@@ -1,0 +1,1800 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Multi-phase equilibrium
+\begin_inset LatexCommand \index{equilibrium}
+
+\end_inset
+
+ libraries
+\begin_inset LatexCommand \label{cha:physprops}
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+This chapter describes the models we provide to compute thermodynamic properties
+\begin_inset LatexCommand \index{thermodynamic properties}
+
+\end_inset
+
+ for multi-phase
+\begin_inset LatexCommand \index{multi-phase}
+
+\end_inset
+
+, multi-component
+\begin_inset LatexCommand \index{multi-component}
+
+\end_inset
+
+ vapor/liquid mixtures
+\begin_inset LatexCommand \index{vapor/liquid mixtures}
+
+\end_inset
+
+ where we assume equilibrium exists among co-existing phases.
+ 
+\end_layout
+
+\begin_layout Section
+A description of the libraries
+\end_layout
+
+\begin_layout Standard
+In this section we describe the three libraries, 
+\family typewriter
+phases.a4l
+\family default
+, 
+\family typewriter
+components.a4l
+\family default
+ and
+\family typewriter
+ thermodynamics.a4l
+\family default
+.
+ These libraries contain many models, but the end user is only interested
+ in a few of them.
+ Our intention is that these few should be very simple to use, with the
+ complexities buried inside the models.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+first the phase definitions
+\end_layout
+
+\end_inset
+
+The first contains the models we use to define the phases we allow for a
+ mixture (i.e., vapor, liquid, vapor/liquid, liquid/liquid and vapor/liquid/liquid
+)
+\begin_inset LatexCommand \ref{id:#id(pgfId-1010487)}
+
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+It should be noted that, while the models will correctly set up the data
+ structures for the liquid/liquid and vapor/liquid/liquid options, we do
+ not really support these alternatives at this time.
+\end_layout
+
+\end_inset
+
+
+\noun off
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+then the components and their data
+\end_layout
+
+\end_inset
+
+The second library contains the models having all the component physical
+ properties for the components we include with ASCEND -- e.g., there are property
+ values for heat capacity
+\begin_inset LatexCommand \index{heat capacity}
+
+\end_inset
+
+, heat of vaporization
+\begin_inset LatexCommand \index{heat of vaporization}
+
+\end_inset
+
+, accentric factor
+\begin_inset LatexCommand \index{accentric factor}
+
+\end_inset
+
+ and so forth for water, methanol, carbon dioxide, etc.
+ There is also the very extensive list of group contribution
+\begin_inset LatexCommand \index{group contribution}
+
+\end_inset
+
+ data we need to use the UNIFAC
+\begin_inset LatexCommand \index{UNIFAC}
+
+\end_inset
+
+ method.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+and finally the mixture thermodynamic models
+\end_layout
+
+\end_inset
+
+The third provides the models we use to compute multi-component mixture
+ thermodynamic properties for phases, such as ideal gas
+\begin_inset LatexCommand \index{ideal gas}
+
+\end_inset
+
+, Pitzer
+\begin_inset LatexCommand \index{Pitzer}
+
+\end_inset
+
+, UNIFAC, and Wilson
+\begin_inset LatexCommand \index{Wilson}
+
+\end_inset
+
+.
+ The final model in this library is the one to compute equilibrium conditions
+ for multi-component, multi-phase systems.
+ We provide both a constant relative volatility
+\begin_inset LatexCommand \index{relative volatility}
+
+\end_inset
+
+ and a rigorous phase equilibrium model, with the ability to switch interactivel
+y between which one to use.
+ Thus one can first assume constant relative volatility to have a better
+ chance to converge and then switch to the version that makes the chemical
+ potential
+\begin_inset LatexCommand \index{chemical potential}
+
+\end_inset
+
+ equal for a component in all phases.
+\end_layout
+
+\begin_layout Subsection
+The 
+\family typewriter
+phases.a4l
+\family default
+
+\begin_inset LatexCommand \index{phases.a4l}
+
+\end_inset
+
+ library
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+need to create only instances of phases_data
+\end_layout
+
+\end_inset
+
+The 
+\family typewriter
+Phases.a4l
+\family default
+ library, see Figure 
+\begin_inset LatexCommand \ref{fig:physprops.phases.a4l}
+
+\end_inset
+
+
+\noun off
+, has only one model in it, phases_data
+\noun default
+
+\begin_inset LatexCommand \index{phases\_data}
+
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+In this and following figures, we represent each model as a rectangle.
+ On the upper left is the name of the model.
+ In 
+\begin_inset LatexCommand \ref{fig:physprops.phases.a4l}
+
+\end_inset
+
+
+\noun on
+Figure 1-1
+\noun off
+, the model is phases_data.
+ On the left side we list in order the parameters for the model.
+ These are shared objects
+\begin_inset LatexCommand \index{shared objects}
+
+\end_inset
+
+ a model containing an instance of phases_data will pass to that instance.
+ An example would bepd IS_A phases_data(V, 'Pitzer_vapor_mixture', 'none',
+ 'none')We list the parts defined locally within a model on the right side
+ of the rectangle, including instances of models, atoms and sets.
+ The slanted double-headed arrow indicates a set; thus, phases and other_phases
+ are sets in phases_data.In 
+\begin_inset LatexCommand \ref{fig:physprops.thermoLib}
+
+\end_inset
+
+
+\noun on
+Figure 1-3
+\noun off
+ we show lines connecting a model, call it A, to a part within another model,
+ call it B.part.
+ The connection is to the sides of both.
+ This type of connection says B.part is an instance of model A.
+ We also show connections from the bottom of one model, call it C, to the
+ top of another, call it D; with this connection we indicate that the lower
+ model D is a refinement
+\begin_inset LatexCommand \index{refinement}
+
+\end_inset
+
+ of the upper model C.
+\end_layout
+
+\end_inset
+
+
+\noun off
+.
+ The user creates an instance of this model, specifying which phases are
+ to exist for a stream or holdup and which thermodynamic model the system
+ should use to compute mixture properties for each phase.
+ Compiling this instance then sets up the data structures required to characteri
+ze those phases for the system.
+\end_layout
+
+\begin_layout Standard
+For example, suppose we want to model a flowsheet consisting of a single
+ flash unit.
+ Suppose further that we want to allow the feed to the flash unit to be
+ vapor, liquid or vapor/liquid (i.e., 2 phase).
+ The product streams from the flash unit will be a vapor phase mixture and
+ a liquid phase mixture.
+ We would define three instances of the phases_data model, one for each
+ type of phase condition we wish to model.
+ You can find the following statements in the model 
+\family typewriter
+testflashmodel
+\family default
+
+\begin_inset LatexCommand \index{testflashmodel}
+
+\end_inset
+
+ in the library 
+\family typewriter
+flash.a4l
+\family default
+
+\begin_inset LatexCommand \index{flash.a4l}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout LyX-Code
+pdV IS_A phases_data('V', 'ideal_vapor_mixture', 
+\end_layout
+
+\begin_layout LyX-Code
+                     'none', 'none');
+\end_layout
+
+\begin_layout LyX-Code
+pdL IS_A phases_data('L', 'none', 
+\end_layout
+
+\begin_layout LyX-Code
+                     'UNIFAC_liquid_mixture', 'none');
+\end_layout
+
+\begin_layout LyX-Code
+pdVL IS_A phases_data('VL', 'ideal_vapor_mixture',
+\end_layout
+
+\begin_layout LyX-Code
+                      'UNIFAC_liquid_mixture','none');
+\end_layout
+
+\begin_layout Standard
+When compiled, 
+\family typewriter
+pdV
+\family default
+, 
+\family typewriter
+pdL
+\family default
+ and 
+\family typewriter
+pdVL
+\family default
+ contain the data structures the thermodynamic models require to model a
+ vapor, liquid and vapor/liquid stream
+\begin_inset LatexCommand \index{stream}
+
+\end_inset
+
+ (or holdup
+\begin_inset LatexCommand \index{holdup}
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+the phase indicators and types
+\end_layout
+
+\end_inset
+
+The first parameter is a character that indicates the phase option desired
+ - 
+\family typewriter
+'M'
+\family default
+, 
+\family typewriter
+'V'
+\family default
+, 
+\family typewriter
+'L'
+\family default
+, 
+\family typewriter
+'VL'
+\family default
+,
+\family typewriter
+ 'LL'
+\family default
+ and 
+\family typewriter
+'VLL'
+\family default
+.
+ 
+\family typewriter
+'M'
+\family default
+ is for a material only stream (no thermodynamic properties are to be computed),
+ 
+\family typewriter
+'V'
+\family default
+ is for vapor and 
+\family typewriter
+'L'
+\family default
+ for liquid.
+ This model always expects the user to supply in the last three parameters
+ an ordered list giving the three single phase mixture models to be used:
+ vapor, liquid1, liquid2.
+ For a non-existent phase
+\begin_inset LatexCommand \index{non-existent phase}
+
+\end_inset
+
+, the user should supply 'none' as the model.
+ If there is only one liquid phase, liquid2 will not exist.
+ The allowed models we can use to estimate multi-component phase mixture
+ properties are in the third of the libraries we describe in this chapter,
+ 
+\family typewriter
+thermodynamics.a4l
+\family default
+
+\begin_inset LatexCommand \index{thermodynamics.a4l}
+
+\end_inset
+
+, which we discuss shortly in Section 
+\begin_inset LatexCommand \ref{ssec:physprops.thermoLib}
+
+\end_inset
+
+
+\noun off
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+
+\noun off
+\begin_inset Graphics
+	filename howto-physpropsFig1.eps
+	width 90col%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+Phases.a4l
+\begin_inset LatexCommand \index{Phases.a4l}
+
+\end_inset
+
+ models
+\begin_inset LatexCommand \label{fig:physprops.phases.a4l}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+The 
+\family typewriter
+components.a4l
+\family default
+
+\begin_inset LatexCommand \index{components.a4l}
+
+\end_inset
+
+ library
+\end_layout
+
+\begin_layout Standard
+In this library (see Figure 
+\begin_inset LatexCommand \ref{fig:physprops.components.a4l}
+
+\end_inset
+
+
+\noun off
+) we provide the actual physical property data for the components supplied
+ with ASCEND.
+ The data we provide is that found in the tables at the back of Reid
+\begin_inset LatexCommand \index{Reid}
+
+\end_inset
+
+, Prausnitz
+\begin_inset LatexCommand \index{Prausnitz}
+
+\end_inset
+
+ and Poling
+\begin_inset LatexCommand \index{Poling}
+
+\end_inset
+
+, The Properties of Vapors 
+\noun default
+&
+\noun off
+ Liquids, 4th Ed, McGraw-Hill
+\begin_inset LatexCommand \index{McGraw-Hill}
+
+\end_inset
+
+, New York (1986).
+ For a few of the components, we have also identified their UNIFAC groups
+\begin_inset LatexCommand \index{UNIFAC groups}
+
+\end_inset
+
+.
+ We include a few Wilson binary mixture parameters
+\begin_inset LatexCommand \index{Wilson binary mixture parameters}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+need to create only instances of components_data
+\end_layout
+
+\end_inset
+
+The purpose of this library is similar to the 
+\family typewriter
+phases.a4l
+\family default
+ library.
+ We wish to provide an easy-to-use model that will set up the data structures
+ for the components in a mixture that the thermodynamic models will use
+ when estimating mixture physical properties.
+ All the user has to do is create an instance of the bottom-most model 
+\family typewriter
+components_data
+\family default
+, passing into it a list of the components in the mixture and the name of
+ one of them which is to serve as the reference component.
+ This model, having parts which are instances of the others present in this
+ library, then compiles into the needed data structures.
+\end_layout
+
+\begin_layout Standard
+An example of use is found in the model 
+\family typewriter
+testflashmodel
+\family default
+ in the library 
+\family typewriter
+flash.a4l
+\family default
+
+\begin_inset LatexCommand \index{flash.a4l}
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout LyX-Code
+cd IS_A components_data(['n_pentane','n_hexane',
+\end_layout
+
+\begin_layout LyX-Code
+                         'n_heptane'],'n_heptane');
+\end_layout
+
+\begin_layout Standard
+When compiled 
+\family typewriter
+cd
+\family default
+ has in it a data structure containing the physical properties for the three
+ species listed.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+reference component
+\end_layout
+
+\end_inset
+
+The choice of which species to use as the reference component
+\begin_inset LatexCommand \index{reference component}
+
+\end_inset
+
+ is up to the user.
+ Usually a good choice is one that is plentiful in the mixture, but that
+ need not be so.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename howto-physpropsFig2.eps
+	width 100col%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+components.a4l
+\begin_inset LatexCommand \index{components.a4l}
+
+\end_inset
+
+ models
+\begin_inset LatexCommand \label{fig:physprops.components.a4l}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+adding a new component
+\end_layout
+
+\end_inset
+
+One can add more components to this library as follows:
+\end_layout
+
+\begin_layout Enumerate
+add the name of the new component to the list of supported_components at
+ the beginning of the model 
+\family typewriter
+td_thermodynamic_constants
+\family default
+ (part of the 
+\family typewriter
+WHERE
+\family default
+ statement that causes the system to output a diagnostic if someone subsequently
+ misspells the name of a component)
+\end_layout
+
+\begin_layout Enumerate
+add the component data as a 
+\family typewriter
+CASE
+\family default
+ to the 
+\family typewriter
+SELECT
+\family default
+ statement in
+\family typewriter
+
+\newline
+td_thermodynamic_constants
+\family default
+ (for an example, look at how it is done for 'methanol')
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+adding UNIFAC group identifiers
+\end_layout
+
+\end_inset
+
+Put the UNIFAC group identifiers
+\begin_inset LatexCommand \index{UNIFAC group identifiers}
+
+\end_inset
+
+ for the new component into the set subgroups.
+ To illustrate, this statement for methanol is:
+\end_layout
+
+\begin_layout LyX-Code
+subgroups:== ['CH3', 'OH'];
+\end_layout
+
+\begin_layout Standard
+You can find all the UNIFAC group identifiers possible in the model 
+\family typewriter
+UNIFAC_constants
+\family default
+
+\begin_inset LatexCommand \index{UNIFAC\_constants}
+
+\end_inset
+
+.
+ Then fill in the vector 
+\family typewriter
+nu
+\family default
+ with a value for each of these groups (to indicate how many such groups
+ are in the molecule).
+ To illustrate, the values for methanol are:
+\end_layout
+
+\begin_layout LyX-Code
+nu['CH3']:==1;
+\end_layout
+
+\begin_layout LyX-Code
+nu['OH']:==1;
+\end_layout
+
+\begin_layout Standard
+If you are entering the component without identifying its UNIFAC groups,
+ then enter the subgroups statement and define it as empty -- i.e., write
+\end_layout
+
+\begin_layout LyX-Code
+subgroups:== [ ];
+\end_layout
+
+\begin_layout Standard
+There should then be no entry for nu (see the 
+\family typewriter
+CASE
+\family default
+ for hydrogen, for example).
+ An activity coefficient estimated by the UNIFAC method will be unity for
+ such a component.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+adding Wilson parameters
+\end_layout
+
+\end_inset
+
+To add Wilson parameters
+\begin_inset LatexCommand \index{Wilson parameters}
+
+\end_inset
+
+, first fill in the names of the other components for which you are adding
+ data into the set 
+\family typewriter
+wilson_set
+\family default
+.
+ For example, this set for methanol might be:
+\end_layout
+
+\begin_layout LyX-Code
+wilson_set:== ['H2O','(CH3)2CO','CH3OH'];
+\end_layout
+
+\begin_layout Standard
+Then fill in lambda and energy parameters into the arrays 
+\family typewriter
+lambda
+\family default
+ and 
+\family typewriter
+del_ip
+\family default
+, one for each of the other components.
+ Again, to illustrate, these arrays for methanol would be:
+\end_layout
+
+\begin_layout LyX-Code
+lambda['H2O']:==0.43045;
+\end_layout
+
+\begin_layout LyX-Code
+lambda['(CH3)2CO']:==0.77204;
+\end_layout
+
+\begin_layout LyX-Code
+lambda['CH3OH']:==1.0;
+\end_layout
+
+\begin_layout LyX-Code
+del_ip['(CH3)2CO']:==2.6493E+002 {J/g_mole};
+\end_layout
+
+\begin_layout LyX-Code
+del_ip['H2O']:==1.1944E+002 {J/g_mole};
+\end_layout
+
+\begin_layout LyX-Code
+del_ip['CH3OH']:==0.0 {J/g_mole};
+\end_layout
+
+\begin_layout Standard
+Finally for each of these other components, go to its 
+\family typewriter
+CASE
+\family default
+ statement, add the name of the new component to its wilson_set and then
+ add statements to set the corresponding lambda and energy data.
+ BEN, IS THIS RIGHT????If you are not adding any Wilson data, enter the
+ statement:
+\end_layout
+
+\begin_layout LyX-Code
+wilson_set:== [ ];
+\end_layout
+
+\begin_layout Subsection
+The 
+\family typewriter
+thermodynamics.a4l
+\family default
+
+\begin_inset LatexCommand \index{thermodynamics.a4l}
+
+\end_inset
+
+ library
+\begin_inset LatexCommand \label{ssec:physprops.thermoLib}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+create instances only of phase_partials and thermodynamics
+\end_layout
+
+\end_inset
+
+Figure 
+\begin_inset LatexCommand \ref{fig:physprops.thermoLib}
+
+\end_inset
+
+
+\noun off
+ shows all the models in this library and how they are related to each other.
+ There are two models in this library that the user has to worry about:
+ 
+\family typewriter
+\noun default
+phase_partials
+\family default
+\noun off
+
+\begin_inset LatexCommand \index{phase\_partials}
+
+\end_inset
+
+ and 
+\family typewriter
+\noun default
+thermodynamics
+\family default
+\noun off
+.
+ The user creates one instance of thermodynamics for every stream or holdup
+ in a process model.
+ Each instance, when compiled has parts which are instances of the other
+ models in this library and which are create the equations to compute the
+ thermodynamic properties for a multi-component, multi-phase mixture.
+\end_layout
+
+\begin_layout Standard
+However, the user must pass each instance of a thermodynamics model an array
+ of instances of 
+\family typewriter
+phase_partials
+\family default
+, one for each phase in the mixture.
+ One 
+\family typewriter
+phase_partials
+\family default
+ model must exist for each phase in each stream or holdup in the process
+ model as it provides the equations modeling that phase.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Standard
+Need to explain UNIFAC, Pitzer etc, since these terms are not familiar to
+ the Mechanical Engineer, and no details are provided as to which is appropriate
+ for which types of problems.
+\end_layout
+
+\begin_layout Standard
+Also, it would be useful to know how to model a homogenous two-phase stream
+ of gas/liquid mixture of a single component.
+\end_layout
+
+\begin_layout Standard
+Also, the documentation needs a 'hello world' example of how to use the
+ properties correlation, eg how to compute the enthalpy of water at room
+ temperature / atmospheric pressure.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Each of the models in the array of 
+\family typewriter
+phase_partials
+\family default
+ must be refined to be one of the possible models for computing properties
+ for a single phase mixture, i.e., one of the models lying below the 
+\family typewriter
+phase_paritals
+\family default
+ model in Figure 
+\begin_inset LatexCommand \ref{fig:physprops.thermoLib}
+
+\end_inset
+
+
+\noun off
+: 
+\family typewriter
+\noun default
+ideal_vapor_mixture
+\family default
+\noun off
+
+\begin_inset LatexCommand \index{ideal\_vapor\_mixture}
+
+\end_inset
+
+, 
+\family typewriter
+\noun default
+Pitzer_vapor_mixture
+\family default
+\noun off
+
+\begin_inset LatexCommand \index{Pitzer\_vapor\_mixture}
+
+\end_inset
+
+, 
+\family typewriter
+\noun default
+UNIFAC_liquid_mixture
+\family default
+\noun off
+
+\begin_inset LatexCommand \index{UNIFAC\_liquid\_mixture}
+
+\end_inset
+
+ or 
+\family typewriter
+\noun default
+Wilson_liquid_mixture
+\family default
+\noun off
+
+\begin_inset LatexCommand \index{Wilson\_liquid\_mixture}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+
+\noun off
+\begin_inset Graphics
+	filename howto-physpropsFig3.eps
+	lyxscale 50
+	width 100col%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+Models in thermodynamic.a4l
+\begin_inset LatexCommand \label{fig:physprops.thermoLib}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The information in an instance of a 
+\family typewriter
+phases_data
+\family default
+ model allows us to construct this array of 
+\family typewriter
+phase_partials
+\family default
+.
+ We extract the following code from the library 
+\family typewriter
+stream_holdup.a4l
+\family default
+
+\begin_inset LatexCommand \index{stream\_holdup.a4l}
+
+\end_inset
+
+ to illustrate how we have created such a model, given a 
+\family typewriter
+phases_data
+\family default
+ model.
+\end_layout
+
+\begin_layout LyX-Code
+MODEL select_mixture_type
+\begin_inset LatexCommand \index{select\_mixture\_type}
+
+\end_inset
+
+(
+\end_layout
+
+\begin_layout LyX-Code
+    cd WILL_BE components_data;
+\end_layout
+
+\begin_layout LyX-Code
+    type WILL_BE symbol_constant;
+\end_layout
+
+\begin_layout LyX-Code
+) REFINES sh_base;
+\end_layout
+
+\begin_layout LyX-Code
+phase IS_A phase_partials(cd);
+\end_layout
+
+\begin_layout LyX-Code
+SELECT (type)
+\end_layout
+
+\begin_layout LyX-Code
+CASE 'ideal_vapor_mixture':
+\end_layout
+
+\begin_layout LyX-Code
+phase IS_REFINED_TO ideal_vapor_mixture(cd);
+\end_layout
+
+\begin_layout LyX-Code
+CASE 'Pitzer_vapor_mixture':
+\end_layout
+
+\begin_layout LyX-Code
+phase IS_REFINED_TO Pitzer_vapor_mixture(cd);
+\end_layout
+
+\begin_layout LyX-Code
+CASE 'UNIFAC_liquid_mixture':
+\end_layout
+
+\begin_layout LyX-Code
+phase IS_REFINED_TO UNIFAC_liquid_mixture(cd);
+\end_layout
+
+\begin_layout LyX-Code
+CASE 'Wilson_liquid_mixture':
+\end_layout
+
+\begin_layout LyX-Code
+phase IS_REFINED_TO Wilson_liquid_mixture(cd);
+\end_layout
+
+\begin_layout LyX-Code
+OTHERWISE:
+\end_layout
+
+\begin_layout LyX-Code
+END SELECT;
+\end_layout
+
+\begin_layout LyX-Code
+boundwidth IS_A bound_width;
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+END select_mixture_type;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+MODEL stream( .......
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+FOR j IN phases CREATE
+\end_layout
+
+\begin_layout LyX-Code
+smt[j] IS_A select_mixture_type(cd, pd.phase_type[j]);
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout LyX-Code
+FOR j IN phases CREATE
+\end_layout
+
+\begin_layout LyX-Code
+phase[j] ALIASES smt[j].phase;
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout LyX-Code
+state IS_A thermodynamics(cd, pd, phase, equilibrated);
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+cannot directly embed SELECT statements in FOR loops
+\end_layout
+
+\end_inset
+
+We had to be a bit tricky, but we hope we have not been so devious that
+ you cannot understand what we have done if we explain it to you here.
+ Look first at the code we extracted from the model stream.
+ The models 
+\family typewriter
+cd
+\family default
+ and 
+\family typewriter
+pd
+\family default
+ are instances of a 
+\family typewriter
+components_data
+\family default
+ and a 
+\family typewriter
+phases_data
+\family default
+ model respectively.
+ If we look inside 
+\family typewriter
+pd
+\family default
+, we will find it contains an array called 
+\family typewriter
+phase_type
+\family default
+, with one entry for each phase that gives the type (name) of the model
+ to be used to set up the equations for that phase.
+ ASCEND does not allow 
+\family typewriter
+SELECT
+\family default
+ statements
+\begin_inset LatexCommand \index{SELECT statements. embedded in FOR}
+
+\end_inset
+
+ to be embedded directly within a 
+\family typewriter
+FOR
+\family default
+ loop -- thus we need a bit of deviousness.
+ For each phase j we create 
+\family typewriter
+smt[j]
+\family default
+ as an instance of a 
+\family typewriter
+select_mixture_type
+\family default
+ model.
+ We parameterize the 
+\family typewriter
+select_mixture_type
+\family default
+ with the components data 
+\family typewriter
+cd
+\family default
+ and the type (name) 
+\family typewriter
+pd.phase_type[j]
+\family default
+ of the model to be used to generate its equations.
+ Then we embed the select statement within the 
+\family typewriter
+select_mixture_type
+\family default
+ model, something ASCEND does allow.
+\end_layout
+
+\begin_layout Standard
+The model 
+\family typewriter
+select_mixture_type
+\family default
+ appears first in this code.
+ It uses the type (name) it is passed to select and then to instance the
+ desired refinement of the 
+\family typewriter
+phase_partials
+\family default
+ model.
+ 
+\end_layout
+
+\begin_layout Standard
+Returning to the code extracted from the flash model, the second 
+\family typewriter
+FOR
+\family default
+ loop creates the desired array by aliasing the array element 
+\family typewriter
+phase[j]
+\family default
+ with the phase model created within the corresponding 
+\family typewriter
+smt
+\family default
+ instance.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+disappearing phases
+\begin_inset LatexCommand \index{disappearing phases}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+The multi-phase model handles the case where a phase disappears by using
+ a complementarity
+\begin_inset LatexCommand \index{complementarity}
+
+\end_inset
+
+ formulation.
+ This formulation relaxes the constraint for a phase that its mole fractions
+ must sum to unity when it disappears.
+ Thus the vapor/liquid model will correctly alter the model to handle the
+ situation when the mixture becomes a superheated vapor or a subcooled liquid.
+\end_layout
+
+\begin_layout Standard
+We are now ready to create an instance of a thermodynamics model.
+ When compiled this instance contains all the equations needed to estimate
+ the phase conditions for a multi-phase, multi-component mixture assuming
+ equilibrium exists among the phases.
+ The following line of code, extracted from the stream model referred to
+ above, illustrates its use:
+\end_layout
+
+\begin_layout LyX-Code
+state IS_A thermodynamics(cd, pd, phase, equilibrated);
+\end_layout
+
+\begin_layout Standard
+where 
+\family typewriter
+cd
+\family default
+ is an instance of a 
+\family typewriter
+components_data model
+\family default
+, 
+\family typewriter
+pd
+\family default
+ of a 
+\family typewriter
+phases_data
+\family default
+ model, 
+\family typewriter
+phase
+\family default
+ an array of instances of 
+\family typewriter
+phase_partials
+\family default
+, and 
+\family typewriter
+equilibrated
+\family default
+ a 
+\family typewriter
+boolean
+\family default
+ variable.
+ When 
+\family typewriter
+equilibrated
+\family default
+ is 
+\family typewriter
+FALSE
+\family default
+, the model will generate the equations assuming constant relative volatilities
+ (the user must estimate these volatilities).
+ When 
+\family typewriter
+TRUE
+\family default
+, the model generates the equations assuming the chemical potentials for
+ a component are equal in all phases.
+\end_layout
+
+\begin_layout Section
+Using the thermodynamics models
+\end_layout
+
+\begin_layout Standard
+There are several libraries of models that use the libraries we have just
+ described.
+ The first library to examine is 
+\family typewriter
+stream_holdup.a4l
+\family default
+.
+ This library contains steady-state models for a stream and a holdup.
+ The following gives the parameter list for a user to create an instance
+ of a stream.
+\end_layout
+
+\begin_layout Subsection
+Streams
+\begin_inset LatexCommand \index{streams}
+
+\end_inset
+
+ and holdups
+\begin_inset LatexCommand \index{holdups}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+MODEL stream (
+\end_layout
+
+\begin_layout LyX-Code
+    cd WILL_BE components_data;
+\end_layout
+
+\begin_layout LyX-Code
+    pd WILL_BE phases_data;
+\end_layout
+
+\begin_layout LyX-Code
+    equilibrated WILL_BE boolean;
+\end_layout
+
+\begin_layout LyX-Code
+) REFINES sh_base;
+\end_layout
+
+\begin_layout Standard
+The model 
+\family typewriter
+sh_base
+\family default
+ is a dummy model to tie all models into this library back to a common root
+ model.
+ The user need do nothing because of this refinement.
+ What you should note is that all you need to do to create a stream is create
+ a 
+\family typewriter
+components_data
+\family default
+ model and a 
+\family typewriter
+phases_data
+\family default
+ model.
+ One supplies the boolean variable 
+\family typewriter
+equilibrated
+\family default
+ as a variable that one can set interactively or in a method or a script
+ when running the model to decide how to model equilibrium, as we have discussed
+ above.
+ A holdup is equally as easy to model.
+\end_layout
+
+\begin_layout Subsection
+Flash units
+\begin_inset LatexCommand \index{flash units}
+
+\end_inset
+
+ and variants thereof
+\end_layout
+
+\begin_layout Standard
+From streams and holdups, we can move on to unit operation models.
+ The library 
+\family typewriter
+flash.a4l
+\family default
+ provide us with a flash model.
+ The parameter list for the flash model is:
+\end_layout
+
+\begin_layout LyX-Code
+MODEL vapor_liquid_flash
+\begin_inset LatexCommand \index{vapor\_liquid\_flash}
+
+\end_inset
+
+(
+\end_layout
+
+\begin_layout LyX-Code
+   Qin WILL_BE energy_rate;
+\end_layout
+
+\begin_layout LyX-Code
+   equilibrated WILL_BE boolean;
+\end_layout
+
+\begin_layout LyX-Code
+   feed WILL_BE stream;
+\end_layout
+
+\begin_layout LyX-Code
+   vapout WILL_BE stream;
+\end_layout
+
+\begin_layout LyX-Code
+   liqout WILL_BE stream;
+\end_layout
+
+\begin_layout LyX-Code
+) WHERE (
+\end_layout
+
+\begin_layout LyX-Code
+   feed, vapout, liqout WILL_NOT_BE_THE_SAME;
+\end_layout
+
+\begin_layout LyX-Code
+   feed.cd, vapout.cd, liqout.cd WILL_BE_THE_SAME;
+\end_layout
+
+\begin_layout LyX-Code
+   vapout.pd.phase_indicator == 'V';
+\end_layout
+
+\begin_layout LyX-Code
+   liqout.pd.phase_indicator == 'L';
+\end_layout
+
+\begin_layout LyX-Code
+   (feed.pd.phase_indicator IN ['V','L','VL','VLL']) == TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+) REFINES flash_base;
+\end_layout
+
+\begin_layout Standard
+Again we see that to create a flash unit, we need to create the variable
+ 
+\family typewriter
+Qin
+\family default
+ for the heat input to the unit, a boolean 
+\family typewriter
+equilibrated
+\family default
+ and three streams, 
+\family typewriter
+feed
+\family default
+, 
+\family typewriter
+vapout
+\family default
+ and 
+\family typewriter
+liqout
+\family default
+.
+ The three streams must all be different streams.
+ They must have the same components in them.
+ The stream 
+\family typewriter
+vapout
+\family default
+ must be a vapor stream and the stream 
+\family typewriter
+liqout
+\family default
+ a liquid stream.
+ The 
+\family typewriter
+feed
+\family default
+ stream can be of any kind.
+\end_layout
+
+\begin_layout Standard
+Hopefully with the above information, creating a flash unit should not now
+ seem particularly difficult.
+\end_layout
+
+\begin_layout Standard
+If you examine this library further, you will see it contains models which
+ are variations of the flash unit for: 
+\family typewriter
+detailed_tray
+\family default
+, 
+\family typewriter
+tray
+\family default
+, 
+\family typewriter
+feed_tray
+\family default
+, 
+\family typewriter
+total_condenser
+\family default
+ and 
+\family typewriter
+simple_reboiler
+\family default
+.
+\end_layout
+
+\begin_layout Subsection
+Distillation columns
+\begin_inset LatexCommand \index{Distillation columns}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We provide two libraries that allow you to model distillation columns: 
+\family typewriter
+column.a4l
+\family default
+
+\begin_inset LatexCommand \index{column.a4l}
+
+\end_inset
+
+ and 
+\family typewriter
+collocation.a4l
+\family default
+
+\begin_inset LatexCommand \index{collocation.a4l}
+
+\end_inset
+
+.
+ The library 
+\family typewriter
+column.a4l
+\family default
+ first models a tray stack and then a simple column using that model.
+ A third model extracts the profiles for pressure, temperature, a parameter
+ that indicates the deviation from constant molar overflow conditions, total
+ vapor and liquid flows and component compositions against tray number.
+ This information may then be used for plotting these profiles using the
+ ASCEND plotting capability.
+\end_layout
+
+\begin_layout Standard
+The library 
+\family typewriter
+collocation.a4l
+\family default
+ provides collocation models for simple columns.
+ With collocation models, one models composition profiles as smooth functions
+ of tray number in a column section.
+ Columns with a large number of trays are modeled with relatively small
+ collocation models.
+ Also the number of trays becomes a continuous variable, aiding in optimization
+ studies where the number of trays in each section is to be computed.
+\end_layout
+
+\begin_layout Subsection
+Dynamic unit models
+\end_layout
+
+\begin_layout Standard
+ASCEND contains models for simulating the dynamic behavior of units.
+ Their use is described in Chapter 
+\begin_inset LatexCommand \vref{cha:ivp}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Discussion
+\end_layout
+
+\begin_layout Standard
+We have presented a description of the libraries that allow one to model
+ the equations providing thermodynamic properties for multi-component, multi-pha
+se mixtures when one assume equilibrium exists among co-existing phases.
+ With this description, we hope that these models become much less difficult
+ to use.
+ We end this chapter by describing other libraries that build on the property
+ estimation libraries, models for streams and holdups, for flash units and
+ variations thereof, and for columns.
+\end_layout
+
+\end_body
+\end_document

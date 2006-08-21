@@ -1,0 +1,1770 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Creating a plot
+\begin_inset LatexCommand \index{plot}
+
+\end_inset
+
+ (using a library model
+\begin_inset LatexCommand \index{library model}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{model, library}
+
+\end_inset
+
+) 
+\begin_inset LatexCommand \label{cha:model3}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this chapter we are going to produce a plot by using a model that someone
+ else has created.
+ We gain two lessons: (1) you will understand first hand the difficulties
+ one encounters when trying to use a model someone else has created and
+ (2) you will learn how to produce a plot in ASCEND.
+ The approach we take is not the one you should take if your goal is simply
+ to produce this plot.
+ Our goal is pedagogical
+\begin_inset LatexCommand \index{pedagogical}
+
+\end_inset
+
+, not efficiency.
+ In the last chapter we created an array of vessel models to produce the
+ data that we now about to plot.
+ We approached this problem this way so you could see how one creates arrays
+ in ASCEND.
+ Having this model, we have the data.
+ The easiest thing we can do now it use it to produce a plot.
+\end_layout
+
+\begin_layout Standard
+We also have in ASCEND the ability to do case studies over a model instance,
+ varying one or more of the fixed variables for it over a range of values
+ and capturing the values of other variables that result.
+ This powerful case study tool is the proper way to produce this plot as
+ ASCEND only has to compile one instance and solve it repeatedly rather
+ than produce an array of models.
+ We finish this chapter showing you how to use this case study tool.
+\end_layout
+
+\begin_layout Section
+Creating a plot
+\end_layout
+
+\begin_layout Standard
+We want a plot of 
+\family typewriter
+metal_mass
+\family default
+ values vs.
+ 
+\family typewriter
+H_to_D_ratio
+\family default
+.
+ If we look around at the available tools, we find there is a 
+\series bold
+Plot
+\series default
+ tool
+\begin_inset LatexCommand \index{tool, Plot}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{Plot tool}
+
+\end_inset
+
+ under the 
+\series bold
+Display
+\series default
+ button in the Browser window.
+ While not obvious, it turns out we can plot the arrays we produce when
+ we include instances of type 
+\family typewriter
+plt_plot_integer
+\family default
+
+\begin_inset LatexCommand \index{plt\_plot\_integer}
+
+\end_inset
+
+ and 
+\family typewriter
+plt_plot_symbol
+\family default
+
+\begin_inset LatexCommand \index{plt\_plot\_symbol}
+
+\end_inset
+
+ in our model.
+ We find these types in the file 
+\family typewriter
+plot.a4l
+\family default
+ located in the ASCEND4 models directory which is distributed with ASCEND.
+ Figure 
+\begin_inset LatexCommand \ref{fig:model3.plot.a4l}
+
+\end_inset
+
+
+\noun off
+ is a print out of that file (but with line numbers added so we can reference
+ them here).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout LyX-Code
+REQUIRE "system.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+PROVIDE "plot.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+(* some lines removed here...
+ *)
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+(*=============================================================================*
+\end_layout
+
+\begin_layout LyX-Code
+ P L O T .
+ A 4 L
+\end_layout
+
+\begin_layout LyX-Code
+ ---------------
+\end_layout
+
+\begin_layout LyX-Code
+AUTHOR:Ben Allan
+\end_layout
+
+\begin_layout LyX-Code
+provoked by plot.lib by Peter Piela and Kirk A.
+ Abbott
+\end_layout
+
+\begin_layout LyX-Code
+DATES:03/97 - Original code.
+\end_layout
+
+\begin_layout LyX-Code
+CONTENTS:
+\end_layout
+
+\begin_layout LyX-Code
+A parameterized plot library mostly compatible
+\end_layout
+
+\begin_layout LyX-Code
+with plot.lib, but with variable graph titles.
+\end_layout
+
+\begin_layout LyX-Code
+*)
+\end_layout
+
+\begin_layout LyX-Code
+MODEL pltmodel() REFINES cmumodel();
+\end_layout
+
+\begin_layout LyX-Code
+END pltmodel;
+\end_layout
+
+\begin_layout LyX-Code
+MODEL plt_point(
+\end_layout
+
+\begin_layout LyX-Code
+x WILL_BE real;
+\end_layout
+
+\begin_layout LyX-Code
+y WILL_BE real;
+\end_layout
+
+\begin_layout LyX-Code
+) REFINES pltmodel();
+\end_layout
+
+\begin_layout LyX-Code
+END plt_point;
+\end_layout
+
+\begin_layout LyX-Code
+(***************************************************************)
+\end_layout
+
+\begin_layout LyX-Code
+MODEL plt_curve(
+\end_layout
+
+\begin_layout LyX-Code
+npnts IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+y_data[npnts] WILL_BE real;
+\end_layout
+
+\begin_layout LyX-Code
+x_data[npnts] WILL_BE real;
+\end_layout
+
+\begin_layout LyX-Code
+) REFINES pltmodel();
+\end_layout
+
+\begin_layout LyX-Code
+(* points of matching subscript will be plotted in order of
+\end_layout
+
+\begin_layout LyX-Code
+ * increasing subscript value.
+\end_layout
+
+\begin_layout LyX-Code
+ *)
+\end_layout
+
+\begin_layout LyX-Code
+legendIS_A symbol; (* mutable now! *)
+\end_layout
+
+\begin_layout LyX-Code
+FOR i IN [npnts] CREATE
+\end_layout
+
+\begin_layout LyX-Code
+pnt[i]IS_A plt_point(x_data[i],y_data[i]);
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout LyX-Code
+END plt_curve;
+\end_layout
+
+\begin_layout LyX-Code
+(***************************************************************)
+\end_layout
+
+\begin_layout LyX-Code
+MODEL plt_plot_integer(
+\end_layout
+
+\begin_layout LyX-Code
+curve_set IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+curve[curve_set] WILL_BE plt_curve;
+\end_layout
+
+\begin_layout LyX-Code
+) REFINES pltmodel();
+\end_layout
+
+\begin_layout LyX-Code
+title, XLabel, YLabel IS_A symbol; (* mutable now! *)
+\end_layout
+
+\begin_layout LyX-Code
+Xlow IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+Ylow IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+Xhigh IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+Yhigh IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+Xlog IS_A boolean;
+\end_layout
+
+\begin_layout LyX-Code
+Ylog IS_A boolean;
+\end_layout
+
+\begin_layout LyX-Code
+END plt_plot_integer;
+\end_layout
+
+\begin_layout LyX-Code
+(***************************************************************)
+\end_layout
+
+\begin_layout LyX-Code
+MODEL plt_plot_symbol(
+\end_layout
+
+\begin_layout LyX-Code
+curve_set IS_A set OF symbol_constant;
+\end_layout
+
+\begin_layout LyX-Code
+curve[curve_set] WILL_BE plt_curve;
+\end_layout
+
+\begin_layout LyX-Code
+) REFINES pltmodel();
+\end_layout
+
+\begin_layout LyX-Code
+title, XLabel, YLabel IS_A symbol; (* mutable now! *)
+\end_layout
+
+\begin_layout LyX-Code
+Xlow IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+Ylow IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+Xhigh IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+Yhigh IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+Xlog IS_A boolean;
+\end_layout
+
+\begin_layout LyX-Code
+Ylog IS_A boolean;
+\end_layout
+
+\begin_layout LyX-Code
+END plt_plot_symbol;
+\end_layout
+
+\begin_layout Caption
+The file plot.a4l
+\begin_inset LatexCommand \index{plot.a4l}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{fig:model3.plot.a4l}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As you can see, this file contains the two types we seek -- starting in
+ lines 59 and 71, respectively.
+ However, before we can use them, we do need to understand them.
+ We are, so to speak, on the receiving end of the reusability issue.
+ If you spend some time, you will find that you can decipher these model
+ definitions.
+ To make that less painful, we will help you do so here.
+ If these models were better documented, they would be much less difficult
+ to interpret.
+ In time we will add Notes to them to remedy this deficiency.
+\end_layout
+
+\begin_layout Subsection
+Model refinement
+\begin_inset LatexCommand \index{refinement}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+please, explain "refines"
+\end_layout
+
+\end_inset
+
+The first model, pltmodel, is two lines long, having a MODEL statement indicatin
+g it "refines" cmumodel and an END statement.
+ We have not encountered the concept of refinement as yet.
+ In ASCEND the to refine means the model pltmodel inherits all the statements
+ of cmumodel, a model which has been defined at the end of the file 
+\family typewriter
+system.a4l
+\family default
+.
+ We show the code for cmumodel in Figure 
+\begin_inset LatexCommand \ref{fig:model3.cmumodel}
+
+\end_inset
+
+
+\noun off
+, and we note that it too is an empty model.
+ It is, as it says, a root for a collection of loosely related models.
+ You will note (and forgive) a bit of dry humor by its author, Ben Allan.
+ So far as we know, this model neither provokes nor hides any bugs.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout LyX-Code
+MODEL cmumodel();
+\end_layout
+
+\begin_layout LyX-Code
+(* This MODEL does nothing except provide a root
+\end_layout
+
+\begin_layout LyX-Code
+ * for a collection of loosely related models.
+\end_layout
+
+\begin_layout LyX-Code
+ * If it happens to reveal a few bugs in the software,
+\end_layout
+
+\begin_layout LyX-Code
+ * and perhaps masks others, well, what me worry? 
+\end_layout
+
+\begin_layout LyX-Code
+ * BAA, 8/97.
+\end_layout
+
+\begin_layout LyX-Code
+ *)
+\end_layout
+
+\begin_layout LyX-Code
+END cmumodel;
+\end_layout
+
+\begin_layout Caption
+The code for cmumodel
+\begin_inset LatexCommand \index{cmumodel}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{fig:model3.cmumodel}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We need to introduce the concept of type refinement to understand these
+ models.
+ We divert for a moment to do just that.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+parents
+\begin_inset LatexCommand \index{parents}
+
+\end_inset
+
+ and children
+\begin_inset LatexCommand \index{children}
+
+\end_inset
+
+ in a refinement hierarchy
+\end_layout
+
+\end_inset
+
+Suppose model B refines model A.
+ We call A the parent model and B the child.
+ The child model B inherits
+\begin_inset LatexCommand \index{}
+
+\end_inset
+
+ all the code defining the parent model A.
+ In writing the code for model B, we do not write the code it inherits from
+ A; we simply understand it is there already.
+ The code we write for model B will be only those statements that we wish
+ to add beyond the code defining its parent.
+ ASCEND supports only single inheritance; thus a child may have only one
+ parent.
+ A parent, on the other hand, may have many children, each inheriting its
+ code.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+order does not matter in nonprocedural code
+\begin_inset LatexCommand \index{nonprocedural code}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+We are dealing in ASCEND with models defined by their variables and equations.
+ As we have noted above, the order for the statements defining each of these
+ does not matter -- i.e., the variables and equations may be defined in any
+ order.
+ So adding new variables and equations through refinement may be done quite
+ easily.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+but it does in the procedural code
+\begin_inset LatexCommand \index{procedural code}
+
+\end_inset
+
+ for methods
+\end_layout
+
+\end_inset
+
+In constrast, the methods are bits of procedural code -- i.e., they are run
+ as a sequence of statements where order does matter.
+ In ASCEND, a child model will inherit all the methods of the parent.
+ If you wish to alter the code for a method, you must replace it entirely,
+ giving it the same name as the method to be replaced.
+ (However, if you look into the documentation on the language syntax for
+ methods, you will find that the original method is still available for
+ execution.
+ You simply have to add a qualifier to its name to point to it.)
+\end_layout
+
+\begin_layout Standard
+If we look into this file we see the refinement hierarchy
+\begin_inset LatexCommand \index{refinement hierarchy}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{hierarchy, refinement}
+
+\end_inset
+
+ shown in Figure 
+\begin_inset LatexCommand \ref{fig:model3.refineHierPlot.a4l}
+
+\end_inset
+
+
+\noun off
+.
+ 
+\noun default
+'
+\noun off
+cmumodel
+\noun default
+'
+\noun off
+ is the parent model for all these models.
+ pltmodel is its child.
+ The remaining three models are children of pltmodel.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+
+\noun off
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+
+\begin_inset Graphics
+	filename howto-model3Fig3.eps
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+The refinement hierarchy in the file plot.a4l
+\begin_inset LatexCommand \label{fig:model3.refineHierPlot.a4l}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+reasons for refinement
+\end_layout
+
+\end_inset
+
+There are three reasons to support model refinement, with the last being
+ the most important one.
+\end_layout
+
+\begin_layout Itemize
+We write more compact code
+\begin_inset LatexCommand \index{compact code}
+
+\end_inset
+
+: The first reason is compactness of coding.
+ One can inherit a lot of code from a parent.
+ Only the new statements belonging to the child are then written to define
+ it.
+ This is not a very important reason for having refinement.
+\end_layout
+
+\begin_layout Itemize
+Changes we make to the parent propagate
+\begin_inset LatexCommand \index{propagate}
+
+\end_inset
+
+: A second reason is that one can edit changes into the parent and know
+ that the children will inherit those changes without having to alter the
+ code written for the child.
+ (Of course, one can change the parent in such a way that the changes to
+ the child are not what is wanted for the child, introducing what will likely
+ become some interesting debugging problems.)
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+with the most important being we know what can substitute for what
+\end_layout
+
+\end_inset
+
+We know what can substitute
+\begin_inset LatexCommand \index{substitute}
+
+\end_inset
+
+ for what: The most important reason is that inheritance tells us what kinds
+ of parts may be substituted for a particular part in a model.
+ Because a child inherits all the code from its parent, we know the child
+ has all the variables and equations defined for it that the parent does
+ -- and typically more.
+ We can use an instance of the child as a replacement for an instance of
+ the parent.
+ Thus if you were to write a model with the part A1 of type A in it, someone
+ else can create an instance of your model and substitute a part B1 which
+ is of type B.
+ This substituted part will have all the needed variables in it that you
+ assumed would be there.
+\end_layout
+
+\begin_layout Standard
+This third reason says that when a object passed as a parameter 
+\family typewriter
+WILL_BE
+\family default
+ of type A, we know that a part of either type A or type B will work.
+\end_layout
+
+\begin_layout Subsection
+Continuing with creating a plot
+\end_layout
+
+\begin_layout Standard
+We are going to include in our model a part of type 
+\family typewriter
+plt_plot_integer
+\family default
+ or 
+\family typewriter
+plt_plot_symbol
+\family default
+ that ASCEND can plot.
+ We need to look at the types of parameters required by whichever of these
+ two we select to include here.
+ Tracing back to its parents, we see them to be empty so all the code for
+ these types is right here.
+\end_layout
+
+\begin_layout Standard
+The first parameter we need is a 
+\family typewriter
+curve_set
+\begin_inset LatexCommand \index{curve\_set}
+
+\end_inset
+
+
+\family default
+ which is defined to be a set of 
+\family typewriter
+integer_constant
+\family default
+ or of 
+\family typewriter
+symbol_constant
+\family default
+.
+ We have to guess at this time at the purpose for 
+\family typewriter
+curve_set
+\family default
+.
+ It would really help to have notes defining the intention here and to have
+ a piece of code that would demonstrate the use of these models.
+ At present, we do not.
+ We proceed, admitting we will appear to "know" more than we should about
+ this model.
+ It turns out that 
+\family typewriter
+curve_set
+\family default
+ allows us to identify each of the curves we are going to plot.
+ These models assume we are plotting several variables (let's call them
+ y[1], y[2], ...) against the same independent variable x.
+ The values for curve_set are the '1', '2', etc.
+ identifying these curves.
+\end_layout
+
+\begin_layout Standard
+Here we wish to plot only one curve presenting 
+\family typewriter
+metal_mass
+\family default
+ vs.
+ 
+\family typewriter
+H_to_D_ratio
+\family default
+.
+ We can elect to use 
+\family typewriter
+plt_plot_symbol
+\family default
+
+\begin_inset LatexCommand \index{plt\_plot\_symbol}
+
+\end_inset
+
+ and label this curve '5 mm'.
+ The label '5 mm' is a symbol so we will create a set of type symbol with
+ this single member.
+\end_layout
+
+\begin_layout Standard
+The second object has to be a object of type 
+\family typewriter
+plt_curve
+\family default
+.
+\end_layout
+
+\begin_layout Standard
+Looking at line 45, we see how to include an object of type 
+\family typewriter
+plt_curve
+\family default
+.
+ It must be passed three objects: a set of integers (e.g., the set of integers
+ from 1 to 20) and two lists of data giving the y-values vs.
+ the x-values for the curve.
+ In the model tabulated_vessel_values, we have just these two lists, and
+ they are named 
+\family typewriter
+metal_mass
+\family default
+ and 
+\family typewriter
+H_to_D_ratio
+\family default
+.
+\end_layout
+
+\begin_layout Standard
+
+\noun off
+You need now to add to the model tabulated_vessel_values
+\noun default
+ in Figure 
+\begin_inset LatexCommand \ref{fig:model3.vesselPlot}
+
+\end_inset
+
+
+\noun off
+ 
+\noun default
+(it is saved as vesselPlot.a4c
+\begin_inset LatexCommand \index{vesselPlot.a4c}
+
+\end_inset
+
+).
+
+\noun off
+ It contains a part called 
+\family typewriter
+\noun default
+massVSratio
+\family default
+\noun off
+ of type 
+\family typewriter
+\noun default
+plt_plot_symbol
+\family default
+\noun off
+
+\begin_inset LatexCommand \index{plt\_plot\_symbol}
+
+\end_inset
+
+ that ASCEND can plot.
+ This code is at the end of the declarative statements in tabulated_vessel_value
+s.
+ It also replaces the first method, 
+\family typewriter
+\noun default
+default_self
+\family default
+\noun off
+.
+\noun default
+]
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout LyX-Code
+CurveSet "the index set for all the curves to be plotted"
+\end_layout
+
+\begin_layout LyX-Code
+            IS_A set OF symbol_constant;
+\end_layout
+
+\begin_layout LyX-Code
+    CurveSet :== ['5 mm'];
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+    Curves['5 mm'] 
+\end_layout
+
+\begin_layout LyX-Code
+      "the one curve of 20 points for metal_mass 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+       vs.
+ H_to_D_ratio"
+\end_layout
+
+\begin_layout LyX-Code
+            IS_A plt_curve(
+\end_layout
+
+\begin_layout LyX-Code
+               [1..n_entries], 
+\end_layout
+
+\begin_layout LyX-Code
+               metal_mass, 
+\end_layout
+
+\begin_layout LyX-Code
+               H_to_D_ratio
+\end_layout
+
+\begin_layout LyX-Code
+               ); 
+\end_layout
+
+\begin_layout LyX-Code
+    massVSratio "the object ASCEND can plot"
+\end_layout
+
+\begin_layout LyX-Code
+            IS_A plt_plot_symbol(
+\end_layout
+
+\begin_layout LyX-Code
+               CurveSet, 
+\end_layout
+
+\begin_layout LyX-Code
+               Curves
+\end_layout
+
+\begin_layout LyX-Code
+               );
+\end_layout
+
+\begin_layout LyX-Code
+    
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+(* set the title for the plot and the labels
+\end_layout
+
+\begin_layout LyX-Code
+   for the ordinate and abscissa *)
+\end_layout
+
+\begin_layout LyX-Code
+    massVSratio.title :=
+\end_layout
+
+\begin_layout LyX-Code
+     'Metal mass of the walls vs H to D ratio 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+         for a thin-walled cylindrical vessel';
+\end_layout
+
+\begin_layout LyX-Code
+    massVSratio.XLabel := 'H to D ratio';
+\end_layout
+
+\begin_layout LyX-Code
+    massVSratio.YLabel := 'metal mass IN kg/m^3';
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout Caption
+The last bit of new code to include a plot in the model tabulated_vessel_values
+ 
+\begin_inset LatexCommand \label{fig:model3.vesselPlot}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Also just after the first line in this file -- which reads
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "atoms.a4l";
+\end_layout
+
+\begin_layout Standard
+place the instruction
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "plot.a4l";
+\end_layout
+
+\begin_layout Standard
+When you solve this new instance and make massSVratio the current object,
+ you will find the Plot tool under the Display button in the Browser window
+ lights up and can be selected.
+ If you do this, you will get a plot of metal_mass vs.
+ H_to_D_ratio.
+ A clear minimum is apparent on this plot at H_to_D_ratio equal to approximately
+ one.
+\end_layout
+
+\begin_layout Standard
+You should create a script to run this model just as you did for vesselTabulated.
+a4c in the previous chapter.
+ Save it as vesselPlot.a4s.
+\end_layout
+
+\begin_layout Section
+Creating a case study from a single vessel
+\end_layout
+
+\begin_layout Standard
+You may think creating an array of vessels and a complex plot object just
+ to generate a graph is either an awful lot of work or a method which will
+ not work for very large models.
+ You think correctly on both points.
+ The 
+\family typewriter
+plt_plot
+\family default
+ models are primarily useful for sampling values from an array of inter-related
+ models that represent a spatially distributed system such as the pillars
+ in a bridge or the trays in a distillation column.
+ You can conduct a case study, solving a single model over a range of values
+ for some specified variable, using the Script command 
+\family typewriter
+STUDY
+\family default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+We will step through creating a base case and a case study using the vessel
+ model.
+ Start by opening a new buffer in the Script window and turning on the record
+ button of the Scripts edit menu.
+ In the Library window run the Delete all types button to clear out any
+ previous simulations.
+ Load the vessel model from the file vesselMethods.a4c you created in Section
+ 3.2.
+ 
+\end_layout
+
+\begin_layout Subsection
+The base case
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+compile a vessel
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Select and compile the vessel model.
+ Give the simulation the name V.
+ Select the simulation V in the bottom pane of the Library window and use
+ the right mouse button (or Alt-x b) to send the simulation to the Browser.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+solving the base case
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the Browser, place the mouse cursor over the upper left pane.
+ Use the right mouse button to run methods reset and values, then send the
+ model to the Solver by typing Alt-x s.
+ Move the mouse to the Solver window and hit the F5 key to solve the model.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+graphical case study optimization
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We now know that it takes 535.7 kg of metal to make a 250 cubic foot vessel
+ which is twice as high as it is broad.
+ Suppose that now we want to know the largest volume that this amount of
+ metal can contain assuming the same wall thickness is required.
+ Perhaps a skinnier or fatter vessel can hold more, so we need to do a case
+ study using the aspect ratio (H_to_D_ratio) as the independent variable.
+ Use the Browser to change V.metal_mass.fixed to TRUE, since we are using
+ a constant amount of metal.
+ The solver will want you to free a variable now, so select V.vessel_vol
+ to be freed, since volume is what we want to study.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+script recorded so far
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Turn off the recording button on the Script window.
+ The recording should look something like
+\end_layout
+
+\begin_layout LyX-Code
+DELETE TYPES;
+\end_layout
+
+\begin_layout LyX-Code
+READ FILE {vesselMethods.a4c};
+\end_layout
+
+\begin_layout LyX-Code
+COMPILE V OF vessel;
+\end_layout
+
+\begin_layout LyX-Code
+BROWSE {V};
+\end_layout
+
+\begin_layout LyX-Code
+RUN {V.reset};
+\end_layout
+
+\begin_layout LyX-Code
+SOLVE {V} WITH QRSlv;
+\end_layout
+
+\begin_layout LyX-Code
+ASSIGN {V.metal_mass.fixed} TRUE {};
+\end_layout
+
+\begin_layout LyX-Code
+# you must type the next line in the script yourself.
+\end_layout
+
+\begin_layout LyX-Code
+ASSIGN {V.vessel_vol.fixed} FALSE {};
+\end_layout
+
+\begin_layout Standard
+The file ascend4/models/vesselStudy.a4s was recorded in a similar manner.
+\end_layout
+
+\begin_layout Subsection
+Case study examples
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+configuring a case study
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The STUDY command takes a lot of arguments.
+ Well explain them all momentarily, but should you forget them simply enter
+ the command STUDY without arguments in the ASCEND Console window or xterm
+ window to see an error message explaining the arguments and giving an example.
+ Enter the following command in the Script window exactly as shown except
+ for the file name following OUTFILE.
+ Specify a file to be created in your ascdata directory.
+\end_layout
+
+\begin_layout LyX-Code
+STUDY {vessel_vol} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+IN {V} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+VARYING {{H_to_D_ratio} {0.1} {0.5} {0.8} {1} {1.5} {2} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+{3} {4} {8}} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+USING {QRSlv} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+OUTFILE {/usr0/ballan/ascdata/vvstudy.dat} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+ERROR STOP;
+\end_layout
+
+\begin_layout Standard
+This is the simplest form of case study; the backslashes at the end of each
+ line mean that it is all one big statement.
+ Select all these lines in the Script at once with the mouse and then hit
+ F5 to execute the study.
+ The solver will solve all the cases and produce the output file vvstudy.dat.
+ The quickest way to see the result is to enter the following command in
+ the Script, then select and execute it.
+ (Remember to use the name of your file and not the name shown).
+\end_layout
+
+\begin_layout LyX-Code
+ASCPLOT {/usr0/ballan/ascdata/vvstudy.dat};
+\end_layout
+
+\begin_layout LyX-Code
+ASCPLOT CLOSE; #omit if you want to see data table
+\end_layout
+
+\begin_layout Standard
+You should get a graph that looks something like Figure 4-5
+\begin_inset LatexCommand \ref{fig:StudyVolumeVsHtoD}
+
+\end_inset
+
+.
+ The largest volume is in the neighborhood of an H_to_D_ratio of 1.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename howto-model3Fig5.eps
+	scale 80
+	BoundingBox 50bp 0bp 600bp 430bp
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+Study of Volume as Function of H/D
+\begin_inset LatexCommand \label{fig:StudyVolumeVsHtoD}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Multi-variable studies
+\end_layout
+
+\begin_layout Standard
+We now have an idea where the solution is most interesting, so we can do
+ a detailed study where we also monitor other variables such as surface
+ areas.
+ Additional variables to watch can be added to the STUDY clause of the statement.
+\end_layout
+
+\begin_layout LyX-Code
+STUDY {vessel_vol} {end_area} {side_area} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+IN {V} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+VARYING {{H_to_D_ratio} {0.5} {0.6} {0.7} {0.8) {0.9} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+{1} {1.1} {1.2} {1.3}} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+USING {QRSlv} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+OUTFILE {/usr0/ballan/ascdata/vvstudy.dat} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+ERROR STOP;
+\end_layout
+
+\begin_layout LyX-Code
+ASCPLOT {/usr0/ballan/ascdata/vvstudy.dat};
+\end_layout
+
+\begin_layout LyX-Code
+ASCPLOT CLOSE; #omit if you want to see data table
+\end_layout
+
+\begin_layout Subsubsection
+Multi-parameter studies
+\end_layout
+
+\begin_layout Standard
+We can also do a multi-parameter study, for example also varying the wall
+ thickness allowed.
+ In general, any number of the fixed variables can be varied in a single
+ study, but be aware that ASCENDs relatively simple plotting capabilities
+ do not yet include surface or contour maps so you will need another graphic
+ tool to view really pretty pictures.
+\end_layout
+
+\begin_layout LyX-Code
+STUDY {vessel_vol} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+IN {V} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+VARYING 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+{{H_to_D_ratio} {0.8) {0.9} {1} {1.1} {1.2} {1.3}} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+{{wall_thickness} {4 {mm}} {5 {mm}} {6 {mm}} {7 {mm}}} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+USING {QRSlv} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+OUTFILE {/usr0/ballan/ascdata/vvstudy.dat} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+ERROR STOP;
+\end_layout
+
+\begin_layout LyX-Code
+ASCPLOT {/usr0/ballan/ascdata/vvstudy.dat};
+\end_layout
+
+\begin_layout Standard
+In this study the peak volume occurs at the same H_to_D_ratio for any wall
+ thickness but the vessel volume increases for thinner walls.
+ This may be hard to see with the default graph settings, but column 2 in
+ rows 8-11 (H_to_D = 1.0) of the ASCPLOT data table have the largest volumes
+ for any given thickness in column 1.
+ Notice that the units must be specified for the wall_thickness values in
+ the VARYING clause.
+\end_layout
+
+\begin_layout Subsubsection
+Plotting output with other tools
+\end_layout
+
+\begin_layout Standard
+To convert the study results from the ASCPLOT format to a file more suitable
+ for importing into a spreadsheet, the following command does the trick.
+ As usual, change the names to match your ascdata directory.
+\end_layout
+
+\begin_layout LyX-Code
+asc_merge_data_files excel 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+{/usr0/ballan/ascdata/vvs.txt} 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+{/usr0/ballan/ascdata/vvstudy.dat}
+\end_layout
+
+\begin_layout Standard
+If you prefer Matlab style text, substitute matlab for excel in the line
+ above and change the output name from vvs.txt to vvs.m.
+\end_layout
+
+\begin_layout Subsection
+STUDY behavior details
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+variable list
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We now turn to the details of the STUDY statement.
+ As we saw in Section 4.2.2.1, any number of variables to be monitored can
+ follow the STUDY keyword.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+IN clause
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The IN clause specifies which part of a simulation is to be sent to the
+ Solver; a small part of a much larger model can be studied if you so desire.
+ All the variable and parameter names that follow the STUDY keyword and
+ that appear in the VARYING clause must be found in this part of the simulation.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+parameter list
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The VARYING clauses is a list of lists.
+ Each inner list gives the name of the parameter to vary followed by its
+ list of values.
+ Each possible combination of parameter values will be attempted in multi-parame
+ter studies.
+ If a case fails to solve, then the study will behave according to the option
+ set in the ERROR clause.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+solver name
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The solver named in the USING clause is invoked on each case.
+ The solver may be any of the algebraic solvers or optimizers, but the integrato
+rs (e.g.
+ LSODE) are not allowed.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+data file name
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The case data are stored in the file name which appears in the OUTFILE clause.
+ By default, this file is overwritten when a STUDY is started, so if you
+ want multiple result files, use separate file names.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+error handling
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+When the solver fails to converge or encounters an error, the STUDY can
+ either ignore it (ERROR IGNORE) and go on to the next case, warn you (ERROR
+ WARN) and go on to the next case, or stop (ERROR STOP).
+ The ERROR option makes it possible start a case study and go to lunch.
+ Cases which fail to solve will not appear in the output data file.
+\end_layout
+
+\begin_layout Standard
+Note that if the model is numerically ill-behaved it is possible for a case
+ to fail when there is in fact a solution for that combination of parameters.
+ STUDY uses the solution of the last successfully solved case as the initial
+ guess for the next case, but sometimes this is not the best strategy.
+ STUDY also does not attempt to rescale the problem from case to case.
+ When a case that you think should succeed fails, go back and investigate
+ that region of the model again manually or with a more narrowly defined
+ study.
+\end_layout
+
+\begin_layout Section
+Discussion
+\end_layout
+
+\begin_layout Standard
+We have just led you step by step through the process of creating, debugging
+ and solving a small ASCEND model.
+ We then showed you how to make this model more reusable, first by adding
+ comments and methods.
+ Methods capture the "how you got it well-posed" experience you had when
+ first solving an instance of the vessel model.
+ We then showed you how to parameterize this model and then use it to construct
+ a table of 
+\family typewriter
+metal_mass
+\family default
+ values vs.
+ 
+\family typewriter
+H_to_D_ratio
+\family default
+ values.
+ Finally we showed you how to add a plot of these results.
+ You should next look at the chapter in the documentation where you create
+ two more small ASCEND models.
+ This chapter gives you much less detail on the buttons to push.
+ Finally, if you are a chemical engineer, you should look at the chapter
+ on the script and model for a simple flowsheet (
+\family typewriter
+simple_fs.a4s
+\family default
+ and 
+\family typewriter
+simple_fs.a4c
+\family default
+ respectively).
+ 
+\end_layout
+
+\begin_layout Standard
+With this experience you should be ready to write your own simple ASCEND
+ models to solve problems that you might now think of solving using a spreadshee
+t.
+ Remember that once you have the model debugged in ASCEND, you can solve
+ inside out, backwards and upside down and NOT just the way you first posed
+ it -- unlike your typical use of a spreadsheet model.
+\end_layout
+
+\end_body
+\end_document
