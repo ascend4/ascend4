@@ -1,0 +1,1146 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Defining Variables and Scaling Values
+\begin_inset LatexCommand \label{cha:atoms}
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+the purpose of this chapter
+\end_layout
+
+\end_inset
+
+By now you have probably read Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \vref{cha:model1}
+
+\end_inset
+
+ and seen an example of how to create a model using existing variable types
+ in ASCEND.
+ You found that variables of types area, length, mass, mass_density, and
+ volume were needed and that they could be found in the library 
+\family typewriter
+atoms.a4l
+\family default
+.
+ You want to know how to generalize on that; how to use variables, constants,
+ and scaling values in your own models so that the models will be easier
+ to solve.
+\end_layout
+
+\begin_layout Standard
+This chapter is meant to explain the following things:
+\end_layout
+
+\begin_layout Itemize
+The "Big Picture" of how variables, constants, and scaling values relate
+ to the rest of the ASCEND IV language and to equations in particular.
+ We'll keep it simple here.
+ More precise explanations for the language purist can be found in our syntax
+ document **syntax.fm5**.
+ You do not need to read about the "Big Picture" in order to read and use
+ the other parts of this chapter, but you may find it helpful if you are
+ having trouble writing an equation
+\begin_inset LatexCommand \index{equation, writing}
+
+\end_inset
+
+ so that ASCEND will accept it.
+\end_layout
+
+\begin_layout Itemize
+How to find the type of variable (or constant) you want.
+ We keep a mess of interesting 
+\family typewriter
+ATOM
+\family default
+ and 
+\family typewriter
+CONSTANT
+\family default
+ definitions in 
+\family typewriter
+atoms.a4l
+\family default
+.
+ We provide tools to search in already loaded libraries to locate the type
+ you need.
+\end_layout
+
+\begin_layout Itemize
+How to define a new type of variable when we do not have a predefined 
+\family typewriter
+ATOM
+\family default
+ or 
+\family typewriter
+CONSTANT
+\family default
+ that suits your needs.
+ It is very easy to define your own variable types by copying code into
+ an atoms library of your own from 
+\family typewriter
+atoms.a4l
+\family default
+ and then editing the copied definition.
+\end_layout
+
+\begin_layout Itemize
+How to define a scaling variable to make your equations much easier to solve.
+\end_layout
+
+\begin_layout Section
+The Big Picture: a taxonomy
+\begin_inset LatexCommand \index{taxonomy}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As you read in Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:model1}
+
+\end_inset
+
+, simulations are built from MODEL and ATOM definitions, and MODEL and ATOM
+ definitions are defined by creating types in an ASCEND language text file
+ that you load into the ASCEND system.
+ Figure 
+\begin_inset LatexCommand \ref{fig:atoms.taxonomy}
+
+\end_inset
+
+
+\noun off
+ shows the types of objects that can be defined.
+ You can see there are many more types than simply real variables used for
+ writing equations.
+ Some of these types can also be used in equations.
+ You also see that there are three kinds of equations, not simply real relations.
+ Throughout our documentation we call real relations simply "relations"
+ because that is the kind of equation most people are interested in most
+ of the time.
+ Notice that "scaling values" do not appear in this diagram.
+ We will cover scaling values at the end of this The major features of this
+ diagram are:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+
+\noun off
+\begin_inset Graphics
+	filename howto-atomsFig1.eps
+	scale 90
+	BoundingBox 20bp 0bp 600bp 320bp
+	clip
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:atoms.taxonomy}
+
+\end_inset
+
+The big picture: how to think about variables
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+
+\noun off
+\begin_inset LatexCommand \index{atom}
+
+\end_inset
+
+
+\noun default
+ATOM
+\end_layout
+
+\begin_layout Itemize
+Any variable quantity for use in relations, logical relations, or when statement
+s or other computations.
+ These come in the usual programming language flavors real, boolean, symbol,
+ integer.
+ Not all kinds of atoms can be used in all kinds of equations, as we shall
+ explain when describing relations in a little bit.
+ Atoms may be assigned values many times interactively, with the Script
+ ASSIGN statement, with the METHOD := assignment operator, or by an ASCEND
+ client such as a solver.
+\end_layout
+
+\begin_layout Standard
+An ATOM may have attributes other than its value, such as .fixed in solver_var,
+ but these attributes are not atoms.
+ They are subatomic particles and cannot be used in equations.
+ These attributes are interpretable by ASCEND clients, and assignable by
+ the user in the same ways that the user assigns atom values.
+\end_layout
+
+\begin_layout Standard
+Each subatomic particle instance belongs to exactly one atom instance (one
+ variable in your compiled simulation).
+ This contrasts with an atom instance which can be shared among several
+ models by passing the atom instance from one model into another or by creating
+ aliases for it.
+\end_layout
+
+\begin_layout Paragraph
+\begin_inset LatexCommand \index{constant}
+
+\end_inset
+
+CONSTANT
+\end_layout
+
+\begin_layout Itemize
+Constants are "variables" that can be assigned no more than once.
+ By convention, all constant types in atoms.a4l have names that end in _constant
+ so that they are not easily confused with atoms.
+ A constant gets a values from the DEFAULT portion of its type definition,
+ by an interactive assignment, or by an assignment in the a model which
+ uses the :== assignment operator.
+ Constants cannot be assigned in a METHOD, nor can they be assigned with
+ the := operator.
+\end_layout
+
+\begin_layout Standard
+Integer and symbol constants can appear as members of sets or as subscripts
+ of arrays.
+ Integer, boolean, and symbol constants can be used to control SELECT statements
+ which determine your simulation's structure at compile-time or to control
+ SWITCH and WHEN behavior during problem solving .
+\end_layout
+
+\begin_layout Paragraph
+\begin_inset LatexCommand \index{set}
+
+\end_inset
+
+set
+\end_layout
+
+\begin_layout Itemize
+Sets are unordered lists of either integer or symbol constants.
+ A set is assigned its value exactly once.
+ The user interface always presents a set in sorted order, but this is for
+ convenience only.
+ Sets are useful for defining an array range or for writing indexed relations.
+ More about sets and their use can be found in **syntax.fm5**.
+\end_layout
+
+\begin_layout Paragraph
+\begin_inset LatexCommand \index{relationship}
+
+\end_inset
+
+relationships
+\end_layout
+
+\begin_layout Itemize
+Relations and logical relations allow you to state 
+\begin_inset LatexCommand \index{equalities}
+
+\end_inset
+
+equalities and 
+\begin_inset LatexCommand \index{inequalitites}
+
+\end_inset
+
+inequalities among the variables and constants in you models.
+ WHEN statements allow you to state relationships among the models and equations
+ which depend on the values of variables in those models.
+ Sets and symbols are not allowed in real or logical relations except when
+ used as array subscripts.
+\end_layout
+
+\begin_layout Standard
+Real
+\begin_inset LatexCommand \index{real}
+
+\end_inset
+
+ 
+\begin_inset LatexCommand \index{relation, real}
+
+\end_inset
+
+relations relate the values of real atoms, real constants, and integer constants.
+ Real relations cannot contain boolean constants and atoms, nor can they
+ contain integer atoms.
+ 
+\end_layout
+
+\begin_layout Standard
+Logical
+\begin_inset LatexCommand \index{logical}
+
+\end_inset
+
+ relations
+\begin_inset LatexCommand \index{logical relation}
+
+\end_inset
+
+ relate the values of boolean atoms and boolean constants.
+ The 
+\family typewriter
+SATISFIED
+\family default
+
+\begin_inset LatexCommand \index{SATISFIED}
+
+\end_inset
+
+ operator makes it possible to include real relations in a logical relation.
+ Neither integer atoms and constants nor real atoms and constants are allowed
+ in logical relations.
+ If you find yourself trying to write an equation with integer atoms, you
+ are really creating a conditional model for which you should use the WHEN
+ statement instead.
+ See **conditional modeling** to learn about how ASCEND represents this
+ kind of mathematical model.
+ There are also a real variable types, solver_integer and solver_binary,
+ which are used to formulate equations when the solver is expected to initially
+ treat the variable as a real value but drive it to an integer or 0-1 value
+ at the solution.
+ The integer programming features of ASCEND are described **elsewhere**.
+\end_layout
+
+\begin_layout Standard
+Like atoms, real and logical relations may have attributes, subatomic particles
+ for use by ASCEND clients and users.
+ The name of a relation can be used in writing logical relations and WHEN
+ statements.
+ 
+\end_layout
+
+\begin_layout Standard
+WHEN statements are outside the scope of this chapter; please see **conditional
+ modeling** or **syntax.fm5** for the details.
+\end_layout
+
+\begin_layout Paragraph
+\begin_inset LatexCommand \index{model}
+
+\end_inset
+
+
+\family typewriter
+MODEL
+\end_layout
+
+\begin_layout Itemize
+A model is simply a container for a collection of atoms, constants, sets,
+ relations, logical relations, when statements, and arrays of any of these.
+ The container also specifies some of the methods that can be used to manipulate
+ its contents.
+ Compiling a model creates an instance of it-- a simulation
+\begin_inset LatexCommand \index{simulation}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Paragraph
+
+\family typewriter
+SOLVER_VAR
+\end_layout
+
+\begin_layout Itemize
+The real atom type 
+\family typewriter
+solver_var
+\family default
+ is the type from which all real variables that you want the system to solve
+ for must spring.
+ If you define a real variable using a type which is not a refinement of
+ 
+\family typewriter
+solver_var
+\family default
+, all solvers will treat that variable as an a scaling value or other given
+ constant rather than as a variable.
+ 
+\end_layout
+
+\begin_layout Standard
+Solver_vars have a number of subatomic attributes (
+\family typewriter
+upper_bound
+\family default
+, 
+\family typewriter
+lower_bound
+\family default
+, and so forth) that help solvers find the solution of your model.
+ ATOM definitions specify appropriate default values for these attributes
+ that depend on the expected applications of the atom.
+ These attribute values can (and should) be modified by methods in the final
+ application model where the most accurate problem information is available.
+\end_layout
+
+\begin_layout Paragraph
+Scaling
+\begin_inset LatexCommand \index{scaling}
+
+\end_inset
+
+ value
+\end_layout
+
+\begin_layout Itemize
+A real that is not a member of the 
+\family typewriter
+solver_var
+\family default
+ family is ignored by the solver.
+ Numerical solvers for problems with many equations in many variables work
+ better if the error computed for each equation (before the system is solved)
+ is of approximately size 1.0.
+ This is most critical when you are starting to solve a new problem at values
+ far, far away from the solution.
+ When the error of one equation is much larger than the errors in the others,
+ that error will skew the behavior of most numerical solvers and will cause
+ poor performance.
+ 
+\end_layout
+
+\begin_layout Standard
+This is one of the many reasons that scientists and engineers work with
+ dimensionless models
+\begin_inset LatexCommand \index{dimensionless models}
+
+\end_inset
+
+: the process of scaling the equations into dimensionless form has the effect
+ of making the error of each equation roughly the same size even far away
+ from the solution.
+ It is sometimes easiest to obtain a dimensionless equation by writing the
+ equation in its dimensional form using natural variables and then dividing
+ both sides by an appropriate scaling value.
+ We will see how to define an atom for scaling purposes in the last part
+ of this chapter.
+\end_layout
+
+\begin_layout Section
+How to find the right variable type
+\begin_inset LatexCommand \index{type, variable}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The type of real atom you want to use depends first on the dimensionality
+ (length, mass/time, etc.) needed and then on the application in which the
+ atom is going to be used.
+ For example, if you are modeling a moving car and you want an atom type
+ to describe the car's speed, then you need to find an atom with dimensionality
+ length/time or in ASCEND terms L/T.
+ There may be two or three types with this dimensionality, possibly including
+ real_constants, a real scaling value, and an atom derived from solver_var.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Load atoms.a4l
+\end_layout
+
+\end_inset
+
+The first step to finding the variable type needed is to make sure that
+ atoms.a4l is loaded in your Library window from 
+\family typewriter
+ascend4/models/atoms.a4l
+\family default
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Find an ATOM or CONSTANT by units
+\end_layout
+
+\end_inset
+
+The next step is to open the "ATOM by units" dialog found in the Library
+ window's Find menu.
+ This dialog asks for the units of the real variable type you want.
+ For our example, speed, you would enter "feet/second," "furlongs/fortnight,"
+ "meter^3/second/ft^2" or any other combination of units that corresponds
+ to the dimensionality L/T.
+ 
+\end_layout
+
+\begin_layout Standard
+If the system is able to deduce the dimensionality of the units you have
+ entered, it will return a list of all the currently loaded ATOM and CONSTANT
+ definitions with matching dimensions.
+ It may fail to understand the units, in which case you should try the correspon
+ding SI units.
+ If it understands the units but there are no matching atoms or constants,
+ you will be duly informed.
+ If there is no atom that meets your needs, you should create one as outlined
+ in **the next section**.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Selecting the right type
+\end_layout
+
+\end_inset
+
+The resulting list of types includes a Code button which will display the
+ definition of any of the types listed once you select (highlight) that
+ type with the mouse.
+ Usually you will need to examine several of the alternatives to see which
+ one is most appropriate to the physics and mathematics of your problem.
+ Compare the default, bounds, and nominal values defined to those you need.
+ Check whether the type you are looking at is a 
+\family typewriter
+CONSTANT
+\family default
+ or an 
+\family typewriter
+ATOM
+\family default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+You now know the name of the variable type you need, or you know that you
+ must create a new one to suit your needs.
+\end_layout
+
+\begin_layout Section
+How to define a new type of variable
+\begin_inset LatexCommand \index{type, variable}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{ssec:atoms.newVarType}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this section we will give examples of defining the atom and constant
+ types as well as outline a few exceptional situations when you should NOT
+ define a new type.
+ More examples can be found and copied from 
+\family typewriter
+atoms.a4l
+\family default
+.
+ You should define your new atoms in your personal atoms library.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Saving customized variable types
+\end_layout
+
+\end_inset
+
+The user data file 
+\family typewriter
+~
+\backslash
+ascdata
+\backslash
+myatoms.a4l
+\family default
+ is  the normal location for a personal
+\begin_inset LatexCommand \index{library, personal}
+
+\end_inset
+
+library.
+ This file contains the following three lines and then the 
+\family typewriter
+ATOM
+\family default
+ and 
+\family typewriter
+CONSTANT
+\family default
+ definitions you create.
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "atoms.a4l"; (* loads our atoms first *)
+\end_layout
+
+\begin_layout LyX-Code
+PROVIDE "myatoms.a4l"; (* registers your library *)
+\end_layout
+
+\begin_layout LyX-Code
+(* Custom atoms created by <insert your name here> *)
+\end_layout
+
+\begin_layout Standard
+If you develop an interesting set of atoms for some problem domain outside
+ chemical engineering thermodynamics, please consider mailing it to us through
+ our web page.
+ 
+\end_layout
+
+\begin_layout Standard
+The user data directory 
+\family typewriter
+~/
+\begin_inset LatexCommand \index{ascdata}
+
+\end_inset
+
+ascdata
+\family default
+ may have a different name if you are running under Windows and do not have
+ the environment variable HOME
+\begin_inset LatexCommand \index{HOME}
+
+\end_inset
+
+ defined.
+ It may be something like C:
+\backslash
+ascdata or 
+\backslash
+WINNT
+\backslash
+Profiles
+\backslash
+Your Name
+\backslash
+ascdata.
+ When ASCEND is started, it prints out the name of this directory.
+\end_layout
+
+\begin_layout Standard
+When you write a 
+\family typewriter
+MODEL
+\family default
+ which depends on the definition of your new atoms, do not forget to add
+ the statement
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "myatoms.a4l";
+\end_layout
+
+\begin_layout Standard
+at the very top of your model file so that your atoms will be loaded before
+ your model definitions try to use them.
+\end_layout
+
+\begin_layout Subsection
+A new real variable for solver use
+\end_layout
+
+\begin_layout Standard
+Suppose you need an atom with units {dollar/ft^2/year} for some equation
+ relating amortized construction costs to building size.
+ Maybe this example is a bit far fetched, but it is a safe bet that our
+ library is not going to have an atom or a constant for these units.
+ Here is the standard incantation for defining a new variable type based
+ on 
+\family typewriter
+solver_var
+\family default
+.
+ ASCEND allows a few permutations on this incantation, but they are of no
+ practical value.
+ The parts of this incantation that are in italics should be changed to
+ match your needs.
+ You can skip the comments, but you 
+\emph on
+must
+\emph default
+ include the units of the default on the bounds and nominal.
+\end_layout
+
+\begin_layout LyX-Code
+ATOM amortized_area_cost 
+\end_layout
+
+\begin_layout LyX-Code
+REFINES solver_var DEFAULT 3.0 {dollar/ft^2/year};
+\end_layout
+
+\begin_layout LyX-Code
+lower_bound := 0 {dollar/ft^2/year};
+\end_layout
+
+\begin_layout LyX-Code
+(* minimum value *)
+\end_layout
+
+\begin_layout LyX-Code
+upper_bound := 10000 {dollar/ft^2/year};
+\end_layout
+
+\begin_layout LyX-Code
+(* maximum value for any sane application *)
+\end_layout
+
+\begin_layout LyX-Code
+nominal := 10 {dollar/ft^2/year}; 
+\end_layout
+
+\begin_layout LyX-Code
+(* expected size for all reasonable applications*)
+\end_layout
+
+\begin_layout LyX-Code
+END amortized_area_cost;
+\end_layout
+
+\begin_layout Standard
+In picking the name of your atom, remember that names should be as self-explanat
+ory as possible.
+ Also avoid choosing a name that ends in _constant (as this is conventionally
+ applied only to CONSTANT
+\begin_inset LatexCommand \index{CONSTANT}
+
+\end_inset
+
+ definitions) or _parameter.
+ Parameter is an extremely ambiguous and therefore useless word.
+ Also remember that the role a variable plays in solving a set of equations
+ depends on how the solver being applied interprets .fixed and other attributes
+ of the variable.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Exceptions 
+\end_layout
+
+\end_inset
+
+If an atom type matches all but one of the attributes you need for your
+ problem, say for example the 
+\family typewriter
+upper_bound
+\family default
+ is way too high, use the existing variable type and reassign the bound
+ to a more sensible value in the 
+\family typewriter
+default_self
+\family default
+ method of the model where the variable is created.
+ Having a dozen atoms defined for the same units gets confusing in short
+ order to anyone you might share your models with.
+\end_layout
+
+\begin_layout Standard
+The exception to the exception (yes, there always seems to be one of those)
+ is the case of a 
+\family typewriter
+lower_bound
+\family default
+ set at zero.
+ Usually a 
+\family typewriter
+lower_bound
+\family default
+ of zero indicates that there is something inherently positive about variables
+ of that type.
+ Variables with a bound of this type should not have these physical bounds
+ expanded in an application.
+ Another example of this type of bound is the 
+\family typewriter
+upper_bound
+\family default
+ 1.0 on the type fraction.
+\end_layout
+
+\begin_layout Standard
+For example, negative temperature just is not sensible for most physical
+ systems.
+ ASCEND defines a temperature atom for use in equations involving the absolute
+ temperature.
+ On the other hand, a temperature difference, delta T, is frequently negative
+ so a separate atom is defined.
+ Anyone receiving a model written using the two types of atoms, which both
+ have units of {Kelvin}, can easily tell which variables might legitimately
+ take on negative values by noting whether the variable is defined as a
+ temperature or a delta_temperature.
+\end_layout
+
+\begin_layout Subsection
+A new real constant
+\begin_inset LatexCommand \index{real constant}
+
+\end_inset
+
+ 
+\begin_inset LatexCommand \index{constant, real}
+
+\end_inset
+
+type
+\end_layout
+
+\begin_layout Standard
+Real constants which do not have a default value are usually needed only
+ in libraries of reusable models, such as 
+\family typewriter
+components.a4l
+\family default
+, where the values depend on the end-user's selection from alternatives
+ in a database.
+ The standard incantation to define a new real constant type is:
+\end_layout
+
+\begin_layout LyX-Code
+CONSTANT 
+\shape italic
+critical_pressure_constant
+\end_layout
+
+\begin_layout LyX-Code
+REFINES real_constant DIMENSION 
+\shape italic
+M/L/T^2
+\shape default
+; 
+\end_layout
+
+\begin_layout Standard
+Here again, the italic parts of this incantation should be redefined for
+ your purpose.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Universal exceptions and unit conversions
+\end_layout
+
+\end_inset
+
+It is wasteful to define a 
+\family typewriter
+CONSTANT
+\family default
+ type and a compiled object to represent a universal
+\begin_inset LatexCommand \index{universal constant}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{constant, universal}
+
+\end_inset
+
+ constant.
+ For example, the thermodynamic gas constant, R = 8.314...
+ {J/mole/K}, is frequently needed in modeling chemical systems.
+ The SI value of R does not vary with its application.
+ Neither does the value of 
+\begin_inset LatexCommand \index{pi}
+
+\end_inset
+
+
+\begin_inset Formula $\pi$
+\end_inset
+
+.
+ Numeric constants of this sort are better represented as a numeric coefficient
+ and an appropriately defined unit conversion.
+ Consider the 
+\begin_inset LatexCommand \index{ideal gas law}
+
+\end_inset
+
+ideal gas law, PV = NRT and the ASCEND unit conversion {GAS_C} which appears
+ in the library ascend4/models/measures.a4l.
+ This equation should be written:
+\end_layout
+
+\begin_layout LyX-Code
+P * V = n * 1.0{GAS_C} * T;
+\end_layout
+
+\begin_layout Standard
+Similarly, area = pi*r^2 should be written
+\end_layout
+
+\begin_layout LyX-Code
+area = 1{PI} * r^2;
+\end_layout
+
+\begin_layout Standard
+The coefficient 1 of 
+\family typewriter
+{GAS_C}
+\family default
+ and {PI} in these equations takes of the dimensionality of and is multiplied
+ by the conversion factor implied by the 
+\family typewriter
+UNITS
+\family default
+ definition for the units.
+ If we check 
+\family typewriter
+measures.a4l
+\family default
+, we find the definition of PI is simply {3.14159...} and the definition of
+ 
+\family typewriter
+GAS_C
+\family default
+ is {8.314...
+ J/mole/K} as we ought to expect.
+\end_layout
+
+\begin_layout Standard
+For historical reasons there are a few universal constant definitions in
+ 
+\family typewriter
+atoms.a4l
+\family default
+.
+ New modelers should not use them; they are only provided to support outdated
+ models that no one has yet taken the time to update.
+\end_layout
+
+\begin_layout Subsection
+New types for integers, symbols, and booleans 
+\end_layout
+
+\begin_layout Standard
+The syntax for 
+\family typewriter
+ATOM
+\family default
+ and 
+\family typewriter
+CONSTANT
+\family default
+ definitions of the non-real types is the same as for real number types,
+ except that units are not involved.
+ Take your best guess based on the examples above, and you will get it right.
+ If even that is too hard, more details are given in **syntax.fm5**.
+\end_layout
+
+\begin_layout Section
+How to define a 
+\begin_inset LatexCommand \index{scaling}
+
+\end_inset
+
+scaling variable
+\end_layout
+
+\begin_layout Standard
+A scaling variable 
+\family typewriter
+ATOM
+\family default
+ is defined with a name that ends in _scale as follows.
+ Note that this 
+\family typewriter
+ATOM
+\family default
+ does not refine 
+\family typewriter
+solver_var
+\family default
+, so solvers will not try to change variables of this type during the solution
+ process.
+\end_layout
+
+\begin_layout LyX-Code
+ATOM distance_scale REFINES real DEFAULT 1.0{meter};
+\end_layout
+
+\begin_layout LyX-Code
+END distance_scale;
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+ASCEND cannot do it all for you
+\end_layout
+
+\end_inset
+
+ASCEND uses a combination of symbolic and numerical techniques to create
+ and solve mathematical problems.
+ Once you get the problem close to the solution, ASCEND can internally compute
+ its own scaling values for relations, known elsewhere as "relation nominals
+\begin_inset LatexCommand \index{nominals}
+
+\end_inset
+
+,
+\begin_inset Quotes erd
+\end_inset
+
+ assuming you have set good values for the .nominal attribute of all the
+ variables.
+ It does this by computing the largest additive term in each equation.
+ The absolute value of this term is a very good scaling value.
+\end_layout
+
+\begin_layout Standard
+This internal scaling works quite well, but not when the problem is very
+ far away from the solution so that the largest additive terms computed
+ are not at all representative of the physical situation being modeled.
+ The 
+\family typewriter
+scale_self
+\family default
+
+\begin_inset LatexCommand \index{scale\_self}
+
+\end_inset
+
+ method, which should be written for every model as described in Section\InsetSpace ~
+
+\begin_inset LatexCommand \ref{sssec:methods.scaleself}
+
+\end_inset
+
+ of Chapter
+\noun off
+\InsetSpace ~
+
+\begin_inset LatexCommand \vref{cha:methods}
+
+\end_inset
+
+ should set the equation scaling values you have defined in a 
+\family typewriter
+\noun default
+MODEL
+\family default
+\noun off
+ based on the best available information.
+ In a chemical engineering flowsheeting problem, for example, information
+ about a key process material flow should be propagated throughout the process
+ flowsheet to scale all the other flows, material balance equations, and
+ energy balance equations.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Scaling atom default value
+\end_layout
+
+\end_inset
+
+The 
+\begin_inset LatexCommand \index{default value}
+
+\end_inset
+
+default value for any scaling atom should always be 1.0 in appropriate SI
+ units, so that the scaling will have no effect until you assign a problem
+ specific value.
+ Multiplying or dividing both sides of an equation by 1.0 obviously will
+ not change the mathematical behavior, but you do not want to change the
+ behavior arbitrarily either-- you want to change it based on problem informatio
+n that is not contained in your 
+\family typewriter
+myatoms.a4l
+\family default
+ file.
+\end_layout
+
+\end_body
+\end_document

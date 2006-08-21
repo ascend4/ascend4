@@ -1,0 +1,536 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Entering Dimensional Equations
+\begin_inset LatexCommand \index{equation, dimensional}
+
+\end_inset
+
+ from Handbooks
+\begin_inset LatexCommand \label{cha:dimeqns}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Often in creating an ASCEND model one needs to enter a correlation
+\begin_inset LatexCommand \index{correlation}
+
+\end_inset
+
+ given in a handbook that is written in terms of variables expressed in
+ specific units.
+ In this chapter, we examine how to do this easily and correctly in a system
+ like ASCEND where all equations must be dimensionally correct.
+\end_layout
+
+\begin_layout Section
+Example 1-- vapor pressure
+\begin_inset LatexCommand \index{pressure, vapor}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Our first example is the equation to express vapor pressure using an Antoine
+\begin_inset LatexCommand \index{Antoine}
+
+\end_inset
+
+-like equation of the form:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{equation}
+\ln(P_{sat})=A-\frac{B}{T+C}\label{eqn:dimeqns.lnPsat}\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $P_{sat}$
+\end_inset
+
+ is in {atm} and 
+\begin_inset Formula $T$
+\end_inset
+
+ in {R}.
+ When one encounters this equation in a handbook, one then finds tabulated
+ values for 
+\begin_inset Formula $A$
+\end_inset
+
+, 
+\begin_inset Formula $B$
+\end_inset
+
+ and 
+\begin_inset Formula $C$
+\end_inset
+
+ for different chemical species.
+ The question we are addressing is:
+\end_layout
+
+\begin_layout Quote
+How should one enter this equation into ASCEND so one can then enter the
+ constants A, B, and C with the exact values given in the handbook?
+\end_layout
+
+\begin_layout Standard
+ASCEND uses SI
+\begin_inset LatexCommand \index{SI}
+
+\end_inset
+
+ units internally.
+ Therefore, P would have the units {kg/m/s^2}, and T would have the units
+ {K}.
+\end_layout
+
+\begin_layout Standard
+Eqn 
+\begin_inset LatexCommand \ref{eqn:dimeqns.lnPsat}
+
+\end_inset
+
+
+\noun off
+ is, in fact, dimensionally incorrect as written.
+ We know how to use this equation, but ASCEND does not as ASCEND requires
+ that we write dimensionally correct equations.
+ For one thing, we can legitimately take the natural log (ln) only of unitless
+ quantities.
+ Also, the handbook will tabulate the values for A, B and C without units.
+ If A is dimensionless, then B and C would require the dimensions of temperature.
+\end_layout
+
+\begin_layout Standard
+The mindset we describe in this chapter is to enter such equations is to
+ make all quantities that must be expressed in particular units into dimensionle
+ss quantities that have the correct numerical value.
+\end_layout
+
+\begin_layout Standard
+We illustrate in the following subsections just how to do this conversion.
+ It proves to be very straight forward to do.
+\end_layout
+
+\begin_layout Subsection
+Converting the ln term
+\end_layout
+
+\begin_layout Standard
+Convert the quantity within the ln() term into a dimensionless number that
+ has the value of pressure when pressure is expressed in {atm}.
+\end_layout
+
+\begin_layout Standard
+Very simply, we write
+\end_layout
+
+\begin_layout LyX-Code
+P_atm = P/1{atm};
+\end_layout
+
+\begin_layout Standard
+Note that P_atm has to be a dimensionless quantity here.
+\end_layout
+
+\begin_layout Standard
+We then rewrite the LHS of Equation 
+\begin_inset LatexCommand \ref{eqn:dimeqns.lnPsat}
+
+\end_inset
+
+
+\noun off
+ as
+\end_layout
+
+\begin_layout LyX-Code
+ln(P_atm)
+\end_layout
+
+\begin_layout Standard
+Suppose P = 2 {atm}.
+ In SI units P= 202,650 {kg/m/s^2}.
+ In SI units, the dimensional constant 1{atm} is about 101,325 {kg/m/s^2}.
+ Using this definition, P_atm has the value 2 and is dimensionless.
+ ASCEND will not complain with P_atm as the argument of the ln
+\begin_inset LatexCommand \index{ln}
+
+\end_inset
+
+ () function, as it can take the natural log of the dimensionless
+\begin_inset LatexCommand \index{dimensionless}
+
+\end_inset
+
+ quantity 2 without any difficulty.
+\end_layout
+
+\begin_layout Subsection
+Converting the RHS
+\end_layout
+
+\begin_layout Standard
+We next convert the RHS of Equation 
+\begin_inset LatexCommand \ref{eqn:dimeqns.lnPsat}
+
+\end_inset
+
+
+\noun off
+, and it is equally as simple.
+ Again, convert the temperature used in the RHS into:
+\end_layout
+
+\begin_layout LyX-Code
+T_R = T/1{R};
+\end_layout
+
+\begin_layout Standard
+ASCEND converts the dimensional constant 1{R} into 0.55555555...{K}.
+ Thus T_R is dimensionless but has the value that T would have if expressed
+ in {R}.
+\end_layout
+
+\begin_layout Subsection
+In summary for example 1
+\end_layout
+
+\begin_layout Standard
+We do not need to introduce the intermediate dimensionless variables.
+ Rather we can write:
+\end_layout
+
+\begin_layout LyX-Code
+ln(P/1{atm}) = A - B/(T/1{R} + C);
+\end_layout
+
+\begin_layout Standard
+as a correct form for the dimensional equation.
+ When we do it in this way, we can enter A, B and C as dimensionless quantities
+ with the values exactly as tabulated.
+\end_layout
+
+\begin_layout Section
+Fahrenheit
+\begin_inset LatexCommand \index{Fahrenheit}
+
+\end_inset
+
+-- variables with offset
+\begin_inset LatexCommand \label{sec:dimeqns.Fahrenheit}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+What if we write Equation 
+\begin_inset LatexCommand \ref{eqn:dimeqns.lnPsat}
+
+\end_inset
+
+
+\noun off
+ but the handbook says that T is in degrees Fahrenheit, i.e., in {F}? The
+ conversion from {K} to {F} is
+\end_layout
+
+\begin_layout LyX-Code
+T{F} = T{K}*1.8 - 459.67
+\end_layout
+
+\begin_layout Standard
+and the 459.67 is an offset.
+ ASCEND does not support an offset for units conversion.
+ We shall discuss the reasons for this apparent limitation in Section 
+\begin_inset LatexCommand \ref{ssec:dimeqns.handlingUnitConv}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+You can readily handle temperatures in {F} if you again think as we did
+ above.
+ The rule, even for units requiring an offset for conversion, remains: convert
+ a dimensional variable into dimensionless one such that the dimensionless
+ one has the proper value.
+\end_layout
+
+\begin_layout Standard
+Define a new variable
+\end_layout
+
+\begin_layout LyX-Code
+T_degF = T/1{R} - 459.67;
+\end_layout
+
+\begin_layout Standard
+Then code 
+\begin_inset LatexCommand \ref{eqn:dimeqns.lnPsat}
+
+\end_inset
+
+
+\noun on
+Equation 7.1
+\noun off
+ as
+\end_layout
+
+\begin_layout LyX-Code
+ln(P/1{atm}) = A - B/(T_degF + C);
+\end_layout
+
+\begin_layout Standard
+when entering it into ASCEND.
+ You will then enter constants A, B, and C as dimensionless quantities having
+ the values exactly as tabulated.
+ In this example we must create the intermediate variable T_degF.
+\end_layout
+
+\begin_layout Section
+Example 3-- pressure drop
+\begin_inset LatexCommand \label{ssec:dimeqns.pressure drop}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+From the Chemical Engineering Handbook
+\begin_inset LatexCommand \index{Chemical Engineering Handbook}
+
+\end_inset
+
+ by Perry
+\begin_inset LatexCommand \index{Perry}
+
+\end_inset
+
+ and Chilton
+\begin_inset LatexCommand \index{Chilton}
+
+\end_inset
+
+, Fifth Edition, McGraw-Hill, p10-33, we find the following correlation:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\Delta P_{a}^{\prime}=\frac{y(V_{g}-V_{l})G^{2}}{144g}\]
+
+\end_inset
+
+where the pressure drop on the LHS is in psi, y is the fraction vapor by
+ weight (i.e., dimensionless), Vg and Vl are the specific volumes of gas and
+ liquid respectively in ft3/lbm, G is the mass velocity in lbm/hr/ft2 and
+ g is the acceleration by gravity and equal to 4.18x108 ft/hr2.
+\end_layout
+
+\begin_layout Standard
+We proceed by making each term dimensionless and with the right numerical
+ value for the units in which it is to be expressed.
+ The following is the result.
+ We do this by simply dividing each dimensional variable by the correct
+ unit conversion factor.
+\end_layout
+
+\begin_layout LyX-Code
+delPa/1{psi} = y*(Vg-Vl)/1{ft^3/lbm}*
+\end_layout
+
+\begin_layout LyX-Code
+              (G/1{lbm/hr/ft^2})^2/(144*4.18e8);
+\end_layout
+
+\begin_layout Section
+The difficulty of handling unit conversions defined with offset
+\begin_inset LatexCommand \label{ssec:dimeqns.handlingUnitConv}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+How do you convert temperature from Kelvin to centigrade? The ASCEND compiler
+ encounters the following ASCEND statement:
+\end_layout
+
+\begin_layout LyX-Code
+d1T1 = d1T2 + a.Td[4];
+\end_layout
+
+\begin_layout Standard
+and d1T1 is supposed to be reported in centigrade.
+ We know that ASCEND stores termperatures in Kelvin {K}.
+ We also know that one converts {K} to {C} with the following relationshipT{C}
+ = T{K} - 273.15.
+\end_layout
+
+\begin_layout Standard
+Now suppose d1T2 has the value 173.15 {K} and a.Td{4} has the value 500 {K}.
+ What is d1T1 in {C}? It would appear to have the value 173.15+500-273.15
+ = 400 {C}.
+ But what if the three variables here are really temperature differences?
+ Then the conversion should be T{dC} = T{dK}, where we use the notation
+ {dC} to be the units for temperature difference in centigrade and {dK}
+ for differences in Kelvin.
+ Then the correct answer is 173.15+500=673.15 {dC}.
+ 
+\end_layout
+
+\begin_layout Standard
+Suppose d1T1 is a temperature and d1T2 is a temperature difference (which
+ would indicate an unfortunate but allowable naming scheme by the creator
+ of this statement).
+ It turns out that a.Td[4] is then required to be a temperature and not a
+ temperature difference for this equation to make sense.
+ We discover that an equation written to have a right-hand-side of zero
+ and that involves the sums and differences of temperature and temperature
+ difference variables will have to have an equal number of positive and
+ negative temperatures in it to make sense, with the remaining having to
+ be temperature differences.
+ Of course if the equation is a correlation, such may not be the case, as
+ the person deriving the correlation is free to create an equation that
+ "fits" the data without requiring the equation to be dimensionally (and
+ physically) reasonable.
+\end_layout
+
+\begin_layout Standard
+We could create the above discussion just as easily in terms of pressure
+ where we distinguish absolute from gauge pressures (e.g., {psia} vs.
+ {psig}).
+ We would find the need to introduce units {dpisa} and {dpsig} also.
+ 
+\end_layout
+
+\begin_layout Subsection
+General offset
+\begin_inset LatexCommand \index{offset}
+
+\end_inset
+
+ and difference units
+\begin_inset LatexCommand \index{difference units}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Unfortunately, we find we have to think much more generally than the above.
+ Any unit conversion can be introduced both with and without offset.
+ Suppose we have an equation which involves the sums and diffences of terms
+ t1 to t4:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{equation}
+t_{1}+t_{2}-(t+t_{4})=0\label{eqn:t1+t2}\end{equation}
+
+\end_inset
+
+where the units for each term is some combination of basic units, e.g., {ft/s^2/R}.
+ Let us call this combination {X} and add it to our set of allowable units,
+ i.e., we define
+\emph on
+{X} = {ft/s^2/R}.
+
+\emph default
+ 
+\end_layout
+
+\begin_layout Standard
+Suppose we define units {Xoffset} to satisfy: {Xoffset} = {X} - 10 as another
+ set of units for our system.
+ We will also have to introduce the concept of {dX} and and should probably
+ introduce also {dXoffset} to our system, with these two obeying{dXoffset}
+ = {Xoffset}.
+ 
+\end_layout
+
+\begin_layout Standard
+For what we might call a "well-posed" equation, we can argue that the coefficien
+t of variables in units such as {Xoffset} have to add to zero with the remaining
+ being in units of {dX} and {dXoffset}.
+ Unfortunately, the authors of correlation equations are not forced to follow
+ any such rule, so you can find many published correlations that make the
+ most awful (and often unstated) assumptions about the units of the variables
+ being correlated.
+\end_layout
+
+\begin_layout Standard
+Will the typical modeler get this right? We suspect not.
+ We would need a very large number of unit conversion combinations in both
+ absolute, offset and relative units to accomodate this approach.
+\end_layout
+
+\begin_layout Standard
+We suggest that our approach to use only absolute units with no offset is
+ the least confusing for a user.
+ Units conversion is then just multiplication by a factor both for absolute
+ {X} and difference {dX} units-- we do not have to introduce difference
+ variables because we do not introduce offset units.
+ 
+\end_layout
+
+\begin_layout Standard
+When users want offset units such as gauge pressure or Fahrenheit for temperatur
+e, they can use the conversion to dimensionless variables having the right
+ value, using the style we introduced above, i.e., T_defF = T/1{R} - 459.67
+ and P_psig = P/1{psi} - 14.696 as needed.
+\end_layout
+
+\begin_layout Standard
+Both approaches to handling offset introduce undesirable and desirable character
+istics to a modeling system.
+ Neither allow the user to use units without thinking carefully.
+ We voted for this form because of its much lower complexity.
+\end_layout
+
+\end_body
+\end_document

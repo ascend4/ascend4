@@ -1,0 +1,795 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize default
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Defining New Units of Measure
+\begin_inset LatexCommand \label{cha:units}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Occasionally units of measure are needed that do not come predefined in
+ the ASCEND system.
+ You can define a new unit of measure by defining the conversion factor.
+ In this chapter, we examine how to do this easily for an individual user
+ and on a system-wide basis.
+ 
+\end_layout
+
+\begin_layout Section
+
+\emph on
+Caveats
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Order matters!
+\end_layout
+
+\end_inset
+
+Order matters for defining units of measure in three ways.
+\end_layout
+
+\begin_layout Itemize
+a unit of measure must be defined before it is used anywhere.
+\end_layout
+
+\begin_layout Itemize
+the first definition ASCEND reads for a unit of measure is the only definition
+ ASCEND sees.
+\end_layout
+
+\begin_layout Itemize
+new units can be defined only from already defined units.
+\end_layout
+
+\begin_layout Standard
+Measuring units are absolutely global in the ASCEND environment -- they
+ are not deleted when the Library of types is deleted.
+ Once you define a unit's conversion factor, you are stuck with it until
+ you shut down and restart ASCEND.
+ For any unit conversion definition, only the first conversion factor seen
+ is accepted.
+ Redefinitions of the same unit are ignored.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Multiplicative unit conversions only!
+\end_layout
+
+\end_inset
+
+The various units ASCEND uses are all obtained by conversion factors (multiplica
+tion only) from the SI units.
+ So, for example, temperatures may be in degrees Rankine but not in Fahrenheit.
+ In this chapter we address creating new conversion factors.
+ For handling non-
+\end_layout
+
+\begin_layout Standard
+multiplicative conversions (such as the Fahrenheit or Celsius offsets) see
+ Section\InsetSpace ~
+
+\begin_inset LatexCommand \vref{sec:dimeqns.Fahrenheit}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Individualised units
+\end_layout
+
+\begin_layout Standard
+There are two scenarios for individualized units of measure.
+ One in which you need a measure defined only for a specific model and another
+ in which you want to define a measure that you will use throughout your
+ modeling activities in the future.
+ The syntax for both is the same, but where best to put the UNITS statement
+ differs.
+\end_layout
+
+\begin_layout Subsection
+Units of measure for a specific model
+\end_layout
+
+\begin_layout Standard
+Units of measure that are used in only one model can be defined at the beginning
+ of the model itself or before the model, but not the units appear in the
+ model definition.
+ Let us suppose you want to measure speed in {furlong/fortnight} in a model.
+ ASCEND does not define 
+\family typewriter
+furlong
+\family default
+, 
+\family typewriter
+fortnight
+\family default
+, or 
+\family typewriter
+furlong/fortnight
+\family default
+.
+ (Interestingly, we have been unable to find standard definitions for them!).
+\end_layout
+
+\begin_layout LyX-Code
+MODEL mock_turtle;
+\end_layout
+
+\begin_layout LyX-Code
+    d IS_A distance;
+\end_layout
+
+\begin_layout LyX-Code
+    delta_t IS_A time;
+\end_layout
+
+\begin_layout LyX-Code
+s IS_A speed
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+    s = d/delta_t;
+\end_layout
+
+\begin_layout LyX-Code
+       (* We really should write s * delta_t = d;
+\end_layout
+
+\begin_layout LyX-Code
+       to avoid division by zero.
+ *)
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+UNITS
+\end_layout
+
+\begin_layout LyX-Code
+    furlong = {3.17*kilometer};
+\end_layout
+
+\begin_layout LyX-Code
+    fortnight = {10*day};
+\end_layout
+
+\begin_layout LyX-Code
+END UNITS;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+    d := 1 {furlong};
+\end_layout
+
+\begin_layout LyX-Code
+    t := 5 {hours};
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+ 
+\end_layout
+
+\begin_layout LyX-Code
+(* other standard methods omitted *)
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+END mock_turtle;
+\end_layout
+
+\begin_layout Standard
+In mock_turtle we define 
+\family typewriter
+furlong
+\family default
+ and 
+\family typewriter
+fortnight
+\family default
+ conversions 
+\series bold
+before
+\series default
+ they are used in the methods and before any equations which use them.
+ Also, notice that, even though ASCEND rejects this model 
+\family typewriter
+mock_turtle
+\family default
+, as it will because of the missing "
+\family typewriter
+;
+\family default
+" after "speed" in the fourth line, 
+\family typewriter
+furlong
+\family default
+ and 
+\family typewriter
+fortnight
+\family default
+ still get defined.
+ The 
+\family typewriter
+UNITS
+\family default
+ statement can appear in any context and gets processed regardless of any
+ other errors in that context.
+\end_layout
+
+\begin_layout Subsection
+UNITS OF MEASURE FOR ALL YOUR PERSONAL MODELS
+\end_layout
+
+\begin_layout Standard
+If you commonly use a set of units that is not in the default ASCEND library
+ 
+\family typewriter
+measures.a4l
+\family default
+, you can create your own personal library of units in the user data directory
+ 
+\family typewriter
+ascdata
+\family default
+.
+ The location of this directory is given by ASCEND at the end of all the
+ start-up spew it prints to the Console window (or xterm under UNIX) as
+ shown below.
+ You will see a path other than 
+\family typewriter
+/usr0/ballan/
+\family default
+ of course.
+\end_layout
+
+\begin_layout LyX-Code
+-----------------------------------
+\end_layout
+
+\begin_layout LyX-Code
+User data directory is /usr0/ballan/ascdata
+\end_layout
+
+\begin_layout LyX-Code
+-----------------------------------
+\end_layout
+
+\begin_layout Standard
+Create the library file 
+\family typewriter
+myunits.a4l
+\family default
+ in your 
+\family typewriter
+ascdata
+\family default
+ directory.
+ This file should contain a 
+\family typewriter
+UNITS
+\family default
+ statement and any comments or 
+\family typewriter
+NOTES
+\family default
+ you wish to make.
+ This file should contain any conversions that you change often.
+ For example:
+\end_layout
+
+\begin_layout LyX-Code
+UNITS
+\end_layout
+
+\begin_layout LyX-Code
+    (* Units for Norway, maybe?*)
+\end_layout
+
+\begin_layout LyX-Code
+    euro = {1*currency};
+\end_layout
+
+\begin_layout LyX-Code
+    (* currency is the fundamental financial unit *)
+\end_layout
+
+\begin_layout LyX-Code
+    kroner = {0.00314*euro};
+\end_layout
+
+\begin_layout LyX-Code
+    nk = {kroner};
+\end_layout
+
+\begin_layout LyX-Code
+    USdollar = {0.9*euro};
+\end_layout
+
+\begin_layout LyX-Code
+    CANdollar = {0.65*USdollar};
+\end_layout
+
+\begin_layout LyX-Code
+END UNITS;
+\end_layout
+
+\begin_layout Standard
+Note that this file contains a definition of 
+\family typewriter
+USdollar
+\family default
+ different from that given in the standard library 
+\family typewriter
+measures.a4l
+\family default
+.
+ ASCEND will warn you about the conflict.
+ You must load 
+\family typewriter
+myunits.a4l
+\family default
+ into ASCEND before 
+\family typewriter
+atoms.a4l
+\family default
+ or any of our higher level libraries.
+ You can ensure that this happens by putting the statement
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "myunits.a4l";
+\end_layout
+
+\begin_layout Standard
+on the very first line in all your model definition files.
+\end_layout
+
+\begin_layout Section
+NEW SYSTEM-WIDE UNITS
+\end_layout
+
+\begin_layout Standard
+Suppose you are maintaining ASCEND on a network of computers with many users.
+ You have a standard set of models stored in a centrally located directory,
+ and you want to define units for use by everyone on the network.
+ In this case, just edit 
+\family typewriter
+models/measures.a4l
+\family default
+, the default units of measure library.
+ ASCEND is an open system.
+ 
+\end_layout
+
+\begin_layout Standard
+Make the new unit conversion definition statement(s) of the form
+\end_layout
+
+\begin_layout LyX-Code
+newunit = {combination of old units};
+\end_layout
+
+\begin_layout Standard
+as described in **Section 9.2.** In the file 
+\family typewriter
+measures.a4l
+\family default
+, add your statement(s) anywhere inside the block of definitions that starts
+ with 
+\family typewriter
+UNITS
+\family default
+ and ends with 
+\family typewriter
+END UNITS
+\family default
+.
+ The existing definitions are divided up into groups by comment statements.
+ If your conversion belongs to one of the groups, it is best to put the
+ conversion in that group.
+ The groups are given in Table 
+\begin_inset LatexCommand \ref{tab:units.groupOfUnits}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Caption
+Groups of units in the current measures library
+\begin_inset LatexCommand \label{tab:units.groupOfUnits}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="21" columns="1">
+<features>
+<column alignment="center" valignment="top" leftline="true" rightline="true" width="0">
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+distance
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+mass
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+time
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+molecular quantities
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+money
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+reciprocal time (frequency)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+area
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+volume
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+force
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+pressure
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+energy
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+power
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+absolute viscosity
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" endhead="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+electric charge
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+miscellaneous electromagnetic
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+swiped from C math.h
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+constant based conversions
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+subtly dimensionless measures
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+light quantities
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+miscellaneous rates
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+time variant conversions
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Send them in
+\end_layout
+
+\begin_layout Standard
+We are always on the lookout for useful unit conversions to add to 
+\family typewriter
+measures.a4l
+\family default
+.
+ If you create a 
+\family typewriter
+myunits.a4l
+\family default
+ containing unit conversion definitions of general use (i.e.
+ not currency exchange rates and other time-varying conversions), please
+ mail us a copy and include your name in a comment.
+ Thank you very much.
+\end_layout
+
+\end_body
+\end_document

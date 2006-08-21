@@ -1,0 +1,270 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Starting Points
+\begin_inset LatexCommand \label{cha:Overview}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Our goal
+\end_layout
+
+\begin_layout Standard
+The purpose of this chapter is to help you find out what you need to read
+ first about ASCEND IV in order to accomplish some portion of your mathematical
+ modeling tasks.
+ Since there is no single best order to learn in for all people, we list
+ the introductory documents and their sound bytes concisely, in the hope
+ that this makes your search task less difficult.
+ If ASCEND IV is new to you, work through the first three listed in sequence,
+ then branch to the special topics you need most.
+ Without further ado, your goals.
+\end_layout
+
+\begin_layout Subsection
+Primal Subjects
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:model1}
+
+\end_inset
+
+ Building and solving a small mathematical model from a simple problem descripti
+on of a water tank.
+ This is basic mathematical modeling of a physical system.
+ If you have never, ever used ASCEND IV, you should probably start here
+ to build and solve a model.
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:model2}
+
+\end_inset
+
+ Making any model easier to share with others by adding basic methods, scripts,
+ and model interfaces.
+ 
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:model3}
+
+\end_inset
+
+ Reusing a model for plotting and case studies with an introduction to type
+ refinement and inheritance.
+ Defining and executing a case study to generate data and plots which indicate
+ how your mathematical model responds to alternative input values.
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:require}
+
+\end_inset
+
+ Managing modeling project files with REQUIRE and PROVIDE.
+ ASCEND will automatically load the other type definition files you need
+ when working on a model if you follow some simple rules.
+ 
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:plot}
+
+\end_inset
+
+ Defining a plot which gathers scattered data from your models into a plt_plot
+ that can be viewed from the Browser window.
+\end_layout
+
+\begin_layout Description
+*howto-specify*\InsetSpace ~
+ (Art,Ben, in progress) Defining a square or well-posed problem
+ when your model gets big.
+ Writing a specify method is the only reliable way to go, and even this
+ is not simple unless you plan ahead.
+ Degrees of freedom can be tricky.
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:atoms}
+
+\end_inset
+
+ Defining new types of variables or constants when the standard library
+ does not have what you want.
+ 
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:dimeqns}
+
+\end_inset
+
+ Entering correlation equations with units and how we support degrees Farenheit.
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:units}
+
+\end_inset
+
+ Defining new units of measure based on SI or other existing units.
+\end_layout
+
+\begin_layout Description
+*howto-library1* (NOTES, check methods, etc) Getting it right the first
+ time.
+ Modeling reliably in teams requires communicating all problem aspects including
+ the goals to be met, the mathematical problem to be solved, the solution
+ process, and the testing criteria that define an acceptable solution.
+ You can do all these in ASCEND IV.
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:methods}
+
+\end_inset
+
+ Making basic models easy to use later by adding METHODS.
+ Defining more standard methods and your own methods so you do not have
+ to remember how you made the model work yesterday, last week, last year,
+ or in your last incarnation.
+ Its almost automatic.
+ 
+\end_layout
+
+\begin_layout Subsection
+Engineering Subjects
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:physprops}
+
+\end_inset
+
+ Defining a chemical mixture and physical property calculations for use
+ in process simulation.
+ Equilibrium thermodynamics, phases, species, and all that jazz.
+ Adding species and correlations to the database.
+\end_layout
+
+\begin_layout Description
+*howto-column1*\InsetSpace ~
+ (Art, in progress) Defining a steady-state distillation
+ column in a flowsheet using the column library that comes with ASCEND IV.
+\end_layout
+
+\begin_layout Description
+*howto-reactor*\InsetSpace ~
+ (Duncan, in progress) Defining a chemical reactor model
+ in a flowsheet.
+ Not a task for the faint of heart, but probably far easier than defining
+ a new reactor in almost any commercial simulator.
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:ivp}
+
+\end_inset
+
+ Defining a simple dynamic model (initial value problem) and watching it
+ respond.
+ Water level in a tank.
+\end_layout
+
+\begin_layout Description
+*howto-dynamic2*\InsetSpace ~
+ (Duncan, in progress) Defining a complex dynamic model
+ using dynamic libraries.
+ Dynamic vapor-liquid flash tank.
+\end_layout
+
+\begin_layout Description
+*howto-column2*\InsetSpace ~
+ (Duncan, in progress) Simulating a dynamic distillation
+ column in a flowsheet using ASCEND.
+ 
+\end_layout
+
+\begin_layout Description
+*howto-control*\InsetSpace ~
+ (Duncan, in progress) Controlling dynamic systems, disturbances,
+ and all those pesky graphing tools using the Script window and Tcl.
+ 
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+ Writing a conditional model where which equations apply is determined
+ by variable values or boundary expressions.
+\end_layout
+
+\begin_layout Description
+Chapter\InsetSpace ~
+ (Ben, in progress) Defining a dynamic model with end-point conditions
+ (boundary value problem) using our collocation (bvp) library.
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\end_body
+\end_document

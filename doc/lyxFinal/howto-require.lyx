@@ -1,0 +1,896 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Managing model definitions, libraries, and projects 
+\begin_inset LatexCommand \label{cha:require}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Most complex models are built from parts in one or more libraries.
+ In this chapter we show typical examples of how to make sure your model
+ gets the libraries it needs.
+ We then explain in more general terms the ASCEND mechanism which makes
+ this work and how you can use it to manage multiple modeling projects simultane
+ously.
+\end_layout
+
+\begin_layout Section
+Using 
+\family typewriter
+REQUIRE
+\family default
+
+\begin_inset LatexCommand \index{REQUIRE}
+
+\end_inset
+
+ and 
+\family typewriter
+PROVIDE
+\family default
+
+\begin_inset LatexCommand \index{PROVIDE}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+REQUIRE
+\family default
+ing 
+\family typewriter
+system.a4l
+\family default
+
+\begin_inset LatexCommand \label{ssec:require.requireSystem.a4l}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Suppose you are in a great hurry and want to create a simple model and solve
+ it without concern for good style, dimensional consistency, or any of the
+ other hobgoblins we preach about elsewhere.
+ You will write equations using only generic_real variables as defined in
+ 
+\family typewriter
+system.a4l
+\family default
+.
+ The equations in this example do not necessarily have a solution.
+ In your ascdata (see howto1) directory you create an application model
+ definition file 
+\begin_inset Quotes eld
+\end_inset
+
+
+\family typewriter
+myfile.a4c
+\family default
+" which looks like:
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "system.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+MODEL quick_n_dirty;
+\end_layout
+
+\begin_layout LyX-Code
+x = y^2;
+\end_layout
+
+\begin_layout LyX-Code
+y = x + 2*z;
+\end_layout
+
+\begin_layout LyX-Code
+z = cos(x+y);
+\end_layout
+
+\begin_layout LyX-Code
+x,y,z IS_A generic_real;
+\end_layout
+
+\begin_layout LyX-Code
+(* homework problem 3, due May 21.
+ *)
+\end_layout
+
+\begin_layout LyX-Code
+END quick_n_dirty;
+\end_layout
+
+\begin_layout Standard
+The very first line 
+\family typewriter
+REQUIRE "system.a4l";
+\family default
+ tells ASCEND to find and load a file named 
+\family typewriter
+system.a4l
+\family default
+ if it has not already been loaded or provided in some other way.
+ This 
+\family typewriter
+REQUIRE
+\family default
+ statement must come before the 
+\family typewriter
+MODEL
+\family default
+ which uses the 
+\family typewriter
+generic_real
+\family default
+ ATOM that 
+\family typewriter
+system.a4l
+\family default
+ defines.
+ 
+\end_layout
+
+\begin_layout Standard
+The 
+\family typewriter
+REQUIRE
+\family default
+ statements in a file should all come at the beginning of the file before
+ any other text, including comments.
+ This makes it very easy for other users or automated tools to determine
+ which files, if any, your models require.
+\end_layout
+
+\begin_layout Standard
+On the ASCEND command line (in the Console window or xterm) or in the Script
+ window, you can then enter and execute the statement
+\end_layout
+
+\begin_layout LyX-Code
+READ FILE "myfile.a4c";
+\end_layout
+
+\begin_layout Standard
+to cause 
+\family typewriter
+system.a4l
+\family default
+ and then 
+\family typewriter
+myfile.a4c
+\family default
+ to be loaded.
+\end_layout
+
+\begin_layout Subsection
+Chaining required files
+\end_layout
+
+\begin_layout Standard
+Notice when you read 
+\family typewriter
+myfile.a4c
+\family default
+ that ASCEND prints messages about the files being loaded.
+ You will see that a file 
+\family typewriter
+basemodel.a4l
+\family default
+ is also loaded.
+ In 
+\family typewriter
+system.a4l
+\family default
+ you will find at the beginning the statements
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+REQUIRE "basemodel.a4l";
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+PROVIDE "system.a4l";
+\end_layout
+
+\begin_layout Standard
+The basemodel library is loaded in turn because of the 
+\family typewriter
+REQUIRE
+\family default
+ statement in 
+\family typewriter
+system.a4l
+\family default
+.
+ We will come back to what the 
+\family typewriter
+PROVIDE
+\family default
+ statement does in a moment.
+ This chaining can be many files deep.
+ To see a more complicated example, enter
+\end_layout
+
+\begin_layout LyX-Code
+
+\family typewriter
+READ FILE column.a4l;
+\end_layout
+
+\begin_layout Standard
+and watch the long list of files that gets loaded.
+ If you examine the first few lines of each file in the output list, you
+ will see that each file REQUIRES only the next lower level of libraries.
+ This style minimizes redundant loading messages and makes it easy to substitute
+ equivalent libraries in the nested lower levels without editing too many
+ higher level libraries.
+ The term "equivalent libraries" is defined better in the later section
+ on 
+\family typewriter
+PROVIDE
+\family default
+.
+\end_layout
+
+\begin_layout Subsection
+Better application modeling practice
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+never require system.a4l in an application model.
+\end_layout
+
+\end_inset
+
+It is generally a bad idea to create a model using only 
+\family typewriter
+generic_real
+\family default
+ variables.
+ The normal practice is to use correct units in equations and to use dimensional
+ variables.
+ In the following file we see that this is done by requiring 
+\family typewriter
+atoms.a4l
+\family default
+ instead of 
+\family typewriter
+system.a4l
+\family default
+ and by using correct units on the coefficients in the equations.
+ 
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+REQUIRE "atoms.a4l"; MODEL quick_n_clean;
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+x = y^2/1{PI*radian};
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+y = x + 2{PI*radian}*z;
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+z = cos(x+y);
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+x, y IS_A angle;
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+z IS_A dimensionless;
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+(* homework problem 3, due May 21.
+ *)
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+END quick_n_clean;
+\end_layout
+
+\begin_layout Subsection
+Substitute libraries
+\begin_inset LatexCommand \index{substitute libraries}
+
+\end_inset
+
+ and 
+\family typewriter
+PROVIDE
+\family default
+
+\begin_inset LatexCommand \index{PROVIDE}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+ASCEND keeps a list of the already loaded files, as we hinted at in Section
+ 
+\begin_inset LatexCommand \ref{ssec:require.requireSystem.a4l}
+
+\end_inset
+
+
+\noun off
+.
+ A library file should contain a 
+\family typewriter
+\noun default
+PROVIDE
+\family default
+\noun off
+ statement, as 
+\family typewriter
+\noun default
+system.a4l
+\family default
+\noun off
+ does, telling what library it supplies.
+ Normally the 
+\family typewriter
+\noun default
+PROVIDE
+\family default
+\noun off
+ statement just repeats the file name, but this is not always the case.
+ For example, see the first few lines of the file 
+\family typewriter
+\noun default
+ivpsystem.a4l
+\family default
+\noun off
+, which include the statement
+\end_layout
+
+\begin_layout LyX-Code
+PROVIDE "system.a4l";
+\end_layout
+
+\begin_layout Standard
+indicating that 
+\family typewriter
+ivpsystem.a4l
+\family default
+ is intended to be equivalent to file 
+\family typewriter
+system.a4l
+\family default
+ while also supplying new features.
+ When ivpsystem.a4l is loaded both "
+\family typewriter
+system.a4l
+\family default
+" and "
+\family typewriter
+ivpsystem.a4l
+\family default
+" get added to the list of already loaded files.
+ For one explanation of when this behavior might be desirable, see Section
+ 
+\begin_inset LatexCommand \vref{ssec:require.requireSystem.a4l}
+
+\end_inset
+
+
+\noun off
+.
+ Another use for this behavior is when creating and testing a second library
+ to eventually replace the first one.
+\end_layout
+
+\begin_layout Standard
+When a second library provides compatible but extended definitions similar
+ to a first library, the second can be substituted for the first one.
+ The second library will obviously have a different file name, but there
+ is no need to load the first library if we already have the second one
+ loaded.
+ 
+\family typewriter
+ivpsystem.a4l
+\family default
+ is a second library substitutable for the first library 
+\family typewriter
+system.a4l
+\family default
+.
+ Note that the reverse is not true: 
+\family typewriter
+system.a4l
+\family default
+ does not 
+\end_layout
+
+\begin_layout LyX-Code
+PROVIDE "ivpsystem.a4l"; 
+\end_layout
+
+\begin_layout Standard
+so system is not a valid substitute for ivpsystem.
+ 
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+REQUIRE
+\family default
+ and combining modeling packages
+\begin_inset LatexCommand \label{ssec:require.requireCombiningPackages}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Model libraries frequently come in interrelated groups.
+ For example, the models referred to in Ben Allan's thesis are published
+ electronically as a package models/ben/ in ASCEND IV release 0.9.
+ To use Ben's distillation libraries, which require rather less memory than
+ the current set of more flexible models, your application model should
+ have the statement
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "ben/bencolumn.a4l";
+\end_layout
+
+\begin_layout Standard
+at the beginning.
+\end_layout
+
+\begin_layout Standard
+Combining models from different packages may be tricky if the package authors
+ have not documented them well.
+ Since all packages are open source code that you can copy into your ascdata
+ directory and modify to suit your needs, the process of combining libraries
+ usually amounts to changing the names of the conflicting model definitions
+ in your copy.
+ 
+\end_layout
+
+\begin_layout Standard
+Do NOT use 
+\backslash
+ instead of / in the package name given to a 
+\family typewriter
+REQUIRE
+\family default
+ statement even if you are forced to use Microsoft Windows.
+ 
+\end_layout
+
+\begin_layout Section
+How 
+\family typewriter
+REQUIRE
+\family default
+ finds the files it loads
+\end_layout
+
+\begin_layout Standard
+The file loading mechanism of 
+\family typewriter
+REQUIRE
+\family default
+ makes it simple to manage several independent sets of models in simultaneous
+ development.
+ We must explain this mechanism or the model management may seem somewhat
+ confusing.
+ When a statement is processed, ASCEND checks in a number of locations for
+ a file with that name: ascdata, the current directory, and the 
+\family typewriter
+ascend4/models
+\family default
+ directory.
+ We will describe how you can extend this list later.
+ ASCEND also looks for model packages in each of these same locations.
+ 
+\end_layout
+
+\begin_layout Subsection
+ascdata
+\begin_inset LatexCommand \index{ascdata}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+If your 
+\family typewriter
+ascdata
+\family default
+ directory exists and is readable, ASCEND looks there first for required
+ files.
+ Thus you can copy one of our standard libraries from the directory 
+\family typewriter
+ascend4/models
+\family default
+ to your 
+\family typewriter
+ascdata
+\family default
+ directory and modify it as you like.
+ Your modification will be loaded instead of our standard library.
+ The 
+\family typewriter
+ascdata
+\family default
+
+\begin_inset LatexCommand \index{ascdata}
+
+\end_inset
+
+ directory is typically put into your HOME
+\begin_inset LatexCommand \index{HOME}
+
+\end_inset
+
+ directory (see Section\InsetSpace ~
+
+\begin_inset LatexCommand \vref{ssec:atoms.newVarType}
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Subsection
+the current directory
+\begin_inset LatexCommand \label{ssec:require.currentDir}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The current directory is what you get if you type 'pwd' at the ASCEND Console
+ or xterm prompt.
+ Under Microsoft Windows, the current directory is usually some useless
+ location.
+ Under UNIX, the current directory is usually the directory from which you
+ started ASCEND.
+\end_layout
+
+\begin_layout Subsection
+ascend4/models/
+\end_layout
+
+\begin_layout Standard
+The standard (CMU) models and packages distributed with ASCEND are found
+ in the 
+\family typewriter
+ascend4/models/
+\family default
+ subdirectory where ASCEND is installed.
+ This directory sits next to the directory 
+\family typewriter
+ascend4/bin/
+\family default
+ where the 
+\family typewriter
+ascend4
+\family default
+ or 
+\family typewriter
+ascend4.exe
+\family default
+ executable is located.
+\end_layout
+
+\begin_layout Subsection
+Multiple modeling projects
+\begin_inset LatexCommand \index{multiple modeling projects}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+If you dislike navigating multi-level directories while working on a single
+ modeling project, you can separate projects by keeping all files related
+ to your current project in one directory and changing to that directory
+ before starting ASCEND.
+ If you have files that are required in all your projects, keep those files
+ in your 
+\family typewriter
+ascdata
+\family default
+ directory.
+ Under Windows, 
+\family typewriter
+cd
+\family default
+ to the directory containing the current project from the Console window
+ after starting ASCEND.
+\end_layout
+
+\begin_layout Subsection
+Example: Finding 
+\family typewriter
+ben/bencolumn.a4l
+\family default
+
+\begin_inset LatexCommand \index{bencolumn.a4l}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Suppose an application model requires 
+\family typewriter
+bencolumn.a4l
+\family default
+ from package 
+\family typewriter
+ben
+\family default
+ as shown in Section 
+\begin_inset LatexCommand \ref{ssec:require.requireCombiningPackages}
+
+\end_inset
+
+
+\noun off
+.
+ Normally ASCEND will execute this statement by searching for:
+\end_layout
+
+\begin_layout LyX-Code
+~/ascdata/ben/bencolumn.a4l
+\end_layout
+
+\begin_layout LyX-Code
+./ben/bencolumn.a4l
+\end_layout
+
+\begin_layout LyX-Code
+$ASCENDDIST/ascend4/models/ben/bencolumn.a4l
+\end_layout
+
+\begin_layout Standard
+Assuming we started ASCEND from directory 
+\family typewriter
+/usr1/ballan/projects/test1
+\family default
+ under UNIX, the full names of these might be
+\end_layout
+
+\begin_layout LyX-Code
+/usr0/ballan/ascdata/ben/bencolumn.a4l
+\end_layout
+
+\begin_layout LyX-Code
+/usr1/ballan/projects/test1/ben/bencolumn.a4l
+\end_layout
+
+\begin_layout LyX-Code
+/usr/local/lib/ascend4/models/ben/bencolumn.a4l
+\end_layout
+
+\begin_layout Standard
+Assuming we started ASCEND from some shortcut on a Windows desktop, the
+ full names of these locations might be
+\end_layout
+
+\begin_layout LyX-Code
+C:
+\backslash
+winnt
+\backslash
+profiles
+\backslash
+ballan
+\backslash
+ascdata
+\backslash
+ben
+\backslash
+bencolumn.a4l 
+\end_layout
+
+\begin_layout LyX-Code
+C:
+\backslash
+Program Files
+\backslash
+netscape
+\backslash
+ben
+\backslash
+bencolumn.a4l 
+\end_layout
+
+\begin_layout LyX-Code
+C:
+\backslash
+ASCEND
+\backslash
+ascend4
+\backslash
+models
+\backslash
+ben
+\backslash
+bencolumn.a4l
+\end_layout
+
+\begin_layout Standard
+The first of these three which actually exists on your disk will be the
+ file that is loaded.
+\end_layout
+
+\begin_layout Subsection
+How 
+\family typewriter
+REQUIRE
+\family default
+ handles file and definition conflicts
+\begin_inset LatexCommand \label{ssec:require.handleConflicts}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Normally you simply delete all types before loading a new or revised set
+ of ASCEND models and thus you avoid most conflicts.
+ When you are working with a large simulation and several smaller ones,
+ you may not want to delete all the types, however.
+ We decided to make 
+\family typewriter
+REQUIRE
+\family default
+ handle this situation and the almost inevitable redundant 
+\family typewriter
+REQUIRE
+\family default
+ statements that occur in the following reasonable way.
+\end_layout
+
+\begin_layout Standard
+When a file is 
+\family typewriter
+REQUIRE
+\family default
+d, ASCEND first checks the list of loaded and provided files for a name
+ that matches.
+ If the name is found, then that file is checked to see if it has changed
+ since it was loaded.
+ If the file has changed, then any definition that was changed is loaded
+ in the ASCEND Library and the new definition is used in building any subsequent
+ly compiled simulations.
+ Old simulations remain undisturbed and are not updated to use the new definitio
+ns since there may be conflicts that cannot be automatically resolved.
+\end_layout
+
+\begin_layout Subsection
+Extending the list of searched directories
+\end_layout
+
+\begin_layout Standard
+ASCEND uses the environment variable
+\begin_inset LatexCommand \index{environment variable}
+
+\end_inset
+
+ 
+\family typewriter
+ASCENDLIBRARY
+\family default
+
+\begin_inset LatexCommand \index{ASCENDLIBRARY}
+
+\end_inset
+
+ as the list of directory paths to search for required files.
+ Normally you do not set this environment variable, and ASCEND works as
+ described above.
+ 
+\end_layout
+
+\begin_layout Standard
+To see or change the value of 
+\family typewriter
+ASCENDLIBRARY
+\family default
+ that ASCEND is using, examine 
+\family typewriter
+ASCENDLIBRARY
+\family default
+ in the System utilities window available from the Script Tools menu.
+ Changes made to environment variables in the utilities window are NOT saved.
+ If you are clever enough to set environment variables before running ASCEND,
+ you can make it look anywhere you want to put your model files.
+ Consult your operating system guru for information on setting environment
+ variables if you do not already know how.
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\end_body
+\end_document

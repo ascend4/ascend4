@@ -1,0 +1,3871 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Vessel Model for Beginners
+\begin_inset LatexCommand \label{cha:model1}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+You read our propaganda about the ASCEND system in which we said it was
+ to help technical people create hard models.
+ We said you can tackle really large models -- 100,000 equations, compiling
+ and solving them in minutes on a PC.
+ We also pointed out that you can readily solve the small problems many
+ currently solve using a spreadsheet, only once posed you can solve them
+ inside out, upside down and backwards.
+ 
+\end_layout
+
+\begin_layout Standard
+This sounded intriguing so you downloaded the system and installed it.
+ Hopefully, this proved quite straight forward.
+ You double-clicked the ASCEND icon on your desktop and started it up for
+ the first time.
+ Four windows opened up.
+ You panicked.
+ 
+\end_layout
+
+\begin_layout Standard
+Who wouldn't? 
+\end_layout
+
+\begin_layout Standard
+To use this system properly requires that you learn how to use it.
+ If you pay the price to do so - and we hope it is not a large price, then
+ we believe you will find the tools we have provided to help you create
+ and debug models will pay you back handsomely.
+ 
+\end_layout
+
+\begin_layout Standard
+This chapter 
+\noun off
+and the next two chapters (
+\noun default
+Chapter 
+\noun off
+
+\begin_inset LatexCommand \ref{cha:model2}
+
+\end_inset
+
+ and 
+\noun default
+Chapter 
+\noun off
+
+\begin_inset LatexCommand \ref{cha:model3}
+
+\end_inset
+
+)
+\noun default
+ 
+\noun off
+are meant to be a good first step along the path to learning how to use
+ ASCEND.
+ We 
+\noun default
+will
+\noun off
+ lead you through the steps for creating and testing a simple model.
+ You will also learn how to improve this model so it may be more readily
+ shared with others.
+ We will present our reasons for the steps we take.
+ We
+\noun default
+ will
+\noun off
+ show you all the buttons you should push as you proceed.
+\end_layout
+
+\begin_layout Standard
+We strongly suggest you put time aside and go through all three of these
+ early chapters to introduce yourself to ASCEND.
+ It should take you about two to three hours.
+ The second chapter is particularly important if you wish to understand
+ our approach to good modeling practices.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+the problem
+\end_layout
+
+\end_inset
+
+Step 1: 
+\emph on
+We are going to create and test an ASCEND model to compute, the mass of
+ the metal in the sides and ends of the thin-walled cylindrical vessel
+\emph default
+
+\begin_inset LatexCommand \index{vessel}
+
+\end_inset
+
+
+\emph on
+ shown in Figure 
+\begin_inset LatexCommand \ref{fig:model1.thinWalledVessel}
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+
+\noun off
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+
+\begin_inset Graphics
+	filename howto-model1Fig1.eps
+	BoundingBox 0bp 0bp 280bp 260bp
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+A thin-walled cylindrical vessel with flat ends
+\begin_inset LatexCommand \label{fig:model1.thinWalledVessel}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Step 2: 
+\emph on
+This model is to become a part of a library of models which others can use
+ in the future.
+ You must document it.
+ You must add methods to it to make it easy for others to make it well-posed.
+ You should probably parameterize it, and finally you must create a script
+ which anyone can easily run that solves an example problem to illustrate
+ its use.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+topics covered
+\end_layout
+
+\end_inset
+
+Topics covered in this and the following two chapters are:
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+T
+\noun off
+his chapter)
+\end_layout
+
+\end_inset
+
+Converting the word description to an ASCEND model.
+\end_layout
+
+\begin_layout Itemize
+Loading the model into ASCEND, dealing with the error messages.
+\end_layout
+
+\begin_layout Itemize
+Compiling the model.
+\end_layout
+
+\begin_layout Itemize
+Browsing the model to see if it looks right
+\end_layout
+
+\begin_layout Itemize
+Solving the model.
+\end_layout
+
+\begin_layout Itemize
+Examining the results.
+\end_layout
+
+\begin_layout Itemize
+More thoroughly testing the model.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \vref{cha:model2}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+Converting the model to a more reusable form by adding methods to it and
+ by parameterizing it.
+\end_layout
+
+\begin_layout Itemize
+Creating a script to load and execute an instance of the model.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \vref{cha:model3}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+Creating an array of models.
+\end_layout
+
+\begin_layout Itemize
+Using an existing library model for plotting.
+\end_layout
+
+\begin_layout Itemize
+Creating a case study using the model.
+\end_layout
+
+\begin_layout Standard
+We shall introduce many of the features of the modeling language as well
+ as the use of the interactive interface you use when compiling, debugging,
+ solving and exploring your model.
+ Language features include units conversion, arrays and sets.
+\end_layout
+
+\begin_layout Section
+Converting the word description into an ASCEND model
+\begin_inset LatexCommand \label{sec:model1.converting-the-word}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+an ASCEND model is a type
+\begin_inset LatexCommand \index{type}
+
+\end_inset
+
+ definition
+\end_layout
+
+\end_inset
+
+Every ASCEND model is, in fact, a type definition.
+ To "solve a model," we make an instance
+\begin_inset LatexCommand \index{instance}
+
+\end_inset
+
+ of a type and solve the instance.
+ So we shall start by creating a vessel type definition.
+ We will have to create our type definition as a text file using a text
+ editor.
+ (Some simple text editors
+\begin_inset LatexCommand \index{text editors}
+
+\end_inset
+
+ include 
+\family typewriter
+emacs
+\family default
+
+\begin_inset LatexCommand \index{emacs}
+
+\end_inset
+
+ and 
+\family typewriter
+gedit
+\begin_inset LatexCommand \index{gedit}
+
+\end_inset
+
+
+\family default
+ on Linux, and Notepad
+\begin_inset LatexCommand \index{Notepad}
+
+\end_inset
+
+ and TextPad
+\begin_inset LatexCommand \index{TextPad}
+
+\end_inset
+
+ on Windows.
+ We shall discuss editors shortly.)
+\end_layout
+
+\begin_layout Standard
+We need first to decide the parts to our model.
+ In this case we know that we need the variables
+\begin_inset LatexCommand \index{variables, vessel}
+
+\end_inset
+
+ listed in Table 
+\begin_inset LatexCommand \ref{tab:model1.variablesVesselModel}
+
+\end_inset
+
+
+\noun off
+.
+ We readily fill in the first three columns in this table.
+ We shall discuss the entry in the last column in a moment.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Caption
+Variables required for model
+\begin_inset LatexCommand \label{tab:model1.variablesVesselModel}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="4">
+<features>
+<column alignment="center" valignment="top" leftline="true" width="0">
+<column alignment="center" valignment="top" leftline="true" width="0">
+<column alignment="center" valignment="top" leftline="true" width="0">
+<column alignment="center" valignment="top" leftline="true" rightline="true" width="1in">
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Symbol
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Meaning
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Typical Units
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+ASCEND variable type
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+D
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+vessel diameter
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+m, ft
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+length
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+H
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+vessel height
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+m, ft
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+length
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+wall_thickness
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+wall thickness
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+mm, in
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+length
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+metal_density
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+metal density
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+kg/m
+\begin_inset Formula $^{\textrm{3}}$
+\end_inset
+
+, lbm/ft
+\begin_inset Formula $^{\textrm{3}}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+mass_density
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We will be computing the masses for the metal in the side wall and in the
+ ends for this vessel.
+ As this is a thin-walled vessel, we shall compute the volume of metal as
+ the area of the walls times the wall thickness.
+ The following equations allow us to compute the required areas
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{equation}
+\mathrm{side\, wall\, area}=\pi DH\label{eq:model1.side-wall-area}\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{equation}
+\mathrm{single\, end\, area}=\frac{\pi D^{2}}{4}\label{eq:model1.single-end-area}\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We should be interested in the volume of the vessel, which we compute as:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{equation}
+\mathrm{vessel\, volume}=\mathrm{single\, end\, area}\times H\label{eq:model1.vessel-volume}\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We add the variables in Table 
+\begin_inset LatexCommand \ref{tab:model1.moreVariablesVessel}
+
+\end_inset
+
+ 
+\noun off
+to our list.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Caption
+Some more variables
+\begin_inset LatexCommand \index{variables,  vessel}
+
+\end_inset
+
+ required for vessel model
+\begin_inset LatexCommand \label{tab:model1.moreVariablesVessel}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="6" columns="4">
+<features>
+<column alignment="center" valignment="top" leftline="true" width="0">
+<column alignment="center" valignment="top" leftline="true" width="1.5in">
+<column alignment="center" valignment="top" leftline="true" width="0">
+<column alignment="center" valignment="top" leftline="true" rightline="true" width="1in">
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Symbol
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Meaning
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Typical Units
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+ASCEND variable type
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+side_area
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+area in the sidewall of the vessel
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+m
+\begin_inset Formula $^{\textrm{2}}$
+\end_inset
+
+, ft
+\begin_inset Formula $^{\textrm{2}}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+area
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+end_area
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+total area iin the ends of the vessel
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+m
+\begin_inset Formula $^{\textrm{2}}$
+\end_inset
+
+, ft
+\begin_inset Formula $^{\textrm{2}}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+area
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+vessel_volume
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+volume of the vessel
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+m
+\begin_inset Formula $^{3}$
+\end_inset
+
+, ft
+\begin_inset Formula $^{\textrm{3}}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+volume
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+metal_volume
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+total volume of metal in the walls
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+m
+\begin_inset Formula $^{3}$
+\end_inset
+
+, ft
+\begin_inset Formula $^{\textrm{3}}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+volume
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+metal_mass
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+total mass of the metal in the walls of the vessel
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+kg, lbm
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+mass
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We believe that no one should create a model of any consequence without
+ worrying about the units for expressing the variables within it.
+ We consider that to be a commandment handed down from somewhere on high;
+ however, we know that others do not believe as we do.
+ Grant us our beliefs.
+ We have created in the ASCEND system a library of variable and constant
+ types called atoms.a4l
+\begin_inset LatexCommand \index{atoms.a4l}
+
+\end_inset
+
+ .
+\end_layout
+
+\begin_layout Standard
+The file type "
+\family typewriter
+.a4l
+\begin_inset LatexCommand \index{a4l}
+
+\end_inset
+
+
+\family default
+" designates it to be an ASCEND IV library file
+\begin_inset LatexCommand \index{library file}
+
+\end_inset
+
+.
+ Double-click on this link to see the approximately 150 different types
+ ranging from universal constants
+\begin_inset LatexCommand \index{universal constants}
+
+\end_inset
+
+ such as 
+\begin_inset Formula $\pi$
+\end_inset
+
+ (=3.14159...) and 
+\begin_inset Formula $e$
+\end_inset
+
+ (=2.718...) to 
+\family typewriter
+length
+\family default
+, 
+\family typewriter
+mass
+\family default
+ and 
+\family typewriter
+angle
+\family default
+.
+ If we have not created one that you need, you can use this library of types
+ to see how to construct one for yourself and add it to your file of type
+ definitions.
+ You will find detailed instructions for how to make your own variable type
+ library in Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \vref{cha:atoms}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+type definition library for variables and constants
+\end_layout
+
+\end_inset
+
+ASCEND considers variable and constant types to be elementary or "atomic"
+ to the system.
+ These type definitions can contain only attributes for variables and constants.
+ They cannot contain equations, for example.
+ Thus ASCEND calls such a type definition an atom rather than a model.
+ Figure 
+\begin_inset LatexCommand \ref{fig:model1.atomVolume}
+
+\end_inset
+
+
+\noun off
+ illustrates the definition for the type volume.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout LyX-Code
+ATOM
+\begin_inset LatexCommand \index{ATOM}
+
+\end_inset
+
+ volume REFINES solver_var 
+\end_layout
+
+\begin_layout LyX-Code
+DIMENSION L^3 
+\end_layout
+
+\begin_layout LyX-Code
+DEFAULT 100.0{ft^3};
+\end_layout
+
+\begin_layout LyX-Code
+lower_bound := 0.0{ft^3};
+\end_layout
+
+\begin_layout LyX-Code
+upper_bound := 1e50{ft^3};
+\end_layout
+
+\begin_layout LyX-Code
+nominal := 100.0{ft^3};  
+\end_layout
+
+\begin_layout LyX-Code
+END volume;
+\end_layout
+
+\begin_layout Caption
+A typical type definition, called an atom, used to define variable and constant
+ types
+\begin_inset LatexCommand \label{fig:model1.atomVolume}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The definition starts by stating that volume is a specialization of 
+\begin_inset LatexCommand \index{solver\_var}
+
+\end_inset
+
+
+\family typewriter
+solver_var
+\family default
+.
+ The type 
+\family typewriter
+solver_var
+\family default
+ refines a base type in the system known as 
+\family typewriter
+real
+\family default
+
+\begin_inset LatexCommand \index{real}
+
+\end_inset
+
+ and adds several attributes to it that a nonlinear equation solver may
+ need, such as a lower and upper bounds, a 'fixed' flag, and so forth.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+dimensions
+\begin_inset LatexCommand \index{dimensions}
+
+\end_inset
+
+ and units
+\begin_inset LatexCommand \index{units}
+
+\end_inset
+
+ in ASCEND.
+ 
+\end_layout
+
+\end_inset
+
+The type definition for volume states that volume has dimensionality of
+ length to the power 3 (
+\family typewriter
+L^3
+\family default
+) where L is one of the 10 dimensions supported by ASCEND (see 
+\noun off
+in ASCEND Syntax document for the 10 dimensions defined within the ASCEND
+ language).
+\end_layout
+
+\begin_layout Standard
+One may express the value for a volume using any units which are consistent
+ with the dimensionality of 
+\family typewriter
+L^3
+\family default
+, such as 
+\family typewriter
+{ft^3}
+\family default
+, 
+\family typewriter
+{m^3}
+\family default
+, 
+\family typewriter
+{gal}
+\family default
+, or even 
+\family typewriter
+{mile^4/mm}
+\family default
+.
+ Setting the lower bound to 
+\family typewriter
+0 {ft^3}
+\family default
+ says volume must be a nonnegative number.
+ ASCEND used the nominal value for scaling a variable of type volume when
+ solving, here 
+\begin_inset Formula $100\,{\mathrm{ft}}^{3}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+One may change the values for the bounds, default and nominal values at
+ any time.
+\end_layout
+
+\begin_layout Standard
+We now can understand the last column in Table 
+\begin_inset LatexCommand \ref{tab:model1.variablesVesselModel}
+
+\end_inset
+
+
+\noun off
+ and
+\noun default
+ Table
+\noun off
+ 
+\begin_inset LatexCommand \ref{tab:model1.moreVariablesVessel}
+
+\end_inset
+
+.
+ For each variable or constant in the system, we have identified its type
+ in the file 
+\family typewriter
+\noun default
+atoms.a4l
+\family default
+\noun off
+.
+ That is, we looked in this file for the type definition that corresponded
+ to the variable we were defining and listed that type here.
+ This task is not as onerous as it seems.
+ As we shall see later, we provide a tool to find for you all atom types
+ that correspond to a particular set of units, e.g, 
+\family typewriter
+\noun default
+ft^3
+\family default
+\noun off
+ -- i.e., the computer will do the searching for you.
+\end_layout
+
+\begin_layout Standard
+In Figure 
+\begin_inset LatexCommand \ref{fig:model1.universalConstant}
+
+\end_inset
+
+
+\noun off
+ we see the definition of one of the universal constants contained in 
+\family typewriter
+\noun default
+atoms.a4l
+\family default
+\noun off
+.
+ This definition is very short; it gives the name of the type 
+\family typewriter
+\noun default
+circle_constant
+\family default
+\noun off
+
+\begin_inset LatexCommand \index{circle\_constant}
+
+\end_inset
+
+, that it refines 
+\family typewriter
+\noun default
+real_constant
+\family default
+\noun off
+
+\begin_inset LatexCommand \index{real\_constant}
+
+\end_inset
+
+ and that it has the value 
+\family typewriter
+\noun default
+1 {PI
+\begin_inset LatexCommand \index{PI}
+
+\end_inset
+
+}
+\family default
+\noun off
+
+\begin_inset LatexCommand \index{\{PI\}}
+
+\end_inset
+
+ where the internal conversion needed for 
+\family typewriter
+\noun default
+{PI}
+\family default
+\noun off
+ is defined in the file defining the built-in units in ASCEND.
+ One can add more units if desired at any time to ASCEND by defining one
+ or more personal units files (
+\noun default
+Chapter 
+\noun off
+
+\begin_inset LatexCommand \vref{cha:units}
+
+\end_inset
+
+
+\noun default
+ 
+\noun off
+tells you how to do this).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+universal constant
+\begin_inset LatexCommand \index{universal constant}
+
+\end_inset
+
+ definition
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout LyX-Code
+UNIVERSAL CONSTANT circle_constant 
+\end_layout
+
+\begin_layout LyX-Code
+    REFINES real_constant :== 1{PI};
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:model1.universalConstant}
+
+\end_inset
+
+Type definition for 
+\family typewriter
+circle_constant;
+\family default
+ has value of 
+\family typewriter
+1 {PI}
+\family default
+ or 3.1415927
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We shall in fact find this constant useful in our program, and we can either
+ introduce a constant with this value or simply use the value 
+\family typewriter
+1{PI}
+\family default
+ in our program.
+ We shall choose to do the latter.
+\end_layout
+
+\begin_layout Standard
+It is time to write our first version for the model, which we do in Figure
+ 
+\begin_inset LatexCommand \ref{fig:model1.modelVessel}
+
+\end_inset
+
+
+\noun off
+ (
+\noun default
+available as 
+\begin_inset LatexCommand \index{vesselPlain.a4c}
+
+\end_inset
+
+
+\family typewriter
+vesselPlain.a4c
+\family default
+ in the ASCEND model library).
+
+\noun off
+ We first list any other files containing type definitions which this model
+ will use; here we list 
+\family typewriter
+\noun default
+"atoms.a4l"
+\family default
+\noun off
+ following the keyword 
+\family typewriter
+\noun default
+REQUIRE
+\family default
+\noun off
+
+\begin_inset LatexCommand \index{REQUIRE}
+
+\end_inset
+
+.
+ ASCEND is sensitive to case so pay attention to where we use and do not
+ use capital letters.
+ Keywords are always capitalized.
+ Often for clarification we use capital letters in a name we use for a variable
+ or label (e.g., we use 
+\family typewriter
+\noun default
+D
+\family default
+\noun off
+ for diameter rather than 
+\family typewriter
+\noun default
+d
+\family default
+\noun off
+).
+ Note that all ASCEND statements end with a semicolon (i.e., with 
+\noun default
+'
+\family typewriter
+;
+\family default
+'
+\noun off
+) and not at the end of a line and that blank lines have no impact.
+ Comments are between opening and closing parenthesis/asterisk pairs, i.e.,
+ '
+\family typewriter
+\noun default
+(*
+\family default
+\noun off
+' and '
+\family typewriter
+\noun default
+*)
+\family default
+\noun off
+'.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+the first version of the code for vessel 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout LyX-Code
+REQUIRE "atoms.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+MODEL vessel;
+\end_layout
+
+\begin_layout LyX-Code
+(* variables *)
+\end_layout
+
+\begin_layout LyX-Code
+side_area, end_areaIS_Aarea;
+\end_layout
+
+\begin_layout LyX-Code
+vessel_vol, wall_vol    IS_Avolume;
+\end_layout
+
+\begin_layout LyX-Code
+wall_thickness, H, D    IS_Adistance;
+\end_layout
+
+\begin_layout LyX-Code
+H_to_D_ratio            IS_A    factor;
+\end_layout
+
+\begin_layout LyX-Code
+metal_density           IS_A    mass_density;
+\end_layout
+
+\begin_layout LyX-Code
+metal_mass              IS_A    mass;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+(* equations *)
+\end_layout
+
+\begin_layout LyX-Code
+FlatEnds:end_area = 1{PI} * D^2 / 4;
+\end_layout
+
+\begin_layout LyX-Code
+Sides:side_area = 1{PI} * D * H;
+\end_layout
+
+\begin_layout LyX-Code
+Cylinder:vessel_vol = end_area * H;
+\end_layout
+
+\begin_layout LyX-Code
+Metal_volume:(side_area + 2 * end_area) *
+\end_layout
+
+\begin_layout LyX-Code
+wall_thickness = wall_vol;
+\end_layout
+
+\begin_layout LyX-Code
+HD_definition:D * H_to_D_ratio = H;
+\end_layout
+
+\begin_layout LyX-Code
+VesselMass:metal_mass = metal_density * wall_vol;
+\end_layout
+
+\begin_layout LyX-Code
+END vessel;
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:model1.modelVessel}
+
+\end_inset
+
+First version of the type definition for 
+\family typewriter
+vessel
+\family default
+.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Our model definition has the following structure for it so far:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+MODEL
+\family default
+
+\begin_inset LatexCommand \index{MODEL}
+
+\end_inset
+
+ statement
+\end_layout
+
+\begin_layout Itemize
+list of variable we intend to use in the type definition
+\end_layout
+
+\begin_layout Itemize
+equations
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+END
+\family default
+
+\begin_inset LatexCommand \index{END}
+
+\end_inset
+
+ statement
+\end_layout
+
+\begin_layout Standard
+While we have put the statements in this order, we could mix up and intermix
+ the middle two types of statements, even going to the extreme of defining
+ the variables after we first use them.
+ The 
+\family typewriter
+MODEL
+\family default
+ and 
+\family typewriter
+END
+\family default
+ statements begin and end the type definition.
+\end_layout
+
+\begin_layout Standard
+You should see little that surprises you in the syntax here.
+ However, you may have noted that we have created a definition that says
+ absolutely nothing about how to use the variables and equations listed.
+ There is no solution procedure buried in this type definition.
+ In ASCEND the idea of solving is separate from saying what we intend to
+ solve.
+ Also note that we have not said anything about the values for any of the
+ variables nor what we intend to calculate and what variables we intend
+ to treat as fixed input.
+\end_layout
+
+\begin_layout Section
+Editing, compiling and browsing an ASCEND model
+\end_layout
+
+\begin_layout Standard
+Could we compile an instance of a vessel given this definition? If there
+ had been some arrays in our definition for which we did not say how many
+ items were in the arrays, we could not.
+ However, here we could compile an instance, putting aside storage space
+ for each of the variables and somehow capturing the equations relating
+ them.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+Do not alter the models subdirectory
+\end_layout
+
+\end_inset
+
+When we compile new models, we need a place to store them.
+ One possibility would be to put them into the 
+\family typewriter
+models
+\family default
+
+\begin_inset LatexCommand \index{models}
+
+\end_inset
+
+ subdirectory of the ASCEND installation
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+On windows this might be 
+\family typewriter
+c:
+\backslash
+Program File
+\backslash
+ASCEND
+\backslash
+models
+\family default
+.
+ On Linux, this might be 
+\family typewriter
+/usr/share/ascend/models
+\family default
+.
+ The location can vary depending on how you went about installing ASCEND.
+\end_layout
+
+\end_inset
+
+.
+ However, you really should leave the contents of this subdirectory untouched
+ -- always.
+ Hopefully the files will be read-only from your user account.
+ We count on being able to replace the model library totally every time
+ you install a new version of ASCEND.
+ Whenever we add new model libraries or corrected versions of previously
+ existing model libraries, we put them in this subdirectory.
+ This subdirectory belongs to us (the developers of the system): hands off,
+ please.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+rather put your things into the ascdata
+\begin_inset LatexCommand \index{ascdata}
+
+\end_inset
+
+ subdirectory (you own it)
+\end_layout
+
+\end_inset
+
+To avoid this problem, ASCEND also creates a subdirectory called 
+\family typewriter
+ascdata
+\family default
+ that it will not touch when you install a new version of ASCEND.
+ It will look in this subdirectory first when looking for a file to load
+ when you have not given a full path name for finding that file.
+ The install process for ASCEND will place 
+\family typewriter
+ascdata
+\family default
+ into your home directory
+\begin_inset LatexCommand \ref{id:#id(pgfId-1007944)}
+
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+On Windows, your home directory will normally be the My Documents folder.
+ On Linux, it will normally be 
+\family typewriter
+/home/
+\emph on
+username
+\family default
+\emph default
+.
+ Note that in both systems, you can set an 
+\begin_inset Quotes eld
+\end_inset
+
+environment
+\begin_inset Quotes erd
+\end_inset
+
+ variable to designate your home directory.
+\end_layout
+
+\end_inset
+
+
+\noun off
+.
+ ASCEND tells you where it has placed this subdirectory when you install
+ it.
+ However, if you did not note where that was, then you will have to search
+ for it (using a tool like "FIND file or folder").
+\end_layout
+
+\begin_layout Standard
+It is within the folder 
+\family typewriter
+ascdata
+\family default
+ that you should place any ASCEND models you create.
+ When running a script (which we shall talk about later), ASCEND first looks
+ in this subdirectory for files, and then it looks in the models subdirectory.
+ It stops looking when it finds the first available version of the file.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+create a text file containing the model definition
+\end_layout
+
+\end_inset
+
+Next open an editor
+\begin_inset LatexCommand \index{text editors}
+
+\end_inset
+
+, such as 
+\family typewriter
+emacs
+\family default
+
+\begin_inset LatexCommand \index{emacs}
+
+\end_inset
+
+, 
+\family typewriter
+gedit
+\family default
+
+\begin_inset LatexCommand \index{gedit}
+
+\end_inset
+
+, 
+\family typewriter
+vi
+\family default
+
+\begin_inset LatexCommand \index{vi}
+
+\end_inset
+
+, 
+\family typewriter
+vim
+\family default
+
+\begin_inset LatexCommand \index{vim}
+
+\end_inset
+
+, Notepad
+\begin_inset LatexCommand \index{Notepad}
+
+\end_inset
+
+ or TextPad
+\begin_inset LatexCommand \index{TextPad}
+
+\end_inset
+
+.
+ Now type in or, better yet, cut-and-paste the statements in Figure 
+\begin_inset LatexCommand \ref{fig:model1.modelVessel}
+
+\end_inset
+
+
+\noun off
+.
+ Be very careful to match the use of capital and small letters.
+ Do not worry about blanks between symbols but do not embed blanks within
+ symbols.
+ In other words, do not put a blank in the middle of the symbol 
+\family typewriter
+\noun default
+side_wall
+\family default
+\noun off
+ but do not worry about putting zero or more blanks between 
+\family typewriter
+\noun default
+side_wall
+\family default
+\noun off
+ and 
+\family typewriter
+\noun default
+=
+\family default
+\noun off
+ in an equation.
+\end_layout
+
+\begin_layout Standard
+When you are finished, be sure to save the file as a text file.
+ Call it 
+\family typewriter
+vesselPlain.a4c
+\family default
+.
+ The "
+\family typewriter
+.a4c
+\family default
+" stands for "ASCEND 4 Code".
+ Many Windows editors will append "
+\family typewriter
+.txt
+\family default
+" to the file name.
+ Remove the 
+\family typewriter
+.txt
+\family default
+ ending off the file name -- do not let Microsoft bully you into thinking
+ you should not -- and change it to "
+\family typewriter
+.a4c
+\begin_inset LatexCommand \index{a4c}
+
+\end_inset
+
+
+\family default
+".
+ 
+\end_layout
+
+\begin_layout Standard
+(This model is also available as 
+\family typewriter
+vesselPlain.a4c
+\family default
+ in the ASCEND models library, but we suggest it would be better for you
+ to go through the exercise of creating your own version here.
+ At the least copy the library file to your ASCEND space so you can play
+ with your own version at this time.)
+\end_layout
+
+\begin_layout Standard
+When you are done, you should have a text file called 
+\family typewriter
+vesselPlain.a4c
+\family default
+ stored in your ASCEND/models/vessel subdirectory.
+ It should contain precisely the statements in Figure 
+\begin_inset LatexCommand \ref{fig:model1.modelVessel}
+
+\end_inset
+
+
+\noun off
+ with care having been taken to match capital and lower case letters as
+ shown there.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+start the ASCEND system.
+ Move and resize the windows to make yourself comfortable.
+\end_layout
+
+\end_inset
+
+Start the ASCEND system by double clicking on the ASCEND icon if you are
+ on Windows or typing 
+\family typewriter
+ascend
+\family default
+ at the command line if you are using a Linux machine
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+Depending on the Linux version you have installed, you might find that the
+ command is 
+\family typewriter
+ascend4
+\family default
+ or that you have an ASCEND option in your GNOME 'Applications' menu.
+\end_layout
+
+\end_inset
+
+.
+ Four windows will appear, three smaller ones and one larger one that will,
+ if left unattended, disappear by itself in a few seconds.
+ Move the three smaller ones around on your screen so they do not overlap
+ or so they overlap very little.
+ Resize them if you want to.
+ You might start by putting the one called Script
+\begin_inset LatexCommand \index{Script window}
+
+\end_inset
+
+ in the upper left, the one called Library
+\begin_inset LatexCommand \index{Library window}
+
+\end_inset
+
+ in the upper right and the one called Console
+\begin_inset LatexCommand \index{Console}
+
+\end_inset
+
+ in the lower right.
+ We shall assume you have placed them in these positions in the following
+ so, even if that is not your favorite placement, it might be useful to
+ use it for now.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+note that each window by itself looks pretty nonthreatening
+\end_layout
+
+\end_inset
+
+As you can see, each window by itself looks like a pretty normal window.
+ Each has buttons across the top under which one will find different tools
+ to run.
+ Each also has one to three sub-windows for displaying things.
+ Each has a Help button that you can push at any time that you want to read
+ all kinds of detailed things about the window
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+assuming you have got the help files installed on your system, which you
+ may not find you have.
+\end_layout
+
+\end_inset
+
+.
+ For the moment we will provide you with the "just-in-time" details here
+ so you do not need to be sidetracked just yet by pushing these Help buttons.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+hey, where did that window go? I want it back NOW!
+\end_layout
+
+\end_inset
+
+If you ever lose a window, open the Script window and under the Tools
+\begin_inset LatexCommand \index{Tools}
+
+\end_inset
+
+ button, select the window you wish to open.
+ You cannot lose the Script window unless you shut down ASCEND.
+ For other windows in ASCEND, you can close them and re-open them as required.
+ Any window that you closed can usually be restored by going back to the
+ Script window and selected it from the Tools menu there.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+How do I quit
+\begin_inset LatexCommand \index{quit ASCEND}
+
+\end_inset
+
+ ASCEND?
+\end_layout
+
+\end_inset
+
+To exit
+\begin_inset LatexCommand \index{exit ASCEND}
+
+\end_inset
+
+ ASCEND, close the Script window.
+ You will be asked to confirm that you want to exit ASCEND.
+ If you have simulations in memory this will stop you from losing your results.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+saving
+\begin_inset LatexCommand \index{saving window position}
+
+\end_inset
+
+ window positions
+\begin_inset LatexCommand \index{window position}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ASCEND will not remember your window locations automatically.
+ If you like where you have placed the windows for ASCEND on your display,
+ go to the Script window and select 'Save all appearances
+\begin_inset LatexCommand \index{window locations, save}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{appearances, save all}
+
+\end_inset
+
+' under the View
+\begin_inset LatexCommand \index{View}
+
+\end_inset
+
+ menu.
+ A similar tool exists for each window for saving only its position.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+start by loading and compiling using tools in the Library window
+\end_layout
+
+\end_inset
+
+We shall start with the Library window in the upper right.
+ This window provides you with the tools to load and compile files containing
+ type definitions.
+ You can also display
+\begin_inset LatexCommand \index{display}
+
+\end_inset
+
+ the code for the different types you have loaded.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+use the left mouse button unless we tell you otherwise (however, on you
+ own explore using the right mouse button in any of the windows)
+\end_layout
+
+\end_inset
+
+Let's load your file.
+ Under the File button select the 'Read types from File
+\begin_inset LatexCommand \index{Read Types from File}
+
+\end_inset
+
+' tool.
+ You select this tool by clicking on it using the left mouse button - i.e.,
+ the button you should have expected to use.
+ A window will appear asking you to find the file you want to read into
+ ASCEND.
+ Navigate to where you stored 
+\family typewriter
+vesselPlain.a4c
+\family default
+ (in the subdirectory 
+\family typewriter
+ascdata
+\family default
+) and select that file.
+ If you have the wrong ending on the file (you left 
+\family typewriter
+.txt
+\family default
+ or you forgot to put 
+\family typewriter
+.a4c
+\family default
+ as the ending), tell the system to list all files and pick the one you
+ want.
+ The 
+\family typewriter
+.a4c
+\family default
+ is used by the system to list only the files it thinks you might want to
+ load, but ASCEND isn't fussy.
+ It will attempt to load any file you pick.
+\end_layout
+
+\begin_layout Standard
+Look in the Console window at the lower right, and, if the file loads without
+ any errors being listed there, you can skip past the next bit to where
+ you should start to compile an instance.
+ The next bit has some useful hints on how to debug your models.
+ If you want some debugging experience, put a known error into your 
+\family typewriter
+vesselPlain.a4c
+\family default
+ file and see what happens.
+ This move will give you a reason to read the following section.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+Do not ignore the diagnostics
+\begin_inset LatexCommand \index{diagnostics}
+
+\end_inset
+
+ that might appear in the Console window
+\end_layout
+
+\end_inset
+
+If the Console window in the lower right starts filling with several tens
+ of lines of diagnostics, look to see if you included the 
+\family typewriter
+REQUIRE
+\family default
+
+\begin_inset LatexCommand \index{REQUIRE}
+
+\end_inset
+
+ statement at the beginning of your model file.
+ Without that statement, ASCEND is missing all the definitions for the types
+ of variables in your model, and it will go wild telling you so
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+ It might also be choking on a Word document because you forgot to save
+ it as a text file.
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+While loading the files containing these types, ASCEND will look very closely
+ at the syntax and will give you all kinds of diagnostic messages in the
+ Console window (lower right) if you have done something wrong.
+ It will also at times spew out some warning messages
+\begin_inset LatexCommand \index{warning messages}
+
+\end_inset
+
+ if you have done something thought to be poor modeling style.
+ You must heed the error messages as the file will not load if there are
+ any.
+ ASCEND will tell you if it did not load the file.
+ 
+\end_layout
+
+\begin_layout Standard
+You should consider heeding the warnings if you get any.
+ If you ignore them now, they may come back and haunt you later.
+ However, there are times when we issue a warning but everything will work,
+ and you will think we were not too clever.
+ Our response: better modeling style
+\begin_inset LatexCommand \index{modeling style}
+
+\end_inset
+
+ can eliminate these warnings.
+ (It's been our system so we get to have the last word.)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+how do I jump
+\begin_inset LatexCommand \index{jump to line}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{line numbers}
+
+\end_inset
+
+ to line 100 of a file when using some of the standard editors?
+\end_layout
+
+\end_inset
+
+The error and warning messages will contain a line number in the file where
+ the error has occurred.
+ This will be the line number as counted by an editor with the first line
+ being line 1 in the file.
+ Editors always provide you with a means to get directly to a line number
+ in a file.
+ Find out how to do that or you will not be too happy with debugging a large
+ file.
+\end_layout
+
+\begin_layout Standard
+You will be in the debug mode for a new system so do not expect it to be
+ totally obvious the first few times you make an error.
+ We have tried to use language that should be meaningful, but we may have
+ failed or the error may be pretty subtle and not possible for us to anticipate
+ how to describe it in your terms.
+ (Send us a bug report if you have any good ideas on language.)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+reloading a file
+\begin_inset LatexCommand \index{reloading a file}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{file, reloading}
+
+\end_inset
+
+ overwrites the previous version
+\end_layout
+
+\end_inset
+
+You can reload any file your have corrected using the Read types from file
+ tool under the File menu.
+ It will overwrite the previous version of the file only if the file has
+ changed since it was last loaded (note that we do not reload those big
+ files unless you make a change even if you tell us to).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+displaying the code
+\end_layout
+
+\end_inset
+
+You can display the code you have written.
+ Select the model vessel in the right window of the Library.
+ Then under the Display
+\begin_inset LatexCommand \index{Display  window}
+
+\end_inset
+
+ menu at the top, select the tool Code.
+ The Display window will open displaying the code for this model.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+now compile as "
+\family typewriter
+v
+\family default
+"
+\end_layout
+
+\end_inset
+
+Okay, you have your file loaded without getting any diagnostics.
+ You are ready to compile
+\begin_inset LatexCommand \index{compile}
+
+\end_inset
+
+.
+ In the Library window, look in the left window and select the file 
+\family typewriter
+vesselPlain.a4c
+\family default
+.
+ It contains the type definition you wish to compile.
+ You should see the type vessel appear in the right window.
+ Select vessel.
+ Under the Edit button, select Create simulation.
+ A small window opens and asks you to name the simulation.
+ Call it 
+\family typewriter
+v
+\family default
+ -- yes, just the letter "v", and select "OK".
+ Short names for instances often seem to be preferable.
+ 
+\end_layout
+
+\begin_layout Standard
+Look again in the Console window for diagnostics.
+ If everything worked without error, you will see some statistics telling
+ you how many models, relations and so forth you have created during the
+ compile step.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+and pass the instance
+\begin_inset LatexCommand \index{instance}
+
+\end_inset
+
+ to the Browser
+\begin_inset LatexCommand \index{Browser}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+Select 
+\family typewriter
+v IS A vessel
+\family default
+ in the bottom of the Library window.
+ Then under the Export
+\begin_inset LatexCommand \index{Export}
+
+\end_inset
+
+ button, select 'Simulation to Browser
+\begin_inset LatexCommand \index{Export Simulation to Browser}
+
+\end_inset
+
+' to export 
+\family typewriter
+v
+\family default
+ to the Browser tool set.
+ The Browser window will open and contain 
+\family typewriter
+v
+\family default
+.
+ It might be useful to enlarge this window and move it down a bit, placing
+ it a bit to the right of the center of your screen.
+ (Remember you can save this positioning and sizing of the Browser window
+ by going under the View menu and picking 'Save appearance'.)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+examine 
+\family typewriter
+v
+\family default
+ by playing with it in the Browser
+\end_layout
+
+\end_inset
+
+In the left upper window of the Browser, you will find 
+\family typewriter
+v
+\family default
+ to be the current object.
+ Listed in the right window are all the parts of the current object.
+ You will see the variables listed here along with an indication of their
+ type.
+ For example, you will find 
+\family typewriter
+Cylinder IS A relation
+\family default
+ and 
+\family typewriter
+D IS A distance
+\family default
+ listed, among many others.
+ 
+\family typewriter
+Cylinder
+\family default
+ is one of the equations you wrote describing the model while 
+\family typewriter
+D
+\family default
+ was the diameter of the vessel.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+included flags
+\begin_inset LatexCommand \index{included flags}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{flag, included}
+
+\end_inset
+
+ for relations
+\end_layout
+
+\end_inset
+
+If you pick any of the parts in the right or bottom windows, it becomes
+ the current object; its parts then show in the right window.
+ For example, a relation has a boolean part (a flag that takes the value
+ 
+\family typewriter
+TRUE
+\family default
+ or 
+\family typewriter
+FALSE
+\family default
+) indicating whether or not it is to be included when ASCEND solves the
+ equations you defined for the model.
+\end_layout
+
+\begin_layout Standard
+If you wish to display the current value for this flag, pick 'Display Atom
+ Values
+\begin_inset LatexCommand \index{Display Atom Values}
+
+\end_inset
+
+' under the View menu.
+ This tool toggles a switch that causes either the value or the type to
+ show for a variable, a constant or a relation in the upper right window
+ of the Browser.
+ Try toggling it back and forth and looking at different things in the Browser.
+\end_layout
+
+\begin_layout Standard
+Pick each of the tools under View and note what happens to the displaying
+ of things in the Browser.
+\end_layout
+
+\begin_layout Standard
+Across the bottom of the Browser window note the buttons you can select
+ labeled 
+\family typewriter
+RV
+\family default
+, 
+\family typewriter
+DV
+\family default
+ and so forth.
+ If you have made the Browser window large enough, you will see to the right
+ of these buttons the type of objects whose value you want to appear or
+ not in the lower Browser window as you toggle each button.
+ Toggle each of these buttons and see if the lower display changes.
+ If it does not, then this type of part is not in the current object.
+\end_layout
+
+\begin_layout Section
+Solving
+\begin_inset LatexCommand \index{Solving}
+
+\end_inset
+
+ an ASCEND instance
+\end_layout
+
+\begin_layout Standard
+Well, you have been patient.
+ While there are lots of interesting tools left to explore in the Browser,
+ perhaps it is time to try to solve this model.
+ To solve 
+\family typewriter
+v
+\family default
+, make it the current object (it alone should be listed in the upper left
+ window of the Browser).
+ Then, under the Export
+\begin_inset LatexCommand \index{Export to Solver}
+
+\end_inset
+
+ menu, select 'to Solver'.
+ The Solver window will open, along with a smaller window labeled Eligible
+\begin_inset LatexCommand \index{window, Eligible}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{Eligible window}
+
+\end_inset
+
+.
+ Move the Eligible window up a bit so it does not cover any or very little
+ of the Solver window.
+ Move the Solver window to the lower left and enlarge it so you can see
+ all of its contents.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+if ASCEND stops responding
+\begin_inset LatexCommand \index{responding, ASCEND stops}
+
+\end_inset
+
+, hunt down one of those "nasty" windows with a "yellow lock
+\begin_inset LatexCommand \index{yellow lock}
+
+\end_inset
+
+" and close it properly
+\end_layout
+
+\end_inset
+
+This Eligible window is 'modal': if it is open and you do not do something
+ to make it happy and go away, it will stop you from doing anything else
+ in the ASCEND system.
+ Such windows appear with a black lock icon in a yellow field -- we shall
+ call it a "yellow lock." They demand you attend to them 
+\emph on
+now
+\emph default
+.
+ A good solution would be for such a window to stay open and on top of all
+ the other open windows.
+ Unfortunately we have not been able under all window managers to stop it
+ from ducking under another window.
+ If you ever find ASCEND unwilling to respond, iconify the other windows
+ to get them out of the way, until you find one of these windows.
+ On the PC you can go to the icon bar at the bottom of your screen and,
+ by clicking on the window, bring it to the top.
+ Then do whatever it takes to make it happy and close properly -- such as
+ cancel it.
+ If you are not careful here, for example, this window will hide under the
+ Solver window before you are through with it.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+is our problem well-posed
+\begin_inset LatexCommand \index{well-posed}
+
+\end_inset
+
+?
+\end_layout
+
+\end_inset
+
+The Solver window contains the information we need to see to explain why
+ the Eligible window opened in the first place.
+ Examine the information the Solver displays.
+ It tells you that 
+\family typewriter
+v
+\family default
+ has 6 relations defining it and that all are equalities and included.
+ It has no inequalities.
+ On the right side we see there are 10 variables and all are 'free
+\begin_inset LatexCommand \index{free variables}
+
+\end_inset
+
+.' A free variable is one for which you want the system to compute a value.
+ Hmm, 6 equations in 10 variables.
+ Something is wrong here.
+ For a well-posed problem, you want 6 equations in 6 variables (i.e., square
+\begin_inset LatexCommand \index{square}
+
+\end_inset
+
+).
+ ASCEND reports that the system is underspecified
+\begin_inset LatexCommand \index{underspecified}
+
+\end_inset
+
+ by 4.
+ This means you need to pick four of the variables and declare them to be
+ fixed
+\begin_inset LatexCommand \index{fixed}
+
+\end_inset
+
+.
+ You will also have to pick values for these fixed variables before you
+ can solve for the remaining 6.
+ For such a small problem as this one, this task is not formidable.
+ For a model with 50,000 equations and 60,000 variables, one would quit
+ and go home.
+ We have exposed a need here.
+ We certainly would like ASCEND to help us here for this small problem.
+ But we insist that it help us in major ways to make the 50,000 equation,
+ 60,000 variable problem possible.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+picking variables we are going to fix
+\end_layout
+
+\end_inset
+
+Okay, the small help such as needed here is why the Eligible window opened.
+ Let's return to it.
+ It lists all the variables of those not yet fixed that are eligible to
+ be fixed and still leave us a calculation that has a chance to solve.
+ The algorithm to find eligible variables does an quick analysis of the
+ structure of the equations.
+ The variables it lists are those that can be fixed 
+\emph on
+without 
+\emph default
+the system becoming numerically singular.
+ So any variables that are not shown 
+\emph on
+cannot possibly
+\emph default
+ help you.
+\end_layout
+
+\begin_layout Standard
+So look at the list and decide what you would like to fix for your first
+ calculation with this model.
+ Diameter (
+\family typewriter
+v.D
+\family default
+) seems a good choice.
+ Now you can see why we called the instance just plain old 
+\family typewriter
+v
+\family default
+.
+ A longer name would get tiring here.
+ Anyway, pick 
+\family typewriter
+v.D
+\family default
+.
+ Immediately the list reappears with 
+\family typewriter
+v.D
+\family default
+ no longer on it.
+ ASCEND has just repeated the eligibility analysis, and found that more
+ variables still need to be fixed.
+\end_layout
+
+\begin_layout Standard
+We have three more to pick.
+ On the list are both vessel height, 
+\family typewriter
+v.H
+\family default
+, and 
+\family typewriter
+v.H_to_D_ratio
+\family default
+.
+ We certainly cannot pick both of these.
+ One implies the other if we know a value for 
+\family typewriter
+v.D
+\family default
+.
+ Pick 
+\family typewriter
+v.H_to_D_ratio
+\family default
+.
+ Note that 
+\family typewriter
+v.H
+\family default
+ is no longer eligible.
+ Good.
+ We would be worried if it were still there.
+\end_layout
+
+\begin_layout Standard
+We see 
+\family typewriter
+v.metal_density
+\emph on
+.
+
+\family default
+\emph default
+ Pick it.
+ Strange.
+ Metal mass and volume stayed eligible.
+ Why? If we pick metal mass, wall thickness is implied, and the same is
+ true if we were to pick metal volume.
+ However, as it seems much more natural to pick 
+\family typewriter
+wall_thickness
+\family default
+, make that the last variable you choose.
+ The Solver window now says this problem is square (i.e., it has 6 equations
+ in the same number of unknowns).
+ Table 
+\begin_inset LatexCommand \ref{tab:model1.variableFixed}
+
+\end_inset
+
+
+\noun off
+ summarizes the four variables we have elected here to fix.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{tab:model1.variableFixed}
+
+\end_inset
+
+Variables we have fixed
+\begin_inset LatexCommand \index{fixed variables}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="1">
+<features>
+<column alignment="center" valignment="top" leftline="true" rightline="true" width="0">
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+variable
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+D
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+H_to_D_ratio
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+meta_density
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+wall_thickness
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+ASCEND partitions the problem into smaller problems for solving
+\end_layout
+
+\end_inset
+
+Toward the bottom right of the 
+\series bold
+Solver
+\series default
+ window, we see there are 6 "blocks
+\begin_inset LatexCommand \index{blocks}
+
+\end_inset
+
+." What are blocks? ASCEND has examined the equations and, in this case,
+ has discovered that not all the equations have to be solved simultaneously.
+ There are 6 blocks of equations which it can solve in sequence.
+ 6 blocks and 6 equations means that ASCEND has found a way to solve the
+ model by solving 6 individual equations in sequence -- i.e., one at a time.
+ This is a good thing: it usually means that the solver will have less problems
+ with locating the overall solution.
+\end_layout
+
+\begin_layout Standard
+As well as breaking down the system into blocks, ASCEND has the ability
+ to rearrange some simple algebraic equations so that unknown variables
+ can be evaluated directly from the known values, with no need for iterative
+ numerical methods.
+ This is only possible if there is just one equation in the block.
+ In fact, this problem, with the 4 variables we selected to be fixed, can
+ be solved entirely without iteration.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Standard
+displaying the incidence matrix
+\begin_inset LatexCommand \index{incidence matrix}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+Can we see what ASCEND has just discovered? It turns out we can (we would
+ not have asked if we could not).
+ Under the Display menu on the Solver, select the 'Incidence matrix tool
+\begin_inset LatexCommand \index{incidence matrix tool}
+
+\end_inset
+
+'.
+ A window pops open showing us the incidence of variables in the equations
+ and display them in the order that ASCEND has found to solve them, also
+ known as a sparsity matrix
+\begin_inset LatexCommand \index{sparsity matrix}
+
+\end_inset
+
+ or sparsity pattern
+\begin_inset LatexCommand \index{sparsity pattern}
+
+\end_inset
+
+.
+ The dark squares are incidences under the variables for which we are solving;
+ the lighter looking 'X' symbols to the right side are incidences for the
+ fixed (known) variables.
+ Click on the incidence in the upper left corner.
+ ASCEND immediately identifies it for us as the 
+\family typewriter
+end_area
+\family default
+.
+ It identifies the equation as the one we labeled 
+\family typewriter
+FlatEnds
+\family default
+.
+ We can go back to our model and find the equation ASCEND will solve first.
+ The other variable in this equation is in the set we fixed; pick it and
+ discover it is 
+\family typewriter
+D
+\family default
+, the vessel diameter.
+ Of course we can compute the area of the ends given the diameter.
+ The 
+\emph on
+end_area
+\emph default
+ is 
+\begin_inset Formula $\pi D^{2}/4$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Play with the other incidences here.
+ See what the other equations are and the order ASCEND will use to solve
+ them.
+\end_layout
+
+\begin_layout Standard
+Okay, we return to our task of solving.
+ We need next to supply values for the variables we have selected to be
+ fixed.
+ Again, the approach we are going to take is acceptable for this small problem,
+ but we would not want to have to do what we are about to do for a large
+ problem.
+ Fortunately, we really have thought about these issues and have some nice
+ approaches that work even for extremely large problem -- like 100,000 equations.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+which variables are currently fixed for this problem?
+\end_layout
+
+\end_inset
+
+Let's see.
+ Do you remember the variables we fixed? What if you do not? Well, we go
+ back to the Browser.
+ Be sure 
+\family typewriter
+v
+\family default
+ remains the current object (it alone is in the upper left window).
+ Under the Find menu select 'by Type
+\begin_inset LatexCommand \index{Find by Type}
+
+\end_inset
+
+.' A small window opens with default information in it saying it will find
+ for us all objects contained in the current object 
+\family typewriter
+v
+\family default
+ of type 
+\family typewriter
+solver_var
+\family default
+ whose 
+\family typewriter
+fixed
+\family default
+ flags are set to 
+\family typewriter
+TRUE
+\family default
+.
+ These are precisely the attributes for the variables we have fixed.
+ Select OK and a list of the four variables we fixed earlier appears.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+specifying values for the fixed variables - this approach is useful for
+ small problems
+\end_layout
+
+\end_inset
+
+For each variable on this list, we should supply a value.
+ Select 
+\family typewriter
+D
+\family default
+ in the lower window of the Browser using the right (the right, not the
+ left -- make 
+\family typewriter
+v
+\family default
+ the current object and do it again) mouse button.
+ A window opens in which we input a value for 
+\family typewriter
+D
+\family default
+.
+ Put in the value 4 in the left window and ft in the right.
+ Continue by putting in the values for the variables as listed in Table
+ 
+\begin_inset LatexCommand \ref{tab:model1.valuesFixedVars}
+
+\end_inset
+
+
+\noun off
+.
+ These values immediately appear in the Browser window as you enter them.
+ If you did not fully appreciate the proper handling of dimension and units
+ before, you just got a taste of its advantages.
+ 
+\noun default
+You
+\noun off
+ did not have to worry about specifying these things in consistent preselected
+ units
+\noun default
+ -- ASCEND did this for you.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{tab:model1.valuesFixedVars}
+
+\end_inset
+
+Values to use for fixed variables
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="3">
+<features>
+<column alignment="center" valignment="top" leftline="true" width="0">
+<column alignment="center" valignment="top" leftline="true" width="0">
+<column alignment="center" valignment="top" leftline="true" rightline="true" width="0">
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+variable
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+value
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+units
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+D
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+ft
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+H_to_D_ratio
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+meta_density
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+5000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+kg/m^3
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+wall_thickness
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+5
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+mm
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+You can now solve this model.
+ Go the Solver window and, under the Execute menu, select Solve.
+ You will get a message telling you the model solved.
+ Dismiss that message and return to the Browser window to examine the results.
+ You should see the following results:
+\end_layout
+
+\begin_layout LyX-Code
+D = 1.21922 meter
+\end_layout
+
+\begin_layout LyX-Code
+H = 3.65765 meter
+\end_layout
+
+\begin_layout LyX-Code
+H_to_D_ratio = 3
+\end_layout
+
+\begin_layout LyX-Code
+end_area = 1.16748 meter^2
+\end_layout
+
+\begin_layout LyX-Code
+metal_density = 5000 kilogram/meter^3
+\end_layout
+
+\begin_layout LyX-Code
+metal_mass = 408.62 kilogram
+\end_layout
+
+\begin_layout LyX-Code
+side_area = 14.0098 meter^2
+\end_layout
+
+\begin_layout LyX-Code
+vessel_vol = 4.27025 meter^3
+\end_layout
+
+\begin_layout LyX-Code
+wall_thickness = 0.005 meter
+\end_layout
+
+\begin_layout LyX-Code
+wall_vol = 0.0817239 meter^3
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Standard
+Some of this stuff appears to have changed in the PDF....
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+alter the units used for displaying values
+\end_layout
+
+\end_inset
+
+You may wish to alter the units used to display these results.
+ For example, you enter the diameter 
+\emph on
+D
+\emph default
+ in ft.
+ You may wish to reassure yourself the 
+\family typewriter
+1.21922 meter
+\family default
+ is 4 ft.
+ Go to the Script window and under the Tools menu select 
+\emph on
+'
+\emph default
+Measuring units'.
+ The 
+\series bold
+Units
+\series default
+ window
+\begin_inset LatexCommand \index{Units window}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{window, Units}
+
+\end_inset
+
+ will open.
+ Enlarge it appropriately and then place it to the top and far right of
+ your display.
+\end_layout
+
+\begin_layout Standard
+There are two ways you can reset the units for displaying length.
+\end_layout
+
+\begin_layout Enumerate
+Length is a basic dimension in ASCEND so under the 
+\emph on
+Display
+\emph default
+ button select Length.
+ A side window will open with all the alternate units supported in ASCEND
+ for length.
+ Select ft.
+\end_layout
+
+\begin_layout Enumerate
+Or, in the lower part of the Units window is a frame labeled 'Set units'.
+ Clear and then type 
+\family typewriter
+ft
+\family default
+ then hit Enter.
+\end_layout
+
+\begin_layout Standard
+In either way, the units for all length variables will switch to ft.
+ Look at the values in the Browser window.
+\end_layout
+
+\begin_layout Standard
+The left upper window of the Units window contains many variable types that
+ have composite dimensions.
+ For example, you will find volume there.
+ Pick it and the right window fills with all the alternative units in which
+ you can express volume.
+\end_layout
+
+\begin_layout Standard
+Play with changing the units for displaying the various variables in the
+ vessel instance v.
+ 
+\end_layout
+
+\begin_layout Standard
+One point - the left window displaying types having composite dimensions
+ will display only one type for each composite dimension.
+ If the atom types you have loaded were to include volume_difference as
+ well as volume, then only one of the two types, volume or volume_difference,
+ will be listed here.
+ Changing the units to express either changes the units for both.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+returning to a consistent set of units
+\end_layout
+
+\end_inset
+
+When you are done, you may wish to return to a consistent set, such as SI
+\begin_inset LatexCommand \index{SI}
+
+\end_inset
+
+.
+ Under the Display button are different sets; pick 
+\emph on
+SI (MKS) set
+\emph default
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+now we can solve the model in other ways
+\end_layout
+
+\end_inset
+
+We can now resolve our vessel instance in any number of different ways.
+ For example we can ask what the diameter would be if we had a volume of
+ 
+\emph on
+250 ft3
+\emph default
+.
+ To accomplish this calculation, we need first to make 
+\emph on
+vessel_volume
+\emph default
+ a variable whose value we wish to fix.
+ When we do this the model will be overspecified.
+ ASCEND will indicate this problem to us and offer us a list of variables
+ - including the vessel diameter 
+\emph on
+D
+\emph default
+, one of which we will have to "unfix
+\begin_inset LatexCommand \index{unfix}
+
+\end_inset
+
+." Finally we need to alter the value of 
+\emph on
+vessel_volume
+\emph default
+ to the desired value and solve.
+ Explicit instructions to accomplish these steps are as follows.
+\end_layout
+
+\begin_layout Itemize
+In the 
+\series bold
+Browser
+\series default
+ window, make 
+\emph on
+vessel_volume
+\emph default
+ the current object (select it using the left mouse button).
+ The right window of the 
+\series bold
+Browser
+\series default
+ display the parts of the 
+\emph on
+vessel_volume
+\emph default
+, among them is the fixed flag with a value of 
+\emph on
+FALSE
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Itemize
+(If you do not see the value for fixed but rather its type as a boolean,
+ under the 
+\emph on
+View
+\emph default
+ button at the top, select 
+\emph on
+Display Atom Values.
+\emph default
+) 
+\end_layout
+
+\begin_layout Itemize
+Pick fixed with the right mouse button, and, in the small window that opens,
+ delete the value 
+\emph on
+FALSE
+\emph default
+, enter the value 
+\emph on
+TRUE
+\emph default
+ and select 
+\emph on
+OK
+\emph default
+.
+\end_layout
+
+\begin_layout Itemize
+Now make v the current object by picking it in the left window of the 
+\series bold
+Browser
+\series default
+.
+\end_layout
+
+\begin_layout Itemize
+Export v to the Solver again by selecting to Solver under the Export button.
+ A window entitled Overspecified
+\begin_inset LatexCommand \index{Overspecified}
+
+\end_inset
+
+ will appear listing the variables v.D, v.H_to_D_ratio and v.vessel_volume.
+ Pick v.D and hit the OK button; ASCEND will reset its fixed flag to FALSE.
+\end_layout
+
+\begin_layout Itemize
+Finally, return to the 
+\series bold
+Browser
+\series default
+ window and select 
+\emph on
+vessel_volume
+\emph default
+ with the right mouse button.
+ In the small window that appears type 
+\emph on
+250
+\emph default
+ in the left window, 
+\emph on
+ft^3
+\emph default
+ in the right, and hit the 
+\emph on
+OK
+\emph default
+ button.
+\end_layout
+
+\begin_layout Itemize
+Under the 
+\emph on
+Execute
+\emph default
+ button in the 
+\series bold
+Solver
+\series default
+ window, select 
+\emph on
+Solve
+\emph default
+.
+\end_layout
+
+\begin_layout Standard
+Note the 
+\series bold
+Solver
+\series default
+ reports only 4 blocks for 6 equations.
+ This time it has to solve some equations simultaneously.
+ In the 
+\series bold
+Solver
+\series default
+ window, under the 
+\emph on
+Display
+\emph default
+ button, select the 
+\emph on
+Incidence matrix
+\emph default
+ tool.
+ You will see that the first three equations must be solved together as
+ a single block of equations.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+clearing all the fixed flags
+\end_layout
+
+\end_inset
+
+For a more complicated model you may wish to start over on the process of
+ selecting which variables are fixed.
+ You can set the fixed flags for all the variables in a problem to FALSE
+ all at once -- without knowing which are currently set to TRUE.
+ In the Browser window, under the Edit button, select the Run method tool.
+ A window will open that displays a list of default methods that are automatical
+ly attached to every model in ASCEND.
+ One is called ClearAll.
+ Pick it and hit OK.
+ All the fixed flags for the entire model will now be reset to FALSE.
+ Can you think of a way to check if this is true? (Do you remember how to
+ check which variables are currently fixed? Repeat that check and you should
+ find no variables are on the list.)
+\end_layout
+
+\begin_layout Standard
+You might now want to play by changing what you calculate and fix.
+\end_layout
+
+\begin_layout Section
+Discussion
+\end_layout
+
+\begin_layout Standard
+You have just completed the creation and solving of a very small model in
+ ASCEND.
+ In doing so, you have been exposed to some interesting issues.
+ How can we separate the concept of the model from how we intend to solve
+ it? How do we make a model to be well-posed -- i.e., a model involving n
+ equations in n unknowns -- so we can solve it? How should one handle the
+ units for the variables in a modeling system? What we have shown you here
+ is for a small model.
+ We still need to show you how one can make a large model well-posed, for
+ example.
+ You will start to understand how one can do this in the next chapter.
+\end_layout
+
+\begin_layout Standard
+The next chapter is crucial for you to understand if you want to begin to
+ understand how we approach good modeling practice.
+ Please do continue with it.
+ As it uses the vessel model, it would, of course, be best to continue with
+ that chapter now.
+\end_layout
+
+\end_body
+\end_document

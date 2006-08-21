@@ -1,0 +1,2201 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize default
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+The modeling of a simple dynamic tank
+\begin_inset LatexCommand \index{dynamic tank}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{cha:ivp}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This chapter assumes you have read Chapter
+\color black
+\InsetSpace ~
+
+\begin_inset LatexCommand \vref{cha:model1}
+
+\end_inset
+
+ and Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \vref{cha:model2}
+
+\end_inset
+
+, which introduce you to ASCEND modeling concepts.
+\end_layout
+
+\begin_layout Standard
+The purpose of this chapter is to be a good first step along the path to
+ learning how to use ASCEND for dynamic simulations
+\begin_inset LatexCommand \index{dynamic simulation}
+
+\end_inset
+
+.
+ We shall lead you through the steps for creating a simple model.
+ You will also learn the standard methods that we employ for our dynamic
+ libraries
+\begin_inset LatexCommand \index{dynamic libraries}
+
+\end_inset
+
+.
+ We will present our reasons for the steps we take.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+The problem
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00.00.0000
+Step\InsetSpace ~
+1: We would like to create a dynamic model of a simple tank.
+\end_layout
+
+\begin_layout Subsubsection*
+Topics covered in this chapter are:
+\end_layout
+
+\begin_layout Itemize
+Converting the word description to an ASCEND model.
+\end_layout
+
+\begin_layout Itemize
+Solving the model.
+\end_layout
+
+\begin_layout Itemize
+Creating a script to load and execute an instance of the model.
+\end_layout
+
+\begin_layout Itemize
+Integrating
+\begin_inset LatexCommand \index{integrating}
+
+\end_inset
+
+ the model.
+\end_layout
+
+\begin_layout Itemize
+View Integration Results.
+\end_layout
+
+\begin_layout Section
+Converting the word description
+\newline
+into an ASCEND model
+\end_layout
+
+\begin_layout Standard
+As stated in Section\InsetSpace ~
+
+\begin_inset LatexCommand \vref{sec:model1.converting-the-word}
+
+\end_inset
+
+
+\color none
+, we need to make an instance of a type and solve the instance.
+ So we shall start by creating a tank type definition.
+ We will have to create our type definition as a text file using a text
+ editor.
+ (Possible text editors
+\begin_inset LatexCommand \index{text editor}
+
+\end_inset
+
+ are Word
+\begin_inset LatexCommand \index{Word}
+
+\end_inset
+
+, Emacs
+\begin_inset LatexCommand \index{Emacs}
+
+\end_inset
+
+, Notepad
+\begin_inset LatexCommand \index{Notepad}
+
+\end_inset
+
+, pico
+\begin_inset LatexCommand \index{pico}
+
+\end_inset
+
+, vi
+\begin_inset LatexCommand \index{vi}
+
+\end_inset
+
+, etc.
+ We shall discuss editors shortly.)
+\end_layout
+
+\begin_layout Standard
+We need first to decide the parts to our model.
+ In this case we know that we need the variables listed in Table\InsetSpace ~
+
+\begin_inset LatexCommand \eqref{cap:Variables-required-for}
+
+\end_inset
+
+We readily fill in the first three columns in this table, and we can also
+ fill out the fourth column if we know the units that are associated with
+ each of the parts.
+ To find the ASCEND variable type needed for the fourth column use the find
+ menu on the library window and select ATOM by units
+\begin_inset LatexCommand \index{atom, select by units}
+
+\end_inset
+
+.
+ The result of this search will be all the ASCEND variable type that have
+ the units you entered.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{cap:Variables-required-for}
+
+\end_inset
+
+Variables required for model
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="8" columns="4">
+<features>
+<column alignment="center" valignment="top" leftline="true" width="0">
+<column alignment="center" valignment="top" leftline="true" width="1.5in">
+<column alignment="center" valignment="top" leftline="true" width="1.5in">
+<column alignment="center" valignment="top" leftline="true" rightline="true" width="1in">
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Symbol
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Meaning
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Typical Units
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+ASCEND variable type
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+M
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Moles in Tank
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+mol, kmol
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+mole
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+dM_dt
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Rate of change of Moles in tank (derivative)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+mol/sec, kmol/sec
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+molar_rate
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+input
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Feed flow rate
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+mol/sec, kmol/sec
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+molar_rate
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+output
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Output flow rate
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+mol/sec, kmol/sec
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+molar_rate
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+Volume
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Volume of liquid in the tank
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+m^3,ft^3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+volume
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+density
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Molar density of tank fluid
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+mol/m^3,mol/ft^3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+molar_density
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+dynamic
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Boolean for switching between dynamic and steady state simulations
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+N/A
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+boolean
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We would like to be able to compute the number of moles in the tank for
+ a given volume assuming steady state
+\begin_inset LatexCommand \index{steady state}
+
+\end_inset
+
+ (dM_dt = 0).
+ We would also like to be able to calculate how the volume changes if we
+ are not at steady state.
+ The following equations describe the simple tank system.
+\end_layout
+
+\begin_layout Standard
+The first equation is the differential equation that relates the input and
+ output flows to the accumulation in the tank.
+ The second equation is the relation of the moles in the tank to the volume
+ of liquid and should be rearranged to avoid division
+\begin_inset LatexCommand \index{division, avoid}
+
+\end_inset
+
+.
+ These equations are all that is need for a simple tank.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{equation}
+dM\_dt=input-output\label{eq:ivp.dMdt}\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{equation}
+Volume=\frac{M}{density}\label{eq:ivp.Volume}\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+The first version of the code for tank
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "ivpsystem.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "atoms.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+MODEL tank
+\begin_inset LatexCommand \index{tank, dynamic MODEL}
+
+\end_inset
+
+;
+\end_layout
+
+\begin_layout LyX-Code
+(* List of Variables *)
+\end_layout
+
+\begin_layout LyX-Code
+dM_dt IS_A molar_rate;
+\end_layout
+
+\begin_layout LyX-Code
+M IS_A mole;
+\end_layout
+
+\begin_layout LyX-Code
+input IS_A molar_rate;
+\end_layout
+
+\begin_layout LyX-Code
+output IS_A molar_rate;
+\end_layout
+
+\begin_layout LyX-Code
+Volume IS_A volume;
+\end_layout
+
+\begin_layout LyX-Code
+density IS_A real_constant;
+\end_layout
+
+\begin_layout LyX-Code
+dynamic IS_A boolean;
+\end_layout
+
+\begin_layout LyX-Code
+t IS_A time;
+\end_layout
+
+\begin_layout LyX-Code
+(* Equations *)
+\end_layout
+
+\begin_layout LyX-Code
+dM_dt = input - output;
+\end_layout
+
+\begin_layout LyX-Code
+M = Volume * density;
+\end_layout
+
+\begin_layout LyX-Code
+(* Assignment of values to Constants *)
+\end_layout
+
+\begin_layout LyX-Code
+density :==10 {mol/m^3};
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD check_self;
+\end_layout
+
+\begin_layout LyX-Code
+IF (input < 1e-4 {mole/s}) THEN
+\end_layout
+
+\begin_layout LyX-Code
+STOP {Input dried up in tank};
+\end_layout
+
+\begin_layout LyX-Code
+END IF;
+\end_layout
+
+\begin_layout LyX-Code
+IF (output < 1e-4 {mole/s}) THEN
+\end_layout
+
+\begin_layout LyX-Code
+STOP {Output dried up in tank}; 
+\end_layout
+
+\begin_layout LyX-Code
+END IF; 
+\end_layout
+
+\begin_layout LyX-Code
+END check_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD check_all;
+\end_layout
+
+\begin_layout LyX-Code
+RUN check_self;
+\end_layout
+
+\begin_layout LyX-Code
+END check_all;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+dynamic := FALSE;
+\end_layout
+
+\begin_layout LyX-Code
+t :=0 {sec};
+\end_layout
+
+\begin_layout LyX-Code
+dM_dt :=0 {mol/sec};
+\end_layout
+
+\begin_layout LyX-Code
+dM_dt.lower_bound := -1e49 {mol/sec};
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_all;
+\end_layout
+
+\begin_layout LyX-Code
+RUN default_self;
+\end_layout
+
+\begin_layout LyX-Code
+END default_all;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD bound_self;
+\end_layout
+
+\begin_layout LyX-Code
+END bound_self;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD bound_all;
+\end_layout
+
+\begin_layout LyX-Code
+RUN bound_self;
+\end_layout
+
+\begin_layout LyX-Code
+END bound_all;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD scale_self; 
+\end_layout
+
+\begin_layout LyX-Code
+END scale_self;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD scale_all;
+\end_layout
+
+\begin_layout LyX-Code
+RUN scale_self;
+\end_layout
+
+\begin_layout LyX-Code
+END scale_all;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD seqmod;
+\end_layout
+
+\begin_layout LyX-Code
+dM_dt.fixed :=TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+M.fixed :=FALSE;
+\end_layout
+
+\begin_layout LyX-Code
+Volume.fixed :=TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+input.fixed :=TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+output.fixed :=FALSE;
+\end_layout
+
+\begin_layout LyX-Code
+IF dynamic THEN
+\end_layout
+
+\begin_layout LyX-Code
+dM_dt.fixed :=FALSE;
+\end_layout
+
+\begin_layout LyX-Code
+M.fixed :=TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+Volume.fixed :=FALSE;
+\end_layout
+
+\begin_layout LyX-Code
+output.fixed :=TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+END IF;
+\end_layout
+
+\begin_layout LyX-Code
+END seqmod;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify;
+\end_layout
+
+\begin_layout LyX-Code
+input.fixed :=TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+RUN seqmod;
+\end_layout
+
+\begin_layout LyX-Code
+END specify;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD set_ode;
+\end_layout
+
+\begin_layout LyX-Code
+(* set ODE_TYPE -1=independent variable,
+\end_layout
+
+\begin_layout LyX-Code
+0=algebraic variable, 1=state variable,
+\end_layout
+
+\begin_layout LyX-Code
+2=derivative *)
+\end_layout
+
+\begin_layout LyX-Code
+t.ode_type :=-1;
+\end_layout
+
+\begin_layout LyX-Code
+dM_dt.ode_type :=2;
+\end_layout
+
+\begin_layout LyX-Code
+M.ode_type :=1;
+\end_layout
+
+\begin_layout LyX-Code
+(* Set ODE_ID *)
+\end_layout
+
+\begin_layout LyX-Code
+dM_dt.ode_id :=1;
+\end_layout
+
+\begin_layout LyX-Code
+M.ode_id :=1;
+\end_layout
+
+\begin_layout LyX-Code
+END set_ode;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD set_obs;
+\end_layout
+
+\begin_layout LyX-Code
+(* Set OBS_ID to any integer value greater 
+\end_layout
+
+\begin_layout LyX-Code
+than 0, the variable will be recorded 
+\end_layout
+
+\begin_layout LyX-Code
+(i.e., observed) *)
+\end_layout
+
+\begin_layout LyX-Code
+M.obs_id :=1;
+\end_layout
+
+\begin_layout LyX-Code
+Volume.obs_id :=2;
+\end_layout
+
+\begin_layout LyX-Code
+input.obs_id :=3;
+\end_layout
+
+\begin_layout LyX-Code
+output.obs_id :=4;
+\end_layout
+
+\begin_layout LyX-Code
+END set_obs;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD values;
+\end_layout
+
+\begin_layout LyX-Code
+Volume :=5 {m^3};
+\end_layout
+
+\begin_layout LyX-Code
+input :=100 {mole/s}; 
+\end_layout
+
+\begin_layout LyX-Code
+END values;
+\end_layout
+
+\begin_layout LyX-Code
+END tank; 
+\end_layout
+
+\begin_layout Standard
+Our model definition has the following structure for it so far:
+\end_layout
+
+\begin_layout Itemize
+MODEL statement
+\end_layout
+
+\begin_layout Itemize
+list of variables we intend to use in the type definition
+\end_layout
+
+\begin_layout Itemize
+equations
+\end_layout
+
+\begin_layout Itemize
+METHODS
+\end_layout
+
+\begin_layout Itemize
+END statement
+\end_layout
+
+\begin_layout Standard
+While we have put the statements in this order, we could mix them up and
+ intermix the middle two types of statements, even going to the extreme
+ of defining the variables after we first use them.
+ Once the 
+\family typewriter
+METHODS
+\family default
+ section is started no new equations or variables can be declared.
+ The 
+\family typewriter
+MODEL
+\family default
+ and 
+\family typewriter
+END
+\family default
+ statements begin and end the type definition.
+\end_layout
+
+\begin_layout Standard
+There are two new methods added to a dynamic model that you would not see
+ in a steady state model, and they are the 
+\family typewriter
+set_ode
+\family default
+ and 
+\family typewriter
+set_obs
+\family default
+ methods.
+ The 
+\family typewriter
+set_ode
+\family default
+ method is used to setup the model for integration.
+ The 
+\family typewriter
+set_obs
+\family default
+ method is used to tell ASCEND which variables you would like to observe
+ in the output of the integration.
+\end_layout
+
+\begin_layout Standard
+Now we need to discuss the how and why of the two new methods.
+ The 
+\family typewriter
+set_ode
+\family default
+ method is used to set up the equations and variables described in the model
+ for integration by LSODE
+\begin_inset LatexCommand \index{LSODE}
+
+\end_inset
+
+.
+ In order for LSODE to be able to integrate the model, it needs to know
+ which variable is the independent variable - in this case 
+\family typewriter
+t
+\family default
+ (time), which variables are the derivatives, and which are the states.
+ The way we do this is we have to add a few extra attributes to each variable.
+ In Section\InsetSpace ~
+
+\begin_inset LatexCommand \ref{sec:model1.converting-the-word}
+
+\end_inset
+
+
+\color none
+, the idea of an atom was discussed with its units, default value, bounds
+ etc.
+ We need to add 5 more of this type of parameter.
+ These attributes
+\begin_inset LatexCommand \index{attributes, ODE variables}
+
+\end_inset
+
+ are 
+\family typewriter
+\color black
+ode_type
+\family default
+\color none
+, 
+\family typewriter
+ode_id
+\family default
+,
+\family typewriter
+ obs_id
+\family default
+, 
+\family typewriter
+ode_rtol
+\family default
+ and 
+\family typewriter
+ode_atol
+\family default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+This now brings us to the reason there is a 
+\family typewriter
+system.a4l
+\family default
+ and an 
+\family typewriter
+ivpsystem.a4l
+\family default
+
+\begin_inset LatexCommand \index{ivpsystem.a4l}
+
+\end_inset
+
+.
+ For a steady state model the new attributes discussed above are not needed,
+ and would take up memory and introduce confusion; therefore, they are excluded
+ for the system library.
+ If a dynamic simulations is to be loaded and solved, the ivpsystem library
+ needs to be loaded instead of the system library so the extra attributes
+ will be present with each part.
+\end_layout
+
+\begin_layout Standard
+We will now go through the purpose of each of these attributes.
+ First 
+\family typewriter
+ode_type
+\family default
+ is to tell the system what type of variable it is.
+ A value of -1 for 
+\family typewriter
+ode_type
+\family default
+ means the variable is the independent variable, 0 means it is an algebraic
+ variable (default), 1 means it is a state variable, and finally 2 means
+ it is a derivative.
+ 
+\end_layout
+
+\begin_layout Standard
+The attribute 
+\family typewriter
+ode_id
+\family default
+ is used to match the state variables with their derivatives and only needs
+ to be used if the variable is a state or derivative.
+ In the example 
+\family typewriter
+M
+\family default
+ is a state and 
+\family typewriter
+dM_dt
+\family default
+ is the derivative.
+ Therefore they both need to have the same 
+\family typewriter
+ode_id
+\family default
+ so ASCEND will know that they belong together.
+ Each state and derivative pair needs to have a different 
+\family typewriter
+ode_id
+\family default
+; however, it does not matter what the number is as long as it is a positive
+ integer and no other state and derivative pair has the same number.
+ 
+\end_layout
+
+\begin_layout Standard
+Next 
+\family typewriter
+obs_id
+\family default
+ is used by the user to flag a variable for observation while integrating.
+ For any integer value of 
+\family typewriter
+obs_id
+\family default
+ greater then 0 the variable will be observed.
+ The result of flagging a variable for observation is that its values will
+ be in a data column in one of two output files.
+ One of the files of data produced with each integration contains the values
+ of the states and the second the values of the variables flagged for observatio
+n.
+ The default file names are 
+\family typewriter
+y.dat
+\family default
+ and 
+\family typewriter
+obs.dat
+\family default
+ respectfully; however, they can be changed in the solver options
+\begin_inset LatexCommand \index{options, solver}
+
+\end_inset
+
+ general menu.
+ 
+\end_layout
+
+\begin_layout Standard
+Last, but not least, are the error control attributes for LSODE: 
+\family typewriter
+ode_rtol
+\family default
+ and 
+\family typewriter
+ode_atol
+\family default
+.
+ Both of these come directly from the LSODE attributes rtol and atol which
+ are the local relative and absolute error tolerances for the variable respectiv
+ely.
+\end_layout
+
+\begin_layout Standard
+There is one other thing about methods that we need to discuss before moving
+ on and that is the 
+\family typewriter
+seqmod
+\family default
+ method.
+ If you have not already noticed, it is a little different from the other
+ examples as it has an IF statement in it.
+ This is an important part of the dynamic simulation.
+ It switches the degrees of freedom depending on if we are computing an
+ initial condition or performing an integration step.
+ We use the boolean 
+\family typewriter
+dynamic
+\family default
+
+\begin_inset LatexCommand \index{dynamic, boolean variable}
+
+\end_inset
+
+ to control whether we are going to solve the model as a steady state model
+ (
+\family typewriter
+dynamic := FALSE;
+\family default
+) or as a dynamic model (
+\family typewriter
+dynamic := TRUE;
+\family default
+).
+ For the current example, we have a simple tank and, for steady state, we
+ would like to calculate the number of moles and output flow rate for a
+ fixed tank volume and input flow rate.
+ Also, for the model to be at steady state, we have to fix the derivative
+ and set it equal to zero, 
+\family typewriter
+(dM_dt.fixed :=TRUE; dM_dt :=0 {mole/s};.
+
+\family default
+ The derivative is normally set to zero in the 
+\family typewriter
+default_self
+\family default
+ method to prepare the model to solve for initial steady-state conditions.)
+ If we then want to integrate this model for a fixed output flow (as when
+ pumping the liquid out under flow control), we would free up the volume
+ and fix the output flow rate.
+ The model will then compute how the liquid volume will change with time.
+ 
+\end_layout
+
+\begin_layout Standard
+In dynamic simulation, an initial value integration package, such as LSODE,
+ repeatedly asks the model to compute the time derivatives for the state
+ variables, given fixed values for the states.
+ Using values for 
+\family typewriter
+dM_dt
+\family default
+ computed by the model, the integration package will then update the state
+ variable, 
+\family typewriter
+M
+\family default
+, to its new value.
+ To accommodate this calculation, we therefore fix the state variable, 
+\family typewriter
+M
+\family default
+, and free up the derivative, 
+\family typewriter
+dM_dt
+\family default
+.
+\end_layout
+
+\begin_layout Section
+Solving an ASCEND instance
+\end_layout
+
+\begin_layout Standard
+We are now ready to read in and compile an instance of our tank model.
+ We are assuming that you understand how to use the scripting window, and
+ we will show how to go about reading, compiling, solving and integrating
+ a dynamic model using the following script.
+\end_layout
+
+\begin_layout Subsubsection*
+Script code
+\begin_inset LatexCommand \index{script, solve dynamic model}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+DELETE TYPES;
+\end_layout
+
+\begin_layout LyX-Code
+READ FILE "example.a4c";
+\end_layout
+
+\begin_layout LyX-Code
+COMPILE ex OF tank;
+\end_layout
+
+\begin_layout LyX-Code
+BROWSE ex;
+\end_layout
+
+\begin_layout LyX-Code
+RUN {ex.default_self};
+\end_layout
+
+\begin_layout LyX-Code
+RUN {ex.reset};
+\end_layout
+
+\begin_layout LyX-Code
+RUN {ex.values};
+\end_layout
+
+\begin_layout LyX-Code
+SOLVE ex WITH QRSlv;
+\end_layout
+
+\begin_layout LyX-Code
+RUN {ex.check_all};
+\end_layout
+
+\begin_layout LyX-Code
+ASSIGN {ex.dynamic} TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+RUN {ex.reset};
+\end_layout
+
+\begin_layout LyX-Code
+RUN {ex.set_ode};
+\end_layout
+
+\begin_layout LyX-Code
+RUN {ex.set_obs};
+\end_layout
+
+\begin_layout LyX-Code
+# User will need to edit the next line to correct path 
+\end_layout
+
+\begin_layout LyX-Code
+# to the models directory
+\end_layout
+
+\begin_layout LyX-Code
+source "$env(ASCENDDIST)/models/set_intervals.tcl";
+\end_layout
+
+\begin_layout LyX-Code
+set_int 500 10 {s};
+\end_layout
+
+\begin_layout LyX-Code
+INTEGRATE ex FROM 0 TO 50 WITH BLSODE;
+\end_layout
+
+\begin_layout LyX-Code
+ASSIGN {ex.input} 120 {mole/s};
+\end_layout
+
+\begin_layout LyX-Code
+INTEGRATE ex FROM 50 TO 499 WITH BLSODE;
+\end_layout
+
+\begin_layout LyX-Code
+# In order to view integration results for both the
+\end_layout
+
+\begin_layout LyX-Code
+# integrations the user will have to go to the solver 
+\end_layout
+
+\begin_layout LyX-Code
+# window, select options, general and turn off the 
+\end_layout
+
+\begin_layout LyX-Code
+# overwrite integrator logs toggle.
+\end_layout
+
+\begin_layout LyX-Code
+# (NOTE: If you were then to run a different model or this 
+\end_layout
+
+\begin_layout LyX-Code
+# same simulation again it would still write to the same 
+\end_layout
+
+\begin_layout LyX-Code
+# files)
+\end_layout
+
+\begin_layout LyX-Code
+# In order to see both sets of data at the same time on
+\end_layout
+
+\begin_layout LyX-Code
+# one plot you will have to merge the two sets of data in
+\end_layout
+
+\begin_layout LyX-Code
+# the file.
+ This is done with following command.
+\end_layout
+
+\begin_layout LyX-Code
+asc_merge_data_file ascend new_obs.dat obs.dat;
+\end_layout
+
+\begin_layout LyX-Code
+# This command can also be used to convert data into a
+\end_layout
+
+\begin_layout LyX-Code
+# format that can be loaded into matlab for further work.
+\end_layout
+
+\begin_layout LyX-Code
+asc_merge_data_file matlab matlab_obs.m obs.dat;
+\end_layout
+
+\begin_layout LyX-Code
+# This command can also be used to convert data into a
+\end_layout
+
+\begin_layout LyX-Code
+# format that can be loaded into excel as a tab delimited
+\end_layout
+
+\begin_layout LyX-Code
+# text file.
+\end_layout
+
+\begin_layout LyX-Code
+asc_merge_data_file excel excel_obs.txt obs.dat;
+\end_layout
+
+\begin_layout Standard
+First of all reading and compiling an instance of a dynamic model is the
+ same as a steady state model except, as stated earlier, we must load 
+\family typewriter
+ivpsystem.a4l
+\family default
+ instead of 
+\family typewriter
+system.a4l
+\family default
+.
+ The file containing 
+\family typewriter
+example.a4c
+\family default
+ in the first version of the code has 
+\family typewriter
+REQUIRE
+\family default
+ statements to load the right system file and the file 
+\family typewriter
+atoms.a4l
+\family default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Now it is time to solve the model, and this is where things start to change.
+ We must first solve the model for its initial conditions.
+ We set the boolean variable 
+\family typewriter
+dynamic
+\family default
+ to 
+\family typewriter
+FALSE
+\family default
+ (in the 
+\family typewriter
+default_self
+\family default
+ method) and run the 
+\family typewriter
+reset
+\family default
+ method to get a well-posed steady-state model.
+ We also need to run the 
+\family typewriter
+values
+\family default
+ method to set the fixed values of the initial conditions.
+ Finally we are solve, getting as the solution the initial conditions for
+ our model.
+\end_layout
+
+\begin_layout Standard
+After solving for the initial conditions
+\begin_inset LatexCommand \index{initial conditions}
+
+\end_inset
+
+, we set things up for the dynamic simulation.
+ We set the boolean variable 
+\family typewriter
+dynamic
+\family default
+ to 
+\family typewriter
+TRUE
+\family default
+ and then run the 
+\family typewriter
+seqmod
+\family default
+ method to give a well-posed dynamic model.
+ We now have to establish which variables are the independent variables,
+ the state variables and their corresponding derivatives, and tell which
+ variables we would like to observe; we run 
+\family typewriter
+set_ode
+\family default
+ and 
+\family typewriter
+set_obs
+\family default
+ methods described above.
+\end_layout
+
+\begin_layout Standard
+In order for ASCEND and LSODE to know what step size and how many steps
+ we want to observe, we must load a Tcl file that defines a new script command.
+ The file we need to load is called 
+\family typewriter
+set_intervals.tcl
+\family default
+, and it is found in the models subdirectory of the ASCEND distribution.
+ The command source comes from Tcl and is used to read and execute the a
+ set of commands in a file.
+ The file in this case is 
+\family typewriter
+set_intervals.tcl
+\family default
+ and the commands within it setup a new script command 
+\family typewriter
+set_int
+\family default
+.
+ Once we have loaded this file, we can use the new command 
+\family typewriter
+set_int
+\family default
+ to set up the number of possible steps and their maximum size.
+ Now we are ready to integrate.
+ The way we do this is to use the 
+\family typewriter
+INTEGRATE
+\family default
+ command in the script.
+ The syntax for these command is as follows.
+\end_layout
+
+\begin_layout Subsubsection*
+Syntax for 
+\family typewriter
+set_int
+\end_layout
+
+\begin_layout LyX-Code
+set_int number_of_steps step_size
+\end_layout
+
+\begin_layout LyX-Code
+     {units of step size(time)};
+\end_layout
+
+\begin_layout Subsubsection*
+Syntax for 
+\family typewriter
+INTEGRATE
+\family default
+ 
+\end_layout
+
+\begin_layout LyX-Code
+INTGRATE compiled_model_name 
+\end_layout
+
+\begin_layout LyX-Code
+   FROM initial_step 
+\end_layout
+
+\begin_layout LyX-Code
+   TO final_step 
+\end_layout
+
+\begin_layout LyX-Code
+   WITH BLSODE;
+\end_layout
+
+\begin_layout Standard
+The command is set up with the initial and final step so that you can integrate
+ for a number of steps, then make step changes, and then continue to integrate
+ another number of steps.
+\end_layout
+
+\begin_layout Section
+Viewing Simulation Results
+\end_layout
+
+\begin_layout Standard
+To view the simulation results, open the ASCPLOT
+\begin_inset LatexCommand \index{ASCPLOT}
+
+\end_inset
+
+ window using the Tools menu on the Script window.
+ To view a plot, first use the File menu to load the data using Load data
+ set.
+ Depending on what you want to look at, you can load the file containing
+ the states or the file containing the variables you flagged for observation.
+ Once the data file is loaded, you can double click on the file name in
+ the top window to get a list of the variables in the file.
+ This list will appear in the left window named Unused variables
+\begin_inset LatexCommand \index{variables, unused}
+
+\end_inset
+
+ below where you just double clicked.
+ As you will notice on the line below, the independent variable has already
+ been set to time.
+ The way we select the variables we want to plot vs.
+ time is to highlight them from the list in the left window and, using the
+ top arrow button, move them over to the plotted variables window on the
+ right.
+ We then use the View plot file command from the Execute menu to view the
+ plot.
+ 
+\end_layout
+
+\begin_layout Standard
+If we now want to plot something else, we simply highlight those variables
+ that we do not want to plot in the plotted variables window, use the other
+ arrow to move them back to the unused variable window and then move new
+ variables to the plotted variables window.
+ 
+\end_layout
+
+\begin_layout Standard
+If we want to change the independent variable, we select the variable we
+ want to be the new independent variable from the list in either the unused
+ variable window or the plotted variable window and then use the appropriate
+ down arrow to move that variable down to become the independent variable.
+\end_layout
+
+\begin_layout Subsection
+Graphing options
+\end_layout
+
+\begin_layout Standard
+Now that you are able to view a plot, you might want to add titles or change
+ the axis scale, line colors, and so forth.
+ Adding titles can be done by selecting set 
+\shape italic
+titles
+\shape default
+ under the 
+\shape italic
+Display
+\shape default
+ menu, a new window will open in which you will have the option to add a
+ plot title and axis labels.
+ To change the axis scale, line color and many other features select see
+ options from the 
+\shape italic
+Options
+\shape default
+ menu.
+\end_layout
+
+\begin_layout Subsubsection*
+Graphing in Windows
+\end_layout
+
+\begin_layout Standard
+Under MS Windows
+\begin_inset LatexCommand \index{MS Windows}
+
+\end_inset
+
+ the default graph program Tkxgraph
+\begin_inset LatexCommand \index{Tkxgraph}
+
+\end_inset
+
+ gives you full control of the options without having to go through the
+ ASCPLOT Options menu.
+ Tkxgraph is also available for UNIX, but xgraph
+\begin_inset LatexCommand \index{xgraph}
+
+\end_inset
+
+ does a much better job drawing dashed lines with X11 than Tkxgraph does.
+\end_layout
+
+\begin_layout Standard
+If you decide you do not like the plotting tools described above, you have
+ two more options, and they are to convert the ASCEND output data files
+ so that they can be loaded by Matlab or a spreadsheet.
+ To convert the data files a new script command needs to be introduced and
+ the command is 
+\family typewriter
+asc_merge_data_file
+\family default
+
+\begin_inset LatexCommand \index{asc\_merge\_data\_file}
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+Syntax for 
+\family typewriter
+asc_merge_data_file
+\family default
+ command
+\end_layout
+
+\begin_layout LyX-Code
+asc_merge_data_file convert_to 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+   output_file_name input_file_names
+\end_layout
+
+\begin_layout Standard
+The syntax for the 
+\family typewriter
+asc_merge_data_file
+\family default
+ command is as follows.
+ First of all the 
+\family typewriter
+convert_to
+\family default
+ is the format you want the data converted to.
+ There are three options matlab, excel or ascend.
+ The 
+\family typewriter
+output_file_name
+\family default
+ is exactly that, the name of the file in which you want the converted data
+ to be put.
+ The 
+\family typewriter
+input_file_names
+\family default
+ is also exactly that, the file name or names that you want converted.
+ If more than one input file is given the data is combined into one output
+ file.
+\end_layout
+
+\begin_layout Standard
+If the matlab
+\begin_inset LatexCommand \index{matlab}
+
+\end_inset
+
+ option is used the output file extension should be 
+\family typewriter
+m
+\family default
+, if excel is used the extension should be 
+\family typewriter
+txt
+\family default
+ as it is a tab delimited text file and for ascend the extension should
+ be 
+\family typewriter
+dat
+\family default
+ for use with ASCPLOT.
+\end_layout
+
+\begin_layout Standard
+You maybe wondering what exactly is this 
+\family typewriter
+asc_merge_data_file
+\family default
+ command doing.
+ In the next three paragraphs we will give a brief explanation of each of
+ the options.
+\end_layout
+
+\begin_layout Subsubsection*
+Matlab conversion
+\end_layout
+
+\begin_layout Standard
+When the data is converted to be used in matlab the first thing that is
+ done is the header of the ascend data file is placed in the output file
+ but is commented out.
+ This is so the user can still tell when the data was created.
+ The next thing is does is put all the data into a matrix that has the same
+ name as the output file with var added to the end.
+ All variable names from the ascend data file are then converted to matlab
+ legal names by replacing the all dots and brackets with underscores(_).
+ The new variable names are then set equal to there corresponding column
+ of data in the matrix.
+ Each variable then becomes a vector.
+ When the file is run all the data is loaded and set equal to the new variable
+ names and can easily be plotted using matlab commands.
+\end_layout
+
+\begin_layout Subsubsection*
+Excel
+\begin_inset LatexCommand \index{Excel}
+
+\end_inset
+
+ conversion
+\end_layout
+
+\begin_layout Standard
+When the data is converted to be used in Excel the only thing that happens
+ is instead of the list of variables and units being a column it is turn
+ into rows.
+ When the data is loaded into Excel as a tab delimited text file all the
+ data will be in columns with the first row being the units of the data
+ and the second being the ascend variable name.
+ The data is then easily plotted using the Excel graphing package.
+\end_layout
+
+\begin_layout Subsubsection*
+Ascend conversion
+\end_layout
+
+\begin_layout Standard
+This is not so much a conversion as a merge and is the origin of the command.
+ It is only useful if there are multiple headers in a file or more than
+ one input file is given.
+ Multiple headers in the file occur when stopping and starting integrations
+ with the overwrite option turned off.
+ This conversion removes all subsequent headers that are the same as the
+ first, whether in one file or multiple, to leave one output file with what
+ looks like one data set for plotting.
+ If the headers are different the data will just be combined into one file
+ and when loaded in ASCPLOT will still look like different data sets.
+\end_layout
+
+\begin_layout Section
+Preparing a model for reuse
+\begin_inset LatexCommand \index{reuse, model}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+There are four major ways to prepare a model for reuse as described in Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cha:model2}
+
+\end_inset
+
+.
+ All of what is said there about reusable models applies to dynamic models.
+ However, there is one thing that we think should be repeated to make clear
+ for dynamic models, and that is parameterizing a model.
+\end_layout
+
+\begin_layout Subsection
+Parameterizing
+\begin_inset LatexCommand \index{parameterizing}
+
+\end_inset
+
+ the tank model
+\end_layout
+
+\begin_layout Standard
+As stated in Section\InsetSpace ~
+
+\begin_inset LatexCommand \vref{sec:model2.parameterizingVessel}
+
+\end_inset
+
+
+\color none
+, parameterizing a model type definition alerts a future user as to which
+ parts of this model you deem to be the most likely to be shared.
+ An instance of a parameterized model is then created from previously defined
+ types.
+\end_layout
+
+\begin_layout Standard
+The new thing that needs to be repeated is that the 
+\family typewriter
+ode_id
+\family default
+'s of derivative and state pairs must be different even if they are in different
+ part of a larger model.
+ If for instance we wanted to have two tanks in series we could parameterize
+ the tank model and connect the two tanks together with the outlet of the
+ first tank being the feed to the second tank.
+ However, with the 
+\family typewriter
+set_ode
+\family default
+
+\begin_inset LatexCommand \index{set\_ode}
+
+\end_inset
+
+ method, as we have currently written it, the derivative and state pairs
+ for both tanks would have the same 
+\family typewriter
+ode_id
+\family default
+'s.
+ Our way around this is to introduce an 
+\family typewriter
+ode_counter
+\family default
+ that is used to set the 
+\family typewriter
+ode_id
+\family default
+'s and is incremented after each derivative and state pair is set.
+ The 
+\family typewriter
+ode_counter
+\family default
+ becomes one of the model parameters and is, therefore, the same in all
+ models.
+ We will now give an example of this to help explain.
+\end_layout
+
+\begin_layout Subsubsection*
+
+\family typewriter
+set_ode
+\family default
+ method for parameterized tank model
+\end_layout
+
+\begin_layout LyX-Code
+METHOD set_ode;
+\end_layout
+
+\begin_layout LyX-Code
+(* set ODE_TYPE -1=independent variable,
+\end_layout
+
+\begin_layout LyX-Code
+0=algebraic variable, 1=state variable,
+\end_layout
+
+\begin_layout LyX-Code
+2=derivative *)
+\end_layout
+
+\begin_layout LyX-Code
+t.ode_type :=-1;
+\end_layout
+
+\begin_layout LyX-Code
+dM_dt.ode_type :=2;
+\end_layout
+
+\begin_layout LyX-Code
+M.ode_type :=1;
+\end_layout
+
+\begin_layout LyX-Code
+(* Set ODE_ID *)
+\end_layout
+
+\begin_layout LyX-Code
+dM_dt.ode_id := ode_offset;
+\end_layout
+
+\begin_layout LyX-Code
+M.ode_id := ode_offset;
+\end_layout
+
+\begin_layout LyX-Code
+ode_offset := ode_offset+1;
+\end_layout
+
+\begin_layout LyX-Code
+END set_ode;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout Subsubsection*
+
+\family typewriter
+set_ode
+\family default
+ method for larger model with two tank models being used as parts
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+METHOD set_ode;
+\end_layout
+
+\begin_layout LyX-Code
+RUN tank_1.set_ode;
+\end_layout
+
+\begin_layout LyX-Code
+RUN tank_2.set_ode;
+\end_layout
+
+\begin_layout LyX-Code
+END set_ode;
+\end_layout
+
+\begin_layout Standard
+The parameterized tank 
+\family typewriter
+set_ode
+\family default
+ method is almost the same as the original one we wrote except it now uses
+ 
+\family typewriter
+ode_offset
+\family default
+, an 
+\family typewriter
+ode_counter
+\family default
+, to set the 
+\family typewriter
+ode_id
+\family default
+s.
+ It may be obvious, but this is how it works.
+ When the larger model 
+\family typewriter
+set_ode
+\family default
+ is run, the 
+\family typewriter
+set_ode
+\family default
+ for 
+\family typewriter
+tank_1
+\family default
+ is run, the
+\family typewriter
+ ode_id
+\family default
+s are set to the current value of 
+\family typewriter
+ode_offset
+\family default
+, the counter is then incremented and 
+\family typewriter
+set_ode
+\family default
+ is run for 
+\family typewriter
+tank_2
+\family default
+ which then gets the incremented 
+\family typewriter
+ode_offset
+\family default
+ so the values are now different.
+ You can now hopefully see that we can string as may tanks together as we
+ like, and all the derivative and state pairs 
+\family typewriter
+ode_id
+\family default
+ will be different.
+\end_layout
+
+\begin_layout Standard
+This same idea can be applies to setting the observed variables.
+ The reason this is a good idea is that the variables are placed in the
+ output files in order of there 
+\family typewriter
+obs_id
+\family default
+ value.
+ This way we can keep all variables flagged for observation from one part
+ of a model together.
+\end_layout
+
+\begin_layout Standard
+The important thing that needs to be stressed for a dynamic system is that
+ the time variable, dynamic boolean, and ode and obs counters must be in
+ the parameter list.
+ All these variable need to be the same in each model to be consistent and
+ to make sure the model gets setup correctly when the 
+\family typewriter
+set_ode
+\family default
+ method is executed.
+\end_layout
+
+\begin_layout Section
+In conclusion
+\end_layout
+
+\begin_layout Standard
+We have just led you step by step through the process of creating a small
+ dynamic ASCEND model and the basics on how to view the results.
+\end_layout
+
+\end_body
+\end_document

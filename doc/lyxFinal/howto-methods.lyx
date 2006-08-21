@@ -1,0 +1,2643 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Writing METHODs
+\begin_inset LatexCommand \label{cha:methods}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this chapter we describe a methodology (pun intended) which can help
+ make anyone who can solve a quadratic equation a mathematical modeling
+ expert.
+ This methodology helps you to avoid mistakes and to find mistakes quickly
+ when you make them.
+ Finding bugs weeks after creating a model is annoying, inefficient, and
+ (frequently) embarrassing.
+ Because METHOD code can be large, we do not include many examples here.
+ 
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Standard
+See ***vessel something*** for detailed examples
+\end_layout
+
+\end_inset
+
+ One of the advantages of this methodology is that it allows almost automatic
+\begin_inset LatexCommand \index{methods, automatic generation}
+
+\end_inset
+
+ generation of methods for a model based on the declarative structure (defined
+ parts and variables) in the model, as we shall see in Section\InsetSpace ~
+
+\begin_inset LatexCommand \ref{sec:methods.automation}
+
+\end_inset
+
+
+\noun off
+.
+ Even if you skip much of this chapter, read 
+\noun default
+Section\InsetSpace ~
+
+\noun off
+
+\begin_inset LatexCommand \ref{sec:methods.automation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We divide methods into 
+\family typewriter
+_self
+\family default
+ and 
+\family typewriter
+_all
+\family default
+ categories.
+ The premise of our approach to design methods is that we can write the
+ 
+\family typewriter
+_self
+\family default
+ methods incrementally, building on the already tested methods of previous
+ MODEL parts we are reusing.
+ In this way we never have to write a single huge method that directly manipulat
+es the hundreds of variables that are in the model hierarchy.
+ Were that all there was to it, things would actually be pretty simple.
+ However, in ASCEND, one can also select to solve any part of an ASCEND
+ model (in particular, any part that is an instance of a single type), and
+ this capability complicates method writing - but not by much if we really
+ understand the approach we advocate here.
+ As an example, suppose we have a flowsheet that has a reactor followed
+ by a flash unit in it.
+ In ASCEND, we can select to solve the entire flowsheet, only the reactor,
+ only the flash unit or even any one of the streams in it (yes, each stream
+ has physical property calculations that belong to it making it interesting
+ to isolate and solve).
+ Should we choose to solve only the flash unit, ASCEND will isolate the
+ equations defining the flash - including the equations we use when defining
+ the input and output streams to it as they are a part of the flash unit.
+ But the input to the flash is also the output from the reactor and is a
+ part of the reactor, too.
+ Each part would typically take the prime responsibility for supplying methods
+ that will set fix flags, set nominal values, etc., for its variables, but
+ who owns the variables they both share such as in the connecting stream?
+ By 
+\begin_inset Quotes eld
+\end_inset
+
+tradition
+\begin_inset Quotes erd
+\end_inset
+
+ in chemical engineering flowsheet modeling, we will assert that the reactor
+ has prime responsibility for its output stream.
+ If we are solving the entire flowsheet, it should set the flags, etc., for
+ its output stream.
+ However, when we isolate the flash for solving, the flash unit must assume
+ responsibility to set fix flags, nominal values, etc., for the output stream
+ from the reactor as that stream is its input stream.
+ The 
+\family typewriter
+_all
+\family default
+ methods allow us to handle these shared variables correctly when we isolate
+ a part for solving by itself.
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Standard
+This needs more explanation: I don't find it completely clear.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Usually discovery of the information you need to write the methods proceeds
+ in the order that they appear below: 
+\family typewriter
+check
+\family default
+, 
+\family typewriter
+default
+\family default
+, 
+\family typewriter
+specify
+\family default
+, 
+\family typewriter
+bound
+\family default
+, 
+\family typewriter
+scale
+\family default
+.
+ 
+\end_layout
+
+\begin_layout Section
+Why use standardised methods on models?
+\end_layout
+
+\begin_layout Standard
+In the present chapter, we are proposing that you use a particular standardised
+ set of methods on your models.
+ While ASCEND doesn't force you to follow these conventions, we hope that
+ you will 
+\emph on
+choose
+\emph default
+ to follow them, because:
+\end_layout
+
+\begin_layout Itemize
+You models will be more portable.
+\end_layout
+
+\begin_layout Itemize
+They will integrate better with the existing model library when composing
+ larger models composed of smaller perhaps pre-existing models.
+\end_layout
+
+\begin_layout Itemize
+Other users will be be more easily able to understand what you have built.
+\end_layout
+
+\begin_layout Itemize
+The proposed structure has, in our experience, made for models that are
+ easier to debug.
+\end_layout
+
+\begin_layout Standard
+There will be cases where these standard methods don't suffice for your
+ needs; these are just proposals for a useful starting point and shared-use
+ conventions.
+\end_layout
+
+\begin_layout Standard
+Note that if you do not write the standard methods, your MODEL will inherit
+ the ones given in the library 
+\family typewriter
+basemodel.a4l
+\family default
+.
+ The 
+\family typewriter
+ClearAll
+\family default
+ and 
+\family typewriter
+reset
+\family default
+ methods here will work for you if you follow the guidelines for the method
+ 
+\family typewriter
+specify
+\family default
+.
+ The other methods defined in 
+\family typewriter
+basemodel.a4l
+\family default
+ 
+\family typewriter
+(check_self
+\family default
+, 
+\family typewriter
+default_self
+\family default
+, 
+\family typewriter
+bound_self
+\family default
+, 
+\family typewriter
+scale_self
+\family default
+, 
+\family typewriter
+check_all
+\family default
+, 
+\family typewriter
+default_all
+\family default
+, 
+\family typewriter
+bound_all
+\family default
+, 
+\family typewriter
+scale_all
+\family default
+) all contain 
+\family typewriter
+STOP
+\family default
+ statements that will warn you that you have skipped something important,
+ should you accidentally call one of these methods.
+ If you create a model for someone else and they run into one of these 
+\family typewriter
+STOP
+\family default
+ errors while using your model, that error is your fault.
+\end_layout
+
+\begin_layout Section
+Methods *_self
+\begin_inset LatexCommand \index{methods, \_self}
+
+\end_inset
+
+ VS *_all
+\begin_inset LatexCommand \index{methods, \_all}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+When you create a model definition, you create a container holding variables,
+ equations, arrays, and other models.
+ You create methods in the same definition to control the state of (the
+ values stored in) all these parts.
+ ASCEND lets you share objects among several models by passing objects through
+ a model interface (the 
+\family typewriter
+MODEL
+\family default
+ parameter list), by creating ALIASES
+\begin_inset LatexCommand \index{ALIASES}
+
+\end_inset
+
+ for parts within contained objects, and even by merging parts (though merging
+ should be avoided for any object larger than a variable).
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Too many cooks
+\begin_inset LatexCommand \index{cooks}
+
+\end_inset
+
+ spoil the broth
+\begin_inset LatexCommand \index{broth}
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+The problem this creates for you as a 
+\family typewriter
+METHOD
+\family default
+ writer is to decide which of the several 
+\family typewriter
+MODEL
+\family default
+s that share an object is responsible for updating that variable's default,
+ bounds, and nominal values.
+ You could decide that every model which shares a variable is responsible
+ for these values.
+ This decision will lead to many, many, many hard to understand conflicts
+ as different models all try to manage the same value.
+ And, the last one run will in fact have the final say.
+ But it is difficult to know always which is the last one run.
+ The sensible approach is to make only one model responsible for the bounding,
+ scaling, and default setting of each variable: 
+\emph on
+the model that creates the variable in the first place
+\emph default
+.
+ If you abide by this approach, you will keep things much simpler for yourself.
+ And, fortunately, the modeling language makes it pretty clear who has created
+ each and every variable - except when merging variables.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Use *_self methods on locally created variables and parts
+\end_layout
+
+\end_inset
+
+Consider the following model and creating the 
+\family typewriter
+*_self
+\family default
+ methods 
+\family typewriter
+default_self
+\family default
+, 
+\family typewriter
+check_self
+\family default
+, 
+\family typewriter
+bound_self
+\family default
+, and 
+\family typewriter
+scale_self
+\family default
+ for it.
+ 
+\end_layout
+
+\begin_layout LyX-Code
+MODEL selfish(
+\end_layout
+
+\begin_layout LyX-Code
+    external_var WILL_BE solver_var;
+\end_layout
+
+\begin_layout LyX-Code
+    out_thingy WILL_BE input_part;
+\end_layout
+
+\begin_layout LyX-Code
+);
+\end_layout
+
+\begin_layout LyX-Code
+    my_variable IS_A solver_var;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+    peek_at_variable ALIASES out_thingy.mabob.cost;
+\end_layout
+
+\begin_layout LyX-Code
+    my_thingy IS_A nother_part;
+\end_layout
+
+\begin_layout LyX-Code
+    navel_gaze ALIASES my_thingy.mabob.cost;
+\end_layout
+
+\begin_layout LyX-Code
+END selfish;
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+IS_A
+\family default
+ statements indicate all the parts we have created in this model: namely,
+ the 
+\family typewriter
+solver_var
+\family default
+ we call 
+\family typewriter
+my_variable
+\family default
+ and the
+\family typewriter
+ nother_part
+\family default
+ we call 
+\family typewriter
+my_thingy
+\family default
+.
+ This model should manage the value of the only variable it creates: 
+\family typewriter
+my_variable
+\family default
+.
+ The variable, 
+\family typewriter
+external_var
+\family default
+, comes in from the outside so some other model has created it and should
+ manage it.
+ The variables 
+\family typewriter
+peek_at_variable
+\family default
+ and 
+\family typewriter
+navel_gaze
+\family default
+ also are not created here and should not be managed in the 
+\family typewriter
+*_self
+\family default
+ methods of 
+\family typewriter
+selfish
+\family default
+.
+ 
+\family typewriter
+my_thingy.mabob.cost
+\family default
+ belongs to a part we created.
+ We want to default, bound, or scale variables in all parts we create, also,
+ so we must call 
+\family typewriter
+my_thingy.default_self
+\family default
+ whenever 
+\family typewriter
+default_self
+\family default
+ is called for this model.
+ Its 
+\family typewriter
+*_self
+\family default
+ method should in turn call the 
+\family typewriter
+*_self
+\family default
+ method for 
+\family typewriter
+mabob
+\family default
+, which should set defaults, bounds and scaling for its variable, 
+\family typewriter
+cost
+\family default
+.
+ Finally, 
+\family typewriter
+out_thingy
+\family default
+ is an input parameter and is not created here; we should not call 
+\family typewriter
+out_thingy.default_self
+\family default
+, therefore, as some other model will do so.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Use *_all methods to manage a troublesome part
+\end_layout
+
+\end_inset
+
+As noted above, you may choose to isolate any mathematical subproblem in
+ a large simulation for debugging or solving purposes.
+ When you do this isolation using the Browser and Solver tools, you still
+ need to call scaling, bounding, and checking methods for all parts of the
+ isolated subproblem, even for those parts that come in from the outside.
+ This is easily done by writing 
+\family typewriter
+*_all
+\family default
+ methods.
+ In the example above, 
+\family typewriter
+scale_all
+\family default
+ will scale 
+\family typewriter
+external_var
+\family default
+ and call 
+\family typewriter
+out_thingy.scale_all
+\family default
+ because these parts are defined using 
+\family typewriter
+WILL_BE
+\family default
+
+\begin_inset LatexCommand \index{WILL\_BE}
+
+\end_inset
+
+ statements.
+ Finally
+\family typewriter
+ scale_all
+\family default
+ will call its local
+\family typewriter
+ *_self 
+\family default
+to do all the normal scaling.
+\end_layout
+
+\begin_layout Standard
+That's the big picture of 
+\family typewriter
+*_self
+\family default
+ and 
+\family typewriter
+*_all
+\family default
+ methods.
+ Each kind of method (bound, scale, default, check) has its own peculiarities,
+ which we cover in Section 
+\begin_inset LatexCommand \ref{sec:methods.selfMethods}
+
+\end_inset
+
+
+\noun off
+ and 
+\noun default
+Section 
+\noun off
+
+\begin_inset LatexCommand \ref{sec:methods.allMethods}
+
+\end_inset
+
+, but they all follow the rules above 
+\noun default
+and
+\noun off
+ distinguish among variables and parts defined with 
+\family typewriter
+\noun default
+WILL_BE
+\family default
+\noun off
+ (managed in *
+\family typewriter
+\noun default
+_all
+\family default
+\noun off
+ only), IS_A
+\begin_inset LatexCommand \index{IS\_A}
+
+\end_inset
+
+ (managed in 
+\family typewriter
+\noun default
+*_self
+\family default
+\noun off
+ only), and 
+\family typewriter
+\noun default
+ALIASES
+\family default
+\noun off
+ (not our responsibility).
+\end_layout
+
+\begin_layout Section
+How to write ClearAll
+\begin_inset LatexCommand \index{ClearAll}
+
+\end_inset
+
+ and reset
+\begin_inset LatexCommand \index{reset}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Writing these two standard methods in your model is very simple: do nothing.
+ You may wish to write alternative 
+\family typewriter
+reset_*
+\family default
+ methods as we shall discuss.
+ All models inherit these methods from the definitions in 
+\family typewriter
+basemodel.a4l
+\family default
+.
+ Just so you know, here is what they do.
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+METHOD ClearAll
+\end_layout
+
+\begin_layout Standard
+This method finds any variable that is a 
+\family typewriter
+solver_var
+\family default
+ or refinement of 
+\family typewriter
+solver_var
+\family default
+ and changes the 
+\family typewriter
+.fixed
+\family default
+ flag on that var to 
+\family typewriter
+FALSE
+\family default
+.
+ This method only touches the 
+\family typewriter
+.fixe
+\family default
+d flags; i.e., it does not change the value of 
+\family typewriter
+.included
+\family default
+ flags on relations or return boolean, integer and symbol variables to a
+ default value.
+ 
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+METHOD reset
+\end_layout
+
+\begin_layout Standard
+This method calls 
+\family typewriter
+ClearAll
+\family default
+ to bring the model to a standard state with all variables unfixed (free),
+ then it calls the user-written specify method to bring the model to a state
+ where it has an equal number of variables to calculate and equations to
+ solve - i.e., to being 
+\begin_inset Quotes eld
+\end_inset
+
+square.
+\begin_inset Quotes erd
+\end_inset
+
+ Normally you do not need to write this method: your models will inherit
+ this one unless you override it (redefine it) in your model.
+\end_layout
+
+\begin_layout Standard
+This standard state is not necessarily the most useful starting state for
+ any particular application.
+ This method merely establishes a base case the modeler finds to be a good
+ starting point.
+ As an example, the modeler may elect to set fix variables for the base
+ case for a flash unit so it corresponds to an isothermal flash calculation.
+ Chemical engineers understand this case and can make changes from it to
+ set up other cases, such as an adiabatic flash, relatively easily by setting
+ and resetting but one or two
+\family typewriter
+ .fixed
+\family default
+ flags.
+ There is no one perfect "reset"' for all purposes.
+ Other 
+\family typewriter
+reset_*
+\family default
+ methods can also be written for particular purposes, if such arise
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+The name of a method, for example 
+\family typewriter
+reset_someOtherPurpose
+\family default
+ is a communication tool.
+ Please use meaningful names as long as necessary to tell what the method
+ does.
+ Avoid cryptic abbreviations and hyper-specialized jargon known only to
+ you and your three friends when you are naming methods; however, do not
+ shy away from technical terms common to the engineering domain in which
+ you are modeling.
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+The 
+\family typewriter
+*_self
+\family default
+
+\begin_inset LatexCommand \index{\_self}
+
+\end_inset
+
+ methods
+\begin_inset LatexCommand \label{sec:methods.selfMethods}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The following methods should be redefined by each reusable library 
+\family typewriter
+MODEL
+\family default
+.
+ Models that do not supply proper versions of these methods are usually
+ very hard to reuse.
+ 
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+METHOD check_self
+\family default
+
+\begin_inset LatexCommand \index{check\_self}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+One can benefit by writing this method first, though it is run last.
+ Just as they taught you in elementary school, always check your work.
+ Start by defining criteria for a successful solution that will not be included
+ in the equations solved and compute them in this method.
+ As you develop your 
+\family typewriter
+MODEL
+\family default
+, you should expect to revise the check method from time to time, if you
+ are learning anything about the model.
+ We frequently change our definition of success when modeling.
+\end_layout
+
+\begin_layout Standard
+When a mathematical model is solved, the assumptions that went into writing
+ (deriving) the equations should be checked.
+ Usually there are redundant equations available (more than one way to state
+ the physics or economics mathematically).
+ These should be used to check the particularly tricky bits of the model.
+\end_layout
+
+\begin_layout Standard
+Check that the physical or intuitive (qualitative) relationships among variables
+ you expect to hold are true, especially if you have not written such relationsh
+ips in terms of inequalities (
+\family typewriter
+x*z <= y
+\family default
+) in the 
+\family typewriter
+MODEL
+\family default
+ equations.
+\end_layout
+
+\begin_layout Standard
+In some models, checking the variable values against absolute physical limits
+ (
+\family typewriter
+temperature > 0{K}
+\family default
+ and 
+\family typewriter
+temperature < Tcritical
+\family default
+, for example) may be all that is necessary or possible.
+ Do not check variable values against their 
+\family typewriter
+.lower_bound
+\family default
+ or 
+\family typewriter
+.upper_bound
+\family default
+, as ASCEND will do this for you.
+\end_layout
+
+\begin_layout Standard
+If a check fails, use a 
+\family typewriter
+STOP
+\family default
+
+\begin_inset LatexCommand \index{STOP}
+
+\end_inset
+
+ statement to notify yourself (or your end-user) that the solution may be
+ bogus.
+ 
+\family typewriter
+STOP
+\family default
+ raises an error signal and issues an error message.
+ 
+\family typewriter
+STOP
+\family default
+ normally also stops further execution of the method and returns control
+ to a higher level, though there are interactive tools to force method execution
+ to continue.
+ 
+\family typewriter
+STOP
+\family default
+ does not cause ASCEND to exit though: just for the method execution to
+ halt and for control to return to the user.
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+METHOD default_self
+\begin_inset LatexCommand \index{default\_self}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This method should set default values for any variables declared locally
+ (
+\family typewriter
+IS_A
+\family default
+) to the model.
+ If the default value declared for the atom type, of which the variable
+ is an instance, is appropriate (and typically it is), then you need not
+ set a specific default value here.
+ This method also should run
+\family typewriter
+ default_self
+\family default
+ on all the complex parts that are declared locally (with 
+\family typewriter
+IS_A
+\family default
+) in the model.
+\end_layout
+
+\begin_layout Standard
+This method should not run any methods on model parts that come via 
+\family typewriter
+WILL_BE
+\family default
+ in the definition's parameter list.
+ This method also should not change the values of variables that are passed
+ in through the parameter list.
+ Sometimes there will be nothing for this method to do.
+ Define it anyway, leaving it empty, so that any writer reusing this model
+ as part of a higher level model can safely assume it is there and call
+ it without having to know the details.
+\end_layout
+
+\begin_layout Standard
+When a top-level simulation is built by the compiler, this method will be
+ run (for the top-level model) at the end of compilation.
+ If your model's 
+\family typewriter
+default_self
+\family default
+ method does not call the lower-level 
+\family typewriter
+default_self
+\family default
+ methods in your model locally-declared (
+\family typewriter
+IS_A
+\family default
+) parts, it is quite likely that your model will not solve.
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+METHOD bound_self
+\begin_inset LatexCommand \index{bound\_self}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Much of the art of nonlinear physical modeling is in bounding the solution.
+ This method should update the bounds on locally defined (
+\family typewriter
+IS_A
+\family default
+) variables and 
+\family typewriter
+(IS_A)
+\family default
+ defined model parts.
+ Updating bounds requires some care.
+ For example, the bounds on fractions frequently don't need updating.
+ This method should not bound variables passed into the 
+\family typewriter
+MODEL
+\family default
+ definition or parts passed into the definition.
+\end_layout
+
+\begin_layout Standard
+A common formula for updating bounds is to define a region around the current
+ value of the variable.
+ A linear region size formula, as an example, would be:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{equation}
+x_{bound}=x\pm\Delta\cdot x_{nominal}\label{eq:methods.bound-width}\end{equation}
+
+\end_inset
+
+or, in ASCEND syntax,
+\end_layout
+
+\begin_layout LyX-Code
+v.upper_bound := v + 
+\begin_inset LatexCommand \index{boundwidth}
+
+\end_inset
+
+boundwidth * v.nominal;
+\end_layout
+
+\begin_layout LyX-Code
+v.lower_bound := v - boundwidth * v.nominal;
+\end_layout
+
+\begin_layout Standard
+Care must be taken that such a formula does not move the bounds (particularly
+ lower bounds) out so far as to allow non-physical solutions.
+ Logarithmic bounding regions are also simple to calculate.
+ Here 
+\family typewriter
+boundwidth
+\family default
+ is a 
+\family typewriter
+bound_width
+\family default
+: it could be a real atom (but 
+\series bold
+not
+\series default
+ a 
+\family typewriter
+solver_var
+\family default
+) or some value you can use to determine how much "wiggle-room" you want
+ to give a solver.
+ 
+\end_layout
+
+\begin_layout Standard
+Small powers of 4 and 10 are usually good values of 
+\family typewriter
+boundwidth
+\family default
+.
+ Too small a boundwidth can cut off the portion of number space where the
+ solution is found.
+ Too large a bound width can allow solvers to wander for great distances
+ in uninteresting regions of the number space.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Standard
+We need an example here
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+METHOD scale_self
+\begin_inset LatexCommand \index{scale\_self}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{ssec:methods.scaleself}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Most nonlinear (and many linear) models cannot be solved without proper
+ scaling of the variables.
+ 
+\family typewriter
+scale_self
+\family default
+ should reset the 
+\family typewriter
+.nominal
+\family default
+ value on every real variable in need of scaling.
+ It should then call the 
+\family typewriter
+scale_self
+\family default
+ method on all the locally-defined (
+\family typewriter
+IS_A
+\family default
+) parts of the MODEL.
+ A proper nominal is one such that you expect at the solution
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{equation}
+0\leq abs\left(\frac{x}{x_{nominal}}\right)\leq10\label{eq:methods.choiceNominal}\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As one is dividing by the nominal value for the variable to establish its
+ scaled value, zero is about the worst value you could choose for a nominal
+ value.
+\end_layout
+
+\begin_layout Standard
+This method should not change the 
+\family typewriter
+.nominal 
+\family default
+values for models and variables that are received through the parameter
+ list of the model.
+\end_layout
+
+\begin_layout Standard
+Variables (like fractions), when bounded such that they cannot be too far
+ away from 1.0 in magnitude, probably don't need scaling most of the time,
+ so long as they they are also bounded away from 0.0.
+ 
+\end_layout
+
+\begin_layout Standard
+Some solvers, but not all, will attempt to scale the equations and variables
+ by heuristic matrix-based methods.
+ This works, but inconsistently; user-defined scaling
+\begin_inset LatexCommand \index{scaling}
+
+\end_inset
+
+ is generally superior.
+ ASCEND makes scaling equations easy to do.
+ You scale the variables, which can only be done well by knowing something
+ about where the solution is going to be found (by being an engineer, for
+ example).
+ Then ASCEND can calculate an appropriate equation-scaling by efficient
+ symbolic methods.
+\end_layout
+
+\begin_layout Section
+The 
+\family typewriter
+*_all
+\family default
+ methods
+\begin_inset LatexCommand \label{sec:methods.allMethods}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+METHOD default_all
+\begin_inset LatexCommand \index{default\_all}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Above we discussed the ability in ASCEND to isolate and solve any part of
+ a model that is defined as an instance of a single type requires you initialize
+ the arguments to a model that you are isolating.
+ This method should run the 
+\family typewriter
+default_all
+\family default
+ method on each of the parts received through the parameter list via 
+\family typewriter
+WILL_BE
+\family default
+ statements and should give appropriate default values to any variables
+ received through the parameter list.
+ After these calls and settings have been done, it should then call its
+ own 
+\family typewriter
+default_self
+\family default
+ to take care of all local defaults.
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+METHOD check_all
+\begin_inset LatexCommand \index{check\_all}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+When solving only a part of a simulation, it is necessary to check the models
+ and variables passed into the part as well as the locally defined parts
+ and variables.
+ This method should call 
+\family typewriter
+check_all
+\family default
+ on the parts received as 
+\family typewriter
+WILL_BE
+\family default
+ parameters, then call 
+\family typewriter
+check_self
+\family default
+ to check the locally defined parts and equations.
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+METHOD bound_all
+\begin_inset LatexCommand \index{bound\_all}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This method should be like 
+\family typewriter
+bound_self
+\family default
+ except that it bounds the passed in variables and calls 
+\family typewriter
+bound_all
+\family default
+ on the passed in parts.
+ It should then call 
+\family typewriter
+bound_self
+\family default
+.
+\end_layout
+
+\begin_layout Subsection
+
+\family typewriter
+METHOD scale_all
+\begin_inset LatexCommand \index{scale\_all}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This method should be like 
+\family typewriter
+scale_self
+\family default
+ above except that it scales the variables received through the parameter
+ list and calls 
+\family typewriter
+scale_all
+\family default
+ on the passed in parts.
+ It should then call 
+\family typewriter
+scale_self
+\family default
+ to take care of the local variables and models.
+\end_layout
+
+\begin_layout Section
+
+\family typewriter
+METHOD specify
+\family default
+
+\begin_inset LatexCommand \index{specify}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The method 
+\family typewriter
+specify
+\family default
+ sets the 
+\family typewriter
+.fixed
+\family default
+ flags so an instance of the model is solvable.
+ There are two issues involved.
+ First, the model must be square - i.e., it must have as many free variables
+ as it has eligible equations available to compute them.
+ Second, it should be a setting of
+\family typewriter
+ .fixed
+\family default
+ flags that the modeler knows will solve numerically.
+ This latter requirement requires one to have an intuitive feel for the
+ model.
+ A chemical engineer will 
+\begin_inset Quotes eld
+\end_inset
+
+know
+\begin_inset Quotes erd
+\end_inset
+
+ that a flash calculation, where he has fixed both the pressure and the
+ vapor fraction, is a pretty robust calculation.
+ It would be a good way to set fix flags in the 
+\family typewriter
+specify
+\family default
+ method.
+ Getting the 
+\family typewriter
+.fixed
+\family default
+ flags set for a large complex model is one of the hardest tasks ever invented
+ by mathematicians if you go about it in the wrong way.
+ If you follow the prescription here, getting the right number of flags
+ set is almost automatic.
+ We have set written the specify methods for a complex hierarchy of models
+ correctly the first time using this approach.
+\end_layout
+
+\begin_layout Standard
+We shall illustrate this section by examining the set of models in 
+\family typewriter
+simple_fs.a4c
+\family default
+.
+ You should find that model in the model directory for ASCEND and open it
+ in your favorite text editor.
+ This model is for a simple flowsheet comprising a mixer, a reactor, a flash
+ unit and a simple stream splitter.
+ It contains the following models: 
+\family typewriter
+mixture
+\family default
+, 
+\family typewriter
+molar_stream
+\family default
+, 
+\family typewriter
+mixer
+\family default
+, 
+\family typewriter
+reactor
+\family default
+, 
+\family typewriter
+flash
+\family default
+, 
+\family typewriter
+splitter
+\family default
+, 
+\family typewriter
+flowsheet
+\family default
+, 
+\family typewriter
+controller
+\family default
+, 
+\family typewriter
+test_flowsheet
+\family default
+ and 
+\family typewriter
+test_controller
+\family default
+.
+ When compiling and solving, one typically creates an instance of 
+\family typewriter
+test_controller
+\family default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Model mixture only defines new variables 
+\family typewriter
+y[components]
+\family default
+ and one equation that says their sum is unity.
+ Model molar_stream introduces new variables 
+\family typewriter
+Ftot
+\family default
+ and 
+\family typewriter
+f[components]
+\family default
+.
+ It also introduces an instance of the model mixture, which it calls 
+\family typewriter
+state
+\family default
+.
+ Finally it introduces locally the equations 
+\family typewriter
+f_def
+\family default
+, one for each component.
+ Models 
+\family typewriter
+mixer
+\family default
+, 
+\family typewriter
+reactor
+\family default
+, 
+\family typewriter
+flash
+\family default
+ and 
+\family typewriter
+splitter
+\family default
+ introduce their own local variables and equations.
+ Each also defines it input and output streams as instances of the model
+ 
+\family typewriter
+molar_stream
+\family default
+.
+ Model 
+\family typewriter
+flowsheet
+\family default
+ contains a 
+\family typewriter
+mixer
+\family default
+, 
+\family typewriter
+reactor
+\family default
+, 
+\family typewriter
+flash
+\family default
+ and 
+\family typewriter
+splitter
+\family default
+, etc.
+\end_layout
+
+\begin_layout Standard
+Assume you have just written a set of models, such as those in 
+\family typewriter
+simple_fs.a4c
+\family default
+.
+ In this approach you should start with the lowest level models - i.e., the
+ ones that only introduce (using 
+\family typewriter
+IS_A
+\family default
+ statements) new variables and new parts that are instances of types in
+ existing ASCEND libraries.
+ The lowest level model by this definition is 
+\family typewriter
+mixture
+\family default
+.
+ It only introduces new variables and one new equation.
+ Once you have written and debugged a 
+\family typewriter
+specify
+\family default
+ method for 
+\family typewriter
+mixture
+\family default
+, then again look for any model that only introduces new variables and local
+ equations and/or parts for which a debugged 
+\family typewriter
+specify
+\family default
+ method exists.
+ The model 
+\family typewriter
+molar_stream
+\family default
+ is such a model and can be considered next.
+ It introduces a part which is an instance of 
+\family typewriter
+mixture
+\family default
+ for which we already have a 
+\family typewriter
+specify
+\family default
+ method.
+ Once we have a debugged 
+\family typewriter
+specify
+\family default
+ method for 
+\family typewriter
+molar_stream
+\family default
+, then we can consider any of the models 
+\family typewriter
+mixer
+\family default
+, 
+\family typewriter
+reactor
+\family default
+, 
+\family typewriter
+flash
+\family default
+ and 
+\family typewriter
+splitter
+\family default
+ - they only have parts that are instances of 
+\family typewriter
+molar_stream
+\family default
+.
+ After creating and debugging their 
+\family typewriter
+specify
+\family default
+ methods, we can consider the model 
+\family typewriter
+flowsheet
+\family default
+, then 
+\family typewriter
+controller
+\family default
+, then 
+\family typewriter
+test_flowsheet
+\family default
+ and finally 
+\family typewriter
+test_controller
+\family default
+.
+\end_layout
+
+\begin_layout Standard
+The safest way to set 
+\family typewriter
+.fixed
+\family default
+ flags is first to clear all the 
+\family typewriter
+.fixed
+\family default
+ flags for a model instance by running the method 
+\family typewriter
+ClearAll
+\family default
+.
+ The method 
+\family typewriter
+specify
+\family default
+ does 
+\series bold
+not
+\series default
+ run 
+\family typewriter
+ClearAll
+\family default
+, but we always write our 
+\family typewriter
+specify
+\family default
+ methods assuming 
+\family typewriter
+ClearAll
+\family default
+ has just been run and thus that all 
+\family typewriter
+.fixed
+\family default
+ flags are set to false.
+ The following steps will aid you to write, almost automatically, a 
+\family typewriter
+specify
+\family default
+ method that fixes the correct number of 
+\family typewriter
+.fixed
+\family default
+ flags.
+\end_layout
+
+\begin_layout Enumerate
+Find all locally defined solver variables (of type 
+\family typewriter
+solver_var
+\family default
+ - e.g., 
+\family typewriter
+y[components]
+\family default
+ are of type 
+\family typewriter
+fraction
+\family default
+ which is of type 
+\family typewriter
+solver_var
+\family default
+).
+ In mixture, the statement 
+\begin_inset Quotes eld
+\end_inset
+
+
+\family typewriter
+y[components] IS_A fraction;
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+ introduces new 
+\family typewriter
+solver_var
+\family default
+s, one for each element in the set 
+\family typewriter
+components
+\family default
+.
+ Let us assume there are 
+\family typewriter
+nc
+\family default
+ such elements.
+\end_layout
+
+\begin_layout Enumerate
+Find locally introduced equations.
+ In 
+\family typewriter
+mixture
+\family default
+, there is one such equation that says the variables 
+\family typewriter
+y
+\family default
+ add up to one.
+\end_layout
+
+\begin_layout Enumerate
+Find all new parts that are instances of previously defined types.
+ In 
+\family typewriter
+mixture
+\family default
+, there are no new parts.
+\end_layout
+
+\begin_layout Enumerate
+You must set 
+\family typewriter
+.fixed
+\family default
+ flags locally equal in number to the number of new locally defined 
+\family typewriter
+solver_var
+\family default
+s minus the number of new locally defined equations.
+ In 
+\family typewriter
+mixture
+\family default
+ you must write set one 
+\family typewriter
+fixed
+\family default
+ flag to true for all but one of the components as there are 
+\family typewriter
+nc
+\family default
+ new locally introduced variables and one new locally introduced equation.
+ The 
+\family typewriter
+CHOICE
+\family default
+ function arbitrarily selects one element of the set (in set theory, you
+ cannot identify a set element as being first, another as second, etc, so
+ for purity's sake, we only give you the option of letting ASCEND pick one
+ arbitrarily).
+ Thus we set all 
+\family typewriter
+nc
+\family default
+ flags and then clear one.
+\end_layout
+
+\begin_layout Enumerate
+You must run the 
+\family typewriter
+specify
+\family default
+ method for each new part.
+ Here there are none.
+ Running specify will guarantee each part is 
+\begin_inset Quotes eld
+\end_inset
+
+square
+\begin_inset Quotes erd
+\end_inset
+
+ - i.e., after being run, the part will not alter the number of degrees of
+ freedom for the current model definition.
+ However, the same 
+\family typewriter
+solver_var
+\family default
+ may get fixed in two or more different parts if those parts share that
+ 
+\family typewriter
+solver_var
+\family default
+, and you will have to discover this sharing and add special statements
+ to correct this type of multiple setting of the same flag.
+ This discovery will best be done by compiling an instance of the type and
+ using the Find By Type tool in the Browser.
+ Its default setting is to find all 
+\family typewriter
+solver_vars
+\family default
+ with 
+\family typewriter
+.fixed
+\family default
+ equal to 
+\family typewriter
+TRUE
+\family default
+, exactly what you need to aid you with this task.
+ You may also wish to change in minor ways the flag setting that the parts
+ do to suit the needs of the current type definition - you may wish to free
+ 
+\family typewriter
+temperature
+\family default
+ and fix 
+\family typewriter
+pressure
+\family default
+ for a stream, for example, when the stream is part of a higher level model.
+\end_layout
+
+\begin_layout Standard
+Look now at the 
+\family typewriter
+molar_stream
+\family default
+ model.
+ Running 
+\family typewriter
+ClearAll
+\family default
+ for an instance of 
+\family typewriter
+molar_stream
+\family default
+ will clear all the 
+\family typewriter
+.fixed
+\family default
+ flags for it and all its parts.
+ It introduces 
+\family typewriter
+Ftot
+\family default
+ and 
+\family typewriter
+f[components]
+\family default
+ as local new solver variables.
+ It also introduces one new equation for each component, one less than the
+ number of new variables.
+ Finally it introduces a new part called 
+\family typewriter
+state
+\family default
+.
+ We have partitioned the 
+\family typewriter
+specify
+\family default
+ method into two methods here for 
+\begin_inset Quotes eld
+\end_inset
+
+chemical engineering reasons,
+\begin_inset Quotes erd
+\end_inset
+
+ one of which runs the other.
+ Think of what the two of them accomplish as the 
+\family typewriter
+specify
+\family default
+ method we wish to create.
+ First we run the 
+\family typewriter
+specify
+\family default
+ method for the new part: 
+\family typewriter
+state
+\family default
+.
+ That will set the 
+\family typewriter
+.fixed
+\family default
+ flags for 
+\family typewriter
+nc-1
+\family default
+ of the variables 
+\family typewriter
+state.y[components]
+\family default
+.
+ Then, as there is one more variable than equation in this model, we must
+ set a net of one added 
+\family typewriter
+.fixed
+\family default
+ flag.
+ We accomplish this by first clearing all the flags for the variables 
+\family typewriter
+state.y[components]
+\family default
+ -- one of which was already clear -- and then fixing all the variables
+ 
+\family typewriter
+f[components]
+\family default
+.
+ We cleared 
+\family typewriter
+nc-1
+\family default
+ flags and set 
+\family typewriter
+nc
+\family default
+ for a net of one new flag being set.
+ For our 
+\family typewriter
+molar_stream
+\family default
+ model, we would prefer that the variables 
+\family typewriter
+f[components]
+\family default
+ are the ones we fix.
+\end_layout
+
+\begin_layout Standard
+Lastly, look at the 
+\family typewriter
+reactor
+\family default
+ model.
+ We introduce 
+\family typewriter
+nc+1
+\family default
+ new variables: 
+\family typewriter
+stoich_coef[feed.components]
+\family default
+ and 
+\family typewriter
+turnover
+\family default
+.
+ We also introduce 
+\family typewriter
+nc
+\family default
+ new equations.
+ Lastly we introduce two parts 
+\family typewriter
+feed
+\family default
+ and 
+\family typewriter
+out
+\family default
+, which are 
+\family typewriter
+molar_stream
+\family default
+s.
+ The 
+\family typewriter
+specify
+\family default
+ method, again a combination of 
+\family typewriter
+specify
+\family default
+ and 
+\family typewriter
+seqmod
+\family default
+, must set a net of one new 
+\family typewriter
+.fixed
+\family default
+ flag.
+ The way it does it is 
+\begin_inset Quotes eld
+\end_inset
+
+tricky
+\begin_inset Quotes erd
+\end_inset
+
+ but not difficult to follow.
+ In 
+\family typewriter
+seqmod
+\family default
+, we fix 
+\family typewriter
+turnover
+\family default
+ and all 
+\family typewriter
+nc
+\family default
+ of the variables 
+\family typewriter
+stoich_coef
+\family default
+.
+ We seem to have fixed 
+\family typewriter
+nc
+\family default
+ too many.
+ In 
+\family typewriter
+specify
+\family default
+, which first runs 
+\family typewriter
+seqmod
+\family default
+, we only run the 
+\family typewriter
+specify
+\family default
+ method for 
+\family typewriter
+feed
+\family default
+ and 
+\series bold
+not
+\series default
+ the 
+\family typewriter
+specify
+\family default
+ method for 
+\family typewriter
+out
+\family default
+.
+ We know that not running the 
+\family typewriter
+specify
+\family default
+ method for 
+\family typewriter
+out
+\family default
+, a 
+\family typewriter
+molar_stream
+\family default
+ as we just discussed above, will leave us with 
+\family typewriter
+nc
+\family default
+ 
+\family typewriter
+.fixed
+\family default
+ flags not set.
+ So we deviously traded these flags for those belonging to 
+\family typewriter
+stoich_coef
+\family default
+, giving us a net of fixing one flag.
+ If we had abided by all the steps above, we would have run the 
+\family typewriter
+specify
+\family default
+ method for 
+\family typewriter
+out
+\family default
+, then gone in and cleared the flags for 
+\family typewriter
+out.f[components]
+\family default
+ while setting those for 
+\family typewriter
+stoich_coef[components]
+\family default
+ in trade to get the flags we want set for this model.
+ We did the equivalent with a shortcut.
+\end_layout
+
+\begin_layout Standard
+If a model is parametric, the models defined by 
+\family typewriter
+WILL_BE
+\family default
+ in the parameter list should be viewed as new variables defined in the
+ model.
+ Remember 
+\family typewriter
+specify
+\family default
+ must fix sufficient variables to make an instance of this model square.
+\end_layout
+
+\begin_layout Standard
+At each of the above steps, pay special attention to indexed variables used
+ in 
+\emph on
+indexed
+\emph default
+ equations
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Standard
+need a cross reference here to the appropriate part of the manual
+\end_layout
+
+\end_inset
+
+.
+ Frequently you must fix or free 
+\family typewriter
+n
+\family default
+ or 
+\family typewriter
+n-1
+\family default
+ variables indexed over a set of size 
+\family typewriter
+n
+\family default
+, if there are 
+\family typewriter
+n
+\family default
+ matching equations.
+ In general, if you think you have 
+\family typewriter
+specify
+\family default
+ correctly written, change the sizes of all the sets in your MODEL by one
+ and then by two members.
+ If your 
+\family typewriter
+specify
+\family default
+ method still works, you are probably using sets correctly.
+ Pursuing 'symmetry', i.e.
+ the identical treatment of all variables defined in a single array, usually
+ helps you write 
+\family typewriter
+specify
+\family default
+ correctly.
+\end_layout
+
+\begin_layout Standard
+When writing models that combine parts which do not share very well, or
+ which both try to compute the same variable in different ways, it may even
+ be necessary to write a 
+\family typewriter
+WHEN
+\family default
+ statement to selectively 'turn off' the conflicting equations or model
+ fragments.
+ An object or equation 
+\family typewriter
+USE
+\family default
+d in any 
+\family typewriter
+WHEN
+\family default
+ statement is turned off by default and becomes a part of the solved 
+\family typewriter
+MODEL
+\family default
+ only when the condition of some 
+\family typewriter
+CASE
+\family default
+ that 
+\family typewriter
+USE
+\family default
+s that object is matched.
+\end_layout
+
+\begin_layout Standard
+The setting of boolean, integer, and symbol variables that are controlling
+ conditions of 
+\family typewriter
+WHEN
+\family default
+ and 
+\family typewriter
+SWITCH
+\family default
+ statements should be done in the 
+\family typewriter
+specify
+\family default
+ method.
+\end_layout
+
+\begin_layout Standard
+There is no 'one perfect' 
+\family typewriter
+specify
+\family default
+ method for all purposes.
+ This routine should merely define a reasonably useful base configuration
+ of the model.
+ Other 
+\family typewriter
+specify_whatElseYouWant
+\family default
+ methods can also be written.
+\end_layout
+
+\begin_layout Section
+
+\family typewriter
+METHOD values
+\begin_inset LatexCommand \index{values}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In a final application 
+\family typewriter
+MODEL
+\family default
+, you should record at least one set of input values (values of the fixed
+ variables and guesses of key solved-for variables) that leads to a good
+ solution.
+ This facilitates testing of the model, and helps the next person using
+ your model to be assured that it works as expected.
+\end_layout
+
+\begin_layout Section
+Summary
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+adding our standard methods to a model definition
+\end_layout
+
+\end_inset
+
+We have defined a set of standard methods for ASCEND models which we insist
+ a modeler provide before we will allow a model to be placed in any of our
+ model libraries.
+ These are listed in Table 
+\begin_inset LatexCommand \ref{tab:methods.stdMethodReqd}
+
+\end_inset
+
+
+\noun off
+.
+ As should be evident from above, not all models must have associated methods;
+ our first vessel model did not.
+ It is simply our policy that models in our libraries must have these methods
+ to promote model reuse and to serve as examples of best practices in mathematic
+al modeling.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{tab:methods.stdMethodReqd}
+
+\end_inset
+
+Standard methods required for types in our ASCEND model library 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="8" columns="2">
+<features islongtable="true">
+<column alignment="center" valignment="top" leftline="true" width="0">
+<column alignment="center" valignment="top" leftline="true" rightline="true" width="4in">
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+method
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+description
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+default_self
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+a method called automatically when any simulation is compiled to provide
+ default values and adjust bounds for any locally created variables which
+ may have unsuitable defaultsin their ATOM definitions.
+ Usually the variables selected are those for which the model becomes ill-behave
+d if given poor initial guesses or bounds (e.g., zero).
+ This method should include statements to run the default_self method for
+ each of its locally created (IS_A'd) parts.
+ This method should be written first.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+ClearAll
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+a method to set all the fixed flags for variables in the type to FALSE.
+ This puts these flags into a known standard state -- i.e., all are FALSE.
+ All models inherit this method from the base model and the need to rewrite
+ it is very, very rare.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+specify
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+a method which assumes all the 
+\family typewriter
+fixed
+\family default
+ flags are currently 
+\family typewriter
+FALSE
+\family default
+ and which then sets a suitable set of fixed flags to 
+\family typewriter
+TRUE
+\family default
+ to make an instance of this type of model well-posed.
+ A well-posed model is one that is square (
+\begin_inset Formula $n$
+\end_inset
+
+ equations in 
+\begin_inset Formula $n$
+\end_inset
+
+ unknowns) and solvable.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+reset
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+a method which first runs the 
+\family typewriter
+ClearAll
+\family default
+ method and then the 
+\family typewriter
+specify
+\family default
+ method.
+ We include this method because it is very convenient.
+ We only have to run one method to make any simulation well-posed, no matter
+ how its fixed flags are currently set.
+ All models inherit this method from the base model, as with 
+\family typewriter
+ClearAll
+\family default
+.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+values
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+a method to establish typical values for the variables we have fixed in
+ an application or test model.
+ We may also supply values for some of the variables we will be computing
+ to aid in solving a model instance of this type.
+ These values are ones that we have tested for simulation of this type and
+ found good.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+bound_self
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+a method to update the 
+\family typewriter
+.upper_bound
+\family default
+ and 
+\family typewriter
+.lower_bound
+\family default
+ value for each of the variables.
+ ASCEND solvers use these bound values to help solve the model equations.
+ This method should bound locally created variables and then call 
+\family typewriter
+bound_self
+\family default
+ for every locally created (
+\family typewriter
+IS_A
+\family default
+'d) part.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+scale_self
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+a method to update the 
+\family typewriter
+.nominal
+\family default
+ value for each of the variables.
+ ASCEND solvers will use these nominal values to rescale the variable to
+ have a value of about one in magnitude to help solve the model equations.
+ This method should re-scale locally created variables and then call 
+\family typewriter
+scale_self
+\family default
+ for every locally created (
+\family typewriter
+IS_A
+\family default
+'d) part.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Method writing automation 
+\begin_inset LatexCommand \label{sec:methods.automation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Standard
+Hit the button Library/Edit/Suggest methods and tweak the results
+\end_layout
+
+\end_inset
+
+ASCEND will help you write the standard methods.
+ Writing most of the standard methods can be nearly automated once the declarati
+ve portion of the model definition is written.
+ Usually, however, some minor tweaking of the automatically generated code
+ is needed.
+ In the Library window, the Edit menu has a "Suggest methods" button.
+ Select a model you have written and read into the library, then hit this
+ button.
+ 
+\end_layout
+
+\begin_layout Standard
+In the Display window will appear a good starting point for the standard
+ methods that you have not yet defined.
+ This starting point follows the guidelines in this chapter.
+ It saves you a lot of typing but it is a starting point only.
+ Select and copy the text into the model you are editing, then tailor it
+ to your needs and finish the missing bits.
+ The comments in the generated code can be deleted before or after you copy
+ the text to your model file.
+\end_layout
+
+\begin_layout Standard
+If you have suggestions for general improvements to the generated method
+ code, please mail them to us and include a sample of what the generated
+ code ought to look like before the user performs any hand-editing.
+ We aim to create easily understood and easily fixed method suggestions,
+ not perfect suggestions, because procedural code style tastes vary so widely.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Standard
+Closing the chapter you find below the suggested methods ASCEND generates
+ for the ***vessel*** model.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

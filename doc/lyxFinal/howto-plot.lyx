@@ -1,0 +1,1583 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry false
+\use_amsmath 2
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Plotting
+\begin_inset LatexCommand \index{plotting}
+
+\end_inset
+
+ data sampled from complex models
+\begin_inset LatexCommand \label{cha:plot}
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+Often you need a plot of data sampled from arbitrary locations in a model
+ that are not naturally grouped in a single easily plotted vector.
+ The 
+\family typewriter
+plot.a4l
+\family default
+
+\begin_inset LatexCommand \index{plot.a4l}
+
+\end_inset
+
+ library provides models (
+\family typewriter
+plt_curve
+\family default
+
+\begin_inset LatexCommand \index{plt\_curve}
+
+\end_inset
+
+, 
+\family typewriter
+plt_plot_symbol
+\family default
+
+\begin_inset LatexCommand \index{plt\_plot\_symbol}
+
+\end_inset
+
+, and 
+\family typewriter
+plt_plot_integer
+\family default
+
+\begin_inset LatexCommand \index{plt\_plot\_integer}
+
+\end_inset
+
+) that can be used with the Browser's Display Plot button.
+ In this chapter we see how to create such a plot using the ASCEND statement
+ ALIASES/IS_A to sample data from a mechanical system of stretched springs,
+ masses, anchors, and fingers.
+ Creating plots of time series data output from ASCEND's initial value solver
+ LSODE is discussed in Chapter\InsetSpace ~
+
+\begin_inset LatexCommand \vref{cha:ivp}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Chemical engineers who can tolerate distillation models should visit the
+ file 
+\family typewriter
+plotcol.a4c
+\family default
+ in the models library for more complicated examples of plotting and visit
+ the model 
+\family typewriter
+simple_column_profiles
+\family default
+
+\begin_inset LatexCommand \index{simple\_column\_profiles}
+
+\end_inset
+
+ in 
+\family typewriter
+column.a4l
+\family default
+
+\begin_inset LatexCommand \index{column.a4l}
+
+\end_inset
+
+ for more complicated examples of sampling data.
+ Reading this chapter first may be of help in interpreting those models.
+\end_layout
+
+\begin_layout Section
+The graph we want
+\end_layout
+
+\begin_layout Standard
+We want to plot the positions X1 to X3 of the connecting hooks h1, h2, and
+ h3 in a mechanical system as shown in Figure\InsetSpace ~
+
+\begin_inset LatexCommand \ref{fig:plot.springSystem}
+
+\end_inset
+
+
+\noun off
+.
+ The anchor, hooks, springs, and finger (we could replace either spring
+ with a block mass, also) are all separate objects which we have modeled
+ very simply.
+ These models are given at the end of the chapter and can also be found
+ (with improvements) in 
+\family typewriter
+\noun default
+force1d.a4c
+\begin_inset LatexCommand \index{force1d.a4c}
+
+\end_inset
+
+
+\family default
+\noun off
+, a model file in the distributed ASCEND libraries.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+
+\noun off
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+
+\begin_inset Graphics
+	filename howto-plotFig1.eps
+	scale 80
+	BoundingBox 0bp 0bp 400bp 200bp
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+Spring test model
+\begin_inset LatexCommand \index{spring test model}
+
+\end_inset
+
+ system, 
+\family typewriter
+st
+\family default
+
+\begin_inset LatexCommand \label{fig:plot.springSystem}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Plotting is usually a post-solution analysis
+\begin_inset LatexCommand \index{post-solution analysis}
+
+\end_inset
+
+ tool, so our plots should not be entangled with the basic models or with
+ the total mechanical system model, 
+\family typewriter
+st
+\family default
+.
+ We might want to explain the system 
+\family typewriter
+st
+\family default
+ to someone and this could be hard to do if the code is cluttered up with
+ plot information.
+\end_layout
+
+\begin_layout Section
+Constructing a plot curve
+\end_layout
+
+\begin_layout Standard
+The plot library models follow object-oriented thinking carefully, perhaps
+ a little too carefully.
+ A 
+\family typewriter
+plt_plot_integer
+\family default
+ is a plottable model built out of plt_curves which are in turn built out
+ of arrays of data points from the user.
+ Constructing these data arrays is the only significant challenge in using
+ the plot models.
+ Begin by building a new model with the system st as a part:
+\end_layout
+
+\begin_layout LyX-Code
+MODEL plot_spring_test;
+\end_layout
+
+\begin_layout LyX-Code
+st IS_A spring_test;
+\end_layout
+
+\begin_layout LyX-Code
+Plot_X IS_A plt_plot_integer(curve_set,curves);
+\end_layout
+
+\begin_layout LyX-Code
+END plot_spring_test;
+\end_layout
+
+\begin_layout Standard
+We want to create a 
+\family typewriter
+plt_curve
+\family default
+ from the array of hook numbers 
+\family typewriter
+y_data[1..3]
+\family default
+ plotted against horizontal hook position 
+\family typewriter
+x_data[1..3]
+\family default
+.
+ There are obvious problems with the model above: 
+\family typewriter
+curves
+\family default
+ and 
+\family typewriter
+curve_set
+\family default
+ are used without being defined, and there is no mention of 
+\family typewriter
+x_data
+\family default
+ or 
+\family typewriter
+y_data
+\family default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Begin by using an ALIASES
+\begin_inset LatexCommand \index{ALIASES}
+
+\end_inset
+
+/IS_A statement to construct the array of positions 
+\family typewriter
+x_data
+\family default
+ from the variables X stored in the hooks of model 
+\family typewriter
+st
+\family default
+.
+\end_layout
+
+\begin_layout LyX-Code
+x_data[Xset] ALIASES (st.h1.X,st.h2.X,st.h3.X) 
+\end_layout
+
+\begin_layout LyX-Code
+    WHERE Xset IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout Standard
+This statement creates a set, 
+\family typewriter
+Xset
+\family default
+, indexing a new array 
+\family typewriter
+x_data
+\family default
+ with elements collected from 
+\family typewriter
+st
+\family default
+.
+ Since the value of 
+\family typewriter
+Xset
+\family default
+ is not specified, it becomes by default the set [1,2,3].
+\end_layout
+
+\begin_layout Standard
+Now we need the hook numbers, 
+\family typewriter
+y_data
+\family default
+.
+ These do not exist in 
+\family typewriter
+st
+\family default
+, so we create them.
+ We will set the numeric values of these in the 
+\family typewriter
+default_self
+\family default
+ method.
+ We will include method in the final model, but do not show it here.
+\end_layout
+
+\begin_layout LyX-Code
+y_data[Xset] IS_A real;
+\end_layout
+
+\begin_layout Standard
+Having both 
+\family typewriter
+y_data
+\family default
+ and 
+\family typewriter
+x_data
+\family default
+, we can construct a curve from them:
+\end_layout
+
+\begin_layout LyX-Code
+X_curve IS_A plt_curve(Xset,y_data,x_data);
+\end_layout
+
+\begin_layout Section
+Constructing the array of curves
+\end_layout
+
+\begin_layout Standard
+We have a curve, but the 
+\family typewriter
+plt_plot_integer
+\family default
+ model 
+\family typewriter
+Plot_x
+\family default
+ expects an array of curves and the set indexing this array as input.
+ We can make both from 
+\family typewriter
+X_curve
+\family default
+ easily using, once again, an ALIASES/IS_A statement.
+\end_layout
+
+\begin_layout LyX-Code
+curves[curve_set] ALIASES (X_curve) 
+\end_layout
+
+\begin_layout LyX-Code
+    WHERE curve_set IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout Standard
+All the pieces are now in place, so we have the final model:
+\end_layout
+
+\begin_layout LyX-Code
+MODEL plot_spring_test;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+(* create our system model and plot.
+ *)
+\end_layout
+
+\begin_layout LyX-Code
+st IS_A spring_test;
+\end_layout
+
+\begin_layout LyX-Code
+Plot_X IS_A plt_plot_integer(curve_set,curves);
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+(* Gather the sampled data into an array *)
+\end_layout
+
+\begin_layout LyX-Code
+x_data[Xset] ALIASES (st.h1.X,st.h2.X,st.h3.X)
+\end_layout
+
+\begin_layout LyX-Code
+WHERE Xset IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+(* Create the Y coordinates *)
+\end_layout
+
+\begin_layout LyX-Code
+y_data[Xset] IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+(* create the curve *)
+\end_layout
+
+\begin_layout LyX-Code
+X_curve IS_A plt_curve(Xset,y_data,x_data);
+\end_layout
+
+\begin_layout LyX-Code
+(* Make X_curve into the array for plt_plot_integer *)
+\end_layout
+
+\begin_layout LyX-Code
+curves[curve_set] ALIASES (X_curve) WHERE
+\end_layout
+
+\begin_layout LyX-Code
+curve_set IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+RUN st.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+st.s1.L0 := 0.2{m}; (* make st more interesting *)
+\end_layout
+
+\begin_layout LyX-Code
+RUN Plot_X.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+RUN X_curve.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+FOR i IN Xset DO
+\end_layout
+
+\begin_layout LyX-Code
+y_data[i] := i;
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout LyX-Code
+X_curve.legend := 'meter';
+\end_layout
+
+\begin_layout LyX-Code
+Plot_X.title := 'Hook locations';
+\end_layout
+
+\begin_layout LyX-Code
+Plot_X.XLabel := 'location';
+\end_layout
+
+\begin_layout LyX-Code
+Plot_X.YLabel := 'hook #';
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+END plot_spring_test;
+\end_layout
+
+\begin_layout Section
+Resulting position plot
+\end_layout
+
+\begin_layout Standard
+We can compile the plot model and obtain the graph in with the following
+ short script.
+\end_layout
+
+\begin_layout LyX-Code
+READ FILE force1d.a4c;
+\end_layout
+
+\begin_layout LyX-Code
+COMPILE pst OF plot_spring_test;
+\end_layout
+
+\begin_layout LyX-Code
+BROWSE {pst};
+\end_layout
+
+\begin_layout LyX-Code
+RUN {pst.st.reset};
+\end_layout
+
+\begin_layout LyX-Code
+SOLVE {pst.st} WITH QRSlv;
+\end_layout
+
+\begin_layout LyX-Code
+PLOT {pst.Plot_X} ;
+\end_layout
+
+\begin_layout LyX-Code
+SHOW LAST;
+\end_layout
+
+\begin_layout Standard
+We can also obtain the plot by moving to 
+\family typewriter
+pst.Plot_X
+\family default
+ in the Browser window and then pushing the Display
+\begin_inset Formula $\rightarrow$
+\end_inset
+
+Plot button or then typing "Alt-d p".
+ We see the hooks are positioned near 0, 230, and 370 mm.
+ We also see that xgraph
+\begin_inset LatexCommand \index{xgraph}
+
+\end_inset
+
+ sometimes makes less than pretty graphs (Figure 
+\begin_inset LatexCommand \ref{fig:plot.plotXforSpring}
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename howto-plotFig2.eps
+	BoundingBox 30bp 0bp 480bp 460bp
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:plot.plotXforSpring}
+
+\end_inset
+
+Plot_X in plot_spring_test
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+1-D mechanical hook, spring, mass, anchor, and finger models
+\end_layout
+
+\begin_layout Standard
+The models used in this chapter are very simple versions of masses and springs
+ horizontally at rest, but possibly under tension, stretched between an
+ anchor and a finger.
+ Only the code absolutely necessary for this example is given here; the
+ full code with methods and additional comments is given in 
+\family typewriter
+force1d.a4c
+\family default
+, an ASCEND modeling example in the library.
+ 
+\end_layout
+
+\begin_layout Standard
+These models could easily be extended to include mass, momentum, and acceleratio
+n in two or three dimensions.
+ Most of the methods in the 
+\family typewriter
+force1d.a4c
+\family default
+ models are unedited from the code generated by the ASCEND Library button
+ Edit
+\begin_inset Formula $\rightarrow$
+\end_inset
+
+Suggest method
+\begin_inset LatexCommand \index{method, Suggest method}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{Suggest method tool}
+
+\end_inset
+
+.
+ If you improve on these models, please share them with us and the rest
+ of the ASCEND community.
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "atoms.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+CONSTANT spring_constant REFINES real_constant DIMENSION M/T^2;
+\end_layout
+
+\begin_layout LyX-Code
+CONSTANT position_constant REFINES real_constant DIMENSION L;
+\end_layout
+
+\begin_layout LyX-Code
+ATOM position REFINES distance DEFAULT 0{m};
+\end_layout
+
+\begin_layout LyX-Code
+END position;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+MODEL hook;
+\end_layout
+
+\begin_layout LyX-Code
+  F_left, F_right IS_A force;
+\end_layout
+
+\begin_layout LyX-Code
+  F_left = F_right;
+\end_layout
+
+\begin_layout LyX-Code
+  X IS_A position;
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  (* ATOM defaults are fine *)
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify;
+\end_layout
+
+\begin_layout LyX-Code
+  F_right.fixed := TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+END specify;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+END specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+END hook;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+MODEL massless_spring(
+\end_layout
+
+\begin_layout LyX-Code
+  k IS_A spring_constant;
+\end_layout
+
+\begin_layout LyX-Code
+  h_left WILL_BE hook;
+\end_layout
+
+\begin_layout LyX-Code
+  h_right WILL_BE hook;
+\end_layout
+
+\begin_layout LyX-Code
+) WHERE (
+\end_layout
+
+\begin_layout LyX-Code
+  h_left, h_right WILL_NOT_BE_THE_SAME;
+\end_layout
+
+\begin_layout LyX-Code
+);
+\end_layout
+
+\begin_layout LyX-Code
+  L0, dx IS_A distance;
+\end_layout
+
+\begin_layout LyX-Code
+  h_right.X = h_left.X + L0 + dx;
+\end_layout
+
+\begin_layout LyX-Code
+  F = k * dx;
+\end_layout
+
+\begin_layout LyX-Code
+  h_left.F_right = F;
+\end_layout
+
+\begin_layout LyX-Code
+  h_right.F_left = F;
+\end_layout
+
+\begin_layout LyX-Code
+  F IS_A force;
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  dx := 1{cm};
+\end_layout
+
+\begin_layout LyX-Code
+  L0 := 10{cm};
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify;
+\end_layout
+
+\begin_layout LyX-Code
+  L0.fixed := TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h_left.reset;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h_right.reset;
+\end_layout
+
+\begin_layout LyX-Code
+  h_left.F_right.fixed := FALSE;
+\end_layout
+
+\begin_layout LyX-Code
+  h_left.X.fixed := TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+END specify;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+  L0.fixed := TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h_left.specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h_right.specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+END specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+END massless_spring;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+MODEL massless_block(
+\end_layout
+
+\begin_layout LyX-Code
+  h_left WILL_BE hook;
+\end_layout
+
+\begin_layout LyX-Code
+  h_right WILL_BE hook;
+\end_layout
+
+\begin_layout LyX-Code
+) WHERE (
+\end_layout
+
+\begin_layout LyX-Code
+  h_left, h_right WILL_NOT_BE_THE_SAME;
+\end_layout
+
+\begin_layout LyX-Code
+);
+\end_layout
+
+\begin_layout LyX-Code
+  width IS_A distance;
+\end_layout
+
+\begin_layout LyX-Code
+  h_left.F_right = h_right.F_left;
+\end_layout
+
+\begin_layout LyX-Code
+  h_right.X = h_left.X + width;
+\end_layout
+
+\begin_layout LyX-Code
+  X "center of the block" IS_A position;
+\end_layout
+
+\begin_layout LyX-Code
+  X = width/2 +  h_left.X;
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  width := 3{cm};
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify;
+\end_layout
+
+\begin_layout LyX-Code
+  width.fixed := TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h_left.reset;
+\end_layout
+
+\begin_layout LyX-Code
+  h_left.F_right.fixed := FALSE;
+\end_layout
+
+\begin_layout LyX-Code
+  h_left.X.fixed := TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h_right.reset;
+\end_layout
+
+\begin_layout LyX-Code
+END specify;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+  width.fixed := TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h_left.specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h_right.specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+END specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+END massless_block;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+MODEL anchor(
+\end_layout
+
+\begin_layout LyX-Code
+  x IS_A position_constant;
+\end_layout
+
+\begin_layout LyX-Code
+  h_right WILL_BE hook;
+\end_layout
+
+\begin_layout LyX-Code
+);
+\end_layout
+
+\begin_layout LyX-Code
+  h_right.X = x;
+\end_layout
+
+\begin_layout LyX-Code
+  F = h_right.F_left;
+\end_layout
+
+\begin_layout LyX-Code
+  F IS_A force;
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h_right.reset;
+\end_layout
+
+\begin_layout LyX-Code
+END specify;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+END specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+END anchor;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+MODEL finger(
+\end_layout
+
+\begin_layout LyX-Code
+  h1 WILL_BE hook;
+\end_layout
+
+\begin_layout LyX-Code
+);
+\end_layout
+
+\begin_layout LyX-Code
+  pull IS_A force;
+\end_layout
+
+\begin_layout LyX-Code
+  h1.F_right = pull;
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  pull := 3{N};
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+END finger;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+MODEL finger_test;
+\end_layout
+
+\begin_layout LyX-Code
+NOTES 'ascii-picture' SELF {
+\end_layout
+
+\begin_layout LyX-Code
+                        ___     __
+\end_layout
+
+\begin_layout LyX-Code
+
+\backslash
+
+\backslash
+--O--/
+\backslash
+/
+\backslash
+/
+\backslash
+/
+\backslash
+/
+\backslash
+/--O--|   |--O(_ 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+                       |___|     
+\backslash
+ 
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+(reference)-h1-(s1)-h2-(m1)-h3-(pinky)
+\end_layout
+
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+END NOTES;
+\end_layout
+
+\begin_layout LyX-Code
+  h1 IS_A hook;
+\end_layout
+
+\begin_layout LyX-Code
+  s1 IS_A massless_spring(100{kg/s^2},h1,h2);
+\end_layout
+
+\begin_layout LyX-Code
+  h2 IS_A hook;
+\end_layout
+
+\begin_layout LyX-Code
+  m1 IS_A massless_block(h2,h3);
+\end_layout
+
+\begin_layout LyX-Code
+  h3 IS_A hook;
+\end_layout
+
+\begin_layout LyX-Code
+  pinky IS_A finger(h3);
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h1.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h2.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h3.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN m1.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN pinky.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN reference.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN s1.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN m1.specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN pinky.reset;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN reference.specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN s1.specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+END specify;
+\end_layout
+
+\begin_layout LyX-Code
+END finger_test;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+MODEL spring_test;
+\end_layout
+
+\begin_layout LyX-Code
+NOTES 'ascii-picture' SELF {
+\end_layout
+
+\begin_layout LyX-Code
+
+\backslash
+
+\backslash
+--O--/
+\backslash
+/
+\backslash
+/
+\backslash
+/
+\backslash
+/
+\backslash
+/--O--
+\backslash
+/
+\backslash
+/
+\backslash
+--O(
+\backslash
+
+\end_layout
+
+\begin_layout LyX-Code
+(reference)-h1-(s1)-h2-(s2)-h3-(pinky)
+\end_layout
+
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+END NOTES;
+\end_layout
+
+\begin_layout LyX-Code
+  reference IS_A anchor(0.0{m},h1);
+\end_layout
+
+\begin_layout LyX-Code
+  h1 IS_A hook;
+\end_layout
+
+\begin_layout LyX-Code
+  s1 IS_A massless_spring(100{kg/s^2},h1,h2);
+\end_layout
+
+\begin_layout LyX-Code
+  h2 IS_A hook;
+\end_layout
+
+\begin_layout LyX-Code
+  s2 IS_A massless_spring(75{kg/s^2},h2,h3);
+\end_layout
+
+\begin_layout LyX-Code
+  h3 IS_A hook;
+\end_layout
+
+\begin_layout LyX-Code
+  pinky IS_A finger(h3);
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h1.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h2.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN h3.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN s2.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN pinky.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN reference.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN s1.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN pinky.reset;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN reference.specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN s1.specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN s2.specify_float;
+\end_layout
+
+\begin_layout LyX-Code
+END specify;
+\end_layout
+
+\begin_layout LyX-Code
+END spring_test;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "plot.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+MODEL plot_spring_test;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+  (* create our model *)
+\end_layout
+
+\begin_layout LyX-Code
+  st IS_A spring_test;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+  (* Now gather the sampled data into an array for plotting *)
+\end_layout
+
+\begin_layout LyX-Code
+  x_data[Xset] ALIASES (st.h1.X,st.h2.X,st.h3.X)
+\end_layout
+
+\begin_layout LyX-Code
+WHERE Xset IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+(* Now create the Y coordinates of the plot since there is no
+\end_layout
+
+\begin_layout LyX-Code
+ * natural Y coordinate in our MODEL.
+\end_layout
+
+\begin_layout LyX-Code
+ *)
+\end_layout
+
+\begin_layout LyX-Code
+  y_data[Xset] IS_A real; (* all will be assigned to 1.0 *)
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+  X_curve IS_A plt_curve(Xset,y_data,x_data);
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+  (* Make X_curve into the expected array for plt_plot *)
+\end_layout
+
+\begin_layout LyX-Code
+  curves[curve_set] ALIASES (X_curve) WHERE
+\end_layout
+
+\begin_layout LyX-Code
+  curve_set IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+  Plot_X IS_A plt_plot_integer(curve_set,curves);
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN st.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  st.s1.L0 := 0.2{m};
+\end_layout
+
+\begin_layout LyX-Code
+  RUN X_curve.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  RUN Plot_X.default_self;
+\end_layout
+
+\begin_layout LyX-Code
+  FOR i IN Xset DO
+\end_layout
+
+\begin_layout LyX-Code
+    y_data[i] := i;
+\end_layout
+
+\begin_layout LyX-Code
+  END FOR;
+\end_layout
+
+\begin_layout LyX-Code
+  X_curve.legend := 'meter';
+\end_layout
+
+\begin_layout LyX-Code
+  Plot_X.title := 'Hook locations';
+\end_layout
+
+\begin_layout LyX-Code
+  Plot_X.XLabel := 'location {m}';
+\end_layout
+
+\begin_layout LyX-Code
+  Plot_X.YLabel := 'hook #';
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+END plot_spring_test;
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\end_body
+\end_document
