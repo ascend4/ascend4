@@ -1,5 +1,29 @@
 Import('env')
+import glob, os.path
 
 # this sconscript will build the ASCEND user's manual and install it in the desired location
 
+env.Command('book.tex','book.lyx'
+	,"lyx --export latex $SOURCE"
+)
 
+epsfigs = glob.glob("*.eps")
+pdffigs = []
+for f in epsfigs:
+	st,ext = os.path.splitext(f)
+	pdffigs += env.Command(st+".pdf",f
+		,"epstopdf --outfile=$TARGET.file $SOURCE.file"
+		,chdir=1
+	)
+
+pdf = env.Command('book.pdf','book.tex'
+	,"pdflatex book.tex"
+	,chdir=1
+)
+env.Depends(pdf,pdffigs)
+
+html = env.Command('html/index.html','book.tex'
+	,"latex2html --show_section_numbers --html_version=4.0 -dir html $SOURCE.file"
+	,chdir="doc"
+)
+env.Depends(html,epsfigs)

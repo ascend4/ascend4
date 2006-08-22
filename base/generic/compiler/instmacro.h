@@ -91,7 +91,7 @@ extern struct WhenInstance *g_when_inst;
 /**< size to which all array children lists are initialized */
 #define UNDEFAULTEDREAL 0.0
 
-#define MAX_EXTRELATIONS 20        
+#define MAX_EXTRELATIONS 50
 /**< maximum number of different ext relations for a given simulation */
 
 /* type coercion definitions */
