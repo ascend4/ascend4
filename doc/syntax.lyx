@@ -1,0 +1,7402 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass book
+\begin_preamble
+\usepackage[bookmarks]{hyperref}
+\usepackage{lmodern}
+\end_preamble
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Syntax and semantics
+\begin_inset LatexCommand \label{cha:ASCENDSyntax}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We shall present an informal description of the ASCEND IV language.
+ Being informal, we shall usually include examples and descriptions of the
+ intended semantics along with the syntax of the items.
+ At times the inclusion of semantics will seem to anticipate later definitions.
+ We do this because we would also like this chapter to be used as a reference
+ for the ASCEND language even after one generally understands it.
+ Often one will need to clarify a point about a particular item and will
+ not wish to have to search in several places to do so.
+\end_layout
+
+\begin_layout Standard
+Syntax
+\begin_inset LatexCommand \index{syntax}
+
+\end_inset
+
+ is the form or structure for the statements in ASCEND, where one worries
+ about the exact words one uses, their ordering, the punctuation, etc.
+ Semantics
+\begin_inset LatexCommand \index{semantics}
+
+\end_inset
+
+ describe the meaning of a statement.
+\end_layout
+
+\begin_layout Standard
+To distinguish between syntax and semantics, consider the statement
+\end_layout
+
+\begin_layout LyX-Code
+y IS_A fraction;
+\end_layout
+
+\begin_layout Standard
+Rules on the syntax for this statement tell us we need a user supplied instance
+ name, y, followed by the ASCEND operator IS_A, followed by a type name
+ (fraction).
+ The statement terminates with a semicolon.
+ The statement semantics says we are declaring the existence of an instance,
+ locally named y, of the type fraction as a part within the current model
+ definition and it is to be constructed when an instance of the current
+ model definition is constructed.
+\end_layout
+
+\begin_layout Standard
+The syntax for a computer language is often defined by using a Bachus-Naur
+\begin_inset LatexCommand \index{Bachus-Naur}
+
+\end_inset
+
+ formal (BNF
+\begin_inset LatexCommand \index{BNF}
+
+\end_inset
+
+) description.
+ The complete YACC
+\begin_inset LatexCommand \index{YACC}
+
+\end_inset
+
+ and FLEX
+\begin_inset LatexCommand \index{FLEX}
+
+\end_inset
+
+ description of the language described (as presently implemented) is available
+ by FTP and via the World Wide Web.
+ The semantics of a very high level modeling language such as ASCEND IV
+ are generally much more restrictive than the syntax.
+ For this reason we do not include a BNF description in this paper.
+ ASCEND IV is an experiment.
+ The language is under constant scrutiny and improvement, so this document
+ is under constant revision.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+\InsetSpace ~
+
+\end_layout
+
+\begin_deeper
+\begin_layout Section
+Preliminaries
+\end_layout
+
+\begin_layout Standard
+We will start off with some background information and some tips that make
+ the rest of the chapter easier to read.
+ ASCEND is an object-oriented (OO) language for hierarchical modeling that
+ has been somewhat specialized for mathematical models.
+ Most of the specialization is in the implementation and the user interface
+ rather than the language definition.
+ 
+\end_layout
+
+\begin_layout Standard
+We feel the single most distinguishing feature of mathematical models is
+ that solving them efficiently requires that the solving algorithms be able
+ to address the entire problem either simultaneously or in a decomposition
+ of the natural problem structure that the algorithm determines is best
+ for the machine(s) in use.
+ In the ASCEND language object-orientation is used to organize natural structure
+s and make them easier to understand.
+ It is not used to hide the details of the objects.
+ The user (or machine) is free to ignore uninteresting details, and the
+ ASCEND environment provides tools for the runtime suppression of these.
+\end_layout
+
+\begin_layout Standard
+ASCEND is well into its 4th generation.
+ Some features we will describe are not yet implemented (some merely speculative
+) and these are clearly marked (* 4+ *).
+ Any feature not marked (* 4+ *)has been completely implemented, and thus
+ any mismatch between the description given here and the software we distribute
+ is a bug we want you to tell us about.
+ 
+\end_layout
+
+\begin_layout Standard
+The syntax and semantics of ASCEND may seem at first a bit unusual.
+ However, do not be afraid to just try what comes naturally if what we write
+ here is unclear.
+ The parser and compiler of ASCEND IV really will help you get things right.
+ Of course if what we write here is unclear, please ask us about it because
+ we aim to continuously improve both this document and the language system
+ it describes.
+\end_layout
+
+\begin_layout Standard
+We will describe, starting in Section 
+\begin_inset LatexCommand \vref{sub:x.1.2Basic-Elements}
+
+\end_inset
+
+, the higher level concepts of ASCEND, but first some important punctuation
+ rules.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ASCEND\InsetSpace ~
+is\InsetSpace ~
+cAsE\InsetSpace ~
+sensitive
+\begin_inset LatexCommand \index{case sensitive}
+
+\end_inset
+
+! 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The keywords that are shown capitalized (or in lower case) in this chapter
+ are that way because ASCEND is case sensitive.
+ IS_A is an ASCEND keyword; isa, Is_a, and all the other permutations you
+ can think of are NOT equivalent to IS_A.
+ In declaring new types of models and variables the user is free to use
+ any style of capitalization he or she may prefer; however, they must remain
+ consistent or undefined types and instances will result.
+\end_layout
+
+\begin_layout Standard
+This case restriction makes our code very readable, but hard to type without
+ a smart editor.
+ We have kept the case-sensitivity because, like all mathematicians, we
+ find ourselves running out of good variable names if we are restricted
+ to a 26 letter alphabet.
+ We have developed smart add-ins for two UNIX editors, EMACS
+\begin_inset LatexCommand \index{EMACS}
+
+\end_inset
+
+ and vi
+\begin_inset LatexCommand \index{vi}
+
+\end_inset
+
+, for handling the upper case keywords and some other syntax elements.
+ The use of these editors is described in another chapter.
+ 
+\end_layout
+
+\begin_layout Standard
+The ASCEND IV parser is very picky and pedantic.
+ It also tries to give helpful messages and occasionally even suggestions.
+ New users should just dive in and make errors, letting the system help
+ them learn how to avoid errors.
+\end_layout
+
+\begin_layout Subsection
+Punctuation
+\begin_inset LatexCommand \index{punctuation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This section covers both the punctuation that must be understood to read
+ this document and the punctuation of ASCEND code.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+keywords
+\begin_inset LatexCommand \index{keywords}
+
+\end_inset
+
+: ASCEND keywords and type names are given in the left column in bold format.
+ It is generally clear from the main text which are keywords and which are
+ type names.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Minor\InsetSpace ~
+items:
+\bar default
+ Minor headings that are helpful in finding details are given in the left
+ column in underline format.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Tips: Special notes and hints are sometimes placed on the left.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+*3*
+\begin_inset LatexCommand \index{*3*}
+
+\end_inset
+
+:
+\bar default
+ This indicates that what follows is specific to ASCEND IIIc and may disappear
+ in a future version of ASCEND IV.
+ Generally ASCEND IV will provide some equivalent functionality at 1/10th
+ of the ASCEND III price.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+*4*
+\bar default
+
+\begin_inset LatexCommand \index{*4*}
+
+\end_inset
+
+ This indicates that what follows is specific to ASCEND IV and may not be
+ available in ASCEND IIIc.
+ Generally ASCEND III may provide some very klugey equivalent functionality,
+ often at a very high price in terms of increased compilation time or debugging
+ difficulty.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+*4+*
+\bar default
+
+\begin_inset LatexCommand \index{*4+*}
+
+\end_inset
+
+ ASCEND IV functionality that is not fully implemented at the time of this
+ writing.
+ The precise syntax of the final implementation may vary slightly from what
+ is presented here.
+ A revision of this document will be made at the time of implementation.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+LHS
+\begin_inset LatexCommand \index{LHS}
+
+\end_inset
+
+:
+\bar default
+ Left Hand Side.
+ Abbreviation used frequently.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+RHS
+\begin_inset LatexCommand \index{RHS}
+
+\end_inset
+
+:
+\bar default
+ Right Hand Side.
+ Abbreviation used frequently.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Simple\InsetSpace ~
+names
+\begin_inset LatexCommand \index{simple names}
+
+\end_inset
+
+:
+\bar default
+ In ASCEND simple names are made of the characters a through z, A through
+ Z, _, (*4+*: $).
+ The underscore is used as a letter, but it cannot be the first letter in
+ a name.
+ The $
+\begin_inset LatexCommand \index{\$}
+
+\end_inset
+
+ character is used exclusively as the first character in the name of system
+ defined built-in parts.
+ "$" is explained in more detail in Section 
+\begin_inset LatexCommand \vref{sub:x.6.2Supported-attributes}
+
+\end_inset
+
+.
+ Simple names should be no more than 80 characters long.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Compound\InsetSpace ~
+names
+\begin_inset LatexCommand \index{compound names}
+
+\end_inset
+
+:
+\bar default
+ Compound names are simple names strung together with dots (.).
+ See the description of "." below.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Groupings:
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+«\InsetSpace ~
+»
+\bar default
+ In documentation optional fields
+\begin_inset LatexCommand \index{optional fields}
+
+\end_inset
+
+ are surrounded by these markers.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+(*\InsetSpace ~
+*)
+\begin_inset LatexCommand \index{(* *)}
+
+\end_inset
+
+ Comment.
+ *3* Anything inside these is a comment.
+ Comments DO NOT nest in ASCEND IIIc.
+ Comments may extend over many lines.
+ *4* Comments DO nest
+\begin_inset LatexCommand \index{nest}
+
+\end_inset
+
+ in ASCEND IV.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+(\InsetSpace ~
+)
+\begin_inset LatexCommand \index{( )}
+
+\end_inset
+
+ Rounded parentheses
+\begin_inset LatexCommand \index{parentheses}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{rounded parentheses}
+
+\end_inset
+
+.
+ Used to enclose arguments for functions or models where the order of the
+ arguments matters.
+ Also used to group terms in complex arithmetic, logical, or set expressions
+ where the order of operations needs to be specified.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Efficiency\InsetSpace ~
+tip: The compiler can simplify relation definitions in a particularly
+ efficient manner if constants are grouped together.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+{\InsetSpace ~
+}
+\begin_inset LatexCommand \index{{ }}
+
+\end_inset
+
+ Curly braces
+\begin_inset LatexCommand \index{Curly braces}
+
+\end_inset
+
+.
+ Used to enclose units.
+ For example, 1 {kg_mole/s}.
+ Also used to enclose the body of annotations.
+ Note: Curly braces are also used in TCL, the language of the ASCEND user
+ interface, about which we will say more in another chapter.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+[\InsetSpace ~
+]
+\begin_inset LatexCommand \index{[ ]}
+
+\end_inset
+
+ Square brackets
+\begin_inset LatexCommand \index{square brackets}
+
+\end_inset
+
+.
+ Used to enclose sets or elements of sets.
+ Examples: my_integer_set :== [1,2,3], demonstrates the use of square brackets
+ in the assignment of a set.
+ My_array[1] demonstrates the use of square brackets in naming an array
+ object indexed over an integer set which includes the element 1.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+.
+\begin_inset LatexCommand \index{.}
+
+\end_inset
+
+ Dot
+\begin_inset LatexCommand \index{dot}
+
+\end_inset
+
+.
+ The dot is used, as in PASCAL and C, to construct the names of nested objects.
+ Examples: if object a has a part b, then the way to refer to b is as a.b.
+ Tray[1].vle shows a dot following a square bracket; here Tray[1] has a part
+ named vle.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+..
+\begin_inset LatexCommand \index{..}
+
+\end_inset
+
+ Dot-dot or double dot
+\begin_inset LatexCommand \index{double dot}
+
+\end_inset
+
+.
+ Integer range shorthand.
+ For example, my_integer_set :== [1,2,3] and my_integer_set :== [1..3] are
+ equivalent.
+ If ..
+ appears in a context requiring (), such as the ALIASES/IS_A statement,
+ then the range is expanded and ordered as we would naturally expect.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+:
+\begin_inset LatexCommand \index{:}
+
+\end_inset
+
+ Colon
+\begin_inset LatexCommand \index{colon}
+
+\end_inset
+
+.
+ A separator used in various ways, principally to set the name of an arithmetic
+ relation apart from the definition.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+::
+\begin_inset LatexCommand \index{::}
+
+\end_inset
+
+ Double colon
+\begin_inset LatexCommand \index{double colon}
+
+\end_inset
+
+.
+ A separator used in the methods section for accessing methods defined on
+ types other than the type the method is part of.
+ Explained in Section 
+\begin_inset LatexCommand \vref{sec:x.4Procedural-statements}
+
+\end_inset
+
+.[
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+;
+\begin_inset LatexCommand \index{;}
+
+\end_inset
+
+ Semicolon
+\begin_inset LatexCommand \index{semicolon}
+
+\end_inset
+
+.
+ The separator of statements.
+\end_layout
+
+\begin_deeper
+\begin_layout Subsection
+Basic Elements
+\begin_inset LatexCommand \index{basic elements}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{sub:x.1.2Basic-Elements}
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Boolean\InsetSpace ~
+value
+\bar default
+
+\begin_inset LatexCommand \index{value, Boolean}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{Boolean value}
+
+\end_inset
+
+ TRUE
+\begin_inset LatexCommand \index{TRUE}
+
+\end_inset
+
+ or FALSE
+\begin_inset LatexCommand \index{FALSE}
+
+\end_inset
+
+.
+ Can't get much simpler, eh? In the language definition TRUE and FALSE do
+ not map to 1 and 0 or any other type of numeric value.
+ (In the implementation, of course, they do.)
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+User\InsetSpace ~
+interface\InsetSpace ~
+tip: The ASCEND user interface programmers have found it very
+ convenient, however, to allow T/F, 1/0, Y/N, and other obvious boolean
+ conventions as interactive input when assigning boolean values.
+ We are lazy users.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Integer\InsetSpace ~
+value
+\bar default
+
+\begin_inset LatexCommand \index{value, integer}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{integer value}
+
+\end_inset
+
+ A signed whole number up to the maximum that can be represented by the
+ computer on which one is running ASCEND.
+ MAX_INTEGER
+\begin_inset LatexCommand \index{MAX\_INTEGER}
+
+\end_inset
+
+ is machine dependent.
+ Examples are:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+\align block
+123
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+-5
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+MAX_INTEGER, typically 2147483647.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Real\InsetSpace ~
+value
+\bar default
+
+\begin_inset LatexCommand \index{value. real}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{real value}
+
+\end_inset
+
+ ASCEND represents reals almost exactly as any other mathematically oriented
+ programming language does.
+ The mantissa
+\begin_inset LatexCommand \index{mantissa}
+
+\end_inset
+
+ has an optional negative sign followed by a string of digits and at most
+ one decimal point.
+ The exponent is the letter e or E followed by an integer.
+ The number must not exceed the largest the computer is able to handle.
+ There can be no blank characters in a real.
+ MAX_REAL
+\begin_inset LatexCommand \index{MAX\_REAL}
+
+\end_inset
+
+ is machine dependent.
+ The following are legitimate reals in ASCEND: 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+\align block
+-1
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+1.2
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+1.3e-2 
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+7.888888e+34
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+.6E21
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+MAX_REAL, typically about 1.79E+308.
+\end_layout
+
+\begin_layout Standard
+while the following are not:
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+1.
+ 2 (*contains a blank within it*)
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+1.3e2.0 (*exponent has a decimal in it*)
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
++1.3 (* illegal unary + sign.
+ x = +1.3 not allowed*)
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Reals\InsetSpace ~
+stored\InsetSpace ~
+in\InsetSpace ~
+SI
+\begin_inset LatexCommand \index{SI}
+
+\end_inset
+
+\InsetSpace ~
+units
+\bar default
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+We store all real values as double precision
+\begin_inset LatexCommand \index{double precision}
+
+\end_inset
+
+ numbers in the MKS
+\begin_inset LatexCommand \index{MKS}
+
+\end_inset
+
+ system of units.
+ This eliminates many common errors in the modeling of physical systems.
+ Since we also place the burden of scaling equations on system routines
+ and a simple modeling methodology, the internal units are not of concern
+ to most users.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Dimensionality
+\begin_inset LatexCommand \index{dimensionality}
+
+\end_inset
+
+:
+\bar default
+ Real values have dimensionality such as length/time for velocity.
+ Dimensionality is to be distinguished from the units such as ft/s.
+ ASCEND takes care of mapping between units
+\begin_inset LatexCommand \index{units}
+
+\end_inset
+
+ and dimensions.
+ A value without units (this includes integer values) is taken to be dimensionle
+ss
+\begin_inset LatexCommand \index{dimensionless}
+
+\end_inset
+
+.
+ Dimensionality is built up from the following base dimensions:
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Name 
+\bar under
+definition; typical units
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+L
+\begin_inset LatexCommand \index{L, length dimension}
+
+\end_inset
+
+ length
+\begin_inset LatexCommand \index{length}
+
+\end_inset
+
+; meter, m
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+M
+\begin_inset LatexCommand \index{M, mass dimension}
+
+\end_inset
+
+ mass
+\begin_inset LatexCommand \index{mass}
+
+\end_inset
+
+; kilogram, kg
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+T
+\begin_inset LatexCommand \index{T, time dimension}
+
+\end_inset
+
+ time
+\begin_inset LatexCommand \index{time}
+
+\end_inset
+
+; second, s
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+E
+\begin_inset LatexCommand \index{E, electric current dimension}
+
+\end_inset
+
+ electric current
+\begin_inset LatexCommand \index{electric current}
+
+\end_inset
+
+; ampere, A
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Q
+\begin_inset LatexCommand \index{Q, quantity dimension}
+
+\end_inset
+
+ quantity
+\begin_inset LatexCommand \index{quantity}
+
+\end_inset
+
+; mole, mole
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+TMP
+\begin_inset LatexCommand \index{TMP, temperature dimension}
+
+\end_inset
+
+ temperature
+\begin_inset LatexCommand \index{temperature}
+
+\end_inset
+
+; Kelvin, K
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+LUM
+\begin_inset LatexCommand \index{LUM, luminous intensity dimension}
+
+\end_inset
+
+ luminous intensity
+\begin_inset LatexCommand \index{luminous intensity}
+
+\end_inset
+
+; candela, cd
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+P
+\begin_inset LatexCommand \index{P, phase angle dimension}
+
+\end_inset
+
+ plane angle
+\begin_inset LatexCommand \index{plane angle}
+
+\end_inset
+
+; radian, rad
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+S
+\begin_inset LatexCommand \index{S, solid angle dimension}
+
+\end_inset
+
+ solid angle
+\begin_inset LatexCommand \index{solid angle}
+
+\end_inset
+
+; steradian, srad
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+C
+\begin_inset LatexCommand \index{C, currency dimension}
+
+\end_inset
+
+ currency
+\begin_inset LatexCommand \index{currency}
+
+\end_inset
+
+; currency, CR
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The atom and constant definitions in the library illustrate the use of dimension
+ality.
+\end_layout
+
+\begin_layout Standard
+Dimensions may be any combination of these symbols along with rounded parenthese
+s, (), and the operators *, ^ and /.
+ Examples include M/T or M*L^2/T^2/TMP {this latter means (M*(L^2)/(T^2))/TMP}.
+ The second operand for the to the power operator, ^, must be an integer
+ value (e.g., -2 or 3) because fractional powers of dimensional numbers are
+ physically undefined.
+\end_layout
+
+\begin_layout Standard
+If the dimensionality for a real value is undefined, then ASCEND gives it
+ a wild card dimensionality
+\begin_inset LatexCommand \index{wild card dimensionality}
+
+\end_inset
+
+.
+ If ASCEND can later deduce its dimensionality from its use in a model definitio
+n it will do so.
+ For example consider the real variable a, suppose a has wild card dimensionalit
+y, b has dimensionality of L/T.
+ Then the statement:
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Example\InsetSpace ~
+of\InsetSpace ~
+a\InsetSpace ~
+dimensionally\InsetSpace ~
+consistent
+\begin_inset LatexCommand \index{dimensionally consistent}
+
+\end_inset
+
+\InsetSpace ~
+equation.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+\InsetSpace ~
+ a + b = 3 {ft/s};
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+requires that a have the same dimensionality as the other two terms, namely,
+ L/T.
+ ASCEND will assign this dimensionality to a.
+ The user will be warned of dimensionally inconsistent equations.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Unit\InsetSpace ~
+expression
+\bar default
+ A unit expression
+\begin_inset LatexCommand \index{unit expression}
+
+\end_inset
+
+ may be composed of any combination of unit names defined by the system
+ and any numerical constants combined with times (*), divide(/) and to the
+ power (^) operators.
+ The RHS of ^ must be an integer.
+ Parentheses can be used to group subexpressions EXCEPT a divide operator
+ may not be followed by a grouped subexpression.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+So, {kg/m/s} is fine, but {kg/(m*s)} is not.
+ Although the two expressions are mathematically equivalent, it makes the
+ system programming and output formatting easier to code and faster to execute
+ if we disallow expressions of the latter sort.
+\end_layout
+
+\begin_layout Standard
+The units understood by the system are defined in the 
+\begin_inset Quotes eld
+\end_inset
+
+howTo
+\begin_inset LatexCommand \cite{key-1}
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ book available on the ASCEND web site.
+ Note that several units defined are really values of interesting constants
+ in SI, e.g.
+ R :== 1{GAS_C} yields the correct value of the thermodynamic gas constant.
+ Users can define additional units.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Units
+\bar default
+
+\begin_inset LatexCommand \index{units}
+
+\end_inset
+
+ A Unit expression unit expression must be enclosed in curly braces {}.
+ When a real number is used in a mathematical expression in ASCEND, it must
+ have a set of units expressed with it.
+ If it does not, ASCEND assumes the number is dimensionless, which may not
+ be the intent of the modeler.
+ An example is shown in the dimensionally consistent equation above where
+ the number 3 has the units {ft/s} associated with it.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Examples:
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+{kg_mole/s/m} same as {(kg_mole/s)/m}
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+{m^3/yr}
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+{3/100*ft} same as {0.03*ft}
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+{s^-1} same as {1/s}
+\end_layout
+
+\begin_layout Standard
+Illegal unit examples are
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+{m/(K*kg_mole)}
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+grouped subexpression used in the denominator; should be written {m/K/kg_mole}.
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+\align block
+{m^3.5}
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+power of units or dimensions must be integer.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Symbol\InsetSpace ~
+Value
+\bar default
+
+\begin_inset LatexCommand \index{value, symbol}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{symbol value}
+
+\end_inset
+
+ The format for a symbol is that of an arbitrary character string enclosed
+ between two single quotes.
+ There is no way to embed a single quote
+\begin_inset LatexCommand \index{'}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{single quote}
+
+\end_inset
+
+ in a symbol: we are not in the escape sequence business at this time.
+ The following are legal symbols in ASCEND:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+'H2O'
+\end_layout
+
+\begin_layout LyX-Code
+'r1'
+\end_layout
+
+\begin_layout LyX-Code
+'Bill said,foo to whom?'
+\end_layout
+
+\begin_layout Standard
+while the following are not legal symbol values:
+\end_layout
+
+\begin_layout LyX-Code
+"ethanol" (double quotes not allowed)
+\end_layout
+
+\begin_layout LyX-Code
+water (no single quotes given)
+\end_layout
+
+\begin_layout LyX-Code
+i cant do this (no embedded quotes)
+\end_layout
+
+\begin_layout Standard
+There is an arbitrary upper limit to the number of characters in a symbol
+ (something like 10,000) so that we may detect a missing close quote in
+ a bad input file without crashing.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Sets\InsetSpace ~
+values
+\begin_inset LatexCommand \index{values, set}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{set values}
+
+\end_inset
+
+ Set values are lists of elements, all of type integer_constant or all of
+ type symbol_constant, enclosed between square brackets [].
+ The following are examples of sets:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+\align block
+['methane', 'ethane', 'propane']
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+[1..5, 7, 15]
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+[2..n_stages]
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+[1, 4, 2, 1, 16]
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+[]
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+More\InsetSpace ~
+about\InsetSpace ~
+sets
+\begin_inset LatexCommand \index{sets}
+
+\end_inset
+
+\InsetSpace ~
+in\InsetSpace ~
+Section\InsetSpace ~
+
+\begin_inset LatexCommand \vref{sub:x.2.2Sets}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The value range 1..5 is an allowable shorthand for the integers 1, 2, 3, 4
+ and 5 while the value range 2..n_stages (where n_stages must be of type integer_c
+onstant) means all integers from 2 to n_stages.
+ If n_stages is less than 2, then the third set is empty.
+ The repeated occurrence of 1 in the fourth set is ignored.
+ The fifth set is the empty set
+\begin_inset LatexCommand \index{empty set}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{set, empty}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+We use the term set in an almost pure mathematical sense.
+ The elements have no order.
+ One can only ask two things of a set: (1) if an element is a member of
+ it and (2) its cardinality
+\begin_inset LatexCommand \index{cardinality}
+
+\end_inset
+
+ (CARD
+\begin_inset LatexCommand \index{CARD}
+
+\end_inset
+
+(set)).
+ Repeated elements used in defining a set are ignored.
+ The elements of sets cannot themselves be sets in ASCEND; i.e., there can
+ be no sets of set.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Sets\InsetSpace ~
+are\InsetSpace ~
+unordered.
+ A set of integers may appear to be ordered to the modeler as the natural
+ numbers have an order.
+ However, it is the user imposing and using the ordering, not ASCEND.
+ ASCEND sees these integers as elements in the set with NO ordering.
+ Therefore, there are no operators in ASCEND such as successor or precursor
+ member of a set.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Arrays
+\bar default
+
+\begin_inset LatexCommand \index{arrays}
+
+\end_inset
+
+ An array is a list of instances indexed over a set, in computer-speak,
+ an associative array of objects.
+ The instances are all of the same base type (as that is the only way they
+ can be defined).
+ An individual member of a list may later be more refined than the other
+ members (we shall illustrate that possibility).
+ The following are arrays in ASCEND.
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+\align block
+stage[1..n_stages]
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+y[components]
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+column[areas][processes]
+\end_layout
+
+\begin_layout Standard
+where components, areas and processes are sets.
+ For example components could be the set of symbols ['ethylene', 'propylene'],
+ areas the set of symbols ['feed_prep', 'prod_purification'] while processes
+ could be the set ['alcohol_manuf', 'poly_propropylene_manuf'].
+ Note that the third example (column) is a list of lists (the way that ASCEND
+ permits a multiply subscripted array).
+ 
+\end_layout
+
+\begin_layout Standard
+The following are elements in the above arrays:
+\end_layout
+
+\begin_layout LyX-Code
+stage[1] 
+\end_layout
+
+\begin_layout LyX-Code
+y['ethylene']
+\end_layout
+
+\begin_layout LyX-Code
+column['feed_prep'][alcohol_manuf']
+\end_layout
+
+\begin_layout Standard
+provided that n_stages is 1 or larger.
+ 
+\end_layout
+
+\begin_layout Standard
+There can be any number of subscripts
+\begin_inset LatexCommand \index{subscripts}
+
+\end_inset
+
+ for an array.
+ We point out, however, that in virtually every application of arrays requiring
+ more than two subscripts, there is usually a some underlying concept that
+ is much better modeled as an object than as part of a deeply subscripted
+\begin_inset LatexCommand \index{subscripted, deeply}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{deeply subscripted}
+
+\end_inset
+
+ array.
+ In the following jagged array example, there are really the concepts of
+ unit operation and stream that would be better understood if made explicit.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Arrays\InsetSpace ~
+can\InsetSpace ~
+be\InsetSpace ~
+jagged
+\bar default
+
+\begin_inset LatexCommand \label{lyx:Arrays-can-be}
+
+\end_inset
+
+ (* 4 *) Arrays can be sparse
+\begin_inset LatexCommand \index{sparse}
+
+\end_inset
+
+ or jagged
+\begin_inset LatexCommand \index{jagged}
+
+\end_inset
+
+.
+ For example:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+process[1..3] IS_A set OF integer;
+\end_layout
+
+\begin_layout LyX-Code
+process[1] :== [2];
+\end_layout
+
+\begin_layout LyX-Code
+process[2] :== [7,5,3];
+\end_layout
+
+\begin_layout LyX-Code
+process[3] :== [4,6];
+\end_layout
+
+\begin_layout LyX-Code
+FOR i in [1..3] CREATE
+\end_layout
+
+\begin_layout LyX-Code
+   FOR j IN process[i] CREATE
+\end_layout
+
+\begin_layout LyX-Code
+      flow[i][j] IS_A mass;
+\end_layout
+
+\begin_layout LyX-Code
+   END FOR;
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout Standard
+process is an array of sets (not to be confused with a set of sets which
+ ASCEND does not have) and flow is an array with six elements spread over
+ three rows:
+\end_layout
+
+\begin_layout LyX-Code
+flow[1][2]
+\end_layout
+
+\begin_layout LyX-Code
+flow[2][7], flow[2][3], flow[2][5]
+\end_layout
+
+\begin_layout LyX-Code
+flow[3][4], flow[3][6]
+\end_layout
+
+\begin_layout Standard
+Sparse arrays of models and variables are new to ASCEND IV.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Arrays\InsetSpace ~
+are\InsetSpace ~
+also\InsetSpace ~
+instances 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Each array is itself an object.
+ That is, when you write "a[1..2] IS_A real;" three objects get created: a[1],
+ a[2], and a.
+ a is an array instance which has parts named [1] and [2] that are real
+ instances.
+ When a parameterized model requires an array, you pass it the single item
+ a, not the elements a[1..2].
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+No\InsetSpace ~
+contiguous\InsetSpace ~
+storage
+\begin_inset LatexCommand \index{contiguous storage, no}
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Just in case you still have not caught on, ASCEND arrays are not blocks
+ of memory such as are seen in low-level languages like C
+\begin_inset LatexCommand \index{C, computer language}
+
+\end_inset
+
+, FORTRAN
+\begin_inset LatexCommand \index{FORTRAN}
+
+\end_inset
+
+, and Matlab
+\begin_inset LatexCommand \index{Matlab}
+
+\end_inset
+
+.
+ The modeling language does not provide things like MatMult
+\begin_inset LatexCommand \index{MatMult}
+
+\end_inset
+
+, Transpose
+\begin_inset LatexCommand \index{Transpose}
+
+\end_inset
+
+, and Inverse
+\begin_inset LatexCommand \index{Inverse}
+
+\end_inset
+
+ because these are procedural solving tools.
+ If you are dedicated, you could write METHODs that implement matrix algebra,
+ but this is a really dumb idea.
+ We aim to structure our software so that it can interact openly with separate,
+ dedicated tools (such as Matlab) when those tools are needed.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Index\InsetSpace ~
+variable
+\begin_inset LatexCommand \index{index variable}
+
+\end_inset
+
+ One can introduce a variable as an index ranging over a set.
+ Index variables are local to the statements in which they occur.
+ An example of using an index variable is the following FOR statement:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+FOR i IN components CREATE
+\end_layout
+
+\begin_layout LyX-Code
+   VLE_equil[i]: y[i] = K[i]*x[i];
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout Standard
+In this example i implicitly is of the same type as the values in the set
+ components.
+ If another object i exists in the model containing the FOR loop, it is
+ ignored while executing the statements in that loop.
+ This may cause unexpected results and the compiler will generate warnings
+ about loop index shadowed variables.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Label
+\begin_inset LatexCommand \index{label}
+
+\end_inset
+
+: One can label statements which define arithmetic relationships (objective
+ functions, equalities, and inequalities) in ASCEND.
+ Labeling is highly recommended because it makes models much more readable
+ and more easily debugged.
+ Labels are also necessary for relations which are going to be used in condition
+al modeling or differentiation functions.
+ A label is a sequence of alphanumeric characters ending in a colon.
+ An example of a labeled equation is:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+mass_balance: m_in = m_out;
+\end_layout
+
+\begin_layout Standard
+An example of a labeled objective function is:
+\end_layout
+
+\begin_layout LyX-Code
+obj1: MAXIMIZE revenue - cost;
+\end_layout
+
+\begin_layout Standard
+If a relation is defined within a FOR statement, it must have an array indexed
+ label so that each instance created using the statement is distinguishable
+ from the others.
+ An example is:
+\end_layout
+
+\begin_layout LyX-Code
+FOR i IN components CREATE
+\end_layout
+
+\begin_layout LyX-Code
+   equil[i]: y[i] = K[i]*x[i];
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout Standard
+The ASCEND interactive user interface identifies relationships by their
+ labels.
+ If one has not provided such a label, the system generates the label:
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+modelname_equationnumber
+\end_layout
+
+\begin_layout Standard
+where modelname and equationnumber are the name of the model and the equation
+ number in the model.
+ An example is
+\end_layout
+
+\begin_layout LyX-Code
+mixture_14
+\end_layout
+
+\begin_layout Standard
+for the unlabeled 14th relation in the mixture definition.
+ If there is a conflict caused with an existing name, the generated name
+ has enough letters added after equationnumber to make it a unique name.
+ Remember that each model in a refinement hierarchy inherits the equations
+ of its less refined ancestors, so the first equation appearing in the source
+ code of a refining model may actually be the nth relation in that model.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Lists
+\bar default
+
+\begin_inset LatexCommand \index{lists}
+
+\end_inset
+
+ Often in a statement one can include a list of names or expression.
+ A name list is one or more names where multiple list entries are separated
+ from each other by commas.
+ Examples of a list of names are:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+\align block
+T1, inlet_T, outlet_T
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+y[components], y_in
+\end_layout
+
+\begin_layout LyX-Code
+\align block
+stage[1..n_stages]
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Ordered\InsetSpace ~
+lists
+\begin_inset LatexCommand \index{lists, ordered}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{ordered lists}
+
+\end_inset
+
+:
+\bar default
+ If the ordering of names in a list matters, that list is enclosed in ().
+ Order matters in: calling externally defined methods or models, calling
+ most real-valued functions, passing parameters to ASCEND models or methods,
+ and declaring the controlling parameters that SELECT, SWITCH, and WHEN
+ statements make decisions on.
+\end_layout
+
+\begin_deeper
+\begin_layout Subsection
+Basic Concepts
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Instances
+\begin_inset LatexCommand \index{instances}
+
+\end_inset
+
+\InsetSpace ~
+and\InsetSpace ~
+types
+\bar default
+
+\begin_inset LatexCommand \index{types}
+
+\end_inset
+
+ This is an opportune time to emphasize the distinction between the terms
+ instance and type.
+ A type in ASCEND is what we define when we declare an ASCEND model or atom.
+ It is the formal definition of the attributes (parts) and attribute default
+ values that an object will have if it is created using the type definition.
+ Methods are associated with types.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+In ASCEND there are two meanings (closely related) of an instance.
+ 
+\end_layout
+
+\begin_layout Itemize
+An instance is a named part that exists within a type definition.
+ 
+\end_layout
+
+\begin_layout Itemize
+An instance is a compiled object.
+ 
+\end_layout
+
+\begin_layout Standard
+If one is in the context of the ASCEND interface, the system compiles an
+ instance of a model type to create an object with which one carries out
+ computations.
+ The system requires the user to give a simple name for this simulation
+ instance.
+ This name given is then the first part of the qualified name for all the
+ parts of the compiled object.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Implicit\InsetSpace ~
+types
+\bar default
+
+\begin_inset LatexCommand \index{types, implicit}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{types, implicit}
+
+\end_inset
+
+ It is possible to create an instance that does not have a corresponding
+ type definition in the library.
+ The type of such an instance is said to be implicit.
+ (Some people use the word anonymous
+\begin_inset LatexCommand \index{type, anonymous}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{anonymous type}
+
+\end_inset
+
+.
+ However, no computable type is anonymous and the implicit type of an instance
+ is theoretically computable).
+ The simplest example of an implicit type is the type of an instance compiled
+ from the built-in definition integer_constant.
+ For example:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+i, j IS_A integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+i:== 2;
+\end_layout
+
+\begin_layout LyX-Code
+j:== 3;
+\end_layout
+
+\begin_layout Standard
+Instances i and j, though of the same formal type, are implicit type incompatibl
+e because they have been assigned distinct values.
+\end_layout
+
+\begin_layout Standard
+Instances which are either formally or implicitly type incompatible cannot
+ be merged.
+ This will be discussed further in Section 
+\begin_inset LatexCommand \vref{sec:x.3Declarative-statements}
+
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Parsing
+\begin_inset LatexCommand \index{parsing}
+
+\end_inset
+
+ Most errors in the declaration of an ASCEND model can be caught at parse
+ time because the object type of any well-formed name in an ASCEND definition
+ can be resolved or proved ambiguous.
+ We cannot prove at parse time whether a specific array element will exist,
+ but we can know that should such an element exist, it must be of the type
+ with which the array is defined.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Ambiguity is warned about loudly because it is caused by either misspelling
+ or poor modeling style.
+ The simplest example of ambiguity follows.
+\end_layout
+
+\begin_layout Standard
+Assume a type, stream, and a refinement of stream, heat_stream, which adds
+ the new variable H.
+ Now, if we write:
+\end_layout
+
+\begin_layout LyX-Code
+MODEL mixer;
+\end_layout
+
+\begin_layout LyX-Code
+input[1..2] IS_A stream;
+\end_layout
+
+\begin_layout LyX-Code
+output IS_A heat_stream;
+\end_layout
+
+\begin_layout LyX-Code
+input[1].H + input[2].H = output.H;
+\end_layout
+
+\begin_layout LyX-Code
+END mixer;
+\end_layout
+
+\begin_layout Standard
+We see the parser can find the definition of H in the type heat_stream,
+ so output.H is well defined.
+ The author of the mixer model may intend to refine input[1] and input[2]
+ to be objects of different types, say steam_stream and electric_stream,
+ where each defines an H suitable for use in the equation.
+ The parser cannot read the authors mind, so it warns that input[1].H and
+ input[2].H are ambiguous in the mixer definition.
+ The mixer model is not highly reusable except by the author, but sometimes
+ reusability is not a high priority objective.
+ The mixer definition is allowed, but it may cause problems in instantiation
+ if the author has forgotten the assumption that is not explicitly stated
+ in the model and neglects to refine the input streams appropriately.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Instantiation
+\bar default
+
+\begin_inset LatexCommand \index{instantiation}
+
+\end_inset
+
+ Creating an simulation based on a type definition is a multi-phase
+\begin_inset LatexCommand \index{multi-phase}
+
+\end_inset
+
+ process called compiling
+\begin_inset LatexCommand \index{compiling}
+
+\end_inset
+
+ (or instantiation).
+ When an instantiation cannot be completed because some structural parameter
+ (a symbol_constant, real_constant, boolean_constant, integer_constant,
+ or set) does not have a value there will be PENDING
+\begin_inset LatexCommand \index{PENDING}
+
+\end_inset
+
+ statements.
+ The user interface will warn that something is incomplete.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+In phase
+\begin_inset LatexCommand \index{phases, compiler}
+
+\end_inset
+
+ 1 all statements that create instance structures or assign constant values
+ are executed.
+ This phase theoretically requires an infinite number of passes through
+ the structural statements of a definition.
+ We allow a maximum of 5 and have never needed more than 3.
+ There may be pending statements at the end of phase 1.
+ The compiler or interface will issue warnings about pending statements,
+ starting with warnings about unassigned constants.
+\end_layout
+
+\begin_layout Standard
+Phase 2 compiles as many real arithmetic relation definitions as possible.
+ Some relations may be impossible to compile because the constants or sets
+ they depend on do not have values assigned.
+ Other relations may be impossible because they reference variables that
+ do not exist.
+ This is determined in a single pass.
+\end_layout
+
+\begin_layout Standard
+Phase 3 compiles as many logical arithmetic relation definitions as possible.
+ Some relations may be impossible to compile because the constants or sets
+ they depend on do not have values assigned.
+ Other relations may be impossible because they reference real arithmetic
+ relations that do not exist.
+ This is determined in a single pass.
+\end_layout
+
+\begin_layout Standard
+Phase 4 compiles as many conditional programming statements (WHENs) as possible.
+ Some WHEN relations may be impossible to compile because the discrete variables
+, models, or relations they depend on do not exist.
+ This is determined in a single pass.
+\end_layout
+
+\begin_layout Standard
+Phase 5 executes the variable defaulting statements made in the declarative
+ section of each model IF AND ONLY IF there are no pending statements from
+ phases 1-4 anywhere in the simulation.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+default_self
+\begin_inset LatexCommand \index{default\_self}
+
+\end_inset
+
+ After all phases are done, the method default_self is called in the top-most
+ model of the simulation, if this method exists.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The first occurrence of each impossible statement will be explained during
+ a failed compilation.
+ Impossible statements include:
+\end_layout
+
+\begin_layout Itemize
+Relations containing undefinable variables (often misspellings).
+\end_layout
+
+\begin_layout Itemize
+Assignments that are dimensionally inconsistent or containing mismatched
+ types.
+\end_layout
+
+\begin_layout Itemize
+Structure building or modifying statements that refer to model parts which
+ cannot exist or that require a type-incompatible argument, refinement,
+ or merge.
+\end_layout
+
+\begin_layout Section
+Data Type Declarations
+\begin_inset LatexCommand \index{data type declarations}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the spectrum of OO languages, ASCEND is best considered as being class-based
+\begin_inset LatexCommand \index{class-based}
+
+\end_inset
+
+, though it is rather more a hybrid.
+ We have atom and model definitions, called types, and the compiled objects
+ themselves, called instances.
+ ASCEND instances have a record of what type they were constructed from.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Type\InsetSpace ~
+qualifiers
+\begin_inset LatexCommand \index{type qualifiers}
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+UNIVERSAL
+\begin_inset LatexCommand \index{UNIVERSAL}
+
+\end_inset
+
+ Universal is an optional modifier of all ATOM, CONSTANT.
+ and MODEL definitions.
+ If UNIVERSAL precedes the definition, then ALL instances of that type will
+ actually refer to the first instance of the type that is created.
+ This saves memory and ensures global consistency of data.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Examples of universal type definitions are
+\end_layout
+
+\begin_layout LyX-Code
+UNIVERSAL MODEL methane
+\end_layout
+
+\begin_layout LyX-Code
+   REFINES generic_component_model;
+\end_layout
+
+\begin_layout LyX-Code
+UNIVERSAL CONSTANT circle_constant
+\end_layout
+
+\begin_layout LyX-Code
+   REFINES real_constant :== 1{PI};
+\end_layout
+
+\begin_layout LyX-Code
+UNIVERSAL ATOM counter_1
+\end_layout
+
+\begin_layout LyX-Code
+   REFINES integer;
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Tip:\InsetSpace ~
+Do\InsetSpace ~
+not\InsetSpace ~
+use\InsetSpace ~
+UNIVERSAL\InsetSpace ~
+variables\InsetSpace ~
+in\InsetSpace ~
+relations.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+It is important to note that, because variables must store information about
+ which relations they occur in, it is a very bad idea to use UNIVERSAL typed
+ variables in relations.
+ The construction and maintenance of the relation list becomes very expensive
+ for universal variables.
+ UNIVERSAL constants are fine to use, though, because there are no relation
+ links for constants.
+\end_layout
+
+\begin_layout Subsection
+Models
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+MODEL
+\begin_inset LatexCommand \index{MODEL}
+
+\end_inset
+
+ An ASCEND model has a declarative part and an optional procedural part
+ headed by the METHODS word.
+ Models are essentially containers for variables and relations.
+ We will explain the various statements that can be made within models in
+ Section 
+\begin_inset LatexCommand \vref{sec:x.3Declarative-statements}
+
+\end_inset
+
+ and Section 
+\begin_inset LatexCommand \vref{sec:x.4Procedural-statements}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Simple\InsetSpace ~
+models
+\begin_inset LatexCommand \index{models, simple}
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+foo 
+\family typewriter
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+MODEL foo;
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+(* statements about foo go here*)
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+(* METHODs for foo go here*)
+\end_layout
+
+\begin_layout LyX-Code
+END foo;
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+bar 
+\family typewriter
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+MODEL bar REFINES foo;
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+(*additional statements about foo *)
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+(* additional METHODs for bar *)
+\end_layout
+
+\begin_layout LyX-Code
+END bar;
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Parameterized\InsetSpace ~
+Models
+\bar default
+
+\begin_inset LatexCommand \index{models, parameterized}
+
+\end_inset
+
+ (* 4 *) Parameterizing models makes them easier to understand and faster
+ for the system to compile.
+ The syntax for a parameterized model vaguely resembles a function call
+ in imperative languages, but it is NOT.
+ When constructing a reusable model, all the constants that determine the
+ sizes of arrays and other structures should be declared in the parameter
+ list so that 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+the user knows what is required to reuse the model.
+\end_layout
+
+\begin_layout Itemize
+the compiler knows what values must be set before it should bother attempting
+ to compile the model.
+\end_layout
+
+\begin_layout Standard
+There is no reason that other items could not also go in the parameter list,
+ such as key variables which might be considered inputs or outputs or control
+ parameters in the mathematical application of the model.
+ A simple example of parameterization would be:
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+column(n,s) 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+MODEL column(
+\end_layout
+
+\begin_layout LyX-Code
+   ntrays WILL_BE integer_constant; 
+\end_layout
+
+\begin_layout LyX-Code
+   components IS_A set of symbol_constant;
+\end_layout
+
+\begin_layout LyX-Code
+);
+\end_layout
+
+\begin_layout LyX-Code
+stage[1..ntrays] IS_A simple_tray;
+\end_layout
+
+\begin_layout LyX-Code
+END column;
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+flowsheet
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+MODEL flowsheet;
+\end_layout
+
+\begin_layout LyX-Code
+   tower4size IS_A integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+   tower4size :== 22;
+\end_layout
+
+\begin_layout LyX-Code
+   ct IS_A column(tower4size,[c5,c6]);
+\end_layout
+
+\begin_layout LyX-Code
+   (* additional flowsheet statements *)
+\end_layout
+
+\begin_layout LyX-Code
+END flowsheet;
+\end_layout
+
+\begin_layout Standard
+In this example, the column model takes the first argument, ntrays, by reference.
+ That is, ct.ntrays is an alias for the flowsheet instance tower4size.
+ tower4size must be compiled and assigned a value before we will attempt
+ to compile the column model instance ct.
+ The second argument is taken by value, [c5,c6], and assigned to components,
+ a column part that was declared with IS_A in the parameter list.
+ There is only one name for this set, ct.components.
+ Note that in the flowsheet model there is no part that is a set of symbol_const
+ant.
+ 
+\end_layout
+
+\begin_layout Standard
+The use of parameters in ASCEND modeling requires some thought, and we will
+ present that set of thoughts in Section 
+\begin_inset LatexCommand \vref{sec:x.5Parameterized-models}
+
+\end_inset
+
+.
+ Beginners may wish to create new models without parameters until they are
+ comfortable using the existing parameterized library definitions.
+ Parameters are intended to support model reuse and efficient compilation
+ which are not issues in the very earliest phase of developing novel models.
+\end_layout
+
+\begin_layout Subsection
+Sets
+\begin_inset LatexCommand \index{sets}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{sub:x.2.2Sets}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Arrays in ASCEND, as already discussed in Section 
+\begin_inset LatexCommand \vref{sub:x.1.2Basic-Elements}
+
+\end_inset
+
+, are defined over sets.
+ A set is simply an instance with a set value.
+ The elements of sets are NOT instances or sets.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Set\InsetSpace ~
+Declaration:
+\bar default
+ A set is made of either symbol_constants or integer_constants, so a set
+ object is declared in one of two ways:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+my_integer_set IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout Standard
+or
+\end_layout
+
+\begin_layout LyX-Code
+my_symbol_set IS_A set OF symbol_constant;
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+:==
+\begin_inset LatexCommand \index{:==}
+
+\end_inset
+
+ A set is assigned a value like so:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+my_integer_set :== [1,4];
+\end_layout
+
+\begin_layout Standard
+The RHS of such an assignment must be either the name of another set instance
+ or an expression enclosed in square brackets and made up of only set operators,
+ other sets, and the names of integer_constants or symbol_constants.
+ Sets can only be assigned once.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Set\InsetSpace ~
+Operations
+\bar default
+ UNION
+\begin_inset LatexCommand \index{UNION}
+
+\end_inset
+
+[setlist]
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+A function taken over a list of sets.
+ The result is the set that includes all the members of all the sets in
+ the list.
+ Note that the result of the UNION operation is an unordered set and the
+ argument order to the union function does not matter.
+ The syntax is:
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
++
+\begin_inset LatexCommand \index{+, sets}
+
+\end_inset
+
+ UNION[list_of_sets]
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+A+B\InsetSpace ~
+is\InsetSpace ~
+shorthand\InsetSpace ~
+for UNION[A,B]
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Consider the following sets for the examples to follow.
+\end_layout
+
+\begin_layout LyX-Code
+A := [1, 2, 3, 5, 9];
+\end_layout
+
+\begin_layout LyX-Code
+B := [2, 4, 6, 8];
+\end_layout
+
+\begin_layout Standard
+Then UNION[A, B] is equal to the set [1, 2, 3, 4, 5, 6, 8, 9] which equals
+ [1..6, 8, 9] which equals [[1..9] - [7]].
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+INTERSECTION
+\begin_inset LatexCommand \index{INTERSECTION}
+
+\end_inset
+
+[] INTERSECTION[list of set expressions].
+ Finds the intersection (and) of the sets listed.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+*
+\begin_inset LatexCommand \index{*, sets}
+
+\end_inset
+
+ Equivalent to INTERSECTION[list_of_sets].
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+A*B\InsetSpace ~
+is\InsetSpace ~
+shorthand\InsetSpace ~
+for\InsetSpace ~
+INTERSECTION[A,B]
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+For the sets A and B defined just above, INTERSECTION[A, B] is the set [2].
+ The * shorthand for intersection is NOT recommended for use except in libraries
+ no one will look at.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Set\InsetSpace ~
+difference
+\begin_inset LatexCommand \index{set difference}
+
+\end_inset
+
+: One can subtract one set from another.
+ The result is the first set less any members in the set union of the first
+ and second set.
+ The syntax is
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+-
+\begin_inset LatexCommand \index{-, sets}
+
+\end_inset
+
+ 
+\family typewriter
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+first_set - second_set
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+For the sets A and B defined above, the set difference A - B is the set
+ [1, 3, 5, 9] while the set difference B - A is the set [4, 6, 8].
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+CARD
+\begin_inset LatexCommand \index{CARD}
+
+\end_inset
+
+[set] Cardinality
+\begin_inset LatexCommand \index{cardinality}
+
+\end_inset
+
+.
+ Returns an integer constant value that is the number of items in the set.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+CHOICE
+\begin_inset LatexCommand \index{CHOICE}
+
+\end_inset
+
+[set] Choose one.
+ The result of running the CHOICE function over a set is an arbitrary (but
+ consistent: for any set instance you always get the same result) single
+ element of that set.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Running CHOICE[A] gives any member from the set A.
+ The result is a member, not a set.
+ To make the result into a set, it must be enclosed in square brackets.
+ Thus [CHOICE[A]] is a set with a single element arbitrarily chosen from
+ the set A.
+ Good modelers do not leave modeling decisions to the compiler; they do
+ not use CHOICE[].
+ We are stuck with it for historical reasons.
+\end_layout
+
+\begin_layout Standard
+To reduce a set by one element, one can use the following
+\end_layout
+
+\begin_layout LyX-Code
+A_less_one IS_A set OF integer;
+\end_layout
+
+\begin_layout LyX-Code
+A_less_one :== A - [CHOICE[A]];
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+IN
+\begin_inset LatexCommand \index{IN}
+
+\end_inset
+
+ lhs IN rhs can only be well explained by examples.
+ IN is used in index expressions.
+ If lhs is a simple and not previously defined name, it is created as a
+ temporary loop index which will take on the values of the rhs set definition.
+ If lhs is something that already exists, the result of lhs IN rhs is a
+ boolean value; stare at the model set_example below which demonstrates
+ both IN and SUCH_THAT.
+ If you still are not satisfied, you might examine [[westerbergksets]].
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+SUCH_THAT
+\begin_inset LatexCommand \index{SUCH\_THAT}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*) Set expressions can be rather clever.
+ We will give a detailed example from chemistry because unordered sets are
+ unfamiliar to most people and set arithmetic is quite powerful.
+ In this example we see arrays of sets and sparse arrays.
+ 
+\end_layout
+
+\begin_layout LyX-Code
+MODEL set_example;
+\end_layout
+
+\begin_layout LyX-Code
+(* we define a sparse matrix of reaction
+\end_layout
+
+\begin_layout LyX-Code
+coefficient information and the species
+\end_layout
+
+\begin_layout LyX-Code
+balance equations.
+ *) 
+\end_layout
+
+\begin_layout LyX-Code
+rxns IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+rxns :== [1..3];
+\end_layout
+
+\begin_layout LyX-Code
+species IS_A set OF symbol_constant;
+\end_layout
+
+\begin_layout LyX-Code
+species :== ['A','B','C','D'];
+\end_layout
+
+\begin_layout LyX-Code
+reactants[rxns] IS_A set OF symbol_constant; (* species
+\end_layout
+
+\begin_layout LyX-Code
+   in each rxn_j *)
+\end_layout
+
+\begin_layout LyX-Code
+reactants[1] :== ['A','B','C'];
+\end_layout
+
+\begin_layout LyX-Code
+reactants[2] :== ['A','C'];
+\end_layout
+
+\begin_layout LyX-Code
+reactants[3] :== ['A','B','D'];
+\end_layout
+
+\begin_layout LyX-Code
+reactions[species] IS_A set OF integer_constant; 
+\end_layout
+
+\begin_layout LyX-Code
+FOR i IN species CREATE (* rxns for each species i *)
+\end_layout
+
+\begin_layout LyX-Code
+reactions[i] :== [j IN rxns SUCH_THAT i IN reactants[j]];
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout LyX-Code
+(* Define sparse stoichiometric matrix.
+ Values of eta_ij
+\end_layout
+
+\begin_layout LyX-Code
+   set later.*)
+\end_layout
+
+\begin_layout LyX-Code
+FOR j IN rxns CREATE
+\end_layout
+
+\begin_layout LyX-Code
+FOR i IN reactants[j] CREATE
+\end_layout
+
+\begin_layout LyX-Code
+(* eta_ij --> mole i/mole rxn j*)
+\end_layout
+
+\begin_layout LyX-Code
+eta[i][j] IS_A real_constant; 
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout LyX-Code
+production[species] IS_A molar_rate;
+\end_layout
+
+\begin_layout LyX-Code
+rate[rxns] IS_A molar_rate; (* mole rxn j/time *)
+\end_layout
+
+\begin_layout LyX-Code
+FOR i IN species CREATE
+\end_layout
+
+\begin_layout LyX-Code
+gen_eqn[i]: production[i] = 
+\end_layout
+
+\begin_layout LyX-Code
+SUM[eta[i][j]*rate[j] | j IN reactions[i]];
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout LyX-Code
+END set_example;
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+"|
+\begin_inset LatexCommand \index{|}
+
+\end_inset
+
+" is shorthand for SUCH_THAT.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The array eta has only 8 elements, and we defined those elements in a set
+ for each reaction.
+ The equation needs to know about the set of reactions for a species i,
+ and that set is calculated automatically in the models first FOR/CREATE
+ statement.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+|
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The | symbol is the ASCEND III notation for SUCH_THAT.
+ We noted that "|" is often read as "for all", which is different in that
+ "for all" makes one think of a FOR loop where the loop index is on the
+ left of an IN operator.
+ For example, the j loop in the SUM of gen_eqn[i] above.
+ 
+\end_layout
+
+\begin_layout Subsection
+Constants
+\begin_inset LatexCommand \index{constants}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+ASCEND supports real, integer, boolean and character string constants.
+ Constants in ASCEND do not have any attributes other than their value.
+ Constants are scalar quantities that can be assigned exactly once.
+ Constants may only be assigned using the :== operator and the RHS expression
+ they are assigned from must itself be constant.
+ Constants do not have subparts.
+ Integer and symbol constants may be used in determining the definitions
+ of sets.
+ 
+\end_layout
+
+\begin_layout Standard
+Explicit refinements of the built-in constant types may be defined as exemplifie
+d in the description of real_constant.
+ Implicit type refinements may be done by instantiating an incompletely
+ defined constant and assigning its final value.
+ 
+\end_layout
+
+\begin_layout Standard
+Sets could be considered constant because they are assigned only once, however
+ sets are described separately because they are not quite scalar quantities.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+real_constant
+\begin_inset LatexCommand \index{real\_constant}
+
+\end_inset
+
+ Real number with dimensionality.
+ Note that the dimensionality of a real constant can be specified via the
+ type definition without immediately defining the value, as in the following
+ pair of definitions.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+CONSTANT\InsetSpace ~
+declaration\InsetSpace ~
+example:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+CONSTANT molar_weight
+\end_layout
+
+\begin_layout LyX-Code
+   REFINES real_constant DIMENSION M/Q;
+\end_layout
+
+\begin_layout LyX-Code
+CONSTANT hydrogen_weight
+\end_layout
+
+\begin_layout LyX-Code
+   REFINES molar_weight :== 1.004{g/mole};
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+integer_constant
+\begin_inset LatexCommand \index{integer\_constant}
+
+\end_inset
+
+ Integer number.
+ Principally used in determining model structure.
+ If appearing in equations, integers are evaluated as dimensionless reals.
+ Typical use is inside a MODEL definition and looks like:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+n_trays IS_A integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+n_trays :== 50;
+\end_layout
+
+\begin_layout LyX-Code
+tray[1..n_trays] IS_A vl_equilibrium_tray;
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+symbol_constant
+\begin_inset LatexCommand \index{symbol\_constant}
+
+\end_inset
+
+ Object with a symbol value.
+ May be used in determining model structure.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+boolean_constant
+\begin_inset LatexCommand \index{boolean\_constant}
+
+\end_inset
+
+ Logical value.
+ May be used in determining model structure.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Setting\InsetSpace ~
+constants
+\bar default
+
+\begin_inset LatexCommand \index{constants, setting}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+:==
+\begin_inset LatexCommand \index{:==}
+
+\end_inset
+
+ Constant and set assignment operator.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+It is suggested, but not required, that names of all types that refine the
+ built-in constant types have names that end in _constant.
+\end_layout
+
+\begin_layout LyX-Code
+LHS_list :== RHS; 
+\end_layout
+
+\begin_layout Standard
+Here it is required that the one or more items in the LHS be of the same
+ constant type and that RHS is a single-valued expression made up of values,
+ operators, and other constants.
+ The :== is used to make clear to both the user and the system what scalar
+ objects are constants.
+ 
+\end_layout
+
+\begin_layout Subsection
+Variables
+\begin_inset LatexCommand \index{variables}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+There are four built-in types which may be used to construct variables:
+ symbol, boolean, integer, and real.
+ At this time symbol types have special restrictions.
+ Refinements of these variable base types are defined with the ATOM statement.
+ Atom types may declare attribute fields with types real, integer, boolean,
+ symbol, and set.
+ These attributes are NOT independent objects and therefore cannot be refined,
+ merged, or put in a refinement clique (ARE_ALIKEd).
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ATOM
+\begin_inset LatexCommand \index{ATOM}
+
+\end_inset
+
+ The syntax for declaring a new atom type is
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+ATOM 
+\emph on
+atom_type_name
+\emph default
+ REFINES 
+\emph on
+variable_type
+\end_layout
+
+\begin_layout LyX-Code
+   «DIMENSION 
+\emph on
+dimension_expression
+\emph default
+»
+\end_layout
+
+\begin_layout LyX-Code
+   «DEFAULT 
+\emph on
+value
+\emph default
+»; (* note the ; *)
+\end_layout
+
+\begin_layout LyX-Code
+   «
+\emph on
+initial attribute assignment
+\emph default
+;»
+\end_layout
+
+\begin_layout LyX-Code
+END 
+\emph on
+atom_type_name
+\emph default
+;
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+DEFAULT
+\begin_inset LatexCommand \index{DEFAULT}
+
+\end_inset
+
+,\InsetSpace ~
+DIMENSION
+\begin_inset LatexCommand \index{DIMENSION}
+
+\end_inset
+
+,\InsetSpace ~
+and\InsetSpace ~
+DIMENSIONLESS
+\begin_inset LatexCommand \index{DIMENSIONLESS}
+
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The DIMENSION attribute is for variables whose base type is real.
+ It is an optional field.
+ If not defined for any atom with base type real, the dimensions will be
+ left as undefined.
+ Any variable which is later declared to be one of these types will be given
+ wild card dimensionality (represented in the interactive display by an
+ asterisk (*)).
+ The system will deduce the dimensionality from its use in the relationships
+ in which it appears or in the declaring of default values for it, if possible.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+solver_var
+\begin_inset LatexCommand \index{solver\_var}
+
+\end_inset
+
+ is a special case of ATOM and we will say much more about it in Section
+ 
+\begin_inset LatexCommand \vref{sub:x.6.1Variables-for-solvers}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+ATOM solver_var REFINES real DEFAULT 0.5 {?
+\begin_inset LatexCommand \index{?}
+
+\end_inset
+
+};
+\end_layout
+
+\begin_layout LyX-Code
+   lower_bound IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+   upper_bound IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+   nominal IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+   fixed IS_A boolean;
+\end_layout
+
+\begin_layout LyX-Code
+   fixed := FALSE;
+\end_layout
+
+\begin_layout LyX-Code
+   lower_bound := -1e20 {?};
+\end_layout
+
+\begin_layout LyX-Code
+   upper_bound := 1e20 {?};
+\end_layout
+
+\begin_layout LyX-Code
+   nominal := 0.5 {?};
+\end_layout
+
+\begin_layout LyX-Code
+END solver_var;
+\end_layout
+
+\begin_layout Standard
+The default field is also optional.
+ If the atom has a declared dimensionality, then this value must be expressed
+ with units which are compatible with this dimensionality.
+ In the solver_var example, we see a DEFAULT value of 0.5 with the unspecified
+ unit
+\begin_inset LatexCommand \index{unit, unspecified}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{unspecified unit}
+
+\end_inset
+
+ {?
+\begin_inset LatexCommand \index{}
+
+\end_inset
+
+} which leaves the dimensionality wild
+\begin_inset LatexCommand \index{wild dimensionality}
+
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+real
+\begin_inset LatexCommand \index{real}
+
+\end_inset
+
+ Real valued variable quantity.
+ At present, all variables that you want to be attended to by solver tools
+ must be refinements of the type solver_var.
+ This is so that modifiable parametric values can be included in equations
+ without treating them as variables.
+ Strictly speaking, this is a characteristic of the solver interface and
+ not the ASCEND language.
+ Each tool in the total ASCEND system may have its own semantics that go
+ beyond the ASCEND object definition language.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+integer
+\begin_inset LatexCommand \index{integer}
+
+\end_inset
+
+ Integer valued variable quantity.
+ We find these mighty convenient for use in certain procedural computations
+ and as attributes of solver_var atoms.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+boolean
+\begin_inset LatexCommand \index{boolean}
+
+\end_inset
+
+ Truth valued variable quantity.
+ These are principally used as flags on solver_vars and relations.
+ They can also be used procedurally and as variables in logical programming
+ models, subject to the logical solver tools semantics.
+ (Compare solver_boolean and boolean_var in Section 
+\begin_inset LatexCommand \vref{sec:x.6Miscellany}
+
+\end_inset
+
+.)
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+symbol
+\begin_inset LatexCommand \index{symbol}
+
+\end_inset
+
+ * 4 * Symbol valued variable quantity.
+ We do not yet have operators for building symbols out of other symbols.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Setting\InsetSpace ~
+variables
+\bar default
+
+\begin_inset LatexCommand \index{variables, setting}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+:=
+\begin_inset LatexCommand \index{:=}
+
+\end_inset
+
+ Procedural equals
+\begin_inset LatexCommand \index{equals, procedural}
+
+\end_inset
+
+ differs from the ordinary equals (=) in that it means the left-hand-side
+ (LHS) variables are to be assigned the value of the right-hand-side (RHS)
+ expression when this statement is processed.
+ Processing happens in the last phase of compiling (instantiation) or when
+ executing a method interactively through the ASCEND user interface.
+ The order the system encounters these statements matters, therefore, with
+ a later result overwriting an earlier one if both statements have the same
+ the same LHS variable.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Note that variable assignments (also known as defaulting statements) written
+ in the declarative section are executed only after an instance has been
+ fully created.
+ This is a frequent source of confusion and errors, therefore we recommend
+ that you DO NOT ASSIGN VARIABLES IN THE DECLARATIVE SECTION.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Note\InsetSpace ~
+that\InsetSpace ~
+:=\InsetSpace ~
+IS\InsetSpace ~
+NOT\InsetSpace ~
+=.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+We use an ordinary equals (=) when defining a real valued equation to state
+ that the LHS expression is to equal the RHS expression at the solution
+ for the model.
+ We use == for logical equations.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Tabular\InsetSpace ~
+assignments
+\bar default
+
+\begin_inset LatexCommand \index{assignments, tabular}
+
+\end_inset
+
+ (* 4+ *) Assigning values en masse to arrays of variables that are defined
+ associatively on sets without order presents a minor challenge.
+ The solution proposed in ASCEND IV (but not yet implemented as weve not
+ had time or significant user demand) is to allow a tabular data statement
+ to be used to assign the elements of arrays of variables or constants.
+ The DATA statement may be used to assign variables in the declarative or
+ methods section of a model (though we discourage its use declaratively
+ for variable initialization) or to assign constant arrays of any type,
+ including sets, in the declarative section.
+ Here are some examples:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+DATA ~(* ~4+ ~*)
+\end_layout
+
+\begin_layout LyX-Code
+MODEL tabular_ex;
+\end_layout
+
+\begin_layout LyX-Code
+   lset,rset,cset IS_A set OF integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+   rset :== [1..3];
+\end_layout
+
+\begin_layout LyX-Code
+   cset :== rset - [2];
+\end_layout
+
+\begin_layout LyX-Code
+   lset :== [5,7];
+\end_layout
+
+\begin_layout LyX-Code
+   a[rset][cset] IS_A real;
+\end_layout
+
+\begin_layout LyX-Code
+   b[lset][cset][rset] IS_A real_constant; 
+\end_layout
+
+\begin_layout LyX-Code
+   (* rectangle table *)
+\end_layout
+
+\begin_layout LyX-Code
+   DATA FOR a:
+\end_layout
+
+\begin_layout LyX-Code
+   COLUMNS 1,3; (*order last subscript cset*)
+\end_layout
+
+\begin_layout LyX-Code
+   UNITS {kg/s}, {s}; (* columnar units *)
+\end_layout
+
+\begin_layout LyX-Code
+   (* give leading subscripts *)
+\end_layout
+
+\begin_layout LyX-Code
+   [1] 2.8, 0.3;
+\end_layout
+
+\begin_layout LyX-Code
+   [2] 2.7, 1.3;
+\end_layout
+
+\begin_layout LyX-Code
+   [3] 3.3, 0.6;
+\end_layout
+
+\begin_layout LyX-Code
+END DATA;
+\end_layout
+
+\begin_layout LyX-Code
+(* 2 layer rectangle table *)
+\end_layout
+
+\begin_layout LyX-Code
+CONSTANT DATA FOR b:
+\end_layout
+
+\begin_layout LyX-Code
+   COLUMNS 1..3; (* order last subscript
+\end_layout
+
+\begin_layout LyX-Code
+      rset *)
+\end_layout
+
+\begin_layout LyX-Code
+   (* UNITS omitted, so either the user gives
+\end_layout
+
+\begin_layout LyX-Code
+      value in the table or values given are
+\end_layout
+
+\begin_layout LyX-Code
+      DIMENSIONLESS.
+ *)
+\end_layout
+
+\begin_layout LyX-Code
+   (* ordering over [lset][cset] required *)
+\end_layout
+
+\begin_layout LyX-Code
+   [5][1] 3 {m}, 2{m}, 1{m};
+\end_layout
+
+\begin_layout LyX-Code
+   [5][3] 0.1, 0.2, 0.3;
+\end_layout
+
+\begin_layout LyX-Code
+   [7][1] -3 {m/s}, -2{m/s}, -1{m/s};
+\end_layout
+
+\begin_layout LyX-Code
+   [7][3] 4.1 {1/s}, 4.2 {1/s}, 4.3 {1/s};
+\end_layout
+
+\begin_layout LyX-Code
+END DATA;
+\end_layout
+
+\begin_layout LyX-Code
+END tabular_ex;
+\end_layout
+
+\begin_layout Standard
+For sparse arrays of variables or constants, the COLUMNS and (possibly)
+ UNITS keywords are omitted and the array subscripts are simply enumerated
+ along with the values to be assigned.
+\end_layout
+
+\begin_layout Subsection
+Relations
+\begin_inset LatexCommand \index{relations}
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Mathematical\InsetSpace ~
+expression
+\begin_inset LatexCommand \index{mathematical expression}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{expression, math}
+
+\end_inset
+
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The syntax for a mathematical expression is any legal combination of variable
+ names and arithmetic operators in the normal notation.
+ An expression may contain any number of matched rounded parentheses, (),
+ to clarify meaning.
+ The following is a legal arithmetic expression:
+\end_layout
+
+\begin_layout LyX-Code
+y^2+(sin(x)-tan(z))*q
+\end_layout
+
+\begin_layout Standard
+Each additive term in a mathematical expression (terms are separated by
+ + or - operators) must have the same dimensionality.
+\end_layout
+
+\begin_layout Standard
+An expression may contain an index variable as a part of the calculation
+ if that index variable is over a set whose elements are of type integer.
+ (See the FOR/CREATE and FOR/DO statements below.) An example is:
+\end_layout
+
+\begin_layout LyX-Code
+term[i] = a[i]*x^(i-1);
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Numerical\InsetSpace ~
+relations
+\bar default
+
+\begin_inset LatexCommand \index{relations, numerical}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{numerical relations}
+
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The syntax for a numeric relation is either
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+optional_label
+\emph default
+: 
+\emph on
+LHS relational_operator RHS
+\emph default
+;
+\end_layout
+
+\begin_layout Standard
+or
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+optional_label
+\emph default
+: 
+\emph on
+objective_type LHS
+\emph default
+;
+\end_layout
+
+\begin_layout Standard
+Objective_type is either MAXIMIZE or MINIMIZE.
+ RHS and LHS must be one or more variables, constants, and operators in
+ a normal algebraic expression.
+ The operators allowed are defined below and in Section 
+\begin_inset LatexCommand \vref{sub:x.6.3Single-operand-real}
+
+\end_inset
+
+.
+ Variable integers, booleans, and symbols are not allowed as operands in
+ numerical relations, nor are boolean constants.
+ Integer indices declared in FOR/CREATE loops are allowed in relations,
+ and they are treated as integer constants.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Relational\InsetSpace ~
+operators
+\begin_inset LatexCommand \index{operators, relational}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{relational operators}
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+=
+\begin_inset LatexCommand \index{=}
+
+\end_inset
+
+,\InsetSpace ~
+>=
+\begin_inset LatexCommand \index{ >=}
+
+\end_inset
+
+,\InsetSpace ~
+<=
+\begin_inset LatexCommand \index{<=}
+
+\end_inset
+
+,\InsetSpace ~
+<
+\begin_inset LatexCommand \index{<}
+
+\end_inset
+
+,\InsetSpace ~
+>
+\begin_inset LatexCommand \index{>}
+
+\end_inset
+
+,\InsetSpace ~
+<>
+\begin_inset LatexCommand \index{<>}
+
+\end_inset
+
+ These are the numerical relational operators for declarative use.
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+Ftot*y['methane'] = m['methane'];
+\end_layout
+
+\begin_layout LyX-Code
+y['ethanol'] >= 0;
+\end_layout
+
+\begin_layout Standard
+Equations must be dimensionally correct.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+MAXIMIZE
+\begin_inset LatexCommand \index{MAXIMIZE}
+
+\end_inset
+
+,\InsetSpace ~
+MINIMIZE
+\begin_inset LatexCommand \index{MINIMIZE}
+
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Objective function indicators.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Binary\InsetSpace ~
+Operators
+\begin_inset LatexCommand \index{operators, binary}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{binary operators}
+
+\end_inset
+
+:
+\bar default
+ +, -, *, /, ^.
+ We follow the usual algebraic order of operations for binary operators.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
++
+\begin_inset LatexCommand \index{+, binary math}
+
+\end_inset
+
+ Plus.
+ Numerical addition or set union.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+-
+\begin_inset LatexCommand \index{-, binary math}
+
+\end_inset
+
+ Minus.
+ Numerical subtraction or set difference.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+*
+\begin_inset LatexCommand \index{*, binary math}
+
+\end_inset
+
+ Times.
+ Numerical multiplication or set intersection.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+/
+\begin_inset LatexCommand \index{/}
+
+\end_inset
+
+ Divide.
+ Numeric division.
+ In most cases it implies real division and not integer division.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+^ Power
+\begin_inset LatexCommand \index{power}
+
+\end_inset
+
+.
+ Numeric exponentiation.
+ If the value of y in x^y is not integer, then x must be greater than 0.0
+ and dimensionless.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Unary\InsetSpace ~
+Operators
+\begin_inset LatexCommand \index{operators, unary}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{unary operators}
+
+\end_inset
+
+:
+\bar default
+ -
+\begin_inset LatexCommand \index{-, unary}
+
+\end_inset
+
+, ordered_function()
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+- Unary minus.
+ Numeric negation.
+ There is no unary +
+\begin_inset LatexCommand \index{+, math unary}
+
+\end_inset
+
+ operator.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ordered_function
+\begin_inset LatexCommand \index{ordered\_function}
+
+\end_inset
+
+() unary real valued functions.
+ The unary real functions we support are given in section Section 
+\begin_inset LatexCommand \vref{sub:x.6.3Single-operand-real}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Real\InsetSpace ~
+functions\InsetSpace ~
+of\InsetSpace ~
+sets\InsetSpace ~
+of\InsetSpace ~
+real\InsetSpace ~
+terms:
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+SUM
+\begin_inset LatexCommand \index{SUM}
+
+\end_inset
+
+[term\InsetSpace ~
+set] Add all expressions in the functions list.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+For the SUM, the base type real items can be arbitrary arithmetic expressions.
+ The resulting items must all be dimensionally compatible.
+\end_layout
+
+\begin_layout Standard
+An examples of the use is:
+\end_layout
+
+\begin_layout LyX-Code
+SUM[y[components]] = 1;
+\end_layout
+
+\begin_layout Standard
+or, equivalently, one could write:
+\end_layout
+
+\begin_layout LyX-Code
+SUM[y[i] | i IN components] = 1;
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Empty\InsetSpace ~
+SUM[]\InsetSpace ~
+yields\InsetSpace ~
+wild\InsetSpace ~
+0.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+When a SUM is compiled over a list which is empty it generates a wild dimensione
+d 0.
+ This will sometimes cause our dimension checking routines to fail.
+ The best way to prevent this is to make sure the SUM never actually encounters
+ an empty list.
+ For example:
+\end_layout
+
+\begin_layout LyX-Code
+SUM[Q[possibly_empty_set], 0{watt}];
+\end_layout
+
+\begin_layout Standard
+In the above, the variables Q[i] (if they exist) have the dimensionality
+ associated with an energy rate.
+ When the set is empty, the 0 is the only term in the SUM and establishes
+ the dimensionality of the result.
+ When the set is NOT empty the compiler will simplify away the trailing
+ 0 in the sum.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+PROD
+\begin_inset LatexCommand \index{PROD}
+
+\end_inset
+
+[term\InsetSpace ~
+set] Multiply all the expressions in the products list.
+ The product of an empty list is a dimensionless value, 1.0.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Possible\InsetSpace ~
+future\InsetSpace ~
+functions:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+(Not implemented - only under confused consideration at this time.) The following
+ functions only work in methods as they are not smooth function and would
+ destroy a Newton-based solution algorithm if used in defining a model equation:
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+MAX
+\begin_inset LatexCommand \index{MAX}
+
+\end_inset
+
+[term\InsetSpace ~
+set] (* 4+ *) maximum value on list of arguments
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+MIN
+\begin_inset LatexCommand \index{MIN}
+
+\end_inset
+
+[term\InsetSpace ~
+set] (* 4+ *) minimum value on list of arguments
+\end_layout
+
+\begin_deeper
+\begin_layout Subsection
+Derivatives
+\begin_inset LatexCommand \index{derivatives}
+
+\end_inset
+
+ in relations (* 4+ *)
+\end_layout
+
+\begin_layout Standard
+Simply put, we would like to have general partial and full derivatives usable
+ in writing equations, as there are many mathematically interesting things
+ that can be said about both.
+ We have not implemented such things yet for lack of time and because with
+ several implementations (see gPROMS and OMOLA, among others) already out
+ there we cant see too many research points to be gained by more derivative
+ work.
+\end_layout
+
+\begin_layout Subsection
+External relations
+\begin_inset LatexCommand \index{relations, external}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{external relations}
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+We cannot document these at the present time.
+ The only reference for them is [[abbottthesis]].
+ 
+\end_layout
+
+\begin_layout Subsection
+Conditional relations
+\begin_inset LatexCommand \index{relations, conditional}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{conditional relations}
+
+\end_inset
+
+ (* 4 *)
+\end_layout
+
+\begin_layout Standard
+The syntax is 
+\end_layout
+
+\begin_layout LyX-Code
+CONDITIONAL 
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+   list_of_relation_statements
+\end_layout
+
+\begin_layout LyX-Code
+END CONDITIONAL;
+\end_layout
+
+\begin_layout Standard
+A CONDITIONAL statement can appear anywhere in the declarative portion of
+ the model and it contains only relations to be used as boundaries.
+ That is, these real arithmetic equations are used in expressing logical
+ condition equations via the SATISFIED operator.
+\end_layout
+
+\begin_layout Subsection
+Logical relations (* 4 *)
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Logical\InsetSpace ~
+expression
+\bar default
+
+\begin_inset LatexCommand \index{expression, logical}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{logical expression}
+
+\end_inset
+
+ An expression whose value is TRUE or FALSE is a logical expression.
+ Such expressions may contain boolean variables.
+ If A,B, and laminar are boolean, then the following is a logical expression:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+A + (B * laminar)
+\end_layout
+
+\begin_layout Standard
+as is (and probably more clearly)
+\end_layout
+
+\begin_layout LyX-Code
+A OR (B AND laminar)
+\end_layout
+
+\begin_layout Standard
+The plus operator acts like an OR among the terms while the times operator
+ acts like an AND.
+ Think of TRUE being equal to 1 and FALSE being equal to 0 with the 1+1=0+1=1+0=
+1, 0+0=0, 1*1=1 and 0*1=1*0=0*0=0.
+ If A = FALSE, B=TRUE and laminar is TRUE, this expression has the value
+\end_layout
+
+\begin_layout LyX-Code
+FALSE OR (TRUE AND TRUE) -->TRUE
+\end_layout
+
+\begin_layout Standard
+or in terms of ones and zeros
+\end_layout
+
+\begin_layout LyX-Code
+0 + (1 * 1) --> 1.
+\end_layout
+
+\begin_layout Standard
+Logical relations are then made by putting together logical expressions
+ with the boolean relational operators == and !=.
+ Since we have no logical solving engine we have not pushed the implementation
+ of logical relations very hard yet.
+\end_layout
+
+\begin_layout Subsection
+NOTES
+\begin_inset LatexCommand \index{NOTES}
+
+\end_inset
+
+ (* 4 *)
+\end_layout
+
+\begin_layout Standard
+Within a MODEL (or METHOD) definition annotations (hereafter called notes)
+ may be made on a part declared in the MODEL, or on the MODEL (or METHOD)
+ itself.
+ Short notes may be made when defining or refining an object by enclosing
+ the note in "double quotes." Longer notes may be made in a block statement.
+\end_layout
+
+\begin_layout Standard
+Each note is entered in a database with the name of the file, name of MODEL,
+ name of METHOD if applicable, and the language (a kind of keyword) in which
+ the note is written.
+ Users, user interfaces, and other programs may query this database for
+ information on models and simulations.
+ The block notes may include code fragments in other languages that you
+ wish to embed in your MODEL or any other kind of text.
+\end_layout
+
+\begin_layout Standard
+Short notes should be included as you write any model to clarify the roles
+ of parts and variables.
+ All short notes have the language 'inline.' Here are some examples of short
+ notes:
+\end_layout
+
+\begin_layout LyX-Code
+L[1..10] "L[i] is the length of the ith rod" 
+\end_layout
+
+\begin_layout LyX-Code
+IS_A distance;
+\end_layout
+
+\begin_layout LyX-Code
+thetaM "angle between horizon and moon",
+\end_layout
+
+\begin_layout LyX-Code
+thetaJ "angle between horizon and jupiter"
+\end_layout
+
+\begin_layout LyX-Code
+IS_A angle;
+\end_layout
+
+\begin_layout LyX-Code
+car.tires "using car in Minnesota, you betcha"
+\end_layout
+
+\begin_layout LyX-Code
+IS_REFINED_TO snow_tire;
+\end_layout
+
+\begin_layout Standard
+In the second IS_A statement concerning two angles, we see that a short
+ note in double quotes goes with the name immediately to its left.
+ We also see that the note comes before the comma if the name is part of
+ a list of names.
+ In the third statement, we see that not only simple names but also qualified
+ names may be annotated.
+ 
+\end_layout
+
+\begin_layout Standard
+Longer notes are made in block statements of the form below.
+ These blocks can appear in a METHOD or MODEL.
+ These blocks can also be written separately before or after a model as
+ we shall see.
+\end_layout
+
+\begin_layout LyX-Code
+NOTES
+\end_layout
+
+\begin_layout LyX-Code
+'language or keyword' list.of, names {
+\end_layout
+
+\begin_layout LyX-Code
+free-form block of text to store in the
+\end_layout
+
+\begin_layout LyX-Code
+database exactly as written.
+\end_layout
+
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+some.other.name {
+\end_layout
+
+\begin_layout LyX-Code
+this note has the same language or keyword as
+\end_layout
+
+\begin_layout LyX-Code
+the first since we didn't define a new keyword
+\end_layout
+
+\begin_layout LyX-Code
+in single quotes before the name list.
+\end_layout
+
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+'another language' some.other.name {
+\end_layout
+
+\begin_layout LyX-Code
+en espanol
+\end_layout
+
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+'fortran' SELF {
+\end_layout
+
+\begin_layout LyX-Code
+This model should be solved with subroutine
+\end_layout
+
+\begin_layout LyX-Code
+LSODE.
+\end_layout
+
+\begin_layout LyX-Code
+This note demonstrates that "SELF" can be used
+\end_layout
+
+\begin_layout LyX-Code
+to annotate the entire model instead of a
+\end_layout
+
+\begin_layout LyX-Code
+named part.
+\end_layout
+
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+END NOTES;
+\end_layout
+
+\begin_layout Standard
+Notes made outside the scope of a model definition look like one of the
+ following:
+\end_layout
+
+\begin_layout LyX-Code
+ADD NOTES IN name_of_model;
+\end_layout
+
+\begin_layout LyX-Code
+'language or keyword' list.of, names {
+\end_layout
+
+\begin_layout LyX-Code
+more text
+\end_layout
+
+\begin_layout LyX-Code
+} (* more than one note may be made in this
+\end_layout
+
+\begin_layout LyX-Code
+block if desired.
+ *)
+\end_layout
+
+\begin_layout LyX-Code
+END NOTES;
+\end_layout
+
+\begin_layout LyX-Code
+ADD NOTES IN name_of_model METHOD
+\end_layout
+
+\begin_layout LyX-Code
+name_of_method;
+\end_layout
+
+\begin_layout LyX-Code
+'language or keyword' SELF {
+\end_layout
+
+\begin_layout LyX-Code
+This method proves Fermat's last theorem and
+\end_layout
+
+\begin_layout LyX-Code
+makes toast.
+\end_layout
+
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+'humor' SELF {
+\end_layout
+
+\begin_layout LyX-Code
+ASCEND is not expected to make either proving
+\end_layout
+
+\begin_layout LyX-Code
+FLT or toasting possible.
+\end_layout
+
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+END NOTES;
+\end_layout
+
+\begin_layout Standard
+We can add notes to the database before or after defining the annotated
+ model.
+ This is handy for several reasons including:
+\end_layout
+
+\begin_layout Itemize
+Lengthy notes mixed with model and method code can make that code very hard
+ to read.
+ 
+\end_layout
+
+\begin_layout Itemize
+Separate notes describing a family of models can be loaded and browsed before
+ loading that library family.
+\end_layout
+
+\begin_layout Itemize
+Users other than the author of a model can annotate that model without fear
+ of introducing typographical errors into the model.
+\end_layout
+
+\begin_layout Standard
+These advantages come with a disadvantage that all documentation has.
+ If you change the model, you ought to change the documentation at the same
+ time.
+ To make finding these documentation locations in need of change easier,
+ the name of the file containing each note is included in the loaded database.
+\end_layout
+
+\begin_layout Standard
+Experience has shown that even documentation embedded directly in models
+ or in other computer programs gets out-dated if the person changing the
+ program is in a hurry and is not required to document properly as part
+ of the task at hand.
+ Neither ASCEND nor any other software system can eliminate the garbage
+ code and documentation that results from undisciplined modeling.
+\end_layout
+
+\begin_layout Section
+Declarative statements
+\begin_inset LatexCommand \index{statements, declarative}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{declarative statements}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{sec:x.3Declarative-statements}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We have already seen several examples that included declarative statements.
+ Here we will be more systematic in defining things.
+ The statements we describe are legal within the declarative portion of
+ an ATOM or MODEL definition.
+ The declarative portion stops at the keyword METHODS if it is present in
+ the definition or at the end of the definition.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Statements
+\bar default
+
+\begin_inset LatexCommand \index{statements}
+
+\end_inset
+
+ Statements in ASCEND terminate with a semicolon (;).
+ Statements may extend over any number of lines.
+ They may have blank lines in the middle of them.
+ There may be several statements on a single line.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Compound\InsetSpace ~
+statements
+\bar default
+
+\begin_inset LatexCommand \index{statements, compound}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{compound statements}
+
+\end_inset
+
+ Some statements in ASCEND can contain other statements as a part of them.
+ The declarative compound statements are the ALIASES/IS_A, CONDITIONAL,
+ FOR/CREATE, SELECT/CASE, and WHEN/CASE statements.
+ The procedural compound statements allowed only in methods are the FOR/DO,
+ FOR/CHECK, SWITCH (* 4 *) and the IF statements.
+ Compound statements end with "END word;", where word matches the beginning
+ of the syntax block, e.g.
+ END FOR.and they can be nested, with some exceptions which are noted later.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+CASE\InsetSpace ~
+statements
+\bar default
+
+\begin_inset LatexCommand \index{statements, CASE}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{CASE statements}
+
+\end_inset
+
+ (*4*) WHEN/CASE, CONDITIONAL, and SELECT/CASE handle modeling alternatives
+ within a single definition.
+ The easy way to remember the difference is that the first picks which equations
+ to solve WHEN discrete variables have certain values, while the second
+ SELECTs which statements to compile based on discrete constants.
+ (* 4 *) SWITCH statements handle flow of control in methods, in a slightly
+ more generalized form than the C language switch statement.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Type\InsetSpace ~
+declarations
+\begin_inset LatexCommand \index{declarations, type}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{yype declarations}
+
+\end_inset
+
+ are not compound statements.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+MODEL and ATOM type definitions and METHOD definitions are not really compound
+ statements because they require a name following their END word that matches
+ the name given at the beginning of the definition.
+ These definitions cannot be nested.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ASCEND\InsetSpace ~
+operator\InsetSpace ~
+synopses:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Well start with an extremely brief synopsis of what each does and then give
+ detailed descriptions.
+ It is helpful to remember that an instance may have many names, even in
+ the same scope, but each name may only be defined once.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+IS_A
+\begin_inset LatexCommand \index{IS\_A}
+
+\end_inset
+
+ Constructor.
+ Calls for one or more named instances to be compiled using the type specified.
+ (* 4 *) If the type is one that requires parameters, the parameters must
+ be supplied in () following the type name.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+IS_REFINED_TO
+\begin_inset LatexCommand \index{IS\_REFINED\_TO}
+
+\end_inset
+
+ Reconstructor.
+ Causes the already compiled instance(s) named to have their type changed
+ to a more refined type.
+ This causes an incremental recompilation of the instance(s).
+ IS_REFINED_TO is not a redefinition of the named instances because refinement
+ can only add compatible information.
+ The instances retain all the structure that originally defined them.
+ (* 4 *) If the type being refined to requires arguments, these must be
+ supplied, even if the same arguments were required in the IS_A of the originall
+y less refined declaration of the instance.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ALIASES
+\begin_inset LatexCommand \index{ALIASES}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*) Part alternate naming statement.
+ Establishes another name for an instance at the same scope or in a child
+ instance.
+ The equivalent of an ALIASES in ASCEND III is to create another part with
+ the desired name and merge it immediately via ARE_THE_SAME with the part
+ being renamed, a rather expensive and unintuitive process.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ALIASES/IS_A
+\begin_inset LatexCommand \index{ALIASES/IS\_A}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Creates an array of alternate names for a list of existing instances with
+ some common base type and creates the set over which the elements of the
+ array are indexed.
+ Useful for making collections of related objects in ways the original author
+ of the model didnt anticipate.
+ Also useful for assembling array arguments to parameterized type definitions.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+WILL_BE
+\begin_inset LatexCommand \index{WILL\_BE}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*) Forward declaration statement.
+ Promises that a part with the given type will be constructed by an as yet
+ unknown IS_A statement above the current scope.
+ At present WILL_BE is legal only in defining parameters.
+ Were it legal in the body of a model, compiling models would be very expensive.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ARE_THE_SAME
+\begin_inset LatexCommand \index{ARE\_THE\_SAME}
+
+\end_inset
+
+ Merge.
+ Calls for two or more instances already compiled to be merged recursively.
+ This essentially means combining all the values in the instances into the
+ most refined of the instances and then destroying all the extra, possibly
+ less refined, instances.
+ The remaining instance has its original name and also all the names of
+ the instances destroyed during the merge.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+WILL_BE_THE_SAME
+\begin_inset LatexCommand \index{WILL\_BE\_THE\_SAME}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Structural condition statement restricting objects in a forward declaration.
+ The objects passed to a parameterized type definition can be constrained
+ to have arbitrary parts in common before the parameterized object is constructe
+d.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+WILL_NOT_BE_THE_SAME
+\begin_inset LatexCommand \index{WILL\_NOT\_BE\_THE\_SAME}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Structural condition statement restricting objects in a forward declaration.
+ We apologize for the length of this key word, but we bet it is easy to
+ remember.
+ The objects passed to a parameterized type definition can be constrained
+ to have arbitrary parts be distinct instances before the parameterized
+ object is constructed.
+ At present the constraint is only enforced when the objects are being passed.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ARE_NOT_THE_SAME
+\begin_inset LatexCommand \index{ARE\_NOT\_THE\_SAME}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4+\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Cannot be merged.
+ We believe it is useful to say that two objects cannot be merged and still
+ represent a valid model.
+ This is not yet implemented, however, mainly for lack of time.
+ The implementation is simple.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ARE_ALIKE
+\begin_inset LatexCommand \index{ARE\_ALIKE}
+
+\end_inset
+
+ Refinement clique
+\begin_inset LatexCommand \index{clique}
+
+\end_inset
+
+ constructor.
+ Causes a group of instances to always be of the same formal type.
+ Refining one of them causes a refinement of all the others.
+ Does not propagate implicit type information, such as assignments to constants
+ or part refinements made from a scope other than the scope of the formal
+ definition.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+FOR/CREATE
+\begin_inset LatexCommand \index{FOR/CREATE}
+
+\end_inset
+
+ Indexed execution of other declarative statements.
+ Required for creating arrays of relations and sparse arrays of other types.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+FOR/CHECK
+\begin_inset LatexCommand \index{FOR/CHECK}
+
+\end_inset
+
+ Indexed checking of the conditions (WHERE
+\begin_inset LatexCommand \index{WHERE}
+
+\end_inset
+
+ statements) of a parameterized model.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+SELECT/CASE
+\begin_inset LatexCommand \index{SELECT/CASE}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Select a subset of statements to compile.
+ Given the values of the specified constants, SELECT compiles all cases
+ that match those values.
+ A name cannot be defined two different ways inside the SELECT statement,
+ but it may be defined outside the case statement and then refined in different
+ ways in separate cases.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+CONDITIONAL
+\begin_inset LatexCommand \index{CONDITIONAL}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Describe bounding relations.
+ The relations written inside a CONDITIONAL statement must all be labelled.
+ These relations can be used to define regions in which alternate sets of
+ equations apply using the WHEN statement.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+WHEN/CASE
+\begin_inset LatexCommand \index{WHEN/CASE}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*) When logical variables have certain values, use certain relations
+ or model parts in defining a mathematical problem.
+ The relations are not defined inside the WHEN statement because all the
+ relations must be compiled regardless of which values the logical variables
+ have at any given moment.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Reminder: In the following detailed statement descriptions, we show keywords
+ in capital letters.
+ These words must appear in capital letters as shown in ASCEND statements.
+ We show optional parts to a statement enclosed in double angle brackets
+ (« ») and user supplied names in lower-case italic letters.
+ (Remember that ASCEND treats the underscore (_) as a letter).
+ The user may substitute any name desired for these names.
+ We use names that describe the kind of name the user should use.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Operators\InsetSpace ~
+in\InsetSpace ~
+detail:
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+IS_A
+\begin_inset LatexCommand \index{IS\_A}
+
+\end_inset
+
+ This statement has the syntax
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+
+\emph on
+list_of_instance_names
+\emph default
+ IS_A 
+\emph on
+model_name
+\end_layout
+
+\begin_layout LyX-Code
+   «(arguments_if_needed)»;
+\end_layout
+
+\begin_layout Standard
+The IS_A statement allows us to declare instances of a given type to exist
+ within a model definition.
+ If type has not been defined (loaded in the ASCEND environment) then this
+ statement is an error and the MODEL it appears in is irreparably damaged
+ (at least until you delete the type definitions and reload a corrected
+ file).
+ Similarly, if the arguments needed are not supplied or if provably incorrect
+ arguments are supplied, the statement is in error.
+ The construction of the instances does not occur until all the arguments
+ satisfy the definition of type.
+\end_layout
+
+\begin_layout Standard
+If a name is used twice in WILL_BE/IS_A/ALIASES statements of the same model,
+ ASCEND will complain bitterly when the definition is parsed.
+ Duplicate naming is a serious error.
+ Labels on relations share the same name space as other objects.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+IS_REFINED_TO
+\begin_inset LatexCommand \index{IS\_REFINED\_TO}
+
+\end_inset
+
+ This statement has the syntax
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+list_of_instances IS_REFINED_TO 
+\emph on
+type_name
+\end_layout
+
+\begin_layout LyX-Code
+   «(arguments_if_needed)»;
+\end_layout
+
+\begin_layout Standard
+We use this statement to change the type of each of the instances listed
+ to the type type_name.
+ The modeler has to have defined each member on the list of instances.
+ The type_name has to be a type which refines the types of all the instances
+ on the list.
+\end_layout
+
+\begin_layout Standard
+An example of its use is as follows.
+ First we define the parts called fl1, fl2 and fl3 which are of type flash.
+\end_layout
+
+\begin_layout LyX-Code
+fl1, fl2, fl3 IS_A flash;
+\end_layout
+
+\begin_layout Standard
+Assume that there exists in the previously defined model definitions the
+ type adiabatic_flash that is a refinement of flash.
+ Then we can make fl1 and fl3 into more refined types by stating:
+\end_layout
+
+\begin_layout LyX-Code
+fl1, fl3 IS_REFINED_TO adiabatic_flash;
+\end_layout
+
+\begin_layout Standard
+This reconstruction does not occur until the arguments to the type satisfy
+ the definition type_name.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ALIASES
+\begin_inset LatexCommand \index{ALIASES}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*) This statement has the syntax
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+
+\emph on
+list_of_instances
+\emph default
+ ALIASES 
+\emph on
+instance_name
+\emph default
+;
+\end_layout
+
+\begin_layout Standard
+We use this statement to point at an already existing instance of any type
+ other than relation, logical_relation, or when.
+ For example, say we want a flash tank model to have a variable T, the temperatu
+re of the vapor-liquid equilibrium mixture in the tank.
+\end_layout
+
+\begin_layout LyX-Code
+MODEL tank;
+\end_layout
+
+\begin_layout LyX-Code
+   feed, liquid, vapor IS_A stream;
+\end_layout
+
+\begin_layout LyX-Code
+   state IS_A VLE_mixture;
+\end_layout
+
+\begin_layout LyX-Code
+   T ALIASES state.T;
+\end_layout
+
+\begin_layout LyX-Code
+   liquor_temperature ALIASES T;
+\end_layout
+
+\begin_layout LyX-Code
+END tank;
+\end_layout
+
+\begin_layout Standard
+We might also want a more descriptive name than T, so ALIASES can also be
+ used to establish a second name at the same scope, e.g.
+ liquor_temperature.
+\end_layout
+
+\begin_layout Standard
+An ALIASES statement will not be executed until the RHS instance has been
+ created with an IS_A.
+ The compiler schedules ALIASES instructions appropriately and issues warnings
+ if recursion is detected.
+ An array of aliases, e.g.
+ 
+\end_layout
+
+\begin_layout LyX-Code
+b[1..n], c ALIASES a; 
+\end_layout
+
+\begin_layout Standard
+is permitted (though we cant think why anyone would want such an array),
+ and the sets over which the array is defined must be completed before the
+ statement is executed.
+ So, in the example of b and c, the array b will not be created until a
+ exists and n is assigned a value.
+ b and c will be created at the same time since they are defined in the
+ same statement.
+ This suggests the following rule: if you must use an array of aliases,
+ do not declare it in the same statement with a scalar alias.
+\end_layout
+
+\begin_layout Standard
+The ALIASES RHS can be an element or portion of a larger array with the
+ following exception.
+ The existing RHS instance cannot be a relation or array of relations (including
+ logical relations and whens) because of the rule in the language that a
+ relation instance is associated with exactly one model.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ALIASES/IS_A
+\begin_inset LatexCommand \index{ALIASES/IS\_A}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The ALIASES/IS_A statement syntax is subject to change, though some equivalent
+ will always exist.
+ We take a set of symbol_constant or integer_constant and pair it with a
+ list of instances to create an array.
+ For the moment, the syntax and semantics is as follows.
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+alias_array_instance[aset]
+\emph default
+ 
+\end_layout
+
+\begin_layout LyX-Code
+ALIASES (
+\emph on
+list_of_instances)
+\emph default
+ 
+\end_layout
+
+\begin_layout LyX-Code
+WHERE 
+\emph on
+aset
+\emph default
+ IS_A set OF 
+\emph on
+settype
+\emph default
+;
+\end_layout
+
+\begin_layout Standard
+or
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+alias_array_instance[aset]
+\emph default
+ 
+\end_layout
+
+\begin_layout LyX-Code
+ALIASES (
+\emph on
+list_of_instances
+\emph default
+) 
+\end_layout
+
+\begin_layout LyX-Code
+WHERE 
+\emph on
+aset
+\emph default
+ IS_A set OF 
+\emph on
+settype
+\emph default
+ 
+\end_layout
+
+\begin_layout LyX-Code
+WITH_VALUE (
+\emph on
+value_list_matching_settype
+\emph default
+);
+\end_layout
+
+\begin_layout Standard
+aset is the name of the set that will be created by the IS_A to index the
+ array of aliases.
+ If value_list_matching_set_type is not given, the compiler will make one
+ up out of the integers (1..number of names in list_of_instances) or symbols
+ derived from the individual names given.
+ If the value list is given, it must have the same number of elements as
+ the list of instances does.
+ The value list elements must be unique because they form a set.
+ The list of instances can contain duplicates.
+ If any of these conditions are not met properly, the statement is in error.
+\end_layout
+
+\begin_layout Standard
+ALIASES/IS_A can be used inside a FOR statement.
+ When this occurs, the definition of aset must be indexed and it must be
+ the last subscript of alias_array_instance.
+ The statement must look like:
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+array_instance[FOR_index][aset[FORindex]]
+\end_layout
+
+\begin_layout LyX-Code
+ALIASES (
+\emph on
+list_of_instances
+\emph default
+) 
+\end_layout
+
+\begin_layout LyX-Code
+WHERE 
+\emph on
+aset[FORindex]
+\emph default
+ IS_A set OF 
+\emph on
+settype
+\emph default
+ 
+\end_layout
+
+\begin_layout LyX-Code
+WITH_VALUE (
+\emph on
+value_list_matching_settype
+\emph default
+);
+\end_layout
+
+\begin_layout Standard
+Here, as with the unindexed version, the WITH_VALUE portion is optional.
+\end_layout
+
+\begin_layout Standard
+If this explanation is unclear, just try it out.
+ The compiler error messages for ALIASES/IS_A are particularly good because
+ we know it is a bit tricky to explain.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+WILL_BE
+\begin_inset LatexCommand \index{WILL\_BE}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*) instance WILL_BE type_name;
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The most common use of this forward declaration is as a statement within
+ the parameter list of a model definition.
+ In parameter lists, list_of_instances must contain exactly one instance.
+ When a model definition includes a parameter defined by WILL_BE, that model
+ cannot be compiled until a compiled instance at least as refined as the
+ type specified by type_name is passed to it.
+\end_layout
+
+\begin_layout Standard
+(* 4+ *) The second potential use of WILL_BE is to establish that an array
+ of a common base type exists and its elements will be filled in individually
+ by IS_A or ARE_THE_SAME or ALIASES statements.
+ WILL_BE allows us to avoid costly reconstruction or merge operations by
+ establishing a placeholder instance which contains just enough type information
+ to let us check the validity of other statements that require type compatibilit
+y while delaying construction until it is called for by the filling in statement
+s.
+ Instances declared with WILL_BE are never compiled if they are not ultimately
+ resolved to another instance created with IS_A.
+ Unresolved WILL_BE instances will appear in the user interface as objects
+ of type PENDING_INSTANCE_model_name.
+ Because of the many implementation and explanation difficulties this usage
+ of WILL_BE creates, it is not allowed.
+ The ALIASES/IS_A construct does the same job in a much simpler way.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ARE_THE_SAME
+\begin_inset LatexCommand \index{ARE\_THE\_SAME}
+
+\end_inset
+
+ The format for this instruction is
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+
+\emph on
+list_of_instances
+\emph default
+ ARE_THE_SAME;
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename syntaxFig1.eps
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+Diagram of the Model Type Hierarchy for A, B, C, D, and E Example
+\begin_inset LatexCommand \label{fig:HierarchyDiagram}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+All items on the list must have compatible types.
+ For the example in Figure 
+\begin_inset LatexCommand \ref{fig:HierarchyDiagram}
+
+\end_inset
+
+, consider a model where we define the following parts:
+\end_layout
+
+\begin_layout LyX-Code
+a1 IS_A A;
+\end_layout
+
+\begin_layout LyX-Code
+b1 IS_A B;
+\end_layout
+
+\begin_layout LyX-Code
+c1 IS_A C;
+\end_layout
+
+\begin_layout LyX-Code
+d1 IS_A D;
+\end_layout
+
+\begin_layout LyX-Code
+e1 IS_A E;
+\end_layout
+
+\begin_layout Standard
+Then the following ARE_THE_SAME statement is legal
+\end_layout
+
+\begin_layout LyX-Code
+a1, b1, c1 ARE_THE_SAME;
+\end_layout
+
+\begin_layout Standard
+while the following are not
+\end_layout
+
+\begin_layout LyX-Code
+b1, d1 ARE_THE_SAME;
+\end_layout
+
+\begin_layout LyX-Code
+a1, c1, d1 ARE_THE_SAME;
+\end_layout
+
+\begin_layout LyX-Code
+b1, e1 ARE_THE_SAME;
+\end_layout
+
+\begin_layout Standard
+When compiling a model, ASCEND will put all of the instances mentioned as
+ being the same into an ARE_THE_SAME clique.
+ ASCEND lists members of this clique when one asks via the interface for
+ the aliases of any object in a compiled model.
+\end_layout
+
+\begin_layout Standard
+Merging any other item with a member of the clique makes it the same as
+ all the other items in the clique, i.e., it adds the newly mentioned items
+ to the existing clique.
+\end_layout
+
+\begin_layout Standard
+ASCEND merges all members of a clique by first checking that all members
+ of the clique are type compatible.
+ It then changes the type designation of all clique members to that of the
+ most refined member.
+\end_layout
+
+\begin_layout Standard
+It next looks inside each of the instances, all of which are now of the
+ same type, and puts all of the parts with the same name into their respective
+ ARE_THE_SAME cliques.
+ The process repeats by processing these cliques until all parts of all
+ parts of all parts, etc., are their respective most refined type or discovered
+ to be type incompatible.
+\end_layout
+
+\begin_layout Standard
+There are now lots of cliques associated with the instances being merged.
+ The type associated with each such clique is now either a model, an array,
+ or an atom (i.e., a variable, constant, or set).
+ If a model, only one member of the clique generates its equations.
+ If a variable, it assigns all members to the same storage location.
+\end_layout
+
+\begin_layout Standard
+Note that the values of constants and sets are essentially type information,
+ so merging two already assigned constants is only possible if merging them
+ does not force one of them to be assigned a new value.
+ Merging arrays with mismatching ranges of elements is an error.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+WILL_BE_THE_SAME\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+There is no further explanation of this operator.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+WILL_NOT_BE_THE_SAME\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+There is no further explanation of this operator.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ARE_NOT_THE_SAME\InsetSpace ~
+(*\InsetSpace ~
+4+\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+ARE_NOT_THE_SAME will be documented further when it is implemented.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ARE_ALIKE
+\begin_inset LatexCommand \index{ARE\_ALIKE}
+
+\end_inset
+
+ The format for this statement is
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+
+\emph on
+list_of_instance_names
+\emph default
+ ARE_ALIKE;
+\end_layout
+
+\begin_layout Standard
+The compiler places all instances in the list into an ARE_ALIKE clique.
+ It checks that the members are formally type compatible and then it converts
+ each into the most refined type of any instance in the clique.
+ At that point the compiler stops.
+ It does not continue by placing the parts into cliques nor does it merge
+ anything.
+\end_layout
+
+\begin_layout Standard
+There are important consequences of modeling with such a partial merge.
+ The consequences we are about to describe can be much more reliably achieved
+ by use of parameterized types, when the types are well understood.
+ When we are exploring new ways of modeling, ARE_ALIKE still has its uses.
+ When a model and its initial uses are understood well enough to be put
+ into a reusable library, then parameterization and the explicit statement
+ of structural constraints by operators such as WILL_NOT_BE_THE_SAME should
+ be the preferred method of ensuring correct use.
+\end_layout
+
+\begin_layout Standard
+One consequence of ARE_ALIKE is to prevent extreme model misuse when configuring
+ models.
+ For example, suppose a modeler creates a new pressure changing model.
+ The modeler is not yet concerned about the type of the streams into and
+ out of the device but does care that these streams are of the same final
+ type.
+ For example, the modeler wants both to be liquid streams if either is or
+ both to be vapor streams if either is.
+ By declaring both to be streams only but declaring the two streams to be
+ alike, the modeler accomplishes this intent.
+ Suppose the modeler merges the inlet stream with a liquid outlet stream
+ from a reactor.
+ The merge operation makes the inlet stream into a liquid stream.
+ The outlet stream, being in an ARE_ALIKE clique with the inlet stream,
+ also becomes a liquid stream.
+ Any subsequent merge of the outlet stream with a vapor stream will lead
+ to an error due to type incompatibility when ASCEND attempts to compile
+ that merge.
+ Without the ARE_ALIKE statement, the compiler can detect no such incompatibilit
+y unless parameterized models are used.
+\end_layout
+
+\begin_layout Standard
+Another purpose is the propagation of types through a model.
+ Altering the type of the inlet stream through merging it with a liquid
+ stream automatically made the outlet stream into a liquid stream.
+\end_layout
+
+\begin_layout Standard
+If all the liquid streams within a distillation column are alike, then the
+ modeler can make them all into streams with a particular set of components
+ in them and with the same method used for physical property evaluation
+ by merging only one of them with a liquid stream of this type.
+ This is the primary example which has been used to justify the existence
+ of ARE_ALIKE.
+ We have observed that its use makes a column library very difficult to
+ compile efficiently.
+ But since we now have parameterized types to help us keep the column library
+ semantically consistent, ARE_ALIKE can be left to its proper role: the
+ rapid prototyping of partially understood models.
+ We have yet to see anyone use ARE_ALIKE in a prototyping context, however.
+\end_layout
+
+\begin_layout Standard
+Finally, because ARE_ALIKE does not recursively put the parts of ARE_ALIKEd
+ instances into ARE_ALIKE cliques, it is possible to ARE_ALIKE model instances
+ which have compatible formal types but incompatible implicit types.
+ This can lead to unexpected problems later and makes the ARE_ALIKE instruction
+ a source of non-reusability.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+FOR/CREATE
+\begin_inset LatexCommand \index{FOR/CREATE}
+
+\end_inset
+
+ The FOR/CREATE statement is a compound statement that looks like a loop.
+ It isnt, however, necessarily compiled as a loop.
+ What FOR really does is specify an index set value.
+ Its format is:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+FOR 
+\emph on
+index_variable
+\emph default
+ IN 
+\emph on
+set
+\emph default
+ CREATE
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+   list_of_statements;
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout Standard
+This statement can be in the declarative part of the model definition only.
+ Every statement in the list should have at least one occurrence of the
+ index variable, or the statement should be moved outside the FOR to avoid
+ redundant execution.
+ A correct example is
+\end_layout
+
+\begin_layout LyX-Code
+FOR i IN components CREATE
+\end_layout
+
+\begin_layout LyX-Code
+a.y[i], b[i] ARE_THE_SAME;
+\end_layout
+
+\begin_layout LyX-Code
+y[i] = K[i]*x[i];
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout Standard
+FOR loops can be nested to produce sparse arrays as illustrated in Arrays
+ can be jagged(
+\begin_inset LatexCommand \vpageref{lyx:Arrays-can-be}
+
+\end_inset
+
+.
+ IS_A and ALIASES statements are allowed in FOR loops, provided the statements
+ are properly indexed, a new feature in ASCEND IV.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+SELECT/CASE
+\begin_inset LatexCommand \index{SELECT/CASE}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Declarative.
+ Order does not matter.
+ All matching cases are executed.
+ The OTHERWISE
+\begin_inset LatexCommand \index{OTHERWISE}
+
+\end_inset
+
+ is executed if present and no other CASEs match.
+ SELECT is not allowed inside FOR.
+ Writing FOR statements inside SELECT is allowed.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+CONDITIONAL
+\begin_inset LatexCommand \index{CONDITIONAL}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Both real and logical relations are allowed in CONDITIONAL statements.
+ CONDITIONAL is really just a shorthand for setting the $boundary flag on
+ a whole batch of relations, since $boundary is a write-once attribute invisible
+ through the user interface and methods at this time.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+WHEN/CASE
+\begin_inset LatexCommand \index{WHEN/CASE}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*) Inside each CASE, relations or model parts to be used are specified
+ by writing, for example, USE mass_balance_1;.
+ The method of dealing with the combined logical/nonlinear model is left
+ to the solver.
+ All matching CASEs are included in the problem to be solved.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Section
+Procedural statements
+\begin_inset LatexCommand \index{statements, procedural}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{procedural statements}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{sec:x.4Procedural-statements}
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+METHODS
+\begin_inset LatexCommand \index{METHODS}
+
+\end_inset
+
+ This statement separates the method definitions in ASCEND from the declarative
+ statements.
+ All statements following this statement are to define methods in ASCEND
+ while all before it are for the declarative part of ASCEND.
+ The syntax for this statement is simply
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout Standard
+with no punctuation.
+ The next code must be a METHOD or the END of the type being defined.
+ If there are no method definitions, this statement may be omitted.
+\end_layout
+
+\begin_layout Standard
+METHOD definitions for a type can also be added or replaced after the type
+ has been defined.
+ This is to make creating and debugging of methods as interactive as possible.
+ In ASCEND III an instance must be destroyed and recreated each time a new
+ or revised method is added to the type definition.
+ This is a very expensive process when working with models of significant
+ size.
+\end_layout
+
+\begin_layout Standard
+The detailed semantics of method inheritance, addition, and replacement
+ of methods are given at the end of this section.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ADD\InsetSpace ~
+METHODS\InsetSpace ~
+IN
+\begin_inset LatexCommand \index{ADD METHODS IN}
+
+\end_inset
+
+\InsetSpace ~
+type_name;\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+This statement allows new methods to be added to an already loaded type
+ definition.
+ The next code must be a METHOD or the END METHODS; statement.
+ If a method of the same name already exists in type_name, the statement
+ is in error.
+ If other types refine type_name then the addition follows the method inheritanc
+e rules.
+ Any type which inherited methods from type_name now inherits the methods
+ added to type_name.
+ If a refinement of type_name already defines a method ADDed to type_name,
+ then the existing method in the more refined type is not disturbed.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+REPLACE\InsetSpace ~
+METHODS\InsetSpace ~
+IN
+\begin_inset LatexCommand \index{REPLACE METHODS IN}
+
+\end_inset
+
+\InsetSpace ~
+type_name;\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*)
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+This statement allows existing methods to be replaced in an already loaded
+ type definition.
+ The next code must be a METHOD or the END METHODS; statement.
+ If a method of the same name does not exist in type_name, the statement
+ is in error.
+ If other types refine type_name then the replacement follows the method
+ inheritance rules.
+ Any type which inherited the old method now inherits the replacment method
+ instead.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ADD\InsetSpace ~
+METHODS\InsetSpace ~
+IN\InsetSpace ~
+DEFINITION\InsetSpace ~
+MODEL;
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+This statement allows methods to be added globally.
+ It should be used very sparingly.
+ Library basemodel.a4l contains the example of this statement.
+ Methods in the global model definition are inherited by all models.
+ There is no actual global model definition, but it has a method list for
+ practical purposes.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Initialization\InsetSpace ~
+routines
+\begin_inset LatexCommand \index{routines, initialization}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{initialization routines}
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+METHOD
+\begin_inset LatexCommand \index{METHOD}
+
+\end_inset
+
+ A method in ASCEND must appear following the METHODS statement within a
+ model.
+ The system executes procedural statements of the method in the order they
+ are written.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+At present, there are no local variables or other structures in methods
+ except loop indices.
+ A method may be written recursively, but there is an arbitrary stack depth
+ limit (currently set to 20 in compiler/initialize.h) to prevent the system
+ from crashing on infinite recursions.
+ 
+\end_layout
+
+\begin_layout Standard
+Specifically disallowed in ASCEND III methods are IS_A, ALIASES, WILL_BE,
+ IS, IS_REFINED_TO, ARE_THE_SAME and ARE_ALIKE statements as these declare
+ the structure of the model and belong only in the declarative section.
+\end_layout
+
+\begin_layout Standard
+(* 4+ *) In the near future, declarations of local instances (which are
+ automatically destroyed when the method exits) will be allowed.
+ Since methods are imperative, these local structure definitions are processed
+ in the order they are written.
+ Local structures are not allowed to shadow structures in the model context
+ with which the method is called.
+ When local structures are allowed, it will also be possible to define methods
+ which take parameters and return values, thereby making the imperative
+ ASCEND methods a rapid prototyping tool every bit as powerful and easy
+ to use as the declarative ASCEND language.
+\end_layout
+
+\begin_layout Standard
+The syntax for a method declaration is
+\end_layout
+
+\begin_layout LyX-Code
+METHOD 
+\emph on
+method_name
+\emph default
+;
+\end_layout
+
+\begin_layout LyX-Code
+«procedural statement;» (*one or more*)
+\end_layout
+
+\begin_layout LyX-Code
+END 
+\emph on
+method_name
+\emph default
+;
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Procedural\InsetSpace ~
+assignment
+\bar default
+
+\begin_inset LatexCommand \index{assignment, procedural}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{procedural assignment}
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The syntax is 
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+instance_name
+\emph default
+ := 
+\emph on
+mathematical_expression
+\emph default
+;
+\end_layout
+
+\begin_layout Standard
+or
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+array_name[set_name]
+\emph default
+ := 
+\emph on
+expression
+\emph default
+;
+\end_layout
+
+\begin_layout Standard
+or
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+list_of_instance_names
+\emph default
+ := expression.
+\end_layout
+
+\begin_layout Standard
+Its meaning is that the value for the variable(s) on the LHS is set to the
+ value of the expression on the RHS.
+ 
+\end_layout
+
+\begin_layout Standard
+DATA (* 4+ *) statements can (should, rather) also appear in methods.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+FOR/DO
+\begin_inset LatexCommand \index{FOR/DO}
+
+\end_inset
+
+ statement
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+This statement is similar to the FOR/CREATE statement except it can only
+ appear in a method definition.
+ An example would be
+\end_layout
+
+\begin_layout LyX-Code
+FOR i IN [1..n_stages] DO
+\end_layout
+
+\begin_layout LyX-Code
+T[i] := T[1] + (i-1)*DT;
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout Standard
+Here we actually execute using the values of i in the sequence given.
+ So, 
+\end_layout
+
+\begin_layout LyX-Code
+FOR i IN [n_stages..1] DO ...
+ 
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout Standard
+is an empty loop, while
+\end_layout
+
+\begin_layout LyX-Code
+FOR i IN [n_stages..1] DECREASING DO ...
+ 
+\end_layout
+
+\begin_layout LyX-Code
+END FOR;
+\end_layout
+
+\begin_layout Standard
+is a backward loop.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+IF
+\begin_inset LatexCommand \index{IF}
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The IF statement can only appear in a method definition.
+ Its syntax is
+\end_layout
+
+\begin_layout LyX-Code
+IF 
+\emph on
+logical_expression
+\emph default
+ THEN
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+list_of_statements
+\end_layout
+
+\begin_layout LyX-Code
+ELSE
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+list_of_statements
+\end_layout
+
+\begin_layout LyX-Code
+END IF;
+\end_layout
+
+\begin_layout Standard
+or
+\end_layout
+
+\begin_layout LyX-Code
+IF 
+\emph on
+logical_expression
+\emph default
+ THEN
+\end_layout
+
+\begin_layout LyX-Code
+
+\emph on
+list_of_statements
+\end_layout
+
+\begin_layout LyX-Code
+END IF;
+\end_layout
+
+\begin_layout Standard
+If the logical expression has a value of TRUE, ASCEND will execute the statement
+s in the THEN part.
+ If the value is FALSE, ASCEND executes the statements in the optional ELSE
+ part.
+ Please use () to make the precedence of AND, OR, NOT, ==, and != clear
+ to both the user and the system.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+SWITCH
+\begin_inset LatexCommand \index{SWITCH}
+
+\end_inset
+
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*) Essentially roughly equivalent to the C switch statement, except that
+ ASCEND allows wildcard matches, allows any number of controlling variables
+ to be given in a list, and assumes BREAK at the end of each CASE.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+CALL
+\begin_inset LatexCommand \index{CALL}
+
+\end_inset
+
+ External calls are not presently well defined, pending debugging of the
+ EXTERNAL
+\begin_inset LatexCommand \index{EXTERNAL}
+
+\end_inset
+
+ connection prototype originally created by Kirk Abbott.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+RUN
+\begin_inset LatexCommand \index{RUN}
+
+\end_inset
+
+ This statement can appear only in a method.
+ Its format is: 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+RUN 
+\emph on
+name_of_method
+\emph default
+;
+\end_layout
+
+\begin_layout Standard
+or
+\end_layout
+
+\begin_layout LyX-Code
+RUN 
+\emph on
+part_name.name_of_method
+\emph default
+;
+\end_layout
+
+\begin_layout Standard
+or
+\end_layout
+
+\begin_layout LyX-Code
+RUN 
+\emph on
+model_type::name_of_method
+\emph default
+;
+\end_layout
+
+\begin_layout Standard
+The named method can be defined in the current model (the first syntax),
+ or in any of its parts (the second syntax).
+ Methods defined in a part will be run in the scope of that part, not at
+ the scope of the RUN statement.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Type\InsetSpace ~
+access\InsetSpace ~
+to\InsetSpace ~
+methods:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+When model_type::
+\begin_inset LatexCommand \index{::}
+
+\end_inset
+
+ appears, the type named must be a type that the current model is refined
+ from.
+ In this way, methods may be defined incrementally.
+ For example:
+\end_layout
+
+\begin_layout LyX-Code
+MODEL foo;
+\end_layout
+
+\begin_layout LyX-Code
+   x IS_A generic_real;
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify;
+\end_layout
+
+\begin_layout LyX-Code
+   x.fixed:= TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+END specify;
+\end_layout
+
+\begin_layout LyX-Code
+END foo;
+\end_layout
+
+\begin_layout LyX-Code
+MODEL bar REFINES foo;
+\end_layout
+
+\begin_layout LyX-Code
+   y IS_A generic_real;
+\end_layout
+
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify;
+\end_layout
+
+\begin_layout LyX-Code
+   RUN foo::specify;
+\end_layout
+
+\begin_layout LyX-Code
+   y.fixed := TRUE;
+\end_layout
+
+\begin_layout LyX-Code
+END specify;
+\end_layout
+
+\begin_layout LyX-Code
+END bar;
+\end_layout
+
+\begin_layout Section
+Parameterized models
+\begin_inset LatexCommand \index{models, parameterized}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{parameterized models}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{sec:x.5Parameterized-models}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Parameterized model definitions have the following general form.
+\end_layout
+
+\begin_layout LyX-Code
+MODEL 
+\emph on
+new_type
+\emph default
+(
+\emph on
+parameter_list
+\emph default
+;)
+\end_layout
+
+\begin_layout LyX-Code
+«WHERE (
+\emph on
+where_list
+\emph default
+;)»
+\end_layout
+
+\begin_layout LyX-Code
+«REFINES 
+\emph on
+existing_type
+\emph default
+ «(
+\emph on
+assignment_list
+\emph default
+;)»»;
+\end_layout
+
+\begin_layout Subsection
+The parameter list
+\begin_inset LatexCommand \label{sub:x.5.1The-parameter-list}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A parameter list is a list of statements about the objects that will be
+ passed into the model being defined when an instance of that model is created
+ by IS_A or IS_REFINED_TO.
+ The parameter list is designed to allow a complete statement of the necessary
+ and sufficient conditions to construct the parameterized model.
+ The mechanism implemented is general, however, so it is possible to put
+ less than the necessary information in the parameter list if one seeks
+ to confuse the models reusers.
+ To make parameters easy to understand for users with experience in other
+ computer languages (and to make the implementation much simpler), we define
+ the parameter list as ordered.
+ All the statements in a parameter list, including the last one, must end
+ with a ";".
+ A parameter list looks like:
+\end_layout
+
+\begin_layout LyX-Code
+MODEL test (
+\end_layout
+
+\begin_layout LyX-Code
+   x WILL_BE real;
+\end_layout
+
+\begin_layout LyX-Code
+   n IS_A integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+   p[1..n] IS_A integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+   q[0..2*n-1] WILL_BE widget;
+\end_layout
+
+\begin_layout LyX-Code
+);
+\end_layout
+
+\begin_layout Standard
+Each WILL_BE statement corresponds to a single object that the user must
+ create and pass into the definition of test.
+ We will establish the local name x for the first object passed to the definitio
+n of test.
+ n is handled similarly, and it must preceed the definition of p[1..n], because
+ it defines the set for the array p.
+ Constant types can also be defined with WILL_BE, though we have used IS_A
+ for the example test.
+\end_layout
+
+\begin_layout Standard
+Each IS_A statement corresponds to a single constant-valued instance or
+ an array of constant-valued instances that we will create as part of the
+ model we are defining.
+ Thus, the user of test must supply an array of constants as the third argument.
+ We will check that the instance supplied is subscripted on the set [1..n]
+ and copy the corresponding values to the array p we create local to the
+ instance of test.
+ 
+\end_layout
+
+\begin_layout Standard
+WILL_BE statements can be used to pass complex objects (models) or arrays
+ of objects.
+ Both WILL_BE and IS_A statements can be passed arguments that are more
+ refined than the type listed.
+ If an object that is less refined than the type listed, the instance of
+ parameterized model test will not be compiled.
+ When a parameterized model type is specified with a WILL_BE statement,
+ NO arguments should be given.
+ We are only interested in the formal type of the argument, not how it was
+ constructed.
+\end_layout
+
+\begin_layout Subsection
+The WHERE list
+\begin_inset LatexCommand \index{list, WHERE}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{WHERE list}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We can write structural and equation constraints on the arguments in the
+ WHERE list.
+ Each statement is a WILL_BE_THE_SAME, a WILL_NOT_BE_THE_SAME, an equation
+ written in terms of sets or discrete constants, or a FOR/CHECK statement
+ surrounding a group of such statements.
+ Until all the conditions in the WHERE list are satisfied, an object cannot
+ be constructed using the parameterized definition.
+ If the arguments given to a parameterized type in an IS_A or IS_REFINED_TO
+ statement cannot possibly satisfy the conditions, the IS_A or IS_REFINED_TO
+ statement is abandoned by the compiler.
+\end_layout
+
+\begin_layout Standard
+We have not created a WILL_BE_ALIKE statement because formal type compatibility
+ in ASCEND is not really a meaningful guarantee of object compatibility.
+ Object compatibility is much more reliably guaranteed by checking conditions
+ on the structure determining constants of a model instance.
+\end_layout
+
+\begin_layout Subsection
+The assignment list
+\begin_inset LatexCommand \index{list, assignment}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{assignment list}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+When we declare constant parameters with IS_A, we can in a later refinement
+ of the parameterized model assign their values in the assignment list,
+ thus removing them from the parameter list.
+ If an array of constants is declared with IS_A, then we must assign values
+ to ALL the array elements at the same time if we are going to remove them
+ from the parameter list.
+ If an array element is left out, the type which assigns some of the elements
+ and any subsequent refinements of that type will not be compilable.
+\end_layout
+
+\begin_layout Subsection
+Refining
+\begin_inset LatexCommand \index{refining, parameterized types}
+
+\end_inset
+
+ parameterized types
+\end_layout
+
+\begin_layout Standard
+Because we wish to make the parameterized model lists represent all the
+ parameters and conditions necessary to use a model of any type, we must
+ repeat the parameters declared in the ancestral type when we make a refinement.
+ If we did not repeat the parameters, the user would be forced to hunt up
+ the (possibly long) chain of types that yield an interesting definition
+ in order to know the list of parameters and conditions that must be satisfied
+ in order to use a model.
+ We repeat all the parameters of the type being refined before we add new
+ ones.
+ The only exception to this is that parameters defined with IS_A and then
+ assigned in the assignment_list are not repeated because the user no longer
+ needs to supply these values.
+ A refinement of the model test given in Section 
+\begin_inset LatexCommand \vref{sub:x.5.1The-parameter-list}
+
+\end_inset
+
+ follows.
+\end_layout
+
+\begin_layout LyX-Code
+MODEL expanded_test (
+\end_layout
+
+\begin_layout LyX-Code
+   x WILL_BE real;
+\end_layout
+
+\begin_layout LyX-Code
+   p[1..n] IS_A integer_constant;
+\end_layout
+
+\begin_layout LyX-Code
+   q[0..2*n-1] WILL_BE better_widget;
+\end_layout
+
+\begin_layout LyX-Code
+   r[0..q[0].k] WILL_BE gizmo;
+\end_layout
+
+\begin_layout LyX-Code
+   ms WILL_BE set OF symbol_constant;
+\end_layout
+
+\begin_layout LyX-Code
+) WHERE (
+\end_layout
+
+\begin_layout LyX-Code
+   q[0].k >= 2;
+\end_layout
+
+\begin_layout LyX-Code
+   r[0..q[0].k].giz_part WILL_BE_THE_SAME;
+\end_layout
+
+\begin_layout LyX-Code
+) REFINES test(
+\end_layout
+
+\begin_layout LyX-Code
+   n :== 4;
+\end_layout
+
+\begin_layout LyX-Code
+);
+\end_layout
+
+\begin_layout Standard
+In expanded_test, we see that the type of the array q is more refined than
+ it was in test.
+ We see that constants and sets from inside passed objects, such as q[0].k,
+ can be used to set the sizes of subseqent array arguments.
+ We see a structural constraint that all the gizmos in the array r must
+ have been constructed with the same giz_part.
+ This condition probably indicates that the gizmo definition takes giz_part
+ as a WILL_BE defined parameter.
+\end_layout
+
+\begin_layout Section
+Miscellany
+\begin_inset LatexCommand \label{sec:x.6Miscellany}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Variables for solvers
+\begin_inset LatexCommand \label{sub:x.6.1Variables-for-solvers}
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+solver_var
+\begin_inset LatexCommand \index{solver\_var}
+
+\end_inset
+
+ Solver_var is the base-type for all computable variables in the current
+ ASCEND system.
+ Any instances of an atom definition that refines solver_var are considered
+ potential variables when constructing a problem for one of the solvers.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Solver_var has wild card dimensionality.
+ (Wild card means that until ASCEND can decide what its dimensionality is,
+ it has none assigned.
+ ASCEND can decide on dimensionality while compiling or executing.) In system.a4l
+ we define the following parts with associated initial values for each:
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Attributes:
+\bar default
+ 
+\bar under
+type, default
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+lower_bound
+\begin_inset LatexCommand \index{lower\_bound}
+
+\end_inset
+
+ real, 0.0
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+upper_bound
+\begin_inset LatexCommand \index{upper\_bound}
+
+\end_inset
+
+ real, 0.0
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+nominal
+\begin_inset LatexCommand \index{nominal}
+
+\end_inset
+
+ real, 0.0
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+fixed
+\begin_inset LatexCommand \index{fixed}
+
+\end_inset
+
+ boolean, FALSE
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+lower_bound and upper_bound are bounds for a variable which are monitored
+ and maintained during solving.
+ The nominal value the value used to scale a variable when solving.
+ The flag fixed indicates if the variable is to be held fixed during solving.
+ All atoms which are refinements of solver_var will have these parts.
+ The refining definitions may reassign the default values of the attributes.
+\end_layout
+
+\begin_layout Standard
+The latest full definition of solver_var is always in the file system.a4l.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+generic_real
+\begin_inset LatexCommand \index{generic\_real}
+
+\end_inset
+
+ One should not declare a variable to be of type solver_var.
+ The nominal value and bound values will get you into trouble when solving.
+ If you are programming and do not wish to declare variable types, then
+ declare them to be of type generic_real.
+ This type has nominal value of 0.5 and lower and upper bounds of -1.0e50
+ and 1.0e50 respectively.
+ It is dimensionless.
+ Generic_real is the first refinement of solver_var and is also defined
+ in system.a4l.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Kluges\InsetSpace ~
+for\InsetSpace ~
+MILPs
+\bar default
+
+\begin_inset LatexCommand \index{MILPs}
+
+\end_inset
+
+ Also defined in system.a4l are the types for integer, binary, and semi-continuou
+s variables
+\begin_inset LatexCommand \index{variables, semi-continuous}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+solver_semi
+\begin_inset LatexCommand \index{solver\_semi}
+
+\end_inset
+
+,\InsetSpace ~
+solver_integer
+\begin_inset LatexCommand \index{solver\_integer}
+
+\end_inset
+
+,\InsetSpace ~
+solver_binary
+\begin_inset LatexCommand \index{solver\_binary}
+
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+We define basic refinements of solver_var to support solvers which are more
+ than simply algebraic.
+ Various mixed integer-linear program solvers can be fed solver_semi based
+ atoms defining semi-continuous variables, solver_integer based atoms defining
+ integer variables, and solver_binary based atoms defining binary variables.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Integers\InsetSpace ~
+are\InsetSpace ~
+relaxable
+\begin_inset LatexCommand \index{relaxable integers}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{integers, relaxable}
+
+\end_inset
+
+ All these types have associated boolean flags which indicate that either
+ the variable is to be treated according to its restricted meaning or it
+ is to be relaxed and treated as a normal continuous algebraic variable.
+ 
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Kluges\InsetSpace ~
+for\InsetSpace ~
+ODEs
+\begin_inset LatexCommand \index{ODEs}
+
+\end_inset
+
+
+\bar default
+ We have an alternate version of system.a4l called ivpsystem.a4l which adds
+ extra flags to the definition of solver_var in order to support initial
+ value problem (IVP
+\begin_inset LatexCommand \index{IVP}
+
+\end_inset
+
+) solvers (integrators
+\begin_inset LatexCommand \index{integrators}
+
+\end_inset
+
+).
+ Integration in the ASCEND IV environment is explained in another chapter.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ivpsystem.a4l
+\begin_inset LatexCommand \index{ivpsystem.a4l}
+
+\end_inset
+
+ Having ivpsystem.a4l is a temporary, but highly effective, way to keep people
+ who want to use ASCEND only for algebraic purposes from having to pay for
+ the IVP overhead.
+ Algebraic users load system.a4l.
+ Users who want both algebraic and IVP capability load ivpsystem.a4l instead
+ of system.a4l.
+ This method is temporary because part of the extended definition of ASCEND
+ IV is that differential calculus constructs will be explicitly supported
+ by the compiler.
+ The calculus is not yet implemented, however.
+\end_layout
+
+\begin_deeper
+\begin_layout Subsection
+Supported attributes
+\begin_inset LatexCommand \label{sub:x.6.2Supported-attributes}
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+(*\InsetSpace ~
+4+\InsetSpace ~
+*) The solver_var, and in fact most objects in ASCEND IV, should have
+ built-in support for (and thereby efficient storage of) quite a few more
+ attributes than are defined above.
+ These built-in attributes are not instances of any sort, merely values.
+ The syntax for naming one of these supported attributes is: object_name.$support
+ed_attribute_name.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Supported attributes may have symbol, real, integer, or boolean values.
+ Note that the $ syntax is essentially the same as the derivative syntax
+ for relations; derivatives are a supported attribute of relations.
+ The supported attributes must be defined at the time the ASCEND compiler
+ is built.
+ The storage requirement for a supported boolean attribute is 1 bit rather
+ than the 24 bytes required to store a run-time defined boolean flag.
+ Similarly, the requirement for a supported real attribute is 4 or 8 bytes
+ instead of 24 bytes.
+\end_layout
+
+\begin_layout Subsection
+Single operand real functions
+\begin_inset LatexCommand \index{functions, real}
+
+\end_inset
+
+
+\begin_inset LatexCommand \label{sub:x.6.3Single-operand-real}
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+exp
+\begin_inset LatexCommand \index{exp}
+
+\end_inset
+
+() exponential (i.e., exp(x) = ex)
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+ln
+\begin_inset LatexCommand \index{ln}
+
+\end_inset
+
+() log to the base e
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+sin
+\begin_inset LatexCommand \index{sin}
+
+\end_inset
+
+() sine.
+ argument must be an angle.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+cos
+\begin_inset LatexCommand \index{cos}
+
+\end_inset
+
+() cosine.
+ argument must be an angle.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+tan
+\begin_inset LatexCommand \index{tan}
+
+\end_inset
+
+() tangent.
+ argument must be an angle.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+arcsin
+\begin_inset LatexCommand \index{arcsin}
+
+\end_inset
+
+() inverse sine.
+ return value is an angle between -
+\begin_inset Formula $\pi/2$
+\end_inset
+
+ and 
+\begin_inset Formula $\pi/2$
+\end_inset
+
+ radians.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+arccos
+\begin_inset LatexCommand \index{arccos}
+
+\end_inset
+
+() inverse cosine.
+ return value is an angle between 0 and 
+\begin_inset Formula $\pi$
+\end_inset
+
+ radians.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+arctan
+\begin_inset LatexCommand \index{arctan}
+
+\end_inset
+
+() inverse tangent.
+ return value is an angle between -
+\begin_inset Formula $\pi/2$
+\end_inset
+
+ and 
+\begin_inset Formula $\pi/2$
+\end_inset
+
+ radians.
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+erf
+\begin_inset LatexCommand \index{erf}
+
+\end_inset
+
+() error function (not available from Microsoft Windoze)
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+sinh
+\begin_inset LatexCommand \index{sinh}
+
+\end_inset
+
+() hyperbolic sine
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+cosh
+\begin_inset LatexCommand \index{cosh}
+
+\end_inset
+
+() hyperbolic cosine
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+tanh
+\begin_inset LatexCommand \index{tanh}
+
+\end_inset
+
+() hyperbolic tangent
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+arcsinh
+\begin_inset LatexCommand \index{arcsinh}
+
+\end_inset
+
+() inverse hyperbolic sine
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+arccosh
+\begin_inset LatexCommand \index{arccosh}
+
+\end_inset
+
+() inverse hyperbolic cosine
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+arctanh
+\begin_inset LatexCommand \index{arctanh}
+
+\end_inset
+
+() inverse hyperbolic tangent
+\end_layout
+
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+lnm
+\begin_inset LatexCommand \index{lnm}
+
+\end_inset
+
+() modified ln
+\begin_inset LatexCommand \index{ln, modified}
+
+\end_inset
+
+ function.
+ This lnm function is parameterized by a constant a, which is typically
+ set to about 1.e-8.
+ lnm(x) is defined as follows:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+ln(x) for x > a
+\end_layout
+
+\begin_layout Standard
+(x-a)/a + ln(a) for x <= a.
+\end_layout
+
+\begin_layout Standard
+Below the value a (default setting is 1.0e-8), lnm takes on the value given
+ by the straight line passing through ln(a) and having the same slope as
+ ln(a) has at a.
+ This function and its first derivative are continuous.
+ The second derivative contains a jump at a.
+\end_layout
+
+\begin_layout Standard
+The lnm function can tolerate a negative argument while the ln function
+ cannot.
+ At present the value of a is controllable via the user interface of the
+ ASCEND solvers.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+Operand\InsetSpace ~
+dimensionality\InsetSpace ~
+must\InsetSpace ~
+be\InsetSpace ~
+correct.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The operands for an ASCEND function must be dimensionally consistent with
+ the function in question.
+ Most transcendental functions require dimensionless arguments.
+ The trigonometric functions require arguments with dimensionality of plane
+ angles, P.
+ ASCEND functions return dimensionally correct results.
+\end_layout
+
+\begin_layout Standard
+The operands for ASCEND functions are enclosed within rounded parentheses,
+ ().
+ An example of use is: 
+\end_layout
+
+\begin_layout LyX-Code
+y = A*exp(-B/T);
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+
+\bar under
+Discontinuous\InsetSpace ~
+functions
+\begin_inset LatexCommand \index{functions, discontinuous}
+
+\end_inset
+
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Discontinuous functions may destroy a Newton
+\begin_inset LatexCommand \index{Newton}
+
+\end_inset
+
+-based solution algorithm if used in defining a model equation.
+ We strongly suggest considering alternative formulations of your equations.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+abs
+\begin_inset LatexCommand \index{abs}
+
+\end_inset
+
+() absolute value of argument.
+ Any dimensionality is allowed in an abs() function.
+\end_layout
+
+\begin_deeper
+\begin_layout Subsection
+Logical functions
+\begin_inset LatexCommand \index{functions, logical}
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00000.00000.00000.000
+SATISFIED
+\begin_inset LatexCommand \index{SATISFIED}
+
+\end_inset
+
+()\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
+*) SATISFIED(relation_name,tolerance) returns TRUE if the relation
+ named has a residual value less than the real value, tolerance, given.
+ If the relation named is a logical relation, the tolerance should not be
+ specified, since logical relations evaluate directly to TRUE or FALSE.
+\end_layout
+
+\begin_deeper
+\begin_layout Subsection
+UNITS
+\begin_inset LatexCommand \index{UNITS}
+
+\end_inset
+
+ definitions
+\end_layout
+
+\begin_layout Standard
+As noted in Section 
+\begin_inset LatexCommand \vref{sub:x.1.2Basic-Elements}
+
+\end_inset
+
+, ASCEND will recognize conversion factors
+\begin_inset LatexCommand \index{conversion factors}
+
+\end_inset
+
+ when it sees them as {units).
+ These units are built up from the basic units, and new units can be defined
+ by the user.
+ Note that the assignment x:= 0.5 {100}; yields x == 50, and that there are
+ no 'offset conversions
+\begin_inset LatexCommand \index{conversion, offset}
+
+\end_inset
+
+
+\begin_inset LatexCommand \index{offset conversions}
+
+\end_inset
+
+,' e.g.
+ F=9/5C+32.
+ Please keep unit names to 20 characters or less as this makes life pretty
+ for other users
+\end_layout
+
+\begin_layout Standard
+One or more unit conversion factors can be defined with the UNITS keyword.
+ A unit of measure, once defined, stays in the system until the system is
+ shut down.
+ A measuring unit cannot be defined differently without first shutting down
+ the system, but duplicate or equivalent definitions are quietly ignored.
+ 
+\end_layout
+
+\begin_layout Standard
+A UNITS declaration can occur in a file by itself, inside a model or inside
+ an atom.
+ UNITS definitions are parsed immediately, they will be processed even if
+ a surrounding MODEL or ATOM definition is rejected.
+ Because units and dimensionality are designed into the deepest levels of
+ the system, a unit definition must be parsed before any atoms or relations
+ use that definition.
+ It is good design practice to keep customized unit definitions in separate
+ files and REQUIRE those files at the beginning of any file that uses them.
+ Unit definitions are made in the form, for example:
+\end_layout
+
+\begin_layout LyX-Code
+UNITS (* several unit definitions could be
+\end_layout
+
+\begin_layout LyX-Code
+here.
+ *)
+\end_layout
+
+\begin_layout LyX-Code
+   ohm = 
+\end_layout
+
+\begin_layout LyX-Code
+      {kilogram*meter^2/second^3/ampere^2};
+\end_layout
+
+\begin_layout LyX-Code
+END UNITS;
+\end_layout
+
+\begin_layout Standard
+The standard units library, measures.a4l, is documented in the ASCEND manual,
+ Section 
+\begin_inset LatexCommand \ref{cha:physprops}
+
+\end_inset
+
+ 
+\begin_inset LatexCommand \cite{ASCEND2006}
+
+\end_inset
+
+.
+\end_layout
+
+\end_body
+\end_document
