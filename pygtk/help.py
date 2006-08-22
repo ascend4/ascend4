@@ -32,7 +32,7 @@ class Help:
 			
 			print _b
 		elif platform.system()=='Linux':
-			_b = webbrowser.get('mozilla')
+			_b = webbrowser.get('firefox')	
 		else:
 			print "PLATFORM IS ".platform.platform(True,True)
 
@@ -40,7 +40,7 @@ class Help:
 			_u = self.webhelproot
 		else:
 			_p = os.path.join(self.helproot,"book.html")
-			_u = "file:"+_p
+			_u = "file://"+_p
 		
 		print "OPENING WEB PAGE:",_u
 		_b.open(_u);
