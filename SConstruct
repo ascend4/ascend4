@@ -461,6 +461,8 @@ if platform.system()!="Windows":
 		, True
 	))
 
+
+
 # TODO: OTHER OPTIONS?
 # TODO: flags for optimisation
 # TODO: turning on/off bintoken functionality
@@ -472,23 +474,30 @@ def c_escape(str):
         return re.sub("\\\\","/",str)
 
 envadditional={}
-if os.environ.get('OSTYPE')=='msys':
-	envenv = os.environ;
-	tools = ['mingw','lex','yacc','fortran','swig','disttar','nsis','doxygen']
-	envadditional['IS_MINGW']=True
 
-elif platform.system()=="Windows":
-	envenv = {
-		'PATH':os.environ['PATH']
-		,'INCLUDE':os.environ['INCLUDE']
-		,'LIB':os.environ['LIB']
-		,'MSVS_IGNORE_IDE_PATHS':1
-	}
-	tools=['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']	
-	envadditional['CPPDEFINES']=['_CRT_SECURE_NO_DEPRECATE']
+if platform.system()=="Windows":
+	if os.environ.get('OSTYPE')=='msys':
+		envenv = os.environ;
+		tools = ['mingw','lex','yacc','fortran','swig','disttar','nsis','doxygen']
+		envadditional['IS_MINGW']=True
+	else:
+		envenv = {
+			'PATH':os.environ['PATH']
+			,'INCLUDE':os.environ['INCLUDE']
+			,'LIB':os.environ['LIB']
+			,'MSVS_IGNORE_IDE_PATHS':1
+		}
+		tools=['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']	
+		envadditional['CPPDEFINES']=['_CRT_SECURE_NO_DEPRECATE']
 else:
-	envenv = os.environ
-	tools=['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']
+	if os.environ.get('TARGET')=='mingw':
+		envenv = os.environ
+		tools=['crossmingw','lex','yacc','disttar','nsis','doxygen']
+		envadditional['CPPPATH']=['/usr/local/lib/gcc/i386-mingw32/3.4.5/include','/usr/include']
+	else:
+		envenv = os.environ
+		tools=['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']
+	
 	
 env = Environment(
 	ENV=envenv
@@ -835,7 +844,7 @@ gamma(x);
 """
 
 def CheckMath(context):
-	context.Message('Checking for IEE math library... ')
+	context.Message('Checking for IEEE math library... ')
 	libsave=context.env.get('LIBS');
 	context.env.AppendUnique(LIBS=['m'])
 	is_ok=context.TryLink(math_test_text,".c")
@@ -1043,6 +1052,7 @@ conf = Configure(env
 # stdio -- just to check that compiler is behaving
 
 if not conf.CheckHeader('stdio.h'):
+	print "CPPPATH =",env.get('CPPPATH')
 	print "Did not find 'stdio.h'! Check your compiler configuration."
 	Exit(1)
 

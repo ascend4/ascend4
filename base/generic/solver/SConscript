@@ -32,7 +32,7 @@ if solver_env.get('WITH_CONOPT'):
 		)
 
 	objs += solver_env.SharedObject('conopt.c')
-	print "BUILDING CONOPT.OS"
+#	print "BUILDING CONOPT.OS"
 
 for c in csrcs:
 	objs += solver_env.SharedObject(c)
@@ -54,7 +54,8 @@ if solver_env.get('WITH_IDA'):
 
 	objs += sundials_env.SharedObject('ida.c');
 else:
-	print "NO IDA REQUESTED!"
+	pass
+#	print "NO IDA REQUESTED!"
 
 if 'LSOD' in solver_env.get('WITH_SOLVERS'):
 	if solver_env.get('F2C_LIBPATH'):

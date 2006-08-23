@@ -2818,6 +2818,7 @@ double *RelationFindRoots(struct Instance *i,
     if (glob_done == 1) {
       /* set to 0 so while loop in RelationInvertToken will work */
       glob_done = 0;
+      CONSOLE_DEBUG("Calling 'RelationInvertToken'...");
       glob_done = RelationInvertTokenTop(&(soln_list));
     }
     if (glob_done == 1) { /* if still one, token inversions successful */
@@ -3446,6 +3447,7 @@ int RelationInvertToken(struct relation_term **term,
           soln_list->soln[ndx] =
             safe_tan_D0(soln_list->soln[ndx],not_safe);
         }else{
+          /* CONSOLE_DEBUG("ARCTAN arg x = %f is out of range (-pi/2,pi/2)",soln_list->soln[ndx]); */
           remove_soln(soln_list,ndx);
         }
         break;
@@ -3455,6 +3457,7 @@ int RelationInvertToken(struct relation_term **term,
           soln_list->soln[ndx] =
             safe_tanh_D0(soln_list->soln[ndx],not_safe);
         }else{
+          /* CONSOLE_DEBUG("ARCTANH arg x = %f is out of range (-1,1)",soln_list->soln[ndx]); */
           remove_soln(soln_list,ndx);
         }
         break;

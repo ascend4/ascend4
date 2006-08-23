@@ -4,7 +4,7 @@ Version:	0.9.5.97
 
 # Use release 0.* so that other users can do patch releases with a higher number
 # and still have the update occur automatically.
-Release:	0
+Release:	0.1019
 
 License:	GPL
 Group:		Applications/Engineering
