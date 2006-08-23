@@ -1,5 +1,21 @@
 REQUIRE "atoms.a4l";
 
+MODEL testtan;
+	x IS_A angle;
+	y IS_A factor;
+
+	y=tan(x);
+
+METHODS
+METHOD on_load;
+	FIX x;
+	x := 0.19{rad};
+END on_load;
+METHOD self_test;
+	ASSERT abs(y - 0.1923198) < 1.0e-7;
+END self_test;
+END testtan;
+	
 MODEL testfunc;
     (* dependent variables *)
     yArccosh,yArcsinh,yArctanh,
@@ -56,13 +72,14 @@ END specify;
 
 METHOD on_load;
 	RUN default_self;
-	RUN reset;
+	RUN reset;	ASSERT abs(yTan - 0.1877619) < 1.0e-7;
 	RUN values;
 END on_load;
 
 METHOD self_test;
 	ASSERT abs(yArctan - 1.1441688{rad}) < 1.0e-7{rad};
 	ASSERT abs(yArctanh - 0.1205810) < 1.0e-7;
+	ASSERT abs(yTan - 0.1923198) < 1.0e-7;
 END self_test;
 
 METHOD values;
