@@ -589,6 +589,7 @@ static double RelationBranchEvaluator(struct relation_term *term)
   assert(term != NULL);
   switch(RelationTermType(term)) {
   case e_func:
+	 CONSOLE_DEBUG("Evaluating term using FuncEval...");
     return FuncEval(TermFunc(term),
       RelationBranchEvaluator(TermFuncLeft(term)) );
   case e_var:
@@ -2789,10 +2790,13 @@ double *RelationFindRoots(struct Instance *i,
      * target.
      */
     if (SearchEval_Branch(Infix_LhsSide(glob_rel)) < 1) {
+      CONSOLE_DEBUG("SearchEval_Branch(Infix_LhsSide(glob_rel)) gave < 1...");
       sideval = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
       if (finite(sideval)) {
+        /* CONSOLE_DEBUG("LHS is finite"); */
         InsertBranchResult(Infix_LhsSide(glob_rel),sideval);
       }else{
+        /* CONSOLE_DEBUG("LHS is INFINITE"); */
         FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite RHS.\n");
         glob_rel = NULL;
         return NULL;
@@ -2800,16 +2804,20 @@ double *RelationFindRoots(struct Instance *i,
     }
     assert(Infix_RhsSide(glob_rel) != NULL);
     if (SearchEval_Branch(Infix_RhsSide(glob_rel)) < 1) {
+		  CONSOLE_DEBUG("SearchEval_Branch(Infix_RhsSide(glob_rel)) gave < 1...");
         sideval = RelationBranchEvaluator(Infix_RhsSide(glob_rel));
         if (finite(sideval)) {
+          /* CONSOLE_DEBUG("RHS is finite"); */
           InsertBranchResult(Infix_RhsSide(glob_rel),sideval);
         }else{
+          /* CONSOLE_DEBUG("RHS is INFINITE"); */
           FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite LHS.\n");
           glob_rel = NULL;
           return NULL;
         }
     }
     if (glob_done < 1) {
+      /* CONSOLE_DEBUG("RelationInvertToken never found variable"); */
       /* RelationInvertToken never found variable */
       glob_done = 0;
       *able = FALSE;
@@ -2818,10 +2826,11 @@ double *RelationFindRoots(struct Instance *i,
     if (glob_done == 1) {
       /* set to 0 so while loop in RelationInvertToken will work */
       glob_done = 0;
-      CONSOLE_DEBUG("Calling 'RelationInvertToken'...");
+      /* CONSOLE_DEBUG("Calling 'RelationInvertToken'..."); */
       glob_done = RelationInvertTokenTop(&(soln_list));
     }
     if (glob_done == 1) { /* if still one, token inversions successful */
+		/* CONSOLE_DEBUG("INVERSION was successful"); */
       glob_done = 0;
       *nsolns= soln_list.length;
       *able = TRUE;
@@ -2838,6 +2847,7 @@ double *RelationFindRoots(struct Instance *i,
       *nsolns = 1;
       *able = TRUE;
     }else{
+      CONSOLE_DEBUG("Single-equation iterative solver was unable to find a solution.");
       *able = FALSE;
     }
     return soln_list.soln;
@@ -3344,6 +3354,7 @@ int RelationInvertToken(struct relation_term **term,
       soln_list->soln[ndx] = -soln_list->soln[ndx];
       break;
     case e_func:
+      CONSOLE_DEBUG("Inverting a function term...");
       switch(FuncId(TermFunc(*term))) {
       case F_EXP:
         soln_list->soln[ndx] = safe_ln_D0(soln_list->soln[ndx],not_safe);
@@ -3444,9 +3455,11 @@ int RelationInvertToken(struct relation_term **term,
       case F_ARCTAN:
         if( -safe_PI/2.0 < soln_list->soln[ndx] &&
             soln_list->soln[ndx] < safe_PI/2.0 ) {
+          CONSOLE_DEBUG("Inverting arctan...");
           soln_list->soln[ndx] =
             safe_tan_D0(soln_list->soln[ndx],not_safe);
         }else{
+          CONSOLE_DEBUG("Not inverting arctan (out of range)...");
           /* CONSOLE_DEBUG("ARCTAN arg x = %f is out of range (-pi/2,pi/2)",soln_list->soln[ndx]); */
           remove_soln(soln_list,ndx);
         }
@@ -3472,7 +3485,14 @@ int RelationInvertToken(struct relation_term **term,
         break;
 
       case F_TAN:
-        return(FALSE);
+        /* added by me, Aug 2006 -- JP */
+        /* CONSOLE_DEBUG("Inverting %f=tan(x)",soln_list->soln[ndx]); */
+        soln_list->soln[ndx] = safe_arctan_D0( soln_list->soln[ndx],not_safe );
+        if( *not_safe != safe_ok) {
+          remove_soln(soln_list,ndx);
+        }
+        break;
+        /* previously it was just: return(FALSE); */
 
       case F_COSH:
         soln_list->soln[ndx] =
