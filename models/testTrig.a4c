@@ -1,6 +1,6 @@
 REQUIRE "atoms.a4l";
 
-MODEL testTrig;
+MODEL testfunc;
     (* dependent variables *)
     yArccosh,yArcsinh,yArctanh,
     yCos,yCosh,
@@ -40,21 +40,27 @@ MODEL testTrig;
     tanEqn:      yTan = tan(xTan);
     tanhEqn:     yTanh = tanh(xTanh);
     
-    METHODS
-    
-    METHOD default_self;
-    END default_self;
+METHODS
 
-    METHOD specify;
+METHOD default_self;
+END default_self;
+
+METHOD specify;
 	FIX xExp,xLn;
 	FIX xSin,xCos,xTan;
 	FIX xArcsin,xArccos,xArctan;
 	FIX xSinh,xCosh,xTanh;
 	FIX xArccosh,xArcsinh,xArctanh;
 	FIX xLnm;
-    END specify;
+END specify;
 
-    METHOD values;
+METHOD on_load;
+	RUN default_self;
+	RUN reset;
+	RUN values;
+END on_load;
+
+METHOD values;
 	xArccos      := 0.10;          (* magnitude must not exceed 1.0  *)
 	xArccosh     := 2.0;           (* value must be 1.0 or greater   *)
 	xArcsin      := 0.11;          (* magnitude must not exceed 1.0  *)
@@ -70,13 +76,13 @@ MODEL testTrig;
 	xSinh        := 0.18;
 	xTan         := 0.19 {radian};
 	xTanh        := 0.2;
-    END values;
-    
+END values;
 
-    (* set up to recover original x values.  Note mapping
-      after solving. *)
-    
-    METHOD valuesRecover;
+
+(* set up to recover original x values.  Note mapping
+    after solving. *)
+
+METHOD valuesRecover;
 	xArccos      := yCos;    (* yArccos  becomes xCos  orig value *)
 	xArccosh     := yCosh;   (* yArccosh becomes xCosh orig value *)
 	xArcsin      := ySin;    (* etc                               *)
@@ -92,6 +98,6 @@ MODEL testTrig;
 	xSinh        := yArcsinh;
 	xTan         := yArctan;
 	xTanh        := yArctanh;
-    END valuesRecover;
+END valuesRecover;
 
-END testTrig;
+END testfunc;
