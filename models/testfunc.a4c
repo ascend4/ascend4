@@ -60,6 +60,11 @@ METHOD on_load;
 	RUN values;
 END on_load;
 
+METHOD self_test;
+	ASSERT abs(yArctan - 1.1441688{rad}) < 1.0e-7{rad};
+	ASSERT abs(yArctanh - 0.1205810) < 1.0e-7;
+END self_test;
+
 METHOD values;
 	xArccos      := 0.10;          (* magnitude must not exceed 1.0  *)
 	xArccosh     := 2.0;           (* value must be 1.0 or greater   *)
