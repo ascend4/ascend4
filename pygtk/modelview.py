@@ -71,11 +71,6 @@ class ModelView:
 		_img.set_from_file(self.browser.options.assets_dir+'unlocked.png')
 		self.freemenuitem.set_image(_img)
 
-		self.plotmenuitem = gtk.ImageMenuItem("P_lot",True);
-		_img = gtk.Image()
-		_img.set_from_file(self.browser.options.assets_dir+'plot.png')
-		self.plotmenuitem.set_image(_img)
-
 		self.propsmenuitem = gtk.ImageMenuItem("_Properties",True);
 		_img = gtk.Image()
 		_img.set_from_file(self.browser.options.assets_dir+'properties.png')
@@ -88,21 +83,18 @@ class ModelView:
 
 		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
 		self.freemenuitem.show(); self.freemenuitem.set_sensitive(False)
-		self.plotmenuitem.show(); self.plotmenuitem.set_sensitive(False)
 		self.observemenuitem.show(); self.observemenuitem.set_sensitive(False)
 		self.propsmenuitem.show()
 		self.treecontext.append(self.fixmenuitem)
 		self.treecontext.append(self.freemenuitem)
 		_sep = gtk.SeparatorMenuItem(); _sep.show()
 		self.treecontext.append(_sep);
-		self.treecontext.append(self.plotmenuitem)
 		self.treecontext.append(self.observemenuitem)
 		_sep = gtk.SeparatorMenuItem(); _sep.show()
 		self.treecontext.append(_sep)
 		self.treecontext.append(self.propsmenuitem)
 		self.fixmenuitem.connect("activate",self.fix_activate)
 		self.freemenuitem.connect("activate",self.free_activate)
-		self.plotmenuitem.connect("activate",self.plot_activate)
 		self.propsmenuitem.connect("activate",self.props_activate)
 		self.observemenuitem.connect("activate",self.observe_activate)
 
@@ -316,12 +308,6 @@ class ModelView:
 			_menu.popup(None,None,None,_button,event.time)
 			return
 
-		if _instance.isPlottable():
-			self.plotmenuitem.set_sensitive(True)
-			_canpop = True;
-		else:
-			self.plotmenuitem.set_sensitive(False)
-
 		if not _canpop:
 			return 
 
@@ -332,7 +318,19 @@ class ModelView:
 
 	def get_model_context_menu(self,instance):
 		menu = gtk.Menu()
-
+		
+		if instance.isPlottable():
+			print "PLOTTABLE"
+			mi = gtk.ImageMenuItem("P_lot",True);
+			img = gtk.Image()
+			img.set_from_file(self.browser.options.assets_dir+'plot.png')
+			mi.set_image(img)
+			mi.show()
+			mi.connect("activate",self.plot_activate)
+			menu.append(mi);
+			sep = gtk.SeparatorMenuItem(); sep.show()
+			menu.append(sep)
+		
 		mi = gtk.ImageMenuItem("Run method...",False)
 		mi.set_sensitive(False)
 		img = gtk.Image()
