@@ -1,0 +1,64 @@
+REQUIRE "atoms.a4l";
+
+(* 
+	Model of a four-bar linkage
+	
+	The pivots are at A, B, C, D. Sides are named after the
+	end points. The 'default' configuration being modelled is
+	of a quadrilater with A and D fixed and B and C free.
+	The angle at A, alpha (to the positive x axis) will also be fixed
+	
+*)
+
+MODEL fourbar;
+	x_A,y_A IS_A delta_distance;
+	x_B,y_B IS_A delta_distance;
+	x_C,y_C IS_A delta_distance;
+	x_D,y_D IS_A delta_distance;
+	
+	AB,BC,CD,DA IS_A distance;
+	alpha, beta, gamma, delta IS_A angle;
+	
+	x_B = x_A + AB*cos(alpha);
+	y_B = y_A + AB*sin(alpha);
+	
+	(x_C-x_B)^2 + (y_C-y_B)^2 = BC^2;
+	beta = arctan((y_C-y_B)/(x_C-x_B));
+	
+	x_D = x_C + CD*cos(gamma);
+	y_D = y_C + CD*sin(gamma);
+	
+	x_A = x_D + DA*cos(delta);
+	y_A = y_D + DA*sin(delta);
+	
+METHODS
+METHOD default_self;
+	y_B := 0.5 {m}; x_B := 0.8 {m};
+	y_C := -0.5{m}; x_C := 1.2 {m};
+	x_D := 2 {m}; y_D := 0 {m};
+END default_self;
+
+METHOD specify;
+	FIX x_A, y_A;
+	FIX AB, BC, CD, DA;
+	FIX alpha, delta;
+END specify;
+METHOD values;
+	x_A := 0 {m};
+	y_A := 0 {m};
+	delta := 180 {deg};
+	AB := 1 {m};
+	BC := 1 {m};
+	CD := 1 {m};
+	DA := 2 {m};
+	
+	alpha:= 30 {deg};
+END values;
+
+METHOD on_load;
+	RUN reset;
+	RUN values;
+	RUN default_self;
+END on_load;
+END fourbar;
+	

@@ -1,0 +1,78 @@
+REQUIRE "johnpye/fourbar.a4c";
+REQUIRE "plot.a4l";
+
+MODEL plotfourbar;
+
+	F IS_A fourbar;
+
+	y[pointset] ALIASES (F.y_A, F.y_B, F.y_C, F.y_D, F.y_A)
+	WHERE pointset IS_A set OF integer_constant;
+
+	x[pointset1] ALIASES (F.x_A,F.x_B, F.x_C, F.x_D, F.x_A)
+	WHERE pointset1 IS_A set OF integer_constant;
+	
+	curve1 IS_A plt_curve(pointset,y,x);
+
+	curves[curve_set] ALIASES (curve1)
+	WHERE curve_set IS_A set OF integer_constant;
+
+	plot1 IS_A plt_plot_integer(curve_set,curves);
+
+METHODS
+
+METHOD values;
+	RUN F.values;
+END values;
+
+METHOD default_self;
+	RUN plot1.default_self;
+	RUN curve1.default_self;
+	RUN F.default_self;
+	plot1.title := 'four bar node positions';
+	plot1.XLabel := 'x';
+	plot1.YLabel := 'y';
+	curve1.legend := 'fourbar';
+END default_self;
+
+METHOD check_self;
+	RUN plot1.check_self;
+	RUN curv1.check_self;
+	RUN F.check_self;
+END check_self;
+
+METHOD scale_self;
+	RUN F.scale_self;
+END scale_self;
+
+METHOD bound_self;
+	RUN plot1.bound_self;
+	RUN curve1.bound_self;
+	RUN F.bound_self;
+END bound_self;
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD specify;
+	RUN F.reset;
+END specify;
+
+METHOD on_load;
+	RUN reset;
+	RUN values;
+	RUN default_self;
+END on_load;
+END plotfourbar;
