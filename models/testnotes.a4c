@@ -1,0 +1,24 @@
+REQUIRE "atoms.a4l";
+
+ADD NOTES IN testNotes;
+    'key1' SELF {key1 note}
+    'key2' SELF {key2 note}
+    'key3' dog {key3 dog note}
+    'key3' cat {key3 cat note}
+END NOTES;
+
+MODEL testNotes;
+    T IS_A temperature;
+    P IS_A pressure;
+    
+METHODS
+    
+    METHOD method1;
+	T := 300 {K};
+    END method1;
+    
+    METHOD default_self;
+    END default_self;
+    
+END testNotes;
+
