@@ -1874,8 +1874,7 @@ METHOD seqmod_massbal;
     FOR j IN [1..ncolls] DO
 	(*FREE coll[j].botliq.state.H;*)
 
-	coll[j].z_set
-	.FREE z_values[coll[j].ntrays+1];
+	FREE coll[j].z_set.z_values[coll[j].ntrays+1];
 	FREE coll[j].z_set.stot;
     END FOR;
     FIX stot;
@@ -1894,8 +1893,7 @@ METHOD seqmod_fullthermo;
     FOR j IN [1..ncolls] DO
 	(*FREE coll[j].botliq.state.H;*)
 
-	coll[j].z_set
-	.FREE z_values[coll[j].ntrays+1];
+	FREE coll[j].z_set.z_values[coll[j].ntrays+1];
 	FREE coll[j].z_set.stot;
     END FOR;
     FIX stot;
@@ -1915,8 +1913,7 @@ METHOD seqmod_adiabatic;
     FOR j IN [1..ncolls] DO
 	(*FREE coll[j].botliq.state.H;*)
 
-	coll[j].z_set
-	.FREE z_values[coll[j].ntrays+1];
+	FREE coll[j].z_set.z_values[coll[j].ntrays+1];
 	FREE coll[j].z_set.stot;
     END FOR;
     FIX stot;
