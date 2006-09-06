@@ -26,6 +26,8 @@ MODEL testfunc;
     
     yArcsin,yArccos,
     yArctan      IS_A angle;
+    
+    this IS_A angle;
 
     (* fixed variables *)
     xArccos,xArccosh,
@@ -44,7 +46,8 @@ MODEL testfunc;
     arccoshEqn:  yArccosh = arccosh(xArccosh);
     arcsinEqn:   yArcsin = arcsin(xArcsin);
     arcsinhEqn:  yArcsinh = arcsinh(xArcsinh);
-    arctanEqn:   yArctan = arctan(xArctan);
+    duh: this = 0.0{radian};
+    arctanEqn:   yArctan = this+arctan(xArctan)+this;
     arctanhEqn:  yArctanh = arctanh(xArctanh);
     cosEqn:      yCos = cos(xCos);
     coshEqn:     yCosh = cosh(xCosh);
