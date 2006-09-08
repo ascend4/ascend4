@@ -423,6 +423,15 @@ END length_parameter;
         nominal := 1.0 {s^2/ft^5};
     END k_constant;
 
+  	ATOM youngs_modulus REFINES solver_var
+  		(* the measure of the physical stiffness of a material *)
+  		DIMENSION M/L/T^2
+  		DEFAULT 200 {GPa};
+  		lower_bound := 0 {Pa};
+  		upper_bound := 1500 {GPa};
+  		nominal := 40 {GPa};
+  	END youngs_modulus;
+
     ATOM pressure_per_length REFINES solver_var
         DIMENSION M/L^2/T^2
         DEFAULT 50 {Pa/m};
@@ -430,6 +439,7 @@ END length_parameter;
         upper_bound := +10{bar/m};
         nominal := 50 {Pa/m};
     END pressure_per_length;
+  
 
 (*  M A S S / M O L E  Q U A N T I T I E S
     --------------------------------------  *)
@@ -1056,3 +1066,14 @@ END cost_per_energy;
         upper_bound := 1e50{lb_mole*s};
         nominal := 10.0{lb_mole*s};
     END mole_sec;
+
+(*  M E C H A N I C AL   P R O P E R T I E S
+	---------------------------------------- *)
+	
+  	ATOM second_moment_of_area REFINES solver_var
+  		DIMENSION L^4
+  		DEFAULT 6.67e5 {mm^4}; (* for 150UB14 Universal Beam, AISC (Australia) *)
+  		lower_bound := 0 {mm^4};
+  		upper_bound := 10000e6 {mm^4};
+  		nominal := 1e6 {mm^4}; (* this may be too high still *)
+  	END second_moment_of_area;
