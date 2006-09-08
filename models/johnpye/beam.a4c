@@ -1,0 +1,82 @@
+REQUIRE "atoms.a4l";
+
+(* a parameterised simply-supported beam model *)
+
+MODEL beam_parameterised(
+	n WILL_BE integer_constant;
+	E WILL_BE youngs_modulus;
+	I WILL_BE second_moment_of_area;
+	L WILL_BE distance;
+);
+	v[1..n] IS_A distance;
+	x[1..n] IS_A distance;
+	
+	P IS_A force;
+	a,b IS_A distance;
+	a + b = L;
+
+	isrightp[1..n] IS_A distance;
+	
+	FOR i IN [1..n] CREATE
+		v_left[i]: v[i] = P*b/(6*E*I*L)*((L^2 - b^2)*x[i] - x[i]^3);
+		v_right[i]: v[i] = P*b/(6*E*I*L)*((L^2 - b^2)*x[i] - x[i]^3 + (L/b)*(x[i]-a)^3 );
+
+		CONDITIONAL
+			isright[i]: x[i] > a;
+		END CONDITIONAL;
+
+		isrightp[i] == SATISFIED(isright[i]);
+
+		WHEN (isrightp[i])
+			CASE TRUE:
+				USE v_right[i];
+			CASE FALSE:
+				USE v_left[i];
+		END WHEN;
+	END FOR;
+
+END beam_parameterised;
+
+(*
+	Model of a simply-supported beam of length L
+	with a single vertical point load P at 0 < a < L
+*)
+
+MODEL beam;
+	n IS_A integer_constant;
+	n :== 1;
+	E IS_A youngs_modulus;
+	I IS_A second_moment_of_area;
+	L IS_A distance;
+	B IS_A beam_parameterised(n,E,I,L);
+
+	P ALIASES B.P;
+	a ALIASES B.a;
+	b ALIASES B.b;
+	
+	x ALIASES B.x[1];
+	v ALIASES B.v[1];
+	
+METHODS
+METHOD specify;
+	FIX E, I, L;
+	FIX P, a;
+	FIX x;
+END specify;
+
+METHOD values;
+	E := 200 {GPa}; (* approx, for steel *)
+	I := 142e6 {mm^4}; (* AISC Universal Beam 360UB50.7 *)
+	L := 3.5 {m};
+	P := 14.0 {kN};
+	a := 1.75 {m};
+	x := 2.0 {m};
+END values;
+
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
+
+END beam;
+
