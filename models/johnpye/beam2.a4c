@@ -1,0 +1,51 @@
+REQUIRE "johnpye/beam.a4c";
+
+(*
+	Simple superposition of two loads
+*)
+
+MODEL beam2;
+
+	n IS_A integer_constant;
+	n:== 2;
+	
+	E IS_A youngs_modulus;
+	I IS_A second_moment_of_area;
+	L IS_A distance;
+	
+	B[1..2] IS_A beam_parameterised(n,E,I,L);
+	
+	P1 ALIASES B[1].P;
+	a1 ALIASES B[1].a;
+	P2 ALIASES B[2].P;
+	a2 ALIASES B[2].a;
+	
+	v[1..n] IS_A distance;
+	x[1..n] IS_A distance;
+	FOR i IN [1..n] CREATE
+		B[1..n].x[i], x[i] ARE_THE_SAME;
+		v[i] = SUM[B[j].v[i] | j IN [1..2]];
+	END FOR;
+	
+METHODS
+METHOD specify;
+	RUN B[1..n].specify;
+	FIX E,I,L;
+END specify;
+
+METHOD values;
+	RUN B[1..n].values;
+	E := 200 {GPa};
+	I := 0.5e6{mm^4};
+	L := 3 {m};
+	P1 := 10 {kN}; a1 := 1 {m};
+	P2 := 10 {kN}; a2 := 2 {m};
+	x[1] := 1{m};
+	x[2] := 2{m};
+END values;
+
+METHOD on_load;
+	RUN reset; RUN values;
+END on_load;
+
+END beam2;

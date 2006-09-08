@@ -15,16 +15,20 @@ MODEL beam_parameterised(
 	a,b IS_A distance;
 	a + b = L;
 
-	isrightp[1..n] IS_A distance;
+	isrightp[1..n] IS_A boolean_var;
 	
 	FOR i IN [1..n] CREATE
 		v_left[i]: v[i] = P*b/(6*E*I*L)*((L^2 - b^2)*x[i] - x[i]^3);
 		v_right[i]: v[i] = P*b/(6*E*I*L)*((L^2 - b^2)*x[i] - x[i]^3 + (L/b)*(x[i]-a)^3 );
-
-		CONDITIONAL
+	END FOR;
+	
+	CONDITIONAL
+		FOR i IN [1..n] CREATE
 			isright[i]: x[i] > a;
-		END CONDITIONAL;
+		END FOR;
+	END CONDITIONAL;
 
+	FOR i IN [1..n] CREATE
 		isrightp[i] == SATISFIED(isright[i]);
 
 		WHEN (isrightp[i])
@@ -34,6 +38,15 @@ MODEL beam_parameterised(
 				USE v_left[i];
 		END WHEN;
 	END FOR;
+METHODS
+METHOD specify;
+	FIX P, a, x[1..n];
+END specify;
+METHOD values;
+	a.upper_bound := 100 {m};
+	b.upper_bound := 100 {m};
+	L.upper_bound := 100 {m};
+END values;
 
 END beam_parameterised;
 
