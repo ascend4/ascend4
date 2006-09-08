@@ -247,10 +247,11 @@ lbf = {N*4.448221};
 (* pressure *)
 
 Pa = {kilogram/meter/second^2};
-MPa = {1.0e+6*Pa};
-bar = {1.0e+5*Pa};
-kPa = {1000*Pa};
 pascal = {Pa};
+kPa = {1e3*Pa};
+bar = {1e5*Pa};
+MPa = {1e6*Pa};
+GPa = {1e9*Pa};
 
 atm = {Pa*101325.0};
 mmHg = {133.322*Pa};
