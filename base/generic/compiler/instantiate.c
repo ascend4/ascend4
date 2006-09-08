@@ -174,7 +174,7 @@ long int g_compiler_counter = 1;
 	     changing the instance tree is executed.
 	     At present the compiler cares nothing about this counter,
 	     but it is provided as a service to clients.
-	
+
 	Real applications:
 	1) This variable is used for keeping track of calls to
 	the compiler which will create the need for a total solver system
@@ -361,7 +361,7 @@ void WriteUnexecutedMessage(FILE *f, struct Statement *stat, CONST char *msg)
 
 /**
 	Write Unexecuted Error Message in Pass 3 WUEMPASS3
-	
+
 	This code will emit error messages only on the last
 	iteration of pass3 when trying to clear pending statements.
 	g_iteration is the global iteration counter, and PASS3MAXNUMBER
@@ -866,7 +866,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
     default:
       STATEMENT_ERROR(stat, "Unknown result value type in MakeIndex.\n");
       Asc_Panic(2, NULL, "Unknown result value type in MakeIndex.\n");
-      
+
     }
   } else { /* checking subscripts on dense ALIASES/param'd IS_A statement */
     if (sptr==NULL) {
@@ -894,7 +894,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
       DestroyValue(&value);
       STATEMENT_ERROR(stat, "Bad index to dense alias array");
       Asc_Panic(2, NULL, "Bad index to dense alias array");
-      
+
     }
     /* return NULL; */  /* unreachable */
   }
@@ -1062,7 +1062,7 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
     return NULL;
   default:
     Asc_Panic(2, NULL ,"Unknown result value type.\n");
-    
+
   }
 }
 
@@ -1112,7 +1112,7 @@ struct Instance *AddArrayChild(struct Instance *parentofary,
 
 	This function returns the child pointer because relation functions
 	need it, not because the child is unconnected.
-	
+
 	If rhsinst is not NULL, uses rhsinst instead of creating new one.
 	If rhslist is not NULL, uses rhslist instead of rhsinst or creating.
 
@@ -1431,7 +1431,7 @@ symchar *UniquifyString(char *s, struct set_t *strset)
     }
     Asc_Panic(2, NULL,
               "Unable to generate unique compound alias subscript.\n");
-    
+
   } else {
     ascfree(s);
     return tmp;
@@ -1892,13 +1892,13 @@ int ArgValuesUnassigned(struct Instance *ipass)
 	If needed, args will be expanded, but if you know the length
 	to expect, make args of that size before calling and this
 	will be faster.
-	
+
 	This does not go into the expressions (which may contain other
 	sets themselves) of the set nodes and disassemble them.
 	The list may be safely destroyed, but its contents should not
 	be destroyed with it as they belong to something else in all
 	likelihood.
-	
+
 	@TODO This function should be moved into a set header someplace.
 */
 static
@@ -2220,7 +2220,7 @@ int ArgValueCorrect(struct Instance *inst,
 
 /**
 	evaluate a logical or real relation and see that it is satisfied.
-	
+
 	@BUG baa. needs to be exception safe and is not.
 
 	returns MPIOK (satisfied)
@@ -2229,7 +2229,7 @@ int ArgValueCorrect(struct Instance *inst,
 	returns MPIWAIT (not yet determinable)
 	returns MPIEXCEP (evaluation is impossible due to float/other error)
 	returns MPINOTBOOL (dissatisfied- nonboolean result)
-	
+
 	@param statement should be a rel or logrel.
 */
 static
@@ -2368,7 +2368,7 @@ int InsertParameterInst(struct Instance *parent,
   } else {			/* unknown name */
     STATEMENT_ERROR(statement, "Unknown parameter name.  Never should happen");
     Asc_Panic(2, NULL, "Unknown parameter name.  Never should happen");
-    
+
   }
 }
 
@@ -2384,7 +2384,7 @@ void DestroyParameterInst(struct Instance *i)
   DestroyInstance(i,NULL);
 }
 
-/** 
+/**
 	destroys everything you send it. If you send some arguments in
 	as null, we don't mind.
 */
@@ -2550,7 +2550,7 @@ int MPIMakeSimple(struct Instance *parent,
 	the more likely to fail steps first.
 
 	A successful return value is 1.
-	
+
 	A failure possibly to succeed later is 0.
 	Possible causes will be detailed via the WriteUnexecutedMessage
 	facility.
@@ -2559,7 +2559,7 @@ int MPIMakeSimple(struct Instance *parent,
 	Causes will be detailed via the WSEM facility, in addition return
 	values < 0 have the interpretations given in g_mpi_message[-value]
 	above.
-	
+
 	@NOTE assumes statement is well formed, in terms of
 	arglist of IS_A/IS_REFINED_TO (if there is one) being of correct length.
 	returns fairly quickly for nonmodel and nonparametric
@@ -3216,7 +3216,7 @@ struct parpendingentry {
 /**
 	returns a single instance, if such can be properly derived
 	from the name given.
-	
+
 	Returns NULL if too many or no instances are found.
 	Probably ought to have a return code, but doesn't.
 */
@@ -3698,7 +3698,7 @@ void ConfigureInstFromArgs(struct Instance *inst,
 	At this point there can be no alias children -- all
 	are either WILL_BE or IS_A of constants/arrays, so far as
 	arginst is concerned.
-	
+
 	This must only be called with models when arginst !=NULL.
 	arginst == NULL --> immediate, no action return.
 	inst is expected to be of same type as arginst.
@@ -4134,7 +4134,7 @@ void MakeDummyInstance(CONST struct Name *name,
 	Used for IS_A statement inside a non-matching CASE of a
 	SELECT statement.
 
-	Make a dummy instance for each name in vlisti, but arrays are not expanded 
+	Make a dummy instance for each name in vlisti, but arrays are not expanded
 	over subscripts. The dummy instance is UNIVERSAL.
 */
 static
@@ -4217,7 +4217,7 @@ int ExecuteREF(struct Instance *inst, struct Statement *statement)
 	If problem, returns NULL and err should be consulted.
 	Note this may have some angst around FOR vars, as it
 	should since forvars are not instances.
-	
+
 	Lint is precluding passing a forvar where an instance is required.
 	err should only be consulted if result comes back NULL.
 
@@ -4250,7 +4250,7 @@ struct gl_list_t *FindArgInsts(struct Instance *parent,
 }
 
 /**
-	Find instances: Make sure at least one thing is found for each name item 
+	Find instances: Make sure at least one thing is found for each name item
 	on list (else returned list will be NULL) and return the collected instances.
 */
 static
@@ -4875,7 +4875,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
         Asc_Panic(2, NULL, "Incorrect error response.\n");/*NOTREACHED*/
       default:
         Asc_Panic(2, NULL, "Unknown error response.\n");/*NOTREACHED*/
-        
+
       }
     }
 #ifdef DEBUG_RELS
@@ -5166,10 +5166,10 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
           return 0;
       case lokay:
         Asc_Panic(2, NULL, "Incorrect error response.\n");/*NOTREACHED*/
-        
+
       default:
         Asc_Panic(2, NULL, "Unknown error response.\n");/*NOTREACHED*/
-        
+
       }
     }
   } else{
@@ -5402,7 +5402,7 @@ static struct Instance *CheckExtCallData(struct Instance *inst,
 }
 
 /**
-	This function does the job of creating an instance of a 'black box'	
+	This function does the job of creating an instance of a 'black box'
 	external relation or set of relations.
 */
 static int ExecuteBlackBoxEXT(struct Instance *inst
@@ -6811,7 +6811,7 @@ int CheckFNAME(struct Instance *inst, struct Statement *statement)
 /**
 	Only logrelations and FOR loops of logrelations are allowed inside a
 	conditional statement in Pass3. This function ask for recursively
-	checking these statements 
+	checking these statements
 */
 static
 int Pass3CheckCondStatements(struct Instance *inst,
@@ -6849,7 +6849,7 @@ int Pass3CheckCondStatements(struct Instance *inst,
 }
 
 /**
-	Checking the statement list inside a CONDITIONAL statement in Pass3 
+	Checking the statement list inside a CONDITIONAL statement in Pass3
 */
 static
 int Pass3CheckCOND(struct Instance *inst, struct Statement *statement)
@@ -7386,7 +7386,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
 }
 
 
-/* - - - - - - - - - - - - - 
+/* - - - - - - - - - - - - -
 	Check SELECT Functions
 */
 
@@ -7463,7 +7463,7 @@ int CheckSelectStatementList(struct Instance *inst, struct StatementList *sl)
 
 /**
 	Current checking of the Select statement starts here.
-	
+
 	Checking that the values of the set of values of each CASE of a
 	SELECT statement are appropriate. This is, they
 	are symbol, integer or boolean. The first part of the
@@ -8467,7 +8467,7 @@ void MakeWhenReference(struct Instance *ref,
 
 /**
 	creating list of reference for each CASE in a WHEN: (3) nested WHENs,
-	nested FOR loops etc. 
+	nested FOR loops etc.
 */
 static
 void MakeWhenCaseReferences(struct Instance *inst,
@@ -9494,7 +9494,7 @@ void ExecuteDefaultsInSELECTStat(struct Instance *inst, unsigned long *c,
 	the possibility of different assignments to the same variable in
 	different cases of the select. I need to execute only those in
 	cases mathing the selection variables.
-	
+
 	@TODO It is becoming annoying to have so similar functions, I need
 	to create a robust and general function which considers all the
 	possible applications.
@@ -9682,10 +9682,10 @@ int Pass3ExecuteForStatements(struct Instance *inst,
 /**
 	@NOTE this function must not be called until all the rel,ext
 	statements in sl pass their checks.
-	
+
 	This is because if any of the Executes fail
 	(returning 0) we abort (at least when assert is active).
-	
+
 	@TODO This should be changed.
 */
 static
@@ -10712,7 +10712,7 @@ int Pass3RealCheckFOR (struct Instance *inst, struct Statement *statement)
 }
 
 
-/** 
+/**
 	a currently unused function, with therefore unused subsidiary functions
 */
 static
@@ -12374,7 +12374,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
 
 
 /**
-	@return 1 if the type is uninstantiable as a sim or 0 otherwise 
+	@return 1 if the type is uninstantiable as a sim or 0 otherwise
 */
 static
 int ValidRealInstantiateType(struct TypeDescription *def)
@@ -12410,7 +12410,7 @@ int ValidRealInstantiateType(struct TypeDescription *def)
     return 1;
   default:
     Asc_Panic(2, NULL, "Unknown definition type.\n");			/*NOTREACHED*/
-    
+
   }
 }
 
@@ -12457,7 +12457,7 @@ struct Instance *NewRealInstantiate(struct TypeDescription *def,
     return NULL; /* how did we get here? */
   default:
     Asc_Panic(2, NULL, "Unknown definition type.\n");	/*NOTREACHED*/
-    
+
   }
 }
 

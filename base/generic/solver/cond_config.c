@@ -75,8 +75,8 @@ struct ds_case_list {
    int32 *case_number;
 };
 
-/* 
- * forward declarations 
+/*
+ * forward declarations
  */
 void analyze_when(struct w_when *);
 static void simplified_analyze_when(struct w_when *);
@@ -91,7 +91,7 @@ static int32 g_case_number = 0;
 
 /**
 	Set the ACTIVE bit to value for all the relations
-	included in the case 
+	included in the case
 */
 static void set_rels_status_in_case(struct when_case *cur_case
 		, uint32 value
@@ -100,15 +100,15 @@ static void set_rels_status_in_case(struct when_case *cur_case
   struct rel_relation *rel;
   int32 r,rlen;
 
-  CONSOLE_DEBUG("...");
+  /* CONSOLE_DEBUG("..."); */
 
   rels = when_case_rels_list(cur_case);
   rlen = gl_length(rels);
   for(r=1;r<=rlen;r++) {
     rel = (struct rel_relation *)(gl_fetch(rels,r));
 	if(!value){
-		CONSOLE_DEBUG("INACTIVE REL AT %p",rel);
-	}	
+		/* CONSOLE_DEBUG("INACTIVE REL AT %p",rel); */
+	}
     rel_set_active(rel,value);
   }
 }
@@ -116,7 +116,7 @@ static void set_rels_status_in_case(struct when_case *cur_case
 
 /*
  * Set the ACTIVE bit to value for all the logrelations
- * included in the case 
+ * included in the case
  */
 static void set_logrels_status_in_case(struct when_case *cur_case,
 				       uint32 value)
@@ -136,7 +136,7 @@ static void set_logrels_status_in_case(struct when_case *cur_case,
 
 /*
  * Set the ACTIVE bit to value for all the relations and logrelations
- * included in a when (implicitly or explcitly). 
+ * included in a when (implicitly or explcitly).
  */
 void set_rels_status_in_when(struct w_when *when, uint32 value)
 {
@@ -163,7 +163,7 @@ void set_rels_status_in_when(struct w_when *when, uint32 value)
 }
 
 
-/* 
+/*
  * After a case is found to apply for the current values of the
  * conditional variables, the rel_relations and logrel_relations
  * in such a case are set ACTIVE.
@@ -207,7 +207,7 @@ static void apply_case(struct when_case *cur_case)
   }
 }
 
-/* 
+/*
  * Compare current values of the conditional variables with
  * the set of values in a CASE, and try to find is such
  * values are the same. If they are, then the previous function
@@ -215,7 +215,7 @@ static void apply_case(struct when_case *cur_case)
  */
 
 
-static int32 analyze_case(struct when_case *cur_case, 
+static int32 analyze_case(struct when_case *cur_case,
 			  struct gl_list_t *dvars)
 {
 
@@ -245,7 +245,7 @@ static int32 analyze_case(struct when_case *cur_case,
 }
 
 
-/* 
+/*
  * This function will determine which case of a WHEN statement
  * applies for the current values of the conditional variables.
  * The relations in that case are set ACTIVE
@@ -354,7 +354,7 @@ static void simplified_apply_case(struct when_case *cur_case)
 }
 
 
-/* 
+/*
  * Compare current values of the conditional variables with
  * the set of values in a CASE, and try to find is such
  * values are the same. If they are, then the previous function
@@ -390,7 +390,7 @@ static int32 simplified_analyze_case(struct when_case *cur_case,
 }
 
 
-/* 
+/*
  * This function will determine which case of a WHEN statement
  * applies for the current values of the conditional variables.
  * That case will be set ACTIVE
@@ -567,7 +567,7 @@ void set_inactive_disvars_in_list(struct dis_discrete **dvlist)
 
 
 /*
- * Set the ACTIVE bit to TRUE for all the variables included in 
+ * Set the ACTIVE bit to TRUE for all the variables included in
  * ACTIVE relations.
  */
 void set_active_vars_in_active_rels(struct rel_relation **solverrl)
@@ -591,10 +591,10 @@ void set_active_vars_in_active_rels(struct rel_relation **solverrl)
 }
 
 /*
- * Set the ACTIVE_AT_BND bit to TRUE for all the variables included in 
+ * Set the ACTIVE_AT_BND bit to TRUE for all the variables included in
  * ACTIVE relations.
  */
-static 
+static
 void set_active_vars_at_bnd_in_active_rels(struct rel_relation **solverrl)
 {
   struct var_variable *var;
@@ -617,7 +617,7 @@ void set_active_vars_at_bnd_in_active_rels(struct rel_relation **solverrl)
 
 
 /*
- * Set the ACTIVE bit to TRUE for all the discrete variables included in 
+ * Set the ACTIVE bit to TRUE for all the discrete variables included in
  * ACTIVE logrelations.
  */
 void set_active_disvars_in_active_logrels(struct logrel_relation **solverll)
@@ -688,7 +688,7 @@ void set_active_vars_at_bnd(slv_system_t sys, struct gl_list_t *disvars)
  * Set the INVARIANT flag to TRUE for all the relations invariant with
  * respect to the current boundary(ies)
  */
-void identify_invariant_rels_at_bnd(slv_system_t sys, 
+void identify_invariant_rels_at_bnd(slv_system_t sys,
 				    struct gl_list_t *disvars)
 {
   struct rel_relation **solverrl;
@@ -761,14 +761,14 @@ static int32 case_in_nested_whens(int32 *cases, int32 ncases,
       num_case = when_case_case_number(cur_case);
       if (num_case == -1) {
         if (case_in_nested_whens(cases,ncases,nested_case)) { /* recursion */
-          return 1; 
+          return 1;
 	}
       } else {
         if(case_in_array_of_cases(num_case,cases,ncases)) {
           return 1;
 	}
       }
-    }    
+    }
   }
 
   return 0;
@@ -778,7 +778,7 @@ static int32 case_in_nested_whens(int32 *cases, int32 ncases,
  * If some case of the when belong to the list of cases, the rels
  * in such a case are set as active
  */
-static void set_active_rels_in_cases(int32 *cases, int32 ncases, 
+static void set_active_rels_in_cases(int32 *cases, int32 ncases,
 				     struct w_when *when)
 {
   struct gl_list_t *case_list;
@@ -795,7 +795,7 @@ static void set_active_rels_in_cases(int32 *cases, int32 ncases,
     num_case = when_case_case_number(cur_case);
     if (num_case == -1) { /* nested whens in case */
       if (case_in_nested_whens(cases,ncases,cur_case)) {
-        when_case_set_active(cur_case,TRUE); 
+        when_case_set_active(cur_case,TRUE);
         set_rels_status_in_case(cur_case,TRUE);
         set_logrels_status_in_case(cur_case,TRUE);
         whens = when_case_whens_list(cur_case);
@@ -807,9 +807,9 @@ static void set_active_rels_in_cases(int32 *cases, int32 ncases,
       }
     } else {
       if(case_in_array_of_cases(num_case,cases,ncases)) {
-        when_case_set_active(cur_case,TRUE); 
+        when_case_set_active(cur_case,TRUE);
         set_rels_status_in_case(cur_case,TRUE);
-        set_logrels_status_in_case(cur_case,TRUE);       
+        set_logrels_status_in_case(cur_case,TRUE);
       }
     }
   }
@@ -821,7 +821,7 @@ static void set_active_rels_in_cases(int32 *cases, int32 ncases,
  * set as active the relations corresponding to the cases passed
  * as argument in cases.
  */
-void set_active_rels_in_subregion(slv_system_t sys, int32 *cases, 
+void set_active_rels_in_subregion(slv_system_t sys, int32 *cases,
 				  int32 ncases, struct gl_list_t *disvars)
 {
   struct rel_relation **solverrl;
@@ -867,7 +867,7 @@ static void set_variant_rels_in_subregion(struct rel_relation **rlist)
 
   for (c = 0; rlist[c]!= NULL; c++) {
     rel = rlist[c];
-    if (rel_active(rel) && (!rel_invariant(rel)) 
+    if (rel_active(rel) && (!rel_invariant(rel))
         && rel_included(rel) && rel_equality(rel)) {
       rel_set_in_cur_subregion(rel,TRUE);
     }
@@ -918,7 +918,7 @@ void set_active_vars_in_subregion(slv_system_t sys)
  * pattern) of the different alternatives in a conditional
  * model. So, alternatives that have the same incidence
  * pattern can be identified and the combinatorial cosistency
- * analysis (proper selection of the degrees of freedom in a 
+ * analysis (proper selection of the degrees of freedom in a
  * conditional model) can be simplified. This current
  * implementation does not handle nested WHENs. So, if a WHEN have
  * a nested WHEN, the outter most WHEN is considered as a WHEN
@@ -1026,14 +1026,14 @@ static int32 compare_alternative_cases(struct when_case *cur_case1,
   for (v=0; v<nvar1; v++) {
     ind1 = ninc1[v];
     ind2 = ninc2[v];
-  
+
     if (ind1 != ind2) {
 #if DEBUG_PRE_ANALYSIS
       FPRINTF(ASCERR,"Incidences are different in CASEs\n");
       FPRINTF(ASCERR,"index in case A =%d  index in case B =%d\n",ind1,ind2);
 #endif /* DEBUG_PRE_ANALYSIS */
       return 0;
-    } 
+    }
   }
 
   rel_list1 = when_case_rels_list(cur_case1);
@@ -1109,7 +1109,7 @@ static int32 compare_alternative_structures_in_when(struct w_when *when)
 #if DEBUG_PRE_ANALYSIS
         FPRINTF(ASCERR,"CASEs have different structure\n");
 #endif /* DEBUG_PRE_ANALYSIS */
-        return 0;        
+        return 0;
       }
     }
     return 1;
@@ -1123,7 +1123,7 @@ static int32 compare_alternative_structures_in_when(struct w_when *when)
 }
 
 /*
- * Define values for the flag incident_in_case of the variables in the 
+ * Define values for the flag incident_in_case of the variables in the
  * master list
  */
 static void set_incident_in_case_status(struct var_variable **vlist,
@@ -1142,10 +1142,10 @@ static void set_incident_in_case_status(struct var_variable **vlist,
  * Get the list of master indices of the variables incident in a
  * CASE
  */
-static void get_incidences_in_case(struct when_case *cur_case, 
+static void get_incidences_in_case(struct when_case *cur_case,
 			    struct var_variable **mastervl)
 {
-  struct gl_list_t *rels; 
+  struct gl_list_t *rels;
   struct rel_relation *rel;
   struct var_variable **var_list;
   struct var_variable *var;
@@ -1163,7 +1163,7 @@ static void get_incidences_in_case(struct when_case *cur_case,
       var_list = rel_incidence_list_to_modify(rel);
       for (v=0; v<vlen; v++) {
        var = var_list[v];
-       var_set_incident_in_case(var,TRUE);       
+       var_set_incident_in_case(var,TRUE);
       }
     }
   }
@@ -1236,7 +1236,7 @@ static void order_relations_by_incidences(struct gl_list_t *scratch)
         vindex = var_ind[r][v];
         rind =r;
         break;
-      } 
+      }
     }
     for (rin=0; rin<rlen; rin++) {
       vind = var_ind[rin][v];
@@ -1256,7 +1256,7 @@ static void order_relations_by_incidences(struct gl_list_t *scratch)
 		  }
                   break;
 		}
-	      } 
+	      }
 	    }
 	  }
 	}
@@ -1289,7 +1289,7 @@ static void order_relations_by_incidences(struct gl_list_t *scratch)
 }
 
 /*
- * Order the list of relations of a CASE according to the number of 
+ * Order the list of relations of a CASE according to the number of
  * incidences and index of the incidences
  */
 static void order_relations_in_case(struct when_case *cur_case)
@@ -1316,7 +1316,7 @@ static void order_relations_in_case(struct when_case *cur_case)
         rel = (struct rel_relation *)(gl_fetch(rels,r));
         num_inc[r-1] = rel_n_incidences(rel);
       }
- 
+
       /* order number of incidences */
       aux = 0;
       while (aux < rlen) {
@@ -1348,7 +1348,7 @@ static void order_relations_in_case(struct when_case *cur_case)
         rcount = ordered_num_inc[r];
         for (rin=0; rin<rlen;rin++) {
           if (num_inc[rin] >= 0) {
-            rel = (struct rel_relation *)(gl_fetch(rels,rin+1));        
+            rel = (struct rel_relation *)(gl_fetch(rels,rin+1));
             rind = rel_n_incidences(rel);
             if (rcount == rind) {
               gl_append_ptr(new_rels,rel);
@@ -1359,7 +1359,7 @@ static void order_relations_in_case(struct when_case *cur_case)
         }
       }
 
-      /* 
+      /*
        * order relations with same order of incidences according to
        * the master indices of their incidences
        */
@@ -1389,13 +1389,13 @@ static void order_relations_in_case(struct when_case *cur_case)
            order_relations_by_incidences(scratch);
            for (r=1; r<=glob_count - aux + 1; r++) {
             rel = (struct rel_relation *)(gl_fetch(scratch,r));
-            gl_append_ptr(tmp,rel); 
+            gl_append_ptr(tmp,rel);
 	   }
            gl_destroy(scratch);
 	 } else {
             rel = (struct rel_relation *)(gl_fetch(rels,glob_count+1));
-            gl_append_ptr(tmp,rel); 
-	 } 
+            gl_append_ptr(tmp,rel);
+	 }
          aux = glob_count+1;
          glob_count = aux;
        }
@@ -1414,7 +1414,7 @@ static void order_relations_in_case(struct when_case *cur_case)
 
 
 /*
- * Analyzes (get number of relations and variables, get global list of 
+ * Analyzes (get number of relations and variables, get global list of
  * incident variables, order relation and variables by master index)
  * a CASE of a WHEN statement
  */
@@ -1430,7 +1430,7 @@ static int32 analyze_structure_of_case(struct when_case *cur_case,
 #if DEBUG_PRE_ANALYSIS
   FPRINTF(ASCERR,"case # = %d  \n",when_case_case_number(cur_case));
 #endif /* DEBUG_PRE_ANALYSIS */
-/* 
+/*
  * No nested WHENs right now
  * Here we'll need to recursively call
  * the analysis of the nested when and
@@ -1466,8 +1466,8 @@ static int32 analyze_structure_of_case(struct when_case *cur_case,
 
 /*
  * analyzes the structure of the different alternatives (CASES)
- * in a WHEN statement so  that we can find out later if it is 
- * necessary to perform a combinatorial search for a consistent 
+ * in a WHEN statement so  that we can find out later if it is
+ * necessary to perform a combinatorial search for a consistent
  * variable partitioning
  */
 
@@ -1517,7 +1517,7 @@ static int32 analyze_alternative_structures_in_when(struct w_when *when,
 
 /*
  *-------------------------------------------
- * ENUMERATION OF CASES 
+ * ENUMERATION OF CASES
  *------------------------------------------
  */
 
@@ -1563,7 +1563,7 @@ void enumerate_cases_in_when(struct w_when *when)
       g_case_number++;
       when_case_set_case_number(cur_case,g_case_number);
 #if CASE_NUMBER
-      FPRINTF(ASCERR,"Case number = %d \n", 
+      FPRINTF(ASCERR,"Case number = %d \n",
                            when_case_case_number(cur_case));
 #endif /* CASE NUMBER*/
     } else {
@@ -1779,9 +1779,9 @@ void configure_conditional_problem(int32 numwhens,
     result = analyze_alternative_structures_in_when(when,mastervl);
   }
 
-  /* 
+  /*
    *All rel_relations and logrel_relations explicitly or implicitly
-   * (models) inside a w_when are deactivated 
+   * (models) inside a w_when are deactivated
    */
   for (w = 0; w < numwhens; w++) {
     when = whenlist[w];
@@ -1793,9 +1793,9 @@ void configure_conditional_problem(int32 numwhens,
   /* All of the rels which are ACTIVE, are also INVARIANT */
   set_active_rels_as_invariant(solverrl);
 
-  /* 
+  /*
    * Analyze whens and find active relations and logrelations
-   * in each of them 
+   * in each of them
    */
 
   for (w = 0; w < numwhens; w++) {
@@ -1901,7 +1901,7 @@ int32 system_reanalyze(slv_system_t sys, SlvBackendToken inst)
 }
 
 
-/* 
+/*
  * The next four functions are not currently in use, but they may
  * in the future. See the header
  */
@@ -1990,7 +1990,7 @@ int32 build_logrel_solver_from_master(struct logrel_relation **masterll,
  * Build the var solver list from the master list in the case of our
  * problem contains when's.  This function is not currently in use. It
  * could be use to build a solver var list of ACTIVE variables (Vars
- * incident in ACTIVE relations). It returns the number of variables 
+ * incident in ACTIVE relations). It returns the number of variables
  * in the list.
  */
 int32 build_var_solver_from_master(struct var_variable **mastervl,
