@@ -2592,8 +2592,21 @@ static int COI_CALL slv9_conopt_readmatrix(
       low = var_lower_bound(var);
       up = var_upper_bound(var);
       uplow = fabs( up - low);
-      lower[count] = -uplow > -CONOPT_BOUNDLIMIT ? -uplow : -0.5*CONOPT_BOUNDLIMIT;
-      upper[count] = uplow < CONOPT_BOUNDLIMIT ? uplow : 0.5*CONOPT_BOUNDLIMIT;
+
+      if(-uplow > -CONOPT_BOUNDLIMIT){
+	      lower[count] = -uplow;
+      }else{
+          lower[count] = -0.5*CONOPT_BOUNDLIMIT;
+          CONSOLE_DEBUG("REDUCING LOWER BOUND LIMIT FOR VAR %d TO %e",count,lower[count]);
+      }
+
+      if(uplow < CONOPT_BOUNDLIMIT){
+          upper[count] = uplow;
+      }else{
+          upper[count] = 0.5*CONOPT_BOUNDLIMIT;
+          CONSOLE_DEBUG("REDUCING UPPER BOUND LIMIT FOR VAR %d TO %e",count,upper[count]);
+      }
+
       curr[count] = 0.5 * nominal;
       count++;
     }
@@ -2816,7 +2829,7 @@ static int COI_CALL slv9_conopt_fdeval(
       }
       *g = obj;
     } else {
-      FPRINTF(ASCERR,"Wrong number of constraint in COIFDE");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Wrong number of constraints");
       return 1;
     }
   }
@@ -2840,7 +2853,7 @@ static int COI_CALL slv9_conopt_fdeval(
         jac[v] = deriv;
       }
     } else {
-      FPRINTF(ASCERR,"Wrong number of constraint in COIFDE");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Wrong number of constraints");
 	  return 1;
     }
   }
@@ -2873,6 +2886,41 @@ static int COI_CALL slv9_conopt_status(int *modsta, int *solsta, int *iter
   sys->con.obj = *objval;
 
   return 0;
+}
+
+/**
+	CONOPT error message reporting
+*/
+int COI_CALL slv9_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
+		, double* USRMEM, char* MSG, int LENMSG
+){
+	slv9_system_t sys;
+	char *varname=NULL;
+	struct var_variable **vp;
+
+	sys = (slv9_system_t)USRMEM;
+
+
+	if(*COLNO!=-1){
+		vp=sys->mvlist;
+		vp = vp + *COLNO;
+		assert(*vp!=NULL);
+		varname= var_make_name(SERVER,*vp);
+	}
+
+	ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+	if(*ROWNO == -1){
+	    FPRINTF(ASCERR,"Variable %d (Maybe it's '%s'): ",*COLNO,varname);
+		ASC_FREE(varname);
+	}else if(*COLNO == -1 ){
+	    FPRINTF(ASCERR,"Relation %d: ",*ROWNO); 
+	}else{
+	    FPRINTF(ASCERR,"Variable %d (Maybe it's '%s') appearing in relation %d: ",*COLNO,varname,*ROWNO);
+		ASC_FREE(varname);
+	}
+	FPRINTF(ASCERR,"%*s", *MSGLEN, MSG);
+	error_reporter_end_flush();
+	return 0;
 }
 
 
@@ -2988,8 +3036,7 @@ static int COI_CALL slv9_conopt_option(
   return 0;
 }
 
-
-#if 0 /* not in API any more */
+#if 0 /* see slv_conopt_iterate */
 /*
  * COIPSZ communicates the model size and structure to CONOPT
  * COIPSZ(nintgr, ipsz, nreal, rpsz, usrmem)
@@ -3056,10 +3103,11 @@ static void slv9_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
 
 
 /**
-	slv_conopt iterate calls conopt start, which calls coicsm
-	to starts CONOPT. The use of conopt_start is a hack to avoid
-	unresolved external during the linking of the CONOPT library.
-	
+	Perform CONOPT solution. For the details of what this does in the larger
+	context of CMSlv, read (???)
+
+	@TODO document this.
+
 	@see conopt.h
 */
 static void slv_conopt_iterate(slv9_system_t sys){
@@ -3094,7 +3142,7 @@ static void slv_conopt_iterate(slv9_system_t sys){
   COIDEF_Solution(sys->con.cntvect, &slv9_conopt_solution);
   COIDEF_Status(sys->con.cntvect, &slv9_conopt_status);
   COIDEF_Message(sys->con.cntvect, &asc_conopt_message);
-  COIDEF_ErrMsg(sys->con.cntvect, &asc_conopt_errmsg);
+  COIDEF_ErrMsg(sys->con.cntvect, &slv9_conopt_errmsg);
   COIDEF_Progress(sys->con.cntvect, &asc_conopt_progress);
 
   /** @TODO implement the following options as well... */
@@ -3174,25 +3222,22 @@ static void create_opt_matrix_and_vectors(int32 num_opt_eqns,
 
   num_vars = num_opt_eqns - 1 + n_subregions;
 
-  coeff_matrix->cols = (struct opt_vector *)
-                   (ascmalloc(n_subregions*sizeof(struct opt_vector)));
+  coeff_matrix->cols = ASC_NEW_ARRAY(struct opt_vector *,n_subregions);
 
   if (g_optimizing) {
-    multipliers->cols = (struct opt_vector *)
-                   (ascmalloc(n_subregions*sizeof(struct opt_vector)));
+    multipliers->cols = ASC_NEW_ARRAY(struct opt_vector *,n_subregions);
   }
 
   for (c=0; c<n_subregions; c++) {
-    coeff_matrix->cols[c].element =
-                    (real64 *)(ascmalloc(num_opt_eqns*sizeof(real64)));
+    coeff_matrix->cols[c].element = ASC_NEW_ARRAY(real64,num_opt_eqns);
   }
-  opt_var_values->element = (real64 *)(ascmalloc(num_vars*sizeof(real64)));
+  opt_var_values->element = ASC_NEW_ARRAY(real64,num_vars);
 
   if (g_optimizing) {
-    gradient->element = (real64 *)(ascmalloc(num_opt_eqns*sizeof(real64)));
+    gradient->element = ASC_NEW_ARRAY(real64,num_opt_eqns);
   } else {
-    invariant->element = (real64 *)(ascmalloc(num_opt_eqns*sizeof(real64)));
-    variant->element = (real64 *)(ascmalloc(num_opt_eqns*sizeof(real64)));
+    invariant->element = ASC_NEW_ARRAY(real64,num_opt_eqns);
+    variant->element = ASC_NEW_ARRAY(real64,num_opt_eqns);
   }
 }
 
@@ -4143,7 +4188,7 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 
 #if SHOW_OPTIMIZATION_DETAILS
   int32 nc;  /* stop gcc whining about unused variables */
-#endif /* SHOW_OPTIMIZATION_DETAILS */
+#endif
 
   sys = SLV9(asys);
   check_system(sys);
@@ -4289,17 +4334,13 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
     while (global_decrease == 0) {
       niter++;
       if (niter > ITER_BIS_LIMIT) {
-        FPRINTF(ASCERR,"ERROR:  (slv9) optimize_at_boundary\n");
-        FPRINTF(ASCERR,"Could not reduce the residuals of all the\n");
-        FPRINTF(ASCERR,"neighboring subregions\n");
+        ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Could not reduce the residuals of all the neighboring subregions.");
         return_value = 0;
         break;
       }
 
       if ( (factor*factor*obj_val) < OBJ_TOL) {
-        FPRINTF(ASCERR,"(slv9) optimize_at_boundary\n");
-        FPRINTF(ASCERR,"Could not reduce the residuals of all the\n");
-        FPRINTF(ASCERR,"neighboring subregions\n");
+        ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Could not reduce the residuals of all the neighboring subregions.");
         return_value = 0;
         break;
       }
@@ -4795,25 +4836,21 @@ static int32 get_solvers_tokens(  slv9_system_t sys, slv_system_t server)
    * this solver's system will not be created.
    */
   if ( num_log_reg == -1 ) {
-    FPRINTF(ASCERR,"\n");
     FPRINTF(ASCERR,"Solver %s not available\n",LOGSOLVER_OPTION);
     return 1;
   }
 
   if ( num_nl_reg == -1 ) {
-    FPRINTF(ASCERR,"\n");
     FPRINTF(ASCERR,"Solver %s not available\n",NONLISOLVER_OPTION);
     return 1;
   }
 
   if ( num_opt_reg == -1 ) {
-    FPRINTF(ASCERR,"\n");
     FPRINTF(ASCERR,"Solver %s not available\n",OPTSOLVER_OPTION);
     return 1;
   }
 
   if ( num_cond_reg == -1 ) {
-    FPRINTF(ASCERR,"\n");
     FPRINTF(ASCERR,"Solver CMSlv was not registered\n");
     return 1;
   }
@@ -5301,8 +5338,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
     slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
     slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
     store_real_pre_values(server,&(rvalues));
-    FPRINTF(ASCERR,"\n");
-    FPRINTF(ASCERR,"Solving Optimization Problem at boundary: \n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Solving Optimization Problem at boundary...");
     if(optimize_at_boundary(server,asys,&(n_subregions),
                             subregions,&(cur_subregion),disvars,&(rvalues))){
       store_real_cur_values(server,&(rvalues));
@@ -5311,9 +5347,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
         vfilter.matchbits = (VAR_ACTIVE_AT_BND | VAR_INCIDENT
 			     | VAR_SVAR | VAR_FIXED);
         vfilter.matchvalue = (VAR_ACTIVE_AT_BND | VAR_INCIDENT | VAR_SVAR);
-        FPRINTF(ASCERR,"\n");
-        FPRINTF(ASCERR,"Boundary(ies) crossed \n");
-        FPRINTF(ASCERR,"Returning to boundary first crossed \n");
+        ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Boundary(ies) crossed. Returning to boundary first crossed...");
         factor = return_to_first_boundary(server,asys,&rvalues,&vfilter);
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);
@@ -5327,9 +5361,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
       destroy_array(rvalues.pre_values);
       sys->s.converged  = TRUE;
       sys->s.ready_to_solve = FALSE;
-       FPRINTF(ASCERR,"(slv9) slv9_iterate\n");
-      FPRINTF(ASCERR," No progress can be achieved: \n");
-      FPRINTF(ASCERR," Solution at current boundary \n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No progress can be achieved: solution at current boundary.");
       slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
       slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
     }
@@ -5346,8 +5378,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
       unsuccessful = update_unsuccessful(sys,&status);
       if (unsuccessful) {
         sys->s.ready_to_solve = !unsuccessful;
-        FPRINTF(ASCERR,"(slv9) slv9_iterate\n");
-        FPRINTF(ASCERR," Not convergence in logical solver \n");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-convergence in logical solver.");
         slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
         slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
         gl_destroy(disvars);
@@ -5378,7 +5409,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
       set_nonbasic_status_in_var_list(server,FALSE);
       (sys->nliter)++;
       if (sys->nliter == 1  || system_was_reanalyzed ==1) {
-        FPRINTF(ASCERR,"Iterating with Optimizer: \n");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Iterating with Optimizer...");
         slv_presolve(server);
         slv_get_status(server,&status);
         update_real_status(&(sys->s),&status,0);
@@ -5415,7 +5446,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
       store_real_pre_values(server,&(rvalues));
       (sys->nliter)++;
       if (sys->nliter == 1  || system_was_reanalyzed ==1) {
-        FPRINTF(ASCERR,"Iterating with Non Linear solver.\n");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Iterating with Non Linear solver...");
         slv_presolve(server);
         slv_get_status(server,&status);
         update_struct_info(sys,&status);
@@ -5428,8 +5459,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
         reset_cost(sys->s.cost,sys->s.costsize);
 #if TEST_CONSISTENCY
         ID_and_storage_subregion_information(server,asys);
-        FPRINTF(ASCERR,"New region\n");
-        FPRINTF(ASCERR,"Iteration = %d\n",sys->s.block.iteration);
+        CONSOLE_DEBUG("New region, Iteration = %d\n",sys->s.block.iteration);
 #endif /* TEST_CONSISTENCY  */
       }
       slv_get_status(server,&status);
@@ -5468,9 +5498,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
         vfilter.matchbits = (VAR_ACTIVE | VAR_INCIDENT
 			     | VAR_SVAR | VAR_FIXED);
         vfilter.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
-        FPRINTF(ASCERR,"\n");
-        FPRINTF(ASCERR,"Boundary(ies) crossed \n");
-        FPRINTF(ASCERR,"Returning to boundary first crossed \n");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Boundary(ies) crossed. Returning to boundary first crossed...");
         factor = return_to_first_boundary(server,asys,&rvalues,&vfilter);
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);
@@ -5493,8 +5521,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
 #endif /* TEST_CONSISTENCY */
 
         sys->s.ready_to_solve = !unsuccessful;
-        FPRINTF(ASCERR,"(slv9) slv9_iterate\n");
-        FPRINTF(ASCERR," Not convergence in nonlinear step\n");
+        ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Non-convergence in nonlinear step.");
       }
     } else {
       sys->s.ready_to_solve = !sys->s.converged;
@@ -5514,8 +5541,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
 
       if (unsuccessful) {
         sys->s.ready_to_solve = !unsuccessful;
-        FPRINTF(ASCERR,"(slv9) slv9_iterate\n");
-        FPRINTF(ASCERR," Not convergence in nonlinear step\n");
+        ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Non-convergence in nonlinear step.");
       }
       destroy_array(rvalues.cur_values);
       destroy_array(rvalues.pre_values);
@@ -5546,8 +5572,7 @@ static mtx_matrix_t slv9_get_matrix(slv_system_t server, SlvClientToken sys)
 {
   if (server == NULL || sys==NULL) return NULL;
   if (check_system(SLV9(sys))) return NULL;
-  FPRINTF(ASCERR,"ERROR:  (slv9) slv9_get_matrix\n");
-  FPRINTF(ASCERR,"         slv9 does not get matrix.\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv9 does not get matrix.");
   return( NULL );
 }
 
@@ -5587,7 +5612,7 @@ static int slv9_destroy(slv_system_t server, SlvClientToken asys)
 int slv9_register(SlvFunctionsT *sft)
 {
   if (sft==NULL)  {
-    FPRINTF(ASCERR,"slv9_register called with NULL pointer\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv9_register called with NULL pointer");
     return 1;
   }
 

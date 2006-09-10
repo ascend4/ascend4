@@ -1500,8 +1500,7 @@ int slv_log_block_partition(slv_system_t sys)
   mtx_set_order(mtx,order);
 
   if (slv_std_make_log_incidence_mtx(sys,mtx,&dvf,&lrf)) {
-    FPRINTF(stderr,
-      "slv_log_block_partition: failure in creating incidence matrix.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"failure in creating incidence matrix.");
     mtx_destroy(mtx);
     return 1;
   }
@@ -1510,29 +1509,21 @@ int slv_log_block_partition(slv_system_t sys)
   rank = mtx_symbolic_rank(mtx);
   if (rank == 0 ) return 1;
   if (rank < nrow) {
-    FPRINTF(stderr,"rank<nrow in slv_log_block_partition\n");
-    FPRINTF(stderr,"dependent logical relations ? \n");
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"rank < nrow. Dependent logical relations?");
   }
   if (rank < ncol) {
     if ( nrow != rank) {
-      FPRINTF(stderr,"rank<ncol and nrow!=rank in slv_log_block_partition.\n");
-      FPRINTF(stderr,"Excess of columns ? \n");
+	  ERROR_REPORTER_HERE(ASC_PROG_WARNING,"rank < ncol and nrow != rank. Excess of columns?");
     } else {
-      FPRINTF(stderr,"rank<ncol but nrow==rank in slv_log_block_partition.\n");
-      FPRINTF(stderr,"Degrees of freedom ? \n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"rank<ncol but nrow==rank. Degrees of freedom?");
     }
   }
   if (ncol == nrow) {
     if (ncol == rank) {
-      FPRINTF(stderr,"\n");
-      FPRINTF(stderr,
-             "System of logical relations does not need Logic Inference \n");
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"System of logical relations does not need Logic Inference.");
     }
     if (ncol != rank) {
-      FPRINTF(stderr,"but ncol!=rank.\n");
-      FPRINTF(stderr,"Rank deficient ? \n");
-    } else {
-      FPRINTF(stderr,"\n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"but ncol!=rank. Rank deficient?");
     }
   }
   mtx_partition(mtx);

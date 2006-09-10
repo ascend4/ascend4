@@ -17,9 +17,7 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	This file is just a place-holder at the moment. It will be used to
-	implement the DYNAMIC_CONOPT interface, which will allow the CONOPT
-	solver to be dlopened at runtime.
+	This file allows CONOPT to be dlopened at runtime.
 *//*
 	By John Pye
 	Based on conopt.c by Vicente Rico Ramirez (created 05/97)
