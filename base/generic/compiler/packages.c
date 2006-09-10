@@ -135,6 +135,8 @@ int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
 	if(file==NULL){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialname);
 		return 1;
+	}else{
+		/* file was found, and is DLL/SO */
 	}
 
 	fp1 = ospath_new_from_posix(partialname);
@@ -155,7 +157,7 @@ int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
 	}
 
 	if(result){
-		CONSOLE_DEBUG("FAILED TO LOAD LIBRARY '%s' (error %d)",partialname,result);
+		CONSOLE_DEBUG("FAILED TO IMPORT '%s' (error %d)",partialname,result);
     	result = 1;
 	}else{
 		if(initfunc==NULL){

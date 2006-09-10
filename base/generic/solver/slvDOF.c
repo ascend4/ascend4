@@ -1017,14 +1017,14 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
   d = 1;
   combinations = 0;
 #if DEBUG_CONSISTENCY_ANALYSIS
-        FPRINTF(ASCERR,"S e a r c h i n g \n");
+        CONSOLE_DEBUG("S e a r c h i n g");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
   result = do_search_consistency_combinations(server,bollist,dlen,d,
 					      &(combinations),terminate);
 
   if (result != 1) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-    FPRINTF(ASCERR,"returning failed search after S e a r c h i n g\n");
+    CONSOLE_DEBUG("returning failed search after S e a r c h i n g");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
     return result;
   }  
@@ -1043,7 +1043,7 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
       mvar = vmlist[v];
       if(var_apply_filter(mvar,&vfilter)) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-        FPRINTF(ASCERR,"Eligible index = %d \n",v);
+        CONSOLE_DEBUG("Eligible index = %d",v);
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
         globeli[elnum] = v;
         elnum++;
@@ -1058,8 +1058,7 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
   if ((*terminate) == 1) {
     if (elnum != 0) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-      FPRINTF(ASCERR,"ERROR:  All alternatives are square but the \n");
-      FPRINTF(ASCERR,"        Eligible set is not null\n");
+      CONSOLE_DEBUG("ERROR: All alternatives are square but the Eligible set is not null");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
       destroy_array(globeli);
     }
@@ -1067,7 +1066,7 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
   } else {
     if (elnum == 0) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-      FPRINTF(ASCERR,"No globally eligible variables to be fixed.\n");
+      CONSOLE_DEBUG("No globally eligible variables to be fixed.");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
       return 0;
     }
@@ -1078,14 +1077,14 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
       var_set_fixed(mvar,TRUE);
       var_set_potentially_fixed(mvar,TRUE);
 #if DEBUG_CONSISTENCY_ANALYSIS
-      FPRINTF(ASCERR,"Fixing index = %d \n",globeli[v]);
-      FPRINTF(ASCERR,"N e s t e d   S e a r c h \n");
+      CONSOLE_DEBUG("Fixing index = %d",globeli[v]);
+      CONSOLE_DEBUG("N e s t e d   S e a r c h");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
       result = perform_combinatorial_consistency_analysis(server,bollist,
 							  &iter);
       if (result != 1) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-        FPRINTF(ASCERR,"%d eliminated\n",globeli[v]);
+        CONSOLE_DEBUG("%d eliminated",globeli[v]);
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
         var_set_fixed(mvar,FALSE);
         var_set_potentially_fixed(mvar,FALSE);
@@ -1094,7 +1093,7 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
         if (iter == 1) {
           (*terminate) = 1;
 #if DEBUG_CONSISTENCY_ANALYSIS
-          FPRINTF(ASCERR,"%d Acepted \n",globeli[v]);
+          CONSOLE_DEBUG("%d accepted",globeli[v]);
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
           destroy_array(globeli);
           return 1;
@@ -1107,7 +1106,7 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
     }
     destroy_array(globeli);
 #if DEBUG_CONSISTENCY_ANALYSIS
-    FPRINTF(ASCERR,"returning 0 after nested search\n");
+    CONSOLE_DEBUG("returning 0 after nested search");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
     return 0;
   }
@@ -1161,10 +1160,10 @@ static int32 get_globally_consistent_set(slv_system_t server,
   if (result != 1) {
     if (terminate == 0) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-      FPRINTF(ASCERR,"ERROR: some alternatives are either singular or\n");
-      FPRINTF(ASCERR,"overspecified. All the alternatives have to be\n");
-      FPRINTF(ASCERR,
-	      "either square or underspecified to complete the analysis\n");
+      CONSOLE_DEBUG("ERROR: some alternatives are either singular or"
+		" overspecified. All the alternatives have to be"
+		" either square or underspecified to complete the analysis"
+	  );
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
     }
     return 0;
@@ -1191,22 +1190,21 @@ static int32 get_globally_consistent_set(slv_system_t server,
   if (elnum == 0) {
     if (terminate == 0) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-      FPRINTF(ASCERR,
-	      "Some alternatives are underspecified, but there does\n");
-      FPRINTF(ASCERR,"not exist a set of eligible variables consistent \n");
-      FPRINTF(ASCERR,"with all the alternatives\n");
+      CONSOLE_DEBUG("Some alternatives are underspecified, but there does"
+		"not exist a set of eligible variables consistent "
+		"with all the alternatives"
+	  );
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
     } else {
 #if DEBUG_CONSISTENCY_ANALYSIS
-      FPRINTF(ASCERR,"All alternatives are already square\n");
+      CONSOLE_DEBUG("All alternatives are already square");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
     }
     return 0;
   } else {
     if (terminate == 1) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-      FPRINTF(ASCERR,"All alternatives are square but the \n");
-      FPRINTF(ASCERR,"Eligible set is not null\n");
+      CONSOLE_DEBUG("All alternatives are square but the Eligible set is not null");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
     }
   }
@@ -1281,7 +1279,7 @@ int32 get_globally_consistent_eligible(slv_system_t server,int32 **eliset)
   int32 result, d, dnum;
 
   if (server==NULL || eliset == NULL) {
-    FPRINTF(ASCERR," get_globally_consistent_eligible called with NULL.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"get_globally_consistent_eligible called with NULL.");
     return 0;
   }
 
@@ -1290,22 +1288,19 @@ int32 get_globally_consistent_eligible(slv_system_t server,int32 **eliset)
   need_consistency_analysis = slv_need_consistency(server);
 
   if(boolist == NULL ) {
-    FPRINTF(ASCERR,"ERROR:  get_globally_consistent_eligible\n");
-    FPRINTF(ASCERR,"        Discrete Variable list was never set.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Discrete Variable list was never set.");
     return 0;
   }
 
   if (!(need_consistency_analysis)) {
-    FPRINTF(ASCERR,"Global analysis is not required\n");
-    FPRINTF(ASCERR,"All the alternatives have the same structure \n");
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Global analysis is not required. All the alternatives have the same structure.");
     return 1;
   }
 
   bana = get_list_of_booleans_for_analysis(server);
 
   if (bana == NULL) {
-    FPRINTF(ASCERR,"ERROR:  get_globally_consistent_eligible \n");
-    FPRINTF(ASCERR,"        List of boolean vars could not be found\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"List of boolean vars could not be found");
     return 0;
   }
 
@@ -1349,7 +1344,7 @@ int32 consistency_analysis(slv_system_t server,int32 **fixed)
   int32 d, dnum;
 
   if (server==NULL || fixed == NULL) {
-    FPRINTF(ASCERR,"consistency_analysis called with NULL.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"consistency_analysis called with NULL.");
     return 0;
   }
 
@@ -1358,22 +1353,20 @@ int32 consistency_analysis(slv_system_t server,int32 **fixed)
   need_consistency_analysis = slv_need_consistency(server);;
 
   if(boolist == NULL ) {
-    FPRINTF(ASCERR,"ERROR:  consistency_analysis\n");
-    FPRINTF(ASCERR,"        Discrete Variable list was never set.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Discrete Variable list was never set.");
     return 0;
   }
 
   if (!(need_consistency_analysis)) {
-    FPRINTF(ASCERR,"Consistency analysis is not required\n");
-    FPRINTF(ASCERR,"All the alternatives have the same structure \n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Consistency analysis is not required."
+		" All the alternatives have the same structure");
     return 1;
   }
 
   bana = get_list_of_booleans_for_analysis(server);
 
   if (bana == NULL || gl_length(bana) == 0) {
-    FPRINTF(ASCERR,"ERROR:  consistency_analysis\n");
-    FPRINTF(ASCERR,"        List of boolean vars could not be found\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"List of boolean vars could not be found.");
     return 0;
   }
 
@@ -1392,12 +1385,13 @@ int32 consistency_analysis(slv_system_t server,int32 **fixed)
   vfilter.matchvalue = (VAR_POTENTIALLY_FIXED);
 
   result = perform_combinatorial_consistency_analysis(server,bana,&terminate);
+  CONSOLE_DEBUG("perform_combinatorial_consistency_analysis gave %d",result);
   if (result == 1) {
   /*
    * Getting the set of eligible variables
    */
     elnum = slv_count_master_vars(server,&vfilter);
-    *fixed = (int32 *)ascmalloc((elnum+1)*sizeof(int32));
+    *fixed = ASC_NEW_ARRAY(int32,elnum+1);
     elnum = 0;
     for (v=0; v<mnum; v++) {
       mvar = vmlist[v];
@@ -1409,6 +1403,7 @@ int32 consistency_analysis(slv_system_t server,int32 **fixed)
       }
     }
     (*fixed)[elnum] = -1;
+	CONSOLE_DEBUG("fixed[%d]=-1",elnum);
 
     for (d=0;d<dnum; d++) {
       dvar = boolist[d];
