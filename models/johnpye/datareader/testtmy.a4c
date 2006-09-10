@@ -21,7 +21,7 @@ MODEL testtmy;
 
 	(* source data: http://rredc.nrel.gov/solar/old_data/nsrdb/tmy2/unix/23161.tm2.Z *)
 	tmydata IS_A drconf;
-	tmydata.filename :== 'johnpye/23161.tm2';
+	tmydata.filename :== 'johnpye/datareader/23161.tm2';
 
 	filereader:datareader(
 		t : INPUT;
