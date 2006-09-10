@@ -13,39 +13,37 @@ MODEL beam2;
 	I IS_A second_moment_of_area;
 	L IS_A distance;
 	
-	B[1..2] IS_A beam_parameterised(n,E,I,L);
+	S IS_A beam_superposition(n,E,I,L);
 	
-	P1 ALIASES B[1].P;
-	a1 ALIASES B[1].a;
-	P2 ALIASES B[2].P;
-	a2 ALIASES B[2].a;
-	
-	v[1..n] IS_A distance;
-	x[1..n] IS_A distance;
-	FOR i IN [1..n] CREATE
-		B[1..n].x[i], x[i] ARE_THE_SAME;
-		v[i] = SUM[B[j].v[i] | j IN [1..2]];
-	END FOR;
-	
+	P1 ALIASES S.B[1].P;
+	a1 ALIASES S.x[1];
+	P2 ALIASES S.B[2].P;
+	a2 ALIASES S.x[2];
+
+	v1 ALIASES S.v[1];	
+	v2 ALIASES S.v[2];
 METHODS
 METHOD specify;
-	RUN B[1..n].specify;
 	FIX E,I,L;
+	FIX P1,a1;
+	FIX P2,a2;
 END specify;
 
+METHOD bound_self;
+	RUN S.bound_self;
+	L.upper_bound := 500 {m};
+END bound_self;
+
 METHOD values;
-	RUN B[1..n].values;
 	E := 200 {GPa};
 	I := 0.5e6{mm^4};
 	L := 3 {m};
 	P1 := 10 {kN}; a1 := 1 {m};
 	P2 := 10 {kN}; a2 := 2 {m};
-	x[1] := 1{m};
-	x[2] := 2{m};
 END values;
 
 METHOD on_load;
-	RUN reset; RUN values;
+	RUN reset; RUN bound_self; RUN values;
 END on_load;
 
 END beam2;
