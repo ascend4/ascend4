@@ -291,14 +291,23 @@ Simulation::getFreeableVariables(){
 	vector<Variable> v;
 
 	cerr << "CHECKING CONSISTENCY..." << endl;
-	int *fixedarrayptr;
+	int *fixedarrayptr=NULL;
+
+	if(!sys){
+    	throw runtime_error("System not yet built");
+    }
 
 	int res = consistency_analysis(sys, &fixedarrayptr);
-	struct var_variable **vp = slv_get_master_var_list(sys);
 
 	if(res==1){
 		cerr << "STRUCTURALLY CONSISTENT" << endl;
 	}else{
+		if(fixedarrayptr ==NULL){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"STRUCTURALLY INCONSISTENT");
+			throw runtime_error("Invalid constistency analysis result returned!");
+		}
+
+		struct var_variable **vp = slv_get_master_var_list(sys);
 		for(int i=0; fixedarrayptr[i]!=-1; ++i){
 			v.push_back( Variable(this, vp[fixedarrayptr[i]]) );
 		}
