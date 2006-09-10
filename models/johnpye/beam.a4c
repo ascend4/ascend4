@@ -8,13 +8,14 @@ MODEL beam_parameterised(
 	I WILL_BE second_moment_of_area;
 	L WILL_BE distance;
 );
-	v[1..n] IS_A distance;
+	v[1..n] IS_A deflection;
 	x[1..n] IS_A distance;
 	
-	P IS_A force;
+	P,R1,R2 IS_A force;
 	a,b IS_A distance;
 	a + b = L;
 
+(*
 	isrightp[1..n] IS_A boolean_var;
 	
 	FOR i IN [1..n] CREATE
@@ -38,17 +39,84 @@ MODEL beam_parameterised(
 				USE v_left[i];
 		END WHEN;
 	END FOR;
+*)
+	FOR i IN [1..n] CREATE
+		defl[i]: v[i] = P*b/(6*E*I*L)*((L^2 - b^2)*x[i] - x[i]^3 + (L/b)*( 0.5 * (x[i]-a + abs(x[i]-a)) )^3 );
+	END FOR;
+
+	(* sum of vertical forces *)
+	R1 + P + R2 = 0 {N};
+	(* sum of moments about left end *)
+	P * a + R2 * L = 0 {N*m};
+
 METHODS
 METHOD specify;
 	FIX P, a, x[1..n];
 END specify;
 METHOD values;
+	RUN bound_self;
+END values;
+METHOD bound_self;
 	a.upper_bound := 100 {m};
 	b.upper_bound := 100 {m};
 	L.upper_bound := 100 {m};
-END values;
+	P.lower_bound := -2e4 {kN};
+	P.upper_bound := 2e4 {kN};
+	v[1..n].upper_bound := 10 {m};
+	v[1..n].lower_bound := -10 {m};
+	x[1..n].upper_bound := 100 {m};
+	x[1..n].lower_bound := -100 {m};
+	R1.lower_bound := -1e4 {kN};
+	R1.upper_bound := 1e4 {kN};
+	R2.lower_bound := -1e4 {kN};	
+	R2.upper_bound := 1e4 {kN};
+END bound_self;
 
 END beam_parameterised;
+
+(* superposition of n beams with displacements calculated at n locations *)
+MODEL beam_superposition(
+	n WILL_BE integer_constant;
+	E WILL_BE youngs_modulus;
+	I WILL_BE second_moment_of_area;
+	L WILL_BE distance;
+);	
+	
+	B[1..n] IS_A beam_parameterised(n,E,I,L);
+		
+	v[1..n] IS_A deflection;
+	x[1..n] IS_A distance;
+	R1,R2 IS_A force;
+
+	FOR i IN [1..n] CREATE
+		B[1..n].x[i], x[i] ARE_THE_SAME;
+		v[i] = SUM[B[j].v[i] | j IN [1..n]];
+	END FOR;
+
+	(* displacements are calculated at the locations of the loads *)
+	FOR i IN [1..n] CREATE
+		B[i].a, x[i] ARE_THE_SAME;
+	END FOR;
+
+	R1 = SUM[B[i].R1 | i IN [1..n]];
+	R2 = SUM[B[i].R2 | i IN [1..n]];
+
+METHODS
+METHOD bound_self;
+	FOR i IN [1..n] DO
+		RUN B[i].bound_self;
+		v[i].upper_bound := 10 {m};
+		v[i].lower_bound := -10 {m};
+		x[i].upper_bound := 500 {m};
+		x[i].lower_bound := -500 {m};
+	END FOR;
+	R1.lower_bound := -1e4 {kN};
+	R1.upper_bound := 1e4 {kN};
+	R2.lower_bound := -1e4 {kN};	
+	R2.upper_bound := 1e4 {kN};
+END bound_self;
+
+END beam_superposition;	
 
 (*
 	Model of a simply-supported beam of length L
@@ -86,8 +154,15 @@ METHOD values;
 	x := 2.0 {m};
 END values;
 
+METHOD bound_self;
+	RUN B.bound_self;
+	L.lower_bound := 500 {m};
+	L.upper_bound := 0{m};
+END bound_self;
+
 METHOD on_load;
 	RUN reset;
+	RUN bound_self;
 	RUN values;
 END on_load;
 

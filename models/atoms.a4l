@@ -1070,6 +1070,14 @@ END cost_per_energy;
 (*  M E C H A N I C AL   P R O P E R T I E S
 	---------------------------------------- *)
 	
+    ATOM deflection REFINES solver_var
+        DIMENSION L
+        DEFAULT 1 {mm};
+        lower_bound := -10{m};
+        upper_bound := 10{m};
+        nominal := 5{mm};
+    END deflection;
+
   	ATOM second_moment_of_area REFINES solver_var
   		DIMENSION L^4
   		DEFAULT 6.67e5 {mm^4}; (* for 150UB14 Universal Beam, AISC (Australia) *)
