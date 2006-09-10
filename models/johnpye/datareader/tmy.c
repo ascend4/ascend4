@@ -155,37 +155,12 @@ int datareader_tmy2_data(DataReader *d){
 		/* 6 */ "%3d%1c%1d" "%3d%1c%1d" "%3d%1c%1d" "%2d%1c%1d" /* +12=79 */
 		" " /* to ensure that we move to the start of the next line, else end of file */
 
-
-	/* 1 */
-		,&year, &month, &day, &hour
-		,&Iegh, &Iedn
-		,READ(Igh) /* I values in Wh/m2 */
-		,READ(Idn)
-		,READ(Idh)
-	/* 2 */
-		,READ(Lgh) /* L values in kCd/m2 */
-		,READ(Ldn)
-		,READ(Ldh)
-		,READ(Lz)
-	/* 3 */
-		,READ(covtot)
-		,READ(covopq)
-		,READ(T)
-		,READ(Tdew)
-		,READ(rh)
-		,READ(p)
-	/* 4 */
-		,READ(wdir)
-		,READ(wvel)
-		,READ(vis)
-		,READ(ch)
-	/* 5 */		
-		,&obs, &storm, &precip, &drizz, &snowtype, &snowshower, &sleet, &fog, &smog, &hail
-	/* 6 */
-		,READ(rain)
-		,READ(aer)
-		,READ(snow)
-		,READ(dsno)
+		/* 1 */,&year, &month, &day, &hour, &Iegh, &Iedn, READ(Igh), READ(Idn), READ(Idh) /* I values in Wh/m2 */
+		/* 2 */,READ(Lgh), READ(Ldn), READ(Ldh), READ(Lz) /* L values in kCd/m2 */
+		/* 3 */,READ(covtot), READ(covopq), READ(T), READ(Tdew), READ(rh), READ(p)
+		/* 4 */,READ(wdir), READ(wvel), READ(vis), READ(ch)
+		/* 5 */,&obs, &storm, &precip, &drizz, &snowtype, &snowshower, &sleet, &fog, &smog, &hail
+		/* 6 */,READ(rain), READ(aer), READ(snow), READ(dsno)
 	);
 
 	if(res!=79){
