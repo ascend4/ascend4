@@ -81,8 +81,8 @@ Instanc::Instanc(const Instanc &parent, const unsigned long &childnum)
 	// cerr << "CREATED CHILD #" << childnum << ", named '" << getName() << "' OF " << parent.getName() << endl;
 }
 
-/** 
-	Destructor 
+/**
+	Destructor
 
 	There's no data owned by this object, so nothing to be done here.
 */
@@ -323,7 +323,7 @@ Instanc::isDefined() const{
 
 const bool
 Instanc::isModel() const{
-	cerr << "TESTING FOR MODEL TYPE" << endl;	
+	cerr << "TESTING FOR MODEL TYPE" << endl;
 	if(getKind()==MODEL_INST){
 		return true;
 	}
@@ -419,6 +419,21 @@ Instanc::getSymbolValue() const{
 	return SCP(GetSymbolAtomValue(i));
 }
 
+void
+Instanc::setSymbolValue(const SymChar &sym){
+	stringstream ss;
+	if(!isSymbol()){
+		ss << "Variable '" << getName().toString() << "' is not symbol-valued.";
+		throw runtime_error(ss.str());
+	}
+	if(isConst() && isDefined()){
+		ss << "Variable '" << getName().toString() << "' has already been defined.";
+		throw runtime_error(ss.str());
+	}
+
+	SetSymbolAtomValue(i,sym.getInternalType());
+}
+
 const string
 Instanc::getRelationAsString(const Instanc &relative_to) const{
 	stringstream ss;
@@ -439,7 +454,7 @@ Instanc::getResidual() const{
 	if(!isRelation()){
 		throw runtime_error("getResidual: not a relation");
 	}
-	struct RelationInstance * const ri = (struct RelationInstance * const)i;
+	struct RelationInstance * const ri = (struct RelationInstance * const) i;
 
 	return RelationResidual( ri->ptr );
 }

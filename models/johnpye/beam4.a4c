@@ -1,4 +1,5 @@
 REQUIRE "johnpye/beam.a4c";
+REQUIRE "johnpye/aiscbeams.a4c";
 
 (*
 	Model of a beam with four supports and one central load.
@@ -12,11 +13,19 @@ MODEL beam4;
 	E IS_A youngs_modulus;
 	I IS_A second_moment_of_area;
 	L IS_A distance;
+	c IS_A distance; (* max distance from neutral axis *)
+	Ag IS_A area;
+	
+	aisc IS_A aiscbeams;
+	
+	designation IS_A symbol;
 	
 	S IS_A beam_superposition(n,E,I,L);
 
 	P ALIASES S.B[2].P;
 	a ALIASES S.B[2	].a;
+	x2 ALIASES S.B[1].a;
+	x3 ALIASES S.B[3].a;
 
 	v ALIASES S.v[2];
 
@@ -25,9 +34,17 @@ MODEL beam4;
 	R3 ALIASES S.B[3].P;
 	R4 ALIASES S.R2;
 
+	M IS_A moment;
+	M + R3*(S.B[3].a - a) + R4*(L-a) = 0;
+	
+	sigma_max IS_A stress;
+	sigma_max = M*c/I;
+	tau_max IS_A stress;
+	tau_max = sigma_max / 2; (* no shear here at point of max bending *)
+	
 METHODS
 METHOD specify;
-	FIX E,I,L;
+	FIX E,I,L,c,Ag;
 	FIX S.B[1,3].a;
 	FIX P, a;
 	FIX S.v[1,3];
@@ -42,7 +59,11 @@ END bound_self;
 METHOD values;
 	(* beam properties *)
 	E := 200 {GPa};
-	I := 10e6 {mm^4};
+	designation := '150UB18.0';
+	I := aisc.Ix[designation];
+	c := aisc.d[designation] / 2;
+	Ag := aisc.Ag[designation];
+	
 	L := 9 {m};
 
 	(* load *)
@@ -54,7 +75,7 @@ METHOD values;
 	S.B[3].a := 6 {m};
 
 	(* deflections at supports *)
-	FOR i IN [1..n] DO
+	FOR i IN [1,3] DO
 		S.v[i] := 0 {m};
 	END FOR;
 

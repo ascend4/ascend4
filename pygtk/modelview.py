@@ -8,6 +8,7 @@ from properties import *
 
 BROWSER_FIXED_COLOR = "#008800"
 BROWSER_FREE_COLOR = "#000088"
+BROWSER_SETTING_COLOR = "#4444AA"
 
 BROWSER_ACTIVE_COLOR = "black"
 BROWSER_INACTIVE_COLOR = "#888888"
@@ -140,7 +141,13 @@ class ModelView:
 		elif instance.isBool() or instance.isReal() or instance.isInt():
 			# TODO can't edit constants that have already been refined
 			_editable = True
-
+			_fgcolor = BROWSER_SETTING_COLOR
+			_fontweight = pango.WEIGHT_BOLD
+		elif instance.isSymbol() and not instance.isConst():
+			_editable = True
+			_fgcolor = BROWSER_SETTING_COLOR
+			_fontweight = pango.WEIGHT_BOLD
+			
 		#if(len(_value) > 80):
 		#	_value = _value[:80] + "..."
 		
@@ -213,6 +220,13 @@ class ModelView:
 					self.browser.reporter.reportNote("Integer atom '%s' was not altered" % _instance.getName())
 					return
 				_instance.setIntValue(_val)
+			elif _instance.isSymbol():
+				_val = str(newtext)
+				if _val == _instance.getValue():
+					self.browser.reporter.reportNote("Symbol atom '%s' was not altered" % _instance.getName())
+					return
+				_instance.setSymbolValue(ascpy.SymChar(_val))
+						
 			else:
 				self.browser.reporter.reportError("Attempt to set a non-real, non-boolean, non-integer value!")
 				return

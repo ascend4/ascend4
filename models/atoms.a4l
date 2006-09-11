@@ -740,45 +740,45 @@ END length_parameter;
         nominal := 100.0{USD};
     END monetary_unit;
 
-ATOM cost_per_volume REFINES solver_var
+	ATOM cost_per_volume REFINES solver_var
         DIMENSION C/L^3
         DEFAULT 1.0{USD/gallon};
         lower_bound := 0.0{USD/gallon};
         upper_bound := 1e50{USD/gallon};
         nominal := 1.0{USD/gallon};
-END cost_per_volume;
+	END cost_per_volume;
 
-ATOM cost_per_mass REFINES solver_var
+	ATOM cost_per_mass REFINES solver_var
         DIMENSION C/M
         DEFAULT 1.0{USD/lbm};
         lower_bound := 0.0{USD/lbm};
         upper_bound := 1e50{USD/lbm};
         nominal := 1.0{USD/lbm};
-END cost_per_mass;
+	END cost_per_mass;
 
-ATOM cost_per_mole REFINES solver_var
+	ATOM cost_per_mole REFINES solver_var
         DIMENSION C/Q
         DEFAULT 1.0{USD/lb_mole};
         lower_bound := 0.0{USD/lb_mole};
         upper_bound := 1e50{USD/lb_mole};
         nominal := 1.0{USD/lb_mole};
-END cost_per_mole;
+	END cost_per_mole;
 
-ATOM cost_per_time REFINES solver_var
+	ATOM cost_per_time REFINES solver_var
         DIMENSION C/T
         DEFAULT 1.0{USD/min};
         lower_bound := 0.0{USD/min};
         upper_bound := 1e50{USD/min};
         nominal := 1.0{USD/min};
-END cost_per_time;
+	END cost_per_time;
 
-ATOM cost_per_energy REFINES solver_var
+	ATOM cost_per_energy REFINES solver_var
         DIMENSION C*T^2/M/L^2
         DEFAULT 1.0{USD/BTU};
         lower_bound := 0.0{USD/BTU};
         upper_bound := 1e50{USD/BTU};
         nominal := 1.0{USD/BTU};
-END cost_per_energy;
+	END cost_per_energy;
 
 
 (*  S U R V E Y I N G   Q U A N T I T I E S
@@ -1085,3 +1085,30 @@ END cost_per_energy;
   		upper_bound := 10000e6 {mm^4};
   		nominal := 1e6 {mm^4}; (* this may be too high still *)
   	END second_moment_of_area;
+
+    CONSTANT second_moment_of_area_constant
+    REFINES real_constant DIMENSION L^4;
+    
+    CONSTANT length_constant
+    REFINES real_constant DIMENSION L;
+
+    CONSTANT area_constant
+    REFINES real_constant DIMENSION L^2;
+    
+    ATOM moment REFINES solver_var
+    	DIMENSION M*L^2/T^2
+    	DEFAULT 1 {kN*m};
+    	lower_bound := -1e5 {kN*m};
+    	upper_bound := 1e5 {kN*m};
+    	nominal := 1 {kN*m};
+    END moment;
+	
+    ATOM stress REFINES solver_var
+        DIMENSION M/L/T^2
+        DEFAULT 1.0 {MPa};
+        lower_bound := -5000 {MPa};
+        upper_bound := 5000 {MPa};
+        nominal := 1.0 {MPa};
+    END stress;
+
+	

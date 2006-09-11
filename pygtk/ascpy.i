@@ -395,6 +395,7 @@ public:
 	void setRealValue(const double &val);
 	void setRealValueWithUnits(const double &, const char *);
 	void setBoolValue(const bool &val);
+	void setSymbolValue(const SymChar &sym);
 	void write();
 
 	const VarStatus getVarStatus() const;

@@ -177,6 +177,12 @@ credits= {currency};
 USdollar = {currency};
 US = {currency};
 
+(* currencies according to yahoo.com, as at 11 Sep 2006 *)
+AUD = {0.752400*USD};
+GBP = {1.865000*USD};
+EUR = {1.266499*USD};
+JPY = {0.00856091*USD};
+
 (*  reciprocal time (frequency) *)
 
 rev = {1.0};
