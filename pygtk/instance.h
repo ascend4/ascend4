@@ -90,6 +90,7 @@ public:
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
+
 	const std::string getValueAsString() const;
 	const std::string getRelationAsString(const Instanc &relative_to) const;
 	Plot getPlot() const;
@@ -100,6 +101,7 @@ public:
 	void setBoolValue(const bool&, const unsigned &depth=0);
 	void setRealValue(const double&, const unsigned &depth=0);
 	void setRealValueWithUnits(double, const char *, const unsigned &depth=0);
+	void setSymbolValue(const SymChar &);
 
 	template<class T>
 	const ASCXX_Set<T> getSetValue() const{
