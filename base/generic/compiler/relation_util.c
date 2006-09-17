@@ -82,7 +82,7 @@ static struct relation *glob_rel;
 	These should probably be located at the top of this
 	file alonge with glob_rel. [OK, let it be so then. -- JP]
 */
-static unsigned long glob_varnum; 
+static unsigned long glob_varnum;
 static int glob_done;
 
 /* some data structurs...*/
@@ -589,7 +589,7 @@ static double RelationBranchEvaluator(struct relation_term *term)
   assert(term != NULL);
   switch(RelationTermType(term)) {
   case e_func:
-	 CONSOLE_DEBUG("Evaluating term using FuncEval...");
+	 /* CONSOLE_DEBUG("Evaluating term using FuncEval..."); */
     return FuncEval(TermFunc(term),
       RelationBranchEvaluator(TermFuncLeft(term)) );
   case e_var:
@@ -706,7 +706,7 @@ RelationEvaluatePostfixBranch(CONST struct relation *r,
     Asc_Panic(2, NULL,
               "Don't know this type of relation type\n"
               "in function RelationEvaluatePostfixBranch\n");
-    
+
     break;
   }
 }
@@ -1594,7 +1594,7 @@ RelationEvaluateDerivativeSafe(CONST struct relation *r,
 */
 
 /**
-	@return =, <, >, etc, etc. not e_token, e_glassbox, etc 
+	@return =, <, >, etc, etc. not e_token, e_glassbox, etc
 */
 enum Expr_enum RelationRelop(CONST struct relation *rel)
 {
@@ -2452,7 +2452,7 @@ RelationCalcDerivative(struct Instance *i,
     return 1;
   }
   else {
-    Asc_Panic(2, __FUNCTION__, "reached end of routine");  
+    Asc_Panic(2, __FUNCTION__, "reached end of routine");
   }
 }
 
@@ -2493,7 +2493,7 @@ RelationCalcDerivativeSafe(struct Instance *i,
   }
   else {
     Asc_Panic(2, __FUNCTION__, "reached end of routine");
-    
+
   }
 }
 
@@ -2868,13 +2868,13 @@ double *RelationFindRoots(struct Instance *i,
 
 	Create a struct relation of type e_token
 	and passes back a pointer to the relation.
-	
+
 	The lengths of
 	the right and left sides (lhslen and rhslen) of the relation
 	are supplied by the calling function.
-	
+
 	User is responsible for setting RTOKEN(return).*_len.
-	
+
 	Basically, all this does is manage memory nicely.
 
 	IF called with all 0/NULL, frees internal recycles.
@@ -2932,7 +2932,7 @@ static struct relation *RelationCreateTmp(
 	We can now just do a memcopy and the infix pointers
 	all adjust by the difference between the token
 	arrays that the gl_lists are hiding. Cool, eh?
-	
+
 	@NOTE if any turkey ever tries to delete an individual
 	token from these gl_lists AND deallocate it,
 	they will get a severe headache. Ooo scary.
@@ -2941,7 +2941,7 @@ static struct relation *RelationCreateTmp(
 	You do not need to remake the infix pointers after
 	calling this function. return 0 if ok, 1 if error.
 
-	@NOTE RelationTmpCopySide and RelationTmpCopyToken are reimplimentations 
+	@NOTE RelationTmpCopySide and RelationTmpCopyToken are reimplimentations
 	of functions from the v. old 'exprman' file.
 */
 static int RelationTmpCopySide(union RelationTermUnion *old,
@@ -3018,7 +3018,7 @@ static int RelationTmpCopySide(union RelationTermUnion *old,
 	know about these references to them, as this is
 	a tmp rel.
 
-	@NOTE RelationTmpCopySide and RelationTmpCopyToken are reimplimentations 
+	@NOTE RelationTmpCopySide and RelationTmpCopyToken are reimplimentations
 	of functions from the v. old 'exprman' file.
 */
 static struct relation *RelationTmpTokenCopy(CONST struct relation *src){
@@ -3104,7 +3104,7 @@ static void remove_soln( struct ds_soln_list *sl, int ndx){
 
 	Change a relation term type to e_real and fill the value field of this term.
 
-	In subsequent passes of the RelationBranchEvaluator the term will be 
+	In subsequent passes of the RelationBranchEvaluator the term will be
 	considered to be a leaf.
  */
 static void InsertBranchResult(struct relation_term *term, double value){
@@ -3126,7 +3126,7 @@ static void InsertBranchResult(struct relation_term *term, double value){
 	@TODO This may need to be changed to only leave e_reals
 	so that the inversion routine can make faster decisions???
 	Probably not.
-	
+
 	@return >= 1 if glob_varnum spotted, else 0 (or at least <1).
 */
 static int SearchEval_Branch(struct relation_term *term){
@@ -3160,7 +3160,7 @@ static int SearchEval_Branch(struct relation_term *term){
       return 0;
     }
     return 1;
-  /* 
+  /*
 	Note that this algorithm could use some work.  Here we go back up the
 	tree only to call relationbranchevaluator to turn these into reals.
   */
@@ -3213,7 +3213,7 @@ static int SearchEval_Branch(struct relation_term *term){
 	Select the side of the relation which will be inverted next.
 
 	Also fill the value which is currently being inverted on.
-	
+
 	@NOTE This function assumes SearchEval_Branch has been called
 	previously.
 */
@@ -3288,7 +3288,7 @@ static void SetUpInvertTokenTop(
 /**
 	@see RelationFindRoots
 
-	Invert tokens until the variable being solved for is found.  
+	Invert tokens until the variable being solved for is found.
 
 	It is assumed that this
 	variable only resides at ONE leaf of the relation tree.
@@ -3645,7 +3645,7 @@ int RelationInvertTokenTop(struct ds_soln_list *soln_list){
 
 /**
 	Set the value of the variable being solved
-	for (given the varnum) and calculate the residual.  
+	for (given the varnum) and calculate the residual.
 
 	@NOTE glob_rel is ASSUMED to be of type e_token. ---
 
@@ -3938,7 +3938,7 @@ CollectTokenRelationsWithUniqueBINlessShares(struct Instance *i,
 /**
 	Utility function to perform debug checking of (input) instance and residual
 	(or gradient) (output) pointers in the various functions in this file.
-	
+
 	@return 1 on all-ok
 */
 static int  relutil_check_inst_and_res(struct Instance *i, double *res){
@@ -3964,4 +3964,4 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res){
 # endif
 	return 1;
 }
-#endif	
+#endif

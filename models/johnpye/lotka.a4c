@@ -1,0 +1,70 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(*
+	A simple population model using the Lotka-Volterra model.
+	
+	http://www.ento.vt.edu/~sharov/PopEcol/lec10/lotka.html
+*)
+MODEL lotka;
+
+	H IS_A factor; (* prey *)
+	P IS_A factor; (* predators *)
+	
+	dH_dt IS_A rate;
+	dP_dt IS_A rate;
+	
+	dH_dt = r*H - a*H*P;
+	dP_dt = b*H*P - m*P;
+	
+	r IS_A factor; (* intrinsic rate of prey population increase *) 
+	a IS_A factor; (* predation rate coefficient *)
+	b IS_A factor; (* production rate of predators per prey eaten *)
+	m IS_A factor; (* predator mortality rate *)
+
+	t IS_A time;	
+METHODS
+
+METHOD on_load;
+	RUN default_self;
+	RUN reset; RUN values;
+	RUN set_obs;
+	RUN set_ode;
+END on_load;
+
+METHOD default_self;
+	H := 1000;
+	P := 9;
+	dH_dt := 0 {Hz};
+	dP_dt := 0 {Hz};
+END default_self;
+
+METHOD specify;
+	FIX r,a,b,m;
+	FIX P,H;
+END specify;
+
+METHOD values;
+	r	:= 0.1;
+	a	:= 0.01;
+	b	:= 0.0005;
+	m	:= 0.04;
+END values;
+
+METHOD set_obs;
+	H.obs_id :=1;
+	P.obs_id :=2;
+END set_obs;
+
+METHOD set_ode; (* this is where the current implementation sux *)
+	H.ode_id := 1;   H.ode_type := 1;
+	dH_dt.ode_id := 1; dH_dt.ode_type := 2;
+	
+	P.ode_id := 2; P.ode_type := 1;
+	dP_dt.ode_id := 2; dP_dt.ode_type := 2;
+
+	t.ode_type :=-1;
+END set_ode;
+
+
+END lotka;

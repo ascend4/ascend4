@@ -2,14 +2,14 @@ REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 
 MODEL pendulum;
-    x IS_A distance; y IS_A distance;
+    x IS_A delta_distance; y IS_A delta_distance;
 	r IS_A distance;
 	theta IS_A angle;
 	-y = r*cos(theta);
 	x = r*sin(theta);
 
 	m IS_A mass;
-	v_x IS_A speed; v_y IS_A speed;
+	v_x, v_x1 IS_A speed; v_y, v_y1 IS_A speed;
 	a_x	IS_A acceleration; a_y IS_A acceleration;
 	g IS_A acceleration;
 
@@ -20,6 +20,9 @@ MODEL pendulum;
 	+Fc*cos(theta)-m*g = m*a_y;
 
 	-Fc*sin(theta) = m*a_x;
+	
+	v_x1 = v_x;
+	v_y1 = v_y;
 
 METHODS
 METHOD specify;
@@ -32,6 +35,8 @@ METHOD default_self;
 	r := 1 {m};
 	v_y := 0 {m/s};
 	v_x := 0 {m/s};
+	v_y1 := 0 {m/s};
+	v_x1 := 0 {m/s};
 END default_self;
 
 METHOD values;
@@ -44,11 +49,15 @@ END values;
 METHOD set_ode; (* this is where the current implementation sux *)
 	x.ode_id := 1;   x.ode_type := 1;
 	v_x.ode_id := 1; v_x.ode_type := 2;
-	a_x.ode_id := 1; a_x.ode_type := 3; 
+	
+	v_x1.ode_id := 2; v_x1.ode_type := 1;
+	a_x.ode_id := 2; a_x.ode_type := 2;
 
-	y.ode_id := 2;   y.ode_type := 1;
-	v_y.ode_id := 2; v_y.ode_type := 2;
-	a_y.ode_id := 2; a_y.ode_type := 3;
+	y.ode_id := 3;   y.ode_type := 1;
+	v_y.ode_id := 3; v_y.ode_type := 2;
+	
+	v_y1.ode_id := 4; v_y1.ode_type := 1;
+	a_y.ode_id := 4; a_y.ode_type := 2;
 
 	t.ode_type :=-1;
 END set_ode;
