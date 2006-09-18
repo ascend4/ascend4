@@ -1,4 +1,5 @@
 REQUIRE "atoms.a4l";
+REQUIRE "johnpye/aiscbeams.a4c";
 
 (* a parameterised simply-supported beam model *)
 
@@ -126,11 +127,13 @@ END beam_superposition;
 MODEL beam;
 	n IS_A integer_constant;
 	n :== 1;
+	aisc IS_A aiscbeams;
+	designation IS_A symbol;
 	E IS_A youngs_modulus;
 	I IS_A second_moment_of_area;
 	L IS_A distance;
 	B IS_A beam_parameterised(n,E,I,L);
-
+	
 	P ALIASES B.P;
 	a ALIASES B.a;
 	b ALIASES B.b;
@@ -145,11 +148,15 @@ METHOD specify;
 	FIX x;
 END specify;
 
+METHOD beam_lookup;
+	I := aisc.Ix[designation];
+END beam_lookup;
+
 METHOD values;
-	E := 200 {GPa}; (* approx, for steel *)
-	I := 142e6 {mm^4}; (* AISC Universal Beam 360UB50.7 *)
+	designation := '360UB50.7';
+	RUN beam_lookup;
 	L := 3.5 {m};
-	P := 14.0 {kN};
+	P := 140 {kN};
 	a := 1.75 {m};
 	x := 2.0 {m};
 END values;

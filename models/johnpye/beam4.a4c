@@ -42,11 +42,14 @@ MODEL beam4;
 	tau_max IS_A stress;
 	tau_max = sigma_max / 2; (* no shear here at point of max bending *)
 	
+	a = L / 2;
+	S.B[1].a = L/3;
+	S.B[3].a = 2*L/3;
+	
 METHODS
 METHOD specify;
 	FIX E,I,L,c,Ag;
-	FIX S.B[1,3].a;
-	FIX P, a;
+	FIX P;
 	FIX S.v[1,3];
 END specify;
 
@@ -56,23 +59,22 @@ METHOD bound_self;
 	RUN S.bound_self;
 END bound_self;
 
+METHOD beam_lookup;
+	I := aisc.Ix[designation];
+	c := aisc.d[designation] / 2;
+	Ag := aisc.Ag[designation];
+END beam_lookup;
+
 METHOD values;
 	(* beam properties *)
 	E := 200 {GPa};
 	designation := '150UB18.0';
-	I := aisc.Ix[designation];
-	c := aisc.d[designation] / 2;
-	Ag := aisc.Ag[designation];
+	RUN beam_lookup;
 	
 	L := 9 {m};
 
 	(* load *)
 	P := 10 {kN};
-	a := 4.5 {m};
-
-	(* locations of supports *)
-	S.B[1].a := 3 {m};
-	S.B[3].a := 6 {m};
 
 	(* deflections at supports *)
 	FOR i IN [1,3] DO
