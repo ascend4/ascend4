@@ -6,6 +6,8 @@ import time
 from varentry import *
 from preferences import *
 
+import observer
+
 # When writing this class, we assume that the integrator class has already had
 # its "analyse" method called, so we know all that stuff like the number of
 # observed variables, what our time samples are, what the independent variable 
@@ -37,7 +39,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.data=[]
 		self.nsteps = self.getIntegrator().getNumSteps()
 		self.progress.set_text("Starting...")
-		self.progress.set_fraction(0.0);
+		self.progress.set_fraction(0.0)
 		#update the GUI
 		while gtk.events_pending():
 			gtk.main_iteration()
@@ -45,10 +47,10 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 
 	def closeOutput(self):
 		# output the results (to the console, for now)
-		for _k,_v in self.data:
-			print _k,_v
+		for _t,_vals in self.data:
+			print _t,_vals
 
-		self.progress.set_fraction(1.0);
+		self.progress.set_fraction(1.0)
 		self.progress.set_text("Finished.")
 		return 1
 
@@ -77,3 +79,9 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			print "\n\nERROR IN RECORDOBSERVEDVALUES!",str(e)
 			return 0
 		return 1
+
+class IntegratorReporterPyGTK(IntegratorReporterPython):
+	def __init__(self,browser,integrator):
+	 	IntegratorReporter.__init__(self,browser,integrator)
+
+	
