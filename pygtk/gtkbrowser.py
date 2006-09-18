@@ -1088,14 +1088,13 @@ class Browser:
 		_dialog.run()
 
 	def create_observer(self,name=None):
-		if name==None:
-			name="New Observer"
-
 		_xml = gtk.glade.XML(self.glade_file,"observervbox");
 		_label = gtk.Label();
-		_label.set_text(name)
 		_tab = self.maintabs.append_page(_xml.get_widget("observervbox"),_label);
-		self.observers.append(ObserverTab(_xml, name, self, _tab))
+		_obs = ObserverTab(xml=_xml, name=name, browser=self, tab=_tab)
+		_label.set_text(_obs.name)
+		self.observers.append(_obs)
+		return _obs
 	
 	def sync_observers(self):
 		for _o in self.observers:

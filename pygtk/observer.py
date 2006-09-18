@@ -16,15 +16,187 @@ OBSERVER_NULL = 0 # value that gets added to empty cells in a new column
 # Update: there is a technique for doing this, in fact:
 # http://www.daa.com.au/pipermail/pygtk/2006-February/011777.html
 
+OBSERVER_NUM=0
+
+class ObserverColumn:
+	"""
+		A class to identify the instance that relates to a specify column
+		and the units of measurement and column title, etc.
+	"""
+	def __init__(self,instance,index,name=None,units=None,browser=None):
+		self.instance = instance
+		self.name = name
+		self.index = index
+
+		if name==None:
+			if browser == None:
+				name = "UNNAMED"
+			else:
+				name = browser.sim.getInstanceName(instance)
+
+		if units == None:
+			units = instance.getType().getPreferredUnits()
+		if units == None:
+			units = instance.getType().getDimensions().getDefaultUnits()
+		
+		uname = str(units.getName())
+		if uname.find("/")!=-1:
+			uname = "["+uname+"]"
+
+		if uname == "":
+			_title = "%s" % (name)
+		else:
+			_title = "%s / %s" % (name, uname) 
+
+		self.title = _title
+		self.units = units
+		self.uname = uname
+		self.name = name
+	
+	def __repr__(self):
+		return "ObserverColumn(name="+self.name+")"
+
+	def cellvalue(self, column, cell, model, iter):
+		print "RENDERING COLUMN",self.index
+		_rowobject = model.get_value(iter,0)
+
+		try:
+			if _rowobject.active:
+				_rawval = self.instance.getRealValue()
+			else:
+				 _rawval = _rowobject.values[self.index]
+			_dataval = _rawval / self.units.getConversion()
+		except KeyError:
+			_dataval = "N/A"
+
+		cell.set_property('text', _dataval)
+
+class ObserverRow:
+	"""
+		Just a container for a vector of values, but with columns that
+		should correspond to those in the Observer object's vector of
+		ObserverColumn objects.
+	"""
+	def __init__(self,values=None,active=False):
+		if values==None:	
+			values={}
+
+		self.values = values
+		self.active = active
+
+	def make_static(self,table):
+		self.active = False
+		print "TABLE COLS:",table.cols
+		print "ROW VALUES:",self.values
+		for index,col in table.cols.iteritems():
+			print "INDEX: ",index,"; COL: ",col
+			self.values[index] = col.instance.getRealValue()
+		print "Made static, values:",self.values
+
 class ObserverTab:
+
+	def __init__(self,xml,browser,tab,name=None,alive=True):
+		global OBSERVER_NUM
+		self.colindex = 0
+		if name==None:
+			OBSERVER_NUM=OBSERVER_NUM+1
+			name = "Observer %d" % OBSERVER_NUM
+		self.name = name
+		self.browser=browser
+		xml.signal_autoconnect(self)
+		self.view = xml.get_widget('observerview')
+		self.tab = tab
+		self.alive=alive
+		if self.alive:
+			self.browser.reporter.reportNote("New observer is 'alive'")
+
+		self.keptimg =  gtk.Image()
+		self.activeimg = gtk.Image()
+		self.activeimg.set_from_file("glade/active.png")
+		# create PixBuf objects from these?
+		self.rows = []
+		_store = gtk.TreeStore(object,int)
+		self.cols = {}
+
+		# create the 'active' pixbuf column
+		_renderer = gtk.CellRendererPixbuf()
+		_col = gtk.TreeViewColumn()
+		_col.set_title("")
+		_col.pack_start(_renderer,False)
+		_col.set_cell_data_func(_renderer, self.activepixbufvalue)
+		self.view.append_column(_col);
+		
+		# initially there will not be any other columns
+
+		if self.alive:
+			# for a 'live' Observer, create the 'active' bottom row
+			self.browser.reporter.reportNote("Adding empty row to store")
+			self.activeiter = _store.append(None, [ObserverRow(active=True),0] )
+
+		self.view.set_model(_store)
+		self.browser.reporter.reportNote("Created observer '%s'" % self.name)
+
+	def activepixbufvalue(self,column,cell,model,iter):
+		_rowobject = model.get_value(iter,0)
+		if _rowobject.active:
+			cell.set_property('pixbuf',self.activeimg.get_pixbuf())
+		else:
+			cell.set_property('pixbuf',self.keptimg.get_pixbuf())
+
+	def on_add_clicked(self,*args):
+		self.do_add_row()
+
+	def on_clear_clicked(self,*args):
+		self.browser.reporter.reportError("CLEAR not implemented")
+
+	def do_add_row(self):
+		if self.alive:
+			_rowobject = ObserverRow(active=True)
+			_store = self.view.get_model()
+			_oldrow = _store.get_value(self.activeiter,0)
+			_oldrow.make_static(self)
+			self.activeiter = _store.append(None,[ObserverRow([],True),0])
+		else:
+			self.browser.reporter.reportError("Can't add row: incorrect observer type")
+
+	def on_view_cell_edited(self, renderer, path, newtext, datacolumn):
+		self.browser.reporter.reportError("EDIT not implemented")
+
+	def sync(self):
+		_store = self.view.get_model()
+		_activerow = _store.get_value(self.activeiter,0)
+		_store.set(self.activeiter,1,0	)
+		self.browser.reporter.reportNote("SYNC performed")
+
+	def add_instance(self,instance):
+		_col = ObserverColumn(instance,self.colindex,browser=self.browser)
+		self.cols[self.colindex] = _col
+		self.colindex = self.colindex + 1
+
+		# create a new column
+		_renderer = gtk.CellRendererText()
+		_tvcol = gtk.TreeViewColumn()
+		_tvcol.set_title(_col.title)
+		_tvcol.pack_start(_renderer,False)
+		_tvcol.set_cell_data_func(_renderer, _col.cellvalue)
+		self.view.append_column(_tvcol);
+		
+		self.browser.reporter.reportError("cols = "+str(self.cols))
+
+#-------------------------------------------------------------------------------
+# OLD STUFF
+
+class ObserverTab1:
+	"""	
+		An 'Observer' tab in the Browser interface. Multiple tabs should be
+		possible.
+	"""
 	def __init__(self,xml,name,browser,tab):
 		xml.signal_autoconnect(self);
 
 		self.view = xml.get_widget('observerview')
 		self.tab = tab
 
-		#self.activeimg = gtk.Image()
-		#self.activeimg.set_from_file("glade/active.png")
 		self.activeimg = None
 		self.keptimg = None
 		
@@ -44,10 +216,10 @@ class ObserverTab:
 		self.rows.append([])
 
 		# work towards having multiple observers for multiple simulations
-		self.name = name
+		self.name = nameself.view.set_model(_store)
 		self.browser = browser
 
-		# create the 'active' pixvuf columns	
+		# create the 'active' pixbuf columns	
 		_renderer = gtk.CellRendererPixbuf()
 		_col = gtk.TreeViewColumn()
 		_col.set_title("")
@@ -140,6 +312,7 @@ class ObserverTab:
 		return _r		
 
 	def add_instance(self, inst):
+		# TODO big changes here....
 		if not inst.getType().isRefinedSolverVar():
 			self.browser.reporter.reportError("Instance is not a refined solver variable: can't 'observe'.");
 			return
@@ -205,4 +378,5 @@ class ObserverTab:
 		self.view.append_column(_col);
 
 		self.browser.reporter.reportNote("Added variable '%s' to observer '%s'" % (_colname,self.name))
+
 
