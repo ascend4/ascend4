@@ -4,6 +4,10 @@ import gtk
 import gtk.glade
 import pango
 
+OBSERVER_EDIT_COLOR = "#008800"
+OBSERVER_NOEDIT_COLOR = "#000088"
+OBSERVER_NORMAL_COLOR = "black"
+
 OBSERVER_INITIAL_COLS = 3 # how many cells are at the start of the table?
 OBSERVER_ICON, OBSERVER_WEIGHT, OBSERVER_EDIT = range(0,OBSERVER_INITIAL_COLS) # column indices for the start of the TreeStore
 OBSERVER_NULL = 0 # value that gets added to empty cells in a new column
@@ -57,16 +61,26 @@ class ObserverColumn:
 		return "ObserverColumn(name="+self.name+")"
 
 	def cellvalue(self, column, cell, model, iter):
-		print "RENDERING COLUMN",self.index
+		#print "RENDERING COLUMN",self.index
 		_rowobject = model.get_value(iter,0)
 
+		cell.set_property('editable',False)
+		cell.set_property('weight',400)
 		try:
 			if _rowobject.active:
 				_rawval = self.instance.getRealValue()
+				if self.instance.getType().isRefinedSolverVar():
+					if self.instance.isFixed():
+						cell.set_property('editable',True)
+						cell.set_property('weight',700)
+						cell.set_property('foreground',OBSERVER_EDIT_COLOR)
+					else:
+						cell.set_property('foreground',OBSERVER_NOEDIT_COLOR)
 			else:
-				 _rawval = _rowobject.values[self.index]
+				cell.set_property('foreground',OBSERVER_NORMAL_COLOR)
+				_rawval = _rowobject.values[self.index]
 			_dataval = _rawval / self.units.getConversion()
-		except KeyError:
+		except IndexError:
 			_dataval = "N/A"
 
 		cell.set_property('text', _dataval)
@@ -77,7 +91,7 @@ class ObserverRow:
 		should correspond to those in the Observer object's vector of
 		ObserverColumn objects.
 	"""
-	def __init__(self,values=None,active=False):
+	def __init__(self,values=None,active=True):
 		if values==None:	
 			values={}
 
@@ -88,10 +102,25 @@ class ObserverRow:
 		self.active = False
 		print "TABLE COLS:",table.cols
 		print "ROW VALUES:",self.values
+		r=0;
 		for index,col in table.cols.iteritems():
-			print "INDEX: ",index,"; COL: ",col
-			self.values[index] = col.instance.getRealValue()
+			print "ROW",r,"; INDEX: ",index,"; COL: ",col
+			try:
+				self.values[index] = col.instance.getRealValue()
+			except KeyError,e:
+				print "Key error: e=",str(e)
+				self.values[index] = None
+			r=r+1
 		print "Made static, values:",self.values
+
+	def get_values(self,table):
+		if not self.active:
+			return self.values.values()
+		else:
+			_v = []
+			for index,col in table.cols.iteritems():
+				_v.append( col.instance.getRealValue() / col.units.getConversion() )
+			return _v
 
 class ObserverTab:
 
@@ -115,7 +144,7 @@ class ObserverTab:
 		self.activeimg.set_from_file("glade/active.png")
 		# create PixBuf objects from these?
 		self.rows = []
-		_store = gtk.TreeStore(object,int)
+		_store = gtk.TreeStore(object)
 		self.cols = {}
 
 		# create the 'active' pixbuf column
@@ -131,7 +160,9 @@ class ObserverTab:
 		if self.alive:
 			# for a 'live' Observer, create the 'active' bottom row
 			self.browser.reporter.reportNote("Adding empty row to store")
-			self.activeiter = _store.append(None, [ObserverRow(active=True),0] )
+			_row = ObserverRow()
+			self.activeiter = _store.append(None, [_row] )
+			self.rows.append(_row)
 
 		self.view.set_model(_store)
 		self.browser.reporter.reportNote("Created observer '%s'" % self.name)
@@ -147,25 +178,38 @@ class ObserverTab:
 		self.do_add_row()
 
 	def on_clear_clicked(self,*args):
-		self.browser.reporter.reportError("CLEAR not implemented")
+		_store = self.view.get_model()
+		_store.clear();
+		self.rows = {}
+		self.activeiter = _store.append(None, [ObserverRow()] )
 
 	def do_add_row(self):
 		if self.alive:
-			_rowobject = ObserverRow(active=True)
+			_row = ObserverRow()
+			self.rows.append(_row)
 			_store = self.view.get_model()
 			_oldrow = _store.get_value(self.activeiter,0)
 			_oldrow.make_static(self)
-			self.activeiter = _store.append(None,[ObserverRow([],True),0])
+			self.activeiter = _store.append(None,[_row])
+			_path = _store.get_path(self.activeiter)
+			_oldpath,_oldcol = self.view.get_cursor()
+			self.view.set_cursor(_path, _oldcol)
 		else:
 			self.browser.reporter.reportError("Can't add row: incorrect observer type")
 
-	def on_view_cell_edited(self, renderer, path, newtext, datacolumn):
-		self.browser.reporter.reportError("EDIT not implemented")
+	def on_view_cell_edited(self, renderer, path, newtext, col):
+		# we can assume it's always the self.activeiter that is edited...
+		if col.instance.isFixed():
+			val = float(newtext) * col.units.getConversion()
+			col.instance.setRealValue( val )
+			self.browser.reporter.reportNote("Updated value to %f" % float(newtext))
+		else:
+			self.browser.reporter.reportError("Can't set a FREE variable from the Observer")
+			return
+		self.browser.do_solve_if_auto()
 
 	def sync(self):
-		_store = self.view.get_model()
-		_activerow = _store.get_value(self.activeiter,0)
-		_store.set(self.activeiter,1,0	)
+		self.view.queue_draw()
 		self.browser.reporter.reportNote("SYNC performed")
 
 	def add_instance(self,instance):
@@ -175,13 +219,24 @@ class ObserverTab:
 
 		# create a new column
 		_renderer = gtk.CellRendererText()
+		_renderer.connect('edited',self.on_view_cell_edited, _col)
 		_tvcol = gtk.TreeViewColumn()
 		_tvcol.set_title(_col.title)
 		_tvcol.pack_start(_renderer,False)
 		_tvcol.set_cell_data_func(_renderer, _col.cellvalue)
 		self.view.append_column(_tvcol);
-		
 		self.browser.reporter.reportError("cols = "+str(self.cols))
+
+	def copy_to_clipboard(self,clip):
+		_s = []
+		_s.append('\t'.join([_v.title for _k,_v in self.cols.iteritems()]))
+		print "COPYING %d ROWS" % len(self.rows)
+		for _r in self.rows:
+			_s.append("\t".join([`_v` for _v in _r.get_values(self)]))
+
+		clip.set_text('\n'.join(_s),-1) 
+
+		self.browser.reporter.reportNote("Observer '%s' data copied to clipboard" % self.name)
 
 #-------------------------------------------------------------------------------
 # OLD STUFF
