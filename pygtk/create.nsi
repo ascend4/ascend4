@@ -116,7 +116,7 @@ Section "PyGTK GUI"
 
 	StrCmp $PYOK "OK" pythonfound
 
-	MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system. If do you want to use the PyGTK GUI, please check the installation instructions ($PYPATH)"
+	MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($PYPATH)"
 	Goto pydone
 
 pythonfound:
@@ -333,5 +333,3 @@ Function DetectTcl
   	${EndIf}
   ${EndIf}
 FunctionEnd
-  
-  
