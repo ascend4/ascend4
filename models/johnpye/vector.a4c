@@ -1,0 +1,51 @@
+REQUIRE "atoms.a4l";
+
+MODEL vector;
+	x IS_A factor;
+	y IS_A factor;
+	z IS_A factor;
+END vector;
+
+MODEL unit_vector REFINES vector;
+	x^2 + y^2 + z^2 = 1;
+END unit_vector;
+
+(* = B X C *)
+MODEL cross_product(
+	B WILL_BE vector; 
+	C WILL_BE vector;
+) REFINES vector;
+	x = B.y*C.z + B.z*C.y;
+	y = B.z*C.x + B.x*C.z;
+	z = B.x*C.y + B.y*C.x;
+END cross_product;
+
+MODEL scaled_cross_product(
+	a WILL_BE solver_var;
+	B WILL_BE vector;
+	C WILL_BE vector;
+) REFINES vector;
+	A IS_A cross_product(B,C);
+	x = a*A.x;
+	y = a*A.y;
+	z = z*A.z;
+END scaled_cross_product;
+	
+(*
+MODEL vector1;
+	A IS_A unit_vector;
+	B IS_A vector;
+	
+	C IS_A cross_product(A,B);
+METHODS
+METHOD on_load;
+	FIX A.x; A.x := 1;
+	FIX A.y; A.y := 0;
+
+	FIX B.x; B.x := 0;
+	FIX B.y; B.y := 1;
+	FIX B.z; B.z := 0;
+END on_load;
+	
+END vector1;
+*)
