@@ -356,6 +356,11 @@ ASC_DLLSPEC(struct var_variable *) integrator_get_observed_var(IntegratorSystem 
 	Returns the var_variable contained in the ith position in the observed variable list.
 */
 
+ASC_DLLSPEC(struct var_variable *) integrator_get_independent_var(IntegratorSystem *blsys);
+/**<
+	Return a pointer to the variable identified as the independent variable.
+*/
+
 /*-------------------------------
   Stuff to facilitate output to the interface
 */

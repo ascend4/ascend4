@@ -61,6 +61,7 @@ public:
 	void setLinearTimesteps(UnitsM units, double start, double end, unsigned long num);
 	std::vector<double> getCurrentObservations();
 	Variable getObservedVariable(const long &i);
+	Variable getIndependentVariable();
 
 	int findIndependentVar(); /** find the independent variable (must not presume a certain choice of integration engine) */
 	int analyse(); /** analysis gives you details about what your variables are etc */

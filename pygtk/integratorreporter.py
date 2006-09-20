@@ -1,17 +1,20 @@
 import ascpy
 import time
+import sys
 import gtk
 import gtk.glade
 import time
 from varentry import *
 from preferences import *
 
-import observer
+from observer import *
 
 # When writing this class, we assume that the integrator class has already had
 # its "analyse" method called, so we know all that stuff like the number of
 # observed variables, what our time samples are, what the independent variable 
 # is, etc.
+
+INTEGRATOR_NUM = 0
 
 class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def __init__(self,browser,integrator):
@@ -46,6 +49,31 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		return 1
 
 	def closeOutput(self):
+		global INTEGRATOR_NUM
+		integrator = self.getIntegrator()
+		# create an empty observer
+		try:
+			_xml = gtk.glade.XML(self.browser.glade_file,"observervbox")
+			_label = gtk.Label();
+			INTEGRATOR_NUM = INTEGRATOR_NUM + 1
+			_name = "Integrator %d" % INTEGRATOR_NUM
+			_tab = self.browser.maintabs.append_page(_xml.get_widget("observervbox"),_label)
+			_obs = ObserverTab(xml=_xml, name=_name, browser=self.browser, tab=_tab, alive=False)
+			_label.set_text(_obs.name)
+			self.browser.observers.append(_obs)
+			
+			# add the columns
+			_obs.add_instance(integrator.getIndependentVariable().getInstance())
+			for _v in [integrator.getObservedVariable(_i) for _i in range(0,integrator.getNumObservedVars())]:
+				_obs.add_instance(_v.getInstance())
+
+			for _time,_vals in self.data:
+				_obs.do_add_row([_time]+[_v for _v in _vals])
+		except Exception,e:
+			sys.stderr.write("\n\n\nCAUGHT EXCEPTION: %s\n\n\n" % str(e))
+		return 0
+
+	def closeOutput1(self):
 		# output the results (to the console, for now)
 		for _t,_vals in self.data:
 			print _t,_vals
@@ -80,8 +108,5 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			return 0
 		return 1
 
-class IntegratorReporterPyGTK(IntegratorReporterPython):
-	def __init__(self,browser,integrator):
-	 	IntegratorReporter.__init__(self,browser,integrator)
 
-	
+

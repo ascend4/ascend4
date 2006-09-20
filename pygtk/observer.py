@@ -8,16 +8,7 @@ OBSERVER_EDIT_COLOR = "#008800"
 OBSERVER_NOEDIT_COLOR = "#000088"
 OBSERVER_NORMAL_COLOR = "black"
 
-OBSERVER_INITIAL_COLS = 3 # how many cells are at the start of the table?
-OBSERVER_ICON, OBSERVER_WEIGHT, OBSERVER_EDIT = range(0,OBSERVER_INITIAL_COLS) # column indices for the start of the TreeStore
-OBSERVER_NULL = 0 # value that gets added to empty cells in a new column
-
-# This is messy code since it doesn't observe the convention of keeping your model
-# separate from your view. It's all mixed up together. Yuck. Part of the
-# difficulty with that was the fact that TreeStores don't support the adding of
-# columns.
-
-# Update: there is a technique for doing this, in fact:
+# This code uses the technique described in
 # http://www.daa.com.au/pipermail/pygtk/2006-February/011777.html
 
 OBSERVER_NUM=0
@@ -93,7 +84,7 @@ class ObserverRow:
 	"""
 	def __init__(self,values=None,active=True):
 		if values==None:	
-			values={}
+			values=[]
 
 		self.values = values
 		self.active = active
@@ -107,8 +98,8 @@ class ObserverRow:
 			print "ROW",r,"; INDEX: ",index,"; COL: ",col
 			try:
 				self.values[index] = col.instance.getRealValue()
-			except KeyError,e:
-				print "Key error: e=",str(e)
+			except IndexError,e:
+				print "Index error: e=",str(e)
 				self.values[index] = None
 			r=r+1
 		print "Made static, values:",self.values
@@ -183,11 +174,11 @@ class ObserverTab:
 		self.rows = {}
 		self.activeiter = _store.append(None, [ObserverRow()] )
 
-	def do_add_row(self):
+	def do_add_row(self,values=None):
+		_store = self.view.get_model()
 		if self.alive:
 			_row = ObserverRow()
 			self.rows.append(_row)
-			_store = self.view.get_model()
 			_oldrow = _store.get_value(self.activeiter,0)
 			_oldrow.make_static(self)
 			self.activeiter = _store.append(None,[_row])
@@ -195,7 +186,10 @@ class ObserverTab:
 			_oldpath,_oldcol = self.view.get_cursor()
 			self.view.set_cursor(_path, _oldcol)
 		else:
-			self.browser.reporter.reportError("Can't add row: incorrect observer type")
+			_row = ObserverRow(values=values,active=False)
+			self.rows.append(_row)
+			_store.append(None,[_row])			
+			self.browser.reporter.reportNote("Added data row")
 
 	def on_view_cell_edited(self, renderer, path, newtext, col):
 		# we can assume it's always the self.activeiter that is edited...

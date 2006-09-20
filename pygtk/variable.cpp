@@ -89,4 +89,7 @@ Variable::getNumIncidentRelations() const{
 	return var_n_incidences(var);
 }
 
-
+Instanc
+Variable::getInstance(){
+	return Instanc((struct Instance *)var_instance(var),"variablefromsolver");
+}

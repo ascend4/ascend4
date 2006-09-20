@@ -128,17 +128,8 @@ public:
 
 /* Variables and relations belong to solvers, so they're here: */
 
-class Variable{
-public:
-	explicit Variable(const Variable &old);
-	const std::string getName() const;
-	const double getValue() const;
-	const double getNominal() const;
-	const double getLowerBound() const;
-	const double getUpperBound() const;
-	const std::vector<Relation> getIncidentRelations() const;
-	const int getNumIncidentRelations() const;
-};
+
+%include "variable.h"
 
 %extend Variable {
 	%pythoncode{

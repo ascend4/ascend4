@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "simulation.h"
+#include "instance.h"
 
 struct Relation;
 
@@ -55,6 +56,8 @@ public:
 	const double getLowerBound() const;
 	const std::vector<Relation> getIncidentRelations() const;
 	const int getNumIncidentRelations() const;
+	
+	Instanc getInstance();
 };
 
 #endif

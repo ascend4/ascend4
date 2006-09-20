@@ -2790,7 +2790,7 @@ double *RelationFindRoots(struct Instance *i,
      * target.
      */
     if (SearchEval_Branch(Infix_LhsSide(glob_rel)) < 1) {
-      CONSOLE_DEBUG("SearchEval_Branch(Infix_LhsSide(glob_rel)) gave < 1...");
+      /* CONSOLE_DEBUG("SearchEval_Branch(Infix_LhsSide(glob_rel)) gave < 1..."); */
       sideval = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
       if (finite(sideval)) {
         /* CONSOLE_DEBUG("LHS is finite"); */
@@ -2804,7 +2804,7 @@ double *RelationFindRoots(struct Instance *i,
     }
     assert(Infix_RhsSide(glob_rel) != NULL);
     if (SearchEval_Branch(Infix_RhsSide(glob_rel)) < 1) {
-		  CONSOLE_DEBUG("SearchEval_Branch(Infix_RhsSide(glob_rel)) gave < 1...");
+        /* CONSOLE_DEBUG("SearchEval_Branch(Infix_RhsSide(glob_rel)) gave < 1..."); */
         sideval = RelationBranchEvaluator(Infix_RhsSide(glob_rel));
         if (finite(sideval)) {
           /* CONSOLE_DEBUG("RHS is finite"); */

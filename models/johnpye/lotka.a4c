@@ -45,7 +45,7 @@ METHOD specify;
 END specify;
 
 METHOD values;
-	r	:= 0.1;
+	r	:= 0.2;
 	a	:= 0.01;
 	b	:= 0.0005;
 	m	:= 0.04;
