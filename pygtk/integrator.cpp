@@ -165,6 +165,15 @@ Integrator::getObservedVariable(const long &i){
 	return Variable(&simulation,v);
 }
 
+Variable
+Integrator::getIndependentVariable(){
+	var_variable *v = integrator_get_independent_var(blsys);
+	if(v==NULL){
+		throw runtime_error("independent variable is null");
+	}
+	return Variable(&simulation,v);
+}
+
 int
 Integrator::getNumVars(){
 	return blsys->n_y;

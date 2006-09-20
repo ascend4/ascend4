@@ -279,7 +279,7 @@ int integrator_find_indep_var(IntegratorSystem *blsys){
 	gl_free_and_destroy(blsys->indepvars);
 	blsys->indepvars = NULL;
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Returning result %d",result);
+	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Returning result %d",result); */
 
 	return result;
 }
@@ -1197,6 +1197,15 @@ struct var_variable *integrator_get_observed_var(IntegratorSystem *blsys, const 
 	return blsys->obs[i];
 }
 
+/**
+	@NOTE Although this shouldn't be required for implementation of solver
+	engines, this is useful for GUI reporting of integration results.
+*/
+struct var_variable *integrator_get_independent_var(IntegratorSystem *blsys){
+	return blsys->x;
+}
+
+
 /*----------------------------------------------------
 	Build an analytic jacobian for solving the state system
 
@@ -1264,7 +1273,7 @@ int integrator_set_reporter(IntegratorSystem *blsys
 ){
 	assert(blsys!=NULL);
 	blsys->reporter = reporter;
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"INTEGRATOR REPORTER HOOKS HAVE BEEN SET\n");
+	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"INTEGRATOR REPORTER HOOKS HAVE BEEN SET\n"); */
 	return 1;
 }
 
@@ -1323,37 +1332,32 @@ int integrator_checkstatus(slv_status_t status) {
     return 1;
   }
   if (status.diverged) {
-    FPRINTF(stderr, "The derivative system did not converge.\n");
-    FPRINTF(stderr, "Integration will be terminated ");
-    FPRINTF(stderr, "at the end of the current step.\n");
+    FPRINTF(stderr, "The derivative system did not converge.\nIntegration "
+		"will be terminated at the end of the current step.");
     return 0;
   }
   if (status.inconsistent) {
-    FPRINTF(stderr, "A numerical inconsistency was discovered ");
-    FPRINTF(stderr, "while calculating derivatives.");
-    FPRINTF(stderr, "Integration will be terminated at the end of ");
-    FPRINTF(stderr, "the current step.\n");
+    FPRINTF(stderr, "A numerical inconsistency was discovered while "
+		"calculating derivatives. Integration will be terminated at "
+		"the end of the current step.");
     return 0;
   }
   if (status.time_limit_exceeded) {
-    FPRINTF(stderr, "The time limit was ");
-    FPRINTF(stderr, "exceeded while calculating derivatives.\n");
-    FPRINTF(stderr, "Integration will be terminated at ");
-    FPRINTF(stderr, "the end of the current step.\n");
+    FPRINTF(stderr, "The time limit was exceeded while calculating "
+		"derivatives.\nIntegration will be terminated at the end of "
+		"the current step.");
     return 0;
   }
   if (status.iteration_limit_exceeded) {
-    FPRINTF(stderr, "The iteration limit was ");
-    FPRINTF(stderr, "exceeded while calculating derivatives.\n");
-    FPRINTF(stderr, "Integration will be terminated at ");
-    FPRINTF(stderr, "the end of the current step.\n");
+    FPRINTF(stderr, "The iteration limit was exceeded while calculating "
+		"derivatives.\nIntegration will be terminated at "
+		"the end of the current step.");
     return 0;
   }
   if (status.panic) {
-    FPRINTF(stderr, "The user patience limit was ");
-    FPRINTF(stderr, "exceeded while calculating derivatives.\n");
-    FPRINTF(stderr, "Integration will be terminated at ");
-    FPRINTF(stderr, "the end of the current step.\n");
+    FPRINTF(stderr, "The user patience limit was exceeded while "
+		"calculating derivatives.\nIntegration will be terminated "
+		"at the end of the current step.");
     return 0;
   }
   return 0;
