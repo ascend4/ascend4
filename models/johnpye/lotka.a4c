@@ -4,24 +4,25 @@ REQUIRE "atoms.a4l";
 (*
 	A simple population model using the Lotka-Volterra model.
 	
+	http://www.stolaf.edu/people/mckelvey/envision.dir/lotka-volt.html
 	http://www.ento.vt.edu/~sharov/PopEcol/lec10/lotka.html
 *)
 MODEL lotka;
 
-	H IS_A factor; (* prey *)
-	P IS_A factor; (* predators *)
+	R IS_A factor; (* rabbits *)
+	F IS_A factor; (* foxes *)
 	
-	dH_dt IS_A rate;
-	dP_dt IS_A rate;
-	
-	dH_dt = r*H - a*H*P;
-	dP_dt = b*H*P - m*P;
-	
-	r IS_A factor; (* intrinsic rate of prey population increase *) 
-	a IS_A factor; (* predation rate coefficient *)
-	b IS_A factor; (* production rate of predators per prey eaten *)
-	m IS_A factor; (* predator mortality rate *)
+	dR_dt IS_A rate;
+	dF_dt IS_A rate;
 
+	r IS_A rate; (* growth rate of rabbits in absence of foxes *) 
+	a IS_A rate; (* efficiency of turning hunted rabbits into new foxes*)
+	b IS_A rate; (* production rate of predators per prey eaten *)
+	m IS_A rate; (* natural fox mortality rate *)
+	
+	dR_dt = r*R - a*R*F;
+	dF_dt = b*R*F - m*F;
+	
 	t IS_A time;	
 METHODS
 
@@ -33,35 +34,36 @@ METHOD on_load;
 END on_load;
 
 METHOD default_self;
-	H := 1000;
-	P := 9;
-	dH_dt := 0 {Hz};
-	dP_dt := 0 {Hz};
+	R := 1000;
+	F := 9;
+	dR_dt := 0 {Hz};
+	dF_dt := 0 {Hz};
 END default_self;
 
 METHOD specify;
 	FIX r,a,b,m;
-	FIX P,H;
+	FIX F,R;
 END specify;
 
 METHOD values;
-	r	:= 0.2;
-	a	:= 0.01;
-	b	:= 0.0005;
-	m	:= 0.04;
+	r	:= 0.04 {1/s};
+	a	:= 0.0005 {1/s};
+	b	:= 0.1*0.0005 {1/s};
+	m	:= 0.2 {1/s};
+	t := 0{s};
 END values;
 
 METHOD set_obs;
-	H.obs_id :=1;
-	P.obs_id :=2;
+	R.obs_id :=1;
+	F.obs_id :=2;
 END set_obs;
 
 METHOD set_ode; (* this is where the current implementation sux *)
-	H.ode_id := 1;   H.ode_type := 1;
-	dH_dt.ode_id := 1; dH_dt.ode_type := 2;
+	R.ode_id := 1;   R.ode_type := 1;
+	dR_dt.ode_id := 1; dR_dt.ode_type := 2;
 	
-	P.ode_id := 2; P.ode_type := 1;
-	dP_dt.ode_id := 2; dP_dt.ode_type := 2;
+	F.ode_id := 2; F.ode_type := 1;
+	dF_dt.ode_id := 2; dF_dt.ode_type := 2;
 
 	t.ode_type :=-1;
 END set_ode;
