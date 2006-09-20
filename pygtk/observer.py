@@ -106,7 +106,7 @@ class ObserverRow:
 
 	def get_values(self,table):
 		if not self.active:
-			return self.values.values()
+			return self.values
 		else:
 			_v = []
 			for index,col in table.cols.iteritems():

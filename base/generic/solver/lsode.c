@@ -914,7 +914,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       }
 # endif /* NO_SIGNAL_TRAPS */
     }
-    CONSOLE_DEBUG("Integration completed from %3g to %3g.",xprev,x[0]);
+    /* CONSOLE_DEBUG("Integration completed from %3g to %3g.",xprev,x[0]); */
   }
 
   CONSOLE_DEBUG("");
