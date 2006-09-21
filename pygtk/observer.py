@@ -71,7 +71,7 @@ class ObserverColumn:
 				cell.set_property('foreground',OBSERVER_NORMAL_COLOR)
 				_rawval = _rowobject.values[self.index]
 			_dataval = _rawval / self.units.getConversion()
-		except KeyError:
+		except IndexError:
 			_dataval = ""
 
 		cell.set_property('text', _dataval)
@@ -93,15 +93,10 @@ class ObserverRow:
 		self.active = False
 		print "TABLE COLS:",table.cols
 		print "ROW VALUES:",self.values
-		r=0;
-		for index,col in table.cols.iteritems():
-			print "ROW",r,"; INDEX: ",index,"; COL: ",col
-			try:
-				self.values[index] = col.instance.getRealValue()
-			except IndexError,e:
-				print "Index error: e=",str(e)
-				self.values[index] = None
-			r=r+1
+		_v = []
+		for col in table.cols.values():
+			_v.append( col.instance.getRealValue() / col.units.getConversion() )
+		self.values = _v
 		print "Made static, values:",self.values
 
 	def get_values(self,table):

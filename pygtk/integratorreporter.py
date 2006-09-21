@@ -61,6 +61,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			_obs = ObserverTab(xml=_xml, name=_name, browser=self.browser, tab=_tab, alive=False)
 			_label.set_text(_obs.name)
 			self.browser.observers.append(_obs)
+			self.browser.tabs[_tab]=_obs
 			
 			# add the columns
 			_obs.add_instance(integrator.getIndependentVariable().getInstance())
