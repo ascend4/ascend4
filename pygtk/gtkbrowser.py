@@ -9,8 +9,7 @@ def print_loading_status(status,msg=None):
 	sys.stderr.flush()
 
 try:
-	print_loading_status("Loading PSYCO")
-
+	#print_loading_status("Loading PSYCO")
 	#try:
 	#	import psyco
 	#	psyco.full()
@@ -458,6 +457,11 @@ class Browser:
 		self.modelview = ModelView(self, glade)
 
 		#--------
+		# set up the tabs
+		self.tabs = {}
+		self.activetab = None # most recent observer tab
+
+		#--------
 		# set the state of the 'auto' toggle
 
 		self.is_auto = self.prefs.getBoolPref("Browser","auto_solve",True)
@@ -792,31 +796,23 @@ class Browser:
 		_db.run();
 
 	def on_add_observer_click(self,*args):
-		if len(self.observers) > 0:
-			self.reporter.reportError("Not supported: multiple observers")
-			return
 		self.create_observer()
 
 	def on_keep_observed_click(self,*args):
-		if len(self.observers) > 1:
-			self.reporter.reportError("Not supported: multiple observers")
-			return
+		print "KEEPING..."
 		if len(self.observers) <= 0:
 			self.reporter.reportError("No observer defined!")
 			return
-		self.observers[0].do_add_row()
+		self.tabs[self.currentobservertab].do_add_row()
 
 	def on_copy_observer_matrix_click(self,*args):
 		if self.clip == None:
 			self.clip = gtk.Clipboard()
 
-		if len(self.observers) > 1:
-			self.reporter.reportError("Not supported: multiple observers")
-			return
 		if len(self.observers) <= 0:
 			self.reporter.reportError("No observer defined!")
 			return
-		self.observers[0].copy_to_clipboard(self.clip)
+		self.tabs[self.currentobservertab].copy_to_clipboard(self.clip)
 
 	def on_use_relation_sharing_toggle(self,checkmenuitem,*args):
 		_v = checkmenuitem.get_active()
@@ -1087,6 +1083,11 @@ class Browser:
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
 
+	def on_maintabs_switch_page(self,notebook,page,pagenum):
+		print("Page switched to %d" % pagenum)
+		if pagenum in self.tabs.keys():
+			self.currentobservertab = pagenum
+
 	def create_observer(self,name=None):
 		_xml = gtk.glade.XML(self.glade_file,"observervbox");
 		_label = gtk.Label();
@@ -1094,6 +1095,8 @@ class Browser:
 		_obs = ObserverTab(xml=_xml, name=name, browser=self, tab=_tab)
 		_label.set_text(_obs.name)
 		self.observers.append(_obs)
+		self.tabs[_tab] = _obs
+		self.currentobservertab = _tab
 		return _obs
 	
 	def sync_observers(self):
@@ -1105,13 +1108,9 @@ class Browser:
 		return False
 
 	def observe(self,instance):
-			if len(self.observers) > 1:
-				self.reporter.reportError("Not implemented: multiple observers (currently %d observers)" % 
-					len(self.observers) )
-				return
 			if len(self.observers) ==0:
 				self.create_observer()
-			_observer = self.observers[0]
+			_observer = self.tabs[self.currentobservertab]
 			_observer.add_instance(instance)
 
 if __name__ == "__main__":
