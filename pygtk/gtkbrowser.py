@@ -140,11 +140,17 @@ class Browser:
 #   ---------------------------------
 #   SETUP
 
-	def __init__(self):
+	def __init__(self,librarypath=None,assetspath=None):
+
+		if assetspath==None:
+			assetspath=config.PYGTK_ASSETS
+		if librarypath==None:
+			librarypath=config.LIBRARY_PATH
+
 		#--------
 		# load the file referenced in the command line, if any
 
-		print_loading_status("Parsing options")
+		print_loading_status("Parsing options","CONFIG = %s"%config.VERSION)
 		
 		parser = optparse.OptionParser(usage="%prog [[-m typename] file]", version="gtkbrowser $rev$" )
 		# add options here if we want
@@ -157,13 +163,13 @@ class Browser:
 			,action="store", type="string", dest="assets_dir"
 			,help="override the configuration value for the location of assets"\
 				+" required by PyGTK for the ASCEND GUI, optional"
-			,default=config.PYGTK_ASSETS
+			,default=assetspath
 		)
 
 		parser.add_option("--library"
 			,action="store", type="string", dest="library_path"
 			,help="override the configuration value for the library path"
-			,default=None
+			,default=librarypath
 		)
 
 		parser.add_option("--no-auto-sim"
@@ -196,7 +202,7 @@ class Browser:
 		
 		if self.options.library_path != None:
 			_path = os.path.abspath(self.options.library_path)
-			_pathsrc = "commandline"
+			_pathsrc = "command line"
 			# when a special path is specified, use that as the file-open location
 			self.fileopenpath = _path
 		else:
@@ -223,7 +229,7 @@ class Browser:
 		#-------------------
 		# Set up the window and main widget actions
 
-		self.glade_file = self.assets_dir+config.GLADE_FILE
+		self.glade_file = os.path.join(self.assets_dir,config.GLADE_FILE)
 
 		print_loading_status("Setting up windows","GLADE_FILE = %s" % self.glade_file)
 
@@ -295,7 +301,7 @@ class Browser:
 		# Status icons
 
 		self.fixedimg = gtk.Image()
-		self.fixedimg.set_from_file(self.options.assets_dir+'locked.png')
+		self.fixedimg.set_from_file(os.path.join(self.options.assets_dir,'locked.png'))
 
 		self.iconstatusunknown = None
 		self.iconfixed = self.fixedimg.get_pixbuf()
@@ -411,7 +417,7 @@ class Browser:
 			_iconpath = ""
 			try:
 				_icon = gtk.Image()
-				_iconpath = self.assets_dir+'ascend'+config.ICON_EXTENSION
+				_iconpath = os.path.join(self.assets_dir,'ascend'+config.ICON_EXTENSION)
 				_icon.set_from_file(_iconpath)
 				_iconpbuf = _icon.get_pixbuf()
 				self.window.set_icon(_iconpbuf)

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+export ASC_START=$PWD
+echo "PWD = $PWD"
+echo "\$0 = $0"
+
+cd @SOURCE_ROOT@/pygtk
+LD_LIBRARY_PATH="$LD_LIBRARY_PATH:@SOURCE_ROOT@" ASC_DEV=1 ./ascend $@
