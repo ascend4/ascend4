@@ -1,0 +1,255 @@
+REQUIRE "atoms.a4l";
+
+MODEL pycurve(
+	B WILL_BE distance; (* pile diameter *)
+);
+	p IS_A force_per_length;
+	y IS_A delta_distance;
+END pycurve;
+
+(*
+MODEL pycurvesoftclay(
+	B WILL_BE distance;
+	epsilon_50 WILL_BE factor;
+	c WILL_BE stress;
+) REFINES pycurve(B);
+
+	y1 IS_A length;
+	
+	y_50 IS_A length;
+	y_50 = 2.5 * epsilon_50 * B;
+	
+	y_p IS_A length;
+	y_p = 8 * y_50;
+
+
+	p = 0.5 * (y/y_50)^(1/3) * p_u;
+	(* p = p_u; (* if y > y_p *) *)
+
+	gamma_dash IS_A force;
+	
+	J IS_A factor;
+	c IS_A factor;
+	
+	p_u = ( 3 + gamma_dash * x / c +  J * x / B ) * c * B;
+	(* p_u = 9 * c * B; (* if x >= x_F *) *)
+	
+	x_F = 6 * B / (gamma_dash*B/c + J);
+
+METHODS
+METHOD default_self;
+END default_self;
+END pycurvesoftclay;
+*)	
+
+(*
+	This is a model of the displacement of a laterally loaded pile
+	
+	See A Verruijt, "Computational Geomechanics", Kluwer Academic 
+	Publishers, 1995 (Chapter 8).
+	
+	This implements a vertical beam placed in an elasto-plastic medium
+	with Mohr-Coulomb failure criterion. 'Active' failure is when
+	the soil plastically expands into a void. 'Passive' failure is when
+	the soil is compressed to the point of plastic deformation.
+*)
+MODEL pile;
+
+	P IS_A force;
+
+	(* pile properties *)
+	E IS_A youngs_modulus;
+	I IS_A second_moment_of_area;
+	B IS_A distance; (* diameter of the pile *)
+	L IS_A distance; (* pile length *)
+	n IS_A integer_constant; (* number of elements *)
+	n:== 5;
+	d[0..n] IS_A distance; (* depth of points *)
+	
+	(* soil properties *)
+	gamma_dash IS_A force_per_volume; (* rate of increase of soil pressure per depth *)
+	phi_f IS_A angle; (* friction angle of the soil *)
+	K_a IS_A factor; (* active pressure of the soil *)
+	K_p IS_A factor; (* passive pressure of the soil *)
+	K_n IS_A factor; (* neutral pressure of the soil *)
+	c IS_A stress; (* soil cohesion *)
+	delta_u IS_A distance; (* 'stroke' -- elastic displacement range *)
+	
+	K_a = (1 - sin(phi_f))/(1+sin(phi_f));
+	K_p = (1 + sin(phi_f))/(1-sin(phi_f));
+	
+	M[0..n] IS_A moment; (* bending moment in the pile *)
+	FOR i IN [0..n-1] CREATE
+		z_mom[i]: M[i+1] - M[i] = (Q[i+1] + Q[i]) * d[i+1] / 2;
+	END FOR;
+		
+	F[1..n] IS_A force; (* loading *)
+	Rr[1..n], Rl[1..n], R[1..n] IS_A force; (* soil reaction *)
+	Q[0..n] IS_A force; (* shear force across the pile *)
+	FOR i IN [1..n] CREATE
+		z_horiz[i]: Q[i] - Q[i-1] + F[i] - R[i] = 0;
+	END FOR;
+	
+	Q[0] = -P;
+
+	sigma_v[1..n] IS_A stress; (* soil pressure at local depth *)
+	sigma_hdash_min[1..n] IS_A stress; (* lateral stress for active failure *)
+	sigma_hdash_max[1..n] IS_A stress; (* lateral stress for passive failure *)
+	sigma_hdash_neut[1..n] IS_A stress; (* lateral stress for passive failure *)
+	S[1..n] IS_A force_per_length; (* stiffness of soil averaged over the element *)
+	
+	vbar_r[1..n] IS_A delta_distance;
+	vbar_l[1..n] IS_A delta_distance; (* previous plastic deformations *)
+	
+	dv_active[1..n] IS_A distance;
+	dv_passive[1..n] IS_A distance;
+	
+
+	is_lpassive[1..n], is_lactive[1..n], is_lelastic[1..n] IS_A boolean_var;
+	is_rpassive[1..n], is_ractive[1..n], is_relastic[1..n] IS_A boolean_var;
+
+	FOR i IN [1..n] CREATE
+		sigma_v[i] = gamma_dash * 0.5*(d[i-1]+d[i]);
+		sigma_hdash_max[i] = K_p*sigma_v[i] + 2 * c * sqrt(K_p);
+		sigma_hdash_min[i] = K_a*sigma_v[i] - 2 * c * sqrt(K_a);
+		sigma_hdash_neut[i] = K_n*sigma_v[i];
+		
+		dv_active[i] = (sigma_hdash_neut[i] - sigma_hdash_min[i])*delta_u / (sigma_hdash_max[i] - sigma_hdash_min[i]);
+		dv_passive[i] = (sigma_hdash_max[i] - sigma_hdash_neut[i])*delta_u / (sigma_hdash_max[i] - sigma_hdash_min[i]);
+				
+		(* elastic stiffness *)
+		S[i] = (sigma_hdash_max[i] - sigma_hdash_min[i]) * B * (d[i] - d[i-1])/ delta_u;
+
+	END FOR;
+	
+	CONDITIONAL
+		FOR i IN [1..n] CREATE
+			(* right side *)	
+			is_rpassive_expr[i]: v[i] - vbar_r[i] > dv_passive[i];
+			is_ractive_expr[i]: vbar_r[i] - v[i] > dv_active[i];
+			
+			(* left side *)
+			is_lpassive_expr[i]: v[i] - vbar_l[i] > dv_passive[i];
+			is_lactive_expr[i]: vbar_l[i] - v[i] > dv_active[i];
+		END FOR;
+	END CONDITIONAL;
+
+	FOR i IN [1..n] CREATE
+		is_rpassive[i] == SATISFIED(is_rpassive_expr[i]);
+		is_ractive[i] == SATISFIED(is_ractive_expr[i]);
+		is_relastic[i] == NOT (is_rpassive[i] OR is_ractive[i]);
+
+		rpassive_expr[i]: Rr[i] = sigma_hdash_max[i] * B * (d[i] - d[i-1]);
+		ractive_expr[i]: Rr[i] = sigma_hdash_min[i] * B * (d[i] - d[i-1]);
+		relastic_expr[i]: Rr[i] = (sigma_hdash_neut[i] + S[i] * (v[i] - vbar_r[i])) * B * (d[i] - d[i-1]);
+
+		WHEN (is_rpassive[i])
+			CASE TRUE: USE rpassive_expr;
+		END WHEN;
+
+		WHEN (is_ractive[i])
+			CASE TRUE: USE ractive_expr;
+		END WHEN;
+
+		WHEN (is_relastic[i])
+			CASE TRUE: USE relastic_expr;
+		END WHEN;
+
+		is_lpassive[i] == SATISFIED(is_lpassive_expr[i]);
+		is_lactive[i] == SATISFIED(is_lactive_expr[i]);
+		is_lelastic[i] == NOT (is_lpassive OR is_lactive);
+
+		lpassive_expr[i]: -Rl[i] = sigma_hdash_max[i] * B * (d[i] - d[i-1]);
+		lactive_expr[i]: -Rl[i] = sigma_hdash_min[i] * B * (d[i] - d[i-1]);
+		lelastic_expr[i]: -Rl[i] = (sigma_hdash_neut[i] + S[i] * (v[i] - vbar_l[i])) * B * (d[i] - d[i-1]);
+
+		WHEN (is_lpassive[i])
+			CASE TRUE: USE lpassive_expr[i];
+		END WHEN;
+
+		WHEN (is_lactive[i])
+			CASE TRUE: USE lactive_expr[i];
+		END WHEN;
+
+		WHEN (is_lelastic[i])
+			CASE TRUE: USE lelastic_expr[i];
+		END WHEN;
+
+		R[i] = Rr[i] + Rl[i];
+		
+	END FOR;
+    
+	(* reactions *)
+	
+	v[1..n] IS_A delta_distance; (* average lateral displacement over the element *)
+	FOR i IN [1..n] CREATE
+		v[i] = u[i] + phi[i]*0.5*(d[i-1]+d[i]) + 0.5*kappa[i]*(0.5*(d[i-1]+d[i]));
+	END FOR;
+	
+	(* deflections for each element take form u = u[i] + phi[i]*z + 1/2*kappa[i]*z^2; *)
+	u[1..n] IS_A delta_distance; (* deflection constant in an element*)
+	phi[1..n] IS_A factor; (* gradient of the pile, relative to vertical *)
+	kappa[1..n] IS_A factor; (* curvature of the pile *)
+
+	(* curvature of an element is due to average bending moment in that element *)
+	FOR i IN [1..n] CREATE
+		z_bend[i]: kappa[i] = - (M[i] + M[i-1])/(2*E*I);
+	END FOR;
+	
+	(* matching slope and displacement of adjacent elements *)
+	FOR i IN [1..n-1] CREATE
+		z_curv[i]: phi[i+1] + kappa[i+1]*d[i] = phi[i] + kappa[i]*d[i];
+		z_disp[i]: u[i+1] + phi[i+1]*d[i] + 0.5*kappa[i+1]*d[i]^2 = u[i] + phi[i]*d[i] + 0.5*kappa[i]*d[i]^2;
+	END FOR;
+	
+METHODS
+METHOD specify;
+	FIX d[0..n];
+	FIX F[1..n];
+	FIX phi_f, K_n;
+	FIX c, delta_u, gamma_dash;
+	FIX B,E,I,L;
+	FIX M[0];
+	FIX P;
+	FIX M[n];
+	FIX Q[n];
+END specify;
+
+METHOD values;
+	M[0] := 0 {N*m};
+	P := 1000 {kN};
+	M[n] := 0 {N*m};
+	Q[n] := 0 {N};
+	B := 1 {m};
+	E := 200 {GPa};
+	I := 4123000 {kN*m^2} / E;
+	L := 50 {m};
+	phi_f := 30 {deg};
+	K_n := 0.5;
+	c := 0 {Pa};
+	delta_u := 0.01 {m};
+	gamma_dash := 10 {kN/m^3};
+	FOR i IN [1..n] DO
+		F[i] := 0{N};
+	END FOR;
+	FOR i IN [0..n] DO
+		d[i] := i*L/n;
+	END FOR;
+END values;
+
+METHOD bound_self;
+	phi_f.lower_bound:= -180 {deg};
+	phi_f.upper_bound:= 180 {deg};
+	
+	FOR i IN [1..n] DO
+		sigma_hdash_min.lower_bound := 0 {Pa};
+	END FOR;
+END bound_self;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN values;
+	RUN reset;
+END on_load;
+
+END pile;

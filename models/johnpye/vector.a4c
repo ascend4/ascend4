@@ -1,10 +1,22 @@
 REQUIRE "atoms.a4l";
 
 MODEL vector;
-	x IS_A factor;
-	y IS_A factor;
-	z IS_A factor;
+	x,y,z IS_A solver_var;
 END vector;
+
+MODEL spherical_coords;
+	mod IS_A solver_var;
+	theta,phi IS_A angle;
+END spherical_coords;
+
+MODEL vector_from_spherical(
+	S WILL_BE spherical_coords;
+) REFINES vector;
+	x = S.mod*sin(S.phi)*cos(S.theta);
+	y = S.mod*sin(S.phi)*sin(S.theta);
+	z = S.mod*cos(S.theta);
+END vector_from_spherical;	
+	
 
 MODEL unit_vector REFINES vector;
 	x^2 + y^2 + z^2 = 1;
@@ -19,6 +31,25 @@ MODEL cross_product(
 	y = B.z*C.x + B.x*C.z;
 	z = B.x*C.y + B.y*C.x;
 END cross_product;
+
+(* = B . C *)
+MODEL dot_product(
+	B WILL_BE vector;
+	C WILL_BE vector;
+);
+	mod IS_A solver_var;
+	mod = B.x*C.x + B.y*C.y + B.z*C.z;
+END dot_product;
+
+(* = b A *)
+MODEL scaled_vector(
+	b WILL_BE factor;
+	A WILL_BE vector;
+) REFINES vector;
+	x = b*A.x;
+	y = b*A.y;
+	z = b*A.z;
+END scaled_vector;
 
 MODEL scaled_cross_product(
 	a WILL_BE solver_var;
