@@ -1,64 +1,34 @@
-#!/bin/sh
+#!@PYTHON@
 
-if [ "x$ASCENDLIBRARY" != "x" ]; then
-    echo "USING ASCENDLIBRARY=$ASCENDLIBRARY"
-else
-    ASCENDLIBRARY=@DEFAULT_ASCENDLIBRARY@
-fi
+import os.path, sys;
 
-args=$@
-
-if [ "$OSTYPE" = "cygwin" ]; then
-    echo "CYGWIN..."
-elif [ "$OSTYPE" = "msys" ]; then
-    #echo "MSYS..."
-    PYTHON=/c/Python24/python
-fi
-
-if [ $PYTHON ]; then 
-    python=$PYTHON
-else
-    python=`which python`
-fi
+if os.environ.get('ASCENDLIBRARY'):
+	ASCENDLIBRARY = os.environ.get('ASCENDLIBRARY')
+	print "USING ASCENDLIBRARY=%s" % ASCENDLIBRARY
+else:
+	ASCENDLIBRARY = """@DEFAULT_ASCENDLIBRARY@"""
 
 
-if [ $ASC_GDB ]; then
-	echo "RUNNING THROUGH DEBUGGER"
-	ASC_DEBUGGER="gdb --symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@ --args" 
-fi
+if os.environ.get('OSTYPE')=='cygwin':
+	print "CYGWIN..."
+elif os.environ.get('OSTYPE')=='msys':
+	print "MSYS..."
 
-if [ "x$ASC_DEBUGGER" != "x" ]; then
-	bin="$ASC_DEBUGGER $python"
-else
-	bin="$python"
-fi
+LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH')
+if not LD_LIBRARY_PATH:
+	LD_LIBRARY_PATH = []
+else:
+	LD_LIBRARY_PATH = LD_LIBRARY_PATH.split(":")
 
-# if 'ascend' isn't in the path, assume ASC_DEV mode...
-whichascend=`which ascend &2>/dev/null`
-if [ $whichascend ]; then
-	echo $whichascend " ?"
-else
-	ASC_DEV=1
-fi
-
-if [ "x$ASC_TEST" != "x" ]; then
-	# set the 'ASC_TEST' env var to run the suite of
-	# unit tests instead of running ASCEND GUI.
-	echo "LAUNCHING ASCEND TEST SUITE..."
-	export LD_LIBRARY_PATH=..
-	cmd="$bin test.py"
-else
-	if [ "x$ASC_DEV" != "x" ]; then
-		# set the 'ASC_DEV' environment variable
-		# if you don't want to run ASCEND from the installed location
-		echo "NOTE! RUNNING ASC_DEV (LOCAL) MODE..."
-		export LD_LIBRARY_PATH=..
-		cmd="$bin gtkbrowser.py --pygtk-assets=glade/ --library=../models $args"
-		echo "Launching... $cmd"
-	else
-		cmd="$bin @INSTALL_ASCDATA@/gtkbrowser.py $args"
-	fi
-fi
-
-$cmd
-
+if __name__=='__main__':
+	import ascpy
+	from gtkbrowser import *
+	if os.environ.get('ASC_DEV'):
+		d,f = os.path.split(os.path.abspath(sys.argv[0]))
+		if os.environ.get('ASC_START'):
+			os.chdir(os.environ.get('ASC_START'))
+		librarypath = ":".join(['.',os.path.normpath(os.path.join(d,"../models"))])
+		B = Browser(librarypath=librarypath,assetspath=os.path.join(d,"glade"))
+	else:
+		B = Browser()
+	B.run()
