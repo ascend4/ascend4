@@ -23,7 +23,7 @@ OutFile ascend-setup.exe
 !endif
 
 
-;SetCompressor /FINAL zlib
+SetCompressor /FINAL zlib
 SetCompressor /SOLID lzma
 
 ; The default installation directory
@@ -150,7 +150,11 @@ Section "PyGTK GUI"
 				FileWrite $0 $INSTDIR 
 				FileWriteByte $0 "13"
 				FileWriteByte $0 "10"
-				FileWrite $0 "$PYPATH\python gtkbrowser.py %1 %2 %3 %4 %5 %6 %7 %8"
+				FileWrite $0 "$PYPATH\python gtkbrowser.py --pygtk-assets="
+				FileWriteByte $0 "34" 
+				FileWrite $0 "$INSTDIR\glade"
+				FileWriteByte $0 "34"
+				FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
 				FileWriteByte $0 "13"
 				FileWriteByte $0 "10"
 
