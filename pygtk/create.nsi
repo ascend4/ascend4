@@ -23,7 +23,7 @@ OutFile ascend-setup.exe
 !endif
 
 
-SetCompressor /FINAL zlib
+;SetCompressor /FINAL zlib
 SetCompressor /SOLID lzma
 
 ; The default installation directory
