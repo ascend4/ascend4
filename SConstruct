@@ -1613,7 +1613,7 @@ if with_scrollkeeper:
 
 env['DISTTAR_FORMAT']='bz2'
 env.Append(
-	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.cc','.cache','.pyc','.cvsignore','.dblite','.log','.pl']
+	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.cc','.cache','.pyc','.cvsignore','.dblite','.log','.pl','.out']
 	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist']
 )
 
@@ -1622,6 +1622,8 @@ tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 )
 
 env.Depends(tar,'ascend.spec')
+
+Alias('dist',tar)
 
 #------------------------------------------------------
 # USER'S MANUAL

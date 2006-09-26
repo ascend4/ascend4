@@ -129,16 +129,26 @@ int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
 	struct FilePath *fp1;
 	int result;
 
+	/** 
+		@TODO
+			* modify SearchArchiveLibraryPath to use the ImportHandler array
+			  in each directory in the path.
+			* when a file is found, return information about which ImportHandler
+			  should be used to open it, then make the call.
+	*/
+
 	CONSOLE_DEBUG("Searching for external library '%s'",partialname);
 
 	file = SearchArchiveLibraryPath(partialname, ASC_DEFAULTPATH, PATHENVIRONMENTVAR);
 	if(file==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"'ImportHandler' functionality not yet implemeneted.");
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialname);
 		return 1;
 	}else{
 		/* file was found, and is DLL/SO */
 	}
 
+	/* assume that the complete path is now in 'file' */
 	fp1 = ospath_new_from_posix(partialname);
 	stem = ospath_getfilestem(fp1);
 	if(stem==NULL){

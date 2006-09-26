@@ -1,6 +1,7 @@
 Import('env')
 
-env.SConscript(['extfn/SConscript','datareader/SConscript'],['env']);
+for d in ['extfn','datareader','extpy']:
+	env.SConscript(d+'/SConscript',['env']);
 
 # vim: set syntax=python:
 

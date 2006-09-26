@@ -1,0 +1,34 @@
+REQUIRE "atoms.a4l";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "extpytest";
+
+(*
+	A very simple model to illustrate the possibility to accessing a model
+	from an external python script during an interactive ASCEND session.
+*)
+MODEL extpytest;
+
+	a IS_A factor;
+	b IS_A factor;
+
+	x_1,y_1 IS_A delta_distance;		
+	x_2,y_2 IS_A delta_distance;
+	y_1 = a * x_1 + b;
+	y_2 = a * x_2 + b;
+
+METHODS
+METHOD specify;
+	FIX x_1,y_1;
+	FIX x_2,y_2;
+END specify;
+METHOD values;
+	x_1 := 0{m};
+	y_1 := 1{m};
+	x_2 := 1{m};
+	y_2 := 0{m};
+END values;
+METHOD on_load;
+	RUN reset; RUN values;
+END on_load;
+
+END extpytest;
