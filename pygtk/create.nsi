@@ -50,6 +50,8 @@ Var /GLOBAL PYOK
 Var /GLOBAL PYPATH
 Var /GLOBAL GTKOK
 Var /GLOBAL GTKPATH
+Var /GLOBAL GLADEOK
+Var /GLOBAL GLADEPATH
 Var /GLOBAL PYINSTALLED
 Var /GLOBAL TCLOK
 Var /GLOBAL TCLPATH
@@ -66,6 +68,10 @@ Function .onInit
 	Call DetectGTK
 	Pop $GTKOK
 	Pop $GTKPATH
+
+	Call DetectGlade
+	Pop $GLADEOK
+	Pop $GLADEPATH	
 	
 	Call DetectTcl
 	Pop $TCLOK
@@ -113,58 +119,58 @@ SectionEnd
 ;--------------------------------
 
 Section "PyGTK GUI"
+	${If} $PYOK == 'OK'
+		${If} $GTKOK == 'OK'
+			${If} $GLADEOK == 'OK'
+				;MessageBox MB_OK "Python: $PYPATH, GTK: $GTKPATH"
 
-	StrCmp $PYOK "OK" pythonfound
+				DetailPrint "--- PYTHON INTERFACE ---"
 
-	MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($PYPATH)"
-	Goto pydone
+				; Set output path to the installation directory.
+				SetOutPath $INSTDIR
 
-pythonfound:
+				; Python interface
+				File "_ascpy.dll"
+				File "*.py"
+				SetOutPath $INSTDIR\glade
+				File "glade\*.glade"
+				File "glade\*.png"
 
-	StrCmp $GTKOK "OK" gtkfound
-	MessageBox MB_OK "PyGTK GUI can not be installed, because GTK+ 2.0 was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($GTKPATH)"
-	Goto pydone
+				; Create 'ascend.bat' launcher for PyGTK interface
+				ClearErrors
+				FileOpen $0 $INSTDIR\ascend.bat w
+				IfErrors pydone
+				FileWrite $0 "@echo off"
+				FileWriteByte $0 "13"
+				FileWriteByte $0 "10"
+				FileWrite $0 "set PATH=$PYPATH;$GTKPATH"
+				FileWriteByte $0 "13"
+				FileWriteByte $0 "10"
+				FileWrite $0 "cd "
+				FileWrite $0 $INSTDIR 
+				FileWriteByte $0 "13"
+				FileWriteByte $0 "10"
+				FileWrite $0 "$PYPATH\python gtkbrowser.py %1 %2 %3 %4 %5 %6 %7 %8"
+				FileWriteByte $0 "13"
+				FileWriteByte $0 "10"
 
-gtkfound:
+				FileClose $0
 
-;	MessageBox MB_OK "Python: $PYPATH, GTK: $GTKPATH"
-
-	DetailPrint "--- PYTHON INTERFACE ---"
+				StrCpy $PYINSTALLED "1"
+				WriteRegDWORD HKLM "SOFTWARE\ASCEND" "Python" 1	
+			${Else}
+				MessageBox MB_OK "PyGTK GUI can not be installed, because Glade was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($GLADEPATH)"
+			${EndIf}				
+		${Else}
+			MessageBox MB_OK "PyGTK GUI can not be installed, because GTK+ 2.0 was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($GTKPATH)"
+		${EndIf}
+	${Else}
+		MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($PYPATH)"
+	${EndIf}
+	Return
 	
-	; Set output path to the installation directory.
-	SetOutPath $INSTDIR
-
-	; Python interface
-	File "_ascpy.dll"
-	File "*.py"
-	SetOutPath $INSTDIR\glade
-	File "glade\*.glade"
-	File "glade\*.png"
-
-	; Create 'ascend.bat' launcher for PyGTK interface
-	ClearErrors
-	FileOpen $0 $INSTDIR\ascend.bat w
-	IfErrors pydone
-	FileWrite $0 "@echo off"
-	FileWriteByte $0 "13"
-	FileWriteByte $0 "10"
-	FileWrite $0 "set PATH=$PYPATH;$GTKPATH"
-	FileWriteByte $0 "13"
-	FileWriteByte $0 "10"
-	FileWrite $0 "cd "
-	FileWrite $0 $INSTDIR 
-	FileWriteByte $0 "13"
-	FileWriteByte $0 "10"
-	FileWrite $0 "$PYPATH\python gtkbrowser.py %1 %2 %3 %4 %5 %6 %7 %8"
-	FileWriteByte $0 "13"
-	FileWriteByte $0 "10"
-
-	FileClose $0
-	
-	StrCpy $PYINSTALLED "1"
-	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "Python" 1
 pydone:
-
+	MessageBox MB_OK "PyGTK GUI was not installed properly -- problems with creating ascend.bar"	
 SectionEnd
 
 ;---------------------------------
@@ -272,64 +278,95 @@ SectionEnd
 ; UTILITY ROUTINES
 
 Function DetectPython
-  ReadRegStr $R6 HKCU "SOFTWARE\Python\PythonCore\2.4\InstallPath" ""
-  StrCmp $R6 "" NoFound1
-
-  IfFileExists "$R6\python.exe" 0 NoFound
-  Push "$R6"
-  Push "OK"
-  Return
- 
-NoFound:
-  Push "No python.exe found"
-  Push "NOK"
-  Return
-
-NoFound1:
-  Push "No registry key found"
-  Push "NOK"
-  Return
-  
+	ReadRegStr $R6 HKCU "SOFTWARE\Python\PythonCore\2.4\InstallPath" ""
+	${If} $R6 == ''
+		ReadRegStr $R6 HKLM "SOFTWARE\Python\PythonCore\2.4\InstallPath" ""
+		${If} $R6 == ''
+			Push "No registry key found"
+			Push "NOK"
+			Return
+		${EndIf}
+	${EndIf}
+	
+	${If} ${FileExists} "$R6\python.exe"
+		Push "$R6"
+		Push "OK"
+	${Else}
+		Push "No python.exe found"
+		Push "NOK"
+	${EndIf}
 FunctionEnd
 
 ;--------------------------------------------------------------------
+; Prefer the current user's installation of GTK, fall back to the local machine
 
 Function DetectGTK
-  ReadRegStr $R6 HKLM "SOFTWARE\GTK\2.0" "DllPath"
-  StrCmp $R6 "" GtkNoFound
-  IfFileExists "$R6\pkg-config.exe" 0 GtkNoFound1
-  Push "$R6"
-  Push "OK"
-  Return
+	ReadRegStr $R6 HKCU "SOFTWARE\GTK\2.0" "DllPath"
+	${If} $R6 == ''
+		ReadRegStr $R6 HKLM "SOFTWARE\GTK\2.0" "DllPath"
+		${If} $R6 == ''
+			Push "No GTK registry key found"
+			Push "NOK"
+			Return
+		${EndIf}
+	${EndIf}
 
-GtkNoFound:
-  Push "No registry key"
-  Push "NOK"
-  Return
-  
-GtkNoFound1:
-  Push "No pkg-config.exe found"
-  Push "NOK"
-  Return
+	${If} ${FileExists} "$R6\libgtk-win32-2.0-0.dll"
+		Push "$R6"
+		Push "OK"
+	${Else}
+		Push "No libgtk-win32-2.0-0.dll found in'$R6'"
+		Push "NOK"
+	${EndIf}
+FunctionEnd
 
+;--------------------------------------------------------------------
+; Prefer the current user's installation of GTK, fall back to the local machine
+
+Function DetectGlade
+	ReadRegStr $R6 HKCU "SOFTWARE\GTK\2.0" "DllPath"
+	${If} $R6 == ''
+		ReadRegStr $R6 HKLM "SOFTWARE\GTK\2.0" "DllPath"
+		${If} $R6 == ''
+			Push "No GTK registry key found"
+			Push "NOK"
+			Return
+		${EndIf}
+	${EndIf}
+
+	${If} ${FileExists} "$R6\libglade-2.0-0.dll"
+		Push "$R6"
+		Push "OK"
+	${Else}
+		Push "No libglade-2.0-0.dll found in'$R6'"
+		Push "NOK"
+	${EndIf}
 FunctionEnd
 
 ;--------------------------------------------------------------------
 
 Function DetectTcl
-  ReadRegStr $R6 HKLM "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
-  ${If} $R6 == ''
-  	Push "No 'CurrentVersion' registry key"
-  	Push "NOK"
-  ${Else}
-  	StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
-  	ReadRegStr $R8 HKLM $R7 ""
-  	${If} $R8 == ''
-  		Push "No value for $R7"
-  		Push "NOK"
-  	${Else}
-  	 	Push "$R8\bin"
-  		Push "OK"
-  	${EndIf}
-  ${EndIf}
+	ReadRegStr $R6 HKCU "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
+	${If} $R6 == ''
+		ReadRegStr $R6 HKLM "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
+		${If} $R6 == ''
+			Push "No 'CurrentVersion' registry key"
+			Push "NOK"
+			Return
+		${Else}
+			StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
+			ReadRegStr $R8 HKLM $R7 ""		
+		${EndIf}
+	${Else}
+		StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
+		ReadRegStr $R8 HKCU $R7 ""		
+	${EndIf}
+
+	${If} $R8 == ''
+		Push "No value for $R7"
+		Push "NOK"
+	${Else}
+		Push "$R8\bin"
+		Push "OK"
+	${EndIf}
 FunctionEnd
