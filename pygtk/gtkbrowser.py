@@ -144,8 +144,6 @@ class Browser:
 
 		if assetspath==None:
 			assetspath=config.PYGTK_ASSETS
-		if librarypath==None:
-			librarypath=config.LIBRARY_PATH
 
 		#--------
 		# load the file referenced in the command line, if any
@@ -202,7 +200,7 @@ class Browser:
 		
 		if self.options.library_path != None:
 			_path = os.path.abspath(self.options.library_path)
-			_pathsrc = "command line"
+			_pathsrc = "command line options"
 			# when a special path is specified, use that as the file-open location
 			self.fileopenpath = _path
 		else:
@@ -423,6 +421,7 @@ class Browser:
 				self.window.set_icon(_iconpbuf)
 				self.icon = _iconpbuf
 			except Exception, e:
+				print "FAILED TO SET APPLICATION ICON PATH '%s': %s" % (_iconpath,str(e))
 				self.reporter.reportError("FAILED to set application icon '%s': %s"
 					 % (_iconpath,str(e)) 
 				)
