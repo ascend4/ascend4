@@ -34,6 +34,7 @@
 #include "ascPanic.h"
 #include "ascMalloc.h"
 #include "ascDynaLoad.h"
+#include "ascEnvVar.h"
 
 #include <general/env.h>
 #include <general/ospath.h>
@@ -41,6 +42,7 @@
 #include <general/list.h>
 #include <compiler/compiler.h>
 #include <compiler/extfunc.h>
+#include <compiler/importhandler.h>
 
 typedef int (*ExternalLibraryRegister_fptr_t)(void);
 
@@ -549,10 +551,14 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 	return 1;
 }
 
+/**
+	@DEPRECATED this function needs to be rewritten to use 'ImportHandler'
+	functionality.
+*/
 char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	struct FilePath *fp1, *fp2, *fp3; /* relative path */
 	char *s1;
-	char buffer[PATH_MAX];
+	char *buffer;
 
 	struct LibrarySearch ls;
 	struct FilePath **sp;
@@ -579,37 +585,10 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 		return NULL;
 	}
 
-	/* CONSOLE_DEBUG("FILESTEM = '%s'",s1); */
-
-# if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
-	/*
-		this is the preferred operation: SCons reports what the local system
-		uses as its shared library file extension.
-	*/
-	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,s1,ASC_SHLIBSUFFIX);
-# else
-	/**
-		@DEPRECATED
-
-		If we don't have ASC_SHLIB-SUFFIX and -PREFIX then we can do some
-		system-specific stuff here, but it's not as general.
-	*/
-#  ifdef __WIN32__
-	snprintf(buffer,PATH_MAX,"%s.dll",s1);
-#  elif defined(linux)
-	snprintf(buffer,PATH_MAX,"lib%s.so",s1); /* changed from .o to .so -- JP */
-#  elif defined(sun) || defined(solaris)
-	snprintf(buffer,PATH_MAX,"%s.so.1.0",s1);
-#  elif defined(__hpux)
-	snprintf(buffer,PATH_MAX,"%s.sl",s1);
-#  elif defined(_SGI_SOURCE)
-	snprintf(buffer,PATH_MAX,"%s.so",s1);
-#  else
-#   error "Unknown system type (please define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX)"
-#  endif
-# endif
+	buffer = importhandler_extlib_filename(s1);
 
 	fp3 = ospath_new(buffer);
+	ASC_FREE(buffer);
 	ospath_free(fp1);
 	fp1 = ospath_concat(fp2,fp3);
 	ospath_free(fp2);
