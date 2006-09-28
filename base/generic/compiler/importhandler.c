@@ -65,6 +65,7 @@ ASC_DLLSPEC(int) importhandler_add(struct ImportHandler *handler){
 		return 1;
 	}
 	importhandler_library[i] = handler;
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"New import hander '%s' added",handler->name);
 	return 0;
 }
 
@@ -185,8 +186,8 @@ int importhandler_createlibrary(){
 	struct ImportHandler *extlib_handler;
 
 	if(importhandler_library!=NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Already created");
-		return 1;
+		/* ERROR_REPORTER_HERE(ASC_PROG_ERR,"Already created"); */
+		return 0;
 	};
 	importhandler_library=ASC_NEW_ARRAY(struct ImportHandler *,IMPORTHANDLER_MAX);
 	for(i=0; i < IMPORTHANDLER_MAX; ++i){
@@ -299,15 +300,19 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 
 		fp1 = ospath_concat(path,searchdata->relativedir); /* eg '/home/john/path/to' */
 		asc_assert(fp1!=NULL);
-		ospath_free(fp);
 
 		fullpath = ospath_str(fp1);
 		CONSOLE_DEBUG("Path is '%s'",fullpath);
 		ASC_FREE(fullpath);
 
+		fullpath = ospath_str(fp);
+		CONSOLE_DEBUG("Filename is '%s'",fullpath);
+		ASC_FREE(fullpath);
+
 		fp2 = ospath_concat(fp1,fp); /* eg '/home/john/path/to/libmyext.so' */
 		asc_assert(fp2!=NULL);
 		ospath_free(fp1);
+		ospath_free(fp);
 
 		fullpath = ospath_str(fp2);
 		CONSOLE_DEBUG("Checking for readable '%s'",fullpath);

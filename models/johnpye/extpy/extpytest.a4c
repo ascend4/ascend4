@@ -1,6 +1,6 @@
 REQUIRE "atoms.a4l";
 IMPORT "johnpye/extpy/extpy";
-IMPORT "extpytest";
+IMPORT "johnpye/extpy/extpytest";
 
 (*
 	A very simple model to illustrate the possibility to accessing a model
