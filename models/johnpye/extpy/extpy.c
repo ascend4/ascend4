@@ -26,6 +26,8 @@
 
 #include <compiler/importhandler.h>
 
+#include <Python.h>
+
 ImportHandlerCreateFilenameFn extpy_filename;
 ImportHandlerImportFn extpy_import;
 
@@ -77,7 +79,7 @@ char *extpy_filename(const char *partialname){
 	name = ASC_NEW_ARRAY_CLEAR(char,len+4);
 	strcpy(name,partialname);
 	strcat(name,".py");
-	CONSOLE_DEBUG("New filename is %s",name);
+	CONSOLE_DEBUG("New filename is '%s'",name);
 	return name;
 }
 
@@ -89,8 +91,22 @@ char *extpy_filename(const char *partialname){
 int extpy_import(const struct FilePath *fp, const char *initfunc, const char *partialpath){
 	char *name;
 	name = ospath_str(fp);
+	FILE *f;
+
 	CONSOLE_DEBUG("IMPORTING PYTHON SCRIPT %s",name);
+	if(Py_IsInitialized()){
+		CONSOLE_DEBUG("PYTHON IS ALREADY INITIALISED");
+	}else{
+		CONSOLE_DEBUG("INITIALISING PYTHON");
+		Py_Initialize();
+	}
+
+	PyRun_SimpleString("import ascpy");
+	f = fopen(name,"r");
+	PyRun_AnyFile(f,name);
+	fclose(f);
+
 	ASC_FREE(name);
-	return 0;
+	return 1;
 }
 
