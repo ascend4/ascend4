@@ -889,7 +889,7 @@ symchar *GenerateId(symchar *type,
             "  The statement is in module %s.\n"
             "  Insufficiently uniqe name is \n%s.  Burp!\n",
             StatioLabel(4), module, statname);
-  
+
 }
 
 static int IndexUsed(symchar *name, CONST struct Expr *expr);
@@ -1105,7 +1105,7 @@ int DoExternal(symchar *type,
     nptr = NULL;
     break;
   }
-  /* 
+  /*
   ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
   FPRINTF(ASCERR,"DOEXTERNAL: nptr = ");
   WriteName(ASCERR,nptr);
@@ -3104,11 +3104,10 @@ enum typelinterr VerifyTypeArgs(CONST struct Set *alist,
         }
         ptype = FindRHSType(n,lclgl,&rval,&subsopen,&origin);
         if (ptype == NULL || (rval != FRC_ok && rval != FRC_array) ) {
-          FPRINTF(ASCERR,
-            "%sUndefined name where instance expected\n  Argument %d: ",
-            StatioLabel(3),argc);
+          ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
+          FPRINTF(ASCERR,"Undefined name where instance expected. Argument %d: ",argc);
           WriteSetNode(ASCERR,sn);
-          FPRINTF(ASCERR,"\n");
+          error_reporter_end_flush();
           return DEF_ARGS_INCORRECT;
         }
         /* dig up set type details to match from MODEL arg list WILL_BE,

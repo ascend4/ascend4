@@ -95,7 +95,7 @@ class ObserverRow:
 		print "ROW VALUES:",self.values
 		_v = []
 		for col in table.cols.values():
-			_v.append( col.instance.getRealValue() / col.units.getConversion() )
+			_v.append( col.instance.getRealValue() )
 		self.values = _v
 		print "Made static, values:",self.values
 
@@ -105,7 +105,7 @@ class ObserverRow:
 		else:
 			_v = []
 			for index,col in table.cols.iteritems():
-				_v.append( col.instance.getRealValue() / col.units.getConversion() )
+				_v.append( col.instance.getRealValue() )
 			return _v
 
 class ObserverTab:
