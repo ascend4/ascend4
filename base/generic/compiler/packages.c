@@ -49,7 +49,8 @@
 #include "compiler.h"
 #include <utilities/ascMalloc.h>
 #include <utilities/ascEnvVar.h>
-#include <utilities/ascDynaLoad.h>
+#include <compiler/importhandler.h>
+#include <utilities/ascPanic.h>
 #include <general/list.h>
 #include "symtab.h"
 #include "fractions.h"
@@ -120,14 +121,13 @@ int Builtins_Init(void)
   return result;
 }
 
-int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
+/* return 0 on success */
+int LoadArchiveLibrary(CONST char *partialpath, CONST char *initfunc){
 
 #ifdef DYNAMIC_PACKAGES
-	char *file;
-	char auto_initfunc[PATH_MAX];
-	char *stem;
 	struct FilePath *fp1;
 	int result;
+	struct ImportHandler *handler=NULL;
 
 	/** 
 		@TODO
@@ -137,50 +137,33 @@ int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
 			  should be used to open it, then make the call.
 	*/
 
-	CONSOLE_DEBUG("Searching for external library '%s'",partialname);
+	CONSOLE_DEBUG("Searching for external library '%s'",partialpath);
 
-	file = SearchArchiveLibraryPath(partialname, ASC_DEFAULTPATH, PATHENVIRONMENTVAR);
-	if(file==NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"'ImportHandler' functionality not yet implemeneted.");
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialname);
-		return 1;
-	}else{
-		/* file was found, and is DLL/SO */
+	importhandler_createlibrary();
+
+	fp1 = importhandler_findinpath(
+		partialpath, ASC_DEFAULTPATH, PATHENVIRONMENTVAR,&handler
+	);
+	if(fp1==NULL){
+		CONSOLE_DEBUG("External library '%s' not found",partialpath);
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialpath);
+		return 1; /* failure */
 	}
 
-	/* assume that the complete path is now in 'file' */
-	fp1 = ospath_new_from_posix(partialname);
-	stem = ospath_getfilestem(fp1);
-	if(stem==NULL){
-		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"What is the stem of named library '%s'???",partialname);
-		free(stem);
+	asc_assert(handler!=NULL);
+	
+	CONSOLE_DEBUG("About to import external library...");
+	/* note the import handler will deal with all the initfunc execution, etc etc */
+	result = (*(handler->importfn))(fp1,initfunc,partialpath);
+	if(result){
+		CONSOLE_DEBUG("Error %d when importing external library of type '%s'",result,handler->name);
+		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Error importing external library '%s'",partialpath);
 		ospath_free(fp1);
 		return 1;
 	}
 
-	if(initfunc==NULL){
-		strncpy(auto_initfunc,stem,PATH_MAX);
-		strncat(auto_initfunc,"_register",PATH_MAX-strlen(auto_initfunc));
-		result = Asc_DynamicLoad(file,auto_initfunc);
-	}else{
-		result = Asc_DynamicLoad(file,initfunc);
-	}
-
-	if(result){
-		CONSOLE_DEBUG("FAILED TO IMPORT '%s' (error %d)",partialname,result);
-    	result = 1;
-	}else{
-		if(initfunc==NULL){
-	  		CONSOLE_DEBUG("Successfully ran '%s' from dynamic package '%s'",auto_initfunc,file);
-		}else{
-			CONSOLE_DEBUG("Successfully ran '%s' from dynamic package '%s'",initfunc,file);
-		}
-	}
-
-	free(stem);
 	ospath_free(fp1);
-  	return result;
-
+  	return 0;
 #else
 
 	DISUSED_PARAMETER(name); DISUSED_PARAMETER(initfunc);

@@ -86,7 +86,7 @@ char *extpy_filename(const char *partialname){
 
 	@return 0 on success, else error codes (TBD)
 */
-int extpy_import(struct FilePath *fp, void *user_data){
+int extpy_import(const struct FilePath *fp, const char *initfunc, const char *partialpath){
 	char *name;
 	name = ospath_str(fp);
 	CONSOLE_DEBUG("IMPORTING PYTHON SCRIPT %s",name);

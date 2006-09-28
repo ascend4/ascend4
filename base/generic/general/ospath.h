@@ -146,7 +146,7 @@ int ospath_isvalid(struct FilePath *fp);
 	Return the FilePath in the form of a string.
 	You must FREE the allocated string when you don't need it any more.
 */
-ASC_DLLSPEC(char *) ospath_str(struct FilePath *fp);
+ASC_DLLSPEC(char *) ospath_str(const struct FilePath *fp);
 
 /**
 	Return the FilePath in the string location given.
