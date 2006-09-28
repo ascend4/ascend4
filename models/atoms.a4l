@@ -443,8 +443,8 @@ END length_parameter;
     ATOM pressure_per_length REFINES solver_var
         DIMENSION M/L^2/T^2
         DEFAULT 50 {Pa/m};
-        lower_bound := -10{bar/m};
-        upper_bound := +10{bar/m};
+        lower_bound := -1e20{bar/m};
+        upper_bound := +1e20{bar/m};
         nominal := 50 {Pa/m};
     END pressure_per_length;
   
