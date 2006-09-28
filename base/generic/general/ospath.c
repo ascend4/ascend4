@@ -497,7 +497,7 @@ int ospath_isvalid(struct FilePath *fp){
 }
 
 
-char *ospath_str(struct FilePath *fp){
+char *ospath_str(const struct FilePath *fp){
 	char *s;
 #ifdef WINPATHS
 	s = (char *)MALLOC(sizeof(char)*(strlen(fp->drive)+strlen(fp->path) +1) );
@@ -835,6 +835,9 @@ struct FilePath *ospath_root(struct FilePath *fp){
 struct FilePath *ospath_getdir(struct FilePath *fp){
 	char *pos;
 	char s[PATH_MAX];
+#ifdef WINPATHS
+	char *e;
+#endif
 
 	pos = strrchr(fp->path,PATH_SEPARATOR_CHAR);
 	if(pos==NULL){
@@ -842,9 +845,13 @@ struct FilePath *ospath_getdir(struct FilePath *fp){
 	}
 #ifdef WINPATHS
 	strncpy(s,fp->drive,PATH_MAX);
+	e = strlen(s);
 	strncat(s,fp->path,pos - fp->path);
+	s[e+pos-fp->path]='\0';
 #else
 	strncpy(s,fp->path,pos - fp->path);
+	s[pos-fp->path]='\0';
+	CONSOLE_DEBUG("DIRECTORY: '%s'",s);
 #endif
 	return ospath_new(s);
 }

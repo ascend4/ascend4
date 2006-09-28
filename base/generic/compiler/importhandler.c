@@ -27,6 +27,9 @@
 #include <utilities/ascConfig.h>
 #include <utilities/config.h>
 #include <utilities/error.h>
+#include <utilities/ascDynaLoad.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascEnvVar.h>
 #include "importhandler.h"
 
 /*
@@ -127,10 +130,50 @@ char *importhandler_extlib_filename(const char *partialname){
 	that the file exists and is readable.
 
 	@param fp Location of DLL/SO file
+	@param initfunc Name of registration function, preferably NULL (so that ASCEND automatically determines it)
+	@param partialpath as specified in 'IMPORT' statement, for creation of auto_initfunc name
 	@return 0 on success
 */
-int importhandler_extlib_import(struct FilePath *fp,void *user_data){
-	return 1;
+int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,const char *partialpath){
+
+	struct FilePath *fp1;
+	char *stem;
+	char *path;
+	char auto_initfunc[PATH_MAX];
+	int result;
+
+	path = ospath_str(fp);
+	if(path==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"File path is NULL");
+		return 1;
+	}
+
+	if(initfunc==NULL){
+		fp1 = ospath_new(partialpath);
+		stem = ospath_getbasefilename(fp1);
+		strncpy(auto_initfunc,stem,PATH_MAX);
+		ospath_free(fp1);
+		ASC_FREE(stem);
+
+		strncat(auto_initfunc,"_register",PATH_MAX-strlen(auto_initfunc));
+		CONSOLE_DEBUG("Created auto-initfunc name '%s'",auto_initfunc);
+		result = Asc_DynamicLoad(path,auto_initfunc);
+	}else{
+		result = Asc_DynamicLoad(path,initfunc);
+	}
+
+	if(result){
+		CONSOLE_DEBUG("FAILED TO IMPORT '%s' (error %d)",partialpath,result);
+	}else{
+		if(initfunc==NULL){
+	  		CONSOLE_DEBUG("Successfully ran '%s' (automatically named) from dynamic package '%s'",auto_initfunc,path);
+		}else{
+			CONSOLE_DEBUG("Successfully ran '%s' from dynamic package '%s'",initfunc,path);
+		}
+	}
+
+	ASC_FREE(path);
+	return result;	
 }
 
 /*------------------------------------------------------------------------------
@@ -139,6 +182,8 @@ int importhandler_extlib_import(struct FilePath *fp,void *user_data){
 
 int importhandler_createlibrary(){
 	int i;
+	struct ImportHandler *extlib_handler;
+
 	if(importhandler_library!=NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Already created");
 		return 1;
@@ -148,6 +193,16 @@ int importhandler_createlibrary(){
 		importhandler_library[i] = NULL;
 	}
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ImportHandler library created");
+
+	extlib_handler = ASC_NEW(struct ImportHandler);
+	extlib_handler->name ="extlib";
+	extlib_handler->filenamefn = &importhandler_extlib_filename;
+	extlib_handler->importfn = &importhandler_extlib_import;
+	if(importhandler_add(extlib_handler)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to create 'extlib' import handler");
+		return 1;
+	}
+	
 	return 0;
 }
 
@@ -179,4 +234,152 @@ int importhandler_printhandler(FILE *fp, struct ImportHandler *handler){
 	return 1;
 }
 
+/*------------------------------------------------------------------------------
+  PATH SEARCH ROUTINES
+*/
 
+/**
+	A little structure to help with searching for import files
+
+	@see test_importsearch
+*/
+struct ImportHandlerSearch{
+	char *partialname; /**< for example 'myext' */
+	struct FilePath *relativedir; /**< for example 'path/to' */
+	struct FilePath *foundpath; /**< the complete filepath located, for example '/home/john/path/to/libmyext.so' */
+	struct ImportHandler *handler; /**< pointer to the import handler identified for this file */
+};
+
+FilePathTestFn importhandler_search_test;
+
+/**
+	A FilePath 'test' function for passing to the ospath_searchpath_iterate function.
+	This test function will return a match when an importable file having the 
+	required name is present in the fully resolved path.
+
+	@param path the search path component
+	@param userdata will be an ImportHandlerSearch object
+	@return 1 if found
+*/
+int importhandler_search_test(struct FilePath *path, void *userdata){
+	/*  user data = the relative path, plus a place
+		to store the full path when found */
+	FILE *f;
+	char *filename;
+	char *fullpath;
+	struct ImportHandlerSearch *searchdata;
+	struct FilePath *fp, *fp1, *fp2;
+	int i;
+	ospath_stat_t buf;
+
+	searchdata = (struct ImportHandlerSearch *)userdata;
+
+	char *pathcomponent;
+	pathcomponent = ospath_str(path); /* eg '/home/john' */
+	CONSOLE_DEBUG("In directory '%s'...",pathcomponent);
+	ASC_FREE(pathcomponent);
+
+	asc_assert(importhandler_library!=NULL);
+
+	for(i=0; i<IMPORTHANDLER_MAX && importhandler_library[i]!=NULL; ++i){
+
+		filename = (*(importhandler_library[i]->filenamefn))(searchdata->partialname); /* eg 'myext' -> 'libmyext.so' */
+		if(filename==NULL){
+			CONSOLE_DEBUG("Unable to create filename from partialname '%s'",searchdata->partialname);
+			continue;
+		}
+		CONSOLE_DEBUG("Filename '%s'",filename);
+		fp = ospath_new_noclean(filename); /* eg 'libmyext.so' */
+		ASC_FREE(filename);
+		asc_assert(fp!=NULL);
+
+		fullpath = ospath_str(searchdata->relativedir);
+		CONSOLE_DEBUG("Relative dir is '%s'",fullpath);
+		ASC_FREE(fullpath);
+
+		fp1 = ospath_concat(path,searchdata->relativedir); /* eg '/home/john/path/to' */
+		asc_assert(fp1!=NULL);
+		ospath_free(fp);
+
+		fullpath = ospath_str(fp1);
+		CONSOLE_DEBUG("Path is '%s'",fullpath);
+		ASC_FREE(fullpath);
+
+		fp2 = ospath_concat(fp1,fp); /* eg '/home/john/path/to/libmyext.so' */
+		asc_assert(fp2!=NULL);
+		ospath_free(fp1);
+
+		fullpath = ospath_str(fp2);
+		CONSOLE_DEBUG("Checking for readable '%s'",fullpath);
+		ASC_FREE(fullpath);
+
+		if(0==ospath_stat(fp2,&buf) && NULL!=(f = ospath_fopen(fp2,"r"))){
+			fclose(f);
+			searchdata->foundpath = fp2;
+			searchdata->handler = importhandler_library[i];
+			return 1; /* success */
+		}
+
+		ospath_free(fp2);
+	}
+	return 0; /* failed */
+}
+
+struct FilePath *importhandler_findinpath(const char *partialname
+		, char *defaultpath, char *envv, struct ImportHandler **handler
+){
+	struct FilePath *fp1; /* relative path */
+	struct ImportHandlerSearch searchdata;
+	char *path;
+	struct FilePath **sp;
+
+	fp1 = ospath_new_noclean(partialname); /* eg 'path/to/myext' */
+	if(fp1==NULL){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid partial path '%s'",partialname);
+		return NULL;
+	}
+
+	searchdata.partialname = ospath_getbasefilename(fp1);
+	if(searchdata.partialname==NULL){
+		CONSOLE_DEBUG("Not a filename");
+		ospath_free(fp1);
+		return NULL;
+	}
+	
+
+	searchdata.relativedir = ospath_getdir(fp1);
+	if(searchdata.relativedir ==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"unable to retrieve file dir");
+		ospath_free(fp1);
+		ASC_FREE(searchdata.partialname);
+		return NULL;
+	}
+	ospath_free(fp1);
+
+	searchdata.foundpath = NULL;
+	searchdata.handler = NULL;
+
+	/** @TODO first, attempt to open without searching in path */
+
+	path=Asc_GetEnv(envv);
+	if(path==NULL){
+		CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",defaultpath);
+		path=defaultpath;
+	}
+
+	CONSOLE_DEBUG("SEARCHPATH IS %s",path);
+	sp = ospath_searchpath_new(path);
+
+	if(NULL==ospath_searchpath_iterate(sp,&importhandler_search_test,&searchdata)){
+		ospath_free(searchdata.relativedir);
+		ASC_FREE(searchdata.partialname);		
+		ospath_searchpath_free(sp);
+		return NULL;
+	}
+
+	ospath_searchpath_free(sp);
+	ASC_FREE(searchdata.partialname);
+	ospath_free(searchdata.relativedir);
+	*handler = searchdata.handler;
+	return searchdata.foundpath;
+}

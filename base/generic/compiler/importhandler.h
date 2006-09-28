@@ -49,11 +49,14 @@ typedef char *ImportHandlerCreateFilenameFn(const char *partialname);
 
 	The function should return 0 on success.
 
-	The 'user_data' parameter can be used to pass additional parameters to
-	the import function, such as verbosity flags or the name of a 'registration'
-	function (as may be the case for importing external DLLs/SOs)
+	@param fp the file to be imported
+	@param initfunc the 'name' of a registration 'function' to be run in the
+	imported file. This comes from the ASCEND syntax "FROM XXXX IMPORT YYYY"
+	(more or less, as I recall) but should normally be set to NULL so that
+	the default registration function can be used, and simpler "IMPORT XXXX"
+	syntax can be used by the end user.
 */
-typedef int ImportHandlerImportFn(struct FilePath *fp,void *user_data);
+typedef int ImportHandlerImportFn(const struct FilePath *fp,const char *initfunc, const char *partialpath);
 
 struct ImportHandler{
 	const char *name; /**< name of this import handler, eg 'extpy' */
@@ -97,5 +100,26 @@ int importhandler_destroylibrary();
 int importhandler_createlibrary();
 int importhandler_printlibrary(FILE *fp);
 int importhandler_printhandler(FILE *fp, struct ImportHandler *);
+
+/*------------------------------------------------------------------------------
+  PATH SEARCH ROUTINES
+*/
+
+/**
+	Search through a path (a la unix $PATH variable) as specified by a specific
+	environment variable (or fall back to a default hard-wired file path) and 
+	find a file that matches the partial filename specfied. For each directory 
+	in the path, the registered importhandlers will be tried, in the order
+	they were registered. If no file matching any of the importhandler filename
+	pattern (eg 'myext' becomes '/path/to/myext.py' for the case of 
+	an import handler with a '.py' extension and a path component of '/path/to')
+	then the next component of the search path is tried.
+
+	@return NULL if no readable file is found, else return a FilePath structure
+	pointing to the location of the file found.
+*/	
+struct FilePath *importhandler_findinpath(const char *partialname
+		, char *defaultpath, char *envv, struct ImportHandler **handler
+);
 
 #endif
