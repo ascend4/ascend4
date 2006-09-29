@@ -836,7 +836,7 @@ struct FilePath *ospath_getdir(struct FilePath *fp){
 	char *pos;
 	char s[PATH_MAX];
 #ifdef WINPATHS
-	char *e;
+	int e;
 #endif
 
 	pos = strrchr(fp->path,PATH_SEPARATOR_CHAR);
@@ -1172,12 +1172,12 @@ struct FilePath **ospath_searchpath_new(const char *path){
 		list[n++]=c;
 	}
 
-	
+
 	for(i=0;i<n;++i){
 		X(list[i]);
 	}
 	V(n);
-	
+
 
 	pp = (struct FilePath **)MALLOC(sizeof(struct FilePath*)*(n+1));
 	for(i=0; i<n; ++i){

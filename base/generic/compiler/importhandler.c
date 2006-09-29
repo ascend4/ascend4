@@ -109,7 +109,7 @@ char *importhandler_extlib_filename(const char *partialname){
 		system-specific stuff here, but it's not as general.
 	*/
 # ifdef __WIN32__
-	snprintf(buffer,PATH_MAX,"%s.dll",partialname1);
+	snprintf(buffer,PATH_MAX,"%s.dll",partialname);
 # elif defined(linux)
 	snprintf(buffer,PATH_MAX,"lib%s.so",partialname); /* changed from .o to .so -- JP */
 # elif defined(sun) || defined(solaris)
@@ -122,7 +122,7 @@ char *importhandler_extlib_filename(const char *partialname){
 #  error "Unknown system type (please define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX)"
 # endif
 #endif
-	
+
 	return buffer;
 }
 
@@ -174,7 +174,7 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 	}
 
 	ASC_FREE(path);
-	return result;	
+	return result;
 }
 
 /*------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ int importhandler_createlibrary(){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to create 'extlib' import handler");
 		return 1;
 	}
-	
+
 	return 0;
 }
 
@@ -255,7 +255,7 @@ FilePathTestFn importhandler_search_test;
 
 /**
 	A FilePath 'test' function for passing to the ospath_searchpath_iterate function.
-	This test function will return a match when an importable file having the 
+	This test function will return a match when an importable file having the
 	required name is present in the fully resolved path.
 
 	@param path the search path component
@@ -350,7 +350,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 		ospath_free(fp1);
 		return NULL;
 	}
-	
+
 
 	searchdata.relativedir = ospath_getdir(fp1);
 	if(searchdata.relativedir ==NULL){
@@ -377,7 +377,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 	if(NULL==ospath_searchpath_iterate(sp,&importhandler_search_test,&searchdata)){
 		ospath_free(searchdata.relativedir);
-		ASC_FREE(searchdata.partialname);		
+		ASC_FREE(searchdata.partialname);
 		ospath_searchpath_free(sp);
 		return NULL;
 	}
