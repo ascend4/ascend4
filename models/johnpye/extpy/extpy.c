@@ -63,7 +63,7 @@ extern ASC_EXPORT(int) extpy_register(){
 /**
 	Create a filename base on a partial filename. In that case of python, this
 	just means adding '.py' to the end.
-	
+
 	@param partialname the filename without suffix, as specified in the user's "IMPORT" command
 	@return new filename, or NULL on failure
 */
@@ -74,7 +74,7 @@ char *extpy_filename(const char *partialname){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Partial name is NULL, can't work out filename");
 		return NULL;
 	}
-			
+
 	len = strlen(partialname);
 	name = ASC_NEW_ARRAY_CLEAR(char,len+4);
 	strcpy(name,partialname);
@@ -99,7 +99,14 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	}else{
 		CONSOLE_DEBUG("INITIALISING PYTHON");
 		Py_Initialize();
+		CONSOLE_DEBUG("COMPLETED ATTEMPT TO INITIALISE PYTHON");
 	}
+
+	if(!Py_IsInitialized()){
+		CONSOLE_DEBUG("UNABLE TO INITIALIZE PYTHON");
+		return 1;
+	}
+	PyRun_SimpleString("print \"HELLO FROM PYTHON IN C\"");
 
 	PyRun_SimpleString("import ascpy");
 	f = fopen(name,"r");
