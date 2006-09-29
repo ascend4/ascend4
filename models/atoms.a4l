@@ -1088,7 +1088,7 @@ END length_parameter;
 (*  M E C H A N I C AL   P R O P E R T I E S
 	---------------------------------------- *)
 	
-    ATOM deflection REFINES solver_var
+    ATOM deflection REFINES solver_var (* to facilitate different display units for small values *)
         DIMENSION L
         DEFAULT 1 {mm};
         lower_bound := -10{m};
@@ -1096,13 +1096,21 @@ END length_parameter;
         nominal := 5{mm};
     END deflection;
 
-  	ATOM second_moment_of_area REFINES solver_var
+  	ATOM second_moment_of_area REFINES solver_var (* for use in beam bending problems *)
   		DIMENSION L^4
   		DEFAULT 6.67e5 {mm^4}; (* for 150UB14 Universal Beam, AISC (Australia) *)
   		lower_bound := 0 {mm^4};
   		upper_bound := 10000e6 {mm^4};
   		nominal := 1e6 {mm^4}; (* this may be too high still *)
   	END second_moment_of_area;
+
+  	ATOM polar_moment_of_inertia REFINES solver_var (* for use in torsion problems *)
+  		DIMENSION L^4
+  		DEFAULT 28.2e3 {mm^4}; (* for 150UB14 Universal Beam, AISC (Australia) *)
+  		lower_bound := 0 {mm^4};
+  		upper_bound := 10000e3 {mm^4};
+  		nominal := 100e3 {mm^4}; (* this may be too high still *)
+  	END polar_moment_of_inertia;
 
     CONSTANT second_moment_of_area_constant
     REFINES real_constant DIMENSION L^4;
