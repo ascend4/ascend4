@@ -32,6 +32,7 @@
 #include "solverstatus.h"
 #include "solverreporter.h"
 #include "incidencematrix.h"
+#include "registry.h"
 %}
 
 // All STL runtime_errors caught to Python
@@ -110,6 +111,7 @@ public:
 %rename(getSetIntValue) Instanc::getSetValue<long>;
 %rename(getSetStringValue) Instanc::getSetValue<SymChar>;
 %rename(Units) UnitsM;
+%rename(set) Registry::setPyObject;
 
 
 // Grab a Python function object as a Python object.
@@ -469,6 +471,9 @@ public:
 			self.setRealValue(val);
 	}
 }
+
+%include "config.h"
+%include "registry.h"
 
 %include "solver.i"
 

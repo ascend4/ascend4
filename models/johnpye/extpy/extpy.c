@@ -15,6 +15,9 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Import handler to provide external python script functionality for ASCEND.
 */
 
 #include <stdio.h>
@@ -59,6 +62,37 @@ extern ASC_EXPORT(int) extpy_register(){
 	}
 	return result;
 }
+
+/*------------------------------------------------------------------------------
+  METHODS TO EXPOSE DATA TO THE EXTERNAL SCRIPT
+*/
+
+/* Return the number of arguments of the application command line */
+static PyObject *extpy_getbrowser(PyObject *self, PyObject *args){
+	PyObject *browser;
+	if(args!=NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"args is not NULL?!");
+	}
+	browser = (PyObject *)importhandler_getsharedpointer("browser");
+	return Py_BuildValue("O",browser);
+}
+
+static PyMethodDef extpymethods[] = {
+	{"getbrowser", extpy_getbrowser, METH_NOARGS,"Retrieve browser pointer"}
+	,{NULL,NULL,0,NULL}
+};
+
+PyMODINIT_FUNC initextpy(void){
+    PyObject *obj;
+	CONSOLE_DEBUG("registering 'extpy' module...");
+	obj = Py_InitModule3("extpy", extpymethods,"Module for accessing shared ASCEND pointers from python");
+	CONSOLE_DEBUG("returned %p",obj);
+	CONSOLE_DEBUG("name %s",PyModule_GetName(obj));
+}
+
+/*------------------------------------------------------------------------------
+  STANDARD IMPORT HANDLER ROUTINES
+*/
 
 /**
 	Create a filename base on a partial filename. In that case of python, this
@@ -107,8 +141,13 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		return 1;
 	}
 	PyRun_SimpleString("print \"HELLO FROM PYTHON IN C\"");
-
 	PyRun_SimpleString("import ascpy");
+	PyRun_SimpleString("L = ascpy.Library()");
+	PyRun_SimpleString("print \"IMPORTED ASCPY\"");
+	PyRun_SimpleString("print L");
+
+	initextpy();
+
 	f = fopen(name,"r");
 	PyRun_AnyFile(f,name);
 	fclose(f);
