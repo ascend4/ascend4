@@ -3,6 +3,12 @@ using namespace std;
 
 #include "extmethod.h"
 
+#ifdef ASCXX_USE_PYTHON
+extern "C"{
+# include <compiler/importhandler.h>
+}
+#endif
+
 /*--- WARNING ---
 	In the C++ interface I'm trying to make the nomenclature
 	a bit more systematic. 'ExternalFunc' as listed end up
@@ -27,6 +33,25 @@ ExtMethod::ExtMethod(const ExtMethod &old) : e(old.e) {
 ExtMethod::ExtMethod(){
 	throw runtime_error("Can't create empty ExtMethod");
 }
+
+#ifdef ASCXX_USE_PYTHON
+/**
+	Declare and register a new external script method from Python
+
+	@TODO not sure if this is the right place for this... problems when creating
+	the method might cause problems. Perhaps it should be in the 'library'
+	object instead?
+*/
+ExtMethod::ExtMethod(PyObject *obj){
+	CONSOLE_DEBUG("CREATING EXTERNAL PYTHON METHOD");
+
+	ExtMethodRun *runfn;
+	runfn = (ExtMethodRun *)importhandler_getsharedpointer("extpy.method");
+
+	CreateUserFunctionMethod("myextpyfn",runfn,0,"external python function",(void *)obj);
+	e = LookupExtFunc("myextpyfn");
+}
+#endif
 
 const char *
 ExtMethod::getName() const{

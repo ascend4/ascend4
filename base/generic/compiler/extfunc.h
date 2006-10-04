@@ -215,10 +215,14 @@ struct BlackBoxExternalFunc {
 		name in the ascend-language argument list is expanded to a list
 		(which may contain 0 or more Instances) and appended to args.
 */
-typedef int ExtMethodRun( struct Instance *context, struct gl_list_t *args);
+typedef int ExtMethodRun(struct Instance *context, struct gl_list_t *args, void *user_data);
 
 struct MethodExternalFunc {
   ExtMethodRun *run; /**< the method invoked. */
+  void *user_data; /**< I'd anticipate that this would be a function pointer 
+		implemented in an external scripting language. Should only be accessed 
+		from inside the 'run' function! -- JP
+  */
 #if 0 /* have no use for these currently. */
   ExtMethodInit *initial; /**< allowed to be null if not needed. */
   ExtMethodInit *final; /**< allowed to be null if not needed. */
@@ -270,7 +274,7 @@ extern int AddExternalFunc(struct ExternalFunc *efunc, int force);
 		or 0 if no addition is made.
 */
 
-extern struct ExternalFunc *LookupExtFunc(CONST char *funcname);
+ASC_DLLSPEC(struct ExternalFunc *) LookupExtFunc(CONST char *funcname);
 /**<
 	Returns the external function having the given name, or NULL if
 	not found.
@@ -339,12 +343,12 @@ ASC_DLLSPEC(CONST char*) ExternalFuncName(CONST struct ExternalFunc *efunc);
 */
 typedef int ExtMethodInit( struct Instance *context);
 
-ASC_DLLSPEC(int) CreateUserFunctionMethod(CONST char *name,
-                             /*  ExtMethodInit *initial, */
-                              ExtMethodRun *run,
-                             /*  ExtMethodInit *final, */
-                              CONST long n_args,
-                              CONST char *help);
+ASC_DLLSPEC(int) CreateUserFunctionMethod(CONST char *name
+		,ExtMethodRun *run
+		,CONST long n_args
+		,CONST char *help
+		,void *user_data
+);
 /**<
  *  Adds an external method call to the ASCEND system.
  *  The name of the function is looked up.  If it already exists, the
@@ -366,6 +370,7 @@ ASC_DLLSPEC(int) CreateUserFunctionMethod(CONST char *name,
 
 /** Fetch method run function. */
 extern ExtMethodRun *GetExtMethodRun(struct ExternalFunc *efunc);
+extern void *GetExtMethodUserData(struct ExternalFunc *efunc);
 
 /*------------------------------------------------------------------------------
   BLACK BOX STUFF

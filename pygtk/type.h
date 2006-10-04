@@ -1,9 +1,10 @@
 #ifndef ASCXX_TYPE_H
 #define ASCXX_TYPE_H
 
+#include "config.h"
+
 #include <vector>
 
-#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <compiler/fractions.h>
