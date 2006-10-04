@@ -96,6 +96,7 @@ Section "ASCEND (required)"
   File /r /x .svn "..\models\*.bz2"
   File /r /x .svn "..\models\*.tcl"
   File /r /x .svn "..\models\*.dll" ; extension modules
+  File /r /x .svn "..\models\*.py"; python modules
 
   SetOutPath $INSTDIR
   File "Makefile.bt"

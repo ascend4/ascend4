@@ -802,10 +802,10 @@ END length_parameter;
 
     ATOM area REFINES solver_var
         DIMENSION L^2
-        DEFAULT 10.0{ft^2};
-        lower_bound := 0.0{ft^2};
-        upper_bound := 1e50{ft^2};
-        nominal := 10.0{ft^2};
+        DEFAULT 1{m^2};
+        lower_bound := 0.0{m^2};
+        upper_bound := 1e50{m^2};
+        nominal := 1{m^2};
     END area;
 
     ATOM inverse_area REFINES solver_var
@@ -975,6 +975,14 @@ END length_parameter;
         nominal := 10.0{ft};
     END delta_distance;
 
+    ATOM delta_area REFINES solver_var
+        DIMENSION L^2
+        DEFAULT 1{m^2};
+        lower_bound := -1e50{m^2};
+        upper_bound := 1e50{m^2};
+        nominal := 1{m^2};
+    END delta_area;
+    
     ATOM temperature_rate REFINES solver_var
         DIMENSION TMP/T
         DEFAULT 0{K/s};
