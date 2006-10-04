@@ -30,6 +30,7 @@
 #include <utilities/ascDynaLoad.h>
 #include <utilities/ascPanic.h>
 #include <utilities/ascEnvVar.h>
+#include <general/table.h>
 #include "importhandler.h"
 
 /*
@@ -43,6 +44,11 @@
 	but unfortunately such globals are 'The ASCEND Way'.
 */
 struct ImportHandler **importhandler_library=NULL;
+
+/**
+	Table of registered pointers for use in passing GUI data out to external scripts.
+*/
+struct Table *importhandler_sharedpointers=NULL;
 
 ASC_DLLSPEC(int) importhandler_add(struct ImportHandler *handler){
 	int i;
@@ -351,7 +357,6 @@ struct FilePath *importhandler_findinpath(const char *partialname
 		return NULL;
 	}
 
-
 	searchdata.relativedir = ospath_getdir(fp1);
 	if(searchdata.relativedir ==NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"unable to retrieve file dir");
@@ -387,4 +392,35 @@ struct FilePath *importhandler_findinpath(const char *partialname
 	ospath_free(searchdata.relativedir);
 	*handler = searchdata.handler;
 	return searchdata.foundpath;
+}
+
+/*------------------------------------------------------------------------------
+  SHARED POINTER TABLE
+*/
+
+int importhandler_createsharedpointertable(){
+	if(importhandler_sharedpointers==NULL){
+		CONSOLE_DEBUG("CREATED SHARED POINTER TABLE");
+		importhandler_sharedpointers = CreateTable(31);
+	}
+	return 0;
+}
+
+int importhandler_setsharedpointer(const char *key, void *ptr){
+	importhandler_createsharedpointertable();
+	if(key==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"key is NULL");
+		return 1;
+	}
+	AddTableData(importhandler_sharedpointers,ptr,key);
+	return 0;
+}		
+
+void *importhandler_getsharedpointer(const char *key){
+	importhandler_createsharedpointertable();
+	if(key==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"key is NULL");
+		return 1;
+	}
+	return LookupTableData(importhandler_sharedpointers,key);
 }

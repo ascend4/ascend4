@@ -122,4 +122,33 @@ struct FilePath *importhandler_findinpath(const char *partialname
 		, char *defaultpath, char *envv, struct ImportHandler **handler
 );
 
+/*------------------------------------------------------------------------------
+  SHARED POINTER TABLE
+*/
+
+/**
+	Create a new registry. This should be called whenever an import handler
+	library is being created, or when a GUI first wants to register pointers.
+
+	@return 0 on success
+*/
+ASC_DLLSPEC(int) importhandler_createsharedpointertable();
+
+/**
+	Sets a pointer in the shared pointer table. This should only be called from
+	the GUI code.
+
+	@return 0 on success
+*/
+ASC_DLLSPEC(int) importhandler_setsharedpointer(const char *key, void *ptr);
+
+/**
+	Retrieve a pointer from the shared pointer table. Returns NULL if the
+	pointer is not found (or if it is found but has NULL value). This should
+	only be used from import handler code.
+
+	@return NULL on not found (or NULL value stored in registry)
+*/
+ASC_DLLSPEC(void *) importhandler_getsharedpointer(const char *key);
+
 #endif

@@ -1,54 +1,45 @@
-/*
- *  Table Module
- *  by Kirk A. Abbott
- *  Created December 29, 1994.
- *  Version: $Revision: 1.3 $
- *  Version control file: $RCSfile: table.h,v $
- *  Date last modified: $Date: 1998/06/16 15:47:47 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1994 Kirk Andre Abbott
- *
- *  The Ascend Language Interpreter is free software; you can
- *  redistribute it and/or modify it under the terms of the GNU
- *  General Public License as published by the Free Software
- *  Foundation; either version 2 of the License, or (at your option)
- *  any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1994 Kirk Andre Abbott
 
-/** @file
- *  Hash Table Module.
- *
- *  Many hash tables are used throughout the implementation of a compiler
- *  and/or interpreter. This module (in the spirit of the list module)
- *  attempts to provide a generic table implementation, based on the classic
- *  *bucket and chains* for resolving collisions. Nothing fancy is done,
- *  except that we cache a ptr to the last thing found, so that access to
- *  it if required is fast. We append the new element to the front of the
- *  chain. The hashpjw algorithm is used.<br><br>
- *
- *  This module is appropriate for hash tables keyed with arbitrary strings.
- *  It is not appropriate for use with symbol table entry keys.
- *  <pre>
- *  Requires:
- *        #include "utilities/ascConfig.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-#ifndef __table_h_seen__
-#define __table_h_seen__
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Hash Table Module.
+	
+	Many hash tables are used throughout the implementation of a compiler
+	and/or interpreter. This module (in the spirit of the list module)
+	attempts to provide a generic table implementation, based on the classic
+	*bucket and chains* for resolving collisions. Nothing fancy is done,
+	except that we cache a ptr to the last thing found, so that access to
+	it if required is fast. We append the new element to the front of the
+	chain. The hashpjw algorithm is used.
+	
+	This module is appropriate for hash tables keyed with arbitrary strings.
+	It is not appropriate for use with symbol table entry keys.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+*//*
+	by Kirk A. Abbott
+	Created December 29, 1994.
+	Last in CVS $Revision: 1.3 $ $Date: 1998/06/16 15:47:47 $ $Author: mthomas $
+*/
+
+#ifndef ASC_TABLE_H
+#define ASC_TABLE_H
 
 typedef  void (*TableIteratorOne)(void *);
 /**<
@@ -225,5 +216,4 @@ ASC_DLLSPEC(void *) TableLastFind(struct Table *table);
  *  @param table Pointer to the hash table to query (non-NULL).
  */
 
-#endif /* __table_h_seen__ */
-
+#endif /* ASC_TABLE_H */

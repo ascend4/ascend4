@@ -474,6 +474,12 @@ class Browser:
 		self.automenu.set_active(self.is_auto)
 
 		#--------
+		# tell libascend about this 'browser' object
+
+		print dir(ascpy.Registry())
+		ascpy.Registry().set("browser",self)
+
+		#--------
 		# options
 
 		if(len(args)==1):
