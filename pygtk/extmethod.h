@@ -2,6 +2,7 @@
 #define ASCXX_EXTMETHOD_H
 
 #include "config.h"
+
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <compiler/compiler.h>
@@ -9,6 +10,10 @@ extern "C"{
 }
 
 #include "symchar.h"
+
+#ifdef ASCXX_USE_PYTHON
+# include <Python.h>
+#endif
 
 /**
 	This is a wrapper for external methods as returned
@@ -22,6 +27,9 @@ public:
 	ExtMethod();
 	ExtMethod(const struct ExternalFunc *);
 	ExtMethod(const ExtMethod &);
+#ifdef ASCXX_USE_PYTHON
+	ExtMethod(PyObject *);
+#endif
 	const char *getHelp() const;
 	const char *getName() const;
 	const unsigned long getNumInputs() const;

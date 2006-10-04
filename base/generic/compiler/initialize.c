@@ -493,6 +493,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
   unsigned long c,len,pos;
 
   ExtMethodRun *eval_func;
+  void *user_data;
   int nok;
 
   funcname = ExternalStatFuncName(stat);
@@ -511,6 +512,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
   CONSOLE_DEBUG("%s: in:%ld, out:%ld", efunc->name, efunc->n_inputs, efunc->n_outputs);
 
   eval_func = GetExtMethodRun(efunc);
+  user_data = GetExtMethodUserData(efunc);
   if (eval_func == NULL) {
     CONSOLE_DEBUG("GetValueFunc(efunc) returned NULL");
     fm->ErrNo = Proc_CallError;
@@ -569,7 +571,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
 
   /*CONSOLE_DEBUG("CHECKED EXTERNAL ARGS, OK");*/
 
-  nok = (*eval_func)(fm->i,arglist);
+  nok = (*eval_func)(fm->i,arglist,user_data);
   /* this should switch on Proc_CallXXXXX */
     /* should switch on proc_enum call bits to translate Proc_Call
      * flow of control to our fm->flow.

@@ -113,10 +113,12 @@ int Builtins_Init(void)
   ERROR_REPORTER_HERE(ASC_USER_WARNING,"Builtins_Init: DISABLED at compile-time");
 #else
   /* ERROR_REPORTER_DEBUG("Loading function asc_free_all_variables\n"); */
-  result = CreateUserFunctionMethod("asc_free_all_variables",
-			Asc_FreeAllVars,
-			1,
-		 "Unset 'fixed' flag of all items of type 'solver_var'");
+  result = CreateUserFunctionMethod("asc_free_all_variables"
+		,Asc_FreeAllVars
+		,1 /* num of args */
+		,"Unset 'fixed' flag of all items of type 'solver_var'" /* help */
+		,NULL /* user_data */
+  );
 #endif
   return result;
 }

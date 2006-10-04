@@ -233,10 +233,10 @@ Example: do_bisection(x[1..n],x_par[1..n], y[1..n]). \n";
   int result;
   result = CreateUserFunctionMethod("do_set_values",
 			      do_set_values_eval,
-			      3,set_values_help);
+			      3,set_values_help,NULL);
   result += CreateUserFunctionMethod("do_bisection",
 			      do_bisection_eval,
-			       3,bisection_help);
+			       3,bisection_help,NULL);
   return result;
 }
 

@@ -235,14 +235,12 @@ ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc)
   EXTERNAL METHOD STUFF
 */
 
-int CreateUserFunctionMethod(CONST char *name,
-	/* 	       ExtMethodInit *init, */
-		       ExtMethodRun *run,
-	/*	       ExtMethodInitEvalFunc *final, */
-		       CONST long n_args,
-	/*	       CONST unsigned long n_outputs, */
-		       CONST char *help)
-{
+int CreateUserFunctionMethod(CONST char *name
+		       ,ExtMethodRun *run
+		       ,CONST long n_args
+		       ,CONST char *help
+		       ,void *user_data
+){
   struct ExternalFunc *efunc;
   int isNew = 1;
   if (name == NULL) {
@@ -285,11 +283,16 @@ int CreateUserFunctionMethod(CONST char *name,
 
 
 
-ExtMethodRun *GetExtMethodRun(struct ExternalFunc *efunc)
-{
+ExtMethodRun *GetExtMethodRun(struct ExternalFunc *efunc){
   asc_assert(efunc!=NULL);
   asc_assert(efunc->etype == efunc_Method);
   return efunc->u.method.run;
+}
+
+void *GetExtMethodUserData(struct ExternalFunc *efunc){
+  asc_assert(efunc!=NULL);
+  asc_assert(efunc->etype == efunc_Method);
+  return efunc->u.method.user_data;
 }
 
 /*------------------------------------------------------------------------------
