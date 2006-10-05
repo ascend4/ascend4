@@ -12,10 +12,6 @@
 # include <Python.h>
 #endif
 
-#ifndef ASCXX_USE_PYTHON
-# error "WHERE IS PYTHON?"
-#endif
-
 class Registry{
 public:
 	void setInteger(const char *key, int value);

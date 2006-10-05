@@ -111,8 +111,6 @@ public:
 %rename(getSetIntValue) Instanc::getSetValue<long>;
 %rename(getSetStringValue) Instanc::getSetValue<SymChar>;
 %rename(Units) UnitsM;
-%rename(set) Registry::setPyObject;
-
 
 // Grab a Python function object as a Python object.
 %typemap(in) PyObject *pyfunc {
@@ -472,8 +470,12 @@ public:
 	}
 }
 
-%include "config.h"
 %include "registry.h"
+%extend Registry{
+	void set(const char *key, PyObject *obj){
+		self->setPyObject(key,obj);
+	}
+}
 
 %include "solver.i"
 
