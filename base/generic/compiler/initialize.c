@@ -569,9 +569,12 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     return;
   }
 
-  /*CONSOLE_DEBUG("CHECKED EXTERNAL ARGS, OK");*/
+  CONSOLE_DEBUG("CHECKED EXTERNAL ARGS, OK");
 
   nok = (*eval_func)(fm->i,arglist,user_data);
+
+  CONSOLE_DEBUG("BACK FROM RUNING FUNC AT %p",eval_func);
+
   /* this should switch on Proc_CallXXXXX */
     /* should switch on proc_enum call bits to translate Proc_Call
      * flow of control to our fm->flow.

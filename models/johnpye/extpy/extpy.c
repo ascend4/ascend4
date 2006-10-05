@@ -28,6 +28,7 @@
 #include <general/ospath.h>
 
 #include <compiler/importhandler.h>
+#include <compiler/extfunc.h>
 
 #include <Python.h>
 
@@ -46,7 +47,7 @@ ImportHandlerImportFn extpy_import;
 extern ASC_EXPORT(int) extpy_register(){
 	int result = 0;
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Hello from EXTPY...");
+	CONSOLE_DEBUG("Hello...");
 
 	struct ImportHandler *handler;
 	handler = ASC_NEW(struct ImportHandler);
@@ -64,10 +65,33 @@ extern ASC_EXPORT(int) extpy_register(){
 }
 
 /*------------------------------------------------------------------------------
-  METHODS TO EXPOSE DATA TO THE EXTERNAL SCRIPT
+  PYTHON METHOD INVOKER
 */
 
-/* Return the number of arguments of the application command line */
+ExtMethodRun extpy_invokemethod;
+
+/** Method invoker. extpy will supply a pointer to this function whenever it
+	registers a python function as an external script method. This function will
+	then dereference the user_data field into a python function, and execute that
+	python function.
+
+	One difficult aspect is the question of how to usefully pass the 'context'
+	argument to Python?
+*/
+int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *user_data){
+	PyObject *fn;
+	/* cast user data to PyObject pointer */
+	fn = (PyObject *) user_data;
+
+	ERROR_REPORTER_HERE(ASC_USER_NOTE,"RUNNING PYTHON METHOD");
+	CONSOLE_DEBUG("RUNNING PYTHON METHOD...");
+	return 1;
+}
+
+/*------------------------------------------------------------------------------
+  'EXTPY' PYTHON STATIC MODULE
+*/
+
 static PyObject *extpy_getbrowser(PyObject *self, PyObject *args){
 	PyObject *browser;
 	if(args!=NULL){
@@ -77,17 +101,64 @@ static PyObject *extpy_getbrowser(PyObject *self, PyObject *args){
 	return Py_BuildValue("O",browser);
 }
 
+static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
+	PyObject *fn, *name, *docstring;
+	const char *cname, *cdocstring;
+	int res;
+	int nargs = 1;
+
+	PyArg_ParseTuple(args,"O:registermethod", &fn);
+	if(!PyCallable_Check(fn)){
+		PyErr_SetString(PyExc_TypeError,"parameter must be callable");
+		return NULL;
+	}
+	Py_INCREF(fn);
+
+	CONSOLE_DEBUG("FOUND FN=%p",fn);
+
+	name = PyObject_GetAttr(fn,PyString_FromString("__name__"));
+	if(name==NULL){
+		CONSOLE_DEBUG("No __name__ attribute");
+		PyErr_SetString(PyExc_TypeError,"No __name__ attribute");
+		return NULL;
+	}
+	cname = PyString_AsString(name);
+
+	CONSOLE_DEBUG("REGISTERED METHOD '%s' HAS %d ARGS",cname,nargs);
+
+	docstring = PyObject_GetAttr(fn,PyString_FromString("func_doc"));
+	cdocstring = "(no help)";
+	if(name!=NULL){
+		cdocstring = PyString_AsString(docstring);
+		CONSOLE_DEBUG("DOCSTRING: %s",cdocstring);
+	}
+
+	res = CreateUserFunctionMethod(cname,extpy_invokemethod,nargs,cdocstring,fn);
+
+	CONSOLE_DEBUG("EXTPY INVOKER IS AT %p",extpy_invokemethod);
+
+	if(res){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem registering external script method (%d)",res);
+		PyErr_SetString(PyExc_Exception,"unable to register script method");
+		return NULL;
+	}
+
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Registered python method '%s'",cname);
+
+	/* nothing gets returned (but possibly an exception) */
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
 static PyMethodDef extpymethods[] = {
 	{"getbrowser", extpy_getbrowser, METH_NOARGS,"Retrieve browser pointer"}
+	,{"registermethod", extpy_registermethod, METH_VARARGS,"Register a python method as an ASCEND script method"}
 	,{NULL,NULL,0,NULL}
 };
 
 PyMODINIT_FUNC initextpy(void){
     PyObject *obj;
-	CONSOLE_DEBUG("registering 'extpy' module...");
 	obj = Py_InitModule3("extpy", extpymethods,"Module for accessing shared ASCEND pointers from python");
-	CONSOLE_DEBUG("returned %p",obj);
-	CONSOLE_DEBUG("name %s",PyModule_GetName(obj));
 }
 
 /*------------------------------------------------------------------------------
@@ -128,9 +199,9 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	FILE *f;
 	PyObject *pyfile;
 
-	CONSOLE_DEBUG("IMPORTING PYTHON SCRIPT %s",name);
+	CONSOLE_DEBUG("Importing Python script %s",name);
 	if(Py_IsInitialized()){
-		CONSOLE_DEBUG("PYTHON IS ALREADY INITIALISED");
+		CONSOLE_DEBUG("Python was already initialised");
 	}else{
 		CONSOLE_DEBUG("INITIALISING PYTHON");
 		Py_Initialize();
@@ -138,38 +209,40 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	}
 
 	if(!Py_IsInitialized()){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to initialise Python");
 		CONSOLE_DEBUG("UNABLE TO INITIALIZE PYTHON");
+		ASC_FREE(name);
 		return 1;
 	}
-	PyRun_SimpleString("print \"HELLO FROM PYTHON IN C\"");
-	CONSOLE_DEBUG("IMPORTING ASCPY...");
-	PyRun_SimpleString("import ascpy");
-	CONSOLE_DEBUG("CREATING LIBRARY OBJECT...");
-	PyRun_SimpleString("L = ascpy.Library()");
-	CONSOLE_DEBUG("PRINTING MESSAGE...");
-	PyRun_SimpleString("print \"IMPORTED ASCPY\"");
-	PyRun_SimpleString("print L");
 
 	initextpy();
 
-	CONSOLE_DEBUG("OPENING THE SCRIPT \"%s\"",name);
 	pyfile = PyFile_FromString(name,"r");
 	if(pyfile==NULL){
 		CONSOLE_DEBUG("Failed opening script");
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"UNABLE TO OPEN SCRIPT");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to open '%s' (%s)",partialpath,name);
+		ASC_FREE(name);
 		return 1;
 	}
 	
 	f = PyFile_AsFile(pyfile);		
 	if(f==NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"UNABLE TO CAST TO FILE*");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to cast PyObject to FILE*");
+		ASC_FREE(name);
 		return 1;
 	}
-	CONSOLE_DEBUG("RUNNING THE SCRIPT");
+
 	PyRun_AnyFileEx(f,name,1);
-	CONSOLE_DEBUG("FINISHED RUNNING THE SCRIPT");
+	/*if(PyErr_Occurred()){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"An error occurred in the python script '%s'. Check the console for details");
+		PyErr_Print();
+		PyErr_Clear();
+		return 1;
+	}*/
+
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Imported python script '%s' (check console for errors)",partialpath);
 
 	ASC_FREE(name);
-	return 1;
+	return 0;
 }
 

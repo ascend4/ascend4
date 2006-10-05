@@ -199,7 +199,7 @@ int importhandler_createlibrary(){
 	for(i=0; i < IMPORTHANDLER_MAX; ++i){
 		importhandler_library[i] = NULL;
 	}
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ImportHandler library created");
+	CONSOLE_DEBUG("ImportHandler library created");
 
 	extlib_handler = ASC_NEW(struct ImportHandler);
 	extlib_handler->name ="extlib";
