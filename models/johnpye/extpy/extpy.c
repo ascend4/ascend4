@@ -141,15 +141,27 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		return 1;
 	}
 	PyRun_SimpleString("print \"HELLO FROM PYTHON IN C\"");
+	CONSOLE_DEBUG("IMPORTING ASCPY...");
 	PyRun_SimpleString("import ascpy");
+	CONSOLE_DEBUG("CREATING LIBRARY OBJECT...");
 	PyRun_SimpleString("L = ascpy.Library()");
+	CONSOLE_DEBUG("PRINTING MESSAGE...");
 	PyRun_SimpleString("print \"IMPORTED ASCPY\"");
 	PyRun_SimpleString("print L");
 
 	initextpy();
 
+	CONSOLE_DEBUG("OPENING THE SCRIPT \"%s\"",name);
 	f = fopen(name,"r");
+	if(f==NULL){
+		CONSOLE_DEBUG("Failed opening script");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"UNABLE TO OPEN SCRIPT");
+		return 1;
+	}
+	CONSOLE_DEBUG("RUNNING THE SCRIPT");
 	PyRun_AnyFile(f,name);
+	CONSOLE_DEBUG("FINISHED RUNNING THE SCRIPT");
+
 	fclose(f);
 
 	ASC_FREE(name);
