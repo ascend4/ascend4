@@ -126,6 +126,7 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	char *name;
 	name = ospath_str(fp);
 	FILE *f;
+	PyObject *pyfile;
 
 	CONSOLE_DEBUG("IMPORTING PYTHON SCRIPT %s",name);
 	if(Py_IsInitialized()){
@@ -152,17 +153,21 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	initextpy();
 
 	CONSOLE_DEBUG("OPENING THE SCRIPT \"%s\"",name);
-	f = fopen(name,"r");
-	if(f==NULL){
+	pyfile = PyFile_FromString(name,"r");
+	if(pyfile==NULL){
 		CONSOLE_DEBUG("Failed opening script");
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"UNABLE TO OPEN SCRIPT");
 		return 1;
 	}
+	
+	f = PyFile_AsFile(pyfile);		
+	if(f==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"UNABLE TO CAST TO FILE*");
+		return 1;
+	}
 	CONSOLE_DEBUG("RUNNING THE SCRIPT");
-	PyRun_AnyFile(f,name);
+	PyRun_AnyFileEx(f,name,1);
 	CONSOLE_DEBUG("FINISHED RUNNING THE SCRIPT");
-
-	fclose(f);
 
 	ASC_FREE(name);
 	return 1;
