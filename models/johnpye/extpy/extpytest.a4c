@@ -30,5 +30,8 @@ END values;
 METHOD on_load;
 	RUN reset; RUN values;
 END on_load;
+METHOD pythonthing;
+  EXTERNAL mypythonmethod(SELF);
+END pythonthing;
 
 END extpytest;

@@ -214,6 +214,7 @@ struct BlackBoxExternalFunc {
 	@param args Each element of args is a list of instances; each
 		name in the ascend-language argument list is expanded to a list
 		(which may contain 0 or more Instances) and appended to args.
+	@return ???
 */
 typedef int ExtMethodRun(struct Instance *context, struct gl_list_t *args, void *user_data);
 
