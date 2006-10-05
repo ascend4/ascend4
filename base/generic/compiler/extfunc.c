@@ -264,6 +264,7 @@ int CreateUserFunctionMethod(CONST char *name
   efunc->n_inputs = n_args;
   efunc->n_outputs = 0;
   efunc->u.method.run = run;
+  efunc->u.method.user_data = user_data;
 #if 0
   efunc->u.method.initial = init;
   efunc->u.method.final = final;
