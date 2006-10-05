@@ -79,13 +79,32 @@ ExtMethodRun extpy_invokemethod;
 	argument to Python?
 */
 int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *user_data){
-	PyObject *fn;
+	PyObject *fn, *arglist, *result;
 	/* cast user data to PyObject pointer */
+
+	CONSOLE_DEBUG("USER_DATA IS AT %p",user_data);
+
 	fn = (PyObject *) user_data;
 
 	ERROR_REPORTER_HERE(ASC_USER_NOTE,"RUNNING PYTHON METHOD");
 	CONSOLE_DEBUG("RUNNING PYTHON METHOD...");
-	return 1;
+
+	PyErr_Clear();
+
+	if(!PyCallable_Check(fn)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"user_data is not a PyCallable");
+		return 1;
+	}
+
+	arglist = Py_BuildValue("(i)", 666);
+	result = PyEval_CallObject(fn, arglist);
+	Py_DECREF(arglist);
+	if(PyErr_Occurred()){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed running python method");
+		return 1;
+	}
+
+	return 0;
 }
 
 /*------------------------------------------------------------------------------
@@ -112,7 +131,6 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 		PyErr_SetString(PyExc_TypeError,"parameter must be callable");
 		return NULL;
 	}
-	Py_INCREF(fn);
 
 	CONSOLE_DEBUG("FOUND FN=%p",fn);
 
@@ -133,7 +151,10 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 		CONSOLE_DEBUG("DOCSTRING: %s",cdocstring);
 	}
 
-	res = CreateUserFunctionMethod(cname,extpy_invokemethod,nargs,cdocstring,fn);
+	res = CreateUserFunctionMethod(cname,extpy_invokemethod,nargs,cdocstring,(void *)fn);
+	CONSOLE_DEBUG("PYTHON FUNCTION IS AT %p",fn);
+	Py_INCREF(fn);
+	CONSOLE_DEBUG("PYTHON FUNCTION IS AT %p",fn);
 
 	CONSOLE_DEBUG("EXTPY INVOKER IS AT %p",extpy_invokemethod);
 
