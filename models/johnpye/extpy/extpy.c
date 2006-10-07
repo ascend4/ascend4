@@ -47,8 +47,6 @@ ImportHandlerImportFn extpy_import;
 extern ASC_EXPORT(int) extpy_register(){
 	int result = 0;
 
-	CONSOLE_DEBUG("Hello...");
-
 	struct ImportHandler *handler;
 	handler = ASC_NEW(struct ImportHandler);
 
@@ -80,6 +78,7 @@ ExtMethodRun extpy_invokemethod;
 */
 int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *user_data){
 	PyObject *fn, *arglist, *result;
+	PyObject *pycontext;
 	/* cast user data to PyObject pointer */
 
 	CONSOLE_DEBUG("USER_DATA IS AT %p",user_data);
@@ -96,11 +95,26 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 		return 1;
 	}
 
+	/*
+		We need to be able to convert C 'struct Instance' pointers to Python 'Instance' objects.
+		This functionality is implemented in 'ascpy' but we're not going to link to that here,
+		so we will use the importhandler 'getsharedpointer' trick to get hold of the
+		casting function, then run it here.
+	*/
+	CONSOLE_DEBUG("ADDING 'context' AS SHARED POINTER");
+	importhandler_setsharedpointer("context",(void *)context);
+
 	arglist = Py_BuildValue("(i)", 666);
+	CONSOLE_DEBUG("BUILDING ARGLIST FOR PYTHON METHOD");
+
+	CONSOLE_DEBUG("CALLING PYTHON");
 	result = PyEval_CallObject(fn, arglist);
+	CONSOLE_DEBUG("DONE CALLING PYTHON");
 	Py_DECREF(arglist);
+
 	if(PyErr_Occurred()){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed running python method");
+		PyErr_Print();
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed running python method (see console)");
 		return 1;
 	}
 
@@ -237,6 +251,11 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	}
 
 	initextpy();
+
+	if(PyRun_SimpleString("import ascpy")){
+		CONSOLE_DEBUG("Failed importing 'ascpy'");
+		return 1;
+	}
 
 	pyfile = PyFile_FromString(name,"r");
 	if(pyfile==NULL){
