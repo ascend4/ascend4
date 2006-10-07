@@ -98,14 +98,17 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 	/*
 		We need to be able to convert C 'struct Instance' pointers to Python 'Instance' objects.
 		This functionality is implemented in 'ascpy' but we're not going to link to that here,
-		so we will use the importhandler 'getsharedpointer' trick to get hold of the
-		casting function, then run it here.
+		so we will use the importhandler 'setsharedpointer' trick to pass the object to the
+		'registry' then write a routine in ascpy that will cast it into the appropriate
+		Python object.
 	*/
-	CONSOLE_DEBUG("ADDING 'context' AS SHARED POINTER");
 	importhandler_setsharedpointer("context",(void *)context);
 
+	/*
+		Eventually we'll work out how to pass the instance object directly into Python. For
+		the moment, just have a placeholder variable instead:
+	*/
 	arglist = Py_BuildValue("(i)", 666);
-	CONSOLE_DEBUG("BUILDING ARGLIST FOR PYTHON METHOD");
 
 	CONSOLE_DEBUG("CALLING PYTHON");
 	result = PyEval_CallObject(fn, arglist);
@@ -113,6 +116,7 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 	Py_DECREF(arglist);
 
 	if(PyErr_Occurred()){
+		/** @TODO we really want to capture these error messages and output them to the GUI, instead of outputting them to the console */
 		PyErr_Print();
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed running python method (see console)");
 		return 1;
