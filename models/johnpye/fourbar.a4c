@@ -1,5 +1,8 @@
 REQUIRE "atoms.a4l";
 
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/fourbarplot";
+
 (* 
 	Model of a four-bar linkage
 	
@@ -54,6 +57,9 @@ METHOD values;
 	
 	alpha:= 30 {deg};
 END values;
+METHOD fancyplot;
+	EXTERNAL fourbarplot(SELF);
+END fancyplot;
 
 METHOD on_load;
 	RUN reset;

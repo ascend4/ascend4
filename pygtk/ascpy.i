@@ -417,6 +417,13 @@ public:
 	Instanc __getattr__(const char *name){
 		return self->getChild(SymChar(name));
 	}
+	double __float__(){
+		if(self->isReal()){
+			return self->getRealValue();
+		}else{
+			throw std::runtime_error("Can't cast this instance to float");
+		}
+	}
 		
 	%pythoncode {
 		def getSetValue(self):
@@ -472,6 +479,9 @@ public:
 				self.setFixed();
 			# getReporter().reportError("Setting value of %s to %s" % (self.getName().toString(),val))
 			self.setRealValue(val);
+
+		def __coerce__(self,other):
+			return (self.getValue(),other.getValue())
 	}
 }
 
