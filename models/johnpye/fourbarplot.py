@@ -32,4 +32,4 @@ def fourbarplot(self):
 	show()
 
 extpy.registermethod(fourbarplot)
-#the above method can be called using "EXTERNAL mypythonmethod(SELF)" in ASCEND.
+#the above method can be called using "EXTERNAL fourbarplot(SELF)" in ASCEND.
