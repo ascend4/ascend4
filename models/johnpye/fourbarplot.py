@@ -1,31 +1,33 @@
 import extpy;
-browser = extpy.getbrowser()
 
 from pylab import *
+from solverreporter import *
 
 def fourbarplot(self):
 	"""Plot the geometry of the four-bar linkage"""
 	# following is an unfortunate necessity in the current system architecture:
 	self = ascpy.Registry().getInstance('context')
 
-	extpy.getbrowser().do_solve()
+	browser = extpy.getbrowser()
+	browser.do_solve()
 
 	ioff()
 	figure()
 	hold(True)
 
-	for alpha in [10,20,30]:
+	for alpha in range(10,74,4):
 		self.alpha.setRealValueWithUnits(alpha,"deg")
 
-		extpy.getbrowser().do_solve()
+		browser.sim.solve(browser.solver,SimpleSolverReporter(browser))
 
 		x = [float(x) for x in [self.x_A, self.x_B, self.x_C, self.x_D]]
 		y = [float(y) for y in [self.y_A, self.y_B, self.y_C, self.y_D]]
 
-		plot(x,y,"r-")
-		plot(x,y,"bo")
+		plot(x,y,"y-")
+		plot(x[0:2],y[0:2],"ro")
+		plot(x[2:4],y[2:4],"bo")
 
-	browser.reporter.reportNote("Plotting completed")
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
 
