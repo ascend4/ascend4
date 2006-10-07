@@ -37,6 +37,7 @@ extern "C"{
 #include <compiler/parser.h>
 #include <utilities/error.h>
 #include <general/env.h>
+#include <compiler/importhandler.h>
 }
 
 #include "library.h"

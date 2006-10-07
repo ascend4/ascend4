@@ -426,7 +426,7 @@ public:
 				raise RuntimeError("getSetValue: unknown set type");
 
 		def getValue(self):
-			# print "GETTING VALUE OF %s" % self.getName()
+			#print "GETTING VALUE OF %s" % self.getName()
 			if self.isCompound():
 				return ""
 			elif self.isRelation():
@@ -450,7 +450,8 @@ public:
 			elif self.isSymbol():
 				return self.getSymbolValue()
 			else:
-				return "UNKNOWN TYPE" #raise RuntimeError("Unknown value model type="+self.getType().getName().toString()+", instance kind=".getKindStr())
+				return "UNKNOWN TYPE" 
+				#raise RuntimeError("Unknown value model type="+self.getType().getName().toString()+", instance kind=".getKindStr())
 
 		def getRealValueAndUnits(self):
 			if not self.isReal():
@@ -470,6 +471,11 @@ public:
 	}
 }
 
+/*
+	This 'registry' thing is a bit of a hack that allows interface pointers to 
+	be registered with libascend so that they can be accessed from external
+	script methods
+*/
 %include "registry.h"
 %extend Registry{
 	void set(const char *key, PyObject *obj){
@@ -491,11 +497,8 @@ public:
 %include "plot.i"
 
 class Curve : public Instanc{
-
 public:
 	std::vector<double> x;
 	std::vector<double> y;
 	const std::string getLegend() const;
-
 };
-

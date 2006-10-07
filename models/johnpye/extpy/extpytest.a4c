@@ -29,6 +29,7 @@ METHOD values;
 END values;
 METHOD on_load;
 	RUN reset; RUN values;
+	RUN pythonthing;
 END on_load;
 METHOD pythonthing;
   EXTERNAL mypythonmethod(SELF);

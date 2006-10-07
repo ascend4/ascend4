@@ -546,14 +546,18 @@ class Browser:
 		_context = self.statusbar.get_context_id("do_open")
 
 		self.errorstore.clear()
-
 		self.modelview.clear()
 	
 		# self.library.clear()
 
+		print "Filename =",filename
 		self.statusbar.push(_context,"Loading '"+filename+"'")
 		self.library.load(filename)
-		self.statusbar.pop(_context)
+		print "Statusbar =",self.statusbar
+		try:
+			self.statusbar.pop(_context)
+		except TypeError,e:
+			print "For some reason, a type error (context=%s,filename=%s): %s" % (_context,filename,e)
 
 		self.filename = filename
 
@@ -913,10 +917,13 @@ class Browser:
 		return _res  
 
 	def error_callback(self,sev,filename,line,msg):
-		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
-		path = self.errorstore.get_path(pos)
-		col = self.errorview.get_column(3)
-		self.errorview.scroll_to_cell(path,col)
+		try:
+			pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
+			path = self.errorstore.get_path(pos)
+			col = self.errorview.get_column(3)
+			self.errorview.scroll_to_cell(path,col)
+		except Exception,e:
+			print "UNABLE TO DISPLAY ERROR MESSAGE '%s'"%msg
 		
 		return 0;
 

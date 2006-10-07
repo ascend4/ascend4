@@ -12,9 +12,13 @@
 # include <Python.h>
 #endif
 
+#include "instance.h"
+
 class Registry{
 public:
 	void setInteger(const char *key, int value);
+	void setPointer(const char *key, void *value);
+	Instanc *getInstance(const char *key);
 #ifdef ASCXX_USE_PYTHON
 	void setPyObject(const char *key, PyObject *obj);
 #endif

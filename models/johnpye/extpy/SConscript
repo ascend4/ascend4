@@ -5,9 +5,11 @@ srcs = Split("""
 	extpy.c
 """)
 
-extfn_env.Append(LIBPATH=['#',env.get('PYTHON_LIBPATH')])
-extfn_env.Append(LIBS=['ascend',env.get('PYTHON_LIB')])
-extfn_env.AppendUnique(CPPPATH=[env.get('PYTHON_CPPPATH')])
+extfn_env.AppendUnique(
+	LIBPATH=['#',env.get('PYTHON_LIBPATH')]	
+	,LIBS=['ascend',env.get('PYTHON_LIB')]
+	,CPPPATH=[env.get('PYTHON_CPPPATH')]
+)
 
 targets = []
 targets.append( extfn_env.SharedLibrary("extpy",srcs) )
