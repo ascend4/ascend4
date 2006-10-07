@@ -414,6 +414,10 @@ public:
 	const char *__repr__(){
 		return self->getName().toString();
 	}
+	Instanc __getattr__(const char *name){
+		return self->getChild(SymChar(name));
+	}
+		
 	%pythoncode {
 		def getSetValue(self):
 			if self.isSetInt():

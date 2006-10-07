@@ -62,7 +62,7 @@ Instanc::Instanc(Instance *i, const SymChar &name) : i(i), name(name){
 		ss << "Attempted to create Instance object will null 'Instance *', name " << name;
 		throw runtime_error(ss.str());
 	}*/
-	cerr << "A NEW INSTANCE " << name << endl;
+	//cerr << "A NEW INSTANCE " << name << endl;
 }
 
 Instanc::Instanc(const Instanc&old) : i(old.i), name(old.name){
@@ -554,8 +554,12 @@ Instanc::getChildren()
 Instanc
 Instanc::getChild(const SymChar &name) const{
 	struct Instance *c = ChildByChar(i,name.getInternalType());
-	if(c==NULL)throw runtime_error("Child not found");
-	return Instanc(c);
+	stringstream ss;
+	if(c==NULL){
+		ss << "Child '" << name << "'  not found in " << getName();
+		throw runtime_error(ss.str());
+	}
+	return Instanc(c,name);
 }
 
 Plot
