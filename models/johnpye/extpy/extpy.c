@@ -18,6 +18,8 @@
 *//**
 	@file
 	Import handler to provide external python script functionality for ASCEND.
+*//*
+	by John Pye, Oct 2006
 */
 
 #include <stdio.h>
@@ -186,7 +188,7 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 
 	/* nothing gets returned (but possibly an exception) */
 	Py_INCREF(Py_None);
-	return Py_None;	
+	return Py_None;
 }
 
 static PyMethodDef extpymethods[] = {
@@ -268,8 +270,8 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		ASC_FREE(name);
 		return 1;
 	}
-	
-	f = PyFile_AsFile(pyfile);		
+
+	f = PyFile_AsFile(pyfile);
 	if(f==NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to cast PyObject to FILE*");
 		ASC_FREE(name);
