@@ -12,6 +12,16 @@ IMPORT "dsg";
 
 	This model also requires the 'dsg' library for Direct Steam Generation
 	calculations, available on request from http://pye.dyndns.org/
+
+	For example (assuming you already have the source code for the above):
+	export $ASCENDLIBRARY=$HOME/src/ascend/models
+	cd $HOME/src/freesteam
+	scons -j2 ascend
+	export ASCENDLIBRARY=$HOME/src/freesteam/ascend:$ASCENDLIBRARY
+	cd $HOME/src/dsg-transient
+	scons -j2 ascend
+	export ASCENDLIBRARY=$HOME/src/dsg-transient/ascend:$ASCENDLIBRARY
+	$HOME/src/ascend/pygtk/ascdev johnpye/dsg.a4c	
 *)
 
 MODEL dsg;
