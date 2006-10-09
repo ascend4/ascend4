@@ -13,6 +13,7 @@ def fourbarplot(self):
 
 	ioff()
 	figure()
+	gca().set_aspect('equal', adjustable='datalim')
 	hold(True)
 
 	for alpha in range(10,74,4):

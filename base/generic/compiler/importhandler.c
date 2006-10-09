@@ -295,24 +295,24 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 			CONSOLE_DEBUG("Unable to create filename from partialname '%s'",searchdata->partialname);
 			continue;
 		}
-		CONSOLE_DEBUG("Filename '%s'",filename);
+		/* CONSOLE_DEBUG("Filename '%s'",filename); */
 		fp = ospath_new_noclean(filename); /* eg 'libmyext.so' */
 		ASC_FREE(filename);
 		asc_assert(fp!=NULL);
 
 		fullpath = ospath_str(searchdata->relativedir);
-		CONSOLE_DEBUG("Relative dir is '%s'",fullpath);
+		/* CONSOLE_DEBUG("Relative dir is '%s'",fullpath); */
 		ASC_FREE(fullpath);
 
 		fp1 = ospath_concat(path,searchdata->relativedir); /* eg '/home/john/path/to' */
 		asc_assert(fp1!=NULL);
 
 		fullpath = ospath_str(fp1);
-		CONSOLE_DEBUG("Path is '%s'",fullpath);
+		/* CONSOLE_DEBUG("Path is '%s'",fullpath); */
 		ASC_FREE(fullpath);
 
 		fullpath = ospath_str(fp);
-		CONSOLE_DEBUG("Filename is '%s'",fullpath);
+		/* CONSOLE_DEBUG("Filename is '%s'",fullpath); */
 		ASC_FREE(fullpath);
 
 		fp2 = ospath_concat(fp1,fp); /* eg '/home/john/path/to/libmyext.so' */
@@ -321,7 +321,7 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 		ospath_free(fp);
 
 		fullpath = ospath_str(fp2);
-		CONSOLE_DEBUG("Checking for readable '%s'",fullpath);
+		/* CONSOLE_DEBUG("Checking for readable '%s'",fullpath); */
 		ASC_FREE(fullpath);
 
 		if(0==ospath_stat(fp2,&buf) && NULL!=(f = ospath_fopen(fp2,"r"))){
