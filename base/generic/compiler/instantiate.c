@@ -5477,7 +5477,7 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
 
     efunc = LookupExtFunc(funcname);
     if (!efunc) {
-      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External function '%s' was not loaded.",funcname);
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External relation '%s' was not loaded.",funcname);
       return 1;
     }
     n_input_args = NumberInputArgs(efunc);

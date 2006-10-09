@@ -76,7 +76,7 @@ MODEL dsg;
 	A IS_A area;
 	A = 1{PI}* D^2 / 4;
 
-	friction: dsg_fric_factor_two_phase(
+	friction: dsg_friction_factor(
 		Re, eps_on_D : INPUT;
 		f : OUTPUT
 	);
