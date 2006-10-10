@@ -1570,8 +1570,8 @@ ascendconfig = env.SubstInFile('ascend-config.in')
 
 if env.get('CAN_INSTALL'):
 
-	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE']
-	install_dirs = [env['INSTALL_ROOT']+env[d] for d in dirs]
+	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE', 'INSTALL_DOC']
+	install_dirs = [env.Entry(env['INSTALL_ROOT']+env[d]) for d in dirs]
 	install_dirs += modeldirs
 
 	# TODO: add install options
