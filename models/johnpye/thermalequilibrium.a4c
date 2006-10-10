@@ -1,0 +1,63 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+(* 
+	this model aims to show the evolution of thermal equilibrium between
+	two containers of water/steam with a simple convection coefficient
+	relation at the interface
+
+	This simple model works without any realistic fluid properties. It's basically
+	just demonstrating Newton's Law of Cooling.
+
+	This model was used as a test case for the Integrator functionality in the
+	PyGTK GUI.
+*)
+MODEL thermalequilibrium;
+	T_1 IS_A temperature;
+	T_2 IS_A temperature;
+	m_1, m_2 IS_A mass;
+	C_p IS_A specific_heat_capacity;
+	h IS_A heat_transfer_coefficient;
+	A IS_A area;
+
+	Q IS_A energy_rate;
+	Q = h*A*(T_1 - T_2); (* rate of heat transfer from 1 to 2 *)
+	m_1*C_p*dT1dt = -Q;
+	m_2*C_p*dT2dt = +Q;
+	
+	dT1dt IS_A temperature_rate;
+	dT2dt IS_A temperature_rate;
+
+	t IS_A time;
+METHODS
+METHOD on_load;
+	FIX C_p, h, A, m_1, m_2, T_1, T_2;
+	A := 1 {m^2};
+	h := 10 {W/m^2/K};
+	C_p := 4.2 {kJ/kg/K};
+	m_1 := 10 {kg};
+	m_2 := 10 {kg};
+
+	T_1 := 500 {K};
+	T_2 := 290 {K};
+
+	t.ode_type := -1;
+
+	T_1.ode_id := 1;
+	dT1dt.ode_id := 1;
+	T_1.ode_type := 1;
+	dT1dt.ode_type := 2;
+
+	T_2.ode_id := 2;
+	dT2dt.ode_id := 2;
+	T_2.ode_type := 1;
+	dT2dt.ode_type := 2;
+
+	Q.obs_id := 2;
+	T_1.obs_id := 3;
+	T_2.obs_id := 4;
+	
+END on_load;
+
+END thermalequilibrium;
+
