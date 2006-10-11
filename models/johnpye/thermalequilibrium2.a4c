@@ -1,0 +1,68 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+IMPORT "freesteam";
+
+MODEL simple_state;
+	p IS_A pressure;
+	h IS_A specific_enthalpy;
+	T IS_A temperature;
+	s IS_A specific_entropy;
+	iapws97: iapws97_Ts_ph(
+		p, h : INPUT;
+		T, s : OUTPUT
+	);
+END simple_state;
+
+(* 
+	Enhanced version of johnpye/thermalequilibrium.a4c. This model uses
+	real steam properties from http://freesteam.sf.net/.
+*)
+MODEL thermalequilibrium2;
+	S[1..2] IS_A simple_state;
+	m[1..2] IS_A mass;
+	h IS_A heat_transfer_coefficient;
+	A IS_A area;
+
+	p ALIASES S[1].p;
+	S[2].p = S[1].p;
+
+	Q IS_A energy_rate;
+	Q = h*A*(S[1].T - S[2].T); (* rate of heat transfer from 1 to 2 *)
+	m[1]*dhdt[1] = -Q;
+	m[2]*dhdt[2] = +Q;
+	
+	dhdt[1..2] IS_A delta_specific_power;
+
+	t IS_A time;
+METHODS
+METHOD on_load;
+	FIX	h, A, m[1..2], S[1..2].h, p;
+	A := 1 {m^2};
+	h := 10 {W/m^2/K};
+
+	p := 1 {bar};
+
+	m[1] := 2 {kg};
+	S[1].h := 200 {kJ/kg};
+	m[2] := 10 {kg};
+	S[2].h := 4000 {kJ/kg};
+
+	t.ode_type := -1;
+	t := 0 {s};
+
+	FOR i IN [1..2] DO
+		S[i].h.ode_id := i;
+		dhdt[i].ode_id := i;
+		S[i].h.ode_type := 1;
+		dhdt[i].ode_type := 2;
+	END FOR;
+
+	Q.obs_id := 2;
+	S[1].T.obs_id := 3;
+	S[2].T.obs_id := 4;
+	
+END on_load;
+
+END thermalequilibrium2;
+
