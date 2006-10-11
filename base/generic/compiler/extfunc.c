@@ -97,9 +97,9 @@ int CreateUserFunctionBlackBox(CONST char *name,
   }
 
   if(isNew){
-	CONSOLE_DEBUG("NEW BLACKBOX EFUNC %p ('%s', %lu inputs, %lu outputs, type=%d, value func=%p)"
+	/* CONSOLE_DEBUG("NEW BLACKBOX EFUNC %p ('%s', %lu inputs, %lu outputs, type=%d, value func=%p)"
 		,efunc, name, n_inputs, n_outputs, (int)efunc->etype, value
-	);
+	); */
     (void)AddExternalFunc(efunc,1);
   }
   return 0;
@@ -369,7 +369,7 @@ int AddExternalFunc(struct ExternalFunc *efunc, int force){
 	    return 1;
 	}else{
 		/* need to add function to library */
-		CONSOLE_DEBUG("Adding external function '%s' (at %p).",name,efunc);
+		/* CONSOLE_DEBUG("Adding external function '%s' (at %p).",name,efunc); */
 		AddTableData(ExternalFuncLibrary,(void *)efunc,name);
 		return 1;
 	}

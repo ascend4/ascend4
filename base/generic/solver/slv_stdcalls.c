@@ -1193,19 +1193,23 @@ int slv_insure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
 
     if( low > val ) {
       if (mif!=NULL) {
-        FPRINTF(mif,"Variable ");
-        var_write_name(sys,var,mif);
-        FPRINTF(mif," was initialized below its lower bound.\n");
-        FPRINTF(mif,"It will be moved to its lower bound.\n");
+		ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+        FPRINTF(ASCERR,"Variable '");
+        var_write_name(sys,var,ASCERR);
+        FPRINTF(ASCERR,"' was initialized below its lower bound.\n");
+        FPRINTF(ASCERR,"It will be moved to its lower bound.");
+		error_reporter_end_flush();
       }
       var_set_value(var, low);
     } else {
       if( val > high ) {
         if (mif!=NULL) {
-          FPRINTF(mif,"Variable ");
-          var_write_name(sys,var,mif);
-          FPRINTF(mif," was initialized above its upper bound.\n");
-          FPRINTF(mif,"It will be moved to its upper bound.\n");
+          ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+          FPRINTF(ASCERR,"Variable '");
+          var_write_name(sys,var,ASCERR);
+          FPRINTF(ASCERR,"' was initialized above its upper bound.\n");
+          FPRINTF(ASCERR,"It will be moved to its upper bound.");
+		  error_reporter_end_flush();
         }
         var_set_value(var, high);
         nchange++;

@@ -283,7 +283,7 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 
 	char *pathcomponent;
 	pathcomponent = ospath_str(path); /* eg '/home/john' */
-	CONSOLE_DEBUG("In directory '%s'...",pathcomponent);
+	/* CONSOLE_DEBUG("In directory '%s'...",pathcomponent); */
 	ASC_FREE(pathcomponent);
 
 	asc_assert(importhandler_library!=NULL);

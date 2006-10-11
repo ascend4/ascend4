@@ -47,7 +47,7 @@ IntegratorReporterCxx::updateStatus(){
 
 int
 IntegratorReporterCxx::recordObservedValues(){
-	CONSOLE_DEBUG("...");
+	// CONSOLE_DEBUG("...");
 	double *data = ASC_NEW_ARRAY(double,integrator->getNumObservedVars());
 	integrator_get_observations(integrator->getInternalType(),data);
 	return 0;
@@ -59,7 +59,6 @@ IntegratorReporterCxx::getIntegrator(){
 }
 
 int ascxx_integratorreporter_init(IntegratorSystem *blsys){
-	CONSOLE_DEBUG("...");
 	IntegratorReporterCxx *r = (IntegratorReporterCxx *)blsys->clientdata;
 	if(r==NULL){
 		throw runtime_error("blsys->clientdata was null");

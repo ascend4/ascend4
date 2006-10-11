@@ -214,7 +214,7 @@ class ObserverTab:
 		_tvcol.pack_start(_renderer,False)
 		_tvcol.set_cell_data_func(_renderer, _col.cellvalue)
 		self.view.append_column(_tvcol);
-		self.browser.reporter.reportError("cols = "+str(self.cols))
+		#self.browser.reporter.reportError("cols = "+str(self.cols))
 
 	def copy_to_clipboard(self,clip):
 		_s = []

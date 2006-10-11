@@ -154,7 +154,7 @@ int LoadArchiveLibrary(CONST char *partialpath, CONST char *initfunc){
 
 	asc_assert(handler!=NULL);
 	
-	CONSOLE_DEBUG("About to import external library...");
+	/* CONSOLE_DEBUG("About to import external library..."); */
 	/* note the import handler will deal with all the initfunc execution, etc etc */
 	result = (*(handler->importfn))(fp1,initfunc,partialpath);
 	if(result){

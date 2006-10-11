@@ -55,6 +55,7 @@
 #include <compiler/instance_enum.h>
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
 
 #include "slv_types.h"
 #include "mtx.h"
@@ -189,21 +190,20 @@ typedef struct{
 /**
 	Type of function used to evaluate derivative system.
 */
-typedef void (LsodeEvalFn)( int * ,double * ,double *,double *);
+typedef void LsodeEvalFn(int *, double *, double *, double *);
 
 /**
 	Type of function used to evaluate jacobian system.
 */
-typedef void (LsodeJacobianFn)(int *, double *, double *, int *, int *,
-                      double *, int *);
+typedef void LsodeJacobianFn(int *, double *, double *, int *, int *, double *, int *);
 
 /*----------------------------
   forward declarations
 */
 
 int integrator_lsode_setup_diffs(IntegratorSystem *blsys);
-static double **MakeDenseMatrix(int nrows, int ncols);
-static void DestroyDenseMatrix(double **matrix,int nrows);
+static double **lsode_densematrix_create(int nrows, int ncols);
+static void lsode_densematrix_destroy(double **matrix,int nrows);
 
 /**
 	void LSODE(&fex, &neq, y, &x, &xend, &itol, reltol, abtol, &itask,
@@ -240,7 +240,7 @@ void integrator_lsode_create(IntegratorSystem *blsys){
 }
 
 /**
-	Cleanup the data struct that belongs to BLSODE
+	Cleanup the data struct that belongs to LSODE
 */
 void integrator_lsode_free(void *enginedata){
 	IntegratorLsodeData d;
@@ -261,21 +261,17 @@ void integrator_lsode_free(void *enginedata){
 	if(d.rlist)ASC_FREE(d.rlist);
 	d.rlist =  NULL;
 
-	if(d.dydx_dx)DestroyDenseMatrix(d.dydx_dx, d.n_eqns);
+	if(d.dydx_dx)lsode_densematrix_destroy(d.dydx_dx, d.n_eqns);
 	d.dydx_dx =  NULL;
 
 	d.n_eqns = 0L;
 }
 
-/*-------------------------------------------------------
-  Prototype for the LSODE function (c.f. lsode.f)
-*/
-
 /*---------------------------------------------------------
   Couple of matrix methods...?
 */
 
-static double **MakeDenseMatrix(int nrows, int ncols){
+static double **lsode_densematrix_create(int nrows, int ncols){
   int c;
   double **result;
   assert(nrows>0);
@@ -287,7 +283,7 @@ static double **MakeDenseMatrix(int nrows, int ncols){
   return result;
 }
 
-static void DestroyDenseMatrix(double **matrix,int nrows){
+static void lsode_densematrix_destroy(double **matrix,int nrows){
   int c;
   if (matrix) {
     for (c=0;c<nrows;c++) {
@@ -357,14 +353,12 @@ int integrator_lsode_setup_diffs(IntegratorSystem *blsys) {
   return 0;
 }
 
-
-
 /**
-	allocates, fills, and returns the atol vector based on BLSODE
+	allocates, fills, and returns the atol vector based on LSODE
 
 	State variables missing child ode_rtol will be defaulted to ATOLDEF
 */
-static double *blsode_get_atol( IntegratorSystem *blsys) {
+static double *lsode_get_atol( IntegratorSystem *blsys) {
 
   struct Instance *tol;
   double *atoli;
@@ -394,11 +388,11 @@ static double *blsode_get_atol( IntegratorSystem *blsys) {
 }
 
 /**
-	Allocates, fills, and returns the rtol vector based on BLSODE
+	Allocates, fills, and returns the rtol vector based on LSODE
 
 	State variables missing child ode_rtol will be defaulted to RTOLDEF
 */
-static double *blsode_get_rtol( IntegratorSystem *blsys) {
+static double *lsode_get_rtol( IntegratorSystem *blsys) {
 
   struct Instance *tol;
   double *rtoli;
@@ -432,7 +426,7 @@ static double *blsode_get_rtol( IntegratorSystem *blsys) {
 /*
 	Write out a a status message based on the istate parameter.
 */
-static void blsode_write_istate( int istate) {
+static void lsode_write_istate( int istate) {
   switch (istate) {
   case -1:
     FPRINTF(ASCERR,"Excess steps taken on this call (perhaps wrong MF).");
@@ -441,22 +435,22 @@ static void blsode_write_istate( int istate) {
     FPRINTF(ASCERR,"Excess accuracy requested (tolerances too small).");
     break;
   case -3:
-    FPRINTF(ASCERR,"Illegal input detected.");
+    FPRINTF(ASCERR,"Illegal input detected (see console).");
     break;
   case -4:
-    FPRINTF(ASCERR,"Repeated error test failures.");
+    FPRINTF(ASCERR,"Repeated error test failures (check all inputs).");
     break;
   case -5:
-    FPRINTF(ASCERR,"Repeated convergence failures.");
+    FPRINTF(ASCERR,"Repeated convergence failures (perhaps bad Jacobian supplied, or wrong choice of MF or tolerances).");
     break;
   case -6:
-    FPRINTF(ASCERR,"Error weight became zero during problem.");
+    FPRINTF(ASCERR,"Error weight became zero during problem (solution component i vanished, and atol or atol(i) = 0).");
     break;
   case -7:
-    FPRINTF(ASCERR,"User patience became zero during problem.");
+    FPRINTF(ASCERR,"Interrupted? User cancelled operation?");
     break;
   default:
-    FPRINTF(ASCERR,"Unknown error code %d.",istate);
+    FPRINTF(ASCERR,"Unknown 'istate' error code %d from LSODE.",istate);
     break;
   }
 }
@@ -464,7 +458,7 @@ static void blsode_write_istate( int istate) {
 /**
 	Free memory allocated for the LSODE, but first check.
 */
-static void blsode_free_mem(double *y, double *reltol, double *abtol, double *rwork,
+static void lsode_free_mem(double *y, double *reltol, double *abtol, double *rwork,
                     int *iwork, double *obs, double *dydx)
 {
   if (y != NULL) {
@@ -496,11 +490,11 @@ static void blsode_free_mem(double *y, double *reltol, double *abtol, double *rw
  * fix for the derivative problem in Lsode.
  * The proper permanent fix for lsode is to dump it in favor of
  * cvode or dassl.
- * Extended 7/95 baa to deal with linsolqr and blsode.
+ * Extended 7/95 baa to deal with linsolqr and lsode.
  * It is assumed the system has been solved at the current point.
  *********************************************************************
  */
-int Asc_BLsodeDerivatives(slv_system_t sys, double **dy_dx,
+int lsode_derivatives(slv_system_t sys, double **dy_dx,
                        int *inputs_ndx_list, int ninputs,
                        int *outputs_ndx_list, int noutputs)
 {
@@ -585,7 +579,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
 #endif
 
   /*
- 	t[1]=t[0]; can't do this. lsode calls us with a different t than the x we sent in.
+ 	t[1]=t[0]; can't do this. lsode calls us with a different t than the t we sent in.
   */
   integrator_set_t(l_lsode_blsys, t[0]);
   integrator_set_y(l_lsode_blsys, y);
@@ -610,6 +604,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
   }
   slv_solve(l_lsode_blsys->system);
   slv_get_status(l_lsode_blsys->system, &status);
+  /* pass the solver status to the integrator */
   ok = integrator_checkstatus(status);
 
 #if DOTIME
@@ -661,7 +656,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y,
   /*
    * Make the real call.
    */
-  nok = Asc_BLsodeDerivatives(l_lsode_blsys->system
+  nok = lsode_derivatives(l_lsode_blsys->system
 		, enginedata.dydx_dx
 		, enginedata.input_indices
 		, *neq
@@ -682,8 +677,9 @@ static void LSODE_JEX(int *neq ,double *t, double *y,
    * Map data from C based matrix to Fortan matrix.
    * We will send in a column major ordering vector for pd.
    */
-  for (j=0;j<*neq;j++) {
-    for (i=0;i<*nrpd;i++) {	/* column wise - hence rows change faster */
+  for (j=0;j<*neq;j++) { /* loop through columnns */
+    for (i=0;i<*nrpd;i++){ /* loop through rows */
+	  /* CONSOLE_DEBUG("JAC[r=%d,c=%d]=%f",i,j,enginedata.dydx_dx[i][j]); */
       *pd++ = enginedata.dydx_dx[i][j];
     }
   }
@@ -731,7 +727,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
 	d->input_indices = ASC_NEW_ARRAY_CLEAR(int, d->n_eqns);
 	d->output_indices = ASC_NEW_ARRAY_CLEAR(int, d->n_eqns);
-	d->dydx_dx = MakeDenseMatrix(d->n_eqns,d->n_eqns);
+	d->dydx_dx = lsode_densematrix_create(d->n_eqns,d->n_eqns);
 
 	d->y_vars = ASC_NEW_ARRAY(struct var_variable *,d->n_eqns+1);
 	d->ydot_vars = ASC_NEW_ARRAY(struct var_variable *, d->n_eqns+1);
@@ -776,13 +772,13 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   liw = 20 + neq;
   iwork = ASC_NEW_ARRAY_CLEAR(int, liw+1);
   y = integrator_get_y(blsys, NULL);
-  reltol = blsode_get_rtol(blsys);
-  abtol = blsode_get_atol(blsys);
+  reltol = lsode_get_rtol(blsys);
+  abtol = lsode_get_atol(blsys);
   obs = integrator_get_observations(blsys, NULL);
   dydx = ASC_NEW_ARRAY_CLEAR(double, neq+1);
   if (!y || !obs || !abtol || !reltol || !rwork || !iwork || !dydx) {
-    blsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for blsode.");
+    lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for lsode.");
     lsodesys.status = lsode_nok;
     return 0;
   }
@@ -798,7 +794,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   rwork[5] = integrator_get_maxstep(blsys);
   rwork[6] = integrator_get_minstep(blsys);
   iwork[5] = integrator_get_maxsubsteps(blsys);
-  mf = 21;		/* gradients 22 -- implies finite diff */
+  mf = 21;		/* 21 = BDF with exact jacobian. 22 = BDF with finite diff Jacobian */
 
   /* put the values from derivative system into the record */
   integrator_setsample(blsys, start_index, x[0]);
@@ -817,12 +813,28 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   for (index = start_index; index < finish_index; index++, 	blsys->currentstep++) {
     xend = integrator_getsample(blsys, index+1);
     xprev = x[0];
-    /* CONSOLE_DEBUG("BEFORE %lu BLSODE CALL\n", index); */
+    /* CONSOLE_DEBUG("BEFORE %lu LSODE CALL\n", index); */
 
 # ifndef NO_SIGNAL_TRAPS
     if (setjmp(g_fpe_env)==0) {
 # endif /* NO_SIGNAL_TRAPS */
 
+	  CONSOLE_DEBUG("Calling LSODE with end-time = %f",xend);
+      switch(mf){
+		case 10:
+			CONSOLE_DEBUG("Non-stiff (Adams) method; no Jacobian will be used"); break;
+		case 21:
+			CONSOLE_DEBUG("Stiff (BDF) method, user-supplied full Jacobian"); break;
+		case 22:
+			CONSOLE_DEBUG("Stiff (BDF) method, internally generated full Jacobian"); break;
+		case 24:
+			CONSOLE_DEBUG("Stiff (BDF) method, user-supplied banded jacobian"); break;
+		case 25:
+			CONSOLE_DEBUG("Stiff (BDF) method, internally generated banded jacobian"); break;
+		default:
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid method id %d for LSODE",mf);
+			return 0; /* failure */
+      }
 
       LSODE(&(LSODE_FEX), &my_neq, y, x, &xend,
             &itol, reltol, abtol, &itask, &istate,
@@ -833,7 +845,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
     } else {
       FPRINTF(stderr,
        "Integration terminated due to float error in LSODE call.\n");
-      blsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
+      lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
       lsodesys.status = lsode_ok;		/* clean up before we go */
       lsodesys.lastcall = lsode_none;
       if (y_out!=NULL) {
@@ -857,20 +869,18 @@ int integrator_lsode_solve(IntegratorSystem *blsys
     if (istate < 0 ) {
       /* some kind of error occurred... */
       ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
-      FPRINTF(ASCERR, "In LSODE integrator: index = %lu, ", index);
-      FPRINTF(ASCERR, "istate = %d.\n", istate);
-      FPRINTF(ASCERR, "Farthest point reached: t = %g.\n",x[0]);
-      blsode_write_istate(istate);
+      lsode_write_istate(istate);
+      FPRINTF(ASCERR, "\nFurthest point reached was t = %g.\n",x[0]);
       error_reporter_end_flush();
 
-      blsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
+      lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
       integrator_output_close(blsys);
       return 0;
     }
 
     if (lsodesys.status==lsode_nok) {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to an error in derivative computations.");
-      blsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
+      lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
       lsodesys.status = lsode_ok;		/* clean up before we go */
       lsodesys.lastcall = lsode_none;
       integrator_output_close(blsys);
@@ -906,7 +916,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 # ifndef NO_SIGNAL_TRAPS
       } else {
       	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE FEX call.");
-        blsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
+        lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
         lsodesys.status = lsode_ok;               /* clean up before we go */
         lsodesys.lastcall = lsode_none;
         integrator_output_close(blsys);
@@ -917,14 +927,14 @@ int integrator_lsode_solve(IntegratorSystem *blsys
     /* CONSOLE_DEBUG("Integration completed from %3g to %3g.",xprev,x[0]); */
   }
 
-  CONSOLE_DEBUG("");
+  CONSOLE_DEBUG("...");
   CONSOLE_DEBUG("Number of steps taken: %1d.", iwork[10]);
   CONSOLE_DEBUG("Number of function evaluations: %1d.", iwork[11]);
   CONSOLE_DEBUG("Number of Jacobian evaluations: %1d.", iwork[12]);
-  CONSOLE_DEBUG("");
+  CONSOLE_DEBUG("...");
 
 
-  blsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
+  lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
 
   /*
    * return the system to its original state.
@@ -935,7 +945,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
   integrator_output_close(blsys);
 
-  CONSOLE_DEBUG("--- BLSODE done ---");
+  CONSOLE_DEBUG("--- LSODE done ---");
   return 1;
 
 #else /* STATIC_LSOD || DYNAMIC_LSOD */
@@ -948,110 +958,69 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 }
 
 /**
-	This function is XASCWV, a compatible
-	replacement for the function XERRWV from lsode.f by Alan Hindmarsh.
+	Function XASCWV is an error reporting function replacing the XERRWV
+	routine in lsode.f. The call signature is the same with the original Fortran
+	function.
 
-	To the extent permitted by the GPL that covers ASCEND, the following
-	function is placed in the public domain, because LSODE itself was
-	released in the public domain.
+	@see the comments for 'xerrwv' from lsode.f, with which XASCWV is compatible...
 
-	The following is the FORTRAN header for 'xerrwv' from LSODE,
-	with which XASCWV is compatible...
-
-	*-----------------------------------------------------------------------
-	Subroutine XERRWV
-	A simplified version of the slatec error handling package.
-	Written by A. C. Hindmarsh at LLNL.  Version of March 30, 1987.
-	This version is in double precision.
-
-	All arguments are input arguments.
-
-	msg    = the message (hollerith literal or integer array).
-	nmes   = the length of msg (number of characters).
-	nerr   = the error number (not used).
-	level  = the error level..
+	@param msg    = the message (hollerith literal or integer array).
+	@param nmes   = the length of msg (number of characters).
+	@param nerr   = the error number (not used).
+	@param level  = the error level..
 	        0 or 1 means recoverable (control returns to caller).
 	        2 means fatal (run is aborted--see note below).
-	ni     = number of integers (0, 1, or 2) to be printed with message.
-	i1,i2  = integers to be printed, depending on ni.
-	nr     = number of reals (0, 1, or 2) to be printed with message.
-	r1,r2  = reals to be printed, depending on nr.
-
-	NOTE..  This routine is machine-dependent and specialized for use
-	in limited context, in the following ways..
-	1. The number of hollerith characters stored per word, denoted
-	   by ncpw below, is a data-loaded constant.
-	2. The value of nmes is assumed to be at most 60.
-	   (multi-line messages are generated by repeated calls.)
-	3. If level = 2, control passes to the statement   stop
-	   to abort the run.  this statement may be machine-dependent.
-	4. r1 and r2 are assumed to be in double precision and are printed
-	   in d21.13 format.
-	5. The common block /eh0001/ below is data-loaded (a machine-
-	   dependent feature) with default values.
-	   This block is needed for proper retention of parameters used by
-	   this routine which the user can reset by calling xsetf or xsetun.
-	   The variables in this block are as follows..
-
-	     mesflg = print control flag..
-	              1 means print all messages (the default).
-	              0 means no printing.
-	     lunit  = logical unit number for messages.
-	              the default is 6 (machine-dependent).
-    *-----------------------------------------------------------------------
-	The following are instructions for installing this routine
-	in different machine environments.
-
-	To change the default output unit, change the data statement
-	in the block data subprogram below.
-
-	For a different number of characters per word, change the
-	data statement setting ncpw below, and format 10.  alternatives for
-	various computers are shown in comment cards.
-
-	For a different run-abort command, change the statement following
-	statement 100 at the end.
- *-----------------------------------------------------------------------
- */
-void XASCWV( char *msg, /* array of char/int not NULL ended, len *nmes */
-             int *nmes, /* len of msg */
-             int *nerr,
-             int *level,
+	@param ni     = number of integers (0, 1, or 2) to be printed with message.
+	@param i1,i2  = integers to be printed, depending on ni.
+	@param nr     = number of reals (0, 1, or 2) to be printed with message.
+	@param r1,r2  = reals to be printed, depending on nr.
+*/
+void XASCWV( char *msg, /* pointer to start of message */
+             int *nmes, /* the length of msg (number of characters) */
+             int *nerr, /* the error number (not used). */
+             int *level, 
              int *ni,
              int *i1,
              int *i2,
              int *nr,
              double *r1,
              double *r2
-           )
-{
-  (void)nerr;
+){
+	switch(*nerr){
+		case 204:
+			if(*nr==0)return;
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
+			break;
+		case 205:
+			if(*nr==0)return;
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Corrector convergence test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
+			break;
+		
+		default:
+			ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
 
-  /* write the message. lot easier in C, geez */
-  ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+			/* note that %.*s means that a string length (integer) and string pointer are being required */
+			FPRINTF(stderr,"LSODE error: %.*s",*nmes,msg);
+			if (*ni == 1) {
+			FPRINTF(stderr,"\nwhere i1 = %d\n",*i1);
+			}
+			if (*ni == 2) {
+			FPRINTF(stderr,"\nwhere i1 = %d, i2 = %d",*i1,*i2);
+			}
+			if (*nr == 1) {
+			FPRINTF(stderr,"\nwhere r1 = %.13g", *r1);
+			}
+			if (*nr == 2) {
+			FPRINTF(stderr,"\nwhere r1 = %.13g, r2 = %.13g", *r1,*r2);
+			}
+			error_reporter_end_flush();
+	}
 
-  /* note that %.*s means that a string length (integer) and string pointer are being required */
-  FPRINTF(stderr,"LSODE error: %.*s",*nmes,msg);
-  if (*ni == 1) {
-    FPRINTF(stderr,"\nwhere i1 = %d\n",*i1);
-  }
-  if (*ni == 2) {
-    FPRINTF(stderr,"\nwhere i1 = %d, i2 = %d",*i1,*i2);
-  }
-  if (*nr == 1) {
-    FPRINTF(stderr,"\nwhere r1 = %.13g", *r1);
-  }
-  if (*nr == 2) {
-    FPRINTF(stderr,"\nwhere r1 = %.13g, r2 = %.13g", *r1,*r2);
-  }
-  if (*level != 2) {
-  	error_reporter_end_flush();
-    return;
-  }
+	if (*level != 2) {
+		return;
+	}
 
-  /* NOT reached. lsode does NOT make level 2 calls in our version. */
-  error_reporter_end_flush();
-  Asc_Panic(3,"xascwv", "LSODE really really confused");
-
-  return; /* not reached */
+	/* NOT reached. lsode does NOT make level 2 calls in our version. */
+	error_reporter_end_flush();
+	Asc_Panic(3,"xascwv", "LSODE really really confused");
 }
