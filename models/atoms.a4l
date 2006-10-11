@@ -642,6 +642,14 @@ END length_parameter;
         nominal := 100000.0{BTU};
     END energy;
 
+    ATOM energy_per_volume REFINES solver_var
+        DIMENSION M/L/T^2
+        DEFAULT 1000{kJ/L};
+        lower_bound := -1e50{kJ/L};
+        upper_bound := 1e50{kJ/L};
+        nominal := 1000{kJ/L};
+    END energy_per_volume;
+
     ATOM energy_rate_scale REFINES real DIMENSION M*L^2/T^3 DEFAULT 1{watt};
     END energy_rate_scale;
 
@@ -660,6 +668,14 @@ END length_parameter;
         upper_bound := 1e50{kW/m};
         nominal := 1.0{kW/m};
     END power_per_length;
+
+	ATOM power_per_volume REFINES solver_var
+        DIMENSION M/L/T^3
+        DEFAULT 1.0{kW/m^3};
+        lower_bound := -1e50{kW/m^3};
+        upper_bound := 1e50{kW/m^3};
+        nominal := 1.0{kW/m^3};
+    END power_per_volume;
 
 	ATOM irradiance REFINES solver_var
 		DIMENSION M/T^3

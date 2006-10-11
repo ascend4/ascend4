@@ -51,7 +51,7 @@
 	Takes the start and finish index as defined by the user and carries
 	out the integration using repeated calls to the function lsode.
 	Assumes sys corresponds to g_solvinst_cur.
-	works off instances of type blsode taken from blsys.
+	works off instances of type lsode taken from blsys.
  */
 extern int integrator_lsode_solve(IntegratorSystem *blsys
 		,unsigned long i1, unsigned long i2

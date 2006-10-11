@@ -995,6 +995,8 @@ int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
 		return 0;
 	}
 
+	CONSOLE_DEBUG("RUNNING INTEGRATION...");
+
 	/* now go and run the integrator */
 	switch (blsys->engine) {
 		case INTEG_LSODE: return integrator_lsode_solve(blsys, start_index, finish_index); break;
@@ -1278,7 +1280,6 @@ int integrator_set_reporter(IntegratorSystem *blsys
 }
 
 int integrator_output_init(IntegratorSystem *blsys){
-	CONSOLE_DEBUG("...");
 	assert(blsys!=NULL);
 	assert(blsys->reporter!=NULL);
 	if(blsys->reporter->init!=NULL){

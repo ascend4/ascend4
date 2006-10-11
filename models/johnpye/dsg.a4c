@@ -1,3 +1,4 @@
+REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "freesteam";
@@ -21,14 +22,15 @@ IMPORT "dsg";
 	cd $HOME/src/dsg-transient
 	scons -j2 ascend
 	export ASCENDLIBRARY=$HOME/src/dsg-transient/ascend:$ASCENDLIBRARY
-	$HOME/src/ascend/pygtk/ascdev johnpye/dsg.a4c	
+	export PATH=$PATH:$HOME/src/ascend/pygtk
+	ascdev johnpye/dsg.a4c	
 *)
 
 MODEL dsg;
 	(* temporal derivatives *)
 	drho_dt IS_A density_rate;
 	dmdot_dt IS_A mass_rate_rate;
-	drhou_dt IS_A solver_var;
+	drhou_dt IS_A power_per_volume;
 	dTw_dt IS_A temperature_rate;
 
 	(* spatial derivatives *)
@@ -56,7 +58,7 @@ MODEL dsg;
 	rho IS_A mass_density;
 	mdot IS_A mass_rate;
 	p IS_A pressure;
-	f IS_A factor; (* pipe friction factor *)
+	f IS_A positive_factor; (* pipe friction factor *)
 	u IS_A specific_energy;
 	h IS_A specific_enthalpy;
 	vel IS_A speed;
@@ -65,6 +67,9 @@ MODEL dsg;
 	v IS_A specific_volume;
 	T, T1, Tw, T2, Tamb IS_A temperature;
 	ekdot IS_A specific_power;
+
+	rhou IS_A energy_per_volume;
+	rhou = rho * u;
 
 	rho * v = 1;
 	ekdot = 0.5 * rho * vel^2;
@@ -76,7 +81,7 @@ MODEL dsg;
 
 	vel = rho*mdot/A;
 
-	Re IS_A factor;
+	Re IS_A positive_factor;
 	Re_rel: Re = rho*vel*D/mu;
 	eps_on_D IS_A factor;
 	eps_on_D_rel: eps_on_D = eps/D;
@@ -91,8 +96,8 @@ MODEL dsg;
 		f : OUTPUT
 	);
 
-	phi2 IS_A factor;
-	x IS_A factor;
+	phi2 IS_A positive_factor;
+	x IS_A fraction;
 	twophmult: dsg_phi2_martinelli_nelson(
 		p,x : INPUT;
 		phi2 : OUTPUT
@@ -125,12 +130,15 @@ MODEL dsg;
 		h1 : OUTPUT
 	);
 
+	t IS_A time;
+
 METHODS
 
 METHOD specify;
 	RUN fix_design;
 	RUN fix_states;
 	RUN fix_spatials;
+	RUN ode_init;
 END specify;
 
 METHOD fix_states;
@@ -176,7 +184,7 @@ METHOD values;
 	mdot := 0.001 {kg/s};
 
 	(* spatial derivs *)
-	dp_dz := -500 {Pa/m};
+	dp_dz := -200 {Pa/m};
 	dmdot_dz := 0 {kg/s/m};
 	drhovel2_dz := (0 {kg/m^3}) * (0 {m/s})^2 / (1 {m});
 	dekdot_dz := 0 {W/m};
@@ -188,6 +196,10 @@ METHOD values;
 	drhou_dt := 0 {kg/m^3*kJ/kg/s};
 	dTw_dt := 0 {K/s};
 
+	drhou_dt.nominal := rhou.nominal / 60 {s};
+
+	v := 0.2 {m^3/kg};
+
 	(* bounds *)
 	f.lower_bound := 0.008;
 	v.lower_bound := 0.00999 {m^3/kg};
@@ -198,6 +210,29 @@ METHOD values;
 	(* starting guesses *)
 	Re := 10000;
 END values;
+
+METHOD ode_init;
+	t.ode_type := -1;
+	t := 0 {s};
+
+	rho.ode_id := 1;   drho_dt.ode_id := 1;
+	rho.ode_type := 1; drho_dt.ode_type := 2;
+
+	mdot.ode_id := 2;   dmdot_dt.ode_id := 2;
+	mdot.ode_type := 1; dmdot_dt.ode_type := 2;
+	
+	rhou.ode_id := 3;   drhou_dt.ode_id := 3;
+	rhou.ode_type := 1; drhou_dt.ode_type := 2;
+
+	Tw.ode_id := 4;   dTw_dt.ode_id := 4;
+	Tw.ode_type := 1; dTw_dt.ode_type := 2;
+
+	rho.obs_id := 1;
+	mdot.obs_id := 2;
+	rhou.obs_id := 3;
+	Tw.obs_id := 4;
+
+END ode_init;
 
 METHOD on_load;
 	RUN reset;

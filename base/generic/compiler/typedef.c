@@ -1196,7 +1196,7 @@ enum typelinterr DoRelations(symchar *type,
       }
       break;
     case EXT:
-      CONSOLE_DEBUG("PROCESSING EXTERNAL REL");
+      /* CONSOLE_DEBUG("PROCESSING EXTERNAL REL"); */
       error_code = DoExternal(type,stat,ft);
       if (error_code != DEF_OKAY) {
         TypeLintError(ASCERR,stat, error_code);
