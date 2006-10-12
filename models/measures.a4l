@@ -256,6 +256,7 @@ Pa = {kilogram/meter/second^2};
 pascal = {Pa};
 kPa = {1e3*Pa};
 bar = {1e5*Pa};
+mbar = {1e2*Pa};
 MPa = {1e6*Pa};
 GPa = {1e9*Pa};
 
@@ -270,11 +271,14 @@ ftH2O = {2989*Pa};
 
 J = {kilogram*meter^2/second^2};
 joule = {J};
-MJ = {J * 1000000};
-kJ = {J * 1000};
-mJ= {J*1.0e-3};
-uJ= {J*1.0e-6};
 nJ= {J*1.0e-9};
+uJ= {J*1.0e-6};
+mJ= {J*1.0e-3};
+kJ = {J * 1000};
+MJ = {J * 1e6};
+GJ = {J * 1e9};
+TJ = {J * 1e12};
+PJ = {J * 1e15};
 milliJoule= {mJ};
 microJoule= {uJ};
 nanoJoule= {nJ};
@@ -313,7 +317,11 @@ nanowatt = {nW};
 picowatt = {pW};
 femtowatt = {fW};
 attowatt = {aW};
- aWW= {1*EW}; (* we could say art has a lot of power *)
+aWW= {1*EW}; (* <geekjok>we could say art has a lot of power</geekjoke> *)
+
+Wh = {W*h};
+kWh = {kW*h};
+
 
 hp= {7.456998e+2*W};
 
