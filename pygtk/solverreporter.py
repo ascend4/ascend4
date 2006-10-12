@@ -172,7 +172,7 @@ class PopupSolverReporter(PythonSolverReporter):
 
 class SimpleSolverReporter(PythonSolverReporter):
 	def __init__(self,browser):
-		print "CREATING SIMPLESOLVERREPORTER..."
+		#print "CREATING SIMPLESOLVERREPORTER..."
 		PythonSolverReporter.__init__(self,browser)
 		self.lasttime = self.starttime
 

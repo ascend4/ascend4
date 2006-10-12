@@ -391,7 +391,7 @@ Simulation::getSingularityInfo() const{
 
 void
 Simulation::setSolver(Solver &solver){
-	cerr << "SETTING SOLVER ON SIMULATION TO " << solver.getName() << endl;
+	//cerr << "SETTING SOLVER ON SIMULATION TO " << solver.getName() << endl;
 
 	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");
 	// Update the solver object because sometimes an alternative solver can be returned, apparently.
@@ -576,7 +576,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		throw runtime_error("Simulation::solver: simulation is not yet built, can't start solving.");
 	}
 
-	cerr << "SIMULATION::SOLVE STARTING..." << endl;
+	//cerr << "SIMULATION::SOLVE STARTING..." << endl;
 	enum inst_t k = getModel().getKind();
 	if(k!=MODEL_INST)throw runtime_error("Can't solve: not an instance of type MODEL_INST");
 
@@ -586,15 +586,15 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 
 	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");
 
-	cerr << "SIMULATION::SOLVE: SET SOLVER..." << endl;
+	//cerr << "SIMULATION::SOLVE: SET SOLVER..." << endl;
 	setSolver(solver);
 
 
-	cerr << "PRESOLVING SYSTEM...";
+	//cerr << "PRESOLVING SYSTEM...";
 	slv_presolve(sys);
-	cerr << "DONE" << endl;
+	//cerr << "DONE" << endl;
 
-	cerr << "SOLVING SYSTEM..." << endl;
+	//cerr << "SOLVING SYSTEM..." << endl;
 	// Add some stuff here for cleverer iteration....
 	unsigned niter = 1000;
 	//double updateinterval = 0.02;
@@ -631,12 +631,12 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	// Just a little bit of console output:
 
 	if(status.isOK()){
-		cerr << "... SOLVED, STATUS OK" << endl;
+		//cerr << "... SOLVED, STATUS OK" << endl;
 	}else{
 		cerr << "... SOLVER FAILED" << endl;
 	}
 
-	cerr << "SOLVER PERFORMED " << status.getIterationNum() << " ITERATIONS IN " << elapsed << "s" << endl;
+	//cerr << "SOLVER PERFORMED " << status.getIterationNum() << " ITERATIONS IN " << elapsed << "s" << endl;
 }
 
 //------------------------------------------------------------------------------
