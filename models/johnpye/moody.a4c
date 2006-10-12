@@ -1,0 +1,35 @@
+REQUIRE "atoms.a4l";
+
+IMPORT "dsg";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/moody";
+
+MODEL moody;
+	f IS_A positive_factor;
+	Re IS_A positive_factor;
+	eps_on_D IS_A fraction;
+
+	friction: dsg_friction_factor(
+		Re, eps_on_D : INPUT;
+		f : OUTPUT
+	);
+	
+	eps IS_A distance;
+	D IS_A distance;
+	eps_on_D = eps / D;
+METHODS
+METHOD on_load;
+	RUN reset; RUN values;
+END on_load;
+METHOD specify;
+	FIX Re, eps, D;
+END specify;
+METHOD values;
+	Re := 20000;
+	eps := 0.007 {mm};
+	D := 25.4 {mm};
+END values;
+METHOD plot;
+	EXTERNAL moodyplot(SELF);
+END plot;
+END moody;

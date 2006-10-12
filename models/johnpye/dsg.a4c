@@ -59,13 +59,14 @@ MODEL dsg;
 	mdot IS_A mass_rate;
 	p IS_A pressure;
 	f IS_A positive_factor; (* pipe friction factor *)
+	f_LO IS_A positive_factor; (* liquid-only friction factor *)
 	u IS_A specific_energy;
 	h IS_A specific_enthalpy;
 	vel IS_A speed;
 	qdott, qdotl,qdots IS_A power_per_length;
 	mu IS_A viscosity;
 	v IS_A specific_volume;
-	T, T1, Tw, T2, Tamb IS_A temperature;
+	T, Tw, Tamb IS_A temperature;
 	ekdot IS_A specific_power;
 
 	rhou IS_A energy_per_volume;
@@ -93,7 +94,7 @@ MODEL dsg;
 
 	friction: dsg_friction_factor(
 		Re, eps_on_D : INPUT;
-		f : OUTPUT
+		f_LO : OUTPUT
 	);
 
 	phi2 IS_A positive_factor;
@@ -106,12 +107,12 @@ MODEL dsg;
 	that's a bit tricky and needs conditional modelling, so maybe try putting 
 	it in the external code. *)
 
+	f = f_LO*rho2;
+
 	cavity_losses: dsg_ext_heat_loss(
-		T2,Tamb,D2,hw : INPUT;
+		Tw,Tamb,D2,hw : INPUT;
 		qdotl : OUTPUT
 	);
-
-	Tw = (T1 + T2)/2;
 
 	mdoth IS_A energy_rate;
 	mdoth = mdot * h;
@@ -123,7 +124,7 @@ MODEL dsg;
 
 	h1 IS_A heat_transfer_coefficient;
 
-	qdott = h1 * 1{PI} * D * (T1 - T);
+	qdott = h1 * 1{PI} * D * (Tw - T);
 
 	twophconv: dsg_conv_coeff_two_phase(
 		p, h, mdot, D, f : INPUT;
@@ -142,7 +143,7 @@ METHOD specify;
 END specify;
 
 METHOD fix_states;
-	FIX T1, T2, p, h, mdot;
+	FIX Tw, p, h, mdot;
 END fix_states;
 
 METHOD fix_design;
@@ -177,8 +178,7 @@ METHOD values;
 	Tamb := 300 {K};
 
 	(* states *)
-	T1 := 600 {K};
-	T2 := 500 {K};
+	Tw := 600 {K};
 	p := 10 {bar};
 	h := 4000 {kJ/kg};
 	mdot := 0.001 {kg/s};
