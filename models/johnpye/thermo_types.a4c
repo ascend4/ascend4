@@ -100,6 +100,14 @@ ATOM ua_value REFINES solver_var
 	nominal := 1{kW/K}; (* heat up 1kg water by 1deg in 5 s *)
 END ua_value;
 
+ATOM pressure_per_temperature REFINES solver_var
+    DIMENSION M/L/T^2/TMP
+    DEFAULT 1.0{Pa/K};
+    lower_bound := -1e50{Pa/K};
+    upper_bound := 1e50{Pa/K};
+    nominal := 1.0{Pa/K};
+END pressure_per_temperature;
+
 MODEL thermo_state;
 	T IS_A temperature;
 	rho IS_A mass_density;
