@@ -33,6 +33,7 @@
 #include "solverreporter.h"
 #include "incidencematrix.h"
 #include "registry.h"
+#include <compiler/importhandler.h>
 %}
 
 // All STL runtime_errors caught to Python
@@ -499,14 +500,7 @@ public:
 
 %include "solver.i"
 
-class ExtMethod{
-public:
-	ExtMethod(const ExtMethod &);
-	const char *getName() const;
-	const char *getHelp() const;
-	const unsigned long getNumInputs() const;
-	const unsigned long getNumOutputs() const;
-};
+%include "extmethod.h"
 
 %include "plot.i"
 

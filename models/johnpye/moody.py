@@ -16,10 +16,10 @@ def moodyplot(self):
 	figure()
 	hold(True)
 	leg = []
-	Re_vals = array([500,1000,2000,2100,2300,2400,2500,2600,2700,2900,3000,4000,5000,10000,20000,50000,100000,200000,500000,1e6])
+	Re_vals = array([1000,1500,2000,2100,2300,2400,2500,2600,2700,2900,3000,4000,5000,10000,20000,50000,100000,200000,500000,1e6])
 
 	browser.reporter.reportNote(str(len(Re_vals)))
-	for eps_on_D in [1e-5, 1e-5,2e-5,5e-5,1e-4,2e-4,5e-4,1e-3,5e-3,0.01,0.02]:
+	for eps_on_D in [1e-5,2e-5,5e-5,1e-4,2e-4,5e-4,1e-3,5e-3,0.01,0.02]:
 		self.eps_on_D.setRealValue(eps_on_D)
 		f_vals = zeros(size(Re_vals),'f')
 		for i in range(0,len(Re_vals)):

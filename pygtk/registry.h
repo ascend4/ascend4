@@ -1,6 +1,8 @@
 /**
-	Provide methods to registry GUI objects with libascend
-	so that they can be accessed from script methods there.
+	@file
+	This head files provides SWIGed access to the importhandler 'shared pointer'
+	mechanism used to pass data from 'extpy' to 'ascpy' in particular (and
+	hopefully between other scripting languages/GUI combinations in future)
 */
 
 #ifndef ASCXX_REGISTRY_H
@@ -11,6 +13,14 @@
 #ifdef ASCXX_USE_PYTHON
 # include <Python.h>
 #endif
+
+/*
+extern "C"{
+#ifdef ASCXX_USE_PYTHON
+ASC_IMPORT(void *) importhandler_getsharedpointer(const char *);
+#endif
+}
+*/
 
 #include "instance.h"
 
