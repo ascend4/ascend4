@@ -1,12 +1,10 @@
+#include "extmethod.h"
+
 #include <stdexcept>
 using namespace std;
 
-#include "extmethod.h"
-
-#ifdef ASCXX_USE_PYTHON
-extern "C"{
-# include <compiler/importhandler.h>
-}
+#ifndef ASCXX_USE_PYTHON
+# error "Where's ASCXX_USE_PYTHON?"
 #endif
 
 /*--- WARNING ---
@@ -52,6 +50,7 @@ ExtMethod::ExtMethod(PyObject *obj){
 	e = LookupExtFunc("myextpyfn");
 }
 #endif
+
 
 const char *
 ExtMethod::getName() const{

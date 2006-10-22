@@ -372,7 +372,7 @@ opts.Add(
 opts.Add(
 	'INSTALL_DOC'
 	,'Location to install documentation files'
-	,"$INSTALL_SHARE/doc/ascend"
+	,"$INSTALL_SHARE/doc"
 )
 
 opts.Add(

@@ -2,7 +2,8 @@
 
 export ASC_START=$PWD
 cd @SOURCE_ROOT@/pygtk
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:@SOURCE_ROOT@"
+export LD_LIBRARY_PATH="@SOURCE_ROOT@:$LD_LIBRARY_PATH"
+export ASCENDLIBRARY="@SOURCE_ROOT@/models:$ASCENDLIBRARY"
 export ASC_DEV=1
 
 if [ "x$ASC_GDB" != "x" ]; then
