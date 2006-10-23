@@ -63,23 +63,24 @@ class ModelView:
 
 		# TODO import this menu from Glade (this code is a PITA)
 
+		print "'free' ICON IS AT %s" % (self.browser.options.assets_dir+'/unlocked.png')
 		self.treecontext = gtk.Menu();
 		self.fixmenuitem = gtk.ImageMenuItem("_Fix",True);
 		self.fixmenuitem.set_image(self.browser.fixedimg)
 
 		self.freemenuitem = gtk.ImageMenuItem("F_ree",True);
 		_img = gtk.Image()
-		_img.set_from_file(self.browser.options.assets_dir+'unlocked.png')
+		_img.set_from_file(self.browser.options.assets_dir+'/unlocked.png')
 		self.freemenuitem.set_image(_img)
 
 		self.propsmenuitem = gtk.ImageMenuItem("_Properties",True);
 		_img = gtk.Image()
-		_img.set_from_file(self.browser.options.assets_dir+'properties.png')
+		_img.set_from_file(self.browser.options.assets_dir+'/properties.png')
 		self.propsmenuitem.set_image(_img)
 
 		self.observemenuitem = gtk.ImageMenuItem("_Observe",True);
 		_img = gtk.Image()
-		_img.set_from_file(self.browser.options.assets_dir+'observe.png')
+		_img.set_from_file(self.browser.options.assets_dir+'/observe.png')
 		self.observemenuitem.set_image(_img)
 
 		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)

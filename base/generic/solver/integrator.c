@@ -570,6 +570,7 @@ int integrator_analyse_ode(IntegratorSystem *blsys){
   struct Integ_var_t *v1,*v2;
   long half,i,len;
   int happy=1;
+  char *varname1, *varname2;
 
   CONSOLE_DEBUG("Starting ODE analysis");
   IntegInitSymbols();
@@ -616,10 +617,15 @@ int integrator_analyse_ode(IntegratorSystem *blsys){
     v1 = (struct Integ_var_t *)gl_fetch(blsys->dynvars,i);
     v2 = (struct Integ_var_t *)gl_fetch(blsys->dynvars,i+1);
     if (v1->type!=1  || v2 ->type !=2 || v1->index != v2->index) {
-      ERROR_REPORTER_HERE(ASC_USER_ERROR,"Mistyped or misindexed dynamic variables: (%s = %ld,%s = %ld),(%s = %ld,%s = %ld).",
-             SCP(STATEFLAG),v1->type,SCP(STATEINDEX),v1->index,
-             SCP(STATEFLAG),v2->type,SCP(STATEINDEX),v2->index
+      varname1 = var_make_name(blsys->system,v1->i);
+	  varname2 = var_make_name(blsys->system,v2->i);
+            
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,"Mistyped or misindexed dynamic variables: %s (%s = %ld,%s = %ld) and %s (%s = %ld,%s = %ld).",
+             varname1, SCP(STATEFLAG),v1->type,SCP(STATEINDEX),v1->index,
+             varname2, SCP(STATEFLAG),v2->type,SCP(STATEINDEX),v2->index
 		);
+      ASC_FREE(varname1);
+      ASC_FREE(varname2);
       happy=0;
       break;
     } else {
@@ -746,7 +752,7 @@ static int integrator_check_indep_var(IntegratorSystem *blsys){
       if(info==NULL)continue;
 
       varname = var_make_name(blsys->system,info->i);
-      FPRINTF(ASCERR," %s",i,varname);
+      FPRINTF(ASCERR," %s",varname);
       ASC_FREE(varname);
     }
     FPRINTF(ASCERR , "\nSet the \"%s\" flag on all but one of these to %s >= 0.\n"

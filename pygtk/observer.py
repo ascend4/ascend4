@@ -184,7 +184,7 @@ class ObserverTab:
 			_row = ObserverRow(values=values,active=False)
 			self.rows.append(_row)
 			_store.append(None,[_row])			
-			self.browser.reporter.reportNote("Added data row")
+			#self.browser.reporter.reportNote("Added data row")
 
 	def on_view_cell_edited(self, renderer, path, newtext, col):
 		# we can assume it's always the self.activeiter that is edited...
@@ -199,7 +199,7 @@ class ObserverTab:
 
 	def sync(self):
 		self.view.queue_draw()
-		self.browser.reporter.reportNote("SYNC performed")
+		#self.browser.reporter.reportNote("SYNC performed")
 
 	def add_instance(self,instance):
 		_col = ObserverColumn(instance,self.colindex,browser=self.browser)
