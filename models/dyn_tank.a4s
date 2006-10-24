@@ -11,7 +11,7 @@ READ FILE "dyn_tank.a4c";
 # full path.
 source "$env(ASCENDDIST)/models/set_intervals.tcl";
 
-COMPILE ex OF tank;
+COMPILE ex OF dyn_tank;
 BROWSE {ex};
 RUN {ex.default_self};
 RUN {ex.reset};

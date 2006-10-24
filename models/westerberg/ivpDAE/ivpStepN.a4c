@@ -1,34 +1,24 @@
 REQUIRE "atoms.a4l";
 REQUIRE "plot.a4l";
 
-(*
- *  ivpStep.a4c
- *  by Arthur W. Westerberg
- *  Part of the ASCEND Library
- *  $Date: 02/07/28 $
- *  $Revision: 1.7 $
- *  $Author:  mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/ivpsystem.a4l,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1994 - 1998 Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
+(*  ASCEND modelling environment
+	Copyright (C) 1994-1998, 2006 Carnegie Mellon University
+	
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
 
 (*============================================================================
 
@@ -44,7 +34,7 @@ REQUIRE "plot.a4l";
 		 (AWW)
 
     CONTENTS:	 Models for the numerical integration equations for
-                 the two multistep methods: a bdf for stiff problems
+                 the two multistep methods: BDF for stiff problems
 		 and the Adams Moulton for non-stiff problems.  There
 		 is also a framework within which one creates the
 		 model for the physical system.  These models are for
@@ -266,18 +256,18 @@ METHODS
     (* ----- factorial ----- *)
 
     METHOD default_self;
-	fac[0] := 1;
+		fac[0] := 1;
 
-	(* if N=0, the following loop produces no code *)
-	FOR i IN [1..N] DO
-	    fac[i] := i*fac[i-1];
-	END FOR;
+		(* if N=0, the following loop produces no code *)
+		FOR i IN [1..N] DO
+		    fac[i] := i*fac[i-1];
+		END FOR;
     END default_self;
 
     (* ----- factorial ----- *)
 
     METHOD specify;
-	FIX fac[0..N];
+		FIX fac[0..N];
     END specify;
 
 END factorial;
@@ -323,7 +313,7 @@ MODEL pascalTriangle(
       *)
  
     FOR i IN [0..dim] CREATE
-	row[i] IS_A pTrow([0..dim-i]);
+		row[i] IS_A pTrow([0..dim-i]);
     END FOR;
     
     METHODS
@@ -331,25 +321,25 @@ MODEL pascalTriangle(
     (* ----- pascalTriangle ----- *)
 
     METHOD default_self;
-	FOR i IN [0..dim] DO
-	    row[0].col[i] := 1;
-	    row[i].col[0] := 1;
-	END FOR;
-	FOR i IN [1..dim] DO
-	    FOR j IN [1..dim-i] DO
-		row[i].col[j] := row[i-1].col[j]+row[i].col[j-1];
-	    END FOR;
-	END FOR;
+		FOR i IN [0..dim] DO
+		    row[0].col[i] := 1;
+		    row[i].col[0] := 1;
+		END FOR;
+		FOR i IN [1..dim] DO
+		    FOR j IN [1..dim-i] DO
+			row[i].col[j] := row[i-1].col[j]+row[i].col[j-1];
+		    END FOR;
+		END FOR;
     END default_self;
 
     (* ----- pascalTriangle ----- *)
 
     METHOD specify;
-	FOR i IN [0..dim] DO
-	    FOR j IN [0..dim-i] DO
-		FIX row[i].col[j];
-	    END FOR;
-	END FOR;
+		FOR i IN [0..dim] DO
+		    FOR j IN [0..dim-i] DO
+			FIX row[i].col[j];
+		    END FOR;
+		END FOR;
     END specify;
     
 END pascalTriangle;

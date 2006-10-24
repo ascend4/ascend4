@@ -3444,6 +3444,7 @@ enum typelinterr VerifyArithmeticNames(symchar *name,
   int errcnt=0;
   unsigned int origin; /* ignored */
   int subsopen=0; /* we don't care */
+  char *iostring;
 
   assert(ex!=NULL);
 
@@ -3454,7 +3455,7 @@ enum typelinterr VerifyArithmeticNames(symchar *name,
   assert(nl!=NULL);
   len = gl_length(nl);
   for (c = 1; c <= len; c++) {
-    n = (CONST struct Name *)gl_fetch(nl,c);
+    n = (const struct Name *)gl_fetch(nl,c);
     /* check forvars here first. tempvars would be tricky,
      * except EvaluateNamesNeeded doesn't report those (we hope).
      */
@@ -3464,12 +3465,11 @@ enum typelinterr VerifyArithmeticNames(symchar *name,
     /* not in forvars, so check declarations */
     rtype = FindRHSType(n,lclgl,&rval,&subsopen,&origin);
     if (rtype==NULL) {
-      char *iostring;
-      iostring = (char *)ascmalloc(6+SCLEN(name));
-      sprintf(iostring,"In %s:\n",SCP(name));
-      TypeLintErrorAuxillary(ASCERR,iostring,DEF_MISC_WARNING,TRUE);
+      iostring = ASC_NEW_ARRAY(char,200);
+      sprintf(iostring,"In model '%s', undefined variable named ",SCP(name));
+      /* TypeLintErrorAuxillary(ASCERR,iostring,DEF_MISC_WARNING,TRUE); */
+      TLNM(ASCERR,n,iostring,2);
       ascfree(iostring);
-      TLNM(ASCERR,n,"Undefined variable name ",2);
       errcnt++;
     } else {
       if (rval != FRC_ok  /* can't compute on arrays */ ||
