@@ -3,6 +3,7 @@
 extern "C"{
 #include <compiler/notate.h>
 #include <utilities/error.h>
+#include <utilities/ascPanic.h>
 }
 
 #include <stdexcept>
@@ -87,7 +88,22 @@ Annotation::getMethod() const{
 */
 const SymChar
 Annotation::getType() const{
+	asc_assert(GetNoteType(n)!=NULL);
 	return SymChar(SCP(GetNoteType(n)));
+}
+
+/**
+	Get the 'language' of a note. This roughly corresponds to the *purpose*
+	that the note exists for: informing the end-user, providing parameters to
+	the solver, giving additional data such as icons for a dreamt-of flowsheet
+	GUI, etc.
+
+	@return the 'language' of the note
+*/
+const SymChar
+Annotation::getLanguage() const{
+	asc_assert(GetNoteLanguage(n)!=NULL);
+	return SymChar(SCP(GetNoteLanguage(n)));
 }
 
 /**

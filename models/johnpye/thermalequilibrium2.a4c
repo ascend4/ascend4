@@ -25,8 +25,12 @@ END simple_state;
 *)
 ADD NOTES IN thermalequilibrium2;
 	'solver' name {QRSlv}
-	'solver' maxiter {3}
-	'solver' reltol {1e-8}
+	'QRSlv' iterationlimit {50}
+	'QRSlv' singtol {1e-10}
+	'LSODE' minstep {0.01}
+	'LSODE' firststep {0.1}
+	'LSODE' maxstep {2000}
+	'LSODE' duration {3000}
 END NOTES;
 
 MODEL thermalequilibrium2;
@@ -72,12 +76,16 @@ METHOD on_load;
 
 	t.ode_type := -1;
 	t := 0 {s};
-	
+
 END on_load;
 
 METHOD listnotes;
 	EXTERNAL listnotes(SELF);
 END listnotes;
+
+METHOD setup_solver;
+	EXTERNAL setup_solver(SELF);
+END setup_solver;
 
 END thermalequilibrium2;
 

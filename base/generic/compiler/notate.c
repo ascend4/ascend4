@@ -44,6 +44,10 @@
 #include "cmpfunc.h"
 #include "notate.h"
 
+/**
+	This data structure holds a NOTE in memory, including a reference to the
+	database it belongs to. @see About 'NOTES' in ASCEND
+*/
 struct Note {
   symchar *typename;    /**< ascend type library name, if any, for context. */
   symchar *id;          /**< child name in type, if only for 1 child, or SELF */
@@ -60,10 +64,13 @@ struct Note {
   struct Note *next;    /**< database master list chain */
 };
 
+/**
+	Some kind of tree or list data structure referenced in struct data_base...
+*/
 struct note_bucket {
-  symchar *key;		/* hash key. type, id, or other heap pointer. */
-  struct note_bucket *next;	/* next bucket. duh */
-  void *obj;		/* data for bucket. usually a note or list. */
+  symchar *key;             /** hash key. type, id, or other heap pointer. */
+  struct note_bucket *next; /** next bucket. duh */
+  void *obj;                /** data for bucket. usually a note or list. */
 };
 
 /* replace this with a pool */
@@ -83,16 +90,16 @@ struct note_bucket {
 #define NTAB 1024
 #define PTRHASH(p) (((((long) (p))*1103515245) >> 20) & 1023)
 
-/*
- * This module manages possibly several databases of this sort.
- */
+/**
+	This module manages possibly several databases of this sort.
+*/
 struct data_base {
-  struct Note *all;                 /* all notes committed */
+  struct Note *all;                  /** all notes committed */
   struct gl_list_t *note_tokens;
-  symchar *dbid;                     /* name of this database */
-  struct data_base *next;            /* linked list of databases */
-  struct note_bucket *typetab[NTAB]; /* hash keyed on type name */
-  struct note_bucket *idtab[NTAB];   /* hash keyed on id name */
+  symchar *dbid;                     /** name of this database */
+  struct data_base *next;            /** linked list of databases */
+  struct note_bucket *typetab[NTAB]; /** hash keyed on type name */
+  struct note_bucket *idtab[NTAB];   /** hash keyed on id name */
   int dead;
 };
 

@@ -271,7 +271,8 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
  *
  * -- Mark Thomas  Thursday, 13 March 1997
  */
-#define DEBUG_NOTES(s) 0
+/* #define DEBUG_NOTES(s) 0 */
+#define DEBUG_NOTES(s) ERROR_REPORTER_NOLINE(ASC_USER_WARNING,"Discarded note: %s", (s))
 
 /*
  * Because the ascend types and notes are not tightly bound to each other,
