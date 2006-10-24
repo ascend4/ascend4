@@ -8,7 +8,7 @@ extern "C"{
 using namespace std;
 
 Compiler::Compiler(){
-	cerr << "CREATED COMPILER" << endl;
+	//cerr << "CREATED COMPILER" << endl;
 }
 
 Compiler::~Compiler(){

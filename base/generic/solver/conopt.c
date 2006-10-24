@@ -104,7 +104,7 @@ int asc_conopt_load(){
 		return 0; /* already loaded */
 	}
 
-	CONSOLE_DEBUG("LOADING CONOPT...");
+	/* CONSOLE_DEBUG("LOADING CONOPT..."); */
 
 	envvar  = ASC_CONOPT_ENVVAR;
 

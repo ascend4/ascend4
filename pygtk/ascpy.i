@@ -34,6 +34,7 @@
 #include "incidencematrix.h"
 #include "registry.h"
 #include <compiler/importhandler.h>
+#include "annotation.h"
 %}
 
 // All STL runtime_errors caught to Python
@@ -106,6 +107,7 @@ public:
 %template(CurveVector) std::vector<Curve>;
 %template(StringVector) std::vector<std::string>;
 %template(IntStringMap) std::map<int,std::string>;
+%template(AnnotationVector) std::vector<Annotation>;
 
 %rename(Instance) Instanc;
 %rename(Name) Nam;#include "incidencematrix.h"
@@ -254,19 +256,11 @@ str = ur'\u00b7'.join(numparts)
 */
 //----------------------------
 
-class Library{
-public:
-	Library(const char *defaultpath=NULL);
-	~Library();
+%typemap(in) const SymChar& {
+	$1 = new SymChar(PyString_AsString($input));
+}
 
-	void load(char *filename);
-	void listModules(const int &module_type=0);
-	Type &findType(const char *name);
-	std::vector<Module> getModules();
-	std::vector<Type> getModuleTypes(const Module &);
-	std::vector<ExtMethod> getExtMethods();
-	void clear();
-};
+%include "library.h"
 
 class SymChar{
 public:
@@ -501,6 +495,8 @@ public:
 %include "solver.i"
 
 %include "extmethod.h"
+
+%include "annotation.h"
 
 %include "plot.i"
 

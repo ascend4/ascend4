@@ -1066,13 +1066,11 @@ Process_Backslashes(void)
  *  arguments to fprintf.
  */
 static void
-ErrMsg_BracesEOF(void)
-{
-  FPRINTF(ASCERR,
-          "Error:\tEnd of file reached within a unit, data table, or "
-	  "explanation.\n"
-	  "\tNo close brace found for open brace on line %s:%lu\n",
-	  Asc_ModuleBestName(Asc_CurrentModule()), start_line);
+ErrMsg_BracesEOF(void){
+	error_reporter(ASC_USER_ERROR, Asc_ModuleBestName(Asc_CurrentModule()), start_line, NULL
+		,"End of file reached within a unit, data table or explanation. No closing brace "
+		"found for open brace."
+	);
 }
 
 

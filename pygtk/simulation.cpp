@@ -249,10 +249,10 @@ Simulation::run(const Method &method, Instanc &model){
 */
 void
 Simulation::checkInstance(){
-	cerr << "CHECKING SIMULATION INSTANCE" << endl;
+	//cerr << "CHECKING SIMULATION INSTANCE" << endl;
 	Instance *i1 = getModel().getInternalType();
 	CheckInstance(stderr, &*i1);
-	cerr << "DONE CHECKING INSTANCE" << endl;
+	//cerr << "DONE CHECKING INSTANCE" << endl;
 }
 
 /**
@@ -290,7 +290,7 @@ vector<Variable>
 Simulation::getFreeableVariables(){
 	vector<Variable> v;
 
-	cerr << "CHECKING CONSISTENCY..." << endl;
+	//cerr << "CHECKING CONSISTENCY..." << endl;
 	int *fixedarrayptr=NULL;
 
 	if(!sys){
@@ -432,14 +432,14 @@ Simulation::getSolver() const{
 */
 void
 Simulation::build(){
-	cerr << "BUILDING SIMULATION..." << endl;
+	//cerr << "BUILDING SIMULATION..." << endl;
 	Instance *i1 = getModel().getInternalType();
 	sys = system_build(&*i1);
 	if(!sys){
 		throw runtime_error("Unable to build system");
 	}
 	is_built = true;
-	cerr << "...DONE BUILDING" << endl;
+	//cerr << "...DONE BUILDING" << endl;
 }
 
 
@@ -477,7 +477,7 @@ Simulation::setSolverParameters(SolverParameters &P){
 */
 vector<Variable>
 Simulation::getFixableVariables(){
-	cerr << "GETTING FIXABLE VARIABLES..." << endl;
+	//cerr << "GETTING FIXABLE VARIABLES..." << endl;
 	vector<Variable> vars;
 
 	if(!sys){
@@ -518,7 +518,7 @@ Simulation::getFixableVariables(){
 */
 vector<Variable>
 Simulation::getVariablesNearBounds(const double &epsilon){
-	cerr << "GETTING VARIABLES NEAR BOUNDS..." << endl;
+	//cerr << "GETTING VARIABLES NEAR BOUNDS..." << endl;
 	vector<Variable> vars;
 
 	if(!sys){

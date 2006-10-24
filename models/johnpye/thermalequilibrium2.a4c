@@ -2,6 +2,8 @@ REQUIRE "ivpsystem.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
 IMPORT "freesteam";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/listnotes";
 
 MODEL simple_state;
 	p IS_A pressure;
@@ -17,7 +19,16 @@ END simple_state;
 (* 
 	Enhanced version of johnpye/thermalequilibrium.a4c. This model uses
 	real steam properties from http://freesteam.sf.net/.
+
+	NOTE: set the starting step to 0.1 and the minimum step to 0.01 s, and
+	integrate from 0 to 3000 s.
 *)
+ADD NOTES IN thermalequilibrium2;
+	'solver' name {QRSlv}
+	'solver' maxiter {3}
+	'solver' reltol {1e-8}
+END NOTES;
+
 MODEL thermalequilibrium2;
 	S[1..2] IS_A simple_state;
 	m[1..2] IS_A mass;
@@ -46,10 +57,7 @@ METHOD on_load;
 	m[1] := 2 {kg};
 	S[1].h := 200 {kJ/kg};
 	m[2] := 10 {kg};
-	S[2].h := 4000 {kJ/kg};
-
-	t.ode_type := -1;
-	t := 0 {s};
+	S[2].h := 3500 {kJ/kg};
 
 	FOR i IN [1..2] DO
 		S[i].h.ode_id := i;
@@ -61,8 +69,15 @@ METHOD on_load;
 	Q.obs_id := 2;
 	S[1].T.obs_id := 3;
 	S[2].T.obs_id := 4;
+
+	t.ode_type := -1;
+	t := 0 {s};
 	
 END on_load;
+
+METHOD listnotes;
+	EXTERNAL listnotes(SELF);
+END listnotes;
 
 END thermalequilibrium2;
 

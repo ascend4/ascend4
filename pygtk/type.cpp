@@ -136,7 +136,7 @@ Type::getSimulation(SymChar sym){
 	static string bin_cmd;
 	static string bin_rm;
 
-	cerr << "Type " << getName().toString() << ", getSimulation('" << sym.toString() << "')" << endl;
+	//CONSOLE_DEBUG("Type %s, getSimulation('%s')",getName().toString(), sym.toString());
 
 	// Tell ASCEND file locations and compiler commands:
 	if(0 && !have_bintoken_setup){
@@ -177,7 +177,7 @@ Type::getSimulation(SymChar sym){
 		have_bintoken_setup = true;
 	}
 
-	cerr << "CREATING INSTANCE..." << endl;
+	//cerr << "CREATING INSTANCE..." << endl;
 	// Perform the instantiation (C compile etc):
 	/*Instance *i = Instantiate(getInternalType()->name, sym.getInternalType(),
 								 0, SymChar("on_load").getInternalType()); */
@@ -187,7 +187,7 @@ Type::getSimulation(SymChar sym){
 		throw runtime_error("Failed to create instance");
 	}
 
-	cerr << "CREATED INSTANCE " << sym << " OF " << getName() << endl;
+	//cerr << "CREATED INSTANCE " << sym << " OF " << getName() << endl;
 	return Simulation(i,sym);
 }
 

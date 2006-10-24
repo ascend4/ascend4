@@ -27,25 +27,22 @@
 
 	This implementation is not optimized for anything -- the
 	intent here is to learn if it can be done at all.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "general/list.h"
-	#include "compiler/compiler.h"
-	#include "compiler/braced.h"
 *//*
-	By Ben Allan
-	4/98
-	Version: $Revision: 1.3 $
-	Version control file: $RCSfile: notate.h,v $
-	Date last modified: $Date: 1998/06/16 16:38:42 $
-	Last modified by: $Author: mthomas $
+	By Ben Allan 4/98
+	Last in CVS:$Revision: 1.3 $ $Date: 1998/06/16 16:38:42 $ $Author: mthomas $
 */
 
 #ifndef ASC_NOTATE_H
 #define ASC_NOTATE_H
 
 #include <utilities/ascConfig.h>
+#include <general/list.h>
+#include "compiler.h"
+#include "braced.h"
+
+/*------------------------------------------------------------------------------
+  MACROS AND DATA STRUCTURES
+*/
 
 /**
  * A wildcard pointer value for database queries.
@@ -92,7 +89,9 @@ struct NoteTmp {
   struct NoteTmp *next;
 };
 
-/*-- tmp notes functions --*/
+/*------------------------------------------------------------------------------
+   TEMPORARY NOTES
+*/
 
 /**
  * Create a notetmp for parsing NOTES statements. need this in order to
@@ -113,7 +112,9 @@ extern struct NoteTmp *LinkNoteTmp(struct NoteTmp *new_thing,
  */
 extern void DestroyNoteTmpList(struct NoteTmp *head);
 
-/*== regular notes functions ==*/
+/*------------------------------------------------------------------------------
+  REGULAR (PERSISTENT) NOTES
+*/
 
 /**
  * Initialize the notes database. Returns 0 if successful.
@@ -122,7 +123,6 @@ extern void DestroyNoteTmpList(struct NoteTmp *head);
  * NULL and merely initializes internal structures without
  * creating something according to dbid. That call always
  * returns 1.
- * <!--  err = InitNotesDatabase(dbid);                                -->
  */
 ASC_DLLSPEC(int) InitNotesDatabase(symchar *dbid);
 
@@ -318,8 +318,9 @@ extern struct Note *CreateNote(symchar *type,
  */
 extern void DestroyNote(struct Note *n);
 
-/*-****** regular expression matching madness for the database ******/
-/*-****** regular expression matching madness for the database ******/
+/*------------------------------------------------------------------------------
+  SEARCHING FUNCTIONS (LINK TO A REGULAR EXPRESSION ENGINE)
+*/
 
 /**
  * Returns a list of notes whose text (or name list if a vlist note in future)

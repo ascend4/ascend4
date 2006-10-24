@@ -1,41 +1,32 @@
-/*
- *  notate.c
- *  By Ben Allan
- *  4/98
- *  Part of ASCEND
- *  Version: $Revision: 1.9 $
- *  Version control file: $RCSfile: notate.c,v $
- *  Date last modified: $Date: 1998/06/18 18:44:58 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The Ascend Language Interpreter is free software; you can
- *  redistribute it and/or modify it under the terms of the GNU
- *  General Public License as published by the Free Software
- *  Foundation; either version 2 of the License, or (at your option)
- *  any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- */
-/* This file defines and manages a little (we hope)
- * database system for storing NOTES in-core in a variety
- * of quickly accessible ways.
- * If scale gets to be an issue, this could become a wrapper
- * for a real database someday.
- * This implementation is not optimized for anything -- the
- * intent here is to learn if it can be done at all.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1998, 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	This file defines and manages a little (we hope) database system for
+	storing NOTES in-core in a variety of quickly accessible ways.
+
+	If scale gets to be an issue, this could become a wrapper for a real
+	database someday. This implementation is not optimized for anything -- the
+	intent here is to learn if it can be done at all.
+*//*
+	Ben Allan, 4/98
+	Last in CVS: $Revision: 1.9 $ $Date: 1998/06/18 18:44:58 $ $Author: ballan $
+*/
+
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
@@ -54,19 +45,19 @@
 #include "notate.h"
 
 struct Note {
-  symchar *typename;	/* ascend type library name, if any, for context. */
-  symchar *id;		/* child name in type, if only for 1 child, or SELF */
-  symchar *method;	/* method name type, if in method context */
-  symchar *lang;	/* language keyword in '' */
-  CONST char *filename;	/* where note is from */
-  struct bracechar *t;	/* text of the note */
-  VOIDPTR data;		/* note data */
-  int line;		/* where note occured, to our best guess */
-  enum NoteData kind;	/* void pointer type */
-  int refcount;		/* number of database references to the note */
-  int found;		/* 0 normal. 1 if found. 2 if collected. search flag */
-  struct data_base *db;	/* database */
-  struct Note *next;	/* database master list chain */
+  symchar *typename;    /**< ascend type library name, if any, for context. */
+  symchar *id;          /**< child name in type, if only for 1 child, or SELF */
+  symchar *method;      /**< method name type, if in method context */
+  symchar *lang;        /**< language keyword in '' */
+  CONST char *filename; /**< where note is from */
+  struct bracechar *t;  /**< text of the note */
+  VOIDPTR data;         /**< note data */
+  int line;             /**< where note occured, to our best guess */
+  enum NoteData kind;   /**< void pointer type */
+  int refcount;         /**< number of database references to the note */
+  int found;            /**< search flag: 0=normal, 1=found, 2=collected. */
+  struct data_base *db; /**< database */
+  struct Note *next;    /**< database master list chain */
 };
 
 struct note_bucket {
@@ -96,12 +87,12 @@ struct note_bucket {
  * This module manages possibly several databases of this sort.
  */
 struct data_base {
-  struct Note *all;			/* all notes committed */
+  struct Note *all;                 /* all notes committed */
   struct gl_list_t *note_tokens;
-  symchar *dbid;		/* name of this database */
-  struct data_base *next;	/* linked list of databases */
-  struct note_bucket *typetab[NTAB];		/* hash keyed on type name */
-  struct note_bucket *idtab[NTAB];		/* hash keyed on id name */
+  symchar *dbid;                     /* name of this database */
+  struct data_base *next;            /* linked list of databases */
+  struct note_bucket *typetab[NTAB]; /* hash keyed on type name */
+  struct note_bucket *idtab[NTAB];   /* hash keyed on id name */
   int dead;
 };
 
@@ -112,10 +103,10 @@ struct data_base {
  */
 #define NDB g_notes_data_base
 static struct fixed_data {
-  symchar *inlinenote;		/* symtab entry 'inline' */
-  symchar *selfnote;		/* symtab entry 'SELF' */
-  symchar *librarynote;		/* symtab entry 'Loaded Libraries' */
-  symchar *globalnote;		/* symtab entry 'All Known Files' */
+  symchar *inlinenote;   /* symtab entry 'inline' */
+  symchar *selfnote;     /* symtab entry 'SELF' */
+  symchar *librarynote;  /* symtab entry 'Loaded Libraries' */
+  symchar *globalnote;   /* symtab entry 'All Known Files' */
   /* pool_t */
   struct data_base *dblist;	/* list of created databases */
 } g_notes_data_base = {NULL,NULL,NULL,NULL,NULL};
@@ -124,8 +115,8 @@ static struct fixed_data {
 static struct Note *CopyNote(struct Note *);
 
 struct NoteTmp *CreateNoteTmp(symchar *lang, struct bracechar *bt,
-                              void *varlist, int line)
-{
+                              void *varlist, int line
+){
   struct NoteTmp *nt;
   nt = ASC_NEW(struct NoteTmp);
   nt->lang = lang;
@@ -137,8 +128,7 @@ struct NoteTmp *CreateNoteTmp(symchar *lang, struct bracechar *bt,
 }
 
 /* var data and bt assumed not our problem */
-void DestroyNoteTmpList(struct NoteTmp *head)
-{
+void DestroyNoteTmpList(struct NoteTmp *head){
   struct NoteTmp *old;
   while (head != NULL) {
     old = head;
@@ -147,8 +137,7 @@ void DestroyNoteTmpList(struct NoteTmp *head)
   }
 }
 
-struct NoteTmp *LinkNoteTmp(struct NoteTmp *new, struct NoteTmp *chain)
-{
+struct NoteTmp *LinkNoteTmp(struct NoteTmp *new, struct NoteTmp *chain){
   if (chain == NULL) {
     return new;
   }
@@ -160,9 +149,7 @@ struct NoteTmp *LinkNoteTmp(struct NoteTmp *new, struct NoteTmp *chain)
 }
 
 /* return pointer to database if it is in global list and not dead. */
-static
-struct data_base *FindDatabase(symchar *dbid)
-{
+static struct data_base *FindDatabase(symchar *dbid){
   struct data_base *db;
   db = NDB.dblist;
   while (db != NULL) {
@@ -177,9 +164,7 @@ struct data_base *FindDatabase(symchar *dbid)
 /* delete dead entries from the dblist and frees them.
  * Stupid implementation.
  */
-static
-void ClearDeadDB(void)
-{
+static void ClearDeadDB(void){
   struct data_base *db, *odb;
   struct gl_list_t *keep;
   unsigned long len;
@@ -223,8 +208,7 @@ void ClearDeadDB(void)
   if (FindDatabase(dbid) == NULL) { return; } db = FindDatabase(dbid)
 
 /* init the database. return 0 if successful. NULL is not considered dbid. */
-int InitNotesDatabase(symchar *dbid)
-{
+int InitNotesDatabase(symchar *dbid){
   int c;
   struct data_base *db;
   NDB.librarynote = AddSymbolL("Loaded Libraries",16);
@@ -254,8 +238,7 @@ int InitNotesDatabase(symchar *dbid)
 
 /* bucket is assumed to contain a gl_list of notes matching key */
 static
-void NoteDestroyHash(struct note_bucket **tab, int size)
-{
+void NoteDestroyHash(struct note_bucket **tab, int size){
   struct note_bucket *old,*next;
   int c;
   for (c = 0; c < size; c++) {
@@ -273,8 +256,7 @@ void NoteDestroyHash(struct note_bucket **tab, int size)
   }
 }
 
-struct gl_list_t *ListNotesDatabases(void)
-{
+struct gl_list_t *ListNotesDatabases(void){
   struct data_base *db;
   struct gl_list_t *names;
   db = NDB.dblist;
@@ -291,9 +273,7 @@ struct gl_list_t *ListNotesDatabases(void)
   return names;
 }
 
-static
-void RealDestroyDatabase(struct data_base *db, symchar *dbid)
-{
+static void RealDestroyDatabase(struct data_base *db, symchar *dbid){
   struct Note *old, *next;
   if (GNT != NULL) {
     ReleaseNoteData(dbid,(void *)0x1);
@@ -310,8 +290,7 @@ void RealDestroyDatabase(struct data_base *db, symchar *dbid)
   db->dead = 1;
 }
 
-void DestroyNotesDatabase(symchar *dbid)
-{
+void DestroyNotesDatabase(symchar *dbid){
   struct data_base *db;
 
   if (dbid == (symchar *)0x1) {
@@ -333,8 +312,7 @@ void DestroyNotesDatabase(symchar *dbid)
 /* clear any notes associated with the type named out of
  * database. Useful if replacing a type.
  */
-void DestroyNotesOnType(symchar *dbid, symchar *typename)
-{
+void DestroyNotesOnType(symchar *dbid, symchar *typename){
   struct note_bucket *b, *prev = NULL;
   unsigned long len;
   struct gl_list_t *nl;
@@ -410,9 +388,7 @@ void DestroyNotesOnType(symchar *dbid, symchar *typename)
 }
 
 /* returns e if it is in the main list NDB.all. returns NULL if not. */
-static
-struct Note *FindNote(symchar *dbid, struct Note *e)
-{
+static struct Note *FindNote(symchar *dbid, struct Note *e){
   struct Note *n;
   CHECKDB(NULL);
   n = db->all;
@@ -428,8 +404,7 @@ struct Note *FindNote(symchar *dbid, struct Note *e)
 /* check list for worthiness and keep it, converting pointer to
  * void for user.
  */
-void *HoldNoteData(symchar *dbid, struct gl_list_t *nl)
-{
+void *HoldNoteData(symchar *dbid, struct gl_list_t *nl){
   CHECKDB(NULL);
   if (nl == NULL) {
     return NULL;
@@ -449,8 +424,7 @@ void *HoldNoteData(symchar *dbid, struct gl_list_t *nl)
   return (void *)nl;
 }
 
-struct gl_list_t *HeldNotes(symchar *dbid, void *token)
-{
+struct gl_list_t *HeldNotes(symchar *dbid, void *token){
   unsigned long pos;
   struct gl_list_t *nl;
   CHECKDB(NULL);
@@ -465,8 +439,7 @@ struct gl_list_t *HeldNotes(symchar *dbid, void *token)
   return NULL;
 }
 
-void ReleaseNoteData(symchar *dbid, void *token)
-{
+void ReleaseNoteData(symchar *dbid, void *token){
   unsigned long pos;
   struct gl_list_t *nl;
   CHECKDBV;
@@ -492,8 +465,8 @@ void ReleaseNoteData(symchar *dbid, void *token)
  */
 struct gl_list_t *GetNotes(symchar *dbid,
                            symchar *type, symchar *lang,
-                           symchar *id, symchar *method, enum NoteData nd)
-{
+                           symchar *id, symchar *method, enum NoteData nd
+){
   struct gl_list_t *result;
   struct Note *n;
   CHECKDB(NULL);
@@ -533,9 +506,7 @@ struct gl_list_t *GetNotes(symchar *dbid,
  * returns 1 if list or data is NULL or if data is found in list.
  * Else returns 0;
  */
-static
-int inDataListOrWild(void *data, struct gl_list_t *list)
-{
+static int inDataListOrWild(void *data, struct gl_list_t *list){
   unsigned long len;
   void *elt;
   if (list == NULL) {
@@ -559,9 +530,7 @@ int inDataListOrWild(void *data, struct gl_list_t *list)
  * returns 1 if list or data is NULL or if data is found in list.
  * Else returns 0;
  */
-static
-int inDataListOrNull(void *data, struct gl_list_t *list)
-{
+static int inDataListOrNull(void *data, struct gl_list_t *list){
   unsigned long len;
   void *elt;
   if (list == NULL) {
@@ -592,8 +561,8 @@ struct gl_list_t *GetNotesList(symchar *dbid,
                                struct gl_list_t *langs,
                                struct gl_list_t *ids,
                                struct gl_list_t *methods,
-                               struct gl_list_t *nds)
-{
+                               struct gl_list_t *nds
+){
   struct gl_list_t *result;
   struct Note *n;
   CHECKDB(NULL);
@@ -628,8 +597,7 @@ struct gl_list_t *GetNotesList(symchar *dbid,
   return result;
 }
 
-struct gl_list_t *GetExactNote(symchar *dbid, struct Note *e)
-{
+struct gl_list_t *GetExactNote(symchar *dbid, struct Note *e){
   struct gl_list_t *result;
   struct Note *n;
 
@@ -644,64 +612,56 @@ struct gl_list_t *GetExactNote(symchar *dbid, struct Note *e)
   return result;
 }
 
-symchar *GetNoteId(struct Note *n)
-{
+symchar *GetNoteId(struct Note *n){
   if (n != NULL)  {
     return n->id;
   }
   return NULL;
 }
 
-symchar *GetNoteMethod(struct Note *n)
-{
+symchar *GetNoteMethod(struct Note *n){
   if (n != NULL)  {
     return n->method;
   }
   return NULL;
 }
 
-symchar *GetNoteType(struct Note *n)
-{
+symchar *GetNoteType(struct Note *n){
   if (n != NULL)  {
     return n->typename;
   }
   return NULL;
 }
 
-symchar *GetNoteLanguage(struct Note *n)
-{
+symchar *GetNoteLanguage(struct Note *n){
   if (n != NULL)  {
     return n->lang;
   }
   return NULL;
 }
 
-CONST char *GetNoteFilename(struct Note *n)
-{
+CONST char *GetNoteFilename(struct Note *n){
   if (n != NULL)  {
     return n->filename;
   }
   return NULL;
 }
 
-int GetNoteLineNum(struct Note *n)
-{
+int GetNoteLineNum(struct Note *n){
   if (n != NULL)  {
     return n->line;
   }
   return 0;
 }
 
-struct bracechar *GetNoteText(struct Note *n)
-{
+struct bracechar *GetNoteText(struct Note *n){
   if (n != NULL)  {
     return n->t;
   }
   return NULL;
 }
 
-enum NoteData GetNoteEnum(struct Note *n)
-{
+enum NoteData GetNoteEnum(struct Note *n){
   if (n != NULL)  {
     return n->kind;
   }
@@ -716,8 +676,7 @@ void *GetNoteData(struct Note *n, enum NoteData nd)
   return NULL;
 }
 
-struct gl_list_t *GetNotesAllLanguages(symchar *dbid)
-{
+struct gl_list_t *GetNotesAllLanguages(symchar *dbid){
   struct Note *n;
   struct gl_list_t *result;
   CHECKDB(NULL);
@@ -738,32 +697,28 @@ struct gl_list_t *GetNotesAllLanguages(symchar *dbid)
 
 }
 
-symchar *GlobalNote(void)
-{
+symchar *GlobalNote(void){
   return NDB.globalnote;
 }
 
-symchar *LibraryNote(void)
-{
+symchar *LibraryNote(void){
   return NDB.librarynote;
 }
 
-symchar *InlineNote(void)
-{
+symchar *InlineNote(void){
   return NDB.inlinenote;
 }
 
-symchar *SelfNote(void)
-{
+symchar *SelfNote(void){
   return NDB.selfnote;
 }
 
 /* creates and inserts bucket, returning pointer.
  * return NULL if malloc fail.
  */
-static
-struct note_bucket *AddEntry(struct note_bucket **tab, symchar *key, void *obj)
-{
+static struct note_bucket *AddEntry(struct note_bucket **tab
+		, symchar *key, void *obj
+){
   long index;
   struct note_bucket *new;
 
@@ -780,8 +735,7 @@ struct note_bucket *AddEntry(struct note_bucket **tab, symchar *key, void *obj)
 }
 
 static
-struct note_bucket *FindEntry(struct note_bucket **tab, symchar *key)
-{
+struct note_bucket *FindEntry(struct note_bucket **tab, symchar *key){
   struct note_bucket *b;
   long index;
   index = PTRHASH(key);
@@ -797,9 +751,7 @@ struct note_bucket *FindEntry(struct note_bucket **tab, symchar *key)
  * idtable buckets match both methods and ids.
  * typetable matches typename.
  */
-static
-int InsertNote(struct data_base *db, struct Note *n)
-{
+static int InsertNote(struct data_base *db, struct Note *n){
   struct note_bucket *b;
   struct gl_list_t *matches;
 
@@ -871,8 +823,7 @@ int InsertNote(struct data_base *db, struct Note *n)
 /* Add a note to the database.
  * CommitNote(note);
  */
-int CommitNote(symchar *dbid, struct Note *n)
-{
+int CommitNote(symchar *dbid, struct Note *n){
   CONST struct VariableList *vl;
   CONST struct Name *name;
   struct Note *new;
@@ -905,8 +856,8 @@ int CommitNote(symchar *dbid, struct Note *n)
 struct Note *CreateNote(symchar *type, symchar *lang,
                         symchar *id, symchar *method, CONST char *file,
                         struct bracechar *t, int line,
-                        VOIDPTR data, enum NoteData nd)
-{
+                        VOIDPTR data, enum NoteData nd
+){
   struct Note *n;
   if (t==NULL) {
     return NULL;
@@ -938,14 +889,13 @@ struct Note *CreateNote(symchar *type, symchar *lang,
   return n;
 }
 
-/* does not copy vlist data and nd, if found.
- * OTHERWISE copies everything about the note.
- * The text t is copied by reference.
- * this cannot be used to move a note between databases.
- */
-static
-struct Note *CopyNote(struct Note *old)
-{
+/** 
+	does not copy vlist data and nd, if found.
+	OTHERWISE copies everything about the note.
+	The text t is copied by reference.
+	this cannot be used to move a note between databases.
+*/
+static struct Note *CopyNote(struct Note *old){
   struct Note *n;
   if (old==NULL) {
     return NULL;
@@ -976,8 +926,7 @@ struct Note *CopyNote(struct Note *old)
   return n;
 }
 
-void DestroyNote(struct Note *n)
-{
+void DestroyNote(struct Note *n){
   if (n==NULL) {
     return;
   }
@@ -1009,8 +958,8 @@ struct NoteEngine {
 #define ENGINEMAGIC 345987607
 
 struct gl_list_t *GetMatchingNotes(symchar *dbid, char *pattern,void *token,
-                                   struct NoteEngine *engine)
-{
+		struct NoteEngine *engine
+){
   struct gl_list_t *result;
   unsigned long len;
   struct gl_list_t *oldlist;
@@ -1079,8 +1028,8 @@ struct gl_list_t *GetMatchingNotes(symchar *dbid, char *pattern,void *token,
 
 struct NoteEngine *NotesCreateEngine(void *ned,
                                      NEInitFunc neif,
-                                     NECompareFunc necf)
-{
+                                     NECompareFunc necf
+){
   struct NoteEngine *ne;
   ne = ASC_NEW(struct NoteEngine);
   if (neif == (NEInitFunc)NULL || necf == (NECompareFunc)NULL) {
@@ -1096,8 +1045,7 @@ struct NoteEngine *NotesCreateEngine(void *ned,
   return ne;
 }
 
-void NotesDestroyEngine(struct NoteEngine *e)
-{
+void NotesDestroyEngine(struct NoteEngine *e){
   if (e != NULL && e->enginekey == ENGINEMAGIC ) {
     e->enginekey = -1;
     ascfree(e);

@@ -70,7 +70,7 @@ Library::Library(const char *defaultpath){
 		//cerr << "Registering solvers..." << endl;
 		registerStandardSolvers();
 	}else{
-		std::cerr << "Reusing LIBRARY" << std::endl;
+		CONSOLE_DEBUG("Reusing LIBRARY");
 	}
 	have_init=1;
 }
@@ -136,12 +136,12 @@ Library::load(const char *filename){
 		std::cerr << "Note: Module " << Asc_ModuleName(m) << ": " << msg1 << std::endl;
 	}
 
-	std::cerr << "Note: Beginning parse of " << Asc_ModuleName(m) << "..." << std::endl;
+	/* std::cerr << "Note: Beginning parse of " << Asc_ModuleName(m) << "..." << std::endl; */
 	zz_parse();
-	std::cerr << "Note: ...yyparse of " << Asc_ModuleName(m) << " completed." << std::endl;
+	/* std::cerr << "Note: ...yyparse of " << Asc_ModuleName(m) << " completed." << std::endl; */
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
-	std::cerr << "Note: " << gl_length(l) << " library entries loaded from '" << filename << "'" << std::endl;
+	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), filename);
 }
 
 /**
@@ -212,7 +212,7 @@ Library::displayModule(void *v){
 }
 
 Type &
-Library::findType(SymChar sym){
+Library::findType(const SymChar &sym){
 	TypeDescription *t = FindType(sym.getInternalType());
 	if(t==NULL){
 		stringstream ss;
@@ -281,7 +281,6 @@ Library::appendToExtMethodVector(void *a1){
 */
 void
 Library::clear(){
-	//DestroyNotesDatabase(LibraryNote());
 /*	Asc_CompilerDestroy();
 	cerr << "COMPLETED ASC_COMPILERDESTROY" << endl;
 	Asc_CompilerInit(1);
@@ -310,4 +309,7 @@ Library::clear(){
 	ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"LIBRARY CLEARED!");
 }
 
-
+AnnotationDatabase
+Library::getAnnotationDatabase(){
+	return AnnotationDatabase(SCP(LibraryNote()));
+}
