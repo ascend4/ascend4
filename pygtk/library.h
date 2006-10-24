@@ -8,6 +8,7 @@
 #include "module.h"
 #include "symchar.h"
 #include "extmethod.h"
+#include "annotation.h"
 
 /**
 	Handles the loading of ASCEND a4c files into memory, then the
@@ -22,7 +23,7 @@ public:
 	~Library();
 	void load(const char *filename);
 	void listModules(const int &module_type=0) const;
-	Type &findType(SymChar name);
+	Type &findType(const SymChar &nametofind);
 	std::vector<Module> getModules();
 	std::vector<Type> getModuleTypes(const Module&);
 
@@ -33,6 +34,8 @@ public:
 
 	// Destroy types from the library
 	void clear();
+
+	AnnotationDatabase getAnnotationDatabase();
 
 private:
 	std::vector<ExtMethod> extmethod_vector;

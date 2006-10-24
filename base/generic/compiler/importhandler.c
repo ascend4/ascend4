@@ -199,7 +199,7 @@ int importhandler_createlibrary(){
 	for(i=0; i < IMPORTHANDLER_MAX; ++i){
 		importhandler_library[i] = NULL;
 	}
-	CONSOLE_DEBUG("ImportHandler library created");
+	/* CONSOLE_DEBUG("ImportHandler library created"); */
 
 	extlib_handler = ASC_NEW(struct ImportHandler);
 	extlib_handler->name ="extlib";
@@ -400,7 +400,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 int importhandler_createsharedpointertable(){
 	if(importhandler_sharedpointers==NULL){
-		CONSOLE_DEBUG("CREATED SHARED POINTER TABLE");
+		/* CONSOLE_DEBUG("CREATED SHARED POINTER TABLE"); */
 		importhandler_sharedpointers = CreateTable(31);
 	}
 	return 0;

@@ -1,42 +1,35 @@
-/*
- *  Braced Text Module
- *  By Benjamin Allan
- *  March 20, 1998.
- *  Part of ASCEND
- *  Version: $Revision: 1.4 $
- *  Version control file: $RCSfile: braced.c,v $
- *  Date last modified: $Date: 1998/06/16 16:38:38 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The Ascend Language Interpreter is free software; you can
- *  redistribute it and/or modify it under the terms of the GNU
- *  General Public License as published by the Free Software
- *  Foundation; either version 2 of the License, or (at your option)
- *  any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1998 Carnegie Mellon University
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	By Benjamin Allan, March 20, 1998.
+	Last in CVS: $Revision: 1.4 $ $Date: 1998/06/16 16:38:38 $ $Author: mthomas $
+*/
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include "compiler.h"
 #include "braced.h"
 
-/* We expect things in this file to get much more complicated
- * to deal with notes.
- */
+/*
+	 We expect things in this file to get much more complicated
+	to deal with notes.
+*/
 
 struct bracechar {
   symchar *lang;
@@ -48,8 +41,7 @@ struct bracechar {
 #define BCMALLOC ASC_NEW(struct bracechar)
 #define BCFREE(bc) ascfree(bc)
 
-struct bracechar *AddBraceChar(CONST char *s, symchar *l)
-{
+struct bracechar *AddBraceChar(CONST char *s, symchar *l){
   struct bracechar *bc;
   assert(s != NULL);
   bc = BCMALLOC;
@@ -61,16 +53,14 @@ struct bracechar *AddBraceChar(CONST char *s, symchar *l)
   return bc;
 }
 
-struct bracechar *CopyBraceChar(struct bracechar *bc)
-{
+struct bracechar *CopyBraceChar(struct bracechar *bc){
   if (bc!=NULL) {
     bc->refcount++;
   }
   return bc;
 }
 
-void DestroyBraceChar(struct bracechar *bc)
-{
+void DestroyBraceChar(struct bracechar *bc){
   if (bc==NULL) {
     return;
   }
@@ -85,21 +75,17 @@ void DestroyBraceChar(struct bracechar *bc)
   }
 }
 
-CONST char *BraceCharString(struct bracechar *bc)
-{
+CONST char *BraceCharString(struct bracechar *bc){
   assert(bc!=NULL);
   return bc->string;
 }
 
-symchar *BraceCharLang(struct bracechar *bc)
-{
+symchar *BraceCharLang(struct bracechar *bc){
   assert(bc!=NULL);
   return bc->lang;
 }
 
-int BraceCharLen(struct bracechar *bc)
-{
+int BraceCharLen(struct bracechar *bc){
   assert(bc!=NULL);
   return bc->slen;
 }
-

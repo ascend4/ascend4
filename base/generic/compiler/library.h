@@ -238,4 +238,3 @@ ASC_DLLSPEC(unsigned int ) CheckFundamental(symchar *f);
  */
 
 #endif /* ASC_LIBRARY_H */
-
