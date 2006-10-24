@@ -10,8 +10,8 @@ import config
 from infodialog import *
 
 ZOOM_RE = re.compile(r"([0-9]+)\s*%?")
-MAX_ZOOM_SIZE = 2000
-MAX_ZOOM_RATIO = 16
+MAX_ZOOM_SIZE = float(2000) # float
+MAX_ZOOM_RATIO = float(16) # float
 AT_BOUND_TOL = 0.0001;
 
 class DiagnoseWindow:
@@ -219,16 +219,21 @@ class DiagnoseWindow:
 			#print "SCALE TO FIX, w=%d, h=%d" % (w,h)
 			if self.nc/self.nr > w/h:
 				# a 'wide' image	
-				self.zoom = w / self.nc
+				self.zoom = float(w) / self.nc
 			else:
-				self.zoom = h / self.nr
+				self.zoom = float(h) / self.nr
+
+		self.browser.reporter.reportNote("Diagnose window: preliminary calculated zoom = %f (nr = %d, nc = %d)" % (self.zoom, self.nr, self.nc))
+		
 
 		if self.zoom > MAX_ZOOM_RATIO:
 			self.zoom = MAX_ZOOM_RATIO
 
 		if self.zoom * self.nc > MAX_ZOOM_SIZE or self.zoom * self.nr > MAX_ZOOM_SIZE:
+			self.browser.reporter.reportNode("image is too big, reducing to MAX_ZOOM_SIZE = %f" % MAX_ZOOM_SIZE);
 			self.zoom = MAX_ZOOM_SIZE / max(self.nc,self.nr)
 
+		self.browser.reporter.reportNote("Diagnose window: matrix zoom = %f" % self.zoom)
 		w = int(self.zoom * self.nc);
 		h = int(self.zoom * self.nr);
 			
@@ -246,7 +251,7 @@ class DiagnoseWindow:
 
 		names = [str(i) for i in self.im.getBlockVars(self.block)]
 
-		print "NAMES:",names
+		#print "NAMES:",names
 
 		if self.varcollapsed.get_active():
 			res = reduce(names)
@@ -273,7 +278,7 @@ class DiagnoseWindow:
 
 		names = [str(i) for i in rels]
 
-		print "NAMES =",names
+		#print "NAMES =",names
 
 		if self.relcollapsed.get_active():
 			res = reduce(names)

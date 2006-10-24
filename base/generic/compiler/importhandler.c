@@ -163,7 +163,7 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 		ASC_FREE(stem);
 
 		strncat(auto_initfunc,"_register",PATH_MAX-strlen(auto_initfunc));
-		CONSOLE_DEBUG("Created auto-initfunc name '%s'",auto_initfunc);
+		/* CONSOLE_DEBUG("Created auto-initfunc name '%s'",auto_initfunc); */
 		result = Asc_DynamicLoad(path,auto_initfunc);
 	}else{
 		result = Asc_DynamicLoad(path,initfunc);
@@ -377,7 +377,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 		path=defaultpath;
 	}
 
-	CONSOLE_DEBUG("SEARCHPATH IS %s",path);
+	/* CONSOLE_DEBUG("SEARCHPATH IS %s",path); */
 	sp = ospath_searchpath_new(path);
 
 	if(NULL==ospath_searchpath_iterate(sp,&importhandler_search_test,&searchdata)){
@@ -420,7 +420,7 @@ void *importhandler_getsharedpointer(const char *key){
 	importhandler_createsharedpointertable();
 	if(key==NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"key is NULL");
-		return 1;
+		return NULL;
 	}
 	return LookupTableData(importhandler_sharedpointers,key);
 }
