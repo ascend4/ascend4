@@ -669,19 +669,32 @@ void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
     line=StatementLineNum(stat);
   }
 
-  if (level == 0 || level ==3 ){
-	error_reporter_start(ASC_USER_ERROR,filename,line,NULL);
-	FPRINTF(f,"%s\n",message);
-  }else if(level < 0){
-    error_reporter_start(ASC_PROG_NOTE,filename,line,NULL);
-	FPRINTF(f,"%s\n",message);
-  }else{
-	error_reporter_start(ASC_USER_ERROR, filename, line,NULL);
-	FPRINTF(f,"%s%s\n",StatioLabel(level), message);
+  if(level < 0){
+    level = 1;
   }
 
-  if(stat!=NULL){
+  switch(level){
+		case 1:
+			error_reporter_start(ASC_USER_NOTE,filename,line,NULL);
+			FPRINTF(ASCERR,"%s\n",message);
+			break;
+		case 2:
+			error_reporter_start(ASC_USER_WARNING,filename,line,NULL);
+			FPRINTF(ASCERR,"%s\n",message);
+			break;
+		case 3:
+			error_reporter_start(ASC_USER_ERROR,filename,line,NULL);
+			FPRINTF(ASCERR,"%s\n",message);
+			break;
+		case 0:
+		case 4:
+		default:
+			error_reporter_start(ASC_PROG_ERR,filename,line,NULL);
+			FPRINTF(ASCERR,"%s\n",message);
+			break;
+  }			
 
+  if(stat!=NULL){
     /* write some more detail */
     g_show_statement_detail = ((noisy!=0) ? 1 : 0);
     WriteStatement(ASCERR,stat,2);
