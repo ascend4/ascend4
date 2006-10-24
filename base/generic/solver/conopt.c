@@ -110,17 +110,17 @@ int asc_conopt_load(){
 
 	/* need to import this variable into the ascend 'environment' */
 	if(-1!=env_import(ASC_CONOPT_ENVVAR,getenv,Asc_PutEnv)){
-		CONSOLE_DEBUG("Using searchpath env var %s = %s",envvar,getenv(envvar));
-	}else{
-		CONSOLE_DEBUG("Using default conopt search path: %s", ASC_CONOPT_DLPATH);
-	}
+		CONSOLE_DEBUG("Searching in path '%s' (from env var '%s')",getenv(envvar),envvar);
+	}/*else{
+		CONSOLE_DEBUG("Default conopt search path: %s", ASC_CONOPT_DLPATH);
+	}*/
 
 	libpath = SearchArchiveLibraryPath(libname, ASC_CONOPT_DLPATH, envvar);
 
 	if(libpath==NULL){
 		ERROR_REPORTER_NOLINE(ASC_PROG_ERR
-			, "Library '%s' could not be located (check env var %s)"
-			, libname, envvar
+			, "Library '%s' could not be located (check value of env var '%s' and/or default path '%s')"
+			, libname, envvar, ASC_CONOPT_DLPATH
 		);
 		return 1;
 	}

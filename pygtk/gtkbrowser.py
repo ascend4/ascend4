@@ -229,7 +229,7 @@ class Browser:
 
 		self.glade_file = os.path.join(self.assets_dir,config.GLADE_FILE)
 
-		print_loading_status("Setting up windows","GLADE_FILE = %s" % self.glade_file)
+		print_loading_status("Setting up windows") #,"GLADE_FILE = %s" % self.glade_file)
 
 		glade = gtk.glade.XML(self.glade_file,"browserwin")
 
@@ -565,7 +565,7 @@ class Browser:
 		self.modtank = {}
 		self.modulestore.clear()
 		modules = self.library.getModules()
-		self.library.listModules()
+		#self.library.listModules()
 		try:
 			_lll=len(modules)
 		except:
@@ -849,7 +849,7 @@ class Browser:
 
 	def on_show_variables_near_bounds_activate(self,*args):
 		_epsilon = 1e-4;
-		text = "Variables New Bounds"
+		text = "Variables Near Bounds"
 		title=text;
 		text += "\n"
 		_vars = self.sim.getVariablesNearBounds(_epsilon)

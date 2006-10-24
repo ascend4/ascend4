@@ -537,7 +537,7 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 	}
 
 	ospath_strncpy(fp,ls->fullpath,PATH_MAX);
-	CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath);
+	/* CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath); */
 
 	f = ospath_fopen(fp,"r");
 	if(f==NULL){
@@ -611,7 +611,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 
 		path=Asc_GetEnv(envv);
 		if(path==NULL){
-			CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",dpath);
+			/* CONSOLE_DEBUG("Library search path env var '%s' not found, using default path '%s'",envv,dpath); */
 			path=dpath;
 		}
 

@@ -819,8 +819,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
     if (setjmp(g_fpe_env)==0) {
 # endif /* NO_SIGNAL_TRAPS */
 
-	  CONSOLE_DEBUG("Calling LSODE with end-time = %f",xend);
-      switch(mf){
+	  /* CONSOLE_DEBUG("Calling LSODE with end-time = %f",xend); */
+      /*
+	  switch(mf){
 		case 10:
 			CONSOLE_DEBUG("Non-stiff (Adams) method; no Jacobian will be used"); break;
 		case 21:
@@ -833,8 +834,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 			CONSOLE_DEBUG("Stiff (BDF) method, internally generated banded jacobian"); break;
 		default:
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid method id %d for LSODE",mf);
-			return 0; /* failure */
+			return 0; * failure *
       }
+	  */
 
       LSODE(&(LSODE_FEX), &my_neq, y, x, &xend,
             &itol, reltol, abtol, &itask, &istate,
