@@ -17,6 +17,7 @@ public:
 	const char *getId() const;
 	const char *getMethod() const;
 	const SymChar getType() const;
+	const SymChar getLanguage() const;
 	const char *getFilename() const;
 	const int getLineNumber() const;
 	const char *getText() const;

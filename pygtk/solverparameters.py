@@ -23,6 +23,7 @@ class SolverParametersWindow:
 		self.window.set_transient_for(self.browser.window)
 
 		self.paramdescription = _xml.get_widget("paramdescription")
+		self.paramname = _xml.get_widget("paramname")
 		self.solvername = _xml.get_widget("solvername")
 
 		_xml.signal_autoconnect(self)
@@ -90,6 +91,7 @@ class SolverParametersWindow:
 
 				# update the description field
 				self.paramdescription.set_text(_param.getDescription())
+				self.paramname.set_text(_param.getName())
 
 				if _param.isStr():
 					_menu = gtk.Menu();
@@ -129,9 +131,11 @@ class SolverParametersWindow:
 		_path, _col = self.paramsview.get_cursor()
 		if not self.otank.has_key(_path):
 			self.paramdescription.set_text("")
+			self.paramname.set_text("")
 			return
 		_iter, _param = self.otank[_path]
 		self.paramdescription.set_text(_param.getDescription())	
+		self.paramname.set_text(_param.getName())
 		#self.paramsview.set_cursor(_path,self.paramsview.get_column(1));		
 
 	def on_paramsview_edited(self, renderer, path, newtext, **kwargs):
