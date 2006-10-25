@@ -109,7 +109,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		# just add to our in-memory data structure for now...
 		try:
 			i = self.getIntegrator()
-			#print str(i.getCurrentObservations())		
+			print str(i.getCurrentObservations())		
 			self.data.append((i.getCurrentTime(),i.getCurrentObservations()))
 		except Exception,e:
 			print "\n\nERROR IN RECORDOBSERVEDVALUES!",str(e)

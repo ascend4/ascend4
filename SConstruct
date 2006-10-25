@@ -188,7 +188,7 @@ opts.Add(PackageOption(
 opts.Add(
 	"IDA_LIB"
 	,"Libraries linked to for IDA"
-	,['sundials_ida','sundials_nvecserial','m']
+	,['sundials_nvecserial','sundials_shared','sundials_ida','m']
 )
 
 opts.Add(

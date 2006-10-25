@@ -330,7 +330,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	assert(blsys->indepvars==NULL);
 
 	blsys->indepvars = gl_create(10L);  /* t var info */
-	blsys->dynvars = gl_create(200L);  /* y ydot var info */
+	blsys->dynvars = gl_create(200L);  /* y and ydot var info */
 	blsys->obslist = gl_create(100L);  /* obs info */
 
 	if(blsys->indepvars==NULL
@@ -363,18 +363,18 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	numstates = 0;
 	for(i=1; i<=gl_length(blsys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
-		if(info->index==1 || info->index==0)numstates++;
+		if(info->type==1 || info->type==0)numstates++;
 		if(maxderiv < info->type - 1)maxderiv = info->type - 1;
 		varname = var_make_name(blsys->system,info->i);
-		CONSOLE_DEBUG("var[%d] = \"%s\": order = %ld",i,varname,info->type-1);
+		/* CONSOLE_DEBUG("var[%d] = \"%s\": ode_index = %ld",i,varname,info->type); */
 		ASC_FREE(varname);
 	}
 	if(maxderiv == 0){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No derivatives found (check 'ode_type' values in your vars).");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No derivatives found (check 'ode_type' values for your vars).");
 		return 0;
 	}
 	if(numstates == 0){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No states found (check 'odetype' values in your vars).");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No states found (check 'odetype' values for your vars).");
 		return 0;
 	}
 
@@ -388,7 +388,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	for(i=1; i<=gl_length(blsys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
 		varname = var_make_name(blsys->system,info->i);
-		CONSOLE_DEBUG("var[%d] = \"%s\": order = %ld",i,varname,info->type-1);
+		/* CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld",i,varname,info->type); */
 		ASC_FREE(varname);
 	}
 
@@ -405,24 +405,24 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 		}else{
 			varname = NULL;
 		}
-		CONSOLE_DEBUG("current = \"%s\", previous = \"%s\"",derivname,varname);
+		/* CONSOLE_DEBUG("current = \"%s\", previous = \"%s\"",derivname,varname); */
 		ASC_FREE(derivname);
 		if(varname)ASC_FREE(varname);
 
 		if(info->type == INTEG_STATE_VAR || info->type == INTEG_ALGEBRAIC_VAR){
 			varname = var_make_name(blsys->system,info->i);
-			CONSOLE_DEBUG("Var \"%s\" is not a derivative",varname);
+			/* CONSOLE_DEBUG("Var \"%s\" is not a derivative",varname); */
 			ASC_FREE(varname);
 			info->derivative_of = NULL;
 			info->type = INTEG_STATE_VAR;
 		}else{
 			if(prev==NULL || info->index != prev->index){
-				CONSOLE_DEBUG("current current type = %ld",info->type);
-				if(prev!=NULL){
+				/* CONSOLE_DEBUG("current current type = %ld",info->type); */
+				/* if(prev!=NULL){
 					CONSOLE_DEBUG("current index = %ld, previous = %ld",info->index,prev->index);
 				}else{
 					CONSOLE_DEBUG("current index = %ld, current type = %ld",info->index,info->type);
-				}
+				} */
 				varname = var_make_name(blsys->system,info->i);
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Derivative %d of \"%s\" is present without its un-differentiated equivalent"
 					, info->type-1
@@ -460,6 +460,11 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
 		if(info->derivative_of){
 			info->derivative_of->derivative = info->i;
+			/* varname = var_make_name(blsys->system,info->derivative_of->i);
+			derivname = var_make_name(blsys->system,info->derivative_of->derivative);
+			CONSOLE_DEBUG("Var \"%s\" is the derivative of \"%s\"",derivname,varname);
+			ASC_FREE(varname);
+			ASC_FREE(derivname); */
 		}
 	}
 
@@ -471,11 +476,18 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
 		if(info->type == INTEG_STATE_VAR || info->type == INTEG_ALGEBRAIC_VAR || info->derivative != NULL){
 			varname = var_make_name(blsys->system,info->i);
-			CONSOLE_DEBUG("Var \"%s\" is a state variable",varname);
+			if(var_fixed(info->i)){
+				CONSOLE_DEBUG("Var \"%s\" is a FIXED state variable",varname);
+			}else{
+				CONSOLE_DEBUG("Var \"%s\" is a state variable",varname);
+			}			
 			ASC_FREE(varname);
 			info->isstate = 1;
 			numy++;
 		}else{
+			varname = var_make_name(blsys->system,info->i);
+			CONSOLE_DEBUG("Var \"%s\" is a NON-STATE derivative",varname);
+			ASC_FREE(varname);
 			info->isstate = 0;
 		}
 	}
@@ -814,6 +826,12 @@ void integrator_dae_classify_var(IntegratorSystem *blsys, struct var_variable *v
 			}else{
 				if(type < 0)type=0;
 				/* any other type of var is in the DAE system, at least for now */
+				INTEG_ADD_TO_LIST(info,type,index,var,blsys->dynvars);
+			}
+		}else{
+			/* fixed variable, only include it if ode_type == 1 */
+			type = DynamicVarInfo(var,&index);
+			if(type==INTEG_STATE_VAR){
 				INTEG_ADD_TO_LIST(info,type,index,var,blsys->dynvars);
 			}
 		}
@@ -1164,15 +1182,15 @@ void integrator_set_ydot(IntegratorSystem *blsys, double *dydx) {
 		if(blsys->ydot[i]!=NULL){
     		var_set_value(blsys->ydot[i],dydx[i]);
 #ifndef NDEBUG
-			varname = var_make_name(blsys->system, blsys->ydot[i]);
+			/* varname = var_make_name(blsys->system, blsys->ydot[i]);
 			CONSOLE_DEBUG("ydot[%ld] = \"%s\" = %g --> ASCEND", i+1, varname, dydx[i]);
-			ASC_FREE(varname);
+			ASC_FREE(varname); */
 #endif
 		}
 #ifndef NDEBUG
-		else{
+		/*else{
 			CONSOLE_DEBUG("ydot[%ld] = %g (internal)", i+1, dydx[i]);
-		}
+		}*/
 #endif
 	}
 }
@@ -1339,32 +1357,27 @@ int integrator_checkstatus(slv_status_t status) {
     return 1;
   }
   if (status.diverged) {
-    FPRINTF(stderr, "The derivative system did not converge.\nIntegration "
-		"will be terminated at the end of the current step.");
+    FPRINTF(stderr, "The derivative system did not converge. Integration will terminate.");
     return 0;
   }
   if (status.inconsistent) {
-    FPRINTF(stderr, "A numerical inconsistency was discovered while "
-		"calculating derivatives. Integration will be terminated at "
-		"the end of the current step.");
+    FPRINTF(stderr, "A numerically inconsistent state was discovered while "
+		"calculating derivatives. Integration will terminate.");
     return 0;
   }
   if (status.time_limit_exceeded) {
     FPRINTF(stderr, "The time limit was exceeded while calculating "
-		"derivatives.\nIntegration will be terminated at the end of "
-		"the current step.");
+		"derivatives. Integration will terminate.");
     return 0;
   }
   if (status.iteration_limit_exceeded) {
     FPRINTF(stderr, "The iteration limit was exceeded while calculating "
-		"derivatives.\nIntegration will be terminated at "
-		"the end of the current step.");
+		"derivatives. Integration will terminate.");
     return 0;
   }
   if (status.panic) {
     FPRINTF(stderr, "The user patience limit was exceeded while "
-		"calculating derivatives.\nIntegration will be terminated "
-		"at the end of the current step.");
+		"calculating derivatives. Integration will terminate.");
     return 0;
   }
   return 0;

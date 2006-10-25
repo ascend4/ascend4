@@ -82,7 +82,7 @@ typedef struct{
   FORWARD DECLS
 */
 /* residual function forward declaration */
-int IDA_FEX(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data);
+int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data);
 
 /* error handler forward declaration */
 void integrator_ida_error(int error_code
@@ -173,7 +173,7 @@ int integrator_ida_solve(
 	reltol = 0.001;
 
 	/* allocate internal memory */
-	flag = IDAMalloc(ida_mem, IDA_FEX, t0, y0, yp0, IDA_SV, reltol, abstol);
+	flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SV, reltol, abstol);
 	if(flag==IDA_MEM_NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 		return 0;
@@ -295,7 +295,7 @@ int integrator_ida_solve(
 	@return 0 on success, positive on recoverable error, and
 		negative on unrecoverable error.
 */
-int IDA_FEX(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data){
+int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data){
 	IntegratorSystem *blsys;
 	IntegratorIdaData *enginedata;
 	int i, calc_ok, is_error;
@@ -306,8 +306,8 @@ int IDA_FEX(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data){
 	blsys = (IntegratorSystem *)res_data;
 	enginedata = integrator_ida_enginedata(blsys);
 
-	fprintf(stderr,"\n\n");
-	CONSOLE_DEBUG("ABOUT TO EVALUTE RESIDUALS...");
+	/* fprintf(stderr,"\n\n"); */
+	/* CONSOLE_DEBUG("ABOUT TO EVALUTE RESIDUALS..."); */
 
 	/* pass the values of everything back to the compiler */
 	integrator_set_t(blsys, (double)tt);
@@ -318,7 +318,7 @@ int IDA_FEX(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data){
 	is_error = 0; 
 	relptr = enginedata->rellist;
 
-	CONSOLE_DEBUG("IDA requests residuals of length %lu",NV_LENGTH_S(rr));
+	/* CONSOLE_DEBUG("IDA requests residuals of length %lu",NV_LENGTH_S(rr)); */
 	if(NV_LENGTH_S(rr)!=enginedata->nrels){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid residuals nrels!=length(rr)");
 		return -1; /* unrecoverable */
@@ -333,11 +333,11 @@ int IDA_FEX(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data){
 			resid = relman_eval(*relptr, &calc_ok, enginedata->safeeval);
 			
 			relname = rel_make_name(blsys->system, *relptr);
-			if(calc_ok){
+			/* if(calc_ok){
 				CONSOLE_DEBUG("residual[%d:\"%s\"] = %f",i,relname,resid);
 			}else{
 				CONSOLE_DEBUG("residual[%d:\"%s\"] = %f (ERROR)",i,relname,resid);
-			}
+			}*/
 			ASC_FREE(relname);
 
 			NV_Ith_S(rr,i) = resid;
@@ -354,6 +354,10 @@ int IDA_FEX(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data){
 	if(is_error)CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");
 	return is_error;
 }
+
+/**
+	@TODO implement calculation of the jacobian, right?
+*/
 
 /*----------------------------------------------
   ERROR REPORTING

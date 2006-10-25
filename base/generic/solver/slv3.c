@@ -1334,7 +1334,7 @@ static int calc_pivots(slv3_system_t sys){
         row = mtx_org_to_row(sys->J.mtx,org_row);
         rel = sys->rlist[org_row];
 
-		ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
+		ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
 		FPRINTF(stderr,"Relation '");
         print_rel_name(stderr,sys,rel);
 		FPRINTF(stderr,"' not pivoted.\n");
@@ -3807,7 +3807,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(ASCERR,"Direct solution of relation '");
       print_rel_name(ASCERR,sys,rel);
-      FPRINTF(ASCERR,"' gives a\nvalue of '");
+      FPRINTF(ASCERR,"' gave a\nvalue of '");
       print_var_name(ASCERR,sys,var);
       FPRINTF(ASCERR,"' outside its bounds.");
 	  error_reporter_end_flush();
