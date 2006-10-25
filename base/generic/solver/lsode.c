@@ -715,6 +715,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	int my_neq;
 	FILE *y_out =NULL;
 	FILE *obs_out =NULL;
+	int reporterstatus;
 
 	/* store the local variable so that we can get at stuff from inside LSODE_FEX. */
 	l_lsode_blsys = blsys;
@@ -895,7 +896,16 @@ int integrator_lsode_solve(IntegratorSystem *blsys
     integrator_set_y(blsys, y);
     /* put x,y in d in case lsode got x,y by interpolation, as it does  */
 
-	integrator_output_write(blsys);
+	reporterstatus = integrator_output_write(blsys);
+
+	if(reporterstatus==0){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration cancelled");
+		lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
+		lsodesys.status = lsode_ok;
+		lsodesys.lastcall = lsode_none;
+		integrator_output_close(blsys);
+		return 0;
+	}
 
 	if (nobs > 0) {
 # ifndef NO_SIGNAL_TRAPS

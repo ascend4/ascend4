@@ -5997,7 +5997,8 @@ Westerberg	</property>
 	      <property name="use_stock">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
-	      <property name="response_id">-6</property>
+	      <property name="response_id">0</property>
+	      <signal name="clicked" handler="on_cancelbutton_clicked" last_modification_time="Wed, 25 Oct 2006 07:16:45 GMT"/>
 	    </widget>
 	  </child>
 

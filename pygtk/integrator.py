@@ -96,7 +96,8 @@ class IntegratorWindow:
 			self.browser.reporter.reportNote("No indep var found");
 			self.beginentry.set_text("0")
 
-		self.durationentry.set_text("10")
+		_dur = self.prefs.getStringPref("Integrator","duration","100")
+		self.durationentry.set_text(_dur)
 		self.nstepsentry.set_text("100")
 		self.timedistributionselect.set_active(0)
 
@@ -167,6 +168,8 @@ class IntegratorWindow:
 		self.integrator.setLinearTimesteps(ascpy.Units("s"), _val["begin"], (_val["begin"]+_val["duration"]), _val["num"]);
 		self.begin=_val["begin"]
 		self.duration=_val["duration"]
+
+		self.prefs.setStringPref("Integrator","duration",str(self.duration))
 		
 		# set substep parameters (ie settings common to any integrator engine)
 		_failed=False

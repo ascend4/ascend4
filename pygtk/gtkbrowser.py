@@ -651,8 +651,21 @@ class Browser:
 		print "DONE BUILDING"
 		self.stop_waiting()
 
+		# get method names and load them into the GUI
+		self.methodstore.clear()
+		_methods = self.sim.getType().getMethods()
+		_activemethod = None;
+		for _m in _methods:
+			_i = self.methodstore.append([_m.getName()])
+			if _m.getName()=="on_load":
+				self.methodsel.set_active_iter(_i)
+
+		self.modelview.setSimulation(self.sim)
+
+		# set the active solver on the simulation
 		self.sim.setSolver(self.solver)
 
+		# run the 'on_load' method
 		self.start_waiting("Running default method...")
 
 		try:
@@ -664,17 +677,6 @@ class Browser:
 			return			
 
 		self.stop_waiting()
-
-		# get method names and load them into the GUI
-		self.methodstore.clear()
-		_methods = self.sim.getType().getMethods()
-		_activemethod = None;
-		for _m in _methods:
-			_i = self.methodstore.append([_m.getName()])
-			if _m.getName()=="on_load":
-				self.methodsel.set_active_iter(_i)
-
-		self.modelview.setSimulation(self.sim)
 	
 	def do_solve_if_auto(self):
 		if self.is_auto:

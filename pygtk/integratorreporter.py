@@ -31,11 +31,16 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.progress=_xml.get_widget("integratorprogress")
 		self.data = None
 
+		self.cancelrequested=False
+
 	def run(self):
 		# run the dialog: start solution, monitor use events
 		_res = self.getIntegrator().solve()
 		self.window.destroy()
 		return _res
+
+	def on_cancelbutton_clicked(self,*args):
+		self.cancelrequested=True
 
 	def initOutput(self):
 		# empty out the data table
@@ -93,6 +98,8 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			self.progress.set_fraction(_frac)
 			while gtk.events_pending():
 				gtk.main_iteration()
+			if self.cancelrequested:
+				return 0	
 			return 1
 		except Exception,e:
 			print "\n\nERROR IN UPDATESTATUS!",str(e)
