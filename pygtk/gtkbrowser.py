@@ -502,7 +502,7 @@ class Browser:
 					try:
 						self.do_sim(_t)
 						if not self.options.model:
-							self.reporter.reportNote("Instantiating self-titled model '%s'" %_model)
+							self.reporter.reportNote("Instantiated self-titled model '%s'" %_model)
 					except RuntimeError, e:
 						self.reporter.reportError("Failed to create instance of '%s': %s" 
 							%(_model, str(e))

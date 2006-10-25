@@ -19,7 +19,7 @@ def listnotes(self):
 		browser.reporter.reportNote(s)
 
 def setup_solver(self):
-	""" use the NOTES DB to configure solver parameters for the current model """
+	""" use the NOTES DB to set parameters applicable to the current active solver """
 	print "SETUP_SOLVER..."
 	self = ascpy.Registry().getInstance('context')
 	sim = ascpy.Registry().getSimulation('sim')
