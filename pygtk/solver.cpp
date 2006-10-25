@@ -18,16 +18,17 @@ extern "C"{
 	Warning, this ctor throws an exception if the name is invalid!
 */
 Solver::Solver(const string &name){
-	//cerr << "CREATING SOLVER, name = " << name << endl;
+	cerr << "CREATING SOLVER, name = " << name << endl;
 	this->name = name;
 }
 
 Solver::Solver(const Solver &old){
 	this->name = old.name;
-	//cerr << "COPIED SOLVER, name = " << name << endl;
+	cerr << "COPIED SOLVER, name = " << name << endl;
 }
 
 Solver::Solver(){
+	cerr << "RETREIVING SOLVER NAME" << name << endl;
 	this->name = "";
 }
 

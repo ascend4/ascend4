@@ -138,6 +138,8 @@ ASC_DLLSPEC(int) importhandler_createsharedpointertable();
 	Sets a pointer in the shared pointer table. This should only be called from
 	the GUI code.
 
+	This is also called from inside Type::getSimulation in the C++ interface.
+
 	@return 0 on success
 */
 ASC_DLLSPEC(int) importhandler_setsharedpointer(const char *key, void *ptr);

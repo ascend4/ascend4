@@ -115,7 +115,7 @@ ASC_DLLSPEC(struct InitProcedure *) FindProcedure(CONST struct Instance *i,
 */
 
 /** Search a list for a named procedure. */
-extern struct InitProcedure *SearchProcList(CONST struct gl_list_t *list,
+ASC_DLLSPEC(struct InitProcedure *) SearchProcList(CONST struct gl_list_t *list,
                                             symchar *name);
 /**<
 	@param list (generally you will use the output from @code GetInitializationList() @endcode)

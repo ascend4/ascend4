@@ -413,6 +413,7 @@ int importhandler_setsharedpointer(const char *key, void *ptr){
 		return 1;
 	}
 	AddTableData(importhandler_sharedpointers,ptr,key);
+	CONSOLE_DEBUG("Set shared pointer '%s' to %p",key, ptr);
 	return 0;
 }		
 

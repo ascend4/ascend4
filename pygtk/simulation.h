@@ -82,6 +82,8 @@ public:
 	~Simulation();
 
 	Instanc &getModel();
+
+	void runDefaultMethod();
 	void run(const Method &method);
 	void run(const Method &method, Instanc &model);
 	enum StructuralStatus checkDoF() const;

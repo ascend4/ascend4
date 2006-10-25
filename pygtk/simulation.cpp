@@ -44,6 +44,7 @@ extern "C"{
 #include <compiler/check.h>
 #include <compiler/name.h>
 #include <compiler/pending.h>
+#include <compiler/importhandler.h>
 
 #include <utilities/readln.h>
 #include <solver/mtx.h>
@@ -151,17 +152,33 @@ Simulation::run(const Method &method){
 }
 
 void
+Simulation::runDefaultMethod(){
+	Method m = getType().getMethod(SymChar("on_load"));
+	run(m);
+}	
+
+void
 Simulation::run(const Method &method, Instanc &model){
+
+	// set the 'sim' pointer to our local variable...
+	CONSOLE_DEBUG("Setting shared pointer 'sim'");
+	importhandler_setsharedpointer("sim",this);
 
 	cerr << "RUNNING PROCEDURE " << method.getName() << endl;
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
+
+
 	Proc_enum pe;
 	pe = Initialize(
 		&*(model.getInternalType()) ,name.getInternalType(), "__not_named__"
 		,ASCERR
 		,0, NULL, NULL
 	);
+
+	// clear out the 'sim' pointer (soon it will be invalid)
+	importhandler_setsharedpointer("sim",NULL);
+	CONSOLE_DEBUG("Cleared shared pointer 'sim'");
 
 	if(pe == Proc_all_ok){
 		ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Method '%s' was run (check above for errors)\n",method.getName());
@@ -391,9 +408,10 @@ Simulation::getSingularityInfo() const{
 
 void
 Simulation::setSolver(Solver &solver){
-	//cerr << "SETTING SOLVER ON SIMULATION TO " << solver.getName() << endl;
+	CONSOLE_DEBUG("Setting solver on sim %p, root inst %p",this,this->simroot.getInternalType());
+	if(!is_built)throw runtime_error("Can't setSolver: simulation has not been built yet");
+	if(!sys)throw runtime_error("Can't setSolver: 'sys' is not assigned.");
 
-	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");
 	// Update the solver object because sometimes an alternative solver can be returned, apparently.
 
 	int selected = slv_select_solver(sys, solver.getIndex());
@@ -433,6 +451,10 @@ Simulation::getSolver() const{
 void
 Simulation::build(){
 	//cerr << "BUILDING SIMULATION..." << endl;
+	if(is_built){
+		throw runtime_error("Simulation is already built");
+	}
+
 	Instance *i1 = getModel().getInternalType();
 	sys = system_build(&*i1);
 	if(!sys){
@@ -451,7 +473,8 @@ Simulation::build(){
 */
 SolverParameters
 Simulation::getSolverParameters() const{
-	if(!sys)throw runtime_error("Can't getSolverParameters: Simulation system has not been built yet.");
+	if(!is_built)throw runtime_error("Can't getSolverParameters: Simulation system has not been built yet.");
+	if(!sys)throw runtime_error("Can't getSolverParameters: Simulation system has no 'sys' assigned.");
 
 	slv_parameters_t p;
 	slv_get_parameters(sys,&p);

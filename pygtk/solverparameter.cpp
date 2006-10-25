@@ -11,6 +11,9 @@ SolverParameter::SolverParameter(slv_parameter *p) : p(p){
 
 const std::string
 SolverParameter::getName() const{
+	if(!p->name){
+		return "";
+	}
 	return string(p->name);
 }
 

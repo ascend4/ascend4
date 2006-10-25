@@ -77,6 +77,7 @@ METHOD on_load;
 	t.ode_type := -1;
 	t := 0 {s};
 
+	RUN setup_solver;
 END on_load;
 
 METHOD listnotes;

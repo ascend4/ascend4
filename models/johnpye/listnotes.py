@@ -20,32 +20,40 @@ def listnotes(self):
 
 def setup_solver(self):
 	""" use the NOTES DB to configure solver parameters for the current model """
+	print "SETUP_SOLVER..."
 	self = ascpy.Registry().getInstance('context')
-	sim = browser.sim
-	reporter = browser.reporter
+	sim = ascpy.Registry().getSimulation('sim')
 
-	# at present this code is pretty clunky because of the bare-bone code in the wrapper API.
-	# this could be improved a lot with some python wizardry for iterators, __getitem__ etc.
+	reporter = browser.reporter
 
 	db = browser.library.getAnnotationDatabase()
 
-	solvernotes = db.getNotes(self.getType(),ascpy.SymChar("solver"),ascpy.SymChar("name"))
-	if len(solvernotes) > 1:
-		reporter.reportNote("Multiple solvers specified in NOTES for model '%s'", sim.getType())
-	elif len(solvernotes) == 1:
-		solver = ascpy.Solver(solvernotes[0].getText())
-		reporter.reportNote("Setting solver to '%s'" % solver.getName())
-		sim.setSolver(solver)
-	else:
-		reporter.reportNote("No solver specified in NOTES , using current")
+	print "GOT SIM..."
+	
+	if not sim:
+		reporter.reportError("No simulation present yet")
+		return
 
-	solvername = sim.getSolver().getName()
-	#reporter.reportNote("Parameters for solver '%s'" % solvername)
+	if not browser.solver:
+		reporter.reportError("No solver yet")
+		return
+
+	solvername = browser.solver.getName()
+	reporter.reportNote("Active solver is '%s'" % solvername)
 
 	notes = db.getNotes(self.getType(),ascpy.SymChar(solvername))
 
+	print "GETTINGS SOLVER PARAMS..."
+
 	params = sim.getSolverParameters()
+
+	print "DONE SOLVER PARAMS"
+
+	print params
+
 	paramnames = [p.getName() for p in params]
+
+	print "DONE PARAMS"
 
 	for i in range(0,len(notes)):
 		note = notes[i]
