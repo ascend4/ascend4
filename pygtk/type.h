@@ -44,6 +44,7 @@ public:
 	Simulation getSimulation(SymChar name);
 	const Dimensions getDimensions() const;
 	std::vector<Method> getMethods() const;
+	Method getMethod(const SymChar &) const; ///< exception if not found
 	const bool isRefinedSolverVar() const; ///< is this type a refinement of solver_var?
 	const bool isRefinedAtom() const;
 	const bool isRefinedReal() const;

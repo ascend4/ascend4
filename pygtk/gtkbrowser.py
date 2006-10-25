@@ -522,6 +522,7 @@ class Browser:
 #   SOLVER LIST
 
 	def set_solver(self,solvername):
+		""" this sets the active solver in the GUI, which is the default applied to newly instantiated models """
 		self.solver = ascpy.Solver(solvername)
 		self.prefs.setStringPref("Solver","engine",solvername)
 		self.reporter.reportNote("Set solver engine to '%s'" % solvername)
@@ -627,6 +628,8 @@ class Browser:
 			ascpy.getCompiler().setUseRelationSharing(_v)
 
 			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim")
+
+			self.reporter.reportNote("SIMULATION ASSIGNED")
 		except RuntimeError, e:
 			self.stop_waiting()
 			self.reporter.reportError(str(e))
@@ -643,14 +646,26 @@ class Browser:
 		except RuntimeError, e:
 			self.stop_waiting()
 			self.reporter.reportError(str(e))
-			return;
+			return
 
 		print "DONE BUILDING"
 		self.stop_waiting()
 
 		self.sim.setSolver(self.solver)
 
-		# methods
+		self.start_waiting("Running default method...")
+
+		try:
+			print "SIMULATION CREATED, RUNNING DEFAULT METHOD NOW..."
+			self.sim.runDefaultMethod()
+		except RuntimeError, e:
+			self.stop_waiting()
+			self.reporter.reportError(str(e))
+			return			
+
+		self.stop_waiting()
+
+		# get method names and load them into the GUI
 		self.methodstore.clear()
 		_methods = self.sim.getType().getMethods()
 		_activemethod = None;

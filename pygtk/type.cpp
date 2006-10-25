@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 using namespace std;
 
 extern "C"{
@@ -39,6 +40,7 @@ extern "C"{
 #include "simulation.h"
 #include "library.h"
 #include "dimensions.h"
+#include "name.h"
 
 /**
 	@TODO FIXME for some reason there are a lot of empty Type objects being created
@@ -140,7 +142,7 @@ Type::getSimulation(SymChar sym){
 
 	// Tell ASCEND file locations and compiler commands:
 	if(0 && !have_bintoken_setup){
-		cerr << "SETUP BINTOKENS..." << endl;
+		CONSOLE_DEBUG("SETUP BINTOKENS...");
 
 /*
 	THE FOLLOWING STUFF IS CURRENTLY BROKEN.
@@ -173,7 +175,7 @@ Type::getSimulation(SymChar sym){
 		BinTokenSetOptions(bin_srcname.c_str(), bin_objname.c_str(), bin_libname.c_str()
 							, bin_cmd.c_str(), bin_rm.c_str(), 1000, 1, 0);
 
-		cerr << "...SETUP BINTOKENS" << endl;
+		CONSOLE_DEBUG("...SETUP BINTOKENS");
 		have_bintoken_setup = true;
 	}
 
@@ -181,7 +183,8 @@ Type::getSimulation(SymChar sym){
 	// Perform the instantiation (C compile etc):
 	/*Instance *i = Instantiate(getInternalType()->name, sym.getInternalType(),
 								 0, SymChar("on_load").getInternalType()); */
-	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, SymChar("on_load").getInternalType());
+	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, NULL);
+	Simulation sim(i,sym);
 
 	if(i==NULL){
 		throw runtime_error("Failed to create instance");
@@ -201,6 +204,25 @@ Type::getMethods() const{
 	}
 	return v;
 }
+
+Method
+Type::getMethod(const SymChar &name) const{
+	struct gl_list_t *l = GetInitializationList(getInternalType());
+	if(l==NULL){
+		stringstream ss;
+		ss << "No methods present in type '" << getName() << "'";
+		throw runtime_error(ss.str());
+	}
+	struct InitProcedure *m;
+	m = SearchProcList(l,name.getInternalType());
+	if(m==NULL){
+		stringstream ss;
+		ss << "No method named '" << name << "' in type '" << getName() << "'";
+		throw runtime_error(ss.str());
+		return NULL;
+	}
+	return Method(m);
+}	
 
 const bool
 Type::isRefinedSolverVar() const{
