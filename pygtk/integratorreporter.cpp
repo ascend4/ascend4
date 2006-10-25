@@ -42,7 +42,6 @@ int
 IntegratorReporterCxx::updateStatus(){
 	double t = integrator->getCurrentTime();
 	return ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"t = %f",t);
-	
 }
 
 int
