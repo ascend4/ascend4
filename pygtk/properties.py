@@ -67,6 +67,7 @@ class VarPropsWin:
 		self.statusmessage = _xml.get_widget("statusmessage");
 
 		self.cliquebutton = _xml.get_widget("cliquebutton"); 
+		self.morepropsbutton = _xml.get_widget("morepropsbutton");
 
 		self.fill_values()
 
@@ -162,6 +163,18 @@ class VarPropsWin:
 				text += "%s\n"%self.browser.sim.getInstanceName(i)
 		else:
 			text += "CLIQUE IS EMPTY"
+		_dialog = InfoDialog(self.browser,self.window,text,title)
+		_dialog.run()
+
+	def on_morepropsbutton_clicked(self,*args):
+		title = "All properties of '%s'" % self.browser.sim.getInstanceName(self.instance)
+		text = title + "\n\n"
+		c = self.instance.getChildren()
+		if c:
+			for i in c:
+				text += "%s = %s\n" % (self.browser.sim.getInstanceName(i), i.getValue())
+		else:
+				text += "This variable has no 'child' properties"
 		_dialog = InfoDialog(self.browser,self.window,text,title)
 		_dialog.run()
 

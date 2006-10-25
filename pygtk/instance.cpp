@@ -173,7 +173,7 @@ Instanc::isAtom() const{
 
 const bool
 Instanc::isFixed() const{
-	if(getKind()==REAL_ATOM_INST && getType().isRefinedSolverVar()){
+	if(getKind()==REAL_ATOM_INST && !isFund() && getType().isRefinedSolverVar()){
 		return getChild("fixed").getBoolValue();
 	}
 	throw runtime_error("Instanc::isFixed: Not a solver_var");

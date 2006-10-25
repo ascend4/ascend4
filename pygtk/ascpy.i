@@ -462,7 +462,7 @@ public:
 		def getRealValueAndUnits(self):
 			if not self.isReal():
 				raise TypeError
-			if self.isDimensionless():
+			if self.isDimensionless() or self.isFund():
 				return self.getRealValue();
 			_u = self.getType().getPreferredUnits();
 			if _u == None:

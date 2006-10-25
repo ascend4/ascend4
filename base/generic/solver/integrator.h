@@ -95,9 +95,32 @@ typedef enum{
 */
 struct IntegratorSystemStruct;
 
+/** 
+	Initialisation. This hook allows initialisation of the GUI or reporting 
+	mechanism to be performed when integration begins
+*/
 typedef int IntegratorOutputInitFn(struct IntegratorSystemStruct *);
+
+/** Status report. This hook allows raw data to be output as integration
+	proceeds, or for a GUI to perform status updates. An integrator should check
+	the return status on this one, as this is the suggested way to perform
+	GUI interruption of the integrator.
+
+	@return 1 on success, 0 on user interrupt
+*/
 typedef int IntegratorOutputWriteFn(struct IntegratorSystemStruct *);
+
+/**
+	Observation reporting. This hook should be implemented to record 
+	observations in a way that can be presented to the use, recorded in a 
+	file, etc.
+*/
 typedef int IntegratorOutputWriteObsFn(struct IntegratorSystemStruct *);
+
+/**
+	Finalisation. This hook can be used to terminate recording of observations, 	
+	close files, terminate GUI status reporting, etc.
+*/
 typedef int IntegratorOutputCloseFn(struct IntegratorSystemStruct *);
 
 /**

@@ -381,6 +381,7 @@ static double *lsode_get_atol( IntegratorSystem *blsys) {
       );
     } else {
       atoli[i] = RealAtomValue(tol);
+	  CONSOLE_DEBUG("Using tolerance %3g for state variable %ld.",atoli[i], blsys->y_id[i]);
     }
   }
   atoli[len] = ATOLDEF;
@@ -573,6 +574,8 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
   double time1,time2;
 #endif
 
+  CONSOLE_DEBUG("Calling for a function evaluation");
+
 #if DOTIME
   CONSOLE_DEBUG("Calling for a function evaluation");
   time1 = tm_cpu_time();
@@ -590,10 +593,14 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
 
   switch(lsodesys.lastcall) {
   case lsode_none:		/* first call */
+	CONSOLE_DEBUG("FIRST CALL...");
+
   case lsode_derivative:
     if (lsodesys.partitioned) {
+	  CONSOLE_DEBUG("PRE-SOLVE");
       slv_presolve(l_lsode_blsys->system);
     } else {
+	  CONSOLE_DEBUG("RE-SOLVE");
       slv_resolve(l_lsode_blsys->system);
     }
     break;
@@ -602,6 +609,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
     slv_resolve(l_lsode_blsys->system);
     break;
   }
+
   slv_solve(l_lsode_blsys->system);
   slv_get_status(l_lsode_blsys->system, &status);
   /* pass the solver status to the integrator */
@@ -612,12 +620,15 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
 #endif
 
   if (!ok) {
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives");
+	/*
   	ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
     FPRINTF(ASCERR,"Unable to compute the vector of derivatives with the following values for the state variables:\n");
     for (i = 0; i< *n_eq; i++) {
       FPRINTF(ASCERR,"y[%4d] = %f\n",i, y[i]);
     }
     error_reporter_end_flush();
+	*/
     lsodesys.status = lsode_nok;
   } else {
     lsodesys.status = lsode_ok;
@@ -647,6 +658,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y,
   UNUSED_PARAMETER(ml);
   UNUSED_PARAMETER(mu);
 
+  CONSOLE_DEBUG("Calling for a gradient evaluation");
 #if DOTIME
   double time1;
 
@@ -674,9 +686,9 @@ static void LSODE_JEX(int *neq ,double *t, double *y,
     lsodesys.lastcall = lsode_derivative;
   }
   /*
-   * Map data from C based matrix to Fortan matrix.
-   * We will send in a column major ordering vector for pd.
-   */
+	Map data from C based matrix to Fortan matrix.
+	We will send in a column major ordering vector for pd.
+  */
   for (j=0;j<*neq;j++) { /* loop through columnns */
     for (i=0;i<*nrpd;i++){ /* loop through rows */
 	  /* CONSOLE_DEBUG("JAC[r=%d,c=%d]=%f",i,j,enginedata.dydx_dx[i][j]); */

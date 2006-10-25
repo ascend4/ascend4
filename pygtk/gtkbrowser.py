@@ -677,6 +677,8 @@ class Browser:
 			return			
 
 		self.stop_waiting()
+
+		self.modelview.refreshtree()
 	
 	def do_solve_if_auto(self):
 		if self.is_auto:
