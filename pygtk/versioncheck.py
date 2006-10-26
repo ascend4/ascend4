@@ -8,39 +8,36 @@ class VersionCheck:
 		self.latest = None
 		self.info = None
 	def check(self):
-		try:
-			auth_handler = urllib2.HTTPBasicAuthHandler()
-			opener = urllib2.build_opener(auth_handler)
-			urllib2.install_opener(opener)
-			fp = urllib2.urlopen(self.url)
+		auth_handler = urllib2.HTTPBasicAuthHandler()
+		opener = urllib2.build_opener(auth_handler)
+		urllib2.install_opener(opener)
+		fp = urllib2.urlopen(self.url)
 
-			cp = ConfigParser.SafeConfigParser() 
-			cp.readfp(fp,self.url)
+		cp = ConfigParser.SafeConfigParser() 
+		cp.readfp(fp,self.url)
 
-			opersys = platform.system()
+		opersys = platform.system()
 
-			if opersys=="Windows":
-				self.vertype = "Windows"
-				self.latest = cp.get('Windows','version').strip()
-				self.info = cp.get('Windows','info').strip()
-				try:
-					self.download = cp.get('Windows','download').strip()
-				except:
-					pass
-				return True
-			else:
-				self.vertype = "Source code"
-				self.latest = cp.get('Generic','version').strip()
-				self.info = cp.get('Generic','info').strip()
-				try:
-					self.download = cp.get('Generic','download').strip()
-				except:
-					pass
-				return True
-		except Exception,e:
-			print "Version check failed (%s)" % e
+		if opersys=="Windows":
+			self.vertype = "Windows"
+			self.latest = cp.get('Windows','version').strip()
+			self.info = cp.get('Windows','info').strip()
+			try:
+				self.download = cp.get('Windows','download').strip()
+			except:
+				pass
+			return True
+		else:
+			self.vertype = "Source code"
+			self.latest = cp.get('Generic','version').strip()
+			self.info = cp.get('Generic','info').strip()
+			try:
+				self.download = cp.get('Generic','download').strip()
+			except:
+				pass
+			return True
 
-		return False
+		raise RuntimeError("No version info available for this operating system")
 
 if __name__=="__main__":
 	v = VersionCheck()

@@ -1079,14 +1079,18 @@ class Browser:
 
 	def on_help_check_for_updates_click(self,*args):
 		v = VersionCheck()
-		v.check()
 		title = "Check for updates"
 		text = "Your version is %s\n" % config.VERSION
-		text += "Latest version is %s\n" % v.latest
-		if v.info:
-			text += "Get more info at %s\n" % v.info
-		if v.download:
-			text += "Download from %s\n" % v.download
+		try:
+			v.check()
+			text += "Latest version is %s\n" % v.latest
+			if v.info:
+				text += "Get more info at %s\n" % v.info
+			if v.download:
+				text += "Download from %s\n" % v.download
+		except Exception, e:
+			text += "\nUnable to check version\n"
+			text += str(e)
 
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
