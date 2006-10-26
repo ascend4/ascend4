@@ -48,7 +48,7 @@ proc set_Library_Defaults {} {
   set ascLibrVect(parserWarnings) 1
   set ascLibrVect(compilerWarnings) 1
   set ascLibrVect(simplifyRelations) 1
-  set ascLibrVect(useCopyAnon) 1
+  set ascLibrVect(useCopyAnon) 0
   set ascLibrVect(lastreadextension) ".a4c"
   set ascLibrVect(fullfilename) ""
   set ascLibrVect(selectedtype) ""

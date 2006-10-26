@@ -177,7 +177,7 @@ extern void when_set_num_cases(struct w_when *when, int32 num_cases);
 extern int32 when_mindex(struct w_when *when);
 /**< Retrieves the index number of the given when as it
  *  appears in a slv_system_t master when list. */
-extern void when_set_mindex(struct w_when *when, int32 index);
+extern void when_set_mindex(struct w_when *when, int32 mindex);
 /**<
  *  <!--  index = when_mindex(when)                                    -->
  *  <!--  when_set_mindex(when,index)                                  -->
@@ -191,7 +191,7 @@ extern void when_set_mindex(struct w_when *when, int32 index);
 extern int32 when_sindex(struct w_when *when);
 /**< Retrieves the index number of the given relation as it
  *  appears in a solvers when list. */
-extern void when_set_sindex(struct w_when *when, int32 index);
+extern void when_set_sindex(struct w_when *when, int32 sindex);
 /**<
  *  <!--  index = when_sindex(when)                                    -->
  *  <!--  when_set_sindex(when,index)                                  -->
@@ -206,7 +206,7 @@ extern int32 when_model(const struct w_when *when);
 /**< Retrieves the model number of the given when.
  *  In a hierarchy, whens come associated with
  *  models. Models are numbered from 1 to some upper limit. */
-extern void when_set_model(struct w_when *when, int32 index);
+extern void when_set_model(struct w_when *when, int32 mindex);
 /**<
  *  <!--  index = when_model(when)                                     -->
  *  <!--  when_set_model(when,index)                                   -->

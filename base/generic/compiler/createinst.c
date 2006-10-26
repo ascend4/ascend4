@@ -58,6 +58,8 @@
 #include "find.h"
 #include "instance_enum.h"
 #include "relation_type.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
 #include "relation.h"
 #include "logical_relation.h"
 #include "logrelation.h"

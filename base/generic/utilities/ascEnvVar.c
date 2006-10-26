@@ -58,7 +58,7 @@ static CONST char ascEnvVarid[] = "$Id: ascEnvVar.c,v 1.5 1997/07/18 12:04:07 mt
  * each contains a list with pointers to strings.
  */
 struct asc_env_t {
-  char *name;
+  const char *name;
   struct gl_list_t *data;
 };
 
@@ -101,7 +101,7 @@ void DestroyEnvVar(struct asc_env_t *ev)
   if (ev==NULL) {
     return;
   }
-  ascfree(ev->name);
+  ascfree((char *)ev->name);
   gl_free_and_destroy(ev->data);
   ascfree(ev);
 }
@@ -136,7 +136,9 @@ struct asc_env_t *FindEnvVar(const char *name)
   dummy.name = name;
   pos = gl_search(g_env_list,&dummy,(CmpFunc)CmpEV);
   if (pos==0) {
-	//FPRINTF(ASCERR,"ENV VAR '%s' NOT FOUND\n",name);
+#if 0
+	FPRINTF(ASCERR,"ENV VAR '%s' NOT FOUND\n",name);
+#endif
     return NULL;
   }
   return (struct asc_env_t *)gl_fetch(g_env_list,pos);
@@ -433,10 +435,10 @@ int Asc_AppendPath(char *envvar, char *newelement)
 }
 
 
-char **Asc_GetPathList(char *envvar, int *argc)
+CONST char **Asc_GetPathList(CONST char *envvar, int *argc)
 {
   struct asc_env_t *ev;
-  char **argv;
+  CONST char **argv;
   char *tmppos, *val;
   unsigned long len, c, slen;
 
@@ -466,7 +468,7 @@ char **Asc_GetPathList(char *envvar, int *argc)
     /* space for the values */
     slen += (strlen((char *)gl_fetch(ev->data,(unsigned long)c)) +1 );
   }
-  argv = ASC_NEW_ARRAY(char *,slen);
+  argv = ASC_NEW_ARRAY(CONST char *,slen);
   if ( argv == NULL ) {
     *argc = -1;
     return NULL;
@@ -524,9 +526,9 @@ char *Asc_GetEnv(const char *envvar)
 }
 
 
-char **Asc_EnvNames(int *argc)
+const char **Asc_EnvNames(int *argc)
 {
-  char **argv;
+  const char **argv;
   unsigned long c, len;
 
   if (g_env_list == NULL) {
@@ -535,7 +537,7 @@ char **Asc_EnvNames(int *argc)
   }
   len = gl_length(g_env_list);
   *argc =  (int)len;
-  argv = ASC_NEW_ARRAY(char *,*argc + 1);
+  argv = ASC_NEW_ARRAY(CONST char *,*argc + 1);
   if (argv==NULL) {
     *argc = -1;
     return NULL;

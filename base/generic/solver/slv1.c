@@ -52,6 +52,8 @@
 #include <compiler/expr_types.h>
 #include <compiler/find.h>
 #include <compiler/relation_type.h>
+#include <compiler/rel_blackbox.h>  /* relation enum */
+#include <compiler/vlist.h>
 #include <compiler/relation.h>  /* relation enum */
 #include "mtx.h"
 #include "linsol.h"

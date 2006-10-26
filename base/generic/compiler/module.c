@@ -922,7 +922,7 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 
 	/* CONSOLE_DEBUG("File found"); */
 	return 1;
-};
+}
 
 
 /**

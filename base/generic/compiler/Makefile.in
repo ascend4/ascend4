@@ -68,11 +68,12 @@ LIB_OBJS = \
 	parpend.o pending.o plot.o proc.o procframe.o \
 	procio.o prototype.o qlfdid.o refineinst.o rel_common.o relation.o \
 	relation_io.o relation_util.o rootfind.o rounded.o safe.o \
+	rel_blackbox.o \
 	scanner.o select.o setinst_io.o setinstval.o setio.o \
 	sets.o slist.o simlist.o statement.o statio.o switch.o \
 	symtab.o syntax.o temp.o tmpnum.o type_desc.o \
 	type_descio.o typedef.o typelint.o redirectFile.o \
-    units.o universal.o \
+	units.o universal.o \
 	value_type.o visitinst.o visitlink.o vlist.o vlistio.o \
 	watchpt.o watchptio.o when.o when_io.o when_util.o
 

@@ -44,7 +44,6 @@
 #define ASC_FUNC_H
 
 #include <utilities/ascConfig.h>
-#include <general/mathmacros.h>
 
 /*
  *  the following should be ifdefed to deal with math.h values

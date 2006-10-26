@@ -50,6 +50,9 @@
 #include "pending.h"
 #include "find.h"
 #include "relation_type.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
+#include "vlist.h"
 #include "relation.h"
 #include "logical_relation.h"
 #include "logrelation.h"
@@ -74,6 +77,7 @@
 
 #define PANIC_ILLEGAL_INSTANCE Asc_Panic(2, __FUNCTION__, "invalid instance type")
 
+/** this gets used in interactive merge/refinement. */
 void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
 			    struct Instance *new
 ){
@@ -81,6 +85,8 @@ void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
   assert(rel->t==REL_INST);
   AssertMemory(rel);
   if (RELN_INST(rel)->ptr!=NULL) {
+    /* FIXME: all rel types have the rel->varlist that needs repair, 
+	then each rel type has specifics to fix up. */
     switch (RELN_INST(rel)->type) {
     case e_token:
       ModifyTokenRelationPointers(rel,RELN_INST(rel)->ptr,old,new);
@@ -271,6 +277,7 @@ void FixRelations(struct RealAtomInstance *old, struct RealAtomInstance *new){
   AssertMemory(old);
   AssertMemory(new);
   if ((new->relations==NULL)||(new->relations==old->relations)){
+	/* new had no relations or new has the identical relation list */
     new->relations = old->relations;
     if ((len=RelationsCount(INST(new)))>0){
       for(c=1;c<=len;c++) {

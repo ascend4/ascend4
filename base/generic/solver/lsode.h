@@ -46,7 +46,7 @@
 #include "linsolqr.h"
 #include "slv_client.h"
 
-/// Perform LSODE integration of a specified 'Integ_system'.
+/* Perform LSODE integration of a specified 'Integ_system'.*/
 /**
 	Takes the start and finish index as defined by the user and carries
 	out the integration using repeated calls to the function lsode.

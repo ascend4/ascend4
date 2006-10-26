@@ -23,8 +23,8 @@ OutFile ascend-setup.exe
 !endif
 
 
-;SetCompressor /FINAL zlib
-SetCompressor /SOLID lzma
+SetCompressor /FINAL zlib
+;SetCompressor /SOLID lzma
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\ASCEND
@@ -93,7 +93,6 @@ Section "ASCEND (required)"
   ; Model Library
   SetOutPath $INSTDIR\models
   File /r /x .svn "..\models\*.a4*"
-  File /r /x .svn "..\models\*.bz2"
   File /r /x .svn "..\models\*.tcl"
   File /r /x .svn "..\models\*.dll" ; extension modules
   File /r /x .svn "..\models\*.py"; python modules

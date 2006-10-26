@@ -650,14 +650,14 @@ void ProbeGarbageCollect(int number)
       argv[0]," ", argv[1]," ", argv[2], (char *)NULL); \
     return TCL_ERROR; \
   } \
-  status = Tcl_GetInt(interp,argv[(ndx)],&index); \
+  status = Tcl_GetInt(interp,argv[(ndx)],&indexe); \
   if (status != TCL_OK) { \
     Tcl_AppendResult(interp, "\nError in collection index: ", \
       argv[0]," ", argv[1]," ", argv[2]," ",argv[(ndx)],(char *)NULL); \
     return TCL_ERROR; \
   } \
-  if ( index < 0 || \
-       (unsigned long)index >= gl_length(g_probe_array[(number)])) { \
+  if ( indexe < 0 || \
+       (unsigned long)indexe >= gl_length(g_probe_array[(number)])) { \
     Tcl_ResetResult(interp); \
     Tcl_AppendResult(interp,Asc_ProbeCmdHN," ",argv[1]," ",argv[2]," ", \
       argv[(ndx)], " : index out of list range.", (char *)NULL); \
@@ -672,7 +672,7 @@ STDHLF(Asc_ProbeCmd,(Asc_ProbeCmdHL1, Asc_ProbeCmdHL2, Asc_ProbeCmdHL3,
 int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
                  int argc, CONST84 char *argv[])
 {
-  int number, index, status, oldindex, pos;
+  int number, indexe, status, oldindexe, pos;
   unsigned int size;
   unsigned long c,len;
   struct ProbeEntry *e;
@@ -751,12 +751,12 @@ int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
       }
       pos = 3;
       c = 1;
-      oldindex = -1;
+      oldindexe = -1;
       /* for memory integrity we must copy and delete in separate passes */
       /* this also traps erroneous user indices automagically + safely */
       while(pos < argc) { /* copy list, except for the given indices. */
         ParseCollectionIndex(number,pos);
-        if (index <= oldindex) { /* no duplicates or reversals allowed */
+        if (indexe <= oldindexe) { /* no duplicates or reversals allowed */
           gl_destroy(newlist);
           newlist = NULL;
           Tcl_ResetResult(interp);
@@ -764,8 +764,8 @@ int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
             " : index out of order ",argv[pos],(char *)NULL);
           return TCL_ERROR;
         }
-        oldindex = index;
-        while(c < (unsigned long)(index+1)) { /* copy up to the next index */
+        oldindexe = indexe;
+        while(c < (unsigned long)(indexe+1)) { /* copy up to the next index */
           gl_append_ptr(newlist,gl_fetch(g_probe_array[number],c));
           c++;
         }
@@ -785,7 +785,7 @@ int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
       c = 1;
       while(pos < argc) { /* copy list, except for the given indices. */
         ParseCollectionIndex(number,pos);
-        ProbeEntryDestroy(ProbeGetEntry(number,index));
+        ProbeEntryDestroy(ProbeGetEntry(number,indexe));
         pos++;
       }
       g_probe_array[number] = newlist;
@@ -823,7 +823,7 @@ int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
       pos = 3;
       while(pos < argc) {
         ParseCollectionIndex(number,pos);
-        AppendEntryItem(interp,ProbeGetEntry(number,index));
+        AppendEntryItem(interp,ProbeGetEntry(number,indexe));
         pos++; /* next index */
       }
     }
@@ -839,7 +839,7 @@ int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
     }
     ParseCollectionNumber(0);
     ParseCollectionIndex(number,3);
-    Tcl_AppendResult(interp,ProbeEntryName(ProbeGetEntry(number,index)),
+    Tcl_AppendResult(interp,ProbeEntryName(ProbeGetEntry(number,indexe)),
       (char *)NULL);
     break;
   case 'q': /* qlfdid */
@@ -851,7 +851,7 @@ int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
     ParseCollectionNumber(0);
     ParseCollectionIndex(number,3);
     g_relative_inst = g_search_inst =
-      ProbeEntryInst(ProbeGetEntry(number,index));
+      ProbeEntryInst(ProbeGetEntry(number,indexe));
     if (g_search_inst==NULL) {
       Tcl_AppendResult(interp,"0",(char *)NULL);
     } else {

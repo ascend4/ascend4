@@ -171,6 +171,7 @@ INSTALL_FILE_LIST = \
 	z-indirect.a4c \
 	z-isawhere.a4c \
 	z-relname.a4c \
+	z-exttest.a4c \
 	z-suite.a4s
 
 

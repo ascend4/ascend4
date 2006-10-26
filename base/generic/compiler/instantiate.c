@@ -72,10 +72,12 @@
 #include "pending.h"
 #include "find.h"
 #include "relation_type.h"
+#include "extfunc.h"
 #include "relation.h"
 #include "logical_relation.h"
 #include "logrelation.h"
 #include "relation_util.h"
+#include "rel_blackbox.h"
 #include "logrel_util.h"
 #include "instance_types.h"
 #include "cmpfunc.h"
@@ -160,11 +162,11 @@ int g_use_copyanon = 1;
 */
 
 #if TIMECOMPILER
-static int g_ExecuteREL_CreateTokenRelation_calls = 0;
-/**<
-	count the number of calls to CreateTokenRelation from ExecuteREL
-*/
-
+static
+int g_ExecuteREL_CreateTokenRelation_calls = 0;
+static
+int g_ExecuteEXT_CreateBlackboxRelation_calls = 0;
+/* count the number of calls to CreateTokenRelation from ExecuteREL */
 int g_CopyAnonRelation = 0;
 #endif
 
@@ -790,17 +792,20 @@ struct gl_list_t *ArrayIndices(CONST struct Name *name,
   SPARSE AND DENSE ARRAY PROCESSING
 */
 
-/**
-	this function has been modified to handle list results when called
-	from check aliases and dense executearr.
-	The indices made here in the aliases case where the alias is NOT
-	inside a FOR loop are NOT for consumption by anyone because they
-	contain a dummy index type. They merely indicate that
-	indices can be made. They should be immediately destroyed.
-	DestroyIndexType is the only thing that groks the Dummy.
-	This should not be called on the final subscript of an ALIASES/IS_A
-	inside a FOR loop unless you can grok a dummy in last place.
-*/
+/* this function has been modified to handle list results when called
+ * from check aliases and dense executearr.
+ * The indices made here in the aliases case where the alias is NOT
+ * inside a FOR loop are NOT for consumption by anyone because they
+ * contain a dummy index type. They merely indicate that
+ * indices can be made. They should be immediately destroyed.
+ * DestroyIndexType is the only thing that groks the Dummy.
+ * This should not be called on the final subscript of an ALIASES/IS_A
+ * inside a FOR loop unless you can grok a dummy in last place.
+ *
+ * External relations (bbox) contain an innermost implicit for loop
+ * in their arrayness over the outputs of the bbox, and this causes
+ * us to have a bit of trickiness.
+ */
 static
 struct IndexType *MakeIndex(struct Instance *inst,
                             CONST struct Set *sptr,
@@ -811,7 +816,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
   int intset;
   assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
-  if (StatInFOR(stat)) {
+  if (StatInFOR(stat) || StatementType(stat) == EXT) {
     if (sptr == NULL ||
         NextSet(sptr) != NULL ||
         SetType(sptr) != 0 ) {
@@ -1137,6 +1142,11 @@ struct Instance *MakeSparseArray(struct Instance *parent,
   if (indices != NULL) {
     switch (StatementType(stat)) {
     case REL:
+      assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
+      desc = CreateArrayTypeDesc(StatementModule(stat),FindRelationType(),
+                                 0,1,0,0,indices);
+      break;
+    case EXT:
       assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),FindRelationType(),
                                  0,1,0,0,indices);
@@ -2242,7 +2252,7 @@ int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
   assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(tmpinst);
   switch (StatementType(statement)){
-  case REL:
+  case REL: /* note EXT not allowed in constraint list */
     value = EvaluateExpr(RelationStatExpr(statement),NULL,
                          InstanceEvaluateName);
     break;
@@ -3096,8 +3106,9 @@ int CheckWhereFOR(struct Instance *inst, struct Statement *statement)
   case symbol_value:
   case boolean_value:
   case list_value:
-    WriteStatement(ASCERR,statement,0);
-    FPRINTF(ASCERR,"FOR expression returns the wrong type.\n");
+    instantiation_error(ASC_USER_ERROR,statement
+  		,"FOR expression returns the wrong type."
+  	);
     DestroyValue(&value);
     return MPIFOR;
   case set_value:
@@ -3167,7 +3178,7 @@ int CheckWhereStatements(struct Instance *tmpinst, struct StatementList *sl)
       code = MPICheckWB(tmpinst,s);
       break;
     case LOGREL:
-    case REL:
+    case REL: /* note EXT not allowed in constraint list */
         /* baa. fix me. bug. need to evaluate rules in a way which is
          * exception-safe. EvaluateExpr currently isn't
          */
@@ -4001,7 +4012,7 @@ void MakeInstance(CONST struct Name *name,
             MakeSparseArray(parent,name,statement,
                             def,intset,NULL,arginst,NULL);
           } else {
-            /* must add array element *//* should check for NULL return here */
+            /* must add array element */ /* should check for NULL return here */
             (void)AddArrayChild(parent,name,statement,NULL,arginst,NULL);
           }
         } else {
@@ -4722,7 +4733,7 @@ struct Instance *MakeRelationInstance(struct Name *name,
     if(pos>0){
       /* following assertion should be true */
       assert(InstanceChild(parent,pos)==NULL);
-      child = CreateRelationInstance(def,type);	/* token relation */
+      child = CreateRelationInstance(def,type);	/* token, bbox relation so far */
       LinkToParentByPos(parent,child,pos);
       return child;
     } else {
@@ -4807,7 +4818,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
   /*
    * child now contains the pointer to the relation instance.
    * We should perhaps double check that the reltype
-   * has not been set or has been set to e_undefined.	!! FIX !!
+   * has not been set or has been set to e_undefined.
    */
   if (GetInstanceRelation(child,&reltype)==NULL) {
     if ( (g_instantiate_relns & TOKRELS) ==0) {
@@ -4934,6 +4945,22 @@ void MarkREL(struct Instance *inst, struct Statement *statement)
 }
 
 /**
+	set a relation instance as Conditional. This is done by activating
+	a bit ( relinst_set_conditional(rel,TRUE) ) and by using a flag
+	SetRelationIsCond(reln). Only one of these two would be strictly
+	required
+
+	@TODO FIXME. probably should look similar to MarkREL.
+	Remember that the compiled instance of an EXT statement
+	is still a Relation instance.
+*/
+static void MarkEXT(struct Instance *inst, struct Statement *statement){
+	(void)inst; (void)statement;
+
+        FPRINTF(stderr,"MarkEXT: external rels in conditional statements not fully supported yet.\n");
+}
+
+/**
 	set a logical relation instance as Conditional. This is done by activating
 	a bit ( logrelinst_set_conditional(lrel,TRUE) ) and by using a flag
 	SetLogRelIsCond(reln). Only one of these two would be strictly
@@ -4989,6 +5016,9 @@ int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
   switch(StatementType(statement)) {
   case REL:
     name = RelationStatName(statement);
+    break;
+  case EXT:
+    name = ExternalStatNameRelation(statement);
     break;
   case LOGREL:
     name = LogicalRelStatName(statement);
@@ -5186,110 +5216,9 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
   BLACK BOX RELATIONS PROCESSING
 */
 
-static struct gl_list_t *MakeExtIndices(unsigned long nindices){
-  struct gl_list_t *result;
-  struct Set *s;
-  struct IndexType *index;
-  unsigned long c;
-
-  if (nindices) {
-    result = gl_create(nindices);
-    for (c=1;c<=nindices;c++) {
-      s = CreateSingleSet(CreateIntExpr(c));
-      index = CreateIndexType(s,1); /* create an integer index ??? */
-      gl_append_ptr(result,(VOIDPTR)index);
-    }
-    return result;
-  } else {
-    return NULL;
-  }
-}
-
 /**
-	This function accepts an array instance for a relation array
-	and will construct the appropriate number of children for this
-	array and append them to the instance.
+	Verify that all instances named in the arglist of lists are real_atoms.
 */
-static int AddExtArrayChildren(struct Instance *inst, /* this is the aryinst */
-		struct Statement *stat,
-		struct gl_list_t *arglist,
-		struct Instance *data,
-		unsigned long n_input_args,
-		unsigned long n_output_args
-){
-  struct Instance *subject;
-  struct Instance *relinst;
-  struct relation *reln;
-  struct ExternalFunc *efunc;
-  struct gl_list_t *inputs, *outputs;
-  unsigned long n_inputs,n_outputs;
-  unsigned long start,end,c;
-
-  if (arglist) {
-    start = 1L; end = n_input_args;
-    inputs = LinearizeArgList(arglist,start,end);
-    n_inputs = gl_length(inputs);
-
-    /* Now process the outputs */
-    start = n_input_args+1; end = n_input_args + n_output_args;
-    outputs = LinearizeArgList(arglist,start,end);
-    n_outputs = gl_length(outputs);
-    efunc = LookupExtFunc(ExternalStatFuncName(stat));
-	/* CONSOLE_DEBUG("Using efunc = %p",efunc);*/
-
-    /* Now create the relations, all with the same
-     * nodestamp. Valid nodestamps are >= 1.
-     */
-    g_ExternalNodeStamps++;
-    for (c=1;c<=n_outputs;c++){
-      relinst = FindOrAddIntChild(inst,c,NULL,NULL);
-      subject = (struct Instance *)gl_fetch(outputs,c);
-      reln = CreateBlackBoxRelation(relinst,efunc,arglist,subject,inputs,data);
-      SetInstanceRelation(relinst,reln,e_blackbox);
-    }
-    gl_destroy(inputs);
-    gl_destroy(outputs);
-    return 0;
-  } else {
-    return 1;
-  }
-}
-
-/**
-	This function creates the array instance for which the
-	children of the array of relations will be apppended.
-*/
-static struct Instance *MakeExtRelationArray(struct Instance * inst,
-		struct Name *name,
-		struct Statement *stat
-){
-  symchar *relation_name;
-  struct TypeDescription *desc;
-  struct InstanceName rec;
-  unsigned long pos;
-  struct gl_list_t *indices;
-  struct Instance *aryinst;  /* this is what will be returned */
-
-  relation_name = NameIdPtr(name);
-  SetInstanceNameType(rec,StrName);
-  SetInstanceNameStrPtr(rec,relation_name);
-  pos = ChildSearch(inst,&rec);
-  if (pos) {
-    if(InstanceChild(inst,pos)==NULL) { /* need to make array */
-      indices = MakeExtIndices(1);
-      desc = CreateArrayTypeDesc(StatementModule(stat),
-                                 FindRelationType(),0,1,0,0,indices);
-      aryinst = CreateArrayInstance(desc,1);
-      LinkToParentByName(inst,aryinst,relation_name);
-      return aryinst;
-    }
-    else
-      return (InstanceChild(inst,pos)); /* exists so just return it */
-  }
-  else
-    return NULL; /* array name not found -- error */
-}
-
 static
 int CheckExtCallArgTypes(struct gl_list_t *arglist)
 {
@@ -5314,49 +5243,17 @@ int CheckExtCallArgTypes(struct gl_list_t *arglist)
 }
 
 /**
-	This function if fully successful will return a list of
-	lists. This will be wasteful if many singlets are used
-	as args, other wise it should be more useful than other
-	representations.
-*/
-static struct gl_list_t *ProcessArgs(struct Instance *inst,
-		CONST struct VariableList *vl,
-		enum find_errors *ferr
-){
-  struct gl_list_t *arglist;
-  struct gl_list_t *branch;
-
-  ListMode=1;
-  arglist = gl_create(10L);
-  while(vl!=NULL){
-    branch = FindInstances(inst,NamePointer(vl),ferr);
-    if (branch==NULL){
-      DestroySpecialList(arglist);
-      ListMode=0;
-      return NULL;
-    }
-    gl_append_ptr(arglist,(VOIDPTR)branch);
-    vl = NextVariableNode(vl);
-  }
-  ListMode=0;
-  return arglist;
-}
-
-/**
 	blackbox only
 */
-static struct gl_list_t *CheckExtCallArgs(struct Instance *inst,
+static struct gl_list_t *GetExtCallArgs(struct Instance *inst,
 		struct Statement *stat,
 		enum find_errors *ferr
 ){
-  struct VariableList *vl;
+  CONST struct VariableList *vl;
   struct gl_list_t *result;
 
-  vl = ExternalStatVlistBlackBox(stat);
-  result = ProcessArgs(inst,vl,ferr);
-  if (result==NULL){
-    return NULL;
-  }
+  vl = ExternalStatVlistRelation(stat);
+  result = ProcessExtRelArgs(inst, vl, ferr);
   return result;
 }
 
@@ -5367,149 +5264,311 @@ static struct Instance *CheckExtCallData(struct Instance *inst,
 ){
   struct Name *n;
   struct Instance *result;
-  struct gl_list_t *instances;
 
   n = ExternalStatDataBlackBox(stat);
-  if (n) {
-    instances = FindInstances(inst,n,ferr);
-    if (instances){ /* only 1 data instance is allowed */
-      if (gl_length(instances) > 1){
-        gl_destroy(instances);
-        *ferr = impossible_instance;
-        return NULL;
-      }
-      else{ /* all ok */
-        result = (struct Instance *)gl_fetch(instances,1L);
-        gl_destroy(instances);
-        /* This may be relaxed later to allow types other than
-         * MODEL_INSTS. The limitation is really for speed.
-         */
-        if (InstanceKind(result)!=MODEL_INST) {
-          *ferr = impossible_instance;
-          return NULL;
-        }
-        return result;
-      }
-    }
-    else{ /* instance not found -- check ferr */
-      return NULL;
-    }
-  }
-  else{ /* No data was given so return NULL */
-    *ferr = correct_instance;
-    return NULL;
-  }
+  result = ProcessExtRelData(inst, n, ferr);
+  return result;
 }
+
+
+
+static int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *statement);
+
+int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struct ExternalFunc *efunc, struct Instance *subject, struct gl_list_t *inputs,  struct BlackBoxCache * common, long c, CONST char *context);
 
 /**
 	This function does the job of creating an instance of a 'black box'
 	external relation or set of relations.
+	It does it by working as if the user wrote a for loop
+	over the outputs.
+	While managing this for loop, we have to make sure that if
+	we are already inside a for loop we don't mess that one up.
+	The role of savedfortable is to manage the change of
+	model context when one model instantiates another inside
+	a for loop. For relations in particular, the saved for
+	table will always be null unless we drop the multipass
+	instantiation scheme.
 */
 static int ExecuteBlackBoxEXT(struct Instance *inst
 		, struct Statement *statement
 ){
-  struct Name *name;
+  int alreadyInFor = 0;
+  int executeStatus = 0;
+  struct for_table_t *SavedForTable;
+
+  if (GetEvaluationForTable() != NULL) {
+	/* is this the right test? FIXME if not multipass instantiation. */
+	/* as written, this might see a fortable from elsewhere */
+    alreadyInFor = 1;
+  }
+
+  if (!alreadyInFor) { /* pushing/popping null table...*/
+    SavedForTable = GetEvaluationForTable();
+    SetEvaluationForTable(CreateForTable());
+  }
+  executeStatus = Pass2ExecuteBlackBoxEXTLoop(inst,statement);
+  if (!alreadyInFor) {
+    DestroyForTable(GetEvaluationForTable());
+    SetEvaluationForTable(SavedForTable);
+  }
+  if ( executeStatus ) {
+    return 1;
+  } else{
+    return 0;
+  }
+}
+
+/* This looks a lot like a FOR loop, since we're building an array,
+but is very specialized to eliminate the user trying to declare
+the for loop of an external relation correctly. Basically they
+would have to write the output index expression identically twice, which
+apparently is too hard for some.
+@param instance: the enclosing model.
+@param statement: the EXT bbox statement.
+*/
+int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *statement)
+{
+  symchar *name;
+  struct Expr *ex, *one, *en;
+  unsigned long c,len;
+  long aindex;
+  struct value_t value;
+  struct set_t *sptr;
+  struct for_var_t *fv;
+
+  struct BlackBoxCache * common;
+  ExtBBoxInitFunc * init;
+  char *context;
+  struct Instance *data=NULL , *subject = NULL;
   enum find_errors ferr;
   struct gl_list_t *arglist=NULL;
-  struct Instance *aryinst, *data=NULL;
-  unsigned long len, n_input_args=0L, n_output_args=0L;
-  struct ExternalFunc *efunc;
-  CONST char *funcname;
+  struct ExternalFunc *efunc = NULL;
+  CONST char *funcname = NULL;
+  unsigned long n_input_args=0L, n_output_args=0L; /* formal arg counts */
+  unsigned long n_inputs_actual=0L, n_outputs_actual=0L; /* atomic arg counts */
+  struct gl_list_t *inputs, *outputs;
+  unsigned long start,end;
+  struct Set *extrange= NULL;
 
-  /* CONSOLE_DEBUG("ENTERED ExecuteBlackBoxExt"); */
-
-  /* make or find the array head */
-  name = ExternalStatNameBlackBox(statement);
-  aryinst = MakeExtRelationArray(inst,name,statement);
-  if (aryinst==NULL) {
+/* common stuff do once ------------ */
+/* note ignoring return codes as all is guaranteed to work by passing
+the checks done before this statement was attempted. */
+  if (ExternalStatDataBlackBox(statement) != NULL) {
+    data = CheckExtCallData(inst, statement, &ferr);
+    assert( ferr == correct_instance );
+  }
+      /* expand the formal args into a list of lists of realatom args. */
+  arglist = GetExtCallArgs(inst, statement, &ferr);
+  if (arglist==NULL){
+    assert(ferr == correct_instance);
+    /* should never be here. */
+    switch(ferr){
+    case unmade_instance:
+      return 0;
+    case undefined_instance:
+      return 0; /* for the time being give another crack */
+    case impossible_instance:
+      instantiation_error(ASC_USER_ERROR,statement,"Statement contains impossible instance\n");
+      return 1;
+    default:
+      instantiation_error(ASC_PROG_ERR,statement,"Unhandled case!");
+      return 1;
+    }
+  }
+  funcname = ExternalStatFuncName(statement);
+  efunc = LookupExtFunc(funcname);
+  if (efunc == NULL) {
+    return 1;
+  }
+  n_input_args = NumberInputArgs(efunc);
+  n_output_args = NumberOutputArgs(efunc);
+  if ((len =gl_length(arglist)) != (n_input_args + n_output_args)) {
     instantiation_error(ASC_PROG_ERR,statement
 		,"Unable to create external expression structure."
 	);
     return 1;
   }
-  /* we now have an array head */
-  if (!RectangleArrayExpanded(aryinst)){        /* need to make children */
-    if (ExternalStatDataBlackBox(statement)){
-      data = CheckExtCallData(inst,statement,&ferr); /* check data bbox*/
-      switch(ferr){
-      case correct_instance:
-        break;
-      case unmade_instance:
-        return 0;
-      case undefined_instance:
-        return 0;
-      case impossible_instance:
-        instantiation_error(ASC_USER_ERROR,statement
-			,"Statement contains impossible DATA instance"
-		);
-        return 1;
-      default:
-        instantiation_error(ASC_PROG_ERROR,statement
-			,"Unhandled case!"
-		);
-        return 1;
-      }
-    }
-    arglist = CheckExtCallArgs(inst,statement,&ferr); /* check main args bbox*/
-    if (arglist==NULL){
-      switch(ferr){
-      case unmade_instance:
-        return 0;
-      case undefined_instance:
-        return 0; /* for the time being give another crack */
-      case impossible_instance:
-        instantiation_error(ASC_USER_ERROR,statement
-			,"Statement contains impossible instance");
-        return 1;
-      default:
-        instantiation_error(ASC_USER_ERROR,statement
-			,"Unhandled case!");
-        return 1;
-      }
-    }
-
-    /*
-     * Get function call details. The external function had better
-     * loaded at this stage or report an error.
-     */
-    funcname = ExternalStatFuncName(statement);
-    /* FPRINTF(ASCERR,">>>>>> ExecuteBlackBoxEXT %s\n",funcname); */
-
-    efunc = LookupExtFunc(funcname);
-    if (!efunc) {
-      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External relation '%s' was not loaded.",funcname);
-      return 1;
-    }
-    n_input_args = NumberInputArgs(efunc);
-    n_output_args = NumberOutputArgs(efunc);
-    if ((len =gl_length(arglist)) != (n_input_args + n_output_args)) {
-      instantiation_error(ASC_USER_ERROR,statement
-	    ,"Incorrect number of input+output args\n"
-	      "(expected total %d, got %d)."
-	    ,(n_input_args + n_output_args),len
-	  );
-      return 1;
-    }
-    /* we should have a valid arglist at this stage */
-    if (CheckExtCallArgTypes(arglist)) {
-      instantiation_error(ASC_USER_ERROR,statement
-			,"Wrong type of args to external statement");
-      DestroySpecialList(arglist);
-      return 1;
-    }
-    if (AddExtArrayChildren(aryinst,statement,arglist,data,
-                            n_input_args,n_output_args)) {
-      instantiation_error(ASC_USER_ERROR,statement
-			,"Unable to execute external expression.");
-      DestroySpecialList(arglist);
-      return 1;
-    } else {
-      DestroySpecialList(arglist);
-    }
-    return 1; /* all should be ok */
-  } else {
-    return 1; /* all should be ok ???*/
+  /* we should have a valid arglist at this stage */
+  if (CheckExtCallArgTypes(arglist)) {
+    instantiation_error(ASC_USER_ERROR,statement,"Wrong type of args to external statement");
+    DestroySpecialList(arglist);
+    return 1;
   }
+  start = 1L;
+  end = n_input_args;
+  inputs = LinearizeArgList(arglist,start,end);
+  n_inputs_actual = gl_length(inputs);
+
+  /* Now process the outputs */
+  start = n_input_args+1;
+  end = n_input_args + n_output_args;
+  outputs = LinearizeArgList(arglist,start,end);
+  n_outputs_actual = gl_length(outputs);
+
+  /* Now create the relations, all with the same
+   * common.
+   */
+  common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, arglist);
+  common->interp.task = bb_first_call;
+  context = WriteInstanceNameString(inst, NULL);
+/* ------------ */ /* ------------ */
+  /* now set up the for loop index --------------------------------*/
+  name = AddSymbolL(BBOX_RESERVED_INDEX, BBOX_RESERVED_INDEX_LEN);
+  /* using a reserved character not legal in user level modeling. */
+  assert(FindForVar(GetEvaluationForTable(),name) == NULL);
+  /* cannot happen as bbox definitions don't nest as statements and
+	user identifiers cannot contain ?.
+ */
+  assert(GetEvaluationContext()==NULL);
+  SetEvaluationContext(inst);
+  /* construct a set value of 1..bbox_arraysize */
+  one = CreateIntExpr(1L); /* destroyed with set. */
+  en = CreateIntExpr(n_outputs_actual); /* destroyed with set. */
+  extrange = CreateRangeSet(one,en);
+  ex = CreateSetExpr(extrange);
+  value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+  switch(ValueKind(value)){
+  case set_value:
+    sptr = SetValue(value);
+    switch(SetKind(sptr)){
+    case integer_set:
+      fv = CreateForVar(name);
+      SetForVarType(fv,f_integer);
+      AddLoopVariable(GetEvaluationForTable(),fv);
+      len = Cardinality(sptr);
+#ifdef DEBUG_RELS
+      ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Pass2RealExecuteFOR integer_set %lu.\n",len);
+#endif
+      for(c=1;c<=len;c++){
+        aindex = FetchIntMember(sptr,c);
+        SetForInteger(fv,aindex);
+        subject = (struct Instance *)gl_fetch(outputs,aindex);
+        ExecuteBBOXElement(inst, statement, efunc, subject, inputs, common, aindex, context);
+        /*  currently designed to always succeed or fail permanently */
+      }
+      RemoveForVariable(GetEvaluationForTable());
+      break;
+    default:
+	/** deeply broken code above if we get here. */
+	/* in particular, the empty set should never show up here. */
+        assert(0);
+	break;
+    }
+    DestroyValue(&value);
+    DestroySetNode(extrange);
+    break;
+  default:
+    /** deeply broken code above if we get here. */
+    /* in particular, a non-set should never show up here. */
+    assert(0);
+    break;
+  }
+/* ------------ */ /* ------------ */
+  /* and now for cleaning up shared data. */
+  init = GetInitFunc(efunc);
+  (*init)( &(common->interp), data, arglist);
+  common->interp.task = bb_none;
+  ascfree(context);
+  DeleteRefBlackBoxCache(NULL, &common);
+  gl_destroy(inputs);
+  gl_destroy(outputs);
+  DestroySpecialList(arglist);
+/* ------------ */ /* ------------ */
+  /*  currently designed to always succeed or fail permanently.
+   *  We reached this point meaning we've processed everything.
+   *  Therefore the statment returns 1 and becomes no longer pending.
+   */
+  return 1;
+}
+
+
+int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struct ExternalFunc *efunc, struct Instance *subject, struct gl_list_t *inputs,  struct BlackBoxCache * common, long c, CONST char *context)
+{
+  struct Name *name;
+  enum find_errors ferr;
+  struct gl_list_t *instances = NULL;
+  struct Instance *child = NULL;
+  struct relation *reln  = NULL;
+  enum Expr_enum reltype;
+
+  CONSOLE_DEBUG("ENTERED ExecuteBBOXElement\n");
+
+  /* make or find the instance */
+  name = ExternalStatNameRelation(statement);
+  instances = FindInstances(inst, name, &ferr);
+  /* see if the relation is there already. If it is, we're really hosed. */
+  if (instances==NULL){
+    if (ferr == unmade_instance){		/* make a reln head */
+      child = MakeRelationInstance(name,FindRelationType(),
+                                   inst,statement,e_blackbox);
+      if (child==NULL){
+        STATEMENT_ERROR(statement, "Unable to create expression structure");
+       /* print a better message here if needed. maybe an if!makeindices moan*/
+        return 1;
+      }
+    } else {
+      /* undefined instances in the relation name, or out of memory */
+      WSSM(ASCERR,statement, "Unable to execute blackbox label",3);
+      return 1;
+    }
+  } else {
+    if(gl_length(instances)==1){
+      child = (struct Instance *)gl_fetch(instances,1);
+      assert((InstanceKind(child)==REL_INST) ||
+             (InstanceKind(child)==DUMMY_INST));
+      gl_destroy(instances);
+      if (InstanceKind(child)==DUMMY_INST) {
+#ifdef DEBUG_RELS
+        STATEMENT_ERROR(statement, "DUMMY_INST foundin compiling blackbox.");
+#endif
+        return 1;
+      }
+#ifdef DEBUG_RELS
+      STATEMENT_ERROR(statement, "REL_INST found in compiling blackbox.");
+#endif
+    } else {
+      STATEMENT_ERROR(statement, "Expression name refers to more than one object");
+      gl_destroy(instances);	/* bizarre! */
+      return 1;
+    }
+  }
+
+  /*
+   * child now contains the pointer to the relation instance.
+   * We should perhaps double check that the reltype
+   * has not been set or has been set to e_undefined.
+   */
+  if (GetInstanceRelation(child,&reltype)==NULL) {
+    if ( (g_instantiate_relns & BBOXRELS) ==0) {
+#ifdef DEBUG_RELS
+      STATEMENT_NOTE(statement, "BBOXRELS 0 found in compiling bbox.");
+#endif
+      return 1;
+    }
+#if TIMECOMPILER
+    g_ExecuteEXT_CreateBlackboxRelation_calls++;
+#endif
+    reln = CreateBlackBoxRelation(child, efunc,
+				subject, inputs,
+				common, c-1, context);
+    assert(reln != NULL); /* cbbr does not return null */
+    SetInstanceRelation(child,reln,e_blackbox);
+#ifdef DEBUG_RELS
+    STATEMENT_NOTE(statement, "Created bbox relation.");
+#endif
+    return 1;
+  } else{
+    /*  Do nothing, somebody already completed the relation.  */
+#ifdef DEBUG_RELS
+        STATEMENT_NOTE(statement, "Already compiled element in blackbox?!.");
+#endif
+    return 1;
+  }
+#ifdef DEBUG_RELS
+  STATEMENT_NOTE(statement, "End of ExecuteBBOX. huh?");
+  /* not reached */
+#endif
 }
 
 /*------------------------------------------------------------------------------
@@ -5531,14 +5590,14 @@ struct gl_list_t *CheckGlassBoxArgs(struct Instance *inst,
   unsigned long len,c;
   int error = 0;
 
-  vl = ExternalStatVlistGlassBox(stat);
+  vl = ExternalStatVlistRelation(stat);
   if (!vl) {
     *ferr = impossible_instance; /* a relation with no incidence ! */
     return NULL;
   }
 
   ListMode = 1;				/* order is very important */
-  varlist = gl_create(NO_INCIDENCES);		/* could be fine tuned */
+  varlist = gl_create(NO_INCIDENCES);	/* could be fine tuned */
   while (vl!=NULL) {
     tmp = FindInstances(inst,NamePointer(vl),ferr);
     if (tmp) {
@@ -5614,7 +5673,7 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
   struct ExternalFunc *efunc;
   CONST char *funcname;
   enum Expr_enum type;
-  int index;
+  int gbindex;
 
   /*
    * Get function call details. The external function had better
@@ -5628,7 +5687,7 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
     return 1;
   }
 
-  name = ExternalStatNameGlassBox(statement);
+  name = ExternalStatNameRelation(statement);
   instances = FindInstances(inst,name,&ferr);
   if (instances==NULL){
     if (ferr == unmade_instance){			/* glassbox reln */
@@ -5681,11 +5740,11 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
   }
 
   /*
-   * Get the index of the relation for mapping into the external
-   * call. An index < 0 is invalid.
+   * Get the gbindex of the relation for mapping into the external
+   * call. An gbindex < 0 is invalid.
    */
-  index = CheckGlassBoxIndex(inst,statement,&err);
-  if (index < 0) {
+  gbindex = CheckGlassBoxIndex(inst,statement,&err);
+  if (gbindex < 0) {
     instantiation_error(ASC_USER_ERROR,statement
 	    ,"Invalid index in external relation statement");
     return 1;
@@ -5702,7 +5761,7 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
   if (GetInstanceRelation(child,&type)!=NULL) {
     goto error;
   }
-  reln = CreateGlassBoxRelation(child,efunc,varlist,index,e_equal);
+  reln = CreateGlassBoxRelation(child,efunc,varlist,gbindex,e_equal);
   if (!reln) {
     Asc_Panic(2, __FUNCTION__,
       "Major error: Unable to create external relation structure."
@@ -6631,30 +6690,52 @@ int CheckRelName(struct Instance *work, struct Name *name)
   }
 }
 
-/**
-	If the relation is already there, it may be a dummy instance. In
-	such a case, do not check the expression. Currently not in
-	use.
-*/
+/*
+ * If the relation is already there, it may be a dummy instance. In
+ * such a case, do not check the expression.
+ */
 static
 int CheckREL(struct Instance *inst, struct Statement *statement)
 {
-
-  if (!CheckRelName(inst,RelationStatName(statement))) {
+  int status;
+  status = CheckRelName(inst,RelationStatName(statement));
+  if (status == 0) {
     return 0;
   }
-  if ( CheckRelName(inst,RelationStatName(statement)) == -1) {
+  if ( status == -1) {
     return 1;
   }
   return CheckRelation(inst,RelationStatExpr(statement));
 }
+/*
+ * If the external relation is already there,
+ * it may be a dummy instance. In
+ * such a case, do not check the args.
+ */
+static
+int CheckEXT(struct Instance *inst, struct Statement *statement)
+{
 
-/**
-	Check that the logical relation instance of some name has not been
-	previously created, or if it has, the instance is unique and
-	corresponds to a logical relation or to a dummy.
-	return -1 for DUMMY. 1 for log relation. 0 if the checking fails.
-*/
+  int status;
+  status = CheckRelName(inst,ExternalStatNameRelation(statement));
+  if (status == 0) {
+    return 0;
+  }
+  if ( status == -1) {
+    return 1;
+  }
+  return CheckExternal(inst,
+                       ExternalStatVlistRelation(statement),
+                       ExternalStatDataBlackBox(statement));
+}
+
+/***********************************************************************/
+
+/* Check that the logical relation instance of some name has not been
+ * previously created, or if it has, the instance is unique and
+ * corresponds to a logical relation or to a dummy.
+ * return -1 for DUMMY. 1 for log relation. 0 if the checking fails.
+ */
 static
 int CheckLogRelName(struct Instance *work, struct Name *name)
 {
@@ -6883,6 +6964,8 @@ int Pass2CheckCondStatements(struct Instance *inst,
   switch(StatementType(statement)){
     case REL:
       return CheckREL(inst,statement);
+    case EXT:
+      return CheckEXT(inst,statement);
     case FOR:
       return Pass2RealCheckFOR(inst,statement);
     case LOGREL:
@@ -6893,7 +6976,6 @@ int Pass2CheckCondStatements(struct Instance *inst,
     case ATS:
     case AA:
     case CALL:
-    case EXT: /** FIXME probably need a check and action here */
     case ASGN:
     case CASGN:
     case COND:
@@ -7704,11 +7786,7 @@ int CheckSELECT(struct Instance *inst, struct Statement *statement)
 	PASS-BY-PASS CHECKING
 */
 
-/**
-	@BUG: CheckStatement and New flavors of same ignore the
-	type EXT. We never use external relations inside a loop?!
-	well, ok, maybe they are always hidden as models
-*/
+
 static
 int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
 {
@@ -7723,6 +7801,7 @@ int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
   case COND:
   case SELECT:
   case REL:
+  case EXT:
   case LOGREL:
   case ISA:
   case ARR:
@@ -7750,6 +7829,7 @@ int Pass3CheckStatement(struct Instance *inst, struct Statement *stat)
   case COND:
     return Pass3CheckCOND(inst,stat);
   case REL:
+  case EXT:
   case ALIASES:
   case ARR:
   case ISA:
@@ -7774,6 +7854,8 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
   switch(StatementType(stat)){
   case FOR:
     return Pass2RealCheckFOR(inst,stat);
+  case EXT:
+    return CheckEXT(inst,stat);
   case REL:
     return CheckREL(inst,stat);
   case COND:
@@ -7826,6 +7908,8 @@ int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
     return Pass1CheckFOR(inst,stat);
   case REL:
     return 1; /* ignore'm in phase 1 */
+  case EXT:
+    return 1; /* ignore'm in phase 1 */
   case COND:
     return 1; /* ignore'm in phase 1 */
   case LOGREL:
@@ -7841,11 +7925,6 @@ int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
   case FNAME:
     FPRINTF(ASCERR,"FNAME are only allowed inside a WHEN Statement\n");
     return 0;
-  case EXT:
-	STATEMENT_ERROR(stat,"External functions are not allowed directly"
-		"\ninside a FOR loop. Maybe Must be embedded inside a MODEL or...?"
-	);
-	return 1;
   default:
     STATEMENT_ERROR(stat,"Inappropriate statement type");
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
@@ -7962,10 +8041,12 @@ void Pass3MarkCondLogRels(struct Instance *inst, struct Statement *statement)
       break;
     case FOR:
       if ( ForContainsLogRelations(statement) ) {
-      Pass3FORMarkCond(inst,statement);
+        Pass3FORMarkCond(inst,statement);
       }
       break;
     case REL:
+      break;
+    case EXT:
       break;
     default:
       STATEMENT_ERROR(statement,"Inappropriate statement type");
@@ -7992,6 +8073,8 @@ void Pass3MarkCondLogRelStatList(struct Instance *inst,
         if ( ForContainsLogRelations(stat) ) {
         Pass3FORMarkCondLogRels(inst,stat);
         }
+        break;
+      case EXT:
         break;
       case REL:
         break;
@@ -8039,6 +8122,8 @@ int Pass3ExecuteCondStatements(struct Instance *inst,
       else {
         return 1;
       }
+    case EXT:
+      return 1; /* assume done */
     case REL:
       return 1; /* assume done */
     default:
@@ -8105,9 +8190,14 @@ void Pass2MarkCondRelations(struct Instance *inst, struct Statement *statement)
     case REL:
       MarkREL(inst,statement);
       break;
+    case EXT:
+      MarkEXT(inst,statement);
+      break;
     case FOR:
-      if ( ForContainsRelations(statement) ) {
-      Pass2FORMarkCond(inst,statement);
+      if ( ForContainsRelations(statement) ||
+           ForContainsExternal(statement)
+         ) {
+        Pass2FORMarkCond(inst,statement);
       }
       break;
     case LOGREL:
@@ -8129,12 +8219,17 @@ void Pass2MarkCondRelStatList(struct Instance *inst, struct StatementList *sl)
   for(c=1;c<=len;c++){
     stat = (struct Statement *)gl_fetch(list,c);
     switch(StatementType(stat)){
+      case EXT:
+        MarkEXT(inst,stat);
+        break;
       case REL:
-        MarkREL(inst,stat);
+        MarkREL(inst,stat); /* MarkEXT is MarkREL exactly */
         break;
       case FOR:
-        if ( ForContainsRelations(stat) ) {
-        Pass2FORMarkCondRelations(inst,stat);
+        if ( ForContainsRelations(stat) ||
+             ForContainsExternal(stat)
+           ) {
+          Pass2FORMarkCondRelations(inst,stat);
         }
         break;
       case LOGREL:
@@ -8180,6 +8275,14 @@ int Pass2ExecuteCondStatements(struct Instance *inst,
     error_reporter_end_flush();
 #endif
       return ExecuteREL(inst,statement);
+    case EXT:
+#ifdef DEBUG_RELS
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
+    FPRINTF(stderr,"Pass2ExecuteCondStatements: case EXT");
+    WriteStatement(stderr, statement, 3);
+    error_reporter_end_flush();
+#endif
+      return ExecuteEXT(inst,statement);
     case FOR:
       if ( ForContainsRelations(statement) ) {
 #ifdef DEBUG_RELS
@@ -8268,6 +8371,7 @@ int ExecuteUnSelectedCOND(struct Instance *inst, struct Statement *statement)
       return_value = ExecuteUnSelectedForStatements(inst,ForStatStmts(stat));
       break;
     case REL:
+    case EXT:
     case LOGREL:
       return_value = ExecuteUnSelectedEQN(inst,stat);
       break;
@@ -8875,14 +8979,9 @@ void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
         return_value = Pass1ExecuteFOR(inst,statement);
         if (return_value) ClearBit(blist,*count);
         break;
-      case EXT:
-#if OLD_ext
-        return_value = ExecuteEXT(inst,statement);
-        if (return_value) ClearBit(blist,*count);
-        break;
-#endif
       case ASGN:
       case REL:
+      case EXT:
       case LOGREL:
       case COND:
       case CALL:
@@ -8937,7 +9036,6 @@ void ExecuteUnSelectedStatements(struct Instance *inst,unsigned long *count,
       case IRT:
       case ATS:
       case AA:
-      case EXT:
       case CALL:
       case CASGN:
       case ASGN:
@@ -8964,6 +9062,7 @@ void ExecuteUnSelectedStatements(struct Instance *inst,unsigned long *count,
         if (return_value) ClearBit(blist,*count);
         break;
       case REL:
+      case EXT:
       case LOGREL:
         return_value = ExecuteUnSelectedEQN(inst,statement);
         ClearBit(blist,*count);
@@ -9222,6 +9321,10 @@ void SetBitsOnOfSELECTStats(struct Instance *inst, unsigned long *count,
       case 2:
         switch(StatementType(s)) {
           case REL:
+            SetBit(blist,*count);
+            (*changed)++;
+            break;
+          case EXT:
             SetBit(blist,*count);
             (*changed)++;
             break;
@@ -9679,15 +9782,11 @@ int Pass3ExecuteForStatements(struct Instance *inst,
 }
 
 
-/**
-	@NOTE this function must not be called until all the rel,ext
-	statements in sl pass their checks.
-
-	This is because if any of the Executes fail
-	(returning 0) we abort (at least when assert is active).
-
-	@TODO This should be changed.
-*/
+/* Note: this function must not be called until all the rel,ext
+ * statements in sl pass their checks.
+ * This is because if any of the Executes fail
+ * (returning 0) we abort (at least when assert is active).
+ */
 static
 void Pass2ExecuteForStatements(struct Instance *inst,
                                struct StatementList *sl)
@@ -9758,9 +9857,12 @@ void Pass2ExecuteForStatements(struct Instance *inst,
        */
       break;
     case EXT:
-      return_value = 1;
-      if (!ExecuteEXT(inst,statement)) {
-        STATEMENT_ERROR(statement,"Impossible external relation encountered");
+      return_value = ExecuteEXT(inst,statement);
+      /* ER expected to succeed or fail permanently,returning 1.
+       * if it doesn't, this needs fixing.
+       */
+      if (return_value == 0) {
+        STATEMENT_ERROR(statement,"Impossible external relation encountered unexpectedly.");
       }
       break;
     default:
@@ -9874,7 +9976,6 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
       case ATS:
       case AA:
       case CALL:
-      case EXT:
       case CASGN:
       case ASGN:
         return_value = 1;
@@ -9897,6 +9998,7 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
                                  ForStatStmts(statement));
         break;
       case REL:
+      case EXT:
       case LOGREL:
         return_value = ExecuteUnSelectedEQN(inst,statement);
         break;
@@ -10259,11 +10361,10 @@ void Pass3FORMarkCond(struct Instance *inst, struct Statement *statement)
 }
 
 
-/**
-	@TODO this function needs to be made much less aggressive about exiting
-	and more verbose about error messages  so we can skip the np2checkfor
-	probably also means it needs the 0/1 fail/succeed return code.
-*/
+/* This function requires all the preconditions for success have
+ * been checked. Verifying correctness is separate from and prior to building
+ * instance data. This pattern is followed throughout instantiation.
+ */
 static
 int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
 {
@@ -10962,6 +11063,12 @@ int Pass3ExecuteFOR(struct Instance *inst, struct Statement *statement)
   }
 }
 
+/* This function is seen exactly once when handling a set of
+nested for loops in the same model.
+In pass2 models are handled from a list rather than recursively,
+so the SavedForTable should always be null (as best I can tell).
+BAA; 8/2006.
+*/
 static
 int Pass2ExecuteFOR(struct Instance *inst, struct Statement *statement)
 {
@@ -11063,13 +11170,6 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return Pass2ExecuteCOND(inst,statement);
   case LOGREL:
   case WHEN:
-#ifdef DEBUG_RELS
-    ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
-    FPRINTF(stderr,"-- IGNORING WHEN STAT\n");
-    /* write statement */
-    WriteStatement(stderr, statement, 3);
-    error_reporter_end_flush();
-#endif
     return 1; /* assumed done  */
   case FNAME:
     STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN statement");
@@ -11554,11 +11654,13 @@ void Pass2ProcessPendingInstances(void)
 }
 
 
-/**
-	in a bizarre way, this will generally lead to a bottom up
-	instantiation finishing process, though it is started in a
-	top down fashion.
-*/
+/*
+ * in a bizarre way, this will generally lead to a bottom up
+ * instantiation finishing process, though it is started in a
+ * top down fashion. While not quite a recursion, work proceeds
+ * in a nested fashion and so the FOR tables must be pushed
+ * and popped to get the right interpretation.
+ */
 static
 void Pass1ProcessPendingInstances(void)
 {
@@ -12131,20 +12233,25 @@ void Pass2SetRelationBits(struct Instance *inst)
         stat = (struct Statement *)gl_fetch(statements,c+1);
         st= StatementType(stat);
         if (st == SELECT) {
-          if (SelectContainsRelations(stat)) {
+          if (SelectContainsRelations(stat) ||
+              SelectContainsExternal(stat))
+          {
             ReEvaluateSELECT(inst,&c,stat,2,&changed);
-          }
-          else {
+          } else {
             c = c + SelectStatNumberStats(stat);
           }
-        }
-        else {
+        } else {
           if ( st == REL ||
-#if NEW_ext
-		st == EXT ||
-#endif
-	     (st == COND && CondContainsRelations(stat)) ||
-             (st == FOR && ForContainsRelations(stat)) ){
+               st == EXT ||
+	       (st == COND &&
+                 (CondContainsRelations(stat) ||
+                  CondContainsExternal(stat) )
+               ) ||
+               (st == FOR &&
+                 (ForContainsRelations(stat) ||
+                  ForContainsExternal(stat) )
+               )
+             ){
             SetBit(blist,c);
             changed++;
           }

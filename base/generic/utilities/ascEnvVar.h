@@ -198,7 +198,7 @@ ASC_DLLSPEC(int ) Asc_AppendPath(char *envvar, char *newelement);
  *  @return Returns 0 if newelement was successfully added, 1 otherwise.
  */
 
-ASC_DLLSPEC(char **) Asc_GetPathList(char *envvar, int *argcPtr);
+ASC_DLLSPEC(CONST char **) Asc_GetPathList(CONST char *envvar, int *argcPtr);
 /**<
  *  Retrieve the current value(s) for ASCEND environment variable envvar.
  *  The values are returned as an array of pointers to the value strings.
@@ -234,13 +234,13 @@ ASC_DLLSPEC(char*) Asc_GetEnv(const char *envvar);
  *          on error.  The caller is responsible for freeing it.
  */
 
-ASC_DLLSPEC(char **) Asc_EnvNames(int *argc);
+ASC_DLLSPEC(const char **) Asc_EnvNames(int *argc);
 /**<
  *  Retrieve a list of currently defined ASCEND environment variables.
  *  Pointers to the variable names are returned in a NULL-terminated
  *  array having (*argc + 1) elements.  The caller is responsible for
- *  freeing argc, but should under no circumstances change any of the
- *  strings it points to.<br><br>
+ *  freeing argc, but should under no circumstances change or free
+ *  any of the strings it points to.<br><br>
  *
  *  If Asc_InitEnvironment() has not been called or memory cannot be
  *  allocated, *argc will be -1.  Otherwise, *argc will be the number

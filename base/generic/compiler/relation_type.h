@@ -202,22 +202,10 @@ struct GlassBoxRelation {
   int index;              /**< the *external* index of this relation */
 };
 
-struct BlackBoxRelation {
-	enum Expr_enum relop;     /**< type of constraint */
-	REFCOUNT_T ref_count;     /**< number of instances looking here */
-	struct ExtCallNode *ext;
-		/**< external call info */
-	int *args;                
-		/**< Holds the indexes into the arglist of the Instance objects
-			referred to by the arguments in the original blackbox statment.
-			So, if arguments are ARE_THE_SAME'd (or aliases, etc) then we can
-			still work out where to locate each argument in the instance
-			hierarchy. 
-
-			This list is set up in CreateBlackBoxRelation.
-
-			These indexes are base-1, because of good ol' gl_list. */
-	int nargs;
+struct BlackBoxRelation { /* reminder: this is shared by many instances. */
+  enum Expr_enum relop;     /**< type of constraint. */
+  REFCOUNT_T ref_count;     /**< number of instances looking here. */
+  struct ExternalFunc *efunc; /** ftable is shared. */
 };
 
 union RelationUnion {
@@ -271,6 +259,9 @@ struct relation {
 	* union doublong *constants;	 loop variant constants. maybe NULL.
 	*/
 	dim_type *d;
+  void *externalData; /**< null for token relations,
+			struct BlackBoxData * for bbox. 
+			*/
 };
 
 /* casts to fix things up, should they really be needed. */

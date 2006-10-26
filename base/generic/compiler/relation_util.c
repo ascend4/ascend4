@@ -23,7 +23,7 @@
 	Relation utility functions for Ascend
 
 	This module defines the dimensionality checking and some other
-	relation auxillaries for Ascend.
+	relation auxillaries for ASCEND.
 *//*
 	Last in CVS: $Revision: 1.44 $ $Date: 1998/04/23 23:51:09 $ $Author: ballan $
 */
@@ -34,6 +34,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
+#include <general/mathmacros.h>
 #include <general/list.h>
 #include <general/dstring.h>
 #include "compiler.h"
@@ -51,13 +52,15 @@
 #include "atomvalue.h"
 #include "instance_name.h"
 #include "relation_type.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
 #include "relation.h"
 #include "relation_util.h"
+#include "rel_blackbox.h"
 #include "instance_io.h"
 #include "instquery.h"
 #include "visitinst.h"
 #include "mathinst.h"
-#include "extfunc.h"
 #include "rootfind.h"
 #include "func.h"
 
@@ -135,10 +138,10 @@ static struct relation *RelationCreateTmp(unsigned long lhslen, unsigned long rh
 
 /* the following appear only to be used locally, so I've made them static  -- JP */
 
-static int RelationCalcDerivative(struct Instance *i, unsigned long index, double *grad);
+static int RelationCalcDerivative(struct Instance *i, unsigned long vindex, double *grad);
 /**<
  *  This calculates the derivative of the relation df/dx (f = lhs-rhs)
- *  where x is the INDEX-th entry in the relation's var list.
+ *  where x is the VINDEX-th entry in the relation's var list.
  *  The var list is a gl_list_t indexed from 1 to length.
  *  Non-zero return value implies a problem.<br><br>
  *
@@ -147,7 +150,7 @@ static int RelationCalcDerivative(struct Instance *i, unsigned long index, doubl
  */
 
 static enum safe_err
-RelationCalcDerivativeSafe(struct Instance *i, unsigned long index, double *grad);
+RelationCalcDerivativeSafe(struct Instance *i, unsigned long vindex, double *grad);
 /**<
  *  Calculates the derivative safely.
  *  Non-zero return value implies a problem.
@@ -488,6 +491,10 @@ int RelationCheckDimensions(struct relation *rel, dim_type *dimens)
   int wild = FALSE;
   unsigned long c, len;
 
+
+  /* FIXME blackbox checkDimens: this is where we need to check on relation type
+  (which we can't without the Instance) and get the output var
+   of blackbox for dims. */
   if ( !IsWild(RelationDim(rel)) ) { /* don't do this twice */
     CopyDimensions(RelationDim(rel),dimens);
     return 2;
@@ -1617,6 +1624,26 @@ unsigned long RelationLength(CONST struct relation *rel, int lhs)
   else return 0;
 }
 
+struct gl_list_t *RelationBlackBoxFormalArgs(CONST struct relation *rel)
+{
+  assert(rel!=NULL);
+  return RelationBlackBoxCache(rel)->formalArgList;
+}
+
+struct BlackBoxCache * RelationBlackBoxCache(CONST struct relation *rel)
+{
+  assert(rel!=NULL);
+  AssertAllocatedMemory(rel,sizeof(struct relation));
+  return ((struct BlackBoxData *) (rel->externalData))->common;
+}
+
+struct BlackBoxData * RelationBlackBoxData(CONST struct relation *rel)
+{
+  assert(rel!=NULL);
+  AssertAllocatedMemory(rel,sizeof(struct relation));
+  return (struct BlackBoxData *) rel->externalData;
+}
+
 /*
 	This query only applies to TokenRelations. It assumes the
 	user still thinks tokens number from [1..len].
@@ -1728,21 +1755,10 @@ struct relation_term *RelationINF_Rhs(CONST struct relation *rel){
   return RTOKEN(rel).rhs_term;
 }
 
-
-/*------------------------------------------------------------------------------
-  BLACKBOX RELATION QUERIES
-
-  For picking apart a BlackBox relation and its ExternalCall node.
-*/
-
-struct ExtCallNode *BlackBoxExtCall(CONST struct relation *rel){
+struct ExternalFunc *RelationBlackBoxExtFunc(CONST struct relation *rel)
+{
   assert(rel!=NULL);
-  return RBBOX(rel).ext;
-}
-
-int *BlackBoxArgs(CONST struct relation *rel){
-  assert(rel!=NULL);
-  return RBBOX(rel).args;
+  return RBBOX(rel).efunc;
 }
 
 /*------------------------------------------------------------------------------
@@ -1751,7 +1767,7 @@ int *BlackBoxArgs(CONST struct relation *rel){
   For picking apart a GlassBox relation.
 */
 
-struct ExternalFunc *GlassBoxExtFunc(CONST struct relation *rel){
+struct ExternalFunc *RelationGlassBoxExtFunc(CONST struct relation *rel){
   assert(rel!=NULL);
   return RGBOX(rel).efunc;
 }
@@ -1783,9 +1799,10 @@ dim_type *RelationDim(CONST struct relation *rel){
   return rel->d;
 }
 
-int SetRelationDim(struct relation *rel, dim_type *d){
+int SetRelationDim(struct relation *rel, CONST dim_type *d)
+{
   if (!rel) return 1;
-  rel->d = d;
+  rel->d = (dim_type*)d;
   return 0;
 }
 
@@ -1988,16 +2005,18 @@ double CalcRelationNominal(struct Instance *i){
     }
   }
   if (reltype == e_blackbox){
-	if(!msg){
-    	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"assuming 1.0 for blackbox (%s)",__FUNCTION__);
-		msg=1;
-	}
-  }else if (reltype == e_glassbox){
+#ifdef BBOXWHINE
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"blackbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__); /* FIXME nominal blackbox */
+#endif
+    /* should pull the nominal from the assigned lhs variable. */
+  }
+  if (reltype == e_glassbox){
     if(!msg){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"glassbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
 		msg=2;
 	}
-  }else if (reltype == e_opcode){
+  }
+  if (reltype == e_opcode){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
   }
   glob_rel = NULL;
@@ -2182,11 +2201,12 @@ RelationCalcResidualPostfix(struct Instance *i, double *res){
   }else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
 
     if (reltype == e_blackbox){
-	  CONSOLE_DEBUG("REL = %p",r);
-      *res = ExtRel_Evaluate_Residual(r);
-    }else if (reltype == e_glassbox){
+      return BlackBoxCalcResidual(i, res, r);
+    }
+    if (reltype == e_glassbox){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
-    }else if (reltype == e_opcode)    {
+    }
+    if (reltype == e_opcode)    {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
     }
 
@@ -2401,12 +2421,17 @@ RelationCalcResidGradSafe(struct Instance *i
       RelationEvaluateResidualGradientSafe(r, residual, gradient, &not_safe);
     return not_safe;
   }
-  else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    if (reltype == e_blackbox){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"blackbox not implemented yet (%s)",__FUNCTION__);
-    }else if (reltype == e_glassbox){
+  if (reltype == e_blackbox){
+    if (BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
+      not_safe = safe_problem;
+    }
+    return not_safe;
+  }
+  if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+    if (reltype == e_glassbox){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
-    }else if (reltype == e_opcode){
+    }
+    if (reltype == e_opcode){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
     }
     not_safe = safe_problem;
@@ -2426,8 +2451,9 @@ RelationCalcResidGradSafe(struct Instance *i
 */
 int
 RelationCalcDerivative(struct Instance *i,
-		unsigned long index, double *gradient
-){
+                       unsigned long vindex,
+                       double *gradient)
+{
   struct relation *r;
   enum Expr_enum reltype;
 
@@ -2438,13 +2464,13 @@ RelationCalcDerivative(struct Instance *i,
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
     return 1;
   }
-  if( (index < 1) || (index > NumberVariables(r)) ) {
+  if( (vindex < 1) || (vindex > NumberVariables(r)) ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"index out of bounds\n");
     return 1;
   }
 
   if( reltype == e_token ) {
-    *gradient = RelationEvaluateDerivative(r, index);
+    *gradient = RelationEvaluateDerivative(r, vindex);
     return 0;
   }
   else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
@@ -2458,8 +2484,9 @@ RelationCalcDerivative(struct Instance *i,
 
 enum safe_err
 RelationCalcDerivativeSafe(struct Instance *i,
-		unsigned long index,double *gradient
-){
+                           unsigned long vindex,
+                           double *gradient)
+{
   struct relation *r;
   enum Expr_enum reltype;
   enum safe_err not_safe = safe_ok;
@@ -2476,14 +2503,14 @@ RelationCalcDerivativeSafe(struct Instance *i,
     not_safe = safe_problem;
     return not_safe;
   }
-  if( (index < 1) || (index > NumberVariables(r)) ) {
+  if( (vindex < 1) || (vindex > NumberVariables(r)) ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"index out of bounds\n");
     not_safe = safe_problem;
     return not_safe;
   }
 
   if( reltype == e_token ) {
-    *gradient = RelationEvaluateDerivativeSafe(r, index, &not_safe);
+    *gradient = RelationEvaluateDerivativeSafe(r, vindex, &not_safe);
     return not_safe;
   }
   else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
@@ -3951,17 +3978,18 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res){
 		Asc_Panic(2,__FUNCTION__,"Not a relation");
 	}
 # else
-	if( i == NULL ) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL instance");
-		return 0;
-	}else if (res == NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL residual ptr");
-		return 0;
-	}else if( InstanceKind(i) != REL_INST ) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation");
-		return 0;
-	}
+  if( i == NULL ) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL instance");
+    return 0;
+  }else if (res == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL residual ptr");
+    return 0;
+  }else if( InstanceKind(i) != REL_INST ) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation");
+    return 0;
+  }
 # endif
+  return 1;
 	return 1;
 }
 #endif

@@ -175,6 +175,7 @@
  *  Make certain we have proper limits defined
  */
 #include <stdlib.h>
+#include <time.h>
 #include <limits.h>
 #include <float.h>
 #include <sys/types.h>

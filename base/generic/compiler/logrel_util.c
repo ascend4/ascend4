@@ -47,6 +47,8 @@
 #include "logrel_util.h"
 #include "extfunc.h"
 #include "relation_type.h"
+#include "rel_blackbox.h"
+#include "vlist.h"
 #include "relation.h"
 #include "relation_util.h"
 #include "instance_io.h"

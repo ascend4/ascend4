@@ -441,7 +441,7 @@ int Asc_LibrModuleInfoCmd(ClientData cdata, Tcl_Interp *interp,
 {
   CONST struct module_t *mod;
   CONST char *string;
-  char index[36];
+  char intbuf[36];
   int i;
 
   ASCUSE;  /* see if first arg is -help */
@@ -461,8 +461,8 @@ int Asc_LibrModuleInfoCmd(ClientData cdata, Tcl_Interp *interp,
         Tcl_AppendElement(interp, asctime(Asc_ModuleTimeModified(mod)));
         Tcl_AppendElement(interp, NULL);
       } else {
-        sprintf(index,"%d",(int)Asc_ModuleStringIndex(mod));
-        Tcl_AppendElement(interp, index);
+        sprintf(intbuf,"%d",(int)Asc_ModuleStringIndex(mod));
+        Tcl_AppendElement(interp, intbuf);
         Tcl_AppendElement(interp, (char *)string);
       }
     }

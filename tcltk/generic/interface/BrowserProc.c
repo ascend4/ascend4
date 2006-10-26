@@ -51,6 +51,8 @@
 #include <compiler/find.h>
 #include <compiler/functype.h>
 #include <compiler/safe.h>
+#include <compiler/rel_blackbox.h>
+#include <compiler/vlist.h>
 #include <compiler/relation.h>
 #include <compiler/relation_util.h>
 #include <compiler/logical_relation.h>
@@ -120,7 +122,7 @@ unsigned long ChildNumberbyChar(struct Instance *i, char *name)
   symchar *sym;
   unsigned long c = 0;
   unsigned long nch = 0;
-  long index;
+  long iindex;
 
   if((!i)||(!name)) {
     FPRINTF(ASCERR,"Null Instance or name in ChildbyNameChar\n");
@@ -142,8 +144,8 @@ unsigned long ChildNumberbyChar(struct Instance *i, char *name)
       }
       break;
     case IntArrayIndex:
-      index = atol(name); /* fixme strtod */
-      if (index==InstanceIntIndex(rec)) {
+      iindex = atol(name); /* fixme strtod */
+      if (iindex==InstanceIntIndex(rec)) {
         return c;
       }
       break;
@@ -252,7 +254,7 @@ int Asc_BrowRootNCmd(ClientData cdata, Tcl_Interp *interp,
 /* This command takes the form : rootn $arg1$. where arg is numeric.
    This will set the current search positions.
 */
-  unsigned long index;
+  unsigned long iindex;
   struct Instance *i;
 
   UNUSED_PARAMETER(cdata);
@@ -261,8 +263,8 @@ int Asc_BrowRootNCmd(ClientData cdata, Tcl_Interp *interp,
     Tcl_SetResult(interp, "wrong # args to \"rootn\"", TCL_STATIC);
     return TCL_ERROR;
   }
-  index = atol(argv[1]);
-  if((index >= MAXIMUM_INST_DEPTH) || (index < 1)) {
+  iindex = atol(argv[1]);
+  if((iindex >= MAXIMUM_INST_DEPTH) || (iindex < 1)) {
     Tcl_SetResult(interp, "Invalid args to \"rootn\"", TCL_STATIC);
     return TCL_ERROR;
   }
@@ -271,10 +273,10 @@ int Asc_BrowRootNCmd(ClientData cdata, Tcl_Interp *interp,
    *  2) index = g_depth; -- do nothing -- we should already be looking here.
    *  3) index > g_depth; -- invalid , we MUST have a name, so use root.
    */
-  if (index < g_depth) {
-    i = g_instlist[index]; /* should maybe check for index = 1*/
+  if (iindex < g_depth) {
+    i = g_instlist[iindex]; /* should maybe check for iindex = 1*/
     if(i) {
-      g_depth = index;
+      g_depth = iindex;
       g_curinst = g_instlist[g_depth];
       return TCL_OK;
     } else {
@@ -283,10 +285,10 @@ int Asc_BrowRootNCmd(ClientData cdata, Tcl_Interp *interp,
       return TCL_ERROR;
     }
   }
-  if (index==g_depth) {
+  if (iindex==g_depth) {
     return TCL_OK;
   }
-  if (index > (g_depth)) {
+  if (iindex > (g_depth)) {
     Tcl_SetResult(interp, "Invalid index to \"rootn\" use \"root\" instead",
                   TCL_STATIC);
     return TCL_ERROR;
@@ -458,7 +460,7 @@ int Asc_BrowInstListCmd(ClientData cdata, Tcl_Interp *interp,
 {
   struct Instance *p, *c;
   struct InstanceName name;
-  unsigned long cc, index;
+  unsigned long cc, cindex;
 
   UNUSED_PARAMETER(cdata);
   UNUSED_PARAMETER(argv);
@@ -474,9 +476,9 @@ int Asc_BrowInstListCmd(ClientData cdata, Tcl_Interp *interp,
   for(cc=1;cc<g_depth;cc++) {
     p = g_instlist[cc];
     c = g_instlist[cc+1];
-    index = ChildIndex(p,c);
-    if(index) {
-      name = ChildName(p,index);
+    cindex = ChildIndex(p,c);
+    if(cindex) {
+      name = ChildName(p,cindex);
       switch(InstanceNameType(name)) {
       case IntArrayIndex:
         PRINTF("[%ld]\n",InstanceIntIndex(name)); break;

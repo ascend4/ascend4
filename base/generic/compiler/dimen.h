@@ -283,7 +283,7 @@ ASC_DLLSPEC(void ) ParseDim(dim_type *dim, CONST char *c);
  *  </pre>
  */
 
-ASC_DLLSPEC(char *) DimName(CONST int index);
+ASC_DLLSPEC(char *) DimName(CONST int nIndex);
 /**<
  *  Return the internal copy of the name of the dimension corresponding
  *  to index if index is within [0..NUM_DIMENS-1], otherwise return NULL.

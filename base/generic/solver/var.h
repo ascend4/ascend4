@@ -253,7 +253,7 @@ extern int32 var_mindexF(const struct var_variable *var);
 	Implementation function for var_mindex().  Do not call this
 	function directly - use var_mindex() instead.
 */
-extern void var_set_mindexF(struct var_variable *var, int32 index);
+extern void var_set_mindexF(struct var_variable *var, int32 mindex);
 /**<
 	Implementation function for var_set_mindex().  Do not call this
 	function directly - use var_set_mindex() instead.
@@ -292,7 +292,7 @@ ASC_DLLSPEC(int32) var_sindexF(const struct var_variable *var);
 	Implementation function for var_sindex().  Do not call this
 	function directly - use var_sindex() instead.
 */
-extern void var_set_sindexF(struct var_variable *var, int32 index);
+extern void var_set_sindexF(struct var_variable *var, int32 sindex);
 /**<
 	Implementation function for var_set_sindex().  Do not call this
 	function directly - use var_set_sindex() instead.

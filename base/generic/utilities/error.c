@@ -78,7 +78,8 @@ va_error_reporter(
     , const char *fmt
     , const va_list args
 ){
-	extern error_reporter_callback_t g_error_reporter_callback;
+/* we should not be seeing extern inside C files under any condition. */
+	/* extern error_reporter_callback_t g_error_reporter_callback; */
 	int res;
 
 	if(g_error_reporter_callback==NULL){
@@ -102,7 +103,7 @@ va_error_reporter(
 int
 fprintf_error_reporter(FILE *file, const char *fmt, ...){
 	va_list args;
-	extern error_reporter_meta_t g_error_reporter_cache;
+	/* extern error_reporter_meta_t g_error_reporter_cache;*/
 	char *msg;
 	int len;
 	int res;
@@ -161,7 +162,7 @@ fflush_error_reporter(FILE *file){
 int
 error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func){
 
-	extern error_reporter_meta_t g_error_reporter_cache;
+	/* extern error_reporter_meta_t g_error_reporter_cache; */
 	if(g_error_reporter_cache.iscaching){
 		error_reporter_end_flush();
 	}
@@ -177,7 +178,7 @@ error_reporter_start(const error_severity_t sev, const char *filename, const int
 
 int
 error_reporter_end_flush(){
-	extern error_reporter_meta_t g_error_reporter_cache;
+	/* extern error_reporter_meta_t g_error_reporter_cache; */
 
 	error_reporter(
 		g_error_reporter_cache.sev
@@ -220,7 +221,7 @@ void
 error_reporter_set_callback(
 		const error_reporter_callback_t new_callback
 ){
-	extern error_reporter_callback_t g_error_reporter_callback;
+	/* extern error_reporter_callback_t g_error_reporter_callback; */
 	g_error_reporter_callback = new_callback;
 }
 

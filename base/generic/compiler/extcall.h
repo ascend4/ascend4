@@ -21,7 +21,7 @@
 	Hold-all structure for external relations and method calls as declared in an
 	ASCEND model file. -- JP
 
-	The ExtCallNode	structure points to an ExternalFunc structure and holds a 
+	The ExtCallNode	structure points to an ExternalFunc structure and holds a
 	list of instances which are tied to the arguments in the calling ASCEND
 	statement. -- JP
 
@@ -94,7 +94,10 @@ extern unsigned long GetSubjectIndex(struct gl_list_t *arglist,
 
 extern unsigned long CountNumberOfArgs(struct gl_list_t *arglist,
         unsigned long start, unsigned long end);
-/**<
+/**< Count the expanded length of a list of lists, using
+     those elements of arglist in [start .. end].
+     This will match the size of the list returned by
+     LinearizeArgList.
 	This function gets used in the ExtRelCache instantiation stuff.
 
 	@TODO what is the purpose of the 'start' and 'end' parameters?
@@ -128,7 +131,7 @@ extern void DestroySpecialList(struct gl_list_t *list);
 #else
 #define ExternalCallExtFunc(ext) ExternalCallExtFuncF(ext)
 #endif
-/**< 
+/**<
 	Return the external function pointer of an external call.
 	@param ext <code>struct ExtCallNode*</code>, node to query.
 	@return Returns the external function as a <code>struct ExternalFunc*</code>.
@@ -163,7 +166,7 @@ extern struct gl_list_t *ExternalCallArgListF(struct ExtCallNode *ext);
 
 
 extern struct Instance *ExternalCallDataInstance(struct ExtCallNode *ext);
-/**< 
+/**<
 	Return the 'data' instance for an external call.  This 'data'
 	instance "can has to be" (???) a MODEL_INST. It is used to convey additional
 	information to a client who may need it. A NULL result means that no
@@ -180,7 +183,7 @@ extern struct Instance *ExternalCallDataInstance(struct ExtCallNode *ext);
 #else
 #define ExternalCallVarIndex(ext) ExternalCallVarIndexF(ext)
 #endif
-/**< 
+/**<
 	Return the index in the argument list of the subject variable.
 	@param ext <code>struct ExtCallNode*</code>, node to query.
 	@return Returns the index as an <code>unsigned long</code>.
@@ -197,7 +200,7 @@ extern unsigned long ExternalCallVarIndexF(struct ExtCallNode *ext);
 
 
 extern struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext);
-/**< 
+/**<
 	Return the "subject" variable instance of the external call. This is
 	the variable that relation was constructed wrt. If NULL, then a user
 	should consider this as an error.
@@ -210,16 +213,16 @@ extern struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext);
 #else
 #define ExternalCallNodeStamp(ext) ExternalCallNodeStampF(ext)
 #endif
-/**< 
+/**<
 	Return the (integer) nodestamp for the given external node.
-	Valid results are >= 0. The nodestamp is incremented in the function 
-	AddExtArrayChildren such that all BlackBoxRelation objects corresponding to 
+	Valid results are >= 0. The nodestamp is incremented in the function
+	AddExtArrayChildren such that all BlackBoxRelation objects corresponding to
 	a single black box have the same nodestamp.
 	This nodestamp is referenced by ExtRelCache objects.
 
 	@TODO why is a nodestamp required when we could be using instance pointers
 	or something more 'real'?
-	
+
 	@param ext <code>struct ExtCallNode*</code>, node to query.
 	@return Returns the node stamp as an <code>int</code>.
 	@see ExternalCallNodeStampF()
@@ -234,9 +237,8 @@ extern int ExternalCallNodeStampF(struct ExtCallNode *ext);
 
 
 extern void SetExternalCallNodeStamp(struct ExtCallNode *ext, int nodestamp);
-/**< 
+/**<
 	Set the nodestamp for the given external node.
 */
 
 #endif /* ASC_EXTCALL_H */
-

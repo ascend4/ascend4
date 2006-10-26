@@ -660,6 +660,7 @@ int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2)
         return -1;
       }
     }
+    assert(ExprType(e1) != e_diff); /* error introduced by JP not handling CompareDiff case. get rid of e_diff. */
     switch(ExprType(e1)){
     case e_var:
       ctmp = CompareNames(ExprName(e1),ExprName(e2));

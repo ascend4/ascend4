@@ -59,11 +59,14 @@
 #include "relation_type.h"
 #include "relation_util.h"
 #include "rel_common.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
 #include "temp.h"
 #include "atomvalue.h"
 #include "mathinst.h"
 #include "instquery.h"
 #include "tmpnum.h"
+#include "vlist.h"
 #include "relation.h"
 
 /*
@@ -1906,7 +1909,7 @@ void DestroyTermList(void) {
 }
 
 /**
-	create a term from the pool 
+	create a term from the pool
 */
 static struct relation_term *CreateOpTerm(enum Expr_enum t)
 {
@@ -2047,7 +2050,7 @@ static struct relation_term *CreateNaryTerm(CONST struct Func *f)
 /**
 	This function creates and *must* create the memory
 	for the structure and for the union that the structure
-	points to. 
+	points to.
 
 	Too much code depends on the pre-existence of a properly initialized union.
 
@@ -2069,6 +2072,7 @@ struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
   newrelation->iscond = 0;
   newrelation->vars = NULL;
   newrelation->d =(dim_type *)WildDimension();
+  newrelation->externalData = NULL;
 
   if (copyunion) {
     newrelation->share = ASC_NEW(union RelationUnion);
@@ -2099,116 +2103,161 @@ struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
 */
 
 /** @file "relation.h"
-	@note 
+	@note
 	A special note on external relations
 
 	External relations behave like relations but they also behave like
 	procedures. As such when they are constructed and invoked they expect
 	a particular ordering of their variables.
-	
+
 	However there are some operations that can mess up (reduce) the number
 	of incident variables on the incident varlist -- ATSing 2 variables in the
 	*same* relation will do this. BUT we still need to maintain the number
 	of variables in the call to the evaluation routine.
-	
+
 	Consider the following example:
 	An glassbox relation is constructed as: test1(x[46,2,8,9] ; 2);
 	It *requires* 4 arguements, but its incident var count could be anything
-	from 1 <= n <= 4, depending on how many ATS are done. Unfortunately
-	the ATS could have been done even before we have constructed the relation,
-	so we have to make sure that we check for aliasing.
+	from 1 <= n <= 4, depending on how many ATS are done.
+	The ATS/alias will be done even before we have constructed the relation,
+	so we just issue warnings.
 */
-
 struct relation *CreateBlackBoxRelation(struct Instance *relinst
 		, struct ExternalFunc *efunc
-		, struct gl_list_t *arglist
 		, struct Instance *subject
 		, struct gl_list_t *inputs
-		, struct Instance *data
+		, struct BlackBoxCache * common
+		, unsigned long lhsIndex
+		, CONST char *context
 ){
   struct relation *result;
-  struct gl_list_t *newarglist;
-  struct gl_list_t *newlist;
-  struct ExtCallNode *ext;
+  struct gl_list_t *varlist;
+  struct BlackBoxData *bbd;
   struct Instance *var = NULL;
-  int *args;
+  unsigned long *inputArgs;
+  int argloc;
   unsigned long c,len,pos;
   unsigned long n_inputs;
+  CONST dim_type *d;
 
-  /* CONSOLE_DEBUG("CREATING BLACK BOX RELATION"); */
+  CONSOLE_DEBUG("CREATING BLACK BOX RELATION");
 
   n_inputs = gl_length(inputs);
   len = n_inputs + 1; /* an extra for the output variable. */
 
   /*
-	Create 'newlist' which is a uniquified list of inputs plus the 'subject'
-	Instance (output variable). Keep track of which instances in 'newlist'
-	correspond to which original blackbox argument by building up the 'args'
-	list at the same time.
+	Create the BlackBox relation structure.
+	output var always first in varlist.
   */
-  args = ASC_NEW_ARRAY_CLEAR(int,len+1);
-  newlist = gl_create(len); /* list of Instance objects */
+  bbd = CreateBlackBoxData(common, lhsIndex, 1);
+  inputArgs = bbd->inputArgs;
+  varlist = gl_create(len);
 
-  for (c=1;c<=n_inputs;c++) {
+  /* add the subject */
+  gl_append_ptr(varlist,(VOIDPTR)subject); /* add the subject */
+  AddRelation(subject,relinst);
+
+  /* now loop, warning of merges and collecting varlist position
+     of each arg into argloc.
+  */
+  argloc = 0;
+  for (c=1; c<=n_inputs; c++) {
     var = (struct Instance *)gl_fetch(inputs,c);
-	/* CONSOLE_DEBUG("ADDING INPUT '%p' TO INCIDENCE",var); */
-
-    pos = gl_search(newlist,var,(CmpFunc)CmpP);
-    if (pos) {
-      ERROR_REPORTER_HERE(ASC_PROG_WARNING
-		,"Incidence for external relation will be inaccurate."
-	  );
-      *args++ = (int)pos;
-    }else{
-      gl_append_ptr(newlist,(VOIDPTR)var);
-      *args++ = (int)gl_length(newlist);
+    pos = gl_search(varlist,var,(CmpFunc)CmpP);
+    switch (pos) {
+    case 0:
+      gl_append_ptr(varlist,(VOIDPTR)var);
       AddRelation(var,relinst);
+      break;
+    case 1:
+      FPRINTF(ASCERR,"BlackBox relation %s[%d] output %d and input %d are merged.\n",
+		context, (int)lhsIndex+1, (int)lhsIndex, (int)pos);
+      FPRINTF(ASCERR,"Good luck getting convergence.\n");
+      break;
+    default:
+      FPRINTF(ASCERR,"BlackBox relation %s[%d] input %d and input %d are merged.\n",
+		context, (int)lhsIndex+1, argloc, (int)pos);
+      FPRINTF(ASCERR,"Good luck getting convergence.\n");
+      break;
     }
+    if (pos) {
+      inputArgs[argloc] = pos;
+    } else {
+      inputArgs[argloc] = gl_length(varlist);
+    }
+    argloc++;
   }
-
-  /*
-	Add the 'subject' instance to the end of the newlist. For a black box,
-	I think that this means the output	variable. -- JP
-  */
-  pos = gl_search(newlist,subject,(CmpFunc)CmpP);
-  /* CONSOLE_DEBUG("ADDING OUTPUT INSTANCE %p TO INCIDENCE",subject); */
-  if(pos){
-    FPRINTF(ASCERR,"An input and output variable are the same !!\n");
-    *args++ = (int)pos;
-  }else{
-    gl_append_ptr(newlist,(VOIDPTR)subject); /* add the subject */
-    *args++ = (int)gl_length(newlist);
-    AddRelation(subject,relinst);
-  }
-
-  /* Add a zero to terminate the 'args' list. */
-  *args = 0;
-
-  /*
-	Create the BlackBox relation structure. This requires
-	creating a ExtCallNode node.
-  */
-  newarglist = CopySpecialList(arglist);
-  ext = CreateExtCall(efunc,newarglist,subject,data);
-  SetExternalCallNodeStamp(ext,g_ExternalNodeStamps);
 
   /*
 	Now make the main relation structure and put it all
-	together. Then append the necessary lists.
+	together.
   */
   result = CreateRelationStructure(e_equal,crs_NEWUNION);
   RelationRefCount(result) = 1;
-  RBBOX(result).args = args;
-  RBBOX(result).ext = ext;
-  result->vars = newlist;
+  result->externalData = bbd;
+  result->vars = varlist;
+  RBBOX(result).efunc = efunc;
+  d = RealAtomDims(subject);
+  if (!IsWild(d)) {
+    SetRelationDim(result,d);
+  }
   return result;
 }
 
+/* After the instance list has been updated, we must recollect
+   the input argument indices into the relation varlist.
+*/
+void UpdateInputArgsList(struct Instance *relinst, struct relation *rel)
+{
+  struct ExternalFunc *efunc;
+  unsigned long n_input_args,c,pos,len;
+  unsigned long *inputArgs;
+  struct gl_list_t *arglist;
+  struct gl_list_t *inputs;
+  CONST struct gl_list_t *varlist;
+  struct BlackBoxCache *common;
+  int32 inputsLen, argloc;
+  char *context;
+  struct Instance *var;
+
+  efunc = RelationBlackBoxExtFunc(rel);
+  n_input_args = NumberInputArgs(efunc);
+  arglist = RelationBlackBoxFormalArgs(rel);
+  inputArgs = RelationBlackBoxData(rel)->inputArgs;
+  inputs = LinearizeArgList(arglist,1,n_input_args);
+  common = RelationBlackBoxCache(rel);
+  inputsLen = common->inputsLen;
+  context = WriteInstanceNameString(relinst,NULL);
+  varlist = RelationVarList(rel);
+
+  assert(inputsLen == (int32)gl_length(inputs));
+
+  /* Now loop, warning of merges and collecting varlist position
+     of each arg into argloc. This time around we don't add relations.
+     We have to check and renumber the lhs.
+  */
+  argloc = 0;
+  len = inputsLen;
+  for (c=1; c<=len; c++) {
+    var = (struct Instance *)gl_fetch(inputs,c);
+    pos = gl_search(varlist,var,(CmpFunc)CmpP);
+    if (pos) {
+      inputArgs[argloc] = pos;
+    } else {
+      FPRINTF(ASCERR,"Screwed up merge of input variable %d in %s\n", argloc, context);
+      inputArgs[argloc] = 0;
+    }
+    argloc++;
+  }
+
+  gl_destroy(inputs);
+  ascfree(context);
+}
 
 struct relation *CreateGlassBoxRelation(struct Instance *relinst,
 					struct ExternalFunc *efunc,
 					struct gl_list_t *varlist,
-					int index,
+					int gbindex,
 					enum Expr_enum relop)
 {
   struct relation *result;
@@ -2252,7 +2301,7 @@ struct relation *CreateGlassBoxRelation(struct Instance *relinst,
   RGBOX(result).efunc = efunc;
   RGBOX(result).args = args;
   RGBOX(result).nargs = (int)len;
-  RGBOX(result).index = index;
+  RGBOX(result).index = gbindex;
   result->vars = newlist;
   return result;
 }
@@ -2411,7 +2460,7 @@ static int AppendList( CONST struct Instance *,
 
 /**
 	@todo document this
-	
+
 	Convert a part of an expression into part of a relation (in postfix)?
 */
 static
@@ -2845,13 +2894,13 @@ static int AppendList(CONST struct Instance *ref,
 }
 
 /**
-	Convert expression from ... to ... 
+	Convert expression from ... to ...
 	nonrecursive, but may call recursive things.
 
 	On a return of 1, newside->arr will be filled and should be deallocated
 	if the user does not want it. a return of 0 means that newside data is
 	invalid.
-	
+
 	This is the ONLY function that should call DestroyTermList.
 
 	@todo document this
@@ -2938,7 +2987,7 @@ static int ConvertExpr(CONST struct Expr *start,
     case e_diff:
       term = CreateDiffTerm(ExprFunc(start));
       AppendTermBuf(term);
-      break;	  
+      break;
     case e_zero:
       /* this should never happen here */
       term = CreateZeroTerm();
@@ -3412,15 +3461,17 @@ void DestroyVarList(struct gl_list_t *l, struct Instance *inst)
 {
   register struct Instance *ptr;
   register unsigned long c;
-  for(c=gl_length(l);c>=1;c--)
-    if (NULL != (ptr = (struct Instance *)gl_fetch(l,c)))
+  for(c=gl_length(l);c>=1;c--) {
+    if (NULL != (ptr = (struct Instance *)gl_fetch(l,c))) {
       RemoveRelation(ptr,inst);
+    }
+  }
   gl_destroy(l);
 }
 
 void DestroyRelation(struct relation *rel, struct Instance *relinst)
 {
-  struct ExtCallNode *ext;
+  struct BlackBoxData *bbd;
   if (rel==NULL) return;
   assert(RelationRefCount(rel));
   if (--(RelationRefCount(rel))==0) {
@@ -3452,10 +3503,10 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
         ascfree((char *)RGBOX(rel).args);
       }
       break;
-    case e_blackbox:		/* KAA_DEBUG -- double check */
-      ext = RBBOX(rel).ext;
-      DestroyExtCall(ext,relinst);
-      ascfree((char *)RBBOX(rel).ext);
+    case e_blackbox:
+      bbd = (struct BlackBoxData *)(rel->externalData);
+      rel->externalData = NULL;
+      DestroyBlackBoxData(rel,bbd);
       break;
     default:
       /*NOTREACHED we hope */
@@ -3512,16 +3563,23 @@ void ChangeTermSide(union RelationTermUnion *side,
   for(c=len-1;c>=0;c--){
     term = A_TERM(&(side[c]));
     if (term->t == e_var){
-      if (V_TERM(term)->varnum == old)
+      if (V_TERM(term)->varnum == old) {
 	V_TERM(term)->varnum = new;
-      else
+      } else {
 	if (V_TERM(term)->varnum > old) V_TERM(term)->varnum--;
+      }
     }
   }
 }
 
 /*
  * Delete one of these variable numbers,
+ * In particular, delete the higher of the numbers
+ * and renumber tokens that referred to the
+ * higher number to refer to the lower number.
+ * This makes for the least work and preserves the lhs
+ * var as position 1 in blackbox relations if it
+ * were applied to bbox, which is isn't.
  */
 static
 void DeleteAndChange(struct relation *rel,
@@ -3540,19 +3598,13 @@ void DeleteAndChange(struct relation *rel,
 }
 
 static
-union RelationUnion *CopyRelationShare(union RelationUnion *ru,
-                                       enum Expr_enum type)
+union RelationUnion *CopyRelationShareToken(union RelationUnion *ru)
 {
   struct TokenRelation *result,*src;
   long int delta;
 
-  if (type != e_token) {
-    FPRINTF(ASCERR,
-            "CopyRelationShare not implemented except for token relations\n");
-    return NULL;
-  }
   src = (struct TokenRelation *)ru;
-  /* yes, the sizeof in the following is correct */
+  /* yes, the sizeof in the following is correct. TOKENDOMINANT. */
   result = (struct TokenRelation *)ascmalloc(sizeof(union RelationUnion));
   if (result==NULL) {
     Asc_Panic(2, "CopyRelationShare" ,"Insufficient memory.");
@@ -3583,6 +3635,81 @@ union RelationUnion *CopyRelationShare(union RelationUnion *ru,
   return (union RelationUnion *)result;
 }
 
+union RelationUnion *CopyRelationShareBlackBox(union RelationUnion *ru)
+{
+  struct BlackBoxRelation *result,*src;
+
+  src = (struct BlackBoxRelation *)ru;
+  /* yes, the sizeof in the following is correct. TOKENDOMINANT. */
+  result = (struct BlackBoxRelation *)asccalloc(1,sizeof(union RelationUnion));
+  if (result==NULL) {
+    Asc_Panic(2, "CopyRelationShareBlackBox" ,"Insufficient memory.");
+    return NULL; /* NOT REACHED */
+  }
+  result->relop = src->relop;
+  result->ref_count = src->ref_count;
+  result->efunc = src->efunc;
+
+  return (union RelationUnion *)result;
+}
+
+/** supports only bbox, token */
+static
+union RelationUnion *CopyRelationShare(union RelationUnion *ru,
+                                       enum Expr_enum type)
+{
+  switch (type) {
+  case e_token:
+    return CopyRelationShareToken(ru);
+  case e_blackbox:
+    return CopyRelationShareBlackBox(ru);
+  default:
+    FPRINTF(ASCERR,
+            "CopyRelationShare not implemented except for token and blackbox relations\n");
+    return NULL;
+  }
+}
+/*
+* @param relinst the relation instance.
+* @param rel the relation structure, which may include glass, black, token, etc.* @param old the variable instance being replaced.
+* @param new the variable instance being used to replace old.
+* @param newlist a new varlist for the relation in question.
+* 5 cases:
+* 0-	no-op; old and new are the same already; do nothing.
+* 1-	notfound; old is not in the varlist; do nothing.
+* 2-	replace; old is found and new is not yet in list. overwrite old. ref count?
+* 3-	merge; old and new are both in varlist, which shrinks varlist. This
+*	will break token relations TermVars that are shared; must duplicate the
+*	shared token list and update our copy only.
+* 4-	null; new is NULL, in which case we just overwrite first instance of
+*	old in the list with null. This is probably incorrect in refcount terms.
+*/
+static
+void RecomputeVarListPointers(struct Instance *relinst,
+                           struct relation *rel,
+                           CONST struct Instance *old,
+                           CONST struct Instance *new, struct gl_list_t *newlist)
+{
+/* FIXME this gets used in interactive merge/refinement.
+*/
+}
+
+
+/*
+* @param relinst the relation instance.
+* @param rel the relation structure, which must be from a token relation.
+* @param new the variable instance being used to replace old.
+* @param newlist a new varlist for the relation in question.
+* 5 cases:
+* 0-	no-op; old and new are the same already; do nothing.
+* 1-	notfound; old is not in the varlist; do nothing.
+* 2-	replace; old is found and new is not in list. overwrite old. ref count?
+* 3-	merge; old and new are both in varlist, which shrinks varlist. This
+*	will break token relations TermVars that are shared; must duplicate the
+*	shared token list and update our copy only.
+* 4-	null; new is NULL, in which case we just overwrite first instance of
+*	old in the list with null. This is probably incorrect in refcount terms.
+*/
 void ModifyTokenRelationPointers(struct Instance *relinst,
 			         struct relation *rel,
 			         CONST struct Instance *old,
@@ -3591,6 +3718,9 @@ void ModifyTokenRelationPointers(struct Instance *relinst,
   unsigned long pos,other;
 
   (void)relinst;    /*  stop gcc whine about unused parameter  */
+  /* FIXME: we may have a problem here handling relation shared
+	merge/split operations and the sorted/unsorted assumption.
+  */
 
   assert(rel!=NULL);
 
@@ -3617,7 +3747,7 @@ void ModifyTokenRelationPointers(struct Instance *relinst,
       }
     } else{					/* case 1 */
       FPRINTF(ASCERR,"Warning ModifyTokenRelationPointers arg not found.\n");
-      FPRINTF(ASCERR,"This shouldn't effect your usage at all.\n");
+      FPRINTF(ASCERR,"This shouldn't affect your usage at all.\n");
     }
   } else {						/* case 4 */
     pos = gl_search(rel->vars,old,(CmpFunc)CmpP);
@@ -3648,7 +3778,7 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
 	gl_store(rel->vars,pos,(char *)new);	/* case 2 */
       }
     } else {					/* case 1 */
-      FPRINTF(ASCERR,"Warning ModifiyRelationPointers not found.\n");
+      FPRINTF(ASCERR,"Warning ModifyRelationPointers not found.\n");
       FPRINTF(ASCERR,"This shouldn't effect your usage at all.\n");
     }
   }
@@ -3664,6 +3794,7 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
 	but handles the "external variables incident on the relation".
 	Remember that variables may be exist more than once in the list, so
 	that we have to find ALL occurrences.
+	Once this is done, we must rebuild inputArgs index list.
 */
 void ModifyBlackBoxRelPointers(struct Instance *relinst,
 			       struct relation *rel,
@@ -3676,36 +3807,32 @@ void ModifyBlackBoxRelPointers(struct Instance *relinst,
 
 	UNUSED_PARAMETER(relinst);
 
-	assert(rel!=NULL);
-	if(old==new){
-		CONSOLE_DEBUG("old==new");
-		return;
-	}
-	extvars = ExternalCallArgList(RBBOX(rel).ext);
-	if (extvars==NULL){
-		CONSOLE_DEBUG("extvars list is NULL");
-		return;
-	}
+  /* FIXME: kirk never dealt with varlist rel->properly under merge.
+this gets used in interactive merge/refinement.
+ */
 
-	len1 = gl_length(extvars);
-	if(!len1){
-		CONSOLE_DEBUG("length is 0");
-		return;
-	}
+  assert(rel!=NULL);
+  if (old==new) return;
+  extvars = RelationBlackBoxFormalArgs(rel);
+  if (extvars==NULL) return;
 
-	for (c1=1;c1<=len1;c1++){	/* find all occurrences and change them */
-		branch = (struct gl_list_t *)gl_fetch(extvars,c1);
-		if (branch){
-			len2 = gl_length(branch);
-			for (c2=1;c2<=len2;c2++){
-				arg = (struct Instance *)gl_fetch(branch,c2);
-				if (arg==old){
-					CONSOLE_DEBUG("STORING 'new' IN PLACE of 'old' in pos %lu of list %lu",c2,c1);
-					gl_store(branch,c2,(VOIDPTR)new);
-				}
-			}
-		}
-	}
+  len1 = gl_length(extvars);
+  if (!len1) return;
+  for (c1=1;c1<=len1;c1++){	/* find all occurrences and change them */
+    branch = (struct gl_list_t *)gl_fetch(extvars,c1);
+    if (branch){
+      len2 = gl_length(branch);
+      for (c2=1;c2<=len2;c2++){
+	arg = (struct Instance *)gl_fetch(branch,c2);
+	if (arg==old) {
+	  gl_store(branch,c2,(VOIDPTR)new);
+        }
+      }
+    }
+  }
+  /* fix up inputs lookup table. */
+  UpdateInputArgsList(relinst,rel);
+  /* still need to fix up lhsvar index. */
 }
 
 /**
@@ -4005,6 +4132,85 @@ static int CheckExpr(CONST struct Instance *ref,
     start = NextExpr(start);
   }
   return 1;
+}
+
+struct gl_list_t *ProcessExtRelArgs(CONST struct Instance *inst, CONST struct VariableList *vl, enum find_errors *ferr)
+{
+  struct gl_list_t *arglist;
+  struct gl_list_t *branch;
+
+  ListMode=1;
+  arglist = gl_create(10L);
+  while(vl!=NULL){
+    branch = FindInstances(inst,NamePointer(vl),ferr);
+    if (branch==NULL || *ferr != correct_instance){
+      DestroySpecialList(arglist);
+      ListMode=0;
+      return NULL;
+    }
+    gl_append_ptr(arglist,(VOIDPTR)branch);
+    vl = NextVariableNode(vl);
+  }
+  ListMode=0;
+  return arglist;
+}
+
+struct Instance *ProcessExtRelData(CONST struct Instance *inst, CONST struct Name *n, enum find_errors *ferr)
+{
+  struct Instance *result;
+  struct gl_list_t *instances;
+  if (n) {
+    instances = FindInstances(inst,n,ferr);
+    if (instances) { /* only 1 data instance is allowed */
+      if (gl_length(instances) > 1) {
+        gl_destroy(instances);
+        *ferr = impossible_instance;
+        return NULL;
+      } else { /* all ok */
+        result = (struct Instance *)gl_fetch(instances,1L);
+        gl_destroy(instances);
+        /* This may be relaxed later to allow types other than
+         * MODEL_INSTS. The limitation is really for speed. (kaa, 1994)
+         */
+/* we care about generality, not speed, so we're relaxing this. baa, 2006
+We probably need to tighten it up to exclude relation-types.
+We may want to expand to include list of instances.
+        if (InstanceKind(result)!=MODEL_INST) {
+          *ferr = impossible_instance;
+          return NULL;
+        }
+*/
+        *ferr = correct_instance;
+        return result;
+      }
+    } else { /* instance not found -- check ferr */
+      return NULL;
+    }
+  } else { /* No data was given so return NULL */
+    *ferr = correct_instance;
+    return NULL;
+  }
+
+}
+
+/* see if all the args and optional DATA exist. */
+int CheckExternal(CONST struct Instance *reference, CONST struct VariableList *vl, CONST struct Name *n)
+{
+  enum find_errors ferr;
+  struct gl_list_t *args;
+  struct Instance *data;
+
+  args = ProcessExtRelArgs(reference, vl, &ferr);
+  if (args == NULL) {
+    return 0;
+  }
+  DestroySpecialList(args);
+  /* args ok. */
+  data = ProcessExtRelData(reference, n, &ferr);
+  if (ferr == correct_instance) {
+    return 1;
+  }
+  return 0;
 }
 
 /** see header.
@@ -4330,7 +4536,7 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
     return result;
   case e_opcode:
     Asc_Panic(2, NULL, "Opcode relation copying not yet supported\n");
-    
+
     break;
   case e_glassbox:
     result = CreateGlassBoxRelation(dest_inst, RGBOX(src).efunc,
@@ -4339,11 +4545,11 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
     return result;
   case e_blackbox:
     Asc_Panic(2, NULL, "Blackbox relation copying not yet supported\n");
-    
+
     break;
   default:
     Asc_Panic(2, NULL, "unknown relation type in CopyRelationToModify\n");
-    
+
     break;
   }
 }

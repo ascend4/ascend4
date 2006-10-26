@@ -61,6 +61,7 @@
 #include "extfunc.h"
 #include "relation_type.h"
 #include "logical_relation.h"
+#include "rel_blackbox.h"
 #include "relation.h"
 #include "logrelation.h"
 #include "relation_util.h"
@@ -644,7 +645,7 @@ static double AverageCliqueSize(struct gl_list_t *l)
 
 static void IncrementTypeCount(CONST struct Instance *i)
 {
-  unsigned long index;
+  unsigned long tindex;
   struct TypeCount rec,*ptr;
   symchar *name;
 
@@ -655,10 +656,10 @@ static void IncrementTypeCount(CONST struct Instance *i)
     rec.name = "UNNAMED ARRAY NODE";
   }
   rec.basetype = InstanceKind(i);
-  index = gl_search(g_type_count_list,&rec, (CmpFunc)CompareTypeCounts);
-  if (index != 0){
+  tindex = gl_search(g_type_count_list,&rec, (CmpFunc)CompareTypeCounts);
+  if (tindex != 0){
     /* increment the current count by one */
-    ptr = (struct TypeCount *)gl_fetch(g_type_count_list,index);
+    ptr = (struct TypeCount *)gl_fetch(g_type_count_list,tindex);
     ptr->count++;
   } else{				/* add a new type count to the list */
     ptr = ASC_NEW(struct TypeCount);

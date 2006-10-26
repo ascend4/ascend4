@@ -88,7 +88,7 @@ extern void NumpairDestroyList(Numlist_p nlp);
  * Returns an efficiently allocated numlist containing the
  * scalar with value index. nlp is not expandable.
  */
-extern Numlist_p NumpairElementary(int index);
+extern Numlist_p NumpairElementary(int indexv);
 
 /** 
  * <!--  nlp2 = NumpairCopyList(nlp);                                  -->

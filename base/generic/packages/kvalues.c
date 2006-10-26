@@ -68,7 +68,7 @@ static struct Vpdata VpTable[] = {
 };
 
 struct KVALUES_problem {
-  int ncomps;
+  unsigned long ncomps;
   char **components;
   int ninputs;
   int noutputs;
@@ -187,7 +187,7 @@ static int GetComponentData(
 }
 
 
-static int CheckArgsOK(struct Slv_Interp *slv_interp,
+static int CheckArgsOK(struct BBoxInterp *interp,
 		       struct Instance *data,
 		       struct gl_list_t *arglist,
 		       struct KVALUES_problem *problem
@@ -195,6 +195,7 @@ static int CheckArgsOK(struct Slv_Interp *slv_interp,
   unsigned long len,ninputs,noutputs;
   int n_components;
   int result;
+  (void)interp;
 
   if (!arglist) {
     FPRINTF(stderr,"External function arguement list does not exist\n");
@@ -227,27 +228,33 @@ static int CheckArgsOK(struct Slv_Interp *slv_interp,
 }
 
 
+static void kvalues_final( struct BBoxInterp *interp)
+{
+  struct KVALUES_problem *problem;
+  if (interp && interp->user_data) {
+    problem = (struct KVALUES_problem *)interp->user_data;
+    if (problem->components) free((char *)problem->components);
+    if (problem->x) free((char *)problem->x);
+    if (problem->x) free((char *)problem);
+  }
+  interp->user_data = NULL;
+}
+
 /**
 	This function is one of the registered functions. It operates in
-	one of two modes, first_call or last_call. In the former it
+	one modes first_call, and
 	creates a KVALUES_problem and calls a number of routines to check
-	the arguements (data and arglist) and to cache the information
+	the arguments (data and arglist) and to cache the information
 	processed away in the KVALUES_problem structure. We then attach
-	to the hook. *However*, the very first time this function is
-	called for any given external node, the slv_interp is guaranteed
-	to be in a clean state. Hence if we find that slv_interp->user_data
-	is non-NULL, it means that this function has been called before,
-	regardless of the first_call/last_call flags, and information was
-	stored there by us. So as not to leak, we either need to deallocate
-	any storage or just update the information there.
+	to the hook.
 
-	In last_call mode, the memory associated with the problem needs to
-	released; this includes:
+	In last_call mode, which should never be seen,
+	we delegate to final where we cleanup the problem structure:
 	the array of compononent string pointers (we dont own the strings).
 	the array of doubles.
 	the problem structure itself.
 */
-int kvalues_preslv(struct Slv_Interp *slv_interp,
+int kvalues_preslv(struct BBoxInterp *interp,
 		   struct Instance *data,
 		   struct gl_list_t *arglist
 
@@ -258,32 +265,27 @@ int kvalues_preslv(struct Slv_Interp *slv_interp,
    int nok,c; */
 
 
-  if (slv_interp->task = bb_first_call) {
-    if (slv_interp->user_data!=NULL) { 	/* we have been called before */
+  if (interp->task == bb_first_call) {
+    if (interp->user_data!=NULL) { 	/* we have been called before */
       return 0;				/* the problem structure exists */
     }
     else{
       problem = CreateProblem();
-      if(CheckArgsOK(slv_interp,data,arglist,problem)) {
+      if(CheckArgsOK(interp,data,arglist,problem)) {
 	return 1;
       }
       workspace = 	/* T, x[1..n], P, y[1..n], satp[1..n] */
 	problem->ninputs + problem->noutputs +
 	  problem->ncomps * 1;
       problem->x = (double *)calloc(workspace, sizeof(double));
-      slv_interp->user_data = (void *)problem;
+      interp->user_data = (void *)problem;
       return 0;
     }
-  } else{					/* shutdown */
-    if (slv_interp->user_data) {
-      problem = (struct KVALUES_problem *)slv_interp->user_data;
-      if (problem->components) free((char *)problem->components);
-      if (problem->x) free((char *)problem->x);
-      if (problem->x) free((char *)problem);
-    }
-    slv_interp->user_data = NULL;
-    return 0;
+  } 
+  if (interp->task == bb_last_call) {
+	kvalues_final(interp);
   }
+  return 0;
 }
 
 
@@ -308,7 +310,7 @@ static int GetCoefficients(struct Vpdata *vp){
 }
 
 
-static int DoCalculation(struct Slv_Interp *slv_interp,
+static int DoCalculation(struct BBoxInterp *interp,
 			 int ninputs, int noutputs,
 			 double *inputs,
 			 double *outputs
@@ -324,8 +326,10 @@ static int DoCalculation(struct Slv_Interp *slv_interp,
   struct Vpdata vp;
   int result = 0;
 
-  problem = (struct KVALUES_problem *)slv_interp->user_data;
+  problem = (struct KVALUES_problem *)interp->user_data;
   ncomps = problem->ncomps;
+  assert(ninputs == ncomps+2);
+  assert(noutputs == ncomps);
   liq_frac = (double *)calloc(ncomps,sizeof(double));
   vap_frac = (double *)calloc(ncomps,sizeof(double));
   SatP = (double *)calloc(ncomps,sizeof(double));
@@ -380,17 +384,18 @@ static int DoCalculation(struct Slv_Interp *slv_interp,
   free((char *)liq_frac);
   free((char *)vap_frac);
   free((char *)SatP);
-  slv_interp->status = calc_all_ok;
+  interp->status = calc_all_ok;
   return 0;
 }
 
-int kvalues_fex(struct Slv_Interp *slv_interp,
+int kvalues_fex(struct BBoxInterp *interp,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
   int nok;
-  nok = DoCalculation(slv_interp, ninputs, noutputs, inputs, outputs);
+  (void)jacobian;
+  nok = DoCalculation(interp, ninputs, noutputs, inputs, outputs);
   if (nok)
     return 1;
   else
@@ -402,12 +407,15 @@ int kvalues_fex(struct Slv_Interp *slv_interp,
 */
 int kvalues_register(void){
   int result;
+  double epsilon = 1.0e-14;
 
   char kvalues_help[] = "This function does a bubble point calculation\
 given the mole fractions in the feed, a T and P.";
 
   result = CreateUserFunctionBlackBox("bubblepnt", kvalues_preslv, kvalues_fex,
-			      NULL,NULL,NULL,N_INPUT_ARGS,N_OUTPUT_ARGS,kvalues_help);
+					NULL,NULL,kvalues_final,
+					N_INPUT_ARGS,N_OUTPUT_ARGS,
+					kvalues_help,epsilon);
   return  result;
 }
 

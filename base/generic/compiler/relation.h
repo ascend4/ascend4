@@ -53,6 +53,9 @@
  *         #include "find.h"
  *         #include "instance_enum.h"
  *         #include "exprs.h"
+ *         #include "extfunc.h"
+ *         #include "rel_blackbox.h"
+ *	   #include "vlist.h"
  *  </pre>
  */
 
@@ -252,6 +255,35 @@ extern void ReportRelInstantiator(FILE *f);
 #define PostFix_LhsSide(r) ((r)->share->token.lhs)
 #define PostFix_RhsSide(r) ((r)->share->token.rhs)
 
+extern int CheckExternal(CONST struct Instance *reference,
+                         CONST struct VariableList *vlist,
+                         CONST struct Name *n);
+/**<
+ *  Return TRUE iff the vlist can be resolved.
+ */
+
+extern struct gl_list_t *ProcessExtRelArgs(CONST struct Instance *inst,
+                              CONST struct VariableList *vl,
+                              enum find_errors *ferr);
+/**<
+return the list of lists arguments, if they all exist, or NULL
+if something is missing.
+Result is the callers to destroy with DestroySpecialList.
+@param inst parent model of the external relation.
+@param vl argument list of names.
+@param ferr find result code, if anyone cares.
+*/
+
+extern struct Instance *ProcessExtRelData(CONST struct Instance *inst, CONST struct Name *n, enum find_errors *ferr);
+/**<
+Check the value of ferr for correct_instance or otherwise.
+@return the DATA instance if it exists (may be NULL if not specified).
+@param inst parent model of the external relation.
+@param n data instance name.
+@param ferr find result code, if anyone cares.
+
+*/
+
 extern int CheckRelation(CONST struct Instance *reference,
                          CONST struct Expr *ex);
 /**<
@@ -315,7 +347,7 @@ extern struct relation
 *CreateGlassBoxRelation(struct Instance *relinst,
                         struct ExternalFunc *efunc,
                         struct gl_list_t *varlist,
-                        int index,
+                        int rIndex,
                         enum Expr_enum relop);
 /**<
  *  Create a relation from an expression, a reference instance and a relation
@@ -325,14 +357,28 @@ extern struct relation
 extern struct relation
 *CreateBlackBoxRelation(struct Instance *relinst,
                         struct ExternalFunc *efunc,
-                        struct gl_list_t *arglist,
                         struct Instance *whichvar,
                         struct gl_list_t *inputs,
-                        struct Instance *data);
+			struct BlackBoxCache * common,
+			unsigned long lhsIndex,
+			CONST char * context
+
+);
 /**<
  *  Construct an external relation from an external statement, a reference
  *  relation instance, a list of lists -- the arglist, a list of inputs,
  *  and a data instance which may be NULL. A copy is made of the arglist.
+ *  @param relinst the RelationInstance this relation is owned by.
+ *  @param efunc the external function table.
+ *  @param arglist the formal parameters list of lists.
+ *  @param whichvar the lhs (output) variable instance.
+ *  @param inputs the flat list of input variables.
+ *  @param data the arbitrary instance argument.
+ *  @param common the data common to all relations in this blackbox set;
+ *         this set is always made as an array, so common is passed in from
+ *         the array instantiation loop.
+ *  @param lhsIndex the index of whichvar in the blackbox efunc double vector.
+ *  @param context the string name of the array instance parent.
  */
 
 extern void DestroyRelation(struct relation *rel, struct Instance *relinst);

@@ -237,9 +237,9 @@ int32 logrel_mindex( struct logrel_relation *logrel)
 }
 
 
-void logrel_set_mindex( struct logrel_relation *logrel, int32 index)
+void logrel_set_mindex( struct logrel_relation *logrel, int32 mindex)
 {
-   logrel->mindex = index;
+   logrel->mindex = mindex;
 }
 
 
@@ -248,9 +248,9 @@ int32 logrel_sindex( struct logrel_relation *logrel)
    return( logrel->sindex );
 }
 
-void logrel_set_sindex( struct logrel_relation *logrel, int32 index)
+void logrel_set_sindex( struct logrel_relation *logrel, int32 sindex)
 {
-   logrel->sindex = index;
+   logrel->sindex = sindex;
 }
 
 
@@ -260,9 +260,9 @@ int32 logrel_model(const struct logrel_relation *logrel)
 }
 
 
-void logrel_set_model( struct logrel_relation *logrel, int32 index)
+void logrel_set_model( struct logrel_relation *logrel, int32 mindex)
 {
-   logrel->model = index;
+   logrel->model = mindex;
 }
 
 

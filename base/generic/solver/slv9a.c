@@ -28,6 +28,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <general/tm_time.h>
+#include <general/mathmacros.h>
 #include <utilities/mem.h>
 #include <compiler/compiler.h>
 #include <compiler/instance_enum.h>
@@ -515,7 +516,7 @@ static int32 slv9a_get_default_parameters(slv_system_t server,
     ascmalloc((slv9a_PA_SIZE)*sizeof(struct slv_parameter));
     if (new_parms == NULL) {
       return -1;
-    } 
+    }
     parameters->parms = new_parms;
     parameters->dynamic_parms = 1;
   }

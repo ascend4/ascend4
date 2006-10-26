@@ -35,8 +35,6 @@
 #ifndef ASC_FIND_H
 #define ASC_FIND_H
 
-#include <compiler/value_type.h>
-
 /**
  * Search error codes.
  * At present, there is a GREAT DEAL of insanity between find_errors and

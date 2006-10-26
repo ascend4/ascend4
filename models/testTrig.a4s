@@ -1,0 +1,22 @@
+# Script for running testTrig.a4c model.  Used to demonstrate
+# that the built-in functions (mostly trig functions)
+# work as advertised.
+
+
+DELETE TYPES;
+READ FILE "/home/aw0a/ascend/code/models/testTrig.a4c";
+COMPILE tt OF testTrig;
+BROWSE {tt};
+RUN {tt.specify};
+RUN {tt.values};
+SOLVE {tt} WITH QRSlv;
+
+# run the next two statements to recover the values
+# for the original x values by computing inverse
+# functions for the results obtained above.  The
+# mapping for the recovered values is in the
+# comments for the method valuesRecover
+
+RUN {tt.valuesRecover};
+SOLVE {tt} WITH QRSlv;
+

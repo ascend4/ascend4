@@ -44,14 +44,16 @@
 */
 
 #ifndef TIMECOMPILER
-#define TIMECOMPILER 0
+#define TIMECOMPILER 1
 /**<  Set to 1 for timing spew or 0 for not. */
 #endif
 
+#ifndef CHECK_SYMBOL_USE
 #ifdef NDEBUG
 #define CHECK_SYMBOL_USE 0
 #else
 #define CHECK_SYMBOL_USE 1
+#endif
 #endif
 /**<
  * Define to check internal and client compliance with symbol

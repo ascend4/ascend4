@@ -64,6 +64,9 @@
 #include "pending.h"
 #include "find.h"
 #include "relation_type.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
+#include "vlist.h"
 #include "relation.h"
 #include "logical_relation.h"
 #include "logrelation.h"
@@ -626,8 +629,9 @@ struct Instance *MergeAtoms(struct Instance *i1, struct Instance *i2)
 			   INST(i1),INST(i2))){
   case 1:			/* keep instance 1 */
     if (MergeValues(i1,i2)) return NULL; /* check instance values */
-    if (InterfacePtrATS!=NULL)
+    if (InterfacePtrATS!=NULL) {
       (*InterfacePtrATS)(i1,i2);
+    }
     MergeChildrenValues(i1,i2);
     MergeParents(i1,i2);
     MergeCliques(i1,i2);

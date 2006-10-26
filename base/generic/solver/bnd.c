@@ -174,10 +174,10 @@ int32 bnd_mindex( struct bnd_boundary *bnd)
 }
 
 
-void bnd_set_mindex( struct bnd_boundary *bnd, int32 index)
+void bnd_set_mindex( struct bnd_boundary *bnd, int32 mindex)
 {
    asc_assert(bnd!=NULL);
-   bnd->mindex = index;
+   bnd->mindex = mindex;
 }
 
 
@@ -188,10 +188,10 @@ int32 bnd_sindex( const struct bnd_boundary *bnd)
 }
 
 
-void bnd_set_sindex( struct bnd_boundary *bnd, int32 index)
+void bnd_set_sindex( struct bnd_boundary *bnd, int32 sindex)
 {
    asc_assert(bnd!=NULL);
-   bnd->sindex = index;
+   bnd->sindex = sindex;
 }
 
 
@@ -202,10 +202,10 @@ int32 bnd_model(const struct bnd_boundary *bnd)
 }
 
 
-void bnd_set_model( struct bnd_boundary *bnd, int32 index)
+void bnd_set_model( struct bnd_boundary *bnd, int32 mindex)
 {
    asc_assert(bnd!=NULL);
-   bnd->model = index;
+   bnd->model = mindex;
 }
 
 

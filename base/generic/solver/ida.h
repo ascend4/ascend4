@@ -24,13 +24,14 @@
 #ifndef ASC_IDA_H
 #define ASC_IDA_H
 
+
 #include <utilities/config.h>
 #include "slv_types.h"
 #include "integrator.h"
 
-#ifndef ASC_WITH_IDA
+#ifdef ASC_WITH_IDA
 
-/// Perform IDA integration of a specified 'Integ_system'.
+/* Perform IDA integration of a specified 'Integ_system'.*/
 ASC_DLLSPEC(int) integrator_ida_solve(IntegratorSystem *blsys
 		, unsigned long start_index, unsigned long finish_index
 );
@@ -42,4 +43,3 @@ ASC_DLLSPEC(void) integrator_ida_create(IntegratorSystem *blsys);
 #endif
 
 #endif  /* ASC_IDA_H */
-

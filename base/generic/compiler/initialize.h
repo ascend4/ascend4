@@ -62,13 +62,13 @@ ASC_DLLSPEC(enum Proc_enum) Initialize(struct Instance *context,
 							    FILE *err,
 							    wpflags options,
 							    struct gl_list_t *watchpoints,
-							    FILE *log);
+							    FILE *dplog);
 /**<
 	@param context instance in which to run the METHOD.
 	@param name initialisation METHOD being called
 	@param cname string form of the METHOD name (used in error messages)
 	@param err file to which error messages are issued
-	@param log file to debugging messages are issued. If NULL, no logging is done (faster).
+	@param dplog file to which debugging messages are issued. If NULL, no logging is done (faster).
 	@param wpflags watchpoint settings
 	@param watchpoints list of watchpoints
 
@@ -89,13 +89,13 @@ extern enum Proc_enum ClassAccessInitialize(struct Instance *context,
                                             FILE *err,
                                             wpflags options,
                                             struct gl_list_t *watchpoints,
-                                            FILE *log);
+                                            FILE *dplog);
 /**<
 	@param class_name the class being called (eg MyType)
 	@param name the METHOD being called (eg values)
 	@param cname string version of method name, for use in error messages
 	@param err file to which error messages will be output
-	@param log file to which debugging messages will be output. NULL if no debug output is deired.
+	@param dplog file to which debugging messages will be output. NULL if no debug output is deired.
 	@param wpflags watchpoint flags
 	@param watchpoints list of watchpoints. NULL if no watchpoints are required.
 

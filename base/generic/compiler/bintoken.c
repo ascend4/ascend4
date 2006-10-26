@@ -60,6 +60,8 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include "relation_type.h"
 #include "relation_io.h"
 #include "find.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
 #include "relation.h"
 #include "relation_util.h"
 #include "mathinst.h"
@@ -999,7 +1001,7 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
   }
 }
 
-#if 0
+#ifdef UNRELOCATE_TEST_BT
 /* this code may be out of date, but should be saved. */
 FILE *g_ascend_errors = stderr;
 int main() { /* built only if TESTBT defined TRUE in bintoken.c */
@@ -1031,4 +1033,4 @@ int main() { /* built only if TESTBT defined TRUE in bintoken.c */
   gl_destroy_pool();
   return 0;
 }
-#endif
+#endif /*unrelocate test bt*/

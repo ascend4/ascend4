@@ -29,6 +29,7 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/set.h>
 #include <general/tm_time.h>
+#include <general/mathmacros.h>
 #include <utilities/mem.h>
 #include <general/list.h>
 #include <compiler/fractions.h>
@@ -367,7 +368,7 @@ static void debug_out_hessian( FILE *fp, slv8_system_t sys){
 
 	destroy_array(p)
 	create_array(len,type)
-	
+
 	zero_vector(vec)
 	copy_vector(vec1,vec2)
 	prod = inner_product(vec1,vec2)
@@ -498,7 +499,7 @@ static boolean calc_objectives( slv8_system_t sys){
 
 /**
 	Calculate all of the residuals in the current block and compute
-	the residual norm for block status.  
+	the residual norm for block status.
 
 	@return true iff calculations preceded without error.
 */
@@ -601,7 +602,7 @@ static void calc_nominals( slv8_system_t sys){
 	} else {
 	  n =  -n;
 
-	  ERROR_REPORTER_START_HERE(ASC_USER_ERROR);	
+	  ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
 	  FPRINTF(fp,"Variable ");
 	  print_var_name(fp,sys,var);
 	  FPRINTF(fp," has negative nominal value.\n");
@@ -1040,7 +1041,7 @@ static void scale_system( slv8_system_t sys ){
 	Reset all flags to setup a new solve.
 	Should set sys->s.block.current_block = -1
 	before calling.
-	
+
 	@TODO This is currently a HACK! Not sure if should call when done.
 */
 static void conopt_initialize( slv8_system_t sys){
@@ -1523,10 +1524,10 @@ static linsol_system_t slv8_get_linsol_sys(slv_system_t server
 
 /**
 	Perform structural analysis on the system, setting the flags in
-	status.  
+	status.
 
 	The problem must be set up, the relation/variable list
-	must be non-NULL. The jacobian (linear) system must be created 
+	must be non-NULL. The jacobian (linear) system must be created
 	and have the correct order (stored in sys->cap).  Everything else
 	will be determined here.
 
@@ -1709,7 +1710,7 @@ static void update_cost(slv8_system_t sys)
 	  - Fix interface so that solvers define status messages. We
 	    should not be stuck with one standard set that all solvers
 	    must deal with.
-	
+
 	  - Reimplement old code to detect linear coefficients and use
 	    in conopt hookup.
 
@@ -1816,7 +1817,7 @@ static int COI_CALL slv8_conopt_readmatrix(
   /*
   for (offset = row = sys->J.reg.row.low;
        row <= sys->J.reg.row.high; row++) {
-	
+
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
     nominal = sys->weights.vec[row];
     * fv[row-offset] = sys->residuals.vec[row];* * already scaled *
@@ -2087,7 +2088,7 @@ static int COI_CALL slv8_conopt_fdeval(
       var_set_value(var, value);
     }
   }
-  /** 
+  /**
 	@TODO could be more efficient when mode = 3
 	(with future versions of CONOPT)
   */
@@ -2169,7 +2170,7 @@ static int COI_CALL slv8_conopt_fdeval(
 /**
 	COISTA Pass the solution from CONOPT to the modeler. It returns
 	completion status
-	
+
 	@param modsta model status
 	@param solsta solver status
 	@param iter   number of iterations
@@ -2352,14 +2353,14 @@ static int COI_CALL slv8_conopt_option(
     if (strlen(sys->p.parms[sys->con.opt_count].interface_label) == 6){
       if (strncmp(sys->p.parms[sys->con.opt_count].interface_label,
                   "R",1) == 0) {
-		name = 
+		name =
           strncpy(name, sys->p.parms[sys->con.opt_count].interface_label,6);
 		*rval = sys->p.parms[sys->con.opt_count].info.r.value;
 		sys->con.opt_count++;
 		return 0;
       } else if (strncmp(sys->p.parms[sys->con.opt_count].interface_label,
                          "L",1) == 0) {
-		name = 
+		name =
 	          strncpy(name,sys->p.parms[sys->con.opt_count].interface_label,6);
 		*ival = sys->p.parms[sys->con.opt_count].info.i.value;
 		sys->con.opt_count++;
@@ -2467,7 +2468,7 @@ int COI_CALL slv8_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 	    FPRINTF(ASCERR,"Variable '%s' : ",varname);
 		ASC_FREE(varname);
 	}else if(*COLNO == -1 ){
-	    FPRINTF(ASCERR,"Relation '%s' : ",relname); 
+	    FPRINTF(ASCERR,"Relation '%s' : ",relname);
 		ASC_FREE(relname);
 	}else{
 	    FPRINTF(ASCERR,"Variable '%s' appearing in relation '%s' : ",varname,relname);
@@ -2515,10 +2516,10 @@ void slv8_coienz COIENZ_ARGS {
   char *varname=NULL;
   struct rel_relation **rp;
   struct var_variable **vp;
-  
+
   slv8_system_t sys;
   sys = (slv8_system_t)usrmem;
-  
+
   rp=slv_get_solvers_rel_list(SERVER);
   vp=slv_get_solvers_var_list(SERVER);
   /* assumes cur = org */
@@ -2546,7 +2547,7 @@ int COI_CALL slv8_conopt_message(
 ){
   int32 stop, i, len;
   char *line[15];
-  /* should put option to make stop = *smsg or *nmsg 
+  /* should put option to make stop = *smsg or *nmsg
    * and option to route output
    */
   stop = *nmsg;
@@ -2599,7 +2600,7 @@ void slv8_coiorc COIORC_ARGS {
 
     slv8_system_t sys;
     sys = (slv8_system_t)usrmem;
-  
+
     rp=slv_get_solvers_rel_list(SERVER);
     vp=slv_get_solvers_var_list(SERVER);
     /* assumes cur = org */
@@ -2609,13 +2610,13 @@ void slv8_coiorc COIORC_ARGS {
     vp = vp + col;
     relname= rel_make_name(SERVER,*rp);
     varname= var_make_name(SERVER,*vp);
-  
+
     FPRINTF(stderr,"ERROR: Infeasible specification discovered at:\n");
     FPRINTF(stderr,"     relation: %s\n          residual: %g\n",
       relname, (*resid)/sys->weights.vec[row]);
     FPRINTF(stderr,"     variable: %s\n          value: %g\n",
       varname, (*value)*sys->nominals.vec[col]);
-    
+
     if (relname) {
       ascfree(relname);
     }
@@ -2769,7 +2770,7 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
 	sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
 	COIDEF_NumNZ(cntvect, &(sys->con.nz));
 	COIDEF_NumNlNz(cntvect, &(sys->con.nz));
-	
+
 	sys->con.base = 0;
 	COIDEF_Base(cntvect,&(sys->con.base));
     COIDEF_ErrLim(cntvect, &(DOMLIM));
@@ -2788,7 +2789,7 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
 
 	temp = 0;
 	COIDEF_StdOut(cntvect, &temp);
-	
+
 	COIDEF_ReadMatrix(cntvect, &slv8_conopt_readmatrix);
 	COIDEF_FDEval(cntvect, &slv8_conopt_fdeval);
 	COIDEF_Option(cntvect, &slv8_conopt_option);
@@ -2924,7 +2925,7 @@ static void slv8_iterate(slv_system_t server, SlvClientToken asys){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
     return;
   }
-  
+
   if (sys->s.block.current_block==-1) {
     conopt_initialize(sys);
     sys->s.converged = sys->con.optimized;

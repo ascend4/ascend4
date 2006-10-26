@@ -43,6 +43,13 @@
 static CONST char IntervalRoutinesRCSid[] = "$Id: interval.c,v 1.7 1998/02/27 16:29:02 mthomas Exp $";
 #endif
 
+/* take the max of 4 numbers using two temporaries */
+#define MAX4(a,b,c,d,u,v) \
+  ( u = ((a > b) ? a : b) , v = ((c > d) ? c : d) , (u > v) ? u : v )
+/* take the min of 4 numbers using two temporaries */
+#define MIN4(a,b,c,d,u,v) \
+  ( u = ((a < b) ? a : b) , v = ((c < d) ? c : d) , (u < v) ? u : v )
+
 struct Interval CreateInterval(double low, double high)
 {
   struct Interval result;
@@ -452,7 +459,7 @@ int IsIn(double d, struct Interval i)
 
 struct Interval PowInterval(struct Interval x, struct Interval y)
 {
-  register double a,b,c,d;
+  register double a,b,c,d, t1, t2;
   struct Interval result;
   if (x.low < 0.0){
     Asc_Panic(2, NULL, "PowInterval call with a argument less than zero.\n");
@@ -476,12 +483,14 @@ struct Interval PowInterval(struct Interval x, struct Interval y)
       b = UPow(x.high,y.high);
       c = UPow(x.low,y.low);
       d = UPow(x.low,y.high);
-      result.high = MAX(a,MAX(b,MAX(c,d)));
+      /*result.high = MAX(a,MAX(b,MAX(c,d))); */
+      result.high = MAX4(a,b,c,d, t1, t2);
       a = DPow(x.high,y.low);
       b = DPow(x.high,y.high);
       c = DPow(x.low,y.low);
       d = DPow(x.low,y.high);
-      result.low = MIN(a,MIN(b,MIN(c,d)));
+      /* result.low = MIN(a,MIN(b,MIN(c,d))); */
+      result.low = MIN4(a,b,c,d, t1, t2);
     }
   }
   assert((!IsIn(0.0,y))||(IsIn(1.0,result)));

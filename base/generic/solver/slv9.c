@@ -35,6 +35,7 @@
 #include <compiler/compiler.h>
 #include <compiler/instance_enum.h>
 #include <general/list.h>
+#include <general/mathmacros.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/functype.h>

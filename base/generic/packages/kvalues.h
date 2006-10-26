@@ -22,13 +22,4 @@
 
 extern int kvalues_register(void);
 
-extern int kvalues_preslv(struct Slv_Interp *slv_interp,
-		   struct Instance *data,
-		   struct gl_list_t *arglist);
-
-extern int kvalues_fex(struct Slv_Interp *slv_interp,
-		int ninputs, int noutputs,
-		double *inputs, double *outputs,
-		double *jacobian);
-
 #endif /* ASC_KVALUES_H */

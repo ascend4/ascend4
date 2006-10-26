@@ -1056,14 +1056,15 @@ static void calc_dependent_rows(linsol_system_t sys)
       mem_zero_byte_cast(lc,0.0,(sys->capacity)*sizeof(real64));
       nz.col = mtx_FIRST;
       while( value = mtx_next_in_row(sys->inv,&nz,&colrange),
-	    nz.col != mtx_LAST )
+	    nz.col != mtx_LAST ) {
 	 lc[mtx_col_to_org(sys->inv,nz.col)] = value;
-      if( nz.row < sys->rng.low+sys->rank || nz.row > sys->rng.high )
+      }
+      if( nz.row < sys->rng.low+sys->rank || nz.row > sys->rng.high ) {
 	 backward_substitute(sys,lc,TRUE);
+      }
       forward_substitute(sys,lc,TRUE);
       mtx_clear_row(sys->inv,nz.row,&colrange);
       for( nz.col=colrange.low; nz.col <= colrange.high; nz.col++ ) {
-	 real64 value;
 	 value = lc[mtx_col_to_org(sys->inv,nz.col)];
 	 if( value != 0.0 ) mtx_add_value(sys->inv,&nz,value);
       }
@@ -1099,14 +1100,15 @@ static void calc_dependent_cols(linsol_system_t sys)
       mem_zero_byte_cast(lc,0.0,sys->capacity*sizeof(real64));
       nz.row = mtx_FIRST;
       while( value = mtx_next_in_col(sys->inv,&nz,&rowrange),
-	    nz.row != mtx_LAST )
+	    nz.row != mtx_LAST ) {
 	 lc[mtx_row_to_org(sys->inv,nz.row)] = value;
-      if( nz.col < sys->rng.low+sys->rank || nz.col > sys->rng.high )
+      }
+      if( nz.col < sys->rng.low+sys->rank || nz.col > sys->rng.high ) {
 	 backward_substitute(sys,lc,FALSE);
+      }
       forward_substitute(sys,lc,FALSE);
       mtx_clear_col(sys->inv,nz.col,&rowrange);
       for( nz.row=rowrange.low; nz.row <= rowrange.high; nz.row++ ) {
-	 real64 value;
 	 value = lc[mtx_row_to_org(sys->inv,nz.row)];
 	 if( value != 0.0 ) mtx_add_value(sys->inv,&nz,value);
       }

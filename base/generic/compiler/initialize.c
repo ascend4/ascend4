@@ -408,7 +408,7 @@ int SpecialSelfName(CONST struct Name *n)
 	Produces a list of lists of argument instances. a the list returned is never NULL except when out of memory. Entries in this list may be NULL if some argument search fails. Argument search is successful IFF errlist returned is empty (length 0).
  */
 static
-struct gl_list_t *ProcessArgs(struct Instance *inst,
+struct gl_list_t *ProcessExtMethodArgs(struct Instance *inst,
                               CONST struct VariableList *vl,
                               struct gl_list_t *errlist)
 {
@@ -459,11 +459,11 @@ struct gl_list_t *InitCheckExtCallArgs(struct Instance *inst,
                                        struct Statement *stat,
                                        struct gl_list_t *errs)
 {
-  struct VariableList *vl;
+  CONST struct VariableList *vl;
   struct gl_list_t *result;
 
   vl = ExternalStatVlistMethod(stat);
-  result = ProcessArgs(inst,vl,errs);
+  result = ProcessExtMethodArgs(inst,vl,errs);
   return result;
 }
 
@@ -475,7 +475,6 @@ void ExecuteInitCall(struct procFrame *fm, struct Statement *stat)
 #if 0 /* guts of CALL statement execution need coding. */
 /* something like ExecuteInitExt only string driven gllist argument
  * translation +/- varargs BS, etc, etc
- * Get rid of that awfully misnamed SlvInterp at any rate.
  */
 #endif
 }

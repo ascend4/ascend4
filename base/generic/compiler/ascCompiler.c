@@ -72,6 +72,7 @@
 #include "relation_io.h"
 #include "extfunc.h"
 #include "find.h"
+#include "rel_blackbox.h"
 #include "relation.h"
 #include "logical_relation.h"
 #include "logrelation.h"
