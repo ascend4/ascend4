@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<omf>
+  <resource>
+    <title>ASCEND User's Manual @VERSION@</title>
+    <date>@BUILDDATE@</date>
+    <maintainer>John Pye<maintainer>
+    <creator>Ben Allan</creator>
+    <creator>Art Westerberg</creator>
+    <version identifier="ascend-@VERSIONS@" date="@BUILDDATE@"/>
+    <subject category="GNOME|Applications|Engineering"/>
+    <description>
+      User manual for the ASCEND modelling environment
+   </description>
+    <type>user's guide</type>
+    <format mime="text/html" dtd="-//W3C//DTD HTML 4.01 Transitional//EN"/>
+    <identifier url="file:///@ASCEND_DOCDIR@/index.html"/>
+    <language code="C"/>
+    <rights type="GNU FDL" license.version="1.1" holder="Carnegie Mellon University"/>
+  </resource>
+</omf>
