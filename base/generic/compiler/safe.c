@@ -48,8 +48,7 @@
 /*boolean safe_ok = TRUE;*/
 static int safe_print_errors = TRUE;
 
-void safe_error_to_stderr(enum safe_err *not_safe)
-{
+void safe_error_to_stderr(enum safe_err *not_safe){
   if (!safe_print_errors) {
     return;
   }

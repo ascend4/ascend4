@@ -494,33 +494,32 @@ int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
   gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
   *count = 0;
-  if( safe ) {
+  if(safe){
     status =(int32)RelationCalcGradientSafe(rel_instance(rel),gradient);
     safe_error_to_stderr( (enum safe_err *)&status );
     /* always map when using safe functions */
     for (c=0; c < len; c++) {
       if (var_apply_filter(vlist[c],filter)) {
         variables[*count] = var_sindex(vlist[c]);
-	derivatives[*count] = gradient[c];
-	(*count)++;
+        derivatives[*count] = gradient[c];
+        CONSOLE_DEBUG("Var %d = %f",var_sindex(vlist[c]),gradient[c]);
+        (*count)++;
       }
     }
-  }
-  else {
+	return status;
+  }else{
     if((status=RelationCalcGradient(rel_instance(rel),gradient)) == 0) {
       /* successful */
       for (c=0; c < len; c++) {
         if (var_apply_filter(vlist[c],filter)) {
-	  variables[*count] = var_sindex(vlist[c]);
-	  derivatives[*count] = gradient[c];
-	  (*count)++;
+          variables[*count] = var_sindex(vlist[c]);
+          derivatives[*count] = gradient[c];
+          (*count)++;
         }
       }
     }
+ 	return !status;
   }
-
-  /* flip the status flag */
-  return !status;
 }
 
 int relman_diff_grad(struct rel_relation *rel, var_filter_t *filter,
@@ -586,14 +585,15 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
   int32 errcnt;
   enum safe_err status;
 
-  if (rlist == NULL || vfilter == NULL || rfilter == NULL || avec == NULL ||
-      rlen < 0 || mORs >3 || mORs < 0 || bias <0 || bias > 1) {
+  if(rlist == NULL || vfilter == NULL || rfilter == NULL || avec == NULL
+      || rlen < 0 || mORs >3 || mORs < 0 || bias <0 || bias > 1
+  ){
     return 1;
   }
   resid = &residual;
   errcnt = k = 0;
 
-  if ( ivec == NULL || jvec == NULL ) {
+  if(ivec==NULL || jvec==NULL){
     /*_skip stuffing ivec,jvec */
     for (r=0; r < rlen; r++) {
       rel = rlist[r];
@@ -616,7 +616,7 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
         }
       }
     }
-  } else {
+  }else{
     for (r=0; r < rlen; r++) {
       rel = rlist[r];
       len = rel_n_incidences(rel);

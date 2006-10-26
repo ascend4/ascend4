@@ -154,24 +154,22 @@ extern int relman_diff2(struct rel_relation *rel,
                         int32 safe);
 /**<
 	Calculates the row of the jacobian matrix (the transpose gradient of
-	the relation residual grad^T(f) ) corresponding to the relation
-	rel.  The filter determines which variables actually contribute to the
+	the relation residual, $ \grad^{T}(f) $) corresponding to the relation
+	rel. The filter determines which variables actually contribute to the
 	jacobian.
 
-	derivative(I) will contain the derivative of the relation with
+	derivatives[i] will contain the derivative of the relation with
 	respect to the variable whose solver index is stored in
-	variables(I).
+	variables[i].
 
-	@param safe If nonzero, "safe" functions are used to for
-	the calculations
-
+	@param rel         Relation being differentiated
+	@param filter	   Filter for variables for which derivs are desired
+	@param safe        If nonzero, "safe" functions are used to for the calculations
 	@param derivatives output vector (allocated by the calling function)
-	@param variables output vector (allocated by the calling function)
-	@param count output value, will be set to the number of elements
-	assigned upon exit.
+	@param variables   output vector (allocated by the calling function)
+	@param count       output value, will be set to the number of elements assigned upon exit.
 
-
-	@return 0 on success, 1 if an error is encountered in the calculation
+	@return 0 on success, non-zero if an error is encountered in the calculation
 */
 
 extern int relman_diff_grad(struct rel_relation *rel,

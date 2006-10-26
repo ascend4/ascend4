@@ -41,6 +41,10 @@ static int32 ArgsDifferent(double new, double old, double tol)
 	}
 }
 
+/*------------------------------------------------------------------------------
+  RESIDUAL AND GRADIENT EVALUATION ROUTINES
+*/
+
 /* 
 	Note:
 	Assume a function in c/fortran that computes yhat(x),
@@ -149,12 +153,27 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 
 }
 
-/* The tricky bit in this is that if input or output args are merged,
-their partial derivatives get summed and the solver at least gets
-what it deserves, which may or may not be sane in a modeling sense.
+/**
+	Calculate the gradient (slice of the overall jacobian) for the blackbox.
+
+	The tricky bit in this is that if input or output args are merged,
+	their partial derivatives get summed and the solver at least gets
+	what it deserves, which may or may not be sane in a modeling sense.
+
+	Implementation:
+		# check input values changed.
+		# if changed, recompute gradient in bbox.
+		# compute gradient per varlist from bbox row.
 */
-int BlackBoxCalcGradient(struct Instance *i, double *gradient, struct relation *r)
-{
+
+int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
+	, int ninputs, int noutputs
+	, double *inputs, double *outputs, double *jac
+);
+
+int BlackBoxCalcGradient(struct Instance *i, double *gradient
+		, struct relation *r
+){
 /* decls */
 	unsigned long *argToVar;
 	unsigned long c, varlistLen;
@@ -173,7 +192,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient, struct relation *
 	unsigned int k;
 	int nok = 0;
   
-/* impl setup */
+	/* prepare */
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox gradient is experimental (%s)",__FUNCTION__);
 	(void)i;
 	efunc = RelationBlackBoxExtFunc(r);
@@ -188,17 +207,12 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient, struct relation *
 	updateNeeded = 0;
 	varlistLen = NumberVariables(r);
 
-/* impl:
-	check input values changed.
-	if changed, recompute gradient in bbox.
-	compute gradient per varlist from bbox row.
-*/
-	/* check: */
-	if (common->gradCount < 1) {
+	/* do we need to calculate? */
+	if(common->gradCount < 1){
 		updateNeeded = 1;
-	} else {
-		for (c=0; c < argToVarLen ; c++) {
-			arg = RelationVariable(r,argToVar[c]); 
+	}else{
+		for(c=0; c<argToVarLen; c++){
+			arg = RelationVariable(r,argToVar[c]);
 			value = RealAtomValue(arg);
 			if (ArgsDifferent(value, common->inputsJac[c], inputTolerance)) {
 				updateNeeded = 1;
@@ -206,7 +220,8 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient, struct relation *
 			}
 		}
 	}
-	/* recompute */
+	
+	/* if inputs have changed more than allowed, or it's first time: evaluate */
 	if (updateNeeded) {
 		for (c=0; c < argToVarLen ;c++) {
 			arg = RelationVariable(r,argToVar[c]);
@@ -215,18 +230,28 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient, struct relation *
 		}
 		common->interp.task = bb_deriv_eval;
 
-		nok = (*derivFunc)(&(common->interp),
-				common->inputsLen,
-				common->outputsLen,
-				common->inputsJac,
-				common->outputs,
-				common->jacobian);
+		if(derivFunc){			
+			nok = (*derivFunc)(
+				&(common->interp)
+				, common->inputsLen, common->outputsLen
+				, common->inputsJac, common->outputs, common->jacobian
+			);
+		}else{
+			CONSOLE_DEBUG("COMPUTING FINITE-DIFFERENCE BLACK-BOX DERIVATIVE");
+			
+			nok = blackbox_fdiff(GetValueFunc(efunc), &(common->interp)
+				, common->inputsLen, common->outputsLen
+				, common->inputsJac, common->outputs, common->jacobian
+			);
+		}
 		common->gradCount++;
 	}
+
 	for (k = 0; k < varlistLen; k++) {
 		gradient[k] = 0.0;
 	}
-	/* now compute d(y-yhat)/dx for this row as I - dyhat/dx*/
+
+	/* now compute d(y-yhat)/dx for this row as ( I - dyhat/dx ) */
 	k = lhsVar-1;
 	gradient[k] = 1.0; /* I */
 	offset = common->inputsLen * outputIndex; /* offset to row needed. */
@@ -242,8 +267,8 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient, struct relation *
 struct Instance *BlackBoxGetOutputVar(struct relation *r)
 {
 	assert(r != NULL);
- 	unsigned long lhsVarNumber;
-	/* FIXME BlackBoxGetOutputVar */	
+ 	/* unsigned long lhsVarNumber; */
+	/** @TODO FIXME BlackBoxGetOutputVar */	
 	return NULL;
 }
 
@@ -270,6 +295,77 @@ void DestroyBlackBoxData(struct relation *rel, struct BlackBoxData *b)
 	DeleteRefBlackBoxCache(rel, &(b->common));
 	ascfree(b);
 }
+
+/*------------------------------------------------------------------------------
+  BLACKBOX GRADIENT BY FINITE-DIFFERENCE
+*/
+
+/**
+	This function works out what the peturbed value for a variable should be.
+
+	@TODO add some awareness of boundaries in this, hopefully.
+*/
+static inline double blackbox_peturbation(double varvalue){
+  return (1.0e-05);
+}
+
+/**
+	Blackbox derivatives estimated by finite difference (by evaluation at 
+	peturbed value of each input in turn)
+
+	Call signature as for ExtBBoxFunc.
+*/
+int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
+	, int ninputs, int noutputs
+	, double *inputs, double *outputs, double *jac
+){
+  long c,r;
+  int nok = 0;
+  double *tmp_outputs;
+  double *ptr;
+  double old_x,deltax,value;
+
+  CONSOLE_DEBUG("NUMERICAL DERIVATIVE...");
+
+  tmp_outputs = ASC_NEW_ARRAY_CLEAR(double,noutputs);
+
+  for (c=0;c<ninputs;c++){
+    /* perturb each input in turn */
+    old_x = inputs[c];
+	deltax = blackbox_peturbation(old_x);
+    inputs[c] = old_x + deltax;
+	CONSOLE_DEBUG("PETURBATED VALUE of input[%ld] = %f",c,inputs[c]);
+
+	/* call routine. note that the 'jac' parameter is just along for the ride */
+    nok = (*resfn)(interp, ninputs, noutputs, inputs, tmp_outputs, jac);
+    if(nok){
+	    CONSOLE_DEBUG("External evaluation error (%d)",nok);
+		break;
+	}
+
+	/* fill load jacobian */
+    ptr = &jac[c];
+    for(r=0;r<noutputs;r++){
+      value = (tmp_outputs[r] - outputs[r]) / deltax;
+	  CONSOLE_DEBUG("output[%ld]: value = %f, gradient = %f",r,tmp_outputs[r],value);
+      *ptr = value;
+      ptr += ninputs;
+    }
+
+	/* now return this input to its old value */
+    inputs[c] = old_x;
+  }
+  ASC_FREE(tmp_outputs);
+  if(nok){
+    CONSOLE_DEBUG("External evaluation error");
+  }
+  return nok;
+
+}
+
+/*------------------------------------------------------------------------------
+  BLACK BOX CACHE
+*/
 
 #define JACMAGIC -3.141592071828
 struct BlackBoxCache *CreateBlackBoxCache(

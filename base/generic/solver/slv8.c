@@ -1842,6 +1842,7 @@ static int COI_CALL slv8_conopt_readmatrix(
         sys->obj,&vfilter,derivatives,variables
 	    , &(obj_count),SAFE_CALC
     );
+	/* what about checking error code? -- JP */
   }
 
   count = count_old = 0;

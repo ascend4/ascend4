@@ -5326,8 +5326,7 @@ apparently is too hard for some.
 @param instance: the enclosing model.
 @param statement: the EXT bbox statement.
 */
-int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *statement)
-{
+int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *statement){
   symchar *name;
   struct Expr *ex, *one, *en;
   unsigned long c,len;
@@ -5481,7 +5480,6 @@ the checks done before this statement was attempted. */
    */
   return 1;
 }
-
 
 int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struct ExternalFunc *efunc, struct Instance *subject, struct gl_list_t *inputs,  struct BlackBoxCache * common, long c, CONST char *context)
 {
