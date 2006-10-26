@@ -74,6 +74,7 @@
 */
 typedef struct{
 	struct rel_relation **rellist;   /**< NULL terminated list of rels */
+	struct var_variable **varlist;   /**< NULL terminated list of rels */
 	int nrels;
 	int safeeval;                    /**< whether to pass the 'safe' flag to relman_eval */
 } IntegratorIdaData;
@@ -83,6 +84,11 @@ typedef struct{
 */
 /* residual function forward declaration */
 int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data);
+
+int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
+		, N_Vector v, N_Vector Jv, realtype c_j
+		, void *jac_data, N_Vector tmp1, N_Vector tmp2
+);
 
 /* error handler forward declaration */
 void integrator_ida_error(int error_code
@@ -98,6 +104,7 @@ void integrator_ida_create(IntegratorSystem *blsys){
 	IntegratorIdaData *enginedata;
 	enginedata = ASC_NEW(IntegratorIdaData);
 	enginedata->rellist = NULL;
+	enginedata->varlist = NULL;
 	enginedata->safeeval = 1;
 	blsys->enginedata = (void *)enginedata;
 }
@@ -143,6 +150,7 @@ int integrator_ida_solve(
 	/* store reference to list of relations (in enginedata) */
 	enginedata->nrels = slv_get_num_solvers_rels(blsys->system);
 	enginedata->rellist = slv_get_solvers_rel_list(blsys->system);
+	enginedata->varlist = slv_get_solvers_var_list(blsys->system);
 	CONSOLE_DEBUG("Number of relations: %d",enginedata->nrels);
 	CONSOLE_DEBUG("Number of dependent vars: %ld",blsys->n_y);
 	size = blsys->n_y;
@@ -203,8 +211,21 @@ int integrator_ida_solve(
 		return 0;
 	}/* else success */
 
-	/* set linear solver optional inputs... */
+	/* assign the J*v function */
+    flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex, (void *)blsys);
+	if(flag==IDASPILS_MEM_NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
+		return 0;
+	}else if(flag==IDASPILS_LMEM_NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDASPILS linear solver has not been initialized");
+		return 0;
+	}/* else success */
 
+	/* set linear solver optional inputs...
+
+		...nothing here at the moment... 
+
+	*/
 
 	/* correct initial values, given derivatives */
 	blsys->currentstep=0;
@@ -356,8 +377,109 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 }
 
 /**
-	@TODO implement calculation of the jacobian, right?
+	Function to evaluate the product J*v, in the form required for IDA.
+
+	Given tt, yy, yp, rr and v, we need to evaluate and return Jv.
+
+	@param tt current value of the independent variable (time, t)
+	@param yy current value of the dependent variable vector, y(t).
+	@param yp current value of y'(t).
+	@param rr current value of the residual vector F(t, y, y').
+	@param v  the vector by which the Jacobian must be multiplied to the right.
+	@param Jv the output vector computed
+	@param c_j the scalar in the system Jacobian, proportional to the inverse of the step size ($ \alpha$ in Eq. (3.5) ).
+	@param jac_data pointer to our stuff (blsys in this case, passed into IDA via IDASp*SetJacTimesVecFn.)
+	@param tmp1 @see tmp2
+	@param tmp2 (as well as tmp1) pointers to memory allocated for variables of type N_Vector for use here as temporary storage or work space.
+	@return 0 on success
 */
+int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
+		, N_Vector v, N_Vector Jv, realtype c_j
+		, void *jac_data, N_Vector tmp1, N_Vector tmp2
+){
+	IntegratorSystem *blsys;
+	IntegratorIdaData *enginedata;
+	int i, j, is_error=0;
+	struct rel_relation** relptr;
+	char *relname, *varname;
+	int status;
+	double Jv_i;
+
+	int *variables;
+	double *derivatives;
+	var_filter_t filter;
+	int count;
+
+	CONSOLE_DEBUG("EVALUTING JACOBIAN...");
+
+	blsys = (IntegratorSystem *)jac_data;
+	enginedata = integrator_ida_enginedata(blsys);
+
+	/* pass the values of everything back to the compiler */
+	integrator_set_t(blsys, (double)tt);
+	integrator_set_y(blsys, NV_DATA_S(yy));
+	integrator_set_ydot(blsys, NV_DATA_S(yp));
+	/* no real use for residuals (rr) here, I don't think? */
+
+	/* allocate space for returns from relman_diff2 */
+	variables = ASC_NEW_ARRAY(int, NV_LENGTH_S(yy) * 2);
+	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
+
+	/* evaluate the derivatives... */
+	/* J = dG_dy = dF_dy + alpha * dF_dyp */
+
+	filter.matchbits = VAR_SVAR;
+	filter.matchvalue = VAR_SVAR;
+
+	Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+	if (setjmp(g_fpe_env)==0) {
+		for(i=0, relptr = enginedata->rellist;
+				i< enginedata->nrels && relptr != NULL;
+				++i, ++relptr
+		){
+			/* get derivatives for this particular relation */
+			status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
+
+			CONSOLE_DEBUG("Got derivatives against %d matching variables", count);
+
+			relname = rel_make_name(blsys->system, *relptr);
+			if(!status){
+				fprintf(stderr,"\n\n");
+				CONSOLE_DEBUG("Derivatives for relation %d '%s' OK",i,relname);
+			}else{
+				CONSOLE_DEBUG("ERROR calculating derivatives for relation %d '%s'",i,relname);
+				break;
+			}
+			ASC_FREE(relname);
+
+			Jv_i = 0;
+			for(j=0; j < count; ++j){
+				CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y);
+				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
+				if(varname){
+					CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
+					ASC_FREE(varname);
+				}else{
+					CONSOLE_DEBUG("Variable %d: derivative = %f",variables[j],derivatives[j]);
+				}
+
+				Jv_i += derivatives[j] * NV_Ith_S(v,variables[j]);
+			}
+
+			NV_Ith_S(Jv,i) = Jv_i;
+			if(status){
+				/* presumably some error_reporter will already have been made*/
+				is_error = 1;
+			}
+		}
+	}else{
+		CONSOLE_DEBUG("FLOATING POINT ERROR WITH i=%d",i);
+	}
+	Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+
+	if(is_error)CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");
+	return is_error;
+}
 
 /*----------------------------------------------
   ERROR REPORTING
