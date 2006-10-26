@@ -365,7 +365,7 @@ This file implements an interface to external packages. These external packages 
 The packages provided in the procedural section follow the 'foreign pointer' concept; i.e., they will be handed a pointer to a reference instance, and a list of list of arguments. They need to provide only the number of input arguements, and may freely manipulate the instance tree and whatever way they feel. The only *mandatory* function must respect the following function prototype:
 
 @code
-int (*proc) (struct Slv_Interp *interp
+int (*proc) (struct BBoxInterp *interp
 		,struct Instance *reference
 		,struct gl_list_t *arglist
 );
@@ -378,16 +378,16 @@ An optional help string may be provided. We will *make a copy* of this string, i
 More information is need from the packages in the declarative section that provide relations. In particular a *presolve/init* routine must be provided, which the compiler/solver will invoke to make sure that all is ok. This package when registering itself has to provide: n_input_args -- the number of input args on its arglist. n_output_args -- the number of output args on its arglist. In addition to the presolve/init routine, the following functions for doing function and jacobian evaluations have to be provided. The deriv (jacobian evaluation routine) and higher order derivative routines may be left NULL, and finite difference via repeated function calls will be done. The calling protocal for all functions is as follows:
 
 @code
-int (*init) (struct Slv_Interp *interp,
+int (*init) (struct BBoxInterp *interp,
               struct Instance *model_data,
               struct gl_list_t *arglist);
 
-int (*value) (struct Slv_Interp *interp,
+int (*value) (struct BBoxInterp *interp,
               int ninputs, int noutputs,
        double *inputs, double *outputs,
        double *jacobian);
 
-int (*deriv) (struct Slv_Interp *interp,
+int (*deriv) (struct BBoxInterp *interp,
               int ninputs, int noutputs,
        double *inputs, double *outputs,
        double *jacobian);
@@ -402,28 +402,28 @@ deriv2 and any higher order derivatives that come along will follow same calling
 The interpreter structure is the means of communication between external packages and the ASCEND instance tree and/or solvers. It is particularly necessary in the case of packages in the declarative section. The state of the bit flags must be monitored and appropriate action taken. In the case of an error, a nonzero result must be returned from all functions, and the reason indicated by writing to the interp->status field. At the moment 1 wild hook is provided for the convenience of users. A user may attach an object to this hook and it will be passed around to each of its function calls. As an example consider the following code fragment.
 
 @code
-int init(struct Slv_Interp *slv_interp
+int init(struct BBoxInterp *interp
 	, struct Instance *data
     ,struct gl_list_t *arglist)
 {
 	struct my_solve_system *system;
 	double *my_inputs;
-	if(slv_interp->firstcall){
+	if(interp->firstcall){
 		system = my_presolve(data,arglist);
 
 		if (system!=NULL) {
 			my_inputs = MakeVectorFromList(arglist);
 			system->inputs = my_inputs;
-			slv_interp->user_data = (void *)system;
+			interp->user_data = (void *)system;
 		}else{
-			slv_interp->status = calc__error;
+			interp->status = calc__error;
 			return 1;
 		}
 	}else{
-		destroy_sys((my_solve_system *)slv_interp->user_data);
-		slv_interp->user_data = NULL;
+		destroy_sys((my_solve_system *)interp->user_data);
+		interp->user_data = NULL;
 	}
-	slv_interp->status = calc_all_ok;
+	interp->status = calc_all_ok;
 	return 0;
 }
 @endcode
@@ -432,7 +432,7 @@ The arglist and all references to instances have been intentionally removed from
 */
 
 /** Reset the interpreter to its initial state. */
-extern void Reset_Slv_Interp(struct Slv_Interp *slv_interp);
+extern void Reset_BBoxInterp(struct BBoxInterp *interp);
 /*
 	@deprecated { Needs revising @see packages.h }
 */
@@ -445,6 +445,7 @@ extern void AddUserFunctions(void);
 	If the compiler-time flag STATIC_PACKAGES was set, this function should load any statically linked packages into the user packages library. If the flag was not set, it should do nothing.
 */
 
+#ifdef TEST_RELOCATE
 /** Calculate an external relation */
 extern int CallExternalProcs(struct Instance *i);
 /**<
@@ -452,6 +453,7 @@ extern int CallExternalProcs(struct Instance *i);
 
 	This function given a handle to a relation instance which represents an external relation, will attempt to invoke it and write the results to stdout.
 */
+#endif
 
 extern int LoadArchiveLibrary(CONST char *partialpath, CONST char *initfunc);
 /**< 
@@ -473,7 +475,7 @@ extern int LoadArchiveLibrary(CONST char *partialpath, CONST char *initfunc);
 	@code void Routine_register(void); @endcode
 */
 
-extern void Init_Slv_Interp(struct Slv_Interp *slv_interp);
+extern void Init_BBoxInterp(struct BBoxInterp *interp);
 /**<
 	@deprecated { Needs revising @see packages.h }
 

@@ -248,7 +248,7 @@ struct value_t InstanceEvaluateName(CONST struct Name *nptr)
       case SET_ATOM_INST:
 	if (ListMode) {
           /* more kaa-ism. client should be checking this. not us. */
-	  FPRINTF(ASCERR,"Sets are not allowed in lists !!\n");
+	  FPRINTF(ASCERR,"Set atoms are not allowed in lists! (ListMode==1)\n");
 	  return CreateErrorValue(illegal_set_use);
 	}
 	if (AtomAssigned(inst)) {
@@ -268,7 +268,7 @@ struct value_t InstanceEvaluateName(CONST struct Name *nptr)
       case SET_INST:
 	if (ListMode) {
           /* more kaa-ism. client should be checking this. not us. */
-	  FPRINTF(ASCERR,"Sets are not allowed in lists !!\n");
+	  FPRINTF(ASCERR,"Sets instances are not allowed in lists! (ListMode==1)\n");
 	  return CreateErrorValue(illegal_set_use);
 	}
 	if (AtomAssigned(inst)) {

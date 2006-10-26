@@ -33,6 +33,7 @@
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/set.h>
+#include <general/mathmacros.h>
 #include <general/tm_time.h>
 #include <utilities/mem.h>
 /* #include "compiler/compiler.h" */

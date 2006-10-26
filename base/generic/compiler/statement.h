@@ -202,7 +202,7 @@ extern struct Statement *CreateWNBTS(struct VariableList *vl);
  *  @param vl variable list
  */
 
-extern struct Statement *CreateFOR(symchar *index,
+extern struct Statement *CreateFOR(symchar *sIndex,
                                    struct Expr *expr,
                                    struct StatementList *stmts,
                                    enum ForOrder order,
@@ -257,7 +257,7 @@ extern struct Statement *CreateEXTERNBlackBox(
 /**<
 	Create a blackbox  statement.
 	@return The created statement
-	@param n Name of the relation .
+	@param n Name of the relation, less the output iteration subscript.
 	@param funcname Name of called function.
 	@param vl Parameters supplied for the external function/method
 	@param data Data arguments, possibly  null.
@@ -887,6 +887,7 @@ extern enum ForOrder ForLoopOrderF(CONST struct Statement *s);
 #ifdef NDEBUG
 #define ForContains(s)             ((s)->v.f.contains)
 #define ForContainsRelations(s)    ((s)->v.f.contains & contains_REL)
+#define ForContainsExternal(s)     ((s)->v.f.contains & contains_EXT)
 #define ForContainsLogRelations(s) ((s)->v.f.contains & contains_LREL)
 #define ForContainsDefaults(s)     ((s)->v.f.contains & contains_DEF)
 #define ForContainsCAssigns(s)     ((s)->v.f.contains & contains_CAS)
@@ -906,6 +907,7 @@ extern enum ForOrder ForLoopOrderF(CONST struct Statement *s);
 #else
 #define ForContains(s)             ForContainsF(s)
 #define ForContainsRelations(s)    ForContainsRelationsF(s)
+#define ForContainsExternal(s)     ForContainsExternalF(s)
 #define ForContainsLogRelations(s) ForContainsLogRelationsF(s)
 #define ForContainsDefaults(s)     ForContainsDefaultsF(s)
 #define ForContainsCAssigns(s)     ForContainsCAssignsF(s)
@@ -925,6 +927,7 @@ extern enum ForOrder ForLoopOrderF(CONST struct Statement *s);
 #endif
 extern unsigned ForContainsF(CONST struct Statement *s);
 extern unsigned ForContainsRelationsF(CONST struct Statement *s);
+extern unsigned ForContainsExternalF(CONST struct Statement *s);
 extern unsigned ForContainsLogRelationsF(CONST struct Statement *s);
 extern unsigned ForContainsDefaultsF(CONST struct Statement *s);
 extern unsigned ForContainsCAssignsF(CONST struct Statement *s);
@@ -947,6 +950,8 @@ extern unsigned ForContainsIllegalF(CONST struct Statement *s);
  *  unsigned ForContainsF(s)
  *  macro ForContainsRelations(s)
  *  unsigned ForContainsRelationsF(s)
+ *  macro ForContainsExternal(s)
+ *  unsigned ForContainsExternalF(s)
  *  macro ForContainsLogRelations(s)
  *  unsigned ForContainsLogRelationsF(s)
  *  macro ForContainsDefaults(s)
@@ -1153,38 +1158,23 @@ extern enum ExternalKind  ExternalStatModeF(CONST struct Statement *s);
  *  function directly - use ExternalStatMode() instead.
  */
 
-#ifdef NDEBUG
-#define ExternalStatNameBlackBox(s) ((s)->v.ext.u.black.nptr)
-#else
-#define ExternalStatNameBlackBox(s) ExternalStatNameBlackBoxF(s)
-#endif
-/**<
- *  Return the external statement's name.
- *  @param s CONST struct Statement*, the statement to query.
- *  @return The name as a struct Name*.
- *  @see ExternalStatNameBlackBoxF()
- */
-extern struct Name *ExternalStatNameBlackBoxF(CONST struct Statement *s);
-/**<
- *  Implementation function for ExternalStatNameBlackBox().  Do not call this
- *  function directly - use ExternalStatNameBlackBox() instead.
- */
 
 #ifdef NDEBUG
-#define ExternalStatNameGlassBox(s) ((s)->v.ext.u.glass.nptr)
+#define ExternalStatNameRelation(s) ((s)->v.ext.u.relation.nptr)
 #else
-#define ExternalStatNameGlassBox(s) ExternalStatNameGlassBoxF(s)
+#define ExternalStatNameRelation(s) ExternalStatNameRelationF(s)
 #endif
 /**<
  *  Return the external statement's name.
+ *  Supercedes ExternalStatNameBlackBox, ExternalStatNameGlassBox
  *  @param s CONST struct Statement*, the statement to query.
  *  @return The name as a struct Name*.
- *  @see ExternalStatNameGlassBoxF()
+ *  @see ExternalStatNameRelationF().
  */
-extern struct Name *ExternalStatNameGlassBoxF(CONST struct Statement *s);
+extern struct Name *ExternalStatNameRelationF(CONST struct Statement *s);
 /**<
- *  Implementation function for ExternalStatNameGlassBox().  Do not call this
- *  function directly - use ExternalStatNameGlassBox() instead.
+ *  Implementation function for ExternalStatNameRelation().  Do not call this
+ *  function directly - use ExternalStatNameRelation() instead.
  */
 
 #ifdef NDEBUG
@@ -1243,30 +1233,24 @@ extern struct Name *ExternalStatScopeGlassBoxF(CONST struct Statement *s);
 
 #ifdef NDEBUG
 #define ExternalStatVlistMethod(s) ((s)->v.ext.u.method.vl)
-#define ExternalStatVlistGlassBox(s) ((s)->v.ext.u.glass.vl)
-#define ExternalStatVlistBlackBox(s) ((s)->v.ext.u.black.vl)
+#define ExternalStatVlistRelation(s) ((s)->v.ext.u.relation.vl)
 #else
-#define ExternalStatVlistGlassBox(s) ExternalStatVlistGlassBoxF(s)
 #define ExternalStatVlistMethod(s) ExternalStatVlistMethodF(s)
-#define ExternalStatVlistBlackBox(s) ExternalStatVlistBlackBoxF(s)
+#define ExternalStatVlistRelation(s) ExternalStatVlistRelationF(s)
 #endif
 /**<
  *  Return the external statement's variable list -- the argument list.
  *  @param s CONST struct Statement*, the statement to query.
  *  @return The list as a struct VariableList*.
- *  @see ExternalStatVlistBlackBoxF()
+ *  @see ExternalStatVlistRelation()
  */
-extern struct VariableList *ExternalStatVlistGlassBoxF(CONST struct Statement *s);
-/**<
- *  Implementation function for ExternalStatVlistGlassBox().  Do not call this
- *  function directly - use ExternalStatVlistGlassBox() instead.
- */
-extern struct VariableList *ExternalStatVlistBlackBoxF(CONST struct Statement *s);
+extern CONST struct VariableList *ExternalStatVlistRelationF(CONST struct Statement *s);
+
 /**<
  *  Implementation function for ExternalStatVlistBlackBox().  Do not call this
  *  function directly - use ExternalStatVlistBlackBox() instead.
  */
-extern struct VariableList *ExternalStatVlistMethodF(CONST struct Statement *s);
+extern CONST struct VariableList *ExternalStatVlistMethodF(CONST struct Statement *s);
 /**<
  *  Implementation function for ExternalStatVlistMethod().  Do not call this
  *  function directly - use ExternalStatVlistMethod() instead.
@@ -1692,14 +1676,17 @@ extern struct StatementList *CondStatListF(CONST struct Statement *s);
 #ifdef NDEBUG
 #define CondContains(s) ((s)->v.cond.contains)
 #define CondContainsRelations(s) ((s)->v.cond.contains & contains_REL)
+#define CondContainsExternal(s) ((s)->v.cond.contains & contains_EXT)
 #define CondContainsLogRelations(s) ((s)->v.cond.contains & contains_LREL)
 #else
 #define CondContains(s) CondContainsF(s)
 #define CondContainsRelations(s) CondContainsRelationsF(s)
+#define CondContainsExternal(s) CondContainsExternalF(s)
 #define CondContainsLogRelations(s) CondContainsLogRelationsF(s)
 #endif
 extern unsigned CondContainsF(CONST struct Statement *s);
 extern unsigned CondContainsRelationsF(CONST struct Statement *s);
+extern unsigned CondContainsExternalF(CONST struct Statement *s);
 extern unsigned CondContainsLogRelationsF(CONST struct Statement *s);
 /**<
  *  <pre>
@@ -1707,6 +1694,8 @@ extern unsigned CondContainsLogRelationsF(CONST struct Statement *s);
  *  unsigned CondContainsF(s)
  *  macro CondContainsRelations(s)
  *  unsigned CondContainsRelationsF(s)
+ *  macro CondContainsExternal(s)
+ *  unsigned CondContainsExternalF(s)
  *  macro CondContainsLogRelations(s)
  *  unsigned CondContainsLogRelationsF(s)
  *  const struct Statement *s;
@@ -1791,6 +1780,7 @@ extern int CompareSelectStatements(CONST struct Statement *s1,
 #ifdef NDEBUG
 #define SelectContains(s) ((s)->v.se.contains)
 #define SelectContainsRelations(s) ((s)->v.se.contains & contains_REL)
+#define SelectContainsExternal(s) ((s)->v.se.contains & contains_EXT)
 #define SelectContainsLogRelations(s) ((s)->v.se.contains & contains_LREL)
 #define SelectContainsDefaults(s) ((s)->v.se.contains & contains_DEF)
 #define SelectContainsCAssigns(s) ((s)->v.se.contains & contains_CAS)
@@ -1810,6 +1800,7 @@ extern int CompareSelectStatements(CONST struct Statement *s1,
 #else
 #define SelectContains(s) SelectContainsF(s)
 #define SelectContainsRelations(s) SelectContainsRelationsF(s)
+#define SelectContainsExternal(s) SelectContainsExternalF(s)
 #define SelectContainsLogRelations(s) SelectContainsLogRelationsF(s)
 #define SelectContainsDefaults(s) SelectContainsDefaultsF(s)
 #define SelectContainsCAssigns(s) SelectContainsCAssignsF(s)
@@ -1829,6 +1820,7 @@ extern int CompareSelectStatements(CONST struct Statement *s1,
 #endif
 extern unsigned SelectContainsF(CONST struct Statement *s);
 extern unsigned SelectContainsRelationsF(CONST struct Statement *s);
+extern unsigned SelectContainsExternalF(CONST struct Statement *s);
 extern unsigned SelectContainsLogRelationsF(CONST struct Statement *s);
 extern unsigned SelectContainsDefaultsF(CONST struct Statement *s);
 extern unsigned SelectContainsCAssignsF(CONST struct Statement *s);
@@ -1851,6 +1843,8 @@ extern unsigned SelectContainsIllegalF(CONST struct Statement *s);
  *  unsigned SelectContainsF(s)
  *  macro SelectContainsRelations(s)
  *  unsigned SelectContainsRelationsF(s)
+ *  macro SelectContainsExternal(s)
+ *  unsigned SelectContainsExternalF(s)
  *  macro SelectContainsLogRelations(s)
  *  unsigned SelectContainsLogRelationsF(s)
  *  macro SelectContainsDefaults(s)

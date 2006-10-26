@@ -523,7 +523,6 @@ int NumberFreeVars(slv_system_t sys){
  */
 
 
-/// Calculate the entire Jacobian
 /*
  * At this point we should have an empty jacobian. We now
  * need to call relman_diff over the *entire* matrix.
@@ -571,8 +570,6 @@ int Compute_J(slv_system_t sys)
   return(!calc_ok);
 }
 
-//-----------------------------------------------------------------
-// CODE FROM tcltk version:
 
 
 /**
@@ -1140,7 +1137,7 @@ static int DoProject_X(struct var_variable **old_inputs,
 #endif
 
 
-/// Sensitivity analysis for an entire system
+
 /**
 	This function is very similar to sensitivity_anal, execept,
 	that it perform the analysis on the entire system, based on
@@ -1338,16 +1335,17 @@ int do_sensitivity_eval_all( struct Instance *i,
 }
 
 
-int sensitivity_register(void){
-
-  int result=0;
-
-  char sensitivity_help[] =
+char sensitivity_help[] =
 	"This function does sensitivity analysis dy/dx. It requires 4 args:\n"
 	"  1. name: name of a reference instance or SELF.\n"
 	"  2. x: x, where x is an array of > solver_var.\n"
 	"  3. y: where y is an array of > solver_var.\n"
 	"  4. dy/dx: which dy_dx[1..n_y][1..n_x].";
+
+int sensitivity_register(void){
+
+  int result=0;
+
 
   result = CreateUserFunctionMethod("do_solve",
 			      do_solve_eval,

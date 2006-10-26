@@ -306,7 +306,7 @@ static void lsode_densematrix_destroy(double **matrix,int nrows){
 	if var and inst are decoupled.
 */
 int integrator_lsode_setup_diffs(IntegratorSystem *blsys) {
-	long n_eqns;
+	/* long n_eqns; */
 	unsigned long nch,i;
 
 	struct var_variable **vp;
@@ -567,7 +567,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
   slv_status_t status;
 
   /*  slv_parameters_t parameters; pity lsode doesn't allow error returns */
-  int i;
+  /* int i; */
   unsigned long ok;
 
 #if DOTIME
@@ -1002,7 +1002,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 void XASCWV( char *msg, /* pointer to start of message */
              int *nmes, /* the length of msg (number of characters) */
              int *nerr, /* the error number (not used). */
-             int *level, 
+             int *level,
              int *ni,
              int *i1,
              int *i2,
@@ -1019,7 +1019,7 @@ void XASCWV( char *msg, /* pointer to start of message */
 			if(*nr==0)return;
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Corrector convergence test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
 			break;
-		
+
 		default:
 			ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
 

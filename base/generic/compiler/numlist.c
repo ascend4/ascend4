@@ -1473,8 +1473,8 @@ void NumpairClearPuddle(void)
 /*
  * test the basic operations.
  */
-/*
-#ifdef NUMPAIRSELFTEST
+#ifdef UNRELOCATE_NP_TEST
+#ifdef NUMPAIRSELFTEST /* if defined, compile test main */
 #define TESTITER 0
 #define TESTLT 0
 #define TESTGT 0
@@ -1537,7 +1537,7 @@ int main()
   NLPWrite(NULL,ep5);
 
 #if TESTITER
-  * test iteration *
+  /* test iteration */
   FPRINTF(stderr,"\nIteration tests\n");
   FPRINTF(stderr,"Prev\n");
   hint = 0;
@@ -1709,9 +1709,10 @@ int main()
   NumpairClearPuddle();
   gl_destroy(nlpgl);
 
-  gl_emptyrecycler();                  * empty the reused list pool *
-  gl_destroy_pool();                   * empty the reused list head pool *
+  gl_emptyrecycler();                  /* empty the reused list pool */
+  gl_destroy_pool();                   /* empty the reused list head pool */
 
   exit(0);
 }
-*//*#endif*/
+#endif /* numpairselftest */
+#endif /* unrelocatenptest */

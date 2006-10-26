@@ -48,6 +48,8 @@
 #include <compiler/relation_type.h>
 #include <compiler/extfunc.h>
 #include <compiler/find.h>
+#include <compiler/rel_blackbox.h>
+#include <compiler/vlist.h>
 #include <compiler/relation.h>
 #include <compiler/functype.h>
 #include <compiler/func.h>
@@ -1888,7 +1890,7 @@ int Asc_SolvSlvIterate(ClientData cdata, Tcl_Interp *interp,
 {
   slv_status_t s;
   int steps=1;
-  double time=5.0,start,delta=0.0;
+  double comptime=5.0,start,delta=0.0;
   safe_status=TCL_OK;
 
   UNUSED_PARAMETER(cdata);
@@ -1913,8 +1915,8 @@ int Asc_SolvSlvIterate(ClientData cdata, Tcl_Interp *interp,
       return safe_status;
   }
   if ( argc == 3 ) {
-    safe_status=Tcl_GetDouble(interp,argv[2],&time);
-    if (safe_status!=TCL_OK || time <0.1) {
+    safe_status=Tcl_GetDouble(interp,argv[2],&comptime);
+    if (safe_status!=TCL_OK || comptime <0.1) {
         FPRINTF(ASCERR, "slv_iterate called with bad time limit.\n");
         Tcl_ResetResult(interp);
         Tcl_SetResult(interp, "slv_iterate called with bad time limit.",
@@ -1930,7 +1932,7 @@ int Asc_SolvSlvIterate(ClientData cdata, Tcl_Interp *interp,
   }
 
   start=tm_cpu_time();
-  for (safe_status=0;safe_status<steps && delta <time;safe_status++) {
+  for (safe_status=0;safe_status<steps && delta <comptime;safe_status++) {
 #ifndef NO_SIGNAL_TRAPS
     if (setjmp(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */

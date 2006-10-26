@@ -446,12 +446,12 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
         FPRINTF(f,")\n");
         break;
       case ek_glass:		/* Glassbox Declarative */
-        if (ExternalStatNameGlassBox(s)!=NULL) {
-          WriteName(f,ExternalStatNameGlassBox(s));
+        if (ExternalStatNameRelation(s)!=NULL) {
+          WriteName(f,ExternalStatNameRelation(s));
           FPRINTF(f," : ");
         }
         FPRINTF(f," %s(",ExternalStatFuncName(s));
-        WriteVariableList(f,ExternalStatVlistGlassBox(s));
+        WriteVariableList(f,ExternalStatVlistRelation(s));
         FPRINTF(f," : INPUT/OUTPUT");
         if (ExternalStatDataGlassBox(s)!=NULL) {
           FPRINTF(f,", ");
@@ -461,12 +461,12 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
         FPRINTF(f,")\n");
         break;
       case ek_black:		/* Blackbox Declarative */
-        if (ExternalStatNameBlackBox(s)!=NULL) {
-          WriteName(f,ExternalStatNameBlackBox(s));
+        if (ExternalStatNameRelation(s)!=NULL) {
+          WriteName(f,ExternalStatNameRelation(s));
           FPRINTF(f," : ");
         }
         FPRINTF(f," %s(",ExternalStatFuncName(s));
-        WriteVariableList(f,ExternalStatVlistBlackBox(s));
+        WriteVariableList(f,ExternalStatVlistRelation(s));
         FPRINTF(f," : INPUT/OUTPUT");
         if (ExternalStatDataBlackBox(s)!=NULL) {
           FPRINTF(f,", ");
@@ -834,6 +834,7 @@ void Asc_StatErrMsg_NotAllowedMethod(FILE *f
 		, CONST struct Statement *stat
 		, CONST char *suggestion
 ){
+	(void)f;
 	error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(StatementModule(stat))
 		, StatementLineNum(stat), NULL
 		, "In a METHOD, %s statements are not allowed. %s"
@@ -846,6 +847,7 @@ void Asc_StatErrMsg_NotAllowedDeclarative(FILE *f
 		, CONST struct Statement *stat
 		, CONST char * suggestion
 ){
+	(void)f;
 	error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(StatementModule(stat))
 		, StatementLineNum(stat), NULL
 		, "In a MODEL's declarative section, %s statements not allowed. %s"

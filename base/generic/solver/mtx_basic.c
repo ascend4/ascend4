@@ -2773,7 +2773,7 @@ void mtx_old_add_col_sparse(mtx_matrix_t mtx,
                        mtx_range_t *rng,    /* range to add over or */
                        int32 *ilist)  /* list to add over */
 {
-  int32 t_org,*toorg,rindex,orgrindex,hilim;
+  int32 t_org,*toorg,rowindex,orgrowindex,hilim;
   struct element_t **arr;
   real64 value;
 
@@ -2790,26 +2790,26 @@ void mtx_old_add_col_sparse(mtx_matrix_t mtx,
     hilim=mtx->order;
 
     if (!ilist) { /* FULL COL CASE no ilist */
-      for (rindex=0; rindex< hilim; rindex++) {
-        if ((value=s_cur[rindex])!=D_ZERO) {
-          if ( ISNULL(arr[(orgrindex=toorg[rindex])]) ) { /* add element */
-            arr[orgrindex] =
-              mtx_create_element_value(mtx,orgrindex,t_org,(factor * value));
+      for (rowindex=0; rowindex< hilim; rowindex++) {
+        if ((value=s_cur[rowindex])!=D_ZERO) {
+          if ( ISNULL(arr[(orgrowindex=toorg[rowindex])]) ) { /* add element */
+            arr[orgrowindex] =
+              mtx_create_element_value(mtx,orgrowindex,t_org,(factor * value));
           } else { /* increment element */
-            arr[orgrindex]->value += factor * value;
+            arr[orgrowindex]->value += factor * value;
           }
         }
       }
     } else { /* SPARSE COL CASE with ilist */
       int32 i;
       i=0;
-      while ((rindex=ilist[i])>=0) {
-        value=s_cur[rindex];
-        if ( ISNULL(arr[(orgrindex=toorg[rindex])])  ) { /* add element */
-          arr[orgrindex] =
-            mtx_create_element_value(mtx,orgrindex,t_org,(factor * value));
+      while ((rowindex=ilist[i])>=0) {
+        value=s_cur[rowindex];
+        if ( ISNULL(arr[(orgrowindex=toorg[rowindex])])  ) { /* add element */
+          arr[orgrowindex] =
+            mtx_create_element_value(mtx,orgrowindex,t_org,(factor * value));
         } else { /* increment element */
-          arr[orgrindex]->value += factor * value;
+          arr[orgrowindex]->value += factor * value;
         }
         i++;
       }
@@ -2822,20 +2822,20 @@ void mtx_old_add_col_sparse(mtx_matrix_t mtx,
     toorg = mtx->perm.row.cur_to_org;        /* current row perm */
     hilim = rng->high;
 
-    for (rindex=rng->low; rindex<= hilim; rindex++) {
-      if ((value=s_cur[rindex])!=D_ZERO) {
-        if ( ISNULL(arr[(orgrindex=toorg[rindex])]) ) { /* add element */
-          arr[orgrindex] =
-            mtx_create_element_value(mtx,orgrindex,t_org,(factor * value));
+    for (rowindex=rng->low; rowindex<= hilim; rowindex++) {
+      if ((value=s_cur[rowindex])!=D_ZERO) {
+        if ( ISNULL(arr[(orgrowindex=toorg[rowindex])]) ) { /* add element */
+          arr[orgrowindex] =
+            mtx_create_element_value(mtx,orgrowindex,t_org,(factor * value));
         } else { /* increment element */
-          arr[orgrindex]->value += factor * value;
+          arr[orgrowindex]->value += factor * value;
         }
       }
     }
     mtx_renull_using_col(mtx,t_org,arr);
   }
   mtx_null_vector_release();
-}
+} 
 
 size_t mtx_size(mtx_matrix_t mtx) {
   size_t size=0;

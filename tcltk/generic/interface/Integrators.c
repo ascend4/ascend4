@@ -312,6 +312,10 @@ int Asc_IntegSetYFileCmd(ClientData cdata, Tcl_Interp *interp,
                   TCL_STATIC);
     return TCL_ERROR;
   }
+  if (l_y_filename != NULL) {
+    ascfree(l_y_filename);
+  }
+  len = strlen(argv[1]);
   if (len >0 ) {
     l_y_filename = Asc_MakeInitString((int)len);
     sprintf(l_y_filename,"%s",argv[1]);
@@ -909,6 +913,7 @@ int Asc_IntegReporterInit(IntegratorSystem *blsys){
 	status &= Asc_IntegPrintObsLine(integ_obs_out,blsys);
 
 	return status;
+	return 0;
 }
 
 int Asc_IntegReporterWrite(IntegratorSystem *blsys){
@@ -918,6 +923,7 @@ int Asc_IntegReporterWrite(IntegratorSystem *blsys){
 
 int Asc_IntegReporterWriteObs(IntegratorSystem *blsys){
 	return Asc_IntegPrintObsLine(integ_obs_out,blsys);
+	return 0;
 }
 
 int Asc_IntegReporterClose(IntegratorSystem *blsys){

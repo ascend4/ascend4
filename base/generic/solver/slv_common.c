@@ -31,6 +31,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascSignal.h>
 #include <compiler/compiler.h>
+#include <general/mathmacros.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include "mtx.h"

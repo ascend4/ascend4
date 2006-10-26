@@ -112,10 +112,10 @@ static int integrator_check_indep_var(IntegratorSystem *blsys);
 
 static int Integ_CmpDynVars(struct Integ_var_t *v1, struct Integ_var_t *v2);
 static int Integ_CmpObs(struct Integ_var_t *v1, struct Integ_var_t *v2);
-static void Integ_SetObsId(struct var_variable *v, long index);
+static void Integ_SetObsId(struct var_variable *v, long oindex);
 
-static long DynamicVarInfo(struct var_variable *v,long *index);
-static struct var_variable *ObservationVar(struct var_variable *v, long *index);
+static long DynamicVarInfo(struct var_variable *v,long *vindex);
+static struct var_variable *ObservationVar(struct var_variable *v, long *oindex);
 static void IntegInitSymbols(void);
 
 /*------------------------------------------------------------------------------
@@ -480,7 +480,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 				CONSOLE_DEBUG("Var \"%s\" is a FIXED state variable",varname);
 			}else{
 				CONSOLE_DEBUG("Var \"%s\" is a state variable",varname);
-			}			
+			}
 			ASC_FREE(varname);
 			info->isstate = 1;
 			numy++;
@@ -631,7 +631,7 @@ int integrator_analyse_ode(IntegratorSystem *blsys){
     if (v1->type!=1  || v2 ->type !=2 || v1->index != v2->index) {
       varname1 = var_make_name(blsys->system,v1->i);
 	  varname2 = var_make_name(blsys->system,v2->i);
-            
+
       ERROR_REPORTER_HERE(ASC_USER_ERROR,"Mistyped or misindexed dynamic variables: %s (%s = %ld,%s = %ld) and %s (%s = %ld,%s = %ld).",
              varname1, SCP(STATEFLAG),v1->type,SCP(STATEINDEX),v1->index,
              varname2, SCP(STATEFLAG),v2->type,SCP(STATEINDEX),v2->index
@@ -985,7 +985,6 @@ int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
 
 	long nstep;
 	unsigned long start_index=0, finish_index=0;
-
 	assert(blsys!=NULL);
 
 	nstep = integrator_getnsamples(blsys)-1;
@@ -995,7 +994,7 @@ int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
 		/* dude, there's no way we're writing interactive stuff here... */
 		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Console input of integration limits has been disabled!");
 		return 0;
-	}else{
+	} else {
 		start_index=i0;
 		finish_index =i1;
 		if (start_index >= (unsigned long)nstep) {
@@ -1023,9 +1022,13 @@ int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
 
 	/* now go and run the integrator */
 	switch (blsys->engine) {
-		case INTEG_LSODE: return integrator_lsode_solve(blsys, start_index, finish_index); break;
+		case INTEG_LSODE:
+		return integrator_lsode_solve(blsys, start_index, finish_index);
+		break;
 #ifdef ASC_WITH_IDA
-		case INTEG_IDA: return integrator_ida_solve(blsys,start_index, finish_index); break;
+		case INTEG_IDA:
+		return integrator_ida_solve(blsys,start_index, finish_index);
+		break;
 #endif
 		default:
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown integrator (invalid, or not implemented yet)");
@@ -1045,11 +1048,11 @@ int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
 		return blsys->NAME; \
 	}
 
-GETTER_AND_SETTER(SampleList *,samples);
-GETTER_AND_SETTER(double,maxstep);
-GETTER_AND_SETTER(double,minstep);
-GETTER_AND_SETTER(double,stepzero);
-GETTER_AND_SETTER(int,maxsubsteps);
+GETTER_AND_SETTER(SampleList *,samples) /*;*/
+GETTER_AND_SETTER(double,maxstep) /*;*/
+GETTER_AND_SETTER(double,minstep) /*;*/
+GETTER_AND_SETTER(double,stepzero) /*;*/
+GETTER_AND_SETTER(int,maxsubsteps) /*;*/
 #undef GETTER_AND_SETTER
 
 long integrator_getnsamples(IntegratorSystem *blsys){
@@ -1176,7 +1179,7 @@ double *integrator_get_ydot(IntegratorSystem *blsys, double *dydx) {
 void integrator_set_ydot(IntegratorSystem *blsys, double *dydx) {
 	long i;
 #ifndef NDEBUG
-	char *varname;
+	/* char *varname; */
 #endif
 	for (i=0; i < blsys->n_y; i++) {
 		if(blsys->ydot[i]!=NULL){
@@ -1197,7 +1200,9 @@ void integrator_set_ydot(IntegratorSystem *blsys, double *dydx) {
 
 /*-------------------------------------------------------------
   RETRIEVING OBSERVATION DATA
+*/
 
+/**
    This function takes the inst in the solver and returns the vector of
    observation variables that are located in the submodel d.obs array.
 */

@@ -31,6 +31,8 @@
 
 #include <tcl.h>
 #include <tk.h>
+#include <general/list.h>
+#include <compiler/instance_enum.h>
 #include <compiler/qlfdid.h>
 
 int Asc_BrowQlfdidSearchCmd(ClientData cdata, Tcl_Interp *interp,

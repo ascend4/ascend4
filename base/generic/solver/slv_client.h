@@ -410,7 +410,7 @@ ASC_DLLSPEC(int) slv_register_client(SlvRegistration slv0_register
 	@todo Note: the second syntax is NOT YET IMPLEMENTED.
 */
 
-ASC_DLLSPEC(const char*) slv_solver_name(int index);
+ASC_DLLSPEC(const char*) slv_solver_name(int sindex);
 /**<
 	@param index index of the solver in question (the index depends on the order in which the solvers have been registered)
 	@return name of the solver
@@ -1073,7 +1073,7 @@ extern int slv_switch_solver(slv_system_t sys, int solver);
 	If failure, return is -1;
 */
 
-ASC_DLLSPEC(int32 ) slv_get_default_parameters(int32 index, slv_parameters_t *parameters);
+ASC_DLLSPEC(int32 ) slv_get_default_parameters(int32 sindex, slv_parameters_t *parameters);
 /**< @TODO needs commenting, KHACK */
 
 ASC_DLLSPEC(void) slv_get_parameters(slv_system_t sys, slv_parameters_t *parameters);
@@ -1107,7 +1107,7 @@ extern void slv_set_client_token(slv_system_t sys, SlvClientToken ct);
 	Sets  the client token of the system_t.
 */
 
-extern void slv_set_solver_index(slv_system_t sys, int index);
+extern void slv_set_solver_index(slv_system_t sys, int sindex);
 /**<
 	Sets the solver index of the slv_system_t.
 */

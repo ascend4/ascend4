@@ -53,6 +53,11 @@
 #include "tmpnum.h"
 #include "find.h"
 #include "relation_type.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
+#include "vlist.h"
 #include "relation.h"
 #include "relation_util.h"
 #include "relation_io.h"
@@ -1193,7 +1198,7 @@ void WriteGlassBoxRelation(FILE *f,
   CONST struct gl_list_t *list;
   unsigned long len,c;
 
-  efunc = GlassBoxExtFunc(r);
+  efunc = RelationGlassBoxExtFunc(r);
   name = ExternalFuncName(efunc);
   FPRINTF(f,"%s(",name);
   if (NULL != (list = RelationVarList(r))) {
@@ -1225,7 +1230,7 @@ static void WriteGlassBoxRelationDS(Asc_DString *dsPtr,
   CONST struct gl_list_t *list;
   unsigned long len,c;
 
-  efunc = GlassBoxExtFunc(r);
+  efunc = RelationGlassBoxExtFunc(r);
   name = ExternalFuncName(efunc);
   Asc_DStringAppend(dsPtr,name,-1);
   Asc_DStringAppend(dsPtr,"(",1);
@@ -1251,6 +1256,8 @@ static void WriteGlassBoxRelationDS(Asc_DString *dsPtr,
 
 /**
 	Output a blackbox relation to the specified file pointer
+	DATA does not go to the output, as it is not mathematically
+	involved. It is seen only as the relation is constructed.
 */
 static
 void WriteBlackBoxRelation(FILE *f,
@@ -1258,16 +1265,15 @@ void WriteBlackBoxRelation(FILE *f,
 			   CONST struct Instance *inst)
 {
   struct ExternalFunc *efunc;
-  struct ExtCallNode *ext;
   struct gl_list_t *arglist;
   struct gl_list_t *branch;
   CONST struct Instance *arg;
-  unsigned long len1,c1,len2,c2;
+  unsigned long len1,c1,len2,c2, ninput;
 
-  ext = BlackBoxExtCall(r);
-  arglist = ExternalCallArgList(ext);
+  efunc = RelationBlackBoxExtFunc(r);
+  ninput = NumberInputArgs(efunc);
+  arglist = RelationBlackBoxFormalArgs(r);
   len1 = gl_length(arglist);
-  efunc = ExternalCallExtFunc(ext);
   FPRINTF(f,"%s(",ExternalFuncName(efunc)); /* function name */
 
   if (len1) {
@@ -1282,12 +1288,13 @@ void WriteBlackBoxRelation(FILE *f,
 		  if(c2<len2)FPRINTF(f,", ");
 		}
       }
-      if (c1<len1)
-		FPRINTF(f,"\n);\n");
+      if (c1<len1) {
+		FPRINTF(f,"\n); %s\n",(c1 <= ninput ?"INPUT":"OUTPUT"));
+      }
     }
   }
 
-  FPRINTF(f,");\n");
+  FPRINTF(f,"); OUTPUT\n");
 }
 
 static
@@ -1296,16 +1303,15 @@ void WriteBlackBoxRelationDS(Asc_DString *dsPtr,
 			   CONST struct Instance *inst)
 {
   struct ExternalFunc *efunc;
-  struct ExtCallNode *ext;
   struct gl_list_t *arglist;
   struct gl_list_t *branch;
   CONST struct Instance *arg;
-  unsigned long len1,c1,len2,c2;
+  unsigned long len1,c1,len2,c2,ninput;
 
-  ext = BlackBoxExtCall(r);
-  arglist = ExternalCallArgList(ext);
+  efunc = RelationBlackBoxExtFunc(r);
+  ninput = NumberInputArgs(efunc);
+  arglist = RelationBlackBoxFormalArgs(r);
   len1 = gl_length(arglist);
-  efunc = ExternalCallExtFunc(ext);
   sprintf(SB255," %s(",ExternalFuncName(efunc)); /* function name */
   Asc_DStringAppend(dsPtr,SB255,-1);
 
@@ -1321,10 +1327,15 @@ void WriteBlackBoxRelationDS(Asc_DString *dsPtr,
 		  if(c2<len2)Asc_DStringAppend(dsPtr,", ",2);
 		}
       }
-      if(c1<len1)
-        Asc_DStringAppend(dsPtr,"\n\t, ",4);
+      if(c1<len1) {
+        if (c1 <= ninput) {
+          Asc_DStringAppend(dsPtr," INPUT \n\t, ",11);
+        } else {
+          Asc_DStringAppend(dsPtr," OUTPUT \n\t, ",12);
+        }
+      }
     }
-	Asc_DStringAppend(dsPtr,"\n",1);
+    Asc_DStringAppend(dsPtr," OUTPUT \n",9);
   }
 
   Asc_DStringAppend(dsPtr,");\n ",3);
@@ -1693,7 +1704,7 @@ void SaveGlassBoxRelation(FILE *fp, CONST struct Instance *relinst)
   FPRINTF(fp,"\t$KIND %d, $RELOP %d, $COUNT %d;\n",
 	  (int)type, (int)RelationRelop(reln), len);
 
-  tmp = ExternalFuncName(GlassBoxExtFunc(reln));
+  tmp = ExternalFuncName(RelationGlassBoxExtFunc(reln));
   FPRINTF(fp,"\t$BASETYPE %s;\n",tmp);			/* the funcname */
   FPRINTF(fp,"\t$INDEX %d\n",GlassBoxRelIndex(reln));
 

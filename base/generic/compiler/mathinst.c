@@ -60,6 +60,9 @@
 #include "pending.h"
 #include "find.h"
 #include "relation_type.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
+#include "vlist.h"
 #include "relation.h"
 #include "logical_relation.h"
 #include "logrelation.h"
@@ -368,7 +371,9 @@ struct Instance *RelationsForAtom(CONST struct Instance *i,
 
 void AddRelation(struct Instance *i, struct Instance *reln){
   unsigned long len;
-  assert(i&&reln&&(reln->t==REL_INST));
+  assert(i);
+  assert(reln);
+  assert(reln->t==REL_INST);
   AssertMemory(i);
   switch(i->t){
   case REAL_ATOM_INST:

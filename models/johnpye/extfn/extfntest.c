@@ -22,6 +22,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
 
+/*
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
 #include <compiler/dimen.h>
@@ -31,10 +32,11 @@
 #include <compiler/childinfo.h>
 #include <compiler/slist.h>
 #include <compiler/type_desc.h>
-#include <compiler/packages.h>
+#include <compiler/packages.h>*/
+#include <compiler/extfunc.h>
 
-int addone_prepare(struct Slv_Interp *slv_interp, struct Instance *data, struct gl_list_t *arglist);
-int addone_calc(struct Slv_Interp *slv_interp, int ninputs, int noutputs, double *inputs, double *outputs, double *jacobian);
+ExtBBoxInitFunc addone_prepare;
+ExtBBoxFunc addone_calc;
 
 /**
 	This is the function called from "IMPORT extfntest"
@@ -63,6 +65,7 @@ ASC_EXPORT(int) extfntest_register(){
 		, (ExtBBoxInitFunc*)NULL /* final */
 		, 1,1 /* inputs, outputs */
 		, addone_help
+		, 0.0
 	); /* returns 0 on success */
 
 	if(result){
@@ -71,7 +74,7 @@ ASC_EXPORT(int) extfntest_register(){
 	return result;
 }
 
-int addone_prepare(struct Slv_Interp *slv_interp,
+int addone_prepare(struct BBoxInterp *slv_interp,
 	   struct Instance *data,
 	   struct gl_list_t *arglist
 ){
@@ -84,7 +87,7 @@ int addone_prepare(struct Slv_Interp *slv_interp,
 }
 
 /* return 0 on success */
-int addone_calc(struct Slv_Interp *slv_interp,
+int addone_calc(struct BBoxInterp *slv_interp,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian

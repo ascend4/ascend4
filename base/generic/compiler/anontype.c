@@ -205,12 +205,12 @@ struct AnonBucket *FindAnonBucket(struct TypeDescription *d,
                                   struct AnonBucket **t)
 {
   struct AnonBucket *result;
-  int index;
+  int bindex;
   if (AssertBucketInfo(d,t)) {
      return NULL;
   }
-  index = TYPEHASHINDEX(SCP(GetName(d)));
-  result = t[index];
+  bindex = TYPEHASHINDEX(SCP(GetName(d)));
+  result = t[bindex];
   while (result != NULL &&
           (d != result->d ||  /* not type wanted */
             (indirected != LONG_MAX  && /* is array */
@@ -235,7 +235,7 @@ struct AnonBucket *AddAnonBucket(struct TypeDescription *d,
                                  struct AnonBucket **t)
 {
   struct AnonBucket *b;
-  int index;
+  int bindex;
   if (AssertBucketInfo(d,t)!=0 || FindAnonBucket(d,indirected,t) != NULL) {
     return NULL;
   }
@@ -243,9 +243,9 @@ struct AnonBucket *AddAnonBucket(struct TypeDescription *d,
   if (b == NULL) {
     return NULL;
   }
-  index = TYPEHASHINDEX(SCP(GetName(d)));
-  b->next = t[index];
-  t[index] = b;
+  bindex = TYPEHASHINDEX(SCP(GetName(d)));
+  b->next = t[bindex];
+  t[bindex] = b;
   b->d = d;
   b->indirected = indirected;
   b->anonlist = NULL;
@@ -1223,7 +1223,7 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
 
   struct AnonType *testat, *after;
   CONST struct Instance *testi = NULL;
-  unsigned long index, testindex; /* 0 = NULL child */
+  unsigned long bindex, testindex; /* 0 = NULL child */
   unsigned long c,len;
   enum search_status s;
 
@@ -1249,23 +1249,23 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
   testat = after;
   /* for loop will be entered */
   for (c = 1; c <= len && s == at_notdone; c++) {
-    index = GAIN(InstanceChild(i,c));
+    bindex = GAIN(InstanceChild(i,c));
     testi = GAP(testat); /* if at never changes, this is redundant,
                           * but redundant is cheaper than the logic
                           * to avoid redundancy.
                           */
     testindex = GAIN(InstanceChild(testi,c));
-    while (testindex < index) {
+    while (testindex < bindex) {
       if (testat->next == NULL) {
         s = at_append;  /* testat is end of at list, exact is 0 */
 #if ATDEBUG
-        FPRINTF(ASCERR,"NearestAnonTypeModel: at_append set (index=%lu, testindex=%lu)\n",index, testindex);
+        FPRINTF(ASCERR,"NearestAnonTypeModel: at_append set (index=%lu, testindex=%lu)\n",bindex, testindex);
 #endif
         break;          /* exit while early */
       } else {
         /* move right */
 #if ATDEBUG
-        FPRINTF(ASCERR,"NearestAnonTypeModel: moving right(index=%lu, testindex=%lu)\n",index, testindex);
+        FPRINTF(ASCERR,"NearestAnonTypeModel: moving right(index=%lu, testindex=%lu)\n",bindex, testindex);
 #endif
         after = testat;
         testat = testat->next;
@@ -1273,15 +1273,15 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
         testindex = GAIN(InstanceChild(testi,c));
       }
     }
-    /* append, or testindex >= index. = -> on to next child, > -> insert. */
-    if (s == at_notdone && testindex > index) {
+    /* append, or testindex >= bindex. = -> on to next child, > -> insert. */
+    if (s == at_notdone && testindex > bindex) {
       s = at_previous;  /* insert new at between after, testat */
 #if ATDEBUG
-      FPRINTF(ASCERR,"NearestAnonTypeModel: at_previous set at c = %lu (index=%lu, testindex=%lu)\n",c, index, testindex);
+      FPRINTF(ASCERR,"NearestAnonTypeModel: at_previous set at c = %lu (index=%lu, testindex=%lu)\n",c, bindex, testindex);
 #endif
       break;            /* exit for early */
     }
-    /* index == test index */
+    /* bindex == test index */
   }
 
 #if ATDEBUG

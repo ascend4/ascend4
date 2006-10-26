@@ -324,17 +324,17 @@ void DestroyNotesOnType(symchar *dbid, symchar *typename){
   unsigned long len;
   struct gl_list_t *nl;
   struct Note *n,*p;
-  long index;
+  long tindex;
   CHECKDBV;
 
   /* find type table data and dump it */
-  index = PTRHASH(typename);
-  b = db->typetab[index];
+  tindex = PTRHASH(typename);
+  b = db->typetab[tindex];
   if (b==NULL) {
     return;
   }
   if (b->key == typename) {
-    db->typetab[index] = b->next;
+    db->typetab[tindex] = b->next;
   } else {
     while (b != NULL && b->key != typename) {
       prev = b;
@@ -355,8 +355,8 @@ void DestroyNotesOnType(symchar *dbid, symchar *typename){
    * is to replace it.
    */
   /* id table */
-  for (index = 0; index < NTAB; index++) {
-    b = db->idtab[index];
+  for (tindex = 0; tindex < NTAB; tindex++) {
+    b = db->idtab[tindex];
     while (b != NULL) {
       nl = (struct gl_list_t *)b->obj;
       len = gl_length(nl);
@@ -726,27 +726,27 @@ symchar *SelfNote(void){
 static struct note_bucket *AddEntry(struct note_bucket **tab
 		, symchar *key, void *obj
 ){
-  long index;
+  long tindex;
   struct note_bucket *new;
 
-  index = PTRHASH(key);
+  tindex = PTRHASH(key);
   new = NBALLOC;
   if (new==NULL) {
     return NULL;
   }
   new->key = key;
   new->obj = obj;
-  new->next = tab[index];
-  tab[index] = new;
+  new->next = tab[tindex];
+  tab[tindex] = new;
   return new;
 }
 
 static
 struct note_bucket *FindEntry(struct note_bucket **tab, symchar *key){
   struct note_bucket *b;
-  long index;
-  index = PTRHASH(key);
-  b = tab[index];
+  long tindex;
+  tindex = PTRHASH(key);
+  b = tab[tindex];
   while (b != NULL && b->key != key) {
     b = b->next;
   }

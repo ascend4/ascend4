@@ -378,12 +378,9 @@ unsigned int SlistHasWhat(struct StatementList *slist)
     case REL:
       what |= contains_REL;
       break;
-#define NEW_ext 1
-#if NEW_ext
     case EXT:
-      what |= contains_REL;
+      what |= contains_EXT;
       break;
-#endif
     case LOGREL:
       what |= contains_LREL;
       break;
@@ -408,14 +405,14 @@ unsigned int SlistHasWhat(struct StatementList *slist)
   return what;
 }
 
-struct Statement *CreateFOR(symchar *index,
+struct Statement *CreateFOR(symchar *sindex,
 			    struct Expr *expr,
 			    struct StatementList *stmts,
 			    enum ForOrder order, enum ForKind kind)
 {
   register struct Statement *result;
   result=create_statement_here(FOR);
-  result->v.f.index = index;
+  result->v.f.index = sindex;
   result->v.f.e = expr;
   result->v.f.stmts = stmts;
   result->v.f.order = order;
@@ -509,11 +506,23 @@ struct Statement *CreateEXTERNBlackBox(
 			       struct Name *data)
 {
   register struct Statement *result;
-  /* ERROR_REPORTER_DEBUG("Found blackbox equation statement '%s'\n",funcname); */
+  struct Name *bbsuffix;
+  symchar *bsuf;
+  ERROR_REPORTER_DEBUG("Found blackbox equation statement '%s'\n",funcname);
 
   result=create_statement_here(EXT);
   result->v.ext.mode = ek_black;
   result->v.ext.extcall = funcname;
+  /* bbox names are indexed bbox{[optionalUserFORIndices]}[?BBOX_OUTPUT].
+	The last index is always ?BBOX_OUTPUT and there is never a case
+	where there can be two such indices, by bbox definition.
+	We could call the symbol ?* instead, but in case another similar
+	internal compiler usage pops up (likely) we like the informative name.
+   */
+  /* name of the bbox implicit int set */
+  bsuf = AddSymbolL(BBOX_RESERVED_INDEX,BBOX_RESERVED_INDEX_LEN); 
+  bbsuffix = CreateReservedIndexName(bsuf); /* add a [?BBOX_OUTPUT] index */
+  n = JoinNames(n, bbsuffix);
   result->v.ext.u.black.nptr = n;
   result->v.ext.u.black.vl = vl;
   result->v.ext.u.black.data = data; 	/* NULL is valid */
@@ -1392,6 +1401,13 @@ unsigned ForContainsRelationsF(CONST struct Statement *s)
   return (s->v.f.contains & contains_REL);
 }
 
+unsigned ForContainsExternalF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==FOR);
+  return (s->v.f.contains & contains_EXT);
+}
+
 
 unsigned ForContainsLogRelationsF(CONST struct Statement *s)
 {
@@ -1578,20 +1594,12 @@ enum ExternalKind ExternalStatModeF(CONST struct Statement *s)
   return(s->v.ext.mode);
 }
 
-struct Name *ExternalStatNameBlackBoxF(CONST struct Statement *s)
+struct Name *ExternalStatNameRelationF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==EXT);
-  assert(s->v.ext.mode == ek_black);
-  return(s->v.ext.u.black.nptr);
-}
-
-struct Name *ExternalStatNameGlassBoxF(CONST struct Statement *s)
-{
-  assert(s!=NULL);
-  assert(s->t==EXT);
-  assert(s->v.ext.mode == ek_glass);
-  return(s->v.ext.u.black.nptr);
+  assert(s->v.ext.mode == ek_glass || s->v.ext.mode == ek_black);
+  return(s->v.ext.u.relation.nptr);
 }
 
 struct Name *ExternalStatDataBlackBoxF(CONST struct Statement *s)
@@ -1618,28 +1626,20 @@ struct Name *ExternalStatScopeGlassBoxF(CONST struct Statement *s)
   return(s->v.ext.u.glass.scope);
 }
 
-struct VariableList *ExternalStatVlistBlackBoxF(CONST struct Statement *s)
+CONST struct VariableList *ExternalStatVlistRelationF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==EXT);
-  assert(s->v.ext.mode == ek_black);
-  return(s->v.ext.u.black.vl);
+  assert(s->v.ext.mode == ek_black || s->v.ext.mode == ek_glass);
+  return(s->v.ext.u.relation.vl);
 }
 
-struct VariableList *ExternalStatVlistMethodF(CONST struct Statement *s)
+CONST struct VariableList *ExternalStatVlistMethodF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==EXT);
   assert(s->v.ext.mode == ek_method);
   return(s->v.ext.u.method.vl);
-}
-
-struct VariableList *ExternalStatVlistGlassBoxF(CONST struct Statement *s)
-{
-  assert(s!=NULL);
-  assert(s->t==EXT);
-  assert(s->v.ext.mode == ek_glass);
-  return(s->v.ext.u.glass.vl);
 }
 
 CONST char *ExternalStatFuncNameF(CONST struct Statement *s)
@@ -1846,6 +1846,13 @@ unsigned CondContainsRelationsF(CONST struct Statement *s)
   return (s->v.cond.contains & contains_REL);
 }
 
+unsigned CondContainsExternalF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==COND);
+  return (s->v.cond.contains & contains_EXT);
+}
+
 
 unsigned CondContainsLogRelationsF(CONST struct Statement *s)
 {
@@ -1942,6 +1949,13 @@ unsigned SelectContainsRelationsF(CONST struct Statement *s)
   assert(s!=NULL);
   assert(s->t==SELECT);
   return (s->v.se.contains & contains_REL);
+}
+
+unsigned SelectContainsExternalF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==SELECT);
+  return (s->v.se.contains & contains_EXT);
 }
 
 
@@ -2334,14 +2348,8 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     if (ExternalStatMode(s1) != ExternalStatMode(s2)) {
       return (ExternalStatMode(s1) > ExternalStatMode(s2)) ? 1 : -1;
     }
-    if (ExternalStatMode(s1) == ek_glass ) {
-      ctmp = CompareNames(ExternalStatNameGlassBox(s1),ExternalStatNameGlassBox(s2));
-      if (ctmp != 0) {
-        return ctmp;
-      }
-    }
-    if (ExternalStatMode(s1) == ek_black ) {
-      ctmp = CompareNames(ExternalStatNameBlackBox(s1),ExternalStatNameBlackBox(s2));
+    if (ExternalStatMode(s1) == ek_glass || ExternalStatMode(s1) == ek_black) {
+      ctmp = CompareNames(ExternalStatNameRelation(s1),ExternalStatNameRelation(s2));
       if (ctmp != 0) {
         return ctmp;
       }
@@ -2368,9 +2376,10 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     case ek_method:
       return CompareVariableLists(ExternalStatVlistMethod(s1),ExternalStatVlistMethod(s2));
     case ek_glass:
-      return CompareVariableLists(ExternalStatVlistGlassBox(s1),ExternalStatVlistGlassBox(s2));
     case ek_black:
-      return CompareVariableLists(ExternalStatVlistBlackBox(s1),ExternalStatVlistBlackBox(s2));
+      return CompareVariableLists(ExternalStatVlistRelation(s1),ExternalStatVlistRelation(s2));
+    default:
+      return 1;
     }
   case REF:
     /* need fixing. since both are ill defined, they

@@ -63,6 +63,8 @@
 #include <compiler/relation_type.h>
 #include <compiler/extfunc.h>
 #include <compiler/find.h>
+#include <compiler/rel_blackbox.h>
+#include <compiler/vlist.h>
 #include <compiler/relation.h>
 #include <compiler/functype.h>
 #include <compiler/safe.h>
@@ -692,6 +694,17 @@ dim_type *Unit_FindRelDim(CONST struct Instance *i)
   reln = GetInstanceRelation(i,&reltype);
   switch (reltype) {
   case e_blackbox:
+    if (!IsWild(RelationDim(reln))) {
+      return RelationDim(reln);
+    }
+    if (g_check_dimensions_noisy) {
+#ifdef BBOXWHINE
+      FPRINTF(stderr,
+              "Blackbox relation dimensionality waiting on output var dimensionality.\n");
+#endif
+      /* should come off lhs var of blackbox */
+    }
+    return (dim_type *)WildDimension();
   case e_glassbox:
   case e_opcode:
     if (g_check_dimensions_noisy) {

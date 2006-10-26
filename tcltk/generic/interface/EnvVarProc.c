@@ -53,7 +53,7 @@ STDHLF(Asc_EnvVarCmd,(Asc_EnvVarCmdHL1, Asc_EnvVarCmdHL2,
 int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
                   int argc, CONST84 char *argv[])
 {
-  char **envargv;
+  const char **envargv;
   char *path;
   int envargc;
   int c;

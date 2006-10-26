@@ -55,6 +55,8 @@
 #include "find.h"
 #include "relation_type.h"
 #include "extfunc.h"
+#include "rel_blackbox.h"
+#include "vlist.h"
 #include "relation.h"
 #include "logical_relation.h"
 #include "logrelation.h"

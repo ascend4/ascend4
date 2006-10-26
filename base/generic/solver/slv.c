@@ -571,7 +571,7 @@ void slv_set_symbol_list(slv_system_t sys,
 #define DEFINE_SET_MASTER_LIST_METHODS(D) \
 	D(var,vars,var_variable) \
 	D(par,pars,var_variable) \
-	D(unattached,unattached,var_variable); \
+	D(unattached,unattached,var_variable) \
 	D(dvar,dvars,dis_discrete) \
 	D(disunatt,disunatt,dis_discrete) \
 	D(rel,rels,rel_relation) \
@@ -659,18 +659,18 @@ int Solv_C_CheckHalt()
     return 0;
 }
 
-const char *slv_solver_name(int index)
+const char *slv_solver_name(int sindex)
 {
   static char errname[] = "ErrorSolver";
-  if (index >= 0 && index < NORC) {
-    if ( SlvClientsData[index].name == NULL ) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_solver_name: unnamed solver: index='%d'",index);
+  if (sindex >= 0 && sindex < NORC) {
+    if ( SlvClientsData[sindex].name == NULL ) {
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_solver_name: unnamed solver: index='%d'",sindex);
       return errname;
     } else {
-	  return SlvClientsData[index].name;
+	  return SlvClientsData[sindex].name;
     }
   } else {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_solver_name: invalid solver index '%d'", index);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_solver_name: invalid solver index '%d'", sindex);
     return errname;
   }
 }
@@ -828,10 +828,10 @@ struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 	D_RETURN(bnd,bnds,bnd_boundary)
 
 /* the slv_set_solvers_*_list methods: some have a 'return' when sys->PROP.master==NULL; others do not: */
-DEFINE_GETSET_LIST_METHODS(DEFINE_SET_SOLVERS_LIST_METHOD, DEFINE_SET_SOLVERS_LIST_METHOD_RETURN)
+DEFINE_GETSET_LIST_METHODS(DEFINE_SET_SOLVERS_LIST_METHOD, DEFINE_SET_SOLVERS_LIST_METHOD_RETURN) /*;*/
 
 /* the slv_get_solvers_*_list methods: all have the same form so it's DEFINE...(D,D) in this case: */
-DEFINE_GETSET_LIST_METHODS(DEFINE_GET_SOLVERS_LIST_METHOD, DEFINE_GET_SOLVERS_LIST_METHOD)
+DEFINE_GETSET_LIST_METHODS(DEFINE_GET_SOLVERS_LIST_METHOD, DEFINE_GET_SOLVERS_LIST_METHOD) /*;*/
 
 #define DEFINE_GET_MASTER_LIST_METHOD(NAME,PROP,TYPE) \
 	struct TYPE **slv_get_master_##NAME##_list(slv_system_t sys){ \
@@ -842,7 +842,7 @@ DEFINE_GETSET_LIST_METHODS(DEFINE_GET_SOLVERS_LIST_METHOD, DEFINE_GET_SOLVERS_LI
 	}
 
 /* the slv_get_master_*_list are also all of the same form, so DEFINE...(D,D) */
-DEFINE_GETSET_LIST_METHODS(DEFINE_GET_MASTER_LIST_METHOD,DEFINE_GET_MASTER_LIST_METHOD)
+DEFINE_GETSET_LIST_METHODS(DEFINE_GET_MASTER_LIST_METHOD,DEFINE_GET_MASTER_LIST_METHOD) /*;*/
 
 /*----------------------------------------------------------------------
 	Macros to define:
@@ -883,8 +883,8 @@ DEFINE_GETSET_LIST_METHODS(DEFINE_GET_MASTER_LIST_METHOD,DEFINE_GET_MASTER_LIST_
 	D(whens) \
 	D(bnds)
 
-DEFINE_SLV_METHODS(DEFINE_SOLVERS_GET_NUM_METHOD)
-DEFINE_SLV_METHODS(DEFINE_MASTER_GET_NUM_METHOD)
+DEFINE_SLV_METHODS(DEFINE_SOLVERS_GET_NUM_METHOD) /*;*/
+DEFINE_SLV_METHODS(DEFINE_MASTER_GET_NUM_METHOD) /*;*/
 
 void slv_set_obj_relation(slv_system_t sys,struct rel_relation *obj)
 {
@@ -992,7 +992,7 @@ int32 slv_need_consistency(slv_system_t sys)
 	D(whens,when,w_when) \
 	D(bnds,bnd,bnd_boundary)
 
-DEFINE_SLV_COUNT_METHODS(DEFINE_SLV_COUNT_METHOD)
+DEFINE_SLV_COUNT_METHODS(DEFINE_SLV_COUNT_METHOD) /*;*/
 
 /*--------------------------------------------------------------
 	Methods to define
@@ -1036,9 +1036,9 @@ DEFINE_SLV_COUNT_METHODS(DEFINE_SLV_COUNT_METHOD)
 	D(bnds,bnds,bnd,bnds)
 
 /** Invoke the DEFINE_COUNT_METHODS macro for SOLVERS methods */
-DEFINE_COUNT_METHODS(DEFINE_SLV_COUNT_SOLVER_METHOD)
+DEFINE_COUNT_METHODS(DEFINE_SLV_COUNT_SOLVER_METHOD) /*;*/
 /** Invoke the DEFINE_COUNT_METHODS macro for MASTER methods */
-DEFINE_COUNT_METHODS(DEFINE_SLV_COUNT_MASTER_METHOD)
+DEFINE_COUNT_METHODS(DEFINE_SLV_COUNT_MASTER_METHOD) /*;*/
 
 /*------------------------------------------------------*/
 
@@ -1281,16 +1281,16 @@ int slv_get_selected_solver(slv_system_t sys)
   return -1;
 }
 
-int32 slv_get_default_parameters(int index,
+int32 slv_get_default_parameters(int sindex,
 				slv_parameters_t *parameters)
 {
-  if (index >= 0 && index < NORC) {
-    if ( SlvClientsData[index].getdefparam == NULL ) {
+  if (sindex >= 0 && sindex < NORC) {
+    if ( SlvClientsData[sindex].getdefparam == NULL ) {
       ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_default_parameters called with parameterless index.");
       return 0;
     } else {
       /* send NULL system when setting up interface */
-      (SlvClientsData[index].getdefparam)(NULL,NULL,parameters);
+      (SlvClientsData[sindex].getdefparam)(NULL,NULL,parameters);
       return 1;
     }
   } else {
@@ -1339,7 +1339,7 @@ int32 slv_get_default_parameters(int index,
 		SF(sys,PROP)(sys,sys->ct, PARAMNAME); \
 	}
 
-DEFINE_SLV_PROXY_METHOD_PARAM(get_parameters,getparam,slv_parameters_t*,parameters);
+DEFINE_SLV_PROXY_METHOD_PARAM(get_parameters,getparam,slv_parameters_t*,parameters) /*;*/
 
 void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
 {
@@ -1355,15 +1355,15 @@ void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
   SF(sys,setparam)(sys,sys->ct,parameters);
 }
 
-DEFINE_SLV_PROXY_METHOD_PARAM(get_status,getstatus,slv_status_t*,status);
-DEFINE_SLV_PROXY_METHOD(get_linsol_sys, getlinsol, linsol_system_t, NULL);
-DEFINE_SLV_PROXY_METHOD(get_sys_mtx, getsysmtx, mtx_matrix_t, NULL);
-DEFINE_SLV_PROXY_METHOD(get_linsolqr_sys, getlinsys, linsolqr_system_t, NULL);
-DEFINE_SLV_PROXY_METHOD_PARAM(dump_internals,dumpinternals,int,level);
-DEFINE_SLV_PROXY_METHOD_VOID(presolve);
-DEFINE_SLV_PROXY_METHOD_VOID(resolve);
-DEFINE_SLV_PROXY_METHOD_VOID(iterate);
-DEFINE_SLV_PROXY_METHOD_VOID(solve);
+DEFINE_SLV_PROXY_METHOD_PARAM(get_status,getstatus,slv_status_t*,status) /*;*/
+DEFINE_SLV_PROXY_METHOD(get_linsol_sys, getlinsol, linsol_system_t, NULL) /*;*/
+DEFINE_SLV_PROXY_METHOD(get_sys_mtx, getsysmtx, mtx_matrix_t, NULL) /*;*/
+DEFINE_SLV_PROXY_METHOD(get_linsolqr_sys, getlinsys, linsolqr_system_t, NULL) /*;*/
+DEFINE_SLV_PROXY_METHOD_PARAM(dump_internals,dumpinternals,int,level) /*;*/
+DEFINE_SLV_PROXY_METHOD_VOID(presolve) /*;*/
+DEFINE_SLV_PROXY_METHOD_VOID(resolve) /*;*/
+DEFINE_SLV_PROXY_METHOD_VOID(iterate) /*;*/
+DEFINE_SLV_PROXY_METHOD_VOID(solve) /*;*/
 
 /*-----------------------------------------------------------*/
 
@@ -1483,7 +1483,7 @@ int32 slv_get_obj_num(slv_system_t sys)
 int32 slv_near_bounds(slv_system_t sys,real64 epsilon,
 		       int32 **vip)
 {
-  int32 len,i, *va, index;
+  int32 len,i, *va, vindex;
   real64 comp;
   static var_filter_t vfilter;
   struct var_variable **vlist=NULL;
@@ -1493,14 +1493,14 @@ int32 slv_near_bounds(slv_system_t sys,real64 epsilon,
   vfilter.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_ACTIVE);
   vlist = slv_get_solvers_var_list(sys);
   va[0] = va[1] = 0;
-  index = 2;
+  vindex = 2;
   for (i = 0; i < len; i++) {
     if (var_apply_filter(vlist[i],&vfilter)) {
       comp = (var_value(vlist[i]) - var_lower_bound(vlist[i]))
 	/ var_nominal(vlist[i]);
       if (comp < epsilon) {
-	va[index] = i;
-	index++;
+	va[vindex] = i;
+	vindex++;
 	va[0]++;
       }
     }
@@ -1510,19 +1510,19 @@ int32 slv_near_bounds(slv_system_t sys,real64 epsilon,
       comp = (var_upper_bound(vlist[i]) - var_value(vlist[i]))
 	/ var_nominal(vlist[i]);
       if (comp < epsilon) {
-	va[index] = i;
-	index++;
+	va[vindex] = i;
+	vindex++;
 	va[1]++;
       }
     }
   }
-  return index - 2;
+  return vindex - 2;
 }
 
 int32 slv_far_from_nominals(slv_system_t sys,real64 bignum,
 		       int32 **vip)
 {
-  int32 len,i, *va, index;
+  int32 len,i, *va, vindex;
   real64 comp;
   static var_filter_t vfilter;
   struct var_variable **vlist=NULL;
@@ -1531,17 +1531,17 @@ int32 slv_far_from_nominals(slv_system_t sys,real64 bignum,
   vfilter.matchbits = (VAR_FIXED | VAR_INCIDENT | VAR_SVAR | VAR_ACTIVE);
   vfilter.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_ACTIVE);
   vlist = slv_get_solvers_var_list(sys);
-  index = 0;
+  vindex = 0;
   for (i = 0; i < len; i++) {
     if (var_apply_filter(vlist[i],&vfilter)) {
       comp = fabs(var_value(vlist[i]) - var_nominal(vlist[i]))
 	/ var_nominal(vlist[i]);
       if (comp > bignum) {
-	va[index] = i;
-	index++;
+	va[vindex] = i;
+	vindex++;
       }
     }
   }
-  return index;
+  return vindex;
 }
 

@@ -193,9 +193,9 @@ int32 when_mindex( struct w_when *when)
    return( when->mindex );
 }
 
-void when_set_mindex( struct w_when *when, int32 index)
+void when_set_mindex( struct w_when *when, int32 mindex)
 {
-   when->mindex = index;
+   when->mindex = mindex;
 }
 
 
@@ -204,9 +204,9 @@ int32 when_sindex( struct w_when *when)
    return( when->sindex );
 }
 
-void when_set_sindex( struct w_when *when, int32 index)
+void when_set_sindex( struct w_when *when, int32 sindex)
 {
-   when->sindex = index;
+   when->sindex = sindex;
 }
 
 int32 when_model(const struct w_when *when)
@@ -214,9 +214,9 @@ int32 when_model(const struct w_when *when)
    return((const int32) when->model );
 }
 
-void when_set_model( struct w_when *when, int32 index)
+void when_set_model( struct w_when *when, int32 mindex)
 {
-   when->model = index;
+   when->model = mindex;
 }
 
 int32 when_apply_filter(struct w_when *w,
@@ -334,10 +334,10 @@ int32 *when_case_values_list( struct when_case *wc)
 
 void when_case_set_values_list( struct when_case *wc, int32 *vallist)
 {
-   int32 *value,index;
+   int32 *value,vindex;
    assert(wc);
    value = &(wc->values[0]);
-   for(index=0;index<MAX_VAR_IN_LIST;index++) {
+   for(vindex=0;vindex<MAX_VAR_IN_LIST;vindex++) {
       *value = *vallist;
       value++;
       vallist++;

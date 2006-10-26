@@ -107,7 +107,7 @@ extern int zz_debug;
 extern int  Tktable_Init(Tcl_Interp*);
 
 static void AscTrap(int);
-static int  AscCheckEnvironVars(Tcl_Interp*,const char *progname);
+static void  AscCheckEnvironVars(Tcl_Interp*,const char *progname);
 static void AscPrintHelpExit(CONST char *);
 static int  AscProcessCommandLine(Tcl_Interp*, int, CONST char **);
 static void Prompt(Tcl_Interp*, int);
@@ -477,9 +477,10 @@ int AscDriver(int argc, CONST char **argv)
 
 static void printenv(){
 	int n;
-	char **l;
+	const char **l;
 	l = Asc_EnvNames(&n);
 	CONSOLE_DEBUG("VARS = %d",n);
+	ascfree(l);
 }
 
 /**
@@ -501,7 +502,7 @@ static void printenv(){
 	If you set ASC_ABSOLUTE_PATHS then ASCENDDIST defaults to @ASC_DATADIR@ and
 	the rest follows through as above.
 */
-static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
+static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	char *distdir, *tkdir, *bitmapsdir, *librarydir;
 	struct FilePath *fp, *fp1, *distfp, *tkfp, *bitmapsfp, *libraryfp;
 	char envcmd[MAX_ENV_VAR_LENGTH];
@@ -531,6 +532,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	bitmapsdir = GETENV(ASC_ENV_BITMAPS);
 	librarydir = GETENV(ASC_ENV_LIBRARY);
 
+
 	/* Create an ASCENDDIST value if it's missing */
 
 	if(distdir == NULL){
@@ -538,20 +540,20 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 # ifndef ASC_ABSOLUTE_PATHS
 
-		// read the executable's name/relative path.
+		/* read the executable's name/relative path.*/
         fp = ospath_new(progname);
 
         ospath_strncpy(fp,s1,PATH_MAX);
         CONSOLE_DEBUG("PROGNAME = %s",s1);
 
-		// get the directory name from the exe path
+		/* get the directory name from the exe path*/
         fp1 = ospath_getdir(fp);
         ospath_free(fp);
 
         ospath_strncpy(fp1,s1,PATH_MAX);
         CONSOLE_DEBUG("DIR = %s",s1);
 
-		// append the contents of ASC_DISTDIR_REL_BIN to this path
+		/* append the contents of ASC_DISTDIR_REL_BIN to this path*/
         fp = ospath_new_noclean(ASC_DISTDIR_REL_BIN);
 		distfp = ospath_concat(fp1,fp);
 		ospath_cleanup(distfp);
@@ -561,6 +563,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 # else
 		distfp = ospath_new(ASC_DATADIR);
+		(void)progname;
 # endif
 		distdir = ospath_str(distfp);
 		CONSOLE_DEBUG("GUESSING %s = %s",ASC_ENV_DIST,distdir);

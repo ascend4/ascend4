@@ -1,4 +1,4 @@
-/*	ASCEND modelling environment
+/*	ASCEND modeling environment
 	Copyright (C) 2006 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
@@ -58,7 +58,7 @@ on the compile line. renamed to NOISY.*/
 # define MALLOC malloc
 #endif
 
-#define ENV_MAX_VAR_NAME 64 // arbitrarily
+#define ENV_MAX_VAR_NAME 64 /* arbitrarily*/
 
 char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level);
 
@@ -67,7 +67,7 @@ char * env_subst(const char *path,GetEnvFn *getenvptr){
 
 	X(path);
 
-	// no substitution required
+	/* no substitution required */
 	if(getenvptr==NULL){
 		dest = MALLOC(sizeof(char) * (strlen(path) + 1));
 		strcpy(dest,path);
@@ -96,7 +96,8 @@ char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 	char varname[ENV_MAX_VAR_NAME+1];
 	int len, vallen, newlen;
 	int copy_in_place;
-	size_t L;
+	/*size_t L;*/
+	(void)level;
 	len = strlen(path);
 
 	dest = MALLOC(sizeof(char)*(strlen(path)+1));
@@ -105,15 +106,16 @@ char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 	X(dest);
 	V(len);
 
-	// scan backwards for $
+	/* scan backwards for $ */
 	for(p=dest+len-1; p>=dest; --p){
 		C(*p);
 
 		if(*p=='$'){
 			M("FOUND DOLLAR SIGN");
 			++p;
+			/* FIXME: note this is i = j = varname in C; p is ignored. */
 			for(i=p, j=varname; i<dest+len, j<varname+ENV_MAX_VAR_NAME; ++i,++j){
-				//C(*i);
+				/*C(*i);*/
 				if(!(
 					(*i >= 'A' && *i < 'Z')
 					|| (*i == '_')
@@ -121,10 +123,10 @@ char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 					M("NON-VARNAME CHAR FOUND");
 					break;
 				}
-				//M("ADDING TO VARNAME");
+				/*M("ADDING TO VARNAME");*/
 				*j=*i;
 			}
-			//M("COMPLETED VARNAME");
+			/*M("COMPLETED VARNAME");*/
 			*j='\0';
 			X(varname);
 
@@ -139,7 +141,7 @@ char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 			X(varname);
 			val = (*getenvptr)(varname);
 			if(val==NULL){
-				//replace with null
+				/*replace with null*/
 				q = --p;
 				for(j=i; j<dest+strlen(varname); ++j, ++q){
 					*q=*j;
@@ -239,7 +241,7 @@ char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 
 #include <assert.h>
 
-// switch to boldface for messages in 'main'
+/* switch to boldface for messages in 'main' */
 #undef D
 #define D DD
 #undef M
@@ -254,7 +256,7 @@ int main(void){
 	r = env_subst(s1,getenv);
 	M(r);
 
-	//assert(strcmp(r,"C:/msys/1.0/share/ascend/share")==0);
+	/*assert(strcmp(r,"C:/msys/1.0/share/ascend/share")==0);*/
 }
 
 #endif

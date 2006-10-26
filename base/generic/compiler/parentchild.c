@@ -61,6 +61,8 @@
 #include "relation_type.h"
 #include "logical_relation.h"
 #include "extfunc.h"
+#include "rel_blackbox.h"
+#include "vlist.h"
 #include "relation.h"
 #include "logrelation.h"
 #include "relation_util.h"

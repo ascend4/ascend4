@@ -271,8 +271,8 @@ ASC_DLLSPEC(FILE *) ospath_fopen(struct FilePath *fp, const char *mode);
 */
 ASC_DLLSPEC(int) ospath_stat(struct FilePath *fp,ospath_stat_t *buf);
 
-//------------------------
-// SEARCH PATH FUNCTIONS
+/*------------------------*/
+/* SEARCH PATH FUNCTIONS*/
 
 ASC_DLLSPEC(struct FilePath **) ospath_searchpath_new(const char *path);
 

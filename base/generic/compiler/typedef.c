@@ -455,13 +455,10 @@ int AddLCL(symchar *s,CONST struct TypeDescription *d, int nsubs,
   case REL:
   case LOGREL:
   case WHEN:
+  case EXT:
     /* not strictly kosher TRUE, but truer than saying an error */
     /* all rel/logrel/when are implicitly IS_A'd/typed */
     new->e.origin = origin_ISA;
-    break;
-  case EXT:
-	/* CONSOLE_DEBUG("STORING EXT STATEMENT IN LCL"); */
-    new->e.origin = origin_EXT;
     break;
   default:
     new->e.origin = origin_ERR;
@@ -1096,22 +1093,21 @@ int DoExternal(symchar *type,
    */
   switch (ExternalStatMode(stat) ) {
   case ek_black:
-    nptr = ExternalStatNameBlackBox(stat);
-    break;
   case ek_glass:
-    nptr = ExternalStatNameGlassBox(stat);
+    nptr = ExternalStatNameRelation(stat);
     break;
   default:
     nptr = NULL;
     break;
   }
-  /*
+/* buggy block. leaves reporter in state that
+constantly repeats last message (doext nptr=) on FFLUSH.
   ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
   FPRINTF(ASCERR,"DOEXTERNAL: nptr = ");
   WriteName(ASCERR,nptr);
   FPRINTF(ASCERR,"\n");
   error_reporter_end_flush();
-  */
+*/
 
   /* add the name to the child list */
   doname_status = DoName(nptr,FindExternalType(),stat);

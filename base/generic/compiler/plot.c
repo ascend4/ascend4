@@ -139,7 +139,7 @@ static unsigned long ChildNumberbyChar(struct Instance *i, symchar *name)
   struct InstanceName rec;
   unsigned long c = 0;
   unsigned long nch = 0;
-  long index;
+  long aindex;
 
   if(i==NULL||name==NULL) {
     FPRINTF(stderr,"Null Instance or name in ChildbyNameChar\n");
@@ -158,8 +158,8 @@ static unsigned long ChildNumberbyChar(struct Instance *i, symchar *name)
       }
       break;
     case IntArrayIndex:
-      index = atol(SCP(name));
-      if (index==InstanceIntIndex(rec)) {
+      aindex = atol(SCP(name));
+      if (aindex==InstanceIntIndex(rec)) {
         return c;
       }
       break;

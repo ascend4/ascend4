@@ -28,8 +28,8 @@
 	Dates: 06/90 - original version
 	       06/93 - separated out exprman
 	       11/93 - added relman_calc_satisfied
-	
-	Requires:     
+
+	Requires:
 	#include "utilities/ascConfig.h"
 	#include "mtx.h"
 	#include "var.h"
@@ -101,7 +101,7 @@ extern void relman_get_incidence(struct rel_relation *rel,
  *  depends on a variable with index var_n.
  */
 
-ASC_DLLSPEC(real64 ) relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe);
+ASC_DLLSPEC(real64 ) relman_eval(struct rel_relation *rel, int32 *calc_okp, int safe);
 /**<
 	The residual of the relation is calculated and returned.  In addition
 	to returning the residual, the residual field of the relation is
@@ -148,9 +148,9 @@ extern real64 relman_scale(struct rel_relation *rel);
 
 extern int relman_diff2(struct rel_relation *rel,
                         var_filter_t *filter,
-                        real64 *derivatives, 
-                        int32 *variables, 
-                        int32 *count, 
+                        real64 *derivatives,
+                        int32 *variables,
+                        int32 *count,
                         int32 safe);
 /**<
 	Calculates the row of the jacobian matrix (the transpose gradient of
@@ -174,12 +174,12 @@ extern int relman_diff2(struct rel_relation *rel,
 	@return 0 on success, 1 if an error is encountered in the calculation
 */
 
-extern int relman_diff_grad(struct rel_relation *rel, 
+extern int relman_diff_grad(struct rel_relation *rel,
                             var_filter_t *filter,
-                            real64 *derivatives, 
-                            int32 *variables_master, 
-                            int32 *variables_solver, 
-                            int32 *count, 
+                            real64 *derivatives,
+                            int32 *variables_master,
+                            int32 *variables_solver,
+                            int32 *count,
                             real64 *resid,
                             int32 safe);
 /**<
@@ -204,8 +204,8 @@ extern int relman_diff_grad(struct rel_relation *rel,
  *    - the residual is evaluated
  */
 
-ASC_DLLSPEC(int ) relman_diffs(struct rel_relation *rel, 
-		var_filter_t *filter, mtx_matrix_t mtx, 
+ASC_DLLSPEC(int ) relman_diffs(struct rel_relation *rel,
+		var_filter_t *filter, mtx_matrix_t mtx,
 		real64 *resid, int safe);
 /**<
 	Calculates the row of the jacobian matrix (the transpose gradient of
@@ -220,21 +220,21 @@ ASC_DLLSPEC(int ) relman_diffs(struct rel_relation *rel,
 	@param filter  filter for which variables should actually contribute to the jacobian
 	@param mtx  matrix into which the row (corresponding to rel) is written
 	@param safe  if non-zero, "safe" functions are used to for the calucaltions.
-	
+
 	It doesn't matter how you have permuted the columns and rows:
 	for the vars which pass the filter you send we
 	fill the org row determined by rel_sindex and the org cols
 	determined by var_sindex.
 
 	@return 0 on success, 1 on calculation error (residual will be returned, grad discarded)
-	
+
 	@NOTE The row of the mtx corresponding to rel should be cleared
 	before calling this function, since this FILLS with the gradient.<br><br>
-	
+
 	@NOTE *changed* -- This operator used to just ADD on top of any incidence
 	already in the row. This is not TRUE now.
-	
-	@TODO This operator really needs to be redesigned so it can deal with 
+
+	@TODO This operator really needs to be redesigned so it can deal with
 	harwellian matrices, glassbox rels and blackbox.
 */
 
@@ -242,7 +242,7 @@ extern int32 relman_diff_harwell(struct rel_relation **rlist,
 		var_filter_t *vfilter, rel_filter_t *rfilter,
 		int32 rlen, int32 bias, int32 mors,
 		real64 *avec, int32 *ivec, int32 *jvec);
-/**< 
+/**<
  *  This fills an "a-i-j" sparse matrix in the avec/ivec/jvec given.
  *  @param rlist   struct rel_relation **, list of relations rlen long.
  *  @param vfilter var_filter_t *, stuffs gradient for matching variables only.
@@ -261,7 +261,7 @@ extern int32 relman_diff_harwell(struct rel_relation **rlist,
 	err = 1 --> unrecoverable error/bad input. caller should probably punt.
 	err < 0 --> -(number of floating point errors in evaluation).
 	            The matrix will contain an approximation only.
-	
+
 	@todo relman_diff_harwell() bias == 1 is not yet implemented.
 */
 
@@ -338,17 +338,17 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
 	@return string
 	@param sys
 	@param rel struct rel_relation *rel
-	
+
 	Creates a sufficiently large string (you must free it when you're
 	done with it) into which it converts a relation.  The string will be
-	terminated with a '\0' character. 
-	
+	terminated with a '\0' character.
+
 	The xstring versions of this call make strings where all the variables
 	are written as x<varindex> (e.g. x23) rather than as object names.
 	The MASTER index (var_mindex) is used, not the solver's sindex.
 	Currently the compiler does not support xstring postfix format,
 	but could easily do so if needed.
-	
+
 	The name of a var is context dependent, so you have to provide the
 	slv_system_t from which you got the relation.
 */
@@ -359,15 +359,15 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
 #define relman_make_xstring_postfix(sys,rel) \
       dummy_rel_string((sys),(rel),0)
 #endif
-/**< 
+/**<
  *  Not suppported.
- *  @TODO Consider adding support for xstring postfix format. 
+ *  @TODO Consider adding support for xstring postfix format.
  */
 
 ASC_DLLSPEC(char *) relman_make_vstring_infix(slv_system_t sys,
                                        struct rel_relation *rel,
                                        int style);
-/**< 
+/**<
  *  Implementation function for relman_make_string_infix() and
  *  relman_make_xstring_infix().  Do not call this function
  *  directly - use one of the macros instead.
@@ -375,7 +375,7 @@ ASC_DLLSPEC(char *) relman_make_vstring_infix(slv_system_t sys,
 extern char *relman_make_vstring_postfix(slv_system_t sys,
                                          struct rel_relation *rel,
                                          int style);
-/**< 
+/**<
  *  Implementation function for relman_make_string_postfix(). and
  *  Do not call this function directly - use the macro instead.
  */

@@ -136,7 +136,6 @@ void Asc_DestroySimulations(void)
 #include "statio.h"
 #include "bit.h"
 #include "simlist.h"
-#include <solver/slv_types.h>
 
 int g_compiler_timing=0;
 
@@ -222,13 +221,13 @@ struct Instance *SimsCreateInstance(symchar *type,
 {
   struct Instance *result;
   unsigned int oldflags;
-  double time;
+  double comptime;
 
   if ((NULL == type) ||(NULL == name)) {
     return NULL;
   }
   g_ExtVariablesTable = NULL;		/* defined in extinst.[ch] */
-  time = tm_cpu_time();
+  comptime = tm_cpu_time();
   switch (format) {
   case e_normal:
     result = Instantiate(type,name,0,defmethod);
@@ -247,9 +246,9 @@ struct Instance *SimsCreateInstance(symchar *type,
     result = Instantiate(type,name,0,defmethod);
     break;
   }
-  time = tm_cpu_time() - time;
+  comptime = tm_cpu_time() - comptime;
   if (g_compiler_timing) {
-    FPRINTF(stderr,"Instantiation CPU time = %g seconds\n",time);
+    FPRINTF(stderr,"Instantiation CPU time = %g seconds\n",comptime);
   }
   return result;
 }

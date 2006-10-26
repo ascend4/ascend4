@@ -56,6 +56,8 @@
 #include "find.h"
 #include "extfunc.h"
 #include "relation_type.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
 #include "relation.h"
 #include "logical_relation.h"
 #include "logrelation.h"
@@ -601,11 +603,11 @@ struct Instance *CreateArrayChildInst(struct Instance *i,
 }
 
 static
-struct ArrayChild *FindRHSByInt(struct gl_list_t *rhslist, long index)
+struct ArrayChild *FindRHSByInt(struct gl_list_t *rhslist, long aindex)
 {
   unsigned long c,len;
   for (c=1, len = gl_length(rhslist); c <= len; c++) {
-    if (CAC(gl_fetch(rhslist,c))->name.index == index) {
+    if (CAC(gl_fetch(rhslist,c))->name.index == aindex) {
       return CAC(gl_fetch(rhslist,c));
     }
   }

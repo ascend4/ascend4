@@ -29,6 +29,7 @@
 
 #include <stdio.h>
 #include <limits.h>
+/* if threading, need to make some macros to use the _r functions of time. */
 #include <time.h>
 #include <malloc.h>
 #include <stdlib.h>

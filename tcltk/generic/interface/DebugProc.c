@@ -53,6 +53,8 @@
 #include <compiler/find.h>
 #include <compiler/functype.h>
 #include <compiler/safe.h>
+#include <compiler/rel_blackbox.h>
+#include <compiler/vlist.h>
 #include <compiler/relation.h>
 #include <compiler/relation_util.h>
 #include <compiler/pending.h>

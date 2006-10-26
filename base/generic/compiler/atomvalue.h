@@ -37,8 +37,7 @@
 	#include "sets.h"
 *//*
 	based on instance.c
-	by Tom Epperly & Ben Allan
-	8/16/89
+	by Tom Epperly & Ben Allan, 8/16/89
 	Last in CVS: $Revision: 1.10 $ $Date: 1998/02/05 16:35:24 $ $Author: ballan $
 */
 

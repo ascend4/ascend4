@@ -2369,7 +2369,7 @@ static int ranki_entry(linsolqr_system_t sys,mtx_region_t *region)
  **/
 {
    struct rhs_list *rl;
-   double time;
+   double comptime;
 
    CHECK_SYSTEM(sys);
    if( sys->factored )
@@ -2402,7 +2402,7 @@ static int ranki_entry(linsolqr_system_t sys,mtx_region_t *region)
    insure_capacity(sys);
    insure_lu_capacity(sys);
 
-   time = tm_cpu_time();
+   comptime = tm_cpu_time();
    switch(sys->fmethod) {
    case ranki_ka:
    case ranki_kw:
@@ -2420,8 +2420,8 @@ static int ranki_entry(linsolqr_system_t sys,mtx_region_t *region)
 
 #undef KAA_DEBUG
 #if KAA_DEBUG
-   time = tm_cpu_time() - time;
-   FPRINTF(stderr,"Time for Inversion = %f\n",time);
+   comptime = tm_cpu_time() - comptime;
+   FPRINTF(stderr,"Time for Inversion = %f\n",comptime);
    FPRINTF(stderr,"Non-zeros in Inverse = %d\n",
 	   mtx_nonzeros_in_region(sys->factors,region));
 #endif
@@ -3038,7 +3038,7 @@ int kirk1_factor(linsolqr_system_t sys,
 int ranki2_entry(linsolqr_system_t sys, mtx_region_t *region)
 {
   struct rhs_list *rl;
-  double time;
+  double comptime;
 
   CHECK_SYSTEM(sys);
   if (sys->factored) return 0;
@@ -3070,7 +3070,7 @@ int ranki2_entry(linsolqr_system_t sys, mtx_region_t *region)
   insure_capacity(sys);
   insure_lu_capacity(sys);
 
-  time = tm_cpu_time();
+  comptime = tm_cpu_time();
   switch(sys->fmethod) {
   case ranki_ba2:
     rankiba2_factor(sys);
@@ -3101,9 +3101,9 @@ int ranki2_entry(linsolqr_system_t sys, mtx_region_t *region)
     anz = mtx_nonzeros_in_region(sys->coef,region);
     fnz = mtx_nonzeros_in_region(sys->factors,region) +
       mtx_nonzeros_in_region(sys->inverse,0);
-    time = tm_cpu_time() - time;
+    comptime = tm_cpu_time() - comptime;
     FPRINTF(stderr,"A-NNZ: %d Factor time: %f Fill %g\n",
-      anz,time,( anz>0 ? (double)fnz/(double)anz : 0));
+      anz,comptime,( anz>0 ? (double)fnz/(double)anz : 0));
   }
 #endif /* KAA_DEBUG */
 #undef KAA_DEBUG

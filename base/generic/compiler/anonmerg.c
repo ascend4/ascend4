@@ -647,9 +647,9 @@ struct AnonMergeUniBucket *FindUniBucket(struct TypeDescription *d,
                                          struct AnonMergeUniBucket **t)
 {
   struct AnonMergeUniBucket *result;
-  int index;
-  index = AMUHASH(SCP(GetName(d)));
-  result = t[index];
+  int bindex;
+  bindex = AMUHASH(SCP(GetName(d)));
+  result = t[bindex];
   while (result != NULL &&
           ( d != result->d ||
             (indirected != LONG_MAX && indirected != result->indirected)
@@ -659,7 +659,7 @@ struct AnonMergeUniBucket *FindUniBucket(struct TypeDescription *d,
   }
 #if THASH
   FPRINTF(ASCERR,"FUB:\t%d\tind %lu\t%s\t%lu\n",
-          index,indirected,SCP(GetName(d)),(unsigned long)result);
+          bindex,indirected,SCP(GetName(d)),(unsigned long)result);
 #endif
   return result;
 }
@@ -673,14 +673,14 @@ struct AnonMergeUniBucket *AddUniBucket(struct TypeDescription *d,
                                         struct AnonMergeUniBucket **t)
 {
   struct AnonMergeUniBucket *b;
-  int index;
+  int bindex;
   b = ASC_NEW(struct AnonMergeUniBucket);
   if (b==NULL) {
     return NULL;
   }
-  index = AMUHASH(SCP(GetName(d)));
-  b->next = t[index];
-  t[index] = b;
+  bindex = AMUHASH(SCP(GetName(d)));
+  b->next = t[bindex];
+  t[bindex] = b;
   b->d = d;
   b->indirected = indirected;
   return b;

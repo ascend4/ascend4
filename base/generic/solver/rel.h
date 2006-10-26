@@ -267,7 +267,7 @@ extern int32 rel_mindex(struct rel_relation *rel);
 	Retrieves the index number of the given relation as it
 	appears in a slv_system_t master relation list.
 */
-extern void rel_set_mindex(struct rel_relation *rel, int32 index);
+extern void rel_set_mindex(struct rel_relation *rel, int32 mindex);
 /**<
 	Sets the index number of the given relation as it
 	appears in a slv_system_t master relation list.
@@ -280,7 +280,7 @@ ASC_DLLSPEC(int32 ) rel_sindex(const struct rel_relation *rel);
 	to assign the relation to a specific original row of a matrix.
 */
 
-extern void rel_set_sindex(struct rel_relation *rel, int32 index);
+extern void rel_set_sindex(struct rel_relation *rel, int32 sindex);
 /**<
 	Sets the index number of the given relation as it
 	appears in a solvers relation list. The index is most often used
@@ -293,7 +293,7 @@ extern int32 rel_model(const struct rel_relation *rel);
 	In a hierarchy, relations come in groups associated with
 	models. Models are numbered from 1 to some upper limit.
 */
-extern void rel_set_model(struct rel_relation *rel, int32 index);
+extern void rel_set_model(struct rel_relation *rel, int32 mindex);
 /**<
 	Sets the model number of the given relation.
 	In a hierarchy, relations come in groups associated with
@@ -626,6 +626,7 @@ extern void rel_set_multiplier(struct rel_relation *rel, real64 multiplier);
 */
 #ifdef _SLV_SERVER_C_SEEN_
 
+#ifdef DIEDIEDIE /* this is only the compiler's business. */
 extern double g_external_tolerance; /**< DEFAULT 1e-12 */
 
 /* - - - - - - - - - - - - -
@@ -734,16 +735,9 @@ extern real64 ExtRel_Evaluate_LHS(struct rel_relation *rel);
 	as retreived from the model.
 */
 
-/**
-	Evaluate the residual as well as Jacobian elements for a given
-	external relation object
-*/
-double extrel_resid_and_jacobian(struct rel_relation *rel
-	, var_filter_t *filter, int32 row, mtx_matrix_t mtx
-);
+#endif /*DIEDIEDIE*/
 
 #endif /* _SLV_SERVER_C_SEEN_ */
 
-/* removed some dead stuff here -- JP  */
 
 #endif /* ASC_REL_H  */

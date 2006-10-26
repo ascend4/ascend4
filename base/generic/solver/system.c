@@ -56,12 +56,15 @@
 slv_system_t system_build(SlvBackendToken inst)
 {
   slv_system_t sys;
-  int stat, i;
+  int stat;
+#ifdef DIEDIEDIE
+  int i;
   struct ExtRelCache **ep;
+#endif
 
 #if DOTIME
-  double time;
-  time = tm_cpu_time();
+  double comptime;
+  comptime = tm_cpu_time();
 #endif
 
   sys = slv_create();
@@ -97,6 +100,7 @@ slv_system_t system_build(SlvBackendToken inst)
 
   slv_set_instance(sys,inst);
 
+#ifdef DIEDIEDIE
   /* perform the 'presolve' on the external relations, whatever that means */
   if( (ep=slv_get_extrel_list(sys))!=NULL ) {
     for( i = 0; ep[i]!=NULL; i++ ) {
@@ -104,15 +108,15 @@ slv_system_t system_build(SlvBackendToken inst)
       ExtRel_PreSolve(ep[i],FALSE);
     }
   }
+#endif /*DIEDIEDIE*/
 
 #if DOTIME
-  FPRINTF(stderr,"Time to build system = %g\n", (tm_cpu_time() - time));
+  FPRINTF(stderr,"Time to build system = %g\n", (tm_cpu_time() - comptime));
 #endif
   return(sys);
 }
 
 void system_destroy(slv_system_t sys){
-  int i;
   struct var_variable **vp, **pp, **up;
   struct dis_discrete **dp, **udp;
   struct rel_relation **rp, **crp;
@@ -120,7 +124,10 @@ void system_destroy(slv_system_t sys){
   struct logrel_relation **lp, **clp;
   struct bnd_boundary **bp;
   struct w_when **wp;
+#ifdef DIEDIEDIE
+  int i;
   struct ExtRelCache **ep;
+#endif
   struct gl_list_t *symbollist;
   if((vp=slv_get_master_var_list(sys))!=NULL        )ascfree(vp);
   if((pp=slv_get_master_par_list(sys))!=NULL        )ascfree(pp);
@@ -152,6 +159,7 @@ void system_destroy(slv_system_t sys){
     DestroySymbolValuesList(symbollist);
   }
 
+#ifdef DIEDIEDIE
   if( (ep=slv_get_extrel_list(sys))!=NULL ) {	/* extrels */
     for(i = 0; ep[i]; i++ ) {
       ExtRel_PreSolve(ep[i],FALSE);		/* allow them to cleanup */
@@ -159,6 +167,7 @@ void system_destroy(slv_system_t sys){
     }
     ascfree(ep);
   }
+#endif
   slv_set_solvers_blocks(sys,0,NULL);
   slv_set_solvers_log_blocks(sys,0,NULL);	/* free blocks lists */
   slv_destroy(sys);				/* frees buf data */

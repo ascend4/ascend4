@@ -120,6 +120,9 @@ ASC_DLLSPEC(struct Instance *) RelationVariable(CONST struct relation *rel,
 	done.
 */
 
+ASC_DLLSPEC(struct BlackBoxCache *) RelationBlackBoxCache(CONST struct relation *rel);
+ASC_DLLSPEC(struct BlackBoxData *) RelationBlackBoxData(CONST struct relation *rel);
+
 ASC_DLLSPEC(unsigned long ) RelationLength(CONST struct relation *rel, int lhs);
 /**<
 	Returns the number of terms on one side of the equation. If lhs!=0, does this
@@ -130,7 +133,7 @@ ASC_DLLSPEC(CONST struct relation_term *) RelationTerm(CONST struct relation *re
         unsigned long pos,
         int lhs);
 /**<
-	Returns the term in position POS (base 1) on one side of the equation. 
+	Returns the term in position POS (base 1) on one side of the equation.
 	If lhs!=0, does this for the LHS. If lhs==0, does this for the RHS.
 
 	@NOTE A bizarre thing about this operator: 1 <= pos <= RelationLength(rel,lhs).
@@ -144,7 +147,7 @@ A_TERM( (l)!=0 ? (&(RTOKEN(r).lhs[(p)])) : (&(RTOKEN(r).rhs[(p)])) )
 #define NewRelationTerm(r,p,l) NewRelationTermF((r),(p),(l))
 #endif
 /**<
-	Returns the term in position POS (base 0) on one side of the equation. 
+	Returns the term in position POS (base 0) on one side of the equation.
 	If lhs!=0, does this for the LHS. If lhs==0, does this for the RHS.
 
 	For this operator: 0 <= p < RelationLength(rel,lhs) as a C array.
@@ -285,7 +288,7 @@ extern int ArgsForRealToken(enum Expr_enum ex);
 
 /**
 	@TODO What's that mean?
-	@TODO this stuff is not complete 
+	@TODO this stuff is not complete
 */
 
 #define OpCode_Lhs(r)       ((int *)(ROPCODE(r).lhs))
@@ -296,8 +299,15 @@ extern int ArgsForRealToken(enum Expr_enum ex);
 /*------------------------------------------------------------------------
 	BLACK BOX RELATION PROCESSING
 */
-extern struct ExtCallNode *BlackBoxExtCall(CONST struct relation *rel);
-extern int *BlackBoxArgs(CONST struct relation *rel);
+
+/** @return the list of instance lists of arguments. Each element
+of the returned list corresponds to a formal argument at the model level.
+The result is identical for all members of an array of relations
+built with a single external statement.
+@param rel the source of the arguments.
+ */
+extern struct gl_list_t *RelationBlackBoxFormalArgs(CONST struct relation *rel);
+extern struct ExternalFunc *RelationBlackBoxExtFunc(CONST struct relation *rel);
 
 #define BlackBoxNumberArgs(r) (RBBOX(r).nargs)
 
@@ -310,7 +320,7 @@ extern int *BlackBoxArgs(CONST struct relation *rel);
 	macros. Double check that the same is true for the
 	ExternalFunc routines.
 */
-extern struct ExternalFunc *GlassBoxExtFunc(CONST struct relation *rel);
+extern struct ExternalFunc *RelationGlassBoxExtFunc(CONST struct relation *rel);
 extern int GlassBoxRelIndex(CONST struct relation *rel);
 extern int *GlassBoxArgs(CONST struct relation *rel);
 
@@ -335,7 +345,7 @@ ASC_DLLSPEC(dim_type *) RelationDim(CONST struct relation *rel);
 	Defaults to Wild.
 */
 
-ASC_DLLSPEC(int ) SetRelationDim(struct relation *rel, dim_type *d);
+ASC_DLLSPEC(int ) SetRelationDim(struct relation *rel, CONST dim_type *d);
 /**<
 	Set the  dimensionality of the relation. return 0 unless there is a
 	problem (rel was null, for instance.)
@@ -527,9 +537,9 @@ int RelationCalcGradient(struct Instance *i, double *grad);
 	double of length matching the gl_list_t.
 	We will stuff df/dx[i] into grad[i-1], where i is the list position
 	in the relation's var list.
-	
+
 	@return Non-zero return value implies a problem
-	
+
 	@NOTE This function is a possible source of floating point
     exceptions and should not be used during compilation.
 */
@@ -549,7 +559,7 @@ int RelationCalcResidGrad(struct Instance *i, double *res, double *grad);
 	This function combines the Residual and Gradient calls, since these
 	may be done together at basically the cost of just one.
 	Non-zero return value implies a problem.
-	
+
 	@NOTE This function is a possible source of floating point exceptions
 	and should not be used during compilation.
 */
@@ -581,19 +591,19 @@ double *RelationFindRoots(struct Instance *i,
 	- nsolns < 0 : severe problems, such as var not found; soln_list will be NULL
 	- nsolns = 0 : No solution found
 	- nsolns > 0 : The soln_status equals the number of roots found
-	
+
 	@return NULL if success? 1 for success and 0 for failure?
 
-	@NOTE In general compiler functions return 0 for success but this function 
-	returns 1 for success because success = 1 is the convention on the solver 
-	side. 
+	@NOTE In general compiler functions return 0 for success but this function
+	returns 1 for success because success = 1 is the convention on the solver
+	side.
 
 	@TODO (we really should make a system wide convention for return values)
 
 	@NOTE The calling function should NOT free the soln_list.
 
-	@NOTE we should recycle the memory used for glob_rel 
-	
+	@NOTE we should recycle the memory used for glob_rel
+
 	@NOTE This function is NOT thread safe because it uses an internal memory
 	recycle.
 

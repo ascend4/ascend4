@@ -95,6 +95,8 @@
 #include <compiler/find.h>
 #include <compiler/extfunc.h>
 #include <compiler/extcall.h>
+#include <compiler/rel_blackbox.h>
+#include <compiler/vlist.h>
 #include <compiler/relation.h>
 #include <compiler/functype.h>
 #include <compiler/safe.h>
@@ -384,7 +386,9 @@ struct problem_t {
   struct rel_relation **varincidence;	/* var_variable incidence source */
   struct dis_discrete **logrelinciden;	/* logrel_relation incidence source */
 
+#ifdef DIEDIEDIE
   struct ExtRelCache **erlist;	/* external rel cache null terminated list */
+#endif
 };
 
 /*------------------------------------------------------------------------------
@@ -693,6 +697,7 @@ static void CollectRelsAndWhens(struct solver_ipdata *ip,
   }
 }
 
+#ifdef DIEDIEDIE
 /*
 	Checks the problem extrels list to see whether a cache has been
 	created for the given relation in the problem_t bridge.
@@ -724,6 +729,7 @@ static struct ExtRelCache
   }
   return NULL;
 }
+#endif
 
 /*
 	Count the instance into the required bin.
@@ -1585,7 +1591,9 @@ static void analyze_free_lists(struct problem_t *p_data)
   AFUN(p_data->solverdul);
   AFUN(p_data->solverwl);
   AFUN(p_data->solverbl);
+#ifdef DIEDIEDIE
   AFUN(p_data->erlist);
+#endif
 
 #undef AFUN
 #undef ADUN
@@ -1978,7 +1986,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
 {
   CONST struct relation *gut;
   CONST struct logrelation *lgut;
+#ifdef DIEDIEDIE
   struct ExtRelCache *cache;
+#endif
   struct Instance *i;
   struct Instance *i_r;
   struct solver_ipdata *rip = NULL, *vip;
@@ -1992,7 +2002,10 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   struct logrel_relation *lrel;
   struct bnd_boundary *bnd;
   struct w_when *when;
-  int order,nnzold, nodestamp;
+  int order,nnzold;
+#ifdef DIEDIEDIE
+  int nodestamp;
+#endif
   int logorder,lognnzold;
   int c,len,v,vlen,r,found;
   uint32 flags;
@@ -2331,7 +2344,8 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     } else {
       rel_set_incidences(rel,0,NULL);
     }
-    if(rel_extnodeinfo(rel)) {
+#ifdef DIEDIEDIE
+    if (rel_extnodeinfo(rel)) {
       cache = CheckIfCacheExists(rip->i,&nodestamp,p_data);
       if (cache) {
         rel_set_extcache(rel,cache);
@@ -2346,6 +2360,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
 		extrel_store_output_var(rel);
       }
     }
+#endif
     flags = 0; /* all init to FALSE */
     /* TURN ON APPROPRIATE ONES */
     if (rip->u.r.included) flags |= (REL_INCLUDED | REL_INBLOCK);
@@ -2363,6 +2378,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->masterrl[vlen] = NULL; /* terminator */
   p_data->solverrl[vlen] = NULL; /* terminator */
 
+#ifdef DIEDIEDIE
   /* cobble together external rel list */
   len = gl_length(p_data->extrels);
   p_data->erlist = (struct ExtRelCache **)
@@ -2372,6 +2388,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     p_data->erlist[c-1] = (struct ExtRelCache *)gl_fetch(p_data->extrels,c);
   }
   p_data->erlist[len] = NULL; /* terminator */
+#endif
 
 /*
 	for c in objlist copy objdata.
@@ -2965,9 +2982,10 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data)
   slv_set_obj_relation(sys,p_data->obj);
   p_data->obj = NULL;
 
-  CONSOLE_DEBUG("PASSING EXTRELCACHE LIST TO SOLVER");
+#ifdef DIEDIEDIE
   slv_set_extrel_list(sys,p_data->erlist,gl_length(p_data->extrels));
   p_data->erlist = NULL;
+#endif
 
   slv_set_num_models(sys,p_data->nm);
   slv_set_need_consistency(sys,p_data->need_consistency);

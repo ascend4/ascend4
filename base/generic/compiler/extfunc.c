@@ -44,7 +44,7 @@
 
 #define EXTFUNCHASHSIZE 31
 
-static struct Table *ExternalFuncLibrary = NULL;
+static struct Table *g_ExternalFuncLibrary = NULL;
 
 /*-----------------------------------------------------------------------------
   BLACK BOX STUFF
@@ -55,10 +55,11 @@ int CreateUserFunctionBlackBox(CONST char *name,
 		ExtBBoxFunc *value,
 		ExtBBoxFunc *deriv,
 		ExtBBoxFunc *deriv2,
-		ExtBBoxInitFunc *final,
+		ExtBBoxFinalFunc *final,
 		CONST unsigned long n_inputs,
 		CONST unsigned long n_outputs,
-		CONST char *help
+		CONST char *help,
+		double inputTolerance
 ){
   struct ExternalFunc *efunc;
   int isNew = 0;
@@ -89,7 +90,8 @@ int CreateUserFunctionBlackBox(CONST char *name,
   efunc->u.black.deriv = deriv;
   efunc->u.black.deriv2 = deriv2;
   efunc->u.black.final = final;
-  if(help){
+  efunc->u.black.inputTolerance = inputTolerance;
+  if (help) {
     if (efunc->help) ascfree((char *)efunc->help);
     efunc->help = ascstrdup(help);
   }else{
@@ -111,7 +113,8 @@ ExtBBoxInitFunc * GetInitFunc(struct ExternalFunc *efunc){
   return efunc->u.black.initial;
 }
 
-ExtBBoxInitFunc * GetFinalFunc(struct ExternalFunc *efunc){
+ExtBBoxFinalFunc * GetFinalFunc(struct ExternalFunc *efunc)
+{
   asc_assert(efunc!=NULL);
   return efunc->u.black.final;
 }
@@ -122,10 +125,15 @@ ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc){
 
   /* CONSOLE_DEBUG("GETVALUEFUNC efunc = %p, type = %d",efunc,(int)efunc->etype); */
   asc_assert(efunc->etype == efunc_BlackBox);
-  /* return (ExtBBoxFunc *)efunc->value; */
   return efunc->u.black.value;
 }
 
+double GetValueFuncTolerance(struct ExternalFunc *efunc)
+{
+  asc_assert(efunc!=NULL);
+  asc_assert(efunc->etype == efunc_BlackBox);
+  return efunc->u.black.inputTolerance;
+}
 
 ExtBBoxFunc *GetDerivFunc(struct ExternalFunc *efunc)
 {
@@ -265,10 +273,6 @@ int CreateUserFunctionMethod(CONST char *name
   efunc->n_outputs = 0;
   efunc->u.method.run = run;
   efunc->u.method.user_data = user_data;
-#if 0
-  efunc->u.method.initial = init;
-  efunc->u.method.final = final;
-#endif
   if (help) {
     if (efunc->help) { ascfree((char *)efunc->help); }
     efunc->help = ascstrdup(help);
@@ -341,7 +345,7 @@ void InitExternalFuncLibrary(void)
 {
   struct Table *result;
   result = CreateTable(EXTFUNCHASHSIZE); /* this isn't destroyed at end. fix.*/
-  ExternalFuncLibrary = result;
+  g_ExternalFuncLibrary = result;
 }
 
 
@@ -349,30 +353,23 @@ int AddExternalFunc(struct ExternalFunc *efunc, int force){
 	struct ExternalFunc *found, *tmp;
 	char *name;
 
-	/* CONSOLE_DEBUG("efunc = %p",efunc); */
-	asc_assert(efunc!=NULL);
-
-	name = (char *)efunc->name;
-	found = (struct ExternalFunc *)LookupTableData(ExternalFuncLibrary,name);
-	if(found){
-		/* function with this name already exists in the ExternalFuncLibrary */
-		if(!force){
-			CONSOLE_DEBUG("EFUNC found OK, not adding");
-			return 0;
-		}
-
-	    /* force!=0, so we're requested to update the entry in the table */
-		CONSOLE_DEBUG("EFUNC found OK, update forced");
-	    tmp = (struct ExternalFunc *)RemoveTableData(ExternalFuncLibrary,name);
-	    DestroyExternalFunc(tmp);
-	    AddTableData(ExternalFuncLibrary,(void *)efunc,name);
-	    return 1;
-	}else{
-		/* need to add function to library */
-		/* CONSOLE_DEBUG("Adding external function '%s' (at %p).",name,efunc); */
-		AddTableData(ExternalFuncLibrary,(void *)efunc,name);
-		return 1;
-	}
+  asc_assert(efunc!=NULL);
+  name = (char *)efunc->name;
+  found = (struct ExternalFunc *)LookupTableData(g_ExternalFuncLibrary,name);
+  if (found) {		/* function name already exists */
+    if (force==0) {
+      return 0;
+    } else {		/* need to update information */
+      tmp = (struct ExternalFunc *)RemoveTableData(g_ExternalFuncLibrary,name);
+      DestroyExternalFunc(tmp);
+      AddTableData(g_ExternalFuncLibrary,(void *)efunc,name);
+      return 1;
+    }
+  }
+  else{			/* need to add function to library */
+    AddTableData(g_ExternalFuncLibrary,(void *)efunc,name);
+    return 1;
+  }
 }
 
 
@@ -382,7 +379,8 @@ struct ExternalFunc *LookupExtFunc(CONST char *funcname)
   if (!funcname) {
     return NULL;
   }
-  found = (struct ExternalFunc *)LookupTableData(ExternalFuncLibrary,funcname);
+  found = (struct ExternalFunc *)
+    LookupTableData(g_ExternalFuncLibrary,funcname);
   if (found) {
 	/* CONSOLE_DEBUG("Found '%s' in ExternalFuncLibrary at %p",funcname,found); */
     return found;
@@ -397,7 +395,7 @@ struct ExternalFunc *RemoveExternalFunc(char *funcname)
   if (!funcname)
     return NULL;
   found = (struct ExternalFunc *)
-    RemoveTableData(ExternalFuncLibrary,funcname);
+    RemoveTableData(g_ExternalFuncLibrary,funcname);
   return found;
 }
 
@@ -413,10 +411,10 @@ void ExternalFuncDestroyFunc(void *efunc)
 
 void DestroyExtFuncLibrary(void)
 {
-  TableApplyAll(ExternalFuncLibrary,
+  TableApplyAll(g_ExternalFuncLibrary,
                 (TableIteratorOne)ExternalFuncDestroyFunc);
-  DestroyTable(ExternalFuncLibrary,0);
-  ExternalFuncLibrary = NULL;
+  DestroyTable(g_ExternalFuncLibrary,0);
+  g_ExternalFuncLibrary = NULL;
 }
 
 static
@@ -440,7 +438,7 @@ void PrintExtFuncLibrary(FILE *fp)
     FPRINTF(ASCERR,"Invalid file handle in PrintExtFuncLibrary\n");
     return;
   }
-  TableApplyAllTwo(ExternalFuncLibrary, PrintExtFuncLibraryFunc,
+  TableApplyAllTwo(g_ExternalFuncLibrary, PrintExtFuncLibraryFunc,
 		   (void *)fp);
 }
 
@@ -466,7 +464,7 @@ char *WriteExtFuncLibraryString(void)
   Asc_DString ds, *dsPtr;
   dsPtr = &ds;
   Asc_DStringInit(dsPtr);
-  TableApplyAllTwo(ExternalFuncLibrary,(TableIteratorTwo)WriteExtFuncString,
+  TableApplyAllTwo(g_ExternalFuncLibrary,(TableIteratorTwo)WriteExtFuncString,
 		   (void *) dsPtr);
   result = Asc_DStringResult(dsPtr);
   return result;
@@ -474,5 +472,5 @@ char *WriteExtFuncLibraryString(void)
 
 void
 TraverseExtFuncLibrary(void (*func)(void *,void *), void *secondparam){
-	TableApplyAllTwo(ExternalFuncLibrary, func, secondparam);
+	TableApplyAllTwo(g_ExternalFuncLibrary, func, secondparam);
 }

@@ -138,13 +138,13 @@ int32 var_mindexF(const struct var_variable *var)
   return var->mindex;
 }
 
-void var_set_mindexF(struct var_variable *var, int32 index)
+void var_set_mindexF(struct var_variable *var, int32 mindex)
 {
   if (var==NULL || var->ratom==NULL) {
     FPRINTF(stderr,"var_set_mindex called on bad var\n");
     return;
   }
-  var->mindex = index;
+  var->mindex = mindex;
 }
 
 int32 var_sindexF(const struct var_variable *var)
@@ -156,13 +156,13 @@ int32 var_sindexF(const struct var_variable *var)
   return var->sindex;
 }
 
-void var_set_sindexF(struct var_variable *var, int32 index)
+void var_set_sindexF(struct var_variable *var, int32 sindex)
 {
   if (var==NULL || var->ratom==NULL) {
     FPRINTF(stderr,"var_set_sindex called on bad var\n");
     return;
   }
-  var->sindex = index;
+  var->sindex = sindex;
 }
 
 real64 var_value(const struct var_variable *var)

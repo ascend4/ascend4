@@ -46,12 +46,6 @@
 #include "expr_types.h"
 #include "stattypes.h"
 #include "instantiate.h"
-#include <solver/slv_types.h>
-
-#ifndef lint
-static CONST char QlfdidID[] = "$Id: Qlfdid.c,v 1.22 2003/08/23 18:43:07 ballan Exp $";
-#endif
-
 
 #ifndef MAXIMUM_STRING_LENGTH
 #define MAXIMUM_STRING_LENGTH 1024
@@ -61,8 +55,8 @@ static CONST char QlfdidID[] = "$Id: Qlfdid.c,v 1.22 2003/08/23 18:43:07 ballan 
 
 /* used for searching */
 
-ASC_DLLSPEC(struct Instance *) g_search_inst = NULL;
-ASC_DLLSPEC(struct Instance *) g_relative_inst = NULL;
+struct Instance *g_search_inst = NULL;
+struct Instance *g_relative_inst = NULL;
 
 char *Asc_MakeInitString(int len)
 {

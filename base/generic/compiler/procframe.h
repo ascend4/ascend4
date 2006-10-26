@@ -240,7 +240,7 @@ extern void InitDebugTopProcFrame(struct procFrame *fm,
                                   int options,
                                   struct procDebug *dbi,
                                   struct gl_list_t *watches,
-                                  FILE *log);
+                                  FILE *dplog);
 
 /** 
  * Add a frame

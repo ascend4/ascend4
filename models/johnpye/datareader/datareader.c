@@ -39,6 +39,8 @@
 #include <compiler/instmacro.h>
 #include <compiler/instance_types.h>
 
+#include <compiler/extfunc.h>
+
 #include "dr.h"
 
 /*------------------------------------------------------------------------------
@@ -53,9 +55,9 @@ static symchar *dr_symbols[2];
   BINDINGS FOR THE DATA READER TO THE ASCEND EXTERNAL FUNCTIONS API
 */
 
-int asc_datareader_prepare(struct Slv_Interp *slv_interp, struct Instance *data, struct gl_list_t *arglist);
-int asc_datareader_calc(struct Slv_Interp *slv_interp, int ninputs, int noutputs, double *inputs, double *outputs, double *jacobian);
-int asc_datareader_close(struct Slv_Interp *slv_interp, struct Instance *data, struct gl_list_t *arglist);
+ExtBBoxInitFunc asc_datareader_prepare;
+ExtBBoxFunc asc_datareader_calc;
+ExtBBoxFinalFunc asc_datareader_close;
 
 #ifndef ASC_EXPORT
 # error "Where is ASC_EXPORT?"
@@ -86,6 +88,7 @@ ASC_EXPORT(int) datareader_register(){
 		, asc_datareader_close /* final */
 		, 1,5 /* inputs, outputs */
 		, help
+		, 0.0
 	); /* returns 0 on success */
 
 	if(result){
@@ -98,7 +101,7 @@ ASC_EXPORT(int) datareader_register(){
 	This function prepares the data that we will use before starting the solver
 	process.
 */
-int asc_datareader_prepare(struct Slv_Interp *slv_interp,
+int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 	   struct Instance *data,
 	   struct gl_list_t *arglist
 ){
@@ -161,9 +164,9 @@ int asc_datareader_prepare(struct Slv_Interp *slv_interp,
 		if(datareader_set_format(d,fmt)){
 			CONSOLE_DEBUG("Invalid 'format'");
 			return 1;
-		}		
+		}
 	}
-	
+
 	if(datareader_init(d)){
 		CONSOLE_DEBUG("Error initialising data reader");
 		return 1;
@@ -176,7 +179,7 @@ int asc_datareader_prepare(struct Slv_Interp *slv_interp,
 }
 
 /* return 0 on success */
-int asc_datareader_calc(struct Slv_Interp *slv_interp,
+int asc_datareader_calc(struct BBoxInterp *slv_interp,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
@@ -208,11 +211,11 @@ int asc_datareader_calc(struct Slv_Interp *slv_interp,
 		return 1;
 	}
 
-	
+
 	for(i=0; i< ninputs; ++i){
 		CONSOLE_DEBUG("inputs[%d] = %f", i, inputs[i]);
 	}
-	
+
 
 	switch(slv_interp->task){
 		case bb_func_eval:
@@ -238,10 +241,7 @@ int asc_datareader_calc(struct Slv_Interp *slv_interp,
 	}
 }
 
-int asc_datareader_close(struct Slv_Interp *slv_interp,
-	   struct Instance *data,
-	   struct gl_list_t *arglist
-){
+void asc_datareader_close(struct BBoxInterp *slv_interp){
 	CONSOLE_DEBUG("NOT IMPLEMENTED");
 	return 1;
 }

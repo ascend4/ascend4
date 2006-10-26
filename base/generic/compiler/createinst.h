@@ -127,7 +127,7 @@ extern struct Instance *CreateSymbolInstance(struct TypeDescription *type);
 */
 
 extern struct Instance *CreateArrayInstance(struct TypeDescription *type,
-                                            unsigned long index);
+                                            unsigned long aIndex);
 /**<
 	Create an array instance whose type is described by "set".  The instance
 	will use the memory pointed to by type, so don't modify it or free it.<br><br>

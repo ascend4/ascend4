@@ -164,7 +164,7 @@ double linutils_A_condqr_kaa(linsolqr_system_t lin_sys,
   double a_norm, a_inverse_norm = 0.0;
   int rank,capacity;
   int j,k;
-  double time;
+  double comptime;
 
   if (mtx==NULL)
     return 1.0e20;
@@ -189,7 +189,7 @@ double linutils_A_condqr_kaa(linsolqr_system_t lin_sys,
   linsolqr_add_rhs(lin_sys,rhs,FALSE);
 
   rank = mtx_symbolic_rank(factors);
-  time = tm_cpu_time();
+  comptime = tm_cpu_time();
   for (j=0;j<rank;j++) {
     rhs[j] = 1.0;
     linsolqr_rhs_was_changed(lin_sys,rhs);
@@ -202,8 +202,8 @@ double linutils_A_condqr_kaa(linsolqr_system_t lin_sys,
     }
     rhs[j] = 0.0;
   }
-  time = tm_cpu_time() - time;
-  FPRINTF(stderr,"Time to compute explicit inverse by linsolqr = %g\n",time);
+  comptime = tm_cpu_time() - comptime;
+  FPRINTF(stderr,"Time to compute explicit inverse by linsolqr = %g\n",comptime);
   a_inverse_norm = sqrt(a_inverse_norm);
   linsolqr_remove_rhs(lin_sys,rhs);
 
@@ -240,7 +240,7 @@ double linutils_A_cond_kaa(linsol_system_t lin_sys,
   double a_norm, a_inverse_norm = 0.0;
   int rank,capacity;
   int j,k;
-  double time;
+  double comptime;
 
   if (mtx==NULL)
     return 1.0e20;
@@ -265,7 +265,7 @@ double linutils_A_cond_kaa(linsol_system_t lin_sys,
   linsol_add_rhs(lin_sys,rhs,FALSE);
 
   rank = mtx_symbolic_rank(factors);
-  time = tm_cpu_time();
+  comptime = tm_cpu_time();
   for (j=0;j<rank;j++) {
     rhs[j] = 1.0;
     linsol_rhs_was_changed(lin_sys,rhs);
@@ -278,8 +278,8 @@ double linutils_A_cond_kaa(linsol_system_t lin_sys,
     }
     rhs[j] = 0.0;
   }
-  time = tm_cpu_time() - time;
-  FPRINTF(stderr,"Time to compute explicit inverse by linsol = %g\n",time);
+  comptime = tm_cpu_time() - comptime;
+  FPRINTF(stderr,"Time to compute explicit inverse by linsol = %g\n",comptime);
   a_inverse_norm = sqrt(a_inverse_norm);
   linsol_remove_rhs(lin_sys,rhs);
 

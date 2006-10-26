@@ -132,7 +132,7 @@ extern int32 logrel_mindex(struct logrel_relation *logrel);
  *  appears in a slv_system_t master logrelation list.
  */
 extern void logrel_set_mindex(struct logrel_relation *logrel,
-                              int32 index);
+                              int32 mindex);
 /**<
  *  Sets the index number of the given logrelation as it
  *  appears in a slv_system_t master logrelation list.
@@ -144,7 +144,7 @@ extern int32 logrel_sindex(struct logrel_relation *logrel);
  *  appears in a solvers logrelation list.
  */
 extern void logrel_set_sindex(struct logrel_relation *logrel,
-                              int32 index);
+                              int32 sindex);
 /**<
  *  Sets he index number of the given logrelation as it
  *  appears in a solvers logrelation list.
@@ -156,7 +156,7 @@ extern int32 logrel_model(const struct logrel_relation *logrel);
  *  Models are numbered from 1 to some upper limit.
  */
 extern void logrel_set_model(struct logrel_relation *logrel,
-                             int32 index);
+                             int32 mindex);
 /**<
  *  Sets the model number of the given logrelation.
  *  Models are numbered from 1 to some upper limit.

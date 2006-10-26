@@ -61,6 +61,8 @@
 #include <compiler/value_type.h>
 #include <compiler/find.h>
 #include <compiler/relation_type.h>
+#include <compiler/rel_blackbox.h>
+#include <compiler/vlist.h>
 #include <compiler/relation.h>
 #include <compiler/relation_util.h>
 #include "old_utils.h"

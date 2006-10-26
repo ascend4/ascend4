@@ -291,14 +291,27 @@ struct StateExternalMethod {
 	struct VariableList *vl; /**< list of arguments */
 };
 
-/** Black box equation model. */ 
+/** Black or glass box equation model. */ 
+struct StateExternalRelation {
+  struct Name *nptr;        /**< name of the statement */
+  struct VariableList *vl;  /**< list of arguments */
+};
+
+/** Black box equation model. Top must match StateExternalRelation. */
 struct StateExternalBlackBox {
   struct Name *nptr;        /**< name of the statement */
   struct VariableList *vl;  /**< list of arguments */
   struct Name *data;        /**< additional user data */
 };
+
+/* blackboxes contain an implicit for loop. For
+internal compiler processing, we make this explicit
+with a loop index name BBOX_RESERVED_INDEX
+*/
+#define BBOX_RESERVED_INDEX "?BBOX_OUTPUT"
+#define BBOX_RESERVED_INDEX_LEN 12
   
-/** Glassbox equation model. */ 
+/** Glassbox equation model. Top must match StateExternalRelation. */ 
 struct StateExternalGlassBox {
   struct Name *nptr;        /**< name of the statement */
   struct VariableList *vl;  /**< list of arguments */
@@ -312,6 +325,7 @@ struct StateExternal {
   enum ExternalKind mode;     /**< 0=procedural, 1=glassbox, 2=blackbox */
   CONST char *extcall;      /**< name of the function */
   union {
+    struct StateExternalRelation relation; /* which is either glass or black */
     struct StateExternalGlassBox glass;
     struct StateExternalBlackBox black;
     struct StateExternalMethod method;
@@ -374,7 +388,8 @@ struct StateWhile {
                                      should always be only in the context of a
                                      MODEL, and any loop should be inside the
                                      CONDITIONAL statement. VRR */
-#define contains_ILL 0x10000    /**< true if illegal statement in loop */
+#define contains_EXT 0x10000	/*< contains a External statement. */
+#define contains_ILL 0x80000    /**< true if illegal statement in loop */
 /* unsupported values, meaning we should be using them but don't yet */
 
 union StateUnion {

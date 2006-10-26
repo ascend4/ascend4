@@ -22,12 +22,11 @@
 	@file
 	External Functions Module.
 
-	This module implements the ExternalFunc structure referenced by the
-	ExtCallNode structure, and allows syntax for black box and glass box
-	relations to be implemented, as well as	external method calls.
-
-	The ExternalFunc structure stores the number of input and output parameters
-	as well as 'help' string and 'name' string' for each of these 'calls'.
+        This module implements the ExternalFunc structure referenced by
+        black and glass box structures and external methods.
+        The ExternalFunc structure stores the number of input and
+        output parameters (formal)
+        as well as 'help' string and 'name' string' for each of these 'calls'.
 
 	This header also provides functions for ExternalFunc library maintenance.
 	This allows ASCEND to maintain a list of the ExternalFunc requests derived
@@ -62,8 +61,7 @@
 */
 
 /**
-	ExtEvalFunc type is a function pointer. It's only being used in the 
-	GlassBox stuff at this stage I think -- JP
+	ExtEvalFunc type is a function pointer.
 
 	@see rootfind.c:51
 
@@ -85,10 +83,10 @@ typedef int ExtEvalFunc(int *mode, int *m, int *n,
 	this is dependent on their code registration to setup.
 */
 enum ExternalFuncType {
-	efunc_ERR = 0, /**< err value (Traps old mode errors too) */
-	efunc_BlackBox = 10, /**< remainder of struct is blackbox */
-	efunc_GlassBox = 20, /**< remainder of struct is glassbox */
-	efunc_Method = 30 /**< remainder of struct is method */
+  efunc_ERR = 0, /**< err value (Traps old mode errors too) */
+  efunc_BlackBox = 10, /**< remainder of struct is blackbox */
+  efunc_GlassBox = 20, /**< remainder of struct is glassbox */
+  efunc_Method = 30 /**< remainder of struct is method */
 };
 
 struct GlassBoxExternalFunc {
@@ -103,15 +101,15 @@ struct GlassBoxExternalFunc {
 /** values a blackbox (or ?) can report when returning. */
 enum Calc_status {
   calc_converged,
-  calc_diverged, 
+  calc_diverged,
   calc_fp_error,
   calc_incorrect_args,
   calc_error,
   calc_all_ok
 };
 
-/** 
-	Things that a blackbox can be asked to do. 
+/**
+	Things that a blackbox can be asked to do.
 
 	@NOTE Rhetorical question: Why do we want this? See comments in Slv_Interp.
 */
@@ -131,24 +129,21 @@ enum Request_type {
 /**
 	Each blackbox equation may show up more than once in a simulation
 	if models repeat in the structure. For each occurence of the
-	blackbox, a unique Slv_Interp object is given when the set of
+	blackbox, a unique BBoxInterp object is given when the set of
 	corresponding relations is created.
 	It is used for the blackbox to communicate to the rest of the system.
 	If the blackbox retains internal state between evaluation calls,
 	it should store this state in the user_data pointer.
  */
-struct Slv_Interp {
+struct BBoxInterp {
   /** status is set by blackbox calls before returning. */
   enum Calc_status status;
 
   /** user_data is set by the blackbox if it has any persistent state
-     during calls to ExtBBoxInitFunc initial and final given in
+     during calls to initial and final functions given in
      CreateUserFunctionBlackBox.
    */
   void *user_data;
-
-  /** unique identifier tied to instance tree. Set by system. */
-  int nodestamp;
 
   /** What the caller wants done on a given call.
 
@@ -162,26 +157,52 @@ struct Slv_Interp {
       different signatures?
   */
   enum Request_type task;
+  /* if someone still needs a nodestamp, we could go back to
+     defining one, but it should really be inside user_data as
+     ascend doesn't need it. */
+
 };
 
-typedef int ExtBBoxInitFunc(struct Slv_Interp *,
-                            struct Instance *,
-                            struct gl_list_t *);
+typedef int ExtBBoxInitFunc(struct BBoxInterp *interp,
+                            struct Instance *data,
+                            struct gl_list_t *arglist);
+/**<
+	Note Well: References to ascend instances must not be
+	cached in the user_data of interp, as instances may move
+	in the dynamically typed ASCEND world.
+	@param interp is the structure that all subsequent calls to
+		evaluation functions will include.
+	@param data is the DATA instance from the ascend model.
+	@param arglist is the input and output list of instance lists,
+		where each element corresponds to a formal argument.
+		Elements 1:n_formal_inputs are the inputs and the next
+		n_formal_outputs elements are the outputs.
+	@return 0 if ok, nonzero if some error makes the blackbox impossible.
 
-/** 
+*/
+
+typedef void ExtBBoxFinalFunc(struct BBoxInterp *interp);
+/**< @param interp same as called in init and evaluate.
+	This is the opportunity to deallocate user_data as the
+	instance is being destroyed.
+*/
+
+/**
 	External black box equations are of the block form
 	y_out = f(x_in). This block expands to N_outputs equations
 	of the form y_out[i] = f_i(x_in), where the functional details
 	of f are assumed to be smooth enough but otherwise totally hidden
 	and x_in, y_out are non-overlapping sets of variables.
+	The compiler will warn if overlap is detected.
+	Normal D.O.F. solver analysis applies in most cases.
 
 	Note that solvers are not psychic; if this blackbox is embedded
-	in a larger model such that some of y_out are fixed variables,
-	the odds of convergence are small. Cleverer solvers may issue
-	a warning. 
+	in a larger model such that some of y_out are inconsistently
+	fixed variables, the odds of convergence are small.
+	Cleverer solvers may issue a warning.
 
-	@param interp the control information is exchanged in interp; interp->task
-		should be consulted.
+	@param interp the control information is exchanged in interp;
+		 interp->task should be consulted.
 	@param ninputs the length of the inputs, xi_in.
 	@param noutputs, the length of the outputs, y_out.
 
@@ -192,16 +213,18 @@ typedef int ExtBBoxInitFunc(struct Slv_Interp *,
 
 	@TODO this one may need splitting/rework for hessian.
 */
-typedef int ExtBBoxFunc(struct Slv_Interp *interp,
+typedef int ExtBBoxFunc(struct BBoxInterp *interp,
         int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian);
 
 struct BlackBoxExternalFunc {
-  ExtBBoxInitFunc *initial;
+  ExtBBoxInitFunc *initial; /**< called after instance construction */
   ExtBBoxFunc *value; /**< relation residual function. */
   ExtBBoxFunc *deriv; /**< relation gradient function (see jacobian)*/
   ExtBBoxFunc *deriv2; /**< relation hessian function. */
-  ExtBBoxInitFunc *final; /**< cleanup function. */
+  ExtBBoxFinalFunc *final; /**< cleanup function called at instance destruction. */
+  double inputTolerance; /**< largest change in an input variable
+			that is allowable without recalculating. */
 };
 
 
@@ -220,8 +243,8 @@ typedef int ExtMethodRun(struct Instance *context, struct gl_list_t *args, void 
 
 struct MethodExternalFunc {
   ExtMethodRun *run; /**< the method invoked. */
-  void *user_data; /**< I'd anticipate that this would be a function pointer 
-		implemented in an external scripting language. Should only be accessed 
+  void *user_data; /**< I'd anticipate that this would be a function pointer
+		implemented in an external scripting language. Should only be accessed
 		from inside the 'run' function! -- JP
   */
 #if 0 /* have no use for these currently. */
@@ -234,8 +257,8 @@ struct ExternalFunc {
   enum ExternalFuncType etype;
   CONST char *name; /**< a string we own. */
   CONST char *help; /**< a string we own. */
-  unsigned long n_inputs; /**< expected # of inputs. */
-  unsigned long n_outputs; /**< expected # of outputs. */
+  unsigned long n_inputs; /**< expected # of formal inputs. */
+  unsigned long n_outputs; /**< expected # of formal outputs. */
   union {
 	struct GlassBoxExternalFunc glass;
 	struct BlackBoxExternalFunc black;
@@ -247,7 +270,6 @@ struct ExternalFunc {
   REGISTRATION / LOOKUP FUNCTIONS
 */
 
-/* deleted: RetiredExternalFunc -- JP */
 
 extern void InitExternalFuncLibrary(void);
 /**<
@@ -315,9 +337,10 @@ ASC_DLLSPEC(char *) WriteExtFuncLibraryString(void);
 ASC_DLLSPEC(void) TraverseExtFuncLibrary(void (*)(void *,void *),void *secondparam);
 
 
-/** fetch the required input count for glass, black, or method. */
+/** fetch the required formal input count for glass, black, or method. */
 ASC_DLLSPEC(unsigned long) NumberInputArgs(CONST struct ExternalFunc *efunc);
-/** fetch the required output count for glass, black, or method. */
+
+/** fetch the required formal output count for glass, black, or method. */
 ASC_DLLSPEC(unsigned long) NumberOutputArgs(CONST struct ExternalFunc *efunc);
 
 
@@ -360,6 +383,26 @@ ASC_DLLSPEC(int) CreateUserFunctionMethod(CONST char *name
  *  of the name.  Anyone desirous of ASCEND knowing about their
  *  external methods must use this protocol.
  *
+ *
+ * Note on blackbox integration with nonlinear solvers:
+ * The basic idea is that the blackbox has inputs x and outputs y
+ * that are all variables to the ascend model. Some of these may
+ * be fixed variables, but this is of no consequence to the blackbox
+ * routine unless one of the fixed variables is fixed outside the
+ * bounds of feasible input to the box. In the newton solution
+ * process there are three sets of values involved, x (inputs),
+ * yhat (the outputs as computed by the box), and y (the proposed
+ * values of the outputs in the model which may not match yhat
+ * until the entire model is converged. The many equations of the
+ * blackbox are hidden and represented by the reduced set of
+ * equations. In mathematical form, an array of equations:
+ * y = yhat(x); (ascend form bbrel: bboxname(inputs, outputs, data);)
+ * where yhat(x) is computed as bboxname(x,yhat).
+ * The bbox may produce the reduced gradient or be finite differenced
+ * to get dyhat/dx partial derivatives.
+ * The residual then, obviously, is yhat - y and the gradient is
+ * (in matrix form) I-dyhat/dx for the reduced equations.
+ *
  *  @param name Name of the function being added (or updated).
  *  @param initial Pointer to initialisation function, or NULL if none.
  *  @param run Pointer to the method.
@@ -386,17 +429,21 @@ extern ExtBBoxFunc *GetDerivFunc(struct ExternalFunc *efunc);
 /** Fetch black hessian function. */
 extern ExtBBoxFunc *GetDeriv2Func(struct ExternalFunc *efunc);
 /** Fetch black cleanup function. */
-extern ExtBBoxInitFunc *GetFinalFunc(struct ExternalFunc *efunc);
+extern ExtBBoxFinalFunc *GetFinalFunc(struct ExternalFunc *efunc);
+/** Fetch black inputTolerance. */
+extern double GetValueFuncTolerance(struct ExternalFunc *efunc);
 
 
 ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
 		ExtBBoxInitFunc *init,
 		ExtBBoxFunc *value,
-		ExtBBoxFunc *deriv, 
+		ExtBBoxFunc *deriv,
 		ExtBBoxFunc *deriv2,
-		ExtBBoxInitFunc *final,
-		CONST unsigned long n_inputs, CONST unsigned long n_outputs,
-		CONST char *help
+		ExtBBoxFinalFunc *final,
+		CONST unsigned long n_inputs,
+		CONST unsigned long n_outputs,
+		CONST char *help,
+		double inputTolerance
 );
 /**<
 	Adds an external function to the ASCEND system.
@@ -408,7 +455,24 @@ ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
 	of the name.  Anyone desirous of ASCEND knowing about their
 	functions must use this protocol.
 
-	Note: most blackboxes 
+        Note on blackbox integration with nonlinear solvers:
+        The basic idea is that the blackbox has inputs x and outputs y
+        that are all variables to the ascend model. Some of these may
+        be fixed variables, but this is of no consequence to the blackbox
+        routine unless one of the fixed variables is fixed outside the
+        bounds of feasible input to the box. In the newton solution
+        process there are three sets of values involved, x (inputs),
+        yhat (the outputs as computed by the box), and y (the proposed
+        values of the outputs in the model which may not match yhat
+        until the entire model is converged. The many equations of the
+        blackbox are hidden and represented by the reduced set of
+        equations. In mathematical form, an array of equations:
+        y = yhat(x); (ascend form bbrel: bboxname(inputs, outputs, data);)
+        where yhat(x) is computed as bboxname(x,yhat).
+        The bbox may produce the reduced gradient or be finite differenced
+        to get dyhat/dx partial derivatives.
+        The residual then, obviously, is yhat - y and the gradient is
+        (in matrix form) I-dyhat/dx for the reduced equations.
 
 	@param name Name of the function being added (or updated).
 	@param init Pointer to initialisation function, or NULL if none.
@@ -416,15 +480,27 @@ ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
 	@param value  evaluation function pointers, or NULL if none.
 	@param deriv first partial derivative functions, or NULL if none.
 	@param deriv2 second derivative functions, or NULL if none.
+	@param inputTolerance maximum change in any of the inputs that is
+               allowable without recomputing the outputs.
+		0.0 is conservative, or specify a larger number if the
+		outputs are only mildly sensitive to small changes in inputs.
 	@return Returns 0 if the function was successfully added,
 	        non-zero otherwise.
 */
 
 
-/**
-	Evaluate blackbox relation.
+ASC_DLLSPEC(int) DefaultExtBBoxFuncDerivFD(
+		struct BBoxInterp *interp,
+		int ninputs,
+		int noutputs,
+		double *inputs,
+		double *outputs,
+		double *jacobian
+);
+/**< Default finite-differencing code for blackboxes.
+If the user does not supply a derivative function they wrote,
+they must supply this derivative function instead.
 */
-double blackbox_evaluate_residual(struct relation *r);
 
 /*-----------------------------------------------------------------------------
   GLASS BOX STUFF
@@ -473,7 +549,9 @@ extern ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc);
 extern ExtEvalFunc *GetGlassBoxFinal(struct ExternalFunc *efunc);
 
 
-
+/** This macro should go away when bboxes done or when user is tired
+of whinage. */
+#define BBOXWHINE
 
 
 #endif /* ASC_EXTFUNC_H */

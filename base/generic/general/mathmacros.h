@@ -4,18 +4,18 @@
 /* Macros for MAX, MIN and ABS... */
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 # define MAX(X,Y) \
-	( { __typeof__ (X) x_ = (X); \
-    	__typeof__ (Y) y_ = (Y); \
-    	(x_ > y_) ? x_ : y_; \
+	( { __typeof__ (X) xmax_ = (X); \
+    	__typeof__ (Y) ymax_ = (Y); \
+    	(xmax_ > ymax_) ? xmax_ : ymax_; \
 	} )
 # define MIN(X,Y) \
-	( { __typeof__ (X) x_ = (X); \
-    	__typeof__ (Y) y_ = (Y); \
-    	(x_ < y_) ? x_ : y_; \
+	( { __typeof__ (X) xmin_ = (X); \
+    	__typeof__ (Y) ymin_ = (Y); \
+    	(xmin_ < ymin_) ? xmin_ : ymin_; \
 	} )
 # define ABS(X) \
-	( { __typeof__ (X) x_ = (X); \
-    	(x_ > 0) ? x_ : -x_; \
+	( { __typeof__ (X) xabs_ = (X); \
+    	(xabs_ > 0) ? xabs_ : -xabs_; \
 	} )
 #else
 # define MAX(a,b) ( (a) < (b) ? (b) : (a) )
@@ -23,4 +23,4 @@
 # define ABS(x) ( ((x) > 0) ? (x) : -(x) )
 #endif
 
-#endif
+#endif /* ASC_MATHMACROS_H */

@@ -211,13 +211,13 @@ int32 dis_mindexF(const struct dis_discrete *dis)
 }
 
 
-void dis_set_mindexF(struct dis_discrete *dis, int32 index)
+void dis_set_mindexF(struct dis_discrete *dis, int32 mindex)
 {
   if (dis==NULL || dis->datom==NULL) {
     FPRINTF(stderr,"dis_set_mindex called on bad dis var\n");
     return;
   }
-  dis->mindex = index;
+  dis->mindex = mindex;
 }
 
 int32 dis_sindexF(const struct dis_discrete *dis)
@@ -230,13 +230,13 @@ int32 dis_sindexF(const struct dis_discrete *dis)
 }
 
 
-void dis_set_sindexF(struct dis_discrete *dis, int32 index)
+void dis_set_sindexF(struct dis_discrete *dis, int32 sindex)
 {
   if (dis==NULL || dis->datom==NULL) {
     FPRINTF(stderr,"dis_set_sindex called on bad dis\n");
     return;
   }
-  dis->sindex = index;
+  dis->sindex = sindex;
 }
 
 

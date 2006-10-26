@@ -168,7 +168,7 @@ extern int32 bnd_mindex(struct bnd_boundary *bnd);
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern void bnd_set_mindex(struct bnd_boundary *bnd, int32 index);
+extern void bnd_set_mindex(struct bnd_boundary *bnd, int32 mindex);
 /**<
  *  Sets the index of the given boundary as it
  *  appears in a slv_system_t master boundary list.
@@ -182,7 +182,7 @@ extern int32 bnd_sindex(const struct bnd_boundary *bnd);
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern void bnd_set_sindex(struct bnd_boundary *bnd, int32 index);
+extern void bnd_set_sindex(struct bnd_boundary *bnd, int32 sindex);
 /**<
  *  Sets the index of the given boundary as it
  *  appears in a solvers boundary list.
@@ -197,7 +197,7 @@ extern int32 bnd_model(const struct bnd_boundary *bnd);
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern void bnd_set_model(struct bnd_boundary *bnd, int32 index);
+extern void bnd_set_model(struct bnd_boundary *bnd, int32 mindex);
 /**<
  *  Sets the model number of the given boundary.
  *  In a hierarchy, boundaries come in groups associated with

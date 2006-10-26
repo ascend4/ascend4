@@ -223,11 +223,11 @@ static int32 analyze_case(struct when_case *cur_case,
   int32 d,dlen;
   int32 values[MAX_VAR_IN_LIST];
   int32 *value;
-  int32 *case_values,index;
+  int32 *case_values,dindex;
 
   value = &(values[0]);
   case_values = when_case_values_list(cur_case);
-  for(index =0; index<MAX_VAR_IN_LIST; index++) {
+  for(dindex =0; dindex<MAX_VAR_IN_LIST; dindex++) {
     *value = *case_values;
     value++;
     case_values++;
@@ -368,11 +368,11 @@ static int32 simplified_analyze_case(struct when_case *cur_case,
   int32 d,dlen;
   int32 values[MAX_VAR_IN_LIST];
   int32 *value;
-  int32 *case_values,index;
+  int32 *case_values,dindex;
 
   value = &(values[0]);
   case_values = when_case_values_list(cur_case);
-  for(index =0; index<MAX_VAR_IN_LIST; index++) {
+  for(dindex =0; dindex<MAX_VAR_IN_LIST; dindex++) {
     *value = *case_values;
     value++;
     case_values++;
@@ -934,29 +934,29 @@ static int32 *order_incidences_of_relation(struct var_variable **var_list,
 				           int32 vlen)
 {
   struct var_variable *var;
-  int32 *index;
+  int32 *indexbuf;
   int32 *ordered_index;
   int32 v,vind,vcount = 0;
   int32 aux,vin,vindex = 0;
 
-  index = ASC_NEW_ARRAY(int32,vlen);
+  indexbuf = ASC_NEW_ARRAY(int32,vlen);
   ordered_index = ASC_NEW_ARRAY(int32,vlen);
 
   for (v=0; v<vlen; v++) {
     var = var_list[v];
-    index[v] = var_mindex(var);
+    indexbuf[v] = var_mindex(var);
   }
 
   aux = 0;
   while (aux < vlen) {
     for (v=0; v<vlen; v++) {
-      vcount = index[aux];
+      vcount = indexbuf[aux];
       if (vcount >=0) {
         break;
       }
     }
     for (vin=0; vin<vlen; vin++) {
-      vind = index[vin];
+      vind = indexbuf[vin];
       if (vind >=0) {
         if (vcount >= vind ) {
           vcount = vind;
@@ -964,12 +964,12 @@ static int32 *order_incidences_of_relation(struct var_variable **var_list,
         }
       }
     }
-    index[vindex] = -1;
+    indexbuf[vindex] = -1;
     ordered_index[aux] = vcount;
     aux++;
   }
 
-  ascfree(index);
+  ascfree(indexbuf);
   return ordered_index;
 }
 
@@ -1302,7 +1302,7 @@ static void order_relations_in_case(struct when_case *cur_case)
   int32 *num_inc;
   int32 *ordered_num_inc;
   int32 r, rin, rlen, rcount = 0, rind;
-  int32 index = 0, aux, glob_count;
+  int32 indexr = 0, aux, glob_count;
 
   rels = when_case_rels_list(cur_case);
   if (rels != NULL) {
@@ -1331,11 +1331,11 @@ static void order_relations_in_case(struct when_case *cur_case)
           if (rind >=0) {
             if (rcount >= rind ) {
               rcount = rind;
-              index = rin;
+              indexr = rin;
             }
           }
         }
-        num_inc[index] = -1;
+        num_inc[indexr] = -1;
         ordered_num_inc[aux] = rcount;
         aux++;
       }

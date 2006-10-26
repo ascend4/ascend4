@@ -40,6 +40,7 @@
 #include "functype.h"
 #include "func.h"
 #include "expr_types.h"
+#include "exprs.h"
 #include "sets.h"
 #include "name.h"
 
@@ -199,6 +200,19 @@ struct Name *CreateSetName(struct Set *s)
   result->bits = 0;
   result->val.s = s;
   result->next = NULL;
+  return result;
+}
+
+struct Name *CreateReservedIndexName(symchar *reserved)
+{
+  struct Name *n;
+  struct Expr *ex;
+  struct Set *s;
+  struct Name *result;
+  n = CreateIdName(reserved);
+  ex = CreateVarExpr(n);
+  s = CreateSingleSet(ex);
+  result = CreateSetName(s);
   return result;
 }
 

@@ -241,6 +241,7 @@ int Asc_Putchar( int c )
   return Asc_Printf( "%c", c );
 }
 
+#ifdef ASC_XTERM_COLORS
 static int color_test(){
 	static int use_xterm_color = 0;
 	char *term;
@@ -263,6 +264,7 @@ static int color_test(){
 	}
 	return use_xterm_color;
 }
+#endif /*ASC_XTERM_COLORS*/
 
 /**
 	Little routine to aid output of XTERM colour codes where supported.
@@ -275,6 +277,8 @@ int color_on(FILE *f, const char *colorcode){
 	if(colorcode!=NULL && use_color==1){
 		return fprintf(f,"\033[%sm",colorcode);
 	}
+#else
+	(void)f; (void)colorcode;
 #endif
 	return 0;
 }
@@ -289,6 +293,9 @@ int color_off(FILE *f){
 	if(use_color==1){
 		return fprintf(f,"\033[0m");
 	}
+
+#else
+	(void)f;
 #endif
 	return 0;
 }

@@ -76,6 +76,14 @@ extern struct Name *CreateSetName(struct Set *s);
 	Create a name node of type set with the set s associated with it.
 */
 
+extern struct Name *CreateReservedIndexName(symchar *reserved);
+/**<
+ * Make subscript index from the reserved identifier given, 
+ * which in most uses will
+ * contain an illegal character for an ascend ID reserving the
+ * set index to internal compiler use only.
+ */
+
 extern void LinkNames(struct Name *cur, struct Name *next);
 /**<
 	Link "next" to cur so that NextName(cur) = next
@@ -105,15 +113,15 @@ extern struct Name *NextNameF(CONST struct Name *n);
 #define NameId(n) NameIdF(n)
 #endif
 /**<
-	Test whether a Name is an identifier.
+	Test whether a Name element is an identifier.
 	We should have analogous functions for CHAT and ATTR, but since no
 	clients yet use them, they aren't implemented.
 	@param n CONST struct Name*, Name to query.
 	@return An int:  NAMEBIT_IDTY if n is an identifier type Name or 0 otherwise.
 	@see NameIdF()
 
-	@todo add an example. Does this just test the *first* link in the name
-		or does it check that the *whole name* is an ID?
+	@note This answers for just the *first* link in the name.
+		
 */
 
 extern int NameIdF(CONST struct Name *n);
@@ -228,7 +236,8 @@ extern struct Name *JoinNames(struct Name *n1, struct Name *n2);
 extern struct Name *ReverseName(struct Name *n);
 /**<
 	Returns the reverse of n.
-	@todo Clarify how exactly, and for what purpose.
+	Normally only done to unreverse the order that yacc collects
+	identifiers.
 */
 
 extern CONST struct Name *NextIdName(CONST struct Name *n);

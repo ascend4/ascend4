@@ -366,7 +366,7 @@ struct gl_list_t *AllPaths(CONST struct Instance *i)
   struct gl_list_t *result,*tmp1,*tmp2,*path;
   CONST struct Instance *parent;
   struct NameNode *nptr;
-  unsigned long length, index;
+  unsigned long length, cindex;
   unsigned c,count;
   if (NumberParents(i)==0){	/* found root. will be sim. */
     result = gl_create(1);
@@ -399,8 +399,8 @@ struct gl_list_t *AllPaths(CONST struct Instance *i)
       parent = nptr->inst;
       length = NumberChildren(parent);
       count=0;
-      for(index=1; index <= length; index++){
-	if (InstanceChild(parent,index) == i){
+      for(cindex=1; cindex <= length; cindex++){
+	if (InstanceChild(parent,cindex) == i){
 	  if (count++) {
 	    tmp1 = CopyPathHead(path);
 	    gl_append_ptr(result,(VOIDPTR)tmp1);
@@ -409,7 +409,7 @@ struct gl_list_t *AllPaths(CONST struct Instance *i)
           }
 	  nptr = ASC_NEW(struct NameNode);
 	  nptr->inst = i;
-	  nptr->index = index;
+	  nptr->index = cindex;
 	  gl_append_ptr(tmp1,(VOIDPTR)nptr);
 	}
       }
@@ -1658,14 +1658,14 @@ static
 void Save__Link(FILE *fp,CONST struct Instance *inst)
 {
   CONST struct Instance *child;
-  unsigned long int nch,c,index;
+  unsigned long int nch,c,tindex;
 
   nch = NumberChildren(inst);
   if (!nch) return;
 
-  index = GetTmpNum(inst);
-  FPRINTF(fp,"$GRAPH %lu {\n",index);
-  FPRINTF(fp,"\t%lu -> ",index);		/* parent index */
+  tindex = GetTmpNum(inst);
+  FPRINTF(fp,"$GRAPH %lu {\n",tindex);
+  FPRINTF(fp,"\t%lu -> ",tindex);		/* parent tindex */
   child = InstanceChild(inst,1);		/* treat the first child */
   FPRINTF(fp,"%lu",GetTmpNum(child));		/* specially. */
   for (c=2;c<=nch;c++) {
@@ -1757,7 +1757,7 @@ void SaveCliques(FILE *fp, struct gl_list_t *list)
 {
   CONST struct Instance *inst;
   CONST struct Instance *ptr;
-  unsigned long len,c,start,index;
+  unsigned long len,c,start,tindex;
 
   len = gl_length(list);
 
@@ -1770,9 +1770,9 @@ void SaveCliques(FILE *fp, struct gl_list_t *list)
       FPRINTF(fp,"\t%lu -> ",start);
       do {
 	ptr = NextCliqueMember(ptr);
-	index = GetTmpNum(ptr);
-	if (index)
-	  FPRINTF(fp,"%lu ",index);	/* white space delimited */
+	tindex = GetTmpNum(ptr);
+	if (tindex)
+	  FPRINTF(fp,"%lu ",tindex);	/* white space delimited */
       } while (ptr!=inst);
       FPRINTF(fp,";\n");
       FPRINTF(fp,"}\n\n");

@@ -66,6 +66,9 @@
 #include "pending.h"
 #include "find.h"
 #include "relation_type.h"
+#include "extfunc.h"
+#include "rel_blackbox.h"
+#include "vlist.h"
 #include "relation.h"
 #include "logical_relation.h"
 #include "logrelation.h"
@@ -991,7 +994,7 @@ void LinkNodes_ListVersion(struct gl_list_t *original_list,
   struct Instance *copy, *ptr;
   struct Instance *next;
   unsigned long len, c, cc;
-  unsigned long nch, index;
+  unsigned long nch, cindex;
 
   len = gl_length(original_list);
   for (c=1;c<=len;c++) {
@@ -1010,12 +1013,12 @@ void LinkNodes_ListVersion(struct gl_list_t *original_list,
       for (cc=1;cc<=nch;cc++) {
         /* only arrays/models should get here */
         child = InstanceChild(original,cc);
-        index = GetTmpNum(child);
-        assert(index!=0);/* subatomic children dont have copynums */
+        cindex = GetTmpNum(child);
+        assert(cindex!=0);/* subatomic children dont have copynums */
         /* link from child to parent. this could be smarter.
          * our handling of UNIVERSAL is poor.
          */
-        ptr = INST(gl_fetch(new_list,index));
+        ptr = INST(gl_fetch(new_list,cindex));
         if (SearchForParent(ptr,copy)==0) {
 	  AddParent(ptr,copy);
         }
@@ -1042,9 +1045,9 @@ void LinkNodes_ListVersion(struct gl_list_t *original_list,
     if (NextCliqueMember(ptr)!=ptr) { /* i is in a clique */
       do {
 	ptr = NextCliqueMember(ptr);
-	index = GetTmpNum(ptr);
-	if (index) {
-	  next = INST(gl_fetch(new_list,index));
+	cindex = GetTmpNum(ptr);
+	if (cindex) {
+	  next = INST(gl_fetch(new_list,cindex));
 	  SetNextCliqueMember(copy,next);
 	  copy = next;
 	}

@@ -104,7 +104,7 @@ extern double tm_reset_cpu_time(void);
  *  @return The initiallized elapsed CPU time.
  */
 
-ASC_DLLSPEC(void ) tm_cpu_time_ftn_(double *time);
+ASC_DLLSPEC(void ) tm_cpu_time_ftn_(double *timef);
 /**<
  *  Stores elapsed CPU time in seconds since the first call
  *  to a timing function in *t*.  The timing functions that, when
@@ -135,16 +135,16 @@ ASC_DLLSPEC(void ) tm_cpu_time_ftn_(double *time);
  *  @param t Location to store the elapsed CPU time in seconds.
  */
 
-ASC_DLLSPEC(void ) aftime_(double *time);
+ASC_DLLSPEC(void ) aftime_(double *timev);
 /**< Short name for tm_cpu_time_ftn_() to satisfy FORTRAN's 6 char restriction. */
-ASC_DLLSPEC(void ) tm_cpu_time_ftn(double *time);
+ASC_DLLSPEC(void ) tm_cpu_time_ftn(double *timev);
 /**< Variant of tm_cpu_time_ftn_(). */
-ASC_DLLSPEC(void ) aftime(double *time);
+ASC_DLLSPEC(void ) aftime(double *timev);
 /**< Short name for tm_cpu_time_ftn() to satisfy FORTRAN's 6 char restriction. */
-ASC_DLLSPEC(void ) TM_CPU_TIME_FTN(double *time);
+ASC_DLLSPEC(void ) TM_CPU_TIME_FTN(double *timev);
 /**< Variant of tm_cpu_time_ftn_(). */
 
-ASC_DLLSPEC(void) AFTIME(double *time);
+ASC_DLLSPEC(void) AFTIME(double *timev);
 /**< Short name for TM_CPU_TIME_FTN() to satisfy FORTRAN's 6 char restriction. */
 
 #endif  /* ASC_TM_TIME_H */

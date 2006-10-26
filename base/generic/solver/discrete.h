@@ -270,7 +270,7 @@ extern int32 dis_mindexF(const struct dis_discrete *dis);
  *  Implementation function for dis_mindex() (debug mode).
  *  Do not call this function directly - use dis_mindex() instead.
  */
-extern void dis_set_mindexF(struct dis_discrete *dis, int32 index);
+extern void dis_set_mindexF(struct dis_discrete *dis, int32 mindex);
 /**<
  *  <!--  index = dis_mindex(dis)                                      -->
  *  <!--  dis_set_mindex(dis,index)                                    -->
@@ -312,7 +312,7 @@ extern int32 dis_sindexF(const struct dis_discrete *dis);
  *  Implementation function for dis_sindex() (debug mode).
  *  Do not call this function directly - use dis_sindex() instead.
  */
-extern void dis_set_sindexF(struct dis_discrete *dis, int32 index);
+extern void dis_set_sindexF(struct dis_discrete *dis, int32 sindex);
 /**<
  *  <!--  index = dis_sindex(dis)                                      -->
  *  <!--  dis_set_sindex(dis,index)                                    -->

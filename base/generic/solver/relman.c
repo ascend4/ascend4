@@ -45,6 +45,8 @@
 #include <compiler/atomvalue.h>
 #include <compiler/mathinst.h>
 #include <compiler/relation_type.h>
+#include <compiler/rel_blackbox.h>
+#include <compiler/vlist.h>
 #include <compiler/relation.h>
 #include <compiler/relation_util.h>
 #include <compiler/relation_io.h>
@@ -160,6 +162,7 @@ void relman_get_incidence(struct rel_relation *rel, var_filter_t *filter,
   }
 }
 
+#ifdef RELOCATE_GB_NEEDED
 /*
  *********************************************************************
  * Code to deal with glassbox relations processing.
@@ -369,63 +372,68 @@ real64 relman_glassbox_diffs( struct rel_relation *rel,
 #define relman_glassbox_diffs(rel,filter,mtx) abort()
 #endif
 
-/* returns residual; sets *calc_ok = 1 on success */
-real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
-  real64 res;
-  assert(calc_ok!=NULL && rel!=NULL);
+#endif /* RELOCATE_GB_NEEDED */
 
-  /*
-	token relations
-  */
-  if( rel->type == e_rel_token ){
-    if(!RelationCalcResidualBinary(
-			GetInstanceRelationOnly(IPTR(rel->instance))
-			,&res)
-	){
-      *calc_ok = 1;
+real64 relman_eval(struct rel_relation *rel, int32 *status, int safe)
+{
+  real64 res;
+  assert(status!=NULL && rel!=NULL);
+  if ( rel->type == e_rel_token ) {
+    if (!RelationCalcResidualBinary(
+          GetInstanceRelationOnly(IPTR(rel->instance)),&res)) {
+      *status = 1; /* calc_ok */
       rel_set_residual(rel,res);
       return res;
     }
+    /* else we don't care -- go on to the old handling which
+     * is reasonably correct, if slow.
+     */
   }
-
-  if(rel->nodeinfo){
-	/*
-	CONSOLE_DEBUG("ABOUT TO CALL EXTREL_EVALUATE_RESIDUAL");
-	CONSOLE_DEBUG("REL_RELATION = %p",rel);
-	*/
-    *calc_ok = 1;
-	res = ExtRel_Evaluate_Residual(rel);
-    rel_set_residual(rel,res);
-	return res;
-  }
-
-  /*
-	other types of relations (which include...). This latter approach is
-	apparently older and "reasonably correct, if slow". 
-  */
-  /* CONSOLE_DEBUG("EVALUATE REL_RELATION = %p",rel); */
-  if(safe){
-    *calc_ok = (int32)RelationCalcResidualSafe(rel_instance(rel),&res);
-    safe_error_to_stderr( (enum safe_err *)calc_ok );
-
+  if( safe ) {
+    *status = (int32)RelationCalcResidualSafe(rel_instance(rel),&res);
+    /* CONSOLE_DEBUG("residual = %g",res); */
+    safe_error_to_stderr( (enum safe_err *)status );
     /* always set the relation residual when using safe functions */
     rel_set_residual(rel,res);
-  }else{
-    *calc_ok = RelationCalcResidual(rel_instance(rel),&res);
-
-	/* for unsafe functions, set a fallback value in case of error */
-    if(*calc_ok){
+  } else {
+    *status = RelationCalcResidual(rel_instance(rel),&res);
+    if ( *status ) {
+      /* an error occured */
       res = 1.0e8;
-    }else{
+    } else {
       rel_set_residual(rel,res);
     }
   }
-
   /* flip the status flag: all values other than safe_ok become 0 */
-  *calc_ok = !(*calc_ok);
+  *status = !(*status);
+  /* CONSOLE_DEBUG("returning %g",res); */
   return res;
-}
 
+#if REIMPLEMENT /* all this is to be done on the compiler side, without
+all the indirection idiocy. */
+   it may take some changes in the CalcResidual header to do so.
+   switch (rel->type) {
+   case e_token:
+     res = exprman_eval(rel,rel_lhs(rel)) - exprman_eval(rel,rel_rhs(rel));
+     break;
+   case e_opcode:
+     FPRINTF(stderr,"opcode relation processing not yet supported\n");
+     res = 1.0e08;
+     break;
+   case e_glassbox:
+     res = relman_glassbox_eval(rel);
+     break;
+   case e_blackbox:
+     res = ExtRel_Evaluate_LHS(rel) - ExtRel_Evaluate_RHS(rel);
+     break;
+   default:
+     FPRINTF(stderr,"unknown relation type in (relman_eval)\n");
+     res = 1.0e08;
+     break;
+   }
+#endif
+
+}
 int32 relman_obj_direction(struct rel_relation *rel)
 {
   assert(rel!=NULL);
@@ -690,16 +698,7 @@ int relman_diffs(struct rel_relation *rel, var_filter_t *filter,
 
   gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
-
-  /** @TODO fix this (it should all be in the compiler, or something) */
-  if(rel->nodeinfo){
-	/* CONSOLE_DEBUG("EVALUTING BLACKBOX DERIVATIVES FOR ROW %d",coord.row); */
-	*resid = extrel_resid_and_jacobian(rel, filter, coord.row, mtx);
-    return 0;
-  }
-
-  if(safe){
-	/* CONSOLE_DEBUG("..."); */
+  if( safe ) {
     status =(int32)RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
     safe_error_to_stderr( (enum safe_err *)&status );
     /* always map when using safe functions */
@@ -710,7 +709,8 @@ int relman_diffs(struct rel_relation *rel, var_filter_t *filter,
         mtx_fill_org_value(mtx,&coord,gradient[c]);
       }
     }
-  }else{
+  }
+  else {
     if((status=RelationCalcResidGrad(rel_instance(rel),resid,gradient)) == 0) {
       /* successful */
       for (c=0; c < len; c++) {
@@ -722,31 +722,8 @@ int relman_diffs(struct rel_relation *rel, var_filter_t *filter,
       }
     }
   }
-
   /* flip the status flag */
   return !status;
-
-#if REIMPLEMENT /* this needs to be reimplemented in the compiler */
-  switch (rel->type) {
-  case e_token:
-    vlist = rel_incidence_list(rel);
-    res -= exprman_diffs_alt(rel,rel_rhs(rel),filter,row,mtx,vlist);
-    mtx_mult_row(mtx,row,-1.0,mtx_ALL_COLS);
-    res += exprman_diffs_alt(rel,rel_lhs(rel),filter,row,mtx,vlist);
-    return (res);
-  case e_glassbox:
-    res = relman_glassbox_diffs(rel,filter,mtx);
-    return (res);
-  case e_opcode:
-    FPRINTF(stderr,"opcode differentiation not yet supported\n");
-    return 1.0e08;
-  case e_blackbox:
-    res -= ExtRel_Diffs_RHS(rel,filter,row,mtx);
-    mtx_mult_row(mtx,row,-1.0,mtx_ALL_COLS);
-    res += ExtRel_Diffs_LHS(rel,filter,row,mtx);
-    return res;
-  }
-#endif
 }
 
 #if REIMPLEMENT /* this needs to be reimplemented in the compiler */
@@ -868,9 +845,11 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
       return(NULL);
    }
    switch (rel->type ) {
+#if 0 /* default */
    case e_rel_glassbox:
      value = relman_glassbox_dsolve(rel,solvefor,able,nsolns,tolerance);
      return value;
+#endif
    case e_rel_token:
      {
        int nvars,n;
@@ -894,7 +873,7 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
 			         able,nsolns);
        return value;
      }
-   default: /* e_rel_blackbox */
+   default: /* e_rel_blackbox, glassbox */
      *able = FALSE;
      *nsolns = 0;
      return(NULL);
