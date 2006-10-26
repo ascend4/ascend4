@@ -91,6 +91,7 @@ try:
 	from modelview import *        # model browser
 	from integrator import *       # integrator dialog	
 	from infodialog import *       # general-purpose textual information dialog
+	from versioncheck import *     # version check (contacts ascend.cruncher2.dyndns.org)
 	import config
 
 except RuntimeError, e:
@@ -1075,6 +1076,20 @@ class Browser:
 	def on_help_contents_click(self,*args):
 		_help = Help(HELP_ROOT)
 		_help.run()
+
+	def on_help_check_for_updates_click(self,*args):
+		v = VersionCheck()
+		v.check()
+		title = "Check for updates"
+		text = "Your version is %s\n" % config.VERSION
+		text += "Latest version is %s\n" % v.latest
+		if v.info:
+			text += "Get more info at %s\n" % v.info
+		if v.download:
+			text += "Download from %s\n" % v.download
+
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
 
 	def on_show_fixable_variables_activate(self,*args):
 		v = self.sim.getFixableVariables()
