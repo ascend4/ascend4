@@ -63,7 +63,7 @@
 		      <accelerator key="F5" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image699">
+			<widget class="GtkImage" id="image713">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-refresh</property>
 			  <property name="icon_size">1</property>
@@ -113,7 +113,7 @@
 		      <accelerator key="C" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image700">
+			<widget class="GtkImage" id="image714">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-copy</property>
 			  <property name="icon_size">1</property>
@@ -141,7 +141,7 @@
 		      <accelerator key="F" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image701">
+			<widget class="GtkImage" id="image715">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">locked.png</property>
 			  <property name="xalign">0.5</property>
@@ -162,7 +162,7 @@
 		      <accelerator key="R" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image702">
+			<widget class="GtkImage" id="image716">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">unlocked.png</property>
 			  <property name="xalign">0.5</property>
@@ -189,7 +189,7 @@
 		      <accelerator key="F4" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image703">
+			<widget class="GtkImage" id="image717">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">properties.png</property>
 			  <property name="xalign">0.5</property>
@@ -223,7 +223,7 @@
 		      <accelerator key="F7" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image704">
+			<widget class="GtkImage" id="image718">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-spell-check</property>
 			  <property name="icon_size">1</property>
@@ -245,7 +245,7 @@
 		      <accelerator key="F9" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image705">
+			<widget class="GtkImage" id="image719">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-media-forward</property>
 			  <property name="icon_size">1</property>
@@ -267,7 +267,7 @@
 		      <accelerator key="F9" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image706">
+			<widget class="GtkImage" id="image720">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">integrator-sm.png</property>
 			  <property name="xalign">0.5</property>
@@ -295,7 +295,7 @@
 		      <accelerator key="F12" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image707">
+			<widget class="GtkImage" id="image721">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-connect</property>
 			  <property name="icon_size">1</property>
@@ -364,7 +364,7 @@
 		      <accelerator key="I" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image708">
+			<widget class="GtkImage" id="image722">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">incidence.png</property>
 			  <property name="xalign">0.5</property>
@@ -385,7 +385,7 @@
 		      <accelerator key="D" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image709">
+			<widget class="GtkImage" id="image723">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">diagnose.png</property>
 			  <property name="xalign">0.5</property>
@@ -412,7 +412,7 @@
 		      <accelerator key="O" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image710">
+			<widget class="GtkImage" id="image724">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-add</property>
 			  <property name="icon_size">1</property>
@@ -434,7 +434,7 @@
 		      <accelerator key="K" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image711">
+			<widget class="GtkImage" id="image725">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-indent</property>
 			  <property name="icon_size">1</property>
@@ -489,7 +489,7 @@
 		      <accelerator key="F11" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image712">
+			<widget class="GtkImage" id="image726">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-preferences</property>
 			  <property name="icon_size">1</property>
@@ -578,9 +578,30 @@
 		      <signal name="activate" handler="on_help_contents_click" last_modification_time="Sun, 29 Jan 2006 06:36:19 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image713">
+			<widget class="GtkImage" id="image727">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-help</property>
+			  <property name="icon_size">1</property>
+			  <property name="xalign">0.5</property>
+			  <property name="yalign">0.5</property>
+			  <property name="xpad">0</property>
+			  <property name="ypad">0</property>
+			</widget>
+		      </child>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkImageMenuItem" id="check_for_updates">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">Check for _Updates</property>
+		      <property name="use_underline">True</property>
+		      <signal name="activate" handler="on_help_check_for_updates_click" last_modification_time="Thu, 26 Oct 2006 00:42:36 GMT"/>
+
+		      <child internal-child="image">
+			<widget class="GtkImage" id="image728">
+			  <property name="visible">True</property>
+			  <property name="stock">gtk-connect</property>
 			  <property name="icon_size">1</property>
 			  <property name="xalign">0.5</property>
 			  <property name="yalign">0.5</property>
