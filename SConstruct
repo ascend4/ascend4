@@ -1,6 +1,6 @@
 import os, commands, platform, distutils.sysconfig, os.path, re
 
-version = "0.9.5.102"
+version = "0.9.5.103"
 
 #------------------------------------------------------
 # OPTIONS
@@ -857,9 +857,9 @@ def CheckMath(context):
 # IDA test
 
 ida_test_text = """
-#include <ida/ida.h>
-#include <nvector/nvector_serial.h>
-#include <ida/ida_spgmr.h>
+# include <ida/ida.h>
+# include <nvector/nvector_serial.h>
+# include <ida/ida_spgmr.h>
 int main(){
 	void *ida_mem;
 	ida_mem = IDACreate();
