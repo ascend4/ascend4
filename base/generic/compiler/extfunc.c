@@ -86,6 +86,7 @@ int CreateUserFunctionBlackBox(CONST char *name,
   efunc->n_inputs = n_inputs;
   efunc->n_outputs = n_outputs;
   efunc->u.black.initial = init;
+  CONSOLE_DEBUG("_______________________ ASSIGNED INIT = %p TO efunc = %p",init, efunc);
   efunc->u.black.value = value;
   efunc->u.black.deriv = deriv;
   efunc->u.black.deriv2 = deriv2;

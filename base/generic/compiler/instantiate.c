@@ -5349,17 +5349,21 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   unsigned long start,end;
   struct Set *extrange= NULL;
 
-/* common stuff do once ------------ */
-/* note ignoring return codes as all is guaranteed to work by passing
-the checks done before this statement was attempted. */
+  /* common stuff do once ------------ */
+
+  /*
+	note ignoring return codes as all is guaranteed to work by passing
+	the checks done before this statement was attempted.
+  */
   if (ExternalStatDataBlackBox(statement) != NULL) {
     data = CheckExtCallData(inst, statement, &ferr);
     assert( ferr == correct_instance );
   }
-      /* expand the formal args into a list of lists of realatom args. */
+  
+  /* expand the formal args into a list of lists of realatom args. */
   arglist = GetExtCallArgs(inst, statement, &ferr);
   if (arglist==NULL){
-    assert(ferr == correct_instance);
+    asc_assert(ferr == correct_instance);
     /* should never be here. */
     switch(ferr){
     case unmade_instance:
@@ -5379,6 +5383,9 @@ the checks done before this statement was attempted. */
   if (efunc == NULL) {
     return 1;
   }
+
+  CONSOLE_DEBUG("...");
+
   n_input_args = NumberInputArgs(efunc);
   n_output_args = NumberOutputArgs(efunc);
   if ((len =gl_length(arglist)) != (n_input_args + n_output_args)) {
@@ -5387,6 +5394,9 @@ the checks done before this statement was attempted. */
 	);
     return 1;
   }
+
+  CONSOLE_DEBUG("...");
+
   /* we should have a valid arglist at this stage */
   if (CheckExtCallArgTypes(arglist)) {
     instantiation_error(ASC_USER_ERROR,statement,"Wrong type of args to external statement");
@@ -5398,11 +5408,15 @@ the checks done before this statement was attempted. */
   inputs = LinearizeArgList(arglist,start,end);
   n_inputs_actual = gl_length(inputs);
 
+  CONSOLE_DEBUG("...");
+
   /* Now process the outputs */
   start = n_input_args+1;
   end = n_input_args + n_output_args;
   outputs = LinearizeArgList(arglist,start,end);
   n_outputs_actual = gl_length(outputs);
+
+  CONSOLE_DEBUG("...");
 
   /* Now create the relations, all with the same
    * common.
@@ -5411,6 +5425,9 @@ the checks done before this statement was attempted. */
   common->interp.task = bb_first_call;
   context = WriteInstanceNameString(inst, NULL);
 /* ------------ */ /* ------------ */
+
+  CONSOLE_DEBUG("...");
+
   /* now set up the for loop index --------------------------------*/
   name = AddSymbolL(BBOX_RESERVED_INDEX, BBOX_RESERVED_INDEX_LEN);
   /* using a reserved character not legal in user level modeling. */
@@ -5418,6 +5435,9 @@ the checks done before this statement was attempted. */
   /* cannot happen as bbox definitions don't nest as statements and
 	user identifiers cannot contain ?.
  */
+
+  CONSOLE_DEBUG("...");
+
   assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   /* construct a set value of 1..bbox_arraysize */
@@ -5463,10 +5483,15 @@ the checks done before this statement was attempted. */
     assert(0);
     break;
   }
+
+  CONSOLE_DEBUG("...");
+
 /* ------------ */ /* ------------ */
   /* and now for cleaning up shared data. */
   init = GetInitFunc(efunc);
-  (*init)( &(common->interp), data, arglist);
+  if(init){
+	  (*init)( &(common->interp), data, arglist);
+  }
   common->interp.task = bb_none;
   ascfree(context);
   DeleteRefBlackBoxCache(NULL, &common);
@@ -5474,6 +5499,9 @@ the checks done before this statement was attempted. */
   gl_destroy(outputs);
   DestroySpecialList(arglist);
 /* ------------ */ /* ------------ */
+
+  CONSOLE_DEBUG("...");
+
   /*  currently designed to always succeed or fail permanently.
    *  We reached this point meaning we've processed everything.
    *  Therefore the statment returns 1 and becomes no longer pending.

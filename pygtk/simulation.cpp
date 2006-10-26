@@ -408,7 +408,7 @@ Simulation::getSingularityInfo() const{
 
 void
 Simulation::setSolver(Solver &solver){
-	CONSOLE_DEBUG("Setting solver on sim %p, root inst %p",this,this->simroot.getInternalType());
+	/* CONSOLE_DEBUG("Setting solver on sim %p, root inst %p",this,this->simroot.getInternalType()); */
 	if(!is_built)throw runtime_error("Can't setSolver: simulation has not been built yet");
 	if(!sys)throw runtime_error("Can't setSolver: 'sys' is not assigned.");
 

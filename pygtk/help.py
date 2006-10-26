@@ -32,7 +32,7 @@ class Help:
 			
 			print _b
 		elif platform.system()=='Linux':
-			_b = webbrowser.get('firefox')	
+			_b = webbrowser.get()	
 		else:
 			print "PLATFORM IS ".platform.platform(True,True)
 
