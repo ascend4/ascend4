@@ -454,7 +454,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 			Jv_i = 0;
 			for(j=0; j < count; ++j){
-				CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y);
+				/* CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y); */
 				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
 				if(varname){
 					CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
@@ -467,6 +467,8 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 			}
 
 			NV_Ith_S(Jv,i) = Jv_i;
+			CONSOLE_DEBUG("(J*v)[%d] = %f", i, Jv_i);
+
 			if(status){
 				/* presumably some error_reporter will already have been made*/
 				is_error = 1;

@@ -4,6 +4,7 @@ REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "freesteam";
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/listnotes";
+IMPORT "johnpye/solve";
 
 MODEL simple_state;
 	p IS_A pressure;
@@ -51,8 +52,10 @@ MODEL thermalequilibrium2;
 
 	t IS_A time;
 METHODS
-METHOD on_load;
+METHOD specify;
 	FIX	h, A, m[1..2], S[1..2].h, p;
+END specify;	
+METHOD values;
 	A := 1 {m^2};
 	h := 10 {W/m^2/K};
 
@@ -62,7 +65,8 @@ METHOD on_load;
 	S[1].h := 200 {kJ/kg};
 	m[2] := 10 {kg};
 	S[2].h := 3500 {kJ/kg};
-
+END values;
+METHOD ode_init;
 	FOR i IN [1..2] DO
 		S[i].h.ode_id := i;
 		dhdt[i].ode_id := i;
@@ -76,17 +80,14 @@ METHOD on_load;
 
 	t.ode_type := -1;
 	t := 0 {s};
-
-	RUN setup_solver;
-END on_load;
-
-METHOD listnotes;
-	EXTERNAL listnotes(SELF);
-END listnotes;
-
-METHOD setup_solver;
+END ode_init;
+METHOD on_load;
+	RUN reset;
+	RUN values;
 	EXTERNAL setup_solver(SELF);
-END setup_solver;
+	EXTERNAL solve(SELF);
+	RUN ode_init;
+END on_load;
 
 END thermalequilibrium2;
 

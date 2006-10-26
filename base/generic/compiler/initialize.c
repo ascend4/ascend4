@@ -508,7 +508,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     return;
   }
 
-  CONSOLE_DEBUG("%s: in:%ld, out:%ld", efunc->name, efunc->n_inputs, efunc->n_outputs);
+  /* CONSOLE_DEBUG("%s: in:%ld, out:%ld", efunc->name, efunc->n_inputs, efunc->n_outputs); */
 
   eval_func = GetExtMethodRun(efunc);
   user_data = GetExtMethodUserData(efunc);
@@ -568,11 +568,11 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     return;
   }
 
-  CONSOLE_DEBUG("CHECKED EXTERNAL ARGS, OK");
+  /* CONSOLE_DEBUG("CHECKED EXTERNAL ARGS, OK"); */
 
   nok = (*eval_func)(fm->i,arglist,user_data);
 
-  CONSOLE_DEBUG("BACK FROM RUNING FUNC AT %p",eval_func);
+  /* CONSOLE_DEBUG("BACK FROM RUNING FUNC AT %p",eval_func); */
 
   /* this should switch on Proc_CallXXXXX */
     /* should switch on proc_enum call bits to translate Proc_Call
@@ -1509,9 +1509,9 @@ static
 void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat)
 {
 #if IDB
-FPRINTF(fm->err,"\n");
-FPRINTF(fm->err,"EIS-IN: %s\n",FrameControlToString(fm->flow));
-FPRINTF(fm->err,"EIS: "); WriteStatement(fm->err,stat,2);
+  FPRINTF(fm->err,"\n");
+  FPRINTF(fm->err,"EIS-IN: %s\n",FrameControlToString(fm->flow));
+  FPRINTF(fm->err,"EIS: "); WriteStatement(fm->err,stat,2);
 #endif
   switch(StatementType(stat)){
   case FOR:
@@ -1533,7 +1533,7 @@ FPRINTF(fm->err,"EIS: "); WriteStatement(fm->err,stat,2);
     ExecuteInitFlow(fm);
     break;
   case EXT:
-    CONSOLE_DEBUG("ABOUT TO ExecuteInitExt");
+    /* CONSOLE_DEBUG("ABOUT TO ExecuteInitExt"); */
     ExecuteInitExt(fm,stat);
     break;
   case CALL:

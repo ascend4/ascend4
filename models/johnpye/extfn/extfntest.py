@@ -17,8 +17,8 @@ L.load("johnpye/extfn/extfntest.a4c")
 
 #--------------------------------
 print "\n\n\n\nINSTANTIATING TEST...\n\n\n"
-t = L.findType("test_extfntest")
-#t = L.findType("test_intfntest")
+t = L.findType("extfntest")
+#t = L.findType("intfntest")
 sim = t.getSimulation("S")
 
 print "\n--------------------------\n"
@@ -42,3 +42,5 @@ for f in ff:
 #--------------------------------
 print "\n\n\n\nBUILDING...\n\n\n"
 sim.build()
+
+sim.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())

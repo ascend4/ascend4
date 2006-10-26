@@ -2135,7 +2135,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
 			safe_error_to_stderr(&status);
 			break;
 		case e_blackbox:
-			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Attempting to evaluate blackbox...");
+			/* ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Attempting to evaluate blackbox..."); */
 		    if ( RelationCalcResidualPostfix(i,res) != 0) {
 		    status = safe_problem;
 		    safe_error_to_stderr(&status);

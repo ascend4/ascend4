@@ -94,9 +94,13 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 	double inputTolerance;
 	int updateNeeded;
 	int nok = 0;
-  
-/* impl setup */
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox evaluation is experimental (%s)",__FUNCTION__);
+  	static int warnexpt;
+
+	if(!warnexpt){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox evaluation is experimental (%s)",__FUNCTION__);
+		warnexpt = 1;
+	}
+
 	(void)i;
 	efunc = RelationBlackBoxExtFunc(r);
 	unique = RelationBlackBoxData(r);
@@ -191,9 +195,14 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 	int updateNeeded, offset;
 	unsigned int k;
 	int nok = 0;
-  
-	/* prepare */
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox gradient is experimental (%s)",__FUNCTION__);
+    static int warnexpt;
+
+	if(!warnexpt){ 
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox gradient is experimental (%s)",__FUNCTION__);
+		warnexpt = 1;
+	}
+
+ 	/* prepare */
 	(void)i;
 	efunc = RelationBlackBoxExtFunc(r);
 	unique = RelationBlackBoxData(r);
@@ -325,7 +334,7 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
   double *ptr;
   double old_x,deltax,value;
 
-  CONSOLE_DEBUG("NUMERICAL DERIVATIVE...");
+  /* CONSOLE_DEBUG("NUMERICAL DERIVATIVE..."); */
 
   tmp_outputs = ASC_NEW_ARRAY_CLEAR(double,noutputs);
 
@@ -334,7 +343,7 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
     old_x = inputs[c];
 	deltax = blackbox_peturbation(old_x);
     inputs[c] = old_x + deltax;
-	CONSOLE_DEBUG("PETURBATED VALUE of input[%ld] = %f",c,inputs[c]);
+	/* CONSOLE_DEBUG("PETURBATED VALUE of input[%ld] = %f",c,inputs[c]); */
 
 	/* call routine. note that the 'jac' parameter is just along for the ride */
     nok = (*resfn)(interp, ninputs, noutputs, inputs, tmp_outputs, jac);
@@ -347,7 +356,7 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
     ptr = &jac[c];
     for(r=0;r<noutputs;r++){
       value = (tmp_outputs[r] - outputs[r]) / deltax;
-	  CONSOLE_DEBUG("output[%ld]: value = %f, gradient = %f",r,tmp_outputs[r],value);
+	  /* CONSOLE_DEBUG("output[%ld]: value = %f, gradient = %f",r,tmp_outputs[r],value); */
       *ptr = value;
       ptr += ninputs;
     }
