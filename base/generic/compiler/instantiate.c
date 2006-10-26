@@ -5384,8 +5384,6 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     return 1;
   }
 
-  CONSOLE_DEBUG("...");
-
   n_input_args = NumberInputArgs(efunc);
   n_output_args = NumberOutputArgs(efunc);
   if ((len =gl_length(arglist)) != (n_input_args + n_output_args)) {
@@ -5394,8 +5392,6 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
 	);
     return 1;
   }
-
-  CONSOLE_DEBUG("...");
 
   /* we should have a valid arglist at this stage */
   if (CheckExtCallArgTypes(arglist)) {
@@ -5408,35 +5404,23 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   inputs = LinearizeArgList(arglist,start,end);
   n_inputs_actual = gl_length(inputs);
 
-  CONSOLE_DEBUG("...");
-
   /* Now process the outputs */
   start = n_input_args+1;
   end = n_input_args + n_output_args;
   outputs = LinearizeArgList(arglist,start,end);
   n_outputs_actual = gl_length(outputs);
 
-  CONSOLE_DEBUG("...");
-
-  /* Now create the relations, all with the same
-   * common.
-   */
+  /* Now create the relations, all with the same common. */
   common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, arglist);
   common->interp.task = bb_first_call;
   context = WriteInstanceNameString(inst, NULL);
-/* ------------ */ /* ------------ */
-
-  CONSOLE_DEBUG("...");
 
   /* now set up the for loop index --------------------------------*/
   name = AddSymbolL(BBOX_RESERVED_INDEX, BBOX_RESERVED_INDEX_LEN);
   /* using a reserved character not legal in user level modeling. */
   assert(FindForVar(GetEvaluationForTable(),name) == NULL);
   /* cannot happen as bbox definitions don't nest as statements and
-	user identifiers cannot contain ?.
- */
-
-  CONSOLE_DEBUG("...");
+		user identifiers cannot contain ?. */
 
   assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
@@ -5484,8 +5468,6 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     break;
   }
 
-  CONSOLE_DEBUG("...");
-
 /* ------------ */ /* ------------ */
   /* and now for cleaning up shared data. */
   init = GetInitFunc(efunc);
@@ -5499,8 +5481,6 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   gl_destroy(outputs);
   DestroySpecialList(arglist);
 /* ------------ */ /* ------------ */
-
-  CONSOLE_DEBUG("...");
 
   /*  currently designed to always succeed or fail permanently.
    *  We reached this point meaning we've processed everything.
@@ -5518,7 +5498,7 @@ int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struc
   struct relation *reln  = NULL;
   enum Expr_enum reltype;
 
-  CONSOLE_DEBUG("ENTERED ExecuteBBOXElement\n");
+  /* CONSOLE_DEBUG("ENTERED ExecuteBBOXElement\n"); */
 
   /* make or find the instance */
   name = ExternalStatNameRelation(statement);

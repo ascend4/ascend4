@@ -83,12 +83,12 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 	PyObject *pycontext;
 	/* cast user data to PyObject pointer */
 
-	CONSOLE_DEBUG("USER_DATA IS AT %p",user_data);
+	/* CONSOLE_DEBUG("USER_DATA IS AT %p",user_data); */
 
 	fn = (PyObject *) user_data;
 
-	ERROR_REPORTER_HERE(ASC_USER_NOTE,"RUNNING PYTHON METHOD");
-	CONSOLE_DEBUG("RUNNING PYTHON METHOD...");
+	/* ERROR_REPORTER_HERE(ASC_USER_NOTE,"RUNNING PYTHON METHOD"); */
+	/* CONSOLE_DEBUG("RUNNING PYTHON METHOD..."); */
 
 	PyErr_Clear();
 
