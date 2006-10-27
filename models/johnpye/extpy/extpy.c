@@ -22,6 +22,8 @@
 	by John Pye, Oct 2006
 */
 
+#include <Python.h>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -32,7 +34,6 @@
 #include <compiler/importhandler.h>
 #include <compiler/extfunc.h>
 
-#include <Python.h>
 
 ImportHandlerCreateFilenameFn extpy_filename;
 ImportHandlerImportFn extpy_import;
@@ -40,6 +41,11 @@ ImportHandlerImportFn extpy_import;
 #ifndef ASC_EXPORT
 # error "Where is ASC_EXPORT?"
 #endif
+
+struct ExtPyData{
+	PyObject *fn;
+	char *name;
+};
 
 /**
 	This is the function called from "IMPORT extpy"
@@ -53,8 +59,8 @@ extern ASC_EXPORT(int) extpy_register(){
 	handler = ASC_NEW(struct ImportHandler);
 
 	handler->name = "extpy";
-	handler->filenamefn = extpy_filename;
-	handler->importfn = extpy_import;
+	handler->filenamefn = &extpy_filename;
+	handler->importfn =   &extpy_import;
 
 	result = importhandler_add(handler);
 
@@ -79,20 +85,24 @@ ExtMethodRun extpy_invokemethod;
 	argument to Python?
 */
 int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *user_data){
-	PyObject *fn, *arglist, *result;
-	PyObject *pycontext;
+	PyObject *arglist, *result;
+	struct ExtPyData *extpydata;
 	/* cast user data to PyObject pointer */
 
 	/* CONSOLE_DEBUG("USER_DATA IS AT %p",user_data); */
 
-	fn = (PyObject *) user_data;
+	extpydata = (struct ExtPyData *) user_data;
 
 	/* ERROR_REPORTER_HERE(ASC_USER_NOTE,"RUNNING PYTHON METHOD"); */
 	/* CONSOLE_DEBUG("RUNNING PYTHON METHOD..."); */
 
+	CONSOLE_DEBUG("Running python method '%s'",extpydata->name);
+
 	PyErr_Clear();
 
-	if(!PyCallable_Check(fn)){
+	/* CONSOLE_DEBUG("PyObject 'fn' is at %p",extpydata->fn); */
+
+	if(!PyCallable_Check(extpydata->fn)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"user_data is not a PyCallable");
 		return 1;
 	}
@@ -112,9 +122,9 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 	*/
 	arglist = Py_BuildValue("(i)", 666);
 
-	CONSOLE_DEBUG("CALLING PYTHON");
-	result = PyEval_CallObject(fn, arglist);
-	CONSOLE_DEBUG("DONE CALLING PYTHON");
+	/* CONSOLE_DEBUG("CALLING PYTHON"); */
+	result = PyEval_CallObject(extpydata->fn, arglist);
+	/* CONSOLE_DEBUG("DONE CALLING PYTHON"); */
 	Py_DECREF(arglist);
 
 	if(PyErr_Occurred()){
@@ -125,6 +135,17 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 	}
 
 	return 0;
+}
+
+/**
+	Free memory associated with a registered script method.
+*/
+void extpy_destroy(void *user_data){
+	struct ExtPyData *extpydata;
+	extpydata = (struct ExtPyData *)user_data;
+	Py_DECREF(extpydata->fn);
+	ASC_FREE(extpydata->name);
+	ASC_FREE(extpydata);
 }
 
 /*------------------------------------------------------------------------------
@@ -145,6 +166,7 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 	const char *cname, *cdocstring;
 	int res;
 	int nargs = 1;
+	struct ExtPyData *extpydata;
 
 	PyArg_ParseTuple(args,"O:registermethod", &fn);
 	if(!PyCallable_Check(fn)){
@@ -152,7 +174,7 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 		return NULL;
 	}
 
-	CONSOLE_DEBUG("FOUND FN=%p",fn);
+	/* CONSOLE_DEBUG("FOUND FN=%p",fn); */
 
 	name = PyObject_GetAttr(fn,PyString_FromString("__name__"));
 	if(name==NULL){
@@ -162,7 +184,7 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 	}
 	cname = PyString_AsString(name);
 
-	CONSOLE_DEBUG("REGISTERED METHOD '%s' HAS %d ARGS",cname,nargs);
+	/* CONSOLE_DEBUG("REGISTERED METHOD '%s' HAS %d ARGS",cname,nargs); */
 
 	docstring = PyObject_GetAttr(fn,PyString_FromString("func_doc"));
 	cdocstring = "(no help)";
@@ -171,12 +193,17 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 		CONSOLE_DEBUG("DOCSTRING: %s",cdocstring);
 	}
 
-	res = CreateUserFunctionMethod(cname,extpy_invokemethod,nargs,cdocstring,(void *)fn);
-	CONSOLE_DEBUG("PYTHON FUNCTION IS AT %p",fn);
-	Py_INCREF(fn);
-	CONSOLE_DEBUG("PYTHON FUNCTION IS AT %p",fn);
+	extpydata = ASC_NEW(struct ExtPyData);
+	extpydata->name = ASC_NEW_ARRAY(char,strlen(cname)+1);
+	extpydata->fn = fn;
+	strcpy(extpydata->name, cname);
 
-	CONSOLE_DEBUG("EXTPY INVOKER IS AT %p",extpy_invokemethod);
+	res = CreateUserFunctionMethod(cname,&extpy_invokemethod,nargs,cdocstring,(void *)extpydata,&extpy_destroy);
+	Py_INCREF(fn);
+
+	/* CONSOLE_DEBUG("EXTPY 'fn' IS AT %p",fn); */
+
+	/* CONSOLE_DEBUG("EXTPY INVOKER IS AT %p",extpy_invokemethod); */
 
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem registering external script method (%d)",res);

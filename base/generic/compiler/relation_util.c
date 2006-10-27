@@ -2005,15 +2005,18 @@ double CalcRelationNominal(struct Instance *i){
     }
   }
   if (reltype == e_blackbox){
-#ifdef BBOXWHINE
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"blackbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__); /* FIXME nominal blackbox */
-#endif
+	if(!msg){
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Relation nominals not yet implemented\n"
+        "for blackbox or glassbox (assuming 1.0)",__FUNCTION__);
+      msg = 1;
+    }
     /* should pull the nominal from the assigned lhs variable. */
   }
   if (reltype == e_glassbox){
     if(!msg){
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"glassbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
-		msg=2;
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Relation nominals not yet implemented\n"
+        "for blackbox or glassbox (assuming 1.0)",__FUNCTION__);
+	  msg=2;
 	}
   }
   if (reltype == e_opcode){

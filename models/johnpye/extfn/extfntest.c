@@ -62,7 +62,7 @@ ASC_EXPORT(int) extfntest_register(){
 		, addone_calc /* value */
 		, (ExtBBoxFunc*)NULL /* deriv */
 		, (ExtBBoxFunc*)NULL /* deriv2 */
-		, (ExtBBoxInitFunc*)NULL /* final */
+		, (ExtBBoxFinalFunc*)NULL /* final */
 		, 1,1 /* inputs, outputs */
 		, addone_help
 		, 0.0

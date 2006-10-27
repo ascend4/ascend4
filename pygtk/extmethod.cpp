@@ -41,13 +41,7 @@ ExtMethod::ExtMethod(){
 	object instead?
 */
 ExtMethod::ExtMethod(PyObject *obj){
-	CONSOLE_DEBUG("CREATING EXTERNAL PYTHON METHOD");
-
-	ExtMethodRun *runfn;
-	runfn = (ExtMethodRun *)importhandler_getsharedpointer("extpy.method");
-
-	CreateUserFunctionMethod("myextpyfn",runfn,0,"external python function",(void *)obj);
-	e = LookupExtFunc("myextpyfn");
+	throw runtime_error("Not allowed here");
 }
 #endif
 

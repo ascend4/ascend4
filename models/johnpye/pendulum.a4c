@@ -1,5 +1,7 @@
 REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/solve";
 
 MODEL pendulum;
     x IS_A delta_distance; y IS_A delta_distance;
@@ -27,6 +29,7 @@ MODEL pendulum;
 METHODS
 METHOD specify;
 	FIX r, m, g, x, t;
+	FIX v_x;
 END specify;
 
 METHOD default_self;
@@ -71,6 +74,8 @@ METHOD on_load;
 	RUN default_self;
 	RUN reset;
 	RUN specify;
+	EXTERNAL solve(SELF);
+	EXTERNAL solve(SELF);
 	RUN set_obs;
 	RUN set_ode;
 END on_load;

@@ -698,25 +698,20 @@ dim_type *Unit_FindRelDim(CONST struct Instance *i)
       return RelationDim(reln);
     }
     if (g_check_dimensions_noisy) {
-#ifdef BBOXWHINE
-      FPRINTF(stderr,
-              "Blackbox relation dimensionality waiting on output var dimensionality.\n");
-#endif
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox relation dimensionality waiting on output var dimensionality.");
       /* should come off lhs var of blackbox */
     }
     return (dim_type *)WildDimension();
   case e_glassbox:
   case e_opcode:
     if (g_check_dimensions_noisy) {
-      FPRINTF(stderr,
-              "Dimensionality checking not supported for these relns\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Dimensionality checking not supported for these relns");
     }
     return (dim_type *)WildDimension();
   case e_token:
     break;
   default:
-    Asc_Panic(2, "Unit_FindRelDimen",
-              "Type is not a relation type in Unit_FindRelDimen\n");
+    Asc_Panic(2, __FUNCTION__, "Type is not a relation type in Unit_FindRelDimen.");
   }
 
   consistent = asc_check_dimensions(reln,&dim);

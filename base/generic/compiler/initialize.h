@@ -30,10 +30,7 @@
 *//*
 	by Tom Epperly
 	Created: 3/24/1990
-	Version: $Revision: 1.11 $
-	Version control file: $RCSfile: initialize.h,v $
-	Date last modified: $Date: 1998/03/17 22:08:40 $
-	Last modified by: $Author: ballan $
+	Last in CVS: $Revision: 1.11 $ $Date: 1998/03/17 22:08:40 $ $Author: ballan $
 */
 
 #ifndef ASC_INITIALIZE_H

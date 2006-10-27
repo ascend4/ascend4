@@ -241,16 +241,39 @@ struct BlackBoxExternalFunc {
 */
 typedef int ExtMethodRun(struct Instance *context, struct gl_list_t *args, void *user_data);
 
+/**
+	Setup/teardown, if any needed, for a particular instance.
+
+	We don't actually support this method anywhere right now, as
+	we're not sure what it can logically be used for that the
+	init function in dlopening shouldn't be doing.
+	In principal, we could add and cache a client-data pointer
+	in each instance so that the external method may be stateful.
+	Presently, the external methods must be clever to do that
+	on their own or must use ascend instances for state instead.
+	@param context the instance on which the method may be run.
+*/
+typedef int ExtMethodInit( struct Instance *context);
+
+/**
+	Destroy function (note comments for ExtMethodInit).
+
+	This function deallocated user_data for a particular external method.
+	In the case of external python script methods, for example, this will perform
+	Py_DECREF on the external script, so that python can unload it.
+
+	Couldn't see a way to do this without adding back this function here. -- JP
+*/
+
+typedef int ExtMethodDestroyFn( void *user_data);
+
+
 struct MethodExternalFunc {
   ExtMethodRun *run; /**< the method invoked. */
   void *user_data; /**< I'd anticipate that this would be a function pointer
 		implemented in an external scripting language. Should only be accessed
-		from inside the 'run' function! -- JP
-  */
-#if 0 /* have no use for these currently. */
-  ExtMethodInit *initial; /**< allowed to be null if not needed. */
-  ExtMethodInit *final; /**< allowed to be null if not needed. */
-#endif
+		from inside the 'run' function! -- JP */
+  ExtMethodDestroyFn *destroyfn;
 };
 
 struct ExternalFunc {
@@ -353,25 +376,12 @@ ASC_DLLSPEC(CONST char*) ExternalFuncName(CONST struct ExternalFunc *efunc);
   EXTERNAL METHOD STUFF
 */
 
-/**
-	Setup/teardown, if any needed, for a particular instance.
-
-	We don't actually support this method anywhere right now, as
-	we're not sure what it can logically be used for that the
-	init function in dlopening shouldn't be doing.
-	In principal, we could add and cache a client-data pointer
-	in each instance so that the external method may be stateful.
-	Presently, the external methods must be clever to do that
-	on their own or must use ascend instances for state instead.
-	@param context the instance on which the method may be run.
-*/
-typedef int ExtMethodInit( struct Instance *context);
-
 ASC_DLLSPEC(int) CreateUserFunctionMethod(CONST char *name
 		,ExtMethodRun *run
 		,CONST long n_args
 		,CONST char *help
 		,void *user_data
+		,ExtMethodDestroyFn *destroyfn
 );
 /**<
  *  Adds an external method call to the ASCEND system.
@@ -547,11 +557,5 @@ extern ExtEvalFunc **GetDerivJumpTable(struct ExternalFunc *efunc);
 extern ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc);
 /** Fetch black initialization function. */
 extern ExtEvalFunc *GetGlassBoxFinal(struct ExternalFunc *efunc);
-
-
-/** This macro should go away when bboxes done or when user is tired
-of whinage. */
-#define BBOXWHINE
-
 
 #endif /* ASC_EXTFUNC_H */

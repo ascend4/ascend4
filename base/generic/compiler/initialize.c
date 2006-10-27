@@ -74,11 +74,6 @@
 #include "sets.h"
 #include "parentchild.h"
 
-
-#ifndef lint
-static CONST char InitializeRCSid[]="$Id: initialize.c,v 1.36 1998/06/11 15:28:30 ballan Exp $";
-#endif /* lint */
-
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
 
@@ -1705,6 +1700,10 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
   int stop;
   int previous_context = GetDeclarativeContext();
 
+  morename = WriteNameString(name);
+  CONSOLE_DEBUG("Running method '%s'...",morename);
+  ASC_FREE(morename);
+
   SetDeclarativeContext(1); /* set up for procedural processing */
   InstanceNamePart(name,&instname,&procname);
 
@@ -1774,6 +1773,7 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
       fm->ErrNo = Proc_instance_not_found;
     }
   } else {
+    CONSOLE_DEBUG("BAD PROC NAME");
     fm->flow = FrameError;
     fm->ErrNo = Proc_bad_name;
   }
@@ -1819,6 +1819,7 @@ enum Proc_enum DebugInitialize(struct Instance *context,
 {
   struct procDebug dbi; /* this struct is huge */
 
+  CONSOLE_DEBUG("RUNNING METHOD IN DEBUG MODE...");
   InitDebugTopProcFrame(fm,context,cname,err,options,&dbi,watchpoints,log);
   RealInitialize(fm,name);
   return InitCalcReturn(fm);
@@ -1842,6 +1843,8 @@ enum Proc_enum Initialize(struct Instance *context,
 {
   enum Proc_enum rval;
   struct procFrame fm;
+  
+  CONSOLE_DEBUG("RUNNING METHOD...");
 
   assert(err != NULL);
   g_proc.depth = 0;
@@ -1850,6 +1853,7 @@ enum Proc_enum Initialize(struct Instance *context,
     InitNormalTopProcFrame(&fm,context,cname,err,options);
     rval = NormalInitialize(&fm,name);
   } else {
+    CONSOLE_DEBUG("DEBUG");
     rval = DebugInitialize(context,name,cname,err,options,watchpoints,log,&fm);
   }
   return rval;

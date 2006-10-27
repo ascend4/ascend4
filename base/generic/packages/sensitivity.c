@@ -1349,16 +1349,16 @@ int sensitivity_register(void){
 
   result = CreateUserFunctionMethod("do_solve",
 			      do_solve_eval,
-			      2,NULL,NULL); /* was 2,0,null */
+			      2,NULL,NULL,NULL); /* was 2,0,null */
   result += CreateUserFunctionMethod("do_finite_difference",
 			       do_finite_diff_eval,
-			       4,NULL,NULL); /* 4,0,null */
+			       4,NULL,NULL,NULL); /* 4,0,null */
   result += CreateUserFunctionMethod("do_sensitivity",
 			       do_sensitivity_eval,
-			       4,sensitivity_help,NULL);
+			       4,sensitivity_help,NULL,NULL);
   result += CreateUserFunctionMethod("do_sensitivity_all",
 			       do_sensitivity_eval_all,
-			       4,"See do_sensitivity_eval for details",NULL);
+			       4,"See do_sensitivity_eval for details",NULL,NULL);
 
   return result;
 }

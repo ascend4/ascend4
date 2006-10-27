@@ -43,10 +43,7 @@
 *//*
 	by Tom Epperly
 	July 31, 1989
-	Version: $Revision: 1.13 $
-	Version control file: $RCSfile: name.h,v $
-	Date last modified: $Date: 1998/06/16 16:36:28 $
-	Last modified by: $Author: mthomas $
+	Last in CVS: $Revision: 1.13 $ $Date: 1998/06/16 16:36:28 $ $Author: mthomas $
 */
 
 #ifndef ASC_NAME_H

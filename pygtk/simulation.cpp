@@ -164,7 +164,12 @@ Simulation::run(const Method &method, Instanc &model){
 	CONSOLE_DEBUG("Setting shared pointer 'sim'");
 	importhandler_setsharedpointer("sim",this);
 
-	cerr << "RUNNING PROCEDURE " << method.getName() << endl;
+	if(not is_built){
+		CONSOLE_DEBUG("WARNING, SIMULATION NOT YET BUILT");
+	}
+
+	CONSOLE_DEBUG("Running method %s...", method.getName());
+
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
 
@@ -263,10 +268,18 @@ Simulation::run(const Method &method, Instanc &model){
 	Check that all the analysis went OK: solver lists are all there, etc...?
 
 	Can't return anything here because of limitations in the C API
+
+	@TODO there's something wrong with this at the moment: even after 'FIX'
+	methods are run, check shows them as not fixed, up until the point that 'SOLVE'
+	successfully completes. Something's not being synchronised properly...
 */
 void
 Simulation::checkInstance(){
 	//cerr << "CHECKING SIMULATION INSTANCE" << endl;
+	if(!is_built){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Simulation has not been built");
+		return;
+	}
 	Instance *i1 = getModel().getInternalType();
 	CheckInstance(stderr, &*i1);
 	//cerr << "DONE CHECKING INSTANCE" << endl;

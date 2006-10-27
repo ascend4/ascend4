@@ -3,7 +3,11 @@ REQUIRE "atoms.a4l";
 IMPORT "dsg";
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/moody";
+IMPORT "johnpye/solvernotes";
 
+ADD NOTES IN moody;
+	'QRSlv' iterationlimit {50}
+END NOTES;
 MODEL moody;
 	f IS_A positive_factor;
 	Re IS_A positive_factor;
@@ -19,7 +23,11 @@ MODEL moody;
 	eps_on_D = eps / D;
 METHODS
 METHOD on_load;
-	RUN reset; RUN values;
+	EXTERNAL solvernotes(SELF);
+	EXTERNAL setsomevalue(SELF);
+	RUN reset; 
+	EXTERNAL checksomevalue(SELF);
+	RUN values;
 END on_load;
 METHOD specify;
 	FIX Re, eps, D;

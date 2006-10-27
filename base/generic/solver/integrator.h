@@ -170,7 +170,7 @@ struct IntegratorSystemStruct{
   struct var_variable **y;    /**< array form of states */
   struct var_variable **ydot; /**< array form of derivatives */
   struct var_variable **obs;  /**< array form of observed variables */
-  long *y_id;                 /**< array form of y/ydot user indices */
+  long *y_id;                 /**< array form of y/ydot user indices, for DAEs we use negatives here for derivative vars */
   long *obs_id;               /**< array form of obs user indices */
   long n_y;
   long n_obs;

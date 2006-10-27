@@ -86,7 +86,7 @@ int CreateUserFunctionBlackBox(CONST char *name,
   efunc->n_inputs = n_inputs;
   efunc->n_outputs = n_outputs;
   efunc->u.black.initial = init;
-  CONSOLE_DEBUG("_______________________ ASSIGNED INIT = %p TO efunc = %p",init, efunc);
+  /* CONSOLE_DEBUG("_______________________ ASSIGNED INIT = %p TO efunc = %p",init, efunc); */
   efunc->u.black.value = value;
   efunc->u.black.deriv = deriv;
   efunc->u.black.deriv2 = deriv2;
@@ -249,6 +249,7 @@ int CreateUserFunctionMethod(CONST char *name
 		       ,CONST long n_args
 		       ,CONST char *help
 		       ,void *user_data
+			   ,ExtMethodDestroyFn *destroyfn
 ){
   struct ExternalFunc *efunc;
   int isNew = 1;
@@ -273,7 +274,11 @@ int CreateUserFunctionMethod(CONST char *name
   efunc->n_inputs = n_args;
   efunc->n_outputs = 0;
   efunc->u.method.run = run;
+
   efunc->u.method.user_data = user_data;
+  efunc->u.method.destroyfn = destroyfn;
+  asc_assert(efunc->u.method.user_data==NULL || efunc->u.method.destroyfn!=NULL);
+
   if (help) {
     if (efunc->help) { ascfree((char *)efunc->help); }
     efunc->help = ascstrdup(help);
@@ -308,32 +313,37 @@ void *GetExtMethodUserData(struct ExternalFunc *efunc){
 void DestroyExternalFunc(struct ExternalFunc *efunc){
   struct ExternalFunc *tmp;
   if(efunc){
-    /* CONSOLE_DEBUG("DESTROYING EFUNC at %p",efunc); */
+    CONSOLE_DEBUG("DESTROYING EFUNC at %p",efunc);
     tmp = efunc;
     if (tmp->name ) ascfree((char *)(tmp->name)); /* we own the string */
     if (tmp->help) ascfree((char *)(tmp->help)); /* we own the string */
     tmp->name = NULL;
     tmp->help = NULL;
-/* might want to set null pointers here depending on etype. */
+    /* might want to set null pointers here depending on etype. */
     tmp->etype = efunc_ERR;
     ascfree((char *)tmp);
+	if(efunc->etype == efunc_Method){
+		if(efunc->u.method.destroyfn){
+			(*efunc->u.method.destroyfn)(efunc->u.method.user_data);
+			efunc->u.method.user_data = NULL;
+		}
+		asc_assert(efunc->u.method.user_data==NULL);
+		/* if you allocate to user_data, you must provide a method for freeing it! */
+	}
   }
 }
 
-CONST char *ExternalFuncName(CONST struct ExternalFunc *efunc)
-{
+CONST char *ExternalFuncName(CONST struct ExternalFunc *efunc){
   asc_assert(efunc!=NULL);
   return efunc->name;
 }
 
-unsigned long NumberInputArgs(CONST struct ExternalFunc *efunc)
-{
+unsigned long NumberInputArgs(CONST struct ExternalFunc *efunc){
   asc_assert(efunc!=NULL);
   return efunc->n_inputs;
 }
 
-unsigned long NumberOutputArgs(CONST struct ExternalFunc *efunc)
-{
+unsigned long NumberOutputArgs(CONST struct ExternalFunc *efunc){
   asc_assert(efunc!=NULL);
   return efunc->n_outputs;
 }
@@ -406,8 +416,9 @@ void ExternalFuncDestroyFunc(void *efunc)
 {
   struct ExternalFunc *local;
   local = (struct ExternalFunc *)efunc;
-  if (local)
+  if (local){
     DestroyExternalFunc(local);
+  }
 }
 
 void DestroyExtFuncLibrary(void)

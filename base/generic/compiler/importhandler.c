@@ -33,6 +33,8 @@
 #include <general/table.h>
 #include "importhandler.h"
 
+/* #define IMPORTHANDLER_VERBOSE */
+
 /*
 	Maximum number of importhandlers possible in one session. Hard to imagine
 	that you would want more than this.
@@ -413,7 +415,9 @@ int importhandler_setsharedpointer(const char *key, void *ptr){
 		return 1;
 	}
 	AddTableData(importhandler_sharedpointers,ptr,key);
+#ifdef IMPORTHANDLER_VERBOSE
 	CONSOLE_DEBUG("Set shared pointer '%s' to %p",key, ptr);
+#endif
 	return 0;
 }		
 

@@ -821,6 +821,10 @@ class Browser:
 		_sp = IncidenceMatrixWindow(_im);
 		_sp.run();
 
+	def on_tools_repaint_tree_activate(self,*args):
+		self.reporter.reportNote("Repainting model view...")
+		self.modelview.refreshtree()
+
 	def on_diagnose_blocks_click(self,*args):
 		try:
 			_bl = self.sim.getActiveBlock()
