@@ -25,11 +25,10 @@
 */
 
 /* 
-	Be careful with the following. You need to have installed SUNDIALS on a
-	directory which your build tool has on its include path. Note that
-	the local "ida.h" would have to be referred to as <solver/ida.h> if you 
-	wanted to use angle-brackets. You're not supposed to add the *sub*-
-	directories of base/generic to your include path.
+	Be careful with the following. This file requires both the 'ida.h' from
+	SUNDIALS as well as the 'ida.h' from ASCEND. Make sure that we're getting
+	both of these; if you get problems check your build tool for the paths being
+	passed to the C preprocessor.
 */
 
 /* standard includes */
@@ -74,7 +73,7 @@
 */
 typedef struct{
 	struct rel_relation **rellist;   /**< NULL terminated list of rels */
-	struct var_variable **varlist;   /**< NULL terminated list of rels */
+	struct var_variable **varlist;   /**< NULL terminated list of vars. ONLY USED FOR DEBUGGING -- get rid of it! */
 	int nrels;
 	int safeeval;                    /**< whether to pass the 'safe' flag to relman_eval */
 } IntegratorIdaData;
@@ -200,6 +199,8 @@ int integrator_ida_solve(
 	IDASetInitStep(ida_mem, integrator_get_stepzero(blsys));
 	IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(blsys));
 	/* there's no capability for setting *minimum* step size in IDA */
+
+	CONSOLE_DEBUG("ASSIGNING LINEAR SOLVER");
 
 	/* attach linear solver module, using the default value of maxl */
 	flag = IDASpgmr(ida_mem, 0);
@@ -377,7 +378,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 }
 
 /**
-	Function to evaluate the product J*v, in the form required for IDA.
+	Function to evaluate the product J*v, in the form required for IDA (see IDASpilsSetJacTimesVecFn)
 
 	Given tt, yy, yp, rr and v, we need to evaluate and return Jv.
 
@@ -421,7 +422,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	integrator_set_ydot(blsys, NV_DATA_S(yp));
 	/* no real use for residuals (rr) here, I don't think? */
 
-	/* allocate space for returns from relman_diff2 */
+	/* allocate space for returns from relman_diff2: we *should* be able to use 'tmp1' and 'tmp2' here... */
 	variables = ASC_NEW_ARRAY(int, NV_LENGTH_S(yy) * 2);
 	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
 
@@ -430,6 +431,14 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 	filter.matchbits = VAR_SVAR;
 	filter.matchvalue = VAR_SVAR;
+
+	CONSOLE_DEBUG("PRINTING VALUES OF 'v' VECTOR (length %ld)",NV_LENGTH_S(v));
+	for(i=0; i<NV_LENGTH_S(v); ++i){
+		varname = var_make_name(blsys->system, enginedata->varlist[i]);
+		if(varname==NULL)varname="UNKNOWN";
+		CONSOLE_DEBUG("v[%d] = '%s' = %f",i,varname,NV_Ith_S(v,i));
+		ASC_FREE(varname);
+	}
 
 	Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
 	if (setjmp(g_fpe_env)==0) {
@@ -444,7 +453,6 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 			relname = rel_make_name(blsys->system, *relptr);
 			if(!status){
-				fprintf(stderr,"\n\n");
 				CONSOLE_DEBUG("Derivatives for relation %d '%s' OK",i,relname);
 			}else{
 				CONSOLE_DEBUG("ERROR calculating derivatives for relation %d '%s'",i,relname);
@@ -460,9 +468,9 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 					CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
 					ASC_FREE(varname);
 				}else{
-					CONSOLE_DEBUG("Variable %d: derivative = %f",variables[j],derivatives[j]);
+					CONSOLE_DEBUG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
 				}
-
+				
 				Jv_i += derivatives[j] * NV_Ith_S(v,variables[j]);
 			}
 
@@ -480,6 +488,9 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
 
 	if(is_error)CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");
+
+	
+	
 	return is_error;
 }
 

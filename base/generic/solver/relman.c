@@ -502,7 +502,7 @@ int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
       if (var_apply_filter(vlist[c],filter)) {
         variables[*count] = var_sindex(vlist[c]);
         derivatives[*count] = gradient[c];
-        CONSOLE_DEBUG("Var %d = %f",var_sindex(vlist[c]),gradient[c]);
+        /* CONSOLE_DEBUG("Var %d = %f",var_sindex(vlist[c]),gradient[c]); */
         (*count)++;
       }
     }

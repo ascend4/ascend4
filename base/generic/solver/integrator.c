@@ -86,6 +86,7 @@ struct Integ_var_t {
   struct var_variable *i;
   struct Integ_var_t *derivative_of;
   struct var_variable *derivative;
+  int varindx; /**< index into slv_get_master_vars_list, or -1 if not there */
   int isstate;
 };
 
@@ -94,21 +95,21 @@ struct Integ_var_t {
 */
 
 /* abstractions of setup/teardown procedures for the specific solvers */
-void integrator_create_engine(IntegratorSystem *blsys);
-void integrator_free_engine(IntegratorSystem *blsys);
+void integrator_create_engine(IntegratorSystem *sys);
+void integrator_free_engine(IntegratorSystem *sys);
 
-static int integrator_analyse_ode(IntegratorSystem *blsys);
-static int integrator_analyse_dae(IntegratorSystem *blsys);
+static int integrator_analyse_ode(IntegratorSystem *sys);
+static int integrator_analyse_dae(IntegratorSystem *sys);
 
-typedef void (IntegratorVarVisitorFn)(IntegratorSystem *blsys, struct var_variable *var);
-static void integrator_visit_system_vars(IntegratorSystem *blsys,IntegratorVarVisitorFn *visitor);
+typedef void (IntegratorVarVisitorFn)(IntegratorSystem *sys, struct var_variable *var, const int *varindx);
+static void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
 IntegratorVarVisitorFn integrator_ode_classify_var;
 IntegratorVarVisitorFn integrator_dae_classify_var;
 IntegratorVarVisitorFn integrator_classify_indep_var;
 
-static int integrator_sort_obs_vars(IntegratorSystem *blsys);
-static void integrator_print_var_stats(IntegratorSystem *blsys);
-static int integrator_check_indep_var(IntegratorSystem *blsys);
+static int integrator_sort_obs_vars(IntegratorSystem *sys);
+static void integrator_print_var_stats(IntegratorSystem *sys);
+static int integrator_check_indep_var(IntegratorSystem *sys);
 
 static int Integ_CmpDynVars(struct Integ_var_t *v1, struct Integ_var_t *v2);
 static int Integ_CmpObs(struct Integ_var_t *v1, struct Integ_var_t *v2);
@@ -126,17 +127,17 @@ static void IntegInitSymbols(void);
 	Create a new IntegratorSystem and assign a slv_system_t to it.
 */
 IntegratorSystem *integrator_new(slv_system_t sys, struct Instance *inst){
-	IntegratorSystem *blsys;
+	IntegratorSystem *intsys;
 
 	if (sys == NULL) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"sys is NULL!");
 		return NULL;
 	}
 
-	blsys = ASC_NEW_CLEAR(IntegratorSystem);
-	blsys->system = sys;
-	blsys->instance = inst;
-	return blsys;
+	intsys = ASC_NEW_CLEAR(IntegratorSystem);
+	intsys->system = sys;
+	intsys->instance = inst;
+	return intsys;
 }
 
 /**
@@ -186,7 +187,7 @@ static void IntegInitSymbols(void){
 */
 
 /* return 1 on success */
-int integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine engine){
+int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
 
 	/* verify integrator type ok. always passes for nonNULL inst. */
 	if(engine==INTEG_UNKNOWN){
@@ -196,35 +197,35 @@ int integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine engine){
 		return 0;
 	}
 
-	if(engine==blsys->engine){
+	if(engine==sys->engine){
 		return 1;
 	}
-	if(blsys->engine!=INTEG_UNKNOWN){
-		integrator_free_engine(blsys);
+	if(sys->engine!=INTEG_UNKNOWN){
+		integrator_free_engine(sys);
 	}
-	blsys->engine = engine;
-	integrator_create_engine(blsys);
+	sys->engine = engine;
+	integrator_create_engine(sys);
 
 	return 1;
 }
 
-IntegratorEngine integrator_get_engine(const IntegratorSystem *blsys){
-	return blsys->engine;
+IntegratorEngine integrator_get_engine(const IntegratorSystem *sys){
+	return sys->engine;
 }
 
 /**
 	Free any engine-specific  data that was required for the solution of
-	this system. Note that this data is pointed to by blsys->enginedata.
+	this system. Note that this data is pointed to by sys->enginedata.
 */
-void integrator_free_engine(IntegratorSystem *blsys){
-	switch(blsys->engine){
-		case INTEG_LSODE: integrator_lsode_free(blsys->enginedata); break;
+void integrator_free_engine(IntegratorSystem *sys){
+	switch(sys->engine){
+		case INTEG_LSODE: integrator_lsode_free(sys->enginedata); break;
 #ifdef ASC_WITH_IDA
-		case INTEG_IDA: integrator_ida_free(blsys->enginedata); break;
+		case INTEG_IDA: integrator_ida_free(sys->enginedata); break;
 #endif
 		default: break;
 	}
-	blsys->enginedata=NULL;
+	sys->enginedata=NULL;
 }
 
 /**
@@ -234,12 +235,12 @@ void integrator_free_engine(IntegratorSystem *blsys){
 	of the problem at hand. Allocating space inside enginedata should be done
 	during the solve stage (and freed inside integrator_free_engine)
 */
-void integrator_create_engine(IntegratorSystem *blsys){
-	if(blsys->enginedata!=NULL)return;
-	switch(blsys->engine){
-		case INTEG_LSODE: integrator_lsode_create(blsys); break;
+void integrator_create_engine(IntegratorSystem *sys){
+	if(sys->enginedata!=NULL)return;
+	switch(sys->engine){
+		case INTEG_LSODE: integrator_lsode_create(sys); break;
 #ifdef ASC_WITH_IDA
-		case INTEG_IDA: integrator_ida_create(blsys); break;
+		case INTEG_IDA: integrator_ida_create(sys); break;
 #endif
 		default: break;
 	}
@@ -258,26 +259,26 @@ void integrator_create_engine(IntegratorSystem *blsys){
 	Locate the independent variable. For the purpose of GUI design, this needs
 	to work independent of the integration engine being used.
 */
-int integrator_find_indep_var(IntegratorSystem *blsys){
+int integrator_find_indep_var(IntegratorSystem *sys){
 	int result = 0;
 
-	if(blsys->x != NULL){
-		CONSOLE_DEBUG("blsys->x already set");
+	if(sys->x != NULL){
+		CONSOLE_DEBUG("sys->x already set");
 		return 1;
 	}
-	assert(blsys->indepvars==NULL);
-	blsys->indepvars = gl_create(10L);
+	assert(sys->indepvars==NULL);
+	sys->indepvars = gl_create(10L);
 
 	IntegInitSymbols();
 
 	/* CONSOLE_DEBUG("About to visit..."); */
-	integrator_visit_system_vars(blsys,&integrator_classify_indep_var);
+	integrator_visit_system_vars(sys,&integrator_classify_indep_var);
 
 	/* CONSOLE_DEBUG("..."); */
 
-	result = integrator_check_indep_var(blsys);
-	gl_free_and_destroy(blsys->indepvars);
-	blsys->indepvars = NULL;
+	result = integrator_check_indep_var(sys);
+	gl_free_and_destroy(sys->indepvars);
+	sys->indepvars = NULL;
 
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Returning result %d",result); */
 
@@ -290,18 +291,18 @@ int integrator_find_indep_var(IntegratorSystem *blsys){
 
 	@return 1 on success
 */
-int integrator_analyse(IntegratorSystem *blsys){
-	switch(blsys->engine){
-		case INTEG_LSODE: return integrator_analyse_ode(blsys);
+int integrator_analyse(IntegratorSystem *sys){
+	switch(sys->engine){
+		case INTEG_LSODE: return integrator_analyse_ode(sys);
 #ifdef ASC_WITH_IDA
-		case INTEG_IDA: return integrator_analyse_dae(blsys);
+		case INTEG_IDA: return integrator_analyse_dae(sys);
 #endif
 		case INTEG_UNKNOWN:
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"No engine selected: can't analyse");
 		default:
 			ERROR_REPORTER_HERE(ASC_PROG_ERR
 				,"The selected integration engine (%d) is not available"
-				,blsys->engine
+				,sys->engine
 			);
 	}
 	return 0;
@@ -316,9 +317,11 @@ int integrator_analyse(IntegratorSystem *blsys){
 	@TODO prevent re-analysis without clearing out the data structures?
 	@return 1 on success
 */
-int integrator_analyse_dae(IntegratorSystem *blsys){
+int integrator_analyse_dae(IntegratorSystem *sys){
 	struct Integ_var_t *info, *prev;
 	char *varname, *derivname;
+	struct var_variable **varlist;
+	int nvarlist;
 	int i, j;
 	int numstates;
 	int numy, nrels;
@@ -327,45 +330,45 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	CONSOLE_DEBUG("Starting DAE analysis");
 	IntegInitSymbols();
 
-	assert(blsys->indepvars==NULL);
+	assert(sys->indepvars==NULL);
 
-	blsys->indepvars = gl_create(10L);  /* t var info */
-	blsys->dynvars = gl_create(200L);  /* y and ydot var info */
-	blsys->obslist = gl_create(100L);  /* obs info */
+	sys->indepvars = gl_create(10L);  /* t var info */
+	sys->dynvars = gl_create(200L);  /* y and ydot var info */
+	sys->obslist = gl_create(100L);  /* obs info */
 
-	if(blsys->indepvars==NULL
-		|| blsys->dynvars==NULL
-		|| blsys->obslist==NULL
+	if(sys->indepvars==NULL
+		|| sys->dynvars==NULL
+		|| sys->obslist==NULL
 	){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory");
 		return 0;
 	}
 
-	integrator_visit_system_vars(blsys,&integrator_dae_classify_var);
+	integrator_visit_system_vars(sys,&integrator_dae_classify_var);
 
-	CONSOLE_DEBUG("Found %lu observation variables:",gl_length(blsys->obslist));
-	for(i=1; i<=gl_length(blsys->obslist); ++i){
-		info = (struct Integ_var_t *)gl_fetch(blsys->obslist, i);
-		varname = var_make_name(blsys->system,info->i);
+	CONSOLE_DEBUG("Found %lu observation variables:",gl_length(sys->obslist));
+	for(i=1; i<=gl_length(sys->obslist); ++i){
+		info = (struct Integ_var_t *)gl_fetch(sys->obslist, i);
+		varname = var_make_name(sys->system,info->i);
 		CONSOLE_DEBUG("observation[%d] = \"%s\"",i,varname);
 		ASC_FREE(varname);
 	}
 
-	CONSOLE_DEBUG("Checking found vars...");
-	if(gl_length(blsys->dynvars)==0){
+	/* CONSOLE_DEBUG("Checking found vars..."); */
+	if(gl_length(sys->dynvars)==0){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No solver_var vars found to integrate (check 'ode_type'?).");
 		return 0;
 	}
 
-	CONSOLE_DEBUG("Found %lu vars.", gl_length(blsys->dynvars));
+	CONSOLE_DEBUG("Found %lu vars.", gl_length(sys->dynvars));
 
 	maxderiv = 0;
 	numstates = 0;
-	for(i=1; i<=gl_length(blsys->dynvars); ++i){
-		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
+	for(i=1; i<=gl_length(sys->dynvars); ++i){
+		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		if(info->type==1 || info->type==0)numstates++;
 		if(maxderiv < info->type - 1)maxderiv = info->type - 1;
-		varname = var_make_name(blsys->system,info->i);
+		varname = var_make_name(sys->system,info->i);
 		/* CONSOLE_DEBUG("var[%d] = \"%s\": ode_index = %ld",i,varname,info->type); */
 		ASC_FREE(varname);
 	}
@@ -379,29 +382,28 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	}
 
 
-	if(!integrator_check_indep_var(blsys))return 0;
+	if(!integrator_check_indep_var(sys))return 0;
 
-	gl_sort(blsys->dynvars,(CmpFunc)Integ_CmpDynVars);
+	gl_sort(sys->dynvars,(CmpFunc)Integ_CmpDynVars);
 
-	/* sort into state-groups with ascending derivs */
-
-	for(i=1; i<=gl_length(blsys->dynvars); ++i){
-		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
-		varname = var_make_name(blsys->system,info->i);
-		/* CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld",i,varname,info->type); */
+	/*
+	for(i=1; i<=gl_length(sys->dynvars); ++i){
+		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
+		varname = var_make_name(sys->system,info->i);
+		// CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld",i,varname,info->type); 
 		ASC_FREE(varname);
-	}
+	}*/
 
 	/* link up derivative chains */
 
 	prev = NULL;
-	for(i=1; i<=gl_length(blsys->dynvars); ++i){ /* why does gl_list index with base 1??? */
-		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
+	for(i=1; i<=gl_length(sys->dynvars); ++i){ /* why does gl_list index with base 1??? */
+		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		info->derivative = NULL;
 
-		derivname = var_make_name(blsys->system,info->i);
+		derivname = var_make_name(sys->system,info->i);
 		if(prev!=NULL){
-			varname = var_make_name(blsys->system,prev->i);
+			varname = var_make_name(sys->system,prev->i);
 		}else{
 			varname = NULL;
 		}
@@ -410,7 +412,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 		if(varname)ASC_FREE(varname);
 
 		if(info->type == INTEG_STATE_VAR || info->type == INTEG_ALGEBRAIC_VAR){
-			varname = var_make_name(blsys->system,info->i);
+			varname = var_make_name(sys->system,info->i);
 			/* CONSOLE_DEBUG("Var \"%s\" is not a derivative",varname); */
 			ASC_FREE(varname);
 			info->derivative_of = NULL;
@@ -423,7 +425,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 				}else{
 					CONSOLE_DEBUG("current index = %ld, current type = %ld",info->index,info->type);
 				} */
-				varname = var_make_name(blsys->system,info->i);
+				varname = var_make_name(sys->system,info->i);
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Derivative %d of \"%s\" is present without its un-differentiated equivalent"
 					, info->type-1
 					, varname
@@ -431,8 +433,8 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 				ASC_FREE(varname);
 				return 0;
 			}else if(info->type != prev->type + 1){
-				derivname = var_make_name(blsys->system,info->i);
-				varname = var_make_name(blsys->system,prev->i);
+				derivname = var_make_name(sys->system,info->i);
+				varname = var_make_name(sys->system,prev->i);
 				ERROR_REPORTER_HERE(ASC_USER_ERROR
 					,"Looking at \"%s\", expected a derivative (order %d) of \"%s\"."
 					,varname
@@ -443,8 +445,8 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 				ASC_FREE(derivname);
 				return 0;
 			}else{
-				varname = var_make_name(blsys->system,prev->i);
-				derivname = var_make_name(blsys->system,info->i);
+				varname = var_make_name(sys->system,prev->i);
+				derivname = var_make_name(sys->system,info->i);
 				CONSOLE_DEBUG("Var \"%s\" is the derivative of \"%s\"",derivname,varname);
 				ASC_FREE(varname);
 				ASC_FREE(derivname);
@@ -456,12 +458,12 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	}
 
 	/* record which vars have derivatives and which don't */
-	for(i=1; i<=gl_length(blsys->dynvars); ++i){
-		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
+	for(i=1; i<=gl_length(sys->dynvars); ++i){
+		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		if(info->derivative_of){
 			info->derivative_of->derivative = info->i;
-			/* varname = var_make_name(blsys->system,info->derivative_of->i);
-			derivname = var_make_name(blsys->system,info->derivative_of->derivative);
+			/* varname = var_make_name(sys->system,info->derivative_of->i);
+			derivname = var_make_name(sys->system,info->derivative_of->derivative);
 			CONSOLE_DEBUG("Var \"%s\" is the derivative of \"%s\"",derivname,varname);
 			ASC_FREE(varname);
 			ASC_FREE(derivname); */
@@ -472,10 +474,10 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 
 	/* count numy: either it's a state, or it has a higher-order derivative */
 	numy = 0;
-	for(i=1; i<=gl_length(blsys->dynvars); ++i){
-		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
+	for(i=1; i<=gl_length(sys->dynvars); ++i){
+		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		if(info->type == INTEG_STATE_VAR || info->type == INTEG_ALGEBRAIC_VAR || info->derivative != NULL){
-			varname = var_make_name(blsys->system,info->i);
+			varname = var_make_name(sys->system,info->i);
 			if(var_fixed(info->i)){
 				CONSOLE_DEBUG("Var \"%s\" is a FIXED state variable",varname);
 			}else{
@@ -485,7 +487,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 			info->isstate = 1;
 			numy++;
 		}else{
-			varname = var_make_name(blsys->system,info->i);
+			varname = var_make_name(sys->system,info->i);
 			CONSOLE_DEBUG("Var \"%s\" is a NON-STATE derivative",varname);
 			ASC_FREE(varname);
 			info->isstate = 0;
@@ -499,8 +501,8 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 
 	CONSOLE_DEBUG("Identified %d state variables", numy);
 
-	blsys->y = ASC_NEW_ARRAY(struct var_variable *,numy);
-	blsys->ydot = ASC_NEW_ARRAY(struct var_variable *,numy);
+	sys->y = ASC_NEW_ARRAY(struct var_variable *,numy);
+	sys->ydot = ASC_NEW_ARRAY(struct var_variable *,numy);
 
 	/*
 		at this point we know there are no missing derivatives etc, so we
@@ -508,20 +510,62 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 		'derivative_of' set to null is a state variable... but it might already
 		be getting added
 	*/
-	for(j=0, i=1; i<=gl_length(blsys->dynvars); ++i){
-		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
+	for(j=0, i=1; i<=gl_length(sys->dynvars); ++i){
+		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		if(!info->isstate)continue;
 		if(info->derivative == NULL){
-			blsys->y[j] = info->i;
-			blsys->ydot[j] = NULL;
+			sys->y[j] = info->i; /* a pure algebraic variable */
+			sys->ydot[j] = NULL;
 		}else{
-			blsys->y[j] = info->i;
-			blsys->ydot[j] = info->derivative;
+			sys->y[j] = info->i; /* a variable whose derivative is present in the model */
+			sys->ydot[j] = info->derivative;
 		}
-		++j;
 	}
 
-	nrels = slv_get_num_solvers_rels(blsys->system);
+	/*
+		set up the y_id table so that given a 'variable number' from relman_diff2,
+		we can work out where that fits in our y and ydot vectors.
+
+		There's something a bit fishy about fetching the varlist at this late stage...
+	*/
+
+	varlist = slv_get_master_var_list(sys->system);
+	nvarlist = slv_get_num_master_vars(sys->system);
+
+	CONSOLE_DEBUG("WORKING THROUGH THE MASTER VAR LIST %d",nvarlist);
+
+	sys->y_id = ASC_NEW_ARRAY(long, nvarlist);
+	for(i=0; i< nvarlist; ++i){
+		sys->y_id[i] = -2;
+		varname = var_make_name(sys->system,varlist[i]);			
+		CONSOLE_DEBUG(ASC_PROG_ERR,"Variable %d: '%s'",i,varname);
+		ASC_FREE(varname);
+	}
+
+	CONSOLE_DEBUG("WORKING THROUGH %d DYNVARS",gl_length(sys->dynvars));
+
+	for(i=1; i <= gl_length(sys->dynvars); ++i){
+		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
+		CONSOLE_DEBUG("i = %d, info = %p", i, info);
+		sys->y_id[info->varindx] = i;
+		if(info->varindx){
+			varname = var_make_name(sys->system,info->varindx);			
+			CONSOLE_DEBUG(ASC_PROG_ERR,"Variable dynvars[%d]: '%s'",i,varname);
+			ASC_FREE(varname);
+		}else{
+			CONSOLE_DEBUG(ASC_PROG_ERR,"Variable dynvars[%d] not found in varlist",i);
+		}
+	}
+	for(i=0; i< nvarlist; ++i){
+		if(sys->y_id[i] < 0){
+			varname = var_make_name(sys->system,varlist[i]);			
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unconnected solver_var '%s'",i,varname);
+			ASC_FREE(varname);
+			return 0;
+		}
+	}
+
+	nrels = slv_get_num_solvers_rels(sys->system);
 	if(numy != nrels){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
 			,"System is not square: solver has %d rels, found %d system states"
@@ -530,47 +574,47 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 		return 0;
 	}
 
-	blsys->n_y = numy;
+	sys->n_y = numy;
 
-	if(!integrator_sort_obs_vars(blsys))return 0;
+	if(!integrator_sort_obs_vars(sys))return 0;
 
 	return 1;
 }
 
-void integrator_visit_system_vars(IntegratorSystem *blsys,IntegratorVarVisitorFn *visitfn){
+void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitfn){
   struct var_variable **vlist;
   int i, vlen;
 
   /* visit all the slv_system_t master var lists to collect vars */
   /* find the vars mostly in this one */
-  vlist = slv_get_master_var_list(blsys->system);
-  vlen = slv_get_num_master_vars(blsys->system);
+  vlist = slv_get_master_var_list(sys->system);
+  vlen = slv_get_num_master_vars(sys->system);
   for (i=0;i<vlen;i++) {
-    (*visitfn)(blsys, vlist[i]);
+    (*visitfn)(sys, vlist[i], &i);
   }
 
   /*
   CONSOLE_DEBUG("Checked %d vars",vlen);
-  integrator_print_var_stats(blsys);
+  integrator_print_var_stats(sys);
   */
 
   /* probably nothing here, but gotta check. */
-  vlist = slv_get_master_par_list(blsys->system);
-  vlen = slv_get_num_master_pars(blsys->system);
+  vlist = slv_get_master_par_list(sys->system);
+  vlen = slv_get_num_master_pars(sys->system);
   for (i=0;i<vlen;i++) {
-    (*visitfn)(blsys, vlist[i]);
+    (*visitfn)(sys, vlist[i], NULL);
   }
 
   /*
   CONSOLE_DEBUG("Checked %d pars",vlen);
-  integrator_print_var_stats(blsys);
+  integrator_print_var_stats(sys);
   */
 
   /* might find t here */
-  vlist = slv_get_master_unattached_list(blsys->system);
-  vlen = slv_get_num_master_unattached(blsys->system);
+  vlist = slv_get_master_unattached_list(sys->system);
+  vlen = slv_get_num_master_unattached(sys->system);
   for (i=0;i<vlen;i++) {
-    (*visitfn)(blsys, vlist[i]);
+    (*visitfn)(sys, vlist[i], NULL);
   }
 
   /* CONSOLE_DEBUG("Checked %d unattached",vlen); */
@@ -578,7 +622,7 @@ void integrator_visit_system_vars(IntegratorSystem *blsys,IntegratorVarVisitorFn
 /**
 	@return 1 on success
 */
-int integrator_analyse_ode(IntegratorSystem *blsys){
+int integrator_analyse_ode(IntegratorSystem *sys){
   struct Integ_var_t *v1,*v2;
   long half,i,len;
   int happy=1;
@@ -588,49 +632,49 @@ int integrator_analyse_ode(IntegratorSystem *blsys){
   IntegInitSymbols();
 
   /* collect potential states and derivatives */
-  blsys->indepvars = gl_create(10L);  /* t var info */
-  blsys->dynvars = gl_create(200L);  /* y ydot var info */
-  blsys->obslist = gl_create(100L);  /* obs info */
-  if (blsys->dynvars == NULL
-    || blsys->obslist == NULL
-    || blsys->indepvars == NULL
+  sys->indepvars = gl_create(10L);  /* t var info */
+  sys->dynvars = gl_create(200L);  /* y ydot var info */
+  sys->obslist = gl_create(100L);  /* obs info */
+  if (sys->dynvars == NULL
+    || sys->obslist == NULL
+    || sys->indepvars == NULL
   ){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 0;
   }
 
-  blsys->nstates = blsys->nderivs = 0;
+  sys->nstates = sys->nderivs = 0;
 
-  integrator_visit_system_vars(blsys,&integrator_ode_classify_var);
+  integrator_visit_system_vars(sys,&integrator_ode_classify_var);
 
-  integrator_print_var_stats(blsys);
+  integrator_print_var_stats(sys);
 
-  if(!integrator_check_indep_var(blsys))return 0;
+  if(!integrator_check_indep_var(sys))return 0;
 
   /* check sanity of state and var lists */
 
-  len = gl_length(blsys->dynvars);
+  len = gl_length(sys->dynvars);
   half = len/2;
   CONSOLE_DEBUG("NUMBER OF DYNAMIC VARIABLES = %ld",half);
 
-  if (len % 2 || len == 0L || blsys->nstates != blsys->nderivs ) {
+  if (len % 2 || len == 0L || sys->nstates != sys->nderivs ) {
     /* list length must be even for vars to pair off */
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"n_y != n_ydot, or no dynamic vars found. Fix your indexing.");
     return 0;
   }
-  gl_sort(blsys->dynvars,(CmpFunc)Integ_CmpDynVars);
-  if (gl_fetch(blsys->dynvars,len)==NULL) {
+  gl_sort(sys->dynvars,(CmpFunc)Integ_CmpDynVars);
+  if (gl_fetch(sys->dynvars,len)==NULL) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Mysterious NULL found!");
     return 0;
   }
-  blsys->states = gl_create(half);   /* state vars Integ_var_t references */
-  blsys->derivs = gl_create(half);   /* derivative var atoms */
+  sys->states = gl_create(half);   /* state vars Integ_var_t references */
+  sys->derivs = gl_create(half);   /* derivative var atoms */
   for (i=1;i < len; i+=2) {
-    v1 = (struct Integ_var_t *)gl_fetch(blsys->dynvars,i);
-    v2 = (struct Integ_var_t *)gl_fetch(blsys->dynvars,i+1);
+    v1 = (struct Integ_var_t *)gl_fetch(sys->dynvars,i);
+    v2 = (struct Integ_var_t *)gl_fetch(sys->dynvars,i+1);
     if (v1->type!=1  || v2 ->type !=2 || v1->index != v2->index) {
-      varname1 = var_make_name(blsys->system,v1->i);
-	  varname2 = var_make_name(blsys->system,v2->i);
+      varname1 = var_make_name(sys->system,v1->i);
+	  varname2 = var_make_name(sys->system,v2->i);
 
       ERROR_REPORTER_HERE(ASC_USER_ERROR,"Mistyped or misindexed dynamic variables: %s (%s = %ld,%s = %ld) and %s (%s = %ld,%s = %ld).",
              varname1, SCP(STATEFLAG),v1->type,SCP(STATEINDEX),v1->index,
@@ -641,41 +685,41 @@ int integrator_analyse_ode(IntegratorSystem *blsys){
       happy=0;
       break;
     } else {
-      gl_append_ptr(blsys->states,(POINTER)v1);
-      gl_append_ptr(blsys->derivs,(POINTER)v2->i);
+      gl_append_ptr(sys->states,(POINTER)v1);
+      gl_append_ptr(sys->derivs,(POINTER)v2->i);
     }
   }
   if (!happy) {
     return 0;
   }
-  blsys->n_y = half;
-  blsys->y = ASC_NEW_ARRAY(struct var_variable *, half);
-  blsys->y_id = ASC_NEW_ARRAY(long, half);
-  blsys->ydot = ASC_NEW_ARRAY(struct var_variable *, half);
-  if (blsys->y==NULL || blsys->ydot==NULL || blsys->y_id==NULL) {
+  sys->n_y = half;
+  sys->y = ASC_NEW_ARRAY(struct var_variable *, half);
+  sys->y_id = ASC_NEW_ARRAY(long, half);
+  sys->ydot = ASC_NEW_ARRAY(struct var_variable *, half);
+  if (sys->y==NULL || sys->ydot==NULL || sys->y_id==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 0;
   }
   for (i = 1; i <= half; i++) {
-    v1 = (struct Integ_var_t *)gl_fetch(blsys->states,i);
-    blsys->y[i-1] = v1->i;
-    blsys->y_id[i-1] = v1->index;
-    blsys->ydot[i-1] = (struct var_variable *)gl_fetch(blsys->derivs,i);
+    v1 = (struct Integ_var_t *)gl_fetch(sys->states,i);
+    sys->y[i-1] = v1->i;
+    sys->y_id[i-1] = v1->index;
+    sys->ydot[i-1] = (struct var_variable *)gl_fetch(sys->derivs,i);
   }
 
-  if(!integrator_sort_obs_vars(blsys))return 0;
+  if(!integrator_sort_obs_vars(sys))return 0;
 
   /* don't need the gl_lists now that we have arrays for everyone */
-  gl_destroy(blsys->states);
-  gl_destroy(blsys->derivs);
-  gl_free_and_destroy(blsys->indepvars);  /* we own the objects in indepvars */
-  gl_free_and_destroy(blsys->dynvars);    /* we own the objects in dynvars */
-  gl_free_and_destroy(blsys->obslist);    /* and obslist */
-  blsys->states = NULL;
-  blsys->derivs = NULL;
-  blsys->indepvars = NULL;
-  blsys->dynvars = NULL;
-  blsys->obslist = NULL;
+  gl_destroy(sys->states);
+  gl_destroy(sys->derivs);
+  gl_free_and_destroy(sys->indepvars);  /* we own the objects in indepvars */
+  gl_free_and_destroy(sys->dynvars);    /* we own the objects in dynvars */
+  gl_free_and_destroy(sys->obslist);    /* and obslist */
+  sys->states = NULL;
+  sys->derivs = NULL;
+  sys->indepvars = NULL;
+  sys->dynvars = NULL;
+  sys->obslist = NULL;
 
   /* analysis completed OK */
   return 1;
@@ -687,29 +731,29 @@ int integrator_analyse_ode(IntegratorSystem *blsys){
 
 	@return 1 on success
 */
-static int integrator_sort_obs_vars(IntegratorSystem *blsys){
+static int integrator_sort_obs_vars(IntegratorSystem *sys){
   int half, i, len = 0;
   struct Integ_var_t *v2;
 
-  half = blsys->n_y;
-  len = gl_length(blsys->obslist);
+  half = sys->n_y;
+  len = gl_length(sys->obslist);
   /* we shouldn't be seeing NULL here ever except if malloc fail. */
   if (len > 1L) {
-    half = ((struct Integ_var_t *)gl_fetch(blsys->obslist,1))->index;
+    half = ((struct Integ_var_t *)gl_fetch(sys->obslist,1))->index;
     /* half != 0 now because we didn't collect 0 indexed vars */
     for (i=2; i <= len; i++) {
-      if (half != ((struct Integ_var_t *)gl_fetch(blsys->obslist,i))->index) {
+      if (half != ((struct Integ_var_t *)gl_fetch(sys->obslist,i))->index) {
         /* change seen. sort and go on */
-        gl_sort(blsys->obslist,(CmpFunc)Integ_CmpObs);
+        gl_sort(sys->obslist,(CmpFunc)Integ_CmpObs);
         break;
       }
     }
   }
   for (i = half = 1; i <= len; i++) {
-    v2 = (struct Integ_var_t *)gl_fetch(blsys->obslist,i);
+    v2 = (struct Integ_var_t *)gl_fetch(sys->obslist,i);
     if (v2==NULL) {
       /* we shouldn't be seeing NULL here ever except if malloc fail. */
-      gl_delete(blsys->obslist,i,0); /* should not be gl_delete(so,i,1) */
+      gl_delete(sys->obslist,i,0); /* should not be gl_delete(so,i,1) */
     } else {
       Integ_SetObsId(v2->i,half);
       v2->index = half++;
@@ -718,39 +762,39 @@ static int integrator_sort_obs_vars(IntegratorSystem *blsys){
 
   /* obslist now uniquely indexed, no nulls */
   /* make into arrays */
-  half = gl_length(blsys->obslist);
-  blsys->obs = ASC_NEW_ARRAY(struct var_variable *,half);
-  blsys->obs_id = ASC_NEW_ARRAY(long, half);
-  if ( blsys->obs==NULL || blsys->obs_id==NULL) {
+  half = gl_length(sys->obslist);
+  sys->obs = ASC_NEW_ARRAY(struct var_variable *,half);
+  sys->obs_id = ASC_NEW_ARRAY(long, half);
+  if ( sys->obs==NULL || sys->obs_id==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 0;
   }
-  blsys->n_obs = half;
+  sys->n_obs = half;
   for (i = 1; i <= half; i++) {
-    v2 = (struct Integ_var_t *)gl_fetch(blsys->obslist,i);
-    blsys->obs[i-1] = v2->i;
-    blsys->obs_id[i-1] = v2->index;
+    v2 = (struct Integ_var_t *)gl_fetch(sys->obslist,i);
+    sys->obs[i-1] = v2->i;
+    sys->obs_id[i-1] = v2->index;
   }
 
   return 1;
 }
 
-static void integrator_print_var_stats(IntegratorSystem *blsys){
-	int v = gl_length(blsys->dynvars);
-	int i = gl_length(blsys->indepvars);
+static void integrator_print_var_stats(IntegratorSystem *sys){
+	int v = gl_length(sys->dynvars);
+	int i = gl_length(sys->indepvars);
 	CONSOLE_DEBUG("Currently %d vars, %d indep",v,i);
 }
 
 /**
 	@return 1 on success
 */
-static int integrator_check_indep_var(IntegratorSystem *blsys){
+static int integrator_check_indep_var(IntegratorSystem *sys){
   int len, i;
   struct Integ_var_t *info;
   char *varname;
 
   /* check the sanity of the independent variable */
-  len = gl_length(blsys->indepvars);
+  len = gl_length(sys->indepvars);
   if (!len) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"No independent variable found.");
     return 0;
@@ -760,10 +804,10 @@ static int integrator_check_indep_var(IntegratorSystem *blsys){
     FPRINTF(ASCERR,"Excess %ld independent variables found:",
       len);
     for(i=1; i <=len;i++) {
-      info = (struct Integ_var_t *)gl_fetch(blsys->indepvars,i);
+      info = (struct Integ_var_t *)gl_fetch(sys->indepvars,i);
       if(info==NULL)continue;
 
-      varname = var_make_name(blsys->system,info->i);
+      varname = var_make_name(sys->system,info->i);
       FPRINTF(ASCERR," %s",varname);
       ASC_FREE(varname);
     }
@@ -773,8 +817,8 @@ static int integrator_check_indep_var(IntegratorSystem *blsys){
 	error_reporter_end_flush();
     return 0;
   }else{
-    info = (struct Integ_var_t *)gl_fetch(blsys->indepvars,1);
-    blsys->x = info->i;
+    info = (struct Integ_var_t *)gl_fetch(sys->indepvars,1);
+    sys->x = info->i;
   }
   return 1;
 }
@@ -783,7 +827,7 @@ static int integrator_check_indep_var(IntegratorSystem *blsys){
   CLASSIFICATION OF VARIABLES (for ANALYSIS step)
 */
 
-#define INTEG_ADD_TO_LIST(info,TYPE,INDEX,VAR,LIST) \
+#define INTEG_ADD_TO_LIST(info,TYPE,INDEX,VAR,VARINDX,LIST) \
 	info = ASC_NEW(struct Integ_var_t); \
 	if(info==NULL){ \
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory (INTEG_VAR_NEW)"); \
@@ -792,6 +836,11 @@ static int integrator_check_indep_var(IntegratorSystem *blsys){
 	info->type=TYPE; \
 	info->index=INDEX; \
 	info->i=VAR; \
+    if(VARINDX==NULL){ \
+		info->varindx = -1; \
+	}else{ \
+		info->varindx = *VARINDX; \
+	} \
 	gl_append_ptr(LIST,(void *)info); \
 	info = NULL
 
@@ -803,7 +852,9 @@ static int integrator_check_indep_var(IntegratorSystem *blsys){
 	present as derivatives of other variables, I guess those ones need to be
 	removed from the list in a second pass?
 */
-void integrator_dae_classify_var(IntegratorSystem *blsys, struct var_variable *var){
+void integrator_dae_classify_var(IntegratorSystem *sys
+		, struct var_variable *var, const int *varindx
+){
 	struct Integ_var_t *info;
 	long type,index;
 
@@ -822,23 +873,23 @@ void integrator_dae_classify_var(IntegratorSystem *blsys, struct var_variable *v
 
 			if(type==INTEG_OTHER_VAR){
 				/* if the var's type is -1, it's independent */
-				INTEG_ADD_TO_LIST(info,INTEG_OTHER_VAR,0,var,blsys->indepvars);
+				INTEG_ADD_TO_LIST(info,INTEG_OTHER_VAR,0,var,varindx,sys->indepvars);
 			}else{
 				if(type < 0)type=0;
 				/* any other type of var is in the DAE system, at least for now */
-				INTEG_ADD_TO_LIST(info,type,index,var,blsys->dynvars);
+				INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->dynvars);
 			}
 		}else{
 			/* fixed variable, only include it if ode_type == 1 */
 			type = DynamicVarInfo(var,&index);
 			if(type==INTEG_STATE_VAR){
-				INTEG_ADD_TO_LIST(info,type,index,var,blsys->dynvars);
+				INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->dynvars);
 			}
 		}
 
 		/* if the var's obs_id > 0, add it to the observation list */
 		if(ObservationVar(var,&index) != NULL && index > 0L) {
-			INTEG_ADD_TO_LIST(info,type,index,var,blsys->obslist);
+			INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->obslist);
 		}
 	}
 }
@@ -850,7 +901,9 @@ void integrator_dae_classify_var(IntegratorSystem *blsys, struct var_variable *v
 
 	@TODO add ability to create new variables for 'missing' derivative vars?
 */
-void integrator_ode_classify_var(IntegratorSystem *blsys, struct var_variable *var){
+void integrator_ode_classify_var(IntegratorSystem *sys, struct var_variable *var
+		, const int *varindx
+){
   struct Integ_var_t *info;
   long type,index;
 
@@ -868,19 +921,19 @@ void integrator_ode_classify_var(IntegratorSystem *blsys, struct var_variable *v
 		/* no action required */
 	}else if(type==INTEG_OTHER_VAR){
 		/* i.e. independent var */
-        INTEG_ADD_TO_LIST(info,type,index,var,blsys->indepvars);
+        INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->indepvars);
 	}else if(type>=INTEG_STATE_VAR){
-        INTEG_ADD_TO_LIST(info,type,index,var,blsys->dynvars);
+        INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->dynvars);
         if(type == 1){
-          blsys->nstates++;
+          sys->nstates++;
         }else if(type == 2){ /* what about higher-order derivatives? -- JP */
-          blsys->nderivs++;
+          sys->nderivs++;
         }else{
 		  ERROR_REPORTER_HERE(ASC_USER_WARNING,"Higher-order (>=2) derivatives are not supported in ODEs.");
 		}	}
 
     if(ObservationVar(var,&index) != NULL && index > 0L) {
-		INTEG_ADD_TO_LIST(info,0L,index,var,blsys->obslist);
+		INTEG_ADD_TO_LIST(info,0L,index,var,varindx,sys->obslist);
     }
   }
 }
@@ -890,7 +943,9 @@ void integrator_ode_classify_var(IntegratorSystem *blsys, struct var_variable *v
 	This is just for the purpose of the integrator_find_indep_var function,
 	which is a utility function provided for use by the GUI.
 */
-void integrator_classify_indep_var(IntegratorSystem *blsys, struct var_variable *var){
+void integrator_classify_indep_var(IntegratorSystem *sys
+		, struct var_variable *var, const int *varindx
+){
 	struct Integ_var_t *info;
 	long type,index;
 
@@ -907,7 +962,7 @@ void integrator_classify_indep_var(IntegratorSystem *blsys, struct var_variable 
 
 		if(type==INTEG_OTHER_VAR){
 			/* i.e. independent var */
-			INTEG_ADD_TO_LIST(info,type,index,var,blsys->indepvars);
+			INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->indepvars);
 		}
 	}
 }
@@ -977,17 +1032,17 @@ static struct var_variable *ObservationVar(struct var_variable *v, long *index){
 
 /*
 	Make the call to the actual integrator we've selected, for the range of
-	time values specified. The blsys contains all the specifics.
+	time values specified. The sys contains all the specifics.
 
 	Return 1 on success
 */
-int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
+int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 
 	long nstep;
 	unsigned long start_index=0, finish_index=0;
-	assert(blsys!=NULL);
+	assert(sys!=NULL);
 
-	nstep = integrator_getnsamples(blsys)-1;
+	nstep = integrator_getnsamples(sys)-1;
 	/* check for at least 2 steps and dimensionality of x vs steps here */
 
 	if (i0<0 || i1 <0) {
@@ -1021,13 +1076,13 @@ int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
 	CONSOLE_DEBUG("RUNNING INTEGRATION...");
 
 	/* now go and run the integrator */
-	switch (blsys->engine) {
+	switch (sys->engine) {
 		case INTEG_LSODE:
-		return integrator_lsode_solve(blsys, start_index, finish_index);
+		return integrator_lsode_solve(sys, start_index, finish_index);
 		break;
 #ifdef ASC_WITH_IDA
 		case INTEG_IDA:
-		return integrator_ida_solve(blsys,start_index, finish_index);
+		return integrator_ida_solve(sys,start_index, finish_index);
 		break;
 #endif
 		default:
@@ -1041,11 +1096,11 @@ int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
 */
 
 #define GETTER_AND_SETTER(TYPE,NAME) \
-	void integrator_set_##NAME(IntegratorSystem *blsys, TYPE val){ \
-		blsys->NAME=val; \
+	void integrator_set_##NAME(IntegratorSystem *sys, TYPE val){ \
+		sys->NAME=val; \
 	} \
-	TYPE integrator_get_##NAME(IntegratorSystem *blsys){ \
-		return blsys->NAME; \
+	TYPE integrator_get_##NAME(IntegratorSystem *sys){ \
+		return sys->NAME; \
 	}
 
 GETTER_AND_SETTER(SampleList *,samples) /*;*/
@@ -1055,32 +1110,32 @@ GETTER_AND_SETTER(double,stepzero) /*;*/
 GETTER_AND_SETTER(int,maxsubsteps) /*;*/
 #undef GETTER_AND_SETTER
 
-long integrator_getnsamples(IntegratorSystem *blsys){
-	assert(blsys!=NULL);
-	assert(blsys->samples!=NULL);
-	return samplelist_length(blsys->samples);
+long integrator_getnsamples(IntegratorSystem *sys){
+	assert(sys!=NULL);
+	assert(sys->samples!=NULL);
+	return samplelist_length(sys->samples);
 }
 
-double integrator_getsample(IntegratorSystem *blsys, long i){
-	assert(blsys!=NULL);
-	assert(blsys->samples!=NULL);
-	return samplelist_get(blsys->samples,i);
+double integrator_getsample(IntegratorSystem *sys, long i){
+	assert(sys!=NULL);
+	assert(sys->samples!=NULL);
+	return samplelist_get(sys->samples,i);
 }
 
-void integrator_setsample(IntegratorSystem *blsys, long i,double xi){
-	assert(blsys!=NULL);
-	assert(blsys->samples!=NULL);
-	samplelist_set(blsys->samples,i,xi);
+void integrator_setsample(IntegratorSystem *sys, long i,double xi){
+	assert(sys!=NULL);
+	assert(sys->samples!=NULL);
+	samplelist_set(sys->samples,i,xi);
 }
 
-const dim_type *integrator_getsampledim(IntegratorSystem *blsys){
-	assert(blsys!=NULL);
-	assert(blsys->samples!=NULL);
-	return samplelist_dim(blsys->samples);
+const dim_type *integrator_getsampledim(IntegratorSystem *sys){
+	assert(sys!=NULL);
+	assert(sys->samples!=NULL);
+	return samplelist_dim(sys->samples);
 }
 
-ASC_DLLSPEC(long) integrator_getcurrentstep(IntegratorSystem *blsys){
-	return blsys->currentstep;
+ASC_DLLSPEC(long) integrator_getcurrentstep(IntegratorSystem *sys){
+	return sys->currentstep;
 }
 
 /*------------------------------------------------------------------------------
@@ -1091,16 +1146,16 @@ ASC_DLLSPEC(long) integrator_getcurrentstep(IntegratorSystem *blsys){
 	Retrieve the value of the independent variable (time) from ASCEND
 	and return it as a double.
 */
-double integrator_get_t(IntegratorSystem *blsys){
-	assert(blsys->x!=NULL);
-	return var_value(blsys->x);
+double integrator_get_t(IntegratorSystem *sys){
+	assert(sys->x!=NULL);
+	return var_value(sys->x);
 }
 
 /**
 	Set the value of the independent variable (time) in ASCEND.
 */
-void integrator_set_t(IntegratorSystem *blsys, double value){
-  var_set_value(blsys->x, value);
+void integrator_set_t(IntegratorSystem *sys, double value){
+  var_set_value(sys->x, value);
   /* CONSOLE_DEBUG("set_t = %g", value); */
 }
 
@@ -1114,17 +1169,17 @@ void integrator_set_t(IntegratorSystem *blsys, double value){
 	If the pointer 'y' is NULL, the necessary space is allocated (and
 	must be freed somewhere else).
 */
-double *integrator_get_y(IntegratorSystem *blsys, double *y) {
+double *integrator_get_y(IntegratorSystem *sys, double *y) {
   long i;
 
   if (y==NULL) {
-    y = ASC_NEW_ARRAY_CLEAR(double, blsys->n_y+1);
+    y = ASC_NEW_ARRAY_CLEAR(double, sys->n_y+1);
     /* C y[0]  <==> ascend d.y[1]  <==>  f77 y(1) */
   }
 
-  for (i=0; i< blsys->n_y; i++) {
-	assert(blsys->y[i]!=NULL);
-    y[i] = var_value(blsys->y[i]);
+  for (i=0; i< sys->n_y; i++) {
+	assert(sys->y[i]!=NULL);
+    y[i] = var_value(sys->y[i]);
     /* CONSOLE_DEBUG("ASCEND --> y[%ld] = %g", i+1, y[i]); */
   }
   return y;
@@ -1135,17 +1190,17 @@ double *integrator_get_y(IntegratorSystem *blsys, double *y) {
 	uses, and use them to update the values of the corresponding variables
 	in ASCEND.
 */
-void integrator_set_y(IntegratorSystem *blsys, double *y) {
+void integrator_set_y(IntegratorSystem *sys, double *y) {
   long i;
 #ifndef NDEBUG
   char *varname;
 #endif
 
-  for (i=0; i < blsys->n_y; i++) {
-	assert(blsys->y[i]!=NULL);
-    var_set_value(blsys->y[i],y[i]);
+  for (i=0; i < sys->n_y; i++) {
+	assert(sys->y[i]!=NULL);
+    var_set_value(sys->y[i],y[i]);
 #ifndef NDEBUG
-	varname = var_make_name(blsys->system, blsys->y[i]);
+	varname = var_make_name(sys->system, sys->y[i]);
     /* CONSOLE_DEBUG("y[%ld] = \"%s\" = %g --> ASCEND", i+1, varname, y[i]); */
 	ASC_FREE(varname);
 #endif
@@ -1156,36 +1211,36 @@ void integrator_set_y(IntegratorSystem *blsys, double *y) {
 	Send the values of the derivatives of the 'y' variables to the solver.
 	Allocate space for an array if necessary.
 
-	Any element in blsys->ydot that is NULL will be passed over (the value
+	Any element in sys->ydot that is NULL will be passed over (the value
 	won't be modified in dydx).
 */
-double *integrator_get_ydot(IntegratorSystem *blsys, double *dydx) {
+double *integrator_get_ydot(IntegratorSystem *sys, double *dydx) {
   long i;
 
   if (dydx==NULL) {
-    dydx = ASC_NEW_ARRAY_CLEAR(double, blsys->n_y+1);
+    dydx = ASC_NEW_ARRAY_CLEAR(double, sys->n_y+1);
     /* C dydx[0]  <==> ascend d.dydx[1]  <==>  f77 ydot(1) */
   }
 
-  for (i=0; i < blsys->n_y; i++) {
-    if(blsys->ydot[i]!=NULL){
-		dydx[i] = var_value(blsys->ydot[i]);
+  for (i=0; i < sys->n_y; i++) {
+    if(sys->ydot[i]!=NULL){
+		dydx[i] = var_value(sys->ydot[i]);
 	}
     /* CONSOLE_DEBUG("ASCEND --> ydot[%ld] = %g", i+1, dydx[i]); */
   }
   return dydx;
 }
 
-void integrator_set_ydot(IntegratorSystem *blsys, double *dydx) {
+void integrator_set_ydot(IntegratorSystem *sys, double *dydx) {
 	long i;
 #ifndef NDEBUG
 	/* char *varname; */
 #endif
-	for (i=0; i < blsys->n_y; i++) {
-		if(blsys->ydot[i]!=NULL){
-    		var_set_value(blsys->ydot[i],dydx[i]);
+	for (i=0; i < sys->n_y; i++) {
+		if(sys->ydot[i]!=NULL){
+    		var_set_value(sys->ydot[i],dydx[i]);
 #ifndef NDEBUG
-			/* varname = var_make_name(blsys->system, blsys->ydot[i]);
+			/* varname = var_make_name(sys->system, sys->ydot[i]);
 			CONSOLE_DEBUG("ydot[%ld] = \"%s\" = %g --> ASCEND", i+1, varname, dydx[i]);
 			ASC_FREE(varname); */
 #endif
@@ -1206,34 +1261,34 @@ void integrator_set_ydot(IntegratorSystem *blsys, double *dydx) {
    This function takes the inst in the solver and returns the vector of
    observation variables that are located in the submodel d.obs array.
 */
-double *integrator_get_observations(IntegratorSystem *blsys, double *obsi) {
+double *integrator_get_observations(IntegratorSystem *sys, double *obsi) {
   long i;
 
   if (obsi==NULL) {
-    obsi = ASC_NEW_ARRAY_CLEAR(double, blsys->n_obs+1);
+    obsi = ASC_NEW_ARRAY_CLEAR(double, sys->n_obs+1);
   }
 
   /* C obsi[0]  <==> ascend d.obs[1] */
 
-  for (i=0; i < blsys->n_obs; i++) {
-    obsi[i] = var_value(blsys->obs[i]);
+  for (i=0; i < sys->n_obs; i++) {
+    obsi[i] = var_value(sys->obs[i]);
     /* CONSOLE_DEBUG("*get_d_obs[%ld] = %g\n", i+1, obsi[i]); */
   }
   return obsi;
 }
 
-struct var_variable *integrator_get_observed_var(IntegratorSystem *blsys, const long i){
+struct var_variable *integrator_get_observed_var(IntegratorSystem *sys, const long i){
 	assert(i>=0);
-	assert(i<blsys->n_obs);
-	return blsys->obs[i];
+	assert(i<sys->n_obs);
+	return sys->obs[i];
 }
 
 /**
 	@NOTE Although this shouldn't be required for implementation of solver
 	engines, this is useful for GUI reporting of integration results.
 */
-struct var_variable *integrator_get_independent_var(IntegratorSystem *blsys){
-	return blsys->x;
+struct var_variable *integrator_get_independent_var(IntegratorSystem *sys){
+	return sys->x;
 }
 
 
@@ -1299,31 +1354,31 @@ static int Integ_CmpDynVars(struct Integ_var_t *v1, struct Integ_var_t *v2){
   Output handling to the GUI/interface.
 */
 
-int integrator_set_reporter(IntegratorSystem *blsys
+int integrator_set_reporter(IntegratorSystem *sys
 	, IntegratorReporter *reporter
 ){
-	assert(blsys!=NULL);
-	blsys->reporter = reporter;
+	assert(sys!=NULL);
+	sys->reporter = reporter;
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"INTEGRATOR REPORTER HOOKS HAVE BEEN SET\n"); */
 	return 1;
 }
 
-int integrator_output_init(IntegratorSystem *blsys){
-	assert(blsys!=NULL);
-	assert(blsys->reporter!=NULL);
-	if(blsys->reporter->init!=NULL){
+int integrator_output_init(IntegratorSystem *sys){
+	assert(sys!=NULL);
+	assert(sys->reporter!=NULL);
+	if(sys->reporter->init!=NULL){
 		/* call the specified output function */
-		return (*(blsys->reporter->init))(blsys);
+		return (*(sys->reporter->init))(sys);
 	}
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"No integrator reporter init method");
 	return 1;
 }
 
-int integrator_output_write(IntegratorSystem *blsys){
+int integrator_output_write(IntegratorSystem *sys){
 	static int reported_already=0;
-	assert(blsys!=NULL);
-	if(blsys->reporter->write!=NULL){
-		return (*(blsys->reporter->write))(blsys);
+	assert(sys!=NULL);
+	if(sys->reporter->write!=NULL){
+		return (*(sys->reporter->write))(sys);
 	}
 	if(!reported_already){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No integrator reporter write method (this message only shown once)");
@@ -1332,11 +1387,11 @@ int integrator_output_write(IntegratorSystem *blsys){
 	return 1;
 }
 
-int integrator_output_write_obs(IntegratorSystem *blsys){
+int integrator_output_write_obs(IntegratorSystem *sys){
 	static int reported_already=0;
-	assert(blsys!=NULL);
-	if(blsys->reporter->write_obs!=NULL){
-		return (*(blsys->reporter->write_obs))(blsys);
+	assert(sys!=NULL);
+	if(sys->reporter->write_obs!=NULL){
+		return (*(sys->reporter->write_obs))(sys);
 	}
 	if(!reported_already){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No integrator reporter write_obs method (this message only shown once)");
@@ -1345,10 +1400,10 @@ int integrator_output_write_obs(IntegratorSystem *blsys){
 	return 1;
 }
 
-int integrator_output_close(IntegratorSystem *blsys){
-	assert(blsys!=NULL);
-	if(blsys->reporter->close!=NULL){
-		return (*(blsys->reporter->close))(blsys);
+int integrator_output_close(IntegratorSystem *sys){
+	assert(sys!=NULL);
+	if(sys->reporter->close!=NULL){
+		return (*(sys->reporter->close))(sys);
 	}
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"No integrator reporter close method");
 	return 1;

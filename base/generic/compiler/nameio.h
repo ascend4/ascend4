@@ -28,10 +28,7 @@
 	#include "symtab.h"
 *//*
 	by Tom Epperly
-	Version: $Revision: 1.5 $
-	Version control file: $RCSfile: nameio.h,v $
-	Date last modified: $Date: 1998/04/16 00:43:29 $
-	Last modified by: $Author: ballan $
+	Last in CVS: $Revision: 1.5 $ $Date: 1998/04/16 00:43:29 $ $Author: ballan $
 */
 
 #ifndef ASC_NAMEIO_H

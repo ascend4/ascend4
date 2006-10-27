@@ -123,6 +123,7 @@ int Builtins_Init(void)
 		,1 /* num of args */
 		,"Unset 'fixed' flag of all items of type 'solver_var'" /* help */
 		,NULL /* user_data */
+		,NULL /* destroy fn */
   );
 #endif
   return result;
