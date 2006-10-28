@@ -89,6 +89,10 @@ Integrator::solve(){
 
 	int res;
 	res = integrator_solve(blsys, 0, samplelist_length(samplelist)-1);
+
+	// communicate solver variable status back to the instance tree via 'interface_ptr'
+	simulation.processVarStatus();
+
 	if(!res){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Failed integration");
 		return 0;

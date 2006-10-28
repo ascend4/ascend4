@@ -195,7 +195,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 	int updateNeeded, offset;
 	unsigned int k;
 	int nok = 0;
-    static int warnexpt;
+    static int warnexpt, warnfdiff;
 
 	if(!warnexpt){ 
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox gradient is experimental (%s)",__FUNCTION__);
@@ -246,7 +246,13 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 				, common->inputsJac, common->outputs, common->jacobian
 			);
 		}else{
-			CONSOLE_DEBUG("COMPUTING FINITE-DIFFERENCE BLACK-BOX DERIVATIVE");
+			if(!warnfdiff){
+				ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Using finite-difference "
+					" to compute derivatives for one or more black boxes in"
+					" this model."
+				);
+				warnfdiff = 1;
+			}
 			
 			nok = blackbox_fdiff(GetValueFunc(efunc), &(common->interp)
 				, common->inputsLen, common->outputsLen

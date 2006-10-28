@@ -3,7 +3,7 @@ REQUIRE "johnpye/thermo_types.a4c";
 
 IMPORT "freesteam";
 IMPORT "johnpye/extpy/extpy";
-IMPORT "johnpye/listnotes";
+IMPORT "johnpye/solvernotes";
 IMPORT "johnpye/solve";
 
 MODEL simple_state;
@@ -82,9 +82,10 @@ METHOD ode_init;
 	t := 0 {s};
 END ode_init;
 METHOD on_load;
+	EXTERNAL solve(SELF);
 	RUN reset;
 	RUN values;
-	EXTERNAL setup_solver(SELF);
+	EXTERNAL solvernotes(SELF);
 	EXTERNAL solve(SELF);
 	RUN ode_init;
 END on_load;
