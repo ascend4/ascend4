@@ -38,6 +38,9 @@
 ImportHandlerCreateFilenameFn extpy_filename;
 ImportHandlerImportFn extpy_import;
 
+ExtMethodDestroyFn extpy_destroy;
+
+
 #ifndef ASC_EXPORT
 # error "Where is ASC_EXPORT?"
 #endif
@@ -139,13 +142,15 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 
 /**
 	Free memory associated with a registered script method.
+	@return 0 on success
 */
-void extpy_destroy(void *user_data){
+int extpy_destroy(void *user_data){
 	struct ExtPyData *extpydata;
 	extpydata = (struct ExtPyData *)user_data;
 	Py_DECREF(extpydata->fn);
 	ASC_FREE(extpydata->name);
 	ASC_FREE(extpydata);
+	return 0;
 }
 
 /*------------------------------------------------------------------------------
