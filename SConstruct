@@ -856,6 +856,19 @@ def CheckMath(context):
 #----------------
 # IDA test
 
+sundials_version_major_required = 2
+sundials_version_minor_min = 2
+sundials_version_minor_max = 3
+
+sundials_version_text = """
+#include <sundials/sundials_config.h>
+#include <stdio.h>
+int main(){
+	printf("%s",SUNDIALS_PACKAGE_VERSION);
+	return 0;
+}
+"""
+
 ida_test_text = """
 # include <ida/ida.h>
 # include <nvector/nvector_serial.h>
@@ -879,6 +892,31 @@ def CheckIDA(context):
 		
 	return is_ok
 
+# slightly changed calling convention (IDACalcID) in newer versions of SUNDIALS,
+# so detect the version and act accordingly.
+def CheckIDAVersion(context):
+	keep = KeepContext(context,'IDA')
+	context.Message("Checking SUNDIALS version... ")
+	(is_ok,output) = context.TryRun(sundials_version_text,'.c')
+	keep.restore(context)
+	if not is_ok:
+		context.Result("failed to run check")
+		return 0
+
+	major,minor,patch = tuple([int(i) for i in output.split(".")])
+	context.env['SUNDIALS_VERSION_MAJOR'] = major
+	context.env['SUNDIALS_VERSION_MINOR'] = minor
+	if major != sundials_version_major_required \
+			or minor < sundials_version_minor_min \
+			or minor > sundials_version_minor_max:
+		context.Result(output+" (bad version)")
+		# bad version
+		return 0
+		
+	# good version
+	context.Result(output+", good")
+	return 1
+	
 #----------------
 # CONOPT test
 
@@ -1041,6 +1079,7 @@ conf = Configure(env
 		, 'CheckTkTable' : CheckTkTable
 		, 'CheckX11' : CheckX11
 		, 'CheckIDA' : CheckIDA
+		, 'CheckIDAVersion' : CheckIDAVersion
 		, 'CheckCONOPT' : CheckCONOPT
 		, 'CheckScrollkeeperConfig' : CheckScrollkeeperConfig
 #		, 'CheckIsNan' : CheckIsNan
@@ -1148,6 +1187,9 @@ if not with_ida:
 elif not conf.CheckIDA():
 	with_ida = False
 	without_ida_reason = "IDA not found"
+elif not conf.CheckIDAVersion():
+	with_ida = False
+	without_ida_reason = "Unsupported (or undetected) SUNDIALS version"
 
 # CONOPT
 

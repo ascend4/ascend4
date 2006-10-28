@@ -157,7 +157,7 @@ MODEL pile;
 
 		is_lpassive[i] == SATISFIED(is_lpassive_expr[i]);
 		is_lactive[i] == SATISFIED(is_lactive_expr[i]);
-		is_lelastic[i] == NOT (is_lpassive OR is_lactive);
+		is_lelastic[i] == NOT (is_lpassive[i] OR is_lactive[i]);
 
 		lpassive_expr[i]: -Rl[i] = sigma_hdash_max[i] * B * (d[i] - d[i-1]);
 		lactive_expr[i]: -Rl[i] = sigma_hdash_min[i] * B * (d[i] - d[i-1]);

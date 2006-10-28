@@ -114,7 +114,7 @@ char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 			M("FOUND DOLLAR SIGN");
 			++p;
 			/* FIXME: note this is i = j = varname in C; p is ignored. */
-			for(i=p, j=varname; i<dest+len, j<varname+ENV_MAX_VAR_NAME; ++i,++j){
+			for(i=p, j=varname; i<dest+len && j<varname+ENV_MAX_VAR_NAME; ++i,++j){
 				/*C(*i);*/
 				if(!(
 					(*i >= 'A' && *i < 'Z')

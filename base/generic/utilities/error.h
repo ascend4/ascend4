@@ -103,14 +103,14 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
-# define CONSOLE_DEBUG(args...) (color_on(stderr,"0;34") + \
+# define CONSOLE_DEBUG(args...) ((void)(color_on(stderr,"0;34") + \
 		fprintf(stderr, "%s:%d ",__FILE__,__LINE__) + \
 		color_on(stderr,"0;31") + \
 		fprintf(stderr, "(%s)", __func__) + \
 		color_on(stderr,"0;34") + \
 		fprintf(stderr, ": ") + \
 		fprintf(stderr, ##args) + \
-        fprintf(stderr, "\n") + color_off(stderr))
+        fprintf(stderr, "\n") + color_off(stderr)))
 
 # define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
 
