@@ -54,12 +54,25 @@
 
 /* SUNDIALS includes */
 #ifdef ASC_WITH_IDA
+# include <sundials/sundials_config.h>
 # include <ida/ida.h>
 # include <nvector/nvector_serial.h>
 # include <ida/ida_spgmr.h>
 # ifndef IDA_SUCCESS
 #  error "Failed to include SUNDIALS IDA header file"
 # endif
+#endif
+
+/*
+	for the benefit of build tools that didn't sniff the SUNDIALS version, we
+	assume version 2.2.x (and thence possible errors)
+*/
+#ifndef SUNDIALS_VERSION_MINOR
+# warning "GUESSING SUNDIALS VERSION 2.2"
+# define SUNDIALS_VERSION_MINOR 2
+#endif
+#ifndef SUNDIALS_VERSION_MAJOR
+# define SUNDIALS_VERSION_MAJOR 2
 #endif
 
 /* check that we've got what we expect now */
@@ -232,7 +245,13 @@ int integrator_ida_solve(
 	blsys->currentstep=0;
  	t_index=start_index+1;
 	tout1 = samplelist_get(blsys->samples, t_index);
+
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
+	flag = IDACalcIC(ida_mem, IDA_Y_INIT, tout1);
+#else
 	flag = IDACalcIC(ida_mem, t0, y0, yp0, IDA_Y_INIT, tout1);
+#endif
+
 	if(flag!=IDA_SUCCESS){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to solve initial values (IDACalcIC)");
 		return 0;

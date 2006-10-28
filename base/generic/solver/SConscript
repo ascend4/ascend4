@@ -40,8 +40,13 @@ for c in csrcs:
 if solver_env.get('WITH_IDA'):
 	sundials_env = solver_env.Copy()
 	sundials_env.Append(
-		CPPPATH=([solver_env.get('IDA_CPPPATH')])
+		CPPPATH=[solver_env.get('IDA_CPPPATH')]
+		,CPPDEFINES=[
+			'SUNDIALS_VERSION_MAJOR=$SUNDIALS_VERSION_MAJOR'
+			,'SUNDIALS_VERSION_MINOR=$SUNDIALS_VERSION_MINOR'
+		]
 	)
+
 	if solver_env.get('IDA_CPPPATH_EXTRA'):
 		sundials_env.AppendUnique(
 			CPPPATH=solver_env.get('IDA_CPPPATH_EXTRA')
