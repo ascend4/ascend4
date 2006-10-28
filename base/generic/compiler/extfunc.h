@@ -263,6 +263,8 @@ typedef int ExtMethodInit( struct Instance *context);
 	Py_DECREF on the external script, so that python can unload it.
 
 	Couldn't see a way to do this without adding back this function here. -- JP
+
+	@return 0 on success, else error code.
 */
 
 typedef int ExtMethodDestroyFn( void *user_data);

@@ -32,5 +32,6 @@ env.Depends(html,epsfigs)
 
 if env.get('CAN_INSTALL'):
 	print "INSTALLING DOCS IN",env['INSTALL_ROOT']+env['INSTALL_DOC']
-	env.Install(env.subst(env['INSTALL_ROOT']+env['INSTALL_DOC']),pdf)
+	d = Dir("$INSTALL_ROOT$INSTALL_DOC")
+	env.Install(d,pdf)
 
