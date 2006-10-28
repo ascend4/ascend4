@@ -668,15 +668,13 @@ class Browser:
 
 		# run the 'on_load' method
 		self.start_waiting("Running default method...")
-
 		try:
-			print "SIMULATION CREATED, RUNNING DEFAULT METHOD NOW..."
+			self.reporter.reportNote("SIMULATION CREATED, RUNNING DEFAULT METHOD NOW...")
 			self.sim.runDefaultMethod()
 		except RuntimeError, e:
 			self.stop_waiting()
 			self.reporter.reportError(str(e))
 			return			
-
 		self.stop_waiting()
 
 		self.modelview.refreshtree()
@@ -707,7 +705,6 @@ class Browser:
 
 		self.stop_waiting()
 		
-		self.sim.processVarStatus()
 		self.modelview.refreshtree()
 
 	def do_integrate(self):

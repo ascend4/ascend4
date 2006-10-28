@@ -465,7 +465,7 @@ void
 Simulation::build(){
 	//cerr << "BUILDING SIMULATION..." << endl;
 	if(is_built){
-		throw runtime_error("Simulation is already built");
+		CONSOLE_DEBUG("Note: rebuilding system (was already built)");
 	}
 
 	Instance *i1 = getModel().getInternalType();
@@ -673,6 +673,9 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	}
 
 	//cerr << "SOLVER PERFORMED " << status.getIterationNum() << " ITERATIONS IN " << elapsed << "s" << endl;
+
+	// communicate solver variable status back to the instance tree
+	processVarStatus();
 }
 
 //------------------------------------------------------------------------------
