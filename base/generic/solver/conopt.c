@@ -210,7 +210,7 @@ int COI_CALL asc_conopt_message( int* SMSG, int* DMSG, int* NMSG, int* LLEN
       j = LLEN[i];
       for( l= 0; l<j; l++ ) line[l] = MSGV[k+l];
       line[j] = '\0';
-      (void)CONSOLE_DEBUG("%s", line);
+      CONSOLE_DEBUG("%s", line);
       k += MSGLEN;
    }
 /*   k = 0;
@@ -258,11 +258,11 @@ int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		, int* ITER, double* OBJVAL, double* USRMEM
 ){
 /* Standard Status routine. Write to all files */
-	(void)CONSOLE_DEBUG("CONOPT has finished Optimizing");
-	(void)CONSOLE_DEBUG("Model status    = %8d", *MODSTA);
-	(void)CONSOLE_DEBUG("Solver status   = %8d", *SOLSTA);
-	(void)CONSOLE_DEBUG("Iteration count = %8d", *ITER);
-	(void)CONSOLE_DEBUG("Objective value = %10f", *OBJVAL);
+	CONSOLE_DEBUG("CONOPT has finished Optimizing");
+	CONSOLE_DEBUG("Model status    = %8d", *MODSTA);
+	CONSOLE_DEBUG("Solver status   = %8d", *SOLSTA);
+	CONSOLE_DEBUG("Iteration count = %8d", *ITER);
+	CONSOLE_DEBUG("Objective value = %10f", *OBJVAL);
 
 	const char *modsta;
 	error_severity_t t = ASC_USER_SUCCESS;
@@ -271,6 +271,7 @@ int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		case 2: modsta = "locally optimal"; break;
 		case 3: t = ASC_USER_ERROR; modsta = "unbounded"; break;
 		case 4: t = ASC_USER_ERROR; modsta = "infeasible"; break;
+		default: t = ASC_PROG_ERR; modsta = "UNKNOWN MODSTA";
 	}
 	const char *solsta;
 	switch(*SOLSTA){
@@ -278,9 +279,10 @@ int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		case 2: t = ASC_USER_NOTE; solsta = "iteration interrupted"; break;
 		case 3: t = ASC_PROG_NOTE; solsta = "time limit exceeded"; break;
 		case 4: t = ASC_PROG_ERR; solsta = "failed (terminated by solver)"; break;
+		default: t = ASC_PROG_ERR; solsta = "UNKNOWN SOLSTA";
 	}
 
-	(void)CONSOLE_DEBUG("CONOPT %s: %s", solsta, modsta);
+	CONSOLE_DEBUG("CONOPT %s (%d): %s (%d)", solsta, *SOLSTA, modsta, *MODSTA);
 	ERROR_REPORTER_NOLINE(t,"CONOPT %s: %s", solsta, modsta);
 
 	return 0;

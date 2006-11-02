@@ -467,6 +467,11 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 		){
 			/* get derivatives for this particular relation */
 			status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
+			for(j=0;i<count;++j){
+				varname = var_make_name(blsys->system, enginedata->varlist[blsys->y_id[variables[i]]]);
+				CONSOLE_DEBUG("diff var[%d] is %s",j,varname);
+				ASC_FREE(varname);
+			}
 
 			CONSOLE_DEBUG("Got derivatives against %d matching variables", count);
 
@@ -490,7 +495,8 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 					CONSOLE_DEBUG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
 				}
 				
-				Jv_i += derivatives[j] * NV_Ith_S(v,variables[j]);
+				/* this bit is still not right!!! */
+				Jv_i += derivatives[j] * NV_Ith_S(v,blsys->y_id[variables[j]]);
 			}
 
 			NV_Ith_S(Jv,i) = Jv_i;
