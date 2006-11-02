@@ -776,6 +776,7 @@ class Browser:
 			self.reporter.reportError("No model selected yet")
 
 		self.sim.run(method)
+		self.sim.processVarStatus()
 		self.modelview.refreshtree()
 
 	def do_quit(self):

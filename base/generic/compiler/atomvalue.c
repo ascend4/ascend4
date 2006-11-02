@@ -139,6 +139,7 @@ double RealAtomValue(CONST struct Instance *i){
 void SetRealAtomValue(struct Instance *i, double d, unsigned int depth){
   assert(i!=NULL);
   AssertMemory(i);
+  
   switch(i->t) {
   case REAL_CONSTANT_INST:
     if (AtomAssigned(i)) {
@@ -163,6 +164,7 @@ void SetRealAtomValue(struct Instance *i, double d, unsigned int depth){
     R_INST(i)->depth = depth;
     break;
   case REAL_ATOM_INST:
+	CONSOLE_DEBUG("SETTING REAL ATOM INSTANCE %p TO VALUE %f, DEPTH %u (WAS %f)",i,d,depth,RA_INST(i)->value);
     RA_INST(i)->assigned++;
     RA_INST(i)->value = d;
     RA_INST(i)->depth = depth;
@@ -294,6 +296,7 @@ void SetBooleanAtomValue(struct Instance *i, int truth, unsigned int depth){
   AssertMemory(i);
   switch(i->t) {
   case BOOLEAN_INST:
+	CONSOLE_DEBUG("SETTING BOOLEAN INSTANCE %p TO VALUE %d, DEPTH %u (WAS %d)",i,truth?1:0,depth,B_INST(i)->value);
     B_INST(i)->value = truth ? 1 : 0;
     B_INST(i)->assigned++;
     B_INST(i)->depth = depth;

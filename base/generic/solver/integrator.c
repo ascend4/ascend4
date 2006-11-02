@@ -513,13 +513,18 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	for(j=0, i=1; i<=gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		if(!info->isstate)continue;
+		varname = var_make_name(sys->system,info->i);
 		if(info->derivative == NULL){
+			CONSOLE_DEBUG("Pure algebraic: %s",varname);
 			sys->y[j] = info->i; /* a pure algebraic variable */
 			sys->ydot[j] = NULL;
 		}else{
+			CONSOLE_DEBUG("Differential variable: %s",varname);
 			sys->y[j] = info->i; /* a variable whose derivative is present in the model */
 			sys->ydot[j] = info->derivative;
 		}
+		ASC_FREE(varname);
+		++j;
 	}
 
 	/*
@@ -537,31 +542,26 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	sys->y_id = ASC_NEW_ARRAY(long, nvarlist);
 	for(i=0; i< nvarlist; ++i){
 		sys->y_id[i] = -2;
-		varname = var_make_name(sys->system,varlist[i]);			
-		CONSOLE_DEBUG(ASC_PROG_ERR,"Variable %d: '%s'",i,varname);
-		ASC_FREE(varname);
 	}
 
-	CONSOLE_DEBUG("WORKING THROUGH %d DYNVARS",gl_length(sys->dynvars));
+	CONSOLE_DEBUG("WORKING THROUGH %ld DYNVARS",gl_length(sys->dynvars));
 
 	for(i=1; i <= gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
-		CONSOLE_DEBUG("i = %d, info = %p", i, info);
 		sys->y_id[info->varindx] = i;
-		if(info->varindx){
-			varname = var_make_name(sys->system,info->varindx);			
-			CONSOLE_DEBUG(ASC_PROG_ERR,"Variable dynvars[%d]: '%s'",i,varname);
-			ASC_FREE(varname);
+		varname = var_make_name(sys->system,info->i);			
+		if(info->varindx > 0){
+			CONSOLE_DEBUG("Variable dynvars[%d] = y_id[%d] = '%s'",i,info->varindx,varname);
 		}else{
-			CONSOLE_DEBUG(ASC_PROG_ERR,"Variable dynvars[%d] not found in varlist",i);
+			CONSOLE_DEBUG("VARIABLE dynvars[%d] = y_id[%d] = '%s' NOT FOUND IN VARLIST",i,info->varindx,varname);
 		}
+		ASC_FREE(varname);
 	}
 	for(i=0; i< nvarlist; ++i){
 		if(sys->y_id[i] < 0){
-			varname = var_make_name(sys->system,varlist[i]);			
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unconnected solver_var '%s'",i,varname);
+			varname = var_make_name(sys->system,varlist[i]);
+			CONSOLE_DEBUG("UNCONNECTED SOLVER VAR varlist[%d] = '%s' (probably fixed?)",i,varname);
 			ASC_FREE(varname);
-			return 0;
 		}
 	}
 

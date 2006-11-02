@@ -12,18 +12,18 @@ MODEL testlog10;
 METHODS
 METHOD specify;
 	FIX x;
-	FREE y,z;
 END specify;
 METHOD values;
 	x := 10;
 END values;
-METHOD default_self;
+METHOD on_load;
 	RUN reset;
 	RUN values;
-END default_self;
+END on_load;
 METHOD self_test;
 	ASSERT abs(y - 1) < 1e-20;
 	ASSERT abs(z - 2.302585093) < 1e-8;
+	ASSERT abs(x - 10) <1e-20;
 END self_test;
 
 END testlog10;
