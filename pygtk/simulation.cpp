@@ -290,11 +290,12 @@ Simulation::checkInstance(){
 */
 enum StructuralStatus
 Simulation::checkDoF() const{
-	cerr << "CHECKING DOF..." << endl;
     int dof, status;
-    if(!sys){
-            throw runtime_error("System not yet built");
+
+    if(!is_built){
+		throw runtime_error("System not yet built");
     }
+	CONSOLE_DEBUG("Calling slvDOF_status...");
     slvDOF_status(sys, &status, &dof);
     switch(status){
         case ASCXX_DOF_UNDERSPECIFIED:
@@ -334,7 +335,7 @@ Simulation::getFreeableVariables(){
 	}else{
 		if(fixedarrayptr ==NULL){
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"STRUCTURALLY INCONSISTENT");
-			throw runtime_error("Invalid constistency analysis result returned!");
+			throw runtime_error("Invalid consistency analysis result returned!");
 		}
 
 		struct var_variable **vp = slv_get_master_var_list(sys);
@@ -352,7 +353,7 @@ Simulation::checkStructuralSingularity(){
 	int *ril;
 	int *fil;
 
-	cerr << "RETREIVING slfDOF_structsing INFO" << endl;
+	cerr << "RETRIEVING slfDOF_structsing INFO" << endl;
 
 	int res = slvDOF_structsing(sys, mtx_FIRST, &vil, &ril, &fil);
 	struct var_variable **varlist = slv_get_solvers_var_list(sys);
@@ -427,6 +428,7 @@ Simulation::setSolver(Solver &solver){
 
 	// Update the solver object because sometimes an alternative solver can be returned, apparently.
 
+	CONSOLE_DEBUG("Calling slv_select_solver...");
 	int selected = slv_select_solver(sys, solver.getIndex());
 	//cerr << "Simulation::setSolver: slv_select_solver returned " << selected << endl;
 
@@ -468,8 +470,8 @@ Simulation::build(){
 		CONSOLE_DEBUG("Note: rebuilding system (was already built)");
 	}
 
-	Instance *i1 = getModel().getInternalType();
-	sys = system_build(&*i1);
+	CONSOLE_DEBUG("Calling system_build...");
+	sys = system_build(simroot.getInternalType());
 	if(!sys){
 		throw runtime_error("Unable to build system");
 	}
@@ -500,6 +502,7 @@ Simulation::getSolverParameters() const{
 void
 Simulation::setSolverParameters(SolverParameters &P){
 	if(!sys)throw runtime_error("Can't set solver parameters: simulation has not been built yet.");
+	CONSOLE_DEBUG("Calling slv_set_parameters");
 	slv_set_parameters(sys, &(P.getInternalType()));
 }
 
@@ -523,6 +526,7 @@ Simulation::getFixableVariables(){
 	int32 *vip; /** TODO ensure 32 bit integers are used */
 
 	// Get IDs of elegible variables in array at vip...
+	CONSOLE_DEBUG("Calling slvDOF_eligible");
 	if(!slvDOF_eligible(sys,&vip)){
 		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"No fixable variables found.");
 	}else{
@@ -562,6 +566,7 @@ Simulation::getVariablesNearBounds(const double &epsilon){
 	}
 
 	int *vip;
+	CONSOLE_DEBUG("Calling slv_near_bounds...");
 	if(slv_near_bounds(sys,epsilon,&vip)){
 		struct var_variable **vp = slv_get_solvers_var_list(sys);
 		struct var_variable *var;
@@ -627,6 +632,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 
 
 	//cerr << "PRESOLVING SYSTEM...";
+	CONSOLE_DEBUG("Calling slv_presolve...");
 	slv_presolve(sys);
 	//cerr << "DONE" << endl;
 
@@ -647,6 +653,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	for(unsigned iter = 1; iter <= niter && !stop; ++iter){
 
 		if(status.isReadyToSolve()){
+			CONSOLE_DEBUG("Calling slv_iterate...");
 			slv_iterate(sys);
 		}
 

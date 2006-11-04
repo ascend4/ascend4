@@ -581,6 +581,7 @@ Instanc::write(){
 void
 Instanc::setFixed(const bool &val){
 	if(isFixed()==val)return;
+	CONSOLE_DEBUG("Fixing solver_var at %p",i);
 	getChild("fixed").setBoolValue(val);
 }
 

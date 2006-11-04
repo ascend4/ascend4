@@ -727,6 +727,8 @@ class Browser:
 		self.start_waiting("Checking system...")
 
 		try:
+			self.sim.build()
+
 			self.sim.checkInstance()
 			self.reporter.reportWarning("System instance check run, check above for error (if any).")
 			# the above gives output but doesn't throw errors or return a status.
@@ -735,8 +737,10 @@ class Browser:
 			status = self.sim.checkDoF()
 			if status==ascpy.ASCXX_DOF_UNDERSPECIFIED:
 				self.on_show_fixable_variables_activate(None)
+				return
 			elif status==ascpy.ASCXX_DOF_OVERSPECIFIED:
 				self.on_show_freeable_variables_activate(None)
+				return
 			elif status==ascpy.ASCXX_DOF_STRUCT_SINGULAR:
 				if not self.sim.checkStructuralSingularity():
 					sing = self.sim.getSingularityInfo()
@@ -759,6 +763,7 @@ class Browser:
 
 					_dialog = InfoDialog(self,self.window,text,title)
 					_dialog.run()
+				return
 
 			self.reporter.reportNote("System DoF check OK")
 
