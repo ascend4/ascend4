@@ -669,7 +669,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	for(unsigned iter = 1; iter <= niter && !stop; ++iter){
 
 		if(status.isReadyToSolve()){
-			CONSOLE_DEBUG("Calling slv_iterate...");
+			/* CONSOLE_DEBUG("Calling slv_iterate..."); */
 			slv_iterate(sys);
 		}
 

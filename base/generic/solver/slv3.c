@@ -862,7 +862,7 @@ static void calc_relnoms(slv3_system_t sys){
   struct rel_relation *rel;
   real64 *var_list;
 
-  CONSOLE_DEBUG("Begin 'calc_relnoms'");
+  /* CONSOLE_DEBUG("Begin 'calc_relnoms'"); */
 
   var_list = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
   col = 0;
@@ -893,7 +893,7 @@ static void calc_relnoms(slv3_system_t sys){
   }
   destroy_array(var_list);
 
-  CONSOLE_DEBUG("End 'calc_relnoms'");
+  /* CONSOLE_DEBUG("End 'calc_relnoms'"); */
 }
 
 
@@ -3724,7 +3724,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   int               minor = 0,ds_status=0, rank_defect=0;
   double            time0;
 
-  CONSOLE_DEBUG("Begin 'slv3_iterate'");
+  /* CONSOLE_DEBUG("Begin 'slv3_iterate'"); */
   sys = SLV3(asys);
   mif = MIF(sys);
   lif = LIF(sys);
@@ -3782,7 +3782,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     }
 
     /* Attempt direct solve */
-    CONSOLE_DEBUG("Attempting direct solve...");
+    /* CONSOLE_DEBUG("Attempting direct solve..."); */
     time0=tm_cpu_time();
     ds_status=slv_direct_solve(SERVER,rel,var,mif,FEAS_TOL,
                                IGNORE_BOUNDS,0);
@@ -3830,7 +3830,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     error_reporter_end_flush();
   }
 
-  CONSOLE_DEBUG("Scale system...");
+  /* CONSOLE_DEBUG("Scale system..."); */
 
   scale_system(sys);
 
@@ -3883,7 +3883,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     return;
   }
 
-  CONSOLE_DEBUG("calc_newton...");
+  /* CONSOLE_DEBUG("calc_newton..."); */
 
   calc_newton(sys);
 
@@ -4091,7 +4091,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
       FPRINTF(stderr,"***********************************\n");
 #endif
 
-  CONSOLE_DEBUG("Iteration ends...");
+  /* CONSOLE_DEBUG("Iteration ends..."); */
 
   iteration_ends(sys);
   if( !OPTIMIZING(sys) && block_feasible(sys) )  {

@@ -1515,6 +1515,8 @@ static SlvClientToken slv8_create(slv_system_t server, int32*statusindex){
 
   sys->p.whose = (*statusindex);
 
+  sys->con.work=NULL;
+
   sys->s.ok = TRUE;
   sys->s.calc_ok = TRUE;
   sys->s.costsize = 0;
@@ -2292,6 +2294,8 @@ static int COI_CALL slv8_conopt_status(
 ){
   slv8_system_t sys;
   sys = (slv8_system_t)usrmem;
+
+  /* for later access from elsewhere */
   sys->con.modsta = *modsta;
   sys->con.solsta = *solsta;
   sys->con.iter = *iter;
@@ -2498,69 +2502,6 @@ static int COI_CALL slv8_conopt_option(
   return 0;
 }
 
-#if 0 /* this stuff has been superceded in the new API */
-/*
- * COIPSZ communicates the model size and structure to CONOPT
- * COIPSZ(nintg, ipsz, nreal, rpsz, usrmem)
- *
- * ningt  - number of positions in ipsz
- * ipsz   - array describing problem size and options
- * nreal  - number of positions in rpsz
- * rpsz   - array of reals describing problem size and options
- * usrmem - user memory
- */
-static void slv8_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal,
-	                real64 *rpsz, real64 *usrmem)
-{
-  slv8_system_t sys;
-
-  /*
-   * stop gcc whining about unused parameter
-   */
-  (void)nintg;  (void)nreal;
-
-  sys = (slv8_system_t)usrmem;
-
-  ipsz[F2C(1)] = sys->con.n;
-  ipsz[F2C(2)] = sys->con.m;
-  ipsz[F2C(3)] = sys->con.nz;
-  ipsz[F2C(4)] = 0;             /* FIX THESE AT A LATER DATE!!!!  */
-  ipsz[F2C(5)] = sys->con.nz;   /* ASSUMING ALL NONLINEAR FOR NOW */
-  if (sys->obj != NULL) {
-    ipsz[F2C(6)] = relman_obj_direction(sys->obj);
-    ipsz[F2C(7)] = sys->con.m;    /* objective will be last row     */
-  } else {
-    ipsz[F2C(7)] = 0;
-  }
-  ipsz[F2C(8)] = ITER_LIMIT;
-  ipsz[F2C(9)] = DOMLIM;
-  ipsz[F2C(10)] = 1;             /* OUTPUT TO SUBROUTINE */
-  ipsz[F2C(11)] = 0;             /* NO OUTPUT TO SCREEN */
-  ipsz[F2C(12)] = 1;             /* NON DEFAULT VALUE */
-  ipsz[F2C(13)] = 1;             /* NON DEFAULT VALUE */
-  ipsz[F2C(14)] = 1;		 /* NON DEFAULT VALUE */
-  ipsz[F2C(15)] = 1;             /* NON DEFAULT VALUE */
-  ipsz[F2C(16)] = 1;             /* NON DEFAULT VALUE */
-  ipsz[F2C(17)] = 0;
-  ipsz[F2C(18)] = 0;
-  ipsz[F2C(19)] = 0;
-  ipsz[F2C(20)] = 0;
-  ipsz[F2C(21)] = 0;
-  ipsz[F2C(22)] = 1;             /* NON DEFAULT VALUE */
-  /*skipping remainder of ipsz which are fortran io parameters */
-
-  rpsz[F2C(1)] = 1e20;
-  rpsz[F2C(2)] = -1e20;
-  rpsz[F2C(3)] = 1.2e20;
-/*rpsz[F2C(4)] = NA*/
-/*rpsz[F2C(5)] = eps*/
-  rpsz[F2C(6)] = 0;
-  rpsz[F2C(7)] = TIME_LIMIT;
-  rpsz[F2C(8)] = 1;
-
-}
-#endif
-
 int COI_CALL slv8_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 		, double* USRMEM, char* MSG, int LENMSG
 ){
@@ -2602,165 +2543,10 @@ int COI_CALL slv8_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 	return 0;
 }
 
-#if 0 /* the calling convention has changed for these ones */
-/* conopt communication subroutines */
-void slv8_coiec COIEC_ARGS {
-  char *name=NULL;
-  struct var_variable **vp;
-  slv8_system_t sys;
-  sys = (slv8_system_t)usrmem;
-  vp=slv_get_solvers_var_list(SERVER);
-  /* assumes cur = org */
-  vp = vp + (*colno + sys->J.reg.col.low);
-  name= var_make_name(SERVER,*vp);
-  FPRINTF(stderr,"ERROR in variable:\n     %s\n",name);
-  FPRINTF(stdout,"     %.*s\n",*msglen,&msg[0]);
-  if (name) {
-    ascfree(name);
-  }
-}
-void slv8_coier COIER_ARGS {
-  char *name=NULL;
-  struct rel_relation **rp;
-  slv8_system_t sys;
-  sys = (slv8_system_t)usrmem;
-  rp=slv_get_solvers_rel_list(SERVER);
-  rp = rp + (*rowno + sys->J.reg.row.low);;
-  name= rel_make_name(SERVER,*rp);
-  FPRINTF(stderr,"ERROR in relation:\n     %s\n",name);
-  FPRINTF(stdout,"     %.*s\n",*msglen,&msg[0]);
-  if (name) {
-    ascfree(name);
-  }
-}
-void slv8_coienz COIENZ_ARGS {
-  char *relname=NULL;
-  char *varname=NULL;
-  struct rel_relation **rp;
-  struct var_variable **vp;
-
-  slv8_system_t sys;
-  sys = (slv8_system_t)usrmem;
-
-  rp=slv_get_solvers_rel_list(SERVER);
-  vp=slv_get_solvers_var_list(SERVER);
-  /* assumes cur = org */
-  rp = rp + (*rowno + sys->J.reg.row.low);;
-  vp = vp + (*colno + sys->J.reg.col.low);
-  relname= rel_make_name(SERVER,*rp);
-  varname= var_make_name(SERVER,*vp);
-  FPRINTF(stderr,"ERROR in jacobian element:\n");
-  FPRINTF(stderr,"     relation: %s\n     variable: %s\n",
-    relname, varname);
-  FPRINTF(stdout,"%.*s\n",*msglen,&msg[0]);
-  if (relname) {
-    ascfree(relname);
-  }
-  if (varname) {
-    ascfree(varname);
-  }
-}
-#endif
-
-#if 0 /* replace these in conopt.c */
-int COI_CALL slv8_conopt_message(
-		int *smsg, int *dmsg, int* nmsg, int* llen
-		, double *usrmem, char *msgv, int msglen
-){
-  int32 stop, i, len;
-  char *line[15];
-  /* should put option to make stop = *smsg or *nmsg
-   * and option to route output
-   */
-  stop = *nmsg;
-  for (i = 0; i < stop; i++) {
-    len = llen[i];
-    line[i] = &msgv[i*msglen];
-    FPRINTF(stdout,"%.*s\n",len,line[i]);
-  }
-}
-
-void slv8_conopt_progress(
-		int *len_intrep, int* intrep
-		, int *len_rl, double* rl
-		, double* x, double *usrmem
-){
-  slv8_system_t sys;
-  sys = (slv8_system_t)usrmem;
-
-  if (sys->con.progress_count == 0) {
-    fprintf(stderr,
-      "  iter   phase  numinf  numnop   nsuper  ");
-    fprintf(stderr,
-      "                    suminf                     objval          rgmax\n");
-  }
-  fprintf(stderr,"%6i  ",intrep[0]);
-  fprintf(stderr,"  %6i  ",intrep[1]);
-  fprintf(stderr,"    %6i  ",intrep[2]);
-  fprintf(stderr,"     %6i  ",intrep[3]);
-  fprintf(stderr,"     %6i    ",intrep[4]);
-  fprintf(stderr,"  %16e  ",rl[0]);
-  fprintf(stderr,"  %16e  ",rl[1]);
-  fprintf(stderr,"  %7.2e  ",rl[2]);
-  fprintf(stderr,"\n");
-
-  sys->con.progress_count++;
-  if (sys->con.progress_count == 10) { /* 10 should be iface parm */
-    sys->con.progress_count = 0;
-  }
-}
-#endif
-
-#if 0 /* seems not to be available any more */
-void slv8_coiorc COIORC_ARGS {
-  if (*resid != 0.0) {
-    char *relname=NULL;
-    char *varname=NULL;
-    struct rel_relation **rp;
-    struct var_variable **vp;
-    int32 row, col;
-
-    slv8_system_t sys;
-    sys = (slv8_system_t)usrmem;
-
-    rp=slv_get_solvers_rel_list(SERVER);
-    vp=slv_get_solvers_var_list(SERVER);
-    /* assumes cur = org */
-    row = F2C(*rowno + sys->J.reg.row.low);
-    rp = rp + row;
-    col = F2C(*colno + sys->J.reg.col.low);
-    vp = vp + col;
-    relname= rel_make_name(SERVER,*rp);
-    varname= var_make_name(SERVER,*vp);
-
-    FPRINTF(stderr,"ERROR: Infeasible specification discovered at:\n");
-    FPRINTF(stderr,"     relation: %s\n          residual: %g\n",
-      relname, (*resid)/sys->weights.vec[row]);
-    FPRINTF(stderr,"     variable: %s\n          value: %g\n",
-      varname, (*value)*sys->nominals.vec[col]);
-
-    if (relname) {
-      ascfree(relname);
-    }
-    if (varname) {
-      ascfree(varname);
-    }
-  }
-}
-#endif
-
-#if 0 /* not present in API any more */
-void slv8_coiscr COISCR_ARGS {
-  FPRINTF(stdout,"%.*s\n",*len,&msg[0]);
-}
-#endif
-
 /**
-	slv_conopt iterate calls conopt_start, which calls coicsm
-	to starts CONOPT.
-
-	The use of conopt_start is a H A C K to avoid
-	unresolved external during the linking of the CONOPT library.
+	Note that the COI_Solve declaration is a clever wrapping of CONOPT to allow
+	dlopening of the CONOPT DLL/SO, rather than dynamic linking, since CONOPT
+	will not always be available.
 */
 static void slv_conopt_iterate(slv8_system_t sys)
 {
@@ -2789,7 +2575,6 @@ static void slv_conopt_iterate(slv8_system_t sys)
 	sys->con.optimized = 0;
   }
 }
-
 
 /**
 	Function created to provide the interface with the correct values
@@ -3126,9 +2911,12 @@ static int32 slv8_destroy(slv_system_t server, SlvClientToken asys){
   destroy_matrices(sys);
   slv_destroy_parms(&(sys->p));
   sys->integrity = DESTROYED;
-  if (sys->s.cost) ascfree(sys->s.cost);
-  if (sys->con.work != NULL) {
-    ascfree(sys->con.work);
+  if(sys->s.cost){
+	ASC_FREE(sys->s.cost);
+  }
+
+  if(sys->con.work != NULL){
+    ASC_FREE(sys->con.work);
     sys->con.work = NULL;
   }
   ascfree( (POINTER)asys );
