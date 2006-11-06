@@ -21,58 +21,51 @@
 *//** @file
 	System routines for the SLV solver.
 
-	This is the ascend version of the system module.
+	This is the ASCEND version of the system module.
 	This provides a means of extracting a solver system
 	from an ASCEND instance tree.
+
 	The result is supposed to appear totally instance
 	independent, though it is not really, so that
 	only the var and rel modules need to know about
 	the ascend compiler.
+
 	With any luck the expr, exprman, and relman files leave.
-
-	04/94 - original version by Joe Zaher
-	06/96 - total reimplementation by Ben Allan
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "slv_types.h"
 *//*
 	by Karl Michael Westerberg and Joseph Zaher
 	Created: 2/6/90
-	Version: $Revision: 1.8 $
-	Version control file: $RCSfile: system.h,v $
-	Date last modified: $Date: 1997/07/18 12:17:26 $
-	Last modified by: $Author: mthomas $
+	Last in CVS: $Revision: 1.8 $ $Date: 1997/07/18 12:17:26 $ $Author: mthomas $
+
+	04/94 - original version by Joe Zaher
+	06/96 - total reimplementation by Ben Allan
 */
 
 #ifndef ASC_SYSTEM_H
 #define ASC_SYSTEM_H
 
 #include <utilities/ascConfig.h>
+#include "slv_types.h"
 
 ASC_DLLSPEC(slv_system_t) system_build(SlvBackendToken inst);
 /**<
- ***  In ascend, backendtoken is a struct Instance *.
- ***  Visits the instance tree and collects all variables,
- ***  relations, and objective functions into pointer lists.
- **/
+	In ascend, backendtoken is a struct Instance *.
+	Visits the instance tree and collects all variables,
+	relations, and objective functions into pointer lists.
+
+	This function needs to be called before slv_select_solver, but does not
+	need to be re-called if the a new solver is selected. -- JP
+*/
 
 ASC_DLLSPEC(void ) system_destroy(slv_system_t sys);
 /**<
- ***  <!--  system_destroy(sys)                                        -->
- ***  <!--  slv_system_t sys;                                          -->
- ***
- ***  Destroys the latest model formulation.
- **/
+	Destroys the latest model formulation.
+*/
 
 ASC_DLLSPEC(void ) system_free_reused_mem(void);
 /**<
- ***  <!--  system_free_reused_mem()                                   -->
- ***
- ***  Deallocates any memory that solvers may be squirrelling away for
- ***  internal reuse. Calling this while any slv_system_t exists
- ***  is likely to be fatal: handle with care.
- **/
+	Deallocates any memory that solvers may be squirrelling away for
+	internal reuse. Calling this while any slv_system_t exists
+	is likely to be fatal: handle with care.
+*/
 
 #endif  /* ASC_SYSTEM_H */
-

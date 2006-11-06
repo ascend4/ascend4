@@ -639,19 +639,6 @@ class Browser:
 		print "...DONE 'getSimulation'"		
 		self.stop_waiting()
 
-		self.start_waiting("Building simulation...")
-		print "BUILDING SIMULATION"
-
-		try:
-			self.sim.build()
-		except RuntimeError, e:
-			self.stop_waiting()
-			self.reporter.reportError(str(e))
-			return
-
-		print "DONE BUILDING"
-		self.stop_waiting()
-
 		# get method names and load them into the GUI
 		self.methodstore.clear()
 		_methods = self.sim.getType().getMethods()
@@ -662,9 +649,6 @@ class Browser:
 				self.methodsel.set_active_iter(_i)
 
 		self.modelview.setSimulation(self.sim)
-
-		# set the active solver on the simulation
-		self.sim.setSolver(self.solver)
 
 		# run the 'on_load' method
 		self.start_waiting("Running default method...")
@@ -692,6 +676,12 @@ class Browser:
 	def do_solve(self):
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
+			return
+
+		try:
+			self.sim.build()
+		except RuntimeError,e:
+			self.reporter.reportError("Couldn't build system: %s",str(e));
 			return
 
 		self.start_waiting("Solving with %s..." % self.solver.getName())
@@ -727,8 +717,6 @@ class Browser:
 		self.start_waiting("Checking system...")
 
 		try:
-			self.sim.build()
-
 			self.sim.checkInstance()
 			self.reporter.reportWarning("System instance check run, check above for error (if any).")
 			# the above gives output but doesn't throw errors or return a status.
@@ -1032,8 +1020,8 @@ class Browser:
 
 	def preferences_click(self,*args):
 		if not self.sim:
-			self.reporter.reportError("No simulation created yet!");
-		
+			self.reporter.reportError("No simulation created yet!");		
+		self.sim.setSolver(self.solver)
 		_paramswin = SolverParametersWindow(self)
 		_paramswin.show()
 
