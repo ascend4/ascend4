@@ -27,6 +27,7 @@
 #include <math.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
 #include <utilities/set.h>
 #include <general/tm_time.h>
 #include <general/mathmacros.h>
@@ -465,7 +466,7 @@ static int32 num_jacobian_nonzeros(slv8_system_t sys, int32 *max){
 */
 static boolean calc_objective( slv8_system_t sys){
   calc_ok = TRUE;
-  assert(sys->obj!=NULL);
+  asc_assert(sys->obj!=NULL);
   sys->objective = (sys->obj ? relman_eval(sys->obj,&calc_ok,SAFE_CALC) : 0.0);
   return calc_ok;
 }
@@ -484,7 +485,7 @@ static boolean calc_objectives( slv8_system_t sys){
   calc_ok = TRUE;
   for (i = 0; i < len; i++) {
     if (rel_apply_filter(rlist[i],&rfilter)) {
-	  assert(rlist[i]!=NULL);
+	  asc_assert(rlist[i]!=NULL);
       relman_eval(rlist[i],&calc_ok,SAFE_CALC);
 #if DEBUG
       if (calc_ok == FALSE) {
@@ -524,7 +525,7 @@ static boolean calc_residuals( slv8_system_t sys){
       );
     }
 #endif /* DEBUG */
-    assert(rel!=NULL);
+    asc_assert(rel!=NULL);
     sys->residuals.vec[row] = relman_eval(rel,&calc_ok,SAFE_CALC);
 
     relman_calc_satisfied(rel,sys->p.tolerance.feasible);
@@ -2210,7 +2211,7 @@ static int COI_CALL slv8_conopt_fdeval(
       }
     }else{
 	  rel = sys->rlist[row];
-	  assert(rel!=NULL);
+	  asc_assert(rel!=NULL);
 	  *g = relman_eval(rel,&calc_ok,SAFE_CALC)
 	  * sys->weights.vec[row];
 	  if (!calc_ok) {
@@ -2231,7 +2232,7 @@ static int COI_CALL slv8_conopt_fdeval(
     row = *rowno + offset;
     if ((*rowno == sys->con.m - 1) && (sys->obj != NULL)){
       rel = sys->obj;
-	  assert(rel!=NULL);
+	  asc_assert(rel!=NULL);
       status = relman_diff2(rel,&vfilter,derivatives,variables,
 		   &(len),SAFE_CALC);
       for (c = 0; c < len; c++) {
@@ -2245,7 +2246,7 @@ static int COI_CALL slv8_conopt_fdeval(
     }else{
       CONOPT_CONSOLE_DEBUG("NOT LAST ROW");
       rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
-	  assert(rel!=NULL);
+	  asc_assert(rel!=NULL);
       status = relman_diff2(rel,&vfilter,derivatives,variables,
 		   &(len),SAFE_CALC);
       for (c = 0; c < len; c++) {
@@ -2574,13 +2575,13 @@ int COI_CALL slv8_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 	if(*COLNO!=-1){
 		vp=slv_get_solvers_var_list(SERVER);
 		vp = vp + (*COLNO + sys->J.reg.col.low);
-		assert(*vp!=NULL);
+		asc_assert(*vp!=NULL);
 		varname= var_make_name(SERVER,*vp);
 	}
 	if(*ROWNO!=-1){
 		rp=slv_get_solvers_rel_list(SERVER);
 		rp = rp + (*ROWNO + sys->J.reg.row.low);
-		assert(*rp!=NULL);
+		asc_assert(*rp!=NULL);
 		relname = rel_make_name(SERVER,*rp);
 	}
 
@@ -2844,6 +2845,11 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
   }
 
   sys->obj = slv_get_obj_relation(server); /*may have changed objective*/
+
+  if(!sys->obj){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"No objective function was specified");
+	return;
+  }
 
   if(sys->presolved > 0) { /* system has been presolved before */
     if(!slv8_dof_changed(sys) /*no changes in fixed or included flags*/
