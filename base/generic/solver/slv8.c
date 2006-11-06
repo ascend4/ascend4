@@ -88,7 +88,7 @@ int slv8_register(SlvFunctionsT *f){
 #define SLV8(s) ((slv8_system_t)(s))
 #define MI8F(s) slv_get_output_file( SLV8(s)->p.output.more_important )
 #define SERVER (sys->slv)
-#define slv8_PA_SIZE 33
+#define slv8_PA_SIZE 54
 #define SAFE_CALC_PTR (sys->parm_array[0])
 #define SAFE_CALC     ((*(int *)SAFE_CALC_PTR))
 #define SCALEOPT_PTR (sys->parm_array[1])
@@ -533,6 +533,9 @@ static boolean calc_residuals( slv8_system_t sys){
   sys->s.block.funcs++;
   square_norm( &(sys->residuals) );
   sys->s.block.residual = calc_sqrt_D0(sys->residuals.norm2);
+  if(!calc_ok){
+    CONOPT_CONSOLE_DEBUG("ERROR IN EVALUATION");
+  }
   return(calc_ok);
 }
 
@@ -1202,8 +1205,7 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
      * an instance of slv8_system_structure has this pointer
      * already set in slv8_create
      */
-    new_parms = (struct slv_parameter *)
-      ascmalloc((slv8_PA_SIZE)*sizeof(struct slv_parameter));
+    new_parms = ASC_NEW_ARRAY(struct slv_parameter, slv8_PA_SIZE);
     if (new_parms == NULL) {
       return -1;
     }
@@ -1224,90 +1226,124 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
   SLV_RPARM_MACRO(RTMAXJ_PTR,parameters);
 
   slv_define_parm(parameters, real_parm,
-	       "hessian_ub","RTMXJ2","upper bound on 2nd derivatives",
+	       "hessian_ub","RTMXJ2","Upper bound on 2nd derivatives",
 	       U_p_real(val,1e4),U_p_real(lo,0),U_p_real(hi,MAX_REAL),2);
 
   slv_define_parm(parameters, real_parm,
 	       "maxfeastol", "RTNWMA",
-	       "max residual considered feasible (may be scaled)",
+	       "Max. residual considered feasible (may be scaled)",
 	       U_p_real(val, 1e-3),U_p_real(lo, 1e-13),U_p_real(hi,10e10),2);
 
   slv_define_parm(parameters, real_parm,
 	       "minfeastol", "RTNWMI",
-	       "residuals below this always considered feasible",
+	       "Min. residual considered feasible",
 	       U_p_real(val, 4e-10),U_p_real(lo, 1e-20),U_p_real(hi,10e10),2);
 
   slv_define_parm(parameters, real_parm,
-	       "oneDsearch","RTONED","accuracy of one dimensional search",
+	       "oneDsearch","RTONED","Accuracy of one dimensional search",
 	       U_p_real(val,0.2),U_p_real(lo,0.1),U_p_real(hi,0.7),2);
 
   slv_define_parm(parameters, real_parm,
-	       "stepmult","RVSTLM","steplength multiplier",
+	       "stepmult","RVSTLM","Step-length multiplier",
 	       U_p_real(val,4),U_p_real(lo,0),U_p_real(hi,MAX_REAL),2);
 
   slv_define_parm(parameters, real_parm,
-	       "objtol","RTOBJR","relative objective tolerance",
+	       "objtol","RTOBJR","Relative objective tolerance",
 	       U_p_real(val,3e-13),U_p_real(lo,0),U_p_real(hi,1),2);
 
   slv_define_parm(parameters, real_parm,
-	       "pivottol","RTPIVA","absolute pivot tolerance",
+	       "pivottol","RTPIVA","Absolute pivot tolerance",
 	       U_p_real(val,1e-7),U_p_real(lo,1e-15),U_p_real(hi,1),2);
 
   slv_define_parm(parameters, real_parm,
-	       "pivtolrel","RTPIVR","relative pivot tolerance",
+	       "pivtolrel","RTPIVR","Relative pivot tolerance",
 	       U_p_real(val,0.05),U_p_real(lo,0),U_p_real(hi,1),2);
 
   slv_define_parm(parameters, real_parm,
-	       "opttol","RTREDG","optimality tolerance",
+	       "opttol","RTREDG","Optimality tolerance",
 	       U_p_real(val,2e-5),U_p_real(lo,0),U_p_real(hi,MAX_REAL),2);
 
+  /* integer valued parameters */
+
   slv_define_parm(parameters, int_parm,
-	       "log_freq","LFILOG","Log Frequency",
+	       "log_freq","LFILOG","How often (in iterations) to write logging info",
 	       U_p_int(val,10),U_p_int(lo,1),U_p_int(hi,MAX_INT),1);
 
   slv_define_parm(parameters, int_parm,
-	       "iterationlimit", "LFITER", "maximum number of iterations",
+	       "log_freq","LFILOS","How often to write logging info during SLP and SQP",
+	       U_p_int(val,10),U_p_int(lo,1),U_p_int(hi,MAX_INT),1);
+
+  slv_define_parm(parameters, int_parm,
+	       "iterationlimit", "LFITER", "Maximum number of iterations",
 	       U_p_int(val, 1000),U_p_int(lo, 1),U_p_int(hi,MAX_INT),1);
   SLV_IPARM_MACRO(ITER_LIMIT_PTR,parameters);
 
   slv_define_parm(parameters, int_parm,
-	       "slowproglim","LFNICR","limit for slow progress",
-	       U_p_int(val,5),U_p_int(lo,1),U_p_int(hi,MAX_INT),1);
+	       "slowproglim","LFNICR","Limit for slow progress",
+	       U_p_int(val,12),U_p_int(lo,2),U_p_int(hi,MAX_INT),1);
 
   slv_define_parm(parameters, int_parm,
-	       "maxhessdim","LFNICR","maximum Hessian dimension",
-	       U_p_int(val,500),U_p_int(lo,1),U_p_int(hi,MAX_INT),1);
+	       "maxhessdim","LFNSUP","Maximum Hessian dimension",
+	       U_p_int(val,500),U_p_int(lo,5),U_p_int(hi,MAX_INT),1);
 
   slv_define_parm(parameters, int_parm,
-	       "supbasiclim","LFMXNS","limit on new superbasics",
+	       "supbasiclim","LFMXNS","Limit on new super-basics",
 	       U_p_int(val,5),U_p_int(lo,0),U_p_int(hi,MAX_INT),1);
 
   slv_define_parm(parameters, int_parm,
+	       "lfscal","LFSCAL","Minimum frequency for updating row/col scales (see LSSCAL)",
+	       U_p_int(val,20),U_p_int(lo,1),U_p_int(hi,MAX_INT),1);
+
+   slv_define_parm(parameters, int_parm,
+	       "lfstal","LFSTAL","Upper bound on the number of stalled iterations",
+	       U_p_int(val,100),U_p_int(lo,2),U_p_int(hi,MAX_INT),1);
+
+  slv_define_parm(parameters, int_parm,
+	       "lkdebg","LKDEBG","How often (in iterations) to write debugging info for derivatives",
+	       U_p_int(val,0),U_p_int(lo,-1),U_p_int(hi,MAX_INT),1);
+  
+  slv_define_parm(parameters, int_parm,
+	       "lkdeb2","LKDEB2","How often (in iterations) to write debugging info for second derivs",
+	       U_p_int(val,0),U_p_int(lo,-1),U_p_int(hi,MAX_INT),1);
+
+  slv_define_parm(parameters, int_parm,
+	       "lmdebg","LMDEBG","Func/derivative debugging: 0=default, 1=additional continuity tests",
+	       U_p_int(val,0),U_p_int(lo,0),U_p_int(hi,1),1);
+
+  slv_define_parm(parameters, int_parm,
+	       "lmmxsf","LMMXSF","Method used to calc max step during Phase 0: 0=default, 1=new",
+	       U_p_int(val,0),U_p_int(lo,0),U_p_int(hi,1),1);
+
+  slv_define_parm(parameters, int_parm,
+	       "lmmxst","LMMXST","'As for LMMXSF but for when tolerances are tightened'",
+	       U_p_int(val,0),U_p_int(lo,0),U_p_int(hi,1),1);
+
+  slv_define_parm(parameters, int_parm,
 	       "errlim","max # func errs",
-	       "limit on function evaluation errors",
+	       "Limit on number of function evaluation errors",
 	       U_p_int(val,500),U_p_int(lo,0),U_p_int(hi,MAX_INT),1);
   SLV_IPARM_MACRO(DOMLIM_PTR,parameters);
 
   slv_define_parm(parameters, char_parm,
-	       "scaleopt", "scaling option", "scaling option",
+	       "scaleopt", "scaling option", "Scaling option",
 	       U_p_string(val,scaling_names[1]),
 	       U_p_strings(lo,scaling_names),
 	       U_p_int(hi,sizeof(scaling_names)/sizeof(char *)),3);
   SLV_CPARM_MACRO(SCALEOPT_PTR,parameters);
 
   slv_define_parm(parameters, bool_parm,
-	       "lifds", "show singletons details", "show singletons details",
+	       "lifds", "show singletons details", "Show singletons details",
 	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 3);
   SLV_BPARM_MACRO(LIFDS_PTR,parameters);
 
   slv_define_parm(parameters, bool_parm,
-	       "safe_calc", "safe calculations", "safe calculations",
+	       "safe_calc", "safe calculations", "Safe calculations",
 	       U_p_bool(val, 1),U_p_bool(lo,0),U_p_bool(hi,1), 3);
   SLV_BPARM_MACRO(SAFE_CALC_PTR,parameters);
 
   slv_define_parm(parameters, real_parm,
 	       "toosmall", "default for zero nominal",
-               "default for zero nominal",
+               "Default for zero nominal",
 	       U_p_real(val, 1e-8),U_p_real(lo, 1e-12),U_p_real(hi,1.0), 3);
   SLV_RPARM_MACRO(TOO_SMALL_PTR,parameters);
 
@@ -1337,7 +1373,7 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
 
   slv_define_parm(parameters, real_parm,
 	       "cnhigh", "largest allowable column norm",
-               "largest allowable column norm",
+               "Largest allowable column norm",
 	       U_p_real(val, 100.0),U_p_real(lo,0),U_p_real(hi,10e10), 3);
   SLV_RPARM_MACRO(CNHIGH_PTR,parameters);
 
@@ -1360,7 +1396,7 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
   SLV_RPARM_MACRO(ITSCALETOL_PTR,parameters);
 
   slv_define_parm(parameters, char_parm,
-	       "reorder", "reorder method", "reorder method",
+	       "reorder", "reorder method", "Re-order method",
 	       U_p_string(val,reorder_names[0]),
 	       U_p_strings(lo,reorder_names),
 	       U_p_int(hi,sizeof(reorder_names)/sizeof(char *)),3);
@@ -1373,15 +1409,82 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
   SLV_IPARM_MACRO(CUTOFF_PTR,parameters);
 
   slv_define_parm(parameters, bool_parm,
-	       "relnomscale", "calc rel nominals", "calc rel nominals",
+	       "relnomscale", "calc rel nominals", "Whether to calculate relation nominals?",
 	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 3);
   SLV_BPARM_MACRO(RELNOMSCALE_PTR,parameters);
 
   slv_define_parm(parameters, int_parm,
 	       "timelimit", "time limit (CPU sec/block)",
-               "time limit (CPU sec/block)",
+               "Time limit (CPU sec/block)",
 	       U_p_int(val,1500),U_p_int(lo, 1),U_p_int(hi,20000),1);
   SLV_IPARM_MACRO(TIME_LIMIT_PTR,parameters);
+
+
+
+  // CONOPT boolean options
+
+  slv_define_parm(parameters, bool_parm,
+      "ls2ptj", "LS2PTJ", "Allow computation of 2nd derivatives by peturbation",
+	  U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lsanrm", "LSANRM", "Use 'steepest edge' procedure",
+	  U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lscrsh", "LSCRSH", "Use Crash procedures to create initial basis",
+	  U_p_bool(val, 1),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lseslp", "LSESLP", "Enable SLP mode",
+	  U_p_bool(val, 1),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lsismp", "LSISMP", "Ignore small pivots",
+	  U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lslack", "LSLACK", "Use the set of all slacks as the initial basis",
+	  U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lspret", "LSPRET", "Identify and solve pre-triangular equations",
+	  U_p_bool(val, 1),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lspost", "LSPOST", "Identify post-triangular equations (that can combine with the Objective)",
+	  U_p_bool(val, 1),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lssqrs", "LSSQRS", "Modeller declares that this is a square system (c.f. COIDEF_Square)",
+	  U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lsscal", "LSSCAL", "Use dynamic scaling algorithm (NB, manual scaling is preferred)",
+	  U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lstcrs", "LSTCRS", "Try to crash triangular bases using Gould & Reid technique",
+	  U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  slv_define_parm(parameters, bool_parm,
+      "lstria", "LSTRIA", "Modeller declares that the equations form a triangular or recursive system",
+	  U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 4);
+
+  // Quick mode
+
+  slv_define_parm(parameters, bool_parm,
+      "lsnop2", "LSNOP2", "No \"Phase 2\"",
+	  U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 5);
+
+  slv_define_parm(parameters, int_parm,
+      "lfmxp4","LFMXP4","Maximum number of iterations in Phase 4",
+	       U_p_int(val,1000000000),U_p_int(lo,1),U_p_int(hi,MAX_INT),5);
+
+  slv_define_parm(parameters, real_parm,
+      "rvobjl", "RVOBJL","Limit on objective in Quick Mode",
+	       U_p_real(val, 0),U_p_real(lo,0),U_p_real(hi,10e10), 5);
+	
 
   return 1;
 }
@@ -1394,7 +1497,7 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
 static SlvClientToken slv8_create(slv_system_t server, int32*statusindex){
   slv8_system_t sys;
 
-  sys = (slv8_system_t)asccalloc(1, sizeof(struct slv8_system_structure) );
+  sys = ASC_NEW_CLEAR(struct slv8_system_structure);
   if (sys==NULL) {
     *statusindex = 1;
     return sys;
@@ -2071,11 +2174,12 @@ static int COI_CALL slv8_conopt_fdeval(
   real64 *derivatives;
   static var_filter_t vfilter;
   slv8_system_t sys;
+  int status;
 
   /* stop gcc whining about unused parameter */
   (void)jcnm;  (void)n;   (void)nj;
 
-  /* CONSOLE_DEBUG("EVALUATION STARTING"); */
+  CONOPT_CONSOLE_DEBUG("EVALUATION STARTING (row=%d, n=%d, nj=%d)",*rowno,*n,*nj);
 
   sys = (slv8_system_t)usrmem;
   if (*newpt == 1) {
@@ -2094,10 +2198,10 @@ static int COI_CALL slv8_conopt_fdeval(
 	(with future versions of CONOPT)
   */
   if (*mode == 1 || *mode == 3) {
-	/* CONSOLE_DEBUG("FUNCTION VALUES"); */
+	CONOPT_CONSOLE_DEBUG("FUNCTION VALUES");
     offset =  sys->J.reg.row.low;
     row = *rowno + offset;
-	/* CONSOLE_DEBUG("ROWNO = %d, OFFSET = %d: ROW = ROW = %d",*rowno, offset, row); */
+	CONOPT_CONSOLE_DEBUG("ROWNO = %d, OFFSET = %d: ROW = ROW = %d",*rowno, offset, row);
     if ((*rowno == sys->con.m - 1) && (sys->obj != NULL)){
       if(calc_objective(sys)){
 		*g = sys->objective;
@@ -2110,12 +2214,13 @@ static int COI_CALL slv8_conopt_fdeval(
 	  *g = relman_eval(rel,&calc_ok,SAFE_CALC)
 	  * sys->weights.vec[row];
 	  if (!calc_ok) {
+        CONOPT_CONSOLE_DEBUG("EVALUATION ERROR IN RELMAN_EVAL");
 		(*errcnt)++;
 	  }
     }
   }
   if (*mode == 2 || *mode == 3) {
-	/* CONSOLE_DEBUG("JACOBIAN VALUES"); */
+	CONOPT_CONSOLE_DEBUG("JACOBIAN VALUES");
     len = sys->con.maxrow;
     variables = ASC_NEW_ARRAY(int32,len);
     derivatives = ASC_NEW_ARRAY(real64,len);
@@ -2127,33 +2232,35 @@ static int COI_CALL slv8_conopt_fdeval(
     if ((*rowno == sys->con.m - 1) && (sys->obj != NULL)){
       rel = sys->obj;
 	  assert(rel!=NULL);
-      calc_ok = relman_diff2(rel,&vfilter,derivatives,variables,
+      status = relman_diff2(rel,&vfilter,derivatives,variables,
 		   &(len),SAFE_CALC);
       for (c = 0; c < len; c++) {
-		jac[variables[c]] = derivatives[c]
-			  *  sys->nominals.vec[variables[c]];
+		jac[variables[c]] = derivatives[c] *  sys->nominals.vec[variables[c]];
+		CONOPT_CONSOLE_DEBUG("Jacobian for row %d, var %d = %f",*rowno,variables[c],jac[variables[c]]);
       }
-      if (!calc_ok) {
+      if(status){
+		CONOPT_CONSOLE_DEBUG("ERROR IN JACOBIAN EVALUATION (OBJECTIVE) (%d)",status);
 		(*errcnt)++;
       }
     }else{
+      CONOPT_CONSOLE_DEBUG("NOT LAST ROW");
       rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
 	  assert(rel!=NULL);
-      calc_ok = relman_diff2(rel,&vfilter,derivatives,variables,
+      status = relman_diff2(rel,&vfilter,derivatives,variables,
 		   &(len),SAFE_CALC);
       for (c = 0; c < len; c++) {
 		jac[variables[c]] = derivatives[c]
 		  * sys->weights.vec[row] *  sys->nominals.vec[variables[c]];
+		CONOPT_CONSOLE_DEBUG("Jacobian for row %d, var %d = %f",mtx_row_to_org(sys->J.mtx,row),variables[c],jac[variables[c]]);
       }
-      if (!calc_ok) {
+      if(status){
+		CONOPT_CONSOLE_DEBUG("ERROR IN JACOBIAN EVALUATION (%d)",status);		
 		(*errcnt)++;
       }
     }
     for (c = 0; c < len; c++) {
       if(fabs(jac[variables[c]]) > RTMAXJ) {
-#if CONDBG
-		CONSOLE_DEBUG("large jac element");
-#endif /* CONDBG  */
+		CONOPT_CONSOLE_DEBUG("large jac element");
         if (jac[variables[c]] < 0) {
           jac[variables[c]] = -RTMAXJ+1;
 		} else {
@@ -2255,7 +2362,7 @@ static int COI_CALL slv8_conopt_solution(
 	  var_set_nonbasic(var,TRUE);
 	}
 
-	CONSOLE_DEBUG("%d: %s = %f (%s)",c,varname,value,varstat);
+	CONOPT_CONSOLE_DEBUG("%d: %s = %f (%s)",c,varname,value,varstat);
 	ASC_FREE(varname);
   }
 
@@ -2352,18 +2459,31 @@ static int COI_CALL slv8_conopt_option(
   name = memset(name,' ',8);
   while (sys->con.opt_count < slv8_PA_SIZE) {
     if (strlen(sys->p.parms[sys->con.opt_count].interface_label) == 6){
-      if (strncmp(sys->p.parms[sys->con.opt_count].interface_label,
-                  "R",1) == 0) {
-		name =
-          strncpy(name, sys->p.parms[sys->con.opt_count].interface_label,6);
+      if(0==strncmp(sys->p.parms[sys->con.opt_count].interface_label,"R",1)){
+		/* real-valued (R*) parameter */
+		name = strncpy(name, sys->p.parms[sys->con.opt_count].interface_label,6);
 		*rval = sys->p.parms[sys->con.opt_count].info.r.value;
+        CONOPT_CONSOLE_DEBUG("Set real option '%s' to %f"
+			,sys->p.parms[sys->con.opt_count].interface_label,*rval
+		);
 		sys->con.opt_count++;
 		return 0;
-      } else if (strncmp(sys->p.parms[sys->con.opt_count].interface_label,
-                         "L",1) == 0) {
-		name =
-	          strncpy(name,sys->p.parms[sys->con.opt_count].interface_label,6);
+      }else if(0==strncmp(sys->p.parms[sys->con.opt_count].interface_label,"LS",2)){
+		/* boolean-balued (LS*) parameter */
+        name = strncpy(name,sys->p.parms[sys->con.opt_count].interface_label,6);
+		*logical = sys->p.parms[sys->con.opt_count].info.b.value;
+        CONOPT_CONSOLE_DEBUG("Set bool option '%s' to %s"
+			,sys->p.parms[sys->con.opt_count].interface_label,((*logical)?"TRUE":"FALSE")
+		);
+		sys->con.opt_count++;
+		return 0;
+      }else if(0==strncmp(sys->p.parms[sys->con.opt_count].interface_label,"L",1)){
+		/* integer-valued (L*) parameter */
+		name = strncpy(name,sys->p.parms[sys->con.opt_count].interface_label,6);
 		*ival = sys->p.parms[sys->con.opt_count].info.i.value;
+        CONOPT_CONSOLE_DEBUG("Set int option '%s' to %d"
+			,sys->p.parms[sys->con.opt_count].interface_label,*ival
+		);
 		sys->con.opt_count++;
 		return 0;
       }
@@ -2643,6 +2763,7 @@ void slv8_coiscr COISCR_ARGS {
 */
 static void slv_conopt_iterate(slv8_system_t sys)
 {
+  int retcode;
   /*
 	We pass the pointer to sys as 'usrmem'.
 	Cast back to slv9_system_t to access the information required
@@ -2654,7 +2775,10 @@ static void slv_conopt_iterate(slv8_system_t sys)
 
   sys->con.kept = 1;
 
-  COI_Solve(sys->con.cntvect);
+  retcode = COI_Solve(sys->con.cntvect);
+
+  CONOPT_CONSOLE_DEBUG("CONOPT COI_Solve return code %d",retcode);
+
   /* conopt_start(&(sys->con.kept), usrmem, &(sys->con.lwork),
 	 sys->con.work, &(sys->con.maxusd), &(sys->con.curusd)); */
 
@@ -2705,6 +2829,8 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
   slv8_system_t sys;
   int *cntvect, temp;
 
+  CONOPT_CONSOLE_DEBUG("PRESOLVE");
+
   sys = SLV8(asys);
   iteration_begins(sys);
   check_system(sys);
@@ -2725,9 +2851,7 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
          && sys->obj == sys->old_obj
     ){
       matrix_creation_needed = 0;
-#if DEBUG
-      CONSOLE_DEBUG("YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION");
-#endif
+      CONOPT_CONSOLE_DEBUG("YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION");
     }
   }
 
@@ -2756,16 +2880,16 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
     sys->old_obj = sys->obj;
 
     slv_sort_rels_and_vars(server,&(sys->con.m),&(sys->con.n));
-    CONSOLE_DEBUG("FOUND %d CONSTRAINTS AND %d VARS",sys->con.m,sys->con.n);
+    CONOPT_CONSOLE_DEBUG("FOUND %d CONSTRAINTS AND %d VARS",sys->con.m,sys->con.n);
     if (sys->obj != NULL) {
-      CONSOLE_DEBUG("ADDING OBJECT AS A ROW");
+      CONOPT_CONSOLE_DEBUG("ADDING OBJECT AS A ROW");
       sys->con.m++; /* treat objective as a row */
     }
 
 	cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
 	COIDEF_Ini(cntvect);
 	sys->con.cntvect = cntvect;
-	CONSOLE_DEBUG("NUMBER OF CONSTRAINTS = %d",sys->con.m);
+	CONOPT_CONSOLE_DEBUG("NUMBER OF CONSTRAINTS = %d",sys->con.m);
 	COIDEF_NumVar(cntvect, &(sys->con.n));
 	COIDEF_NumCon(cntvect, &(sys->con.m));
 	sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
@@ -2780,7 +2904,7 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
     if(sys->obj!=NULL){
 		sys->con.optdir = relman_obj_direction(sys->obj);
 		sys->con.objcon = sys->con.m - 1; /* objective will be last row */
-		CONSOLE_DEBUG("SETTING OBJECTIVE CONSTRAINT TO BE %d",sys->con.objcon);
+		CONOPT_CONSOLE_DEBUG("SETTING OBJECTIVE CONSTRAINT TO BE %d",sys->con.objcon);
 	}else{
 		sys->con.optdir = 0;
 		sys->con.objcon = 0;
@@ -2800,6 +2924,8 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
 	COIDEF_ErrMsg(cntvect, &slv8_conopt_errmsg);
 	COIDEF_Progress(cntvect, &asc_conopt_progress);
 
+	int debugfv = 1;
+	COIDEF_DebugFV(cntvect, &debugfv);
 
 #if 0 /* these are the parameters we need to pass to CONOPT */
   ipsz[F2C(4)] = 0;             /* FIX THESE AT A LATER DATE!!!!  */
@@ -3015,8 +3141,6 @@ int32 slv8_register(SlvFunctionsT *sft){
 	return 1;
   }
 #endif
-
-  /* do dlopening here, conopt_load, if DYNAMIC_CONOPT. not implemented. */
 
   sft->name = "CONOPT";
   sft->ccreate = slv8_create;

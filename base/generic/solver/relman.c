@@ -506,6 +506,7 @@ int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
         (*count)++;
       }
     }
+	/* CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status); */
 	return status;
   }else{
     if((status=RelationCalcGradient(rel_instance(rel),gradient)) == 0) {
@@ -518,6 +519,7 @@ int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
         }
       }
     }
+	CONSOLE_DEBUG("RETURNING (NON-SAFE) calc_ok=%d",!status);
  	return !status;
   }
 }

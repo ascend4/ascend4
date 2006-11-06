@@ -84,7 +84,8 @@ extern "C"{
 	@TODO fix mutex on compile command filenames
 */
 Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), simroot(GetSimulationRoot(i),SymChar("simroot")){
-	is_built = false;
+	sys = NULL;
+	//is_built = false;
 	// Create an Instance object for the 'simulation root' (we'll call
 	// it the 'simulation model') and it can be fetched using 'getModel()'
 	// any time later.
@@ -92,7 +93,7 @@ Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), sim
 }
 
 Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroot){
-	is_built = old.is_built;
+	//is_built = old.is_built;
 	sys = old.sys;
 	bin_srcname = old.bin_srcname;
 	bin_objname = old.bin_objname;
@@ -110,6 +111,9 @@ Instanc &
 Simulation::getModel(){
 	if(!simroot.getInternalType()){
 		throw runtime_error("Simulation::getModel: simroot.getInternalType()is NULL");
+	}
+	if(InstanceKind(simroot.getInternalType())!=MODEL_INST){
+		throw runtime_error("Simulation::getModel: simroot is not a MODEL instance");
 	}
 	return simroot;
 }
@@ -164,9 +168,9 @@ Simulation::run(const Method &method, Instanc &model){
 	CONSOLE_DEBUG("Setting shared pointer 'sim'");
 	importhandler_setsharedpointer("sim",this);
 
-	if(not is_built){
+	/*if(not is_built){
 		CONSOLE_DEBUG("WARNING, SIMULATION NOT YET BUILT");
-	}
+	}*/
 
 	CONSOLE_DEBUG("Running method %s...", method.getName());
 
@@ -276,10 +280,10 @@ Simulation::run(const Method &method, Instanc &model){
 void
 Simulation::checkInstance(){
 	//cerr << "CHECKING SIMULATION INSTANCE" << endl;
-	if(!is_built){
+	/*if(!is_built){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Simulation has not been built");
 		return;
-	}
+	}*/
 	Instance *i1 = getModel().getInternalType();
 	CheckInstance(stderr, &*i1);
 	//cerr << "DONE CHECKING INSTANCE" << endl;
@@ -292,9 +296,13 @@ enum StructuralStatus
 Simulation::checkDoF() const{
     int dof, status;
 
-    if(!is_built){
+	if(!sys){
+		throw runtime_error("System is not built");
+	}
+
+    /*if(!is_built){
 		throw runtime_error("System not yet built");
-    }
+    }*/
 	CONSOLE_DEBUG("Calling slvDOF_status...");
     slvDOF_status(sys, &status, &dof);
     switch(status){
@@ -423,10 +431,15 @@ Simulation::getSingularityInfo() const{
 void
 Simulation::setSolver(Solver &solver){
 	/* CONSOLE_DEBUG("Setting solver on sim %p, root inst %p",this,this->simroot.getInternalType()); */
-	if(!is_built)throw runtime_error("Can't setSolver: simulation has not been built yet");
-	if(!sys)throw runtime_error("Can't setSolver: 'sys' is not assigned.");
 
-	// Update the solver object because sometimes an alternative solver can be returned, apparently.
+	try{
+		build();
+	}catch(runtime_error &e){
+		stringstream ss;
+		ss << "Couldn't prepare system for solving:";
+		ss << e.what();
+		throw runtime_error(ss.str());
+	}
 
 	CONSOLE_DEBUG("Calling slv_select_solver...");
 	int selected = slv_select_solver(sys, solver.getIndex());
@@ -458,25 +471,32 @@ Simulation::getSolver() const{
 }
 
 //------------------------------------------------------------------------------
-// BUILD THE SYSTEM (SEND IT TO THE SOLVER)
+// BUILD THE SYSTEM
 
 /**
 	Build the system (send it to the solver)
 */
 void
 Simulation::build(){
-	//cerr << "BUILDING SIMULATION..." << endl;
-	if(is_built){
-		CONSOLE_DEBUG("Note: rebuilding system (was already built)");
+	if(sys){
+		CONSOLE_DEBUG("System is already built");
+		return;
 	}
 
-	CONSOLE_DEBUG("Calling system_build...");
+	if(simroot.getKind() != MODEL_INST){
+		throw runtime_error("Simulation does not contain a MODEL_INST");
+	}
+
+	if(NumberPendingInstances(simroot.getInternalType())){
+		throw runtime_error("System has pending instances; can't yet send to solver.");
+	}
+	
 	sys = system_build(simroot.getInternalType());
 	if(!sys){
 		throw runtime_error("Unable to build system");
 	}
-	is_built = true;
-	//cerr << "...DONE BUILDING" << endl;
+	
+	CONSOLE_DEBUG("System built OK");
 }
 
 
@@ -488,7 +508,7 @@ Simulation::build(){
 */
 SolverParameters
 Simulation::getSolverParameters() const{
-	if(!is_built)throw runtime_error("Can't getSolverParameters: Simulation system has not been built yet.");
+	//if(!is_built)throw runtime_error("Can't getSolverParameters: Simulation system has not been built yet.");
 	if(!sys)throw runtime_error("Can't getSolverParameters: Simulation system has no 'sys' assigned.");
 
 	slv_parameters_t p;
@@ -613,23 +633,19 @@ SingularityInfo::isSingular() const{
 */
 void
 Simulation::solve(Solver solver, SolverReporter &reporter){
-	if(!is_built){
-		throw runtime_error("Simulation::solver: simulation is not yet built, can't start solving.");
+
+	if(!sys){
+		try{
+			build();
+		}catch(runtime_error &e){
+			stringstream ss;
+			ss << "Unable to build system: ";
+			ss << e.what();
+			throw runtime_error(ss.str());
+		}
 	}
 
-	//cerr << "SIMULATION::SOLVE STARTING..." << endl;
-	enum inst_t k = getModel().getKind();
-	if(k!=MODEL_INST)throw runtime_error("Can't solve: not an instance of type MODEL_INST");
-
-	Instance *i1 = getInternalType();
-	int npend = NumberPendingInstances(&*i1);
-	if(npend)throw runtime_error("Can't solve: There are still %d pending instances");
-
-	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");
-
-	//cerr << "SIMULATION::SOLVE: SET SOLVER..." << endl;
 	setSolver(solver);
-
 
 	//cerr << "PRESOLVING SYSTEM...";
 	CONSOLE_DEBUG("Calling slv_presolve...");
@@ -665,8 +681,8 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	}
 
 	double elapsed = tm_cpu_time() - starttime;
-
-
+	CONSOLE_DEBUG("Elapsed time: %0.3f", elapsed);
+	
 	activeblock = status.getCurrentBlockNum();
 
 	reporter.finalise(&status);

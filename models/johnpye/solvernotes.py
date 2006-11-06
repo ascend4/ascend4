@@ -22,6 +22,13 @@ def solvernotes(self):
 		reporter.reportError("No solver yet")
 		return
 
+	# the simulation needs to be built at this point, else solver could not
+	# be selected, and hence solver params could not be assigned.
+	sim.build()
+	
+	# use the solver selected in the browser
+	sim.setSolver(browser.solver)
+
 	solvername = browser.solver.getName()
 	reporter.reportNote("Active solver is '%s'" % solvername)
 

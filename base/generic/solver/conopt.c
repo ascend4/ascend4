@@ -271,6 +271,14 @@ int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		case 2: modsta = "locally optimal"; break;
 		case 3: t = ASC_USER_ERROR; modsta = "unbounded"; break;
 		case 4: t = ASC_USER_ERROR; modsta = "infeasible"; break;
+		case 5: modsta = "locally infeasible"; break;
+		case 6: modsta = "intermediate infeasible"; break;
+		case 7: modsta = "intermediate non-optimal"; break;
+		case 12: modsta = "unknown type of error"; break;
+		case 13: modsta = "error no solution"; break;
+		case 15: modsta = "solved unique"; break;
+		case 16: modsta = "solved"; break;
+		case 17: modsta = "solved singular"; break;
 		default: t = ASC_PROG_ERR; modsta = "UNKNOWN MODSTA";
 	}
 	const char *solsta;
@@ -279,6 +287,12 @@ int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		case 2: t = ASC_USER_NOTE; solsta = "iteration interrupted"; break;
 		case 3: t = ASC_PROG_NOTE; solsta = "time limit exceeded"; break;
 		case 4: t = ASC_PROG_ERR; solsta = "failed (terminated by solver)"; break;
+		case 5: t = ASC_PROG_ERR; solsta = "Error evaluation limit"; break;
+		case 8: t = ASC_USER_NOTE; solsta = "User interrupt"; break;
+		case 9: t = ASC_PROG_ERR; solsta = "Error: setup failure"; break;
+		case 10:t = ASC_PROG_ERR; solsta = "Error: solver failure"; break;
+		case 11:t = ASC_PROG_ERR; solsta = "Error: internal solver error"; break;
+		case 15:t = ASC_PROG_ERR; solsta = "Terminated by Quick Mode"; break;
 		default: t = ASC_PROG_ERR; solsta = "UNKNOWN SOLSTA";
 	}
 
