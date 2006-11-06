@@ -68,7 +68,9 @@
 	assume version 2.2.x (and thence possible errors)
 */
 #ifndef SUNDIALS_VERSION_MINOR
-# warning "GUESSING SUNDIALS VERSION 2.2"
+# ifdef __GNUC__
+#  warning "GUESSING SUNDIALS VERSION 2.2"
+# endif
 # define SUNDIALS_VERSION_MINOR 2
 #endif
 #ifndef SUNDIALS_VERSION_MAJOR

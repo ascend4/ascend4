@@ -126,18 +126,27 @@ static void IntegInitSymbols(void);
 /**
 	Create a new IntegratorSystem and assign a slv_system_t to it.
 */
-IntegratorSystem *integrator_new(slv_system_t sys, struct Instance *inst){
-	IntegratorSystem *intsys;
+IntegratorSystem *integrator_new(slv_system_t slvsys, struct Instance *inst){
+	IntegratorSystem *sys;
 
-	if (sys == NULL) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"sys is NULL!");
+	if (slvsys == NULL) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"slvsys is NULL!");
 		return NULL;
 	}
 
-	intsys = ASC_NEW_CLEAR(IntegratorSystem);
-	intsys->system = sys;
-	intsys->instance = inst;
-	return intsys;
+	sys = ASC_NEW_CLEAR(IntegratorSystem);
+	sys->system = slvsys;
+	sys->instance = inst;
+
+	sys->states = NULL; sys->derivs = NULL;
+	sys->dynvars = NULL; sys->obslist = NULL; sys->indepvars = NULL;
+
+	sys->y_id = NULL;
+	sys->obs_id = NULL;
+	sys->y = NULL;
+	sys->ydot = NULL;
+	sys->obs = NULL;
+	return sys;
 }
 
 /**
@@ -160,12 +169,12 @@ void integrator_free(IntegratorSystem *sys){
 	if(sys->obslist != NULL)gl_free_and_destroy(sys->obslist);    /* and obslist */
 	if (sys->indepvars != NULL)gl_free_and_destroy(sys->indepvars);  /* and indepvars */
 
-	if(sys->y_id != NULL)ascfree(sys->y_id);
-	if(sys->obs_id != NULL)ascfree(sys->obs_id);
+	/* if(sys->y_id != NULL)ASC_FREE(sys->y_id); */
+	if(sys->obs_id != NULL)ASC_FREE(sys->obs_id);
 
-	if(sys->y != NULL && !sys->ycount)ascfree(sys->y);
-	if(sys->ydot != NULL && !sys->ydotcount)ascfree(sys->ydot);
-	if(sys->obs != NULL && !sys->obscount)ascfree(sys->obs);
+	if(sys->y != NULL && !sys->ycount)ASC_FREE(sys->y);
+	if(sys->ydot != NULL && !sys->ydotcount)ASC_FREE(sys->ydot);
+	if(sys->obs != NULL && !sys->obscount)ASC_FREE(sys->obs);
 
 	ascfree(sys);
 	sys=NULL;
@@ -534,10 +543,10 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		There's something a bit fishy about fetching the varlist at this late stage...
 	*/
 
-	varlist = slv_get_master_var_list(sys->system);
-	nvarlist = slv_get_num_master_vars(sys->system);
+	varlist = slv_get_solvers_var_list(sys->system);
+	nvarlist = slv_get_num_solvers_vars(sys->system);
 
-	CONSOLE_DEBUG("WORKING THROUGH THE MASTER VAR LIST %d",nvarlist);
+	CONSOLE_DEBUG("WORKING THROUGH THE SOLVER'S VAR LIST %d",nvarlist);
 
 	sys->y_id = ASC_NEW_ARRAY(long, nvarlist);
 	for(i=0; i< nvarlist; ++i){
@@ -560,7 +569,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	for(i=0; i< nvarlist; ++i){
 		if(sys->y_id[i] < 0){
 			varname = var_make_name(sys->system,varlist[i]);
-			CONSOLE_DEBUG("UNCONNECTED SOLVER VAR varlist[%d] = '%s' (probably fixed?)",i,varname);
+			CONSOLE_DEBUG("UNCONNECTED SOLVER VAR varlist[%d] = '%s' (%s)",i,varname,var_fixed(varlist[i])?"fixed":"not fixed");
 			ASC_FREE(varname);
 		}
 	}
@@ -866,6 +875,10 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 	assert(var != NULL && var_instance(var)!=NULL );
 
 	if( var_apply_filter(var,&vfilt) ) {
+		if(!var_active(var)){
+			CONSOLE_DEBUG("VARIABLE IS NOT ACTIVE");
+			return;
+		}
 
 		if(!var_fixed(var)){
 			/* get the ode_type and ode_id of this solver_var */
@@ -879,13 +892,16 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 				/* any other type of var is in the DAE system, at least for now */
 				INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->dynvars);
 			}
-		}else{
+		}
+#if 1
+else{
 			/* fixed variable, only include it if ode_type == 1 */
 			type = DynamicVarInfo(var,&index);
 			if(type==INTEG_STATE_VAR){
 				INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->dynvars);
 			}
 		}
+#endif
 
 		/* if the var's obs_id > 0, add it to the observation list */
 		if(ObservationVar(var,&index) != NULL && index > 0L) {

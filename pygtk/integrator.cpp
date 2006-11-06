@@ -24,7 +24,10 @@ Integrator::Integrator(Simulation &simulation)
 }
 
 Integrator::~Integrator(){
+	CONSOLE_DEBUG("DESTROYING Integrator (C++) at %p",this);
+	CONSOLE_DEBUG("DESTROYING IntegratorSystem at %p",blsys);
 	integrator_free(blsys);
+	CONSOLE_DEBUG("DESTROYING samplelist at %p",samplelist);
 	samplelist_free(samplelist);
 }
 
