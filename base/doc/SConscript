@@ -1,5 +1,7 @@
 Import('env')
 
-docs = env.Doxygen('Doxyfile.base')
-env.Alias('docs',docs)
+# TODO removed doxygen for SCons 0.96.93
+
+#docs = env.Doxygen('Doxyfile.base')
+#env.Alias('docs',docs)
 

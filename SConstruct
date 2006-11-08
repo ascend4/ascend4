@@ -188,7 +188,7 @@ opts.Add(PackageOption(
 opts.Add(
 	"IDA_LIB"
 	,"Libraries linked to for IDA"
-	,['sundials_nvecserial','sundials_shared','sundials_ida','m']
+	,['sundials_nvecserial','sundials_ida','m']
 )
 
 opts.Add(
@@ -478,7 +478,8 @@ envadditional={}
 if platform.system()=="Windows":
 	if os.environ.get('OSTYPE')=='msys':
 		envenv = os.environ;
-		tools = ['mingw','lex','yacc','fortran','swig','disttar','nsis','doxygen']
+		tools = ['mingw','lex','yacc','fortran','swig','disttar','nsis']
+		#TODO removed 'doxygen' for SCons 0.96.93
 		envadditional['IS_MINGW']=True
 	else:
 		envenv = {
@@ -487,7 +488,8 @@ if platform.system()=="Windows":
 			,'LIB':os.environ['LIB']
 			,'MSVS_IGNORE_IDE_PATHS':1
 		}
-		tools=['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']	
+		tools=['default','lex','yacc','fortran','swig','disttar','nsis']	
+		#TODO removed 'doxygen' for SCons 0.96.93
 		envadditional['CPPDEFINES']=['_CRT_SECURE_NO_DEPRECATE']
 else:
 	if os.environ.get('TARGET')=='mingw':
@@ -496,7 +498,8 @@ else:
 		envadditional['CPPPATH']=['/usr/local/lib/gcc/i386-mingw32/3.4.5/include','/usr/include']
 	else:
 		envenv = os.environ
-		tools=['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']
+		tools=['default','lex','yacc','fortran','swig','disttar','nsis']
+		#TODO removed 'doxygen' for SCons 0.96.93
 	
 	
 env = Environment(

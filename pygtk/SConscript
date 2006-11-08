@@ -117,7 +117,7 @@ if env.get('CAN_INSTALL'):
 if platform.system()=="Windows":
 	env.Append(NSISDEFINES={'OUTFILE':env['WIN_INSTALLER_NAME']})
 	installer = env.Installer('create.nsi')
-	Depends(installer,[swiglib,configpy,configh,"../models"])
+	Depends(installer,[swiglib,configpy,configh,"../models","../ascend-config"])
 	env.Alias('installer',installer)
 
 # vim: set syntax=python:

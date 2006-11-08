@@ -1,6 +1,6 @@
 #!@PYTHON@
 from optparse import OptionParser
-import sys
+import sys, platform
 
 #---------------------
 # This file is generated automatically by SCons and installed in at INSTALL_BIN.
@@ -20,13 +20,25 @@ import sys
 # Type ascend-config --help for usage.
 #---------------------
 
+if platform.system()=="Windows":
+	import _winreg
+	x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
+	y= _winreg.OpenKey(x,r"SOFTWARE\ASCEND")
+	LIB,t = _winreg.QueryValueEx(y,"INSTALL_LIB")
+	BIN,t = _winreg.QueryValueEx(y,"INSTALL_BIN")
+	INCLUDE,t = _winreg.QueryValueEx(y,"INSTALL_INCLUDE")
+	ASCDATA,t = _winreg.QueryValueEx(y,"INSTALL_ASCDATA")
+	MODELS,t = _winreg.QueryValueEx(y,"INSTALL_MODELS")
 
-# here are the values passed to us from SCons:
-LIB="@INSTALL_LIB@"
-BIN="@INSTALL_BIN@"
-INCLUDE="@INSTALL_INCLUDE@"
-ASCDATA="@INSTALL_ASCDATA@"
-MODELS="@INSTALL_MODELS@"
+	_winreg.CloseKey(y)
+	_winreg.CloseKey(x)
+else:
+	# If we're not in Windows, use the original values passed to us from SCons:
+	LIB="@INSTALL_LIB@"
+	BIN="@INSTALL_BIN@"
+	INCLUDE="@INSTALL_INCLUDE@"
+	ASCDATA="@INSTALL_ASCDATA@"
+	MODELS="@INSTALL_MODELS@"
 
 usage = "usage: %prog [--help,...]"
 # the rest of this script is about returning those values in the standard way
@@ -66,3 +78,4 @@ if options.models:
 if not ok:
 	sys.stderr.write("invalid option '%s' (use --help for more info)\n" % args)
 	sys.exit(1)
+
