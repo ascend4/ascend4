@@ -23,8 +23,8 @@ OutFile ascend-setup.exe
 !endif
 
 
-SetCompressor /FINAL zlib
-;SetCompressor /SOLID lzma
+;SetCompressor /FINAL zlib
+SetCompressor /SOLID lzma
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\ASCEND
@@ -82,38 +82,74 @@ FunctionEnd
 
 ; The stuff to install
 Section "ASCEND (required)"
-  SectionIn RO
+	SectionIn RO
 
-  DetailPrint "--- COMMON FILES ---"
-  
-  ; Set output path to the installation directory.
-  SetOutPath $INSTDIR
-  File "..\ascend.dll"
-  
-  ; Model Library
-  SetOutPath $INSTDIR\models
-  File /r /x .svn "..\models\*.a4*"
-  File /r /x .svn "..\models\*.tcl"
-  File /r /x .svn "..\models\*.dll" ; extension modules
-  File /r /x .svn "..\models\*.py"; python modules
+	DetailPrint "--- COMMON FILES ---"
 
-  SetOutPath $INSTDIR
-  File "Makefile.bt"
-  File "ascend.syn"
+	; Set output path to the installation directory.
+	SetOutPath $INSTDIR
+	File "..\ascend.dll"
+	File "..\ascend-config"
 
-  ; Set 'librarypath' in .ascend.ini
-  WriteINIstr $APPDATA\.ascend.ini Directories librarypath "$DOCUMENTS\ascdata;$INSTDIR\models"
-  
-  ; Write the installation path into the registry
-  WriteRegStr HKLM SOFTWARE\ASCEND "Install_Dir" "$INSTDIR"
-  
-  ; Write the uninstall keys for Windows
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ASCEND" "DisplayName" "ASCEND Simulation Environment"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ASCEND" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ASCEND" "NoModify" 1
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ASCEND" "NoRepair" 1
-  WriteUninstaller "uninstall.exe"
-  
+	; Model Library
+	SetOutPath $INSTDIR\models
+	File /r /x .svn "..\models\*.a4*"
+	File /r /x .svn "..\models\*.tcl"
+	File /r /x .svn "..\models\*.dll" ; extension modules
+	File /r /x .svn "..\models\*.py"; python modules
+
+	SetOutPath $INSTDIR
+	File "Makefile.bt"
+	File "ascend.syn"
+
+	; Set 'librarypath' in .ascend.ini
+	WriteINIstr $APPDATA\.ascend.ini Directories librarypath "$DOCUMENTS\ascdata;$INSTDIR\models"
+
+	; Write the installation path into the registry
+	WriteRegStr HKLM SOFTWARE\ASCEND "Install_Dir" "$INSTDIR"
+
+	; Write the uninstall keys for Windows
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ASCEND" "DisplayName" "ASCEND Simulation Environment"
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ASCEND" "UninstallString" '"$INSTDIR\uninstall.exe"'
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ASCEND" "NoModify" 1
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ASCEND" "NoRepair" 1
+	WriteUninstaller "uninstall.exe"
+
+	; Write file locations to the registry for access from ascend-config
+	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_LIB" "$INSTDIR"
+	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_BIN" "$INSTDIR"
+	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_INCLUDE" "$INSTDIR\include"
+	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_ASCDATA" "$INSTDIR"
+	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_MODELS" "$INSTDIR\models"
+
+	; Create 'ascend-config.bat' batch file for launching the python script 'ascend-config'.
+	ClearErrors
+	FileOpen $0 $INSTDIR\ascend-config.bat w
+	IfErrors ascendconfigerror
+	FileWrite $0 "@echo off"
+	FileWriteByte $0 "13"
+	FileWriteByte $0 "10"
+	FileWrite $0 "set PATH=$PYPATH;$GTKPATH"
+	FileWriteByte $0 "13"
+	FileWriteByte $0 "10"
+	FileWrite $0 "cd "
+	FileWrite $0 $INSTDIR 
+	FileWriteByte $0 "13"
+	FileWriteByte $0 "10"
+	FileWrite $0 "$PYPATH\python "
+	FileWriteByte $0 "34" 
+	FileWrite $0 "$INSTDIR\ascend-config"
+	FileWriteByte $0 "34"
+	FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
+	FileWriteByte $0 "13"
+	FileWriteByte $0 "10"
+
+	FileClose $0
+
+	Return
+ascendconfigerror:
+	MessageBox MB_OK "The 'ascend-config.bat' file was not installed properly; problems writing to that file."	
+	
 SectionEnd
 
 ;--------------------------------
