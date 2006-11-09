@@ -1,0 +1,192 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/solve";
+IMPORT "johnpye/solvernotes";
+
+(*
+	This model uses some ASCEND models from the freesteam library. See
+	http://freesteam.sf.net/ for more information. This model doesn't actually
+	require compiled binaries of freesteam, so you can just download the .a4c
+	files if you wish.
+*)
+REQUIRE "satsteamstream.a4c";
+
+
+MODEL dsgsat2;
+	n IS_A integer_constant;
+	n :== 3;
+
+	(* temporal derivatives *)
+	drho_dt[2..n] IS_A density_rate;
+	dmdot_dt[2..n] IS_A mass_rate_rate;
+	drhou_dt[2..n] IS_A power_per_volume;
+	dTw_dt[2..n] IS_A temperature_rate;
+
+	(* wall properties *)
+	rho_w IS_A mass_density;
+	D, D_2 IS_A distance;
+	c_w IS_A specific_heat_capacity;
+	A, A_w IS_A area;
+	h_int IS_A heat_transfer_coefficient; (* internal *)
+	h_ext IS_A heat_transfer_coefficient; (* external *)
+	A = 1{PI}*D^2/4;
+	A_w = 1{PI}*(D_2^2 - D^2)/4;
+	dz IS_A distance;
+	L IS_A distance;
+	dz = L / n;
+
+	(* fluid properties *)
+	node[1..n] IS_A satsteamstream;
+	
+	(* flow properties *)
+	vel[1..n] IS_A speed;
+	T_w[1..n] IS_A temperature;
+
+	(* constants, for the moment: *)
+	f IS_A positive_factor;
+	mu_f IS_A viscosity;
+	T_amb IS_A temperature;
+
+	(* system dynamics *)	
+	qdot_t[2..n], qdot_l[2..n] IS_A power_per_length;
+	qdot_s IS_A power_per_length;
+	rhou[1..n] IS_A	energy_per_volume;
+
+	FOR i IN [1..n] CREATE
+		vel[i] = node[i].v*node[i].mdot/A;
+		rhou[i] = node[i].rho * node[i].u;
+	END FOR;
+
+	(* some aliases just for easier review of the state of the model *)
+	x[1..n] IS_A fraction;
+	mdot[1..n] IS_A mass_rate;
+	p[1..n] IS_A pressure;
+	FOR i IN [1..n] CREATE
+		x[i], node[i].x ARE_THE_SAME;
+		mdot[i], node[i].mdot ARE_THE_SAME;
+		p[i], node[i].p ARE_THE_SAME;
+	END FOR;
+
+	(* differential equations *)
+	FOR i IN [2..n] CREATE
+		A * drho_dt[i] = - (node[i].mdot - node[i-1].mdot)/dz;
+		1/A*dmdot_dt[i] = -(node[i].p-node[i-1].p)/dz - f/D/2*node[i].rho*node[i].v^2* (node[i].rho*vel[i]^2 - node[i-1].rho*vel[i-1]^2)/dz;
+		A * drhou_dt[i] = qdot_t[i] - (node[i].Hdot - node[i-1].Hdot)/dz;
+		rho_w*A_w*c_w*dTw_dt[i] = qdot_s - qdot_l[i] - qdot_t[i];
+		qdot_l[i] = h_ext*(1{PI}*D_2)*(T_w[i] - T_amb);
+		qdot_t[i] = h_int*(1{PI}*D)  *(T_w[i] - node[i].T);
+	END FOR;
+
+	t IS_A time;
+METHODS
+METHOD specify;
+	RUN node[1].specify;
+	FIX qdot_s;
+	FIX D, D_2, L;
+	FIX h_int, c_w, rho_w, h_ext;
+	FIX f, mu_f;
+	FIX T_amb;
+	(* fix derivatives to zero *)
+	FOR i IN [2..n] DO
+		FIX drho_dt[i];  FREE node[i].rho;
+		FIX dmdot_dt[i]; FREE node[i].mdot;
+		FIX drhou_dt[i]; FREE rhou[i];
+		FIX dTw_dt[i];   FREE T_w[i];
+	END FOR;
+	(* FIX node[3].rho; *)
+
+END specify;
+METHOD values;
+	node[1].T := 400 {K};
+	node[1].x := 0.1;
+	qdot_s := 0 {W/m};
+	D := 60 {mm}; D_2 := 70 {mm};
+	L := 100 {m};
+	A_w := 1{PI}*D_2^2;
+	h_int := 10 {W/m^2/K}; c_w := 0.47 {J/g/K}; rho_w := 7.8 {g/cm^3}; h_ext := 10 {W/m^2/K};
+	f := 0.005; mu_f := 4.5e-5 {Pa*s};
+	T_amb := 300 {K};
+	FOR i IN [2..n] DO
+		drho_dt[i] := 0 {kg/m^3/s};
+		dmdot_dt[i] := 0 {kg/s/s};
+		drhou_dt[i] := 0 {kJ/m^3/s};
+		dTw_dt[i] := 0 {K/s};
+	END FOR;
+END values;
+METHOD on_load;
+	RUN specify;
+	FOR i IN [1..n] DO
+		RUN node[i].bound_self;
+	END FOR;
+	RUN values;
+	RUN solvernotes;
+	RUN solve; (* wish I knew why it needs three goes *)
+	RUN ode_init;
+	qdot_s := 10 {W/m};
+	RUN solve; (* after fixing the states and freeing the derivatives *)
+	
+END on_load;
+METHOD ode_init;
+	(* get the model into the required state for solving as ODE *)
+	t.ode_type := -1;
+	t := 0 {s};
+	FOR i IN [2..n] DO
+		FREE drho_dt[i];  FIX node[i].rho;
+		FREE dmdot_dt[i]; FIX node[i].mdot;
+		FREE drhou_dt[i]; FIX rhou[i];
+		FREE dTw_dt[i];   FIX T_w[i];
+	END FOR;
+
+	FOR i IN [2..n] DO
+		drho_dt[i].ode_id := 4*i;     node[i].rho.ode_id := 4*i;
+		drho_dt[i].ode_type := 2;     node[i].rho.ode_type := 1;
+
+		dmdot_dt[i].ode_id := 4*i+1;  node[i].mdot.ode_id := 4*i+1;
+		dmdot_dt[i].ode_type := 2;    node[i].mdot.ode_type := 1;
+		
+		drhou_dt[i].ode_id := 4*i+2;  rhou[i].ode_id := 4*i+2;
+		drhou_dt[i].ode_type := 2;    rhou[i].ode_type := 1;
+
+		dTw_dt[i].ode_id := 4*i+3;    T_w[i].ode_id := 4*i+3;
+		dTw_dt[i].ode_type := 2;      T_w[i].ode_type := 1;
+
+		(*
+		p[i].obs_id := 4*i;
+		x[i].obs_id := 4*i+1;
+		qdot_t[i].obs_id := 4*i+2;
+		T_w[i].obs_id := 4*i+3;
+		*)
+	END FOR;
+
+	FOR i IN [1,n] DO
+		p[i].obs_id := 4*i;
+		x[i].obs_id := 4*i+1;
+	END FOR;
+	FOR i IN [2,n] DO
+		(* qdot_t[i].obs_id := 4*i+2; *)
+		T_w[i].obs_id := 4*i+3;
+	END FOR;
+END ode_init;
+
+METHOD fix_outlet_quality;
+	FIX x[n];
+	FREE node[1].mdot;
+END fix_outlet_quality;
+
+METHOD solvernotes;
+	EXTERNAL solvernotes(SELF);
+END setup_solver;
+
+METHOD solve;
+	EXTERNAL solve(SELF);
+END solve;
+
+END dsgsat2;
+ADD NOTES IN dsgsat2;
+	'QRSlv' iterationlimit {50}
+END NOTES;
+
+
