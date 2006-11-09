@@ -65,7 +65,7 @@
 
 /*
 	for the benefit of build tools that didn't sniff the SUNDIALS version, we
-	assume version 2.2.x (and thence possible errors)
+	assume version 2.2.x (and thence possible errors).
 */
 #ifndef SUNDIALS_VERSION_MINOR
 # ifdef __GNUC__
@@ -469,7 +469,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 		){
 			/* get derivatives for this particular relation */
 			status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
-			for(j=0;i<count;++j){
+			for(j=0;j<count;++j){
 				varname = var_make_name(blsys->system, enginedata->varlist[blsys->y_id[variables[i]]]);
 				CONSOLE_DEBUG("diff var[%d] is %s",j,varname);
 				ASC_FREE(varname);
