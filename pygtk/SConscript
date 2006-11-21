@@ -52,20 +52,23 @@ def get_new_swig_flags(env):
 		flags += ['-O']
 	return flags
 
-swigobj = python_env.SharedObject('ascpy.i'
+swig_env = python_env.Copy()
+swig_env['CCFLAGS'] = swig_env['CCFLAGS'].remove('-Wall')
+
+swigobj = swig_env.SharedObject('ascpy.i'
 	, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
 )
-python_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
-python_env.Depends('ascpy.py',['ascpy.i'])
-python_env.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
-python_env.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
-python_env.Clean('ascpy_wrap.h','ascpy$SWIGCXXFILESUFFIX')
+swig_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
+swig_env.Depends('ascpy.py',['ascpy.i'])
+swig_env.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
+swig_env.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
+swig_env.Clean('ascpy_wrap.h','ascpy$SWIGCXXFILESUFFIX')
 
 _libs = ['ascend']+env['PYTHON_LIB']
 if not env.get('MSVS'):
 	_libs.append('stdc++')
 
-swiglib = python_env.SharedLibrary("ascpy",objs + swigobj
+swiglib = swig_env.SharedLibrary("ascpy",objs + swigobj
 	, LIBS = _libs
 	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
 	, SHLIBPREFIX = '_'
