@@ -17,7 +17,7 @@ extern "C"{
 #include <compiler/ascCompiler.h>
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
-#include <compiler/redirectFile.h>
+/* #include <compiler/redirectFile.h> */
 #include <compiler/module.h>
 #include <compiler/prototype.h>
 #include <compiler/dump.h>
@@ -50,7 +50,11 @@ Library::Library(const char *defaultpath){
 	static int have_init;
 	if(!have_init){
 		//cerr << "Initialising ASCEND library..." << endl;
+
+#ifdef REIMPLEMENT_STREAMS
 		Asc_RedirectCompilerDefault(); // Ensure that error message reach stderr
+#endif
+
 		Asc_CompilerInit(1);
 		env_import(PATHENVIRONMENTVAR,getenv,Asc_PutEnv);
 		char *x = Asc_GetEnv(PATHENVIRONMENTVAR);
