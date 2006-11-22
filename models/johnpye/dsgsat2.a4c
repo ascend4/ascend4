@@ -123,7 +123,7 @@ METHOD on_load;
 	END FOR;
 	RUN values;
 	RUN solvernotes;
-	RUN solve; (* wish I knew why it needs three goes *)
+	RUN solve;
 	RUN ode_init;
 	qdot_s := 10 {W/m};
 	RUN solve; (* after fixing the states and freeing the derivatives *)
@@ -134,10 +134,10 @@ METHOD ode_init;
 	t.ode_type := -1;
 	t := 0 {s};
 	FOR i IN [2..n] DO
-		FREE drho_dt[i];  FIX node[i].rho;
-		FREE dmdot_dt[i]; FIX node[i].mdot;
-		FREE drhou_dt[i]; FIX rhou[i];
-		FREE dTw_dt[i];   FIX T_w[i];
+		FREE drho_dt[i];  FREE node[i].rho;
+		FREE dmdot_dt[i]; FREE node[i].mdot;
+		FREE drhou_dt[i]; FREE rhou[i];
+		FREE dTw_dt[i];   FREE T_w[i];
 	END FOR;
 
 	FOR i IN [2..n] DO
@@ -178,7 +178,7 @@ END fix_outlet_quality;
 
 METHOD solvernotes;
 	EXTERNAL solvernotes(SELF);
-END setup_solver;
+END solvernotes;
 
 METHOD solve;
 	EXTERNAL solve(SELF);

@@ -163,6 +163,9 @@ static PyObject *extpy_getbrowser(PyObject *self, PyObject *args){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"args is not NULL?!");
 	}
 	browser = (PyObject *)importhandler_getsharedpointer("browser");
+	if(browser==NULL){
+		return Py_None;
+	}
 	return Py_BuildValue("O",browser);
 }
 
@@ -216,7 +219,7 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 		return NULL;
 	}
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Registered python method '%s'",cname);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Registered python method '%s'\n",cname);
 
 	/* nothing gets returned (but possibly an exception) */
 	Py_INCREF(Py_None);
@@ -271,6 +274,7 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	name = ospath_str(fp);
 	FILE *f;
 	PyObject *pyfile;
+	int iserr;
 
 	CONSOLE_DEBUG("Importing Python script %s",name);
 	if(Py_IsInitialized()){
@@ -310,15 +314,17 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		return 1;
 	}
 
-	PyRun_AnyFileEx(f,name,1);
-	/*if(PyErr_Occurred()){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"An error occurred in the python script '%s'. Check the console for details");
-		PyErr_Print();
-		PyErr_Clear();
-		return 1;
-	}*/
+	PyErr_Clear();
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Imported python script '%s' (check console for errors)",partialpath);
+	iserr = PyRun_AnyFileEx(f,name,1);
+	
+	if(iserr){
+		/* according to the manual, there is no way of determining anything more about the error. */
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"An error occurring in importing the script '%s'",name);
+		return 1;
+	}
+
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Imported python script '%s'",partialpath);
 
 	ASC_FREE(name);
 	return 0;

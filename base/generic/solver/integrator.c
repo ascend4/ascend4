@@ -399,7 +399,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	for(i=1; i<=gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		varname = var_make_name(sys->system,info->i);
-		CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld",i,varname,info->type); 
+		CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld (varindx = %d)",i,varname,info->type,info->varindx); 
 		ASC_FREE(varname);
 	}
 
