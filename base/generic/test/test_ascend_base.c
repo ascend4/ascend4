@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include <utilities/ascConfig.h>
+#include <utilities/error.h>
 #include <compiler/redirectFile.h>
 #include <utilities/ascMalloc.h>
 #include <printutil.h>
@@ -42,6 +43,8 @@ int main(int argc, char* argv[])
   CU_ErrorCode result;
   int print_messages = FALSE;
   int i;
+
+  error_reporter_set_callback(NULL);
 
   setvbuf(stdout, NULL, _IONBF, 0);
 
@@ -71,7 +74,7 @@ int main(int argc, char* argv[])
       print_messages = TRUE;
     }
     else {
-      printf("\nUsage:  test_ascend [options]\n\n"
+      printf("\nUsage:  %s [options]\n\n"
                "Options:   -i   ignore framework errors [default].\n"
                "           -f   fail on framework error.\n"
                "           -A   abort on framework error.\n\n"
@@ -80,7 +83,9 @@ int main(int argc, char* argv[])
                "           -v   verbose mode - max output to screen [default].\n\n"
                "           -d   hide ASCEND messages [default].\n"
                "           -w   print ASCEND messages to console.\n\n"
-               "           -h   print this message and exit.\n\n");
+               "           -h   print this message and exit.\n\n"
+          , argv[0]
+      );
       return 0;
     }
   }
@@ -92,7 +97,7 @@ int main(int argc, char* argv[])
     return result;
   }
 
-  /* register general component */
+  /* register 'general' component */
   result = test_register_general();
   if (CUE_SUCCESS != result) {
     fprintf(stderr, "\nError during registration of general component tests.  "
@@ -101,7 +106,7 @@ int main(int argc, char* argv[])
     return result;
   }
 
-  /* register utilities component */
+  /* register 'utilities' component */
   result = test_register_utilities();
   if (CUE_SUCCESS != result) {
     fprintf(stderr, "\nError during registration of utilities component tests.  "
@@ -110,7 +115,7 @@ int main(int argc, char* argv[])
     return result;
   }
 
-  /* register solver component */
+  /* register 'solver' component */
   result = test_register_solver();
   if (CUE_SUCCESS != result) {
     fprintf(stderr, "\nError during registration of solver component tests.  "
@@ -123,7 +128,7 @@ int main(int argc, char* argv[])
     test_enable_printing();
   }
 
-  Asc_RedirectCompilerDefault();  /* direct internal named streams to std streams */
+  /* Asc_RedirectCompilerDefault(); */ /* direct internal named streams to std streams */
   CU_basic_set_mode(mode);
   CU_set_error_action(error_action);
   result = CU_basic_run_tests();

@@ -23,12 +23,13 @@
 
 #include <stdio.h>
 #include <utilities/ascConfig.h>
+#include <utilities/error.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
-#include "CUnit/CUnit.h"
+#include <CUnit/CUnit.h>
 #include "test_ascMalloc.h"
 #include "assertimpl.h"
 
@@ -64,6 +65,7 @@ static void test_ascMalloc(void)
   unsigned long prior_meminuse;
 
   prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
+  CONSOLE_DEBUG("IN USE = %lu",prior_meminuse);
 
 #ifdef NDEBUG
   CU_FAIL("test_ascMalloc() compiled with NDEBUG - some features not tested.");
@@ -73,22 +75,22 @@ static void test_ascMalloc(void)
 #endif
 
   /* test ascstrdup() */
-  CU_TEST(NULL == ascstrdup(NULL));                   /* NULL str */
+  CU_ASSERT(NULL == ascstrdup(NULL));                   /* NULL str */
 
   p_str1 = ascstrdup("Just a simple little string.");  /* normal operation with literal*/
-  CU_TEST(NULL != p_str1);
-  CU_TEST(0 == strcmp(p_str1, "Just a simple little string."));
-  CU_TEST(0 != ascmeminuse());
+  CU_ASSERT(NULL != p_str1);
+  CU_ASSERT(0 == strcmp(p_str1, "Just a simple little string."));
+  CU_ASSERT(0 != ascmeminuse());
   ascfree(p_str1);
-  CU_TEST(0 == ascmeminuse());
+  CU_ASSERT(0 == ascmeminuse());
 
   snprintf(str1, STR_LEN-1, "I'm a simple string.");
   p_str1 = ascstrdup(str1);                            /* normal operation with literal*/
-  CU_TEST(NULL != p_str1);
-  CU_TEST(0 == strcmp(p_str1, str1));
-  CU_TEST(0 != ascmeminuse());
+  CU_ASSERT(NULL != p_str1);
+  CU_ASSERT(0 == strcmp(p_str1, str1));
+  CU_ASSERT(0 != ascmeminuse());
   ascfree(p_str1);
-  CU_TEST(0 == ascmeminuse());
+  CU_ASSERT(0 == ascmeminuse());
 
   /* test asc_memcpy() */
 
@@ -98,12 +100,12 @@ static void test_ascMalloc(void)
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     asc_memcpy(NULL, str2, STR_LEN);                  /* error - NULL dest */
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     asc_memcpy(str1, NULL, STR_LEN);                  /* error - NULL src */
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
 #endif    /* !ASC_NO_ASSERTIONS */
@@ -127,7 +129,7 @@ static void test_ascMalloc(void)
   }
   if (!str1_bad && !str2_bad) CU_PASS("str1 and str2 check out.");
 
-  CU_TEST(str1 == asc_memcpy(str1, str2, STR_LEN/2)); /* copy part of a memory block */
+  CU_ASSERT(str1 == asc_memcpy(str1, str2, STR_LEN/2)); /* copy part of a memory block */
 
   str1_bad = FALSE;
   str2_bad = FALSE;
@@ -157,7 +159,7 @@ static void test_ascMalloc(void)
   memset(str1, '\0', STR_LEN);
   memset(str2, '*', STR_LEN);
 
-  CU_TEST(str1 == asc_memcpy(str1, str2, STR_LEN));  /* copy all of a memory block */
+  CU_ASSERT(str1 == asc_memcpy(str1, str2, STR_LEN));  /* copy all of a memory block */
 
   str1_bad = FALSE;
   str2_bad = FALSE;
@@ -179,7 +181,7 @@ static void test_ascMalloc(void)
   memset(str1+10, '=', 10);
   memset(str1+20, '|', 10);
 
-  CU_TEST((str1+10) == asc_memcpy(str1+10, str1, 20)); /* copy overlapping memory block */
+  CU_ASSERT((str1+10) == asc_memcpy(str1+10, str1, 20)); /* copy overlapping memory block */
 
   str1_bad = FALSE;
   for (i=0 ; i<20 ; ++i) {
@@ -202,7 +204,7 @@ static void test_ascMalloc(void)
   memset(str1+10, '=', 10);
   memset(str1+20, '|', 10);
 
-  CU_TEST(str1 == asc_memcpy(str1, str1+10, 20)); /* copy overlapping memory block */
+  CU_ASSERT(str1 == asc_memcpy(str1, str1+10, 20)); /* copy overlapping memory block */
 
   str1_bad = FALSE;
   for (i=0 ; i<10 ; ++i) {
@@ -222,42 +224,42 @@ static void test_ascMalloc(void)
   if (!str1_bad) CU_PASS("str1 and str2 check out.");
 
   snprintf(str1, STR_LEN-1, "This is yet another dumb string");
-  CU_TEST(str1 == asc_memcpy(str1, str1, strlen(str1))); /* to == from */
-  CU_TEST(0 == strcmp(str1, "This is yet another dumb string"));
+  CU_ASSERT(str1 == asc_memcpy(str1, str1, strlen(str1))); /* to == from */
+  CU_ASSERT(0 == strcmp(str1, "This is yet another dumb string"));
 
-  CU_TEST(str1 == asc_memcpy(str1, str2, 0));           /* n = 0 */
-  CU_TEST(0 == strcmp(str1, "This is yet another dumb string"));
+  CU_ASSERT(str1 == asc_memcpy(str1, str2, 0));           /* n = 0 */
+  CU_ASSERT(0 == strcmp(str1, "This is yet another dumb string"));
 
   /* test ascreallocPURE() */
 
   p_str1 = ASC_NEW_ARRAY(char,50);                       /* allocate a block & check status */
   CU_TEST_FATAL(NULL != p_str1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(50 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_str1, 50));
+  CU_ASSERT(50 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_str1, 50));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_str1, 50));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 50));
 #endif
 
   snprintf(p_str1, 49, "I should survive a reallocation!");
   p_str1 = ascreallocPURE(p_str1, 50, 100);
   CU_TEST_FATAL(NULL != p_str1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(100 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(100 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_str1, 100));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 100));
 #endif
-  CU_TEST(0 == strcmp(p_str1, "I should survive a reallocation!"));
+  CU_ASSERT(0 == strcmp(p_str1, "I should survive a reallocation!"));
 
   ascfree(p_str1);
-  CU_TEST(0 == ascmeminuse());
+  CU_ASSERT(0 == ascmeminuse());
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == AllocatedMemory(p_str1, 0));
+  CU_ASSERT(0 == AllocatedMemory(p_str1, 0));
 #else
-  CU_TEST(1 == AllocatedMemory(p_str1, 0));
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 0));
 #endif
 
   /* ascstatus(), ascstatus_detail() - reporting functions, not tested */
@@ -269,106 +271,106 @@ static void test_ascMalloc(void)
   p_int1 = (int *)asccalloc(0, sizeof(int));         /* 0 elements requested */
   CU_TEST_FATAL(NULL != p_int1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(AT_LEAST_1(0) == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(AT_LEAST_1(0) == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int1, 0));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 0));
 #endif
 
   ascfree(p_int1);
-  CU_TEST(0 == ascmeminuse());
+  CU_ASSERT(0 == ascmeminuse());
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(0 == AllocatedMemory(p_int1, 0));
 #else
-  CU_TEST(1 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 0));
 #endif
 
   p_int1 = (int *)asccalloc(100, 0);                 /* 0 size requested */
   CU_TEST_FATAL(NULL != p_int1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int1, 0));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 0));
 #endif
 
   ascfree(p_int1);
-  CU_TEST(0 == ascmeminuse());
+  CU_ASSERT(0 == ascmeminuse());
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(0 == AllocatedMemory(p_int1, 0));
 #else
-  CU_TEST(1 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 0));
 #endif
 
   p_int1 = (int *)asccalloc(100, sizeof(int));       /* 100 elements requested */
   CU_TEST_FATAL(NULL != p_int1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(100*sizeof(int) == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int1, 100*sizeof(int)));
+  CU_ASSERT(100*sizeof(int) == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int1, 100*sizeof(int)));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 0));
 #endif
 
   p_int2 = (int *)asccalloc(200, sizeof(int));       /* 200 more elements requested */
   CU_TEST_FATAL(NULL != p_int2);
 #ifdef MALLOC_DEBUG
-  CU_TEST(300*sizeof(int) == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int2, 200*sizeof(int)));
+  CU_ASSERT(300*sizeof(int) == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int2, 200*sizeof(int)));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int2, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int2, 0));
 #endif
 
   p_int3 = (int *)asccalloc(10, sizeof(int));        /* 10 more elements requested */
   CU_TEST_FATAL(NULL != p_int3);
 #ifdef MALLOC_DEBUG
-  CU_TEST(310*sizeof(int) == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int3, 10*sizeof(int)));
+  CU_ASSERT(310*sizeof(int) == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int3, 10*sizeof(int)));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int3, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int3, 0));
 #endif
 
   ascfree(p_int2);
 #ifdef MALLOC_DEBUG
-  CU_TEST(110*sizeof(int) == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int1, 100*sizeof(int)));
-  CU_TEST(0 == AllocatedMemory(p_int2, 200*sizeof(int)));
-  CU_TEST(2 == AllocatedMemory(p_int3, 10*sizeof(int)));
+  CU_ASSERT(110*sizeof(int) == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int1, 100*sizeof(int)));
+  CU_ASSERT(0 == AllocatedMemory(p_int2, 200*sizeof(int)));
+  CU_ASSERT(2 == AllocatedMemory(p_int3, 10*sizeof(int)));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 100*sizeof(int)));
-  CU_TEST(1 == AllocatedMemory(p_int2, 200*sizeof(int)));
-  CU_TEST(1 == AllocatedMemory(p_int3, 10*sizeof(int)));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 100*sizeof(int)));
+  CU_ASSERT(1 == AllocatedMemory(p_int2, 200*sizeof(int)));
+  CU_ASSERT(1 == AllocatedMemory(p_int3, 10*sizeof(int)));
 #endif
 
   ascfree(p_int1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(10*sizeof(int) == ascmeminuse());
-  CU_TEST(0 == AllocatedMemory(p_int1, 100*sizeof(int)));
-  CU_TEST(0 == AllocatedMemory(p_int2, 200*sizeof(int)));
-  CU_TEST(2 == AllocatedMemory(p_int3, 10*sizeof(int)));
+  CU_ASSERT(10*sizeof(int) == ascmeminuse());
+  CU_ASSERT(0 == AllocatedMemory(p_int1, 100*sizeof(int)));
+  CU_ASSERT(0 == AllocatedMemory(p_int2, 200*sizeof(int)));
+  CU_ASSERT(2 == AllocatedMemory(p_int3, 10*sizeof(int)));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 100*sizeof(int)));
-  CU_TEST(1 == AllocatedMemory(p_int2, 200*sizeof(int)));
-  CU_TEST(1 == AllocatedMemory(p_int3, 10*sizeof(int)));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 100*sizeof(int)));
+  CU_ASSERT(1 == AllocatedMemory(p_int2, 200*sizeof(int)));
+  CU_ASSERT(1 == AllocatedMemory(p_int3, 10*sizeof(int)));
 #endif
 
   ascfree(p_int3);
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(0 == AllocatedMemory(p_int1, 100*sizeof(int)));
-  CU_TEST(0 == AllocatedMemory(p_int2, 200*sizeof(int)));
-  CU_TEST(0 == AllocatedMemory(p_int3, 10*sizeof(int)));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(0 == AllocatedMemory(p_int1, 100*sizeof(int)));
+  CU_ASSERT(0 == AllocatedMemory(p_int2, 200*sizeof(int)));
+  CU_ASSERT(0 == AllocatedMemory(p_int3, 10*sizeof(int)));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 100*sizeof(int)));
-  CU_TEST(1 == AllocatedMemory(p_int2, 200*sizeof(int)));
-  CU_TEST(1 == AllocatedMemory(p_int3, 10*sizeof(int)));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 100*sizeof(int)));
+  CU_ASSERT(1 == AllocatedMemory(p_int2, 200*sizeof(int)));
+  CU_ASSERT(1 == AllocatedMemory(p_int3, 10*sizeof(int)));
 #endif
 
   /* test ascmalloc() */
@@ -376,88 +378,88 @@ static void test_ascMalloc(void)
   p_int1 = (int *)ascmalloc(0);                      /* 0 bytes requested */
   CU_TEST_FATAL(NULL != p_int1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(AT_LEAST_1(0) == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(AT_LEAST_1(0) == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int1, 0));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 0));
 #endif
 
   ascfree(p_int1);
-  CU_TEST(0 == ascmeminuse());
+  CU_ASSERT(0 == ascmeminuse());
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(0 == AllocatedMemory(p_int1, 0));
 #else
-  CU_TEST(1 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 0));
 #endif
 
   p_int1 = (int *)ascmalloc(100);                    /* 100 bytes requested */
   CU_TEST_FATAL(NULL != p_int1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(100 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int1, 100));
+  CU_ASSERT(100 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int1, 100));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 0));
 #endif
 
   p_int2 = (int *)ascmalloc(200);                    /* 200 more bytes requested */
   CU_TEST_FATAL(NULL != p_int2);
 #ifdef MALLOC_DEBUG
-  CU_TEST(300 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int2, 200));
+  CU_ASSERT(300 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int2, 200));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int2, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int2, 0));
 #endif
 
   p_int3 = (int *)ascmalloc(10);                     /* 10 more bytes requested */
   CU_TEST_FATAL(NULL != p_int3);
 #ifdef MALLOC_DEBUG
-  CU_TEST(310 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int3, 10));
+  CU_ASSERT(310 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int3, 10));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int3, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int3, 0));
 #endif
 
   ascfree(p_int2);
 #ifdef MALLOC_DEBUG
-  CU_TEST(110 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_int1, 100));
-  CU_TEST(0 == AllocatedMemory(p_int2, 200));
-  CU_TEST(2 == AllocatedMemory(p_int3, 10));
+  CU_ASSERT(110 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_int1, 100));
+  CU_ASSERT(0 == AllocatedMemory(p_int2, 200));
+  CU_ASSERT(2 == AllocatedMemory(p_int3, 10));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 100));
-  CU_TEST(1 == AllocatedMemory(p_int2, 200));
-  CU_TEST(1 == AllocatedMemory(p_int3, 10));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 100));
+  CU_ASSERT(1 == AllocatedMemory(p_int2, 200));
+  CU_ASSERT(1 == AllocatedMemory(p_int3, 10));
 #endif
 
   ascfree(p_int1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(10 == ascmeminuse());
-  CU_TEST(0 == AllocatedMemory(p_int1, 100));
-  CU_TEST(0 == AllocatedMemory(p_int2, 200));
-  CU_TEST(2 == AllocatedMemory(p_int3, 10));
+  CU_ASSERT(10 == ascmeminuse());
+  CU_ASSERT(0 == AllocatedMemory(p_int1, 100));
+  CU_ASSERT(0 == AllocatedMemory(p_int2, 200));
+  CU_ASSERT(2 == AllocatedMemory(p_int3, 10));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 100));
-  CU_TEST(1 == AllocatedMemory(p_int2, 200));
-  CU_TEST(1 == AllocatedMemory(p_int3, 10));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 100));
+  CU_ASSERT(1 == AllocatedMemory(p_int2, 200));
+  CU_ASSERT(1 == AllocatedMemory(p_int3, 10));
 #endif
 
   ascfree(p_int3);
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(0 == AllocatedMemory(p_int1, 100));
-  CU_TEST(0 == AllocatedMemory(p_int2, 200));
-  CU_TEST(0 == AllocatedMemory(p_int3, 10));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(0 == AllocatedMemory(p_int1, 100));
+  CU_ASSERT(0 == AllocatedMemory(p_int2, 200));
+  CU_ASSERT(0 == AllocatedMemory(p_int3, 10));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_int1, 100));
-  CU_TEST(1 == AllocatedMemory(p_int2, 200));
-  CU_TEST(1 == AllocatedMemory(p_int3, 10));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_int1, 100));
+  CU_ASSERT(1 == AllocatedMemory(p_int2, 200));
+  CU_ASSERT(1 == AllocatedMemory(p_int3, 10));
 #endif
 
   /* test ascrealloc() */
@@ -469,15 +471,15 @@ static void test_ascMalloc(void)
   CU_TEST_FATAL(NULL != p_str2);
   CU_TEST_FATAL(NULL != p_str3);
 #ifdef MALLOC_DEBUG
-  CU_TEST(95 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_str1, 50));
-  CU_TEST(2 == AllocatedMemory(p_str2, 20));
-  CU_TEST(2 == AllocatedMemory(p_str3, 25));
+  CU_ASSERT(95 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_str1, 50));
+  CU_ASSERT(2 == AllocatedMemory(p_str2, 20));
+  CU_ASSERT(2 == AllocatedMemory(p_str3, 25));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_str1, 50));
-  CU_TEST(1 == AllocatedMemory(p_str2, 20));
-  CU_TEST(1 == AllocatedMemory(p_str3, 25));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 50));
+  CU_ASSERT(1 == AllocatedMemory(p_str2, 20));
+  CU_ASSERT(1 == AllocatedMemory(p_str3, 25));
 #endif
 
   snprintf(p_str1, 49, "I should survive a reallocation!");
@@ -487,90 +489,90 @@ static void test_ascMalloc(void)
   p_str1 = ascrealloc(p_str1, 100);                     /* realloc to larger size */
   CU_TEST_FATAL(NULL != p_str1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(145 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_str1, 100));
-  CU_TEST(2 == AllocatedMemory(p_str2, 20));
-  CU_TEST(2 == AllocatedMemory(p_str3, 25));
+  CU_ASSERT(145 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(2 == AllocatedMemory(p_str2, 20));
+  CU_ASSERT(2 == AllocatedMemory(p_str3, 25));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_str1, 100));
-  CU_TEST(1 == AllocatedMemory(p_str2, 20));
-  CU_TEST(1 == AllocatedMemory(p_str3, 25));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(1 == AllocatedMemory(p_str2, 20));
+  CU_ASSERT(1 == AllocatedMemory(p_str3, 25));
 #endif
-  CU_TEST(0 == strcmp(p_str1, "I should survive a reallocation!"));
-  CU_TEST(0 == strcmp(p_str2, "Me too?"));
-  CU_TEST(0 == strcmp(p_str3, "Realloc me away."));
+  CU_ASSERT(0 == strcmp(p_str1, "I should survive a reallocation!"));
+  CU_ASSERT(0 == strcmp(p_str2, "Me too?"));
+  CU_ASSERT(0 == strcmp(p_str3, "Realloc me away."));
 
   p_str2 = ascrealloc(p_str2, 10);                       /* realloc to smaller size */
   CU_TEST_FATAL(NULL != p_str2);
 #ifdef MALLOC_DEBUG
-  CU_TEST(135 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_str1, 100));
-  CU_TEST(2 == AllocatedMemory(p_str2, 10));
-  CU_TEST(2 == AllocatedMemory(p_str3, 25));
+  CU_ASSERT(135 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(2 == AllocatedMemory(p_str2, 10));
+  CU_ASSERT(2 == AllocatedMemory(p_str3, 25));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_str1, 100));
-  CU_TEST(1 == AllocatedMemory(p_str2, 10));
-  CU_TEST(1 == AllocatedMemory(p_str3, 25));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(1 == AllocatedMemory(p_str2, 10));
+  CU_ASSERT(1 == AllocatedMemory(p_str3, 25));
 #endif
-  CU_TEST(0 == strcmp(p_str1, "I should survive a reallocation!"));
-  CU_TEST(0 == strcmp(p_str2, "Me too?"));
-  CU_TEST(0 == strcmp(p_str3, "Realloc me away."));
+  CU_ASSERT(0 == strcmp(p_str1, "I should survive a reallocation!"));
+  CU_ASSERT(0 == strcmp(p_str2, "Me too?"));
+  CU_ASSERT(0 == strcmp(p_str3, "Realloc me away."));
 
   p_str3 = ascrealloc(p_str3, 0);                       /* realloc to zero */
-  CU_TEST(NULL == p_str3);
+  CU_ASSERT(NULL == p_str3);
 #ifdef MALLOC_DEBUG
-  CU_TEST(110+AT_LEAST_1(0) == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_str1, 100));
-  CU_TEST(2 == AllocatedMemory(p_str2, 10));
-  CU_TEST(0 == AllocatedMemory(p_str3, 0));
+  CU_ASSERT(110+AT_LEAST_1(0) == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(2 == AllocatedMemory(p_str2, 10));
+  CU_ASSERT(0 == AllocatedMemory(p_str3, 0));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_str1, 100));
-  CU_TEST(1 == AllocatedMemory(p_str2, 10));
-  CU_TEST(1 == AllocatedMemory(p_str3, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(1 == AllocatedMemory(p_str2, 10));
+  CU_ASSERT(1 == AllocatedMemory(p_str3, 0));
 #endif
-  CU_TEST(0 == strcmp(p_str1, "I should survive a reallocation!"));
-  CU_TEST(0 == strcmp(p_str2, "Me too?"));
+  CU_ASSERT(0 == strcmp(p_str1, "I should survive a reallocation!"));
+  CU_ASSERT(0 == strcmp(p_str2, "Me too?"));
 
   ascfree(p_str3);
 #ifdef MALLOC_DEBUG
-  CU_TEST(110 == ascmeminuse());
-  CU_TEST(2 == AllocatedMemory(p_str1, 100));
-  CU_TEST(2 == AllocatedMemory(p_str2, 10));
-  CU_TEST(0 == AllocatedMemory(p_str3, 0));
+  CU_ASSERT(110 == ascmeminuse());
+  CU_ASSERT(2 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(2 == AllocatedMemory(p_str2, 10));
+  CU_ASSERT(0 == AllocatedMemory(p_str3, 0));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_str1, 100));
-  CU_TEST(1 == AllocatedMemory(p_str2, 10));
-  CU_TEST(1 == AllocatedMemory(p_str3, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(1 == AllocatedMemory(p_str2, 10));
+  CU_ASSERT(1 == AllocatedMemory(p_str3, 0));
 #endif
 
   ascfree(p_str1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(10 == ascmeminuse());
-  CU_TEST(0 == AllocatedMemory(p_str1, 100));
-  CU_TEST(2 == AllocatedMemory(p_str2, 10));
-  CU_TEST(0 == AllocatedMemory(p_str3, 0));
+  CU_ASSERT(10 == ascmeminuse());
+  CU_ASSERT(0 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(2 == AllocatedMemory(p_str2, 10));
+  CU_ASSERT(0 == AllocatedMemory(p_str3, 0));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_str1, 100));
-  CU_TEST(1 == AllocatedMemory(p_str2, 10));
-  CU_TEST(1 == AllocatedMemory(p_str3, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(1 == AllocatedMemory(p_str2, 10));
+  CU_ASSERT(1 == AllocatedMemory(p_str3, 0));
 #endif
 
   ascfree(p_str2);
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(0 == AllocatedMemory(p_str1, 100));
-  CU_TEST(0 == AllocatedMemory(p_str2, 10));
-  CU_TEST(0 == AllocatedMemory(p_str3, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(0 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(0 == AllocatedMemory(p_str2, 10));
+  CU_ASSERT(0 == AllocatedMemory(p_str3, 0));
 #else
-  CU_TEST(0 == ascmeminuse());
-  CU_TEST(1 == AllocatedMemory(p_str1, 100));
-  CU_TEST(1 == AllocatedMemory(p_str2, 10));
-  CU_TEST(1 == AllocatedMemory(p_str3, 0));
+  CU_ASSERT(0 == ascmeminuse());
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 100));
+  CU_ASSERT(1 == AllocatedMemory(p_str2, 10));
+  CU_ASSERT(1 == AllocatedMemory(p_str3, 0));
 #endif
 
   /* ascfree() tested adequately by other tests */
@@ -580,7 +582,7 @@ static void test_ascMalloc(void)
   memset(str1, '\0', STR_LEN);
   memset(str2, '*', STR_LEN);
 
-  CU_TEST(str2 == ascbcopy(str1, str2, STR_LEN/2));     /* copy part of a memory block */
+  CU_ASSERT(str2 == ascbcopy(str1, str2, STR_LEN/2));     /* copy part of a memory block */
 
   str1_bad = FALSE;
   str2_bad = FALSE;
@@ -610,7 +612,7 @@ static void test_ascMalloc(void)
   memset(str1, '+', STR_LEN);
   memset(str2, '-', STR_LEN);
 
-  CU_TEST(str2 == ascbcopy(str1, str2, 0));             /* 0 bytes copied */
+  CU_ASSERT(str2 == ascbcopy(str1, str2, 0));             /* 0 bytes copied */
 
   str1_bad = FALSE;
   str2_bad = FALSE;
@@ -632,7 +634,7 @@ static void test_ascMalloc(void)
 
   memset(str1, '=', STR_LEN);
 
-  CU_TEST(str1 == ascbzero(str1, STR_LEN/2));           /* zero part of a memory block */
+  CU_ASSERT(str1 == ascbzero(str1, STR_LEN/2));           /* zero part of a memory block */
 
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN/2 ; ++i) {
@@ -653,7 +655,7 @@ static void test_ascMalloc(void)
 
   memset(str1, '+', STR_LEN);
 
-  CU_TEST(str1 == ascbzero(str1, 0));                   /* 0 bytes processed */
+  CU_ASSERT(str1 == ascbzero(str1, 0));                   /* 0 bytes processed */
 
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
@@ -669,7 +671,7 @@ static void test_ascMalloc(void)
 
   memset(str1, '@', STR_LEN);
 
-  CU_TEST(str1 == ascbfill(str1, STR_LEN/2));           /* fill part of a memory block */
+  CU_ASSERT(str1 == ascbfill(str1, STR_LEN/2));           /* fill part of a memory block */
 
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN/2 ; ++i) {
@@ -690,7 +692,7 @@ static void test_ascMalloc(void)
 
   memset(str1, '#', STR_LEN);
 
-  CU_TEST(str1 == ascbfill(str1, 0));                   /* 0 bytes processed */
+  CU_ASSERT(str1 == ascbfill(str1, 0));                   /* 0 bytes processed */
 
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
@@ -705,11 +707,11 @@ static void test_ascMalloc(void)
   /* test AllocatedMemory() */
 
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == AllocatedMemory(NULL, 0));               /* NULL pointer, nothing allocated */
-  CU_TEST(0 == AllocatedMemory(&str1_bad, 0));          /* non-NULL pointer, nothing allocated */
+  CU_ASSERT(0 == AllocatedMemory(NULL, 0));               /* NULL pointer, nothing allocated */
+  CU_ASSERT(0 == AllocatedMemory(&str1_bad, 0));          /* non-NULL pointer, nothing allocated */
 #else
-  CU_TEST(1 == AllocatedMemory(NULL, 0));               /* NULL pointer, nothing allocated */
-  CU_TEST(1 == AllocatedMemory(&str1_bad, 0));          /* non-NULL pointer, nothing allocated */
+  CU_ASSERT(1 == AllocatedMemory(NULL, 0));               /* NULL pointer, nothing allocated */
+  CU_ASSERT(1 == AllocatedMemory(&str1_bad, 0));          /* non-NULL pointer, nothing allocated */
 #endif
 
   p_str1 = ASC_NEW_ARRAY(char,100);                      /* allocate 1 block */
@@ -719,46 +721,46 @@ static void test_ascMalloc(void)
   CU_TEST_FATAL(NULL != p_str2);
 
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == AllocatedMemory(NULL, 0));               /* NULL pointer */
+  CU_ASSERT(0 == AllocatedMemory(NULL, 0));               /* NULL pointer */
 
-  CU_TEST(0 == AllocatedMemory(p_str2, 0));             /* pointer allocated outside ascMalloc */
+  CU_ASSERT(0 == AllocatedMemory(p_str2, 0));             /* pointer allocated outside ascMalloc */
 
-  CU_TEST(2 == AllocatedMemory(p_str1, 100));           /* complete blocks */
+  CU_ASSERT(2 == AllocatedMemory(p_str1, 100));           /* complete blocks */
 
-  CU_TEST(1 == AllocatedMemory(p_str1, 99));            /* contained blocks */
-  CU_TEST(1 == AllocatedMemory(p_str1+1, 99));
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 99));            /* contained blocks */
+  CU_ASSERT(1 == AllocatedMemory(p_str1+1, 99));
 
-  CU_TEST(-1 == AllocatedMemory(p_str1, 101));          /* overlapping blocks */
-  CU_TEST(-1 == AllocatedMemory(p_str1+1, 100));
-  CU_TEST(-1 == AllocatedMemory(p_str1-1, 2));
-  CU_TEST(-1 == AllocatedMemory(p_str1-1, 150));
+  CU_ASSERT(-1 == AllocatedMemory(p_str1, 101));          /* overlapping blocks */
+  CU_ASSERT(-1 == AllocatedMemory(p_str1+1, 100));
+  CU_ASSERT(-1 == AllocatedMemory(p_str1-1, 2));
+  CU_ASSERT(-1 == AllocatedMemory(p_str1-1, 150));
 
-  CU_TEST(0 == AllocatedMemory(p_str1-10, 10));         /* non-overlapping blocks */
-  CU_TEST(0 == AllocatedMemory(p_str1-1, 1));
+  CU_ASSERT(0 == AllocatedMemory(p_str1-10, 10));         /* non-overlapping blocks */
+  CU_ASSERT(0 == AllocatedMemory(p_str1-1, 1));
 
 #else
-  CU_TEST(1 == AllocatedMemory(NULL, 0));               /* NULL pointer */
+  CU_ASSERT(1 == AllocatedMemory(NULL, 0));               /* NULL pointer */
 
-  CU_TEST(1 == AllocatedMemory(p_str2, 0));             /* pointer allocated outside ascMalloc */
+  CU_ASSERT(1 == AllocatedMemory(p_str2, 0));             /* pointer allocated outside ascMalloc */
 
-  CU_TEST(1 == AllocatedMemory(p_str1, 100));           /* complete blocks */
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 100));           /* complete blocks */
 
-  CU_TEST(1 == AllocatedMemory(p_str1, 99));            /* contained blocks */
-  CU_TEST(1 == AllocatedMemory(p_str1+1, 99));
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 99));            /* contained blocks */
+  CU_ASSERT(1 == AllocatedMemory(p_str1+1, 99));
 
-  CU_TEST(1 == AllocatedMemory(p_str1, 101));           /* overlapping blocks */
-  CU_TEST(1 == AllocatedMemory(p_str1+1, 100));
-  CU_TEST(1 == AllocatedMemory(p_str1-1, 2));
-  CU_TEST(1 == AllocatedMemory(p_str1-1, 150));
+  CU_ASSERT(1 == AllocatedMemory(p_str1, 101));           /* overlapping blocks */
+  CU_ASSERT(1 == AllocatedMemory(p_str1+1, 100));
+  CU_ASSERT(1 == AllocatedMemory(p_str1-1, 2));
+  CU_ASSERT(1 == AllocatedMemory(p_str1-1, 150));
 
-  CU_TEST(1 == AllocatedMemory(p_str1-10, 10));         /* non-overlapping blocks */
-  CU_TEST(1 == AllocatedMemory(p_str1-1, 1));
+  CU_ASSERT(1 == AllocatedMemory(p_str1-10, 10));         /* non-overlapping blocks */
+  CU_ASSERT(1 == AllocatedMemory(p_str1-1, 1));
 
 #endif
 
   ascfree(p_str1);
   free(p_str2);
-  CU_TEST(0 == ascmeminuse());
+  CU_ASSERT(0 == ascmeminuse());
 
   p_doub1 = (double *)ascmalloc(sizeof(double));        /* allocate 1 block */
   CU_TEST_FATAL(NULL != p_doub1);
@@ -767,67 +769,67 @@ static void test_ascMalloc(void)
   CU_TEST_FATAL(NULL != p_doub2);
 
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == AllocatedMemory(NULL, 0));               /* NULL pointer */
+  CU_ASSERT(0 == AllocatedMemory(NULL, 0));               /* NULL pointer */
 
-  CU_TEST(0 == AllocatedMemory(p_doub2, 0));            /* pointer allocated outside ascMalloc */
+  CU_ASSERT(0 == AllocatedMemory(p_doub2, 0));            /* pointer allocated outside ascMalloc */
 
-  CU_TEST(2 == AllocatedMemory(p_doub1, sizeof(double)));/* complete blocks */
+  CU_ASSERT(2 == AllocatedMemory(p_doub1, sizeof(double)));/* complete blocks */
 
-  CU_TEST(1 == AllocatedMemory(p_doub1, 0));            /* contained blocks */
-  CU_TEST(1 == AllocatedMemory((char *)p_doub1+1, sizeof(double)-1));
+  CU_ASSERT(1 == AllocatedMemory(p_doub1, 0));            /* contained blocks */
+  CU_ASSERT(1 == AllocatedMemory((char *)p_doub1+1, sizeof(double)-1));
 
-  CU_TEST(-1 == AllocatedMemory(p_doub1, sizeof(double)+1)); /* overlapping blocks */
-  CU_TEST(-1 == AllocatedMemory((char *)p_doub1+1, sizeof(double)));
-  CU_TEST(-1 == AllocatedMemory((char *)p_doub1-1, 2));
+  CU_ASSERT(-1 == AllocatedMemory(p_doub1, sizeof(double)+1)); /* overlapping blocks */
+  CU_ASSERT(-1 == AllocatedMemory((char *)p_doub1+1, sizeof(double)));
+  CU_ASSERT(-1 == AllocatedMemory((char *)p_doub1-1, 2));
 
-  CU_TEST(0 == AllocatedMemory((char *)p_doub1-1, 1));  /* non-overlapping blocks */
-  CU_TEST(0 == AllocatedMemory((char *)p_doub1-100, 100));
+  CU_ASSERT(0 == AllocatedMemory((char *)p_doub1-1, 1));  /* non-overlapping blocks */
+  CU_ASSERT(0 == AllocatedMemory((char *)p_doub1-100, 100));
 
 #else
-  CU_TEST(1 == AllocatedMemory(NULL, 0));               /* NULL pointer */
+  CU_ASSERT(1 == AllocatedMemory(NULL, 0));               /* NULL pointer */
 
-  CU_TEST(1 == AllocatedMemory(p_doub2, 0));            /* pointer allocated outside ascMalloc */
+  CU_ASSERT(1 == AllocatedMemory(p_doub2, 0));            /* pointer allocated outside ascMalloc */
 
-  CU_TEST(1 == AllocatedMemory(p_doub1, sizeof(double)));/* complete blocks */
+  CU_ASSERT(1 == AllocatedMemory(p_doub1, sizeof(double)));/* complete blocks */
 
-  CU_TEST(1 == AllocatedMemory(p_doub1, 0));            /* contained blocks */
-  CU_TEST(1 == AllocatedMemory((char *)p_doub1+1, sizeof(double)-1));
+  CU_ASSERT(1 == AllocatedMemory(p_doub1, 0));            /* contained blocks */
+  CU_ASSERT(1 == AllocatedMemory((char *)p_doub1+1, sizeof(double)-1));
 
-  CU_TEST(1 == AllocatedMemory(p_doub1, sizeof(double)+1)); /* overlapping blocks */
-  CU_TEST(1 == AllocatedMemory((char *)p_doub1+1, sizeof(double)));
-  CU_TEST(1 == AllocatedMemory((char *)p_doub1-1, 2));
+  CU_ASSERT(1 == AllocatedMemory(p_doub1, sizeof(double)+1)); /* overlapping blocks */
+  CU_ASSERT(1 == AllocatedMemory((char *)p_doub1+1, sizeof(double)));
+  CU_ASSERT(1 == AllocatedMemory((char *)p_doub1-1, 2));
 
-  CU_TEST(1 == AllocatedMemory((char *)p_doub1-1, 1));  /* non-overlapping blocks */
-  CU_TEST(1 == AllocatedMemory((char *)p_doub1-100, 100));
+  CU_ASSERT(1 == AllocatedMemory((char *)p_doub1-1, 1));  /* non-overlapping blocks */
+  CU_ASSERT(1 == AllocatedMemory((char *)p_doub1-100, 100));
 
 #endif
 
   ascfree(p_doub1);
   free(p_doub2);
-  CU_TEST(0 == ascmeminuse());
+  CU_ASSERT(0 == ascmeminuse());
 
   /* test InMemoryBlock() */
 
   p_str1 = ASC_NEW_ARRAY(char,100);                      /* allocate 1 block */
   CU_TEST_FATAL(NULL != p_str1);
-  CU_TEST(0 != InMemoryBlock(p_str1, p_str1));
-  CU_TEST(0 != InMemoryBlock(p_str1, p_str1+1));
-  CU_TEST(0 != InMemoryBlock(p_str1, p_str1+50));
-  CU_TEST(0 != InMemoryBlock(p_str1, p_str1+99));
+  CU_ASSERT(0 != InMemoryBlock(p_str1, p_str1));
+  CU_ASSERT(0 != InMemoryBlock(p_str1, p_str1+1));
+  CU_ASSERT(0 != InMemoryBlock(p_str1, p_str1+50));
+  CU_ASSERT(0 != InMemoryBlock(p_str1, p_str1+99));
 #ifdef MALLOC_DEBUG
-  CU_TEST(0 == InMemoryBlock(p_str1, p_str1-1));
-  CU_TEST(0 == InMemoryBlock(p_str1, p_str1+100));
-  CU_TEST(0 == InMemoryBlock(p_str1, p_str1+101));
-  CU_TEST(0 == InMemoryBlock(p_str1, (VOIDPTR)0));
+  CU_ASSERT(0 == InMemoryBlock(p_str1, p_str1-1));
+  CU_ASSERT(0 == InMemoryBlock(p_str1, p_str1+100));
+  CU_ASSERT(0 == InMemoryBlock(p_str1, p_str1+101));
+  CU_ASSERT(0 == InMemoryBlock(p_str1, (VOIDPTR)0));
 #else
-  CU_TEST(1 == InMemoryBlock(p_str1, p_str1-1));
-  CU_TEST(1 == InMemoryBlock(p_str1, p_str1+100));
-  CU_TEST(1 == InMemoryBlock(p_str1, p_str1+101));
-  CU_TEST(1 == InMemoryBlock(p_str1, (VOIDPTR)0));
+  CU_ASSERT(1 == InMemoryBlock(p_str1, p_str1-1));
+  CU_ASSERT(1 == InMemoryBlock(p_str1, p_str1+100));
+  CU_ASSERT(1 == InMemoryBlock(p_str1, p_str1+101));
+  CU_ASSERT(1 == InMemoryBlock(p_str1, (VOIDPTR)0));
 #endif
 
   ascfree(p_str1);
-  CU_TEST(0 == ascmeminuse());
+  CU_ASSERT(0 == ascmeminuse());
 
   /* test AssertAllocatedMemory() */
 
@@ -838,9 +840,9 @@ static void test_ascMalloc(void)
   if (0 == setjmp(g_asc_test_env))
     AssertAllocatedMemory(p_str1, 100);               /* error - no memory allocated */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   p_str1 = ASC_NEW_ARRAY(char,100);
@@ -853,73 +855,73 @@ static void test_ascMalloc(void)
   if (0 == setjmp(g_asc_test_env))
     AssertAllocatedMemory(NULL, 100);                 /* error - NULL ptr */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertAllocatedMemory(p_str1, 100);               /* ok - allocated block, correct size*/
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertAllocatedMemory(p_str1, 99);                /* error - incorrect size */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertAllocatedMemory(p_str1, 101);               /* error - incorrect size */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertAllocatedMemory(p_str2, 100);               /* error - invalid ptr */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertAllocatedMemory(p_int1, 10*sizeof(int));    /* ok - allocated block, correct size*/
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertAllocatedMemory(p_int1, 10*sizeof(int)-1);  /* error - incorrect size */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertAllocatedMemory(p_int1, 10*sizeof(int)+1);  /* error - incorrect size */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertAllocatedMemory(p_int2, 10*sizeof(int));    /* error - invalid ptr */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
@@ -939,9 +941,9 @@ static void test_ascMalloc(void)
   if (0 == setjmp(g_asc_test_env))
     AssertMemory(p_str1);                             /* error - no memory allocated */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   p_str1 = ASC_NEW_ARRAY(char,100);
@@ -954,42 +956,42 @@ static void test_ascMalloc(void)
   if (0 == setjmp(g_asc_test_env))
     AssertMemory(NULL);                               /* error -  NULL ptr */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertMemory(p_str1);                             /* ok - start of allocated block*/
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertMemory(p_str1+10);                          /* ok - in allocated block*/
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertMemory(p_int1);                             /* ok - start of allocated block */
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertMemory(p_str2);                             /* error - not allocated using asc*alloc */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertMemory(p_int2);                             /* error - not allocated using asc*alloc */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
@@ -1009,9 +1011,9 @@ static void test_ascMalloc(void)
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(p_str1, 100);               /* error - no memory allocated */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   p_str1 = ASC_NEW_ARRAY(char,100);
@@ -1024,70 +1026,70 @@ static void test_ascMalloc(void)
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(NULL, 100);                 /* error - NULL ptr */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(p_str1, 100);               /* ok - allocated block, correct size*/
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(p_str1, 0);                 /* ok - contained in a block*/
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(p_str1+10, 50);             /* ok - contained in a block */
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(p_str1, 101);               /* error - incorrect size */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(p_str2, 0);                 /* error - invalid ptr */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(p_int1, 10*sizeof(int));    /* ok - allocated block, correct size*/
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(p_int1, sizeof(int)-1);     /* ok - incorrect size */
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(p_int1, 10*sizeof(int)+1);  /* error - incorrect size */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedMemory(p_int2, 10*sizeof(int));    /* error - invalid ptr */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
@@ -1107,9 +1109,9 @@ static void test_ascMalloc(void)
   if (0 == setjmp(g_asc_test_env))
     AssertContainedIn(p_str1, p_str1);                /* error - no memory allocated */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   p_str1 = ASC_NEW_ARRAY(char,100);                    /* allocate 1 block */
@@ -1118,66 +1120,66 @@ static void test_ascMalloc(void)
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedIn(p_str1, p_str1);                /* ok - same pointer */
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedIn(p_str1, p_str1+1);              /* ok - in block */
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedIn(p_str1, p_str1+50);             /* ok - in block */
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedIn(p_str1, p_str1+99);             /* ok - in block */
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedIn(p_str1, p_str1-1);              /* error - outside block */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedIn(p_str1, p_str1+100);            /* error - outside block */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedIn(p_str1, p_str1+101);            /* error - outside block */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedIn(p_str1, NULL);                  /* error - NULL ptr */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
     AssertContainedIn(NULL, p_str1);                  /* error - NULL ptr */
 #if defined(MALLOC_DEBUG) && defined(ALLOCATED_TESTS)
-  CU_TEST(TRUE == asc_assert_failed());
+  CU_ASSERT(TRUE == asc_assert_failed());
 #else
-  CU_TEST(FALSE == asc_assert_failed());
+  CU_ASSERT(FALSE == asc_assert_failed());
 #endif
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
@@ -1185,7 +1187,7 @@ static void test_ascMalloc(void)
 
   ascfree(p_str1);
 
-  CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+  CU_ASSERT(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 }
 
 /*===========================================================================*/

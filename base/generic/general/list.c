@@ -31,6 +31,7 @@
 
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
+#include <utilities/error.h>
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
 #include "list.h"
@@ -57,8 +58,7 @@ static const unsigned long MIN_INCREMENT = 8;
  * just before assertion acts to handle the range error.
  */
 #define ASSERTRANGE(list,pos,n) \
-  asc_assert(((pos >= 1) && (pos <= GL_LENGTH(list))) || \
-             (PRINTF("%s called with illegal length %lu\n",n,pos) == -2));
+  asc_assert((pos >= 1) && (pos <= GL_LENGTH(list)));
 
 #ifndef MOD_REALLOC
 #define REALLOCDEBUG FALSE
@@ -130,7 +130,7 @@ void gl_init(void)
   int i;
   if (AllowedContents[0] &&
       AllowedContents[0] != MAXRECYCLESMALLITEMS) {
-    PRINTF("gl_init recalled after data corrupted!\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_init recalled after data corrupted!\n");
     return;
     /* somebody called us twice, with intervening nonsense. punt */
   }
@@ -202,7 +202,7 @@ void gl_init_pool(void) {
     Asc_Panic(2, NULL, "ERROR: gl_init_pool unable to allocate pool.\n");
   }                     
 #else
-  PRINTF("list.[ch] built without pooling of overheads\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"list.[ch] built without pooling of overheads\n");
 #endif
 }
 
@@ -214,7 +214,7 @@ void gl_destroy_pool(void) {
   pool_destroy_store(g_list_head_pool);
   g_list_head_pool = NULL;
 #else
-  PRINTF("list.[ch] built without pooling of overheads\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"list.[ch] built without pooling of overheads\n");
 #endif
 }                                                              
 
@@ -224,7 +224,7 @@ int gl_pool_initialized(void)
 #if LISTUSESPOOL
   return (g_list_head_pool == NULL) ? FALSE : TRUE;
 #else
-  PRINTF("list.[ch] built without pooling of overheads\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"list.[ch] built without pooling of overheads\n");
   return TRUE;
 #endif
 }
@@ -291,7 +291,7 @@ struct gl_list_t *gl_create(unsigned long int capacity)
     return new;
   }
   else {
-    FPRINTF(ASCERR,"UNABLE TO ALLOCATE MEMORY FOR LIST\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"UNABLE TO ALLOCATE MEMORY FOR LIST\n");
     return NULL;
   }
 }
@@ -426,7 +426,7 @@ static void gl_expand_list(struct gl_list_t *list)
   tmp = (VOIDPTR *) DATAREALLOC(list,increment);
 
   if (tmp==NULL) {
-    PRINTF("gl_expand_list: memory allocation failed\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_expand_list: memory allocation failed");
     list->capacity -= increment;
   } else {
     list->data = tmp;
@@ -441,7 +441,7 @@ static void gl_expand_list_by(struct gl_list_t *list,unsigned long addlen)
   list->capacity += addlen;
   list->data = (VOIDPTR *)DATAREALLOC(list,addlen);
 
-  if (list->data==NULL) PRINTF("gl_expand_list_by: memory allocation failed\n");
+  if (list->data==NULL)ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_expand_list_by: memory allocation failed\n");
   asc_assert(list->data!=NULL);
 }
 
@@ -787,8 +787,7 @@ void gl_insert_sorted(struct gl_list_t *list,
     list->flags |= gsf_SORTED;
   }
   else {
-    PRINTF(
-      "Warning gl_insert_sorted called on unsorted list.\nSorting list.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_insert_sorted called on unsorted list -- sorting list now.");
     gl_append_ptr(list,ptr);
     gl_sort(list,func);
   }

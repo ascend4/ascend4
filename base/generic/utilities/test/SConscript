@@ -3,6 +3,7 @@ Import('env')
 import glob
 
 env['TESTSRCS_UTILITIES'] = [env.File(i) for i in Split("""
+	test_ascMalloc.c 
 	test_ascPanic.c
 	test_ascSignal.c
 	test_ascPrint.c
@@ -10,7 +11,6 @@ env['TESTSRCS_UTILITIES'] = [env.File(i) for i in Split("""
 	test_mem.c
 	test_readln.c
 	test_register_utilities.c
-	test_ascMalloc.c 
 	test_ascDynaLoad.c
 	test_ascEnvVar.c
 """)]
