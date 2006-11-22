@@ -1,7 +1,7 @@
 #include <utilities/ascConfig.h>
 #include "test_ascDynaLoad_shlib.h"
 
-ASC_DLLSPEC(int) value = FALSE;
+int value = FALSE;
                           
 int init(void)
 {
