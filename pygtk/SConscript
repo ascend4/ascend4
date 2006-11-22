@@ -53,7 +53,8 @@ def get_new_swig_flags(env):
 	return flags
 
 swig_env = python_env.Copy()
-swig_env['CCFLAGS'] = swig_env['CCFLAGS'].remove('-Wall')
+if '-Wall' in swig_env.get('CCFLAGS'):
+	swig_env['CCFLAGS'] = swig_env['CCFLAGS'].remove('-Wall')
 
 swigobj = swig_env.SharedObject('ascpy.i'
 	, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)

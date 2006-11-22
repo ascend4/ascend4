@@ -60,7 +60,7 @@
 #include <compiler/dimen.h>
 #include <compiler/compiler.h>      /* for symchar for units.h */
 #include <compiler/units.h>
-#include <compiler/redirectFile.h>  /* for Asc_RedirectCompilerDefault() */
+/* #include <compiler/redirectFile.h> */  /* for Asc_RedirectCompilerDefault() */
 #include <compiler/simlist.h>
 #include <solver/slv_types.h>
 #include <solver/var.h>
@@ -228,9 +228,13 @@ int AscDriver(int argc, CONST char **argv)
   Tcl_Channel inChannel;
   Tcl_Channel outChannel;
 
+  /* Remove the stream redirection stuff for the moment -- JP Nov 2006 */
   /* jds20050119:  Initialize ASCERR before any calls to ascPanic(). */
   /* TODO: revisit when interface is decoupled from base - this may change. */
+#ifdef REIMPLEMENT_STREAMS
   Asc_RedirectCompilerDefault();
+#endif
+
 #ifdef USE_ASC_PRINTF
   Asc_PrintInit_TclVtable();
 #endif  /* USE_ASC_PRINTF */
