@@ -259,9 +259,9 @@ static int color_test(){
 			fprintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED (NO ENV VAR 'TERM')\n\n\n");
 			use_xterm_color=-1;
 		}
-	}else{
+	}/*else{
 		Asc_FPrintf(stderr,"color=%d",use_xterm_color);
-	}
+	}*/
 	return use_xterm_color;
 }
 #endif /*ASC_XTERM_COLORS*/

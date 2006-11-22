@@ -28,7 +28,7 @@
 #endif
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
-#include <compiler/redirectFile.h>
+/* #include <compiler/redirectFile.h> */
 #include "CUnit/CUnit.h"
 #include "test_ascPanic.h"
 #include "assertimpl.h"
@@ -36,6 +36,19 @@
 
 static int f_callback_called = FALSE;
 static int f_callback_status;
+
+/*
+	These tests have been disabled as the stream redirection in ASCEND is
+	starting to be a bit crazy: error.c --> ascPrint.h --> redirectFile.h
+	as well as printutil.c and redirectStdStreams.c. Will set this test to
+	failing and we'll come back and reimplement this later.
+*/
+
+static void test_ascPanic(void){
+	CU_FAIL("test_ascPanic needs to be reimplemented");
+}
+
+#ifdef REIMPLEMENT_STREAMS
 
 /*
  *  Callback function for Asc_Panic() during testing.
@@ -171,6 +184,7 @@ static void test_ascPanic(void)
   Asc_RedirectCompilerStreams(old_errfile, old_warnfile, old_infofile); /* restore streams */
   CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 }
+#endif /* REIMPLEMENT_STREAMS */
 
 /*===========================================================================*/
 /* Registration information */

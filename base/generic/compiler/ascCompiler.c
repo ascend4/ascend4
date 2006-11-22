@@ -85,7 +85,7 @@
 #include "numlist.h"
 #include "bintoken.h"
 #include "childio.h"
-#include "redirectFile.h"
+/* #include "redirectFile.h" */
 #include "ascCompiler.h"
 
 #ifndef lint
@@ -160,7 +160,11 @@ int Asc_CompilerInit(int simp)
  if (simp !=0){
    g_simplify_relations = 1;
  }
+
+#ifdef REIMPLEMENT_STREAMS
  Asc_RedirectCompilerDefault();
+#endif /* REIMPLEMENT_STREAMS */
+
 /* Commenting out the call to gl_init will make the system slower but
  * easier to debug for leaks.
  * Move the close-comment to after gl_init if debugging.

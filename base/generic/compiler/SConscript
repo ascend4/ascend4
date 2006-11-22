@@ -20,7 +20,7 @@ csrcs = Split("""
 	select.c setinst_io.c setinstval.c setio.c
 	sets.c slist.c simlist.c statement.c statio.c switch.c
 	symtab.c syntax.c temp.c tmpnum.c type_desc.c
-	type_descio.c typedef.c typelint.c redirectFile.c
+	type_descio.c typedef.c typelint.c
 	units.c universal.c
 	value_type.c visitinst.c visitlink.c vlist.c vlistio.c
 	watchpt.c watchptio.c when.c when_io.c when_util.c

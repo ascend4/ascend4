@@ -174,11 +174,17 @@ int integrator_ida_solve(
 		return 0; /* failure */
 	}
 
+	CONSOLE_DEBUG("RETRIEVING t0");
+
 	/* retrieve initial values from the system */
 	t0 = samplelist_get(blsys->samples,start_index);
 
+	CONSOLE_DEBUG("RETRIEVING y0");
+
 	y0 = N_VNew_Serial(size);
 	integrator_get_y(blsys,NV_DATA_S(y0));
+
+	CONSOLE_DEBUG("RETRIEVING yp0");
 
 	yp0 = N_VNew_Serial(size);
 	integrator_get_ydot(blsys,NV_DATA_S(yp0));
@@ -426,12 +432,14 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	char *relname, *varname;
 	int status;
 	double Jv_i;
+	int var_yindex;
 
 	int *variables;
 	double *derivatives;
 	var_filter_t filter;
 	int count;
 
+	fprintf(stderr,"\n--------------\n");
 	CONSOLE_DEBUG("EVALUTING JACOBIAN...");
 
 	blsys = (IntegratorSystem *)jac_data;
@@ -467,24 +475,33 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				i< enginedata->nrels && relptr != NULL;
 				++i, ++relptr
 		){
+			fprintf(stderr,"\n");
+			relname = rel_make_name(blsys->system, *relptr);
+			CONSOLE_DEBUG("RELATION %d '%s'",i,relname);
+			ASC_FREE(relname);
+
 			/* get derivatives for this particular relation */
 			status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
+			CONSOLE_DEBUG("Got derivatives against %d matching variables", count);
+
 			for(j=0;j<count;++j){
-				varname = var_make_name(blsys->system, enginedata->varlist[blsys->y_id[variables[i]]]);
-				CONSOLE_DEBUG("diff var[%d] is %s",j,varname);
+				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
+				CONSOLE_DEBUG("derivatives[%d] = %f (variable %d, '%s')",j,derivatives[j],variables[j],varname);
 				ASC_FREE(varname);
 			}
 
-			CONSOLE_DEBUG("Got derivatives against %d matching variables", count);
-
-			relname = rel_make_name(blsys->system, *relptr);
 			if(!status){
-				CONSOLE_DEBUG("Derivatives for relation %d '%s' OK",i,relname);
+				CONSOLE_DEBUG("Derivatives for relation %d OK",i);
 			}else{
-				CONSOLE_DEBUG("ERROR calculating derivatives for relation %d '%s'",i,relname);
+				CONSOLE_DEBUG("ERROR calculating derivatives for relation %d",i);
 				break;
 			}
-			ASC_FREE(relname);
+
+			/*
+				Now we have the derivatives wrt each alg/diff variable in the
+				present equation. variables[] points into the varlist. need
+				a mapping from the varlist to the y and ydot lists.
+			*/
 
 			Jv_i = 0;
 			for(j=0; j < count; ++j){
@@ -498,7 +515,16 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				}
 				
 				/* this bit is still not right!!! */
-				Jv_i += derivatives[j] * NV_Ith_S(v,blsys->y_id[variables[j]]);
+				var_yindex = blsys->y_id[variables[j]];
+
+				if(var_yindex >= 0){
+					CONSOLE_DEBUG("j = %d: algebraic, deriv[j] = %f, v[%d] = %f",j,derivatives[j], var_yindex, NV_Ith_S(v,var_yindex));
+					Jv_i += derivatives[j] * NV_Ith_S(v,var_yindex);
+				}else{
+					var_yindex = -var_yindex-1;
+					CONSOLE_DEBUG("j = %d: differential, deriv[j] = %f, v[%d] = %f",j,derivatives[j], var_yindex, NV_Ith_S(v,var_yindex));
+					Jv_i += derivatives[j] * NV_Ith_S(v,var_yindex) / c_j; 
+				}
 			}
 
 			NV_Ith_S(Jv,i) = Jv_i;

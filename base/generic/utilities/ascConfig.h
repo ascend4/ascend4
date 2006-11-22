@@ -269,6 +269,7 @@
 #define ASC_MILD_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
 #define ASC_BIG_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
 
+#ifdef REIMPLEMENT_STREAMS
 ASC_DLLSPEC(FILE*) g_ascend_errors;         /**< File stream to receive error messages. */
 ASC_DLLSPEC(FILE*) g_ascend_warnings;       /**< File stream to receive warning messages. */
 ASC_DLLSPEC(FILE*) g_ascend_information;    /**< File stream to receive general messages. */
@@ -279,6 +280,14 @@ ASC_DLLSPEC(FILE*) g_ascend_information;    /**< File stream to receive general 
 # define ASCWAR g_ascend_warnings
 # define ASCINF g_ascend_information
 #endif
+
+#else 
+# define ASCERR stderr
+# define ASCWAR stderr
+# define ASCINF stderr
+#endif
+
+
 /*
  *  file pointers for whine. they default to stderr. if you change
  *  them, be sure to change them to valid files.

@@ -84,15 +84,6 @@ void Asc_Panic(CONST int status, CONST char *function,
   msg[p++] = '\n';
   msg[p++] = '\0';
 
-  /*
-	Ensure that our messages don't get left in the GUI
-	that is about to vanish...
-  */
-  error_reporter_set_callback(NULL);
-
-  /* Print the message to the default error reporter (ASCERR) */
-  fprintf(stderr,"\n\n");
-  ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,msg);
 
   /*
 	Write the message to g_panic_outfile if it is not empty
@@ -109,8 +100,25 @@ void Asc_Panic(CONST int status, CONST char *function,
     fclose(outfile);
   }
 
-  /* Call the registered callback function, if any. */
-  if (NULL != f_panic_callback_func) {
+  if (NULL == f_panic_callback_func) {
+    /* if there is no callback function registered, reset the error handler, and
+	   output the message to the console.
+    */
+
+	  /*
+		Ensure that our messages don't get left in the GUI
+		that is about to vanish...
+	  */
+	  error_reporter_set_callback(NULL);
+
+	  /* Print the message to the default error reporter (ASCERR) */
+	  fprintf(stderr,"\n\n");
+	  ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,msg);
+
+
+  }else{
+    /* just use the callback, don't make any output */
+
     cancel = (*f_panic_callback_func)(status);
 	if(cancel){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,

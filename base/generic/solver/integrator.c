@@ -83,9 +83,9 @@ static symchar *g_symbols[4];
 struct Integ_var_t {
   long index;
   long type;
-  struct var_variable *i;
+  struct Integ_var_t *derivative;
   struct Integ_var_t *derivative_of;
-  struct var_variable *derivative;
+  struct var_variable *i;
   int varindx; /**< index into slv_get_master_vars_list, or -1 if not there */
   int isstate;
 };
@@ -334,6 +334,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	int i, j;
 	int numstates;
 	int numy, nrels;
+	int yindex;
 	int maxderiv;
 
 	CONSOLE_DEBUG("Starting DAE analysis");
@@ -377,63 +378,45 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		if(info->type==1 || info->type==0)numstates++;
 		if(maxderiv < info->type - 1)maxderiv = info->type - 1;
-		varname = var_make_name(sys->system,info->i);
-		/* CONSOLE_DEBUG("var[%d] = \"%s\": ode_index = %ld",i,varname,info->type); */
-		ASC_FREE(varname);
+		/* varname = var_make_name(sys->system,info->i);
+		CONSOLE_DEBUG("var[%d] = \"%s\": ode_index = %ld",i,varname,info->type);
+		ASC_FREE(varname); */
 	}
 	if(maxderiv == 0){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No derivatives found (check 'ode_type' values for your vars).");
 		return 0;
 	}
-	if(numstates == 0){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No states found (check 'odetype' values for your vars).");
+	if(maxderiv > 1){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Higher-order derivatives found. You must provide a reduced order formulation for your model.");
 		return 0;
 	}
-
 
 	if(!integrator_check_indep_var(sys))return 0;
 
 	gl_sort(sys->dynvars,(CmpFunc)Integ_CmpDynVars);
 
-	/*
+	fprintf(stderr,"\n\n\nSORTED VARS\n");
 	for(i=1; i<=gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		varname = var_make_name(sys->system,info->i);
-		// CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld",i,varname,info->type); 
+		CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld",i,varname,info->type); 
 		ASC_FREE(varname);
-	}*/
+	}
 
-	/* link up derivative chains */
-
+	/* link up variables with their derivatives */
 	prev = NULL;
 	for(i=1; i<=gl_length(sys->dynvars); ++i){ /* why does gl_list index with base 1??? */
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
-		info->derivative = NULL;
-
-		derivname = var_make_name(sys->system,info->i);
-		if(prev!=NULL){
-			varname = var_make_name(sys->system,prev->i);
-		}else{
-			varname = NULL;
-		}
-		/* CONSOLE_DEBUG("current = \"%s\", previous = \"%s\"",derivname,varname); */
-		ASC_FREE(derivname);
-		if(varname)ASC_FREE(varname);
-
+		
 		if(info->type == INTEG_STATE_VAR || info->type == INTEG_ALGEBRAIC_VAR){
 			varname = var_make_name(sys->system,info->i);
-			/* CONSOLE_DEBUG("Var \"%s\" is not a derivative",varname); */
+			CONSOLE_DEBUG("Var \"%s\" is an algebraic variable",varname);
 			ASC_FREE(varname);
-			info->derivative_of = NULL;
 			info->type = INTEG_STATE_VAR;
+			info->derivative_of = NULL;
 		}else{
 			if(prev==NULL || info->index != prev->index){
-				/* CONSOLE_DEBUG("current current type = %ld",info->type); */
-				/* if(prev!=NULL){
-					CONSOLE_DEBUG("current index = %ld, previous = %ld",info->index,prev->index);
-				}else{
-					CONSOLE_DEBUG("current index = %ld, current type = %ld",info->index,info->type);
-				} */
+				/* derivative, but without undifferentiated var present in model */
 				varname = var_make_name(sys->system,info->i);
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Derivative %d of \"%s\" is present without its un-differentiated equivalent"
 					, info->type-1
@@ -442,6 +425,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 				ASC_FREE(varname);
 				return 0;
 			}else if(info->type != prev->type + 1){
+				/* derivative, but missing the next-lower-order derivative */
 				derivname = var_make_name(sys->system,info->i);
 				varname = var_make_name(sys->system,prev->i);
 				ERROR_REPORTER_HERE(ASC_USER_ERROR
@@ -454,124 +438,60 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 				ASC_FREE(derivname);
 				return 0;
 			}else{
+				/* variable with derivative */
 				varname = var_make_name(sys->system,prev->i);
 				derivname = var_make_name(sys->system,info->i);
 				CONSOLE_DEBUG("Var \"%s\" is the derivative of \"%s\"",derivname,varname);
 				ASC_FREE(varname);
 				ASC_FREE(derivname);
 				info->derivative_of = prev;
-				numy++;
 			}
 		}
 		prev = info;
 	}
 
-	/* record which vars have derivatives and which don't */
-	for(i=1; i<=gl_length(sys->dynvars); ++i){
-		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
-		if(info->derivative_of){
-			info->derivative_of->derivative = info->i;
-			/* varname = var_make_name(sys->system,info->derivative_of->i);
-			derivname = var_make_name(sys->system,info->derivative_of->derivative);
-			CONSOLE_DEBUG("Var \"%s\" is the derivative of \"%s\"",derivname,varname);
-			ASC_FREE(varname);
-			ASC_FREE(derivname); */
-		}
-	}
-
-	CONSOLE_DEBUG("Indentifying states...");
-
-	/* count numy: either it's a state, or it has a higher-order derivative */
+	/* record which vars have derivatives and which don't, and count 'states' */
 	numy = 0;
 	for(i=1; i<=gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
-		if(info->type == INTEG_STATE_VAR || info->type == INTEG_ALGEBRAIC_VAR || info->derivative != NULL){
-			varname = var_make_name(sys->system,info->i);
-			if(var_fixed(info->i)){
-				CONSOLE_DEBUG("Var \"%s\" is a FIXED state variable",varname);
-			}else{
-				CONSOLE_DEBUG("Var \"%s\" is a state variable",varname);
-			}
-			ASC_FREE(varname);
-			info->isstate = 1;
-			numy++;
+		if(info->derivative_of){
+			info->derivative_of->derivative = info;
 		}else{
-			varname = var_make_name(sys->system,info->i);
-			CONSOLE_DEBUG("Var \"%s\" is a NON-STATE derivative",varname);
-			ASC_FREE(varname);
-			info->isstate = 0;
+			numy++;
 		}
 	}
 
-	/*
-		create lists 'y' and 'ydot'. some elements of ydot don't correspond
-		to variables in our model: these are the algebraic vars.
-	*/
-
-	CONSOLE_DEBUG("Identified %d state variables", numy);
-
+	/* allocate storage for the 'y' and 'ydot' arrays */
 	sys->y = ASC_NEW_ARRAY(struct var_variable *,numy);
 	sys->ydot = ASC_NEW_ARRAY(struct var_variable *,numy);
+	sys->y_id = ASC_NEW_ARRAY(int, slv_get_num_master_vars(sys->system));
 
-	/*
-		at this point we know there are no missing derivatives etc, so we
-		can use (i-1) as the index into y and ydot. any variable with
-		'derivative_of' set to null is a state variable... but it might already
-		be getting added
-	*/
-	for(j=0, i=1; i<=gl_length(sys->dynvars); ++i){
+	/* now add variables and their derivatives to 'ydot' and 'y' */
+	yindex = 0;
+	
+	for(i=1; i<=gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
-		if(!info->isstate)continue;
-		varname = var_make_name(sys->system,info->i);
-		if(info->derivative == NULL){
-			CONSOLE_DEBUG("Pure algebraic: %s",varname);
-			sys->y[j] = info->i; /* a pure algebraic variable */
-			sys->ydot[j] = NULL;
+		if(info->derivative_of)continue;
+		if(info->derivative){
+			sys->y[yindex] = info->i;
+			sys->ydot[yindex] = info->derivative->i;
+			if(info->varindx >= 0){
+				sys->y_id[info->varindx] = yindex;
+				CONSOLE_DEBUG("y_id[%d] = %d",info->varindx,yindex);
+			}
+			if(info->derivative->varindx >= 0){
+				sys->y_id[info->derivative->varindx] = -1-yindex;
+				CONSOLE_DEBUG("y_id[%d] = %d",info->derivative->varindx,-1-yindex);
+			}
 		}else{
-			CONSOLE_DEBUG("Differential variable: %s",varname);
-			sys->y[j] = info->i; /* a variable whose derivative is present in the model */
-			sys->ydot[j] = info->derivative;
+			sys->y[yindex] = info ->i;
+			sys->ydot[yindex] = NULL;
+			if(info->varindx >= 0){
+				sys->y_id[info->varindx] = yindex;
+				CONSOLE_DEBUG("y_id[%d] = %d",info->varindx,yindex);
+			}
 		}
-		ASC_FREE(varname);
-		++j;
-	}
-
-	/*
-		set up the y_id table so that given a 'variable number' from relman_diff2,
-		we can work out where that fits in our y and ydot vectors.
-
-		There's something a bit fishy about fetching the varlist at this late stage...
-	*/
-
-	varlist = slv_get_solvers_var_list(sys->system);
-	nvarlist = slv_get_num_solvers_vars(sys->system);
-
-	CONSOLE_DEBUG("WORKING THROUGH THE SOLVER'S VAR LIST %d",nvarlist);
-
-	sys->y_id = ASC_NEW_ARRAY(long, nvarlist);
-	for(i=0; i< nvarlist; ++i){
-		sys->y_id[i] = -2;
-	}
-
-	CONSOLE_DEBUG("WORKING THROUGH %ld DYNVARS",gl_length(sys->dynvars));
-
-	for(i=1; i <= gl_length(sys->dynvars); ++i){
-		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
-		sys->y_id[info->varindx] = i;
-		varname = var_make_name(sys->system,info->i);			
-		if(info->varindx > 0){
-			CONSOLE_DEBUG("Variable dynvars[%d] = y_id[%d] = '%s'",i,info->varindx,varname);
-		}else{
-			CONSOLE_DEBUG("VARIABLE dynvars[%d] = y_id[%d] = '%s' NOT FOUND IN VARLIST",i,info->varindx,varname);
-		}
-		ASC_FREE(varname);
-	}
-	for(i=0; i< nvarlist; ++i){
-		if(sys->y_id[i] < 0){
-			varname = var_make_name(sys->system,varlist[i]);
-			CONSOLE_DEBUG("UNCONNECTED SOLVER VAR varlist[%d] = '%s' (%s)",i,varname,var_fixed(varlist[i])?"fixed":"not fixed");
-			ASC_FREE(varname);
-		}
+		yindex++;
 	}
 
 	nrels = slv_get_num_solvers_rels(sys->system);
@@ -583,6 +503,8 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		return 0;
 	}
 
+	CONSOLE_DEBUG("THERE ARE %d VARIABLES IN THE INTEGRATION SYSTEM",numy);
+	
 	sys->n_y = numy;
 
 	if(!integrator_sort_obs_vars(sys))return 0;
@@ -795,6 +717,8 @@ static void integrator_print_var_stats(IntegratorSystem *sys){
 }
 
 /**
+	Check sanity of the independent variable.
+
 	@return 1 on success
 */
 static int integrator_check_indep_var(IntegratorSystem *sys){
@@ -879,7 +803,8 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 			CONSOLE_DEBUG("VARIABLE IS NOT ACTIVE");
 			return;
 		}
-
+		
+		/* only non-fixed variables are accepted */
 		if(!var_fixed(var)){
 			/* get the ode_type and ode_id of this solver_var */
 			type = DynamicVarInfo(var,&index);
@@ -893,8 +818,8 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 				INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->dynvars);
 			}
 		}
-#if 1
-else{
+#if 0
+		else{
 			/* fixed variable, only include it if ode_type == 1 */
 			type = DynamicVarInfo(var,&index);
 			if(type==INTEG_STATE_VAR){
