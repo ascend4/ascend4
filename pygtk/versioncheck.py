@@ -1,5 +1,5 @@
 import urllib2, ConfigParser, platform
-
+import socket
 
 class VersionCheck:
 	def __init__(self):
@@ -8,6 +8,7 @@ class VersionCheck:
 		self.latest = None
 		self.info = None
 	def check(self):
+		socket.setdefaulttimeout(1)
 		auth_handler = urllib2.HTTPBasicAuthHandler()
 		opener = urllib2.build_opener(auth_handler)
 		urllib2.install_opener(opener)

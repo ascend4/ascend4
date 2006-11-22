@@ -234,6 +234,7 @@ int integrator_ida_solve(
 	}/* else success */
 
 	/* assign the J*v function */
+#if 0
     flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex, (void *)blsys);
 	if(flag==IDASPILS_MEM_NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
@@ -242,6 +243,7 @@ int integrator_ida_solve(
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDASPILS linear solver has not been initialized");
 		return 0;
 	}/* else success */
+#endif
 
 	/* set linear solver optional inputs...
 
@@ -463,10 +465,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 	CONSOLE_DEBUG("PRINTING VALUES OF 'v' VECTOR (length %ld)",NV_LENGTH_S(v));
 	for(i=0; i<NV_LENGTH_S(v); ++i){
-		varname = var_make_name(blsys->system, enginedata->varlist[i]);
-		if(varname==NULL)varname="UNKNOWN";
-		CONSOLE_DEBUG("v[%d] = '%s' = %f",i,varname,NV_Ith_S(v,i));
-		ASC_FREE(varname);
+		CONSOLE_DEBUG("v[%d] = %f",i,NV_Ith_S(v,i));
 	}
 
 	Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
@@ -514,8 +513,8 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 					CONSOLE_DEBUG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
 				}
 				
-				/* this bit is still not right!!! */
 				var_yindex = blsys->y_id[variables[j]];
+				CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %d",j,variables[j],var_yindex);
 
 				if(var_yindex >= 0){
 					CONSOLE_DEBUG("j = %d: algebraic, deriv[j] = %f, v[%d] = %f",j,derivatives[j], var_yindex, NV_Ith_S(v,var_yindex));
