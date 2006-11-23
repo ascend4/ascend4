@@ -6,6 +6,7 @@
 
 #ifdef ERROR_REPORTER_TREE_ACTIVE
 # include "ascMalloc.h"
+# include "ascPanic.h"
 #endif
 
 /**
@@ -20,6 +21,7 @@ static error_reporter_callback_t g_error_reporter_callback;
 */
 static error_reporter_meta_t g_error_reporter_cache;
 
+#ifdef ERROR_REPORTER_TREE_ACTIVE
 static error_reporter_meta_t *error_reporter_meta_new(){
 	error_reporter_meta_t *e;
 	e = ASC_NEW(error_reporter_meta_t);
@@ -31,6 +33,7 @@ static error_reporter_meta_t *error_reporter_meta_new(){
 	e->msg[0] = '\0';
 	return e;
 }
+#endif /* ERROR_REPORTER_TREE_ACTIVE */
 	
 /**
 	XTERM colour codes used to distinguish between errors of different types.
@@ -92,8 +95,12 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 
 static error_reporter_tree_t *g_error_reporter_tree = NULL;
 static error_reporter_tree_t *g_error_reporter_tree_current = NULL;
+
 # define TREECURRENT g_error_reporter_tree_current
 # define TREE g_error_reporter_tree
+
+static int error_reporter_tree_write(error_reporter_tree_t *t);
+static void error_reporter_tree_free(error_reporter_tree_t *t);
 
 static error_reporter_tree_t *error_reporter_tree_new(){
 	error_reporter_tree_t *tnew = ASC_NEW(error_reporter_tree_t);
@@ -108,13 +115,27 @@ int error_reporter_tree_start(){
 	error_reporter_tree_t *tnew;
 	tnew = error_reporter_tree_new();
 
+	CONSOLE_DEBUG("TREE = %p",TREE);
+	CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT);
+
+#if 0
+	if(TREE != NULL && TREECURRENT == NULL){
+		CONSOLE_DEBUG("CALLED WITH NULL TREECURRENT BUT NON-NULL TREE");
+		error_reporter_tree_write(TREE);
+		error_reporter_tree_free(TREE);
+		TREE = NULL;
+	}
+#endif
+
 	if(TREE == NULL){
 		CONSOLE_DEBUG("CREATING ROOT");
 		/* we're creating the root */
 		tnew->parent = NULL;
 		TREE = tnew;
 		TREECURRENT = tnew;
+		CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT);
 	}else{
+		asc_assert(TREECURRENT != NULL);
 		CONSOLE_DEBUG("CREATING SUBTREE");
 		if(TREECURRENT->head == NULL){
 			/* if the current tree has no elements, add it as the head */
@@ -128,11 +149,12 @@ int error_reporter_tree_start(){
 
 		/* now switch the context to the sub-tree */
 		tnew->parent = TREECURRENT;
+		CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT);
 		TREECURRENT = tnew;
 	}
 	return 0;
 }
-	
+
 int error_reporter_tree_end(){
 	CONSOLE_DEBUG("TREE END");
 	if(!TREECURRENT){
@@ -140,14 +162,22 @@ int error_reporter_tree_end(){
 		return 1;
 	}
 	TREECURRENT = TREECURRENT->parent;
+	CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT);
 	return 0;
 }	
 
-
 static void error_reporter_tree_free(error_reporter_tree_t *t){
-	if(t->head)error_reporter_tree_free(t->head);
-	if(t->next)error_reporter_tree_free(t->next);
+	CONSOLE_DEBUG("FREEING TREE AT %p",t);
+	if(t->head){
+		CONSOLE_DEBUG("FREEING SUBTREE...");
+		error_reporter_tree_free(t->head);
+	}
+	if(t->next){
+		CONSOLE_DEBUG("FREEING NEXT...");
+		error_reporter_tree_free(t->next);
+	}
 	if(t->err)ASC_FREE(t->err);
+	CONSOLE_DEBUG("DONE WITH  %p",t);
 	ASC_FREE(t);
 }
 
@@ -163,16 +193,28 @@ void error_reporter_tree_clear(){
 		t = TREECURRENT->parent;
 	}else{
 		CONSOLE_DEBUG("REACHED TOP LEVEL");
+		TREE = NULL;
 		t = NULL;
 	}
 	error_reporter_tree_free(TREECURRENT);
 	TREECURRENT = t;
+	CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT);
 }
 
 static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned match){
-	if(t->err && (t->err->sev & match))return 1;
-	if(t->next && error_reporter_tree_match_sev(t->next, match))return 1;
-	if(t->head && error_reporter_tree_match_sev(t->head, match))return 1;
+	if(t->err && (t->err->sev & match)){
+		CONSOLE_DEBUG("SEVERITY MATCH FOR t = %p",t);
+		return 1;
+	}
+	if(t->next && error_reporter_tree_match_sev(t->next, match)){
+		CONSOLE_DEBUG("SEVERITY MATCH IN 'next' FOR t = %p",t);
+		return 1;
+	}
+	if(t->head && error_reporter_tree_match_sev(t->head, match)){
+		CONSOLE_DEBUG("SEVERITTY MATCH IN 'head' FOR t = %p",t);
+		return 1;
+	}
+	CONSOLE_DEBUG("NO MATCH FOR t = %p",t);
 	return 0;
 }
 
@@ -201,7 +243,7 @@ static int error_reporter_tree_write(error_reporter_tree_t *t){
 	if(t->err){
 		res += error_reporter(t->err->sev, t->err->filename, t->err->line, t->err->func, t->err->msg);
 	}else{
-		CONSOLE_DEBUG("TREE HAS NO TOP-LEVEL ERROR");
+		/* CONSOLE_DEBUG("TREE HAS NO TOP-LEVEL ERROR"); */
 	}
 
 	if(t->head){
@@ -216,9 +258,14 @@ static int error_reporter_tree_write(error_reporter_tree_t *t){
 #else /* ERROR_REPORTER_TREE_ACTIVE */
 int error_reporter_tree_start(){
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Error reporter 'tree' turned off at compile time");
+	return 0;
 }
-# define error_reporter_tree_end(){}
-# define error_reporter_tree_clear(){}
+int error_reporter_tree_end(){return 0;}
+void error_reporter_tree_clear(){}
+int error_reporter_tree_has_error(){
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Attempt to check 'tree_has_error' when 'tree' turned off at compile time");
+	return 0;
+}
 #endif /* ERROR_REPORTER_TREE_ACTIVE */
 
 /*--------------------------
@@ -238,30 +285,37 @@ va_error_reporter(
 
 #ifdef ERROR_REPORTER_TREE_ACTIVE
 	error_reporter_tree_t *t;
-	if(TREECURRENT){
-		/* add the error to the tree, don't output anything now */
-		t = error_reporter_tree_new();
-		t->err = error_reporter_meta_new();
-		res = vsnprintf(t->err->msg,ERROR_REPORTER_MAX_MSG,fmt,args);
-		t->err->filename = errfile;
-		t->err->func = errfunc;
-		t->err->line = errline;
-		t->err->sev = sev;
-		if(!TREECURRENT->head){
-			TREECURRENT->head = TREECURRENT->tail = t;
-		}else{
-			TREECURRENT->tail->next = t;
-			TREECURRENT->tail = t;
+	if(sev != ASC_PROG_FATAL){
+		if(TREECURRENT){
+			/* add the error to the tree, don't output anything now */
+			t = error_reporter_tree_new();
+			t->err = error_reporter_meta_new();
+			res = vsnprintf(t->err->msg,ERROR_REPORTER_MAX_MSG,fmt,args);
+			t->err->filename = errfile;
+			t->err->func = errfunc;
+			t->err->line = errline;
+			t->err->sev = sev;
+			if(!TREECURRENT->head){
+				TREECURRENT->head = TREECURRENT->tail = t;
+			}else{
+				TREECURRENT->tail->next = t;
+				TREECURRENT->tail = t;
+			}
+			/* CONSOLE_DEBUG("Message (%d chars) added to tree",res); */
+			return res;
+		}else if(TREE){
+			/* flush the tree before outputting current message */
+			CONSOLE_DEBUG("WRITING OUT TREE CONTENTS");
+			t = TREE;
+			TREE = NULL;
+			error_reporter_tree_write(t);
+			CONSOLE_DEBUG("DONE WRITING TREE");
+			TREECURRENT = t;
+			error_reporter_tree_clear();
+			CONSOLE_DEBUG("DONE FREEING TREE");
+			CONSOLE_DEBUG("TREE = %p",TREE);
+			CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT);
 		}
-		CONSOLE_DEBUG("Message (%d chars) added to tree",res);
-		return res;
-	}else if(TREE){
-		/* flush the tree before outputting current message */
-		CONSOLE_DEBUG("WRITING OUT TREE CONTENTS");
-		t = TREE;
-		TREE = NULL;
-		error_reporter_tree_write(t);
-		error_reporter_tree_free(t);
 	}
 #endif
 

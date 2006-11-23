@@ -34,8 +34,9 @@ class Method{
 private:
 	struct InitProcedure *initproc;
 public:
-	Method();
 	Method(struct InitProcedure *initproc);
+	Method();
+	Method(const Method &);
 	~Method();
 	struct InitProcedure *getInternalType() const;
 	const char *getName() const;

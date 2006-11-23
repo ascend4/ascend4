@@ -177,6 +177,7 @@ Simulation::run(const Method &method, Instanc &model){
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
 
+	error_reporter_tree_start();
 
 	Proc_enum pe;
 	pe = Initialize(
@@ -185,12 +186,25 @@ Simulation::run(const Method &method, Instanc &model){
 		,0, NULL, NULL
 	);
 
+	int haserror=0;
+	if(error_reporter_tree_has_error()){
+		haserror=1;
+	}
+	error_reporter_tree_end();
+
 	// clear out the 'sim' pointer (soon it will be invalid)
 	importhandler_setsharedpointer("sim",NULL);
 	CONSOLE_DEBUG("Cleared shared pointer 'sim'");
 
 	if(pe == Proc_all_ok){
-		ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Method '%s' was run (check above for errors)\n",method.getName());
+		if(haserror){
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Method '%s' had error(s).",method.getName());
+			stringstream ss;
+			ss << "Method '"<<method.getName()<<"' returned 'all_ok' status but output error(s)";
+			throw runtime_error(ss.str());
+		}else{
+			ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"Method '%s' returned 'all_ok' and output no errors.\n",method.getName());
+		}
 		//cerr << "METHOD " << method.getName() << " COMPLETED OK" << endl;
 	}else{
 		stringstream ss;

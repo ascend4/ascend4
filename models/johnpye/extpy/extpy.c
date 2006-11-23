@@ -324,7 +324,7 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		return 1;
 	}
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Imported python script '%s'",partialpath);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Imported python script '%s'\n",partialpath);
 
 	ASC_FREE(name);
 	return 0;
