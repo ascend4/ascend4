@@ -142,9 +142,25 @@ Library::load(const char *filename){
 		std::cerr << "Note: Module " << Asc_ModuleName(m) << ": " << msg1 << std::endl;
 	}
 
-	/* std::cerr << "Note: Beginning parse of " << Asc_ModuleName(m) << "..." << std::endl; */
-	zz_parse();
-	/* std::cerr << "Note: ...yyparse of " << Asc_ModuleName(m) << " completed." << std::endl; */
+	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
+	error_reporter_tree_start();
+	status = zz_parse();
+	switch(status){
+		case 0: break;
+		case 1: ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Parsing of %s was aborted",Asc_ModuleName(m)); break;
+		case 2: ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,"Out of memory when parsing %s",Asc_ModuleName(m)); break;
+		default: ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Invalid return from zz_parse"); break;
+	}
+	status = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	if(!status)error_reporter_tree_clear();
+	else{
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error(s) when loading '%s'",filename);
+		stringstream ss;
+		ss << "Errors found in '" << filename <<  "'";
+		throw runtime_error(ss.str());
+	}
+
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
 	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), filename);

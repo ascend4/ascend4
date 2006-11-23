@@ -20,12 +20,13 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//*
-	Ascend Grammar file
+	ASCEND parser
 	by Tom Epperly
-	Version: $Revision: 1.23 $
-	Version control file: $RCSfile: ascParse.y,v $
-	Date last modified: $Date: 2000/01/25 02:25:59 $
-	Last modified by: $Author: ballan $
+	Last in CVS: $Revision: 1.23 $ $Date: 2000/01/25 02:25:59 $ $Author: ballan $
+*/
+
+/*------------------------------------------------------------------------------
+  PROLOGUE
 */
 %{
 #include <stdio.h>
@@ -83,10 +84,6 @@
 #include <compiler/exprio.h>
 #endif /* for CommaExpr if working. */
 
-#ifndef lint
-static CONST char ParserID[] = "$Id: ascParse.y,v 1.23 2000/01/25 02:25:59 ballan Exp $";
-#endif
-
 int g_compiler_warnings = 1;		/* level of whine to allow */
 
 #include <compiler/redirectFile.h>
@@ -113,7 +110,7 @@ static symchar *g_proc_name=NULL;
 /* the last seen ATOM/MODEL/constant type and refinement base */
 static symchar *g_type_name=NULL;
 static symchar *g_refines_name=NULL;
-/*********************************************************************\
+/*
  * g_type_name is used by the scanner when closing a module to check if
  * the parser is in the middle of parsing a MODEL or ATOM type
  * definition.
@@ -123,7 +120,7 @@ static symchar *g_refines_name=NULL;
  *      g_type_name != NULL implies that the parser is in the middle
  *                          of a type definition and gives the name
  *                          of that type.
-\*********************************************************************/
+ */
 
 static symchar *g_end_identifier = NULL;
 /*  This variable gets reset every time we see an ``END_TOK''.  If the
@@ -196,9 +193,6 @@ static void ErrMsg_CommaName(CONST char *, struct Name *);
 static void ErrMsg_CommaExpr(CONST char *, struct Expr *);
 #endif /* COMMAEXPR_NOTBUGGY */
 static void ErrMsg_NullDefPointer(CONST char *);
-static void ErrMsg_ProcTypeMissing(CONST char *, CONST char *);
-static void ErrMsg_ProcsRejected(CONST char *, CONST char *);
-static void ErrMsg_DuplicateProc(struct InitProcedure *);
 static void ErrMsg_ParensBrackets(CONST char *);
 static void WarnMsg_MismatchEnd(CONST char *, CONST char *,
                                 unsigned long, CONST char *);
@@ -300,7 +294,12 @@ static void CollectNote(struct Note *);
 #ifdef _MSC_VER
 # define __STDC__
 #endif
+
 %}
+/* END OF PROLOGUE
+  ------------------------------------------------------------------------------
+  DEFINITION OF PARSER RETURN TYPE
+*/
 
 %union {
   double real_value;
@@ -329,6 +328,10 @@ static void CollectNote(struct Note *);
   enum ForOrder order;
   enum ForKind fkind;
 }
+
+/*------------------------------------------------------------------------------
+  YACC TOKENS
+*/
 
 %token ADD_TOK ALIASES_TOK AND_TOK ANY_TOK AREALIKE_TOK ARETHESAME_TOK ARRAY_TOK ASSERT_TOK ATOM_TOK
 %token BEQ_TOK BNE_TOK BREAK_TOK
@@ -411,6 +414,10 @@ static void CollectNote(struct Note *);
 
 /* stuff without a particular need for a type */
 
+/*------------------------------------------------------------------------------
+  GRAMMAR RULES
+*/
+
 %%
 
 definitions:
@@ -441,46 +448,46 @@ definition:
 global_def:
     GLOBAL_TOK ';' fstatements end ';'
 	{
-          /* the following steps apply to string buffers only, not files */
-	  struct gl_list_t *stats;
-          int dispose;
-	  if ($3 != NULL) {
-	    stats = gl_create(1L);
-	    gl_append_ptr(stats,(void *)$3);
-	    if (g_untrapped_error) {
-	      ErrMsg_Generic("Because of a syntax error, the following statements are being ignored:");
-		WriteStatementList(ASCERR,$3,4);
-	      DestroyStatementList($3);
-            } else {
-	      dispose = Asc_ModuleAddStatements(Asc_CurrentModule(),stats);
-              switch (dispose) {
-              case 1: /* appended */
-	        if (stats != NULL) {
-	          gl_destroy(stats);
-	        }
-	        break;
-              case 0: /* kept */
-	        break;
-              case -1: /* illegal in file */
-	        ErrMsg_Generic("GLOBAL statements can only be made interactively. Ignoring:");
-	        if (stats != NULL) {
-		  WriteStatementList(ASCERR,$3,4);
-	          gl_iterate(stats,(DestroyFunc)DestroyStatementList);
-	          gl_destroy(stats);
-	        }
-	        break;
-              default:
-	        break;
+      /* the following steps apply to string buffers only, not files */
+      struct gl_list_t *stats;
+      int dispose;
+      if ($3 != NULL) {
+        stats = gl_create(1L);
+        gl_append_ptr(stats,(void *)$3);
+        if (g_untrapped_error) {
+          ErrMsg_Generic("Because of a syntax error, the following statements are being ignored:");
+          WriteStatementList(ASCERR,$3,4);
+          DestroyStatementList($3);
+        }else{
+          dispose = Asc_ModuleAddStatements(Asc_CurrentModule(),stats);
+          switch (dispose) {
+            case 1: /* appended */
+              if (stats != NULL) {
+                  gl_destroy(stats);
               }
-            }
-	  }
-	  /* don't let any bizarreness in string parsing hang around */
-	  g_type_name = g_refines_name = g_proc_name = NULL;
-	  g_model_parameters =
-	    g_parameter_reduction =
-	    g_parameter_wheres = NULL;
-	  g_untrapped_error = 0;
-	}
+              break;
+            case 0: /* kept */
+              break;
+            case -1: /* illegal in file */
+              ErrMsg_Generic("GLOBAL statements can only be made interactively. Ignoring:");
+              if (stats != NULL) {
+                WriteStatementList(ASCERR,$3,4);
+                gl_iterate(stats,(DestroyFunc)DestroyStatementList);
+                gl_destroy(stats);
+              }
+              break;
+            default:
+              break;
+          }
+        }
+      }
+      /* don't let any bizarreness in string parsing hang around */
+      g_type_name = g_refines_name = g_proc_name = NULL;
+      g_model_parameters =
+      g_parameter_reduction =
+      g_parameter_wheres = NULL;
+      g_untrapped_error = 0;
+    }
     ;
 
 require_file:
@@ -520,11 +527,15 @@ provide_module:
 import:
     IMPORT_TOK IDENTIFIER_TOK FROM_TOK DQUOTE_TOK ';'
 	{
-	  (void)LoadArchiveLibrary($4,SCP($2));
+	  if(LoadArchiveLibrary($4,SCP($2))){
+		ErrMsg_Generic("IMPORT failed");
+      }
 	}
 	| IMPORT_TOK DQUOTE_TOK ';'
 	{
-	  (void)LoadArchiveLibrary(SCP($2),NULL);
+	  if(LoadArchiveLibrary(SCP($2),NULL)){
+        ErrMsg_Generic("IMPORT failed");
+      }
 	}
     ;
 
@@ -553,8 +564,8 @@ add_notes_def:
 	    /* now keep them */
 	    ProcessNotes(1);
 	    DestroyNoteTmpList($2);
-          }
-          g_type_name = g_proc_name = NULL;
+      }
+      g_type_name = g_proc_name = NULL;
 	  g_untrapped_error = 0;
 	}
     ;
@@ -578,7 +589,10 @@ add_method_def:
 	    }
 	    if (AddMethods($1,$2,g_untrapped_error) != 0) {
 	      if ($1 != ILLEGAL_DEFINITION) {
-                ErrMsg_ProcsRejected("ADD",SCP(GetName($1)));
+            error_reporter_current_line(ASC_USER_ERROR
+              ,"ADD METHODS failed for type %s"
+              ,SCP(GetName($1))
+            );
 	        DestroyProcedureList($2);
 	      } /* else adding in DEFINITION MODEL may have misgone */
 	    }
@@ -592,8 +606,11 @@ add_method_head:
 	{
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType($4);
-	  if (tmptype == NULL) {
-            ErrMsg_ProcTypeMissing("ADD", SCP($4));
+	  if(tmptype == NULL){
+        error_reporter_current_line(ASC_USER_ERROR
+          ,"ADD METHODS called with undefined type (%s)"
+          ,SCP($4)
+        );
 	  }
 	  $$ = tmptype; /* parent should check for NULL */
 	  g_type_name = $4; /* scope for notes */
@@ -615,7 +632,10 @@ replace_method_def:
 	      WarnMsg_MismatchEnd("REPLACE METHODS", NULL, $3, "METHODS");
 	    }
 	    if (ReplaceMethods($1,$2,g_untrapped_error) != 0) {
-              ErrMsg_ProcsRejected("REPLACE",SCP(GetName($1)));
+          error_reporter_current_line(ASC_USER_ERROR
+            ,"REPLACE METHODS failed for type %s"
+            ,SCP(GetName($1))
+          );
 	      DestroyProcedureList($2);
 	    }
 	  }
@@ -629,7 +649,10 @@ replace_method_head:
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType($4);
 	  if (tmptype == NULL) {
-            ErrMsg_ProcTypeMissing("REPLACE", SCP($4));
+        error_reporter_current_line(ASC_USER_ERROR
+          ,"REPLACE METHODS called with undefined type (%s)"
+          ,SCP($4)
+        );
 	  }
 	  $$ = tmptype; /* parent should check for NULL */
 	}
@@ -646,7 +669,7 @@ atom_def:
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
 
-          if(( $5 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
+	  if(( $5 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
@@ -679,11 +702,10 @@ atom_def:
 	      ErrMsg_NullDefPointer(SCP(g_type_name));
 	    }
 	  } else {
-	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,NULL,
-	            "Atom dimensions don't match in ATOM %s on line %s:%lu.\n",
-	            SCP(g_type_name),
-	            Asc_ModuleBestName(Asc_CurrentModule()),
-	            g_header_linenum);
+	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,NULL
+	      ,"Atom dimensions don't match in ATOM %s"
+	      ,SCP(g_type_name)
+	    );
 	    DestroyStatementList($3);
 	    DestroyProcedureList($4);
 	  }
@@ -1137,7 +1159,9 @@ proclistf:
           while (c > 0) {
             oldproc = (struct InitProcedure *)gl_fetch($1,c);
             if (ProcName($2) == ProcName(oldproc)) {
-	      ErrMsg_DuplicateProc($2);
+              error_reporter_current_line(ASC_USER_WARNING
+                ,"Duplicate METHOD %s rejected", SCP(ProcName($2))
+              );
               break;
             }
             c--;
@@ -2645,14 +2669,18 @@ logrelop:
 	}
     ;
 %%
+/* END OF GRAMMAR RULES
+   -----------------------------------------------------------------------------
+   START OF EPILOGUE
+*/
+
 /*
  * We really need to do something about freeing up the productions
  * that invoke this so we don't leak memory like a seive.
  * for example  z[i IN [1..2]][j IN [process[i]] IS_A mass; eats a ton.
  */
 int
-yyerror(char *s)
-{
+zz_error(char *s){
   g_untrapped_error++;
   if (Asc_CurrentModule() != NULL) {
     error_reporter_current_line(ASC_USER_ERROR,"%s",s);
@@ -2738,27 +2766,6 @@ ErrMsg_NullDefPointer(CONST char *object)
 }
 
 static void
-ErrMsg_ProcTypeMissing(CONST char *AorR, CONST char *type)
-{
-  error_reporter_current_line(ASC_USER_ERROR,
-	  "%s METHODS called with undefined type (%s)", AorR, type);
-}
-
-static void
-ErrMsg_ProcsRejected(CONST char *AorR, CONST char *type)
-{
-  error_reporter_current_line(ASC_USER_ERROR,
-	  "%s METHODS failed for type %s", AorR, type);
-}
-
-static void
-ErrMsg_DuplicateProc(struct InitProcedure *p)
-{
-  error_reporter_current_line(ASC_USER_WARNING,
-	  "Duplicate METHOD %s rejected", SCP(ProcName(p)));
-}
-
-static void
 ErrMsg_ParensBrackets(CONST char *operation)
 {
   error_reporter_current_line(ASC_USER_ERROR,
@@ -2768,24 +2775,18 @@ ErrMsg_ParensBrackets(CONST char *operation)
 }
 
 
-/*
- *  WarnMsg_MismatchEnd(statement, opt_name, end_token, expecting);
- *      const char *statement;
- *      const char *opt_name;
- *      unsigned long end_token;
- *      const char *expecting;
- *
- *  Print a warning message that the token after the END keyword did not
- *  match what we were expecting for the current statement.
- *  Arguments:
- *      statement --the current statement, e.g. ATOM, METHOD, FOR, IF, CASE
- *      opt_name  --the name of the thing we were defining for ATOMs, METHODs,
- *                  etc, or NULL anonymous statements (FOR, IF, CASE, etc)
- *      end_token --the TOKEN_TOK that we were received instead.  We use the
- *                  TokenAsString to produce a string given a TOKEN_TOK
- *      expecting --the keyword we were expecting to see after the END; if
- *                  NULL, we were expecting the string given in statement
- */
+/**
+	Print a warning message that the token after the END keyword did not
+	match what we were expecting for the current statement.
+
+	@param statement --the current statement, e.g. ATOM, METHOD, FOR, IF, CASE
+	@param opt_name  --the name of the thing we were defining for ATOMs, METHODs,
+		etc, or NULL anonymous statements (FOR, IF, CASE, etc)
+	@param end_token --the TOKEN_TOK that we were received instead.  We use the
+		TokenAsString to produce a string given a TOKEN_TOK
+	@param expecting --the keyword we were expecting to see after the END; if
+	NULL, we were expecting the string given in statement
+*/
 static void
 WarnMsg_MismatchEnd(CONST char *statement, CONST char *opt_name,
 		    unsigned long end_token, CONST char *expecting)
@@ -2800,19 +2801,16 @@ WarnMsg_MismatchEnd(CONST char *statement, CONST char *opt_name,
 
 
 /*
- *  CONST char *TokenAsString(token);
- *      unsigned long token;
- *
- *  Takes a TOKEN_TOK (e.g., FOR_TOK, MODEL_TOK, END_TOK, IDENTIFIER_TOK) and returns
- *  a string representation of it:
- *      e.g.:  TokenAsString(FOR_TOK) ==> "FOR"
- *
- *  Since this function is only used inside WarnMsg_MismatchEnd, we do a
- *  couple of things specific to that function:  If token is END_TOK, we
- *  return an empty string, and if it is IDENTIFIER_TOK, we return the
- *  current value of g_end_identifier, or UNKNOWN if g_end_identifier is
- *  NULL.
- */
+	Take a TOKEN_TOK (e.g., FOR_TOK, MODEL_TOK, END_TOK, IDENTIFIER_TOK) and returns
+	a string representation of it:
+	    e.g.:  TokenAsString(FOR_TOK) ==> "FOR"
+	
+	Since this function is only used inside WarnMsg_MismatchEnd, we do a
+	couple of things specific to that function:  If token is END_TOK, we
+	return an empty string, and if it is IDENTIFIER_TOK, we return the
+	current value of g_end_identifier, or UNKNOWN if g_end_identifier is
+	NULL.
+*/
 static CONST char *
 TokenAsString(unsigned long token)
 {

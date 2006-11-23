@@ -4772,10 +4772,11 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
   /* To generate (log)relation names */
   g_number = 0;
 
-  if (err!=0) {
-    FPRINTF(ASCERR,
-      "%sModel definition \"%s\" abandoned due to syntax errors.\n",
-      StatioLabel(3),SCP(name));
+  if(err!=0){
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+      ,"Model definition \"%s\" abandoned due to syntax errors."
+      ,SCP(name)
+    );
     DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
     return NULL;
   }

@@ -83,14 +83,15 @@
 typedef enum error_severity_enum{
     ASC_USER_SUCCESS=0
    ,ASC_USER_NOTE=1    /**< a note to the user */
-   ,ASC_USER_WARNING   /**< the user has done something bad but tolerable */
-   ,ASC_USER_ERROR     /**< the user has done something wrong */
-   ,ASC_PROG_NOTE      /**< a note for the programmer */
-   ,ASC_PROG_WARNING   /**< the program encounters an unexpected state */
-   ,ASC_PROG_ERROR     /**< the program has failed but can ignore and continue (maybe) */
-   ,ASC_PROG_FATAL	   /**< fatal error, program will exit */
+   ,ASC_USER_WARNING=2 /**< the user has done something bad but tolerable */
+   ,ASC_USER_ERROR=4   /**< the user has done something wrong */
+   ,ASC_PROG_NOTE=8    /**< a note for the programmer */
+   ,ASC_PROG_WARNING=16/**< the program encounters an unexpected state */
+   ,ASC_PROG_ERROR=32  /**< the program has failed but can ignore and continue (maybe) */
+   ,ASC_PROG_FATAL=64  /**< fatal error, program will exit */
 } error_severity_t;
 
+#define ASC_ERR_ERR (ASC_PROG_ERROR | ASC_USER_ERROR | ASC_PROG_FATAL)
 
 /**
 	Variadic macros to allow nice succint logging and error reporting
@@ -161,6 +162,50 @@ typedef struct{
 	const char *func;
 	char msg[ERROR_REPORTER_MAX_MSG];
 } error_reporter_meta_t;
+
+/**
+	This structure provides a means for caching errors so that they can be
+	reported back later in the manner of 'stack traces'. Should be useful
+	for more detailed reporting from parser, external calls, etc.
+
+	Usage will be
+
+		int res = 0;
+		error_reporter_tree_start();
+		do_subordinate_tasks();
+		error_reporter_tree_end();
+		if(error_reporter_tree_has_error()){
+			error_reporter_here(ASC_PROG_ERR,"Some errors occurred");
+		}else{
+			error_reporter_tree_clear();
+		}
+
+	The next 'error_reporter' call after an outermost 'error_reporter_tree_end' 
+	will cause the error tree to be output to the error reporting channel.
+
+	If an 'error_reporter' is found *inside* an an 'error_reporter_tree_start'
+	and 'error_reporter_tree_end', the error message is kept and not output.
+
+	If the latest set of errors (those found inside the last start..end) are not
+	important, they can be discarded using error_reporter_tree_clear. This will
+	not clear the entire error tree, as there may be errors higher-up that we
+	don't want to discard.
+
+	After a call to error_reporter_tree_clear(), further errors can still be
+	added within the current TREECURRENT context.
+*/
+typedef struct ErrorReporterTree{
+	error_reporter_meta_t *err;
+	struct ErrorReporterTree *head; /**< first on the list of child errors */
+	struct ErrorReporterTree *tail; /**< last on the list of child errors */
+	struct ErrorReporterTree *next; /**< next error in the present list */
+	struct ErrorReporterTree *parent; /**< parent error (or NULL) */
+} error_reporter_tree_t;
+
+ASC_DLLSPEC(int) error_reporter_tree_start();
+ASC_DLLSPEC(int) error_reporter_tree_end();
+ASC_DLLSPEC(void) error_reporter_tree_clear();
+ASC_DLLSPEC(int) error_reporter_tree_has_error();
 
 /**
 	This is the drop-in replacement for Asc_FPrintf. Anythin you attempt

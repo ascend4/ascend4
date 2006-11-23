@@ -64,7 +64,7 @@ ASC_DLLSPEC(int) importhandler_add(struct ImportHandler *handler){
 	for(i=0; i< IMPORTHANDLER_MAX; ++i){
 		if(importhandler_library[i] == NULL)break;
 		if(importhandler_library[i]->name == handler->name){
-			ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Handler already loaded");
+			ERROR_REPORTER_HERE(ASC_USER_NOTE,"Handler already loaded");
 			return 0;
 		}
 	}
@@ -73,7 +73,7 @@ ASC_DLLSPEC(int) importhandler_add(struct ImportHandler *handler){
 		return 1;
 	}
 	importhandler_library[i] = handler;
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"New import hander '%s' added\n",handler->name);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE,"New import hander '%s' added",handler->name);
 	return 0;
 }
 

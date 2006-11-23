@@ -18,7 +18,7 @@ class AscendTest(unittest.TestCase):
 			L.load('johnpye/shm.a4c')
 			M = L.findType('shm').getSimulation('sim')
 		except Exception,e:
-			fail(str(e))
+			self.fail(str(e))
 		
 if __name__=='__main__':
 	unittest.main()

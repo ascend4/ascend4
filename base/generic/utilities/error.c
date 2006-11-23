@@ -2,6 +2,12 @@
 
 #include "error.h"
 
+#define ERROR_REPORTER_TREE_ACTIVE
+
+#ifdef ERROR_REPORTER_TREE_ACTIVE
+# include "ascMalloc.h"
+#endif
+
 /**
 	Global variable which stores the pointer to the callback
 	function being used.
@@ -14,6 +20,18 @@ static error_reporter_callback_t g_error_reporter_callback;
 */
 static error_reporter_meta_t g_error_reporter_cache;
 
+static error_reporter_meta_t *error_reporter_meta_new(){
+	error_reporter_meta_t *e;
+	e = ASC_NEW(error_reporter_meta_t);
+	e->sev = ASC_USER_SUCCESS;
+	e->iscaching = 0;
+	e->filename = NULL;
+	e->func = NULL;
+	e->line = 0;
+	e->msg[0] = '\0';
+	return e;
+}
+	
 /**
 	XTERM colour codes used to distinguish between errors of different types.
 */
@@ -66,9 +84,147 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 	return res;
 }
 
-/*--------------------------
-  REPORT the error
+/*---------------------------------------------------------------------------
+  ERROR REPORTER TREE (BRANCHABLE ERROR STACK) FUNCTIONALITY
 */
+
+#ifdef ERROR_REPORTER_TREE_ACTIVE
+
+static error_reporter_tree_t *g_error_reporter_tree = NULL;
+static error_reporter_tree_t *g_error_reporter_tree_current = NULL;
+# define TREECURRENT g_error_reporter_tree_current
+# define TREE g_error_reporter_tree
+
+static error_reporter_tree_t *error_reporter_tree_new(){
+	error_reporter_tree_t *tnew = ASC_NEW(error_reporter_tree_t);
+	tnew->next = NULL;
+	tnew->head = NULL;
+	tnew->tail = NULL;
+	tnew->err = NULL;
+	return tnew;
+}
+
+int error_reporter_tree_start(){
+	error_reporter_tree_t *tnew;
+	tnew = error_reporter_tree_new();
+
+	if(TREE == NULL){
+		CONSOLE_DEBUG("CREATING ROOT");
+		/* we're creating the root */
+		tnew->parent = NULL;
+		TREE = tnew;
+		TREECURRENT = tnew;
+	}else{
+		CONSOLE_DEBUG("CREATING SUBTREE");
+		if(TREECURRENT->head == NULL){
+			/* if the current tree has no elements, add it as the head */
+			TREECURRENT->head = tnew;
+		}else{
+			/* link the new tree to the last in the child list */
+			TREECURRENT->tail->next = tnew;
+		}
+		/* update the tail of the list */
+		TREECURRENT->tail = tnew;
+
+		/* now switch the context to the sub-tree */
+		tnew->parent = TREECURRENT;
+		TREECURRENT = tnew;
+	}
+	return 0;
+}
+	
+int error_reporter_tree_end(){
+	CONSOLE_DEBUG("TREE END");
+	if(!TREECURRENT){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"'end' without TREECURRENT set");
+		return 1;
+	}
+	TREECURRENT = TREECURRENT->parent;
+	return 0;
+}	
+
+
+static void error_reporter_tree_free(error_reporter_tree_t *t){
+	if(t->head)error_reporter_tree_free(t->head);
+	if(t->next)error_reporter_tree_free(t->next);
+	if(t->err)ASC_FREE(t->err);
+	ASC_FREE(t);
+}
+
+void error_reporter_tree_clear(){
+	/* recursively free anything beneath the TREECURRENT node, return to the parent context */
+	error_reporter_tree_t *t;
+	if(!TREECURRENT){
+		/* CONSOLE_DEBUG("NOTHING TO CLEAR!"); */
+		return;
+	}
+	if(TREECURRENT->parent){
+		CONSOLE_DEBUG("MOVING UP TO PARENT");
+		t = TREECURRENT->parent;
+	}else{
+		CONSOLE_DEBUG("REACHED TOP LEVEL");
+		t = NULL;
+	}
+	error_reporter_tree_free(TREECURRENT);
+	TREECURRENT = t;
+}
+
+static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned match){
+	if(t->err && (t->err->sev & match))return 1;
+	if(t->next && error_reporter_tree_match_sev(t->next, match))return 1;
+	if(t->head && error_reporter_tree_match_sev(t->head, match))return 1;
+	return 0;
+}
+
+/**
+	traverse the tree, looking for ASC_PROG_ERR, ASC_USER_ERROR, or ASC_PROG_FATAL
+	@return 1 if errors found
+*/
+int error_reporter_tree_has_error(){
+	if(TREECURRENT){
+		return error_reporter_tree_match_sev(TREECURRENT,ASC_ERR_ERR);
+	}else{
+		CONSOLE_DEBUG("NO TREE FOUND");
+		return 0;
+	}
+}
+
+static int error_reporter_tree_write(error_reporter_tree_t *t){
+	int res = 0;
+	static int writecount = 0;
+
+	if(++writecount > 30){
+		CONSOLE_DEBUG("TOO MUCH WRITING");
+		return 0;
+	}
+
+	if(t->err){
+		res += error_reporter(t->err->sev, t->err->filename, t->err->line, t->err->func, t->err->msg);
+	}else{
+		CONSOLE_DEBUG("TREE HAS NO TOP-LEVEL ERROR");
+	}
+
+	if(t->head){
+		res += error_reporter_tree_write(t->head);
+	}
+	if(t->next){
+		res += error_reporter_tree_write(t->next);
+	}
+	return res;
+}
+
+#else /* ERROR_REPORTER_TREE_ACTIVE */
+int error_reporter_tree_start(){
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Error reporter 'tree' turned off at compile time");
+}
+# define error_reporter_tree_end(){}
+# define error_reporter_tree_clear(){}
+#endif /* ERROR_REPORTER_TREE_ACTIVE */
+
+/*--------------------------
+  REALLY WHERE THE REPORTING HAPPENS
+*/
+
 int
 va_error_reporter(
       const error_severity_t sev
@@ -79,6 +235,35 @@ va_error_reporter(
     , const va_list args
 ){
 	int res;
+
+#ifdef ERROR_REPORTER_TREE_ACTIVE
+	error_reporter_tree_t *t;
+	if(TREECURRENT){
+		/* add the error to the tree, don't output anything now */
+		t = error_reporter_tree_new();
+		t->err = error_reporter_meta_new();
+		res = vsnprintf(t->err->msg,ERROR_REPORTER_MAX_MSG,fmt,args);
+		t->err->filename = errfile;
+		t->err->func = errfunc;
+		t->err->line = errline;
+		t->err->sev = sev;
+		if(!TREECURRENT->head){
+			TREECURRENT->head = TREECURRENT->tail = t;
+		}else{
+			TREECURRENT->tail->next = t;
+			TREECURRENT->tail = t;
+		}
+		CONSOLE_DEBUG("Message (%d chars) added to tree",res);
+		return res;
+	}else if(TREE){
+		/* flush the tree before outputting current message */
+		CONSOLE_DEBUG("WRITING OUT TREE CONTENTS");
+		t = TREE;
+		TREE = NULL;
+		error_reporter_tree_write(t);
+		error_reporter_tree_free(t);
+	}
+#endif
 
 	if(g_error_reporter_callback==NULL){
 		/* fprintf(stderr,"CALLING VFPRINTF\n"); */
@@ -280,4 +465,5 @@ int console_debug(const char *fmt,...){
 
 	return res;
 }
+
 #endif /* NO_VARIADIC_MACROS */
