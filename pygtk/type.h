@@ -41,15 +41,14 @@ public:
 	const SymChar getName() const;
 	const int getParameterCount() const;
 	const TypeDescription *getInternalType() const;
-	Simulation getSimulation(SymChar name);
+	Simulation getSimulation(const SymChar &name, const bool &rundefaultmethod=true);
 	const Dimensions getDimensions() const;
 	std::vector<Method> getMethods() const;
-	Method getMethod(const SymChar &) const; ///< exception if not found
+	Method getMethod(const SymChar &name) const; ///< exception if not found
 	const bool isRefinedSolverVar() const; ///< is this type a refinement of solver_var?
 	const bool isRefinedAtom() const;
 	const bool isRefinedReal() const;
 	const bool isRefinedConstant() const;
-	const bool isModel() const;
 	const bool hasParameters() const;
 };
 

@@ -131,7 +131,7 @@ Type::isRefinedConstant() const{
 	g_use_copyanon which is sort-of owned by the Compiler class.
 */
 Simulation
-Type::getSimulation(SymChar sym){
+Type::getSimulation(const SymChar &sym, const bool &rundefaultmethod){
 	static bool have_bintoken_setup;
 	static string bin_targetstem;
 	static string bin_srcname;
@@ -192,8 +192,13 @@ Type::getSimulation(SymChar sym){
 		throw runtime_error("Failed to create instance");
 	}
 
+	if(rundefaultmethod){
+		CONSOLE_DEBUG("RUNNING DEFAULT METHOD");
+		sim.runDefaultMethod();
+	}
+
 	//cerr << "CREATED INSTANCE " << sym << " OF " << getName() << endl;
-	return Simulation(i,sym);
+	return sim;
 }
 
 vector<Method>

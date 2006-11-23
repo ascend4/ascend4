@@ -4,8 +4,12 @@ using namespace std;
 
 #include "method.h"
 
-Method::Method(){
-	throw runtime_error("Can't create new Methods, use Type.getMethods instead");
+Method::Method() : initproc(NULL){
+	cerr << "EMPTY METHOD CREATED" << endl;
+}
+
+Method::Method(const Method &old) : initproc(old.initproc){
+	// nothing else
 }
 
 Method::Method(struct InitProcedure *initproc) : initproc(initproc){
@@ -18,16 +22,19 @@ Method::~Method(){
 
 struct InitProcedure *
 Method::getInternalType() const{
+	if(initproc==NULL)throw runtime_error("NULL initproc value");
 	return initproc;
 }
 
 const char*
 Method::getName() const{
+	if(initproc==NULL)throw runtime_error("NULL initproc value");
 	return SCP( initproc->name );
 }
 
 SymChar
 Method::getSym() const{
 	/// @TODO this is not efficient. couldn't make it work the right way though...
+	if(initproc==NULL)throw runtime_error("NULL initproc value");
 	return SymChar( SCP( initproc->name ));
 }

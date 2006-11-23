@@ -280,10 +280,10 @@ public:
 	const struct tm *getMtime() const;
 };
 
-class Method{
-public:
-	const char *getName() const;
-};
+%include "method.h"
+
+%ignore Method::getInternalType;
+%ignore Method::getSym;
 
 // Renamed in python as 'Name'
 class Nam{
@@ -296,17 +296,8 @@ public:
 /* we can always disown Compiler * as it's a singleton */
 %apply SWIGTYPE *DISOWN { Compiler * };
 
-class Type{
-public:
-	const SymChar getName();
-	const int getParameterCount();
-	Simulation getSimulation(const char *name);
-	std::vector<Method> getMethods();
-	const bool isRefinedSolverVar() const;
-	const bool isRefinedReal() const;
-	const Dimensions getDimensions() const;
-	const bool hasParameters() const;
-};
+%include "type.h"
+
 %extend Type{
 	const char *__repr__(){
 		return self->getName().toString();

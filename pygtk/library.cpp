@@ -153,8 +153,11 @@ Library::load(const char *filename){
 	}
 	status = error_reporter_tree_has_error();
 	error_reporter_tree_end();
-	if(!status)error_reporter_tree_clear();
-	else{
+	if(!status){
+		CONSOLE_DEBUG("CLEARING TREE...");
+		error_reporter_tree_clear();
+		CONSOLE_DEBUG("DONE CLEARING TREE...");
+	}else{
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error(s) when loading '%s'",filename);
 		stringstream ss;
 		ss << "Errors found in '" << filename <<  "'";
@@ -314,10 +317,10 @@ Library::clear(){
 	cerr << "... DEFINED FUND TYPES" << endl;
 	\*SetUniversalProcedureList(NULL);
 */
-	ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Destroying simulations...\n");
+	CONSOLE_DEBUG("Destroying simulations...");
 	Asc_DestroySimulations();
 
-	ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Clearing library...\n");
+	CONSOLE_DEBUG("Clearing library...");
 	DestroyNotesDatabase(LibraryNote());
 	SetUniversalProcedureList(NULL);
 	DestroyLibrary();
