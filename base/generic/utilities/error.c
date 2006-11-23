@@ -167,17 +167,13 @@ int error_reporter_tree_end(){
 }	
 
 static void error_reporter_tree_free(error_reporter_tree_t *t){
-	CONSOLE_DEBUG("FREEING TREE AT %p",t);
 	if(t->head){
-		CONSOLE_DEBUG("FREEING SUBTREE...");
 		error_reporter_tree_free(t->head);
 	}
 	if(t->next){
-		CONSOLE_DEBUG("FREEING NEXT...");
 		error_reporter_tree_free(t->next);
 	}
 	if(t->err)ASC_FREE(t->err);
-	CONSOLE_DEBUG("DONE WITH  %p",t);
 	ASC_FREE(t);
 }
 
@@ -189,16 +185,13 @@ void error_reporter_tree_clear(){
 		return;
 	}
 	if(TREECURRENT->parent){
-		CONSOLE_DEBUG("MOVING UP TO PARENT");
 		t = TREECURRENT->parent;
 	}else{
-		CONSOLE_DEBUG("REACHED TOP LEVEL");
 		TREE = NULL;
 		t = NULL;
 	}
 	error_reporter_tree_free(TREECURRENT);
 	TREECURRENT = t;
-	CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT);
 }
 
 static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned match){
@@ -223,8 +216,11 @@ static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned matc
 	@return 1 if errors found
 */
 int error_reporter_tree_has_error(){
+	int res;
 	if(TREECURRENT){
-		return error_reporter_tree_match_sev(TREECURRENT,ASC_ERR_ERR);
+		res = error_reporter_tree_match_sev(TREECURRENT,ASC_ERR_ERR);
+		if(res)CONSOLE_DEBUG("ERROR(S) FOUND IN TREECURRENT %p",TREECURRENT);
+		return res;
 	}else{
 		CONSOLE_DEBUG("NO TREE FOUND");
 		return 0;

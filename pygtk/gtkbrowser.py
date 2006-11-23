@@ -896,26 +896,30 @@ class Browser:
 #   ERROR PANEL
 
 	def get_error_row_data(self,sev,filename,line,msg):
-		_sevicon = {
-			0: self.iconok
-			,1: self.iconinfo
-			,2: self.iconwarning
-			,3: self.iconerror
-			,4: self.iconinfo
-			,5: self.iconwarning
-			,6: self.iconerror
-		}[sev]
+		try:
+			_sevicon = {
+				0   : self.iconok
+				,1  : self.iconinfo
+				,2  : self.iconwarning
+				,4  : self.iconerror
+				,8  : self.iconinfo
+				,16 : self.iconwarning
+				,32 : self.iconerror
+				,64 : self.iconerror
+			}[sev]
+		except KeyError:
+			_sevicon = self.iconerror
 
 		_fontweight = pango.WEIGHT_NORMAL
-		if sev==6:
+		if sev==32 or sev==64:
 			_fontweight = pango.WEIGHT_BOLD
 		
 		_fgcolor = "black"
-		if sev==4:
+		if sev==8:
 			_fgcolor = "#888800"
-		elif sev==5:
+		elif sev==16:
 			_fgcolor = "#884400"
-		elif sev==6:
+		elif sev==32 or sev==64:
 			_fgcolor = "#880000"
 		elif sev==0:
 			_fgcolor = BROWSER_FIXED_COLOR
@@ -927,19 +931,20 @@ class Browser:
 				filename = "..."+filename[-22:]
 			_fileline = filename + ":" + str(line)
 
-		_res = [_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight]
+		_res = (_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight)
+		print "RES IS",_res
 		#print _res
 		return _res  
 
 	def error_callback(self,sev,filename,line,msg):
-		try:
-			pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
-			path = self.errorstore.get_path(pos)
-			col = self.errorview.get_column(3)
-			self.errorview.scroll_to_cell(path,col)
-		except Exception,e:
-			print "UNABLE TO DISPLAY ERROR MESSAGE '%s'"%msg
-		
+		#print "SEV =",sev
+		#print "FILENAME =",filename
+		#print "LINE =",line
+		#print "MSG =",msg
+		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
+		path = self.errorstore.get_path(pos)
+		col = self.errorview.get_column(3)
+		self.errorview.scroll_to_cell(path,col)		
 		return 0;
 
 #   --------------------------------
