@@ -892,7 +892,7 @@ struct FilePath *ospath_getdir(struct FilePath *fp){
 #else
 	strncpy(s,fp->path,pos - fp->path);
 	s[pos-fp->path]='\0';
-	CONSOLE_DEBUG("DIRECTORY: '%s'",s);
+	/* CONSOLE_DEBUG("DIRECTORY: '%s'",s); */
 #endif
 	return ospath_new(s);
 }
