@@ -9,6 +9,38 @@ extern "C"{
 #include <stdexcept>
 using namespace std;
 
+//---------------------------------------------
+// NULL INTEGRATOR REPORTER (makes no output at all)
+
+IntegratorReporterNull::IntegratorReporterNull(Integrator *integrator) : IntegratorReporterCxx(integrator){
+	// nothing else
+}
+
+IntegratorReporterNull::~IntegratorReporterNull(){
+	// nothing else
+}
+
+int
+IntegratorReporterNull::initOutput(){
+	return 1;
+}
+
+int IntegratorReporterNull::closeOutput(){
+	return 1;
+}
+
+int IntegratorReporterNull::updateStatus(){
+	return 1;
+}
+
+int IntegratorReporterNull::recordObservedValues(){
+	return 1;
+}
+
+
+//----------------------------------------------------
+// DEFAULT INTEGRATOR REPORTER (reporter start and end, outputs time at each step)
+
 IntegratorReporterCxx::IntegratorReporterCxx(Integrator *integrator){
 	// Initialise the C-API structure with flat function pointers
 	reporter.init = &ascxx_integratorreporter_init;

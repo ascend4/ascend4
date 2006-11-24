@@ -64,6 +64,17 @@ private:
 	IntegratorReporter *getInternalType();
 };
 
+class IntegratorReporterNull : public IntegratorReporterCxx{
+public:
+	IntegratorReporterNull(Integrator *);
+	virtual ~IntegratorReporterNull();
+
+	virtual int initOutput();
+	virtual int closeOutput();
+	virtual int updateStatus();
+	virtual int recordObservedValues();
+};
+
 int ascxx_integratorreporter_init(IntegratorSystem *blsys);
 int ascxx_integratorreporter_write(IntegratorSystem *blsys);
 int ascxx_integratorreporter_write_obs(IntegratorSystem *blsys);
