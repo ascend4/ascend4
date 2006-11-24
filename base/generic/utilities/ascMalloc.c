@@ -22,11 +22,6 @@
 	Last in CVS: $Revision: 1.1 $ $Date: 1997/07/18 11:44:49 $ $Author: mthomas $
 */
 
-#include "ascMalloc.h"
-
-/* if 'dmalloc' is being used, we don't need *any* of this stuff */
-#ifndef ASC_WITH_DMALLOC
-
 #include <stdio.h>
 #include <limits.h>
 /* if threading, need to make some macros to use the _r functions of time. */
@@ -45,19 +40,6 @@
 #include "ascPanic.h"
 #include "ascMalloc.h"
 
-#define MAXPOINTERS 1000000
-
-/* temporary file support */
-#ifdef __WIN32__
-#  define LOGFILE "memlg"
-#else
-#  define TEMPFILE_TEMPLATE "/tmp/ascmemlog_XXXXXX"
-#endif
-
-#ifndef lint
-static CONST char AscendMemoryAllocRCSid[]="$Rev$";
-#endif
-
 /*
  *  The "non-debug" version of ascstrdupf -
  *  all memory calls should be to the system versions.
@@ -75,6 +57,24 @@ char *ascstrdupf(CONST char *s)
   }
 	return result;
 }
+
+/*------------------------------------------------------------------------------
+  ASCEND 'MALLOC' IMPLEMENTATION
+
+	if 'dmalloc' is being used, we don't need *any* of this stuff 
+*/
+#ifndef ASC_WITH_DMALLOC
+
+#define MAXPOINTERS 1000000
+
+/* temporary file support */
+#ifdef __WIN32__
+#  define LOGFILE "memlg"
+#else
+#  define TEMPFILE_TEMPLATE "/tmp/ascmemlog_XXXXXX"
+#endif
+
+
 
 
 /*
