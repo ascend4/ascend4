@@ -195,7 +195,7 @@ static void IntegInitSymbols(void){
   INTEGRATOR ENGINE
 */
 
-/* return 1 on success */
+/* return 0 on success */
 int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
 
 	/* verify integrator type ok. always passes for nonNULL inst. */
@@ -203,11 +203,13 @@ int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR
 			,"Integrator has not been specified (or is unknown)."
 		);
-		return 0;
+		return 1;
+	}else{
+		/** @TODO other engine-specific tests */
 	}
 
 	if(engine==sys->engine){
-		return 1;
+		return 0;
 	}
 	if(sys->engine!=INTEG_UNKNOWN){
 		integrator_free_engine(sys);
@@ -215,7 +217,7 @@ int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
 	sys->engine = engine;
 	integrator_create_engine(sys);
 
-	return 1;
+	return 0;
 }
 
 IntegratorEngine integrator_get_engine(const IntegratorSystem *sys){

@@ -212,7 +212,9 @@ ASC_DLLSPEC(int) integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine
 	Sets the engine for this integrator. Checks that the integrator can be used
 	on the given system.
 
-	@return 1 on success, if engine is compatible with the system being integrated.
+	@return 0 on success,
+		1 if unknown engine,
+		2 if invalid engine (not suitable for this present problem)
 */
 
 ASC_DLLSPEC(IntegratorEngine) integrator_get_engine(const IntegratorSystem *blsys);

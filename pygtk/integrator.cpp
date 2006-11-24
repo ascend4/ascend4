@@ -1,6 +1,7 @@
 #include "integrator.h"
 #include "integratorreporter.h"
 #include <stdexcept>
+#include <sstream>
 using namespace std;
 
 /**
@@ -104,18 +105,25 @@ Integrator::solve(){
 	return 1;
 }
 
-int
+void
 Integrator::setEngine(IntegratorEngine engine){
-	return integrator_set_engine(this->blsys, engine);
+	int res = integrator_set_engine(this->blsys, engine);
+	if(!res)return;
+	if(res==1)throw range_error("Unknown integrator");
+	if(res==2)throw range_error("Invalid integrator");
+	stringstream ss;
+	ss << "Unknown error in setEngine (res = " << res << ")";
+	throw runtime_error(ss.str());
 }
 
-int
+void
 Integrator::setEngine(int engine){
-	return integrator_set_engine(this->blsys, (IntegratorEngine)engine);
+	setEngine((IntegratorEngine)engine);
 }
 
-int
+void
 Integrator::setEngine(const string &name){
+	CONSOLE_DEBUG("Setting integration engine to '%s'",name.c_str());
 	IntegratorEngine engine = INTEG_UNKNOWN;
 #ifdef ASC_WITH_LSODE
 	if(name=="LSODE")engine = INTEG_LSODE;
@@ -124,7 +132,7 @@ Integrator::setEngine(const string &name){
 	if(name=="IDA")engine = INTEG_IDA;
 #endif
 
-	return integrator_set_engine(this->blsys, engine);
+	setEngine(engine);
 }
 
 /**
@@ -132,7 +140,7 @@ Integrator::setEngine(const string &name){
 	are available or are in memory.
 */
 map<int,string>
-Integrator::getEngines() const{
+Integrator::getEngines(){
 	map<int,string> m;
 #ifdef ASC_WITH_LSODE
 	m.insert(pair<int,string>(INTEG_LSODE,"LSODE"));
