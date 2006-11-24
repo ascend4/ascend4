@@ -673,26 +673,18 @@ void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
     level = 1;
   }
 
+  error_severity_t sev;
+
   switch(level){
-		case 1:
-			error_reporter_start(ASC_USER_NOTE,filename,line,NULL);
-			FPRINTF(ASCERR,"%s\n",message);
-			break;
-		case 2:
-			error_reporter_start(ASC_USER_WARNING,filename,line,NULL);
-			FPRINTF(ASCERR,"%s\n",message);
-			break;
-		case 3:
-			error_reporter_start(ASC_USER_ERROR,filename,line,NULL);
-			FPRINTF(ASCERR,"%s\n",message);
-			break;
-		case 0:
-		case 4:
+		case 1:	sev = ASC_USER_NOTE; break;
+		case 2: sev = ASC_USER_WARNING; break;
+		case 3: sev = ASC_USER_ERROR; break;
 		default:
-			error_reporter_start(ASC_PROG_ERR,filename,line,NULL);
-			FPRINTF(ASCERR,"%s\n",message);
-			break;
+			sev = ASC_PROG_ERR;
   }			
+
+  error_reporter_start(sev,filename,line,NULL);
+  FPRINTF(ASCERR,"%s\n",message);
 
   if(stat!=NULL){
     /* write some more detail */
@@ -708,6 +700,7 @@ void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
   }
 
   error_reporter_end_flush();
+  CONSOLE_DEBUG("MESSAGE OUTPUT");
 }
 
 CONST char *StatioLabel(int level)

@@ -409,14 +409,17 @@ error_reporter_start(const error_severity_t sev, const char *filename, const int
 
 int
 error_reporter_end_flush(){
-
-	error_reporter(
-		g_error_reporter_cache.sev
-		,g_error_reporter_cache.filename
-		,g_error_reporter_cache.line
-		,g_error_reporter_cache.func
-		,g_error_reporter_cache.msg
-	);
+	if(g_error_reporter_cache.iscaching){
+		error_reporter(
+			g_error_reporter_cache.sev
+			,g_error_reporter_cache.filename
+			,g_error_reporter_cache.line
+			,g_error_reporter_cache.func
+			,g_error_reporter_cache.msg
+		);
+	}else{
+		/* CONSOLE_DEBUG("IGNORING REPEATED CALL TO error_reporter_end_flush()"); */
+	}
 	g_error_reporter_cache.iscaching = 0;
 
 	return 0; /* output must be compatible with fflush */
