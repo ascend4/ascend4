@@ -400,6 +400,8 @@ extern int integrator_output_init(IntegratorSystem *blsys);
 	perhaps not the values of the algebraic varaibles, which must be calculated 
 	separately. They'll be stored in the Integ_system_t somehow (not yet
 	known how)
+
+	@return 1 on success, return 0 on failure (integration will be cancelled)
 */
 extern int integrator_output_write(IntegratorSystem *blsys);
 
