@@ -22,6 +22,7 @@
  */
 
 #include "CUnit/CUnit.h"
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #include "test_register_utilities.h"
 
@@ -51,10 +52,12 @@ CU_ErrorCode test_register_utilities(void)
   if (CUE_SUCCESS != result)
     return result;
 
+#ifndef ASC_WITH_DMALLOC
   /* utilites/ascMalloc.c */
   result = test_register_utilities_ascMalloc();
   if (CUE_SUCCESS != result)
     return result;
+#endif
 
   /* utilites/ascPanic.c */
   result = test_register_utilities_ascPanic();

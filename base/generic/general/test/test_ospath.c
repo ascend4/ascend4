@@ -372,7 +372,7 @@ static void test_ospath(void){
 	M("Passed getbasefilename test 3\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	if(s1)FREE(s1);
 
 	//-------------------------------
 
@@ -458,7 +458,7 @@ static void test_ospath(void){
 	M("Passed getfilestem test 5\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	if(s1)FREE(s1);
 
 	//-------------------------------
 
@@ -482,7 +482,7 @@ static void test_ospath(void){
 	M("Passed getbasefileext test 2\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	if(s1)FREE(s1);
 
 	//-------------------------------
 
@@ -494,7 +494,7 @@ static void test_ospath(void){
 	M("Passed getbasefileext test 3\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	if(s1)FREE(s1);
 
 	//-------------------------------
 

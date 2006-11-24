@@ -124,6 +124,13 @@
 
 #define ASC_FREE(PTR) ascfree(PTR)
 
+ASC_DLLSPEC(char *) ascstrdupf(CONST char *str);
+/**<
+ *  Implementation function for ascstrdup() if MALLOC_DEBUG
+ *  is not defined.  Do not call this function directly - use
+ *  ascstrdup() instead.
+ */
+
 /*------------------------------------------------------------------------------
 	MACROS FOR THE CASE WHERE 'DMALLOC' IS AVAILABLE
 */
@@ -133,7 +140,7 @@
 #include <malloc.h>
 #include <dmalloc.h>
 
-#define ascstrdup(str) strdup(str)
+#define ascstrdup(str) ascstrdupf(str)
 #define ascmalloc(SIZE) malloc(SIZE)
 #define asccalloc(COUNT,SIZE) calloc((COUNT),(SIZE))
 #define ascfree(ADDR) free(ADDR)
@@ -141,8 +148,9 @@
 #define ascstatus(MSG) /* empty */
 #define ascstatus_detail(msg) /* empty */
 #define ascmeminuse() (0)
-#define ascshutdown() /* empty */
+#define ascshutdown(ARG) /* empty */
 #define ascrealloc(PTR,SIZE) realloc((PTR),(SIZE))
+#define ascreallocPURE(PTR,OLD,NEWP) ascrealloc((PTR),(NEWP))
 #define ascbcopy(SRC,DEST,SIZE) memcpy((void *)(DEST), (void *)(SRC), (SIZE))
 #define ascbzero(DEST,LENGTH) memset((char *)(DEST), 0, (LENGTH))
 #define ascbfill(DEST,LENGTH) memset((char *)(DEST), 255, (LENGTH))
@@ -175,13 +183,6 @@
  *
  *  @param str The 0-terminated string to copy.
  *  @return A new copy of str as a char *, or NULL if an error occurs.
- */
-
-ASC_DLLSPEC(char *) ascstrdupf(CONST char *str);
-/**<
- *  Implementation function for ascstrdup() if MALLOC_DEBUG
- *  is not defined.  Do not call this function directly - use
- *  ascstrdup() instead.
  */
 
 ASC_DLLSPEC(char *) ascstrdupf_dbg(CONST char *str);
