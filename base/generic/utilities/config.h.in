@@ -114,6 +114,17 @@
 /* #define MALLOC_DEBUG @MALLOC_DEBUG@ */
 #endif
 
+/*
+	Whether the dmalloc library was detected. Should permit much reduced
+	complexity in ascMalloc.c, hopefully.
+
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
+*/
+#ifndef ASC_WITH_DMALLOC
+/* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ */
+#endif
+
 /*-----------------------------------------------------------------------
   IDA
 */

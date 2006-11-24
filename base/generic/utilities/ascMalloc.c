@@ -1,31 +1,31 @@
-/*
- *  Ascend Memory Allocation Routines
- *  by Tom Epperly
- *  Created: 2/6/90
- *  Version: $Revision: 1.1 $
- *  Version control file: $RCSfile: ascMalloc.c,v $
- *  Date last modified: $Date: 1997/07/18 11:44:49 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	Ascend Memory Allocation Routines
+	by Tom Epperly
+	Created: 2/6/90
+	Last in CVS: $Revision: 1.1 $ $Date: 1997/07/18 11:44:49 $ $Author: mthomas $
+*/
+
+#include "ascMalloc.h"
+
+/* if 'dmalloc' is being used, we don't need *any* of this stuff */
+#ifndef ASC_WITH_DMALLOC
 
 #include <stdio.h>
 #include <limits.h>
@@ -36,7 +36,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "ascConfig.h"
 #ifndef __WIN32__
 #  include <unistd.h>
 #else
@@ -82,22 +81,20 @@ char *ascstrdupf(CONST char *s)
  *  Here's the debug version of ascstrdup -
  *  all memory calls should be to the local debug versions.
  */
-char *ascstrdupf_dbg(CONST char *s)
-{
+char *ascstrdupf_dbg(CONST char *s){
 	char *result;
 
 	if (NULL == s) {
-    return NULL;
-  }
+		return NULL;
+	}
 	result = (char *)ascmallocf(strlen(s) + 1, __FILE__, __LINE__);
-  if (NULL != result) {
-    strcpy(result, s);
-  }
+	if (NULL != result) {
+		strcpy(result, s);
+	}
 	return result;
 }
 
-char *asc_memcpy(char *to, char *from, size_t size)
-{
+char *asc_memcpy(char *to, char *from, size_t size){
 /* We really should be moving stuff a long at a time, but that mean
  * handling the leading and trailing unaligned bytes separately.
  * We also really should just be passing on to the vendor memcpy on
@@ -111,7 +108,7 @@ char *asc_memcpy(char *to, char *from, size_t size)
     while (size-- > 0) {
       *fill-- = *from--;
     }
-  } else {
+  }else{
     if (from > to) {
       fill = to;
       while (size-- > 0) {
@@ -139,7 +136,7 @@ char *ascreallocPUREF(char *ptr, size_t oldbytes, size_t newbytes)
   if (!oldbytes) {
     if (ptr!=NULL) free(ptr); /* some OS allocate 0 bytes, god help us */
     return (char *)malloc(newbytes);
-  } else {
+  }else{
     /* expand */
     char *ret;
     ret = malloc(newbytes);
@@ -175,7 +172,7 @@ char *ascreallocPUREF_dbg(char *ptr, size_t oldbytes, size_t newbytes)
   if (!oldbytes) {
     if (ptr!=NULL) ascfreef(ptr, __FILE__, __LINE__); /* some OS allocate 0 bytes, god help us */
     return (char *)ascmallocf(newbytes, __FILE__, __LINE__);
-  } else {
+  }else{
     /* expand */
     char *ret;
     ret = ascmallocf(newbytes, __FILE__, __LINE__);
@@ -212,17 +209,6 @@ unsigned long ascmeminusef(void)
 {
   return f_memory_allocated;
 }
-
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
-/*@unused@*/
-static int SortedList(void)
-{
-  int c;
-  for(c=1;c<f_memory_length;c++)
-    if (f_mem_rec[c-1].ptr>f_mem_rec[c].ptr) return 0;
-  return 1;
-}
-#endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
 static CONST VOIDPTR MinMemory(void)
 {
@@ -798,3 +784,5 @@ int InMemoryBlockF(CONST VOIDPTR ptr1, CONST VOIDPTR ptr2)
   else
     return 0;
 }
+
+#endif

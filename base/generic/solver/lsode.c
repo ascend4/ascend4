@@ -574,7 +574,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
   double time1,time2;
 #endif
 
-  CONSOLE_DEBUG("Calling for a function evaluation");
+  /* CONSOLE_DEBUG("Calling for a function evaluation"); */
 
 #if DOTIME
   CONSOLE_DEBUG("Calling for a function evaluation");
@@ -597,9 +597,10 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
 
   case lsode_derivative:
     if (lsodesys.partitioned) {
-	  CONSOLE_DEBUG("PRE-SOLVE");
+	  /* CONSOLE_DEBUG("PRE-SOLVE"); */
       slv_presolve(l_lsode_blsys->system);
     } else {
+	  /** @TODO this doesn't ever seem to be called */
 	  CONSOLE_DEBUG("RE-SOLVE");
       slv_resolve(l_lsode_blsys->system);
     }
@@ -658,7 +659,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y,
   UNUSED_PARAMETER(ml);
   UNUSED_PARAMETER(mu);
 
-  CONSOLE_DEBUG("Calling for a gradient evaluation");
+  /* CONSOLE_DEBUG("Calling for a gradient evaluation"); */
 #if DOTIME
   double time1;
 

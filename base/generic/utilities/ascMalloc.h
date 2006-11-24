@@ -18,6 +18,10 @@
 *//** @file
 	ASCEND memory allocation & reporting routines.
 
+	@TODO
+		An attempt is being made here to remove some of the complexity here
+		and migrate to the external tool 'dmalloc' (http://dmalloc.com/)
+
 	These functions provide tracking of memory events and assist
 	finding and debugging memory errors.  Memory tracking options are
 	selected using the macros MALLOC_DEBUG and ALLOCATED_TESTS discussed
@@ -71,41 +75,23 @@
 *//*
 	by Tom Epperly
 	Created: 2/6/90
-	Version: $Revision: 1.2 $
-	Version control file: $RCSfile: ascMalloc.h,v $
-	Date last modified: $Date: 1997/07/18 11:44:50 $
-	Last modified by: $Author: mthomas $
+	Last in CVS: $Revision: 1.2 $ $Date: 1997/07/18 11:44:50 $ $Author: mthomas $
 */
 
 #ifndef ASC_ASCMALLOC_H
 #define ASC_ASCMALLOC_H
 
-/* MALLOC_DEBUG may be defined in config.h... */
+/* MALLOC_DEBUG and ASC_WITH_DMALLOC will be defined in config.h... */
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 
-#ifdef MALLOC_DEBUG
-#  define ascstrdup(str) ascstrdupf_dbg(str)
-#else
-#  define ascstrdup(str) ascstrdupf(str)
-#endif
-/**<
- *  Returns a new copy of string str.
- *  This is the ASCEND rendition of strdup().  The caller is
- *  responsible for deallocating the new string when finished
- *  using ascfree().  Returns NULL if str is NULL or memory
- *  cannot be allocated for the new copy.  If MALLOC_DEBUG is
- *  defined, the allocation is tracked.
- *
- *  @param str The 0-terminated string to copy.
- *  @return A new copy of str as a char *, or NULL if an error occurs.
- */
-
+/*------------------------------------------------------------------------------
+	C++-ish ASC_NEW* macros
+*/
 /**
 	Shorthand for creating pointers to newly allocated data of a given type
 */
 #define ASC_NEW(TYPE) (TYPE*)ascmalloc(sizeof(TYPE))
-
 #define ASC_NEW_CLEAR(TYPE) (TYPE*)asccalloc(1,sizeof(TYPE))
 
 /**
@@ -137,6 +123,59 @@
 */
 
 #define ASC_FREE(PTR) ascfree(PTR)
+
+/*------------------------------------------------------------------------------
+	MACROS FOR THE CASE WHERE 'DMALLOC' IS AVAILABLE
+*/
+
+#ifdef ASC_WITH_DMALLOC
+
+#include <malloc.h>
+#include <dmalloc.h>
+
+#define ascstrdup(str) strdup(str)
+#define ascmalloc(SIZE) malloc(SIZE)
+#define asccalloc(COUNT,SIZE) calloc((COUNT),(SIZE))
+#define ascfree(ADDR) free(ADDR)
+#define asc_memcpy(DEST,SRC,SIZE) memcpy((DEST),(SRC),(SIZE))
+#define ascstatus(MSG) /* empty */
+#define ascstatus_detail(msg) /* empty */
+#define ascmeminuse() (0)
+#define ascshutdown() /* empty */
+#define ascrealloc(PTR,SIZE) realloc((PTR),(SIZE))
+#define ascbcopy(SRC,DEST,SIZE) memcpy((void *)(DEST), (void *)(SRC), (SIZE))
+#define ascbzero(DEST,LENGTH) memset((char *)(DEST), 0, (LENGTH))
+#define ascbfill(DEST,LENGTH) memset((char *)(DEST), 255, (LENGTH))
+
+/* some assertions, all ignored in this case */
+#define AllocatedMemory(ptr,size) (1)
+#define InMemoryBlock(ptr1,ptr2) (1)
+#define AssertAllocatedMemory(ptr,size)
+#define AssertMemory(ptr)
+#define AssertContainedMemory(ptr,size)
+#define AssertContainedIn(ptr,ptr2)
+
+/*------------------------------------------------------------------------------
+	ORIGINAL ASCEND 'MALLOC' IMPLEMENTATION
+*/
+#else /* ASC_WITH_DMALLOC */
+
+#ifdef MALLOC_DEBUG
+#  define ascstrdup(str) ascstrdupf_dbg(str)
+#else
+#  define ascstrdup(str) ascstrdupf(str)
+#endif
+/**<
+ *  Returns a new copy of string str.
+ *  This is the ASCEND rendition of strdup().  The caller is
+ *  responsible for deallocating the new string when finished
+ *  using ascfree().  Returns NULL if str is NULL or memory
+ *  cannot be allocated for the new copy.  If MALLOC_DEBUG is
+ *  defined, the allocation is tracked.
+ *
+ *  @param str The 0-terminated string to copy.
+ *  @return A new copy of str as a char *, or NULL if an error occurs.
+ */
 
 ASC_DLLSPEC(char *) ascstrdupf(CONST char *str);
 /**<
@@ -591,6 +630,8 @@ ASC_DLLSPEC(int) InMemoryBlockF(CONST VOIDPTR ptr1, CONST VOIDPTR ptr2);
  *  starting at ptr1.  This assertion is only active if both
  *  MALLOC_DEBUG and ALLOCATED_TESTS are defined.
  */
+
+#endif /* ASC_WITH_DMALLOC */
 
 #endif /* ASC_ASCMALLOC_H */
 
