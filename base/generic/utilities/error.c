@@ -196,18 +196,18 @@ void error_reporter_tree_clear(){
 
 static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned match){
 	if(t->err && (t->err->sev & match)){
-		CONSOLE_DEBUG("SEVERITY MATCH FOR t = %p",t);
+		/* CONSOLE_DEBUG("SEVERITY MATCH FOR t = %p",t); */
 		return 1;
 	}
 	if(t->next && error_reporter_tree_match_sev(t->next, match)){
-		CONSOLE_DEBUG("SEVERITY MATCH IN 'next' FOR t = %p",t);
+		/* CONSOLE_DEBUG("SEVERITY MATCH IN 'next' FOR t = %p",t); */
 		return 1;
 	}
 	if(t->head && error_reporter_tree_match_sev(t->head, match)){
-		CONSOLE_DEBUG("SEVERITTY MATCH IN 'head' FOR t = %p",t);
+		/* CONSOLE_DEBUG("SEVERITTY MATCH IN 'head' FOR t = %p",t); */
 		return 1;
 	}
-	CONSOLE_DEBUG("NO MATCH FOR t = %p",t);
+	/* CONSOLE_DEBUG("NO MATCH FOR t = %p",t); */
 	return 0;
 }
 
@@ -219,7 +219,9 @@ int error_reporter_tree_has_error(){
 	int res;
 	if(TREECURRENT){
 		res = error_reporter_tree_match_sev(TREECURRENT,ASC_ERR_ERR);
-		if(res)CONSOLE_DEBUG("ERROR(S) FOUND IN TREECURRENT %p",TREECURRENT);
+		if(res){
+			/* CONSOLE_DEBUG("ERROR(S) FOUND IN TREECURRENT %p",TREECURRENT); */
+		}
 		return res;
 	}else{
 		CONSOLE_DEBUG("NO TREE FOUND");
@@ -230,6 +232,8 @@ int error_reporter_tree_has_error(){
 static int error_reporter_tree_write(error_reporter_tree_t *t){
 	int res = 0;
 	static int writecount = 0;
+
+	asc_assert(TREE==NULL); /* else recursive calls will occur */
 
 	if(++writecount > 30){
 		CONSOLE_DEBUG("TOO MUCH WRITING");
