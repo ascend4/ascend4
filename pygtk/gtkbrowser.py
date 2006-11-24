@@ -932,7 +932,6 @@ class Browser:
 			_fileline = filename + ":" + str(line)
 
 		_res = (_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight)
-		print "RES IS",_res
 		#print _res
 		return _res  
 

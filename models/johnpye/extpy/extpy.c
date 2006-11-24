@@ -164,7 +164,7 @@ static PyObject *extpy_getbrowser(PyObject *self, PyObject *args){
 	}
 	browser = (PyObject *)importhandler_getsharedpointer("browser");
 	if(browser==NULL){
-		return Py_None;
+		return Py_BuildValue("");
 	}
 	return Py_BuildValue("O",browser);
 }
@@ -222,8 +222,7 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Registered python method '%s'\n",cname);
 
 	/* nothing gets returned (but possibly an exception) */
-	Py_INCREF(Py_None);
-	return Py_None;
+	return Py_BuildValue("");
 }
 
 static PyMethodDef extpymethods[] = {

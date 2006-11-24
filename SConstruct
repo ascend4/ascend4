@@ -34,6 +34,10 @@ if platform.system()=="Windows":
 	default_conopt_cpppath="$CONOPT_PREFIX"
 	default_conopt_lib="conopt3"
 	default_conopt_envvar="CONOPT_PATH"
+
+	default_cunit_prefix="c:\\MinGW"
+	default_cunit_libpath="$CUNIT_PREFIX\\lib"
+	default_cunit_cpppath="$CUNIT_PREFIX\\include"
 	
 	if not os.path.exists(default_conopt_prefix):
 		default_conopt_prefix = None
@@ -57,6 +61,9 @@ else:
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
 	default_conopt_lib="consub3"
 	default_conopt_envvar="CONOPT_PATH"
+	default_cunit_prefix="/usr"
+	default_cunit_libpath="$CUNIT_PREFIX/lib"
+	default_cunit_cpppath="$CUNIT_PREFIX/include"
 
 	need_libm = True
 	if not os.path.isdir(default_tcl):
@@ -165,18 +172,25 @@ opts.Add(BoolOption(
 	,True
 ))
 
+# Where was CUNIT installed?
+opts.Add(PackageOption(
+	'CUNIT_PREFIX'
+	,"Where are your CUnit files?"
+	,default_cunit_prefix
+))
+
 # Where are the CUnit includes?
 opts.Add(PackageOption(
 	'CUNIT_CPPPATH'
 	,"Where are your CUnit include files?"
-	,'off'
+	,default_cunit_cpppath
 ))
 
 # Where are the CUnit libraries?
 opts.Add(PackageOption(
 	'CUNIT_LIBPATH'
 	,"Where are your CUnit libraries?"
-	,'off'
+	,default_cunit_libpath
 ))
 
 opts.Add(PackageOption(
