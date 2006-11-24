@@ -88,26 +88,36 @@ ExtMethodRun extpy_invokemethod;
 	argument to Python?
 */
 int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *user_data){
-	PyObject *arglist, *result;
+	PyObject *arglist=NULL, *result=NULL, *pyinstance=NULL, *dict=NULL
+		, *mainmodule=NULL, *errstring=NULL, *errtypestring=NULL;
+	PyObject *perrtype=NULL, *perrvalue=NULL, *perrtrace=NULL;
+
+	int ret;
 	struct ExtPyData *extpydata;
+
 	/* cast user data to PyObject pointer */
+	extpydata = (struct ExtPyData *)user_data;
 
-	/* CONSOLE_DEBUG("USER_DATA IS AT %p",user_data); */
+	mainmodule = PyImport_AddModule("__main__");
+	if(mainmodule==NULL){
+		CONSOLE_DEBUG("Unable to retrieve __main__ module");
+		ret = 1;
+		goto cleanup_extpy_invokemethod;
+	}
 
-	extpydata = (struct ExtPyData *) user_data;
-
-	/* ERROR_REPORTER_HERE(ASC_USER_NOTE,"RUNNING PYTHON METHOD"); */
-	/* CONSOLE_DEBUG("RUNNING PYTHON METHOD..."); */
+	dict = PyModule_GetDict(mainmodule);
+	if(dict==NULL){
+		CONSOLE_DEBUG("Unable to retrieve __main__ dict");
+		ret = 1;
+		goto cleanup_extpy_invokemethod;
+	}
 
 	CONSOLE_DEBUG("Running python method '%s'",extpydata->name);
 
-	PyErr_Clear();
-
-	/* CONSOLE_DEBUG("PyObject 'fn' is at %p",extpydata->fn); */
-
 	if(!PyCallable_Check(extpydata->fn)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"user_data is not a PyCallable");
-		return 1;
+		ret = 1;
+		goto cleanup_extpy_invokemethod;
 	}
 
 	/*
@@ -119,25 +129,64 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 	*/
 	importhandler_setsharedpointer("context",(void *)context);
 
-	/*
-		Eventually we'll work out how to pass the instance object directly into Python. For
-		the moment, just have a placeholder variable instead:
-	*/
-	arglist = Py_BuildValue("(i)", 666);
-
-	/* CONSOLE_DEBUG("CALLING PYTHON"); */
-	result = PyEval_CallObject(extpydata->fn, arglist);
-	/* CONSOLE_DEBUG("DONE CALLING PYTHON"); */
-	Py_DECREF(arglist);
-
+	PyErr_Clear();
+	pyinstance = PyRun_String("ascpy.Registry().getInstance('context')",Py_eval_input,dict,dict);
 	if(PyErr_Occurred()){
-		/** @TODO we really want to capture these error messages and output them to the GUI, instead of outputting them to the console */
-		PyErr_Print();
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed running python method (see console)");
-		return 1;
+		CONSOLE_DEBUG("Failed retrieving instance");
+		ret = 1;
+		goto cleanup_extpy_invokemethod;
 	}
 
-	return 0;
+	arglist = Py_BuildValue("(O)", pyinstance);
+
+	PyErr_Clear();
+	result = PyEval_CallObject(extpydata->fn, arglist);
+
+	if(PyErr_Occurred()){
+
+		/* get the content of the error message */
+		PyErr_Fetch(&perrtype, &perrvalue, &perrtrace);		
+
+		errtypestring = NULL;
+		if(perrtype != NULL
+			&& (errtypestring = PyObject_Str(perrtype)) != NULL
+		    && PyString_Check(errtypestring)
+		){
+			// nothing
+		}else{
+			errtypestring = Py_BuildValue("");
+		}
+	
+		errstring = NULL;
+		if(perrvalue != NULL
+			&& (errstring = PyObject_Str(perrvalue)) != NULL
+		    && PyString_Check(errstring)
+		){
+			error_reporter(ASC_PROG_ERR
+				,extpydata->name,0
+				,PyString_AsString(errtypestring)
+				,"%s",PyString_AsString(errstring)
+			);
+		}else{
+			error_reporter(ASC_PROG_ERR,extpydata->name,0,extpydata->name,"(unknown python error)");
+		}
+		PyErr_Print();
+		ret = 1;
+		goto cleanup_extpy_invokemethod;
+	}
+
+	ret=0;
+
+cleanup_extpy_invokemethod:
+	Py_XDECREF(dict);
+	Py_XDECREF(arglist);
+	Py_XDECREF(pyinstance);
+	Py_XDECREF(errstring);
+	Py_XDECREF(errtypestring);
+	Py_XDECREF(perrtype);
+	Py_XDECREF(perrvalue);
+	Py_XDECREF(perrtrace);
+	return ret;
 }
 
 /**
