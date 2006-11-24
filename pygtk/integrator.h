@@ -49,10 +49,10 @@ public:
 	Integrator(Simulation &);
 	~Integrator();
 
-	std::map<int,std::string> getEngines() const;
-	int setEngine(IntegratorEngine engine);
-	int setEngine(int engine);
-	int setEngine(const std::string &name);
+	static std::map<int,std::string> getEngines();
+	void setEngine(IntegratorEngine engine);
+	void setEngine(int engine);
+	void setEngine(const std::string &name);
 	std::string getEngineName() const;
 
 	void setReporter(IntegratorReporterCxx *reporter);
