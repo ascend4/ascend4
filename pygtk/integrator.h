@@ -34,6 +34,9 @@ extern "C"{
 #include <solver/samplelist.h>
 }
 
+const int LSODE = INTEG_LSODE;
+const int IDA = INTEG_IDA;
+
 #include "simulation.h"
 #include "units.h"
 #include "integratorreporter.h"
@@ -49,6 +52,7 @@ public:
 	std::map<int,std::string> getEngines() const;
 	int setEngine(IntegratorEngine engine);
 	int setEngine(int engine);
+	int setEngine(const std::string &name);
 	std::string getEngineName() const;
 
 	void setReporter(IntegratorReporterCxx *reporter);

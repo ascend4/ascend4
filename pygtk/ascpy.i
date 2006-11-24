@@ -35,6 +35,8 @@
 #include "registry.h"
 #include <compiler/importhandler.h>
 #include "annotation.h"
+
+#include <dmalloc.h>
 %}
 
 // All STL runtime_errors caught to Python

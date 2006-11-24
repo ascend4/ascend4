@@ -114,6 +114,19 @@ Integrator::setEngine(int engine){
 	return integrator_set_engine(this->blsys, (IntegratorEngine)engine);
 }
 
+int
+Integrator::setEngine(const string &name){
+	IntegratorEngine engine = INTEG_UNKNOWN;
+#ifdef ASC_WITH_LSODE
+	if(name=="LSODE")engine = INTEG_LSODE;
+#endif
+#ifdef ASC_WITH_IDA
+	if(name=="IDA")engine = INTEG_IDA;
+#endif
+
+	return integrator_set_engine(this->blsys, engine);
+}
+
 /**
 	Ideally this list would be dynamically generated based on what solvers
 	are available or are in memory.

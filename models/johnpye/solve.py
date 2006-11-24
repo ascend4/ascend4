@@ -13,10 +13,14 @@ def solve(self):
 		solver = browser.solver;
 		reporter = SimpleSolverReporter(browser)
 	else:
+		# default to the QRSlv solver. @TODO make this configurable somehow.
 		solver = ascpy.Solver("QRSlv")
 		reporter = ascpy.SolverReporter()
 
+	# the 'sim' object is registered in simulation.cpp each time a method is to be run
+	# (an exception is thrown if not available (eg if C++ not being used)
 	sim = ascpy.Registry().getSimulation("sim")
+
 	sim.build()
 	sim.solve(solver,reporter)
 

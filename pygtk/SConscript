@@ -73,12 +73,18 @@ for swigf in Split("""
 	swigobjs.append(swigobj)
 
 _libs = ['ascend']+env['PYTHON_LIB']
+
+swig_env['LIBS'] = _libs
+swig_env['LIBPATH'] = ['#'] + env['PYTHON_LIBPATH']
+
 if not env.get('MSVS'):
-	_libs.append('stdc++')
+	swig_env.Append(LIBS = ['stdc++'])
+
+if env.get('WITH_DMALLOC'):
+	swig_env.Append(LIBS = ['dmalloc'])
+	swig_env.Append(LIBPATH = [env.get('DMALLOC_LIBPATH')])
 
 swiglib = swig_env.SharedLibrary("ascpy",objs + swigobjs
-	, LIBS = _libs
-	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
 	, SHLIBPREFIX = '_'
 )
 

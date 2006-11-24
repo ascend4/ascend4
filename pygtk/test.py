@@ -1,4 +1,5 @@
 import unittest
+import ascpy
 
 class AscendTest(unittest.TestCase):
 
@@ -14,18 +15,20 @@ class AscendTest(unittest.TestCase):
 		try:
 			self.L.load('johnpye/shm.a4c')
 			M = self.L.findType('shm').getSimulation('sim')
-			M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+			I = ascpy.Integrator(M)
+			I.setReporter(ascpy.IntegratorReporterCxx(I))
+			I.setEngine('LSODE');
+			I.setLinearTimesteps(ascpy.Units("s"), 0.0, 100.0, 100);
+			I.setMinSubStep(0.005);
+			I.setMaxSubStep(0.5);
+			I.setInitialSubStep(0.01);
+			I.setMaxSubSteps(100);
+			I.analyse();
+			I.solve();
+			print "OBSERVED %d VARS" % I.getNumObservedVars()
 		except Exception,e:
 			self.fail(str(e))
 
-	def testloading(self):
-		pass
-
-	def testsystema4l(self):
-		self.L.load('simpleflowsheet01.a4c')
-
-	def testatomsa4l(self):
-		self.L.load('atoms.a4l')
 
 	def testlog10(self):
 		self.L.load('johnpye/testlog10.a4c')
@@ -38,6 +41,14 @@ class NotToBeTested:
 	def nothing(self):
 		pass
 
+	def testloading(self):
+		pass
+
+	def testsystema4l(self):
+		self.L.load('simpleflowsheet01.a4c')
+
+	def testatomsa4l(self):
+		self.L.load('atoms.a4l')
 		
 if __name__=='__main__':
 	unittest.main()

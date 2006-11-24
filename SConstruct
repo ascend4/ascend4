@@ -35,9 +35,9 @@ if platform.system()=="Windows":
 	default_conopt_lib="conopt3"
 	default_conopt_envvar="CONOPT_PATH"
 
-	default_cunit_prefix="c:\\MinGW"
-	default_cunit_libpath="$CUNIT_PREFIX\\lib"
-	default_cunit_cpppath="$CUNIT_PREFIX\\include"
+	default_prefix="c:\\MinGW"
+	default_libpath="$DEFAULT_PREFIX\\lib"
+	default_cpppath="$DEFAULT_PREFIX\\include"
 	
 	if not os.path.exists(default_conopt_prefix):
 		default_conopt_prefix = None
@@ -61,9 +61,10 @@ else:
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
 	default_conopt_lib="consub3"
 	default_conopt_envvar="CONOPT_PATH"
-	default_cunit_prefix="/usr"
-	default_cunit_libpath="$CUNIT_PREFIX/lib"
-	default_cunit_cpppath="$CUNIT_PREFIX/include"
+
+	default_prefix="/usr"
+	default_libpath="$DEFAULT_PREFIX/lib"
+	default_cpppath="$DEFAULT_PREFIX/include"
 
 	need_libm = True
 	if not os.path.isdir(default_tcl):
@@ -172,26 +173,36 @@ opts.Add(BoolOption(
 	,True
 ))
 
+#----- default paths -----
+opts.Add(PackageOption(
+	'DEFAULT_PREFIX'
+	,"Where are most of the shared libraries located on your system?"
+	,default_prefix
+))
+
+#------ cunit --------
 # Where was CUNIT installed?
 opts.Add(PackageOption(
 	'CUNIT_PREFIX'
 	,"Where are your CUnit files?"
-	,default_cunit_prefix
+	,"$DEFAULT_PREFIX"
 ))
 
 # Where are the CUnit includes?
 opts.Add(PackageOption(
 	'CUNIT_CPPPATH'
 	,"Where are your CUnit include files?"
-	,default_cunit_cpppath
+	,"$CUNIT_PREFIX/include"
 ))
 
 # Where are the CUnit libraries?
 opts.Add(PackageOption(
 	'CUNIT_LIBPATH'
 	,"Where are your CUnit libraries?"
-	,default_cunit_libpath
+	,"$CUNIT_PREFIX/lib"
 ))
+
+#-------- ida -------
 
 opts.Add(PackageOption(
 	"IDA_PREFIX"
@@ -217,7 +228,7 @@ opts.Add(
 	,"$IDA_PREFIX/lib"
 )
 
-# conopt
+# ----- conopt-----
 
 opts.Add(PackageOption(
 	"CONOPT_PREFIX"
@@ -249,6 +260,8 @@ opts.Add(
 	,default_conopt_envvar
 )
 
+#-------- f2c ------
+
 opts.Add(
 	"F2C_LIB"
 	,"F2C library (eg. g2c, gfortran, f2c)"
@@ -260,6 +273,8 @@ opts.Add(PackageOption(
 	,"Directory containing F2C library (i.e. g2c, gfortran, f2c, etc.), if not already accessible"
 	,"off"
 ))
+
+#------- tcl/tk --------
 
 opts.Add(
 	'TCL'
@@ -359,6 +374,8 @@ opts.Add(
 	,'X11'
 )
 
+#----- installed file locations (for 'scons install') -----
+
 opts.Add(
 	'INSTALL_PREFIX'
 	,'Root location for installed files'
@@ -401,6 +418,15 @@ opts.Add(
 	,"$INSTALL_PREFIX/include"
 )
 
+
+opts.Add(
+	'INSTALL_ROOT'
+	,'For use by RPM only: location of %{buildroot} during rpmbuild'
+	,""
+)
+
+#----------------------
+
 opts.Add(
 	'PYGTK_ASSETS'
 	,'Default location for Glade assets (placed in pygtk/config.py)'
@@ -419,11 +445,32 @@ opts.Add(BoolOption(
 	,False
 ))
 
-opts.Add(
-	'INSTALL_ROOT'
-	,'For use by RPM only: location of %{buildroot} during rpmbuild'
-	,""
-)
+#------ dmalloc --------
+opts.Add(PackageOption(
+	'DMALLOC_PREFIX'
+	,"Where are your dmalloc files?"
+	,default_prefix
+))
+
+opts.Add(PackageOption(
+	'DMALLOC_CPPPATH'
+	,"Where are your dmalloc include files?"
+	,default_cpppath
+))
+
+opts.Add(PackageOption(
+	'DMALLOC_LIBPATH'
+	,"Where are your dmalloc libraries?"
+	,default_libpath
+))
+
+opts.Add(BoolOption(
+	'WITH_DMALLOC'
+	,"Link to the DMALLOC library (if available) for debugging of memory usage."
+	,False
+))
+
+#-----------------------
 
 opts.Add(
 	'DISTTAR_NAME'
@@ -542,6 +589,9 @@ without_extfn_reason = "disabled by options/config.py"
 
 with_scrollkeeper = env.get('WITH_SCROLLKEEPER')
 without_scrollkeeper_reason = "disabled by options/config.py"
+
+with_dmalloc = env.get('WITH_DMALLOC')
+without_dmalloc_reason = "disabled by options/config.py"
 
 if platform.system()=="Windows":
 	with_installer=1
@@ -830,6 +880,24 @@ def CheckCUnit(context):
 	return CheckExtLib(context,'cunit',cunit_test_text)
 
 #----------------
+# dmalloc test
+
+dmalloc_test_text = """
+#include <stdlib.h>
+#include <dmalloc.h>
+
+int main(void){
+	char *c;
+	c = malloc(100*sizeof(char));
+	free(c);
+	return 0;
+}
+"""
+
+def CheckDMalloc(context):
+	return CheckExtLib(context,'dmalloc',dmalloc_test_text)
+
+#----------------
 # MATH test
 
 math_test_text = """
@@ -1086,6 +1154,7 @@ conf = Configure(env
 		'CheckMath' : CheckMath
 		, 'CheckSwigVersion' : CheckSwigVersion
 		, 'CheckCUnit' : CheckCUnit
+		, 'CheckDMalloc' : CheckDMalloc
 		, 'CheckTcl' : CheckTcl
 		, 'CheckTclVersion' : CheckTclVersion
 		, 'CheckTk' : CheckTk
@@ -1196,6 +1265,13 @@ if with_cunit:
 		without_cunit_reason = 'CUnit not found'
 		with_cunit = False
 		#print "CUNIT NOT FOUND, LIBS=",conf.env.get('LIBS')
+
+# DMALLOC
+
+if with_dmalloc:
+	if not conf.CheckDMalloc():
+		without_dmalloc_reason = 'dmalloc not found'
+		with_dmalloc = False
 
 # IDA
 
@@ -1351,6 +1427,9 @@ for k,v in {
 
 if with_ida:
 	subst_dict["/\\* #define ASC_WITH_IDA @ASC_WITH_IDA@ \\*/"]='#define ASC_WITH_IDA '
+
+if with_dmalloc:
+	subst_dict["/\\* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ \\*/"]='#define ASC_WITH_DMALLOC '
 
 if with_conopt:
 	subst_dict["/\\* #define ASC_WITH_CONOPT @ASC_WITH_CONOPT@ \\*/"]='#define ASC_WITH_CONOPT '
@@ -1582,6 +1661,9 @@ if not with_ida:
 
 #-------------
 # LIBASCEND -- all base/generic functionality
+
+if with_dmalloc:
+	libascend_env.Append(LIBS=['dmalloc'])
 
 libascend = libascend_env.SharedLibrary('ascend',srcs)
 
