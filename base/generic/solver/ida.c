@@ -56,9 +56,11 @@
 /* SUNDIALS includes */
 #ifdef ASC_WITH_IDA
 # include <sundials/sundials_config.h>
+# include <sundials/sundials_dense.h>
 # include <ida/ida.h>
 # include <nvector/nvector_serial.h>
 # include <ida/ida_spgmr.h>
+# include <ida/ida_dense.h>
 # ifndef IDA_SUCCESS
 #  error "Failed to include SUNDIALS IDA header file"
 # endif
@@ -111,6 +113,12 @@ void integrator_ida_error(int error_code
 		, char *msg, void *eh_data
 );
 
+int integrator_ida_djex(long int Neq, realtype tt
+		, N_Vector yy, N_Vector yp, N_Vector rr
+		, realtype c_j, void *jac_data, DenseMat Jac
+		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+);
+
 /*-------------------------------------------------------------
   SETUP/TEARDOWN ROUTINES
 */
@@ -147,7 +155,8 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *blsys){
 */
 
 enum ida_parameters{
-	IDA_PARAM_AUTODIFF
+	IDA_PARAM_LINSOLVER
+	,IDA_PARAM_AUTODIFF
 	,IDA_PARAM_RTOL
 	,IDA_PARAM_ATOL
 	,IDA_PARAM_ATOLVECT
@@ -209,7 +218,14 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,"Scalar relative error tolerance",1
 			,"Value of the scalar relative error tolerance."
 			" See IDA manual, section 5.5.1"
-		}, 1e-5, DBL_MIN, DBL_MAX }
+		}, 1e-4, DBL_MIN, DBL_MAX }
+	);
+
+	slv_param_char(p,IDA_PARAM_LINSOLVER
+			,(SlvParameterInitChar){{"linsolver"
+			,"Linear solver",1
+			,"See IDA manual, section 5.5.3."
+		}, "DENSE"}, (char *[]){"DENSE","SPGMR",NULL}
 	);
 
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
@@ -234,6 +250,7 @@ int integrator_ida_solve(
 	realtype t0, reltol, abstol, t, tret, tout1;
 	N_Vector y0, yp0, abstolvect, ypret, yret;
 	IntegratorIdaData *enginedata;
+	char *linsolver;
 
 	CONSOLE_DEBUG("STARTING IDA...");
 
@@ -291,7 +308,6 @@ int integrator_ida_solve(
 		CONSOLE_DEBUG("USING SCALAR ATOL VALUE = %8.2e",abstol);
 		abstol = SLV_PARAM_REAL(&(blsys->params),IDA_PARAM_ATOL);
 		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SS, reltol, &abstol);
-
 	}
 
 	if(flag==IDA_MEM_NULL){
@@ -316,29 +332,56 @@ int integrator_ida_solve(
 	CONSOLE_DEBUG("ASSIGNING LINEAR SOLVER");
 
 	/* attach linear solver module, using the default value of maxl */
-	flag = IDASpgmr(ida_mem, 0);
-	if(flag==IDASPILS_MEM_NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
-		return 0;
-	}else if(flag==IDASPILS_MEM_FAIL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDASpgmr)");
-		return 0;
-	}/* else success */
-
-	/* assign the J*v function */
-	if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_AUTODIFF)){
-		CONSOLE_DEBUG("USING AUTODIFF");
-	    flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex, (void *)blsys);
+	linsolver = SLV_PARAM_CHAR(&(blsys->params),IDA_PARAM_LINSOLVER);
+	if(strcmp(linsolver,"SPGMR")==0){
+		flag = IDASpgmr(ida_mem, 0);
 		if(flag==IDASPILS_MEM_NULL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 			return 0;
-		}else if(flag==IDASPILS_LMEM_NULL){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDASPILS linear solver has not been initialized");
+		}else if(flag==IDASPILS_MEM_FAIL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDASpgmr)");
 			return 0;
 		}/* else success */
+
+		/* assign the J*v function */
+		if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_AUTODIFF)){
+			CONSOLE_DEBUG("USING AUTODIFF");
+		    flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex, (void *)blsys);
+			if(flag==IDASPILS_MEM_NULL){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
+				return 0;
+			}else if(flag==IDASPILS_LMEM_NULL){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDASPILS linear solver has not been initialized");
+				return 0;
+			}/* else success */
+		}else{
+			CONSOLE_DEBUG("USING NUMERICAL DIFF");
+		}
+	}else if(strcmp(linsolver,"DENSE")==0){
+		CONSOLE_DEBUG("USING IDADEENSE SOLVER, size = %d",size);
+		flag = IDADense(ida_mem, size);
+		switch(flag){
+			case IDADENSE_SUCCESS: break;
+			case IDADENSE_MEM_NULL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL"); return 0;
+			case IDADENSE_ILL_INPUT: ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDADENSE is not compatible with current nvector module"); return 0;
+			case IDADENSE_MEM_FAIL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for IDADENSE"); return 0;
+			default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad return"); return 0;
+		}
+		
+		if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_AUTODIFF)){
+			CONSOLE_DEBUG("USING AUTODIFF");
+			flag = IDADenseSetJacFn(ida_mem, &integrator_ida_djex, (void *)blsys);
+			switch(flag){
+				case IDADENSE_SUCCESS: break;
+				default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDADenseSetJacFn"); return 0;
+			}
+		}else{
+			CONSOLE_DEBUG("USING NUMERICAL DIFF");
+		}
 	}else{
-		CONSOLE_DEBUG("USING NUMERICAL DIFF");
-	}		
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
+		return 0;
+	}
 
 	/* set linear solver optional inputs...
 
@@ -502,6 +545,44 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 
 	if(is_error)CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");
 	return is_error;
+}
+
+/**
+	Dense Jacobian evaluation. Only suitable for small problems!
+*/
+int integrator_ida_djex(long int Neq, realtype tt
+		, N_Vector yy, N_Vector yp, N_Vector rr
+		, realtype c_j, void *jac_data, DenseMat Jac
+		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+){
+	IntegratorSystem *blsys;
+	IntegratorIdaData *enginedata;
+	realtype *yval;
+
+	blsys = (IntegratorSystem *)jac_data;
+	enginedata = integrator_ida_enginedata(blsys);
+
+	/* pass the values of everything back to the compiler */
+	integrator_set_t(blsys, (double)tt);
+	integrator_set_y(blsys, NV_DATA_S(yy));
+	integrator_set_ydot(blsys, NV_DATA_S(yp));
+
+	yval = NV_DATA_S(yy);
+
+	/* AWFUL HACK! In an attempt to prove that 'IDADense' works as expected,
+	I've pulled the jacobians straight from idadenx.c (an IDA example) */
+# define IJth(A,i,j) DENSE_ELEM(A,i-1,j-1)
+	IJth(Jac,1,1) = RCONST(-0.04) - c_j;
+	IJth(Jac,2,1) = RCONST(0.04);
+	IJth(Jac,3,1) = 1.0;
+	IJth(Jac,1,2) = RCONST(1.0e4)*yval[2];
+	IJth(Jac,2,2) = RCONST(-1.0e4)*yval[2] - RCONST(6.0e7)*yval[1] - c_j;
+	IJth(Jac,3,2) = 1.0;
+	IJth(Jac,1,3) = RCONST(1.0e4)*yval[1];
+	IJth(Jac,2,3) = RCONST(-1.0e4)*yval[1];
+	IJth(Jac,3,3) = 1.0;
+#undef IJth
+	return(0);
 }
 
 /**

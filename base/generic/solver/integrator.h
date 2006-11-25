@@ -416,7 +416,7 @@ ASC_DLLSPEC(struct var_variable *) integrator_get_independent_var(IntegratorSyst
 	Return a pointer to the variable identified as the independent variable.
 */
 
-extern double *integrator_get_abstol(IntegratorSystem *blsys, double *vector);
+extern double *integrator_get_atol(IntegratorSystem *blsys, double *vector);
 /**<
 	Return abolute tolerance values for the 'ode_atol' values in the MODEL.
 */
