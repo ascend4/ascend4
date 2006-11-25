@@ -14,7 +14,7 @@ SolverParameters::SolverParameters(const slv_parameters_t &p) : p(p){
 }
 
 SolverParameters::SolverParameters(){
-	cerr << "CONSTRUCTED SOLVERPARAMETERS NULL" << endl;
+	/* cerr << "CONSTRUCTED SOLVERPARAMETERS NULL" << endl; */
 }
 
 SolverParameters::SolverParameters(const SolverParameters &old) : p(old.p){

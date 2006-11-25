@@ -76,6 +76,31 @@ class AscendTest(unittest.TestCase):
 	def testIDA(self):
 		self._testIntegrator('IDA')
 
+	def testIDAparameters(self):
+		self.L.load('johnpye/shm.a4c')
+		M = self.L.findType('shm').getSimulation('sim')
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		P = I.getParameters()
+		assert len(P)==1
+		assert P[0].isBool()
+		assert P[0].getName()=="autodiff"
+		assert P[0].getBoolValue() == True
+		P[0].setBoolValue(False)
+		assert P[0].getBoolValue()==False
+		I.setParameters(P)
+		assert len(I.getParameters())==1
+		for p in I.getParameters():
+			print p.getName(),"=",p.getValue()
+		assert I.getParameterValue('autodiff')==False
+		I.setParameter('autodiff',True)
+		try:
+			v = I.getParameterValue('nonexist')
+		except KeyError:
+			pass
+		else:
+			self.fail('Failed to trip invalid Integrator parameter')
+
 	def testIDAwithDAE(self):
 		self.L.load('johnpye/idadenx.a4c')
 		M = self.L.findType('idadenx').getSimulation('sim')
@@ -87,25 +112,11 @@ class AscendTest(unittest.TestCase):
 		I.setMaxSubStep(0.02);
 		I.setInitialSubStep(0.001);
 		I.setMaxSubSteps(500);
+		I.setParameter('autodiff',False)
 		I.analyse();
-		I.solve();
+		I.solve();	
 
-	def testIDAparameters(self):
-		self.L.load('johnpye/shm.a4c')
-		M = self.L.findType('shm').getSimulation('sim')
-		I = ascpy.Integrator(M)
-		I.setEngine('IDA')
-		P = I.getParameters()
-		print "THERE ARE %d PARAMETERS" % len(P)
-		print P[0]
-		assert P[0].getBoolValue() == True
-		P[0].setBoolValue(False)
-		I.setParameters(P)
-		P = I.getParameters()
-		assert P[0].getBoolValue() == False		
-		print P[0]
-
-
+# move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
 	def nothing(self):
 		pass
