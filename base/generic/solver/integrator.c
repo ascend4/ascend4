@@ -435,12 +435,13 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	if(!integrator_check_indep_var(sys))return 0;
 
 	gl_sort(sys->dynvars,(CmpFunc)Integ_CmpDynVars);
+	/* !!! NOTE THAT dynvars IS NOW REARRANGED !!! *sigh* bug hunting(!) */
 
-	fprintf(stderr,"\n\n\nSORTED VARS\n");
+	CONSOLE_DEBUG("Variables rearranged to increasing ODE ID & TYPE (varindx = matrix order)");
 	for(i=1; i<=gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		varname = var_make_name(sys->system,info->i);
-		CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld (varindx = %d)",i,varname,info->type,info->varindx); 
+		CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld (varindx = %d)",i-1,varname,info->type,info->varindx); 
 		ASC_FREE(varname);
 	}
 
@@ -504,12 +505,17 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 
 	/* allocate storage for the 'y' and 'ydot' arrays */
 	sys->y = ASC_NEW_ARRAY(struct var_variable *,numy);
-	sys->ydot = ASC_NEW_ARRAY(struct var_variable *,numy);
+	sys->ydot = ASC_NEW_ARRAY_CLEAR(struct var_variable *,numy);
 	sys->y_id = ASC_NEW_ARRAY(int, slv_get_num_master_vars(sys->system));
+
+	for(i=0; i<numy; ++i){
+		asc_assert(sys->ydot[i]==NULL);
+	}
 
 	/* now add variables and their derivatives to 'ydot' and 'y' */
 	yindex = 0;
 	
+	CONSOLE_DEBUG("VARS IN THEIR MATRIX ORDER");
 	for(i=1; i<=gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		if(info->derivative_of)continue;
@@ -518,18 +524,18 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 			assert(info->derivative);
 			sys->ydot[yindex] = info->derivative->i;
 			if(info->varindx >= 0){
-				sys->y_id[info->varindx] = yindex;
+				sys->y_id[info->varindx - 1] = yindex;
 				CONSOLE_DEBUG("y_id[%d] = %d",info->varindx,yindex);
 			}
 			if(info->derivative->varindx >= 0){
-				sys->y_id[info->derivative->varindx] = -1-yindex;
+				sys->y_id[info->derivative->varindx - 1] = -1-yindex;
 				CONSOLE_DEBUG("y_id[%d] = %d",info->derivative->varindx,-1-yindex);
 			}
 		}else{
 			sys->y[yindex] = info ->i;
 			sys->ydot[yindex] = NULL;
 			if(info->varindx >= 0){
-				sys->y_id[info->varindx] = yindex;
+				sys->y_id[info->varindx - 1] = yindex;
 				CONSOLE_DEBUG("y_id[%d] = %d",info->varindx,yindex);
 			}
 		}

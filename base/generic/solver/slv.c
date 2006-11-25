@@ -1286,7 +1286,7 @@ int slv_param_real(slv_parameters_t *p, const int index
 
 int slv_param_char(slv_parameters_t *p, const int index
 	,const SlvParameterInitChar init
-	,const char **options
+	,char *options[]
 ){
 	int i, noptions;
 	struct slv_parameter *p1;

@@ -225,7 +225,7 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,(SlvParameterInitChar){{"linsolver"
 			,"Linear solver",1
 			,"See IDA manual, section 5.5.3."
-		}, "DENSE"}, (char *[]){"DENSE","SPGMR",NULL}
+		}, "SPGMR"}, (char *[]){"DENSE","SPGMR",NULL}
 	);
 
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
@@ -329,11 +329,12 @@ int integrator_ida_solve(
 	IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(blsys));
 	/* there's no capability for setting *minimum* step size in IDA */
 
-	CONSOLE_DEBUG("ASSIGNING LINEAR SOLVER");
 
 	/* attach linear solver module, using the default value of maxl */
 	linsolver = SLV_PARAM_CHAR(&(blsys->params),IDA_PARAM_LINSOLVER);
+	CONSOLE_DEBUG("ASSIGNING LINEAR SOLVER '%s'",linsolver);
 	if(strcmp(linsolver,"SPGMR")==0){
+		CONSOLE_DEBUG("USING 'SCALED PRECONDITIONER GMRES' LINEAR SOLVER");
 		flag = IDASpgmr(ida_mem, 0);
 		if(flag==IDASPILS_MEM_NULL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
@@ -358,7 +359,7 @@ int integrator_ida_solve(
 			CONSOLE_DEBUG("USING NUMERICAL DIFF");
 		}
 	}else if(strcmp(linsolver,"DENSE")==0){
-		CONSOLE_DEBUG("USING IDADEENSE SOLVER, size = %d",size);
+		CONSOLE_DEBUG("DENSE DIRECT SOLVER, size = %d",size);
 		flag = IDADense(ida_mem, size);
 		switch(flag){
 			case IDADENSE_SUCCESS: break;
@@ -557,32 +558,156 @@ int integrator_ida_djex(long int Neq, realtype tt
 ){
 	IntegratorSystem *blsys;
 	IntegratorIdaData *enginedata;
-	realtype *yval;
+	char *relname, *varname;
+	int status;
+	struct rel_relation **relptr;
+	int i;
+	var_filter_t filter = {VAR_SVAR, VAR_SVAR};
+	double *derivatives;
+	int *variables;
+	int count, j, var_yindex;
 
 	blsys = (IntegratorSystem *)jac_data;
 	enginedata = integrator_ida_enginedata(blsys);
+
+	/* allocate space for returns from relman_diff2: we *should* be able to use 'tmp1' and 'tmp2' here... */
+	variables = ASC_NEW_ARRAY(int, NV_LENGTH_S(yy) * 2);
+	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
 
 	/* pass the values of everything back to the compiler */
 	integrator_set_t(blsys, (double)tt);
 	integrator_set_y(blsys, NV_DATA_S(yy));
 	integrator_set_ydot(blsys, NV_DATA_S(yp));
 
-	yval = NV_DATA_S(yy);
+	/* print vars */
+	for(i=0; i < blsys->n_y; ++i){
+		varname = var_make_name(blsys->system, blsys->y[i]);
+		CONSOLE_DEBUG("%s = %f",varname,NV_Ith_S(yy,i));
+		ASC_FREE(varname);
+	}
 
+	/* print derivatives */
+	for(i=0; i < blsys->n_y; ++i){
+		if(blsys->ydot[i]){
+			varname = var_make_name(blsys->system, blsys->ydot[i]);
+			CONSOLE_DEBUG("%s = %f",varname,NV_Ith_S(yp,i));
+			ASC_FREE(varname);
+		}else{
+			varname = var_make_name(blsys->system, blsys->y[i]);
+			CONSOLE_DEBUG("diff(%s) = %f",varname,NV_Ith_S(yp,i));
+			ASC_FREE(varname);
+		}
+	}
+
+	/* print step size */
+	CONSOLE_DEBUG("<c_j> = %f",c_j);
+
+	for(i=0, relptr = enginedata->rellist;
+			i< enginedata->nrels && relptr != NULL;
+			++i, ++relptr
+	){
+		relname = rel_make_name(blsys->system, *relptr);
+		CONSOLE_DEBUG("%d: '%s'",i,relname);
+	}
+	
+	/* build up the dense jacobian matrix... */
+	status = 0;
+	for(i=0, relptr = enginedata->rellist;
+			i< enginedata->nrels && relptr != NULL;
+			++i, ++relptr
+	){
+		relname = rel_make_name(blsys->system, *relptr);
+		CONSOLE_DEBUG("RELATION %d '%s'",i,relname);
+		ASC_FREE(relname);
+
+		/* get derivatives for this particular relation */
+		status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
+		/* CONSOLE_DEBUG("Got derivatives against %d matching variables", count); */
+
+		for(j=0;j<count;++j){
+			varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
+			/* CONSOLE_DEBUG("derivatives[%d] = %f (variable %d, '%s')",j,derivatives[j],variables[j],varname); */
+			ASC_FREE(varname);
+		}
+
+		if(status){
+			relname = rel_make_name(blsys->system, *relptr);
+			CONSOLE_DEBUG("ERROR calculating derivatives for relation '%s'",relname);
+			ASC_FREE(relname);
+			break;
+		}
+
+		for(j=0; j < enginedata->nrels; ++j){
+			DENSE_ELEM(Jac,i,j) = 0;
+		}
+
+		for(j=0; j < count; ++j){
+			/* CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y); */
+			varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
+			if(varname){
+				CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
+				ASC_FREE(varname);
+			}else{
+				CONSOLE_DEBUG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
+			}
+			
+			var_yindex = blsys->y_id[variables[j] - 1];
+			CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %d",j,variables[j],var_yindex);
+
+			if(var_yindex >= 0){
+				DENSE_ELEM(Jac,i,var_yindex) += derivatives[j];
+				CONSOLE_DEBUG("New value (%d,%d) is %f", i, var_yindex, DENSE_ELEM(Jac,i,var_yindex));
+			}else{
+				DENSE_ELEM(Jac,i,-var_yindex-1) += derivatives[j] * c_j;
+				CONSOLE_DEBUG("New value (%d,%d) is %f (deriv)", i, -var_yindex-1, DENSE_ELEM(Jac,i,-var_yindex-1));
+			}
+		}
+	}
+
+	CONSOLE_DEBUG("PRINTING JAC");
+	for(i=0; i < blsys->n_y; ++i){
+		for(j=0; j < blsys->n_y; ++j){
+			fprintf(stderr,"%8.2e\t",DENSE_ELEM(Jac,i,j));
+		}
+		fprintf(stderr,"\n");
+	}
+
+#if 1
+	double *yval = NV_DATA_S(yy);
 	/* AWFUL HACK! In an attempt to prove that 'IDADense' works as expected,
 	I've pulled the jacobians straight from idadenx.c (an IDA example) */
-# define IJth(A,i,j) DENSE_ELEM(A,i-1,j-1)
-	IJth(Jac,1,1) = RCONST(-0.04) - c_j;
-	IJth(Jac,2,1) = RCONST(0.04);
-	IJth(Jac,3,1) = 1.0;
-	IJth(Jac,1,2) = RCONST(1.0e4)*yval[2];
-	IJth(Jac,2,2) = RCONST(-1.0e4)*yval[2] - RCONST(6.0e7)*yval[1] - c_j;
-	IJth(Jac,3,2) = 1.0;
-	IJth(Jac,1,3) = RCONST(1.0e4)*yval[1];
-	IJth(Jac,2,3) = RCONST(-1.0e4)*yval[1];
-	IJth(Jac,3,3) = 1.0;
-#undef IJth
-	return(0);
+#define A(REL,I,J,DESIRED) if(fabs((DENSE_ELEM(Jac,I,J) - DESIRED)/DESIRED) > 1e-5){ \
+		CONSOLE_DEBUG("Value for ('%s'=%d,%d) got %e, expected %e",REL,I,J,DENSE_ELEM(Jac,I,J),DESIRED); \
+		status=1; \
+	}else{ \
+		CONSOLE_DEBUG("Value for (%d,%d) is OK",I,J); \
+	}
+	char *eqs[] = {"eq1","eq2","eq3"};
+	for(i=0;i<enginedata->nrels;++i){
+		relname = rel_make_name(blsys->system, enginedata->rellist[i]);
+		if(strcmp(relname,"eq1")==0){
+			A(relname,i,0, -0.04 - c_j   );
+			A(relname,i,1, 1.0e4*yval[2] );
+			A(relname,i,2, 1.0e4*yval[1] );
+		}else if(strcmp(relname,"eq2")==0){
+			A(relname,i,0, 0.04);
+			A(relname,i,1, RCONST(-1.0e4)*yval[2] - RCONST(6.0e7)*yval[1] - c_j);
+			A(relname,i,2, RCONST(-1.0e4)*yval[1]);
+		}else if(strcmp(relname,"eq3")==0){
+			A(relname,i,0, -1.0);
+			A(relname,i,1, -1.0);
+			A(relname,i,2, -1.0);
+		}
+	}	
+#undef A
+#endif		
+
+	if(status){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"There were derivative evaluation errors in the dense jacobian");
+		return 1;
+	}
+
+	return 0;
 }
 
 /**
@@ -663,9 +788,9 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 			/* CONSOLE_DEBUG("Got derivatives against %d matching variables", count); */
 
 			for(j=0;j<count;++j){
-				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
-				/* CONSOLE_DEBUG("derivatives[%d] = %f (variable %d, '%s')",j,derivatives[j],variables[j],varname); */
-				ASC_FREE(varname);
+				/* varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
+				CONSOLE_DEBUG("derivatives[%d] = %f (variable %d, '%s')",j,derivatives[j],variables[j],varname);
+				ASC_FREE(varname); */
 			}
 
 			if(!status){
@@ -683,16 +808,16 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 			Jv_i = 0;
 			for(j=0; j < count; ++j){
-				/* CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y); */
-				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
+				/* CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y);
+				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]); */
 				if(varname){
-					/* CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]); */
-					ASC_FREE(varname);
+					/* CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
+					ASC_FREE(varname); */
 				}else{
 					CONSOLE_DEBUG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
 				}
 				
-				var_yindex = blsys->y_id[variables[j]];
+				var_yindex = blsys->y_id[variables[j] - 1];
 				/* CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %d",j,variables[j],var_yindex); */
 
 				if(var_yindex >= 0){
@@ -707,11 +832,11 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 			NV_Ith_S(Jv,i) = Jv_i;
 			/* CONSOLE_DEBUG("(J*v)[%d] = %f", i, Jv_i); */
-
-			if(status){
-				/* presumably some error_reporter will already have been made*/
-				is_error = 1;
-			}
+		}
+		if(status){
+			CONSOLE_DEBUG("JVEX ERROR RESULT");
+			/* presumably some error_reporter will already have been made*/
+			is_error = 1;
 		}
 	}else{
 		CONSOLE_DEBUG("FLOATING POINT ERROR WITH i=%d",i);
