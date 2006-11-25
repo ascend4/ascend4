@@ -29,6 +29,8 @@ extern "C"{
 #include <solver/integrator.h>
 }
 
+#include <ostream>
+
 class Integrator;
 
 /**
@@ -57,13 +59,16 @@ public:
 
 	Integrator *getIntegrator();
 
-private:
+protected:
 	Integrator *integrator; /**< pointer back to integrator */
 	IntegratorReporter reporter; /**< for passing to C */
 
 	IntegratorReporter *getInternalType();
 };
 
+/**
+	NULL integrator reporter. This reporter won't output ANYTHING at all.
+*/
 class IntegratorReporterNull : public IntegratorReporterCxx{
 public:
 	IntegratorReporterNull(Integrator *);
@@ -74,6 +79,24 @@ public:
 	virtual int updateStatus();
 	virtual int recordObservedValues();
 };
+
+/**
+	Simple console based integrator reporter. Output the observed variables
+	to the console at each sample point.
+*/
+class IntegratorReporterConsole : public IntegratorReporterCxx{
+private:
+	std::ostream &f;
+public:
+	IntegratorReporterConsole(Integrator *);
+	virtual ~IntegratorReporterConsole();
+
+	virtual int initOutput();
+	virtual int closeOutput();
+	virtual int updateStatus();
+	virtual int recordObservedValues();
+};
+
 
 int ascxx_integratorreporter_init(IntegratorSystem *blsys);
 int ascxx_integratorreporter_write(IntegratorSystem *blsys);

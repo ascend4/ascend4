@@ -30,6 +30,7 @@
 #include "lsode.h"
 #include "ida.h"
 #include "slv_common.h"
+#include "slv_client.h"
 #include <utilities/ascPanic.h>
 
 #include "samplelist.h"
@@ -59,7 +60,7 @@
  * These should be supported directly in a future solveratominst.
  */
 
-static symchar *g_symbols[4];
+static symchar *g_symbols[3];
 
 #define STATEFLAG g_symbols[0]
 /*
@@ -80,7 +81,6 @@ static symchar *g_symbols[4];
  * the blsode output file. Tis someone else's job to grok this output.
  */
 
-#define FIXEDSYMBOL g_symbols[3]
 
 /** Temporary catcher of dynamic variable and observation variable data */
 struct Integ_var_t {
@@ -194,7 +194,6 @@ static void IntegInitSymbols(void){
   STATEFLAG = AddSymbol("ode_type");
   STATEINDEX = AddSymbol("ode_id");
   OBSINDEX = AddSymbol("obs_id");
-  FIXEDSYMBOL = AddSymbol("fixed");
 }
 
 /*------------------------------------------------------------------------------
@@ -1237,6 +1236,32 @@ void integrator_set_ydot(IntegratorSystem *sys, double *dydx) {
 		}*/
 #endif
 	}
+}
+
+/**
+	Retrieve the values of 'ode_atol' properties of each of y-variables,
+	for use in setting absolute error tolerances for the Integrator.
+
+	If the pointer 'atol' is NULL, the necessary space is allocated (and
+	must be freed somewhere else).
+*/
+double *integrator_get_atol(IntegratorSystem *sys, double *atol){
+	long i;
+	char *varname;
+
+	if (atol==NULL) {
+		atol = ASC_NEW_ARRAY_CLEAR(double, sys->n_y);
+	}
+
+	for (i=0; i< sys->n_y; i++) {
+		assert(sys->y[i]!=NULL);
+		atol[i] = var_odeatol(sys->y[i]);
+		assert(atol[i]!=-1);
+		varname = var_make_name(sys->system,sys->y[i]);
+		CONSOLE_DEBUG("%s.ode_atol = %8.2e",varname,atol[i]);
+		ASC_FREE(varname);
+	}
+	return atol;
 }
 
 /*-------------------------------------------------------------

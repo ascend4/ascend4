@@ -148,6 +148,9 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *blsys){
 
 enum ida_parameters{
 	IDA_PARAM_AUTODIFF
+	,IDA_PARAM_RTOL
+	,IDA_PARAM_ATOL
+	,IDA_PARAM_ATOLVECT
 	,IDA_PARAMS_SIZE
 };
 
@@ -184,6 +187,31 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 		}, TRUE}
 	);
 
+	slv_param_bool(p,IDA_PARAM_ATOLVECT
+			,(SlvParameterInitBool){{"atolvect"
+			,"Use 'ode_atol' values as specified?",1
+			,"If TRUE, values of 'ode_atol' are taken from your model and used "
+			" in the integration. If FALSE, a scalar absolute tolerance value"
+			" is shared by all variables. See IDA manual, section 5.5.1"
+		}, TRUE }
+	);
+
+	slv_param_real(p,IDA_PARAM_ATOL
+			,(SlvParameterInitReal){{"atol"
+			,"Scalar absolute error tolerance",1
+			,"Value of the scalar absolute error tolerance. See also 'atolvect'."
+			" See IDA manual, section 5.5.1"
+		}, 1e-5, DBL_MIN, DBL_MAX }
+	);
+
+	slv_param_real(p,IDA_PARAM_RTOL
+			,(SlvParameterInitReal){{"rtol"
+			,"Scalar relative error tolerance",1
+			,"Value of the scalar relative error tolerance."
+			" See IDA manual, section 5.5.1"
+		}, 1e-5, DBL_MIN, DBL_MAX }
+	);
+
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
 
 	CONSOLE_DEBUG("Created %d params", p->num_parms);
@@ -203,8 +231,8 @@ int integrator_ida_solve(
 ){
 	void *ida_mem;
 	int size, flag, t_index;
-	realtype t0, reltol, t, tret, tout1;
-	N_Vector y0, yp0, abstol, ypret, yret;
+	realtype t0, reltol, abstol, t, tret, tout1;
+	N_Vector y0, yp0, abstolvect, ypret, yret;
 	IntegratorIdaData *enginedata;
 
 	CONSOLE_DEBUG("STARTING IDA...");
@@ -225,10 +253,11 @@ int integrator_ida_solve(
 		return 0; /* failure */
 	}
 
-	CONSOLE_DEBUG("RETRIEVING t0");
-
 	/* retrieve initial values from the system */
-	t0 = samplelist_get(blsys->samples,start_index);
+	
+	/** @TODO fix this, the starting time != first sample */
+	t0 = integrator_get_t(blsys);
+	CONSOLE_DEBUG("RETRIEVED t0 = %f",t0);
 
 	CONSOLE_DEBUG("RETRIEVING y0");
 
@@ -246,13 +275,25 @@ int integrator_ida_solve(
 	/* create IDA object */
 	ida_mem = IDACreate();
 
-	/* retrieve the absolute tolerance values for each variable */
-	abstol = N_VNew_Serial(size);
-	N_VConst(0.1,abstol); /** @TODO fill in the abstol values from the model */
-	reltol = 0.001;
+	/* relative error tolerance */	
+	reltol = SLV_PARAM_REAL(&(blsys->params),IDA_PARAM_RTOL);
 
 	/* allocate internal memory */
-	flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SV, reltol, abstol);
+	if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_ATOLVECT)){
+		/* vector of absolute tolerances */
+		CONSOLE_DEBUG("USING VECTOR OF ATOL VALUES");
+		abstolvect = N_VNew_Serial(size);
+		integrator_get_atol(blsys,NV_DATA_S(abstolvect));
+
+		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SV, reltol, abstolvect);
+	}else{
+		/* scalar absolute tolerance (one value for all) */
+		CONSOLE_DEBUG("USING SCALAR ATOL VALUE = %8.2e",abstol);
+		abstol = SLV_PARAM_REAL(&(blsys->params),IDA_PARAM_ATOL);
+		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SS, reltol, &abstol);
+
+	}
+
 	if(flag==IDA_MEM_NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 		return 0;
@@ -307,10 +348,13 @@ int integrator_ida_solve(
 
 	/* correct initial values, given derivatives */
 	blsys->currentstep=0;
- 	t_index=start_index+1;
+ 	t_index=start_index;
 	tout1 = samplelist_get(blsys->samples, t_index);
 
+	/* CONSOLE_DEBUG("Giving t value %f to IDACalcIC", tout1);*/
+
 #if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
+	/* note the new API from version 2.3 and onwards */
 	flag = IDACalcIC(ida_mem, IDA_Y_INIT, tout1);
 #else
 	flag = IDACalcIC(ida_mem, t0, y0, yp0, IDA_Y_INIT, tout1);
@@ -495,8 +539,8 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	var_filter_t filter;
 	int count;
 
-	fprintf(stderr,"\n--------------\n");
-	CONSOLE_DEBUG("EVALUTING JACOBIAN...");
+	/* fprintf(stderr,"\n--------------\n"); */
+	/* CONSOLE_DEBUG("EVALUTING JACOBIAN..."); */
 
 	blsys = (IntegratorSystem *)jac_data;
 	enginedata = integrator_ida_enginedata(blsys);
@@ -517,10 +561,10 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	filter.matchbits = VAR_SVAR;
 	filter.matchvalue = VAR_SVAR;
 
-	CONSOLE_DEBUG("PRINTING VALUES OF 'v' VECTOR (length %ld)",NV_LENGTH_S(v));
-	for(i=0; i<NV_LENGTH_S(v); ++i){
+	/* CONSOLE_DEBUG("PRINTING VALUES OF 'v' VECTOR (length %ld)",NV_LENGTH_S(v)); */
+	/* for(i=0; i<NV_LENGTH_S(v); ++i){
 		CONSOLE_DEBUG("v[%d] = %f",i,NV_Ith_S(v,i));
-	}
+	}*/
 
 	Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
 	if (setjmp(g_fpe_env)==0) {
@@ -528,23 +572,23 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				i< enginedata->nrels && relptr != NULL;
 				++i, ++relptr
 		){
-			fprintf(stderr,"\n");
+			/* fprintf(stderr,"\n"); */
 			relname = rel_make_name(blsys->system, *relptr);
-			CONSOLE_DEBUG("RELATION %d '%s'",i,relname);
+			/* CONSOLE_DEBUG("RELATION %d '%s'",i,relname); */
 			ASC_FREE(relname);
 
 			/* get derivatives for this particular relation */
 			status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
-			CONSOLE_DEBUG("Got derivatives against %d matching variables", count);
+			/* CONSOLE_DEBUG("Got derivatives against %d matching variables", count); */
 
 			for(j=0;j<count;++j){
 				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
-				CONSOLE_DEBUG("derivatives[%d] = %f (variable %d, '%s')",j,derivatives[j],variables[j],varname);
+				/* CONSOLE_DEBUG("derivatives[%d] = %f (variable %d, '%s')",j,derivatives[j],variables[j],varname); */
 				ASC_FREE(varname);
 			}
 
 			if(!status){
-				CONSOLE_DEBUG("Derivatives for relation %d OK",i);
+				/* CONSOLE_DEBUG("Derivatives for relation %d OK",i); */
 			}else{
 				CONSOLE_DEBUG("ERROR calculating derivatives for relation %d",i);
 				break;
@@ -561,27 +605,27 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				/* CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y); */
 				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
 				if(varname){
-					CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
+					/* CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]); */
 					ASC_FREE(varname);
 				}else{
 					CONSOLE_DEBUG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
 				}
 				
 				var_yindex = blsys->y_id[variables[j]];
-				CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %d",j,variables[j],var_yindex);
+				/* CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %d",j,variables[j],var_yindex); */
 
 				if(var_yindex >= 0){
-					CONSOLE_DEBUG("j = %d: algebraic, deriv[j] = %f, v[%d] = %f",j,derivatives[j], var_yindex, NV_Ith_S(v,var_yindex));
+					/* CONSOLE_DEBUG("j = %d: algebraic, deriv[j] = %f, v[%d] = %f",j,derivatives[j], var_yindex, NV_Ith_S(v,var_yindex)); */
 					Jv_i += derivatives[j] * NV_Ith_S(v,var_yindex);
 				}else{
 					var_yindex = -var_yindex-1;
-					CONSOLE_DEBUG("j = %d: differential, deriv[j] = %f, v[%d] = %f",j,derivatives[j], var_yindex, NV_Ith_S(v,var_yindex));
+					/* CONSOLE_DEBUG("j = %d: differential, deriv[j] = %f, v[%d] = %f",j,derivatives[j], var_yindex, NV_Ith_S(v,var_yindex)); */
 					Jv_i += derivatives[j] * NV_Ith_S(v,var_yindex) / c_j; 
 				}
 			}
 
 			NV_Ith_S(Jv,i) = Jv_i;
-			CONSOLE_DEBUG("(J*v)[%d] = %f", i, Jv_i);
+			/* CONSOLE_DEBUG("(J*v)[%d] = %f", i, Jv_i); */
 
 			if(status){
 				/* presumably some error_reporter will already have been made*/

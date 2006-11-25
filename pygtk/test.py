@@ -51,6 +51,8 @@ class AscendTest(unittest.TestCase):
 		I.setMaxSubStep(0.02);
 		I.setInitialSubStep(0.001);
 		I.setMaxSubSteps(200);
+		if(integratorname=='IDA'):
+			I.setParameter('autodiff',False)
 		I.analyse();
 		I.solve();
 		print "At end of simulation,"
@@ -82,14 +84,16 @@ class AscendTest(unittest.TestCase):
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		P = I.getParameters()
-		assert len(P)==1
+		assert len(P)==2
 		assert P[0].isBool()
 		assert P[0].getName()=="autodiff"
 		assert P[0].getBoolValue() == True
+		assert P[1].getName()=="useatol"
+		assert P[1].getBoolValue() == True
 		P[0].setBoolValue(False)
 		assert P[0].getBoolValue()==False
 		I.setParameters(P)
-		assert len(I.getParameters())==1
+		assert len(I.getParameters())==2
 		for p in I.getParameters():
 			print p.getName(),"=",p.getValue()
 		assert I.getParameterValue('autodiff')==False
@@ -106,15 +110,15 @@ class AscendTest(unittest.TestCase):
 		M = self.L.findType('idadenx').getSimulation('sim')
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
-		I.setReporter(ascpy.IntegratorReporterNull(I))
-		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLogTimesteps(ascpy.Units("s"), 0.2, 4e10, 21);
 		I.setMinSubStep(0.0005); # these limits are required by IDA at present (numeric diff)
 		I.setMaxSubStep(0.02);
 		I.setInitialSubStep(0.001);
 		I.setMaxSubSteps(500);
-		I.setParameter('autodiff',False)
-		I.analyse();
-		I.solve();	
+		I.setParameter('autodiff',True)
+		I.analyse()
+		I.solve()
 
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
