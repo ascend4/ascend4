@@ -84,16 +84,19 @@ class AscendTest(unittest.TestCase):
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		P = I.getParameters()
-		assert len(P)==2
-		assert P[0].isBool()
-		assert P[0].getName()=="autodiff"
-		assert P[0].getBoolValue() == True
-		assert P[1].getName()=="useatol"
-		assert P[1].getBoolValue() == True
-		P[0].setBoolValue(False)
-		assert P[0].getBoolValue()==False
+		for p in P:
+			print p.getName(),"=",p.getValue()
+		assert len(P)==5
+		assert P[0].isStr()
+		assert P[0].getName()=="linsolver"
+		assert P[0].getValue()=='DENSE'
+		assert P[1].getName()=="autodiff"
+		assert P[1].getValue()==True
+		assert P[4].getName()=="atolvect"
+		assert P[4].getBoolValue() == True
+		P[1].setBoolValue(False)
+		assert P[1].getBoolValue()==False
 		I.setParameters(P)
-		assert len(I.getParameters())==2
 		for p in I.getParameters():
 			print p.getName(),"=",p.getValue()
 		assert I.getParameterValue('autodiff')==False
@@ -111,14 +114,16 @@ class AscendTest(unittest.TestCase):
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLogTimesteps(ascpy.Units("s"), 0.2, 4e10, 21);
+		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
 		I.setMinSubStep(0.0005); # these limits are required by IDA at present (numeric diff)
 		I.setMaxSubStep(0.02);
 		I.setInitialSubStep(0.001);
 		I.setMaxSubSteps(500);
 		I.setParameter('autodiff',True)
+		I.setParameter('linsolver','SPGMR')
 		I.analyse()
 		I.solve()
+		self.fail("WHAT IS THE ANSWER?")
 
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:

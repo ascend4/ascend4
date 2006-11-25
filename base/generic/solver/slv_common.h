@@ -307,7 +307,7 @@ typedef struct{
 typedef struct{
 	const SlvParameterInitMeta meta;
 	const char *val;
-	const char *options[]; /* Important: NULL terminated */
+	/* list of options will be passed in separately; seems not possible to have static array here */
 } SlvParameterInitChar;
 
 struct slv_parameters_structure;
@@ -315,7 +315,7 @@ struct slv_parameters_structure;
 int slv_param_int (struct slv_parameters_structure *p, const int index, const SlvParameterInitInt);
 int slv_param_bool(struct slv_parameters_structure *p, const int index, const SlvParameterInitBool);
 int slv_param_real(struct slv_parameters_structure *p, const int index, const SlvParameterInitReal);
-int slv_param_char(struct slv_parameters_structure *p, const int index, const SlvParameterInitChar);
+int slv_param_char(struct slv_parameters_structure *p, const int index, const SlvParameterInitChar, const char **options);
 
 /* macros to access values from your solver code 
 
