@@ -267,6 +267,56 @@ void integrator_lsode_free(void *enginedata){
 	d.n_eqns = 0L;
 }
 
+/*------------------------------------------------------------------------------
+	PARAMETERS
+*/
+
+enum ida_parameters{
+	LSODE_PARAM_TIMING
+	,LSODE_PARAMS_SIZE
+};
+
+/**
+	Here the full set of parameters is defined, along with upper/lower bounds,
+	etc. The values are stuck into the blsys->params structure.
+
+	@return 0 on success
+*/
+int integrator_lsode_params_default(IntegratorSystem *blsys){
+
+	asc_assert(blsys!=NULL);
+	asc_assert(blsys->engine==INTEG_IDA);
+	slv_parameters_t *p;
+	p = &(blsys->params);
+
+	slv_destroy_parms(p);
+
+	if(p->parms==NULL){
+		CONSOLE_DEBUG("params NULL");
+		p->parms = ASC_NEW_ARRAY(struct slv_parameter, LSODE_PARAMS_SIZE);
+		if(p->parms==NULL)return -1;
+		p->dynamic_parms = 1;
+	}else{
+		asc_assert(p->num_parms == LSODE_PARAMS_SIZE);
+		CONSOLE_DEBUG("reusing parm memory");
+	}
+
+	/* reset the number of parameters to zero so that we can check it at the end */
+	p->num_parms = 0;
+
+	slv_param_bool(p,LSODE_PARAM_TIMING
+			,(SlvParameterInitBool){{"timing"
+			,"Output timing statistics?",1,NULL
+		}, TRUE}
+	);
+
+	asc_assert(p->num_parms == LSODE_PARAMS_SIZE);
+
+	CONSOLE_DEBUG("Created %d params", p->num_parms);
+
+	return 0;
+}	
+
 /*---------------------------------------------------------
   Couple of matrix methods...?
 */

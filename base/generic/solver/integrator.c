@@ -25,9 +25,12 @@
 	integration engines.
 */
 #include <time.h>
+#include <string.h>
 #include "integrator.h"
 #include "lsode.h"
 #include "ida.h"
+#include "slv_common.h"
+#include <utilities/ascPanic.h>
 
 #include "samplelist.h"
 
@@ -176,7 +179,10 @@ void integrator_free(IntegratorSystem *sys){
 	if(sys->ydot != NULL && !sys->ydotcount)ASC_FREE(sys->ydot);
 	if(sys->obs != NULL && !sys->obscount)ASC_FREE(sys->obs);
 
-	ascfree(sys);
+	slv_destroy_parms(&(sys->params));
+
+	ASC_FREE(sys);
+	CONSOLE_DEBUG("Destroyed IntegratorSystem");
 	sys=NULL;
 }
 
@@ -255,6 +261,40 @@ void integrator_create_engine(IntegratorSystem *sys){
 #endif
 		default: break;
 	}
+}
+
+/*------------------------------------------------------------------------------
+  PARAMETERS
+*/
+
+/**
+	Reset the parameters in this IntegratorSystem to the default ones for this
+	Integrator.
+
+	@return 0 on success, 1 on error
+*/
+static int integrator_params_default(IntegratorSystem *sys){
+	switch(sys->engine){
+		case INTEG_LSODE: return integrator_lsode_params_default(sys);
+#ifdef ASC_WITH_IDA
+		case INTEG_IDA: return integrator_ida_params_default(sys);
+#endif
+		default: return 0;
+	}
+}
+
+int integrator_params_get(const IntegratorSystem *sys, slv_parameters_t *parameters){
+	asc_assert(sys!=NULL);
+	asc_assert(sys->params.num_parms > 0);
+	memcpy(parameters,&(sys->params),sizeof(slv_parameters_t));
+	return 0;
+}
+
+int integrator_params_set(IntegratorSystem *sys, const slv_parameters_t *parameters){
+	asc_assert(sys!=NULL);
+	asc_assert(parameters!=NULL);
+	memcpy(&(sys->params),parameters,sizeof(slv_parameters_t));
+	return 0;
 }
 
 /*------------------------------------------------------------------------------
@@ -476,6 +516,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		if(info->derivative_of)continue;
 		if(info->derivative){
 			sys->y[yindex] = info->i;
+			assert(info->derivative);
 			sys->ydot[yindex] = info->derivative->i;
 			if(info->varindx >= 0){
 				sys->y_id[info->varindx] = yindex;
@@ -771,6 +812,8 @@ static int integrator_check_indep_var(IntegratorSystem *sys){
 	info->type=TYPE; \
 	info->index=INDEX; \
 	info->i=VAR; \
+	info->derivative=NULL; \
+	info->derivative_of=NULL; \
     if(VARINDX==NULL){ \
 		info->varindx = -1; \
 	}else{ \

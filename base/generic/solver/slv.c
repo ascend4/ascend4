@@ -1168,29 +1168,145 @@ void slv_set_char_parameter(char **cp, CONST char *newvalue)
 
 void slv_destroy_parms(slv_parameters_t *p) {
   int32 i,j;
-  for (i = 0; i < p->num_parms; i++) {
+  for(i = 0; i < p->num_parms; i++){
     switch(p->parms[i].type) {
     case char_parm:
-      ascfree(p->parms[i].info.c.value);
+      ASC_FREE(p->parms[i].info.c.value);
       for (j = 0; j < p->parms[i].info.c.high; j++) {
-	ascfree(p->parms[i].info.c.argv[j]);
+        ASC_FREE(p->parms[i].info.c.argv[j]);
       }
-      ascfree(p->parms[i].info.c.argv);
+      ASC_FREE(p->parms[i].info.c.argv);
       /* FALL THROUGH */
     case int_parm:
     case bool_parm:
     case real_parm:
-      ascfree(p->parms[i].name);
-      ascfree(p->parms[i].interface_label);
-      ascfree(p->parms[i].description);
+      ASC_FREE(p->parms[i].name);
+      ASC_FREE(p->parms[i].interface_label);
+      ASC_FREE(p->parms[i].description);
       break;
     default:
       ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Unrecognized parameter type in slv_destroy_parms.");
     }
   }
   if (p->parms && p->dynamic_parms) {
-    ascfree(p->parms);
+    ASC_FREE(p->parms);
   }
+  CONSOLE_DEBUG("Destroyed slv_parameters_t");
+}
+
+/*------------------------------------------------------------------------------
+	IMPROVED (says I) FUNCTIONS FOR DECLARING SOLVER PARAMETERS -- JP
+*/
+/** @page solver-parameters
+
+	Additional info on new solver parameter routines. This routine attempts 
+	to make declaration of new parameters possible with simple syntax, without
+	requiring changes to the underlying data structure. Also aim to eliminate
+	the extensive #defines used in the old approach, and eliminate the risk of
+	messing up the parameter list by forgetting to update something.
+
+	Usage:
+		1. declare IDs for the parameters you'll be using via an 'enum'
+			(last ID is XXXX_PARAMS_COUNT)
+		2. allocate space for your slv_parameters_t::parms of size XXXX_PARAMS_COUNT
+		3. for each parameter, call slv_param_* as follows:
+
+			slv_param_int(p,XXXX_PARAM_NAME,(SlvParameterInitInt){
+				{"codename","guiname",3 (==guipagenum) "description"}
+				,1 (==default value) ,0 (==min), 100 (==max)
+			});
+
+		4. to access a value from your code, use SLV_PARAM_BOOL(p,XXX_PARAM_NAME) etc
+			(as defined in slv_common.h)
+
+	See example stuff in ida.c
+*/
+
+static void slv_define_param_meta(struct slv_parameter *p1, const SlvParameterInitMeta *meta, const int index){
+	/* copy the codename, guiname and description */
+	asc_assert(meta!=NULL);
+	asc_assert(p1!=NULL);
+	p1->name = ascstrdup(meta->codename);
+	p1->interface_label = ascstrdup(meta->guiname);
+	p1->description = ascstrdup(meta->description);
+	p1->display = meta->guipagenum;
+
+	/* record the index of this parameter */		
+	p1->number = index;
+}
+
+int slv_param_int(slv_parameters_t *p, const int index
+	,const SlvParameterInitInt init
+){
+	struct slv_parameter *p1;
+	if(p == NULL)return -1;
+	p1 = &(p->parms[index]);
+
+	p1->type = int_parm;
+	p1->info.i.value = init.val;
+	p1->info.i.low = init.low;
+	p1->info.i.high = init.high;
+
+	slv_define_param_meta(p1, &(init.meta), index);
+	return ++(p->num_parms);
+}
+
+int slv_param_bool(slv_parameters_t *p, const int index
+	,const SlvParameterInitBool init
+){
+	struct slv_parameter *p1;
+	if(p == NULL)return -1;
+	p1 = &(p->parms[index]);
+
+	p1->type = bool_parm;
+	p1->info.b.value = init.val;
+	p1->info.b.low = 0;
+	p1->info.b.high = 1;
+
+	slv_define_param_meta(p1, &(init.meta), index);
+	return ++(p->num_parms);
+}
+
+int slv_param_real(slv_parameters_t *p, const int index
+	,const SlvParameterInitReal init
+){
+	struct slv_parameter *p1;
+
+	if(p == NULL)return -1;
+	p1 = &(p->parms[index]);
+
+	p1->type = real_parm;
+	p1->info.r.value = init.val;
+	p1->info.r.low = init.low;
+	p1->info.r.high = init.high;
+
+	slv_define_param_meta(p1, &(init.meta), index);
+	return ++(p->num_parms);
+}
+
+int slv_param_char(slv_parameters_t *p, const int index
+	,const SlvParameterInitChar init
+){
+	int i, noptions;
+	struct slv_parameter *p1;
+	if(p == NULL)return -1;
+	p1 = &(p->parms[index]);
+
+	/* find the length by hunting for the NULL at the end */
+	for(i=0; init.options[i]!=NULL; ++i);
+	noptions = i;
+	CONSOLE_DEBUG("THERE ARE %d CHAR OPTIONS IN PARAMETER '%s'", noptions, init.meta.codename);
+
+	p1->info.c.high = noptions;
+	p1->info.c.value = strdup(init.val);
+	p1->info.c.argv = ASC_NEW_ARRAY(char *,noptions);
+
+	for(i = 0; i < noptions; ++i){
+	    p1->info.c.argv[i] = ascstrdup(init.options[i]);
+	}
+
+	slv_define_param_meta(p1, &(init.meta), index);
+	return ++(p->num_parms);
 }
 
 int32 slv_define_parm(slv_parameters_t *p,
@@ -1275,6 +1391,9 @@ int32 slv_define_parm(slv_parameters_t *p,
   return p->num_parms;
 }
 
+/*--------------------------------*/
+
+
 int slv_get_selected_solver(slv_system_t sys)
 {
   if (sys!=NULL) return sys->solver;
@@ -1349,7 +1468,8 @@ void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
   }
   if (parameters->whose != sys->solver) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,
-		"slv_set_parameters can give parameters from one client to a different client.");
+		"slv_set_parameters cannot pass parameters from one solver to a"
+		" another.");
     return;
   }
   SF(sys,setparam)(sys,sys->ct,parameters);

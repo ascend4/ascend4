@@ -136,7 +136,7 @@ typedef struct{
 
 /*------------------------------------*/
 /**
-	Initial value problem description struct. Anyone making a copy of
+	Initial Value Problem description struct. Anyone making a copy of
 	the y, ydot, or obs pointers who plans to free that pointer later
 	should increment the reference count for that pointer so if blsys
 	is destroyed later we don't end up double freeing it. Note this
@@ -150,10 +150,12 @@ struct IntegratorSystemStruct{
   struct Instance *instance;  /**< not sure if this one is really necessary... -- JP */
   slv_system_t system;        /**< the system that we're integrating in ASCEND */
   IntegratorEngine engine;    /**< enum containing the ID of the integrator engine we're using */
-  IntegratorReporter *reporter;/**< functions for reporting integration results */ 
+  IntegratorReporter *reporter;/**< functions for reporting integration results */
   SampleList *samples;        /**< pointer to the list of samples. we *don't own* this **/
   void *enginedata;           /**< space where the integrator engine can store stuff */
   void *clientdata;           /**< any stuff that the GUI/CLI needs to associate with this */
+
+  slv_parameters_t params;   /**< structure containing parameters applicable to this Integrator */
 
   int nstates;                /**< was a local global in integrator.c, moved it here. */
   int nderivs;                /**< ditto, as for nstates */
@@ -175,9 +177,12 @@ struct IntegratorSystemStruct{
   long n_y;
   long n_obs;
   long currentstep;           /**< current step number (also @see integrator_getnsamples) */
+
   int ycount;                 /**< number of external references to  y */
   int ydotcount;              /**< number of external references to  ydot */
   int obscount;               /**< number of external references to  obs */
+
+  /** @TODO move the following to the 'params' structure? Or maybe better not to? */
   int maxsubsteps;               /**< most steps between mesh poins */
   double stepzero;            /**< initial step length, SI units. */
   double minstep;             /**< shortest step length, SI units. */
@@ -208,7 +213,7 @@ ASC_DLLSPEC(void) integrator_free(IntegratorSystem *blsys);
 */
 
 ASC_DLLSPEC(int) integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine engine);
-/**
+/**<
 	Sets the engine for this integrator. Checks that the integrator can be used
 	on the given system.
 
@@ -218,9 +223,34 @@ ASC_DLLSPEC(int) integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine
 */
 
 ASC_DLLSPEC(IntegratorEngine) integrator_get_engine(const IntegratorSystem *blsys);
-/**
+/**<
 	Returns the engine (ID) selected for use in this IntegratorSystem (may return
 	INTEG_UNKNOWN if none or invalid setting).
+*/
+
+typedef int IntegratorParamsDefaultFn(IntegratorSystem *blsys);
+/**<
+	Integrators must provide a function like this that can be used to retrieve
+	the default set of parameters.
+*/
+
+ASC_DLLSPEC(int) integrator_params_get(const IntegratorSystem *blsys, slv_parameters_t *parameters);
+/**<
+	Copies the current set of Integrator parameters into the indicated parameter set, 'parameters'.
+
+	@TODO test these, not sure if the memory copy stuff is right or not.
+
+	@return 0 on success
+*/
+
+ASC_DLLSPEC(int) integrator_params_set(IntegratorSystem *blsys, const slv_parameters_t *parameters);
+/**<
+	Copies the the given parameter set into the Integrator's data structure, 
+	which immediately makes the new values available to the integrator engine.
+
+	@TODO test these, not sure if the memory copy stuff is right or not.
+
+	@return 0 on success
 */
 
 ASC_DLLSPEC(int) integrator_set_reporter(IntegratorSystem *blsys

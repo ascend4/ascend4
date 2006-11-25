@@ -25,7 +25,7 @@ class AscendTest(unittest.TestCase):
 		self.L.load('johnpye/testlog10.a4c')
 		T = self.L.findType('testlog10')
 		M = T.getSimulation('sim')
-		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())		
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
 		M.run(T.getMethod('self_test'))		
 
 	def testListIntegrators(self):
@@ -34,6 +34,7 @@ class AscendTest(unittest.TestCase):
 		s2 = sorted(['IDA','LSODE'])
 		assert s1==s2
 
+	# this routine is reused by both testIDA and testLSODE
 	def _testIntegrator(self,integratorname):
 		self.L.load('johnpye/shm.a4c')
 		M = self.L.findType('shm').getSimulation('sim')
@@ -74,6 +75,36 @@ class AscendTest(unittest.TestCase):
 
 	def testIDA(self):
 		self._testIntegrator('IDA')
+
+	def testIDAwithDAE(self):
+		self.L.load('johnpye/idadenx.a4c')
+		M = self.L.findType('idadenx').getSimulation('sim')
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setReporter(ascpy.IntegratorReporterNull(I))
+		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
+		I.setMinSubStep(0.0005); # these limits are required by IDA at present (numeric diff)
+		I.setMaxSubStep(0.02);
+		I.setInitialSubStep(0.001);
+		I.setMaxSubSteps(500);
+		I.analyse();
+		I.solve();
+
+	def testIDAparameters(self):
+		self.L.load('johnpye/shm.a4c')
+		M = self.L.findType('shm').getSimulation('sim')
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		P = I.getParameters()
+		print "THERE ARE %d PARAMETERS" % len(P)
+		print P[0]
+		assert P[0].getBoolValue() == True
+		P[0].setBoolValue(False)
+		I.setParameters(P)
+		P = I.getParameters()
+		assert P[0].getBoolValue() == False		
+		print P[0]
+
 
 class NotToBeTested:
 	def nothing(self):

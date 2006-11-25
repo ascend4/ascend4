@@ -39,6 +39,7 @@
 #include <utilities/error.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascSignal.h>
+#include <utilities/ascPanic.h>
 #include <compiler/instance_enum.h>
 #include "var.h"
 #include "rel.h"
@@ -121,6 +122,7 @@ void integrator_ida_create(IntegratorSystem *blsys){
 	enginedata->varlist = NULL;
 	enginedata->safeeval = 1;
 	blsys->enginedata = (void *)enginedata;
+	integrator_ida_params_default(blsys);
 }
 
 void integrator_ida_free(void *enginedata){
@@ -138,6 +140,55 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *blsys){
 	d = ((IntegratorIdaData *)(blsys->enginedata));
 	assert(d->safeeval = 1);
 	return d;
+}
+
+/*-------------------------------------------------------------
+  PARAMETERS FOR IDA
+*/
+
+enum ida_parameters{
+	IDA_PARAM_AUTODIFF
+	,IDA_PARAMS_SIZE
+};
+
+/**
+	Here the full set of parameters is defined, along with upper/lower bounds,
+	etc. The values are stuck into the blsys->params structure.
+
+	@return 0 on success
+*/
+int integrator_ida_params_default(IntegratorSystem *blsys){
+	asc_assert(blsys!=NULL);
+	asc_assert(blsys->engine==INTEG_IDA);
+	slv_parameters_t *p;
+	p = &(blsys->params);
+
+	slv_destroy_parms(p);
+
+	if(p->parms==NULL){
+		CONSOLE_DEBUG("params NULL");
+		p->parms = ASC_NEW_ARRAY(struct slv_parameter, IDA_PARAMS_SIZE);
+		if(p->parms==NULL)return -1;
+		p->dynamic_parms = 1;
+	}else{
+		CONSOLE_DEBUG("params not NULL");
+	}
+
+	/* reset the number of parameters to zero so that we can check it at the end */
+	p->num_parms = 0;
+
+	slv_param_bool(p,IDA_PARAM_AUTODIFF
+			,(SlvParameterInitBool){{"autodiff"
+			,"Use auto-diff?",1
+			,"Use automatic differentiation of expressions (1) or use numerical derivatives (0)"
+		}, TRUE}
+	);
+
+	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
+
+	CONSOLE_DEBUG("Created %d params", p->num_parms);
+
+	return 0;
 }
 
 /*-------------------------------------------------------------
@@ -234,16 +285,19 @@ int integrator_ida_solve(
 	}/* else success */
 
 	/* assign the J*v function */
-#if 0
-    flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex, (void *)blsys);
-	if(flag==IDASPILS_MEM_NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
-		return 0;
-	}else if(flag==IDASPILS_LMEM_NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDASPILS linear solver has not been initialized");
-		return 0;
-	}/* else success */
-#endif
+	if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_AUTODIFF)){
+		CONSOLE_DEBUG("USING AUTODIFF");
+	    flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex, (void *)blsys);
+		if(flag==IDASPILS_MEM_NULL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
+			return 0;
+		}else if(flag==IDASPILS_LMEM_NULL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDASPILS linear solver has not been initialized");
+			return 0;
+		}/* else success */
+	}else{
+		CONSOLE_DEBUG("USING NUMERICAL DIFF");
+	}		
 
 	/* set linear solver optional inputs...
 
@@ -287,7 +341,7 @@ int integrator_ida_solve(
 	for(t_index=start_index+1;t_index <= finish_index;++t_index, ++blsys->currentstep){
 		t = samplelist_get(blsys->samples, t_index);
 
-		CONSOLE_DEBUG("SOLVING UP TO t = %f", t);
+		/* CONSOLE_DEBUG("SOLVING UP TO t = %f", t); */
 	
 		flag = IDASolve(ida_mem, t, &tret, yret, ypret, IDA_NORMAL);
 

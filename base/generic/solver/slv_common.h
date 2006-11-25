@@ -23,7 +23,7 @@
 	@file
 	SLV common utilities & structures for ASCEND solvers.
 
-	Routines in this header a applicable to both the system API (as accessed
+	Routines in this header are applicable to both the system API (as accessed
 	from ASCEND compiler and GUI/CLI) as well as the solver backend (slv3.c, 
 	and other solvers, etc)
 
@@ -66,8 +66,12 @@
 	#include <solver/logrel.h>
 	#include <solver/mtx.h>
 	#include <general/list.h>
+*/
 
-	Details on solver parameter definition:
+/** @page solver-parameters Solver Parameters in ASCEND
+
+	@NOTE This stuff REALLY seems painful to use! Is there not a way that
+	we could make it a bit easier? @ENDNOTE
 
 	When used together the parameter-related structures, functions, and
 	macros allow us to define all of a solver's parameters in one file
@@ -269,6 +273,69 @@ struct slv_parameter {
     struct slv_char_parameter c;    /**< Char parameter. */
   } info;                           /**< Data. */
 };
+
+/*------------------------------------------------------------------------------
+  SOME STRUCTURES FOR SANER INITIALISATION OF PARAMETERS (says I -- JP)
+*/
+
+typedef struct{
+	const char *codename;
+	const char *guiname;
+	const int guipagenum;
+	const char *description;
+} SlvParameterInitMeta;
+	
+typedef struct{
+	const SlvParameterInitMeta meta;
+	const int val;
+	const int low;
+	const int high;
+} SlvParameterInitInt;
+
+typedef struct{
+	const SlvParameterInitMeta meta;
+	const int val;
+} SlvParameterInitBool;
+
+typedef struct{
+	const SlvParameterInitMeta meta;
+	const double val;
+	const double low;
+	const double high;
+} SlvParameterInitReal;
+
+typedef struct{
+	const SlvParameterInitMeta meta;
+	const char *val;
+	const char *options[]; /* Important: NULL terminated */
+} SlvParameterInitChar;
+
+struct slv_parameters_structure;
+
+int slv_param_int (struct slv_parameters_structure *p, const int index, const SlvParameterInitInt);
+int slv_param_bool(struct slv_parameters_structure *p, const int index, const SlvParameterInitBool);
+int slv_param_real(struct slv_parameters_structure *p, const int index, const SlvParameterInitReal);
+int slv_param_char(struct slv_parameters_structure *p, const int index, const SlvParameterInitChar);
+
+/* macros to access values from your solver code 
+
+	Usage example:
+		if(SLV_PARAM_BOOL(p,IDA_PARAM_AUTODIFF)){
+			// do something
+		}
+		SLV_PARAM_BOOL(p,IDA_PARAM_AUTODIFF) = FALSE;
+*/
+
+/* the first three are read/write */
+#define SLV_PARAM_INT(PARAMS,INDEX)  (PARAMS)->parms[INDEX].info.i.value
+#define SLV_PARAM_BOOL(PARAMS,INDEX) (PARAMS)->parms[INDEX].info.b.value
+#define SLV_PARAM_REAL(PARAMS,INDEX) (PARAMS)->parms[INDEX].info.r.value
+
+#define SLV_PARAM_CHAR(PARAMS,INDEX) (PARAMS)->parms[INDEX].info.c.value
+/**<
+	@NOTE, don't use this macro to set the value of your string, as it will
+	result in memory leaks
+*/
 
 /*------------------------------------------------------------------------------
   ACCESSOR MACROS for parm_arg unions
@@ -538,9 +605,15 @@ typedef struct slv_parameters_structure {
 ASC_DLLSPEC(void ) slv_destroy_parms(slv_parameters_t *p);
 /**<
 	Deallocates any allocated memory held by a parameter structure.
+
+	   * All the 'meta' strings are freed, as they are allocated using ascstrdup.
+	   * String values and option arrays are
+
 	Only the held memory is freed, not p itself.  Further, if
 	(p->dynamic_parms != 0), the strings in p->parms are freed
 	but not p->parms itself.  Does nothing if p is NULL.
+
+	@NOTE the above description does not appear to be correct! check the code!
 
 	@param p  The parameter structure to destroy.
  */
