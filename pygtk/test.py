@@ -120,7 +120,7 @@ class AscendTest(unittest.TestCase):
 		I.setInitialSubStep(0.001);
 		I.setMaxSubSteps(500);
 		I.setParameter('autodiff',True)
-		I.setParameter('linsolver','SPGMR')
+		I.setParameter('linsolver','DENSE')
 		I.analyse()
 		I.solve()
 		self.fail("WHAT IS THE ANSWER?")
