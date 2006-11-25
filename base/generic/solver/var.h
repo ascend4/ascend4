@@ -327,6 +327,9 @@ extern void var_set_upper_bound(struct var_variable *var, real64 upper_bound);
 	Gets/sets the upper bound value of the variable.
 */
 
+double var_odeatol(struct var_variable *var);
+/**< Returns the ODE absolute error tolerance for the variable, or -1 if not available */
+
 #ifdef NDEBUG
 # define var_n_incidences(var) ((var)->n_incidences)
 #else

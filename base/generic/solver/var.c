@@ -71,11 +71,12 @@
 #define RELAXED_V g_strings[3]
 #define NOMINAL_V g_strings[4]
 #define INTERFACE_V g_strings[5]
+#define ODEATOL_V g_strings[6]
 
 /*
  * array of those symbol table entries we need.
  */
-static symchar * g_strings[6];
+static symchar * g_strings[7];
 
 SlvBackendToken var_instanceF(const struct var_variable *var)
 { if (var==NULL || var->ratom==NULL) {
@@ -132,7 +133,7 @@ void var_destroy(struct var_variable *var)
 int32 var_mindexF(const struct var_variable *var)
 {
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_set_mindex called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return -1;
   }
   return var->mindex;
@@ -141,7 +142,7 @@ int32 var_mindexF(const struct var_variable *var)
 void var_set_mindexF(struct var_variable *var, int32 mindex)
 {
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_set_mindex called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return;
   }
   var->mindex = mindex;
@@ -150,7 +151,7 @@ void var_set_mindexF(struct var_variable *var, int32 mindex)
 int32 var_sindexF(const struct var_variable *var)
 {
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_set_sindex called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return -1;
   }
   return var->sindex;
@@ -159,7 +160,7 @@ int32 var_sindexF(const struct var_variable *var)
 void var_set_sindexF(struct var_variable *var, int32 sindex)
 {
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_set_sindex called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return;
   }
   var->sindex = sindex;
@@ -168,7 +169,7 @@ void var_set_sindexF(struct var_variable *var, int32 sindex)
 real64 var_value(const struct var_variable *var)
 {
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_value called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return 0.0;
   }
   return( RealAtomValue(var->ratom) );
@@ -177,7 +178,7 @@ real64 var_value(const struct var_variable *var)
 void var_set_value(struct var_variable *var, real64 value)
 {
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_set_value called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return;
   }
   SetRealAtomValue(var->ratom,value,(unsigned)0);
@@ -187,14 +188,13 @@ real64 var_nominal(struct var_variable *var)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_nominal called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return 1.0;
   }
   c = ChildByChar(var->ratom,NOMINAL_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_nominal\n");
-    FPRINTF(stderr,"        No 'nominal' field in variable.\n");
-    WriteInstance(stderr,IPTR(var->ratom));
+    FPRINTF(ASCERR,"no 'nominal' field in variable");
+    /* WriteInstance(stderr,IPTR(var->ratom)); */
     return 1.0;
   }
   return( RealAtomValue(c) );
@@ -204,14 +204,13 @@ void var_set_nominal(struct var_variable *var, real64 nominal)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_set_nominal called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return;
   }
   c = ChildByChar(IPTR(var->ratom),NOMINAL_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_set_nominal\n");
-    FPRINTF(stderr,"        No 'nominal' field in variable.\n");
-    WriteInstance(stderr,IPTR(var->ratom));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'nominal' field in var");
+    /* WriteInstance(stderr,IPTR(var->ratom)); */
     return;
   }
   SetRealAtomValue(c,nominal,(unsigned)0);
@@ -222,13 +221,12 @@ real64 var_lower_bound(struct var_variable *var)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_lower_bound called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return 0.0;
   }
   c = ChildByChar(IPTR(var->ratom),LOWER_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_lower_bound\n");
-    FPRINTF(stderr,"        No 'lower_bound' field in variable.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'lower_bound' field");
     WriteInstance(stderr,IPTR(var->ratom));
     return 0.0;
   }
@@ -239,14 +237,13 @@ void var_set_lower_bound(struct var_variable *var, real64 lower_bound)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_set_lower_bound called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return;
   }
   c = ChildByChar(IPTR(var->ratom),LOWER_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_set_lower_bound\n");
-    FPRINTF(stderr,"        No 'lower_bound' field in variable.\n");
-    WriteInstance(stderr,IPTR(var->ratom));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'lower_bound' field");
+    /* WriteInstance(stderr,IPTR(var->ratom)); */
     return;
   }
   SetRealAtomValue(c,lower_bound,(unsigned)0);
@@ -257,14 +254,13 @@ real64 var_upper_bound(struct var_variable *var)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_upper_bound called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return 0.0;
   }
   c = ChildByChar(IPTR(var->ratom),UPPER_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_upper_bound\n");
-    FPRINTF(stderr,"        No 'upper_bound' field in variable.\n");
-    WriteInstance(stderr,IPTR(var->ratom));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'upper_bound' field");
+    /* WriteInstance(stderr,IPTR(var->ratom)); */
     return 0.0;
   }
   return( RealAtomValue(c) );
@@ -274,18 +270,32 @@ void var_set_upper_bound(struct var_variable *var, real64 upper_bound)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_set_upper_bound called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return;
   }
   c = ChildByChar(IPTR(var->ratom),UPPER_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_set_upper_bound\n");
-    FPRINTF(stderr,"        No 'upper_bound' field in variable.\n");
-    WriteInstance(stderr,IPTR(var->ratom));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'upper_bound' field");
+    /* WriteInstance(stderr,IPTR(var->ratom)); */
     return;
   }
   SetRealAtomValue(c,upper_bound,(unsigned)0);
 }
+
+double var_odeatol(struct var_variable *var){
+	struct Instance *c;
+	if(var==NULL||var->ratom==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
+		return -1;
+	}
+	c = ChildByChar(IPTR(var->ratom),ODEATOL_V);
+	if(c==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"no '%s' field",SCP(ODEATOL_V));
+		return -1;
+	}
+	return RealAtomValue(c);
+}
+	
 
 uint32 var_flagsF(const struct var_variable *var)
 {
@@ -301,14 +311,13 @@ uint32 var_fixed(struct var_variable *var)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_fixed called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return FALSE;
   }
   c = ChildByChar(IPTR(var->ratom),FIXED_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_fixed\n");
-    FPRINTF(stderr,"        No 'fixed' field in variable.\n");
-    WriteInstance(stderr,IPTR(var->ratom));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'fixed' field");
+    /* WriteInstance(stderr,IPTR(var->ratom)); */
     return FALSE;
   }
   var_set_flagbit(var,VAR_FIXED,GetBooleanAtomValue(c));
@@ -319,14 +328,13 @@ void var_set_fixed(struct var_variable *var, uint32 fixed)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_set_fixed called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return;
   }
   c = ChildByChar(IPTR(var->ratom),FIXED_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_set_fixed\n");
-    FPRINTF(stderr,"        No 'fixed' field in variable.\n");
-    WriteInstance(stderr,IPTR(var->ratom));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'fixed' field");
+    /* WriteInstance(stderr,IPTR(var->ratom)); */
     return;
   }
   SetBooleanAtomValue(c,fixed,(unsigned)0);
@@ -337,14 +345,13 @@ uint32 var_relaxed(struct var_variable *var)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_relaxed called on bad var\n");
-    return FALSE;
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
+	return FALSE;
   }
   c = ChildByChar((var->ratom),RELAXED_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_relaxed\n");
-    FPRINTF(stderr,"        No 'relaxed' field in variable.\n");
-    WriteInstance(stderr,(var->ratom));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'relaxed' field");
+    /* WriteInstance(stderr,(var->ratom)); */
     return FALSE;
   }
   var_set_flagbit(var,VAR_RELAXED,GetBooleanAtomValue(c));
@@ -355,14 +362,13 @@ void var_set_relaxed(struct var_variable *var, uint32 fixed)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_set_relaxed called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return;
   }
   c = ChildByChar(IPTR(var->ratom),RELAXED_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_set_relaxed\n");
-    FPRINTF(stderr,"        No 'relaxed' field in variable.\n");
-    WriteInstance(stderr,IPTR(var->ratom));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'relaxed' field");
+    /* WriteInstance(stderr,IPTR(var->ratom)); */
     return;
   }
   SetBooleanAtomValue(c,fixed,(unsigned)0);
@@ -373,14 +379,13 @@ uint32 var_interface(struct var_variable *var)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
-    FPRINTF(stderr,"var_interface called on bad var\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return FALSE;
   }
   c = ChildByChar(IPTR(var->ratom),INTERFACE_V);
   if( c == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var) var_interface\n");
-    FPRINTF(stderr,"        No 'interface' field in variable.\n");
-    WriteInstance(stderr,IPTR(var->ratom));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'interface' field");
+    /* WriteInstance(stderr,IPTR(var->ratom)); */
     return 0;
   }
   var_set_flagbit(var,VAR_INTERFACE,GetBooleanAtomValue(c));
@@ -390,7 +395,7 @@ uint32 var_interface(struct var_variable *var)
 extern uint32 var_flagbit(const struct var_variable *var,const uint32 one)
 {
   if (var==NULL || var->ratom == NULL) {
-    FPRINTF(stderr,"ERROR: var_flagbit called with bad var.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return 0;
   }
   return (var->flags & one);
@@ -399,7 +404,7 @@ extern uint32 var_flagbit(const struct var_variable *var,const uint32 one)
 void var_set_flagbit(struct var_variable *var, uint32 field,uint32 one)
 {
   if (var==NULL || var->ratom == NULL) {
-    FPRINTF(stderr,"ERROR: var_set_flagbit called with bad var.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return;
   }
   if (one) {
@@ -427,7 +432,7 @@ int32 var_apply_filter(const struct var_variable *var,
 int32 var_n_incidencesF(struct var_variable *var)
 {
   if (var!=NULL) return var->n_incidences;
-  FPRINTF(stderr,"var_n_incidences miscalled with NULL\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL var");
   return 0;
 }
 
@@ -436,13 +441,13 @@ void var_set_incidencesF(struct var_variable *var,int32 n,
 {
   if(var!=NULL && n >=0) {
     if (n && i==NULL) {
-      FPRINTF(stderr,"var_set_incidence miscalled with NULL ilist\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL i");
     }
     var->n_incidences = n;
     var->incidence = i;
     return;
   }
-  FPRINTF(stderr,"var_set_incidence miscalled with NULL or n < 0\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL var, or n < 0");
 }
 const struct rel_relation **var_incidence_list( struct var_variable *var)
 {
@@ -506,7 +511,7 @@ struct var_variable **var_BackendTokens_to_vars(slv_system_t sys,
       /* the odds of g_var_tag being a legal pointer are vanishingly
 	small, so if we find an ATOM without g_var_tag we assume it
 	is outside the tree and shouldn't have been in the list. */
-      FPRINTF(stderr,"var_BackendTokens_to_vars called with bad token.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad token");
     }
   }
   /* run through the master lists and put the vars with their atoms */
@@ -538,13 +543,9 @@ struct var_variable **var_BackendTokens_to_vars(slv_system_t sys,
     }
   }
   if (count < len) {
-    FPRINTF(stderr,
-           "var_BackendTokens_to_vars found less than expected vars\n");
-    FPRINTF(stderr,"len = %d, vars found = %d\n",len,count);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"found less than expected vars (len = %d, found = %d)",len,count);
   } else {
-    FPRINTF(stderr,
-           "var_BackendTokens_to_vars found more than expected vars\n");
-    FPRINTF(stderr,"len = %d, vars found = %d\n",len,count);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"found more than expected vars (len = %d, found = %d)",len,count);
   }
   PopInterfacePtrs(oldips,NULL,NULL);
   return result;
@@ -558,28 +559,20 @@ static struct TypeDescription *g_solver_semi_type;
 boolean set_solver_types(void) {
   boolean nerr = 0;
   if( (g_solver_var_type = FindType(AddSymbol(SOLVER_VAR_STR))) == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var.c) set_solver_types\n");
-    FPRINTF(stderr,"        Type solver_var not defined.\n");
-    FPRINTF(stderr,"        Solvers will not work.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_FATAL,"'solver_var' not defined");
     nerr++;
   }
   if( (g_solver_int_type = FindType(AddSymbol(SOLVER_INT_STR))) == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var.c) set_solver_types\n");
-    FPRINTF(stderr,"        Type solver_int not defined.\n");
-    FPRINTF(stderr,"        MPS will not work.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"'solver_int' not defined: MPS will not work");
     nerr++;
   }
   g_solver_binary_type = FindType(AddSymbol(SOLVER_BINARY_STR));
   if( g_solver_binary_type == NULL) {
-    FPRINTF(stderr,"ERROR:  (var.c) set_solver_types\n");
-    FPRINTF(stderr,"        Type solver_binary not defined.\n");
-    FPRINTF(stderr,"        MPS will not work.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_FATAL,"'solver_binary' not defined: MPS will not work");
     nerr++;
   }
   if( (g_solver_semi_type = FindType(AddSymbol(SOLVER_SEMI_STR))) == NULL ) {
-    FPRINTF(stderr,"ERROR:  (var.c) set_solver_types\n");
-    FPRINTF(stderr,"        Type solver_semi not defined.\n");
-    FPRINTF(stderr,"        MPS will not work.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_FATAL,"'solver_semi' not defined: MPS will not work");
     nerr++;
   }
 
@@ -589,7 +582,7 @@ boolean set_solver_types(void) {
   NOMINAL_V = AddSymbolL("nominal",7);
   FIXED_V = AddSymbolL("fixed",5);
   INTERFACE_V = AddSymbolL("interface",9);
- 
+  ODEATOL_V = AddSymbol("ode_atol"); 
   return nerr;
 }
 

@@ -38,6 +38,17 @@ METHOD ode_init;
 	y2.ode_id := 2; y2.ode_type := 1;
 
 	y3.ode_id := 3;
+
+	t.obs_id := 1;
+	y1.obs_id := 2;
+	y2.obs_id := 3;
+	y3.obs_id := 4;
+	dy1_dt.obs_id := 5;
+	dy2_dt.obs_id := 6;
+
+	y1.ode_atol := 1e-8;
+	y2.ode_atol := 1e-14;
+	y3.ode_atol := 1e-6;
 END ode_init;
 	
 METHOD on_load;

@@ -44,6 +44,7 @@ const int IDA = INTEG_IDA;
 
 class Integrator{
 	friend class IntegratorReporterCxx;
+	friend class IntegratorReporterConsole;
 
 public:
 	Integrator(Simulation &);

@@ -6,7 +6,11 @@ extern "C"{
 #include <solver/integrator.h>
 }
 
+#include <vector>
 #include <stdexcept>
+#include <iostream>
+#include <iterator>
+#include <sstream>
 using namespace std;
 
 //---------------------------------------------
@@ -37,6 +41,51 @@ int IntegratorReporterNull::recordObservedValues(){
 	return 1;
 }
 
+//------------------------------------------------------------------------------
+// SIMPLE CONSOLE INTEGRATOR REPORTER
+
+IntegratorReporterConsole::IntegratorReporterConsole(Integrator *integrator)
+		 : IntegratorReporterCxx(integrator), f(cout){
+	// nothing else
+}
+
+IntegratorReporterConsole::~IntegratorReporterConsole(){
+	// nothing else
+}
+
+int
+IntegratorReporterConsole::initOutput(){
+	long nobs = integrator->getNumObservedVars();
+	stringstream ss;
+	for(long i=0; i<nobs; ++i){
+		if(i){
+			f << "\t";
+			ss << "\t";
+		}
+		Variable v = integrator->getObservedVariable(i);
+		f << v.getName();
+		ss << "-------";
+	}
+	f << endl;
+	f << ss.str() << endl;
+	return 1;
+}
+
+int IntegratorReporterConsole::closeOutput(){
+	return 1;
+}
+
+int IntegratorReporterConsole::updateStatus(){
+	return 1;
+}
+
+int IntegratorReporterConsole::recordObservedValues(){
+	vector<double> data(integrator->getNumObservedVars());
+	integrator_get_observations(integrator->getInternalType(),&data[0]);
+	copy(data.begin(),data.end(),ostream_iterator<double>(f,"\t"));
+	f << endl;
+	return 1;
+}
 
 //----------------------------------------------------
 // DEFAULT INTEGRATOR REPORTER (reporter start and end, outputs time at each step)
