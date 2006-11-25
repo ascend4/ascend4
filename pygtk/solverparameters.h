@@ -19,6 +19,7 @@
 
 class SolverParameterIterator;
 class SolverParameter;
+class Integrator;
 	
 /// Wrapper class for slv_parameters_t
 class SolverParameters{
@@ -30,8 +31,11 @@ private:
 
 protected:
 	friend class Simulation;
+	friend class Integrator;
+
 	explicit SolverParameters(const slv_parameters_t &);
 	slv_parameters_t &getInternalType();
+	inline const slv_parameters_t &getInternalTypeConst() const{return p;}
 
 	friend class SolverParameterIterator;
 

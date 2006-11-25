@@ -26,7 +26,6 @@
 
 
 #include <utilities/config.h>
-#include "slv_types.h"
 #include "integrator.h"
 
 #ifdef ASC_WITH_IDA
@@ -39,6 +38,8 @@ ASC_DLLSPEC(int) integrator_ida_solve(IntegratorSystem *blsys
 ASC_DLLSPEC(void) integrator_ida_free(void *enginedata);
 
 ASC_DLLSPEC(void) integrator_ida_create(IntegratorSystem *blsys);
+
+IntegratorParamsDefaultFn integrator_ida_params_default;
 
 #endif
 

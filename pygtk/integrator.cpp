@@ -1,7 +1,9 @@
 #include "integrator.h"
 #include "integratorreporter.h"
+#include "solverparameters.h"
 #include <stdexcept>
 #include <sstream>
+#include <cmath>
 using namespace std;
 
 /**
@@ -32,6 +34,19 @@ Integrator::~Integrator(){
 	samplelist_free(samplelist);
 }
 
+SolverParameters 
+Integrator::getParameters() const{
+	SolverParameters params;
+	int res = integrator_params_get(blsys,&(params.getInternalType() ) );
+	if(res)throw runtime_error("Failed to get integrator parameters");
+	return params;
+}
+
+void
+Integrator::setParameters(const SolverParameters &params){
+	int res = integrator_params_set(blsys,&(params.getInternalTypeConst() ) );
+	if(res)throw runtime_error("Failed to set integrator parameters");
+}
 
 void
 Integrator::setReporter(IntegratorReporterCxx *reporter){
@@ -78,8 +93,12 @@ Integrator::analyse(){
 
 /**
 	@TODO what about root detection?
+
+	Integrate the function for the timesteps specified.
+
+	This method will throw a runtime_error if integration fails.
 */
-int
+void
 Integrator::solve(){
 
 	// check the integration limits
@@ -98,11 +117,8 @@ Integrator::solve(){
 	simulation.processVarStatus();
 
 	if(!res){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Failed integration");
-		return 0;
+		throw runtime_error("Failed integration");
 	}
-
-	return 1;
 }
 
 void
@@ -161,6 +177,9 @@ Integrator::getEngineName() const{
 	return f->second;
 }		
 
+/**
+	@TODO what about conversion factors? Is an allowance being made?
+*/
 void
 Integrator::setLinearTimesteps(UnitsM units, double start, double end, unsigned long num){
 	if(samplelist!=NULL){
@@ -173,6 +192,31 @@ Integrator::setLinearTimesteps(UnitsM units, double start, double end, unsigned 
 	for(unsigned long i=0;i<=num;++i){
 		samplelist_set(samplelist,i,val);
 		val += inc;
+	}
+	integrator_set_samples(blsys,samplelist);
+}
+
+/**
+	@TODO what about conversion factors? Is an allowance being made?
+*/
+void
+Integrator::setLogTimesteps(UnitsM units, double start, double end, unsigned long num){
+	if(samplelist!=NULL){
+		ASC_FREE(samplelist);
+	}
+	const dim_type *d = units.getDimensions().getInternalType();
+
+	if(start<=0)throw runtime_error("starting timestep needs to be > 0");
+	if(end<=0)throw runtime_error("end timestep needs to be > 0");
+	if(end <= start)throw runtime_error("end timestep needs to be > starting timestep");
+
+	samplelist = samplelist_new(num+1, d);
+	double val = start;
+	double inc = exp((log(end)-log(start))/num);
+	for(unsigned long i=0;i<=num;++i){
+		samplelist_set(samplelist,i,val);
+		CONSOLE_DEBUG("samplelist[%lu] = %f",i,val);
+		val *= inc;
 	}
 	integrator_set_samples(blsys,samplelist);
 }

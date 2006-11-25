@@ -24,10 +24,14 @@
 			self.params = params;
 			self.index = 0;
 
+		def __iter__(self):
+			return self
+
 		def next(self):
 			self.index = self.index + 1
 			if self.index >= self.params.getLength():
 				raise StopIteration
+			print "INDEX = %d" % self.index
 			return self.params.getParameter(self.index)
 }
 
@@ -43,8 +47,10 @@ public:
 	%pythoncode{
 		def __iter__(self):
 			return SolverParameterIter(self)
-		def getitem(self,index):
-			return
+		def __getitem__(self,index):
+			return self.getParameter(index)
+		def __len__(self):
+			return self.getLength()
 	}
 }
 
@@ -86,6 +92,16 @@ public:
 
 	const std::string toString() const;
 };
+
+%extend SolverParameter{
+	%pythoncode{
+		def __str__(self):
+			if self.isInt(): return "%s = %d" %(self.getName(),self.getIntValue())
+			if self.isBool(): return "%s = %s" %(self.getName(),self.getBoolValue())
+			if self.isStr(): return "%s = %s" %(self.getName(),self.getStrValue())
+			if self.isReal(): return "%s = %f" %(self.getName(),self.getRealValue())
+	}
+}
 
 /* Incidence matrix stuff */
 typedef enum{

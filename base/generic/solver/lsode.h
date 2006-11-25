@@ -42,9 +42,7 @@
 #ifndef ASC_LSODE_H
 #define ASC_LSODE_H
 
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_client.h"
+#include "integrator.h"
 
 /* Perform LSODE integration of a specified 'Integ_system'.*/
 /**
@@ -60,6 +58,9 @@ extern int integrator_lsode_solve(IntegratorSystem *blsys
 void integrator_lsode_create(IntegratorSystem *blsys);
 void integrator_lsode_init(IntegratorSystem *blsys);
 void integrator_lsode_free(void *enginedata);
+
+IntegratorParamsDefaultFn integrator_lsode_params_default;
+
 
 #endif  /* ASC_LSODE_H */
 

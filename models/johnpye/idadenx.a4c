@@ -1,0 +1,49 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/solve";
+
+(* ASCEND model based on the 'idadenx.c' example problem that accomanpanies IDA *)
+MODEL idadenx;
+	y1, y2, y3 IS_A factor;
+	dy1_dt IS_A factor;
+	dy2_dt IS_A factor;
+
+	eq1: dy1_dt = -0.04 * y1 + 1e4 * y2*y3;
+	eq2: dy2_dt = +0.04 * y1 - 1e4 * y2*y3 - 3e7*y2^2;
+	eq3: 0 = y1 + y2 + y3 - 1;
+	
+	t IS_A time;
+METHODS
+
+METHOD values; (* initial values *)
+	y1 := 1;
+	y2 := 0;
+	y3 := 0;
+	t := 0 {s};
+END values;
+
+METHOD specify;
+	FIX y1, y2;
+END specify;
+
+METHOD ode_init;
+	FREE y1, y2;
+	t.ode_type := -1; t := 0 {s};
+	dy1_dt.ode_id := 1; dy1_dt.ode_type := 2;
+	y1.ode_id := 1; y1.ode_type := 1;
+
+	dy2_dt.ode_id := 2; dy2_dt.ode_type := 2;
+	y2.ode_id := 2; y2.ode_type := 1;
+
+	y3.ode_id := 3;
+END ode_init;
+	
+METHOD on_load;
+	RUN reset; RUN values;
+	EXTERNAL solve(SELF);
+	RUN ode_init;
+END on_load;
+
+END idadenx;
