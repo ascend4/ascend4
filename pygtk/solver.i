@@ -7,6 +7,10 @@
 #include "integratorreporter.h"
 %}
 
+%pythoncode{
+	import types
+}
+
 %template(VariableVector) std::vector<Variable>;
 %template(RelationVector) std::vector<Relation>;
 %template(SolverVector) std::vector<Solver>;
@@ -28,11 +32,11 @@
 			return self
 
 		def next(self):
-			self.index = self.index + 1
-			if self.index >= self.params.getLength():
+			if self.index >= len(self.params):
 				raise StopIteration
-			print "INDEX = %d" % self.index
-			return self.params.getParameter(self.index)
+			p = self.params.getParameter(self.index)
+			self.index = self.index +1
+			return p
 }
 
 class SolverParameters{
@@ -47,10 +51,28 @@ public:
 	%pythoncode{
 		def __iter__(self):
 			return SolverParameterIter(self)
+		def __getattr(self,index):
+			for p in self:
+				if p.getName()==index:
+					return p
+			raise KeyError
 		def __getitem__(self,index):
+			if type(index) != types.IntType:
+				raise TypeError
 			return self.getParameter(index)
 		def __len__(self):
 			return self.getLength()
+		def getValue(self,codename):
+			for p in self:
+				if p.getName()==codename:
+					return p.getValue()
+			raise KeyError
+		def set(self,codename,value):
+			for p in self:
+				if p.getName()==codename:
+					p.setValue(value)
+					return
+			raise KeyError						
 	}
 }
 
@@ -100,6 +122,27 @@ public:
 			if self.isBool(): return "%s = %s" %(self.getName(),self.getBoolValue())
 			if self.isStr(): return "%s = %s" %(self.getName(),self.getStrValue())
 			if self.isReal(): return "%s = %f" %(self.getName(),self.getRealValue())
+			raise TypeError
+		def getValue(self):
+			if self.isBool():return self.getBoolValue()
+			if self.isReal():return self.getRealValue()
+			if self.isInt(): return self.getIntValue()
+			if self.isStr(): return self.getStrValue()
+			raise TypeError
+		def setValue(self,value):
+			if self.isBool(): 
+				self.setBoolValue(value)
+				return
+			if self.isReal():
+				self.setRealValue(value)
+				return
+			if self.isInt():
+				self.setIntValue(value)
+				return
+			if self.isStr():
+				self.setStrValue(value)
+				return
+			raise TypeError
 	}
 }
 
@@ -220,6 +263,23 @@ public:
 
 %include "integrator.h"
 
+%extend Integrator{
+	%pythoncode{
+		def setParameter(self,name,value):
+			""" set the value of a parameter for this integrator """
+			P = self.getParameters()
+			P.set(name,value)
+			self.setParameters(P)
+		def getParameterValue(self,name):
+			""" retrieve the *value* of the specified parameter """
+			P = self.getParameters()
+			for p in P:
+				if p.getName()==name:
+					return p.getValue()
+			raise KeyError
+	}
+}
+		
 %feature("director") IntegratorReporterCxx;
 
 %ignore ascxx_integratorreporter_init;
