@@ -85,6 +85,8 @@
 # error "Failed to include ASCEND IDA header file"
 #endif
 
+/* #define JEX_DEBUG */
+/* #define FEX_DEBUG */
 /**
 	Struct containing any stuff that IDA needs that doesn't fit into the 
 	common IntegratorSystem struct.
@@ -294,6 +296,7 @@ int integrator_ida_solve(
 
 	/* relative error tolerance */	
 	reltol = SLV_PARAM_REAL(&(blsys->params),IDA_PARAM_RTOL);
+	CONSOLE_DEBUG("rtol = %8.2e",reltol);
 
 	/* allocate internal memory */
 	if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_ATOLVECT)){
@@ -303,6 +306,8 @@ int integrator_ida_solve(
 		integrator_get_atol(blsys,NV_DATA_S(abstolvect));
 
 		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SV, reltol, abstolvect);
+
+		N_VDestroy_Serial(abstolvect);
 	}else{
 		/* scalar absolute tolerance (one value for all) */
 		CONSOLE_DEBUG("USING SCALAR ATOL VALUE = %8.2e",abstol);
@@ -324,9 +329,9 @@ int integrator_ida_solve(
 	/* set optional inputs... */
 	IDASetErrHandlerFn(ida_mem, &integrator_ida_error, (void *)blsys);
 	IDASetRdata(ida_mem, (void *)blsys);
-	IDASetMaxStep(ida_mem, integrator_get_maxstep(blsys));
-	IDASetInitStep(ida_mem, integrator_get_stepzero(blsys));
-	IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(blsys));
+	/* IDASetMaxStep(ida_mem, integrator_get_maxstep(blsys)); */
+	/* IDASetInitStep(ida_mem, integrator_get_stepzero(blsys)); */
+	/* IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(blsys)); */
 	/* there's no capability for setting *minimum* step size in IDA */
 
 
@@ -390,19 +395,20 @@ int integrator_ida_solve(
 
 	*/
 
+#if 0
 	/* correct initial values, given derivatives */
 	blsys->currentstep=0;
  	t_index=start_index;
 	tout1 = samplelist_get(blsys->samples, t_index);
 
-	/* CONSOLE_DEBUG("Giving t value %f to IDACalcIC", tout1);*/
+	CONSOLE_DEBUG("SOLVING INITIAL CONDITIONS IDACalcIC (tout1 = %f)", tout1);
 
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
+# if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
 	/* note the new API from version 2.3 and onwards */
 	flag = IDACalcIC(ida_mem, IDA_Y_INIT, tout1);
-#else
+# else
 	flag = IDACalcIC(ida_mem, t0, y0, yp0, IDA_Y_INIT, tout1);
-#endif
+# endif
 
 	if(flag!=IDA_SUCCESS){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to solve initial values (IDACalcIC)");
@@ -410,6 +416,7 @@ int integrator_ida_solve(
 	}/* else success */
 
 	CONSOLE_DEBUG("INITIAL CONDITIONS SOLVED :-)");
+#endif
 
 	/* optionally, specify ROO-FINDING PROBLEM */
 
@@ -426,7 +433,7 @@ int integrator_ida_solve(
 
 	/* advance solution in time, return values as yret and derivatives as ypret */
 	blsys->currentstep=1;
-	for(t_index=start_index+1;t_index <= finish_index;++t_index, ++blsys->currentstep){
+	for(t_index=start_index;t_index <= finish_index;++t_index, ++blsys->currentstep){
 		t = samplelist_get(blsys->samples, t_index);
 
 		/* CONSOLE_DEBUG("SOLVING UP TO t = %f", t); */
@@ -495,27 +502,35 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	struct rel_relation** relptr;
 	double resid;
 	char *relname;
+#ifdef FEX_DEBUG
+	char *varname;
+#endif
 
 	blsys = (IntegratorSystem *)res_data;
 	enginedata = integrator_ida_enginedata(blsys);
 
+#ifdef FEX_DEBUG
 	/* fprintf(stderr,"\n\n"); */
-	/* CONSOLE_DEBUG("ABOUT TO EVALUTE RESIDUALS..."); */
+	CONSOLE_DEBUG("EVALUTE RESIDUALS...");
+#endif
 
 	/* pass the values of everything back to the compiler */
 	integrator_set_t(blsys, (double)tt);
 	integrator_set_y(blsys, NV_DATA_S(yy));
 	integrator_set_ydot(blsys, NV_DATA_S(yp));
 
-	/* revaluate the system residuals using the new data */
-	is_error = 0; 
-	relptr = enginedata->rellist;
-
-	/* CONSOLE_DEBUG("IDA requests residuals of length %lu",NV_LENGTH_S(rr)); */
 	if(NV_LENGTH_S(rr)!=enginedata->nrels){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid residuals nrels!=length(rr)");
 		return -1; /* unrecoverable */
 	}
+
+	/**
+		@TODO does this function (fex) do bounds checking already?
+	*/
+
+	/* evaluate each residual in the rellist */
+	is_error = 0; 
+	relptr = enginedata->rellist;
 
 	Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
 	if (setjmp(g_fpe_env)==0) {
@@ -524,28 +539,51 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 				++i, ++relptr
 		){
 			resid = relman_eval(*relptr, &calc_ok, enginedata->safeeval);
-			
-			relname = rel_make_name(blsys->system, *relptr);
-			/* if(calc_ok){
-				CONSOLE_DEBUG("residual[%d:\"%s\"] = %f",i,relname,resid);
-			}else{
-				CONSOLE_DEBUG("residual[%d:\"%s\"] = %f (ERROR)",i,relname,resid);
-			}*/
-			ASC_FREE(relname);
 
 			NV_Ith_S(rr,i) = resid;
 			if(!calc_ok){
+				relname = rel_make_name(blsys->system, *relptr);
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Residual calculation error in rel '%s'",relname);
+				ASC_FREE(relname);
 				/* presumable some output already made? */
 				is_error = 1;
 			}
 		}
 	}else{
-		CONSOLE_DEBUG("FLOATING POINT ERROR WITH i=%d",i);
+		relname = rel_make_name(blsys->system, *relptr);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Floating point error (SIGFPE) in rel '%s'",relname);
+		ASC_FREE(relname);
+		is_error = 1;
 	}
 	Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
 
-	if(is_error)CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");
-	return is_error;
+#ifdef FEX_DEBUG
+	/* output residuals to console */
+	CONSOLE_DEBUG("RESIDUAL OUTPUT");
+	fprintf(stderr,"index\t%20s\t%20s\t%s\n","y","ydot","resid");
+	for(i=0; i<blsys->n_y; ++i){
+		varname = var_make_name(blsys->system,blsys->y[i]);
+		fprintf(stderr,"%d\t%10s=%10f\t",i,varname,NV_Ith_S(yy,i));
+		if(blsys->ydot[i]){
+			varname = var_make_name(blsys->system,blsys->ydot[i]);
+			fprintf(stderr,"%10s=%10f\t",varname,NV_Ith_S(yp,i));
+		}else{
+			fprintf(stderr,"diff(%4s)=%10f\t",varname,NV_Ith_S(yp,i));
+		}
+		ASC_FREE(varname);
+		relname = rel_make_name(blsys->system,enginedata->rellist[i]);
+		fprintf(stderr,"'%s'=%f\n",relname,NV_Ith_S(rr,i));
+	}
+#endif
+
+	if(is_error){
+		return 1;
+	}
+
+#ifdef FEX_DEBUG	
+	CONSOLE_DEBUG("RESIDUAL OK");
+#endif
+	return 0;
 }
 
 /**
@@ -558,7 +596,10 @@ int integrator_ida_djex(long int Neq, realtype tt
 ){
 	IntegratorSystem *blsys;
 	IntegratorIdaData *enginedata;
-	char *relname, *varname;
+	char *relname;
+#ifdef JEX_DEBUG
+	char *varname;
+#endif
 	int status;
 	struct rel_relation **relptr;
 	int i;
@@ -579,6 +620,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	integrator_set_y(blsys, NV_DATA_S(yy));
 	integrator_set_ydot(blsys, NV_DATA_S(yp));
 
+#ifdef JEX_DEBUG
 	/* print vars */
 	for(i=0; i < blsys->n_y; ++i){
 		varname = var_make_name(blsys->system, blsys->y[i]);
@@ -601,14 +643,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 
 	/* print step size */
 	CONSOLE_DEBUG("<c_j> = %f",c_j);
-
-	for(i=0, relptr = enginedata->rellist;
-			i< enginedata->nrels && relptr != NULL;
-			++i, ++relptr
-	){
-		relname = rel_make_name(blsys->system, *relptr);
-		CONSOLE_DEBUG("%d: '%s'",i,relname);
-	}
+#endif
 	
 	/* build up the dense jacobian matrix... */
 	status = 0;
@@ -627,6 +662,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 		}
 
 		/* output what's going on here ... */
+#ifdef JEX_DEBUG
 		relname = rel_make_name(blsys->system, *relptr);
 		CONSOLE_DEBUG("RELATION %d '%s'",i,relname);
 		fprintf(stderr,"%d: '%s': ",i,relname);
@@ -642,13 +678,8 @@ int integrator_ida_djex(long int Neq, realtype tt
 			ASC_FREE(varname);
 		}
 		fprintf(stderr,"\n");
-
-		/* zero the Jacobian row */
-		for(j=0; j < enginedata->nrels; ++j){
-			DENSE_ELEM(Jac,i,j) = 0;
-		}
-	
-		/* insert values into the Jacobian row in appropriate spots */
+#endif	
+		/* insert values into the Jacobian row in appropriate spots (can assume Jac starts with zeros -- IDA manual) */
 		for(j=0; j < count; ++j){			
 			var_yindex = blsys->y_id[variables[j]];
 			if(var_yindex >= 0){
@@ -661,6 +692,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 		}
 	}
 
+#ifdef JEX_DEBUG
 	CONSOLE_DEBUG("PRINTING JAC");
 	fprintf(stderr,"\t");
 	for(j=0; j < blsys->n_y; ++j){
@@ -680,43 +712,17 @@ int integrator_ida_djex(long int Neq, realtype tt
 			fprintf(stderr,"%11.2e",DENSE_ELEM(Jac,i,j));
 		}
 		fprintf(stderr,"\n");
-	}
-
-#if 0
-	double *yval = NV_DATA_S(yy);
-	/* AWFUL HACK! In an attempt to prove that 'IDADense' works as expected,
-	I've pulled the jacobians straight from idadenx.c (an IDA example) */
-#define A(REL,I,J,DESIRED) if(fabs((DENSE_ELEM(Jac,I,J) - DESIRED)/DESIRED) > 1e-5){ \
-		CONSOLE_DEBUG("Value for ('%s'=%d,%d) got %e, expected %e",REL,I,J,DENSE_ELEM(Jac,I,J),DESIRED); \
-		status=1; \
-	}else{ \
-		CONSOLE_DEBUG("Value for (%d,%d) is OK",I,J); \
-	}
-	char *eqs[] = {"eq1","eq2","eq3"};
-	for(i=0;i<enginedata->nrels;++i){
-		relname = rel_make_name(blsys->system, enginedata->rellist[i]);
-		if(strcmp(relname,"eq1")==0){
-			A(relname,i,0, -0.04 - c_j   );
-			A(relname,i,1, 1.0e4*yval[2] );
-			A(relname,i,2, 1.0e4*yval[1] );
-		}else if(strcmp(relname,"eq2")==0){
-			A(relname,i,0, 0.04);
-			A(relname,i,1, RCONST(-1.0e4)*yval[2] - RCONST(6.0e7)*yval[1] - c_j);
-			A(relname,i,2, RCONST(-1.0e4)*yval[1]);
-		}else if(strcmp(relname,"eq3")==0){
-			A(relname,i,0, -1.0);
-			A(relname,i,1, -1.0);
-			A(relname,i,2, -1.0);
-		}
 	}	
-#undef A
-#endif		
+#endif
 
 	if(status){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"There were derivative evaluation errors in the dense jacobian");
 		return 1;
 	}
 
+#ifdef FEX_DEBUG
+	CONSOLE_DEBUG("DJEX RETURNING 0");
+#endif
 	return 0;
 }
 
@@ -789,9 +795,9 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				++i, ++relptr
 		){
 			/* fprintf(stderr,"\n"); */
-			relname = rel_make_name(blsys->system, *relptr);
-			/* CONSOLE_DEBUG("RELATION %d '%s'",i,relname); */
-			ASC_FREE(relname);
+			/* relname = rel_make_name(blsys->system, *relptr);
+			CONSOLE_DEBUG("RELATION %d '%s'",i,relname);
+			ASC_FREE(relname); */
 
 			/* get derivatives for this particular relation */
 			status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
@@ -819,13 +825,14 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 			Jv_i = 0;
 			for(j=0; j < count; ++j){
 				/* CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y);
-				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]); */
+				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
 				if(varname){
-					/* CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
-					ASC_FREE(varname); */
+					CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
+					ASC_FREE(varname);
 				}else{
 					CONSOLE_DEBUG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
 				}
+				*/
 				
 				var_yindex = blsys->y_id[variables[j] - 1];
 				/* CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %d",j,variables[j],var_yindex); */
@@ -854,8 +861,6 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
 
 	if(is_error)CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");
-
-	
 	
 	return is_error;
 }
