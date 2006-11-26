@@ -582,7 +582,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	/* print vars */
 	for(i=0; i < blsys->n_y; ++i){
 		varname = var_make_name(blsys->system, blsys->y[i]);
-		CONSOLE_DEBUG("%s = %f",varname,NV_Ith_S(yy,i));
+		CONSOLE_DEBUG("%s = %f = %f",varname,NV_Ith_S(yy,i),var_value(blsys->y[i]));
 		ASC_FREE(varname);
 	}
 
@@ -590,7 +590,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	for(i=0; i < blsys->n_y; ++i){
 		if(blsys->ydot[i]){
 			varname = var_make_name(blsys->system, blsys->ydot[i]);
-			CONSOLE_DEBUG("%s = %f",varname,NV_Ith_S(yp,i));
+			CONSOLE_DEBUG("%s = %f =%f",varname,NV_Ith_S(yp,i),var_value(blsys->ydot[i]));
 			ASC_FREE(varname);
 		}else{
 			varname = var_make_name(blsys->system, blsys->y[i]);
@@ -616,19 +616,8 @@ int integrator_ida_djex(long int Neq, realtype tt
 			i< enginedata->nrels && relptr != NULL;
 			++i, ++relptr
 	){
-		relname = rel_make_name(blsys->system, *relptr);
-		CONSOLE_DEBUG("RELATION %d '%s'",i,relname);
-		ASC_FREE(relname);
-
 		/* get derivatives for this particular relation */
 		status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
-		/* CONSOLE_DEBUG("Got derivatives against %d matching variables", count); */
-
-		for(j=0;j<count;++j){
-			varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
-			/* CONSOLE_DEBUG("derivatives[%d] = %f (variable %d, '%s')",j,derivatives[j],variables[j],varname); */
-			ASC_FREE(varname);
-		}
 
 		if(status){
 			relname = rel_make_name(blsys->system, *relptr);
@@ -637,42 +626,63 @@ int integrator_ida_djex(long int Neq, realtype tt
 			break;
 		}
 
+		/* output what's going on here ... */
+		relname = rel_make_name(blsys->system, *relptr);
+		CONSOLE_DEBUG("RELATION %d '%s'",i,relname);
+		fprintf(stderr,"%d: '%s': ",i,relname);
+		ASC_FREE(relname);
+		for(j=0;j<count;++j){
+			varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
+			var_yindex = blsys->y_id[variables[j]];
+			if(var_yindex >=0){
+				fprintf(stderr,"  var[%d]='%s'=y[%d]",variables[j],varname,var_yindex);
+			}else{
+				fprintf(stderr,"  var[%d]='%s'=ydot[%d]",variables[j],varname,-var_yindex-1);
+			}
+			ASC_FREE(varname);
+		}
+		fprintf(stderr,"\n");
+
+		/* zero the Jacobian row */
 		for(j=0; j < enginedata->nrels; ++j){
 			DENSE_ELEM(Jac,i,j) = 0;
 		}
-
-		for(j=0; j < count; ++j){
-			/* CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y); */
-			varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
-			if(varname){
-				CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
-				ASC_FREE(varname);
-			}else{
-				CONSOLE_DEBUG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
-			}
-			
-			var_yindex = blsys->y_id[variables[j] - 1];
-			CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %d",j,variables[j],var_yindex);
-
+	
+		/* insert values into the Jacobian row in appropriate spots */
+		for(j=0; j < count; ++j){			
+			var_yindex = blsys->y_id[variables[j]];
 			if(var_yindex >= 0){
+				asc_assert(blsys->y[var_yindex]==enginedata->varlist[variables[j]]);
 				DENSE_ELEM(Jac,i,var_yindex) += derivatives[j];
-				CONSOLE_DEBUG("New value (%d,%d) is %f", i, var_yindex, DENSE_ELEM(Jac,i,var_yindex));
 			}else{
+				asc_assert(blsys->ydot[-var_yindex-1]==enginedata->varlist[variables[j]]);
 				DENSE_ELEM(Jac,i,-var_yindex-1) += derivatives[j] * c_j;
-				CONSOLE_DEBUG("New value (%d,%d) is %f (deriv)", i, -var_yindex-1, DENSE_ELEM(Jac,i,-var_yindex-1));
 			}
 		}
 	}
 
 	CONSOLE_DEBUG("PRINTING JAC");
-	for(i=0; i < blsys->n_y; ++i){
+	fprintf(stderr,"\t");
+	for(j=0; j < blsys->n_y; ++j){
+		if(j)fprintf(stderr,"\t");
+		varname = var_make_name(blsys->system,blsys->y[j]);
+		fprintf(stderr,"%11s",varname);
+		ASC_FREE(varname);
+	}
+	fprintf(stderr,"\n");
+	for(i=0; i < enginedata->nrels; ++i){
+		relname = rel_make_name(blsys->system, enginedata->rellist[i]);
+		fprintf(stderr,"%s\t",relname);
+		ASC_FREE(relname);
+
 		for(j=0; j < blsys->n_y; ++j){
-			fprintf(stderr,"%8.2e\t",DENSE_ELEM(Jac,i,j));
+			if(j)fprintf(stderr,"\t");
+			fprintf(stderr,"%11.2e",DENSE_ELEM(Jac,i,j));
 		}
 		fprintf(stderr,"\n");
 	}
 
-#if 1
+#if 0
 	double *yval = NV_DATA_S(yy);
 	/* AWFUL HACK! In an attempt to prove that 'IDADense' works as expected,
 	I've pulled the jacobians straight from idadenx.c (an IDA example) */
