@@ -329,9 +329,12 @@ int integrator_ida_solve(
 	/* set optional inputs... */
 	IDASetErrHandlerFn(ida_mem, &integrator_ida_error, (void *)blsys);
 	IDASetRdata(ida_mem, (void *)blsys);
-	/* IDASetMaxStep(ida_mem, integrator_get_maxstep(blsys)); */
-	/* IDASetInitStep(ida_mem, integrator_get_stepzero(blsys)); */
-	/* IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(blsys)); */
+	IDASetMaxStep(ida_mem, integrator_get_maxstep(blsys));	
+	IDASetInitStep(ida_mem, integrator_get_stepzero(blsys));
+	IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(blsys));
+	if(integrator_get_minstep(blsys)>0){
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"IDA does not support minstep (ignored)");
+	}
 	/* there's no capability for setting *minimum* step size in IDA */
 
 

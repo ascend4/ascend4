@@ -115,15 +115,16 @@ class AscendTest(unittest.TestCase):
 		I.setEngine('IDA')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
-		I.setMinSubStep(0.0005); # these limits are required by IDA at present (numeric diff)
-		I.setMaxSubStep(0.02);
-		I.setInitialSubStep(0.001);
-		I.setMaxSubSteps(500);
+		I.setMaxSubStep(0);
+		I.setInitialSubStep(0);
+		I.setMaxSubSteps(0);
 		I.setParameter('autodiff',True)
 		I.setParameter('linsolver','DENSE')
 		I.analyse()
 		I.solve()
-		self.fail("WHAT IS THE ANSWER?")
+		assert abs(float(M.sim.y1) - 5.1091e-08) < 1e-10;
+		assert abs(float(M.sim.y2) - 2.0437e-13) < 1e-15;
+		assert abs(float(M.sim.y3) - 1.0) < 1e-5;
 
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
