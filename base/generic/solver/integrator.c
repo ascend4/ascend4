@@ -590,7 +590,7 @@ void integrator_dae_show_var(IntegratorSystem *sys
 	int y_id;
 	varname = var_make_name(sys->system, var);
 	if(varindx==NULL){
-		fprintf(stderr,"?\t%s\n",varname);
+		fprintf(stderr,".\t%s\n",varname);
 		ASC_FREE(varname);
 		return;
 	}
@@ -610,8 +610,8 @@ void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *
 
   /* visit all the slv_system_t master var lists to collect vars */
   /* find the vars mostly in this one */
-  vlist = slv_get_master_var_list(sys->system);
-  vlen = slv_get_num_master_vars(sys->system);
+  vlist = slv_get_solvers_var_list(sys->system);
+  vlen = slv_get_num_solvers_vars(sys->system);
   for (i=0;i<vlen;i++) {
     (*visitfn)(sys, vlist[i], &i);
   }
