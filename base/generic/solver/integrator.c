@@ -109,6 +109,7 @@ static void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisi
 IntegratorVarVisitorFn integrator_ode_classify_var;
 IntegratorVarVisitorFn integrator_dae_classify_var;
 IntegratorVarVisitorFn integrator_classify_indep_var;
+IntegratorVarVisitorFn integrator_dae_show_var;
 
 static int integrator_sort_obs_vars(IntegratorSystem *sys);
 static void integrator_print_var_stats(IntegratorSystem *sys);
@@ -506,7 +507,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	/* allocate storage for the 'y' and 'ydot' arrays */
 	sys->y = ASC_NEW_ARRAY(struct var_variable *,numy);
 	sys->ydot = ASC_NEW_ARRAY_CLEAR(struct var_variable *,numy);
-	sys->y_id = ASC_NEW_ARRAY(int, slv_get_num_master_vars(sys->system));
+	sys->y_id = ASC_NEW_ARRAY(long, slv_get_num_master_vars(sys->system));
 
 	for(i=0; i<numy; ++i){
 		asc_assert(sys->ydot[i]==NULL);
@@ -524,18 +525,18 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 			assert(info->derivative);
 			sys->ydot[yindex] = info->derivative->i;
 			if(info->varindx >= 0){
-				sys->y_id[info->varindx - 1] = yindex;
+				sys->y_id[info->varindx] = yindex;
 				CONSOLE_DEBUG("y_id[%d] = %d",info->varindx,yindex);
 			}
 			if(info->derivative->varindx >= 0){
-				sys->y_id[info->derivative->varindx - 1] = -1-yindex;
+				sys->y_id[info->derivative->varindx] = -1-yindex;
 				CONSOLE_DEBUG("y_id[%d] = %d",info->derivative->varindx,-1-yindex);
 			}
 		}else{
 			sys->y[yindex] = info ->i;
 			sys->ydot[yindex] = NULL;
 			if(info->varindx >= 0){
-				sys->y_id[info->varindx - 1] = yindex;
+				sys->y_id[info->varindx] = yindex;
 				CONSOLE_DEBUG("y_id[%d] = %d",info->varindx,yindex);
 			}
 		}
@@ -557,7 +558,50 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 
 	if(!integrator_sort_obs_vars(sys))return 0;
 
+	CONSOLE_DEBUG("RESULTS OF ANALYSIS");
+	fprintf(stderr,"index\ty\tydot\n");
+	fprintf(stderr,"-----\t-----\t-----\n");
+	for(i=0;i<numy;++i){
+		varname = var_make_name(sys->system, sys->y[i]);
+		fprintf(stderr,"%d\t%s\t",i,varname);
+		if(sys->ydot[i]){
+			ASC_FREE(varname);
+			varname = var_make_name(sys->system, sys->ydot[i]);
+			fprintf(stderr,"%s\n",varname);
+			ASC_FREE(varname);
+		}else{
+			fprintf(stderr,"diff(%s)\n",varname);
+			ASC_FREE(varname);
+		}	
+	}
+
+	CONSOLE_DEBUG("CORRESPONDENCE OF SOLVER VARS TO INTEGRATOR VARS");
+	fprintf(stderr,"index\tname\ty_id\ty\tydot\n");
+	fprintf(stderr,"-----\t-----\t-----\t-----\t-----\n");
+	integrator_visit_system_vars(sys,integrator_dae_show_var);
+
 	return 1;
+}
+
+void integrator_dae_show_var(IntegratorSystem *sys
+		, struct var_variable *var, const int *varindx
+){
+	char *varname;
+	int y_id;
+	varname = var_make_name(sys->system, var);
+	if(varindx==NULL){
+		fprintf(stderr,"?\t%s\n",varname);
+		ASC_FREE(varname);
+		return;
+	}
+	y_id = sys->y_id[*varindx];
+	fprintf(stderr,"%d\t%s\t%d", *varindx, varname,y_id);
+	ASC_FREE(varname);
+	if(y_id >= 0){
+		fprintf(stderr,"\ty[%ld]\t.\n",y_id);
+	}else{
+		fprintf(stderr,"\t.\tydot[%ld]\n",-y_id-1);
+	}
 }
 
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitfn){
