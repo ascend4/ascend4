@@ -4,7 +4,24 @@ REQUIRE "atoms.a4l";
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/solve";
 
-(* ASCEND model based on the 'idadenx.c' example problem that accomanpanies IDA *)
+(*
+	ASCEND model based on the 'idadenx.c' example problem that accompanies IDA.
+	The root-finding part isn't yet implemented though.
+    ----------------------------------------------------------------------------
+	This simple example problem for IDA, due to Robertson, 
+	is from chemical kinetics, and consists of the following three 
+	equations:
+
+	     dy1/dt = -.04*y1 + 1.e4*y2*y3
+	     dy2/dt = .04*y1 - 1.e4*y2*y3 - 3.e7*y2**2
+	        0   = y1 + y2 + y3 - 1
+
+	on the interval from t = 0.0 to t = 4.e10, with initial
+	conditions: y1 = 1, y2 = y3 = 0.
+
+	This model is tested (using the same parameters as used by idadenx.c) by the
+	script pygtk/test.py.
+*)
 MODEL idadenx;
 	y1, y2, y3 IS_A factor;
 	dy1_dt IS_A factor;

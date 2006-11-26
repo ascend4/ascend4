@@ -85,8 +85,9 @@
 # error "Failed to include ASCEND IDA header file"
 #endif
 
-/* #define JEX_DEBUG */
-/* #define FEX_DEBUG */
+#define FEX_DEBUG
+#define JEX_DEBUG
+
 /**
 	Struct containing any stuff that IDA needs that doesn't fit into the 
 	common IntegratorSystem struct.
@@ -162,7 +163,8 @@ enum ida_parameters{
 	,IDA_PARAM_RTOL
 	,IDA_PARAM_ATOL
 	,IDA_PARAM_ATOLVECT
-	,IDA_PARAMS_SIZE
+	,IDA_PARAM_GSMODIFIED
+		,IDA_PARAMS_SIZE
 };
 
 /**
@@ -228,6 +230,13 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,"Linear solver",1
 			,"See IDA manual, section 5.5.3."
 		}, "SPGMR"}, (char *[]){"DENSE","SPGMR",NULL}
+	);
+
+	slv_param_bool(p,IDA_PARAM_GSMODIFIED
+			,(SlvParameterInitBool){{"gsmodified"
+			,"Use modified Gram-Schmidt orthogonalisation in SPGMR?",2
+			,"TRUE = GS_MODIFIED, FALSE = GS_CLASSICAL. See IDA manual section 5.5.6.6"
+		}, TRUE}
 	);
 
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
@@ -333,7 +342,7 @@ int integrator_ida_solve(
 	IDASetInitStep(ida_mem, integrator_get_stepzero(blsys));
 	IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(blsys));
 	if(integrator_get_minstep(blsys)>0){
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"IDA does not support minstep (ignored)");
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"IDA does not support minstep (ignored)\n");
 	}
 	/* there's no capability for setting *minimum* step size in IDA */
 
@@ -365,6 +374,23 @@ int integrator_ida_solve(
 			}/* else success */
 		}else{
 			CONSOLE_DEBUG("USING NUMERICAL DIFF");
+		}
+
+		/* select Gram-Schmidt orthogonalisation */
+		if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_GSMODIFIED)){
+			CONSOLE_DEBUG("USING MODIFIED GS");
+			flag = IDASpilsSetGSType(ida_mem,MODIFIED_GS);
+			if(flag!=IDASPILS_SUCCESS){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
+				return 0;
+			}
+		}else{
+			CONSOLE_DEBUG("USING CLASSICAL GS");
+			flag = IDASpilsSetGSType(ida_mem,CLASSICAL_GS);
+			if(flag!=IDASPILS_SUCCESS){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
+				return 0;
+			}
 		}
 	}else if(strcmp(linsolver,"DENSE")==0){
 		CONSOLE_DEBUG("DENSE DIRECT SOLVER, size = %d",size);
@@ -546,7 +572,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 			NV_Ith_S(rr,i) = resid;
 			if(!calc_ok){
 				relname = rel_make_name(blsys->system, *relptr);
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Residual calculation error in rel '%s'",relname);
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Calculation error in rel '%s'",relname);
 				ASC_FREE(relname);
 				/* presumable some output already made? */
 				is_error = 1;
@@ -764,8 +790,9 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	var_filter_t filter;
 	int count;
 
-	/* fprintf(stderr,"\n--------------\n"); */
-	/* CONSOLE_DEBUG("EVALUTING JACOBIAN..."); */
+#ifdef JEX_DEBUG
+	CONSOLE_DEBUG("EVALUATING JACOBIAN...");
+#endif
 
 	blsys = (IntegratorSystem *)jac_data;
 	enginedata = integrator_ida_enginedata(blsys);
@@ -786,36 +813,21 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	filter.matchbits = VAR_SVAR;
 	filter.matchvalue = VAR_SVAR;
 
-	/* CONSOLE_DEBUG("PRINTING VALUES OF 'v' VECTOR (length %ld)",NV_LENGTH_S(v)); */
-	/* for(i=0; i<NV_LENGTH_S(v); ++i){
-		CONSOLE_DEBUG("v[%d] = %f",i,NV_Ith_S(v,i));
-	}*/
-
 	Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
 	if (setjmp(g_fpe_env)==0) {
 		for(i=0, relptr = enginedata->rellist;
 				i< enginedata->nrels && relptr != NULL;
 				++i, ++relptr
 		){
-			/* fprintf(stderr,"\n"); */
-			/* relname = rel_make_name(blsys->system, *relptr);
-			CONSOLE_DEBUG("RELATION %d '%s'",i,relname);
-			ASC_FREE(relname); */
-
 			/* get derivatives for this particular relation */
 			status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
 			/* CONSOLE_DEBUG("Got derivatives against %d matching variables", count); */
 
-			for(j=0;j<count;++j){
-				/* varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
-				CONSOLE_DEBUG("derivatives[%d] = %f (variable %d, '%s')",j,derivatives[j],variables[j],varname);
-				ASC_FREE(varname); */
-			}
-
-			if(!status){
-				/* CONSOLE_DEBUG("Derivatives for relation %d OK",i); */
-			}else{
-				CONSOLE_DEBUG("ERROR calculating derivatives for relation %d",i);
+			if(status){
+				relname = rel_make_name(blsys->system, *relptr);
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Calculation error in rel '%s'",relname);
+				ASC_FREE(relname);
+				is_error = 1;
 				break;
 			}
 
@@ -837,35 +849,53 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				}
 				*/
 				
-				var_yindex = blsys->y_id[variables[j] - 1];
+				var_yindex = blsys->y_id[variables[j]];
 				/* CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %d",j,variables[j],var_yindex); */
 
 				if(var_yindex >= 0){
-					/* CONSOLE_DEBUG("j = %d: algebraic, deriv[j] = %f, v[%d] = %f",j,derivatives[j], var_yindex, NV_Ith_S(v,var_yindex)); */
+#ifdef JEX_DEBUG
+					asc_assert(blsys->y[var_yindex]==enginedata->varlist[variables[j]]);
+					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dy[%d] = %f, v[%d] = %f)\n", i
+						, derivatives[j] * NV_Ith_S(v,var_yindex)
+						, i, var_yindex, derivatives[j]
+						, var_yindex, NV_Ith_S(v,var_yindex)
+					);
+#endif
 					Jv_i += derivatives[j] * NV_Ith_S(v,var_yindex);
 				}else{
-					var_yindex = -var_yindex-1;
-					/* CONSOLE_DEBUG("j = %d: differential, deriv[j] = %f, v[%d] = %f",j,derivatives[j], var_yindex, NV_Ith_S(v,var_yindex)); */
-					Jv_i += derivatives[j] * NV_Ith_S(v,var_yindex) / c_j; 
+#ifdef JEX_DEBUG
+					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dydot[%d] = %f, v[%d] = %f)\n", i
+						, derivatives[j] * NV_Ith_S(v,-var_yindex-1)
+						, i, -var_yindex-1, derivatives[j]
+						, -var_yindex-1, NV_Ith_S(v,-var_yindex-1)
+					);
+#endif
+					asc_assert(blsys->ydot[-var_yindex-1]==enginedata->varlist[variables[j]]);
+					Jv_i += derivatives[j] * NV_Ith_S(v,-var_yindex-1) * c_j; 
 				}
 			}
 
 			NV_Ith_S(Jv,i) = Jv_i;
-			/* CONSOLE_DEBUG("(J*v)[%d] = %f", i, Jv_i); */
-		}
-		if(status){
-			CONSOLE_DEBUG("JVEX ERROR RESULT");
-			/* presumably some error_reporter will already have been made*/
-			is_error = 1;
+#ifdef JEX_DEBUG
+			relname = rel_make_name(blsys->system, *relptr);
+			CONSOLE_DEBUG("'%s': Jv[%d] = %f", relname, i, NV_Ith_S(Jv,i));
+			ASC_FREE(relname);
+			return 1;			
+#endif
 		}
 	}else{
-		CONSOLE_DEBUG("FLOATING POINT ERROR WITH i=%d",i);
+		relname = rel_make_name(blsys->system, *relptr);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Floating point error (SIGFPE) in rel '%s'",relname);
+		ASC_FREE(relname);
+		is_error = 1;
 	}
 	Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
 
-	if(is_error)CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");
-	
-	return is_error;
+	if(is_error){
+		CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");
+		return 1;
+	}
+	return 0;
 }
 
 /*----------------------------------------------

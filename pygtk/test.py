@@ -108,7 +108,7 @@ class AscendTest(unittest.TestCase):
 		else:
 			self.fail('Failed to trip invalid Integrator parameter')
 
-	def testIDAwithDAE(self):
+	def testIDAdenx(self):
 		self.L.load('johnpye/idadenx.a4c')
 		M = self.L.findType('idadenx').getSimulation('sim')
 		I = ascpy.Integrator(M)
@@ -126,6 +126,32 @@ class AscendTest(unittest.TestCase):
 		assert abs(float(M.sim.y2) - 2.0437e-13) < 1e-15;
 		assert abs(float(M.sim.y3) - 1.0) < 1e-5;
 
+	def testIDAdenxSPGMR(self):
+		self.L.load('johnpye/idadenx.a4c')
+		M = self.L.findType('idadenx').getSimulation('sim')
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
+		I.setMaxSubStep(0);
+		I.setInitialSubStep(0);
+		I.setMaxSubSteps(0);
+		I.setParameter('autodiff',True)
+		I.setParameter('linsolver','SPGMR')
+		I.setParameter('gsmodified',False)
+		I.analyse()
+		I.solve()
+		assert abs(float(M.sim.y1) - 5.1091e-08) < 1e-10;
+		assert abs(float(M.sim.y2) - 2.0437e-13) < 1e-15;
+		assert abs(float(M.sim.y3) - 1.0) < 1e-5;
+
+	def testIDAkryx(self):
+		self.L.load('johnpye/idakryx.a4c')
+		M = self.L.findType('idakryx').getSimulation('sim')
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+	
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
 	def nothing(self):
