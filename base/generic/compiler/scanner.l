@@ -1139,13 +1139,16 @@ ErrMsg_SymbolEOL(void)
 	  Asc_ModuleBestName(Asc_CurrentModule()), yy_line);
 }
 
-#define ERRCOUNT_UNEXPCHAR 30
+#define ERRCOUNT_UNEXPCHAR 5
 static void ErrMsg_UnexpectedChar(){
 	static int errcount=0;
 	if(errcount<ERRCOUNT_UNEXPCHAR){
 		error_reporter(ASC_USER_ERROR
-			,Asc_ModuleBestName(Asc_CurrentModule()), yy_line
-			,"Unexpected character '%s' in input.", yytext
+			,Asc_ModuleBestName(Asc_CurrentModule()), yy_line, NULL
+			,"Unexpected character '%s' in input (ASCII %d). If you pasted"
+			" text from another source (a word-processor, web page, etc) be"
+			" careful that you haven't pasted strange quotes, hyphens, etc."
+			, yytext, yytext[0]
 		);
 		errcount++;
 		if(errcount==ERRCOUNT_UNEXPCHAR){

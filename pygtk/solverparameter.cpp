@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <vector>
 #include <string>
+#include <sstream>
 using namespace std;
 
 SolverParameter::SolverParameter(slv_parameter *p) : p(p){
@@ -91,7 +92,9 @@ SolverParameter::setIntValue(const int &val){
 		throw runtime_error("Not an integer parameter");
 	}
 	if(isBounded() && (val > getIntUpperBound() || val < getIntLowerBound())){
-		throw runtime_error("Out of bounds");
+		stringstream ss;
+		ss << "Out of bounds (range is [" << getIntLowerBound() << "," << getIntUpperBound() << "])" << endl;
+		throw runtime_error(ss.str());
 	}
 	p->info.i.value = val;
 }
@@ -146,7 +149,9 @@ SolverParameter::setRealValue(const double &val){
 		throw runtime_error("Not a real parameter");
 	}
 	if(isBounded() && (val > getRealUpperBound() || val < getRealLowerBound())){
-		throw runtime_error("Out of bounds");
+		stringstream ss;
+		ss << "Out of bounds (range is [" << getRealLowerBound() << "," << getRealUpperBound() << "])" << endl;
+		throw runtime_error(ss.str());
 	}
 	p->info.r.value = val;
 }

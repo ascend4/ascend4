@@ -42,7 +42,7 @@
 enum NameTypes {
   IntArrayIndex,  /**< integer array index */
   StrArrayIndex,  /**< string array index */
-  StrName	        /**< string name */
+  StrName         /**< string name */
 };
 
 union InstanceNameUnion {
@@ -57,70 +57,42 @@ struct InstanceName {
 
 #define InstanceNameType(in) ((in).t)
 /**< 
- *  <!--  macro InstanceNameType(in)                                   -->
- *  <!--  struct InstanceName in;                                      -->
- *
  *  Return the type of InstanceName structure in.
  */
 
 #define InstanceNameStr(in) ((in).u.name)
 /**< 
- *  <!--  macro InstanceNameStr(in)                                    -->
- *  <!--  struct InstanceName in;                                      -->
- *
  *  Return the name of InstanceName structure in.
  *  in must be of type StrName.
  */
 
 #define InstanceIntIndex(in) ((in).u.index)
 /**< 
- *  <!--  macro InstanceIntIndex(in)                                   -->
- *  <!--  struct InstanceName in;                                      -->
- *
  *  Return the integer index value of InstanceName structure in.
  */
 
 #define InstanceStrIndex(in) ((in).u.name)
 /**< 
- *  <!--  macro InstanceStrIndex(in)                                   -->
- *  <!--  struct InstanceName in;                                      -->
- *
  *  Return the string index value of InstanceName structure in.
  */
 
 #define SetInstanceNameType(in,type) ((in).t) = (type)
 /**< 
- *  <!--  macro SetInstanceNameType(in,type)                           -->
- *  <!--  struct InstanceName in;                                      -->
- *  <!--  enum NameTypes type;                                         -->
- *
  *  Set the type of InstanceName structure in to type (a NameTypes).
  */
 
 #define SetInstanceNameStrPtr(in,str) ((in).u.name) = (str)
 /**< 
- *  <!--  macro SetInstanceNameStrPtr(in,str)                          -->
- *  <!--  struct InstanceName in;                                      -->
- *  <!--  symchar *str;                                                -->
- *
  *  Set the string pointer of InstanceName structure in to str (a symchar*).
  */
 
 #define SetInstanceNameStrIndex(in,str) ((in).u.name) = (str)
 /**<
- *  <!--  macro SetInstanceNameStrIndex(in,str)                        -->
- *  <!--  struct InstanceName in;                                      -->
- *  <!--  symchar *str;                                                -->
- *
  *  Set the string index of InstanceName structure in to str (a symchar*).
  */
 
 #define SetInstanceNameIntIndex(in,int_index) ((in).u.index) = (int_index)
 /**< 
- *  <!--  macro SetInstanceNameIndex(in,int_index)                     -->
- *  <!--  struct InstanceName in;                                      -->
- *  <!--  long int_index;                                              -->
- *
  *  Set the integer index of InstanceName structure in to int_index (a long).
  */
 

@@ -57,6 +57,7 @@ public:
 	~Instanc();
 	std::vector<Instanc> &getChildren();
 	Instanc getChild(const SymChar &) const;
+	Instanc getChild(const long &) const;
 	const enum inst_t getKind() const;
 	const std::string getKindStr() const;
 	const Type getType() const;

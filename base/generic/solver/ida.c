@@ -222,14 +222,14 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,"Scalar relative error tolerance",1
 			,"Value of the scalar relative error tolerance."
 			" See IDA manual, section 5.5.1"
-		}, 1e-4, DBL_MIN, DBL_MAX }
+		}, 1e-4, 0, DBL_MAX }
 	);
 
 	slv_param_char(p,IDA_PARAM_LINSOLVER
 			,(SlvParameterInitChar){{"linsolver"
 			,"Linear solver",1
 			,"See IDA manual, section 5.5.3."
-		}, "SPGMR"}, (char *[]){"DENSE","SPGMR",NULL}
+		}, "SPGMR"}, (char *[]){"DENSE","BAND","SPGMR",NULL}
 	);
 
 	slv_param_bool(p,IDA_PARAM_GSMODIFIED

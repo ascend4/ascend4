@@ -1,6 +1,18 @@
 import unittest
 import ascpy
 import math
+import os, subprocess
+
+class CUnit(unittest.TestCase):
+	def setUp(self):
+		self.cunitexe = "../base/generic/test/test"
+	
+	def testcunittests(self):
+		res = os.system(self.cunitexe)
+		if res:
+			raise RuntimeError("CUnit tests failed (returned %d -- run %s for details)" % (res,self.cunitexe))
+		else:
+			print "CUnit returned %s" % res
 
 class AscendTest(unittest.TestCase):
 
@@ -148,9 +160,21 @@ class AscendTest(unittest.TestCase):
 	def testIDAkryx(self):
 		self.L.load('johnpye/idakryx.a4c')
 		M = self.L.findType('idakryx').getSimulation('sim')
+		M.build()
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setParameter('linsolver','SPGMR')
+		I.setParameter('gsmodified',False)
+		I.setParameter('autodiff',True)
+		I.setParameter('rtol',0)
+		I.setParameter('atol',1e-3);
+		I.setParameter('atolvect',False)
+		I.analyse()
+		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 10);
+		print M.sim.udot[1][3];
+		I.solve()
+		assert 0
 	
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:

@@ -1,33 +1,26 @@
-/*
- *  Ascend Instance Array Functions
- *  by Tom Epperly & Ben Allan
- *  8/16/89
- *  Version: $Revision: 1.15 $
- *  Version control file: $RCSfile: arrayinst.h,v $
- *  Date last modified: $Date: 1998/04/07 19:52:46 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1996, 1997 Benjamin Andrew Allan
- *  based on instance.c
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1996, 1997 Ben Allan
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	by Tom Epperly 8/16/89, Ben Allan
+	Last in CVS $Revision: 1.15 $ $Date: 1998/04/07 19:52:46 $ $Author: ballan $
+*/
 
 /** @file
  *  Ascend Instance Array Functions.
@@ -89,13 +82,13 @@
  *  application proposed for it has been the result of sloppy and/or
  *  lazy thinking.  In the end we may find a need for a genuine
  *  multidimensional ListInstance that has much in common with arrays,
- *  but such a creature should be implemented as it's own creature and
+ *  but such a creature should be implemented as its own creature and
  *  not a sloppy graft on top of arrays.
  *  </pre>
  */
 
-#ifndef __ARRAYINST_H_SEEN__
-#define __ARRAYINST_H_SEEN__
+#ifndef ASC_ARRAYINST_H
+#define ASC_ARRAYINST_H
 
 /* Array child memory management */
 #define CAC(acp) ((struct ArrayChild *)(acp))
@@ -143,7 +136,6 @@ extern void InitInstanceNanny(void);
 
 extern void DestroyInstanceNanny(void);
 /**<
- *  <!--  DestroyInstanceNanny();                                      -->
  *  Destroy array child instantiation gizmos. This must be called to
  *  clean up before shutting down ASCEND.
  *  Do attempt to instantiate anything after you call this unless you
@@ -152,8 +144,6 @@ extern void DestroyInstanceNanny(void);
 
 extern void ReportInstanceNanny(FILE *f);
 /**<
- *  <!--  ReportInstanceNanny(f);                                      -->
- *  <!--  FILE *f;                                                     -->
  *  Reports on the array child instantiator to f.
  */
 
@@ -163,9 +153,6 @@ extern struct gl_list_t
 *CollectArrayInstances(CONST struct Instance *i,
                        struct gl_list_t *list);
 /**<
- *  <!--  list = CollectArrayInstances(i,NULL);                        -->
- *  <!--  const struct Instance *i;                                    -->
- *  <!--  struct gl_list_t *list;                                      -->
  *  Appends pointers of the set/MODEL/ATOM/constant instances found in
  *  the leaves of an array instance, i, sparse or dense.
  *  If list given by user is NULL, a list to be returned is made if
@@ -180,11 +167,15 @@ typedef void (*AVProc)(struct Instance *);
 
 extern void ArrayVisitLocalLeaves(struct Instance *mch, AVProc func);
 /**<
- *  <!--  ArrayVisitLocalLeaves(mch,func)                              -->
- *  <!--  struct Instance *mch;                                        -->
- *  <!--  AVProc func;                                                 -->
  *  This function visits the instances indicated by the name
- *  given in the definition statement of mch.
+ *  given in the definition statement of mch.ASC_DLLSPEC(struct Instance*) ChildByChar(CONST struct Instance *i,
+                                    symchar *str);
+/**<
+ *  This returns to the pointer to a child, c, of parent,p, named by str.
+ *  str must be a simple name. If child not found, returns NULL.
+ *  str must be from the symbol table. If AscFindSymbol(str)==NULL,
+ *  then this function should not be called because NO instance
+ *  can have a child with a name which is not in the symbol table.
  *  func is as described in visitinst.h for VisitProc.
  *  mch is an array instance that is the child of a MODEL.
  */
@@ -193,8 +184,6 @@ extern void ArrayVisitLocalLeaves(struct Instance *mch, AVProc func);
 
 extern int RectangleArrayExpanded(CONST struct Instance *i);
 /**<
- *  <!--  int RectangleArrayExpanded(i)                                -->
- *  <!--  const struct Instance *i;                                    -->
  *  Test if the array is fully expanded
  *  (i.e. all the sets for all the derefencing have been specified).<br><br>
  *
@@ -210,9 +199,6 @@ extern int RectangleSubscriptsMatch(CONST struct Instance *context,
                                     CONST struct Instance *ary,
                                     CONST struct Name *subscripts);
 /**<
- *  <!--  int RectangleSubscriptsMatch(context,ary,subscripts)         -->
- *  <!--  const struct Instance *context, *ary;                        -->
- *  <!--  const struct Name *subscripts;                               -->
  *  Test if the ary children expected from evaluating the
  *  nodes of subscripts (all set nodes) are all compatible
  *  with the children of the array instance given. The set
@@ -231,25 +217,18 @@ extern int RectangleSubscriptsMatch(CONST struct Instance *context,
 
 extern unsigned long NextToExpand(CONST struct Instance *i);
 /**<
- *  <!--  unsigned long NextToExpand(i)                                -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the number of the dereferencing that needs to be expanded.  This
  *  returns 0 if none are needed; 1 is the first dereference.
  */
 
 extern unsigned long NumberofDereferences(CONST struct Instance *i);
 /**<
- *  <!--  unsigned long NumberofDereferences(i)                        -->
- *  <!--  const struct Instance *i;                                    -->
  *  This returns the number of dereferences that this array instance has
  *  before reaching what the array contains.
  */
 
 extern CONST struct Set *IndexSet(CONST struct Instance *i, unsigned long num);
 /**<
- *  <!--  struct Set *IndexSet(i,num)                                  -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  unsigned long num;                                           -->
  *  Return the set that the num'th index is defined over.  Don't make any
  *  changes to the structure that is returned!
  *  1 <= num <= NumberofDereferences(i)
@@ -264,13 +243,6 @@ extern void ExpandArray(struct Instance *i,
                         struct Instance *arginst,
                         struct gl_list_t *rhslist);
 /**<
- *  <!--  void ExpandArray(i,num,set,rhsinst,arginst,rhslist)          -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  unsigned long num;                                           -->
- *  <!--  struct set_t *set;                                           -->
- *  <!--  struct Instance *arginst, *rhsinst;                          -->
- *  <!--  struct gl_list_t *rhslist;                                   -->
- *
  *  This will expand the num'th index over the set of index values given by
  *  set.  set is returned unchanged.<br><br>
  *
@@ -299,9 +271,6 @@ extern struct Instance *FindOrAddIntChild(struct Instance *i,
                                           struct Instance *rhsinst,
                                           struct Instance *arginst);
 /**<
- *  <!--  struct Instance *FindOrAddIntChild(i,v,rhsinst,arginst)      -->
- *  <!--  struct Instance *i,*rhsinst, *arginst;                       -->
- *  <!--  long v;                                                      -->
  *  Add sparse array child at location defined by current ForTable
  *  after instantiating child if rhsinst is NULL (an ISA).
  *  If instantiating, uses arginst if not NULL.
@@ -313,9 +282,6 @@ extern struct Instance *FindOrAddStrChild(struct Instance *i,
                                           struct Instance *rhsinst,
                                           struct Instance *arginst);
 /**<
- *  <!--  struct Instance *FindOrAddStrChild(i,sym,rhsinst,arginst)    -->
- *  <!--  struct Instance *i, *rhsinst, *arginst;                      -->
- *  <!--  symchar *sym;                                                -->
  *  Add sparse array child at location defined by current ForTable
  *  after instantiating child if rhsinst is NULL (an ISA).
  *  If instantiating, uses arginst if not NULL.
@@ -324,8 +290,6 @@ extern struct Instance *FindOrAddStrChild(struct Instance *i,
 
 extern int CmpArrayInsts(struct Instance *i1, struct Instance *i2);
 /**<
- *  <!--  int CmpArrayInsts(i1,i2)                                     -->
- *  <!--  struct Instance *i1, *i2;                                    -->
  *  Returns 0 if the arrays i1 and i2 are defined over equivalent subscript
  *  ranges and have leaf parts of shallowly equivalent types.
  *  (hint: relations and models are not deeply checked.)
@@ -334,5 +298,4 @@ extern int CmpArrayInsts(struct Instance *i1, struct Instance *i2);
  *  NULL input --> 1 + warning, rather than exit.
  */
 
-#endif  /* __ARRAYINST_H_SEEN__ */
-
+#endif /* ASC_ARRAYINST_H */
