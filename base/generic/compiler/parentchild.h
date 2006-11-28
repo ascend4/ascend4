@@ -1,7 +1,7 @@
 /*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
 	Copyright (C) 1996 Ben Allan
 	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
-	Copyright (C) 2006 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -69,8 +69,7 @@
 	#include "instance_enum.h"
 	#include "compiler.h"
 *//*
-	by Tom Epperly & Ben Allan
-	8/16/89
+	by Tom Epperly 8/16/89, Ben Allan
 	Version: $Revision: 1.11 $
 	Version control file: $RCSfile: parentchild.h,v $
 	Date last modified: $Date: 1998/02/05 16:37:24 $

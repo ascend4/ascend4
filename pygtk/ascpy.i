@@ -36,7 +36,10 @@
 #include <compiler/importhandler.h>
 #include "annotation.h"
 
-#include <dmalloc.h>
+#ifdef ASC_WITH_DMALLOC
+# include <dmalloc.h>
+#endif
+
 %}
 
 // All STL runtime_errors caught to Python
@@ -355,6 +358,7 @@ public:
 	const bool isSetInt() const;
 	const bool isSetString() const;
 	const bool isSetEmpty() const;
+	const bool isArray() const;
 	const bool isDefined() const;
 	const bool isBool() const;
 	const bool isInt() const;
@@ -405,6 +409,9 @@ public:
 	Instanc __getattr__(const char *name){
 		return self->getChild(SymChar(name));
 	}
+	Instanc __getitem__(const long &index){
+		return self->getChild(index);
+	} 
 	double __float__(){
 		if(self->isReal()){
 			return self->getRealValue();

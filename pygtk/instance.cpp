@@ -562,6 +562,26 @@ Instanc::getChild(const SymChar &name) const{
 	return Instanc(c,name);
 }
 
+Instanc
+Instanc::getChild(const long &index) const{
+	if(!isArray()){
+		stringstream ss;
+		ss << "Instance '" << getName() << "' is not an array; can't retrieve child index " << index;
+		throw runtime_error(ss.str());
+	}
+	struct InstanceName n;
+	InstanceNameType(n) = IntArrayIndex;
+	InstanceIntIndex(n) = index;
+	long childindex = ChildSearch(i,&n);
+	if(childindex){
+    	return InstanceChild(i,childindex);
+	}
+	stringstream ss;
+	ss << "Invalid child index '" << index << "' for instance '" << getName() << "'";
+	throw runtime_error(ss.str());
+		
+}
+
 Plot
 Instanc::getPlot() const{
 	if(isPlottable()){

@@ -147,7 +147,9 @@ Integrator::setEngine(const string &name){
 #ifdef ASC_WITH_IDA
 	if(name=="IDA")engine = INTEG_IDA;
 #endif
-
+	if(engine==INTEG_UNKNOWN){
+		throw runtime_error("Unkown integrator name");
+	}
 	setEngine(engine);
 }
 

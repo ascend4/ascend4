@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 
   error_reporter_set_callback(NULL);
 
-  setvbuf(stdout, NULL, _IONBF, 0);
+/*  setvbuf(stdout, NULL, _IONBF, 0); */
 
   for (i=1 ; i<argc ; i++) {
     if (!strcmp("-i", argv[i])) {
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
                "           -h   print this message and exit.\n\n"
           , argv[0]
       );
-      return 0;
+      return 1;
     }
   }
 
@@ -123,11 +123,11 @@ int main(int argc, char* argv[])
                     result, CU_get_error_msg());
     return result;
   }
-
+/*
   if (TRUE == print_messages) {
     test_enable_printing();
   }
-
+*/
   /* Asc_RedirectCompilerDefault(); */ /* direct internal named streams to std streams */
   CU_basic_set_mode(mode);
   CU_set_error_action(error_action);
@@ -138,9 +138,12 @@ int main(int argc, char* argv[])
     ascshutdown("Testing completed.");    /* shut down memory manager */
   }
 
+  fprintf(stderr,"RETURN CODE = %d\n\n", result);
+
+/*
   if (TRUE == print_messages) {
     test_disable_printing();
   }
-
+*/
   return result;
 }

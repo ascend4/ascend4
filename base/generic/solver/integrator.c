@@ -40,6 +40,7 @@
 	@TODO this needs to go away.
 */
 #define INTEG_DEBUG TRUE
+/* #define ANALYSE_DEBUG */
 
 /**
 	Print a debug message with value if INTEG_DEBUG is TRUE.
@@ -398,6 +399,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 
 	integrator_visit_system_vars(sys,&integrator_dae_classify_var);
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Found %lu observation variables:",gl_length(sys->obslist));
 	for(i=1; i<=gl_length(sys->obslist); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->obslist, i);
@@ -405,6 +407,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		CONSOLE_DEBUG("observation[%d] = \"%s\"",i,varname);
 		ASC_FREE(varname);
 	}
+#endif
 
 	/* CONSOLE_DEBUG("Checking found vars..."); */
 	if(gl_length(sys->dynvars)==0){
@@ -438,6 +441,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	gl_sort(sys->dynvars,(CmpFunc)Integ_CmpDynVars);
 	/* !!! NOTE THAT dynvars IS NOW REARRANGED !!! *sigh* bug hunting(!) */
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Variables rearranged to increasing ODE ID & TYPE (varindx = matrix order)");
 	for(i=1; i<=gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
@@ -445,6 +449,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld (varindx = %d)",i-1,varname,info->type,info->varindx); 
 		ASC_FREE(varname);
 	}
+#endif
 
 	/* link up variables with their derivatives */
 	prev = NULL;
@@ -452,23 +457,28 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		
 		if(info->type == INTEG_STATE_VAR || info->type == INTEG_ALGEBRAIC_VAR){
+#ifdef ANALYSE_DEBUG
 			varname = var_make_name(sys->system,info->i);
 			CONSOLE_DEBUG("Var \"%s\" is an algebraic variable",varname);
 			ASC_FREE(varname);
+#endif
 			info->type = INTEG_STATE_VAR;
 			info->derivative_of = NULL;
 		}else{
 			if(prev==NULL || info->index != prev->index){
 				/* derivative, but without undifferentiated var present in model */
+#ifdef ANALYSE_DEBUG
 				varname = var_make_name(sys->system,info->i);
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Derivative %d of \"%s\" is present without its un-differentiated equivalent"
 					, info->type-1
 					, varname
 				);
 				ASC_FREE(varname);
+#endif
 				return 0;
 			}else if(info->type != prev->type + 1){
 				/* derivative, but missing the next-lower-order derivative */
+#ifdef ANALYSE_DEBUG
 				derivname = var_make_name(sys->system,info->i);
 				varname = var_make_name(sys->system,prev->i);
 				ERROR_REPORTER_HERE(ASC_USER_ERROR
@@ -479,14 +489,17 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 				);
 				ASC_FREE(varname);
 				ASC_FREE(derivname);
+#endif
 				return 0;
 			}else{
 				/* variable with derivative */
+#ifdef ANALYSE_DEBUG
 				varname = var_make_name(sys->system,prev->i);
 				derivname = var_make_name(sys->system,info->i);
 				CONSOLE_DEBUG("Var \"%s\" is the derivative of \"%s\"",derivname,varname);
 				ASC_FREE(varname);
 				ASC_FREE(derivname);
+#endif
 				info->derivative_of = prev;
 			}
 		}
@@ -516,7 +529,9 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	/* now add variables and their derivatives to 'ydot' and 'y' */
 	yindex = 0;
 	
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("VARS IN THEIR MATRIX ORDER");
+#endif
 	for(i=1; i<=gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		if(info->derivative_of)continue;
@@ -526,18 +541,24 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 			sys->ydot[yindex] = info->derivative->i;
 			if(info->varindx >= 0){
 				sys->y_id[info->varindx] = yindex;
+#ifdef ANALYSE_DEBUG
 				CONSOLE_DEBUG("y_id[%d] = %d",info->varindx,yindex);
+#endif
 			}
 			if(info->derivative->varindx >= 0){
 				sys->y_id[info->derivative->varindx] = -1-yindex;
+#ifdef ANALYSE_DEBUG
 				CONSOLE_DEBUG("y_id[%d] = %d",info->derivative->varindx,-1-yindex);
+#endif
 			}
 		}else{
 			sys->y[yindex] = info ->i;
 			sys->ydot[yindex] = NULL;
 			if(info->varindx >= 0){
 				sys->y_id[info->varindx] = yindex;
+#ifdef ANALYSE_DEBUG
 				CONSOLE_DEBUG("y_id[%d] = %d",info->varindx,yindex);
+#endif
 			}
 		}
 		yindex++;
@@ -558,6 +579,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 
 	if(!integrator_sort_obs_vars(sys))return 0;
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("RESULTS OF ANALYSIS");
 	fprintf(stderr,"index\ty\tydot\n");
 	fprintf(stderr,"-----\t-----\t-----\n");
@@ -579,6 +601,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	fprintf(stderr,"index\tname\ty_id\ty\tydot\n");
 	fprintf(stderr,"-----\t-----\t-----\t-----\t-----\n");
 	integrator_visit_system_vars(sys,integrator_dae_show_var);
+#endif
 
 	return 1;
 }
