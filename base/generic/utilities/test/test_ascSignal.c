@@ -102,10 +102,10 @@ void my_handler2(int sigval)
 
 static void test_ascSignal(void)
 {
-  SigHandler old_fpe_handler = NULL;
-  SigHandler old_int_handler = NULL;
-  SigHandler old_seg_handler = NULL;
-  SigHandler old_handler;
+  SigHandlerFn *old_fpe_handler = NULL;
+  SigHandlerFn *old_int_handler = NULL;
+  SigHandlerFn *old_seg_handler = NULL;
+  SigHandlerFn *old_handler;
   volatile int signal1_caught;
   volatile int signal2_caught;
   volatile int signal3_caught;

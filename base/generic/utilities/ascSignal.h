@@ -95,21 +95,12 @@
 	Requires:
 	#include "utilities/ascConfig.h"
 *//*
-	Signal handling protocol definitions for ASCEND
-	May 27, 1997
-	By Benjamin Andrew Allan
-	Version: $Revision: 1.6 $
-	Version control file: $RCSfile: ascSignal.h,v $
-	Date last modified: $Date: 1998/01/10 18:00:05 $
-	Last modified by: $Author: ballan $
+	by Benjamin Andrew Allan, May 27, 1997
+	Last in CVS: $Revision: 1.6 $ $Date: 1998/01/10 18:00:05 $ $Author: ballan $
 */
 
 #ifndef ASC_ASCSIGNAL_H
 #define ASC_ASCSIGNAL_H
-
-#ifndef lint
-static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 ballan Exp $";
-#endif
 
 #include <signal.h>
 #include <setjmp.h>
@@ -121,7 +112,7 @@ static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 b
 #  include <unistd.h>
 #endif
 
-typedef void (*SigHandler)(int);
+typedef void SigHandlerFn(int);
 /**< Signature of a signal handling function. */
 
 #define MAX_TRAP_DEPTH 40L
@@ -133,10 +124,10 @@ ASC_DLLSPEC(jmp_buf ) g_int_env;   /**< Standard signal jmp_buf - interactive at
 
 extern jmp_buf g_foreign_code_call_env;
 /**<
- * Not currently in use.  Should be when we get to a unified
- * standard for signal handling.
- * @todo Implement use of g_foreign_code_call_env?
- */
+	Not currently in use.  Should be when we get to a unified
+	standard for signal handling.
+	@todo Implement use of g_foreign_code_call_env?
+*/
 
 ASC_DLLSPEC(void ) Asc_SignalTrap(int sigval);
 /**<
@@ -229,7 +220,7 @@ ASC_DLLSPEC(void ) Asc_SignalRecover(int force);
  *               compiler/platform.
  */
 
-ASC_DLLSPEC(int ) Asc_SignalHandlerPush(int signum, SigHandler func);
+ASC_DLLSPEC(int ) Asc_SignalHandlerPush(int signum, SigHandlerFn *func);
 /**<
  * Adds a handler to the stack of signal handlers for the given signal.
  * There is a maximum stack limit, so returns 1 if limit exceeded.
@@ -251,7 +242,7 @@ ASC_DLLSPEC(int ) Asc_SignalHandlerPush(int signum, SigHandler func);
  *        popping an unintended handler.
  */
 
-ASC_DLLSPEC(int ) Asc_SignalHandlerPop(int signum, SigHandler func);
+ASC_DLLSPEC(int ) Asc_SignalHandlerPop(int signum, SigHandlerFn *func);
 /**<
  *  Removes the last-pushed handler from the stack for signum signal types.
  *  If the removed handler is the same as func, it is uninstalled and

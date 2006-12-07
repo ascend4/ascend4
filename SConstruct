@@ -1140,6 +1140,42 @@ def CheckX11(context):
 	return CheckExtLib(context,'X11',x11_check_text)
 
 #----------------
+# Check that we're able to catch floating point errors
+
+sigfpe_test_text = r"""
+#include <signal.h>
+#include <setjmp.h>
+#include <stdlib.h>
+#include <fenv.h>
+static jmp_buf g_jmpenv;
+void fpehandler(int sig){
+	longjmp(g_jmpenv,sig);
+}
+int main(void){
+	fenv_t myfenv;
+    fegetenv(&myfenv);
+    fesetenv(&myfenv);
+	feenableexcept(FE_ALL_EXCEPT);
+	signal(SIGFPE,&fpehandler);
+	double x;
+	switch(setjmp(g_jmpenv)){
+		case 0:
+			x = 1.0 / 0.0;
+			/* failed to catch */
+			exit(1);			
+		case SIGFPE:
+			exit(0);
+	}
+}
+"""
+
+def CheckFPE(context):
+	context.Message("Checking for C99 FPE behaviour... ")
+	(is_ok,output) = context.TryRun(sigfpe_test_text,'.c')
+	context.Result(is_ok)
+	return is_ok
+
+#----------------
 # GCC Version sniffing
 
 # TODO FIXME
@@ -1168,6 +1204,7 @@ conf = Configure(env
 		, 'CheckIDAVersion' : CheckIDAVersion
 		, 'CheckCONOPT' : CheckCONOPT
 		, 'CheckScrollkeeperConfig' : CheckScrollkeeperConfig
+		, 'CheckFPE' : CheckFPE
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -1204,6 +1241,13 @@ if conf.CheckGcc():
 		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
 		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
 	conf.env.Append(CCFLAGS=['-Wall'])
+
+# Catching SIGFPE
+
+if conf.CheckFPE():
+	conf.env['HAVE_SIGFPE']=True
+else:
+	conf.env['HAVE_SIGFPE']=False
 
 # YACC
 

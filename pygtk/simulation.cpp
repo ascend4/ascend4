@@ -746,6 +746,7 @@ Simulation::getIncidenceMatrix(){
 */
 void
 Simulation::processVarStatus(){
+	if(!sys)throw runtime_error("No system built");
 
 	// this is a cheap function call:
 	const mtx_block_t *bb = slv_get_solvers_blocks(getSystem());

@@ -131,7 +131,7 @@ void integrator_ida_create(IntegratorSystem *blsys){
 	enginedata = ASC_NEW(IntegratorIdaData);
 	enginedata->rellist = NULL;
 	enginedata->varlist = NULL;
-	enginedata->safeeval = 1;
+	enginedata->safeeval = 0;
 	blsys->enginedata = (void *)enginedata;
 	integrator_ida_params_default(blsys);
 }
@@ -149,7 +149,6 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *blsys){
 	assert(blsys->enginedata!=NULL);
 	assert(blsys->engine==INTEG_IDA);
 	d = ((IntegratorIdaData *)(blsys->enginedata));
-	assert(d->safeeval = 1);
 	return d;
 }
 
@@ -160,6 +159,7 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *blsys){
 enum ida_parameters{
 	IDA_PARAM_LINSOLVER
 	,IDA_PARAM_AUTODIFF
+	,IDA_PARAM_SAFEEVAL
 	,IDA_PARAM_RTOL
 	,IDA_PARAM_ATOL
 	,IDA_PARAM_ATOLVECT
@@ -199,6 +199,15 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,"Use automatic differentiation of expressions (1) or use numerical derivatives (0)"
 		}, TRUE}
 	);
+
+	slv_param_bool(p,IDA_PARAM_SAFEEVAL
+			,(SlvParameterInitBool){{"safeeval"
+			,"Use safe evaluation?",1
+			,"Use 'safe' function evaluation routines (TRUE) or allow ASCEND to "
+			"throw SIGFPE errors which will then halt integration."
+		}, FALSE}
+	);
+
 
 	slv_param_bool(p,IDA_PARAM_ATOLVECT
 			,(SlvParameterInitBool){{"atolvect"
@@ -266,6 +275,8 @@ int integrator_ida_solve(
 	CONSOLE_DEBUG("STARTING IDA...");
 
 	enginedata = integrator_ida_enginedata(blsys);
+
+	enginedata->safeeval = SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_SAFEEVAL);
 	CONSOLE_DEBUG("safeeval = %d",enginedata->safeeval);
 
 	/* store reference to list of relations (in enginedata) */

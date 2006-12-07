@@ -1,0 +1,118 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(*
+ * -----------------------------------------------------------------
+ * Example problem for IDA: 2D heat equation, serial, GMRES.
+ *
+ * This example solves a discretized 2D heat equation problem.
+ * This version uses the Krylov solver IDASpgmr.
+ *
+ * The DAE system solved is a spatial discretization of the PDE
+ *          du/dt = d^2u/dx^2 + d^2u/dy^2
+ * on the unit square. The boundary condition is u = 0 on all edges.
+ * Initial conditions are given by u = 16 x (1 - x) y (1 - y). The
+ * PDE is treated with central differences on a uniform M x M grid.
+ * The values of u at the interior points satisfy ODEs, and
+ * equations u = 0 at the boundaries are appended, to form a DAE
+ * system of size N = M^2. Here M = 10.
+ *
+ * The system is solved with IDA/IDAS using the Krylov linear solver
+ * IDASPGMR. The preconditioner uses the diagonal elements of the
+ * Jacobian only. Routines for preconditioning, required by
+ * IDASPGMR, are supplied here. The constraints u >= 0 are posed
+ * for all components. Output is taken at t = 0, .01, .02, .04,
+ * ..., 10.24. Two cases are run -- with the Gram-Schmidt type
+ * being Modified in the first case, and Classical in the second.
+ * The second run uses IDAReInit and IDAReInitSpgmr.
+ * -----------------------------------------------------------------
+*)
+MODEL idakryx;
+
+	M IS_A integer_constant;
+	M :== 10;
+
+	dx IS_A real_constant;
+	dx :== 1 / (M - 1);
+
+	coeff IS_A real_constant;
+	coeff :== 1/dx^2;
+
+	u[0..M-1][0..M-1] IS_A solver_var;
+	udot[0..M-1][0..M-1] IS_A solver_var;
+	
+	t IS_A time;
+
+	(* central difference equations for internal points *)
+	FOR i IN [1..M-2] CREATE
+		FOR j IN [1..M-2] CREATE
+			udoteq[i][j]: udot[i][j] = coeff * (
+				(* u_yy *) u[i-1][j] + u[i+1][j] - 2*u[i][j]
+				+ (* u_xx *) u[i][j-1] + u[i][j+1] - 2*u[i][j]
+			);
+		END FOR;
+	END FOR;
+
+	(* boundary conditions: constrained u = 0 *)
+
+	(* top and bottom *)
+	FOR i IN [0,M-1] CREATE
+		FOR j IN[0..M-1] CREATE
+			topbot[i][j]: u[i][j] = 0;
+(*			udot1[i][j]: udot[i][j] = 0; *)
+		END FOR;
+	END FOR;
+	
+	(* sides *)
+	FOR i IN [1..M-2] CREATE
+		FOR j IN[0,M-1] CREATE
+			sides[i][j]: u[i][j] = 0;
+(*			udot2[i][j]: udot[i][j] = 0; *)
+		END FOR;
+	END FOR;
+
+METHODS
+METHOD on_load;
+	RUN specify;
+	RUN values;
+	RUN ode_init;
+END on_load;
+
+METHOD specify;
+	FIX udot[1..M-2][1..M-2];
+(*
+	FIX udot[0,M-1][0..M-1];
+	FIX udot[1..M-2][0,M-1];
+*)
+END specify;
+
+
+METHOD values;
+	t := 0 {s};
+	FOR i IN [0..M-1] DO
+		FOR j IN [0..M-1] DO
+			u[i][j] := 16 * (dx*j) * (1 - dx*j) * dx*i * (1 - dx*i);
+		END FOR;
+	END FOR;
+END values;
+
+METHOD ode_init;
+	FREE udot[1..M-2][1..M-2];
+	FREE udot[0,M-1][0..M-1];
+	FREE udot[1..M-2][0,M-1];
+
+	FOR i IN [0..M-1] DO
+		FOR j IN[0..M-1] DO
+			u[i][j].ode_id := i*M + j;
+			udot[i][j].ode_id := i*M + j;
+
+			u[i][j].ode_type := 1;
+			udot[i][j].ode_type := 2;
+		END FOR;
+	END FOR;
+
+	t.ode_type := -1;
+	
+END ode_init;
+
+END idakryx;
