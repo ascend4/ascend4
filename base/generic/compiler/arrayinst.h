@@ -167,8 +167,13 @@ typedef void (*AVProc)(struct Instance *);
 
 extern void ArrayVisitLocalLeaves(struct Instance *mch, AVProc func);
 /**<
- *  This function visits the instances indicated by the name
- *  given in the definition statement of mch.ASC_DLLSPEC(struct Instance*) ChildByChar(CONST struct Instance *i,
+	This function visits the instances indicated by the name
+	given in the definition statement of mch.
+	func is as described in visitinst.h for VisitProc.
+	mch is an array instance that is the child of a MODEL.
+*/
+
+ASC_DLLSPEC(struct Instance*) ChildByChar(CONST struct Instance *i,
                                     symchar *str);
 /**<
  *  This returns to the pointer to a child, c, of parent,p, named by str.
