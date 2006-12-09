@@ -1,4 +1,4 @@
-import os, commands, platform, distutils.sysconfig, os.path, re
+import sys, os, commands, platform, distutils.sysconfig, os.path, re
 
 version = "0.9.5.103"
 
@@ -1292,9 +1292,10 @@ if env['STATIC_TCLTK']:
 # check that we can link to the python library OK:
 
 if platform.system()=="Windows":
-	python_lib='python24'
+	python_lib='python%d%d'
 else:
-	python_lib='python2.4'
+	python_lib='python%d.%d'
+python_lib = python_lib % (sys.version_info[0],sys.version_info[1])
 
 # SWIG version
 
