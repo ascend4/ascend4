@@ -418,7 +418,7 @@ int32 var_apply_filter(const struct var_variable *var,
 	const var_filter_t *filter
 ){
   if (var==NULL || filter==NULL || var->ratom == NULL) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"'%s' miscalled with NULL",__FUNCTION__);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"miscalled with NULL");
     return FALSE;
   }
   /* AND to mask off irrelevant bits in flags and match value, then compare */

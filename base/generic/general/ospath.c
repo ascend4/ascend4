@@ -40,6 +40,10 @@
 
 /* to test this code, 'gcc -DTEST ospath.c && ./a' */
 
+#ifndef __FUNCTION__
+# define __FUNCTION__ "<ospath>"
+#endif
+
 
 /* #define VERBOSE */
 
@@ -112,7 +116,7 @@
 struct FilePath{
     char path[PATH_MAX]; /** the string version of the represented POSIX path */
 
-#ifdef WINPATHS
+#ifdef WINPATHs
     char drive[DRIVEMAX]; /** the drive the path resides on (field is absent in POSIX systems) */
 #endif
 };
