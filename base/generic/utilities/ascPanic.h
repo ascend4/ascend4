@@ -32,6 +32,10 @@
 #ifndef ASC_ASCPANIC_H
 #define ASC_ASCPANIC_H
 
+#ifndef __FUNCTION__
+# define __FUNCTION__ "<unknown>"
+#endif
+
 /**
 	Our assert macro. Uses Asc_Panic() to report & handle assertion failure. Disabled if ASC_NO_ASSERTIONS is defined.
 */

@@ -134,7 +134,7 @@ struct Instance *GetSubjectInstance(struct gl_list_t *arglist,
       if (count>=varndx){
 	safetycheck = len2-count+varndx;
 	if (safetycheck<=0){
-	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Something really wrong (%s)",__FUNCTION__);
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Something really wrong");
 	  return NULL;
 	}
 	arg = (struct Instance *)gl_fetch(branch,(unsigned long)safetycheck);
