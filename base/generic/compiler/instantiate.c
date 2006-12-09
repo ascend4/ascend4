@@ -713,10 +713,7 @@ int FindExprType(CONST struct Expr *ex, struct Instance *parent,
     if (g_iteration>=(MAXNUMBER)) {
       /* referencing g_iteration sucks, but seeing spew sucks more.*/
       /* WUM, which we want, needs a statement ptr we can't supply. */
-      FPRINTF(ASCERR,"Heuristic FindExprType failed. Check your indices.\n");
-      FPRINTF(ASCERR,"Report this failure to %s if no apparent error.\n",
-              ASC_MILD_BUGMAIL);
-      FPRINTF(ASCERR,"Assuming integer array index.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Heuristic FindExprType failed. Check your indices. Assuming integer array index.");
     }
     return -1;
   }
@@ -1700,9 +1697,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
   /* get instance  and assign. */
   setinstl = FindInstances(inst,NamePointer(vlist),&ferr);
   if (setinstl == NULL || gl_length(setinstl) != 1L) {
-    FPRINTF(ASCERR,"Unable to construct set.\n");
-    FPRINTF(ASCERR,"Bizarre error in ALIASES-IS_A. Please report it to:\n%s",
-      ASC_BIG_BUGMAIL);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to construct set. Bizarre error in ALIASES-IS_A.");
     if (setinstl!=NULL) {
       gl_destroy(setinstl);
     }

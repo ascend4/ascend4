@@ -1,29 +1,29 @@
-/*
- *  Test runner for ASCEND base library.
- *
- *  Copyright (C) 2005 Jerry St.Clair
- *
- *  This file is part of the Ascend Environment.
- *
- *  The Ascend Environment is free software; you can redistribute it
- *  and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Environment is distributed in hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2005 Jerry St.Clair
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	Test runner for the 'base/generic' routines in ASCEND
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
@@ -36,114 +36,135 @@
 #include <utilities/test/test_register_utilities.h>
 #include <solver/test/test_register_solver.h>
 
-int main(int argc, char* argv[])
-{
-  CU_BasicRunMode mode = CU_BRM_VERBOSE;
-  CU_ErrorAction error_action = CUEA_IGNORE;
-  CU_ErrorCode result;
-  int print_messages = FALSE;
-  int i;
+static int test_register_all(){
+	test_register_general();
+	test_register_utilities();
+	test_register_solver();
+}
 
-  error_reporter_set_callback(NULL);
+int run_suite_or_test(char *name){
+	char suitename[1000];
+	char *s,*n;
+	for(s=suitename,n=name; *n!='.' && *n!='\0' && s < suitename+999; *s++=*n++);
+	*s='\0';
+	struct CU_TestRegistry *reg = CU_get_registry();
+	struct CU_Suite *suite = reg->pSuite;
+	struct CU_Test *test;
+	CU_ErrorCode result;
+	while(suite!=NULL){
+		fprintf(stderr,"Looking at suite %s\n", suite->pName);
+		if(0==strcmp(suite->pName,suitename)){
+			fprintf(stderr,"Found suite %s\n", suitename);
+			if(*n=='.'){
+				++n;
+				fprintf(stderr,"Looking for test %s\n", n);					
+				test = suite->pTest;
+				while(test!=NULL){
+					fprintf(stderr,"Found test %s\n", test->pName);					
+					if(0==strcmp(test->pName,n)){
+						fprintf(stderr,"Running test %s (%p, %p)\n", n,suite,test);			
+						result = CU_basic_run_test(suite,test);
+						fprintf(stderr,"Result = %d\n",result);
+						fprintf(stderr,"Result: %s\n",CU_get_error_msg());
+						return result;
+					}
+					test = test->pNext;
+				}
+				return CUE_NO_TESTNAME;
+			}else{
+				fprintf(stderr,"Running suite %s\n",suitename);
+				result = CU_basic_run_suite(suite);
+				fprintf(stderr,"Result = %d\n",result);
+				fprintf(stderr,"Result: %s\n",CU_get_error_msg());
+				return result;
+			}	
+		}
+		suite = suite->pNext;
+	}
+	return CUE_NO_SUITENAME;
+};
 
-/*  setvbuf(stdout, NULL, _IONBF, 0); */
-
-  for (i=1 ; i<argc ; i++) {
-    if (!strcmp("-i", argv[i])) {
-      error_action = CUEA_IGNORE;
-    }
-    else if (0 == strcmp("-f", argv[i])) {
-      error_action = CUEA_FAIL;
-    }
-    else if (0 == strcmp("-A", argv[i])) {
-      error_action = CUEA_ABORT;
-    }
-    else if (0 == strcmp("-s", argv[i])) {
-      mode = CU_BRM_SILENT;
-    }
-    else if (0 == strcmp("-n", argv[i])) {
-      mode = CU_BRM_NORMAL;
-    }
-    else if (0 == strcmp("-v", argv[i])) {
-      mode = CU_BRM_VERBOSE;
-    }
-    else if (0 == strcmp("-d", argv[i])) {
-      print_messages = FALSE;
-    }
-    else if (0 == strcmp("-w", argv[i])) {
-      print_messages = TRUE;
-    }
-    else {
-      printf("\nUsage:  %s [options]\n\n"
-               "Options:   -i   ignore framework errors [default].\n"
-               "           -f   fail on framework error.\n"
-               "           -A   abort on framework error.\n\n"
-               "           -s   silent mode - no output to screen.\n"
-               "           -n   normal mode - standard output to screen.\n"
-               "           -v   verbose mode - max output to screen [default].\n\n"
-               "           -d   hide ASCEND messages [default].\n"
-               "           -w   print ASCEND messages to console.\n\n"
-               "           -h   print this message and exit.\n\n"
-          , argv[0]
-      );
-      return 1;
-    }
-  }
-
-  /* initialize testing framework */
-  result = CU_initialize_registry();
-  if (CUE_SUCCESS != result) {
-    fprintf(stderr, "\nInitialization of Test Registry failed - Aborting.");
-    return result;
-  }
-
-  /* register 'general' component */
-  result = test_register_general();
-  if (CUE_SUCCESS != result) {
-    fprintf(stderr, "\nError during registration of general component tests.  "
-                    "\nError code = %d (%s).",
-                    result, CU_get_error_msg());
-    return result;
-  }
-
-  /* register 'utilities' component */
-  result = test_register_utilities();
-  if (CUE_SUCCESS != result) {
-    fprintf(stderr, "\nError during registration of utilities component tests.  "
-                    "\nError code = %d (%s).",
-                    result, CU_get_error_msg());
-    return result;
-  }
-
-  /* register 'solver' component */
-  result = test_register_solver();
-  if (CUE_SUCCESS != result) {
-    fprintf(stderr, "\nError during registration of solver component tests.  "
-                    "\nError code = %d (%s).",
-                    result, CU_get_error_msg());
-    return result;
-  }
-/*
-  if (TRUE == print_messages) {
-    test_enable_printing();
-  }
+/**
+	Main routine, handles command line options
 */
-  /* Asc_RedirectCompilerDefault(); */ /* direct internal named streams to std streams */
-  CU_basic_set_mode(mode);
-  CU_set_error_action(error_action);
-  result = CU_basic_run_tests();
-  CU_cleanup_registry();
+int main(int argc, char* argv[]){
+	CU_BasicRunMode mode = CU_BRM_VERBOSE;
+	CU_ErrorAction error_action = CUEA_IGNORE;
+	CU_ErrorCode result;
 
-  if (CU_BRM_VERBOSE == mode) {
-    ascshutdown("Testing completed.");    /* shut down memory manager */
-  }
+	static struct option long_options[] = {
+		{"on-error", required_argument, 0, 'e'},
+		{"verbose",  no_argument,       0, 'v'},
+		{"silent",   no_argument,       0, 's'},
+		{"normal",   no_argument,       0, 'n'},
+		{"help",     no_argument,       0, '?'},
+		{"usage",    no_argument,       0, '?'},
+		{0, 0, 0, 0}
+	};
 
-  fprintf(stderr,"RETURN CODE = %d\n\n", result);
+	/* getopt_long stores the option index here. */
+	int option_index = 0;
 
-/*
-  if (TRUE == print_messages) {
-    test_disable_printing();
-  }
-*/
-  return result;
+	const char *usage = 
+		"%s -vsne [SuiteName|SuiteName.testname] ...\n"
+		"Test ASCEND base/generic routines\n"
+		"options:\n"
+		"    --verbose, -v   full output, including memory checking\n"
+		"    --silent, -s\n"
+		"    --normal, -n\n"
+		"    --on-error=[fail|abort|ignore], -e\n"
+		"    --help\n";
+
+	char c;
+	while(-1 != (c = getopt_long (argc, argv, "vsne:", long_options, &option_index))){
+		switch(c){
+			case 'v': mode = CU_BRM_VERBOSE; break;
+			case 's': mode = CU_BRM_SILENT; break;
+			case 'n': mode = CU_BRM_NORMAL; break;
+			case 'e':
+				fprintf(stderr,"Got option 'e'\n"); exit(1);
+				if(0==strcmp(optarg,"fail")) error_action = CUEA_FAIL;
+				else if(0==strcmp(optarg,"abort")) error_action = CUEA_ABORT;
+				else if(0==strcmp(optarg,"ignore")) error_action = CUEA_IGNORE;
+				else fprintf(stderr,"Invalid argument for --on-error option!\n"); exit(1);
+				break;
+			case '?':
+			case 'h':
+				fprintf(stderr,usage,argv[0]);
+				exit(1);
+			default:
+				fprintf(stderr,"Unknown option -- '%c'", c);
+				fprintf(stderr,usage,argv[0]);
+				exit(2);
+		}
+	}
+
+	CU_initialize_registry();
+	test_register_all();
+	CU_basic_set_mode(mode);
+	CU_set_error_action(error_action);
+
+	/* any remaining command-line arguments will be specific test suites and/or tests to run */
+	if(optind < argc){
+		while(optind < argc){
+			result = run_suite_or_test(argv[optind]);
+			if(result==CUE_NO_SUITENAME){
+				fprintf(stderr,"Invalid suite name '%s'\n", argv[optind]);
+				exit(1);
+			}else if(result==CUE_NO_TESTNAME){
+				fprintf(stderr,"Invalid test name '%s'\n", argv[optind]);
+				exit(1);
+			}
+			optind++;				
+		}
+	}else{
+		result = CU_basic_run_tests();
+	}
+
+	CU_cleanup_registry();
+
+	if(mode == CU_BRM_VERBOSE)ascshutdown("Testing completed.");/* shut down memory manager */
+
+	fprintf(stderr,"RETURN CODE = %d\n", result);
+	return result;
 }

@@ -2578,8 +2578,7 @@ void SearchStr(char *str, char *temp)
 	break;
       default:
 	Bell();
-	PRINTF("Unexpected error in FindInstanceLimits.\n");
-	PRINTF("Report to %s\n",ASC_MILD_BUGMAIL);
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unexpected error in FindInstanceLimits.");
 	break;
       }
       ptr = temp;

@@ -58,9 +58,10 @@ static void test_readln(void)
 
   /* test readln() */
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     fclose(infile);
-    infile = redirect_stdin(infilename);
+    infile = redirect_redirectstdin(infilename);
     CU_TEST(-1 == readln(NULL, STR_LEN));             /* NULL str */
     rewind(infile);
     CU_TEST(0 == readln(str1, 0));                    /* max = 0 */
@@ -71,7 +72,9 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     snprintf(str2, STR_LEN, "This is the string we expect back from readln()?\n");
     fputs(str2, infile);
@@ -88,7 +91,9 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     snprintf(str2, STR_LEN, "\nThis is the string we expect back from readln()?\n");
     fputs(str2, infile);
@@ -105,6 +110,7 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
   /* test freadln() */
 
@@ -154,6 +160,7 @@ static void test_readln(void)
 
   /* test areadln() */
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     fclose(infile);
     infile = redirect_stdin(infilename);
@@ -166,7 +173,9 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     snprintf(str2, STR_LEN, "This is the string we expect back from areadln()?\n");
     fputs(str2, infile);
@@ -183,7 +192,9 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     snprintf(str2, STR_LEN, "\nThis is the string we expect back from areadln()?\n");
     fputs(str2, infile);
@@ -205,6 +216,7 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
   /* test afreadln() */
 
@@ -257,6 +269,7 @@ static void test_readln(void)
 
   /* test readlong() */
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     fclose(infile);
     infile = redirect_stdin(infilename);
@@ -267,7 +280,9 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     snprintf(str2, STR_LEN, "98765This is the string we expect back from areadln()?\n");
     fputs(str2, infile);
@@ -280,7 +295,9 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     snprintf(str2, STR_LEN, "\n-837\n");
     fputs(str2, infile);
@@ -295,9 +312,11 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
   /* test readdouble() */
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     fclose(infile);
     infile = redirect_stdin(infilename);
@@ -308,7 +327,9 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     snprintf(str2, STR_LEN, "-3.5670384e199This is the string we expect back from areadln()?\n");
     fputs(str2, infile);
@@ -321,7 +342,9 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
+#if 0 /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
     snprintf(str2, STR_LEN, "\n-642542146Good bye!\n");
     fputs(str2, infile);
@@ -336,6 +359,7 @@ static void test_readln(void)
   else {
     CU_FAIL("Output file could not be opened in test_readln().");
   }
+#endif
 
   if (TRUE == i_enabled_printing) {
     test_disable_printing();

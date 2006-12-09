@@ -243,7 +243,6 @@
  */
 
 /* for use by ascmalloc, which is also practically everywhere */
-#include <stdio.h>
 #include <assert.h>
 #include <string.h>
 /*
@@ -264,10 +263,6 @@
 #endif
 
 #define VOIDPTR void *
-
-/* Updated the following to use new Wiki URLS */
-#define ASC_MILD_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
-#define ASC_BIG_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
 
 #ifdef REIMPLEMENT_STREAMS
 ASC_DLLSPEC(FILE*) g_ascend_errors;         /**< File stream to receive error messages. */

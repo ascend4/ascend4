@@ -137,9 +137,7 @@ int CheckInstanceType(FILE *f, CONST struct Instance *i,
 	ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Instance is not of a valid type in CheckInstanceType");
     FPRINTF(f,"A child of ");
     WriteInstanceName(f,parent,NULL);
-    FPRINTF(f," is an incorrect data type.\n");
-    FPRINTF(f,"This is the most serious type of error.\n");
-    FPRINTF(f,"Please report this to %s\n",ASC_BIG_BUGMAIL);
+    FPRINTF(f," is an incorrect data type. Please report this bug!");
     return 1;
   }
 }

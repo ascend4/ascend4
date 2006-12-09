@@ -30,6 +30,7 @@
 #include <utilities/ascSignal.h>
 #include "CUnit/CUnit.h"
 #include "test_ascSignal.h"
+#include "printutil.h"
 
 static jmp_buf my_jmp_buf1;
 
@@ -110,6 +111,11 @@ static void test_ascSignal(void)
   volatile int signal2_caught;
   volatile int signal3_caught;
   unsigned long prior_meminuse;
+
+  CONSOLE_DEBUG("Output from console_debug");
+  fprintf(stderr,"Output from fprintf\n");
+  CONSOLE_DEBUG("2 Output from console_debug");
+  fprintf(stderr,"2 Output from fprintf\n");
 
   prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
 

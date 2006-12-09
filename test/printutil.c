@@ -34,29 +34,38 @@
 static struct Asc_PrintVTable f_vtable = {f_vtable_name, vfprintf, fflush, NULL};
 static int f_vtable_registered = FALSE;
 
-int test_enable_printing(void)
-{
-  if (TRUE == f_vtable_registered) {
-    return TRUE;
-  }
-  else {
-    f_vtable_registered = TRUE;
-    return (0 == Asc_PrintPushVTable(&f_vtable)) ? TRUE : FALSE ;
-  }
+int test_enable_printing(void){
+	fprintf(stderr,"PRINTING ENABLED\n");
+	return TRUE;
+
+	/* old code... */
+	if (TRUE == f_vtable_registered) {
+		fprintf(stderr,"PRINTING *ALREADY* ENABLED\n");
+		return TRUE;
+	}
+	else {
+		fprintf(stderr,"PRINTING ENABLED\n");
+		f_vtable_registered = TRUE;
+		return (0 == Asc_PrintPushVTable(&f_vtable)) ? TRUE : FALSE ;
+	}
 }
 
 
-void test_disable_printing(void)
-{
-  if (TRUE == f_vtable_registered) {
-    f_vtable_registered = FALSE;
-    Asc_PrintRemoveVTable(f_vtable_name);
-  }
+void test_disable_printing(void){
+	fprintf(stderr,"PRINTING DISABLED\n");
+	return;
+
+	/* old code... */
+	if (TRUE == f_vtable_registered) {
+		f_vtable_registered = FALSE;
+		Asc_PrintRemoveVTable(f_vtable_name);
+	}
 }
 
 
-int test_printing_enabled(void)
-{
-  return f_vtable_registered;
+int test_printing_enabled(void){
+	return TRUE;
+
+	return f_vtable_registered;
 }
 

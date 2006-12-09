@@ -34,6 +34,8 @@
 
 #include "redirectStdStreams.h"
 
+#if 0 
+
 static FILE *f_stdin_file = NULL;
 static int f_stdin_handle = -1;
 static int f_stdin_fileno = -1;
@@ -172,6 +174,7 @@ FILE *redirect_stderr(CONST char *filename)
 
 FILE *reset_stderr(void)
 {
+  fprintf(stderr,"\n\n\n\n\nREDIRECTING STDERR!\n\n\n\n");
   if (NULL != f_stderr_file) {
     fflush(f_stderr_file);
     fclose(f_stderr_file);
@@ -186,4 +189,6 @@ FILE *reset_stderr(void)
   f_stderr_handle = -1;
   return stderr;
 }
+
+#endif
 
