@@ -33,6 +33,8 @@
 #ifndef REDIRECTSTDSTREAMS_H_SEEN
 #define REDIRECTSTDSTREAMS_H_SEEN
 
+#if 0 /* disabling this stuff (it was making it hard to debug tests) */
+
 FILE *redirect_stderr(CONST char *filename);
 /**<
  *  Redirects stderr to the specified file.
@@ -87,5 +89,7 @@ FILE *reset_stdout(void);
  *  to the new stdout stream.  Returns NULL if stdout could not
  *  be reset.
  */
+
+#endif
 
 #endif  /* REDIRECTSTDSTREAMS_H_SEEN */

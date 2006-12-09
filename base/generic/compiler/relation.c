@@ -2616,8 +2616,7 @@ int ConvertSubExpr(CONST struct Expr *ptr,
         DestroyValue(&cvalue);
         return 1;
       default:
-        FPRINTF(ASCERR,"This message should never occur.\n");
-        FPRINTF(ASCERR,"If it does tell %s\n",ASC_BIG_BUGMAIL);
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid case reached!");
         DestroyValue(&cvalue);
         *err = incorrect_structure;
         return 1;
@@ -2641,7 +2640,7 @@ int ConvertSubExpr(CONST struct Expr *ptr,
       break;
     default:
       *err = incorrect_structure;
-      FPRINTF(ASCERR,"incorrect_structure in ConvertSubExpr 2\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"incorrect_structure in ConvertSubExpr 2!");
       return 1;
 
     }

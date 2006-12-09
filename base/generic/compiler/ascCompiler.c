@@ -127,8 +127,6 @@ void InterfaceNotifyProc(char *ptr, struct Instance *old, struct Instance *new)
       FPRINTF(stderr,
               "Simulation %s has been relocated for your information.\n",
               GetSimulationName(sptr));
-      FPRINTF(stderr,"If you see this message please report it to\n");
-      FPRINTF(stderr,"\t%s\n",ASC_BIG_BUGMAIL);
     }
   }
 #endif

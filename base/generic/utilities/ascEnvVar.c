@@ -109,7 +109,10 @@ void DestroyEnvVar(struct asc_env_t *ev)
 /*
  * compare two env variable data blobs by name.
  */
-static
+
+CmpFunc CmpEv;
+
+static 
 int CmpEV(struct asc_env_t *ev1, struct asc_env_t *ev2)
 {
   if (ev1==ev2) {

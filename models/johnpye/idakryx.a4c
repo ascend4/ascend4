@@ -30,7 +30,7 @@ REQUIRE "atoms.a4l";
 MODEL idakryx;
 
 	M IS_A integer_constant;
-	M :== 10;
+	M :== 4;
 
 	dx IS_A real_constant;
 	dx :== 1 / (M - 1);
@@ -92,6 +92,11 @@ METHOD values;
 	FOR i IN [0..M-1] DO
 		FOR j IN [0..M-1] DO
 			u[i][j] := 16 * (dx*j) * (1 - dx*j) * dx*i * (1 - dx*i);
+		END FOR;
+	END FOR;
+	FOR i IN [1..M-2] DO
+		FOR j IN [1..M-2] DO
+			u[i][j] := 0;
 		END FOR;
 	END FOR;
 END values;

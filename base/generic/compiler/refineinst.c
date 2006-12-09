@@ -188,8 +188,7 @@ static struct Instance *RefineRealConstant(struct RealConstantInstance *i,
   if (i->desc==type) return INST(i); /* if same type already, no work */
   if (ShortCutMakeUniversalInstance(type)) {
     /* NOT REACHED. see RefineRealAtom for expl. */
-    FPRINTF(ASCERR,"Program logic error in RefineRealConstant.\n");
-    FPRINTF(ASCERR,"Please report this message to %s.\n",ASC_BIG_BUGMAIL);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Program logic error in RefineRealConstant. Please report this bug!");
     return INST(i);
   }
   /* Work: new type is more refined, at least in the library */

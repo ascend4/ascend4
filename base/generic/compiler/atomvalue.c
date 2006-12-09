@@ -352,14 +352,13 @@ int AssignSetAtomList(struct Instance *i, struct set_t *list){
       return 0;
     }
     if (SA_INST(i)->list != NULL) {
-      FPRINTF(ASCERR,"AssignSetAtomList called on fixed set instance.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"AssignSetAtomList called on fixed set instance.");
       if (SetsEqual(list,SA_INST(i)->list)){ /* benign assignment */
-        FPRINTF(ASCERR,
-          "The assignment is benign(assigns the same value), %s %s.\n",
-          "so the program can continue\nrunning.  Report this message to",
-          ASC_MILD_BUGMAIL);
-        FPRINTF(ASCERR,"and or stop writing buggy models.\n");
-	DestroySet(SA_INST(i)->list);
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,
+			"The assignment is benign(assigns the same value) so the "
+			" program can continue running."
+		);
+        DestroySet(SA_INST(i)->list);
       } else {
 	return 0;
       }
@@ -369,19 +368,21 @@ int AssignSetAtomList(struct Instance *i, struct set_t *list){
   case SET_INST:
     if ((SetKind(list)!=empty_set)&&
 	((S_INST(i)->int_set==1)!=(SetKind(list)==integer_set))){
-      FPRINTF(ASCERR,"AssignSetAtomList called with mismatching set:\n");
+      ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
+	  FPRINTF(ASCERR,"AssignSetAtomList called with mismatching set:\n");
       WriteInstSet(ASCERR,list);
       FPRINTF(ASCERR,"\n");
+	  error_reporter_end_flush();
       return 0;
     }
     if (S_INST(i)->list != NULL) {
-      FPRINTF(ASCERR,"AssignSetAtomList called on fixed set instance.\n");
-      if (SetsEqual(list,S_INST(i)->list)){ /* benign assignment */
-        FPRINTF(ASCERR,
-          "The assignment is benign(assigns the same value), %s %s.\n",
-          "so the program can continue\nrunning.  Report this message to",
-          ASC_MILD_BUGMAIL);
-        FPRINTF(ASCERR,"and or stop writing buggy models.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"AssignSetAtomList called on fixed set instance.\n");
+      if(SetsEqual(list,S_INST(i)->list)){
+        /* benign assignment */
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,
+			"The assignment is benign(assigns the same value) so the "
+			" program can continue running."
+		);
 	DestroySet(S_INST(i)->list);
       } else {
 	return 0;

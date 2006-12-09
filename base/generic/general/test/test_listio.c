@@ -97,6 +97,8 @@ static void test_listio(void)
     CU_FAIL("Error opening output file 1 in test_listio.c");
   }
 
+#if 0 /* removing stream redirection (too damn confusing) */
+
   if (NULL != (file_stderr = redirect_stderr("listiotempstderr.tmp"))) {
 
     gl_write_list(NULL, p_list1);       /* write to stderr */
@@ -125,6 +127,7 @@ static void test_listio(void)
     CU_FAIL("Error opening output file 2 in test_listio.c");
   }
   remove("listiotempfile.tmp");
+#endif
 
   gl_destroy(p_list1);                  /* clean up the list, preserving data */
 

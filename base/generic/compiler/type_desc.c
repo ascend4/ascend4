@@ -176,10 +176,9 @@ void LinkTypeDesc(struct TypeDescription *old,
                   struct TypeDescription *new)
 {
   if (old==NULL || new == NULL) {
-    Asc_Panic(2, NULL,
-              "Attempt to link bad types- old (%p) new (%p)\n"
-              "Extreme error. Please notify \n\t%s\n",
-              old, new, ASC_BIG_BUGMAIL);
+    Asc_Panic(2, NULL,"Attempt to link bad types- old (%p) new (%p)."
+		,old, new
+	);
   }
   if (old->refiners == NULL) {
     old->refiners = gl_create(2);

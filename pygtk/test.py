@@ -14,7 +14,7 @@ class CUnit(unittest.TestCase):
 		else:
 			print "CUnit returned %s" % res
 
-class AscendTest(unittest.TestCase):
+class Ascend(unittest.TestCase):
 
 	def setUp(self):
 		import ascpy

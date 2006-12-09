@@ -31,8 +31,6 @@
 	by Benjamin Andrew Allan, May 27, 1997
 	Last in CVS $Revision: 1.9 $ $Date: 1999/01/19 12:23:20 $ $Author: mthomas $
 	
-	ChangeLog
-
 	10/15/2005  - Changed ascresetneeded() so that any previously
 	              registered handlers are reset before return.
 	            - Added Asc_SignalRecover() to standard handler
@@ -58,6 +56,10 @@
 
 #include "ascMalloc.h"
 #include "ascSignal.h"
+
+/*------------------------------------------------------------------------------
+  GLOBALS AND FOWARD DECS
+*/
 
 #if !defined(NO_SIGINT_TRAP) || !defined(NO_SIGSEGV_TRAP)
 static jmp_buf f_test_env;    /* for local testing of signal handling */
@@ -87,6 +89,220 @@ static int f_int_top_of_stack = -1;     /**< top of SIGFPE stack, -1 for empty *
 
 static SigHandlerFn **f_seg_traps = NULL;  /**< array for pushed SIGSEGV handlers */
 static int f_seg_top_of_stack = -1;     /**< top of SIGFPE stack, -1 for empty */
+
+static int ascresetneeded(void);
+static void initstack (SigHandlerFn **traps, int *stackptr, int sig);
+static int pop_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp);
+static int push_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp);
+static void reset_trap(int signum, SigHandlerFn **tlist, int tos);
+
+/*------------------------------------------------------------------------------
+  API FUNCTIONS
+*/
+
+/**
+	Initialise ASCEND signal handling
+
+	Does not establish any traps, just the structures for maintaining them. 
+	Pushes the existing traps, if any, on the bottom of the created stacks.
+
+	@NOTE Cannot be called twice successfully.
+
+	@return 0 if successful, 1 if out of memory, 2 otherwise.
+*/
+int Asc_SignalInit(void)
+{
+  if (f_reset_needed != -2) {
+    return 2;
+  }
+
+  /* initialize SIGFPE stack */
+  if (f_fpe_traps == NULL) {
+    f_fpe_traps = ASC_NEW_ARRAY_CLEAR(SigHandlerFn*,MAX_TRAP_DEPTH);
+    if (f_fpe_traps == NULL) {
+      return 1;
+    }
+  }
+  f_fpe_top_of_stack = -1;
+
+  /* initialize SIGINT stack */
+  if (f_int_traps == NULL) {
+    f_int_traps = ASC_NEW_ARRAY_CLEAR(SigHandlerFn*,MAX_TRAP_DEPTH);
+    if (f_int_traps == NULL) {
+      ascfree(f_fpe_traps);
+      f_fpe_traps = NULL;
+      return 1;
+    }
+  }
+  f_int_top_of_stack = -1;
+
+  /* initialize SIGSEGV stack */
+  if (f_seg_traps == NULL) {
+    f_seg_traps = ASC_NEW_ARRAY_CLEAR(SigHandlerFn*,MAX_TRAP_DEPTH);
+    if (f_seg_traps == NULL) {
+      ascfree(f_fpe_traps);
+      f_fpe_traps = NULL;
+      ascfree(f_int_traps);
+      f_int_traps = NULL;
+      return 1;
+    }
+  }
+  f_seg_top_of_stack = -1;
+
+#ifndef NO_SIGNAL_TRAPS
+  /* push the old ones if any, on the stack. */
+  initstack(f_fpe_traps, &f_fpe_top_of_stack, SIGFPE);
+
+# ifndef NO_SIGINT_TRAP
+  initstack(f_int_traps, &f_int_top_of_stack, SIGINT);
+# endif
+
+# ifndef NO_SIGSEGV_TRAP
+  initstack(f_seg_traps, &f_seg_top_of_stack, SIGSEGV);
+# endif
+
+  f_reset_needed = ascresetneeded();
+  if (f_reset_needed < 0) {
+	CONSOLE_DEBUG("RESET NEEDED");
+    f_reset_needed = 1;
+    return 2;
+  }
+#endif /* NO_SIGNAL_TRAPS */
+  return 0;
+}
+
+/**
+	Clears and destroys the stacks of signal handlers.
+*/
+void Asc_SignalDestroy(void)
+{
+  ascfree(f_fpe_traps);
+  ascfree(f_int_traps);
+  ascfree(f_seg_traps);
+  f_fpe_traps = f_int_traps = f_seg_traps =  NULL;
+  f_fpe_top_of_stack = f_int_top_of_stack = f_seg_top_of_stack =  -1;
+}
+
+/**
+	This function reinstalls all the signal handlers this module
+	has been informed of. This should be called after every
+	trapped exception and at any other time when the status of
+	exception handlers may have become not well defined.
+	The most recently pushed handler is installed for each supported
+	signal. If nothing on stack, SIG_DFL gets installed.
+
+	@NOTE that if somebody installs a handler without going through
+	our push/pop, theirs is liable to be forgotten.
+*/
+void Asc_SignalRecover(int force)
+{
+  if (force || f_reset_needed > 0) {
+#ifndef NO_SIGNAL_TRAPS
+    reset_trap(SIGFPE, f_fpe_traps, f_fpe_top_of_stack);
+    reset_trap(SIGINT, f_int_traps, f_int_top_of_stack);
+    reset_trap(SIGSEGV, f_seg_traps, f_seg_top_of_stack);
+#endif /* NO_SIGNAL_TRAPS */
+  }
+}
+
+/**
+	Add a handler to the stack of signal handlers for the given signal.
+
+	There is a maximum stack limit, so returns 1 if limit exceeded.
+	Returns -1 if stack of signal requested does not exist.
+	Pushing a NULL handler does NOT change anything at all.
+	On a successful return, the handler has been installed and will
+	remain installed until a Asc_SignalHandlerPop or another push.
+*/
+int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
+{
+  int err;
+  if (tp == NULL) {
+    return 0;
+  }
+  switch (signum) {
+    case SIGFPE:
+	  ERROR_REPORTER_DEBUG("PUSH SIGFPE");
+      err = push_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
+      break;
+    case SIGINT:
+	  ERROR_REPORTER_DEBUG("PUSH SIGINT");
+      err = push_trap(f_int_traps, &f_int_top_of_stack, tp);
+      break;
+    case SIGSEGV:
+	  ERROR_REPORTER_DEBUG("PUSH SIGSEGV");
+      err = push_trap(f_seg_traps, &f_seg_top_of_stack, tp);
+      break;
+    default:
+      return -1;
+  }
+  if (err != 0) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack limit exceeded.",signum);
+    return err;
+  }
+  (void)signal(signum, tp); /* install */
+  return 0;
+}
+
+/* see ascSignal.h */
+int Asc_SignalHandlerPop(int signum, SigHandlerFn *tp){
+  int err;
+  switch (signum) {
+  case SIGFPE:
+    ERROR_REPORTER_DEBUG("POP SIGFPE");
+    err = pop_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
+    break;
+  case SIGINT:
+    ERROR_REPORTER_DEBUG("POP SIGINT");
+    err = pop_trap(f_int_traps, &f_int_top_of_stack, tp);
+    break;
+  case SIGSEGV:
+    ERROR_REPORTER_DEBUG("POP SIGSEGV");
+    err = pop_trap(f_seg_traps, &f_seg_top_of_stack, tp);
+    break;
+  default:
+	CONSOLE_DEBUG("popping invalid signal type (signum = %d)", signum);
+    return -1;
+  }
+  if (err != 0 && tp != NULL) {
+	CONSOLE_DEBUG("stack pop mismatch");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack pop mismatch.",signum);
+    return err;
+  }
+  Asc_SignalRecover(TRUE);
+  return 0;
+}
+
+void Asc_SignalTrap(int sigval) {
+#ifndef NO_SIGNAL_TRAPS
+  switch(sigval) {
+  case SIGFPE:
+	CONSOLE_DEBUG("SIGFPE caught");
+    FPRESET;
+    longjmp(g_fpe_env,sigval);
+    break;
+  case SIGINT:
+	CONSOLE_DEBUG("SIGINT (Ctrl-C) caught");
+    longjmp(g_int_env,sigval);
+    break;
+  case SIGSEGV:
+	CONSOLE_DEBUG("SIGSEGV caught");
+    longjmp(g_seg_env,sigval);
+    break;
+  default:
+    CONSOLE_DEBUG("Installed on unexpected signal (sigval = %d).", sigval);
+    CONSOLE_DEBUG("Returning ... who knows where :-)");
+    break;
+  }
+  return;
+#else
+   UNUSED_PARAMETER(sigval);
+#endif /* NO_SIGNAL_TRAPS */
+}
+
+/*------------------------------------------------------------------------------
+  UTILITY FUNCTIONS
+*/
 
 #ifndef NO_SIGSEGV_TRAP
 /* function to throw an interrupt. system dependent. */
@@ -210,90 +426,7 @@ static void initstack (SigHandlerFn **traps, int *stackptr, int sig){
   }
 }
 
-/**
-	Initialise ASCEND signal handling
-
-	Does not establish any traps, just the structures for maintaining them. 
-	Pushes the existing traps, if any, on the bottom of the created stacks.
-
-	@NOTE Cannot be called twice successfully.
-
-	@return 0 if successful, 1 if out of memory, 2 otherwise.
-*/
-int Asc_SignalInit(void)
-{
-  if (f_reset_needed != -2) {
-    return 2;
-  }
-
-  /* initialize SIGFPE stack */
-  if (f_fpe_traps == NULL) {
-    f_fpe_traps = ASC_NEW_ARRAY_CLEAR(SigHandlerFn*,MAX_TRAP_DEPTH);
-    if (f_fpe_traps == NULL) {
-      return 1;
-    }
-  }
-  f_fpe_top_of_stack = -1;
-
-  /* initialize SIGINT stack */
-  if (f_int_traps == NULL) {
-    f_int_traps = ASC_NEW_ARRAY_CLEAR(SigHandlerFn*,MAX_TRAP_DEPTH);
-    if (f_int_traps == NULL) {
-      ascfree(f_fpe_traps);
-      f_fpe_traps = NULL;
-      return 1;
-    }
-  }
-  f_int_top_of_stack = -1;
-
-  /* initialize SIGSEGV stack */
-  if (f_seg_traps == NULL) {
-    f_seg_traps = ASC_NEW_ARRAY_CLEAR(SigHandlerFn*,MAX_TRAP_DEPTH);
-    if (f_seg_traps == NULL) {
-      ascfree(f_fpe_traps);
-      f_fpe_traps = NULL;
-      ascfree(f_int_traps);
-      f_int_traps = NULL;
-      return 1;
-    }
-  }
-  f_seg_top_of_stack = -1;
-
-#ifndef NO_SIGNAL_TRAPS
-  /* push the old ones if any, on the stack. */
-  initstack(f_fpe_traps, &f_fpe_top_of_stack, SIGFPE);
-
-# ifndef NO_SIGINT_TRAP
-  initstack(f_int_traps, &f_int_top_of_stack, SIGINT);
-# endif
-
-# ifndef NO_SIGSEGV_TRAP
-  initstack(f_seg_traps, &f_seg_top_of_stack, SIGSEGV);
-# endif
-
-  f_reset_needed = ascresetneeded();
-  if (f_reset_needed < 0) {
-    f_reset_needed = 1;
-    return 2;
-  }
-#endif /* NO_SIGNAL_TRAPS */
-  return 0;
-}
-
-/**
-	Clears and destroys the stacks of signal handlers.
-*/
-void Asc_SignalDestroy(void)
-{
-  ascfree(f_fpe_traps);
-  ascfree(f_int_traps);
-  ascfree(f_seg_traps);
-  f_fpe_traps = f_int_traps = f_seg_traps =  NULL;
-  f_fpe_top_of_stack = f_int_top_of_stack = f_seg_top_of_stack =  -1;
-}
-
-static void reset_trap(int signum, SigHandlerFn **tlist, int tos)
-{
+static void reset_trap(int signum, SigHandlerFn **tlist, int tos){
   SigHandlerFn *tp;
   if ((tlist != NULL) && (tos >= 0) && (tos < MAX_TRAP_DEPTH)) {
     tp = tlist[tos];
@@ -304,33 +437,11 @@ static void reset_trap(int signum, SigHandlerFn **tlist, int tos)
     (void)signal(signum,SIG_DFL);
   }
 }
-/*
-	This function reinstalls all the signal handlers this module
-	has been informed of. This should be called after every
-	trapped exception and at any other time when the status of
-	exception handlers may have become not well defined.
-	The most recently pushed handler is installed for each supported
-	signal. If nothing on stack, SIG_DFL gets installed.
-
-	@NOTE that if somebody installs a handler without going through
-	our push/pop, theirs is liable to be forgotten.
-*/
-void Asc_SignalRecover(int force)
-{
-  if (force || f_reset_needed > 0) {
-#ifndef NO_SIGNAL_TRAPS
-    reset_trap(SIGFPE, f_fpe_traps, f_fpe_top_of_stack);
-    reset_trap(SIGINT, f_int_traps, f_int_top_of_stack);
-    reset_trap(SIGSEGV, f_seg_traps, f_seg_top_of_stack);
-#endif /* NO_SIGNAL_TRAPS */
-  }
-}
 
 /**
 	Append a pointer to the list given, if the list is not full.
 */
-static int push_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp)
-{
+static int push_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp){
   if (tlist == NULL) {
     CONSOLE_DEBUG("TLIST IS NULL");
     return -1;
@@ -352,44 +463,6 @@ static int push_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp)
   return 0;
 }
 
-/*
-	Add a handler to the stack of signal handlers for the given signal.
-
-	There is a maximum stack limit, so returns 1 if limit exceeded.
-	Returns -1 if stack of signal requested does not exist.
-	Pushing a NULL handler does NOT change anything at all.
-	On a successful return, the handler has been installed and will
-	remain installed until a Asc_SignalHandlerPop or another push.
-*/
-int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
-{
-  int err;
-  if (tp == NULL) {
-    return 0;
-  }
-  switch (signum) {
-    case SIGFPE:
-	  /*ERROR_REPORTER_DEBUG("PUSH SIGFPE");*/
-      err = push_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
-      break;
-    case SIGINT:
-	  /*ERROR_REPORTER_DEBUG("PUSH SIGINT");*/
-      err = push_trap(f_int_traps, &f_int_top_of_stack, tp);
-      break;
-    case SIGSEGV:
-	  /*ERROR_REPORTER_DEBUG("PUSH SIGSEGV");*/
-      err = push_trap(f_seg_traps, &f_seg_top_of_stack, tp);
-      break;
-    default:
-      return -1;
-  }
-  if (err != 0) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack limit exceeded.",signum);
-    return err;
-  }
-  (void)signal(signum, tp); /* install */
-  return 0;
-}
 
 /*
 	Returns: 0 -ok, 2 NULL list input, 1 empty list input,
@@ -408,59 +481,4 @@ static int pop_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp){
   tlist[*stackptr] = NULL;
   --(*stackptr);
   return (-(oldtrap != tp));
-}
-
-int Asc_SignalHandlerPop(int signum, SigHandlerFn *tp){
-  int err;
-  switch (signum) {
-  case SIGFPE:
-    /*ERROR_REPORTER_DEBUG("POP SIGFPE");*/
-    err = pop_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
-    break;
-  case SIGINT:
-    /*ERROR_REPORTER_DEBUG("POP SIGINT");*/
-    err = pop_trap(f_int_traps, &f_int_top_of_stack, tp);
-    break;
-  case SIGSEGV:
-    /*ERROR_REPORTER_DEBUG("POP SIGSEGV");*/
-    err = pop_trap(f_seg_traps, &f_seg_top_of_stack, tp);
-    break;
-  default:
-	CONSOLE_DEBUG("popping invalid signal type (signum = %d)", signum);
-    return -1;
-  }
-  if (err != 0 && tp != NULL) {
-	CONSOLE_DEBUG("stack pop mismatch");
-    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack pop mismatch.",signum);
-    return err;
-  }
-  Asc_SignalRecover(TRUE);
-  return 0;
-}
-
-void Asc_SignalTrap(int sigval) {
-#ifndef NO_SIGNAL_TRAPS
-  switch(sigval) {
-  case SIGFPE:
-	CONSOLE_DEBUG("SIGFPE caught");
-    FPRESET;
-    longjmp(g_fpe_env,sigval);
-    break;
-  case SIGINT:
-	CONSOLE_DEBUG("SIGINT (Ctrl-C) caught");
-    longjmp(g_int_env,sigval);
-    break;
-  case SIGSEGV:
-	CONSOLE_DEBUG("SIGSEGV caught");
-    longjmp(g_seg_env,sigval);
-    break;
-  default:
-    CONSOLE_DEBUG("Installed on unexpected signal (sigval = %d).", sigval);
-    CONSOLE_DEBUG("Returning ... who knows where :-)");
-    break;
-  }
-  return;
-#else
-   UNUSED_PARAMETER(sigval);
-#endif /* NO_SIGNAL_TRAPS */
 }
