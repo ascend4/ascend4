@@ -969,16 +969,19 @@ def CheckPythonLib(context):
 	lastLIBS = context.env.get('LIBS')
 	lastLIBPATH = context.env.get('LIBPATH')
 	lastCPPPATH = context.env.get('CPPPATH')
+	lastLINKFLAGS = context.env.get('LINKFLAGS')
 
 	python_libpath = []
+	python_linkflags = []
 	if cfig['LDLIBRARY']==cfig['LIBRARY']:
 		sys.stdout.write("(static)")
 		python_libpath += [cfig['LIBPL']]
-		python_libs += cfig['LIBS']
+		python_linkflags += cfig['LIBS']
 
 	context.env.AppendUnique(LIBS=python_libs)
 	context.env.AppendUnique(LIBPATH=python_libpath)
 	context.env.AppendUnique(CPPPATH=python_cpppath)
+	context.env.AppendUnique(LINKFLAGS=python_linkflags)
 	result = context.TryLink(libpython_test_text,".c");
 
 	context.Result(result)	
@@ -987,10 +990,12 @@ def CheckPythonLib(context):
 		context.env['PYTHON_LIBPATH']=python_libpath
 		context.env['PYTHON_LIB']=python_libs
 		context.env['PYTHON_CPPPATH']=python_cpppath
+		context.env['PYTHON_LINKFLAGS']=python_linkflags
 
 	context.env['LIBS'] = lastLIBS
 	context.env['LIBPATH'] = lastLIBPATH
 	context.env['CPPPATH'] = lastCPPPATH
+	context.env['LINKFLAGS'] = lastLINKFLAGS
 
 	return result
 
