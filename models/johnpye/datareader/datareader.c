@@ -243,5 +243,4 @@ int asc_datareader_calc(struct BBoxInterp *slv_interp,
 
 void asc_datareader_close(struct BBoxInterp *slv_interp){
 	CONSOLE_DEBUG("NOT IMPLEMENTED");
-	return 1;
 }
