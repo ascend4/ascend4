@@ -961,7 +961,7 @@ def CheckPythonLib(context):
 		python_lib='python%d%d'
 	else:
 		python_lib='python%d.%d'
-	python_lib = python_lib % (sys.version_info[0],sys.version_info[1])
+	python_libs = [python_lib % (sys.version_info[0],sys.version_info[1])]
 
 	python_cpppath = [distutils.sysconfig.get_python_inc()]
 	cfig = distutils.sysconfig.get_config_vars()	
@@ -971,22 +971,22 @@ def CheckPythonLib(context):
 	lastCPPPATH = context.env.get('CPPPATH')
 
 	python_libpath = []
-
 	if cfig['LDLIBRARY']==cfig['LIBRARY']:
-		print "static library only?"
+		sys.stdout.write("(static)")
 		python_libpath += [cfig['LIBPL']]
+		python_libs += cfig['LIBS']
 
-	context.env.AppendUnique(LIBS=[python_lib])
+	context.env.AppendUnique(LIBS=python_libs)
 	context.env.AppendUnique(LIBPATH=python_libpath)
 	context.env.AppendUnique(CPPPATH=python_cpppath)
 	result = context.TryLink(libpython_test_text,".c");
 
-	context.Result(result)
+	context.Result(result)	
 
 	if(result):
-		context.env.Append(PYTHON_LIBPATH=python_libpath)
-		context.env.Append(PYTHON_LIB=[python_lib])
-		context.env.Append(PYTHON_CPPPATH=python_cpppath)
+		context.env['PYTHON_LIBPATH']=python_libpath
+		context.env['PYTHON_LIB']=python_libs
+		context.env['PYTHON_CPPPATH']=python_cpppath
 
 	context.env['LIBS'] = lastLIBS
 	context.env['LIBPATH'] = lastLIBPATH
