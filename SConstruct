@@ -976,7 +976,7 @@ def CheckPythonLib(context):
 	if cfig['LDLIBRARY']==cfig['LIBRARY']:
 		sys.stdout.write("(static)")
 		python_libpath += [cfig['LIBPL']]
-		python_linkflags += cfig['LIBS']
+		python_linkflags += cfig['LIBS'].split(' ')
 
 	context.env.AppendUnique(LIBS=python_libs)
 	context.env.AppendUnique(LIBPATH=python_libpath)
