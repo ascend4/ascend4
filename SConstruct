@@ -180,6 +180,10 @@ opts.Add(PackageOption(
 	,default_prefix
 ))
 
+#------ install location for python extensions ------
+
+# (removed for the moment)
+
 #------ cunit --------
 # Where was CUNIT installed?
 opts.Add(PackageOption(
@@ -939,6 +943,58 @@ def CheckMath(context):
 	return is_ok
 
 #----------------
+# libpython test
+
+libpython_test_text = """
+#include <Python.h>
+int main(void){
+	PyObject *p;
+	p = Py_None;
+	return 0;
+}
+"""
+
+def CheckPythonLib(context):
+	context.Message('Checking for libpython... ')
+
+	if platform.system()=="Windows":
+		python_lib='python%d%d'
+	else:
+		python_lib='python%d.%d'
+	python_lib = python_lib % (sys.version_info[0],sys.version_info[1])
+
+	python_cpppath = [distutils.sysconfig.get_python_inc()]
+	cfig = distutils.sysconfig.get_config_vars()	
+	
+	lastLIBS = context.env.get('LIBS')
+	lastLIBPATH = context.env.get('LIBPATH')
+	lastCPPPATH = context.env.get('CPPPATH')
+
+	python_libpath = []
+
+	if cfig['LDLIBRARY']==cfig['LIBRARY']:
+		print "static library only?"
+		python_libpath += [cfig['LIBPL']]
+
+	context.env.AppendUnique(LIBS=[python_lib])
+	context.env.AppendUnique(LIBPATH=python_libpath)
+	context.env.AppendUnique(CPPPATH=python_cpppath)
+	result = context.TryLink(libpython_test_text,".c");
+
+	context.Result(result)
+
+	if(result):
+		context.env.Append(PYTHON_LIBPATH=python_libpath)
+		context.env.Append(PYTHON_LIB=[python_lib])
+		context.env.Append(PYTHON_CPPPATH=python_cpppath)
+
+	context.env['LIBS'] = lastLIBS
+	context.env['LIBPATH'] = lastLIBPATH
+	context.env['CPPPATH'] = lastCPPPATH
+
+	return result
+
+#----------------
 # IDA test
 
 sundials_version_major_required = 2
@@ -1189,6 +1245,7 @@ conf = Configure(env
 	, custom_tests = { 
 		'CheckMath' : CheckMath
 		, 'CheckSwigVersion' : CheckSwigVersion
+		, 'CheckPythonLib' : CheckPythonLib
 		, 'CheckCUnit' : CheckCUnit
 		, 'CheckDMalloc' : CheckDMalloc
 		, 'CheckTcl' : CheckTcl
@@ -1291,15 +1348,13 @@ if env['STATIC_TCLTK']:
 # Python... obviously we're already running python, so we just need to
 # check that we can link to the python library OK:
 
-if platform.system()=="Windows":
-	python_lib='python%d%d'
-else:
-	python_lib='python%d.%d'
-python_lib = python_lib % (sys.version_info[0],sys.version_info[1])
+if not conf.CheckPythonLib():
+	without_python_reason = 'libpython2.x not found or not linkable'
+	with_python = False
 
 # SWIG version
 
-if not conf.CheckSwigVersion():
+if with_python and not conf.CheckSwigVersion():
 	without_python_reason = 'SWIG >= 1.3.24 is required'
 	with_python = False
 
@@ -1416,10 +1471,6 @@ if platform.system()=="Windows" and env.has_key('MSVS'):
 conf.env.Append(CPPDEFINES=env['PACKAGE_LINKING'])
 
 conf.Finish()
-
-env.Append(PYTHON_LIBPATH=[distutils.sysconfig.PREFIX+"/libs"])
-env.Append(PYTHON_LIB=[python_lib])
-env.Append(PYTHON_CPPPATH=[distutils.sysconfig.get_python_inc()])
 
 #---------------------------------------
 # SUBSTITUTION DICTIONARY for .in files
