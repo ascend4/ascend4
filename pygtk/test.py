@@ -87,6 +87,22 @@ class Ascend(unittest.TestCase):
 	def testLSODE(self):
 		self._testIntegrator('LSODE')
 
+	def testnewton(self):
+		self.L.load('johnpye/newton.a4c')
+		T = self.L.findType('newton')
+		M = T.getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		I = ascpy.Integrator(M)
+		I.setEngine('LSODE')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 20.0/9.8, 2);
+		I.analyse()
+		I.solve()
+		print "At end of simulation,"
+		print "x = %f" % M.sim.x
+		print "v = %f" % M.sim.v
+		M.run(T.getMethod('self_test'))
+
 	def testlotka(self):
 		self.L.load('johnpye/lotka.a4c')
 		M = self.L.findType('lotka').getSimulation('sim')

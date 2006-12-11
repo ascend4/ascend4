@@ -131,9 +131,6 @@ static CONST char LsodeID[] = "$Id: Lsode.c,v 1.29 2000/01/25 02:26:31 ballan Ex
 
 /* definitions of lsode supported children of atoms, etc */
 /********************************************************************/
-/* default input tolerances for lsode */
-#define RTOLDEF 1e-6
-#define ATOLDEF 1e-6
 /* solver_var children expected for state variables */
 static symchar *g_symbols[2];
 #define STATERTOL g_symbols[0]
@@ -237,6 +234,8 @@ void integrator_lsode_create(IntegratorSystem *blsys){
 	d->rlist=NULL;
 	d->dydx_dx=NULL;
 	blsys->enginedata=(void*)d;
+	integrator_lsode_params_default(blsys);
+
 }
 
 /**
@@ -273,6 +272,8 @@ void integrator_lsode_free(void *enginedata){
 
 enum ida_parameters{
 	LSODE_PARAM_TIMING
+	,LSODE_PARAM_RTOLDEF
+	,LSODE_PARAM_ATOLDEF
 	,LSODE_PARAMS_SIZE
 };
 
@@ -285,7 +286,7 @@ enum ida_parameters{
 int integrator_lsode_params_default(IntegratorSystem *blsys){
 
 	asc_assert(blsys!=NULL);
-	asc_assert(blsys->engine==INTEG_IDA);
+	asc_assert(blsys->engine==INTEG_LSODE);
 	slv_parameters_t *p;
 	p = &(blsys->params);
 
@@ -308,6 +309,24 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 			,(SlvParameterInitBool){{"timing"
 			,"Output timing statistics?",1,NULL
 		}, TRUE}
+	);
+
+	slv_param_real(p,LSODE_PARAM_ATOLDEF
+			,(SlvParameterInitReal){{"atoldef"
+			,"Scalar absolute error tolerance",1
+			,"Default value of the scalar absolute error tolerance (for cases"
+			" where not specified in oda_atol var property. See 'lsode.f' for"
+			" details"
+		}, 1e-6, DBL_MIN, DBL_MAX }
+	);
+
+	slv_param_real(p,LSODE_PARAM_RTOLDEF
+			,(SlvParameterInitReal){{"rtoldef"
+			,"Scalar relative error tolerance",1
+			,"Default value of the scalar relative error tolerance (for cases"
+			" where not specified in oda_rtol var property. See 'lsode.f' for"
+			" details"
+		}, 1e-6, DBL_MIN, DBL_MAX }
 	);
 
 	asc_assert(p->num_parms == LSODE_PARAMS_SIZE);
@@ -424,17 +443,17 @@ static double *lsode_get_atol( IntegratorSystem *blsys) {
   for (i=0; i<len; i++) {
     tol = ChildByChar(var_instance(blsys->y[i]),STATEATOL);
     if (tol == NULL || !AtomAssigned(tol) ) {
-      atoli[i] = ATOLDEF;
+      atoli[i] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_ATOLDEF);
       ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Assuming atol = %3g"
       	"for ode_atol child undefined for state variable %ld."
-      	,ATOLDEF, blsys->y_id[i]
+      	,atoli[i], blsys->y_id[i]
       );
     } else {
       atoli[i] = RealAtomValue(tol);
 	  CONSOLE_DEBUG("Using tolerance %3g for state variable %ld.",atoli[i], blsys->y_id[i]);
     }
   }
-  atoli[len] = ATOLDEF;
+  atoli[len] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_ATOLDEF); /* not sure why this one...? */
   return atoli;
 }
 
@@ -459,18 +478,18 @@ static double *lsode_get_rtol( IntegratorSystem *blsys) {
   for (i=0; i<len; i++) {
     tol = ChildByChar(var_instance(blsys->y[i]),STATERTOL);
     if (tol == NULL || !AtomAssigned(tol) ) {
-      rtoli[i] = RTOLDEF;
+      rtoli[i] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOLDEF);
 
       ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Assuming rtol = %3g"
       	"for ode_rtol child undefined for state variable %ld."
-      	,ATOLDEF, blsys->y_id[i]
+      	,rtoli[i], blsys->y_id[i]
       );
 
     } else {
       rtoli[i] = RealAtomValue(tol);
     }
   }
-  rtoli[len] = RTOLDEF;
+  rtoli[len] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOLDEF);
   return rtoli;
 }
 
