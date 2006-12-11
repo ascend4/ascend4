@@ -115,8 +115,8 @@ int error_reporter_tree_start(){
 	error_reporter_tree_t *tnew;
 	tnew = error_reporter_tree_new();
 
-	CONSOLE_DEBUG("TREE = %p",TREE);
-	CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT);
+	/* CONSOLE_DEBUG("TREE = %p",TREE); */
+	/* CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT); */
 
 #if 0
 	if(TREE != NULL && TREECURRENT == NULL){
@@ -128,15 +128,15 @@ int error_reporter_tree_start(){
 #endif
 
 	if(TREE == NULL){
-		CONSOLE_DEBUG("CREATING ROOT");
+		/* CONSOLE_DEBUG("CREATING ROOT"); */
 		/* we're creating the root */
 		tnew->parent = NULL;
 		TREE = tnew;
 		TREECURRENT = tnew;
-		CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT);
+		/* CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT); */
 	}else{
 		asc_assert(TREECURRENT != NULL);
-		CONSOLE_DEBUG("CREATING SUBTREE");
+		/* CONSOLE_DEBUG("CREATING SUBTREE"); */
 		if(TREECURRENT->head == NULL){
 			/* if the current tree has no elements, add it as the head */
 			TREECURRENT->head = tnew;
@@ -149,7 +149,7 @@ int error_reporter_tree_start(){
 
 		/* now switch the context to the sub-tree */
 		tnew->parent = TREECURRENT;
-		CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT);
+		/* CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT); */
 		TREECURRENT = tnew;
 	}
 	return 0;
@@ -162,7 +162,7 @@ int error_reporter_tree_end(){
 		return 1;
 	}
 	TREECURRENT = TREECURRENT->parent;
-	CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT);
+	/* CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT); */
 	return 0;
 }	
 
@@ -305,16 +305,16 @@ va_error_reporter(
 			return res;
 		}else if(TREE){
 			/* flush the tree before outputting current message */
-			CONSOLE_DEBUG("WRITING OUT TREE CONTENTS");
+			/* CONSOLE_DEBUG("WRITING OUT TREE CONTENTS"); */
 			t = TREE;
 			TREE = NULL;
 			error_reporter_tree_write(t);
 			CONSOLE_DEBUG("DONE WRITING TREE");
 			TREECURRENT = t;
 			error_reporter_tree_clear();
-			CONSOLE_DEBUG("DONE FREEING TREE");
+			/* CONSOLE_DEBUG("DONE FREEING TREE");
 			CONSOLE_DEBUG("TREE = %p",TREE);
-			CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT);
+			CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT); */
 		}
 	}
 #endif

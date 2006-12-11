@@ -1,0 +1,55 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(* 
+	Simple dynamic model of object under gravity (for use in test suite)
+*)
+MODEL newton;
+	x IS_A distance;
+	dx_dt IS_A speed;
+	v IS_A speed;
+	dv_dt IS_A acceleration;
+	g IS_A gravity_constant;
+	g :== 1{EARTH_G};
+
+	xderiv: dx_dt = v;
+	vderiv: dv_dt = -g;
+	
+	t IS_A time;
+METHODS
+
+METHOD values;
+	v := +10 {m/s};
+	x := 0 {m};
+	t := 0 {s};
+END values;
+
+METHOD specify;
+	FIX x, v;
+END specify;
+
+METHOD ode_init;
+	FREE x,v;
+	t.ode_type := -1; t := 0 {s};
+	dx_dt.ode_id := 1; x.ode_id := 1; dx_dt.ode_type := 2; x.ode_type := 1;
+	dv_dt.ode_id := 2; v.ode_id := 2; dv_dt.ode_type := 2; v.ode_type := 1;
+	x.obs_id := 1;
+	v.obs_id := 2;
+	dv_dt.obs_id := 3;
+	v.ode_atol := 1e-8;
+	x.ode_atol := 1e-8;
+END ode_init;
+	
+METHOD on_load;
+	RUN reset; RUN values;
+	RUN ode_init;
+END on_load;
+
+METHOD self_test;
+	(* assumes integration up to t = (20/9.8){s}; *)
+	ASSERT abs(x - 0 {m}) < 1e-5 {m};
+	ASSERT abs(v +10 {m/s}) < 1e-5 {m/s};
+	ASSERT abs(dv_dt + g) == 0 {m/s^2};
+END self_test;
+
+END newton;
