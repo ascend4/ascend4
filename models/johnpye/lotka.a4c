@@ -54,8 +54,9 @@ METHOD values;
 END values;
 
 METHOD set_obs;
-	R.obs_id :=1;
-	F.obs_id :=2;
+	t.obs_id :=1;
+	R.obs_id :=2;
+	F.obs_id :=3;
 END set_obs;
 
 METHOD set_ode; (* this is where the current implementation sux *)

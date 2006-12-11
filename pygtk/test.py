@@ -87,8 +87,24 @@ class Ascend(unittest.TestCase):
 	def testLSODE(self):
 		self._testIntegrator('LSODE')
 
+	def testlotka(self):
+		self.L.load('johnpye/lotka.a4c')
+		M = self.L.findType('lotka').getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		I = ascpy.Integrator(M)
+		I.setEngine('LSODE')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5);
+		I.analyse()
+		I.solve()
+		assert I.getNumObservedVars() == 3;
+		assert abs(float(M.sim.R) - 832) < 1.0
+		assert abs(float(M.sim.F) - 21.36) < 0.1
+		
+
 	def testIDA(self):
 		self._testIntegrator('IDA')
+
 
 	def testIDAparameters(self):
 		self.L.load('johnpye/shm.a4c')
@@ -98,14 +114,14 @@ class Ascend(unittest.TestCase):
 		P = I.getParameters()
 		for p in P:
 			print p.getName(),"=",p.getValue()
-		assert len(P)==5
+		assert len(P)==7
 		assert P[0].isStr()
 		assert P[0].getName()=="linsolver"
-		assert P[0].getValue()=='DENSE'
+		assert P[0].getValue()=='SPGMR'
 		assert P[1].getName()=="autodiff"
 		assert P[1].getValue()==True
-		assert P[4].getName()=="atolvect"
-		assert P[4].getBoolValue() == True
+		assert P[5].getName()=="atolvect"
+		assert P[5].getBoolValue() == True
 		P[1].setBoolValue(False)
 		assert P[1].getBoolValue()==False
 		I.setParameters(P)
