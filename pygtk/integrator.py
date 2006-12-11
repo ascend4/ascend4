@@ -201,7 +201,7 @@ class IntegratorWindow:
 
 		self.prefs.setStringPref("Integrator","engine",self.engines.values()[engine])
 
-		_res = self.integrator.setEngine(self.engines.keys()[engine])
-		if not _res:
-			raise IntegratorError("Invalid engine selected")
-			
+		try:
+			_res = self.integrator.setEngine(self.engines.keys()[engine])			
+		except IndexError,e:
+			raise IntegratorERror("Unable to set engine: %s",e) 

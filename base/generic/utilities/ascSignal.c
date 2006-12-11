@@ -222,15 +222,15 @@ int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
   }
   switch (signum) {
     case SIGFPE:
-	  ERROR_REPORTER_DEBUG("PUSH SIGFPE");
+	  /* CONSOLE_DEBUG("PUSH SIGFPE"); */
       err = push_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
       break;
     case SIGINT:
-	  ERROR_REPORTER_DEBUG("PUSH SIGINT");
+	  /* CONSOLE_DEBUG("PUSH SIGINT"); */
       err = push_trap(f_int_traps, &f_int_top_of_stack, tp);
       break;
     case SIGSEGV:
-	  ERROR_REPORTER_DEBUG("PUSH SIGSEGV");
+	  /* CONSOLE_DEBUG("PUSH SIGSEGV"); */
       err = push_trap(f_seg_traps, &f_seg_top_of_stack, tp);
       break;
     default:
@@ -249,15 +249,15 @@ int Asc_SignalHandlerPop(int signum, SigHandlerFn *tp){
   int err;
   switch (signum) {
   case SIGFPE:
-    ERROR_REPORTER_DEBUG("POP SIGFPE");
+    /* CONSOLE_DEBUG("POP SIGFPE"); */
     err = pop_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
     break;
   case SIGINT:
-    ERROR_REPORTER_DEBUG("POP SIGINT");
+    /* CONSOLE_DEBUG("POP SIGINT"); */
     err = pop_trap(f_int_traps, &f_int_top_of_stack, tp);
     break;
   case SIGSEGV:
-    ERROR_REPORTER_DEBUG("POP SIGSEGV");
+    /* CONSOLE_DEBUG("POP SIGSEGV"); */
     err = pop_trap(f_seg_traps, &f_seg_top_of_stack, tp);
     break;
   default:
