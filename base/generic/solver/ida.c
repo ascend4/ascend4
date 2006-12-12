@@ -229,7 +229,9 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 	slv_param_real(p,IDA_PARAM_RTOL
 			,(SlvParameterInitReal){{"rtol"
 			,"Scalar relative error tolerance",1
-			,"Value of the scalar relative error tolerance."
+			,"Value of the scalar relative error tolerance. (Note that for IDA,"
+			" it's not possible to set per-variable relative tolerances as it is"
+			" with LSODE)."
 			" See IDA manual, section 5.5.1"
 		}, 1e-4, 0, DBL_MAX }
 	);
