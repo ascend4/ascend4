@@ -87,6 +87,20 @@ class Ascend(unittest.TestCase):
 	def testLSODE(self):
 		self._testIntegrator('LSODE')
 
+	def testzill(self):
+		self.L.load('johnpye/zill.a4c')
+		T = self.L.findType('zill')
+		M = T.getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		I = ascpy.Integrator(M)
+		I.setEngine('LSODE')		
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units(), 0, 1.5, 2);
+		I.analyse()
+		I.solve()
+		M.run(T.getMethod('self_test'))
+
+		
 	def testnewton(self):
 		self.L.load('johnpye/newton.a4c')
 		T = self.L.findType('newton')
@@ -103,7 +117,7 @@ class Ascend(unittest.TestCase):
 		I.setMaxSubSteps(10000)
 		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.sim.v)/float(M.sim.g), 3);
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.sim.v)/float(M.sim.g), 2);
 		I.analyse()
 		I.solve()
 		print "At end of simulation,"
