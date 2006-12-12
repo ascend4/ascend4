@@ -2,15 +2,18 @@ REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 
 (* 
-	Simple dynamic model of object under gravity (for use in test suite)
+	Simple dynamic model of object under gravity (for use in test suite).
+	We expect an inverted parabola. Check that after the expected elapsed time,
+	x returns to its starting value and velocity is the negative of the starting
+	value.
 *)
 MODEL newton;
 	x IS_A distance;
 	dx_dt IS_A speed;
 	v IS_A speed;
 	dv_dt IS_A acceleration;
-	g IS_A gravity_constant;
-	g :== 1{EARTH_G};
+	g IS_A real_constant;
+	g :== 10{N/kg};
 
 	xderiv: dx_dt = v;
 	vderiv: dv_dt = -g;
@@ -33,9 +36,10 @@ METHOD ode_init;
 	t.ode_type := -1; t := 0 {s};
 	dx_dt.ode_id := 1; x.ode_id := 1; dx_dt.ode_type := 2; x.ode_type := 1;
 	dv_dt.ode_id := 2; v.ode_id := 2; dv_dt.ode_type := 2; v.ode_type := 1;
-	x.obs_id := 1;
-	v.obs_id := 2;
-	dv_dt.obs_id := 3;
+	t.obs_id := 1;
+	x.obs_id := 2;
+	v.obs_id := 3;
+	dv_dt.obs_id := 4;
 	v.ode_atol := 1e-8;
 	x.ode_atol := 1e-8;
 END ode_init;

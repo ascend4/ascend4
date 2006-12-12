@@ -272,8 +272,10 @@ void integrator_lsode_free(void *enginedata){
 
 enum ida_parameters{
 	LSODE_PARAM_TIMING
-	,LSODE_PARAM_RTOLDEF
-	,LSODE_PARAM_ATOLDEF
+	,LSODE_PARAM_RTOLVECT
+	,LSODE_PARAM_RTOL
+	,LSODE_PARAM_ATOLVECT
+	,LSODE_PARAM_ATOL
 	,LSODE_PARAMS_SIZE
 };
 
@@ -311,8 +313,17 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 		}, TRUE}
 	);
 
-	slv_param_real(p,LSODE_PARAM_ATOLDEF
-			,(SlvParameterInitReal){{"atoldef"
+	slv_param_bool(p,LSODE_PARAM_ATOLVECT
+			,(SlvParameterInitBool){{"atolvect"
+			,"Use 'ode_atol' values as specified for each var?",1
+			,"If TRUE, values of 'ode_atol' are taken from your model and used "
+			" in the integration. If FALSE, a scalar absolute tolerance (atol)"
+			" is shared by all variables."
+		}, TRUE }
+	);
+
+	slv_param_real(p,LSODE_PARAM_ATOL
+			,(SlvParameterInitReal){{"atol"
 			,"Scalar absolute error tolerance",1
 			,"Default value of the scalar absolute error tolerance (for cases"
 			" where not specified in oda_atol var property. See 'lsode.f' for"
@@ -320,8 +331,17 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 		}, 1e-6, DBL_MIN, DBL_MAX }
 	);
 
-	slv_param_real(p,LSODE_PARAM_RTOLDEF
-			,(SlvParameterInitReal){{"rtoldef"
+	slv_param_bool(p,LSODE_PARAM_RTOLVECT
+			,(SlvParameterInitBool){{"rtolvect"
+			,"Use 'ode_rtol' values as specified for each var?",1
+			,"If TRUE, values of 'ode_atol' are taken from your model and used "
+			" in the integration. If FALSE, a scalar absolute tolerance (rtol)"
+			" is shared by all variables."
+		}, TRUE }
+	);
+
+	slv_param_real(p,LSODE_PARAM_RTOL
+			,(SlvParameterInitReal){{"rtol"
 			,"Scalar relative error tolerance",1
 			,"Default value of the scalar relative error tolerance (for cases"
 			" where not specified in oda_rtol var property. See 'lsode.f' for"
@@ -425,47 +445,57 @@ int integrator_lsode_setup_diffs(IntegratorSystem *blsys) {
 /**
 	allocates, fills, and returns the atol vector based on LSODE
 
-	State variables missing child ode_rtol will be defaulted to ATOLDEF
+	State variables missing child ode_rtol will be defaulted to ATOL
 */
 static double *lsode_get_atol( IntegratorSystem *blsys) {
 
   struct Instance *tol;
   double *atoli;
   int i,len;
+  double atol;
 
   len = blsys->n_y;
-  atoli = ASC_NEW_ARRAY(double, blsys->n_y+1);
+  atoli = ASC_NEW_ARRAY(double, blsys->n_y); /* changed, this was n_y+1 before, dunnowi -- JP */
   if (atoli == NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory");
     return atoli;
   }
-  InitTolNames();
-  for (i=0; i<len; i++) {
-    tol = ChildByChar(var_instance(blsys->y[i]),STATEATOL);
-    if (tol == NULL || !AtomAssigned(tol) ) {
-      atoli[i] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_ATOLDEF);
-      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Assuming atol = %3g"
-      	"for ode_atol child undefined for state variable %ld."
-      	,atoli[i], blsys->y_id[i]
-      );
-    } else {
-      atoli[i] = RealAtomValue(tol);
-	  CONSOLE_DEBUG("Using tolerance %3g for state variable %ld.",atoli[i], blsys->y_id[i]);
+
+  if(!SLV_PARAM_BOOL(&(blsys->params),LSODE_PARAM_ATOLVECT)){
+	atol = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_ATOL);
+	CONSOLE_DEBUG("Using ATOL = %f for all vars", atol);
+    for(i=0; i<len; ++i){
+      atoli[i] = atol;
+	}
+  }else{
+    InitTolNames();
+    for (i=0; i<len; i++) {
+	  
+      tol = ChildByChar(var_instance(blsys->y[i]),STATEATOL);
+      if (tol == NULL || !AtomAssigned(tol) ) {
+        atoli[i] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_ATOL);
+        ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Assuming atol = %3g"
+      	  "for ode_atol child undefined for state variable %ld."
+        	,atoli[i], blsys->y_id[i]
+        );
+      } else {
+        atoli[i] = RealAtomValue(tol);
+        CONSOLE_DEBUG("Using atol %3g for state variable %ld.",atoli[i], blsys->y_id[i]);
+      }
     }
   }
-  atoli[len] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_ATOLDEF); /* not sure why this one...? */
   return atoli;
 }
 
 /**
 	Allocates, fills, and returns the rtol vector based on LSODE
 
-	State variables missing child ode_rtol will be defaulted to RTOLDEF
+	State variables missing child ode_rtol will be defaulted to RTOL
 */
 static double *lsode_get_rtol( IntegratorSystem *blsys) {
 
   struct Instance *tol;
-  double *rtoli;
+  double rtol, *rtoli;
   int i,len;
 
   len = blsys->n_y;
@@ -474,22 +504,30 @@ static double *lsode_get_rtol( IntegratorSystem *blsys) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory");
     return rtoli;
   }
-  InitTolNames();
-  for (i=0; i<len; i++) {
-    tol = ChildByChar(var_instance(blsys->y[i]),STATERTOL);
-    if (tol == NULL || !AtomAssigned(tol) ) {
-      rtoli[i] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOLDEF);
+  if(!SLV_PARAM_BOOL(&(blsys->params),LSODE_PARAM_RTOLVECT)){
+	rtol = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOL);
+	CONSOLE_DEBUG("Using RTOL = %f for all vars", rtol);
+    for(i=0; i<len; ++i){
+      rtoli[i] = rtol;
+	}
+  }else{
+    InitTolNames();
+    for (i=0; i<len; i++) {
+      tol = ChildByChar(var_instance(blsys->y[i]),STATERTOL);
+      if (tol == NULL || !AtomAssigned(tol) ) {
+        rtoli[i] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOL);
 
-      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Assuming rtol = %3g"
-      	"for ode_rtol child undefined for state variable %ld."
-      	,rtoli[i], blsys->y_id[i]
-      );
-
-    } else {
-      rtoli[i] = RealAtomValue(tol);
+        ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Assuming rtol = %3g"
+        	"for ode_rtol child undefined for state variable %ld."
+        	,rtoli[i], blsys->y_id[i]
+        );
+  
+      } else {
+        rtoli[i] = RealAtomValue(tol);
+      }
     }
   }
-  rtoli[len] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOLDEF);
+  rtoli[len] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOL);
   return rtoli;
 }
 

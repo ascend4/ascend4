@@ -94,8 +94,16 @@ class Ascend(unittest.TestCase):
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
 		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
+		I.setParameter('rtolvect',False)
+		I.setParameter('rtol',1e-7)
+		I.setParameter('atolvect',False)
+		I.setParameter('atol',1e-7)
+		I.setMinSubStep(1e-7)
+		I.setMaxSubStep(0.001)
+		I.setMaxSubSteps(10000)
+		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 20.0/9.8, 2);
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.sim.v)/float(M.sim.g), 3);
 		I.analyse()
 		I.solve()
 		print "At end of simulation,"
