@@ -1,0 +1,51 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(* 
+	An example problem used in the text by Zill, 4th Ed, p 472.
+
+	Dennis G Zill, A First Course in Differential Equations with Applications,
+	PWS-KENTm Boston, 1989.
+
+	Actually this is a single-variable integration and can be solved using the
+	Runge-Kutta method (as illustrated by Zill).
+*)
+MODEL zill;
+	x IS_A solver_var;
+	y IS_A solver_var;
+	dy_dx IS_A solver_var;
+
+	xderiv: dy_dx = 2 * x * y;
+
+METHODS
+
+METHOD values;
+	y := 1; x := 1; (* initial conditions *)
+END values;
+
+METHOD specify;
+	FIX x, y;
+END specify;
+
+METHOD ode_init;
+	FREE x, y;
+	x.ode_type := -1;
+	dy_dx.ode_id := 1;   y.ode_id := 1; 
+	dy_dx.ode_type := 2; y.ode_type := 1;
+
+	x.obs_id := 1;
+	y.obs_id := 2;
+END ode_init;
+	
+METHOD on_load;
+	RUN reset; RUN values;
+	RUN ode_init;
+END on_load;
+
+METHOD self_test;
+	(* assumes integration up to x = 1.5 *)
+	ASSERT abs(x - 1.5) < 1e-7;
+	ASSERT abs(y - 3.4904) < 0.0003; (* this would be true if we used RK4, with h = 0.1 *)
+END self_test;
+
+END zill;
