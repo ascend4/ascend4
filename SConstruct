@@ -973,10 +973,14 @@ def CheckPythonLib(context):
 
 	python_libpath = []
 	python_linkflags = []
-	if cfig['LDLIBRARY']==cfig['LIBRARY']:
-		sys.stdout.write("(static)")
-		python_libpath += [cfig['LIBPL']]
-		python_linkflags += cfig['LIBS'].split(' ')
+	if platform.system()=="Windows":
+		pass
+	else:
+		# checked on Linux and SunOS
+		if cfig['LDLIBRARY']==cfig['LIBRARY']:
+			sys.stdout.write("(static)")
+			python_libpath += [cfig['LIBPL']]
+			python_linkflags += cfig['LIBS'].split(' ')
 
 	context.env.AppendUnique(LIBS=python_libs)
 	context.env.AppendUnique(LIBPATH=python_libpath)

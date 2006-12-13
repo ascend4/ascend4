@@ -1082,11 +1082,14 @@ class Browser:
 		text = "Your version is %s\n" % config.VERSION
 		try:
 			v.check()
-			text += "Latest version is %s\n" % v.latest
-			if v.info:
-				text += "Get more info at %s\n" % v.info
-			if v.download:
-				text += "Download from %s\n" % v.download
+			if config.VERSION==v.latest:
+				text += "You are running the latest released version"
+			else:
+				text += "Latest version is %s\n" % v.latest
+				if v.info:
+					text += "Get more info at %s\n" % v.info
+				if v.download:
+					text += "Download from %s\n" % v.download
 		except Exception, e:
 			text += "\nUnable to check version\n"
 			text += str(e)
