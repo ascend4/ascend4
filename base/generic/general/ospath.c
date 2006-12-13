@@ -116,7 +116,7 @@
 struct FilePath{
     char path[PATH_MAX]; /** the string version of the represented POSIX path */
 
-#ifdef WINPATHs
+#ifdef WINPATHS
     char drive[DRIVEMAX]; /** the drive the path resides on (field is absent in POSIX systems) */
 #endif
 };

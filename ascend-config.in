@@ -12,7 +12,8 @@ import sys, platform
 # this system already but we don't know that about unix shell (eg on Windows).
 #
 # Note that SCons supports reading of the output from this script, using
-# features offered since version 0.96.91
+# features offered since version 0.96.91, although this functionality
+# is a bit problematic on the Windows platform, and/or when paths contain spaces.
 #
 # This file inspired by other software that uses the same approach, eg
 # ginac-config, xft-config, cppunit-config.
@@ -57,14 +58,20 @@ if options.cppflags:
 	include = ""
 	if INCLUDE!="/usr/include":
 		include=INCLUDE
-	print "-I"+include
+	if -1!=include.find(" "):
+		print "-I\""+include+"\""
+	else:
+		print "-L"+libs+" -lascend"
 	ok = True
 
 if options.libs:
 	libs = ""
 	if LIB!="/usr/lib":
 		libs = LIB
-	print "-L"+libs+" -lascend"
+	if -1!=libs.find(" "):
+		print "-L\""+libs+"\" -lascend"
+	else:
+		print "-L"+libs+" -lascend"
 	ok = True
 
 if options.data:

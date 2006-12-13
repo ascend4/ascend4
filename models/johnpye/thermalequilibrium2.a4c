@@ -19,7 +19,8 @@ END simple_state;
 
 (* 
 	Enhanced version of johnpye/thermalequilibrium.a4c. This model uses
-	real steam properties from http://freesteam.sf.net/.
+	real steam properties from http://freesteam.sf.net/. You will need to 
+	build the freesteam ASCEND hooks. See the freesteam site for instructions.
 
 	NOTE: set the starting step to 0.1 and the minimum step to 0.01 s, and
 	integrate from 0 to 3000 s.
