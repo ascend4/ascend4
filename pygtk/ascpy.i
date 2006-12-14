@@ -33,8 +33,12 @@
 #include "solverreporter.h"
 #include "incidencematrix.h"
 #include "registry.h"
-#include <compiler/importhandler.h>
 #include "annotation.h"
+
+extern "C"{
+#include <compiler/importhandler.h>
+#include <utilities/ascMalloc.h>
+}
 
 #ifdef ASC_WITH_DMALLOC
 # include <dmalloc.h>
@@ -181,13 +185,7 @@ public:
 	const short getFractionDenominator(const unsigned &) const;
 };
 
-class UnitsM{
-public:
-	UnitsM(const char *);
-	const SymChar getName() const; // the units description string eg 'bar' or 'kJ/kg/K'
-	const Dimensions getDimensions() const;
-	const double getConversion() const; // multiplication factor to convert eg feet to SI (metres)
-};
+%include "units.h"
 
 %extend UnitsM{
 	%pythoncode{
@@ -491,6 +489,14 @@ public:
 		self->setPyObject(key,obj);
 	}
 }
+
+void shutdown();
+
+%{
+void shutdown(){
+	ascshutdown("Shutdown ASCEND...");
+}
+%}
 
 %include "solver.i"
 

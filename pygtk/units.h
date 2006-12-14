@@ -20,12 +20,14 @@ class Dimensions;
 class UnitsM{
 private:
 	const struct Units *u;
+protected:
+	const struct Units *getInternalType() const;
+
 public:
 	UnitsM();
 	UnitsM(const struct Units *u);
 	UnitsM(const char *units);
 
-	const struct Units *getInternalType() const;
 	const SymChar getName() const;
 	const Dimensions getDimensions() const;
 	const double getConversion() const;

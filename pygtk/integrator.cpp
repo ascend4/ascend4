@@ -52,9 +52,9 @@ void
 Integrator::setReporter(IntegratorReporterCxx *reporter){
 	this->blsys->clientdata = reporter;
 	integrator_set_reporter(blsys,reporter->getInternalType());
-	CONSOLE_DEBUG("REPORTER HAS BEEN SET");	
+	//CONSOLE_DEBUG("REPORTER HAS BEEN SET");	
 	(*(this->blsys->reporter->init))(blsys);
-	CONSOLE_DEBUG("DONE TESTING OUTPUT_INIT");
+	//CONSOLE_DEBUG("DONE TESTING OUTPUT_INIT");
 }
 
 double

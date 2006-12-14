@@ -2,6 +2,7 @@ import unittest
 import ascpy
 import math
 import os, subprocess
+import atexit
 
 class CUnit(unittest.TestCase):
 	def setUp(self):
@@ -24,6 +25,8 @@ class Ascend(unittest.TestCase):
 		self.L.clear()
 		del self.L
 
+class TestCompiler(Ascend):
+
 	def testloading(self):
 		pass
 
@@ -33,12 +36,45 @@ class Ascend(unittest.TestCase):
 	def testatomsa4l(self):
 		self.L.load('atoms.a4l')
 
-	def testlog10(self):
-		self.L.load('johnpye/testlog10.a4c')
-		T = self.L.findType('testlog10')
+class TestSolver(Ascend):
+	
+	def _run(self,modelname,solvername="QRSlv",filename=None):
+		if filename==None:
+			filename = 'johnpye/%s.a4c' % modelname
+		self.L.load(filename)
+		T = self.L.findType(modelname)
 		M = T.getSimulation('sim')
-		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
-		M.run(T.getMethod('self_test'))		
+		M.solve(ascpy.Solver(solvername),ascpy.SolverReporter())	
+		M.run(T.getMethod('self_test'))
+
+	def testlog10(self):
+		self._run('testlog10')
+
+	def testconopt(self):
+		self._run('testconopt',"CONOPT")				
+
+	def testcmslv2(self):
+		self._run('testcmslv2',"CONOPT")	
+
+	def testsunpos1(self):
+		self._run('example_1_6_1',"QRSlv","johnpye/sunpos.a4c")
+
+	def testsunpos2(self):
+		self._run('example_1_6_2',"QRSlv","johnpye/sunpos.a4c")
+
+	def testsunpos3(self):
+		self._run('example_1_7_1',"QRSlv","johnpye/sunpos.a4c")
+
+	def testsunpos4(self):
+		self._run('example_1_7_2',"QRSlv","johnpye/sunpos.a4c")
+
+	def testsunpos5(self):
+		self._run('example_1_7_3',"QRSlv","johnpye/sunpos.a4c")
+
+	def testsunpos6(self):
+		self._run('example_1_8_1',"QRSlv","johnpye/sunpos.a4c")
+
+class TestIntegrator(Ascend):
 
 	def testListIntegrators(self):
 		I = ascpy.Integrator.getEngines()
@@ -75,7 +111,7 @@ class Ascend(unittest.TestCase):
 		assert I.getNumObservedVars() == 3
 
 	def testInvalidIntegrator(self):
-		self.L.load('johnpye/shm.a4c')
+		self.L.load('johnpye/shm.a4c') 
 		M = self.L.findType('shm').getSimulation('sim')
 		I = ascpy.Integrator(M)
 		try:
@@ -93,9 +129,12 @@ class Ascend(unittest.TestCase):
 		M = T.getSimulation('sim')
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
 		I = ascpy.Integrator(M)
-		I.setEngine('LSODE')		
+		I.setEngine('LSODE')
+		I.setMinSubStep(1e-7)
+		I.setMaxSubStep(0.001)
+		I.setMaxSubSteps(10000)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units(), 0, 1.5, 2);
+		I.setLinearTimesteps(ascpy.Units(), 0, 1.5, 5);
 		I.analyse()
 		I.solve()
 		M.run(T.getMethod('self_test'))
@@ -236,4 +275,5 @@ class NotToBeTested:
 		pass
 		
 if __name__=='__main__':
+	atexit.register(ascpy.shutdown)
 	unittest.main()
