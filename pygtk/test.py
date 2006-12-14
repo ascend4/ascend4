@@ -4,17 +4,6 @@ import math
 import os, subprocess
 import atexit
 
-class CUnit(unittest.TestCase):
-	def setUp(self):
-		self.cunitexe = "../base/generic/test/test"
-	
-	def testcunittests(self):
-		res = os.system(self.cunitexe)
-		if res:
-			raise RuntimeError("CUnit tests failed (returned %d -- run %s for details)" % (res,self.cunitexe))
-		else:
-			print "CUnit returned %s" % res
-
 class Ascend(unittest.TestCase):
 
 	def setUp(self):
@@ -269,6 +258,17 @@ class TestIntegrator(Ascend):
 		I.solve()
 		assert 0
 	
+class CUnit(unittest.TestCase):
+	def setUp(self):
+		self.cunitexe = "../base/generic/test/test"
+	
+	def testcunittests(self):
+		res = os.system(self.cunitexe)
+		if res:
+			raise RuntimeError("CUnit tests failed (returned %d -- run %s for details)" % (res,self.cunitexe))
+		else:
+			print "CUnit returned %s" % res
+
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
 	def nothing(self):
