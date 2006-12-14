@@ -139,4 +139,10 @@ void samplelist_set(CONST SampleList *l, CONST long i, CONST double x){
 	);
 }
 
-
+void samplelist_debug(CONST SampleList *l){
+	long i;
+	CONSOLE_DEBUG("SAMPLELIST (%d)", l->ns);
+	for(i=0; i < l->ns; ++i){
+		CONSOLE_DEBUG("sample[%d] = %f", i, l->x[i]);
+	}
+}

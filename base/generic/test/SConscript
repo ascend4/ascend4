@@ -19,11 +19,7 @@ if env.has_key('CUNIT_CPPPATH'):
 libpath = ['#', '#test']
 if env.has_key('CUNIT_LIBPATH'):
 	libpath.append(env['CUNIT_LIBPATH'])
-	print "CUNIT_LIBPATH ---> ",libpath
-
-
-print "CUNIT srcs =",srcs
-print "CUNIT basesrcs =",basesrcs
+	#print "CUNIT_LIBPATH ---> ",libpath
 
 env.Program('test',srcs+basesrcs
 	, CPPPATH = cpppath

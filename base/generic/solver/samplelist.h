@@ -58,7 +58,12 @@ ASC_DLLSPEC(int) samplelist_assign(SampleList *l, unsigned long n, double *value
 ASC_DLLSPEC(long) samplelist_length(CONST SampleList *l);
 ASC_DLLSPEC(const dim_type *) samplelist_dim(CONST SampleList *l);
 
+/**
+	Get an element from the samplelist. Value of the index i should be in [0,ns).
+*/
 ASC_DLLSPEC(double) samplelist_get(CONST SampleList *l, CONST long i);
 ASC_DLLSPEC(void) samplelist_set(CONST SampleList *l, CONST long i, CONST double x);
+
+void samplelist_debug(CONST SampleList *l);
 
 #endif

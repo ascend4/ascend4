@@ -814,6 +814,8 @@ static void LSODE_JEX(int *neq ,double *t, double *y,
 
 /**
 	The public function: here we do the actual integration, I guess.
+
+	Return 1 on success
 */
 int integrator_lsode_solve(IntegratorSystem *blsys
 		, unsigned long start_index, unsigned long finish_index
@@ -886,7 +888,10 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   neq = blsys->n_y;
   nobs = blsys->n_obs;
 
-  x[0] = integrator_get_t(blsys);
+  /* samplelist_debug(blsys->samples); */
+
+  /* x[0] = integrator_get_t(blsys); */
+  x[0] = integrator_getsample(blsys, 0);
   x[1] = x[0]-1; /* make sure we don't start with wierd x[1] */
   lrw = 22 + 9*neq + neq*neq;
   rwork = ASC_NEW_ARRAY_CLEAR(double, lrw+1);
@@ -917,6 +922,11 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   iwork[5] = integrator_get_maxsubsteps(blsys);
   mf = 21;		/* 21 = BDF with exact jacobian. 22 = BDF with finite diff Jacobian */
 
+  if(x[0] > integrator_getsample(blsys, 2)){
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid initialisation time: exceeds second timestep value");
+  	return 0;
+  }
+
   /* put the values from derivative system into the record */
   integrator_setsample(blsys, start_index, x[0]);
 
@@ -930,11 +940,13 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	the loop ahead in time, all we need to do is keep upping
 	xend.
   */
+  
   blsys->currentstep = 0;
   for (index = start_index; index < finish_index; index++, 	blsys->currentstep++) {
     xend = integrator_getsample(blsys, index+1);
     xprev = x[0];
-    /* CONSOLE_DEBUG("BEFORE %lu LSODE CALL\n", index); */
+	asc_assert(xend > xprev);
+    /* CONSOLE_DEBUG("LSODE call #%lu: x = [%f,%f]", index,xprev,xend); */
 
 # ifndef NO_SIGNAL_TRAPS
     if (setjmp(g_fpe_env)==0) {
@@ -1118,41 +1130,51 @@ void XASCWV( char *msg, /* pointer to start of message */
              double *r1,
              double *r2
 ){
+	static double r1last;
+
+	asc_assert(*level!=2); // LSODE doesn't give level 2 in our version.
+
 	switch(*nerr){
+		case 52:
+			if(*nr==2){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Illegal t = %f, not in range (t - hu,t) = (%f,%f)", r1last, *r1, *r2);
+				return;
+			}else if(*nr==1){
+				r1last = *r1;
+				return;
+			} break;
 		case 204:
-			if(*nr==0)return;
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
-			break;
+			if(*nr==2){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
+				return;
+			} break;
 		case 205:
-			if(*nr==0)return;
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Corrector convergence test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
-			break;
-
-		default:
-			ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
-
-			/* note that %.*s means that a string length (integer) and string pointer are being required */
-			FPRINTF(stderr,"LSODE error: %.*s",*nmes,msg);
-			if (*ni == 1) {
-			FPRINTF(stderr,"\nwhere i1 = %d\n",*i1);
-			}
-			if (*ni == 2) {
-			FPRINTF(stderr,"\nwhere i1 = %d, i2 = %d",*i1,*i2);
-			}
-			if (*nr == 1) {
-			FPRINTF(stderr,"\nwhere r1 = %.13g", *r1);
-			}
-			if (*nr == 2) {
-			FPRINTF(stderr,"\nwhere r1 = %.13g, r2 = %.13g", *r1,*r2);
-			}
-			error_reporter_end_flush();
+			if(*nr==2){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Corrector convergence test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
+				return;
+			} break;
+		case 27:
+			if(*nr==1 && *ni==1){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Trouble with INTDY: itask = %d, tout = %f", *i1, *r1);
+				return;
+			} break;
 	}
 
-	if (*level != 2) {
-		return;
-	}
+	ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
 
-	/* NOT reached. lsode does NOT make level 2 calls in our version. */
+	/* note that %.*s means that a string length (integer) and string pointer are being required */
+	FPRINTF(stderr,"LSODE error: (%d) %.*s",*nerr,*nmes,msg);
+	if (*ni == 1) {
+	FPRINTF(stderr,"\nwhere i1 = %d",*i1);
+	}
+	if (*ni == 2) {
+	FPRINTF(stderr,"\nwhere i1 = %d, i2 = %d",*i1,*i2);
+	}
+	if (*nr == 1) {
+	FPRINTF(stderr,"\nwhere r1 = %.13g", *r1);
+	}
+	if (*nr == 2) {
+	FPRINTF(stderr,"\nwhere r1 = %.13g, r2 = %.13g", *r1,*r2);
+	}
 	error_reporter_end_flush();
-	Asc_Panic(3,"xascwv", "LSODE really really confused");
 }

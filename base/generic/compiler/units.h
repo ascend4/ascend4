@@ -20,23 +20,18 @@
 	Ascend Units Type definitions.
 
 	Requires:
-	#include <stdio.h>
-	#include "utilities/ascConfig.h"
 	#include "fractions.h"
 	#include "compiler.h"
 	#include "dimen.h"
 *//*
-	by Tom Epperly
-	8/18/89
-	Version: $Revision: 1.10 $
-	Version control file: $RCSfile: units.h,v $
-	Date last modified: $Date: 1998/02/05 16:38:40 $
-	Last modified by: $Author: ballan $
+	by Tom Epperly 8/18/89
+	Last in CVS: $Revision: 1.10 $ $Date: 1998/02/05 16:38:40 $ $Author: ballan $
 */
 
 #ifndef ASC_UNITS_H
 #define ASC_UNITS_H
 
+#include <stdio.h>
 #include <utilities/ascConfig.h>
 
 #ifdef _HPUX_SOURCE
@@ -49,7 +44,7 @@
 /**< to shut up the hp lexer */
 
 /**
- *  Value in system units = value in given units * conversion_factor.
+	Value in system units = value in given units * conversion_factor.
  */
 struct Units {
   double conversion_factor; /**< to convert from units to system units */
@@ -59,7 +54,7 @@ struct Units {
 };
 
 /**
- * Temporary structure for parsing unit definitions in ascParse.y.
+	Temporary structure for parsing unit definitions in ascParse.y.
  */
 struct UnitDefinition {
   symchar *new_name;
@@ -70,7 +65,7 @@ struct UnitDefinition {
 
 #define UNITS_HASH_SIZE (1023)
 /**<
- *  size of the hash table for unit structs
+	size of the hash table for unit structs
  */
 
 /*
@@ -105,29 +100,22 @@ ASC_DLLSPEC(struct Units *) g_units_hash_table[];
 
 extern void InitUnitsTable(void);
 /**<
- *  <!--  void InitUnitsTable()                                        -->
- *  This routine initializes some internal variables, so that all the
- *  other units functions may be called.  It must be called once and
- *  only once when the program is starting up.
- *  Must be called after dimensions table initiatialization.
- */
+	This routine initializes some internal variables, so that all the
+	other units functions may be called.  It must be called once and
+	only once when the program is starting up.
+	Must be called after dimensions table initiatialization.
+*/
 
 extern void DestroyUnitsTable(void);
 /**<
- *  <!--  void DestroyUnitsTable()                                     -->
- *  This routine can be called to deallocate all of the units in the table.
- */
+	This routine can be called to deallocate all of the units in the table.
+*/
 
 extern struct UnitDefinition *CreateUnitDef(symchar *new_name,
                                             CONST char *unitsexpr,
                                             CONST char *filename,
                                             int linenum);
 /**<
- * <!--  udptr = CreateUnitDef(new_name,unitsexpr,filename,linenum);   -->
- * <!--  new_name should be from the symbol table.                     -->
- * <!--  unitsexpr is a string that we will copy, so it does not       -->
- * <!--  need to be persistent.                                        -->
- * <!--  filename should be persistent.                                -->
  *  Create a new unit definition.
  *  @param new_name  Should be from the symbol table.
  *  @param unitsexpr A string that we will copy, so it does not
@@ -138,21 +126,17 @@ extern struct UnitDefinition *CreateUnitDef(symchar *new_name,
 
 extern void DestroyUnitDef(struct UnitDefinition *udp);
 /**<
- * <!--  DestroyUnitDef(udp);                                          -->
  * Destroys udp and its unitsexpr.
  */
 
 extern void ProcessUnitDef(struct UnitDefinition *udp);
 /**<
- * <!--  ProcessUnitDef(udp);                                          -->
  * Attempts to add the info in udp to the units table.
  * messages to ascerr if not possible.
  */
 
 ASC_DLLSPEC(CONST struct Units*) LookupUnits(CONST char *c);
 /**<
- *  <!--  const struct Units *LookupUnits(c)                           -->
- *  <!--  const char *c;                                               -->
  *  Check the units library for units with a description string which
  *  matches c.  If it is found, this function will return a non-NULL pointer;
  *  otherwise, it returns NULL to indicate that units c are undefined.
@@ -161,10 +145,6 @@ ASC_DLLSPEC(CONST struct Units*) LookupUnits(CONST char *c);
 
 extern CONST struct Units *DefineUnits(symchar *c, double conv, CONST dim_type *dim);
 /**<
- *  <!--  const struct Units *DefineUnits(c,conv,dim)                  -->
- *  <!--  const char *c;                                               -->
- *  <!--  double conv;                                                 -->
- *  <!--  const dim_type *dim;                                         -->
  *  Define the units c with conversion factor conv and dimensions *dim.
  *  This assumes that *dim was the value returned by FindOrAddDim.  This
  *  will check to prevent duplicate entries.  The resulting unit structure is
@@ -185,10 +165,6 @@ ASC_DLLSPEC(CONST struct Units*) FindOrDefineUnits(CONST char *c,
                                              unsigned long * CONST pos,
                                              int * CONST error_code);
 /**<
- *  <!--  struct Units *FindOrDefineUnits(c,pos,error_code)            -->
- *  <!--  CONST char *c;                                               -->
- *  <!--  unsigned long * const pos;                                   -->
- *  <!--  int * const error_code;                                      -->
  *  This function will attempt to parse the string c into a units
  *  description.  If the unit type has been defined before, the corresponding
  *  units pointer will be returned.  If this type hasn't been defined before,
@@ -222,7 +198,6 @@ ASC_DLLSPEC(CONST struct Units*) FindOrDefineUnits(CONST char *c,
 
 ASC_DLLSPEC(char**) UnitsExplainError(CONST char *unitsexpr, int code, int pos);
 /**<
- *  <!--  errv = UnitsExplainError(unitsexpr,code,pos);                -->
  *  Returns an array of strings which may be helpful in
  *  explaining the error.
  *  - errv[0] is a message.
@@ -235,28 +210,21 @@ ASC_DLLSPEC(char**) UnitsExplainError(CONST char *unitsexpr, int code, int pos);
 
 #define UnitsDescription(u) ((u)->description)
 /**<
- *  <!--  macro UnitsDescription(u)                                    -->
- *  <!--  struct Units *u;                                             -->
  *  Returns the string description attribute of a units structure.
  */
 
 #define UnitsConvFactor(u) ((u)->conversion_factor)
 /**<
- *  <!--  macro UnitsConvFactor(u)                                     -->
- *  <!--  struct Units *u;                                             -->
  *  Returns the conversion factor for a given units structure.
  */
 
 #define UnitsDimensions(u) ((u)->dim)
 /**<
- *  <!--  macro UnitsDimensions(u)                                     -->
- *  <!--  struct Units *u;                                             -->
  *  Returns the dimensions of the units structure.
  */
 
 ASC_DLLSPEC(char *) UnitsStringSI(struct Units *up);
 /**<
- *  <!--  UnitsStringSI(up);                                           -->
  *  Returns the SI form of the units for the dimensionality of up.
  *  Wild = *, Dimensionless = "", NULL up --> NULL return.
  *  Caller is responsible for freeing the string returned.
