@@ -19,6 +19,22 @@
 #define ASC_CONFIG_H
 
 /**
+	If signal handlers (<signal.h>) on this platform need to be reset after
+	each 'catch', the ASC_RESETNEEDED macro should be set true.
+*/
+#ifndef ASC_RESETNEEDED
+/* #define ASC_RESETNEEDED @ASC_RESETNEEDED@ */
+#endif
+
+/**
+	If we have C99 FPE (floating point error) routines available on this
+	platform/compiler.
+*/
+#ifndef HAVE_C99FPE
+/* #define HAVE_C99FPE @HAVE_C99FPE@ */
+#endif
+
+/**
 	The name of the environment variable containing a list' of paths
 	to search when trying to open a module.  The list is in the style
 	of the native OS: colon-separated on UNIX and semicolon separated

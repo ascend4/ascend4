@@ -49,48 +49,51 @@
 	   Asc_SignHandlerPop(SIGFPE,Asc_SignalTrap);
 	   Asc_SignalDestroy();
 	</pre>
- *  This example uses the built-in signal handler Asc_SignalTrap()
- *  and the global <code>jmp_buf</code> g_fpe_env.  After initializing
- *  the signal manager and registering the handler, <code>setjmp</code>
- *  is used to select normal and exception paths.  The <code>setjmp</code>
- *  returns 0 when initially called and the sqrt(x) is calculated.  If
- *  x is negative, a SIGFPE exception occurs and the handler is called.  It
- *  uses <code>lngjmp</code> and returns to the if statement, and now
- *  <setjmp> returns non-zero and the <code>else</code> clause is executed.
- *  Finally, the handler is removed and the signal manager cleaned up.<br><br>
- *
- *  The stack mechanism also allows nested handlers to be registered.  It is
- *  important to note that nested handlers for the same signal type cannot
- *  both use Asc_SignalTrap() as the handler.  This is because different
- *  <code>jmp_buf</code> variables must be used and Asc_SignalTrap() uses
- *  the same global <code>jmp_buf</code> each time.  However, you can use
- *  custome <code>jmp_buf</code>'s and handlers:
- *  <pre>
- *     Asc_SignalInit();
- *     Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap);
- *     if (setjmp(g_fpe_env) == 0) {
- *         y = sqrt(x);
- *         Asc_SignalHandlerPush(SIGFPE, my_handler);
- *         if (setjmp(my_jmp_buf) == 0) {
- *             y = z/x;
- *         } else {
- *             Asc_Panic(1, NULL, "Div by zero error.");
- *         }
- *         Asc_SignHandlerPop(SIGFPE, my_handler);
- *     } else {
- *       y = sqrt(-x);
- *     }
- *     Asc_SignHandlerPop(SIGFPE,Asc_SignalTrap);
- *     Asc_SignalDestroy();
- *  </pre>
- *  Here, exceptions in the sqrt(x) calculation are handled by the standard
- *  Asc_SignalTrap(), while the division is handled by my_handler.<br><br>
- *
- *  Avoid mixing use of the signal manager with direct calls to signal().
- *  Once Asc_SignalInit() has been called, use of signal() directly is likely
- *  to be lost or to corrupt the managed handlers.<br><br>
- *
- *  Another warning: setjmp is expensive if called inside a fast loop.
+
+	This example uses the built-in signal handler Asc_SignalTrap()
+	and the global <code>jmp_buf</code> g_fpe_env.  After initializing
+	the signal manager and registering the handler, <code>setjmp</code>
+	is used to select normal and exception paths.  The <code>setjmp</code>
+	returns 0 when initially called and the sqrt(x) is calculated.  If
+	x is negative, a SIGFPE exception occurs and the handler is called.  It
+	uses <code>lngjmp</code> and returns to the if statement, and now
+	'setjmp' returns non-zero and the <code>else</code> clause is executed.
+	Finally, the handler is removed and the signal manager cleaned up.<br><br>
+	
+	The stack mechanism also allows nested handlers to be registered.  It is
+	important to note that nested handlers for the same signal type cannot
+	both use Asc_SignalTrap() as the handler.  This is because different
+	<code>jmp_buf</code> variables must be used and Asc_SignalTrap() uses
+	the same global <code>jmp_buf</code> each time.  However, you can use
+	custome <code>jmp_buf</code>'s and handlers:
+
+	<pre>
+	   Asc_SignalInit();
+	   Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap);
+	   if (setjmp(g_fpe_env) == 0) {
+	       y = sqrt(x);
+	       Asc_SignalHandlerPush(SIGFPE, my_handler);
+	       if (setjmp(my_jmp_buf) == 0) {
+	           y = z/x;
+	       } else {
+	           Asc_Panic(1, NULL, "Div by zero error.");
+	       }
+	       Asc_SignHandlerPop(SIGFPE, my_handler);
+	   } else {
+	     y = sqrt(-x);
+	   }
+	   Asc_SignHandlerPop(SIGFPE,Asc_SignalTrap);
+	   Asc_SignalDestroy();
+	</pre>
+	
+	Here, exceptions in the sqrt(x) calculation are handled by the standard
+	Asc_SignalTrap(), while the division is handled by my_handler.<br><br>
+	
+	Avoid mixing use of the signal manager with direct calls to signal().
+	Once Asc_SignalInit() has been called, use of signal() directly is likely
+	to be lost or to corrupt the managed handlers.<br><br>
+	
+	Another warning: setjmp is expensive if called inside a fast loop.
 
 	Requires:
 	#include "utilities/ascConfig.h"
@@ -110,6 +113,12 @@
 #  include <process.h>
 #else
 #  include <unistd.h>
+#endif
+
+#ifdef __WIN32__
+# define FPRESET _fpreset()
+#else
+# define FPRESET (void)0
 #endif
 
 typedef void SigHandlerFn(int);
@@ -220,6 +229,7 @@ ASC_DLLSPEC(void ) Asc_SignalRecover(int force);
  *               compiler/platform.
  */
 
+ASC_DLLSPEC(int ) Asc_SignalHandlerPushDefault(int signum);
 ASC_DLLSPEC(int ) Asc_SignalHandlerPush(int signum, SigHandlerFn *func);
 /**<
  * Adds a handler to the stack of signal handlers for the given signal.
@@ -242,6 +252,7 @@ ASC_DLLSPEC(int ) Asc_SignalHandlerPush(int signum, SigHandlerFn *func);
  *        popping an unintended handler.
  */
 
+ASC_DLLSPEC(int ) Asc_SignalHandlerPopDefault(int signum);
 ASC_DLLSPEC(int ) Asc_SignalHandlerPop(int signum, SigHandlerFn *func);
 /**<
  *  Removes the last-pushed handler from the stack for signum signal types.

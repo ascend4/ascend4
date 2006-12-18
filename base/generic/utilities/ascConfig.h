@@ -483,7 +483,6 @@ typedef	unsigned   uint32;
  * the following patch up IEEE754isms that some systems can't seem to
  * get right.
  */
-#define FPRESET (void)0
 #ifdef __WIN32__
 /* renamed in some __WIN32__ compiler systems */
 #  ifndef NO_RENAME_IEEE_FUNCTIONS
@@ -494,8 +493,6 @@ typedef	unsigned   uint32;
 #    undef isinf
 #    define isinf(x)  _isinf(x)
 #  endif
-#  undef FPRESET
-#  define FPRESET _fpreset()
 /* MSVC peculiarities */
 #  ifdef _MSC_VER
 #    undef snprintf

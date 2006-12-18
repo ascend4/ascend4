@@ -38,15 +38,19 @@
 	12/10/2005  - Changed storage of signal handlers from gl_list's
 	              to local arrays.  gl_list's can't legally hold
 	              function pointers. (JDS)
+	18 Dec 06   - Removed ascresetneeded (moved to SConstruct)
 */
 
 #include <stdio.h>
+#include "config.h"
 #include "ascConfig.h"
 
-#ifndef NO_SIGNAL_TRAPS
-# include <signal.h>
-# include <setjmp.h>
-#endif /* NO_SIGNAL_TRAPS*/
+#include <signal.h>
+#include <setjmp.h>
+
+#ifdef HAVE_C99FPE
+# include <fenv.h>
+#endif
 
 #ifdef __WIN32__
 # include <process.h>
@@ -61,26 +65,18 @@
   GLOBALS AND FOWARD DECS
 */
 
-#if !defined(NO_SIGINT_TRAP) || !defined(NO_SIGSEGV_TRAP)
-static jmp_buf f_test_env;    /* for local testing of signal handling */
-#endif
-
-#ifndef NO_SIGNAL_TRAPS
 /* test buf for initialization */
 jmp_buf g_fpe_env;
 jmp_buf g_seg_env;
 jmp_buf g_int_env;
 
+#ifdef HAVE_C99FPE
+fenv_t g_fenv;
+#endif
+
 /* for future use */
 jmp_buf g_foreign_code_call_env;
 
-#endif /* NO_SIGNAL_TRAPS*/
-
-static int f_reset_needed = -2;
-/* has value 0 or 1 after Init is called.
- * and if Init is called without the value -2 in f_reset_needed,
- * it will fail.
- */
 static SigHandlerFn **f_fpe_traps = NULL;  /**< array for pushed SIGFPE handlers */
 static int f_fpe_top_of_stack = -1;     /**< top of SIGFPE stack, -1 for empty */
 
@@ -90,11 +86,20 @@ static int f_int_top_of_stack = -1;     /**< top of SIGFPE stack, -1 for empty *
 static SigHandlerFn **f_seg_traps = NULL;  /**< array for pushed SIGSEGV handlers */
 static int f_seg_top_of_stack = -1;     /**< top of SIGFPE stack, -1 for empty */
 
-static int ascresetneeded(void);
+#ifdef HAVE_C99FPE
+static fenv_t *f_fenv_stack = NULL;
+static int f_fenv_stack_top = -1;
+#endif
+
 static void initstack (SigHandlerFn **traps, int *stackptr, int sig);
 static int pop_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp);
 static int push_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp);
 static void reset_trap(int signum, SigHandlerFn **tlist, int tos);
+
+#ifdef HAVE_C99FPE
+static int fenv_pop(fenv_t *stack, int *top);
+static int fenv_push(fenv_t *stack,int *top);
+#endif
 
 /*------------------------------------------------------------------------------
   API FUNCTIONS
@@ -112,10 +117,6 @@ static void reset_trap(int signum, SigHandlerFn **tlist, int tos);
 */
 int Asc_SignalInit(void)
 {
-  if (f_reset_needed != -2) {
-    return 2;
-  }
-
   /* initialize SIGFPE stack */
   if (f_fpe_traps == NULL) {
     f_fpe_traps = ASC_NEW_ARRAY_CLEAR(SigHandlerFn*,MAX_TRAP_DEPTH);
@@ -124,6 +125,14 @@ int Asc_SignalInit(void)
     }
   }
   f_fpe_top_of_stack = -1;
+
+#ifdef HAVE_C99FPE
+  if(f_fenv_stack==NULL){ /* if we haven't already initialised this... */
+    f_fenv_stack = ASC_NEW_ARRAY_CLEAR(fenv_t,MAX_TRAP_DEPTH);
+	if(f_fenv_stack == NULL) return 1; /* failed to allocate */
+  }
+  f_fenv_stack_top = -1;
+#endif
 
   /* initialize SIGINT stack */
   if (f_int_traps == NULL) {
@@ -149,25 +158,16 @@ int Asc_SignalInit(void)
   }
   f_seg_top_of_stack = -1;
 
-#ifndef NO_SIGNAL_TRAPS
   /* push the old ones if any, on the stack. */
   initstack(f_fpe_traps, &f_fpe_top_of_stack, SIGFPE);
-
-# ifndef NO_SIGINT_TRAP
   initstack(f_int_traps, &f_int_top_of_stack, SIGINT);
-# endif
-
-# ifndef NO_SIGSEGV_TRAP
   initstack(f_seg_traps, &f_seg_top_of_stack, SIGSEGV);
-# endif
 
-  f_reset_needed = ascresetneeded();
-  if (f_reset_needed < 0) {
-	CONSOLE_DEBUG("RESET NEEDED");
-    f_reset_needed = 1;
-    return 2;
-  }
-#endif /* NO_SIGNAL_TRAPS */
+#ifdef HAVE_C99FPE
+  CONSOLE_DEBUG("Adding original FPE state to stack (%d)",f_fenv_stack_top);
+  fenv_push(f_fenv_stack,&f_fenv_stack_top);
+#endif
+
   return 0;
 }
 
@@ -194,15 +194,20 @@ void Asc_SignalDestroy(void)
 	@NOTE that if somebody installs a handler without going through
 	our push/pop, theirs is liable to be forgotten.
 */
-void Asc_SignalRecover(int force)
-{
-  if (force || f_reset_needed > 0) {
-#ifndef NO_SIGNAL_TRAPS
-    reset_trap(SIGFPE, f_fpe_traps, f_fpe_top_of_stack);
-    reset_trap(SIGINT, f_int_traps, f_int_top_of_stack);
-    reset_trap(SIGSEGV, f_seg_traps, f_seg_top_of_stack);
-#endif /* NO_SIGNAL_TRAPS */
-  }
+void Asc_SignalRecover(int force){
+#ifndef ASC_RESETNEEDED
+	if(force){
+#endif
+		reset_trap(SIGFPE, f_fpe_traps, f_fpe_top_of_stack);
+		reset_trap(SIGINT, f_int_traps, f_int_top_of_stack);
+		reset_trap(SIGSEGV, f_seg_traps, f_seg_top_of_stack);
+#ifndef ASC_RESETNEEDED
+	}
+#endif
+}
+
+int Asc_SignalHandlerPushDefault(int signum){
+	return Asc_SignalHandlerPush(signum, &Asc_SignalTrap);
 }
 
 /**
@@ -222,8 +227,11 @@ int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
   }
   switch (signum) {
     case SIGFPE:
-	  /* CONSOLE_DEBUG("PUSH SIGFPE"); */
+	  //CONSOLE_DEBUG("PUSH SIGFPE");
       err = push_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
+#ifdef HAVE_C99FPE
+      err = fenv_push(f_fenv_stack, &f_fenv_stack_top);
+#endif
       break;
     case SIGINT:
 	  /* CONSOLE_DEBUG("PUSH SIGINT"); */
@@ -244,13 +252,20 @@ int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
   return 0;
 }
 
+int Asc_SignalHandlerPopDefault(int signum){
+	return Asc_SignalHandlerPop(signum, &Asc_SignalTrap);
+}
+
 /* see ascSignal.h */
 int Asc_SignalHandlerPop(int signum, SigHandlerFn *tp){
   int err;
   switch (signum) {
   case SIGFPE:
-    /* CONSOLE_DEBUG("POP SIGFPE"); */
+    //CONSOLE_DEBUG("POP SIGFPE");
     err = pop_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
+#ifdef HAVE_C99FPE
+	err = fenv_pop(f_fenv_stack, &f_fenv_stack_top);
+#endif
     break;
   case SIGINT:
     /* CONSOLE_DEBUG("POP SIGINT"); */
@@ -274,9 +289,9 @@ int Asc_SignalHandlerPop(int signum, SigHandlerFn *tp){
 }
 
 void Asc_SignalTrap(int sigval) {
-#ifndef NO_SIGNAL_TRAPS
   switch(sigval) {
   case SIGFPE:
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Floating point error caught");
 	CONSOLE_DEBUG("SIGFPE caught");
     FPRESET;
     longjmp(g_fpe_env,sigval);
@@ -295,128 +310,37 @@ void Asc_SignalTrap(int sigval) {
     break;
   }
   return;
-#else
-   UNUSED_PARAMETER(sigval);
-#endif /* NO_SIGNAL_TRAPS */
 }
 
 /*------------------------------------------------------------------------------
   UTILITY FUNCTIONS
 */
 
-#ifndef NO_SIGSEGV_TRAP
-/* function to throw an interrupt. system dependent. */
-static int testdooley2(int sig){
-  raise(sig);
-  return 0;
-}
-#endif
-
-#if !defined(NO_SIGINT_TRAP) || !defined(NO_SIGSEGV_TRAP)
-/* function to catch an interrupt */
-static void testcatch(int signum){
-  FPRINTF(ASCERR," signal %d caught ",signum);
-  if (signum == SIGFPE) {
-    FPRESET;
-  }
-  longjmp(f_test_env, signum);
-}
-#endif
-
 /*
- * So far the following seem to need reset trapped signals after
- * a longjmp, or unconditionally.
- * HPUX cc -Aa -D_HPUX_SOURCE
- * Solaris cc
- * AIX xlc
- * IRIX cc
- * Windows
- *
- * The following retain the last trap set with or without a call to longjmp
- * and so don't need resetting of traps.
- * SunOS4 acc
- * OSF32 cc
- * NetBSD gcc 2.4.5 -ansi
- */
+	Removed ascresetneeded from here. This is a build-time configuration test
+	rather than a runtime test (and causes annoyance when running ASCEND through
+	a debugger).
 
-/** 
-	This function tests the signal reseting of compilers using SIGINT.
-	It should not be called except when starting a process.
+	So far the following seem to need reset trapped signals after
+	a longjmp, or unconditionally.
+		HPUX cc -Aa -D_HPUX_SOURCE
+		Solaris cc
+		AIX xlc
+		IRIX cc
+		Windows
 
-	Side effects:
-	 - a line is sent to ASCERR
-	 - SIGINT is set to SIG_DFL if no handler was previously registered
-	 - SIGFPE may be set to SIG_DFL if no handler was previously registered
-
-	@return 0 for no reset needed, 1 for reset needed, and
-	-1 if the test fails (presuming program doesn't exit first.)
+	The following retain the last trap set with or without a call to longjmp
+	and so don't need resetting of traps.
+		SunOS4 acc
+		OSF32 cc
+		NetBSD gcc 2.4.5 -ansi
+		Linux gcc (i386)
 */
-static int ascresetneeded(void) {
-  static int result = 0;
 
-#if !defined(NO_SIGINT_TRAP) || !defined(NO_SIGSEGV_TRAP)
-  SigHandlerFn *lasttrap;
-  volatile SigHandlerFn *savedtrap;
-  static int c=0;
-#endif
+//------------------------------------
+// COMMOM STACK ROUTINES (shared by the three different signal handler stacks)
 
-#ifndef NO_SIGINT_TRAP
-
-  /* test interrupt */
-  savedtrap = signal(SIGINT, testcatch);
-  CONSOLE_DEBUG("Testing signal SIGINT (signum = %d) %p\t%p\t", SIGINT, savedtrap, testcatch);
-  if (setjmp(f_test_env) == 0) {
-    testdooley2(SIGINT);
-  } else {
-    c++;
-  }
-  if (c != 1) {
-    CONSOLE_DEBUG("SIGINT test failed");
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Signal (SIGINT) test failed. ASCEND unlikely to work on this hardware.");
-    result = -1;
-  }
-  lasttrap = signal(SIGINT, (NULL != savedtrap) ? savedtrap : SIG_DFL);
-  CONSOLE_DEBUG("%p",lasttrap);
-  if (lasttrap != testcatch) {
-    result = 1;
-  }
-
-  if (result != 0) {
-    return result;
-  }
-
-  c = 0;
-#else
-  CONSOLE_DEBUG("SIGINT trap bypassed: compile-time settings");
-#endif
-
-#ifndef NO_SIGSEGV_TRAP
-  /* passed interrupt, check fpe */
-  savedtrap=signal(SIGFPE, testcatch);
-  CONSOLE_DEBUG("Testing signal %d %p\t%p\t",SIGFPE, savedtrap, testcatch);
-  if (setjmp(f_test_env)==0) {
-    testdooley2(SIGFPE);
-  } else {
-    c++;
-  }
-  if (c != 1) {
-    CONSOLE_DEBUG("SIGFPE test failed");
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Signal test failed. ASCEND unlikely to work on this hardware.");
-    result = -1;
-  }
-  lasttrap = signal(SIGFPE, (NULL != savedtrap) ? savedtrap : SIG_DFL);
-  CONSOLE_DEBUG("%p\n",lasttrap);
-  if (lasttrap != testcatch) {
-    result = 1;
-  }
-#else
-  CONSOLE_DEBUG("SIGSEGV trap bypassed: compile-time settings.");
-#endif
-
-  return result;
-}
-
-static void initstack (SigHandlerFn **traps, int *stackptr, int sig){
+static void initstack(SigHandlerFn **traps, int *stackptr, int sig){
   SigHandlerFn *old;
   old = signal(sig,SIG_DFL);
   if (old != SIG_ERR && old != SIG_DFL) {
@@ -482,3 +406,62 @@ static int pop_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp){
   --(*stackptr);
   return (-(oldtrap != tp));
 }
+
+/*------------------------------------------
+  FPE ENV STACK
+*/
+
+#ifdef HAVE_C99FPE
+
+/** 
+	Store current FPU state so that we can reset it later (after we've done
+	some stuff)
+
+	return 0 on success 
+*/
+static int fenv_push(fenv_t *stack,int *top){
+	if(*top > MAX_TRAP_DEPTH - 1){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"FPE stack is full");
+		return 1;
+	}
+	if(*top < -1){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"stack top < -1");
+		return 2;
+	}
+	if(stack==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"stack is NULL");
+		return 3;
+	}
+	fenv_t *fe = &stack[++(*top)];
+	if(fegetenv(fe)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"unable to get env");
+		return 4;
+	}
+	feenableexcept(FE_DIVBYZERO);
+	//CONSOLE_DEBUG("Enabled div-by-zero FPE exception (%d)",*top);
+	return 0;
+}
+
+/**
+	Restore a save FPU state. Return 0 on success.
+*/
+static int fenv_pop(fenv_t *stack, int *top){
+	if(*top < 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"FPE stack is empty");
+		return 1;
+	}
+	if(stack==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"stack is NULL");
+		return 2;
+	}
+	fenv_t *fe = &stack[(*top)--];
+	if(fesetenv(fe)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"unable to set env");
+		return 3;
+	}
+	//CONSOLE_DEBUG("Restorted FPE state");
+	return 0;
+}
+
+#endif /* HAVE_C99FPE */
+

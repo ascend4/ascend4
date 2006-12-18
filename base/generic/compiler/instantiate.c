@@ -32,6 +32,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
+#include <utilities/ascSignal.h>
 #include <utilities/error.h>
 #include <general/pool.h>
 #include <general/list.h>
@@ -6081,9 +6082,23 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
   if (instances != NULL){
     assert(GetEvaluationContext()==NULL);
     SetEvaluationContext(work);
-    value = EvaluateExpr(AssignStatRHS(statement),NULL,
-                         InstanceEvaluateName);
+
+	Asc_SignalHandlerPushDefault(SIGFPE);
+	if(setjmp(g_fpe_env)==0){
+	    value = EvaluateExpr(AssignStatRHS(statement),NULL,
+    	                     InstanceEvaluateName);
+	}else{
+		STATEMENT_ERROR(statement, "Floating-point error while evaluating assignment statement");
+        MarkStatContext(statement,context_WRONG);
+		SetDeclarativeContext(previous_context);
+		return 1;		
+	}
+	Asc_SignalHandlerPopDefault(SIGFPE);
+
+
     SetEvaluationContext(NULL);
+
+
     if (ValueKind(value)==error_value || !IsConstantValue(value) ){
       if (ValueKind(value)==error_value) {
         gl_destroy(instances);

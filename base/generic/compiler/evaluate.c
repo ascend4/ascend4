@@ -862,7 +862,7 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
       DestroyValue(&top);
       break;
     case e_st:			/* such that  */
-      Asc_Panic(2, NULL, "Something is royally wrong is EvaluateExpr.\n");
+      Asc_Panic(2, NULL, "Something is royally wrong in EvaluateExpr.\n");
       break;
     case e_minimize:
     case e_maximize:
