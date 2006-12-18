@@ -996,6 +996,7 @@ int ModuleSearchPath(CONST char *name,
 		tmp = Asc_GetEnv(PATHENVIRONMENTVAR);
 		if(tmp==NULL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"No paths to search (is env var '%s' set?)",PATHENVIRONMENTVAR);
+			ospath_free(fp1);
 			return 1;
 		}
 
@@ -1005,7 +1006,8 @@ int ModuleSearchPath(CONST char *name,
 		if(sp1==NULL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to process %s value '%s'",PATHENVIRONMENTVAR,tmp);
 			/* memory error */
-			ascfree(tmp);
+			ASC_FREE(tmp);
+			ospath_free(fp1);
 			return -3;
 		}
 		ascfree(tmp);

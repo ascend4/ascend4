@@ -104,7 +104,13 @@ Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroo
 }
 
 Simulation::~Simulation(){
-	//CONSOLE_DEBUG("Deleting simulation %s", getName().toString());
+	CONSOLE_DEBUG("Deleting simulation %s", getName().toString());
+	system_free_reused_mem();
+	if(sys){
+		CONSOLE_DEBUG("Destroying simulation system...");
+		system_destroy(sys);
+	}
+	sys=NULL;
 }
 
 Instanc &

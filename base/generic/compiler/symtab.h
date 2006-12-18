@@ -48,7 +48,7 @@ extern void DestroyStringSpace(void);
  *  This deallocates all the memory associated with the string space.
  */
 
-extern void InitSymbolTable(void);
+ASC_DLLSPEC(void) InitSymbolTable(void);
 /**<
  *  This procedure performs all the necessary initialization for the symbol
  *  table manager.  It should be called once and only once, and it must
@@ -114,7 +114,7 @@ extern void PrintTab(int noisy);
  *  if (noisy) prints lots of goop.
  */
 
-extern void DestroySymbolTable(void);
+ASC_DLLSPEC(void) DestroySymbolTable(void);
 /**<
  *  This function will deallocate all the memory associated with the
  *  symbol table and the symbols it contains.

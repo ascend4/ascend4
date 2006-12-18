@@ -283,10 +283,10 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 
 	searchdata = (struct ImportHandlerSearch *)userdata;
 
-	char *pathcomponent;
-	pathcomponent = ospath_str(path); /* eg '/home/john' */
-	/* CONSOLE_DEBUG("In directory '%s'...",pathcomponent); */
-	ASC_FREE(pathcomponent);
+	/* char *pathcomponent;
+	pathcomponent = ospath_str(path); //eg '/home/john'
+	CONSOLE_DEBUG("In directory '%s'...",pathcomponent);
+	ASC_FREE(pathcomponent); */
 
 	asc_assert(importhandler_library!=NULL);
 
@@ -302,29 +302,29 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 		ASC_FREE(filename);
 		asc_assert(fp!=NULL);
 
-		fullpath = ospath_str(searchdata->relativedir);
-		/* CONSOLE_DEBUG("Relative dir is '%s'",fullpath); */
-		ASC_FREE(fullpath);
+		/* fullpath = ospath_str(searchdata->relativedir);
+		CONSOLE_DEBUG("Relative dir is '%s'",fullpath);
+		ASC_FREE(fullpath); */
 
 		fp1 = ospath_concat(path,searchdata->relativedir); /* eg '/home/john/path/to' */
 		asc_assert(fp1!=NULL);
 
-		fullpath = ospath_str(fp1);
-		/* CONSOLE_DEBUG("Path is '%s'",fullpath); */
-		ASC_FREE(fullpath);
+		/*fullpath = ospath_str(fp1);
+		CONSOLE_DEBUG("Path is '%s'",fullpath);
+		ASC_FREE(fullpath);*/
 
-		fullpath = ospath_str(fp);
-		/* CONSOLE_DEBUG("Filename is '%s'",fullpath); */
-		ASC_FREE(fullpath);
+		/*fullpath = ospath_str(fp);
+		CONSOLE_DEBUG("Filename is '%s'",fullpath);
+		ASC_FREE(fullpath);*/
 
 		fp2 = ospath_concat(fp1,fp); /* eg '/home/john/path/to/libmyext.so' */
 		asc_assert(fp2!=NULL);
 		ospath_free(fp1);
 		ospath_free(fp);
 
-		fullpath = ospath_str(fp2);
-		/* CONSOLE_DEBUG("Checking for readable '%s'",fullpath); */
-		ASC_FREE(fullpath);
+		/* fullpath = ospath_str(fp2);
+		CONSOLE_DEBUG("Checking for readable '%s'",fullpath);
+		ASC_FREE(fullpath); */
 
 		if(0==ospath_stat(fp2,&buf) && NULL!=(f = ospath_fopen(fp2,"r"))){
 			fclose(f);

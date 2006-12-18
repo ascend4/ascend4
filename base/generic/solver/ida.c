@@ -574,7 +574,13 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	is_error = 0; 
 	relptr = enginedata->rellist;
 
-	Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+	if(enginedata->safeeval){
+		Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+	}else{
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"SETTING TO CATCH SIGFPE...");
+		Asc_SignalHandlerPushDefault(SIGFPE);
+	}
+
 	if (setjmp(g_fpe_env)==0) {
 		for(i=0, relptr = enginedata->rellist;
 				i< enginedata->nrels && relptr != NULL;
@@ -589,6 +595,8 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 				ASC_FREE(relname);
 				/* presumable some output already made? */
 				is_error = 1;
+			}else{
+				CONSOLE_DEBUG("Calc OK");
 			}
 		}
 	}else{
@@ -597,7 +605,12 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 		ASC_FREE(relname);
 		is_error = 1;
 	}
-	Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+
+	if(enginedata->safeeval){
+		Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+	}else{
+		Asc_SignalHandlerPopDefault(SIGFPE);
+	}
 
 #ifdef FEX_DEBUG
 	/* output residuals to console */
@@ -826,7 +839,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	filter.matchbits = VAR_SVAR;
 	filter.matchvalue = VAR_SVAR;
 
-	Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+	Asc_SignalHandlerPushDefault(SIGFPE);
 	if (setjmp(g_fpe_env)==0) {
 		for(i=0, relptr = enginedata->rellist;
 				i< enginedata->nrels && relptr != NULL;
@@ -902,7 +915,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 		ASC_FREE(relname);
 		is_error = 1;
 	}
-	Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+	Asc_SignalHandlerPopDefault(SIGFPE);
 
 	if(is_error){
 		CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");

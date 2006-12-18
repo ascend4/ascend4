@@ -1205,6 +1205,40 @@ def CheckX11(context):
 	return CheckExtLib(context,'X11',x11_check_text)
 
 #----------------
+# Check that we can raise and catch sigint
+
+sigint_test_text = r"""
+#include <signal.h>
+#include <setjmp.h>
+#include <stdlib.h>
+static jmp_buf g_jmpenv;
+void sighandler(int sig){
+	longjmp(g_jmpenv,sig);
+}
+void testsigint(){
+	raise(SIGINT);
+}
+int main(void){
+	signal(SIGINT,&sighandler);
+	switch(setjmp(g_jmpenv)){
+		case 0:
+			testsigint();
+			exit(1);
+		case SIGINT:
+			exit(0);
+		default:
+			exit(2);
+	}
+}
+"""
+
+def CheckSIGINT(context):
+	context.Message("Checking SIGINT is catchable... ")
+	(is_ok,output)=context.TryRun(sigint_test_text,".c")
+	context.Result(is_ok)
+	return is_ok
+
+#----------------
 # Check that we're able to catch floating point errors
 
 sigfpe_test_text = r"""
@@ -1235,9 +1269,67 @@ int main(void){
 """
 
 def CheckFPE(context):
-	context.Message("Checking for C99 FPE behaviour... ")
+	context.Message("Checking C99 FPE behaviour... ")
 	(is_ok,output) = context.TryRun(sigfpe_test_text,'.c')
 	context.Result(is_ok)
+	return is_ok
+
+#----------------
+# signal reset needed?
+
+sigreset_test_text = r"""
+#include <signal.h>
+#include <setjmp.h>
+#include <stdlib.h>
+#include <stdio.h>
+typedef void SigHandlerFn(int);
+static jmp_buf g_jmpenv;
+void sighandler(int sig){
+	longjmp(g_jmpenv,sig);
+}
+void testsigint(){
+	fprintf(stderr,"Raising SIGINT\n");
+	raise(SIGINT);
+}
+int main(void){
+	SigHandlerFn *last,*saved;
+	saved = signal(SIGINT,&sighandler);
+	if(saved!=SIG_DFL){
+		fprintf(stderr,"Default handler was not correctly set\n");
+		exit(3);
+	}
+	switch(setjmp(g_jmpenv)){
+		case 0:
+			testsigint();
+			fprintf(stderr,"Back from SIGINT\n");
+			exit(1);
+		case SIGINT:
+			break;
+		default:
+			exit(2);
+	};
+	last = signal(SIGINT,(saved!=NULL)?saved:SIG_DFL);
+	if(last!=&sighandler){
+		printf("1");
+		exit(0);
+	}
+	printf("0");
+	exit(0);
+}
+"""
+
+def CheckSigReset(context):
+	context.Message("Checking signal handler reset... ")
+	(is_ok,output) = context.TryRun(sigreset_test_text,'.c')
+	if not is_ok:
+		context.Result("ERROR")
+		return 0
+	if(int(output)):
+		context.Result("required");
+		context.env['ASC_RESETNEEDED'] = True
+	else:
+		context.Result("not required");
+		context.env['ASC_RESETNEEDED'] = False
 	return is_ok
 
 #----------------
@@ -1271,6 +1363,8 @@ conf = Configure(env
 		, 'CheckCONOPT' : CheckCONOPT
 		, 'CheckScrollkeeperConfig' : CheckScrollkeeperConfig
 		, 'CheckFPE' : CheckFPE
+		, 'CheckSIGINT' : CheckSIGINT
+		, 'CheckSigReset' : CheckSigReset
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -1308,12 +1402,24 @@ if conf.CheckGcc():
 		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
 	conf.env.Append(CCFLAGS=['-Wall'])
 
+# Catching SIGINT
+
+if not conf.CheckSIGINT():
+	print "SIGINT unable to be caught. Aborting."
+	exit(1)
+
 # Catching SIGFPE
 
 if conf.CheckFPE():
-	conf.env['HAVE_SIGFPE']=True
+	conf.env['HAVE_C99FPE']=True
 else:
-	conf.env['HAVE_SIGFPE']=False
+	conf.env['HAVE_C99FPE']=False
+
+# Checking for signal reset requirement
+
+if not conf.CheckSigReset():
+	print "Unable to determine if signal reset is required"
+	exit(1)
 
 # YACC
 
@@ -1548,6 +1654,12 @@ if with_python:
 
 if env.has_key('HAVE_GCCVISIBILITY'):
 	subst_dict['@HAVE_GCCVISIBILITY@'] = "1"
+
+if env.get('ASC_RESETNEEDED'):
+	subst_dict["/\\* #define ASC_RESETNEEDED @ASC_RESETNEEDED@ \\*/"]='#define ASC_RESETNEEDED '
+
+if env.get('HAVE_C99FPE'):
+	subst_dict["/\\* #define HAVE_C99FPE @HAVE_C99FPE@ \\*/"]='#define HAVE_C99FPE '
 
 env.Append(SUBST_DICT=subst_dict)
 

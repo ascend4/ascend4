@@ -33,10 +33,10 @@ MODEL idakryx;
 	M :== 4;
 
 	dx IS_A real_constant;
-	dx :== 1 / (M - 1);
+	dx :== 1.0 / (M - 1);
 
 	coeff IS_A real_constant;
-	coeff :== 1/dx^2;
+	coeff :== 1/dx/dx;
 
 	u[0..M-1][0..M-1] IS_A solver_var;
 	udot[0..M-1][0..M-1] IS_A solver_var;

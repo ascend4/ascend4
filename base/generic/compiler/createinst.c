@@ -761,9 +761,6 @@ struct Instance *CreateLogRelInstance(struct TypeDescription *type)
     result->logrels = NULL;
     result->padding = INT_MAX;
     /* relation stuff */
-    if(result->ptr!=NULL){
-      CONSOLE_DEBUG("Clearing rel ptr %p",result->ptr);
-    }
     result->ptr = NULL;
     MakeAtomChildren(num_children,
 		     INST(result),
