@@ -159,6 +159,7 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *blsys){
 
 enum ida_parameters{
 	IDA_PARAM_LINSOLVER
+	,IDA_PARAM_MAXL
 	,IDA_PARAM_AUTODIFF
 	,IDA_PARAM_SAFEEVAL
 	,IDA_PARAM_RTOL
@@ -241,7 +242,17 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,(SlvParameterInitChar){{"linsolver"
 			,"Linear solver",1
 			,"See IDA manual, section 5.5.3."
-		}, "SPGMR"}, (char *[]){"DENSE","BAND","SPGMR","BBDSPGMR",NULL}
+		}, "SPGMR"}, (char *[]){"DENSE","BAND","SPGMR","SPBCG","SPTFQMR",NULL}
+	);
+
+	slv_param_int(p,IDA_PARAM_MAXL
+			,(SlvParameterInitInt){{"maxl"
+			,"Maximum Krylov dimension",0
+			,"The maximum dimension of Krylov space used by the linear solver"
+			" (for SPGMR, SPBCG, SPTFQMR) with IDA. See IDA manual section 5.5."
+			" The default of 0 results in IDA using its internal default, which"
+			" is currently a value of 5."
+		}, 0, 0, 20 }
 	);
 
 	slv_param_bool(p,IDA_PARAM_GSMODIFIED
