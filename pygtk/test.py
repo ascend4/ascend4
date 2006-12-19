@@ -68,13 +68,14 @@ class TestIntegrator(Ascend):
 	def testListIntegrators(self):
 		I = ascpy.Integrator.getEngines()
 		s1 = sorted([str(i) for i in I.values()])
-		s2 = sorted(['IDA','LSODE'])
+		s2 = sorted(['IDA','LSODE','AWW'])
 		assert s1==s2
 
 	# this routine is reused by both testIDA and testLSODE
 	def _testIntegrator(self,integratorname):
 		self.L.load('johnpye/shm.a4c')
 		M = self.L.findType('shm').getSimulation('sim')
+		M.setSolver(ascpy.Solver('QRSlv'))
 		print M.sim.getChildren()
 		assert float(M.sim.x) == 10.0
 		assert float(M.sim.v) == 0.0
@@ -102,33 +103,39 @@ class TestIntegrator(Ascend):
 	def testInvalidIntegrator(self):
 		self.L.load('johnpye/shm.a4c') 
 		M = self.L.findType('shm').getSimulation('sim')
+		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		try:
 			I.setEngine('___NONEXISTENT____')
-		except IndexError:
+		except RuntimeError:
 			return
 		self.fail("setEngine did not raise error!")
 
 	def testLSODE(self):
 		self._testIntegrator('LSODE')
 
+	def testIDA(self):
+		self._testIntegrator('IDA')
+
+class TestLSODE(Ascend):
+
 	def testzill(self):
 		self.L.load('johnpye/zill.a4c')
 		T = self.L.findType('zill')
 		M = T.getSimulation('sim')
-		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		M.build()
+		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
 		I.setMinSubStep(1e-7)
 		I.setMaxSubStep(0.001)
 		I.setMaxSubSteps(10000)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units(), 0, 1.5, 5);
+		I.setLinearTimesteps(ascpy.Units(), 1.0, 1.5, 5);
 		I.analyse()
 		I.solve()
 		M.run(T.getMethod('self_test'))
 
-		
 	def testnewton(self):
 		self.L.load('johnpye/newton.a4c')
 		T = self.L.findType('newton')
@@ -167,10 +174,7 @@ class TestIntegrator(Ascend):
 		assert abs(float(M.sim.R) - 832) < 1.0
 		assert abs(float(M.sim.F) - 21.36) < 0.1
 		
-
-	def testIDA(self):
-		self._testIntegrator('IDA')
-
+class TestIDA(Ascend):
 
 	def testIDAparameters(self):
 		self.L.load('johnpye/shm.a4c')
@@ -202,18 +206,38 @@ class TestIntegrator(Ascend):
 		else:
 			self.fail('Failed to trip invalid Integrator parameter')
 
+	def testIDAzill(self):
+		self.L.load('johnpye/zill.a4c')
+		T = self.L.findType('zill')
+		M = T.getSimulation('sim')
+		M.build()
+		M.setSolver(ascpy.Solver('QRSlv'))
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setParameter('safeeval',True)
+		I.setMinSubStep(1e-7)
+		I.setMaxSubStep(0.001)
+		I.setMaxSubSteps(10000)
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units(), 1.0, 1.5, 5);
+		I.analyse()
+		I.solve()
+		M.run(T.getMethod('self_test'))
+		
 	def testIDAdenx(self):
 		self.L.load('johnpye/idadenx.a4c')
 		M = self.L.findType('idadenx').getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
+		I.setParameter('calcic',False)
+		I.setParameter('linsolver','DENSE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
 		I.setMaxSubStep(0);
 		I.setInitialSubStep(0);
 		I.setMaxSubSteps(0);
 		I.setParameter('autodiff',True)
-		I.setParameter('linsolver','DENSE')
 		I.analyse()
 		I.solve()
 		assert abs(float(M.sim.y1) - 5.1091e-08) < 1e-10;

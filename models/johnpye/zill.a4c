@@ -45,7 +45,7 @@ END on_load;
 METHOD self_test;
 	(* assumes integration up to x = 1.5 *)
 	ASSERT abs(x - 1.5) < 1e-7;
-	ASSERT abs(y - 3.4904) < 0.0003; (* this would be true if we used RK4, with h = 0.1 *)
+	ASSERT abs(y - 3.4904) < 0.001; (* this would be true if we used RK4, with h = 0.1 *)
 END self_test;
 
 END zill;

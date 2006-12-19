@@ -51,6 +51,14 @@ enum StructuralStatus{
 	In ASCEND C-code, a simulation is a special type of Instance. It
 	has a 'simulation root' instance which often needs to be used for
 	solving, inspecting, etc, rather than the simulation instance itself.
+
+	The Simulation can be exported to an Integrator (for time-stepping)
+	or a Solver (for steady-state solutions).
+
+	At present the architecture is a bit muddy wrt to way that Solvers and
+	Integrators 'act on' the Simulation. We need to work on improving the
+	delimitation of solver and integrator, and keeping better track of the 
+	state of the Simulation (has it been 'built', etc).
 */
 class Simulation : public Instanc{
 	friend class IncidenceMatrix;

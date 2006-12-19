@@ -159,7 +159,7 @@ void AscCheckDuplicateLoad(CONST char *path)
   r = g_ascend_dllist;
   while (r != NULL) {
     if (strcmp(path,r->path)==0) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Attempt to load already loaded '%s'.",path);
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Attempt to load already loaded '%s'.",path);
       return;
     }
     r = r->next;

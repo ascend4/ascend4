@@ -96,6 +96,7 @@
 typedef struct{
 	struct rel_relation **rellist;   /**< NULL terminated list of rels */
 	struct var_variable **varlist;   /**< NULL terminated list of vars. ONLY USED FOR DEBUGGING -- get rid of it! */
+	struct bnd_boundary **bndlist;	 /**< NULL-terminated list of boundaries, for use in the root-finding  code */
 	int nrels;
 	int safeeval;                    /**< whether to pass the 'safe' flag to relman_eval */
 } IntegratorIdaData;
@@ -161,6 +162,7 @@ enum ida_parameters{
 	IDA_PARAM_LINSOLVER
 	,IDA_PARAM_MAXL
 	,IDA_PARAM_AUTODIFF
+	,IDA_PARAM_CALCIC
 	,IDA_PARAM_SAFEEVAL
 	,IDA_PARAM_RTOL
 	,IDA_PARAM_ATOL
@@ -200,6 +202,13 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,"Use auto-diff?",1
 			,"Use automatic differentiation of expressions (1) or use numerical derivatives (0)"
 		}, TRUE}
+	);
+
+	slv_param_bool(p,IDA_PARAM_CALCIC
+			,(SlvParameterInitBool){{"calcic"
+			,"Calculate initial conditions?",1
+			,"Use IDA to calculate initial conditions (1) or else assume that the model will already be solved for this case (0)"
+		}, FALSE}
 	);
 
 	slv_param_bool(p,IDA_PARAM_SAFEEVAL
@@ -282,7 +291,7 @@ int integrator_ida_solve(
 ){
 	void *ida_mem;
 	int size, flag, t_index;
-	realtype t0, reltol, abstol, t, tret;
+	realtype t0, reltol, abstol, t, tret, tout1;
 	N_Vector y0, yp0, abstolvect, ypret, yret;
 	IntegratorIdaData *enginedata;
 	char *linsolver;
@@ -299,6 +308,8 @@ int integrator_ida_solve(
 	enginedata->nrels = slv_get_num_solvers_rels(blsys->system);
 	enginedata->rellist = slv_get_solvers_rel_list(blsys->system);
 	enginedata->varlist = slv_get_solvers_var_list(blsys->system);
+	enginedata->bndlist = slv_get_solvers_bnd_list(blsys->system);
+
 	CONSOLE_DEBUG("Number of relations: %d",enginedata->nrels);
 	CONSOLE_DEBUG("Number of dependent vars: %ld",blsys->n_y);
 	size = blsys->n_y;
@@ -463,33 +474,36 @@ int integrator_ida_solve(
 	}
 
 	/* set linear solver optional inputs...
-
 		...nothing here at the moment... 
-
 	*/
 
-#if 0
-	/* correct initial values, given derivatives */
-	blsys->currentstep=0;
- 	t_index=start_index;
-	tout1 = samplelist_get(blsys->samples, t_index);
+	/* calculate initial conditions */
+	if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_CALCIC)){
+		CONSOLE_DEBUG("Solving initial conditions (given derivatives)");
 
-	CONSOLE_DEBUG("SOLVING INITIAL CONDITIONS IDACalcIC (tout1 = %f)", tout1);
+		blsys->currentstep=0;
+	 	t_index=start_index;
+		tout1 = samplelist_get(blsys->samples, t_index);
 
-# if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
-	/* note the new API from version 2.3 and onwards */
-	flag = IDACalcIC(ida_mem, IDA_Y_INIT, tout1);
-# else
-	flag = IDACalcIC(ida_mem, t0, y0, yp0, IDA_Y_INIT, tout1);
-# endif
+		CONSOLE_DEBUG("SOLVING INITIAL CONDITIONS IDACalcIC (tout1 = %f)", tout1);
 
-	if(flag!=IDA_SUCCESS){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to solve initial values (IDACalcIC)");
-		return 0;
-	}/* else success */
+		/* correct initial values, given derivatives */
+	# if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
+		/* note the new API from version 2.3 and onwards */
+		flag = IDACalcIC(ida_mem, IDA_Y_INIT, tout1);
+	# else
+		flag = IDACalcIC(ida_mem, t0, y0, yp0, IDA_Y_INIT, tout1);
+	# endif
 
-	CONSOLE_DEBUG("INITIAL CONDITIONS SOLVED :-)");
-#endif
+		if(flag!=IDA_SUCCESS){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to solve initial values (IDACalcIC)");
+			return 0;
+		}/* else success */
+
+		CONSOLE_DEBUG("INITIAL CONDITIONS SOLVED :-)");
+	}else{
+		CONSOLE_DEBUG("Not solving initial conditions (see IDA parameter 'calcic')");
+	}
 
 	/* optionally, specify ROO-FINDING PROBLEM */
 
@@ -506,10 +520,12 @@ int integrator_ida_solve(
 
 	/* advance solution in time, return values as yret and derivatives as ypret */
 	blsys->currentstep=1;
-	for(t_index=start_index;t_index <= finish_index;++t_index, ++blsys->currentstep){
+	for(t_index=start_index+1;t_index <= finish_index;++t_index, ++blsys->currentstep){
 		t = samplelist_get(blsys->samples, t_index);
-
-		/* CONSOLE_DEBUG("SOLVING UP TO t = %f", t); */
+		t0 = integrator_get_t(blsys);
+		asc_assert(t > t0);
+		
+		CONSOLE_DEBUG("Integratoring from t0 = %f to t = %f", t0, t);
 	
 		flag = IDASolve(ida_mem, t, &tret, yret, ypret, IDA_NORMAL);
 

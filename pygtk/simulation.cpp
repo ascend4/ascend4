@@ -88,6 +88,7 @@ Simulation::Simulation(){
 	@TODO fix mutex on compile command filenames
 */
 Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), simroot(GetSimulationRoot(i),SymChar("simroot")){
+	CONSOLE_DEBUG("Created simulation");	
 	sys = NULL;
 	//is_built = false;
 	// Create an Instance object for the 'simulation root' (we'll call
@@ -98,6 +99,7 @@ Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), sim
 
 Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroot){
 	//is_built = old.is_built;
+	CONSOLE_DEBUG("Copying Simulation...");
 	sys = old.sys;
 	bin_srcname = old.bin_srcname;
 	bin_objname = old.bin_objname;
@@ -108,12 +110,17 @@ Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroo
 }
 
 Simulation::~Simulation(){
+	CONSOLE_DEBUG("Destroying Simulation...");
+	/*
+	// FIXME removing this here, because Python overzealously seems to delete simulations
+	
 	CONSOLE_DEBUG("Deleting simulation %s", getName().toString());
 	system_free_reused_mem();
 	if(sys){
 		CONSOLE_DEBUG("Destroying simulation system...");
 		system_destroy(sys);
 	}
+	*/
 	sys=NULL;
 }
 
@@ -457,6 +464,7 @@ Simulation::setSolver(Solver &solver){
 	/* CONSOLE_DEBUG("Setting solver on sim %p, root inst %p",this,this->simroot.getInternalType()); */
 
 	try{
+		CONSOLE_DEBUG("BUILDING SYSTEM");
 		build();
 	}catch(runtime_error &e){
 		stringstream ss;
@@ -465,7 +473,7 @@ Simulation::setSolver(Solver &solver){
 		throw runtime_error(ss.str());
 	}
 
-	CONSOLE_DEBUG("Calling slv_select_solver...");
+	CONSOLE_DEBUG("Selecting solver '%s'",solver.getName().c_str());
 	int selected = slv_select_solver(sys, solver.getIndex());
 	//cerr << "Simulation::setSolver: slv_select_solver returned " << selected << endl;
 
