@@ -7,10 +7,10 @@ REQUIRE "atoms.a4l";
             1 +      .
 	          |    .'
               |  .'
-              |.'
+              |.'    1
 	 <-+------*------+->
-	  -1  .-'`|      1 
-	  ,-'`    + -1/2
+	  -1 _.-'`| 
+	 ,-'`     + - 0.5
               |  
 *)
 MODEL testcmslv2;
@@ -18,7 +18,7 @@ MODEL testcmslv2;
 	y IS_A factor;
 
 	rhs: y = x;
-	lhs: y = -0.5*x;
+	lhs: y = 0.5*x;
 
 	CONDITIONAL
 		ispos: x > 0;
@@ -36,13 +36,13 @@ MODEL testcmslv2;
 
 METHODS
 METHOD default_self;
-	ispos := TRUE;
-	y := 0.0;
-	x := 0.0;
+	isposp := TRUE;
+	y := 3.0;
+	x := 3.0;
 END default_self;
 
 METHOD values;
-	x := 3;
+	x := -1;
 END values;
 
 METHOD specify;
@@ -52,5 +52,9 @@ END specify;
 METHOD on_load;
 	RUN default_self; RUN values; RUN specify;
 END on_load;
+
+METHOD self_test;
+	ASSERT y == -0.5;
+END self_test;
 
 END testcmslv2;
