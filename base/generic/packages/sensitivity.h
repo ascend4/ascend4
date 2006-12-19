@@ -1,7 +1,4 @@
-/*
-	Sensitivity add-on for ASCEND
-	by Tom Epperly, Kirk Abbot
-
+/*	ASCEND modelling environment
 	Copyright (C) 1990-2006 Carnegie-Mellon University
 
     This program is free software; you can redistribute it and/or modify
@@ -18,9 +15,10 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 	This file is part of the SLV solver.
-*/
+*//** @file
+	Sensitivity add-on for ASCEND
+	by Tom Epperly, Kirk Abbot
 
-/** @file
 	@note This is a static package in ASCEND. It can not be built as a dynamic package
 	because it doesn't contain the self-registration stuff.
 

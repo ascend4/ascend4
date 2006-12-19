@@ -177,7 +177,7 @@ class TestLSODE(Ascend):
 		
 class TestIDA(Ascend):
 
-	def testIDAparameters(self):
+	def testparameters(self):
 		self.L.load('johnpye/shm.a4c')
 		M = self.L.findType('shm').getSimulation('sim')
 		I = ascpy.Integrator(M)
@@ -207,7 +207,7 @@ class TestIDA(Ascend):
 		else:
 			self.fail('Failed to trip invalid Integrator parameter')
 
-	def testIDAzill(self):
+	def testzill(self):
 		self.L.load('johnpye/zill.a4c')
 		T = self.L.findType('zill')
 		M = T.getSimulation('sim')
@@ -224,7 +224,7 @@ class TestIDA(Ascend):
 		I.solve()
 		M.run(T.getMethod('self_test'))
 		
-	def testIDAdenx(self):
+	def testdenx(self):
 		self.L.load('johnpye/idadenx.a4c')
 		M = self.L.findType('idadenx').getSimulation('sim')
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
@@ -244,7 +244,7 @@ class TestIDA(Ascend):
 		assert abs(float(M.sim.y2) - 2.0437e-13) < 1e-15;
 		assert abs(float(M.sim.y3) - 1.0) < 1e-5;
 
-	def testIDAdenxSPGMR(self):
+	def testdenxSPGMR(self):
 		self.L.load('johnpye/idadenx.a4c')
 		M = self.L.findType('idadenx').getSimulation('sim')
 		I = ascpy.Integrator(M)
@@ -263,7 +263,7 @@ class TestIDA(Ascend):
 		assert abs(float(M.sim.y2) - 2.0437e-13) < 1e-15;
 		assert abs(float(M.sim.y3) - 1.0) < 1e-5;
 
-	def testIDAkryx(self):
+	def testkryx(self):
 		self.L.load('johnpye/idakryx.a4c')
 		M = self.L.findType('idakryx').getSimulation('sim')
 		M.build()

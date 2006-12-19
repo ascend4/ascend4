@@ -1,6 +1,27 @@
-/*********************************************************************\
-  Sensititvity analysis code. Kirk Abbott.
-\*********************************************************************/
+/*	ASCEND modelling environment
+	Copyright (C) 1990-2006 Carnegie-Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Sensititvity analysis code
+
+	@see documentation in sensitivity.h.
+*//*
+	by Kirk Abbott
+*/
 
 #include "sensitivity.h"
 
@@ -8,6 +29,7 @@
 #include <math.h>
 #include <utilities/error.h>
 #include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
 #include <compiler/packages.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
@@ -15,11 +37,7 @@
 #include <compiler/instquery.h>
 #include <general/mathmacros.h>
 
-
-
 #define DEBUG 1
-
-/* see documentation in sensitivity.h */
 
 #if 0
 static real64 *zero_vector(real64 *vec, int size)
@@ -549,7 +567,7 @@ int Compute_J(slv_system_t sys)
   lqr_sys = slv_get_linsolqr_sys(sys);
   mtx = linsolqr_get_matrix(lqr_sys);
   rlist = slv_get_solvers_rel_list(sys);
-  nrows = NumberRels(sys);
+  nrows = slv_get_num_solvers_rels(sys);
 
   calc_ok = TRUE;
   vfilter.matchbits =  (VAR_SVAR | VAR_ACTIVE) ;
@@ -563,6 +581,7 @@ int Compute_J(slv_system_t sys)
   for(row=0; row<nrows; row++) {
     struct rel_relation *rel;
     rel = rlist[mtx_row_to_org(mtx,row)];
+	asc_assert(rel!=NULL);
     (void)relman_diffs(rel,&vfilter,mtx,&resid,1);
   }
   linsolqr_matrix_was_changed(lqr_sys);
