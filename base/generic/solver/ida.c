@@ -286,6 +286,7 @@ int integrator_ida_solve(
 	N_Vector y0, yp0, abstolvect, ypret, yret;
 	IntegratorIdaData *enginedata;
 	char *linsolver;
+	int maxl;
 
 	CONSOLE_DEBUG("STARTING IDA...");
 
@@ -401,15 +402,18 @@ int integrator_ida_solve(
 		/* remaining methods are all SPILS */
 		CONSOLE_DEBUG("IDA SPILS");
 
+		maxl = SLV_PARAM_INT(&(blsys->params),IDA_PARAM_MAXL);
+		CONSOLE_DEBUG("maxl = %d",maxl);
+
 		if(strcmp(linsolver,"SPGMR")==0){
 			CONSOLE_DEBUG("IDA SPGMR");
-			flag = IDASpgmr(ida_mem, 0); /* 0 means use the default max Krylov dimension of 5 */
+			flag = IDASpgmr(ida_mem, maxl); /* 0 means use the default max Krylov dimension of 5 */
 		}else if(strcmp(linsolver,"SPBCG")==0){
 			CONSOLE_DEBUG("IDA SPBCG");
-			flag = IDASpbcg(ida_mem, 0);
+			flag = IDASpbcg(ida_mem, maxl);
 		}else if(strcmp(linsolver,"SPTFQMR")==0){
 			CONSOLE_DEBUG("IDA SPTFQMR");
-			flag = IDASptfqmr(ida_mem,0);
+			flag = IDASptfqmr(ida_mem,maxl);
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
 			return 0;
