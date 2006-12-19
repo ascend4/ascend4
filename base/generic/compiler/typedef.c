@@ -3134,14 +3134,16 @@ enum typelinterr VerifyTypeArgs(CONST struct Set *alist,
             arrayerr=1;
           }
         }
-        if (arrayerr) {
+        if(arrayerr){
+		  ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
           FPRINTF(ASCERR,
-            "%sInstance of incorrect arrayness passed\n  Argument %d: ",
-            StatioLabel(3),argc);
+            "Instance of incorrect arrayness passed. Argument %d: "
+            ,argc);
           WriteSetNode(ASCERR,sn);
-          FPRINTF(ASCERR,"\n  ");
+          FPRINTF(ASCERR,"\n");
           FPRINTF(ASCERR,
-                  "Expected name of a %d dimensional object\n",subsneed);
+                  "Expected name of a %d-dimensional object.",subsneed);
+		  error_reporter_end_flush();
           return DEF_ARGS_INCORRECT;
         }
         MarkIfPassedArgs(n,lclgl);

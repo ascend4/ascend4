@@ -81,14 +81,29 @@
 #include "samplelist.h"
 
 /*---------------------------*/
+
+#define I(N) INTEG_##N
+#define S ,
+#define INTEG_LIST \
+	I(LSODE) S \
+	I(IDA) S \
+	I(AWW)
+
 /** 
 	Struct containin the list of supported integrators
 */
 typedef enum{
-  INTEG_UNKNOWN,
-  INTEG_LSODE,
-  INTEG_IDA
+	INTEG_UNKNOWN
+	,INTEG_LIST
 } IntegratorEngine;
+
+#undef I
+#undef S
+
+typedef struct{
+	IntegratorEngine id;
+	const char *name;
+} IntegratorLookup;
 
 /*------------------------
   abstraction of the integrator output interface
@@ -210,6 +225,13 @@ ASC_DLLSPEC(int) integrator_solve(IntegratorSystem *blsys, long i0, long i1);
 ASC_DLLSPEC(void) integrator_free(IntegratorSystem *blsys);
 /**<
 	Deallocates any memory used and sets all integration global points to NULL.
+*/
+
+ASC_DLLSPEC(void) integrator_get_engines(IntegratorLookup **listptr);
+/**<
+	Return a {INTEG_UNKNOWN,NULL} terminated list of integrator currently
+	available. At present this is determined at compile time but will be
+	changed to being determined at load time if necessary.
 */
 
 ASC_DLLSPEC(int) integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine engine);

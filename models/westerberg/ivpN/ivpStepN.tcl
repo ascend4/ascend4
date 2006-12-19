@@ -1,6 +1,6 @@
 proc IVP.Integrator {qlfdid method relativeError maxNumberSolves initDeltaX maxDeltaX stopX} {
 
-# qkfdid          stands for qualified id (this name occurs often in ASCEND
+# qlfdid          stands for qualified id (this name occurs often in ASCEND
 #                 tcl code) 
 # method          must have value Am or Bdf and is used to set integration
 #                 method

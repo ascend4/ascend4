@@ -60,6 +60,8 @@
 # include <ida/ida.h>
 # include <nvector/nvector_serial.h>
 # include <ida/ida_spgmr.h>
+# include <ida/ida_spbcgs.h>
+# include <ida/ida_sptfqmr.h>
 # include <ida/ida_dense.h>
 # ifndef IDA_SUCCESS
 #  error "Failed to include SUNDIALS IDA header file"
@@ -67,8 +69,7 @@
 #endif
 
 /*
-	for the benefit of build tools that didn't sniff the SUNDIALS version, we
-	assume version 2.2.x (and thence possible errors).
+	for cases where we don't have SUNDIALS_VERSION_MINOR defined, guess version 2.2
 */
 #ifndef SUNDIALS_VERSION_MINOR
 # ifdef __GNUC__
@@ -240,13 +241,14 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,(SlvParameterInitChar){{"linsolver"
 			,"Linear solver",1
 			,"See IDA manual, section 5.5.3."
-		}, "SPGMR"}, (char *[]){"DENSE","BAND","SPGMR",NULL}
+		}, "SPGMR"}, (char *[]){"DENSE","BAND","SPGMR","BBDSPGMR",NULL}
 	);
 
 	slv_param_bool(p,IDA_PARAM_GSMODIFIED
 			,(SlvParameterInitBool){{"gsmodified"
 			,"Use modified Gram-Schmidt orthogonalisation in SPGMR?",2
-			,"TRUE = GS_MODIFIED, FALSE = GS_CLASSICAL. See IDA manual section 5.5.6.6"
+			,"TRUE = GS_MODIFIED, FALSE = GS_CLASSICAL. See IDA manual section"
+			" 5.5.6.6. Only applies when linsolve=SPGMR is selected."
 		}, TRUE}
 	);
 
@@ -269,7 +271,7 @@ int integrator_ida_solve(
 ){
 	void *ida_mem;
 	int size, flag, t_index;
-	realtype t0, reltol, abstol, t, tret, tout1;
+	realtype t0, reltol, abstol, t, tret;
 	N_Vector y0, yp0, abstolvect, ypret, yret;
 	IntegratorIdaData *enginedata;
 	char *linsolver;
@@ -363,9 +365,45 @@ int integrator_ida_solve(
 	/* attach linear solver module, using the default value of maxl */
 	linsolver = SLV_PARAM_CHAR(&(blsys->params),IDA_PARAM_LINSOLVER);
 	CONSOLE_DEBUG("ASSIGNING LINEAR SOLVER '%s'",linsolver);
-	if(strcmp(linsolver,"SPGMR")==0){
-		CONSOLE_DEBUG("USING 'SCALED PRECONDITIONER GMRES' LINEAR SOLVER");
-		flag = IDASpgmr(ida_mem, 0);
+	if(strcmp(linsolver,"DENSE")==0){
+		CONSOLE_DEBUG("DENSE DIRECT SOLVER, size = %d",size);
+		flag = IDADense(ida_mem, size);
+		switch(flag){
+			case IDADENSE_SUCCESS: break;
+			case IDADENSE_MEM_NULL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL"); return 0;
+			case IDADENSE_ILL_INPUT: ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDADENSE is not compatible with current nvector module"); return 0;
+			case IDADENSE_MEM_FAIL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for IDADENSE"); return 0;
+			default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad return"); return 0;
+		}
+		
+		if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_AUTODIFF)){
+			CONSOLE_DEBUG("USING AUTODIFF");
+			flag = IDADenseSetJacFn(ida_mem, &integrator_ida_djex, (void *)blsys);
+			switch(flag){
+				case IDADENSE_SUCCESS: break;
+				default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDADenseSetJacFn"); return 0;
+			}
+		}else{
+			CONSOLE_DEBUG("USING NUMERICAL DIFF");
+		}
+	}else{
+		/* remaining methods are all SPILS */
+		CONSOLE_DEBUG("IDA SPILS");
+
+		if(strcmp(linsolver,"SPGMR")==0){
+			CONSOLE_DEBUG("IDA SPGMR");
+			flag = IDASpgmr(ida_mem, 0); /* 0 means use the default max Krylov dimension of 5 */
+		}else if(strcmp(linsolver,"SPBCG")==0){
+			CONSOLE_DEBUG("IDA SPBCG");
+			flag = IDASpbcg(ida_mem, 0);
+		}else if(strcmp(linsolver,"SPTFQMR")==0){
+			CONSOLE_DEBUG("IDA SPTFQMR");
+			flag = IDASptfqmr(ida_mem,0);
+		}else{
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
+			return 0;
+		}				
+			
 		if(flag==IDASPILS_MEM_NULL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 			return 0;
@@ -389,46 +427,24 @@ int integrator_ida_solve(
 			CONSOLE_DEBUG("USING NUMERICAL DIFF");
 		}
 
-		/* select Gram-Schmidt orthogonalisation */
-		if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_GSMODIFIED)){
-			CONSOLE_DEBUG("USING MODIFIED GS");
-			flag = IDASpilsSetGSType(ida_mem,MODIFIED_GS);
-			if(flag!=IDASPILS_SUCCESS){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
-				return 0;
-			}
-		}else{
-			CONSOLE_DEBUG("USING CLASSICAL GS");
-			flag = IDASpilsSetGSType(ida_mem,CLASSICAL_GS);
-			if(flag!=IDASPILS_SUCCESS){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
-				return 0;
+		if(strcmp(linsolver,"SPGMR")==0){
+			/* select Gram-Schmidt orthogonalisation */
+			if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_GSMODIFIED)){
+				CONSOLE_DEBUG("USING MODIFIED GS");
+				flag = IDASpilsSetGSType(ida_mem,MODIFIED_GS);
+				if(flag!=IDASPILS_SUCCESS){
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
+					return 0;
+				}
+			}else{
+				CONSOLE_DEBUG("USING CLASSICAL GS");
+				flag = IDASpilsSetGSType(ida_mem,CLASSICAL_GS);
+				if(flag!=IDASPILS_SUCCESS){
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
+					return 0;
+				}
 			}
 		}
-	}else if(strcmp(linsolver,"DENSE")==0){
-		CONSOLE_DEBUG("DENSE DIRECT SOLVER, size = %d",size);
-		flag = IDADense(ida_mem, size);
-		switch(flag){
-			case IDADENSE_SUCCESS: break;
-			case IDADENSE_MEM_NULL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL"); return 0;
-			case IDADENSE_ILL_INPUT: ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDADENSE is not compatible with current nvector module"); return 0;
-			case IDADENSE_MEM_FAIL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for IDADENSE"); return 0;
-			default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad return"); return 0;
-		}
-		
-		if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_AUTODIFF)){
-			CONSOLE_DEBUG("USING AUTODIFF");
-			flag = IDADenseSetJacFn(ida_mem, &integrator_ida_djex, (void *)blsys);
-			switch(flag){
-				case IDADENSE_SUCCESS: break;
-				default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDADenseSetJacFn"); return 0;
-			}
-		}else{
-			CONSOLE_DEBUG("USING NUMERICAL DIFF");
-		}
-	}else{
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
-		return 0;
 	}
 
 	/* set linear solver optional inputs...
@@ -595,9 +611,9 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 				ASC_FREE(relname);
 				/* presumable some output already made? */
 				is_error = 1;
-			}else{
+			}/*else{
 				CONSOLE_DEBUG("Calc OK");
-			}
+			}*/
 		}
 	}else{
 		relname = rel_make_name(blsys->system, *relptr);
@@ -806,7 +822,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	IntegratorIdaData *enginedata;
 	int i, j, is_error=0;
 	struct rel_relation** relptr;
-	char *relname, *varname;
+	char *relname;
 	int status;
 	double Jv_i;
 	int var_yindex;

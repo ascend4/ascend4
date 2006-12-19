@@ -11,7 +11,7 @@ csrcs = Split("""
 	slv8.c slv9.c slv9a.c slvDOF.c slv_common.c
 	slv_interface.c slv_stdcalls.c system.c var.c
 
-	integrator.c lsode.c samplelist.c
+	integrator.c lsode.c samplelist.c aww.c
 """)
 
 solver_env = libascend_env.Copy()
