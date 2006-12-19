@@ -247,6 +247,7 @@ class TestIntegrator(Ascend):
 		I.setEngine('IDA')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setParameter('linsolver','SPGMR')
+		I.setParameter('maxl',8)
 		I.setParameter('gsmodified',False)
 		I.setParameter('autodiff',True)
 		I.setParameter('rtol',0)
