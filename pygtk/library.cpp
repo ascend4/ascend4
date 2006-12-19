@@ -49,7 +49,7 @@ extern "C"{
 Library::Library(const char *defaultpath){
 	static int have_init;
 	if(!have_init){
-		//cerr << "Initialising ASCEND library..." << endl;
+		cerr << "Initialising ASCEND library..." << endl;
 
 #ifdef REIMPLEMENT_STREAMS
 		Asc_RedirectCompilerDefault(); // Ensure that error message reach stderr
@@ -75,9 +75,9 @@ Library::Library(const char *defaultpath){
 		//cerr << "Created LIBRARY" << endl;
 		//cerr << "Registering solvers..." << endl;
 		registerStandardSolvers();
-	}else{
+	}/*else{
 		CONSOLE_DEBUG("Reusing LIBRARY");
-	}
+	}*/
 	have_init=1;
 }
 
@@ -174,11 +174,17 @@ Library::load(const char *filename){
 	the current library.
 */
 vector<Module>
-Library::getModules(){
-	//cerr << "GET MODULES\n" << endl;
+Library::getModules(const int module_type){
+	if(module_type < 0 || module_type > 2){
+		throw std::runtime_error("Library::getModules: invalid module_type parameter");
+	}
 
 	vector<Module> v;
-	struct gl_list_t *l = Asc_ModuleList(0);
+	struct gl_list_t *l = Asc_ModuleList(module_type);
+	if(l==NULL){
+		CONSOLE_DEBUG("list is empty");
+		return v;
+	}
 	for(int i=0, end=gl_length(l); i<end; ++i){
 		symchar *name = (symchar *)gl_fetch(l,i+1);
 		if(AscFindSymbol(name)==NULL){
@@ -199,41 +205,31 @@ Library::getModules(){
 	Output to stderr the names of the modules loaded into the current Library.
 */
 void
-Library::listModules(const int &module_type) const{
-
+Library::listModules(const int module_type){
 	if(module_type < 0 || module_type > 2){
 		throw std::runtime_error("Library::listModules: invalid module_type parameter");
 	}
 
-	struct gl_list_t *l;
-
-	l = Asc_ModuleList(module_type);
-
-	if(l==NULL){
-		std::cerr << "Library::listModules: list is empty" << std::endl;
-		return;
-		//throw std::runtime_error("Library::listModules: Asc_ModuleList returned NULL");
-	}
-
 	char *type = NULL;
 	switch(module_type){
-		case 0: type = "modules containing defined types"; break;
-		case 1: type = "modules with string definitions"; break;
-		case 2: type = "modules with statements"; break;
+		case 0: type = "defined types"; break;
+		case 1: type = "string definitions"; break;
+		case 2: type = "statements"; break;
 	}
-	int n=gl_length(l);
-	if(n){
-		std::cerr << "Listing " << gl_length(l) << " " << type << std::endl;
-		gl_iterate(l,Library::displayModule);
+
+	vector<Module> v = getModules(module_type);
+	if(v.size()){
+		std::cerr << "Listing " << v.size() << " modules with " << type << std::endl;
+		for(vector<Module>::const_iterator i=v.begin(); i < v.end(); ++i){
+			cerr << " - " << i->getName() << endl;
+			vector<Type> tt = getModuleTypes(*i);
+			for(vector<Type>::const_iterator j = tt.begin(); j < tt.end(); ++j){
+				cerr << "    * " << j->getName() << endl;
+			}
+		}
 	}else{
 		std::cerr << "Notice: No " << type << " found in module list." << std::endl;
 	}
-}
-
-void
-Library::displayModule(void *v){
-	//module_t *m = (module_t *)v;
-	std::cerr << " - " << (char *)v << std::endl;
 }
 
 Type &
@@ -317,6 +313,10 @@ Library::clear(){
 	cerr << "... DEFINED FUND TYPES" << endl;
 	\*SetUniversalProcedureList(NULL);
 */
+
+	//CONSOLE_DEBUG("Displaying library modules and types...");
+	//listModules();
+
 	CONSOLE_DEBUG("Destroying simulations...");
 	Asc_DestroySimulations();
 

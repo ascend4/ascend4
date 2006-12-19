@@ -2,9 +2,9 @@ REQUIRE "atoms.a4l";
 
 MODEL testlog10;
 
-	x IS_A variable;
-	y IS_A variable;
-	z IS_A variable;
+	x IS_A solver_var;
+	y IS_A solver_var;
+	z IS_A solver_var;
 
 	log_10_expr: y = log10(x);
 	log_e_expr: z = ln(x);

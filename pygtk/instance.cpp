@@ -40,6 +40,7 @@ extern "C"{
 #include "set.h"
 #include "plot.h"
 #include "instanceinterfacedata.h"
+#include "library.h"
 
 using namespace std;
 
@@ -173,10 +174,15 @@ Instanc::isAtom() const{
 
 const bool
 Instanc::isFixed() const{
-	if(getKind()==REAL_ATOM_INST && !isFund() && getType().isRefinedSolverVar()){
-		return getChild("fixed").getBoolValue();
+	if(getKind()!=REAL_ATOM_INST) throw runtime_error("Instanc::isFixed: not a REAL_ATOM_INST");
+	if(isFund()) throw runtime_error("Instanc::isFixed: not a fundamental type");
+	Type T = getType();
+	if(!T.isRefinedSolverVar()){
+		stringstream ss;
+		ss << "Instanc::isFixed: type '" << T.getName() << "' is not a refined solver_var";
+		throw runtime_error(ss.str());
 	}
-	throw runtime_error("Instanc::isFixed: Not a solver_var");
+	return getChild("fixed").getBoolValue();
 }
 
 /** Is the relation currently included in the simulation (ie active WHEN) */

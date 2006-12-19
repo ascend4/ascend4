@@ -233,11 +233,10 @@ Type::getMethod(const SymChar &name) const{
 
 const bool
 Type::isRefinedSolverVar() const{
-	static const TypeDescription *solver_var_type;
-	if(!solver_var_type){
-		Type t1 = Library().findType(SymChar("solver_var"));
-		solver_var_type=t1.getInternalType();
-	}
+	const TypeDescription *solver_var_type;
+	Type t1 = Library().findType(SymChar("solver_var"));
+	solver_var_type=t1.getInternalType();
+
 	if(MoreRefined(t, solver_var_type)==t){
 		//cerr << getName() << " IS A REFINED SOLVER_VAR" << endl;
 		return true;
