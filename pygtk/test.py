@@ -1,7 +1,7 @@
 import unittest
 import ascpy
 import math
-import os, subprocess
+import os, subprocess, sys
 import atexit
 
 class Ascend(unittest.TestCase):
@@ -123,7 +123,6 @@ class TestLSODE(Ascend):
 		self.L.load('johnpye/zill.a4c')
 		T = self.L.findType('zill')
 		M = T.getSimulation('sim')
-		M.build()
 		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
@@ -137,6 +136,7 @@ class TestLSODE(Ascend):
 		M.run(T.getMethod('self_test'))
 
 	def testnewton(self):
+		sys.stderr.write("STARTING TESTNEWTON\n")
 		self.L.load('johnpye/newton.a4c')
 		T = self.L.findType('newton')
 		M = T.getSimulation('sim')
@@ -210,7 +210,6 @@ class TestIDA(Ascend):
 		self.L.load('johnpye/zill.a4c')
 		T = self.L.findType('zill')
 		M = T.getSimulation('sim')
-		M.build()
 		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')

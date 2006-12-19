@@ -22,9 +22,9 @@ public:
 	Library(const char *defaultpath=NULL);
 	~Library();
 	void load(const char *filename);
-	void listModules(const int &module_type=0) const;
+	void listModules(const int module_type=0);
 	Type &findType(const SymChar &nametofind);
-	std::vector<Module> getModules();
+	std::vector<Module> getModules(const int module_type=0);
 	std::vector<Type> getModuleTypes(const Module&);
 
 	// External Function library
@@ -40,7 +40,6 @@ public:
 private:
 	std::vector<ExtMethod> extmethod_vector;
 
-	static void displayModule(void *m);
 };
 
 #endif

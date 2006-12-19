@@ -766,6 +766,8 @@ void
 Simulation::processVarStatus(){
 	if(!sys)throw runtime_error("No system built");
 
+	CONSOLE_DEBUG("Getting var status");
+
 	// this is a cheap function call:
 	const mtx_block_t *bb = slv_get_solvers_blocks(getSystem());
 
@@ -773,7 +775,7 @@ Simulation::processVarStatus(){
 	int nvars = slv_get_num_solvers_vars(getSystem());
 
 	slv_status_t status;
-	slv_get_status(getSystem(), &status);
+	slv_get_status(sys, &status);
 
 	if(status.block.number_of == 0){
 		cerr << "Variable statuses can't be set: block structure not yet determined." << endl;
@@ -801,5 +803,8 @@ Simulation::processVarStatus(){
 		}
 		i.setVarStatus(s);
 	}
+
+	CONSOLE_DEBUG(" ...done var status");
+
 }
 
