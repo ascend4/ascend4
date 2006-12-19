@@ -1,9 +1,6 @@
 REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 
-IMPORT "johnpye/extpy/extpy";
-IMPORT "johnpye/solve";
-
 (* Model of simple harmonic motion *)
 MODEL shm;
 	x IS_A factor;
@@ -39,9 +36,6 @@ END ode_init;
 	
 METHOD on_load;
 	RUN reset; RUN values;
-	EXTERNAL solve(SELF);
-	RUN values;
-	EXTERNAL solve(SELF);
 	RUN ode_init;
 END on_load;
 
