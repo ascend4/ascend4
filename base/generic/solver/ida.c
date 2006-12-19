@@ -708,7 +708,8 @@ int integrator_ida_djex(long int Neq, realtype tt
 	var_filter_t filter = {VAR_SVAR, VAR_SVAR};
 	double *derivatives;
 	int *variables;
-	int count, j, var_yindex;
+	int count, j;
+	long var_yindex;
 
 	blsys = (IntegratorSystem *)jac_data;
 	enginedata = integrator_ida_enginedata(blsys);
@@ -773,9 +774,9 @@ int integrator_ida_djex(long int Neq, realtype tt
 			varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
 			var_yindex = blsys->y_id[variables[j]];
 			if(var_yindex >=0){
-				fprintf(stderr,"  var[%d]='%s'=y[%d]",variables[j],varname,var_yindex);
+				fprintf(stderr,"  var[%d]='%s'=y[%ld]",variables[j],varname,var_yindex);
 			}else{
-				fprintf(stderr,"  var[%d]='%s'=ydot[%d]",variables[j],varname,-var_yindex-1);
+				fprintf(stderr,"  var[%d]='%s'=ydot[%ld]",variables[j],varname,-var_yindex-1);
 			}
 			ASC_FREE(varname);
 		}
@@ -856,7 +857,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	char *relname;
 	int status;
 	double Jv_i;
-	int var_yindex;
+	long var_yindex;
 
 	int *variables;
 	double *derivatives;
@@ -928,7 +929,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				if(var_yindex >= 0){
 #ifdef JEX_DEBUG
 					asc_assert(blsys->y[var_yindex]==enginedata->varlist[variables[j]]);
-					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dy[%d] = %f, v[%d] = %f)\n", i
+					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dy[%ld] = %f, v[%ld] = %f)\n", i
 						, derivatives[j] * NV_Ith_S(v,var_yindex)
 						, i, var_yindex, derivatives[j]
 						, var_yindex, NV_Ith_S(v,var_yindex)
@@ -936,8 +937,9 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 #endif
 					Jv_i += derivatives[j] * NV_Ith_S(v,var_yindex);
 				}else{
+					ASC_ASSERT_LT(-var_yindex-1, NV_LENGTH_S(v));
 #ifdef JEX_DEBUG
-					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dydot[%d] = %f, v[%d] = %f)\n", i
+					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dydot[%ld] = %f, v[%ld] = %f)\n", i
 						, derivatives[j] * NV_Ith_S(v,-var_yindex-1)
 						, i, -var_yindex-1, derivatives[j]
 						, -var_yindex-1, NV_Ith_S(v,-var_yindex-1)

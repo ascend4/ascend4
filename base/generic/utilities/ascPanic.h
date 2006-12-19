@@ -32,25 +32,59 @@
 #ifndef ASC_ASCPANIC_H
 #define ASC_ASCPANIC_H
 
-#ifndef __FUNCTION__
-# define __FUNCTION__ "<unknown>"
+#ifndef __GNUC__
+# ifndef __FUNCTION__
+#  define __FUNCTION__ NULL
+# endif
 #endif
 
-/**
-	Our assert macro. Uses Asc_Panic() to report & handle assertion failure. Disabled if ASC_NO_ASSERTIONS is defined.
-*/
-#ifdef ASC_NO_ASSERTIONS
-# define asc_assert(x) ((void)0)
+NORETURN ASC_DLLSPEC(void) asc_panic_line(
+		const int status, const char *file, const int line, const char *function,
+		const char *format, ...
+);
+
+/* for 'Asc_Panic', use a var-args macro to get local line numbers if possible */
+
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+# define Asc_Panic(STAT,FUNC,ARGS...) asc_panic_line(STAT,__FILE__,__LINE__,__func__, ##ARGS)
 #else
-# define asc_assert(cond) \
-	((cond) ? (void)0 : Asc_Panic(ASCERR_ASSERTION_FAILED, NULL, \
-		"Assertion failed in %s:%d:  '%s'", __FILE__, __LINE__, #cond))
-#endif
+# define Asc_Panic asc_panic
 
-NORETURN ASC_DLLSPEC(void) Asc_Panic(
+NORETURN ASC_DLLSPEC(void) asc_panic(
 		CONST int status, CONST char *function,
 		CONST char *format, ...
 );
+
+#endif
+
+/**
+	Our assertion macros. Use asc_panic_line to report & handle assertion failure. Disabled if ASC_NO_ASSERTIONS is defined.
+*/
+#ifdef ASC_NO_ASSERTIONS
+# define asc_assert(x) ((void)0)
+
+#else
+# define asc_assert(cond) \
+	((cond) ? (void)0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
+		, __FILE__, __LINE__, __FUNCTION__\
+		,"Assertion failed: %s", #cond))
+
+#define ASC_ASSERT_LT(A,B) \
+	(((A)<(B)) ? (void)0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
+		, __FILE__, __LINE__, __FUNCTION__\
+		,"Assertion failed: %s < %s (lhs = %f, rhs = %f)" \
+		, #A, #B \
+		, (float)A, (float)B))
+
+#define ASC_ASSERT_EQ(A,B) \
+	(((A)==(B)) ? (void)0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
+		, __FILE__, __LINE__, __FUNCTION__\
+		,"Assertion failed: %s < %s (lhs = %f, rhs = %f)" \
+		, #A, #B \
+		, (float)A, (float)B))
+
+#endif
+
 /**< Print fatal error message, run callback function & (usually) exit the program.
 
 	@param status   Status code passed by the calling function.

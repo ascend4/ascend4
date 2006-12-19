@@ -180,21 +180,22 @@ class TestIDA(Ascend):
 	def testparameters(self):
 		self.L.load('johnpye/shm.a4c')
 		M = self.L.findType('shm').getSimulation('sim')
+		M.build()
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		P = I.getParameters()
 		for p in P:
 			print p.getName(),"=",p.getValue()
-		assert len(P)==7
+		assert len(P)==9
 		assert P[0].isStr()
 		assert P[0].getName()=="linsolver"
 		assert P[0].getValue()=='SPGMR'
-		assert P[1].getName()=="autodiff"
-		assert P[1].getValue()==True
-		assert P[5].getName()=="atolvect"
-		assert P[5].getBoolValue() == True
-		P[1].setBoolValue(False)
-		assert P[1].getBoolValue()==False
+		assert P[2].getName()=="autodiff"
+		assert P[2].getValue()==True
+		assert P[7].getName()=="atolvect"
+		assert P[7].getBoolValue() == True
+		P[2].setBoolValue(False)
+		assert P[2].getBoolValue()==False
 		I.setParameters(P)
 		for p in I.getParameters():
 			print p.getName(),"=",p.getValue()

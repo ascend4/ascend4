@@ -55,95 +55,124 @@ static char g_panic_outfile[PATH_MAX];
 */
 
 
-void Asc_Panic(CONST int status, CONST char *function,
-               CONST char *format, ...)
-{
-  char msg[PANIC_MSG_MAXLEN];  /* The message that will be printed */
-  size_t p;                    /* The current length of the msg array */
-  FILE *outfile;               /* The file to save the message into */
-  va_list args;                /* The arguments to print */
-  int cancel = FALSE;          /* If non-zero, do not call exit().  Default is to exit() */
+/**
+	This static function does the actual output of a PANIC message. It aims
+	to do a few things to ensure that the user always gets the message.
 
-  /* Fail loudly if ASCERR isn't set to a file pointer -- can't use asc_assert here! */
-  assert(NULL != ASCERR);
+	@TODO We could can improve even further by integrating with some crash
+	reporting facility in GNOME, etc?
+*/
+static void asc_va_panic(const int status, const char *filename, const int line
+		, const char *function, const char *fmt, const va_list args
+){
+	FILE *outfile;               /* The file to save the message into */
+	int cancel = FALSE;          /* If non-zero, do not call exit().  Default is to exit() */
+	char msg[PANIC_MSG_MAXLEN];
+	size_t p;
 
-  /* Give the name of the function where the panic occurred */
-  if( function != NULL ) {
-    snprintf( msg, PANIC_MSG_MAXLEN-2, "function '%s':", function );
-  }else{
-	snprintf(msg, PANIC_MSG_MAXLEN-2, " ");
-  }
-  p = strlen(msg);
+	/* Fail loudly if ASCERR isn't set to a file pointer -- can't use asc_assert here! */
+	assert(NULL != ASCERR);
 
-  /* Add the variable args to the panic message using the format "format" */
-  va_start(args, format);
-  vsnprintf( (msg+p), PANIC_MSG_MAXLEN-p-2, format, args );
-  va_end(args);
+	p = snprintf(msg,PANIC_MSG_MAXLEN-2,"%s:%d (%s): ",filename,line,function);
 
-  p = strlen(msg);
-  msg[p++] = '\n';
-  msg[p++] = '\0';
+	/* Add the variable args to the panic message using the format "format" */
+	vsnprintf(msg+p, PANIC_MSG_MAXLEN-p-2, fmt, args );
 
+	p = strlen(msg);
+	msg[p++] = '\n';
+	msg[p++] = '\0';
 
-  /*
-	Write the message to g_panic_outfile if it is not empty
-	and we can actually write to that location.  Print a
-	message on ASCERR (if valid) saying that we did that.
-  */
-  if(( g_panic_outfile[0] != '\0' )
-     && ( (outfile=fopen(g_panic_outfile,"w")) != NULL ))
-  {
-    FPRINTF(outfile, msg);
-    if( ASCERR != NULL ) {
-      CONSOLE_DEBUG("Error message written to %s\n", g_panic_outfile);
-    }
-    fclose(outfile);
-  }
+	/*
+		Always write the message to g_panic_outfile if it is not empty
+		and we can actually write to that location.  Print a
+		message on ASCERR (if valid) saying that we did that.
+	*/
+	if(( *g_panic_outfile != '\0' )
+			&& ( (outfile=fopen(g_panic_outfile,"w")) != NULL )
+	){
+		fprintf(outfile, msg);
+		CONSOLE_DEBUG("Error message written to %s\n", g_panic_outfile);
 
-  if (NULL == f_panic_callback_func) {
-    /* if there is no callback function registered, reset the error handler, and
-	   output the message to the console.
-    */
-
-	  /*
-		Ensure that our messages don't get left in the GUI
-		that is about to vanish...
-	  */
-	  error_reporter_set_callback(NULL);
-
-	  /* Print the message to the default error reporter (ASCERR) */
-	  fprintf(stderr,"\n\n");
-	  ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,msg);
-
-
-  }else{
-    /* just use the callback, don't make any output */
-
-    cancel = (*f_panic_callback_func)(status);
-	if(cancel){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,
-			"AscPanic 'cancel' facility has been disabled, program will exit"
-		);
+		fclose(outfile);
 	}
-  }
+
+	if (NULL == f_panic_callback_func) {
+		/* No panic-callback, so we reset the error handler and output to console */
+		error_reporter_set_callback(NULL);
+
+		/* Print the message to the default error reporter (ASCERR) */
+		fprintf(stderr,"\n\n");
+		va_error_reporter(ASC_PROG_FATAL,filename,line,function,fmt,args);
+		fprintf(stderr,"\n");
+
+	}else{
+    	/* just use the callback, don't make any output */
+    	cancel = (*f_panic_callback_func)(status);
+		if(cancel){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"AscPanic 'cancel' facility has been disabled, program will exit"
+			);
+		}
+	}
 
   /* Display msg in a MessageBox under Windows unless turned off */
 #ifdef USE_WIN32_FATAL_MSGBOX
-  if (FALSE != f_display_MessageBox) {
-    (void)MessageBeep(MB_ICONEXCLAMATION);
-    MessageBox(NULL, msg, "Fatal Error in ASCEND",
-               (UINT)(MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND));
-  }
-  ExitProcess((UINT)status);
+	if(FALSE != f_display_MessageBox) {
+		(void)MessageBeep(MB_ICONEXCLAMATION);
+		MessageBox(NULL, msg, "Fatal Error in ASCEND"
+			,(UINT)(MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND)
+		);
+	}
+#endif
+}
+
+/**
+	This is a new replacement for Asc_Panic that handles error source
+	details (line, file, function) itself.
+*/
+void asc_panic_line(const int status, const char *filename, const int line
+		, const char *function, const char *fmt, ...
+){
+	va_list args;
+
+	va_start(args,fmt);
+	asc_va_panic(status,filename,line,function,fmt,args);
+	va_end(args);
+
+#ifdef USE_WIN32_FATAL_MSGBOX
+	ExitProcess((UINT)status);
 #else
 # ifndef NDEBUG
-  abort();
+	abort();
 # else
-  exit(status);
+	exit(status);
 # endif
 #endif
 }
 
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+/**
+	we only need this function if our platform doesn't support var-arg macros 
+*/
+void asc_panic(CONST int status, CONST CONST char *function
+		,CONST char *fmt, ...
+){
+	va_list args;
+
+	va_start(args,fmt);
+	asc_va_panic(status,NULL,0,function,fmt,args);
+	va_end(args);
+# ifdef USE_WIN32_FATAL_MSGBOX
+	ExitProcess((UINT)status);
+# else
+#  ifndef NDEBUG
+	abort();
+#  else
+	exit(status);
+#  endif
+# endif
+}
+#endif
 
 void Asc_PanicSetOutfile(CONST char *filename)
 {
