@@ -231,7 +231,7 @@ METHOD values;
 END values;
 METHOD self_test;
 	ASSERT abs(delta - (-13{deg})) < 0.5{deg};
-	ASSERT abs(R_b-1.80) < 0.005;
+	ASSERT abs(R_b-1.80) < 0.05;
 END self_test;
 END example_1_7_3;
 

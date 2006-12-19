@@ -33,6 +33,7 @@ class TestSolver(Ascend):
 		self.L.load(filename)
 		T = self.L.findType(modelname)
 		M = T.getSimulation('sim')
+		M.build()
 		M.solve(ascpy.Solver(solvername),ascpy.SolverReporter())	
 		M.run(T.getMethod('self_test'))
 
@@ -43,7 +44,7 @@ class TestSolver(Ascend):
 		self._run('testconopt',"CONOPT")				
 
 	def testcmslv2(self):
-		self._run('testcmslv2',"CONOPT")	
+		self._run('testcmslv2',"CMSlv")	
 
 	def testsunpos1(self):
 		self._run('example_1_6_1',"QRSlv","johnpye/sunpos.a4c")
