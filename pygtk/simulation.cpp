@@ -78,6 +78,10 @@ extern "C"{
 #include "solverstatus.h"
 #include "solverreporter.h"
 
+Simulation::Simulation(){
+	throw runtime_error("Can't create Simulation without arguments");
+}
+
 /**
 	Create an instance of a type (call compiler etc)
 

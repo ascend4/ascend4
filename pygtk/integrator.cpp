@@ -162,12 +162,12 @@ Integrator::setEngine(const string &name){
 map<int,string>
 Integrator::getEngines(){
 	map<int,string> m;
-#ifdef ASC_WITH_LSODE
-	m.insert(pair<int,string>(INTEG_LSODE,"LSODE"));
-#endif
-#ifdef ASC_WITH_IDA
-	m.insert(pair<int,string>(INTEG_IDA,"IDA"));
-#endif
+	IntegratorLookup *list;
+	integrator_get_engines(&list);
+	while(list->id != INTEG_UNKNOWN){
+		m.insert(pair<int,string>(list->id,list->name));
+		++list;
+	}
 	return m;
 }
 

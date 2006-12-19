@@ -28,6 +28,7 @@
 #include <string.h>
 #include "integrator.h"
 #include "lsode.h"
+#include "aww.h"
 #include "ida.h"
 #include "slv_common.h"
 #include "slv_client.h"
@@ -202,6 +203,22 @@ static void IntegInitSymbols(void){
   INTEGRATOR ENGINE
 */
 
+/**
+	At present, integrators are all present at compile-time so this is a static
+	list; we just return the list.
+*/
+void integrator_get_engines(IntegratorLookup **listptr){
+#define S ,
+#define I(N) {INTEG_##N, #N}
+	static const IntegratorLookup lookup[] = {
+		INTEG_LIST
+		,{INTEG_UNKNOWN,NULL}
+	};
+	*listptr = lookup;
+#undef S
+#undef I
+}
+
 /* return 0 on success */
 int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
 
@@ -241,6 +258,7 @@ void integrator_free_engine(IntegratorSystem *sys){
 #ifdef ASC_WITH_IDA
 		case INTEG_IDA: integrator_ida_free(sys->enginedata); break;
 #endif
+		case INTEG_AWW: integrator_aww_free(sys->enginedata); break;
 		default: break;
 	}
 	sys->enginedata=NULL;
@@ -260,6 +278,7 @@ void integrator_create_engine(IntegratorSystem *sys){
 #ifdef ASC_WITH_IDA
 		case INTEG_IDA: integrator_ida_create(sys); break;
 #endif
+		case INTEG_AWW: integrator_aww_create(sys); break;
 		default: break;
 	}
 }
@@ -280,6 +299,7 @@ static int integrator_params_default(IntegratorSystem *sys){
 #ifdef ASC_WITH_IDA
 		case INTEG_IDA: return integrator_ida_params_default(sys);
 #endif
+		case INTEG_AWW: return integrator_aww_params_default(sys);
 		default: return 0;
 	}
 }
@@ -349,6 +369,7 @@ int integrator_analyse(IntegratorSystem *sys){
 #ifdef ASC_WITH_IDA
 		case INTEG_IDA: return integrator_analyse_dae(sys);
 #endif
+		case INTEG_AWW: return integrator_aww_analyse(sys);
 		case INTEG_UNKNOWN:
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"No engine selected: can't analyse");
 		default:
@@ -371,10 +392,10 @@ int integrator_analyse(IntegratorSystem *sys){
 */
 int integrator_analyse_dae(IntegratorSystem *sys){
 	struct Integ_var_t *info, *prev;
+#ifdef ANALYSE_DEBUG
 	char *varname, *derivname;
-	struct var_variable **varlist;
-	int nvarlist;
-	int i, j;
+#endif
+	int i;
 	int numstates;
 	int numy, nrels;
 	int yindex;
@@ -621,9 +642,9 @@ void integrator_dae_show_var(IntegratorSystem *sys
 	fprintf(stderr,"%d\t%s\t%d", *varindx, varname,y_id);
 	ASC_FREE(varname);
 	if(y_id >= 0){
-		fprintf(stderr,"\ty[%ld]\t.\n",y_id);
+		fprintf(stderr,"\ty[%d]\t.\n",y_id);
 	}else{
-		fprintf(stderr,"\t.\tydot[%ld]\n",-y_id-1);
+		fprintf(stderr,"\t.\tydot[%d]\n",-y_id-1);
 	}
 }
 
@@ -1136,13 +1157,13 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 	/* now go and run the integrator */
 	switch (sys->engine) {
 		case INTEG_LSODE:
-		return integrator_lsode_solve(sys, start_index, finish_index);
-		break;
+			return integrator_lsode_solve(sys, start_index, finish_index); break;
 #ifdef ASC_WITH_IDA
 		case INTEG_IDA:
-		return integrator_ida_solve(sys,start_index, finish_index);
-		break;
+			return integrator_ida_solve(sys,start_index, finish_index);	break;
 #endif
+		case INTEG_AWW:
+			return integrator_aww_solve(sys,start_index, finish_index); break;
 		default:
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown integrator (invalid, or not implemented yet)");
 			return 0;

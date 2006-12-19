@@ -2,9 +2,20 @@
 	SWIG interface for accessing Solver and choosing solver parameters
 */
 
+%include <python/std_vector.i>
+%include <python/std_except.i>
+
+%import "ascpy.i"
+
 %{
 #include "integrator.h"
 #include "integratorreporter.h"
+#include "solver.h"
+#include "incidencematrix.h"
+#include "solverparameter.h"
+#include "solverparameters.h"
+#include "solverreporter.h"
+#include "curve.h"
 %}
 
 %pythoncode{
@@ -18,6 +29,7 @@
 %ignore registerSolver;
 %ignore registerStandardSolvers;
 %include "solver.h"
+
 
 %include "simulation.h"
 // SOLVE PARAMETERS
