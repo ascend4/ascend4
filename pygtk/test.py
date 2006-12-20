@@ -164,7 +164,7 @@ class TestLSODE(Ascend):
 	def testlotka(self):
 		self.L.load('johnpye/lotka.a4c')
 		M = self.L.findType('lotka').getSimulation('sim')
-		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		M.setSolver(ascpy.Solver("QRSlv"))
 		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
