@@ -215,6 +215,11 @@ ASC_DLLSPEC(int) error_reporter_tree_has_error();
 ASC_DLLSPEC(int) fprintf_error_reporter(FILE *file, const char *fmt, ...);
 
 /**
+	For use when implementing higher-level error handling routines
+*/
+ASC_DLLSPEC(int) vfprintf_error_reporter(FILE *file, const char *fmt, const va_list args);
+
+/**
 	If file!=stderr, this will do the usual thing. If file==stderr, it will output
 	the character via fprintf_error_reporter.
 */

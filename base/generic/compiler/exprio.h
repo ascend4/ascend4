@@ -28,8 +28,8 @@
 	#include "expr_types.h"
 	#include "symtab.h"
 *//*
- *  by Tom Epperly
- *  Last in CVS: $Revision: 1.6 $ $Date: 1998/02/05 16:35:57 $ $Author: ballan $
+	by Tom Epperly
+	Last in CVS: $Revision: 1.6 $ $Date: 1998/02/05 16:35:57 $ $Author: ballan $
 */
 
 #ifndef ASC_EXPRIO_H
@@ -37,31 +37,34 @@
 
 extern CONST char *ExprEnumName(CONST enum Expr_enum t);
 /**< 
- *  Returns a pointer to a string containing the name of the Expr term
- *  given. Do not free this string under any circumstances.
- *  This string is not in the symbol table.
- */
+	Returns a pointer to a string containing the name of the Expr term
+	given. Do not free this string under any circumstances.
+	This string is not in the symbol table.
+*/
 
 extern void WriteExprNode(FILE *f, CONST struct Expr *e);
 /**<
- *  Write a single expression node with no leading or trailing white space.
+	Write a single expression node with no leading or trailing white space.
  */
 
 extern void WriteExpr(FILE *f, CONST struct Expr *e);
 /**<
- *  Write the expression with no leading or trailing white space.
- */
+	Write the expression with no leading or trailing white space.
+	@NOTE The output is in POSTFIX format
+*/
 
 extern void WriteExprNode2Str(Asc_DString *dstring, CONST struct Expr *e);
-/**<
- *  Write a single expression node to a string with no leading
- *  or trailing white space.
- */
+/**<	
+	Write a single expression node to a string with no leading
+	or trailing white space.
+*/
 
 extern void WriteExpr2Str(Asc_DString *dstring, CONST struct Expr *e);
 /**<
- *  Write the expression to a string with no leading or trailing white space.
- */
+	Write the expression to a string with no leading or trailing white space.
+	@param dstring string into output is returned
+	@NOTE The return is in POSTFIX format.
+*/
 
 #endif /* ASC_EXPRIO_H */
 

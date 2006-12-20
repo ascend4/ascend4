@@ -1,29 +1,28 @@
-/*
- *  Temporary Statement Output routines
- *  by Tom Epperly
- *  Version: $Revision: 1.41 $
- *  Version control file: $RCSfile: statio.c,v $
- *  Date last modified: $Date: 1998/04/21 23:49:55 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Temporary Statement Output routines
+*//*
+	by Tom Epperly
+	Last in CVS: $Revision: 1.41 $ $Date: 1998/04/21 23:49:55 $ $Author: ballan $
+*/
+
 #define INDENTATION 4
 
 #include <utilities/ascConfig.h>
@@ -528,6 +527,11 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
     WriteSet(f,CallStatArgs(s));
     FPRINTF(f,");\n");
     break;
+  case ASSERT:
+	FPRINTF(f,"ASSERT ");
+	WriteExpr(f,AssertStatExpr(s));
+	FPRINTF(f,"\n");
+	break;
   case WHILE:
     FPRINTF(f,"WHILE (");
     WriteExpr(f,WhileStatExpr(s));
@@ -596,7 +600,7 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
     FPRINTF(f,"END;\n");
     break;
   default:
-    FPRINTF(f,"Unknown\n");
+    FPRINTF(f,"<Implemented statement type in WriteStatement>");
     break;
   }
 }
@@ -656,6 +660,26 @@ void WriteStatementSuppressed(FILE *f, CONST struct Statement *stat)
   } else {
     FPRINTF(f,"  Suppressing NULL STATEMENT!!! How odd! Expect crash.\n");
   }
+}
+
+void WriteStatementError(const error_severity_t sev
+		, const struct Statement *stat
+		, const int outputstatement
+		, const char *fmt
+		, ...
+){
+	va_list args;
+	int res;
+
+	error_reporter_start(sev,Asc_ModuleFileName(stat->mod),stat->linenum,SCP(StatementTypeString(stat)));
+	va_start(args,fmt);
+	vfprintf_error_reporter(ASCERR,fmt,args);
+	va_end(args);
+	if(outputstatement){
+		FPRINTF(ASCERR,"\n");
+		WriteStatement(ASCERR,stat,4);
+	}
+	error_reporter_end_flush();
 }
 
 void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
@@ -775,6 +799,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
     g_statio_stattypenames[SWITCH] = AddSymbol("SWITCH");
     g_statio_stattypenames[EXT] = AddSymbol("EXTERNAL");
     g_statio_stattypenames[CALL] = AddSymbol("CALL");
+	g_statio_stattypenames[ASSERT] = AddSymbol("ASSERT");
     g_statio_stattypenames[FLOW] = AddSymbol("<flow-control>");
     g_statio_stattypenames[WHILE] = AddSymbol("WHILE");
     g_statio_stattypenames[REF] = AddSymbol("_IS_");
@@ -808,6 +833,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
   case SWITCH:
   case EXT:
   case CALL:
+  case ASSERT:
   case REF:
   case COND:
   case WBTS:
