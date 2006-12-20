@@ -89,6 +89,16 @@
 #define FEX_DEBUG
 #define JEX_DEBUG
 
+const IntegratorInternals integrator_ida_internals = {
+	integrator_ida_create
+	,integrator_ida_params_default
+	,integrator_analyse_dae /* note, this routine is back in integrator.c */
+	,integrator_ida_solve
+	,integrator_ida_free
+	,INTEG_IDA
+	,"IDA"
+};
+
 /**
 	Struct containing any stuff that IDA needs that doesn't fit into the 
 	common IntegratorSystem struct.
@@ -785,6 +795,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 		/* insert values into the Jacobian row in appropriate spots (can assume Jac starts with zeros -- IDA manual) */
 		for(j=0; j < count; ++j){			
 			var_yindex = blsys->y_id[variables[j]];
+			ASC_ASSERT_RANGE(var_yindex, -Jac->N, Jac->N);
 			if(var_yindex >= 0){
 				asc_assert(blsys->y[var_yindex]==enginedata->varlist[variables[j]]);
 				DENSE_ELEM(Jac,i,var_yindex) += derivatives[j];
@@ -924,7 +935,8 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				*/
 				
 				var_yindex = blsys->y_id[variables[j]];
-				/* CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %d",j,variables[j],var_yindex); */
+				CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %ld",j,variables[j],var_yindex);
+				ASC_ASSERT_RANGE(-var_yindex-1, -NV_LENGTH_S(v),NV_LENGTH_S(v));
 
 				if(var_yindex >= 0){
 #ifdef JEX_DEBUG
@@ -937,7 +949,6 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 #endif
 					Jv_i += derivatives[j] * NV_Ith_S(v,var_yindex);
 				}else{
-					ASC_ASSERT_LT(-var_yindex-1, NV_LENGTH_S(v));
 #ifdef JEX_DEBUG
 					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dydot[%ld] = %f, v[%ld] = %f)\n", i
 						, derivatives[j] * NV_Ith_S(v,-var_yindex-1)

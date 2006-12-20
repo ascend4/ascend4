@@ -44,23 +44,11 @@
 
 #include "integrator.h"
 
-/* Perform LSODE integration of a specified 'Integ_system'.*/
-/**
-	Takes the start and finish index as defined by the user and carries
-	out the integration using repeated calls to the function lsode.
-	Assumes sys corresponds to g_solvinst_cur.
-	works off instances of type lsode taken from blsys.
- */
-extern int integrator_lsode_solve(IntegratorSystem *blsys
-		,unsigned long i1, unsigned long i2
-);
-
-void integrator_lsode_create(IntegratorSystem *blsys);
-void integrator_lsode_init(IntegratorSystem *blsys);
-void integrator_lsode_free(void *enginedata);
-
+IntegratorCreateFn integrator_lsode_create;
 IntegratorParamsDefaultFn integrator_lsode_params_default;
+IntegratorSolveFn integrator_lsode_solve;
+IntegratorFreeFn integrator_lsode_free;
 
+const IntegratorInternals integrator_lsode_internals;
 
 #endif  /* ASC_LSODE_H */
-

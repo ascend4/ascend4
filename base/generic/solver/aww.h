@@ -27,17 +27,12 @@
 #include <utilities/config.h>
 #include "integrator.h"
 
-/* Perform IDA integration of a specified 'Integ_system'.*/
-ASC_DLLSPEC(int) integrator_aww_solve(IntegratorSystem *blsys
-		, unsigned long start_index, unsigned long finish_index
-);
-
-ASC_DLLSPEC(void) integrator_aww_free(void *enginedata);
-
-ASC_DLLSPEC(void) integrator_aww_create(IntegratorSystem *blsys);
-
-ASC_DLLSPEC(int) integrator_aww_analyse(IntegratorSystem *blsys);
-
+IntegratorCreateFn integrator_aww_create;
 IntegratorParamsDefaultFn integrator_aww_params_default;
+IntegratorAnalyseFn integrator_aww_analyse;
+IntegratorSolveFn integrator_aww_solve;
+IntegratorFreeFn integrator_aww_free;
+
+const IntegratorInternals integrator_aww_internals;
 
 #endif  /* ASC_INTEGRATOR_AWW_H */
