@@ -77,18 +77,15 @@ Integrator::findIndependentVar(){
 	return integrator_find_indep_var(blsys);
 }
 
-int
+void
 Integrator::analyse(){
 
 	int res;
 	res = integrator_analyse(blsys);
 
 	if(!res){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Failed system analysis");
-		return 0;
+		throw runtime_error("Failed system analysis");
 	}
-
-	return 1;
 }
 
 /**

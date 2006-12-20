@@ -710,7 +710,7 @@ RelationEvaluatePostfixBranch(CONST struct relation *r,
     (*pos)--;
     return FuncEval(funcptr, RelationEvaluatePostfixBranch(r, pos, lhs));
   default:
-    Asc_Panic(2, NULL,
+    ASC_PANIC(
               "Don't know this type of relation type\n"
               "in function RelationEvaluatePostfixBranch\n");
 
@@ -765,7 +765,7 @@ RelationEvaluatePostfixBranchSafe(CONST struct relation *r,
   case e_func:
     (*pos)--; return FuncEvalSafe(TermFunc(term),RECURSE(r,pos,lhs,serr),serr);
   default:
-    Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
+    ASC_PANIC("Unknown relation term type");
   }
 }
 #undef RECURSE
@@ -859,7 +859,7 @@ RelationEvaluateResidualPostfix(CONST struct relation *r)
       res_stack[s] = FuncEval(funcptr, res_stack[s]);
       break;
     default:
-      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
+      ASC_PANIC("Unknown relation term type");
     }
   }
 }
@@ -869,13 +869,16 @@ RelationEvaluateResidualPostfix(CONST struct relation *r)
 */
 
 /**
-	This function evaluates the residual and the gradient for the relation
-	r.  The calling function must provide a pointer to a double for the
-	residual and an array of doubles for the gradients.  This function
-	assumes r exists and that the pointers to the residual and gradients
-	are not NULL.  This function returns 0 is everythings goes o.k., and
-	1 otherwise (out of memory).  The function computes the gradients by
-	maintaining a n stacks, where n = (number-of-variables-in-r + 1)
+	Compute residuals and gradients for a relation (compiler-side routine)
+
+	@param r relation for which residual and gradients are to be calculated.
+	@param residual pointer to a double in which the residual shall be stored (must have already been allocated)
+	@param gradient pointer to an array of doubles where the gradients can be stored (must already have been allocated)
+	
+ 	@return 0 on success, 1 on out-of-memeory.
+
+	Computes the gradients by maintaining n stacks, where 
+		n = (number-of-variables-in-r + 1)
 	The +1 is for the residual.  The stacks come from a single array which
 	this function gets by calling tmpalloc_array.  Two macros are defined
 	to make referencing this array easier.
@@ -902,6 +905,7 @@ RelationEvaluateResidualGradient(CONST struct relation *r,
   length_rhs = RelationLength(r, 0);
   if( (length_lhs + length_rhs) == 0 ) {
     for( v = 0; v < num_var; v++ ) gradient[v] = 0.0;
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Relation with no LHS and no RHS: returning residual 0");
     *residual = 0.0;
     return 0;
   }
@@ -1068,7 +1072,7 @@ RelationEvaluateResidualGradient(CONST struct relation *r,
       res_stack(s) = FuncEval( fxnptr, res_stack(s) );
       break;
     default:
-      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
+      ASC_PANIC("Unknown relation term type");
       break;
     }
   }
@@ -1268,7 +1272,7 @@ RelationEvaluateResidualGradientSafe(CONST struct relation *r,
       res_stack(s) = FuncEvalSafe( fxnptr, res_stack(s), serr);
       break;
     default:
-      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
+      ASC_PANIC("Unknown relation term type");
     }
   }
 #undef grad_stack
@@ -1430,7 +1434,7 @@ RelationEvaluateDerivative(CONST struct relation *r,
       res_stack(s) = FuncEval( fxnptr, res_stack(s) );
       break;
     default:
-      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
+      ASC_PANIC("Unknown relation term type");
       break;
     }
   }
@@ -1589,7 +1593,7 @@ RelationEvaluateDerivativeSafe(CONST struct relation *r,
       res_stack(s) = FuncEvalSafe( fxnptr, res_stack(s), serr);
       break;
     default:
-      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
+      ASC_PANIC("Unknown relation term type");
     }
   }
 #undef grad_stack
@@ -1896,7 +1900,7 @@ static void CalcDepth(CONST struct relation *rel,
       (*depth)--;
       break;
     default:
-      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
+      ASC_PANIC("Unknown relation term type");
     }
   }
 }
@@ -1920,7 +1924,7 @@ unsigned long RelationDepth(CONST struct relation *rel){
     assert(depth == 1);
     break;
   default:
-      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
+      ASC_PANIC("Unknown relation term type");
   }
   return maxdepth;
 }
@@ -2156,7 +2160,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
 			if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
 				status = safe_problem;
 			}else{
-			    Asc_Panic(2, __FUNCTION__, "reached end of routine!");
+			    ASC_PANIC( "reached end of routine!");
 			}
 	}
 	return status;
@@ -2215,7 +2219,7 @@ RelationCalcResidualPostfix(struct Instance *i, double *res){
 
     return 1;
   }else{
-    Asc_Panic(2, __FUNCTION__,"reached end of routine");
+    ASC_PANIC("reached end of routine");
   }
 }
 
@@ -2273,7 +2277,7 @@ int RelationCalcExceptionsInfix(struct Instance *i){
     glob_rel = NULL;
     return -1;
   }else{
-    Asc_Panic(2, __FUNCTION__,"reached end of routine");
+    ASC_PANIC("reached end of routine");
   }
 }
 
@@ -2305,7 +2309,7 @@ int RelationCalcResidualInfix(struct Instance *i, double *res){
     glob_rel = NULL;
     return 1;
   }else{
-    Asc_Panic(2, __FUNCTION__,"reached end of routine");
+    ASC_PANIC("reached end of routine");
   }
 }
 
@@ -2333,7 +2337,7 @@ RelationCalcResidualPostfix2(struct Instance *i, double *res){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not implemented (%s)",__FUNCTION__);
     return 1;
   }else{
-    Asc_Panic(2, __FUNCTION__,"reached end of routine");
+    ASC_PANIC("reached end of routine");
   }
 }
 
@@ -2351,6 +2355,8 @@ RelationCalcGradient(struct Instance *r, double *grad){
 /*
 	simply call the version that calculates the gradient and the residual,
 	then ignore the residual
+	
+	return 0 on success (as 'safe_ok' enum)
 */
 enum safe_err
 RelationCalcGradientSafe(struct Instance *r, double *grad){
@@ -2359,7 +2365,7 @@ RelationCalcGradientSafe(struct Instance *r, double *grad){
   return RelationCalcResidGradSafe(r, &residual, grad);
 }
 
-
+/* return 0 on success, 1 on error */
 int
 RelationCalcResidGrad(struct Instance *i, double *residual, double *gradient){
   struct relation *r;
@@ -2382,7 +2388,7 @@ RelationCalcResidGrad(struct Instance *i, double *residual, double *gradient){
     return 1;
 
   }else{
-    Asc_Panic(2, __FUNCTION__, "reached end of routine");
+    ASC_PANIC( "reached end of routine");
   }
 }
 
@@ -2441,7 +2447,7 @@ RelationCalcResidGradSafe(struct Instance *i
     return not_safe;
   }
   else {
-    Asc_Panic(2, __FUNCTION__, "reached end of routine");
+    ASC_PANIC( "reached end of routine");
   }
 }
 
@@ -2481,7 +2487,7 @@ RelationCalcDerivative(struct Instance *i,
     return 1;
   }
   else {
-    Asc_Panic(2, __FUNCTION__, "reached end of routine");
+    ASC_PANIC( "reached end of routine");
   }
 }
 
@@ -2522,7 +2528,7 @@ RelationCalcDerivativeSafe(struct Instance *i,
     return not_safe;
   }
   else {
-    Asc_Panic(2, __FUNCTION__, "reached end of routine");
+    ASC_PANIC( "reached end of routine");
 
   }
 }
@@ -3028,7 +3034,7 @@ static int RelationTmpCopySide(union RelationTermUnion *old,
     case e_equal: case e_notequal: case e_less:
     case e_greater: case e_lesseq: case e_greatereq:
     default:
-      Asc_Panic(2, NULL, "Unknown term type in RelationSide\n");
+      ASC_PANIC("Unknown term type in RelationSide");
       break;
     }
   }
@@ -3230,7 +3236,7 @@ static int SearchEval_Branch(struct relation_term *term){
     }
     return 1;
  default:
-   Asc_Panic(2, NULL,
+   ASC_PANIC(
              "error in SearchEval_Branch routine\n"
              "relation term type not recognized\n");
     return 1;
@@ -3621,7 +3627,7 @@ int RelationInvertToken(struct relation_term **term,
     case e_real:
     case e_zero:
     case e_int:
-      Asc_Panic(2,__FUNCTION__,"Unexpected error with real/zero/int type");
+      ASC_PANIC("Unexpected error with real/zero/int type");
       break;
     case e_var:
       ++glob_done;
@@ -3633,7 +3639,7 @@ int RelationInvertToken(struct relation_term **term,
     case e_equal: case e_notequal: case e_less:
     case e_greater: case e_lesseq: case e_greatereq:
     default:
-      Asc_Panic(2, NULL, "Unknown term type in RelationInvertToken\n");
+      ASC_PANIC("Unknown term type in RelationInvertToken\n");
       break;
     }
   }
@@ -3974,11 +3980,11 @@ CollectTokenRelationsWithUniqueBINlessShares(struct Instance *i,
 static int  relutil_check_inst_and_res(struct Instance *i, double *res){
 # ifdef RELUTIL_CHECK_ABORT
 	if(i==NULL){
-		Asc_Panic(2,__FUNCTION__,"NULL instance");
+		ASC_PANIC("NULL instance");
 	}else if (res==NULL){
-		Asc_Panic(2,__FUNCTION__,"NULL residual pointer");
+		ASC_PANIC("NULL residual pointer");
 	}else if(InstanceKind(i)!=REL_INST){
-		Asc_Panic(2,__FUNCTION__,"Not a relation");
+		ASC_PANIC("Not a relation");
 	}
 # else
   if( i == NULL ) {

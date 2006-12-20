@@ -32,8 +32,16 @@
 
 
 %include "simulation.h"
-// SOLVE PARAMETERS
+%extend Simulation{
+	Instanc __getitem__(const long &index){
+		return self->getModel().getChild(index);
+	} 		
+	Instanc __getattr__(const char *name){
+		return self->getModel().getChild(SymChar(name));
+	}
+}
 
+// SOLVER PARAMETERS
 %pythoncode{
 	class SolverParameterIter:
 		def __init__(self, params):

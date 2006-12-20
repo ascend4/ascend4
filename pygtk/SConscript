@@ -31,7 +31,7 @@ if min==1 and maj==3 and pat>=29:
 	swig_has_gccvisibility = True
 
 if env.get('HAVE_GCC'):
-	python_env.Append(CPPFLAGS=['-O3'])
+	#python_env.Append(CPPFLAGS=['-O3'])
 	if swig_has_gccvisibility and env.has_key('HAVE_GCCVISIBILITY'):
 		python_env.Append(CCFLAGS=['-fvisibility=hidden']);
 

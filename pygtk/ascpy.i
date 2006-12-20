@@ -475,7 +475,17 @@ public:
 			self.setRealValue(val);
 
 		def __coerce__(self,other):
+			if self.isInt() and other.__class__==int:
+				return self.getValue(),int(other)
+			if (self.isReal() or self.isInt()) and (other.__class__==float or other.__class__==int):
+				return self.getValue(),float(other)
+
 			return (self.getValue(),other.getValue())
+
+		def __sub__(self,other):
+			if other.__class__==int or other.__class__==float:
+				return self.getValue() - other
+			return self.getValue() - other.getValue()
 	}
 }
 

@@ -21,6 +21,7 @@ METHODS
 
 METHOD values;
 	y := 1; x := 1; (* initial conditions *)
+	dy_dx := 0;
 END values;
 
 METHOD specify;
@@ -28,7 +29,8 @@ METHOD specify;
 END specify;
 
 METHOD ode_init;
-	FREE x, y;
+	FREE x, y, dy_dx;
+
 	x.ode_type := -1;
 	dy_dx.ode_id := 1;   y.ode_id := 1; 
 	dy_dx.ode_type := 2; y.ode_type := 1;

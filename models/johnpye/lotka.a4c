@@ -50,7 +50,7 @@ METHOD values;
 	a	:= 0.0005 {1/s};
 	b	:= 0.1*0.0005 {1/s};
 	m	:= 0.2 {1/s};
-	t := 0{s};
+	t   := 0{s};
 END values;
 
 METHOD set_obs;
@@ -60,6 +60,8 @@ METHOD set_obs;
 END set_obs;
 
 METHOD set_ode; (* this is where the current implementation sux *)
+	FREE F,R,dR_dt,dF_dt;
+
 	R.ode_id := 1;   R.ode_type := 1;
 	dR_dt.ode_id := 1; dR_dt.ode_type := 2;
 	

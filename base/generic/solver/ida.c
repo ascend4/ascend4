@@ -86,8 +86,9 @@
 # error "Failed to include ASCEND IDA header file"
 #endif
 
-#define FEX_DEBUG
-#define JEX_DEBUG
+/* #define FEX_DEBUG */
+/* #define JEX_DEBUG */
+/* #define SOLVE_DEBUG */
 
 const IntegratorInternals integrator_ida_internals = {
 	integrator_ida_create
@@ -535,7 +536,9 @@ int integrator_ida_solve(
 		t0 = integrator_get_t(blsys);
 		asc_assert(t > t0);
 		
+#ifdef SOLVE_DEBUG
 		CONSOLE_DEBUG("Integratoring from t0 = %f to t = %f", t0, t);
+#endif
 	
 		flag = IDASolve(ida_mem, t, &tret, yret, ypret, IDA_NORMAL);
 
@@ -634,7 +637,9 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	if(enginedata->safeeval){
 		Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
 	}else{
+#ifdef FEX_DEBUG
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"SETTING TO CATCH SIGFPE...");
+#endif
 		Asc_SignalHandlerPushDefault(SIGFPE);
 	}
 
@@ -684,7 +689,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 		}
 		ASC_FREE(varname);
 		relname = rel_make_name(blsys->system,enginedata->rellist[i]);
-		fprintf(stderr,"'%s'=%f\n",relname,NV_Ith_S(rr,i));
+		fprintf(stderr,"'%s'=%f (%p)\n",relname,NV_Ith_S(rr,i),enginedata->rellist[i]);
 	}
 #endif
 
@@ -715,7 +720,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	int status;
 	struct rel_relation **relptr;
 	int i;
-	var_filter_t filter = {VAR_SVAR, VAR_SVAR};
+	var_filter_t filter = {VAR_SVAR | VAR_FIXED, VAR_SVAR};
 	double *derivatives;
 	int *variables;
 	int count, j;
@@ -874,7 +879,6 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	double *derivatives;
 	var_filter_t filter;
 	int count;
-
 #ifdef JEX_DEBUG
 	CONSOLE_DEBUG("EVALUATING JACOBIAN...");
 #endif
@@ -889,13 +893,18 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	/* no real use for residuals (rr) here, I don't think? */
 
 	/* allocate space for returns from relman_diff2: we *should* be able to use 'tmp1' and 'tmp2' here... */
-	variables = ASC_NEW_ARRAY(int, NV_LENGTH_S(yy) * 2);
-	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
+	
+	i = NV_LENGTH_S(yy) * 2;
+#ifdef JEX_DEBUG
+	CONSOLE_DEBUG("Allocating 'variables' with length %d",i);
+#endif
+	variables = ASC_NEW_ARRAY(int, i);
+	derivatives = ASC_NEW_ARRAY(double, i);
 
 	/* evaluate the derivatives... */
 	/* J = dG_dy = dF_dy + alpha * dF_dyp */
 
-	filter.matchbits = VAR_SVAR;
+	filter.matchbits = VAR_SVAR | VAR_FIXED;
 	filter.matchvalue = VAR_SVAR;
 
 	Asc_SignalHandlerPushDefault(SIGFPE);
@@ -906,7 +915,9 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 		){
 			/* get derivatives for this particular relation */
 			status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
-			/* CONSOLE_DEBUG("Got derivatives against %d matching variables", count); */
+#ifdef JEX_DEBUG
+			CONSOLE_DEBUG("Got derivatives against %d matching variables, status = %d", count,status);
+#endif
 
 			if(status){
 				relname = rel_make_name(blsys->system, *relptr);
@@ -933,9 +944,16 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 					CONSOLE_DEBUG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
 				}
 				*/
-				
+
+				/* we don't calculate derivatives wrt indep var */
+				asc_assert(variables[j]>=0);
+				if(enginedata->varlist[variables[j]] == blsys->x) continue;
+
 				var_yindex = blsys->y_id[variables[j]];
+#ifdef JEX_DEBUG
 				CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %ld",j,variables[j],var_yindex);
+#endif
+
 				ASC_ASSERT_RANGE(-var_yindex-1, -NV_LENGTH_S(v),NV_LENGTH_S(v));
 
 				if(var_yindex >= 0){
@@ -963,9 +981,10 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 			NV_Ith_S(Jv,i) = Jv_i;
 #ifdef JEX_DEBUG
+			CONSOLE_DEBUG("rel = %p",*relptr);
 			relname = rel_make_name(blsys->system, *relptr);
 			CONSOLE_DEBUG("'%s': Jv[%d] = %f", relname, i, NV_Ith_S(Jv,i));
-			ASC_FREE(relname);
+			//ASC_FREE(relname);
 			return 1;			
 #endif
 		}
