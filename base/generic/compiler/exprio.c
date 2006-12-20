@@ -1,30 +1,27 @@
-/*
- *  Expression Output Routines
- *  by Tom Epperly
- *  Version: $Revision: 1.14 $
- *  Version control file: $RCSfile: exprio.c,v $
- *  Date last modified: $Date: 1998/04/10 23:25:42 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
+	Expression Output Routines
+*//*
+	by Tom Epperly
+	Last in CVS: $Revision: 1.14 $ $Date: 1998/04/10 23:25:42 $ $Author: ballan $
+*/
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
@@ -43,10 +40,6 @@
 #include "exprio.h"
 #include "nameio.h"
 #include "setio.h"
-
-#ifndef lint
-static CONST char ExprIOId[] = "$Id: exprio.c,v 1.14 1998/04/10 23:25:42 ballan Exp $";
-#endif
 
 CONST char *ExprEnumName(CONST enum Expr_enum t)
 {

@@ -1,4 +1,4 @@
-/* ex:set ts=8: */
+/* ex:set ts=4: */
 /*
  *  Initialization Routines
  *  by Tom Epperly
@@ -773,9 +773,9 @@ ExecuteInitAssert(struct procFrame *fm, struct Statement *stat){
 		case boolean_value:
 			testerr = 0;
 			if(BooleanValue(value)){
-				ERROR_REPORTER_STAT(ASC_USER_SUCCESS,stat,"Assertion OK");
+				WriteStatementError(ASC_USER_SUCCESS,stat,0,"Assertion OK");
 			}else{
-				ERROR_REPORTER_STAT(ASC_USER_ERROR,stat,"Assertion failed");
+				WriteStatementError(ASC_USER_ERROR,stat,1,"Assertion failed");
 			}
 			break;
 		case real_value:

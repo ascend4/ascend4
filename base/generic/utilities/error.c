@@ -334,19 +334,10 @@ va_error_reporter(
   DROP-IN replacements for stdio.h / ascPrint.h
 */
 
-/**
-	This function performs caching of the error text if the flag is set
-*/
-int
-fprintf_error_reporter(FILE *file, const char *fmt, ...){
-	va_list args;
+int vfprintf_error_reporter(FILE *file, const char *fmt, const va_list args){
 	char *msg;
 	int len;
 	int res;
-
-	/* fprintf(stderr,"ENTERED FPRINTF_ERROR_REPORTER\n"); */
-
-	va_start(args,fmt);
 	if(file==stderr){
 		if(g_error_reporter_cache.iscaching){
 			msg = g_error_reporter_cache.msg;
@@ -365,7 +356,19 @@ fprintf_error_reporter(FILE *file, const char *fmt, ...){
 	}else{
 		res = ASC_VFPRINTF(file,fmt,args);
 	}
+	return res;
+}
+	
+/**
+	This function performs caching of the error text if the flag is set
+*/
+int
+fprintf_error_reporter(FILE *file, const char *fmt, ...){
+	va_list args;
+	int res;
 
+	va_start(args,fmt);
+	res = vfprintf_error_reporter(file,fmt,args);
 	va_end(args);
 
 	return res;

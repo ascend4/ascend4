@@ -87,7 +87,7 @@ NORETURN ASC_DLLSPEC(void) asc_panic(
 		, (float)A, (float)B))
 
 #define ASC_ASSERT_RANGE(A,B,C) \
-	((A) >= (B) && (A) < (C) ? (void)0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
+	((A) >= (B) && (A) < (C) ? (void)0 : (void)asc_panic_line(ASCERR_ASSERTION_FAILED\
 		, __FILE__, __LINE__, __FUNCTION__\
 		,"Assertion failed: %s < %s < %s (val = %f, low = %f, up = %f)" \
 		, #B, #A, #C \

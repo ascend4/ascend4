@@ -20,8 +20,6 @@
 	 @file
 	Permanent Statement Output routines.
 
-	#include <stdio.h>
-	#include "utilities/ascConfig.h"
 	#include "fractions.h"
 	#include "compiler.h"
 	#include "dimen.h"
@@ -38,6 +36,12 @@
 
 #ifndef ASC_STATIO_H
 #define ASC_STATIO_H
+
+#include <stdio.h>
+#include <stdarg.h>
+#include <utilities/ascConfig.h>
+#include <utilities/error.h>
+#include "stattypes.h"
 
 ASC_DLLSPEC(struct gl_list_t *) GetTypeNamesFromStatList(CONST struct StatementList*sl);
 /**<
@@ -84,17 +88,23 @@ extern void WriteStatementList(FILE *f, CONST struct StatementList *sl, int i);
  *  printed on file f.
  */
 
-/** Write a ASC_PROG_NOTE message using WriteStatementErrorMessage(). */
+/** Write a ASC_PROG_NOTE message using WriteStatementErrorMessage().
+	@see WriteStatementError
+*/
 #define WSNM(FILEP,STMT,MSG) WriteStatementErrorMessage(FILEP,STMT,MSG,1,-1)
 
 #define STATEMENT_NOTE(STMT,MSG) WriteStatementErrorMessage(ASCERR,STMT,MSG,1,-1)
 
-/** Write a verbose error message using WriteStatementErrorMessage(). */
+/** Write a verbose error message using WriteStatementErrorMessage(). 
+	@see WriteStatementError
+*/
 #define WSEM(FILEP,STMT,MSG) WriteStatementErrorMessage(FILEP,STMT,MSG,1,0)
 
 #define STATEMENT_ERROR(STMT,MSG) WriteStatementErrorMessage(ASCERR,STMT,MSG,1,0)
 
-/** Write a brief error message using WriteStatementErrorMessage(). */
+/** Write a brief error message using WriteStatementErrorMessage(). 
+	@see WriteStatementError
+*/
 #define WSSM(FILEP,STMT,MSG,l) WriteStatementErrorMessage(FILEP,STMT,MSG,0,l)
 extern void WriteStatementErrorMessage(FILE *f,
                                        CONST struct Statement *stat,
@@ -115,6 +125,8 @@ extern void WriteStatementErrorMessage(FILE *f,
  *  - 2 => Asc-Warning: Line %lu <filename>: \n\tmessage\n<statement>
  *  - 3 => Asc-Error:   Line %lu <filename>: \n\tmessage\n<statement>
  *  - 4 => Asc-Fatal:   Line %lu <filename>: \n\tmessage\n<statement>
+
+	@see WriteStatementError
  */
 
 extern CONST char *StatioLabel(int level);
@@ -123,6 +135,8 @@ extern CONST char *StatioLabel(int level);
  *  You don't own the string returned.
  *  If you give us invalid level, label 0 is returned.
  *  StatioLabels are defined in WriteStatementErrorMessage above.
+
+	@see WriteStatementError
  */
 
 extern int *GetStatioSuppressions(void);
@@ -150,7 +164,21 @@ extern void WriteStatementErrorSparse(FILE *f,
  *  Typically this procedure will print the "message" followed by the filename
  *  and line number where the error occurs.
  *  FOR information will also be displayed when appropriate.
+
+	@see WriteStatementError
  */
+
+extern void WriteStatementError(const error_severity_t sev
+		, const struct Statement *stat
+		, const int outputstatment
+		, const char *msg
+		, ...
+);
+/**<
+	A simpler and more flexible statement error routine using var args.
+	@param outputstatment whether to output the content of the statment (TRUE)
+	or just its location (FALSE).
+*/ 
 
 extern symchar *StatementTypeString(CONST struct Statement *stat);
 /**< 
