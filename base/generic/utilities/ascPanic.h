@@ -62,6 +62,9 @@ NORETURN ASC_DLLSPEC(void) asc_panic(
 */
 #ifdef ASC_NO_ASSERTIONS
 # define asc_assert(x) ((void)0)
+# define ASC_ASSERT_LT(A,B) ((void)0)
+# define ASC_ASSERT_EQ(A,B) ((void)0)
+# define ASC_ASSERT_RANGE(A,B,C) ((void)0)
 
 #else
 # define asc_assert(cond) \
@@ -82,6 +85,13 @@ NORETURN ASC_DLLSPEC(void) asc_panic(
 		,"Assertion failed: %s < %s (lhs = %f, rhs = %f)" \
 		, #A, #B \
 		, (float)A, (float)B))
+
+#define ASC_ASSERT_RANGE(A,B,C) \
+	((A) >= (B) && (A) < (C) ? (void)0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
+		, __FILE__, __LINE__, __FUNCTION__\
+		,"Assertion failed: %s < %s < %s (val = %f, low = %f, up = %f)" \
+		, #B, #A, #C \
+		, (float)A, (float)B), (float)C)
 
 #endif
 

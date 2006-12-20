@@ -35,7 +35,9 @@ extern "C"{
 }
 
 const int LSODE = INTEG_LSODE;
+#ifdef ASC_WITH_IDA
 const int IDA = INTEG_IDA;
+#endif
 
 #include "simulation.h"
 #include "units.h"

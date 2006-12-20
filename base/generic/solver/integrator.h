@@ -82,23 +82,30 @@
 
 /*---------------------------*/
 
-#define I(N) INTEG_##N
-#define S ,
+#ifdef ASC_WITH_IDA
+# define IDA_OPTIONAL S I(IDA,integrator_ida_internals)
+#else
+# define IDA_OPTIONAL
+#endif
+
+/* we add IDA to the list of integrators at build time, if it is selected */
 #define INTEG_LIST \
-	I(LSODE) S \
-	I(IDA) S \
-	I(AWW)
+	I(LSODE       ,integrator_lsode_internals) \
+	IDA_OPTIONAL \
+	S I(AWW       ,integrator_aww_internals)
 
 /** 
 	Struct containin the list of supported integrators
 */
 typedef enum{
-	INTEG_UNKNOWN
-	,INTEG_LIST
-} IntegratorEngine;
-
+#define I(N,P) INTEG_##N
+#define S ,
+	INTEG_LIST
 #undef I
 #undef S
+	,INTEG_UNKNOWN /* must be last in the list*/
+} IntegratorEngine;
+
 
 typedef struct{
 	IntegratorEngine id;
@@ -150,6 +157,49 @@ typedef struct{
 } IntegratorReporter;
 
 /*------------------------------------*/
+/* INTEGRATOR INTERNALS - define the routines that consitute a specific integrator */
+
+/* forward decl */
+struct IntegratorSystemStruct;
+
+typedef void IntegratorCreateFn(struct IntegratorSystemStruct *blsys);
+/**< Integrators must provide a routine here that allocates the necessary
+	data structures.
+*/
+
+typedef int IntegratorParamsDefaultFn(struct IntegratorSystemStruct *blsys);
+/**<
+	Integrators must provide a function like this that can be used to retrieve
+	the default set of parameters.
+*/
+
+typedef int IntegratorAnalyseFn(struct IntegratorSystemStruct *blsys);
+
+
+typedef int IntegratorSolveFn(struct IntegratorSystemStruct *blsys
+		, unsigned long start_index, unsigned long finish_index);
+/**<
+	Integrators must provide a function like this that actually runs the
+	integration.
+*/
+
+typedef void IntegratorFreeFn(void *enginedata);
+/**<
+	Integrators must provide a function like this that frees internal
+	data that they have allocated in their 'enginedata' structure.
+*/
+
+typedef struct{
+	IntegratorCreateFn *createfn;
+	IntegratorParamsDefaultFn *paramsdefaultfn;
+	IntegratorAnalyseFn *analysefn;
+	IntegratorSolveFn *solvefn;
+	IntegratorFreeFn *freefn;
+	IntegratorEngine engine;
+	const char name[];
+} IntegratorInternals;
+
+/*------------------------------------*/
 /**
 	Initial Value Problem description struct. Anyone making a copy of
 	the y, ydot, or obs pointers who plans to free that pointer later
@@ -165,6 +215,7 @@ struct IntegratorSystemStruct{
   struct Instance *instance;  /**< not sure if this one is really necessary... -- JP */
   slv_system_t system;        /**< the system that we're integrating in ASCEND */
   IntegratorEngine engine;    /**< enum containing the ID of the integrator engine we're using */
+  const IntegratorInternals *internals;/**< pointers to the various functions belonging to this integrator */
   IntegratorReporter *reporter;/**< functions for reporting integration results */
   SampleList *samples;        /**< pointer to the list of samples. we *don't own* this **/
   void *enginedata;           /**< space where the integrator engine can store stuff */
@@ -214,6 +265,18 @@ ASC_DLLSPEC(IntegratorSystem *) integrator_new(slv_system_t sys, struct Instance
 
 ASC_DLLSPEC(int) integrator_analyse(IntegratorSystem *blsys);
 
+/**
+	These routines will hopefully be sharable by different Integrator engines.
+	The idea is that if we change from the 'ode_id' and 'ode_type' syntax,
+	the only place in the Integrator code that would be affected is here.
+	However for the moment, we allow Integrators to specify how they would
+	like to analyse the system, and for that, we export these routines so that
+	they can be referred to in lsode.h, ida.h, etc.
+*/	
+ASC_DLLSPEC(int) integrator_analyse_ode(IntegratorSystem *blsys);
+ASC_DLLSPEC(int) integrator_analyse_dae(IntegratorSystem *blsys);
+/**< see integrator_analyse_ode */
+
 ASC_DLLSPEC(int) integrator_solve(IntegratorSystem *blsys, long i0, long i1);
 /**<
 	Takes the type of integrator and sets up the global variables into the
@@ -227,7 +290,7 @@ ASC_DLLSPEC(void) integrator_free(IntegratorSystem *blsys);
 	Deallocates any memory used and sets all integration global points to NULL.
 */
 
-ASC_DLLSPEC(void) integrator_get_engines(IntegratorLookup **listptr);
+ASC_DLLSPEC(const IntegratorLookup *) integrator_get_engines();
 /**<
 	Return a {INTEG_UNKNOWN,NULL} terminated list of integrator currently
 	available. At present this is determined at compile time but will be
@@ -248,12 +311,6 @@ ASC_DLLSPEC(IntegratorEngine) integrator_get_engine(const IntegratorSystem *blsy
 /**<
 	Returns the engine (ID) selected for use in this IntegratorSystem (may return
 	INTEG_UNKNOWN if none or invalid setting).
-*/
-
-typedef int IntegratorParamsDefaultFn(IntegratorSystem *blsys);
-/**<
-	Integrators must provide a function like this that can be used to retrieve
-	the default set of parameters.
 */
 
 ASC_DLLSPEC(int) integrator_params_get(const IntegratorSystem *blsys, slv_parameters_t *parameters);

@@ -162,8 +162,7 @@ Integrator::setEngine(const string &name){
 map<int,string>
 Integrator::getEngines(){
 	map<int,string> m;
-	IntegratorLookup *list;
-	integrator_get_engines(&list);
+	const IntegratorLookup *list = integrator_get_engines();
 	while(list->id != INTEG_UNKNOWN){
 		m.insert(pair<int,string>(list->id,list->name));
 		++list;

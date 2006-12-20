@@ -30,16 +30,12 @@
 
 #ifdef ASC_WITH_IDA
 
-/* Perform IDA integration of a specified 'Integ_system'.*/
-ASC_DLLSPEC(int) integrator_ida_solve(IntegratorSystem *blsys
-		, unsigned long start_index, unsigned long finish_index
-);
-
-ASC_DLLSPEC(void) integrator_ida_free(void *enginedata);
-
-ASC_DLLSPEC(void) integrator_ida_create(IntegratorSystem *blsys);
-
+IntegratorCreateFn integrator_ida_create;
 IntegratorParamsDefaultFn integrator_ida_params_default;
+IntegratorSolveFn integrator_ida_solve;
+IntegratorFreeFn integrator_ida_free;
+
+const IntegratorInternals integrator_ida_internals;
 
 #endif
 

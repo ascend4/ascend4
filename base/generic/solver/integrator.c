@@ -41,7 +41,7 @@
 	@TODO this needs to go away.
 */
 #define INTEG_DEBUG TRUE
-/* #define ANALYSE_DEBUG */
+#define ANALYSE_DEBUG 
 
 /**
 	Print a debug message with value if INTEG_DEBUG is TRUE.
@@ -79,8 +79,8 @@ static symchar *g_symbols[3];
  * that maintains this info by backpointers, but oh well until then.
  */
 #define OBSINDEX g_symbols[2]
-/* Integer child. All variables with OBSINDEX !=0 will be recorded in
- * the blsode output file. Tis someone else's job to grok this output.
+/* Integer child. All variables with OBSINDEX !=0 will be sent to the
+	IntegratorOutputWriteObsFn allowing output to a file, graph, console, etc.
  */
 
 
@@ -103,8 +103,8 @@ struct Integ_var_t {
 void integrator_create_engine(IntegratorSystem *sys);
 void integrator_free_engine(IntegratorSystem *sys);
 
-static int integrator_analyse_ode(IntegratorSystem *sys);
-static int integrator_analyse_dae(IntegratorSystem *sys);
+IntegratorAnalyseFn integrator_analyse_ode;
+IntegratorAnalyseFn integrator_analyse_dae;
 
 typedef void (IntegratorVarVisitorFn)(IntegratorSystem *sys, struct var_variable *var, const int *varindx);
 static void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
@@ -143,6 +143,9 @@ IntegratorSystem *integrator_new(slv_system_t slvsys, struct Instance *inst){
 	sys = ASC_NEW_CLEAR(IntegratorSystem);
 	sys->system = slvsys;
 	sys->instance = inst;
+
+	sys->engine = INTEG_UNKNOWN;
+	sys->internals = NULL;
 
 	sys->states = NULL; sys->derivs = NULL;
 	sys->dynvars = NULL; sys->obslist = NULL; sys->indepvars = NULL;
@@ -207,20 +210,22 @@ static void IntegInitSymbols(void){
 	At present, integrators are all present at compile-time so this is a static
 	list; we just return the list.
 */
-void integrator_get_engines(IntegratorLookup **listptr){
+const IntegratorLookup *integrator_get_engines(){
 #define S ,
-#define I(N) {INTEG_##N, #N}
-	static const IntegratorLookup lookup[] = {
+#define I(N,P) {INTEG_##N, P.name}
+	static const IntegratorLookup list[] = {
 		INTEG_LIST
 		,{INTEG_UNKNOWN,NULL}
 	};
-	*listptr = lookup;
 #undef S
 #undef I
+	return list;
 }
 
 /* return 0 on success */
 int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
+
+	CONSOLE_DEBUG("Setting engine...");
 
 	/* verify integrator type ok. always passes for nonNULL inst. */
 	if(engine==INTEG_UNKNOWN){
@@ -239,8 +244,20 @@ int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
 		integrator_free_engine(sys);
 	}
 	sys->engine = engine;
+	switch(sys->engine){
+#ifdef ASC_WITH_IDA
+		case INTEG_IDA: sys->internals = &integrator_ida_internals; break;
+#endif
+		case INTEG_LSODE: sys->internals = &integrator_lsode_internals; break;
+		case INTEG_AWW: sys->internals = &integrator_aww_internals; break;
+		default:
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown integrator engine");
+			sys->internals = NULL;
+			return 1;
+	};
+	
+	asc_assert(sys->internals);
 	integrator_create_engine(sys);
-
 	return 0;
 }
 
@@ -253,15 +270,15 @@ IntegratorEngine integrator_get_engine(const IntegratorSystem *sys){
 	this system. Note that this data is pointed to by sys->enginedata.
 */
 void integrator_free_engine(IntegratorSystem *sys){
-	switch(sys->engine){
-		case INTEG_LSODE: integrator_lsode_free(sys->enginedata); break;
-#ifdef ASC_WITH_IDA
-		case INTEG_IDA: integrator_ida_free(sys->enginedata); break;
-#endif
-		case INTEG_AWW: integrator_aww_free(sys->enginedata); break;
-		default: break;
+	if(sys->engine==INTEG_UNKNOWN)return;
+	if(sys->enginedata){
+		if(sys->internals){
+			(sys->internals->freefn)(sys->enginedata);
+			sys->enginedata=NULL;
+		}else{
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to free engine data: no sys->internals");
+		}
 	}
-	sys->enginedata=NULL;
 }
 
 /**
@@ -272,15 +289,10 @@ void integrator_free_engine(IntegratorSystem *sys){
 	during the solve stage (and freed inside integrator_free_engine)
 */
 void integrator_create_engine(IntegratorSystem *sys){
-	if(sys->enginedata!=NULL)return;
-	switch(sys->engine){
-		case INTEG_LSODE: integrator_lsode_create(sys); break;
-#ifdef ASC_WITH_IDA
-		case INTEG_IDA: integrator_ida_create(sys); break;
-#endif
-		case INTEG_AWW: integrator_aww_create(sys); break;
-		default: break;
-	}
+	asc_assert(sys->engine!=INTEG_UNKNOWN);
+	asc_assert(sys->internals);
+	asc_assert(sys->enginedata==NULL);
+	(sys->internals->createfn)(sys);
 }
 
 /*------------------------------------------------------------------------------
@@ -293,15 +305,10 @@ void integrator_create_engine(IntegratorSystem *sys){
 
 	@return 0 on success, 1 on error
 */
-static int integrator_params_default(IntegratorSystem *sys){
-	switch(sys->engine){
-		case INTEG_LSODE: return integrator_lsode_params_default(sys);
-#ifdef ASC_WITH_IDA
-		case INTEG_IDA: return integrator_ida_params_default(sys);
-#endif
-		case INTEG_AWW: return integrator_aww_params_default(sys);
-		default: return 0;
-	}
+int integrator_params_default(IntegratorSystem *sys){
+	asc_assert(sys->engine!=INTEG_UNKNOWN);
+	asc_assert(sys->internals);
+	return (sys->internals->paramsdefaultfn)(sys);
 }
 
 int integrator_params_get(const IntegratorSystem *sys, slv_parameters_t *parameters){
@@ -364,21 +371,15 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 	@return 1 on success
 */
 int integrator_analyse(IntegratorSystem *sys){
-	switch(sys->engine){
-		case INTEG_LSODE: return integrator_analyse_ode(sys);
-#ifdef ASC_WITH_IDA
-		case INTEG_IDA: return integrator_analyse_dae(sys);
-#endif
-		case INTEG_AWW: return integrator_aww_analyse(sys);
-		case INTEG_UNKNOWN:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"No engine selected: can't analyse");
-		default:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR
-				,"The selected integration engine (%d) is not available"
-				,sys->engine
-			);
+	CONSOLE_DEBUG("Analysing integration system...");
+	asc_assert(sys);
+	if(sys->engine==INTEG_UNKNOWN){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No engine selected: can't analyse");
+		return 0;
 	}
-	return 0;
+	asc_assert(sys->engine!=INTEG_UNKNOWN);
+	asc_assert(sys->internals);
+	return (sys->internals->analysefn)(sys);
 }
 
 /**
@@ -546,6 +547,10 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	for(i=0; i<numy; ++i){
 		asc_assert(sys->ydot[i]==NULL);
 	}
+	
+	for(i=0; i<numy; ++i){
+		sys->y_id[i] = 9999999L;
+	}
 
 	/* now add variables and their derivatives to 'ydot' and 'y' */
 	yindex = 0;
@@ -561,6 +566,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 			assert(info->derivative);
 			sys->ydot[yindex] = info->derivative->i;
 			if(info->varindx >= 0){
+				ASC_ASSERT_RANGE(yindex, -1e7L, 1e7L);
 				sys->y_id[info->varindx] = yindex;
 #ifdef ANALYSE_DEBUG
 				CONSOLE_DEBUG("y_id[%d] = %d",info->varindx,yindex);
@@ -568,6 +574,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 			}
 			if(info->derivative->varindx >= 0){
 				sys->y_id[info->derivative->varindx] = -1-yindex;
+				ASC_ASSERT_RANGE(-1-yindex,-numy,0);
 #ifdef ANALYSE_DEBUG
 				CONSOLE_DEBUG("y_id[%d] = %d",info->derivative->varindx,-1-yindex);
 #endif
@@ -577,6 +584,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 			sys->ydot[yindex] = NULL;
 			if(info->varindx >= 0){
 				sys->y_id[info->varindx] = yindex;
+				ASC_ASSERT_RANGE(yindex,0,numy);
 #ifdef ANALYSE_DEBUG
 				CONSOLE_DEBUG("y_id[%d] = %d",info->varindx,yindex);
 #endif
@@ -631,7 +639,7 @@ void integrator_dae_show_var(IntegratorSystem *sys
 		, struct var_variable *var, const int *varindx
 ){
 	char *varname;
-	int y_id;
+	long y_id;
 	varname = var_make_name(sys->system, var);
 	if(varindx==NULL){
 		fprintf(stderr,".\t%s\n",varname);
@@ -639,13 +647,18 @@ void integrator_dae_show_var(IntegratorSystem *sys
 		return;
 	}
 	y_id = sys->y_id[*varindx];
-	fprintf(stderr,"%d\t%s\t%d", *varindx, varname,y_id);
+
+	fprintf(stderr,"%d\t%s\t%ld", *varindx, varname,y_id);
 	ASC_FREE(varname);
 	if(y_id >= 0){
-		fprintf(stderr,"\ty[%d]\t.\n",y_id);
+		fprintf(stderr,"\ty[%ld]\t.\n",y_id);
 	}else{
-		fprintf(stderr,"\t.\tydot[%d]\n",-y_id-1);
+		fprintf(stderr,"\t.\tydot[%ld]\n",-y_id-1);
 	}
+
+	ASC_ASSERT_LT(*varindx,1e7L);
+	ASC_ASSERT_LT(y_id, 9999999L);
+	ASC_ASSERT_LT(-9999999L, y_id);
 }
 
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitfn){
@@ -1121,6 +1134,9 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 	unsigned long start_index=0, finish_index=0;
 	assert(sys!=NULL);
 
+	assert(sys->internals);
+	assert(sys->engine!=INTEG_UNKNOWN);
+
 	nstep = integrator_getnsamples(sys)-1;
 	/* check for at least 2 steps and dimensionality of x vs steps here */
 
@@ -1154,20 +1170,7 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 
 	CONSOLE_DEBUG("RUNNING INTEGRATION...");
 
-	/* now go and run the integrator */
-	switch (sys->engine) {
-		case INTEG_LSODE:
-			return integrator_lsode_solve(sys, start_index, finish_index); break;
-#ifdef ASC_WITH_IDA
-		case INTEG_IDA:
-			return integrator_ida_solve(sys,start_index, finish_index);	break;
-#endif
-		case INTEG_AWW:
-			return integrator_aww_solve(sys,start_index, finish_index); break;
-		default:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown integrator (invalid, or not implemented yet)");
-			return 0;
-	}
+	return (sys->internals->solvefn)(sys,start_index,finish_index);
 }
 
 /*---------------------------------------------------------------

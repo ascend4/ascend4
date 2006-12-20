@@ -73,14 +73,19 @@
 #include "integrator.h"
 #include "lsode.h"
 
+const IntegratorInternals integrator_lsode_internals = {
+	integrator_lsode_create
+	,integrator_lsode_params_default
+	,integrator_analyse_ode /* note, this routine is back in integrator.c */
+	,integrator_lsode_solve
+	,integrator_lsode_free
+	,INTEG_LSODE
+	,"LSODE"
+};
+
 /*
 #include "Sensitivity.h"
 *//* see the packages dir */
-
-#ifndef lint
-static CONST char LsodeID[] = "$Id: Lsode.c,v 1.29 2000/01/25 02:26:31 ballan Exp $";
-#endif
-
 
 /*
  *  NOUNDERBARS --> FORTRAN compiler naming convention for subroutine

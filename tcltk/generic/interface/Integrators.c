@@ -678,8 +678,10 @@ int Asc_IntegInstIntegrableCmd(ClientData cdata,Tcl_Interp *interp,
 
   if (strncmp(argv[2],"blsode",3)==0) {
     integrator = INTEG_LSODE;
+#ifdef ASC_WITH_IDA
   }else if (strncmp(argv[2],"ida",3)==0) {
     integrator = INTEG_IDA;
+#endif
   }
 
   result = (integrator != INTEG_UNKNOWN);
@@ -771,10 +773,12 @@ int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
     ifound=1;
   }
 
+#ifdef ASC_WITH_IDA
   if (engine != NULL && strncmp(engine,"IDA",3)==0) {
     integrator = INTEG_IDA;
     ifound=1;
   }
+#endif
 
   if (!ifound) {
     Tcl_SetResult(interp, "Unsupported integrator", TCL_STATIC);

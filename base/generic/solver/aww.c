@@ -24,7 +24,17 @@
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
-#include "integrator.h"
+#include "aww.h"
+
+const IntegratorInternals integrator_aww_internals = {
+	integrator_aww_create
+	,integrator_aww_params_default
+	,integrator_aww_analyse
+	,integrator_aww_solve
+	,integrator_aww_free
+	,INTEG_AWW
+	,"AWW"
+};
 
 typedef struct{
 	unsigned nothing;
