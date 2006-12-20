@@ -154,7 +154,7 @@ void asc_panic_line(const int status, const char *filename, const int line
 /**
 	we only need this function if our platform doesn't support var-arg macros 
 */
-void asc_panic(CONST int status, CONST CONST char *function
+void asc_panic(CONST int status, CONST char *function
 		,CONST char *fmt, ...
 ){
 	va_list args;
@@ -172,7 +172,25 @@ void asc_panic(CONST int status, CONST CONST char *function
 #  endif
 # endif
 }
-#endif
+
+/** this one is also only required if we don't support var-arg macros */
+void asc_panic_nofunc(const char *fmt, ...){
+	va_list args;
+	va_start(args,fmt);
+	asc_va_panic(2,NULL,0,NULL,fmt,args);
+	va_end(args);
+# ifdef USE_WIN32_FATAL_MSGBOX
+	ExitProcess((UINT)status);
+# else
+#  ifndef NDEBUG
+	abort();
+#  else
+	exit(status);
+#  endif
+# endif
+}
+
+#endif /* __GNUC__ & !__STRICT_ANSI__ */
 
 void Asc_PanicSetOutfile(CONST char *filename)
 {

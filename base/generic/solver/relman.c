@@ -1,33 +1,29 @@
-/*
- *  SLV: Ascend Nonlinear Solver
- *  by Karl Michael Westerberg
- *  Created: 2/6/90
- *  Version: $Revision: 1.44 $
- *  Version control file: $RCSfile: relman.c,v $
- *  Date last modified: $Date: 1998/04/23 23:56:22 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1990 Karl Michael Westerberg
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Relation manipulator module for the SLV solver.
+*//*
+	by Karl Michael Westerberg. Created 2/6/90
+	Last in CVS: $Revision: 1.44 $ $Date: 1998/04/23 23:56:22 $ $Author: ballan $
+*/
 
 #include <math.h>
 #include <utilities/ascConfig.h>
@@ -478,6 +474,7 @@ real64 relman_diff(struct rel_relation *rel, struct var_variable *var,
 }
 #endif
 
+/* return 0 on success */
 int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
                  real64 *derivatives, int32 *variables,
 		 int32 *count, int32 safe)
@@ -519,8 +516,8 @@ int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
         }
       }
     }
-	CONSOLE_DEBUG("RETURNING (NON-SAFE) calc_ok=%d",!status);
- 	return !status;
+	/* SOLE_DEBUG("RETURNING (NON-SAFE) calc_ok=%d",status); */
+ 	return status;
   }
 }
 

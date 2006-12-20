@@ -53,7 +53,7 @@ METHOD self_test;
 	(* assumes integration up to t = (20/9.8){s}; *)
 	ASSERT abs(x - 0 {m}) < 1e-5 {m};
 	ASSERT abs(v +10 {m/s}) < 1e-5 {m/s};
-	ASSERT abs(dv_dt + g) == 0 {m/s^2};
+	ASSERT abs(dv_dt + g) < 1e-10 {m/s^2};
 END self_test;
 
 END newton;

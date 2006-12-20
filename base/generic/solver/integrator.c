@@ -41,19 +41,9 @@
 	@TODO this needs to go away.
 */
 #define INTEG_DEBUG TRUE
-#define ANALYSE_DEBUG 
-
-/**
-	Print a debug message with value if INTEG_DEBUG is TRUE.
-*/
-#define print_debug(msg, value) \
-	if(INTEG_DEBUG){ CONSOLE_DEBUG(msg, value); }
-
-/**
-	Print a debug message string if INTEG_DEBUG is TRUE.
-*/
-#define print_debugstring(msg) \
-	if(INTEG_DEBUG){ CONSOLE_DEBUG(msg); }
+#define ANALYSE_DEBUG
+/* #define SOLVE_DEBUG */
+/* #define CLASSIFY_DEBUG */
 
 /*------------------------------------------------------------------------------
    The following names are of solver_var children or attributes
@@ -340,6 +330,9 @@ int integrator_params_set(IntegratorSystem *sys, const slv_parameters_t *paramet
 */
 int integrator_find_indep_var(IntegratorSystem *sys){
 	int result = 0;
+#ifdef ANALYSE_DEBUG
+	char *varname;
+#endif
 
 	if(sys->x != NULL){
 		CONSOLE_DEBUG("sys->x already set");
@@ -350,14 +343,27 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 
 	IntegInitSymbols();
 
-	/* CONSOLE_DEBUG("About to visit..."); */
+	CONSOLE_DEBUG("Looking for independent var...");
 	integrator_visit_system_vars(sys,&integrator_classify_indep_var);
-
-	/* CONSOLE_DEBUG("..."); */
+#ifdef ANALYSE_DEBUG
+	if(gl_length(sys->indepvars)){
+		CONSOLE_DEBUG("Found %lu indepvars",gl_length(sys->indepvars));
+	}else{
+		CONSOLE_DEBUG("NO INDEP VARS FOUND");
+	}
+#endif
 
 	result = integrator_check_indep_var(sys);
 	gl_free_and_destroy(sys->indepvars);
 	sys->indepvars = NULL;
+
+#ifdef ANALYSE_DEBUG
+	asc_assert(sys->system);
+	asc_assert(sys->x);
+	varname = var_make_name(sys->system, sys->x);
+	CONSOLE_DEBUG("Indep var is '%s'",varname);
+	ASC_FREE(varname);
+#endif
 
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Returning result %d",result); */
 
@@ -379,6 +385,14 @@ int integrator_analyse(IntegratorSystem *sys){
 	}
 	asc_assert(sys->engine!=INTEG_UNKNOWN);
 	asc_assert(sys->internals);
+
+	if(!sys->indepvars || !gl_length(sys->indepvars)){
+		if(!integrator_find_indep_var(sys)){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"No independent variable found: abandoning integration");
+			return 0;
+		}
+	}
+
 	return (sys->internals->analysefn)(sys);
 }
 
@@ -458,7 +472,10 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		return 0;
 	}
 
-	if(!integrator_check_indep_var(sys))return 0;
+	if(!integrator_check_indep_var(sys)){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Independent variable not yet identified");
+		return 0;
+	}
 
 	gl_sort(sys->dynvars,(CmpFunc)Integ_CmpDynVars);
 	/* !!! NOTE THAT dynvars IS NOW REARRANGED !!! *sigh* bug hunting(!) */
@@ -593,6 +610,24 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		yindex++;
 	}
 
+	/* FREE all derivatives and also all states */
+	for(i=0; i<sys->n_y; ++i){
+		if(var_fixed(sys->y[i])){
+			CONSOLE_DEBUG("Freeing state %d",i);
+			var_set_fixed(sys->y[i], FALSE);
+		}
+		if(var_fixed(sys->ydot[i])){
+			CONSOLE_DEBUG("Freeing derivative %d",i);
+			var_set_fixed(sys->ydot[i], FALSE);
+		}
+	}
+	/* FIX the independent variable (just so that it doesn't appear in relman_diff2 */
+	asc_assert(sys->x);
+	if(!var_fixed(sys->x)){
+		CONSOLE_DEBUG("Fixing indep variable");
+		var_set_fixed(sys->x,TRUE);
+	}
+
 	nrels = slv_get_num_solvers_rels(sys->system);
 	if(numy != nrels){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
@@ -640,12 +675,36 @@ void integrator_dae_show_var(IntegratorSystem *sys
 ){
 	char *varname;
 	long y_id;
+
+	asc_assert(sys->x);
+	
 	varname = var_make_name(sys->system, var);
-	if(varindx==NULL){
-		fprintf(stderr,".\t%s\n",varname);
+
+	// maybe it's the independent variable
+	if(var==sys->x){
+		if(varindx==NULL){
+			fprintf(stderr,".\t%s\t(indep)\n",varname);
+		}else{
+			fprintf(stderr,"%d\t%s\t(index)\n",*varindx,varname);
+		}
 		ASC_FREE(varname);
 		return;
 	}
+
+	// if it's fixed then it's not really a DAE var
+	if(var_fixed(var)){
+		fprintf(stderr,"%d\t%s\t(fixed)\n",*varindx,varname);
+		ASC_FREE(varname);
+		return;
+	}
+
+	// if there's no varindx, and neither of the above, then there's a problem
+	if(varindx==NULL){
+		fprintf(stderr,".\t%s\t(not visited?)\t",varname);
+		ASC_FREE(varname);
+		return;
+	}
+
 	y_id = sys->y_id[*varindx];
 
 	fprintf(stderr,"%d\t%s\t%ld", *varindx, varname,y_id);
@@ -789,6 +848,14 @@ int integrator_analyse_ode(IntegratorSystem *sys){
 
   if(!integrator_sort_obs_vars(sys))return 0;
 
+  /* FIX all states */
+  for(i=0; i<sys->n_y; ++i){
+	if(!var_fixed(sys->y[i])){
+      ERROR_REPORTER_HERE(ASC_USER_WARNING,"Fixing state %d",i);
+	  var_set_fixed(sys->y[i], TRUE);
+	}
+  }
+
   /* don't need the gl_lists now that we have arrays for everyone */
   gl_destroy(sys->states);
   gl_destroy(sys->derivs);
@@ -875,6 +942,11 @@ static int integrator_check_indep_var(IntegratorSystem *sys){
   struct Integ_var_t *info;
   char *varname;
 
+  if(sys->x){
+	CONSOLE_DEBUG("Indep var already assigned");
+	return 1;
+  }
+
   /* check the sanity of the independent variable */
   len = gl_length(sys->indepvars);
   if (!len) {
@@ -902,6 +974,8 @@ static int integrator_check_indep_var(IntegratorSystem *sys){
     info = (struct Integ_var_t *)gl_fetch(sys->indepvars,1);
     sys->x = info->i;
   }
+  asc_assert(gl_length(sys->indepvars)==1);
+  asc_assert(sys->x);
   return 1;
 }
 
@@ -1040,23 +1114,42 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 ){
 	struct Integ_var_t *info;
 	long type,index;
-
 	var_filter_t vfilt;
+#ifdef CLASSIFY_DEBUG
+	char *varname;
+#endif
+
+	assert(var != NULL && var_instance(var)!=NULL );
 	vfilt.matchbits = VAR_SVAR;
 	vfilt.matchvalue = VAR_SVAR;
 
-	/* CONSOLE_DEBUG("..."); */
-
-	assert(var != NULL && var_instance(var)!=NULL );
+#ifdef CLASSIFY_DEBUG
+	varname = var_make_name(sys->system,var);
+#endif
 
 	if( var_apply_filter(var,&vfilt) ) {
 		type = DynamicVarInfo(var,&index);
 
 		if(type==INTEG_OTHER_VAR){
 			/* i.e. independent var */
+#ifdef CLASSIFY_DEBUG
+			CONSOLE_DEBUG("Var '%s' added to indepvars",varname);
+#endif
 			INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->indepvars);
+#ifdef CLASSIFY_DEBUG
+		}else{
+			CONSOLE_DEBUG("Var '%s' not correct ode_type",varname);
+#endif
 		}
+#ifdef CLASSIFY_DEBUG
+	}else{
+		CONSOLE_DEBUG("Var '%s' failed filter",varname);
+#endif
 	}
+
+#ifdef CLASSIFY_DEBUG
+	ASC_FREE(varname);
+#endif
 }
 
 /**
@@ -1274,16 +1367,16 @@ double *integrator_get_y(IntegratorSystem *sys, double *y) {
 */
 void integrator_set_y(IntegratorSystem *sys, double *y) {
   long i;
-#ifndef NDEBUG
+#ifdef SOLVE_DEBUG
   char *varname;
 #endif
 
   for (i=0; i < sys->n_y; i++) {
 	assert(sys->y[i]!=NULL);
     var_set_value(sys->y[i],y[i]);
-#ifndef NDEBUG
+#ifdef SOLVE_DEBUG
 	varname = var_make_name(sys->system, sys->y[i]);
-    /* CONSOLE_DEBUG("y[%ld] = \"%s\" = %g --> ASCEND", i+1, varname, y[i]); */
+	CONSOLE_DEBUG("y[%ld] = %g --> '%s'", i+1, y[i], varname);
 	ASC_FREE(varname);
 #endif
   }
@@ -1315,23 +1408,20 @@ double *integrator_get_ydot(IntegratorSystem *sys, double *dydx) {
 
 void integrator_set_ydot(IntegratorSystem *sys, double *dydx) {
 	long i;
-#ifndef NDEBUG
-	/* char *varname; */
+#ifdef SOLVE_DEBUG
+	char *varname;
 #endif
 	for (i=0; i < sys->n_y; i++) {
 		if(sys->ydot[i]!=NULL){
     		var_set_value(sys->ydot[i],dydx[i]);
-#ifndef NDEBUG
-			/* varname = var_make_name(sys->system, sys->ydot[i]);
+#ifdef SOLVE_DEBUG
+			varname = var_make_name(sys->system, sys->ydot[i]);
 			CONSOLE_DEBUG("ydot[%ld] = \"%s\" = %g --> ASCEND", i+1, varname, dydx[i]);
-			ASC_FREE(varname); */
+			ASC_FREE(varname);
+		}else{
+			CONSOLE_DEBUG("ydot[%ld] = %g (internal)", i+1, dydx[i]);
 #endif
 		}
-#ifndef NDEBUG
-		/*else{
-			CONSOLE_DEBUG("ydot[%ld] = %g (internal)", i+1, dydx[i]);
-		}*/
-#endif
 	}
 }
 

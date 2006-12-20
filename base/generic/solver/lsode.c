@@ -937,6 +937,10 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
   integrator_output_init(blsys);
 
+  /* -- store the initial values of all the stuff */
+  integrator_output_write(blsys);
+  integrator_output_write_obs(blsys);
+
   my_neq = (int)neq;
 
   /*

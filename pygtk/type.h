@@ -41,7 +41,7 @@ public:
 	const SymChar getName() const;
 	const int getParameterCount() const;
 	const TypeDescription *getInternalType() const;
-	Simulation getSimulation(const SymChar &name, const bool &rundefaultmethod=true);
+	Simulation getSimulation(const SymChar &name="sim", const bool &rundefaultmethod=true);
 	const Dimensions getDimensions() const;
 	std::vector<Method> getMethods() const;
 	Method getMethod(const SymChar &name) const; ///< exception if not found

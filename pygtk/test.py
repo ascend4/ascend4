@@ -77,9 +77,9 @@ class TestIntegrator(Ascend):
 		self.L.load('johnpye/shm.a4c')
 		M = self.L.findType('shm').getSimulation('sim')
 		M.setSolver(ascpy.Solver('QRSlv'))
-		print M.sim.getChildren()
-		assert float(M.sim.x) == 10.0
-		assert float(M.sim.v) == 0.0
+		print M.getChildren()
+		assert float(M.x) == 10.0
+		assert float(M.v) == 0.0
 		t_end = math.pi
 
 		I = ascpy.Integrator(M)
@@ -95,10 +95,10 @@ class TestIntegrator(Ascend):
 		I.analyse();
 		I.solve();
 		print "At end of simulation,"
-		print "x = %f" % M.sim.x
-		print "v = %f" % M.sim.v
-		assert abs(float(M.sim.x) + 10) < 1e-2
-		assert abs(float(M.sim.v)) < 1e-2
+		print "x = %f" % M.x
+		print "v = %f" % M.v
+		assert abs(float(M.x) + 10) < 1e-2
+		assert abs(float(M.v)) < 1e-2
 		assert I.getNumObservedVars() == 3
 
 	def testInvalidIntegrator(self):
@@ -153,12 +153,12 @@ class TestLSODE(Ascend):
 		I.setMaxSubSteps(10000)
 		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.sim.v)/float(M.sim.g), 2);
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.v)/float(M.g), 2);
 		I.analyse()
 		I.solve()
 		print "At end of simulation,"
-		print "x = %f" % M.sim.x
-		print "v = %f" % M.sim.v
+		print "x = %f" % M.x
+		print "v = %f" % M.v
 		M.run(T.getMethod('self_test'))
 
 	def testlotka(self):
@@ -170,10 +170,12 @@ class TestLSODE(Ascend):
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5);
 		I.analyse()
+		print "Number of vars = %d" % I.getNumVars()
+		assert I.getNumVars()==2
 		I.solve()
 		assert I.getNumObservedVars() == 3;
-		assert abs(float(M.sim.R) - 832) < 1.0
-		assert abs(float(M.sim.F) - 21.36) < 0.1
+		assert abs(M.R - 832) < 1.0
+		assert abs(M.F - 21.36) < 0.1
 		
 class TestIDA(Ascend):
 
@@ -208,6 +210,45 @@ class TestIDA(Ascend):
 		else:
 			self.fail('Failed to trip invalid Integrator parameter')
 
+	def testnewton(self):
+		sys.stderr.write("STARTING TESTNEWTON\n")
+		self.L.load('johnpye/newton.a4c')
+		T = self.L.findType('newton')
+		M = T.getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setParameter('safeeval',True)
+		I.setParameter('rtol',1e-8)
+		I.setMaxSubStep(0.001)
+		I.setMaxSubSteps(10000)
+		
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.v)/float(M.g), 2);
+		I.analyse()
+		I.solve()
+		print "At end of simulation,"
+		print "x = %f" % M.x
+		print "v = %f" % M.v
+		M.run(T.getMethod('self_test'))
+
+	def testlotka(self):
+		self.L.load('johnpye/lotka.a4c')
+		M = self.L.findType('lotka').getSimulation('sim')
+		M.setSolver(ascpy.Solver("QRSlv"))
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5);
+		I.setParameter('rtol',1e-8);
+		I.analyse()
+		assert I.getNumVars()==2
+		assert abs(M.R - 1000) < 1e-300
+		I.solve()
+		assert I.getNumObservedVars() == 3;
+		assert abs(M.R - 832) < 1.0
+		assert abs(M.F - 21.36) < 0.1
+
 	def testzill(self):
 		self.L.load('johnpye/zill.a4c')
 		T = self.L.findType('zill')
@@ -215,7 +256,7 @@ class TestIDA(Ascend):
 		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
-		I.setParameter('safeeval',True)
+		I.setParameter('safeeval',False)
 		I.setMinSubStep(1e-7)
 		I.setMaxSubStep(0.001)
 		I.setMaxSubSteps(10000)
@@ -241,9 +282,9 @@ class TestIDA(Ascend):
 		I.setParameter('autodiff',True)
 		I.analyse()
 		I.solve()
-		assert abs(float(M.sim.y1) - 5.1091e-08) < 1e-10;
-		assert abs(float(M.sim.y2) - 2.0437e-13) < 1e-15;
-		assert abs(float(M.sim.y3) - 1.0) < 1e-5;
+		assert abs(float(M.y1) - 5.1091e-08) < 1e-10;
+		assert abs(float(M.y2) - 2.0437e-13) < 1e-15;
+		assert abs(float(M.y3) - 1.0) < 1e-5;
 
 	def testdenxSPGMR(self):
 		self.L.load('johnpye/idadenx.a4c')
@@ -260,9 +301,9 @@ class TestIDA(Ascend):
 		I.setParameter('gsmodified',False)
 		I.analyse()
 		I.solve()
-		assert abs(float(M.sim.y1) - 5.1091e-08) < 1e-10;
-		assert abs(float(M.sim.y2) - 2.0437e-13) < 1e-15;
-		assert abs(float(M.sim.y3) - 1.0) < 1e-5;
+		assert abs(float(M.y1) - 5.1091e-08) < 1e-10;
+		assert abs(float(M.y2) - 2.0437e-13) < 1e-15;
+		assert abs(float(M.y3) - 1.0) < 1e-5;
 
 	def testkryx(self):
 		self.L.load('johnpye/idakryx.a4c')
@@ -280,7 +321,7 @@ class TestIDA(Ascend):
 		I.setParameter('atolvect',False)
 		I.analyse()
 		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 10);
-		print M.sim.udot[1][3];
+		print M.udot[1][3];
 		I.solve()
 		assert 0
 	

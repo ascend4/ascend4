@@ -74,8 +74,8 @@ public:
 	Variable getObservedVariable(const long &i);
 	Variable getIndependentVariable();
 
-	int findIndependentVar(); /** find the independent variable (must not presume a certain choice of integration engine) */
-	int analyse(); /** analysis gives you details about what your variables are etc */
+	int findIndependentVar(); /**< find the independent variable (must not presume a certain choice of integration engine) */
+	void analyse(); /**< analysis gives you details about what your variables are etc */
 	void solve();
 
 	double getCurrentTime();

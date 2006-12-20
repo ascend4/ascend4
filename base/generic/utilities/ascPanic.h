@@ -47,13 +47,17 @@ NORETURN ASC_DLLSPEC(void) asc_panic_line(
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 # define Asc_Panic(STAT,FUNC,ARGS...) asc_panic_line(STAT,__FILE__,__LINE__,__func__, ##ARGS)
+# define ASC_PANIC(ARGS...) asc_panic_line(2,__FILE__,__LINE__,__func__, ##ARGS)
 #else
 # define Asc_Panic asc_panic
+# define ASC_PANIC asc_panic_nofunc
 
 NORETURN ASC_DLLSPEC(void) asc_panic(
 		CONST int status, CONST char *function,
 		CONST char *format, ...
 );
+
+NORETURN ASC_DLLSPEC(void) asc_panic_nofunc(CONST char *format, ...);
 
 #endif
 
@@ -87,7 +91,7 @@ NORETURN ASC_DLLSPEC(void) asc_panic(
 		, (float)A, (float)B))
 
 #define ASC_ASSERT_RANGE(A,B,C) \
-	((A) >= (B) && (A) < (C) ? (void)0 : (void)asc_panic_line(ASCERR_ASSERTION_FAILED\
+	(void)((A) >= (B) && (A) < (C) ? 0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
 		, __FILE__, __LINE__, __FUNCTION__\
 		,"Assertion failed: %s < %s < %s (val = %f, low = %f, up = %f)" \
 		, #B, #A, #C \
