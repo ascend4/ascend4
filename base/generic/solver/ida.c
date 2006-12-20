@@ -24,7 +24,7 @@
 	by John Pye, May 2006
 */
 
-/* 
+/*
 	Be careful with the following. This file requires both the 'ida.h' from
 	SUNDIALS as well as the 'ida.h' from ASCEND. Make sure that we're getting
 	both of these; if you get problems check your build tool for the paths being
@@ -101,7 +101,7 @@ const IntegratorInternals integrator_ida_internals = {
 };
 
 /**
-	Struct containing any stuff that IDA needs that doesn't fit into the 
+	Struct containing any stuff that IDA needs that doesn't fit into the
 	common IntegratorSystem struct.
 */
 typedef struct{
@@ -331,7 +331,7 @@ int integrator_ida_solve(
 	}
 
 	/* retrieve initial values from the system */
-	
+
 	/** @TODO fix this, the starting time != first sample */
 	t0 = integrator_get_t(blsys);
 	CONSOLE_DEBUG("RETRIEVED t0 = %f",t0);
@@ -352,7 +352,7 @@ int integrator_ida_solve(
 	/* create IDA object */
 	ida_mem = IDACreate();
 
-	/* relative error tolerance */	
+	/* relative error tolerance */
 	reltol = SLV_PARAM_REAL(&(blsys->params),IDA_PARAM_RTOL);
 	CONSOLE_DEBUG("rtol = %8.2e",reltol);
 
@@ -387,7 +387,7 @@ int integrator_ida_solve(
 	/* set optional inputs... */
 	IDASetErrHandlerFn(ida_mem, &integrator_ida_error, (void *)blsys);
 	IDASetRdata(ida_mem, (void *)blsys);
-	IDASetMaxStep(ida_mem, integrator_get_maxstep(blsys));	
+	IDASetMaxStep(ida_mem, integrator_get_maxstep(blsys));
 	IDASetInitStep(ida_mem, integrator_get_stepzero(blsys));
 	IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(blsys));
 	if(integrator_get_minstep(blsys)>0){
@@ -409,7 +409,7 @@ int integrator_ida_solve(
 			case IDADENSE_MEM_FAIL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for IDADENSE"); return 0;
 			default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad return"); return 0;
 		}
-		
+
 		if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_AUTODIFF)){
 			CONSOLE_DEBUG("USING AUTODIFF");
 			flag = IDADenseSetJacFn(ida_mem, &integrator_ida_djex, (void *)blsys);
@@ -439,8 +439,8 @@ int integrator_ida_solve(
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
 			return 0;
-		}				
-			
+		}
+
 		if(flag==IDASPILS_MEM_NULL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 			return 0;
@@ -485,7 +485,7 @@ int integrator_ida_solve(
 	}
 
 	/* set linear solver optional inputs...
-		...nothing here at the moment... 
+		...nothing here at the moment...
 	*/
 
 	/* calculate initial conditions */
@@ -535,11 +535,11 @@ int integrator_ida_solve(
 		t = samplelist_get(blsys->samples, t_index);
 		t0 = integrator_get_t(blsys);
 		asc_assert(t > t0);
-		
+
 #ifdef SOLVE_DEBUG
 		CONSOLE_DEBUG("Integratoring from t0 = %f to t = %f", t0, t);
 #endif
-	
+
 		flag = IDASolve(ida_mem, t, &tret, yret, ypret, IDA_NORMAL);
 
 		/* pass the values of everything back to the compiler */
@@ -568,11 +568,11 @@ int integrator_ida_solve(
 	}
 
 	/* get optional outputs */
-	
+
 	/* free solution memory */
 	N_VDestroy_Serial(yret);
 	N_VDestroy_Serial(ypret);
-	
+
 	/* free solver memory */
 	IDAFree(ida_mem);
 
@@ -631,7 +631,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	*/
 
 	/* evaluate each residual in the rellist */
-	is_error = 0; 
+	is_error = 0;
 	relptr = enginedata->rellist;
 
 	if(enginedata->safeeval){
@@ -697,7 +697,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 		return 1;
 	}
 
-#ifdef FEX_DEBUG	
+#ifdef FEX_DEBUG
 	CONSOLE_DEBUG("RESIDUAL OK");
 #endif
 	return 0;
@@ -762,7 +762,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	/* print step size */
 	CONSOLE_DEBUG("<c_j> = %f",c_j);
 #endif
-	
+
 	/* build up the dense jacobian matrix... */
 	status = 0;
 	for(i=0, relptr = enginedata->rellist;
@@ -796,11 +796,14 @@ int integrator_ida_djex(long int Neq, realtype tt
 			ASC_FREE(varname);
 		}
 		fprintf(stderr,"\n");
-#endif	
+#endif
 		/* insert values into the Jacobian row in appropriate spots (can assume Jac starts with zeros -- IDA manual) */
-		for(j=0; j < count; ++j){			
+		for(j=0; j < count; ++j){
 			var_yindex = blsys->y_id[variables[j]];
+#ifndef __WIN32__
+			/* the SUNDIALS headers seem not to store 'N' on Windows */
 			ASC_ASSERT_RANGE(var_yindex, -Jac->N, Jac->N);
+#endif
 			if(var_yindex >= 0){
 				asc_assert(blsys->y[var_yindex]==enginedata->varlist[variables[j]]);
 				DENSE_ELEM(Jac,i,var_yindex) += derivatives[j];
@@ -831,7 +834,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 			fprintf(stderr,"%11.2e",DENSE_ELEM(Jac,i,j));
 		}
 		fprintf(stderr,"\n");
-	}	
+	}
 #endif
 
 	if(status){
@@ -893,7 +896,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	/* no real use for residuals (rr) here, I don't think? */
 
 	/* allocate space for returns from relman_diff2: we *should* be able to use 'tmp1' and 'tmp2' here... */
-	
+
 	i = NV_LENGTH_S(yy) * 2;
 #ifdef JEX_DEBUG
 	CONSOLE_DEBUG("Allocating 'variables' with length %d",i);
@@ -975,7 +978,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 					);
 #endif
 					asc_assert(blsys->ydot[-var_yindex-1]==enginedata->varlist[variables[j]]);
-					Jv_i += derivatives[j] * NV_Ith_S(v,-var_yindex-1) * c_j; 
+					Jv_i += derivatives[j] * NV_Ith_S(v,-var_yindex-1) * c_j;
 				}
 			}
 
@@ -985,7 +988,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 			relname = rel_make_name(blsys->system, *relptr);
 			CONSOLE_DEBUG("'%s': Jv[%d] = %f", relname, i, NV_Ith_S(Jv,i));
 			//ASC_FREE(relname);
-			return 1;			
+			return 1;
 #endif
 		}
 	}else{
