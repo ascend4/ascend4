@@ -110,6 +110,7 @@ typedef struct{
 	struct bnd_boundary **bndlist;	 /**< NULL-terminated list of boundaries, for use in the root-finding  code */
 	int nrels;
 	int safeeval;                    /**< whether to pass the 'safe' flag to relman_eval */
+	N_Vector pp;                     /**< Preconditioner values */
 } IntegratorIdaData;
 
 /*-------------------------------------------------------------
@@ -135,6 +136,23 @@ int integrator_ida_djex(long int Neq, realtype tt
 		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
 );
 
+int integrator_ida_psetup(realtype tt,
+		 N_Vector yy, N_Vector yp, N_Vector rr,
+		 realtype c_j, void *prec_data,
+		 N_Vector tmp1, N_Vector tmp2,
+		 N_Vector tmp3
+);
+
+int integrator_ida_psolve(realtype tt,
+		 N_Vector yy, N_Vector yp, N_Vector rr,
+		 N_Vector rvec, N_Vector zvec,
+		 realtype c_j, realtype delta, void *prec_data,
+		 N_Vector tmp
+);
+
+static const IDASpilsPrecSetupFn psetup1 = &integrator_ida_psetup;
+static const IDASpilsPrecSolveFn psolve1 = &integrator_ida_psolve;
+
 /*-------------------------------------------------------------
   SETUP/TEARDOWN ROUTINES
 */
@@ -145,6 +163,7 @@ void integrator_ida_create(IntegratorSystem *blsys){
 	enginedata->rellist = NULL;
 	enginedata->varlist = NULL;
 	enginedata->safeeval = 0;
+	enginedata->pp = NULL;
 	blsys->enginedata = (void *)enginedata;
 	integrator_ida_params_default(blsys);
 }
@@ -152,6 +171,7 @@ void integrator_ida_create(IntegratorSystem *blsys){
 void integrator_ida_free(void *enginedata){
 	CONSOLE_DEBUG("DELETING IDA ENGINE DATA");
 	IntegratorIdaData *d = (IntegratorIdaData *)enginedata;
+	if(d->pp)N_VDestroy_Serial(d->pp);
 	/* note, we don't own the rellist, so don't need to free it */
 	ASC_FREE(d);
 }
@@ -180,12 +200,17 @@ enum ida_parameters{
 	,IDA_PARAM_ATOLVECT
 	,IDA_PARAM_GSMODIFIED
 	,IDA_PARAM_MAXNCF
+	,IDA_PARAM_PREC
 		,IDA_PARAMS_SIZE
 };
 
 /**
 	Here the full set of parameters is defined, along with upper/lower bounds,
 	etc. The values are stuck into the blsys->params structure.
+
+	To add a new parameter, first give it a name IDA_PARAM_* in thge above enum ida_parameters
+	list. Then add a slv_param_*(...) statement below to define the type, description and range
+	for the new parameter.
 
 	@return 0 on success
 */
@@ -292,6 +317,13 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 		}, 10,0,1000 }
 	);
 
+	slv_param_char(p,IDA_PARAM_PREC
+			,(SlvParameterInitChar){{"prec"
+			,"Preconditioner",1
+			,"See IDA manual, section section 5.6.8."
+		},"NONE"}, (char *[]){"NONE","DIAG",NULL}
+	);
+
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
 
 	CONSOLE_DEBUG("Created %d params", p->num_parms);
@@ -322,6 +354,9 @@ int integrator_ida_solve(
 	IdaFlagFn *flagfn;
 	IdaFlagNameFn *flagnamefn;
 	const char *flagfntype;
+	char *pname;
+	IDASpilsPrecSetupFn psetup;
+	IDASpilsPrecSolveFn psolve;
 
 	CONSOLE_DEBUG("STARTING IDA...");
 
@@ -454,6 +489,15 @@ int integrator_ida_solve(
 		maxl = SLV_PARAM_INT(&(blsys->params),IDA_PARAM_MAXL);
 		CONSOLE_DEBUG("maxl = %d",maxl);
 
+		pname = SLV_PARAM_CHAR(&(blsys->params),IDA_PARAM_PREC);
+		if(strcmp(pname,"NONE")==0){
+			psetup=NULL;
+			psolve=NULL;
+		}else if(strcmp(pname,"DIAG")==0){
+			psetup=&integrator_ida_psetup;
+			psolve=&integrator_ida_psolve;
+		}
+
 		if(strcmp(linsolver,"SPGMR")==0){
 			CONSOLE_DEBUG("IDA SPGMR");
 			flag = IDASpgmr(ida_mem, maxl); /* 0 means use the default max Krylov dimension of 5 */
@@ -467,6 +511,10 @@ int integrator_ida_solve(
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
 			return 0;
 		}
+
+		enginedata->pp = N_VNew_Serial(blsys->n_y);
+		IDASpilsSetPreconditioner(ida_mem,psetup,psolve,(void *)blsys);
+		CONSOLE_DEBUG("PRECONDITIONER = %s",pname);
 
 		flagfntype = "IDASPILS";
 		flagfn = &IDASpilsGetLastFlag;
@@ -1054,6 +1102,59 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	}
 	return 0;
 }
+
+/*----------------------------------------------
+  PRECONDITIONER
+*/
+
+
+/**
+	EXPERIMENTAL. A diagonal preconditioner for use with IDA Krylov solvers
+
+	'setup' function.
+*/
+int integrator_ida_psetup(realtype tt,
+		 N_Vector yy, N_Vector yp, N_Vector rr,
+		 realtype c_j, void *p_data,
+		 N_Vector tmp1, N_Vector tmp2,
+		 N_Vector tmp3
+){
+	int i;
+	IntegratorSystem *blsys;
+	IntegratorIdaData *data;
+	blsys = (IntegratorSystem *)p_data;
+	data = blsys->enginedata;
+
+	double y = 1; /* derivative of y[i] in relation i */
+	double ydot = 1; /* derivative of ydot[i] in relation i */
+
+	N_VConst(1, data->pp);
+	for(i=0; i<blsys->n_y; ++i){
+		/* @TODO calculate y, ydot here */
+		NV_Ith_S(data->pp, i) = 1 / (y + c_j * ydot);
+	}
+	return 0;
+};
+
+/**
+	EXPERIMENTAL. A diagonal preconditioner for use with IDA Krylov solvers
+
+	'solve' function.
+*/
+int integrator_ida_psolve(realtype tt,
+		 N_Vector yy, N_Vector yp, N_Vector rr,
+		 N_Vector rvec, N_Vector zvec,
+		 realtype c_j, realtype delta, void *p_data,
+		 N_Vector tmp
+){
+	IntegratorSystem *blsys;
+	IntegratorIdaData *data;
+	blsys = (IntegratorSystem *)p_data;
+	data = blsys->enginedata;
+
+	N_VProd(data->pp, rvec, zvec);
+	return 0;
+};
 
 /*----------------------------------------------
   ERROR REPORTING
