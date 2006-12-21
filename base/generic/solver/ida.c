@@ -179,6 +179,7 @@ enum ida_parameters{
 	,IDA_PARAM_ATOL
 	,IDA_PARAM_ATOLVECT
 	,IDA_PARAM_GSMODIFIED
+	,IDA_PARAM_MAXNCF
 		,IDA_PARAMS_SIZE
 };
 
@@ -277,10 +278,18 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 
 	slv_param_bool(p,IDA_PARAM_GSMODIFIED
 			,(SlvParameterInitBool){{"gsmodified"
-			,"Use modified Gram-Schmidt orthogonalisation in SPGMR?",2
+			,"Gram-Schmidt Orthogonalisation Scheme", 2
 			,"TRUE = GS_MODIFIED, FALSE = GS_CLASSICAL. See IDA manual section"
 			" 5.5.6.6. Only applies when linsolve=SPGMR is selected."
 		}, TRUE}
+	);
+
+	slv_param_int(p,IDA_PARAM_MAXNCF
+			,(SlvParameterInitInt){{"maxncf"
+			,"Max nonlinear solver convergence failures per step", 2
+			,"Maximum number of allowable nonlinear solver convergence failures"
+			" on one step. See IDA manual section 5.5.6.1."
+		}, 10,0,1000 }
 	);
 
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
@@ -295,7 +304,7 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 */
 
 typedef int IdaFlagFn(void *,int *);
-typedef const char *IdaFlagNameFn(int);
+typedef char *IdaFlagNameFn(int);
 
 /* return 1 on success */
 int integrator_ida_solve(
@@ -347,13 +356,17 @@ int integrator_ida_solve(
 	y0 = N_VNew_Serial(size);
 	integrator_get_y(blsys,NV_DATA_S(y0));
 
+#ifdef SOLVE_DEBUG
 	CONSOLE_DEBUG("RETRIEVING yp0");
+#endif
 
 	yp0 = N_VNew_Serial(size);
 	integrator_get_ydot(blsys,NV_DATA_S(yp0));
 
+#ifdef SOLVE_DEBUG
 	N_VPrint_Serial(yp0);
 	CONSOLE_DEBUG("yp0 is at %p",&yp0);
+#endif
 
 	/* create IDA object */
 	ida_mem = IDACreate();
@@ -399,6 +412,10 @@ int integrator_ida_solve(
 	if(integrator_get_minstep(blsys)>0){
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"IDA does not support minstep (ignored)\n");
 	}
+
+	CONSOLE_DEBUG("MAXNCF = %d",SLV_PARAM_INT(&blsys->params,IDA_PARAM_MAXNCF));
+    IDASetMaxConvFails(ida_mem,SLV_PARAM_INT(&blsys->params,IDA_PARAM_MAXNCF));
+
 	/* there's no capability for setting *minimum* step size in IDA */
 
 
@@ -430,7 +447,6 @@ int integrator_ida_solve(
 		flagfntype = "IDADENSE";
 		flagfn = &IDADenseGetLastFlag;
 		flagnamefn = &IDADenseGetReturnFlagName;
-
 	}else{
 		/* remaining methods are all SPILS */
 		CONSOLE_DEBUG("IDA SPILS");
@@ -521,18 +537,28 @@ int integrator_ida_solve(
 		flag = IDACalcIC(ida_mem, t0, y0, yp0, IDA_Y_INIT, tout1);
 	# endif
 
-		if(flag!=IDA_SUCCESS){
-			flag = -999;
-			flag1 = (flagfn)(ida_mem,&flag);
-			if(flag1){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error retrieving linear solver error code (%d)",flag1);
-			}
+		switch(flag){
+			case IDA_SUCCESS:
+				CONSOLE_DEBUG("Initial conditions solved OK");
+				break;
 
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to solve initial values (Last %s error: %s)",flagfntype,(flagnamefn)(flag));
-			return 0;
-		}/* else success */
+			case IDA_LSETUP_FAIL:
+			case IDA_LINIT_FAIL:
+			case IDA_LSOLVE_FAIL:
+			case IDA_NO_RECOVERY:
+				flag1 = -999;
+				flag = (flagfn)(ida_mem,&flag1);
+				if(flag){
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to retrieve error code from %s (err %d)",flagfntype,flag);
+					return 0;
+				}
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s returned flag '%s' (value = %d)",flagfntype,(flagnamefn)(flag1),flag1);
+				return 0;
 
-		CONSOLE_DEBUG("INITIAL CONDITIONS SOLVED :-)");
+			default:
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
+				return 0;
+		}
 	}else{
 		CONSOLE_DEBUG("Not solving initial conditions (see IDA parameter 'calcic')");
 	}
@@ -627,6 +653,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	char *relname;
 #ifdef FEX_DEBUG
 	char *varname;
+	char diffname[30];
 #endif
 
 	blsys = (IntegratorSystem *)res_data;
@@ -698,15 +725,16 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 #ifdef FEX_DEBUG
 	/* output residuals to console */
 	CONSOLE_DEBUG("RESIDUAL OUTPUT");
-	fprintf(stderr,"index\t%20s\t%20s\t%s\n","y","ydot","resid");
+	fprintf(stderr,"index\t%25s\t%25s\t%s\n","y","ydot","resid");
 	for(i=0; i<blsys->n_y; ++i){
 		varname = var_make_name(blsys->system,blsys->y[i]);
-		fprintf(stderr,"%d\t%10s=%10f\t",i,varname,NV_Ith_S(yy,i));
+		fprintf(stderr,"%d\t%15s=%10f\t",i,varname,NV_Ith_S(yy,i));
 		if(blsys->ydot[i]){
 			varname = var_make_name(blsys->system,blsys->ydot[i]);
-			fprintf(stderr,"%10s=%10f\t",varname,NV_Ith_S(yp,i));
+			fprintf(stderr,"%15s=%10f\t",varname,NV_Ith_S(yp,i));
 		}else{
-			fprintf(stderr,"diff(%4s)=%10f\t",varname,NV_Ith_S(yp,i));
+			snprintf(diffname,99,"diff(%s)",varname);
+			fprintf(stderr,"%15s=%10f\t",diffname,NV_Ith_S(yp,i));
 		}
 		ASC_FREE(varname);
 		relname = rel_make_name(blsys->system,enginedata->rellist[i]);

@@ -40,8 +40,7 @@
 	Define as TRUE to enable debug message printing.
 	@TODO this needs to go away.
 */
-#define INTEG_DEBUG TRUE
-#define ANALYSE_DEBUG
+/* #define ANALYSE_DEBUG */
 /* #define SOLVE_DEBUG */
 /* #define CLASSIFY_DEBUG */
 
