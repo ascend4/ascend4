@@ -1,14 +1,14 @@
 Name:		ascend
 Summary:	ASCEND modelling environment
-Version:	0.9.5.103
+Version:	0.9.5.104
 
 # Use release 0.* so that other users can do patch releases with a higher number
 # and still have the update occur automatically.
-Release:	0.1076
+Release:	0
 
 License:	GPL
 Group:		Applications/Engineering
-Source:		ascend-0.9.5.103.tar.bz2
+Source:		ascend-0.9.5.104.tar.bz2
 URL:		http://ascend.cheme.cmu.edu/
 
 Prefix:		%{_prefix}
@@ -48,7 +48,7 @@ domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
 #%package -n ascend-python
-#Version:    0.9.5.103
+#Version:    0.9.5.104
 #Summary:    PyGTK user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -58,7 +58,7 @@ fields from Architecture to (computational) Zoology.
 #access to all of the ASCEND functionality provided by the Tcl/Tk interface.
 #
 #%package -n ascend-tcltk
-#Version:    0.9.5.103
+#Version:    0.9.5.104
 #Summary:    Tcl/Tk user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -69,7 +69,7 @@ fields from Architecture to (computational) Zoology.
 #functionality not provided by the PyGTK interface.
 
 %prep
-%setup -q -n ascend-0.9.5.103
+%setup -q -n ascend-0.9.5.104
 
 %build
 scons %{_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
