@@ -1,7 +1,10 @@
 Import('env')
 
-for d in ['extfn','datareader','extpy']:
+for d in ['extfn','datareader']:
 	env.SConscript(d+'/SConscript',['env']);
+
+if env.get('WITH_PYTHON'):
+	env.SConscript('extpy/SConscript',['env']);
 
 # vim: set syntax=python:
 
