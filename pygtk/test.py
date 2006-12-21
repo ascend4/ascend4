@@ -249,6 +249,24 @@ class TestIDA(Ascend):
 		assert abs(M.R - 832) < 1.0
 		assert abs(M.F - 21.36) < 0.1
 
+	def testlotkaDENSE(self):
+		self.L.load('johnpye/lotka.a4c')
+		M = self.L.findType('lotka').getSimulation('sim')
+		M.setSolver(ascpy.Solver("QRSlv"))
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5);
+		I.setParameter('linsolver','DENSE')
+		I.setParameter('rtol',1e-8);
+		I.analyse()
+		assert I.getNumVars()==2
+		assert abs(M.R - 1000) < 1e-300
+		I.solve()
+		assert I.getNumObservedVars() == 3;
+		assert abs(M.R - 832) < 1.0
+		assert abs(M.F - 21.36) < 0.1
+
 	def testzill(self):
 		self.L.load('johnpye/zill.a4c')
 		T = self.L.findType('zill')
@@ -303,13 +321,14 @@ class TestIDA(Ascend):
 		I.setParameter('atolvect',False)
 		I.setParameter('calcic',True)
 		I.analyse()
-		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 10);
+		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 11);
 		I.solve()
 		assert abs(M.u[2][2].getValue()) < 1e-5
 
 	def testdenxSPGMR(self):
 		self.L.load('johnpye/idadenx.a4c')
 		M = self.L.findType('idadenx').getSimulation('sim')
+		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
@@ -320,20 +339,21 @@ class TestIDA(Ascend):
 		I.setParameter('autodiff',True)
 		I.setParameter('linsolver','SPGMR')
 		I.setParameter('gsmodified',False)
+		I.setParameter('maxncf',10)
 		I.analyse()
 		I.solve()
 		assert abs(float(M.y1) - 5.1091e-08) < 1e-10;
 		assert abs(float(M.y2) - 2.0437e-13) < 1e-15;
 		assert abs(float(M.y3) - 1.0) < 1e-5;
 
-	def testkryxSPGMR(self):
+	def testkryx(self):
 		self.L.load('johnpye/idakryx.a4c')
 		M = self.L.findType('idakryx').getSimulation('sim')
 		M.build()
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setParameter('linsolver','SPGMR')
+		I.setParameter('linsolver','SPTFQMR')
 		I.setParameter('maxl',8)
 		I.setParameter('gsmodified',False)
 		I.setParameter('autodiff',True)
