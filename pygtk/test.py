@@ -319,6 +319,7 @@ class TestIDA(Ascend):
 		I.setParameter('rtol',0)
 		I.setParameter('atol',1e-3);
 		I.setParameter('atolvect',False)
+		I.setParameter('calcic',True)
 		I.analyse()
 		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 10);
 		print M.udot[1][3];

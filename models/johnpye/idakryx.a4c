@@ -102,9 +102,9 @@ METHOD values;
 END values;
 
 METHOD ode_init;
-	FREE udot[1..M-2][1..M-2];
-	FREE udot[0,M-1][0..M-1];
-	FREE udot[1..M-2][0,M-1];
+	FREE udot[1..M-2][1..M-2]; (* middle *)
+	FIX udot[0,M-1][0..M-1]; (* top, bottom *)
+	FIX udot[1..M-2][0,M-1]; (* sides *)
 
 	FOR i IN [0..M-1] DO
 		FOR j IN[0..M-1] DO

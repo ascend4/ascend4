@@ -294,6 +294,9 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
   MAIN IDA SOLVER ROUTINE, see IDA manual, sec 5.4, p. 27 ff.
 */
 
+typedef int IdaFlagFn(void *,int *);
+typedef const char *IdaFlagNameFn(int);
+
 /* return 1 on success */
 int integrator_ida_solve(
 		IntegratorSystem *blsys
@@ -307,6 +310,8 @@ int integrator_ida_solve(
 	IntegratorIdaData *enginedata;
 	char *linsolver;
 	int maxl;
+	IdaFlagFn *flagfn;
+	IdaFlagNameFn *flagnamefn;
 
 	CONSOLE_DEBUG("STARTING IDA...");
 
@@ -420,6 +425,10 @@ int integrator_ida_solve(
 		}else{
 			CONSOLE_DEBUG("USING NUMERICAL DIFF");
 		}
+
+		flagfn = &IDADenseGetLastFlag;
+		flagnamefn = &IDADenseGetReturnFlagName;
+
 	}else{
 		/* remaining methods are all SPILS */
 		CONSOLE_DEBUG("IDA SPILS");
@@ -440,6 +449,9 @@ int integrator_ida_solve(
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
 			return 0;
 		}
+
+		flagfn = &IDASpilsGetLastFlag;
+		flagnamefn = &IDASpilsGetReturnFlagName;
 
 		if(flag==IDASPILS_MEM_NULL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
@@ -507,7 +519,8 @@ int integrator_ida_solve(
 	# endif
 
 		if(flag!=IDA_SUCCESS){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to solve initial values (IDACalcIC)");
+			(flagfn)(ida_mem,&flag);
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to solve initial values (IDACalcIC: %s)",(flagnamefn)(flag));
 			return 0;
 		}/* else success */
 
