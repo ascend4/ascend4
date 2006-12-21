@@ -21,10 +21,10 @@ BuildRequires: scons >= 0.96.91
 BuildRequires: bison >= 2.0
 BuildRequires: flex >= 2.5.4
 BuildRequires: swig >= 1.3.24
-BuildRequires: tk-devel < 8.5, tcl-devel < 8.5
+BuildRequires: tk-devel >= 8.3, tcl-devel >= 8.3
 BuildRequires: tktable < 2.10, tktable >= 2.8
 BuildRequires: desktop-file-utils
-BuildRequires: sundials >= 2.3.0
+BuildRequires: sundials >= 2.2.1
 BuildRequires: conopt >= 3.14
 
 # This contains the libg2c library; which on FC5 is not in the path, unfort.
@@ -37,7 +37,7 @@ Requires: python-matplotlib
 Requires: python-numeric
 Requires: gtksourceview
 Requires: xgraph >= 11
-Requires: sundials >= 2.3.0
+# sundials is statically linked (hopefully)
 
 %description
 ASCEND IV is both a large-scale object-oriented mathematical
