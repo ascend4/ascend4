@@ -52,6 +52,12 @@ setting up the PyGTK GUI, please see
 https://pse.cheme.cmu.edu/wiki/view/Ascend/PythonWrapper
 
 ------
+BUILDING ON SOLARIS
+
+Some work has been done on building on Solaris, using Python 2.3. At present
+it's pretty close but not yet stable. If you can help out, let us know.
+
+------
 RUNNING FOR THE FIRST TIME
 
 If you've build ASCEND from source, you don't need to 'install'
