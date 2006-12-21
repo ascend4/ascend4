@@ -662,8 +662,8 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	}
 
 	CONSOLE_DEBUG("CORRESPONDENCE OF SOLVER VARS TO INTEGRATOR VARS");
-	fprintf(stderr,"index\tname\ty_id\ty\tydot\n");
-	fprintf(stderr,"-----\t-----\t-----\t-----\t-----\n");
+	fprintf(stderr,"index\t%-15s\ty_id\ty\tydot\n","name");
+	fprintf(stderr,"-----\t%-15s\t-----\t-----\t-----\n","----");
 	integrator_visit_system_vars(sys,integrator_dae_show_var);
 #endif
 
@@ -680,44 +680,37 @@ void integrator_dae_show_var(IntegratorSystem *sys
 	
 	varname = var_make_name(sys->system, var);
 
-	// maybe it's the independent variable
-	if(var==sys->x){
-		if(varindx==NULL){
-			fprintf(stderr,".\t%s\t(indep)\n",varname);
-		}else{
-			fprintf(stderr,"%d\t%s\t(index)\n",*varindx,varname);
-		}
-		ASC_FREE(varname);
-		return;
-	}
-
-	// if it's fixed then it's not really a DAE var
-	if(var_fixed(var)){
-		fprintf(stderr,"%d\t%s\t(fixed)\n",*varindx,varname);
-		ASC_FREE(varname);
-		return;
-	}
-
-	// if there's no varindx, and neither of the above, then there's a problem
 	if(varindx==NULL){
-		fprintf(stderr,".\t%s\t(not visited?)\t",varname);
-		ASC_FREE(varname);
-		return;
-	}
-
-	y_id = sys->y_id[*varindx];
-
-	fprintf(stderr,"%d\t%s\t%ld", *varindx, varname,y_id);
-	ASC_FREE(varname);
-	if(y_id >= 0){
-		fprintf(stderr,"\ty[%ld]\t.\n",y_id);
+		fprintf(stderr,".\t%-15s\t",varname);
 	}else{
-		fprintf(stderr,"\t.\tydot[%ld]\n",-y_id-1);
+		fprintf(stderr,"%d\t%-15s\t",*varindx,varname);
 	}
 
-	ASC_ASSERT_LT(*varindx,1e7L);
-	ASC_ASSERT_LT(y_id, 9999999L);
-	ASC_ASSERT_LT(-9999999L, y_id);
+	if(var==sys->x){
+		// it's the independent variable
+		fprintf(stderr,"(indep)\n");
+	}else if(var_fixed(var)){
+		// it's fixed, so not really a DAE var
+		fprintf(stderr,"(fixed)\n");
+	}else if(varindx==NULL){
+		// there's no varindx, so looks like a problem
+		fprintf(stderr,"(not visited?)\n");
+	}else{
+		// a DAE var, by elimination
+		y_id = sys->y_id[*varindx];
+
+		fprintf(stderr,"%ld", y_id);
+		if(y_id >= 0){
+			fprintf(stderr,"\ty[%ld]\t.\n",y_id);
+		}else{
+			fprintf(stderr,"\t.\tydot[%ld]\n",-y_id-1);
+		}
+
+		ASC_ASSERT_LT(*varindx,1e7L);
+		ASC_ASSERT_LT(y_id, 9999999L);
+		ASC_ASSERT_LT(-9999999L, y_id);
+	}
+	ASC_FREE(varname);
 }
 
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitfn){
