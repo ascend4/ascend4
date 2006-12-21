@@ -1,14 +1,10 @@
 Import('env')
 extenv = env.Copy()
 
-if extenv.get('WITH_PYTHON'):
-	extenv.Append(CPPDEFINES=['WITH_PYTHON'])
-
 for d in ['extfn','datareader']:
 	extenv.SConscript(d+'/SConscript',['env']);
 
 if extenv.get('WITH_PYTHON'):
-	print "BUILDING EXTPY -- WITH_PYTHON"
 	extenv.SConscript('extpy/SConscript',['env']);
 
 # vim: set syntax=python:
