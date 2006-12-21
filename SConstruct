@@ -1466,12 +1466,14 @@ if env['STATIC_TCLTK']:
 if not conf.CheckPythonLib():
 	without_python_reason = 'libpython2.x not found or not linkable'
 	with_python = False
+	env['WITH_PYTHON']=False
 
 # SWIG version
 
 if with_python and not conf.CheckSwigVersion():
 	without_python_reason = 'SWIG >= 1.3.24 is required'
 	with_python = False
+	env['WITH_PYTHON']=False
 
 # CUnit
 
@@ -1837,7 +1839,7 @@ if with_conopt:
 if with_tcltk:
 	env.SConscript(['tcltk/generic/interface/SConscript'],'env')
 else:
-	print "Skipping... Tcl/Tk GUI isn't being built:",without_tcltk_reason
+	print "Skipping... Tcl/Tk bindings aren't being built:",without_tcltk_reason
 
 #-------------
 # PYTHON INTERFACE
@@ -1845,7 +1847,7 @@ else:
 if with_python:
 	env.SConscript(['pygtk/SConscript'],'env')
 else:
-	print "Skipping... Python GUI isn't being built:",without_python_reason
+	print "Skipping... Python bindings aren't being built:",without_python_reason
 
 #------------
 # BASE/GENERIC SUBDIRECTORIES

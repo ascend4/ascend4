@@ -22,6 +22,10 @@
 	by John Pye, Oct 2006
 */
 
+#ifndef WITH_PYTHON
+# error "Can't build 'extpy' without WITH_PYTHON set"
+#else
+
 #include <Python.h>
 
 #include <stdio.h>
@@ -377,4 +381,6 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	ASC_FREE(name);
 	return 0;
 }
+
+#endif /* WITH_PYTHON */
 
