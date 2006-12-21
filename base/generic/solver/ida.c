@@ -304,7 +304,7 @@ int integrator_ida_solve(
 		, unsigned long finish_index
 ){
 	void *ida_mem;
-	int size, flag, t_index;
+	int size, flag, flag1, t_index;
 	realtype t0, reltol, abstol, t, tret, tout1;
 	N_Vector y0, yp0, abstolvect, ypret, yret;
 	IntegratorIdaData *enginedata;
@@ -312,6 +312,7 @@ int integrator_ida_solve(
 	int maxl;
 	IdaFlagFn *flagfn;
 	IdaFlagNameFn *flagnamefn;
+	const char *flagfntype;
 
 	CONSOLE_DEBUG("STARTING IDA...");
 
@@ -426,6 +427,7 @@ int integrator_ida_solve(
 			CONSOLE_DEBUG("USING NUMERICAL DIFF");
 		}
 
+		flagfntype = "IDADENSE";
 		flagfn = &IDADenseGetLastFlag;
 		flagnamefn = &IDADenseGetReturnFlagName;
 
@@ -450,6 +452,7 @@ int integrator_ida_solve(
 			return 0;
 		}
 
+		flagfntype = "IDASPILS";
 		flagfn = &IDASpilsGetLastFlag;
 		flagnamefn = &IDASpilsGetReturnFlagName;
 
@@ -519,8 +522,13 @@ int integrator_ida_solve(
 	# endif
 
 		if(flag!=IDA_SUCCESS){
-			(flagfn)(ida_mem,&flag);
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to solve initial values (IDACalcIC: %s)",(flagnamefn)(flag));
+			flag = -999;
+			flag1 = (flagfn)(ida_mem,&flag);
+			if(flag1){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error retrieving linear solver error code (%d)",flag1);
+			}
+
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to solve initial values (Last %s error: %s)",flagfntype,(flagnamefn)(flag));
 			return 0;
 		}/* else success */
 
