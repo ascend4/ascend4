@@ -30,7 +30,7 @@ REQUIRE "atoms.a4l";
 MODEL idakryx;
 
 	M IS_A integer_constant;
-	M :== 4;
+	M :== 5;
 
 	dx IS_A real_constant;
 	dx :== 1.0 / (M - 1);
@@ -115,6 +115,9 @@ METHOD ode_init;
 			udot[i][j].ode_type := 2;
 		END FOR;
 	END FOR;
+
+	t.obs_id := 1;
+	udot[M/2][M/2].obs_id := 2;
 
 	t.ode_type := -1;
 	

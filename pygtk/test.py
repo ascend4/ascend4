@@ -286,6 +286,27 @@ class TestIDA(Ascend):
 		assert abs(float(M.y2) - 2.0437e-13) < 1e-15;
 		assert abs(float(M.y3) - 1.0) < 1e-5;
 
+	def testkryxDENSE(self):
+		self.L.load('johnpye/idakryx.a4c')
+		M = self.L.findType('idakryx').getSimulation('sim')
+		M.setSolver(ascpy.Solver('QRSlv'))
+		M.build()
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setParameter('linsolver','DENSE')
+		I.setParameter('maxl',8)
+		I.setParameter('gsmodified',False)
+		I.setParameter('autodiff',True)
+		I.setParameter('rtol',0)
+		I.setParameter('atol',1e-3);
+		I.setParameter('atolvect',False)
+		I.setParameter('calcic',True)
+		I.analyse()
+		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 10);
+		I.solve()
+		assert abs(M.u[2][2].getValue()) < 1e-5
+
 	def testdenxSPGMR(self):
 		self.L.load('johnpye/idadenx.a4c')
 		M = self.L.findType('idadenx').getSimulation('sim')
@@ -305,7 +326,7 @@ class TestIDA(Ascend):
 		assert abs(float(M.y2) - 2.0437e-13) < 1e-15;
 		assert abs(float(M.y3) - 1.0) < 1e-5;
 
-	def testkryx(self):
+	def testkryxSPGMR(self):
 		self.L.load('johnpye/idakryx.a4c')
 		M = self.L.findType('idakryx').getSimulation('sim')
 		M.build()
