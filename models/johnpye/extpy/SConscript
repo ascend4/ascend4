@@ -1,6 +1,9 @@
 Import('env')
 extfn_env = env.Copy()
 
+if extfn_env.get('WITH_PYTHON'):
+	extfn_env.Append(CPPDEFINES=['-DWITH_PYTHON'])
+
 srcs = Split("""
 	extpy.c
 """)
