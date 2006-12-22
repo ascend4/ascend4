@@ -15,6 +15,8 @@ csrcs = Split("""
 """)
 
 solver_env = libascend_env.Copy()
+if solver_env.get('WITH_MMIO'):
+	solver_env.Append(CPPPATH=["#/mmio"])
 
 defs = []
 for i in libascend_env.get('WITH_SOLVERS'):

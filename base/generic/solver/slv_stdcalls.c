@@ -94,6 +94,8 @@ enum mtx_reorder_method g_blockmethod = mtx_UNKNOWN;
 	Solvers are still free to reorder their own matrices any way they like.
 	It's probably a dumb idea, though.
 */
+
+/* see slv_stdcalls.h */
 int slv_std_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
                                var_filter_t *vf,rel_filter_t *rf)
 {

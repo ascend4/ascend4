@@ -307,11 +307,6 @@ struct element_t *mtx_find_element(mtx_matrix_t mtx,
                                    int32 org_row, 
                                    int32 org_col);
 /**< 
- ***  <!--  mtx_find_element(mtx,org_row,org_col)                      -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  int32 org_row;                                             -->
- ***  <!--  int32 org_col;                                             -->
- ***
  ***  Searches for a given element of the matrix and returns a pointer to it
  ***  if it exists, or NULL if it doesn't exist. 
  ***  It is *ASSUMED* that org_row
@@ -322,10 +317,6 @@ struct element_t *mtx_create_element(mtx_matrix_t mtx,
                                      int32 org_row, 
                                      int32 org_col);
 /**<
- ***  <!--  mtx_create_element(mtx,org_row,org_col);                   -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  int32 org_row;                                             -->
- ***  <!--  int32 org_col;                                             -->
  ***  Creates the given element and returns a pointer to it.  The value is
  ***  initially zero.
  ***  It is *ASSUMED* that org_row
@@ -339,11 +330,6 @@ struct element_t *mtx_create_element_value(mtx_matrix_t mtx,
                                            int32 org_col,
                                            real64 val);
 /**<
- ***  <!--  mtx_create_element_value(mtx,org_row,org_col,val);         -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  int32 org_row;                                             -->
- ***  <!--  int32 org_col;                                             -->
- ***  <!--  real64 val;                                                -->
  ***  Creates the given element and returns a pointer to it.  The value is
  ***  initialzed to val.
  ***  It is *ASSUMED* that org_row
@@ -360,11 +346,6 @@ extern struct element_t *mtx_next_col(register struct element_t *elt,
                                       mtx_range_t *rng, 
                                       int32 *tocur);
 /**< 
- ***  <!--  enext = struct element_t *mtx_next_col(elt,rng,tocur);     -->
- ***  <!--  struct element_t *elt, *enext;                             -->
- ***  <!--  mtx_range_t *rng;                                          -->
- ***  <!--  int32 *tocur;                                              -->
- ***
  ***  Returns the next element after elt that is in the range
  ***  rng according to the permutation vector tocur given. May return NULL.
  **/
@@ -373,11 +354,6 @@ extern struct element_t *mtx_next_row(register struct element_t *elt,
                                       mtx_range_t *rng, 
                                       int32 *tocur);
 /**< 
- ***  <!--  enext = struct element_t *mtx_next_row(elt,rng,tocur);     -->
- ***  <!--  struct element_t *elt, *enext;                             -->
- ***  <!--  mtx_range_t *rng;                                          -->
- ***  <!--  int32 *tocur;                                              -->
- ***
  ***  Returns the next element after elt that is in the range
  ***  rng according to the permutation vector tocur given. May return NULL.
  **/
@@ -387,26 +363,18 @@ extern struct element_t *mtx_next_row(register struct element_t *elt,
 \* ************************************************************************ */
 extern int32 *mtx_alloc_perm(int32 cap);
 /**<
- ***  <!--  p = mtx_alloc_perm(cap);                                   -->
- ***  <!--  int32 cap, *p;                                             -->
  ***  Allocates a permutation vector.  The user need
  ***  not concern himself with the -1st element, which does exist.
  **/
 
 extern void mtx_copy_perm(int32 *tarperm, int32 *srcperm, int32 cap);
 /**<
- ***  <!--  mtx_copy_perm(tarperm,srcperm,cap)                         -->
- ***  <!--  int32 *tarperm;                                            -->
- ***  <!--  int32 *srcperm;                                            -->
- ***  <!--  int32 cap;                                                 -->
  ***  Copies srcperm to tarperm given the capacity of srcperm.
  ***  If tarperm was obtained from alloc_perm(), the -1 has already been copied.
  **/
 
 extern void mtx_free_perm(int32 *perm);
 /**<
- ***  <!--  mtx_free_perm(perm);                                       -->
- ***  <!--  int32 *perm;                                               -->
  ***  Frees resources used by a permutation vector.
  **/
 
@@ -638,13 +606,6 @@ extern struct reusable_data_vector
 extern void *mtx_null_vector_f(int32 cap, int line, CONST char *file,
                                struct reusable_data_vector *ptr, char *fn);
 /**<
- *** <!--  v = mtx_null_vector_f(cap,line,file, ptr,fn);               -->
- *** <!--  int32 cap;                                                  -->
- *** <!--  int line;                                                   -->
- *** <!--  CONST char *file;                                           -->
- *** <!--  struct reusable_data_vector *ptr;                           -->
- *** <!--  char *fn;                                                   -->
- ***
  ***  Implementation function for macros generating vectors of NULL
  ***  elements.  This includes:
  ***    - mtx_null_vector()
@@ -669,12 +630,6 @@ extern void mtx_null_vector_release_f(int line,
                                       struct reusable_data_vector *ptr, 
                                       char *fn);
 /**<
- *** <!--  mtx_null_vector_release_f(line,file,ptr,fn);                -->
- *** <!--  int line;                                                   -->
- *** <!--  CONST char *file,                                           -->
- *** <!--  struct reusable_data_vector *ptr;                           -->
- *** <!--  char *fn                                                    -->
- ***
  ***  Implementation function for macros releasing reusable vectors.
  ***  This includes:
  ***    - mtx_null_vector_release()
@@ -702,11 +657,6 @@ extern void mtx_reset_null_vectors(void);
 
 extern struct element_t **mtx_expand_row(mtx_matrix_t mtx, int32 orgrow);
 /**<
- ***  <!--  buf = mtx_expand_row(mtx,orgrow);                          -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  int32 orgrow;                                              -->
- ***  <!--  struct element_t **buf;                                    -->
- ***
  ***  Expands the given row into an array of pointers, indexed on original
  ***  col number.  The array is obtained from mtx_null_vector().
  ***  Be sure to call mtx_null_vector_release() when done with the vector and
@@ -717,11 +667,6 @@ extern struct element_t **mtx_expand_row(mtx_matrix_t mtx, int32 orgrow);
 
 extern struct element_t **mtx_expand_col(mtx_matrix_t mtx, int32 orgcol);
 /**<
- ***  <!--  buf = mtx_expand_col(mtx,orgcol);                          -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  int32 orgcol;                                              -->
- ***  <!--  struct element_t **buf;                                    -->
- ***
  ***  Expands the given col into an array of pointers, indexed on original
  ***  row number.  The array is obtained from mtx_null_vector().
  ***  Be sure to call mtx_null_vector_release() when done with the vector and
@@ -734,11 +679,6 @@ extern void mtx_renull_using_row(mtx_matrix_t mtx,
                                  int32 orgrow,
                                  struct element_t **arr);
 /**<
- ***  <!--  mtx_renull_using_row(mtx,orgrow,arr)                       -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  int32 orgrow;                                              -->
- ***  <!--  struct element_t **arr;                                    -->
- ***
  ***  Makes arr NULLed again, assuming that the only non-NULL elements
  ***  must correspond to original col numbers that exist in the given
  ***  orgrow.
@@ -748,11 +688,6 @@ extern void mtx_renull_using_col(mtx_matrix_t mtx,
                                  int32 orgcol,
                                  struct element_t **arr);
 /**<
- ***  <!--  mtx_renull_using_row(mtx,orgcol,arr);                      -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  int32 orgcol;                                              -->
- ***  <!--  struct element_t **arr;                                    -->
- ***
  ***  Makes arr NULLed again, assuming that the only non-NULL elements
  ***  must correspond to original row numbers that exist in the given
  ***  orgcol.
@@ -760,10 +695,6 @@ extern void mtx_renull_using_col(mtx_matrix_t mtx,
 
 extern void mtx_renull_all(mtx_matrix_t mtx, struct element_t **arr);
 /**<
- ***  <!--  mtx_renull_all(mtx,arr);                                   -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  struct element_t **arr;                                    -->
- ***
  ***  Makes arr NULLed again, assuming it is size mtx->order.
  **/
 

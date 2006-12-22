@@ -280,6 +280,7 @@ extern boolean relman_calc_satisfied_scaled(struct rel_relation *rel,
 /**<
  *  This definition of satisfaction includes the notion
  *  of scaling by the relation nominal before comparison.
+ *  @see relman_calc_satisfied.
  */
 extern boolean relman_calc_satisfied(struct rel_relation *rel,
                                      real64 tolerance);
@@ -289,10 +290,7 @@ extern boolean relman_calc_satisfied(struct rel_relation *rel,
  *  in the residual field.  The satisfied field of the relation is also
  *  updated.  A tolerance specification allows equalities to be declared
  *  satisfied as long as their residuals are close to zero.
- *
- *  <!--  relman_calc_satisfied_scaled:                                -->
- *  <!--  This definition of satisfaction includes the notion          -->
- *  <!--  of scaling by the relation nominal before comparison.        -->
+ *	@see relman_calc_satisfied_scaled.
  */
 
 #define relman_directly_solve(r,s,a,n) \
@@ -349,8 +347,11 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
 
 	The name of a var is context dependent, so you have to provide the
 	slv_system_t from which you got the relation.
+	
+	@see relman_make_string_postfix
+	@see relman_make_string_infix
 */
-#if 0 /* needs compiler side work */
+#if 0 /* needs compiler-side work */
 #define relman_make_xstring_postfix(sys,rel) \
       relman_make_vstring_postfix((sys),(rel),FALSE)
 #else

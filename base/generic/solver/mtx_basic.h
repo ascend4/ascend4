@@ -1194,7 +1194,6 @@ extern void mtx_free_reused_mem(void);
 \* ********************************************************************* */
 extern void mtx_write_sparse(FILE *file, mtx_sparse_t *sparse);
 /**<
- ***  <!--  mtx_write_sparse(file,sparse);                             -->
  ***  Outputs sizes and data of sparse vector to the file given.
  **/
 
@@ -1278,7 +1277,6 @@ ASC_DLLSPEC(void ) mtx_write_region(FILE *file,
                              mtx_matrix_t mtx, 
                              mtx_region_t *region);
 /**<
- ***  <!--  mtx_write_region(file,mtx,region)                          -->
  ***  Outputs permutation and values of the nonzero elements in the
  ***  given region of the mtx to the file given along with the matrix
  ***  size.
@@ -1298,7 +1296,6 @@ extern mtx_matrix_t mtx_read_region(FILE *file,
                                     mtx_matrix_t mtx, 
                                     int transposed);
 /**<
- ***  <!--  mtx_read_region(file,mtx,transposed)                       -->
  ***  Reads a matrix region.
  ***  From the file pointer, does the following:
  ***   - Gets the matrix order of the data in the file.
@@ -1332,7 +1329,6 @@ extern void mtx_write_region_matlab(FILE *file,
                                     mtx_matrix_t mtx, 
                                     mtx_region_t *region);
 /**<
- ***  <!--  mtx_write_region_matlab(file,mtx,region)                   -->
  ***  Outputs values of the nonzero elements in the
  ***  given region of the mtx to the file in matlab/harwell sparse format.
  ***  The "a=[\n" and trailing "];\n" are not supplied, since the caller
@@ -1364,6 +1360,8 @@ ASC_DLLSPEC(void ) mtx_write_region_csr(FILE *file,
  ***  There may be a _ccs version (column based) one day.
  ***  offset controls whether fortran (1) or c style indexing is done.
  ***  Doesn't care about master/slave status.
+ ***
+ ***  @see http://citeseer.ist.psu.edu/366279.html
  **/
 ASC_DLLSPEC(void ) mtx_write_region_smms(FILE *file,
                                   mtx_matrix_t mtx,
@@ -1385,27 +1383,6 @@ extern mtx_matrix_t mtx_read_smms(FILE *file,
 
 /**<
  ***  Reads a matrix in smms format. If a NULL matrix
- ***  is sent in, it will create and return it. If a non NULL matrix
- ***  is given, the order will be increased if necessary. The contents
- ***  of the old mtx, will be blown away. The transpose flag dictates
- ***  whether the transpose should be read in.
- ***  Doesn't care about master/slave status.
- **/
-/* OLD GROUP COMMENT */
-/*
- ***  mtx_write_region_csr(file,mtx,region,offset)
- ***  mtx_write_region_smms(file,mtx,region,offset)
- ***  mtx = mtx_read_smms(file,mtx,transpose);
- ***
- ***  Writes the given region of the matrix to the named file.
- ***  Will write the entire matrix if the region is mtx_ENTIRE_MATRIX.
- ***  The _csr version writes out the matrix in compressed row format.
- ***  The _smms version writes out the matrix in a form digestible by
- ***  Alvarado's Sparse Matrix Manipulation System.
- ***  There may be a _ccs version (column based) one day.
- ***  offset controls whether fortran (1) or c style indexing is done.
- ***
- ***  mtx_read_smms reads a matrix in smms format. If a NULL matrix
  ***  is sent in, it will create and return it. If a non NULL matrix
  ***  is given, the order will be increased if necessary. The contents
  ***  of the old mtx, will be blown away. The transpose flag dictates

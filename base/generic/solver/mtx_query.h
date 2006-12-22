@@ -1,40 +1,31 @@
-/*
- *  mtx2: Ascend Sparse Matrix Package
- *  by Benjamin Andrew Allan
- *  Derived from mtx by Karl Michael Westerberg
- *  Created: 5/3/90
- *  Version: $Revision: 1.9 $
- *  Version control file: $RCSfile: mtx_query.h,v $
- *  Date last modified: $Date: 1997/07/18 12:15:12 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1996 Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1996 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  mtx2: Ascend Sparse Matrix Package.
- *  <pre>
- *  requires:   #include "utilities/ascConfig.h"
- *  requires:   #include "mtx.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	mtx2: Ascend Sparse Matrix Package.
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "mtx.h"
+*//*
+	mtx by Karl Michael Westerberg, created 5/3/90
+	mtx2 by Benjamin Andrew Allan
+	Last in CVS: $Revision: 1.9 $ $Date: 1997/07/18 12:15:12 $ $Author: mthomas $
+*/
 
 #ifndef __MTX_QUERY_H_SEEN__
 #define __MTX_QUERY_H_SEEN__
@@ -47,14 +38,6 @@ extern real64 mtx_next_in_col(mtx_matrix_t matrix,
                               mtx_coord_t *coord,
                               mtx_range_t *rowrng);
 /**<
- <!--  -$-  value = mtx_next_in_row(matrix,coord,colrng)               -->
- <!--  -$-  value = mtx_next_in_col(matrix,coord,rowrng)               -->
- ***  <!--  real64 value;                                              -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***  <!--  mtx_coord_t *coord;                                        -->
- ***  <!--  mtx_range_t *colrng,*rowrng;                               -->
- ***
- ***  <!--  mtx_next_in_row():                                         -->
  ***  Searches for the next non-zero in the given row, whose column index
  ***  lies in the given range, and returns its value.  Coord->col is set to
  ***  the column in which it was found.  To find the first non-zero in the
@@ -66,9 +49,6 @@ extern real64 mtx_next_in_col(mtx_matrix_t matrix,
  ***  behaviour for mtx/vector processing loops.
  ***  If nz.row is not in the matrix (<0 || >= mtx order) on an initial
  ***  call (with nz.col == mtx_FIRST) returns 0.0 and nz.col == mtx_LAST.
- ***
- ***  <!--  mtx_next_in_col():                                         -->
- ***  <!--  Switch row <--> column in the discussion above.            -->
  ***
  ***  Example of canonical usage:                                       <pre>
  ***     nz.col = col;                   (* the col to be traversed *)
@@ -119,16 +99,6 @@ extern real64 mtx_col_max(mtx_matrix_t matrix,
                           mtx_range_t *rowrng, 
                           real64 *signval);
 /**<
- <!--  -$-  value = mtx_row_max(matrix,coord,colrng,signval)           -->
- <!--  -$-  value = mtx_col_max(matrix,coord,rowrng,signval)           -->
- <!--  -$-  value = mtx_row_min(matrix,coord,colrng,signval)           -->
- <!--  -$-  value = mtx_col_min(matrix,coord,rowrng,signval)           -->
- ***  <!--  real64 value, *signval;                                    -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***  <!--  mtx_coord_t *coord;                                        -->
- ***  <!--  mtx_range_t *colrng,*rowrng;                               -->
- ***
- ***  <!--  mtx_row_max():                                             -->
  ***  Searches for the element in the given row, with column index in the
  ***  given column range, which has the largest absolute value.  The user
  ***  should set coord->row to the desired row to search, and this function
@@ -138,10 +108,7 @@ extern real64 mtx_col_max(mtx_matrix_t matrix,
  ***  NULL, the real64 pointed to will be stuffed with the signed
  ***  value of the maximum sized element.
  ***  In the event of ties, the element with the lowest current column
- ***  index wins.<br><br>
- ***
- ***  <!--  mtx_col_max():                                             -->
- ***  <!--  Replace row <--> column above.                             -->
+ ***  index wins.
  ***
  -$-  Returns -1.0 from a bad matrix.
  **/
@@ -174,22 +141,6 @@ extern real64 mtx_col_min(mtx_matrix_t matrix,
  ***
  -$-  Returns -1.0 from a bad matrix.
  **/
-/* OLD GROUP COMMENTS */
-/*
- -$-  value = mtx_row_min(matrix,coord,colrng,signval,minval)
- -$-  value = mtx_col_min(matrix,coord,rowrng,signval,minval)
- ***  real64 value, *signval, minval;
- ***  mtx_matrix_t matrix;
- ***  mtx_coord_t *coord;
- ***  mtx_range_t *colrng,*rowrng;
- ***
- ***  These functions are basicaly defined as their max counterparts
- ***  above with the appropriate swapping of max<-->min.
- ***  This function only looks at the nonzero elements
- ***  The min functions will only find numbers between minval
- ***  and 1e50.  If no number is found signval will be zero and
- ***  value will be one.
- **/
 
 extern real64 mtx_get_pivot_col(mtx_matrix_t matrix, 
                                 mtx_coord_t *coord,
@@ -205,17 +156,9 @@ extern real64 mtx_get_pivot_row(mtx_matrix_t matrix,
                                 real64 tol,
                                 real64 eps);
 /**<
- <!--  -$-  value = mtx_get_pivot_col(matrix,coord,colrng,signval,tol,eps) -->
- <!--  -$-  value = mtx_get_pivot_row(matrix,coord,rowrng,signval,tol,eps) -->
- ***  <!--  real64 value, *signval;                                    -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***  <!--  mtx_coord_t *coord;                                        -->
- ***  <!--  mtx_range_t *colrng,*rowrng;                               -->
- ***
  ***  This implements efficiently the standard sparse modification
  ***  of LU partial pivot selection.
  ***
- ***  <!--  mtx_get_pivot_col();                                       -->
  ***  Searches for the leftmost element in the colrng of the given row,
  ***  which passes the sparse partial pivoting criteria:
  ***    -# aij >= eps,
@@ -230,8 +173,6 @@ extern real64 mtx_get_pivot_row(mtx_matrix_t matrix,
  ***  value of the selected element.
  ***  This function is faster when colrng == mtx_ALL_COLS can be used.<br><br>
  ***
- ***  <!--  mtx_get_pivot_row():                                       -->
- ***  <!--  Replace row <--> column above.                             -->
  -$-  Returns -1.0 from a bad matrix.
  **/
 
@@ -279,42 +220,6 @@ extern int32 mtx_numbers_in_region(mtx_matrix_t matrix,
  ***  Counts the number of incidences in the given region.
  -$-  Returns -1 from a bad matrix.
  **/
-/* OLD GROUP COMMENT */
-/*
- -$-  count = mtx_nonzeros_in_row(matrix,row,colrng)
- -$-  count = mtx_nonzeros_in_col(matrix,col,rowrng)
- -$-  count = mtx_nonzeros_in_region(matrix,reg)
- -$-  count = mtx_numbers_in_row(matrix,row,colrng)
- -$-  count = mtx_numbers_in_col(matrix,col,rowrng)
- -$-  count = mtx_numbers_in_region(matrix,reg)
- ***  int32 count;
- ***  mtx_matrix_t matrix;
- ***  int32 row,col;
- ***  mtx_range_t *colrng,*rowrng;
- ***  mtx_region_t *reg;
- ***
- ***  mtx_nonzeros_in_row():
- ***  Counts the number of incidences in the given row whose column index
- ***  lies in the given column range.
- ***
- ***  mtx_nonzeros_in_col():
- ***  Replace row <--> column above.
- ***
- ***  mtx_nonzeros_in_region():
- ***  Counts the number of incidences in the given region.
- ***
- ***  mtx_numbers_in_row():
- ***  Counts the non-zero values in the given row whose column index
- ***  lies in the given column range.
- ***
- ***  mtx_numbers_in_col():
- ***  Replace row <--> column above.
- ***
- ***  mtx_nonzeros_in_region():
- ***  Counts the non-zero values in the given region.
- ***
- -$-  Returns -1 from a bad matrix.
- **/
 
 /* ********************************************************************* *\
   mtx vector operation routines
@@ -344,25 +249,12 @@ extern void mtx_cur_row_vec(mtx_matrix_t mtx, int32 row,
 extern void mtx_cur_col_vec(mtx_matrix_t mtx, int32 col,
                             real64 *vec, mtx_range_t *rowrng);
 /**<
- <!--  -$-  mtx_org_row_vec(mtx,row,vec,colrng)                        -->
- <!--  -$-  mtx_org_col_vec(mtx,col,vec,rowrng)                        -->
- <!--  -$-  mtx_cur_row_vec(mtx,row,vec,colrng)                        -->
- <!--  -$-  mtx_cur_col_vec(mtx,col,vec,rowrng)                        -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  int32 row,col;                                             -->
- ***  <!--  real64 *vec;                                               -->
- ***  <!--  mtx_range_t *colrng,*rowrng;                               -->
- ***
- ***  <!--  mtx_org/cur_col_vec:                                       -->
  ***  The user is expected to supply the vec; we cannot check it.
  ***  Copies the mtx nonzeros currently within rowrng INTO array vec which is
  ***  indexed by org/cur row number. Does not affect other
  ***  entries of vec in or outside the range. In particular, vec
  ***  is NOT zeroed within the range unless there is a matrix element
  ***  with value zero at that location.<br><br>
- ***
- ***  <!--  mtx_org/cur_row_vec:                                       -->
- ***  <!--  Switch row <--> col in above.                              -->
  ***
  ***  Notes: It is faster to call this with mtx_ALL_COLS/ROWS when
  ***  the row/col of interest is known to have incidence exclusively in
@@ -412,24 +304,10 @@ extern mtx_sparse_t *mtx_cur_col_sparse(mtx_matrix_t mtx,
                                         mtx_range_t *rowrng,
                                         int zeroes);
 /**<
- <!--  -$-  sparse = mtx_org_row_sparse(mtx,row,sparse,colrng,zeroes)  -->
- <!--  -$-  sparse = mtx_org_col_sparse(mtx,col,sparse,rowrng,zeroes)  -->
- <!--  -$-  sparse = mtx_cur_row_sparse(mtx,row,sparse,colrng,zeroes)  -->
- <!--  -$-  sparse = mtx_cur_col_sparse(mtx,col,sparse,rowrng,zeroes)  -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  int32 row,col;                                             -->
- ***  <!--  mtx_sparse_t *sparse;                                      -->
- ***  <!--  mtx_range_t *colrng,*rowrng;                               -->
- ***  <!--  int zeroes;                                                -->
- ***
- ***  <!--  mtx_org/cur_col_sparse:                                    -->
  ***  Copies the mtx nonzeros currently within rowrng to the sparse,
  ***  indexing by org/cur row number. Nonzeros with value 0.0 WILL
  ***  be included in the sparse iff zeros is mtx_SOFT_ZEROES.
  ***  sparse->len will be set accordingly.
- ***
- ***  <!--  Switch row <--> col in above.                              -->
- ***  <!--  mtx_org/cur_row_sparse:                                    -->
  ***
  ***  The user must supply the sparse. It will not be enlarged.
  ***  mtx_CREATE_SPARSE is not a valid argument.
@@ -456,21 +334,8 @@ extern void mtx_zr_cur_vec_using_row(mtx_matrix_t mtx, int32 row,
 extern void mtx_zr_cur_vec_using_col(mtx_matrix_t mtx, int32 col,
                                      real64 *vec, mtx_range_t *rowrng);
 /**< 
- <!--  -$-  mtx_zr_org_vec_using_row(mtx,row,vec,colrng)               -->
- <!--  -$-  mtx_zr_org_vec_using_col(mtx,col,vec,rowrng)               -->
- <!--  -$-  mtx_zr_cur_vec_using_row(mtx,row,vec,colrng)               -->
- <!--  -$-  mtx_zr_cur_vec_using_col(mtx,col,vec,rowrng)               -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  int32 row,col;                                             -->
- ***  <!--  real64 *vec;                                               -->
- ***  <!--  mtx_range_t *colrng,*rowrng;                               -->
- ***
- ***  <!--  mtx_zr_org/cur_vec_using_col:                              -->
  ***  Sets the values of vec (indexed by org/cur col) corresponding to
  ***  incidences in rowrng to 0.0.<br><br>
- ***
- ***  <!--  mtx_zr_org/cur_vec_using_row:                              -->
- ***  <!--  Switch row <--> col in above.                              -->
  ***
  ***  Notes: It is faster to call this with mtx_ALL_COLS/ROWS when
  ***  practical, and the org flavor is faster than the cur flavor.<br><br>
@@ -510,30 +375,6 @@ extern real64 mtx_sum_abs_in_col(mtx_matrix_t mtx, int32 col,
  ***
  -$-  Returns 0.0 from a bad matrix.
  **/
-/* OLD GROUP COMMENTS */
-/*
- -$-  sum = mtx_sum_sqrs_in_row(matrix,row,colrng)
- -$-  sum = mtx_sum_sqrs_in_col(matrix,col,rowrng)
- -$-  sum = mtx_sum_abs_in_row(matrix,row,colrng)
- -$-  sum = mtx_sum_abs_in_col(matrix,col,rowrng)
- ***  real64 sum;
- ***  mtx_matrix_t matrix;
- ***  int32 row,col;
- ***  mtx_range_t *colrng,*rowrng;
- ***
- ***  mtx_sum_sqrs_in_row():
- ***  Compute sum of squares of non-zeros in the given row whose column index
- ***  lies in the given column range.
- ***  mtx_sum_abs_in_row():
- ***  Compute sum of absolute values of non-zeros in the
- ***  given row whose column index lies in the given column range.
- ***
- ***  mtx_sum_sqrs_in_col():
- ***  Replace row <--> column above.
- ***  mtx_sum_abs_in_col():
- ***  Replace row <--> column above.
- -$-  Returns 0.0 from a bad matrix.
- **/
 
 extern real64 mtx_col_dot_full_org_vec(mtx_matrix_t mtx,
                                        int32 col,
@@ -547,16 +388,6 @@ extern real64 mtx_row_dot_full_org_vec(mtx_matrix_t mtx,
                                        mtx_range_t *colrng,
                                        boolean transpose);
 /**<
- <!--  -$-  sum = mtx_row_dot_full_org_vec(matrix,row,orgvec,colrng,transpose) -->
- <!--  -$-  sum = mtx_col_dot_full_org_vec(matrix,col,orgvec,rowrng,transpose) -->
- ***  <!--  real64 sum;                                                -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***  <!--  int32 row,col;                                             -->
- ***  <!--  real64 *orgvec;                                            -->
- ***  <!--  mtx_range_t *colrng,*rowrng;                               -->
- ***  <!--  boolean transpose;                                         -->
- ***
- ***  <!--  mtx_row_dot_full_org_vec:                                  -->
  ***  <pre>
  ***    For transpose==FALSE:
  ***    Compute the dot product of the row given with the org_col indexed
@@ -572,8 +403,6 @@ extern real64 mtx_row_dot_full_org_vec(mtx_matrix_t mtx,
  ***    i.e. SUM( mtx(row,col_cur) * orgvec[mtx_row_to_org(mtx,col_cur)] )
  ***         for all inrange(col_cur).
  ***  </pre>
- ***  <!--  mtx_col_dot_full_org_vec:                                  -->
- ***  <!--  Replace row <--> col above.                                -->
  -$-  Returns 0.0 from a bad matrix.
  **/
 
@@ -589,22 +418,10 @@ extern real64 mtx_row_dot_full_cur_vec(mtx_matrix_t mtx,
                                        mtx_range_t *colrng,
                                        boolean transpose);
 /**<
- <!--  -$-  sum = mtx_row_dot_full_cur_vec(matrix,row,currowvec,colrng,transpose) -->
- <!--  -$-  sum = mtx_col_dot_full_cur_vec(matrix,col,curcolvec,rowrng,transpose) -->
- ***  <!--  real64 sum;                                                -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***  <!--  int32 row,col;                                             -->
- ***  <!--  real64 *currowvec, *curcolvec;                             -->
- ***  <!--  mtx_range_t *colrng,*rowrng;                               -->
- ***  <!--  boolean transpose;                                         -->
- ***
- ***  <!--  mtx_row_dot_full_cur_vec:                                  -->
  ***  Compute the dot product of the row given with the cur col indexed
  ***  currowvec over the colrng given (colrng being the cur indexed
  ***  limits as usual.)<br><br>
  ***
- ***  <!--  mtx_col_dot_full_cur_vec:                                  -->
- ***  <!--  Replace row <--> column above.                             -->
  -$-  Returns 0.0 from a bad matrix.<br><br>
  ***
  ! !  Transpose is currently not implemented. A warning will be issued.
@@ -629,19 +446,6 @@ extern real64 mtx_row_dot_full_org_custom_vec(mtx_matrix_t matrix1,
                                               mtx_range_t *rowrng,
                                               boolean transpose);
 /**< 
- <!--  -$-  sum = mtx_row_dot_full_org_custom_vec                      -->
- <!--  -$-                (matrix1,matrix2,row,orgvec,colrng,transpose)-->
- <!--  -$-  sum = mtx_col_dot_full_org_custom_vec                      -->
- <!--  -$-                (matrix1,matrix2,col,orgvec,rowrng,transpose)-->
- ***  <!--  real64 sum;                                                -->
- ***  <!--  mtx_matrix_t matrix1;                                      -->
- ***  <!--  mtx_matrix_t matrix2;                                      -->
- ***  <!--  int32 row,col;                                             -->
- ***  <!--  real64 *orgvec;                                            -->
- ***  <!--  mtx_range_t *colrng,*rowrng;                               -->
- ***  <!--  boolean transpose;                                         -->
- ***
- ***  <!--  mtx_row_dot_full_org_vec:                                  -->
  ***  <pre>
  ***    For transpose==FALSE:
  ***    Compute the dot product of the row given with the org_col indexed
@@ -659,8 +463,6 @@ extern real64 mtx_row_dot_full_org_custom_vec(mtx_matrix_t matrix1,
  ***              orgvec[mtx_row_to_org(mtx2,col_cur)] )
  ***         for all inrange(col_cur).
  ***  </pre>
- ***  <!--  mtx_col_dot_full_org_custom_vec:                           -->
- ***  <!--  Replace row <--> col above.                                -->
  -$-  Returns 0.0 from a bad matrix.
  **/
 
@@ -692,27 +494,13 @@ extern void mtx_cur_vec_add_row(mtx_matrix_t mtx,
                                 mtx_range_t *colrng,
                                 boolean transpose);
 /**< 
- <!--  -$-  mtx_org_vec_add_row(matrix,tvec,srow,factor,colrng,transpose) -->
- <!--  -$-  mtx_org_vec_add_col(matrix,tvec,scol,factor,rowrng,transpose) -->
- <!--  -$-  mtx_cur_vec_add_row(matrix,tvec,srow,factor,colrng,transpose) -->
- <!--  -$-  mtx_cur_vec_add_col(matrix,tvec,scol,factor,rowrng,transpose) -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***  <!--  int32 srow,scol;                                           -->
- ***  <!--  real64 *tvec;                                              -->
- ***  <!--  real64 factor;                                             -->
- ***  <!--  mtx_range_t *colrng,*rowrng;                               -->
- ***  <!--  boolean transpose;                                         -->
- ***
- ***  <!--  mtx_org/cur_vec_add_row:                                   -->
  ***  Adds multiple factor of srow to tvec for those columns in colrng.
  ***  tvec is org/cur col indexed if transpose==FALSE.
  ***    i.e. this is just adding rows.
  ***  tvec is org/cur row indexed if transpose==TRUE. 
  ***    orgvec[mtx_row_to_org(col)]+=factor*element(srow,col)
  ! !    curvec[???]+=factor*element(srow,col)
- ***<br><br>
- ***  <!--  mtx_org/cur_vec_add_col:                                   -->
- ***  <!--  Reverse row <-->col in above.                              -->
+ ***
  ***  Since switching row and column is hard for the transpose, here it is:
  ***    orgvec[mtx_col_to_org(row)]+=factor*element(row,scol)
  ! !    curvec[???]+=factor*element(row,scol)

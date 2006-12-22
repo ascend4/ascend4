@@ -18,8 +18,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
- *//**
- 	@file
+*//** @file
 	Variable module of the SLV solver.
 
 	This module provides a SLV solver (the "client") with access to
@@ -82,6 +81,15 @@
 /**< do we think this var a solver_binary?  */
 #define VAR_SEMICONT  0x40
 /**< do we think this var a solver_semi(continuous) ?  */
+
+/*
+	Added this one. Not sure if it belongs 'above the line' here or
+	not. -- JP 20061222
+*/
+#define VAR_DERIV     0x80
+/**< var is a derivative of some other var present in the system */
+#define VAR_DIFF	  0x100
+/**< var is differential; it has a derivative somewhere explicitly written in the system of equations */
 
 /*
 	The remaining flagbit definitions are those flags to be
@@ -489,11 +497,6 @@ extern uint32 var_interface(struct var_variable *var);
 extern void var_set_interface(struct var_variable *var, uint32 fixed);
 /**< Sets the interface flag of var.  Has side effects in the ascend instance.
 	@todo solver/var.h: var_set_interface() not implemented.  Implement or remove.
- */
-/*
-	The above... Gets/sets the fixed/relaxed/interface flag of the variable. This
-	has side effects in the ascend instance, with which
-	we are keeping the bits in sync.
 */
 
 #ifdef NDEBUG
@@ -501,7 +504,10 @@ extern void var_set_interface(struct var_variable *var, uint32 fixed);
   /**<  Returns the in_block flag of var as a uint32. */
 # define var_incident(var) ((var)->flags & VAR_INCIDENT)
   /**<  Returns the incident flag of var as a uint32. */
-
+# define var_deriv(var) ((var)->flags & VAR_DERIV)
+  /**<  Returns the deriv flag of var as a uint32. */
+# define var_diff(var) ((var)->flags & VAR_DERIV)
+  /**<  Returns the diff flag of var as a uint32. */
 # define var_active(var)   ((var)->flags & VAR_ACTIVE)
   /**<  Returns the active flag of var as a uint32. */
 # define var_nonbasic(var) ((var)->flags & VAR_NONBASIC)
@@ -522,6 +528,10 @@ extern void var_set_interface(struct var_variable *var, uint32 fixed);
 
 # define var_incident(var)      var_flagbit((var),VAR_INCIDENT)
   /**<  Returns the incident flag of var as a uint32. */
+# define var_deriv(var)         var_flagbit((var),VAR_DERIV)
+  /**<  Returns the deriv flag of var as a uint32. */
+# define var_diff(var)         var_flagbit((var),VAR_DIFF)
+  /**<  Returns the diff flag of var as a uint32. */
 # define var_active(var)        var_flagbit((var),VAR_ACTIVE)
   /**<  Returns the active flag of var as a uint32. */
 # define var_nonbasic(var)      var_flagbit((var),VAR_NONBASIC)
@@ -544,6 +554,12 @@ extern void var_set_interface(struct var_variable *var, uint32 fixed);
 #define var_set_incident(var,oneorzero)      \
         var_set_flagbit((var),VAR_INCIDENT,(oneorzero))
 /**<  Sets the incident flag of var on (1) or off (0). */
+#define var_set_deriv(var,oneorzero)      \
+        var_set_flagbit((var),VAR_DERIV,(oneorzero))
+/**<  Sets the deriv flag of var on (1) or off (0). */
+#define var_set_diff(var,oneorzero)      \
+        var_set_flagbit((var),VAR_DIFF,(oneorzero))
+/**<  Sets the deriv flag of var on (1) or off (0). */
 #define var_set_interface(var,oneorzero)     \
         var_set_flagbit((var),VAR_INTERFACE,(oneorzero))
 /**<  Sets the interface flag of var on (1) or off (0). */
