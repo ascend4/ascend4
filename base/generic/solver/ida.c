@@ -66,6 +66,10 @@
 # endif
 #endif
 
+#ifdef ASC_WITH_MMIO
+# include <mmio.h>
+#endif
+
 /*
 	for cases where we don't have SUNDIALS_VERSION_MINOR defined, guess version 2.2
 */
@@ -124,8 +128,8 @@ typedef struct IntegratorIdaDataStruct{
 	struct bnd_boundary **bndlist;	 /**< NULL-terminated list of boundaries, for use in the root-finding  code */
 	int nrels;
 	int safeeval;                    /**< whether to pass the 'safe' flag to relman_eval */
-	var_filter_t filter;             /**< Used to filter variables from varlist in relman_diff2 etc */
-
+	var_filter_t vfilter;            /**< Used to filter variables from varlist in relman_diff2 etc */
+	rel_filter_t rfilter;            /**< Used to filter relations from rellist (@TODO needs work) */
 	void *precdata;                  /**< For use by the preconditioner */
 	IntegratorIdaPrecFreeFn *pfree;	 /**< Store instructions here on how to free precdata */
 } IntegratorIdaData;
@@ -218,8 +222,11 @@ void integrator_ida_create(IntegratorSystem *blsys){
 	enginedata->rellist = NULL;
 	enginedata->varlist = NULL;
 	enginedata->safeeval = 0;
-	enginedata->filter.matchbits = VAR_SVAR | VAR_FIXED;
-	enginedata->filter.matchvalue = VAR_SVAR;
+	enginedata->vfilter.matchbits =  VAR_SVAR | VAR_ACTIVE | VAR_FIXED;
+	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_ACTIVE;
+
+	enginedata->rfilter.matchbits =  REL_EQUALITY | REL_INCLUDED | REL_ACTIVE;
+	enginedata->rfilter.matchvalue = REL_EQUALITY | REL_INCLUDED | REL_ACTIVE;
 
 	blsys->enginedata = (void *)enginedata;
 
@@ -970,7 +977,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 			++i, ++relptr
 	){
 		/* get derivatives for this particular relation */
-		status = relman_diff2(*relptr, &enginedata->filter, derivatives, variables, &count, enginedata->safeeval);
+		status = relman_diff2(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 
 		if(status){
 			relname = rel_make_name(blsys->system, *relptr);
@@ -1113,7 +1120,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				++i, ++relptr
 		){
 			/* get derivatives for this particular relation */
-			status = relman_diff2(*relptr, &enginedata->filter, derivatives, variables, &count, enginedata->safeeval);
+			status = relman_diff2(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 #ifdef JEX_DEBUG
 			CONSOLE_DEBUG("Got derivatives against %d matching variables, status = %d", count,status);
 #endif
@@ -1273,7 +1280,7 @@ int integrator_ida_psetup_jacobi(realtype tt,
 	){
 
 		/* get derivatives for this particular relation */
-		status = relman_diff2(*relptr, &enginedata->filter, derivatives, variables, &count, enginedata->safeeval);
+		status = relman_diff2(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 		if(status){
 			relname = rel_make_name(blsys->system, *relptr);
 			CONSOLE_DEBUG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
@@ -1327,7 +1334,6 @@ int integrator_ida_psolve_jacobi(realtype tt,
 	blsys = (IntegratorSystem *)p_data;
 	data = blsys->enginedata;
 	precdata = (IntegratorIdaPrecDataJacobi *)(data->precdata);
-	int i;
 
 	CONSOLE_DEBUG("Solving Jacobi preconditioner (c_j = %f)",c_j);
 	N_VProd(precdata->PIii, rvec, zvec);
@@ -1369,8 +1375,97 @@ void integrator_ida_write_stats(IntegratorIdaStats *stats){
 }
 
 /*------------------------------------------------------------------------------
-  INCIDENCE MATRIX
+  JACOBIAN / INCIDENCE MATRIX OUTPUT
 */
+
+enum integrator_ida_write_jac_enum{
+	II_WRITE_Y
+	, II_WRITE_YDOT
+};
+
+/**
+	@TODO COMPLETE THIS...
+*/
+void integrator_ida_write_jacobian(IntegratorSystem *blsys, realtype c_j, FILE *f, enum integrator_ida_write_jac_enum type){
+	IntegratorIdaData *enginedata;
+	MM_typecode matcode;                        
+	int nnz, rhomax;
+	double *derivatives;
+	int *variables;
+	struct rel_relation **relptr;
+	int i, j, status, count, var_yindex;
+	char *relname;
+
+	var_filter_t vfiltery  = {
+		VAR_SVAR | VAR_FIXED | VAR_DERIV
+	    , VAR_SVAR 
+	};
+	var_filter_t vfilteryd = {
+		VAR_SVAR | VAR_FIXED | VAR_DERIV
+		, VAR_SVAR | VAR_DERIV
+	};
+
+	enginedata = (IntegratorIdaData *)blsys->enginedata;
+
+	/* number of non-zeros for all the non-FIXED solver_vars,
+		in all the active included equality relations.
+	*/
+	nnz = relman_jacobian_count(enginedata->rellist, enginedata->nrels
+		, &enginedata->vfilter, &enginedata->rfilter
+		, &rhomax
+	);
+
+	/* we must have found the same number of relations */
+	asc_assert(rhomax == enginedata->nrels);
+
+	/* output the mmio file header, now that we know our size*/
+	/* note that we are asserting that our problem is square */
+	mm_initialize_typecode(&matcode);
+	mm_set_matrix(&matcode);
+	mm_set_coordinate(&matcode);
+	mm_set_real(&matcode);
+    mm_write_banner(f, matcode); 
+    mm_write_mtx_crd_size(f, enginedata->nrels, enginedata->nrels, nnz);	
+
+	variables = ASC_NEW_ARRAY(int, blsys->n_y * 2);
+	derivatives = ASC_NEW_ARRAY(double, blsys->n_y * 2);
+
+	CONSOLE_DEBUG("Writing sparse Jacobian to file...");
+
+	for(i=0, relptr = enginedata->rellist;
+			i< enginedata->nrels && relptr != NULL;
+			++i, ++relptr
+	){
+		relname = rel_make_name(blsys->system, *relptr);
+
+		/* get derivatives of y */
+		status = relman_diff2(*relptr, &vfiltery, derivatives, variables, &count, enginedata->safeeval);
+		if(status){
+			CONSOLE_DEBUG("ERROR calculating derivatives for relation '%s'",relname);
+			ASC_FREE(relname);
+			break;
+		}
+
+		/* get derivatives of y */
+		status = relman_diff2(*relptr, &vfilteryd, derivatives, variables, &count, enginedata->safeeval);
+		if(status){
+			CONSOLE_DEBUG("ERROR calculating derivatives for relation '%s'",relname);
+			ASC_FREE(relname);
+			break;
+		}
+
+		for(j=0; j<count; ++j){
+			var_yindex = blsys->y_id[variables[j]];
+			if(var_yindex >= 0 && type == II_WRITE_Y){
+		        fprintf(f, "%d %d %10.3g\n", i, var_yindex, derivatives[j]);
+			}else if(var_yindex < 0 && type == II_WRITE_YDOT){
+				fprintf(f, "%d %d %10.3g\n", i, -var_yindex-1, derivatives[j]);
+			}
+		}
+	}
+	ASC_FREE(variables);
+	ASC_FREE(derivatives);
+}
 
 /**
 	This routine outputs matrix structure in a crude text format, for the sake
@@ -1403,7 +1498,7 @@ void integrator_ida_write_incidence(IntegratorSystem *blsys){
 		relname = rel_make_name(blsys->system, *relptr);
 
 		/* get derivatives for this particular relation */
-		status = relman_diff2(*relptr, &enginedata->filter, derivatives, variables, &count, enginedata->safeeval);
+		status = relman_diff2(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 		if(status){
 			CONSOLE_DEBUG("ERROR calculating derivatives for relation '%s'",relname);
 			ASC_FREE(relname);

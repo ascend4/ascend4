@@ -1,40 +1,30 @@
-/* 
- *  mtx2: Ascend Sparse Matrix Package
- *  by Benjamin Andrew Allan
- *  Derived from mtx by Karl Michael Westerberg
- *  Created: 5/3/90
- *  Version: $Revision: 1.4 $
- *  Version control file: $RCSfile: mtx_linal.h,v $
- *  Date last modified: $Date: 1997/07/18 12:15:02 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1996 Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1996 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  mtx2: Ascend Sparse Matrix Package.
- *  <pre>
- *  requires:   #include "utilities/ascConfig.h"
- *  requires:   #include "mtx.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	mtx2: Ascend Sparse Matrix Package.
+	requires:   #include "utilities/ascConfig.h"
+	requires:   #include "mtx.h"
+*//* 
+	mtx by Karl Michael Westerberg, 5/3/90
+	mtx2 by Benjamin Andrew Allan
+	Last in CVS: $Revision: 1.4 $ $Date: 1997/07/18 12:15:02 $ $Author: mthomas $
+*/
 
 #ifndef __MTX_LINAL_H_SEEN__
 #define __MTX_LINAL_H_SEEN__
@@ -46,19 +36,11 @@ extern void mtx_householder_transform_region(mtx_matrix_t mtx,
                                              real64 droptol,
                                              boolean transpose);
 /**<
- -$-  <!--  mtx_householder_transform_region(mtx,coef,orgsp,reg,droptol,transpose); -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  real64 coef,droptol;                                       -->
- ***  <!--  mtx_sparse_t *sp;                                          -->
- ***  <!--  mtx_region_t *reg;                                         -->
- ***  <!--  real64 droptol;                                            -->
- ***  <!--  boolean transpose;                                         -->
- ***
  ***  Does a sparse Householder transformation to the matrix A
  ***  denoted by region, resulting in Anew.<br><br>
  ***  Mathematically: Anew = (I - coef * u dot Transpose[u]) dot A.<br><br>
  ***  Slightly faster in the case of coef = 1.0.
- ***  Returns immediately in the case of coef = 0.0.
+ -$-  Returns immediately in the case of coef = 0.0.
  ***  Note following unusual assumptions, however:
  ***   -# The user has already cleared out the leading column in the
  ***      region and we will not be doing anything to it. This is usually
@@ -73,6 +55,8 @@ extern void mtx_householder_transform_region(mtx_matrix_t mtx,
  ***
  ***  @bug (11/95) ignores the transpose and droptol arguments.
  ***  @bug (11/95) does not remove soft zeroes created when 2 numbers add to zero.
+ ***
+ ***  This decl has the '-$-' thing going on.
  **/
 
 #endif /* __MTX_LINAL_H_SEEN__ */

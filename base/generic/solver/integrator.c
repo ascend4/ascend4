@@ -403,6 +403,11 @@ int integrator_analyse(IntegratorSystem *sys){
 
 	@TODO implement Pantelides algorithm in here?
 	@TODO prevent re-analysis without clearing out the data structures?
+
+	@TODO currently the data here is being stuffed into the IntegratorSystem
+	object. This doesn't really make sense, since we have both analyse_dae
+ 	and analyse_ode both attempting to reuse the same data structures.
+
 	@return 1 on success
 */
 int integrator_analyse_dae(IntegratorSystem *sys){
@@ -420,6 +425,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	IntegInitSymbols();
 
 	assert(sys->system);
+
 	CONSOLE_DEBUG("Block partitioning system...");
 	if(slv_block_partition(sys->system)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to block-partition system");
@@ -587,8 +593,13 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		if(info->derivative_of)continue;
 		if(info->derivative){
 			sys->y[yindex] = info->i;
-			assert(info->derivative);
+			var_set_deriv(info->i,FALSE);
+			var_set_diff(info->i,TRUE);
+
 			sys->ydot[yindex] = info->derivative->i;
+			var_set_deriv(info->derivative->i,TRUE);
+			var_set_diff(info->derivative->i,FALSE);
+
 			if(info->varindx >= 0){
 				ASC_ASSERT_RANGE(yindex, -1e7L, 1e7L);
 				sys->y_id[info->varindx] = yindex;
@@ -605,7 +616,12 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 			}
 		}else{
 			sys->y[yindex] = info ->i;
-			sys->ydot[yindex] = NULL;
+			var_set_deriv(info->i,FALSE);
+			var_set_diff(info->i,FALSE);
+
+			sys->ydot[yindex] = NULL; 
+			/* in this case, ydot is not present in the system so we can't set flags on it! */
+
 			if(info->varindx >= 0){
 				sys->y_id[info->varindx] = yindex;
 				ASC_ASSERT_RANGE(yindex,0,numy);
