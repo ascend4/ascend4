@@ -1,44 +1,35 @@
-/*
- *  mtx2: Ascend Sparse Matrix Package
- *  by Benjamin Andrew Allan
- *  Derived from mtx by Karl Michael Westerberg
- *  Created: 5/3/90
- *  Version: $Revision: 1.13 $
- *  Version control file: $RCSfile: mtx_basic.h,v $
- *  Date last modified: $Date: 2000/01/25 02:27:10 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *  Copyright (C) 1995 Benjamin Andrew Allan, Kirk Andre' Abbott
- *  Copyright (C) 1996 Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
- */
+/*	ASCEND Solver Interface
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 1995 Benjamin Andrew Allan, Kirk Andre' Abbott
+	Copyright (C) 1996 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  mtx2: Ascend Sparse Matrix Package.
- *  <pre>
- *  requires:   #include "utilities/ascConfig.h"
- *  requires:   #include "mtx.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*//** @file
+	mtx2: Ascend Sparse Matrix Package.
+	
+	Requires
+	#include "utilities/ascConfig.h"
+	#include "mtx.h"
+*//*
+	Originally 'mtx' by Karl Michael Westerberg, 5/3/90
+	New version 'mtx2' by Benjamin Andrew Allan
+	Last in CVS: $Revision: 1.13 $ $Date: 2000/01/25 02:27:10 $ $Author: ballan $
+*/
 
 #ifndef __MTX_BASIC_H_SEEN__
 #define __MTX_BASIC_H_SEEN__
@@ -54,13 +45,6 @@ extern boolean check_matrix(mtx_matrix_t mtx, char *file, int line);
  */
 #define mtx_check_matrix(mtx) check_matrix((mtx),__FILE__,__LINE__)
 /**<
- ** <!--  (mtx_matrix_t, char *, int);                                 -->
- **
- ** <!--  Use mtx_check_matrix in all cases.                           -->
- ** <!--  If mtx given is ok, returns 1, otherwise returns 0.          -->
- ** <!--  spits up to stderr if not ok.                                -->
- ** <!--  If mtx is a slave, also checks integrity on the master mtx.  -->
- <!--  mm macro extern boolean mtx_check_matrix(m)                     -->
  **  Checks the integrity flag of the matrix.
  **  Returns 1 if mtx is ok (non-NULL, integrity flag ok).
  **  Otherwise returns 0.  If mtx is not ok, a message is
@@ -79,12 +63,6 @@ extern boolean check_sparse(const mtx_sparse_t * const sp,
  */
 #define mtx_check_sparse(sp) check_sparse((sp),__FILE__,__LINE__)
 /**<
- * <!--  (mtx_sparse_t *, char *, int);                                -->
- **
- ** <!--  Use mtx_check_sparse in all cases.                           -->
- ** <!--  If sparse given is ok, returns 1, otherwise returns 0.       -->
- ** <!--  spits up to stderr if not ok.                                -->
- <!--  mm macro extern boolean mtx_check_sparse(sp)                    -->
  **  Checks the consistency of a sparse matrix as best it can.
  **  Returns 1 if sp is ok, FALSE if something wierd is found.
  **  If sp is not ok, a message is  printed to g_mtxerr.
@@ -112,22 +90,6 @@ ASC_DLLSPEC(mtx_region_t *) mtx_region(mtx_region_t *regionp,
                                 int32 rowlow, int32 rowhigh,
                                 int32 collow, int32 colhigh);
 /**<
- ***  <!--  coordp = mtx_coord(coordp,row,col)                         -->
- ***  <!--  rangep = mtx_range(rangep,low,high)                        -->
- ***  <!--  regionp = mtx_region(regionp,rowlow,rowhigh,collow,colhigh)-->
- ***  <!--  mtx_coord_t *coordp;                                       -->
- ***  <!--  mtx_range_t *rangep;                                       -->
- ***  <!--  mtx_region_t *regionp;                                     -->
- ***  <!--  int32 row,col,low,high,rowlow,rowhigh,collow,colhigh;      -->
- ***
- ***  <!--  Places the values of arguments 2,3,... into the structure p-->ointed to
- ***  <!--  by argument 1 and returns the pointer to it again.         -->
- ***
- ***  <!--  Typical usage:                                             -->
- ***  <!--  {                                                          -->
- ***  <!--     mtx_coord_t coord;                                      -->
- ***  <!--     value = mtx_value(matrix,mtx_coord(&coord,row,col));    -->
- ***  <!--  }                                                          -->
  ***  Places the ranges specified by (rowlow,rowhigh) and
  ***  (collow,colhigh) into regionp and returns the
  ***  regionp pointer again.
@@ -141,26 +103,17 @@ extern void mtx_zero_ptr(void **data, int len);
 /**< Zeros a vector of pointers of specified length. Ignores NULL input vectors. */
 #define mtx_zero_char(ar,len) if ((ar)!=NULL) memset((ar),0,(len))
 /**<
- ***  <!--  mtx_zero_XXX(ptr,length);                                  -->
- ***  <!--  Zeros a vector of specified length and type.               -->
- ***  <!--  Ignore NULL input vectors.                                 -->
  ***  Zeros a char vector of specified length. Ignores NULL input vectors.
  **/
 
 ASC_DLLSPEC(mtx_matrix_t) mtx_create(void);
 /**<
- ***  <!--  matrix = mtx_create()                                      -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***
  ***  Creates a 0-order matrix and returns a handle to it.
  ***  Matrix created is a master with no slaves.
  **/
 
 extern mtx_matrix_t mtx_create_slave(mtx_matrix_t master);
 /**<
- ***  <!--  matrix = mtx_create_slave(master)                          -->
- ***  <!--  mtx_matrix_t matrix, master;                               -->
- ***
  ***  Create and return a matrix which shares all structural
  ***  information EXCEPT incidence pattern/values with the
  ***  master matrix given. A master may have as many slaves
@@ -197,9 +150,6 @@ extern void mtx_debug_redirect_freeze(void);
 
 ASC_DLLSPEC(void) mtx_destroy(mtx_matrix_t matrix);
 /**<
- ***  <!--  mtx_destroy(matrix);                                       -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***
  ***  Destroys the matrix, freeing the memory it occupied.
  ***  Does nothing if matrix fails mtx_check_matrix.
  ***  Destroys all slaves associated with the matrix if
@@ -209,10 +159,6 @@ ASC_DLLSPEC(void) mtx_destroy(mtx_matrix_t matrix);
 
 extern mtx_sparse_t *mtx_create_sparse(int32 capacity);
 /**<
- ***  <!--  sp = mtx_create_sparse(capacity);                          -->
- ***  <!--  mtx_sparse_t *sp;                                          -->
- ***  <!--  int32 capacity;                                            -->
- ***
  ***  Creates a sparse vector with capacity given and returns it.
  ***  The length of the sparse data is initialized to 0.
  ***  If insufficient memory is available, returns NULL.
@@ -230,9 +176,6 @@ ASC_DLLSPEC(void ) mtx_destroy_sparse(mtx_sparse_t *sp);
 
 extern void mtx_destroy_blocklist(mtx_block_t *bl);
 /**<
- ***  <!--  mtx_destroy_blocklist);                                    -->
- ***  <!--  mtx_block_t *bl;                                           -->
- ***
  ***  Given a pointer to the block structure, deallocates everything to
  ***  do with the structure, including the structure itself. The pointer
  ***  bl is invalidated. Handles NULL gracefully.
@@ -244,12 +187,6 @@ extern mtx_matrix_t mtx_duplicate_region(mtx_matrix_t matrix,
                                          mtx_region_t *region,
                                          real64 drop);
 /**<
- -$-  <!--  slave = mtx_duplicate_region(matrix,region,drop);          -->
- ***
- ***  <!--  mtx_matrix_t slave, matrix;                                -->
- ***  <!--  mtx_region_t *region;                                      -->
- ***  <!--  real64 drop;                                               -->
- ***
  ***  Creates a slave of the matrix given (or of the master of the matrix
  ***  given). This operator provides a low overhead way of
  ***  saving a matrix region for later computation. The slave matrix
@@ -270,8 +207,6 @@ extern mtx_matrix_t mtx_copy_options(mtx_matrix_t matrix,
                                      boolean blocks, boolean incidence,
                                      mtx_region_t *region, real64 drop);
 /**<
- -$-  <!--  copy = mtx_copy_options(matrix,blocks,incidence,region,drop-->);
- ***
  ***  General matrix copy function.
  ***  All operations can take either a master or a slave matrix
  ***  and all return a NEW master. If you want a slave copy, see
@@ -281,16 +216,6 @@ extern mtx_matrix_t mtx_copy_options(mtx_matrix_t matrix,
  ***  function not to be called directly.  Use one of the macros described
  ***  below to perform the type of copy desired.
  ***
- ***  <!--  MACROS:                                                    -->
- -$-  <!--  copy = mtx_copy(matrix)                                    -->
- -$-  <!--  copy = mtx_copy_region(matrix,region)                      -->
- -$-  <!--  copy = mtx_copy_region_drop(matrix,region,drop)            -->
- -$-  <!--  copy = mtx_copy_wo_incidence(matrix)                       -->
- -$-  <!--  copy = mtx_copy_complete(matrix)                           -->
- ***  <!--  mtx_matrix_t copy,matrix;                                  -->
- ***  <!--  boolean blocks, incidence;                                 -->
- ***  <!--  mtx_region_t *region;                                      -->
- ***  <!--  real64 drop;                                               -->
  ***  <pre>
  ***  mtx_copy_complete(mtx)
  ***    Copies everything to do with a mtx. Copying the block information
@@ -321,11 +246,6 @@ extern mtx_matrix_t mtx_copy_options(mtx_matrix_t matrix,
  ***
  -$-  Does nothing if matrix fails mtx_check_matrix; returns NULL.
  ***  </pre>
- <!--  mmm  macro extern  mtx_matrix_t  mtx_copy(m)                    -->
- <!--  mmm  macro extern  mtx_matrix_t  mtx_copy_region(m,r)           -->
- <!--  mmm  macro extern  mtx_matrix_t  mtx_copy_region_drop(m,r,d)    -->
- <!--  mmm  macro extern  mtx_matrix_t  mtx_copy_wo_incidence(m)       -->
- <!--  mmm  macro extern  mtx_matrix_t  mtx_copy_complete(m)           -->
  **/
 #define mtx_copy(m) mtx_copy_options((m),FALSE,TRUE,mtx_ENTIRE_MATRIX,0.0)
 /**< See mtx_copy_options(). */
@@ -340,20 +260,12 @@ extern mtx_matrix_t mtx_copy_options(mtx_matrix_t matrix,
 
 ASC_DLLSPEC(int32 ) mtx_order(mtx_matrix_t matrix);
 /**<
- ***  <!--  order = mtx_order(matrix)                                  -->
- ***  <!--  int32 order;                                               -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***
  ***  Returns the order of the matrix, be it master or slave.
  -$-  Order of a corrupt matrix is -1;
  **/
 
 ASC_DLLSPEC(int32 ) mtx_capacity(mtx_matrix_t matrix);
 /**< 
- ***  <!--  cap = mtx_capacity(matrix)                                 -->
- ***  <!--  int32 cap;                                                 -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***
  ***  Returns the capacity of the matrix, be it master or slave.
  ***  Original row/column numbers must lie in the range 0 <= ndx < cap.
  ***  cap may be larger than the matrix order if the order of the matrix
@@ -363,10 +275,6 @@ ASC_DLLSPEC(int32 ) mtx_capacity(mtx_matrix_t matrix);
 
 ASC_DLLSPEC(void) mtx_set_order(mtx_matrix_t matrix, int32 order);
 /**< 
- ***  <!--  mtx_set_order(matrix,order)                                -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***  <!--  int32 order;                                               -->
- ***
  ***  Changes the order of the matrix to the new order, either truncating
  ***  the matrix, or extending it with blank rows and columns if necessary.
  ***  Does not change the incidence pattern if the matrix is being expanded.
@@ -463,64 +371,7 @@ ASC_DLLSPEC(void) mtx_clear(mtx_matrix_t matrix);
  ***  mtx_*_block_perm functions.<br><br>
  ***  mtx_clear(master or slave) passes up to the master.
  **/
-/* OLD GROUP COMMENT */
-/*
- -$-  mtx_clear_coord(matrix,row,col)
- -$-  mtx_clear_row(matrix,row,rng)
- -$-  mtx_clear_col(matrix,col,rng)
- -$-  mtx_clear_rowlist(matrix,sp,rng)  !* not yet implemented *!
- -$-  mtx_clear_collist(matrix,sp,rng)  !* not yet implemented *!
- -$-  mtx_clear_region(matrix,region)
- -$-  mtx_reset_perm(matrix)
- -$-  mtx_clear(matrix)
- ***  mtx_matrix_t matrix;
- ***  mtx_sparse_t *sp;
- ***  mtx_region_t *region;
- ***  mtx_range_t *rowrng;
- ***
- ***  mtx_clear_coord will make sure a specific element doesn't exist.
- ***  mtx_clear_row and mtx_clear_col will erase a range of elements
- ***    in a single row or column.
- ***  mtx_clear_rowlist and mtx_clear_collist will erase a range of elements
- ***    in the list of rows or columns given in the idata of the sparse.
- ***    The data of the sparse need not be valid as it will not be referenced.
- ***  mtx_clear_region erases all elements in the given region.
- ***  mtx_reset_perm restores the original row/column ordering.
- ***  mtx_clear clears everything.
- -$-  Does nothing to a bad matrix.
- ***
- ***  It is generally most efficient to clear as many incidences in possible
- ***  in a single call. When a set of adjacent rows/columns is to be cleared,
- ***  use mtx_clear_region. If a rather disjoint set is to be cleared (such
- ***  as the nonlinear rows of a mixed linear/nonlinear jacobian) use
- ***  mtx_clear_rowlist/collist.
- ***
- ***  Note that mtx_clear and mtx_reset_perm invalidate any data saved
- ***  with the mtx_*_block_perm functions.
- ***  Notes on masters/slaves:
- ***    mtx_clear_coord, mtx_clear_row, mtx_clear_col, mtx_clear_rowlist,
- ***      mtx_clear_collist work as usual.
- ***    mtx_clear_region(slave,region) can be used without affecting other
- ***      slaves or the master.
- ***    mtx_clear_region(master,region) affects only the master UNLESS
- ***      region is mtx_ENTIRE_MATRIX. mtx_ENTIRE_MATRIX clears the master
- ***      and ALL incidence in ALL its slaves.
- ***    mtx_reset_perm(master or slave) passes the reset up to the master.
- ***    mtx_clear(master or slave) passes up to the master.
- ***
- ***  Clears everything in the matrix.
- -$-  Does nothing to a bad matrix if MTX_DEBUG is defined.<br><br>
- ***
- ***  It is generally most efficient to clear as many incidences in possible
- ***  in a single call. When a set of adjacent rows/columns is to be cleared,
- ***  use mtx_clear_region. If a rather disjoint set is to be cleared (such
- ***  as the nonlinear rows of a mixed linear/nonlinear jacobian) use
- ***  mtx_clear_rowlist/collist.<br><br>
- ***
- ***  Note that mtx_clear() invalidates any data saved with the
- ***  mtx_*_block_perm functions.<br><br>
- ***  mtx_clear(master or slave) passes up to the master.
- **/
+
 
 ASC_DLLSPEC(real64 ) mtx_value(mtx_matrix_t matrix, mtx_coord_t *coord);
 /**<
@@ -584,63 +435,12 @@ extern void mtx_fill_org_value(mtx_matrix_t matrix,
  ***
  -$-  Returns 0.0/does nothing from/to a bad matrix.
  **/
-/* OLD GROUP COMMENT */
-/*
- -$-  value = mtx_value(matrix,coord)
- -$-  mtx_set_value(matrix,coord,value)
- -$-  mtx_fill_value(matrix,coord,value)
- -$-  mtx_fill_org_value(matrix,orgcoord,value)
- ***  real64 value;
- ***  mtx_matrix_t matrix;
- ***  mtx_coord_t *coord, *orgcoord;
- ***
- ***  Use of mtx_value, mtx_set_value should be avoided if at all possible
- ***  inside loops. See mtx_next_in_* for doing mtx/vector operations.
- ***  Returns/sets the value of the given element in the matrix.
- ***  Because the only sane usage of mtx_value, mtx_set_value is for
- ***  things like getting and setting something in the diagonal,
- ***  mtx_set_value remembers the last place mtx_value returned
- ***  and checks it before starting a search. Any element destruction
- ***  causes mtx_set_value to forget, however.
- ***  This remembrance is matrix specific and is not affected by
- ***  element destruction in other unrelated matrices.
- ***
- ***  mtx_fill_value is
- ***  to be used in place of mtx_set_value in those instances where the
- ***  caller knows there currently exists no element at the coordinate
- ***  whose value is to be set. mtx_fill_value can also be used if a
- ***  mtx_assemble call will happen before ANY other numeric or structural
- ***  calls are made.
- ***
- ***  mtx_fill_org_value is
- ***  just like mtx_fill_value except the location given is understood as
- ***  the (orgrow,orgcol) location to put the fill.
- ***
- ***  mtx_set_value(mtx,coord,0.0) will create no incidence if none
- ***  is presently there, nor does it delete an incidence.
- ***
- ***  Doesn't matter whether a matrix is slave or master.
- ***
- -$-  Returns 0.0/does nothing from/to a bad matrix.
- ***
- ***  Sets the value of the given element in the matrix.
- ***  This function is just like mtx_fill_value() except the location 
- ***  given is understood as the (orgrow,orgcol) location to put the fill.
- ***
- ***  Doesn't matter whether a matrix is slave or master.
- ***
- -$-  Returns 0.0/does nothing from/to a bad matrix.
- **/
 
 /** grandfathering old linsol. @todo Remove when linsolqr replaces linsol. */
 #define mtx_add_value(a,b,c) mtx_fill_value((a),(b),(c))
 
 extern int32 mtx_assemble(mtx_matrix_t matrix);
 /**<
- ***  <!--  dinc = mtx_assemble(mtx_matrix_t matrix);                  -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***  <!--  int32 dinc;                                                -->
- ***
  ***  Takes a matrix, assumed to have redundant and otherwise insane incidences
  ***  created by mtx_fill_value and sums all like entries, eliminating
  ***  the duplicates and the zeroes. Returns -# of duplicate elements removed.
@@ -679,20 +479,6 @@ extern void mtx_del_zr_in_colrange(mtx_matrix_t matrix, mtx_range_t *rng);
 /**<
  ***  "Non-zeros" in the given range of cols which are actually
  ***  zero are effectively removed (i.e. the status of "non-zero" is revoked).
- -$-  Does nothing to a bad matrix.
- **/
-/* OLD GROUP COMMENT */
-/*
- -$-  mtx_del_zr_in_row(matrix,row)                              
- -$-  mtx_del_zr_in_col(matrix,col)                              
- -$-  mtx_del_zr_in_rowrange(matrix,rng)                         
- -$-  mtx_del_zr_in_colrange(matrix,rng)                         
- ***  mtx_matrix_t matrix;                                       
- ***  int32 row,col;
- ***  mtx_range_t *rng;                                          
- ***
- ***  "Non-zeros" in the given row/col/rng of rows/cols which are actually     
- ***  zero are effectively removed (i.e. the status of "non-zero" is revoked). 
  -$-  Does nothing to a bad matrix.
  **/
 
@@ -761,35 +547,6 @@ extern void mtx_steal_cur_col_vec(mtx_matrix_t mtx, int32 col,
  ***  Notes: It is rather faster to call this with mtx_ALL_COLS/ROWS when
  ***  the row/col of interest is known to have incidence exclusively in
  ***  the range of interest.<br><br>
- ***
- -$-  Fetches nothing from a bad matrix.
- **/
-/* OLD GROUP COMMENT */
-/*
- -$-  mtx_steal_org_row_vec(mtx,row,vec,colrng)
- -$-  mtx_steal_org_col_vec(mtx,col,vec,rowrng)
- -$-  mtx_steal_cur_row_vec(mtx,row,vec,colrng)
- -$-  mtx_steal_cur_col_vec(mtx,col,vec,rowrng)
- ***  mtx_matrix_t mtx;
- ***  int32 row,col;
- ***  real64 *vec;
- ***  mtx_range_t *colrng,*rowrng;
- ***
- ***  mtx_steal_org/cur_row_vec:
- ***  The user is expected to supply the vec; we cannot check it.
- ***  Copies the mtx nonzeros currently within colrng INTO array vec which is
- ***  indexed by org/cur column number. Does not affect other
- ***  entries of vec in or outside the range. In particular, vec
- ***  is NOT zeroed within the range unless there is a matrix element
- ***  with value zero at that location.
- ***  All incidence within colrng of the row given is removed from the matrix.
- ***
- ***  mtx_steal_org/cur_col_vec:
- ***  Switch row <--> col in above.
- ***
- ***  Notes: It is rather faster to call this with mtx_ALL_COLS/ROWS when
- ***  the row/col of interest is known to have incidence exclusively in
- ***  the range of interest.
  ***
  -$-  Fetches nothing from a bad matrix.
  **/
@@ -896,39 +653,6 @@ extern boolean mtx_steal_cur_col_sparse(mtx_matrix_t mtx,
  ***  Notes: It is rather faster to call this with mtx_ALL_COLS/ROWS when
  ***  the row/col of interest is known to have incidence exclusively in
  ***  the range of interest.<br><br>
- ***
- -$-  Fetches nothing from a bad matrix.
- **/
-/* OLD GROUP COMMENT */
-/*
- -$-  err = mtx_steal_org_row_sparse(mtx,row,sparse,colrng)      
- -$-  err = mtx_steal_org_col_sparse(mtx,col,sparse,rowrng)      
- -$-  err = mtx_steal_cur_row_sparse(mtx,row,sparse,colrng)      
- -$-  err = mtx_steal_cur_col_sparse(mtx,col,sparse,rowrng)      
- ***  mtx_matrix_t mtx;                                          
- ***  int32 row,col;                                             
- ***  mtx_sparse_t *sparse;                                      
- ***  mtx_range_t *colrng,*rowrng;                               
- ***  boolean err;                                               
- ***
- ***  The user must supply the sparse; if it is too small, err will be  
- ***  TRUE and data will not be collected and incidence not cleared.  
- ***  mtx_CREATE_SPARSE is not a valid argument to this function.
- ***  What is too small? For all flavors the sparse must         
- ***  have at least the capacity indicated by the col/rowrng.    
- ***
- ***  mtx_steal_org/cur_row_sparse:                              
- ***  Copies the mtx nonzeros currently within colrng to the sparse,      
- ***  indexing by org/cur column number. Nonzeros with value 0.0 WILL NOT 
- ***  be included in the sparse. sparse->len will be set accordingly.     
- ***  All incidence within colrng will be deleted from the mtx.  
- ***
- ***  mtx_steal_org/cur_col_sparse:                              
- ***  Switch row < col in above.                              
- ***
- ***  Notes: It is rather faster to call this with mtx_ALL_COLS/ROWS when 
- ***  the row/col of interest is known to have incidence exclusively in   
- ***  the range of interest.                                     
  ***
  -$-  Fetches nothing from a bad matrix.
  **/
@@ -1072,42 +796,6 @@ extern void mtx_dropfill_cur_col_vec(mtx_matrix_t mtx, int32 col,
  ***
  -$-  Puts nothing to a bad matrix.
  **/
-/* OLD GROUP COMMENT */
-/*
- -$-  mtx_fill_org_row_vec(mtx,row,vec,colrng)                   
- -$-  mtx_fill_org_col_vec(mtx,col,vec,rowrng)                   
- -$-  mtx_fill_cur_row_vec(mtx,row,vec,colrng)                   
- -$-  mtx_fill_cur_col_vec(mtx,col,vec,rowrng)                   
- -$-  mtx_dropfill_cur_row_vec(mtx,row,vec,colrng,tolerance)     
- -$-  mtx_dropfill_cur_col_vec(mtx,col,vec,rowrng,tolerance)     
- ***  mtx_matrix_t mtx;                                          
- ***  int32 row, col;                                            
- ***  real64 tolerance, *vec;                                    
- ***  mtx_range_t *colrng, *rowrng;                              
- ***
- ***  mtx_fill_org/cur_row_vec:                                  
- ***  Assumes that the colrng of row in the matrix is empty and  
- ***  copies the nonzeros currently within colrng FROM array vec which is 
- ***  indexed by org/cur column number INTO the matrix.          
- ***
- ***  mtx_fill_org/cur_col_vec:                                  
- ***  Switch row < col in above.
- ***
- ***  mtx_dropfill_cur_row/col_vec:                              
- ***  Assumes that the colrng of row in the matrix is empty and  
- ***  copies the values such that abs(value) >tolerance currently
- ***  within colrng FROM array vec which is                      
- ***  indexed by cur column/row number INTO the matrix.          
- ***
- ***  Notes: It is faster to call these with a narrow range than with    
- ***  mtx_ALL_COLS/ROWS. It is very marginally faster to call the cur    
- ***  rather than the org flavor of these functions.                     
- ! !  If you use this when the range is NOT empty, you will sooner or    
- ! !  later certainly lose numerical integrity and you may lose memory   
- ! !  integrity. The sparse matrix programmer cannot afford to be naive. 
- ***
- -$-  Puts nothing to a bad matrix.
- **/
 
 extern void mtx_fill_org_row_sparse(mtx_matrix_t mtx, int32 row,
                                     const mtx_sparse_t *sparse);
@@ -1153,35 +841,6 @@ extern void mtx_fill_cur_col_sparse(mtx_matrix_t mtx, int32 col,
  ***  This function ignores 0.0 in the data and does not create numbers
  ***  there in the mtx.
  **/
-/* OLD GROUP COMMENT */
-/*
- -$-  mtx_fill_org_row_sparse(mtx,row,sp)                        
- -$-  mtx_fill_org_col_sparse(mtx,col,sp)                        
- -$-  mtx_fill_cur_row_sparse(mtx,row,sp)                        
- -$-  mtx_fill_cur_col_sparse(mtx,col,sp)                        
- ***  mtx_matrix_t mtx;                                          
- ***  int32 row, col;                                            
- ***  mtx_sparse_t *sp;                                          
- ***
- ***  mtx_fill_org_row_sparse:                                   
- ***    Fills the current row given with the data in the sparse given. 
- ***    The indices in sp->idata are taken as org col indices.         
- ***    It is assumed that the row is empty, at least where data is    
- ***    being added.                                             
- ***  mtx_fill_org_col_sparse:
- ***    Swap row/col in the previous description.                
- ***
- ***  mtx_fill_cur_row_sparse:                                   
- ***    Fills the current row given with the data in the sparse given. 
- ***    The indices in sp->idata are taken as cur col indices.         
- ***    It is assumed that the row is empty, at least where data is    
- ***    being added.                                             
- ***  mtx_fill_cur_col_sparse:                                   
- ***    Swap row/col in the previous description.                
- ***
- ***  All these functions ignore 0.0 in the data and do not create numbers 
- ***  there in the mtx.
- **/
 
 
 extern void mtx_mult_row(mtx_matrix_t mtx, int32 row,
@@ -1216,23 +875,6 @@ extern void mtx_mult_col_zero(mtx_matrix_t mtx, int32 col,
  ***  This function zeros without disturbing structure.
  -$-  Does nothing on a bad matrix.
  **/
-/* OLD GROUP COMMENT */
-/*
- -$-  mtx_mult_row(matrix,row,factor,colrng)                     
- -$-  mtx_mult_col(matrix,col,factor,rowrng)                     
- -$-  mtx_mult_row_zero(matrix,row,colrng)                       
- -$-  mtx_mult_col_zero(matrix,col,rowrng)                       
- ***  mtx_matrix_t matrix;                                       
- ***  int32 row,col;
- ***  real64 factor;                                             
- ***  mtx_range_t *colrng,*rowrng;                               
- ***
- ***  Multiplies the given row/column by a given factor.  Only those        
- ***  elements with column/row index within the given range are multiplied. 
- ***  mtx_mult_row/col tests for factor=0.0 and blows away the row if true. 
- ***  mtx_mult_row/col_zero zeros without disturbing structure.  
- -$-  Does nothing on a bad matrix.
- **/
 
 extern void mtx_add_row(mtx_matrix_t mtx, int32 srow, int32 trow,
                         real64 factor, mtx_range_t *colrng);
@@ -1248,20 +890,6 @@ extern void mtx_add_col(mtx_matrix_t mtx, int32 scol, int32 tcol,
  ***  Adds a given multiple of column scol to column tcol.
  ***  Only those elements with row index within the given range are
  ***  so affected.<br><br>
- -$-  Does nothing on a bad matrix.
- **/
-/* OLD GROUP COMMENT */
-/*
- -$-  mtx_add_row(matrix,srow,trow,factor,colrng)                
- -$-  mtx_add_col(matrix,scol,tcol,factor,rowrng)                
- ***  mtx_matrix_t matrix;
- ***  int32 srow,trow,scol,tcol;                                 
- ***  real64 factor;                                             
- ***  mtx_range_t *colrng,*rowrng;                               
- ***
- ***  Adds a given multiple of row srow/column scol to row trow/column tcol. 
- ***  Only those elements with column/row index within the given range are   
- ***  so affected.                                               
  -$-  Does nothing on a bad matrix.
  **/
 
@@ -1539,16 +1167,6 @@ extern void mtx_add_row_sparse(mtx_matrix_t mtx, int32 row,
 extern void mtx_add_col_sparse(mtx_matrix_t mtx, int32 col,
                                real64 factor, mtx_sparse_t *sparse);
 /**< @todo mtx_add_col_sparse() NOT IMPLEMENTED. */
-/* OLD GROUP COMMENT */
-/*
- -$-  mtx_add_row_sparse(matrix,row,factor,sparse)
- -$-  mtx_add_col_sparse(matrix,col,factor,sparse)
- ***  mtx_matrix_t matrix;
- ***  int32 row,col;
- ***  real64 factor;
- ***  mtx_sparse_t *sparse;  expected to be in org coords.
- ***  NOT IMPLEMENTED.
- **/
 
 extern size_t mtx_size(mtx_matrix_t mtx);
 /**<
@@ -1563,29 +1181,9 @@ extern size_t mtx_chattel_size(mtx_matrix_t mtx);
  ***  Returns the memory used by all slaves of the matrix given
  ***  that is not shared with the master. Returns 0 from a slave.
  **/
-/* OLD GROUP COMMENT */
-/*
- *** size=mtx_size(mtx)
- *** size=mtx_chattel_size(mtx)
- *** size_t size;
- *** mtx_matrix_t mtx;
- ***
- ***  mtx_size(mtx);
- ***  Returns the amount of memory in use by a matrix and all its
- ***  bits and pieces.
- ***  Slaves report only their incremental cost, that is they do
- ***  not report the cost of the structures they share with a master.
- ***  Masters do report the cost of their slaves.
- ***
- ***  mtx_chattel_size(master);
- ***  Returns the memory used by all slaves of the matrix given
- ***  that is not shared with the master. Returns 0 from a slave.
- **/
 
 extern void mtx_free_reused_mem(void);
 /**<
- ***  <!--  mtx_free_reused_mem()                                      -->
- ***
  ***  Deallocates any memory that mtx may be squirrelling away for
  ***  internal reuse. Calling this while any slv_system_t exists
  ***  is likely to be fatal: handle with care.
@@ -1817,7 +1415,6 @@ extern mtx_matrix_t mtx_read_smms(FILE *file,
 
 extern void mtx_exception_recover(void);
 /**<
- ***  <!--  mtx_exception_recover();                                   -->
  ***  Cleans up after a floating point exception has
  ***  occurred during matrix manipulations.  You don't need to know 
  ***  what this does, except that you should call it any time this may
@@ -1835,10 +1432,6 @@ extern void mtx_exception_recover(void);
 
 extern void mtx__debug_output(FILE *file, mtx_matrix_t mtx);
 /**<
- ***  <!--  mtx_debug_output(fp,matrix)                                -->
- ***  <!--  FILE *fp;                                                  -->
- ***  <!--  mtx_matrix_t matrix;                                       -->
- ***
  ***  Debug outputs all internal information about a matrix to file.
  ***  In the process, integrity checks are performed.
  ***  If file is NULL, output goes to default (which is stderr.)

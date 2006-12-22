@@ -54,6 +54,10 @@
 #include "slv_client.h"
 #include "model_reorder.h"
 
+#define MRDEBUG 0
+/**< if !=0, generate spew while working */
+#define CUTOFFDEFAULT 1000
+/**< tuning parameter in need of investigation */
 
 mr_reorder_t *mr_reorder_create(slv_system_t slv, mtx_matrix_t mtx, int32 size)
 {

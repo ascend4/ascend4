@@ -19,16 +19,14 @@
 	@file
 	Access to the IDA integrator for ASCEND. IDA is a DAE solver that comes
 	as part of the GPL-licensed SUNDIALS solver package from LLNL.
+
+	IDA provides dense, banded and sparse solvers. At present this module only
+	implements access to the dense and sparse solvers, using the *serial*
+	vector methods.
+
 	@see http://www.llnl.gov/casc/sundials/
 *//*
 	by John Pye, May 2006
-*/
-
-/*
-	Be careful with the following. This file requires both the 'ida.h' from
-	SUNDIALS as well as the 'ida.h' from ASCEND. Make sure that we're getting
-	both of these; if you get problems check your build tool for the paths being
-	passed to the C preprocessor.
 */
 
 /* standard includes */
@@ -89,7 +87,12 @@
 /* #define FEX_DEBUG */
 /* #define JEX_DEBUG */
 /* #define SOLVE_DEBUG */
+#define STATS_DEBUG
+#define PREC_DEBUG
 
+/**
+	Everthing that the outside world needs to know about IDA
+*/
 const IntegratorInternals integrator_ida_internals = {
 	integrator_ida_create
 	,integrator_ida_params_default
@@ -100,22 +103,50 @@ const IntegratorInternals integrator_ida_internals = {
 	,"IDA"
 };
 
+/*-------------------------------------------------------------
+  FORWARD DECLS
+*/
+
+/* forward dec needed for IntegratorIdaPrecFreeFn */
+struct IntegratorIdaDataStruct;
+
+/* functions for allocating storage for and freeing preconditioner data */
+typedef void IntegratorIdaPrecCreateFn(IntegratorSystem *blsys);
+typedef void IntegratorIdaPrecFreeFn(struct IntegratorIdaDataStruct *enginedata);
+
 /**
 	Struct containing any stuff that IDA needs that doesn't fit into the
 	common IntegratorSystem struct.
 */
-typedef struct{
+typedef struct IntegratorIdaDataStruct{
 	struct rel_relation **rellist;   /**< NULL terminated list of rels */
 	struct var_variable **varlist;   /**< NULL terminated list of vars. ONLY USED FOR DEBUGGING -- get rid of it! */
 	struct bnd_boundary **bndlist;	 /**< NULL-terminated list of boundaries, for use in the root-finding  code */
 	int nrels;
 	int safeeval;                    /**< whether to pass the 'safe' flag to relman_eval */
-	N_Vector pp;                     /**< Preconditioner values */
+	var_filter_t filter;             /**< Used to filter variables from varlist in relman_diff2 etc */
+
+	void *precdata;                  /**< For use by the preconditioner */
+	IntegratorIdaPrecFreeFn *pfree;	 /**< Store instructions here on how to free precdata */
 } IntegratorIdaData;
 
-/*-------------------------------------------------------------
-  FORWARD DECLS
+typedef struct{
+	N_Vector PIii; /**< diagonal elements of the inversed Jacobi preconditioner */
+} IntegratorIdaPrecDataJacobi;
+
+/**
+	Hold all the function pointers associated with a particular preconditioner
+	We don't need to store the 'pfree' function here as it is allocated to the enginedata struct
+	by the pcreate function (ensures that corresponding 'free' and 'create' are always used)
+	
+	@note IDA uses a different convention for function pointer types, so no '*'.
 */
+typedef struct{
+	IntegratorIdaPrecCreateFn *pcreate;
+	IDASpilsPrecSetupFn psetup;
+	IDASpilsPrecSolveFn psolve;
+} IntegratorIdaPrec;
+
 /* residual function forward declaration */
 int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data);
 
@@ -136,22 +167,46 @@ int integrator_ida_djex(long int Neq, realtype tt
 		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
 );
 
-int integrator_ida_psetup(realtype tt,
+typedef struct{
+	long nsteps;
+	long nrevals;
+	long nlinsetups;
+	long netfails;
+	int qlast, qcur;
+	realtype hinused, hlast, hcur;
+	realtype tcur;
+} IntegratorIdaStats;
+
+int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
+void integrator_ida_write_stats(IntegratorIdaStats *stats);
+void integrator_ida_write_incidence(IntegratorSystem *blsys);
+/*------
+  Jacobi preconditioner -- experimental 
+*/
+
+int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 realtype c_j, void *prec_data,
 		 N_Vector tmp1, N_Vector tmp2,
 		 N_Vector tmp3
 );
 
-int integrator_ida_psolve(realtype tt,
+int integrator_ida_psolve_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
 		 realtype c_j, realtype delta, void *prec_data,
 		 N_Vector tmp
 );
 
-static const IDASpilsPrecSetupFn psetup1 = &integrator_ida_psetup;
-static const IDASpilsPrecSolveFn psolve1 = &integrator_ida_psolve;
+void integrator_ida_pcreate_jacobi(IntegratorSystem *blsys);
+
+void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata);
+
+static const IntegratorIdaPrec prec_jacobi = {
+	integrator_ida_pcreate_jacobi
+	, integrator_ida_psetup_jacobi
+	, integrator_ida_psolve_jacobi
+};
 
 /*-------------------------------------------------------------
   SETUP/TEARDOWN ROUTINES
@@ -163,15 +218,21 @@ void integrator_ida_create(IntegratorSystem *blsys){
 	enginedata->rellist = NULL;
 	enginedata->varlist = NULL;
 	enginedata->safeeval = 0;
-	enginedata->pp = NULL;
+	enginedata->filter.matchbits = VAR_SVAR | VAR_FIXED;
+	enginedata->filter.matchvalue = VAR_SVAR;
+
 	blsys->enginedata = (void *)enginedata;
+
 	integrator_ida_params_default(blsys);
 }
 
 void integrator_ida_free(void *enginedata){
 	CONSOLE_DEBUG("DELETING IDA ENGINE DATA");
 	IntegratorIdaData *d = (IntegratorIdaData *)enginedata;
-	if(d->pp)N_VDestroy_Serial(d->pp);
+	if(d->pfree){
+		/* free the preconditioner data, whatever it happens to be */
+		(d->pfree)(enginedata);
+	}
 	/* note, we don't own the rellist, so don't need to free it */
 	ASC_FREE(d);
 }
@@ -241,11 +302,15 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 		}, TRUE}
 	);
 
-	slv_param_bool(p,IDA_PARAM_CALCIC
-			,(SlvParameterInitBool){{"calcic"
-			,"Calculate initial conditions?",1
-			,"Use IDA to calculate initial conditions (1) or else assume that the model will already be solved for this case (0)"
-		}, FALSE}
+	slv_param_char(p,IDA_PARAM_CALCIC
+			,(SlvParameterInitChar){{"calcic"
+			,"Initial conditions calcuation",1
+			,"Use specified values of ydot to solve for inital y (Y),"
+			" or use the the values of the differential variables (yd) to solve"
+			" for the pure algebraic variables (ya) along with the derivatives"
+			" of the differential variables (yddot) (YA_YDP), or else don't solve"
+			" the intial conditions at all (NONE). See IDA manual p 41 (IDASetId)"
+		}, "YA_YDP"}, (char *[]){"Y", "YA_YDP", "NONE"}
 	);
 
 	slv_param_bool(p,IDA_PARAM_SAFEEVAL
@@ -347,16 +412,18 @@ int integrator_ida_solve(
 	void *ida_mem;
 	int size, flag, flag1, t_index;
 	realtype t0, reltol, abstol, t, tret, tout1;
-	N_Vector y0, yp0, abstolvect, ypret, yret;
+	N_Vector y0, yp0, abstolvect, ypret, yret, id;
 	IntegratorIdaData *enginedata;
 	char *linsolver;
 	int maxl;
 	IdaFlagFn *flagfn;
 	IdaFlagNameFn *flagnamefn;
 	const char *flagfntype;
-	char *pname;
-	IDASpilsPrecSetupFn psetup;
-	IDASpilsPrecSolveFn psolve;
+	char *pname = NULL;
+	char *varname;
+	int i;
+	const IntegratorIdaPrec *prec = NULL;
+	int icopt; /* initial conditions strategy */
 
 	CONSOLE_DEBUG("STARTING IDA...");
 
@@ -489,15 +556,18 @@ int integrator_ida_solve(
 		maxl = SLV_PARAM_INT(&(blsys->params),IDA_PARAM_MAXL);
 		CONSOLE_DEBUG("maxl = %d",maxl);
 
+		/* what preconditioner? */
 		pname = SLV_PARAM_CHAR(&(blsys->params),IDA_PARAM_PREC);
 		if(strcmp(pname,"NONE")==0){
-			psetup=NULL;
-			psolve=NULL;
-		}else if(strcmp(pname,"DIAG")==0){
-			psetup=&integrator_ida_psetup;
-			psolve=&integrator_ida_psolve;
+			prec = NULL;
+		}else if(strcmp(pname,"JACOBI")==0){
+			prec = &prec_jacobi;
+		}else{
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid preconditioner choice '%s'",pname);
+			return 0;
 		}
 
+		/* which SPILS linear solver? */
 		if(strcmp(linsolver,"SPGMR")==0){
 			CONSOLE_DEBUG("IDA SPGMR");
 			flag = IDASpgmr(ida_mem, maxl); /* 0 means use the default max Krylov dimension of 5 */
@@ -512,9 +582,14 @@ int integrator_ida_solve(
 			return 0;
 		}
 
-		enginedata->pp = N_VNew_Serial(blsys->n_y);
-		IDASpilsSetPreconditioner(ida_mem,psetup,psolve,(void *)blsys);
-		CONSOLE_DEBUG("PRECONDITIONER = %s",pname);
+		if(prec){
+			/* assign the preconditioner to the linear solver */
+			(prec->pcreate)(blsys);
+			IDASpilsSetPreconditioner(ida_mem,prec->psetup,prec->psolve,(void *)blsys);
+			CONSOLE_DEBUG("PRECONDITIONER = %s",pname);
+		}else{
+			CONSOLE_DEBUG("No preconditioner");
+		}
 
 		flagfntype = "IDASPILS";
 		flagfn = &IDASpilsGetLastFlag;
@@ -568,9 +643,34 @@ int integrator_ida_solve(
 	*/
 
 	/* calculate initial conditions */
-	if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_CALCIC)){
-		CONSOLE_DEBUG("Solving initial conditions (given derivatives)");
+	icopt = 0;
+	if(strcmp(SLV_PARAM_CHAR(&blsys->params,IDA_PARAM_CALCIC),"Y")==0){
+		CONSOLE_DEBUG("Solving initial conditions using values of yddot");
+		icopt = IDA_Y_INIT;
+		asc_assert(icopt!=0);
+	}else if(strcmp(SLV_PARAM_CHAR(&blsys->params,IDA_PARAM_CALCIC),"YA_YDP")==0){
+		CONSOLE_DEBUG("Solving initial conditions using values of yd");
+		icopt = IDA_YA_YDP_INIT;
+		asc_assert(icopt!=0);
+		id = N_VNew_Serial(blsys->n_y);
+		for(i=0; i < blsys->n_y; ++i){
+			if(blsys->ydot[i] == NULL){
+				NV_Ith_S(id,i) = 0.0;
+				varname = var_make_name(blsys->system,blsys->y[i]);
+				CONSOLE_DEBUG("y[%d] = '%s' is pure algebraic",i,varname);
+				ASC_FREE(varname);
+			}else{
+				CONSOLE_DEBUG("y[%d] is differential",i);
+				NV_Ith_S(id,i) = 1.0;
+			}
+		}
+		IDASetId(ida_mem, id);
+		N_VDestroy_Serial(id);
+	}else{
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Not solving initial conditions: check current residuals");
+	}
 
+	if(icopt){
 		blsys->currentstep=0;
 	 	t_index=start_index;
 		tout1 = samplelist_get(blsys->samples, t_index);
@@ -578,12 +678,12 @@ int integrator_ida_solve(
 		CONSOLE_DEBUG("SOLVING INITIAL CONDITIONS IDACalcIC (tout1 = %f)", tout1);
 
 		/* correct initial values, given derivatives */
-	# if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
+# if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
 		/* note the new API from version 2.3 and onwards */
-		flag = IDACalcIC(ida_mem, IDA_Y_INIT, tout1);
-	# else
-		flag = IDACalcIC(ida_mem, t0, y0, yp0, IDA_Y_INIT, tout1);
-	# endif
+		flag = IDACalcIC(ida_mem, icopt, tout1);
+# else
+		flag = IDACalcIC(ida_mem, t0, y0, yp0, icopt, tout1);
+# endif
 
 		switch(flag){
 			case IDA_SUCCESS:
@@ -607,8 +707,6 @@ int integrator_ida_solve(
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
 				return 0;
 		}
-	}else{
-		CONSOLE_DEBUG("Not solving initial conditions (see IDA parameter 'calcic')");
 	}
 
 	/* optionally, specify ROO-FINDING PROBLEM */
@@ -657,12 +755,13 @@ int integrator_ida_solve(
 	/* -- close the IntegratorReporter */
 	integrator_output_close(blsys);
 
-	if(flag < 0){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solving aborted while attempting t = %f", t);
-		return 0;
-	}
-
 	/* get optional outputs */
+#ifdef STATS_DEBUG
+	IntegratorIdaStats stats;
+	if(IDA_SUCCESS == integrator_ida_stats(ida_mem, &stats)){
+		integrator_ida_write_stats(&stats);
+	}
+#endif
 
 	/* free solution memory */
 	N_VDestroy_Serial(yret);
@@ -671,7 +770,12 @@ int integrator_ida_solve(
 	/* free solver memory */
 	IDAFree(ida_mem);
 
-	/* all done */
+	if(flag < 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solving aborted while attempting t = %f", t);
+		return 0;
+	}
+
+	/* all done, success */
 	return 1;
 }
 
@@ -817,7 +921,6 @@ int integrator_ida_djex(long int Neq, realtype tt
 	int status;
 	struct rel_relation **relptr;
 	int i;
-	var_filter_t filter = {VAR_SVAR | VAR_FIXED, VAR_SVAR};
 	double *derivatives;
 	int *variables;
 	int count, j;
@@ -867,7 +970,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 			++i, ++relptr
 	){
 		/* get derivatives for this particular relation */
-		status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
+		status = relman_diff2(*relptr, &enginedata->filter, derivatives, variables, &count, enginedata->safeeval);
 
 		if(status){
 			relname = rel_make_name(blsys->system, *relptr);
@@ -977,7 +1080,6 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 	int *variables;
 	double *derivatives;
-	var_filter_t filter;
 	int count;
 #ifdef JEX_DEBUG
 	CONSOLE_DEBUG("EVALUATING JACOBIAN...");
@@ -1004,9 +1106,6 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	/* evaluate the derivatives... */
 	/* J = dG_dy = dF_dy + alpha * dF_dyp */
 
-	filter.matchbits = VAR_SVAR | VAR_FIXED;
-	filter.matchvalue = VAR_SVAR;
-
 	Asc_SignalHandlerPushDefault(SIGFPE);
 	if (setjmp(g_fpe_env)==0) {
 		for(i=0, relptr = enginedata->rellist;
@@ -1014,7 +1113,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				++i, ++relptr
 		){
 			/* get derivatives for this particular relation */
-			status = relman_diff2(*relptr, &filter, derivatives, variables, &count, enginedata->safeeval);
+			status = relman_diff2(*relptr, &enginedata->filter, derivatives, variables, &count, enginedata->safeeval);
 #ifdef JEX_DEBUG
 			CONSOLE_DEBUG("Got derivatives against %d matching variables, status = %d", count,status);
 #endif
@@ -1104,44 +1203,119 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 }
 
 /*----------------------------------------------
-  PRECONDITIONER
+  JACOBI PRECONDITIONER -- EXPERIMENTAL.
 */
 
+void integrator_ida_pcreate_jacobi(IntegratorSystem *blsys){
+	IntegratorIdaData * enginedata =blsys->enginedata;
+	IntegratorIdaPrecDataJacobi *precdata;
+	precdata = ASC_NEW(IntegratorIdaPrecDataJacobi);
+
+	asc_assert(blsys->n_y);
+	precdata->PIii = N_VNew_Serial(blsys->n_y);
+
+	enginedata->pfree = &integrator_ida_pfree_jacobi;
+	enginedata->precdata = precdata;
+	CONSOLE_DEBUG("Allocated memory for Jacobi preconditioner");
+}
+
+void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
+	if(enginedata->precdata){
+		IntegratorIdaPrecDataJacobi *precdata = (IntegratorIdaPrecDataJacobi *)enginedata->precdata;
+		N_VDestroy_Serial(precdata->PIii);
+
+		ASC_FREE(precdata);
+		enginedata->precdata = NULL;
+		CONSOLE_DEBUG("Freed memory for Jacobi preconditioner");
+	}
+	enginedata->pfree = NULL;
+}
 
 /**
-	EXPERIMENTAL. A diagonal preconditioner for use with IDA Krylov solvers
+	EXPERIMENTAL. Jacobi preconditioner for use with IDA Krylov solvers
 
 	'setup' function.
 */
-int integrator_ida_psetup(realtype tt,
+int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 realtype c_j, void *p_data,
 		 N_Vector tmp1, N_Vector tmp2,
 		 N_Vector tmp3
 ){
-	int i;
+	int i, j;
 	IntegratorSystem *blsys;
-	IntegratorIdaData *data;
+	IntegratorIdaData *enginedata;
+	IntegratorIdaPrecDataJacobi *precdata;
+	struct rel_relation **relptr;
+
 	blsys = (IntegratorSystem *)p_data;
-	data = blsys->enginedata;
+	enginedata = blsys->enginedata;
+	precdata = (IntegratorIdaPrecDataJacobi *)(enginedata->precdata);
+	double *derivatives;
+	int *variables;
+	int count, status;
+	char *relname;
+	int var_yindex;
 
-	double y = 1; /* derivative of y[i] in relation i */
-	double ydot = 1; /* derivative of ydot[i] in relation i */
+	CONSOLE_DEBUG("Setting up Jacobi preconditioner");
 
-	N_VConst(1, data->pp);
-	for(i=0; i<blsys->n_y; ++i){
-		/* @TODO calculate y, ydot here */
-		NV_Ith_S(data->pp, i) = 1 / (y + c_j * ydot);
+	variables = ASC_NEW_ARRAY(int, NV_LENGTH_S(yy) * 2);
+	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
+
+	/**
+		@TODO FIXME here we are using the very inefficient and contorted approach
+		of calculating the whole jacobian, then extracting just the diagonal elements.
+	*/
+
+	for(i=0, relptr = enginedata->rellist;
+			i< enginedata->nrels && relptr != NULL;
+			++i, ++relptr
+	){
+
+		/* get derivatives for this particular relation */
+		status = relman_diff2(*relptr, &enginedata->filter, derivatives, variables, &count, enginedata->safeeval);
+		if(status){
+			relname = rel_make_name(blsys->system, *relptr);
+			CONSOLE_DEBUG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
+			ASC_FREE(relname);
+			break;
+		}
+		/* CONSOLE_DEBUG("Got %d derivatives from relation %d",count,i); */
+		/* find the diagonal elements */
+		for(j=0; j<count; ++j){
+			if(variables[j]==i){
+				var_yindex = blsys->y_id[variables[j]];
+				if(var_yindex >= 0){
+					NV_Ith_S(precdata->PIii, i) = 1./derivatives[j];
+				}else{
+					NV_Ith_S(precdata->PIii, i) = 1./(c_j * derivatives[j]);
+				}
+			}
+		}
+#ifdef PREC_DEBUG
+		CONSOLE_DEBUG("PI[%d] = %f",i,NV_Ith_S(precdata->PIii,i));
+#endif
 	}
+
+	if(status){
+		CONSOLE_DEBUG("Error found when evaluating derivatives");
+		return 1; /* recoverable */
+	}
+
+	integrator_ida_write_incidence(blsys);
+
+	ASC_FREE(variables);
+	ASC_FREE(derivatives);
+
 	return 0;
 };
 
 /**
-	EXPERIMENTAL. A diagonal preconditioner for use with IDA Krylov solvers
+	EXPERIMENTAL. Jacobi preconditioner for use with IDA Krylov solvers
 
 	'solve' function.
 */
-int integrator_ida_psolve(realtype tt,
+int integrator_ida_psolve_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
 		 realtype c_j, realtype delta, void *p_data,
@@ -1149,12 +1323,109 @@ int integrator_ida_psolve(realtype tt,
 ){
 	IntegratorSystem *blsys;
 	IntegratorIdaData *data;
+	IntegratorIdaPrecDataJacobi *precdata;
 	blsys = (IntegratorSystem *)p_data;
 	data = blsys->enginedata;
+	precdata = (IntegratorIdaPrecDataJacobi *)(data->precdata);
+	int i;
 
-	N_VProd(data->pp, rvec, zvec);
+	CONSOLE_DEBUG("Solving Jacobi preconditioner (c_j = %f)",c_j);
+	N_VProd(precdata->PIii, rvec, zvec);
 	return 0;
 };
+
+/*----------------------------------------------
+  STATS
+*/
+
+/**
+	A simple wrapper to the IDAGetIntegratorStats function. Returns all the
+	status in a struct instead of separately.
+
+	@return IDA_SUCCESS on sucess.
+*/
+int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s){
+	return IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals, &s->nlinsetups
+		,&s->netfails, &s->qlast, &s->qcur, &s->hinused
+		,&s->hlast, &s->hcur, &s->tcur
+	);
+}
+
+/**
+	This routine just outputs the stats to the CONSOLE_DEBUG routine.
+
+	@TODO provide a GUI way of stats reporting from IDA.
+*/
+void integrator_ida_write_stats(IntegratorIdaStats *stats){
+# define SL(N) CONSOLE_DEBUG("%s = %ld",#N,stats->N)
+# define SI(N) CONSOLE_DEBUG("%s = %d",#N,stats->N)
+# define SR(N) CONSOLE_DEBUG("%s = %f",#N,stats->N)
+		SL(nsteps); SL(nrevals); SL(nlinsetups); SL(netfails);
+		SI(qlast); SI(qcur);
+		SR(hinused); SR(hlast); SR(hcur); SR(tcur);
+# undef SL
+# undef SI
+# undef SR
+}
+
+/*------------------------------------------------------------------------------
+  INCIDENCE MATRIX
+*/
+
+/**
+	This routine outputs matrix structure in a crude text format, for the sake
+	of debugging.
+*/
+void integrator_ida_write_incidence(IntegratorSystem *blsys){
+	int i, j;
+	struct rel_relation **relptr;
+	IntegratorIdaData *enginedata = blsys->enginedata;
+	double *derivatives;
+	int *variables;
+	int count, status;
+	char *relname;
+	int var_yindex;
+
+	if(enginedata->nrels > 100){
+		CONSOLE_DEBUG("Ignoring call (matrix size too big = %d)",enginedata->nrels);
+		return;
+	}
+
+	variables = ASC_NEW_ARRAY(int, blsys->n_y * 2);
+	derivatives = ASC_NEW_ARRAY(double, blsys->n_y * 2);
+
+	CONSOLE_DEBUG("Outputting incidence information to console...");
+
+	for(i=0, relptr = enginedata->rellist;
+			i< enginedata->nrels && relptr != NULL;
+			++i, ++relptr
+	){
+		relname = rel_make_name(blsys->system, *relptr);
+
+		/* get derivatives for this particular relation */
+		status = relman_diff2(*relptr, &enginedata->filter, derivatives, variables, &count, enginedata->safeeval);
+		if(status){
+			CONSOLE_DEBUG("ERROR calculating derivatives for relation '%s'",relname);
+			ASC_FREE(relname);
+			break;
+		}
+
+		fprintf(stderr,"%3d:%-15s:",i,relname);		
+		ASC_FREE(relname);
+
+		for(j=0; j<count; ++j){
+			var_yindex = blsys->y_id[variables[j]];
+			if(var_yindex >= 0){
+				fprintf(stderr," %d:y[%d]",variables[j],var_yindex);
+			}else{
+				fprintf(stderr," %d:ydot[%d]",variables[j],-var_yindex-1);
+			}
+		}
+		fprintf(stderr,"\n");
+	}
+	ASC_FREE(variables);
+	ASC_FREE(derivatives);
+}
 
 /*----------------------------------------------
   ERROR REPORTING

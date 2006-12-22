@@ -32,6 +32,7 @@
 #include "ida.h"
 #include "slv_common.h"
 #include "slv_client.h"
+#include "slv_stdcalls.h"
 #include <utilities/ascPanic.h>
 
 #include "samplelist.h"
@@ -417,6 +418,13 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 
 	CONSOLE_DEBUG("Starting DAE analysis");
 	IntegInitSymbols();
+
+	assert(sys->system);
+	CONSOLE_DEBUG("Block partitioning system...");
+	if(slv_block_partition(sys->system)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to block-partition system");
+		return 0;
+	}
 
 	assert(sys->indepvars==NULL);
 
