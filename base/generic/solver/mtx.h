@@ -1,56 +1,145 @@
-/*
- *  mtx: Ascend Sparse Matrix Package
- *  by Benjamin Andrew Allan
- *  Derived from mtx by Karl Michael Westerberg
- *  Created: 5/3/90
- *  Version: $Revision: 1.11 $
- *  Version control file: $RCSfile: mtx.h,v $
- *  Date last modified: $Date: 1998/07/05 20:46:27 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *  Copyright (C) 1995 Benjamin Andrew Allan, Kirk Andre' Abbott
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *                                         
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 1995 Benjamin Andrew Allan, Kirk Andre' Abbott
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
  *  mtx: Ascend Sparse Matrix Package.
- *  <pre>
- *  Contents:     Matrix modules module
  *
- *  Authors:      Karl Westerberg
- *                Joseph Zaher
- *                Ben Allan
+ *  Description:  This module allows the user to create and manipulate
+ *                matrices.  The following is list of what constitutes
+ *                a "matrix":
  *
- *  Dates:    KW  06/90 - original version
- *            JZ  01/94 - added output assignment and partitioning
- *                        operations allowing them to be performed
- *                        individually.
- *            JZ  08/94 - reduced the internal practice of repeatedly
- *                        finding the existence of an element by re-
- *                        writing mtx_next_in_row and mtx_next_in_col
- *                        to use a static element pointer which can
- *                        advance and be rewound.  Dramatic cpu time
- *                        savings were obtained by having the values
- *                        of subsequent elements returned by these
+ *                   - A square nxn (where n is the order of the matrix)
+ *                     rectangular region of numbers, indexed by
+ *                     (row,col) pairs where 0<=row<n and 0<=col<n.
+ *
+ *                   - Row and column permutations which keep track of
+ *                     where a given row/column "came from" originally.
+ *
+ *                The coefficient matrix (i.e. the nxn region of numbers)
+ *                can be divided into two classes, non-zeros and zeros.
+ *                Roughly speaking, a given element is a non-zero so long
+ *                as its value has the POTENTIAL of not equaling zero.
+ *                Thus, if the value of an element (r,c) is not equal to
+ *                zero, then (r,c) must be classified as a non-zero:
+ *                however the converse need not hold, unless either
+ *                mtx_del_zr_in_row or mtx_del_zr_in_col has been
+ *                recently called with r or c respectively.
+ *
+ *                The mtx_matrix_t includes a data structure for block
+ *                information storage, a block being a matrix subregion.
+ *                This feature supports partitioning solvers.
+ *
+ *                There are only 3 fundamental operations _on_ matrices
+ *                  vector scaling  (mtx_mult_*)
+ *                  vector addition (mtx_add_*)
+ *                  permutation     (mtx_swap_*)
+ *                Matrix elements are maintained as
+ *                relatively unordered linked lists. Mtx_next_in_* is
+ *                most generally useful operator for doing sparse math
+ *                with this matrix package. There are several operations
+ *                that take matrices/vectors and return vectors/scalars.
+ *                Sparse matrix-matrix computations are best coded with
+ *                vector primitives and knowledge of the specific matrix,
+ *                so they are not provided here.
+ *
+ *                It's amazing for a package that only addresses the
+ *                fundamentals, this still has over 100 calls and looks
+ *                like an extremely well documented kitchen sink.
+ *
+ *                The user may grep on extern to get a semiformatted list
+ *                of the operator names in this file. Please follow the
+ *                formatting if you add functions to this module.
+ *                i.e.  grep extern mtx2*h  cooks up a reduced header.
+ *
+ ** vocabulary for this header file.
+ **   int32   a 32 bit signed integer (int usually, long on some archs.)
+ **   real64  a 64 bit real (double on most systems.)
+ **                 By using these typedefs, all the code remains intact
+ **                 across different systems/compilers: only the typedefs
+ **                 have to change if there is a difference in data size.
+ **
+ **   mtx, matrix:  a peculiar sparse matrix structure which should not
+ **                 be manipulated except by means of functions in this
+ **                 header. Attempts to go around by another path are
+ **                 99.44% likely to fail, and 95% likely to fail
+ **                 catastrophically.
+ **
+ **   cur_row,
+ **   cur_col, or
+ **   row,col:      an int32 denoting the ith(jth) row(column) as the
+ **                 matrix is currently permuted (range 0..order-1).
+ **   org_row, org_col:
+ **                 an int32 denoting the ith(jth) row(col) as the matrix
+ **                 is ordered in the unpermuted state (range 0..order-1).
+ **
+ **   vec:          an array of real64, generally of size
+ **                 mtx->order or larger. Indexing scheme is indeterminate.
+ **   org_vec:      a vec indexed by the org_row or org_col index.
+ **   cur_vec:      a vec indexed by the (current) row or col index.
+ **
+ **   s,txxx:       source or target xxx, where xxx may be a  vec, row, col
+ **                 org_row, or org_col.
+ **
+ **   order:        the working size of a matrix.
+ **                 order N ==> cols/rows 0->N-1 exist.
+ **   capacity:     the length, essentially, of the mtx edges.
+ **                 This number is >= order, normally ==.
+ **
+ **   coord:        a pair of current indices (row,col).
+ **   range:        a pair of current indices (low,high).
+ **                 operations which take a range will do nothing if
+ **                 low > high.
+ **   region:       a pair of ranges (rowrange,colrange)
+ **   Coords, ranges and regions are passed by pointer to mtx functions.
+ **
+ **   sparse:       a compressed vector, with indeterminate indexing scheme.
+ **                 a sparse has a capacity (maximum amount of data)
+ **                 a length (the current amount of data)
+ **                 an array of real64 (the data) and
+ **                 an array of int32 (where the data correspond to.)
+ **                 The array of int32 may be cur or org and this
+ **                 is determined by the context in which the sparse is used.
+ **
+ **                 Sparses are generally passed by pointer.
+ *
+	Requires:      
+	#include <stdio.h>
+    #include <string.h>
+    #include <utilities/ascConfig.h>
+*//*
+	'mtx' by Karl Michael Westerberg, created 5/3/90
+	'mtx2' by Benjamin Andrew Allan
+	Last in CVS: $Revision: 1.11 $ $Date: 1998/07/05 20:46:27 $ $Author: ballan $
+
+	Dates:    KW  06/90 - original version
+	          JZ  01/94 - added output assignment and partitioning
+	                      operations allowing them to be performed
+	                      individually.
+	          JZ  08/94 - reduced the internal practice of repeatedly
+	                      finding the existence of an element by re-
+	                      writing mtx_next_in_row and mtx_next_in_col
+	                      to use a static element pointer which can
+	                      advance and be rewound.  Dramatic cpu time
+	                      savings were obtained by having the values
+	                      of subsequent elements returned by these
  *                        functions to eliminate the need for calling
  *                        mtx_value on the obtained coordinate.  A new
  *                        function mtx_add_value was added to replace
@@ -199,54 +288,7 @@
  *               7/98 ba  Added mtx_write_region_matlab for harwell format.
  *
  *
- *  Description:  This module allows the user to create and manipulate
- *                matrices.  The following is list of what constitutes
- *                a "matrix":
- *
- *                   - A square nxn (where n is the order of the matrix)
- *                     rectangular region of numbers, indexed by
- *                     (row,col) pairs where 0<=row<n and 0<=col<n.
- *
- *                   - Row and column permutations which keep track of
- *                     where a given row/column "came from" originally.
- *
- *                The coefficient matrix (i.e. the nxn region of numbers)
- *                can be divided into two classes, non-zeros and zeros.
- *                Roughly speaking, a given element is a non-zero so long
- *                as its value has the POTENTIAL of not equaling zero.
- *                Thus, if the value of an element (r,c) is not equal to
- *                zero, then (r,c) must be classified as a non-zero:
- *                however the converse need not hold, unless either
- *                mtx_del_zr_in_row or mtx_del_zr_in_col has been
- *                recently called with r or c respectively.
- *
- *                The mtx_matrix_t includes a data structure for block
- *                information storage, a block being a matrix subregion.
- *                This feature supports partitioning solvers.
- *
- *                There are only 3 fundamental operations _on_ matrices
- *                  vector scaling  (mtx_mult_*)
- *                  vector addition (mtx_add_*)
- *                  permutation     (mtx_swap_*)
- *                Matrix elements are maintained as
- *                relatively unordered linked lists. Mtx_next_in_* is
- *                most generally useful operator for doing sparse math
- *                with this matrix package. There are several operations
- *                that take matrices/vectors and return vectors/scalars.
- *                Sparse matrix-matrix computations are best coded with
- *                vector primitives and knowledge of the specific matrix,
- *                so they are not provided here.
- *
- *                It's amazing for a package that only addresses the
- *                fundamentals, this still has over 100 calls and looks
- *                like an extremely well documented kitchen sink.
- *
- *                The user may grep on extern to get a semiformatted list
- *                of the operator names in this file. Please follow the
- *                formatting if you add functions to this module.
- *                i.e.  grep extern mtx2*h  cooks up a reduced header.
- **
- ** header conventions: (DON'T SKIP READING THIS SECTION!!)
+ ** header conventions: (DON'T SKIP READING THIS SECTION!!) *yawn*
  **   -$- in place of *** implies as described in compilation flags below.
  **   ! ! in place of *** implies a warning which should be read before
  **   ! ! using the function under discussion in certain ways.
@@ -262,62 +304,8 @@
  **   MTX_DEBUG TRUE slows this code down incredibly and should not be
  **   used when compiling production code.
  **
- ** vocabulary for this header file.
- **   int32   a 32 bit signed integer (int usually, long on some archs.)
- **   real64  a 64 bit real (double on most systems.)
- **                 By using these typedefs, all the code remains intact
- **                 across different systems/compilers: only the typedefs
- **                 have to change if there is a difference in data size.
- **
- **   mtx, matrix:  a peculiar sparse matrix structure which should not
- **                 be manipulated except by means of functions in this
- **                 header. Attempts to go around by another path are
- **                 99.44% likely to fail, and 95% likely to fail
- **                 catastrophically.
- **
- **   cur_row,
- **   cur_col, or
- **   row,col:      an int32 denoting the ith(jth) row(column) as the
- **                 matrix is currently permuted (range 0..order-1).
- **   org_row, org_col:
- **                 an int32 denoting the ith(jth) row(col) as the matrix
- **                 is ordered in the unpermuted state (range 0..order-1).
- **
- **   vec:          an array of real64, generally of size
- **                 mtx->order or larger. Indexing scheme is indeterminate.
- **   org_vec:      a vec indexed by the org_row or org_col index.
- **   cur_vec:      a vec indexed by the (current) row or col index.
- **
- **   s,txxx:       source or target xxx, where xxx may be a  vec, row, col
- **                 org_row, or org_col.
- **
- **   order:        the working size of a matrix.
- **                 order N ==> cols/rows 0->N-1 exist.
- **   capacity:     the length, essentially, of the mtx edges.
- **                 This number is >= order, normally ==.
- **
- **   coord:        a pair of current indices (row,col).
- **   range:        a pair of current indices (low,high).
- **                 operations which take a range will do nothing if
- **                 low > high.
- **   region:       a pair of ranges (rowrange,colrange)
- **   Coords, ranges and regions are passed by pointer to mtx functions.
- **
- **   sparse:       a compressed vector, with indeterminate indexing scheme.
- **                 a sparse has a capacity (maximum amount of data)
- **                 a length (the current amount of data)
- **                 an array of real64 (the data) and
- **                 an array of int32 (where the data correspond to.)
- **                 The array of int32 may be cur or org and this
- **                 is determined by the context in which the sparse is used.
- **
- **                 Sparses are generally passed by pointer.
- *
- * Requires:      #include <stdio.h>
- *                #include <string.h>
- *                #include "utilities/ascConfig.h"
- *  </pre>
- */
+ * right. let's get into it...
+*/
 
 #ifndef ASC_MTX_H
 #define ASC_MTX_H

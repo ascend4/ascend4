@@ -217,6 +217,18 @@
 #endif
 
 /*--------------------------------------------------------------------------
+  MATRIX MARKET EXPORT
+*/
+
+/*
+	Whether to provide export functions using the Matrix Market format
+	(from Integrator, perhaps elsewhere)
+*/
+#ifndef ASC_WITH_MMIO
+/* #define ASC_WITH_MMIO @ASC_WITH_MMIO@ */
+#endif
+
+/*--------------------------------------------------------------------------
   ENV VAR
 */
 

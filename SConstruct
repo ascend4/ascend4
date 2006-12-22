@@ -173,6 +173,13 @@ opts.Add(BoolOption(
 	,True
 ))
 
+# Build with MMIO matrix export support?
+opts.Add(BoolOption(
+	'WITH_MMIO'
+	,"Include support for exporting matrices in Matrix Market format"
+	,True
+))
+
 #----- default paths -----
 opts.Add(PackageOption(
 	'DEFAULT_PREFIX'
@@ -596,6 +603,9 @@ without_scrollkeeper_reason = "disabled by options/config.py"
 
 with_dmalloc = env.get('WITH_DMALLOC')
 without_dmalloc_reason = "disabled by options/config.py"
+
+with_mmio = env.get('WITH_MMIO')
+without_mmio_reason = "disabled by options/config.py"
 
 if platform.system()=="Windows":
 	with_installer=1
@@ -1650,6 +1660,9 @@ if with_conopt:
 if with_lsode:
 	subst_dict["/\\* #define ASC_WITH_LSODE @ASC_WITH_LSODE@ \\*/"]='#define ASC_WITH_LSODE '
 
+if with_mmio:
+	subst_dict["/\\* #define ASC_WITH_MMIO @ASC_WITH_MMIO@ \\*/"]='#define ASC_WITH_MMIO '
+
 if with_python:
 	subst_dict['@ASCXX_USE_PYTHON@']="1"
 	env['WITH_PYTHON']=1;
@@ -1878,6 +1891,10 @@ else:
 if not with_ida:
 	print "Skipping... IDA won't be built:", without_ida_reason
 
+if with_mmio:
+	srcs += env.SConscript(['mmio/SConscript'],'env')
+else:
+	print "Skipping... MMIO export won't be built:", without_mmio_reason
 #-------------
 # LIBASCEND -- all base/generic functionality
 

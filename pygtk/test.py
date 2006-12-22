@@ -354,14 +354,15 @@ class TestIDA(Ascend):
 		I.setEngine('IDA')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setParameter('linsolver','SPGMR')
-		I.setParameter('prec','DIAG')
+		I.setParameter('prec','JACOBI')
 		I.setParameter('maxl',8)
 		I.setParameter('gsmodified',False)
 		I.setParameter('autodiff',True)
+		I.setParameter('gsmodified',True)
 		I.setParameter('rtol',0)
 		I.setParameter('atol',1e-3);
 		I.setParameter('atolvect',False)
-		I.setParameter('calcic',True)
+		I.setParameter('calcic','Y')
 		I.analyse()
 		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 10);
 		print M.udot[1][3];

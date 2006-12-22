@@ -1,0 +1,11 @@
+Import('env')
+
+srcs = Split("""
+	mmio.c
+""")
+
+mmio = []
+for src in srcs:
+	mmio.append(env.SharedObject(src))
+
+Return('mmio')
