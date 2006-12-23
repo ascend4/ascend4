@@ -136,13 +136,16 @@ class IntegratorWindow:
 				# continue
 
 		if _ok:
-			_res = self.integrator.analyse()
-			if _res:				
-				# if we're all ok, create the reporter window and close this one
-				_integratorreporter = IntegratorReporterPython(self.browser,self.integrator)
-				self.integrator.setReporter(_integratorreporter)
-				self.window.destroy()
-				return _integratorreporter # means proceed to solve
+			try:
+				self.integrator.analyse()
+			except RuntimeError,e:
+				self.browser.reporter.reportError(str(e))
+				return None							
+			# if we're all ok, create the reporter window and close this one
+			_integratorreporter = IntegratorReporterPython(self.browser,self.integrator)
+			self.integrator.setReporter(_integratorreporter)
+			self.window.destroy()
+			return _integratorreporter # means proceed to solve
 
 		self.window.destroy()
 		return None # can't solve
