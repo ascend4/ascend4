@@ -684,36 +684,53 @@ int integrator_ida_solve(
 
 		CONSOLE_DEBUG("SOLVING INITIAL CONDITIONS IDACalcIC (tout1 = %f)", tout1);
 
-		/* correct initial values, given derivatives */
+		/* catch SIGFPE if desired to */
+		if(enginedata->safeeval){
+			Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+		}else{
+#ifdef FEX_DEBUG
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"SETTING TO CATCH SIGFPE...");
+#endif
+			Asc_SignalHandlerPushDefault(SIGFPE);
+		}
+		
+			/* correct initial values, given derivatives */
 # if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
-		/* note the new API from version 2.3 and onwards */
-		flag = IDACalcIC(ida_mem, icopt, tout1);
+			/* note the new API from version 2.3 and onwards */
+			flag = IDACalcIC(ida_mem, icopt, tout1);
 # else
-		flag = IDACalcIC(ida_mem, t0, y0, yp0, icopt, tout1);
+			flag = IDACalcIC(ida_mem, t0, y0, yp0, icopt, tout1);
 # endif
 
-		switch(flag){
-			case IDA_SUCCESS:
-				CONSOLE_DEBUG("Initial conditions solved OK");
-				break;
+			switch(flag){
+				case IDA_SUCCESS:
+					CONSOLE_DEBUG("Initial conditions solved OK");
+					break;
 
-			case IDA_LSETUP_FAIL:
-			case IDA_LINIT_FAIL:
-			case IDA_LSOLVE_FAIL:
-			case IDA_NO_RECOVERY:
-				flag1 = -999;
-				flag = (flagfn)(ida_mem,&flag1);
-				if(flag){
-					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to retrieve error code from %s (err %d)",flagfntype,flag);
+				case IDA_LSETUP_FAIL:
+				case IDA_LINIT_FAIL:
+				case IDA_LSOLVE_FAIL:
+				case IDA_NO_RECOVERY:
+					flag1 = -999;
+					flag = (flagfn)(ida_mem,&flag1);
+					if(flag){
+						ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to retrieve error code from %s (err %d)",flagfntype,flag);
+						return 0;
+					}
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s returned flag '%s' (value = %d)",flagfntype,(flagnamefn)(flag1),flag1);
 					return 0;
-				}
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s returned flag '%s' (value = %d)",flagfntype,(flagnamefn)(flag1),flag1);
-				return 0;
 
-			default:
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
-				return 0;
+				default:
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
+					return 0;
+			}
+
+		if(enginedata->safeeval){
+			Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+		}else{
+			Asc_SignalHandlerPopDefault(SIGFPE);
 		}
+
 	}
 
 	/* optionally, specify ROO-FINDING PROBLEM */
@@ -1007,10 +1024,9 @@ int integrator_ida_djex(long int Neq, realtype tt
 		/* insert values into the Jacobian row in appropriate spots (can assume Jac starts with zeros -- IDA manual) */
 		for(j=0; j < count; ++j){
 			var_yindex = blsys->y_id[variables[j]];
-#ifndef __WIN32__
 			/* the SUNDIALS headers seem not to store 'N' on Windows */
-			ASC_ASSERT_RANGE(var_yindex, -Jac->N, Jac->N);
-#endif
+			ASC_ASSERT_RANGE(var_yindex, -blsys->n_y, blsys->n_y);
+
 			if(var_yindex >= 0){
 				asc_assert(blsys->y[var_yindex]==enginedata->varlist[variables[j]]);
 				DENSE_ELEM(Jac,i,var_yindex) += derivatives[j];
