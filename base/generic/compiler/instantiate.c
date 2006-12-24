@@ -6084,7 +6084,7 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
     SetEvaluationContext(work);
 
 	Asc_SignalHandlerPushDefault(SIGFPE);
-	if(setjmp(g_fpe_env)==0){
+	if(SETJMP(g_fpe_env)==0){
 	    value = EvaluateExpr(AssignStatRHS(statement),NULL,
     	                     InstanceEvaluateName);
 	}else{

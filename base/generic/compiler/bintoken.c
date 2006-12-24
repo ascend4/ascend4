@@ -869,7 +869,7 @@ int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual)
       func = ctable[bindex].F;
 #if 0 /* setting this to 1 is a major performance hit. */
       if (func != NULL) {
-        if (setjmp(g_fpe_env)==0) {
+        if (SETJMP(g_fpe_env)==0) {
           (*func)(vars,residual);
           return 0;
         } else {
@@ -898,7 +898,7 @@ int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual)
         ForG = BinTokenRESIDUAL;
 #ifndef NO_SIGNAL_TRAPS
         Asc_SignalHandlerPush(SIGFPE,Asc_SignalTrap);
-        if (setjmp(g_fpe_env)==0) {
+        if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
           (*subroutine)(vars,NULL,residual,&ForG,&bindex,&status);
 #ifndef NO_SIGNAL_TRAPS
@@ -947,7 +947,7 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
       if (func != NULL) {
 #ifndef NO_SIGNAL_TRAPS
         Asc_SignalHandlerPush(SIGFPE,Asc_SignalTrap);
-        if (setjmp(g_fpe_env)==0) {
+        if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
           (*func)(vars,gradient,residual);
 #ifndef NO_SIGNAL_TRAPS
@@ -977,7 +977,7 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
         ForG = BinTokenGRADIENT;
 #ifndef NO_SIGNAL_TRAPS
         Asc_SignalHandlerPush(SIGFPE,Asc_SignalTrap);
-        if (setjmp(g_fpe_env)==0) {
+        if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
           (*subroutine)(vars,gradient,residual,&ForG,&bindex,&status);
 #ifndef NO_SIGNAL_TRAPS
