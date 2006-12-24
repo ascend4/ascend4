@@ -16,13 +16,29 @@ cpppath = ['#test','#base/generic']
 if env.has_key('CUNIT_CPPPATH'):
 	cpppath.append(env['CUNIT_CPPPATH'])
 
-libpath = ['#', '#test']
+libpath = ['#', '#test', '#base/generic/test']
 if env.has_key('CUNIT_LIBPATH'):
 	libpath.append(env['CUNIT_LIBPATH'])
 	#print "CUNIT_LIBPATH ---> ",libpath
 
-env.Program('test',srcs+basesrcs
+objs = []
+for src in srcs:
+	objs += env.SharedObject(src
+		, CPPPATH = cpppath
+	)
+objs += env.SharedObject('test_ascend_base.c'
+		, CPPPATH = cpppath
+	)
+
+env.SharedLibrary('asctestsuite',objs
 	, CPPPATH = cpppath
 	, LIBS = ['ascend','asctest','m','cunit','dl']
+	, LIBPATH = libpath
+	, CPPDEFINES = env.get('CPPDEFINES') + ['-DASC_SHARED']
+)
+
+env.Program('test',['test.c']
+	, CPPPATH = cpppath
+	, LIBS = ['ascend','asctest','cunit','asctestsuite']
 	, LIBPATH = libpath
 )

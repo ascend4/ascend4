@@ -32,7 +32,7 @@
 #include "test_ascSignal.h"
 #include "printutil.h"
 
-static jmp_buf my_jmp_buf1;
+static JMP_BUF my_jmp_buf1;
 
 static int f_handler1_called;
 static int f_handler1_sigval;
@@ -63,10 +63,10 @@ void my_handler1(int sigval)
       f_handler1_sigval = -1;
       break;
   }
-  longjmp(my_jmp_buf1, sigval);
+  LONGJMP(my_jmp_buf1, sigval);
 }
 
-static jmp_buf my_jmp_buf2;
+static JMP_BUF my_jmp_buf2;
 
 static int f_handler2_called;
 static int f_handler2_sigval;
@@ -97,7 +97,7 @@ void my_handler2(int sigval)
       f_handler2_sigval = -1;
       break;
   }
-  longjmp(my_jmp_buf2, sigval);
+  LONGJMP(my_jmp_buf2, sigval);
 }
 
 
@@ -225,7 +225,7 @@ static void test_ascSignal(void)
   CU_TEST(0 == Asc_SignalHandlerPush(SIGSEGV, Asc_SignalTrap));
 
   signal1_caught = FALSE;
-  if (0 == setjmp(g_fpe_env)) {                         /* raise & catch a SIGFPE */
+  if (0 == SETJMP(g_fpe_env)) {                         /* raise & catch a SIGFPE */
     raise(SIGFPE);
   }
   else {
@@ -235,7 +235,7 @@ static void test_ascSignal(void)
   CU_TEST(TRUE == signal1_caught);
 
   signal1_caught = FALSE;
-  if (0 == setjmp(g_int_env)) {                         /* raise & catch a SIGINT */
+  if (0 == SETJMP(g_int_env)) {                         /* raise & catch a SIGINT */
     raise(SIGINT);
   }
   else {
@@ -245,7 +245,7 @@ static void test_ascSignal(void)
   CU_TEST(TRUE == signal1_caught);
 
   signal1_caught = FALSE;
-  if (0 == setjmp(g_seg_env)) {                         /* raise & catch a SIGSEGV */
+  if (0 == SETJMP(g_seg_env)) {                         /* raise & catch a SIGSEGV */
     raise(SIGSEGV);
   }
   else {
@@ -279,11 +279,11 @@ Asc_SignalRecover(TRUE);
   signal3_caught = FALSE;
 
   CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, my_handler1));   /* test for SIGFPE */
-  if (0 == setjmp(my_jmp_buf1)) {
+  if (0 == SETJMP(my_jmp_buf1)) {
     CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, my_handler2));
-    if (0 == setjmp(my_jmp_buf2)) {
+    if (0 == SETJMP(my_jmp_buf2)) {
       CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap));
-      if (0 == setjmp(g_fpe_env)) {
+      if (0 == SETJMP(g_fpe_env)) {
          raise(SIGFPE);
       }
       else {
@@ -347,11 +347,11 @@ Asc_SignalRecover(TRUE);
   signal3_caught = FALSE;
 
   CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, my_handler2));   /* test for SIGINT */
-  if (0 == setjmp(my_jmp_buf2)) {
+  if (0 == SETJMP(my_jmp_buf2)) {
     CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, Asc_SignalTrap));
-    if (0 == setjmp(g_int_env)) {
+    if (0 == SETJMP(g_int_env)) {
       CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, my_handler1));
-      if (0 == setjmp(my_jmp_buf1)) {
+      if (0 == SETJMP(my_jmp_buf1)) {
          raise(SIGINT);
       }
       else {
@@ -415,11 +415,11 @@ Asc_SignalRecover(TRUE);
   signal3_caught = FALSE;
 
   CU_TEST(0 == Asc_SignalHandlerPush(SIGSEGV, Asc_SignalTrap));   /* test for SIGSEGV */
-  if (0 == setjmp(g_seg_env)) {
+  if (0 == SETJMP(g_seg_env)) {
     CU_TEST(0 == Asc_SignalHandlerPush(SIGSEGV, my_handler2));
-    if (0 == setjmp(my_jmp_buf2)) {
+    if (0 == SETJMP(my_jmp_buf2)) {
       CU_TEST(0 == Asc_SignalHandlerPush(SIGSEGV, my_handler1));
-      if (0 == setjmp(my_jmp_buf1)) {
+      if (0 == SETJMP(my_jmp_buf1)) {
          raise(SIGSEGV);
       }
       else {

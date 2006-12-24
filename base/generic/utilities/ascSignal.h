@@ -127,16 +127,39 @@ typedef void SigHandlerFn(int);
 #define MAX_TRAP_DEPTH 40L
 /**< The maximum number of traps that can be nested. */
 
-ASC_DLLSPEC(jmp_buf ) g_fpe_env;   /**< Standard signal jmp_buf - floating point error. */
-ASC_DLLSPEC(jmp_buf ) g_seg_env;   /**< Standard signal jmp_buf - segmentation fault. */
-ASC_DLLSPEC(jmp_buf ) g_int_env;   /**< Standard signal jmp_buf - interactive attention (<CTRL>C). */
+#define ASC_JMP_INFO
+/**< Whether to store additional information before making a setjmp call */
 
+#ifndef ASC_JMP_INFO
+# define SETJMP set_jmp
+# define LONGJMP longjmp
+typedef JMP_BUF jmp_buf
+#else
+# define SETJMP(ENV) (ENV.filename = __FILE__, ENV.line = __LINE__, ENV.func = __FUNCTION__, setjmp(ENV.jmp))
+# define LONGJMP(ENV,VAL) (CONSOLE_DEBUG("LONGJMP back to %s:%d (%s)",ENV.filename,ENV.line,ENV.func), longjmp(ENV.jmp, VAL))
+typedef struct{
+	jmp_buf jmp;
+	const char *filename;
+	int line;
+	const char *func;
+} asc_jmp_buf;
+#define JMP_BUF asc_jmp_buf
+#endif
+
+
+	
+ASC_DLLSPEC(JMP_BUF) g_fpe_env;   /**< Standard signal jmp_buf - floating point error. */
+ASC_DLLSPEC(JMP_BUF) g_seg_env;   /**< Standard signal jmp_buf - segmentation fault. */
+ASC_DLLSPEC(JMP_BUF) g_int_env;   /**< Standard signal jmp_buf - interactive attention (<CTRL>C). */
+
+#if 0
 extern jmp_buf g_foreign_code_call_env;
 /**<
 	Not currently in use.  Should be when we get to a unified
 	standard for signal handling.
 	@todo Implement use of g_foreign_code_call_env?
 */
+#endif
 
 ASC_DLLSPEC(void ) Asc_SignalTrap(int sigval);
 /**<

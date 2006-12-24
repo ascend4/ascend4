@@ -41,6 +41,7 @@
 	18 Dec 06   - Removed ascresetneeded (moved to SConstruct)
 */
 
+#define _GNU_SOURCE /* enables feenableexcept (http://gcc.gnu.org/ml/fortran/2005-10/msg00365.html) */
 #include <stdio.h>
 #include "config.h"
 #include "ascConfig.h"
@@ -66,9 +67,9 @@
 */
 
 /* test buf for initialization */
-jmp_buf g_fpe_env;
-jmp_buf g_seg_env;
-jmp_buf g_int_env;
+JMP_BUF g_fpe_env;
+JMP_BUF g_seg_env;
+JMP_BUF g_int_env;
 
 #ifdef HAVE_C99FPE
 fenv_t g_fenv;
@@ -98,7 +99,7 @@ static void reset_trap(int signum, SigHandlerFn **tlist, int tos);
 
 #ifdef HAVE_C99FPE
 static int fenv_pop(fenv_t *stack, int *top);
-static int fenv_push(fenv_t *stack,int *top);
+static int fenv_push(fenv_t *stack,int *top, int excepts);
 #endif
 
 /*------------------------------------------------------------------------------
@@ -164,8 +165,8 @@ int Asc_SignalInit(void)
   initstack(f_seg_traps, &f_seg_top_of_stack, SIGSEGV);
 
 #ifdef HAVE_C99FPE
-  CONSOLE_DEBUG("Adding original FPE state to stack (%d)",f_fenv_stack_top);
-  fenv_push(f_fenv_stack,&f_fenv_stack_top);
+  CONSOLE_DEBUG("Initialise FPE state to stack (%d)",f_fenv_stack_top);
+  fenv_push(f_fenv_stack,&f_fenv_stack_top,0);
 #endif
 
   return 0;
@@ -230,7 +231,11 @@ int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
 	  //CONSOLE_DEBUG("PUSH SIGFPE");
       err = push_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
 #ifdef HAVE_C99FPE
-      err = fenv_push(f_fenv_stack, &f_fenv_stack_top);
+	  if(tp == SIG_IGN){
+	      err = fenv_push(f_fenv_stack, &f_fenv_stack_top,FE_DIVBYZERO);
+	  }else{
+		  err = fenv_push(f_fenv_stack, &f_fenv_stack_top,0);
+	  }
 #endif
       break;
     case SIGINT:
@@ -294,15 +299,15 @@ void Asc_SignalTrap(int sigval) {
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Floating point error caught");
 	CONSOLE_DEBUG("SIGFPE caught");
     FPRESET;
-    longjmp(g_fpe_env,sigval);
+	LONGJMP(g_fpe_env,sigval);
     break;
   case SIGINT:
 	CONSOLE_DEBUG("SIGINT (Ctrl-C) caught");
-    longjmp(g_int_env,sigval);
+    LONGJMP(g_int_env,sigval);
     break;
   case SIGSEGV:
 	CONSOLE_DEBUG("SIGSEGV caught");
-    longjmp(g_seg_env,sigval);
+    LONGJMP(g_seg_env,sigval);
     break;
   default:
     CONSOLE_DEBUG("Installed on unexpected signal (sigval = %d).", sigval);
@@ -419,7 +424,9 @@ static int pop_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp){
 
 	return 0 on success 
 */
-static int fenv_push(fenv_t *stack,int *top){
+static int fenv_push(fenv_t *stack, int *top, int excepts){
+	CONSOLE_DEBUG("Pushing FENV flags %d",excepts);
+
 	if(*top > MAX_TRAP_DEPTH - 1){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"FPE stack is full");
 		return 1;
@@ -437,15 +444,17 @@ static int fenv_push(fenv_t *stack,int *top){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"unable to get env");
 		return 4;
 	}
-	feenableexcept(FE_DIVBYZERO);
+	fesetexceptflag(&g_fenv, excepts);
 	//CONSOLE_DEBUG("Enabled div-by-zero FPE exception (%d)",*top);
 	return 0;
 }
 
 /**
-	Restore a save FPU state. Return 0 on success.
+	Restore a saved FPU state. Return 0 on success.
 */
 static int fenv_pop(fenv_t *stack, int *top){
+	CONSOLE_DEBUG("Popping FENV flags");
+
 	if(*top < 0){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"FPE stack is empty");
 		return 1;

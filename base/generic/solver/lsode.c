@@ -958,7 +958,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
     /* CONSOLE_DEBUG("LSODE call #%lu: x = [%f,%f]", index,xprev,xend); */
 
 # ifndef NO_SIGNAL_TRAPS
-    if (setjmp(g_fpe_env)==0) {
+    if (SETJMP(g_fpe_env)==0) {
 # endif /* NO_SIGNAL_TRAPS */
 
 	  /* CONSOLE_DEBUG("Calling LSODE with end-time = %f",xend); */
@@ -1050,7 +1050,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
 	if (nobs > 0) {
 # ifndef NO_SIGNAL_TRAPS
-      if (setjmp(g_fpe_env)==0) {
+      if (SETJMP(g_fpe_env)==0) {
 # endif /* NO_SIGNAL_TRAPS */
 
         /* solve for obs since d isn't necessarily already

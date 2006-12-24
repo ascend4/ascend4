@@ -438,7 +438,7 @@ int Asc_AppendPath(char *envvar, char *newelement)
 }
 
 
-CONST char **Asc_GetPathList(CONST char *envvar, int *argc)
+CONST char **Asc_GetPathList(const char *envvar, int *argc)
 {
   struct asc_env_t *ev;
   CONST char **argv;

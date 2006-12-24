@@ -1380,7 +1380,7 @@ int Asc_Sims2Solve(ClientData cdata, Tcl_Interp *interp,
     }
     FPRINTF(ASCERR,"Presolving . . .\n");
 #ifndef NO_SIGNAL_TRAPS
-    if (setjmp(g_fpe_env)==0) {
+    if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
       slv_presolve(g_solvsys_cur);
 #ifndef NO_SIGNAL_TRAPS
@@ -1460,7 +1460,7 @@ int Asc_Brow2Solve(ClientData cdata, Tcl_Interp *interp,
     }
     FPRINTF(ASCERR,"Presolving . . .\n");
 #ifndef NO_SIGNAL_TRAPS
-    if (setjmp(g_fpe_env)==0) {
+    if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
       slv_presolve(g_solvsys_cur);
 #ifndef NO_SIGNAL_TRAPS
@@ -1742,7 +1742,7 @@ int Asc_SolvSlvPresolve(ClientData cdata, Tcl_Interp *interp,
   }
 
 #ifndef NO_SIGNAL_TRAPS
-  if (setjmp(g_fpe_env)==0) {
+  if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
     if (g_solvsys_cur!=NULL) {
       slv_presolve(g_solvsys_cur);
@@ -1830,7 +1830,7 @@ int Asc_SolvSlvResolve(ClientData cdata, Tcl_Interp *interp,
   }
 
 #ifndef NO_SIGNAL_TRAPS
-  if (setjmp(g_fpe_env)==0) {
+  if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
     if (g_solvsys_cur!=NULL) {
       slv_resolve(g_solvsys_cur);
@@ -1863,7 +1863,7 @@ int Asc_SolvSlvSolve(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 #ifndef NO_SIGNAL_TRAPS
-  if (setjmp(g_fpe_env)==0) {
+  if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
     if (g_solvsys_cur!=NULL) {
       slv_solve(g_solvsys_cur);
@@ -1934,7 +1934,7 @@ int Asc_SolvSlvIterate(ClientData cdata, Tcl_Interp *interp,
   start=tm_cpu_time();
   for (safe_status=0;safe_status<steps && delta <comptime;safe_status++) {
 #ifndef NO_SIGNAL_TRAPS
-    if (setjmp(g_fpe_env)==0) {
+    if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
       slv_get_status(g_solvsys_cur,&s);
       if (s.ready_to_solve && !Solv_C_CheckHalt_Flag) {

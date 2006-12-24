@@ -88,9 +88,9 @@
 # error "Failed to include ASCEND IDA header file"
 #endif
 
-/* #define FEX_DEBUG */
-/* #define JEX_DEBUG */
-/* #define SOLVE_DEBUG */
+#define FEX_DEBUG
+#define JEX_DEBUG
+#define SOLVE_DEBUG
 #define STATS_DEBUG
 #define PREC_DEBUG
 
@@ -342,7 +342,7 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,(SlvParameterInitReal){{"atol"
 			,"Scalar absolute error tolerance",1
 			,"Value of the scalar absolute error tolerance. See also 'atolvect'."
-			" See IDA manual, section 5.5.1"
+			" See IDA manual, sections 5.5.1 and 5.5.2 'Advice on choice and use of tolerances'"
 		}, 1e-5, DBL_MIN, DBL_MAX }
 	);
 
@@ -352,7 +352,7 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,"Value of the scalar relative error tolerance. (Note that for IDA,"
 			" it's not possible to set per-variable relative tolerances as it is"
 			" with LSODE)."
-			" See IDA manual, section 5.5.1"
+			" See IDA manual, section 5.5.2 'Advice on choice and use of tolerances'"
 		}, 1e-4, 0, DBL_MAX }
 	);
 
@@ -406,6 +406,10 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 /*-------------------------------------------------------------
   MAIN IDA SOLVER ROUTINE, see IDA manual, sec 5.4, p. 27 ff.
 */
+
+static double div1(double a, double b){
+	return a/b;
+}
 
 typedef int IdaFlagFn(void *,int *);
 typedef char *IdaFlagNameFn(int);
@@ -686,13 +690,19 @@ int integrator_ida_solve(
 
 		/* catch SIGFPE if desired to */
 		if(enginedata->safeeval){
+			CONSOLE_DEBUG("SETTING TO IGNORE SIGFPE...");
 			Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
 		}else{
 #ifdef FEX_DEBUG
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"SETTING TO CATCH SIGFPE...");
+			CONSOLE_DEBUG("SETTING TO CATCH SIGFPE...");
 #endif
 			Asc_SignalHandlerPushDefault(SIGFPE);
 		}
+		if (SETJMP(g_fpe_env)==0) {
+
+			CONSOLE_DEBUG("Raising signal...");
+			CONSOLE_DEBUG("1/0 = %f", div1(1.0,0.0));
+			CONSOLE_DEBUG("Still here...");
 		
 			/* correct initial values, given derivatives */
 # if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
@@ -724,11 +734,17 @@ int integrator_ida_solve(
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
 					return 0;
 			}
+		}else{
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Floating point error while solving initial conditions");
+			return 0;
+		}
 
 		if(enginedata->safeeval){
 			Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
 		}else{
+			CONSOLE_DEBUG("pop...");
 			Asc_SignalHandlerPopDefault(SIGFPE);
+			CONSOLE_DEBUG("...pop");
 		}
 
 	}
@@ -867,7 +883,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 		Asc_SignalHandlerPushDefault(SIGFPE);
 	}
 
-	if (setjmp(g_fpe_env)==0) {
+	if (SETJMP(g_fpe_env)==0) {
 		for(i=0, relptr = enginedata->rellist;
 				i< enginedata->nrels && relptr != NULL;
 				++i, ++relptr
@@ -1130,7 +1146,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	/* J = dG_dy = dF_dy + alpha * dF_dyp */
 
 	Asc_SignalHandlerPushDefault(SIGFPE);
-	if (setjmp(g_fpe_env)==0) {
+	if (SETJMP(g_fpe_env)==0) {
 		for(i=0, relptr = enginedata->rellist;
 				i< enginedata->nrels && relptr != NULL;
 				++i, ++relptr

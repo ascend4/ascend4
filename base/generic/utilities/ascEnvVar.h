@@ -198,7 +198,7 @@ ASC_DLLSPEC(int ) Asc_AppendPath(char *envvar, char *newelement);
  *  @return Returns 0 if newelement was successfully added, 1 otherwise.
  */
 
-ASC_DLLSPEC(CONST char **) Asc_GetPathList(CONST char *envvar, int *argcPtr);
+ASC_DLLSPEC(CONST char **) Asc_GetPathList(const char *envvar, int *argcPtr);
 /**<
  *  Retrieve the current value(s) for ASCEND environment variable envvar.
  *  The values are returned as an array of pointers to the value strings.

@@ -31,7 +31,6 @@
 
 #ifndef NO_SIGNAL_TRAPS
 # include <signal.h>
-# include <setjmp.h>
 #endif /* NO_SIGNAL_TRAPS */
 
 #include <tcl.h>
@@ -2789,7 +2788,7 @@ int Asc_DebuNumBlockSing(ClientData cdata, Tcl_Interp *interp,
   region = b->block[cur_block];
   linsolqr_set_region(lsys,region);
 #ifndef NO_SIGNAL_TRAPS
-  if (setjmp(g_fpe_env)==0) {
+  if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
     dbg_factor_block(lsys,&region,mtx,rp,vp);
 #ifndef NO_SIGNAL_TRAPS
@@ -3121,7 +3120,7 @@ static int dbg_calc_nominal(struct rel_relation *rel) {
   double nom;
   enum Expr_enum dummy;
 #ifndef NO_SIGNAL_TRAPS
-  if (setjmp(g_fpe_env)==0) {
+  if (SETJMP(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
     nom = CalcRelationNominal(rel_instance(rel));
     if (nom >0.0) {
