@@ -180,6 +180,7 @@ void Asc_SignalDestroy(void)
   ascfree(f_fpe_traps);
   ascfree(f_int_traps);
   ascfree(f_seg_traps);
+  if(f_fenv_stack)ASC_FREE(f_fenv_stack);
   f_fpe_traps = f_int_traps = f_seg_traps =  NULL;
   f_fpe_top_of_stack = f_int_top_of_stack = f_seg_top_of_stack =  -1;
 }

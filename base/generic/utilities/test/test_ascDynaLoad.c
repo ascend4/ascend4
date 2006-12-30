@@ -61,9 +61,9 @@ static void test_ascDynaLoad(void)
   unsigned long prior_meminuse;
 
 #ifdef __WIN32__
-  const char *shlib_name = "..\\..\\..\\base\\generic\\utilities\\test\\testdynaload.dll";
+  const char *shlib_name = "base\\generic\\utilities\\test\\testdynaload.dll";
 #else
-  const char *shlib_name = "../../../base/generic/utilities/test/libtestdynaload.so";
+  const char *shlib_name = "base/generic/utilities/test/libtestdynaload.so";
 #endif  /* __WIN32__ */
 
 
