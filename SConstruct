@@ -1298,14 +1298,14 @@ void sighandler(int sig){
 	longjmp(g_jmpenv,sig);
 }
 void testsigint(){
-	fprintf(stderr,"Raising SIGINT\n");
+	/* fprintf(stderr,"Raising SIGINT\n"); */
 	raise(SIGINT);
 }
 int main(void){
 	SigHandlerFn *last,*saved;
 	saved = signal(SIGINT,&sighandler);
 	if(saved!=SIG_DFL){
-		fprintf(stderr,"Default handler was not correctly set\n");
+		fprintf(stderr,"Default handler (%p) was not correctly set\n",SIG_DFL);
 		exit(3);
 	}
 	switch(setjmp(g_jmpenv)){
@@ -1318,7 +1318,7 @@ int main(void){
 		default:
 			exit(2);
 	};
-	last = signal(SIGINT,(saved!=NULL)?saved:SIG_DFL);
+	last = signal(SIGINT,SIG_DFL);
 	if(last!=&sighandler){
 		printf("1");
 		exit(0);
@@ -1334,7 +1334,7 @@ def CheckSigReset(context):
 	if not is_ok:
 		context.Result("ERROR")
 		return 0
-	if(int(output)):
+	if int(output)==1:
 		context.Result("required");
 		context.env['ASC_RESETNEEDED'] = True
 	else:

@@ -22,7 +22,7 @@ if env.has_key('CUNIT_LIBPATH'):
 	#print "CUNIT_LIBPATH ---> ",libpath
 
 objs = []
-for src in srcs:
+for src in srcs+testsrcs:
 	objs += env.SharedObject(src
 		, CPPPATH = cpppath
 	)
@@ -32,13 +32,13 @@ objs += env.SharedObject('test_ascend_base.c'
 
 env.SharedLibrary('asctestsuite',objs
 	, CPPPATH = cpppath
-	, LIBS = ['ascend','asctest','m','cunit','dl']
+	, LIBS = ['ascend','m','cunit','dl']
 	, LIBPATH = libpath
 	, CPPDEFINES = env.get('CPPDEFINES') + ['-DASC_SHARED']
 )
 
 env.Program('test',['test.c']
 	, CPPPATH = cpppath
-	, LIBS = ['ascend','asctest','cunit','asctestsuite']
+	, LIBS = ['ascend','cunit','asctestsuite']
 	, LIBPATH = libpath
 )

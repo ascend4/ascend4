@@ -133,17 +133,28 @@ typedef void SigHandlerFn(int);
 #ifndef ASC_JMP_INFO
 # define SETJMP set_jmp
 # define LONGJMP longjmp
+# define SIGNAL signal
 typedef JMP_BUF jmp_buf
 #else
-# define SETJMP(ENV) (ENV.filename = __FILE__, ENV.line = __LINE__, ENV.func = __FUNCTION__, setjmp(ENV.jmp))
-# define LONGJMP(ENV,VAL) (CONSOLE_DEBUG("LONGJMP back to %s:%d (%s)",ENV.filename,ENV.line,ENV.func), longjmp(ENV.jmp, VAL))
+# define SETJMP(ENV) (\
+		CONSOLE_DEBUG("SETJMP at %s:%d (%s=%p)",__FILE__,__LINE__,#ENV,ENV.jmp)\
+		,ENV.filename = __FILE__, ENV.line = __LINE__, ENV.func = __FUNCTION__\
+		,ENV.varname = #ENV\
+		, setjmp(ENV.jmp)\
+	)
+# define LONGJMP(ENV,VAL) (\
+		CONSOLE_DEBUG("LONGJMP to %s:%d (%s) (%s=%p)",ENV.filename,ENV.line,ENV.func,ENV.varname,ENV.jmp)\
+		, longjmp(ENV.jmp, VAL)\
+	)
 typedef struct{
 	jmp_buf jmp;
 	const char *filename;
 	int line;
 	const char *func;
+	const char *varname;
 } asc_jmp_buf;
 #define JMP_BUF asc_jmp_buf
+#define SIGNAL(SIG,HANDLER) (CONSOLE_DEBUG("SIGNAL(%d,%s)",SIG,#HANDLER),signal(SIG,HANDLER))
 #endif
 
 
@@ -297,6 +308,10 @@ ASC_DLLSPEC(int ) Asc_SignalHandlerPop(int signum, SigHandlerFn *func);
  *        clear why the function should pop the top handler no matter what, but
  *        only call Asc_SignalRecover() if it matches func.
  */
+
+ASC_DLLSPEC(void) Asc_SignalPrintStack(int signum);
+
+ASC_DLLSPEC(int) Asc_SignalStackLength(int signum);
 
 #endif  /* ASC_ASCSIGNAL_H */
 
