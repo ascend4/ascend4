@@ -40,8 +40,10 @@
 
 /* to test this code, 'gcc -DTEST ospath.c && ./a' */
 
-#ifndef __FUNCTION__
-# define __FUNCTION__ "<ospath>"
+#ifndef __GNUC__
+# ifndef __FUNCTION__
+#  define __FUNCTION__ "<ospath>"
+# endif
 #endif
 
 
@@ -71,6 +73,7 @@
 # define X(VAR) fprintf(stderr,"%s:%d: (%s) %s=%s\n",__FILE__,__LINE__,__FUNCTION__,#VAR,VAR);fflush(stderr)
 # define C(VAR) fprintf(stderr,"%s:%d: (%s) %s=%c\n",__FILE__,__LINE__,__FUNCTION__,#VAR,VAR);fflush(stderr)
 # define V(VAR) fprintf(stderr,"%s:%d: (%s) %s=%d\n",__FILE__,__LINE__,__FUNCTION__,#VAR,(VAR));fflush(stderr)
+# define P(VAR) fprintf(stderr,"%s:%d: (%s) %s=%p\n",__FILE__,__LINE__,__FUNCTION__,#VAR,(VAR));fflush(stderr)
 # define D(VAR) fprintf(stderr,"%s:%d: (%s) %s=",__FILE__,__LINE__,__FUNCTION__,#VAR);ospath_debug(VAR);fflush(stderr)
 # define DD(VAR) fprintf(stderr,"%c[34;1m%s:%d: (%s)%c[0m %s=",27,__FILE__,__LINE__,__FUNCTION__,27,#VAR);ospath_debug(VAR);fflush(stderr)
 #else
@@ -81,6 +84,7 @@
 # define C(VAR) ((void)0)
 # define V(VAR) ((void)0)
 # define D(VAR) ((void)0)
+# define P(VAR) ((void)0)
 # define DD(VAR) ((void)0)
 # define MM(VAR) ((void)0)
 #endif
@@ -188,6 +192,8 @@ struct FilePath *ospath_new(const char *path){
 /** Create but with no 'cleanup', and no fixing of / vs \. */
 struct FilePath *ospath_new_noclean(const char *path){
 	struct FilePath *fp = (struct FilePath *)MALLOC(sizeof(struct FilePath));
+	P(fp);
+	X(path);
 	STRNCPY(fp->path,path,PATH_MAX);
 	assert(strcmp(fp->path,path)==0);
 #ifdef WINPATHS
@@ -253,6 +259,7 @@ struct FilePath *ospath_new_from_posix(const char *posixpath){
 
 void ospath_free(struct FilePath *fp){
 	if(fp!=NULL){
+		P(fp);
 		FREE(fp);
 	}
 	fp=NULL;
@@ -327,7 +334,7 @@ void ospath_fixslash(char *path){
 #endif
 
 struct FilePath *ospath_getcwd(void){
-	struct FilePath *fp = (struct FilePath *)MALLOC(sizeof(struct FilePath));
+	struct FilePath *fp;
 	char *cwd;
 
 	/* get current working directory */
@@ -480,10 +487,9 @@ void ospath_cleanup(struct FilePath *fp){
 
 				D(fp);
 				X(p);
-#if 0
 				X(path+strlen(p)+1);
+
 				ospath_free(working);
-#endif
 				continue;
 			}else{/* later in the path: just skip it */
 				M("SKIPPING '.' IN PATH");
@@ -496,9 +502,7 @@ void ospath_cleanup(struct FilePath *fp){
 			if(ospath_isvalid(parent)){
 				ospath_copy(fp,parent);
 			}
-#if 0
 			ospath_free(parent);
-#endif
 			continue;
 		}
 
@@ -642,7 +646,9 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 		return ospath_new_noclean(fp->path);
 	}
 
+	M("Creating 'sub'");
 	fp1 = ospath_new_noclean(sub);
+	M("... 'sub'");
 	D(fp1);
 	return fp1;
 }
@@ -1254,6 +1260,7 @@ struct FilePath **ospath_searchpath_new(const char *path){
 #if 0
 		D(pp[i]);
 #endif
+		FREE(list[i]);
 	}
 	pp[n] = NULL;
 
