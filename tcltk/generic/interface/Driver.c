@@ -34,6 +34,7 @@
 #include <general/ospath.h>
 #include <utilities/ascPrint.h>
 #include <utilities/error.h>
+#include <utilities/ascSignal.h>
 
 #ifndef __WIN32__
 # include <unistd.h>
@@ -341,7 +342,7 @@ int AscDriver(int argc, CONST char **argv)
    */
   clock();
   /* the next line should NOT be Asc_SignalHandlerPush */
-  (void)signal(SIGINT, AscTrap);
+  (void)SIGNAL(SIGINT, AscTrap);
 #ifdef DEBUG_MALLOC
   InitDebugMalloc();
   ascstatus("Memory status after calling InitDebugMalloc()");

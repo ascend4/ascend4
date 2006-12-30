@@ -273,7 +273,7 @@ static int AscDriver(int argc, CONST84 char *argv[])
    */
   clock();
   /* the next line should NOT be Asc_SignalHandlerPush */
-  (void)signal(SIGINT, AscTrap);
+  (void)SIGNAL(SIGINT, AscTrap);
 #ifdef DEBUG_MALLOC
   InitDebugMalloc();
   ascstatus("Memory status after calling InitDebugMalloc()");

@@ -34,6 +34,8 @@
 
 static JMP_BUF my_jmp_buf1;
 
+#define MEMUSED(N) CU_TEST(ascmeminuse()==N)
+
 static int f_handler1_called;
 static int f_handler1_sigval;
 /*
@@ -100,173 +102,319 @@ void my_handler2(int sigval)
   LONGJMP(my_jmp_buf2, sigval);
 }
 
+static int old_active = 0;
+static SigHandlerFn *old_fpe_handler = NULL;
+static SigHandlerFn *old_int_handler = NULL;
+static SigHandlerFn *old_seg_handler = NULL;
 
-static void test_ascSignal(void)
-{
-  SigHandlerFn *old_fpe_handler = NULL;
-  SigHandlerFn *old_int_handler = NULL;
-  SigHandlerFn *old_seg_handler = NULL;
+static void store_current_signals(void){
+  CU_TEST(old_active==0);
+  old_active = 1;
+  old_fpe_handler = SIGNAL(SIGFPE, my_handler1);        /* save any pre-existing handlers */
+  old_int_handler = SIGNAL(SIGINT, my_handler1);
+  old_seg_handler = SIGNAL(SIGSEGV, my_handler1);
+}
+
+static void restore_previous_signals(void){
+  CU_TEST(old_active==1);
+  if (NULL != old_fpe_handler)                /* restore any pre-existing handlers */
+    SIGNAL(SIGFPE, old_fpe_handler);
+  if (NULL != old_int_handler)
+    SIGNAL(SIGINT, old_int_handler);
+  if (NULL != old_seg_handler)
+    SIGNAL(SIGSEGV, old_seg_handler);
+  old_active = 0;
+}	
+
+/*----------------------------------------*/
+
+static void test_ascsignal_basic(void){
+
   SigHandlerFn *old_handler;
   volatile int signal1_caught;
-  volatile int signal2_caught;
-  volatile int signal3_caught;
-  unsigned long prior_meminuse;
-
-  CONSOLE_DEBUG("Output from console_debug");
-  fprintf(stderr,"Output from fprintf\n");
-  CONSOLE_DEBUG("2 Output from console_debug");
-  fprintf(stderr,"2 Output from fprintf\n");
-
-  prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
 
 #ifdef NO_SIGNAL_TRAPS
   /* no point in testing if the functionality is disabled */
   CU_FAIL("Signal handler manager not enabled.");
+  return;
 #else
-  
-  old_fpe_handler = signal(SIGFPE, my_handler1);        /* save any pre-existing handlers */
-  old_int_handler = signal(SIGINT, my_handler1);
-  old_seg_handler = signal(SIGSEGV, my_handler1);
 
-  signal(SIGFPE, my_handler1);                          /* install some pre-existing handlers */
-  signal(SIGINT, SIG_DFL);
-  signal(SIGSEGV, my_handler2);
+  CONSOLE_DEBUG("SIGFPE = %d",SIGFPE);
+  CONSOLE_DEBUG("SIGINT = %d",SIGINT);
+  CONSOLE_DEBUG("SIGSEGV= %d",SIGSEGV);
+
+  store_current_signals();
+
+  SIGNAL(SIGFPE, my_handler1);                          /* install some pre-existing handlers */
+  SIGNAL(SIGINT, SIG_DFL);
+  SIGNAL(SIGSEGV, my_handler2);
 
   /* Asc_SignalInit(), Asc_SignalDestroy() - not much to test */
 
   CU_TEST(0 == Asc_SignalInit());                       /* initialize the signal manager */
 
-  old_handler = signal(SIGFPE, SIG_DFL);                /* previously-installed handlers should still be active */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* previously-installed handlers should still be active */
   CU_TEST(my_handler1 == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
   CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
 
   Asc_SignalRecover(TRUE);
 
-  old_handler = signal(SIGFPE, SIG_DFL);                /* handlers should have been reinstalled */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* handlers should have been reinstalled */
   CU_TEST(my_handler1 == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
   CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
 
   Asc_SignalRecover(TRUE);
 
-  /* test Asc_SignalPush(), Asc_SignalPop() */
+  restore_previous_signals();
+  Asc_SignalDestroy();
+  MEMUSED(0);
+}
 
-  CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap));  /* ok - supported signal, ok func */
-  old_handler = signal(SIGFPE, SIG_DFL);
-  CU_TEST(Asc_SignalTrap == old_handler);
+/*----------------------------------------*/
 
-  CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, my_handler1));     /* ok - supported signal, ok func */
-  old_handler = signal(SIGINT, SIG_DFL);
-  CU_TEST(my_handler1 == old_handler);
+static void test_ascsignal_pushpopint(void){
+  SigHandlerFn *old_handler;
+  volatile int signal1_caught;
 
-  CU_TEST(0 == Asc_SignalHandlerPush(SIGSEGV, NULL));           /* NULL func - should have no effect */
-  old_handler = signal(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);                          /* old handler should still be installed */
+  store_current_signals();
+
+  SIGNAL(SIGINT, SIG_IGN);
+  CU_TEST(0==Asc_SignalInit());
+
+  CU_TEST(0==Asc_SignalStackLength(SIGINT));
+
+  CU_TEST(0==Asc_SignalHandlerPush(SIGINT, my_handler1));     /* ok - supported signal, ok func */
+  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
+
+  CONSOLE_DEBUG("Stack should have my_handler1...");
+  Asc_SignalPrintStack(SIGINT);
+
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(old_handler == my_handler1);
 
   CU_TEST(0 != Asc_SignalHandlerPush(SIGILL, Asc_SignalTrap));  /* unsupported signal type */
   CU_TEST(0 != Asc_SignalHandlerPush(SIGABRT, my_handler2));    /* unsupported signal type */
+  Asc_SignalRecover(TRUE);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
+
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(old_handler == my_handler1);
 
   Asc_SignalRecover(TRUE);
-
-  old_handler = signal(SIGFPE, SIG_DFL);                /* handlers should have been reinstalled */
-  CU_TEST(Asc_SignalTrap == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
-  CU_TEST(my_handler1 == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
-  Asc_SignalRecover(TRUE);
-
   CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, my_handler1));
-  old_handler = signal(SIGFPE, SIG_DFL);                /* SIGINT should be reset to no handler */
-  CU_TEST(Asc_SignalTrap == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
-  CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==0);
+
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(old_handler == SIG_IGN);
+
   Asc_SignalRecover(TRUE);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==0);
+
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(SIG_IGN == old_handler);
+
+  Asc_SignalRecover(TRUE);
+
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(SIG_IGN == old_handler);
+  Asc_SignalRecover(TRUE);
+
+  CU_TEST(0 != Asc_SignalHandlerPop(SIGILL, my_handler1));     /* unsupported signal type */
+  CU_TEST(0 != Asc_SignalHandlerPop(SIGABRT, Asc_SignalTrap)); /* unsupported signal type */
+
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(SIG_IGN == old_handler);
+
+  restore_previous_signals();
+  Asc_SignalDestroy();
+  MEMUSED(0);
+}
+
+/*----------------------------------------*/
+
+static void test_ascsignal_pushpop(void){
+  SigHandlerFn *old_handler;
+  volatile int signal1_caught;
+
+  store_current_signals();
+
+  SIGNAL(SIGFPE, my_handler1);                          /* install some pre-existing handlers */
+  SIGNAL(SIGINT, SIG_IGN);
+  SIGNAL(SIGSEGV, my_handler2);
+
+  CU_TEST(0 == Asc_SignalInit());
+
+  /* test Asc_SignalPush(), Asc_SignalPop() */
+  CONSOLE_DEBUG("Initial stack for SIGFPE...");
+  Asc_SignalPrintStack(SIGFPE);
+
+  CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap));  /* ok - supported signal, ok func */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);
+  CU_TEST(old_handler == Asc_SignalTrap);
+
+  CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, my_handler1));     /* ok - supported signal, ok func */
+  CONSOLE_DEBUG("Stack should have my_handler1...");
+  Asc_SignalPrintStack(SIGINT);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(old_handler == my_handler1);
+
+  CU_TEST(0 == Asc_SignalHandlerPush(SIGSEGV, NULL));           /* NULL func - should have no effect */
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
+  CU_TEST(old_handler == my_handler2);                          /* old handler should still be installed */
+
+  CU_TEST(0 != Asc_SignalHandlerPush(SIGILL, Asc_SignalTrap));  /* unsupported signal type */
+  CU_TEST(0 != Asc_SignalHandlerPush(SIGABRT, my_handler2));    /* unsupported signal type */
+  Asc_SignalRecover(TRUE);
+
+  /* we expect: SIGSEGV = my_handler2, SIGINT = my_handler1, SIGFPE = Asc_SignalTrap */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* handlers should have been reinstalled */
+  CU_TEST(old_handler == Asc_SignalTrap);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(old_handler == my_handler1);
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
+  CU_TEST(old_handler == my_handler2);
+
+  Asc_SignalRecover(TRUE);
+  CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, my_handler1));
+
+  /* we expect: SIGSEGV = my_handler2, SIGINT = SIG_IGN, SIGFPE = Asc_SignalTrap */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* SIGINT should be reset to no handler */
+  CU_TEST(old_handler == SIG_DFL);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(old_handler == SIG_IGN);
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
+  CU_TEST(old_handler == my_handler2);
+
+  Asc_SignalRecover(TRUE);
+  CONSOLE_DEBUG("Stack for SIGFPE...");
+  Asc_SignalPrintStack(SIGFPE);
 
   CU_TEST(0 != Asc_SignalHandlerPop(SIGFPE, my_handler1));  /* wrong handler indicated */
-  old_handler = signal(SIGFPE, SIG_DFL);                /* so SIGFPE should be not be reset */
-  CU_TEST(Asc_SignalTrap == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
-  CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
-  Asc_SignalRecover(TRUE);
 
-  old_handler = signal(SIGFPE, SIG_DFL);                /* but Asc_SignalRecover should reset it */
+  CONSOLE_DEBUG("Stack for SIGFPE...");
+  Asc_SignalPrintStack(SIGFPE);
+
+  /* we expect: SIGSEGV = my_handler2, SIGINT = SIG_IGN, SIGFPE = Asc_SignalTrap */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* so SIGFPE should be not be reset */
+  CU_TEST(Asc_SignalTrap == old_handler);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(SIG_IGN == old_handler);
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
+  CU_TEST(my_handler2 == old_handler);
+
+  Asc_SignalRecover(TRUE);
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* but Asc_SignalRecover should reset it */
+
+  /* we expect: SIGSEGV = my_handler2, SIGINT = SIG_IGN, SIGFPE = SIG_DFL */
   CU_TEST(my_handler1 == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
-  CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(SIG_IGN == old_handler);
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
   Asc_SignalRecover(TRUE);
 
   CU_TEST(0 != Asc_SignalHandlerPop(SIGILL, my_handler1));     /* unsupported signal type */
   CU_TEST(0 != Asc_SignalHandlerPop(SIGABRT, Asc_SignalTrap)); /* unsupported signal type */
 
-  old_handler = signal(SIGFPE, SIG_DFL);                /* should be no change in handlers */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* should be no change in handlers */
   CU_TEST(my_handler1 == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
-  CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
+  CU_TEST(SIG_IGN == old_handler);
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
   Asc_SignalRecover(TRUE);
 
-  /* test Asc_SignalTrap() */
+  restore_previous_signals();
+  Asc_SignalDestroy();
+  MEMUSED(0);
+}
+
+/*----------------------------------------*/
+
+static void test_ascsignal_trap(void){
+  SigHandlerFn *old_handler;
+  volatile int signal1_caught;
+
+  store_current_signals();
+
+  SIGNAL(SIGFPE,my_handler1);
+  SIGNAL(SIGINT,NULL);
+  SIGNAL(SIGSEGV,my_handler2);
+
+  CU_TEST(0 == Asc_SignalInit());
 
   CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap));
   CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, Asc_SignalTrap));
   CU_TEST(0 == Asc_SignalHandlerPush(SIGSEGV, Asc_SignalTrap));
 
   signal1_caught = FALSE;
-  if (0 == SETJMP(g_fpe_env)) {                         /* raise & catch a SIGFPE */
+  CONSOLE_DEBUG("Raise and catch a SIGFPE...");
+  if (0 == SETJMP(g_fpe_env)){
+	CONSOLE_DEBUG("Raising SIGFPE");
     raise(SIGFPE);
-  }
-  else {
+	CONSOLE_DEBUG("SHOULDN'T BE HERE");
+	CU_FAIL("Shouldn't be here");
+  }else{
     signal1_caught = TRUE;
-    CU_PASS("SIGFPE caught.");
+	CONSOLE_DEBUG("Caught SIGFPE");
   }
   CU_TEST(TRUE == signal1_caught);
 
   signal1_caught = FALSE;
-  if (0 == SETJMP(g_int_env)) {                         /* raise & catch a SIGINT */
+  /* raise & catch a SIGINT */
+  if (0 == SETJMP(g_int_env)){
     raise(SIGINT);
-  }
-  else {
+  }else{
     signal1_caught = TRUE;
-    CU_PASS("SIGINT caught.");
+	CONSOLE_DEBUG("Caught SIGINT");
   }
   CU_TEST(TRUE == signal1_caught);
 
   signal1_caught = FALSE;
-  if (0 == SETJMP(g_seg_env)) {                         /* raise & catch a SIGSEGV */
+  /* raise & catch a SIGSEGV */
+  if (0 == SETJMP(g_seg_env)) {
     raise(SIGSEGV);
-  }
-  else {
+  }else{
     signal1_caught = TRUE;
-    CU_PASS("SIGSEGV caught.");
+	CONSOLE_DEBUG("Caught SIGSEGV");
   }
   CU_TEST(TRUE == signal1_caught);
 
-Asc_SignalRecover(TRUE);
+
+  Asc_SignalRecover(TRUE);
 
   CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, Asc_SignalTrap));
   CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, Asc_SignalTrap));
   CU_TEST(0 == Asc_SignalHandlerPop(SIGSEGV, Asc_SignalTrap));
 
-  old_handler = signal(SIGFPE, SIG_DFL);                /* handlers should be restored at this point */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* handlers should be restored at this point */
   CU_TEST(my_handler1 == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
   CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
   Asc_SignalRecover(TRUE);
+
+  restore_previous_signals();
+  Asc_SignalDestroy();
+  MEMUSED(0);
+}
+
+/*----------------------------------------*/
+
+static void test_ascsignal_nestingfpe(void){
+  volatile int signal1_caught;
+  volatile int signal2_caught;
+  volatile int signal3_caught;
+
+  store_current_signals();
+  CU_TEST(0 == Asc_SignalInit());
 
   /* test typical use with nesting of handlers */
 
@@ -278,21 +426,24 @@ Asc_SignalRecover(TRUE);
   signal2_caught = FALSE;
   signal3_caught = FALSE;
 
-  CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, my_handler1));   /* test for SIGFPE */
+  CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, my_handler1));
   if (0 == SETJMP(my_jmp_buf1)) {
     CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, my_handler2));
     if (0 == SETJMP(my_jmp_buf2)) {
       CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap));
-      if (0 == SETJMP(g_fpe_env)) {
+      if(0 == SETJMP(g_fpe_env)) {
          raise(SIGFPE);
-      }
-      else {
+         CONSOLE_DEBUG("...");
+		 CU_FAIL("Can't be here! No signal was raised!");
+      }else{
+		CONSOLE_DEBUG("...");
         CU_TEST(f_handler1_called == FALSE);
         CU_TEST(f_handler1_sigval == 0);
         CU_TEST(f_handler2_called == FALSE);
         CU_TEST(f_handler2_sigval == 0);
         signal3_caught = TRUE;
       }
+      CONSOLE_DEBUG("...");
       CU_TEST(FALSE == signal1_caught);
       CU_TEST(FALSE == signal2_caught);
       CU_TEST(TRUE == signal3_caught);
@@ -305,8 +456,8 @@ Asc_SignalRecover(TRUE);
       signal2_caught = FALSE;
       signal3_caught = FALSE;
       raise(SIGFPE);
-    }
-    else {
+    }else{
+      CONSOLE_DEBUG("...");
       CU_TEST(f_handler1_called == FALSE);
       CU_TEST(f_handler1_sigval == 0);
       CU_TEST(f_handler2_called == TRUE);
@@ -325,8 +476,8 @@ Asc_SignalRecover(TRUE);
     signal2_caught = FALSE;
     signal3_caught = FALSE;
     raise(SIGFPE);
-  }
-  else {
+  }else{
+    CONSOLE_DEBUG("...");
     CU_TEST(f_handler1_called == TRUE);
     CU_TEST(f_handler1_sigval == SIGFPE);
     CU_TEST(f_handler2_called == FALSE);
@@ -338,6 +489,24 @@ Asc_SignalRecover(TRUE);
   CU_TEST(FALSE == signal3_caught);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, my_handler1));
 
+  CONSOLE_DEBUG("...");
+
+  restore_previous_signals();
+  Asc_SignalDestroy();
+  MEMUSED(0);
+}
+
+/*----------------------------------------*/
+
+static void test_ascsignal_nestingint(void){
+  volatile int signal1_caught;
+  volatile int signal2_caught;
+  volatile int signal3_caught;
+  SigHandlerFn *old_handler;
+
+  store_current_signals();
+  CU_TEST(0 == Asc_SignalInit());
+
   f_handler1_called = FALSE;                              /* initialize flags for detecting flow */
   f_handler1_sigval = 0;
   f_handler2_called = FALSE;
@@ -346,15 +515,22 @@ Asc_SignalRecover(TRUE);
   signal2_caught = FALSE;
   signal3_caught = FALSE;
 
+  CONSOLE_DEBUG("my_handler1 = %p",my_handler1);
+  CONSOLE_DEBUG("my_handler2 = %p",my_handler2);
+  CONSOLE_DEBUG("Asc_SignalTrap = %p",Asc_SignalTrap);
+
   CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, my_handler2));   /* test for SIGINT */
   if (0 == SETJMP(my_jmp_buf2)) {
     CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, Asc_SignalTrap));
     if (0 == SETJMP(g_int_env)) {
       CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, my_handler1));
       if (0 == SETJMP(my_jmp_buf1)) {
+	     CONSOLE_DEBUG("Raising to my_handler1");
          raise(SIGINT);
-      }
-      else {
+         CONSOLE_DEBUG("SHOULDN'T BE HERE!");
+         CU_FAIL("Shouldn't be here!");
+      }else{
+		CONSOLE_DEBUG("Caught from my_handler1");
         CU_TEST(f_handler1_called == TRUE);
         CU_TEST(f_handler1_sigval == SIGINT);
         CU_TEST(f_handler2_called == FALSE);
@@ -365,6 +541,13 @@ Asc_SignalRecover(TRUE);
       CU_TEST(FALSE == signal2_caught);
       CU_TEST(TRUE == signal3_caught);
       CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, my_handler1));
+
+      /* check that 'Asc_SignalTrap' is now installed for SIGINT */
+	  old_handler = SIGNAL(SIGINT,SIG_DFL);
+	  CU_TEST(old_handler == Asc_SignalTrap);
+	  old_handler = SIGNAL(SIGINT,Asc_SignalTrap);
+	  CU_TEST(old_handler == SIG_DFL);
+
       f_handler1_called = FALSE;
       f_handler1_sigval = 0;
       f_handler2_called = FALSE;
@@ -372,9 +555,12 @@ Asc_SignalRecover(TRUE);
       signal1_caught = FALSE;
       signal2_caught = FALSE;
       signal3_caught = FALSE;
+	  CONSOLE_DEBUG("Raising to Asc_SignalTrap");
       raise(SIGINT);
-    }
-    else {
+	  CONSOLE_DEBUG("SHOULDN'T BE HERE!");
+	  CU_FAIL("Shouldn't be here!");
+    }else{
+	  CONSOLE_DEBUG("Caught from Asc_SignalTrap");
       CU_TEST(f_handler1_called == FALSE);
       CU_TEST(f_handler1_sigval == 0);
       CU_TEST(f_handler2_called == FALSE);
@@ -392,9 +578,12 @@ Asc_SignalRecover(TRUE);
     signal1_caught = FALSE;
     signal2_caught = FALSE;
     signal3_caught = FALSE;
+	CONSOLE_DEBUG("Raising to my_handler2");
     raise(SIGINT);
-  }
-  else {
+	CONSOLE_DEBUG("SHOULDN'T BE HERE!");
+    CU_FAIL("Shouldn't be here!");
+  }else{
+	CONSOLE_DEBUG("Caught from my_handler2");
     CU_TEST(f_handler1_called == FALSE);
     CU_TEST(f_handler1_sigval == 0);
     CU_TEST(f_handler2_called == TRUE);
@@ -405,6 +594,23 @@ Asc_SignalRecover(TRUE);
   CU_TEST(FALSE == signal2_caught);
   CU_TEST(FALSE == signal3_caught);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, my_handler2));
+
+  restore_previous_signals();
+  Asc_SignalDestroy();
+  MEMUSED(0);
+}
+
+/*----------------------------------------*/
+
+static void test_ascsignal_nestingsegv(void){
+
+  SigHandlerFn *old_handler;
+  volatile int signal1_caught;
+  volatile int signal2_caught;
+  volatile int signal3_caught;
+
+  store_current_signals();
+  CU_TEST(0 == Asc_SignalInit());
 
   f_handler1_called = FALSE;                              /* initialize flags for detecting flow */
   f_handler1_sigval = 0;
@@ -474,43 +680,46 @@ Asc_SignalRecover(TRUE);
   CU_TEST(FALSE == signal3_caught);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGSEGV, Asc_SignalTrap));
 
-  old_handler = signal(SIGFPE, SIG_DFL);                /* handlers should be restored at this point */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* handlers should be restored at this point */
   CU_TEST(my_handler1 == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
   CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
   Asc_SignalRecover(TRUE);
 
   Asc_SignalDestroy();
 
-  old_handler = signal(SIGFPE, SIG_DFL);                /* original handlers should still be in place */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* original handlers should still be in place */
   CU_TEST(my_handler1 == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
+  old_handler = SIGNAL(SIGINT, SIG_DFL);
   CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
+  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
   Asc_SignalRecover(TRUE);
 
 #endif  /* NO_SIGNAL_TRAPS */
 
-  if (NULL != old_fpe_handler)                /* restore any pre-existing handlers */
-    signal(SIGFPE, old_fpe_handler);
-  if (NULL != old_int_handler)
-    signal(SIGINT, old_int_handler);
-  if (NULL != old_seg_handler)
-    signal(SIGSEGV, old_seg_handler);
-
-  CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+  restore_previous_signals();
+  Asc_SignalDestroy();
+  MEMUSED(0);
 }
 
 /*===========================================================================*/
 /* Registration information */
 
+#define T(N) {#N,test_ascsignal_##N}
 static CU_TestInfo ascSignal_test_list[] = {
-  {"test_ascSignal", test_ascSignal},
-  CU_TEST_INFO_NULL
+	T(basic)
+	, T(pushpopint)
+	, T(pushpop)
+	, T(trap)
+	, T(nestingfpe)
+	, T(nestingint)
+	, T(nestingsegv)
+	, CU_TEST_INFO_NULL
 };
+#undef T
 
 static CU_SuiteInfo suites[] = {
   {"test_utilities_ascSignal", NULL, NULL, ascSignal_test_list},

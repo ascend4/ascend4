@@ -3493,7 +3493,7 @@ void Interface(void)
   AddCommands();
   SetupTerminal();
   SetupTermcapStuff();
-  (void)signal(SIGINT,Trap);
+  (void)SIGNAL(SIGINT,Trap);
   /* command processor */
   CommandProc();
   RestoreTerminal();

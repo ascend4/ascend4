@@ -60,7 +60,6 @@ int run_suite_or_test(char *name){
 					if(0==strcmp(test->pName,n)){
 						fprintf(stderr,"Running test %s (%p, %p)\n", n,suite,test);			
 						result = CU_basic_run_test(suite,test);
-						fprintf(stderr,"Result = %d\n",result);
 						fprintf(stderr,"Result: %s\n",CU_get_error_msg());
 						return result;
 					}
@@ -70,7 +69,6 @@ int run_suite_or_test(char *name){
 			}else{
 				fprintf(stderr,"Running suite %s (%p)\n",suitename,suite);
 				result = CU_basic_run_suite(suite);
-				fprintf(stderr,"Result = %d\n",result);
 				fprintf(stderr,"Result: %s\n",CU_get_error_msg());
 				return result;
 			}	
@@ -118,11 +116,20 @@ int main(int argc, char* argv[]){
 			case 's': mode = CU_BRM_SILENT; break;
 			case 'n': mode = CU_BRM_NORMAL; break;
 			case 'e':
-				fprintf(stderr,"Got option 'e'\n"); exit(1);
-				if(0==strcmp(optarg,"fail")) error_action = CUEA_FAIL;
-				else if(0==strcmp(optarg,"abort")) error_action = CUEA_ABORT;
-				else if(0==strcmp(optarg,"ignore")) error_action = CUEA_IGNORE;
-				else fprintf(stderr,"Invalid argument for --on-error option!\n"); exit(1);
+				if(0==strcmp(optarg,"fail")){
+					fprintf(stderr,"on error FAIL\n");
+					error_action = CUEA_FAIL;
+				}else if(0==strcmp(optarg,"abort")){
+					fprintf(stderr,"on error ABORT\n");
+					error_action = CUEA_ABORT;
+					break;
+				}else if(0==strcmp(optarg,"ignore")){
+					error_action = CUEA_IGNORE;
+				}
+				else{
+					fprintf(stderr,"Invalid argument for --on-error option!\n"); 
+					exit(1);
+				}
 				break;
 			case '?':
 			case 'h':
@@ -161,6 +168,5 @@ int main(int argc, char* argv[]){
 
 	if(mode == CU_BRM_VERBOSE)ascshutdown("Testing completed.");/* shut down memory manager */
 
-	fprintf(stderr,"RETURN CODE = %d\n", result);
 	return result;
 }
