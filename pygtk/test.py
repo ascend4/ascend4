@@ -3,6 +3,7 @@ import ascpy
 import math
 import os, subprocess, sys
 import atexit
+import cunit
 
 class Ascend(unittest.TestCase):
 
@@ -368,17 +369,6 @@ class TestIDA(Ascend):
 		print M.udot[1][3];
 		I.solve()
 		assert 0
-	
-class CUnit(unittest.TestCase):
-	def setUp(self):
-		self.cunitexe = "../base/generic/test/test"
-	
-	def testcunittests(self):
-		res = os.system(self.cunitexe)
-		if res:
-			raise RuntimeError("CUnit tests failed (returned %d -- run %s for details)" % (res,self.cunitexe))
-		else:
-			print "CUnit returned %s" % res
 
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
@@ -386,5 +376,14 @@ class NotToBeTested:
 		pass
 		
 if __name__=='__main__':
+	pass
 	atexit.register(ascpy.shutdown)
-	unittest.main()
+	suite = unittest.TestSuite()
+	suite.addTest(unittest.makeSuite(TestCompiler))
+	suite.addTest(unittest.makeSuite(TestSolver))
+	#suite.addTest(TestLSODE)
+	csuites = cunit.load("base/generic/test/libasctestsuite.so")
+	#suite.addTests(csuites)
+	suite.addTests(csuites)
+	unittest.TextTestRunner(verbosity=2).run(suite)
+	#unittest.main()

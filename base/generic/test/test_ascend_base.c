@@ -32,6 +32,6 @@ ASC_EXPORT(int) register_cunit_tests(){
 	test_register_general();
 	test_register_utilities();
 	test_register_solver();
-	fprintf(stderr,"Registered ASCEND test suite");
+	fprintf(stderr,"Registered ASCEND test suite\n");
 	return 0;
 }

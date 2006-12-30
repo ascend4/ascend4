@@ -25,6 +25,8 @@
 
 FilePathTestFn ospath_searchpath_testexists;
 
+#define NDEBUG
+
 #ifndef NDEBUG
 # include <assert.h>
 # define M(MSG) fprintf(stderr,"%s:%d: (%s) %s\n",__FILE__,__LINE__,__FUNCTION__,MSG);fflush(stderr);fflush(stderr)
@@ -47,8 +49,12 @@ FilePathTestFn ospath_searchpath_testexists;
 # define MM(VAR) ((void)0)
 #endif
 
+#ifndef MEMUSED
+# define MEMUSED(N) CU_TEST(ascmeminuse()==(N))
+#endif
+
 /**
-	This is a sample searchpath test function. Assumes the 'userfdata' is a
+	This is a sample searchpath test function. Assumes the 'userdata' is a
 	relative FilePath which is appended to path, and then if it matches
 	the path \GTK\bin\johnpye\extfn, returns true. This is of
 	course a fairly useless test function, so it's just for testing.
@@ -76,9 +82,13 @@ int ospath_searchpath_testexists(struct FilePath *path,void *file){
 
 	if(ospath_cmp(fp1,fp2)==0){
 		MC("32","MATCH");
+		ospath_free(fp1);
+		ospath_free(fp2);
 		return 1;
 	}
 	MC("31","NO MATCH");
+	ospath_free(fp1);
+	ospath_free(fp2);
 	return 0;
 }
 
@@ -89,18 +99,8 @@ int ospath_searchpath_testexists(struct FilePath *path,void *file){
 #undef M
 #define M MM
 
-static void test_ospath(void){
-
-	struct FilePath *fp1, *fp2, *fp3, *fp4;
-	char *s1;
-	struct FilePath **pp, **p1;// will be returned null-terminated
-#ifdef WINPATHS
-	char pathtext[]="c:\\Program Files\\GnuWin32\\bin;c:\\GTK\\bin;e:\\ascend\\;..\\..\\pygtk";
-	char pathtext2[]="c:\\Program Files\\ASCEND\\models";
-#else
-	char pathtext[]="\\Program Files\\GnuWin32\\bin:\\GTK\\bin:\\ascend\\:..\\..\\pygtk";
-	char pathtext2[]="/usr/local/ascend/models";
-#endif
+static void test_ospath_getparent(void){
+	struct FilePath *fp1, *fp2, *fp3;
 
 	//------------------------
 
@@ -116,7 +116,29 @@ static void test_ospath(void){
 
 	ospath_free(fp1); ospath_free(fp2); ospath_free(fp3);
 
+	MEMUSED(0);
+}
 	//------------------------
+
+static void test_ospath_cleanup(void){
+	struct FilePath *fp1, *fp2;
+
+	fp1 = ospath_new_from_posix("/usr/include/../local");
+	fp2 = ospath_new_from_posix("/usr/local");
+
+	D(fp1);
+	D(fp2);
+	CU_TEST(ospath_cmp(fp1,fp2)==0);
+	M("Passed 'cleanup' test\n");
+
+	ospath_free(fp1); ospath_free(fp2);
+	MEMUSED(0);
+}
+	//------------------------
+
+static void test_ospath_newfromposix(void){
+
+	struct FilePath *fp1, *fp2;
 
 	fp1 = ospath_new_from_posix("models/johnpye/extfn/extfntest");
 	D(fp1);
@@ -128,8 +150,12 @@ static void test_ospath(void){
 
 	ospath_free(fp1);
 	ospath_free(fp2);
-
+	MEMUSED(0);
+}
 	//------------------------
+
+static void test_ospath_secondcleanup(void){
+	struct FilePath *fp1, *fp2, *fp3;
 	fp1 = ospath_new(".\\src/.\\images\\..\\\\movies\\");
 	fp2 = ospath_new(".\\src\\movies");
 
@@ -150,7 +176,16 @@ static void test_ospath(void){
 	CU_TEST(ospath_cmp(fp1,fp3)==0);
 	M("Passed 'second cleanup' test\n");
 
+	ospath_free(fp1);
+	ospath_free(fp2);
+	ospath_free(fp3);
+	MEMUSED(0);
+}
 	//------------------------
+
+static void test_ospath_append(void){
+
+	struct FilePath *fp2, *fp3, *fp4;
 
 	fp2 = ospath_new("\\home\\john");
 	fp3 = ospath_new("where\\mojo");
@@ -170,8 +205,14 @@ static void test_ospath(void){
 
 	ospath_free(fp3);
 	ospath_free(fp2);
-
+	ospath_free(fp4);
+	MEMUSED(0);
+}
 	//---------------------------
+
+static void test_ospath_appendupup(void){
+
+	struct FilePath *fp2, *fp3, *fp4;
 
 	fp3 = ospath_new_noclean("../..");
 	D(fp3);
@@ -195,8 +236,13 @@ static void test_ospath(void){
 	ospath_free(fp2);
 	ospath_free(fp3);
 	ospath_free(fp4);
-
+	MEMUSED(0);
+}
 	//-------------------------
+
+static void test_ospath_up(void){
+
+	struct FilePath *fp1, *fp2;
 
 	fp1 = ospath_new("~\\somewhere\\..");
 	fp2 = ospath_new("~/.");
@@ -219,8 +265,13 @@ static void test_ospath(void){
 
 	ospath_free(fp1);
 	ospath_free(fp2);
-
+	MEMUSED(0);
+}
 	//---------------------------
+
+static void test_ospath_concat(void){
+
+	struct FilePath *fp1, *fp2, *fp3, *fp4;
 
 	fp1 = ospath_new("/home");
 	fp2 = ospath_new("john");
@@ -233,8 +284,6 @@ static void test_ospath(void){
 
 	ospath_free(fp1); ospath_free(fp2); ospath_free(fp3); ospath_free(fp4);
 
-	//---------------------------
-
 	fp1 = ospath_new("c:/Program Files");
 	fp2 = ospath_new("GnuWin32\\bin");
 	fp3 = ospath_concat(fp1, fp2);
@@ -245,8 +294,13 @@ static void test_ospath(void){
 	M("Passed 'ospath_concat' test\n");
 
 	ospath_free(fp1); ospath_free(fp2); ospath_free(fp3); ospath_free(fp4);
-
+	MEMUSED(0);
+}
 	//---------------------------
+
+static void test_ospath_concatmixedslash(void){
+
+	struct FilePath *fp1, *fp2, *fp3, *fp4;
 
 	fp1 = ospath_new("c:/Program Files/");
 	fp2 = ospath_new("GnuWin32\\bin");
@@ -258,8 +312,13 @@ static void test_ospath(void){
 	M("Passed trailing-slash 'ospath_concat' test\n");
 
 	ospath_free(fp1); ospath_free(fp2); ospath_free(fp3); ospath_free(fp4);
-
+	MEMUSED(0);
+}
 	//---------------------------
+
+static void test_ospath_trailingslash(void){
+
+	struct FilePath *fp1, *fp2, *fp3, *fp4;
 
 	fp1 = ospath_new("c:/Program Files/GnuWin32/bin");
 	fp2 = ospath_new("johnpye/extfn");
@@ -271,8 +330,19 @@ static void test_ospath(void){
 	M("Passed trailing-slash 'ospath_concat' test\n");
 
 	ospath_free(fp1); ospath_free(fp2); ospath_free(fp3); ospath_free(fp4);
-
+	MEMUSED(0);
+}
 	//---------------------------
+
+static void test_ospath_searchpath(void){
+
+	struct FilePath *fp1, *fp2, *fp3;
+	struct FilePath **pp, **p1;// will be returned null-terminated
+#ifdef WINPATHS
+	char pathtext[]="c:\\Program Files\\GnuWin32\\bin;c:\\GTK\\bin;e:\\ascend\\;..\\..\\pygtk";
+#else
+	char pathtext[]="\\Program Files\\GnuWin32\\bin:\\GTK\\bin:\\ascend\\:..\\..\\pygtk";
+#endif
 
 	pp = ospath_searchpath_new(pathtext);
 
@@ -312,8 +382,19 @@ static void test_ospath(void){
 	ospath_free(fp1);
 	ospath_free(fp2);
 	ospath_searchpath_free(pp);
-
+	MEMUSED(0);
+}
 	//-------------------------------
+
+static void test_ospath_searchpath2(void){
+
+	struct FilePath *fp2, *fp3;
+	struct FilePath **pp, **p1;// will be returned null-terminated
+#ifdef WINPATHS
+	char pathtext2[]="c:\\Program Files\\ASCEND\\models";
+#else
+	char pathtext2[]="/usr/local/ascend/models";
+#endif
 
 	M("Path-search test 2...");
 
@@ -336,8 +417,14 @@ static void test_ospath(void){
 	ospath_free(fp2);
 	ospath_free(fp3);
 	ospath_searchpath_free(pp);
-
+	MEMUSED(0);
+}
 	//-------------------------------
+
+static void test_ospath_basefilename(void){
+
+	struct FilePath *fp1;
+	char *s1;
 
 	fp1 = ospath_new("/usr/share/data/ascend/models/johnpye/extfn/extfntest.a4c");
 	D(fp1);
@@ -349,8 +436,6 @@ static void test_ospath(void){
 	ospath_free(fp1);
 	FREE(s1);
 
-	//-------------------------------
-
 	fp1 = ospath_new("extfntest.a4c");
 	D(fp1);
 	s1 = ospath_getbasefilename(fp1);
@@ -361,9 +446,6 @@ static void test_ospath(void){
 	ospath_free(fp1);
 	FREE(s1);
 
-
-	//-------------------------------
-
 	fp1 = ospath_new("/here/is/my/path.dir/");
 	D(fp1);
 	s1 = ospath_getbasefilename(fp1);
@@ -373,8 +455,6 @@ static void test_ospath(void){
 
 	ospath_free(fp1);
 	if(s1)FREE(s1);
-
-	//-------------------------------
 
 #ifdef WINPATHS
 	fp1 = ospath_new("c:extfntest.a4c");
@@ -387,8 +467,14 @@ static void test_ospath(void){
 	ospath_free(fp1);
 	FREE(s1);
 #endif
-
+	MEMUSED(0);
+}
 	//-------------------------------
+
+static void test_ospath_getfilestem(void){
+
+	struct FilePath *fp1;
+	char *s1;
 
 	fp1 = ospath_new("/usr/share/data/ascend/models/johnpye/extfn/extfntest.a4c");
 	D(fp1);
@@ -400,8 +486,6 @@ static void test_ospath(void){
 	ospath_free(fp1);
 	FREE(s1);
 
-	//-------------------------------
-
 	fp1 = ospath_new("/usr/share/data/ascend/models/johnpye/extfn/extfntest");
 	D(fp1);
 	s1 = ospath_getfilestem(fp1);
@@ -411,8 +495,6 @@ static void test_ospath(void){
 
 	ospath_free(fp1);
 	FREE(s1);
-
-	//-------------------------------
 
 	fp1 = ospath_new("/usr/share/data/ascend/.ascend.ini");
 	D(fp1);
@@ -424,8 +506,6 @@ static void test_ospath(void){
 	ospath_free(fp1);
 	FREE(s1);
 
-	//-------------------------------
-
 	fp1 = ospath_new("~/.vimrc");
 	D(fp1);
 	s1 = ospath_getfilestem(fp1);
@@ -435,8 +515,6 @@ static void test_ospath(void){
 
 	ospath_free(fp1);
 	FREE(s1);
-
-	//-------------------------------
 
 	fp1 = ospath_new("~/src/ascend-0.9.5-1.jdpipe.src.rpm");
 	D(fp1);
@@ -448,8 +526,6 @@ static void test_ospath(void){
 	ospath_free(fp1);
 	FREE(s1);
 
-	//-------------------------------
-
 	fp1 = ospath_new("~/dir1/dir2/");
 	D(fp1);
 	s1 = ospath_getfilestem(fp1);
@@ -459,8 +535,14 @@ static void test_ospath(void){
 
 	ospath_free(fp1);
 	if(s1)FREE(s1);
-
+	MEMUSED(0);
+}
 	//-------------------------------
+
+static void test_ospath_getbasefileext(void){
+
+	struct FilePath *fp1;
+	char *s1;
 
 	fp1 = ospath_new("~/src/ascend-0.9.5-1.jdpipe.src.rpm");
 	D(fp1);
@@ -472,8 +554,6 @@ static void test_ospath(void){
 	ospath_free(fp1);
 	FREE(s1);
 
-	//-------------------------------
-
 	fp1 = ospath_new("~/.vimrc");
 	D(fp1);
 	s1 = ospath_getfileext(fp1);
@@ -484,8 +564,6 @@ static void test_ospath(void){
 	ospath_free(fp1);
 	if(s1)FREE(s1);
 
-	//-------------------------------
-
 	fp1 = ospath_new("./ascend4");
 	D(fp1);
 	s1 = ospath_getfileext(fp1);
@@ -495,8 +573,13 @@ static void test_ospath(void){
 
 	ospath_free(fp1);
 	if(s1)FREE(s1);
-
+	MEMUSED(0);
+}
 	//-------------------------------
+
+static void test_ospath_getdir(void){
+
+	struct FilePath *fp1, *fp2, *fp3;
 
 	fp1 = ospath_new("/home/myfile");
 	fp2 = ospath_getdir(fp1);
@@ -508,8 +591,6 @@ static void test_ospath(void){
 	ospath_free(fp2);
 	ospath_free(fp3);
 
-	//-------------------------------
-
 	fp1 = ospath_new("/home/myfile.ext");
 	fp2 = ospath_getdir(fp1);
 	fp3 = ospath_new("/home");
@@ -520,8 +601,6 @@ static void test_ospath(void){
 	ospath_free(fp2);
 	ospath_free(fp3);
 
-	//-------------------------------
-
 	fp1 = ospath_new("/home/mydir/");
 	fp2 = ospath_getdir(fp1);
 	fp3 = ospath_new("/home/mydir");
@@ -531,18 +610,33 @@ static void test_ospath(void){
 	ospath_free(fp1);
 	ospath_free(fp2);
 	ospath_free(fp3);
-
-	//---------------------------------
-	M("ALL TESTS PASSED");
+	MEMUSED(0);
 }
 
 /*===========================================================================*/
 /* Registration information */
 
+#define T(N) {#N, test_ospath_##N }
 static CU_TestInfo ospath_test_list[] = {
-  {"test_ospath", test_ospath},
-  CU_TEST_INFO_NULL
+	T(getparent)
+	,T(cleanup)
+	,T(newfromposix)
+	,T(secondcleanup)
+	,T(append)
+	,T(appendupup)
+	,T(up)
+	,T(concat)
+	,T(concatmixedslash)
+	,T(trailingslash)
+	,T(searchpath)
+	,T(searchpath2)
+	,T(basefilename)
+	,T(getfilestem)
+	,T(getbasefileext)
+	,T(getdir)
+	,CU_TEST_INFO_NULL
 };
+#undef T
 
 static CU_SuiteInfo suites[] = {
   {"test_general_ospath", NULL, NULL, ospath_test_list},
