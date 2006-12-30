@@ -60,9 +60,11 @@ CU_ErrorCode test_register_utilities(void)
 #endif
 
   /* utilites/ascPanic.c */
+#ifdef TEST_ASCPANIC
   result = test_register_utilities_ascPanic();
   if (CUE_SUCCESS != result)
     return result;
+#endif
 
   /* utilites/ascPrint.c */
   result = test_register_utilities_ascPrint();
