@@ -33,6 +33,8 @@
 #include "test_ascSignal.h"
 #include "printutil.h"
 
+#include <signal.h>
+
 static JMP_BUF my_jmp_buf1;
 
 #define MEMUSED(N) CU_TEST(ascmeminuse()==N)
@@ -155,12 +157,6 @@ static void test_ascsignal_basic(void){
 
   SigHandlerFn *old_handler;
   volatile int signal1_caught;
-
-#ifdef NO_SIGNAL_TRAPS
-  /* no point in testing if the functionality is disabled */
-  CU_FAIL("Signal handler manager not enabled.");
-  return;
-#else
 
   CONSOLE_DEBUG("SIGFPE = %d",SIGFPE);
   CONSOLE_DEBUG("SIGINT = %d",SIGINT);
@@ -445,6 +441,12 @@ static void test_ascsignal_nestingfpe(void){
   volatile int signal3_caught;
 
   store_current_signals();
+
+  /* set the initial handlers */
+  SIGNAL(SIGFPE, SIG_DFL);
+  SIGNAL(SIGINT, SIG_DFL);
+  SIGNAL(SIGSEGV,SIG_DFL);
+
   CU_TEST(0 == Asc_SignalInit());
 
   /* test typical use with nesting of handlers */
@@ -463,10 +465,12 @@ static void test_ascsignal_nestingfpe(void){
     if (0 == SETJMP(my_jmp_buf2)) {
       CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap));
       if(0 == SETJMP(g_fpe_env)) {
-         raise(SIGFPE);
+         CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, SIG_DFL, SIG_DFL);
+         CU_TEST(0==raise(SIGFPE));
          CONSOLE_DEBUG("...");
 		 CU_FAIL("Can't be here! No signal was raised!");
       }else{
+		/* do we need to reset traps here? */
 		CONSOLE_DEBUG("...");
         CU_TEST(f_handler1_called == FALSE);
         CU_TEST(f_handler1_sigval == 0);
@@ -479,6 +483,7 @@ static void test_ascsignal_nestingfpe(void){
       CU_TEST(FALSE == signal2_caught);
       CU_TEST(TRUE == signal3_caught);
       CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, Asc_SignalTrap));
+      CHECK_SIGNALS_MATCH_STACKS(my_handler2, SIG_DFL, SIG_DFL);
       f_handler1_called = FALSE;
       f_handler1_sigval = 0;
       f_handler2_called = FALSE;
@@ -486,7 +491,8 @@ static void test_ascsignal_nestingfpe(void){
       signal1_caught = FALSE;
       signal2_caught = FALSE;
       signal3_caught = FALSE;
-      raise(SIGFPE);
+      CU_TEST(0==raise(SIGFPE));
+	  CU_FAIL("Shouldn't be here");
     }else{
       CONSOLE_DEBUG("...");
       CU_TEST(f_handler1_called == FALSE);
@@ -499,6 +505,7 @@ static void test_ascsignal_nestingfpe(void){
     CU_TEST(TRUE == signal2_caught);
     CU_TEST(FALSE == signal3_caught);
     CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, my_handler2));
+    CHECK_SIGNALS_MATCH_STACKS(my_handler1, SIG_DFL, SIG_DFL);
     f_handler1_called = FALSE;
     f_handler1_sigval = 0;
     f_handler2_called = FALSE;
@@ -506,7 +513,8 @@ static void test_ascsignal_nestingfpe(void){
     signal1_caught = FALSE;
     signal2_caught = FALSE;
     signal3_caught = FALSE;
-    raise(SIGFPE);
+    CU_TEST(0==raise(SIGFPE));
+    CU_FAIL("Shouldn't be here");
   }else{
     CONSOLE_DEBUG("...");
     CU_TEST(f_handler1_called == TRUE);
@@ -519,6 +527,7 @@ static void test_ascsignal_nestingfpe(void){
   CU_TEST(FALSE == signal2_caught);
   CU_TEST(FALSE == signal3_caught);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, my_handler1));
+  CHECK_SIGNALS_MATCH_STACKS(SIG_DFL, SIG_DFL, SIG_DFL);
 
   CONSOLE_DEBUG("...");
 
@@ -536,6 +545,12 @@ static void test_ascsignal_nestingint(void){
   SigHandlerFn *old_handler;
 
   store_current_signals();
+
+  /* set the initial handlers */
+  SIGNAL(SIGFPE, SIG_DFL);
+  SIGNAL(SIGINT, SIG_DFL);
+  SIGNAL(SIGSEGV,SIG_DFL);
+
   CU_TEST(0 == Asc_SignalInit());
 
   f_handler1_called = FALSE;                              /* initialize flags for detecting flow */
@@ -556,8 +571,9 @@ static void test_ascsignal_nestingint(void){
     if (0 == SETJMP(g_int_env)) {
       CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, my_handler1));
       if (0 == SETJMP(my_jmp_buf1)) {
+         CHECK_SIGNALS_MATCH_STACKS(SIG_DFL, my_handler1, SIG_DFL);
 	     CONSOLE_DEBUG("Raising to my_handler1");
-         raise(SIGINT);
+         CU_TEST(0==raise(SIGINT));
          CONSOLE_DEBUG("SHOULDN'T BE HERE!");
          CU_FAIL("Shouldn't be here!");
       }else{
@@ -574,10 +590,7 @@ static void test_ascsignal_nestingint(void){
       CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, my_handler1));
 
       /* check that 'Asc_SignalTrap' is now installed for SIGINT */
-	  old_handler = SIGNAL(SIGINT,SIG_DFL);
-	  CU_TEST(old_handler == Asc_SignalTrap);
-	  old_handler = SIGNAL(SIGINT,Asc_SignalTrap);
-	  CU_TEST(old_handler == SIG_DFL);
+      CHECK_SIGNALS_MATCH_STACKS(SIG_DFL, Asc_SignalTrap, SIG_DFL);
 
       f_handler1_called = FALSE;
       f_handler1_sigval = 0;
@@ -586,8 +599,11 @@ static void test_ascsignal_nestingint(void){
       signal1_caught = FALSE;
       signal2_caught = FALSE;
       signal3_caught = FALSE;
-	  CONSOLE_DEBUG("Raising to Asc_SignalTrap");
-      raise(SIGINT);
+
+	  CONSOLE_DEBUG("Raising to Asc_SignalTrap = %p",Asc_SignalTrap);
+      CU_TEST(0==raise(SIGINT));
+	  //Asc_SignalTrap(SIGINT);
+      CHECK_SIGNALS_MATCH_STACKS(SIG_DFL, Asc_SignalTrap, SIG_DFL);
 	  CONSOLE_DEBUG("SHOULDN'T BE HERE!");
 	  CU_FAIL("Shouldn't be here!");
     }else{
@@ -602,6 +618,9 @@ static void test_ascsignal_nestingint(void){
     CU_TEST(TRUE == signal2_caught);
     CU_TEST(FALSE == signal3_caught);
     CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, Asc_SignalTrap));
+
+    CHECK_SIGNALS_MATCH_STACKS(SIG_DFL, my_handler2, SIG_DFL);
+
     f_handler1_called = FALSE;
     f_handler1_sigval = 0;
     f_handler2_called = FALSE;
@@ -610,7 +629,8 @@ static void test_ascsignal_nestingint(void){
     signal2_caught = FALSE;
     signal3_caught = FALSE;
 	CONSOLE_DEBUG("Raising to my_handler2");
-    raise(SIGINT);
+    CU_TEST(0==raise(SIGINT));
+    //my_handler2(SIGINT);
 	CONSOLE_DEBUG("SHOULDN'T BE HERE!");
     CU_FAIL("Shouldn't be here!");
   }else{
@@ -625,6 +645,8 @@ static void test_ascsignal_nestingint(void){
   CU_TEST(FALSE == signal2_caught);
   CU_TEST(FALSE == signal3_caught);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, my_handler2));
+
+  CHECK_SIGNALS_MATCH_STACKS(SIG_DFL, SIG_DFL, SIG_DFL);
 
   restore_previous_signals();
   Asc_SignalDestroy();
@@ -641,6 +663,12 @@ static void test_ascsignal_nestingsegv(void){
   volatile int signal3_caught;
 
   store_current_signals();
+
+  /* set the initial handlers */
+  SIGNAL(SIGFPE, SIG_DFL);
+  SIGNAL(SIGINT, SIG_DFL);
+  SIGNAL(SIGSEGV,SIG_DFL);
+
   CU_TEST(0 == Asc_SignalInit());
 
   f_handler1_called = FALSE;                              /* initialize flags for detecting flow */
@@ -657,7 +685,8 @@ static void test_ascsignal_nestingsegv(void){
     if (0 == SETJMP(my_jmp_buf2)) {
       CU_TEST(0 == Asc_SignalHandlerPush(SIGSEGV, my_handler1));
       if (0 == SETJMP(my_jmp_buf1)) {
-         raise(SIGSEGV);
+         CHECK_SIGNALS_MATCH_STACKS(SIG_DFL, SIG_DFL, my_handler1);
+         CU_TEST(0==raise(SIGSEGV));
       }
       else {
         CU_TEST(f_handler1_called == TRUE);
@@ -670,6 +699,7 @@ static void test_ascsignal_nestingsegv(void){
       CU_TEST(FALSE == signal2_caught);
       CU_TEST(TRUE == signal3_caught);
       CU_TEST(0 == Asc_SignalHandlerPop(SIGSEGV, my_handler1));
+      CHECK_SIGNALS_MATCH_STACKS(SIG_DFL, SIG_DFL, my_handler2);
       f_handler1_called = FALSE;
       f_handler1_sigval = 0;
       f_handler2_called = FALSE;
@@ -677,7 +707,7 @@ static void test_ascsignal_nestingsegv(void){
       signal1_caught = FALSE;
       signal2_caught = FALSE;
       signal3_caught = FALSE;
-      raise(SIGSEGV);
+      CU_TEST(0==raise(SIGSEGV));
     }
     else {
       CU_TEST(f_handler1_called == FALSE);
@@ -690,6 +720,7 @@ static void test_ascsignal_nestingsegv(void){
     CU_TEST(TRUE == signal2_caught);
     CU_TEST(FALSE == signal3_caught);
     CU_TEST(0 == Asc_SignalHandlerPop(SIGSEGV, my_handler2));
+    CHECK_SIGNALS_MATCH_STACKS(SIG_DFL, SIG_DFL, Asc_SignalTrap);
     f_handler1_called = FALSE;
     f_handler1_sigval = 0;
     f_handler2_called = FALSE;
@@ -697,7 +728,7 @@ static void test_ascsignal_nestingsegv(void){
     signal1_caught = FALSE;
     signal2_caught = FALSE;
     signal3_caught = FALSE;
-    raise(SIGSEGV);
+    CU_TEST(0==raise(SIGSEGV));
   }
   else {
     CU_TEST(f_handler1_called == FALSE);
@@ -711,25 +742,7 @@ static void test_ascsignal_nestingsegv(void){
   CU_TEST(FALSE == signal3_caught);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGSEGV, Asc_SignalTrap));
 
-  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* handlers should be restored at this point */
-  CU_TEST(my_handler1 == old_handler);
-  old_handler = SIGNAL(SIGINT, SIG_DFL);
-  CU_TEST(NULL == old_handler);
-  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
-  Asc_SignalRecover(TRUE);
-
-  Asc_SignalDestroy();
-
-  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* original handlers should still be in place */
-  CU_TEST(my_handler1 == old_handler);
-  old_handler = SIGNAL(SIGINT, SIG_DFL);
-  CU_TEST(NULL == old_handler);
-  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
-  Asc_SignalRecover(TRUE);
-
-#endif  /* NO_SIGNAL_TRAPS */
+  CHECK_SIGNALS_MATCH_STACKS(SIG_DFL, SIG_DFL, SIG_DFL);
 
   restore_previous_signals();
   Asc_SignalDestroy();

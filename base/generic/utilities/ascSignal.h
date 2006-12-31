@@ -127,14 +127,14 @@ typedef void SigHandlerFn(int);
 #define MAX_TRAP_DEPTH 40L
 /**< The maximum number of traps that can be nested. */
 
-#define ASC_JMP_INFO
+/* #define ASC_JMP_INFO */
 /**< Whether to store additional information before making a setjmp call */
 
 #ifndef ASC_JMP_INFO
-# define SETJMP set_jmp
+# define SETJMP setjmp
 # define LONGJMP longjmp
 # define SIGNAL signal
-typedef JMP_BUF jmp_buf
+# define JMP_BUF jmp_buf
 #else
 # define SETJMP(ENV) (\
 		CONSOLE_DEBUG("SETJMP at %s:%d (%s=%p)",__FILE__,__LINE__,#ENV,ENV.jmp)\
