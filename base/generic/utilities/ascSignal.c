@@ -177,10 +177,10 @@ int Asc_SignalInit(void)
   initstack(f_int_traps, &f_int_top_of_stack, SIGINT);
   initstack(f_seg_traps, &f_seg_top_of_stack, SIGSEGV);
 
-#ifdef HAVE_C99FPE
+#if 0 && defined(HAVE_C99FPE)
   CONSOLE_DEBUG("Initialise FPE state to stack (%d)",f_fenv_stack_top);
   fenv_push(f_fenv_stack,&f_fenv_stack_top,0);
-#endif
+#endif 
 
   return 0;
 }
@@ -245,12 +245,15 @@ int Asc_SignalHandlerPushDefault(int signum){
 	Pushing a NULL handler does NOT change anything at all.
 	On a successful return, the handler has been installed and will
 	remain installed until a Asc_SignalHandlerPop or another push.
+
+	@return 0 on success, -2 if tp is NULL, -1 if unsupported signal is given,
+	-3 if 'signal' returns SIG_ERR.
 */
 int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
 {
   int err;
   if (tp == NULL) {
-    return 0;
+    return -2;
   }
 
 #ifdef SIGNAL_DEBUG
@@ -261,7 +264,7 @@ int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
     case SIGFPE:
 	  //CONSOLE_DEBUG("PUSH SIGFPE");
       err = push_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
-#ifdef HAVE_C99FPE
+#if 0 && defined(HAVE_C99FPE)
 	  if(tp == SIG_IGN){
 	      err = fenv_push(f_fenv_stack, &f_fenv_stack_top,FE_ALL_EXCEPT);
 	  }else{
@@ -284,8 +287,7 @@ int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Error from push_trap or fenv_push (err = %d, signal=#%d).",err, signum);
     return err;
   }
-  (void)SIGNAL(signum, tp); /* install */
-  return 0;
+  return SIG_ERR==SIGNAL(signum, tp); /* install */
 }
 
 int Asc_SignalHandlerPopDefault(int signum){
@@ -330,7 +332,7 @@ int Asc_SignalHandlerPop(int signum, SigHandlerFn *tp){
   return 0;
 }
 
-void Asc_SignalTrap(int sigval) {
+void Asc_SignalTrap(int sigval){
 #ifdef SIGNAL_DEBUG
   CONSOLE_DEBUG("Caught signal #%d",sigval);
 #endif
