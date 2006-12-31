@@ -379,11 +379,8 @@ if __name__=='__main__':
 	pass
 	atexit.register(ascpy.shutdown)
 	suite = unittest.TestSuite()
-	suite.addTest(unittest.makeSuite(TestCompiler))
-	suite.addTest(unittest.makeSuite(TestSolver))
+	#suite = unittest.defaultTestLoader.loadTestsFromName('__main__')
+	suite.addTests(cunit.load("base/generic/test/libasctestsuite.so"))
 	#suite.addTest(TestLSODE)
-	csuites = cunit.load("base/generic/test/libasctestsuite.so")
 	#suite.addTests(csuites)
-	suite.addTests(csuites)
 	unittest.TextTestRunner(verbosity=2).run(suite)
-	#unittest.main()

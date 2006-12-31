@@ -28,6 +28,7 @@
 #endif
 #include <utilities/ascMalloc.h>
 #include <utilities/ascSignal.h>
+#include <utilities/ascPanic.h>
 #include "CUnit/CUnit.h"
 #include "test_ascSignal.h"
 #include "printutil.h"
@@ -66,6 +67,10 @@ void my_handler1(int sigval)
       break;
   }
   LONGJMP(my_jmp_buf1, sigval);
+}
+
+void wrong_handler(int sigval){
+	ASC_PANIC("Don't use this one");
 }
 
 static JMP_BUF my_jmp_buf2;
@@ -115,6 +120,24 @@ static void store_current_signals(void){
   old_seg_handler = SIGNAL(SIGSEGV, my_handler1);
 }
 
+#define CHECK_SIGNALS_MATCH_STACKS(FPEFN,INTFN,SEGFN) \
+	{	SigHandlerFn *oldfpe, *oldint, *oldseg; \
+		oldfpe = signal(SIGFPE,SIG_IGN);\
+		CU_TEST(oldfpe == FPEFN);\
+		CU_TEST(Asc_SignalStackTop(SIGFPE)==FPEFN);\
+		oldfpe = signal(SIGFPE,oldfpe);\
+	\
+		oldint = signal(SIGINT,SIG_IGN);\
+		CU_TEST(oldint == INTFN);\
+		CU_TEST(Asc_SignalStackTop(SIGINT)==INTFN);\
+		oldint = signal(SIGINT,oldint);\
+	\
+		oldseg = signal(SIGSEGV,SIG_IGN);\
+		CU_TEST(oldseg == SEGFN);\
+		CU_TEST(Asc_SignalStackTop(SIGSEGV)==SEGFN);\
+		oldseg = signal(SIGSEGV,oldseg);\
+	}
+
 static void restore_previous_signals(void){
   CU_TEST(old_active==1);
   if (NULL != old_fpe_handler)                /* restore any pre-existing handlers */
@@ -153,23 +176,19 @@ static void test_ascsignal_basic(void){
 
   CU_TEST(0 == Asc_SignalInit());                       /* initialize the signal manager */
 
-  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* previously-installed handlers should still be active */
-  CU_TEST(my_handler1 == old_handler);
-  old_handler = SIGNAL(SIGINT, SIG_DFL);
-  CU_TEST(NULL == old_handler);
-  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
+  CHECK_SIGNALS_MATCH_STACKS(my_handler1, NULL, my_handler2);
+
+  /* mix up the current handlers */
+  SIGNAL(SIGFPE, my_handler2);
+  SIGNAL(SIGINT, SIG_IGN);
+  SIGNAL(SIGSEGV, my_handler1);
 
   Asc_SignalRecover(TRUE);
 
-  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* handlers should have been reinstalled */
-  CU_TEST(my_handler1 == old_handler);
-  old_handler = SIGNAL(SIGINT, SIG_DFL);
-  CU_TEST(NULL == old_handler);
-  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
-
-  Asc_SignalRecover(TRUE);
+  /* check that recovery worked; check that repeated calls don't damage it */
+  CHECK_SIGNALS_MATCH_STACKS(my_handler1, NULL, my_handler2);
+  CHECK_SIGNALS_MATCH_STACKS(my_handler1, NULL, my_handler2);
+  CHECK_SIGNALS_MATCH_STACKS(my_handler1, NULL, my_handler2);
 
   restore_previous_signals();
   Asc_SignalDestroy();
@@ -187,10 +206,10 @@ static void test_ascsignal_pushpopint(void){
   SIGNAL(SIGINT, SIG_IGN);
   CU_TEST(0==Asc_SignalInit());
 
-  CU_TEST(0==Asc_SignalStackLength(SIGINT));
+  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
 
   CU_TEST(0==Asc_SignalHandlerPush(SIGINT, my_handler1));     /* ok - supported signal, ok func */
-  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==2);
 
   CONSOLE_DEBUG("Stack should have my_handler1...");
   Asc_SignalPrintStack(SIGINT);
@@ -201,20 +220,20 @@ static void test_ascsignal_pushpopint(void){
   CU_TEST(0 != Asc_SignalHandlerPush(SIGILL, Asc_SignalTrap));  /* unsupported signal type */
   CU_TEST(0 != Asc_SignalHandlerPush(SIGABRT, my_handler2));    /* unsupported signal type */
   Asc_SignalRecover(TRUE);
-  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==2);
 
   old_handler = SIGNAL(SIGINT, SIG_DFL);
   CU_TEST(old_handler == my_handler1);
 
   Asc_SignalRecover(TRUE);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, my_handler1));
-  CU_TEST(Asc_SignalStackLength(SIGINT)==0);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
 
   old_handler = SIGNAL(SIGINT, SIG_DFL);
   CU_TEST(old_handler == SIG_IGN);
 
   Asc_SignalRecover(TRUE);
-  CU_TEST(Asc_SignalStackLength(SIGINT)==0);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
 
   old_handler = SIGNAL(SIGINT, SIG_DFL);
   CU_TEST(SIG_IGN == old_handler);
@@ -242,93 +261,105 @@ static void test_ascsignal_pushpop(void){
   SigHandlerFn *old_handler;
   volatile int signal1_caught;
 
+  CONSOLE_DEBUG("my_handler1 = %p",my_handler1);
+  CONSOLE_DEBUG("my_handler2 = %p",my_handler2);
+  CONSOLE_DEBUG("Asc_SignalTrap = %p",Asc_SignalTrap);
+
   store_current_signals();
 
-  SIGNAL(SIGFPE, my_handler1);                          /* install some pre-existing handlers */
+  /* set the initial handlers */
+  SIGNAL(SIGFPE, my_handler1);
   SIGNAL(SIGINT, SIG_IGN);
   SIGNAL(SIGSEGV, my_handler2);
 
+  /* initialise the stack */
   CU_TEST(0 == Asc_SignalInit());
 
-  /* test Asc_SignalPush(), Asc_SignalPop() */
-  CONSOLE_DEBUG("Initial stack for SIGFPE...");
+  CHECK_SIGNALS_MATCH_STACKS(my_handler1, SIG_IGN, my_handler2);
+
+  /* check that initial handlers were pushed onto the stack */
+  CU_TEST(Asc_SignalStackLength(SIGSEGV)==1);
+  CU_TEST(Asc_SignalStackLength(SIGFPE)==1);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
+
+  /* push an additional handler onto SIGFPE stack */
+  CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap));
+
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, SIG_IGN, my_handler2);
+
+  CONSOLE_DEBUG("SIGFPE stack:");
   Asc_SignalPrintStack(SIGFPE);
 
-  CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap));  /* ok - supported signal, ok func */
-  old_handler = SIGNAL(SIGFPE, SIG_DFL);
-  CU_TEST(old_handler == Asc_SignalTrap);
+  /* push an additional handler onto SIGINT stack */
+  CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, my_handler1));
 
-  CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, my_handler1));     /* ok - supported signal, ok func */
-  CONSOLE_DEBUG("Stack should have my_handler1...");
-  Asc_SignalPrintStack(SIGINT);
-  old_handler = SIGNAL(SIGINT, SIG_DFL);
-  CU_TEST(old_handler == my_handler1);
+  /* check the stacks */
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, my_handler1, my_handler2);
+  CU_TEST(Asc_SignalStackLength(SIGSEGV)==1); /* my_handler2 */
+  CU_TEST(Asc_SignalStackLength(SIGINT)==2); /* SIG_IGN, my_handler1 */
+  CU_TEST(Asc_SignalStackLength(SIGFPE)==2); /* my_handler1, Asc_SignalTrap */
 
-  CU_TEST(0 == Asc_SignalHandlerPush(SIGSEGV, NULL));           /* NULL func - should have no effect */
-  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
-  CU_TEST(old_handler == my_handler2);                          /* old handler should still be installed */
+  CONSOLE_DEBUG("SIGFPE stack:");
+  Asc_SignalPrintStack(SIGFPE);
 
-  CU_TEST(0 != Asc_SignalHandlerPush(SIGILL, Asc_SignalTrap));  /* unsupported signal type */
-  CU_TEST(0 != Asc_SignalHandlerPush(SIGABRT, my_handler2));    /* unsupported signal type */
-  Asc_SignalRecover(TRUE);
+  /* attempt to push a NULL handler should have no effect */
+  CU_TEST(0 == Asc_SignalHandlerPush(SIGSEGV, NULL));
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, my_handler1, my_handler2);
+  CU_TEST(Asc_SignalStackLength(SIGSEGV)==1);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==2);
+  CU_TEST(Asc_SignalStackLength(SIGFPE)==2);
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, my_handler1, my_handler2);
 
-  /* we expect: SIGSEGV = my_handler2, SIGINT = my_handler1, SIGFPE = Asc_SignalTrap */
-  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* handlers should have been reinstalled */
-  CU_TEST(old_handler == Asc_SignalTrap);
-  old_handler = SIGNAL(SIGINT, SIG_DFL);
-  CU_TEST(old_handler == my_handler1);
-  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
-  CU_TEST(old_handler == my_handler2);
+  CONSOLE_DEBUG("SIGFPE stack:");
+  Asc_SignalPrintStack(SIGFPE);
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, my_handler1, my_handler2);
 
-  Asc_SignalRecover(TRUE);
+  /* attempt to push handler for unsupported signal types should have no effect, should return error */
+  CU_TEST(0 != Asc_SignalHandlerPush(SIGILL, Asc_SignalTrap));
+  CU_TEST(0 != Asc_SignalHandlerPush(SIGABRT, my_handler2));
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, my_handler1, my_handler2);
+  CU_TEST(Asc_SignalStackLength(SIGSEGV)==1);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==2);
+  CU_TEST(Asc_SignalStackLength(SIGFPE)==2);
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, my_handler1, my_handler2);
+
+  /* pop off the SIGINT stack */
   CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, my_handler1));
 
-  /* we expect: SIGSEGV = my_handler2, SIGINT = SIG_IGN, SIGFPE = Asc_SignalTrap */
-  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* SIGINT should be reset to no handler */
-  CU_TEST(old_handler == SIG_DFL);
-  old_handler = SIGNAL(SIGINT, SIG_DFL);
-  CU_TEST(old_handler == SIG_IGN);
-  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
-  CU_TEST(old_handler == my_handler2);
-
-  Asc_SignalRecover(TRUE);
-  CONSOLE_DEBUG("Stack for SIGFPE...");
+  CONSOLE_DEBUG("SIGFPE stack:");
   Asc_SignalPrintStack(SIGFPE);
 
-  CU_TEST(0 != Asc_SignalHandlerPop(SIGFPE, my_handler1));  /* wrong handler indicated */
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, SIG_IGN, my_handler2);
+  CU_TEST(Asc_SignalStackLength(SIGSEGV)==1);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
+  CU_TEST(Asc_SignalStackLength(SIGFPE)==2);
 
-  CONSOLE_DEBUG("Stack for SIGFPE...");
-  Asc_SignalPrintStack(SIGFPE);
+  /* attempt to pop off an incorrect handler */
+  CONSOLE_DEBUG("Popping incorrect handler");
+  CU_TEST(0 != Asc_SignalHandlerPop(SIGFPE, wrong_handler));
 
-  /* we expect: SIGSEGV = my_handler2, SIGINT = SIG_IGN, SIGFPE = Asc_SignalTrap */
-  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* so SIGFPE should be not be reset */
-  CU_TEST(Asc_SignalTrap == old_handler);
-  old_handler = SIGNAL(SIGINT, SIG_DFL);
-  CU_TEST(SIG_IGN == old_handler);
-  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, SIG_IGN, my_handler2);
+  CU_TEST(Asc_SignalStackLength(SIGSEGV)==1);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
+  CU_TEST(Asc_SignalStackLength(SIGFPE)==2);
 
-  Asc_SignalRecover(TRUE);
-  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* but Asc_SignalRecover should reset it */
-
-  /* we expect: SIGSEGV = my_handler2, SIGINT = SIG_IGN, SIGFPE = SIG_DFL */
-  CU_TEST(my_handler1 == old_handler);
-  old_handler = SIGNAL(SIGINT, SIG_DFL);
-  CU_TEST(SIG_IGN == old_handler);
-  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
+  /* mess with the SIGFPE handler, then attempt to recover from stacks */
+  old_handler = SIGNAL(SIGFPE, SIG_DFL);
   Asc_SignalRecover(TRUE);
 
-  CU_TEST(0 != Asc_SignalHandlerPop(SIGILL, my_handler1));     /* unsupported signal type */
-  CU_TEST(0 != Asc_SignalHandlerPop(SIGABRT, Asc_SignalTrap)); /* unsupported signal type */
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, SIG_IGN, my_handler2);
+  CU_TEST(Asc_SignalStackLength(SIGSEGV)==1);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
+  CU_TEST(Asc_SignalStackLength(SIGFPE)==2);
 
-  old_handler = SIGNAL(SIGFPE, SIG_DFL);                /* should be no change in handlers */
-  CU_TEST(my_handler1 == old_handler);
-  old_handler = SIGNAL(SIGINT, SIG_DFL);
-  CU_TEST(SIG_IGN == old_handler);
-  old_handler = SIGNAL(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
-  Asc_SignalRecover(TRUE);
+  /* try a couple of unsupported signal types */
+  CU_TEST(0 != Asc_SignalHandlerPop(SIGILL, my_handler1));
+  CU_TEST(0 != Asc_SignalHandlerPop(SIGABRT, Asc_SignalTrap));
+
+  CHECK_SIGNALS_MATCH_STACKS(Asc_SignalTrap, SIG_IGN, my_handler2);
+  CU_TEST(Asc_SignalStackLength(SIGSEGV)==1);
+  CU_TEST(Asc_SignalStackLength(SIGINT)==1);
+  CU_TEST(Asc_SignalStackLength(SIGFPE)==2);
 
   restore_previous_signals();
   Asc_SignalDestroy();

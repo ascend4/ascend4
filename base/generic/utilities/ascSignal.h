@@ -309,9 +309,16 @@ ASC_DLLSPEC(int ) Asc_SignalHandlerPop(int signum, SigHandlerFn *func);
  *        only call Asc_SignalRecover() if it matches func.
  */
 
+/** Output the contents of the specified stack. For debugging. */
 ASC_DLLSPEC(void) Asc_SignalPrintStack(int signum);
 
+/** Return the length of the specified stack. For debugging. */
 ASC_DLLSPEC(int) Asc_SignalStackLength(int signum);
+
+/** For debugging.
+	@return handler at top of specified stack, or NULL if stack is empty.
+*/
+ASC_DLLSPEC(SigHandlerFn *) Asc_SignalStackTop(int signum);
 
 #endif  /* ASC_ASCSIGNAL_H */
 
