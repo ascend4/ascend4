@@ -172,7 +172,7 @@ int Asc_SignalInit(void)
   }
   f_seg_top_of_stack = -1;
 
-  /* push the old ones if any, on the stack. */
+  /* old signals are *not* stored */
   initstack(f_fpe_traps, &f_fpe_top_of_stack, SIGFPE);
   initstack(f_int_traps, &f_int_top_of_stack, SIGINT);
   initstack(f_seg_traps, &f_seg_top_of_stack, SIGSEGV);
@@ -272,7 +272,6 @@ int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
     case SIGINT:
 	  CONSOLE_DEBUG("PUSH SIGINT");
       err = push_trap(f_int_traps, &f_int_top_of_stack, tp);
-      print_stack(SIGINT,f_int_traps,f_int_top_of_stack);
       break;
     case SIGSEGV:
 	  /* CONSOLE_DEBUG("PUSH SIGSEGV"); */
@@ -281,7 +280,7 @@ int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
     default:
       return -1;
   }
-  if (err != 0) {
+  if(err != 0){
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Error from push_trap or fenv_push (err = %d, signal=#%d).",err, signum);
     return err;
   }
@@ -302,19 +301,20 @@ int Asc_SignalHandlerPop(int signum, SigHandlerFn *tp){
 
   switch (signum) {
   case SIGFPE:
-    //CONSOLE_DEBUG("POP SIGFPE");
+    CONSOLE_DEBUG("POP SIGFPE");
     err = pop_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
-#ifdef HAVE_C99FPE
-	err = fenv_pop(f_fenv_stack, &f_fenv_stack_top);
+#if 0 && defined(HAVE_C99FPE)
+	if(!err){
+		err = fenv_pop(f_fenv_stack, &f_fenv_stack_top);
+	}
 #endif
     break;
   case SIGINT:
     CONSOLE_DEBUG("POP SIGINT");
     err = pop_trap(f_int_traps, &f_int_top_of_stack, tp);
-	print_stack(SIGINT,f_int_traps,f_int_top_of_stack);
     break;
   case SIGSEGV:
-    /* CONSOLE_DEBUG("POP SIGSEGV"); */
+    CONSOLE_DEBUG("POP SIGSEGV");
     err = pop_trap(f_seg_traps, &f_seg_top_of_stack, tp);
     break;
   default:
@@ -326,7 +326,7 @@ int Asc_SignalHandlerPop(int signum, SigHandlerFn *tp){
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack pop mismatch.",signum);
     return err;
   }
-  Asc_SignalRecover(TRUE);
+  SIGNAL(signum,Asc_SignalStackTop(signum));
   return 0;
 }
 
@@ -378,16 +378,34 @@ void Asc_SignalPrintStack(int signum){
 int Asc_SignalStackLength(int signum){
 	switch(signum){
 		case SIGINT:
-			return f_int_top_of_stack;
+			return f_int_top_of_stack + 1;
 		case SIGFPE:
-			return f_fpe_top_of_stack;
+			return f_fpe_top_of_stack + 1;
 		case SIGSEGV:
-			return f_seg_top_of_stack;
+			return f_seg_top_of_stack + 1;
 		default:
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid signal %d",signum);
+			return 0;
 	}
 }
 
+SigHandlerFn *Asc_SignalStackTop(int signum){
+	SigHandlerFn **stack;
+	int *ptr;
+	switch(signum){
+		case SIGINT:
+			stack = f_int_traps; ptr = &f_int_top_of_stack; break;
+		case SIGFPE:
+			stack = f_fpe_traps; ptr = &f_fpe_top_of_stack; break;
+		case SIGSEGV:
+			stack = f_seg_traps; ptr = &f_seg_top_of_stack; break;
+	}
+	if(stack==NULL)return NULL;
+	if(ptr==NULL)return NULL;
+	if(*ptr < 0) return NULL;
+	if(*ptr >= MAX_TRAP_DEPTH) return NULL;
+	return stack[*ptr];
+}
 
 /*------------------------------------------------------------------------------
   UTILITY FUNCTIONS
@@ -425,6 +443,9 @@ static void initstack(SigHandlerFn **traps, int *stackptr, int sig){
     traps[0] = old;
     *stackptr = 0;
     (void)SIGNAL(sig,old);
+  }else{
+	CONSOLE_DEBUG("Initialising stack for signal %d as empty",sig);
+	*stackptr = -1;
   }
 }
 
@@ -432,22 +453,15 @@ static void reset_trap(int signum, SigHandlerFn **tlist, int tos){
   SigHandlerFn *tp;
   SigHandlerFn *oldfn;
   if ((tlist != NULL) && (tos >= 0) && (tos < MAX_TRAP_DEPTH)) {
-    oldfn = SIGNAL(signum,SIG_DFL);
+    oldfn = signal(signum,SIG_DFL);
     tp = tlist[tos];
     if (tp != SIG_ERR) {
-#ifdef ASC_RESETNEEDED
-# ifdef SIGNAL_DEBUG
-		CONSOLE_DEBUG("Resetting signal #%d (was %p, new %p)",signum,oldfn,tp);
-# endif
-      (void)SIGNAL(signum,tp);
-#else
-# ifdef SIGNAL_DEBUG
+#ifndef ASC_RESETNEEDED
 	  if(tp!=oldfn){
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Resetting signal %d (shouldn't be necessary)",signum);
-        (void)SIGNAL(signum,tp);
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Resetting signal %d (was=%p, new=%p",signum,oldfn,tp);
 	  }
-# endif
 #endif
+      (void)signal(signum,tp);
     }
   }else{
     (void)SIGNAL(signum,SIG_DFL);
@@ -459,19 +473,19 @@ static void reset_trap(int signum, SigHandlerFn **tlist, int tos){
 */
 static int push_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp){
   if (tlist == NULL) {
-    CONSOLE_DEBUG("TLIST IS NULL");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"TLIST is NULL");
     return -1;
   }
   if (stackptr == NULL) {
-    CONSOLE_DEBUG("STACKPTR IS NULL");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"STACKPTR is NULL");
     return -1;
   }
   if (tp == NULL) {
-    CONSOLE_DEBUG("TP IS NULL");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"TP is NULL");
     return 2;
   }
   if (*stackptr > MAX_TRAP_DEPTH-1) {
-    CONSOLE_DEBUG("TLIST LENGTH = CAPACITY");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"stackptr >= capacity");
     return 1;
   }
   ++(*stackptr);
@@ -480,9 +494,11 @@ static int push_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp){
 }
 
 
-/*
-	Returns: 0 -ok, 2 NULL list input, 1 empty list input,
-	-1 mismatched input tp and stack data.
+/**
+	@return 0 on success, 2 on NULL tlist or stackptr input, 1 on empty stack
+	or -1 on mismatched input tp and stack data
+
+	Any non-zero return code leaves the stack as it was.
 */
 static int pop_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp){
   SigHandlerFn *oldtrap;
@@ -494,15 +510,16 @@ static int pop_trap(SigHandlerFn **tlist, int *stackptr, SigHandlerFn *tp){
     return 1;
   }
   oldtrap = tlist[*stackptr];
+  if(oldtrap != tp)return -1;
   tlist[*stackptr] = NULL;
   --(*stackptr);
-  return (-(oldtrap != tp));
+  return 0;
 }
 
 static void print_stack(int signum, SigHandlerFn **tlist, int tos){
 	int i;
 	CONSOLE_DEBUG("---------------");
-	for(i=0;i<tos;++i){
+	for(i=0;i<=tos;++i){
 		CONSOLE_DEBUG("Signal #%d, stack %d/%d: %p",signum,i,tos,tlist[i]);
 	}
 	CONSOLE_DEBUG("--------------- = %d",tos);
