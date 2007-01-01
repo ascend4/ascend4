@@ -202,8 +202,11 @@ class Browser:
 		if self.options.library_path != None:
 			_path = os.path.abspath(self.options.library_path)
 			_pathsrc = "command line options"
-			# when a special path is specified, use that as the file-open location
-			self.fileopenpath = _path
+			# when a special path is specified, use the last path component as the file-open location
+			if platform.system()=="Windows":
+				self.fileopenpath = _path.split(":").pop()
+			else:
+				self.fileopenpath = _path.split(":").pop()
 		else:
 			if _prefpath:
 				_path = _prefpath
