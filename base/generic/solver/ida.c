@@ -224,6 +224,7 @@ void integrator_ida_create(IntegratorSystem *blsys){
 	enginedata->safeeval = 0;
 	enginedata->vfilter.matchbits =  VAR_SVAR | VAR_ACTIVE | VAR_FIXED;
 	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_ACTIVE;
+	enginedata->pfree = NULL;
 
 	enginedata->rfilter.matchbits =  REL_EQUALITY | REL_INCLUDED | REL_ACTIVE;
 	enginedata->rfilter.matchvalue = REL_EQUALITY | REL_INCLUDED | REL_ACTIVE;
