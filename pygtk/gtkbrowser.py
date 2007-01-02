@@ -728,10 +728,8 @@ class Browser:
 			status = self.sim.checkDoF()
 			if status==ascpy.ASCXX_DOF_UNDERSPECIFIED:
 				self.on_show_fixable_variables_activate(None)
-				return
 			elif status==ascpy.ASCXX_DOF_OVERSPECIFIED:
 				self.on_show_freeable_variables_activate(None)
-				return
 			elif status==ascpy.ASCXX_DOF_STRUCT_SINGULAR:
 				if not self.sim.checkStructuralSingularity():
 					sing = self.sim.getSingularityInfo()
@@ -754,9 +752,8 @@ class Browser:
 
 					_dialog = InfoDialog(self,self.window,text,title)
 					_dialog.run()
-				return
-
-			self.reporter.reportNote("System DoF check OK")
+			else:
+				self.reporter.reportNote("System DoF check OK")
 
 		except RuntimeError, e:
 			self.stop_waiting()
@@ -764,7 +761,6 @@ class Browser:
 			return
 
 		self.stop_waiting()
-
 		self.modelview.refreshtree()
 
 	def do_method(self,method):
@@ -796,13 +792,17 @@ class Browser:
 		# causes prefs to be saved unless they are still being used elsewher
 		del(self.prefs)
 
+		print_loading_status("Clearing error callback")		
+		self.reporter.clearPythonErrorCallback()
+
 		print_loading_status("Closing down GTK")
 		gtk.main_quit()
 
-		print_loading_status("Clearing error callback")		
-		self.reporter.clearPythonErrorCallback()
+		print_loading_status("Clearing library")			
+		self.library.clear()
 		
 		print_loading_status("Quitting")
+
 		return False
 
 	def on_tools_sparsity_click(self,*args):
