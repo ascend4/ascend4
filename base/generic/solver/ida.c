@@ -88,7 +88,7 @@
 # error "Failed to include ASCEND IDA header file"
 #endif
 
-#define FEX_DEBUG
+/* #define FEX_DEBUG */
 #define JEX_DEBUG
 #define SOLVE_DEBUG
 #define STATS_DEBUG
@@ -699,11 +699,11 @@ int integrator_ida_solve(
 #endif
 			Asc_SignalHandlerPushDefault(SIGFPE);
 		}
-		if (SETJMP(g_fpe_env)==0) {
+		if (setjmp(g_fpe_env)==0) {
 
-			CONSOLE_DEBUG("Raising signal...");
-			CONSOLE_DEBUG("1/0 = %f", div1(1.0,0.0));
-			CONSOLE_DEBUG("Still here...");
+			//CONSOLE_DEBUG("Raising signal...");
+			//CONSOLE_DEBUG("1/0 = %f", div1(1.0,0.0));
+			//CONSOLE_DEBUG("Still here...");
 		
 			/* correct initial values, given derivatives */
 # if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
@@ -771,7 +771,7 @@ int integrator_ida_solve(
 		asc_assert(t > t0);
 
 #ifdef SOLVE_DEBUG
-		CONSOLE_DEBUG("Integratoring from t0 = %f to t = %f", t0, t);
+		CONSOLE_DEBUG("Integrating from t0 = %f to t = %f", t0, t);
 #endif
 
 		flag = IDASolve(ida_mem, t, &tret, yret, ypret, IDA_NORMAL);
@@ -956,7 +956,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	IntegratorSystem *blsys;
 	IntegratorIdaData *enginedata;
 	char *relname;
-#ifdef JEX_DEBUG
+#ifdef DJEX_DEBUG
 	char *varname;
 #endif
 	int status;
@@ -979,7 +979,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	integrator_set_y(blsys, NV_DATA_S(yy));
 	integrator_set_ydot(blsys, NV_DATA_S(yp));
 
-#ifdef JEX_DEBUG
+#ifdef DJEX_DEBUG
 	/* print vars */
 	for(i=0; i < blsys->n_y; ++i){
 		varname = var_make_name(blsys->system, blsys->y[i]);
@@ -1021,7 +1021,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 		}
 
 		/* output what's going on here ... */
-#ifdef JEX_DEBUG
+#ifdef DJEX_DEBUG
 		relname = rel_make_name(blsys->system, *relptr);
 		CONSOLE_DEBUG("RELATION %d '%s'",i,relname);
 		fprintf(stderr,"%d: '%s': ",i,relname);
@@ -1054,7 +1054,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 		}
 	}
 
-#ifdef JEX_DEBUG
+#ifdef DJEX_DEBUG
 	CONSOLE_DEBUG("PRINTING JAC");
 	fprintf(stderr,"\t");
 	for(j=0; j < blsys->n_y; ++j){
@@ -1082,7 +1082,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 		return 1;
 	}
 
-#ifdef FEX_DEBUG
+#ifdef DJEX_DEBUG
 	CONSOLE_DEBUG("DJEX RETURNING 0");
 #endif
 	return 0;

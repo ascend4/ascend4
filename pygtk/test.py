@@ -292,7 +292,7 @@ class TestIDA(Ascend):
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
-		I.setParameter('calcic',False)
+		I.setParameter('calcic','NONE')
 		I.setParameter('linsolver','DENSE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
