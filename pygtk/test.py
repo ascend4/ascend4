@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import unittest
 import ascpy
 import math
@@ -376,11 +377,8 @@ class NotToBeTested:
 		pass
 		
 if __name__=='__main__':
-	pass
 	atexit.register(ascpy.shutdown)
-	suite = unittest.TestSuite()
+	#suite = unittest.TestSuite()
 	#suite = unittest.defaultTestLoader.loadTestsFromName('__main__')
-	suite.addTests(cunit.load("base/generic/test/libasctestsuite.so"))
-	#suite.addTest(TestLSODE)
-	#suite.addTests(csuites)
-	unittest.TextTestRunner(verbosity=2).run(suite)
+	#unittest.TextTestRunner(verbosity=2).run(suite)
+	unittest.main()	
