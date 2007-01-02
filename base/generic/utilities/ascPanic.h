@@ -91,11 +91,11 @@ NORETURN ASC_DLLSPEC(void) asc_panic_nofunc(CONST char *format, ...);
 		, (float)A, (float)B))
 
 #define ASC_ASSERT_RANGE(A,B,C) \
-	(void)((A) >= (B) && (A) < (C) ? 0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
+	(void) ((A) >= (B) && (A) < (C) ? 0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
 		, __FILE__, __LINE__, __FUNCTION__\
 		,"Assertion failed: %s < %s < %s (val = %f, low = %f, up = %f)" \
 		, #B, #A, #C \
-		, (float)A, (float)B), (float)C)
+		, (float)A, (float)B, (float)C))
 
 #endif
 
