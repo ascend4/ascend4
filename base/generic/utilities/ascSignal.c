@@ -63,7 +63,7 @@
 #include "ascSignal.h"
 #include "ascPanic.h"
 
-#define SIGNAL_DEBUG
+/* #define SIGNAL_DEBUG */
 
 /*------------------------------------------------------------------------------
   GLOBALS AND FOWARD DECS
@@ -303,7 +303,9 @@ int Asc_SignalHandlerPop(int signum, SigHandlerFn *tp){
 
   switch (signum) {
   case SIGFPE:
+#ifdef SIGNAL_DEBUG
     CONSOLE_DEBUG("POP SIGFPE");
+#endif
     err = pop_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
 #if 0 && defined(HAVE_C99FPE)
 	if(!err){
@@ -312,19 +314,25 @@ int Asc_SignalHandlerPop(int signum, SigHandlerFn *tp){
 #endif
     break;
   case SIGINT:
+#ifdef SIGNAL_DEBUG
     CONSOLE_DEBUG("POP SIGINT");
+#endif
     err = pop_trap(f_int_traps, &f_int_top_of_stack, tp);
     break;
   case SIGSEGV:
+#ifdef SIGNAL_DEBUG
     CONSOLE_DEBUG("POP SIGSEGV");
+#endif
     err = pop_trap(f_seg_traps, &f_seg_top_of_stack, tp);
     break;
   default:
-	CONSOLE_DEBUG("popping invalid signal type (signum = %d)", signum);
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Popping invalid signal type (signum = %d)", signum);
     return -1;
   }
   if (err != 0 && tp != NULL) {
+#ifdef SIGNAL_DEBUG
 	CONSOLE_DEBUG("stack pop mismatch");
+#endif
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack pop mismatch.",signum);
     return err;
   }
@@ -354,10 +362,11 @@ void Asc_SignalTrap(int sigval){
     LONGJMP(g_seg_env,sigval);
     break;
   default:
-    CONSOLE_DEBUG("Installed on unexpected signal (sigval = %d).", sigval);
-    CONSOLE_DEBUG("Returning ... who knows where :-)");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Installed on unexpected signal (sigval = %d). Returning (who knows where...)", sigval);
+
     break;
   }
+  CONSOLE_DEBUG("Returning ... who knows where :-)");
   return;
 }
 
@@ -441,12 +450,16 @@ static void initstack(SigHandlerFn **traps, int *stackptr, int sig){
   SigHandlerFn *old;
   old = SIGNAL(sig,SIG_DFL);
   if (old != SIG_ERR && old != SIG_DFL){
+#ifdef SIGNAL_DEBUG
 	CONSOLE_DEBUG("Initialising stack for signal %d to %p",sig,old);
+#endif
     traps[0] = old;
     *stackptr = 0;
     (void)SIGNAL(sig,old);
   }else{
+#ifdef SIGNAL_DEBUG
 	CONSOLE_DEBUG("Initialising stack for signal %d as empty",sig);
+#endif
 	*stackptr = -1;
   }
 }
@@ -540,7 +553,9 @@ static void print_stack(int signum, SigHandlerFn **tlist, int tos){
 	return 0 on success 
 */
 static int fenv_push(fenv_t *stack, int *top, int excepts){
+#ifdef SIGNAL_DEBUG
 	CONSOLE_DEBUG("Pushing FENV flags %d",excepts);
+#endif
 
 	if(*top > MAX_TRAP_DEPTH - 1){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"FPE stack is full");
@@ -568,8 +583,9 @@ static int fenv_push(fenv_t *stack, int *top, int excepts){
 	Restore a saved FPU state. Return 0 on success.
 */
 static int fenv_pop(fenv_t *stack, int *top){
+#ifdef CONSOLE_DEBUG
 	CONSOLE_DEBUG("Popping FENV flags");
-
+#endif
 	if(*top < 0){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"FPE stack is empty");
 		return 1;
