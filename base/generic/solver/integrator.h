@@ -196,7 +196,7 @@ typedef struct{
 	IntegratorSolveFn *solvefn;
 	IntegratorFreeFn *freefn;
 	IntegratorEngine engine;
-	const char name[];
+	const char *name;
 } IntegratorInternals;
 
 /*------------------------------------*/

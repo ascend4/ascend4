@@ -202,7 +202,7 @@ static void IntegInitSymbols(void){
 */
 const IntegratorLookup *integrator_get_engines(){
 #define S ,
-#define I(N,P) {INTEG_##N, P.name}
+#define I(N,P) {INTEG_##N, #N}
 	static const IntegratorLookup list[] = {
 		INTEG_LIST
 		,{INTEG_UNKNOWN,NULL}
