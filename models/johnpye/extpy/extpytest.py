@@ -27,7 +27,15 @@ def mypythonmethod(self):
 	self.y_1.setFixed(not self.x_1.isFixed())
 	self.y_2.setFixed(not self.x_2.isFixed())
 
-	browser.reporter.reportNote("No, now go away or I shall taunt you a second time!")
+	print "SETTING VALUE OF X_2"
+	self.x_2.setRealValueWithUnits(2.0,"m")
+
+	print "X_2 = %f" % self.x_2
+
+	if browser:
+		browser.reporter.reportNote("No, now go away or I shall taunt you a second time!")
+	else:
+		print "No, now go away or I shall taunt you a second time!"
 
 extpy.registermethod(mypythonmethod)
 #the above method can be called using "EXTERNAL mypythonmethod(SELF)" in ASCEND.

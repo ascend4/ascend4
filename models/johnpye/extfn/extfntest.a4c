@@ -20,9 +20,9 @@ METHOD values;
 	x := 1.0;
 END values;
 
-METHOD default_self;
+METHOD on_load;
 	RUN specify; RUN values;
-END default_self;
+END on_load;
 
 METHOD self_test;
 	ASSERT y == 2;

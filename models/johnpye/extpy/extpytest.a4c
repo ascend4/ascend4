@@ -35,4 +35,8 @@ METHOD pythonthing;
   EXTERNAL mypythonmethod(SELF);
 END pythonthing;
 
+METHOD self_test;
+	ASSERT abs(x_2 - 2.0 {m}) < 1e-8 {m};
+END self_test;
+
 END extpytest;
