@@ -120,7 +120,7 @@ public:
 %template(AnnotationVector) std::vector<Annotation>;
 
 %rename(Instance) Instanc;
-%rename(Name) Nam;#include "incidencematrix.h"
+%rename(Name) Nam;
 %rename(getSetIntValue) Instanc::getSetValue<long>;
 %rename(getSetStringValue) Instanc::getSetValue<SymChar>;
 %rename(Units) UnitsM;
@@ -483,9 +483,28 @@ public:
 			return (self.getValue(),other.getValue())
 
 		def __sub__(self,other):
+			print "self (%s) - other (%s)" % (self,other)
 			if other.__class__==int or other.__class__==float:
 				return self.getValue() - other
 			return self.getValue() - other.getValue()
+
+		def __rsub__(self,other):
+			print "other (%s) - self (%s)" % (other,self)
+			if other.__class__==int or other.__class__==float:
+				return other - self.getValue()
+			return other.getValue() - self.getValue()
+
+		def __add__(self,other):
+			print "self (%s) + other (%s) = %f" % (self,other,self.getValue() + other)
+			if other.__class__==int or other.__class__==float:
+				return self.getValue() + other
+			return self.getValue() + other.getValue()
+
+		def __radd__(self,other):
+			print "other (%s) + self (%s)" % (other,self)
+			if other.__class__==int or other.__class__==float:
+				return self.getValue() + other
+			return self.getValue() + other.getValue()
 	}
 }
 
