@@ -1,4 +1,5 @@
 Import('env')
+import platform
 
 testsrcs = ['#test/'+i for i in Split("""
   assertimpl.c
@@ -21,20 +22,34 @@ if env.has_key('CUNIT_LIBPATH'):
 	libpath.append(env['CUNIT_LIBPATH'])
 	#print "CUNIT_LIBPATH ---> ",libpath
 
+cppdefines = []
+if env.has_key('CPPDEFINES'):
+	cppdefines += env.get('CPPDEFINES')
+cppdefines += ['-DASC_SHARED']
+
+libs = ['ascend','m','cunit']
+if platform.system()!="Windows":
+	libs += ['dl']
+
 objs = []
 for src in srcs+testsrcs:
 	objs += env.SharedObject(src
 		, CPPPATH = cpppath
 	)
+
 objs += env.SharedObject('test_ascend_base.c'
 		, CPPPATH = cpppath
 	)
 
+print "OBJS = "
+for o in objs:
+	print o
+
 env.SharedLibrary('asctestsuite',objs
 	, CPPPATH = cpppath
-	, LIBS = ['ascend','m','cunit','dl']
+	, LIBS = libs
 	, LIBPATH = libpath
-	, CPPDEFINES = env.get('CPPDEFINES') + ['-DASC_SHARED']
+	, CPPDEFINES = cppdefines
 )
 
 env.Program('test',['test.c']
