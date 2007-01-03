@@ -370,7 +370,7 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			" solver bundled with IDA, or one of the Krylov solvers SPGMR, SPBCG"
 			" or SPTFQMR (which still need preconditioners to be implemented"
 			" before they can be very useful."
-		}, "ASCEND"}, (char *[]){"ASCEND","DENSE","BAND","SPGMR","SPBCG","SPTFQMR",NULL}
+		}, "SPGMR"}, (char *[]){"ASCEND","DENSE","BAND","SPGMR","SPBCG","SPTFQMR",NULL}
 	);
 
 	slv_param_int(p,IDA_PARAM_MAXL
@@ -702,7 +702,7 @@ int integrator_ida_solve(
 
 	if(icopt){
 		blsys->currentstep=0;
-	 	t_index=start_index;
+	 	t_index=start_index + 1;
 		tout1 = samplelist_get(blsys->samples, t_index);
 
 		CONSOLE_DEBUG("SOLVING INITIAL CONDITIONS IDACalcIC (tout1 = %f)", tout1);
