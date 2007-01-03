@@ -305,7 +305,7 @@
 #ifndef ASC_MTX_H
 #define ASC_MTX_H
 
-/** @addtogroup linear
+/** @defgroup linear
 	Ascend linear solver routines
 	@{
 */

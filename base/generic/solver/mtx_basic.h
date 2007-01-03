@@ -34,7 +34,9 @@
 #ifndef __MTX_BASIC_H_SEEN__
 #define __MTX_BASIC_H_SEEN__
 
-/**	@addtogroup linear @{ */
+/**	@addtogroup linear 
+	Linear solver routines
+	@{ */
 
 /***********************************************************************\
   mtx types creation/destruction/info routines

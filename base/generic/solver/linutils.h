@@ -41,7 +41,9 @@
 #ifndef linutils_already_included
 #define linutils_already_included
 
-/**	@addtogroup linear @{ */
+/**	@addtogroup linear 
+	Linear solver routines
+	@{ */
 
 ASC_DLLSPEC(double ) linutils_A_1_norm(mtx_matrix_t mtx,
                                 mtx_region_t *reg);

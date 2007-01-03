@@ -39,7 +39,9 @@
 #ifndef __MTX_REORDER_H_SEEN__
 #define __MTX_REORDER_H_SEEN__
 
-/**	@addtogroup linear @{ */
+/**	@addtogroup linear 
+	Linear solver routines
+	@{ */
 
 enum mtx_reorder_method {
   mtx_UNKNOWN,  /**< junk method */
