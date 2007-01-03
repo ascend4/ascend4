@@ -120,6 +120,35 @@ class TestIntegrator(Ascend):
 	def testIDA(self):
 		self._testIntegrator('IDA')
 
+	def testparameters(self):
+		self.L.load('johnpye/shm.a4c')
+		M = self.L.findType('shm').getSimulation('sim')
+		M.build()
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		P = I.getParameters()
+		for p in P:
+			print p.getName(),"=",p.getValue()
+		assert len(P)==11
+		assert P[0].isStr()
+		assert P[0].getName()=="linsolver"
+		assert P[0].getValue()=='SPGMR'
+		assert P[2].getName()=="autodiff"
+		assert P[2].getValue()==True
+		assert P[7].getName()=="atolvect"
+		assert P[7].getBoolValue() == True
+		P[2].setBoolValue(False)
+		assert P[2].getBoolValue()==False
+		I.setParameters(P)
+		assert I.getParameterValue('autodiff')==False
+		I.setParameter('autodiff',True)
+		try:
+			v = I.getParameterValue('nonexist')
+		except KeyError:
+			pass
+		else:
+			self.fail('Failed to trip invalid Integrator parameter')
+
 class TestLSODE(Ascend):
 
 	def testzill(self):
@@ -179,38 +208,7 @@ class TestLSODE(Ascend):
 		assert abs(M.R - 832) < 1.0
 		assert abs(M.F - 21.36) < 0.1
 		
-class TestIDA(Ascend):
-
-	def testparameters(self):
-		self.L.load('johnpye/shm.a4c')
-		M = self.L.findType('shm').getSimulation('sim')
-		M.build()
-		I = ascpy.Integrator(M)
-		I.setEngine('IDA')
-		P = I.getParameters()
-		for p in P:
-			print p.getName(),"=",p.getValue()
-		assert len(P)==9
-		assert P[0].isStr()
-		assert P[0].getName()=="linsolver"
-		assert P[0].getValue()=='SPGMR'
-		assert P[2].getName()=="autodiff"
-		assert P[2].getValue()==True
-		assert P[7].getName()=="atolvect"
-		assert P[7].getBoolValue() == True
-		P[2].setBoolValue(False)
-		assert P[2].getBoolValue()==False
-		I.setParameters(P)
-		for p in I.getParameters():
-			print p.getName(),"=",p.getValue()
-		assert I.getParameterValue('autodiff')==False
-		I.setParameter('autodiff',True)
-		try:
-			v = I.getParameterValue('nonexist')
-		except KeyError:
-			pass
-		else:
-			self.fail('Failed to trip invalid Integrator parameter')
+class TestIDADENSE(Ascend):
 
 	def testnewton(self):
 		sys.stderr.write("STARTING TESTNEWTON\n")
@@ -220,6 +218,7 @@ class TestIDA(Ascend):
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
+		I.setParameter('linsolver','DENSE')
 		I.setParameter('safeeval',True)
 		I.setParameter('rtol',1e-8)
 		I.setMaxSubStep(0.001)
@@ -233,23 +232,6 @@ class TestIDA(Ascend):
 		print "x = %f" % M.x
 		print "v = %f" % M.v
 		M.run(T.getMethod('self_test'))
-
-	def testlotka(self):
-		self.L.load('johnpye/lotka.a4c')
-		M = self.L.findType('lotka').getSimulation('sim')
-		M.setSolver(ascpy.Solver("QRSlv"))
-		I = ascpy.Integrator(M)
-		I.setEngine('IDA')
-		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5);
-		I.setParameter('rtol',1e-8);
-		I.analyse()
-		assert I.getNumVars()==2
-		assert abs(M.R - 1000) < 1e-300
-		I.solve()
-		assert I.getNumObservedVars() == 3;
-		assert abs(M.R - 832) < 1.0
-		assert abs(M.F - 21.36) < 0.1
 
 	def testlotkaDENSE(self):
 		self.L.load('johnpye/lotka.a4c')
@@ -268,23 +250,6 @@ class TestIDA(Ascend):
 		assert I.getNumObservedVars() == 3;
 		assert abs(M.R - 832) < 1.0
 		assert abs(M.F - 21.36) < 0.1
-
-	def testzill(self):
-		self.L.load('johnpye/zill.a4c')
-		T = self.L.findType('zill')
-		M = T.getSimulation('sim')
-		M.setSolver(ascpy.Solver('QRSlv'))
-		I = ascpy.Integrator(M)
-		I.setEngine('IDA')
-		I.setParameter('safeeval',False)
-		I.setMinSubStep(1e-7)
-		I.setMaxSubStep(0.001)
-		I.setMaxSubSteps(10000)
-		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units(), 1.0, 1.5, 5);
-		I.analyse()
-		I.solve()
-		M.run(T.getMethod('self_test'))
 		
 	def testdenx(self):
 		self.L.load('johnpye/idadenx.a4c')
@@ -321,32 +286,31 @@ class TestIDA(Ascend):
 		I.setParameter('rtol',0)
 		I.setParameter('atol',1e-3);
 		I.setParameter('atolvect',False)
-		I.setParameter('calcic',True)
+		I.setParameter('calcic','YA_YDP')
 		I.analyse()
 		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 11);
 		I.solve()
 		assert abs(M.u[2][2].getValue()) < 1e-5
-
-	def testdenxSPGMR(self):
-		self.L.load('johnpye/idadenx.a4c')
-		M = self.L.findType('idadenx').getSimulation('sim')
-		M.setSolver(ascpy.Solver('QRSlv'))
+		
+# these tests are disabled until SPGMR preconditioning has been implemented
+class TestIDASPGMR:#(Ascend):
+	def testlotka(self):
+		self.L.load('johnpye/lotka.a4c')
+		M = self.L.findType('lotka').getSimulation('sim')
+		M.setSolver(ascpy.Solver("QRSlv"))
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
-		I.setMaxSubStep(0);
-		I.setInitialSubStep(0);
-		I.setMaxSubSteps(0);
-		I.setParameter('autodiff',True)
-		I.setParameter('linsolver','SPGMR')
-		I.setParameter('gsmodified',False)
-		I.setParameter('maxncf',10)
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5);
+		I.setParameter('rtol',1e-8);
 		I.analyse()
+		assert I.getNumVars()==2
+		assert abs(M.R - 1000) < 1e-300
 		I.solve()
-		assert abs(float(M.y1) - 5.1091e-08) < 1e-10;
-		assert abs(float(M.y2) - 2.0437e-13) < 1e-15;
-		assert abs(float(M.y3) - 1.0) < 1e-5;
+		assert I.getNumObservedVars() == 3;
+		assert abs(M.R - 832) < 1.0
+		assert abs(M.F - 21.36) < 0.1
+
 
 	def testkryx(self):
 		self.L.load('johnpye/idakryx.a4c')
@@ -371,11 +335,49 @@ class TestIDA(Ascend):
 		I.solve()
 		assert 0
 
+	def testzill(self):
+		self.L.load('johnpye/zill.a4c')
+		T = self.L.findType('zill')
+		M = T.getSimulation('sim')
+		M.setSolver(ascpy.Solver('QRSlv'))
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setParameter('safeeval',False)
+		I.setMinSubStep(1e-7)
+		I.setMaxSubStep(0.001)
+		I.setMaxSubSteps(10000)
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units(), 1.0, 1.5, 5);
+		I.analyse()
+		I.solve()
+		M.run(T.getMethod('self_test'))
+
+	def testdenxSPGMR(self):
+		self.L.load('johnpye/idadenx.a4c')
+		M = self.L.findType('idadenx').getSimulation('sim')
+		M.setSolver(ascpy.Solver('QRSlv'))
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
+		I.setMaxSubStep(0);
+		I.setInitialSubStep(0);
+		I.setMaxSubSteps(0);
+		I.setParameter('autodiff',True)
+		I.setParameter('linsolver','SPGMR')
+		I.setParameter('gsmodified',False)
+		I.setParameter('maxncf',10)
+		I.analyse()
+		I.solve()
+		assert abs(float(M.y1) - 5.1091e-08) < 1e-10;
+		assert abs(float(M.y2) - 2.0437e-13) < 1e-15;
+		assert abs(float(M.y3) - 1.0) < 1e-5;
+
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
 	def nothing(self):
 		pass
-		
+
 if __name__=='__main__':
 	atexit.register(ascpy.shutdown)
 	#suite = unittest.TestSuite()

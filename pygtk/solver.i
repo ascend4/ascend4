@@ -150,7 +150,7 @@ public:
 			if self.isStr(): return self.getStrValue()
 			raise TypeError
 		def setValue(self,value):
-			if self.isBool(): 
+			if self.isBool():
 				self.setBoolValue(value)
 				return
 			if self.isReal():
