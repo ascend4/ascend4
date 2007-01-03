@@ -870,6 +870,37 @@ def CheckYacc(context):
 	return is_ok
 
 #----------------
+# LEX
+
+lex_test_text = """
+%{
+#include <stdio.h>
+%}
+DIGIT	[0-9]
+ID		[a-z][a-z0-9]*
+%%
+{DIGIT}+	{
+		printf("A digit: %s\\n",yytext);
+	}
+
+[ \\t\\n]+    /* ignore */
+
+.			{
+		printf("Unrecognized guff");
+	}
+%%
+main(){
+	yylex();
+}
+"""
+
+def CheckLex(context):
+	context.Message("Checking for Lex ('%s')... " % context.env.get('LEX'))
+	is_ok = context.TryCompile(lex_test_text,".l")
+	context.Result(is_ok)
+	return is_ok
+
+#----------------
 # CUnit test
 
 cunit_test_text = """
@@ -1366,6 +1397,7 @@ conf = Configure(env
 		, 'CheckGcc' : CheckGcc
 		, 'CheckGccVisibility' : CheckGccVisibility
 		, 'CheckYacc' : CheckYacc
+		, 'CheckLex' : CheckLex
 		, 'CheckTkTable' : CheckTkTable
 		, 'CheckX11' : CheckX11
 		, 'CheckIDA' : CheckIDA
@@ -1438,7 +1470,10 @@ if not conf.CheckYacc():
 else:
 	conf.env['HAVE_YACC']=True
 
-conf.env['HAVE_LEX']=True
+if not conf.CheckLex():
+	print "YACC NOT FOUND OR NOT WORKING"
+else:
+	conf.env['HAVE_LEX']=True
 
 # Tcl/Tk
 
