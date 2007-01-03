@@ -162,7 +162,7 @@ class TestLSODE(Ascend):
 		I.setMaxSubStep(0.001)
 		I.setMaxSubSteps(10000)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units(), 1.0, 1.5, 5);
+		I.setLinearTimesteps(ascpy.Units(), 1.0, 1.5, 5)
 		I.analyse()
 		I.solve()
 		M.run(T.getMethod('self_test'))
@@ -184,7 +184,7 @@ class TestLSODE(Ascend):
 		I.setMaxSubSteps(10000)
 		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.v)/float(M.g), 2);
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.v)/float(M.g), 2)
 		I.analyse()
 		I.solve()
 		print "At end of simulation,"
@@ -199,7 +199,7 @@ class TestLSODE(Ascend):
 		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5);
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5)
 		I.analyse()
 		print "Number of vars = %d" % I.getNumVars()
 		assert I.getNumVars()==2
@@ -207,8 +207,42 @@ class TestLSODE(Ascend):
 		assert I.getNumObservedVars() == 3;
 		assert abs(M.R - 832) < 1.0
 		assert abs(M.F - 21.36) < 0.1
-		
+
+#-------------------------------------------------------------------------------
+# Testing of freesteam external steam properties functions
+
+try:
+	import freesteam
+	have_freesteam = True
+except ImportException,e:
+	have_freesteam = False
+
+if have_freesteam:
+	class TestFreesteam(Ascend):
+		def testfreesteam(self):
+			self.L.load('johnpye/thermalequilibrium2.a4c')
+			#M = self.L.findType('thermalequilibrium2').getSimulation('sim')
+			#M.setSolver(ascpy.Solver("QRSlv"))
+			#I = ascpy.Integrator(M)
+			#I.setEngine('LSODE')
+			#I.setReporter(ascpy.IntegratorReporterConsole(I))
+			#I.setLinearTimesteps(ascpy.Units("s"), 0, 3000, 30)
+			#I.setMinSubStep(0.01)
+			#I.setInitialSubStep(0.1)
+			#I.analyse()
+			#print "Number of vars = %d" % I.getNumVars()
+			#assert I.getNumVars()==2
+			#I.solve()
+			#assert I.getNumObservedVars() == 3;
+			#assert abs(M.R - 832) < 1.0
+			#assert abs(M.F - 21.36) < 0.1
+
+
+#-------------------------------------------------------------------------------
+# Testing of IDA models using DENSE linear solver
+
 class TestIDADENSE(Ascend):
+	"""IDA DAE integrator, DENSE linear solver"""
 
 	def testnewton(self):
 		sys.stderr.write("STARTING TESTNEWTON\n")
@@ -225,7 +259,7 @@ class TestIDADENSE(Ascend):
 		I.setMaxSubSteps(10000)
 		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.v)/float(M.g), 2);
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.v)/float(M.g), 2)
 		I.analyse()
 		I.solve()
 		print "At end of simulation,"
@@ -247,29 +281,29 @@ class TestIDADENSE(Ascend):
 		assert I.getNumVars()==2
 		assert abs(M.R - 1000) < 1e-300
 		I.solve()
-		assert I.getNumObservedVars() == 3;
+		assert I.getNumObservedVars() == 3
 		assert abs(M.R - 832) < 1.0
 		assert abs(M.F - 21.36) < 0.1
 		
 	def testdenx(self):
 		self.L.load('johnpye/idadenx.a4c')
 		M = self.L.findType('idadenx').getSimulation('sim')
-		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		M.setSolver(ascpy.Solver("QRSlv"))
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setParameter('calcic','NONE')
 		I.setParameter('linsolver','DENSE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
+		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11)
 		I.setMaxSubStep(0);
-		I.setInitialSubStep(0);
+		I.setInitialSubStep(0)
 		I.setMaxSubSteps(0);
 		I.setParameter('autodiff',True)
 		I.analyse()
 		I.solve()
-		assert abs(float(M.y1) - 5.1091e-08) < 1e-10;
-		assert abs(float(M.y2) - 2.0437e-13) < 1e-15;
-		assert abs(float(M.y3) - 1.0) < 1e-5;
+		assert abs(float(M.y1) - 5.1091e-08) < 1e-10
+		assert abs(float(M.y2) - 2.0437e-13) < 1e-15
+		assert abs(float(M.y3) - 1.0) < 1e-5
 
 	def testkryxDENSE(self):
 		self.L.load('johnpye/idakryx.a4c')
@@ -288,10 +322,13 @@ class TestIDADENSE(Ascend):
 		I.setParameter('atolvect',False)
 		I.setParameter('calcic','YA_YDP')
 		I.analyse()
-		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 11);
+		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 11)
 		I.solve()
 		assert abs(M.u[2][2].getValue()) < 1e-5
-		
+	
+#-------------------------------------------------------------------------------
+# Testing of IDA models using SPGMR linear solver (Krylov)
+	
 # these tests are disabled until SPGMR preconditioning has been implemented
 class TestIDASPGMR:#(Ascend):
 	def testlotka(self):
@@ -301,13 +338,13 @@ class TestIDASPGMR:#(Ascend):
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5);
-		I.setParameter('rtol',1e-8);
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5)
+		I.setParameter('rtol',1e-8)
 		I.analyse()
 		assert I.getNumVars()==2
 		assert abs(M.R - 1000) < 1e-300
 		I.solve()
-		assert I.getNumObservedVars() == 3;
+		assert I.getNumObservedVars() == 3
 		assert abs(M.R - 832) < 1.0
 		assert abs(M.F - 21.36) < 0.1
 
@@ -331,7 +368,7 @@ class TestIDASPGMR:#(Ascend):
 		I.setParameter('calcic','Y')
 		I.analyse()
 		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 10);
-		print M.udot[1][3];
+		print M.udot[1][3]
 		I.solve()
 		assert 0
 
@@ -347,7 +384,7 @@ class TestIDASPGMR:#(Ascend):
 		I.setMaxSubStep(0.001)
 		I.setMaxSubSteps(10000)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units(), 1.0, 1.5, 5);
+		I.setLinearTimesteps(ascpy.Units(), 1.0, 1.5, 5)
 		I.analyse()
 		I.solve()
 		M.run(T.getMethod('self_test'))
@@ -359,7 +396,7 @@ class TestIDASPGMR:#(Ascend):
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11);
+		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11)
 		I.setMaxSubStep(0);
 		I.setInitialSubStep(0);
 		I.setMaxSubSteps(0);
@@ -369,9 +406,9 @@ class TestIDASPGMR:#(Ascend):
 		I.setParameter('maxncf',10)
 		I.analyse()
 		I.solve()
-		assert abs(float(M.y1) - 5.1091e-08) < 1e-10;
-		assert abs(float(M.y2) - 2.0437e-13) < 1e-15;
-		assert abs(float(M.y3) - 1.0) < 1e-5;
+		assert abs(float(M.y1) - 5.1091e-08) < 1e-10
+		assert abs(float(M.y2) - 2.0437e-13) < 1e-15
+		assert abs(float(M.y3) - 1.0) < 1e-5
 
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
