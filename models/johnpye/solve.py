@@ -1,4 +1,10 @@
-from solverreporter import *
+try:
+	from solverreporter import *
+	have_solverreporter = True
+except ImportError:
+	pass
+	have_solverreporter = False
+
 import extpy
 
 def solve(self):
@@ -9,7 +15,7 @@ def solve(self):
 	print "SELF IS A MODEL"
 
 	browser = extpy.getbrowser()
-	if browser:
+	if browser and have_solverreporter:
 		solver = browser.solver;
 		reporter = SimpleSolverReporter(browser)
 	else:
