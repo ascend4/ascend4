@@ -39,6 +39,8 @@
 #ifndef __MTX_REORDER_H_SEEN__
 #define __MTX_REORDER_H_SEEN__
 
+/**	@addtogroup linear @{ */
+
 enum mtx_reorder_method {
   mtx_UNKNOWN,  /**< junk method */
   mtx_SPK1,     /**< Stadtherr's SPK1 reordering */
@@ -91,6 +93,8 @@ extern int mtx_reorder(mtx_matrix_t mtx,
  ***
  ***  Return 0 if ok, 1 if bad input detected, 2 if unable to do.
  **/
+
+/** @} */
 
 #endif /* __MTX_REORDER_H_SEEN__ */
 

@@ -34,6 +34,8 @@
 #ifndef __MTX_BASIC_H_SEEN__
 #define __MTX_BASIC_H_SEEN__
 
+/**	@addtogroup linear @{ */
+
 /***********************************************************************\
   mtx types creation/destruction/info routines
 \***********************************************************************/
@@ -1414,5 +1416,7 @@ extern void mtx__debug_output(FILE *file, mtx_matrix_t mtx);
  ***  If file is NULL, output goes to default (which is stderr.)
  ***  Doesn't care about master/slave status.
  **/
+
+/** @} */
 
 #endif /**< __MTX_BASIC_H_SEEN__ */

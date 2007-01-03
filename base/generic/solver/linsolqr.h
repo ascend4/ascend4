@@ -212,6 +212,8 @@
 #ifndef ASC_LINSOLQR_H
 #define ASC_LINSOLQR_H
 
+/**	@addtogroup linear @{ */
+
 #define LINSOLMTX_DEBUG FALSE
 /**< Debug mode. */
 #define LINQR_DROP_TOLERANCE 1.0e-16
@@ -898,5 +900,7 @@ extern int linsolqr_setup_ngslv(linsolqr_system_t sys,
 /**< Sets up the NGSlv solver. */
 extern real64 *linsolqr_get_varvalue(linsolqr_system_t sys, int n);
 /**<  Returns the value of the nth variable in sys. */
+
+/** @} */
 
 #endif  /* ASC_LINSOLQR_H */

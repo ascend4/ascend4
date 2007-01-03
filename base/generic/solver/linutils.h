@@ -41,6 +41,8 @@
 #ifndef linutils_already_included
 #define linutils_already_included
 
+/**	@addtogroup linear @{ */
+
 ASC_DLLSPEC(double ) linutils_A_1_norm(mtx_matrix_t mtx,
                                 mtx_region_t *reg);
 
@@ -58,5 +60,6 @@ ASC_DLLSPEC(double ) linutils_A_cond_kaa(linsol_system_t lin_sys,
                                   mtx_matrix_t mtx,
                                   mtx_region_t *reg);
 
-#endif /* linutils_already_included */
+/**	@} */
 
+#endif /* linutils_already_included */

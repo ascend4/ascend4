@@ -59,6 +59,8 @@
 #ifndef ASC_LINSOL_H
 #define ASC_LINSOL_H
 
+/**	@addtogroup linear @{ */
+
 typedef struct linsol_header *linsol_system_t;
 /**<  linsol_system_t is the linear system handle. */
 
@@ -288,5 +290,7 @@ extern real64 linsol_eqn_residual(linsol_system_t sys,
  *  be an original row number.
  */
 
+/** @} */
+ 
 #endif  /* ASC_LINSOL_H */
 

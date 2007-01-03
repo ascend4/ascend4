@@ -47,13 +47,14 @@ typedef int IntegratorSparseJacFn(long int Neq, realtype tt
 
 #define IDAASCEND_SUCCESS 0
 
-#define IDAASCEND_JACFUNC_RECVR 1
+#define IDAASCEND_JACFN_RECVR 1
 
 #define IDAASCEND_MEM_NULL -1
 #define IDAASCEND_LMEM_NULL -2
 #define IDAASCEND_MEM_FAIL -4
 #define IDAASCEND_JACFN_UNDEF -5
-#define IDAASCEND_JACFUNC_UNRECVR -6
+#define IDAASCEND_JACFN_UNRECVR -6
+
 /*------------------------------------
   User functions (called from ida.c in this directory)
 */

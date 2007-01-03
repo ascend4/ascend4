@@ -32,6 +32,8 @@
 #ifndef ASC_MTX_PERMS_H
 #define ASC_MTX_PERMS_H
 
+/**	@addtogroup linear @{ */
+
 /* the following block_perm functions are not yet implemented: 
  *   this is the software spec. 5/3/95 baa. */
 
@@ -477,5 +479,7 @@ extern int32 mtx_block_containing_col(mtx_matrix_t mtx,
  ***
  ***  Calls on slaves are passed up to the master matrix.
  **/
+
+/** @} */
 
 #endif /* ASC_MTX_PERMS_H */

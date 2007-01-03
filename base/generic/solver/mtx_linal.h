@@ -29,6 +29,8 @@
 #ifndef __MTX_LINAL_H_SEEN__
 #define __MTX_LINAL_H_SEEN__
 
+/**	@addtogroup linear @{ */
+
 extern void mtx_householder_transform_region(mtx_matrix_t mtx,
                                              const real64 coef,
                                              const mtx_sparse_t *orgsp,
@@ -58,5 +60,7 @@ extern void mtx_householder_transform_region(mtx_matrix_t mtx,
  ***
  ***  This decl has the '-$-' thing going on.
  **/
+
+/** @} */
 
 #endif /* __MTX_LINAL_H_SEEN__ */

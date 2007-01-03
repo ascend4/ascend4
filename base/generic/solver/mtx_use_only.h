@@ -72,6 +72,8 @@
 #ifndef __MTX_INTERNAL_USE_ONLY_H__
 #define __MTX_INTERNAL_USE_ONLY_H__
 
+/**	@addtogroup linear @{ */
+
 #ifndef FALSE
 /** These should have come in from ascConfig.h.
  *  @todo Remove redefines of FALSE & TRUE to enforce pre-inclusion of ascCenfig.h? */
@@ -697,6 +699,8 @@ extern void mtx_renull_all(mtx_matrix_t mtx, struct element_t **arr);
 /**<
  ***  Makes arr NULLed again, assuming it is size mtx->order.
  **/
+
+/** @} */
 
 #endif /* __MTX_INTERNAL_USE_ONLY_H__ */
 #endif /* none of your business if you aren't mtx_*.c */
