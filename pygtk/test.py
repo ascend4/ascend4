@@ -209,6 +209,21 @@ class TestLSODE(Ascend):
 		assert abs(M.F - 21.36) < 0.1
 
 #-------------------------------------------------------------------------------
+# Testing of a simple external function
+
+class TestExtFn(Ascend):
+	def testextfntest(self):
+		self.L.load('johnpye/extfn/extfntest.a4c')
+		M = self.L.findType('extfntest').getSimulation('sim')
+		M.build()
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		print "y = %f" % M.y
+		print "x = %f" % M.x
+		self.assertAlmostEqual(M.y, 1);
+		self.assertAlmostEqual(M.x, 0);
+		self.assertAlmostEqual(M.y, M.x + 1);
+
+#-------------------------------------------------------------------------------
 # Testing of freesteam external steam properties functions
 
 try:
@@ -219,12 +234,15 @@ except ImportError,e:
 
 if have_freesteam:
 	class TestFreesteam(Ascend):
-		def testimport(self):
+		def testload(self):
 			self.L.load('johnpye/thermalequilibrium2.a4c')
 
-		def testevaluate(self):
-			self.L.load('johnpye/thermalequilibrium2.a4c')
+		def testinstantiate(self):
+			self.testload()
 			M = self.L.findType('thermalequilibrium2').getSimulation('sim')
+
+		def testsolve(self):
+			self.testinstantiate()
 			M.setSolver(ascpy.Solver("QRSlv"))
 			#I = ascpy.Integrator(M)
 			#I.setEngine('LSODE')

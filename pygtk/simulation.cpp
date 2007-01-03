@@ -174,8 +174,15 @@ Simulation::run(const Method &method){
 
 void
 Simulation::runDefaultMethod(){
-	Method m = getType().getMethod(SymChar("on_load"));
-	run(m);
+	const Type &type = getType();
+	Method m;
+	try{
+		m = type.getMethod(SymChar("on_load"));
+	}catch(runtime_error &e){
+		ERROR_REPORTER_NOLINE(ASC_USER_WARNING,"There is no 'on_load' method defined for type '%s'",type.getName().toString());
+		return;
+	}
+	run(m);		
 }	
 
 void
