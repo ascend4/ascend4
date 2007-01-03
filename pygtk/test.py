@@ -16,6 +16,19 @@ class Ascend(unittest.TestCase):
 		self.L.clear()
 		del self.L
 
+class AscendSelfTester(Ascend):
+
+	def _run(self,modelname,solvername="QRSlv",filename=None):
+		if filename==None:
+			filename = 'johnpye/%s.a4c' % modelname
+		self.L.load(filename)
+		T = self.L.findType(modelname)
+		M = T.getSimulation('sim')
+		M.build()
+		M.solve(ascpy.Solver(solvername),ascpy.SolverReporter())	
+		M.run(T.getMethod('self_test'))
+		return M
+
 class TestCompiler(Ascend):
 
 	def testloading(self):
@@ -27,18 +40,8 @@ class TestCompiler(Ascend):
 	def testatomsa4l(self):
 		self.L.load('atoms.a4l')
 
-class TestSolver(Ascend):
+class TestSolver(AscendSelfTester):
 	
-	def _run(self,modelname,solvername="QRSlv",filename=None):
-		if filename==None:
-			filename = 'johnpye/%s.a4c' % modelname
-		self.L.load(filename)
-		T = self.L.findType(modelname)
-		M = T.getSimulation('sim')
-		M.build()
-		M.solve(ascpy.Solver(solvername),ascpy.SolverReporter())	
-		M.run(T.getMethod('self_test'))
-
 	def testlog10(self):
 		self._run('testlog10')
 
@@ -211,28 +214,45 @@ class TestLSODE(Ascend):
 #-------------------------------------------------------------------------------
 # Testing of a simple external function
 
-class TestExtFn(Ascend):
+class TestExtFn(AscendSelfTester):
 	def testextfntest(self):
-		self.L.load('johnpye/extfn/extfntest.a4c')
-		M = self.L.findType('extfntest').getSimulation('sim')
-		M.build()
-		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		print "y = %f" % M.y
-		print "x = %f" % M.x
-		self.assertAlmostEqual(M.y, 1);
-		self.assertAlmostEqual(M.x, 0);
+		M = self._run('extfntest',filename='johnpye/extfn/extfntest.a4c')
+		self.assertAlmostEqual(M.y, 2);
+		self.assertAlmostEqual(M.x, 1);
 		self.assertAlmostEqual(M.y, M.x + 1);
+
+#   THIS TEST FAILS
+#	def testextrelfor(self):
+#		self.L.load('johnpye/extfn/extrelfor.a4c')
+#		T = self.L.findType('extrelfor')
+#		M = T.getSimulation('sim')
+#		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+#		print "x[1] = %f" % M.x[1]
+#		print "x[2] = %f" % M.x[2]
+#		print "x[3] = %f" % M.x[3]
+#		M.run(T.getMethod('self_test'))
+
+	def testextrelrepeat(self):
+		M = self._run('extrelrepeat',filename='johnpye/extfn/extrelrepeat.a4c')
+
+#-------------------------------------------------------------------------------
+# Testing of a ExtPy - external python methods
+
+class TestExtPy(AscendSelfTester):
+	def testextpytest(self):
+		M = self._run('extpytest',filename='johnpye/extpy/extpytest.a4c')
 
 #-------------------------------------------------------------------------------
 # Testing of freesteam external steam properties functions
 
+with_freesteam = False
 try:
 	import freesteam
 	have_freesteam = True
 except ImportError,e:
 	have_freesteam = False
 
-if have_freesteam:
+if with_freesteam and have_freesteam:
 	class TestFreesteam(Ascend):
 		def testload(self):
 			self.L.load('johnpye/thermalequilibrium2.a4c')
@@ -312,7 +332,7 @@ class TestIDADENSE(Ascend):
 		M.setSolver(ascpy.Solver("QRSlv"))
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
-		I.setParameter('calcic','NONE')
+		I.setParameter('calcic','YA_YPD')
 		I.setParameter('linsolver','DENSE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11)
