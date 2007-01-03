@@ -337,7 +337,7 @@ class ModelView:
 			print "PLOTTABLE"
 			mi = gtk.ImageMenuItem("P_lot",True);
 			img = gtk.Image()
-			img.set_from_file(self.browser.options.assets_dir+'plot.png')
+			img.set_from_file(self.browser.options.assets_dir+'/plot.png')
 			mi.set_image(img)
 			mi.show()
 			mi.connect("activate",self.plot_activate)
