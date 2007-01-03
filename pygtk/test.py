@@ -322,8 +322,8 @@ class TestIDADENSE(Ascend):
 		I.setParameter('autodiff',True)
 		I.analyse()
 		I.solve()
-		assert abs(float(M.y1) - 5.1091e-08) < 1e-10
-		assert abs(float(M.y2) - 2.0437e-13) < 1e-15
+		assert abs(float(M.y1) - 5.1091e-08) < 2e-9
+		assert abs(float(M.y2) - 2.0437e-13) < 2e-14
 		assert abs(float(M.y3) - 1.0) < 1e-5
 
 	def testkryxDENSE(self):
