@@ -121,7 +121,7 @@ Simulation::~Simulation(){
 		system_destroy(sys);
 	}
 	*/
-	sys=NULL;
+	sys = NULL;
 }
 
 Instanc &
@@ -189,7 +189,7 @@ void
 Simulation::run(const Method &method, Instanc &model){
 
 	// set the 'sim' pointer to our local variable...
-	CONSOLE_DEBUG("Setting shared pointer 'sim'");
+	CONSOLE_DEBUG("Setting shared pointer 'sim' = %p",this);
 	importhandler_setsharedpointer("sim",this);
 
 	/*if(not is_built){
@@ -202,6 +202,9 @@ Simulation::run(const Method &method, Instanc &model){
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
 
 	error_reporter_tree_start();
+
+	CONSOLE_DEBUG("sys = %p",sys);
+	CONSOLE_DEBUG("simroot = %p",simroot.getInternalType());
 
 	Proc_enum pe;
 	pe = Initialize(
@@ -471,7 +474,7 @@ Simulation::setSolver(Solver &solver){
 	/* CONSOLE_DEBUG("Setting solver on sim %p, root inst %p",this,this->simroot.getInternalType()); */
 
 	try{
-		CONSOLE_DEBUG("BUILDING SYSTEM");
+		// build the system (if not built already)
 		build();
 	}catch(runtime_error &e){
 		stringstream ss;
@@ -518,7 +521,7 @@ Simulation::getSolver() const{
 void
 Simulation::build(){
 	if(sys){
-		CONSOLE_DEBUG("System is already built");
+		CONSOLE_DEBUG("System is already built (%p)",sys);
 		return;
 	}
 
@@ -530,6 +533,7 @@ Simulation::build(){
 		throw runtime_error("System has pending instances; can't yet send to solver.");
 	}
 	
+	CONSOLE_DEBUG("============== REALLY building system...");
 	sys = system_build(simroot.getInternalType());
 	if(!sys){
 		throw runtime_error("Unable to build system");
@@ -673,8 +677,11 @@ SingularityInfo::isSingular() const{
 void
 Simulation::solve(Solver solver, SolverReporter &reporter){
 
+	// no need for this stuff: setSolver will try it anyway?
+/*
 	if(!sys){
 		try{
+			CONSOLE_DEBUG("Building system");
 			build();
 		}catch(runtime_error &e){
 			stringstream ss;
@@ -683,7 +690,8 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 			throw runtime_error(ss.str());
 		}
 	}
-
+*/
+	CONSOLE_DEBUG("Setting solver to '%s'",solver.getName().c_str());
 	setSolver(solver);
 
 	//cerr << "PRESOLVING SYSTEM...";

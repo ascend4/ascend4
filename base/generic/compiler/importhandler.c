@@ -217,7 +217,7 @@ int importhandler_createlibrary(){
 
 int importhandler_remove(const char *name){
 	if(importhandler_library==NULL)return 2;
-	CONSOLE_DEBUG("Removing importhandler '%s'", name);
+	/* CONSOLE_DEBUG("Removing importhandler '%s'", name); */
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s not implemented",__FUNCTION__);
 	return 1;
 }
@@ -233,9 +233,11 @@ int importhandler_destroylibrary(){
 	int err = 0;
 	CONSOLE_DEBUG("Destroying importhandler library...");
 	importhandler_printlibrary(stderr);
-	for(i=IMPORTHANDLER_MAX - 1; i >= 0; --i){
-		if(importhandler_library[i]==NULL)continue;
-		err = err | importhandler_remove(importhandler_library[i]->name);
+	if(importhandler_library!=NULL){
+		for(i=IMPORTHANDLER_MAX - 1; i >= 0; --i){
+			if(importhandler_library[i]==NULL)continue;
+			err = err | importhandler_remove(importhandler_library[i]->name);
+		}
 	}
 	if(err)ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Failed to destroy importhandler library");
 	return err;
@@ -434,10 +436,15 @@ int importhandler_setsharedpointer(const char *key, void *ptr){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"key is NULL");
 		return 1;
 	}
+
+	/* woops! 'AddTableData' does *not* overwrite table entries! */
+	RemoveTableData(importhandler_sharedpointers,(char *)key);
+
 	AddTableData(importhandler_sharedpointers,ptr,key);
 #ifdef IMPORTHANDLER_VERBOSE
 	CONSOLE_DEBUG("Set shared pointer '%s' to %p",key, ptr);
 #endif
+	asc_assert(importhandler_getsharedpointer(key)==ptr);
 	return 0;
 }		
 
