@@ -510,8 +510,8 @@ int integrator_ida_solve(
 		N_VDestroy_Serial(abstolvect);
 	}else{
 		/* scalar absolute tolerance (one value for all) */
-		CONSOLE_DEBUG("USING SCALAR ATOL VALUE = %8.2e",abstol);
 		abstol = SLV_PARAM_REAL(&(blsys->params),IDA_PARAM_ATOL);
+		CONSOLE_DEBUG("USING SCALAR ATOL VALUE = %8.2e",abstol);
 		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SS, reltol, &abstol);
 	}
 
