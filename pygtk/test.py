@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 import unittest
+
+import platform, sys
+if platform.system() != "Windows":
+	import dl
+	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
+
 import ascpy
 import math
-import os, subprocess, sys
+import os, subprocess
 import atexit
 import cunit
 
