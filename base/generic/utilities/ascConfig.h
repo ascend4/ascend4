@@ -89,6 +89,12 @@
 # endif /* __SVR4 */
 #endif /* __sun || sun */
 
+#ifdef linux
+#define __LINUX__
+#endif /* linux */
+
+/* FIXME: need to slip osx in here now. */
+
 /*
 	ASCEND code in base/generic only EXPORTS symbols, no imports.
 	The ASC_DLLSPEC macro will, depending on whether we are
@@ -520,6 +526,29 @@ typedef	unsigned   uint32;
  /** not properly headered in math.h or ieee*.h */
  extern int finite(double);
 #endif
+
+/**     This macro returns a nonzero value if X is NaN.  */
+#define asc_isnan(x) isnan(x)
+
+/**
+ This function returns `-1' if X represents negative infinity, `1'
+     if X represents positive infinity, and `0' otherwise.
+        note that 0 can be a number or a nan.
+*/
+#define asc_isinf(x) isinf(x)
+
+/**
+This macro returns a nonzero value if X is finite: not plus or
+     minus infinity, and not NaN.
+*/
+#if (defined(__STDC_VERSION__)&&(__STDC_VERSION__ >= 199901L))
+/* c99 std */
+#define asc_finite(x) isfinite(x)
+#else
+/* gnu c89 and most other compilers when not in anti-bsd mode */
+#define asc_finite(x) finite(x)
+#endif
+
 
 #endif /* ASC_ASCCONFIG_H */
 

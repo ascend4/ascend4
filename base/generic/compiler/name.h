@@ -23,16 +23,13 @@
 	@todo WHAT'S IN A NAME??? That which we call a rose
 	By any other name would smell as sweet.
 
-	A name is [or seems to JP to be] a linked list of symchars, integers
-	or so on that gives the complete global context for a variable or
-	a relation. So if you have something's name, it tells you how to
-	find it in the instance hierarchy. Is that right?
-
-	Actually I'm not sure if linked-up Names actually make discrete lists
-	or maybe form a tree structure?
-
-	@TODO Clarify what is a name of type 'set'.
-	@TODO These things need to be pooled to save space and time. baa 3/96
+	A name is a linked list of symchars, integers, and potentially
+	unexpanded set definitions (array subscripts)
+	that gives the route another instance starting at some root
+	instance i.  So if you have something's name and context instance, we
+	know how to find the child (grandchild, etc) with the given name.
+	A name without a context (either an instance or a type definition)
+	means nothing.
 
 	Requires:
 	#include "utilities/ascConfig.h"
@@ -71,6 +68,16 @@ ASC_DLLSPEC(struct Name*) CreateIdNameF(symchar *s, int bits);
 extern struct Name *CreateSetName(struct Set *s);
 /**<
 	Create a name node of type set with the set s associated with it.
+*/
+
+extern struct Name *CreateEnumElementName(symchar *s);
+/**<
+	Create a name node of type set with the subscript s associated with it.
+*/
+
+extern struct Name *CreateIntegerElementName(long i);
+/**<
+	Create a name node of type set with the subscript i associated with it.
 */
 
 extern struct Name *CreateReservedIndexName(symchar *reserved);
@@ -210,6 +217,12 @@ extern CONST struct Set *NameSetPtrF(CONST struct Name *n);
 extern struct Name *CopyName(CONST struct Name *n);
 /**<
 	Make and return a copy of the whole name.
+*/
+
+extern struct Name *CopyAppendNameNode(CONST struct Name *n, CONST struct Name *node);
+/**<
+	Make a copy of n and append a copy of the node (which may be just the
+	head of a longer name). The result is totally disjoint from the inputs.
 */
 
 ASC_DLLSPEC(void) DestroyName(struct Name *n);

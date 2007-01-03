@@ -60,9 +60,9 @@ ASC_DLLSPEC(int ) g_check_dimensions_noisy;
  *  from RelationCheckDimensions();
  */
 
-extern int RelationCheckDimensions(struct relation *rel, dim_type *dimens);
+ASC_DLLSPEC(int ) RelationCheckDimensions(struct Instance *relinst, dim_type *dimens);
 /**<
- *  Scans a relation in postfix and collects all dimensional
+ *  If a token relation, scans a relation in postfix and collects all dimensional
  *  information by applying each token.  It returns a value of TRUE
  *  only if no real instances or real atom instances with wild
  *  dimensionality and no dimensional inconsistencies were encountered.
@@ -71,8 +71,10 @@ extern int RelationCheckDimensions(struct relation *rel, dim_type *dimens);
  *  The address of an allocated dimension type is passed in so that
  *  the dimensions of the relation (or at least what the function
  *  thinks the dimensions ought to be) can be also obtained.
+ *  If a blackbox, gets dim of lhs if not already set, as the rel dim.
  *
- *  @NOTE THIS ONLY WORKS ON e_token relations and maybe in future e_opcode
+ *  @NOTE THIS ONLY WORKS ON e_token and e_blackbox relations a
+ *  and maybe in future e_opcode
  *  relations. rel is assumed to be valid when called. !!!
  *
  *  @NOTE This brings in the asc_check_dimensions function from ascend_utils.
@@ -300,16 +302,24 @@ extern int ArgsForRealToken(enum Expr_enum ex);
 	BLACK BOX RELATION PROCESSING
 */
 
-/** @return the list of instance lists of arguments. Each element
-of the returned list corresponds to a formal argument at the model level.
+/** @return the list of lists of argument names.
 The result is identical for all members of an array of relations
 built with a single external statement.
 @param rel the source of the arguments.
  */
-extern struct gl_list_t *RelationBlackBoxFormalArgs(CONST struct relation *rel);
-extern struct ExternalFunc *RelationBlackBoxExtFunc(CONST struct relation *rel);
+extern struct gl_list_t *RelationBlackBoxArgNames(CONST struct relation *rel);
 
-#define BlackBoxNumberArgs(r) (RBBOX(r).nargs)
+/** @return the data argument name.
+The result is identical for all members of an array of relations
+built with a single external statement.
+@param rel the source of the arguments.
+ */
+extern struct Name *RelationBlackBoxDataName(CONST struct relation *rel);
+
+/** @return the C function table structure for the blackbox. 
+@param rel the source of the efunc.
+ */
+extern struct ExternalFunc *RelationBlackBoxExtFunc(CONST struct relation *rel);
 
 /*------------------------------------------------------------------------
 	GLASS BOX STUFF

@@ -46,8 +46,8 @@ EXEC_LIBS =
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
 LIB_OBJS = \
-	dstring.o hashpjw.o list.o listio.o pool.o pretty.o \
-	stack.o table.o tm_time.o ospath.o env.o
+	dstring.o hashpjw.o list.o listio.o pairlist.o pool.o \
+	pretty.o stack.o table.o tm_time.o ospath.o env.o
 
 LIB_SRCS = $(LIB_OBJS:%.c=%.o)
 

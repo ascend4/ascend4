@@ -416,10 +416,9 @@ ASC_DLLSPEC(int) CreateUserFunctionMethod(CONST char *name
  * (in matrix form) I-dyhat/dx for the reduced equations.
  *
  *  @param name Name of the function being added (or updated).
- *  @param initial Pointer to initialisation function, or NULL if none.
  *  @param run Pointer to the method.
- *  @param final Pointer to cleanup function, or NULL if none.
  *  @param n_args number of arguments expected as input, or -1 if any number is allowed.
+ *  @param help a string for human consumption.
  *  @return Returns 0 if the function was successfully added,
  *          non-zero otherwise.
  */
@@ -487,8 +486,8 @@ ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
         (in matrix form) I-dyhat/dx for the reduced equations.
 
 	@param name Name of the function being added (or updated).
-	@param init Pointer to initialisation function, or NULL if none.
-	@param final Pointer to shutdown function. May be same as init.
+	@param init Pointer to initialisation function, or DefaultExtBBoxInitFunc if none.
+	@param final Pointer to shutdown function, or DefaultExtBBoxFinalFunc if none.
 	@param value  evaluation function pointers, or NULL if none.
 	@param deriv first partial derivative functions, or NULL if none.
 	@param deriv2 second derivative functions, or NULL if none.
@@ -501,6 +500,28 @@ ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
 */
 
 
+ASC_DLLSPEC(int) DefaultExtBBoxInitFunc(struct BBoxInterp *interp,
+                            struct Instance *data,
+                            struct gl_list_t *arglist);
+/**< Default init code for black boxes.
+If the user does not supply an init function (possibly because they have
+no per-instance data to manage), they should pass this function
+instead to CreateUserFunctionBlackBox.
+*/
+
+ASC_DLLSPEC(int) ErrorExtBBoxValueFunc(
+		struct BBoxInterp *interp,
+		int ninputs,
+		int noutputs,
+		double *inputs,
+		double *outputs,
+		double *jacobian
+);
+/**< Default residual code for black boxes. NOT VERY INTERESTING.
+If the user does not supply a value function (possibly because they have
+no brain) they will get this. It whines. always returns -1.
+*/
+
 ASC_DLLSPEC(int) DefaultExtBBoxFuncDerivFD(
 		struct BBoxInterp *interp,
 		int ninputs,
@@ -512,6 +533,24 @@ ASC_DLLSPEC(int) DefaultExtBBoxFuncDerivFD(
 /**< Default finite-differencing code for blackboxes.
 If the user does not supply a derivative function they wrote,
 they must supply this derivative function instead.
+John Pye claims to have filled this in.
+*/
+
+ASC_DLLSPEC(int) DefaultExtBBoxFuncDeriv2FD(
+		struct BBoxInterp *interp,
+		int ninputs,
+		int noutputs,
+		double *inputs,
+		double *outputs,
+		double *jacobian
+);
+/**< Currently a pipe dream. returns an error.  */
+
+ASC_DLLSPEC(void) DefaultExtBBoxFinalFunc(struct BBoxInterp *interp);
+/**< Default finalize code for black boxes.
+If the user does not supply a final function (possibly because they have
+no per-instance data to manage), they should pass this function
+instead to CreateUserFunctionBlackBox.
 */
 
 /*-----------------------------------------------------------------------------

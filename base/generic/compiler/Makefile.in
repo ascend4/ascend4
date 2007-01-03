@@ -59,7 +59,7 @@ LIB_OBJS = \
 	commands.o copyinst.o createinst.o destroyinst.o \
 	dimen.o dimen_io.o dump.o \
 	evaluate.o exprio.o exprs.o exprsym.o extcall.o \
-	extfunc.o extinst.o find.o forvars.o fractions.o \
+	extfunc.o extinst.o find.o findpath.o forvars.o fractions.o \
 	freestore.o func.o initialize.o instance_io.o \
 	instantiate.o instmacro.o instquery.o interval.o \
 	library.o linkinst.o logrel_io.o logrel_util.o \

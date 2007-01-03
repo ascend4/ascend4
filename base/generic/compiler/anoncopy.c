@@ -36,6 +36,7 @@
 #include <utilities/ascPanic.h>
 #include <general/pool.h>
 #include <general/list.h>
+#include <general/pairlist.h>
 #include <general/dstring.h>
 #include "bit.h"
 #include "symtab.h"
@@ -106,11 +107,11 @@
 static struct Instance *g_Pass2AddAnonProtoVar_visit_root = 0;
 #endif
 
+
 /* forward declaration */
 static struct Instance *
 CopyAnonRelationArrayInstance(struct Instance *, struct Instance *,
-                              unsigned long, struct gl_list_t *);
-
+                              unsigned long, struct gl_list_t *, struct pairlist_t *);
 /**
 	Create a new relation instance based on protorel,
 	and attach it to newparent, copying details by reference.
@@ -123,11 +124,13 @@ CopyAnonRelationArrayInstance(struct Instance *, struct Instance *,
 	are being indicated. This needs to be torn out and replaced by the
 	correct stuff from the original (duplicand) relation. -- JP
 */
+
 static
 struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
 			                  struct Instance *protorel,
                                           unsigned long pos,
-			                  struct gl_list_t *copyvars)
+			                  struct gl_list_t *copyvars,
+					struct pairlist_t *bboxtable)
 {
   register struct RelationInstance *src,*result;
   struct relation *rel;
@@ -160,13 +163,15 @@ struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
   }
   result->ptr = NULL;
 
+  /* fixup subatomic relation child pointers. */
   RedoChildPointers(ChildListLen(GetChildList(result->desc)),
 		    INST(result),REL_CHILD(result,0),
 		    protorel,REL_CHILD(protorel,0));
+  /* check fixup subatomic relation child pointers to set values. */
   CheckChildCopies(ChildListLen(GetChildList(result->desc)),
 		   REL_CHILD(result,0));
 
-  rel = CopyAnonRelationByReference(protorel,INST(result),copyvars);
+  rel = CopyAnonRelationByReference(protorel,INST(result),copyvars, bboxtable);
   type = GetInstanceRelationType(protorel);
   SetInstanceRelation(INST(result),rel,type);
 
@@ -179,7 +184,8 @@ struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
 static
 struct gl_list_t *CopyAnonArrayChildPtrs(struct Instance *newparent,
                                          struct gl_list_t *list,
-                                         struct gl_list_t *copyvars)
+                                         struct gl_list_t *copyvars,
+					struct pairlist_t *bboxtable)
 {
   register struct gl_list_t *result;
   register unsigned long length,c;
@@ -188,24 +194,24 @@ struct gl_list_t *CopyAnonArrayChildPtrs(struct Instance *newparent,
     length = gl_length(list);
     if (length) {
       result = gl_create(length);
-      for(c=1;c<=length;c++) {
+      for (c=1;c<=length;c++) {
 	src = (struct ArrayChild *)gl_fetch(list,c);
 	new = MALLOCPOOLAC;
 	*new = *src;
         /* new->inst points to the proto of this array entry. need to fix */
         if (new->inst !=NULL) {
           switch (InstanceKind(new->inst)) {
-          /* should add an lrel case here */
+          /* should add an lrel case here if lrels ever get to sharing. */
           case REL_INST:
-			CONSOLE_DEBUG("Copying relation...");
-            new->inst = CopyAnonRelationInstance(NULL,new->inst,c, copyvars);
+            new->inst = CopyAnonRelationInstance(NULL,new->inst,c,
+                                                 copyvars, bboxtable);
             AddParent(new->inst,newparent);
             break;
           case ARRAY_ENUM_INST:
           case ARRAY_INT_INST:
 			CONSOLE_DEBUG("Copying ARRAY_INT_INST");
             new->inst = CopyAnonRelationArrayInstance(NULL, new->inst,
-                                                      0, copyvars);
+                                                      0, copyvars, bboxtable);
             AddParent(new->inst,newparent);
             break;
           default:
@@ -233,7 +239,8 @@ struct Instance *
 CopyAnonRelationArrayInstance(struct Instance *newparent,
                               struct Instance *proto,
                               unsigned long pos,
-                              struct gl_list_t *copyvars)
+                              struct gl_list_t *copyvars,
+				struct pairlist_t *bboxtable)
 {
   register struct ArrayInstance *ary,*result;
   AssertMemory(proto);
@@ -250,7 +257,7 @@ CopyAnonRelationArrayInstance(struct Instance *newparent,
   result->parents = gl_create(AVG_PARENTS);
   result->children = CopyAnonArrayChildPtrs(INST(result),
                                             ary->children,
-                                            copyvars);
+                                            copyvars,bboxtable);
   if (newparent != NULL) {
     LinkToParentByPos(newparent,INST(result),pos);
   }
@@ -472,13 +479,15 @@ void CopyAnonDummyInstance(struct Instance *parent,
   LinkToParentByPos(parent,inst,pos);
 }
 
+
 /*
-	Copies all the local relations (including those in arrays)
-	of the MODEL instance proto to the instance i using only
-	local information. No global information is needed, but
-	we need to arrange that the tmpnums all start and end 0
-	so we can avoid extra 0ing of them.
-*/
+ * Copies all the local relations (including those in arrays)
+ * of the MODEL instance proto to the instance i using only
+ * local information. No global information is needed, but
+ * we need to arrange that the tmpnums all start and end 0
+ * so we can avoid extra 0ing of them.
+ * Strictly not recursive at this level.
+ */
 void Pass2CopyAnonProto(struct Instance *proto,
 		struct BitList *protoblist,
 		struct gl_list_t *protovarindices,
@@ -488,6 +497,12 @@ void Pass2CopyAnonProto(struct Instance *proto,
   struct gl_list_t *copyvars;
   struct Instance *ch;
   unsigned long nch,c;
+  struct BlackBoxCache *dupCache;
+  struct BlackBoxData *bbd;
+/*
+ * This pairlist matches proto and new bbox common objects.
+ */
+  struct pairlist_t *bboxtable;
 
   blist = InstanceBitList(i);
   /* copy bitlist from proto to i since they must be identical
@@ -505,6 +520,7 @@ void Pass2CopyAnonProto(struct Instance *proto,
     FPRINTF(ASCERR,"\n");
 #endif
   copyvars = Pass2CollectAnonCopyVars(protovarindices,i);
+  bboxtable = pairlist_create(10);
   /* Now copy local relations, and wherever a var is needed
    * in the copy, use the tmpnum of the original var in proto to
    * look up the equivalent var in the copyvars found from i.
@@ -515,12 +531,11 @@ void Pass2CopyAnonProto(struct Instance *proto,
     if (ch != NULL && InstanceChild(i,c) == NULL) {
       switch (InstanceKind(ch)) {
       case REL_INST:
-        CopyAnonRelationInstance(i,ch,c,copyvars);
+        CopyAnonRelationInstance(i,ch,c,copyvars,bboxtable);
         break;
       case ARRAY_ENUM_INST:
       case ARRAY_INT_INST:
-		CONSOLE_DEBUG("Copying ARRAY_*_INST");
-        CopyAnonRelationArrayInstance(i,ch,c,copyvars);
+        CopyAnonRelationArrayInstance(i,ch,c,copyvars,bboxtable);
         break;
       case DUMMY_INST:
         CopyAnonDummyInstance(i,c,InstanceTypeDesc(ch));
@@ -531,5 +546,20 @@ void Pass2CopyAnonProto(struct Instance *proto,
     }
   }
   gl_destroy(copyvars);
+
+  /* fixup the init call */
+  nch = pairlist_length(bboxtable);
+#if ATDEBUG
+      FPRINTF(ASCERR,"P2CAP: bbox fixups for %d in ",(int)nch);
+	WriteInstanceName(ASCERR,i,NULL);
+    FPRINTF(ASCERR,"\n");
+#endif
+  for (c = 1; c <= nch; c++)
+  {
+    bbd = (struct BlackBoxData *)pairlist_valueAt(bboxtable,c);
+    dupCache = bbd->common;
+    InitBBox(i,dupCache);
+  }
+  pairlist_destroy(bboxtable);
 }
 

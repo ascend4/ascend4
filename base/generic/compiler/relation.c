@@ -34,6 +34,7 @@
 #include <utilities/ascPanic.h>
 #include <general/pool.h>
 #include <general/list.h>
+/* #include <general/pairlist.h> */
 #include <general/stack.h>
 #include <general/dstring.h>
 #include "compiler.h"
@@ -52,6 +53,7 @@
 #include "evaluate.h"
 #include "forvars.h"
 #include "find.h"
+#include "findpath.h"
 #include "sets.h"
 #include "setinstval.h"
 #include "instance_io.h"
@@ -897,7 +899,6 @@ static unsigned long SimplifyTermBuf(int level,
   case e_int:
   case e_real:
   case e_zero:
-  case e_diff:
     break;
   default:
     FPRINTF(ASCERR,"Compiler cannot simplify malformed expression\n");
@@ -930,7 +931,6 @@ static unsigned long SimplifyTermBuf(int level,
     case e_int:
     case e_real:
     case e_zero:
-	case e_diff:
       TS_PUSH(top);
       break;
     case e_nop:
@@ -2020,17 +2020,6 @@ static struct relation_term *CreateFuncTerm(CONST struct Func *f)
   return term;
 }
 
-/** create a diff operator term */
-static struct relation_term *CreateDiffTerm(){
-	struct relation_term *term;
-	term = POOL_ALLOCTERM;
-	assert(term!=NULL);
-	PTINIT(term);
-	term->t = e_diff;
-	/* NOT YET IMPLEMENTED */
-	Asc_Panic(2,__FUNCTION__,"not yet implemented");
-}
-
 /** create a term from the pool */
 #ifdef  THIS_IS_AN_UNUSED_FUNCTION
 static struct relation_term *CreateNaryTerm(CONST struct Func *f)
@@ -2123,7 +2112,6 @@ struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
 	so we just issue warnings.
 */
 struct relation *CreateBlackBoxRelation(struct Instance *relinst
-		, struct ExternalFunc *efunc
 		, struct Instance *subject
 		, struct gl_list_t *inputs
 		, struct BlackBoxCache * common
@@ -2135,8 +2123,9 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
   struct BlackBoxData *bbd;
   struct Instance *var = NULL;
   unsigned long *inputArgs;
+  int32 inputsLen;
   int argloc;
-  unsigned long c,len,pos;
+  unsigned long c,len,pos, lhsVarNumber;
   unsigned long n_inputs;
   CONST dim_type *d;
 
@@ -2149,8 +2138,10 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
 	Create the BlackBox relation structure.
 	output var always first in varlist.
   */
-  bbd = CreateBlackBoxData(common, lhsIndex, 1);
-  inputArgs = bbd->inputArgs;
+  bbd = CreateBlackBoxData(common);
+  inputsLen = BlackBoxCacheInputsLen(common);
+  inputArgs = (unsigned long *)ascmalloc(sizeof(unsigned long) * inputsLen);
+  lhsVarNumber = 1;
   varlist = gl_create(len);
 
   /* add the subject */
@@ -2196,7 +2187,9 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
   RelationRefCount(result) = 1;
   result->externalData = bbd;
   result->vars = varlist;
-  RBBOX(result).efunc = efunc;
+  RBBOX(result).inputArgs = inputArgs;
+  RBBOX(result).lhsindex = lhsIndex;
+  RBBOX(result).lhsvar = lhsVarNumber;
   d = RealAtomDims(subject);
   if (!IsWild(d)) {
     SetRelationDim(result,d);
@@ -2204,55 +2197,6 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
   return result;
 }
 
-/* After the instance list has been updated, we must recollect
-   the input argument indices into the relation varlist.
-*/
-void UpdateInputArgsList(struct Instance *relinst, struct relation *rel)
-{
-  struct ExternalFunc *efunc;
-  unsigned long n_input_args,c,pos,len;
-  unsigned long *inputArgs;
-  struct gl_list_t *arglist;
-  struct gl_list_t *inputs;
-  CONST struct gl_list_t *varlist;
-  struct BlackBoxCache *common;
-  int32 inputsLen, argloc;
-  char *context;
-  struct Instance *var;
-
-  efunc = RelationBlackBoxExtFunc(rel);
-  n_input_args = NumberInputArgs(efunc);
-  arglist = RelationBlackBoxFormalArgs(rel);
-  inputArgs = RelationBlackBoxData(rel)->inputArgs;
-  inputs = LinearizeArgList(arglist,1,n_input_args);
-  common = RelationBlackBoxCache(rel);
-  inputsLen = common->inputsLen;
-  context = WriteInstanceNameString(relinst,NULL);
-  varlist = RelationVarList(rel);
-
-  assert(inputsLen == (int32)gl_length(inputs));
-
-  /* Now loop, warning of merges and collecting varlist position
-     of each arg into argloc. This time around we don't add relations.
-     We have to check and renumber the lhs.
-  */
-  argloc = 0;
-  len = inputsLen;
-  for (c=1; c<=len; c++) {
-    var = (struct Instance *)gl_fetch(inputs,c);
-    pos = gl_search(varlist,var,(CmpFunc)CmpP);
-    if (pos) {
-      inputArgs[argloc] = pos;
-    } else {
-      FPRINTF(ASCERR,"Screwed up merge of input variable %d in %s\n", argloc, context);
-      inputArgs[argloc] = 0;
-    }
-    argloc++;
-  }
-
-  gl_destroy(inputs);
-  ascfree(context);
-}
 
 struct relation *CreateGlassBoxRelation(struct Instance *relinst,
 					struct ExternalFunc *efunc,
@@ -2576,12 +2520,6 @@ int ConvertSubExpr(CONST struct Expr *ptr,
         }
       }
       break;
-    case e_diff:
-	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"CreateDiffTerm not yet implemented");
-	  term = CreateZeroTerm();
-      my_added++;
-	  AppendTermBuf(term);
-	  break;
     case e_int:
       term = CreateIntegerTerm(ExprIValue(ptr));
       my_added++;
@@ -2983,10 +2921,6 @@ static int ConvertExpr(CONST struct Expr *start,
         }
       }
       break;
-    case e_diff:
-      term = CreateDiffTerm(ExprFunc(start));
-      AppendTermBuf(term);
-      break;
     case e_zero:
       /* this should never happen here */
       term = CreateZeroTerm();
@@ -3068,7 +3002,6 @@ CONST struct Expr *FindRHS(CONST struct Expr *ex)
     switch(ExprType(ex)){
     case e_zero:
     case e_var:
-	case e_diff:
     case e_int:
     case e_real:
     case e_boolean:
@@ -3164,7 +3097,6 @@ static struct relation_term
     term = A_TERM(&(tmp->side[count])); /* aka tmp->side+count */
     switch(t = RelationTermType(term)) {
     case e_var:
-    case e_diff:
     case e_int:
     case e_real:
     case e_zero:
@@ -3499,13 +3431,19 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
       break;
     case e_glassbox:
       if (RGBOX(rel).args) {
-        ascfree((char *)RGBOX(rel).args);
+        ascfree((char *)(RGBOX(rel).args));
       }
       break;
     case e_blackbox:
+      if (RBBOX(rel).inputArgs) {
+        ascfree((void *)(RBBOX(rel).inputArgs));
+        RBBOX(rel).inputArgs = NULL;
+      }
+      RBBOX(rel).lhsindex = -(RBBOX(rel).lhsindex);
+      RBBOX(rel).lhsvar = 0;
       bbd = (struct BlackBoxData *)(rel->externalData);
-      rel->externalData = NULL;
       DestroyBlackBoxData(rel,bbd);
+      rel->externalData = NULL;
       break;
     default:
       /*NOTREACHED we hope */
@@ -3647,7 +3585,6 @@ union RelationUnion *CopyRelationShareBlackBox(union RelationUnion *ru)
   }
   result->relop = src->relop;
   result->ref_count = src->ref_count;
-  result->efunc = src->efunc;
 
   return (union RelationUnion *)result;
 }
@@ -3668,6 +3605,7 @@ union RelationUnion *CopyRelationShare(union RelationUnion *ru,
     return NULL;
   }
 }
+
 /*
 * @param relinst the relation instance.
 * @param rel the relation structure, which may include glass, black, token, etc.* @param old the variable instance being replaced.
@@ -3689,7 +3627,7 @@ void RecomputeVarListPointers(struct Instance *relinst,
                            CONST struct Instance *old,
                            CONST struct Instance *new, struct gl_list_t *newlist)
 {
-/* FIXME this gets used in interactive merge/refinement.
+/* FIXME this gets used in interactive merge/refinement. RecomputeVarListPointers
 */
 }
 
@@ -3698,7 +3636,6 @@ void RecomputeVarListPointers(struct Instance *relinst,
 * @param relinst the relation instance.
 * @param rel the relation structure, which must be from a token relation.
 * @param new the variable instance being used to replace old.
-* @param newlist a new varlist for the relation in question.
 * 5 cases:
 * 0-	no-op; old and new are the same already; do nothing.
 * 1-	notfound; old is not in the varlist; do nothing.
@@ -3717,7 +3654,7 @@ void ModifyTokenRelationPointers(struct Instance *relinst,
   unsigned long pos,other;
 
   (void)relinst;    /*  stop gcc whine about unused parameter  */
-  /* FIXME: we may have a problem here handling relation shared
+  /* FIXME: ModifyTokenRelationPointers. we may have a problem here handling relation shared
 	merge/split operations and the sorted/unsorted assumption.
   */
 
@@ -3786,14 +3723,81 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
       gl_store(rel->vars,pos,(VOIDPTR)new);
 }
 
-/**
-	Change all references of "old" in relation instance rel to "new.
+/* After the instance list has been updated, we must recollect
+   the input argument indices into the relation varlist.
+*/
+static
+void UpdateInputArgsList(struct Instance *relinst, struct relation *rel)
+{
+  struct ExternalFunc *efunc;
+  unsigned long n_input_args,c,pos,len;
+  unsigned long *inputArgs;
+  struct gl_list_t *argListNames;
+  struct gl_list_t *inputs;
+  CONST struct gl_list_t *varlist;
+  struct BlackBoxCache *common;
+  int32 inputsLen, argloc;
+  char *context;
+  struct Instance *var;
 
-	This is similar to ModifyTokenRelationPointers
-	but handles the "external variables incident on the relation".
-	Remember that variables may be exist more than once in the list, so
-	that we have to find ALL occurrences.
-	Once this is done, we must rebuild inputArgs index list.
+  /* FIXME-  UpdateInputArgsList */
+  efunc = RelationBlackBoxExtFunc(rel);
+  n_input_args = NumberInputArgs(efunc);
+  argListNames = RelationBlackBoxArgNames(rel);
+  inputArgs = RBBOX(rel).inputArgs;
+  inputs = LinearizeArgList(argListNames,1,n_input_args);
+  common = RelationBlackBoxCache(rel);
+  inputsLen = common->inputsLen;
+  context = WriteInstanceNameString(relinst,NULL);
+  varlist = RelationVarList(rel);
+
+  assert(inputsLen == (int32)gl_length(inputs));
+
+  /* Now loop, warning of merges and collecting varlist position
+     of each arg into argloc. This time around we don't add relations.
+     We have to check and renumber the lhs.
+  */
+  argloc = 0;
+  len = inputsLen;
+  for (c=1; c<=len; c++) {
+    var = (struct Instance *)gl_fetch(inputs,c);
+    pos = gl_search(varlist,var,(CmpFunc)CmpP);
+    if (pos) {
+      inputArgs[argloc] = pos;
+    } else {
+      FPRINTF(ASCERR,"Screwed up merge of input variable %d in %s\n", argloc, context);
+      inputArgs[argloc] = 0;
+    }
+    argloc++;
+  }
+
+  gl_destroy(inputs);
+  ascfree(context);
+}
+/*
+	This procedure should change all references of "old" in relation
+	instance rel to "new.
+	Remember:
+	The elements of rel->varlist are unique.
+	The varlist is never shared with another rel.
+	The argument list to the blackbox is composed by indexing into the varlist.
+
+	If the varlist length is changed, we must rebuild the
+	indexing array.
+* @param relinst the relation instance.
+* @param rel the relation structure, which must be from a blackbox relation.
+* @param new the variable instance being used to replace old.
+* 5 cases:
+* 0-	no-op; old and new are the same already; do nothing.
+* 1-	notfound; old is not in the varlist; do nothing.
+* 2-	replace; old is found and new is not in list. overwrite old. ref count?
+*       bbox arg indexing remains the same.
+* 3-	merge; old and new are both in varlist, which shrinks varlist. This
+*	will break the indexing, which is part of the shared RelationUnion,
+*	and we will need to copy.
+*
+* 4-	null; new is NULL, in which case we just overwrite first instance of
+*	old in the list with null. This is probably incorrect in refcount terms.
 */
 void ModifyBlackBoxRelPointers(struct Instance *relinst,
 			       struct relation *rel,
@@ -3806,13 +3810,15 @@ void ModifyBlackBoxRelPointers(struct Instance *relinst,
 
 	UNUSED_PARAMETER(relinst);
 
-  /* FIXME: kirk never dealt with varlist rel->properly under merge.
+  /* FIXME: kirk never dealt with varlist rel->properly under merge. ModifyBlackBoxRelPointers
 this gets used in interactive merge/refinement.
+This should have just gone away perhaps now that we don't store
+instance pointers anywhere except the varlist. maybe we must reindex,though.
  */
 
   assert(rel!=NULL);
   if (old==new) return;
-  extvars = RelationBlackBoxFormalArgs(rel);
+  extvars = RelationBlackBoxArgNames(rel);
   if (extvars==NULL) return;
 
   len1 = gl_length(extvars);
@@ -3843,8 +3849,10 @@ int ReturnFromValue(struct value_t value)
   assert(ValueKind(value)==error_value);
   switch(ErrorValue(value)){
   case name_unfound:
-  case undefined_value: DestroyValue(&value); return 0;
-  default: DestroyValue(&value); return 1;
+  case undefined_value:
+    DestroyValue(&value); return 0;
+  default:
+    DestroyValue(&value); return 1;
   }
 }
 
@@ -4133,6 +4141,27 @@ static int CheckExpr(CONST struct Instance *ref,
   return 1;
 }
 
+struct gl_list_t *ProcessExtRelArgNames(CONST struct Instance *inst, CONST struct VariableList *vl, enum find_errors *ferr)
+{
+  struct gl_list_t *arglist;
+  struct gl_list_t *branch;
+
+  ListMode=1;
+  arglist = gl_create(10L);
+  while(vl!=NULL){
+    branch = FindInstancesPaths(inst,NamePointer(vl),ferr);
+    if (branch==NULL || *ferr != correct_instance){
+      DeepDestroySpecialList(arglist,(DestroyFunc)DestroyName);
+      ListMode=0;
+      return NULL;
+    }
+    gl_append_ptr(arglist,(VOIDPTR)branch);
+    vl = NextVariableNode(vl);
+  }
+  ListMode=0;
+  return arglist;
+}
+
 struct gl_list_t *ProcessExtRelArgs(CONST struct Instance *inst, CONST struct VariableList *vl, enum find_errors *ferr)
 {
   struct gl_list_t *arglist;
@@ -4192,7 +4221,46 @@ We may want to expand to include list of instances.
 
 }
 
-/* see if all the args and optional DATA exist. */
+struct Name *ProcessExtRelDataName(CONST struct Instance *inst, CONST struct Name *n, enum find_errors *ferr)
+{
+  struct Name *result;
+  struct gl_list_t *names;
+  if (n) {
+    names = FindInstancesPaths(inst,n,ferr);
+    if (names) { /* only 1 data instance is allowed */
+      if (gl_length(names) > 1) {
+        gl_iterate(names,(DestroyFunc)DestroyName);
+        gl_destroy(names);
+        *ferr = impossible_instance;
+        return NULL;
+      } else { /* all ok */
+        result = (struct Name *)gl_fetch(names,1L);
+        gl_destroy(names);
+        /* This may be relaxed later to allow types other than
+         * MODEL_INSTS. The limitation is really for speed. (kaa, 1994)
+         */
+/* we care about generality, not speed, so we're relaxing this. baa, 2006
+We probably need to tighten it up to exclude relation-types.
+We may want to expand to include list of instances.
+        if (InstanceKind(result)!=MODEL_INST) {
+          *ferr = impossible_instance;
+          return NULL;
+        }
+*/
+        *ferr = correct_instance;
+        return result;
+      }
+    } else { /* instance not found -- check ferr */
+      return NULL;
+    }
+  } else { /* No data was given so return NULL */
+    *ferr = correct_instance;
+    return NULL;
+  }
+
+}
+
+/* see if all the args and optional DATA exist.  0 if bad 1 if ok. */
 int CheckExternal(CONST struct Instance *reference, CONST struct VariableList *vl, CONST struct Name *n)
 {
   enum find_errors ferr;
@@ -4443,18 +4511,20 @@ void CopyRelationHead(struct relation *src,struct relation *target)
   target->iscond = src->iscond;
   target->vars = NULL;
   target->d = src->d;
-
+  target->externalData = NULL;
 }
 
 /* see external header -- BAA */
 struct relation *CopyAnonRelationByReference(CONST struct Instance *src_inst,
                                              struct Instance *dest_inst,
-                                             struct gl_list_t *copyvars)
+                                             struct gl_list_t *copyvars,
+						void * bboxtable_p)
 {
   struct relation *src;
   struct relation *result;
   enum Expr_enum type;
   unsigned size;
+  /*struct pairlist_t *bboxtable = (struct pairlist_t *)bboxtable_p;*/
 
   src = (struct relation *)GetInstanceRelation(src_inst,&type);
   if (src==NULL)  {
@@ -4471,10 +4541,15 @@ struct relation *CopyAnonRelationByReference(CONST struct Instance *src_inst,
   result->vars = CopyAnonRelationVarList(src_inst,dest_inst,copyvars);
   switch (type) {
   case e_token:		/* only need increment the reference count */
-  case e_opcode:
-  case e_glassbox:	/* Double check  -- what about the args ?? */
-  case e_blackbox:	/* Double check  -- what about the args ?? */
     RelationRefCount(src)++;
+    break;
+  case e_blackbox:
+    CopyBlackBoxDataByReference(src,result,bboxtable_p);
+    RelationRefCount(src)++;
+    break;
+  case e_opcode:
+  case e_glassbox:	/* Double  check  -- what about the args ?? */
+    Asc_Panic(2, NULL, "ERROR: CopyAnonRelationByReference on opcode/glassbox.\n");
     break;
   default: /*NOTREACHED we hope*/
     break;

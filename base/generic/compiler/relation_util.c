@@ -63,6 +63,7 @@
 #include "mathinst.h"
 #include "rootfind.h"
 #include "func.h"
+#include "parentchild.h"
 
 #ifndef NDEBUG
 #include "relation_io.h"
@@ -173,7 +174,7 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res);
 /*
 	@TODO what this does needs to be documented here
 */
-static void apply_term_dimensions(struct relation *rel,
+static void apply_term_dimensions(CONST struct relation *rel,
 		struct relation_term *rt,
 		struct dimnode *first,
 		struct dimnode *second,
@@ -484,22 +485,34 @@ static void apply_term_dimensions(struct relation *rel,
 /**
 	@TODO what this does needs to be documented here
 */
-int RelationCheckDimensions(struct relation *rel, dim_type *dimens)
+int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
 {
+  CONST struct relation *rel;
+  enum Expr_enum reltype= 0;
   struct dimnode *stack, *sp;
+  CONST dim_type* lhsdim;
+  struct Instance * lhs;
   int consistent = TRUE;
   int wild = FALSE;
   unsigned long c, len;
 
-
-  /* FIXME blackbox checkDimens: this is where we need to check on relation type
-  (which we can't without the Instance) and get the output var
-   of blackbox for dims. */
+  rel = GetInstanceRelation(relinst, &reltype);
   if ( !IsWild(RelationDim(rel)) ) { /* don't do this twice */
     CopyDimensions(RelationDim(rel),dimens);
     return 2;
   }
-  sp = stack = ASC_NEW_ARRAY(struct dimnode,RelationDepth(rel));
+  if (reltype == e_glassbox || reltype == e_opcode) {
+    return 0;
+  }
+  if (reltype == e_blackbox) {
+    lhs = BlackBoxGetOutputVar(rel);
+    lhsdim = RealAtomDims(lhs);
+    CopyDimensions(lhsdim,dimens);
+    return( !IsWild(dimens) );
+  }
+  /* else token relation */
+  sp = stack = (struct dimnode *)
+    ascmalloc(RelationDepth(rel)*sizeof(struct dimnode));
   switch( RelationRelop(rel) ) {
   case e_less:
   case e_lesseq:
@@ -607,9 +620,6 @@ static double RelationBranchEvaluator(struct relation_term *term)
     return TermReal(term);
   case e_zero:
     return 0.0;
-  case e_diff:
-	return 0.0;
-
   case e_plus:
     return (RelationBranchEvaluator(TermBinLeft(term)) +
       RelationBranchEvaluator(TermBinRight(term)));
@@ -663,9 +673,6 @@ RelationEvaluatePostfixBranch(CONST struct relation *r,
   case e_zero:
   case e_real:
     return TermReal(term);
-  case e_diff:
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Can't evaluate DIFF(...)");
-	return 0;
   case e_int:
     return TermInteger(term);
   case e_var:
@@ -734,8 +741,6 @@ RelationEvaluatePostfixBranchSafe(CONST struct relation *r,
   case e_zero:
   case e_real:
     return TermReal(term);
-  case e_diff:
-	return 0; /* for the moment, all derivatives evaluate to zero */
   case e_int:
     return TermInteger(term);
   case e_var:
@@ -874,10 +879,10 @@ RelationEvaluateResidualPostfix(CONST struct relation *r)
 	@param r relation for which residual and gradients are to be calculated.
 	@param residual pointer to a double in which the residual shall be stored (must have already been allocated)
 	@param gradient pointer to an array of doubles where the gradients can be stored (must already have been allocated)
-	
+
  	@return 0 on success, 1 on out-of-memeory.
 
-	Computes the gradients by maintaining n stacks, where 
+	Computes the gradients by maintaining n stacks, where
 		n = (number-of-variables-in-r + 1)
 	The +1 is for the residual.  The stacks come from a single array which
 	this function gets by calling tmpalloc_array.  Two macros are defined
@@ -1628,10 +1633,16 @@ unsigned long RelationLength(CONST struct relation *rel, int lhs)
   else return 0;
 }
 
-struct gl_list_t *RelationBlackBoxFormalArgs(CONST struct relation *rel)
+struct gl_list_t *RelationBlackBoxArgNames(CONST struct relation *rel)
 {
   assert(rel!=NULL);
-  return RelationBlackBoxCache(rel)->formalArgList;
+  return RelationBlackBoxCache(rel)->argListNames;
+}
+
+struct Name *RelationBlackBoxDataName(CONST struct relation *rel)
+{
+  assert(rel!=NULL);
+  return RelationBlackBoxCache(rel)->dataName;
 }
 
 struct BlackBoxCache * RelationBlackBoxCache(CONST struct relation *rel)
@@ -1762,7 +1773,7 @@ struct relation_term *RelationINF_Rhs(CONST struct relation *rel){
 struct ExternalFunc *RelationBlackBoxExtFunc(CONST struct relation *rel)
 {
   assert(rel!=NULL);
-  return RBBOX(rel).efunc;
+  return RelationBlackBoxCache(rel)->efunc;
 }
 
 /*------------------------------------------------------------------------------
@@ -1975,7 +1986,8 @@ static double FindMaxFromTop(struct relation *s){
 /* send in relation */
 double CalcRelationNominal(struct Instance *i){
   enum Expr_enum reltype;
-  static int msg=0;
+  struct Instance *c , *p;
+  symchar *nomname;
 
   char *iname;
   iname = WriteInstanceNameString(i,NULL);
@@ -1999,7 +2011,7 @@ double CalcRelationNominal(struct Instance *i){
   if (reltype == e_token) {
     double temp;
     temp = FindMaxFromTop(glob_rel);
-    if (isnan(temp) || !finite(temp)) {
+    if (asc_isnan(temp) || !asc_finite(temp)) {
       glob_rel = NULL;
       return (double)1;
     }
@@ -2009,19 +2021,28 @@ double CalcRelationNominal(struct Instance *i){
     }
   }
   if (reltype == e_blackbox){
-	if(!msg){
-      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Relation nominals not yet implemented\n"
-        "for blackbox or glassbox (assuming 1.0)",__FUNCTION__);
-      msg = 1;
+    p = BlackBoxGetOutputVar(glob_rel);
+    nomname = AddSymbolL("nominal",7);
+    glob_rel = NULL;
+    c = ChildByChar(p,nomname);
+    if (c == NULL) {
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"nominal missing from standard var definition (assuming 1.0) (%s)",__FUNCTION__);
+      return 1.0;
+    } else {
+      return( RealAtomValue(c) );
     }
-    /* should pull the nominal from the assigned lhs variable. */
   }
   if (reltype == e_glassbox){
-    if(!msg){
-      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Relation nominals not yet implemented\n"
-        "for blackbox or glassbox (assuming 1.0)",__FUNCTION__);
-	  msg=2;
-	}
+    p = BlackBoxGetOutputVar(glob_rel);
+    nomname = AddSymbolL("nominal",7);
+    glob_rel = NULL;
+    c = ChildByChar(p,nomname);
+    if (c == NULL) {
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"nominal missing from standard var definition (assuming 1.0) (%s)",__FUNCTION__);
+      return 1.0;
+    } else {
+      return( RealAtomValue(c) );
+    }
   }
   if (reltype == e_opcode){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
@@ -2085,7 +2106,7 @@ int RelationCalcResidualBinary(CONST struct relation *r, double *res){
     }
     return 1;
   }
-  if (!finite(tres) || errno == EDOM || errno == ERANGE ) {
+  if (!asc_finite(tres) || errno == EDOM || errno == ERANGE ) {
     if (errno == 0) { /* pop if unchanged */
       errno = old_errno;
     }
@@ -2100,70 +2121,64 @@ int RelationCalcResidualBinary(CONST struct relation *r, double *res){
 
 enum safe_err
 RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
-	struct relation *r;
-	enum Expr_enum reltype;
-	enum safe_err status = safe_ok;
-	unsigned long length_lhs, length_rhs;
+  struct relation *r;
+  enum Expr_enum reltype;
+  enum safe_err status = safe_ok;
+  unsigned long length_lhs, length_rhs;
 
-	/* CONSOLE_DEBUG("..."); */
 
-	CHECK_INST_RES(i,res,1);
+  CHECK_INST_RES(i,res,1);
 
-	r = (struct relation *)GetInstanceRelation(i, &reltype);
+  r = (struct relation *)GetInstanceRelation(i, &reltype);
 
-	/* CONSOLE_DEBUG("..."); */
 
-	if( r == NULL ) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation");
-		return safe_problem;
-	}
+  if( r == NULL ) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation");
+    return safe_problem;
+  }
 
-	/* CONSOLE_DEBUG("..."); */
+  switch(reltype){
+    case e_token:
+      length_lhs = RelationLength(r, 1);
+      length_rhs = RelationLength(r, 0);
 
-	switch(reltype){
-		case e_token:
-			length_lhs = RelationLength(r, 1);
-			length_rhs = RelationLength(r, 0);
+      if(length_lhs > 0){
+        length_lhs--;
+        *res = RelationEvaluatePostfixBranchSafe(r, &length_lhs, 1,&status);
+      }else{
+        *res = 0.0;
+      }
 
-			if(length_lhs > 0){
-			    length_lhs--;
-			    *res = RelationEvaluatePostfixBranchSafe(r, &length_lhs, 1,&status);
-			  	/* CONSOLE_DEBUG("res = %g",res); */
-			}else{
-			    *res = 0.0;
-			}
+      if(length_rhs > 0){
+        length_rhs--;
+        *res -= RelationEvaluatePostfixBranchSafe(r, &length_rhs, 0,&status);
+      }
 
-			if(length_rhs > 0){
-			    length_rhs--;
-			    *res -= RelationEvaluatePostfixBranchSafe(r, &length_rhs, 0,&status);
-			  	/* CONSOLE_DEBUG("res = %g",res); */
-			}
-
-			safe_error_to_stderr(&status);
-			break;
-		case e_blackbox:
-			/* ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Attempting to evaluate blackbox..."); */
-		    if ( RelationCalcResidualPostfix(i,res) != 0) {
-		    status = safe_problem;
-		    safe_error_to_stderr(&status);
-		    }
-		  break;
-		case e_glassbox:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"'e_glassbox' relation not supported");
-			status = safe_problem;
-			break;
-		case e_opcode:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"'e_opcode' relation not supported");
-			status = safe_problem;
-			break;
-		default:
-			if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
-				status = safe_problem;
-			}else{
-			    ASC_PANIC( "reached end of routine!");
-			}
-	}
-	return status;
+      safe_error_to_stderr(&status);
+      break;
+    case e_blackbox:
+      if ( RelationCalcResidualPostfix(i,res) != 0) {
+        status = safe_problem;
+        safe_error_to_stderr(&status);
+      }
+      break;
+    case e_glassbox:
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"'e_glassbox' relation not supported");
+      status = safe_problem;
+      break;
+    case e_opcode:
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"'e_opcode' relation not supported");
+      status = safe_problem;
+      break;
+    default:
+      if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
+        status = safe_problem;
+      }else{
+          Asc_Panic(2, NULL, "RelationCalcResidualPostfixSafe: reached end of routine!");
+        exit(2);
+      }
+  }
+  return status;
 }
 
 
@@ -2243,12 +2258,12 @@ int RelationCalcExceptionsInfix(struct Instance *i){
       old_errno = errno;
       errno = 0; /* save the last errno, because we don't know why */
       res = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
-      if (!finite(res) || errno == EDOM || errno == ERANGE) {
+      if (!asc_finite(res) || errno == EDOM || errno == ERANGE) {
         result |= RCE_ERR_LHS;
-        if (isnan(res)) {
+        if (asc_isnan(res)) {
           result |= RCE_ERR_LHSNAN;
         }else{
-          if (!finite(res)) {
+          if (!asc_finite(res)) {
             result |= RCE_ERR_LHSINF;
           }
         }
@@ -2259,12 +2274,12 @@ int RelationCalcExceptionsInfix(struct Instance *i){
     }
     if(Infix_RhsSide(glob_rel) != NULL) {
       res = RelationBranchEvaluator(Infix_RhsSide(glob_rel));
-      if (!finite(res)) {
+      if (!asc_finite(res)) {
         result |= RCE_ERR_RHS;
-        if (isnan(res)) {
+        if (asc_isnan(res)) {
           result |= RCE_ERR_RHSNAN;
         }else{
-          if (!finite(res)) {
+          if (!asc_finite(res)) {
             result |= RCE_ERR_LHSINF;
           }
         }
@@ -2355,7 +2370,7 @@ RelationCalcGradient(struct Instance *r, double *grad){
 /*
 	simply call the version that calculates the gradient and the residual,
 	then ignore the residual
-	
+
 	return 0 on success (as 'safe_ok' enum)
 */
 enum safe_err
@@ -2503,7 +2518,7 @@ RelationCalcDerivativeSafe(struct Instance *i,
 #ifndef NDEBUG
   if(!relutil_check_inst_and_res(i,gradient)){
     not_safe = safe_problem;
-  	return not_safe;
+    return not_safe;
   }
 #endif
   r = (struct relation *)GetInstanceRelation(i, &reltype);
@@ -2733,6 +2748,8 @@ void PrintRelationResiduals(struct Instance *i){
 	function.
 
 	I suspect that a lot of this stuff is deprecated -- JP
+
+	Really?! Why?
 */
 
 double *RelationFindRoots(struct Instance *i,
@@ -2828,7 +2845,7 @@ double *RelationFindRoots(struct Instance *i,
     if (SearchEval_Branch(Infix_LhsSide(glob_rel)) < 1) {
       /* CONSOLE_DEBUG("SearchEval_Branch(Infix_LhsSide(glob_rel)) gave < 1..."); */
       sideval = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
-      if (finite(sideval)) {
+      if (asc_finite(sideval)) {
         /* CONSOLE_DEBUG("LHS is finite"); */
         InsertBranchResult(Infix_LhsSide(glob_rel),sideval);
       }else{
@@ -2842,7 +2859,7 @@ double *RelationFindRoots(struct Instance *i,
     if (SearchEval_Branch(Infix_RhsSide(glob_rel)) < 1) {
         /* CONSOLE_DEBUG("SearchEval_Branch(Infix_RhsSide(glob_rel)) gave < 1..."); */
         sideval = RelationBranchEvaluator(Infix_RhsSide(glob_rel));
-        if (finite(sideval)) {
+        if (asc_finite(sideval)) {
           /* CONSOLE_DEBUG("RHS is finite"); */
           InsertBranchResult(Infix_RhsSide(glob_rel),sideval);
         }else{
@@ -3021,7 +3038,6 @@ static int RelationTmpCopySide(union RelationTermUnion *old,
       break;
     case e_zero:
     case e_var:			/* the var number will be correct */
-	case e_diff:
     case e_int:
     case e_real:
       break;
@@ -3203,7 +3219,6 @@ static int SearchEval_Branch(struct relation_term *term){
   case e_int:
   case e_real:
   case e_zero:
-  case e_diff:
     return 0;
 
   case e_plus:

@@ -6,6 +6,7 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <general/list.h>
+#include <general/pairlist.h>
 #include <general/dstring.h>
 #include "compiler.h"
 #include "symtab.h"
@@ -26,11 +27,15 @@
 #include "relation.h"
 #include "relation_util.h"
 #include "instance_io.h"
+#include "relation_io.h"
 #include "instquery.h"
 #include "visitinst.h"
 #include "mathinst.h"
 #include "extcall.h" /* for copy/destroy speciallist */
 #include "packages.h" /* for init slv interp */
+#include "name.h" /* for copy/destroy name */
+
+#define BBDEBUG 0 /* set 0 if not wanting spew */
 
 static int32 ArgsDifferent(double new, double old, double tol)
 {
@@ -45,7 +50,7 @@ static int32 ArgsDifferent(double new, double old, double tol)
   RESIDUAL AND GRADIENT EVALUATION ROUTINES
 */
 
-/* 
+/*
 	Note:
 	Assume a function in c/fortran that computes yhat(x),
 	aka func(inputs_x, outputs_yhat);.
@@ -66,7 +71,7 @@ int BlackBoxCalcResidGrad(struct Instance *i, double *res, double *gradient, str
 	return (int)(fabs(residErr) + fabs(gradErr));
 }
 
-/* 
+/*
 	Note:
 	Assume a function in c/fortran that computes yhat(x),
 	aka func(inputs_x, outputs_yhat);.
@@ -83,7 +88,6 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 	unsigned long *argToVar;
 	unsigned long c;
 	unsigned long argToVarLen;
-	struct BlackBoxData *unique;
 	struct BlackBoxCache *common;
 	struct ExternalFunc *efunc;
 	ExtBBoxFunc *evalFunc;
@@ -103,12 +107,12 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 
 	(void)i;
 	efunc = RelationBlackBoxExtFunc(r);
-	unique = RelationBlackBoxData(r);
 	common = RelationBlackBoxCache(r);
-	argToVar = unique->inputArgs;
+	assert(efunc && common);
 	argToVarLen = common->inputsLen;
-	lhsVar = unique->lhsvar;
-	outputIndex = unique->lhsindex;
+	argToVar = RBBOX(r).inputArgs;
+	lhsVar = RBBOX(r).lhsvar;
+	outputIndex = RBBOX(r).lhsindex;
 	evalFunc = GetValueFunc(efunc);
 	inputTolerance = GetValueFuncTolerance(efunc);
 	updateNeeded = 0;
@@ -123,7 +127,7 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 		updateNeeded = 1;
 	} else {
 		for (c=0; c < argToVarLen ; c++) {
-			arg = RelationVariable(r,argToVar[c]); 
+			arg = RelationVariable(r,argToVar[c]);
 			value = RealAtomValue(arg);
 			if (ArgsDifferent(value, common->inputs[c], inputTolerance)) {
 				updateNeeded = 1;
@@ -182,7 +186,6 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 	unsigned long *argToVar;
 	unsigned long c, varlistLen;
 	unsigned long argToVarLen;
-	struct BlackBoxData *unique;
 	struct BlackBoxCache *common;
 	struct ExternalFunc *efunc;
 	ExtBBoxFunc *derivFunc;
@@ -197,7 +200,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 	int nok = 0;
     static int warnexpt, warnfdiff;
 
-	if(!warnexpt){ 
+	if(!warnexpt){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox gradient is experimental (%s)",__FUNCTION__);
 		warnexpt = 1;
 	}
@@ -205,12 +208,11 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
  	/* prepare */
 	(void)i;
 	efunc = RelationBlackBoxExtFunc(r);
-	unique = RelationBlackBoxData(r);
 	common = RelationBlackBoxCache(r);
-	argToVar = unique->inputArgs;
 	argToVarLen = common->inputsLen;
-	lhsVar = unique->lhsvar;
-	outputIndex = unique->lhsindex;
+	argToVar = RBBOX(r).inputArgs;
+	lhsVar = RBBOX(r).lhsvar;
+	outputIndex = RBBOX(r).lhsindex;
 	derivFunc = GetDerivFunc(efunc);
 	inputTolerance = GetValueFuncTolerance(efunc);
 	updateNeeded = 0;
@@ -229,7 +231,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 			}
 		}
 	}
-	
+
 	/* if inputs have changed more than allowed, or it's first time: evaluate */
 	if (updateNeeded) {
 		for (c=0; c < argToVarLen ;c++) {
@@ -239,7 +241,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 		}
 		common->interp.task = bb_deriv_eval;
 
-		if(derivFunc){			
+		if(derivFunc){
 			nok = (*derivFunc)(
 				&(common->interp)
 				, common->inputsLen, common->outputsLen
@@ -253,7 +255,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 				);
 				warnfdiff = 1;
 			}
-			
+
 			nok = blackbox_fdiff(GetValueFunc(efunc), &(common->interp)
 				, common->inputsLen, common->outputsLen
 				, common->inputsJac, common->outputs, common->jacobian
@@ -279,35 +281,86 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 	return nok;
 }
 
-struct Instance *BlackBoxGetOutputVar(struct relation *r)
+struct Instance *BlackBoxGetOutputVar(CONST struct relation *r)
 {
 	assert(r != NULL);
- 	/* unsigned long lhsVarNumber; */
-	/** @TODO FIXME BlackBoxGetOutputVar */	
-	return NULL;
+ 	unsigned long lhsVarNumber;
+	struct Instance *i;
+
+	lhsVarNumber = RBBOX(r).lhsvar;
+	i = RelationVariable(r, lhsVarNumber);
+	return i;
 }
 
-struct BlackBoxData *CreateBlackBoxData(struct BlackBoxCache *common,
-					unsigned long lhsindex,
-					unsigned long lhsVarNumber)
+static int g_cbbdcount=0;
+struct BlackBoxData *CreateBlackBoxData(struct BlackBoxCache *common)
 {
 	struct BlackBoxData *b = (struct BlackBoxData *)malloc(sizeof(struct BlackBoxData));
+	g_cbbdcount++;
+	b->count = g_cbbdcount;
 	assert(common!=NULL);
 	b->common = common;
 	AddRefBlackBoxCache(common);
-	b->inputArgs = (unsigned long *)ascmalloc(sizeof(long) * (common->inputsLen));
-	b->lhsindex = lhsindex;
-	b->lhsvar = lhsVarNumber;
+#if BBDEBUG
+	FPRINTF(ASCERR,"CreateBlackBoxData(%p) made BBD#%d (%p)\n",common,b->count, b);
+#endif
 	return b;
+}
+
+static
+struct BlackBoxCache *CloneBlackBoxCache(struct BlackBoxCache *b)
+{
+	return CreateBlackBoxCache(b->inputsLen , b->outputsLen, b->argListNames, b->dataName, b->efunc);
+}
+
+void CopyBlackBoxDataByReference(struct relation *src, struct relation *dest, void * bboxtable_p)
+{
+	unsigned long entry;
+	struct pairlist_t *bboxtable = (struct pairlist_t *)bboxtable_p;
+	struct BlackBoxCache * newCache = NULL, *oldCache;
+	struct BlackBoxData *b;
+	struct BlackBoxData *a;
+	assert(src);
+	assert(dest);
+	a = RelationBlackBoxData(src);
+	oldCache = RelationBlackBoxCache(src);
+	assert(a != NULL);
+
+	/* at moment, key is src cache and val is first dest bbd */
+	entry = pairlist_contains(bboxtable, oldCache);
+	if (entry) {
+		/* everyone gets a unique bbd and shared cache */
+		b = (struct BlackBoxData *)pairlist_valueAt(bboxtable, entry);
+#if BBDEBUG
+		FPRINTF(ASCERR,"CopyBlackBoxDataByReference(%p, %p): found already cloned cache C#%d (%p)in BBD#%d (%p)\n",src,dest,b->common->count, b->common, b->count, b);
+#endif
+		newCache = b->common;
+		b = CreateBlackBoxData(newCache);
+	} else {
+		/* dup common */
+		/* This is common across a single box output array of rels,
+		not across all box instances sharing relation data.
+		All the array pointers, etc are different.
+		*/
+		newCache = CloneBlackBoxCache(oldCache); /* starts refc 1 for our scope. */
+		b = CreateBlackBoxData(newCache);
+		DeleteRefBlackBoxCache(dest, &newCache); /* left our scope. now null */
+		pairlist_append(bboxtable, oldCache, b); /* next relation in same array will find its data in the table now, because it has the same a. */
+#if BBDEBUG
+		FPRINTF(ASCERR,"CopyBlackBoxDataByReference(%p, %p): cloned cache C#%d (%p)into BBD#%d (%p) with new cache C#%d (%p)\n",src,dest,oldCache->count, oldCache, b->count, b,b->common->count, b->common);
+#endif
+	}
+
+	dest->externalData = b;
 }
 
 void DestroyBlackBoxData(struct relation *rel, struct BlackBoxData *b)
 {
-	b->lhsindex = -(b->lhsindex);
-	b->lhsvar = 0;
-	ascfree(b->inputArgs);
-	b->inputArgs = NULL;
+#if BBDEBUG
+	FPRINTF(ASCERR,"DestroyBlackBoxData(%p): destroying bbd %p BBD#%d\n",rel,b,b->count);
+#endif
 	DeleteRefBlackBoxCache(rel, &(b->common));
+	b->count *= -1;
 	ascfree(b);
 }
 
@@ -325,7 +378,7 @@ static inline double blackbox_peturbation(double varvalue){
 }
 
 /**
-	Blackbox derivatives estimated by finite difference (by evaluation at 
+	Blackbox derivatives estimated by finite difference (by evaluation at
 	peturbed value of each input in turn)
 
 	Call signature as for ExtBBoxFunc.
@@ -382,18 +435,25 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
   BLACK BOX CACHE
 */
 
+static int g_cbbccount = 0;
+
 #define JACMAGIC -3.141592071828
 struct BlackBoxCache *CreateBlackBoxCache(
 	int32 inputsLen,
 	int32 outputsLen,
-	struct gl_list_t *formalArgs
+	struct gl_list_t *argListNames,
+	struct Name *dataName,
+	struct ExternalFunc *efunc
 )
 {
 	struct BlackBoxCache *b = (struct BlackBoxCache *)malloc(sizeof(struct BlackBoxCache));
+	g_cbbccount++;
+	b->count = g_cbbccount;
  	b->interp.task = bb_none;
 	b->interp.status = calc_all_ok;
 	b->interp.user_data = NULL;
-	b->formalArgList = CopySpecialList(formalArgs);
+	b->argListNames = DeepCopySpecialList(argListNames,(CopyFunc)CopyName);
+	b->dataName = CopyName(dataName);
 	b->inputsLen = inputsLen;
 	b->outputsLen = outputsLen;
 	b->jacobianLen = inputsLen*outputsLen;
@@ -407,7 +467,54 @@ struct BlackBoxCache *CreateBlackBoxCache(
 	b->residCount = 0;
 	b->gradCount = 0;
 	b->refCount = 1;
+	b->efunc = efunc;
 	return b;
+}
+
+void InitBBox(struct Instance *context, struct BlackBoxCache *b)
+{
+	ExtBBoxInitFunc * init;
+	enum find_errors ferr = correct_instance;
+	unsigned long nbr, br, errpos;
+	struct gl_list_t *tmp;
+
+	struct gl_list_t *arglist;
+	struct Instance *data;
+
+	/* fish up data from name. */
+	if (b->dataName != NULL) {
+		tmp = FindInstances(context,b->dataName,&ferr);
+		assert(tmp != NULL);
+		assert(gl_length(tmp) == 1);
+		data = (struct Instance *)gl_fetch(tmp,1);
+		gl_destroy(tmp);
+		assert(data != NULL);
+	} else {
+		data = NULL;
+	}
+
+	/* convert arglistnames to arglist. */
+	WriteNamesInList2D(ASCERR, b->argListNames, ", ", "\n");
+	nbr = gl_length(b->argListNames);
+	arglist = gl_create(nbr);
+	for (br = 1; br <= nbr; br++) {
+		tmp = (struct gl_list_t *)gl_fetch(b->argListNames,br);
+		tmp = FindInstancesFromNames(context, tmp, &ferr, &errpos);
+		assert(tmp != NULL);
+		gl_append_ptr(arglist,tmp);
+	}
+
+	/* now do the init */
+	init = GetInitFunc(b->efunc);
+	b->interp.task = bb_first_call;
+	(*init)( &(b->interp), data, arglist);
+  	b->interp.task = bb_none;
+}
+
+int32 BlackBoxCacheInputsLen(struct BlackBoxCache *b)
+{
+	assert(b != NULL);
+	return b->inputsLen;
 }
 
 void AddRefBlackBoxCache(struct BlackBoxCache *b)
@@ -423,14 +530,19 @@ static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b)
 	assert(b != NULL);
 	if (b->jacobian[b->outputsLen*b->inputsLen] != JACMAGIC)
 	{
-		FPRINTF(ASCERR, "Jacobian overrun detected while destroying BlackBoxCache. Debug the user blackbox implementation.\n");
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING, "Jacobian overrun detected while destroying BlackBoxCache. Debug the user blackbox implementation.\n");
 	}
+#if BBDEBUG
+	FPRINTF(ASCERR,"DestroyBlackBoxCache(%p,%p): destroying %d\n",rel,b,b->count);
+#endif
 	ascfree(b->inputs);
 	ascfree(b->inputsJac);
 	ascfree(b->outputs);
 	ascfree(b->jacobian);
-	DestroySpecialList(b->formalArgList);
-	b->formalArgList = NULL;
+	DeepDestroySpecialList(b->argListNames,(DestroyFunc)DestroyName);
+	b->argListNames = NULL;
+	DestroyName(b->dataName);
+	b->dataName = NULL;
 	b->inputsLen = -(b->inputsLen);
 	b->outputsLen = -(b->outputsLen);
 	b->jacobianLen = -(b->jacobianLen);
@@ -445,12 +557,15 @@ static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b)
 	b->refCount = -3;
 	if (rel != NULL) {
 		/* rel is null with refcount 0 only when there's a bbox array
-		instantiation failure. If failure, we don't need final. */ 
-		efunc = RelationBlackBoxExtFunc(rel);
+		instantiation failure or we're in a weird copy process.
+		Either way, we don't need final. */
+		efunc = b->efunc;
 		final = GetFinalFunc(efunc);
 		b->interp.task = bb_last_call;
 		(*final)(&(b->interp));
+		b->efunc = NULL;
 	}
+	b->count *= -1;
 	ascfree(b);
 }
 
@@ -458,15 +573,25 @@ void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b)
 {
 	struct BlackBoxCache * d = *b;
 	assert(b != NULL && *b != NULL);
-	*b = NULL;
 	if (d->refCount > 0) {
 		(d->refCount)--;
+#if BBDEBUG
+	FPRINTF(ASCERR,"DeleteRefBlackBoxCache(%p,%p): C#%d refcount reduced to %d in bbox %p\n",rel,d,d->count,d->refCount,b);
+#endif
+		*b = NULL;
 	}
 	if (d->refCount == 0) {
+#if BBDEBUG
+		FPRINTF(ASCERR,"DeleteRefBlackBoxCache(%p,%p): bbc refcount reduced to %d in bbox %p\n",rel,d,d->count,b);
+#endif
 		DestroyBlackBoxCache(rel,d);
+		*b = NULL;
 		return;
 	}
 	if (d->refCount < 0) {
+#if BBDEBUG
 		FPRINTF(ASCERR, "Attempt to delete BlackBoxCache (%p) too often.\n", *b);
+#endif
+		*b = NULL;
 	}
 }

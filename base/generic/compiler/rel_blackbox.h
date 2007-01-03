@@ -55,11 +55,13 @@ extern int BlackBoxCalcGradient(struct Instance *i, double *gradient, struct rel
 /**
 Return the output variable instance from r, assuming r is from a blackbox.
 */
-extern struct Instance *BlackBoxGetOutputVar(struct relation *r);
+extern struct Instance *BlackBoxGetOutputVar(CONST struct relation *r);
 
 /** All the relations evaluated in a single call to y=f(x) have this data in common.  */
 struct BlackBoxCache { /* was extrelcache, sort of. */
-	struct gl_list_t *formalArgList; /**< only passed on pre_slv */
+	struct gl_list_t *argListNames; /**< list of list of names. */
+	struct Name *dataName; /**< name of the DATA instance. */
+	struct ExternalFunc *efunc; /**< external function table. */
 	struct BBoxInterp interp; /**< userdata lives in here only */
 	int32 inputsLen; /**< number of actual, not formal, inputs */
 	int32 outputsLen; /**< number of actual, not formal, outputs. */
@@ -72,8 +74,14 @@ struct BlackBoxCache { /* was extrelcache, sort of. */
 	double *hessian; /**< undetermined format */
 	int residCount; /**< number of calls made for y output. */
 	int gradCount; /**< number of calls made for gradient. */
-	int refCount; /* when to destroy */
+	int refCount; /**< when to destroy */
+	int count; /**< serial number */
 };
+
+/** Fetch the input array len size. 
+    @param bbc the source.
+*/
+extern int32 BlackBoxCacheInputsLen(struct BlackBoxCache *bbc);
 
 /** All the elements of an array of blackbox relations resulting
 from a single external statement have the BlackBoxCache in common, but
@@ -83,18 +91,18 @@ the 'common' pointer is unique to the set.
 */
 struct BlackBoxData {
 	struct BlackBoxCache *common;
-	unsigned long *inputArgs;  /**< an array of indexes into the varlist;
-				see notes elsewhere about why varlist
-				may be shorter than arglist due to alias/ats.
-				size is in common. */
-	unsigned long lhsindex; /**< location of value yhati in C output array. */
-	unsigned long lhsvar; /**< location of lhs var(yi) in varlist. */
+	int count;
 };
 
-/* make a blackboxdata unique to a single relation. */
-extern struct BlackBoxData *CreateBlackBoxData(struct BlackBoxCache *common,
-					unsigned long lhsindex,
-					unsigned long lhsVarNumber);
+/** make a blackboxdata unique to a single relation.
+@param common the data common to all the relations in the array of blackbox output relations.
+@param lhsindex the index of this relation's residual in the blackbox output vector.
+@param lhsVarNumber the index of the output variable (y) in the relation's varlist. 
+*/
+extern struct BlackBoxData *CreateBlackBoxData(struct BlackBoxCache *common);
+
+/* do anoncopy of bbox data for relation sharing. */
+extern void CopyBlackBoxDataByReference(struct relation *src, struct relation *dest, void *bboxtable_p);
 
 /* called when destroying the relation containing b. */
 extern void DestroyBlackBoxData(struct relation * rel, struct BlackBoxData *b);
@@ -107,12 +115,21 @@ make a call to AddRef any time the pointer is stored in a
 persistent structure.
  @param inputsLen number of actual, not formal, inputs.
  @param outputsLen number of actual, not formal, outputs.
- @param formalArgs list of list of args, which will be copied.
+ @param argListNames list of lists of names of real atom instances in/output.
+ @param dataName name of the data instance.
 */
-extern struct BlackBoxCache *CreateBlackBoxCache( int32 inputsLen, int32 outputsLen, struct gl_list_t *formalArgs);
+extern struct BlackBoxCache *CreateBlackBoxCache( int32 inputsLen, int32 outputsLen, struct gl_list_t *argListNames, struct Name *dataName, struct ExternalFunc *efunc);
 
 /** make a persistent reference to b. */
 extern void AddRefBlackBoxCache(struct BlackBoxCache *b);
+
+/** dispatch the init function on a bbox after updating the input instance list
+  from the names list.
+  @param context the parent model containing the relations the cache is
+   referenced by.
+  @param b a cache in need of the init call.
+ */
+extern void InitBBox(struct Instance *context, struct BlackBoxCache *b);
 
 /** remove a persistent reference to *b.
  sets *b to null before returning.

@@ -202,10 +202,16 @@ struct GlassBoxRelation {
   int index;              /**< the *external* index of this relation */
 };
 
-struct BlackBoxRelation { /* reminder: this is shared by many instances. */
+struct BlackBoxRelation { /* reminder: this is potentially shared by many instances, but NOT by instances within a single bbox call expanded to a relation array. The data common to the array, but not shareable is kept in externalData. */
   enum Expr_enum relop;     /**< type of constraint. */
   REFCOUNT_T ref_count;     /**< number of instances looking here. */
-  struct ExternalFunc *efunc; /** ftable is shared. */
+  unsigned long *inputArgs;  /**< an array of indexes into the varlist;
+                                see notes elsewhere about why varlist
+                                may be shorter than arglist due to alias/ats.
+                                size is in common. */
+  unsigned long lhsindex; /**< location of value yhati in C output array.  */
+  unsigned long lhsvar; /**< location of lhs var(yi) in varlist. */
+
 };
 
 union RelationUnion {
@@ -260,7 +266,8 @@ struct relation {
 	*/
 	dim_type *d;
   void *externalData; /**< null for token relations,
-			struct BlackBoxData * for bbox. 
+			struct BlackBoxData * for bbox,
+			other things for other critters.
 			*/
 };
 

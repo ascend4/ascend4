@@ -1093,23 +1093,19 @@ int DoExternal(symchar *type,
    */
   switch (ExternalStatMode(stat) ) {
   case ek_black:
+    nptr = ExternalStatNameRelation(stat);
+    doname_status = DoName(nptr,FindRelationType(),stat);
+    return doname_status;
   case ek_glass:
     nptr = ExternalStatNameRelation(stat);
-    break;
+    doname_status = DoName(nptr,FindExternalType(),stat);
+    return doname_status;
   default:
     nptr = NULL;
     break;
   }
-/* buggy block. leaves reporter in state that
-constantly repeats last message (doext nptr=) on FFLUSH.
-  ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
-  FPRINTF(ASCERR,"DOEXTERNAL: nptr = ");
-  WriteName(ASCERR,nptr);
-  FPRINTF(ASCERR,"\n");
-  error_reporter_end_flush();
-*/
 
-  /* add the name to the child list */
+  /* if a ext method shows up, we'll get DEF_NAME_INCORRECT as nptr is null */
   doname_status = DoName(nptr,FindExternalType(),stat);
   /* CONSOLE_DEBUG("DONAME STATUS = %d",doname_status); */
   return doname_status;

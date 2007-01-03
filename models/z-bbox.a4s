@@ -1,0 +1,244 @@
+DELETE TYPES;
+READ FILE /home/baallan/panic/trunknew/models/z-bboxtest.a4c;
+
+## required parser failures for bad input
+# undefined formal args
+COMPILE parsefail0 parsefail0; # typelint needs to catch this.
+# incorrect input formal args
+COMPILE parsefail1 parsefail1;  # typelint needs to catch this.
+# incorrect output formal args
+COMPILE parsefail2 parsefail2;  # typelint needs to catch this.
+# no data formal args
+COMPILE parsefail3 parsefail3; # typelint needs to catch this.
+# bbox referenced in ATS
+COMPILE parsefail4 parsefail4;  ;# ok 10/27/06
+COMPILE parsefail21 parsefail21; # ok 10/27/06
+
+## argument checks (actually testing external code for proper checks)
+# mismatched arg counts check
+COMPILE fail1 fail1; # ok 10/27/06 -- whinage occurs
+# incorrect data arg check
+COMPILE fail2 fail2; # ok 10/27/06 -- whinage occurs
+
+## single box cases.
+# simple single bbox forward solve -- ok 10/27/06
+COMPILE pass1 pass1;
+RUN pass1.reset;
+RUN pass1.default_all;
+SOLVE pass1 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass1;
+
+# simple single bbox reverse solve -- ok 10/27/06
+COMPILE pass2 pass2;
+RUN pass2.reset;
+RUN pass2.default_all;
+SOLVE pass2 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass2;
+
+# simple double bbox solve -- ok 10/27/06
+COMPILE pass3 pass3;
+RUN pass3.reset;
+RUN pass3.default_all;
+SOLVE pass3 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass3;
+
+# simple double bbox reverse solve -- ok 10/27/06
+COMPILE pass4 pass4;
+RUN pass4.reset;
+RUN pass4.default_all;
+SOLVE pass4 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass4;
+
+# linked double bbox solve -- ok 10/27/06
+COMPILE pass5 pass5;
+RUN pass5.reset;
+RUN pass5.default_all;
+SOLVE pass5 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass5;
+
+# linked double bbox reverse solve -- ok 10/27/06
+COMPILE pass6 pass6;
+RUN pass6.reset;
+RUN pass6.default_all;
+SOLVE pass6 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass6;
+
+# merged input solve -- ok 10/27/06
+COMPILE pass7 pass7;
+RUN pass7.reset;
+RUN pass7.default_all;
+SOLVE pass7 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass7;
+
+# merged input reverse solve -- ok 10/27/06
+COMPILE pass8 pass8;
+RUN pass8.reset;
+RUN pass8.default_all;
+SOLVE pass8 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass8;
+
+# merged output solve -- ok 10/27/06
+COMPILE pass9 pass9;
+RUN pass9.reset;
+RUN pass9.default_all;
+SOLVE pass9 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass9;
+
+# merged output reverse solve -- ok 10/27/06
+COMPILE pass10 pass10;
+RUN pass10.reset;
+RUN pass10.default_all;
+SOLVE pass10 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass10;
+
+# merged input/output solve -- ok 10/27/06
+COMPILE pass11 pass11;
+RUN pass11.reset;
+RUN pass11.default_all;
+SOLVE pass11 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass11;
+
+# merged input/output reverse solve -- ok 10/27/06
+COMPILE pass12 pass12;
+RUN pass12.reset;
+RUN pass12.default_all;
+SOLVE pass12 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass12;
+
+# cross-merged input/output solve
+COMPILE pass13 pass13;
+RUN pass13.reset;
+RUN pass13.default_all;
+SOLVE pass13 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass13;
+
+# cross-merged input/output reverse solve
+COMPILE pass14 pass14;
+RUN pass14.reset;
+RUN pass14.default_all;
+SOLVE pass14 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass14;
+
+# array of models containing bboxes. -- ok 10/27/06
+COMPILE pass20 pass20;
+RUN pass20.reset;
+RUN pass20.default_all;
+SOLVE pass20 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass20;
+
+
+# dense array of black boxes -- ok 10/27/06
+COMPILE pass22 pass22;
+RUN pass22.reset;
+RUN pass22.default_all;
+SOLVE pass22 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass22;
+
+# triangular array of black boxes -- ok 10/27/06
+COMPILE pass23 pass23;
+RUN pass23.reset;
+RUN pass23.default_all;
+SOLVE pass23 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass23;
+
+# bbox referenced in WHEN
+COMPILE pass31 pass31;
+RUN pass31.reset;
+RUN pass31.default_all;
+SOLVE pass31 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass31;
+
+# bbox referenced in SATISFIED
+COMPILE pass41 pass41;
+RUN pass41.reset;
+RUN pass41.default_all;
+SOLVE pass41 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass41;
+
+# bbox referenced in SELECT
+COMPILE pass51 pass51;
+RUN pass51.reset;
+RUN pass51.default_all;
+SOLVE pass51 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass51;
+
+# bboxes in reinstantiate merge of boxes
+COMPILE pass61 pass61;
+RUN pass61.reset;
+RUN pass61.default_all;
+SOLVE pass61 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass61;
+
+# bbox that becomes feasible to compile after reinstantiation merge to assign constants.
+COMPILE pass62 pass62;
+RUN pass62.reset;
+RUN pass62.default_all;
+SOLVE pass62 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass62;
+
+# bboxes in reinstantiate merge of boxes
+COMPILE pass63 pass63;
+RUN pass63.reset;
+RUN pass63.default_all;
+SOLVE pass63 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass63;
+
+# bboxes in reinstantiate merge of input/output
+COMPILE pass64 pass64;
+RUN pass64.reset;
+RUN pass64.default_all;
+SOLVE pass64 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass64;
+
+# bboxes in reinstantiate merge of inputs
+COMPILE pass65 pass65;
+RUN pass65.reset;
+RUN pass65.default_all;
+SOLVE pass65 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass65;
+
+# bboxes in reinstantiate merge of outputs
+COMPILE pass66 pass66;
+RUN pass66.reset;
+RUN pass66.default_all;
+SOLVE pass66 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass66;
+
+# bboxes in reinstantiate cross-link merge of input/output
+COMPILE pass67 pass67;
+RUN pass67.reset;
+RUN pass67.default_all;
+SOLVE pass67 WITH QRSlv;
+DELETE SYSTEM;
+DELETE pass67;
+
+
+
+
+

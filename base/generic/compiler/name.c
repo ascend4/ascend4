@@ -216,6 +216,32 @@ struct Name *CreateReservedIndexName(symchar *reserved)
   return result;
 }
 
+struct Name *CreateEnumElementName(symchar *senum)
+{
+  struct Expr *ex;
+  struct Set *s;
+  struct Name *result;
+
+  ex = CreateSymbolExpr(senum);
+  s = CreateSingleSet(ex);
+  result = CreateSetName(s);
+
+  return result;
+}
+
+struct Name *CreateIntegerElementName(long i)
+{
+  struct Expr *ex;
+  struct Set *s;
+  struct Name *result;
+
+  ex = CreateIntExpr(i);
+  s = CreateSingleSet(ex);
+  result = CreateSetName(s);
+
+  return result;
+}
+
 void LinkNames(struct Name *cur, struct Name *next)
 {
   assert(cur!=NULL);
@@ -273,6 +299,24 @@ struct Name *CopyName(CONST struct Name *n)
        p->val.s = CopySetList(np->val.s);
      }
    }
+  return result;
+}
+
+struct Name *CopyAppendNameNode(CONST struct Name *n, CONST struct Name *node)
+{
+  struct Name *result = NULL, *tmp = NULL;
+  if (n != NULL) {
+    result = CopyName(n);
+  }
+  if (node != NULL) {
+    tmp = IDNMALLOC;
+    *tmp = *node;
+    if (!(tmp->bits & NAMEBIT_IDTY)) {
+      tmp->val.s = CopySetList(node->val.s);
+    }
+    tmp->next = NULL;
+  }
+  result = JoinNames(result,tmp);
   return result;
 }
 

@@ -89,8 +89,6 @@ enum Expr_enum {
   e_ipower	= 17,  /**< a^n */
   /* Don't mess with the ordering of the above items */
 
-  e_diff, /**< derivative operator */
-
   /* Boolean Relations  */
   e_bol_token,
 

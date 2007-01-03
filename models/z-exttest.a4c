@@ -1,7 +1,6 @@
 REQUIRE "system.a4l";
 REQUIRE "basemodel.a4l";
-(* still not working. working on it. baa *)
-(*IMPORT "bboxtest";*)
+IMPORT "bboxtest";
 
 MODEL test1multi( coef IS_A real_constant; );
 
@@ -113,19 +112,26 @@ MODEL test1(
 );
 	x[1..3] IS_A generic_real;
 	y[1..3] IS_A generic_real;
+	z[1..3] IS_A generic_real;
 
 
-(*
+(* The equivalent is:
     bbox[i]:  y[i] = coef*x[i];
 *)
 	bbox: bboxtest( x[1..3] : INPUT ; 
 			y[1..3] : OUTPUT ;
 			coef : DATA);
 
+(* here we have it in z, but negative to readily see the difference *) 
+	FOR j IN [1..3] CREATE
+		rel[j]: z[j] = -coef * x[j];
+	END FOR;
+
 METHODS 
 
 	METHOD default_self;
-		y[1..3]	:= -1.0 ;
+		z[1..3]	:= -200.0 ;
+		y[1..3]	:= -100.0 ;
 		x[1..3]	:= 1.0 ;
 	END default_self;
 
@@ -137,6 +143,7 @@ METHODS
 	METHOD specify;
 		FIX x[1..3];
 		FREE y[1..3];
+		FREE z[1..3];
 	END specify;
 
 	METHOD default_all;
@@ -196,6 +203,7 @@ METHOD default_all;
 END default_all;
 
 END test2;
+
 
 MODEL test1Array
 REFINES testcmumodel;
@@ -465,3 +473,44 @@ METHODS
 	END specify;
 
 END testrefinement;
+
+(* simple test of relation sharing for blackboxes *)
+MODEL test2Shared
+REFINES testcmumodel;
+
+	one IS_A real_constant;
+	one :== 1.0;
+	two IS_A real_constant;
+	two :== 2.0;
+
+	t1 IS_A test1(one); (* unique *)
+
+	t2 IS_A test1(two); (* 1st copy *)
+
+	t3 IS_A test1(two); (* constructed by anoncopy*)
+
+METHODS
+
+METHOD specify;
+	RUN t1.reset;
+	RUN t2.reset;
+	RUN t3.reset;
+END specify;
+
+METHOD default_self;
+	RUN t1.default_self;
+	RUN t2.default_self;
+	RUN t3.default_self;
+
+	FOR i IN [1..3] DO
+		t3.x[i] := 2+i*0.5;
+	END FOR;
+
+END default_self;
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+END test2Shared;
+

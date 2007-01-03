@@ -62,6 +62,7 @@
 #include "relation_util.h"
 #include "relation_io.h"
 #include "instance_io.h"
+#include "nameio.h"
 
 #ifndef lint
 static CONST char RelationOutputRoutinesRCS[]="$Id: relation_io.c,v 1.16 1998/04/10 23:25:47 ballan Exp $";
@@ -789,14 +790,6 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
     term = RelationTerm(r,pos,side);
     t = RelationTermType(term);
     switch (t) {
-    case e_diff:
-	  /*cur_var = RelationVariable(r,TermVarNumber(term));
-	  Asc_DStringAppend(dsPtr,"DIFF(",-1);
-      WriteInstanceNameDS(dsPtr,cur_var,ref);
-	  Asc_DStringAppend(dsPtr,")",-1);*/
-	  Asc_DStringAppend(dsPtr,"DIFF(__something__)",-1);
-	  ERROR_REPORTER_HERE(ASC_PROG_WARNING,"e_diff relation term not implemented");
-	  break;
     case e_var:
       if (func == NULL) {
         cur_var = RelationVariable(r,TermVarNumber(term));
@@ -1255,9 +1248,7 @@ static void WriteGlassBoxRelationDS(Asc_DString *dsPtr,
 }
 
 /**
-	Output a blackbox relation to the specified file pointer
-	DATA does not go to the output, as it is not mathematically
-	involved. It is seen only as the relation is constructed.
+	Output a blackbox relation to the specified file pointer.
 */
 static
 void WriteBlackBoxRelation(FILE *f,
@@ -1267,24 +1258,25 @@ void WriteBlackBoxRelation(FILE *f,
   struct ExternalFunc *efunc;
   struct gl_list_t *arglist;
   struct gl_list_t *branch;
-  CONST struct Instance *arg;
+  CONST struct Name *arg;
   unsigned long len1,c1,len2,c2, ninput;
 
+  (void) inst;
   efunc = RelationBlackBoxExtFunc(r);
   ninput = NumberInputArgs(efunc);
-  arglist = RelationBlackBoxFormalArgs(r);
+  arglist = RelationBlackBoxArgNames(r);
   len1 = gl_length(arglist);
   FPRINTF(f,"%s(",ExternalFuncName(efunc)); /* function name */
 
   if (len1) {
-	FPRINTF(f,"\n\t");
+    FPRINTF(f,"\n\t");
     for (c1=1;c1<=len1;c1++) {
       branch = (struct gl_list_t *)gl_fetch(arglist,c1);
       if (branch) {
         len2 = gl_length(branch);
 		for (c2=1;c2<=len2;c2++) {
-		  arg = (struct Instance *)gl_fetch(branch,c2);
-		  WriteInstanceName(f,arg,inst);
+		  arg = (struct Name *)gl_fetch(branch,c2);
+		  WriteName(f,arg);
 		  if(c2<len2)FPRINTF(f,", ");
 		}
       }
@@ -1294,6 +1286,11 @@ void WriteBlackBoxRelation(FILE *f,
     }
   }
 
+  arg = RelationBlackBoxDataName(r);
+  if (arg != NULL) {
+    WriteName(f,arg);
+    FPRINTF(f,"); DATA\n"); /* sequencing correct? */
+  }
   FPRINTF(f,"); OUTPUT\n");
 }
 
@@ -1305,12 +1302,13 @@ void WriteBlackBoxRelationDS(Asc_DString *dsPtr,
   struct ExternalFunc *efunc;
   struct gl_list_t *arglist;
   struct gl_list_t *branch;
-  CONST struct Instance *arg;
+  CONST struct Name *arg;
   unsigned long len1,c1,len2,c2,ninput;
 
+  (void)inst;
   efunc = RelationBlackBoxExtFunc(r);
   ninput = NumberInputArgs(efunc);
-  arglist = RelationBlackBoxFormalArgs(r);
+  arglist = RelationBlackBoxArgNames(r);
   len1 = gl_length(arglist);
   sprintf(SB255," %s(",ExternalFuncName(efunc)); /* function name */
   Asc_DStringAppend(dsPtr,SB255,-1);
@@ -1322,8 +1320,8 @@ void WriteBlackBoxRelationDS(Asc_DString *dsPtr,
       if (branch) {
 		len2 = gl_length(branch);
 		for (c2=1;c2<=len2;c2++) {
-		  arg = (struct Instance *)gl_fetch(branch,c2);
-		  WriteInstanceNameDS(dsPtr,arg,inst);
+		  arg = (struct Name *)gl_fetch(branch,c2);
+		  WriteName2Str(dsPtr,arg);
 		  if(c2<len2)Asc_DStringAppend(dsPtr,", ",2);
 		}
       }
@@ -1338,7 +1336,13 @@ void WriteBlackBoxRelationDS(Asc_DString *dsPtr,
     Asc_DStringAppend(dsPtr," OUTPUT \n",9);
   }
 
-  Asc_DStringAppend(dsPtr,");\n ",3);
+  arg = RelationBlackBoxDataName(r);
+  if (arg != NULL) {
+    Asc_DStringAppend(dsPtr,"\t",1);
+    WriteName2Str(dsPtr,arg);
+    Asc_DStringAppend(dsPtr," DATA\n",6);
+  }
+  Asc_DStringAppend(dsPtr,");\n",3);
 }
 
 
@@ -1793,4 +1797,31 @@ int ConversionIsValid(enum Expr_enum old, enum Expr_enum new)
   }
 }
 
+void WriteNamesInList(FILE *f, struct gl_list_t *l, CONST char *sep)
+{
+	unsigned long n,i;
+	struct Name *name;
 
+	n = gl_length(l);
+	if (f==NULL || l == NULL) { return; }
+	for (i = 1; i <= n; i++) {
+		name = (struct Name *)gl_fetch(l,i);
+		WriteName(f,name);
+		fprintf(f,"%s",sep);
+	}
+}
+
+void WriteNamesInList2D(FILE *f, struct gl_list_t *l, CONST char *sep, CONST char *sep2)
+{
+	unsigned long n,i;
+	struct gl_list_t *gl;
+
+	n = gl_length(l);
+	if (f==NULL || l == NULL) { return; }
+	for (i = 1; i <= n; i++) {
+		gl = (struct gl_list_t *)gl_fetch(l,i);
+		WriteNamesInList(f,gl,sep);
+		fprintf(f,"%s --list %d--",sep2,(int)i);
+	}
+	fprintf(f,"%s",sep2);
+}

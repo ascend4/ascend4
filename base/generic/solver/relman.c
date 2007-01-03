@@ -750,7 +750,7 @@ boolean relman_calc_satisfied( struct rel_relation *rel, real64 tolerance)
 {
    real64 res;
    res = rel_residual(rel);
-   if (!finite(res)) {
+   if (!asc_finite(res)) {
       rel_set_satisfied(rel,FALSE);
       return( rel_satisfied(rel) );
    }

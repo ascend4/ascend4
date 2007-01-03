@@ -170,18 +170,6 @@ struct Expr *CreateVarExpr(struct Name *n)
   return result;
 }
 
-/*
-	As with var, store pointer to the name, but give it a special type 'e_diff'.
-*/
-struct Expr *CreateDiffExpr(struct Name *n){
-  register struct Expr *result;
-  ERROR_REPORTER_HERE(ASC_PROG_ERR,"not yet implemented");
-  EXPR_NEW(result,e_diff);
-  result->v.nptr = n;
-  EXPR_CHECK_MEMORY(result);
-  return result;
-}
-
 void InitVarExpr(struct Expr *result,CONST struct Name *n)
 {
   assert(n!=NULL);
@@ -660,7 +648,6 @@ int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2)
         return -1;
       }
     }
-    assert(ExprType(e1) != e_diff); /* error introduced by JP not handling CompareDiff case. get rid of e_diff. */
     switch(ExprType(e1)){
     case e_var:
       ctmp = CompareNames(ExprName(e1),ExprName(e2));

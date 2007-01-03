@@ -77,7 +77,7 @@
 
 #define PANIC_ILLEGAL_INSTANCE Asc_Panic(2, __FUNCTION__, "invalid instance type")
 
-/** this gets used in interactive merge/refinement. */
+/** this gets used in interactive merge/refinement and destruction. */
 void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
 			    struct Instance *new
 ){
@@ -85,8 +85,7 @@ void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
   assert(rel->t==REL_INST);
   AssertMemory(rel);
   if (RELN_INST(rel)->ptr!=NULL) {
-    /* FIXME: all rel types have the rel->varlist that needs repair, 
-	then each rel type has specifics to fix up. */
+    /* FIXME: ChangeRelationPointers needs verification. all rel types have the rel->varlist that needs repair, then each rel type has specifics to fix up. */
     switch (RELN_INST(rel)->type) {
     case e_token:
       ModifyTokenRelationPointers(rel,RELN_INST(rel)->ptr,old,new);
@@ -267,12 +266,12 @@ void FixCliques(struct Instance *old, struct Instance *new){
 }
 
 
-/**
-	this is called to tell relations about a change in variable location
-	e.g. If two atoms are merged, point all the relations that know about
-	ATOM old to ATOM new.
-*/
-void FixRelations(struct RealAtomInstance *old, struct RealAtomInstance *new){
+/* this is called to tell relations about a change in variable location
+ * e.g. If two atoms are merged, point all the relations that know about
+ * ATOM old to ATOM new. 
+ */
+void FixRelations(struct RealAtomInstance *old, struct RealAtomInstance *new)
+{
   register unsigned long c,len;
   AssertMemory(old);
   AssertMemory(new);

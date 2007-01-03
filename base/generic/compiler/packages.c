@@ -82,21 +82,9 @@
 void Init_BBoxInterp(struct BBoxInterp *interp)
 {
   if (interp){
-#if 0
-    interp->nodestamp = 0;
-#endif
     interp->status = calc_all_ok;
     interp->user_data = NULL;
     interp->task = bb_none;
-/*
-    interp->first_call = (unsigned)0; // gone away
-    interp->last_call = (unsigned)0; // gone away
-    interp->check_args = (unsigned)0; // gone away
-    interp->recalculate = (unsigned)0; // gone away
-    interp->func_eval = (unsigned)0; // gone away
-    interp->deriv_eval = (unsigned)0; // gone away
-    interp->single_step = (unsigned)0; // gone away
-*/
   }
 }
 

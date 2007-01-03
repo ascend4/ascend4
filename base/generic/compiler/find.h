@@ -44,7 +44,7 @@
  */
 enum find_errors {
   unmade_instance,      /**< Found an unmade instance (NULL child). */
-  undefined_instance,   /**< Unstance in an expression is unknown child. */
+  undefined_instance,   /**< Instance in an expression is unknown child. */
   impossible_instance,  /**< Name cannot possibily exist(real error),often sets. */
   correct_instance      /**< Return value when everything went okay. */
 };
@@ -192,5 +192,22 @@ extern struct gl_list_t *FindInstances(CONST struct Instance *i,
  *  it indicates that it couldn't find the name.  Check err to discover why.
  */
 
+
+extern struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i,
+                                                CONST struct gl_list_t *names,
+                                                enum find_errors *err,
+                                                unsigned long *errpos);
+/**<
+ *  <!--  struct gl_list_t *FindInstancesFromNames(i,names,err,errpos) -->
+ *  <!--  struct Instance *i;                                          -->
+ *  <!--  CONST struct gl_list_t *names;                               -->
+ *  <!--  enum find_errors *err;                                       -->
+ *  <!--  unsigned long *errpos;                                       -->
+ *  Return the list of instances specified by names.  If this returns NULL,
+ *  it indicates that it couldn't find a name.  Check err to discover why
+ *  and errpos to discover which list element had the problem.
+ *  Each listed name on input must resolve to a single instance, or
+ *  the err will be impossible_instance.
+ */
 #endif /* ASC_FIND_H */
 
