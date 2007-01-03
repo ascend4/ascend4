@@ -46,6 +46,11 @@ int run_suite_or_test(char *name){
 	struct CU_TestRegistry *reg = CU_get_registry();
 	struct CU_Suite *suite = reg->pSuite;
 	struct CU_Test *test;
+	if(suite==NULL){
+		fprintf(stderr,"No suites present in registry!\n");
+		return CUE_NO_SUITENAME;
+	}
+
 	CU_ErrorCode result;
 	while(suite!=NULL){
 		fprintf(stderr,"Looking at suite %s\n", suite->pName);
@@ -53,12 +58,12 @@ int run_suite_or_test(char *name){
 			fprintf(stderr,"Found suite %s\n", suitename);
 			if(*n=='.'){
 				++n;
-				fprintf(stderr,"Looking for test %s\n", n);					
+				fprintf(stderr,"Looking for test %s\n", n);
 				test = suite->pTest;
 				while(test!=NULL){
-					fprintf(stderr,"Found test %s\n", test->pName);					
+					fprintf(stderr,"Found test %s\n", test->pName);
 					if(0==strcmp(test->pName,n)){
-						fprintf(stderr,"Running test %s (%p, %p)\n", n,suite,test);			
+						fprintf(stderr,"Running test %s (%p, %p)\n", n,suite,test);
 						result = CU_basic_run_test(suite,test);
 						fprintf(stderr,"Result: %s\n",CU_get_error_msg());
 						return result;
@@ -71,7 +76,7 @@ int run_suite_or_test(char *name){
 				result = CU_basic_run_suite(suite);
 				fprintf(stderr,"Result: %s\n",CU_get_error_msg());
 				return result;
-			}	
+			}
 		}
 		suite = suite->pNext;
 	}
@@ -99,7 +104,7 @@ int main(int argc, char* argv[]){
 	/* getopt_long stores the option index here. */
 	int option_index = 0;
 
-	const char *usage = 
+	const char *usage =
 		"%s -vsne [SuiteName|SuiteName.testname] ...\n"
 		"Test ASCEND base/generic routines\n"
 		"options:\n"
@@ -127,7 +132,7 @@ int main(int argc, char* argv[]){
 					error_action = CUEA_IGNORE;
 				}
 				else{
-					fprintf(stderr,"Invalid argument for --on-error option!\n"); 
+					fprintf(stderr,"Invalid argument for --on-error option!\n");
 					exit(1);
 				}
 				break;
@@ -158,7 +163,7 @@ int main(int argc, char* argv[]){
 				fprintf(stderr,"Invalid test name '%s'\n", argv[optind]);
 				exit(1);
 			}
-			optind++;				
+			optind++;
 		}
 	}else{
 		result = CU_basic_run_tests();

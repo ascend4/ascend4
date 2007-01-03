@@ -767,7 +767,11 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
 
-		self.sim.run(method)
+		try:
+			self.sim.run(method)
+		except RuntimeError,e:
+			self.reporter.reportError(e)
+		
 		self.sim.processVarStatus()
 		self.modelview.refreshtree()
 
