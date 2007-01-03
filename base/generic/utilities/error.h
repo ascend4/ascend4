@@ -122,6 +122,7 @@ typedef enum error_severity_enum{
 # define CONSOLE_DEBUG(...) (color_on(stderr,"0;34") + fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
                              fprintf(stderr, ##__VA_ARGS__) + \
                              fprintf(stderr, "\n") + color_off(stderr))
+# define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
 
 #elif defined(_MSC_VER) && _MSC_VER >= 1400 /* Microsoft Visual C++ 2005 or newer */
 #  define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__FUNCTION__);

@@ -802,3 +802,47 @@ struct gl_list_t *FindInstances(CONST struct Instance *i,
   SetEvaluationContext(NULL);
   return result;
 }
+
+struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i,
+                                                CONST struct gl_list_t *names,
+                                                enum find_errors *err,
+                                                unsigned long *errpos)
+{
+  unsigned long pos, len;
+  struct gl_list_t *result, *tmp;
+  struct Name *n;
+
+  *errpos = 0;
+  len = gl_length(names);
+  if (len == 0) { 
+    *err = correct_instance;
+    return NULL;
+  }
+  result = gl_create(len);
+  for (pos = 1; pos <= len; pos++) {
+    n = (struct Name *)gl_fetch(names,pos);
+    if (n == NULL) {
+      gl_destroy(result);
+      *err = impossible_instance;
+      *errpos = pos;
+      return NULL;
+    }
+    tmp = FindInstances(i,n,err);
+    if (tmp == NULL) {
+      gl_destroy(result);
+      *errpos = pos;
+      return NULL;
+    }
+    if (gl_length(tmp) != 1) {
+      gl_destroy(tmp);
+      gl_destroy(result);
+      *err = impossible_instance;
+      *errpos = pos;
+      return NULL;
+    }
+    gl_append_ptr(result,gl_fetch(tmp,1));
+    gl_destroy(tmp);
+  }
+
+  return result;
+}

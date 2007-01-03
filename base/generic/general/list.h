@@ -100,6 +100,9 @@ typedef void (*DestroyFunc)(VOIDPTR);
 /** Generic function called during iterations. */
 typedef void (*IterateFunc)(VOIDPTR);
 
+/** Output function called during iterations. */
+typedef void * (*CopyFunc)(VOIDPTR);
+
 ASC_DLLSPEC(void) gl_init(void);
 /**<
  *  Initializes the list recycler control table.
@@ -578,8 +581,11 @@ ASC_DLLSPEC(unsigned long ) gl_ptr_search(CONST struct gl_list_t *list,
  *
  *  @param list       The list to search (non-NULL).
  *  @param match      The pointer to search for in list.
- *  @param increasing TRUE if the list is sorted in increasing
- *                    pointer order, FALSE otherwise.
+ *  @param increasing TRUE if the list is sorted and in increasing
+ *                    pointer order;
+ *                    TRUE if the list is unsorted but should be
+ *                    searched in 1..n order
+ *                    False otherwise (causes linear reverse search).
  *  @return The position of match in the list [1..gl_length(list)],
  *          0 if match not found.
  */

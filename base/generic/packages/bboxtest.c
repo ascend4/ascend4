@@ -147,7 +147,13 @@ int bboxtest_preslv(struct BBoxInterp *interp,
 ){
 	struct BBOXTEST_problem *problem;
 
+#ifdef BBOXTEST_DEBUG
+	FPRINTF(stdout,"bboxtest_preslv called (interp %p), (instance %p)\n",interp, interp->user_data);
+#endif
 	if (interp->task == bb_first_call) {
+#ifdef BBOXTEST_DEBUG
+	FPRINTF(stdout,"bboxtest_preslv called for bb_first_call");
+#endif
 		if (interp->user_data!=NULL) {
 			/* we have been called before */
 			return 0;
@@ -162,6 +168,9 @@ int bboxtest_preslv(struct BBoxInterp *interp,
 			return 0;
 		}
 	}
+#ifdef BBOXTEST_DEBUG
+	FPRINTF(stdout,"bboxtest_preslv called in fish circumstance.");
+#endif
 	return 1; /* shouldn't be here ever. */
 }
 
@@ -181,12 +190,14 @@ static int DoCalculation(struct BBoxInterp *interp,
 ){
 	struct BBOXTEST_problem *problem;
 	int c;
+	double coef;
 
 	assert(ninputs == noutputs);
 	problem = (struct BBOXTEST_problem *)interp->user_data;
+	coef = problem->coef;
 
 	for (c=0; c < ninputs; c++) {
-		outputs[c] = problem->coef * inputs[c];
+		outputs[c] = coef * inputs[c];
 	}
 
 #ifdef BBOXTEST_DEBUG

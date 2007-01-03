@@ -133,8 +133,8 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case CALL:
     case EXT:
     case REF:
-	case FIX:
-	case FREE:
+    case FIX:
+    case FREE:
     case RUN:
     case FNAME:
     case FLOW:

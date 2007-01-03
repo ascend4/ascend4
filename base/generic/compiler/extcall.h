@@ -115,6 +115,14 @@ extern struct gl_list_t *LinearizeArgList(struct gl_list_t *arglist,
 */
 
 extern struct gl_list_t *CopySpecialList(struct gl_list_t *list);
+/**< Shallow duplicate a 2d list, that is the resulting lists are new,
+   but the (instance) data in them is not.
+ */
+
+extern struct gl_list_t *DeepCopySpecialList(struct gl_list_t *list, CopyFunc copy);
+/**< Deep duplicate a 2d list of Names. That is the resulting lists are new,
+   and the data enclosed is duplicated using copy.
+ */
 
 extern void DestroySpecialList(struct gl_list_t *list);
 /**<
@@ -122,6 +130,13 @@ extern void DestroySpecialList(struct gl_list_t *list);
 	destroy the lists structures associated with this complex list.
 	It *will* not destroy the *leaf* data, but it will destroy all the list
 	structures.
+*/
+
+extern void DeepDestroySpecialList(struct gl_list_t *list, DestroyFunc dtor);
+/**<
+	Given a list of gl_list_t's, this function will destroy the lists
+	structures associated with this complex list and destroy
+	the *leaf* data using dtor.
 */
 
 

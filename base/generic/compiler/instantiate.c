@@ -29,6 +29,8 @@
 */
 
 #include <stdarg.h>
+#include <errno.h>
+/*#include <stdlib.h>*/
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
@@ -187,6 +189,7 @@ long int g_compiler_counter = 1;
 
 /* #define DEBUG_RELS */
 /* undef DEBUG_RELS if you want less spew in pass 2 */
+#undef DEBUG_RELS
 
 #ifdef DEBUG_RELS
 /* root of tree being visited in pass 2. */
@@ -4772,6 +4775,9 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
   struct gl_list_t *instances;
   enum Expr_enum reltype;
 
+#ifdef DEBUG_RELS
+  CONSOLE_DEBUG("ENTERED ExecuteREL\n");
+#endif
   name = RelationStatName(statement);
   instances = FindInstances(inst,name,&ferr);
   /* see if the relation is there already */
@@ -5238,31 +5244,54 @@ int CheckExtCallArgTypes(struct gl_list_t *arglist)
   return 0;
 }
 
-/**
-	blackbox only
-*/
-static struct gl_list_t *GetExtCallArgs(struct Instance *inst,
-		struct Statement *stat,
-		enum find_errors *ferr
-){
+/*
+ @param names a pointer address that will be set to a list or null
+  to provide the names result.
+ */
+static /* blackbox only */
+struct gl_list_t *GetExtCallArgs(struct Instance *inst,
+                                   struct Statement *stat,
+                                   enum find_errors *ferr,
+				struct gl_list_t **names)
+{
   CONST struct VariableList *vl;
   struct gl_list_t *result;
+  enum find_errors ferr2;
+
+  /* the two process calls could be merged if we change findpaths
+     to return instance/name pairs rather than just names. it does
+     know the instances.
+   */
 
   vl = ExternalStatVlistRelation(stat);
   result = ProcessExtRelArgs(inst, vl, ferr);
+
+  *names = NULL;
+  if (result != NULL) {
+    *names = ProcessExtRelArgNames(inst,vl,&ferr2);
+    assert(*ferr == ferr2);
+  }
   return result;
 }
 
-/** black box only */
-static struct Instance *CheckExtCallData(struct Instance *inst,
-		struct Statement *stat,
-		enum find_errors *ferr
-){
+static /* blackbox only */
+struct Instance *CheckExtCallData(struct Instance *inst,
+                                  struct Statement *stat,
+                                  enum find_errors *ferr,
+                                  struct Name **name)
+{
   struct Name *n;
   struct Instance *result;
+  enum find_errors ferr2;
 
   n = ExternalStatDataBlackBox(stat);
   result = ProcessExtRelData(inst, n, ferr);
+
+  *name = NULL;
+  if (result != NULL) {
+    *name = ProcessExtRelDataName(inst, n, &ferr2);
+    assert(*ferr == ferr2);
+  }
   return result;
 }
 
@@ -5270,7 +5299,7 @@ static struct Instance *CheckExtCallData(struct Instance *inst,
 
 static int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *statement);
 
-int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struct ExternalFunc *efunc, struct Instance *subject, struct gl_list_t *inputs,  struct BlackBoxCache * common, long c, CONST char *context);
+int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struct Instance *subject, struct gl_list_t *inputs,  struct BlackBoxCache * common, long c, CONST char *context);
 
 /**
 	This function does the job of creating an instance of a 'black box'
@@ -5341,7 +5370,8 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   CONST char *funcname = NULL;
   unsigned long n_input_args=0L, n_output_args=0L; /* formal arg counts */
   unsigned long n_inputs_actual=0L, n_outputs_actual=0L; /* atomic arg counts */
-  struct gl_list_t *inputs, *outputs;
+  struct gl_list_t *inputs, *outputs, *argListNames;
+  struct Name *dataName;
   unsigned long start,end;
   struct Set *extrange= NULL;
 
@@ -5352,20 +5382,38 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
 	the checks done before this statement was attempted.
   */
   if (ExternalStatDataBlackBox(statement) != NULL) {
-    data = CheckExtCallData(inst, statement, &ferr);
-    assert( ferr == correct_instance );
+    data = CheckExtCallData(inst, statement, &ferr, &dataName);
+    /* should never be here, if checkext were being used properly somewhere. it isn't */
+    if (data==NULL && ferr != correct_instance){
+      /* should never be here, if checkext were being used properly somewhere. it isn't */
+      switch(ferr){
+      case unmade_instance:
+		STATEMENT_ERROR(statement,"Statement contains unmade data instance");
+        return 1;
+      case undefined_instance:
+        STATEMENT_ERROR(statement,"Statement contains undefined data instance\n");
+        return 1; /* for the time being give another crack */
+      case impossible_instance:
+        STATEMENT_ERROR(statement,"Statement contains impossible data instance\n");
+        return 1;
+      default:
+        STATEMENT_ERROR(statement,"Unhandled case!");
+        return 1;
+      }
+    }
   }
-  
+
   /* expand the formal args into a list of lists of realatom args. */
-  arglist = GetExtCallArgs(inst, statement, &ferr);
+  arglist = GetExtCallArgs(inst, statement, &ferr, &argListNames);
   if (arglist==NULL){
-    asc_assert(ferr == correct_instance);
-    /* should never be here. */
+    /* should never be here, if checkext were being used properly somewhere. it isn't */
     switch(ferr){
     case unmade_instance:
-      return 0;
+      STATEMENT_ERROR(statement,"Statement contains unmade argument instance\n");
+      return 1;
     case undefined_instance:
-      return 0; /* for the time being give another crack */
+      STATEMENT_ERROR(statement,"Statement contains undefined argument instance\n");
+      return 1;
     case impossible_instance:
       instantiation_error(ASC_USER_ERROR,statement,"Statement contains impossible instance\n");
       return 1;
@@ -5407,7 +5455,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   n_outputs_actual = gl_length(outputs);
 
   /* Now create the relations, all with the same common. */
-  common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, arglist);
+ common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, argListNames, dataName, efunc );
   common->interp.task = bb_first_call;
   context = WriteInstanceNameString(inst, NULL);
 
@@ -5443,7 +5491,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
         aindex = FetchIntMember(sptr,c);
         SetForInteger(fv,aindex);
         subject = (struct Instance *)gl_fetch(outputs,aindex);
-        ExecuteBBOXElement(inst, statement, efunc, subject, inputs, common, aindex, context);
+        ExecuteBBOXElement(inst, statement, subject, inputs, common, aindex, context);
         /*  currently designed to always succeed or fail permanently */
       }
       RemoveForVariable(GetEvaluationForTable());
@@ -5476,6 +5524,8 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   gl_destroy(inputs);
   gl_destroy(outputs);
   DestroySpecialList(arglist);
+  DeepDestroySpecialList(argListNames,(DestroyFunc)DestroyName);
+  DestroyName(dataName);
 /* ------------ */ /* ------------ */
 
   /*  currently designed to always succeed or fail permanently.
@@ -5485,7 +5535,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   return 1;
 }
 
-int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struct ExternalFunc *efunc, struct Instance *subject, struct gl_list_t *inputs,  struct BlackBoxCache * common, long c, CONST char *context)
+int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struct Instance *subject, struct gl_list_t *inputs,  struct BlackBoxCache * common, long c, CONST char *context)
 {
   struct Name *name;
   enum find_errors ferr;
@@ -5494,7 +5544,9 @@ int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struc
   struct relation *reln  = NULL;
   enum Expr_enum reltype;
 
-  /* CONSOLE_DEBUG("ENTERED ExecuteBBOXElement\n"); */
+#ifdef DEBUG_RELS
+  CONSOLE_DEBUG("ENTERED ExecuteBBOXElement\n");
+#endif
 
   /* make or find the instance */
   name = ExternalStatNameRelation(statement);
@@ -5522,7 +5574,7 @@ int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struc
       gl_destroy(instances);
       if (InstanceKind(child)==DUMMY_INST) {
 #ifdef DEBUG_RELS
-        STATEMENT_ERROR(statement, "DUMMY_INST foundin compiling blackbox.");
+        STATEMENT_ERROR(statement, "DUMMY_INST found in compiling blackbox.");
 #endif
         return 1;
       }
@@ -5551,7 +5603,7 @@ int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struc
 #if TIMECOMPILER
     g_ExecuteEXT_CreateBlackboxRelation_calls++;
 #endif
-    reln = CreateBlackBoxRelation(child, efunc,
+    reln = CreateBlackBoxRelation(child,
 				subject, inputs,
 				common, c-1, context);
     assert(reln != NULL); /* cbbr does not return null */
@@ -5639,6 +5691,8 @@ int CheckGlassBoxIndex(struct Instance *inst,
                        enum relation_errors *err)
 {
   int result;
+  long int iresult;
+  char *tail;
   CONST struct Name *n;
   symchar *str;		   /* a string representation of the index */
 
@@ -5652,7 +5706,16 @@ int CheckGlassBoxIndex(struct Instance *inst,
 
   str = SimpleNameIdPtr(n);
   if (str) {
-    result = atoi(SCP(str));	/* convert to integer. FIXME strtod */
+#if 0
+    result = atoi(SCP(str));	/* convert to integer. use strtol */
+#endif
+    errno = 0;
+    iresult = strtol(SCP(str),&tail,0);
+    if (errno != 0 || (iresult == 0 && tail == SCP(str))) {
+      *err = incorrect_structure;
+      return -1;
+    }
+    result = iresult; /* range errror possible. */
     *err = okay;
     return result;
   }
@@ -6091,7 +6154,7 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
 		STATEMENT_ERROR(statement, "Floating-point error while evaluating assignment statement");
         MarkStatContext(statement,context_WRONG);
 		SetDeclarativeContext(previous_context);
-		return 1;		
+		return 1;
 	}
 	Asc_SignalHandlerPopDefault(SIGFPE);
 

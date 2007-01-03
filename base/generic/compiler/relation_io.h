@@ -211,5 +211,15 @@ extern void RelationIO_report_pool(void);
  * Write the pool report to ASCERR for the ppe pool.
  */
 
+extern void WriteNamesInList(FILE *f, struct gl_list_t *l, CONST char *sep);
+/**<
+ *  Write each element of l as a struct Name * on file separated by sep.
+ */
+
+extern void WriteNamesInList2D(FILE *f, struct gl_list_t *l, CONST char *sep, CONST char *sep2);
+/**<
+ *  Write each element of l as a list of struct Name * on file separated by sep2.
+ */
+
 #endif /* ASC_RELATION_IO_H */
 

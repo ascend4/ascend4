@@ -208,6 +208,10 @@ AC_CANONICAL_HOST
 #JP  Autotools.
 
 AC_PROG_CC(gcc)
+# if gcc, -fno-strict-aliasing mandatory to work around compiler bugs
+if test "x$ac_compiler_gnu" = "xyes"; then
+	CFLAGS="$CFLAGS -fno-strict-aliasing"
+fi
 
 #--------------------------------------------------------------------
 #	Do other misc checks with CC and CFLAGS.
@@ -228,7 +232,6 @@ AC_PROG_CC(gcc)
 #--------------------------------------------------------------------
 
 AC_PROG_CPP
-
 AC_ARG_ENABLE(optimization,
     [  --enable-optimization   optimize the C code while building ascend],
     [asc_do_opt="$enableval"], [asc_do_opt=no])

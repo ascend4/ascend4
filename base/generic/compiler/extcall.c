@@ -225,6 +225,25 @@ struct gl_list_t *LinearizeArgList(struct gl_list_t *arglist,
   return NULL;
 }
 
+void DeepDestroySpecialList(struct gl_list_t *list, DestroyFunc dtor)
+{
+  unsigned long len,c;
+  struct gl_list_t *branch,*tmp;
+  if (list) {
+    tmp = list;
+    len = gl_length(tmp);
+    for (c=1;c<=len;c++) {
+      branch = (struct gl_list_t *)gl_fetch(tmp,c);
+      if (branch != NULL) {
+        gl_iterate(branch,dtor);
+        gl_destroy(branch);
+      }
+    }
+    gl_destroy(tmp);
+    list = NULL;
+  }
+}
+
 void DestroySpecialList(struct gl_list_t *list)
 {
   unsigned long len,c;
@@ -243,10 +262,11 @@ void DestroySpecialList(struct gl_list_t *list)
   }
 }
 
-struct gl_list_t *CopySpecialList(struct gl_list_t *list){
+struct gl_list_t *DeepCopySpecialList(struct gl_list_t *list, CopyFunc copy)
+{
   unsigned long len1,c1,len2,c2;
   struct gl_list_t *result,*branch,*tmp;
-  struct Instance *arg;
+  void *arg, *newarg;
   if (list) {
     len1 = gl_length(list);
     result = gl_create(len1);
@@ -256,8 +276,38 @@ struct gl_list_t *CopySpecialList(struct gl_list_t *list){
 	len2 = gl_length(tmp);
 	branch = gl_create(len2);
 	for (c2=1;c2<=len2;c2++) {
-	  arg = (struct Instance *)gl_fetch(tmp,c2);
-	  gl_append_ptr(branch,(VOIDPTR)arg);
+	  arg = gl_fetch(tmp,c2);
+          newarg = copy(arg);
+	  gl_append_ptr(branch,newarg);
+	}
+      }
+      else{
+	branch = NULL;
+	return NULL;
+      }
+      gl_append_ptr(result,(VOIDPTR)branch);
+    }
+    return result;
+  }
+  return NULL;
+}
+
+struct gl_list_t *CopySpecialList(struct gl_list_t *list)
+{
+  unsigned long len1,c1,len2,c2;
+  struct gl_list_t *result,*branch,*tmp;
+  void *arg;
+  if (list) {
+    len1 = gl_length(list);
+    result = gl_create(len1);
+    for(c1=1;c1<=len1;c1++) {
+      tmp = (struct gl_list_t *)gl_fetch(list,c1);
+      if (tmp) {
+	len2 = gl_length(tmp);
+	branch = gl_create(len2);
+	for (c2=1;c2<=len2;c2++) {
+	  arg = gl_fetch(tmp,c2);
+	  gl_append_ptr(branch,arg);
 	}
       }
       else{

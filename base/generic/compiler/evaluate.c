@@ -191,7 +191,6 @@ unsigned int ExprStackDepth(CONST struct Expr *ex,
     AssertMemory(ex);
     switch(ExprType(ex)){
     case e_var:
-	case e_diff:
     case e_zero:
     case e_int:
     case e_satisfied:
@@ -281,7 +280,6 @@ unsigned SuchThatForm(CONST struct Expr *expr,
     AssertMemory(expr);
     switch(ExprType(expr)){
     case e_var:
-	case e_diff:
     case e_zero:
     case e_int:
     case e_satisfied:
@@ -903,7 +901,6 @@ struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *expr,
     AssertMemory(expr);
     switch(ExprType(expr)){
     case e_var:        /* variable */
-	case e_diff:       /* derivative */
       cptr = SimpleNameIdPtr(ExprName(expr));
       if ( cptr == NULL || TempExists(cptr)==0 ) {
         /* append if name not already seen in list */

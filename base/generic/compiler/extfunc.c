@@ -42,6 +42,9 @@
   forward decls and typedefs etc
 */
 
+/* make efdebug 1 if you want spew */
+#define EFDEBUG 0
+
 #define EXTFUNCHASHSIZE 31
 
 static struct Table *g_ExternalFuncLibrary = NULL;
@@ -85,12 +88,30 @@ int CreateUserFunctionBlackBox(CONST char *name,
   efunc->etype = efunc_BlackBox;
   efunc->n_inputs = n_inputs;
   efunc->n_outputs = n_outputs;
-  efunc->u.black.initial = init;
-  /* CONSOLE_DEBUG("_______________________ ASSIGNED INIT = %p TO efunc = %p",init, efunc); */
-  efunc->u.black.value = value;
+  if (init != NULL) {
+    efunc->u.black.initial = init;
+  } else {
+    efunc->u.black.initial = DefaultExtBBoxInitFunc;
+  }
+  if (!value) {
+    efunc->u.black.value = ErrorExtBBoxValueFunc;
+  } else {
+    efunc->u.black.value = value;
+  }
   efunc->u.black.deriv = deriv;
+  if (!deriv) { 
+    efunc->u.black.deriv = DefaultExtBBoxFuncDerivFD;
+  }
   efunc->u.black.deriv2 = deriv2;
+  if (!deriv) { 
+    efunc->u.black.deriv2 = DefaultExtBBoxFuncDeriv2FD;
+  }
   efunc->u.black.final = final;
+  if (final != NULL) {
+    efunc->u.black.final = final;
+  } else {
+    efunc->u.black.final = DefaultExtBBoxFinalFunc;
+  }
   efunc->u.black.inputTolerance = inputTolerance;
   if (help) {
     if (efunc->help) ascfree((char *)efunc->help);
@@ -148,6 +169,93 @@ ExtBBoxFunc *GetDeriv2Func(struct ExternalFunc *efunc)
   asc_assert(efunc!=NULL);
   asc_assert(efunc->etype == efunc_BlackBox);
   return efunc->u.black.deriv2;
+}
+
+int DefaultExtBBoxInitFunc(struct BBoxInterp *interp,
+                            struct Instance *data,
+                            struct gl_list_t *arglist)
+{
+  (void)arglist;
+  (void)data;
+#if EFDEBUG
+  FPRINTF(ASCERR,"Default do-nothing DefaultExtBBoxInitFunc called.\n");
+#endif
+  interp->user_data = NULL;
+  return 0;
+}
+
+int ErrorExtBBoxValueFunc(
+		struct BBoxInterp *interp,
+		int ninputs,
+		int noutputs,
+		double *inputs,
+		double *outputs,
+		double *jacobian
+)
+{
+  (void)interp;
+  (void)ninputs;
+  (void)noutputs;
+  (void)inputs;
+  (void)outputs;
+  (void)jacobian;
+  FPRINTF(ASCERR,"Do-nothing ErrorExtBBoxValueFunc called.\nBlackbox writer is an idiot or memory corrupted.\n");
+  return -1;
+}
+
+void DefaultExtBBoxFinalFunc(struct BBoxInterp *interp)
+{
+#if EFDEBUG
+  FPRINTF(ASCERR,"Default do-nothing DefaultExtBBoxFinalFunc called.\n");
+#endif
+  (void)interp;
+}
+
+
+int DefaultExtBBoxFuncDerivFD(
+		struct BBoxInterp *interp,
+		int ninputs,
+		int noutputs,
+		double *inputs,
+		double *outputs,
+		double *jacobian
+)
+{
+#if EFDEBUG
+	FPRINTF(ASCERR,"Braindead DefaultExtBBoxFuncDerivFD called.\n");
+#endif
+	(void)interp;
+	(void)ninputs;
+	(void)noutputs;
+	(void)inputs;
+	(void)outputs;
+	(void)jacobian;
+
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox fd gradients not implemented, returning -1");
+	return -1; /* FIXME */
+}
+
+int DefaultExtBBoxFuncDeriv2FD(
+		struct BBoxInterp *interp,
+		int ninputs,
+		int noutputs,
+		double *inputs,
+		double *outputs,
+		double *jacobian
+)
+{
+#if EFDEBUG
+	FPRINTF(ASCERR,"Braindead DefaultExtBBoxFuncDeriv2FD called.\n");
+#endif
+	(void)interp;
+	(void)ninputs;
+	(void)noutputs;
+	(void)inputs;
+	(void)outputs;
+	(void)jacobian;
+
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"2nd partials merely a dream, returning -1");
+	return -1; /* FIXME */
 }
 
 /*------------------------------------------------------------------------------

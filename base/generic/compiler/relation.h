@@ -274,12 +274,32 @@ Result is the callers to destroy with DestroySpecialList.
 @param ferr find result code, if anyone cares.
 */
 
+struct gl_list_t *ProcessExtRelArgNames(CONST struct Instance *inst, CONST struct VariableList *vl, enum find_errors *ferr);
+/**<
+return the list of lists argument names, if they all exist, or NULL
+if something is missing.
+Result is the callers to destroy with DeepDestroySpecialList(l,DestroyName).
+@param inst parent model of the external relation.
+@param vl argument list of names.
+@param ferr find result code, if anyone cares.
+*/
+
 extern struct Instance *ProcessExtRelData(CONST struct Instance *inst, CONST struct Name *n, enum find_errors *ferr);
 /**<
 Check the value of ferr for correct_instance or otherwise.
 @return the DATA instance if it exists (may be NULL if not specified).
 @param inst parent model of the external relation.
 @param n data instance name.
+@param ferr find result code, if anyone cares.
+
+*/
+
+extern struct Name *ProcessExtRelDataName(CONST struct Instance *inst, CONST struct Name *n, enum find_errors *ferr);
+/**<
+Check the value of ferr for correct_instance or otherwise.
+@return the name for DATA instance if it data exists (may be NULL if not specified).
+@param inst parent model of the external relation.
+@param n data instance name, possibly in indexed rather than exact form.
 @param ferr find result code, if anyone cares.
 
 */
@@ -356,7 +376,6 @@ extern struct relation
 
 extern struct relation
 *CreateBlackBoxRelation(struct Instance *relinst,
-                        struct ExternalFunc *efunc,
                         struct Instance *whichvar,
                         struct gl_list_t *inputs,
 			struct BlackBoxCache * common,
@@ -466,7 +485,8 @@ extern struct relation
 extern struct relation
 *CopyAnonRelationByReference(CONST struct Instance *anonproto,
                              struct Instance *target,
-                             struct gl_list_t *copyvars);
+                             struct gl_list_t *copyvars,
+                             void *bboxtable);
 /**<
  * Version of relation copy-by-reference for use with the AnonType
  * approach to copying relations.
@@ -478,6 +498,7 @@ extern struct relation
  * by upping the reference count and notify the interested copyvars
  * of the new relation they have. The needed new varlist for target
  * is also created and set.
+ * @param bboxtable must be a struct pairlist_t *.
  * If the anonproto struct relation is NULL, this will quietly return NULL.
  */
 
