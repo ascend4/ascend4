@@ -53,7 +53,7 @@ typedef char *ImportHandlerCreateFilenameFn(const char *partialname);
 	@param initfunc the 'name' of a registration 'function' to be run in the
 	imported file. This comes from the ASCEND syntax "FROM XXXX IMPORT YYYY"
 	(more or less, as I recall) but should normally be set to NULL so that
-	the default registration function can be used, and simpler "IMPORT XXXX"
+	the default registration function can be used, and simpler 'IMPORT "XXXX"'
 	syntax can be used by the end user.
 */
 typedef int ImportHandlerImportFn(const struct FilePath *fp,const char *initfunc, const char *partialpath);
@@ -96,7 +96,7 @@ ImportHandlerImportFn importhandler_extlib_import;
 
 int importhandler_remove(const char *name);
 struct ImportHandler *importhandler_lookup(const char *name);
-int importhandler_destroylibrary();
+ASC_DLLSPEC(int) importhandler_destroylibrary();
 int importhandler_createlibrary();
 int importhandler_printlibrary(FILE *fp);
 int importhandler_printhandler(FILE *fp, struct ImportHandler *);

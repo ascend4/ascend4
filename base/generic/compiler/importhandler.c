@@ -216,6 +216,8 @@ int importhandler_createlibrary(){
 }
 
 int importhandler_remove(const char *name){
+	if(importhandler_library==NULL)return 2;
+	CONSOLE_DEBUG("Removing importhandler '%s'", name);
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s not implemented",__FUNCTION__);
 	return 1;
 }
@@ -225,16 +227,34 @@ struct ImportHandler *importhandler_lookup(const char *name){
 	return NULL;
 }
 
+/** @return 0 on success */
 int importhandler_destroylibrary(){
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s not implemented",__FUNCTION__);
-	CONSOLE_DEBUG("NOT IMPLEMENTED");
-	return 1;
+	int i;
+	int err = 0;
+	CONSOLE_DEBUG("Destroying importhandler library...");
+	importhandler_printlibrary(stderr);
+	for(i=IMPORTHANDLER_MAX - 1; i >= 0; --i){
+		if(importhandler_library[i]==NULL)continue;
+		err = err | importhandler_remove(importhandler_library[i]->name);
+	}
+	if(err)ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Failed to destroy importhandler library");
+	return err;
 }
 
-
+/** @return 0 on success */
 int importhandler_printlibrary(FILE *fp){
-	CONSOLE_DEBUG("NOT IMPLEMENTED");
-	return 1;
+	int i;
+	if(importhandler_library==NULL){
+		fprintf(fp,"# importhandler_printlibrary: empty\n");
+		return 0;
+	}else{
+		fprintf(fp,"# importhandler_printlibrary: start\n");
+		for(i=0; i < IMPORTHANDLER_MAX && importhandler_library[i] != NULL; ++i){
+			fprintf(fp,"%s\n",importhandler_library[i]->name);
+		}
+		fprintf(fp,"# importhandler_printlibrary: end\n");
+		return 0;
+	}
 }
 
 int importhandler_printhandler(FILE *fp, struct ImportHandler *handler){
@@ -275,7 +295,7 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 		to store the full path when found */
 	FILE *f;
 	char *filename;
-	char *fullpath;
+	/* char *fullpath; */
 	struct ImportHandlerSearch *searchdata;
 	struct FilePath *fp, *fp1, *fp2;
 	int i;

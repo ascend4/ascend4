@@ -70,8 +70,9 @@
 
 /** @page solver-parameters Solver Parameters in ASCEND
 
-	@NOTE This stuff REALLY seems painful to use! Is there not a way that
-	we could make it a bit easier? @ENDNOTE
+	@NOTE There is a new syntax available for setting solver parameters
+	that has not yet been documented here. See slv_common.h (~line 280) and
+	also solver/ida.c for examples. @ENDNOTE
 
 	When used together the parameter-related structures, functions, and
 	macros allow us to define all of a solver's parameters in one file

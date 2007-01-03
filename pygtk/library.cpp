@@ -327,6 +327,7 @@ Library::clear(){
 	DestroyPrototype();
 	EmptyTrash();
 	Asc_DestroyModules((DestroyFunc)DestroyStatementList);
+	importhandler_destroylibrary();
 	WriteChildMissing(NULL,NULL,NULL);
 	//Asc_CompilerInit(1)
 	DefineFundamentalTypes();
