@@ -214,15 +214,18 @@ class TestLSODE(Ascend):
 try:
 	import freesteam
 	have_freesteam = True
-except ImportException,e:
+except ImportError,e:
 	have_freesteam = False
 
 if have_freesteam:
 	class TestFreesteam(Ascend):
-		def testfreesteam(self):
+		def testimport(self):
 			self.L.load('johnpye/thermalequilibrium2.a4c')
-			#M = self.L.findType('thermalequilibrium2').getSimulation('sim')
-			#M.setSolver(ascpy.Solver("QRSlv"))
+
+		def testevaluate(self):
+			self.L.load('johnpye/thermalequilibrium2.a4c')
+			M = self.L.findType('thermalequilibrium2').getSimulation('sim')
+			M.setSolver(ascpy.Solver("QRSlv"))
 			#I = ascpy.Integrator(M)
 			#I.setEngine('LSODE')
 			#I.setReporter(ascpy.IntegratorReporterConsole(I))
