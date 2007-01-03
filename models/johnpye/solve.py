@@ -1,8 +1,8 @@
 try:
 	from solverreporter import *
 	have_solverreporter = True
-except ImportError:
-	pass
+except RuntimeError,e:
+	print "NOTE: RuntimeError when importing solverreporter: %s", e
 	have_solverreporter = False
 
 import extpy
