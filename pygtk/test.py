@@ -240,6 +240,7 @@ class TestExtFn(AscendSelfTester):
 
 class TestExtPy(AscendSelfTester):
 	def testextpytest(self):
+		print "-------------------=--=-=-=-"
 		M = self._run('extpytest',filename='johnpye/extpy/extpytest.a4c')
 
 #-------------------------------------------------------------------------------
@@ -327,6 +328,7 @@ class TestIDADENSE(Ascend):
 		assert abs(M.F - 21.36) < 0.1
 		
 	def testdenx(self):
+		print "-----------------------------====="
 		self.L.load('johnpye/idadenx.a4c')
 		M = self.L.findType('idadenx').getSimulation('sim')
 		M.setSolver(ascpy.Solver("QRSlv"))
