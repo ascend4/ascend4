@@ -1078,8 +1078,8 @@ int slv_select_solver(slv_system_t sys,int solver){
   }
   if ( solver >= 0 && solver < NORC ) {
     if (sys->ct != NULL && solver != sys->solver) {
-	  asc_assert(sys->solver >= 0);
       CONSOLE_DEBUG("g_SlvNumberOfRegisteredClients = %d, sys->solver = %d", g_SlvNumberOfRegisteredClients, sys->solver);
+	  asc_assert(sys->solver >= -1);
 	  asc_assert(g_SlvNumberOfRegisteredClients > 0);
 	  asc_assert(sys->solver < g_SlvNumberOfRegisteredClients);
       destroy = SlvClientsData[sys->solver].cdestroy;

@@ -28,7 +28,7 @@ Registry::getSimulation(const char *key){
 	if(s==NULL){
 		throw std::runtime_error("Simulation pointer was NULL");
 	}
-	CONSOLE_DEBUG("Pointer value is %p",s);
+	CONSOLE_DEBUG("Simulation 'sim' = %p",s);
 	return (Simulation &)(*s);
 }
 
