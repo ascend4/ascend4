@@ -59,7 +59,9 @@ if solver_env.get('WITH_IDA'):
 		, LIBS=[solver_env.get('IDA_LIB')]
 	)
 
-	objs += sundials_env.SharedObject('ida.c');
+	idasrcs = ['ida.c','idalinear.c']
+	for s in idasrcs:
+		objs += sundials_env.SharedObject(s)
 else:
 	pass
 #	print "NO IDA REQUESTED!"

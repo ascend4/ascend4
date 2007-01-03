@@ -34,6 +34,7 @@
 
 /* ASCEND includes */
 #include "ida.h"
+#include "idalinear.h"
 #include <utilities/error.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascSignal.h>
@@ -165,11 +166,15 @@ void integrator_ida_error(int error_code
 		, char *msg, void *eh_data
 );
 
+/* dense jacobian evaluation for IDADense dense direct linear solver */
 int integrator_ida_djex(long int Neq, realtype tt
 		, N_Vector yy, N_Vector yp, N_Vector rr
 		, realtype c_j, void *jac_data, DenseMat Jac
 		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
 );
+
+/* sparse jacobian evaluation for ASCEND's sparse direct solver */
+IntegratorSparseJacFn integrator_ida_sjex;
 
 typedef struct{
 	long nsteps;
@@ -360,8 +365,12 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 	slv_param_char(p,IDA_PARAM_LINSOLVER
 			,(SlvParameterInitChar){{"linsolver"
 			,"Linear solver",1
-			,"See IDA manual, section 5.5.3."
-		}, "SPGMR"}, (char *[]){"DENSE","BAND","SPGMR","SPBCG","SPTFQMR",NULL}
+			,"See IDA manual, section 5.5.3. Choose 'ASCEND' to use the linsolqr"
+			" direct linear solver bundled with ASCEND, 'DENSE' to use the dense"
+			" solver bundled with IDA, or one of the Krylov solvers SPGMR, SPBCG"
+			" or SPTFQMR (which still need preconditioners to be implemented"
+			" before they can be very useful."
+		}, "ASCEND"}, (char *[]){"ASCEND","DENSE","BAND","SPGMR","SPBCG","SPTFQMR",NULL}
 	);
 
 	slv_param_int(p,IDA_PARAM_MAXL
@@ -536,7 +545,16 @@ int integrator_ida_solve(
 	/* attach linear solver module, using the default value of maxl */
 	linsolver = SLV_PARAM_CHAR(&(blsys->params),IDA_PARAM_LINSOLVER);
 	CONSOLE_DEBUG("ASSIGNING LINEAR SOLVER '%s'",linsolver);
-	if(strcmp(linsolver,"DENSE")==0){
+	if(strcmp(linsolver,"ASCEND")==0){
+		CONSOLE_DEBUG("ASCEND DIRECT SOLVER, size = %d",size);
+		IDAASCEND(ida_mem,size);
+		IDAASCENDSetJacFn(ida_mem, &integrator_ida_sjex, (void *)blsys);
+
+		flagfntype = "IDAASCEND";
+		flagfn = &IDAASCENDGetLastFlag;
+		flagnamefn = &IDAASCENDGetReturnFlagName;
+
+	}else if(strcmp(linsolver,"DENSE")==0){
 		CONSOLE_DEBUG("DENSE DIRECT SOLVER, size = %d",size);
 		flag = IDADense(ida_mem, size);
 		switch(flag){
@@ -1241,6 +1259,13 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	}
 	return 0;
 }
+
+/* sparse jacobian evaluation for IDAASCEND sparse direct linear solver */
+int integrator_ida_sjex(long int Neq, realtype tt
+		, N_Vector yy, N_Vector yp, N_Vector rr
+		, realtype c_j, void *jac_data, mtx_matrix_t Jac
+		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+);
 
 /*----------------------------------------------
   JACOBI PRECONDITIONER -- EXPERIMENTAL.

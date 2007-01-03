@@ -119,11 +119,6 @@
  **                 is determined by the context in which the sparse is used.
  **
  **                 Sparses are generally passed by pointer.
- *
-	Requires:      
-	#include <stdio.h>
-    #include <string.h>
-    #include <utilities/ascConfig.h>
 *//*
 	'mtx' by Karl Michael Westerberg, created 5/3/90
 	'mtx2' by Benjamin Andrew Allan
@@ -309,6 +304,10 @@
 
 #ifndef ASC_MTX_H
 #define ASC_MTX_H
+
+#include <stdio.h>
+#include <string.h>
+#include <utilities/ascConfig.h>
 
 /***********************************************************************\
   public mtx data structures
