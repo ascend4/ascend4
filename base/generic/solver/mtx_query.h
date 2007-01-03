@@ -30,7 +30,9 @@
 #ifndef __MTX_QUERY_H_SEEN__
 #define __MTX_QUERY_H_SEEN__
 
-/**	@addtogroup linear @{ */
+/**	@addtogroup linear 
+	Linear solver routines
+	@{ */
 
 ASC_DLLSPEC(real64 ) mtx_next_in_row(mtx_matrix_t matrix, 
                               mtx_coord_t *coord,

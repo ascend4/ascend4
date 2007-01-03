@@ -212,7 +212,9 @@
 #ifndef ASC_LINSOLQR_H
 #define ASC_LINSOLQR_H
 
-/**	@addtogroup linear @{ */
+/**	@addtogroup linear 
+	Linear solver routines
+	@{ */
 
 #define LINSOLMTX_DEBUG FALSE
 /**< Debug mode. */

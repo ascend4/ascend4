@@ -32,7 +32,9 @@
 #ifndef ASC_MTX_PERMS_H
 #define ASC_MTX_PERMS_H
 
-/**	@addtogroup linear @{ */
+/**	@addtogroup linear 
+	Linear solver routines
+	@{ */
 
 /* the following block_perm functions are not yet implemented: 
  *   this is the software spec. 5/3/95 baa. */
