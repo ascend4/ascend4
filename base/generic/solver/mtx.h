@@ -305,6 +305,11 @@
 #ifndef ASC_MTX_H
 #define ASC_MTX_H
 
+/** @addtogroup linear
+	Ascend linear solver routines
+	@{
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <utilities/ascConfig.h>
@@ -497,5 +502,7 @@ typedef struct mtx_block_perm_structure *mtx_block_perm_t;
  ***  You really DON'T want to add functions to this
  ***  file or use those that are in it.
  **/
+
+/**	@} */
 
 #endif /* ASC_MTX_H */

@@ -145,21 +145,18 @@ char *IDAASCENDGetReturnFlagName(int flag){
 
 	name = ASC_NEW_ARRAY(char,30);
 
+#define FLAG(N) case N:sprintf(name,#N);break
+
 	switch(flag) {
-		case IDAASCEND_SUCCESS:
-			sprintf(name,"IDAASCEND_SUCCESS");
-			break;
-		case IDAASCEND_MEM_NULL:
-			sprintf(name,"IDAASCEND_MEM_NULL");
-			break;
-		case IDAASCEND_LMEM_NULL:
-			sprintf(name,"IDAASCEND_LMEM_NULL");
-			break;
-		case IDAASCEND_MEM_FAIL:
-			sprintf(name,"IDADENSE_MEM_FAIL");
-			break;
+		FLAG(IDAASCEND_SUCCESS);
+		FLAG(IDAASCEND_MEM_NULL);
+		FLAG(IDAASCEND_LMEM_NULL);
+		FLAG(IDAASCEND_MEM_FAIL);
+		FLAG(IDAASCEND_JACFN_UNDEF);
+		FLAG(IDAASCEND_JACFN_UNRECVR);
+		FLAG(IDAASCEND_JACFN_RECVR);
 		default:
-			sprintf(name,"NONE");
+			sprintf(name,"Unknown flag value '%d'",flag);
 	}
 
 	return name;
@@ -189,7 +186,6 @@ int integrator_ida_lsetup(IDAMem IDA_mem
 	, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
 ){
 	int retval;
-	long int retfac;
 
   	IntegratorIdaAscendMem *iamem;
 	iamem = (IntegratorIdaAscendMem *)lmem;
@@ -213,18 +209,18 @@ int integrator_ida_lsetup(IDAMem IDA_mem
 	);
 
 	if(retval < 0){
-		lastflag = IDAASCEND_JACFUNC_UNRECVR;
+		lastflag = IDAASCEND_JACFN_UNRECVR;
 		return -1;
 	}
 	if (retval > 0) {
-		lastflag = IDAASCEND_JACFUNC_RECVR;
+		lastflag = IDAASCEND_JACFN_RECVR;
 		return +1;
 	}
 
 	/* do block decomposition, LU factorisation or whatever, return success or fail flag */
 	/* ... */
 
-	CONSOLE_DEBUG("Not implemented");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
 	return(-1);
 }
 
@@ -257,7 +253,7 @@ int integrator_ida_lsolve(IDAMem IDA_mem
 		N_VScale(TWO/(ONE + cjratio), b, b);
 	}
 
-	CONSOLE_DEBUG("Solving IDA linear problem (not implemented)");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
 	return -1;
 }
 

@@ -30,6 +30,8 @@
 #ifndef __MTX_QUERY_H_SEEN__
 #define __MTX_QUERY_H_SEEN__
 
+/**	@addtogroup linear @{ */
+
 ASC_DLLSPEC(real64 ) mtx_next_in_row(mtx_matrix_t matrix, 
                               mtx_coord_t *coord,
                               mtx_range_t *colrng);
@@ -517,5 +519,7 @@ extern void mtx_cur_vec_add_row(mtx_matrix_t mtx,
  ***
  -$-  Does nothing to a bad matrix.
  **/
+
+/** @} */
 
 #endif /* __MTX_QUERY_H_SEEN__ */

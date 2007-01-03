@@ -1265,7 +1265,10 @@ int integrator_ida_sjex(long int Neq, realtype tt
 		, N_Vector yy, N_Vector yp, N_Vector rr
 		, realtype c_j, void *jac_data, mtx_matrix_t Jac
 		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
-);
+){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
+	return -1;
+}
 
 /*----------------------------------------------
   JACOBI PRECONDITIONER -- EXPERIMENTAL.
