@@ -305,10 +305,9 @@
 #ifndef ASC_MTX_H
 #define ASC_MTX_H
 
-/** @defgroup linear
-	Ascend linear solver routines
-	@{
-*/
+/** @addtogroup linear
+ * @{
+ */
 
 #include <stdio.h>
 #include <string.h>
