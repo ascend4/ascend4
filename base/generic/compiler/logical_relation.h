@@ -39,8 +39,8 @@
  *  </pre>
  */
 
-#ifndef __LOGICAL_RELATION_H_SEEN__
-#define __LOGICAL_RELATION_H_SEEN__
+#ifndef ASC_LOGICAL_RELATION_H
+#define ASC_LOGICAL_RELATION_H
 
 struct LogRelBVar {
   enum Expr_enum t;   /**< type of term */
@@ -156,5 +156,5 @@ struct logrelation {
  */
 #define LOGTERM_ALLOC LOGA_TERM(ascmalloc(sizeof(union LogRelTermUnion)))
 
-#endif /* __LOGICAL_RELATION_H_SEEN__ */
+#endif /* ASC_LOGICAL_RELATION_H */
 

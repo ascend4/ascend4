@@ -8,12 +8,12 @@ IMPORT "johnpye/extfn/extfntest";
 MODEL extrelfor;
 
 	n IS_A integer_constant;
-	n :== 3;
+	n :== 5;
 
 	x[1..n] IS_A factor;
 
 	FOR i IN [1..n-1] CREATE
-		do_it_nth: add_one(
+		do_it[i]: add_one(
 			x[i] : INPUT;
 			x[i+1] : OUTPUT
 		);
@@ -34,7 +34,7 @@ METHOD on_load;
 END on_load;
 
 METHOD self_test;
-	ASSERT x[3] == 3.0;
+	ASSERT x[1] == 1.0;
 	ASSERT x[n] == 1.0 * n;
 END self_test;
 

@@ -83,7 +83,6 @@ METHOD ode_init;
 	t := 0 {s};
 END ode_init;
 METHOD on_load;
-	EXTERNAL solve(SELF);
 	RUN reset;
 	RUN values;
 	EXTERNAL solvernotes(SELF);

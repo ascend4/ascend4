@@ -36,25 +36,21 @@
 	relation within the black box. There is 'relation' created for each
 	output variable, as required for the [eye(NxN), ones(NxM)] submatrix
 	in the jacobian. -- JP
-
-	Requires:
-	#include <stdio.h>
-	#include <stdlib.h>
-	#include "utilities/ascConfig.h"
-	#include "compiler.h"
-	#include "ascmalloc.h"
-	#include "list.h"
-	#include "extfunc.h"
-	#include "instance_enum.h"
 *//*
 	by Kirk Andre Abbott
 	Created: Jun 1, 1995.
 	Last in CVS: $Revision: 1.6 $ $Date: 1997/07/18 12:29:27 $ $Author: mthomas $
 */
 
-
 #ifndef ASC_EXTCALL_H
 #define ASC_EXTCALL_H
+
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <compiler/extfunc.h>
+#include "compiler.h"
+#include "instance_enum.h"
 
 /**
 	External call data structure

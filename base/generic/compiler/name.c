@@ -44,11 +44,6 @@
 #include "sets.h"
 #include "name.h"
 
-
-#ifndef lint
-static CONST char NameProcID[] = "$Id: name.c,v 1.14 1998/02/05 16:37:12 ballan Exp $";
-#endif
-
 #ifndef NULL
 #define NULL 0
 #endif
@@ -82,11 +77,11 @@ unsigned long g_num_names_max=0;
 
 #define IDNMALLOC AllocName()
 #define IDNFREE(a) ascfree(a)
-static struct Name *AllocName()
-{
-  g_num_names_cur++;
-  if (g_num_names_cur>g_num_names_max) g_num_names_max=g_num_names_cur;
-  return IDNMALLOC;
+static struct Name *AllocName(){
+		
+	g_num_names_cur++;
+	if (g_num_names_cur>g_num_names_max) g_num_names_max=g_num_names_cur;
+	return IDNMALLOC;
 }
 
 #else /*_NAMEDEBUG*/

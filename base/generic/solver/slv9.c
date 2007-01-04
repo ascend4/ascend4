@@ -5178,8 +5178,7 @@ static int32 is_an_optimization_problem(slv_system_t server,
   return optimizing;
 }
 
-static void slv9_presolve(slv_system_t server, SlvClientToken asys)
-{
+static int slv9_presolve(slv_system_t server, SlvClientToken asys){
   slv9_system_t sys;
   struct var_variable **vp;
   struct rel_relation **rp;
@@ -5189,14 +5188,12 @@ static void slv9_presolve(slv_system_t server, SlvClientToken asys)
   iteration_begins(sys);
   check_system(sys);
   if( sys->vlist == NULL ) {
-    FPRINTF(ASCERR,"ERROR:  (slv9) slv9_presolve\n");
-    FPRINTF(ASCERR,"        Variable list was never set.\n");
-    return;
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable list was never set.");
+    return 1;
   }
   if( sys->rlist == NULL && sys->obj == NULL ) {
-    FPRINTF(ASCERR,"ERROR:  (slv9) slv9_presolve\n");
-    FPRINTF(ASCERR,"        Relation list and objective never set.\n");
-    return;
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation list and objective never set.");
+    return 2;
   }
 
   cap = slv_get_num_solvers_rels(server);
@@ -5252,12 +5249,13 @@ static void slv9_presolve(slv_system_t server, SlvClientToken asys)
 
   update_status(sys);
   iteration_ends(sys);
+
+  return 0;
 }
 
 
 
-static void slv9_resolve(slv_system_t server, SlvClientToken asys)
-{
+static int slv9_resolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
   slv9_system_t sys;
@@ -5288,10 +5286,11 @@ static void slv9_resolve(slv_system_t server, SlvClientToken asys)
   sys->s.block.iteration = 0;
 
   update_status(sys);
+
+  return 0;
 }
 
-static void slv9_iterate(slv_system_t server, SlvClientToken asys)
-{
+static int slv9_iterate(slv_system_t server, SlvClientToken asys){
   slv9_system_t sys;
   slv_status_t status;
   struct matching_cases *subregions;
@@ -5313,12 +5312,11 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
   mif = MIF(sys);
   lif = LIF(sys);
 
-  if (server == NULL || sys==NULL) return;
-  if (check_system(SLV9(sys))) return;
+  if (server == NULL || sys==NULL) return 1;
+  if (check_system(SLV9(sys))) return 2;
   if( !sys->s.ready_to_solve ) {
-    FPRINTF(ASCERR,"ERROR:  (slv9) slv9_iterate\n");
-    FPRINTF(ASCERR,"         Not ready to solve.\n");
-    return;
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
+    return 3;
   }
 
   unsuccessful = FALSE;
@@ -5333,9 +5331,12 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
    * is not available before iterating with the optimizer, so, an iteration
    * with the oprimizer is required before the analysis at the boundary.
    */
-  if (  ( !g_optimizing || (sys->nliter > 0) ) &&
-       (at_a_boundary(server,asys,&(n_subregions),&(subregions),
-        &(cur_subregion), disvars)) ) {
+  if((!g_optimizing || (sys->nliter > 0))
+      && at_a_boundary(
+        server
+        ,asys,&(n_subregions),&(subregions),&(cur_subregion), disvars
+      )
+  ){
     slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
     slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
     store_real_pre_values(server,&(rvalues));
@@ -5352,13 +5353,13 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
         factor = return_to_first_boundary(server,asys,&rvalues,&vfilter);
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);
-	update_relations_residuals(server);
-      } else {
+        update_relations_residuals(server);
+      }else{
         destroy_array(rvalues.cur_values);
         destroy_array(rvalues.pre_values);
       }
       update_status(sys);
-    } else {
+    }else{
       destroy_array(rvalues.pre_values);
       sys->s.converged  = TRUE;
       sys->s.ready_to_solve = FALSE;
@@ -5369,8 +5370,8 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
     gl_destroy(disvars);
     disvars = NULL;
     iteration_ends(sys);
-    return;
-  } else {
+    return 0; /* is there an error here? */
+  }else{
     /* solve logical relations */
     solve_logical_relations(server);
     slv_get_status(server,&status);
@@ -5385,7 +5386,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
         gl_destroy(disvars);
         disvars = NULL;
         iteration_ends(sys);
-        return;
+        return 4;
       }
     }
     /*
@@ -5420,7 +5421,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
         sys->s.cost =
 	          create_zero_array(sys->s.costsize,struct slv_block_cost);
         reset_cost(sys->s.cost,sys->s.costsize);
-      } else {
+      }else{
         slv_get_status(server,&status);
         update_struct_info(sys,&status);
         if (status.converged) {
@@ -5431,14 +5432,14 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
           }
           sys->s.cost =
 	            create_zero_array(sys->s.costsize,struct slv_block_cost);
-	  reset_cost(sys->s.cost,sys->s.costsize);
-        } else {
+          reset_cost(sys->s.cost,sys->s.costsize);
+        }else{
           if (!status.ready_to_solve) {
             slv_resolve(server);
           }
-	}
+        }
       }
-    } else {
+    }else{
     /*
      * SetUp nonlinear solver
      */
@@ -5473,12 +5474,12 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
         }
         sys->s.cost =
 	            create_zero_array(sys->s.costsize,struct slv_block_cost);
-	reset_cost(sys->s.cost,sys->s.costsize);
+        reset_cost(sys->s.cost,sys->s.costsize);
       }
     }
     /*
-     * Iteration steps common to optimizer and nonlinear solver
-     */
+      Iteration steps common to optimizer and nonlinear solver
+    */
     previous_block = sys->s.block.current_block;
     slv_iterate(server);
     store_real_cur_values(server,&(rvalues));
@@ -5486,8 +5487,8 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
     slv_get_status(server,&status);
     sys->s.converged  = status.converged;
     /*
-     * The following statement was added 4/2
-     */
+      The following statement was added 4/2
+    */
     update_struct_info(sys,&status);
     update_real_status(&(sys->s),&status,0);
     update_cost(sys->s.cost,&status,
@@ -5527,8 +5528,8 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
     } else {
       sys->s.ready_to_solve = !sys->s.converged;
       /*
-       * The following was added 4/2
-       */
+        The following was added 4/2
+      */
       unsuccessful = update_unsuccessful(sys,&status);
 
 #if TEST_CONSISTENCY
@@ -5540,7 +5541,7 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
       }
 #endif /* TEST_CONSISTENCY */
 
-      if (unsuccessful) {
+      if(unsuccessful){
         sys->s.ready_to_solve = !unsuccessful;
         ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Non-convergence in nonlinear step.");
       }
@@ -5553,19 +5554,21 @@ static void slv9_iterate(slv_system_t server, SlvClientToken asys)
   gl_destroy(disvars);
   disvars = NULL;
   iteration_ends(sys);
-  return;
+  return 0;
 }
 
 
-static void slv9_solve(slv_system_t server, SlvClientToken asys)
-{
+static int slv9_solve(slv_system_t server, SlvClientToken asys){
   slv9_system_t sys;
+  int err = 0;
 
   sys = SLV9(asys);
-  if (server == NULL || sys==NULL) return;
-  if (check_system(sys)) return;
+  if(server == NULL || sys==NULL)return 1;
+  if(check_system(sys))return 2;
 
-   while( sys->s.ready_to_solve ) slv9_iterate(server,sys);
+  while(sys->s.ready_to_solve)err = err | slv9_iterate(server,sys);
+
+  return err;
 }
 
 

@@ -19,11 +19,6 @@
 *//**
 	@file
 	Ascend Dimensions Data Structure.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "fractions.h"
-	#include "compiler.h"
 *//*
 	by Tom Epperly
 	8/18/89
@@ -37,6 +32,9 @@
 #define ASC_DIMEN_H
 
 #include <utilities/ascConfig.h>
+#include "fractions.h"
+#include "compiler.h"
+
 
 /* Keep these defines current with DimNames in dimen.h. */
 #define NUM_DIMENS            10  /**< Number of dimension types. */

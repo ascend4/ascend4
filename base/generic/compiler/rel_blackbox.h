@@ -29,6 +29,13 @@
 #ifndef ASC_REL_BLACKBOX_H
 #define ASC_REL_BLACKBOX_H
 
+#include <utilities/ascConfig.h>
+#include "instance_enum.h"
+#include "relation_type.h"
+#include <general/list.h>
+#include "expr_types.h"
+#include "extfunc.h"
+
 extern int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r);
 
 /** Compute standard form residual and gradient. 
@@ -136,6 +143,5 @@ extern void InitBBox(struct Instance *context, struct BlackBoxCache *b);
  deallocates **b if refcount has dropped to 0.
  */
 extern void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b);
-
 
 #endif /* ASC_REL_BLACKBOX_H */

@@ -30,6 +30,13 @@
 #ifndef ASC_INSTANCE_TYPES_H
 #define ASC_INSTANCE_TYPES_H
 
+#include "instance_enum.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "type_desc.h"
+#include <general/list.h>
+#include "logical_relation.h"
+
 /** @file
  *  Real Ascend Instance Types.
  *  <pre>

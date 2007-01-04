@@ -22,18 +22,14 @@
 	Last in CVS: $Revision: 1.9 $ $Date: 1998/02/24 21:44:42 $ $Author: ballan $
 */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
+#include "extcall.h"
 #include <utilities/error.h>
-#include "compiler.h"
-#include <general/list.h>
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
 #include "expr_types.h"
 #include "extinst.h"
 #include "mathinst.h"
-#include "extcall.h"
 
 struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
 		struct gl_list_t *args,

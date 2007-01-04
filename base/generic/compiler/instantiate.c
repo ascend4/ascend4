@@ -533,9 +533,9 @@ void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
   ChildListPtr clp;
   struct Statement *statement;
 
-  assert(work!= NULL);
-  assert(cnum!= 0);
-  assert(InstanceKind(work)==MODEL_INST);
+  asc_assert(work!= NULL);
+  asc_assert(cnum!= 0);
+  asc_assert(InstanceKind(work)==MODEL_INST);
   desc = InstanceTypeDesc(work);
   clp = GetChildList(desc);
   statement = (struct Statement *)ChildStatement(clp,cnum);
@@ -579,7 +579,7 @@ int TryChildExpansion(struct Instance *child,
   struct value_t value;
   CONST struct Set *setp;
   int error=0;
-  assert(arginst==NULL || (rhsinst==NULL && rhslist==NULL));
+  asc_assert(arginst==NULL || (rhsinst==NULL && rhslist==NULL));
   /* one must be NULL as alii do not have args */
   while((pos=NextToExpand(child))>oldpos){
     oldpos=pos;
@@ -815,7 +815,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
   struct value_t value;
   struct value_t setval;
   int intset;
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   if (StatInFOR(stat) || StatementType(stat) == EXT) {
     if (sptr == NULL ||
@@ -963,9 +963,9 @@ void LinkToParentByPos(struct Instance *inst,
                        struct Instance *child,
                        unsigned long pos)
 {
-  assert(pos);
-  assert(child != NULL);
-  assert(inst != NULL);
+  asc_assert(pos);
+  asc_assert(child != NULL);
+  asc_assert(inst != NULL);
 
   StoreChildPtr(inst,pos,child);
   AddParent(child,inst);
@@ -1020,8 +1020,8 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
   if ((sptr==NULL)||(NextSet(sptr)!=NULL)||(SetType(sptr))) {
     return NULL;
   }
-  assert(GetEvaluationContext()==NULL);
-  assert(rhsinst==NULL || arginst==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
+  asc_assert(rhsinst==NULL || arginst==NULL);
   SetEvaluationContext(parentofary);
   value = EvaluateExpr(GetSingleExpr(sptr),NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -1143,29 +1143,29 @@ struct Instance *MakeSparseArray(struct Instance *parent,
   if (indices != NULL) {
     switch (StatementType(stat)) {
     case REL:
-      assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
+      asc_assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),FindRelationType(),
                                  0,1,0,0,indices);
       break;
     case EXT:
-      assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
+      asc_assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),FindRelationType(),
                                  0,1,0,0,indices);
       break;
     case LOGREL:
-      assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
+      asc_assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),FindLogRelType(),
                                  0,0,1,0,indices);
       break;
     case WHEN:
-      assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
+      asc_assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),
                                  FindWhenType(),0,0,0,1,indices);
       break;
     case ISA:
     case ALIASES:
     case ARR:
-      assert(def!=NULL);
+      asc_assert(def!=NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),def,
                                  intset,0,0,0,indices);
       break;
@@ -1208,8 +1208,8 @@ void MakeAliasInstance(CONST struct Name *name,
   struct TypeDescription *arydef, *def;
   struct gl_list_t *indices;
   int tce;
-  assert(rhsinst != NULL || rhslist !=NULL); /* one required */
-  assert(rhsinst == NULL || rhslist ==NULL); /* only one allowed */
+  asc_assert(rhsinst != NULL || rhslist !=NULL); /* one required */
+  asc_assert(rhsinst == NULL || rhslist ==NULL); /* only one allowed */
   childname = SimpleNameIdPtr(name);
   if (childname !=NULL){
     /* case of simple part name */
@@ -1327,7 +1327,7 @@ int ExecuteALIASES(struct Instance *inst, struct Statement *statement)
   enum find_errors ferr;
   int intset;
 
-  assert(StatementType(statement)==ALIASES);
+  asc_assert(StatementType(statement)==ALIASES);
   if (StatWrong(statement)) {
     /* incorrect statements should be warned about when they are
      * marked wrong, so we just ignore them here.
@@ -1427,7 +1427,7 @@ symchar *UniquifyString(char *s, struct set_t *strset)
     oldlen = strlen(s);
     maxlen = oldlen+12;
     new = ascrealloc(s,oldlen+14);
-    assert(new!=NULL);
+    asc_assert(new!=NULL);
     while ( (oldlen+1) < maxlen) {
       new[oldlen+1] = '\0';
       for(c = 'a'; c <= 'z'; c++){
@@ -1513,7 +1513,7 @@ struct value_t ComputeArrayElements(struct Instance *inst,
   unsigned long c, len;
   struct ArrayChild *ptr;
 
-  assert((*rhslist)==NULL && rhsinstlist != NULL && rhslist != NULL);
+  asc_assert((*rhslist)==NULL && rhsinstlist != NULL && rhslist != NULL);
 
   intset = ArrayStatIntSet(statement);
   len = gl_length(rhsinstlist);
@@ -1542,7 +1542,7 @@ struct value_t ComputeArrayElements(struct Instance *inst,
     return result;
   } else {
     /* cook up the users list */
-    assert(GetEvaluationContext()==NULL);
+    asc_assert(GetEvaluationContext()==NULL);
     SetEvaluationContext(inst);
     subslist = EvaluateSet(setp,InstanceEvaluateName);
     SetEvaluationContext(NULL);
@@ -1645,7 +1645,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
   ChildListPtr icl;
   int intset;
 
-  assert(StatementType(statement)==ARR);
+  asc_assert(StatementType(statement)==ARR);
   if (StatWrong(statement)) {
     /* incorrect statements should be warned about when they are
      * marked wrong, so we just ignore them here.
@@ -1693,7 +1693,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
       return 1;
     }
   }
-  assert(rhslist!=NULL); /* might be empty, but not NULL */
+  asc_assert(rhslist!=NULL); /* might be empty, but not NULL */
   /* make set ATOM */
   vlist = ArrayStatSetName(statement);
   intset = ArrayStatIntSet(statement);
@@ -1915,7 +1915,7 @@ void SplitArgumentSet(CONST struct Set *s, struct gl_list_t *args)
 {
   struct Set *sp;
   if (s==NULL) return;
-  assert(args !=NULL); /* debug WriteSet(ASCERR,s); FPRINTF(ASCERR,"\n"); */
+  asc_assert(args !=NULL); /* debug WriteSet(ASCERR,s); FPRINTF(ASCERR,"\n"); */
   while (s!=NULL) {
     sp = CopySetNode(s);
     gl_append_ptr(args,(VOIDPTR)sp);
@@ -1948,7 +1948,7 @@ int ArrayElementsTypeCompatible(CONST struct Instance *ipass,
   if (ipass==NULL || ptype == NULL) {
     return -1; /* hosed input */
   }
-  assert(IsArrayInstance(ipass) != 0);
+  asc_assert(IsArrayInstance(ipass) != 0);
   atype = GetArrayBaseType(InstanceTypeDesc(ipass));
   if (BaseTypeIsSet(atype)==0 && MoreRefined(atype,ptype)==atype) {
       /* if not set and if array base is good enough */
@@ -2006,11 +2006,11 @@ struct value_t FindArgValue(struct Instance *parent,
   int previous_context;
   struct value_t value;
 
-  assert(err!=NULL);
+  asc_assert(err!=NULL);
   *err=0;
   previous_context = GetDeclarativeContext();
   SetDeclarativeContext(0);
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(parent);
   value = EvaluateExpr(GetSingleExpr(argset),
                        NULL,
@@ -2114,9 +2114,9 @@ int ArgValueCorrect(struct Instance *inst,
   int previous_context;
   struct value_t value;
 
-  assert (inst!=NULL);
-  assert (tmpinst!=NULL);
-  assert (statement!=NULL);
+  asc_assert(inst!=NULL);
+  asc_assert(tmpinst!=NULL);
+  asc_assert(statement!=NULL);
 
   if ( StatementType(statement)!= WILLBE ||
        (check = GetStatCheckValue(statement)) == NULL ||
@@ -2130,7 +2130,7 @@ int ArgValueCorrect(struct Instance *inst,
   }
   previous_context = GetDeclarativeContext();
   SetDeclarativeContext(0);
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(tmpinst);
   value = EvaluateExpr(check, NULL, InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -2214,7 +2214,7 @@ int ArgValueCorrect(struct Instance *inst,
   case SYMBOL_CONSTANT_INST:
     if (ValueKind(value) != symbol_value ||
          SymbolValue(value) != GetSymbolAtomValue(inst)) {
-      assert(AscFindSymbol(SymbolValue(value))!=NULL);
+      asc_assert(AscFindSymbol(SymbolValue(value))!=NULL);
       DestroyValue(&value);
       return MPIARGVAL;
     }
@@ -2248,7 +2248,7 @@ int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
 
   IVAL(value);
 
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(tmpinst);
   switch (StatementType(statement)){
   case REL: /* note EXT not allowed in constraint list */
@@ -2649,7 +2649,7 @@ int MakeParameterInst(struct Instance *parent,
   }
   SplitArgumentSet(GetStatTypeArgs(statement),args);
   /* due to typelint, the following assertion should pass. fix lint if not. */
-  assert(gl_length(args)==(unsigned long)pc);
+  asc_assert(gl_length(args)==(unsigned long)pc);
   psl = GetModelParameterList(d);
   slen = StatementListLength(psl);
   argn = 1L;
@@ -3083,7 +3083,7 @@ int CheckWhereFOR(struct Instance *inst, struct Statement *statement)
     STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return MPIFOR;
   }
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -3238,8 +3238,8 @@ struct Instance *GetNamedInstance(CONST struct Name *nptr,
   struct gl_list_t *insts;
   enum find_errors ferr;
 
-  assert(nptr!=NULL);
-  assert(tmpinst!=NULL);
+  asc_assert(nptr!=NULL);
+  asc_assert(tmpinst!=NULL);
   insts = FindInstances(tmpinst,nptr,&ferr);
   if (insts==NULL) {
     return NULL;
@@ -3267,7 +3267,7 @@ CreateParameterPendings(struct Instance *tmpinst,
   CONST struct Expr *ex;
   struct gl_list_t *nlist=NULL;
 
-  assert(args!=NULL);
+  asc_assert(args!=NULL);
 
   len = gl_length(args);
   for (c=len; c >= 1; c--) {
@@ -3289,7 +3289,7 @@ CreateParameterPendings(struct Instance *tmpinst,
         ex = GetStatCheckValue(new->s);
         if (ex != NULL) {
           nlist = EvaluateNamesNeededShallow(ex,NULL,NULL);
-          assert(nlist!=NULL);
+          asc_assert(nlist!=NULL);
           if (gl_length(nlist) != 0L) {
             new->status = pp_WV;
             new->inst =
@@ -3620,9 +3620,9 @@ void ConfigureCopy(struct Instance *inst,
   struct Instance *src,*copy;
 
   src = InstanceChild(arginst,cnum);
-  assert(src!=NULL);
+  asc_assert(src!=NULL);
   copy = CopyInstance(src);
-  assert(copy!=NULL);
+  asc_assert(copy!=NULL);
   StoreChildPtr(inst,cnum,copy);
   /* hunting out UNIVERSAL/arrays we could make this check much
    * less needed.
@@ -3643,7 +3643,7 @@ void ConfigureReference(struct Instance *inst,
   struct Instance *src;
 
   src = InstanceChild(arginst,cnum);
-  assert(src!=NULL);
+  asc_assert(src!=NULL);
   StoreChildPtr(inst,cnum,src);
   /* hunting out UNIVERSAL/arrays we could make this check much
    * less needed.
@@ -3671,8 +3671,8 @@ void ConfigureInstFromArgs(struct Instance *inst,
   if (arginst == NULL) {
     return;
   }
-  assert(InstanceKind(inst)==MODEL_INST);
-  assert(InstanceTypeDesc(inst)==InstanceTypeDesc(arginst));
+  asc_assert(InstanceKind(inst)==MODEL_INST);
+  asc_assert(InstanceTypeDesc(inst)==InstanceTypeDesc(arginst));
   clist = GetChildList(InstanceTypeDesc(inst));
   len = ChildListLen(clist);
   for (c=1; c <= len; c++) {
@@ -3722,8 +3722,8 @@ void ReConfigureInstFromArgs(struct Instance *inst,
   if (arginst == NULL) {
     return;
   }
-  assert(InstanceKind(inst)==MODEL_INST);
-  assert(InstanceTypeDesc(inst)==InstanceTypeDesc(arginst));
+  asc_assert(InstanceKind(inst)==MODEL_INST);
+  asc_assert(InstanceTypeDesc(inst)==InstanceTypeDesc(arginst));
   clist = GetChildList(InstanceTypeDesc(arginst));
   len = ChildListLen(clist);
   for (c=1; c <= len; c++) {
@@ -3781,12 +3781,12 @@ int CompareChildInsts(struct Instance *i1, struct Instance *i2,
                       unsigned long c1, unsigned long c2)
 {
   struct Instance *ch1,* ch2;
-  assert(i1!=NULL);
-  assert(i2!=NULL);
+  asc_assert(i1!=NULL);
+  asc_assert(i2!=NULL);
   ch1 = InstanceChild(i1,c1);
   ch2 = InstanceChild(i2,c2);
-  assert(ch1!=NULL);
-  assert(ch2!=NULL);
+  asc_assert(ch1!=NULL);
+  asc_assert(ch2!=NULL);
   if (InstanceKind(ch1) != InstanceKind(ch2)) {
     return 1;
   }
@@ -3826,7 +3826,7 @@ int CheckParamRefinement(struct Instance *parent,
   unsigned long oldlen, newlen, c,pos;
   symchar *childname;
 
-  assert(MoreRefined(InstanceTypeDesc(inst),InstanceTypeDesc(arginst))==
+  asc_assert(MoreRefined(InstanceTypeDesc(inst),InstanceTypeDesc(arginst))==
          InstanceTypeDesc(arginst));
   icl = GetChildList(InstanceTypeDesc(inst));
   aicl = GetChildList(InstanceTypeDesc(arginst));
@@ -4038,7 +4038,7 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
   int mpi;
   int intset;
 
-  assert(StatementType(statement)==ISA);
+  asc_assert(StatementType(statement)==ISA);
   if (StatWrong(statement)) {
     /* incorrect statements should be warned about when they were
      * marked wrong, so we just ignore them here.
@@ -4152,7 +4152,7 @@ int ExecuteUnSelectedISA( struct Instance *inst, struct Statement *statement)
 {
   struct TypeDescription *def;
   CONST struct VariableList *vlist;
-  assert(StatementType(statement)==ISA);
+  asc_assert(StatementType(statement)==ISA);
   if ((def = FindDummyType())!=NULL){
     vlist = GetStatVarList(statement);
     while (vlist!=NULL){
@@ -4185,7 +4185,7 @@ int ExecuteUnSelectedALIASES(struct Instance *inst,
 {
   CONST struct VariableList *vlist;
 
-  assert(StatementType(statement)==ALIASES);
+  asc_assert(StatementType(statement)==ALIASES);
   vlist = GetStatVarList(statement);
   while (vlist!=NULL){
     MakeDummyInstance(NamePointer(vlist),FindDummyType(),inst,statement);
@@ -4357,7 +4357,7 @@ int InPrecedingClique(struct gl_list_t *list, unsigned long int pos,
 {
   unsigned long c;
   struct Instance *i;
-  assert(pos<=gl_length(list));
+  asc_assert(pos<=gl_length(list));
   for(c=1;c<pos;c++){
     i = (struct Instance *)gl_fetch(list,c);
     if (SameClique(i,inst)) return 1;
@@ -4432,7 +4432,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
   unsigned long c,len;
   int suberr;
 
-  assert(StatementType(statement)==IRT);
+  asc_assert(StatementType(statement)==IRT);
 
   def = FindType(GetStatType(statement)); /* sort of redundant, but safe */
   if (def!=NULL) {
@@ -4576,7 +4576,7 @@ struct TypeDescription *MostRefined(struct gl_list_t *list)
   struct TypeDescription *mostrefined;
   struct Instance *inst;
   unsigned long c,len;
-  assert(list!=NULL);
+  asc_assert(list!=NULL);
   len = gl_length(list);
   if (len==0) return NULL;
   inst = (struct Instance  *)gl_fetch(list,1);
@@ -4731,7 +4731,7 @@ struct Instance *MakeRelationInstance(struct Name *name,
     pos = ChildSearch(parent,&rec);
     if(pos>0){
       /* following assertion should be true */
-      assert(InstanceChild(parent,pos)==NULL);
+      asc_assert(InstanceChild(parent,pos)==NULL);
       child = CreateRelationInstance(def,type);	/* token, bbox relation so far */
       LinkToParentByPos(parent,child,pos);
       return child;
@@ -4798,8 +4798,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
   } else {
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
-      assert((InstanceKind(child)==REL_INST) ||
-             (InstanceKind(child)==DUMMY_INST));
+      asc_assert((InstanceKind(child)==REL_INST)||(InstanceKind(child)==DUMMY_INST));
       gl_destroy(instances);
       if (InstanceKind(child)==DUMMY_INST) {
 #ifdef DEBUG_RELS
@@ -4932,7 +4931,7 @@ void MarkREL(struct Instance *inst, struct Statement *statement)
     if(gl_length(instances)==1){
       rel = (struct Instance *)gl_fetch(instances,1);
       gl_destroy(instances);
-      assert(InstanceKind(rel)==REL_INST);
+      asc_assert(InstanceKind(rel)==REL_INST);
       relinst_set_conditional(rel,TRUE);
       reln = GetInstanceRelToModify(rel,&reltype);
       if (reln == NULL) {
@@ -4987,7 +4986,7 @@ void MarkLOGREL(struct Instance *inst, struct Statement *statement)
     if(gl_length(instances)==1){
       lrel = (struct Instance *)gl_fetch(instances,1);
       gl_destroy(instances);
-      assert(InstanceKind(lrel)==LREL_INST);
+      asc_assert(InstanceKind(lrel)==LREL_INST);
       logrelinst_set_conditional(lrel,TRUE);
       lreln = GetInstanceLogRelToModify(lrel);
       if (lreln == NULL) {
@@ -5036,7 +5035,7 @@ int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
   } else {
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
-      assert(InstanceKind(child)==DUMMY_INST);
+      asc_assert(InstanceKind(child)==DUMMY_INST);
       gl_destroy(instances);
     } else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
@@ -5069,7 +5068,7 @@ struct Instance *MakeLogRelInstance(struct Name *name,
     SetInstanceNameStrPtr(rec,childname);
     if(0 != (pos = ChildSearch(parent,&rec))){
       /* following assertion should be true */
-      assert(InstanceChild(parent,pos)==NULL);
+      asc_assert(InstanceChild(parent,pos)==NULL);
       child = CreateLogRelInstance(def);
       LinkToParentByPos(parent,child,pos);
       return child;
@@ -5124,8 +5123,7 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
   else{
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
-      assert( (InstanceKind(child)==LREL_INST) ||
-                 (InstanceKind(child)==DUMMY_INST));
+      asc_assert((InstanceKind(child)==LREL_INST)||(InstanceKind(child)==DUMMY_INST));
       gl_destroy(instances);
       if (InstanceKind(child)==DUMMY_INST) {
         return 1;
@@ -5269,7 +5267,7 @@ struct gl_list_t *GetExtCallArgs(struct Instance *inst,
   *names = NULL;
   if (result != NULL) {
     *names = ProcessExtRelArgNames(inst,vl,&ferr2);
-    assert(*ferr == ferr2);
+    asc_assert(*ferr == ferr2);
   }
   return result;
 }
@@ -5290,7 +5288,7 @@ struct Instance *CheckExtCallData(struct Instance *inst,
   *name = NULL;
   if (result != NULL) {
     *name = ProcessExtRelDataName(inst, n, &ferr2);
-    assert(*ferr == ferr2);
+    asc_assert(*ferr == ferr2);
   }
   return result;
 }
@@ -5371,7 +5369,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   unsigned long n_input_args=0L, n_output_args=0L; /* formal arg counts */
   unsigned long n_inputs_actual=0L, n_outputs_actual=0L; /* atomic arg counts */
   struct gl_list_t *inputs, *outputs, *argListNames;
-  struct Name *dataName;
+  struct Name *dataName = NULL;
   unsigned long start,end;
   struct Set *extrange= NULL;
 
@@ -5454,19 +5452,22 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   outputs = LinearizeArgList(arglist,start,end);
   n_outputs_actual = gl_length(outputs);
 
+  char *tempnamestr = WriteNameString(dataName);
+  CONSOLE_DEBUG("dataName = %s", tempnamestr);
+  ASC_FREE(tempnamestr);
+
   /* Now create the relations, all with the same common. */
- common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, argListNames, dataName, efunc );
+  common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, argListNames, dataName, efunc);
   common->interp.task = bb_first_call;
   context = WriteInstanceNameString(inst, NULL);
 
   /* now set up the for loop index --------------------------------*/
   name = AddSymbolL(BBOX_RESERVED_INDEX, BBOX_RESERVED_INDEX_LEN);
   /* using a reserved character not legal in user level modeling. */
-  assert(FindForVar(GetEvaluationForTable(),name) == NULL);
-  /* cannot happen as bbox definitions don't nest as statements and
-		user identifiers cannot contain ?. */
+  asc_assert(FindForVar(GetEvaluationForTable(),name) == NULL);
+  /* cannot happen as bbox definitions don't nest as statements and	user identifiers cannot contain ?. */
 
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   /* construct a set value of 1..bbox_arraysize */
   one = CreateIntExpr(1L); /* destroyed with set. */
@@ -5475,42 +5476,27 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   ex = CreateSetExpr(extrange);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
-  switch(ValueKind(value)){
-  case set_value:
-    sptr = SetValue(value);
-    switch(SetKind(sptr)){
-    case integer_set:
-      fv = CreateForVar(name);
-      SetForVarType(fv,f_integer);
-      AddLoopVariable(GetEvaluationForTable(),fv);
-      len = Cardinality(sptr);
-#ifdef DEBUG_RELS
-      ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Pass2RealExecuteFOR integer_set %lu.\n",len);
-#endif
-      for(c=1;c<=len;c++){
-        aindex = FetchIntMember(sptr,c);
-        SetForInteger(fv,aindex);
-        subject = (struct Instance *)gl_fetch(outputs,aindex);
-        ExecuteBBOXElement(inst, statement, subject, inputs, common, aindex, context);
-        /*  currently designed to always succeed or fail permanently */
-      }
-      RemoveForVariable(GetEvaluationForTable());
-      break;
-    default:
-	/** deeply broken code above if we get here. */
-	/* in particular, the empty set should never show up here. */
-        assert(0);
-	break;
-    }
-    DestroyValue(&value);
-    DestroySetNode(extrange);
-    break;
-  default:
-    /** deeply broken code above if we get here. */
-    /* in particular, a non-set should never show up here. */
-    assert(0);
-    break;
+  
+  ASC_ASSERT_EQ(ValueKind(value),set_value);
+  sptr = SetValue(value);
+  ASC_ASSERT_EQ(SetKind(sptr),integer_set);
+  fv = CreateForVar(name);
+  SetForVarType(fv,f_integer);
+  AddLoopVariable(GetEvaluationForTable(),fv);
+  len = Cardinality(sptr);
+  #ifdef DEBUG_RELS
+  ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Pass2RealExecuteFOR integer_set %lu.\n",len);
+  #endif
+  for(c=1;c<=len;c++){
+    aindex = FetchIntMember(sptr,c);
+    SetForInteger(fv,aindex);
+    subject = (struct Instance *)gl_fetch(outputs,aindex);
+    ExecuteBBOXElement(inst, statement, subject, inputs, common, aindex, context);
+    /*  currently designed to always succeed or fail permanently */
   }
+  RemoveForVariable(GetEvaluationForTable());
+  DestroyValue(&value);
+  DestroySetNode(extrange);
 
 /* ------------ */ /* ------------ */
   /* and now for cleaning up shared data. */
@@ -5571,8 +5557,7 @@ int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struc
   } else {
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
-      assert((InstanceKind(child)==REL_INST) ||
-             (InstanceKind(child)==DUMMY_INST));
+      asc_assert((InstanceKind(child)==REL_INST) || (InstanceKind(child)==DUMMY_INST));
       gl_destroy(instances);
       if (InstanceKind(child)==DUMMY_INST) {
 #ifdef DEBUG_RELS
@@ -5608,7 +5593,7 @@ int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struc
     reln = CreateBlackBoxRelation(child,
 				subject, inputs,
 				common, c-1, context);
-    assert(reln != NULL); /* cbbr does not return null */
+    asc_assert(reln != NULL); /* cbbr does not return null */
     SetInstanceRelation(child,reln,e_blackbox);
 #ifdef DEBUG_RELS
     STATEMENT_NOTE(statement, "Created bbox relation.");
@@ -5773,7 +5758,7 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
   else{
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
-      assert(InstanceKind(child)==REL_INST);
+      ASC_ASSERT_EQ(InstanceKind(child), REL_INST);
       gl_destroy(instances);
     }
     else{
@@ -6097,7 +6082,7 @@ int AssignStructuralValue(struct Instance *inst,
     }
   case SYMBOL_CONSTANT_INST:
     if (ValueKind(value)==symbol_value){
-      assert(AscFindSymbol(SymbolValue(value))!=NULL);
+      asc_assert(AscFindSymbol(SymbolValue(value))!=NULL);
       if (AtomAssigned(inst) &&
           (SymbolValue(value) != GetSymbolAtomValue(inst))) {
         ReAssignmentError(SCP(GetBaseTypeName(symbol_constant_type)),
@@ -6145,7 +6130,7 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
   SetDeclarativeContext(0);
   instances = FindInstances(work,AssignStatVar(statement),&err);
   if (instances != NULL){
-    assert(GetEvaluationContext()==NULL);
+    asc_assert(GetEvaluationContext()==NULL);
     SetEvaluationContext(work);
 
 	Asc_SignalHandlerPushDefault(SIGFPE);
@@ -6228,8 +6213,8 @@ int NameContainsName(CONST struct Name *n,CONST struct Name *sub)
   unsigned long c,len;
   struct Expr *en;
 
-  assert(n!=NULL);
-  assert(sub!=NULL);
+  asc_assert(n!=NULL);
+  asc_assert(sub!=NULL);
   en = ASC_NEW(struct Expr);
   InitVarExpr(en,n);
   nl = EvaluateNamesNeededShallow(en,NULL,NULL);
@@ -6417,7 +6402,7 @@ int FailsIndexCheck(CONST struct Name *name, struct Statement *statement,
       name = NextName(name);
     }
   } else {
-    assert(statement!=NULL);
+    asc_assert(statement!=NULL);
     if (arrsetname == NULL) {
       /* sparse IS_A or ALIASES but not ALIASES/IS_A */
       indices = MakeIndices(inst,name,statement);
@@ -6523,7 +6508,7 @@ int CheckARR(struct Instance *inst, struct Statement *stat)
   struct value_t value;
   int cu;
 
-  assert(StatementType(stat)==ARR);
+  asc_assert(StatementType(stat)==ARR);
 
   /* check subscripts on IS_A portion lhs. all mess should be in fortable */
   cu = ContainsUnknownArrayIndex(inst,
@@ -6553,7 +6538,7 @@ int CheckARR(struct Instance *inst, struct Statement *stat)
   }
   /* check IS_A WITH_VALUE list */
   if (ArrayStatSetValues(stat)!=NULL) {
-    assert(GetEvaluationContext()==NULL);
+    asc_assert(GetEvaluationContext()==NULL);
     SetEvaluationContext(inst);
     value = EvaluateSet(ArrayStatSetValues(stat),InstanceEvaluateName);
     SetEvaluationContext(NULL);
@@ -6673,7 +6658,7 @@ int CheckCASGN(struct Instance *inst, struct Statement *statement)
   instances = FindInstances(inst,AssignStatVar(statement),&err);
   if (instances != NULL){
     gl_destroy(instances);
-    assert(GetEvaluationContext()==NULL);
+    asc_assert(GetEvaluationContext()==NULL);
     SetEvaluationContext(inst);
     value = EvaluateExpr(AssignStatRHS(statement),NULL,
                          InstanceEvaluateName);
@@ -6709,7 +6694,7 @@ int CheckASGN(struct Instance *inst, struct Statement *statement)
   instances = FindInstances(inst,DefaultStatVar(statement),&err);
   if (instances != NULL){
     gl_destroy(instances);
-    assert(GetEvaluationContext()==NULL);
+    asc_assert(GetEvaluationContext()==NULL);
     SetEvaluationContext(inst);
     value = EvaluateExpr(DefaultStatRHS(statement),NULL,
                          InstanceEvaluateName);
@@ -6756,8 +6741,7 @@ int CheckRelName(struct Instance *work, struct Name *name)
   else{
     if (gl_length(instances)==1){
       inst = (struct Instance *)gl_fetch(instances,1);
-      assert((InstanceKind(inst)==REL_INST) ||
-                                            (InstanceKind(inst)==DUMMY_INST));
+      asc_assert((InstanceKind(inst)==REL_INST) || (InstanceKind(inst)==DUMMY_INST));
       gl_destroy(instances);
       if (InstanceKind(inst)==DUMMY_INST) {
         return -1;
@@ -6830,8 +6814,7 @@ int CheckLogRelName(struct Instance *work, struct Name *name)
   else{
     if (gl_length(instances)==1){
       inst = (struct Instance *)gl_fetch(instances,1);
-      assert((InstanceKind(inst)==LREL_INST) ||
-                                            (InstanceKind(inst)==DUMMY_INST));
+      asc_assert((InstanceKind(inst)==LREL_INST) || (InstanceKind(inst)==DUMMY_INST));
       gl_destroy(instances);
       if (InstanceKind(inst)==DUMMY_INST) {
         return -1;
@@ -6979,7 +6962,7 @@ static
 int Pass3CheckCondStatements(struct Instance *inst,
                              struct Statement *statement)
 {
-  assert(inst&&statement);
+  asc_assert(inst&&statement);
   switch(StatementType(statement)){
     case LOGREL:
       return CheckLOGREL(inst,statement);
@@ -7021,7 +7004,7 @@ int Pass3CheckCOND(struct Instance *inst, struct Statement *statement)
   unsigned long c,len;
   struct gl_list_t *list;
   sl = CondStatList(statement);
-  assert(inst&&sl);
+  asc_assert(inst&&sl);
   list = GetList(sl);
   len = gl_length(list);
   for(c=1;c<=len;c++){
@@ -7041,7 +7024,7 @@ static
 int Pass2CheckCondStatements(struct Instance *inst,
                              struct Statement *statement)
 {
-  assert(inst&&statement);
+  asc_assert(inst&&statement);
   switch(StatementType(statement)){
     case REL:
       return CheckREL(inst,statement);
@@ -7084,7 +7067,7 @@ int Pass2CheckCOND(struct Instance *inst, struct Statement *statement)
   unsigned long c,len;
   struct gl_list_t *list;
   sl = CondStatList(statement);
-  assert(inst&&sl);
+  asc_assert(inst&&sl);
   list = GetList(sl);
   len = gl_length(list);
   for(c=1;c<=len;c++){
@@ -7112,8 +7095,7 @@ int CheckWhenName(struct Instance *work, struct Name *name)
   else{
     if (gl_length(instances)==1){
       inst = (struct Instance *)gl_fetch(instances,1);
-      assert( (InstanceKind(inst)==WHEN_INST) ||
-                                           (InstanceKind(inst)==DUMMY_INST) );
+      asc_assert((InstanceKind(inst)==WHEN_INST)||(InstanceKind(inst)==DUMMY_INST) );
       gl_destroy(instances);
       if (InstanceKind(inst)==DUMMY_INST) {
         return -1;
@@ -7349,10 +7331,8 @@ int CheckWhenVariableNode(struct Instance *ref,
 	asks for the checking of these statements.
 */
 static
-int CheckWhenStatements(struct Instance *inst, struct Statement *statement)
-{
-
-  assert(inst&&statement);
+int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
+  asc_assert(inst&&statement);
   switch(StatementType(statement)){
     case WHEN:
       return CheckWHEN(inst,statement);
@@ -7431,7 +7411,7 @@ int CheckWhenStatementList(struct Instance *inst, struct StatementList *sl)
   struct Statement *statement;
   unsigned long c,len;
   struct gl_list_t *list;
-  assert(inst&&sl);
+  asc_assert(inst&&sl);
   list = GetList(sl);
   len = gl_length(list);
   for(c=1;c<=len;c++){
@@ -7482,7 +7462,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
   }
   vlist = WhenStatVL(statement);
   numvar = VariableListLength(vlist);
-  assert(numvar<=MAX_VAR_IN_LIST);
+  asc_assert(numvar<=MAX_VAR_IN_LIST);
   p1 = &vl[0];
   p2 = &casel[0];
   numother=0;
@@ -7565,7 +7545,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
 static
 int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
 {
-  assert(inst&&statement);
+  asc_assert(inst&&statement);
   switch(StatementType(statement)){
   case ALIASES:
   case ISA:
@@ -7612,7 +7592,7 @@ int CheckSelectStatementList(struct Instance *inst, struct StatementList *sl)
   struct Statement *statement;
   unsigned long c,len;
   struct gl_list_t *list;
-  assert(inst&&sl);
+  asc_assert(inst&&sl);
   list = GetList(sl);
   len = gl_length(list);
   for(c=1;c<=len;c++){
@@ -7836,7 +7816,7 @@ int CheckSELECT(struct Instance *inst, struct Statement *statement)
 
   vlist = SelectStatVL(statement);
   numsvar = VariableListLength(vlist);
-  assert(numsvar<=MAX_VAR_IN_LIST);
+  asc_assert(numsvar<=MAX_VAR_IN_LIST);
   p1 = &vl[0];
   p2 = &casel[0];
   numother = 0;
@@ -7871,7 +7851,7 @@ int CheckSELECT(struct Instance *inst, struct Statement *statement)
 static
 int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
 {
-  assert(stat&&inst);
+  asc_assert(stat&&inst);
   switch(StatementType(stat)){
   case WHEN:
     return CheckWHEN(inst,stat);
@@ -7901,7 +7881,7 @@ int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
 static
 int Pass3CheckStatement(struct Instance *inst, struct Statement *stat)
 {
-  assert(stat&&inst);
+  asc_assert(stat&&inst);
   switch(StatementType(stat)){
   case FOR:
     return Pass3RealCheckFOR(inst,stat);
@@ -7931,7 +7911,7 @@ int Pass3CheckStatement(struct Instance *inst, struct Statement *stat)
 static
 int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
 {
-  assert(stat&&inst);
+  asc_assert(stat&&inst);
   switch(StatementType(stat)){
   case FOR:
     return Pass2RealCheckFOR(inst,stat);
@@ -7965,7 +7945,7 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
 static
 int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
 {
-  assert(stat&&inst);
+  asc_assert(stat&&inst);
   switch(StatementType(stat)){
   case ALIASES:
     return CheckALIASES(inst,stat);
@@ -8019,7 +7999,7 @@ int Pass4CheckStatementList(struct Instance *inst, struct StatementList *sl)
   unsigned long c,len;
   struct gl_list_t *list;
   struct Statement *stat;
-  assert(inst&&sl);
+  asc_assert(inst&&sl);
   list = GetList(sl);
   len = gl_length(list);
   for(c=1;c<=len;c++){
@@ -8035,7 +8015,7 @@ int Pass3CheckStatementList(struct Instance *inst, struct StatementList *sl)
   unsigned long c,len;
   struct gl_list_t *list;
   struct Statement *stat;
-  assert(inst&&sl);
+  asc_assert(inst&&sl);
   list = GetList(sl);
   len = gl_length(list);
   for(c=1;c<=len;c++){
@@ -8051,7 +8031,7 @@ int Pass2CheckStatementList(struct Instance *inst, struct StatementList *sl)
   unsigned long c,len;
   struct gl_list_t *list;
   struct Statement *stat;
-  assert(inst&&sl);
+  asc_assert(inst&&sl);
   list = GetList(sl);
   len = gl_length(list);
   for(c=1;c<=len;c++){
@@ -8067,7 +8047,7 @@ int Pass1CheckStatementList(struct Instance *inst, struct StatementList *sl)
   unsigned long c,len;
   struct gl_list_t *list;
   struct Statement *stat;
-  assert(inst&&sl);
+  asc_assert(inst&&sl);
   list = GetList(sl);
   len = gl_length(list);
   for(c=1;c<=len;c++){
@@ -8462,7 +8442,7 @@ int ExecuteUnSelectedCOND(struct Instance *inst, struct Statement *statement)
       Asc_Panic(2, NULL,
                 "Inappropriate statement type in CONDITIONAL Statement");
     }
-    assert(return_value);
+    asc_assert(return_value);
   }
   return 1;
 }
@@ -8753,7 +8733,7 @@ struct Instance *MakeWhenInstance(struct Instance *parent,
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,when_name);
     if(0 != (pos = ChildSearch(parent,&rec))){
-      assert(InstanceChild(parent,pos)==NULL);
+      asc_assert(InstanceChild(parent,pos)==NULL);
       desc = FindWhenType();
       child = CreateWhenInstance(desc);
       LinkToParentByPos(parent,child,pos);
@@ -8811,7 +8791,7 @@ void ExecuteWhenStatements(struct Instance *inst,
                       "Inappropriate statement type in WHEN Statement");
       Asc_Panic(2, NULL, "Inappropriate statement type in WHEN Statement");
     }
-    assert(return_value);
+    asc_assert(return_value);
   }
 }
 
@@ -8878,8 +8858,7 @@ void RealExecuteWHEN(struct Instance *inst, struct Statement *statement)
   } else {
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
-      assert( (InstanceKind(child)==WHEN_INST)
-              || (InstanceKind(child)==DUMMY_INST) );
+      asc_assert((InstanceKind(child)==WHEN_INST) || (InstanceKind(child)==DUMMY_INST));
       gl_destroy(instances);
       if (InstanceKind(child)==DUMMY_INST) {
         return;
@@ -8954,7 +8933,7 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
                       "Inappropriate statement type in WHEN Statement");
       Asc_Panic(2, NULL, "Inappropriate statement type in WHEN Statement");
     }
-    assert(return_value);
+    asc_assert(return_value);
   }
 }
 
@@ -8983,7 +8962,7 @@ int ExecuteUnSelectedWHEN(struct Instance *inst, struct Statement *statement)
   else {
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
-      assert(InstanceKind(child)==DUMMY_INST);
+      asc_assert(InstanceKind(child)==DUMMY_INST);
       gl_destroy(instances);
     } else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
@@ -9214,8 +9193,8 @@ int AnalyzeSelectCase(struct Instance *ref, struct VariableList *vlist,
   struct Instance *inst;
   enum find_errors err;
 
-  assert(s!= NULL);
-  assert(vlist != NULL);
+  asc_assert(s!= NULL);
+  asc_assert(vlist != NULL);
   values = s;
   vl = vlist;
 
@@ -9223,7 +9202,7 @@ int AnalyzeSelectCase(struct Instance *ref, struct VariableList *vlist,
     name = NamePointer(vl);
     expr = GetSingleExpr(values);
     instances = FindInstances(ref,name,&err);
-    assert(gl_length(instances)==1);
+    asc_assert(gl_length(instances)==1);
     inst = (struct Instance *)gl_fetch(instances,1);
     gl_destroy(instances);
     switch(ExprType(expr)) {
@@ -9236,17 +9215,17 @@ int AnalyzeSelectCase(struct Instance *ref, struct VariableList *vlist,
         if (val != valvar) return 0;
         break;
       case e_int:
-        assert(InstanceKind(inst)==INTEGER_CONSTANT_INST);
+        asc_assert(InstanceKind(inst)==INTEGER_CONSTANT_INST);
         val =  ExprIValue(expr);
         valvar = GetIntegerAtomValue(inst);
         if (val != valvar) return 0;
         break;
       case e_symbol:
-        assert(InstanceKind(inst)==SYMBOL_CONSTANT_INST);
+        asc_assert(InstanceKind(inst)==SYMBOL_CONSTANT_INST);
         symvar = ExprSymValue(expr);
         value = GetSymbolAtomValue(inst);
         if (symvar != value) {
-          assert(AscFindSymbol(symvar)!=NULL);
+          asc_assert(AscFindSymbol(symvar)!=NULL);
           return 0;
         }
         break;
@@ -9364,7 +9343,7 @@ void JumpSELECTStats(unsigned long *count,struct StatementList *sl)
   for(c=1;c<=length;c++){
     tmp = 0;
     s = GetStatement(sl,c);
-    assert(s!=NULL);
+    asc_assert(s!=NULL);
     switch(StatementType(s)) {
       case SELECT:
         tmp = SelectStatNumberStats(s);
@@ -9396,7 +9375,7 @@ void SetBitsOnOfSELECTStats(struct Instance *inst, unsigned long *count,
   length = StatementListLength(sl);
   for(c=1;c<=length;c++){
     s = GetStatement(sl,c);
-    assert(s!=NULL);
+    asc_assert(s!=NULL);
     (*count)++;
     switch (pass) {
       case 2:
@@ -9596,7 +9575,7 @@ void ExecuteDefaultsInSELECTCase(struct Instance *inst, unsigned long *count,
   length = StatementListLength(sl);
   for(c=1;c<=length;c++){
     s = GetStatement(sl,c);
-    assert(s!=NULL);
+    asc_assert(s!=NULL);
     (*count)++;
     switch(StatementType(s)) {
       case ASGN:
@@ -9952,7 +9931,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       Asc_Panic(2, NULL, "Inappropriate statement type"
                 " in declarative section relations");
     }
-    assert(return_value);
+    asc_assert(return_value);
   }
 }
 
@@ -10029,7 +10008,7 @@ void Pass1ExecuteForStatements(struct Instance *inst,
       Asc_Panic(2, NULL,
                 "Inappropriate statement type in declarative section");
     }
-    assert(return_value);
+    asc_assert(return_value);
   }
 }
 
@@ -10124,7 +10103,7 @@ int Pass4RealExecuteFOR(struct Instance *inst, struct Statement *statement)
     STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return 0;
   }
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -10216,7 +10195,7 @@ void MakeRealWhenCaseReferencesFOR(struct Instance *inst,
     STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return ;
   }
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -10295,7 +10274,7 @@ int Pass3RealExecuteFOR(struct Instance *inst, struct Statement *statement)
     STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return 0;
   }
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -10372,7 +10351,7 @@ void Pass3FORMarkCondLogRels(struct Instance *inst,
     STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return ;
   }
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -10463,7 +10442,7 @@ int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
     STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return 0;
   }
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -10557,7 +10536,7 @@ void Pass2FORMarkCondRelations(struct Instance *inst,
     STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return ;
   }
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -10643,7 +10622,7 @@ void Pass1RealExecuteFOR(struct Instance *inst, struct Statement *statement)
     STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return;
   }
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -10714,7 +10693,7 @@ int Pass4CheckFOR(struct Instance *inst, struct Statement *statement)
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)) return 1; /* will give error */
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -10812,7 +10791,7 @@ int Pass3CheckFOR(struct Instance *inst, struct Statement *statement)
   if (FindForVar(GetEvaluationForTable(),name)) {
     return 1; /* will give error */
   }
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -10911,7 +10890,7 @@ int Pass2CheckFOR(struct Instance *inst, struct Statement *statement)
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)) return 1; /* will give error */
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -11008,7 +10987,7 @@ int Pass1CheckFOR(struct Instance *inst, struct Statement *statement)
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)) return 1; /* will give error */
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -11596,7 +11575,7 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
   /* CONSOLE_DEBUG("..."); */
 
   /* pending will have at least one instance, or quick return. */
-  assert(PASS2MAXNUMBER==1);
+  asc_assert(PASS2MAXNUMBER==1);
 
   if (NumberPending() > 0) {
 #if TIMECOMPILER
@@ -11826,7 +11805,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
       case REAL_INST:
         if (*depth == 0) *depth = InstanceDepth(i);
         if (DepthAssigned(ptr) >= *depth){
-          assert(GetEvaluationContext()==NULL);
+          asc_assert(GetEvaluationContext()==NULL);
           SetEvaluationContext(i);
           value = EvaluateExpr(DefaultStatRHS(stat),NULL,
                                InstanceEvaluateName);
@@ -11877,7 +11856,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
       case BOOLEAN_INST:
         if (*depth == 0) *depth = InstanceDepth(i);
         if (DepthAssigned(ptr) > *depth){
-          assert(GetEvaluationContext()==NULL);
+          asc_assert(GetEvaluationContext()==NULL);
           SetEvaluationContext(i);
           value = EvaluateExpr(DefaultStatRHS(stat),NULL,
                                InstanceEvaluateName);
@@ -11893,7 +11872,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
         break;
       case INTEGER_ATOM_INST:
       case INTEGER_INST:
-        assert(GetEvaluationContext()==NULL);
+        asc_assert(GetEvaluationContext()==NULL);
         SetEvaluationContext(i);
 
         value = EvaluateExpr(DefaultStatRHS(stat),NULL,
@@ -11909,7 +11888,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
         break;
       case SYMBOL_ATOM_INST:
       case SYMBOL_INST:
-        assert(GetEvaluationContext()==NULL);
+        asc_assert(GetEvaluationContext()==NULL);
         SetEvaluationContext(i);
         value = EvaluateExpr(DefaultStatRHS(stat),NULL,
                                InstanceEvaluateName);
@@ -11985,7 +11964,7 @@ void RealDefaultFor(struct Instance *i,
     STATEMENT_ERROR(stat, "FOR construct uses duplicate index variable");
     return;
   }
-  assert(GetEvaluationContext()==NULL);
+  asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(i);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
@@ -12739,7 +12718,7 @@ static
 void AddIncompleteInst(struct Instance *i)
 {
   struct BitList *blist;
-  assert(i!=NULL);
+  asc_assert(i!=NULL);
   if ( ( (blist = InstanceBitList(i)) != NULL &&
         !BitListEmpty(blist)  ) ||
       IncompleteArray(i)) {
@@ -12763,7 +12742,7 @@ void NewReInstantiate(struct Instance *i)
   time_t start, phase1t,phase2t,phase3t,phase4t,phase5t;
 #endif
   ++g_compiler_counter;/*instance tree will change:increment compiler counter*/
-  assert(i!=NULL);
+  asc_assert(i!=NULL);
   if (i==NULL || !IsCompoundInstance(i)) return;
   /* can't reinstantiate simple objects, missing objects */
 
@@ -12942,7 +12921,7 @@ struct Instance *InstantiatePatch(symchar *patch,
    */
 
   original = GetName(GetPatchOriginal(patchdef));
-  assert(original!=NULL);
+  asc_assert(original!=NULL);
   oldflags = GetInstantiationRelnFlags();
   SetInstantiationRelnFlags(EXTRELS);
   result = Instantiate(original,name,intset,NULL);
