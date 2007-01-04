@@ -108,4 +108,7 @@ METHODS
     METHOD default_all;
         RUN default_self;
     END default_all;
+	METHOD self_test;
+		(* won't both to test anything here just yet *)
+	END self_test;
 END pass23;
