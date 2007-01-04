@@ -1,0 +1,13 @@
+REQUIRE "test/blackbox/bbox3.a4c";
+
+(*  simple single bbox forward solve *)
+MODEL pass1 REFINES bbox3; 
+END pass1;
+
+(*  simple single bbox reverse solve *)
+MODEL pass2 REFINES bbox3; 
+METHODS
+METHOD specify;
+	RUN specify_reverse;
+END specify;
+END pass2;

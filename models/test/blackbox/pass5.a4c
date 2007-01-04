@@ -1,0 +1,22 @@
+REQUIRE "test/blackbox/pass3.a4c";
+
+(*  linked double bbox solve *)
+MODEL pass5 REFINES pass3 ; 
+	b1.y[1] = b2.y[2];
+METHODS
+METHOD specify;
+	RUN b1.specify;
+	RUN b2.specify;
+	b1.x[1].fixed := FALSE;
+END specify;
+END pass5;
+
+(*  linked double bbox reverse solve *)
+MODEL pass6 REFINES pass5; 
+METHODS
+METHOD specify;
+	RUN b1.specify_reverse;
+	RUN b2.specify_reverse;
+	b1.y[1].fixed := FALSE;
+END specify;
+END pass6;

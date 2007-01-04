@@ -1,0 +1,36 @@
+REQUIRE "test/blackbox/bbox3.a4c";
+
+(*  simple double bbox solve *)
+MODEL pass3 ; 
+	b1 IS_A bbox3;
+	b2 IS_A bbox3;
+METHODS 
+METHOD default_all;
+	RUN b1.default_self;
+	RUN b2.default_self;
+END default_all;
+METHOD specify;
+	RUN b1.specify;
+	RUN b2.specify;
+END specify;
+
+METHOD on_load;
+	RUN reset;
+	RUN default_all;
+END on_load;
+
+METHOD self_test;
+	RUN b1.self_test;
+	RUN b2.self_test;
+END self_test;
+
+END pass3;
+
+(*  simple double bbox reverse solve *)
+MODEL pass4 REFINES pass3; 
+METHODS 
+METHOD specify;
+	RUN b1.specify_reverse;
+	RUN b2.specify_reverse;
+END specify;
+END pass4;

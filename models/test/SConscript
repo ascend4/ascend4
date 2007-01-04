@@ -1,0 +1,7 @@
+Import('env')
+extenv = env.Copy()
+
+for d in ['blackbox']:
+	extenv.SConscript(d+'/SConscript',['env']);
+
+# vim: set syntax=python:
