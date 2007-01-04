@@ -2161,14 +2161,20 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
       AddRelation(var,relinst);
       break;
     case 1:
-      FPRINTF(ASCERR,"BlackBox relation %s[%d] output %d and input %d are merged.\n",
-		context, (int)lhsIndex+1, (int)lhsIndex, (int)pos);
-      FPRINTF(ASCERR,"Good luck getting convergence.\n");
+      ERROR_REPORTER_HERE(ASC_USER_WARNING,"In external relation %s[%d],"
+		" output %d and input %d are merged."
+		" This will probably destroy your chances of achieving convergence,"
+		" unless you are very careful."
+		, context, (int)lhsIndex+1, (int)lhsIndex, (int)pos
+      );
       break;
     default:
-      FPRINTF(ASCERR,"BlackBox relation %s[%d] input %d and input %d are merged.\n",
-		context, (int)lhsIndex+1, argloc, (int)pos);
-      FPRINTF(ASCERR,"Good luck getting convergence.\n");
+      ERROR_REPORTER_HERE(ASC_USER_WARNING,"In external relation %s[%d],"
+		" input %d and input %d are merged."
+		" This will probably destroy your chances of achieving convergence,"
+		" unless you are very careful."
+		, context, (int)lhsIndex+1, argloc, (int)pos
+      );
       break;
     }
     if (pos) {

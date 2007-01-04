@@ -676,27 +676,20 @@ SingularityInfo::isSingular() const{
 */
 void
 Simulation::solve(Solver solver, SolverReporter &reporter){
+	int res;
 
-	// no need for this stuff: setSolver will try it anyway?
-/*
-	if(!sys){
-		try{
-			CONSOLE_DEBUG("Building system");
-			build();
-		}catch(runtime_error &e){
-			stringstream ss;
-			ss << "Unable to build system: ";
-			ss << e.what();
-			throw runtime_error(ss.str());
-		}
-	}
-*/
 	CONSOLE_DEBUG("Setting solver to '%s'",solver.getName().c_str());
 	setSolver(solver);
 
 	//cerr << "PRESOLVING SYSTEM...";
 	CONSOLE_DEBUG("Calling slv_presolve...");
-	slv_presolve(sys);
+
+	res = slv_presolve(sys);
+	CONSOLE_DEBUG("slv_presolve returns %d",res);
+	if(res!=0){
+		throw runtime_error("Error in slv_presolve");
+	}
+
 	//cerr << "DONE" << endl;
 
 	//cerr << "SOLVING SYSTEM..." << endl;
@@ -717,12 +710,14 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 
 		if(status.isReadyToSolve()){
 			/* CONSOLE_DEBUG("Calling slv_iterate..."); */
-			slv_iterate(sys);
+			res = slv_iterate(sys);
 		}
+
+		if(res)CONSOLE_DEBUG("slv_iterate returns %d",res);
 
 		status.getSimulationStatus(*this);
 
-		if(reporter.report(&status)){
+		if(res || reporter.report(&status)){
 			stop = true;
 		}
 	}
@@ -732,20 +727,13 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	
 	activeblock = status.getCurrentBlockNum();
 
+	// reporter can do output of num of iterations etc, if it wants to.
 	reporter.finalise(&status);
-
-	// Just a little bit of console output:
-
-	if(status.isOK()){
-		//cerr << "... SOLVED, STATUS OK" << endl;
-	}else{
-		cerr << "... SOLVER FAILED" << endl;
-	}
-
-	//cerr << "SOLVER PERFORMED " << status.getIterationNum() << " ITERATIONS IN " << elapsed << "s" << endl;
 
 	// communicate solver variable status back to the instance tree
 	processVarStatus();
+
+	if(res || !status.isOK())throw runtime_error("Error in solving");
 }
 
 //------------------------------------------------------------------------------

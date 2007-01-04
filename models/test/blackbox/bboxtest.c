@@ -63,11 +63,11 @@ struct BBOXTEST_problem {
 static int GetCoef( struct Instance *data, struct BBOXTEST_problem *problem){
 
 	if (!data) {
-		FPRINTF(stderr,"Error: bboxtest: expecting a data instance to be provided\n");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"expecting a data instance to be provided");
 		return 1;
 	}
 	if (InstanceKind(data)!=REAL_CONSTANT_INST) {
-		FPRINTF(stderr,"Error: bboxtest: expecting a real constant instance.\n");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"expecting a real constant instance.");
 		return 1;
 	}
 
@@ -84,17 +84,19 @@ static int CheckArgsOK(struct Instance *data,
 	int result;
 
 	if (!arglist) {
-		FPRINTF(stderr,"External function argument list does not exist\n");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"External function argument list does not exist.");
 		return 1;
 	}
 	len = gl_length(arglist);
 	if (!len) {
-		FPRINTF(stderr,"No arguments to external function statement\n");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No arguments to external function statement.");
 		return 1;
 	}
 	if ((len!=(N_INPUT_ARGS+N_OUTPUT_ARGS))) {
-		FPRINTF(stderr,"Number of arguments does not match\n");
-		FPRINTF(stderr,"the external function prototype(array_of_realatom[set],array_of_realatom[set],real_constant\n");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Number of arguments does not match"
+			" the external function"
+			" prototype(array_of_realatom[set],array_of_realatom[set],real_constant"
+		);
 		return 1;
 	}
 
@@ -102,7 +104,7 @@ static int CheckArgsOK(struct Instance *data,
 	noutputs = CountNumberOfArgs(arglist,N_INPUT_ARGS+1,
 					N_INPUT_ARGS+N_OUTPUT_ARGS);
 	if (ninputs != noutputs) {
-		FPRINTF(stderr,"bboxtest: Length of input, output arguments mismatched.\n");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Length of input, output arguments mismatched.");
 		return 1;
 	}
 
@@ -156,14 +158,14 @@ int bboxtest_preslv(struct BBoxInterp *interp,
 	struct BBOXTEST_problem *problem;
 
 #ifdef BBOXTEST_DEBUG
-	FPRINTF(stdout,"bboxtest_preslv called (interp %p), (instance %p)\n",interp, interp->user_data);
+	CONSOLE_DEBUG("bboxtest_preslv called (interp %p), (instance %p)",interp, interp->user_data);
 #endif
 	if (interp->task == bb_first_call) {
 #ifdef BBOXTEST_DEBUG
-	FPRINTF(stdout,"bboxtest_preslv called for bb_first_call");
+	CONSOLE_DEBUG("bboxtest_preslv called for bb_first_call");
 #endif
 		if (interp->user_data!=NULL) {
-			/* we have been called before */
+			CONSOLE_DEBUG("We have been called before: not reallocating");
 			return 0;
 			/* the problem structure exists */
 		} else {
@@ -177,7 +179,7 @@ int bboxtest_preslv(struct BBoxInterp *interp,
 		}
 	}
 #ifdef BBOXTEST_DEBUG
-	FPRINTF(stdout,"bboxtest_preslv called in fish circumstance.");
+	CONSOLE_DEBUG("bboxtest_preslv called in fish circumstance.");
 #endif
 	return 1; /* shouldn't be here ever. */
 }
@@ -201,7 +203,10 @@ static int DoCalculation(struct BBoxInterp *interp,
 	int c;
 	double coef;
 
-	asc_assert(ninputs == noutputs);
+	if(ninputs != noutputs){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ninputs != noutputs");
+		return -1;
+	}
 	problem = (struct BBOXTEST_problem *)interp->user_data;
 	coef = problem->coef;
 
@@ -210,12 +215,12 @@ static int DoCalculation(struct BBoxInterp *interp,
 	}
 
 #ifdef BBOXTEST_DEBUG
-	FPRINTF(stdout,"bboxtest_fex called (instance %p)\n",interp->user_data);
+	CONSOLE_DEBUG("instance = %p",interp->user_data);
 	for(c=0;c<ninputs;c++) {
-		FPRINTF(stdout,"x[%d]	= %12.8g\n",c,inputs[c]);
+		CONSOLE_DEBUG("x[%d]	= %12.8g",c,inputs[c]);
 	}
 	for (c=0;c<noutputs;c++) {
-		FPRINTF(stdout,"y[%d]	= %20.8g\n",c,outputs[c]);
+		CONSOLE_DEBUG("y[%d]	= %20.8g",c,outputs[c]);
 	}
 #endif /* BBOXTEST_DEBUG */
 
@@ -223,6 +228,7 @@ static int DoCalculation(struct BBoxInterp *interp,
 	return 0;
 }
 
+/** return 0 on success */
 int bboxtest_fex(struct BBoxInterp *interp,
 		int ninputs,
 		int noutputs,
@@ -230,27 +236,27 @@ int bboxtest_fex(struct BBoxInterp *interp,
 		double *outputs,
 		double *jacobian
 ){
-	int nok;
 	(void)jacobian;
-	nok = DoCalculation(interp, ninputs, noutputs, inputs, outputs);
-	if (nok) {
-		return 1;
-	} else {
-		return 0;
-	}
+	return DoCalculation(interp, ninputs, noutputs, inputs, outputs);
 }
 
 int DoDeriv(struct BBoxInterp *interp, int ninputs, double *jacobian)
 {
 	int i; int len;
 	double coef;
-	asc_assert(interp!=NULL);
-	asc_assert(interp->user_data!=NULL);
+	if(interp==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"interp==NULL");
+		return -1;
+	}
+	if(interp->user_data==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"interp->user_data==NULL");
+		return -2;
+	}
 	coef = ((struct BBOXTEST_problem *)interp->user_data)->coef;
 	len = ninputs*ninputs;
 
 #ifdef BBOXTEST_DEBUG
-	FPRINTF(stdout,"bboxtest_jex called (instance %p)\n",interp->user_data);
+	CONSOLE_DEBUG("instance = %p",interp->user_data);
 #endif
 	for (i = 0; i< len; i++) {
 		jacobian[i] = 0;
@@ -261,12 +267,13 @@ int DoDeriv(struct BBoxInterp *interp, int ninputs, double *jacobian)
 	}
 #ifdef BBOXTEST_DEBUG
 	for(i=0; i<len; i++) {
-		FPRINTF(stdout,"J[%d]	= %12.8g\n", i, jacobian[i]);
+		CONSOLE_DEBUG("J[%d]	= %12.8g", i, jacobian[i]);
 	}
 #endif
 	return 0;
 }
 
+/* return 0 on success */
 int bboxtest_jex(struct BBoxInterp *interp,
 		int ninputs,
 		int noutputs,
@@ -274,17 +281,11 @@ int bboxtest_jex(struct BBoxInterp *interp,
 		double *outputs,
 		double *jacobian
 ){
-	int nok;
 	(void)noutputs; 
 	(void)outputs;
 	(void)inputs;
 	
-	nok = DoDeriv(interp, ninputs, jacobian);
-	if (nok) {
-		return 1;
-	} else {
-		return 0;
-	}
+	return DoDeriv(interp, ninputs, jacobian);
 }
 
 /**
