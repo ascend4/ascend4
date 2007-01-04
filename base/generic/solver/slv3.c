@@ -530,7 +530,7 @@ static int savlinnum=0;
 	Evaluate the objective function.
 */
 static boolean calc_objective( slv3_system_t sys){
-  calc_ok = TRUE;
+  boolean calc_ok = TRUE;
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
   sys->objective = (sys->obj ? relman_eval(sys->obj,&calc_ok,SAFE_CALC) : 0.0);
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
@@ -548,7 +548,7 @@ static boolean calc_objectives( slv3_system_t sys){
   rfilter.matchvalue =(REL_INCLUDED);
   rlist = slv_get_solvers_obj_list(SERVER);
   len = slv_get_num_solvers_objs(SERVER);
-  calc_ok = TRUE;
+  boolean calc_ok = TRUE;
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
   for (i = 0; i < len; i++) {
     if (rel_apply_filter(rlist[i],&rfilter)) {
@@ -578,7 +578,7 @@ static boolean calc_inequalities( slv3_system_t sys){
   rfilter.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
   rfilter.matchvalue = (REL_INCLUDED | REL_ACTIVE);
 
-  calc_ok = TRUE;
+  boolean calc_ok = TRUE;
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
   for (rp=sys->rlist;*rp != NULL; rp++) {
     if (rel_apply_filter(*rp,&rfilter)) {
@@ -593,8 +593,9 @@ static boolean calc_inequalities( slv3_system_t sys){
 
 /**
 	Calculates all of the residuals in the current block and computes
-	the residual norm for block status.  Returns true iff calculations
-	preceded without error.
+	the residual norm for block status.  
+
+	@return 0 on failure, non-zero on success
 */
 static boolean calc_residuals( slv3_system_t sys){
   int32 row;
@@ -603,7 +604,8 @@ static boolean calc_residuals( slv3_system_t sys){
 
   if( sys->residuals.accurate ) return TRUE;
 
-  calc_ok = TRUE;
+  boolean calc_ok = TRUE;
+  boolean calc_ok_1;
   row = sys->residuals.rng->low;
   time0=tm_cpu_time();
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
@@ -619,7 +621,11 @@ static boolean calc_residuals( slv3_system_t sys){
       );
     }
 #endif
-    sys->residuals.vec[row] = relman_eval(rel,&calc_ok,SAFE_CALC);
+    sys->residuals.vec[row] = relman_eval(rel,&calc_ok_1,SAFE_CALC);
+    if(!calc_ok_1){
+		calc_ok = FALSE;
+		CONSOLE_DEBUG("error calculating residual for row %d",row);
+	}
 
     if (strcmp(CONVOPT,"ABSOLUTE") == 0) {
       relman_calc_satisfied(rel,FEAS_TOL);
@@ -632,6 +638,7 @@ static boolean calc_residuals( slv3_system_t sys){
   sys->s.block.funcs++;
   square_norm( &(sys->residuals) );
   sys->s.block.residual = calc_sqrt_D0(sys->residuals.norm2);
+  if(!calc_ok)CONSOLE_DEBUG("error calculating residuals");
   return(calc_ok);
 }
 
@@ -1341,7 +1348,7 @@ static int calc_pivots(slv3_system_t sys){
 		ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
 		FPRINTF(stderr,"Relation '");
         print_rel_name(stderr,sys,rel);
-		FPRINTF(stderr,"' not pivoted.\n");
+		FPRINTF(stderr,"' not pivoted.");
         error_reporter_end_flush();
 
         /*
@@ -2565,10 +2572,8 @@ static void move_to_next_block( slv3_system_t sys){
 
     sys->residuals.accurate = FALSE;
     if( !(ok = calc_residuals(sys)) ) {
-      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-      FPRINTF(MIF(sys),
-        "Residual calculation errors detected in move_to_next_block.\n");
-	  error_reporter_end_flush();
+      /* error_reporter will have been called somewhere else already */
+      CONSOLE_DEBUG("Residual calculation errors detected in move_to_next_block.");
     }
     if( SHOW_LESS_IMPT &&
         (sys->s.block.current_size >1 ||
@@ -2737,13 +2742,15 @@ static void reorder_new_block(slv3_system_t sys){
 	converged (or is -1, to start).
 */
 static void find_next_unconverged_block( slv3_system_t sys){
-   do {
+
+   do{
      move_to_next_block(sys);
 #if DEBUG
      debug_out_var_values(stderr,sys);
      debug_out_rel_residuals(stderr,sys);
 #endif
-   } while( !sys->s.converged && block_feasible(sys) && !OPTIMIZING(sys) );
+   }while( !sys->s.converged && block_feasible(sys) && !OPTIMIZING(sys));
+
    reorder_new_block(sys);
 }
 
@@ -3552,7 +3559,7 @@ static void slv3_update_linsolqr(slv3_system_t sys){
   linsolqr_set_condition_tolerance(sys->J.sys, PIVOT_TOL);
 }
 
-static void slv3_presolve(slv_system_t server, SlvClientToken asys){
+static int slv3_presolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
   int32 cap, ind;
@@ -3566,13 +3573,13 @@ static void slv3_presolve(slv_system_t server, SlvClientToken asys){
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(stderr,"QRSlv::slv3_presolve: Variable list was never set.");
     error_reporter_end_flush();
-    return;
+    return 1;
   }
   if( sys->rlist == NULL && sys->obj == NULL ) {
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(stderr,"QRSlv::slv3_presolve: Relation list and objective never set.");
 	error_reporter_end_flush();
-    return;
+    return 1;
   }
 
   if(sys->presolved > 0) { /* system has been presolved before */
@@ -3643,6 +3650,8 @@ static void slv3_presolve(slv_system_t server, SlvClientToken asys){
   update_status(sys);
   iteration_ends(sys);
   sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
+
+  return 0;
 }
 
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
@@ -3677,8 +3686,7 @@ static boolean slv3_change_basis(slv3_system_t sys,int32 var,
 }
 #endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
-static void slv3_resolve(slv_system_t server, SlvClientToken asys)
-{
+static int slv3_resolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
   slv3_system_t sys;
@@ -3708,11 +3716,11 @@ static void slv3_resolve(slv_system_t server, SlvClientToken asys)
   sys->objective =  MAXDOUBLE/2000.0;
 
   update_status(sys);
+  return 0;
 }
 
 
-static void slv3_iterate(slv_system_t server, SlvClientToken asys)
-{
+static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   slv3_system_t sys;
   FILE              *mif;
   FILE              *lif;
@@ -3728,21 +3736,25 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   sys = SLV3(asys);
   mif = MIF(sys);
   lif = LIF(sys);
-  if (server == NULL || sys==NULL) return;
-  if (check_system(SLV3(sys))) return;
+  if (server == NULL || sys==NULL) return 1;
+  if (check_system(SLV3(sys))) return 2;
   if( !sys->s.ready_to_solve ) {
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv: Not ready to solve.");
-    return;
+    return 3;
   }
 
   if (sys->s.block.current_block==-1) {
     find_next_unconverged_block(sys);
+	if(!sys->s.calc_ok){
+	  CONSOLE_DEBUG("Calculation errors after find_next_unconverged_block"); 
+      return 10;
+	}
     update_status(sys);
     if( RELNOMSCALE == 1 /*|| (strcmp(SCALEOPT,"RELNOM") == 0) ||
        (strcmp(SCALEOPT,"RELNOM+ITERATIVE") == 0)*/ ){
       calc_relnoms(sys);
     }
-    return;
+    return 0; /* not sure if this is an error? */
   }
   if (SHOW_LESS_IMPT && (sys->s.block.current_size >1 ||
       LIFDS)) {
@@ -3759,7 +3771,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     sys->s.diverged = 1;
     iteration_ends(sys);
     update_status(sys);
-    return;
+    return 4;
   }
 #endif
   /*
@@ -3803,11 +3815,9 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
         iteration_ends(sys);
         find_next_unconverged_block(sys);
         update_status(sys);
-        return;
+        return 0;
       }
-	  ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-      FPRINTF(mif,"Direct solve found numerically impossible equation given variables solved in previous blocks.\n");
-      error_reporter_end_flush();
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Direct solve found numerically impossible equation given variables solved in previous blocks.");
     case -1:
       sys->s.inconsistent = TRUE;
 
@@ -3821,7 +3831,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
       iteration_ends(sys);
       update_status(sys);
-      return;
+      return 5;
     }
   } /* if fails with a 0, go on to newton a 1x1 */
   if( !calc_J(sys) ) {
@@ -3860,7 +3870,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     iteration_ends(sys);
     find_next_unconverged_block(sys);
     update_status(sys);
-    return;
+    return 0;
   }
   calc_phi(sys);
 
@@ -3880,7 +3890,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     sys->s.diverged = TRUE;
     iteration_ends(sys);
     update_status(sys);
-    return;
+    return 6;
   }
 
   /* CONSOLE_DEBUG("calc_newton..."); */
@@ -3923,7 +3933,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
       sys->s.inconsistent = TRUE;
       iteration_ends(sys);
       update_status(sys);
-      return;
+      return 7;
     }
 
 /* end of code by AWW */
@@ -4001,7 +4011,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
       sys->s.diverged = TRUE;
       iteration_ends(sys);
       update_status(sys);
-      return;
+      return 8;
     }
 
 
@@ -4028,7 +4038,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
       sys->s.diverged = TRUE;
       iteration_ends(sys);
       update_status(sys);
-      return;
+      return 9;
     }
 
     /**
@@ -4050,7 +4060,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
       sys->s.calc_ok = new_ok;
       iteration_ends(sys);
       update_status(sys);
-      return;
+      return 0;
     }
     if( !new_ok ) {
       previous = oldphi;
@@ -4105,16 +4115,19 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     find_next_unconverged_block(sys);
   }
   update_status(sys);
+  return 0;
 }
 
 
 static void slv3_solve(slv_system_t server, SlvClientToken asys)
 {
+  int err = 0;
   slv3_system_t sys;
   sys = SLV3(asys);
-  if (server == NULL || sys==NULL) return;
-  if (check_system(sys)) return;
-  while( sys->s.ready_to_solve ) slv3_iterate(server,sys);
+  if (server == NULL || sys==NULL) return 1;
+  if (check_system(sys)) return 1;
+  while( sys->s.ready_to_solve ) err = err | slv3_iterate(server,sys);
+  return err;
 }
 
 static mtx_matrix_t slv3_get_jacobian(slv_system_t server, SlvClientToken sys)

@@ -387,6 +387,7 @@ real64 relman_eval(struct rel_relation *rel, int32 *status, int safe)
   }
   if( safe ) {
     *status = (int32)RelationCalcResidualSafe(rel_instance(rel),&res);
+	if(*status)CONSOLE_DEBUG("Relation evaluation returned error");
     /* CONSOLE_DEBUG("residual = %g",res); */
     safe_error_to_stderr( (enum safe_err *)status );
     /* always set the relation residual when using safe functions */

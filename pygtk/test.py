@@ -260,7 +260,11 @@ class TestBlackBox(AscendSelfTester):
 		"""Mismatched arg counts check-- tests bbox, not ascend."""
 		self.L.load('test/blackbox/fail1.a4c')
 		M = self.L.findType('fail1').getSimulation('sim')
-		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+		try:
+			M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+			self.fail("expected exception was not raised")
+		except RuntimeError,e:
+			print "Caught exception '%s', assumed ok" % e
 
 	def testfail2(self):
 		"""Incorrect data arg check -- tests bbox, not ascend"""

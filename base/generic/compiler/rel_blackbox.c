@@ -150,6 +150,7 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 				common->inputs,
 				common->outputs,
 				common->jacobian);
+		if(nok)CONSOLE_DEBUG("blackbox residual function returned error %d",nok);
 		common->residCount++;
 	}
 	value = common->outputs[outputIndex];

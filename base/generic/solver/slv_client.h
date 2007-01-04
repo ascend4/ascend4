@@ -317,7 +317,7 @@ typedef linsol_system_t (SlvGetLinsolF)(slv_system_t, SlvClientToken);
 typedef linsolqr_system_t (SlvGetLinSysF)(slv_system_t, SlvClientToken);
 typedef mtx_matrix_t (SlvGetSysMtxF)(slv_system_t, SlvClientToken);
 typedef void (SlvDumpInfoF)(slv_system_t, SlvClientToken,int);
-typedef void (SlvSolveF)(slv_system_t, SlvClientToken);
+typedef int (SlvSolveF)(slv_system_t, SlvClientToken);
 
 /** Registration information for a solver.
 	@TODO Complete documentation of slv_registration_data members.
@@ -1144,7 +1144,7 @@ ASC_DLLSPEC(void ) slv_dump_internals(slv_system_t sys, int level);
 	@TODO fix dubious documentation (return type is void...)
 */
 
-ASC_DLLSPEC(void) slv_presolve(slv_system_t sys);
+ASC_DLLSPEC(int) slv_presolve(slv_system_t sys);
 /**<
 	Prepares the system for solving.  This must be called before the
 	system is solved, but after everything about the system is set up
@@ -1163,9 +1163,11 @@ ASC_DLLSPEC(void) slv_presolve(slv_system_t sys);
 
 	Among other things, this function will perform structural analysis
 	so that structural analysis flags in the status will be accurate.
+
+	@return 0 on success, 1 if errors occurred (they will be output via ERROR_REPORTER)
 */
 
-ASC_DLLSPEC(void ) slv_resolve(slv_system_t sys);
+ASC_DLLSPEC(int) slv_resolve(slv_system_t sys);
 /**<
 	This function re-prepares the system for solving.  This function may
 	be used instead of slv_presolve, provided the system was partially
@@ -1189,9 +1191,11 @@ ASC_DLLSPEC(void ) slv_resolve(slv_system_t sys);
 		expression may be simplified.
 
 	This function is considerably more efficient when it is usable.
+
+	@return 0 on success
 */
 
-ASC_DLLSPEC(void) slv_iterate(slv_system_t sys);
+ASC_DLLSPEC(int) slv_iterate(slv_system_t sys);
 /**<
 	Performs one iteration toward the ultimate solution (or
 	failure thereof) of the system.  The user can obtain information
@@ -1200,13 +1204,17 @@ ASC_DLLSPEC(void) slv_iterate(slv_system_t sys);
 	they may not be up to date).  The user may not modify the system in
 	any way between iterations (i.e. you may look, but don't touch: see
 	slv_presolve()).  See also slv_solve().
+
+	@return 0 on success
 */
 
-ASC_DLLSPEC(void ) slv_solve(slv_system_t sys);
+ASC_DLLSPEC(int) slv_solve(slv_system_t sys);
 /**<
 	Attempts to solve the entire system in one shot (i.e.
 	performs as many iterations as needed or allowed).  For some solvers,
 	slv_iterate() and slv_solve() may mean the same thing.
+
+	@return 0 on success
 */
 
 extern void slv_destroy_client(slv_system_t sys);
