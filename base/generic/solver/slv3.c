@@ -555,7 +555,9 @@ static boolean calc_objectives( slv3_system_t sys){
     if (rel_apply_filter(rlist[i],&rfilter)) {
       relman_eval(rlist[i],&calc_ok_1,SAFE_CALC);
       if(!calc_ok_1) {
+#if DEBUG
         CONSOLE_DEBUG("error with i = %d",i);
+#endif
         calc_ok = FALSE;
       }
     }
@@ -588,7 +590,9 @@ static boolean calc_inequalities( slv3_system_t sys){
     }
   }
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#if DEBUG
   CONSOLE_DEBUG("inequalities: calc_ok = %d, satisfied = %d",calc_ok, satisfied);
+#endif
   return (calc_ok && satisfied);
 }
 
@@ -625,7 +629,9 @@ static boolean calc_residuals( slv3_system_t sys){
     sys->residuals.vec[row] = relman_eval(rel,&calc_ok_1,SAFE_CALC);
     if(!calc_ok_1){
 		calc_ok = FALSE;
+#if DEBUG
 		CONSOLE_DEBUG("error calculating residual for row %d",row);
+#endif
 	}
 
     if (strcmp(CONVOPT,"ABSOLUTE") == 0) {
@@ -639,7 +645,9 @@ static boolean calc_residuals( slv3_system_t sys){
   sys->s.block.funcs++;
   square_norm( &(sys->residuals) );
   sys->s.block.residual = calc_sqrt_D0(sys->residuals.norm2);
+#if DEBUG
   if(!calc_ok)CONSOLE_DEBUG("error calculating residuals");
+#endif
   return calc_ok;
 }
 
@@ -2817,17 +2825,22 @@ static void update_status( slv3_system_t sys){
    unsuccessful = sys->s.diverged || sys->s.inconsistent ||
       sys->s.iteration_limit_exceeded || sys->s.time_limit_exceeded;
 
+#if DEBUG
    if(unsuccessful){
        CONSOLE_DEBUG("unsuccessful: diverged = %d, inconsistent = %d, iter_limit = %d, time_limit = %d"
 			,sys->s.diverged, sys->s.inconsistent
 			,sys->s.iteration_limit_exceeded, sys->s.time_limit_exceeded
        );
    }
+#endif
 
    sys->s.ready_to_solve = !unsuccessful && !sys->s.converged;
+#if DEBUG
    CONSOLE_DEBUG("Updating solver status: unsuccessful = %d, calc_ok = %d, struct_sing = %d"
 		,unsuccessful,sys->s.calc_ok,sys->s.struct_singular
    );
+#endif
+
    sys->s.ok = !unsuccessful && sys->s.calc_ok && !sys->s.struct_singular;
 }
 
@@ -3763,7 +3776,9 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   if (sys->s.block.current_block==-1) {
     find_next_unconverged_block(sys);
 	if(!sys->s.calc_ok){
+#if DEBUG
 	  CONSOLE_DEBUG("Calculation errors after find_next_unconverged_block"); 
+#endif
       return 10;
 	}
     update_status(sys);
@@ -4056,9 +4071,9 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
       return 9;
     }
 
-    /**
-     ***  Check calculations at new point.
-     **/
+    /*
+      Check calculations at new point.
+    */
     new_ok = (calc_objective(sys) && calc_residuals(sys));
     /* calculate all included objectives
      * need error checking here
@@ -4082,9 +4097,9 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
       continue;
     }
 
-    /**
-     ***  Check for descent.
-     **/
+    /*
+      Check for descent
+    */
     scale_residuals(sys);
     calc_phi(sys);
     sys->phi += inner_product( &(sys->mulstep),&(sys->residuals) );
@@ -4106,9 +4121,9 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
             sys->s.block.residual);
   }
 
-  /**
-   ***  Check for equation solving convergence within the block
-   **/
+  /*
+  	Check for equation solving convergence within the block
+  */
 #if DEBUG
       FPRINTF(stderr,"******end of iteration*************\n");
       debug_out_var_values(LIF(sys), sys);
@@ -4120,12 +4135,10 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 
   iteration_ends(sys);
   if( !OPTIMIZING(sys) && block_feasible(sys) )  {
-    if (rank_defect) {
-	  ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
-      FPRINTF(ASCERR,"Block %d singular one step before convergence.\n",
-        sys->s.block.current_block);
-      FPRINTF(ASCERR,"You may wish to check for numeric dependency at solution.");
-	  error_reporter_end_flush();
+    if(rank_defect){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Block %d was singular one step before convergence."
+        " You may wish to check for numeric dependency at solution."
+        , sys->s.block.current_block);
     }
     find_next_unconverged_block(sys);
   }

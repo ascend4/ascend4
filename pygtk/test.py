@@ -365,16 +365,20 @@ class TestExtFn(AscendSelfTester):
 		self.assertAlmostEqual(M.x, 1);
 		self.assertAlmostEqual(M.y, M.x + 1);
 
-#   THIS TEST FAILS
-#	def testextrelfor(self):
-#		self.L.load('johnpye/extfn/extrelfor.a4c')
-#		T = self.L.findType('extrelfor')
-#		M = T.getSimulation('sim')
-#		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-#		print "x[1] = %f" % M.x[1]
-#		print "x[2] = %f" % M.x[2]
-#		print "x[3] = %f" % M.x[3]
-#		M.run(T.getMethod('self_test'))
+	def testextrelfor(self):
+		M = self._run('extrelfor',filename='johnpye/extfn/extrelfor.a4c')
+
+	def testextrelforbadnaming(self):
+		self.L.load('johnpye/extfn/extrelforbadnaming.a4c')
+		T = self.L.findType('extrelfor')
+		M = T.getSimulation('sim')
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		print "x[1] = %f" % M.x[1]
+		print "x[2] = %f" % M.x[2]
+		print "x[3] = %f" % M.x[3]
+		print "x[4] = %f" % M.x[4]
+		print "x[5] = %f" % M.x[5]
+		M.run(T.getMethod('self_test'))
 
 	def testextrelrepeat(self):
 		M = self._run('extrelrepeat',filename='johnpye/extfn/extrelrepeat.a4c')
@@ -392,37 +396,53 @@ class TestExtPy(AscendSelfTester):
 
 with_freesteam = True
 try:
+	# we assume that if the freesteam python module is installed, the ASCEND
+	# external library will also be.
 	import freesteam
 	have_freesteam = True
 except ImportError,e:
 	have_freesteam = False
 
 if with_freesteam and have_freesteam:
-	class TestFreesteam(Ascend):
+	class TestFreesteam(AscendSelfTester):
+		def testfreesteamtest(self):
+			"""run the self-test cases bundled with freesteam"""
+			self._run('testfreesteam',filename='testfreesteam.a4c')
+
 		def testload(self):
+			"""check that we can load 'thermalequilibrium2' (IMPORT "freesteam", etc)"""
 			self.L.load('johnpye/thermalequilibrium2.a4c')
 
 		def testinstantiate(self):
+			"""load an instantiate 'thermalequilibrium2'"""
 			self.testload()
 			M = self.L.findType('thermalequilibrium2').getSimulation('sim')
+			return M
 
-		def testsolve(self):
-			self.testinstantiate()
+		def testintegrate(self):
+			"""integrate transfer of heat from one mass of water/steam to another
+			according to Newton's law of cooling"""
+			M = self.testinstantiate()
 			M.setSolver(ascpy.Solver("QRSlv"))
-			#I = ascpy.Integrator(M)
-			#I.setEngine('LSODE')
-			#I.setReporter(ascpy.IntegratorReporterConsole(I))
-			#I.setLinearTimesteps(ascpy.Units("s"), 0, 3000, 30)
-			#I.setMinSubStep(0.01)
-			#I.setInitialSubStep(0.1)
-			#I.analyse()
-			#print "Number of vars = %d" % I.getNumVars()
-			#assert I.getNumVars()==2
-			#I.solve()
-			#assert I.getNumObservedVars() == 3;
-			#assert abs(M.R - 832) < 1.0
-			#assert abs(M.F - 21.36) < 0.1
-
+			I = ascpy.Integrator(M)
+			I.setEngine('LSODE')
+			I.setReporter(ascpy.IntegratorReporterConsole(I))
+			I.setLinearTimesteps(ascpy.Units("s"), 0, 3000, 30)
+			I.setMinSubStep(0.001)
+			I.setInitialSubStep(0.01)
+			I.analyse()
+			print "Number of vars = %d" % I.getNumVars()
+			assert I.getNumVars()==2
+			I.solve()
+			assert I.getNumObservedVars() == 3;
+			print "S[1].T = %f K" % M.S[1].T
+			print "S[2].T = %f K" % M.S[2].T
+			print "Q = %f W" % M.Q		
+			self.assertAlmostEqual(float(M.S[1].T),506.77225109);
+			self.assertAlmostEqual(float(M.S[2].T),511.605173967);
+			self.assertAlmostEqual(float(M.Q),-48.32922877329);
+			self.assertAlmostEqual(float(M.t),3000);
+			print "Note that the above values have not been verified analytically"
 
 #-------------------------------------------------------------------------------
 # Testing of IDA models using DENSE linear solver

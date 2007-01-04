@@ -1,16 +1,21 @@
-#include <iostream>
-#include <stdexcept>
-#include <sstream>
+
+/* needs to be first so that <Python.h> gets included before <iostream> */
+#include "library.h" 
+
+#include "instance.h"
+#include "variable.h"
+#include "name.h"
+#include "set.h"
+#include "plot.h"
+#include "instanceinterfacedata.h"
 
 extern "C"{
 #include <utilities/ascConfig.h>
+#include <compiler/instance_types.h>
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
 #include <general/dstring.h>
-#include <compiler/instance_enum.h>
-#include <compiler/fractions.h>
 #include <compiler/compiler.h>
-#include <compiler/dimen.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
 #include <compiler/instantiate.h>
@@ -30,17 +35,12 @@ extern "C"{
 #include <compiler/relation.h>
 #include <compiler/relation_io.h>
 #include <compiler/functype.h>
-#include <compiler/instance_types.h>
 #include <compiler/relation_util.h>
 }
 
-#include "instance.h"
-#include "variable.h"
-#include "name.h"
-#include "set.h"
-#include "plot.h"
-#include "instanceinterfacedata.h"
-#include "library.h"
+#include <iostream>
+#include <stdexcept>
+#include <sstream>
 
 using namespace std;
 

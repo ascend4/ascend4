@@ -19,31 +19,24 @@
 *//**
 	@file
 	Atom description structure data type.
-
-	Requires:
-	#include <stdio.h>
-	#include "utilities/ascConfig.h"
-	#include "compiler/fractions.h"
-	#include "compiler/compiler.h"
-	#include "compiler/dimen.h"
-	#include "compiler/child.h"
-	#include "compiler/list.h"
-	#include "compiler/module.h"
-	#include "compiler/childinfo.h"
-	#include "compiler/slist.h"
 *//*
-	by Tom Epperly
-	9/3/89
-	Version: $Revision: 1.37 $
-	Version control file: $RCSfile: type_desc.h,v $
-	Date last modified: $Date: 1998/05/18 16:36:52 $
-	Last modified by: $Author: ballan $
+	by Tom Epperly, 9/3/89
+	Last in CVS: $Revision: 1.37 $ $Date: 1998/05/18 16:36:52 $ $Author: ballan $
 */
 
 #ifndef ASC_TYPE_DESC_H
 #define ASC_TYPE_DESC_H
 
 #include <utilities/ascConfig.h>
+#include "fractions.h"
+#include "compiler.h"
+#include "dimen.h"
+#include "child.h"
+#include <general/list.h>
+#include "module.h"
+#include "childinfo.h"
+#include "slist.h"
+#include <stdio.h>
 
 /*------------------------------------------------------------------------------
 	forward declarations and typedefs

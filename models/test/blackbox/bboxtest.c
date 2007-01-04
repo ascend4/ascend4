@@ -36,30 +36,168 @@
 #include <compiler/dimen.h>
 #include <compiler/atomvalue.h>
 #include <compiler/instquery.h>
-/* */
+
 #include <compiler/extcall.h>
 
-#ifndef ASC_EXPORT
-# error "Where is ASC_EXPORT?"
-#endif
+/* #define BBOXTEST_DEBUG */
 
-extern ASC_EXPORT(int) bboxtest_register(void);
-
-#define BBOXTEST_DEBUG 1
-
-#ifndef EXTERNAL_EPSILON
-#define EXTERNAL_EPSILON 1.0e-12
-#endif
-
+ExtBBoxInitFunc bboxtest_preslv;
+ExtBBoxFunc bboxtest_fex;
+ExtBBoxFunc bboxtest_jex;
+ExtBBoxFinalFunc bboxtest_final;
 #define N_INPUT_ARGS 1 /* formal arg count */
 #define N_OUTPUT_ARGS 1 /* formal arg count */
+
+extern 
+ASC_EXPORT(int) bboxtest_register(void){
+	double epsilon = 1.0e-14;
+
+	char bboxtest_help[] = "This tests a simple black box y=k*x."
+		" The value 'k' is provided to the blackbox as a data argument.";
+
+	return CreateUserFunctionBlackBox("bboxtest"
+		,&bboxtest_preslv
+		,&bboxtest_fex, &bboxtest_jex
+		,NULL, &bboxtest_final
+		,N_INPUT_ARGS, N_OUTPUT_ARGS
+		,bboxtest_help
+		,epsilon
+	);
+}
+
+/*------------------------------------------------------------------------------
+  forward decls
+*/
 
 struct BBOXTEST_problem {
 	double coef; /* coef in y=coef*x*/
 	int n; /* number of equations. */
 };
 
+static int GetCoef( struct Instance *data, struct BBOXTEST_problem *problem);
+
+static int CheckArgsOK(struct Instance *data
+	,struct gl_list_t *arglist, struct BBOXTEST_problem *problem
+);
+
+static int DoCalculation(struct BBoxInterp *interp
+	,int ninputs, int noutputs
+	,double *inputs, double *outputs
+);
+
+int DoDeriv(struct BBoxInterp *interp, int ninputs, double *jacobian);
+
+#ifndef EXTERNAL_EPSILON
+#define EXTERNAL_EPSILON 1.0e-12
+#endif
+
 /*----------------------------------------------------------------------------*/
+
+/**
+	This function is one of the registered functions. It operates in
+	mode 'last_call'.
+
+	In 'last_call' mode, the memory associated with the problem is
+	released.
+*/
+void bboxtest_final(struct BBoxInterp *interp){
+	struct BBOXTEST_problem *problem;
+
+	if(interp->task != bb_last_call){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unexpected call to last_call fn");
+		return;
+	}
+
+	if(interp->user_data != NULL) {
+		problem = (struct BBOXTEST_problem *)interp->user_data;
+		problem->coef *= -1;
+		problem->n *= -1;
+		ASC_FREE(problem);
+		interp->user_data = NULL;
+	}
+}
+/**
+	This function is one of the registered functions. It operates in
+	 mode first_call.
+	It creates a BBOXTEST_problem and calls a number of routines to check
+	the arguments (data and arglist) and to cache the information
+	processed away in the BBOXTEST_problem structure.
+
+	In last_call mode, the memory associated with the problem is
+	released.
+
+	@return 0 on success
+*/
+int bboxtest_preslv(struct BBoxInterp *interp,
+			struct Instance *data,
+			struct gl_list_t *arglist
+
+){
+	struct BBOXTEST_problem *problem;
+
+	if(interp->task != bb_first_call){
+		ERROR_REPORTER(ASC_PROG_ERR,"Unexpected call to first_call fn");
+		return -1;
+	}
+
+	if(interp->user_data!=NULL){
+#ifdef BBOXTEST_DEBUG
+		CONSOLE_DEBUG("user_data has already been allocated, no need to reallocate");
+#endif
+		return 0;
+	}
+
+	problem = ASC_NEW(struct BBOXTEST_problem);
+	if(CheckArgsOK(data,arglist,problem)){
+		CONSOLE_DEBUG("Problem with arguments");
+		ASC_FREE(problem);
+		return -2;
+	}
+
+	/* store the BBTEST_problem in the user_data pointer */
+	interp->user_data = (void *)problem;
+	return 0; /* success */
+}
+
+/*----------------------------------------------------------------------------*/
+
+/** 
+	Evaluate residuals
+
+	@return 0 on success 
+*/
+int bboxtest_fex(struct BBoxInterp *interp,
+		int ninputs,
+		int noutputs,
+		double *inputs,
+		double *outputs,
+		double *jacobian
+){
+	(void)jacobian;
+	return DoCalculation(interp, ninputs, noutputs, inputs, outputs);
+}
+
+/*
+	Evaluate jacobian
+	@return 0 on success
+*/
+int bboxtest_jex(struct BBoxInterp *interp,
+		int ninputs,
+		int noutputs,
+		double *inputs,
+		double *outputs,
+		double *jacobian
+){
+	(void)noutputs; 
+	(void)outputs;
+	(void)inputs;
+	
+	return DoDeriv(interp, ninputs, jacobian);
+}
+
+/*------------------------------------------------------------------------------
+  utility routines
+*/
 
 static int GetCoef( struct Instance *data, struct BBOXTEST_problem *problem){
 
@@ -76,13 +214,11 @@ static int GetCoef( struct Instance *data, struct BBOXTEST_problem *problem){
 	return 0;
 }
 
-
 static int CheckArgsOK(struct Instance *data,
 			struct gl_list_t *arglist,
 			struct BBOXTEST_problem *problem
 ){
 	unsigned long len,ninputs,noutputs;
-	int result;
 
 	if (!arglist) {
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"External function argument list does not exist.");
@@ -113,76 +249,6 @@ static int CheckArgsOK(struct Instance *data,
 
 	return GetCoef(data,problem); /* get the coef, return 0 on success means all was ok */
 }
-
-/*----------------------------------------------------------------------------*/
-
-/**
-	This function is one of the registered functions. It operates in
-	 mode last_call.
-	In last_call mode, the memory associated with the problem is
-	released.
-*/
-void bboxtest_final(struct BBoxInterp *interp )
-{
-	struct BBOXTEST_problem *problem;
-
-	if (interp->task == bb_last_call) {
-		if (interp->user_data != NULL) {
-			problem = (struct BBOXTEST_problem *)interp->user_data;
-			problem->coef *= -1;
-			problem->n *= -1;
-			free(problem);
-		}
-		interp->user_data = NULL;
-	}
-	/* shouldn't be here */
-}
-/**
-	This function is one of the registered functions. It operates in
-	 mode first_call.
-	It creates a BBOXTEST_problem and calls a number of routines to check
-	the arguments (data and arglist) and to cache the information
-	processed away in the BBOXTEST_problem structure.
-
-	In last_call mode, the memory associated with the problem is
-	released.
-*/
-int bboxtest_preslv(struct BBoxInterp *interp,
-			struct Instance *data,
-			struct gl_list_t *arglist
-
-){
-	struct BBOXTEST_problem *problem;
-
-#ifdef BBOXTEST_DEBUG
-	CONSOLE_DEBUG("bboxtest_preslv called (interp %p), (instance %p)",interp, interp->user_data);
-#endif
-	if (interp->task == bb_first_call) {
-#ifdef BBOXTEST_DEBUG
-	CONSOLE_DEBUG("bboxtest_preslv called for bb_first_call");
-#endif
-		if (interp->user_data!=NULL) {
-			CONSOLE_DEBUG("We have been called before: not reallocating");
-			return 0;
-			/* the problem structure exists */
-		} else {
-			problem = ASC_NEW(struct BBOXTEST_problem);
-			if(CheckArgsOK(data,arglist,problem)){
-				CONSOLE_DEBUG("Problem with arguments");
-				ASC_FREE(problem);
-				return 1;
-			}
-			interp->user_data = (void *)problem;
-			return 0;
-		}
-	}
-#ifdef BBOXTEST_DEBUG
-	CONSOLE_DEBUG("bboxtest_preslv called in fish circumstance.");
-#endif
-	return 1; /* shouldn't be here ever. */
-}
-
-/*----------------------------------------------------------------------------*/
 
 /*
 	This function provides support to bboxtest_fex which is one of the
@@ -230,20 +296,7 @@ static int DoCalculation(struct BBoxInterp *interp,
 	return 0;
 }
 
-/** return 0 on success */
-int bboxtest_fex(struct BBoxInterp *interp,
-		int ninputs,
-		int noutputs,
-		double *inputs,
-		double *outputs,
-		double *jacobian
-){
-	(void)jacobian;
-	return DoCalculation(interp, ninputs, noutputs, inputs, outputs);
-}
-
-int DoDeriv(struct BBoxInterp *interp, int ninputs, double *jacobian)
-{
+int DoDeriv(struct BBoxInterp *interp, int ninputs, double *jacobian){
 	int i; int len;
 	double coef;
 	if(interp==NULL){
@@ -274,43 +327,3 @@ int DoDeriv(struct BBoxInterp *interp, int ninputs, double *jacobian)
 #endif
 	return 0;
 }
-
-/* return 0 on success */
-int bboxtest_jex(struct BBoxInterp *interp,
-		int ninputs,
-		int noutputs,
-		double *inputs,
-		double *outputs,
-		double *jacobian
-){
-	(void)noutputs; 
-	(void)outputs;
-	(void)inputs;
-	
-	return DoDeriv(interp, ninputs, jacobian);
-}
-
-/**
-	Registration function
-*/
-int bboxtest_register(void){
-	int result;
-	double epsilon = 1.0e-14;
-
-	char bboxtest_help[] = "This tests a simple black box y=k*x";
-
-	result = CreateUserFunctionBlackBox("bboxtest",
-					bboxtest_preslv, 
-					bboxtest_fex,
-					bboxtest_jex,
-					NULL,
-					bboxtest_final,
-					N_INPUT_ARGS,
-					N_OUTPUT_ARGS,
-					bboxtest_help,
-					epsilon);
-	return result;
-}
-
-#undef N_INPUT_ARGS
-#undef N_OUTPUT_ARGS

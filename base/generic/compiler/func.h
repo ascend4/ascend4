@@ -25,13 +25,6 @@
 
 	@TODO 2/96 baa Probably somebody should properly set these evaluation
 	defined below based on math.h when possible.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "fractions.h"
-	#include "compiler.h"
-	#include "dimen.h"
-	#include "functype.h"
 *//*
 	by Tom Epperly
 	Version: $Revision: 1.16 $
@@ -44,6 +37,9 @@
 #define ASC_FUNC_H
 
 #include <utilities/ascConfig.h>
+#include "functype.h"
+#include "compiler.h"
+#include "dimen.h"
 
 /*
  *  the following should be ifdefed to deal with math.h values

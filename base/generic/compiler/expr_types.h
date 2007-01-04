@@ -20,13 +20,6 @@
 	@file
 	Name, set and expr type definitions
 
-	Requires:
-	#include <limits.h>
-	#include "fractions.h"
-	#include "compiler.h"
-	#include "dimen.h"
-	#include "list.h"
-	#include "functype.h"
 	@todo Complete documentation of types.h.
 
 	Renamed from 'types.h' -- JP, 21 Jun 2006.
@@ -38,6 +31,12 @@
 
 #ifndef ASC_TYPES_H
 #define ASC_TYPES_H
+
+#include <limits.h>
+#include "compiler.h"
+#include "dimen.h"
+#include <general/list.h>
+#include "functype.h"
 
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * Please see usage notes at top of Expr_enum before modifying it.

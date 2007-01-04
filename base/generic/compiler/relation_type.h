@@ -41,6 +41,13 @@
 #ifndef ASC_RELATION_TYPE_H
 #define ASC_RELATION_TYPE_H
 
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "dimen.h"
+#include "expr_types.h"
+#include <general/list.h>
+#include "func.h"
+
 /** If TOKENDOMINANT is 1, then we assume union RelationUnion fields
  * other than relop and ref_count are all going to be initialized
  * to 0/NULL if we do the initializations for the token unions.

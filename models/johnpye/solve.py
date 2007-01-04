@@ -26,7 +26,6 @@ def solve(self):
 		reporter = SimpleSolverReporter(browser)
 	else:
 		print "Using console solver reporter"
-		# default to the QRSlv solver. @TODO make this configurable somehow.
 		reporter = ascpy.SolverReporter()
 
 	# the 'sim' object is registered in simulation.cpp each time a method is to be run

@@ -15,6 +15,17 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
+*//**
+	This is intended to be a simplest-possible external function and was
+	used by John Pye to test his updates/fixes to the Black Box implementation.
+	Since Ben refactored the the black box stuff separately, this has stopped
+	working (and now causes a runtime crash. The aim now is to work out why
+	the crash occurs and ensure that it can't!
+
+	Note that this external function does *not* provide its own jacobian; it is
+	counting on the default numerical diff function provided by ASCEND.
+*//*
+	by John Pye, Jan 2006
 */
 
 #include <stdio.h>
@@ -92,17 +103,13 @@ int addone_calc(struct BBoxInterp *slv_interp,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	/* char *mystring = (char *)slv_interp->user_data; */
-
-	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ADDONE_CALC: mystring = %s\n",mystring); */
-
-	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"NINPUTS = %d, NOUTPUTS = %d\n",ninputs, noutputs); */
-
-	/* CONSOLE_DEBUG("inputs[0] = %f, outputs[0] = %f",inputs[0],outputs[0]); */
+	if(noutputs != 1)return -1;
+	if(ninputs != 1)return -2;
+	if(inputs==NULL)return -3;
+	if(outputs==NULL)return -4;
+	if(slv_interp==NULL)return -5;
 
 	outputs[0] = inputs[0] + 1;
 
-	/* CONSOLE_DEBUG("INPUT = %f, OUTPUT = %f",inputs[0],outputs[0]); */
-
-	return 0; /* success */
+	return 0;
 }

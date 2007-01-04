@@ -1,29 +1,43 @@
+/*
+	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*/
+
+#include "rel_blackbox.h"
 
 #include <math.h>
 #include <errno.h>
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
-#include <general/list.h>
+
 #include <general/pairlist.h>
 #include <general/dstring.h>
 #include "compiler.h"
 #include "symtab.h"
 #include "functype.h"
 #include "safe.h"
-#include "fractions.h"
 #include "dimen.h"
-#include "expr_types.h"
 #include "vlist.h"
 #include "dimen_io.h"
-#include "instance_enum.h"
 #include "find.h"
 #include "atomvalue.h"
 #include "instance_name.h"
-#include "extfunc.h"
-#include "relation_type.h"
-#include "rel_blackbox.h"
 #include "relation.h"
 #include "relation_util.h"
 #include "instance_io.h"
@@ -382,7 +396,7 @@ static inline double blackbox_peturbation(double varvalue){
 	Blackbox derivatives estimated by finite difference (by evaluation at
 	peturbed value of each input in turn)
 
-	Call signature as for ExtBBoxFunc.
+	Call signature as for ExtBBoxFunc (except for addition leading 'resfn' parameter)
 */
 int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
 	, int ninputs, int noutputs
