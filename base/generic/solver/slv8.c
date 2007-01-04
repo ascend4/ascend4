@@ -2607,7 +2607,7 @@ static void update_block_information(slv8_system_t sys)
 }
 
 
-static void slv8_presolve(slv_system_t server, SlvClientToken asys){
+static int slv8_presolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
   int32 cap, ind;
@@ -2622,18 +2622,18 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
   check_system(sys);
   if( sys->vlist == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable list was not set.");
-    return;
+    return -1;
   }
   if( sys->rlist == NULL && sys->obj == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation list and objective were not set.");
-    return;
+    return -2;
   }
 
   sys->obj = slv_get_obj_relation(server); /*may have changed objective*/
 
   if(!sys->obj){
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"No objective function was specified");
-	return;
+	return -3;
   }
 
   if(sys->presolved > 0) { /* system has been presolved before */
@@ -2787,6 +2787,8 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
   update_status(sys);
   iteration_ends(sys);
   sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
+
+  return 0;
 }
 
 /**
@@ -2825,23 +2827,24 @@ static void slv8_resolve(slv_system_t server, SlvClientToken asys){
   sys->objective =  MAXDOUBLE/2000.0;
 
   update_status(sys);
+  return 0;
 }
 
 /**
 	@TODO document this
 */
-static void slv8_iterate(slv_system_t server, SlvClientToken asys){
+static int slv8_iterate(slv_system_t server, SlvClientToken asys){
   slv8_system_t sys;
   FILE              *mif;
   FILE              *lif;
   sys = SLV8(asys);
   mif = MIF(sys);
   lif = LIF(sys);
-  if (server == NULL || sys==NULL) return;
-  if (check_system(SLV8(sys))) return;
+  if (server == NULL || sys==NULL) return -1;
+  if (check_system(SLV8(sys))) return -2;
   if( !sys->s.ready_to_solve ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
-    return;
+    return 1;
   }
 
   if (sys->s.block.current_block==-1) {
@@ -2870,19 +2873,22 @@ static void slv8_iterate(slv_system_t server, SlvClientToken asys){
     update_cost(sys);
     iteration_ends(sys);
     update_status(sys);
-    return;
   }
+
+  return 0;
 }
 
 /**
 	@TODO document this
 */
-static void slv8_solve(slv_system_t server, SlvClientToken asys){
+static int slv8_solve(slv_system_t server, SlvClientToken asys){
   slv8_system_t sys;
+  int err = 0;
   sys = SLV8(asys);
-  if (server == NULL || sys==NULL) return;
-  if (check_system(sys)) return;
-  while( sys->s.ready_to_solve ) slv8_iterate(server,sys);
+  if (server == NULL || sys==NULL) return -1;
+  if (check_system(sys)) return -2;
+  while( sys->s.ready_to_solve )err = err | slv8_iterate(server,sys);
+  return err;
 }
 
 /**
