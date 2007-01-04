@@ -8,83 +8,90 @@ END pass7;
 (*  merged input reverse solve *)
 MODEL pass8 REFINES pass7; 
 METHODS
-METHOD specify;
-	RUN specify_reverse;
-	y[1].fixed := FALSE;
-END specify;
+	METHOD specify;
+		RUN specify_reverse;
+		y[1].fixed := FALSE;
+	END specify;
 END pass8;
 
 (*  merged output solve *)
 MODEL pass9 REFINES pass1; 
 	y[1..2] ARE_THE_SAME;
 METHODS
-METHOD specify;
-	RUN pass1::specify;
-	x[1].fixed := FALSE;
-END specify;
+	METHOD specify;
+		RUN pass1::specify;
+		x[1].fixed := FALSE;
+	END specify;
 END pass9;
 
 (*  merged output reverse solve *)
 MODEL pass10 REFINES pass9; 
 METHODS
-METHOD specify;
-	RUN specify_reverse;
-END specify;
+	METHOD specify;
+		RUN specify_reverse;
+	END specify;
 END pass10;
 
 (*  merged input/output solve *)
 MODEL pass11 REFINES pass1; 
 	y[1], x[1] ARE_THE_SAME; (* always self consistent in theory unless you think you fixed both to distinct values. *)
 METHODS
-METHOD specify;
-	RUN pass1::specify;
-	x[1].fixed := FALSE;
-END specify;
+	METHOD specify;
+		RUN pass1::specify;
+		x[1].fixed := FALSE;
+	END specify;
 END pass11;
 
 (*  merged input/output reverse solve *)
 MODEL pass12 REFINES pass11 ; 
 METHODS
-METHOD specify;
-	RUN specify_reverse;
-	y[1].fixed := FALSE;
-END specify;
+	METHOD specify;
+		RUN specify_reverse;
+		y[1].fixed := FALSE;
+	END specify;
 END pass12;
 
 (*  cross-merged input/output solve *)
 MODEL pass13 REFINES pass1; 
 	y[1],x[2] ARE_THE_SAME; (* generally infeasible *)
 METHODS
-METHOD values_feasible;
-	x[1..2] := 7; (* could be any constant. result will be y1==y2 *)
-END values_feasible;
-METHOD values_infeasible;
-	x[1] := x[2] +1; (* could be any constant. result will be solve fail *)
-END values_infeasible;
-METHOD default_all;
-	RUN default_self;
-	RUN values_feasible;
-END default_all;
+	METHOD values_feasible;
+		x[1..2] := 7; (* could be any constant. result will be y1==y2 *)
+	END values_feasible;
+	METHOD values_infeasible;
+		x[1] := x[2] +1; (* could be any constant. result will be solve fail *)
+	END values_infeasible;
+	METHOD default_all;
+		RUN default_self;
+		RUN values_feasible;
+	END default_all;
 
-METHOD on_load;
-	RUN reset;
-	RUN default_all;
-END on_load;
+	METHOD on_load;
+		RUN reset;
+		RUN default_all;
+	END on_load;
 
-METHOD self_test;
-	FOR i IN [1..2] DO
-		ASSERT x[i] == 7;
-		ASSERT y[i] == 7*coef;
-	END FOR;
-END self_test;
-
+	METHOD self_test;
+		FOR i IN [1..2] DO
+			ASSERT x[i] == 7;
+			ASSERT y[i] == 7*coef;
+		END FOR;
+	END self_test;
 END pass13;
 
 (*  cross-merged input/output reverse solve *)
 MODEL pass14 REFINES pass13; 
 METHODS
-METHOD specify;
-        RUN specify_reverse;
-END specify;
-
+	METHOD specify;
+		RUN specify_reverse;
+		FREE y[2];
+	END specify;
+	METHOD self_test;
+		ASSERT x[1] == 7.0/coef;
+		ASSERT y[1] == 7;
+		ASSERT x[2] == 7;
+		ASSERT y[2] == 7*coef;
+		ASSERT x[3] == -4/coef;
+		ASSERT y[3] == -4;
+	END self_test;
 END pass14;

@@ -4,27 +4,62 @@ REQUIRE "test/blackbox/bbox3.a4c";
 MODEL pass20;
 	ma[1..3] IS_A bbox3;
 METHODS
-METHOD specify;
-	RUN ma[1..3].specify;
-END specify;
+	METHOD on_load;
+		RUN reset;
+		RUN ma[1..3].default_all;
+	END on_load;
+	METHOD specify;
+		RUN ma[1..3].specify;
+	END specify;
+	METHOD self_test;
+		ASSERT ma[1].y[1] = ma[1].x[1] * ma[1].coef;
+		FOR i IN [1..3] DO
+			RUN ma[i].self_test;
+		END FOR;
+	END self_test;
 END pass20;
 
 (*  dense array of black boxes right syntax*)
 MODEL pass22; 
 	coef IS_A real_constant;
 	coef :== 2.0;
-        npts IS_A integer_constant;
-        npts :== 4;
-        x[1..npts][1..3] IS_A generic_real;
-        y[1..npts][1..3] IS_A generic_real;
+    npts IS_A integer_constant;
+    npts :== 4;
+    x[1..npts][1..3] IS_A generic_real;
+    y[1..npts][1..3] IS_A generic_real;
 
-        (* the simple repeated npts times for different data. *)
-        FOR i IN [1..npts] CREATE
-                bbox[i]: bboxtest( x[i][1..3] : INPUT ;
-                                y[i][1..3] : OUTPUT ;
-                                coef : DATA);
-        END FOR;
-
+    (* the simple repeated npts times for different data. *)
+    FOR i IN [1..npts] CREATE
+        bbox[i]: bboxtest(
+			x[i][1..3] : INPUT ;
+            y[i][1..3] : OUTPUT ;
+            coef : DATA
+		);
+    END FOR;
+METHODS
+	METHOD specify;
+		FIX x[1..npts][1];
+		FIX y[1..npts][2];
+		FIX x[1..npts][3];
+	END specify;
+	METHOD values;
+		x[1][1..3] := 1;
+		y[2][1..3] := 2;
+		x[3][1..3] := 3;
+	END values;
+	METHOD on_load;
+		RUN reset;
+		RUN values;
+	END on_load;
+	METHOD self_test;
+		ASSERT y[1][1] = 2;
+		ASSERT x[2][2] = 1;
+		FOR i IN [1..npts] DO
+			FOR j IN [1..3] DO
+				ASSERT y[i][j] = coef * x[i][j];
+			END FOR;
+		END FOR;
+	END self_test;
 END pass22;
 
 (*  triangular array of black boxes *)
@@ -34,47 +69,43 @@ MODEL pass23;
 	coef IS_A real_constant;
 	coef :== 3;
 
-        (* the odd repeated npts triangle of times.
-        Verifies that each instance gets its own argument
-        evaluation in FOR processing.
-         *)
-        FOR i IN [1..npts] CREATE
-                FOR j IN [1..i] CREATE
-                        xT[i][j] IS_A generic_real;
-                        yT[i][j] IS_A generic_real;
-                END FOR;
-        END FOR;
-        FOR i IN [1..npts] CREATE
-                bboxT[i]: bboxtest( xT[i][1..i] : INPUT ;
-                                yT[i][1..i] : OUTPUT ;
-                                coef : DATA);
-        END FOR;
+    (* the odd repeated npts triangle of times.
+    Verifies that each instance gets its own argument
+    evaluation in FOR processing.
+        *)
+    FOR i IN [1..npts] CREATE
+            FOR j IN [1..i] CREATE
+                    xT[i][j] IS_A generic_real;
+                    yT[i][j] IS_A generic_real;
+            END FOR;
+    END FOR;
+    FOR i IN [1..npts] CREATE
+            bboxT[i]: bboxtest( xT[i][1..i] : INPUT ;
+                            yT[i][1..i] : OUTPUT ;
+                            coef : DATA);
+    END FOR;
 METHODS
-
-        METHOD default_self;
-                FOR i IN [1..npts] DO
-                        FOR j IN [1..i] DO
-                                xT[i][j] := 1.0;
-                                yT[i][j] := -1.0;
-                        END FOR;
-                END FOR;
-        END default_self;
-        METHOD reset;
-                EXTERNAL asc_free_all_variables(SELF);
-                RUN specify;
-        END reset;
-
-        METHOD specify;
-                FOR i IN [1..npts] DO
-                        FOR j IN [1..i] DO
-                                FIX xT[i][j];
-                                FREE yT[i][j];
-                        END FOR;
-                END FOR;
-        END specify;
-
-        METHOD default_all;
-                RUN default_self;
-        END default_all;
-
+    METHOD default_self;
+        FOR i IN [1..npts] DO
+            FOR j IN [1..i] DO
+                xT[i][j] := 1.0;
+                yT[i][j] := -1.0;
+            END FOR;
+        END FOR;
+    END default_self;
+    METHOD reset;
+        EXTERNAL asc_free_all_variables(SELF);
+        RUN specify;
+    END reset;
+    METHOD specify;
+        FOR i IN [1..npts] DO
+            FOR j IN [1..i] DO
+                FIX xT[i][j];
+                FREE yT[i][j];
+            END FOR;
+        END FOR;
+    END specify;
+    METHOD default_all;
+        RUN default_self;
+    END default_all;
 END pass23;

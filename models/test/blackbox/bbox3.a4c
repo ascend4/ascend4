@@ -3,7 +3,6 @@ REQUIRE "basemodel.a4l";
 IMPORT "test/blackbox/bboxtest"; (* yi = coef*xi test *)
 
 MODEL bbox3;
-
 	coef IS_A real_constant;
 	n IS_A integer_constant;
 	coef :== 2.0;
@@ -11,40 +10,41 @@ MODEL bbox3;
 
 	x[1..n], y[1..n] IS_A generic_real;
 
-	bbox: bboxtest( x[1..n] : INPUT ;
-                        y[1..n] : OUTPUT ;
-                        coef : DATA);
+	bbox: bboxtest(
+		x[1..n] : INPUT ;
+        y[1..n] : OUTPUT ;
+        coef : DATA
+	);
 	
 METHODS
+	METHOD default_all;
+		RUN default_self;
+	END default_all;
+	METHOD default_self;
+		FOR i IN [1..n] DO
+			x[i] := 1+i;
+			y[i] := -x[i];
+		END FOR;
+	END default_self;
 
-METHOD default_all;
-	RUN default_self;
-END default_all;
-METHOD default_self;
-	FOR i IN [1..n] DO
-		x[i] := 1+i;
-		y[i] := -x[i];
-	END FOR;
-END default_self;
+	METHOD on_load;
+		RUN reset;
+		RUN default_all;
+	END on_load;
 
-METHOD on_load;
-	RUN reset;
-	RUN default_all;
-END on_load;
+	METHOD specify;
+		y[1..n].fixed := FALSE;
+		x[1..n].fixed := TRUE;
+	END specify;
 
-METHOD self_test;
-	FOR i IN [1..n] DO
-		ASSERT y[1] == coef * x[1];
-	END FOR;
-END self_test;
+	METHOD specify_reverse;
+		x[1..n].fixed := FALSE;
+		y[1..n].fixed := TRUE;
+	END specify_reverse;
 
-METHOD specify;
-	y[1..n].fixed := FALSE;
-	x[1..n].fixed := TRUE;
-END specify;
-
-METHOD specify_reverse;
-	x[1..n].fixed := FALSE;
-	y[1..n].fixed := TRUE;
-END specify_reverse;
+	METHOD self_test;
+		FOR i IN [1..n] DO
+			ASSERT y[i] = coef*x[i];
+		END FOR;
+	END self_test;
 END bbox3;
