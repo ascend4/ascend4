@@ -237,7 +237,7 @@ static int error_reporter_tree_write(error_reporter_tree_t *t){
 
 	asc_assert(TREE==NULL); /* else recursive calls will occur */
 
-	if(++writecount > 30){
+	if(++writecount > 50){
 		CONSOLE_DEBUG("TOO MUCH WRITING");
 		return 0;
 	}
