@@ -530,11 +530,11 @@ static int savlinnum=0;
 	Evaluate the objective function.
 */
 static boolean calc_objective( slv3_system_t sys){
-  boolean calc_ok = TRUE;
+  int calc_ok = TRUE;
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
   sys->objective = (sys->obj ? relman_eval(sys->obj,&calc_ok,SAFE_CALC) : 0.0);
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
-  return calc_ok;
+  return calc_ok ? TRUE : FALSE;
 }
 
 /**
@@ -549,16 +549,15 @@ static boolean calc_objectives( slv3_system_t sys){
   rlist = slv_get_solvers_obj_list(SERVER);
   len = slv_get_num_solvers_objs(SERVER);
   boolean calc_ok = TRUE;
+  int calc_ok_1 = 0;
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
   for (i = 0; i < len; i++) {
     if (rel_apply_filter(rlist[i],&rfilter)) {
-      relman_eval(rlist[i],&calc_ok,SAFE_CALC);
-#if DEBUG
-      if (calc_ok == FALSE) {
-	FPRINTF(stderr,"error in calc_objectives\n");
-	calc_ok = TRUE;
+      relman_eval(rlist[i],&calc_ok_1,SAFE_CALC);
+      if(!calc_ok_1) {
+        CONSOLE_DEBUG("error with i = %d",i);
+        calc_ok = FALSE;
       }
-#endif
     }
   }
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
@@ -577,17 +576,19 @@ static boolean calc_inequalities( slv3_system_t sys){
   static rel_filter_t rfilter;
   rfilter.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
   rfilter.matchvalue = (REL_INCLUDED | REL_ACTIVE);
-
+  int calc_ok_1;
   boolean calc_ok = TRUE;
+
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
   for (rp=sys->rlist;*rp != NULL; rp++) {
     if (rel_apply_filter(*rp,&rfilter)) {
-      relman_eval(*rp,&calc_ok,SAFE_CALC);
-      satisfied= satisfied &&
-	  relman_calc_satisfied(*rp,FEAS_TOL);
+      relman_eval(*rp,&calc_ok_1,SAFE_CALC);
+      if(!calc_ok_1)calc_ok = FALSE;
+      satisfied = satisfied && relman_calc_satisfied(*rp,FEAS_TOL);
     }
   }
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+  CONSOLE_DEBUG("inequalities: calc_ok = %d, satisfied = %d",calc_ok, satisfied);
   return (calc_ok && satisfied);
 }
 
@@ -601,11 +602,11 @@ static boolean calc_residuals( slv3_system_t sys){
   int32 row;
   struct rel_relation *rel;
   double time0;
+  boolean calc_ok = TRUE;
+  int calc_ok_1;
 
   if( sys->residuals.accurate ) return TRUE;
 
-  boolean calc_ok = TRUE;
-  boolean calc_ok_1;
   row = sys->residuals.rng->low;
   time0=tm_cpu_time();
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
@@ -639,7 +640,7 @@ static boolean calc_residuals( slv3_system_t sys){
   square_norm( &(sys->residuals) );
   sys->s.block.residual = calc_sqrt_D0(sys->residuals.norm2);
   if(!calc_ok)CONSOLE_DEBUG("error calculating residuals");
-  return(calc_ok);
+  return calc_ok;
 }
 
 
@@ -2486,6 +2487,7 @@ static void move_to_next_block( slv3_system_t sys){
   int32 row;
   int32 col;
   int32 ci;
+  boolean ok;
 
   if( sys->s.block.current_block >= 0 ) {
 
@@ -2520,7 +2522,6 @@ static void move_to_next_block( slv3_system_t sys){
 
   sys->s.block.current_block++;
   if( sys->s.block.current_block < sys->s.block.number_of ) {
-    boolean ok;
 
     /* Initialize next block */
     if( OPTIMIZING(sys) ) {
@@ -2556,9 +2557,7 @@ static void move_to_next_block( slv3_system_t sys){
     sys->s.calc_ok = TRUE;
 
     if( !(ok = calc_objective(sys)) ) {
-      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-      FPRINTF(MIF(sys),"Objective calculation errors detected.\n");
-	  error_reporter_end_flush();
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Objective calculation errors detected");
     }
     if(SHOW_LESS_IMPT && sys->obj) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Objective", sys->objective);
@@ -2620,7 +2619,6 @@ static void move_to_next_block( slv3_system_t sys){
     }
 
   } else {
-    boolean ok;
     /*
      * Before we claim convergence, we must check if we left behind
      * some unassigned relations.  If and only if they happen to be
@@ -2648,6 +2646,9 @@ static void move_to_next_block( slv3_system_t sys){
          FPRINTF(MIF(sys),
            "Residual calculation errors detected in leftover equations.\n");
       }
+
+      /** @TODO does this 'ok' needed to be ANDed with sys->s.calc_ok? */
+
       if(SHOW_LESS_IMPT) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Residual norm (unscaled)",
                 sys->s.block.residual);
@@ -2658,10 +2659,12 @@ static void move_to_next_block( slv3_system_t sys){
         }
         sys->s.converged = TRUE;
       } else {
-        if(SHOW_LESS_IMPT) {
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Problem inconsistent: unassigned relations not satisfied");
+/*        if(SHOW_LESS_IMPT) {
           ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nProblem inconsistent:  %s.\n",
                   "Unassigned relations not satisfied");
         }
+*/
         sys->s.inconsistent = TRUE;
       }
       if(SHOW_LESS_IMPT) {
@@ -2673,7 +2676,11 @@ static void move_to_next_block( slv3_system_t sys){
     /* nearly done checking. Must verify included inequalities if
        we think equalities are ok. */
     if (sys->s.converged) {
-      sys->s.inconsistent=(!calc_inequalities(sys));
+      ok = calc_inequalities(sys);
+	  if(!ok && sys->s.inconsistent){
+        sys->s.inconsistent = TRUE;
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"System marked inconsistent after inspecting inequalities");
+      }
     }
   }
 }
@@ -2810,7 +2817,17 @@ static void update_status( slv3_system_t sys){
    unsuccessful = sys->s.diverged || sys->s.inconsistent ||
       sys->s.iteration_limit_exceeded || sys->s.time_limit_exceeded;
 
+   if(unsuccessful){
+       CONSOLE_DEBUG("unsuccessful: diverged = %d, inconsistent = %d, iter_limit = %d, time_limit = %d"
+			,sys->s.diverged, sys->s.inconsistent
+			,sys->s.iteration_limit_exceeded, sys->s.time_limit_exceeded
+       );
+   }
+
    sys->s.ready_to_solve = !unsuccessful && !sys->s.converged;
+   CONSOLE_DEBUG("Updating solver status: unsuccessful = %d, calc_ok = %d, struct_sing = %d"
+		,unsuccessful,sys->s.calc_ok,sys->s.struct_singular
+   );
    sys->s.ok = !unsuccessful && sys->s.calc_ok && !sys->s.struct_singular;
 }
 
@@ -3819,6 +3836,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
       }
 	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Direct solve found numerically impossible equation given variables solved in previous blocks.");
     case -1:
+
       sys->s.inconsistent = TRUE;
 
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
@@ -3926,10 +3944,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 
 /* 2004.11.5 code by AWW to eliminate runaway minor loop */
     if(minor >= MAX_MINOR){
-      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-      FPRINTF(ASCERR,"QRSlv: Exceeded max line search iterations. Check for variables on bounds.");
-	  error_reporter_end_flush();
-
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv exceeded max line search iterations. Check for variables on bounds.");
       sys->s.inconsistent = TRUE;
       iteration_ends(sys);
       update_status(sys);

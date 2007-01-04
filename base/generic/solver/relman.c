@@ -27,6 +27,7 @@
 
 #include <math.h>
 #include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
@@ -373,7 +374,7 @@ real64 relman_glassbox_diffs( struct rel_relation *rel,
 real64 relman_eval(struct rel_relation *rel, int32 *status, int safe)
 {
   real64 res;
-  assert(status!=NULL && rel!=NULL);
+  asc_assert(status!=NULL && rel!=NULL);
   if ( rel->type == e_rel_token ) {
     if (!RelationCalcResidualBinary(
           GetInstanceRelationOnly(IPTR(rel->instance)),&res)) {

@@ -171,15 +171,20 @@ typedef struct{
 
 	Usage will be
 
-		int res = 0;
+		bool has_error = 0;
 		error_reporter_tree_start();
 		do_subordinate_tasks();
-		error_reporter_tree_end();
 		if(error_reporter_tree_has_error()){
-			error_reporter_here(ASC_PROG_ERR,"Some errors occurred");
+			has_error = 1;
 		}else{
-			error_reporter_tree_clear();
+			has_error = 0
 		}
+		error_reporter_tree_end();
+		if(has_error){
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"failed");
+		}else{
+			ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"success");
+		}	
 
 	The next 'error_reporter' call after an outermost 'error_reporter_tree_end' 
 	will cause the error tree to be output to the error reporting channel.

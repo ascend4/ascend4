@@ -55,7 +55,9 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 	int res=0;
 	switch(sev){
 		case ASC_PROG_FATAL:    color=ERR_RED; sevmsg = "PROGRAM FATAL ERROR: "; break;
-		case ASC_PROG_ERROR:    color=ERR_RED; sevmsg = "PROGRAM ERROR: "; break;
+		case ASC_PROG_ERROR:
+		    color=ERR_RED; sevmsg = "PROGRAM ERROR: ";
+			break;
 		case ASC_PROG_WARNING:  color=ERR_BOLD;sevmsg = "PROGRAM WARNING: "; break;
 		case ASC_PROG_NOTE:     color=ERR_GRN; endtxt=""; break; /* default, keep unembellished for now */
 		case ASC_USER_ERROR:    color=ERR_RED; sevmsg = "ERROR: "; break;

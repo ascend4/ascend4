@@ -31,19 +31,15 @@
 #include <math.h>
 #include <errno.h>
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
+
+#include "relation_util.h"
+
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <general/mathmacros.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include "compiler.h"
 #include "symtab.h"
-#include "functype.h"
-#include "safe.h"
-#include "fractions.h"
-#include "dimen.h"
-#include "expr_types.h"
 #include "vlist.h"
 #include "dimen_io.h"
 #include "instance_enum.h"
@@ -51,11 +47,9 @@
 #include "find.h"
 #include "atomvalue.h"
 #include "instance_name.h"
-#include "relation_type.h"
 #include "extfunc.h"
 #include "rel_blackbox.h"
 #include "relation.h"
-#include "relation_util.h"
 #include "rel_blackbox.h"
 #include "instance_io.h"
 #include "instquery.h"

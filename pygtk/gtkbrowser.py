@@ -694,7 +694,10 @@ class Browser:
 		else:
 			reporter = SimpleSolverReporter(self)
 
-		self.sim.solve(self.solver,reporter)
+		try:
+			self.sim.solve(self.solver,reporter)
+		except RuntimeError,e:
+			self.reporter.reportError(str(e))	
 
 		self.stop_waiting()
 		
