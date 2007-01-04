@@ -5516,7 +5516,9 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   /* and now for cleaning up shared data. */
   init = GetInitFunc(efunc);
   if(init){
-	  (*init)( &(common->interp), data, arglist);
+    if( (*init)( &(common->interp), data, arglist) ){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in blackbox initfn");
+    }
   }
   common->interp.task = bb_none;
   ascfree(context);
@@ -12450,7 +12452,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   result = Pass1InstantiateModel(def,&pass1pendings,NULL);
 #if TIMECOMPILER
   phase1t = clock();
-  FPRINTF(ASCERR,"Phase 1 models \t\t%lu\n",(unsigned long)phase1t-start);
+  CONSOLE_DEBUG("Phase 1 models = %lu",(unsigned long)phase1t-start);
 #endif
   /* At this point, there may be unexecuted non-relation
    * statements, but they can never be executed. The
@@ -12478,8 +12480,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }
 #if TIMECOMPILER
   phase2t = clock();
-  FPRINTF(ASCERR,"Phase 2 relations \t\t%lu\n",
-    (unsigned long)(phase2t-phase1t));
+  CONSOLE_DEBUG("Phase 2 relations = %lu",(unsigned long)(phase2t-phase1t));
 #endif
   /* CONSOLE_DEBUG("Starting phase 3..."); */
   /* at this point, there may be unexecuted non-logical relation
@@ -12500,8 +12501,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }
 #if TIMECOMPILER
   phase3t = clock();
-  FPRINTF(ASCERR,
-          "Phase 3 logicals \t\t%lu\n",(unsigned long)(phase3t-phase2t));
+  CONSOLE_DEBUG("Phase 3 logicals = %lu",(unsigned long)(phase3t-phase2t));
 #endif
   if (result!=NULL) {
     /* now set the bits for when statements and add pending models */
@@ -12515,8 +12515,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }
 #if TIMECOMPILER
   phase4t = clock();
-  FPRINTF(ASCERR,"Phase 4 when-case \t\t%lu\n",
-    (unsigned long)(phase4t-phase3t));
+  CONSOLE_DEBUG("Phase 4 when-case = %lu",(unsigned long)(phase4t-phase3t));
 #endif
   if (result!=NULL) {
     if (!pass1pendings && !pass2pendings && !pass3pendings && !pass4pendings){
@@ -12529,8 +12528,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }
 #if TIMECOMPILER
   phase5t = clock();
-  FPRINTF(ASCERR,
-          "Phase 5 defaults \t\t%lu\n",(unsigned long)(phase5t-phase4t));
+  CONSOLE_DEBUG("Phase 5 defaults = %lu",(unsigned long)(phase5t-phase4t));
   if (pass1pendings || pass2pendings || pass3pendings || pass4pendings) {
 #ifdef __WIN32__
     char *timeunit = "milliseconds";
@@ -12549,7 +12547,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
     FPRINTF(ASCERR,"Phase 5 defaults\t\t%lu\n",
             (unsigned long)(phase5t-phase4t));
   }
-  FPRINTF(ASCERR,"Total\t\t%lu\n",(unsigned long)(phase5t-start));
+  CONSOLE_DEBUG("Total = %lu",(unsigned long)(phase5t-start));
 #if 0 /* deep performance tuning */
   gl_reportrecycler(ASCERR);
 #endif

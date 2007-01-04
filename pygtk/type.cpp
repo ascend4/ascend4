@@ -185,8 +185,30 @@ Type::getSimulation(const SymChar &sym, const bool &rundefaultmethod){
 	// Perform the instantiation (C compile etc):
 	/*Instance *i = Instantiate(getInternalType()->name, sym.getInternalType(),
 								 0, SymChar("on_load").getInternalType()); */
+
+	bool has_error;
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Starting tree...");
+	error_reporter_tree_start();
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Started tree");
+
 	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, NULL);
 	Simulation sim(i,sym);
+
+	if(error_reporter_tree_has_error()){
+		has_error = TRUE;
+	}else{
+		has_error = FALSE;
+	}
+
+	error_reporter_tree_end();
+
+	if(has_error){
+		stringstream ss;
+		ss << "Error(s) during instantiation of type '" << getName() << "'";
+		throw runtime_error(ss.str());
+	}else{
+		ERROR_REPORTER_HERE(ASC_USER_NOTE,"Instantiated %s",SCP(getInternalType()->name));
+	}
 
 	if(i==NULL){
 		throw runtime_error("Failed to create instance");

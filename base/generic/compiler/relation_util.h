@@ -24,17 +24,6 @@
 	Relation utility functions for Ascend.
 	This module defines the dimensionality checking and some other
 	auxillaries for Ascend.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "compiler/fractions.h"
-	#include "compiler/compiler.h"
-	#include "compiler/functype.h"
-	#include "compiler/safe.h"
-	#include "compiler/dimen.h"
-	#include "compiler/expr_types.h"
-	#include "compiler/relation_type.h"
-	#include "compiler/relation_util.h"
 *//*
 	Version: $Revision: 1.27 $
 	Version control file: $RCSfile: relation_util.h,v $
@@ -53,6 +42,7 @@
 #include "dimen.h"
 #include "expr_types.h"
 #include "relation_type.h"
+#include "instance_enum.h"
 
 ASC_DLLSPEC(int ) g_check_dimensions_noisy;
 /**<
@@ -60,7 +50,7 @@ ASC_DLLSPEC(int ) g_check_dimensions_noisy;
  *  from RelationCheckDimensions();
  */
 
-ASC_DLLSPEC(int ) RelationCheckDimensions(struct Instance *relinst, dim_type *dimens);
+ASC_DLLSPEC(int) RelationCheckDimensions(struct Instance *relinst, dim_type *dimens);
 /**<
  *  If a token relation, scans a relation in postfix and collects all dimensional
  *  information by applying each token.  It returns a value of TRUE

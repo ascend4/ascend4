@@ -678,8 +678,11 @@ void
 Simulation::solve(Solver solver, SolverReporter &reporter){
 	int res;
 
+	cerr << "-----------------set solver----------------" << endl;
 	CONSOLE_DEBUG("Setting solver to '%s'",solver.getName().c_str());
 	setSolver(solver);
+
+	cerr << "-----------------presolve----------------" << endl;
 
 	//cerr << "PRESOLVING SYSTEM...";
 	CONSOLE_DEBUG("Calling slv_presolve...");
@@ -690,6 +693,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		throw runtime_error("Error in slv_presolve");
 	}
 
+	cerr << "-----------------solve----------------" << endl;
 	//cerr << "DONE" << endl;
 
 	//cerr << "SOLVING SYSTEM..." << endl;
@@ -733,7 +737,18 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	// communicate solver variable status back to the instance tree
 	processVarStatus();
 
-	if(res || !status.isOK())throw runtime_error("Error in solving");
+	if(res){
+		stringstream ss;
+		ss << "Error in solving (res = " << res << ")";
+		throw runtime_error(ss.str());
+	}
+	if(!status.isOK()){
+		if(status.isDiverged())throw runtime_error("Solution diverged");
+		if(status.isInconsistent())throw runtime_error("System is inconsistent");
+		if(status.hasExceededIterationLimit())throw runtime_error("Solver exceeded iteration limit");
+		if(status.hasExceededTimeLimit())throw runtime_error("Solver exceeded time limit");
+		throw runtime_error("Error in solver (unknown)");
+	}
 }
 
 //------------------------------------------------------------------------------

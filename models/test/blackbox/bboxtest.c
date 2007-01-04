@@ -26,6 +26,7 @@
 */
 
 #include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
 #include <compiler/compiler.h>
 #include <compiler/packages.h>
 #include <compiler/instance_enum.h>
@@ -62,13 +63,13 @@ struct BBOXTEST_problem {
 
 static int GetCoef( struct Instance *data, struct BBOXTEST_problem *problem){
 
-	if (!data) {
+	if(!data){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"expecting a data instance to be provided");
-		return 1;
+		return 5;
 	}
-	if (InstanceKind(data)!=REAL_CONSTANT_INST) {
+	if(InstanceKind(data)!=REAL_CONSTANT_INST) {
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"expecting a real constant instance.");
-		return 1;
+		return 6;
 	}
 
 	problem->coef = RealAtomValue(data);
@@ -90,14 +91,14 @@ static int CheckArgsOK(struct Instance *data,
 	len = gl_length(arglist);
 	if (!len) {
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No arguments to external function statement.");
-		return 1;
+		return 2;
 	}
 	if ((len!=(N_INPUT_ARGS+N_OUTPUT_ARGS))) {
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Number of arguments does not match"
 			" the external function"
 			" prototype(array_of_realatom[set],array_of_realatom[set],real_constant"
 		);
-		return 1;
+		return 3;
 	}
 
 	ninputs = CountNumberOfArgs(arglist,1,N_INPUT_ARGS);
@@ -105,16 +106,12 @@ static int CheckArgsOK(struct Instance *data,
 					N_INPUT_ARGS+N_OUTPUT_ARGS);
 	if (ninputs != noutputs) {
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Length of input, output arguments mismatched.");
-		return 1;
+		return 4;
 	}
 
 	problem->n = (int)ninputs;
-	result = GetCoef(data,problem);	/* get the coef */
-	if (result) {
-		return 1;
-	}
 
-	return 0;
+	return GetCoef(data,problem); /* get the coef, return 0 on success means all was ok */
 }
 
 /*----------------------------------------------------------------------------*/
@@ -169,9 +166,10 @@ int bboxtest_preslv(struct BBoxInterp *interp,
 			return 0;
 			/* the problem structure exists */
 		} else {
-			problem = (struct BBOXTEST_problem *)malloc(sizeof(struct BBOXTEST_problem));
-			if(CheckArgsOK(data,arglist,problem)) {
-				free(problem);
+			problem = ASC_NEW(struct BBOXTEST_problem);
+			if(CheckArgsOK(data,arglist,problem)){
+				CONSOLE_DEBUG("Problem with arguments");
+				ASC_FREE(problem);
 				return 1;
 			}
 			interp->user_data = (void *)problem;
@@ -206,6 +204,10 @@ static int DoCalculation(struct BBoxInterp *interp,
 	if(ninputs != noutputs){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ninputs != noutputs");
 		return -1;
+	}
+	if(interp->user_data == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"user_data not supplied");
+		return -2;
 	}
 	problem = (struct BBOXTEST_problem *)interp->user_data;
 	coef = problem->coef;
