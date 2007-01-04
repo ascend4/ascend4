@@ -1,0 +1,17 @@
+REQUIRE "system.a4l";
+REQUIRE "basemodel.a4l";
+IMPORT "test/blackbox/bboxtest"; (* yi = coef*xi test *)
+
+(*  no data formal args *)
+MODEL parsefail3;
+	coef IS_A real_constant;
+	n IS_A integer_constant;
+	n :== 3;
+	coef :== 1.0;
+
+	x[1..n], y[1..n] IS_A generic_real;
+
+	bbox: bboxtest( x[1..n] : INPUT ;
+                        y[1], y[2..n] : OUTPUT ) ;
+
+END parsefail3;

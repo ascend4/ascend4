@@ -218,7 +218,138 @@ class TestLSODE(Ascend):
 		assert abs(M.F - 21.36) < 0.1
 
 #-------------------------------------------------------------------------------
-# Testing of a simple external function
+# Testing of a external blackbox functions
+
+class TestBlackBox(AscendSelfTester):
+	def testparsefail0(self):
+		try:
+			self.L.load('test/blackbox/parsefail0.a4c')
+			self.fail("parsefail0 should not have loaded without errors")
+		except:
+			pass
+
+	def testparsefail1(self):
+		try:
+			self.L.load('test/blackbox/parsefail1.a4c')
+			self.fail("parsefail1 should not have loaded without errors")
+		except:
+			pass
+
+	def testparsefail2(self):
+		try:
+			self.L.load('test/blackbox/parsefail2.a4c')
+			self.fail("parsefail2 should not have loaded without errors")
+		except:
+			pass
+
+	def testparsefail3(self):
+		try:
+			self.L.load('test/blackbox/parsefail3.a4c')
+			self.fail("parsefail3 should not have loaded without errors")
+		except:
+			pass
+
+	def testparsefail4(self):
+		try:
+			self.L.load('test/blackbox/parsefail4.a4c')
+			self.fail("parsefail4 should not have loaded")
+		except:
+			pass
+
+	def testfail1(self):
+		"""Mismatched arg counts check-- tests bbox, not ascend."""
+		self.L.load('test/blackbox/fail1.a4c')
+		M = self.L.findType('fail1').getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+
+	def testfail2(self):
+		"""Incorrect data arg check -- tests bbox, not ascend"""
+		self.L.load('test/blackbox/fail2.a4c')
+		M = self.L.findType('fail2').getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+
+	def testpass1(self):
+		"""simple single bbox forward solve"""
+		M = self._run('pass1',filename='test/blackbox/pass.a4c')
+
+	def testpass2(self):
+		"""simple single bbox reverse solve"""
+		M = self._run('pass2',filename='test/blackbox/pass.a4c')
+
+	def testpass3(self):
+		"""simple double bbox solve"""
+		M = self._run('pass3',filename='test/blackbox/pass3.a4c')
+
+	def testpass4(self):
+		"""simple double bbox reverse solve"""
+		M = self._run('pass4',filename='test/blackbox/pass3.a4c')
+
+	def testpass5(self):
+		M = self._run('pass5',filename='test/blackbox/pass5.a4c')
+
+	def testpass6(self):
+		M = self._run('pass6',filename='test/blackbox/pass5.a4c')
+
+	def testpass7(self):
+		M = self._run('pass7',filename='test/blackbox/passmerge.a4c')
+
+	def testpass8(self):
+		M = self._run('pass8',filename='test/blackbox/passmerge.a4c')
+
+	def testpass9(self):
+		M = self._run('pass9',filename='test/blackbox/passmerge.a4c')
+
+	def testpass10(self):
+		M = self._run('pass10',filename='test/blackbox/passmerge.a4c')
+
+	def testpass11(self):
+		M = self._run('pass11',filename='test/blackbox/passmerge.a4c')
+
+	def testpass12(self):
+		M = self._run('pass12',filename='test/blackbox/passmerge.a4c')
+
+	def testpass13(self):
+		"""cross-merged input/output solve"""
+		M = self._run('pass13',filename='test/blackbox/passmerge.a4c')
+
+	def testpass14(self):
+		"""cross-merged input/output reverse solve"""
+		M = self._run('pass14',filename='test/blackbox/passmerge.a4c')
+
+	def testpass20(self):
+		M = self._run('pass20',filename='test/blackbox/passarray.a4c')
+
+	def testparsefail21(self):
+		"""dense array of black boxes wrong syntax"""
+		try:
+			self.L.load('test/blackbox/parsefail21.a4c')
+			self.fail("parsefail21 should not have loaded without errors")
+		except:
+			pass
+
+	def testpass22(self):
+		M = self._run('pass22',filename='test/blackbox/passarray.a4c')
+
+	def testpass23(self):
+		M = self._run('pass23',filename='test/blackbox/passarray.a4c')
+
+	def testpass61(self):
+		M = self._run('pass61',filename='test/blackbox/reinstantiate.a4c')
+
+	def testpass62(self):
+		M = self._run('pass62',filename='test/blackbox/reinstantiate.a4c')
+
+	def testpass64(self):
+		M = self._run('pass64',filename='test/blackbox/reinstantiate.a4c')
+
+	def testpass65(self):
+		M = self._run('pass65',filename='test/blackbox/reinstantiate.a4c')
+
+	def testpass66(self):
+		M = self._run('pass66',filename='test/blackbox/reinstantiate.a4c')
+
+	def testpass67(self):
+		M = self._run('pass67',filename='test/blackbox/reinstantiate.a4c')
 
 class TestExtFn(AscendSelfTester):
 	def testextfntest(self):
@@ -252,7 +383,7 @@ class TestExtPy(AscendSelfTester):
 #-------------------------------------------------------------------------------
 # Testing of freesteam external steam properties functions
 
-with_freesteam = False
+with_freesteam = True
 try:
 	import freesteam
 	have_freesteam = True

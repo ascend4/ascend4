@@ -1,0 +1,30 @@
+REQUIRE "system.a4l";
+REQUIRE "basemodel.a4l";
+IMPORT "test/blackbox/bboxtest"; (* yi = coef*xi test *)
+
+(*  bbox referenced in ATS *)
+MODEL parsefail4;
+	coef IS_A real_constant;
+	n IS_A integer_constant;
+	n :== 3;
+	coef :== 1.0;
+	x[1..n], y[1..n] IS_A generic_real;
+
+	bbox2: bboxtest( x[1..n] : INPUT ;
+                        y[1..n] : OUTPUT ;
+                        coef : DATA);
+	bbox1: bboxtest( x[1..n] : INPUT ;
+                        y[1..n] : OUTPUT ;
+                        coef : DATA);
+
+	bbox1, bbox2 ARE_THE_SAME;
+	
+(* the following is already caught by typelint.
+	FOR i IN [1] CREATE
+		r1[i]: x[1] = x[1];
+		r2[i]: x[1] = x[1];
+	END FOR;
+	r1, r2 ARE_THE_SAME;
+*)
+
+END parsefail4;
