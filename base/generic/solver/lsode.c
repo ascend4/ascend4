@@ -680,7 +680,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
 
   /*  slv_parameters_t parameters; pity lsode doesn't allow error returns */
   /* int i; */
-  unsigned long ok;
+  unsigned long res;
 
 #if DOTIME
   double time1,time2;
@@ -726,14 +726,14 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
   slv_solve(l_lsode_blsys->system);
   slv_get_status(l_lsode_blsys->system, &status);
   /* pass the solver status to the integrator */
-  ok = integrator_checkstatus(status);
+  res = integrator_checkstatus(status);
 
 #if DOTIME
   time2 = tm_cpu_time() - time2;
 #endif
 
-  if (!ok) {
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives");
+  if(res){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives (%d)",res);
 	/*
   	ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
     FPRINTF(ASCERR,"Unable to compute the vector of derivatives with the following values for the state variables:\n");
@@ -743,7 +743,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
     error_reporter_end_flush();
 	*/
     lsodesys.status = lsode_nok;
-  } else {
+  }else{
     lsodesys.status = lsode_ok;
   }
   integrator_get_ydot(l_lsode_blsys, ydot);
@@ -820,7 +820,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y,
 /**
 	The public function: here we do the actual integration, I guess.
 
-	Return 1 on success
+	Return 0 on success
 */
 int integrator_lsode_solve(IntegratorSystem *blsys
 		, unsigned long start_index, unsigned long finish_index
@@ -866,7 +866,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
      We handle any linsol/linsolqr based solver. */
   if (strcmp(slv_solver_name(slv_get_selected_solver(blsys->system)),"QRSlv") != 0) {
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv must be selected before integration.");
-    return 0;
+    return 1;
   }
 
   slv_get_status(l_lsode_blsys->system, &status);
@@ -874,7 +874,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   if (status.struct_singular) {
   	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration will not be performed. The system is structurally singular.");
     lsodesys.status = lsode_nok;
-    return 0;
+    return 2;
   }
 
 #if defined(STATIC_LSOD) || defined (DYNAMIC_LSOD)
@@ -888,7 +888,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   if (nsamples <2) {
   	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration will not be performed. The system has no end sample time defined.");
     lsodesys.status = lsode_nok;
-    return 0;
+    return 3;
   }
   neq = blsys->n_y;
   nobs = blsys->n_obs;
@@ -911,7 +911,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
     lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for lsode.");
     lsodesys.status = lsode_nok;
-    return 0;
+    return 4;
   }
 
   /*
@@ -929,7 +929,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
   if(x[0] > integrator_getsample(blsys, 2)){
     ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid initialisation time: exceeds second timestep value");
-  	return 0;
+  	return 5;
   }
 
   /* put the values from derivative system into the record */
@@ -998,7 +998,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       if (obs_out!=NULL) {
         fclose(obs_out);
       }
-      return 0;
+      return 6;
     }
 # endif /* NO_SIGNAL_TRAPS */
 
@@ -1019,7 +1019,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
       lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
       integrator_output_close(blsys);
-      return 0;
+      return 7;
     }
 
     if (lsodesys.status==lsode_nok) {
@@ -1028,7 +1028,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       lsodesys.status = lsode_ok;		/* clean up before we go */
       lsodesys.lastcall = lsode_none;
       integrator_output_close(blsys);
-      return 0;
+      return 8;
     }
 
     integrator_setsample(blsys, index+1, x[0]);
@@ -1045,7 +1045,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 		lsodesys.status = lsode_ok;
 		lsodesys.lastcall = lsode_none;
 		integrator_output_close(blsys);
-		return 0;
+		return 9;
 	}
 
 	if (nobs > 0) {
@@ -1073,7 +1073,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
         lsodesys.status = lsode_ok;               /* clean up before we go */
         lsodesys.lastcall = lsode_none;
         integrator_output_close(blsys);
-        return 0;
+        return 10;
       }
 # endif /* NO_SIGNAL_TRAPS */
     }
@@ -1099,13 +1099,13 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   integrator_output_close(blsys);
 
   CONSOLE_DEBUG("--- LSODE done ---");
-  return 1;
+  return 0; /* success */
 
 #else /* STATIC_LSOD || DYNAMIC_LSOD */
 
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration will not be performed. LSODE binary not available.");
   lsodesys.status = lsode_nok;
-  return 0;
+  return 11;
 
 #endif
 }
@@ -1153,6 +1153,7 @@ void XASCWV( char *msg, /* pointer to start of message */
 				return;
 			} break;
 		case 204:
+			if(*nr==0 && *ni==0)return;
 			if(*nr==2){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
 				return;

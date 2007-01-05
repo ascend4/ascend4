@@ -122,7 +122,7 @@ int integrator_aww_analyse(IntegratorSystem *blsys){
 	return 0;
 }
 
-/** return 1 on success */
+/** return 0 on success */
 int integrator_aww_solve(IntegratorSystem *blsys
 		, unsigned long start_index, unsigned long finish_index
 ){
@@ -177,6 +177,6 @@ int integrator_aww_solve(IntegratorSystem *blsys
 	// }
 
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
-	return 0;
+	return 1;
 }
 

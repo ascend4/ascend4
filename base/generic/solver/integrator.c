@@ -1235,7 +1235,7 @@ static struct var_variable *ObservationVar(struct var_variable *v, long *index){
 	Make the call to the actual integrator we've selected, for the range of
 	time values specified. The sys contains all the specifics.
 
-	Return 1 on success
+	Return 0 on success
 */
 int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 
@@ -1250,9 +1250,9 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 	/* check for at least 2 steps and dimensionality of x vs steps here */
 
 	if (i0<0 || i1 <0) {
-		/* dude, there's no way we're writing interactive stuff here... */
+		/* removed completely inappropriate interactive code here */
 		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Console input of integration limits has been disabled!");
-		return 0;
+		return -1;
 	} else {
 		start_index=i0;
 		finish_index =i1;
@@ -1260,13 +1260,13 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Start point (=%lu) must be an index in the range [0,%li]."
 				,start_index,nstep
 			);
-			return 0;
+			return -2;
 		}
 		if (finish_index > (unsigned long)nstep) {
 			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"End point (=%lu) must be an index in the range [0,%li]."
 				,finish_index,nstep
 			);
-			return 0;
+			return -3;
 		}
     }
 
@@ -1274,7 +1274,7 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"End point comes before start point! (start=%lu, end=%lu)"
 			,start_index,finish_index
 		);
-		return 0;
+		return -4;
 	}
 
 	CONSOLE_DEBUG("RUNNING INTEGRATION...");
@@ -1625,34 +1625,30 @@ int integrator_output_close(IntegratorSystem *sys){
 
 /**
 	Decode status codes from the integrator, and output them via FPRINTF.
+
+	@return 0 on status ok (converged), <0 on unrecognised state, >0 on recognised error state.
 */
 int integrator_checkstatus(slv_status_t status) {
-  if (status.converged) {
-    return 1;
-  }
-  if (status.diverged) {
-    FPRINTF(stderr, "The derivative system did not converge. Integration will terminate.");
-    return 0;
-  }
-  if (status.inconsistent) {
-    FPRINTF(stderr, "A numerically inconsistent state was discovered while "
-		"calculating derivatives. Integration will terminate.");
-    return 0;
-  }
-  if (status.time_limit_exceeded) {
-    FPRINTF(stderr, "The time limit was exceeded while calculating "
-		"derivatives. Integration will terminate.");
-    return 0;
-  }
-  if (status.iteration_limit_exceeded) {
-    FPRINTF(stderr, "The iteration limit was exceeded while calculating "
-		"derivatives. Integration will terminate.");
-    return 0;
-  }
-  if (status.panic) {
-    FPRINTF(stderr, "The user patience limit was exceeded while "
-		"calculating derivatives. Integration will terminate.");
-    return 0;
-  }
-  return 0;
+	if(status.converged){
+		return 0;
+	}
+
+	if(status.diverged){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"The derivative system did not converge."
+			" Integration will terminate."); return 1;
+	}else if(status.inconsistent){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A numerically inconsistent state was discovered while"
+			" calculating derivatives. Integration will terminate."); return 1;
+	}else if(status.time_limit_exceeded){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"The time limit was exceeded while calculating"
+			" derivatives. Integration will terminate."); return 1;
+	}else if(status.iteration_limit_exceeded){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"The iteration limit was exceeded while calculating"
+			" derivatives. Integration will terminate."); return 1;
+	}else if(status.panic){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration cancelled by user."); return 1;
+	}
+
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unrecognised solver state (non converged)");
+	return -1;
 }

@@ -744,7 +744,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		if(status.isInconsistent())throw runtime_error("System is inconsistent");
 		if(status.hasExceededIterationLimit())throw runtime_error("Solver exceeded iteration limit");
 		if(status.hasExceededTimeLimit())throw runtime_error("Solver exceeded time limit");
-		throw runtime_error("Error in solver (unknown)");
+		throw runtime_error("Error in solver (status.isOK()==FALSE but can't see why)");
 	}
 }
 

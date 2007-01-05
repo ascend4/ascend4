@@ -788,7 +788,7 @@ class Browser:
 		try:
 			self.sim.run(method)
 		except RuntimeError,e:
-			self.reporter.reportError(e)
+			self.reporter.reportError(str(e))
 		
 		self.sim.processVarStatus()
 		self.modelview.refreshtree()
