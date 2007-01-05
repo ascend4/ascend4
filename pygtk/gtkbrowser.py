@@ -297,6 +297,10 @@ class Browser:
 		self.use_relation_sharing=glade.get_widget("use_relation_sharing")
 		self.use_relation_sharing.set_active(self.prefs.getBoolPref("Compiler","use_relation_sharing",True))
 
+		self.use_binary_compilation=glade.get_widget("use_binary_compilation")
+		self.use_binary_compilation.set_active(self.prefs.getBoolPref("Compiler","use_binary_compilation",False))
+		self.use_binary_compilation.set_sensitive(self.use_relation_sharing.get_active())
+
 		glade.signal_autoconnect(self)
 
 		#-------
@@ -869,6 +873,12 @@ class Browser:
 		_v = checkmenuitem.get_active()
 		self.prefs.setBoolPref("Compiler","use_relation_sharing",_v)
 		self.reporter.reportNote("Relation sharing set to "+str(_v))
+		self.use_binary_compilation.set_sensitive(_v);
+
+	def on_use_binary_compilation_toggle(self,checkmenuitem,*args):
+		_v = checkmenuitem.get_active()
+		self.prefs.setBoolPref("Compiler","use_binary_compilation",_v)
+		self.reporter.reportNote("Binary compilation set to "+str(_v))
 
 	def on_show_solving_popup_toggle(self,checkmenuitem,*args):
 		_v = checkmenuitem.get_active()
