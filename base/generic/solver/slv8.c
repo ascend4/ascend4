@@ -1686,7 +1686,9 @@ static void structural_analysis(slv_system_t server, slv8_system_t sys){
   if (sys->obj != NULL) sys->J.reg.row.high--;
   sys->J.reg.col.high = sys->con.n - 1;
 
-  slv_check_bounds(SERVER,sys->vused,sys->vtot-1,MIF(sys),"fixed");
+  if(slv_check_bounds(SERVER,sys->vused,sys->vtot-1,MIF(sys),"fixed")){
+    sys->s.inconsistent = 1;
+  }
 
   /* Initialize Status */
   sys->s.over_defined = (sys->rused > sys->vused);
