@@ -401,8 +401,14 @@ class TestSteam(AscendSelfTester):
 		M = self._run('testiapwssatprops2',filename='steam/iapwssatprops.a4c')
 	def testiapwssatprops3(self):
 		M = self._run('testiapwssatprops3',filename='steam/iapwssatprops.a4c')
+	def testsatsteamstream(self):
+		M = self._run('satsteamstream',filename='steam/satsteamstream.a4c')
 
+	def testsatsteamstream(self):
+		M = self._run('satsteamstream',filename='steam/satsteamstream.a4c')
 
+	def testiapwssat1(self):
+		M = self._run('testiapwssat1',filename='steam/iapwssat.a4c')
 
 #-------------------------------------------------------------------------------
 # Testing of freesteam external steam properties functions

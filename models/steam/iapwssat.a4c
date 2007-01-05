@@ -1,7 +1,7 @@
 REQUIRE "iapwssatprops.a4c";
 
 MODEL iapwssat REFINES iapwssatprops;
-	x IS_A fraction;
+	x IS_A fraction; (* ensures we stay in the required region *)
 	h IS_A specific_enthalpy;
 	u IS_A specific_energy;
 	v IS_A specific_volume;
@@ -23,3 +23,11 @@ METHOD on_load;
 	RUN bound_self;
 END on_load;
 END iapwssat;
+
+MODEL testiapwssat1 REFINES iapwssat;
+METHODS
+METHOD values;
+	RUN iapwssatprops::values;
+	x := 1.01;
+END values;
+END testiapwssat1;

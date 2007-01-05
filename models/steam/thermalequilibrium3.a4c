@@ -7,8 +7,9 @@ IMPORT "johnpye/listnotes";
 IMPORT "johnpye/solve";
 
 (* 
-	Enhanced version of johnpye/thermalequilibrium.a4c. This model uses
-	real steam properties from http://freesteam.sf.net/.
+	Simplified version of models/johnpye/thermalequilibrium2.a4c. This one uses
+	saturated steam properties only (and is not suitable for cases where
+	properties pass outside those limits).
 
 	NOTE: set the starting step to 0.1 and the minimum step to 0.01 s, and
 	integrate from 0 to 3000 s.
