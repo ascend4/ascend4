@@ -93,7 +93,7 @@ Integrator::analyse(){
 
 	Integrate the function for the timesteps specified.
 
-	This method will throw a runtime_error if integration fails.
+	Method will throw a runtime_error if integrator_solve returns error (non zero)
 
 	@TODO does simulation.processVarStatus work for integrators like IDA???
 */
@@ -112,8 +112,10 @@ Integrator::solve(){
 	int res;
 	res = integrator_solve(blsys, 0, samplelist_length(samplelist)-1);
 
-	if(!res){
-		throw runtime_error("Failed integration");
+	if(res){
+		stringstream ss;
+		ss << "Failed integration (integrator_solve returned " << res << ")";
+		throw runtime_error(ss.str());
 	}
 
 	// communicate solver variable status back to the instance tree via 'interface_ptr'

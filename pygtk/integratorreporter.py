@@ -35,9 +35,12 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 
 	def run(self):
 		# run the dialog: start solution, monitor use events
-		_res = self.getIntegrator().solve()
+		try:
+			self.getIntegrator().solve()
+		except RuntimeError,e:
+			self.browser.reporter.reportError("Integrator failed: %s" % e)
 		self.window.destroy()
-		return _res
+		return
 
 	def on_cancelbutton_clicked(self,*args):
 		self.cancelrequested=True

@@ -12,7 +12,7 @@ Compiler::Compiler(){
 	CONSOLE_DEBUG("Creating compiler");
 
 	/* set some default for bintoken compilation */
-	use_bintoken = true;
+	use_bintoken = false;
 	bintoken_options_sent = false;
 	bt_targetstem = "/tmp/asc_bintoken";
 	bt_srcname = bt_targetstem + ".c";
@@ -40,9 +40,9 @@ Compiler::instance(){
 const bool
 Compiler::getUseRelationSharing() const{
 	if(g_use_copyanon){
-		return TRUE;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 void

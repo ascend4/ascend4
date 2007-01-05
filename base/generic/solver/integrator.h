@@ -282,7 +282,7 @@ ASC_DLLSPEC(int) integrator_solve(IntegratorSystem *blsys, long i0, long i1);
 	Takes the type of integrator and sets up the global variables into the
 	current integration instance.
 
-	@return 1 on success, 0 on failure.
+	@return 0 on success, else error
 */
 
 ASC_DLLSPEC(void) integrator_free(IntegratorSystem *blsys);
@@ -350,9 +350,10 @@ ASC_DLLSPEC(int) integrator_find_indep_var(IntegratorSystem *blsys);
 
 extern int integrator_checkstatus(slv_status_t status);
 /**<
- *  Takes a status and checks for convergence.  If converged then return 1
- *  else return 0 and print error message if appropriate.
- */
+	Takes a status and checks for convergence, and prints status info if the
+	system is not converged.
+	@return 0 if status says system has converged, non-zero otherwise.
+*/
 
 ASC_DLLSPEC(void) integrator_set_samples(IntegratorSystem *blsys, SampleList *samples);
 /**<

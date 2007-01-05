@@ -424,7 +424,7 @@ static double div1(double a, double b){
 typedef int IdaFlagFn(void *,int *);
 typedef char *IdaFlagNameFn(int);
 
-/* return 1 on success */
+/* return 0 on success */
 int integrator_ida_solve(
 		IntegratorSystem *blsys
 		, unsigned long start_index
@@ -465,7 +465,7 @@ int integrator_ida_solve(
 
 	if(enginedata->nrels!=size){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration problem is not square (%d rels, %d vars)", enginedata->nrels, size);
-		return 0; /* failure */
+		return 1; /* failure */
 	}
 
 	/* retrieve initial values from the system */
@@ -517,13 +517,13 @@ int integrator_ida_solve(
 
 	if(flag==IDA_MEM_NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
-		return 0;
+		return 2;
 	}else if(flag==IDA_MEM_FAIL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDAMalloc)");
-		return 0;
+		return 3;
 	}else if(flag==IDA_ILL_INPUT){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid input to IDAMalloc");
-		return 0;
+		return 4;
 	}/* else success */
 
 	/* set optional inputs... */
@@ -559,10 +559,10 @@ int integrator_ida_solve(
 		flag = IDADense(ida_mem, size);
 		switch(flag){
 			case IDADENSE_SUCCESS: break;
-			case IDADENSE_MEM_NULL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL"); return 0;
-			case IDADENSE_ILL_INPUT: ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDADENSE is not compatible with current nvector module"); return 0;
-			case IDADENSE_MEM_FAIL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for IDADENSE"); return 0;
-			default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad return"); return 0;
+			case IDADENSE_MEM_NULL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL"); return 5;
+			case IDADENSE_ILL_INPUT: ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDADENSE is not compatible with current nvector module"); return 5;
+			case IDADENSE_MEM_FAIL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for IDADENSE"); return 5;
+			default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad return"); return 5;
 		}
 
 		if(SLV_PARAM_BOOL(&(blsys->params),IDA_PARAM_AUTODIFF)){
@@ -570,7 +570,7 @@ int integrator_ida_solve(
 			flag = IDADenseSetJacFn(ida_mem, &integrator_ida_djex, (void *)blsys);
 			switch(flag){
 				case IDADENSE_SUCCESS: break;
-				default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDADenseSetJacFn"); return 0;
+				default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDADenseSetJacFn"); return 6;
 			}
 		}else{
 			CONSOLE_DEBUG("USING NUMERICAL DIFF");
@@ -594,7 +594,7 @@ int integrator_ida_solve(
 			prec = &prec_jacobi;
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid preconditioner choice '%s'",pname);
-			return 0;
+			return 7;
 		}
 
 		/* which SPILS linear solver? */
@@ -609,7 +609,7 @@ int integrator_ida_solve(
 			flag = IDASptfqmr(ida_mem,maxl);
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
-			return 0;
+			return 8;
 		}
 
 		if(prec){
@@ -627,10 +627,10 @@ int integrator_ida_solve(
 
 		if(flag==IDASPILS_MEM_NULL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
-			return 0;
+			return 9;
 		}else if(flag==IDASPILS_MEM_FAIL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDASpgmr)");
-			return 0;
+			return 9;
 		}/* else success */
 
 		/* assign the J*v function */
@@ -639,10 +639,10 @@ int integrator_ida_solve(
 		    flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex, (void *)blsys);
 			if(flag==IDASPILS_MEM_NULL){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
-				return 0;
+				return 10;
 			}else if(flag==IDASPILS_LMEM_NULL){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDASPILS linear solver has not been initialized");
-				return 0;
+				return 10;
 			}/* else success */
 		}else{
 			CONSOLE_DEBUG("USING NUMERICAL DIFF");
@@ -655,14 +655,14 @@ int integrator_ida_solve(
 				flag = IDASpilsSetGSType(ida_mem,MODIFIED_GS);
 				if(flag!=IDASPILS_SUCCESS){
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
-					return 0;
+					return 11;
 				}
 			}else{
 				CONSOLE_DEBUG("USING CLASSICAL GS");
 				flag = IDASpilsSetGSType(ida_mem,CLASSICAL_GS);
 				if(flag!=IDASPILS_SUCCESS){
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
-					return 0;
+					return 11;
 				}
 			}
 		}
@@ -744,18 +744,18 @@ int integrator_ida_solve(
 					flag = (flagfn)(ida_mem,&flag1);
 					if(flag){
 						ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to retrieve error code from %s (err %d)",flagfntype,flag);
-						return 0;
+						return 12;
 					}
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s returned flag '%s' (value = %d)",flagfntype,(flagnamefn)(flag1),flag1);
-					return 0;
+					return 12;
 
 				default:
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
-					return 0;
+					return 12;
 			}
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Floating point error while solving initial conditions");
-			return 0;
+			return 13;
 		}
 
 		if(enginedata->safeeval){
@@ -831,11 +831,11 @@ int integrator_ida_solve(
 
 	if(flag < 0){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solving aborted while attempting t = %f", t);
-		return 0;
+		return 14;
 	}
 
 	/* all done, success */
-	return 1;
+	return 0;
 }
 
 /*--------------------------------------------------
