@@ -487,7 +487,11 @@ class Browser:
 		# options
 
 		if(len(args)==1):
-			self.do_open(args[0])
+			try:
+				self.do_open(args[0])
+			except RuntimeError,e:
+				self.reporter.reportError(str(e))
+				return
 
 			print "Options: ",self.options
 
@@ -557,14 +561,18 @@ class Browser:
 
 		print "Filename =",filename
 		self.statusbar.push(_context,"Loading '"+filename+"'")
-		self.library.load(filename)
+		try:
+			self.filename = filename
+			self.library.load(filename)
+		except RuntimeError,e:
+			self.statusbar.pop(_context)
+			raise
+
 		print "Statusbar =",self.statusbar
 		try:
 			self.statusbar.pop(_context)
 		except TypeError,e:
 			print "For some reason, a type error (context=%s,filename=%s): %s" % (_context,filename,e)
-
-		self.filename = filename
 
 		# Load the current list of modules into self.modules
 		self.modtank = {}
@@ -1003,11 +1011,14 @@ class Browser:
 			_type = self.sim.getType().getName().toString();
 
 		self.library.clear()
-		self.do_open(self.filename)
-		
-		if _type:
-			_t = self.library.findType(_type)
-			self.do_sim(_t)	
+
+		try:
+			self.do_open(self.filename)		
+			if _type:
+				_t = self.library.findType(_type)
+				self.do_sim(_t)
+		except RuntimeError,e:
+			self.reporter.reportError(str(e))
 
 	def props_activate(self,widget,*args):
 		return self.modelview.props_activate(self,widget,*args)

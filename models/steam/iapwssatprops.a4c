@@ -140,7 +140,7 @@ METHOD bound_self;
 END bound_self;
 METHOD values;
 	T := 300 {K};
-	u_g := 3000 {kJ/kg};
+	u_g := 3000 {kJ/kg}; (* just a starting guess *)
 END values;
 END iapwssatprops;
 
