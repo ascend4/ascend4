@@ -233,14 +233,8 @@ int error_reporter_tree_has_error(){
 
 static int error_reporter_tree_write(error_reporter_tree_t *t){
 	int res = 0;
-	static int writecount = 0;
 
 	asc_assert(TREE==NULL); /* else recursive calls will occur */
-
-	if(++writecount > 50){
-		CONSOLE_DEBUG("TOO MUCH WRITING");
-		return 0;
-	}
 
 	if(t->err){
 		res += error_reporter(t->err->sev, t->err->filename, t->err->line, t->err->func, t->err->msg);
