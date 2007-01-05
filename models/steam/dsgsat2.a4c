@@ -12,8 +12,7 @@ IMPORT "johnpye/solvernotes";
 	require compiled binaries of freesteam, so you can just download the .a4c
 	files if you wish.
 *)
-REQUIRE "satsteamstream.a4c";
-
+REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat2;
 	n IS_A integer_constant;
@@ -122,17 +121,15 @@ METHOD on_load;
 		RUN node[i].bound_self;
 	END FOR;
 	RUN values;
-	RUN solvernotes;
-	RUN solve;
-	RUN ode_init;
-	qdot_s := 10 {W/m};
-	RUN solve; (* after fixing the states and freeing the derivatives *)
-	
+    EXTERNAL solvernotes(SELF);
+	(* RUN ode_init;
+	RUN solve; *) (* after fixing the states and freeing the derivatives *)
 END on_load;
 METHOD ode_init;
 	(* get the model into the required state for solving as ODE *)
 	t.ode_type := -1;
 	t := 0 {s};
+	qdot_s := 10 {W/m};
 	FOR i IN [2..n] DO
 		FREE drho_dt[i];  FREE node[i].rho;
 		FREE dmdot_dt[i]; FREE node[i].mdot;
@@ -175,14 +172,6 @@ METHOD fix_outlet_quality;
 	FIX x[n];
 	FREE node[1].mdot;
 END fix_outlet_quality;
-
-METHOD solvernotes;
-	EXTERNAL solvernotes(SELF);
-END solvernotes;
-
-METHOD solve;
-	EXTERNAL solve(SELF);
-END solve;
 
 END dsgsat2;
 ADD NOTES IN dsgsat2;

@@ -639,6 +639,9 @@ class Browser:
 			_v = self.prefs.getBoolPref("Compiler","use_relation_sharing",True)
 			ascpy.getCompiler().setUseRelationSharing(_v)
 
+			_v = self.prefs.getBoolPref("Compiler","use_binary_compilation",True)
+			ascpy.getCompiler().setBinaryCompilation(True)
+
 			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim",False)
 
 			self.reporter.reportNote("SIMULATION ASSIGNED")

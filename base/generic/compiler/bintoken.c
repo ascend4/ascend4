@@ -1,34 +1,27 @@
 /* ex: set ts=8 : */
-/*
- *  bintoken.c
- *  By Benjamin A. Allan
- *  Jan 7, 1998.
- *  Part of ASCEND
- *  Version: $Revision: 1.12 $
- *  Version control file: $RCSfile: bintoken.c,v $
- *  Date last modified: $Date: 1998/06/16 16:38:36 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The Ascend Language Interpreter is free software; you can
- *  redistribute it and/or modify it under the terms of the GNU
- *  General Public License as published by the Free Software
- *  Foundation; either version 2 of the License, or (at your option)
- *  any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1998 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	By Benjamin A. Allan
+	Jan 7, 1998.
+	Last in CVS:$Revision: 1.12 $ $Date: 1998/06/16 16:38:36 $ $Author: mthomas $
+*/
 
 #if 0
 TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
@@ -117,21 +110,24 @@ struct bt_data {
  *  const char*. But here, new can lose its constness in *ptr = new. - JP
 */
 static
-int bt_string_replace(CONST char *new, char **ptr)
-{
-  if (*ptr == new) {
+int bt_string_replace(CONST char *new, char **ptr){
+  if(*ptr == new){
+    /* no destination specified */
     return 0;
   }
-  if (new == NULL) {
-    if (*ptr != NULL) {
-      ascfree(*ptr);
+  if(new == NULL){
+    /* free the current value */
+    if(*ptr != NULL) {
+      ASC_FREE(*ptr);
       *ptr = NULL;
     }
-  } else {
-    if (*ptr != NULL) {
-      ascfree(*ptr);
+  }else{
+    /* free then reallocate */
+    if(*ptr != NULL){
+      ASC_FREE(*ptr);
     }
-    *ptr = (char *)new;
+    *ptr = ASC_NEW_ARRAY(char,strlen(new)+1);
+    strcpy(*ptr,new);
   }
   return 0;
 }
@@ -191,13 +187,12 @@ int BinTokenCheckCapacity()
 }
 
 /*
- * frees global memory.
- * should be more careful.
- */
+	frees global memory.
+*/
 void BinTokenClearTables(void)
 {
   if (g_bt_data.tables != NULL) {
-    ascfree(g_bt_data.tables);
+    ASC_FREE(g_bt_data.tables);
     g_bt_data.tables = NULL;
   }
   g_bt_data.captables = 0;
@@ -228,7 +223,7 @@ void BinTokenDeleteReference(int btable)
 #else
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Dynamic Unloading not available in this build");
 #endif /* havedlunload */
-    ascfree(g_bt_data.tables[btable].name);
+    ASC_FREE(g_bt_data.tables[btable].name);
     g_bt_data.tables[btable].name = NULL;
     g_bt_data.tables[btable].tu = NULL;
     g_bt_data.tables[btable].type = BT_error;
@@ -293,13 +288,13 @@ void DestroyEQData(struct bintoken_eqlist *eql)
     u = (struct bintoken_unique_eqn *)gl_fetch(eql->ue,c);
     if (u != NULL) {
       if (u->str != NULL) {
-        ascfree(u->str);
+        ASC_FREE(u->str);
       }
-      ascfree(u);
+      ASC_FREE(u);
     }
   }
   gl_destroy(eql->ue);
-  ascfree(eql->rel2U);
+  ASC_FREE(eql->rel2U);
 }
 
 /*
@@ -507,7 +502,7 @@ void ResizeIndices(struct Instance *rel, struct reusable_rxnd *r)
   /* free and return if NULL rel */
   if (rel == NULL) {
     if (r->rd.indices != NULL) {
-      ascfree(r->rd.indices);
+      ASC_FREE(r->rd.indices);
       r->rd.indices = NULL;
       r->cap = 0;
     }
@@ -525,7 +520,7 @@ void ResizeIndices(struct Instance *rel, struct reusable_rxnd *r)
 
   if (r->rd.indices != NULL) {
     /* assume we'll grow again and try not to do it often */
-    ascfree(r->rd.indices);
+    ASC_FREE(r->rd.indices);
     r->rd.indices = NULL;
     newlen *= 2;
   }
@@ -607,7 +602,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
     if (error[c-1] == BTE_ok) {
       eqns_done++;
       if (BinTokenAddUniqueEqn(&eql,(int)c,str,slen) == 0) {
-        ascfree(str);
+        ASC_FREE(str);
       } /* else string is kept in eql and killed later */
     }
     /* else { eql.rel2U[c] = -1; } needed? */
@@ -657,7 +652,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
   }
   CLINE("}");
 
-  ascfree(error);
+  ASC_FREE(error);
   DestroyEQData(&eql);
   fclose(fp);
   return BTE_ok;
@@ -767,8 +762,7 @@ void BinTokenErrorMessage(enum bintoken_error err,
   error_reporter(ASC_PROG_ERR,filename,0,"%s",mess);
 }
 
-void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
-{
+void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
   struct gl_list_t *rellist;
   char *cbuf;
   enum bintoken_error status;
@@ -780,6 +774,7 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
   int verbose = g_bt_data.verbose;
 
   if (g_bt_data.maxrels == 0) {
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"BinTokensCreate disabled (maxrels=0)");
     return;
   }
   if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {
@@ -795,6 +790,8 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
     );
     return;
   }
+
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Creating bintokens");
 
   switch (method) {
   case BT_C:
@@ -815,13 +812,13 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
         assert(cbuf!=NULL);
         sprintf(cbuf,"%s %s",unlinkcommand,srcname);
         system(cbuf); /* we don't care if the delete fails */
-        ascfree(cbuf);
+        ASC_FREE(cbuf);
         /* trash obj */
         cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(objname)+1);
         assert(cbuf!=NULL);
         sprintf(cbuf,"%s %s",unlinkcommand,objname);
         system(cbuf); /* we don't care if the delete fails */
-        ascfree(cbuf);
+        ASC_FREE(cbuf);
       }
 
       status = BinTokenLoadC(rellist,libname,g_bt_data.regname);
@@ -833,12 +830,8 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
       }*/
     }
     break;
-  case BT_F77:
-  case BT_SunJAVA:
-  case BT_MsJAVA:
   default:
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"BinaryTokensCreate called with\n"
-            "  unavailable method '%d'",(int)method);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"BinaryTokensCreate called with unavailable method '%d'",(int)method);
     break;
   }
   gl_destroy(rellist);
@@ -914,8 +907,6 @@ int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual)
       }
       return 1;
     }
-  case BT_SunJAVA:
-  case BT_MsJAVA:
   default:
     return 1;
   }
@@ -994,8 +985,6 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
       }
       return 1;
     }
-  case BT_SunJAVA:
-  case BT_MsJAVA:
   default:
     return 1;
   }
@@ -1006,7 +995,6 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
 FILE *g_ascend_errors = stderr;
 int main() { /* built only if TESTBT defined TRUE in bintoken.c */
   double res;
-  char *b[5];
   gl_init_pool();
   g_test_list = gl_create(5);
   gl_append_ptr(g_test_list,(void *)10);
@@ -1014,17 +1002,12 @@ int main() { /* built only if TESTBT defined TRUE in bintoken.c */
   gl_append_ptr(g_test_list,(void *)30);
   gl_append_ptr(g_test_list,(void *)40);
   gl_append_ptr(g_test_list,(void *)50);
-  b[0]=ASC_NEW_ARRAY(char,50);
-  b[1]=ASC_NEW_ARRAY(char,50);
-  b[2]=ASC_NEW_ARRAY(char,50);
-  b[4]=ASC_NEW_ARRAY(char,50);
-  b[5]=ASC_NEW_ARRAY(char,50);
-  sprintf(b[0],"/tmp/btsrc.c");
-  sprintf(b[1],"/tmp/btsrc.o");
-  sprintf(b[2],"/tmp/btsrc.so");
-  sprintf(b[3],"make -f foo/Makefile BTTARGET=/tmp/btsrc /tmp/btsrc");
-  sprintf(b[4],"/bin/rm");
-  BinTokenSetOptions(b[0],b[1],b[2],b[3],b[4],1000,1,0);
+  BinTokenSetOptions(
+    "/tmp/btsrc.c","/tmp/btsrc.o","/tmp/btsrc.so"
+    ,"make -f foo/Makefile BTTARGET=/tmp/btsrc /tmp/btsrc"
+    ,"/bin/rm"
+    ,1000,1,0
+  );
   BinTokensCreate((struct Instance *)1, BT_C);
   BinTokenCalcResidual(1,1,&res,&res);
   FPRINTF(ASCERR,"residual 1 = %g\n",res);

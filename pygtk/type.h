@@ -34,7 +34,6 @@ class Simulation;
 class Type{
 private:
 	const TypeDescription *t;
-
 public:
 	Type();
 	Type(const TypeDescription *t);

@@ -101,11 +101,6 @@ Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroo
 	//is_built = old.is_built;
 	CONSOLE_DEBUG("Copying Simulation...");
 	sys = old.sys;
-	bin_srcname = old.bin_srcname;
-	bin_objname = old.bin_objname;
-	bin_libname = old.bin_libname;
-	bin_cmd = old.bin_cmd;
-	bin_rm = old.bin_rm;
 	sing = NULL;
 }
 
@@ -405,8 +400,6 @@ Simulation::checkStructuralSingularity(){
 	cerr << "RETRIEVING slfDOF_structsing INFO" << endl;
 
 	int res = slvDOF_structsing(sys, mtx_FIRST, &vil, &ril, &fil);
-	struct var_variable **varlist = slv_get_solvers_var_list(sys);
-	struct rel_relation **rellist = slv_get_solvers_rel_list(sys);
 
 	if(this->sing){
 		cerr << "DELETING OLD SINGULATING INFO" << endl;
@@ -415,42 +408,46 @@ Simulation::checkStructuralSingularity(){
 	}
 
 	if(res==1){
-		CONSOLE_DEBUG("processing singularity data...");
-		sing = new SingularityInfo();
-
-		// pull in the lists of vars and rels, and the freeable vars:
-		for(int i=0; ril[i]!=-1; ++i){
-			sing->rels.push_back( Relation(this, rellist[ril[i]]) );
-		}
-
-		for(int i=0; vil[i]!=-1; ++i){
-			sing->vars.push_back( Variable(this, varlist[vil[i]]) );
-		}
-
-		for(int i=0; fil[i]!=-1; ++i){
-			sing->freeablevars.push_back( Variable(this, varlist[fil[i]]) );
-		}
-
-		// we're done with those lists now
-		ASC_FREE(vil);
-		ASC_FREE(ril);
-		ASC_FREE(fil);
-
-		if(sing->isSingular()){
-			CONSOLE_DEBUG("singularity found");
-			this->sing = sing;
-			return FALSE;
-		}
-		CONSOLE_DEBUG("no singularity");
-		delete sing;
-		return TRUE;
-	}else{
-		if(res==0){
-			throw runtime_error("Unable to determine singularity lists");
-		}else{
-			throw runtime_error("Invalid return from slvDOF_structsing.");
-		}
+		throw runtime_error("Unable to determine singularity lists");
 	}
+
+	if(res!=0){
+		throw runtime_error("Invalid return from slvDOF_structsing.");
+	}
+
+
+	CONSOLE_DEBUG("processing singularity data...");
+	sing = new SingularityInfo();
+
+	struct var_variable **varlist = slv_get_solvers_var_list(sys);
+	struct rel_relation **rellist = slv_get_solvers_rel_list(sys);
+
+	// pull in the lists of vars and rels, and the freeable vars:
+	for(int i=0; ril[i]!=-1; ++i){
+		sing->rels.push_back( Relation(this, rellist[ril[i]]) );
+	}
+
+	for(int i=0; vil[i]!=-1; ++i){
+		sing->vars.push_back( Variable(this, varlist[vil[i]]) );
+	}
+
+	for(int i=0; fil[i]!=-1; ++i){
+		sing->freeablevars.push_back( Variable(this, varlist[fil[i]]) );
+	}
+
+	// we're done with those lists now
+	ASC_FREE(vil);
+	ASC_FREE(ril);
+	ASC_FREE(fil);
+
+	if(sing->isSingular()){
+		CONSOLE_DEBUG("singularity found");
+		this->sing = sing;
+		return FALSE;
+	}
+	CONSOLE_DEBUG("no singularity");
+	delete sing;
+	return TRUE;
 }
 
 /**

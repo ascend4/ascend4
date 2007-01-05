@@ -3463,14 +3463,9 @@ static int g_uid=5;
 static
 void SetupBinTokens(void)
 {
-  char *b[5];
+  char b[5][200];
   char leaf[25];
   g_uid++;
-  b[0]=ASC_NEW_ARRAY(char,50);
-  b[1]=ASC_NEW_ARRAY(char,50);
-  b[2]=ASC_NEW_ARRAY(char,50);
-  b[3]=ASC_NEW_ARRAY(char,180);
-  b[4]=ASC_NEW_ARRAY(char,50);
   sprintf(b[0],"/tmp/btsrc%d.c",g_uid);
   sprintf(b[1],"/tmp/btsrc%d.o",g_uid);
   sprintf(b[2],"/tmp/btsrc%d.so",g_uid);

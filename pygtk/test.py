@@ -410,6 +410,14 @@ class TestSteam(AscendSelfTester):
 	def testiapwssat1(self):
 		M = self._run('testiapwssat1',filename='steam/iapwssat.a4c')
 
+	def testdsgsat(self):
+		self.L.load('steam/dsgsat2.a4c')
+		T = self.L.findType('dsgsat2')
+		M = T.getSimulation('sim')
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		M.checkStructuralSingularity()
+		
 #-------------------------------------------------------------------------------
 # Testing of freesteam external steam properties functions
 
