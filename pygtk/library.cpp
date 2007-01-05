@@ -122,13 +122,13 @@ Library::load(const char *filename){
 		case 0:
 			msg = "Module for '%s' created OK."; break;
 		case -1:
-			msg = "Error: File not found for '%s'. (-1)"; break;
+			msg = "File not found for '%s'. (-1)"; break;
 		case -2:
-			msg = "Error: Unable to open '%s' for reading. (-2)";break;
+			msg = "Unable to open '%s' for reading. (-2)";break;
 		case -3:
-			msg = "Error: Insuffient memory to create module for '%s'. (-3)"; break;
+			msg = "Insuffient memory to create module for '%s'. (-3)"; break;
 		case -4:
-			msg = "Error: bad input, null or zero length filename in '%s'. (-4)"; break;
+			msg = "Bad input, null or zero length filename in '%s'. (-4)"; break;
 		default:
 			throw std::runtime_error("Invalid status code in library.cpp");
 	}
