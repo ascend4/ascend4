@@ -392,6 +392,19 @@ class TestExtPy(AscendSelfTester):
 		M = self._run('extpytest',filename='johnpye/extpy/extpytest.a4c')
 
 #-------------------------------------------------------------------------------
+# Testing of saturated steam properties library (iapwssatprops.a4c)
+
+class TestSteam(AscendSelfTester):
+	def testiapwssatprops1(self):
+		M = self._run('testiapwssatprops1',filename='steam/iapwssatprops.a4c')
+	def testiapwssatprops2(self):
+		M = self._run('testiapwssatprops2',filename='steam/iapwssatprops.a4c')
+	def testiapwssatprops3(self):
+		M = self._run('testiapwssatprops3',filename='steam/iapwssatprops.a4c')
+
+
+
+#-------------------------------------------------------------------------------
 # Testing of freesteam external steam properties functions
 
 with_freesteam = True
@@ -473,7 +486,7 @@ class TestIDADENSE(Ascend):
 		print "v = %f" % M.v
 		M.run(T.getMethod('self_test'))
 
-	def testlotkaDENSE(self):
+	def testlotka(self):
 		self.L.load('johnpye/lotka.a4c')
 		M = self.L.findType('lotka').getSimulation('sim')
 		M.setSolver(ascpy.Solver("QRSlv"))
@@ -512,7 +525,7 @@ class TestIDADENSE(Ascend):
 		assert abs(float(M.y2) - 2.0437e-13) < 2e-14
 		assert abs(float(M.y3) - 1.0) < 1e-5
 
-	def testkryxDENSE(self):
+	def testkryx(self):
 		self.L.load('johnpye/idakryx.a4c')
 		M = self.L.findType('idakryx').getSimulation('sim')
 		M.setSolver(ascpy.Solver('QRSlv'))

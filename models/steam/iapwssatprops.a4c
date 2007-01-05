@@ -1,0 +1,210 @@
+(*
+	ASCEND modelling environment
+	Copyright (C) 2006 John Pye
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*)
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+(*
+	This model implements the complete set of equations from the IAPWS release:
+	'Revised Supplementary Release on Saturation Properties of Ordinary Water Substance'
+	from the International Association for the Properties of Water and Steam,
+	St Petersburg, Russia, September 1992.
+	http://www.iapws.org/relguide/supsat.pdf
+
+	These equations are not compatible with the full IAPWS-IF97 correlations;
+	the only implement properties inside the saturation region, using relatively
+	simple correlations.
+*)
+MODEL iapwssatprops;
+	T IS_A temperature;
+	p IS_A pressure;
+	h_f, h_g IS_A specific_enthalpy;
+	mu_f, mu_g IS_A viscosity;
+	rho_f, rho_g IS_A mass_density;
+	u_f, u_g IS_A specific_energy;
+
+	alpha IS_A specific_energy;
+
+	p_c IS_A pressure_constant;
+	p_c :== 22.064 {MPa};
+	T_c IS_A temperature_constant;
+	T_c :== 647.096 {K};
+	alpha_0 IS_A real_constant;
+	alpha_0 :== 1000 {J/kg};
+	rho_c IS_A real_constant;
+	rho_c :== 322 {kg/m^3};
+
+	tau IS_A fraction;
+	tau_expr: tau = 1 - theta;
+	theta IS_A fraction;
+	theta_expr: theta = T / T_c;
+
+	uf_expr: u_f = h_f - p/rho_f;
+	ug_expr: u_g = h_g - p/rho_g;
+
+	a[1..6] IS_A real_constant;
+	a[1] :== -7.85951783;
+	a[2] :== 1.84408259;
+	a[3] :== -11.7866497;
+	a[4] :== 22.6807411;
+	a[5] :== -15.9618719;
+	a[6] :== 1.80122502;
+
+	n[1..6] IS_A real_constant;
+	n[1] :== 1;
+	n[2] :== 1.5;
+	n[3] :== 3;
+	n[4] :== 3.5;
+	n[5] :== 4;
+	n[6] :== 7.5;
+
+	ln(p / p_c) = T_c/T * SUM[a[i]*tau^n[i] | i IN [1..6]];
+
+	dp_dT IS_A pressure_per_temperature;
+	dpdT_expr: dp_dT = - p/T * T_c/T * SUM[a[i]*n[i]*tau^(n[i]-1) + a[i]*(1-n[i])*tau^n[i] | i IN [1..6]];
+	
+	b[1..6] IS_A real_constant;
+	b[1] :== 1.99274064;
+	b[2] :== 1.09965342;
+	b[3] :== -0.510839303;
+	b[4] :== -1.75493479;
+	b[5] :== -45.5170352;
+	b[6] :== -6.74694450e5;
+
+	rhof_expr: rho_f / rho_c =  1 + b[1]*tau^(1/3) + b[2]*tau^(2/3) + b[3]*tau^(5/3) + b[4]*tau^(16/3) + b[5] * tau^(43/3) + b[6]*tau^(110/3);
+
+	c[1..6] IS_A real_constant;
+	c[1] :== -2.03150240;
+	c[2] :== -2.68302940;
+	c[3] :== -5.38626492;
+	c[4] :== -17.2991605;
+	c[5] :== -44.7586581;
+	c[6] :== -63.9201063;
+
+	rhog_expr: rho_g / rho_c = exp( c[1]*tau^(2/6) + c[2] * tau^(4/6) +c[3]*tau^(8/6) + c[4] *tau^(18/6) + c[5]*tau^(37/6) + c[6]*tau^(71/6) );
+
+	alpha_expr: alpha / alpha_0 = d_alpha + d[1]*theta^-19 +d[2]*theta + d[3]*theta^4.5 + d[4]*theta^5 + d[5]*theta^54.5;
+
+	d[1..5] IS_A real_constant;
+	d[1] :== -5.65134998e-8;
+	d[2] :== 2690.66631;
+	d[3] :== 127.287297;
+	d[4] :== -135.003439;
+	d[5] :== 0.981825814;
+	d_alpha IS_A real_constant;
+	d_alpha :== -1135.905627715;
+
+	hf_expr: h_f = alpha + T / rho_f * dp_dT;
+	hg_expr: h_g - alpha = T / rho_g * dp_dT;
+
+	d_phi IS_A real_constant;
+	d_phi :== 2319.5246;
+
+	phi_0 IS_A real_constant;
+	phi_0 :== 1000 {J/kg} / 647.096 {K};
+
+	phi IS_A specific_entropy;
+	phi_expr: phi / phi_0 = d_phi + 19/20*d[1]*theta^(-20) + d[2]*ln(theta) + 9/7*d[3]*theta^3.5 + 5/4*d[4]*theta^4 + 109/107*d[5]*theta^53.5;
+
+	s_f, s_g IS_A specific_entropy;	
+	sf_expr: s_f = phi + 1/rho_f * dp_dT;
+	sg_expr: s_g = phi + 1/rho_g * dp_dT;
+METHODS
+METHOD on_load;
+	RUN reset; RUN values; RUN bound_self;
+END on_load;
+METHOD specify;
+	FIX T;
+END specify;
+METHOD bound_self;
+	u_f.lower_bound := -1e50 {J/kg};
+	u_g.lower_bound := -1e50 {J/kg};
+	phi.lower_bound := -0.045 {J/kg/K};
+	alpha.lower_bound := -11.54 {J/kg};	
+	s_f.lower_bound := -5e-5 {J/kg/K};
+END bound_self;
+METHOD values;
+	T := 300 {K};
+	u_g := 3000 {kJ/kg};
+END values;
+END iapwssatprops;
+
+(*
+	The following test cases implement the three test points provided in
+	the IAPWS supsat.pdf release.
+*)
+
+MODEL testiapwssatprops1 REFINES iapwssatprops;
+METHODS
+METHOD values;
+	T := 273.16 {K};
+
+	u_g := 4000 {kJ/kg};	(* starting guess *)
+END values;
+METHOD self_test;
+	ASSERT abs(p - 611.657 {Pa}) < 0.001 {Pa};
+	ASSERT abs(dp_dT - 44.436693 {Pa/K}) < 0.0005e3 {Pa/K};
+	ASSERT abs(rho_f - 999.789 {kg/m^3}) < 0.0005 {kg/m^3};
+	ASSERT abs(rho_g - 0.00485426 {kg/m^3}) < 0.0000005 {kg/m^3};
+	ASSERT abs(alpha - -11.529101 {J/kg}) < 0.005e3 {J/kg};
+	ASSERT abs(h_f - 0.611786 {J/kg}) < 0.005e3 {J/kg};
+	ASSERT abs(h_g - 2500.5e3 {J/kg}) < 0.05e3 {J/kg};
+	ASSERT abs(phi - -0.04 {J/kg/K}) < 0.0005e3 {J/kg/K};
+	ASSERT abs(s_f - 0 {J/kg/K}) < 0.0005e3 {J/kg/K};
+	ASSERT abs(s_g - 9.154e3 {J/kg/K}) < 0.0005e3 {J/kg/K};
+END self_test;
+END testiapwssatprops1;
+
+MODEL testiapwssatprops2 REFINES iapwssatprops;
+METHODS
+METHOD values;
+	T := 373.1243 {K};
+	u_g := 4000 {kJ/kg};
+END values;
+METHOD self_test;
+	ASSERT abs(p - 101.325 {kPa}) < 1 {Pa};
+	ASSERT abs(dp_dT - 3.616e3 {Pa/K}) < 0.0005e3 {Pa/K};
+	ASSERT abs(rho_f - 958.365 {kg/m^3}) < 0.0005 {kg/m^3};
+	ASSERT abs(rho_g - 0.597586 {kg/m^3}) < 0.0000005 {kg/m^3};
+	ASSERT abs(alpha - 417.65e3 {J/kg}) < 0.005e3 {J/kg};
+	ASSERT abs(h_f - 419.05e3 {J/kg}) < 0.005e3 {J/kg};
+	ASSERT abs(h_g - 2675.7e3 {J/kg}) < 0.05e3 {J/kg};
+	ASSERT abs(phi - 1.303e3 {J/kg/K}) < 0.0005e3 {J/kg/K};
+	ASSERT abs(s_f - 1.307e3 {J/kg/K}) < 0.0005e3 {J/kg/K};
+	ASSERT abs(s_g - 7.355e3 {J/kg/K}) < 0.0005e3 {J/kg/K};
+END self_test;
+END testiapwssatprops2;
+
+MODEL testiapwssatprops3 REFINES iapwssatprops;
+METHODS
+METHOD values;
+	T := 647.096 {K};
+	rho_f := 322 {kg/m^3};
+END values;
+METHOD self_test;
+	ASSERT abs(p - 22.064 {MPa}) < 1 {kPa};
+	ASSERT abs(dp_dT - 268e3 {Pa/K}) < 0.1e3 {Pa/K};
+	ASSERT abs(rho_g - 322 {kg/m^3}) < 0.001 {kg/m^3};
+	ASSERT abs(alpha - 1548e3 {J/kg}) < 0.5e3 {J/kg};
+	ASSERT abs(h_f - 2086.6e3 {J/kg}) < 0.05e3 {J/kg};
+	ASSERT abs(h_g - 2086.6e3 {J/kg}) < 0.05e3 {J/kg};
+	ASSERT abs(phi - 3.578e3 {J/kg/K}) < 0.0005e3 {J/kg/K};
+	ASSERT abs(s_f - 4.410e3 {J/kg/K}) < 0.0005e3 {J/kg/K};
+	ASSERT abs(s_g - 4.410e3 {J/kg/K}) < 0.0005e3 {J/kg/K};
+END self_test;
+END testiapwssatprops3;
