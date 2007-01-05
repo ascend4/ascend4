@@ -70,15 +70,6 @@ private:
 	slv_system_structure *sys;
 	bool is_built;
 	SingularityInfo *sing; /// will be used to store this iff singularity found
-
-	// options to pass to BinTokenSetOptions
-	/// @TODO these should probably be put somewhere else
-	std::string *bin_srcname;
-	std::string *bin_objname;
-	std::string *bin_libname;
-	std::string *bin_cmd;
-	std::string *bin_rm;
-
 	int activeblock;
 
 protected:

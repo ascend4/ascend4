@@ -75,19 +75,23 @@ ASC_DLLSPEC(int) slvDOF_structsing(slv_system_t server,
                              int32 **ril,
                              int32 **fil);
 /**<
+	Analyse slv system for structural singularity and return. If relinst is set to mtx_FIRST, routine returns
+	the intersection of all singularity lists for any unassignable included equations in the system.
+
+	@param relindex sindex of an unassigned,included equation from solvers_rel_list, or else value mtx_FIRST.
+	@param vil  list of vars involved in a structural singularity, (-1) terminated.
+	@param ril  list of rels involved in a structural singularity, (-1) terminated.
+	@param fil  list of vars which reduce the structural singularity if freed, (-1) terminated.
+
+	@return 0 on success, 1 otherwise (in which case vil,ril,fil will not have been allocated)
+
  *  Returns 1 if able to determine lists, 0 otherwise.
  *  relindex should be the sindex of an unassigned, included equation
  *  from the solvers_rel_list.
  *  If relindex is mtx_FIRST, the list returned will be the intersection of
  *  all singularity lists for any unassignable included equations in
  *  the system.
- *  If return is 1, user should free r/v/fil when done with
- *  them. Return 0 -> lists will be null.
- *  The index lists are terminated with a -1.
  *  The indices are *_sindex of vars/rels on solvers_*_list.
- *  @param vil  int32 **, the vars involved in a structural singularity.
- *  @param ril  int32 **, the rels involved in a structural singularity.
- *  @param fil  int32 **, the vars which reduce the structural singularity if freed.
  */
 
 ASC_DLLSPEC(int32) slvDOF_status(slv_system_t server, int32 *status, int32 *dof);

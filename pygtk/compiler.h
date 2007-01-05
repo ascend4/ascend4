@@ -13,15 +13,34 @@
 	The GUI must also access the Compiler object when it wants to set
 	configuration options.
 */
+
+#include <string>
+
 class Compiler{
 private:
 	Compiler();
 	~Compiler();
+
+	/* options for bintoken compilation */
+	bool use_bintoken;
+	bool bintoken_options_sent;
+	std::string bt_targetstem;
+	std::string bt_srcname;
+	std::string bt_objname;
+	std::string bt_libname;
+	std::string bt_cmd;
+	std::string bt_rm;
+
+protected:
+	friend class Type;
+	void sendBinaryCompilationOptions(); /* pass them down to libascend */
 public:
-	static Compiler *instance();
+	static Compiler *instance(); /* (as in singleton pattern) */
 
 	const bool getUseRelationSharing() const;
 	void setUseRelationSharing(const bool&);
+
+	void setBinaryCompilation(const bool&);
 };
 
 /** Compiler access function for use with Python */

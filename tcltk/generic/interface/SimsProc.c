@@ -629,11 +629,11 @@ int Asc_SimBinTokenSetOptions(ClientData cdata, Tcl_Interp *interp,
     Asc_HelpGetUsage(interp,Asc_SimBinTokenSetOptionsHN);
     return TCL_ERROR;
   };
-  srcname = ascstrdup(argv[1]);
-  objname = ascstrdup(argv[2]);
-  libname = ascstrdup(argv[3]);
-  buildcommand = ascstrdup(argv[4]);
-  unlinkcommand = ascstrdup(argv[5]);
+  srcname = argv[1];
+  objname = argv[2];
+  libname = argv[3];
+  buildcommand = argv[4];
+  unlinkcommand = argv[5];
   s1 = Tcl_ExprLong(interp,argv[6],&maxrels);
   Tcl_ResetResult(interp);
   s2 = Tcl_GetInt(interp,argv[7],&verbose);

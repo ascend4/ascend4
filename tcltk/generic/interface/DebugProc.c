@@ -2969,7 +2969,7 @@ int Asc_DebuStructSing(ClientData cdata, Tcl_Interp *interp,
        FPRINTF(ASCERR,"dbg_struct_singular called with strange i/o option\n");
             return TCL_ERROR;
   }
-  if (slvDOF_structsing(g_solvsys_cur,relnum,&vip,&rip,&fip)) {
+  if(!slvDOF_structsing(g_solvsys_cur,relnum,&vip,&rip,&fip)) {
     char tmps[MAXIMUM_NUMERIC_LENGTH];
     switch (dev) {
       case 0:
