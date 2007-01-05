@@ -136,7 +136,7 @@ int bboxtest_preslv(struct BBoxInterp *interp,
 	struct BBOXTEST_problem *problem;
 
 	if(interp->task != bb_first_call){
-		ERROR_REPORTER(ASC_PROG_ERR,"Unexpected call to first_call fn");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unexpected call to first_call fn");
 		return -1;
 	}
 
