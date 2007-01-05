@@ -1,0 +1,58 @@
+REQUIRE "test/blackbox/pass3.a4c";
+REQUIRE "test/blackbox/pass.a4c";
+REQUIRE "test/blackbox/oldstylebbox.a4c";
+
+(*  bboxes in reinstantiate merge of boxes *)
+MODEL pass61 REFINES pass3; 
+	b1, b2 ARE_THE_SAME;
+END pass61;
+
+(*  bbox that becomes feasible to compile after reinstantiation to assign constants. *)
+MODEL pass62 REFINES oldstylebbox; 
+	n :== 3;
+METHODS
+METHOD self_test;
+	(* @TODO add stuff here *)
+END self_test;
+
+END pass62;
+
+(*  bbox in reinstantiate merge of input/output *)
+MODEL pass64 REFINES pass1; 
+	x[2],y[2] ARE_THE_SAME;
+METHODS
+	METHOD specify;
+		FIX x[1..3];
+		FREE y[1..3];
+	END specify;
+END pass64;
+
+(*  bbox in reinstantiate merge of inputs *)
+MODEL pass65 REFINES pass1; 
+	x[3],x[2] ARE_THE_SAME;
+METHODS
+	METHOD specify;
+		FIX x[1..3];
+		FREE y[1..3];
+	END specify;
+END pass65;
+
+(*  bboxes in reinstantiate merge of outputs *)
+MODEL pass66 REFINES pass1; 
+	y[3],y[1] ARE_THE_SAME;
+METHODS
+	METHOD specify;
+		FIX y[1..3];
+		FREE x[1..3];
+	END specify;
+END pass66;
+
+(*  bboxes in reinstantiate cross-link merge of input/output *)
+MODEL pass67 REFINES pass1; 
+	x[2],y[3] ARE_THE_SAME;
+METHODS
+	METHOD specify;
+		FIX x[1..3];
+		FREE y[1..3];
+	END specify;
+END pass67;
