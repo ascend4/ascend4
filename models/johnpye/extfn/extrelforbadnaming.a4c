@@ -1,0 +1,42 @@
+REQUIRE "atoms.a4l";
+IMPORT "johnpye/extfn/extfntest";
+
+(* 
+	This tests external relations embedded directly inside a FOR loop.
+	There was a typo in the orignal version of this file that seems to have
+	exposed a bug. This test will identify bug so that it can be fixed.
+*)
+MODEL extrelfor;
+
+	n IS_A integer_constant;
+	n :== 5;
+
+	x[1..n] IS_A factor;
+
+	FOR i IN [1..n-1] CREATE
+		do_it: add_one( (* note the missing index after do_it *)
+			x[i] : INPUT;
+			x[i+1] : OUTPUT
+		);
+	END FOR;
+
+METHODS
+METHOD specify;
+	FIX x[1];
+END specify;
+
+METHOD values;
+	x[1] := 1.0;
+END values;
+
+METHOD on_load;
+	RUN specify;
+	RUN values;
+END on_load;
+
+METHOD self_test;
+	ASSERT x[1] == 1.0;
+	ASSERT x[n] == 1.0 * n;
+END self_test;
+
+END extrelfor;
