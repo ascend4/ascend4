@@ -1222,13 +1222,14 @@ int slv_insure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
 }
 
 
-void slv_check_bounds(const slv_system_t sys,int32 lo,int32 hi,
-                      FILE *mif,const char *label)
-{
+int slv_check_bounds(const slv_system_t sys,int32 lo,int32 hi
+	,FILE *mif,const char *label
+){
   real64 val,low,high;
   int32 c,len;
   struct var_variable *var, **vp;
   static char defaultlabel[] = "";
+  int err = 0;
 
   if (label==NULL) label = defaultlabel;
   if (sys==NULL || mif == NULL) return;
@@ -1236,8 +1237,8 @@ void slv_check_bounds(const slv_system_t sys,int32 lo,int32 hi,
   if (vp==NULL) return;
   len = slv_get_num_solvers_vars(sys);
   if (lo > len || hi > len) {
-    FPRINTF(stderr,"slv_check_bounds miscalled\n");
-    return;
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv_check_bounds miscalled");
+    return -1;
   }
   for (c= lo; c <= hi; c++) {
     var = vp[c];
@@ -1245,24 +1246,31 @@ void slv_check_bounds(const slv_system_t sys,int32 lo,int32 hi,
     high = var_upper_bound(var);
     val = var_value(var);
     if( low > high ) {
-      FPRINTF(mif,"Bounds for %s variable ",label);
-      var_write_name(sys,var,mif);
-      FPRINTF(mif,"\nare inconsistent [%g,%g].\n",low,high);
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,"Bounds for %s variable '",label);
+      var_write_name(sys,var,ASCERR);
+      FPRINTF(ASCERR,"' are inconsistent [%g,%g]",low,high);
+      error_reporter_end_flush();
+	  err = err | 0x1;
     }
 
-    if( low > val ) {
-      FPRINTF(mif,"%s variable ",label);
-      var_write_name(sys,var,mif);
-      FPRINTF(mif,"\nwas initialized below its lower bound.\n");
-    } else {
-      if( val > high ) {
-        FPRINTF(mif,"%s variable ",label);
-        var_write_name(sys,var,mif);
-        FPRINTF(mif," was initialized above its upper bound.\n");
-      }
+    if(low > val){
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,"The %s variable '",label);
+      var_write_name(sys,var,ASCERR);
+      FPRINTF(ASCERR,"' was initialized below its lower bound.");
+      error_reporter_end_flush();
+      err = err | 0x2;
+    }else if( val > high ){
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+        FPRINTF(ASCERR,"The %s variable '",label);
+        var_write_name(sys,var,ASCERR);
+        FPRINTF(ASCERR,"' was initialized above its upper bound.");
+      error_reporter_end_flush();
+      err = err | 0x4;
     }
   }
-  return;
+  return err;
 }
 
 /*------------------------------------------------------------------------------

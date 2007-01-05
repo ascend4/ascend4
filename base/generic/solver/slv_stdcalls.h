@@ -225,7 +225,7 @@ extern int slv_insure_bounds(slv_system_t sys, int32 lo, int32 hi, FILE *fp);
 	@return number of repairs made or -1 if something weird found.
 */
 
-extern void slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
+extern int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
                              FILE * fp, const char *label);
 /**<
 	Takes a system and a range of vars (lo,hi) and makes sure all the
@@ -233,6 +233,8 @@ extern void slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
 	to fp using the label in all cases where they are not.
 	Does not change anything.
 	If fp is NULL, does nothing.
+
+	@return 0 if bounds are ok and variable lies in range, non-zero otherwise
 */
 
 /*------------------------------------------------------------------------------
