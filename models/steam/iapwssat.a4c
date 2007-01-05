@@ -1,0 +1,25 @@
+REQUIRE "iapwssatprops.a4c";
+
+MODEL iapwssat REFINES iapwssatprops;
+	x IS_A fraction;
+	h IS_A specific_enthalpy;
+	u IS_A specific_energy;
+	v IS_A specific_volume;
+
+	h_expr: h = (h_g - h_f)*x + h_f;
+	u_expr: u = (u_g - u_f)*x + u_f;
+	v_expr: v = (rho_g + (rho_f - rho_g)*x ) / ( rho_f * rho_g );
+METHODS
+METHOD specify;
+	RUN iapwssatprops::specify;
+	FIX x;
+END specify;
+METHOD values;
+	RUN iapwssatprops::values;
+	x := 0.5;
+END values;
+METHOD on_load;
+	RUN reset; RUN values;
+	RUN bound_self;
+END on_load;
+END iapwssat;
