@@ -415,7 +415,16 @@ class TestSteam(AscendSelfTester):
 		T = self.L.findType('dsgsat2')
 		M = T.getSimulation('sim')
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		M.run(T.getMethod('fixed_states'))
+		I = ascpy.Integrator(M)
+		I.setEngine('LSODE')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 10, 100)
+		I.setMinSubStep(0.01)
+		I.setInitialSubStep(0.1)
+		I.analyse()
+		I.solve()
 		#M.checkStructuralSingularity() causes crash!
 		
 #-------------------------------------------------------------------------------

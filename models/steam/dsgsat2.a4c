@@ -147,6 +147,7 @@ END fix_states;
 METHOD ode_init;
 	(* get the model into the required state for solving as ODE *)
 	t.ode_type := -1;
+	t.obs_id := 1;
 
 	FOR i IN [2..n] DO
 		drho_dt[i].ode_id := 4*i;     node[i].rho.ode_id := 4*i;
@@ -170,12 +171,12 @@ METHOD ode_init;
 	END FOR;
 
 	FOR i IN [1,n] DO
-		p[i].obs_id := 4*i;
-		x[i].obs_id := 4*i+1;
+		p[i].obs_id := 1 + 4*i;
+		x[i].obs_id := 2 + 4*i+1;
 	END FOR;
 	FOR i IN [2,n] DO
-		(* qdot_t[i].obs_id := 4*i+2; *)
-		T_w[i].obs_id := 4*i+3;
+		(* qdot_t[i].obs_id := 3 + 4*i; *)
+		T_w[i].obs_id := 4 + 4*i;
 	END FOR;
 END ode_init;
 
