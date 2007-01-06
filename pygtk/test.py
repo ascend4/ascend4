@@ -10,7 +10,11 @@ import ascpy
 import math
 import os, subprocess
 import atexit
-import cunit
+
+try:
+	import cunit
+except:
+	pass
 
 class Ascend(unittest.TestCase):
 
