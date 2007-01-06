@@ -783,7 +783,7 @@ int scale_and_bounds(slv2_system_t sys)
   struct var_variable **vp;
   struct var_variable *var;
 
-  slv_insure_bounds(SERVER,0,sys->vlen,MIF(sys));
+  slv_ensure_bounds(SERVER,0,sys->vlen,MIF(sys));
 
   for( col=0 ; col < sys->vlen ; ++col ) {
     ndx = 2*col;

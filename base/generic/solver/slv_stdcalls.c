@@ -1166,7 +1166,7 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
   return 0;
 }
 
-int slv_insure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
+int slv_ensure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
 {
   real64 val,low,high;
   int32 c,nchange=0;

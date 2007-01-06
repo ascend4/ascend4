@@ -2104,7 +2104,7 @@ static void move_to_next_block( slv5_system_t sys)
     sys->s.calc_ok = TRUE;
 
     if (!(sys->p.ignore_bounds) ) {
-      slv_insure_bounds(SERVER, sys->J.reg.col.low,
+      slv_ensure_bounds(SERVER, sys->J.reg.col.low,
                         sys->J.reg.col.high,MIF(sys));
     }
 

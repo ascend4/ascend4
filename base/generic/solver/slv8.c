@@ -1091,7 +1091,7 @@ static void conopt_initialize( slv8_system_t sys){
     sys->s.calc_ok = sys->s.calc_ok && ok;
 
     if(!(sys->p.ignore_bounds) ) {
-      slv_insure_bounds(
+      slv_ensure_bounds(
           SERVER, sys->J.reg.col.low,
           sys->J.reg.col.high,MIF(sys)
       );
