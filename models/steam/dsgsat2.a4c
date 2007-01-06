@@ -16,7 +16,7 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat2;
 	n IS_A integer_constant;
-	n :== 3;
+	n :== 5;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;
@@ -114,6 +114,7 @@ METHOD values;
 		drhou_dt[i] := 0 {kJ/m^3/s};
 		dTw_dt[i] := 0 {K/s};
 	END FOR;
+	t := 0 {s};
 END values;
 METHOD on_load;
 	RUN specify;
@@ -123,11 +124,10 @@ METHOD on_load;
 	RUN values;
 	RUN ode_init;
     EXTERNAL solvernotes(SELF);
-	(* RUN ode_init;
-	RUN solve; *) (* after fixing the states and freeing the derivatives *)
+	EXTERNAL solve(SELF);
+	RUN fixed_states;
 END on_load;
 METHOD fixed_states;
-	t := 0 {s};
 	qdot_s := 10 {W/m};
 	FOR i IN [2..n] DO
 		FREE drho_dt[i];  FIX node[i].rho;
@@ -170,12 +170,13 @@ METHOD ode_init;
 		*)
 	END FOR;
 
-	FOR i IN [1,n] DO
+	FOR i IN [1..n] DO
 		p[i].obs_id := 1 + 4*i;
 		x[i].obs_id := 2 + 4*i+1;
 	END FOR;
-	FOR i IN [2,n] DO
+	FOR i IN [] DO
 		(* qdot_t[i].obs_id := 3 + 4*i; *)
+		node[i].mdot.obs_id := 3 + 4*i;
 		T_w[i].obs_id := 4 + 4*i;
 	END FOR;
 END ode_init;

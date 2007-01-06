@@ -8,9 +8,9 @@ def mypythonmethod(self):
 	"""I don't want to talk to you no more, you empty headed animal food trough wiper!"""
 	# the above python docstring is visible as the method 'help' in ASCEND.
 
-	# we hope to be able to get rid of this first line, but so far it's proved
-	# difficult from the architectural point of view:
-	self = ascpy.Registry().getInstance('context')
+	assert self.__class__.__name__=="Instance"
+	assert self.isModel()
+	print "SELF IS A MODEL"
 
 	# iterating through the children of an instance
 	print "CHILDREN OF INSTANCE '%s':" % self.getName()
@@ -37,5 +37,9 @@ def mypythonmethod(self):
 	else:
 		print "No, now go away or I shall taunt you a second time!"
 
+def adjust_a(self):
+	sel
 extpy.registermethod(mypythonmethod)
 #the above method can be called using "EXTERNAL mypythonmethod(SELF)" in ASCEND.
+
+extpy.registermethod(adjust_a)

@@ -226,13 +226,16 @@ extern int slv_ensure_bounds(slv_system_t sys, int32 lo, int32 hi, FILE *fp);
 */
 
 extern int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
-                             FILE * fp, const char *label);
+	const char *label
+);
 /**<
 	Takes a system and a range of vars (lo,hi) and makes sure all the
-	variables are within bounds and bounds are reasonable. Whines
-	to fp using the label in all cases where they are not.
+	variables are within bounds and bounds are reasonable. 
+	Reports errors in all cases where they are not.
 	Does not change anything.
-	If fp is NULL, does nothing.
+
+	You can express lo,hi as negative numbers, which means you count back from
+	the last var (-1), second last (-2), etc. So lo=0,hi=-1 means the full range.
 
 	@return 0 if bounds are ok and variable lies in range, non-zero otherwise
 */

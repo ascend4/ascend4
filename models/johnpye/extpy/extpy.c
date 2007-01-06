@@ -142,11 +142,13 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 	}
 
 	arglist = Py_BuildValue("(O)", pyinstance);
+	
 
 	PyErr_Clear();
 	result = PyEval_CallObject(extpydata->fn, arglist);
 
 	if(PyErr_Occurred()){
+		CONSOLE_DEBUG("Error occured in PyEval_CallObject");
 
 		/* get the content of the error message */
 		PyErr_Fetch(&perrtype, &perrvalue, &perrtrace);		
@@ -219,7 +221,8 @@ static PyObject *extpy_getbrowser(PyObject *self, PyObject *args){
 	if(browser==NULL){
 		return Py_BuildValue("");
 	}
-	return Py_BuildValue("O",browser);
+	return browser;
+	/* return Py_BuildValue("O",browser);*/
 }
 
 static PyObject *extpy_registermethod(PyObject *self, PyObject *args){

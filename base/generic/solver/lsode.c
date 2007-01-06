@@ -69,6 +69,7 @@
 #include "linsol.h"
 #include "linsolqr.h"
 #include "slv_client.h"
+#include "slv_stdcalls.h"
 
 #include "integrator.h"
 #include "lsode.h"
@@ -725,6 +726,10 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
 
   slv_solve(l_lsode_blsys->system);
   slv_get_status(l_lsode_blsys->system, &status);
+  if(slv_check_bounds(l_lsode_blsys->system,0,-1,"")){
+    lsodesys.status = lsode_nok;
+  }
+
   /* pass the solver status to the integrator */
   res = integrator_checkstatus(status);
 
@@ -734,14 +739,14 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
 
   if(res){
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives (%d)",res);
-	/*
+#if 0
   	ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
     FPRINTF(ASCERR,"Unable to compute the vector of derivatives with the following values for the state variables:\n");
     for (i = 0; i< *n_eq; i++) {
       FPRINTF(ASCERR,"y[%4d] = %f\n",i, y[i]);
     }
     error_reporter_end_flush();
-	*/
+#endif
     lsodesys.status = lsode_nok;
   }else{
     lsodesys.status = lsode_ok;

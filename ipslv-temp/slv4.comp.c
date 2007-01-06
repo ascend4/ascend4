@@ -2652,7 +2652,7 @@ static void structural_analysis(slv_system_t server, slv4_system_t sys)
     slv_block_unify(server);
   }
 
-  slv_check_bounds(SERVER,sys->vused,sys->vtot-1,MIF(sys),"fixed");
+  slv_check_bounds(SERVER,sys->vused,-1,"fixed ");
 
   /* Initialize Status */
   sys->s.over_defined = (sys->rused > sys->vused);

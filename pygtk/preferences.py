@@ -4,6 +4,9 @@ import ConfigParser, os
 import re
 import platform
 
+## @TODO implement this differently; the __del__ stuff is not working correctly
+## in the context of the extpy extension.
+
 class Preferences:
 	__sharedstate = {}
 
