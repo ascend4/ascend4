@@ -29,8 +29,11 @@ METHODS
 METHOD values;
 	RUN iapwssatprops::values;
 	x := 1.01;
+	x.upper_bound := 1.0;
+	x.lower_bound := 0.0;
 END values;
 METHOD self_test;
-	ASSERT x == 1.0;
+	ASSERT x <= x.upper_bound;
+	ASSERT x >= x.lower_bound;
 END self_test;
 END testiapwssat1;
