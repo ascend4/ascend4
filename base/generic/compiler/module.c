@@ -143,7 +143,7 @@ static struct module_t *OpenModuleInternal(CONST char *, int * CONST,
 static void RemoveModule(CONST struct module_t *);
 static struct module_t *SearchForModule(CONST struct module_t *);
 static int StoreModule(CONST struct module_t *);
-static void WriteWhyNotFound(symchar *,  int);
+static void WriteWhyNotFound(char *,  int);
 
 /*------------------------------------------------------------------------------
   MODULE HANDLING
@@ -348,7 +348,7 @@ struct module_t *OpenModuleInternal(CONST char *name,
   if (keep_string == NULL) {
     Asc_ScannerAssignFile(new_module->f,1);
   } else {
-    assert(new_module->scanbuffer != NULL);
+    asc_assert(new_module->scanbuffer != NULL);
     Asc_ScannerAssignString(new_module->scanbuffer,1,1);
   }
 
@@ -398,8 +398,9 @@ struct module_t *FindModuleFile(CONST char *name,
   int result;                   /* return value when searching for module */
   int error;                    /* error number returned by fopen() or stat() */
 
-  assert(name != NULL);
-  assert(status != NULL);
+  asc_assert(name != NULL);
+  asc_assert(status != NULL);
+  asc_assert(strcmp(name,"")!=0);
 
   /*
 	Create space for the module and set its base_name to a "proper"
@@ -419,12 +420,18 @@ struct module_t *FindModuleFile(CONST char *name,
 	Check to see if a module having the same base_name exists.
 	If so, fetch it.
    */
-  dup = SearchForModule( new_module );
+  dup = SearchForModule(new_module);
+
+  if(dup){
+    CONSOLE_DEBUG("Duplicate module named '%s' was found"
+      ,SCP(new_module->base_name)
+    );
+  }
 
   /*
-	If were we called from RequireModule, return if a module
+	If we were called from RequireModule, return if a module
 	having this name already exists
-   */
+  */
   if(( do_not_overwrite == TRUE ) && ( dup != NULL )) {
     DeleteModule( new_module );
     *status = 5;
@@ -453,7 +460,8 @@ struct module_t *FindModuleFile(CONST char *name,
 	a message and exit the function
   */
   if( result == -1 ) {
-    WriteWhyNotFound( new_module->filename, error );
+    CONSOLE_DEBUG("ModuleSearchPath returned -1, name=%s, filename=%s",name,filename);
+    WriteWhyNotFound(name, error);
     DeleteModule(new_module);
     *status = -2;
     return NULL;
@@ -471,7 +479,7 @@ struct module_t *FindModuleFile(CONST char *name,
   */
   new_module->filename = AddSymbol(filename);
 
-  assert(new_module->f != NULL);
+  asc_assert(new_module->f != NULL);
 
   /*
 	If a module having the same base_name does not exist,
@@ -644,9 +652,9 @@ struct module_t *CreateStringModule(CONST char *name,
   int result;                   /* return value when searching for module */
 #endif /* use for strings */
 
-  assert(name != NULL);
-  assert(keep_string != NULL);
-  assert(status != NULL);
+  asc_assert(name != NULL);
+  asc_assert(keep_string != NULL);
+  asc_assert(status != NULL);
 
   /*
    *  Create space for the module and set its base_name to a "proper"
@@ -664,7 +672,7 @@ struct module_t *CreateStringModule(CONST char *name,
    *  If so, fetch it.
    */
   dup = SearchForModule( new_module );
-  assert(dup == NULL); /* string modules are to be unique */
+  asc_assert(dup == NULL); /* string modules are to be unique */
   /* probably should be ascpanic to avoid mystery messages */
 
 #if USE_FOR_STRINGS
@@ -701,7 +709,8 @@ struct module_t *CreateStringModule(CONST char *name,
    *  a message and exit the function
    */
   if( result == -1 ) {
-    WriteWhyNotFound( new_module->filename, error );
+    CONSOLE_DEBUG("ModuleSearchPath returned -1, name=%s, filename=%s",name,filename);
+    WriteWhyNotFound(filename, error );
     DeleteModule(new_module);
     *status = -2;
     return NULL;
@@ -879,8 +888,8 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	/*char *tmp;*/
 
 	sd = (struct ModuleSearchData *)searchdata;
-	assert(sd!=NULL);
-	assert(sd->fp!=NULL);
+	asc_assert(sd!=NULL);
+	asc_assert(sd->fp!=NULL);
 
 
 	/*
@@ -942,6 +951,11 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	value of errno will be passed back to the caller in the `error'
 	argument.
 
+	@param name filename to be searched for (in cwd & in search path).
+	@param filename (output) the location of the found file (if found)
+	@param error (output) error code from ModuleStatFile
+	@param m (output) a pointer to the opened module_t object (if found)
+
 	@return
 		-4  Invalid partial path in parameter 'filename'.
 	    -3  Memory error occurred when trying to get PATHENVIRONMENTVAR
@@ -955,20 +969,15 @@ int ModuleSearchPath(CONST char *name,
                      struct module_t *m,
                      int * CONST error
 ){
-	/* register size_t length; */
-	/* int result; */
-	/* int path_entries; */
-	/* int j; */
-	/* register CONST char *t; */
 	struct FilePath *fp1, *fp2;
 	char *tmp;
 	struct FilePath **sp1 = NULL;
 	struct ModuleSearchData sd;
 
-	assert( name != NULL );
-	assert( filename != NULL );
-	assert( m != NULL );
-	assert( error != NULL );
+	asc_assert( name != NULL );
+	asc_assert( filename != NULL );
+	asc_assert( m != NULL );
+	asc_assert( error != NULL );
 
 	/* CONSOLE_DEBUG("Launching ModuleSearchPath with '%s'",name); */
 
@@ -1020,13 +1029,13 @@ int ModuleSearchPath(CONST char *name,
 
 		if(fp2==NULL){
 			*error = sd.error;
-			CONSOLE_DEBUG("File '%s' not found in search path",name);
+			CONSOLE_DEBUG("File '%s' not found in search path (%d)",name,sd.error);
 			ospath_searchpath_free(sp1);
 			return -1;
 		}
 
 		tmp = ospath_str(fp2);
-		assert(tmp!=NULL);
+		asc_assert(tmp!=NULL);
 		/* CONSOLE_DEBUG("Found file in '%s' in search path",tmp); */
 		ospath_searchpath_free(sp1);
 		ospath_free_str(tmp);
@@ -1049,13 +1058,13 @@ int ModuleSearchPath(CONST char *name,
 	not open/stat the file named `filename'.
 */
 static
-void WriteWhyNotFound(symchar *filename, int error)
+void WriteWhyNotFound(char *filename, int error)
 {
   switch( error ) {
   case EACCES:
     ERROR_REPORTER_HERE(ASC_USER_ERROR,
 	    "File or directory permissions don't allow you to access '%s'.",
-	    SCP(filename)
+	    filename
 	);
     break;
   case EFAULT:
@@ -1065,29 +1074,29 @@ void WriteWhyNotFound(symchar *filename, int error)
     break;
   case EIO:
     ERROR_REPORTER_HERE(ASC_USER_ERROR
-		,"I/O error in reading '%s'.",SCP(filename)
+		,"I/O error in reading '%s'.",filename
 	);
     break;
   case ENAMETOOLONG:
     ERROR_REPORTER_HERE(ASC_USER_ERROR
-		,"The path for '%s' is too long.",SCP(filename)
+		,"The path for '%s' is too long.",filename
 	);
     break;
   case ENOENT:
     ERROR_REPORTER_HERE(ASC_USER_ERROR
-		,"File '%s' doesn't exist.",SCP(filename)
+		,"File '%s' doesn't exist.",filename
 	);
     break;
   case ENOTDIR:
     ERROR_REPORTER_HERE(ASC_USER_ERROR
-		,"A component of the path name '%s' is not a directory.",SCP(filename)
+		,"A component of the path name '%s' is not a directory.",filename
 	);
     break;
 #ifndef __WIN32__
   case ELOOP:
     /*  no symlinks in windows land  */
     ERROR_REPORTER_HERE(ASC_USER_ERROR
-		,"There are too many symbolic links in '%s'.",SCP(filename)
+		,"There are too many symbolic links in '%s'.",filename
 	);
     break;
 #endif  /*  __WIN32__  */
@@ -1109,7 +1118,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
   struct module_t *dup;
   char mod_name[PATH_MAX];
 
-  assert( m != NULL );
+  asc_assert( m != NULL );
 
   /*
    *  Make sure the user gave us good data
@@ -1354,11 +1363,10 @@ void RemoveModule(CONST struct module_t *m)
  *  CmpModulesNameVers() to determine which module return.
  */
 static
-struct module_t *SearchForModule(CONST struct module_t *m)
-{
+struct module_t *SearchForModule(CONST struct module_t *m){
   unsigned long place;
 
-  assert(m != NULL);
+  asc_assert(m != NULL);
 
   if( g_module_list == NULL ) {
     return NULL;
@@ -1383,8 +1391,7 @@ struct module_t *SearchForModule(CONST struct module_t *m)
  *          && m1->version <= m2->version
  */
 static
-int CmpModulesNameVers(CONST struct module_t *m1, CONST struct module_t *m2)
-{
+int CmpModulesNameVers(CONST struct module_t *m1, CONST struct module_t *m2){
   int result;
 
   if( (result = CmpSymchar(m1->base_name, m2->base_name)) != 0 ) {
@@ -1420,7 +1427,7 @@ extern int Asc_CloseCurrentModule(void){
     fclose(g_current_module->f);
     g_current_module->f = NULL;
   } else {
-    assert(g_current_module->s != NULL);
+    asc_assert(g_current_module->s != NULL);
     Asc_ScannerReleaseStringBuffer(g_current_module->scanbuffer);
     g_current_module->scanbuffer = NULL;
   }
@@ -1446,7 +1453,7 @@ extern int Asc_CloseCurrentModule(void){
   if (g_current_module->s == NULL) {
     Asc_ScannerAssignFile(g_current_module->f,g_current_module->linenum);
   } else {
-    assert(g_current_module->scanbuffer != NULL);
+    asc_assert(g_current_module->scanbuffer != NULL);
     Asc_ScannerAssignString(g_current_module->scanbuffer,
                             g_current_module->linenum,0);
   }
@@ -1539,7 +1546,7 @@ unsigned long ModuleNameToInternalNameVers(CONST char *module_name,
   unsigned int t;
   unsigned long vers = ULONG_MAX;
 
-  assert( name != NULL );
+  asc_assert( name != NULL );
 
   /*
    *  Make sure we got good data
@@ -1666,7 +1673,7 @@ extern struct gl_list_t *Asc_ModuleList(int module_type){
 
 
 extern void Asc_ModuleWrite(FILE *f, CONST struct module_t *m){
-  assert(m!=NULL);
+  asc_assert(m!=NULL);
   FPRINTF(f,"MODULE: %s\nFILENAME: %s\n",SCP(m->name),SCP(m->filename));
   FPRINTF(f,(m->f!=NULL)?"OPEN\n":"CLOSED\n");
   FPRINTF(f,"FILE DATE: %s",asctime(localtime( &(m->time_last_modified) )));

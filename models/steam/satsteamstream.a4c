@@ -1,4 +1,4 @@
-REQUIRE "iapwssat.a4c";
+REQUIRE "steam/iapwssat.a4c";
 
 MODEL satsteamstream REFINES iapwssat;
 	mdot IS_A mass_rate;
