@@ -387,9 +387,21 @@ class TestExtFn(AscendSelfTester):
 # Testing of a ExtPy - external python methods
 
 class TestExtPy(AscendSelfTester):
-	def testextpytest(self):
-		print "-------------------=--=-=-=-"
-		M = self._run('extpytest',filename='johnpye/extpy/extpytest.a4c')
+	def test1(self):
+		self.L.load('johnpye/extpy/extpytest.a4c')
+		T = self.L.findType('extpytest')
+		M = T.getSimulation('sim')
+		M.run(T.getMethod('self_test'))
+		
+	def test2(self):
+		self.L.load('johnpye/extpy/extpytest.a4c')
+		T = self.L.findType('extpytest')
+		M = T.getSimulation('sim')
+		M.run(T.getMethod('pythonthing'))
+		M.run(T.getMethod('pythonthing'))
+		M.run(T.getMethod('pythonthing'))
+		M.run(T.getMethod('pythonthing'))
+		# causes crash!
 
 #-------------------------------------------------------------------------------
 # Testing of saturated steam properties library (iapwssatprops.a4c)
@@ -420,8 +432,9 @@ class TestSteam(AscendSelfTester):
 		I.setEngine('LSODE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 10, 100)
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 5, 100)
 		I.setMinSubStep(0.01)
+		I.setMaxSubStep(0.02)
 		I.setInitialSubStep(0.1)
 		I.analyse()
 		I.solve()
@@ -464,8 +477,8 @@ if with_freesteam and have_freesteam:
 			I.setEngine('LSODE')
 			I.setReporter(ascpy.IntegratorReporterConsole(I))
 			I.setLinearTimesteps(ascpy.Units("s"), 0, 3000, 30)
-			I.setMinSubStep(0.001)
-			I.setInitialSubStep(0.01)
+			I.setMinSubStep(0.01)
+			I.setInitialSubStep(1)
 			I.analyse()
 			print "Number of vars = %d" % I.getNumVars()
 			assert I.getNumVars()==2
@@ -550,6 +563,7 @@ class TestIDADENSE(Ascend):
 
 	def testkryx(self):
 		self.L.load('johnpye/idakryx.a4c')
+		ascpy.getCompiler().setUseRelationSharing(False)
 		M = self.L.findType('idakryx').getSimulation('sim')
 		M.setSolver(ascpy.Solver('QRSlv'))
 		M.build()

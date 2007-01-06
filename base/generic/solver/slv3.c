@@ -3352,7 +3352,7 @@ static void structural_analysis(slv_system_t server, slv3_system_t sys){
     slv_block_unify(server);
   }
 
-  if(slv_check_bounds(SERVER,sys->vused,sys->vtot-1,MIF(sys),"fixed")){
+  if(slv_check_bounds(SERVER,sys->vused,-1,"fixed ")){
     sys->s.inconsistent = 1;
   }
 

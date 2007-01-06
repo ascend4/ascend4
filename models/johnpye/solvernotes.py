@@ -4,7 +4,6 @@ import extpy
 def solvernotes(self):
 	""" use the NOTES DB to set parameters applicable to the current active solver """
 	print "SETUP_SOLVER..."
-	self = ascpy.Registry().getInstance('context')
 	sim = ascpy.Registry().getSimulation('sim')
 
 	browser = extpy.getbrowser()
