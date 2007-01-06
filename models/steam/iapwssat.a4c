@@ -1,4 +1,4 @@
-REQUIRE "iapwssatprops.a4c";
+REQUIRE "steam/iapwssatprops.a4c";
 
 MODEL iapwssat REFINES iapwssatprops;
 	x IS_A fraction; (* ensures we stay in the required region *)
@@ -30,4 +30,7 @@ METHOD values;
 	RUN iapwssatprops::values;
 	x := 1.01;
 END values;
+METHOD self_test;
+	ASSERT x == 1.0;
+END self_test;
 END testiapwssat1;
