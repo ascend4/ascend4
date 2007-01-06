@@ -107,7 +107,7 @@ typedef enum{
 } IntegratorEngine;
 
 
-typedef struct{
+typedef struct IntegratorLookupStruct{
 	IntegratorEngine id;
 	const char *name;
 } IntegratorLookup;

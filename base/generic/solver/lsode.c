@@ -172,7 +172,7 @@ static struct Lsode_Data {
 /*--------------------------
   Data space for use by LSODE
 */
-typedef struct{
+typedef struct IntegratorLsodeDataStruct{
   long n_eqns;                     /**< dimension of state vector */
   int *input_indices;              /**< vector of state vars indexes */
   int *output_indices;             /**< vector of derivative var indexes */
