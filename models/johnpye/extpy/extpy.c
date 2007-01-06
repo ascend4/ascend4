@@ -74,6 +74,9 @@ extern ASC_EXPORT(int) extpy_register(){
 	if(result){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to register import handler (error = %d)",result);
 	}
+
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Loaded EXPERIMENTAL 'extpy' import handler.");
+	
 	return result;
 }
 
@@ -332,7 +335,6 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	int iserr;
 
 	CONSOLE_DEBUG("Importing Python script %s",name);
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Loading external python method (EXPERIMENTAL)");
 
 	if(Py_IsInitialized()){
 		CONSOLE_DEBUG("Python was already initialised");
