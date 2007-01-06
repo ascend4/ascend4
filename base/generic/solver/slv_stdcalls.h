@@ -214,7 +214,7 @@ extern int slv_tear_drop_reorder_block(slv_system_t sys,
   BOUNDS CHECKING
 */
 
-extern int slv_insure_bounds(slv_system_t sys, int32 lo, int32 hi, FILE *fp);
+extern int slv_ensure_bounds(slv_system_t sys, int32 lo, int32 hi, FILE *fp);
 /**<
 	Takes a system and a range of vars (lo,hi) and makes sure all the
 	variables are within bounds and bounds are reasonable. makes
