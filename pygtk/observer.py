@@ -8,10 +8,29 @@ OBSERVER_EDIT_COLOR = "#008800"
 OBSERVER_NOEDIT_COLOR = "#000088"
 OBSERVER_NORMAL_COLOR = "black"
 
-# This code uses the technique described in
+# This code uses the techniques described in
 # http://www.daa.com.au/pipermail/pygtk/2006-February/011777.html
+# http://piman.livejournal.com/361173.html
 
 OBSERVER_NUM=0
+
+class ClickableTreeColumn(gtk.TreeViewColumn):
+	def __init__(self, title="", *args, **kwargs):
+		super(ClickableTreeColumn, self).__init__(None, *args, **kwargs)
+		self.label = gtk.Label("%s" % title)
+		self.label.show()
+		self.set_widget(self.label)
+
+	def do_connect(self):
+		""" Connect the defined 'on_click' method. Note: must be called after
+		this object (ClickableTreeColumn) has been added to the TreeView,
+		eg mytreeview.append_column(col). """
+		button = self.label.get_ancestor(gtk.Button)
+		h = button.connect("clicked",self.on_click)
+		#button.clicked()
+		
+	def on_click(self,widget,*args):
+		print "RECEIVED EVENT"
 
 class ObserverColumn:
 	"""
@@ -135,11 +154,11 @@ class ObserverTab:
 
 		# create the 'active' pixbuf column
 		_renderer = gtk.CellRendererPixbuf()
-		_col = gtk.TreeViewColumn()
-		_col.set_title("")
+		_col = ClickableTreeColumn("")
 		_col.pack_start(_renderer,False)
 		_col.set_cell_data_func(_renderer, self.activepixbufvalue)
-		self.view.append_column(_col);
+		self.view.append_column(_col)
+		_col.do_connect()
 		
 		# initially there will not be any other columns
 
@@ -209,11 +228,11 @@ class ObserverTab:
 		# create a new column
 		_renderer = gtk.CellRendererText()
 		_renderer.connect('edited',self.on_view_cell_edited, _col)
-		_tvcol = gtk.TreeViewColumn()
-		_tvcol.set_title(_col.title)
+		_tvcol = ClickableTreeColumn(_col.title)
 		_tvcol.pack_start(_renderer,False)
 		_tvcol.set_cell_data_func(_renderer, _col.cellvalue)
 		self.view.append_column(_tvcol);
+		_tvcol.do_connect()
 		#self.browser.reporter.reportError("cols = "+str(self.cols))
 
 	def copy_to_clipboard(self,clip):
