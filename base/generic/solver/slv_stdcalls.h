@@ -244,7 +244,7 @@ extern int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
   SOLVER REGISTRATION
 */
 
-ASC_DLLSPEC(int ) SlvRegisterStandardClients(void);
+ASC_DLLSPEC int SlvRegisterStandardClients(void);
 /**<
 	Attempts to register solvers slv0 through (as of 6/96) slv7.
 

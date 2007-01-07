@@ -44,7 +44,7 @@
 extern void InitializePrototype(void);
 /**<  Must be called before any other prototype procedure. */
 
-ASC_DLLSPEC(struct Instance *) LookupPrototype(symchar *t);
+ASC_DLLSPEC struct Instance *LookupPrototype(symchar *t);
 /**<
  *  Check if an instance of type "t" is in the prototype library.  If
  *  no instance of that type exists, NULL is returned.
@@ -58,13 +58,13 @@ extern void DeletePrototype(symchar *t);
  *  an ancestor of type "t" is change.
  */
 
-ASC_DLLSPEC(void ) AddPrototype(struct Instance *i);
+ASC_DLLSPEC void AddPrototype(struct Instance *i);
 /**<
  *  This will add instance i to the prototype library.  If another definition
  *  of type "i" exists, it is deleted and replace with then new one.
  */
 
-ASC_DLLSPEC(void) DestroyPrototype(void);
+ASC_DLLSPEC void DestroyPrototype(void);
 /**<
  *  This deletes all the instances in the prototype library.  This should
  *  be done before the program exits.

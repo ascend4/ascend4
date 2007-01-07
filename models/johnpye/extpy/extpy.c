@@ -59,7 +59,7 @@ struct ExtPyData{
 
 	It sets up the functions in this external function library
 */
-extern ASC_EXPORT(int) extpy_register(){
+extern ASC_EXPORT int extpy_register(){
 	int result = 0;
 
 	struct ImportHandler *handler;

@@ -52,7 +52,7 @@ typedef struct slv3_system_structure *slv3_system_t;
 # define HAVE_QRSLV 0
 #endif
 
-ASC_DLLSPEC(int) slv3_register(SlvFunctionsT *f);
+ASC_DLLSPEC int slv3_register(SlvFunctionsT *f);
 /**<
  *  Registration function for the ASCEND QRSlv nonlinear solver.
  *  This is the function that tells the system about the QRSlv solver.

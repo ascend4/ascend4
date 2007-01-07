@@ -28,13 +28,13 @@ typedef int (*isInitializedFunc)(void);
 typedef void (*cleanupFunc)(void);
 
 /** A public datum. */
-ASC_DLLSPEC(int) value;
+ASC_DLLSPEC int value;
 
 /** Initializes the library. Returns -5. */
-ASC_DLLSPEC(int) init(void);
+ASC_DLLSPEC int init(void);
 /** Returns TRUE if library has been initialized, FALSE otherwise. */
-ASC_DLLSPEC(int) isInitialized(void);
+ASC_DLLSPEC int isInitialized(void);
 /** Cleans up the library. */
-ASC_DLLSPEC(void) cleanup(void);
+ASC_DLLSPEC void cleanup(void);
 
 #endif  /* TEST_ASCDYNALOAD_SHLIB_H */

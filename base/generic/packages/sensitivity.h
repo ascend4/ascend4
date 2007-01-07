@@ -96,7 +96,7 @@ extern int do_sensitivity_eval_all( struct Instance *i, struct gl_list_t *arglis
 /* ignores: interp, i,  */
 extern int do_sensitivity_eval( struct Instance *i, struct gl_list_t *arglist);
 
-ASC_DLLSPEC(int) sensitivity_register(void);
+ASC_DLLSPEC int sensitivity_register(void);
 
 /*--------------------------------------------------
 	The following functions are provided only for use by BLSODE. We want to

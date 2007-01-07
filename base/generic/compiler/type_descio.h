@@ -43,7 +43,7 @@
 #ifndef ASC_TYPE_DESCIO_H
 #define ASC_TYPE_DESCIO_H
 
-ASC_DLLSPEC(void ) WriteDefinition(FILE *f, struct TypeDescription *desc);
+ASC_DLLSPEC void WriteDefinition(FILE *f, struct TypeDescription *desc);
 /**<
  *  Write the type description structure to the given file in text.
  *  May include compiler derived information in comments.
@@ -78,7 +78,7 @@ extern char *WriteDefinitionStringList(struct TypeDescription *d);
  *      No GUI idiots need apply.
  */
 
-ASC_DLLSPEC(void ) WriteDiffDefinition(FILE *f, struct TypeDescription *desc);
+ASC_DLLSPEC void WriteDiffDefinition(FILE *f, struct TypeDescription *desc);
 /**< 
  *  Write the type description structure to the given file in text but
  *  only those statements that are in the declarative section which are

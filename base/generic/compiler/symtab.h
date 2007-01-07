@@ -48,7 +48,7 @@ extern void DestroyStringSpace(void);
  *  This deallocates all the memory associated with the string space.
  */
 
-ASC_DLLSPEC(void) InitSymbolTable(void);
+ASC_DLLSPEC void InitSymbolTable(void);
 /**<
  *  This procedure performs all the necessary initialization for the symbol
  *  table manager.  It should be called once and only once, and it must
@@ -59,7 +59,7 @@ ASC_DLLSPEC(void) InitSymbolTable(void);
  *  Post: the symbol table is initialized
  */
 
-ASC_DLLSPEC(symchar*) AddSymbol(CONST char *c);
+ASC_DLLSPEC symchar*AddSymbol(CONST char *c);
 /**<
  *  This function adds the string c to the symbol table if it is not already
  *  defined.  This uses a copy of c rather than c itself.  c must be a
@@ -82,7 +82,7 @@ ASC_DLLSPEC(symchar*) AddSymbol(CONST char *c);
  *  @example symchar *permanentstring = AddSymbol(c);
  */
 
-ASC_DLLSPEC(symchar *) AddSymbolL(CONST char *c, int len);
+ASC_DLLSPEC symchar *AddSymbolL(CONST char *c, int len);
 /**<
  *  This function does exactly what add symbol does except the length of the
  *  string is passed as a parameter.  The length is the number of characters
@@ -99,7 +99,7 @@ ASC_DLLSPEC(symchar *) AddSymbolL(CONST char *c, int len);
  *  for the life of the ASCEND process.
  */
 
-ASC_DLLSPEC(symchar*) AscFindSymbol(symchar *s);
+ASC_DLLSPEC symchar*AscFindSymbol(symchar *s);
 /**<
  * Returns NULL if the pointer s given is not from the table.
  * Otherwise returns the pointer given.
@@ -114,7 +114,7 @@ extern void PrintTab(int noisy);
  *  if (noisy) prints lots of goop.
  */
 
-ASC_DLLSPEC(void) DestroySymbolTable(void);
+ASC_DLLSPEC void DestroySymbolTable(void);
 /**<
  *  This function will deallocate all the memory associated with the
  *  symbol table and the symbols it contains.

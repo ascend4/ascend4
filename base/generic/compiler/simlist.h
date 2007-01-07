@@ -46,13 +46,13 @@
 
 #include <utilities/ascConfig.h>
 
-ASC_DLLSPEC(int ) g_compiler_timing;
+ASC_DLLSPEC int g_compiler_timing;
 /**<  Global flag for whether to perform timing of compiler operations. */
 
-ASC_DLLSPEC(struct gl_list_t *) g_simulation_list;
+ASC_DLLSPEC struct gl_list_t *g_simulation_list;
 /**<  Global simulation list.*/
 
-ASC_DLLSPEC(void ) Asc_DeAllocSim(struct Instance *inst);
+ASC_DLLSPEC void Asc_DeAllocSim(struct Instance *inst);
 /**<
  *  Destroys the instance given.
  *  inst should be a simulation instance, and may be NULL.
@@ -65,7 +65,7 @@ enum CreateInst_format {
   e_patch           /**< Compile a patch. */
 };
 
-ASC_DLLSPEC(struct Instance *) SimsCreateInstance(
+ASC_DLLSPEC struct Instance *SimsCreateInstance(
 	symchar *type,
 	symchar *name,
 	enum CreateInst_format format,
@@ -90,7 +90,7 @@ ASC_DLLSPEC(struct Instance *) SimsCreateInstance(
 	@return A pointer to the newly-created simulation instance.
 */
 
-ASC_DLLSPEC(void) Asc_DestroySimulations(void);
+ASC_DLLSPEC void Asc_DestroySimulations(void);
 /**<  Destroys all known instances on the simulation list. */
 
 
@@ -98,40 +98,40 @@ ASC_DLLSPEC(void) Asc_DestroySimulations(void);
  *  Stuff from SimsProc.h
  */
 
-ASC_DLLSPEC(struct Instance *) Asc_FindSimulationTop(symchar *str);
+ASC_DLLSPEC struct Instance *Asc_FindSimulationTop(symchar *str);
 /**<  Return the sim pointer if there is a sim named *str. */
 
-ASC_DLLSPEC(struct Instance *) Asc_FindSimulationRoot(symchar *str);
+ASC_DLLSPEC struct Instance *Asc_FindSimulationRoot(symchar *str);
 /**<  Return the top inst pointer if there is a sim named *str. */
 
-ASC_DLLSPEC(symchar *) Asc_SimsFindSimulationName(CONST struct Instance *sim);
+ASC_DLLSPEC symchar *Asc_SimsFindSimulationName(CONST struct Instance *sim);
 /**<
  *  Return the name string of the instance given if it is in the
  *  global sim list. Return null if not.
  */
 
-ASC_DLLSPEC(void ) Asc_SetCurrentSim(struct Instance *sim);
+ASC_DLLSPEC void Asc_SetCurrentSim(struct Instance *sim);
 /**<  Sets the current working simulation to the specified simulation. */
 
-ASC_DLLSPEC(struct Instance *) Asc_GetCurrentSim(void);
+ASC_DLLSPEC struct Instance *Asc_GetCurrentSim(void);
 /**<
  *  Returns a pointer to the current working simulation.
  *  Makes no checks on the state of the simulation.
  */
 
-ASC_DLLSPEC(int ) Asc_SimsUniqueName(symchar *str);
+ASC_DLLSPEC int Asc_SimsUniqueName(symchar *str);
 /**<
  *  Checks whether a simulation exists having specified name.
  *  Returns 0 if the name was found, 1 otherwise.
  */
 
-ASC_DLLSPEC(int ) Asc_SimsCmpSim(struct Instance *sim1, struct Instance *sim2);
+ASC_DLLSPEC int Asc_SimsCmpSim(struct Instance *sim1, struct Instance *sim2);
 /**<
  *  Compares two simulations, based on their names.
  *  Returns 0 if they are the same, non-zero if different.
  */
 
-ASC_DLLSPEC(void ) Asc_DeAllocSim(struct Instance *sim);
+ASC_DLLSPEC void Asc_DeAllocSim(struct Instance *sim);
 /**<
  *  Deallocates a simulation instance.
  *  The instance and its associated root instance are destroyed using

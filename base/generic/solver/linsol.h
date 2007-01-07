@@ -81,12 +81,12 @@ extern void linsol_set_matrix(linsol_system_t sys, mtx_matrix_t mtx);
  *  Sets the coefficient matrix to mtx.
  */
 
-ASC_DLLSPEC(mtx_matrix_t ) linsol_get_matrix(linsol_system_t sys);
+ASC_DLLSPEC mtx_matrix_t linsol_get_matrix(linsol_system_t sys);
 /**<
  *  Returns the coefficient matrix.
  */
 
-ASC_DLLSPEC(mtx_matrix_t ) linsol_get_inverse(linsol_system_t sys);
+ASC_DLLSPEC mtx_matrix_t linsol_get_inverse(linsol_system_t sys);
 /**<
  *  Returns the inverse matrix. May be NULL.
  */
@@ -114,21 +114,21 @@ extern int linsol_number_of_rhs(linsol_system_t sys);
  *  Returns the number of rhs's currently part of the system.
  */
 
-ASC_DLLSPEC(real64 *) linsol_get_rhs(linsol_system_t sys, int n);
+ASC_DLLSPEC real64 *linsol_get_rhs(linsol_system_t sys, int n);
 /**< 
  *  Returns the n-th rhs, where rhs's are indexed in the order they were
  *  added using linsol_add_rhs() from 0 to (# rhs's)-1.  NULL is returned
  *  if the index is out of range.
  */
 
-ASC_DLLSPEC(void ) linsol_matrix_was_changed(linsol_system_t sys);
+ASC_DLLSPEC void linsol_matrix_was_changed(linsol_system_t sys);
 /**< 
  *  Informs the solver that a numerical value of a non-zero was changed.
  *  This must be called whenever any numerical changes to the matrix are
  *  made.
  */
 
-ASC_DLLSPEC(void ) linsol_rhs_was_changed(linsol_system_t sys, real64 *rhs);
+ASC_DLLSPEC void linsol_rhs_was_changed(linsol_system_t sys, real64 *rhs);
 /**< 
  *  Informs the solver that the given rhs has been modified.  This must be
  *  called whenever the rhs is modified.
@@ -163,14 +163,14 @@ extern real64 linsol_pivot_tolerance(linsol_system_t sys);
 	Calls linsol_matrix_was_changed().
 */
 
-ASC_DLLSPEC(void ) linsol_reorder(linsol_system_t sys, mtx_region_t *region);
+ASC_DLLSPEC void linsol_reorder(linsol_system_t sys, mtx_region_t *region);
 /**<
  *  The specified region of the coefficient matrix is reordered.  This
  *  should be called before inverting the matrix.  The specified region
  *  is assumed to contain only nonempty rows and columns.
  */
 
-ASC_DLLSPEC(void ) linsol_invert(linsol_system_t sys, mtx_region_t *region);
+ASC_DLLSPEC void linsol_invert(linsol_system_t sys, mtx_region_t *region);
 /**<
  *  Decompose the specified region of a copy of the coefficient matrix
  *  into upper and lower triangular factors (if necessary) which can be
@@ -245,7 +245,7 @@ extern real64 linsol_org_col_dependency(linsol_system_t sys,
  *  set of row / column pivots obtained by linsol_get_pivot_sets.
  */
 
-ASC_DLLSPEC(void ) linsol_solve(linsol_system_t sys, real64 *rhs);
+ASC_DLLSPEC void linsol_solve(linsol_system_t sys, real64 *rhs);
 /**<
  *  Solves the system of linear equations (if necessary) utilizing the
  *  specified rhs along with the previously inverted matrix.  The rhs
@@ -263,7 +263,7 @@ extern real64 linsol_var_value(linsol_system_t sys,
  *  original column number.
  */
 
-ASC_DLLSPEC(boolean ) linsol_copy_solution(linsol_system_t sys,
+ASC_DLLSPEC boolean linsol_copy_solution(linsol_system_t sys,
                                     real64 *rhs, real64 *vector);
 /**<
  *  Will copy the solution vector into the vector provided.

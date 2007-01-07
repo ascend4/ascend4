@@ -319,7 +319,7 @@ extern struct ExtRelCache **slv_get_extrel_list(slv_system_t sys);
 extern int slv_get_num_extrels(slv_system_t sys);
 /**<  Returns the size of the most recently set extrel list. */
 
-ASC_DLLSPEC(int32 ) slv_obj_select_list(slv_system_t sys, int32 **rip);
+ASC_DLLSPEC int32 slv_obj_select_list(slv_system_t sys, int32 **rip);
 /**<
 	Allocates rip and fills it with solver objective list
 	positions of included objectives.
@@ -328,13 +328,13 @@ ASC_DLLSPEC(int32 ) slv_obj_select_list(slv_system_t sys, int32 **rip);
 	The calling function must free rip.
 */
 
-ASC_DLLSPEC(int32 ) slv_get_obj_num(slv_system_t sys);
+ASC_DLLSPEC int32 slv_get_obj_num(slv_system_t sys);
 /**<
 	Returns the solver list index of the current objective.
 	If the objective is NULL then -1 is returned.
 */
 
-ASC_DLLSPEC(int32) slv_near_bounds(slv_system_t sys, real64 epsilon, int32 **rip);
+ASC_DLLSPEC int32 slv_near_bounds(slv_system_t sys, real64 epsilon, int32 **rip);
 /**<
 	Allocates rip and fills it with:
 	-#  the number of vars close to lower bounds
@@ -349,7 +349,7 @@ ASC_DLLSPEC(int32) slv_near_bounds(slv_system_t sys, real64 epsilon, int32 **rip
 	@par The calling function must free rip.
 */
 
-ASC_DLLSPEC(int32 ) slv_far_from_nominals(slv_system_t sys, real64 bignum, int32 **rip);
+ASC_DLLSPEC int32 slv_far_from_nominals(slv_system_t sys, real64 bignum, int32 **rip);
 /**<
 	Allocates rip and fills it with
 	solver variable list positions of variables far

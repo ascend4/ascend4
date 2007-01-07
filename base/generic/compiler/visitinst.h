@@ -114,7 +114,7 @@ extern void ResetVisitCounts(struct Instance *inst);
  *  @bug At present, no known interface calls this function yet.
  */
 
-ASC_DLLSPEC(void ) SilentVisitInstanceTree(struct Instance *inst,
+ASC_DLLSPEC void SilentVisitInstanceTree(struct Instance *inst,
                                     VisitProc proc, int depth, int leaf);
 /**<
  *  <!--  void SilentVisitInstanceTree(inst,proc,depth,leaf)           -->
@@ -174,7 +174,7 @@ extern void FastVisitInstanceTree(struct Instance *inst,
  *                otherwise, it won't.
  */
 
-ASC_DLLSPEC(void ) SlowVisitInstanceTree(struct Instance *inst, 
+ASC_DLLSPEC void SlowVisitInstanceTree(struct Instance *inst, 
                                   VisitProc proc, int depth, int leaf);
 /**<
  *  <!--  void SlowVisitInstanceTree(inst,proc,depth,leaf)             -->

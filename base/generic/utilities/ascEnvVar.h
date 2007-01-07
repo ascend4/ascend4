@@ -53,7 +53,7 @@
 #define MAX_ENV_VAR_LENGTH 4096
 /**< Maximum length of an environment variable string. */
 
-ASC_DLLSPEC(int ) Asc_InitEnvironment(unsigned long anticipated);
+ASC_DLLSPEC int Asc_InitEnvironment(unsigned long anticipated);
 /**<
  *  Creates an empty environment of size anticipated.
  *  There is a minimum environment size, so the actual size
@@ -68,13 +68,13 @@ ASC_DLLSPEC(int ) Asc_InitEnvironment(unsigned long anticipated);
  *  @return Returns 0 on success, 1 on failure.
  */
 
-ASC_DLLSPEC(void ) Asc_DestroyEnvironment(void);
+ASC_DLLSPEC void Asc_DestroyEnvironment(void);
 /**<
  *  Destroys any information currently in the stored environment.
  *  All memory associated with the storage is released.
  */
 
-ASC_DLLSPEC(int ) Asc_SetPathList(CONST char *var, CONST char *path);
+ASC_DLLSPEC int Asc_SetPathList(CONST char *var, CONST char *path);
 /**<
  *  Assigns the elements in path to ASCEND environment variable var.
  *  path should contain one or more strings delimited with :
@@ -117,7 +117,7 @@ ASC_DLLSPEC(int ) Asc_SetPathList(CONST char *var, CONST char *path);
  *          1 otherwise.
  */
 
-ASC_DLLSPEC(int) Asc_PutEnv(CONST char *putenv_input_string);
+ASC_DLLSPEC int Asc_PutEnv(CONST char *putenv_input_string);
 /**<
  *  Creates an ASCEND environment variable from a putenv()-type string.
  *  The input string should have the form "varname=path".  The path
@@ -164,7 +164,7 @@ ASC_DLLSPEC(int) Asc_PutEnv(CONST char *putenv_input_string);
  *          1 otherwise.
  */
 
-ASC_DLLSPEC(int) Asc_ImportPathList(CONST char *osEnvVar);
+ASC_DLLSPEC int Asc_ImportPathList(CONST char *osEnvVar);
 /**<
  *  Imports a system environment variable into the ASCEND environment.
  *  If osEnvVar is already a variable in the ASCEND environment space,
@@ -180,7 +180,7 @@ ASC_DLLSPEC(int) Asc_ImportPathList(CONST char *osEnvVar);
  *  @return Returns 0 if variable is successfully imported, 1 otherwise.
  */
 
-ASC_DLLSPEC(int ) Asc_AppendPath(char *envvar, char *newelement);
+ASC_DLLSPEC int Asc_AppendPath(char *envvar, char *newelement);
 /**<
  *  Adds a new element to the list of values for an ASCEND environment
  *  variable.  If envvar does not exist, it is created.  newelement is
@@ -198,7 +198,7 @@ ASC_DLLSPEC(int ) Asc_AppendPath(char *envvar, char *newelement);
  *  @return Returns 0 if newelement was successfully added, 1 otherwise.
  */
 
-ASC_DLLSPEC(const char **) Asc_GetPathList(const char *envvar, int *argcPtr);
+ASC_DLLSPEC const char **Asc_GetPathList(const char *envvar, int *argcPtr);
 /**<
  *  Retrieve the current value(s) for ASCEND environment variable envvar.
  *  The values are returned as an array of pointers to the value strings.
@@ -218,7 +218,7 @@ ASC_DLLSPEC(const char **) Asc_GetPathList(const char *envvar, int *argcPtr);
  *          the returned array pointer will be NULL.
  */
 
-ASC_DLLSPEC(char*) Asc_GetEnv(const char *envvar);
+ASC_DLLSPEC char*Asc_GetEnv(const char *envvar);
 /**<
  *  Retrieve the value(s) of ASCEND environment variable envvar
  *  as a delimited string.  The elements of envvar are assembled
@@ -234,7 +234,7 @@ ASC_DLLSPEC(char*) Asc_GetEnv(const char *envvar);
  *          on error.  The caller is responsible for freeing it.
  */
 
-ASC_DLLSPEC(const char **) Asc_EnvNames(int *argc);
+ASC_DLLSPEC const char **Asc_EnvNames(int *argc);
 /**<
  *  Retrieve a list of currently defined ASCEND environment variables.
  *  Pointers to the variable names are returned in a NULL-terminated

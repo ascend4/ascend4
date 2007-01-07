@@ -46,7 +46,7 @@
 /**
  *  Write the procedure to the file.
  */
-ASC_DLLSPEC(void) WriteProcedure(FILE *f, struct InitProcedure *p);
+ASC_DLLSPEC void WriteProcedure(FILE *f, struct InitProcedure *p);
 
 #endif  /* __WATCHPTIO_H_SEEN__ */
 

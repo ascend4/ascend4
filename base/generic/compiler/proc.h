@@ -80,13 +80,13 @@ extern struct gl_list_t *MergeProcedureLists(struct gl_list_t *old_list,
  *  list given are thereby ignored and overridden.
  */
 
-ASC_DLLSPEC(struct gl_list_t *) GetUniversalProcedureList(void);
+ASC_DLLSPEC struct gl_list_t *GetUniversalProcedureList(void);
 /**<
  * Returns the list of methods defined for all MODELs
  * unless they redefine the methods themselves.
  */
 
-ASC_DLLSPEC(void) SetUniversalProcedureList(struct gl_list_t *l);
+ASC_DLLSPEC void SetUniversalProcedureList(struct gl_list_t *l);
 /**<
  * Sets the list of procedures defined for all MODELs.
  * If a UPL already exists, it will be destroyed unless it
@@ -127,7 +127,7 @@ extern int CompareProcedureLists(struct gl_list_t *pl1,
  *  @return name as a symchar*.
  *  @see ProcNameF()
  */
-ASC_DLLSPEC(symchar *) ProcNameF(CONST struct InitProcedure *p);
+ASC_DLLSPEC symchar *ProcNameF(CONST struct InitProcedure *p);
 /**<
  *  Implementation function for ProcName().  Do not call this
  *  function directly - use ProcName() instead.

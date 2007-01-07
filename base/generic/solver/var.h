@@ -182,7 +182,7 @@ typedef struct var_filter_structure {
 	@see var_instanceF()
 */
 
-ASC_DLLSPEC(SlvBackendToken) var_instanceF(const struct var_variable *var);
+ASC_DLLSPEC SlvBackendToken var_instanceF(const struct var_variable *var);
 /**<
 	Implementation function for var_instance().  Do not call this
 	function directly - use var_instance() instead.
@@ -198,7 +198,7 @@ extern char *var_make_xname(const struct var_variable *var);
 	Returns the index name, eg x23 rather than full name.
 	See var_make_name() for more information.
 */
-ASC_DLLSPEC(char*) var_make_name(
+ASC_DLLSPEC char*var_make_name(
 	const slv_system_t sys,
 	const struct var_variable *var
 );
@@ -212,7 +212,7 @@ ASC_DLLSPEC(char*) var_make_name(
 	slv_system_t from which you got the var.
 */
 
-ASC_DLLSPEC(void) var_write_name(const slv_system_t sys,
+ASC_DLLSPEC void var_write_name(const slv_system_t sys,
                            const struct var_variable *var,
                            FILE *file);
 /**<
@@ -295,7 +295,7 @@ extern void var_set_mindexF(struct var_variable *var, int32 mindex);
 	@see var_set_sindexF().
 */
 
-ASC_DLLSPEC(int32) var_sindexF(const struct var_variable *var);
+ASC_DLLSPEC int32 var_sindexF(const struct var_variable *var);
 /**<
 	Implementation function for var_sindex().  Do not call this
 	function directly - use var_sindex() instead.
@@ -306,29 +306,29 @@ extern void var_set_sindexF(struct var_variable *var, int32 sindex);
 	function directly - use var_set_sindex() instead.
 */
 
-ASC_DLLSPEC(real64) var_value(const struct var_variable *var);
+ASC_DLLSPEC real64 var_value(const struct var_variable *var);
 /**<  Returns the value of the variable. */
-ASC_DLLSPEC(void ) var_set_value(struct var_variable *var, real64 value);
+ASC_DLLSPEC void var_set_value(struct var_variable *var, real64 value);
 /**<
 	Sets the value of the variable.
 */
 
-ASC_DLLSPEC(real64) var_nominal(struct var_variable *var);
+ASC_DLLSPEC real64 var_nominal(struct var_variable *var);
 /**<  Returns the nominal value of the variable, or 1.0 if it has none. */
-ASC_DLLSPEC(void ) var_set_nominal(struct var_variable *var, real64 nominal);
+ASC_DLLSPEC void var_set_nominal(struct var_variable *var, real64 nominal);
 /**<
 	Sets the nominal value of the variable.
 	If no nominal field in var, returns 1.0.
 */
 
-ASC_DLLSPEC(real64) var_lower_bound(struct var_variable *var);
+ASC_DLLSPEC real64 var_lower_bound(struct var_variable *var);
 /**<  Returns the lower bound value of the variable. */
 extern void var_set_lower_bound(struct var_variable *var, real64 lower_bound);
 /**<
 	Sets the lower bound value of the variable.
 */
 
-ASC_DLLSPEC(real64) var_upper_bound(struct var_variable *var);
+ASC_DLLSPEC real64 var_upper_bound(struct var_variable *var);
 /**<  Returns the upper bound value of the variable. */
 extern void var_set_upper_bound(struct var_variable *var, real64 upper_bound);
 /**<
@@ -341,7 +341,7 @@ double var_odeatol(struct var_variable *var);
 #ifdef NDEBUG
 # define var_n_incidences(var) ((var)->n_incidences)
 #else
-ASC_DLLSPEC(int32) var_n_incidencesF(struct var_variable *var);
+ASC_DLLSPEC int32 var_n_incidencesF(struct var_variable *var);
 # define var_n_incidences(var) var_n_incidencesF(var)
 #endif
 /**<
@@ -378,7 +378,7 @@ extern void var_set_incidencesF(struct var_variable *var,
 	function directly - use var_set_incidences() instead.
 */
 
-ASC_DLLSPEC(struct rel_relation **) var_incidence_list_to_modify(
+ASC_DLLSPEC struct rel_relation **var_incidence_list_to_modify(
 		struct var_variable *var);
 /**<  Same as var_incidence_list(), except the returned list is modifiable. */
 
@@ -423,7 +423,7 @@ extern const struct rel_relation **var_incidence_list(struct var_variable *var);
 	@see var_set_flagsF().
 */
 
-ASC_DLLSPEC(uint32) var_flagsF(const struct var_variable *var);
+ASC_DLLSPEC uint32 var_flagsF(const struct var_variable *var);
 /**<
 	Implementation function for var_flags().  Do not call this
 	function directly - use var_flags() instead.
@@ -434,13 +434,13 @@ extern void var_set_flagsF(struct var_variable *var, uint32 flags);
 	function directly - use var_set_flags() instead.
 */
 
-ASC_DLLSPEC(uint32) var_flagbit(const struct var_variable *rel, const uint32 name);
+ASC_DLLSPEC uint32 var_flagbit(const struct var_variable *rel, const uint32 name);
 /**<
 	Returns the value of the bit specified from the variable flags.
 	name should be a VAR_xx flag defined above.
 */
 
-ASC_DLLSPEC(void ) var_set_flagbit(struct var_variable *var,
+ASC_DLLSPEC void var_set_flagbit(struct var_variable *var,
                             uint32 NAME,
                             uint32 oneorzero);
 /**<
@@ -477,14 +477,14 @@ ASC_DLLSPEC(void ) var_set_flagbit(struct var_variable *var,
  * 6/96. baa
 */
 
-ASC_DLLSPEC(int32 ) var_apply_filter(const struct var_variable *var,
+ASC_DLLSPEC int32 var_apply_filter(const struct var_variable *var,
                               const var_filter_t *filter);
 /**<
 	Returns 1 if filter and var flags are compatible, 0 elsewise.
 	See the filter description in rel.h. This is exactly the same.
 */
 
-ASC_DLLSPEC(uint32 ) var_fixed(struct var_variable *var);
+ASC_DLLSPEC uint32 var_fixed(struct var_variable *var);
 /**< Returns the fixed flag of var.  Has side effects in the ascend instance. */
 extern void var_set_fixed(struct var_variable *var, uint32 fixed);
 /**< Sets the fixed flag of var.  Has side effects in the ascend instance. */

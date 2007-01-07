@@ -49,7 +49,7 @@ ExtBBoxFinalFunc bboxtest_final;
 #define N_OUTPUT_ARGS 1 /* formal arg count */
 
 extern 
-ASC_EXPORT(int) bboxtest_register(void){
+ASC_EXPORT int bboxtest_register(void){
 	double epsilon = 1.0e-14;
 
 	char bboxtest_help[] = "This tests a simple black box y=k*x."

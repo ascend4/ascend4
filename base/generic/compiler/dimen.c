@@ -425,7 +425,7 @@ void PrintDimen(FILE *file, CONST dim_type *dim)
   }
 }
 
-ASC_DLLSPEC(void) PrintDimenMessage(CONST char *message
+ASC_DLLSPEC void PrintDimenMessage(CONST char *message
 		, CONST char *label1, CONST dim_type *d1
 		, CONST char *label2, CONST dim_type *d2
 ){

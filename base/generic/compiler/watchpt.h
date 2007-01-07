@@ -191,7 +191,7 @@ typedef unsigned int wpflags;
  * This value may or may not have an interrupt effect on any external
  * packages being called from ascend methods.
  */
-ASC_DLLSPEC(void ) Asc_SetMethodUserInterrupt(int value);
+ASC_DLLSPEC void Asc_SetMethodUserInterrupt(int value);
 
 
 /** 

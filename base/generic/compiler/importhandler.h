@@ -74,7 +74,7 @@ extern struct ImportHandler **ImportHandlerLibrary;
 	@param handler Handler struct to be added to the list 
 	@return 0 on success
 */
-ASC_DLLSPEC(int) importhandler_add(struct ImportHandler *handler);
+ASC_DLLSPEC int importhandler_add(struct ImportHandler *handler);
 
 /** Function to attempt import of an external script
 	@param partialname Name of the external script (without extension), relative to PATH.
@@ -96,7 +96,7 @@ ImportHandlerImportFn importhandler_extlib_import;
 
 int importhandler_remove(const char *name);
 struct ImportHandler *importhandler_lookup(const char *name);
-ASC_DLLSPEC(int) importhandler_destroylibrary();
+ASC_DLLSPEC int importhandler_destroylibrary();
 int importhandler_createlibrary();
 int importhandler_printlibrary(FILE *fp);
 int importhandler_printhandler(FILE *fp, struct ImportHandler *);
@@ -132,7 +132,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 	@return 0 on success
 */
-ASC_DLLSPEC(int) importhandler_createsharedpointertable();
+ASC_DLLSPEC int importhandler_createsharedpointertable();
 
 /**
 	Sets a pointer in the shared pointer table. This should only be called from
@@ -142,7 +142,7 @@ ASC_DLLSPEC(int) importhandler_createsharedpointertable();
 
 	@return 0 on success
 */
-ASC_DLLSPEC(int) importhandler_setsharedpointer(const char *key, void *ptr);
+ASC_DLLSPEC int importhandler_setsharedpointer(const char *key, void *ptr);
 
 /**
 	Retrieve a pointer from the shared pointer table. Returns NULL if the
@@ -151,6 +151,6 @@ ASC_DLLSPEC(int) importhandler_setsharedpointer(const char *key, void *ptr);
 
 	@return NULL on not found (or NULL value stored in registry)
 */
-ASC_DLLSPEC(void *) importhandler_getsharedpointer(const char *key);
+ASC_DLLSPEC void *importhandler_getsharedpointer(const char *key);
 
 #endif

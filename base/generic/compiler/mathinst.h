@@ -38,21 +38,21 @@
 #ifndef ASC_MATHINST_H
 #define ASC_MATHINST_H
 
-ASC_DLLSPEC(enum Expr_enum ) GetInstanceRelationType(CONST struct Instance *i);
+ASC_DLLSPEC enum Expr_enum GetInstanceRelationType(CONST struct Instance *i);
 /**<
 	This returns the type of the relation associated with this relations
 	instance (REL_INST).
 	This should be one of e_token, e_opcode, e_glassbox or e_blackbox.
 */
 
-ASC_DLLSPEC(CONST struct relation *) GetInstanceRelationOnly(CONST struct Instance *i);
+ASC_DLLSPEC CONST struct relation *GetInstanceRelationOnly(CONST struct Instance *i);
 /**<
 	This returns the guts of a relation instance (REL_INST).
 	These should be treated as read only usually because you don't
 	know who is sharing those guts.
 */
 
-ASC_DLLSPEC(CONST struct relation *) GetInstanceRelation(CONST struct Instance *i,
+ASC_DLLSPEC CONST struct relation *GetInstanceRelation(CONST struct Instance *i,
                                                   enum Expr_enum *type);
 /**<
 	This returns the value of a relation inst(REL_INST). It will fill in
@@ -83,14 +83,14 @@ extern void SetInstanceRelation(struct Instance *i,
 	rel and type may be the NULL/e_undefined combination.
 */
 
-ASC_DLLSPEC(CONST struct logrelation *) GetInstanceLogRelOnly(CONST struct Instance*i);
+ASC_DLLSPEC CONST struct logrelation *GetInstanceLogRelOnly(CONST struct Instance*i);
 /**< 
 	This returns the guts of a logical relation instance (LREL_INST).
 	These should be treated as read only usually because you don't
 	know who is sharing those guts.
 */
 
-ASC_DLLSPEC(CONST struct logrelation *) GetInstanceLogRel(CONST struct Instance *i);
+ASC_DLLSPEC CONST struct logrelation *GetInstanceLogRel(CONST struct Instance *i);
 /**< 
 	This returns the value of a logrelation inst(LREL_INST).
 */
@@ -108,7 +108,7 @@ extern void SetInstanceLogRel(struct Instance *i, struct logrelation *lrel);
 	instance, so rel should not be modified or destroyed.
 */
 
-ASC_DLLSPEC(struct gl_list_t *) GetInstanceOperands(CONST struct Instance *i);
+ASC_DLLSPEC struct gl_list_t *GetInstanceOperands(CONST struct Instance *i);
 /**< 
 	Returns list of vars/models/equations in a mathematical relationship.
 	Accepts all instance kinds. returns list only if the query makes
@@ -152,14 +152,14 @@ extern void SetWhenCases(struct Instance *i, struct gl_list_t *whencases);
 	Same for discrete variables.
 */
 
-ASC_DLLSPEC(unsigned long ) RelationsCount(CONST struct Instance *i);
+ASC_DLLSPEC unsigned long RelationsCount(CONST struct Instance *i);
 /**< 
 	This will return the number of relations that instance "i" appears in.
 	"i" must be a REAL_ATOM_INST.  Otherwise, this routine will
 	bomb.
 */
 
-ASC_DLLSPEC(struct Instance *) RelationsForAtom(CONST struct Instance *i,
+ASC_DLLSPEC struct Instance *RelationsForAtom(CONST struct Instance *i,
                                          unsigned long c);
 /**<
  	This routine will return the c'th relation in instance i's relation list.
@@ -178,13 +178,13 @@ extern void RemoveRelation(struct Instance *i, struct Instance *reln);
 	list, execution continues with a warning message.
 */
 
-ASC_DLLSPEC(unsigned long ) LogRelationsCount(CONST struct Instance *i);
+ASC_DLLSPEC unsigned long LogRelationsCount(CONST struct Instance *i);
 /**< 
 	This will return the number of logical relations that instance "i"
 	appears in. "i" must be a BOOLEAN_ATOM_INST, REL_INST or LREL_INST
 */
 
-ASC_DLLSPEC(struct Instance *) LogRelationsForInstance(CONST struct Instance *i,
+ASC_DLLSPEC struct Instance *LogRelationsForInstance(CONST struct Instance *i,
                                                 unsigned long c);
 /**<
 	This routine will return the c'th logical relation in instance i's
@@ -206,12 +206,12 @@ extern void RemoveLogRel(struct Instance *i, struct Instance *lreln);
 	i's logical relation list, execution continues with a warning message.
 */
 
-ASC_DLLSPEC(unsigned long ) WhensCount(struct Instance *i);
+ASC_DLLSPEC unsigned long WhensCount(struct Instance *i);
 /**< 
 	This will return the number of whens that instance "i" is referenced in.
 */
 
-ASC_DLLSPEC(struct Instance *) WhensForInstance(struct Instance *i,
+ASC_DLLSPEC struct Instance *WhensForInstance(struct Instance *i,
                                          unsigned long c);
 /**<
 	This routine will return the c'th when in instance i's when list.

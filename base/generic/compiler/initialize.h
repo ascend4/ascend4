@@ -53,7 +53,7 @@ extern void SetProcStackLimit(unsigned long l);
 extern unsigned long GetProcStackLimit(void);
 
 /** Run a METHOD on a model. */
-ASC_DLLSPEC(enum Proc_enum) Initialize(struct Instance *context,
+ASC_DLLSPEC enum Proc_enum Initialize(struct Instance *context,
 							    struct Name *name,
 							    char *cname,
 							    FILE *err,
@@ -104,7 +104,7 @@ extern enum Proc_enum ClassAccessInitialize(struct Instance *context,
 */
 
 /** Search for a named procedure on an instance */
-ASC_DLLSPEC(struct InitProcedure *) FindProcedure(CONST struct Instance *i,
+ASC_DLLSPEC struct InitProcedure *FindProcedure(CONST struct Instance *i,
                                            symchar *procname);
 /**<
 	@param procname the name of the procedure searched for
@@ -112,7 +112,7 @@ ASC_DLLSPEC(struct InitProcedure *) FindProcedure(CONST struct Instance *i,
 */
 
 /** Search a list for a named procedure. */
-ASC_DLLSPEC(struct InitProcedure *) SearchProcList(CONST struct gl_list_t *list,
+ASC_DLLSPEC struct InitProcedure *SearchProcList(CONST struct gl_list_t *list,
                                             symchar *name);
 /**<
 	@param list (generally you will use the output from @code GetInitializationList() @endcode)

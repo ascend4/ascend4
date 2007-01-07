@@ -70,7 +70,7 @@ ExtBBoxFinalFunc asc_datareader_close;
 	how many inputs and outputs it needs.
 */
 extern
-ASC_EXPORT(int) datareader_register(){
+ASC_EXPORT int datareader_register(){
 	const char *help = "The is the ASCEND Data Reader, for pulling in"
 		" time-series data such as weather readings for use in simulations.";
 

@@ -74,7 +74,7 @@ extern boolean check_sparse(const mtx_sparse_t * const sp,
  **  @return 1 if given matrix is valid, 0 otherwise.
  **/
 
-ASC_DLLSPEC(mtx_coord_t *) mtx_coord(mtx_coord_t *coordp, int32 row, int32 col);
+ASC_DLLSPEC mtx_coord_t *mtx_coord(mtx_coord_t *coordp, int32 row, int32 col);
 /**<
  ***  Places the values of row and col into coordp and returns
  ***  the coordp pointer again.
@@ -90,7 +90,7 @@ extern mtx_range_t *mtx_range(mtx_range_t *rangep, int32 low, int32 high);
  ***  Places the values of low and high into rangep and returns
  ***  the rangep pointer again.
  **/
-ASC_DLLSPEC(mtx_region_t *) mtx_region(mtx_region_t *regionp,
+ASC_DLLSPEC mtx_region_t *mtx_region(mtx_region_t *regionp,
                                 int32 rowlow, int32 rowhigh,
                                 int32 collow, int32 colhigh);
 /**<
@@ -99,7 +99,7 @@ ASC_DLLSPEC(mtx_region_t *) mtx_region(mtx_region_t *regionp,
  ***  regionp pointer again.
  **/
 
-ASC_DLLSPEC(void ) mtx_zero_int32(int32 *data, int len);
+ASC_DLLSPEC void mtx_zero_int32(int32 *data, int len);
 /**< Zeros an int32 vector of specified length. Ignores NULL input vectors. */
 extern void mtx_zero_real64(real64 *data, int len);
 /**< Zeros a real64 vector of specified length. Ignores NULL input vectors. */
@@ -110,7 +110,7 @@ extern void mtx_zero_ptr(void **data, int len);
  ***  Zeros a char vector of specified length. Ignores NULL input vectors.
  **/
 
-ASC_DLLSPEC(mtx_matrix_t) mtx_create(void);
+ASC_DLLSPEC mtx_matrix_t mtx_create(void);
 /**<
  ***  Creates a 0-order matrix and returns a handle to it.
  ***  Matrix created is a master with no slaves.
@@ -152,7 +152,7 @@ extern void mtx_debug_redirect_freeze(void);
  ***  redirecting errors back to stderr.
  **/
 
-ASC_DLLSPEC(void) mtx_destroy(mtx_matrix_t matrix);
+ASC_DLLSPEC void mtx_destroy(mtx_matrix_t matrix);
 /**<
  ***  Destroys the matrix, freeing the memory it occupied.
  ***  Does nothing if matrix fails mtx_check_matrix.
@@ -168,7 +168,7 @@ extern mtx_sparse_t *mtx_create_sparse(int32 capacity);
  ***  If insufficient memory is available, returns NULL.
  **/
 
-ASC_DLLSPEC(void ) mtx_destroy_sparse(mtx_sparse_t *sp);
+ASC_DLLSPEC void mtx_destroy_sparse(mtx_sparse_t *sp);
 /**<
  ***  <!--  mtx_destroy_sparse(sp);                                    -->
  ***  <!--  mtx_sparse_t *sp;                                          -->
@@ -262,13 +262,13 @@ extern mtx_matrix_t mtx_copy_options(mtx_matrix_t matrix,
 #define mtx_copy_complete(m) mtx_copy_options((m),TRUE,TRUE, mtx_ENTIRE_MATRIX,0.0)
 /**< See mtx_copy_options(). */
 
-ASC_DLLSPEC(int32 ) mtx_order(mtx_matrix_t matrix);
+ASC_DLLSPEC int32 mtx_order(mtx_matrix_t matrix);
 /**<
  ***  Returns the order of the matrix, be it master or slave.
  -$-  Order of a corrupt matrix is -1;
  **/
 
-ASC_DLLSPEC(int32 ) mtx_capacity(mtx_matrix_t matrix);
+ASC_DLLSPEC int32 mtx_capacity(mtx_matrix_t matrix);
 /**< 
  ***  Returns the capacity of the matrix, be it master or slave.
  ***  Original row/column numbers must lie in the range 0 <= ndx < cap.
@@ -277,7 +277,7 @@ ASC_DLLSPEC(int32 ) mtx_capacity(mtx_matrix_t matrix);
  -$-  capacity of a corrupt matrix is -1;
  **/
 
-ASC_DLLSPEC(void) mtx_set_order(mtx_matrix_t matrix, int32 order);
+ASC_DLLSPEC void mtx_set_order(mtx_matrix_t matrix, int32 order);
 /**< 
  ***  Changes the order of the matrix to the new order, either truncating
  ***  the matrix, or extending it with blank rows and columns if necessary.
@@ -338,7 +338,7 @@ extern void mtx_clear_collist(mtx_matrix_t matrix,
  ***  @see mtx_clear() for more about matrix clearing functions.
  **/
 
-ASC_DLLSPEC(void ) mtx_clear_region(mtx_matrix_t matrix, mtx_region_t *region);
+ASC_DLLSPEC void mtx_clear_region(mtx_matrix_t matrix, mtx_region_t *region);
 /**<
  ***  Erases all elements in the given region.
  -$-  Does nothing to a bad matrix if MTX_DEBUG is defined.<br><br>
@@ -360,7 +360,7 @@ extern void mtx_reset_perm(mtx_matrix_t matrix);
  ***  @see mtx_clear() for more about matrix clearing functions.
  **/
 
-ASC_DLLSPEC(void) mtx_clear(mtx_matrix_t matrix);
+ASC_DLLSPEC void mtx_clear(mtx_matrix_t matrix);
 /**<
  ***  Clears everything in the matrix.
  -$-  Does nothing to a bad matrix if MTX_DEBUG is defined.<br><br>
@@ -377,7 +377,7 @@ ASC_DLLSPEC(void) mtx_clear(mtx_matrix_t matrix);
  **/
 
 
-ASC_DLLSPEC(real64 ) mtx_value(mtx_matrix_t matrix, mtx_coord_t *coord);
+ASC_DLLSPEC real64 mtx_value(mtx_matrix_t matrix, mtx_coord_t *coord);
 /**<
  ***
  ***  Use of mtx_value() should be avoided if at all possible
@@ -411,7 +411,7 @@ extern void mtx_set_value(mtx_matrix_t matrix,
  *** @see mtx_fill_value()
  **/
 
-ASC_DLLSPEC(void) mtx_fill_value(mtx_matrix_t matrix,
+ASC_DLLSPEC void mtx_fill_value(mtx_matrix_t matrix,
                            mtx_coord_t *coord, real64 value);
 /**<
  ***  Sets the value of the given element in the matrix.
@@ -1277,7 +1277,7 @@ mtx_write_region_human_f((f),(m),(r),1,1)
  *  @see mtx_write_region_human_f(). 
  */
 
-ASC_DLLSPEC(void ) mtx_write_region(FILE *file, 
+ASC_DLLSPEC void mtx_write_region(FILE *file, 
                              mtx_matrix_t mtx, 
                              mtx_region_t *region);
 /**<
@@ -1340,7 +1340,7 @@ extern void mtx_write_region_matlab(FILE *file,
  ***  Row/column coordinates printed are the cur coordinates.
  **/
 
-ASC_DLLSPEC(void ) mtx_write_region_plot(FILE *file, 
+ASC_DLLSPEC void mtx_write_region_plot(FILE *file, 
                                   mtx_matrix_t mtx, 
                                   mtx_region_t *region);
 /**<
@@ -1351,7 +1351,7 @@ ASC_DLLSPEC(void ) mtx_write_region_plot(FILE *file,
  ***  Doesn't care about master/slave status.
  **/
 
-ASC_DLLSPEC(void ) mtx_write_region_csr(FILE *file,
+ASC_DLLSPEC void mtx_write_region_csr(FILE *file,
                                  mtx_matrix_t mtx,
                                  mtx_region_t *region, 
                                  int offset);
@@ -1367,7 +1367,7 @@ ASC_DLLSPEC(void ) mtx_write_region_csr(FILE *file,
  ***
  ***  @see http://citeseer.ist.psu.edu/366279.html
  **/
-ASC_DLLSPEC(void ) mtx_write_region_smms(FILE *file,
+ASC_DLLSPEC void mtx_write_region_smms(FILE *file,
                                   mtx_matrix_t mtx,
                                   mtx_region_t *region,
                                   int offset);

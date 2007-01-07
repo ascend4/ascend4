@@ -46,7 +46,7 @@
 #include <utilities/ascConfig.h>
 #include "slv_types.h"
 
-ASC_DLLSPEC(slv_system_t) system_build(SlvBackendToken inst);
+ASC_DLLSPEC slv_system_t system_build(SlvBackendToken inst);
 /**<
 	In ascend, backendtoken is a struct Instance *.
 	Visits the instance tree and collects all variables,
@@ -56,12 +56,12 @@ ASC_DLLSPEC(slv_system_t) system_build(SlvBackendToken inst);
 	need to be re-called if the a new solver is selected. -- JP
 */
 
-ASC_DLLSPEC(void ) system_destroy(slv_system_t sys);
+ASC_DLLSPEC void system_destroy(slv_system_t sys);
 /**<
 	Destroys the latest model formulation.
 */
 
-ASC_DLLSPEC(void ) system_free_reused_mem(void);
+ASC_DLLSPEC void system_free_reused_mem(void);
 /**<
 	Deallocates any memory that solvers may be squirrelling away for
 	internal reuse. Calling this while any slv_system_t exists

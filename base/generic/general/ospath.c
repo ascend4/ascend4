@@ -907,7 +907,7 @@ struct FilePath *ospath_getdir(struct FilePath *fp){
 	return ospath_new(s);
 }
 
-ASC_DLLSPEC(struct FilePath *) ospath_getabs(struct FilePath *fp){
+ASC_DLLSPEC struct FilePath *ospath_getabs(struct FilePath *fp){
 	struct FilePath *fp1, *fp2;
 	if(fp->path[0]==PATH_SEPARATOR_CHAR){
 		fp1 = ospath_new_copy(fp);

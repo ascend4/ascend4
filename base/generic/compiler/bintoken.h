@@ -58,7 +58,7 @@ enum bintoken_kind {
  * of unneeded files; specifically $srcname, objname will be deleted
  * after a successful link.
  */
-ASC_DLLSPEC(int) BinTokenSetOptions(
+ASC_DLLSPEC int BinTokenSetOptions(
 	CONST char *srcname, CONST char *objname, CONST char *libname
 	,CONST char *buildcommand, CONST char *unlinkcommand
 	,unsigned long maxreln

@@ -139,7 +139,7 @@ extern void (*InterfacePtrATS)();
 */
 
 #ifndef NDEBUG
-ASC_DLLSPEC(enum inst_t) InstanceKindF(CONST struct Instance *i);
+ASC_DLLSPEC enum inst_t InstanceKindF(CONST struct Instance *i);
 /**<
 	Implementation function for InstanceKind().  Do not use
 	this function directly - use InstanceKind() instead.
@@ -179,7 +179,7 @@ extern unsigned long InstanceDepth(CONST struct Instance *i);
  *  The root instance is at depth 1.
  */
 
-ASC_DLLSPEC(unsigned long ) InstanceShortDepth(CONST struct Instance *i);
+ASC_DLLSPEC unsigned long InstanceShortDepth(CONST struct Instance *i);
 /**<
  *  Return the shortest distance between i and root.  The depth of NULL
  *  is 0, and the depth of root is 1.
@@ -194,7 +194,7 @@ extern void SetNextCliqueMember(struct Instance *i, struct Instance *ptr);
  *  This is not an intelligent function.
  */
 
-ASC_DLLSPEC(struct Instance*) NextCliqueMember(CONST struct Instance *i);
+ASC_DLLSPEC struct Instance*NextCliqueMember(CONST struct Instance *i);
 /**<
  *  This is defined to give clients access to the cliques(ARE_ALIKE) links
  *  between instances.  Each instance has a clique pointer which points to
@@ -214,7 +214,7 @@ ASC_DLLSPEC(struct Instance*) NextCliqueMember(CONST struct Instance *i);
  *  This function can be call on *any* type of instance.
  */
 
-ASC_DLLSPEC(VOIDPTR) GetInterfacePtr(CONST struct Instance *i);
+ASC_DLLSPEC VOIDPTR GetInterfacePtr(CONST struct Instance *i);
 /**<
  *  Return the interface pointer.  The compiler initializes this to NULL
  *  when it creates an instance of the following kinds, and hence should
@@ -252,7 +252,7 @@ ASC_DLLSPEC(VOIDPTR) GetInterfacePtr(CONST struct Instance *i);
  *  instance_io.h.
  */
 
-ASC_DLLSPEC(void) SetInterfacePtr(struct Instance *i, VOIDPTR c);
+ASC_DLLSPEC void SetInterfacePtr(struct Instance *i, VOIDPTR c);
 /**<
  *  Set the interface pointer.  The interface must set and maintain this
  *  pointer. See the note for GetInterfacePtr about applicability of this
@@ -274,7 +274,7 @@ extern void SetAnonFlags(struct Instance *i, unsigned int flags);
  *  Works for all instance kinds except subatomic ones.
  */
 
-ASC_DLLSPEC(struct BitList *) InstanceBitList(CONST struct Instance *i);
+ASC_DLLSPEC struct BitList *InstanceBitList(CONST struct Instance *i);
 /**<
  *  Return the bit list which indicates which statements have and have not
  *  been executed.  NULL indicates that there aren't any unexecuted statements.
@@ -287,14 +287,14 @@ ASC_DLLSPEC(struct BitList *) InstanceBitList(CONST struct Instance *i);
 	These are general instance querying routines.
 */
 
-ASC_DLLSPEC(symchar *) InstanceType(CONST struct Instance *i);
+ASC_DLLSPEC symchar *InstanceType(CONST struct Instance *i);
 /**<
  *  Return a string indicating the type of instance i.  This works for
  *  all types of instances.  It returns the blank string for arrays and
  *  relations though.
  */
 
-ASC_DLLSPEC(struct TypeDescription*) InstanceTypeDesc(CONST struct Instance *i);
+ASC_DLLSPEC struct TypeDescription*InstanceTypeDesc(CONST struct Instance *i);
 /**<
  *  Return the instance's type description.  This returns NULL for fundamental
  *  instances.
@@ -324,13 +324,13 @@ extern unsigned long InstanceSize(CONST struct Instance *i);
  *  Returns TRUE if i is a UNIVERSAL instance.
  */
 
-ASC_DLLSPEC(int ) IntegerSetInstance(CONST struct Instance *i);
+ASC_DLLSPEC int IntegerSetInstance(CONST struct Instance *i);
 /**<
  *  It will return true if the set is of integers and false otherwise.
  *  This should only be called on set instances.
  */
 
-ASC_DLLSPEC(symchar *) GetSimulationName(struct Instance *i);
+ASC_DLLSPEC symchar *GetSimulationName(struct Instance *i);
 /**<
  *  Returns the name of the simulation instance.
  *  i must be a SIM_INST kind.
@@ -342,7 +342,7 @@ extern struct gl_list_t *FindSimulationAncestors(struct Instance *i);
  * Caller should destroy the list (but obviously not its content).
  */
 
-ASC_DLLSPEC(struct Instance*) GetSimulationRoot(struct Instance *i);
+ASC_DLLSPEC struct Instance*GetSimulationRoot(struct Instance *i);
 /**<
  *  Returns the root instance of the simulation. This is where most if not
  *  all useful queries of a simulation should be based.

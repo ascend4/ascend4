@@ -484,7 +484,7 @@ int error_reporter_note_no_line(const char *fmt,...){
 	Error reporter 'here' function for compilers not supporting
 	variadic macros.
 */
-ASC_DLLSPEC(int) error_reporter_here(const error_severity_t sev, const char *fmt,...){
+ASC_DLLSPEC int error_reporter_here(const error_severity_t sev, const char *fmt,...){
 	int res;
 	va_list args;
 

@@ -103,7 +103,7 @@ extern struct Instance *ShortCutProtoInstance(struct TypeDescription *type);
  *  can treat a copied instance specially.
  */
 
-ASC_DLLSPEC(struct Instance *) CopyInstance(CONST struct Instance *i);
+ASC_DLLSPEC struct Instance *CopyInstance(CONST struct Instance *i);
 /**<
  *  <!--  struct Instance *CopyInstance(i)                             -->
  *  <!--  const struct Instance *i;                                    -->

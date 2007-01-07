@@ -173,7 +173,7 @@ extern void ArrayVisitLocalLeaves(struct Instance *mch, AVProc func);
 	mch is an array instance that is the child of a MODEL.
 */
 
-ASC_DLLSPEC(struct Instance*) ChildByChar(CONST struct Instance *i,
+ASC_DLLSPEC struct Instance*ChildByChar(CONST struct Instance *i,
                                     symchar *str);
 /**<
  *  This returns to the pointer to a child, c, of parent,p, named by str.

@@ -44,7 +44,7 @@
 #ifndef ASC_SLV_INTERFACE_H
 #define ASC_SLV_INTERFACE_H
 
-ASC_DLLSPEC(void ) Solve(struct Instance *inst);
+ASC_DLLSPEC void Solve(struct Instance *inst);
 /**<
  *  This is the link that the command line interface should call.
  */

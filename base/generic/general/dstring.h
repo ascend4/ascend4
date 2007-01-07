@@ -98,7 +98,7 @@ typedef struct Asc_DString {
  *                < 0, then append all of string, up to null at end.
  *  @return Returns the new value of the dynamic string.
  */
-ASC_DLLSPEC(char *) Asc_DStringAppend(register Asc_DString *dsPtr,
+ASC_DLLSPEC char *Asc_DStringAppend(register Asc_DString *dsPtr,
                                CONST char *string,
                                int length);
 
@@ -112,7 +112,7 @@ ASC_DLLSPEC(char *) Asc_DStringAppend(register Asc_DString *dsPtr,
  *
  *  @param dsPtr Structure describing dynamic string (non-NULL).
 */
-ASC_DLLSPEC(void ) Asc_DStringFree(Asc_DString *dsPtr);
+ASC_DLLSPEC void Asc_DStringFree(Asc_DString *dsPtr);
 
 /*----------------------------------------------------------------------*/
 /**
@@ -124,7 +124,7 @@ ASC_DLLSPEC(void ) Asc_DStringFree(Asc_DString *dsPtr);
  *
  *  @param dsPtr Pointer to structure for dynamic string (non-NULL).
  */
-ASC_DLLSPEC(void ) Asc_DStringInit(register Asc_DString *dsPtr);
+ASC_DLLSPEC void Asc_DStringInit(register Asc_DString *dsPtr);
 
 /*----------------------------------------------------------------------*/
 /**
@@ -137,7 +137,7 @@ ASC_DLLSPEC(void ) Asc_DStringInit(register Asc_DString *dsPtr);
  *  @param dsPtr dsPtr Dynamic string holding the returned result.
  *  @return Returns a copy of the original value of the dynamic string.
 */
-ASC_DLLSPEC(char *) Asc_DStringResult(Asc_DString *dsPtr);
+ASC_DLLSPEC char *Asc_DStringResult(Asc_DString *dsPtr);
 
 /*----------------------------------------------------------------------*/
 /**
@@ -150,7 +150,7 @@ ASC_DLLSPEC(char *) Asc_DStringResult(Asc_DString *dsPtr);
  *  @param dsPtr  Structure describing dynamic string (non-NULL).
  *  @param length New maximum length for the dynamic string.
  */
-ASC_DLLSPEC(void ) Asc_DStringTrunc(Asc_DString *dsPtr, int length);
+ASC_DLLSPEC void Asc_DStringTrunc(Asc_DString *dsPtr, int length);
 
 /*----------------------------------------------------------------------*/
 /**
@@ -163,7 +163,7 @@ ASC_DLLSPEC(void ) Asc_DStringTrunc(Asc_DString *dsPtr, int length);
  *  @param string  String to append (non-NULL, null-terminated).
  *  @return Returns the new value of the dynamic string.
  */
-ASC_DLLSPEC(char *) Asc_DStringSet(Asc_DString *dsPtr, CONST char *string);
+ASC_DLLSPEC char *Asc_DStringSet(Asc_DString *dsPtr, CONST char *string);
 
 #endif /* ASC_DSTRING_H */
 

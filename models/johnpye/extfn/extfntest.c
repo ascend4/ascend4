@@ -60,7 +60,7 @@ ExtBBoxFunc addone_calc;
 #endif
 
 extern
-ASC_EXPORT(int) extfntest_register(){
+ASC_EXPORT int extfntest_register(){
 	const char *addone_help = "This is a test of the dynamic user packages functionality";
 	int result = 0;
 

@@ -603,7 +603,7 @@ typedef struct slv_parameters_structure {
 
 
 /* slv_destroy_parms() is defined in slv.c */
-ASC_DLLSPEC(void ) slv_destroy_parms(slv_parameters_t *p);
+ASC_DLLSPEC void slv_destroy_parms(slv_parameters_t *p);
 /**<
 	Deallocates any allocated memory held by a parameter structure.
 
@@ -655,7 +655,7 @@ extern int32 slv_define_parm(slv_parameters_t *p,
  */
 
 /* slv_set_char_parameter() is defined in slv.c */
-ASC_DLLSPEC(void) slv_set_char_parameter(char **cptr, CONST char *newvalue);
+ASC_DLLSPEC void slv_set_char_parameter(char **cptr, CONST char *newvalue);
 /**<
 	Sets a char parameter value to a new string.
 	Resetting the value of a parameter can be done directly except
@@ -831,7 +831,7 @@ typedef struct slv_status_structure {
   GENERAL INPUT/OUTPUT ROUTINES
 */
 
-ASC_DLLSPEC(FILE *)slv_get_output_file(FILE *fp);
+ASC_DLLSPEC FILE *slv_get_output_file(FILE *fp);
 /**<
  *  Checks a file pointer, and if NULL returns a pointer to the nul device.
  *  If you are in environment that doesn't have something like
@@ -1089,7 +1089,7 @@ extern int slv_direct_log_solve(slv_system_t sys,
   and columns back to the original data? -- JP
 */
 
-ASC_DLLSPEC(int32 **) slv_create_lnkmap(int32 m, int32 n, int32 hl, int32 *hi, int32 *hj);
+ASC_DLLSPEC int32 **slv_create_lnkmap(int32 m, int32 n, int32 hl, int32 *hi, int32 *hj);
 /**<
  *  Builds a row-biased mapping array from the hi,hj lists given.
  *  The map returned has the following format:
@@ -1129,7 +1129,7 @@ ASC_DLLSPEC(int32 **) slv_create_lnkmap(int32 m, int32 n, int32 hl, int32 *hi, i
  *  @return Pointer to the new lnkmap array, or NULL if an error occurred.
  */
 
-ASC_DLLSPEC(int32 **) slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *region);
+ASC_DLLSPEC int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *region);
 /**<
  *  Generates a lnkmap from a region of a matrix.
  *  The length of the map returned will be the order of mtx.  Empty rows
@@ -1152,7 +1152,7 @@ ASC_DLLSPEC(int32 **) slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *region
  *  @see slv_create_lnkmap() for a more details about lnkmaps.
  */
 
-ASC_DLLSPEC(void) slv_destroy_lnkmap(int32 **map);
+ASC_DLLSPEC void slv_destroy_lnkmap(int32 **map);
 /**<
  *  Deallocate a map created by slv_create_lnkmap() or slv_destroy_lnkmap().
  *  destroy_lnkmap() will tolerate a NULL map as input.
@@ -1160,7 +1160,7 @@ ASC_DLLSPEC(void) slv_destroy_lnkmap(int32 **map);
  *  @param map The lnkmap to destroy.
  */
 
-ASC_DLLSPEC(void) slv_write_lnkmap(FILE *fp, int m, int32 **map);
+ASC_DLLSPEC void slv_write_lnkmap(FILE *fp, int m, int32 **map);
 /**<
  *  Prints a link map to a file.
  *  write_lnkmap() will tolerate a NULL map as input.

@@ -38,7 +38,7 @@
 # endif
 #endif
 
-NORETURN ASC_DLLSPEC(void) asc_panic_line(
+NORETURN ASC_DLLSPEC void asc_panic_line(
 		const int status, const char *file, const int line, const char *function,
 		const char *format, ...
 );
@@ -52,12 +52,12 @@ NORETURN ASC_DLLSPEC(void) asc_panic_line(
 # define Asc_Panic asc_panic
 # define ASC_PANIC asc_panic_nofunc
 
-NORETURN ASC_DLLSPEC(void) asc_panic(
+NORETURN ASC_DLLSPEC void asc_panic(
 		CONST int status, CONST char *function,
 		CONST char *format, ...
 );
 
-NORETURN ASC_DLLSPEC(void) asc_panic_nofunc(CONST char *format, ...);
+NORETURN ASC_DLLSPEC void asc_panic_nofunc(CONST char *format, ...);
 
 #endif
 
@@ -127,7 +127,7 @@ NORETURN ASC_DLLSPEC(void) asc_panic_nofunc(CONST char *format, ...);
 	testing purposes, and should be used with caution.
 */
 
-ASC_DLLSPEC(void ) Asc_PanicSetOutfile(CONST char *filename);
+ASC_DLLSPEC void Asc_PanicSetOutfile(CONST char *filename);
 /**< Sets a file name for reporting of Asc_Panic() messages.
 
 	@param filename Pointer to the name of the file to print messages to.
@@ -151,7 +151,7 @@ typedef int (*PanicCallbackFunc)(int);
 	error conditions, and current calls assume no return.
 */
 
-ASC_DLLSPEC(PanicCallbackFunc ) Asc_PanicSetCallback(PanicCallbackFunc func);
+ASC_DLLSPEC PanicCallbackFunc Asc_PanicSetCallback(PanicCallbackFunc func);
 /**< Registers a callback function to be called by Asc_Panic().
 
 	@param func Pointer to the new function to call during an Asc_Panic().
@@ -164,7 +164,7 @@ ASC_DLLSPEC(PanicCallbackFunc ) Asc_PanicSetCallback(PanicCallbackFunc func);
 	@see PanicCallbackFunc for the form this callback function takes.
 */
 
-ASC_DLLSPEC(void ) Asc_PanicDisplayMessageBox(int is_displayed);
+ASC_DLLSPEC void Asc_PanicDisplayMessageBox(int is_displayed);
 /**<
 	Controls whether a MessageBox is displayed by Asc_Panic() on Windows.
 

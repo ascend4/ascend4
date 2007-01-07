@@ -169,7 +169,7 @@ extern int32 logrel_residual(struct logrel_relation *logrel);
  *  there is no guarantee (from this function) that the residual is
  *  actually correct.
  */
-ASC_DLLSPEC(void) logrel_set_residual(struct logrel_relation *logrel,
+ASC_DLLSPEC void logrel_set_residual(struct logrel_relation *logrel,
                                 int32 residual);
 /**<
  *  Sets the logical residual field of the given logrelation.
@@ -229,7 +229,7 @@ extern void logrel_set_incidencesF(struct logrel_relation *logrel,
  *  Do not call this function directly - use logrel_set_incidences() instead.
  */
 
-ASC_DLLSPEC(const struct dis_discrete**) logrel_incidence_list(
+ASC_DLLSPEC const struct dis_discrete**logrel_incidence_list(
 	struct logrel_relation *logrel
 );
 /**<
@@ -399,7 +399,7 @@ extern void logrel_set_flagbit(struct logrel_relation *logrel,
 #define logrel_set_in_block(lr,bv)    \
         logrel_set_flagbit((lr),LOGREL_IN_BLOCK,(bv))
 
-ASC_DLLSPEC(uint32) logrel_included(struct logrel_relation *logrel);
+ASC_DLLSPEC uint32 logrel_included(struct logrel_relation *logrel);
 /**<
  *  Retrieves the included field of the given logrelation.
  *  This has side effect on the ascend instance, so it isn't

@@ -59,7 +59,7 @@ extern struct StatementList *EmptyStatementList(void);
  *  @return The list as a struct gl_list_t*.
  *  @see GetListF()
  */
-ASC_DLLSPEC(struct gl_list_t *) GetListF(CONST struct StatementList *sl,
+ASC_DLLSPEC struct gl_list_t *GetListF(CONST struct StatementList *sl,
                                   CONST char *file,
                                   int line);
 /**<
@@ -160,7 +160,7 @@ extern struct StatementList
  *  newlist = AppendStatementList(oldlist,EmptyStatementList());
  */
 
-ASC_DLLSPEC(void) DestroyStatementList(struct StatementList *sl);
+ASC_DLLSPEC void DestroyStatementList(struct StatementList *sl);
 /**<
  *  Destroy a statement list.  Tolerates null input.
  */
