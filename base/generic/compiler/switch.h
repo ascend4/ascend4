@@ -41,7 +41,7 @@
 #ifndef ASC_SWITCH_H
 #define ASC_SWITCH_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

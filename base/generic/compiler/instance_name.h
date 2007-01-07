@@ -39,7 +39,7 @@
 #ifndef ASC_INSTANCE_NAME_H
 #define ASC_INSTANCE_NAME_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

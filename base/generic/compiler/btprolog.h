@@ -49,7 +49,7 @@
 #ifndef ASC_BTPROLOG_H
 #define ASC_BTPROLOG_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

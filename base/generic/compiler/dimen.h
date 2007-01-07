@@ -31,7 +31,7 @@
 #ifndef ASC_DIMEN_H
 #define ASC_DIMEN_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

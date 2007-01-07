@@ -39,7 +39,7 @@
 #ifndef ASC_SETINSTVAL_H
 #define ASC_SETINSTVAL_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

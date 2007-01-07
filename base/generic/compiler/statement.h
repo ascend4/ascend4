@@ -43,7 +43,7 @@
 #ifndef ASC_STATEMENT_H
 #define ASC_STATEMENT_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

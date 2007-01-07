@@ -34,7 +34,7 @@
 #ifndef ASC_INSTANCE_IO_H
 #define ASC_INSTANCE_IO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

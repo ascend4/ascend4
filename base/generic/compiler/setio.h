@@ -40,7 +40,7 @@
 #ifndef ASC_SETIO_H
 #define ASC_SETIO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

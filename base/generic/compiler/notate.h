@@ -35,7 +35,7 @@
 #ifndef ASC_NOTATE_H
 #define ASC_NOTATE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

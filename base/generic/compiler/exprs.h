@@ -34,7 +34,7 @@
 #ifndef ASC_EXPRS_H
 #define ASC_EXPRS_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

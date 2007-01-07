@@ -35,7 +35,7 @@
 #ifndef ASC_SCANNER_H
 #define ASC_SCANNER_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -35,7 +35,7 @@
 #ifndef ASC_FIND_H
 #define ASC_FIND_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

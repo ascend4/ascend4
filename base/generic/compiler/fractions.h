@@ -34,7 +34,7 @@
 #ifndef ASC_FRACTIONS_H
 #define ASC_FRACTIONS_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

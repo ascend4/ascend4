@@ -36,7 +36,7 @@
 #ifndef ASC_FINDPATH_H
 #define ASC_FINDPATH_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

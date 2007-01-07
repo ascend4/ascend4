@@ -42,7 +42,7 @@
 #ifndef ASC_SETS_H
 #define ASC_SETS_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -36,7 +36,7 @@
 #ifndef ASC_FUNC_H
 #define ASC_FUNC_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

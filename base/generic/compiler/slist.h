@@ -36,7 +36,7 @@
 #ifndef ASC_SLIST_H
 #define ASC_SLIST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

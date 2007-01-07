@@ -46,7 +46,7 @@
 #ifndef ASC_NAME_H
 #define ASC_NAME_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

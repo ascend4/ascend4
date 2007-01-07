@@ -40,7 +40,7 @@
 #ifndef ASC_BRACED_H
 #define ASC_BRACED_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

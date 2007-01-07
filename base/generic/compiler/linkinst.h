@@ -34,7 +34,7 @@
 #ifndef ASC_LINKINST_H
 #define ASC_LINKINST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -29,7 +29,7 @@
 #ifndef ASC_REL_BLACKBOX_H
 #define ASC_REL_BLACKBOX_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

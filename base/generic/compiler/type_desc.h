@@ -27,7 +27,7 @@
 #ifndef ASC_TYPE_DESC_H
 #define ASC_TYPE_DESC_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

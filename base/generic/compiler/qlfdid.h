@@ -26,7 +26,7 @@
 #ifndef ASC_QLFDID_H
 #define ASC_QLFDID_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

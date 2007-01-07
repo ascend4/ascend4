@@ -51,7 +51,7 @@
 #ifndef ASC_TMPNUM_H
 #define ASC_TMPNUM_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

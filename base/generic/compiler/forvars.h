@@ -39,7 +39,7 @@
 #ifndef ASC_FORVARS_H
 #define ASC_FORVARS_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

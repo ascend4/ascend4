@@ -43,7 +43,7 @@
 #ifndef ASC_WATCHPTIO_H
 #define ASC_WATCHPTIO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

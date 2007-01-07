@@ -34,7 +34,7 @@
 #ifndef ASC_NAMEIO_H
 #define ASC_NAMEIO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

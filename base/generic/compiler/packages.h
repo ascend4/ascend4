@@ -36,7 +36,7 @@
 #ifndef ASC_PACKAGES_H
 #define ASC_PACKAGES_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

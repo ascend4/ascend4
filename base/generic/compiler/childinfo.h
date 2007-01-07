@@ -45,7 +45,7 @@
 #ifndef ASC_CHILDINFO_H
 #define ASC_CHILDINFO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

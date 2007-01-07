@@ -90,7 +90,7 @@
 #ifndef ASC_ARRAYINST_H
 #define ASC_ARRAYINST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

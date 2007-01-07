@@ -39,7 +39,7 @@
 #ifndef ASC_VLISTIO_H
 #define ASC_VLISTIO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

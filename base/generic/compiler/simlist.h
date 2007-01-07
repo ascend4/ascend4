@@ -44,7 +44,7 @@
 #ifndef ASC_SIMLIST_H
 #define ASC_SIMLIST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -45,7 +45,7 @@
 #ifndef ASC_EXTCALL_H
 #define ASC_EXTCALL_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

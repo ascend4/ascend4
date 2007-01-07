@@ -42,7 +42,7 @@
 #ifndef ASC_BIT_H
 #define ASC_BIT_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -40,7 +40,7 @@
 #ifndef ASC_EXTINST_H
 #define ASC_EXTINST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

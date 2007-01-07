@@ -44,7 +44,7 @@
 #ifndef ASC_UNIVERSAL_H
 #define ASC_UNIVERSAL_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

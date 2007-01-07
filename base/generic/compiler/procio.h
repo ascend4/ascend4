@@ -40,7 +40,7 @@
 #ifndef ASC_PROCIO_H
 #define ASC_PROCIO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

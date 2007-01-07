@@ -36,7 +36,7 @@
 #ifndef ASC_INITIALIZE_H
 #define ASC_INITIALIZE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

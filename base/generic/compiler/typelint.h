@@ -49,7 +49,7 @@
 #ifndef ASC_TYPELINT_H
 #define ASC_TYPELINT_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -43,7 +43,7 @@
 #ifndef ASC_ATOMSIZE_H
 #define ASC_ATOMSIZE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

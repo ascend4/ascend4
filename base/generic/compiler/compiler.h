@@ -35,7 +35,7 @@
 #ifndef ASC_COMPILER_H
 #define ASC_COMPILER_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

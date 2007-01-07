@@ -37,7 +37,7 @@
 #ifndef ASC_CHECK_H
 #define ASC_CHECK_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

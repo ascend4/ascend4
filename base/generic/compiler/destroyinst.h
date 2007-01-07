@@ -41,7 +41,7 @@
 #ifndef ASC_DESTROYINST_H
 #define ASC_DESTROYINST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

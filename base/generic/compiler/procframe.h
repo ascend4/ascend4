@@ -46,7 +46,7 @@
 #ifndef ASC_PROCFRAME_H
 #define ASC_PROCFRAME_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

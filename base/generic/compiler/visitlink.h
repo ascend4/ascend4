@@ -40,7 +40,7 @@
 #ifndef ASC_VISITNAME_H
 #define ASC_VISITNAME_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

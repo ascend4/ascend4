@@ -39,7 +39,7 @@
 #ifndef ASC_PROTOTYPE_H
 #define ASC_PROTOTYPE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

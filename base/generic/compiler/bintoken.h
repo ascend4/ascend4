@@ -39,7 +39,7 @@
 #ifndef ASC_BINTOKEN_H
 #define ASC_BINTOKEN_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

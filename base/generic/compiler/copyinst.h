@@ -43,7 +43,7 @@
 #ifndef ASC_COPYINST_H
 #define ASC_COPYINST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

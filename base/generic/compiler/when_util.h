@@ -43,7 +43,7 @@
 #ifndef ASC_WHEN_UTIL_H
 #define ASC_WHEN_UTIL_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -65,7 +65,7 @@
 #ifndef ASC_INSTANCE_ENUM_H
 #define ASC_INSTANCE_ENUM_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 
