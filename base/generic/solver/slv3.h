@@ -41,6 +41,10 @@
 #ifndef ASC_SLV3_H
 #define ASC_SLV3_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 typedef struct slv3_system_structure *slv3_system_t;
@@ -63,6 +67,8 @@ ASC_DLLSPEC int slv3_register(SlvFunctionsT *f);
  *  @param f SlvFunctionsT to receive the solver registration info.
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
+
+/* @} */
 
 #endif  /* ASC_SLV3_H */
 

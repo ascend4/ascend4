@@ -33,6 +33,10 @@
 #ifndef ASC_CREATEINST_H
 #define ASC_CREATEINST_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern void ZeroNewChildrenEntries(struct Instance **ary, unsigned long int num);
 /**<
 	Sets num entries of ary to NULL.
@@ -157,6 +161,8 @@ extern struct Instance *CreateWhenInstance(struct TypeDescription *type);
 	Create a when instance. The instance will use the memory
 	pointed to by type, so don't modify it or free it.
 */
+
+/* @} */
 
 #endif  /* ASC_CREATEINST_H */
 

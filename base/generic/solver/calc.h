@@ -62,6 +62,10 @@
 #ifndef calc__already_included
 #define calc__already_included
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 ASC_DLLSPEC int32 calc_ok;
 /**<
  ***  The variable calc_ok will be set to FALSE whenever an undefined
@@ -263,6 +267,8 @@ extern real64 calc_pow_Dn(real64 x, real64 y, int nwrt0, int nwrt1); /**< Comput
  ***  Computes nwrt0'th derivative wrt x of the nwrt1'th derivative wrt y
  ***  of x <binop> y.
  **/
+
+/* @} */
 
 #endif  /* calc__already_included */
 

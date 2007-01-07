@@ -34,6 +34,14 @@
 #ifndef ASC_PLOT_H
 #define ASC_PLOT_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /** Plot types. */

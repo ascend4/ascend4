@@ -36,6 +36,10 @@
 #ifndef ASC_EVALUATE_H
 #define ASC_EVALUATE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern struct value_t EvaluateSet(CONST struct Set *sptr,
                                   struct value_t (*EvaluateName)());
 /**<
@@ -153,6 +157,8 @@ extern void ClearRecycleStack(void);
  *  There is an option inside evaluate.c that causes this function to
  *  report how many recycled stack elements it deallocates.
  */
+
+/* @} */
 
 #endif /* ASC_EVALUATE_H */
 

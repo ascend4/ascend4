@@ -29,9 +29,9 @@
 #ifndef __MTX_LINAL_H_SEEN__
 #define __MTX_LINAL_H_SEEN__
 
-/** @addtogroup linear Linear
- * @{
- */
+/**	@addtogroup linear Linear
+	@{
+*/
 
 extern void mtx_householder_transform_region(mtx_matrix_t mtx,
                                              const real64 coef,

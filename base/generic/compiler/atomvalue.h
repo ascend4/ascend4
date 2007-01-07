@@ -44,6 +44,10 @@
 #ifndef ASC_ATOMVALUE_H
 #define ASC_ATOMVALUE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 ASC_DLLSPEC unsigned AtomAssigned(CONST struct Instance *i);
@@ -188,6 +192,8 @@ extern int CmpAtomValues(CONST struct Instance *i1, CONST struct Instance *i2);
  *  Calls with other types will not return, nor will calls with mismatched
  *  types.
  */
+
+/* @} */
 
 #endif  /* ASC_ATOMVALUE_H */
 

@@ -33,6 +33,10 @@
 #ifndef ASC_SAMPLELIST_H
 #define ASC_SAMPLELIST_H
 
+/**	@addtogroup integrator Integrator
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
@@ -65,5 +69,7 @@ ASC_DLLSPEC double samplelist_get(CONST SampleList *l, CONST long i);
 ASC_DLLSPEC void samplelist_set(CONST SampleList *l, CONST long i, CONST double x);
 
 void samplelist_debug(CONST SampleList *l);
+
+/* @} */
 
 #endif

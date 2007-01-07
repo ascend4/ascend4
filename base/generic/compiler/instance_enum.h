@@ -65,6 +65,10 @@
 #ifndef ASC_INSTANCE_ENUM_H
 #define ASC_INSTANCE_ENUM_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #define IREAL   0x1
 #define IINT    0x2
 #define IBOOL   0x4
@@ -173,5 +177,7 @@ enum inst_t {
 struct Instance {
   enum inst_t t;
 };
+
+/* @} */
 
 #endif /* ASC_INSTANCE_ENUM_H */

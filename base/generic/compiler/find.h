@@ -35,6 +35,10 @@
 #ifndef ASC_FIND_H
 #define ASC_FIND_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /**
  * Search error codes.
  * At present, there is a GREAT DEAL of insanity between find_errors and
@@ -209,5 +213,7 @@ extern struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i,
  *  Each listed name on input must resolve to a single instance, or
  *  the err will be impossible_instance.
  */
+/* @} */
+
 #endif /* ASC_FIND_H */
 

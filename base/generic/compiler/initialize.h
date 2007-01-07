@@ -36,6 +36,10 @@
 #ifndef ASC_INITIALIZE_H
 #define ASC_INITIALIZE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /** Set the procedure stack limit */
@@ -118,5 +122,7 @@ ASC_DLLSPEC struct InitProcedure *SearchProcList(CONST struct gl_list_t *list,
 	@param list (generally you will use the output from @code GetInitializationList() @endcode)
 	@return pointer to found procedure, or NULL if none found.
  */
+
+/* @} */
 
 #endif /* ASC_INITIALIZE_H */

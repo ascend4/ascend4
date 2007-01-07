@@ -53,6 +53,10 @@
 #ifndef ASC_EXTFUNC_H
 #define ASC_EXTFUNC_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include "relation_util.h"
 
@@ -598,5 +602,7 @@ extern ExtEvalFunc **GetDerivJumpTable(struct ExternalFunc *efunc);
 extern ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc);
 /** Fetch black initialization function. */
 extern ExtEvalFunc *GetGlassBoxFinal(struct ExternalFunc *efunc);
+
+/* @} */
 
 #endif /* ASC_EXTFUNC_H */

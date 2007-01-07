@@ -140,6 +140,10 @@
 #ifndef ASC_SLV_COMMON_H
 #define ASC_SLV_COMMON_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 #undef SLV_INSTANCES
@@ -1169,6 +1173,8 @@ ASC_DLLSPEC void slv_write_lnkmap(FILE *fp, int m, int32 **map);
  *  @param m   The number of rows in map to print.
  *  @param map The lnkmap to print.
  */
+
+/* @} */
 
 #endif  /* ASC_SLV_COMMON_H */
 

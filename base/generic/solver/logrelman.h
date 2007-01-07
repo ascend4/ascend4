@@ -47,6 +47,10 @@
 #ifndef logrelman__already_included
 #define logrelman__already_included
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 extern void logrelman_get_incidence(struct logrel_relation *lrel,
                                     dis_filter_t *filter,
                                     mtx_matrix_t matrix);
@@ -135,6 +139,8 @@ extern char *logrelman_make_string_postfix(slv_system_t sys,
  *  The name of a discrete var is context dependent, so you have to
  *  provide the slv_system_t from which you got the logical relation.
  */
+
+/* @} */
 
 #endif /*  logrelman__already_included */
 

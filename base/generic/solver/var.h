@@ -60,6 +60,10 @@
 #ifndef ASC_VAR_H
 #define ASC_VAR_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /*
@@ -668,6 +672,8 @@ extern boolean set_solver_types(void);
 	If 1, it is useless to invoke the solvers.
 	Also sets all the related types listed above.
 */
+
+/* @} */
 
 #endif  /* ASC_VAR_H */
 

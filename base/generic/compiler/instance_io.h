@@ -34,6 +34,10 @@
 #ifndef ASC_INSTANCE_IO_H
 #define ASC_INSTANCE_IO_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include <general/dstring.h>
 #include <compiler/compiler.h>
@@ -339,6 +343,8 @@ extern int ArrayIsModel(struct Instance *i);
  *  Returns 1 if the instance sent in is a good model array
  *  or when, 0 OTHERWISE.
  */
+
+/* @} */
 
 #endif /* ASC_INSTANCE_IO_H */
 

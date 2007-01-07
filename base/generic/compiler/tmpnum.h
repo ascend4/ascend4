@@ -48,8 +48,12 @@
  *  </pre>
  */
 
-#ifndef __TMPNUM_H_SEEN__
-#define __TMPNUM_H_SEEN__
+#ifndef ASC_TMPNUM_H
+#define ASC_TMPNUM_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern unsigned long GetTmpNum(CONST struct Instance *i);
 /**< 
@@ -98,5 +102,7 @@ extern void ZeroTmpNums(struct Instance *i, int order);
  *  The visit order really is irrelevant though.
  */
 
-#endif  /*  __TMPNUM_H_SEEN__  */
+/* @} */
+
+#endif /* ASC_TMPNUM_H */
 

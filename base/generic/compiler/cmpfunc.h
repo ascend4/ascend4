@@ -46,8 +46,12 @@
  *  </pre>
 */
 
-#ifndef __CMPFUNC_H_SEEN__
-#define __CMPFUNC_H_SEEN__
+#ifndef ASC_CMPFUNC_H
+#define ASC_CMPFUNC_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /* reminder strcmp("abc","fcd") --> -1 */
 /*
@@ -256,5 +260,7 @@ extern int CmpPtrsReverse(void *p1, void *p2);
  *  @see CmpPtrs()
  */
 
-#endif  /* __CMPFUNC_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_CMPFUNC_H */
 

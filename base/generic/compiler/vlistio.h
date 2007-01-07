@@ -36,8 +36,12 @@
  *  </pre>
  */
 
-#ifndef __VLISTIO_H_SEEN__
-#define __VLISTIO_H_SEEN__
+#ifndef ASC_VLISTIO_H
+#define ASC_VLISTIO_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern void WriteVariableList(FILE *f, CONST struct VariableList *n);
 /**<
@@ -56,5 +60,7 @@ extern void WriteVariableListNode(FILE *f, CONST struct VariableList *n);
  *  following it.
  */
 
-#endif /* __VLISTIO_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_VLISTIO_H */
 

@@ -68,6 +68,10 @@
 #ifndef ASC_SLV6_H
 #define ASC_SLV6_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 typedef struct slv6_system_structure *slv6_system_t;
 
 int slv6_register(SlvFunctionsT *sft);
@@ -291,6 +295,8 @@ typedef struct mps_data {   /**< see more detailed comments in calc_matrix */
 /*
 #endif
 */
+
+/* @} */
 
 #endif  /* ASC_SLV6_H */
 

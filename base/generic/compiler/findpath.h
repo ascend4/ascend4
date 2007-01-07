@@ -36,6 +36,10 @@
 #ifndef ASC_FINDPATH_H
 #define ASC_FINDPATH_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern struct gl_list_t *FindInstancesPaths(CONST struct Instance *i,
                                        CONST struct Name *n,
                                        enum find_errors *err);
@@ -46,6 +50,8 @@ extern struct gl_list_t *FindInstancesPaths(CONST struct Instance *i,
  *  it indicates that it couldn't find something in the name.
  *  Check err to discover why.
  */
+
+/* @} */
 
 #endif /* ASC_FINDPATH_H */
 

@@ -34,6 +34,10 @@
 #ifndef ASC_NAMEIO_H
 #define ASC_NAMEIO_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 extern void WriteName(FILE *f, CONST struct Name *n);
@@ -63,6 +67,8 @@ extern void WriteNameNode2Str(Asc_DString *dstring,CONST struct Name *n);
 /**<
  *  Write just this one name node, and not any of the ones following it.
  */
+
+/* @} */
 
 #endif  /* ASC_NAMEIO_H */
 

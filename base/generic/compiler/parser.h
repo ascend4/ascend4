@@ -20,6 +20,10 @@
 #ifndef ASC_PARSER_H
 #define ASC_PARSER_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /* ascParse.y supplies this function. */

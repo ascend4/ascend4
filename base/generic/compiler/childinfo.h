@@ -42,8 +42,12 @@
  *  </pre>
  */
 
-#ifndef __CHILDINFO_H_SEEN__
-#define __CHILDINFO_H_SEEN__
+#ifndef ASC_CHILDINFO_H
+#define ASC_CHILDINFO_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /** Atom child value for Real type. */
 struct ChildDescR {
@@ -463,5 +467,7 @@ extern struct ChildDesc MakeSymbolDesc(int assigned, symchar *str);
  *  str is ignored if assigned is false.
  */
 
-#endif  /* __CHILDINFO_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_CHILDINFO_H */
 

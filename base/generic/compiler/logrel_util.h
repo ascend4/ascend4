@@ -41,8 +41,12 @@
  *  </pre>
  */
 
-#ifndef __LOGRELATION_UTIL_H_SEEN__
-#define __LOGRELATION_UTIL_H_SEEN__
+#ifndef ASC_LOGRELATION_UTIL_H
+#define ASC_LOGRELATION_UTIL_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern enum Expr_enum LogRelRelop(CONST struct logrelation *lrel);
 /**<
@@ -565,5 +569,7 @@ extern int *LogRelFindBoolValues(struct Instance *i,
  *  Not conditional modeling.
  */
 
-#endif /* __LOGRELATION_UTIL_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_LOGRELATION_UTIL_H */
 

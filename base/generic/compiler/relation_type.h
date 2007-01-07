@@ -41,6 +41,10 @@
 #ifndef ASC_RELATION_TYPE_H
 #define ASC_RELATION_TYPE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include "compiler.h"
 #include "dimen.h"
@@ -301,6 +305,8 @@ struct relation {
  * Use of individually allocated terms is a really bad idea!
  */
 #define TERM_ALLOC A_TERM(ascmalloc(sizeof(union RelationTermUnion)))
+
+/* @} */
 
 #endif /* ASC_RELATION_TYPE_H */
 

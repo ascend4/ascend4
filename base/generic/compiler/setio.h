@@ -37,8 +37,12 @@
  *  </pre>
  */
 
-#ifndef __SETIO_H_SEEN__
-#define __SETIO_H_SEEN__
+#ifndef ASC_SETIO_H
+#define ASC_SETIO_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern void WriteSetNode(FILE *f, CONST struct Set *s);
 /**< 
@@ -72,5 +76,7 @@ extern void WriteSet2Str(Asc_DString *dstring, CONST struct Set *s);
  *  Output the set with no leading or trailing white space.
  */
 
-#endif  /* __SETIO_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_SETIO_H */
 

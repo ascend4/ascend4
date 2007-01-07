@@ -46,6 +46,10 @@
 #ifndef ASC_NAME_H
 #define ASC_NAME_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 #define CreateIdName(s) CreateIdNameF((s),NAMEBIT_IDTY)
@@ -300,5 +304,7 @@ extern void name_report_pool(void);
 /**<
 	Write the pool report to ASCERR for the name pool.
 */
+
+/* @} */
 
 #endif  /* ASC_NAME_H */

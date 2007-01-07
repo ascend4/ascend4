@@ -32,6 +32,10 @@
 #ifndef ASC_IDALINEAR_H
 #define ASC_IDALINEAR_H
 
+/**	@addtogroup integrator Integrator
+	@{
+*/
+
 #include <ida/ida.h>
 #include <nvector/nvector_serial.h>
 #include <solver/mtx.h>
@@ -81,5 +85,7 @@ int IDAASCENDGetLastFlag(void *ida_mem, int *flag);
 	You need to free the returned string here.
 */
 char *IDAASCENDGetReturnFlagName(int flag);
+
+/* @} */
 
 #endif

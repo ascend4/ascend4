@@ -39,6 +39,10 @@
 #ifndef ASC_SYMTAB_H
 #define ASC_SYMTAB_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 #define MAXIMUM_STRING_LENGTH (2*MAXTOKENLENGTH)
@@ -119,6 +123,8 @@ ASC_DLLSPEC void DestroySymbolTable(void);
  *  This function will deallocate all the memory associated with the
  *  symbol table and the symbols it contains.
  */
+
+/* @} */
 
 #endif  /* ASC_SYMTAB_H */
 

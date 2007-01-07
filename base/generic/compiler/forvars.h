@@ -36,8 +36,12 @@
  *  </pre>
  */
 
-#ifndef __FORVARS_H_SEEN__
-#define __FORVARS_H_SEEN__
+#ifndef ASC_FORVARS_H
+#define ASC_FORVARS_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 enum for_kind {
   f_untyped,
@@ -223,5 +227,7 @@ extern int ClearForVarRecycle(void);
  *  There is no recycle initialization function.
  */
 
-#endif /* __FORVARS_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_FORVARS_H */
 

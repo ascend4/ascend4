@@ -236,6 +236,10 @@
 #ifndef ASC_SLV_CLIENT_H
 #define ASC_SLV_CLIENT_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include <compiler/instance_enum.h>
 #include <solver/var.h>
@@ -1240,6 +1244,8 @@ extern void slv_print_output(FILE *fp, slv_system_t sys);
 
 	@TODO make more general in the future.
 */
+
+/* @} */
 
 #endif  /* ASC_SLV_CLIENT_H */
 

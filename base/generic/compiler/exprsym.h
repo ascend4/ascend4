@@ -40,6 +40,10 @@
 #ifndef ASC_EXPRSYM_H
 #define ASC_EXPRSYM_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /**
  * Until we decide whether to let the postfix and
  * infix data structures be shared. we will use these
@@ -154,6 +158,8 @@ extern RelationINF *RelDeriveSloppy(RelationINF *rel, unsigned long wrt,
  *  set up in PrepareDerivatives and will be handled by that store on
  *  Shutdown.
  */
+
+/* @} */
 
 #endif /* ASC_EXPRSYM_H */
 

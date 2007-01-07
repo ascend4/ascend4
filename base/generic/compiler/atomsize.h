@@ -40,8 +40,12 @@
  *  </pre>
  */
 
-#ifndef __ATOMSIZE_H_SEEN__
-#define __ATOMSIZE_H_SEEN__
+#ifndef ASC_ATOMSIZE_H
+#define ASC_ATOMSIZE_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern unsigned long ConstantByteLength(enum inst_t it);
 /**<
@@ -120,5 +124,7 @@ extern unsigned long LogRelAtomByteLength(unsigned long num_children,
  *  routine will calculate the number of bytes needed for the instance.
  */
 
-#endif  /* __ATOMSIZE_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_ATOMSIZE_H */
 

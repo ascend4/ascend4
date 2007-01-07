@@ -39,8 +39,12 @@
  *  </pre>
  */
 
-#ifndef __REFINEINST_H_SEEN__
-#define __REFINEINST_H_SEEN__
+#ifndef ASC_REFINEINST_H
+#define ASC_REFINEINST_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern struct Instance *RefineInstance(struct Instance *i,
                                        struct TypeDescription *type,
@@ -81,5 +85,7 @@ ASC_DLLSPEC struct Instance *RefineClique(struct Instance *i,
  *  list, adding to it or changing it.
  */
 
-#endif  /* __REFINEINST_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_REFINEINST_H */
 

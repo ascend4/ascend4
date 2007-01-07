@@ -62,6 +62,10 @@
 #ifndef ASC_RELATION_H
 #define ASC_RELATION_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 enum relation_errors {
   find_error,                   /**< indicates an error finding an instance */
   incorrect_structure,
@@ -526,5 +530,7 @@ extern void RelationSetBinTokens(struct Instance *c,
  * this will report an error if the existing share does
  * not INT_MAX for btable and bindex.
  */
+
+/* @} */
 
 #endif /* ASC_RELATION_H */

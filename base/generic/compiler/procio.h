@@ -37,8 +37,12 @@
  *  </pre>
  */
 
-#ifndef __PROCIO_H_SEEN__
-#define __PROCIO_H_SEEN__
+#ifndef ASC_PROCIO_H
+#define ASC_PROCIO_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /** Codes for old-style external call messaging. */
 enum ProcExtError {
@@ -146,5 +150,7 @@ extern void WriteProcedureLine(FILE *fp,
                                struct gl_list_t *initstack,
                                CONST char *str);
 
-#endif  /* __PROCIO_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_PROCIO_H */
 

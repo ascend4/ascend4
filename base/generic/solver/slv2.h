@@ -42,6 +42,10 @@
 #ifndef ASC_SLV2_H
 #define ASC_SLV2_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 typedef struct slv2_system_structure *slv2_system_t;
 
 int slv2_register(SlvFunctionsT *sft);
@@ -129,5 +133,7 @@ extern void slv2_solve();
 #define slv2_solver_name "no_opt"   /**< Solver's name */
 #define slv2_solver_number 2   /**< Solver's number */
 #endif
+
+/* @} */
 
 #endif

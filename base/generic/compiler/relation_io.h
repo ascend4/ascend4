@@ -41,6 +41,10 @@
 #ifndef ASC_RELATION_IO_H
 #define ASC_RELATION_IO_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /**<
@@ -220,6 +224,8 @@ extern void WriteNamesInList2D(FILE *f, struct gl_list_t *l, CONST char *sep, CO
 /**<
  *  Write each element of l as a list of struct Name * on file separated by sep2.
  */
+
+/* @} */
 
 #endif /* ASC_RELATION_IO_H */
 

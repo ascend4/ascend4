@@ -41,8 +41,12 @@
  *  </pre>
  */
 
-#ifndef __LOGRELATION_H_SEEN__
-#define __LOGRELATION_H_SEEN__
+#ifndef ASC_LOGRELATION_H
+#define ASC_LOGRELATION_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /** Logical relation errors. */
 enum logrelation_errors {
@@ -227,5 +231,7 @@ extern struct logrelation
  *  NOT independently allocated, they are in the postfix array.
  */
 
-#endif /* __LOGRELATION_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_LOGRELATION_H */
 

@@ -65,6 +65,10 @@
 #ifndef ASC_SLV0_H
 #define ASC_SLV0_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 typedef struct slv0_system_structure *slv0_system_t;
 
 int slv0_register(SlvFunctionsT *sft);
@@ -77,6 +81,8 @@ int slv0_register(SlvFunctionsT *sft);
  *  @param sft SlvFunctionsT to receive the solver registration info.
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
+
+/* @} */
 
 #endif /* ASC_SLV0_H */
 

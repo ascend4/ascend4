@@ -47,6 +47,10 @@
 #ifndef ASC_SLV8_H
 #define ASC_SLV8_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 typedef struct slv8_system_structure *slv8_system_t;
 
 #ifdef ASC_WITH_CONOPT
@@ -66,6 +70,8 @@ int slv8_register(SlvFunctionsT *f);
 	@param f SlvFunctionsT to receive the solver registration info.
 	@return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
 */
+
+/* @} */
 
 #endif  /* ASC_SLV8_H */
 

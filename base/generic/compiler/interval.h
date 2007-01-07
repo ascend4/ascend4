@@ -34,8 +34,12 @@
  *  </pre>
  */
 
-#ifndef __INTERVAL_H_SEEN__
-#define __INTERVAL_H_SEEN__
+#ifndef ASC_INTERVAL_H
+#define ASC_INTERVAL_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /** Interval data structure. */
 struct Interval {
@@ -195,5 +199,7 @@ extern int IsIn(double scaler, struct Interval i);
  *  Return true if the scaler is in the interval.
  */
 
-#endif /* __INTERVAL_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_INTERVAL_H */
 

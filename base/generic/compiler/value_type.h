@@ -61,6 +61,10 @@
 #ifndef ASC_VALUE_TYPE_H
 #define ASC_VALUE_TYPE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /** Evaluation error types. */
 enum evaluation_error{
   type_conflict,
@@ -546,6 +550,8 @@ extern struct value_t NotValue(struct value_t value);
  *  Return NOT value; Value and result are boolean.
  *  If args are constant, result is.
  */
+
+/* @} */
 
 #endif /* ASC_VALUE_TYPE_H */
 

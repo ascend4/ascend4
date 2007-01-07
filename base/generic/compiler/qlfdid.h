@@ -26,6 +26,10 @@
 #ifndef ASC_QLFDID_H
 #define ASC_QLFDID_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #include <general/list.h>
@@ -130,6 +134,8 @@ ASC_DLLSPEC int Asc_QlfdidSearch3(CONST char *str, int relative);
  *  Note that if the relative option is used str should be relative to
  *  g_relative_inst NOT to the simulation root.
  */
+
+/* @} */
 
 #endif  /* ASC_QLFDID_H */
 

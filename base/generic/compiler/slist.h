@@ -36,6 +36,10 @@
 #ifndef ASC_SLIST_H
 #define ASC_SLIST_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 extern struct StatementList *CreateStatementList(struct gl_list_t *l);
@@ -164,5 +168,7 @@ ASC_DLLSPEC void DestroyStatementList(struct StatementList *sl);
 /**<
  *  Destroy a statement list.  Tolerates null input.
  */
+
+/* @} */
 
 #endif  /* ASC_SLIST_H */

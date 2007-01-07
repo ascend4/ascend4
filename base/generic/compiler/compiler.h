@@ -35,6 +35,10 @@
 #ifndef ASC_COMPILER_H
 #define ASC_COMPILER_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /* some influential defines and where to set them:
@@ -173,6 +177,8 @@ ASC_DLLSPEC int g_use_copyanon;
  * CmpSymchar(GetBaseTypeName(enum type_kind),symchar) instead from
  * type_descio.h instead.
  */
+
+/* @} */
 
 #endif  /* ASC_COMPILER_H */
 

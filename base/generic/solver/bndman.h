@@ -41,6 +41,10 @@
 #ifndef bndman__already_included
 #define bndman__already_included
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 extern real64 bndman_real_eval(struct bnd_boundary *bnd);
 /**<  Returns the (real) residual of the boundary. */
 extern int32  bndman_log_eval(struct bnd_boundary *bnd);
@@ -74,6 +78,8 @@ extern int32 bndman_calc_at_zero(struct bnd_boundary *bnd);
  *  based on the calculation of the residual of the boundary
  *  Used only for real(not boolean) boundaries.
  */
+
+/* @} */
 
 #endif  /* bndman__already_included */
 

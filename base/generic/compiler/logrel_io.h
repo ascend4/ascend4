@@ -38,8 +38,12 @@
  *  </pre>
  */
 
-#ifndef __LOGRELATION_IO_H_SEEN__
-#define __LOGRELATION_IO_H_SEEN__
+#ifndef ASC_LOGRELATION_IO_H
+#define ASC_LOGRELATION_IO_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern int LogExprNeedParentheses(enum Expr_enum parent,
                                   enum Expr_enum child,
@@ -126,5 +130,7 @@ extern void SaveLogRel(FILE *f, CONST struct Instance *lrelinst);
  *  format.
  */
 
-#endif /* __LOGRELATION_IO_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_LOGRELATION_IO_H */
 

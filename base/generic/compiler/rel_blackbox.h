@@ -29,6 +29,10 @@
 #ifndef ASC_REL_BLACKBOX_H
 #define ASC_REL_BLACKBOX_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include "instance_enum.h"
 #include "relation_type.h"
@@ -143,5 +147,7 @@ extern void InitBBox(struct Instance *context, struct BlackBoxCache *b);
  deallocates **b if refcount has dropped to 0.
  */
 extern void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b);
+
+/* @} */
 
 #endif /* ASC_REL_BLACKBOX_H */

@@ -43,6 +43,10 @@
 #ifndef ASC_SYSTEM_H
 #define ASC_SYSTEM_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include "slv_types.h"
 
@@ -67,5 +71,7 @@ ASC_DLLSPEC void system_free_reused_mem(void);
 	internal reuse. Calling this while any slv_system_t exists
 	is likely to be fatal: handle with care.
 */
+
+/* @} */
 
 #endif  /* ASC_SYSTEM_H */

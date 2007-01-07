@@ -37,6 +37,10 @@
 #ifndef ASC_CHECK_H
 #define ASC_CHECK_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 #define CheckInstance(a,b) CheckInstanceLevel((a),(b),5)
@@ -71,6 +75,8 @@ ASC_DLLSPEC void InstanceStatistics(FILE *f, CONST struct Instance *i);
 /**<
  *  This compiles and prints various statistics about this instance tree.
  */
+
+/* @} */
 
 #endif  /* ASC_CHECK_H */
 

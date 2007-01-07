@@ -39,8 +39,12 @@
  *  </pre>
  */
 
-#ifndef __TEMP_H_SEEN__
-#define __TEMP_H_SEEN__
+#ifndef ASC_TEMP_H
+#define ASC_TEMP_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern void AddTemp(symchar *name);
 /**<
@@ -85,5 +89,7 @@ extern void DestroyTemporaryList(void);
  *  Free the memory for the temporary variable list.
  */
 
-#endif  /* __TEMP_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_TEMP_H */
 

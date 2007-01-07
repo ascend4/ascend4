@@ -47,6 +47,10 @@
 #ifndef ASC_INTEGRATOR_H
 #define ASC_INTEGRATOR_H
 
+/**	@addtogroup integrator Integrator
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
@@ -534,5 +538,7 @@ extern int integrator_output_write_obs(IntegratorSystem *blsys);
 	user notification or screen update, etc.
 */
 extern int integrator_output_close(IntegratorSystem *blsys);
+
+/* @} */
 
 #endif

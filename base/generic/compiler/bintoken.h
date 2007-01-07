@@ -39,6 +39,10 @@
 #ifndef ASC_BINTOKEN_H
 #define ASC_BINTOKEN_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 enum bintoken_kind {
   BT_error,
   BT_C,
@@ -110,6 +114,8 @@ extern int BinTokenCalcResidual(int btable, int bindex, double *vars, double *re
  */
 extern int BinTokenCalcGradient(int btable, int bindex, double *vars,
                                 double *residual, double *gradient);
+
+/* @} */
 
 #endif  /* ASC_BINTOKEN_H */
 

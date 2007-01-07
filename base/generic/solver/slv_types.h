@@ -43,6 +43,10 @@
 #ifndef ASC_SLV_TYPES_H
 #define ASC_SLV_TYPES_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 typedef void *SlvBackendToken;
 /**<
 	Backends that provide the residuals, gradients, and so forth
@@ -70,6 +74,8 @@ typedef struct slv_system_structure *slv_system_t;
 	This is the handle which should be used in all of the functions
 	in slv and system to reference a mathematical problem.
 */
+
+/* @} */
 
 #endif  /* ASC_SLV_TYPES_H */
 

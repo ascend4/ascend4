@@ -41,8 +41,12 @@
  *        In the meanwhile...
  */
 
-#ifndef __PARPEND_H_SEEN__
-#define __PARPEND_H_SEEN__
+#ifndef ASC_PARPEND_H
+#define ASC_PARPEND_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 enum ppstatus {
   pp_ERR =0,
@@ -84,5 +88,7 @@ extern void ppe_destroy_pool(void);
 /** Write the pool report to ASCERR for the ppe pool. */
 extern void ppe_report_pool(void);
 
-#endif /* __PARPEND_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_PARPEND_H */
 

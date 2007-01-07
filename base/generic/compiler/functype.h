@@ -42,6 +42,10 @@
 #ifndef ASC_FUNCTYPE_H
 #define ASC_FUNCTYPE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /** 
  *  Safe math error codes.
  *  If you add to this enum be sure to add to safe_error_to_stderr 
@@ -97,6 +101,8 @@ struct Func {
   double (*Ed)(double,double,double,double (*)(double));  /**< concave envelope derivative */
 #endif
 };
+
+/* @} */
 
 #endif   /* ASC_FUNCTYPE_H */
 

@@ -42,6 +42,10 @@
 #ifndef ASC_DUMP_H
 #define ASC_DUMP_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 #define MESSYTHRESH 10
@@ -84,6 +88,8 @@ extern struct Instance *FindInstance(symchar *str);
  *  This will return an instance if it one is available; otherwise, it
  *  returns NULL.
  */
+
+/* @} */
 
 #endif /* ASC_DUMP_H */
 

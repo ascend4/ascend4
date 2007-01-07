@@ -30,6 +30,10 @@
 #ifndef ASC_INSTANCE_TYPES_H
 #define ASC_INSTANCE_TYPES_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include "instance_enum.h"
 #include "fractions.h"
 #include "dimen.h"
@@ -663,6 +667,8 @@ struct GlobalDummyInstance {
    * (This has nothing to do with the DummyIndexType.)
    */
 };
+
+/* @} */
 
 #endif /* ASC_INSTANCE_TYPES_H */
 

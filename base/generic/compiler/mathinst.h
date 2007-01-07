@@ -38,6 +38,10 @@
 #ifndef ASC_MATHINST_H
 #define ASC_MATHINST_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 ASC_DLLSPEC enum Expr_enum GetInstanceRelationType(CONST struct Instance *i);
 /**<
 	This returns the type of the relation associated with this relations
@@ -229,6 +233,8 @@ extern void RemoveWhen(struct Instance *i, struct Instance *when);
 	Remove when from i's when list.  If 'when' isn't found in i's when
 	list, execution continues with a warning message.
 */
+
+/* @} */
 
 #endif  /* ASC_MATHINST_H */
 

@@ -44,8 +44,12 @@
  *  </pre>
  */
 
-#ifndef __FREESTORE_H_SEEN__
-#define __FREESTORE_H_SEEN__
+#ifndef ASC_FREESTORE_H
+#define ASC_FREESTORE_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /** Free store data structure. */
 struct FreeStore {
@@ -129,5 +133,7 @@ extern void FreeStore_SetFreeStore(struct FreeStore *store);
 extern struct FreeStore *FreeStore_GetFreeStore(void);
 /**<  Retrieve the current working freestore. */
 
-#endif /* __FREESTORE_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_FREESTORE_H */
 

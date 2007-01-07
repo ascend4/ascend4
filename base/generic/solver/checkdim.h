@@ -45,6 +45,10 @@
 #ifndef chkdim__already_included
 #define chkdim__already_included
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #define REIMPLEMENT 0
 
 /* See relman.h for the definition of list of relations/variables */
@@ -135,6 +139,8 @@ extern int chkdim_check_dimensions();
 #define chkdim_check_dimensions(a,b)  0
 
 #endif /* REIMPLEMENT  */
+
+/* @} */
 
 #endif  /* chkdim__already_included  */
 

@@ -39,8 +39,12 @@
  *  </pre>
  */
 
-#ifndef __WHEN_H_SEEN__
-#define __WHEN_H_SEEN__
+#ifndef ASC_WHEN_H
+#define ASC_WHEN_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern struct WhenList *CreateWhen(struct Set *set, struct StatementList *sl);
 /**< 
@@ -160,5 +164,7 @@ extern struct WhenList *CopyWhenList(struct WhenList *w);
  *  Copy the whole list contents. not a reference count change.
  */
 
-#endif  /* __WHEN_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_WHEN_H */
 

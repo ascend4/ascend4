@@ -44,6 +44,10 @@
 #ifndef ASC_SIMLIST_H
 #define ASC_SIMLIST_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 ASC_DLLSPEC int g_compiler_timing;
@@ -143,5 +147,7 @@ ASC_DLLSPEC void Asc_DeAllocSim(struct Instance *sim);
  *  sim is the *Top* of the simulation and *not* the root. As such this
  *  function works on instances of kind SIM_INST.
  */
+
+/* @} */
 
 #endif  /* ASC_SIMLIST_H */

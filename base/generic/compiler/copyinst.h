@@ -40,8 +40,12 @@
  *  </pre>
  */
 
-#ifndef __COPYINST_H_SEEN__
-#define __COPYINST_H_SEEN__
+#ifndef ASC_COPYINST_H
+#define ASC_COPYINST_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 enum Copy_enum {
   c_none, 
@@ -133,5 +137,7 @@ ASC_DLLSPEC struct Instance *CopyInstance(CONST struct Instance *i);
  *  </pre>
  */
 
-#endif  /* __COPYINST_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_COPYINST_H */
 

@@ -39,8 +39,12 @@
  *  </pre>
  */
 
-#ifndef __BIT_H_SEEN__
-#define __BIT_H_SEEN__
+#ifndef ASC_BIT_H
+#define ASC_BIT_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /** Data structure for holding bit lists. */
 struct BitList {
@@ -207,5 +211,7 @@ extern unsigned long FirstNonZeroBit(CONST struct BitList *bl);
  *  it will return a number greater than BLength(bl).
  */
 
-#endif  /* __BIT_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_BIT_H */
 

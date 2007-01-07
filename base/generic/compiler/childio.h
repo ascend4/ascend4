@@ -35,6 +35,10 @@
 #ifndef ASC_CHILDIO_H
 #define ASC_CHILDIO_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /*
@@ -82,6 +86,8 @@ ASC_DLLSPEC CONST char *WriteChildMetaDetails(void);
  * has not been missing since the last call with any NULL argument.
  */
 ASC_DLLSPEC void WriteChildMissing(FILE *fp, char *scope, symchar *childname);
+
+/* @} */
 
 #endif  /* ASC_CHILDIO_H */
 

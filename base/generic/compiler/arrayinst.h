@@ -90,6 +90,10 @@
 #ifndef ASC_ARRAYINST_H
 #define ASC_ARRAYINST_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /* Array child memory management */
 #define CAC(acp) ((struct ArrayChild *)(acp))
 
@@ -302,5 +306,7 @@ extern int CmpArrayInsts(struct Instance *i1, struct Instance *i2);
  *  Doesn't return if called with something other than arrays.
  *  NULL input --> 1 + warning, rather than exit.
  */
+
+/* @} */
 
 #endif /* ASC_ARRAYINST_H */

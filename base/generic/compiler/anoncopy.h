@@ -33,6 +33,10 @@
 #ifndef ASC_ANONCOPY_H
 #define ASC_ANONCOPY_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern struct gl_list_t *Pass2CollectAnonProtoVars(struct Instance *i);
 /**<
 	Returns a gl_list of index paths through i to reach the vars
@@ -67,6 +71,8 @@ extern void Pass2CopyAnonProto(struct Instance *proto,
 	we need to arrange that the tmpnums all start and end 0
 	so we can avoid extra 0ing of them.
 */
+
+/* @} */
 
 #endif /* ASC_ANONCOPY_H */
 

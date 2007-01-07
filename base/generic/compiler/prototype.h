@@ -39,6 +39,10 @@
 #ifndef ASC_PROTOTYPE_H
 #define ASC_PROTOTYPE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 extern void InitializePrototype(void);
@@ -69,6 +73,8 @@ ASC_DLLSPEC void DestroyPrototype(void);
  *  This deletes all the instances in the prototype library.  This should
  *  be done before the program exits.
  */
+
+/* @} */
 
 #endif /* ASC_PROTOTYPE_H */
 

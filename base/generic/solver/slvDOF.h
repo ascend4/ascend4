@@ -42,6 +42,10 @@
 #ifndef ASC_SLVDOF_H
 #define ASC_SLVDOF_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /*
@@ -138,5 +142,7 @@ ASC_DLLSPEC int32 consistency_analysis(slv_system_t server, int32 **fixed);
  *  The index list is terminated with a -1 but may be of any length.
  *  The indices are var_mindex of vars on master_var_list.
  */
+
+/* @} */
 
 #endif  /* ASC_SLVDOF_H */

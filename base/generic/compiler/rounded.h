@@ -37,6 +37,10 @@
 #ifndef ASC_ROUNDED_H
 #define ASC_ROUNDED_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern double DIPow(register double d, long int n);
 /**< 
  *  <!--  double DIPow(d,n)                                            -->
@@ -252,6 +256,8 @@ extern double Ultod(long int l);
 #define DPow(d1,d2) (pow(d1,d2))
 #define UPow(d1,d2) (pow(d1,d2))
 #endif /* SLOPPY */
+
+/* @} */
 
 #endif /* ASC_ROUNDED_H */
 

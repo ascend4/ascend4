@@ -34,6 +34,10 @@
 #ifndef ASC_FRACTIONS_H
 #define ASC_FRACTIONS_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /** The type of a fraction numerator or denominator. */
 #define FRACPART short
 /** The maximum FRACPART value. */
@@ -96,6 +100,8 @@ extern struct fraction NegateF(struct fraction f);
 /**<
  *  Returned fraction equal -f.
  */
+
+/* @} */
 
 #endif /* ASC_FRACTIONS_H */
 

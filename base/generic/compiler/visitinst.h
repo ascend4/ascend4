@@ -39,8 +39,12 @@
  *  </pre>
  */
 
-#ifndef __VISITINST_H_SEEN__
-#define __VISITINST_H_SEEN__
+#ifndef ASC_VISITINST_H
+#define ASC_VISITINST_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 typedef void (*VisitProc)(struct Instance *);
 /**< 
@@ -411,5 +415,7 @@ extern struct visitmapinfo *MakeVisitMap(struct Instance *inst, unsigned long *m
  * memory, we visit the tree to get size then again to get data.
  */
 
-#endif  /* __VISITINST_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_VISITINST_H */
 

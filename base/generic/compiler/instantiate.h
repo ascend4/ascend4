@@ -55,6 +55,10 @@
 #ifndef ASC_INSTANTIATE_H
 #define ASC_INSTANTIATE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /*
  *  Relation instantiation flags.
  *  If you add/remove/change these, update the comments in
@@ -254,6 +258,8 @@ extern int IncompleteArray(CONST struct Instance *i);
  *  This means all NONNULL children are done, with the possible
  *  exception of arrays of relations/logical_relations.
  */
+
+/* @} */
 
 #endif /* ASC_INSTANTIATE_H */
 

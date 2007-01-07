@@ -32,6 +32,10 @@
 #ifndef ASC_TYPES_H
 #define ASC_TYPES_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <limits.h>
 #include "compiler.h"
 #include "dimen.h"
@@ -232,6 +236,8 @@ struct Name {
  * The IEEE gurus will tell you OTHERWISE, of course.
  */
 #define MAXINTREAL 100000
+
+/* @} */
 
 #endif /* ASC_TYPES_H */
 

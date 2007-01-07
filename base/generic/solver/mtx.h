@@ -305,9 +305,9 @@
 #ifndef ASC_MTX_H
 #define ASC_MTX_H
 
-/** @addtogroup linear Linear
- * @{
- */
+/**	addtogroup linear Linear
+	@{
+*/
 
 #include <stdio.h>
 #include <string.h>

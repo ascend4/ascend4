@@ -38,8 +38,12 @@
  *  </pre>
  */
 
-#ifndef __DIMEN_IO_H_SEEN__
-#define __DIMEN_IO_H_SEEN__
+#ifndef ASC_DIMEN_IO_H
+#define ASC_DIMEN_IO_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /**
  * Write the human readable and parser edible string form of the
@@ -53,5 +57,7 @@ ASC_DLLSPEC char *WriteDimensionString(CONST dim_type *p);
  */
 extern void WriteDimensions(FILE *f, CONST dim_type *dimp);
 
-#endif /* __DIMEN_IO_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_DIMEN_IO_H */
 

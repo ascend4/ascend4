@@ -47,8 +47,12 @@
  *  building with -DNUMPAIRSELFTEST causes numlist to compile a simple main().
  */
 
-#ifndef __NUMPAIR_H_SEEN__
-#define __NUMPAIR_H_SEEN__
+#ifndef ASC_NUMPAIR_H
+#define ASC_NUMPAIR_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /**
  *  NUMLISTUSESPOOL == TRUE allows the list module to use pool.[ch] to
@@ -265,5 +269,7 @@ extern void NLPWrite(FILE *fp, Numlist_p nlp);
 #define NLPWRITE 1
 #endif
 
-#endif /* __NUMPAIR_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_NUMPAIR_H */
 

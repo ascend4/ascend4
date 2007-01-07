@@ -45,6 +45,10 @@
 #ifndef ASC_EXTCALL_H
 #define ASC_EXTCALL_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
@@ -251,5 +255,7 @@ extern void SetExternalCallNodeStamp(struct ExtCallNode *ext, int nodestamp);
 /**<
 	Set the nodestamp for the given external node.
 */
+
+/* @} */
 
 #endif /* ASC_EXTCALL_H */
