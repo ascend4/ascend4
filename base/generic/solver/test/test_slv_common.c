@@ -37,6 +37,7 @@
 #include "test_slv_common.h"
 #include "assertimpl.h"
 #include "printutil.h"
+#include <solver/mtx_vector.h>
 
 /*
  *  Independent calculation of a vector dot product.

@@ -61,7 +61,7 @@ static void test_ascEnvVar(void)
   char str_pathbig_ss2[MAX_ENV_VAR_LENGTH*3];
 
   int elem_count;
-  char **paths;
+  const char **paths;
   struct gl_list_t *name_list;
   int i;
   char test_ext_varname[] = "TEST_ASCENVVAR_EXTERNAL_ENV_VAR";
