@@ -42,7 +42,7 @@
  *  Independent calculation of a vector dot product.
  *  Nothing fancy, no validation of input.  Assumes valid vectors.
  */
-static real64 slow_inner_product(struct vector_data *vec1, struct vector_data *vec2)
+static real64 slow_inner_product(struct vec_vector *vec1, struct vec_vector *vec2)
 {
   int32 i;
   real64 product = 0.0;
@@ -77,8 +77,8 @@ static real64 slow_dot_product(int32 len, real64 *array1, real64 *array2)
  *  Nothing fancy, no validation of input.  Assumes valid vector & matrix.
  */
 static void slow_vector_matrix_product(mtx_matrix_t mtx,
-                                       struct vector_data *vec,
-                                       struct vector_data *prod,
+                                       struct vec_vector *vec,
+                                       struct vec_vector *prod,
                                        real64 scale)
 {
   int32 row, col;
@@ -114,9 +114,9 @@ static int compare_int32s(CONST VOIDPTR p1, CONST VOIDPTR p2)
  */
 static void test_slv_common(void)
 {
-  struct vector_data *pvec1;
-  struct vector_data *pvec2;
-  struct vector_data *pvec3;
+  struct vec_vector *pvec1;
+  struct vec_vector *pvec2;
+  struct vec_vector *pvec3;
   mtx_matrix_t mtx;
   mtx_coord_t coord;
   mtx_region_t region;
@@ -158,33 +158,33 @@ static void test_slv_common(void)
     rarray[i] = 7/2 * i;
   }
 
-  /* test slv_create_vector(), slv_destroy_vector() */
+  /* test vec_create(), vec_destroy() */
 
   test_meminuse = ascmeminuse();
 
   cur_meminuse = ascmeminuse();
-  pvec1 = slv_create_vector(-1, 0);                       /* error - low < 0 */
+  pvec1 = vec_create(-1, 0);                       /* error - low < 0 */
   CU_TEST(NULL == pvec1);
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
-  pvec1 = slv_create_vector(0, -1);                       /* error - high < 0 */
+  pvec1 = vec_create(0, -1);                       /* error - high < 0 */
   CU_TEST(NULL == pvec1);
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
-  pvec1 = slv_create_vector(10, 0);                       /* error - low > high */
+  pvec1 = vec_create(10, 0);                       /* error - low > high */
   CU_TEST(NULL == pvec1);
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
-  pvec1 = slv_create_vector(0, 0);                        /* ok - low == high */
+  pvec1 = vec_create(0, 0);                        /* ok - low == high */
   CU_TEST_FATAL(NULL != pvec1);
   CU_TEST_FATAL(NULL != pvec1->rng);
   CU_TEST(0 == pvec1->rng->low);
@@ -192,16 +192,16 @@ static void test_slv_common(void)
   CU_TEST(NULL != pvec1->vec);
   CU_TEST(FALSE == pvec1->accurate);
 #ifdef MALLOC_DEBUG
-  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
   CU_TEST(2 == AllocatedMemory(pvec1->rng, sizeof(mtx_range_t)));
   CU_TEST(2 == AllocatedMemory(pvec1->vec, sizeof(real64)));
 #else
-  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
   CU_TEST(1 == AllocatedMemory(pvec1->rng, sizeof(mtx_range_t)));
   CU_TEST(1 == AllocatedMemory(pvec1->vec, sizeof(real64)));
 #endif
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 #ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
 #else
@@ -210,7 +210,7 @@ static void test_slv_common(void)
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
-  pvec1 = slv_create_vector(0, 10);                       /* ok - low < high */
+  pvec1 = vec_create(0, 10);                       /* ok - low < high */
   CU_TEST_FATAL(NULL != pvec1);
   CU_TEST_FATAL(NULL != pvec1->rng);
   CU_TEST(0 == pvec1->rng->low);
@@ -218,16 +218,16 @@ static void test_slv_common(void)
   CU_TEST(NULL != pvec1->vec);
   CU_TEST(FALSE == pvec1->accurate);
 #ifdef MALLOC_DEBUG
-  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
   CU_TEST(2 == AllocatedMemory(pvec1->rng, sizeof(mtx_range_t)));
   CU_TEST(2 == AllocatedMemory(pvec1->vec, 11 * sizeof(real64)));
 #else
-  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
   CU_TEST(1 == AllocatedMemory(pvec1->rng, sizeof(mtx_range_t)));
   CU_TEST(1 == AllocatedMemory(pvec1->vec, 11 * sizeof(real64)));
 #endif
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 #ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
 #else
@@ -237,32 +237,32 @@ static void test_slv_common(void)
 
   CU_TEST(test_meminuse == ascmeminuse());
 
-  /* test slv_init_vector() */
+  /* test vec_init() */
 
   test_meminuse = ascmeminuse();
 
   cur_meminuse = ascmeminuse();
-  CU_TEST(2 == slv_init_vector(NULL, 0, 10));             /* error - NULL vec */
+  CU_TEST(2 == vec_init(NULL, 0, 10));             /* error - NULL vec */
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
-  pvec1 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng, vec */
+  pvec1 = (struct vec_vector *)ascmalloc(sizeof(struct vec_vector));  /* create a vector with NULL rng, vec */
   CU_TEST_FATAL(NULL != pvec1);
   pvec1->rng = NULL;
   pvec1->vec = NULL;
   pvec1->accurate = TRUE;
 
-  CU_TEST(1 == slv_init_vector(pvec1, -1, 10));           /* error - low < 0 */
+  CU_TEST(1 == vec_init(pvec1, -1, 10));           /* error - low < 0 */
   CU_TEST(NULL == pvec1->rng);
   CU_TEST(NULL == pvec1->vec);
   CU_TEST(TRUE == pvec1->accurate);
 #ifdef MALLOC_DEBUG
-  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
 #else
-  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
 #endif
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 #ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
 #else
@@ -271,23 +271,23 @@ static void test_slv_common(void)
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
-  pvec1 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng, vec */
+  pvec1 = (struct vec_vector *)ascmalloc(sizeof(struct vec_vector));  /* create a vector with NULL rng, vec */
   CU_TEST_FATAL(NULL != pvec1);
   pvec1->rng = NULL;
   pvec1->vec = NULL;
   pvec1->accurate = TRUE;
 
-  CU_TEST(1 == slv_init_vector(pvec1, 10, -1));           /* error - high < 0 */
+  CU_TEST(1 == vec_init(pvec1, 10, -1));           /* error - high < 0 */
   CU_TEST(NULL == pvec1->rng);
   CU_TEST(NULL == pvec1->vec);
   CU_TEST(TRUE == pvec1->accurate);
 #ifdef MALLOC_DEBUG
-  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
 #else
-  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
 #endif
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 #ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
 #else
@@ -296,29 +296,29 @@ static void test_slv_common(void)
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
-  pvec1 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng, vec */
+  pvec1 = (struct vec_vector *)ascmalloc(sizeof(struct vec_vector));  /* create a vector with NULL rng, vec */
   CU_TEST_FATAL(NULL != pvec1);
   pvec1->rng = NULL;
   pvec1->vec = NULL;
   pvec1->accurate = TRUE;
 
-  CU_TEST(0 == slv_init_vector(pvec1, 10, 10));           /* ok - low == high */
+  CU_TEST(0 == vec_init(pvec1, 10, 10));           /* ok - low == high */
   CU_TEST_FATAL(NULL != pvec1->rng);
   CU_TEST(10 == pvec1->rng->low);
   CU_TEST(10 == pvec1->rng->high);
   CU_TEST(NULL != pvec1->vec);
   CU_TEST(FALSE == pvec1->accurate);
 #ifdef MALLOC_DEBUG
-  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
   CU_TEST(2 == AllocatedMemory(pvec1->rng, sizeof(mtx_range_t)));
   CU_TEST(2 == AllocatedMemory(pvec1->vec, 11 * sizeof(real64)));
 #else
-  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
   CU_TEST(1 == AllocatedMemory(pvec1->rng, sizeof(mtx_range_t)));
   CU_TEST(1 == AllocatedMemory(pvec1->vec, 11 * sizeof(real64)));
 #endif
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 #ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
 #else
@@ -327,29 +327,29 @@ static void test_slv_common(void)
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
-  pvec1 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng, vec */
+  pvec1 = (struct vec_vector *)ascmalloc(sizeof(struct vec_vector));  /* create a vector with NULL rng, vec */
   CU_TEST_FATAL(NULL != pvec1);
   pvec1->rng = NULL;
   pvec1->vec = NULL;
   pvec1->accurate = TRUE;
 
-  CU_TEST(0 == slv_init_vector(pvec1, 10, 100));          /* ok - low < high */
+  CU_TEST(0 == vec_init(pvec1, 10, 100));          /* ok - low < high */
   CU_TEST_FATAL(NULL != pvec1->rng);
   CU_TEST(10 == pvec1->rng->low);
   CU_TEST(100 == pvec1->rng->high);
   CU_TEST(NULL != pvec1->vec);
   CU_TEST(FALSE == pvec1->accurate);
 #ifdef MALLOC_DEBUG
-  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
   CU_TEST(2 == AllocatedMemory(pvec1->rng, sizeof(mtx_range_t)));
   CU_TEST(2 == AllocatedMemory(pvec1->vec, 101 * sizeof(real64)));
 #else
-  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
   CU_TEST(1 == AllocatedMemory(pvec1->rng, sizeof(mtx_range_t)));
   CU_TEST(1 == AllocatedMemory(pvec1->vec, 101 * sizeof(real64)));
 #endif
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 #ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
 #else
@@ -358,14 +358,14 @@ static void test_slv_common(void)
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
-  pvec1 = slv_create_vector(0,0);                         /* create a vector with data */
+  pvec1 = vec_create(0,0);                         /* create a vector with data */
   CU_TEST_FATAL(NULL != pvec1);
 #ifdef MALLOC_DEBUG
-  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(2 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
   CU_TEST(2 == AllocatedMemory(pvec1->rng, sizeof(mtx_range_t)));
   CU_TEST(2 == AllocatedMemory(pvec1->vec, 1 * sizeof(real64)));
 #else
-  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vector_data)));
+  CU_TEST(1 == AllocatedMemory(pvec1, sizeof(struct vec_vector)));
   CU_TEST(1 == AllocatedMemory(pvec1->rng, sizeof(mtx_range_t)));
   CU_TEST(1 == AllocatedMemory(pvec1->vec, 1 * sizeof(real64)));
 #endif
@@ -373,7 +373,7 @@ static void test_slv_common(void)
   pvec1->accurate = TRUE;
   pvec1->vec[0] = rarray[0];
 
-  CU_TEST(1 == slv_init_vector(pvec1, -1, 100));          /* error - low < 0 */
+  CU_TEST(1 == vec_init(pvec1, -1, 100));          /* error - low < 0 */
   CU_TEST_FATAL(NULL != pvec1->rng);
   CU_TEST(0 == pvec1->rng->low);
   CU_TEST(0 == pvec1->rng->high);
@@ -386,7 +386,7 @@ static void test_slv_common(void)
   CU_TEST(1 == AllocatedMemory(pvec1->vec, 1 * sizeof(real64)));
 #endif
 
-  CU_TEST(1 == slv_init_vector(pvec1, 1, 0));          /* error - high < low */
+  CU_TEST(1 == vec_init(pvec1, 1, 0));          /* error - high < low */
   CU_TEST_FATAL(NULL != pvec1->rng);
   CU_TEST(0 == pvec1->rng->low);
   CU_TEST(0 == pvec1->rng->high);
@@ -399,7 +399,7 @@ static void test_slv_common(void)
   CU_TEST(1 == AllocatedMemory(pvec1->vec, 1 * sizeof(real64)));
 #endif
 
-  CU_TEST(0 == slv_init_vector(pvec1, 0, 1));          /* ok - high > low */
+  CU_TEST(0 == vec_init(pvec1, 0, 1));          /* ok - high > low */
   CU_TEST_FATAL(NULL != pvec1->rng);
   CU_TEST(0 == pvec1->rng->low);
   CU_TEST(1 == pvec1->rng->high);
@@ -415,7 +415,7 @@ static void test_slv_common(void)
   pvec1->accurate = TRUE;
   pvec1->vec[1] = rarray[1];
 
-  CU_TEST(0 == slv_init_vector(pvec1, 9, 10));         /* ok - high > low */
+  CU_TEST(0 == vec_init(pvec1, 9, 10));         /* ok - high > low */
   CU_TEST_FATAL(NULL != pvec1->rng);
   CU_TEST(9 == pvec1->rng->low);
   CU_TEST(10 == pvec1->rng->high);
@@ -429,7 +429,7 @@ static void test_slv_common(void)
   CU_TEST(1 == AllocatedMemory(pvec1->vec, 11 * sizeof(real64)));
 #endif
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 #ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
 #else
@@ -439,7 +439,7 @@ static void test_slv_common(void)
 
   CU_TEST(test_meminuse == ascmeminuse());
 
-  /* test slv_zero_vector() */
+  /* test vec_zero() */
 
   test_meminuse = ascmeminuse();
 
@@ -448,17 +448,17 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_zero_vector(NULL);                       /* error - NULL vec */
+    vec_zero(NULL);                       /* error - NULL vec */
   CU_TEST(TRUE == asc_assert_failed());
 
-  pvec1 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng */
+  pvec1 = (struct vec_vector *)ascmalloc(sizeof(struct vec_vector));  /* create a vector with NULL rng */
   CU_TEST_FATAL(NULL != pvec1);
   pvec1->rng = NULL;
   pvec1->vec = ASC_NEW_ARRAY(real64,10 );
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_zero_vector(pvec1);                      /* error - NULL vec->rng */
+    vec_zero(pvec1);                      /* error - NULL vec->rng */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec1->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
@@ -467,7 +467,7 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_zero_vector(pvec1);                      /* error - NULL vec->vec */
+    vec_zero(pvec1);                      /* error - NULL vec->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec1->vec = ASC_NEW_ARRAY(real64,10 );
@@ -476,38 +476,38 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_zero_vector(pvec1);                      /* error - low < 0 */
+    vec_zero(pvec1);                      /* error - low < 0 */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec1->rng->low = 11;
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_zero_vector(pvec1);                      /* error - low > high */
+    vec_zero(pvec1);                      /* error - low > high */
   CU_TEST(TRUE == asc_assert_failed());
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
 #endif    /* !ASC_NO_ASSERTIONS */
 
-  pvec1 = slv_create_vector(0,0);                     /* create & initialize a 1-element vector */
+  pvec1 = vec_create(0,0);                     /* create & initialize a 1-element vector */
   CU_TEST_FATAL(NULL != pvec1);
 
   pvec1->vec[0] = rarray[0];
   CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[0], rarray[0], 0.00001);
 
-  slv_zero_vector(pvec1);
+  vec_zero(pvec1);
   CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[0], 0.0, 0.00001);
 
-  CU_TEST_FATAL(0 == slv_init_vector(pvec1, 0, 9));   /* redimension to larger vector */
+  CU_TEST_FATAL(0 == vec_init(pvec1, 0, 9));   /* redimension to larger vector */
 
   for (i=0 ; i<10 ; ++i) {
     pvec1->vec[i] = rarray[i];                    /* initialize & check the data */
     CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[i], rarray[i], 0.00001);
   }
 
-  slv_zero_vector(pvec1);
+  vec_zero(pvec1);
   for (i=0 ; i<10 ; ++i) {
     CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[i], 0.0, 0.00001);  /* all data should now be 0.0 */
   }
@@ -519,7 +519,7 @@ static void test_slv_common(void)
   pvec1->rng->low = 5;
   pvec1->rng->high = 7;
 
-  slv_zero_vector(pvec1);
+  vec_zero(pvec1);
   for (i=0 ; i<5 ; ++i) {
     CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[i], rarray[i], 0.00001);
   }
@@ -530,43 +530,43 @@ static void test_slv_common(void)
     CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[i], rarray[i], 0.00001);
   }
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 
   CU_TEST(test_meminuse == ascmeminuse());
 
-  /* test slv_copy_vector() */
+  /* test vec_copy() */
 
   test_meminuse = ascmeminuse();
 
 #ifndef ASC_NO_ASSERTIONS
   asc_assert_catch(TRUE);                        /* prepare to test assertions */
 
-  pvec1 = slv_create_vector(0,10);
+  pvec1 = vec_create(0,10);
   CU_TEST_FATAL(NULL != pvec1);
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_copy_vector(NULL, pvec1);                /* error - NULL srcvec */
+    vec_copy(NULL, pvec1);                /* error - NULL srcvec */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_copy_vector(pvec1, NULL);                /* error - NULL destvec */
+    vec_copy(pvec1, NULL);                /* error - NULL destvec */
   CU_TEST(TRUE == asc_assert_failed());
 
-  pvec2 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng */
+  pvec2 = (struct vec_vector *)ascmalloc(sizeof(struct vec_vector));  /* create a vector with NULL rng */
   CU_TEST_FATAL(NULL != pvec2);
   pvec2->rng = NULL;
   pvec2->vec = ASC_NEW_ARRAY(real64,10 );
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_copy_vector(pvec2, pvec1);              /* error - NULL srcvec->rng */
+    vec_copy(pvec2, pvec1);              /* error - NULL srcvec->rng */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_copy_vector(pvec1, pvec2);              /* error - NULL destvec->rng */
+    vec_copy(pvec1, pvec2);              /* error - NULL destvec->rng */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec2->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
@@ -575,12 +575,12 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_copy_vector(pvec2, pvec1);              /* error - NULL srcvec->vec */
+    vec_copy(pvec2, pvec1);              /* error - NULL srcvec->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_copy_vector(pvec1, pvec2);              /* error - NULL destvec->vec */
+    vec_copy(pvec1, pvec2);              /* error - NULL destvec->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec2->vec = ASC_NEW_ARRAY(real64,10 );
@@ -589,29 +589,29 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_copy_vector(pvec2, pvec1);              /* error - srcvec->rng->low < 0 */
+    vec_copy(pvec2, pvec1);              /* error - srcvec->rng->low < 0 */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_copy_vector(pvec1, pvec2);              /* error - destvec->rng->low < 0 */
+    vec_copy(pvec1, pvec2);              /* error - destvec->rng->low < 0 */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec2->rng->low = 11;
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_copy_vector(pvec2, pvec1);              /* error - srcvec low > high */
+    vec_copy(pvec2, pvec1);              /* error - srcvec low > high */
   CU_TEST(TRUE == asc_assert_failed());
 
-  slv_destroy_vector(pvec1);
-  slv_destroy_vector(pvec2);
+  vec_destroy(pvec1);
+  vec_destroy(pvec2);
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
 #endif    /* !ASC_NO_ASSERTIONS */
 
-  pvec1 = slv_create_vector(0,0);                     /* create & initialize a 1-element vectors */
-  pvec2 = slv_create_vector(0,0);
+  pvec1 = vec_create(0,0);                     /* create & initialize a 1-element vectors */
+  pvec2 = vec_create(0,0);
   CU_TEST_FATAL(NULL != pvec1);
 
   pvec1->vec[0] = rarray[0];
@@ -619,11 +619,11 @@ static void test_slv_common(void)
   CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[0], rarray[0], 0.00001);
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], rarray[5], 0.00001);
 
-  slv_copy_vector(pvec1, pvec2);
+  vec_copy(pvec1, pvec2);
   CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[0], rarray[0], 0.00001);
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], rarray[0], 0.00001);
 
-  CU_TEST_FATAL(0 == slv_init_vector(pvec1, 0, 9));   /* redimension pvec1 to larger vector */
+  CU_TEST_FATAL(0 == vec_init(pvec1, 0, 9));   /* redimension pvec1 to larger vector */
 
   for (i=0 ; i<10 ; ++i) {
     pvec1->vec[i] = rarray[i];                    /* initialize & check the data */
@@ -631,7 +631,7 @@ static void test_slv_common(void)
   }
 
   pvec2->vec[0] = rarray[8];
-  slv_copy_vector(pvec2, pvec1);                  /* copy 1 element*/
+  vec_copy(pvec2, pvec1);                  /* copy 1 element*/
   CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[0], rarray[8], 0.00001);
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], rarray[8], 0.00001);
   for (i=1 ; i<10 ; ++i) {
@@ -641,18 +641,18 @@ static void test_slv_common(void)
   pvec2->vec[0] = rarray[3];
   pvec1->rng->low = 9;
   pvec1->rng->high = 9;
-  slv_copy_vector(pvec1, pvec2);                  /* copy 1 element other way*/
+  vec_copy(pvec1, pvec2);                  /* copy 1 element other way*/
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], rarray[9], 0.00001);
   CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[0], rarray[8], 0.00001);
   for (i=1 ; i<10 ; ++i) {
     CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[i], rarray[i], 0.00001);  /* data in src should be intact */
   }
 
-  CU_TEST_FATAL(0 == slv_init_vector(pvec2, 0, 9));   /* redimension pvec2 to larger vector */
-  slv_zero_vector(pvec2);                         /* zero the destvec */
+  CU_TEST_FATAL(0 == vec_init(pvec2, 0, 9));   /* redimension pvec2 to larger vector */
+  vec_zero(pvec2);                         /* zero the destvec */
   pvec1->rng->low = 0;
   pvec1->rng->high = 9;
-  slv_copy_vector(pvec1, pvec2);                  /* copy all elements */
+  vec_copy(pvec1, pvec2);                  /* copy all elements */
   for (i=0 ; i<10 ; ++i) {
     CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[i], pvec2->vec[i], 0.00001);  /* data should be the same */
   }
@@ -662,7 +662,7 @@ static void test_slv_common(void)
   }
   pvec2->rng->low = 3;
   pvec2->rng->high = 6;
-  slv_copy_vector(pvec2, pvec1);                  /* copy a subset of elements to start of destvec */
+  vec_copy(pvec2, pvec1);                  /* copy a subset of elements to start of destvec */
   for (i=3 ; i<7 ; ++i) {
     CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[i-3], rarray[9-i], 0.00001);  /* data should be the same */
   }
@@ -670,44 +670,44 @@ static void test_slv_common(void)
     CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[i], rarray[i], 0.00001);  /* data should be the same */
   }
 
-  slv_destroy_vector(pvec1);
-  slv_destroy_vector(pvec2);
+  vec_destroy(pvec1);
+  vec_destroy(pvec2);
 
   CU_TEST(test_meminuse == ascmeminuse());
 
-  /* test slv_inner_product() */
+  /* test vec_inner_product() */
 
   test_meminuse = ascmeminuse();
 
 #ifndef ASC_NO_ASSERTIONS
   asc_assert_catch(TRUE);                        /* prepare to test assertions */
 
-  pvec1 = slv_create_vector(0,10);
+  pvec1 = vec_create(0,10);
   CU_TEST_FATAL(NULL != pvec1);
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_inner_product(NULL, pvec1);              /* error - NULL vec1 */
+    vec_inner_product(NULL, pvec1);              /* error - NULL vec1 */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_inner_product(pvec1, NULL);              /* error - NULL vec2 */
+    vec_inner_product(pvec1, NULL);              /* error - NULL vec2 */
   CU_TEST(TRUE == asc_assert_failed());
 
-  pvec2 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng */
+  pvec2 = (struct vec_vector *)ascmalloc(sizeof(struct vec_vector));  /* create a vector with NULL rng */
   CU_TEST_FATAL(NULL != pvec2);
   pvec2->rng = NULL;
   pvec2->vec = ASC_NEW_ARRAY(real64,10 );
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_inner_product(pvec2, pvec1);              /* error - NULL vec1->rng */
+    vec_inner_product(pvec2, pvec1);              /* error - NULL vec1->rng */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_inner_product(pvec1, pvec2);              /* error - NULL vec2->rng */
+    vec_inner_product(pvec1, pvec2);              /* error - NULL vec2->rng */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec2->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
@@ -716,12 +716,12 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_inner_product(pvec2, pvec1);              /* error - NULL vec1->vec */
+    vec_inner_product(pvec2, pvec1);              /* error - NULL vec1->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_inner_product(pvec1, pvec2);              /* error - NULL vec2->vec */
+    vec_inner_product(pvec1, pvec2);              /* error - NULL vec2->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec2->vec = ASC_NEW_ARRAY(real64,10 );
@@ -730,29 +730,29 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_inner_product(pvec2, pvec1);              /* error - vec1->rng->low < 0 */
+    vec_inner_product(pvec2, pvec1);              /* error - vec1->rng->low < 0 */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_inner_product(pvec1, pvec2);              /* error - vec2->rng->low < 0 */
+    vec_inner_product(pvec1, pvec2);              /* error - vec2->rng->low < 0 */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec2->rng->low = 11;
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_inner_product(pvec2, pvec1);             /* error - vec1 low > high */
+    vec_inner_product(pvec2, pvec1);             /* error - vec1 low > high */
   CU_TEST(TRUE == asc_assert_failed());
 
-  slv_destroy_vector(pvec1);
-  slv_destroy_vector(pvec2);
+  vec_destroy(pvec1);
+  vec_destroy(pvec2);
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
 #endif    /* !ASC_NO_ASSERTIONS */
 
-  pvec1 = slv_create_vector(0,0);                     /* create & initialize a 1-element vectors */
-  pvec2 = slv_create_vector(0,0);
+  pvec1 = vec_create(0,0);                     /* create & initialize a 1-element vectors */
+  pvec2 = vec_create(0,0);
   CU_TEST_FATAL(NULL != pvec1);
   CU_TEST_FATAL(NULL != pvec2);
 
@@ -761,35 +761,35 @@ static void test_slv_common(void)
   CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[0], rarray[0], 0.00001);
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], rarray[5], 0.00001);
 
-  CU_ASSERT_DOUBLE_EQUAL(slv_inner_product(pvec1, pvec2), slow_inner_product(pvec1, pvec2), 0.00001);
-  CU_ASSERT_DOUBLE_EQUAL(slv_inner_product(pvec2, pvec1), slow_inner_product(pvec1, pvec2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_inner_product(pvec1, pvec2), slow_inner_product(pvec1, pvec2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_inner_product(pvec2, pvec1), slow_inner_product(pvec1, pvec2), 0.00001);
   CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[0], rarray[0], 0.00001);
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], rarray[5], 0.00001);
 
-  CU_TEST_FATAL(0 == slv_init_vector(pvec1, 0, 9));   /* redimension vectors larger */
-  CU_TEST_FATAL(0 == slv_init_vector(pvec2, 0, 9));
+  CU_TEST_FATAL(0 == vec_init(pvec1, 0, 9));   /* redimension vectors larger */
+  CU_TEST_FATAL(0 == vec_init(pvec2, 0, 9));
 
   for (i=0 ; i<10 ; ++i) {
     pvec1->vec[i] = rarray[i];                    /* initialize & check the data */
     pvec2->vec[i] = 2.0;
   }
                                                   /* check entire vectors */
-  CU_ASSERT_DOUBLE_EQUAL(slv_inner_product(pvec1, pvec2), slow_inner_product(pvec1, pvec2), 0.00001);
-  CU_ASSERT_DOUBLE_EQUAL(slv_inner_product(pvec2, pvec1), slow_inner_product(pvec1, pvec2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_inner_product(pvec1, pvec2), slow_inner_product(pvec1, pvec2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_inner_product(pvec2, pvec1), slow_inner_product(pvec1, pvec2), 0.00001);
 
   pvec1->rng->low = 9;
   pvec1->rng->high = 9;
   pvec2->rng->low = 5;
   pvec2->rng->high = 5;                           /* check 1 element subrange */
-  CU_ASSERT_DOUBLE_EQUAL(slv_inner_product(pvec1, pvec2), slow_inner_product(pvec1, pvec2), 0.00001);
-  CU_ASSERT_DOUBLE_EQUAL(slv_inner_product(pvec2, pvec1), slow_inner_product(pvec1, pvec2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_inner_product(pvec1, pvec2), slow_inner_product(pvec1, pvec2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_inner_product(pvec2, pvec1), slow_inner_product(pvec1, pvec2), 0.00001);
 
   pvec1->rng->low = 0;
   pvec1->rng->high = 3;
   pvec2->rng->low = 2;
   pvec2->rng->high = 5;                           /* check 4 element subrange */
-  CU_ASSERT_DOUBLE_EQUAL(slv_inner_product(pvec1, pvec2), slow_inner_product(pvec1, pvec2), 0.00001);
-  CU_ASSERT_DOUBLE_EQUAL(slv_inner_product(pvec2, pvec1), slow_inner_product(pvec1, pvec2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_inner_product(pvec1, pvec2), slow_inner_product(pvec1, pvec2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_inner_product(pvec2, pvec1), slow_inner_product(pvec1, pvec2), 0.00001);
 
   for (i=1 ; i<10 ; ++i) {
     CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[i], rarray[i], 0.00001);  /* data in vecs should be intact */
@@ -801,15 +801,15 @@ static void test_slv_common(void)
     pvec2->vec[i] = rarray[9-i];
   }
                                                   /* check entire vectors */
-  CU_ASSERT_DOUBLE_EQUAL(slv_inner_product(pvec1, pvec2), slow_inner_product(pvec1, pvec2), 0.00001);
-  CU_ASSERT_DOUBLE_EQUAL(slv_inner_product(pvec2, pvec1), slow_inner_product(pvec1, pvec2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_inner_product(pvec1, pvec2), slow_inner_product(pvec1, pvec2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_inner_product(pvec2, pvec1), slow_inner_product(pvec1, pvec2), 0.00001);
 
-  slv_destroy_vector(pvec1);
-  slv_destroy_vector(pvec2);
+  vec_destroy(pvec1);
+  vec_destroy(pvec2);
 
   CU_TEST(test_meminuse == ascmeminuse());
 
-  /* test slv_square_norm() */
+  /* test vec_square_norm() */
 
   test_meminuse = ascmeminuse();
 
@@ -818,17 +818,17 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_square_norm(NULL);                      /* error - NULL vec */
+    vec_square_norm(NULL);                      /* error - NULL vec */
   CU_TEST(TRUE == asc_assert_failed());
 
-  pvec1 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng */
+  pvec1 = (struct vec_vector *)ascmalloc(sizeof(struct vec_vector));  /* create a vector with NULL rng */
   CU_TEST_FATAL(NULL != pvec1);
   pvec1->rng = NULL;
   pvec1->vec = ASC_NEW_ARRAY(real64,10 );
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_square_norm(pvec1);                     /* error - NULL vec->rng */
+    vec_square_norm(pvec1);                     /* error - NULL vec->rng */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec1->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
@@ -837,7 +837,7 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_square_norm(pvec1);                     /* error - NULL vec->vec */
+    vec_square_norm(pvec1);                     /* error - NULL vec->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec1->vec = ASC_NEW_ARRAY(real64,10 );
@@ -846,57 +846,57 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_square_norm(pvec1);                     /* error - vec->rng->low < 0 */
+    vec_square_norm(pvec1);                     /* error - vec->rng->low < 0 */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec1->rng->low = 11;
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_square_norm(pvec1);                     /* error - vec low > high */
+    vec_square_norm(pvec1);                     /* error - vec low > high */
   CU_TEST(TRUE == asc_assert_failed());
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
 #endif    /* !ASC_NO_ASSERTIONS */
 
-  pvec1 = slv_create_vector(0,0);                     /* create & initialize a 1-element vector */
+  pvec1 = vec_create(0,0);                     /* create & initialize a 1-element vector */
   CU_TEST_FATAL(NULL != pvec1);
 
   pvec1->vec[0] = 0.0;
-  CU_ASSERT_DOUBLE_EQUAL(slv_square_norm(pvec1), slow_inner_product(pvec1, pvec1), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_square_norm(pvec1), slow_inner_product(pvec1, pvec1), 0.00001);
   CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[0], 0.0, 0.00001);
 
   pvec1->vec[0] = rarray[7];
-  CU_ASSERT_DOUBLE_EQUAL(slv_square_norm(pvec1), slow_inner_product(pvec1, pvec1), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_square_norm(pvec1), slow_inner_product(pvec1, pvec1), 0.00001);
   CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[0], rarray[7], 0.00001);
 
-  CU_TEST_FATAL(0 == slv_init_vector(pvec1, 0, 9));   /* redimension vectors larger */
+  CU_TEST_FATAL(0 == vec_init(pvec1, 0, 9));   /* redimension vectors larger */
 
   for (i=0 ; i<10 ; ++i) {
     pvec1->vec[i] = rarray[i];                    /* initialize the data */
   }
                                                   /* check entire vectors */
-  CU_ASSERT_DOUBLE_EQUAL(slv_square_norm(pvec1), slow_inner_product(pvec1, pvec1), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_square_norm(pvec1), slow_inner_product(pvec1, pvec1), 0.00001);
 
   pvec1->rng->low = 9;
   pvec1->rng->high = 9;
-  CU_ASSERT_DOUBLE_EQUAL(slv_square_norm(pvec1), slow_inner_product(pvec1, pvec1), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_square_norm(pvec1), slow_inner_product(pvec1, pvec1), 0.00001);
 
   pvec1->rng->low = 0;
   pvec1->rng->high = 3;
-  CU_ASSERT_DOUBLE_EQUAL(slv_square_norm(pvec1), slow_inner_product(pvec1, pvec1), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_square_norm(pvec1), slow_inner_product(pvec1, pvec1), 0.00001);
 
   for (i=1 ; i<10 ; ++i) {
     CU_ASSERT_DOUBLE_EQUAL(pvec1->vec[i], rarray[i], 0.00001);  /* data in vecs should be intact */
   }
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 
   CU_TEST(test_meminuse == ascmeminuse());
 
-  /* test slv_matrix_product() */
+  /* test vec_matrix_product() */
 
   test_meminuse = ascmeminuse();
 
@@ -906,13 +906,13 @@ static void test_slv_common(void)
   mtx = mtx_create();
   CU_TEST_FATAL(NULL != mtx);
   mtx_set_order(mtx, 10);
-  pvec1 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));
+  pvec1 = (struct vec_vector *)ascmalloc(sizeof(struct vec_vector));
   CU_TEST_FATAL(NULL != pvec1);
   pvec1->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
   pvec1->rng->low = 0;
   pvec1->rng->high = 10;
   pvec1->vec = ASC_NEW_ARRAY(real64,11 );
-  pvec2 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));
+  pvec2 = (struct vec_vector *)ascmalloc(sizeof(struct vec_vector));
   CU_TEST_FATAL(NULL != pvec2);
   pvec2->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
   pvec2->rng->low = 0;
@@ -921,17 +921,17 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(NULL, pvec1, pvec2, 1.0, FALSE);   /* error - NULL mtx */
+    vec_matrix_product(NULL, pvec1, pvec2, 1.0, FALSE);   /* error - NULL mtx */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(mtx, NULL, pvec2, 1.0, FALSE);   /* error - NULL vec */
+    vec_matrix_product(mtx, NULL, pvec2, 1.0, FALSE);   /* error - NULL vec */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(mtx, pvec1, NULL, 1.0, FALSE);   /* error - NULL prod */
+    vec_matrix_product(mtx, pvec1, NULL, 1.0, FALSE);   /* error - NULL prod */
   CU_TEST(TRUE == asc_assert_failed());
 
   ascfree(pvec1->rng);
@@ -939,7 +939,7 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - NULL vec->rng */
+    vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - NULL vec->rng */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec1->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
@@ -950,7 +950,7 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - NULL prod->rng */
+    vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - NULL prod->rng */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec2->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
@@ -961,7 +961,7 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - NULL vec->vec */
+    vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - NULL vec->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec1->vec = ASC_NEW_ARRAY(real64,11 );
@@ -970,7 +970,7 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - NULL prod->vec */
+    vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - NULL prod->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec2->vec = ASC_NEW_ARRAY(real64,11 );
@@ -979,14 +979,14 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - vec low < 0 */
+    vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - vec low < 0 */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec1->rng->low = 11;
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - vec low > high */
+    vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - vec low > high */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec1->rng->low = 0;
@@ -996,19 +996,19 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - prod low < 0 */
+    vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - prod low < 0 */
   CU_TEST(TRUE == asc_assert_failed());
 
   pvec2->rng->low = 11;
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - prod low > high */
+    vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - prod low > high */
   CU_TEST(TRUE == asc_assert_failed());
 
   mtx_destroy(mtx);
-  slv_destroy_vector(pvec1);
-  slv_destroy_vector(pvec2);
+  vec_destroy(pvec1);
+  vec_destroy(pvec2);
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
 #endif    /* !ASC_NO_ASSERTIONS */
@@ -1016,38 +1016,38 @@ static void test_slv_common(void)
   mtx = mtx_create();
   mtx_set_order(mtx, 10);
 
-  pvec1 = slv_create_vector(0,0);
+  pvec1 = vec_create(0,0);
   pvec1->vec[0] = 10.0;
 
-  pvec2 = slv_create_vector(0,0);
-  pvec3 = slv_create_vector(0,0);
+  pvec2 = vec_create(0,0);
+  pvec3 = vec_create(0,0);
 
-  slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);    /* mtx with all zero's */
+  vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);    /* mtx with all zero's */
   slow_vector_matrix_product(mtx, pvec1, pvec3, 1.0);   /* 1-element vector */
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], pvec3->vec[0], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[0], 0.000001);
 
   mtx_fill_value(mtx, mtx_coord(&coord,0,0), 20.0);
 
-  slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);    /* normal mtx */
+  vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);    /* normal mtx */
   slow_vector_matrix_product(mtx, pvec1, pvec3, 1.0);   /* 1-element vector */
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], pvec3->vec[0], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(200.0, pvec2->vec[0], 0.000001);
 
-  slv_matrix_product(mtx, pvec1, pvec2, 1.0, TRUE);     /* transpose should have no effect */
+  vec_matrix_product(mtx, pvec1, pvec2, 1.0, TRUE);     /* transpose should have no effect */
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], pvec3->vec[0], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(200.0, pvec2->vec[0], 0.000001);
 
   mtx_clear(mtx);
 
-  slv_init_vector(pvec1,0,1);
+  vec_init(pvec1,0,1);
   pvec1->vec[0] = 10.0;
   pvec1->vec[1] = 20.5;
 
-  slv_init_vector(pvec2, 0,1);
-  slv_init_vector(pvec3, 0,1);
+  vec_init(pvec2, 0,1);
+  vec_init(pvec3, 0,1);
 
-  slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);    /* empty mtx */
+  vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);    /* empty mtx */
   slow_vector_matrix_product(mtx, pvec1, pvec3, 1.0);   /* 2-element vector */
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], pvec3->vec[0], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[1], pvec3->vec[1], 0.000001);
@@ -1058,12 +1058,12 @@ static void test_slv_common(void)
   mtx_fill_value(mtx, mtx_coord(&coord,0,1), 0.5);
   mtx_fill_value(mtx, mtx_coord(&coord,1,1), -0.455);
 
-  slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);    /* normal mtx, but not all non-zeros */
+  vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);    /* normal mtx, but not all non-zeros */
   slow_vector_matrix_product(mtx, pvec1, pvec3, 1.0);   /* 2-element vector */
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], pvec3->vec[0], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[1], pvec3->vec[1], 0.000001);
 
-  slv_matrix_product(mtx, pvec1, pvec2, 1.0, TRUE);     /* transpose of normal mtx, not all non-zeros */
+  vec_matrix_product(mtx, pvec1, pvec2, 1.0, TRUE);     /* transpose of normal mtx, not all non-zeros */
 
   mtx_clear(mtx);
   mtx_fill_value(mtx, mtx_coord(&coord,0,0), 20.0);
@@ -1074,7 +1074,7 @@ static void test_slv_common(void)
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[0], pvec3->vec[0], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(pvec2->vec[1], pvec3->vec[1], 0.000001);
 
-  slv_init_vector(pvec1,0,10);
+  vec_init(pvec1,0,10);
   pvec1->vec[0] = 10.0;
   pvec1->vec[1] = 20.0;
   pvec1->vec[2] = 30.0;
@@ -1089,8 +1089,8 @@ static void test_slv_common(void)
   pvec1->rng->low = 2;                              /* only use a subset of vector */
   pvec1->rng->high = 4;
 
-  slv_init_vector(pvec2, 0,10);
-  slv_init_vector(pvec3, 0,10);
+  vec_init(pvec2, 0,10);
+  vec_init(pvec3, 0,10);
   for (i=0 ; i<11 ; ++i) {                          /* zero product vecs so can detect subset */
     pvec2->vec[i] = 0.0;
     pvec3->vec[i] = 0.0;
@@ -1107,7 +1107,7 @@ static void test_slv_common(void)
   mtx_fill_value(mtx, mtx_coord(&coord,4,3), 3.0);
   mtx_fill_value(mtx, mtx_coord(&coord,4,4), 3.0);
 
-  slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);    /* normal mtx */
+  vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);    /* normal mtx */
   slow_vector_matrix_product(mtx, pvec1, pvec3, 1.0);   /* vector subset*/
 
   for (i=0 ; i<11 ; ++i) {
@@ -1125,7 +1125,7 @@ static void test_slv_common(void)
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[9], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[10], 0.000001);
 
-  slv_matrix_product(mtx, pvec1, pvec2, 0.5, FALSE);    /* different scale */
+  vec_matrix_product(mtx, pvec1, pvec2, 0.5, FALSE);    /* different scale */
 
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[0], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[1], 0.000001);
@@ -1139,7 +1139,7 @@ static void test_slv_common(void)
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[9], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[10], 0.000001);
 
-  slv_matrix_product(mtx, pvec1, pvec2, 1.0, TRUE);     /* transpose */
+  vec_matrix_product(mtx, pvec1, pvec2, 1.0, TRUE);     /* transpose */
 
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[0], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[1], 0.000001);
@@ -1153,7 +1153,7 @@ static void test_slv_common(void)
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[9], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[10], 0.000001);
 
-  slv_matrix_product(mtx, pvec1, pvec2, 2.0, TRUE);     /* transpose */
+  vec_matrix_product(mtx, pvec1, pvec2, 2.0, TRUE);     /* transpose */
 
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[0], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[1], 0.000001);
@@ -1168,17 +1168,17 @@ static void test_slv_common(void)
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[10], 0.000001);
 
   mtx_destroy(mtx);
-  slv_destroy_vector(pvec1);
-  slv_destroy_vector(pvec2);
-  slv_destroy_vector(pvec3);
+  vec_destroy(pvec1);
+  vec_destroy(pvec2);
+  vec_destroy(pvec3);
 
   CU_TEST(test_meminuse == ascmeminuse());
 
-  /* test slv_write_vector() - not much to do but make sure something gets written */
+  /* test vec_write() - not much to do but make sure something gets written */
 
   test_meminuse = ascmeminuse();
 
-  pvec1 = slv_create_vector(0,10);
+  pvec1 = vec_create(0,10);
 
   if (FALSE == test_printing_enabled()) {
     test_enable_printing();
@@ -1187,7 +1187,7 @@ static void test_slv_common(void)
 
   if (NULL != (file_normal = fopen("slvcommontempfile1.tmp", "w+"))) {
 
-    slv_write_vector(file_normal, pvec1);/* write to normal open file */
+    vec_write(file_normal, pvec1);/* write to normal open file */
     rewind(file_normal);
     CU_TEST(EOF != fgetc(file_normal)); /* test that file is not empty */
     fclose(file_normal);
@@ -1202,11 +1202,11 @@ static void test_slv_common(void)
     i_enabled_printing = FALSE;
   }
 
-  slv_destroy_vector(pvec1);
+  vec_destroy(pvec1);
 
   CU_TEST(test_meminuse == ascmeminuse());
 
-  /* test slv_dot() */
+  /* test vec_dot() */
 
   test_meminuse = ascmeminuse();
 
@@ -1215,17 +1215,17 @@ static void test_slv_common(void)
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_dot(10, NULL, rarray2);                   /* error - NULL a1 */
+    vec_dot(10, NULL, rarray2);                   /* error - NULL a1 */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_dot(10, rarray, NULL);                    /* error - NULL a2 */
+    vec_dot(10, rarray, NULL);                    /* error - NULL a2 */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
-    slv_dot(-10, rarray, rarray2);                /* error - len < 0 */
+    vec_dot(-10, rarray, rarray2);                /* error - len < 0 */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
@@ -1233,21 +1233,21 @@ static void test_slv_common(void)
 
   rarray2[0] = rarray[5];
 
-  CU_ASSERT_DOUBLE_EQUAL(slv_dot(1, rarray, rarray2), slow_dot_product(1, rarray, rarray2), 0.00001);
-  CU_ASSERT_DOUBLE_EQUAL(slv_dot(1, rarray2, rarray), slow_dot_product(1, rarray, rarray2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_dot(1, rarray, rarray2), slow_dot_product(1, rarray, rarray2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_dot(1, rarray2, rarray), slow_dot_product(1, rarray, rarray2), 0.00001);
 
   for (i=0 ; i<10 ; ++i) {
     rarray2[i] = 2.0;
   }
 
-  CU_ASSERT_DOUBLE_EQUAL(slv_dot(11, rarray, rarray2), slow_dot_product(11, rarray, rarray2), 0.00001);
-  CU_ASSERT_DOUBLE_EQUAL(slv_dot(11, rarray2, rarray), slow_dot_product(11, rarray, rarray2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_dot(11, rarray, rarray2), slow_dot_product(11, rarray, rarray2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_dot(11, rarray2, rarray), slow_dot_product(11, rarray, rarray2), 0.00001);
 
-  CU_ASSERT_DOUBLE_EQUAL(slv_dot(5, rarray, rarray2), slow_dot_product(5, rarray, rarray2), 0.00001);
-  CU_ASSERT_DOUBLE_EQUAL(slv_dot(5, rarray2, rarray), slow_dot_product(5, rarray, rarray2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_dot(5, rarray, rarray2), slow_dot_product(5, rarray, rarray2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_dot(5, rarray2, rarray), slow_dot_product(5, rarray, rarray2), 0.00001);
 
-  CU_ASSERT_DOUBLE_EQUAL(slv_dot(0, rarray, rarray2), slow_dot_product(0, rarray, rarray2), 0.00001);
-  CU_ASSERT_DOUBLE_EQUAL(slv_dot(0, rarray2, rarray), slow_dot_product(0, rarray, rarray2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_dot(0, rarray, rarray2), slow_dot_product(0, rarray, rarray2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_dot(0, rarray2, rarray), slow_dot_product(0, rarray, rarray2), 0.00001);
 
   for (i=1 ; i<10 ; ++i) {
     CU_ASSERT_DOUBLE_EQUAL(7/2 * i, rarray[i], 0.00001);  /* data in arrays should be intact */
@@ -1258,8 +1258,8 @@ static void test_slv_common(void)
     rarray2[i] = rarray[9-i];
   }
 
-  CU_ASSERT_DOUBLE_EQUAL(slv_dot(11, rarray, rarray2), slow_dot_product(11, rarray, rarray2), 0.00001);
-  CU_ASSERT_DOUBLE_EQUAL(slv_dot(11, rarray2, rarray), slow_dot_product(11, rarray, rarray2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_dot(11, rarray, rarray2), slow_dot_product(11, rarray, rarray2), 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(vec_dot(11, rarray2, rarray), slow_dot_product(11, rarray, rarray2), 0.00001);
 
   CU_TEST(test_meminuse == ascmeminuse());
 

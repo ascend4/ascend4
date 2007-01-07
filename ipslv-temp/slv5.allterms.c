@@ -242,17 +242,17 @@ struct slv5_system_structure {
    *  Calculated data (scaled)
    */
   struct jacobian_data   J;            /* linearized system */
-  struct vector_data     nominals;     /* Variable nominals */
-  struct vector_data     weights;      /* Relation weights */
-  struct vector_data     variables;    /* Variable values */
-  struct vector_data     residuals;    /* Relation residuals */
-  struct vector_data     newton_residuals;    /* Newton Relation residuals */
-  struct vector_data     perturbed_residuals; /* Perturbed residuals */
-  struct vector_data     correction;          /* 2nd order correction */
-  struct vector_data     newton;              /* Dependent variables */
-  struct vector_data     perturbed_newton;    /* Perturbed Newton direction */
-  struct vector_data     varnewstep;   /* newton step in variables */
-  struct vector_data     varstep;      /* Step in variables */
+  struct vec_vector     nominals;     /* Variable nominals */
+  struct vec_vector     weights;      /* Relation weights */
+  struct vec_vector     variables;    /* Variable values */
+  struct vec_vector     residuals;    /* Relation residuals */
+  struct vec_vector     newton_residuals;    /* Newton Relation residuals */
+  struct vec_vector     perturbed_residuals; /* Perturbed residuals */
+  struct vec_vector     correction;          /* 2nd order correction */
+  struct vec_vector     newton;              /* Dependent variables */
+  struct vec_vector     perturbed_newton;    /* Perturbed Newton direction */
+  struct vec_vector     varnewstep;   /* newton step in variables */
+  struct vec_vector     varstep;      /* Step in variables */
 
   real64                 progress;     /* expected progress */
   real64                 sigma;        /* penalty parameter */
@@ -338,7 +338,7 @@ static void debug_delimiter( FILE *fp)
 /*
  *  Outputs a vector.
  */
-static void debug_out_vector( FILE *fp, struct vector_data *vec)
+static void debug_out_vector( FILE *fp, struct vec_vector *vec)
 {
   int32 ndx;
   FPRINTF(fp,"Norm = %g, Accurate = %s, Vector range = %d to %d\n",
@@ -444,11 +444,11 @@ static int savlinnum=0;
 #define create_zero_array(len,type)  \
    ((len) > 0 ? (type *)asccalloc((len),sizeof(type)) : NULL)
 
-#define zero_vector(v) slv_zero_vector(v)
-#define copy_vector(v,t) slv_copy_vector((v),(t))
-#define inner_product(v,u) slv_inner_product((v),(u))
-#define square_norm(v)  slv_square_norm(v)
-#define matrix_product(m,v,p,s,t) slv_matrix_product((m),(v),(p),(s),(t))
+#define zero_vector(v) vec_zero(v)
+#define copy_vector(v,t) vec_copy((v),(t))
+#define inner_product(v,u) vec_inner_product((v),(u))
+#define square_norm(v)  vec_square_norm(v)
+#define matrix_product(m,v,p,s,t) vec_matrix_product((m),(v),(p),(s),(t))
 
 /*
  *  Calculation routines
@@ -1393,7 +1393,7 @@ static int calc_pivots(slv5_system_t sys)
  *  already be calculated and scaled so as to simply be added to the
  *  rhs.  Caller is responsible for initially zeroing the rhs vector.
  */
-static void calc_rhs(slv5_system_t sys, struct vector_data *vec,
+static void calc_rhs(slv5_system_t sys, struct vec_vector *vec,
                      real64 scalar, boolean transpose)
 {
   if( transpose ) {     /* vec is indexed by col */
@@ -1716,7 +1716,7 @@ static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v)
    struct var_variable *var;
    real64 dx,val,bnd;
    int32 col;
-   struct vector_data step;
+   struct vec_vector step;
    real64 *vec;
 
    vec = (sys->nominals.vec);
@@ -1767,7 +1767,7 @@ static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v)
 static real64 quadratic_factor_for_complementary_vars( slv5_system_t sys) 
 {
    struct var_variable *var;
-   struct vector_data predictor,corrector;
+   struct vec_vector predictor,corrector;
    real64 *vec;
    real64 dx, dxp, dxc, val, bnd, try;
    real64 factor, minfactor, fup, flow;
@@ -1847,7 +1847,7 @@ static void apply_quadratic_step( slv5_system_t sys, real64 factor)
    FILE *lif = LIF(sys);
    struct var_variable *var;
    real64 dx, dxp, dxc, val, bnd;
-   struct vector_data predictor, corrector;
+   struct vec_vector predictor, corrector;
    int32 col;
    real64 *vec;
 
@@ -1897,7 +1897,7 @@ static void apply_step( slv5_system_t sys, int32 v, real64 factor)
    FILE *lif = LIF(sys);
    struct var_variable *var;
    real64 dx,val,bnd;
-   struct vector_data step;
+   struct vec_vector step;
    int32 col;
    real64 *vec;
 
@@ -1951,7 +1951,7 @@ static void apply_2nd_order_correction( slv5_system_t sys)
 {
    struct var_variable *var;
    real64 dx,val;
-   struct vector_data step;
+   struct vec_vector step;
    int32 col;
    real64 *vec;
 

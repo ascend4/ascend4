@@ -72,7 +72,7 @@
 #ifndef __MTX_INTERNAL_USE_ONLY_H__
 #define __MTX_INTERNAL_USE_ONLY_H__
 
-/** @addtogroup linear
+/** @addtogroup linear Linear
  * @{
  */
 

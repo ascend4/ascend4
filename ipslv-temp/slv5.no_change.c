@@ -258,17 +258,17 @@ struct slv5_system_structure {
    *  Calculated data (scaled)
    */
   struct jacobian_data   J;            /* linearized system */
-  struct vector_data     nominals;     /* Variable nominals */
-  struct vector_data     weights;      /* Relation weights */
-  struct vector_data     relnoms;      /* Relation nominals */
-  struct vector_data     variables;    /* Variable values */
-  struct vector_data     residuals;    /* Relation residuals */
-  struct vector_data     gamma;        /* Feasibility steepest descent */
-  struct vector_data     Jgamma;       /* Product of J and gamma */
-  struct vector_data     newton;       /* Dependent variables */
-  struct vector_data     varstep1;     /* 1st order in variables */
-  struct vector_data     varstep2;     /* 2nd order in variables */
-  struct vector_data     varstep;      /* Step in variables */
+  struct vec_vector     nominals;     /* Variable nominals */
+  struct vec_vector     weights;      /* Relation weights */
+  struct vec_vector     relnoms;      /* Relation nominals */
+  struct vec_vector     variables;    /* Variable values */
+  struct vec_vector     residuals;    /* Relation residuals */
+  struct vec_vector     gamma;        /* Feasibility steepest descent */
+  struct vec_vector     Jgamma;       /* Product of J and gamma */
+  struct vec_vector     newton;       /* Dependent variables */
+  struct vec_vector     varstep1;     /* 1st order in variables */
+  struct vec_vector     varstep2;     /* 2nd order in variables */
+  struct vec_vector     varstep;      /* Step in variables */
 
   real64                 objective;    /* Objective function evaluation */
   real64                 phi;          /* Unconstrained minimizer */
@@ -347,7 +347,7 @@ static void debug_delimiter( FILE *fp)
  *  Outputs a vector.
  */
 static void debug_out_vector( FILE *fp, slv5_system_t sys,
-                              struct vector_data *vec)
+                              struct vec_vector *vec)
 {
   int32 ndx;
   FPRINTF(fp,"Norm = %g, Accurate = %s, Vector range = %d to %d\n",
@@ -453,11 +453,11 @@ static int savlinnum=0;
 #define create_zero_array(len,type)  \
    ((len) > 0 ? (type *)asccalloc((len),sizeof(type)) : NULL)
 
-#define zero_vector(v) slv_zero_vector(v)
-#define copy_vector(v,t) slv_copy_vector((v),(t))
-#define inner_product(v,u) slv_inner_product((v),(u))
-#define square_norm(v)  slv_square_norm(v)
-#define matrix_product(m,v,p,s,t) slv_matrix_product((m),(v),(p),(s),(t))
+#define zero_vector(v) vec_zero(v)
+#define copy_vector(v,t) vec_copy((v),(t))
+#define inner_product(v,u) vec_inner_product((v),(u))
+#define square_norm(v)  vec_square_norm(v)
+#define matrix_product(m,v,p,s,t) vec_matrix_product((m),(v),(p),(s),(t))
 
 /*
  *  Calculation routines
@@ -1178,7 +1178,7 @@ static int calc_pivots(slv5_system_t sys)
  *  already be calculated and scaled so as to simply be added to the
  *  rhs.  Caller is responsible for initially zeroing the rhs vector.
  */
-static void calc_rhs(slv5_system_t sys, struct vector_data *vec,
+static void calc_rhs(slv5_system_t sys, struct vec_vector *vec,
                      real64 scalar, boolean transpose)
 {
   if( transpose ) {     /* vec is indexed by col */

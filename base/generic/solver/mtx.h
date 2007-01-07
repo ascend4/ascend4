@@ -305,7 +305,7 @@
 #ifndef ASC_MTX_H
 #define ASC_MTX_H
 
-/** @addtogroup linear
+/** @addtogroup linear Linear
  * @{
  */
 
@@ -322,15 +322,15 @@ typedef struct mtx_header *mtx_matrix_t;
 /* Used to index rows and columns of matrices */
 
 /**
- ***  Refers to (row,col) element of a matrix
- **/
+	Refers to (row,col) element of a matrix
+*/
 typedef struct mtx_coord_struct {
    int32 row,col;
 } mtx_coord_t;
 
 /**
- *** provide a list type for giving functions a list of coordinates.
- **/
+	provide a list type for giving functions a list of coordinates.
+*/
 struct mtx_coord_list {
   mtx_coord_t coord;
   struct mtx_coord_list *next;
@@ -340,23 +340,23 @@ typedef struct mtx_range_struct {
   int32 low,high;
 } mtx_range_t;
 /**<
- ***  Range refered to is low..high, inclusive.  If low>high, range is empty
- **/
+	Range refered to is low..high, inclusive.  If low>high, range is empty
+*/
 
 typedef struct mtx_region_struct {
   mtx_range_t row,col;
 } mtx_region_t;
 /**< 
- ***  Rectangular region of a matrix
- **/
+	Rectangular region of a matrix
+*/
 
 typedef struct mtx_block_struct {
   int32 nblocks;
   mtx_region_t *block;		/**< array of regions denoting blocks */
 } mtx_block_t;
 /**< 
- *** Block structure of a matrix.
- **/
+	Block structure of a matrix.
+*/
 
 typedef struct mtx_sparse_vector_struct {
   real64 *data;

@@ -30,7 +30,7 @@
 #ifndef __MTX_QUERY_H_SEEN__
 #define __MTX_QUERY_H_SEEN__
 
-/** @addtogroup linear
+/** @addtogroup linear Linear
  * @{
  */
 

@@ -53,6 +53,7 @@
 #include "slv_client.h"
 #include "slv8.h"
 #include "slv_stdcalls.h"
+#include "mtx_vector.h"
 
 #include <solver/conopt.h>
 
@@ -205,11 +206,11 @@ struct slv8_system_structure {
   */
   struct jacobian_data   J;            /* linearized system */
 
-  struct vector_data     nominals;     /* Variable nominals */
-  struct vector_data     weights;      /* Relation weights */
-  struct vector_data     relnoms;      /* Relation nominals */
-  struct vector_data     variables;    /* Variable values */
-  struct vector_data     residuals;    /* Relation residuals */
+  struct vec_vector     nominals;     /* Variable nominals */
+  struct vec_vector     weights;      /* Relation weights */
+  struct vec_vector     relnoms;      /* Relation nominals */
+  struct vec_vector     variables;    /* Variable values */
+  struct vec_vector     residuals;    /* Relation residuals */
 
   real64                 objective;    /* Objective function evaluation */
 };
@@ -271,7 +272,7 @@ static void debug_delimiter(){
 	Output a vector.
 */
 static void debug_out_vector(slv8_system_t sys
-		,struct vector_data *vec
+		,struct vec_vector *vec
 ){
   int32 ndx;
   CONSOLE_DEBUG("Norm = %g, Accurate = %s, Vector range = %d to %d\n",
@@ -384,11 +385,11 @@ static void debug_out_hessian( FILE *fp, slv8_system_t sys){
 #define create_zero_array(len,type)  \
    ((len) > 0 ? (type *)asccalloc((len),sizeof(type)) : NULL)
 
-#define zero_vector(v) slv_zero_vector(v)
-#define copy_vector(v,t) slv_copy_vector((v),(t))
-#define inner_product(v,u) slv_inner_product((v),(u))
-#define square_norm(v)  slv_square_norm(v)
-#define matrix_product(m,v,p,s,t) slv_matrix_product((m),(v),(p),(s),(t))
+#define zero_vector(v) vec_zero(v)
+#define copy_vector(v,t) vec_copy((v),(t))
+#define inner_product(v,u) vec_inner_product((v),(u))
+#define square_norm(v)  vec_square_norm(v)
+#define matrix_product(m,v,p,s,t) vec_matrix_product((m),(v),(p),(s),(t))
 
 
 /*------------------------------------------------------------------------------
@@ -2796,7 +2797,7 @@ static int slv8_presolve(slv_system_t server, SlvClientToken asys){
 /**
 	@TODO check this: not sure if 'resolve' is really working or not -- JP
 */
-static void slv8_resolve(slv_system_t server, SlvClientToken asys){
+static int slv8_resolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
   slv8_system_t sys;
