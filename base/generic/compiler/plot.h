@@ -43,7 +43,7 @@ enum PlotTypes {
   XGRAPH_PLOT
 };
 
-ASC_DLLSPEC(enum PlotTypes ) g_plot_type;
+ASC_DLLSPEC enum PlotTypes g_plot_type;
 /**<
  *  These are the plot types recognized by the code in plot.c
  *  Parameterized equivalents are also recognized.
@@ -80,12 +80,12 @@ ASC_DLLSPEC(enum PlotTypes ) g_plot_type;
  *        is good only for xgraph. gnuplot has been neglected.
  */
 
-ASC_DLLSPEC(void ) plot_prepare_file(struct Instance *inst, char *plotfilename);
+ASC_DLLSPEC void plot_prepare_file(struct Instance *inst, char *plotfilename);
 /**<
  *  Writes data points for the given plot instance to the given plot file.
  */
 
-ASC_DLLSPEC(boolean) plot_allowed(struct Instance *inst);
+ASC_DLLSPEC boolean plot_allowed(struct Instance *inst);
 /**<
  *  Determines whether or not the given instance is allowed to be plotted
  *  (i.e. whether it is a refinement of plt_plot).

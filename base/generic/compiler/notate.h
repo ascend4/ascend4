@@ -124,19 +124,19 @@ extern void DestroyNoteTmpList(struct NoteTmp *head);
  * creating something according to dbid. That call always
  * returns 1.
  */
-ASC_DLLSPEC(int) InitNotesDatabase(symchar *dbid);
+ASC_DLLSPEC int InitNotesDatabase(symchar *dbid);
 
 /**
  * Returns a gl_list containing symchar * of names (dbid)
  * of databases currently in existence.
  */
-ASC_DLLSPEC(struct gl_list_t *) ListNotesDatabases(void);
+ASC_DLLSPEC struct gl_list_t *ListNotesDatabases(void);
 
 /**
  * Destroy the database, and necessarily all tokens being held.
  * if dbid is 0x1, destroys all databases.
  */
-ASC_DLLSPEC(void) DestroyNotesDatabase(symchar *dbid);
+ASC_DLLSPEC void DestroyNotesDatabase(symchar *dbid);
 
 /**
  * Clear any notes associated with the type named out of
@@ -172,7 +172,7 @@ extern void DestroyNotesOnType(symchar *dbid, symchar *type_name);
  *   returns a list of all notes about id in any context, any language.
  * </pre>
  */
-ASC_DLLSPEC(struct gl_list_t *) GetNotes(symchar *dbid,
+ASC_DLLSPEC struct gl_list_t *GetNotes(symchar *dbid,
                                   symchar *type,
                                   symchar *lang,
                                   symchar *id,
@@ -187,7 +187,7 @@ ASC_DLLSPEC(struct gl_list_t *) GetNotes(symchar *dbid,
  * scripted interfaces that can shove in garbage.
  * GetExactNote(dbid,n);
  */
-ASC_DLLSPEC(struct gl_list_t *) GetExactNote(symchar *dbid, struct Note *n);
+ASC_DLLSPEC struct gl_list_t *GetExactNote(symchar *dbid, struct Note *n);
 
 /**
  * Returns the list of notes matching any combination of the
@@ -196,7 +196,7 @@ ASC_DLLSPEC(struct gl_list_t *) GetExactNote(symchar *dbid, struct Note *n);
  * cookup up the list of ancestor type names, stick id in idlist,
  * and pass NOTESWILD,nd_wild for the other two arguments.
  */
-ASC_DLLSPEC(struct gl_list_t *) GetNotesList(symchar *dbid,
+ASC_DLLSPEC struct gl_list_t *GetNotesList(symchar *dbid,
                                       struct gl_list_t *types,
                                       struct gl_list_t *langs,
                                       struct gl_list_t *ids,
@@ -207,7 +207,7 @@ ASC_DLLSPEC(struct gl_list_t *) GetNotesList(symchar *dbid,
  * Return id of note. id is normally a child name or SELF.
  * Might be NULL.
  */
-ASC_DLLSPEC(symchar *) GetNoteId(struct Note *n);
+ASC_DLLSPEC symchar *GetNoteId(struct Note *n);
 
 /**
  * Return method of note.  Method is normally NULL unless note
@@ -215,35 +215,35 @@ ASC_DLLSPEC(symchar *) GetNoteId(struct Note *n);
  * also have a nonnull id.
  * Might be NULL.
  */
-ASC_DLLSPEC(symchar *) GetNoteMethod(struct Note *n);
+ASC_DLLSPEC symchar *GetNoteMethod(struct Note *n);
 
 /**
  * Return typename of note.
  * typename is normally something in the library.
  * Might be NULL.
  */
-ASC_DLLSPEC(symchar *) GetNoteType(struct Note *n);
+ASC_DLLSPEC symchar *GetNoteType(struct Note *n);
 
 /** Return language of note.  Might be NULL. */
-ASC_DLLSPEC(symchar *) GetNoteLanguage(struct Note *n);
+ASC_DLLSPEC symchar *GetNoteLanguage(struct Note *n);
 
 /**
  * Return best module name of note.
  * Might be NULL.  Name is string from a symchar.
  */
-ASC_DLLSPEC(CONST char *) GetNoteFilename(struct Note *n);
+ASC_DLLSPEC CONST char *GetNoteFilename(struct Note *n);
 
 /** Return line number of note. possibly -1. */
-ASC_DLLSPEC(int ) GetNoteLineNum(struct Note *n);
+ASC_DLLSPEC int GetNoteLineNum(struct Note *n);
 
 /** Return the text string of a note.  It is ours. */
-ASC_DLLSPEC(struct bracechar *) GetNoteText(struct Note *n);
+ASC_DLLSPEC struct bracechar *GetNoteText(struct Note *n);
 
 /** Return the enum NoteData. */
-ASC_DLLSPEC(enum NoteData ) GetNoteEnum(struct Note *n);
+ASC_DLLSPEC enum NoteData GetNoteEnum(struct Note *n);
 
 /** Return the data of a note if it matches the enum given, or NULL. */
-ASC_DLLSPEC(void *) GetNoteData(struct Note *n, enum NoteData nd);
+ASC_DLLSPEC void *GetNoteData(struct Note *n, enum NoteData nd);
 
 /**
  * Puts the list of note pointers on an internal tracking list.
@@ -252,12 +252,12 @@ ASC_DLLSPEC(void *) GetNoteData(struct Note *n, enum NoteData nd);
  * to contain notes.
  * The notes list must be from the same database.
  */
-ASC_DLLSPEC(void *) HoldNoteData(symchar *dbid, struct gl_list_t *nl);
+ASC_DLLSPEC void *HoldNoteData(symchar *dbid, struct gl_list_t *nl);
 
 /**
  * Returns NULL if token given is invalid in dbid.
  */
-ASC_DLLSPEC(struct gl_list_t *) HeldNotes(symchar *dbid, void *token);
+ASC_DLLSPEC struct gl_list_t *HeldNotes(symchar *dbid, void *token);
 
 /**
  * Removes the list of note pointers associated with token
@@ -266,12 +266,12 @@ ASC_DLLSPEC(struct gl_list_t *) HeldNotes(symchar *dbid, void *token);
  * existing tokens become invalid.
  * Calling with bogus token is ok.
  */
-ASC_DLLSPEC(void ) ReleaseNoteData(symchar *dbid, void *token);
+ASC_DLLSPEC void ReleaseNoteData(symchar *dbid, void *token);
 
 /**
  * Return the languages found in any committed note as a list of symchars.
  */
-ASC_DLLSPEC(struct gl_list_t *) GetNotesAllLanguages(symchar *dbid);
+ASC_DLLSPEC struct gl_list_t *GetNotesAllLanguages(symchar *dbid);
 
 /*
  * The 4 following calls do not work until after at least 1 call of
@@ -279,7 +279,7 @@ ASC_DLLSPEC(struct gl_list_t *) GetNotesAllLanguages(symchar *dbid);
  */
 
 /** Returns the 'Loaded Libraries' symchar, which is useful for the parser. */
-ASC_DLLSPEC(symchar*) LibraryNote(void);
+ASC_DLLSPEC symchar*LibraryNote(void);
 
 /** Returns the 'All Known Files' symchar, which is useful for the parser. */
 extern symchar *GlobalNote(void);
@@ -331,7 +331,7 @@ extern void DestroyNote(struct Note *n);
  * The engine NEdata, about which you know more than we,
  * should be consulted for errors if the return is NULL.
  */
-ASC_DLLSPEC(struct gl_list_t *) GetMatchingNotes(symchar *dbid,
+ASC_DLLSPEC struct gl_list_t *GetMatchingNotes(symchar *dbid,
                                           char *pattern,
                                           void *token,
                                           struct NoteEngine *engine);
@@ -363,14 +363,14 @@ typedef int (*NECompareFunc)(void *, /* NEdata */
  * This is a wrapper to keep things independent of anyone in particular's
  * regular expression package.
  */
-ASC_DLLSPEC(struct NoteEngine *) NotesCreateEngine(void *NEdata,
+ASC_DLLSPEC struct NoteEngine *NotesCreateEngine(void *NEdata,
                                    NEInitFunc NEInit,
                                    NECompareFunc NECompare);
 
 /**
  * Destroys a previously returned engine.
  */
-ASC_DLLSPEC(void ) NotesDestroyEngine(struct NoteEngine *engine);
+ASC_DLLSPEC void NotesDestroyEngine(struct NoteEngine *engine);
 
 #endif /* ASC_NOTATE_H */
 

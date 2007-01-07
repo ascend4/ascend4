@@ -93,7 +93,7 @@ struct UnitDefinition {
 #define UNIT_BASE_SOLID_ANGLE        "steradian"
 /**< Name of basic SI unit for solid angle. */
 
-ASC_DLLSPEC(struct Units *) g_units_hash_table[];
+ASC_DLLSPEC struct Units *g_units_hash_table[];
 /**<
  *  The hash table for unit structs.
  */
@@ -135,7 +135,7 @@ extern void ProcessUnitDef(struct UnitDefinition *udp);
  * messages to ascerr if not possible.
  */
 
-ASC_DLLSPEC(CONST struct Units*) LookupUnits(CONST char *c);
+ASC_DLLSPEC CONST struct Units*LookupUnits(CONST char *c);
 /**<
  *  Check the units library for units with a description string which
  *  matches c.  If it is found, this function will return a non-NULL pointer;
@@ -161,7 +161,7 @@ extern CONST struct Units *DefineUnits(symchar *c, double conv, CONST dim_type *
  *       know where to fix it. BAA 6-94
  */
 
-ASC_DLLSPEC(CONST struct Units*) FindOrDefineUnits(CONST char *c,
+ASC_DLLSPEC CONST struct Units*FindOrDefineUnits(CONST char *c,
                                              unsigned long * CONST pos,
                                              int * CONST error_code);
 /**<
@@ -196,7 +196,7 @@ ASC_DLLSPEC(CONST struct Units*) FindOrDefineUnits(CONST char *c,
  *  </pre>
  */
 
-ASC_DLLSPEC(char**) UnitsExplainError(CONST char *unitsexpr, int code, int pos);
+ASC_DLLSPEC char**UnitsExplainError(CONST char *unitsexpr, int code, int pos);
 /**<
  *  Returns an array of strings which may be helpful in
  *  explaining the error.
@@ -223,14 +223,14 @@ ASC_DLLSPEC(char**) UnitsExplainError(CONST char *unitsexpr, int code, int pos);
  *  Returns the dimensions of the units structure.
  */
 
-ASC_DLLSPEC(char *) UnitsStringSI(struct Units *up);
+ASC_DLLSPEC char *UnitsStringSI(struct Units *up);
 /**<
  *  Returns the SI form of the units for the dimensionality of up.
  *  Wild = *, Dimensionless = "", NULL up --> NULL return.
  *  Caller is responsible for freeing the string returned.
  */
 
-ASC_DLLSPEC(void ) DumpUnits(FILE *f);
+ASC_DLLSPEC void DumpUnits(FILE *f);
 /**<  Dump all defined units to f. */
 
 #endif /* ASC_UNITS_H */

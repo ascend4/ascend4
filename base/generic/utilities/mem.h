@@ -138,7 +138,7 @@
  *  @see mem_move()
  */
 
-ASC_DLLSPEC(void ) mem_move(POINTER from, POINTER too, size_t nbytes);
+ASC_DLLSPEC void mem_move(POINTER from, POINTER too, size_t nbytes);
 /**<
  *  Implementation function for mem_move_cast().  Do not call this
  *  function directly - use mem_move_cast() instead.
@@ -157,7 +157,7 @@ ASC_DLLSPEC(void ) mem_move(POINTER from, POINTER too, size_t nbytes);
  *  @see mem_move_disjoint()
  */
 
-ASC_DLLSPEC(void) mem_move_disjoint(POINTER from, POINTER too, size_t nbytes);
+ASC_DLLSPEC void mem_move_disjoint(POINTER from, POINTER too, size_t nbytes);
 /**<
  *  Implementation function for mem_copy_cast().  Do not call this
  *  function directly - use mem_copy_cast() instead.
@@ -175,7 +175,7 @@ ASC_DLLSPEC(void) mem_move_disjoint(POINTER from, POINTER too, size_t nbytes);
  *  @see mem_repl_byte()
  */
 
-ASC_DLLSPEC(void) mem_repl_byte(POINTER too, unsigned byte, size_t nbytes);
+ASC_DLLSPEC void mem_repl_byte(POINTER too, unsigned byte, size_t nbytes);
 /**<
  *  Implementation function for mem_repl_byte_cast().  Do not call this
  *  function directly - use mem_repl_byte_cast() instead.
@@ -195,7 +195,7 @@ ASC_DLLSPEC(void) mem_repl_byte(POINTER too, unsigned byte, size_t nbytes);
  *  @see mem_zero_byte()
  */
 
-ASC_DLLSPEC(void ) mem_zero_byte(POINTER too, unsigned byte, size_t nbytes);
+ASC_DLLSPEC void mem_zero_byte(POINTER too, unsigned byte, size_t nbytes);
 /**<
  *  Implementation function for mem_zero_byte_cast().  Do not call this
  *  function directly - use mem_zero_byte_cast() instead.
@@ -213,7 +213,7 @@ ASC_DLLSPEC(void ) mem_zero_byte(POINTER too, unsigned byte, size_t nbytes);
  *  @see mem_repl_word()
  */
 
-ASC_DLLSPEC(void) mem_repl_word(POINTER too, unsigned word, size_t nwords);
+ASC_DLLSPEC void mem_repl_word(POINTER too, unsigned word, size_t nwords);
 /**<
  *  Implementation function for mem_repl_word_cast().  Do not call this
  *  function directly - use mem_repl_word_cast() instead.                    
@@ -223,16 +223,16 @@ ASC_DLLSPEC(void) mem_repl_word(POINTER too, unsigned word, size_t nwords);
 #if 0
 extern int mem_get_byte(long from);               /**< Returns the byte located at from. */
 #endif
-ASC_DLLSPEC(unsigned) char mem_get_byte(long from);     /**< Returns the byte located at from. */
-ASC_DLLSPEC(int) mem_get_int(long from);                /**< Returns the int located at from. */
-ASC_DLLSPEC(long) mem_get_long(long from);              /**< Returns the long located at from. */
-ASC_DLLSPEC(double) mem_get_float(long from);           /**< Returns the float located at from. */
-ASC_DLLSPEC(double) mem_get_double(long from);          /**< Returns the double located at from. */
-ASC_DLLSPEC(void) mem_set_byte(long from, int b);       /**< Sets the byte located at from. */
-ASC_DLLSPEC(void) mem_set_int(long from, int i);        /**< Sets the int located at from. */
-ASC_DLLSPEC(void) mem_set_long(long from, long l);      /**< Sets the long located at from. */
-ASC_DLLSPEC(void) mem_set_float(long from, double f);   /**< Sets the float located at from. */
-ASC_DLLSPEC(void) mem_set_double(long from, double d);  /**< Sets the double located at from. */
+ASC_DLLSPEC unsigned char mem_get_byte(long from);     /**< Returns the byte located at from. */
+ASC_DLLSPEC int mem_get_int(long from);                /**< Returns the int located at from. */
+ASC_DLLSPEC long mem_get_long(long from);              /**< Returns the long located at from. */
+ASC_DLLSPEC double mem_get_float(long from);           /**< Returns the float located at from. */
+ASC_DLLSPEC double mem_get_double(long from);          /**< Returns the double located at from. */
+ASC_DLLSPEC void mem_set_byte(long from, int b);       /**< Sets the byte located at from. */
+ASC_DLLSPEC void mem_set_int(long from, int i);        /**< Sets the int located at from. */
+ASC_DLLSPEC void mem_set_long(long from, long l);      /**< Sets the long located at from. */
+ASC_DLLSPEC void mem_set_float(long from, double f);   /**< Sets the float located at from. */
+ASC_DLLSPEC void mem_set_double(long from, double d);  /**< Sets the double located at from. */
 
 #define	mem_get_unsigned(from)	((unsigned)mem_get_int(from))
 /**< Returns the unsigned located at from. */
@@ -299,7 +299,7 @@ struct mem_statistics {
   int str_wid;        /**< elements/pointer in pool. */
 };
 
-ASC_DLLSPEC(void) mem_get_stats(struct mem_statistics *m_stats, mem_store_t ms);
+ASC_DLLSPEC void mem_get_stats(struct mem_statistics *m_stats, mem_store_t ms);
 /**<
  *  Get statistics about a memory store.
  *  Stuffs the user's interface structure, m_stats, with info
@@ -314,7 +314,7 @@ ASC_DLLSPEC(void) mem_get_stats(struct mem_statistics *m_stats, mem_store_t ms);
  *  @param ms      Pointer to the memory store to query.
  */
 
-ASC_DLLSPEC(mem_store_t ) mem_create_store(int length, int width, size_t eltsize,
+ASC_DLLSPEC mem_store_t mem_create_store(int length, int width, size_t eltsize,
                                     int deltalen, int deltapool);
 /**<
  *  Creates and returns a new memory store. The returned mem_store_t
@@ -374,7 +374,7 @@ ASC_DLLSPEC(mem_store_t ) mem_create_store(int length, int width, size_t eltsize
  *  @return A pointer to the newly created pool store, NULL if an error occurred.
  */
 
-ASC_DLLSPEC(void *) mem_get_element(mem_store_t ms);
+ASC_DLLSPEC void *mem_get_element(mem_store_t ms);
 /**<
  *  Get a usable element from the pool.
  *  Returns a void pointer to a blob of memory of the eltsize
@@ -430,7 +430,7 @@ extern void mem_get_element_list(mem_store_t ms, int len, void **ellist);
  *  assumption that the user is perfect.
  */
 
-ASC_DLLSPEC(void ) mem_free_element(mem_store_t ms, void *eltpointer);
+ASC_DLLSPEC void mem_free_element(mem_store_t ms, void *eltpointer);
 /**<
  *  Releases an element back to the store.
  *  If you return the same pointer twice, we will have
@@ -458,7 +458,7 @@ ASC_DLLSPEC(void ) mem_free_element(mem_store_t ms, void *eltpointer);
  *  @return No return value.
  */
 
-ASC_DLLSPEC(void ) mem_clear_store(mem_store_t ms);
+ASC_DLLSPEC void mem_clear_store(mem_store_t ms);
 /**<
  *  Clears the books in ms. That is, we reset the ms to think
  *  that __all__ elements are freshly available and have never
@@ -481,7 +481,7 @@ ASC_DLLSPEC(void ) mem_clear_store(mem_store_t ms);
  *  @return No return value.
  */
 
-ASC_DLLSPEC(void ) mem_destroy_store(mem_store_t ms);
+ASC_DLLSPEC void mem_destroy_store(mem_store_t ms);
 /**<
  *  Deallocates everything associated with the ms.
  *  If mem_DEBUG is TRUE, it first verifies that all elements

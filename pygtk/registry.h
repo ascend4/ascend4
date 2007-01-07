@@ -17,7 +17,7 @@
 /*
 extern "C"{
 #ifdef ASCXX_USE_PYTHON
-ASC_IMPORT(void *) importhandler_getsharedpointer(const char *);
+ASC_IMPORT void * importhandler_getsharedpointer(const char *);
 #endif
 }
 */

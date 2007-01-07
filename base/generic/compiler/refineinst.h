@@ -60,7 +60,7 @@ extern struct Instance *RefineInstance(struct Instance *i,
  *  doesn't check for cliques.
  */
 
-ASC_DLLSPEC(struct Instance *) RefineClique(struct Instance *i,
+ASC_DLLSPEC struct Instance *RefineClique(struct Instance *i,
                                      struct TypeDescription *type,
                                      struct Instance *arginst);
 /**<

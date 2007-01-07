@@ -64,7 +64,7 @@ extern void DestroyBraceChar(struct bracechar *bc);
  * use. Since we frequently want to use this inside
  * printf and the like, a short macro form is provided.
  */
-ASC_DLLSPEC(CONST char *) BraceCharString(struct bracechar *sbc);
+ASC_DLLSPEC CONST char *BraceCharString(struct bracechar *sbc);
 /** Shortcut to BraceCharString(). */
 #define BCS(sbc) BraceCharString(sbc)
 
@@ -84,7 +84,7 @@ extern symchar *BraceCharLang(struct bracechar *sbc);
  * printf and the like, a short macro form is provided.
  * will not be NULL. (This is not the length of lang).
  */
-ASC_DLLSPEC(int ) BraceCharLen(struct bracechar *sbc);
+ASC_DLLSPEC int BraceCharLen(struct bracechar *sbc);
 /** Shortcut to BraceCharLen(). */
 #define BCL(sbc) BraceCharLen(sbc)
 

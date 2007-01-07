@@ -49,7 +49,7 @@ typedef struct{
   struct rel_relation **rlist; /** pointer to the array of relations in the system */
 } incidence_vars_t;
 
-ASC_DLLSPEC(int) build_incidence_data(CONST slv_system_t sys, incidence_vars_t *pd);
+ASC_DLLSPEC int build_incidence_data(CONST slv_system_t sys, incidence_vars_t *pd);
 /**<
 	Fill in an mplotvars struct
 
@@ -64,7 +64,7 @@ ASC_DLLSPEC(int) build_incidence_data(CONST slv_system_t sys, incidence_vars_t *
 */
 
 
-ASC_DLLSPEC(void) free_incidence_data(incidence_vars_t *pd);
+ASC_DLLSPEC void free_incidence_data(incidence_vars_t *pd);
 /**<
 	free memory in an mplotvars struct, if it is our memory
 */

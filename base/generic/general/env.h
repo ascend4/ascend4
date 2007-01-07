@@ -26,7 +26,7 @@
 #define ASC_ENV_H
 
 #ifdef TEST
-# define ASC_DLLSPEC(T) T
+# define ASC_DLLSPEC T T
 #else
 # include <utilities/config.h>
 # include <utilities/ascConfig.h>
@@ -56,7 +56,7 @@ typedef int (PutEnvFn)(const char *inputstring);
 	@return nonzero on error, -1 means that the value didn't exist in getenv,
 	otherwise the errors are those returned by putenv.
 */
-ASC_DLLSPEC(int) env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr);
+ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr);
 
 /**
 	Perform variable substitution on a string in shell-like way.
@@ -69,6 +69,6 @@ ASC_DLLSPEC(int) env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *pu
 	from being swallowed up is allowed for, either. These can be added
 	later, 'as an exercise'.
 */
-ASC_DLLSPEC(char *) env_subst(const char *path,GetEnvFn *getenvptr);
+ASC_DLLSPEC char *env_subst(const char *path,GetEnvFn *getenvptr);
 
 #endif

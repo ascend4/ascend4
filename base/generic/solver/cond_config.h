@@ -203,7 +203,7 @@ extern void reanalyze_solver_lists(slv_system_t sys);
  * flag ACTIVE for variables and relations in the solvers lists.
  */
 
-ASC_DLLSPEC(int32 ) system_reanalyze(slv_system_t sys, SlvBackendToken inst);
+ASC_DLLSPEC int32 system_reanalyze(slv_system_t sys, SlvBackendToken inst);
 /**<
  * For conditional modeling. If a whenvarlist has been changed
  * or a method has been run, this function calls

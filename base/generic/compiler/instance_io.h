@@ -106,7 +106,7 @@ extern struct gl_list_t *ISAPaths(CONST struct gl_list_t *pathlist);
  *  In well written MODELs, the isalist returned will be one long.
  */
 
-ASC_DLLSPEC(int ) WriteInstanceName(FILE *f,
+ASC_DLLSPEC int WriteInstanceName(FILE *f,
 		CONST struct Instance *i,
 		CONST struct Instance *ref);
 /**<
@@ -129,7 +129,7 @@ extern void WriteInstanceNameDS(Asc_DString * dsPtr,
 	relative names instead, where the context is assumed to be ref.
 */
 
-ASC_DLLSPEC(char*) WriteInstanceNameString(CONST struct Instance *i,
+ASC_DLLSPEC char*WriteInstanceNameString(CONST struct Instance *i,
 		CONST struct Instance *ref);
 /**<
 	Return a string (that the caller then owns). The name that is
@@ -139,7 +139,7 @@ ASC_DLLSPEC(char*) WriteInstanceNameString(CONST struct Instance *i,
 	is not a simulation or NULL.
 */
 
-ASC_DLLSPEC(int ) WriteAnyInstanceName(FILE *f, struct Instance *i);
+ASC_DLLSPEC int WriteAnyInstanceName(FILE *f, struct Instance *i);
 /**<
  *  Print the instance's name to the specified file.
  *  Very similar to WriteInstanceName().  The name that is
@@ -149,12 +149,12 @@ ASC_DLLSPEC(int ) WriteAnyInstanceName(FILE *f, struct Instance *i);
  *  the count of characters written.
  */
 
-ASC_DLLSPEC(unsigned long ) CountAliases(CONST struct Instance *i);
+ASC_DLLSPEC unsigned long CountAliases(CONST struct Instance *i);
 /**<
  *  Count all the known names of the instance given.
  */
 
-ASC_DLLSPEC(unsigned long ) CountISAs(CONST struct Instance *i);
+ASC_DLLSPEC unsigned long CountISAs(CONST struct Instance *i);
 /**<
  *  Count the names with which the instance given was created.
  */
@@ -170,14 +170,14 @@ extern void WriteISAs(FILE *f, CONST struct Instance *i);
  *  (there may not be any in bizarre circumstances).
  */
 
-ASC_DLLSPEC(struct gl_list_t *) WriteAliasStrings(CONST struct Instance *i);
+ASC_DLLSPEC struct gl_list_t *WriteAliasStrings(CONST struct Instance *i);
 /**<
  *  Return a list of strings of all the possible instance names for i.
  *  The list AND the strings on it are the user's responsibility to destroy.
  *  gl_free_and_destroy(aliases) would be convenient.
  */
 
-ASC_DLLSPEC(struct gl_list_t *) WriteISAStrings(CONST struct Instance *i);
+ASC_DLLSPEC struct gl_list_t *WriteISAStrings(CONST struct Instance *i);
 /**<
  *  Return a list of strings of all the constructed instance names for i.
  *  Names created by WILL_BE/ALIASES are not returned.
@@ -195,7 +195,7 @@ extern void WriteClique(FILE *f, CONST struct Instance *i);
  *  Print all the instance's clique members.
  */
 
-ASC_DLLSPEC(void) WriteInstance(FILE *f, CONST struct Instance *i);
+ASC_DLLSPEC void WriteInstance(FILE *f, CONST struct Instance *i);
 /**<
  *  Print the information contained in i.
  */
@@ -214,7 +214,7 @@ extern char *WritePathString(CONST struct gl_list_t *path);
  *  done with it.
  */
 
-ASC_DLLSPEC(void ) SaveInstance(FILE *f, CONST struct Instance *inst, int dorelations);
+ASC_DLLSPEC void SaveInstance(FILE *f, CONST struct Instance *inst, int dorelations);
 /**<
  *  Save the information contained in inst in a format that will allow
  *  efficient reconstruction of the instance. This will be followed up
@@ -228,7 +228,7 @@ extern void WriteInstanceList(struct gl_list_t *list);
  *  out the instance name for each element on the list.
  */
 
-ASC_DLLSPEC(void ) WriteAtomValue(FILE *fp, CONST struct Instance *i);
+ASC_DLLSPEC void WriteAtomValue(FILE *fp, CONST struct Instance *i);
 /**<
  *  Write an instance value to fp.
  */
@@ -316,19 +316,19 @@ extern void PopInterfacePtrs(struct gl_list_t *oldips,
  *  We deallocate oldips, this is not your job.
  */
 
-ASC_DLLSPEC(int ) ArrayIsRelation(struct Instance *i);
+ASC_DLLSPEC int ArrayIsRelation(struct Instance *i);
 /**<
  *  Returns 1 if the instance sent in is a good relation array or relation,
  *  0 OTHERWISE.
  */
 
-ASC_DLLSPEC(int ) ArrayIsLogRel(struct Instance *i);
+ASC_DLLSPEC int ArrayIsLogRel(struct Instance *i);
 /**<
  *  Returns 1 if the instance sent in is a good logical relation array
  *  or logical relation, 0 OTHERWISE.
  */
 
-ASC_DLLSPEC(int ) ArrayIsWhen(struct Instance *i);
+ASC_DLLSPEC int ArrayIsWhen(struct Instance *i);
 /**<
  *  Returns 1 if the instance sent in is a good when array
  *  or when, 0 OTHERWISE.

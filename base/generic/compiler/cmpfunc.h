@@ -57,7 +57,7 @@
  *  strcmp(SCP(sc1),SCP(sc2));
  */
 
-ASC_DLLSPEC(int ) CmpSymchar(symchar *s1, symchar *s2);
+ASC_DLLSPEC int CmpSymchar(symchar *s1, symchar *s2);
 /**<
  *  Compare two strings from the symbol table.
  *  Regardless of the details of the symchar definition, returns

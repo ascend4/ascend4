@@ -54,7 +54,7 @@
  * time.
  */
 
-ASC_DLLSPEC(int) slvDOF_eligible(slv_system_t server, int32 **vil);
+ASC_DLLSPEC int slvDOF_eligible(slv_system_t server, int32 **vil);
 /**
  * @return 1 if able to determine lists, 0 otherwise.
  * @param vil pointer to an int32 array which will fill in and return
@@ -69,7 +69,7 @@ ASC_DLLSPEC(int) slvDOF_eligible(slv_system_t server, int32 **vil);
  * since they cannot help the DOF state of the system.
  */
 
-ASC_DLLSPEC(int) slvDOF_structsing(slv_system_t server,
+ASC_DLLSPEC int slvDOF_structsing(slv_system_t server,
                              int32 relindex,
                              int32 **vil,
                              int32 **ril,
@@ -94,7 +94,7 @@ ASC_DLLSPEC(int) slvDOF_structsing(slv_system_t server,
  *  The indices are *_sindex of vars/rels on solvers_*_list.
  */
 
-ASC_DLLSPEC(int32) slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
+ASC_DLLSPEC int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
 /**<
  *  Return the status of the current problem.
  *
@@ -108,7 +108,7 @@ ASC_DLLSPEC(int32) slvDOF_status(slv_system_t server, int32 *status, int32 *dof)
  *  degrees of freedom for the problem.
  */
 
-ASC_DLLSPEC(int32 ) get_globally_consistent_eligible(slv_system_t server,
+ASC_DLLSPEC int32 get_globally_consistent_eligible(slv_system_t server,
                                               int32 **eliset);
 /**<
  *  Returns 1 if able to determine list, 0 otherwise.
@@ -121,7 +121,7 @@ ASC_DLLSPEC(int32 ) get_globally_consistent_eligible(slv_system_t server,
  *  elist is incident vars eligible to be fixed.
  */
 
-ASC_DLLSPEC(int32) consistency_analysis(slv_system_t server, int32 **fixed);
+ASC_DLLSPEC int32 consistency_analysis(slv_system_t server, int32 **fixed);
 /**<
  *  Returns 1 if system is structurally consistent, 0 otherwise.
  *  That is you send us the address of a pointer to an int32 array

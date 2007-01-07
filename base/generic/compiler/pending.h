@@ -185,7 +185,7 @@ extern void MoveToBottom(struct pending_t *pt);
  *  Move the item pt to the bottom of the list.
  */
 
-ASC_DLLSPEC(unsigned long) NumberPendingInstances(struct Instance *i);
+ASC_DLLSPEC unsigned long NumberPendingInstances(struct Instance *i);
 /**<
  *  <!--  unsigned long NumberPendingInstances;                        -->
  *  <!--  struct Instance *i;                                          -->

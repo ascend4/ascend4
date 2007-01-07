@@ -107,22 +107,22 @@
 	as well.
 */
 #ifdef __WIN32__
-# define ASC_EXPORT(TYPE) __declspec(dllexport) TYPE
-# define ASC_IMPORT(TYPE) __declspec(dllimport) TYPE
+# define ASC_EXPORT __declspec(dllexport)
+# define ASC_IMPORT __declspec(dllimport)
 #else
 # ifdef HAVE_GCCVISIBILITY
-#  define ASC_EXPORT(TYPE) __attribute__ ((visibility("default"))) TYPE
-#  define ASC_IMPORT(TYPE) TYPE
+#  define ASC_EXPORT __attribute__ ((visibility("default")))
+#  define ASC_IMPORT
 # else
-#  define ASC_EXPORT(TYPE) TYPE
-#  define ASC_IMPORT(TYPE) TYPE
+#  define ASC_EXPORT
+#  define ASC_IMPORT
 # endif
 #endif
 
 #ifdef ASC_BUILDING_LIBASCEND
-# define ASC_DLLSPEC(TYPE) extern ASC_EXPORT(TYPE)
+# define ASC_DLLSPEC extern ASC_EXPORT
 #else
-# define ASC_DLLSPEC(TYPE) extern ASC_IMPORT(TYPE)
+# define ASC_DLLSPEC extern ASC_IMPORT
 #endif
 
 #if !defined(ASC_DLLSPEC) || !defined(ASC_EXPORT) || !defined(ASC_IMPORT)
@@ -271,9 +271,9 @@
 #define VOIDPTR void *
 
 #ifdef REIMPLEMENT_STREAMS
-ASC_DLLSPEC(FILE*) g_ascend_errors;         /**< File stream to receive error messages. */
-ASC_DLLSPEC(FILE*) g_ascend_warnings;       /**< File stream to receive warning messages. */
-ASC_DLLSPEC(FILE*) g_ascend_information;    /**< File stream to receive general messages. */
+ASC_DLLSPEC FILE*g_ascend_errors;         /**< File stream to receive error messages. */
+ASC_DLLSPEC FILE*g_ascend_warnings;       /**< File stream to receive warning messages. */
+ASC_DLLSPEC FILE*g_ascend_information;    /**< File stream to receive general messages. */
 
 /* NB For error messages to be correctly captured, all output needs to go to stderr in error.h */
 #ifndef ASCERR

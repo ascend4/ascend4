@@ -59,7 +59,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv);
 	in dynamic loading of external solver DLLs.
 */
 
-ASC_DLLSPEC(int) Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
+ASC_DLLSPEC int Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
 /**<
  *  Loads a dynamic library and calls its initialization function.
  *  This is our function wrapping dlopen/LoadLibrary.  It makes
@@ -85,7 +85,7 @@ ASC_DLLSPEC(int) Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
  *          loaded, 1 if it is not.
  */
 
-ASC_DLLSPEC(int ) Asc_DynamicUnLoad(CONST char *path);
+ASC_DLLSPEC int Asc_DynamicUnLoad(CONST char *path);
 /**<
  *  Attempts to unload a dynamic library.
  *  This function tries to look up the previously-loaded library
@@ -112,7 +112,7 @@ ASC_DLLSPEC(int ) Asc_DynamicUnLoad(CONST char *path);
 #define Asc_DynamicSymbol(a,b) Asc_DynamicVariable((a),(b))
 /**< For backward compatibility to old name of Asc_DynamicVariable() */
 
-ASC_DLLSPEC(void *) Asc_DynamicVariable(CONST char *libraryname,
+ASC_DLLSPEC void *Asc_DynamicVariable(CONST char *libraryname,
                                  CONST char *varname);
 /**<
  *  Returns a pointer to a variable exported from a dynamically-linked
@@ -141,7 +141,7 @@ ASC_DLLSPEC(void *) Asc_DynamicVariable(CONST char *libraryname,
 typedef void (*DynamicF)(void);
 /**<  Function pointer type returned by Asc_DynamicFunction(). */
 
-ASC_DLLSPEC(DynamicF ) Asc_DynamicFunction(CONST char *libraryname,
+ASC_DLLSPEC DynamicF Asc_DynamicFunction(CONST char *libraryname,
                                     CONST char *funcname);
 /**<
  *  Returns a pointer to a function exported from a dynamically-linked

@@ -45,7 +45,7 @@ struct fraction {
   FRACPART denominator;
 };
 
-ASC_DLLSPEC(struct fraction ) CreateFraction(short n, short d);
+ASC_DLLSPEC struct fraction CreateFraction(short n, short d);
 /**<
  *  Create a fraction (n/d).
  *  Specify the numerator (n) and denominator (d).

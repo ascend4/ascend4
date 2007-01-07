@@ -51,7 +51,7 @@
 /**< Extension for new units files. */
 #define  MOD_CATCHALL    ""
 /**< Extension for general files. */
-ASC_DLLSPEC(CONST char *) g_alt_ending[MOD_FILE_EXTS];
+ASC_DLLSPEC CONST char *g_alt_ending[MOD_FILE_EXTS];
 /**<
  *  This array defines the expected file extensions for
  *  parsable ascend MODEL/ATOM/unit code. Files are not
@@ -77,14 +77,14 @@ extern int Asc_InitModules(unsigned long init_length);
  */
 
 
-ASC_DLLSPEC(void) Asc_DestroyModules(DestroyFunc func);
+ASC_DLLSPEC void Asc_DestroyModules(DestroyFunc func);
 /**<
  *  Deallocate all of the modules.  This should be done when all types
  *  are destroyed and just before exiting.
  *  The function argument is not optional.
  */
 
-ASC_DLLSPEC(struct module_t *) Asc_OpenStringModule(CONST char *inputstring,
+ASC_DLLSPEC struct module_t *Asc_OpenStringModule(CONST char *inputstring,
                                              int *status,
                                              CONST char *nameprefix);
 /**<
@@ -98,13 +98,13 @@ ASC_DLLSPEC(struct module_t *) Asc_OpenStringModule(CONST char *inputstring,
  *  to zz_lex.
  */
 
-ASC_DLLSPEC(struct module_t *) Asc_OpenModule(CONST char *name, int *status);
+ASC_DLLSPEC struct module_t *Asc_OpenModule(CONST char *name, int *status);
 /**<
  *  Attempt to find and open (for reading) a file whose
  *  name is based on `name'.
  *  @see Asc_RequireModule() for additional information.
  */
-ASC_DLLSPEC(struct module_t*) Asc_RequireModule(CONST char *name, int *status);
+ASC_DLLSPEC struct module_t*Asc_RequireModule(CONST char *name, int *status);
 /**<
  *  Attempt to find and open (for reading) a file whose
  *  name is based on `name'.
@@ -265,7 +265,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name);
  *  If any attempts to allocate memory fail, -3 is returned.
  */
 
-ASC_DLLSPEC(int ) Asc_CloseCurrentModule(void);
+ASC_DLLSPEC int Asc_CloseCurrentModule(void);
 /**<
  *  This function will close the current module, and restore the module
  *  (tell the scanner to scan the module) that REQUIREd it.<br><br>
@@ -289,7 +289,7 @@ extern int Asc_ModuleAddStatements(struct module_t *mod, struct gl_list_t *stats
  *  </pre>
  */
 
-ASC_DLLSPEC(CONST struct module_t*) Asc_GetModuleByName(CONST char *name);
+ASC_DLLSPEC CONST struct module_t*Asc_GetModuleByName(CONST char *name);
 /**<
  *  Return the module whose name is `name.'  `name' should be in the
  *  style returned by Asc_ModuleName(), namely, a base-name and a
@@ -302,7 +302,7 @@ ASC_DLLSPEC(CONST struct module_t*) Asc_GetModuleByName(CONST char *name);
  *  If a module with the requested name is not found, ruturn NULL.
  */
 
-ASC_DLLSPEC(struct gl_list_t*) Asc_ModuleList(int module_type);
+ASC_DLLSPEC struct gl_list_t*Asc_ModuleList(int module_type);
 /**<
  *  <pre>
  *  module_type 0;
@@ -353,7 +353,7 @@ extern struct module_t *g_current_module;
 /**<  Returns a pointer to the current module (release mode). */
 #endif /* NDEBUG */
 
-ASC_DLLSPEC(CONST char*) Asc_ModuleName(CONST struct module_t *m);
+ASC_DLLSPEC CONST char*Asc_ModuleName(CONST struct module_t *m);
 /**<
  *  Return the name of module m.
  */
@@ -371,18 +371,18 @@ extern struct gl_list_t *Asc_ModuleStatementLists(CONST struct module_t *m);
  *    all the statements. module.c owns the gl_list.
  */
 
-ASC_DLLSPEC(CONST char *) Asc_ModuleString(CONST struct module_t *m);
+ASC_DLLSPEC CONST char *Asc_ModuleString(CONST struct module_t *m);
 /**<
  *  Return the string of module m, if it is an interactive
  *  string module, or NULL if it is a file module.
  */
 
-ASC_DLLSPEC(CONST char*) Asc_ModuleFileName(CONST struct module_t *m);
+ASC_DLLSPEC CONST char*Asc_ModuleFileName(CONST struct module_t *m);
 /**<
  *  Return the filename of module m.
  */
 
-ASC_DLLSPEC(CONST char *) Asc_ModuleBestName(CONST struct module_t *m);
+ASC_DLLSPEC CONST char *Asc_ModuleBestName(CONST struct module_t *m);
 /**<
  *  Return the filename of module m, if it is a file, or the
  *  buffer name if it is a string.
@@ -398,13 +398,13 @@ extern unsigned long Asc_ModuleTimesOpened(CONST struct module_t *m);
  */
 
 
-ASC_DLLSPEC(struct tm*) Asc_ModuleTimeModified(CONST struct module_t *m);
+ASC_DLLSPEC struct tm*Asc_ModuleTimeModified(CONST struct module_t *m);
 /**<
  *  Return the time that the module was last modified.  The time is
  *  coverted to the local time.
  */
 
-ASC_DLLSPEC(int ) Asc_ModuleStringIndex(CONST struct module_t *m);
+ASC_DLLSPEC int Asc_ModuleStringIndex(CONST struct module_t *m);
 /**<
  *  Return the string index (the place in the sequence of parsing
  *  strings.

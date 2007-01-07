@@ -88,7 +88,7 @@ extern unsigned long GetSubjectIndex(struct gl_list_t *arglist,
 	@TODO what is this?
 */
 
-ASC_DLLSPEC(unsigned long) CountNumberOfArgs(struct gl_list_t *arglist,
+ASC_DLLSPEC unsigned long CountNumberOfArgs(struct gl_list_t *arglist,
         unsigned long start, unsigned long end);
 /**< Count the expanded length of a list of lists, using
      those elements of arglist in [start .. end].

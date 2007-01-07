@@ -41,14 +41,14 @@
 
 #include <utilities/ascConfig.h>
 
-ASC_DLLSPEC(int) Asc_ClearVarsInTree(struct Instance *i);
+ASC_DLLSPEC int Asc_ClearVarsInTree(struct Instance *i);
 /**< Asc_ClearVarsInTree(i).
  * A service routine which assumes a solver_var modeling world
  * and clears (set var.fixed := FALSE) all var and refinements
  * of var in the DAG rooted at i.
  */
 
-ASC_DLLSPEC(int) Asc_FreeAllVars( struct Instance *rootinstance,
+ASC_DLLSPEC int Asc_FreeAllVars( struct Instance *rootinstance,
                                     struct gl_list_t *arglist);
 /**<
  *  err = Asc_FreeAllVars(NULL,rootinstance,arglist,0);

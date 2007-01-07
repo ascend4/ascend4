@@ -180,7 +180,7 @@ extern void rel_destroy(struct rel_relation *rel);
 	Destroys a relation.
 */
 
-ASC_DLLSPEC(void ) rel_write_name(slv_system_t sys, struct rel_relation *rel, FILE *file);
+ASC_DLLSPEC void rel_write_name(slv_system_t sys, struct rel_relation *rel, FILE *file);
 /**<
 	Writes a name to the file given. Handles NULL inputs gracefully.
 	Does not print any whitespace, including carriage returns.
@@ -196,7 +196,7 @@ typedef struct rel_filter_structure {
 } rel_filter_t;
 /**< Relation filter type */
 
-ASC_DLLSPEC(SlvBackendToken) rel_instance(struct rel_relation *rel);
+ASC_DLLSPEC SlvBackendToken rel_instance(struct rel_relation *rel);
 /**<
 	Returns the instance pointer from a rel.
 */
@@ -256,7 +256,7 @@ extern enum rel_enum rel_relop(struct rel_relation *rel);
 	Returns the type of the relational operator of a given relation.
 */
 
-ASC_DLLSPEC(char *) rel_make_name(slv_system_t sys, struct rel_relation *rel);
+ASC_DLLSPEC char *rel_make_name(slv_system_t sys, struct rel_relation *rel);
 /**<
 	Copies of the relation instance name can be made and returned.
 	The string returned should be freed when no longer in use.
@@ -273,7 +273,7 @@ extern void rel_set_mindex(struct rel_relation *rel, int32 mindex);
 	appears in a slv_system_t master relation list.
 */
 
-ASC_DLLSPEC(int32 ) rel_sindex(const struct rel_relation *rel);
+ASC_DLLSPEC int32 rel_sindex(const struct rel_relation *rel);
 /**<
 	Retrieves the index number of the given relation as it
 	appears in a solvers relation list. The index is most often used
@@ -300,7 +300,7 @@ extern void rel_set_model(struct rel_relation *rel, int32 mindex);
 	models. Models are numbered from 1 to some upper limit.
 */
 
-ASC_DLLSPEC(real64) rel_residual(struct rel_relation *rel);
+ASC_DLLSPEC real64 rel_residual(struct rel_relation *rel);
 /**<
 	Retrieves the residual field of the given relation.
 	Note that the residual is not actually computed by rel_residual:
@@ -308,12 +308,12 @@ ASC_DLLSPEC(real64) rel_residual(struct rel_relation *rel);
 	actually correct.
 */
 
-ASC_DLLSPEC(void) rel_set_residual(struct rel_relation *rel, real64 residual);
+ASC_DLLSPEC void rel_set_residual(struct rel_relation *rel, real64 residual);
 /**<
 	Sets the residual field of the given relation.
 */
 
-ASC_DLLSPEC(real64 ) rel_nominal(struct rel_relation *rel);
+ASC_DLLSPEC real64 rel_nominal(struct rel_relation *rel);
 /**<
 	Retrieves the nominal field of the given relation.
 	No slv client has any business being able to set the nominal,
@@ -330,7 +330,7 @@ extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
 #ifdef NDEBUG
 # define rel_n_incidences(rel) ((rel)->n_incidences)
 #else
-ASC_DLLSPEC(int32) rel_n_incidencesF(struct rel_relation *rel);
+ASC_DLLSPEC int32 rel_n_incidencesF(struct rel_relation *rel);
 # define rel_n_incidences(rel) rel_n_incidencesF(rel)
 #endif
 /**<
@@ -369,14 +369,14 @@ extern void rel_set_incidencesF(struct rel_relation *rel,
  */
 
 
-ASC_DLLSPEC(struct var_variable **)
+ASC_DLLSPEC struct var_variable **
 rel_incidence_list_to_modify(struct rel_relation *rel);
 /**<
 	Returns a non-const pointer to an array rel_n_incidences(rel)
 	long of vars.
 	@see rel_incidence_list().
 */
-ASC_DLLSPEC(const struct var_variable**) rel_incidence_list(struct rel_relation *rel);
+ASC_DLLSPEC const struct var_variable**rel_incidence_list(struct rel_relation *rel);
 /**<
 	Returns a pointer to an array rel_n_incidences(rel) long of vars.
 	Each element of the array is a struct var_variable *.
@@ -398,7 +398,7 @@ ASC_DLLSPEC(const struct var_variable**) rel_incidence_list(struct rel_relation 
 	these bits and for operations on the whole set.
 */
 
-ASC_DLLSPEC(int32 ) rel_apply_filter(const struct rel_relation *rel,
+ASC_DLLSPEC int32 rel_apply_filter(const struct rel_relation *rel,
                               rel_filter_t *filter);
 /**<
  *  Returns 1 only if all of the positions specified in
@@ -427,13 +427,13 @@ extern void rel_set_flags(struct rel_relation *rel, uint32 flags);
  *  Sets the entire flag field to the value of flags given.
  */
 
-ASC_DLLSPEC(uint32) rel_flagbit(struct rel_relation *rel, uint32 name);
+ASC_DLLSPEC uint32 rel_flagbit(struct rel_relation *rel, uint32 name);
 /**<
  *  Returns the value of the bit specified from the relation flags.
  *  name should be a REL_xx flag defined above)
  */
 
-ASC_DLLSPEC(void ) rel_set_flagbit(struct rel_relation *rel,
+ASC_DLLSPEC void rel_set_flagbit(struct rel_relation *rel,
                             uint32 NAME, uint32 oneorzero);
 /**<
  *  Sets the bit, which should be referred to by its macro name,
@@ -583,7 +583,7 @@ ASC_DLLSPEC(void ) rel_set_flagbit(struct rel_relation *rel,
         rel_set_flagbit((rel),REL_IN_CUR_SUBREGION,(bitval))
 #define rel_set_generated(rel,bitval)		rel_set_flagbit((rel),REL_GENERATED,(bitval))
 
-ASC_DLLSPEC(uint32) rel_included(struct rel_relation *rel);
+ASC_DLLSPEC uint32 rel_included(struct rel_relation *rel);
 /**<
  *  Retrieves the included field of the given relation.
  *  @todo This has side effects on the ascend instance, so it isn't

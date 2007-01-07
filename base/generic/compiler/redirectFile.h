@@ -46,14 +46,14 @@
 #include <utilities/ascConfig.h>
 
 #ifdef REIMPLEMENT_STREAMS
-ASC_DLLSPEC(FILE *) g_ascend_errors;       /**< File for error messages.  Default is stderr. */
-ASC_DLLSPEC(FILE *) g_ascend_warnings;     /**< File for warning messages.  Default is stderr. */
-ASC_DLLSPEC(FILE *) g_ascend_information;  /**< File for informational messages.  Default is stderr. */
+ASC_DLLSPEC FILE *g_ascend_errors;       /**< File for error messages.  Default is stderr. */
+ASC_DLLSPEC FILE *g_ascend_warnings;     /**< File for warning messages.  Default is stderr. */
+ASC_DLLSPEC FILE *g_ascend_information;  /**< File for informational messages.  Default is stderr. */
 
-ASC_DLLSPEC(void) Asc_RedirectCompilerDefault(void);
+ASC_DLLSPEC void Asc_RedirectCompilerDefault(void);
 /**< Set the default files/streams to receive ASCEND messages. */
 
-ASC_DLLSPEC(void ) Asc_RedirectCompilerStreams(FILE *errfile,
+ASC_DLLSPEC void Asc_RedirectCompilerStreams(FILE *errfile,
                                         FILE *warnfile,
                                         FILE *infofile);
 /**< Set specific files/streams to receive ASCEND messages. */

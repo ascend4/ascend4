@@ -86,13 +86,13 @@
 
 /* Parent routines */
 
-ASC_DLLSPEC(unsigned long ) NumberParents(CONST struct Instance *i);
+ASC_DLLSPEC unsigned long NumberParents(CONST struct Instance *i);
 /**<
  *  Return the number of parents that instance i has.
  *  DummyInstances have no parents, apparently.
  */
 
-ASC_DLLSPEC(struct Instance *) InstanceParent(CONST struct Instance *i, unsigned long n);
+ASC_DLLSPEC struct Instance *InstanceParent(CONST struct Instance *i, unsigned long n);
 /**<
  *  Return a pointer to parent number n.  Parents are numbered from
  *  1 to NumberParents(i).  0(zero) is not a valid parent number.
@@ -114,7 +114,7 @@ extern void DeleteParent(struct Instance *i, unsigned long pos);
  *  DummyInstance just reduces its reference count.
  */
 
-ASC_DLLSPEC(struct InstanceName ) ParentsName(CONST struct Instance *p,
+ASC_DLLSPEC struct InstanceName ParentsName(CONST struct Instance *p,
                                        CONST struct Instance *c);
 /**<
  *  This will returns parent "p"'s name for "c".  This assumes that
@@ -143,13 +143,13 @@ extern void AddParent(struct Instance *i, struct Instance *p);
 
 /* Children routines */
 
-ASC_DLLSPEC(unsigned long) NumberChildren(CONST struct Instance *i);
+ASC_DLLSPEC unsigned long NumberChildren(CONST struct Instance *i);
 /**<
  *  Return the number of children that instance i has.
  */
 
 
-ASC_DLLSPEC(struct Instance*) InstanceChild(CONST struct Instance *i,
+ASC_DLLSPEC struct Instance*InstanceChild(CONST struct Instance *i,
                                       unsigned long n);
 /**<
  *  Return a pointer to children number n.  Do not confuse the child number
@@ -159,13 +159,13 @@ ASC_DLLSPEC(struct Instance*) InstanceChild(CONST struct Instance *i,
  *  May exit on improper i.
  */
 
-ASC_DLLSPEC(struct InstanceName) ChildName(CONST struct Instance *i, unsigned long n);
+ASC_DLLSPEC struct InstanceName ChildName(CONST struct Instance *i, unsigned long n);
 /**<
  *  Returns the name of the n'th child of i.  Assumes that i has an
  *  n'th child.
  */
 
-ASC_DLLSPEC(CONST struct Statement *) ChildDeclaration(CONST struct Instance *i,
+ASC_DLLSPEC CONST struct Statement *ChildDeclaration(CONST struct Instance *i,
                                                 unsigned long n);
 /**<
  *  Returns the declaration statement (IS_A,ALIASE,ARRAY) of the n'th child
@@ -192,7 +192,7 @@ extern CONST struct TypeDescription *ChildRefines(CONST struct Instance *i,
  *  instead of whatever type this returns.
  */
 
-ASC_DLLSPEC(unsigned long ) ChildSearch(CONST struct Instance *i,
+ASC_DLLSPEC unsigned long ChildSearch(CONST struct Instance *i,
                                  CONST struct InstanceName *name);
 /**<
  *  This procedure will search instance i for a child that matches "name".
@@ -203,7 +203,7 @@ ASC_DLLSPEC(unsigned long ) ChildSearch(CONST struct Instance *i,
  *  error. The strings in the InstanceName must come from the symbol table.
  */
 
-ASC_DLLSPEC(struct Instance*) ChildByChar(CONST struct Instance *i,
+ASC_DLLSPEC struct Instance*ChildByChar(CONST struct Instance *i,
                                     symchar *str);
 /**<
  *  This returns to the pointer to a child, c, of parent,p, named by str.
@@ -230,7 +230,7 @@ ASC_DLLSPEC(struct Instance*) ChildByChar(CONST struct Instance *i,
  *  f
  */
 
-ASC_DLLSPEC(unsigned long ) ChildIndex(CONST struct Instance *i,
+ASC_DLLSPEC unsigned long ChildIndex(CONST struct Instance *i,
                                 CONST struct Instance *child);
 /**<
  *  This procedure searches through the child list of instance i for child.

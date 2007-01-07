@@ -59,7 +59,7 @@ struct vec_vector {
    boolean      accurate;   /**< Is vector currently accurate?  User-manipulated. */
 };
 
-ASC_DLLSPEC(struct vec_vector *) vec_create(int32 low, int32 high);
+ASC_DLLSPEC struct vec_vector *vec_create(int32 low, int32 high);
 /**<
  *  Returns a new vec_vector initialized to the specified range.
  *  This function creates, initializes, and returns a new vec_vector
@@ -77,7 +77,7 @@ ASC_DLLSPEC(struct vec_vector *) vec_create(int32 low, int32 high);
  *          not be created.
  */
 
-ASC_DLLSPEC(int) vec_init(struct vec_vector *vec, int32 low, int32 high);
+ASC_DLLSPEC int vec_init(struct vec_vector *vec, int32 low, int32 high);
 /**<
  *  Initializes a vec_vector structure.
  *  The new range (low..high) is considered proper if both low and
@@ -98,7 +98,7 @@ ASC_DLLSPEC(int) vec_init(struct vec_vector *vec, int32 low, int32 high);
  *          and 3 if memory cannot be allocated.
  */
 
-ASC_DLLSPEC(void) vec_destroy(struct vec_vector *vec);
+ASC_DLLSPEC void vec_destroy(struct vec_vector *vec);
 /**<
  *  Destroys a vector and its assocated data.
  *  Deallocates any memory held in vec->rng and vec->vec,
@@ -108,7 +108,7 @@ ASC_DLLSPEC(void) vec_destroy(struct vec_vector *vec);
  *  @param vec Pointer to the vec_vector to destroy.
  */
 
-ASC_DLLSPEC(void) vec_zero(struct vec_vector *vec);
+ASC_DLLSPEC void vec_zero(struct vec_vector *vec);
 /**<
  *  Zeroes a vector.
  *  The vector entries between vec->rng.low and  vec->rng.high will
@@ -123,7 +123,7 @@ ASC_DLLSPEC(void) vec_zero(struct vec_vector *vec);
  *  @param vec The vector to zero.
  */
 
-ASC_DLLSPEC(void) vec_copy(struct vec_vector *srcvec,
+ASC_DLLSPEC void vec_copy(struct vec_vector *srcvec,
                             struct vec_vector *destvec);
 /**<
  *  Copies the data from srcvec to destvec.
@@ -145,7 +145,7 @@ ASC_DLLSPEC(void) vec_copy(struct vec_vector *srcvec,
  *  @param destvec The vector to receive the copied data.
  */
 
-ASC_DLLSPEC(real64) vec_inner_product(struct vec_vector *vec1,
+ASC_DLLSPEC real64 vec_inner_product(struct vec_vector *vec1,
                                 struct vec_vector *vec2);
 /**<
  *  Calculates the dot product of 2 vectors.
@@ -167,7 +167,7 @@ ASC_DLLSPEC(real64) vec_inner_product(struct vec_vector *vec1,
  *  @todo solver/slv_common:vec_inner_product() could stand to be optimized.
  */
 
-ASC_DLLSPEC(real64) vec_square_norm(struct vec_vector *vec);
+ASC_DLLSPEC real64 vec_square_norm(struct vec_vector *vec);
 /**<
  *  Calculates the dot product of a vector with itself.
  *  Dot [vec->rng.low .. vec->rng.high] with itself and store the
@@ -183,7 +183,7 @@ ASC_DLLSPEC(real64) vec_square_norm(struct vec_vector *vec);
  *  @todo solver/slv_common:vec_square_norm() could stand to be optimized.
  */
 
-ASC_DLLSPEC(void) vec_matrix_product(mtx_matrix_t mtx,
+ASC_DLLSPEC void vec_matrix_product(mtx_matrix_t mtx,
                                struct vec_vector *vec,
                                struct vec_vector *prod,
                                real64 scale,
@@ -220,7 +220,7 @@ ASC_DLLSPEC(void) vec_matrix_product(mtx_matrix_t mtx,
  *        does it go into mtx?
  */
 
-ASC_DLLSPEC(void ) vec_write(FILE *fp, struct vec_vector *vec);
+ASC_DLLSPEC void vec_write(FILE *fp, struct vec_vector *vec);
 /**<
  *  Write vector information to a file stream.
  *  Prints general information about the vector followed by the
@@ -234,7 +234,7 @@ ASC_DLLSPEC(void ) vec_write(FILE *fp, struct vec_vector *vec);
   BLAS-LIKE FUNCTIONS
 */
 
-ASC_DLLSPEC(real64) vec_dot(int32 len, const real64 *a1, const real64 *a2);
+ASC_DLLSPEC real64 vec_dot(int32 len, const real64 *a1, const real64 *a2);
 /**<
  *  Calculates the dot product of 2 arrays of real64.
  *  This is an optimized routine (loop unrolled).  It takes

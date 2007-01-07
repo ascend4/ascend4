@@ -58,7 +58,7 @@
 	Create system name with Id+Auto flags.
 	@see CreateIdNameF()
 */
-ASC_DLLSPEC(struct Name*) CreateIdNameF(symchar *s, int bits);
+ASC_DLLSPEC struct Name*CreateIdNameF(symchar *s, int bits);
 /**<
 	Create a name node with the identifier s
 	and flag bits associated with it.  Implementation
@@ -225,7 +225,7 @@ extern struct Name *CopyAppendNameNode(CONST struct Name *n, CONST struct Name *
 	head of a longer name). The result is totally disjoint from the inputs.
 */
 
-ASC_DLLSPEC(void) DestroyName(struct Name *n);
+ASC_DLLSPEC void DestroyName(struct Name *n);
 /**<
 	Deallocate the whole name linked list
 	Handles NULL input gracefully.

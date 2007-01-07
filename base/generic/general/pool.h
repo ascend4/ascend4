@@ -131,7 +131,7 @@ struct pool_statistics {
   int str_wid;        /**< elements/pointer in pool. */
 };
 
-ASC_DLLSPEC(void ) pool_get_stats(struct pool_statistics *p_stats,
+ASC_DLLSPEC void pool_get_stats(struct pool_statistics *p_stats,
                            pool_store_t ps);
 /**<
  *  Get statistics about a pool store.
@@ -147,7 +147,7 @@ ASC_DLLSPEC(void ) pool_get_stats(struct pool_statistics *p_stats,
  *  @param ps      Pointer to the pool store to query.
  */
 
-ASC_DLLSPEC(pool_store_t ) pool_create_store(int length,
+ASC_DLLSPEC pool_store_t pool_create_store(int length,
                                       int width,
                                       size_t eltsize,
                                       int deltalen,
@@ -210,7 +210,7 @@ ASC_DLLSPEC(pool_store_t ) pool_create_store(int length,
  *  @return A pointer to the newly created pool store, NULL if an error occurred.
  */
 
-ASC_DLLSPEC(void *) pool_get_element(pool_store_t ps);
+ASC_DLLSPEC void *pool_get_element(pool_store_t ps);
 /**<
  *  Get a usable element from the pool.
  *  Returns a void pointer to a blob of memory of the eltsize
@@ -301,7 +301,7 @@ extern void pool_get_element_list(pool_store_t ps,
  *  @see pool_free_elementF()
  */
 
-ASC_DLLSPEC(void ) pool_free_elementF(pool_store_t ps, void * eltpointer
+ASC_DLLSPEC void pool_free_elementF(pool_store_t ps, void * eltpointer
 #if pool_DEBUG
 ,CONST char *file
 #endif
@@ -339,7 +339,7 @@ ASC_DLLSPEC(void ) pool_free_elementF(pool_store_t ps, void * eltpointer
  *  @see pool_clear_storeF()
  */
 
-ASC_DLLSPEC(void ) pool_clear_storeF(pool_store_t ps
+ASC_DLLSPEC void pool_clear_storeF(pool_store_t ps
 #if pool_DEBUG
 , CONST char *file
 #endif
@@ -349,7 +349,7 @@ ASC_DLLSPEC(void ) pool_clear_storeF(pool_store_t ps
  *  Do not call this function directly - use pool_clear_store() instead.
  */
 
-ASC_DLLSPEC(void ) pool_destroy_store(pool_store_t ps);
+ASC_DLLSPEC void pool_destroy_store(pool_store_t ps);
 /**<
  *  Deallocates everything associated with the ps.
  *  If pool_DEBUG is TRUE, it first verifies that all elements

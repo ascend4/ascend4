@@ -52,7 +52,7 @@ struct ImportHandler **importhandler_library=NULL;
 */
 struct Table *importhandler_sharedpointers=NULL;
 
-ASC_DLLSPEC(int) importhandler_add(struct ImportHandler *handler){
+ASC_DLLSPEC int importhandler_add(struct ImportHandler *handler){
 	int i;
 	if(handler==NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Handler is NULL");

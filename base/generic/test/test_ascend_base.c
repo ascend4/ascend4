@@ -28,7 +28,7 @@
 #include <utilities/test/test_register_utilities.h>
 #include <solver/test/test_register_solver.h>
 
-ASC_EXPORT(int) register_cunit_tests(){
+ASC_EXPORT int register_cunit_tests(){
 	test_register_general();
 	test_register_utilities();
 	test_register_solver();

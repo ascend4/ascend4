@@ -38,7 +38,7 @@
 
 #include <utilities/ascConfig.h>
 
-ASC_DLLSPEC(int) Asc_CompilerInit(int simplify_relations);
+ASC_DLLSPEC int Asc_CompilerInit(int simplify_relations);
 /**<
  *  Initialize any resources used by the ASCEND compiler.
  *
@@ -53,7 +53,7 @@ ASC_DLLSPEC(int) Asc_CompilerInit(int simplify_relations);
  *       from the functions this calls. Currently returns 0 regardless.
  */
 
-ASC_DLLSPEC(void ) Asc_CompilerDestroy(void);
+ASC_DLLSPEC void Asc_CompilerDestroy(void);
 /**<
  *  Clean up any resources used by the compiler.
  *  This function should not be called while there are any clients

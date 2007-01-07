@@ -41,7 +41,7 @@
 #ifndef __DESTROYINST_H_SEEN__
 #define __DESTROYINST_H_SEEN__
 
-ASC_DLLSPEC(void ) DestroyInstance(struct Instance *inst, struct Instance *parent);
+ASC_DLLSPEC void DestroyInstance(struct Instance *inst, struct Instance *parent);
 /**<
  *  If parent is NULL, this will destroy all references to inst and deallocate
  *  the memory associated with inst.  It will delete inst's reference to its

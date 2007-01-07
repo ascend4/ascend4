@@ -60,7 +60,7 @@
  * code: we aren't going to waste time reimplementing these basic
  * functions.
  */
-ASC_DLLSPEC(double) cbrt(double);
+ASC_DLLSPEC double cbrt(double);
 
 #  ifdef HAVE_ERF
 extern double erf(double);
@@ -128,7 +128,7 @@ extern void FuncSetLnmEpsilon(double e);
  *  Change the current epsilon for the modified log function lnm.
  *  epsilon > 0.0.
  */
-ASC_DLLSPEC(double ) g_lnm_epsilon;
+ASC_DLLSPEC double g_lnm_epsilon;
 #define FuncSetLnmEpsilon(e) \
    (e>(double)0.0 ? g_lnm_epsilon=e : FPRINTF(ASCERR,"bad lnm eps"))
 
@@ -136,7 +136,7 @@ ASC_DLLSPEC(double ) g_lnm_epsilon;
  *  declare cbrt() and erf() since some vendors put
  *  these functions in odd headers
  */
-ASC_DLLSPEC(double) cbrt(double);
+ASC_DLLSPEC double cbrt(double);
 #ifdef HAVE_ERF
 extern double erf(double);
 #endif /* HAVE_ERF */
@@ -155,7 +155,7 @@ extern double erf(double);
  *  @param d double, the real number to convert.
  *  @return The nearest integer as an int.
  */
-ASC_DLLSPEC(int) ascnintF(double);
+ASC_DLLSPEC int ascnintF(double);
 /**<
  *  Implementation function for debug version of ascnint().
  *  Do not call this function directly - use ascnint() instead.
@@ -163,13 +163,13 @@ ASC_DLLSPEC(int) ascnintF(double);
 
 #endif
 
-ASC_DLLSPEC(double) dln(double x);
-ASC_DLLSPEC(double) dln2(double x);
-ASC_DLLSPEC(double) dlog10(double x);
-ASC_DLLSPEC(double) dlog102(double x);
-ASC_DLLSPEC(double) lnm(double x);
-ASC_DLLSPEC(double) dlnm(double x);
-ASC_DLLSPEC(double) dlnm2(double x);
+ASC_DLLSPEC double dln(double x);
+ASC_DLLSPEC double dln2(double x);
+ASC_DLLSPEC double dlog10(double x);
+ASC_DLLSPEC double dlog102(double x);
+ASC_DLLSPEC double lnm(double x);
+ASC_DLLSPEC double dlnm(double x);
+ASC_DLLSPEC double dlnm2(double x);
 /**<
  *  Modified natural log function and derivatives.
  *  <pre>
@@ -192,34 +192,34 @@ ASC_DLLSPEC(double) dlnm2(double x);
  *  </pre>
  */
 
-ASC_DLLSPEC(double) dtanh(double x);
-ASC_DLLSPEC(double) dtanh2(double x);
-ASC_DLLSPEC(double) arcsinh(double x);
-ASC_DLLSPEC(double) arccosh(double x);
-ASC_DLLSPEC(double) arctanh(double x);
-ASC_DLLSPEC(double) darcsinh(double x);
-ASC_DLLSPEC(double) darcsinh2(double x);
-ASC_DLLSPEC(double) darccosh(double x);
-ASC_DLLSPEC(double) darccosh2(double x);
-ASC_DLLSPEC(double) darctanh(double x);
-ASC_DLLSPEC(double) darctanh2(double x);
+ASC_DLLSPEC double dtanh(double x);
+ASC_DLLSPEC double dtanh2(double x);
+ASC_DLLSPEC double arcsinh(double x);
+ASC_DLLSPEC double arccosh(double x);
+ASC_DLLSPEC double arctanh(double x);
+ASC_DLLSPEC double darcsinh(double x);
+ASC_DLLSPEC double darcsinh2(double x);
+ASC_DLLSPEC double darccosh(double x);
+ASC_DLLSPEC double darccosh2(double x);
+ASC_DLLSPEC double darctanh(double x);
+ASC_DLLSPEC double darctanh2(double x);
 /**<
  *  Zero, first and second partials of (inverse) hyperbolic functions.
  */
 
-ASC_DLLSPEC(double) sqr(double x);
-ASC_DLLSPEC(double) dsqr(double x);
-ASC_DLLSPEC(double) dsqr2(double x);
-ASC_DLLSPEC(double) cube(double x);
-ASC_DLLSPEC(double) dcube(double x);
-ASC_DLLSPEC(double) dcube2(double x);
+ASC_DLLSPEC double sqr(double x);
+ASC_DLLSPEC double dsqr(double x);
+ASC_DLLSPEC double dsqr2(double x);
+ASC_DLLSPEC double cube(double x);
+ASC_DLLSPEC double dcube(double x);
+ASC_DLLSPEC double dcube2(double x);
 /**<
  *  Zero, first and second partials of x for sqr, cube.
  */
 
-ASC_DLLSPEC(double) asc_ipow(double a, int n);
-ASC_DLLSPEC(double) asc_d1ipow(double a, int n);
-ASC_DLLSPEC(double) asc_d2ipow(double a, int n);
+ASC_DLLSPEC double asc_ipow(double a, int n);
+ASC_DLLSPEC double asc_d1ipow(double a, int n);
+ASC_DLLSPEC double asc_d2ipow(double a, int n);
 /**<
  *  Integer power function, a^n, and its first and second derivatives.
  *  d = asc_ipow(a,n);
@@ -233,7 +233,7 @@ ASC_DLLSPEC(double) asc_d2ipow(double a, int n);
  *  Special cases d1ipow,d2ipow:
  */
 
-ASC_DLLSPEC(double) hold(double x);
+ASC_DLLSPEC double hold(double x);
 /**<
  *  Returns the value it is passed.
  *  The primary purpose is as an operator so we can write
@@ -243,13 +243,13 @@ ASC_DLLSPEC(double) hold(double x);
  *  hold(x) is a constant value, so its derivatives are 0.
  */
 
-ASC_DLLSPEC(double) dsqrt(double x);
-ASC_DLLSPEC(double) dsqrt2(double x);
-ASC_DLLSPEC(double) dcbrt(double x);
-ASC_DLLSPEC(double) dcbrt2(double x);
-ASC_DLLSPEC(double) dfabs(double x);
-ASC_DLLSPEC(double) dfabs2(double x);
-ASC_DLLSPEC(double) dhold(double x);
+ASC_DLLSPEC double dsqrt(double x);
+ASC_DLLSPEC double dsqrt2(double x);
+ASC_DLLSPEC double dcbrt(double x);
+ASC_DLLSPEC double dcbrt2(double x);
+ASC_DLLSPEC double dfabs(double x);
+ASC_DLLSPEC double dfabs2(double x);
+ASC_DLLSPEC double dhold(double x);
 #define dhold2 dhold
 /**<
  *  first and second partials of sqrt cbrt fabs hold
@@ -258,29 +258,29 @@ ASC_DLLSPEC(double) dhold(double x);
  *  dhold, dhold2 = 0 for all x.
  */
 
-ASC_DLLSPEC(double) dasin(double x);
-ASC_DLLSPEC(double) dasin2(double x);
-ASC_DLLSPEC(double) dcos(double x);
-ASC_DLLSPEC(double) dcos2(double x);
-ASC_DLLSPEC(double) dacos(double x);
-ASC_DLLSPEC(double) dacos2(double x);
-ASC_DLLSPEC(double) dtan(double x);
-ASC_DLLSPEC(double) dtan2(double x);
-ASC_DLLSPEC(double) datan(double x);
-ASC_DLLSPEC(double) datan2(double x);
+ASC_DLLSPEC double dasin(double x);
+ASC_DLLSPEC double dasin2(double x);
+ASC_DLLSPEC double dcos(double x);
+ASC_DLLSPEC double dcos2(double x);
+ASC_DLLSPEC double dacos(double x);
+ASC_DLLSPEC double dacos2(double x);
+ASC_DLLSPEC double dtan(double x);
+ASC_DLLSPEC double dtan2(double x);
+ASC_DLLSPEC double datan(double x);
+ASC_DLLSPEC double datan2(double x);
 /**<
  *  First and second partials of the cosine, tangent, arctangent functions
  */
 
 #ifdef HAVE_ERF
-ASC_DLLSPEC(double) derf(double x);
-ASC_DLLSPEC(double) derf2(double x);
+ASC_DLLSPEC double derf(double x);
+ASC_DLLSPEC double derf2(double x);
 #endif /* HAVE_ERF */
 /**<
  *  First and second derivatives of erf()
  */
 
-ASC_DLLSPEC(CONST char *) FuncName(CONST struct Func *f);
+ASC_DLLSPEC CONST char *FuncName(CONST struct Func *f);
 /**<
  *  Return the ASCEND language name of the function.
  *  Not a symchar.
@@ -301,7 +301,7 @@ extern CONST char *FuncDeriv2CName(CONST struct Func *f);
  *  Return the C language name of the function second derivative, if any.
  */
 
-ASC_DLLSPEC(enum Func_enum ) FuncId(CONST struct Func *f);
+ASC_DLLSPEC enum Func_enum FuncId(CONST struct Func *f);
 /**<
  *  Return the identification of the function.
  */

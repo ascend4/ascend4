@@ -261,9 +261,9 @@ typedef struct IntegratorSystemStruct IntegratorSystem;
   PUBLIC INTERFACE (for use by the GUI/CLI)]
 */
 
-ASC_DLLSPEC(IntegratorSystem *) integrator_new(slv_system_t sys, struct Instance *inst);
+ASC_DLLSPEC IntegratorSystem *integrator_new(slv_system_t sys, struct Instance *inst);
 
-ASC_DLLSPEC(int) integrator_analyse(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_analyse(IntegratorSystem *blsys);
 
 /**
 	These routines will hopefully be sharable by different Integrator engines.
@@ -273,11 +273,11 @@ ASC_DLLSPEC(int) integrator_analyse(IntegratorSystem *blsys);
 	like to analyse the system, and for that, we export these routines so that
 	they can be referred to in lsode.h, ida.h, etc.
 */	
-ASC_DLLSPEC(int) integrator_analyse_ode(IntegratorSystem *blsys);
-ASC_DLLSPEC(int) integrator_analyse_dae(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_analyse_ode(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_analyse_dae(IntegratorSystem *blsys);
 /**< see integrator_analyse_ode */
 
-ASC_DLLSPEC(int) integrator_solve(IntegratorSystem *blsys, long i0, long i1);
+ASC_DLLSPEC int integrator_solve(IntegratorSystem *blsys, long i0, long i1);
 /**<
 	Takes the type of integrator and sets up the global variables into the
 	current integration instance.
@@ -285,19 +285,19 @@ ASC_DLLSPEC(int) integrator_solve(IntegratorSystem *blsys, long i0, long i1);
 	@return 0 on success, else error
 */
 
-ASC_DLLSPEC(void) integrator_free(IntegratorSystem *blsys);
+ASC_DLLSPEC void integrator_free(IntegratorSystem *blsys);
 /**<
 	Deallocates any memory used and sets all integration global points to NULL.
 */
 
-ASC_DLLSPEC(const IntegratorLookup *) integrator_get_engines();
+ASC_DLLSPEC const IntegratorLookup *integrator_get_engines();
 /**<
 	Return a {INTEG_UNKNOWN,NULL} terminated list of integrator currently
 	available. At present this is determined at compile time but will be
 	changed to being determined at load time if necessary.
 */
 
-ASC_DLLSPEC(int) integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine engine);
+ASC_DLLSPEC int integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine engine);
 /**<
 	Sets the engine for this integrator. Checks that the integrator can be used
 	on the given system.
@@ -307,13 +307,13 @@ ASC_DLLSPEC(int) integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine
 		2 if invalid engine (not suitable for this present problem)
 */
 
-ASC_DLLSPEC(IntegratorEngine) integrator_get_engine(const IntegratorSystem *blsys);
+ASC_DLLSPEC IntegratorEngine integrator_get_engine(const IntegratorSystem *blsys);
 /**<
 	Returns the engine (ID) selected for use in this IntegratorSystem (may return
 	INTEG_UNKNOWN if none or invalid setting).
 */
 
-ASC_DLLSPEC(int) integrator_params_get(const IntegratorSystem *blsys, slv_parameters_t *parameters);
+ASC_DLLSPEC int integrator_params_get(const IntegratorSystem *blsys, slv_parameters_t *parameters);
 /**<
 	Copies the current set of Integrator parameters into the indicated parameter set, 'parameters'.
 
@@ -322,7 +322,7 @@ ASC_DLLSPEC(int) integrator_params_get(const IntegratorSystem *blsys, slv_parame
 	@return 0 on success
 */
 
-ASC_DLLSPEC(int) integrator_params_set(IntegratorSystem *blsys, const slv_parameters_t *parameters);
+ASC_DLLSPEC int integrator_params_set(IntegratorSystem *blsys, const slv_parameters_t *parameters);
 /**<
 	Copies the the given parameter set into the Integrator's data structure, 
 	which immediately makes the new values available to the integrator engine.
@@ -332,7 +332,7 @@ ASC_DLLSPEC(int) integrator_params_set(IntegratorSystem *blsys, const slv_parame
 	@return 0 on success
 */
 
-ASC_DLLSPEC(int) integrator_set_reporter(IntegratorSystem *blsys
+ASC_DLLSPEC int integrator_set_reporter(IntegratorSystem *blsys
 	, IntegratorReporter *r);
 /**<
 	Use this function from your interface to tell the integrator how it needs
@@ -341,7 +341,7 @@ ASC_DLLSPEC(int) integrator_set_reporter(IntegratorSystem *blsys
 	Python, eventually)
 */
 
-ASC_DLLSPEC(int) integrator_find_indep_var(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_find_indep_var(IntegratorSystem *blsys);
 /**<
 	Attempt to locate the independent variable. It will be stored in the blsys
 	structure if found.
@@ -355,7 +355,7 @@ extern int integrator_checkstatus(slv_status_t status);
 	@return 0 if status says system has converged, non-zero otherwise.
 */
 
-ASC_DLLSPEC(void) integrator_set_samples(IntegratorSystem *blsys, SampleList *samples);
+ASC_DLLSPEC void integrator_set_samples(IntegratorSystem *blsys, SampleList *samples);
 /**<
 	Sets values of time samples to the values given (ns of them) and
 	keeps both the dim pointer and vector given. The vector and dimp
@@ -366,40 +366,40 @@ ASC_DLLSPEC(void) integrator_set_samples(IntegratorSystem *blsys, SampleList *sa
 	Return is 1 if for some reason we can't set as expected, 0 otherwise.
 */
 
-ASC_DLLSPEC(void) integrator_set_stepzero(IntegratorSystem *blsys, double);
-ASC_DLLSPEC(double) integrator_get_stepzero(IntegratorSystem *blsys);
+ASC_DLLSPEC void integrator_set_stepzero(IntegratorSystem *blsys, double);
+ASC_DLLSPEC double integrator_get_stepzero(IntegratorSystem *blsys);
 /**<
 	Returns the length of the initial step user specified,
 	or 0.0 if none was set.
 */
 
-ASC_DLLSPEC(void) integrator_set_minstep(IntegratorSystem *blsys, double);
-ASC_DLLSPEC(double) integrator_get_minstep(IntegratorSystem *blsys);
+ASC_DLLSPEC void integrator_set_minstep(IntegratorSystem *blsys, double);
+ASC_DLLSPEC double integrator_get_minstep(IntegratorSystem *blsys);
 /**<
 	Returns the length of the longest allowable step.
 	or 0.0 if none was set by user.
 */
 
-ASC_DLLSPEC(void) integrator_set_maxstep(IntegratorSystem *blsys, double);
-ASC_DLLSPEC(double) integrator_get_maxstep(IntegratorSystem *blsys);
+ASC_DLLSPEC void integrator_set_maxstep(IntegratorSystem *blsys, double);
+ASC_DLLSPEC double integrator_get_maxstep(IntegratorSystem *blsys);
 /**<
 	Returns the length of the shortest allowable step.
 	or 0.0 if none was set by user.
 */
 
-ASC_DLLSPEC(void) integrator_set_maxsubsteps(IntegratorSystem *blsys, int);
-ASC_DLLSPEC(int) integrator_get_maxsubsteps(IntegratorSystem *blsys);
+ASC_DLLSPEC void integrator_set_maxsubsteps(IntegratorSystem *blsys, int);
+ASC_DLLSPEC int integrator_get_maxsubsteps(IntegratorSystem *blsys);
 /**<
 	Returns the most internal steps allowed between
 	two time samples,  or 0 if none was set by user.
 */
 
-ASC_DLLSPEC(long) integrator_getnsamples(IntegratorSystem *blsys);
+ASC_DLLSPEC long integrator_getnsamples(IntegratorSystem *blsys);
 /**<
 	Returns the number of values currently stored in xsamples.
 */
 
-ASC_DLLSPEC(long) integrator_getcurrentstep(IntegratorSystem *blsys);
+ASC_DLLSPEC long integrator_getcurrentstep(IntegratorSystem *blsys);
 /**<
 	Returns the current step number (blsys->currentstep). Should be reset to
 	zero inside your solver's integrator_*_solve method.
@@ -438,7 +438,7 @@ extern const dim_type *integrator_getsampledim(IntegratorSystem *blsys);
 
 /* Parts of type definition derivatives refinements. */
 
-ASC_DLLSPEC(double) integrator_get_t(IntegratorSystem *blsys);
+ASC_DLLSPEC double integrator_get_t(IntegratorSystem *blsys);
 /**<
 	Gets value of the independent variable value from the ASCEND model 
 	(retrieves the value from the ASCEND compiler's instance hierarchy)
@@ -478,7 +478,7 @@ extern void integrator_set_ydot(IntegratorSystem *blsys, double *vector);
 	Sets d.dydx[] to values in vector.
 */
 
-ASC_DLLSPEC(double *) integrator_get_observations(IntegratorSystem *blsys, double *vector);
+ASC_DLLSPEC double *integrator_get_observations(IntegratorSystem *blsys, double *vector);
 /**<
 	Returns the vector d.obs.
 	Vector should be of sufficient length (g_intginst_d_n_obs+1).
@@ -486,12 +486,12 @@ ASC_DLLSPEC(double *) integrator_get_observations(IntegratorSystem *blsys, doubl
 	responsibility to deallocate.
 */
 
-ASC_DLLSPEC(struct var_variable *) integrator_get_observed_var(IntegratorSystem *blsys, const long i);
+ASC_DLLSPEC struct var_variable *integrator_get_observed_var(IntegratorSystem *blsys, const long i);
 /**<
 	Returns the var_variable contained in the ith position in the observed variable list.
 */
 
-ASC_DLLSPEC(struct var_variable *) integrator_get_independent_var(IntegratorSystem *blsys);
+ASC_DLLSPEC struct var_variable *integrator_get_independent_var(IntegratorSystem *blsys);
 /**<
 	Return a pointer to the variable identified as the independent variable.
 */

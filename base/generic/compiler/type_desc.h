@@ -243,7 +243,7 @@ struct TypeDescription {
  *  @return The childlist field as a ChildListPtr.
  *  @see GetChildListF()
  */
-ASC_DLLSPEC(ChildListPtr) GetChildListF(CONST struct TypeDescription *d);
+ASC_DLLSPEC ChildListPtr GetChildListF(CONST struct TypeDescription *d);
 /**<
  *  Returns the childlist field of d.
  *  Implementation function for GetChildList() (debug mode).
@@ -261,7 +261,7 @@ ASC_DLLSPEC(ChildListPtr) GetChildListF(CONST struct TypeDescription *d);
  *  @return The base type as an enum type_kind.
  *  @see GetBaseTypeF()
  */
-ASC_DLLSPEC(enum type_kind ) GetBaseTypeF(CONST struct TypeDescription *d);
+ASC_DLLSPEC enum type_kind GetBaseTypeF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for GetBaseType() (debug mode).
  *  Do not call this function directly - use GetBaseType() instead.
@@ -319,7 +319,7 @@ ASC_DLLSPEC(enum type_kind ) GetBaseTypeF(CONST struct TypeDescription *d);
  *  @return The statement list as a CONST struct StatementList*.
  *  @see GetStatementListF()
  */
-ASC_DLLSPEC(CONST struct StatementList *) GetStatementListF(
+ASC_DLLSPEC CONST struct StatementList *GetStatementListF(
 	CONST struct TypeDescription *d
 );
 /**<
@@ -338,8 +338,8 @@ ASC_DLLSPEC(CONST struct StatementList *) GetStatementListF(
  *  @return The list as a CONST struct gl_list_t*.
  *  @see GetInitializationListF()
  */
-ASC_DLLSPEC(struct gl_list_t)
-*GetInitializationListF(CONST struct TypeDescription *d);
+ASC_DLLSPEC struct gl_list_t *
+GetInitializationListF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for GetInitializationList() (debug mode).
  *  Do not call this function directly - use GetInitializationList() instead.
@@ -554,7 +554,7 @@ extern unsigned TypeHasDefaultStatementsF(CONST struct TypeDescription *d);
 	@return An unsigned.
 	@see TypeHasParameterizedInstsF()
 */
-ASC_DLLSPEC(unsigned) TypeHasParameterizedInstsF(CONST struct TypeDescription *d);
+ASC_DLLSPEC unsigned TypeHasParameterizedInstsF(CONST struct TypeDescription *d);
 /**<
 	Implementation function for TypeHasParameterizedInsts() (debug mode).
 	Do not call this function directly - use TypeHasParameterizedInsts() instead.
@@ -639,7 +639,7 @@ extern unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
 	@return The dimensions as a CONST dim_type*.
 	@see GetRealDimensF()
 */
-ASC_DLLSPEC(CONST dim_type*) GetRealDimensF(CONST struct TypeDescription *d,
+ASC_DLLSPEC CONST dim_type*GetRealDimensF(CONST struct TypeDescription *d,
                                       CONST char *f, CONST int l);
 /**<
 	Implementation function for GetRealDimens() (debug mode).
@@ -661,7 +661,7 @@ ASC_DLLSPEC(CONST dim_type*) GetRealDimensF(CONST struct TypeDescription *d,
 	@return The dimensions as a CONST dim_type*.
 	@see GetConstantDimensF()
 */
-ASC_DLLSPEC(CONST dim_type*) GetConstantDimensF(CONST struct TypeDescription *d,
+ASC_DLLSPEC CONST dim_type*GetConstantDimensF(CONST struct TypeDescription *d,
                                           CONST char *f, CONST int l);
 /**<
 	Implementation function for GetConstantDimens() (debug mode).
@@ -680,7 +680,7 @@ ASC_DLLSPEC(CONST dim_type*) GetConstantDimensF(CONST struct TypeDescription *d,
 	@return The name as a symchar*.
 	@see GetNameF()
 */
-ASC_DLLSPEC(symchar*) GetNameF(CONST struct TypeDescription *d);
+ASC_DLLSPEC symchar*GetNameF(CONST struct TypeDescription *d);
 /**<
 	Implementation function for GetName() (debug mode).
 	Do not call this function directly - use GetName() instead.
@@ -711,7 +711,7 @@ ASC_DLLSPEC(symchar*) GetNameF(CONST struct TypeDescription *d);
 	@return The refiners of d as a gl_list of TypeDescription *.
 */
 
-ASC_DLLSPEC(struct gl_list_t *) GetAncestorNames(CONST struct TypeDescription *d);
+ASC_DLLSPEC struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d);
 /**<
 	Return the names of ancestors of type d given.
 	If none, list may be empty. The list is of symchar *.
@@ -1129,7 +1129,7 @@ extern struct TypeDescription
 	POLYMORPHISM STUFF
 */
 
-ASC_DLLSPEC(struct TypeDescription*) MoreRefined(CONST struct TypeDescription *desc1,
+ASC_DLLSPEC struct TypeDescription*MoreRefined(CONST struct TypeDescription *desc1,
                                            CONST struct TypeDescription *desc2);
 /**<
  *  Returns the more refined of desc1 or desc2, or
@@ -1214,13 +1214,13 @@ extern void WriteArrayTypeList(FILE *fp);
  *  @return The result as an unsigned.
  *  @see TypeShowF()
  */
-ASC_DLLSPEC(unsigned) TypeShowF(CONST struct TypeDescription *d);
+ASC_DLLSPEC unsigned TypeShowF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for TypeShow() (debug mode).
  *  Do not call this function directly - use TypeShow() instead.
  */
 
-ASC_DLLSPEC(void ) SetTypeShowBit(struct TypeDescription *d, int value);
+ASC_DLLSPEC void SetTypeShowBit(struct TypeDescription *d, int value);
 /**<
  *  Sets the bit TYPESHOW.  This bit is for browsing purposes.
  *  It will tell is the user wants to view the instances of a specific type.

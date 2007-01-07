@@ -147,7 +147,7 @@
  *  @return TRUE if k belongs to the given set, FALSE otherwise.
  */
 
-ASC_DLLSPEC(unsigned int *) set_null(unsigned int *set, int n);
+ASC_DLLSPEC unsigned int *set_null(unsigned int *set, int n);
 /**<
  *  Clears a set so that it has no elements.
  *  The size of the set must be indicated.
@@ -158,7 +158,7 @@ ASC_DLLSPEC(unsigned int *) set_null(unsigned int *set, int n);
  *  @return Returns a pointer to the set.
  */
 
-ASC_DLLSPEC(void ) set_change_member(unsigned int *set, int k, boolean value);
+ASC_DLLSPEC void set_change_member(unsigned int *set, int k, boolean value);
 /**<
  *  Adds or removes an element from a set.
  *  If value==TRUE, then k is added to the set.  Otherwise k 

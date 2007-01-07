@@ -32,7 +32,7 @@
 
 #include <CUnit/Basic.h>
 
-ASC_IMPORT(int) register_cunit_tests();
+ASC_IMPORT int register_cunit_tests();
 
 /*
 	The following allows the CUnit tests to be run using a standalone executable

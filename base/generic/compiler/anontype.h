@@ -176,7 +176,7 @@ extern struct Instance *Asc_GetAnonPrototype(struct AnonType *at);
  * Destroys the anonlist we returned from a call to classify.
  * Do not destroy this list any other way.
  */
-ASC_DLLSPEC(void ) Asc_DestroyAnonList(struct gl_list_t *atl);
+ASC_DLLSPEC void Asc_DestroyAnonList(struct gl_list_t *atl);
 
 /**
  * This function classifies an instance tree
@@ -184,7 +184,7 @@ ASC_DLLSPEC(void ) Asc_DestroyAnonList(struct gl_list_t *atl);
  * root may be at any place in an instance tree.
  * The list should be destroyed with Asc_DestroyAnonList.
  */
-ASC_DLLSPEC(struct gl_list_t *) Asc_DeriveAnonList(struct Instance *root);
+ASC_DLLSPEC struct gl_list_t *Asc_DeriveAnonList(struct Instance *root);
 
 /**
  * Writes a list of anon type info in atl, mainly for debugging purposes,
@@ -194,7 +194,7 @@ ASC_DLLSPEC(struct gl_list_t *) Asc_DeriveAnonList(struct Instance *root);
  * If mlists != 0 and merge info exists, merge info will be written
  * with the AT info.
  */
-ASC_DLLSPEC(void ) Asc_WriteAnonList(FILE *fp,
+ASC_DLLSPEC void Asc_WriteAnonList(FILE *fp,
                               struct gl_list_t *atl,
                               struct Instance *root,
                               int mlists);

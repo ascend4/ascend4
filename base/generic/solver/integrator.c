@@ -1325,7 +1325,7 @@ const dim_type *integrator_getsampledim(IntegratorSystem *sys){
 	return samplelist_dim(sys->samples);
 }
 
-ASC_DLLSPEC(long) integrator_getcurrentstep(IntegratorSystem *sys){
+ASC_DLLSPEC long integrator_getcurrentstep(IntegratorSystem *sys){
 	return sys->currentstep;
 }
 

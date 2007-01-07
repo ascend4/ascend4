@@ -165,12 +165,12 @@ extern ChildListPtr AppendChildList(ChildListPtr cl, struct gl_list_t *l);
  *  The same conditions for l in CreateChildList apply here.
  */
 
-ASC_DLLSPEC(unsigned long ) ChildListLen(ChildListPtr cl);
+ASC_DLLSPEC unsigned long ChildListLen(ChildListPtr cl);
 /**<
  *  Return the length of the child list.
  */
 
-ASC_DLLSPEC(symchar *) ChildStrPtr(ChildListPtr cl, unsigned long n);
+ASC_DLLSPEC symchar *ChildStrPtr(ChildListPtr cl, unsigned long n);
 /**<
  *  Return child number n name element 1 string.
  *  Children are numbered 1..ChildListLen(cl).
@@ -208,7 +208,7 @@ extern CONST struct Statement *ChildStatement(ChildListPtr cl, unsigned long n);
  *  Children are numbered 1..ChildListLen(cl).
  */
 
-ASC_DLLSPEC(unsigned) ChildGetBooleans(ChildListPtr cl, unsigned long n);
+ASC_DLLSPEC unsigned ChildGetBooleans(ChildListPtr cl, unsigned long n);
 /**<
  *  Return child number n current boolean flags.
  *  Children are numbered 1..ChildListLen(cl).
@@ -230,7 +230,7 @@ ASC_DLLSPEC(unsigned) ChildGetBooleans(ChildListPtr cl, unsigned long n);
  *  Returns 1 if child has PASSED bit turned on.
  */
 
-ASC_DLLSPEC(void ) ChildSetBoolean(ChildListPtr cl, unsigned long n,
+ASC_DLLSPEC void ChildSetBoolean(ChildListPtr cl, unsigned long n,
                             unsigned cbfname, unsigned val);
 /**<
  *  Set child number n current boolean flag bit cbfname to val.
@@ -272,7 +272,7 @@ extern CONST struct TypeDescription *ChildBaseTypePtr(ChildListPtr cl,
  *  instances.
  */
 
-ASC_DLLSPEC(unsigned long ) ChildPos(ChildListPtr cl, symchar *s);
+ASC_DLLSPEC unsigned long ChildPos(ChildListPtr cl, symchar *s);
 /**<
  *  Search for the string s in child list cl.  If it is not found,
  *  it will return 0; otherwise, it returns the index of the child which

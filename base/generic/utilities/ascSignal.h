@@ -159,9 +159,9 @@ typedef struct{
 
 
 	
-ASC_DLLSPEC(JMP_BUF) g_fpe_env;   /**< Standard signal jmp_buf - floating point error. */
-ASC_DLLSPEC(JMP_BUF) g_seg_env;   /**< Standard signal jmp_buf - segmentation fault. */
-ASC_DLLSPEC(JMP_BUF) g_int_env;   /**< Standard signal jmp_buf - interactive attention (<CTRL>C). */
+ASC_DLLSPEC JMP_BUF g_fpe_env;   /**< Standard signal jmp_buf - floating point error. */
+ASC_DLLSPEC JMP_BUF g_seg_env;   /**< Standard signal jmp_buf - segmentation fault. */
+ASC_DLLSPEC JMP_BUF g_int_env;   /**< Standard signal jmp_buf - interactive attention (<CTRL>C). */
 
 #if 0
 extern jmp_buf g_foreign_code_call_env;
@@ -172,7 +172,7 @@ extern jmp_buf g_foreign_code_call_env;
 */
 #endif
 
-ASC_DLLSPEC(void ) Asc_SignalTrap(int sigval);
+ASC_DLLSPEC void Asc_SignalTrap(int sigval);
 /**<
  *  Standard signal handler.
  *  This is the trap that should be used for most applications in
@@ -209,7 +209,7 @@ ASC_DLLSPEC(void ) Asc_SignalTrap(int sigval);
  *                an exception.
  */
 
-ASC_DLLSPEC(int ) Asc_SignalInit(void);
+ASC_DLLSPEC int Asc_SignalInit(void);
 /**<
  *  Initializes the signal manager.
  *  This should be called before using any of the signal handling
@@ -223,7 +223,7 @@ ASC_DLLSPEC(int ) Asc_SignalInit(void);
  *          allocated, and 2 if an error occurred.
  */
 
-ASC_DLLSPEC(void ) Asc_SignalDestroy(void);
+ASC_DLLSPEC void Asc_SignalDestroy(void);
 /**<
  *  Cleans up and destroys the stacks of signal handlers.
  *  It does not change the status of any registered signal handlers
@@ -234,7 +234,7 @@ ASC_DLLSPEC(void ) Asc_SignalDestroy(void);
  *  that were installed before Asc_SignalInit() was called will be lost.
  */
 
-ASC_DLLSPEC(void ) Asc_SignalRecover(int force);
+ASC_DLLSPEC void Asc_SignalRecover(int force);
 /**<
  *  Reinstalls the most recently pushed handler that has been
  *  installed for each supported signal type.  This should be called
@@ -263,8 +263,8 @@ ASC_DLLSPEC(void ) Asc_SignalRecover(int force);
  *               compiler/platform.
  */
 
-ASC_DLLSPEC(int ) Asc_SignalHandlerPushDefault(int signum);
-ASC_DLLSPEC(int ) Asc_SignalHandlerPush(int signum, SigHandlerFn *func);
+ASC_DLLSPEC int Asc_SignalHandlerPushDefault(int signum);
+ASC_DLLSPEC int Asc_SignalHandlerPush(int signum, SigHandlerFn *func);
 /**<
  * Adds a handler to the stack of signal handlers for the given signal.
  * There is a maximum stack limit, so returns 1 if limit exceeded.
@@ -286,8 +286,8 @@ ASC_DLLSPEC(int ) Asc_SignalHandlerPush(int signum, SigHandlerFn *func);
  *        popping an unintended handler.
  */
 
-ASC_DLLSPEC(int ) Asc_SignalHandlerPopDefault(int signum);
-ASC_DLLSPEC(int ) Asc_SignalHandlerPop(int signum, SigHandlerFn *func);
+ASC_DLLSPEC int Asc_SignalHandlerPopDefault(int signum);
+ASC_DLLSPEC int Asc_SignalHandlerPop(int signum, SigHandlerFn *func);
 /**<
  *  Removes the last-pushed handler from the stack for signum signal types.
  *  If the removed handler is the same as func, it is uninstalled and
@@ -310,15 +310,15 @@ ASC_DLLSPEC(int ) Asc_SignalHandlerPop(int signum, SigHandlerFn *func);
  */
 
 /** Output the contents of the specified stack. For debugging. */
-ASC_DLLSPEC(void) Asc_SignalPrintStack(int signum);
+ASC_DLLSPEC void Asc_SignalPrintStack(int signum);
 
 /** Return the length of the specified stack. For debugging. */
-ASC_DLLSPEC(int) Asc_SignalStackLength(int signum);
+ASC_DLLSPEC int Asc_SignalStackLength(int signum);
 
 /** For debugging.
 	@return handler at top of specified stack, or NULL if stack is empty.
 */
-ASC_DLLSPEC(SigHandlerFn *) Asc_SignalStackTop(int signum);
+ASC_DLLSPEC SigHandlerFn *Asc_SignalStackTop(int signum);
 
 #endif  /* ASC_ASCSIGNAL_H */
 

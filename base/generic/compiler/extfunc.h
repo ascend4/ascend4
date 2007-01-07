@@ -322,7 +322,7 @@ extern int AddExternalFunc(struct ExternalFunc *efunc, int force);
 		or 0 if no addition is made.
 */
 
-ASC_DLLSPEC(struct ExternalFunc *) LookupExtFunc(CONST char *funcname);
+ASC_DLLSPEC struct ExternalFunc *LookupExtFunc(CONST char *funcname);
 /**<
 	Returns the external function having the given name, or NULL if
 	not found.
@@ -349,7 +349,7 @@ extern void PrintExtFuncLibrary(FILE *f);
 	file. The file must be opened for writing.
 */
 
-ASC_DLLSPEC(char *) WriteExtFuncLibraryString(void);
+ASC_DLLSPEC char *WriteExtFuncLibraryString(void);
 /**<
 	Returns a string of formatted information about the external functions
 	defined. the string looks like "{{name1} {help1}} {{name2} {help2}} "
@@ -359,17 +359,17 @@ ASC_DLLSPEC(char *) WriteExtFuncLibraryString(void);
 /**
 	This provides a way for other code to visit the external function list
 */
-ASC_DLLSPEC(void) TraverseExtFuncLibrary(void (*)(void *,void *),void *secondparam);
+ASC_DLLSPEC void TraverseExtFuncLibrary(void (*)(void *,void *),void *secondparam);
 
 
 /** fetch the required formal input count for glass, black, or method. */
-ASC_DLLSPEC(unsigned long) NumberInputArgs(CONST struct ExternalFunc *efunc);
+ASC_DLLSPEC unsigned long NumberInputArgs(CONST struct ExternalFunc *efunc);
 
 /** fetch the required formal output count for glass, black, or method. */
-ASC_DLLSPEC(unsigned long) NumberOutputArgs(CONST struct ExternalFunc *efunc);
+ASC_DLLSPEC unsigned long NumberOutputArgs(CONST struct ExternalFunc *efunc);
 
 
-ASC_DLLSPEC(CONST char*) ExternalFuncName(CONST struct ExternalFunc *efunc);
+ASC_DLLSPEC CONST char*ExternalFuncName(CONST struct ExternalFunc *efunc);
 /**<
 	Returns the name of an external function.
 */
@@ -378,7 +378,7 @@ ASC_DLLSPEC(CONST char*) ExternalFuncName(CONST struct ExternalFunc *efunc);
   EXTERNAL METHOD STUFF
 */
 
-ASC_DLLSPEC(int) CreateUserFunctionMethod(CONST char *name
+ASC_DLLSPEC int CreateUserFunctionMethod(CONST char *name
 		,ExtMethodRun *run
 		,CONST long n_args
 		,CONST char *help
@@ -445,7 +445,7 @@ extern ExtBBoxFinalFunc *GetFinalFunc(struct ExternalFunc *efunc);
 extern double GetValueFuncTolerance(struct ExternalFunc *efunc);
 
 
-ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
+ASC_DLLSPEC int CreateUserFunctionBlackBox(CONST char *name,
 		ExtBBoxInitFunc *init,
 		ExtBBoxFunc *value,
 		ExtBBoxFunc *deriv,
@@ -500,7 +500,7 @@ ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
 */
 
 
-ASC_DLLSPEC(int) DefaultExtBBoxInitFunc(struct BBoxInterp *interp,
+ASC_DLLSPEC int DefaultExtBBoxInitFunc(struct BBoxInterp *interp,
                             struct Instance *data,
                             struct gl_list_t *arglist);
 /**< Default init code for black boxes.
@@ -509,7 +509,7 @@ no per-instance data to manage), they should pass this function
 instead to CreateUserFunctionBlackBox.
 */
 
-ASC_DLLSPEC(int) ErrorExtBBoxValueFunc(
+ASC_DLLSPEC int ErrorExtBBoxValueFunc(
 		struct BBoxInterp *interp,
 		int ninputs,
 		int noutputs,
@@ -522,7 +522,7 @@ If the user does not supply a value function (possibly because they have
 no brain) they will get this. It whines. always returns -1.
 */
 
-ASC_DLLSPEC(int) DefaultExtBBoxFuncDerivFD(
+ASC_DLLSPEC int DefaultExtBBoxFuncDerivFD(
 		struct BBoxInterp *interp,
 		int ninputs,
 		int noutputs,
@@ -536,7 +536,7 @@ they must supply this derivative function instead.
 John Pye claims to have filled this in.
 */
 
-ASC_DLLSPEC(int) DefaultExtBBoxFuncDeriv2FD(
+ASC_DLLSPEC int DefaultExtBBoxFuncDeriv2FD(
 		struct BBoxInterp *interp,
 		int ninputs,
 		int noutputs,
@@ -546,7 +546,7 @@ ASC_DLLSPEC(int) DefaultExtBBoxFuncDeriv2FD(
 );
 /**< Currently a pipe dream. returns an error.  */
 
-ASC_DLLSPEC(void) DefaultExtBBoxFinalFunc(struct BBoxInterp *interp);
+ASC_DLLSPEC void DefaultExtBBoxFinalFunc(struct BBoxInterp *interp);
 /**< Default finalize code for black boxes.
 If the user does not supply a final function (possibly because they have
 no per-instance data to manage), they should pass this function
@@ -557,7 +557,7 @@ instead to CreateUserFunctionBlackBox.
   GLASS BOX STUFF
 */
 
-ASC_DLLSPEC(int) CreateUserFunctionGlassBox(CONST char *name,
+ASC_DLLSPEC int CreateUserFunctionGlassBox(CONST char *name,
 		ExtEvalFunc *init,
 		ExtEvalFunc **value,
 		ExtEvalFunc **deriv,

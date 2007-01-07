@@ -353,7 +353,7 @@ extern CONST struct gl_list_t *LogRelSatRelList(CONST struct logrelation *lrel);
  *  which maybe NULL.
  */
 
-ASC_DLLSPEC(int ) LogRelResidual(CONST struct logrelation *lrel);
+ASC_DLLSPEC int LogRelResidual(CONST struct logrelation *lrel);
 /**< 
  *  <!--  int LogRelResidual(lrel)                                     -->
  *  <!--  const struct logrelation *lrel;                              -->
@@ -368,7 +368,7 @@ extern void SetLogRelResidual(struct logrelation *lrel, int value);
  *  Set the value of the logical relation residual.
  */
 
-ASC_DLLSPEC(int ) LogRelIsCond(CONST struct logrelation *lrel);
+ASC_DLLSPEC int LogRelIsCond(CONST struct logrelation *lrel);
 /**< 
  *  <!--  int LogRelIsCond(lrel)                                       -->
  *  <!--  const struct logrelation *lrel;                              -->

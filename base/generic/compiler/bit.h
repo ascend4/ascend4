@@ -143,7 +143,7 @@ extern void CondSetBit(struct BitList *bl, unsigned long pos, int cond);
  *  If cond is true, set the pos'th bit of bl to 1; otherwise, set it to 0.
  */
 
-ASC_DLLSPEC(int ) ReadBit(CONST struct BitList *bl, unsigned long pos);
+ASC_DLLSPEC int ReadBit(CONST struct BitList *bl, unsigned long pos);
 /**<
  *  <!--  int ReadBit(bl,pos)                                          -->
  *  <!--  struct BitList *bl;                                          -->
@@ -184,7 +184,7 @@ extern unsigned long BLengthF(CONST struct BitList *bl);
  *  Return the length of bl.
  */
 
-ASC_DLLSPEC(int ) BitListEmpty(CONST struct BitList *bl);
+ASC_DLLSPEC int BitListEmpty(CONST struct BitList *bl);
 /**<
  *  <!--  int BitListEmpty(bl)                                         -->
  *  <!--  const struct BitList *bl;                                    -->
