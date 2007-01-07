@@ -212,7 +212,7 @@
 #ifndef ASC_LINSOLQR_H
 #define ASC_LINSOLQR_H
 
-/** @addtogroup linear
+/** @addtogroup linear Linear
  * @{
  */
 

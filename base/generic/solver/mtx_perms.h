@@ -32,7 +32,7 @@
 #ifndef ASC_MTX_PERMS_H
 #define ASC_MTX_PERMS_H
 
-/** @addtogroup linear
+/** @addtogroup linear Linear
  * @{
  */
 

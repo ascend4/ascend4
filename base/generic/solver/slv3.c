@@ -59,6 +59,7 @@
 #include "slv_client.h"
 #include "slv3.h"
 #include "slv_stdcalls.h"
+#include "mtx_vector.h"
 
 #define CANOPTIMIZE FALSE
 /**< TRUE iff optimization code completed, meaning relman_diff fixed. */
@@ -284,8 +285,8 @@ struct jacobian_data {
 };
 
 struct hessian_data {
-  struct vector_data     Bs;           /* Product of B and s */
-  struct vector_data     y;            /* Difference in stationaries */
+  struct vec_vector     Bs;           /* Product of B and s */
+  struct vec_vector     y;            /* Difference in stationaries */
   real64                 ys;           /* inner product of y and s */
   real64                 sBs;          /* inner product of s and Bs */
   struct hessian_data    *next;        /* previous iteration data */
@@ -328,27 +329,27 @@ struct slv3_system_structure {
   struct hessian_data    *B;           /* Curvature information */
   struct reduced_data    ZBZ;          /* Reduced hessian */
 
-  struct vector_data     nominals;     /* Variable nominals */
-  struct vector_data     weights;      /* Relation weights */
-  struct vector_data     relnoms;      /* Relation nominals */
-  struct vector_data     variables;    /* Variable values */
-  struct vector_data     residuals;    /* Relation residuals */
-  struct vector_data     gradient;     /* Objective gradient */
-  struct vector_data     multipliers;  /* Relation multipliers */
-  struct vector_data     stationary;   /* Lagrange gradient */
-  struct vector_data     gamma;        /* Feasibility steepest descent */
-  struct vector_data     Jgamma;       /* Product of J and gamma */
-  struct vector_data     newton;       /* Dependent variables */
-  struct vector_data     Bnewton;      /* Product of B and newton */
-  struct vector_data     nullspace;    /* Independent variables */
-  struct vector_data     varstep1;     /* 1st order in variables */
-  struct vector_data     Bvarstep1;    /* Product of B and varstep1 */
-  struct vector_data     varstep2;     /* 2nd order in variables */
-  struct vector_data     Bvarstep2;    /* Product of B and varstep2 */
-  struct vector_data     mulstep1;     /* 1st order in multipliers */
-  struct vector_data     mulstep2;     /* 2nd order in multipliers */
-  struct vector_data     varstep;      /* Step in variables */
-  struct vector_data     mulstep;      /* Step in multipliers */
+  struct vec_vector     nominals;     /* Variable nominals */
+  struct vec_vector     weights;      /* Relation weights */
+  struct vec_vector     relnoms;      /* Relation nominals */
+  struct vec_vector     variables;    /* Variable values */
+  struct vec_vector     residuals;    /* Relation residuals */
+  struct vec_vector     gradient;     /* Objective gradient */
+  struct vec_vector     multipliers;  /* Relation multipliers */
+  struct vec_vector     stationary;   /* Lagrange gradient */
+  struct vec_vector     gamma;        /* Feasibility steepest descent */
+  struct vec_vector     Jgamma;       /* Product of J and gamma */
+  struct vec_vector     newton;       /* Dependent variables */
+  struct vec_vector     Bnewton;      /* Product of B and newton */
+  struct vec_vector     nullspace;    /* Independent variables */
+  struct vec_vector     varstep1;     /* 1st order in variables */
+  struct vec_vector     Bvarstep1;    /* Product of B and varstep1 */
+  struct vec_vector     varstep2;     /* 2nd order in variables */
+  struct vec_vector     Bvarstep2;    /* Product of B and varstep2 */
+  struct vec_vector     mulstep1;     /* 1st order in multipliers */
+  struct vec_vector     mulstep2;     /* 2nd order in multipliers */
+  struct vec_vector     varstep;      /* Step in variables */
+  struct vec_vector     mulstep;      /* Step in multipliers */
 
   real64                 objective;    /* Objective function evaluation */
   real64                 phi;          /* Unconstrained minimizer */
@@ -408,7 +409,7 @@ static void debug_delimiter( FILE *fp){
 	Outputs a vector.
 */
 static void debug_out_vector(FILE *fp, slv3_system_t sys
-		,struct vector_data *vec
+		,struct vec_vector *vec
 ){
   int32 ndx;
   FPRINTF(fp,"Norm = %g, Accurate = %s, Vector range = %d to %d\n",
@@ -514,11 +515,11 @@ static int savlinnum=0;
 
 #define destroy_array(p) if((p)!=NULL)ascfree(p)
 
-#define zero_vector(v) slv_zero_vector(v)
-#define copy_vector(v,t) slv_copy_vector((v),(t))
-#define inner_product(v,u) slv_inner_product((v),(u))
-#define square_norm(v)  slv_square_norm(v)
-#define matrix_product(m,v,p,s,t) slv_matrix_product((m),(v),(p),(s),(t))
+#define zero_vector(v) vec_zero(v)
+#define copy_vector(v,t) vec_copy((v),(t))
+#define inner_product(v,u) vec_inner_product((v),(u))
+#define square_norm(v)  vec_square_norm(v)
+#define matrix_product(m,v,p,s,t) vec_matrix_product((m),(v),(p),(s),(t))
 
 /*------------------------------------------------------------------------------
   CALCULATION ROUTINES
@@ -1490,7 +1491,7 @@ static void calc_ZBZ(slv3_system_t sys){
 	already be calculated and scaled so as to simply be added to the
 	rhs.  Caller is responsible for initially zeroing the rhs vector.
 */
-static void calc_rhs(slv3_system_t sys, struct vector_data *vec,
+static void calc_rhs(slv3_system_t sys, struct vec_vector *vec,
                      real64 scalar, boolean transpose
 ){
   if( transpose ) {     /* vec is indexed by col */
@@ -4149,8 +4150,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 }
 
 
-static void slv3_solve(slv_system_t server, SlvClientToken asys)
-{
+static int slv3_solve(slv_system_t server, SlvClientToken asys){
   int err = 0;
   slv3_system_t sys;
   sys = SLV3(asys);

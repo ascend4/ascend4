@@ -94,7 +94,7 @@ extern void slv_set_num_models(slv_system_t sys, int32 nmod);
 
 extern void slv_set_need_consistency(slv_system_t sys, int32 need_consistency);
 /**<
-	Sets the int need_consitency associated with the system.
+	Sets the int need_consistency associated with the system.
 */
 
 extern void slv_set_master_var_list(slv_system_t sys,

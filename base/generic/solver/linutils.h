@@ -41,7 +41,7 @@
 #ifndef linutils_already_included
 #define linutils_already_included
 
-/** @addtogroup linear
+/** @addtogroup linear Linear
  * @{
  */
 

@@ -59,7 +59,7 @@
 #ifndef ASC_LINSOL_H
 #define ASC_LINSOL_H
 
-/**	@addtogroup linear @{ */
+/**	@addtogroup linear Linear @{ */
 
 typedef struct linsol_header *linsol_system_t;
 /**<  linsol_system_t is the linear system handle. */

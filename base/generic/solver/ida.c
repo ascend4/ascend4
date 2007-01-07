@@ -135,7 +135,7 @@ typedef struct IntegratorIdaDataStruct{
 	IntegratorIdaPrecFreeFn *pfree;	 /**< Store instructions here on how to free precdata */
 } IntegratorIdaData;
 
-typedef struct{
+typedef struct IntegratorIdaPrecDJStruct{
 	N_Vector PIii; /**< diagonal elements of the inversed Jacobi preconditioner */
 } IntegratorIdaPrecDataJacobi;
 
@@ -146,7 +146,7 @@ typedef struct{
 	
 	@note IDA uses a different convention for function pointer types, so no '*'.
 */
-typedef struct{
+typedef struct IntegratorIdaPrecStruct{
 	IntegratorIdaPrecCreateFn *pcreate;
 	IDASpilsPrecSetupFn psetup;
 	IDASpilsPrecSolveFn psolve;
@@ -176,7 +176,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 /* sparse jacobian evaluation for ASCEND's sparse direct solver */
 IntegratorSparseJacFn integrator_ida_sjex;
 
-typedef struct{
+typedef struct IntegratorIdaStatsStruct{
 	long nsteps;
 	long nrevals;
 	long nlinsetups;
@@ -417,9 +417,9 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
   MAIN IDA SOLVER ROUTINE, see IDA manual, sec 5.4, p. 27 ff.
 */
 
-static double div1(double a, double b){
+/*static double div1(double a, double b){
 	return a/b;
-}
+}*/
 
 typedef int IdaFlagFn(void *,int *);
 typedef char *IdaFlagNameFn(int);

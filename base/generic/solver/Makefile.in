@@ -48,7 +48,8 @@ LIB_OBJS = \
 	conditional.o conopt.o discrete.o incidence.o linsol.o \
 	linsolqr.o linutils.o logrel.o logrelman.o model_reorder.o \
 	mps.o mtx_basic.o mtx_linal.o mtx_perms.o mtx_query.o \
-	mtx_reorder.o mtx_use_only.o rel.o relman.o \
+	mtx_reorder.o mtx_use_only.o mtx_vector.o  \
+    rel.o relman.o \
 	slv.o slv0.o slv1.o slv2.o slv3.o slv6.o slv7.o \
 	slv8.o slv9.o slv9a.o slvDOF.o slv_common.o \
 	slv_interface.o slv_stdcalls.o system.o var.o \
