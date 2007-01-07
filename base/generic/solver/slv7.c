@@ -911,7 +911,7 @@ static boolean calc_gradient(slv7_system_t sys)
     vfilter.matchbits = (VAR_INBLOCK | VAR_SVAR | VAR_ACTIVE);
     vfilter.matchvalue = (VAR_INBLOCK | VAR_SVAR | VAR_ACTIVE);
     zero_vector(&(sys->gradient));
-    Asc_Panic(2, "calc_gradient", "abort");
+    ASC_PANIC("abort");
     /* the next line will core dump anyway since vp not null-terminated*/
     for( vp = rel_incidence_list(sys->obj) ; *vp != NULL ; ++vp ) {
       int32 col;

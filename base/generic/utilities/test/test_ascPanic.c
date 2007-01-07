@@ -118,7 +118,7 @@ static void test_ascPanic(void)
     Asc_RedirectCompilerStreams(stdoutfile, stdoutfile, stdoutfile); /* send output to a file */
     Asc_Panic(1, "test_ascPanic", "Error message 1.");
     CU_TEST(1 == f_callback_status);
-    Asc_Panic(2, "test_ascPanic", "Error message 2.");
+    ASC_PANIC("Error message 2.");
     CU_TEST(2 == f_callback_status);
     rewind(stdoutfile);
     CU_TEST(EOF != fgetc(stdoutfile));                /* test that file is not empty */

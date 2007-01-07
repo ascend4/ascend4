@@ -1533,7 +1533,7 @@ boolean slv_change_basis(slv_system_t sys, int32 var, mtx_range_t *rng)
   (void)sys;
   (void)var;
   (void)rng;
-  Asc_Panic(2, "slv_change_basis", "fix me");
+  ASC_PANIC("fix me");
   return 0;
 }
 

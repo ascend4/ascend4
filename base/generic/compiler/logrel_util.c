@@ -513,7 +513,7 @@ unsigned long LogRelDepth(CONST struct logrelation *lrel)
     assert(depth == 2);
     break;
   default:
-    Asc_Panic(2, NULL, "Unknown logical relation type.\n");
+    ASC_PANIC("Unknown logical relation type.\n");
     break;
   }
   return maxdepth;

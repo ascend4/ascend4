@@ -871,7 +871,7 @@ void AccStatistics(CONST struct Instance *i)
     /* vicente we should be collecting info here */
     break;
   default:
-    Asc_Panic(2, NULL, "Invalid arguments to AccStatistics.\n");
+    ASC_PANIC("Invalid arguments to AccStatistics.\n");
     break;
   }
 }
@@ -943,7 +943,7 @@ static void AccTokenStatistics(CONST struct Instance *i)
   case DUMMY_INST:
     break;
   default:
-    Asc_Panic(2, NULL, "Invalid arguments to AccTokenStatistics.\n");
+    ASC_PANIC("Invalid arguments to AccTokenStatistics.\n");
     break;
   }
 }

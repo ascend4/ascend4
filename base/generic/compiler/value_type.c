@@ -100,12 +100,12 @@ void ValInit(struct value_t *v)
    One could also recall these every time there is a delete all types. */
 void InitValueManager(void) {
   if (g_value_pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: InitValueManager called twice.\n");
+    ASC_PANIC("ERROR: InitValueManager called twice.\n");
   }
   g_value_pool =
     pool_create_store(VP_LEN, VP_WID, VP_ELT_SIZE, VP_MORE_ELTS, VP_MORE_BARS);
   if (g_value_pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: InitValueManager unable to allocate pool.\n");
+    ASC_PANIC("ERROR: InitValueManager unable to allocate pool.\n");
   }
 }
 

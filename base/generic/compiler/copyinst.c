@@ -701,7 +701,7 @@ void CopyRelationStructures(struct gl_list_t *src_list,
       rel = CopyRelationToModify(src,dest,scratch);
       break;
     default:
-      Asc_Panic(2, NULL, "Invalid type in CopyRelationStructures\n");
+      ASC_PANIC("Invalid type in CopyRelationStructures\n");
       exit(2);
     }
     type = GetInstanceRelationType(src);
@@ -744,7 +744,7 @@ void CopyLogRelStructures(struct gl_list_t *src_list,
       lrel = CopyLogRelToModify(src,dest,varlist,rellist);
       break;
     default:
-      Asc_Panic(2, "CopyLogRelStructures", "Invalid type in CopyLogRelStructures\n"); /* NOTREACHED */
+      ASC_PANIC("Invalid type in CopyLogRelStructures\n"); /* NOTREACHED */
       lrel = NULL;
     }
     SetInstanceLogRel(dest,lrel);
@@ -831,7 +831,7 @@ static struct Instance *CopyNode(CONST struct Instance *i)
   case SYMBOL_INST:
     return NULL;
   default:
-    Asc_Panic(2, NULL, "Incorrect instance type passed to CopyNode.\n");
+    ASC_PANIC("Incorrect instance type passed to CopyNode.\n");
     
   }
 }
@@ -869,7 +869,7 @@ void CollectNodes(struct Instance *i, struct gl_list_t *data)
   case SYMBOL_INST:
     break;
   default:
-    Asc_Panic(2, NULL, "Incorrect instance type passed to CollectNodes.\n");
+    ASC_PANIC("Incorrect instance type passed to CollectNodes.\n");
   }
 }
 
@@ -913,7 +913,7 @@ static void CountNodes(struct Instance *i)
   case SYMBOL_INST:
     break;
   default:
-    Asc_Panic(2, NULL, "Incorrect instance type passed to CountNodes.\n");
+    ASC_PANIC("Incorrect instance type passed to CountNodes.\n");
   }
 }
 
@@ -1216,7 +1216,7 @@ struct Instance *CopyInstance(CONST struct Instance *i)
               " fundamental atomic instances.\n");
     
   default:
-    Asc_Panic(2, NULL, "Unknown instance type passed to CopyInstance.\n");
+    ASC_PANIC("Unknown instance type passed to CopyInstance.\n");
     
   }
 }

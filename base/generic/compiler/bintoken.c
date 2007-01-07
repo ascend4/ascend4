@@ -531,7 +531,7 @@ void ResizeIndices(struct Instance *rel, struct reusable_rxnd *r)
   /* create mem_*/
   r->rd.indices = ASC_NEW_ARRAY(int,newlen);
   if (r->rd.indices == NULL) {
-    Asc_Panic(2, "BinTokenSharesToC","out of memory error");
+    ASC_PANIC("out of memory error");
     exit(2);
   }
   /* set up one-less indices */

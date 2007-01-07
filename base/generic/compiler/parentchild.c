@@ -407,7 +407,7 @@ struct InstanceName ParentsName(CONST struct Instance *p,
     num_children = ChildListLen(clist = GetChildList(LRELN_INST(p)->desc));
     break;
   case WHEN_INST:    /*  WHEN instances have no children */
-    Asc_Panic(2, NULL, "ParentsName cannot be called on a WHEN instance.\n");
+    ASC_PANIC("ParentsName cannot be called on a WHEN instance.\n");
   case ARRAY_INT_INST:
     if (ARY_INST(p)->children!=NULL){
       SetInstanceNameType(result,IntArrayIndex);
@@ -543,7 +543,7 @@ void AddParent(struct Instance *i, struct Instance *p)
       }
     }
     else{
-      Asc_Panic(2, NULL, "Logical relations can only have two parents.\n");
+      ASC_PANIC("Logical relations can only have two parents.\n");
     }
     break;
   /* WHENs can only have one or two parents */
@@ -559,7 +559,7 @@ void AddParent(struct Instance *i, struct Instance *p)
       }
     }
     else{
-      Asc_Panic(2, NULL, "WHENs can only have two parents.\n");/*NOTREACHED*/
+      ASC_PANIC("WHENs can only have two parents.\n");/*NOTREACHED*/
     }
     break;
   /* fundamental atom instances can only have one parent */
@@ -615,7 +615,7 @@ unsigned long NumberChildren(CONST struct Instance *i)
   case DUMMY_INST:
     return 0;
   default:
-    Asc_Panic(2, NULL, "Invalid argument to NumberChildren.\n");
+    ASC_PANIC("Invalid argument to NumberChildren.\n");
     /*NOTREACHED*/
   }
   return 0;
@@ -694,7 +694,7 @@ struct Instance *InstanceChild(CONST struct Instance *i,
               "InstanceChild shouldn't be called"
               " on fundamental atoms, constants.\n");
   default:
-    Asc_Panic(2, NULL, "Invalid argument to InstanceChild.\n");
+    ASC_PANIC("Invalid argument to InstanceChild.\n");
   }
   return NULL;
 }
@@ -750,7 +750,7 @@ struct Instance *InstanceChild(CONST struct Instance *i,
       }
     }
 #ifndef NDEBUG
-    Asc_Panic(2, NULL, "InstanceChild found unexpected compound instance.\n");
+    ASC_PANIC("InstanceChild found unexpected compound instance.\n");
 #endif
   } else { /* not compound */
     if (i->t == REAL_ATOM_INST) {
@@ -886,7 +886,7 @@ struct InstanceName ChildName(CONST struct Instance *i, unsigned long int n)
     break;
   /* WHEN instances don't have any children */
   case WHEN_INST:
-    Asc_Panic(2, NULL, "ChildName shouldn't be called on WHEN instances\n");
+    ASC_PANIC("ChildName shouldn't be called on WHEN instances\n");
   /* fundamental, constant instances don't have children */
   case REAL_INST:
   case INTEGER_INST:
@@ -903,7 +903,7 @@ struct InstanceName ChildName(CONST struct Instance *i, unsigned long int n)
               " on fundamentaa/const instances.\n");
     exit(2);  /*NOTREACHED*/
   default:
-    Asc_Panic(2, NULL, "Invalid argument passed to ChildName.\n");
+    ASC_PANIC("Invalid argument passed to ChildName.\n");
     exit(2);  /*NOTREACHED*/
   }
   return result;
@@ -1014,7 +1014,7 @@ unsigned long ChildSearch(CONST struct Instance *i,
   case DUMMY_INST:
     break;
   default:
-    Asc_Panic(2, NULL, "Invalid argument passed to ChildSearch.\n");
+    ASC_PANIC("Invalid argument passed to ChildSearch.\n");
   }
   return 0;
 }
@@ -1079,7 +1079,7 @@ unsigned long ChildIndex(CONST struct Instance *i,
     num_children = ChildListLen(clist = GetChildList(LRELN_INST(i)->desc));
     break;
   default:
-    Asc_Panic(2, NULL, "Invalid argument to ChildIndex.\n");
+    ASC_PANIC("Invalid argument to ChildIndex.\n");
     childlist = 0;
   }
   while(num_children--) {
@@ -1187,7 +1187,7 @@ void StoreChildPtr(struct Instance *i, unsigned long int n,
               "StoreChildPtr shouldn't be called"
               " on fundamental/constant atoms.\n");
   default:
-    Asc_Panic(2, NULL, "Invalid argument to StoreChildPtr.\n");
+    ASC_PANIC("Invalid argument to StoreChildPtr.\n");
   }
 }
 

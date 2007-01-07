@@ -145,7 +145,7 @@ static struct {
    One could also recall these every time there is a delete all types. */
 void InitLogRelInstantiator(void) {
   if (g_logterm_pool != NULL || g_logterm_ptrs.buf != NULL) {
-    Asc_Panic(2, NULL, "ERROR: InitLogRelInstantiator called twice.\n");
+    ASC_PANIC("ERROR: InitLogRelInstantiator called twice.\n");
   }
   g_logterm_pool =
     pool_create_store(LOGRP_LEN, LOGRP_WID, LOGRP_ELT_SIZE, LOGRP_MORE_ELTS,
@@ -495,7 +495,7 @@ static int ConvertLogExpr(CONST struct Expr *start,
   symchar *str;
   struct for_var_t *fvp;
   if (newside==NULL) {
-    Asc_Panic(2, NULL, "newside == NULL");
+    ASC_PANIC("newside == NULL");
   }
   while(start!=stop){
     switch(ExprType(start)){
@@ -667,7 +667,7 @@ CONST struct Expr *FindLogRHS(CONST struct Expr *ex)
       }
       break;
     case e_st:
-      Asc_Panic(2, NULL, "Such that expressions are not allowed.\n");
+      ASC_PANIC("Such that expressions are not allowed.\n");
       break;
     case e_minimize:
     case e_maximize:
@@ -676,7 +676,7 @@ CONST struct Expr *FindLogRHS(CONST struct Expr *ex)
                 "They are only allowed in relations.\n");
       break;
     default:
-      Asc_Panic(2, NULL, "Unknown expression node type.\n");
+      ASC_PANIC("Unknown expression node type.\n");
       break;
     }
     previous = ex;
@@ -1465,7 +1465,7 @@ static union LogRelTermUnion
        they may be binary or unary, but InfixArr_MakeLogSide never set them. */
     case e_boolean_eq: case e_boolean_neq:
     default:
-      Asc_Panic(2, NULL, "Unknown term type in CopyLogRelSide\n");
+      ASC_PANIC("Unknown term type in CopyLogRelSide\n");
       break;
     }
   }
@@ -1495,7 +1495,7 @@ struct gl_list_t *CopyLogRelInstList(struct Instance *dest_inst,
       inst = (struct Instance *)gl_fetch(instlist,c);
       pos = gl_search(newinstlist,inst,(CmpFunc)CmpP);
       if (pos) {
-	Asc_Panic(2, NULL, "Corrupted instance list in CopyLogRelation\n");
+	ASC_PANIC("Corrupted instance list in CopyLogRelation\n");
       }
       gl_append_ptr(newinstlist,(VOIDPTR)inst);
       AddLogRel(inst,dest_inst);

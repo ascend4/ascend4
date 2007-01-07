@@ -850,7 +850,7 @@ void WriteTypeOrValue(FILE *f, CONST struct Instance *i)
 		SCP(GetName(GetArrayBaseType(InstanceTypeDesc(i)))));
     break;
   default:
-    Asc_Panic(2, NULL, "Unknown instance type in WriteTypeOrValue.\n");
+    ASC_PANIC("Unknown instance type in WriteTypeOrValue.\n");
     break;
   }
 }
@@ -1088,7 +1088,7 @@ void WriteInstance(FILE *f, CONST struct Instance *i)
     FPRINTF(f,"GlobalDummyInstance\n");
     break;
   default:
-    Asc_Panic(2, NULL, "Unknown instance type in WriteInstance.\n");
+    ASC_PANIC("Unknown instance type in WriteInstance.\n");
   }
 }
 
@@ -1517,7 +1517,7 @@ void Save__ComplexInsts(FILE *fp, struct Instance *inst)
     FPRINTF(fp,"UNSELECTED;\n");
     break;
   default:
-    Asc_Panic(2, NULL, "Unknown instance kind in Save__ComplexInsts.\n");
+    ASC_PANIC("Unknown instance kind in Save__ComplexInsts.\n");
     break;
   }
 }

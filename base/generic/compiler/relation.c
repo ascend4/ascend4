@@ -135,7 +135,7 @@ void FigureOutError(struct value_t value,
     *ferr = unmade_instance;
     break;
   default:
-    Asc_Panic(2, NULL, "Unknown error type in FigureOutError.\n");
+    ASC_PANIC("Unknown error type in FigureOutError.\n");
     break;
   }
 }
@@ -232,7 +232,7 @@ static struct {
    One could also recall these every time there is a delete all types. */
 void InitRelInstantiator(void) {
   if (g_term_pool != NULL || g_term_ptrs.buf != NULL) {
-    Asc_Panic(2, NULL, "ERROR: InitRelInstantiator called twice.\n");
+    ASC_PANIC("ERROR: InitRelInstantiator called twice.\n");
   }
   g_term_pool =
     pool_create_store(RP_LEN, RP_WID, RP_ELT_SIZE, RP_MORE_ELTS, RP_MORE_BARS);
@@ -2666,7 +2666,7 @@ int CorrectSuchThat(CONST struct Expr *ex,
                 "They are only allowed in relations.\n");
       break;
     default:
-      Asc_Panic(2, NULL, "%s: Unknown expression node type.\n",__FUNCTION__);
+      ASC_PANIC("%s: Unknown expression node type.\n",__FUNCTION__);
       break;
     }
     previous = ex;
@@ -2866,7 +2866,7 @@ static int ConvertExpr(CONST struct Expr *start,
   CONST struct for_var_t *fvp;
   struct value_t svalue,cvalue;
   if (newside==NULL) {
-    Asc_Panic(2, NULL, "newside == NULL");
+    ASC_PANIC("newside == NULL");
   }
   while(start!=stop){
     switch(ExprType(start)){
@@ -3550,7 +3550,7 @@ union RelationUnion *CopyRelationShareToken(union RelationUnion *ru)
   /* yes, the sizeof in the following is correct. TOKENDOMINANT. */
   result = (struct TokenRelation *)ascmalloc(sizeof(union RelationUnion));
   if (result==NULL) {
-    Asc_Panic(2, "CopyRelationShare" ,"Insufficient memory.");
+    ASC_PANIC("Insufficient memory.");
     return NULL; /* NOT REACHED */
   }
   result->lhs = CopyRelationSide(src->lhs,src->lhs_len);
@@ -3586,7 +3586,7 @@ union RelationUnion *CopyRelationShareBlackBox(union RelationUnion *ru)
   /* yes, the sizeof in the following is correct. TOKENDOMINANT. */
   result = (struct BlackBoxRelation *)asccalloc(1,sizeof(union RelationUnion));
   if (result==NULL) {
-    Asc_Panic(2, "CopyRelationShareBlackBox" ,"Insufficient memory.");
+    ASC_PANIC("Insufficient memory.");
     return NULL; /* NOT REACHED */
   }
   result->relop = src->relop;
@@ -4380,7 +4380,7 @@ static union RelationTermUnion
     case e_equal: case e_notequal: case e_less:
     case e_greater: case e_lesseq: case e_greatereq:
     default:
-      Asc_Panic(2, NULL, "Unknown term type in CopyRelationSide\n");
+      ASC_PANIC("Unknown term type in CopyRelationSide\n");
       break;
     }
   }
@@ -4451,7 +4451,7 @@ struct gl_list_t *CopyRelationVarList(struct Instance *dest_inst,
       /* garbage in, garbage out */
       pos = gl_search(newvarlist,var,(CmpFunc)CmpP);
       if (pos) {
-	Asc_Panic(2, NULL, "Corrupted variable list in CopyTokenRelation\n");
+	ASC_PANIC("Corrupted variable list in CopyTokenRelation\n");
       }
 #endif
       gl_append_ptr(newvarlist,(VOIDPTR)var);
@@ -4555,7 +4555,7 @@ struct relation *CopyAnonRelationByReference(CONST struct Instance *src_inst,
     break;
   case e_opcode:
   case e_glassbox:	/* Double  check  -- what about the args ?? */
-    Asc_Panic(2, NULL, "ERROR: CopyAnonRelationByReference on opcode/glassbox.\n");
+    ASC_PANIC("ERROR: CopyAnonRelationByReference on opcode/glassbox.\n");
     break;
   default: /*NOTREACHED we hope*/
     break;
@@ -4615,7 +4615,7 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
     result = CopyTokenRelation(src_inst,dest_inst,copylist);
     return result;
   case e_opcode:
-    Asc_Panic(2, NULL, "Opcode relation copying not yet supported\n");
+    ASC_PANIC("Opcode relation copying not yet supported\n");
 
     break;
   case e_glassbox:
@@ -4624,11 +4624,11 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
 				    RelRelop(src));
     return result;
   case e_blackbox:
-    Asc_Panic(2, NULL, "Blackbox relation copying not yet supported\n");
+    ASC_PANIC("Blackbox relation copying not yet supported\n");
 
     break;
   default:
-    Asc_Panic(2, NULL, "unknown relation type in CopyRelationToModify\n");
+    ASC_PANIC("unknown relation type in CopyRelationToModify\n");
 
     break;
   }

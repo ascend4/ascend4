@@ -540,7 +540,7 @@ unsigned long CalcByteSize(enum type_kind t,
   case logrel_type:
     return LogRelAtomByteLength(ChildListLen(clist),childd);
   default:
-    Asc_Panic(2, NULL, "Unknown type.\n");
+    ASC_PANIC("Unknown type.\n");
     
   }
   /*NOTREACHED*/

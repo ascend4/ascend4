@@ -261,7 +261,7 @@ struct AnonMergeIP *AMGetIP(struct AnonMergeIPData *amipd)
   struct AnonMergeIP *amip;
   assert(amipd!=NULL);
   if (amipd->iplen <= amipd->ipused) {
-    Asc_Panic(2,"AMGetIP","Too many ips requested");
+    ASC_PANIC("Too many ips requested");
     gl_write_list(NULL,NULL); /* delete when done. forcing linker */
     return NULL; /* not reached */
   }
@@ -283,7 +283,7 @@ int IsIgnorableInstance(struct Instance *ch)
 {
   assert(ch!=NULL);
   if (InstanceKind(ch)&IERRINST) {
-    Asc_Panic(2,"IsIgnorableInstance","Called with bad instance");
+    ASC_PANIC("Called with bad instance");
     return 0; /* not reached */
   }
   if (InstanceKind(ch) & (IFUND | ICONS | IDUMB | IWHEN | IRELN | ILRELN)) {
@@ -293,7 +293,7 @@ int IsIgnorableInstance(struct Instance *ch)
     struct TypeDescription *d;
     d = GetArrayBaseType(InstanceTypeDesc(ch));
     if (GetBaseType(d) & ERROR_KIND) {
-      Asc_Panic(2,"IsIgnorableInstance","Called with bad array instance");
+      ASC_PANIC("Called with bad array instance");
       return 0; /* not reached */
     }
     if (GetBaseType(d) & (EQN_KIND | CONSTANT_KIND | DUMB_KIND | SET_KIND)) {
@@ -909,12 +909,12 @@ void AMVIInit(struct AnonMergeVisitInfo *amvi,struct Instance *root)
 static
 void InitSgeltPool(struct mdata *md) {
   if (md->pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: InitSgeltPool called twice.\n");
+    ASC_PANIC("ERROR: InitSgeltPool called twice.\n");
   }
   md->pool =
     pool_create_store(SP_LEN, SP_WID, SP_ELT_SIZE, SP_MORE_ELTS, SP_MORE_BARS);
   if (md->pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: InitSgeltPool unable to allocate pool.\n");
+    ASC_PANIC("ERROR: InitSgeltPool unable to allocate pool.\n");
   }
 }
 
@@ -950,7 +950,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
   amipd = ASC_NEW(struct AnonMergeIPData);
   if (amipd==NULL) {
     ascfree(amipd);
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for amipd.");
+    ASC_PANIC("Insufficent memory for amipd.");
     return NULL;
   }
   amipd->root = amvi->root;
@@ -959,12 +959,12 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
   amipd->num_iwithmerge = 0;
   amipd->node2ip = ASC_NEW_ARRAY(int,(amvi->nim+1));
   if (amipd->node2ip == NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for node2ip.");
+    ASC_PANIC("Insufficent memory for node2ip.");
     return NULL;
   }
   amipd->ipbuf = ASC_NEW_ARRAY(struct AnonMergeIP,amvi->nip);
   if (amipd->ipbuf==NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for ipbuf.");
+    ASC_PANIC("Insufficent memory for ipbuf.");
     return NULL;
   }
   amipd->ipused = 0;
@@ -978,7 +978,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
       amipd->enlp1 == NULL ||
       amipd->enlp2 == NULL ||
       amipd->nlpgl == NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for scratch nlps.");
+    ASC_PANIC("Insufficent memory for scratch nlps.");
     return NULL;
   }
   amipd->senlp0 = NumpairExpandableList(NULL,100);
@@ -989,7 +989,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
       amipd->senlp1 == NULL ||
       amipd->senlp2 == NULL ||
       amipd->snlpgl == NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for scratch snlps.");
+    ASC_PANIC("Insufficent memory for scratch snlps.");
     return NULL;
   }
   amipd->oldips = PushInterfacePtrs(amvi->root,(IPFunc)AnonMergeCreateIP,
@@ -1016,7 +1016,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
       amipd->routes == NULL ||
       amipd->routechildnum == NULL ||
       amipd->finalchildnum == NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for subgraph lists.");
+    ASC_PANIC("Insufficent memory for subgraph lists.");
     return NULL;
   }
   amipd->scratchpath = gl_create(100);
@@ -1025,33 +1025,33 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
   if (amipd->scratchpath == NULL ||
       amipd->scratchpathlist == NULL ||
       amipd->scratchamlist == NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for scratch lists.");
+    ASC_PANIC("Insufficent memory for scratch lists.");
     return NULL;
   }
   /* setup md */
   amipd->md.header = ASC_NEW_ARRAY(struct sgelt *,amvi->nip+1);
   if (amipd->md.header == NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for md.header.");
+    ASC_PANIC("Insufficent memory for md.header.");
     return NULL;
   }
   amipd->md.colcount = ASC_NEW_ARRAY(int,amvi->nip+1);
   if (amipd->md.colcount == NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for md.colcount.");
+    ASC_PANIC("Insufficent memory for md.colcount.");
     return NULL;
   }
   amipd->md.sg2blob = ASC_NEW_ARRAY(int,asize+1);
   if (amipd->md.sg2blob == NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for md.sg2blob.");
+    ASC_PANIC("Insufficent memory for md.sg2blob.");
     return NULL;
   }
   amipd->md.blobcollected = ASC_NEW_ARRAY(int,asize+1);
   if (amipd->md.blobcollected == NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for md.blobcollected.");
+    ASC_PANIC("Insufficent memory for md.blobcollected.");
     return NULL;
   }
   amipd->md.blob = ASC_NEW_ARRAY(struct gl_list_t *,asize+1);
   if (amipd->md.blob == NULL) {
-    Asc_Panic(2,"AMIPDInit","Insufficent memory for md.blob.");
+    ASC_PANIC("Insufficent memory for md.blob.");
     return NULL;
   }
   for (i=0;i <= (int)asize;i++) {
@@ -1060,7 +1060,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
      */
     amipd->md.blob[i] = gl_create(2);
     if (amipd->md.blob[i] == NULL) {
-      Asc_Panic(2,"AMIPDInit","Insufficent memory for md.blob data.");
+      ASC_PANIC("Insufficent memory for md.blob data.");
       return NULL;
     }
   }
@@ -1890,7 +1890,7 @@ void Asc_AnonMergeUnmarkIPs(VOIDPTR vp)
 {
   struct AnonMergeIPData *amipd;
   if (g_ammarking == 0) {
-    Asc_Panic(2,"Asc_AnonMergeUnmarkIP","Called without marks current");
+    ASC_PANIC("Called without marks current");
   }
   amipd = (struct AnonMergeIPData *)vp;
 #if AMSTAT
@@ -1914,7 +1914,7 @@ void Asc_AnonMergeWriteList(FILE *fp, struct Instance *i)
 {
   struct AnonMergeIP *amip;
   if (g_ammarking == 0) {
-    Asc_Panic(2,"Asc_AnonMergeWriteList","Called without marks current");
+    ASC_PANIC("Called without marks current");
   }
   assert(i!= NULL);
   if (IsCompoundInstance(i)==0) {

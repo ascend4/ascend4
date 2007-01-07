@@ -373,7 +373,7 @@ char *WriteChildDetails(ChildListPtr cl,unsigned long n)
     sym = ChildStrPtr(cl,n);
     name = ExtractChildName(stat,sym,desc);
     if (name == NULL) {
-      Asc_Panic(2,"WriteChildDetails","Name %s not found in defining statement",
+      ASC_PANIC("Name %s not found in defining statement",
             SCP(sym));
     }
     WriteName2Str(dsPtr,name);

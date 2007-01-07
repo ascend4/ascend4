@@ -98,7 +98,7 @@ unsigned long ConstantByteLength(enum inst_t it)
   case SYMBOL_CONSTANT_INST:
     return sizeof(struct SymbolConstantInstance);
   default:
-    Asc_Panic(2, NULL, "Bytelength of unknown constant type requested.");
+    ASC_PANIC("Bytelength of unknown constant type requested.");
     
     break;
   }

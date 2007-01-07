@@ -194,12 +194,12 @@ static pool_store_t g_list_head_pool = NULL;
 void gl_init_pool(void) {
 #if LISTUSESPOOL
   if (g_list_head_pool != NULL) {
-    Asc_Panic(2, NULL, "ERROR: gl_init_pool called twice.\n");
+    ASC_PANIC("ERROR: gl_init_pool called twice.\n");
   }
   g_list_head_pool = pool_create_store(GLP_LEN, GLP_WID, GLP_ELT_SIZE,
     GLP_MORE_ELTS, GLP_MORE_BARS);
   if (g_list_head_pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: gl_init_pool unable to allocate pool.\n");
+    ASC_PANIC("ERROR: gl_init_pool unable to allocate pool.\n");
   }                     
 #else
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"list.[ch] built without pooling of overheads\n");
@@ -1021,7 +1021,7 @@ void gl_reverse(struct gl_list_t *list)
   if (list==NULL || list->length <2L) return;
   tmpdata = ASC_NEW_ARRAY(VOIDPTR,(list->capacity));
   if (tmpdata==NULL) {
-    Asc_Panic(2, NULL, "gl_reverse out of memory. Bye!\n");
+    ASC_PANIC("gl_reverse out of memory. Bye!\n");
   }
   len = list->length;
   for (c=0;c < len;c++) {
@@ -1079,7 +1079,7 @@ int gl_compare_ptrs(CONST struct gl_list_t *l1, CONST struct gl_list_t *l2)
   unsigned long len,c;
   register unsigned long i1,i2;
   if (l1==NULL || l2 == NULL) {
-    Asc_Panic(2,"gl_compare_ptrs","Called with NULL input");
+    ASC_PANIC("Called with NULL input");
   }
   len = MIN(GL_LENGTH(l1),GL_LENGTH(l2));
   for (c=0;c < len; c++) {

@@ -302,7 +302,7 @@ static void MakeAtomChildren(unsigned long int nc, /* number of children */
       base = INST((unsigned long)base+sizeof(struct SymbolInstance));
       break;
     case bad_child:
-      Asc_Panic(2, NULL, "MakeAtomChildren called with bad_child\n");
+      ASC_PANIC("MakeAtomChildren called with bad_child\n");
       break;
     }
     /* set pointer and counter for next child */
@@ -823,7 +823,7 @@ struct Instance *CreateArrayInstance(struct TypeDescription *type,
   result = ARY_INST(ascmalloc((unsigned)sizeof(struct ArrayInstance)));
   list = GetArrayIndexList(type);
   if ((list==NULL)||(gl_length(list)==0)) {
-    Asc_Panic(2, NULL, "An array without any indicies!\n");
+    ASC_PANIC("An array without any indicies!\n");
   }
   ptr = (struct IndexType *)gl_fetch(list,pos);
   if (GetIndexType(ptr)) {

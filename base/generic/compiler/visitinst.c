@@ -381,7 +381,7 @@ static int ZeroVisitNumber(struct Instance *i)
     return 0;			/* assumed always unvisited */
         			/* since they have exactly one ATOM parent */
   default:
-    Asc_Panic(2, NULL, "ZeroVisitInstanceTree:"
+    ASC_PANIC("ZeroVisitInstanceTree:"
               "  Instance tree contains illegal instance.\n");
     /*NOTREACHED*/
   }
@@ -539,7 +539,7 @@ void IndexedVisitCheckSize(unsigned long **llist, unsigned int *llen, int len)
     }
     if (*llist == NULL) {
       *llist = old;
-      Asc_Panic(2,"IndexedVisitInstanceTree","insufficient memory");
+      ASC_PANIC("insufficient memory");
     }
   }
 }

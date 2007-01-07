@@ -151,7 +151,7 @@ static symchar *CopyString(CONST char *str,int userlen)
     ptr = g_string_space;
   }
   if ((g_string_space = ASC_NEW(struct StringSpaceRec))==NULL){
-    Asc_Panic(2, NULL, "Unable to allocate string space.\n");
+    ASC_PANIC("Unable to allocate string space.\n");
     
   }
   g_string_space->next = ptr;

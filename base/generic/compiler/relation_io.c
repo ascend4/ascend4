@@ -126,7 +126,7 @@ static pool_store_t g_rel_stack_pool = NULL;
 /* This function is called at compiler startup time and destroy at shutdown. */
 void RelationIO_init_pool(void) {
   if (g_rel_stack_pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: RelationIO_init_pool called twice.\n");
+    ASC_PANIC("ERROR: RelationIO_init_pool called twice.\n");
   }
   g_rel_stack_pool = pool_create_store(RSP_LEN, RSP_WID, RSP_ELT_SIZE,
     RSP_MORE_ELTS, RSP_MORE_BARS);
@@ -185,7 +185,7 @@ void WriteOp(FILE *f, enum Expr_enum t)
   case e_maximize: FPRINTF(f,"MAXIMIZE"); break;
   case e_minimize: FPRINTF(f,"MINIMIZE"); break;
   default:
-    Asc_Panic(2, NULL, "Unknown term in WriteOp.\n");
+    ASC_PANIC("Unknown term in WriteOp.\n");
     break;
   }
 }
@@ -309,7 +309,7 @@ void WriteTerm(FILE *f,
     FPRINTF(f,"NEG");
     break;
   default:
-    Asc_Panic(2, NULL, "Unknown term type in WriteTerm.\n");
+    ASC_PANIC("Unknown term type in WriteTerm.\n");
     break;
   }
 }
@@ -884,7 +884,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
           }
           break;
         default: /* first */
-          Asc_Panic(2, "WriteSideDS", "Don't know this type of stack first");
+          ASC_PANIC("Don't know this type of stack first");
           break;
         }
         break;
@@ -968,7 +968,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
       }
       break;
     default:
-      Asc_Panic(2, "WriteSideDS", "Don't know this type of relation token");
+      ASC_PANIC("Don't know this type of relation token");
       break;
     }
   }
@@ -1032,7 +1032,7 @@ void WriteTokenRelationDS(Asc_DString *dsPtr,
       Asc_DStringAppend(dsPtr," ) - ( ",7);
       break;
     default:
-      Asc_Panic(2, NULL, "Unknown lang in WriteRelationString.\n");
+      ASC_PANIC("Unknown lang in WriteRelationString.\n");
       exit(2); /* NOTREACHED ,  shuts up gcc */
     }
     WriteSideDS(dsPtr,r,0,ref,func,userdata,lang);
@@ -1055,7 +1055,7 @@ void WriteTokenRelationDS(Asc_DString *dsPtr,
       Asc_DStringAppend(dsPtr," )",2);
       break;
     default:
-      Asc_Panic(2, NULL, "Unknown lang in WriteRelationString.\n");
+      ASC_PANIC("Unknown lang in WriteRelationString.\n");
       exit(2); /* NOTREACHED ,  shuts up gcc */
     }
     break;
@@ -1610,7 +1610,7 @@ void SaveTokenConstants(FILE *fp, struct gl_list_t *constants)
       FPRINTF(fp,"%12.8e",(double)TermInteger(term));
       break;
     default:
-      Asc_Panic(2, NULL, "Illegal term in SaveTokenConstants\n");
+      ASC_PANIC("Illegal term in SaveTokenConstants\n");
       break;
     }
     PUTC(' ',fp);

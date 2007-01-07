@@ -1831,7 +1831,7 @@ CONST struct TypeDescription *FindCommonType(CONST struct VariableList *vl,
       case FRC_ok:
       case FRC_array:
         /* good FRC codes not seen if type is NULL */
-        Asc_Panic(2, NULL, "good FRC codes not seen if type is NULL");
+        ASC_PANIC("good FRC codes not seen if type is NULL");
         break;
       case FRC_badname:  /* part named is impossible */
       case FRC_attrname: /* part named is subatomic and can't be aliased */
@@ -1997,7 +1997,7 @@ int DeriveChildTypes(struct StatementList *stats, struct gl_list_t *clist)
           case FRC_unable:  /* try later */
             break;
           default:
-            Asc_Panic(2, NULL, "NOT REACHED should never see other values");
+            ASC_PANIC("NOT REACHED should never see other values");
             break;
           }
         }
@@ -2028,7 +2028,7 @@ int DeriveChildTypes(struct StatementList *stats, struct gl_list_t *clist)
           case FRC_unable:  /* try later */
             break;
           default:
-            Asc_Panic(2, NULL, "NOT REACHED should never see other values");
+            ASC_PANIC("NOT REACHED should never see other values");
             break;
           }
         }
@@ -3177,7 +3177,7 @@ enum typelinterr VerifyTypeArgs(CONST struct Set *alist,
       /* future messiness */
       break;
     default:
-      Asc_Panic(2, NULL, "NOTREACHED. filtered types in typedefillegal fcns");
+      ASC_PANIC("NOTREACHED. filtered types in typedefillegal fcns");
       break;
     }
   }
@@ -3825,7 +3825,7 @@ enum typelinterr CheckWITHVALUE( CONST struct Statement *stat)
   struct gl_list_t *lclgl;
 
   if (StatementType(stat)!=WILLBE) {
-    Asc_Panic(2, NULL, "StatementType(stat)!=WILLBE");
+    ASC_PANIC("StatementType(stat)!=WILLBE");
   }
   if (GetStatCheckValue(stat)!=NULL) {
     lclgl = CopyLCLToGL();
@@ -4189,7 +4189,7 @@ enum typelinterr ExtractRLEs(CONST struct StatementList *tmpl,
       TypeLintError(ASCERR,s,DEF_STAT_MISLOCATED);
 	  error_reporter_end_flush();
 
-      Asc_Panic(2, NULL, "%sIncorrect statement found in %s list.\n",
+      ASC_PANIC("%sIncorrect statement found in %s list.\n",
                 StatioLabel(4),
                 (absorbed != 0) ? "absorbed" : "parameter");
       break;
@@ -4219,7 +4219,7 @@ int FindAssignedStatement(struct gl_list_t *nspace, struct Statement *s)
     WriteStatement(ASCERR,s,2);
 	error_reporter_end_flush();
 
-    Asc_Panic(2, NULL, "%sFindAssignedStatement called with unknown stat:\n",
+    ASC_PANIC("%sFindAssignedStatement called with unknown stat:\n",
               StatioLabel(4));
   }
   return SRLE(gl_fetch(nspace,pos))->assigned;

@@ -160,7 +160,7 @@ void DeleteIPtr(struct Instance *i)
   case SYMBOL_INST:		/* fall through */
     break;
   default:
-    Asc_Panic(2, NULL, "Unknown instance type passed to DeleteIPtr.\n");
+    ASC_PANIC("Unknown instance type passed to DeleteIPtr.\n");
   }
 }
 

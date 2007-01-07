@@ -93,12 +93,12 @@ static pool_store_t g_exprs_pool = NULL;
 */
 void exprs_init_pool(void) {
   if (g_exprs_pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: exprs_init_pool called twice.\n");
+    ASC_PANIC("ERROR: exprs_init_pool called twice.\n");
   }
   g_exprs_pool = pool_create_store(EMP_LEN, EMP_WID, EMP_ELT_SIZE,
     EMP_MORE_ELTS, EMP_MORE_BARS);
   if (g_exprs_pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: exprs_init_pool unable to allocate pool.\n");
+    ASC_PANIC("ERROR: exprs_init_pool unable to allocate pool.\n");
   }
 }
 

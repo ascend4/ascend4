@@ -857,7 +857,7 @@ int Asc_BrowWriteAtomValue(char *ftorv, CONST struct Instance *i)
       sprintf(ftorv,"'%s'",SCP(GetSymbolAtomValue(i)));
       break;
     default:
-      Asc_Panic(2, NULL, "Unrecognized atom type in BrowInstAtomValue\n");
+      ASC_PANIC("Unrecognized atom type in BrowInstAtomValue\n");
     }
   } else {
     sprintf(ftorv,"UNDEFINED");

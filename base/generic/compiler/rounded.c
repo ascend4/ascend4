@@ -260,7 +260,7 @@ double DIPow(register double d, long int n)
   int negative;
   if (n==0) return 1.0;
   if ((n<0)&&(d==0.0)) {
-    Asc_Panic(2, NULL, "Zero raised to a zero power.\n");
+    ASC_PANIC("Zero raised to a zero power.\n");
   }
   if (d==0.0) return 0.0;
   negative = (d<0.0) &&(IsOdd(n));
@@ -325,7 +325,7 @@ double DIPow(register double d, long n)
   register double result;
   if (n==0) return 1.0;
   if ((n<0)&&(d==0.0)) {
-    Asc_Panic(2, NULL, "Zero raised to a zero power.\n");
+    ASC_PANIC("Zero raised to a zero power.\n");
   }
   if (d==0.0) return 0.0;
   result = 1.0;
@@ -342,7 +342,7 @@ double UIPow(register double d, long n)
   register double result;
   if (n==0) return 1.0;
   if ((n<0)&&(d==0.0)) {
-    Asc_Panic(2, NULL, "Zero raised to a zero power.\n");
+    ASC_PANIC("Zero raised to a zero power.\n");
   }
   if (d==0.0) {
     return 0.0;

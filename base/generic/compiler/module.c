@@ -540,7 +540,7 @@ struct module_t *FindModuleFile(CONST char *name,
       */
       fclose(dup->f);
       fclose(new_module->f);
-      Asc_Panic(2, "FindModuleFile", "While reading file \"%s\" for module %s,"
+      ASC_PANIC("While reading file \"%s\" for module %s,"
                 "\n\treceived a request to read \"%s\" as module %s",
                 SCP(dup->filename), SCP(dup->base_name),
                 SCP(new_module->filename), SCP(new_module->base_name));
@@ -549,7 +549,7 @@ struct module_t *FindModuleFile(CONST char *name,
       /* timestamp changed while reading the file. PANIC! */
       fclose(dup->f);
       fclose(new_module->f);
-      Asc_Panic(2, "FindModuleFile", "Timestamp on file \"%s\" changed\n"
+      ASC_PANIC("Timestamp on file \"%s\" changed\n"
                 "while file was open for reading", SCP(dup->filename));
     }
     /* recursive require! */
@@ -801,7 +801,7 @@ struct module_t *CreateStringModule(CONST char *name,
        */
       fclose(dup->f);
       fclose(new_module->f);
-      Asc_Panic(2, "FindModuleFile", "While reading file \"%s\" for module %s,"
+      ASC_PANIC("While reading file \"%s\" for module %s,"
                 "\n\treceived a request to read \"%s\" as module %s",
                 SCP(dup->filename), SCP(dup->base_name),
                 SCP(new_module->filename), SCP(new_module->base_name));
@@ -811,7 +811,7 @@ struct module_t *CreateStringModule(CONST char *name,
        */
       fclose(dup->f);
       fclose(new_module->f);
-      Asc_Panic(2, "FindModuleFile", "Timestamp on file \"%s\" changed\n"
+      ASC_PANIC("Timestamp on file \"%s\" changed\n"
                 "while file was open for reading", SCP(dup->filename));
     }
     /* recursive require! */
@@ -857,7 +857,7 @@ struct module_t *CreateStringModule(CONST char *name,
   *status = 1;
   return new_module;
 #endif /* use for strings */
-  Asc_Panic(2, "CreateStringModule", "String buffer \"%s\" misunderstood"
+  ASC_PANIC("String buffer \"%s\" misunderstood"
             "while opening for reading", new_module->name);
 
 }
