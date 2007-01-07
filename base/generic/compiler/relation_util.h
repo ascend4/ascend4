@@ -34,7 +34,7 @@
 #ifndef ASC_RELATION_UTIL_H
 #define ASC_RELATION_UTIL_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

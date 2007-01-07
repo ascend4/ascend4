@@ -39,7 +39,7 @@
 #ifndef ASC_SYMTAB_H
 #define ASC_SYMTAB_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

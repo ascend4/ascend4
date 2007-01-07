@@ -49,7 +49,7 @@
 #ifndef ASC_ROOTFIND_H
 #define ASC_ROOTFIND_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

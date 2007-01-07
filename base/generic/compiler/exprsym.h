@@ -40,7 +40,7 @@
 #ifndef ASC_EXPRSYM_H
 #define ASC_EXPRSYM_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

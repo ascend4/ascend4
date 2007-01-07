@@ -44,7 +44,7 @@
 #ifndef ASC_ATOMVALUE_H
 #define ASC_ATOMVALUE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

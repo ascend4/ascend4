@@ -33,7 +33,7 @@
 #ifndef ASC_INSTQUERY_H
 #define ASC_INSTQUERY_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

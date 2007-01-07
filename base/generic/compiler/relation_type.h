@@ -41,7 +41,7 @@
 #ifndef ASC_RELATION_TYPE_H
 #define ASC_RELATION_TYPE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -61,7 +61,7 @@
 #ifndef ASC_VALUE_TYPE_H
 #define ASC_VALUE_TYPE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

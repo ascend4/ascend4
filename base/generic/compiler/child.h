@@ -38,7 +38,7 @@
 #ifndef ASC_CHILD_H
 #define ASC_CHILD_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -37,7 +37,7 @@
 #ifndef ASC_STATIO_H
 #define ASC_STATIO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

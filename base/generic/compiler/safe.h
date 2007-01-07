@@ -70,7 +70,7 @@
 #ifndef ASC_SAFE_H
 #define ASC_SAFE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

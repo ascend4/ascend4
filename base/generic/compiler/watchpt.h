@@ -44,7 +44,7 @@
 #ifndef ASC_WATCHPT_H
 #define ASC_WATCHPT_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

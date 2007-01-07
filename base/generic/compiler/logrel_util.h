@@ -44,7 +44,7 @@
 #ifndef ASC_LOGRELATION_UTIL_H
 #define ASC_LOGRELATION_UTIL_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

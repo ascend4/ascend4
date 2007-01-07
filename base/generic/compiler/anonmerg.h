@@ -145,7 +145,7 @@
 #ifndef ASC_ANONMERG_H
 #define ASC_ANONMERG_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

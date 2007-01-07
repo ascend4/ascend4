@@ -32,7 +32,7 @@
 #ifndef ASC_INSTMACRO_H
 #define ASC_INSTMACRO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

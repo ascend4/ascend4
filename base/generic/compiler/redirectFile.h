@@ -43,7 +43,7 @@
 #ifndef ASC_REDIRECTFILE_H
 #define ASC_REDIRECTFILE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

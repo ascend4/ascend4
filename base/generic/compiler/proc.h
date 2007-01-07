@@ -35,7 +35,7 @@
 #ifndef ASC_PROC_H
 #define ASC_PROC_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

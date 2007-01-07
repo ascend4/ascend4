@@ -37,7 +37,7 @@
 #ifndef ASC_ROUNDED_H
 #define ASC_ROUNDED_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

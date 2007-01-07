@@ -42,7 +42,7 @@
 #ifndef ASC_FUNCTYPE_H
 #define ASC_FUNCTYPE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

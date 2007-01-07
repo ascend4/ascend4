@@ -53,7 +53,7 @@
 #ifndef ASC_EXTFUNC_H
 #define ASC_EXTFUNC_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

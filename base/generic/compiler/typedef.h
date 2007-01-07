@@ -45,7 +45,7 @@
 #ifndef ASC_TYPEDEF_H
 #define ASC_TYPEDEF_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -50,7 +50,7 @@
 #ifndef ASC_NUMPAIR_H
 #define ASC_NUMPAIR_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

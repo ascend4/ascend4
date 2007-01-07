@@ -42,7 +42,7 @@
 #ifndef ASC_DUMP_H
 #define ASC_DUMP_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

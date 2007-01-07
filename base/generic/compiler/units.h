@@ -31,7 +31,7 @@
 #ifndef ASC_UNITS_H
 #define ASC_UNITS_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

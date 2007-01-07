@@ -32,7 +32,7 @@
 #ifndef ASC_TYPES_H
 #define ASC_TYPES_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

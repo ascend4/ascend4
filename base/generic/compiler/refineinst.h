@@ -42,7 +42,7 @@
 #ifndef ASC_REFINEINST_H
 #define ASC_REFINEINST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

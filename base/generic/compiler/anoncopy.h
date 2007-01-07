@@ -33,7 +33,7 @@
 #ifndef ASC_ANONCOPY_H
 #define ASC_ANONCOPY_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

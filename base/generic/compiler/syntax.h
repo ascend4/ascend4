@@ -45,7 +45,7 @@
 #ifndef ASC_SYNTAX_H
 #define ASC_SYNTAX_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

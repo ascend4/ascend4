@@ -42,7 +42,7 @@
 #ifndef ASC_SELECT_H
 #define ASC_SELECT_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

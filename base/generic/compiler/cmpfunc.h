@@ -49,7 +49,7 @@
 #ifndef ASC_CMPFUNC_H
 #define ASC_CMPFUNC_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -36,7 +36,7 @@
 #ifndef ASC_REL_COMMON_H
 #define ASC_REL_COMMON_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

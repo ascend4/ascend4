@@ -46,7 +46,7 @@
 #ifndef ASC_STATTYPES_H
 #define ASC_STATTYPES_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

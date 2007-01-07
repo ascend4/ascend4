@@ -38,7 +38,7 @@
 #ifndef ASC_MATHINST_H
 #define ASC_MATHINST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

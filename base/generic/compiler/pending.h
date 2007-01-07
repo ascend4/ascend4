@@ -44,7 +44,7 @@
 #ifndef ASC_PENDING_H
 #define ASC_PENDING_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

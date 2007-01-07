@@ -44,7 +44,7 @@
 #ifndef ASC_PARPEND_H
 #define ASC_PARPEND_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

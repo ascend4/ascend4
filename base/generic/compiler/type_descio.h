@@ -43,7 +43,7 @@
 #ifndef ASC_TYPE_DESCIO_H
 #define ASC_TYPE_DESCIO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

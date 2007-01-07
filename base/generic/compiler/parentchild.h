@@ -79,7 +79,7 @@
 #ifndef ASC_PARENTCHILD_H
 #define ASC_PARENTCHILD_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -38,7 +38,7 @@
 #ifndef ASC_CASE_H
 #define ASC_CASE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

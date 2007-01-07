@@ -42,7 +42,7 @@
 #ifndef ASC_LOGICAL_RELATION_H
 #define ASC_LOGICAL_RELATION_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

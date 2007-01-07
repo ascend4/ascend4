@@ -47,7 +47,7 @@
 #ifndef ASC_FREESTORE_H
 #define ASC_FREESTORE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

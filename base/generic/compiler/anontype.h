@@ -98,7 +98,7 @@
 #ifndef ASC_ANONTYPE_H
 #define ASC_ANONTYPE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

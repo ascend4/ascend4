@@ -45,7 +45,7 @@
 #ifndef ASC_LIBRARY_H
 #define ASC_LIBRARY_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

@@ -55,7 +55,7 @@
 #ifndef ASC_INSTANTIATE_H
 #define ASC_INSTANTIATE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

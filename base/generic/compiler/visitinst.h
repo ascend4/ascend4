@@ -42,7 +42,7 @@
 #ifndef ASC_VISITINST_H
 #define ASC_VISITINST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

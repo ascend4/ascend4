@@ -42,7 +42,7 @@
 #ifndef ASC_TEMP_H
 #define ASC_TEMP_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

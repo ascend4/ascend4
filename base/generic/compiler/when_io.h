@@ -40,7 +40,7 @@
 #ifndef ASC_WHENINST_IO_H
 #define ASC_WHENINST_IO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

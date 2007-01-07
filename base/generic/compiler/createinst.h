@@ -33,7 +33,7 @@
 #ifndef ASC_CREATEINST_H
 #define ASC_CREATEINST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

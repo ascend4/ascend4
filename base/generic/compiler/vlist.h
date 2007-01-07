@@ -32,7 +32,7 @@
 #ifndef ASC_VLIST_H
 #define ASC_VLIST_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

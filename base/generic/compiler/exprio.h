@@ -35,7 +35,7 @@
 #ifndef ASC_EXPRIO_H
 #define ASC_EXPRIO_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 

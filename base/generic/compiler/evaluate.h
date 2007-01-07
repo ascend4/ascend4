@@ -36,7 +36,7 @@
 #ifndef ASC_EVALUATE_H
 #define ASC_EVALUATE_H
 
-/**	addtogroup compiler Compiler
+/**	@addtogroup compiler Compiler
 	@{
 */
 
