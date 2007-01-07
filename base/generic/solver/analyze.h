@@ -56,6 +56,10 @@
 #ifndef ASC_ANALYZE_H
 #define ASC_ANALYZE_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 /** Used to give an integer value to each symbol used in a when */
 struct SymbolValues {
   char *name;
@@ -109,5 +113,7 @@ extern void DestroySymbolValuesList(struct gl_list_t *symbol_list);
 	Destroy the gl_list of SymbolValues struct created to asign an integer
 	value to symbol value
 */
+
+/* @} */
 
 #endif /* ASC_ANALYZE_H */

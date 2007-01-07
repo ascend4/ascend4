@@ -40,6 +40,10 @@
 #ifndef ASC_BRACED_H
 #define ASC_BRACED_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include "compiler.h"
 
@@ -87,5 +91,7 @@ extern symchar *BraceCharLang(struct bracechar *sbc);
 ASC_DLLSPEC int BraceCharLen(struct bracechar *sbc);
 /** Shortcut to BraceCharLen(). */
 #define BCL(sbc) BraceCharLen(sbc)
+
+/* @} */
 
 #endif  /* ASC_BRACED_H */

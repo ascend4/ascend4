@@ -37,8 +37,12 @@
  *  </pre>
  */
 
-#ifndef __SETINST_IO_H_SEEN__
-#define __SETINST_IO_H_SEEN__
+#ifndef ASC_SETINST_IO_H
+#define ASC_SETINST_IO_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern void WriteInstSet(FILE *f, CONST struct set_t *s);
 /**<
@@ -48,5 +52,7 @@ extern void WriteInstSet(FILE *f, CONST struct set_t *s);
  *  Write set instance s to file f.
  */
 
-#endif  /* __SETINST_IO_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_SETINST_IO_H */
 

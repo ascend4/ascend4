@@ -39,8 +39,12 @@
  *  </pre>
  */
 
-#ifndef __SELECT_H_SEEN__
-#define __SELECT_H_SEEN__
+#ifndef ASC_SELECT_H
+#define ASC_SELECT_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern struct SelectList *CreateSelect(struct Set *set, struct StatementList *sl);
 /**< 
@@ -163,5 +167,7 @@ extern struct SelectList *CopySelectList(struct SelectList *sel);
  *  Copy the whole list content. not a reference count change.
  */
 
-#endif  /* __SELECT_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_SELECT_H */
 

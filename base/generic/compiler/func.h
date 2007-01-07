@@ -36,6 +36,10 @@
 #ifndef ASC_FUNC_H
 #define ASC_FUNC_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include "functype.h"
 #include "compiler.h"
@@ -412,5 +416,7 @@ extern double ConcaveEnvDeriv(CONST struct Func *f, double x,
  */
 
 #endif /* CHRIS_FUNC */
+
+/* @} */
 
 #endif /* ASC_FUNC_H */

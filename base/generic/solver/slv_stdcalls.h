@@ -42,6 +42,10 @@
 #ifndef ASC_SLV_STDCLIENTS_H
 #define ASC_SLV_STDCLIENTS_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 
 extern int slv_std_make_incidence_mtx(slv_system_t sys, 
 		mtx_matrix_t mtx, var_filter_t *vf, rel_filter_t *rf);
@@ -284,5 +288,7 @@ extern int slv_log_block_partition(slv_system_t sys);
 
 	@return 0 on success, 2 on out-of-memory, 1 on any other failure	
 */
+
+/* @} */
 
 #endif  /** ASC_SLV_STDCLIENTS_H */

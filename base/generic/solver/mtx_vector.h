@@ -48,9 +48,9 @@
 #include <utilities/ascConfig.h>
 #include "mtx.h"
 
-/** @addtogroup linear Linear
- * @{
- */
+/**	@addtogroup linear Linear
+	@{
+*/
 
 struct vec_vector {
    real64       norm2;      /**< 2-norm of vector squared. */

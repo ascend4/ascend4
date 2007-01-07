@@ -32,6 +32,10 @@
 #ifndef ASC_VLIST_H
 #define ASC_VLIST_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /**<
  *  Don't ever access these things yourself.  Use the functions and/or
  *  macros defined in this file.
@@ -125,5 +129,7 @@ extern int CompareVariableLists(CONST struct VariableList *vl1,
  *  Returns -1,0,1 as vl1 is < == > vl2 in content.
  *  The NULL list is > all lists.
  */
+
+/* @} */
 
 #endif /* ASC_VLIST_H */

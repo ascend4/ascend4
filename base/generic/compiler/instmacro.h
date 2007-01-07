@@ -29,8 +29,12 @@
  *  COPYING.
  */
 
-#ifndef __INSTMACRO_H_SEEN__
-#define __INSTMACRO_H_SEEN__
+#ifndef ASC_INSTMACRO_H
+#define ASC_INSTMACRO_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /** @file
  *  Ascend Instance Tree Type Implementation Macros.
@@ -183,5 +187,7 @@ extern int NotAtomF(struct Instance *);
  *  when. that means array or MODEL.) else returns 0.
  */
 
-#endif  /* __INSTMACRO_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_INSTMACRO_H */
 

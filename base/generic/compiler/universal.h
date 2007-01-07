@@ -41,8 +41,12 @@
  *  </pre>
  */
 
-#ifndef __UNIVERSAL_H_SEEN__
-#define __UNIVERSAL_H_SEEN__
+#ifndef ASC_UNIVERSAL_H
+#define ASC_UNIVERSAL_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 #define UniversalTable gl_list_t
 
@@ -165,5 +169,7 @@ extern struct Instance *GetInstance(struct UniversalTable *table,
  *  Return the instance in position pos.
  */
 
-#endif /* __UNIVERSAL_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_UNIVERSAL_H */
 

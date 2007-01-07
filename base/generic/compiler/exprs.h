@@ -34,6 +34,10 @@
 #ifndef ASC_EXPRS_H
 #define ASC_EXPRS_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern struct Expr *CreateVarExpr(struct Name *n);
 /**<
  *  Create a name type expr node.
@@ -457,6 +461,8 @@ extern void exprs_report_pool(void);
 /**< 
  * Write the pool report to ASCERR for the exprs pool.
  */
+
+/* @} */
 
 #endif /* ASC_EXPRS_H */
 

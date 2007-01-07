@@ -60,7 +60,7 @@
 #define ASC_LINSOL_H
 
 /**	@addtogroup linear Linear
-    @{
+	@{
 */
 
 typedef struct linsol_header *linsol_system_t;

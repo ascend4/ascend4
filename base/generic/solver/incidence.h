@@ -23,6 +23,10 @@
 #ifndef ASC_INCIDENCE_H
 #define ASC_INCIDENCE_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <stdio.h>
 
 /* The includes required just for this *header* to load */
@@ -68,4 +72,6 @@ ASC_DLLSPEC void free_incidence_data(incidence_vars_t *pd);
 /**<
 	free memory in an mplotvars struct, if it is our memory
 */
+/* @} */
+
 #endif /* ASC_INCIDENCE_H */

@@ -49,6 +49,10 @@
 #ifndef ASC_ROOTFIND_H
 #define ASC_ROOTFIND_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern double zbrent(ExtEvalFunc *func,
                      double *lowbound,
                      double *upbound,
@@ -84,6 +88,8 @@ extern double zbrent(ExtEvalFunc *func,
 	@param status    Success or failure.
 	@return          The location of the found root (see also status code)
 */
+
+/* @} */
 
 #endif  /* ASC_ROOTFIND_H */
 

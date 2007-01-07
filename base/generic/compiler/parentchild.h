@@ -79,6 +79,10 @@
 #ifndef ASC_PARENTCHILD_H
 #define ASC_PARENTCHILD_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include <compiler/compiler.h>
 #include <compiler/instance_enum.h>
@@ -247,5 +251,7 @@ extern void StoreChildPtr(struct Instance *i,
  *  add parent.  Instance "i" cannot be a fundamental atom; atoms are
  *  created in a special way.
  */
+
+/* @} */
 
 #endif  /* ASC_PARENTCHILD_H */

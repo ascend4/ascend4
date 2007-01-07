@@ -58,6 +58,10 @@
 #ifndef ASC_REL_H
 #define ASC_REL_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /*------------------------------------------------------------------------------
@@ -739,5 +743,7 @@ extern real64 ExtRel_Evaluate_LHS(struct rel_relation *rel);
 
 #endif /* _SLV_SERVER_C_SEEN_ */
 
+
+/* @} */
 
 #endif /* ASC_REL_H  */

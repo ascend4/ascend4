@@ -30,6 +30,10 @@
 #ifndef ASC_CONOPT_H
 #define ASC_CONOPT_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 
@@ -239,6 +243,8 @@ int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT, int* LEN_RL
 );
 
 #endif /* if ASC_WITH_CONOPT */
+
+/* @} */
 
 #endif /* ASC_CONOPT_H */
 

@@ -31,6 +31,10 @@
 #ifndef ASC_DIMEN_H
 #define ASC_DIMEN_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include "fractions.h"
 #include "compiler.h"
@@ -309,5 +313,7 @@ ASC_DLLSPEC void PrintDimenMessage(CONST char *message
 
 ASC_DLLSPEC void DumpDimens(FILE *f);
 /**< Dump all dimensions to a file.  Used in interface */
+
+/* @} */
 
 #endif /* ASC_DIMEN_H */

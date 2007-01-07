@@ -42,6 +42,10 @@
 #ifndef ASC_LSODE_H
 #define ASC_LSODE_H
 
+/**	@addtogroup integrator Integrator
+	@{
+*/
+
 #include "integrator.h"
 
 IntegratorCreateFn integrator_lsode_create;
@@ -50,5 +54,7 @@ IntegratorSolveFn integrator_lsode_solve;
 IntegratorFreeFn integrator_lsode_free;
 
 const IntegratorInternals integrator_lsode_internals;
+
+/* @} */
 
 #endif  /* ASC_LSODE_H */

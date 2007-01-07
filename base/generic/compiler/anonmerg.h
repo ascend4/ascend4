@@ -142,8 +142,12 @@
  *  module in use.
  */
 
-#ifndef __ANONMERG_H_SEEN__
-#define __ANONMERG_H_SEEN__
+#ifndef ASC_ANONMERG_H
+#define ASC_ANONMERG_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /**
  * If want to collect/report some statistics, set to 1.
@@ -216,5 +220,7 @@ extern void Asc_AnonMergeUnmarkIPs(VOIDPTR vp);
  */
 extern void Asc_AnonMergeWriteList(FILE *fp, struct Instance *i);
 
-#endif  /* __ANONMERG_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_ANONMERG_H */
 

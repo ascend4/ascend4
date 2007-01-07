@@ -38,6 +38,10 @@
 #ifndef ASC_LOGREL_H
 #define ASC_LOGREL_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /* ********************************************************************\
@@ -417,6 +421,8 @@ extern void logrel_set_included(struct logrel_relation *logrel,
  *  change.
  *  @todo  Modify logrel_set_included() per comment in solver/logrel.h?
  */
+
+/* @} */
 
 #endif  /* ASC_LOGREL_H  */
 

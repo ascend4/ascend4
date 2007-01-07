@@ -49,6 +49,10 @@
 #ifndef ASC_BTPROLOG_H
 #define ASC_BTPROLOG_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #ifdef ASC_BINTOKEN_H
 # include <utilities/ascConfig.h>
 # include <compiler/instance_enum.h>
@@ -243,5 +247,8 @@ ASC_DLLSPEC double derf2();
 
 #  endif  /* no stdc */
 # endif  /* fake ASC_FUNC_H */
+
+/* @} */
+
 #endif  /* ASC_BT_PROLOG */
 

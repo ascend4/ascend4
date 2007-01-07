@@ -35,6 +35,10 @@
 #ifndef ASC_NOTATE_H
 #define ASC_NOTATE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include <general/list.h>
 #include "compiler.h"
@@ -371,6 +375,8 @@ ASC_DLLSPEC struct NoteEngine *NotesCreateEngine(void *NEdata,
  * Destroys a previously returned engine.
  */
 ASC_DLLSPEC void NotesDestroyEngine(struct NoteEngine *engine);
+
+/* @} */
 
 #endif /* ASC_NOTATE_H */
 

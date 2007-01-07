@@ -37,8 +37,12 @@
  *  </pre>
  */
 
-#ifndef __WHENINST_IO_H_SEEN__
-#define __WHENINST_IO_H_SEEN__
+#ifndef ASC_WHENINST_IO_H
+#define ASC_WHENINST_IO_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /*===========================*/
 
@@ -62,5 +66,7 @@ ASC_DLLSPEC char *WriteWhenString(CONST struct Instance *wheninst,
  *  Write a when instance to a char
  */
 
-#endif  /* __WHENINST_IO_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_WHENINST_IO_H */
 

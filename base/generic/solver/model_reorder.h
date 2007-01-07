@@ -41,6 +41,10 @@
 #ifndef ASC_MODEL_REORDER_H
 #define ASC_MODEL_REORDER_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 typedef struct mr_bisection_structure{
   /* data spaces */
   slv_system_t slv;
@@ -190,6 +194,8 @@ extern int mr_bisect_partition2(mr_reorder_t *sys,
  *  The values in reg may be messed with, so if the data in
  *  reg is needed after this function call, keep it elsewhere.
  */
+
+/* @} */
 
 #endif /* ASC_MODEL_REORDER_H */
 

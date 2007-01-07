@@ -45,6 +45,10 @@
 #ifndef ASC_TYPEDEF_H
 #define ASC_TYPEDEF_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 extern void DestroyTypedefRecycle(void);
@@ -229,5 +233,7 @@ ASC_DLLSPEC void DefineFundamentalTypes(void);
  *  @bug compiler/typedef:DefineFundamentalTypes() doesn't specify the
  *       name "relation". Doing so is problematic wrt instantiate.c.
  */
+
+/* @} */
 
 #endif /* ASC_TYPEDEF_H */

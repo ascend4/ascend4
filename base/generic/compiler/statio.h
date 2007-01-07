@@ -37,6 +37,10 @@
 #ifndef ASC_STATIO_H
 #define ASC_STATIO_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
@@ -203,6 +207,8 @@ extern void Asc_StatErrMsg_NotAllowedDeclarative(FILE *f
  * Writes a message to the file given indicating the statement is not
  * allowed in a declarative MODEL body.
  */
+
+/* @} */
 
 #endif /* ASC_STATIO_H */
 

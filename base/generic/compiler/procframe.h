@@ -43,8 +43,12 @@
  *  </pre>
  */
 
-#ifndef __PROCFRAME_H_SEEN__
-#define __PROCFRAME_H_SEEN__
+#ifndef ASC_PROCFRAME_H
+#define ASC_PROCFRAME_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 enum FrameMode {
   FrameInherit,   /**< Inherit previous mode when used in Add. */
@@ -274,5 +278,7 @@ extern void UpdateProcFrame(struct procFrame *fm,
 /** iffy */
 extern void DestroyProcFrame(struct procFrame *fm);
 
-#endif  /* __PROCFRAME_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_PROCFRAME_H */
 

@@ -48,6 +48,10 @@
 #ifndef ASC_DISCRETE_H
 #define ASC_DISCRETE_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 /** Kinds of discrete variables. */
 enum discrete_kind {
   e_dis_boolean_t,
@@ -631,6 +635,8 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
  *  For that reason, among others, this function is not heavily
  *  optimized, it is however reasonable for 1-off jobs.
  */
+
+/* @} */
 
 #endif /* ASC_DISCRETE_H */
 

@@ -40,8 +40,12 @@
  *  </pre>
  */
 
-#ifndef __STATEMENT_H_SEEN__
-#define __STATEMENT_H_SEEN__
+#ifndef ASC_STATEMENT_H
+#define ASC_STATEMENT_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern void AddContext(struct StatementList *slist ,unsigned int c);
 /**<
@@ -1982,5 +1986,7 @@ extern int CompareISStatements(CONST struct Statement *s1,
  *  see CompareStatements above.
  */
 
-#endif /* __STATEMENT_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_STATEMENT_H */
 

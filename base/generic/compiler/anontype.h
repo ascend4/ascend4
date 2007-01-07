@@ -98,6 +98,10 @@
 #ifndef ASC_ANONTYPE_H
 #define ASC_ANONTYPE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /** For debugging set =1, for performance set = 0 */
 #define ATDEBUG 0
 
@@ -198,6 +202,8 @@ ASC_DLLSPEC void Asc_WriteAnonList(FILE *fp,
                               struct gl_list_t *atl,
                               struct Instance *root,
                               int mlists);
+
+/* @} */
 
 #endif  /* ASC_ANONTYPE_H */
 

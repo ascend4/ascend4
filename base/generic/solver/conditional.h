@@ -46,6 +46,10 @@
 #ifndef ASC_CONDITIONAL_H
 #define ASC_CONDITIONAL_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 /**
  * @todo I have to get rid of this
  */
@@ -547,6 +551,8 @@ extern void when_case_set_flagbit(struct when_case *wc,
  *  @param bv   uint32, the new value for the flag (1 or 0).
  *  @return No return value.
  */
+
+/* @} */
 
 #endif  /* ASC_CONDITIONAL_H */
 

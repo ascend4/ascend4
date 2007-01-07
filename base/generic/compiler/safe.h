@@ -70,6 +70,10 @@
 #ifndef ASC_SAFE_H
 #define ASC_SAFE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /*extern int safe_print_errors;*/
 
 extern void safe_error_to_stderr(enum safe_err *err);
@@ -300,6 +304,8 @@ safe_pow_Dn(double x, double y, int nwrt0, int nwrt1, enum safe_err *safe);
  *  Computes nwrt0'th derivative wrt x of the nwrt1'th derivative wrt y
  *  of x <binop> y.
  */
+
+/* @} */
 
 #endif  /* ASC_SAFE_H */
 

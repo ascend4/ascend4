@@ -35,6 +35,10 @@
 #ifndef ASC_EXPRIO_H
 #define ASC_EXPRIO_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern CONST char *ExprEnumName(CONST enum Expr_enum t);
 /**< 
 	Returns a pointer to a string containing the name of the Expr term
@@ -65,6 +69,8 @@ extern void WriteExpr2Str(Asc_DString *dstring, CONST struct Expr *e);
 	@param dstring string into output is returned
 	@NOTE The return is in POSTFIX format.
 */
+
+/* @} */
 
 #endif /* ASC_EXPRIO_H */
 

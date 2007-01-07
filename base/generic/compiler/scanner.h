@@ -35,6 +35,10 @@
 #ifndef ASC_SCANNER_H
 #define ASC_SCANNER_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #define YY_MAXLEN MAXTOKENLENGTH
 /**<
  * Maximum token size(in characters).
@@ -110,6 +114,8 @@ extern void Asc_DestroyScannerInputBuffer(void);
  * Calls yy_delete_buffer on the 0th file buffer that we get at
  * startup. Call this only at the final shutdown of the scanner.
  */
+
+/* @} */
 
 #endif /* ASC_SCANNER_H */
 

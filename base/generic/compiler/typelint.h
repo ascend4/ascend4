@@ -46,8 +46,12 @@
  *  @todo Upgrade type definition lint module.
  */
 
-#ifndef __TYPELINT_H_SEEN__
-#define __TYPELINT_H_SEEN__
+#ifndef ASC_TYPELINT_H
+#define ASC_TYPELINT_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /**
  * if TLINT_STYLE == TRUE, then style messages should be issued.
@@ -264,5 +268,7 @@ TypeLintIllegalMethodStats(FILE *fp,
  *  DEF_ILLEGAL or other when unhappy.
  */
 
-#endif  /* __TYPELINT_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_TYPELINT_H */
 

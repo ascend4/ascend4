@@ -43,8 +43,12 @@
  *  </pre>
  */
 
-#ifndef __CHILDDEF_H_SEEN__
-#define __CHILDDEF_H_SEEN__
+#ifndef ASC_CHILDDEF_H
+#define ASC_CHILDDEF_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /**
  * There are 5 allowable ATOM children types, at present.
@@ -91,5 +95,7 @@ extern unsigned long CalcByteSize(enum type_kind t,
  * child information
  */
 
-#endif  /* __CHILDDEF_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_CHILDDEF_H */
 

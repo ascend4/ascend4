@@ -34,6 +34,10 @@
 #ifndef ASC_LINKINST_H
 #define ASC_LINKINST_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern void ChangeRelationPointers(struct Instance *rel,
                                    struct Instance *old,
                                    struct Instance *new);
@@ -233,6 +237,8 @@ extern void FixWhensForRefinement(struct Instance *old, struct Instance *new);
 	the reason for which we wrote this other function, we want to visit
 	the list of whens of the new instance instead.
 */
+
+/* @} */
 
 #endif  /* ASC_LINKINST_H */
 

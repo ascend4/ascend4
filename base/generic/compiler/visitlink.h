@@ -37,8 +37,12 @@
  *  </pre>
  */
 
-#ifndef __VISITNAME_H_SEEN__
-#define __VISITNAME_H_SEEN__
+#ifndef ASC_VISITNAME_H
+#define ASC_VISITNAME_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 typedef void (*VisitNameProc)(struct Instance *,struct gl_list_t *);
 /**< 
@@ -204,5 +208,7 @@ extern void SlowVisitNameTreeTwo(struct Instance *inst,
  *  userdata is passed as the last argument to the user supplied proc.
  */
 
-#endif /* __VISITNAME_H_SEEN__ */
+/* @} */
+
+#endif /* ASC_VISITNAME_H */
 

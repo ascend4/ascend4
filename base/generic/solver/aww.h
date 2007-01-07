@@ -24,6 +24,10 @@
 #ifndef ASC_INTEGRATOR_AWW_H
 #define ASC_INTEGRATOR_AWW_H
 
+/**	@addtogroup integrator Integrator
+	@{
+*/
+
 #include <utilities/config.h>
 #include "integrator.h"
 
@@ -34,5 +38,7 @@ IntegratorSolveFn integrator_aww_solve;
 IntegratorFreeFn integrator_aww_free;
 
 const IntegratorInternals integrator_aww_internals;
+
+/* @} */
 
 #endif  /* ASC_INTEGRATOR_AWW_H */

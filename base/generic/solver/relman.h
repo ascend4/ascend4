@@ -46,6 +46,10 @@
 #ifndef ASC_RELMAN_H
 #define ASC_RELMAN_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #define relman_is_linear(a,b) (FALSE)
 /**<
  *  Determines whether or not the given relation is linear in
@@ -388,6 +392,8 @@ extern void relman_free_reused_mem(void);
 /**<
  * Call when desired to free memory cached internally.
  */
+
+/* @} */
 
 #endif  /* ASC_RELMAN_H */
 

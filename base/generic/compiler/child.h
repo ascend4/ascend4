@@ -38,6 +38,10 @@
 #ifndef ASC_CHILD_H
 #define ASC_CHILD_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /**
@@ -300,5 +304,7 @@ extern void WriteChildList(FILE *fp, ChildListPtr cl);
  *  given.  What is known may be surprising. It may be only mildly
  *  accurate.
  */
+
+/* @} */
 
 #endif  /* ASC_CHILD_H */

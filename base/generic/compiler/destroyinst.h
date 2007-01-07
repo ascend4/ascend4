@@ -38,8 +38,12 @@
  *  </pre>
  */
 
-#ifndef __DESTROYINST_H_SEEN__
-#define __DESTROYINST_H_SEEN__
+#ifndef ASC_DESTROYINST_H
+#define ASC_DESTROYINST_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 ASC_DLLSPEC void DestroyInstance(struct Instance *inst, struct Instance *parent);
 /**<
@@ -56,5 +60,7 @@ ASC_DLLSPEC void DestroyInstance(struct Instance *inst, struct Instance *parent)
  *  struct Instance *inst,*parent;
  */
 
-#endif  /* __DESTROYINST_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_DESTROYINST_H */
 

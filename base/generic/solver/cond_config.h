@@ -37,6 +37,10 @@
 #ifndef ASC_COND_CONFIG_H
 #define ASC_COND_CONFIG_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 extern void set_rels_status_in_when(struct w_when *when, uint32 value);
 /**<
  * Set the ACTIVE bit to FALSE/TRUE for all the relations and logrelations
@@ -261,6 +265,8 @@ extern int32 build_disvar_solver_from_master(struct dis_discrete **masterdl,
  * use. It would be used if I want only ACTIVE relations
  * (INCLUDED or NOT) and ACTIVE vars in the solver lists
  */
+
+/* @} */
 
 #endif /*  ASC_COND_CONFIG_H */
 

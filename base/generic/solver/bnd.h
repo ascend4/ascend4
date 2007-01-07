@@ -42,6 +42,10 @@
 #ifndef ASC_BND_H
 #define ASC_BND_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 /** Type of condition held by a boundary. */
 enum bnd_enum {
   e_bnd_rel,        /**< real condition */
@@ -332,6 +336,8 @@ extern int32 bnd_status_pre(struct bnd_boundary *bnd);
  *  between the current and the previous status of a boundary.
  *  bnd may not be NULL (checked by asc_assertion).
  */
+
+/* @} */
 
 #endif /* ASC_BND_H */
 

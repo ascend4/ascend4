@@ -46,6 +46,10 @@
 #ifndef ASC_STATTYPES_H
 #define ASC_STATTYPES_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /** FOR statement ordering types. */
 enum ForOrder {
   f_random,     /**< FOR/CREATE only */
@@ -430,6 +434,8 @@ struct StatementList {
   REFCOUNT_T ref_count;
   struct gl_list_t *l;
 };
+
+/* @} */
 
 #endif  /* ASC_STATTYPES_H */
 

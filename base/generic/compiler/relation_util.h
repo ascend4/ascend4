@@ -34,6 +34,10 @@
 #ifndef ASC_RELATION_UTIL_H
 #define ASC_RELATION_UTIL_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include "fractions.h"
 #include "compiler.h"
@@ -631,5 +635,7 @@ struct gl_list_t *CollectTokenRelationsWithUniqueBINlessShares(
 	one of the relation instances which use the share is collected.
 	The list returned should be destroyed by the user (not its content,though).
 */
+
+/* @} */
 
 #endif  /* ASC_RELATION_UTIL_H */

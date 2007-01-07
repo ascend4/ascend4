@@ -33,6 +33,10 @@
 #ifndef ASC_INSTQUERY_H
 #define ASC_INSTQUERY_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /*------------------------------------------------------------------------------
@@ -348,6 +352,8 @@ ASC_DLLSPEC struct Instance*GetSimulationRoot(struct Instance *i);
  *  all useful queries of a simulation should be based.
  *  i must be a sim instance.
  */
+
+/* @} */
 
 #endif  /* ASC_INSTQUERY_H */
 

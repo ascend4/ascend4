@@ -38,6 +38,10 @@
 #ifndef ASC_SLV9A_H
 #define ASC_SLV9A_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 /* used by StaticSolverRegistration to detect this solver: */
 #if defined(STATIC_LRSLV) || defined(DYNAMIC_LRSLV)
 # define HAVE_LRSLV 1
@@ -58,6 +62,8 @@ int slv9a_register(SlvFunctionsT *sft);
  *  @param sft SlvFunctionsT to receive the solver registration info.
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
+
+/* @} */
 
 #endif  /* ASC_SLV9A_H */
 

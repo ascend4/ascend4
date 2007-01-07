@@ -40,6 +40,10 @@
 #ifndef ASC_EXTINST_H
 #define ASC_EXTINST_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern struct Instance **g_ExtVariablesTable;
 /**<
 	A global variable which is non NULL if external relations have been
@@ -69,6 +73,8 @@ extern void SetSimulationExtVars(struct Instance *i, struct Instance **extvars);
 	Could not avoid exporting this one. I would rather have not.
 	However instantiate needs to be able to set this table when finished.
 */
+
+/* @} */
 
 #endif  /* ASC_EXTINST_H */
 

@@ -212,9 +212,9 @@
 #ifndef ASC_LINSOLQR_H
 #define ASC_LINSOLQR_H
 
-/** @addtogroup linear Linear
- * @{
- */
+/** 	@addtogroup linear Linear
+	@{
+*/
 
 #define LINSOLMTX_DEBUG FALSE
 /**< Debug mode. */

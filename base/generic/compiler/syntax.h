@@ -42,8 +42,12 @@
  *  </pre>
  */
 
-#ifndef __SYNTAX_H_SEEN__
-#define __SYNTAX_H_SEEN__
+#ifndef ASC_SYNTAX_H
+#define ASC_SYNTAX_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern unsigned NumberOfRelOps(struct Expr *ex);
 /**< 
@@ -83,5 +87,7 @@ ASC_DLLSPEC void SetParseRelnsFlag(int flag);
  *  @param flag The new value for the parse relations flag.
  */
 
-#endif  /* __SYNTAX_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_SYNTAX_H */
 

@@ -42,6 +42,10 @@
 #ifndef ASC_LOGICAL_RELATION_H
 #define ASC_LOGICAL_RELATION_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 struct LogRelBVar {
   enum Expr_enum t;   /**< type of term */
   unsigned int flags; /**< flags for future use */
@@ -155,6 +159,8 @@ struct logrelation {
  * Use of individually allocated terms is a really bad idea!
  */
 #define LOGTERM_ALLOC LOGA_TERM(ascmalloc(sizeof(union LogRelTermUnion)))
+
+/* @} */
 
 #endif /* ASC_LOGICAL_RELATION_H */
 

@@ -40,13 +40,19 @@
  *  </pre>
  */
 
-#ifndef __WATCHPTIO_H_SEEN__
-#define __WATCHPTIO_H_SEEN__
+#ifndef ASC_WATCHPTIO_H
+#define ASC_WATCHPTIO_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /**
  *  Write the procedure to the file.
  */
 ASC_DLLSPEC void WriteProcedure(FILE *f, struct InitProcedure *p);
 
-#endif  /* __WATCHPTIO_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_WATCHPTIO_H */
 

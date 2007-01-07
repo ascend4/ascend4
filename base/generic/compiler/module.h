@@ -35,6 +35,10 @@
 #ifndef ASC_MODULE_H
 #define ASC_MODULE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 
@@ -414,5 +418,7 @@ ASC_DLLSPEC int Asc_ModuleStringIndex(CONST struct module_t *m);
 /**<
  *  This macro will evaluate to TRUE if module `m1' equals module `m2';
  */
+
+/* @} */
 
 #endif  /* ASC_MODULE_H */

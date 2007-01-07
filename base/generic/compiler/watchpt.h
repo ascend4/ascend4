@@ -44,6 +44,10 @@
 #ifndef ASC_WATCHPT_H
 #define ASC_WATCHPT_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /** 
  * The most iterations in a WHILE loop we will tolerate.
  * @todo This limit should go away and a user interrupt facility 
@@ -313,5 +317,7 @@ extern void Asc_wp_stop_recall(void);
 
 /** Called when a constructor/destroyer is scheduled. */
 extern void Asc_wp_stop_compiler(void);
+
+/* @} */
 
 #endif /* ASC_WATCHPT_H */

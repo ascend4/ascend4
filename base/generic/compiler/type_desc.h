@@ -27,6 +27,10 @@
 #ifndef ASC_TYPE_DESC_H
 #define ASC_TYPE_DESC_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 #include "fractions.h"
 #include "compiler.h"
@@ -1229,6 +1233,8 @@ ASC_DLLSPEC void SetTypeShowBit(struct TypeDescription *d, int value);
  *  @param d     The type to modify.
  *  @param value Flag for whether to set (non-zero) or clear (0) the show bit.
  */
+
+/* @} */
 
 #endif  /* ASC_TYPE_DESC_H */
 

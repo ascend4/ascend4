@@ -24,6 +24,10 @@
 #ifndef ASC_IDA_H
 #define ASC_IDA_H
 
+/**	@addtogroup integrator Integrator
+	@{
+*/
+
 
 #include <utilities/config.h>
 #include "integrator.h"
@@ -38,5 +42,7 @@ IntegratorFreeFn integrator_ida_free;
 const IntegratorInternals integrator_ida_internals;
 
 #endif
+
+/* @} */
 
 #endif  /* ASC_IDA_H */

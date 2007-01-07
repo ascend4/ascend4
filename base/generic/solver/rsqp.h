@@ -32,6 +32,10 @@
 #ifndef __RSQP_H_SEEN__
 #define __RSQP_H_SEEN__
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #if defined(CRAY) || defined(__WIN32__)
 #define OPT_ASCEND        OPT_ASCEND
 #define SET_OPT_COMMON    SET_OPT_COMMON
@@ -156,6 +160,8 @@ extern void CHECK_MEM(
   int32 *iwsize, /**< out */
   int32 *rwsize  /**< out */
 );
+
+/* @} */
 
 #endif  /* __RSQP_H_SEEN__ */
 

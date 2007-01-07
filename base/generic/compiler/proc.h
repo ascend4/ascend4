@@ -35,6 +35,10 @@
 #ifndef ASC_PROC_H
 #define ASC_PROC_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 struct InitProcedure {
@@ -200,6 +204,8 @@ extern int CmpProcs(CONST struct InitProcedure *p1, CONST struct InitProcedure *
  *  Compare the two procedures to provide an ordering for them.
  *  Simply alphabetizing.
  */
+
+/* @} */
 
 #endif  /* ASC_PROC_H */
 

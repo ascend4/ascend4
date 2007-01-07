@@ -36,8 +36,12 @@
  *  </pre>
  */
 
-#ifndef __MERGEINST_H_SEEN__
-#define __MERGEINST_H_SEEN__
+#ifndef ASC_MERGEINST_H
+#define ASC_MERGEINST_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 ASC_DLLSPEC struct Instance *MergeInstances(struct Instance *i1, struct Instance *i2);
 /**< 
@@ -80,5 +84,7 @@ ASC_DLLSPEC void MergeCliques(struct Instance *i1, struct Instance *i2);
  *  It doesn't matter if i1 and i2 are already in the same clique.
  */
 
-#endif  /* __MERGEINST_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_MERGEINST_H */
 

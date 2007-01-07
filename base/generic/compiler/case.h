@@ -35,8 +35,12 @@
  *  </pre>
  */
 
-#ifndef __CASE_H_SEEN__
-#define __CASE_H_SEEN__
+#ifndef ASC_CASE_H
+#define ASC_CASE_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 /** Case data structure. */
 struct Case {
@@ -148,5 +152,7 @@ extern struct Case *CopyCase(struct Case *cs);
  *  Copy a Case.
  */
 
-#endif  /* __CASE_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_CASE_H */
 

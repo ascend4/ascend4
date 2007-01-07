@@ -72,9 +72,9 @@
 #ifndef __MTX_INTERNAL_USE_ONLY_H__
 #define __MTX_INTERNAL_USE_ONLY_H__
 
-/** @addtogroup linear Linear
- * @{
- */
+/**	@addtogroup linear Linear
+	@{
+*/
 
 #ifndef FALSE
 /** These should have come in from ascConfig.h.

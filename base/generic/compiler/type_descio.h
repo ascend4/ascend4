@@ -43,6 +43,10 @@
 #ifndef ASC_TYPE_DESCIO_H
 #define ASC_TYPE_DESCIO_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 ASC_DLLSPEC void WriteDefinition(FILE *f, struct TypeDescription *desc);
 /**<
  *  Write the type description structure to the given file in text.
@@ -99,5 +103,7 @@ extern symchar *GetBaseTypeName(enum type_kind t);
 
 extern void InitBaseTypeNames(void);
 /**< Set up the basetypes symbol table. */
+
+/* @} */
 
 #endif /* ASC_TYPE_DESCIO_H */

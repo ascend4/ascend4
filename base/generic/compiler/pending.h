@@ -44,6 +44,10 @@
 #ifndef ASC_PENDING_H
 #define ASC_PENDING_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 struct pending_t {
@@ -193,6 +197,8 @@ ASC_DLLSPEC unsigned long NumberPendingInstances(struct Instance *i);
  *  Increments g_unresolved_count for each pending instance found.
  *  Returns the total count of pendings.
  */
+
+/* @} */
 
 #endif  /* ASC_PENDING_H */
 

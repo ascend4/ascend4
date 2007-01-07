@@ -39,8 +39,12 @@
  *  </pre>
  */
 
-#ifndef __SETS_H_SEEN__
-#define __SETS_H_SEEN__
+#ifndef ASC_SETS_H
+#define ASC_SETS_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern struct Set *CreateSingleSet(struct Expr *ex);
 /**< 
@@ -302,5 +306,7 @@ extern void sets_report_pool(void);
  *  Write the pool report to ASCERR for the sets pool.
  */
 
-#endif  /* __SETS_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_SETS_H */
 

@@ -36,6 +36,10 @@
 #ifndef ASC_REL_COMMON_H
 #define ASC_REL_COMMON_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 extern int CmpP(CONST char *c1, CONST char *c2);
 /**< 
  *  Compare two character pointers.
@@ -50,6 +54,8 @@ extern CONST struct Expr *FindLastExpr(register CONST struct Expr *ex);
 /**< 
  *  Return the next pointer in a link of expressions
  */
+
+/* @} */
 
 #endif  /* ASC_REL_COMMON_H */
 

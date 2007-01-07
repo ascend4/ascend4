@@ -45,6 +45,10 @@
 #ifndef ASC_LIBRARY_H
 #define ASC_LIBRARY_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 /** For use in constructing hierarchies. */
@@ -236,5 +240,7 @@ ASC_DLLSPEC unsigned int CheckFundamental(symchar *f);
  *  @param f The string to check.
  *  @return Returns 1 if f is a fundamental type name, 0 if not.
  */
+
+/* @} */
 
 #endif /* ASC_LIBRARY_H */

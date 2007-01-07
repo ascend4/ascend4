@@ -39,6 +39,10 @@
 #ifndef ASC_INSTANCE_NAME_H
 #define ASC_INSTANCE_NAME_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 enum NameTypes {
   IntArrayIndex,  /**< integer array index */
   StrArrayIndex,  /**< string array index */
@@ -95,6 +99,8 @@ struct InstanceName {
 /**< 
  *  Set the integer index of InstanceName structure in to int_index (a long).
  */
+
+/* @} */
 
 #endif /* ASC_INSTANCE_NAME_H */
 

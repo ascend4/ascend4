@@ -39,6 +39,10 @@
 #ifndef ASC_SETINSTVAL_H
 #define ASC_SETINSTVAL_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 enum set_kind {
@@ -203,6 +207,8 @@ extern void AppendStringElement(struct set_t *set, symchar *str);
  *  attempt to sort the elements of the set or to make the elements of the
  *  set unique. In this way the set is treated as a list.
  */
+
+/* @} */
 
 #endif /* ASC_SETINSTVAL_H */
 

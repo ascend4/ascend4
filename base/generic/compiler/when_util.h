@@ -40,8 +40,12 @@
  *  </pre>
  */
 
-#ifndef __WHEN_UTIL_H_SEEN__
-#define __WHEN_UTIL_H_SEEN__
+#ifndef ASC_WHEN_UTIL_H
+#define ASC_WHEN_UTIL_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 #ifndef TRUE
 #define TRUE       1
@@ -375,5 +379,7 @@ extern void logrelinst_set_flagbit(struct Instance *rel,
 #define logrelinst_set_in_when(lr,bv) \
                        logrelinst_set_flagbit((lr),LOGRELINST_IN_WHEN,(bv))
 
-#endif  /* __WHEN_UTIL_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_WHEN_UTIL_H */
 

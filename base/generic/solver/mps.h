@@ -52,6 +52,10 @@
 #ifndef MPS__already_included
 #define MPS__already_included
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #ifdef STATIC_MPS
 
 /** 
@@ -80,5 +84,7 @@ extern boolean write_MPS(const char *name,
                          double rarray[]);   
 
 #endif  /* STATIC_MPS */
+/* @} */
+
 #endif  /* MPS__already_included */
 

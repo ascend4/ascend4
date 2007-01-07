@@ -43,6 +43,10 @@
 #ifndef ASC_REDIRECTFILE_H
 #define ASC_REDIRECTFILE_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 #ifdef REIMPLEMENT_STREAMS
@@ -59,6 +63,8 @@ ASC_DLLSPEC void Asc_RedirectCompilerStreams(FILE *errfile,
 /**< Set specific files/streams to receive ASCEND messages. */
 
 #endif /* REIMPLEMENT_STREAMS */
+
+/* @} */
 
 #endif /* ASC_REDIRECTFILE_H*/
 

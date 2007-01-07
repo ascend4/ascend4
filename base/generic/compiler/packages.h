@@ -36,6 +36,10 @@
 #ifndef ASC_PACKAGES_H
 #define ASC_PACKAGES_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 /**
 	Have included the follow here to simplify instructions for people 
 	writing their own external packages:
@@ -489,6 +493,8 @@ extern void Init_BBoxInterp(struct BBoxInterp *interp);
 	  @li deriv_eval = (unsigned)0;
 	  @li func_eval = (unsigned)0;
 */
+
+/* @} */
 
 #endif /* ASC_PACKAGES_H */
 

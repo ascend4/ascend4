@@ -36,6 +36,10 @@
 #ifndef ASC_ASCCOMPILER_H
 #define ASC_ASCCOMPILER_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 ASC_DLLSPEC int Asc_CompilerInit(int simplify_relations);
@@ -59,5 +63,7 @@ ASC_DLLSPEC void Asc_CompilerDestroy(void);
  *  This function should not be called while there are any clients
  *  with pointers to any compiler structures, including gl_lists.
  */
+
+/* @} */
 
 #endif /* ASC_ASCCOMPILER_H */

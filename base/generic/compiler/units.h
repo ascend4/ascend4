@@ -31,6 +31,10 @@
 #ifndef ASC_UNITS_H
 #define ASC_UNITS_H
 
+/**	addtogroup compiler Compiler
+	@{
+*/
+
 #include <stdio.h>
 #include <utilities/ascConfig.h>
 
@@ -232,6 +236,8 @@ ASC_DLLSPEC char *UnitsStringSI(struct Units *up);
 
 ASC_DLLSPEC void DumpUnits(FILE *f);
 /**<  Dump all defined units to f. */
+
+/* @} */
 
 #endif /* ASC_UNITS_H */
 

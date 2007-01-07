@@ -38,8 +38,12 @@
  *  </pre>
  */
 
-#ifndef __SWITCH_H_SEEN__
-#define __SWITCH_H_SEEN__
+#ifndef ASC_SWITCH_H
+#define ASC_SWITCH_H
+
+/**	addtogroup compiler Compiler
+	@{
+*/
 
 extern struct SwitchList *CreateSwitch(struct Set *set, struct StatementList *sl);
 /**<
@@ -160,5 +164,7 @@ extern struct SwitchList *CopySwitchList(struct SwitchList *sw);
  *  Copy the whole list content. not a reference count change.
  */
 
-#endif  /* __SWITCH_H_SEEN__ */
+/* @} */
+
+#endif  /* ASC_SWITCH_H */
 

@@ -51,6 +51,10 @@
 #ifndef ASC_SLV_SERVER_H
 #define ASC_SLV_SERVER_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 #include <utilities/ascConfig.h>
 
 extern slv_system_t slv_create(void);
@@ -359,6 +363,8 @@ ASC_DLLSPEC int32 slv_far_from_nominals(slv_system_t sys, real64 bignum, int32 *
 	<br><br>
 	The calling function must free rip.
 */
+
+/* @} */
 
 #endif  /* ASC_SLV_SERVER_H */
 

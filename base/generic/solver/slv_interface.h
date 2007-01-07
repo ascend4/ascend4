@@ -44,6 +44,10 @@
 #ifndef ASC_SLV_INTERFACE_H
 #define ASC_SLV_INTERFACE_H
 
+/**	@addtogroup solver Solver
+	@{
+*/
+
 ASC_DLLSPEC void Solve(struct Instance *inst);
 /**<
  *  This is the link that the command line interface should call.
@@ -203,6 +207,8 @@ ASC_DLLSPEC void Solve(struct Instance *inst);
  *  Always		Prints equation number, name and residual.
  *   >= 1		Prints the equation
  */
+
+/* @} */
 
 #endif  /* ASC_SLV_INTERFACE_H */
 
