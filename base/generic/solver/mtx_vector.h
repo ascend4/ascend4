@@ -254,4 +254,8 @@ ASC_DLLSPEC(real64) vec_dot(int32 len, const real64 *a1, const real64 *a2);
  *  @param a2  The 2nd array for the dot product.
  */
 
+/**
+	@}
+*/
+
 #endif
