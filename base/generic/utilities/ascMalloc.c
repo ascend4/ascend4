@@ -268,21 +268,21 @@ static void OpenLogFile(void)
     /* Windows doesn't have mkstemp(), so need to use tempnam() */
     f_memlog_filename = tempnam(NULL, LOGFILE);
     if (NULL == f_memlog_filename) {
-      Asc_Panic(2, NULL, "Unable to create a unique memory log filename.\n");
+      ASC_PANIC("Unable to create a unique memory log filename.\n");
     }
     handle = _open(f_memlog_filename,
                    O_WRONLY | O_CREAT | O_EXCL | O_TEXT,
                    _S_IREAD | _S_IWRITE);
     if ((-1 == handle) ||
          (NULL == (f_memory_log_file = fdopen(handle,"w")))) {
-      Asc_Panic(2, NULL, "Unable to open memory log file.\n");
+      ASC_PANIC("Unable to open memory log file.\n");
     }
 #else
     char temp_filename[] = TEMPFILE_TEMPLATE;
     handle = mkstemp(temp_filename);
     if ((-1 == handle) ||
         (NULL == (f_memory_log_file = fdopen(handle,"r+")))) {
-      Asc_Panic(2, NULL, "Unable to open memory log file.\n");
+      ASC_PANIC("Unable to open memory log file.\n");
     }
 #endif  /* __WIN32__ */
 

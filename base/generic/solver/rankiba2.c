@@ -315,7 +315,7 @@ int32 rankiba_firstinsert_nz(int32 leftorg,
       return leftorg; /* unchanged left */
     }
 #ifndef NDEBUG
-    Asc_Panic(2, "rankiba_firstinsert_nz", "fix me");
+    ASC_PANIC("fix me");
     abort(); /* NOTREACHED */
 #endif
   } else {

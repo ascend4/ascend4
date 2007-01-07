@@ -2169,7 +2169,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
       if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
         status = safe_problem;
       }else{
-          Asc_Panic(2, NULL, "RelationCalcResidualPostfixSafe: reached end of routine!");
+          ASC_PANIC("RelationCalcResidualPostfixSafe: reached end of routine!");
         exit(2);
       }
   }

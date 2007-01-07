@@ -150,7 +150,7 @@ int main(int argc, char **argv)
   PRINTF("certain conditions; type `copying' for details.\n");
 
   if( Asc_CompilerInit(1) != 0 ) {
-    Asc_Panic(2, "main", "Asc_CompilerInit returned nonzero");
+    ASC_PANIC("Asc_CompilerInit returned nonzero");
   }
 
   /*

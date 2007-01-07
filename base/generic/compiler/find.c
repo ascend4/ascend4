@@ -760,7 +760,7 @@ struct gl_list_t *FindNextNameElement(CONST struct Name *n,
       DestroyValue(&setvalue);
       return NULL;
     default:
-      Asc_Panic(2, NULL, "Need to add to FindNextNameElement.\n");
+      ASC_PANIC("Need to add to FindNextNameElement.\n");
       
     }
   }

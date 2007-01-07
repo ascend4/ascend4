@@ -134,12 +134,12 @@ void SetTemp(symchar *name, struct value_t value)
   struct temp_var_t *ptr,rec;
   unsigned long pos;
   if (GTVL==NULL){
-    Asc_Panic(2, NULL, "SetTemp called before AddTemp.\n");
+    ASC_PANIC("SetTemp called before AddTemp.\n");
   }
   rec.name = name;
   pos = gl_search(GTVL,&rec,(CmpFunc)CmpVars);
   if (pos==0){
-    Asc_Panic(2, NULL, "Unable to locate temporary variable %s.\n",name);
+    ASC_PANIC("Unable to locate temporary variable %s.\n",name);
   }
   ptr = (struct temp_var_t *)gl_fetch(GTVL,pos);
   switch(ValueKind(value)){
@@ -164,7 +164,7 @@ void RemoveTemp(symchar *name)
   struct temp_var_t rec;
   unsigned long pos;
   if (GTVL==NULL){
-    Asc_Panic(2, NULL, "RemoveTemp called before AddTemp.\n");
+    ASC_PANIC("RemoveTemp called before AddTemp.\n");
   }
   assert(AscFindSymbol(name)!=NULL);
   rec.name = name;

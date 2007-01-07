@@ -151,12 +151,12 @@ static pool_store_t g_numlist_head_pool = NULL;
 static
 void numlist_init_pool(void) {
   if (g_numlist_head_pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: numlist_init_pool called twice.\n");
+    ASC_PANIC("ERROR: numlist_init_pool called twice.\n");
   }
   g_numlist_head_pool = pool_create_store(PNL_LEN, PNL_WID, PNL_ELT_SIZE,
     PNL_MORE_ELTS, PNL_MORE_BARS);
   if (g_numlist_head_pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: numlist_init_pool unable to allocate pool.\n");
+    ASC_PANIC("ERROR: numlist_init_pool unable to allocate pool.\n");
   }
 }
 

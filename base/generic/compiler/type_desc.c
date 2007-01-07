@@ -176,7 +176,7 @@ void LinkTypeDesc(struct TypeDescription *old,
                   struct TypeDescription *new)
 {
   if (old==NULL || new == NULL) {
-    Asc_Panic(2, NULL,"Attempt to link bad types- old (%p) new (%p)."
+    ASC_PANIC("Attempt to link bad types- old (%p) new (%p)."
 		,old, new
 	);
   }
@@ -503,7 +503,7 @@ struct TypeDescription *CreateConstantTypeDesc(
     result->u.constant.u.defsymbol = sval;
     break;
   default: /* not reached we hope */
-    Asc_Panic(2, NULL, "ERROR 666\n");
+    ASC_PANIC("ERROR 666\n");
     break;
   }
   return result;

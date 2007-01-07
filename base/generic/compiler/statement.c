@@ -199,7 +199,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
       }
       break;
     default:
-      Asc_Panic(2, NULL, "AddContext called with bad statement list.");
+      ASC_PANIC("AddContext called with bad statement list.");
       break;
     }
   }
@@ -2385,7 +2385,7 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     /* need fixing. since both are ill defined, they
      * will not be fixed until the definitions are really known.
      */
-    Asc_Panic(2, NULL, "Don't know how to compare REF statements\n");
+    ASC_PANIC("Don't know how to compare REF statements\n");
     
   case COND:
     return CompareStatementLists(CondStatList(s1),CondStatList(s2),&ltmp);

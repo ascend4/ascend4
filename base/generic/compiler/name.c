@@ -110,12 +110,12 @@ static pool_store_t g_name_pool = NULL;
 /* This function is called at compiler startup time and destroy at shutdown. */
 void name_init_pool(void) {
   if (g_name_pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: name_init_pool called twice.\n");
+    ASC_PANIC("ERROR: name_init_pool called twice.\n");
   }
   g_name_pool = pool_create_store(NP_LEN, NP_WID, NP_ELT_SIZE,
     NP_MORE_ELTS, NP_MORE_BARS);
   if (g_name_pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: name_init_pool unable to allocate pool.\n");
+    ASC_PANIC("ERROR: name_init_pool unable to allocate pool.\n");
   }
 }
 

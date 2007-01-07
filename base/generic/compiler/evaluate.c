@@ -242,7 +242,7 @@ unsigned int ExprStackDepth(CONST struct Expr *ex,
                 "They are only allowed in relations.\n");
       break;
     default:
-      Asc_Panic(2, NULL, "Unknown expression node type.\n");
+      ASC_PANIC("Unknown expression node type.\n");
       break;
     }
     ex = NextExpr(ex);
@@ -333,7 +333,7 @@ unsigned SuchThatForm(CONST struct Expr *expr,
                 "They are only allowed in relations.\n");
       break;
     default:
-      Asc_Panic(2, NULL, "%s: Unknown expression node type.\n",__FUNCTION__);
+      ASC_PANIC("%s: Unknown expression node type.\n",__FUNCTION__);
       break;
     }
     previous = expr;
@@ -860,7 +860,7 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
       DestroyValue(&top);
       break;
     case e_st:			/* such that  */
-      Asc_Panic(2, NULL, "Something is royally wrong in EvaluateExpr.\n");
+      ASC_PANIC("Something is royally wrong in EvaluateExpr.\n");
       break;
     case e_minimize:
     case e_maximize:
@@ -869,7 +869,7 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
                 "They are only allowed in relations.\n");
       break;
     default:
-      Asc_Panic(2, NULL, "Unknown expression node in EvaluateExpr.\n");
+      ASC_PANIC("Unknown expression node in EvaluateExpr.\n");
       break;
     }
     expr = NextExpr(expr);
@@ -968,7 +968,7 @@ struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *expr,
     case e_maximize:
       break;
     default:
-      Asc_Panic(2, NULL, "Unknown expression node in EvaluateNamesNeeded.\n");
+      ASC_PANIC("Unknown expression node in EvaluateNamesNeeded.\n");
       break;
     }
     expr = NextExpr(expr);

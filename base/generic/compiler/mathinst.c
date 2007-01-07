@@ -343,7 +343,7 @@ unsigned long RelationsCount(CONST struct Instance *i)
       return 0;
     }
   default:
-    Asc_Panic(2, NULL, "RelationsCount called with inappropriate argument.");
+    ASC_PANIC("RelationsCount called with inappropriate argument.");
     
   }
 }
@@ -358,7 +358,7 @@ struct Instance *RelationsForAtom(CONST struct Instance *i,
     if (RA_INST(i)->relations!=NULL) {
       return INST(gl_fetch(RA_INST(i)->relations,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in RelationsForAtom.");
+      ASC_PANIC("c out of bounds in RelationsForAtom.");
     }
     break;
   default:
@@ -453,19 +453,19 @@ struct Instance *LogRelationsForInstance(CONST struct Instance *i,
     if (BA_INST(i)->logrelations!=NULL) {
       return INST(gl_fetch(BA_INST(i)->logrelations,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in LogRelationsForInstance.\n");
+      ASC_PANIC("c out of bounds in LogRelationsForInstance.\n");
     }
   case REL_INST:
     if (RELN_INST(i)->logrels!=NULL) {
       return INST(gl_fetch(RELN_INST(i)->logrels,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in LogRelationsForInstance.\n");
+      ASC_PANIC("c out of bounds in LogRelationsForInstance.\n");
     }
   case LREL_INST:
     if (LRELN_INST(i)->logrels!=NULL) {
       return INST(gl_fetch(LRELN_INST(i)->logrels,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in LogRelationsForInstance.\n");
+      ASC_PANIC("c out of bounds in LogRelationsForInstance.\n");
     }
   default:
     PANIC_INCORRECT_TYPE;
@@ -640,61 +640,61 @@ struct Instance *WhensForInstance(struct Instance *i,
     if (BA_INST(i)->whens!=NULL)
       return INST(gl_fetch(BA_INST(i)->whens,c));
     else{
-      Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   case INTEGER_ATOM_INST:
     if (IA_INST(i)->whens!=NULL) {
       return INST(gl_fetch(IA_INST(i)->whens,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   case SYMBOL_ATOM_INST:
     if (SYMA_INST(i)->whens!=NULL) {
       return INST(gl_fetch(SYMA_INST(i)->whens,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   case BOOLEAN_CONSTANT_INST:
     if (BC_INST(i)->whens!=NULL) {
       return INST(gl_fetch(BC_INST(i)->whens,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   case INTEGER_CONSTANT_INST:
     if (IC_INST(i)->whens!=NULL) {
       return INST(gl_fetch(IC_INST(i)->whens,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   case SYMBOL_CONSTANT_INST:
     if (SYMC_INST(i)->whens!=NULL) {
       return INST(gl_fetch(SYMC_INST(i)->whens,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   case MODEL_INST:
     if (MOD_INST(i)->whens!=NULL) {
       return INST(gl_fetch(MOD_INST(i)->whens,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   case REL_INST:
     if (RELN_INST(i)->whens!=NULL) {
       return INST(gl_fetch(RELN_INST(i)->whens,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   case LREL_INST:
     if (LRELN_INST(i)->whens!=NULL) {
       return INST(gl_fetch(LRELN_INST(i)->whens,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   case WHEN_INST:
     if (W_INST(i)->whens!=NULL) {
       return INST(gl_fetch(W_INST(i)->whens,c));
     }else{
-      Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   default:
     PANIC_INCORRECT_TYPE;

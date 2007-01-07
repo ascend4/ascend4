@@ -134,7 +134,7 @@ void OverwriteBList(CONST struct BitList *bl, struct BitList *target)
   assert(target!=NULL);
 
   if (BLENGTH(bl) != BLENGTH(target)) {
-    Asc_Panic(2,"OverwriteBList","src and target bitlists of uneven size");
+    ASC_PANIC("src and target bitlists of uneven size");
   }
   num_bytes = BLENGTH(bl) >> 3;	/* divide by 8- the assumed bits/char */
   if (BLENGTH(bl) & 0x07) num_bytes++;

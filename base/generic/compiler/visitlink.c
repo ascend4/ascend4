@@ -140,7 +140,7 @@ void SlowVisitNameTreeTwo(struct Instance *inst,
   if (inst!=NULL) {
     path = gl_create(IVIT_MIN_LEN*2);
     if (path==NULL) {
-      Asc_Panic(2,"SlowVisitNameTreeTwo","insufficient memory");
+      ASC_PANIC("insufficient memory");
     }
     SlowVisitTreeTwo(inst,proc,depth,leaf,anon_flags,path,userdata);
     gl_destroy(path);
@@ -157,7 +157,7 @@ void SilentVisitNameTreeTwo(struct Instance *inst,
   AssertMemory(inst);
   path = gl_create(IVIT_MIN_LEN*2);
   if (path==NULL) {
-    Asc_Panic(2,"SilentVisitNameTreeTwo","insufficient memory");
+    ASC_PANIC("insufficient memory");
   }
   SilentVisitTreeTwo(inst,proc,depth,leaf,anon_flags,path,userdata);
   gl_destroy(path);

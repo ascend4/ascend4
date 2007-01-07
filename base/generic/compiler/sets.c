@@ -92,12 +92,12 @@ static pool_store_t g_sets_pool = NULL;
 /* This function is called at compiler startup time and destroy at shutdown. */
 void sets_init_pool(void) {
   if (g_sets_pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: sets_init_pool called twice.\n");
+    ASC_PANIC("ERROR: sets_init_pool called twice.\n");
   }
   g_sets_pool = pool_create_store(SETS_LEN, SETS_WID, SETS_ELT_SIZE,
     SETS_MORE_ELTS, SETS_MORE_BARS);
   if (g_sets_pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: sets_init_pool unable to allocate pool.\n");
+    ASC_PANIC("ERROR: sets_init_pool unable to allocate pool.\n");
   }
 }
 

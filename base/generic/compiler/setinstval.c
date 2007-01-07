@@ -76,12 +76,12 @@ void InitSetManager(void)
 {
 #if SETINST_USES_POOL 
   if (g_set_pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: InitSetManager called twice.\n");
+    ASC_PANIC("ERROR: InitSetManager called twice.\n");
   }
   g_set_pool =
     pool_create_store(SM_LEN, SM_WID, SM_ELT_SIZE, SM_MORE_ELTS, SM_MORE_BARS);
   if (g_set_pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: InitSetManager unable to allocate pool.\n");
+    ASC_PANIC("ERROR: InitSetManager unable to allocate pool.\n");
   }
 #endif
 }

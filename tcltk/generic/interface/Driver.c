@@ -284,12 +284,12 @@ int AscDriver(int argc, CONST char **argv)
    */
   (void)Tcl_Eval(interp,initScriptTclAdjust);
   if (Tcl_Init(interp) == TCL_ERROR) {
-    Asc_Panic(2, "Asc_Driver", "Tcl initialization failed:\n%s",
+    ASC_PANIC("Tcl initialization failed:\n%s",
               Tcl_GetStringResult(interp));
   }
   (void)Tcl_Eval(interp,initScriptTkAdjust);
   if (Tk_Init(interp) == TCL_ERROR) {
-    Asc_Panic(2, "Asc_Driver", "Tk initialization failed:\n%s",
+    ASC_PANIC("Tk initialization failed:\n%s",
               Tcl_GetStringResult(interp));
   }
   Tcl_StaticPackage( interp, "Tk", Tk_Init, Tk_SafeInit );

@@ -469,7 +469,7 @@ struct var_variable **get_incidence_space(int len, struct problem_t *p_data)
 {
   struct var_variable **tmp;
   if (p_data->relincidence == NULL) {
-    Asc_Panic(2,NULL,"get_incidence_space called prematurely. bye.\n");
+    ASC_PANIC("get_incidence_space called prematurely. bye.\n");
   }
   if (len <1) return NULL;
   if (p_data->relincinuse + len > p_data->relincsize) {
@@ -492,7 +492,7 @@ struct rel_relation **get_var_incidence_space(int len,
 {
   struct rel_relation **tmp;
   if (p_data->varincidence == NULL) {
-    Asc_Panic(2,NULL,"get_var_incidence_space called prematurely. bye.\n");
+    ASC_PANIC("get_var_incidence_space called prematurely. bye.\n");
   }
   if (len <1) return NULL;
   if (p_data->varincinuse + len > p_data->varincsize) {
@@ -514,7 +514,7 @@ struct dis_discrete **get_logincidence_space(int len,
 {
   struct dis_discrete **tmp;
   if (p_data->logrelinciden == NULL) {
-    Asc_Panic(2,NULL,"get_logincidence_space called prematurely. bye.\n");
+    ASC_PANIC("get_logincidence_space called prematurely. bye.\n");
   }
   if (len <1) return NULL;
   if (p_data->lrelincinuse + len > p_data->lrelincsize) {

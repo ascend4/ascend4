@@ -75,7 +75,7 @@ struct parpendingentry *CreatePPE(void)
   struct parpendingentry *new;
   new = PPMALLOC;
   if (new ==NULL) {
-    Asc_Panic(2, NULL, "malloc fail in CreatePPE. Bye!\n");
+    ASC_PANIC("malloc fail in CreatePPE. Bye!\n");
   }
   return new;
 }
@@ -88,12 +88,12 @@ void DestroyPPE(struct parpendingentry *old)
 /* This function is called at compiler startup time and destroy at shutdown. */
 void ppe_init_pool(void) {
   if (g_ppe_pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: ppe_init_pool called twice.\n");
+    ASC_PANIC("ERROR: ppe_init_pool called twice.\n");
   }
   g_ppe_pool = pool_create_store(PPE_LEN, PPE_WID, PPE_ELT_SIZE,
     PPE_MORE_ELTS, PPE_MORE_BARS);
   if (g_ppe_pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: ppe_init_pool unable to allocate pool.\n");
+    ASC_PANIC("ERROR: ppe_init_pool unable to allocate pool.\n");
   }
 }
 

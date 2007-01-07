@@ -125,12 +125,12 @@ pool_store_t g_array_child_pool=NULL;
 void InitInstanceNanny(void)
 {
   if (g_array_child_pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: InitInstanceNanny called twice.\n");
+    ASC_PANIC("ERROR: InitInstanceNanny called twice.\n");
   }
   g_array_child_pool =
     pool_create_store(IN_LEN, IN_WID, IN_ELT_SIZE, IN_MORE_ELTS, IN_MORE_BARS);
   if (g_array_child_pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: InitInstanceNanny unable to allocate pool.\n");
+    ASC_PANIC("ERROR: InitInstanceNanny unable to allocate pool.\n");
   }
 }
 
@@ -247,7 +247,7 @@ int RectangleArrayExpanded(CONST struct Instance *i)
       ptr = (struct ArrayChild *)gl_fetch(ary->children,1);
       AssertContainedMemory(ptr,sizeof(struct ArrayChild));
       if ((ptr==NULL)||(ptr->inst==NULL)){
-	Asc_Panic(2, NULL, "Illegal array data structure.\n");
+	ASC_PANIC("Illegal array data structure.\n");
       }
       ary = ARY_INST(ptr->inst);
     }
@@ -447,7 +447,7 @@ unsigned long NextToExpand(CONST struct Instance *i)
       ptr = (struct ArrayChild *)gl_fetch(ary->children,1);
       AssertContainedMemory(ptr,sizeof(struct ArrayChild));
       if ((ptr==NULL)||(ptr->inst==NULL)){
-	Asc_Panic(2, NULL, "Illegal array data structure.\n");
+	ASC_PANIC("Illegal array data structure.\n");
       }
       if (c) {
         ary = ARY_INST(ptr->inst);
@@ -455,7 +455,7 @@ unsigned long NextToExpand(CONST struct Instance *i)
     }
     return 0;
   } else {
-    Asc_Panic(2, NULL, "Incorrect instance type passed to NextToExpand.\n");
+    ASC_PANIC("Incorrect instance type passed to NextToExpand.\n");
     
   }
 }
@@ -484,7 +484,7 @@ CONST struct Set *IndexSet(CONST struct Instance *i, unsigned long int num)
     AssertAllocatedMemory(ptr,sizeof(struct IndexType));
     return GetIndexSet(ptr);
   } else {
-    Asc_Panic(2, NULL, "Incorrect instance type passed to IndexSet.\n");
+    ASC_PANIC("Incorrect instance type passed to IndexSet.\n");
     
   }
 }
@@ -706,7 +706,7 @@ void ExpandStringSet(struct ArrayInstance *i, struct set_t *set,
     }
     gl_sort(i->children,(CmpFunc)CmpStrIndex);
   } else {
-    Asc_Panic(2, NULL, "Attempt to expand array with incorrect set type.\n");
+    ASC_PANIC("Attempt to expand array with incorrect set type.\n");
   }
 }
 
@@ -729,7 +729,7 @@ void RecursiveExpand(struct Instance *i, unsigned long int num,
   AssertMemory(i);
   AssertMemory(set);
   if ((i->t!=ARRAY_INT_INST)&&(i->t!=ARRAY_ENUM_INST)){
-    Asc_Panic(2, NULL, "Incorrect array structure in RecursiveExpand.\n");
+    ASC_PANIC("Incorrect array structure in RecursiveExpand.\n");
   }
   if ((--num)==0){		/* we're here -- start creating instances */
     if (ARY_INST(i)->children==NULL){
@@ -743,7 +743,7 @@ void RecursiveExpand(struct Instance *i, unsigned long int num,
 	break;
       }
     } else {
-      Asc_Panic(2, NULL, "Attempt to expand previously expanded array.\n");
+      ASC_PANIC("Attempt to expand previously expanded array.\n");
     }
   } else {			/* not there yet recurse on each child */
     register unsigned long c,len;
@@ -774,7 +774,7 @@ void ExpandArray(struct Instance *i, unsigned long int num,
     AssertMemory(set);
     RecursiveExpand(i,num,set,rhsinst,arginst,rhslist);
   } else {
-    Asc_Panic(2, NULL, "Incorrect instance type passed to ExpandArray.\n");
+    ASC_PANIC("Incorrect instance type passed to ExpandArray.\n");
   }
 }
 
@@ -826,7 +826,7 @@ struct Instance *FindOrAddIntChild(struct Instance *i, long int v,
   case ARRAY_ENUM_INST:
     return NULL;
   default:
-    Asc_Panic(2, NULL, "Wrong type passed to ForOrAddIntChild.\n");
+    ASC_PANIC("Wrong type passed to ForOrAddIntChild.\n");
     
   }
 }
@@ -856,7 +856,7 @@ struct Instance *FindOrAddStrChild(struct Instance *i, symchar *sym,
   case ARRAY_INT_INST:
     return NULL;
   default:
-    Asc_Panic(2, NULL, "Wrong type passed to ForOrAddStrChild.\n");
+    ASC_PANIC("Wrong type passed to ForOrAddStrChild.\n");
     
   }
 }

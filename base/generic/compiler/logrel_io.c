@@ -64,7 +64,7 @@ void WriteLogOp(FILE *f, enum Expr_enum t)
   case e_boolean_eq: FPRINTF(f,"=="); break;
   case e_boolean_neq: FPRINTF(f,"!="); break;
   default:
-    Asc_Panic(2, NULL, "Unknown term in WriteLogOp.\n");/*NOTREACHED*/
+    ASC_PANIC("Unknown term in WriteLogOp.\n");/*NOTREACHED*/
   }
 }
 
@@ -139,7 +139,7 @@ void WriteLogTerm(FILE *f,
     break;
   case e_not: FPRINTF(f,"NOT"); break;
   default:
-    Asc_Panic(2, NULL, "Unknown term type in WriteLogTerm.\n");/*NOTREACHED*/
+    ASC_PANIC("Unknown term type in WriteLogTerm.\n");/*NOTREACHED*/
   }
 }
 
@@ -919,7 +919,7 @@ void SaveTokenLogConstants(FILE *fp, struct gl_list_t *constants)
       FPRINTF(fp,"%d",LogTermInteger(term));
       break;
     default:
-      Asc_Panic(2, NULL, "Illegal term in SaveTokenLogConstants\n");
+      ASC_PANIC("Illegal term in SaveTokenLogConstants\n");
     }
     PUTC(' ',fp);
   }

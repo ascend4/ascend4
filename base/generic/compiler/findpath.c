@@ -310,7 +310,7 @@ struct gl_list_t *FindNextNameElementPath(CONST struct Name *n,
       DestroyValue(&setvalue);
       return NULL;
     default:
-      Asc_Panic(2, NULL, "Need to add to FindNextNameElementPath.\n");
+      ASC_PANIC("Need to add to FindNextNameElementPath.\n");
       exit(2);/* Needed to keep gcc from whining */
     }
   }

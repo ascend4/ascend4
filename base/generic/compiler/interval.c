@@ -462,13 +462,13 @@ struct Interval PowInterval(struct Interval x, struct Interval y)
   register double a,b,c,d, t1, t2;
   struct Interval result;
   if (x.low < 0.0){
-    Asc_Panic(2, NULL, "PowInterval call with a argument less than zero.\n");
+    ASC_PANIC("PowInterval call with a argument less than zero.\n");
     exit(2);  /*NOTREACHED*/
   }
   else{
     if (x.low == 0.0){
       if (y.low <= 0.0){
-        Asc_Panic(2, NULL, "PowInterval called with illegal arguments.\n");
+        ASC_PANIC("PowInterval called with illegal arguments.\n");
         exit(2);  /*NOTREACHED*/
       }
       else{

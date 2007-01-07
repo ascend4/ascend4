@@ -144,7 +144,7 @@ static void CheckChild(struct Instance *old, struct Instance *new)
     }
     break;
   default:
-    Asc_Panic(2, NULL, "Incorrect type passed to CheckChild.\n");/*NOTREACHED*/
+    ASC_PANIC("Incorrect type passed to CheckChild.\n");/*NOTREACHED*/
   }
 }
 
@@ -757,7 +757,7 @@ struct Instance *RefineInstance(struct Instance *i,
     Asc_Panic(2, NULL,
               "It is illegal to call RefineInstance on a fundamental atom.");
   default:
-    Asc_Panic(2, NULL, "RefineInstance called on unknown instance type.\n");
+    ASC_PANIC("RefineInstance called on unknown instance type.\n");
   }
   exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
 }

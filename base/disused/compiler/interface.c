@@ -2130,7 +2130,7 @@ int StateFromArg(unsigned long int com, int arg)
   case id_arg:		return 3;
   case shell_arg:	return 7;
   }
-  Asc_Panic(2, NULL, "Unknown argument type in StateFromArg\n");
+  ASC_PANIC("Unknown argument type in StateFromArg\n");
   
 }
 
@@ -2945,7 +2945,7 @@ void CompleteInstance(unsigned long int *l,
       str[*pos] = '\0';
       break;
     default:
-      Asc_Panic(2, NULL, "Bad instance type.\n");
+      ASC_PANIC("Bad instance type.\n");
     }
   }
   else{

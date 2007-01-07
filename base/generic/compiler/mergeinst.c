@@ -370,7 +370,7 @@ Returns 0 if happy, 1 or other if not.
     }
     return 0;
   default:
-    Asc_Panic(2, NULL, "Error in MergeValues in instance.c. Unknown type.\n");
+    ASC_PANIC("Error in MergeValues in instance.c. Unknown type.\n");
     
   }
 }
@@ -442,7 +442,7 @@ as refined or more refined that i2.
 			  NumberChildren(i1));
       break;
     default:
-      Asc_Panic(2, NULL, "Wrong type passed to MergeChildrenValues.\n");
+      ASC_PANIC("Wrong type passed to MergeChildrenValues.\n");
     }
   } else {
     MergeUncommonChildren(i1,i2);
@@ -545,9 +545,9 @@ void MergeParents(struct Instance *i1, struct Instance *i2)
   case SET_INST:
   case SYMBOL_INST:
   case DUMMY_INST:
-    Asc_Panic(2, NULL, "Shouldn't be called on fundamental/dummy type.\n");
+    ASC_PANIC("Shouldn't be called on fundamental/dummy type.\n");
   default:
-    Asc_Panic(2, NULL, "Unknown instance type passed to MergeParents.\n");
+    ASC_PANIC("Unknown instance type passed to MergeParents.\n");
   }
 }
 
@@ -1011,7 +1011,7 @@ struct Instance *MergeArrays(struct ArrayInstance *i1,
   assert(i1&&i2&&i1->t==i2->t);
   if ((i1->desc == i2->desc)&&(i1->indirected == i2->indirected)){
     if (CheckArrayChildren(i1->children,i2->children,i1->t)){
-      Asc_Panic(2, NULL, "Arrays have different children.\n");/*NOTREACHED*/
+      ASC_PANIC("Arrays have different children.\n");/*NOTREACHED*/
     }
     switch (KeepWhichInstance(i1->desc,i2->desc,INST(i1),INST(i2))){
     case 1:
@@ -1029,7 +1029,7 @@ struct Instance *MergeArrays(struct ArrayInstance *i1,
                 "Bizarre error that should never occur.\n");/*NOTREACHED*/
     }
   } else {
-    Asc_Panic(2, NULL, "Unconformable arrays.\n");/*NOTREACHED*/
+    ASC_PANIC("Unconformable arrays.\n");/*NOTREACHED*/
   }
   exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
 }
@@ -1134,7 +1134,7 @@ struct Instance *RecursiveMergeInstance(struct Instance *i1,
     /*  CheckClique(result); moved to a PostMergeCheck */
     return result;
   } else {
-    Asc_Panic(2, NULL, "Attempt to merge unconformable types in children.\n");
+    ASC_PANIC("Attempt to merge unconformable types in children.\n");
     
   }
 }

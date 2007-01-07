@@ -102,7 +102,7 @@ int NotAtomF(struct Instance *i)
   case DUMMY_INST: /* well, it's fair to say the dummy is not anything */
     return 0;
   default:
-    Asc_Panic(2, NULL, "VisitTree: Illegal instance type.\n");
+    ASC_PANIC("VisitTree: Illegal instance type.\n");
     
   }
 }

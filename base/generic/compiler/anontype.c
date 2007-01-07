@@ -176,14 +176,14 @@ int AssertBucketInfo(struct TypeDescription *d, struct AnonBucket **t)
 {
   if (d==NULL) {
 #ifndef NDEBUG
-    Asc_Panic(2,"AssertBucketInfo","Called with NULL TypeDescription");
+    ASC_PANIC("Called with NULL TypeDescription");
 #else
     return 1;
 #endif
   }
   if (t==NULL) {
 #ifndef NDEBUG
-    Asc_Panic(2,"AssertBucketInfo","Called with NULL Bucket table");
+    ASC_PANIC("Called with NULL Bucket table");
 #else
     return 1;
 #endif
@@ -292,7 +292,7 @@ struct AnonType *ExpandAnonResult(struct gl_list_t *atl)
   struct AnonType *at;
   at = ASC_NEW(struct AnonType);
   if (at==NULL) {
-    Asc_Panic(2,"ExpandAnonResult","Insufficient memory");
+    ASC_PANIC("Insufficient memory");
     return NULL; /* NOTREACHED */
   }
   gl_append_ptr(atl,(void *)at);
@@ -1026,7 +1026,7 @@ struct AnonType *NearestAnonTypeArrayEnum(struct Instance *i,
     case at_notdone:
       /* we screwed up */
     default:
-      Asc_Panic(2,"NearestAnonTypeArrayInt","Returning while not (1) done");
+      ASC_PANIC("Returning while not (1) done");
       exit(2); /* NOTREACHED, but quiets gcc */
     }
   }
@@ -1048,7 +1048,7 @@ struct AnonType *NearestAnonTypeArrayEnum(struct Instance *i,
     case at_notdone:
       /* we screwed up */
     default:
-      Asc_Panic(2,"NearestAnonTypeArrayInt","Returning while not (2) done");
+      ASC_PANIC("Returning while not (2) done");
       exit(2); /* NOTREACHED, but quiets gcc */
     }
   }
@@ -1116,7 +1116,7 @@ struct AnonType *NearestAnonTypeArrayInt(struct Instance *i,
     case at_notdone:
       /* we screwed up */
     default:
-      Asc_Panic(2,"NearestAnonTypeArrayInt","Returning while not (1) done");
+      ASC_PANIC("Returning while not (1) done");
       exit(2); /* NOTREACHED, but quiets gcc */
     }
   }
@@ -1138,7 +1138,7 @@ struct AnonType *NearestAnonTypeArrayInt(struct Instance *i,
     case at_notdone:
       /* we screwed up */
     default:
-      Asc_Panic(2,"NearestAnonTypeArrayInt","Returning while not (2) done");
+      ASC_PANIC("Returning while not (2) done");
       exit(2); /* NOTREACHED, but quiets gcc */
     }
   }
@@ -1317,7 +1317,7 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
   case at_notdone:
     /* we screwed up */
   default:
-    Asc_Panic(2,"NearestAnonTypeModel","Returning while not done");
+    ASC_PANIC("Returning while not done");
     exit(2); /* NOTREACHED, but quiets gcc */
   }
 }
@@ -1401,15 +1401,15 @@ struct AnonType *NearestAnonType(struct Instance *i,
   case SYMBOL_INST:             /* FALL THROUGH */
   case BOOLEAN_INST:            /* FALL THROUGH */
   case SET_INST:
-    Asc_Panic(2,"NearestAnonType","Called with subatomic instance");
+    ASC_PANIC("Called with subatomic instance");
     return NULL; /* NOT REACHED, but shuts up gcc */
 
   case SIM_INST:
-    Asc_Panic(2,"NearestAnonType","Called with SIM_INST kind");
+    ASC_PANIC("Called with SIM_INST kind");
     return NULL; /* NOT REACHED, but shuts up gcc */
 
   default:
-    Asc_Panic(2,"NearestAnonType","Called with unknown instance kind");
+    ASC_PANIC("Called with unknown instance kind");
     return NULL; /* NOT REACHED, but shuts up gcc */
   }
 }
@@ -1430,7 +1430,7 @@ void DeriveAnonType(struct Instance *i, struct AnonVisitInfo *info)
 
   if (i==NULL) {
     info->errors++;
-    Asc_Panic(2,"DeriveAnonType","Function called with NULL instance");
+    ASC_PANIC("Function called with NULL instance");
     return;
   }
   if (GetTmpNum(i) != 0L) {
@@ -1443,7 +1443,7 @@ void DeriveAnonType(struct Instance *i, struct AnonVisitInfo *info)
   if (b == NULL) {
     b = AddAnonBucket(InstanceTypeDesc(i),InstanceIndirected(i),info->t);
     if (b == NULL) {
-      Asc_Panic(2,"DeriveAnonType","AddAnonBucket returned NULL");
+      ASC_PANIC("AddAnonBucket returned NULL");
     }
   }
   exactfamily = 0;

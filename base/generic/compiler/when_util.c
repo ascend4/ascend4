@@ -154,7 +154,7 @@ struct gl_list_t *CopyWhenBVarList(struct Instance *dest_inst,
       bvar = (struct Instance *)gl_fetch(copylist,c);
       pos = gl_search(newbvarlist,bvar,(CmpFunc)CmpP);
       if (pos) {
-	Asc_Panic(2, NULL, "Corrupted variable list in CopyWhenBVarList\n");
+	ASC_PANIC("Corrupted variable list in CopyWhenBVarList\n");
       }
       gl_append_ptr(newbvarlist,(VOIDPTR)bvar);
       switch(bvar->t){
@@ -191,7 +191,7 @@ struct gl_list_t *CopyWhenCaseRefList(struct Instance *dest_inst,
       ref = (struct Instance *)gl_fetch(copylist,c);
       pos = gl_search(newreflist,ref,(CmpFunc)CmpP);
       if (pos) {
-	Asc_Panic(2, NULL, "Corrupted reference list in CopyWhenCaseRefList\n");
+	ASC_PANIC("Corrupted reference list in CopyWhenCaseRefList\n");
       }
       gl_append_ptr(newreflist,(VOIDPTR)ref);
       switch(ref->t){

@@ -985,7 +985,7 @@ double safe_div_D1(double x,double y,int wrt,enum safe_err *safe)
   case 1:
     return( -safe_mul_D0(safe_sqr_D0(y,safe),x,safe) );
   default:
-    Asc_Panic(2, NULL, "'wrt' out of range!");
+    ASC_PANIC("'wrt' out of range!");
     
   }
 }
@@ -1001,7 +1001,7 @@ double safe_ipow_D1( double x,double y, int wrt,enum safe_err *safe)
     return(0.0); /* d(x^i)/di where i is integer is 0.0 since we
                   * assume integers are constant */
   default:
-    Asc_Panic(2, NULL, "'wrt' out of range!");
+    ASC_PANIC("'wrt' out of range!");
     
   }
 }
@@ -1014,7 +1014,7 @@ double safe_pow_D1(double x,double y,int wrt,enum safe_err *safe)
   case 1:
     return( safe_mul_D0( safe_ln_D0(x,safe) , safe_pow_D0(x,y,safe) ,safe) );
   default:
-    Asc_Panic(2, NULL, "'wrt' out of range!");
+    ASC_PANIC("'wrt' out of range!");
     
   }
 }
@@ -1030,7 +1030,7 @@ double safe_div_D2(double x,double y,int wrt1,int wrt2,enum safe_err *safe)
   case 2:
     return( safe_rec(0.5*safe_mul_D0(y,safe_sqr_D0(y,safe),safe),safe) );
   default:
-    Asc_Panic(2, NULL, "'wrt' out of range!");
+    ASC_PANIC("'wrt' out of range!");
     
   }
 }
@@ -1053,7 +1053,7 @@ double safe_ipow_D2( double x,double y, int wrt1,int wrt2,enum safe_err *safe)
     return( safe_mul_D0(safe_sqr_D0(lnx,safe) ,
                         safe_ipow_D0(x,y,safe),safe) );
   default:
-    Asc_Panic(2, NULL, "'wrt' out of range!");
+    ASC_PANIC("'wrt' out of range!");
     
   }
 }
@@ -1074,7 +1074,7 @@ double safe_pow_D2(double x,double y,int wrt1,int wrt2,enum safe_err *safe)
     return( safe_mul_D0(safe_sqr_D0(lnx,safe) ,
                         safe_pow_D0(x,y,safe),safe) );
   default:
-    Asc_Panic(2, NULL, "'wrt' out of range!");
+    ASC_PANIC("'wrt' out of range!");
     
   }
 }

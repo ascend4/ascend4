@@ -108,12 +108,12 @@ static pool_store_t g_pending_pool = NULL;
    One could also recall these every time there is a delete all types. */
 void InitPendingPool(void) {
   if (g_pending_pool != NULL ) {
-    Asc_Panic(2, NULL, "ERROR: InitPendingPool called twice.\n");
+    ASC_PANIC("ERROR: InitPendingPool called twice.\n");
   }
   g_pending_pool =
     pool_create_store(PP_LEN, PP_WID, PP_ELT_SIZE, PP_MORE_ELTS, PP_MORE_BARS);
   if (g_pending_pool == NULL) {
-    Asc_Panic(2, NULL, "ERROR: InitPendingPool unable to allocate pool.\n");
+    ASC_PANIC("ERROR: InitPendingPool unable to allocate pool.\n");
   }
 }
 

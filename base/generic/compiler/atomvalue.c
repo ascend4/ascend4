@@ -269,7 +269,7 @@ void SetIntegerAtomValue(struct Instance *i, long int v,unsigned d){
     }
     break;
   default:
-    Asc_Panic(2, NULL, "SetIntegerAtomValue called on non-integer.\n");
+    ASC_PANIC("SetIntegerAtomValue called on non-integer.\n");
   }
 }
 

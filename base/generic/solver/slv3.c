@@ -1172,7 +1172,7 @@ static boolean calc_gradient(slv3_system_t sys){
     zero_vector(&(sys->gradient));
     sys->gradient.norm2 = 0.0;
   } else {
-    Asc_Panic(2, "calc_gradient", "Not implemented");
+    ASC_PANIC("Not implemented");
 #if CANOPTIMIZE
     real64 pd;
     const struct var_variable **vp;

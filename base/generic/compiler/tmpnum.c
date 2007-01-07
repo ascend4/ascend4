@@ -98,7 +98,7 @@ unsigned long GetTmpNum(CONST struct Instance *i)
   case SYMBOL_INST:
     return 0;		/* this is the change was exit(2).kaa */
   default:
-    Asc_Panic(2, NULL, "Incorrect type in GetTmpNum.\n");
+    ASC_PANIC("Incorrect type in GetTmpNum.\n");
     return LONG_MAX; /* but not really. shuts up gcc, though. */
   }
 }
@@ -144,7 +144,7 @@ void SetTmpNum(struct Instance *i, unsigned long int cn)
   case SYMBOL_INST:
     break;		/* another change -- dont choke just return */
   default:
-    Asc_Panic(2, NULL, "Incorrect type in SetTmpNum.\n");
+    ASC_PANIC("Incorrect type in SetTmpNum.\n");
   }
 }
 
@@ -191,7 +191,7 @@ unsigned long IncrementTmpNum(struct Instance *i)
   case SYMBOL_INST:
     break;		/* another change -- dont choke just return */
   default:
-    Asc_Panic(2, NULL, "Incorrect type in IncrementTmpNum.\n");
+    ASC_PANIC("Incorrect type in IncrementTmpNum.\n");
   }
   return 0;
 }
@@ -257,7 +257,7 @@ unsigned long DecrementTmpNum(struct Instance *i)
   case SYMBOL_INST:
     break;		/* another change -- dont choke just return */
   default:
-    Asc_Panic(2, NULL, "Incorrect type in DecrementTmpNum.\n");
+    ASC_PANIC("Incorrect type in DecrementTmpNum.\n");
   }
   return 0;
 }

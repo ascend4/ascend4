@@ -871,7 +871,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
       return NULL;
     default:
       STATEMENT_ERROR(stat, "Unknown result value type in MakeIndex.\n");
-      Asc_Panic(2, NULL, "Unknown result value type in MakeIndex.\n");
+      ASC_PANIC("Unknown result value type in MakeIndex.\n");
 
     }
   } else { /* checking subscripts on dense ALIASES/param'd IS_A statement */
@@ -899,7 +899,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
     default:
       DestroyValue(&value);
       STATEMENT_ERROR(stat, "Bad index to dense alias array");
-      Asc_Panic(2, NULL, "Bad index to dense alias array");
+      ASC_PANIC("Bad index to dense alias array");
 
     }
     /* return NULL; */  /* unreachable */
@@ -1067,7 +1067,7 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
     DestroyValue(&value);
     return NULL;
   default:
-    Asc_Panic(2, NULL ,"Unknown result value type.\n");
+    ASC_PANIC("Unknown result value type.\n");
 
   }
 }
@@ -1171,7 +1171,7 @@ struct Instance *MakeSparseArray(struct Instance *parent,
       break;
     default:
       STATEMENT_ERROR(stat, "Utter screw-up in MakeSparseArray");
-      Asc_Panic(2, NULL, "Utter screw-up in MakeSparseArray");
+      ASC_PANIC("Utter screw-up in MakeSparseArray");
     }
     aryinst = CreateArrayInstance(desc,1);
     LinkToParentByName(parent,aryinst,NameIdPtr(name));
@@ -1243,7 +1243,7 @@ void MakeAliasInstance(CONST struct Name *name,
     } else{			/* unknown child name */
       /* case of part not expected */
       STATEMENT_ERROR(statement, "Unknown child name.  Never should happen");
-      Asc_Panic(2, NULL, "Unknown child name.  Never should happen");
+      ASC_PANIC("Unknown child name.  Never should happen");
     }
   } else{
     /* if reach the else, means compound identifier or garbage */
@@ -1275,13 +1275,13 @@ void MakeAliasInstance(CONST struct Name *name,
             }
           } else {
             STATEMENT_ERROR(statement, "Unable to create alias array instance");
-            Asc_Panic(2, NULL, "Unable to create alias array instance");
+            ASC_PANIC("Unable to create alias array instance");
           }
         } else {
           DeleteTypeDesc(arydef);
           STATEMENT_ERROR(statement,
                "Unknown array child name. Never should happen");
-          Asc_Panic(2, NULL, "Unknown array child name. Never should happen");
+          ASC_PANIC("Unknown array child name. Never should happen");
         }
       } else {
         /* sparse array */
@@ -1302,7 +1302,7 @@ void MakeAliasInstance(CONST struct Name *name,
         } else {
           STATEMENT_ERROR(statement,
             "Unknown array child name. Never should happen");
-          Asc_Panic(2, NULL, "Unknown array child name. Never should happen");
+          ASC_PANIC("Unknown array child name. Never should happen");
         }
       }
     } else {
@@ -1821,7 +1821,7 @@ struct Instance *MakeSimpleInstance(struct TypeDescription *def,
     case array_type:
     default: /* picks up patch_type */
       STATEMENT_ERROR(statement, "MakeSimpleInstance error. PATCH/ARRAY found.\n");
-      Asc_Panic(2, NULL,  "MakeSimpleInstance error. PATCH/ARRAY found.\n");
+      ASC_PANIC("MakeSimpleInstance error. PATCH/ARRAY found.\n");
     }
   }
   return inst;
@@ -2376,7 +2376,7 @@ int InsertParameterInst(struct Instance *parent,
     }
   } else {			/* unknown name */
     STATEMENT_ERROR(statement, "Unknown parameter name.  Never should happen");
-    Asc_Panic(2, NULL, "Unknown parameter name.  Never should happen");
+    ASC_PANIC("Unknown parameter name.  Never should happen");
 
   }
 }
@@ -2914,7 +2914,7 @@ int MakeParameterInst(struct Instance *parent,
       argn++;
       break;
     default:
-      Asc_Panic(2, NULL, "how the hell did typelint let that through?");
+      ASC_PANIC("how the hell did typelint let that through?");
       /* how the hell did typelint let that through? */
       break;
     }
@@ -3522,7 +3522,7 @@ int DigestArguments(
       case pp_ERR:
         /* shouldn't have gone through the loop to reach an err marked pp */
       default:
-        Asc_Panic(2, NULL, "Unexpected status in DigestParameters!\n");
+        ASC_PANIC("Unexpected status in DigestParameters!\n");
         break;
       }
       /* delete if we finished it, then advance counter. */
@@ -3684,7 +3684,7 @@ void ConfigureInstFromArgs(struct Instance *inst,
     case origin_PALI:
     case origin_PARR:
       if (InstanceChild(arginst,c)!=NULL) {
-        Asc_Panic(2, NULL, "arginst caught with illegitimate child. Bye!");
+        ASC_PANIC("arginst caught with illegitimate child. Bye!");
       }
       break;
     case origin_PISA:
@@ -3695,7 +3695,7 @@ void ConfigureInstFromArgs(struct Instance *inst,
       break;
     case origin_ERR:
     default:
-      Asc_Panic(2, NULL, "arginst caught with alien child. Bye!");
+      ASC_PANIC("arginst caught with alien child. Bye!");
     }
   }
 }
@@ -3735,7 +3735,7 @@ void ReConfigureInstFromArgs(struct Instance *inst,
     case origin_PALI:
     case origin_PARR:
       if (InstanceChild(arginst,c)!=NULL) {
-        Asc_Panic(2, NULL, "arginst caught with illegitimate child. Bye!");
+        ASC_PANIC("arginst caught with illegitimate child. Bye!");
       }
       break;
     case origin_PISA:
@@ -3752,7 +3752,7 @@ void ReConfigureInstFromArgs(struct Instance *inst,
       break;
     case origin_ERR:
     default:
-      Asc_Panic(2, NULL, "arginst caught with alien child. Bye!");
+      ASC_PANIC("arginst caught with alien child. Bye!");
     }
   }
 }
@@ -3846,7 +3846,7 @@ int CheckParamRefinement(struct Instance *parent,
       case origin_PALI:
       case origin_PARR:
         if (InstanceChild(arginst,c)!=NULL) {
-          Asc_Panic(2, NULL, "arginst caught with illegitimate child. Bye!");
+          ASC_PANIC("arginst caught with illegitimate child. Bye!");
         }
         break;
       case origin_PISA:
@@ -3868,7 +3868,7 @@ int CheckParamRefinement(struct Instance *parent,
         break;
       case origin_ERR:
       default:
-        Asc_Panic(2, NULL, "arginst caught with alien child. Bye!");
+        ASC_PANIC("arginst caught with alien child. Bye!");
       }
     }
   } else {
@@ -3882,7 +3882,7 @@ int CheckParamRefinement(struct Instance *parent,
       case origin_PALI:
       case origin_PARR:
         if (InstanceChild(arginst,c)!=NULL) {
-          Asc_Panic(2, NULL, "arginst caught with illegitimate child. Bye!");
+          ASC_PANIC("arginst caught with illegitimate child. Bye!");
         }
         break;
       case origin_PISA:
@@ -3908,7 +3908,7 @@ int CheckParamRefinement(struct Instance *parent,
         break;
       case origin_ERR:
       default:
-        Asc_Panic(2, NULL, "arginst caught with alien child. Bye!");
+        ASC_PANIC("arginst caught with alien child. Bye!");
       }
     }
   }
@@ -3968,7 +3968,7 @@ void MakeInstance(CONST struct Name *name,
       }
     } else {			/* unknown child name */
       STATEMENT_ERROR(statement, "Unknown child name.  Never should happen");
-      Asc_Panic(2, NULL, "Unknown child name.  Never should happen");
+      ASC_PANIC("Unknown child name.  Never should happen");
     }
   } else {
     /* if reach the else, means compound identifier or garbage */
@@ -3994,13 +3994,13 @@ void MakeInstance(CONST struct Name *name,
             }
           } else {
             STATEMENT_ERROR(statement, "Unable to create array instance");
-            Asc_Panic(2, NULL, "Unable to create array instance");
+            ASC_PANIC("Unable to create array instance");
           }
         } else {
           DeleteTypeDesc(arydef);
           STATEMENT_ERROR(statement,
                "Unknown array child name. Never should happen");
-          Asc_Panic(2, NULL, "Unknown array child name. Never should happen");
+          ASC_PANIC("Unknown array child name. Never should happen");
         }
       } else {
         DestroyIndexList(indices);
@@ -4017,7 +4017,7 @@ void MakeInstance(CONST struct Name *name,
         } else {
           STATEMENT_ERROR(statement,
             "Unknown array child name. Never should happen");
-          Asc_Panic(2, NULL, "Unknown array child name. Never should happen");
+          ASC_PANIC("Unknown array child name. Never should happen");
         }
       }
     } else {
@@ -4135,7 +4135,7 @@ void MakeDummyInstance(CONST struct Name *name,
     }
   } else {			/* unknown child name */
       STATEMENT_ERROR(statement, "Unknown child name.  Never should happen");
-      Asc_Panic(2, NULL, "Unknown child name.  Never should happen");
+      ASC_PANIC("Unknown child name.  Never should happen");
   }
 }
 
@@ -4616,7 +4616,7 @@ int ExecuteATS(struct Instance *inst, struct Statement *statement)
           inst1 = MergeInstances(inst1,inst2);
           if (inst1==NULL){
             STATEMENT_ERROR(statement, "Fatal ARE_THE_SAME error");
-            Asc_Panic(2, NULL, "Fatal ARE_THE_SAME error");
+            ASC_PANIC("Fatal ARE_THE_SAME error");
             /*NOTREACHED Wanna bet? ! */
           }
         }
@@ -4873,9 +4873,9 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
                      "Relation contains an impossible instance",3);
           return 1;
         case correct_instance:
-          Asc_Panic(2, NULL, "Incorrect error response.\n");/*NOTREACHED*/
+          ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
         default:
-          Asc_Panic(2, NULL, "Unknown error response.\n");/*NOTREACHED*/
+          ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
         }
       case integer_value_undefined:
       case real_value_wild:
@@ -4884,9 +4884,9 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
          "Unassigned constants or wild dimensioned real constant in relation");
           return 1;
       case okay:
-        Asc_Panic(2, NULL, "Incorrect error response.\n");/*NOTREACHED*/
+        ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
       default:
-        Asc_Panic(2, NULL, "Unknown error response.\n");/*NOTREACHED*/
+        ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
 
       }
     }
@@ -5025,7 +5025,7 @@ int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
     name = LogicalRelStatName(statement);
     break;
   default:
-    Asc_Panic(2, NULL, "Incorrect argument passed to ExecuteUnSelectedEQN\n");
+    ASC_PANIC("Incorrect argument passed to ExecuteUnSelectedEQN\n");
 	name = NULL;
   }
   instances = FindInstances(inst,name,&ferr);
@@ -5040,7 +5040,7 @@ int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
     } else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
-      Asc_Panic(2, NULL, "Expression name refers to more than one object");
+      ASC_PANIC("Expression name refers to more than one object");
     }
   }
   return 1;
@@ -5186,19 +5186,19 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
                         "Logical Relation contains an impossible instance");
           return 0;
         case correct_instance:
-          Asc_Panic(2, NULL, "Incorrect error response.\n");/*NOTREACHED*/
+          ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
         default:
-          Asc_Panic(2, NULL, "Unknown error response.\n");/*NOTREACHED*/
+          ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
         }
       case boolean_value_undefined:
         WUEMPASS3(ASCERR,statement,
                                 "Unassigned constants in logical relation");
           return 0;
       case lokay:
-        Asc_Panic(2, NULL, "Incorrect error response.\n");/*NOTREACHED*/
+        ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
 
       default:
-        Asc_Panic(2, NULL, "Unknown error response.\n");/*NOTREACHED*/
+        ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
 
       }
     }
@@ -8477,7 +8477,7 @@ struct gl_list_t *MakeWhenVarList(struct Instance *inst,
     name = NamePointer(vlist);
     instances = FindInstances(inst,name,&err);
     if (instances == NULL){
-      Asc_Panic(2, NULL, "Instance not found in MakeWhenVarList \n");
+      ASC_PANIC("Instance not found in MakeWhenVarList \n");
     }
     else{
       if (gl_length(instances)==1) {
@@ -8663,7 +8663,7 @@ void MakeWhenCaseReferences(struct Instance *inst,
     default:
       WSEM(stderr,statement,
                       "Inappropriate statement type in WHEN Statement");
-      Asc_Panic(2, NULL, "Inappropriate statement type in WHEN Statement");
+      ASC_PANIC("Inappropriate statement type in WHEN Statement");
     }
   }
 }
@@ -8704,7 +8704,7 @@ void MakeRealWhenCaseReferencesList(struct Instance *inst,
     default:
       STATEMENT_ERROR(statement,
                       "Inappropriate statement type in declarative section");
-      Asc_Panic(2, NULL,"Inappropriate statement type in declarative section");
+      ASC_PANIC("Inappropriate statement type in declarative section");
       break;
     }
   }
@@ -8789,7 +8789,7 @@ void ExecuteWhenStatements(struct Instance *inst,
     default:
       WSEM(stderr,statement,
                       "Inappropriate statement type in WHEN Statement");
-      Asc_Panic(2, NULL, "Inappropriate statement type in WHEN Statement");
+      ASC_PANIC("Inappropriate statement type in WHEN Statement");
     }
     asc_assert(return_value);
   }
@@ -8848,12 +8848,12 @@ void RealExecuteWHEN(struct Instance *inst, struct Statement *statement)
       child = MakeWhenInstance(inst,wname,statement);
       if (child == NULL) {
         STATEMENT_ERROR(statement,"Unable to create when instance");
-        Asc_Panic(2, NULL, "Unable to create when instance");
+        ASC_PANIC("Unable to create when instance");
       }
       /*    }
     else {
       STATEMENT_ERROR(statement,"Unable to execute statement");
-      Asc_Panic(2, NULL, "Unable to execute statement");
+      ASC_PANIC("Unable to execute statement");
     }  */
   } else {
     if(gl_length(instances)==1){
@@ -8866,7 +8866,7 @@ void RealExecuteWHEN(struct Instance *inst, struct Statement *statement)
     } else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
-      Asc_Panic(2, NULL, "Expression name refers to more than one object");
+      ASC_PANIC("Expression name refers to more than one object");
 	  child = NULL;
     }
   }
@@ -8931,7 +8931,7 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
     default:
       WSEM(stderr,statement,
                       "Inappropriate statement type in WHEN Statement");
-      Asc_Panic(2, NULL, "Inappropriate statement type in WHEN Statement");
+      ASC_PANIC("Inappropriate statement type in WHEN Statement");
     }
     asc_assert(return_value);
   }
@@ -8967,7 +8967,7 @@ int ExecuteUnSelectedWHEN(struct Instance *inst, struct Statement *statement)
     } else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
-      Asc_Panic(2, NULL, "Expression name refers to more than one object");
+      ASC_PANIC("Expression name refers to more than one object");
     }
   }
 
@@ -9141,7 +9141,7 @@ void ExecuteUnSelectedStatements(struct Instance *inst,unsigned long *count,
       default:
         WSEM(stderr,statement,
           "Inappropriate statement type in declarative section unSELECTed\n");
-        Asc_Panic(2, NULL, "Inappropriate statement type"
+        ASC_PANIC("Inappropriate statement type"
                   " in declarative section unSELECTed\n");
     }
   }
@@ -9831,7 +9831,7 @@ int Pass3ExecuteForStatements(struct Instance *inst,
     default:
       STATEMENT_ERROR(statement,
            "Inappropriate statement type in declarative section log rel\n");
-      Asc_Panic(2, NULL, "Inappropriate statement type"
+      ASC_PANIC("Inappropriate statement type"
                 " in declarative section log rel\n");
     }
     if (!return_value) {
@@ -9928,7 +9928,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
     default:
       STATEMENT_ERROR(statement,
       "Inappropriate statement type in declarative section relations");
-      Asc_Panic(2, NULL, "Inappropriate statement type"
+      ASC_PANIC("Inappropriate statement type"
                 " in declarative section relations");
     }
     asc_assert(return_value);
@@ -10068,16 +10068,16 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
       case COND:
         STATEMENT_ERROR(statement,
         "CONDITIONAL not allowed inside a FOR loop. Try FOR inside COND");
-        Asc_Panic(2, NULL, "CONDITIONAL not allowed inside a FOR loop."
+        ASC_PANIC("CONDITIONAL not allowed inside a FOR loop."
                   " Try FOR inside COND");
       case SELECT:
         STATEMENT_ERROR(statement, "SELECT not allowed inside a FOR Statement");
-        Asc_Panic(2, NULL, "SELECT not allowed inside a FOR Statement");
+        ASC_PANIC("SELECT not allowed inside a FOR Statement");
         break;
       default:
         WSEM(stderr,statement,
              "Inappropriate statement type in declarative section unSEL FOR");
-        Asc_Panic(2, NULL, "Inappropriate statement type in"
+        ASC_PANIC("Inappropriate statement type in"
                   " declarative section unSEL FOR");
     }
   }
@@ -10633,7 +10633,7 @@ void Pass1RealExecuteFOR(struct Instance *inst, struct Statement *statement)
     case undefined_value:
       DestroyValue(&value);
       STATEMENT_ERROR(statement, "FOR has undefined values");
-      Asc_Panic(2, NULL, "FOR has undefined values");
+      ASC_PANIC("FOR has undefined values");
     default:
       WriteForValueError(statement,value);
       DestroyValue(&value);
@@ -11284,7 +11284,7 @@ int Pass1ExecuteStatement(struct Instance *inst, unsigned long *c,
   default:
     STATEMENT_ERROR(statement,
                        "Inappropriate statement type in declarative section");
-    Asc_Panic(2, NULL, "Inappropriate statement type in declarative section");
+    ASC_PANIC("Inappropriate statement type in declarative section");
   }
   return 0;
 }
@@ -12572,7 +12572,7 @@ int ValidRealInstantiateType(struct TypeDescription *def)
     FPRINTF(ASCERR,"They can only be contained in models or arrays.\n");
     return 1;
   default:
-    Asc_Panic(2, NULL, "Unknown definition type.\n");			/*NOTREACHED*/
+    ASC_PANIC("Unknown definition type.\n");			/*NOTREACHED*/
 
   }
 }
@@ -12619,7 +12619,7 @@ struct Instance *NewRealInstantiate(struct TypeDescription *def,
             "They can only be contained in models or arrays.\n");
     return NULL; /* how did we get here? */
   default:
-    Asc_Panic(2, NULL, "Unknown definition type.\n");	/*NOTREACHED*/
+    ASC_PANIC("Unknown definition type.\n");	/*NOTREACHED*/
 
   }
 }
@@ -12761,7 +12761,7 @@ void NewReInstantiate(struct Instance *i)
     SilentVisitInstanceTree(result,Pass2SetRelationBits,0,0);
     result = Pass2InstantiateModel(result,&pass2pendings);
   } else {
-    Asc_Panic(2, NULL ,"Reinstantiation phase 2 went insane. Bye!\n");
+    ASC_PANIC("Reinstantiation phase 2 went insane. Bye!\n");
   }
 #if TIMECOMPILER
   phase2t = clock();
@@ -12770,7 +12770,7 @@ void NewReInstantiate(struct Instance *i)
     SilentVisitInstanceTree(result,Pass3SetLogRelBits,0,0);
     result = Pass3InstantiateModel(result,&pass3pendings);
   } else {
-    Asc_Panic(2, NULL, "Reinstantiation phase 3 went insane. Bye!\n");
+    ASC_PANIC("Reinstantiation phase 3 went insane. Bye!\n");
   }
 #if TIMECOMPILER
   phase3t = clock();
@@ -12779,7 +12779,7 @@ void NewReInstantiate(struct Instance *i)
     SilentVisitInstanceTree(result,Pass4SetWhenBits,0,0);
     result = Pass4InstantiateModel(result,&pass4pendings);
   } else {
-    Asc_Panic(2, NULL ,"Reinstantiation phase 4 went insane. Bye!\n");
+    ASC_PANIC("Reinstantiation phase 4 went insane. Bye!\n");
   }
 #if TIMECOMPILER
   phase4t = clock();
@@ -12792,7 +12792,7 @@ void NewReInstantiate(struct Instance *i)
       FPRINTF(ASCERR,"Default assignments not executed.\n");
     }
   } else {
-    Asc_Panic(2, NULL, "Reinstantiation phase 5 went insane. Bye!\n");
+    ASC_PANIC("Reinstantiation phase 5 went insane. Bye!\n");
   }
 #if TIMECOMPILER
   phase5t = clock();
