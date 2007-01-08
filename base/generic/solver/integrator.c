@@ -97,7 +97,7 @@ IntegratorAnalyseFn integrator_analyse_ode;
 IntegratorAnalyseFn integrator_analyse_dae;
 
 typedef void (IntegratorVarVisitorFn)(IntegratorSystem *sys, struct var_variable *var, const int *varindx);
-static void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
+void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
 IntegratorVarVisitorFn integrator_ode_classify_var;
 IntegratorVarVisitorFn integrator_dae_classify_var;
 IntegratorVarVisitorFn integrator_classify_indep_var;
@@ -371,35 +371,45 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 }
 
 /**
-	Analyse the system, either as DAE or as an ODE system, depending on the
-	solver engine selected.
+	Perform whatever additional problem is required so that the system can be
+	integrated as a dynamical system with the IntegrationEngine chosen.
 
-	@return 1 on success
+	We can always assume that sys->system has had analyse_make_problem called on
+	it, so all the variable lists (etc) will be there already.
+
+	@return 0 on success
 */
 int integrator_analyse(IntegratorSystem *sys){
+	int res;
+
 	CONSOLE_DEBUG("Analysing integration system...");
 	asc_assert(sys);
 	if(sys->engine==INTEG_UNKNOWN){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No engine selected: can't analyse");
-		return 0;
+		return 1;
 	}
 	asc_assert(sys->engine!=INTEG_UNKNOWN);
 	asc_assert(sys->internals);
 
 	if(!sys->indepvars || !gl_length(sys->indepvars)){
-		if(!integrator_find_indep_var(sys)){
+		if(integrator_find_indep_var(sys)){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"No independent variable found: abandoning integration");
-			return 0;
+			return 2;
+		}else{
+			CONSOLE_DEBUG("got 0 from  integrator_find_indep_var");
 		}
 	}
 
-	return (sys->internals->analysefn)(sys);
+	res = (sys->internals->analysefn)(sys);
+	CONSOLE_DEBUG("integrator_analyse returning %d",res);
+	return res;
 }
 
 /**
 	To analyse a DAE we need to identify *ALL* variables in the system
 	Except for the highest-level derivatives of any present?
-	We also need to identify the independent variable (just one).
+
+	Note that we can asume the independent variable has already been identified.
 
 	@TODO implement Pantelides algorithm in here?
 	@TODO prevent re-analysis without clearing out the data structures?
@@ -429,7 +439,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	CONSOLE_DEBUG("Block partitioning system...");
 	if(slv_block_partition(sys->system)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to block-partition system");
-		return 0;
+		return 1;
 	}
 
 	assert(sys->indepvars==NULL);
@@ -443,7 +453,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		|| sys->obslist==NULL
 	){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory");
-		return 0;
+		return 2;
 	}
 
 	integrator_visit_system_vars(sys,&integrator_dae_classify_var);
@@ -461,7 +471,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	/* CONSOLE_DEBUG("Checking found vars..."); */
 	if(gl_length(sys->dynvars)==0){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No solver_var vars found to integrate (check 'ode_type'?).");
-		return 0;
+		return 3;
 	}
 
 	CONSOLE_DEBUG("Found %lu vars.", gl_length(sys->dynvars));
@@ -478,16 +488,11 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	}
 	if(maxderiv == 0){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"No derivatives found (check 'ode_type' values for your vars).");
-		return 0;
+		return 4;
 	}
 	if(maxderiv > 1){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Higher-order derivatives found. You must provide a reduced order formulation for your model.");
-		return 0;
-	}
-
-	if(!integrator_check_indep_var(sys)){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Independent variable not yet identified");
-		return 0;
+		return 5;
 	}
 
 	gl_sort(sys->dynvars,(CmpFunc)Integ_CmpDynVars);
@@ -527,7 +532,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 				);
 				ASC_FREE(varname);
 #endif
-				return 0;
+				return 7;
 			}else if(info->type != prev->type + 1){
 				/* derivative, but missing the next-lower-order derivative */
 #ifdef ANALYSE_DEBUG
@@ -542,7 +547,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 				ASC_FREE(varname);
 				ASC_FREE(derivname);
 #endif
-				return 0;
+				return 8;
 			}else{
 				/* variable with derivative */
 #ifdef ANALYSE_DEBUG
@@ -654,14 +659,14 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 			,"System is not square: solver has %d rels, found %d system states"
 			,nrels, numy
 		);
-		return 0;
+		return 9;
 	}
 
 	CONSOLE_DEBUG("THERE ARE %d VARIABLES IN THE INTEGRATION SYSTEM",numy);
 	
 	sys->n_y = numy;
 
-	if(!integrator_sort_obs_vars(sys))return 0;
+	if(integrator_sort_obs_vars(sys))return 10;
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("RESULTS OF ANALYSIS");
@@ -687,7 +692,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	integrator_visit_system_vars(sys,integrator_dae_show_var);
 #endif
 
-	return 1;
+	return 0;
 }
 
 void integrator_dae_show_var(IntegratorSystem *sys
@@ -772,7 +777,10 @@ void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *
   /* CONSOLE_DEBUG("Checked %d unattached",vlen); */
 }
 /**
-	@return 1 on success
+	Analyse the ODE structure. We can assume that the independent variable was
+	already found.
+
+	@return 0 on success
 */
 int integrator_analyse_ode(IntegratorSystem *sys){
   struct Integ_var_t *v1,*v2;
@@ -792,7 +800,7 @@ int integrator_analyse_ode(IntegratorSystem *sys){
     || sys->indepvars == NULL
   ){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
-    return 0;
+    return 1;
   }
 
   sys->nstates = sys->nderivs = 0;
@@ -800,8 +808,6 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   integrator_visit_system_vars(sys,&integrator_ode_classify_var);
 
   integrator_print_var_stats(sys);
-
-  if(!integrator_check_indep_var(sys))return 0;
 
   /* check sanity of state and var lists */
 
@@ -812,12 +818,12 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   if (len % 2 || len == 0L || sys->nstates != sys->nderivs ) {
     /* list length must be even for vars to pair off */
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"n_y != n_ydot, or no dynamic vars found. Fix your indexing.");
-    return 0;
+    return 3;
   }
   gl_sort(sys->dynvars,(CmpFunc)Integ_CmpDynVars);
   if (gl_fetch(sys->dynvars,len)==NULL) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Mysterious NULL found!");
-    return 0;
+    return 4;
   }
   sys->states = gl_create(half);   /* state vars Integ_var_t references */
   sys->derivs = gl_create(half);   /* derivative var atoms */
@@ -842,7 +848,7 @@ int integrator_analyse_ode(IntegratorSystem *sys){
     }
   }
   if (!happy) {
-    return 0;
+    return 5;
   }
   sys->n_y = half;
   sys->y = ASC_NEW_ARRAY(struct var_variable *, half);
@@ -850,7 +856,7 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   sys->ydot = ASC_NEW_ARRAY(struct var_variable *, half);
   if (sys->y==NULL || sys->ydot==NULL || sys->y_id==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
-    return 0;
+    return 6;
   }
   for (i = 1; i <= half; i++) {
     v1 = (struct Integ_var_t *)gl_fetch(sys->states,i);
@@ -859,7 +865,7 @@ int integrator_analyse_ode(IntegratorSystem *sys){
     sys->ydot[i-1] = (struct var_variable *)gl_fetch(sys->derivs,i);
   }
 
-  if(!integrator_sort_obs_vars(sys))return 0;
+  if(integrator_sort_obs_vars(sys))return 7;
 
   /* FIX all states */
   for(i=0; i<sys->n_y; ++i){
@@ -882,14 +888,14 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   sys->obslist = NULL;
 
   /* analysis completed OK */
-  return 1;
+  return 0;
 }
 
 /**
 	Reindex observations. Sort if the user mostly numbered. Take natural order
 	if user just booleaned.
 
-	@return 1 on success
+	@return 0 on success
 */
 static int integrator_sort_obs_vars(IntegratorSystem *sys){
   int half, i, len = 0;
@@ -927,7 +933,7 @@ static int integrator_sort_obs_vars(IntegratorSystem *sys){
   sys->obs_id = ASC_NEW_ARRAY(long, half);
   if ( sys->obs==NULL || sys->obs_id==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
-    return 0;
+    return 1;
   }
   sys->n_obs = half;
   for (i = 1; i <= half; i++) {
@@ -936,7 +942,7 @@ static int integrator_sort_obs_vars(IntegratorSystem *sys){
     sys->obs_id[i-1] = v2->index;
   }
 
-  return 1;
+  return 0;
 }
 
 static void integrator_print_var_stats(IntegratorSystem *sys){
@@ -948,7 +954,7 @@ static void integrator_print_var_stats(IntegratorSystem *sys){
 /**
 	Check sanity of the independent variable.
 
-	@return 1 on success
+	@return 0 on success
 */
 static int integrator_check_indep_var(IntegratorSystem *sys){
   int len, i;
@@ -964,7 +970,7 @@ static int integrator_check_indep_var(IntegratorSystem *sys){
   len = gl_length(sys->indepvars);
   if (!len) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"No independent variable found.");
-    return 0;
+    return 2;
   }
   if (len > 1) {
 	ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
@@ -978,18 +984,18 @@ static int integrator_check_indep_var(IntegratorSystem *sys){
       FPRINTF(ASCERR," %s",varname);
       ASC_FREE(varname);
     }
-    FPRINTF(ASCERR , "\nSet the \"%s\" flag on all but one of these to %s >= 0.\n"
+    FPRINTF(ASCERR , "\nSet the '%s' flag on all but one of these to %s >= 0.\n"
         , SCP(STATEFLAG),SCP(STATEFLAG)
 	);
 	error_reporter_end_flush();
-    return 0;
+    return 3;
   }else{
     info = (struct Integ_var_t *)gl_fetch(sys->indepvars,1);
     sys->x = info->i;
   }
   asc_assert(gl_length(sys->indepvars)==1);
   asc_assert(sys->x);
-  return 1;
+  return 0;
 }
 
 /*------------------------------------------------------------------------------

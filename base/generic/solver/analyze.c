@@ -145,6 +145,7 @@ static symchar *g_strings[4];
 #define FIXED_A g_strings[1]
 #define BASIS_A g_strings[2]
 #define DERIV_A g_strings[3]
+#define ODEID_A g_strings[4]
 
 /*
 	Global variable. Set to true by classify if need be
@@ -175,7 +176,9 @@ struct varip {
   int solvervar;	      /* set in classify_instance */
   int active;             /* is this var a part of my problem */
   int basis;              /* set in classify_instance */
+
   int deriv;              /* set in classify_instance */
+  int odeid;              /* value loaded from the ode_id child integer atom */
 };
 
 
@@ -391,10 +394,6 @@ struct problem_t {
   struct var_variable **relincidence;	/* rel_relation incidence source */
   struct rel_relation **varincidence;	/* var_variable incidence source */
   struct dis_discrete **logrelinciden;	/* logrel_relation incidence source */
-
-#ifdef DIEDIEDIE
-  struct ExtRelCache **erlist;	/* external rel cache null terminated list */
-#endif
 };
 
 /*------------------------------------------------------------------------------
@@ -717,41 +716,6 @@ void CollectRelsAndWhens(struct solver_ipdata *ip
   }
 }
 
-#ifdef DIEDIEDIE
-/*
-	Checks the problem extrels list to see whether a cache has been
-	created for the given relation in the problem_t bridge.
-	If not will return NULL, else
-	will return the pointer to the cache. The nodestamp corresponding
-	to this relation is returned regardless.
-*/
-static
-struct ExtRelCache *CheckIfCacheExists(struct Instance *relinst
-		,int *nodestamp
-		,struct problem_t *p_data
-){
-  struct ExtCallNode *ext;
-  struct ExtRelCache *cache;
-  CONST struct relation *gut;
-  enum Expr_enum type;
-  unsigned long len,c;
-
-  gut = GetInstanceRelation(relinst,&type);
-  assert(type==e_blackbox);
-  ext = BlackBoxExtCall(gut);
-  *nodestamp = ExternalCallNodeStamp(ext);
-  len = gl_length(p_data->extrels);
-
-  for (c=1;c<=len;c++) {
-    cache = (struct ExtRelCache *)gl_fetch(p_data->extrels,c);
-    if (cache->nodestamp == *nodestamp) {
-      return cache;
-    }
-  }
-  return NULL;
-}
-#endif
-
 /*
 	Count the instance into the required bin.
 
@@ -784,7 +748,7 @@ static void analyze_CountRelation(struct Instance *inst
 }
 
 
-/*
+/**
 	Obtain an integer value from a symbol value
 	Used for a WHEN statement. Each symbol value is storaged in a symbol list.
 	It checks if the symval is already in the solver symbol list,
@@ -795,7 +759,6 @@ static void analyze_CountRelation(struct Instance *inst
 	I am keeping it by now, are they going to be so many symbols in
 	whens anyway ?
 */
-
 int GetIntFromSymbol(CONST char *symval
 		,struct gl_list_t *symbol_list
 ){
@@ -882,8 +845,10 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
       ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
       ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
+      ip->u.v.odeid = IntegerChildValue(inst,ODEID_A);
 
       if(RelationsCount(inst)) {
+        asc_assert((int)ip!=0x1);
         gl_append_ptr(p_data->vars,(POINTER)ip);
       }else{
         gl_append_ptr(p_data->unas,(POINTER)ip);
@@ -1276,44 +1241,24 @@ int analyze_make_master_lists(struct problem_t *p_data){
     return 1;
   }
 
-  p_data->vars = gl_create(p_data->nv);		/* variables */
-  if (p_data->vars == NULL) return 1;
+#define CL(L,N) \
+  p_data->L = gl_create(p_data->N); \
+  if(p_data->vars == NULL)return 1
 
-  p_data->dvars = gl_create(p_data->ndv);	/* discrete variables */
-  if (p_data->dvars == NULL) return 1;
-
-  p_data->pars = gl_create(p_data->np);		/* parameters */
-  if (p_data->pars == NULL) return 1;
-
-  p_data->unas = gl_create(p_data->nu);		/* unattached */
-  if (p_data->unas == NULL) return 1;
-
-  p_data->dunas = gl_create(p_data->nud);	/* discrete unattached */
-  if (p_data->dunas == NULL) return 1;
-
-  p_data->cnds = gl_create(p_data->nc);		/* conditional relations */
-  if (p_data->cnds == NULL) return 1;
-
-  p_data->rels = gl_create(p_data->nr);		/* relations */
-  if (p_data->rels == NULL) return 1;
-
-  p_data->logrels = gl_create(p_data->nl);     	/* logical relations */
-  if (p_data->logrels == NULL) return 1;
-
-  p_data->logcnds = gl_create(p_data->ncl);  	/* conditional logrelations */
-  if (p_data->logcnds == NULL) return 1;
-
-  p_data->extrels = gl_create(p_data->ne);	/* extrelations */
-  if (p_data->extrels == NULL) return 1;
-
-  p_data->objrels = gl_create(p_data->no);	/* objectives */
-  if (p_data->objrels == NULL) return 1;
-
-  p_data->whens = gl_create(p_data->nw);	/* whens */
-  if (p_data->whens == NULL) return 1;
-
-  p_data->models = gl_create(p_data->nm);	/* models */
-  if (p_data->models == NULL) return 1;
+  CL(vars,nv);	/* variables */
+  CL(dvars,ndv);/* discrete variables */
+  CL(pars,np);  /* parameters */
+  CL(unas,nu);  /* unattached */
+  CL(dunas,nud);/* discrete unattached */
+  CL(cnds,nc);  /* conditional relations */
+  CL(rels,nr);  /* relations */
+  CL(logrels,nl);/* logical relations */
+  CL(logcnds,ncl);/* conditional logrelations */
+  CL(extrels,ne); /* extrelations */
+  CL(objrels,no); /* objectives */
+  CL(whens,nw);	/* whens */
+  CL(models,nm); /* models */
+#undef CL
 
   /* decorate the instance tree with ips, collecting vars and models. */
   p_data->oldips = PushInterfacePtrs(p_data->root,classify_instance,
@@ -1542,69 +1487,34 @@ void analyze_free_lists(struct problem_t *p_data){
 
   /* memory containing gl_lists of atomic structure pointers */
   /* if(p_data->extrels != NULL)gl_free_and_destroy(p_data->extrels); */
+
   if(p_data->extrels!=NULL)gl_destroy(p_data->extrels); /* -- JP HACK */
 
-#define AFUN(ptr) if (ptr!=NULL) ascfree(ptr); (ptr) = NULL
-#define ADUN(ptr) if (ptr!=NULL) gl_destroy(ptr); (ptr) = NULL
+#define AFUN(P) if(p_data->P!=NULL) ascfree(p_data->P); (p_data->P) = NULL
+#define ADUN(P) if(p_data->P!=NULL) gl_destroy(p_data->P); (p_data->P) = NULL
 
   /* gl_lists without memory items use ADUN */
-  ADUN(p_data->vars);
-  ADUN(p_data->dvars);
-  ADUN(p_data->pars);
-  ADUN(p_data->unas);
-  ADUN(p_data->dunas);
-  ADUN(p_data->rels);
-  ADUN(p_data->objrels);
-  ADUN(p_data->models);
-  ADUN(p_data->cnds);
-  ADUN(p_data->logrels);
-  ADUN(p_data->logcnds);
-  ADUN(p_data->whens);
+  ADUN(vars);   ADUN(dvars);  ADUN(pars);
+  ADUN(unas);   ADUN(dunas);  ADUN(rels);
+  ADUN(objrels);  ADUN(models);  ADUN(cnds);
+  ADUN(logrels);  ADUN(logcnds);  ADUN(whens);
   
   /* blocks of memory use AFUN */
-  AFUN(p_data->blocks);
-  AFUN(p_data->reldata);
-  AFUN(p_data->objdata);
-  AFUN(p_data->condata);
-  AFUN(p_data->lrdata);
-  AFUN(p_data->logcondata);
-  AFUN(p_data->vardata);
-  AFUN(p_data->pardata);
-  AFUN(p_data->undata);
-  AFUN(p_data->disdata);
-  AFUN(p_data->undisdata);
-  AFUN(p_data->whendata);
-  AFUN(p_data->bnddata);
-  AFUN(p_data->relincidence);
-  AFUN(p_data->varincidence);
-  AFUN(p_data->logrelinciden);
-  AFUN(p_data->mastervl);
-  AFUN(p_data->masterdl);
-  AFUN(p_data->masterrl);
-  AFUN(p_data->masterol);
-  AFUN(p_data->mastercl);
-  AFUN(p_data->masterll);
-  AFUN(p_data->mastercll);
-  AFUN(p_data->masterpl);
-  AFUN(p_data->masterul);
-  AFUN(p_data->masterdul);
-  AFUN(p_data->masterwl);
-  AFUN(p_data->masterbl);
-  AFUN(p_data->solvervl);
-  AFUN(p_data->solverdl);
-  AFUN(p_data->solverrl);
-  AFUN(p_data->solverol);
-  AFUN(p_data->solvercl);
-  AFUN(p_data->solverll);
-  AFUN(p_data->solvercll);
-  AFUN(p_data->solverpl);
-  AFUN(p_data->solverul);
-  AFUN(p_data->solverdul);
-  AFUN(p_data->solverwl);
-  AFUN(p_data->solverbl);
-#ifdef DIEDIEDIE
-  AFUN(p_data->erlist);
-#endif
+  AFUN(blocks);  AFUN(reldata);  AFUN(objdata);
+  AFUN(condata);  AFUN(lrdata);  AFUN(logcondata);
+  AFUN(vardata);  AFUN(pardata);  AFUN(undata);
+  AFUN(disdata);  AFUN(undisdata);  AFUN(whendata);
+  AFUN(bnddata);  AFUN(relincidence);  AFUN(varincidence);
+  AFUN(logrelinciden);
+  /* these variable names are a %*@#$ abomination */
+  AFUN(mastervl);  AFUN(masterdl);  AFUN(masterrl);
+  AFUN(masterol);  AFUN(mastercl);  AFUN(masterll);
+  AFUN(mastercll);  AFUN(masterpl);  AFUN(masterul);
+  AFUN(masterdul);  AFUN(masterwl);  AFUN(masterbl);
+  AFUN(solvervl);  AFUN(solverdl);  AFUN(solverrl);
+  AFUN(solverol);  AFUN(solvercl);  AFUN(solverll);
+  AFUN(solvercll);  AFUN(solverpl);  AFUN(solverul);
+  AFUN(solverdul);  AFUN(solverwl);  AFUN(solverbl);
 
 #undef AFUN
 #undef ADUN
@@ -1993,9 +1903,6 @@ static
 int analyze_make_solvers_lists(struct problem_t *p_data){
   CONST struct relation *gut;
   CONST struct logrelation *lgut;
-#ifdef DIEDIEDIE
-  struct ExtRelCache *cache;
-#endif
   struct Instance *i;
   struct Instance *i_r;
   struct solver_ipdata *rip = NULL, *vip;
@@ -2010,9 +1917,6 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   struct bnd_boundary *bnd;
   struct w_when *when;
   int order,nnzold;
-#ifdef DIEDIEDIE
-  int nodestamp;
-#endif
   int logorder,lognnzold;
   int c,len,v,vlen,r,found;
   uint32 flags;
@@ -2130,104 +2034,78 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   /* now malloc and build things, remember to punt the matrix soon */
   /* remember we must NEVER free these things individually. */
 
-#define ALLOCVARDATA(p,n)    (p)=((n)>0 ? ASC_NEW_ARRAY(struct var_variable,n) : (struct var_variable *)NULL)
-#define ALLOCRELDATA(p,n)    (p)=((n)>0 ? ASC_NEW_ARRAY(struct rel_relation,n) : (struct rel_relation *)NULL)
-#define ALLOCDISVARDATA(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct dis_discrete,n) : (struct dis_discrete *)NULL)
-#define ALLOCLOGRELDATA(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct logrel_relation,n) : (struct logrel_relation *)NULL)
-#define ALLOCWHENDATA(p,n)   (p)=((n)>0 ? ASC_NEW_ARRAY(struct w_when,n)       : (struct w_when *)NULL)
-#define ALLOCBNDDATA(p,n)    (p)=((n)>0 ? ASC_NEW_ARRAY(struct bnd_boundary,n) : (struct bnd_boundary *)NULL)
+#define ALLOC_OR_NULL(T,N) ((N) > 0 ? ASC_NEW_ARRAY(T,N) : (T*)NULL)
 
-  ALLOCVARDATA(p_data->vardata,p_data->nv);
-  ALLOCVARDATA(p_data->pardata,p_data->np);
-  ALLOCVARDATA(p_data->undata,p_data->nu);
-  ALLOCDISVARDATA(p_data->disdata,p_data->ndv);
-  ALLOCDISVARDATA(p_data->undisdata,p_data->nud);
-  ALLOCRELDATA(p_data->reldata,p_data->nr);
-  ALLOCRELDATA(p_data->objdata,p_data->no);
-  ALLOCRELDATA(p_data->condata,p_data->nc);
-  ALLOCLOGRELDATA(p_data->lrdata,p_data->nl);
-  ALLOCLOGRELDATA(p_data->logcondata,p_data->ncl);
-  ALLOCWHENDATA(p_data->whendata,p_data->nw);
-  ALLOCBNDDATA(p_data->bnddata,p_data->nc+p_data->ncl);
+#define AL(P,N,T) p_data->P##data = ALLOC_OR_NULL(struct T,p_data->N)
+  AL(var,nv,var_variable);  AL(par,np,var_variable);  AL(un,nu,var_variable);  
+  AL(dis,ndv,dis_discrete);  AL(undis,nud,dis_discrete);
+  AL(rel,nr,rel_relation);  AL(obj,no,rel_relation);  AL(con,nc,rel_relation);
+  AL(lr,nl,logrel_relation);  AL(logcon,ncl,logrel_relation);
+  AL(when,nw,w_when);
+  AL(bnd,nc + p_data->ncl,bnd_boundary);
+#undef AL
 
-#define ALLOCVARLIST(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct var_variable*,n) :(struct var_variable **)NULL)
-#define ALLOCRELLIST(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct rel_relation*,n) :(struct rel_relation **)NULL)
-#define ALLOCDISVARLIST(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct dis_discrete*,n) : (struct dis_discrete **)NULL)
-#define ALLOCLOGRELLIST(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct logrel_relation*,n) : (struct logrel_relation **)NULL)
-#define ALLOCWHENLIST(p,n)(p)=((n)>0 ? ASC_NEW_ARRAY(struct w_when*,n)       :(struct w_when **)NULL)
-#define ALLOCBNDLIST(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct bnd_boundary*,n) :(struct bnd_boundary **)NULL)
+#define AL(P,N,T) p_data->master##P=ALLOC_OR_NULL(struct T*,p_data->N + 1)
+  AL(vl,nv,var_variable);  AL(pl,np,var_variable);  AL(ul,nu,var_variable);  
+  AL(dl,ndv,dis_discrete);  AL(dul,nud,dis_discrete);
+  AL(rl,nr,rel_relation);  AL(ol,no,rel_relation);  AL(cl,nc,rel_relation);
+  AL(ll,nl,logrel_relation);  AL(cll,ncl,logrel_relation);
+  AL(wl,nw,w_when);
+  AL(bl,nc + p_data->ncl,bnd_boundary);
+#undef AL
 
-  ALLOCVARLIST(p_data->mastervl,p_data->nv+1);
-  ALLOCVARLIST(p_data->masterpl,p_data->np+1);
-  ALLOCVARLIST(p_data->masterul,p_data->nu+1);
-  ALLOCDISVARLIST(p_data->masterdl,p_data->ndv+1);
-  ALLOCDISVARLIST(p_data->masterdul,p_data->nud+1);
-  ALLOCRELLIST(p_data->masterrl,p_data->nr+1);
-  ALLOCRELLIST(p_data->masterol,p_data->no+1);
-  ALLOCRELLIST(p_data->mastercl,p_data->nc+1);
-  ALLOCLOGRELLIST(p_data->masterll,p_data->nl+1);
-  ALLOCLOGRELLIST(p_data->mastercll,p_data->ncl+1);
-  ALLOCWHENLIST(p_data->masterwl,p_data->nw+1);
-  ALLOCBNDLIST(p_data->masterbl,p_data->nc+p_data->ncl+1);
-  ALLOCVARLIST(p_data->solvervl,p_data->nv+1);
-  ALLOCVARLIST(p_data->solverpl,p_data->np+1);
-  ALLOCVARLIST(p_data->solverul,p_data->nu+1);
-  ALLOCDISVARLIST(p_data->solverdl,p_data->ndv+1);
-  ALLOCDISVARLIST(p_data->solverdul,p_data->nud+1);
-  ALLOCRELLIST(p_data->solverrl,p_data->nr+1);
-  ALLOCRELLIST(p_data->solverol,p_data->no+1);
-  ALLOCRELLIST(p_data->solvercl,p_data->nc+1);
-  ALLOCLOGRELLIST(p_data->solverll,p_data->nl+1);
-  ALLOCLOGRELLIST(p_data->solvercll,p_data->ncl+1);
-  ALLOCWHENLIST(p_data->solverwl,p_data->nw+1);
-  ALLOCBNDLIST(p_data->solverbl,p_data->nc+p_data->ncl+1);
+#define AL(P,N,T) p_data->solver##P=ALLOC_OR_NULL(struct T*,p_data->N + 1)
+  AL(vl,nv,var_variable);  AL(pl,np,var_variable);  AL(ul,nu,var_variable);  
+  AL(dl,ndv,dis_discrete);  AL(dul,nud,dis_discrete);
+  AL(rl,nr,rel_relation);  AL(ol,no,rel_relation);  AL(cl,nc,rel_relation);
+  AL(ll,nl,logrel_relation);  AL(cll,ncl,logrel_relation);
+  AL(wl,nw,w_when);
+  AL(bl,nc + p_data->ncl,bnd_boundary);
+#undef AL
 
-  ALLOCVARLIST(p_data->relincidence,p_data->nnztot+p_data->nnzobj +
-	       p_data->nnzcond);
-  ALLOCDISVARLIST(p_data->logrelinciden,p_data->lrelincsize);
+  p_data->relincidence = ALLOC_OR_NULL(
+     struct varvariable*
+     , p_data->nnztot+p_data->nnzobj + p_data->nnzcond
+  );
 
-  /* verify mem allocations. */
-#define CHECKPTRSIZE(n,p) if ((n)>0 && (p)==NULL) return 1
-#define CHECKPTR(p) if ((p)==NULL) return 1
+  p_data->logrelinciden = ALLOC_OR_NULL(
+    struct dis_discrete *
+    , p_data->lrelincsize
+  );
 
-  CHECKPTRSIZE(p_data->nv,p_data->vardata);
-  CHECKPTRSIZE(p_data->np,p_data->pardata);
-  CHECKPTRSIZE(p_data->nu,p_data->undata);
-  CHECKPTRSIZE(p_data->ndv,p_data->disdata);
-  CHECKPTRSIZE(p_data->nud,p_data->undisdata);
-  CHECKPTRSIZE(p_data->nr,p_data->reldata);
-  CHECKPTRSIZE(p_data->no,p_data->objdata);
-  CHECKPTRSIZE(p_data->nc,p_data->condata);
-  CHECKPTRSIZE(p_data->nl,p_data->lrdata);
-  CHECKPTRSIZE(p_data->ncl,p_data->logcondata);
-  CHECKPTRSIZE(p_data->nw,p_data->whendata);
-  CHECKPTRSIZE(p_data->nc+p_data->ncl,p_data->bnddata);
-  CHECKPTR(p_data->mastervl);
-  CHECKPTR(p_data->masterpl);
-  CHECKPTR(p_data->masterul);
-  CHECKPTR(p_data->masterdl);
-  CHECKPTR(p_data->masterdul);
-  CHECKPTR(p_data->masterrl);
-  CHECKPTR(p_data->masterol);
-  CHECKPTR(p_data->mastercl);
-  CHECKPTR(p_data->masterll);
-  CHECKPTR(p_data->mastercll);
-  CHECKPTR(p_data->masterwl);
-  CHECKPTR(p_data->masterbl);
-  CHECKPTR(p_data->solvervl);
-  CHECKPTR(p_data->solverpl);
-  CHECKPTR(p_data->solverul);
-  CHECKPTR(p_data->solverdl);
-  CHECKPTR(p_data->solverdul);
-  CHECKPTR(p_data->solverrl);
-  CHECKPTR(p_data->solverol);
-  CHECKPTR(p_data->solvercl);
-  CHECKPTR(p_data->solverll);
-  CHECKPTR(p_data->solvercll);
-  CHECKPTR(p_data->solverwl);
-  CHECKPTR(p_data->solverbl);
-  CHECKPTR(p_data->relincidence);
-  CHECKPTRSIZE(p_data->lrelincsize,p_data->logrelinciden);
+  /* check that lists have been allocated whereever number of expected elements > 0 */
+#define C(N,P) if ((p_data->N)>0 && (p_data->P##data)==NULL) return 1
+  C(nv,var);   C(np,par);  C(nu,un);
+  C(ndv,dis);  C(nud,undis);
+  C(nr,rel);  C(no,obj);  C(nc,con);
+  C(nl,lr);  C(ncl,logcon);
+  C(nw,when);
+  C(nc + p_data->ncl,bnd);
+#undef C
+
+  /* check that all master lists were assigned */
+#define C(P) if ((p_data->master##P)==NULL)return 1
+  C(vl);  C(pl);  C(ul);
+  C(dl);  C(dul);
+  C(rl);  C(ol);  C(cl);
+  C(ll);  C(cll);
+  C(wl);
+  C(bl);
+#undef C
+
+  /* check that all the solver's lists were assigned */
+#define C(P) if ((p_data->solver##P)==NULL)return 1
+  C(vl);  C(pl);  C(ul);
+  C(dl);  C(dul);
+  C(rl);  C(ol);  C(cl);
+  C(ll);  C(cll);
+  C(wl);
+  C(bl);
+#undef C
+
+  if(p_data->relincidence==NULL)return 1;
+  if(p_data->lrelincsize > 0 && p_data->logrelinciden==NULL) return 1;
+
   p_data->relincsize = p_data->nnztot+p_data->nnzobj + p_data->nnzcond;
   p_data->relincinuse = 0;
   p_data->lrelincinuse = 0;
@@ -2343,23 +2221,6 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     } else {
       rel_set_incidences(rel,0,NULL);
     }
-#ifdef DIEDIEDIE
-    if (rel_extnodeinfo(rel)) {
-      cache = CheckIfCacheExists(rip->i,&nodestamp,p_data);
-      if (cache) {
-        rel_set_extcache(rel,cache);
-		extrel_store_output_var(rel);
-      }else{
-		/* CONSOLE_DEBUG("rip = %p, rip->i = %p",rip,rip->i); */
-        cache = CreateCacheFromInstance(rip->i);
-		/* CONSOLE_DEBUG("cache = %p",cache); */
-        gl_append_ptr(p_data->extrels,(POINTER)cache);
-        rel_set_extcache(rel,cache);
-		extrel_store_input_vars(rel);
-		extrel_store_output_var(rel);
-      }
-    }
-#endif
     flags = 0; /* all init to FALSE */
     /* TURN ON APPROPRIATE ONES */
     if (rip->u.r.included) flags |= (REL_INCLUDED | REL_INBLOCK);
@@ -2376,18 +2237,6 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   }
   p_data->masterrl[vlen] = NULL; /* terminator */
   p_data->solverrl[vlen] = NULL; /* terminator */
-
-#ifdef DIEDIEDIE
-  /* cobble together external rel list */
-  len = gl_length(p_data->extrels);
-  p_data->erlist = (struct ExtRelCache **)
-    ascmalloc((1+len)*sizeof(struct ExtRelCache *));
-  if (p_data->erlist==NULL) return 1;
-  for (c=1; c <= len; c++) {
-    p_data->erlist[c-1] = (struct ExtRelCache *)gl_fetch(p_data->extrels,c);
-  }
-  p_data->erlist[len] = NULL; /* terminator */
-#endif
 
 /*
 	for c in objlist copy objdata.
@@ -2846,7 +2695,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     p_data->varincsize += len;
   }
 
-  ALLOCRELLIST(p_data->varincidence,p_data->varincsize);
+  p_data->varincidence = ALLOC_OR_NULL(struct rel_relation*, p_data->varincsize);
 
   vlen = gl_length(p_data->vars);
   for (v = 0; v < vlen; v++) {
@@ -2892,31 +2741,28 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 static
 int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
 
-  slv_set_var_buf(sys,p_data->vardata);
-  p_data->vardata = NULL;
-  slv_set_par_buf(sys,p_data->pardata);
-  p_data->pardata = NULL;
+  /* do the slv_set_var_buf (etc) calls... */
+#define SL(N,L) slv_set_##N##_buf(sys,p_data->L##data); p_data->L##data=NULL;
+
+  SL(var,var);    SL(par,par);
+
   slv_set_dvar_buf(sys,p_data->disdata,gl_length(p_data->dvars));
   p_data->disdata = NULL;
-  slv_set_rel_buf(sys,p_data->reldata);
-  p_data->reldata = NULL;
-  slv_set_condrel_buf(sys,p_data->condata);
-  p_data->condata = NULL;
-  slv_set_obj_buf(sys,p_data->objdata);
-  p_data->objdata = NULL;
-  slv_set_logrel_buf(sys,p_data->lrdata);
-  p_data->lrdata = NULL;
-  slv_set_condlogrel_buf(sys,p_data->logcondata);
-  p_data->logcondata = NULL;
+
+  SL(rel,rel);    SL(condrel,con);  SL(obj,obj);
+  SL(logrel,lr);  SL(condlogrel,logcon);
+
   slv_set_when_buf(sys,p_data->whendata,gl_length(p_data->whens));
   p_data->whendata = NULL;
-  slv_set_bnd_buf(sys,p_data->bnddata,
-  		gl_length(p_data->cnds) + gl_length(p_data->logcnds));
+  slv_set_bnd_buf(sys,p_data->bnddata, gl_length(p_data->cnds) + gl_length(p_data->logcnds));
   p_data->bnddata = NULL;
-  slv_set_unattached_buf(sys,p_data->undata);
-  p_data->undata = NULL;
-  slv_set_disunatt_buf(sys,p_data->undisdata);
-  p_data->undisdata = NULL;
+
+  SL(unattached,un);
+  SL(disunatt,undis);
+
+#undef SL
+
+  /* set rel, var, logrel incidences... */
   slv_set_incidence(sys,p_data->relincidence,p_data->relincsize);
   p_data->relincidence = NULL;
   slv_set_var_incidence(sys,p_data->varincidence,p_data->varincsize);
@@ -2925,67 +2771,36 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
   p_data->logrelinciden = NULL;
   slv_set_symbol_list(sys,g_symbol_values_list);
   g_symbol_values_list = NULL;
-  slv_set_master_var_list(sys,p_data->mastervl,gl_length(p_data->vars));
-  p_data->mastervl = NULL;
-  slv_set_master_par_list(sys,p_data->masterpl,gl_length(p_data->pars));
-  p_data->masterpl = NULL;
-  slv_set_master_dvar_list(sys,p_data->masterdl,gl_length(p_data->dvars));
-  p_data->masterdl = NULL;
-  slv_set_master_rel_list(sys,p_data->masterrl,gl_length(p_data->rels));
-  p_data->masterrl = NULL;
-  slv_set_master_condrel_list(sys,p_data->mastercl,gl_length(p_data->cnds));
-  p_data->mastercl = NULL;
-  slv_set_master_obj_list(sys,p_data->masterol,gl_length(p_data->objrels));
-  p_data->masterol = NULL;
-  slv_set_master_logrel_list(sys,p_data->masterll,gl_length(p_data->logrels));
-  p_data->masterll = NULL;
-  slv_set_master_condlogrel_list(sys,p_data->mastercll,gl_length(p_data->logcnds));
-  p_data->mastercll = NULL;
-  slv_set_master_when_list(sys,p_data->masterwl,gl_length(p_data->whens));
-  p_data->masterwl = NULL;
-  slv_set_master_bnd_list(sys,p_data->masterbl,
-          gl_length(p_data->cnds) + gl_length(p_data->logcnds)
-  );
+
+  /* do the slv_set_master_var_list (etc) calls... */
+#define SL(N,L,L2) slv_set_master_##N##_list(sys,p_data->master##L,gl_length(p_data->L2)); p_data->master##L=NULL;
+  SL(var,vl,vars);  SL(par,pl,pars);  SL(dvar,dl,dvars);
+  SL(rel,rl,rels);  SL(condrel,cl,cnds);  SL(obj,ol,objrels);
+  SL(logrel,ll,logrels);  SL(condlogrel,cll,logcnds);  SL(when,wl,whens);
+
+  slv_set_master_bnd_list(sys,p_data->masterbl, gl_length(p_data->cnds) + gl_length(p_data->logcnds));
   p_data->masterbl = NULL;
-  slv_set_master_unattached_list(sys,p_data->masterul,gl_length(p_data->unas));
-  p_data->masterul = NULL;
-  slv_set_master_disunatt_list(sys,p_data->masterdul,gl_length(p_data->dunas));
-  p_data->masterdul = NULL;
 
-  slv_set_solvers_var_list(sys,p_data->solvervl,gl_length(p_data->vars));
-  p_data->solvervl = NULL;
-  slv_set_solvers_par_list(sys,p_data->solverpl,gl_length(p_data->pars));
-  p_data->solverpl = NULL;
-  slv_set_solvers_dvar_list(sys,p_data->solverdl,gl_length(p_data->dvars));
-  p_data->solverdl = NULL;
-  slv_set_solvers_rel_list(sys,p_data->solverrl,gl_length(p_data->rels));
-  p_data->solverrl = NULL;
-  slv_set_solvers_condrel_list(sys,p_data->solvercl,gl_length(p_data->cnds));
-  p_data->solvercl = NULL;
-  slv_set_solvers_obj_list(sys,p_data->solverol,gl_length(p_data->objrels));
-  p_data->solverol = NULL;
-  slv_set_solvers_logrel_list(sys,p_data->solverll,gl_length(p_data->logrels));
-  p_data->solverll = NULL;
-  slv_set_solvers_condlogrel_list(sys,p_data->solvercll,gl_length(p_data->logcnds));
-  p_data->solvercll = NULL;
-  slv_set_solvers_when_list(sys,p_data->solverwl,gl_length(p_data->whens));
-  p_data->solverwl = NULL;
-  slv_set_solvers_bnd_list(sys,p_data->solverbl,
-                        gl_length(p_data->cnds) + gl_length(p_data->logcnds));
+  SL(unattached,ul,unas);  SL(disunatt,dul,dunas);
+#undef SL
+
+  /* do the slv_set_solvers_var_list (etc) calls... */
+#define SL(N,L,L2) slv_set_solvers_##N##_list(sys,p_data->solver##L,gl_length(p_data->L2)); p_data->solver##L=NULL;
+  SL(var,vl,vars);  SL(par,pl,pars);  SL(dvar,dl,dvars);
+  SL(rel,rl,rels);  SL(condrel,cl,cnds);  SL(obj,ol,objrels);
+  SL(logrel,ll,logrels);  SL(condlogrel,cll,logcnds);  SL(when,wl,whens);
+
+  slv_set_solvers_bnd_list(sys,p_data->solverbl, gl_length(p_data->cnds) + gl_length(p_data->logcnds));
   p_data->solverbl = NULL;
-  slv_set_solvers_unattached_list(sys,p_data->solverul,gl_length(p_data->unas));
-  p_data->solverul = NULL;
-  slv_set_solvers_disunatt_list(sys,p_data->solverdul,gl_length(p_data->dunas));
-  p_data->solverdul = NULL;
 
+  SL(unattached,ul,unas);  SL(disunatt,dul,dunas);
+#undef SL
+
+  /* objective relation, if found... */
   slv_set_obj_relation(sys,p_data->obj);
   p_data->obj = NULL;
 
-#ifdef DIEDIEDIE
-  slv_set_extrel_list(sys,p_data->erlist,gl_length(p_data->extrels));
-  p_data->erlist = NULL;
-#endif
-
+  /* and finally... */
   slv_set_num_models(sys,p_data->nm);
   slv_set_need_consistency(sys,p_data->need_consistency);
 
@@ -3025,6 +2840,7 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   FIXED_A = AddSymbolL("fixed",5);
   BASIS_A = AddSymbolL("basis",5);
   DERIV_A = AddSymbol("ode_type");
+  ODEID_A = AddSymbol("ode_id");
 
   p_data = &thisproblem;
   g_bad_rel_in_list = FALSE;

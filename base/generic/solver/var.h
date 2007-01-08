@@ -139,7 +139,7 @@
 	backward compatible with such code.
 
 	struct Instance * and struct var_variable * are no longer synonymous!
- */
+*/
 struct var_variable {
   SlvBackendToken ratom;  /**< the associated ascend ATOM */
   struct rel_relation **incidence;  /**< array rels which contain var */

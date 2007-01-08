@@ -180,6 +180,13 @@ opts.Add(BoolOption(
 	,True
 ))
 
+
+opts.Add(BoolOption(
+	'IDA_NEW_ANALYSE'
+	,"Build with new IDA 'analyse' function? (see base/generic/solver/ida.c)"
+	,False
+))
+
 #----- default paths -----
 opts.Add(PackageOption(
 	'DEFAULT_PREFIX'

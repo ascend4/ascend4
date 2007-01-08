@@ -699,7 +699,7 @@ extern void slv_set_solvers_bnd_list(slv_system_t sys,
 	@ref solverslists
 */
 
-ASC_DLLSPEC struct var_variable**slv_get_solvers_var_list(slv_system_t sys);
+ASC_DLLSPEC struct var_variable **slv_get_solvers_var_list(slv_system_t sys);
 /**< Returns the most recently set variable list (never NULL) from the system.
 	@ref solverslists
 */

@@ -41,9 +41,9 @@ objs += env.SharedObject('test_ascend_base.c'
 		, CPPPATH = cpppath
 	)
 
-print "OBJS = "
-for o in objs:
-	print o
+#print "OBJS = "
+#for o in objs:
+#	print o
 
 env.SharedLibrary('asctestsuite',objs
 	, CPPPATH = cpppath

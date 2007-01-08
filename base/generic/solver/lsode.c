@@ -70,6 +70,7 @@
 #include "linsolqr.h"
 #include "slv_client.h"
 #include "slv_stdcalls.h"
+#include <packages/sensitivity.h>
 
 #include "integrator.h"
 #include "lsode.h"

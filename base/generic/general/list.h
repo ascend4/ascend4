@@ -251,7 +251,7 @@ ASC_DLLSPEC void gl_destroy(struct gl_list_t *list);
  *
  *  The returned pointer is of type VOIDPTR (void *).  It will usually be
  *  necessary to cast the pointer to the correct type before use.  This is
- *  similar to what needs to be done with the pointer returned be malloc().<br><br>
+ *  similar to what needs to be done with the pointer returned be malloc().
  *
  *  Example:                                        <pre>
  *	     struct data_t *item;

@@ -1,33 +1,27 @@
-/*
- *  Implementation
- *  of List Module
- *  Tom Epperly
- *  Part of Ascend
- *  Version: $Revision: 1.3 $
- *  Version control file: $RCSfile: list.c,v $
- *  Date last modified: $Date: 1998/01/06 12:06:55 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
+	Implementation of List Module
+*//*
+	Tom Epperly
+	Last in CVS $Revision: 1.3 $ $Date: 1998/01/06 12:06:55 $ $Author: ballan $
+*/
 
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
@@ -39,10 +33,6 @@
 #include "pool.h"
 #endif
 #include "mathmacros.h"
-
-#ifndef lint
-static CONST char ListID[] = "$Id: list.c,v 1.3 1998/01/06 12:06:55 ballan Exp $";
-#endif
 
 #define address(a,b) (((unsigned long)(a) + ((b)*sizeof(VOIDPTR))-sizeof(VOIDPTR)))
 
@@ -374,8 +364,7 @@ void gl_destroy(struct gl_list_t *list)
   }
 }
 
-VOIDPTR gl_fetchF(CONST struct gl_list_t *list, unsigned long int pos)
-{
+VOIDPTR gl_fetchF(CONST struct gl_list_t *list, unsigned long int pos){
   asc_assert(NULL != list);
   ASSERTRANGE(list,pos,"gl_fetchF");
   return list->data[pos-1];
