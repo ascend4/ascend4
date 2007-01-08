@@ -152,6 +152,46 @@
 	the system pointer be provided when asking for certain properties
 	or services.
 
+	@section varlists What the Solver Sees
+
+	The 'analysis' routines (see analyse.h) provide a number of lists to the
+	solver, including real-valued solver variables, relations, WHENs,
+	boundaries, logical relations, and some more.
+
+	There are 'master' lists, which contain the lists of entities in their
+	'natural' order as discovered in the Instance hierarchy.
+
+	Then there are the 'solvers' (ie solver's) lists, which are reordered in
+	a formed defined by the solver. "the solvers var list is to be fetched by 
+	the solvers".
+
+	Eventually the solvers_varlist will only include those vars the specific
+	solver needs to know about. For the moment, the content of the two lists
+	is the same, but the ordering is not. The master list is in the order
+	collected. The solvers list is reordered in some useful fashion defined
+	elsewhere.
+
+	Parameters are problem invariant constants that the GUI
+	user might change before solving another problem using the
+	same MODEL.
+
+	@NOTE
+		Efficiency note relating to slv_count_master_*: if you are using this with a match anything
+		filter, you would be better off just calling the slv_get_num_*
+		function for the list in question.
+
+	@TODO where do these solver's lists get reordered?
+
+	@subsection solverslists Solver's Lists
+	If the system already
+	has such a list, the old list will be freed unless the two lists are
+	in fact the same (in which case why are you calling this?).
+	Size is the length of the vlist (excluding the terminal NULL entry).
+	The sindex field of each var in the list should match it's list position. @par
+
+	The list should be NULL terminated and the size should be the length
+	of the list  EXCLUDING  the terminal NULL.
+
 	@section faq FAQ
 
 	@subsection whatisvar What is a variable?
@@ -576,24 +616,21 @@ extern void slv_set_solvers_var_list(slv_system_t sys,
                                      int size);
 /**<
 	Sets the system's variable list to vlist.
-
-	@see slv_set_solvers_bnd_list()
- **/
+	@ref solverslists
+*/
 extern void slv_set_solvers_par_list(slv_system_t sys,
                                      struct var_variable **vlist,
                                      int size);
 /**<
 	Sets the system's parameters list to vlist.
-
-	@see slv_set_solvers_bnd_list()
+	@ref solverslists
 */
 extern void slv_set_solvers_unattached_list(slv_system_t sys,
                                             struct var_variable **vlist,
                                             int size);
 /**<
 	Sets the system's unattached variable list to vlist.
-
-	@see slv_set_solvers_bnd_list()
+	@ref solverslists
 */
 
 extern void slv_set_solvers_dvar_list(slv_system_t sys,
@@ -601,8 +638,7 @@ extern void slv_set_solvers_dvar_list(slv_system_t sys,
                                       int size);
 /**<
 	Sets the system's discrete varialbe list to dvlist.
-
-	@see slv_set_solvers_bnd_list()
+	@ref solverslists
 */
 
 extern void slv_set_solvers_disunatt_list(slv_system_t sys,
@@ -610,386 +646,490 @@ extern void slv_set_solvers_disunatt_list(slv_system_t sys,
                                           int size);
 /**<
 	Sets the system's unattached discrete variable list to dvlist.
-
-	@see slv_set_solvers_bnd_list()
+	@ref solverslists
 */
 
 extern void slv_set_solvers_rel_list(slv_system_t sys,
                                      struct rel_relation **rlist,
                                      int size);
 /**< Sets the system's relation list to rlist.
-
-	@see slv_set_solvers_bnd_list()
+	@ref solverslists
 */
 
 extern void slv_set_solvers_condrel_list(slv_system_t sys,
                                          struct rel_relation **clist,
                                          int size);
 /**< Sets the system's conditional relation list to clist.
-	@see slv_set_solvers_bnd_list()
+	@ref solverslists
 */
 
 extern void slv_set_solvers_obj_list(slv_system_t sys,
                                      struct rel_relation **rlist,
                                      int size);
 /**< Sets the system's objective relation list to rlist.
-	@see slv_set_solvers_bnd_list()
+	@ref solverslists
 */
 
 extern void slv_set_solvers_logrel_list(slv_system_t sys,
                                         struct logrel_relation **lrlist,
                                         int size);
 /**< Sets the system's logical relation list to lrlist.
-	@see slv_set_solvers_bnd_list()
+	@ref solverslists
 */
 
 extern void slv_set_solvers_condlogrel_list(slv_system_t sys,
                                             struct logrel_relation **lrlist,
                                             int size);
 /**< Sets the system's conditional relation list to lrlist.
-	@see slv_set_solvers_bnd_list()
+	@ref solverslists
 */
 
 extern void slv_set_solvers_when_list(slv_system_t sys,
                                       struct w_when **wlist,
                                       int size);
 /**< Sets the system's when list to wlist.
-	@see slv_set_solvers_bnd_list()
+	@ref solverslists
 */
 
 extern void slv_set_solvers_bnd_list(slv_system_t sys,
                                      struct bnd_boundary **blist,
                                      int size);
 /**<
-	Sets the system's boundary list to blist. If the system already
-	has such a list, the old list will be freed unless the two lists are
-	in fact the same (in which case why are you calling this?).
-	Size is the length of the vlist (excluding the terminal NULL entry).
-	The sindex field of each var in the list should match it's list position. @par
-
-	The list should be NULL terminated and the size should be the length
-	of the list  EXCLUDING  the terminal NULL.
-
-	@NOTE
-		There are now 2 var lists: the master var list pulled of the instance
-		tree, and the solvers var list is to be fetched by the solvers.
-		Eventually the solvers_varlist will only include those vars the specific
-		solver needs to know about.
-		For the moment, the content of the two lists is the same, but the ordering
-		is not. The master list is in the order collected. The solvers list
-		is reordered in some useful fashion defined elsewhere.
+	Sets the system's boundary list to blist.
+	@ref solverslists
 */
 
 ASC_DLLSPEC struct var_variable**slv_get_solvers_var_list(slv_system_t sys);
 /**< Returns the most recently set variable list (never NULL) from the system.
-	@see slv_get_master_disunatt_list()
+	@ref solverslists
 */
 
 extern struct var_variable **slv_get_solvers_par_list(slv_system_t sys);
 /**< Returns the most recently set par list (never NULL) from the system.
-	@see slv_get_master_disunatt_list()
+	@ref solverslists
 */
 ASC_DLLSPEC struct var_variable **slv_get_solvers_unattached_list(slv_system_t sys);
 /**< Returns the most recently set unattached variable list (never NULL) from the system.
-	@see slv_get_master_disunatt_list()
+	@ref solverslists
 */
 
 extern struct dis_discrete **slv_get_solvers_dvar_list(slv_system_t sys);
 /**< Returns the most recently set discrete variable list (never NULL) from the system.
-	@see slv_get_master_disunatt_list()
+	@ref solverslists
 */
 extern struct dis_discrete **slv_get_solvers_disunatt_list(slv_system_t sys);
 /**< Returns the most recently set unattached discrete variable list (never NULL)  from the system.
-	@see slv_get_master_disunatt_list()
+	@ref solverslists
 */
 ASC_DLLSPEC struct var_variable **slv_get_master_var_list(slv_system_t sys);
 /**< Returns the most recently set master variable list (never NULL) from the system.
-	@see slv_get_master_disunatt_list()
+	@ref masterlists
 */
 ASC_DLLSPEC struct var_variable **slv_get_master_par_list(slv_system_t sys);
 /**< Returns the most recently set master par list (never NULL) from the system.
-	@see slv_get_master_disunatt_list()
+	@ref masterlists
 */
 ASC_DLLSPEC struct var_variable **slv_get_master_unattached_list(slv_system_t sys);
 /**< Returns the most recently set master unattached variable list (never NULL) from the system.
-	@see slv_get_master_disunatt_list()
+	@ref masterlists
 */
 extern struct dis_discrete **slv_get_master_dvar_list(slv_system_t sys);
 /**< Returns the most recently set master discrete variable list (never NULL) from the system.
-	@see slv_get_master_disunatt_list()
+	@ref masterlists
 */
 extern struct dis_discrete **slv_get_master_disunatt_list(slv_system_t sys);
 /** Returns the most recently set master unattached discrete variable list
 	(never NULL) for the convenience of those who need it.<br><br>
-
-	@NOTE
-		There are now 2 var lists: the master var list pulled of the instance
-		tree, and the solvers var list to be handed to the solvers.
-		Eventually the solvers_varlist will only include those vars the specific
-		solver needs to know about.
-		For the moment, the content of the two lists is the same, but the ordering
-		is not. The master list is in the order collected. The solvers list
-		is reordered in some useful fashion defined by a client.
-		Solver clients don't need to know about the master list. UI clients may.<br><br>
-
-	Parameters are problem invariant constants that the GUI
-	user might change before solving another problem using the
-	same MODEL.
+	@ref masterlists
 */
 
 ASC_DLLSPEC struct rel_relation**slv_get_solvers_rel_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of solver relations. */
+/**< 
+	Returns the (NULL-terminated) list of solver relations. 
+	@ref solverslists
+*/
 
 extern struct rel_relation **slv_get_solvers_condrel_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of solver conditional relations. */
+/**< 
+	Returns the (NULL-terminated) list of solver conditional relations. 
+	@ref solverslists
+*/
 
 ASC_DLLSPEC struct rel_relation **slv_get_solvers_obj_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of solver objective relations. */
+/**< 
+	Returns the (NULL-terminated) list of solver objective relations. 
+	@ref solverslists
+*/
 
 extern struct logrel_relation **slv_get_solvers_logrel_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of solver logical relations. */
+/**<
+	Returns the (NULL-terminated) list of solver logical relations. 
+	@ref solverslists
+*/
 
 extern struct logrel_relation **slv_get_solvers_condlogrel_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of solver conditional relations. */
+/**<
+	Returns the (NULL-terminated) list of solver conditional relations. 
+	@ref solverslists
+*/
 
 extern struct w_when **slv_get_solvers_when_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of solver whens. */
+/**<
+	Returns the (NULL-terminated) list of solver whens.
+	@ref solverslists
+*/
 
 extern struct bnd_boundary **slv_get_solvers_bnd_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of solver boundaries. */
+/**< 
+	Returns the (NULL-terminated) list of solver boundaries.
+	@ref solverslists
+*/
 
 ASC_DLLSPEC struct rel_relation **slv_get_master_rel_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of master relations. */
+/**<
+	Returns the (NULL-terminated) list of master relations.
+	@ref masterlists
+*/
 
 extern struct rel_relation **slv_get_master_condrel_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of master conditional relations. */
+/**<
+	Returns the (NULL-terminated) list of master conditional relations.
+	@ref masterlists
+*/
 
 extern struct rel_relation **slv_get_master_obj_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of master objective relations. */
+/**<
+	Returns the (NULL-terminated) list of master objective relations.
+	@ref masterlists
+*/
 
 extern struct logrel_relation **slv_get_master_logrel_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of master logical relations. */
+/**<
+	Returns the (NULL-terminated) list of master logical relations.
+	@ref masterlists
+*/
 
 extern struct logrel_relation **slv_get_master_condlogrel_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of master conditional relations. */
+/**<
+	Returns the (NULL-terminated) list of master conditional relations.
+	@ref masterlists
+*/
 
 extern struct w_when **slv_get_master_when_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of master whens. */
+/**<
+	Returns the (NULL-terminated) list of master whens.
+	@ref masterlists
+*/
 
 extern struct bnd_boundary **slv_get_master_bnd_list(slv_system_t sys);
-/**<  Returns the (NULL-terminated) list of master boundaries. */
+/**<
+	Returns the (NULL-terminated) list of master boundaries.
+	@ref masterlists
+*/
 
 extern struct gl_list_t *slv_get_symbol_list(slv_system_t sys);
-/**< Returns the list of SymbolValues struct of a solver system. */
+/**<
+	Returns the list of SymbolValues struct of a solver system.
+	@ref varlists
+*/
 
 extern int32 slv_need_consistency(slv_system_t sys);
-/**< Gets the int need_consitency associated with the system. */
+/**< Gets the int need_consistency associated with the system. */
 
 ASC_DLLSPEC int32 slv_get_num_solvers_vars(slv_system_t sys);
 /**< Returns the length of the solver variable list.
 	The length does NOT include the terminating NULL.
+	@ref solverslists
 */
 
 extern int32 slv_get_num_solvers_pars(slv_system_t sys);
 /**< Returns the length of the solver parameters list.
 	The length does NOT include the terminating NULL.
+	@ref solverslists
 */
 
 ASC_DLLSPEC int32 slv_get_num_solvers_unattached(slv_system_t sys);
 /**< Returns the length of the solver unsattached variable list.
 	The length does NOT include the terminating NULL.
+	@ref solverslists
 */
 
 extern int32 slv_get_num_solvers_dvars(slv_system_t sys);
 /**< Returns the length of the solver discrete variables list.
 	The length does NOT include the terminating NULL.
+	@ref solverslists
 */
 
 extern int32 slv_get_num_solvers_disunatt(slv_system_t sys);
 /**< Returns the length of the solver unattached discrete variables list.
 	The length does NOT include the terminating NULL.
+	@ref solverslists
 */
 
 ASC_DLLSPEC int32 slv_get_num_solvers_rels(slv_system_t sys);
 /**< Returns the length of the solver relations list.
 	The length does NOT include the terminating NULL.
+	@ref solverslists
 */
 
 extern int32 slv_get_num_solvers_condrels(slv_system_t sys);
 /**< Returns the length of the solver conditional relations list.
 	The length does NOT include the terminating NULL.
+	@ref solverslists
 */
 
 ASC_DLLSPEC int32 slv_get_num_solvers_objs(slv_system_t sys);
 /**< Returns the length of the solver objective relations list.
 	The length does NOT include the terminating NULL.
-*/
+	@ref solverslists*/
 
 extern int32 slv_get_num_solvers_logrels(slv_system_t sys);
 /**< Returns the length of the solver logical relations list.
 	The length does NOT include the terminating NULL.
-*/
+	@ref solverslists*/
 
 extern int32 slv_get_num_solvers_condlogrels(slv_system_t sys);
 /**< Returns the length of the solver conditional relations list.
 	The length does NOT include the terminating NULL.
+	@ref solverslists
 */
 
 extern int32 slv_get_num_solvers_whens(slv_system_t sys);
 /**< Returns the length of the solver whens list.
 	The length does NOT include the terminating NULL.
+	@ref solverslists
 */
 
 extern int32 slv_get_num_solvers_bnds(slv_system_t sys);
 /**<
- ***  Returns the length of the solver boundaries list.
- ***  The length does NOT include the terminating NULL.
- **/
+	Returns the length of the solver boundaries list.
+	The length does NOT include the terminating NULL.
+	@ref solverslists
+*/
+
 ASC_DLLSPEC int32 slv_get_num_master_vars(slv_system_t sys);
 /**<
- ***  Returns the length of the master variables list.
- ***  The length does NOT include the terminating NULL.
- **/
+	Returns the length of the master variables list.
+	The length does NOT include the terminating NULL.
+	@ref masterlists
+*/
+
 ASC_DLLSPEC int32 slv_get_num_master_pars(slv_system_t sys);
 /**< Returns the length of the master parameters list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 ASC_DLLSPEC int32 slv_get_num_master_unattached(slv_system_t sys);
 /**< Returns the length of the master unattached variables list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 extern int32 slv_get_num_master_dvars(slv_system_t sys);
 /**< Returns the length of the master discrete variables list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 extern int32 slv_get_num_master_disunatt(slv_system_t sys);
 /**< Returns the length of the master unattached discrete variables list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 ASC_DLLSPEC int32 slv_get_num_master_rels(slv_system_t sys);
 /**< Returns the length of the master relations list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 extern int32 slv_get_num_master_condrels(slv_system_t sys);
 /**< Returns the length of the master conditional relations list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 extern int32 slv_get_num_master_objs(slv_system_t sys);
 /**< Returns the length of the master objective relations list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 extern int32 slv_get_num_master_logrels(slv_system_t sys);
 /**< Returns the length of the master logical relations list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 extern int32 slv_get_num_master_condlogrels(slv_system_t sys);
 /**< Returns the length of the master conditional relations list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 extern int32 slv_get_num_master_whens(slv_system_t sys);
 /**< Returns the length of the master whens list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 extern int32 slv_get_num_master_bnds(slv_system_t sys);
 /**<  Returns the length of the master boundaries list.
 	The length does NOT include the terminating NULL.
+	@ref masterlists
 */
 
 extern int32 slv_get_num_models(slv_system_t sys);
 /**< Returns the number of models found in the tree the
 	problem was constructed from. There is no corresponding list.
 	Rel_relations will know which of these models they came from.
+	@ref masterlists
 */
 
 ASC_DLLSPEC int32 slv_count_solvers_vars(slv_system_t sys, var_filter_t *vfilter);
-/**< Returns the number of solver variables matching the specified filter. */
-
-extern int32 slv_count_solvers_pars(slv_system_t sys, var_filter_t *vfilter);
-/**< Returns the number of solver parameters matching the specified filter. */
-
-ASC_DLLSPEC int32 slv_count_solvers_unattached(slv_system_t sys, var_filter_t *vfilter);
-/**< Returns the number of solver unattached variables matching the specified filter. */
-
-extern int32 slv_count_solvers_dvars(slv_system_t sys, dis_filter_t *dfilter);
-/**< Returns the number of solver discrete variables matching the specified filter. */
-
-extern int32 slv_count_solvers_disunatt(slv_system_t sys, dis_filter_t *dfilter);
-/**< Returns the number of solver unattached discrete variables matching the specified filter. */
-
-ASC_DLLSPEC int32 slv_count_solvers_rels(slv_system_t sys, rel_filter_t *rfilter);
-/**< Returns the number of solver relations matching the specified filter. */
-
-extern int32 slv_count_solvers_condrels(slv_system_t sys, rel_filter_t *rfilter);
-/**< Returns the number of solver conditional relations matching the specified filter. */
-
-extern int32 slv_count_solvers_objs(slv_system_t sys, rel_filter_t *rfilter);
-/**< Returns the number of solver objective relations matching the specified filter. */
-
-extern int32 slv_count_solvers_logrels(slv_system_t sys, logrel_filter_t *lrfilter);
-/**< Returns the number of solver logical relations matching the specified filter. */
-
-extern int32 slv_count_solvers_condlogrels(slv_system_t sys, logrel_filter_t *lrfilter);
-/**< Returns the number of solver conditional logical relations matching the specified filter. */
-
-extern int32 slv_count_solvers_whens(slv_system_t sys, when_filter_t *wfilter);
-/**< Returns the number of solver whens matching the specified filter. */
-
-extern int32 slv_count_solvers_bnds(slv_system_t sys, bnd_filter_t *bfilter);
-/**< Returns the number of solver boundaries matching the specified filter. */
-
-extern int32 slv_count_master_vars(slv_system_t sys, var_filter_t *vfilter);
-/**< Returns the number of master variables matching the specified filter. */
-
-extern int32 slv_count_master_pars(slv_system_t sys, var_filter_t *vfilter);
-/**< Returns the number of master parameters matching the specified filter. */
-
-extern int32 slv_count_master_unattached(slv_system_t sys, var_filter_t *vfilter);
-/**< Returns the number of master unattached variables matching the specified filter. */
-
-extern int32 slv_count_master_dvars(slv_system_t sys, dis_filter_t *dfilter);
-/**< Returns the number of master discrete variables matching the specified filter. */
-
-extern int32 slv_count_master_disunatt(slv_system_t sys, dis_filter_t *dfilter);
-/**< Returns the number of master unattached discrete variables matching the specified filter. */
-
-extern int32 slv_count_master_rels(slv_system_t sys, rel_filter_t *rfilter);
-/**< Returns the number of master relations matching the specified filter. */
-
-extern int32 slv_count_master_condrels(slv_system_t sys, rel_filter_t *rfilter);
-/**< Returns the number of master conditional relations matching the specified filter. */
-
-extern int32 slv_count_master_objs(slv_system_t sys, rel_filter_t *rfilter);
-/**< Returns the number of master objective relations matching the specified filter. */
-
-extern int32 slv_count_master_logrels(slv_system_t sys, logrel_filter_t *lrfilter);
-/**< Returns the number of master logical relations matching the specified filter. */
-
-extern int32 slv_count_master_condlogrels(slv_system_t sys, logrel_filter_t *lrfilter);
-/**< Returns the number of master conditional logical relations matching the specified filter. */
-
-extern int32 slv_count_master_whens(slv_system_t sys, when_filter_t *wfilter);
-/**< Returns the number of master whens matching the specified filter. */
-
-extern int32 slv_count_master_bnds(slv_system_t sys, bnd_filter_t *bfilter);
-/**< Returns the number of master boundaries matching the specified filter. */
-
-/**	@file slv_client.h
-	@NOTE
-		Efficiency note relating to slv_count_master_*: if you are using this with a match anything
-		filter, you would be better off just calling the slv_get_num_*
-		function for the list in question.
+/**< 
+	Returns the number of solver variables matching the specified filter.
+	@ref solverslists
 */
 
+extern int32 slv_count_solvers_pars(slv_system_t sys, var_filter_t *vfilter);
+/**<
+	Returns the number of solver parameters matching the specified filter.
+	@ref solverslists
+*/
+
+ASC_DLLSPEC int32 slv_count_solvers_unattached(slv_system_t sys, var_filter_t *vfilter);
+/**< 
+	Returns the number of solver unattached variables matching the specified filter.
+	@ref solverslists
+*/
+
+extern int32 slv_count_solvers_dvars(slv_system_t sys, dis_filter_t *dfilter);
+/**< 
+	Returns the number of solver discrete variables matching the specified filter. 
+	@ref solverslists
+*/
+
+extern int32 slv_count_solvers_disunatt(slv_system_t sys, dis_filter_t *dfilter);
+/**< 
+	Returns the number of solver unattached discrete variables matching the specified filter. 
+	@ref varlists
+*/
+
+ASC_DLLSPEC int32 slv_count_solvers_rels(slv_system_t sys, rel_filter_t *rfilter);
+/**< 
+	Returns the number of solver relations matching the specified filter. 
+	@ref solverslists
+*/
+
+extern int32 slv_count_solvers_condrels(slv_system_t sys, rel_filter_t *rfilter);
+/**<
+	Returns the number of solver conditional relations matching the specified filter.
+	@ref solverslists
+*/
+
+extern int32 slv_count_solvers_objs(slv_system_t sys, rel_filter_t *rfilter);
+/**< 
+	Returns the number of solver objective relations matching the specified filter.
+	@ref solverslists
+*/
+
+extern int32 slv_count_solvers_logrels(slv_system_t sys, logrel_filter_t *lrfilter);
+/**<
+	Returns the number of solver logical relations matching the specified filter.
+	@ref solverslists
+*/
+
+extern int32 slv_count_solvers_condlogrels(slv_system_t sys, logrel_filter_t *lrfilter);
+/**<
+	Returns the number of solver conditional logical relations matching the specified filter. 
+	@ref solverslists
+*/
+
+extern int32 slv_count_solvers_whens(slv_system_t sys, when_filter_t *wfilter);
+/**<
+	Returns the number of solver whens matching the specified filter.
+	@ref solverslists
+*/
+
+extern int32 slv_count_solvers_bnds(slv_system_t sys, bnd_filter_t *bfilter);
+/**<
+	Returns the number of solver boundaries matching the specified filter.
+	@ref solverslists
+*/
+
+extern int32 slv_count_master_vars(slv_system_t sys, var_filter_t *vfilter);
+/**<
+	Returns the number of master variables matching the specified filter.
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_pars(slv_system_t sys, var_filter_t *vfilter);
+/**<
+	Returns the number of master parameters matching the specified filter.
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_unattached(slv_system_t sys, var_filter_t *vfilter);
+/**<
+	Returns the number of master unattached variables matching the specified filter.
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_dvars(slv_system_t sys, dis_filter_t *dfilter);
+/**<
+	Returns the number of master discrete variables matching the specified filter.
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_disunatt(slv_system_t sys, dis_filter_t *dfilter);
+/**<
+	Returns the number of master unattached discrete variables matching the specified filter.
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_rels(slv_system_t sys, rel_filter_t *rfilter);
+/**<
+	Returns the number of master relations matching the specified filter.
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_condrels(slv_system_t sys, rel_filter_t *rfilter);
+/**<
+	Returns the number of master conditional relations matching the specified filter.
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_objs(slv_system_t sys, rel_filter_t *rfilter);
+/**<
+	Returns the number of master objective relations matching the specified filter. 
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_logrels(slv_system_t sys, logrel_filter_t *lrfilter);
+/**<
+	Returns the number of master logical relations matching the specified filter.
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_condlogrels(slv_system_t sys, logrel_filter_t *lrfilter);
+/**<
+	Returns the number of master conditional logical relations matching the specified filter.
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_whens(slv_system_t sys, when_filter_t *wfilter);
+/**<
+	Returns the number of master whens matching the specified filter.
+	@ref masterlists
+*/
+
+extern int32 slv_count_master_bnds(slv_system_t sys, bnd_filter_t *bfilter);
+/**<
+	Returns the number of master boundaries matching the specified filter.
+	@ref masterlists
+*/
 
 /*-----------------------------------------------------------------------
 	Registered client queries.

@@ -153,7 +153,7 @@ typedef int IntegratorOutputCloseFn(struct IntegratorSystemStruct *);
 	This struct allows arbitrary functions to be used for the reporting
 	of integrator progress.
 */
-typedef struct{
+typedef struct IntegratorReporterStruct{
 	IntegratorOutputInitFn *init;
 	IntegratorOutputWriteFn *write;
 	IntegratorOutputWriteObsFn *write_obs;
@@ -193,7 +193,7 @@ typedef void IntegratorFreeFn(void *enginedata);
 	data that they have allocated in their 'enginedata' structure.
 */
 
-typedef struct{
+typedef struct IntegratorInternalsStruct{
 	IntegratorCreateFn *createfn;
 	IntegratorParamsDefaultFn *paramsdefaultfn;
 	IntegratorAnalyseFn *analysefn;

@@ -281,6 +281,7 @@ public:
 
 %apply SWIGTYPE *DISOWN { IntegratorReporterCxx *reporter };
 
+%feature("autodoc", "Return dict of available integration engines {id:name,...}") Integrator::getEngines;
 %include "integrator.h"
 
 %extend Integrator{

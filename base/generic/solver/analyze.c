@@ -70,6 +70,10 @@
 	Last modified by: $Author: ballan $
 */
 
+/**	@addtogroup analyse Analyse
+	@{
+*/
+
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
@@ -134,12 +138,13 @@
   GLOBAL VARS
 */
 
-static symchar *g_strings[3];
+static symchar *g_strings[4];
 
 /* symbol table entries we need */
 #define INCLUDED_A g_strings[0]
 #define FIXED_A g_strings[1]
 #define BASIS_A g_strings[2]
+#define DERIV_A g_strings[3]
 
 /*
 	Global variable. Set to true by classify if need be
@@ -170,6 +175,7 @@ struct varip {
   int solvervar;	      /* set in classify_instance */
   int active;             /* is this var a part of my problem */
   int basis;              /* set in classify_instance */
+  int deriv;              /* set in classify_instance */
 };
 
 
@@ -257,8 +263,8 @@ static struct reuse_t {
 	In particular, do no operations that can throw an exception
 	while manipulating a problem_t, as it is way too big to let leak.
 
-	@TODO is this comment in the right place?
-	we are making the ANSI assumption that this will be init to 0/NULL
+	We are making the ANSI assumption that this will be init to 0/NULL 
+	(K&R 2nd Ed, p 219)
 	
 	@TODO what about this one?:
 	container for globals during assembly.
@@ -394,30 +400,29 @@ struct problem_t {
 /*------------------------------------------------------------------------------
   SOME STUFF WITH INTERFACE POINTERS
 */
-/* return a pointer to the oncesizefitsall ips we're using.
-	always returns nonnull because if we run out we exit
+/**
+	Return a pointer to the one-size-fits-all ips we're using.
+	Always returns non-NULL because if we run out we exit
 */
-static struct solver_ipdata *analyze_getip(void)
-{
+static
+struct solver_ipdata *analyze_getip(void){
   if (g_reuse.ipbuf!=NULL && g_reuse.ipused < g_reuse.ipcap) {
     return &(g_reuse.ipbuf[g_reuse.ipused++]);
   } else {
-    Asc_Panic(2, "ananlyze_getip",
-              "Too many ips requested by analyze_getip\n");
-    exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+    ASC_PANIC("Too many ips requested by analyze_getip");
   }
 }
 
-/*
-	reallocates to the requested size (newcap) the ipbuf.
-	if newcap = 0, frees ipbuf.
-	if insufficient memory returns 1.
-	if newcap > 0 and reset mem != 0, initializes ipbuf to 0s.
+/**
+	Reallocates to the requested size (newcap) the ipbuf.
+	If newcap = 0, frees ipbuf.
+	If newcap > 0 and reset mem != 0, initializes ipbuf to 0s.
 	Resets ipused to 0.
+
+	@return 0 on success, 1 on insufficient memory
 */
 static
-int resize_ipbuf(size_t newcap, int resetmem)
-{
+int resize_ipbuf(size_t newcap, int resetmem){
   struct solver_ipdata *tmp;
   if (newcap ==0) {
     if (g_reuse.ipbuf != NULL) {
@@ -465,8 +470,7 @@ int resize_ipbuf(size_t newcap, int resetmem)
 	NULL. p_data->relincidence must have been allocated for this to work.
 */
 static
-struct var_variable **get_incidence_space(int len, struct problem_t *p_data)
-{
+struct var_variable **get_incidence_space(int len, struct problem_t *p_data){
   struct var_variable **tmp;
   if (p_data->relincidence == NULL) {
     ASC_PANIC("get_incidence_space called prematurely. bye.\n");
@@ -487,9 +491,9 @@ struct var_variable **get_incidence_space(int len, struct problem_t *p_data)
 	NULL. p_data->varincidence must have been allocated for this to work.
 */
 static
-struct rel_relation **get_var_incidence_space(int len,
-                                              struct problem_t *p_data)
-{
+struct rel_relation **get_var_incidence_space(int len
+		,struct problem_t *p_data
+){
   struct rel_relation **tmp;
   if (p_data->varincidence == NULL) {
     ASC_PANIC("get_var_incidence_space called prematurely. bye.\n");
@@ -509,9 +513,9 @@ struct rel_relation **get_var_incidence_space(int len,
 	p_data->logrelinciden must have been allocated for this to work.
 */
 static
-struct dis_discrete **get_logincidence_space(int len,
-                                             struct problem_t *p_data)
-{
+struct dis_discrete **get_logincidence_space(int len
+		,struct problem_t *p_data
+){
   struct dis_discrete **tmp;
   if (p_data->logrelinciden == NULL) {
     ASC_PANIC("get_logincidence_space called prematurely. bye.\n");
@@ -537,8 +541,7 @@ struct dis_discrete **get_logincidence_space(int len,
 	of the caller.
 	p_data->root is set to i.
 */
-static void InitTreeCounts(struct Instance *i,struct problem_t *p_data)
-{
+static void InitTreeCounts(struct Instance *i,struct problem_t *p_data){
   memset((char *)p_data,0,sizeof(struct problem_t));
   p_data->root = i;
 }
@@ -549,22 +552,38 @@ static void InitTreeCounts(struct Instance *i,struct problem_t *p_data)
 #define AVG_GROWTH 2
 #define PART_THRESHOLD 1000
 
-/*
-	The following function should be moved out to the compiler
-	under the guise of a supported attribute.
+/**
+	@param i atom instance in the Instance hierarchy
+	@param sc name of an supposed child instance of i, a boolean atom.
+
+	@return the value of the named boolean child instance, or NULL if i or the child doesn't exist
 */
-static int BooleanChildValue(struct Instance *i,symchar *sc){
-  /* FPRINTF(ASCERR,"GETTING BOOLEAN CHILD VALUE OF %s\n",SCP(sc)); */
-  if (i == NULL || sc == NULL || (i=ChildByChar(i,sc)) == NULL) {
+static
+int BooleanChildValue(struct Instance *i,symchar *sc){
+  if(i == NULL || sc == NULL || (i=ChildByChar(i,sc)) == NULL) {
     return 0;
-  } else {
+  }else{
     return ( GetBooleanAtomValue(i) );
   }
 }
 
-static void CollectArrayRelsAndWhens(struct Instance *i, long modindex,
-                                     struct problem_t *p_data)
-{
+/**
+	As for BooleanChildValue but for integer child atoms (ode_type in this case)
+*/
+static
+int IntegerChildValue(struct Instance *i,symchar *sc){
+  if(i == NULL || sc == NULL || (i=ChildByChar(i,sc)) == NULL) {
+    return 0;
+  }else{
+    return ( GetIntegerAtomValue(i) );
+  }
+}
+
+
+static 
+void CollectArrayRelsAndWhens(struct Instance *i, long modindex
+		,struct problem_t *p_data
+){
   struct Instance *child;
   struct solver_ipdata *rip;
   unsigned long nch,c;
@@ -639,10 +658,11 @@ static void CollectArrayRelsAndWhens(struct Instance *i, long modindex,
 	mainly because these arrays don't have interface pointers so we
 	can't treat them separately.
 */
-static void CollectRelsAndWhens(struct solver_ipdata *ip,
-                                long modindex,
-                                struct problem_t *p_data)
-{
+static
+void CollectRelsAndWhens(struct solver_ipdata *ip
+		,long modindex
+		,struct problem_t *p_data
+){
   struct Instance *child;
   struct solver_ipdata *rip;
   unsigned long nch,c;
@@ -705,10 +725,11 @@ static void CollectRelsAndWhens(struct solver_ipdata *ip,
 	will return the pointer to the cache. The nodestamp corresponding
 	to this relation is returned regardless.
 */
-static struct ExtRelCache
-  *CheckIfCacheExists( struct Instance *relinst, int *nodestamp,
-                       struct problem_t *p_data)
-{
+static
+struct ExtRelCache *CheckIfCacheExists(struct Instance *relinst
+		,int *nodestamp
+		,struct problem_t *p_data
+){
   struct ExtCallNode *ext;
   struct ExtRelCache *cache;
   CONST struct relation *gut;
@@ -736,9 +757,9 @@ static struct ExtRelCache
 
 	@NOTE Call only with good relation instances.
 */
-static void analyze_CountRelation(struct Instance *inst,
-                                  struct problem_t *p_data)
-{
+static void analyze_CountRelation(struct Instance *inst
+		,struct problem_t *p_data
+){
   switch( RelationRelop(GetInstanceRelationOnly(inst)) ) {
   case e_maximize:
   case e_minimize:
@@ -775,9 +796,10 @@ static void analyze_CountRelation(struct Instance *inst,
 	whens anyway ?
 */
 
-int GetIntFromSymbol(CONST char *symval,
-		     struct gl_list_t *symbol_list)
-{
+int GetIntFromSymbol(CONST char *symval
+		,struct gl_list_t *symbol_list
+){
+
   struct SymbolValues *entry,*dummy;
   unsigned long length;
   int len,c,value;
@@ -841,8 +863,7 @@ void DestroySymbolValuesList(struct gl_list_t *symbol_list)
 	vp is a struct problem_t.
 */
 static
-void *classify_instance(struct Instance *inst, VOIDPTR vp)
-{
+void *classify_instance(struct Instance *inst, VOIDPTR vp){
   struct solver_ipdata *ip;
   struct problem_t *p_data;
   CONST char *symval;
@@ -860,18 +881,19 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
       ip->u.v.solvervar = 1; /* must set this regardless of what list */
       ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
+      ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
 
-      if (RelationsCount(inst)) {
+      if(RelationsCount(inst)) {
         gl_append_ptr(p_data->vars,(POINTER)ip);
       }else{
         gl_append_ptr(p_data->unas,(POINTER)ip);
       }
-    } else {
+    }else{
       ip->u.v.fixed = 1;
       ip->u.v.solvervar=0;
-      if (solver_par(inst) && RelationsCount(inst)) {
+      if(solver_par(inst) && RelationsCount(inst)) {
         gl_append_ptr(p_data->pars,(POINTER)ip);
-      } else {
+      }else{
         gl_append_ptr(p_data->unas,(POINTER)ip);
       }
     }
@@ -885,123 +907,104 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
     ip->u.dv.index = 0;
     ip->u.dv.active = 0;
       ip->u.dv.value = GetBooleanAtomValue(inst);
-    if( boolean_var(inst) ) {
+    if(boolean_var(inst) ) {
       ip->u.dv.booleanvar = 1;
       ip->u.dv.fixed = BooleanChildValue(inst,FIXED_A);
-    } else {
+    }else{
       ip->u.dv.fixed = 1;
       ip->u.dv.booleanvar=0;
     }
-    if( LogRelationsCount(inst) || WhensCount(inst) ) {
+    if(LogRelationsCount(inst) || WhensCount(inst) ) {
       gl_append_ptr(p_data->dvars,(POINTER)ip);
-      if ( WhensCount(inst) ) {
+      if(WhensCount(inst) ) {
         ip->u.dv.inwhen = 1;
-      } else {
+      }else{
         ip->u.dv.inwhen = 0;
       }
-    } else {
+    }else{
       gl_append_ptr(p_data->dunas,(POINTER)ip);
     }
     return ip;
   case BOOLEAN_CONSTANT_INST:
-    if (WhensCount(inst)) {
-      ip = analyze_getip();
-      ip->i = inst;
-      ip->u.dv.isconst = 1;
-      ip->u.dv.distype = 0;
-      ip->u.dv.index = 0;
-      ip->u.dv.incident = 0;
-      ip->u.dv.booleanvar=0;
-      ip->u.dv.fixed = 1;
-      ip->u.dv.active = 0;
-      ip->u.dv.value = GetBooleanAtomValue(inst);
-      gl_append_ptr(p_data->dvars,(POINTER)ip);
-      return ip;
-    } else {
-      return NULL;
-    }
+    if(!WhensCount(inst))return NULL;
+    ip = analyze_getip();
+    ip->i = inst;
+    ip->u.dv.isconst = 1;
+    ip->u.dv.distype = 0;
+    ip->u.dv.index = 0;
+    ip->u.dv.incident = 0;
+    ip->u.dv.booleanvar=0;
+    ip->u.dv.fixed = 1;
+    ip->u.dv.active = 0;
+    ip->u.dv.value = GetBooleanAtomValue(inst);
+    gl_append_ptr(p_data->dvars,(POINTER)ip);
+    return ip;
   case INTEGER_ATOM_INST:
-    if (WhensCount(inst)) {
-      ip = analyze_getip();
-      ip->i = inst;
-      ip->u.dv.isconst = 0;
-      ip->u.dv.distype = 1;
-      ip->u.dv.index = 0;
-      ip->u.dv.incident = 0;
-      ip->u.dv.booleanvar=0;
-      ip->u.dv.fixed = 0;
-      ip->u.dv.active = 0;
-      ip->u.dv.value = GetIntegerAtomValue(inst);
-      gl_append_ptr(p_data->dvars,(POINTER)ip);
-      return ip;
-    } else {
-      return NULL;
-    }
+    if(!WhensCount(inst))return NULL;
+    ip = analyze_getip();
+    ip->i = inst;
+    ip->u.dv.isconst = 0;
+    ip->u.dv.distype = 1;
+    ip->u.dv.index = 0;
+    ip->u.dv.incident = 0;
+    ip->u.dv.booleanvar=0;
+    ip->u.dv.fixed = 0;
+    ip->u.dv.active = 0;
+    ip->u.dv.value = GetIntegerAtomValue(inst);
+    gl_append_ptr(p_data->dvars,(POINTER)ip);
+    return ip;
   case SYMBOL_ATOM_INST:
-    if (WhensCount(inst)) {
-      symval = SCP(GetSymbolAtomValue(inst));
-      if (symval == NULL) {
-        return NULL;
-      }
-      ip = analyze_getip();
-      ip->i = inst;
-      ip->u.dv.isconst = 0;
-      ip->u.dv.distype = -1;
-      ip->u.dv.index = 0;
-      ip->u.dv.incident = 0;
-      ip->u.dv.booleanvar=0;
-      ip->u.dv.fixed = 0;
-      ip->u.dv.active = 0;
-      if (g_symbol_values_list == NULL) {
-        g_symbol_values_list = gl_create(2L);
-      }
-      ip->u.dv.value = GetIntFromSymbol(symval,g_symbol_values_list);
-      gl_append_ptr(p_data->dvars,(POINTER)ip);
-      return ip;
-    } else {
-      return NULL;
+    if(!WhensCount(inst))return NULL;
+    symval = SCP(GetSymbolAtomValue(inst));
+    if(symval == NULL)return NULL;
+    ip = analyze_getip();
+    ip->i = inst;
+    ip->u.dv.isconst = 0;
+    ip->u.dv.distype = -1;
+    ip->u.dv.index = 0;
+    ip->u.dv.incident = 0;
+    ip->u.dv.booleanvar=0;
+    ip->u.dv.fixed = 0;
+    ip->u.dv.active = 0;
+    if(g_symbol_values_list == NULL) {
+      g_symbol_values_list = gl_create(2L);
     }
+    ip->u.dv.value = GetIntFromSymbol(symval,g_symbol_values_list);
+    gl_append_ptr(p_data->dvars,(POINTER)ip);
+    return ip;
   case INTEGER_CONSTANT_INST:
-    if (WhensCount(inst)) {
-      ip = analyze_getip();
-      ip->i = inst;
-      ip->u.dv.isconst = 1;
-      ip->u.dv.distype = 1;
-      ip->u.dv.index = 0;
-      ip->u.dv.incident = 0;
-      ip->u.dv.booleanvar=0;
-      ip->u.dv.fixed = 1;
-      ip->u.dv.active = 0;
-      ip->u.dv.value = GetIntegerAtomValue(inst);
-      gl_append_ptr(p_data->dvars,(POINTER)ip);
-      return ip;
-    } else {
-      return NULL;
-    }
+    if(!WhensCount(inst))return NULL;
+    ip = analyze_getip();
+    ip->i = inst;
+    ip->u.dv.isconst = 1;
+    ip->u.dv.distype = 1;
+    ip->u.dv.index = 0;
+    ip->u.dv.incident = 0;
+    ip->u.dv.booleanvar=0;
+    ip->u.dv.fixed = 1;
+    ip->u.dv.active = 0;
+    ip->u.dv.value = GetIntegerAtomValue(inst);
+    gl_append_ptr(p_data->dvars,(POINTER)ip);
+    return ip;
   case SYMBOL_CONSTANT_INST:
-    if (WhensCount(inst)) {
-      symval = SCP(GetSymbolAtomValue(inst));
-      if (symval == NULL) {
-        return NULL;
-      }
-      ip = analyze_getip();
-      ip->i = inst;
-      ip->u.dv.isconst = 1;
-      ip->u.dv.distype = -1;
-      ip->u.dv.index = 0;
-      ip->u.dv.incident = 0;
-      ip->u.dv.booleanvar=0;
-      ip->u.dv.fixed = 1;
-      ip->u.dv.active = 0;
-      if (g_symbol_values_list == NULL) {
-        g_symbol_values_list = gl_create(2L);
-      }
-      ip->u.dv.value = GetIntFromSymbol(symval,g_symbol_values_list);
-      gl_append_ptr(p_data->dvars,(POINTER)ip);
-      return ip;
-    } else {
-      return NULL;
+    if(!WhensCount(inst))return NULL;
+    symval = SCP(GetSymbolAtomValue(inst));
+    if(symval==NULL)return NULL;
+    ip = analyze_getip();
+    ip->i = inst;
+    ip->u.dv.isconst = 1;
+    ip->u.dv.distype = -1;
+    ip->u.dv.index = 0;
+    ip->u.dv.incident = 0;
+    ip->u.dv.booleanvar=0;
+    ip->u.dv.fixed = 1;
+    ip->u.dv.active = 0;
+    if (g_symbol_values_list == NULL) {
+      g_symbol_values_list = gl_create(2L);
     }
+    ip->u.dv.value = GetIntFromSymbol(symval,g_symbol_values_list);
+    gl_append_ptr(p_data->dvars,(POINTER)ip);
+    return ip;
   case REL_INST:               /* Relation (or conditional or objective) */
     ip = analyze_getip();
     ip->i = inst;
@@ -1017,19 +1020,19 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
       ip->u.r.obj = 0;
       break;
     }
-    if ( GetInstanceRelationType(inst)==e_blackbox ) {
+    if(GetInstanceRelationType(inst)==e_blackbox){
       ip->u.r.ext = 1;
-    } else {
+    }else{
       ip->u.r.ext = 0;
     }
-    if ( RelationIsCond(GetInstanceRelationOnly(inst)) ) {
+    if(RelationIsCond(GetInstanceRelationOnly(inst))){
       ip->u.r.cond = 1;
-    } else {
+    }else{
       ip->u.r.cond = 0;
     }
-    if ( WhensCount(inst) ) {
+    if(WhensCount(inst)){
       ip->u.r.inwhen = 1;
-    } else {
+    }else{
       ip->u.r.inwhen = 0;
     }
     ip->u.r.included = BooleanChildValue(inst,INCLUDED_A);
@@ -1041,14 +1044,14 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
     ip = analyze_getip();
     ip->i = inst;
     ip->u.lr.active = 1;
-    if ( LogRelIsCond(GetInstanceLogRel(inst)) ) {
+    if( LogRelIsCond(GetInstanceLogRel(inst)) ) {
       ip->u.lr.cond = 1;
-    } else {
+    }else{
       ip->u.lr.cond = 0;
     }
-    if ( WhensCount(inst) ) {
+    if( WhensCount(inst) ) {
       ip->u.lr.inwhen = 1;
-    } else {
+    }else{
       ip->u.lr.inwhen = 0;
     }
     ip->u.lr.included = BooleanChildValue(inst,INCLUDED_A);
@@ -1060,9 +1063,9 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
     ip = analyze_getip();
     ip->i = inst;
     ip->u.m.index = 0;
-    if ( WhensCount(inst) ) {
+    if( WhensCount(inst) ) {
       ip->u.m.inwhen = 1;
-    } else {
+    }else{
       ip->u.m.inwhen = 0;
     }
     gl_append_ptr(p_data->models,(POINTER)ip);
@@ -1073,7 +1076,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
     ip->u.w.index = 0;
     if ( WhensCount(inst) ) {
       ip->u.w.inwhen = 1;
-    } else {
+    }else{
       ip->u.w.inwhen = 0;
     }
     return ip;
@@ -1093,8 +1096,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
 	good, so don't disable the g_bad_rel_in_list feature.
 */
 static
-void CountStuffInTree(struct Instance *inst, struct problem_t *p_data)
-{
+void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
   CONST char *symval;
   if (inst!=NULL) {
     switch (InstanceKind(inst)) {
@@ -1189,54 +1191,62 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data)
 
 
 /**
+	Build 'master' lists of variables, relations, etc, from the Instance
+	hierarchy assigned to the problem p_data.
+
 	This takes the already derived counts,
 	allocates all the memory we need to allocate for master,
-	and builds the var/rel/MODEL/etc master lists.
-	filling in p_data and ips as far as possible.
-	Returns 0 normally, or 1 if insufficient memory, 2 if nothing to do.
-	If 1, then the user should deallocate any partial results in
-	a separate cleanup function for p_data->
+	and actually builds the var/rel/MODEL/etc master lists,
+	filling in p_data and interface pointers as far as possible.
 
-	In particular, after this is done we have
-	vars with correct ip values for:
-	index;
-	 incident;
-	 in_block;
-	 fixed;	(as flag)
-	 basis;      (as flag)
-	 solvervar;	(as flag)
-	relations and conditional relations with correct ip values for:
-	 index;
-	 model;
-	 obj;		(0 constraint, -1 maximize, +1 minimize)
-	 ext;
-	 inwhen;
-	 cond;
-	 included;	(as flag)
-	discrete vars with correct ip values for:
-	 index;
-	 incident;
-	 isconst;
-	 distype;
-	 fixed;	(as flag)
-	 booleanvar;	(as flag)
-	 inwhen;
-	logrelations and conditional logrelations with correct ip values for:
-	 index;
-	 model;
-	 included;	(as flag)
-	 inwhen;
-	 cond;
-	whens with correct ip values for:
-	 index;
-	 model;
-	 inwhen;
-	models with correct ip values for:
-	 index;
+	In particular, after this is done we have:
 
-	Note that these are all indexed from 1, being stored in gllists.
+	  - vars with correct ip values for:
+	     - index
+	     - incident
+	     - in_block
+	     - fixed (as flag)
+	     - basis (as flag)
+	     - solvervar (as flag)
+	  - relations and conditional relations with correct ip values for:
+	     - index
+	     - model
+	     - obj (0 constraint, -1 maximize, +1 minimize)
+	     - ext
+	     - inwhen
+	     - cond
+	     - included	(as flag)
+	  - discrete vars with correct ip values for:
+	     - index
+	     - incident
+	     - isconst
+	     - distype
+	     - fixed (as flag)
+	     - booleanvar (as flag)
+	     - inwhen
+	  - logrelations and conditional logrelations with correct ip values for:
+	     - index
+	     - model
+	     - included	(as flag)
+	     - inwhen
+	     - cond
+	  - whens with correct ip values for:
+	     - index
+	     - model
+	     - inwhen
+	  - models with correct ip values for:
+	     - index
+
+	Note that these are all indexed from 1, being stored in gl_list structs (groan).
+
+	@param p_data partial problem definition, include Instance pointer and master list lengths assumed already computed.
+
+	@return 0 on success, 1 on insufficient memory (user should deallocate any partial results in
+	a separate cleanup function for p_data->), 2 if nothing to do.
 */
-static int analyze_make_master_lists(struct problem_t *p_data){
+static
+int analyze_make_master_lists(struct problem_t *p_data){
+
   long int c, len,v,vlen;
   CONST struct Instance *i;
   CONST struct relation *gut;
@@ -1341,7 +1351,7 @@ static int analyze_make_master_lists(struct problem_t *p_data){
   	invariant with hardware and ascend invocation so long as
   	set FIRSTCHOICE holds in compilation.
   */
-  /* mark vars in constraints incident  and index rels */
+  /* mark vars in constraints incident and index rels */
   len = gl_length(p_data->rels);
   for (c=1; c <= len; c++) {
     SIP(gl_fetch(p_data->rels,c))->u.r.index = c;
@@ -1523,12 +1533,13 @@ static int analyze_make_master_lists(struct problem_t *p_data){
 }
 
 /**
-	 This function cleans up an errant problem_t or a good one that we're
-	 done with. We should have set to null any pointers to memory we are
-	 keeping elsewhere before calling this.
+	This function cleans up an errant problem_t or a good one that we're
+	done with. We should have set to null any pointers to memory we are
+	keeping elsewhere before calling this.
 */
-static void analyze_free_lists(struct problem_t *p_data)
-{
+static
+void analyze_free_lists(struct problem_t *p_data){
+
   /* memory containing gl_lists of atomic structure pointers */
   /* if(p_data->extrels != NULL)gl_free_and_destroy(p_data->extrels); */
   if(p_data->extrels!=NULL)gl_destroy(p_data->extrels); /* -- JP HACK */
@@ -1614,9 +1625,9 @@ static void analyze_free_lists(struct problem_t *p_data)
 	which will be equivalent to a symbol value
 */
 static
-void ProcessValueList(struct Set *ValueList, int *value,
-		      struct gl_list_t *symbol_list)
-{
+void ProcessValueList(struct Set *ValueList, int *value
+		,struct gl_list_t *symbol_list
+){
   CONST struct Expr *expr;
   struct Set *s;
 
@@ -1655,11 +1666,11 @@ void ProcessValueList(struct Set *ValueList, int *value,
 	@see ProcessSolverWhens
 */
 static
-void ProcessArraysInWhens(struct Instance *cur_inst,
-			  struct gl_list_t *rels,
-			  struct gl_list_t *logrels,
-			  struct gl_list_t *whens)
-{
+void ProcessArraysInWhens(struct Instance *cur_inst
+		,struct gl_list_t *rels
+		,struct gl_list_t *logrels
+		,struct gl_list_t *whens
+){
   struct rel_relation *rel;
   struct logrel_relation *lrel;
   struct w_when *w;
@@ -1713,9 +1724,9 @@ void ProcessArraysInWhens(struct Instance *cur_inst,
 	@see ProcessSolverWhens
 */
 static
-void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels,
-			  struct gl_list_t *logrels, struct gl_list_t *whens)
-{
+void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
+		,struct gl_list_t *logrels, struct gl_list_t *whens
+){
   struct rel_relation *rel;
   struct logrel_relation *lrel;
   struct w_when *w;
@@ -1782,8 +1793,8 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels,
 	functions.
 */
 static
-void ProcessSolverWhens(struct w_when *when,struct Instance *i)
-{
+void ProcessSolverWhens(struct w_when *when,struct Instance *i){
+
   struct gl_list_t *scratch;
   struct gl_list_t *wvars;
   struct gl_list_t *ref;
@@ -1885,8 +1896,7 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i)
 		1 if discrete var is a member of the when var list, 
 		else 0
 */
-int dis_var_in_a_when(struct Instance *var, struct w_when *when)
-{
+int dis_var_in_a_when(struct Instance *var, struct w_when *when){
   struct Instance *winst;
 
   winst = (struct Instance *)(when_instance(when));
@@ -1898,8 +1908,7 @@ int dis_var_in_a_when(struct Instance *var, struct w_when *when)
 	Determine if the conditional variable inst is part of the
 	variable list of some when in the when list.
 */
-int varinst_found_in_whenlist(slv_system_t sys, struct Instance *inst)
-{
+int varinst_found_in_whenlist(slv_system_t sys, struct Instance *inst){
   struct w_when **whenlist;
   struct w_when *when;
   int c;
@@ -1924,8 +1933,7 @@ int varinst_found_in_whenlist(slv_system_t sys, struct Instance *inst)
 	side and make the same link in the solver side
 */
 static
-void GetListOfLogRels(struct bnd_boundary *bnd, struct Instance *inst)
-{
+void GetListOfLogRels(struct bnd_boundary *bnd, struct Instance *inst){
   struct gl_list_t *logrels;
   unsigned long c,len;
   struct Instance *i;
@@ -1952,8 +1960,7 @@ void GetListOfLogRels(struct bnd_boundary *bnd, struct Instance *inst)
 	(Defined in the SATISFIED term)
 */
 static
-void GetTolerance(struct bnd_boundary *bnd)
-{
+void GetTolerance(struct bnd_boundary *bnd){
   struct gl_list_t *logrels;
   unsigned long c,len;
   struct logrel_relation *lrel;
@@ -1982,8 +1989,8 @@ void GetTolerance(struct bnd_boundary *bnd)
 	@returns 0 on success, 1 on out-of-memory, or 2 if the problem does not
 	contain at least one variable in one equation
 */
-static int analyze_make_solvers_lists(struct problem_t *p_data)
-{
+static
+int analyze_make_solvers_lists(struct problem_t *p_data){
   CONST struct relation *gut;
   CONST struct logrelation *lgut;
 #ifdef DIEDIEDIE
@@ -2120,22 +2127,16 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     if (!(dvip->u.dv.fixed)) p_data->logncol++;
   }
 
-
   /* now malloc and build things, remember to punt the matrix soon */
   /* remember we must NEVER free these things individually. */
 
-#define ALLOCVARDATA(p,n) (p) = (struct var_variable *)( \
-    ((n)>0) ? ascmalloc((n)*sizeof(struct var_variable)) : NULL)
-#define ALLOCRELDATA(p,n) (p) = (struct rel_relation *)( \
-    ((n)>0) ? ascmalloc((n)*sizeof(struct rel_relation)) : NULL)
-#define ALLOCDISVARDATA(p,n) (p) = (struct dis_discrete *)( \
-    ((n)>0) ? ascmalloc((n)*sizeof(struct dis_discrete)) : NULL)
-#define ALLOCLOGRELDATA(p,n) (p) = (struct logrel_relation *)( \
-    ((n)>0) ? ascmalloc((n)*sizeof(struct logrel_relation)) : NULL)
-#define ALLOCWHENDATA(p,n) (p) = (struct w_when *)( \
-    ((n)>0) ? ascmalloc((n)*sizeof(struct w_when)) : NULL)
-#define ALLOCBNDDATA(p,n) (p) = (struct bnd_boundary *)( \
-    ((n)>0) ? ascmalloc((n)*sizeof(struct bnd_boundary)) : NULL)
+#define ALLOCVARDATA(p,n)    (p)=((n)>0 ? ASC_NEW_ARRAY(struct var_variable,n) : (struct var_variable *)NULL)
+#define ALLOCRELDATA(p,n)    (p)=((n)>0 ? ASC_NEW_ARRAY(struct rel_relation,n) : (struct rel_relation *)NULL)
+#define ALLOCDISVARDATA(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct dis_discrete,n) : (struct dis_discrete *)NULL)
+#define ALLOCLOGRELDATA(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct logrel_relation,n) : (struct logrel_relation *)NULL)
+#define ALLOCWHENDATA(p,n)   (p)=((n)>0 ? ASC_NEW_ARRAY(struct w_when,n)       : (struct w_when *)NULL)
+#define ALLOCBNDDATA(p,n)    (p)=((n)>0 ? ASC_NEW_ARRAY(struct bnd_boundary,n) : (struct bnd_boundary *)NULL)
+
   ALLOCVARDATA(p_data->vardata,p_data->nv);
   ALLOCVARDATA(p_data->pardata,p_data->np);
   ALLOCVARDATA(p_data->undata,p_data->nu);
@@ -2149,18 +2150,13 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   ALLOCWHENDATA(p_data->whendata,p_data->nw);
   ALLOCBNDDATA(p_data->bnddata,p_data->nc+p_data->ncl);
 
-#define ALLOCVARLIST(p,n) (p) = (struct var_variable **)( \
-  ((n)>0) ? ascmalloc((n)*sizeof(struct var_variable *)) : NULL)
-#define ALLOCRELLIST(p,n) (p) = (struct rel_relation **)( \
-    ((n)>0) ? ascmalloc((n)*sizeof(struct rel_relation *)) : NULL)
-#define ALLOCDISVARLIST(p,n) (p) = (struct dis_discrete **)( \
-  ((n)>0) ? ascmalloc((n)*sizeof(struct dis_discrete *)) : NULL)
-#define ALLOCLOGRELLIST(p,n) (p) = (struct logrel_relation **)( \
-    ((n)>0) ? ascmalloc((n)*sizeof(struct logrel_relation *)) : NULL)
-#define ALLOCWHENLIST(p,n) (p) = (struct w_when **)( \
-    ((n)>0) ? ascmalloc((n)*sizeof(struct w_when *)) : NULL)
-#define ALLOCBNDLIST(p,n) (p) = (struct bnd_boundary **)( \
-    ((n)>0) ? ascmalloc((n)*sizeof(struct bnd_boundary *)) : NULL)
+#define ALLOCVARLIST(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct var_variable*,n) :(struct var_variable **)NULL)
+#define ALLOCRELLIST(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct rel_relation*,n) :(struct rel_relation **)NULL)
+#define ALLOCDISVARLIST(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct dis_discrete*,n) : (struct dis_discrete **)NULL)
+#define ALLOCLOGRELLIST(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct logrel_relation*,n) : (struct logrel_relation **)NULL)
+#define ALLOCWHENLIST(p,n)(p)=((n)>0 ? ASC_NEW_ARRAY(struct w_when*,n)       :(struct w_when **)NULL)
+#define ALLOCBNDLIST(p,n) (p)=((n)>0 ? ASC_NEW_ARRAY(struct bnd_boundary*,n) :(struct bnd_boundary **)NULL)
+
   ALLOCVARLIST(p_data->mastervl,p_data->nv+1);
   ALLOCVARLIST(p_data->masterpl,p_data->np+1);
   ALLOCVARLIST(p_data->masterul,p_data->nu+1);
@@ -2189,9 +2185,11 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   ALLOCVARLIST(p_data->relincidence,p_data->nnztot+p_data->nnzobj +
 	       p_data->nnzcond);
   ALLOCDISVARLIST(p_data->logrelinciden,p_data->lrelincsize);
+
+  /* verify mem allocations. */
 #define CHECKPTRSIZE(n,p) if ((n)>0 && (p)==NULL) return 1
 #define CHECKPTR(p) if ((p)==NULL) return 1
-  /* verify mem allocations. */
+
   CHECKPTRSIZE(p_data->nv,p_data->vardata);
   CHECKPTRSIZE(p_data->np,p_data->pardata);
   CHECKPTRSIZE(p_data->nu,p_data->undata);
@@ -2252,11 +2250,12 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     var_set_sindex(var,v);
     flags = 0; /* all init to FALSE */
     /* turn on appropriate ones */
-    if (vip->u.v.incident)  flags |= VAR_INCIDENT;
-    if (vip->u.v.in_block)  flags |= VAR_INBLOCK;
-    if (vip->u.v.fixed)     flags |= VAR_FIXED;
-    if (!vip->u.v.basis)    flags |= VAR_NONBASIC;
-    if (vip->u.v.solvervar) flags |= VAR_SVAR;
+    if(vip->u.v.incident)  flags |= VAR_INCIDENT;
+    if(vip->u.v.in_block)  flags |= VAR_INBLOCK;
+    if(vip->u.v.fixed)     flags |= VAR_FIXED;
+    if(!vip->u.v.basis)    flags |= VAR_NONBASIC;
+    if(vip->u.v.solvervar) flags |= VAR_SVAR;
+    if(vip->u.v.deriv > 1) flags |= VAR_DERIV;
 	/* CONSOLE_DEBUG("VAR %p IS IN BLOCK",var); */
     var_set_flags(var,flags);
     p_data->mastervl[v] = var;
@@ -2891,8 +2890,8 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
 
 */
 static
-int analyze_configure_system(slv_system_t sys,struct problem_t *p_data)
-{
+int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
+
   slv_set_var_buf(sys,p_data->vardata);
   p_data->vardata = NULL;
   slv_set_par_buf(sys,p_data->pardata);
@@ -3016,14 +3015,16 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data)
 	errors -- in particular because we must leave the interface ptrs
 	in the state they were found.
 */
-int analyze_make_problem(slv_system_t sys, struct Instance *inst)
-{
+int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   int stat;
-  struct problem_t thisproblem; /* need to malloc, free, or make &local */
+
+  struct problem_t thisproblem; /* note default zero intitialisation. note also: local var! */
   struct problem_t *p_data; /* need to malloc, free, or make &local */
+
   INCLUDED_A = AddSymbolL("included",8);
   FIXED_A = AddSymbolL("fixed",5);
   BASIS_A = AddSymbolL("basis",5);
+  DERIV_A = AddSymbol("ode_type");
 
   p_data = &thisproblem;
   g_bad_rel_in_list = FALSE;
@@ -3071,5 +3072,6 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst)
 
 extern void analyze_free_reused_mem(void){
   resize_ipbuf((size_t)0,0);
-  /* analyze_free_lists(); */
 }
+
+/* @} */

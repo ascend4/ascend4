@@ -594,11 +594,9 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		if(info->derivative){
 			sys->y[yindex] = info->i;
 			var_set_deriv(info->i,FALSE);
-			var_set_diff(info->i,TRUE);
 
 			sys->ydot[yindex] = info->derivative->i;
 			var_set_deriv(info->derivative->i,TRUE);
-			var_set_diff(info->derivative->i,FALSE);
 
 			if(info->varindx >= 0){
 				ASC_ASSERT_RANGE(yindex, -1e7L, 1e7L);
@@ -617,7 +615,6 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		}else{
 			sys->y[yindex] = info ->i;
 			var_set_deriv(info->i,FALSE);
-			var_set_diff(info->i,FALSE);
 
 			sys->ydot[yindex] = NULL; 
 			/* in this case, ydot is not present in the system so we can't set flags on it! */

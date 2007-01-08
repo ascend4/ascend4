@@ -92,8 +92,6 @@
 */
 #define VAR_DERIV     0x80
 /**< var is a derivative of some other var present in the system */
-#define VAR_DIFF	  0x100
-/**< var is differential; it has a derivative somewhere explicitly written in the system of equations */
 
 /*
 	The remaining flagbit definitions are those flags to be
@@ -510,8 +508,6 @@ extern void var_set_interface(struct var_variable *var, uint32 fixed);
   /**<  Returns the incident flag of var as a uint32. */
 # define var_deriv(var) ((var)->flags & VAR_DERIV)
   /**<  Returns the deriv flag of var as a uint32. */
-# define var_diff(var) ((var)->flags & VAR_DERIV)
-  /**<  Returns the diff flag of var as a uint32. */
 # define var_active(var)   ((var)->flags & VAR_ACTIVE)
   /**<  Returns the active flag of var as a uint32. */
 # define var_nonbasic(var) ((var)->flags & VAR_NONBASIC)
@@ -534,8 +530,6 @@ extern void var_set_interface(struct var_variable *var, uint32 fixed);
   /**<  Returns the incident flag of var as a uint32. */
 # define var_deriv(var)         var_flagbit((var),VAR_DERIV)
   /**<  Returns the deriv flag of var as a uint32. */
-# define var_diff(var)         var_flagbit((var),VAR_DIFF)
-  /**<  Returns the diff flag of var as a uint32. */
 # define var_active(var)        var_flagbit((var),VAR_ACTIVE)
   /**<  Returns the active flag of var as a uint32. */
 # define var_nonbasic(var)      var_flagbit((var),VAR_NONBASIC)
@@ -560,9 +554,6 @@ extern void var_set_interface(struct var_variable *var, uint32 fixed);
 /**<  Sets the incident flag of var on (1) or off (0). */
 #define var_set_deriv(var,oneorzero)      \
         var_set_flagbit((var),VAR_DERIV,(oneorzero))
-/**<  Sets the deriv flag of var on (1) or off (0). */
-#define var_set_diff(var,oneorzero)      \
-        var_set_flagbit((var),VAR_DIFF,(oneorzero))
 /**<  Sets the deriv flag of var on (1) or off (0). */
 #define var_set_interface(var,oneorzero)     \
         var_set_flagbit((var),VAR_INTERFACE,(oneorzero))

@@ -297,10 +297,6 @@ ASC_DLLSPEC void gl_store(struct gl_list_t *list, unsigned long pos, VOIDPTR ptr
 
 ASC_DLLSPEC void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
 /**<
- *  <!--  PROCEDURE gl_append_ptr(list,ptr);                           -->
- *  <!--  struct gl_list_t *list;                                      -->
- *  <!--  VOIDPTR ptr;                                                 -->
- *
  *  Appends ptr to the end of the list.  If the addition of ptr exceeds
  *  the list capacity, the list capacity is increased.  This and
  *  gl_append_list() are the only procedures that will expand the
@@ -445,10 +441,6 @@ ASC_DLLSPEC int gl_sorted(CONST struct gl_list_t *list);
 #if LISTIMPLEMENTED
 extern void gl_ptr_sort(struct gl_list_t *list, int inc);
 /**<
- *  <!--  PROCEDURE gl_ptr_sort(list,inc);                             -->
- *  <!--  struct gl_list_t *list;                                      -->
- *  <!--  int inc;                                                     -->
- *
  *  This will sort the list data using Quick Sort.  It
  *  uses a somewhat intelligent pivot choice, so it is unlikely that the
  *  worst case of O(n^2) will arise.  I however will not guarantee that.
@@ -487,11 +479,6 @@ ASC_DLLSPEC void gl_sort(struct gl_list_t *list, CmpFunc func);
 #if LISTIMPLEMENTED
 extern void gl_insert_ptr_sorted(struct gl_list_t *list, VOIDPTR ptr, int inc);
 /**<
- *  <!--  PROCEDURE gl_insert_ptr_sorted(list,ptr,inc);                -->
- *  <!--  struct gl_list_t *list;                                      -->
- *  <!--  VOIDPTR ptr;                                                 -->
- *  <!--  int inc;                                                     -->
- *
  *  This procedure will insert an item into the list in the position
  *  where it belongs to keep the list sorted. If inc != 0,
  *  sort will be in increasing order of address, else it will be
