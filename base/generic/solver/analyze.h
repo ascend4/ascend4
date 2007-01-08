@@ -56,7 +56,7 @@
 #ifndef ASC_ANALYZE_H
 #define ASC_ANALYZE_H
 
-/**	@addtogroup solver Solver
+/**	@addtogroup analyse Analyse
 	@{
 */
 
@@ -71,23 +71,18 @@ extern int analyze_make_problem(slv_system_t sys, struct Instance *inst);
 	Takes a system and populates the guts of it from the instance.
 
 	@NOTE 
-		This implementation of analyze is specific to the ascend compiler
+		This implementation of analyze is specific to the ASCEND Compiler
 		back end.
 */
-
-#if 0 /* NOT IMPLEMENTED */
-extern int analyze_remake_problem(slv_system_t sys);
-/*
-	Reanalyzes the system, reordering solvers var and relation lists
-	if needed.
-	
-	@todo Not implemented.  Remove from header if not needed.
-*/
-#endif
 
 extern void analyze_free_reused_mem(void);
 /**< 
 	Resets all internal memory recycles.
+*/
+
+/*------------------------------------------------------------------------------
+  Some routines that arguably aren't part of the 'analysis' module per se.
+  What is the argument for them being here?
 */
 
 extern int varinst_found_in_whenlist(slv_system_t sys, struct Instance *inst);

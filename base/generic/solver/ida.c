@@ -20,9 +20,11 @@
 	Access to the IDA integrator for ASCEND. IDA is a DAE solver that comes
 	as part of the GPL-licensed SUNDIALS solver package from LLNL.
 
-	IDA provides dense, banded and sparse solvers. At present this module only
-	implements access to the dense and sparse solvers, using the *serial*
-	vector methods.
+	IDA provides the non-linear parts, as well as a number of pluggable linear
+	solvers: dense, banded and krylov types.
+
+	We also implement here an EXPERIMENTAL direct sparse linear solver for IDA
+	using the ASCEND linsolqr routines.
 
 	@see http://www.llnl.gov/casc/sundials/
 *//*
@@ -95,13 +97,19 @@
 #define STATS_DEBUG
 #define PREC_DEBUG
 
+/* #define IDA_NEW_ANALYSE */
+
 /**
 	Everthing that the outside world needs to know about IDA
 */
 const IntegratorInternals integrator_ida_internals = {
 	integrator_ida_create
 	,integrator_ida_params_default
+#ifdef IDA_NEW_ANALYSE
+	,integrator_ida_analyse
+#else
 	,integrator_analyse_dae /* note, this routine is back in integrator.c */
+#endif
 	,integrator_ida_solve
 	,integrator_ida_free
 	,INTEG_IDA
@@ -411,6 +419,85 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 	CONSOLE_DEBUG("Created %d params", p->num_parms);
 
 	return 0;
+}
+
+/*------------------------------------------------------------------------------
+  ANALYSIS ROUTINE (new implementation)
+*/
+
+int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
+	struct gl_list_t *solversvars;
+	unsigned long nsolversvars, i, j, nderivs;
+	struct var_variable *v;
+	struct var_variable **derivs, **derivs2;
+	
+	asc_assert(sys->engine==INTEG_IDA);
+	
+	/* identify our independent variable, throw errors if count()!=1 */
+	if(!sys->indepvars || !gl_length(sys->indepvars)){
+		if(!integrator_find_indep_var(sys)){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"No independent variable found: abandoning integration");
+			return 0;
+		}
+	}
+
+	/* get our list of derivative variables */
+	derivs = ASC_NEW_ARRAY(struct var_variable *,nsolversvars);
+	if(derivs==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"insufficient memory");
+		return -1; 
+	}
+	j = 0;
+	solversvars = slv_get_solvers_var_list(sys->system);
+	for(i=1; i<=nsolversvars; ++i){
+		v = (struct var_variable *)gl_fetch(solversvars,i);
+		/* the solver has marked derivs already, so just test */
+		if(var_deriv(v)){
+			CONSOLE_DEBUG("Found derivative var %p",v);
+			derivs[j++] = v;
+		}
+	}
+	nderivs = j;
+	if(nderivs==0){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"System is not a dynamic problem: contains no derivatives");
+		return 1;
+	}
+	
+	/* shrink the list down to size */
+	derivs2 = derivs;
+	derivs = ASC_NEW_ARRAY(struct var_variable *,nderivs);
+	memcpy(derivs,derivs2,nderivs*sizeof(struct var_variable *));
+	ASC_FREE(derivs2);
+
+	CONSOLE_DEBUG("FOUND %lu DERIV VARS",nderivs);
+		
+
+	/* partition into static, dynamic and output problems */
+
+	/* raise error if any of the above are non-square */
+
+	/* get our list of differential variables */
+
+	/* get our list of algebraic varibles */
+
+	/* set up the static problem */
+	/*   - rel, var (etc) lists */
+    /*   - block decomposition */
+
+	/* set up the output problem */
+	/*   - rel, var (etc) lists */
+    /*   - block decomposition */
+
+	/* set up the dynamic problem */
+	/*   - 'y' list as [ya|yd] */
+	/*   - sparsity pattern for dF/dy and dF/dy' */
+	/*   - sparsity pattern for union of above */
+	/*   - block decomposition based on above */
+    /*   - block decomposition results in reordering of y and y' */
+	/*   - boundaries (optional) */
+
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
+	return 1;
 }
 
 /*-------------------------------------------------------------

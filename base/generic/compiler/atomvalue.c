@@ -116,7 +116,7 @@ unsigned DepthAssigned(CONST struct Instance *i){
   case BOOLEAN_INST:
     return B_INST(i)->depth;
   default:
-    Asc_Panic(2, __FUNCTION__, "Incorrect type passed");
+    ASC_PANIC("Incorrect type passed");
     
   }
 }
@@ -132,7 +132,7 @@ double RealAtomValue(CONST struct Instance *i){
   case REAL_ATOM_INST:
     return RA_INST(i)->value;
   default:
-    Asc_Panic(2, __FUNCTION__, "called with non-real instance");
+    ASC_PANIC("called with non-real instance");
   }
 }
 
@@ -170,7 +170,7 @@ void SetRealAtomValue(struct Instance *i, double d, unsigned int depth){
     RA_INST(i)->depth = depth;
     break;
   default:
-    Asc_Panic(2, __FUNCTION__, "called on non-real instance.\n");
+    ASC_PANIC("called on non-real instance.\n");
   }
 }
 
@@ -200,7 +200,7 @@ void SetRealAtomDims(struct Instance *i, CONST dim_type *dim){
     RA_INST(i)->dimen = dim;
     break;
   default:
-    Asc_Panic(2, __FUNCTION__, "called on non-real instance.");
+    ASC_PANIC("called on non-real instance.");
   }
 }
 
@@ -215,7 +215,7 @@ CONST dim_type *RealAtomDims(CONST struct Instance *i){
   case REAL_ATOM_INST:
     return RA_INST(i)->dimen;
   default:
-    Asc_Panic(2, __FUNCTION__, "called on non-real instance."); 
+    ASC_PANIC("called on non-real instance."); 
   }
 }
 
@@ -233,7 +233,7 @@ long GetIntegerAtomValue(CONST struct Instance *i){
     }
     return IC_INST(i)->value;
   default:
-    Asc_Panic(2, __FUNCTION__,"called on non-integer instance");
+    ASC_PANIC("called on non-integer instance");
   }
 }
 
@@ -287,7 +287,7 @@ int GetBooleanAtomValue(CONST struct Instance *i){
     }
     return BCV(i);
   default:
-    Asc_Panic(2, __FUNCTION__,"called on non-boolean instance."); 
+    ASC_PANIC("called on non-boolean instance."); 
   }
 }
 
@@ -332,7 +332,7 @@ void SetBooleanAtomValue(struct Instance *i, int truth, unsigned int depth){
     }
     break;
   default:
-    Asc_Panic(2, NULL, __FUNCTION__,"called on non-boolean instance.\n");
+    ASC_PANIC("called on non-boolean instance.\n");
   }
 }
 
@@ -405,7 +405,7 @@ CONST struct set_t *SetAtomList(CONST struct Instance *i){
   case SET_ATOM_INST:
     return SA_INST(i)->list;
   default:
-    Asc_Panic(2, __FUNCTION__, "called on non-set instance.");
+    ASC_PANIC("called on non-set instance.");
   }
 }
 
@@ -418,7 +418,7 @@ int GetSetAtomKind(CONST struct Instance *i){
   case SET_ATOM_INST:
     return (int)(SA_INST(i)->int_set);
   default:
-    Asc_Panic(2, __FUNCTION__, "called on non-set instance.");
+    ASC_PANIC("called on non-set instance.");
   }
 }
 
@@ -437,7 +437,7 @@ symchar *GetSymbolAtomValue(CONST struct Instance *i){
     }
     return SYMC_INST(i)->value;
   default:
-    Asc_Panic(2, __FUNCTION__, "called on non-symbol instance.");
+    ASC_PANIC("called on non-symbol instance.");
   }
 }
 
@@ -477,7 +477,7 @@ void SetSymbolAtomValue(struct Instance *i, symchar *str){
     }
     break;
   default:
-    Asc_Panic(2, __FUNCTION__, "called on non-symbol instance.");
+    ASC_PANIC("called on non-symbol instance.");
   }
 }
 
@@ -539,6 +539,6 @@ int CmpAtomValues(CONST struct Instance *i1, CONST struct Instance *i2){
   case SET_ATOM_INST:
     return CmpSetInstVal(SetAtomList(i1),SetAtomList(i2));
   default:
-    Asc_Panic(2, __FUNCTION__, "Bad call!");
+    ASC_PANIC("Bad call!");
   }
 }

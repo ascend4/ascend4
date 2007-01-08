@@ -28,7 +28,6 @@
 	@{
 */
 
-
 #include <utilities/config.h>
 #include "integrator.h"
 
@@ -38,6 +37,7 @@ IntegratorCreateFn integrator_ida_create;
 IntegratorParamsDefaultFn integrator_ida_params_default;
 IntegratorSolveFn integrator_ida_solve;
 IntegratorFreeFn integrator_ida_free;
+IntegratorAnalyseFn integrator_ida_analyse; /* for new approach -- JP Jan 2007 */
 
 const IntegratorInternals integrator_ida_internals;
 

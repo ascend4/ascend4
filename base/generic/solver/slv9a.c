@@ -799,8 +799,7 @@ static int32 slv9a_dof_changed(slv9a_system_t sys)
 }
 
 
-static void reset_cost(struct slv_block_cost *cost,int32 costsize)
-{
+static void reset_cost(struct slv_block_cost *cost,int32 costsize){
   int32 ind;
   for( ind = 0; ind < costsize; ++ind ) {
     cost[ind].size = 0;
@@ -815,8 +814,7 @@ static void reset_cost(struct slv_block_cost *cost,int32 costsize)
 }
 
 
-static void slv9a_presolve(slv_system_t server, SlvClientToken asys)
-{
+static int slv9a_presolve(slv_system_t server, SlvClientToken asys){
   struct dis_discrete **dvp;
   struct logrel_relation **lrp;
   int32 cap, ind;
@@ -827,14 +825,12 @@ static void slv9a_presolve(slv_system_t server, SlvClientToken asys)
   iteration_begins(sys);
   check_system(sys);
   if( sys->vlist == NULL ) {
-    FPRINTF(ASCERR,"ERROR:  (slv9a) slv9a_presolve\n");
-    FPRINTF(ASCERR,"        Discrete Variable list was never set.\n");
-    return;
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Discrete Variable list was never set.");
+    return 1;
   }
   if( sys->rlist == NULL ) {
-    FPRINTF(ASCERR,"ERROR:  (slv9a) slv9a_presolve\n");
-    FPRINTF(ASCERR,"        Logical Relation list was never set.\n");
-    return;
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Logical Relation list was never set.");
+    return 2;
   }
 
   if(sys->presolved > 0) { /* system has been presolved before */
@@ -895,11 +891,10 @@ static void slv9a_presolve(slv_system_t server, SlvClientToken asys)
   update_status(sys);
   iteration_ends(sys);
   sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
+  return 0;
 }
 
-
-static void slv9a_resolve(slv_system_t server, SlvClientToken asys)
-{
+static int slv9a_resolve(slv_system_t server, SlvClientToken asys){
   struct dis_discrete **dvp;
   struct logrel_relation **lrp;
   slv9a_system_t sys;
@@ -929,6 +924,7 @@ static void slv9a_resolve(slv_system_t server, SlvClientToken asys)
   sys->s.block.iteration = 0;
 
   update_status(sys);
+  return 0;
 }
 
 
@@ -939,8 +935,7 @@ static void slv9a_resolve(slv_system_t server, SlvClientToken asys)
  * required for conditional analysis. The use of the structure instance
  * in this function is an insanity, but we stick with it by now.
  */
-static void slv9a_iterate(slv_system_t server, SlvClientToken asys)
-{
+static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
   slv9a_system_t sys;
   struct bnd_boundary **blist;
   struct bnd_boundary *cur_bnd;
@@ -959,54 +954,54 @@ static void slv9a_iterate(slv_system_t server, SlvClientToken asys)
   sys = SLV9A(asys);
   mif = MIF(sys);
   lif = LIF(sys);
-  if (server == NULL || sys==NULL) return;
-  if (check_system(SLV9A(sys))) return;
-  if( !sys->s.ready_to_solve ) {
-    FPRINTF(ASCERR,"ERROR:  (slv9a) slv9a_iterate\n");
-    FPRINTF(ASCERR,"        Not ready to solve.\n");
-    return;
+  if(server == NULL || sys==NULL)return 1;
+  if(check_system(SLV9A(sys)))return 2;
+  if(!sys->s.ready_to_solve){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
+    return 3;
   }
 
   /*
-   * To change truth values of some boundaries
-   */
+    To change truth values of some boundaries
+  */
   blist = sys->blist;
   if (blist == NULL && PERTURB_BOUNDARY) {
-    FPRINTF(lif,"No boundaries in the problem. The solver cannot\n");
-    FPRINTF(lif,"work in perturbation mode \n");
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,"No boundaries in the problem."
+		" The solver cannot work in perturbation mode."
+    );
     sys->s.ready_to_solve = FALSE;
     iteration_ends(sys);
-    return;
+    return 4;
   }
 
   /*
-   * Solution process begins
-   */
-  if (sys->s.block.current_block==-1) {
+    Solution process begins
+  */
+  if(sys->s.block.current_block==-1) {
     find_next_unconverged_block(sys);
     update_status(sys);
-    return;
+    return 0; /* is that right? */
   }
 
   /*
-   * finding the list of boundaries to be perturbed
-   */
+    finding the list of boundaries to be perturbed
+  */
   per_insts = NULL;
-  if (PERTURB_BOUNDARY) {
+  if(PERTURB_BOUNDARY) {
     numbnds = slv_get_num_solvers_bnds(server);
     bfilter.matchbits = (BND_PERTURB);
     bfilter.matchvalue = (BND_PERTURB);
     numper = slv_count_solvers_bnds(server,&bfilter);
-    if (numper != 0) {
+    if(numper != 0) {
       per_insts = gl_create(numper);
       for (nb=0; nb <numbnds; nb++){
-	cur_bnd = blist[nb];
+        cur_bnd = blist[nb];
         if(bnd_perturb(cur_bnd)) {
 	  if(bnd_kind(cur_bnd) == e_bnd_rel) {
             rel = bnd_rel(bnd_real_cond(cur_bnd));
             i = (struct Instance *)rel_instance(rel);
 	    gl_append_ptr(per_insts,i);
-	  } else {
+	  }else{
 	    if (bnd_kind(cur_bnd) == e_bnd_logrel) {
               logrel = bnd_logrel(bnd_log_cond(cur_bnd));
               i = (struct Instance *)logrel_instance(logrel);
@@ -1018,12 +1013,11 @@ static void slv9a_iterate(slv_system_t server, SlvClientToken asys)
     }
   }
 
-
   iteration_begins(sys);
 
   /*
-   *  Attempt direct solve if appropriate
-   */
+    Attempt direct solve if appropriate
+  */
   if( sys->s.block.current_size == 1 ) {
     struct dis_discrete *dvar;
     struct logrel_relation *lrel;
@@ -1055,7 +1049,7 @@ static void slv9a_iterate(slv_system_t server, SlvClientToken asys)
         FPRINTF(lif,"Unable to directly solve a logical relation.\n");
       }
       FPRINTF(lif,"Bad discrete variable or logrel\n");
-      return;
+      return 5;
     case 1:
       if (SHOW_LESS_IMPT) {
         FPRINTF(lif,"Directly solved.\n");
@@ -1063,28 +1057,34 @@ static void slv9a_iterate(slv_system_t server, SlvClientToken asys)
       iteration_ends(sys);
       find_next_unconverged_block(sys);
       update_status(sys);
-      return;
+      return 0;
     case 2:
       if (SHOW_LESS_IMPT) {
         FPRINTF(lif,"Directly solved.\n");
       }
       sys->s.inconsistent = TRUE;
-      FPRINTF(mif,"Multiple solution exists for the discrete variable:\n");
-      print_dis_name(mif,sys,dvar); PUTC('\n',mif);
-      FPRINTF(mif,"when solving the logical relation:\n");
-      print_logrel_name(mif,sys,lrel); PUTC('\n',mif);
+      ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,"Multiple solution exists for the discrete variable '");
+      print_dis_name(ASCERR,sys,dvar);
+      FPRINTF(ASCERR,"' when solving the logical relation '");
+      print_logrel_name(ASCERR,sys,lrel);
+      FPRINTF(ASCERR,"'.");
+      error_reporter_end_flush();
       iteration_ends(sys);
       update_status(sys);
-      return;
+      return 6;
     case -1:
       sys->s.inconsistent = TRUE;
-      FPRINTF(mif,"No solution exists for the discrete variable:\n");
-      print_dis_name(mif,sys,dvar); PUTC('\n',mif);
-      FPRINTF(mif,"when solving the logical relation:\n");
-      print_logrel_name(mif,sys,lrel); PUTC('\n',mif);
+      ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,"No solution exists for the discrete variable '");
+      print_dis_name(ASCERR,sys,dvar);
+      FPRINTF(ASCERR,"' when solving the logical relation '");
+      print_logrel_name(ASCERR,sys,lrel);
+      FPRINTF(ASCERR,"'.");
+      error_reporter_end_flush();
       iteration_ends(sys);
       update_status(sys);
-      return;
+      return 7;
     }
   } else {
     FPRINTF(lif,"block number = %d \n",sys->s.block.current_block);
@@ -1102,16 +1102,18 @@ static void slv9a_iterate(slv_system_t server, SlvClientToken asys)
       debug_out_logrel_residuals(LIF(sys), sys);
       FPRINTF(ASCERR,"********************************************\n");
 #endif /* DEBUG */
+  return 0;
 }
 
 
-static void slv9a_solve(slv_system_t server, SlvClientToken asys)
-{
+static int slv9a_solve(slv_system_t server, SlvClientToken asys){
   slv9a_system_t sys;
+  int err = 0;
   sys = SLV9A(asys);
-  if (server == NULL || sys==NULL) return;
-  if (check_system(sys)) return;
-  while( sys->s.ready_to_solve ) slv9a_iterate(server,sys);
+  if (server == NULL || sys==NULL) return -1;
+  if (check_system(sys)) return -2;
+  while( sys->s.ready_to_solve )err |= slv9a_iterate(server,sys);
+  return err;
 }
 
 
