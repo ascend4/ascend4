@@ -396,6 +396,10 @@ struct problem_t {
   struct dis_discrete **logrelinciden;	/* logrel_relation incidence source */
 };
 
+#ifdef IDA_NEW_ANALYSE
+int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob);
+#endif
+
 /*------------------------------------------------------------------------------
   SOME STUFF WITH INTERFACE POINTERS
 */
@@ -2063,9 +2067,8 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   AL(bl,nc + p_data->ncl,bnd_boundary);
 #undef AL
 
-  p_data->relincidence = ALLOC_OR_NULL(
-     struct varvariable*
-     , p_data->nnztot+p_data->nnzobj + p_data->nnzcond
+  p_data->relincidence = ALLOC_OR_NULL(struct varvariable*
+     , p_data->nnztot + p_data->nnzobj + p_data->nnzcond
   );
 
   p_data->logrelinciden = ALLOC_OR_NULL(
@@ -2889,5 +2892,29 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
 extern void analyze_free_reused_mem(void){
   resize_ipbuf((size_t)0,0);
 }
+
+/*------------------------------------------------------------------------------
+  Routines for analysing differental/derivative variable lists
+*/
+
+#ifdef IDA_NEW_ANALYSE
+
+const SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys){
+	return (SolverDiffVarCollection *)slv_get_diffvars(sys);
+}	
+
+/**
+	@return 0 on success
+*/
+int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
+	SolverDiffVarCollection *diffvars;
+	diffvars = ASC_NEW(SolverDiffVarCollection);
+	slv_set_diffvars(sys,(void *)diffvars);
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
+	return 1;
+}
+
+#endif
+
 
 /* @} */

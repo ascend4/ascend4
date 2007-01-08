@@ -204,6 +204,12 @@ struct slv_system_structure {
 	struct dis_discrete *buf;
   } disunatt;
 
+  void *diffvars;
+  /**
+	This will be a pointer to a SolverDiffVarCollection, but we don't want
+	to force all solvers to know what that is. Default to NULL, thankfully.
+  */
+
   /* the data that follows is for internal consumption only. */
   struct {
     int num_extrels;
@@ -1672,4 +1678,13 @@ int32 slv_far_from_nominals(slv_system_t sys,real64 bignum,
   }
   return vindex;
 }
+
+#ifdef IDA_NEW_ANALYSE
+const void *slv_get_diffvars(slv_system_t sys){
+	return sys->diffvars;
+}
+int slv_set_diffvars(slv_system_t sys,void *diffvars){
+	sys->diffvars = diffvars;
+}
+#endif
 
