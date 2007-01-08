@@ -178,7 +178,10 @@ typedef int IntegratorParamsDefaultFn(struct IntegratorSystemStruct *blsys);
 */
 
 typedef int IntegratorAnalyseFn(struct IntegratorSystemStruct *blsys);
-
+/**<
+	Integrators must provide a function like this that will perform system
+	analysis such as identifying derivative and algebraic variables.
+*/
 
 typedef int IntegratorSolveFn(struct IntegratorSystemStruct *blsys
 		, unsigned long start_index, unsigned long finish_index);

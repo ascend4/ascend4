@@ -52,6 +52,7 @@
 #include "linsolqr.h"
 #include "slv_common.h"
 #include "slv_client.h"
+#include "slv_stdcalls.h"
 #include "relman.h"
 
 /* SUNDIALS includes */
@@ -425,35 +426,54 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
   ANALYSIS ROUTINE (new implementation)
 */
 
+typedef void (IntegratorVarVisitorFn)(IntegratorSystem *sys, struct var_variable *var, const int *varindx);
+void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
+IntegratorVarVisitorFn integrator_dae_classify_var;
+
+/** 
+	Perform additional problem analysis to prepare problem for integration with 
+	IDA.
+
+	Note, we can assume that analyse_make_problem has already been called.
+
+	We can also assume that the independent variable has been found.
+
+	@return 0 on success 
+	@see integrator_analyse
+*/
 int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
-	struct gl_list_t *solversvars;
+	struct var_variable **solversvars;
 	unsigned long nsolversvars, i, j, nderivs;
 	struct var_variable *v;
 	struct var_variable **derivs, **derivs2;
+	char *varname;
+	struct Instance *inst;
+
+	CONSOLE_DEBUG("NEW integrator_ida_analyse------------------>");
 	
 	asc_assert(sys->engine==INTEG_IDA);
-	
-	/* identify our independent variable, throw errors if count()!=1 */
-	if(!sys->indepvars || !gl_length(sys->indepvars)){
-		if(!integrator_find_indep_var(sys)){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"No independent variable found: abandoning integration");
-			return 0;
-		}
-	}
 
 	/* get our list of derivative variables */
+	solversvars = slv_get_solvers_var_list(sys->system);
+	nsolversvars = slv_get_num_solvers_vars(sys->system);
+    CONSOLE_DEBUG("Solver has %lu vars",nsolversvars);
+
 	derivs = ASC_NEW_ARRAY(struct var_variable *,nsolversvars);
 	if(derivs==NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"insufficient memory");
-		return -1; 
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory");
+		return 3; 
 	}
 	j = 0;
-	solversvars = slv_get_solvers_var_list(sys->system);
-	for(i=1; i<=nsolversvars; ++i){
-		v = (struct var_variable *)gl_fetch(solversvars,i);
+	for(i=0; i<nsolversvars; ++i){
+		v = solversvars[i];
+		asc_assert((int)v!=0x1);
+
+		/** @TODO remove this */
+		varname = var_make_name(sys->system,v);
+
 		/* the solver has marked derivs already, so just test */
 		if(var_deriv(v)){
-			CONSOLE_DEBUG("Found derivative var %p",v);
+			CONSOLE_DEBUG("Found derivative var '%s'",varname);
 			derivs[j++] = v;
 		}
 	}
@@ -470,9 +490,13 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	ASC_FREE(derivs2);
 
 	CONSOLE_DEBUG("FOUND %lu DERIV VARS",nderivs);
-		
 
 	/* partition into static, dynamic and output problems */
+	CONSOLE_DEBUG("Block partitioning system...");
+	if(slv_block_partition(sys->system)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to block-partition system");
+		return 1;
+	}
 
 	/* raise error if any of the above are non-square */
 

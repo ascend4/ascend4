@@ -81,9 +81,13 @@ void
 Integrator::analyse(){
 
 	int res;
+	/*
+		Note, we never need to call analyze_make_system in any of the Integrator
+		code, as it gets called by Simulation::build.
+	*/
 	res = integrator_analyse(blsys);
 
-	if(!res){
+	if(res){
 		throw runtime_error("Failed system analysis");
 	}
 }

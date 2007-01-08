@@ -53,8 +53,7 @@
 #define IPTR(i) ((struct Instance *) (i))
 #define DOTIME 1
 
-slv_system_t system_build(SlvBackendToken inst)
-{
+slv_system_t system_build(SlvBackendToken inst){
   slv_system_t sys;
   int stat;
 #ifdef DIEDIEDIE

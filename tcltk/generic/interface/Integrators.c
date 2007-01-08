@@ -846,6 +846,10 @@ int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
   integrator_set_maxsubsteps(blsys,moststeps);
 
   result = integrator_analyse(blsys);
+  if(result){
+      Tcl_SetResult(interp, "integrate_analyse: error returned", TCL_STATIC);
+      return TCL_ERROR;
+  }
 
   /* go and solve it */
   integrator_solve(blsys, i0, i1);

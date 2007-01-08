@@ -722,6 +722,13 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
 			return
+
+		try:
+			self.sim.build()
+		except RuntimeError,e:
+			self.reporter.reportError("Couldn't build system: %s",str(e))
+			return
+
 		integwin = IntegratorWindow(self,self.sim)		
 		_integratorreporter = integwin.run()
 		if _integratorreporter!=None:
