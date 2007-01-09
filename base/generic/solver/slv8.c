@@ -90,7 +90,7 @@ int slv8_register(SlvFunctionsT *f){
 #define SLV8(s) ((slv8_system_t)(s))
 #define MI8F(s) slv_get_output_file( SLV8(s)->p.output.more_important )
 #define SERVER (sys->slv)
-#define slv8_PA_SIZE 54
+#define slv8_PA_SIZE 56
 #define SAFE_CALC_PTR (sys->parm_array[0])
 #define SAFE_CALC     ((*(int *)SAFE_CALC_PTR))
 #define SCALEOPT_PTR (sys->parm_array[1])
@@ -1487,6 +1487,7 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
       "rvobjl", "RVOBJL","Limit on objective in Quick Mode",
 	       U_p_real(val, 0),U_p_real(lo,0),U_p_real(hi,10e10), 5);
 	
+  asc_assert(parameters->num_parms==slv8_PA_SIZE);
 
   return 1;
 }
