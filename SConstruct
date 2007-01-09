@@ -1425,6 +1425,10 @@ conf = Configure(env
 if not conf.CheckHeader('stdio.h'):
 	print "CPPPATH =",env.get('CPPPATH')
 	print "Did not find 'stdio.h'! Check your compiler configuration."
+	print ""
+	print "You environment is printed here:"
+	for k,v in os.environ.iteritems():
+		print "%-30s%s" % ("%s :" % k, v)
 	Exit(1)
 
 # Math library
