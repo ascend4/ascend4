@@ -555,7 +555,7 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 	@DEPRECATED this function needs to be rewritten to use 'ImportHandler'
 	functionality.
 */
-char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
+char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 	struct FilePath *fp1, *fp2, *fp3; /* relative path */
 	char *s1;
 	char *buffer;
