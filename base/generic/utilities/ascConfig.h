@@ -276,11 +276,11 @@ ASC_DLLSPEC FILE*g_ascend_warnings;       /**< File stream to receive warning me
 ASC_DLLSPEC FILE*g_ascend_information;    /**< File stream to receive general messages. */
 
 /* NB For error messages to be correctly captured, all output needs to go to stderr in error.h */
-#ifndef ASCERR
-# define ASCERR g_ascend_errors
-# define ASCWAR g_ascend_warnings
-# define ASCINF g_ascend_information
-#endif
+# ifndef ASCERR
+#  define ASCERR g_ascend_errors
+#  define ASCWAR g_ascend_warnings
+#  define ASCINF g_ascend_information
+# endif
 
 #else 
 # define ASCERR stderr

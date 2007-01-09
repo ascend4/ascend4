@@ -21,6 +21,8 @@
 
 #include <utilities/ascConfig.h>
 #include "redirectFile.h"
+
+#ifdef REIMPLEMENT_STREAMS
 FILE *g_ascend_errors=NULL;
 FILE *g_ascend_warnings=NULL;
 FILE *g_ascend_information=NULL;
@@ -37,4 +39,4 @@ void Asc_RedirectCompilerStreams(FILE *errfile, FILE *warnfile, FILE *infofile)
   g_ascend_warnings = warnfile;      /* whine file */
   g_ascend_information = infofile;   /* note file */
 }
-
+#endif

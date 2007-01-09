@@ -167,6 +167,7 @@ Integrator::getEngines(){
 	map<int,string> m;
 	const IntegratorLookup *list = integrator_get_engines();
 	while(list->id != INTEG_UNKNOWN){
+		if(list->name==NULL)throw runtime_error("list->name is NULL");
 		m.insert(pair<int,string>(list->id,list->name));
 		++list;
 	}

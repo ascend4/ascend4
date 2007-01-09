@@ -532,7 +532,7 @@ int Asc_SolvGetSlvParmsNew(ClientData cdata, Tcl_Interp *interp,
   }
 
   slv_get_default_parameters(solver,&p);
-  tmps= (char *)ascmalloc((MAXIMUM_NUMERIC_LENGTH+1)*sizeof(char));
+  tmps=ASC_NEW_ARRAY(char,MAXIMUM_NUMERIC_LENGTH+1);
 
   for (i = 0; i < p.num_parms; i++) {
     Tcl_AppendElement(interp,"New_Parm");

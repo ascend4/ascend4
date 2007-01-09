@@ -136,8 +136,10 @@ static Tcl_Interp *g_typ__interp;
 /*
  *  Specify ASCERR, ASCWAR when building stand alone.
  */
+#ifdef REIMPLEMENT_STREAM
 FILE *ASCERR = stderr;
 FILE *ASCWAR = stderr;
+#endif
 #endif /* TYPER_TEST */
 
 %}
