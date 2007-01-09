@@ -556,11 +556,13 @@ envadditional={}
 
 if platform.system()=="Windows":
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
+		print "Detected MINGW"
 		envenv = os.environ;
 		tools = ['mingw','lex','yacc','fortran','swig','disttar','nsis']
 		#TODO removed 'doxygen' for SCons 0.96.93
 		envadditional['IS_MINGW']=True
 	else:
+		print "Assuming VC++ build environment (Note: MinGW is preferred)"
 		envenv = {
 			'PATH':os.environ['PATH']
 			,'INCLUDE':os.environ['INCLUDE']
