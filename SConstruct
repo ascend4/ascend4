@@ -556,11 +556,10 @@ envadditional={}
 
 if platform.system()=="Windows":
 	import SCons.Util
-
-	print ">>> mingw32-gcc at",SCons.Util.WhereIs('mingw32-gcc')
+	if SCons.Util.WhereIs('mingw32-gcc'):
+	print "mingw32-gcc found by SCons:",SCons.Util.WhereIs('mingw32-gcc')
 	
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
-		print "Detected MINGW"
 		envenv = os.environ;
 		tools = ['mingw','lex','yacc','fortran','swig','disttar','nsis']
 		#TODO removed 'doxygen' for SCons 0.96.93
