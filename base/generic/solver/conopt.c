@@ -31,8 +31,10 @@
 #include "conopt.h"
 
 #ifndef ASC_WITH_CONOPT
-# error "Shouldn't compile this file unless ASC_WITH_CONOPT set"
+#ifdef __GNUC__
+# warning "Shouldn't compile this file unless ASC_WITH_CONOPT set"
 #endif
+#else
 
 #ifndef ASC_LINKED_CONOPT
 # include <ctype.h>
@@ -320,3 +322,5 @@ int COI_CALL asc_conopt_solution( double* XVAL, double* XMAR, int* XBAS
 
    return 0;
 }
+
+#endif /* ASC_WITH_CONOPT */
