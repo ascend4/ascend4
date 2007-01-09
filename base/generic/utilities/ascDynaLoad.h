@@ -38,7 +38,7 @@
 
 #include <utilities/ascConfig.h>
 
-char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv);
+char *SearchArchiveLibraryPath(const char *name, char *dpath, const char *envv);
 /**<
 	Search the archive library path for a file matching the given
 	(platform specific, with extension?) library filename.
