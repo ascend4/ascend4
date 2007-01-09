@@ -13,7 +13,7 @@ using namespace std;
 */
 Integrator::Integrator(Simulation &simulation)
 		: simulation(simulation)
-{		
+{
 	// create the C-level object
 	this->blsys = integrator_new(simulation.getSystem(),simulation.getModel().getInternalType());
 
@@ -34,7 +34,7 @@ Integrator::~Integrator(){
 	samplelist_free(samplelist);
 }
 
-SolverParameters 
+SolverParameters
 Integrator::getParameters() const{
 	SolverParameters params;
 	int res = integrator_params_get(blsys,&(params.getInternalType() ) );
@@ -52,7 +52,7 @@ void
 Integrator::setReporter(IntegratorReporterCxx *reporter){
 	this->blsys->clientdata = reporter;
 	integrator_set_reporter(blsys,reporter->getInternalType());
-	//CONSOLE_DEBUG("REPORTER HAS BEEN SET");	
+	//CONSOLE_DEBUG("REPORTER HAS BEEN SET");
 	(*(this->blsys->reporter->init))(blsys);
 	//CONSOLE_DEBUG("DONE TESTING OUTPUT_INIT");
 }
@@ -72,9 +72,18 @@ Integrator::getNumSteps(){
 	return integrator_getnsamples(blsys);
 }
 
-int 
+/**
+	Find the independent variable in the system, or throw an exception if not found.
+*/
+void
 Integrator::findIndependentVar(){
-	return integrator_find_indep_var(blsys);
+	int res = integrator_find_indep_var(blsys);
+
+	if(res){
+		stringstream ss;
+		ss << "Independent variable not found (" << res << ")";
+		throw runtime_error(ss.str());
+	}
 }
 
 void
@@ -107,7 +116,7 @@ Integrator::solve(){
 	// check the integration limits
 	// trigger of the solution process
 	// report errors?
-	
+
 	assert(samplelist!=NULL);
 	assert(samplelist->ns>0);
 	assert(blsys->reporter!=NULL);
@@ -182,7 +191,7 @@ Integrator::getEngineName() const{
 		throw runtime_error("No engine selected");
 	}
 	return f->second;
-}		
+}
 
 /**
 	@TODO what about conversion factors? Is an allowance being made?
@@ -258,7 +267,7 @@ Integrator::getNumVars(){
 	return blsys->n_y;
 }
 
-int 
+int
 Integrator::getNumObservedVars(){
 	return blsys->n_obs;
 }
