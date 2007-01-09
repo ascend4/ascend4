@@ -1556,14 +1556,18 @@ ASC_DISTDIR_REL_BIN=".."
 # prefix or datadir. If datadir not explicitly given, we
 # use prefix.
 if test "x$datadir" = 'x${prefix}/share'; then
+  echo "--------PREFIX"
   INSTALL_ASCDATA="$prefix"
 else
+  echo "--------DATADIR"
   INSTALL_ASCDATA="$datadir"
 fi
 DEFAULT_ASCENDLIBRARY="$INSTALL_ASCDATA/models"
 ASCEND_DEFAULTLIBRARY="$INSTALL_ASCDATA/models"
 ASC_ENV_TK_DEFAULT="\$ASCENDDIST/TK"
 
+echo "INSTALL_ASCDATA--- $INSTALL_ASCDATA"
+echo "LIBRARY----------- $DEFAULT_ASCENDLIBRARY"
 
 #--------------------------------------------------------------------
 #	The variables we substitute into the Makefile.in files
@@ -1647,7 +1651,7 @@ AC_OUTPUT(
        packages/Makefile:../../base/generic/packages/Makefile.in
        solver/Makefile:../../base/generic/solver/Makefile.in
        utilities/Makefile:../../base/generic/utilities/Makefile.in
-       utilities/config.h:../../base/generic/utilities/config.h.in
+       ../../base/generic/utilities/config.h
        ../../jam/Jamrules
        ../../tcltk/generic/Jamrules_tcltk
        $tkdir_makefiles
