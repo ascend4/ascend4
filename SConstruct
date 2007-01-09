@@ -555,7 +555,7 @@ def c_escape(str):
 envadditional={}
 
 if platform.system()=="Windows":
-	if os.environ.get('OSTYPE')=='msys':
+	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
 		envenv = os.environ;
 		tools = ['mingw','lex','yacc','fortran','swig','disttar','nsis']
 		#TODO removed 'doxygen' for SCons 0.96.93
