@@ -79,6 +79,11 @@ class TestSolver(AscendSelfTester):
 	def testsunpos6(self):
 		self._run('example_1_8_1',"QRSlv","johnpye/sunpos.a4c")
 
+	def testinstanceas(self):
+		M = self._run('example_1_6_1',"QRSlv","johnpye/sunpos.a4c")
+		self.assertAlmostEqual( float(M.t_solar), M.t_solar.as("s"))
+		self.assertAlmostEqual( float(M.t_solar)/3600, M.t_solar.as("h"))
+
 class TestIntegrator(Ascend):
 
 	def testListIntegrators(self):

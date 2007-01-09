@@ -468,6 +468,15 @@ public:
 				return str(self.getRealValue()) + ' ' + self.getDimensions().getDefaultUnits().getName().toString()
 			return _u.getConvertedValue(self.getRealValue())
 
+		def as(self,units):
+			if not self.isReal():
+				raise TypeError
+			if units.__class__==str:
+				units = Units(units);
+			if units.__class__!=Units:
+				raise TypeError
+			return self.getRealValue() / units.getConversion()
+
 		def setFixedValue(self,val):
 			if not self.isFixed():
 				self.setFixed();
