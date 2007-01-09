@@ -245,7 +245,7 @@ int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
 			sys->internals = NULL;
 			return 1;
 	};
-	
+
 	asc_assert(sys->internals);
 	integrator_create_engine(sys);
 	return 0;
@@ -325,8 +325,10 @@ int integrator_params_set(IntegratorSystem *sys, const slv_parameters_t *paramet
 */
 
 /**
-	Locate the independent variable. For the purpose of GUI design, this needs
-	to work independent of the integration engine being used.
+	Locate the independent variable.
+
+	@NOTE For the purpose of GUI design, this needs	to work independent of the
+	integration engine being used. @ENDNOTE
 */
 int integrator_find_indep_var(IntegratorSystem *sys){
 	int result = 0;
@@ -503,7 +505,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	for(i=1; i<=gl_length(sys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
 		varname = var_make_name(sys->system,info->i);
-		CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld (varindx = %d)",i-1,varname,info->type,info->varindx); 
+		CONSOLE_DEBUG("var[%d] = \"%s\": ode_type = %ld (varindx = %d)",i-1,varname,info->type,info->varindx);
 		ASC_FREE(varname);
 	}
 #endif
@@ -512,7 +514,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	prev = NULL;
 	for(i=1; i<=gl_length(sys->dynvars); ++i){ /* why does gl_list index with base 1??? */
 		info = (struct Integ_var_t *)gl_fetch(sys->dynvars, i);
-		
+
 		if(info->type == INTEG_STATE_VAR || info->type == INTEG_ALGEBRAIC_VAR){
 #ifdef ANALYSE_DEBUG
 			varname = var_make_name(sys->system,info->i);
@@ -582,14 +584,14 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	for(i=0; i<numy; ++i){
 		asc_assert(sys->ydot[i]==NULL);
 	}
-	
+
 	for(i=0; i<numy; ++i){
 		sys->y_id[i] = 9999999L;
 	}
 
 	/* now add variables and their derivatives to 'ydot' and 'y' */
 	yindex = 0;
-	
+
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("VARS IN THEIR MATRIX ORDER");
 #endif
@@ -621,7 +623,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 			sys->y[yindex] = info ->i;
 			var_set_deriv(info->i,FALSE);
 
-			sys->ydot[yindex] = NULL; 
+			sys->ydot[yindex] = NULL;
 			/* in this case, ydot is not present in the system so we can't set flags on it! */
 
 			if(info->varindx >= 0){
@@ -663,7 +665,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	}
 
 	CONSOLE_DEBUG("THERE ARE %d VARIABLES IN THE INTEGRATION SYSTEM",numy);
-	
+
 	sys->n_y = numy;
 
 	if(integrator_sort_obs_vars(sys))return 10;
@@ -683,7 +685,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		}else{
 			fprintf(stderr,"diff(%s)\n",varname);
 			ASC_FREE(varname);
-		}	
+		}
 	}
 
 	CONSOLE_DEBUG("CORRESPONDENCE OF SOLVER VARS TO INTEGRATOR VARS");
@@ -702,7 +704,7 @@ void integrator_dae_show_var(IntegratorSystem *sys
 	long y_id;
 
 	asc_assert(sys->x);
-	
+
 	varname = var_make_name(sys->system, var);
 
 	if(varindx==NULL){
@@ -1047,7 +1049,7 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 			CONSOLE_DEBUG("VARIABLE IS NOT ACTIVE");
 			return;
 		}
-		
+
 		/* only non-fixed variables are accepted */
 		if(!var_fixed(var)){
 			/* get the ode_type and ode_id of this solver_var */
