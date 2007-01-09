@@ -336,11 +336,17 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 	char *varname;
 #endif
 
+	/* if the indep var has been found, we don't look again (we assume the user won't fiddle with ode_type!) */
 	if(sys->x != NULL){
 		CONSOLE_DEBUG("sys->x already set");
-		return 1;
+		return 0; /* success */
 	}
-	assert(sys->indepvars==NULL);
+
+	/* create a clear indepvars list */
+	if(sys->indepvars!=NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"indepvars should be NULL at this point");
+		return 1; /* error */
+	}
 	sys->indepvars = gl_create(10L);
 
 	IntegInitSymbols();
@@ -355,16 +361,23 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 	}
 #endif
 
+	/* after visiting the instance tree, look at the candidates and return 0 on success */
 	result = integrator_check_indep_var(sys);
+
+	/* whatever happens, we clean up afterwards */
 	gl_free_and_destroy(sys->indepvars);
 	sys->indepvars = NULL;
 
 #ifdef ANALYSE_DEBUG
 	asc_assert(sys->system);
-	asc_assert(sys->x);
-	varname = var_make_name(sys->system, sys->x);
-	CONSOLE_DEBUG("Indep var is '%s'",varname);
-	ASC_FREE(varname);
+	if(!result){
+		asc_assert(sys->x);
+		varname = var_make_name(sys->system, sys->x);
+		CONSOLE_DEBUG("Indep var is '%s'",varname);
+		ASC_FREE(varname);
+	}else{
+		CONSOLE_DEBUG("No indep var was found");
+	}
 #endif
 
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Returning result %d",result); */

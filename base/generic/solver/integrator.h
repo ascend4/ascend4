@@ -39,8 +39,8 @@
 *//*
 	by John Pye, May 2006.
 
-	Derived from tcltk/.../Integrators.h (with heavy editing). 
-	Removed all global variables and created a 'IntegratorReporter' interface 
+	Derived from tcltk/.../Integrators.h (with heavy editing).
+	Removed all global variables and created a 'IntegratorReporter' interface
 	for reporting results of integration to whatever interface you're using.
 */
 
@@ -98,7 +98,7 @@
 	IDA_OPTIONAL \
 	S I(AWW       ,integrator_aww_internals)
 
-/** 
+/**
 	Struct containin the list of supported integrators
 */
 typedef enum{
@@ -121,8 +121,8 @@ typedef struct IntegratorLookupStruct{
 */
 struct IntegratorSystemStruct;
 
-/** 
-	Initialisation. This hook allows initialisation of the GUI or reporting 
+/**
+	Initialisation. This hook allows initialisation of the GUI or reporting
 	mechanism to be performed when integration begins
 */
 typedef int IntegratorOutputInitFn(struct IntegratorSystemStruct *);
@@ -137,14 +137,14 @@ typedef int IntegratorOutputInitFn(struct IntegratorSystemStruct *);
 typedef int IntegratorOutputWriteFn(struct IntegratorSystemStruct *);
 
 /**
-	Observation reporting. This hook should be implemented to record 
-	observations in a way that can be presented to the use, recorded in a 
+	Observation reporting. This hook should be implemented to record
+	observations in a way that can be presented to the use, recorded in a
 	file, etc.
 */
 typedef int IntegratorOutputWriteObsFn(struct IntegratorSystemStruct *);
 
 /**
-	Finalisation. This hook can be used to terminate recording of observations, 	
+	Finalisation. This hook can be used to terminate recording of observations,
 	close files, terminate GUI status reporting, etc.
 */
 typedef int IntegratorOutputCloseFn(struct IntegratorSystemStruct *);
@@ -279,7 +279,7 @@ ASC_DLLSPEC int integrator_analyse(IntegratorSystem *blsys);
 	However for the moment, we allow Integrators to specify how they would
 	like to analyse the system, and for that, we export these routines so that
 	they can be referred to in lsode.h, ida.h, etc.
-*/	
+*/
 ASC_DLLSPEC int integrator_analyse_ode(IntegratorSystem *blsys);
 ASC_DLLSPEC int integrator_analyse_dae(IntegratorSystem *blsys);
 /**< see integrator_analyse_ode */
@@ -331,7 +331,7 @@ ASC_DLLSPEC int integrator_params_get(const IntegratorSystem *blsys, slv_paramet
 
 ASC_DLLSPEC int integrator_params_set(IntegratorSystem *blsys, const slv_parameters_t *parameters);
 /**<
-	Copies the the given parameter set into the Integrator's data structure, 
+	Copies the the given parameter set into the Integrator's data structure,
 	which immediately makes the new values available to the integrator engine.
 
 	@TODO test these, not sure if the memory copy stuff is right or not.
@@ -352,7 +352,7 @@ ASC_DLLSPEC int integrator_find_indep_var(IntegratorSystem *blsys);
 /**<
 	Attempt to locate the independent variable. It will be stored in the blsys
 	structure if found.
-	@return 1 if found, 0 if not found.
+	@return 0 if found, non-zero on error.
 */
 
 extern int integrator_checkstatus(slv_status_t status);
@@ -447,14 +447,14 @@ extern const dim_type *integrator_getsampledim(IntegratorSystem *blsys);
 
 ASC_DLLSPEC double integrator_get_t(IntegratorSystem *blsys);
 /**<
-	Gets value of the independent variable value from the ASCEND model 
+	Gets value of the independent variable value from the ASCEND model
 	(retrieves the value from the ASCEND compiler's instance hierarchy)
 */
 
 extern void integrator_set_t(IntegratorSystem *blsys, double value);
 /**<
-	Sets value of the independent variable in the model (inserts the value in 
-	the correct place in the compiler's instance hierarchy via the var_variable 
+	Sets value of the independent variable in the model (inserts the value in
+	the correct place in the compiler's instance hierarchy via the var_variable
 	API).
 */
 
@@ -513,7 +513,7 @@ extern double *integrator_get_atol(IntegratorSystem *blsys, double *vector);
 */
 
 /**
-	This call should be used to get the file streams ready, output column 
+	This call should be used to get the file streams ready, output column
 	headings etc.
 */
 extern int integrator_output_init(IntegratorSystem *blsys);
@@ -521,7 +521,7 @@ extern int integrator_output_init(IntegratorSystem *blsys);
 /**
 	This call should be used to output the immediate integration results from
 	a single timestep. For an ODE solver, this means just the 'y' values but
-	perhaps not the values of the algebraic varaibles, which must be calculated 
+	perhaps not the values of the algebraic varaibles, which must be calculated
 	separately. They'll be stored in the Integ_system_t somehow (not yet
 	known how)
 

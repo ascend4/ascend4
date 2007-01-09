@@ -87,13 +87,14 @@ class IntegratorWindow:
 
 		# get the current time value as the beginentry...
 		print "SEARCHING FOR TIME VAR..."
-		if self.integrator.findIndependentVar():
+		try:
+			self.integrator.findIndependentVar()
 			print "FOUND time var..."	
 			_t = self.integrator.getCurrentTime();
 			print "Found time = %f" % _t
 			self.beginentry.set_text(str(_t))
-		else:
-			self.browser.reporter.reportNote("No indep var found");
+		except RuntimeError,e:
+			self.browser.reporter.reportNote(str(e));
 			self.beginentry.set_text("0")
 
 		_dur = self.prefs.getStringPref("Integrator","duration","100")
