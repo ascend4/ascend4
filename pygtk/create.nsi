@@ -102,8 +102,12 @@ Section "ASCEND (required)"
 	File "Makefile.bt"
 	File "ascend.syn"
 
-	; Set 'librarypath' in .ascend.ini
-	WriteINIstr $APPDATA\.ascend.ini Directories librarypath "$DOCUMENTS\ascdata;$INSTDIR\models"
+	${If} ${FileExists} "$APPDATA\.ascend.ini"
+		MessageBox MB_OK "The '$APPDATA\.ascend.ini' is NOT being updated. Manually delete this file if ASCEND doesn't behave as expected."
+	${Else}
+		; Set 'librarypath' in .ascend.ini
+		WriteINIstr $APPDATA\.ascend.ini Directories librarypath "$DOCUMENTS\ascdata;$INSTDIR\models"
+	${EndIf}
 
 	; Write the installation path into the registry
 	WriteRegStr HKLM SOFTWARE\ASCEND "Install_Dir" "$INSTDIR"
