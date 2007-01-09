@@ -4,6 +4,9 @@ try:
 except RuntimeError,e:
 	print "NOTE: RuntimeError when importing solverreporter: %s", e
 	have_solverreporter = False
+except Exception,e:
+	print "NOTE: unrecognised error when importing solverreporter: %s",e
+	have_solverreporter = False
 
 import extpy
 
