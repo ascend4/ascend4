@@ -1806,7 +1806,7 @@ def TOOL_SUBST(env):
             raise SCons.Errors.UserError, "Can't read source file %s"%sourcefile
         for (k,v) in dict.items():
         	try:
-        		print "%s ---> %s" % (k,v)
+        		#print "%s ---> %s" % (k,v)
         		contents = re.sub(k, v, contents)
         	except Exception,e:
         		sys.stderr.write("Failed to substute '%s' with '%s': %s\n" % (k,v,e))
