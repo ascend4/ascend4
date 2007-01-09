@@ -557,7 +557,7 @@ envadditional={}
 if platform.system()=="Windows":
 	import SCons.Util
 	if SCons.Util.WhereIs('mingw32-gcc'):
-	print "mingw32-gcc found by SCons:",SCons.Util.WhereIs('mingw32-gcc')
+		print "mingw32-gcc found by SCons:",SCons.Util.WhereIs('mingw32-gcc')
 	
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
 		envenv = os.environ;
