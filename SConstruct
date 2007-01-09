@@ -555,6 +555,10 @@ def c_escape(str):
 envadditional={}
 
 if platform.system()=="Windows":
+	import SCons.Util
+
+	print ">>> mingw32-gcc at",SCons.Util.WhereIs('mingw32-gcc')
+	
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
 		print "Detected MINGW"
 		envenv = os.environ;
