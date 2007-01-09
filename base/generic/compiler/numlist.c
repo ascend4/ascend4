@@ -1479,7 +1479,11 @@ void NumpairClearPuddle(void)
 #define TESTLT 0
 #define TESTGT 0
 #define TESTINT 1
+
+#ifdef REIMPLEMENT_STREAMS
 FILE *g_ascend_errors = stderr;
+#endif
+
 int main()
 {
   Numlist_p p1,p2,p3,ep4,ep5,ep6,ep7,ep8,ep9, es1,es2, p10;

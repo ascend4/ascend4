@@ -992,7 +992,10 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
 
 #ifdef UNRELOCATE_TEST_BT
 /* this code may be out of date, but should be saved. */
+#ifdef RELOCATE_STREAMS
 FILE *g_ascend_errors = stderr;
+#endif
+
 int main() { /* built only if TESTBT defined TRUE in bintoken.c */
   double res;
   gl_init_pool();
