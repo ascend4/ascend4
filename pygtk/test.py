@@ -1,14 +1,20 @@
 #!/usr/bin/env python
 import unittest
 
-import platform, sys
+import os, subprocess,sys
+
+if not os.environ.get('ASCENDLIBRARY'):
+	os.environ['ASCENDLIBRARY'] = os.path.normpath(os.path.join(sys.path[0],"../models"))
+	print os.environ['ASCENDLIBRARY']
+
+import platform
 if platform.system() != "Windows":
 	import dl
 	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
 
+
 import ascpy
 import math
-import os, subprocess
 import atexit
 
 try:
@@ -20,7 +26,7 @@ class Ascend(unittest.TestCase):
 
 	def setUp(self):
 		import ascpy
-		self.L = ascpy.Library()
+		self.L = ascpy.Library(os.environ['ASCENDLIBRARY'])
 	
 	def tearDown(self):
 		self.L.clear()
