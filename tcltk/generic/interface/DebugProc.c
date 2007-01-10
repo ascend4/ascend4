@@ -2903,46 +2903,44 @@ int Asc_DebuStructSing(ClientData cdata, Tcl_Interp *interp,
 
   UNUSED_PARAMETER(cdata);
 
-  if ( argc != 3 ) {
-    FPRINTF(ASCERR,  "call is: dbg_struct_singular <out> <relindex,-1>\n");
-    Tcl_SetResult(interp,
-                  "dbg_struct_singular wants output dev & relation index.",
-                  TCL_STATIC);
+  if(argc != 3){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"call is: dbg_struct_singular <out> <relindex,-1>");
+    Tcl_SetResult(interp, "dbg_struct_singular wants output dev & relation index.", TCL_STATIC);
     return TCL_ERROR;
   }
-  if (g_solvsys_cur==NULL) {
-    FPRINTF(ASCERR,  "dbg_struct_singular called with NULL pointer\n");
-    Tcl_SetResult(interp, "dbg_struct_singular called without slv_system",
-                  TCL_STATIC);
+  if(g_solvsys_cur==NULL){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"g_solvsys_cur is NULL");
+    Tcl_SetResult(interp, "dbg_struct_singular called without slv_system", TCL_STATIC);
     return TCL_ERROR;
   }
+
   rp=slv_get_solvers_rel_list(g_solvsys_cur);
+  if(!rp){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"got NULL relation list");
+    Tcl_SetResult(interp, "dbg_struct_singular called with null rellist", TCL_STATIC);
+    return TCL_ERROR;
+  }
   vp=slv_get_solvers_var_list(g_solvsys_cur);
-  if (!rp) {
-    FPRINTF(ASCERR,  "NULL relation list found in dbg_struct_singular\n");
-    Tcl_SetResult(interp, "dbg_struct_singular called with null rellist",
-                  TCL_STATIC);
-    return TCL_ERROR;
-  }
-  if (!vp) {
+  if(!vp){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"got NULL variable list");
     FPRINTF(ASCERR,  "NULL variable list found in dbg_struct_singular\n");
-    Tcl_SetResult(interp, "dbg_struct_singular called with null rellist",
-                  TCL_STATIC);
+    Tcl_SetResult(interp, "dbg_struct_singular called with null varlist", TCL_STATIC);
     return TCL_ERROR;
   }
+
   maxrel=slv_get_num_solvers_rels(g_solvsys_cur);
   relnum = maxrel;
   status = Tcl_GetInt(interp,argv[2],&relnum);
-  if (relnum >= maxrel || status == TCL_ERROR) {
+  if(relnum >= maxrel || status == TCL_ERROR){
     Tcl_ResetResult(interp);
-    Tcl_SetResult(interp,
-                  "dbg_struct_singular: equation checked does not exist",
-                  TCL_STATIC);
+    Tcl_SetResult(interp, "dbg_struct_singular: equation checked does not exist", TCL_STATIC);
     return TCL_ERROR;
   }
+
   if (relnum < 0) {
     relnum = mtx_FIRST;
   }
+
   /* get io option */
   i=3;
   status=Tcl_GetInt(interp,argv[1],&i);
@@ -2969,38 +2967,29 @@ int Asc_DebuStructSing(ClientData cdata, Tcl_Interp *interp,
        FPRINTF(ASCERR,"dbg_struct_singular called with strange i/o option\n");
             return TCL_ERROR;
   }
-  if(!slvDOF_structsing(g_solvsys_cur,relnum,&vip,&rip,&fip)) {
+
+  /* do the test */
+  if(0==slvDOF_structsing(g_solvsys_cur,relnum,&vip,&rip,&fip)) {
+    /* successfully got lists... */
     char tmps[MAXIMUM_NUMERIC_LENGTH];
-    switch (dev) {
+    switch(dev){
       case 0:
       case 1:
         FPRINTF(fp,"Relations in structural singularity:\n");
-        if (rip[0] < 0) {
-          FPRINTF(fp,"  None.\n");
-        }
-        for (i=0; rip[i] > -1; i++) {
-          FPRINTF(fp,"  ");
-          rel_write_name(g_solvsys_cur,rp[rip[i]],fp);
-          FPRINTF(fp,"\n");
+        if(rip[0] < 0)FPRINTF(fp,"  None.\n");
+        else for (i=0; rip[i] > -1; i++) {
+          FPRINTF(fp,"  "); rel_write_name(g_solvsys_cur,rp[rip[i]],fp); FPRINTF(fp,"\n");
         }
         FPRINTF(fp,"Variables in structural singularity:\n");
-        if (vip[0] < 0) {
-          FPRINTF(fp,"  None.\n");
-        }
-        for (i=0; vip[i] > -1; i++) {
-          FPRINTF(fp,"  ");
-          var_write_name(g_solvsys_cur,vp[vip[i]],fp);
-          FPRINTF(fp,"\n");
+        if(vip[0] < 0)FPRINTF(fp,"  None.\n");
+        else for (i=0; vip[i] > -1; i++) {
+          FPRINTF(fp,"  "); var_write_name(g_solvsys_cur,vp[vip[i]],fp); FPRINTF(fp,"\n");
         }
 
         FPRINTF(fp,"Variables reducing structural singularity if freed:\n");
-        if (fip[0] < 0) {
-          FPRINTF(fp,"  None.\n");
-        }
-        for (i=0; fip[i] > -1; i++) {
-          FPRINTF(fp,"  ");
-          var_write_name(g_solvsys_cur,vp[fip[i]],fp);
-          FPRINTF(fp,"\n");
+        if(fip[0] < 0)FPRINTF(fp,"  None.\n");
+        else for (i=0; fip[i] > -1; i++) {
+          FPRINTF(fp,"  "); var_write_name(g_solvsys_cur,vp[fip[i]],fp); FPRINTF(fp,"\n");
         }
         break;
       case 2:
@@ -3034,7 +3023,8 @@ int Asc_DebuStructSing(ClientData cdata, Tcl_Interp *interp,
     if (fip) {
       ascfree(fip);
     }
-  } else {
+  }else{
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Couldn't determine singularity lists");
     Tcl_SetResult(interp, "{} {} {}", TCL_STATIC);
   }
   return TCL_OK;

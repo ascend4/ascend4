@@ -49,35 +49,42 @@
 #include <utilities/ascConfig.h>
 
 /*
- * The following functions are for use in running DOF analysis and dialog
- * through the interface. The tcl callbacks for them will be coded in
- * DebugProc.c probably.
- * Partitioning is assumed to be in effect.
- * In general, the lists returned will be longer than number of degrees of
- * freedom which can be changed. DOF dialogs should be done 1 var/rel at a
- * time.
- */
+	The following functions are for use in running DOF analysis and dialog
+	through the interface. The tcl callbacks are coded in DebugProc.c.
+
+	Partitioning is assumed to be in effect.
+
+	In general, the lists returned will be longer than number of degrees of
+	freedom which can be changed. DOF dialogs should be done 1 var/rel at a
+	time.
+*/
 
 ASC_DLLSPEC int slvDOF_eligible(slv_system_t server, int32 **vil);
-/**
- * @return 1 if able to determine lists, 0 otherwise.
- * @param vil pointer to an int32 array which will fill in and return
- * If return is 1, user should ascfree(*vil) when done with it. Return 0
- * -> vil will be null.
- * The index list is terminated with a -1 but may be of any length.
- * The indices are var_sindex of vars on solvers_var_list.
- * vil is incident vars eligible to be fixed.
- * This routine does not sort out which vars are in a particular part of
- * the MODEL represented by the system -- that is a UI job.
- * Vars that do not appear in equations will not be listed as eligible
- * since they cannot help the DOF state of the system.
- */
+/**<
+	Calculate a list of incident variables elegible to be fixed
 
-ASC_DLLSPEC int slvDOF_structsing(slv_system_t server,
-                             int32 relindex,
-                             int32 **vil,
-                             int32 **ril,
-                             int32 **fil);
+	This routine does not sort out which vars are in a particular part of
+	the MODEL represented by the system -- that is a UI job.
+
+	Vars that do not appear in equations will not be listed as eligible
+	since they cannot help the DOF state of the system.
+
+	If return is 1, user owns the returned list vil and must free it. If
+	return is zero, vil will be NULL.
+
+	@param vil pointer to an int32 array which will fill in and return. The
+	indices are var_sindex values for vars from the solvers_var_list. The index
+	list is terminated with a -1 but may be of any length.
+
+	@return 1 if able to determine lists, 0 otherwise.
+*/
+
+ASC_DLLSPEC int slvDOF_structsing(slv_system_t server
+		,int32 relindex
+		,int32 **vil
+		,int32 **ril
+		,int32 **fil
+);
 /**<
 	Analyse slv system for structural singularity and return. If relinst is set to mtx_FIRST, routine returns
 	the intersection of all singularity lists for any unassignable included equations in the system.
@@ -89,6 +96,7 @@ ASC_DLLSPEC int slvDOF_structsing(slv_system_t server,
 
 	@return 0 on success, 1 otherwise (in which case vil,ril,fil will not have been allocated)
 
+    -- old comments --
  *  Returns 1 if able to determine lists, 0 otherwise.
  *  relindex should be the sindex of an unassigned, included equation
  *  from the solvers_rel_list.
@@ -100,17 +108,22 @@ ASC_DLLSPEC int slvDOF_structsing(slv_system_t server,
 
 ASC_DLLSPEC int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
 /**<
- *  Return the status of the current problem.
- *
- *  - status = 1  ==> underspecified
- *  - status = 2  ==> square
- *  - status = 3  ==> structurally singular
- *  - status = 4  ==> overspecifed
- *  - status = 5  ==> Error !! ( insufficient memory, NULL argument, failed to presolve)
- *
- *  If the system is underspecified, we will also get the number of the
- *  degrees of freedom for the problem.
- */
+	Return the structural status of the current system into 'status':
+	   - 1 : underspecified
+	   - 2 : square
+	   - 3 : structurally singular
+	   - 4 : overspecifed
+	   - 5 : error (with console output)
+
+	If the system is underspecified, we will also get the number of the
+	degrees of freedom for the problem.
+
+	@return 1 on success, 0 on error (error output to console)
+
+	@param status pointer to variable where the singularity status is returned.
+	@param dof degrees of freedom for the current conditional model 
+	configuration (in case where status is underspecified)
+*/
 
 ASC_DLLSPEC int32 get_globally_consistent_eligible(slv_system_t server,
                                               int32 **eliset);

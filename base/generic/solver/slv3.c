@@ -1356,9 +1356,9 @@ static int calc_pivots(slv3_system_t sys){
         rel = sys->rlist[org_row];
 
 		ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
-		FPRINTF(stderr,"Relation '");
+		FPRINTF(ASCERR,"Relation '");
         print_rel_name(stderr,sys,rel);
-		FPRINTF(stderr,"' not pivoted.");
+		FPRINTF(ASCERR,"' is not pivoted.");
         error_reporter_end_flush();
 
         /*
@@ -2664,11 +2664,11 @@ static void move_to_next_block( slv3_system_t sys){
       }
       if( block_feasible(sys) ) {
         if(SHOW_LESS_IMPT) {
-          ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nUnassigned relations ok. You lucked out.\n");
+          ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nUnassigned relations ok. Lucky you.\n");
         }
         sys->s.converged = TRUE;
       } else {
-        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Problem inconsistent: unassigned relations not satisfied");
+        ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Problem inconsistent: unassigned relations not satisfied");
 /*        if(SHOW_LESS_IMPT) {
           ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nProblem inconsistent:  %s.\n",
                   "Unassigned relations not satisfied");
