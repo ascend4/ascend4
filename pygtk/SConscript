@@ -125,6 +125,7 @@ if env.get('CAN_INSTALL'):
 	pythonfiles = glob.glob("*.py")
 
 	env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/",pythonfiles)
+	env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/","config.py")
 
 	gladefiles = glob.glob("glade/*")
 	env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/glade/",gladefiles)
