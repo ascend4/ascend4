@@ -1,4 +1,26 @@
 #!/usr/bin/env python
+#	ASCEND modelling environment
+#	Copyright (C) 2006 Carnegie Mellon University
+#
+#	This program is free software; you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation; either version 2, or (at your option)
+#	any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program; if not, write to the Free Software
+#	Foundation, Inc., 59 Temple Place - Suite 330,
+#	Boston, MA 02111-1307, USA.
+
+# This script gives a test suite for the high-level interface of ASCEND via
+# Python. It is also planned to be a wrapper for the CUnit test suite, although
+# this is still experimental.
+
 import unittest
 import os, subprocess,sys
 import math
@@ -688,7 +710,7 @@ if __name__=='__main__':
 	modelsdir = None
 
 	if not os.environ.get('ASCENDLIBRARY'):
-		modelsdir = os.path.normpath(os.path.join(sys.path[0],"../models"))
+		modelsdir = os.path.normpath(os.path.join(sys.path[0],"models"))
 		os.environ['ASCENDLIBRARY'] = modelsdir
 		restart = 1
 
@@ -699,7 +721,7 @@ if __name__=='__main__':
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
 		SEP = ":"
 
-	libdirs = [".",".."]
+	libdirs = ["pygtk","."]
 	libdirs = [os.path.normpath(os.path.join(sys.path[0],l)) for l in libdirs]
 	if not os.environ.get(LD_LIBRARY_PATH):
 		os.environ[LD_LIBRARY_PATH]=libdirs
@@ -710,6 +732,15 @@ if __name__=='__main__':
 				envlibdirs.insert(0,l)
 				restart = 1
 		os.environ[LD_LIBRARY_PATH] = SEP.join(envlibdirs)
+
+	pypath = os.path.normpath(os.path.join(sys.path[0],"pygtk"))
+	if not os.environ.get('PYTHONPATH'):
+		os.environ['PYTHONPATH']=pypath
+	else:
+		envpypath = os.environ['PYTHONPATH'].split(SEP)
+		if pypath not in envpypath:
+			envpypath.insert(0,pypath)
+			restart = 1
 
 	if restart:
 		script = os.path.join(sys.path[0],"test.py")
