@@ -141,6 +141,7 @@ class IntegratorWindow:
 				self.integrator.analyse()
 			except RuntimeError,e:
 				self.browser.reporter.reportError(str(e))
+				self.window.destroy()
 				return None							
 			# if we're all ok, create the reporter window and close this one
 			_integratorreporter = IntegratorReporterPython(self.browser,self.integrator)

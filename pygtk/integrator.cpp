@@ -97,7 +97,8 @@ Integrator::analyse(){
 	res = integrator_analyse(blsys);
 
 	if(res){
-		throw runtime_error("Failed system analysis");
+		stringstream ss; ss << "Failed system analysis (error " << res << ")";
+		throw runtime_error(ss.str());
 	}
 }
 

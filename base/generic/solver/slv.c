@@ -1052,7 +1052,7 @@ static void printwarning(const char * fname, slv_system_t sys)
 {
   ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,
     "%s called with bad registered client (%s).",fname,
-    slv_solver_name(sys->solver));
+    slv_solver_name(slv_get_selected_solver(sys)));
 }
 
 static void printinfo(slv_system_t sys, const char *rname)
@@ -1060,7 +1060,7 @@ static void printinfo(slv_system_t sys, const char *rname)
   if (CF(sys,name) == NULL ) {
     ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,
       "Client %s does not support function '%s'.",
-      slv_solver_name(sys->solver),rname);
+      slv_solver_name(slv_get_selected_solver(sys)),rname);
   }
 }
 
@@ -1438,8 +1438,8 @@ int32 slv_get_default_parameters(int sindex,
 	slv_system_t:
 
 	These macros use macro-argument-concatenation and macro stringification.
-	Verified that the former works with Visual C++:
-		getlinso://www.codeproject.com/macro/metamacros.asp
+	Verified that the former works with Visual C++.
+	http://www.codeproject.com/macro/metamacros.asp
 */
 
 /** Define a method like 'void slv_METHODNAME(sys)' */

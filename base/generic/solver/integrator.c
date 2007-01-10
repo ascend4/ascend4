@@ -803,6 +803,10 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   int happy=1;
   char *varname1, *varname2;
 
+  asc_assert(sys->system!=NULL);
+  asc_assert(strcmp("QRSlv",slv_solver_name(slv_get_selected_solver(sys->system)))==0);
+  CONSOLE_DEBUG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
+
   CONSOLE_DEBUG("Starting ODE analysis");
   IntegInitSymbols();
 
@@ -863,6 +867,7 @@ int integrator_analyse_ode(IntegratorSystem *sys){
     }
   }
   if (!happy) {
+	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem with ode_id and ode_type values");
     return 5;
   }
   sys->n_y = half;
@@ -880,7 +885,10 @@ int integrator_analyse_ode(IntegratorSystem *sys){
     sys->ydot[i-1] = (struct var_variable *)gl_fetch(sys->derivs,i);
   }
 
-  if(integrator_sort_obs_vars(sys))return 7;
+  if(integrator_sort_obs_vars(sys)){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error sorting observation variables");
+	return 7;
+  }
 
   /* FIX all states */
   for(i=0; i<sys->n_y; ++i){

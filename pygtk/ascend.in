@@ -5,33 +5,38 @@ import os.path, sys;
 LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH').split(":")
 restart = 0
 
-if not "@INSTALL_LIB@" in LD_LIBRARY_PATH:
-	LD_LIBRARY_PATH = ["@INSTALL_LIB@"] + LD_LIBRARY_PATH
-	os.environ['LD_LIBRARY_PATH'] = ":".join(LD_LIBRARY_PATH)
-	restart = 1
+# this script handles restarting ascend if it's invoked without the full
+# complement of env vars
 
-PYTHONPATH = os.environ.get("PYTHONPATH")
-if not PYTHONPATH:
-	os.environ['PYTHONPATH'] = ":".join(["@INSTALL_ASCDATA@"])
-	restart = 1
-elif not "@INSTALL_ASCDATA@" in PYTHONPATH.split(":"):
-	os.environ['PYTHONPATH'] = ":".join(["@INSTALL_ASCDATA@"] + PYTHONPATH.split(":"))
-	restart = 1
+if not os.environ.get('ASC_GDB'):
+	# restarting messes up GDB so don't allow it
+	if not "@INSTALL_LIB@" in LD_LIBRARY_PATH:
+		LD_LIBRARY_PATH = ["@INSTALL_LIB@"] + LD_LIBRARY_PATH
+		os.environ['LD_LIBRARY_PATH'] = ":".join(LD_LIBRARY_PATH)
+		restart = 1
 
-if restart:
-	#print "argv = %s" % sys.argv
-	#print
-	print "Restarting with corrected environment..."
-	#print "   LD_LIBRARY_PATH = %s" % os.environ['LD_LIBRARY_PATH']
-	#print "   PYTHONPATH = %s" % os.environ['PYTHONPATH']
-	script = os.path.join(sys.path[0],"ascend")
-	os.execv("@PYTHON@",[script] + sys.argv)
+	PYTHONPATH = os.environ.get("PYTHONPATH")
+	if not PYTHONPATH:
+		os.environ['PYTHONPATH'] = ":".join(["@INSTALL_ASCDATA@"])
+		restart = 1
+	elif not "@INSTALL_ASCDATA@" in PYTHONPATH.split(":"):
+		os.environ['PYTHONPATH'] = ":".join(["@INSTALL_ASCDATA@"] + PYTHONPATH.split(":"))
+		restart = 1
+
+	if restart:
+		#print "argv = %s" % sys.argv
+		#print
+		print "Restarting with corrected environment..."
+		#print "   LD_LIBRARY_PATH = %s" % os.environ['LD_LIBRARY_PATH']
+		#print "   PYTHONPATH = %s" % os.environ['PYTHONPATH']
+		script = os.path.join(sys.path[0],"ascend")
+		os.execv("@PYTHON@",[script] + sys.argv)
 
 
 print "Running with..."
-print "   LD_LIBRARY_PATH = %s" % os.environ['LD_LIBRARY_PATH']
-print "   PYTHONPATH = %s" % os.environ['PYTHONPATH']
-print "   argv = %s" % sys.argv[1:]
+print "   LD_LIBRARY_PATH = %s" % os.environ.get('LD_LIBRARY_PATH')
+print "   PYTHONPATH = %s" % os.environ.get('PYTHONPATH')
+print "   argv = %s" % sys.argv
 
 if os.environ.get('ASCENDLIBRARY'):
 	ASCENDLIBRARY = os.environ.get('ASCENDLIBRARY')
