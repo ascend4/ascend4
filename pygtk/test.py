@@ -3,9 +3,9 @@ import unittest
 
 import os, subprocess,sys
 
-if not os.environ.get('ASCENDLIBRARY'):
-	os.environ['ASCENDLIBRARY'] = os.path.normpath(os.path.join(sys.path[0],"../models"))
-	print os.environ['ASCENDLIBRARY']
+#if not os.environ.get('ASCENDLIBRARY'):
+#	os.environ['ASCENDLIBRARY'] = os.path.normpath(os.path.join(sys.path[0],"../models"))
+#	print os.environ['ASCENDLIBRARY']
 
 import platform
 if platform.system() != "Windows":
@@ -26,7 +26,7 @@ class Ascend(unittest.TestCase):
 
 	def setUp(self):
 		import ascpy
-		self.L = ascpy.Library(os.environ['ASCENDLIBRARY'])
+		self.L = ascpy.Library()
 	
 	def tearDown(self):
 		self.L.clear()
