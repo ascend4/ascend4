@@ -2,33 +2,62 @@
 
 import os.path, sys;
 
+LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH').split(":")
+restart = 0
+
+if not "@INSTALL_LIB@" in LD_LIBRARY_PATH:
+	LD_LIBRARY_PATH = ["@INSTALL_LIB@"] + LD_LIBRARY_PATH
+	os.environ['LD_LIBRARY_PATH'] = ":".join(LD_LIBRARY_PATH)
+	restart = 1
+
+PYTHONPATH = os.environ.get("PYTHONPATH")
+if not PYTHONPATH:
+	os.environ['PYTHONPATH'] = ":".join(["@INSTALL_ASCDATA@"])
+	restart = 1
+elif not "@INSTALL_ASCDATA@" in PYTHONPATH.split(":"):
+	os.environ['PYTHONPATH'] = ":".join(["@INSTALL_ASCDATA@"] + PYTHONPATH.split(":"))
+	restart = 1
+
+if restart:
+	#print "argv = %s" % sys.argv
+	#print
+	print "Restarting with corrected environment..."
+	#print "   LD_LIBRARY_PATH = %s" % os.environ['LD_LIBRARY_PATH']
+	#print "   PYTHONPATH = %s" % os.environ['PYTHONPATH']
+	script = os.path.join(sys.path[0],"ascend")
+	os.execv("@PYTHON@",[script] + sys.argv)
+
+
+print "Running with..."
+print "   LD_LIBRARY_PATH = %s" % os.environ['LD_LIBRARY_PATH']
+print "   PYTHONPATH = %s" % os.environ['PYTHONPATH']
+print "   argv = %s" % sys.argv[1:]
+
 if os.environ.get('ASCENDLIBRARY'):
 	ASCENDLIBRARY = os.environ.get('ASCENDLIBRARY')
 	print "USING ASCENDLIBRARY=%s" % ASCENDLIBRARY
 else:
 	ASCENDLIBRARY = """@DEFAULT_ASCENDLIBRARY@"""
 
+print "sys.path[0] = %s" % sys.path[0]
+
+if not "@INSTALL_ASCDATA@" in sys.path:
+	print "Where is @INSTALL_ASCDATA@?"
+	sys.path.append("@INSTALL_ASCDATA@")
 
 if os.environ.get('OSTYPE')=='cygwin':
 	print "CYGWIN..."
 elif os.environ.get('OSTYPE')=='msys':
 	print "MSYS..."
 
-LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH')
-if not LD_LIBRARY_PATH:
-	LD_LIBRARY_PATH = []
+import ascpy
+from gtkbrowser import *
+if os.environ.get('ASC_DEV'):
+	d,f = os.path.split(os.path.abspath(sys.argv[0]))
+	if os.environ.get('ASC_START'):
+		os.chdir(os.environ.get('ASC_START'))
+	librarypath = ":".join(['.',os.path.normpath(os.path.join(d,"../models"))])
+	B = Browser(librarypath=librarypath,assetspath=os.path.join(d,"glade"))
 else:
-	LD_LIBRARY_PATH = LD_LIBRARY_PATH.split(":")
-
-if __name__=='__main__':
-	import ascpy
-	from gtkbrowser import *
-	if os.environ.get('ASC_DEV'):
-		d,f = os.path.split(os.path.abspath(sys.argv[0]))
-		if os.environ.get('ASC_START'):
-			os.chdir(os.environ.get('ASC_START'))
-		librarypath = ":".join(['.',os.path.normpath(os.path.join(d,"../models"))])
-		B = Browser(librarypath=librarypath,assetspath=os.path.join(d,"glade"))
-	else:
-		B = Browser()
-	B.run()
+	B = Browser()
+B.run()
