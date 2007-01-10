@@ -5,7 +5,6 @@ cd @SOURCE_ROOT@/pygtk
 export LD_LIBRARY_PATH=@SOURCE_ROOT@:@SOURCE_ROOT@/pygtk:$LD_LIBRARY_PATH
 export ASCENDLIBRARY=@SOURCE_ROOT@/models:$ASCENDLIBRARY
 export ASC_DEV=1
-export ASC_GDB=1
 
 if [ "x$ASC_GDB" != "x" ]; then
 	cmd="gdb --symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@ --args python ascend"
