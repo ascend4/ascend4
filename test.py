@@ -715,7 +715,7 @@ if __name__=='__main__':
 		restart = 1
 
 	if platform.system()=="Windows":
-		LD_LIBRARY_PATTH="PATH"
+		LD_LIBRARY_PATH="PATH"
 		SEP = ";"
 	else:
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
@@ -724,7 +724,8 @@ if __name__=='__main__':
 	libdirs = ["pygtk","."]
 	libdirs = [os.path.normpath(os.path.join(sys.path[0],l)) for l in libdirs]
 	if not os.environ.get(LD_LIBRARY_PATH):
-		os.environ[LD_LIBRARY_PATH]=libdirs
+		#print "Setting %s" % LD_LIBRARY_PATH
+		os.environ[LD_LIBRARY_PATH]=SEP.join(libdirs)
 	else:
 		envlibdirs = [os.path.normpath(i) for i in os.environ[LD_LIBRARY_PATH].split(SEP)]
 		for l in libdirs:
@@ -744,6 +745,8 @@ if __name__=='__main__':
 
 	if restart:
 		script = os.path.join(sys.path[0],"test.py")
+		print "restarting with script = %s",script
+		print "                  argv = %s",sys.argv
 		os.execvp("python",[script] + sys.argv)
 
 	import ascpy
