@@ -143,7 +143,7 @@ struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
   g_CopyAnonRelation++;
 #endif
 
-  CONSOLE_DEBUG("COPYING PROTOTYPE %p TO POS %lu UNDER PARENT %p",protorel,pos,newparent);
+  /*CONSOLE_DEBUG("COPYING PROTOTYPE %p TO POS %lu UNDER PARENT %p",protorel,pos,newparent);*/
 
   assert(InstanceKind(protorel) == REL_INST);
   src = RELN_INST(protorel);
@@ -158,9 +158,9 @@ struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
   result->logrels = NULL;
   result->anon_flags = 0x0;
   CopyTypeDesc(result->desc);
-  if(result->ptr!=NULL){
+  /*if(result->ptr!=NULL){
     CONSOLE_DEBUG("Clearing ptr %p in new rel %p, copy of %p",result->ptr,result,src);
-  }
+  }*/
   result->ptr = NULL;
 
   /* fixup subatomic relation child pointers. */
