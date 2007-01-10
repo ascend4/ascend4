@@ -16,7 +16,7 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat2;
 	n IS_A integer_constant;
-	n :== 5;
+	n :== 70;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;
@@ -93,6 +93,7 @@ METHOD specify_easy;
 	FOR i IN [1..n] DO
 		RUN node[i].specify;
 		FIX dTw_dt[i];   FREE T_w[i];
+		FREE rhou[i];
 	END FOR;
 	FIX qdot_s;
 	FIX D, D_2, L;
@@ -144,14 +145,14 @@ METHOD on_load;
 	RUN default_self;
 	RUN ClearAll;
 	RUN specify_easy;
-	EXTERNAL solvernotes(SELF);
-	EXTERNAL solve(SELF);
+	(* EXTERNAL solvernotes(SELF); *)
+	(* EXTERNAL solve(SELF); *)
 	RUN bound_self;	
 	RUN values;
-	RUN ode_init;
+	(* RUN ode_init;
     EXTERNAL solvernotes(SELF);
 	EXTERNAL solve(SELF);
-	RUN fixed_states;
+	RUN fixed_states; *)
 END on_load;
 METHOD fixed_states;
 	qdot_s := 10 {W/m};
