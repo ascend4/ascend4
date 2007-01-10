@@ -3,9 +3,9 @@ import unittest
 
 import os, subprocess,sys
 
-#if not os.environ.get('ASCENDLIBRARY'):
-#	os.environ['ASCENDLIBRARY'] = os.path.normpath(os.path.join(sys.path[0],"../models"))
-#	print os.environ['ASCENDLIBRARY']
+if not os.environ.get('ASCENDLIBRARY'):
+	os.environ['ASCENDLIBRARY'] = os.path.normpath(os.path.join(sys.path[0],"../models"))
+	print os.environ['ASCENDLIBRARY']
 
 import platform
 if platform.system() != "Windows":
