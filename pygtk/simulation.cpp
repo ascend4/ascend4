@@ -397,15 +397,16 @@ Simulation::checkStructuralSingularity(){
 	int *ril;
 	int *fil;
 
-	cerr << "RETRIEVING slfDOF_structsing INFO" << endl;
-
-	int res = slvDOF_structsing(sys, mtx_FIRST, &vil, &ril, &fil);
-
 	if(this->sing){
 		cerr << "DELETING OLD SINGULATING INFO" << endl;
 		delete this->sing;
 		this->sing = NULL;
 	}
+
+	cerr << "RETRIEVING slfDOF_structsing INFO" << endl;
+
+	int res = slvDOF_structsing(sys, mtx_FIRST, &vil, &ril, &fil);
+
 
 	if(res==1){
 		throw runtime_error("Unable to determine singularity lists");

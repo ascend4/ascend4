@@ -81,6 +81,25 @@ MODEL dsgsat2;
 
 	t IS_A time;
 METHODS
+METHOD default_self;
+	A := 5 {cm^2};
+	FOR i IN [1..n] DO
+		RUN node[i].default_self;
+		mdot[i] := 0.001 {kg/s};
+		vel[i] := 0.01 {m/s};
+	END FOR;
+END default_self;
+METHOD specify_easy;
+	FOR i IN [1..n] DO
+		RUN node[i].specify;
+		FIX dTw_dt[i];   FREE T_w[i];
+	END FOR;
+	FIX qdot_s;
+	FIX D, D_2, L;
+	FIX h_int, c_w, rho_w, h_ext;
+	FIX f, mu_f;
+	FIX T_amb;
+END specify_easy;	
 METHOD specify;
 	RUN node[1].specify;
 	FIX qdot_s;
@@ -96,7 +115,6 @@ METHOD specify;
 		FIX dTw_dt[i];   FREE T_w[i];
 	END FOR;
 	(* FIX node[3].rho; *)
-
 END specify;
 METHOD values;
 	node[1].T := 400 {K};
@@ -116,11 +134,19 @@ METHOD values;
 	END FOR;
 	t := 0 {s};
 END values;
-METHOD on_load;
-	RUN specify;
+METHOD bound_self;
+	vel[1..n].upper_bound := 100 {m/s};
 	FOR i IN [1..n] DO
 		RUN node[i].bound_self;
 	END FOR;
+END bound_self;
+METHOD on_load;
+	RUN default_self;
+	RUN ClearAll;
+	RUN specify_easy;
+	EXTERNAL solvernotes(SELF);
+	EXTERNAL solve(SELF);
+	RUN bound_self;	
 	RUN values;
 	RUN ode_init;
     EXTERNAL solvernotes(SELF);
@@ -135,7 +161,7 @@ METHOD fixed_states;
 		FREE drhou_dt[i]; FIX rhou[i];
 		FREE dTw_dt[i];   FIX T_w[i];
 	END FOR;
-END free_derivs;
+END fixed_states;
 METHOD fixed_derivs;
 	FOR i IN [2..n] DO
 		FIX drho_dt[i];  FREE node[i].rho;
@@ -143,7 +169,7 @@ METHOD fixed_derivs;
 		FIX drhou_dt[i]; FREE rhou[i];
 		FIX dTw_dt[i];   FREE T_w[i];
 	END FOR;
-END fix_states;
+END fixed_derivs;
 METHOD ode_init;
 	(* get the model into the required state for solving as ODE *)
 	t.ode_type := -1;

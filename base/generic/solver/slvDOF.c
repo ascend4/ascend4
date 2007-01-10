@@ -1,32 +1,30 @@
-/*
- *  SlvDOF: ASCEND Degrees of freedom manager
- *  by Benjamin Andrew Allan and Vicente Rico-Ramirez
- *  Created: 7/11/94
- *  Version: $Revision: 1.24 $
- *  Version control file: $RCSfile: slvDOF.c,v $
- *  Date last modified: $Date: 1998/04/09 21:56:09 $
- *  Last modified by: $Author: rv2a $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1996  Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1996 Benjamin Andrew Allan
+	Copyright (C) 1998 Vicente Rico-Ramirez
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Degrees-of-freedom manager
+
+	@TODO we need to usage information for this stuff.
+*//*
+	by Benjamin Andrew Allan and Vicente Rico-Ramirez, Created: 7/11/94
+	Last in CVS: $Revision: 1.24 $ $Date: 1998/04/09 21:56:09 $ $Author: rv2a $
+*/
 
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
@@ -60,109 +58,81 @@
 #define DEBUG_CONSISTENCY_ANALYSIS FALSE
 #define ELDEBUG 0  /* print debug statements in eligible code */
 #define KILL 0
-struct jacobian_data {
+
+struct jacobian_data{
    mtx_matrix_t           mtx;          /* Transpose gradient of residuals */
    mtx_region_t           reg;          /* Current block region */
 };
 
 typedef struct slvDOF_system_structure *slvDOF_system_t;
 
-struct slvDOF_system_structure {
+struct slvDOF_system_structure{
 
-   /**
-    ***  Problem definition
-    **/
-   slv_system_t           slv;		/* slv_system_t back-link */
-   struct var_variable         **vlist; /* Variable list (NULL terminated) */
-   struct rel_relation         **rlist; /* Relation list (NULL terminated) */
+   /* problem definition */
+   slv_system_t           slv;          /* slv_system_t back-link */
+   struct var_variable    **vlist;      /* Variable list (NULL terminated) */
+   struct rel_relation    **rlist;      /* Relation list (NULL terminated) */
 
-   /**
-    ***  Solver information
-    **/
-   unsigned char 		*rows; /* marks on rows */
-   unsigned char 		*cols; /* marks on cols */
-   int32			*rowlist; /* list of newly marked rows */
-   int32			*collist; /* list of newly marked cols */
+   /* solver information */
+   unsigned char          *rows;        /* marks on rows */
+   unsigned char          *cols;        /* marks on cols */
+   int32                  *rowlist;     /* list of newly marked rows */
+   int32                  *collist;     /* list of newly marked cols */
    int                    integrity;    /* ? Has the system been created */
    slv_parameters_t       p;            /* Parameters */
    slv_status_t           s;            /* Status (as of iteration end) */
-   int32            cap;          /* Order of matrix/vectors */
-   int32            rank;         /* Symbolic rank of problem */
-   int32            vused;        /* Free and incident variables */
-   int32            vtotal;       /* all variables */
-   int32            rused;        /* Included relations */
-   int32            rtot;         /* rellist len */
+   int32                  cap;          /* Order of matrix/vectors */
+   int32                  rank;         /* Symbolic rank of problem */
+   int32                  vused;        /* Free and incident variables */
+   int32                  vtotal;       /* all variables */
+   int32                  rused;        /* Included relations */
+   int32                  rtot;         /* rellist len */
    double                 clock;        /* CPU time */
 
-   /**
-    ***  Calculated data (scaled)
-    **/
+   /* calculated data (scaled) */
    struct jacobian_data   J;            /* linearized system */
 };
 
-/**
- ***  Integrity checks
- ***  ----------------
- ***     check_system(sys)
- **/
 
+/*------------------------------------------------------------------------------
+  INTEGRITY CHECKS
+*/
+
+/* what are these crazy numbers??? */
 #define OK        ((int)13695914)
 #define DESTROYED ((int)15784619)
-static int check_system(slvDOF_system_t sys)
-/**
- ***  Checks sys for NULL and for integrity.
- **/
-{
-   if( sys == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slvDOF) check_system\n");
-      FPRINTF(stderr,"        NULL system handle.\n");
-      return 1;
-   }
 
-   switch( sys->integrity ) {
-   case OK:
-      return 0;
-   case DESTROYED:
-      FPRINTF(stderr,"ERROR:  (slvDOF) check_system\n");
-      FPRINTF(stderr,"        System was recently destroyed.\n");
-      return 1;
-   default:
-      FPRINTF(stderr,"ERROR:  (slvDOF) check_system\n");
-      FPRINTF(stderr,"        System reused or never allocated.\n");
-      return 1;
-   }
+/**
+	Checks sys for NULL and for integrity.
+*/
+static int check_system(slvDOF_system_t sys){
+	if(sys == NULL) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"system is NULL");
+	    return 1;
+	}
+
+	switch(sys->integrity) {
+	case OK:
+	    return 0;
+	case DESTROYED:
+	    ERROR_REPORTER_HERE(ASC_PROG_ERR,"system was recently destroyed");
+	    return 1;
+	default:
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"system reused or never allocated");
+	    return 1;
+	}
 }
 
+/*------------------------------------------------------------------------------
+  GENERAL INPUT/OUTPUT ROUTINES
+*/
 
-/**
- ***  General input/output routines
- ***  -----------------------------
- ***     print_var_name(out,sys,var)
- ***     print_rel_name(out,sys,rel)
- **/
 #define print_var_name(a,b,c) slv_print_var_name((a),(b->slv),(c))
 #define print_rel_name(a,b,c) slv_print_rel_name((a),(b->slv),(c))
 
-/**
- ***  Array/vector operations
- ***  ----------------------------
- ***     destroy_array(p)
- ***     create_array(len,type)
- ***     zero_array(arr,len,type)
- **/
-
-#define destroy_array(p)  \
-   if( (p) != NULL ) ascfree((p))
-#define create_array(len,type)  \
-   ((len) > 0 ? (type *)ascmalloc((len)*sizeof(type)) : NULL)
-#define create_zero_array(len,type)  \
-   ((len) > 0 ? (type *)asccalloc((len),sizeof(type)) : NULL)
-
-/**
- ***  External routines
- ***  -----------------
- ***     See slv.h
- **/
+/*------------------------------------------------------------------------------
+  EXTERNAL ROUTINES (see slv.h)
+*/
 
 static
 slvDOF_system_t slvDOF_create()
@@ -186,10 +156,10 @@ static void destroy_matrices(slvDOF_system_t sys)
   if( sys->J.mtx ) {
     mtx_destroy(sys->J.mtx);
   }
-  destroy_array(sys->rows);
-  destroy_array(sys->cols);
-  destroy_array(sys->rowlist);
-  destroy_array(sys->collist);
+  ASC_FREE(sys->rows);
+  ASC_FREE(sys->cols);
+  ASC_FREE(sys->rowlist);
+  ASC_FREE(sys->collist);
 }
 
 static
@@ -238,21 +208,19 @@ slv_status_t *status;
 #endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 /**
- ***  Performs structural analysis on the system, setting the flags in
- ***  status.  The problem must be set up, the relation/variable list
- ***  must be non-NULL. sys->cap, vtotal, rtot must be set.
- **/
-static void create_matrices(slv_system_t server,slvDOF_system_t sys)
-{
+	Performs structural analysis on the system, setting the flags in
+	status.  The problem must be set up, the relation/variable list
+	must be non-NULL. sys->cap, vtotal, rtot must be set.
+*/
+static void create_matrices(slv_system_t server,slvDOF_system_t sys){
    var_filter_t vfilter;
    rel_filter_t rfilter;
 
    sys->J.mtx = mtx_create();
    mtx_set_order(sys->J.mtx,sys->cap);
 
-  /**
-   *** The server has marked incidence flags already.
-   **/
+  /* Note: the server has marked incidence flags already. */
+
   /* count included equalities */
   rfilter.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
   rfilter.matchvalue = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
@@ -263,10 +231,10 @@ static void create_matrices(slv_system_t server,slvDOF_system_t sys)
   vfilter.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_ACTIVE);
   sys->vused = slv_count_solvers_vars(server,&vfilter);
 
-  if (slv_std_make_incidence_mtx(server,sys->J.mtx,&vfilter,&rfilter)) {
-    Asc_Panic(2, "create_matrices",
-              "ABORT! slv_std_make_indicidence_mtx failed");
+  if(slv_std_make_incidence_mtx(server,sys->J.mtx,&vfilter,&rfilter)){
+    ASC_PANIC("slv_std_make_indicidence_mtx failed");
   }
+
   /* Symbolic analysis */
   sys->rtot = slv_get_num_solvers_rels(server);
   sys->vtotal = slv_get_num_solvers_vars(server);
@@ -287,35 +255,36 @@ static void create_matrices(slv_system_t server,slvDOF_system_t sys)
   sys->s.block.number_of = mtx_number_of_blocks(sys->J.mtx);
 }
 
-static int slvDOF_presolve(slv_system_t server, slvDOF_system_t sys)
-{
-   check_system(sys);
-   sys->vlist = slv_get_solvers_var_list(server);
-   sys->rlist = slv_get_solvers_rel_list(server);
-   if( sys->vlist == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slvDOF) slvDOF_presolve\n");
-      FPRINTF(stderr,"        Variable list not found.\n");
-      return 1;
-   } else if( sys->rlist == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slvDOF) slvDOF_presolve\n");
-      FPRINTF(stderr,"        Relation list not found.\n");
-      return 1;
-   }
+/**
+	return 0 on success
+*/
+static int slvDOF_presolve(slv_system_t server, slvDOF_system_t sys){
 
-   sys->rtot= slv_get_num_solvers_rels(server);
-   sys->vtotal= slv_get_num_solvers_vars(server);
-   sys->cap = MAX(sys->rtot,sys->vtotal);
+	check_system(sys);
+	sys->vlist = slv_get_solvers_var_list(server);
+	sys->rlist = slv_get_solvers_rel_list(server);
+	if( sys->vlist == NULL ) {
+	    ERROR_REPORTER_HERE(ASC_PROG_ERR,"variable list not found");
+	    return 1;
+	} else if( sys->rlist == NULL ) {
+    	ERROR_REPORTER_HERE(ASC_PROG_ERR,"relation list not found");
+	    return 1;
+	}
 
-   destroy_matrices(sys);
-   create_matrices(server,sys);
+	sys->rtot= slv_get_num_solvers_rels(server);
+	sys->vtotal= slv_get_num_solvers_vars(server);
+	sys->cap = MAX(sys->rtot,sys->vtotal);
 
-   /* Reset status */
-   sys->s.iteration = 0;
-   sys->s.cpu_elapsed = 0.0;
-   sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
-   sys->s.block.previous_total_size = 0;
-   sys->s.block.current_block = -1;
-   return 0;
+	destroy_matrices(sys);
+	create_matrices(server,sys);
+
+	/* Reset status */
+	sys->s.iteration = 0;
+	sys->s.cpu_elapsed = 0.0;
+	sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
+	sys->s.block.previous_total_size = 0;
+	sys->s.block.current_block = -1;
+	return 0;
 }
 
 /* this can be coded recursively, but it's a dumb idea.
@@ -338,19 +307,19 @@ int slvDOF_eligible(slv_system_t server, int32 **vil) {
   slvDOF_system_t sys;
 
   if (server==NULL || vil == NULL) {
-    FPRINTF(stderr,"slvDOF_eligible called with NULL.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"system or vil is NULL");
     return 0;
   }
 
   sys = slvDOF_create();
 
   *vil = NULL; /* zero return pointer ahead of time */
-  if (sys==NULL) {
-    FPRINTF(stderr,"slvDOF_eligible insufficient memory.\n");
+  if(sys==NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"insufficient memory");
     return 0;
   }
-  if (slvDOF_presolve(server,sys)) {
-    FPRINTF(stderr,"slvDOF_eligible failed presolve.");
+  if(slvDOF_presolve(server,sys)) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed presolve");
     /* need to destroy memory here */
     slvDOF_destroy(sys);
     return 0;
@@ -452,22 +421,22 @@ int slvDOF_eligible(slv_system_t server, int32 **vil) {
 #if ELDEBUG
   PRINTF("ct= %d, rt= %d\n",ct,rt);
 #endif
-  va = *vil = create_zero_array(1+ct,int32);
+  va = *vil = ASC_NEW_ARRAY_CLEAR(int32,1+ct);
   vsize = ct;
   va[ct]=(-1);
   ct=0;
 
 /* make up col report */
-  for (c=0;c<mmax;c++) {
-    if (cols[c]==1) {
+  for(c=0;c<mmax;c++){
+    if(cols[c]==1){
 #if ELDEBUG
       PRINTF("recording marked col %d\n",c);
-      if (ct<vsize) {;
+      if(ct<vsize){;
 #endif
         va[ct] = mtx_col_to_org(mtx,c);
         ct++;
 #if ELDEBUG
-      } else {
+      }else{
         PRINTF("unexpectedly ");
       }
       PRINTF("got eligible col %d\n",c);
@@ -481,14 +450,18 @@ int slvDOF_eligible(slv_system_t server, int32 **vil) {
   return 1;
 }
 
-/* this can be coded recursively, but it's a bad idea.
-  see dof.pas:find_swap_vars if you can find the pascal version.
-  Turn your head sideways and you see it is the same code as
-  find eligible with different output and skipping all the debug.
-*/
+/*
+	This can be coded recursively, but it's a bad idea.
+  	See dof.pas:find_swap_vars if you can find the pascal version.
 
-int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover,
-                          int32 **rcomb, int32 **vfixed) {
+	Turn your head sideways and you see it is the same code as
+	find-eligible but with different output and skipping all the debug.
+
+	@return 0 on success
+*/
+int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover
+		,int32 **rcomb, int32 **vfixed
+){
   mtx_matrix_t mtx;
   const struct var_variable **fv=NULL;
   int32 *va, *ra, *fa, *rowlist, *collist;
@@ -501,22 +474,21 @@ int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover,
   mtx_coord_t coord;
   slvDOF_system_t sys;
 
-
-  if (server==NULL || vover == NULL || rcomb == NULL || vfixed == NULL) {
-    FPRINTF(stderr,"slvDOF_structsing called with NULL.\n");
-    return 0;
+  if(server==NULL || vover == NULL || rcomb == NULL || vfixed == NULL) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with a NULL parameter");
+    return 1;
   }
 
   sys = slvDOF_create();
 
-  if (sys == NULL) {
-    FPRINTF(stderr,"slvDOF_structsing insufficient memory.\n");
-    return 0;
+  if(sys == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"insufficient memory.");
+    return 2;
   }
   if (slvDOF_presolve(server,sys)) {
-    FPRINTF(stderr,"slvDOF_structsing failed presolve.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed presolve");
     slvDOF_destroy(sys);
-    return 0;
+    return 3;
   }
 
   *vfixed = *vover = *rcomb = NULL; /* zero return pointers ahead of time */
@@ -526,35 +498,48 @@ int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover,
   collist = sys->collist;
   rows = sys->rows;
   cols = sys->cols;
+
   /* nonsingular and not empty; no list */
   rmax = sys->rused;
   rank = sys->rank;
-  if (sys->rank == rmax && rmax > 0) {
+  if(sys->rank == rmax && rmax > 0){
     slvDOF_destroy(sys);
-    return 0;
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"rused = rank and rused > 0. dunno.");
+    return 666; /* is this an error case? */
   }
-  if ((mtx=sys->J.mtx)==NULL) return 0; /* there is no jacobian-- wierd */
-  if (!mtx_check_matrix(mtx)) return 0; /* jacobian bad, very wierd */
-
+  if((mtx=sys->J.mtx)==NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"No jacobian -- wierd.");
+    return 4;
+  }
+  if(!mtx_check_matrix(mtx)){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad jacobian -- v wierd.");
+    return 5;
+  }
   cmax=sys->vused;
   mmax=sys->cap;
 
   rt=ct=ft=0;
-  if (rwhy > -1) rwhy = mtx_row_to_org(mtx,rwhy);
-/* col marks:
-	0 unvisited/ineligible
-	1 visited
-   row marks:
-	0 unvisited
-	1 visited
- */
+  if(rwhy > -1)rwhy = mtx_row_to_org(mtx,rwhy);
+
+  /* 
+    col marks:
+     0 unvisited/ineligible
+     1 visited
+    row marks:
+ 	 0 unvisited
+     1 visited
+  */
+
   vfilter.matchbits = (VAR_INCIDENT | VAR_FIXED | VAR_SVAR | VAR_ACTIVE);
   vfilter.matchvalue = vfilter.matchbits;
+
   /* initing things. */
   newcols = newrows = 0; /* next available ptrs in rellist,collist */
-  /* add included unassigned user-interesting equations to rellist.
-   * ignore fake and unincluded rows.
-   */
+
+  /* 
+	add included unassigned user-interesting equations to rellist.
+	ignore fake and unincluded rows.
+  */
   for (rcur = rank; rcur < mmax; rcur++) {
     i = mtx_row_to_org(mtx,rcur);
     if ( i < sys->rtot && (rwhy == -1 || rcur == rwhy)) {  /* if row real */
@@ -565,6 +550,7 @@ int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover,
       }
     }
   }
+
   /* now mark up everyone who might be singular */
   do {
     while (newrows > 0) {
@@ -592,8 +578,8 @@ int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover,
     }
   } while (newrows>0);
 
-  va = *vover = create_zero_array(1+ct,int32);
-  ra = *rcomb = create_zero_array(1+rt,int32);
+  va = *vover = ASC_NEW_ARRAY_CLEAR(int32,1+ct);
+  ra = *rcomb = ASC_NEW_ARRAY_CLEAR(int32,1+rt);
   va[ct] = ra[rt] = (-1);
   rt = ct = 0;
 
@@ -613,6 +599,7 @@ int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover,
       }
     }
   }
+
   /* make up free singular col report */
   for (c = 0; c < cmax; c++) {
     if (cols[c] == 1) {
@@ -625,7 +612,7 @@ int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover,
   for (c=cmax;c<mmax;c++) {
     if (cols[c]) ft++;
   }
-  fa = *vfixed = create_zero_array(1+ft,int32);
+  fa = *vfixed = ASC_NEW_ARRAY_CLEAR(int32,1+ft);
   fa[ft] = (-1);
   ft=0;
   for (c = cmax; c < mmax; c++) {
@@ -634,13 +621,15 @@ int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover,
     }
   }
   slvDOF_destroy(sys);
-  return 1;
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Completed structural singularity analysis");
+  return 0;
 }
 
+/*------------------------------------------------------------------------------
+  CONDITIONAL MODELLING
+*/
 
 /*
- *  CONDITIONAL MODELING
- *
  *  Global Search Consistency Analysis
  *  ---------------------------------------------------------
  *  This Analysis performs a combinatorial search (over all the
@@ -653,94 +642,88 @@ int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover,
  *  of the system.
  */
 
-
-/* auxiliar structures */
+/* auxiliary structures */
 struct bool_values {
   int32            *pre_val;    /* previous values of dis_discrete */
   int32            *cur_val;    /* current values of dis_discrete  */
 };
 
 /*
- * In each step of the combinatorial search it is necessary to find out
- * if the alternative being analyzed is square, underspecified,
- * structurally singular or overspecified.
- *
- * status = 1  ==> underspecified
- * status = 2  ==> square
- * status = 3  ==> structurally singular
- * status = 4  ==> overspecifed
- * status = 5  ==> Error !! ( insufficient memory, NULL argument,
- *                            failed to presolve)
- *
- * If the system is underspecified, we will get the number of the
- * degrees of freedom for the alternative
- *
- */
+	(see slvDOF.h)
 
-int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof) 
-{
+	In each step of the combinatorial search it is necessary to find out
+	if the alternative being analyzed is square, underspecified,
+	structurally singular or overspecified.
+
+	status = 1  ==> underspecified
+	status = 2  ==> square
+	status = 3  ==> structurally singular
+	status = 4  ==> overspecifed
+	status = 5  ==> <error>
+*/
+int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof){
   slvDOF_system_t sys;
 
-  if (server==NULL) {
-    FPRINTF(ASCERR,"slvDOF_status called with NULL.\n");
-    (*status) = 5;
+  if(server==NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"system is NULL");
+    *status = 5;
     return 0;
   }
-  (*dof) = 0;
+  *dof = 0;
   sys = slvDOF_create();
 
-  if (sys == NULL) {
-    FPRINTF(ASCERR,"slvDOF_status insufficient memory.\n");
-    (*status) = 5;
+  if(sys == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"insufficient memory");
+    *status = 5;
     return 0;
   }
-  if (slvDOF_presolve(server,sys)) {
-    FPRINTF(ASCERR,"slvDOF_status failed presolve.");
-    (*status) = 5;
+  if(slvDOF_presolve(server,sys)){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed presolve");
+    *status = 5;
     slvDOF_destroy(sys);
     return 0;
   }
 
-  if (sys->rank < sys->rused) {
-   (*status) = 3;
-   (*dof) = 0;
+  if(sys->rank < sys->rused){
+    *status = 3;
+    *dof = 0;
     slvDOF_destroy(sys);
-   return 1;    
+    return 1;    
   }
 
-  if (sys->rused > sys->vused) {
-   (*status) = 4;
+  if(sys->rused > sys->vused){
+    *status = 4;
     slvDOF_destroy(sys);
-   return 1;
+	return 1;
   }
 
-  if ((sys->vused==sys->rused) && (sys->rank ==sys->rused)) {
-   (*status) = 2;
+  if((sys->vused==sys->rused) && (sys->rank ==sys->rused)){
+    *status = 2;
     slvDOF_destroy(sys);
-   return 1;
+    return 1;
   }
 
-  if (sys->vused > sys->rused) {
-   (*status) = 1;
-   (*dof) = sys->vused - sys->rused;
+  if(sys->vused > sys->rused){
+    *status = 1;
+    *dof = sys->vused - sys->rused;
     slvDOF_destroy(sys);
-   return 1;
+    return 1;
   }
 
   return 1;
 }
 
 
-/*
- * the first element of cur_cases is in position one. The result is
- * the same array, but ordered and starting in position zero
+/**
+	The first element of cur_cases is in position one. The result is
+	the same array, but ordered and starting in position zero
  */
-static int32 *reorder_cases(int32 *cur_cases, int32 ncases)
-{
+static int32 *reorder_cases(int32 *cur_cases, int32 ncases){
+
   int32 cur_case,pos = 0,tmp_num,c,ind;
   int32 *result;
 
-  result = create_array(ncases,int32);
+  result = ASC_NEW_ARRAY(int32,ncases);
   for (c=1; c<=ncases; c++) {
     tmp_num = 0;
     for (ind=1; ind<=ncases; ind++) {
@@ -754,20 +737,19 @@ static int32 *reorder_cases(int32 *cur_cases, int32 ncases)
     result[ncases-c] = tmp_num;
   }
 
-  destroy_array(cur_cases);
+  ASC_FREE(cur_cases);
   return result;
 }
 
-/*
- * Get the eligible var list for each alternative
- * Return:
- * 1 means everything went right
- * 0 means the analysis has failed with the current parititioning
- * -1 means a memory problem has occurred
- */
-static int32 get_eligible_vars(slv_system_t server,struct gl_list_t *disvars,
-			      int *combinations, int32 *terminate)
-{
+/**
+	Get the eligible var list for each alternative
+	
+	@return 1 on success, 0 if the analysis has failed with the current parititioning
+	or -1 if a memory problem has occurred
+*/
+static int32 get_eligible_vars(slv_system_t server,struct gl_list_t *disvars
+		,int *combinations, int32 *terminate
+){
   struct var_variable **vslist;
   struct var_variable **vmlist;
   struct var_variable *mvar, *svar;
@@ -792,27 +774,26 @@ static int32 get_eligible_vars(slv_system_t server,struct gl_list_t *disvars,
   correct_cases = reorder_cases(cur_cases,ncases);
   set_active_rels_in_subregion(server,correct_cases,ncases,disvars);
   set_active_vars_in_subregion(server);
-  destroy_array(correct_cases);
+  ASC_FREE(correct_cases);
 
 #if DEBUG_CONSISTENCY_ANALYSIS
   FPRINTF(ASCERR,"Analyzing alternative:\n");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
 
-  if (!slvDOF_status(server,(&status),(&dof))) {
-   FPRINTF(ASCERR,"ERROR in combinatorial search\n");
-   FPRINTF(ASCERR,"Combinatorial search aborted\n");
+  if(!slvDOF_status(server,(&status),(&dof))) {
+   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Aborted combinatorial search after error");
    return -1;
-  } else {
+  }else{
     if (status == 3) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-      FPRINTF(ASCERR,"Alternative is structurally singular\n");
+      CONSOLE_DEBUG("Alternative is structurally singular");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
       (*terminate) = 0;
       return 0;
     } else {
       if (status == 4) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-         FPRINTF(ASCERR,"Alternative is overspecified\n");
+      CONSOLE_DEBUG("Alternative is overspecified");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
          (*terminate) = 0;
          return 0;
@@ -823,7 +804,7 @@ static int32 get_eligible_vars(slv_system_t server,struct gl_list_t *disvars,
   if (status == 1) {
     (*terminate) = 0;
 #if DEBUG_CONSISTENCY_ANALYSIS
-    FPRINTF(ASCERR,"Alternative has % d degrees of freedom.\n",dof);
+    CONSOLE_DEBUG("Alternative is has % d degrees of freedom.",dof);
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
     if (slvDOF_eligible(server,&(vars))) {
       count = 0;
@@ -835,12 +816,11 @@ static int32 get_eligible_vars(slv_system_t server,struct gl_list_t *disvars,
         var_set_eligible_in_subregion(mvar,TRUE);
         count++;
       }
-      destroy_array(vars);   
+      ASC_FREE(vars);   
     }
     if (dof > count) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-      FPRINTF(ASCERR,
-              "Alternative does not have enough number of eligible vars\n");
+      CONSOLE_DEBUG("Alternative does not have enough eligible vars");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
       return 0;
     }
@@ -848,7 +828,7 @@ static int32 get_eligible_vars(slv_system_t server,struct gl_list_t *disvars,
 
   if (status == 2) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-    FPRINTF(ASCERR,"Alternative is square.\n");
+    CONSOLE_DEBUG("Alternative is square.");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
   }
 
@@ -867,20 +847,19 @@ static int32 get_eligible_vars(slv_system_t server,struct gl_list_t *disvars,
   return 1;
 }
 
-/*
- * Get the eligible set of variables for each of the combinations generated
- * by modifying the values of the boolean variables
- * Return:
- * 1 means everything went right
- * 0 means the analysis has failed with the current parititioning
- * -1 means a memory problem has occurred
- */
+/**
+	Get the eligible set of variables for each of the combinations generated
+	by modifying the values of the boolean variables
+	
+	@return 1 on success, 0 if analysis failed with current partitioning, or 
+	-1 if a memory error occurred.
+*/
 static int32 do_search_consistency_combinations(slv_system_t server,
-					        struct gl_list_t *disvars,
-					        int32 dlen, int32 d,
-					        int32 *combinations,
-						int32 *terminate)
-{
+		struct gl_list_t *disvars,
+		int32 dlen, int32 d,
+		int32 *combinations,
+		int32 *terminate
+){
   struct dis_discrete *cur_dis;
   int32 dpo, result;
 
@@ -901,7 +880,7 @@ static int32 do_search_consistency_combinations(slv_system_t server,
       return result;
     }
 
-  } else {
+  }else{
     if (d == dlen) {
       cur_dis = (struct dis_discrete *)(gl_fetch(disvars,d));
       dis_set_boolean_value(cur_dis,TRUE);
@@ -914,9 +893,8 @@ static int32 do_search_consistency_combinations(slv_system_t server,
       if (result != 1) {
         return result;
       }
-    } else {
-      FPRINTF(ASCERR,"ERROR: do_search_consistency_combinations \n");
-      FPRINTF(ASCERR,"       Wrong discrete var index as argument \n");
+    }else{
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Wrong discrete var index as argument");
     }
   }
   return 1;
@@ -925,15 +903,15 @@ static int32 do_search_consistency_combinations(slv_system_t server,
 /*
  * Storing original values of boolean variables
  */
-static void storing_original_bool_values(struct gl_list_t *bollist,
-			                 struct bool_values *bval)
-{
+static void storing_original_bool_values(struct gl_list_t *bollist
+		,struct bool_values *bval
+){
   struct dis_discrete *dvar;
   int32 d, dlen;
 
   dlen = gl_length(bollist);
-  bval->pre_val = create_array(dlen,int32);
-  bval->cur_val = create_array(dlen,int32);
+  bval->pre_val = ASC_NEW_ARRAY(int32,dlen);
+  bval->cur_val = ASC_NEW_ARRAY(int32,dlen);
   for (d=1; d<=dlen; d++){
     dvar = (struct dis_discrete *)gl_fetch(bollist,d);
     bval->cur_val[d-1] = dis_value(dvar);
@@ -944,9 +922,9 @@ static void storing_original_bool_values(struct gl_list_t *bollist,
 /*
  * Restoring original values of boolean variables
  */
-static void restoring_original_bool_values(struct gl_list_t *bollist,
-			                   struct bool_values *bval)
-{
+static void restoring_original_bool_values(struct gl_list_t *bollist
+		,struct bool_values *bval
+){
   struct dis_discrete *dvar;
   int32 d, dlen;
 
@@ -957,17 +935,16 @@ static void restoring_original_bool_values(struct gl_list_t *bollist,
     dis_set_value(dvar,bval->cur_val[d-1]);
     dis_set_previous_value(dvar,bval->pre_val[d-1]);
   }
-  destroy_array(bval->cur_val);
-  destroy_array(bval->pre_val);
+  ASC_FREE(bval->cur_val);
+  ASC_FREE(bval->pre_val);
 }
 
 /*
  * Restoring orignal configuration of the system
  */
-static void restore_configuration(slv_system_t server, 
-				  struct gl_list_t *bollist)
-
-{
+static void restore_configuration(slv_system_t server
+		,struct gl_list_t *bollist
+){
   int32 *cur_cases, *correct_cases;
   int32 ncases;
 
@@ -975,7 +952,7 @@ static void restore_configuration(slv_system_t server,
    correct_cases = reorder_cases(cur_cases,ncases);
    set_active_rels_in_subregion(server,correct_cases,ncases,bollist);
    set_active_vars_in_subregion(server);
-   destroy_array(correct_cases);
+   ASC_FREE(correct_cases);
 }
 
 /*
@@ -984,10 +961,10 @@ static void restore_configuration(slv_system_t server,
  * variables given in the list passed as argument
  */
 
-static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
-						 struct gl_list_t *bollist,
-							int32 *terminate)
-{
+static int32 perform_combinatorial_consistency_analysis(slv_system_t server
+		, struct gl_list_t *bollist
+		, int32 *terminate
+){
   struct var_variable **vmlist;
   struct var_variable *mvar;
   var_filter_t vfilter;
@@ -1060,7 +1037,7 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
 #if DEBUG_CONSISTENCY_ANALYSIS
       CONSOLE_DEBUG("ERROR: All alternatives are square but the Eligible set is not null");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
-      destroy_array(globeli);
+      ASC_FREE(globeli);
     }
     return 1;
   } else {
@@ -1095,7 +1072,7 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
 #if DEBUG_CONSISTENCY_ANALYSIS
           CONSOLE_DEBUG("%d accepted",globeli[v]);
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
-          destroy_array(globeli);
+          ASC_FREE(globeli);
           return 1;
         } else {
           var_set_fixed(mvar,FALSE);
@@ -1104,7 +1081,7 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
         }
       }
     }
-    destroy_array(globeli);
+    ASC_FREE(globeli);
 #if DEBUG_CONSISTENCY_ANALYSIS
     CONSOLE_DEBUG("returning 0 after nested search");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
@@ -1119,9 +1096,9 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
  */
 
 static int32 get_globally_consistent_set(slv_system_t server,
-					 struct gl_list_t *bollist,
-					 int32 **eliset)
-{
+		struct gl_list_t *bollist,
+		int32 **eliset
+){
   struct var_variable **vmlist;
   struct var_variable *mvar;
   var_filter_t vfilter;
@@ -1160,7 +1137,7 @@ static int32 get_globally_consistent_set(slv_system_t server,
   if (result != 1) {
     if (terminate == 0) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-      CONSOLE_DEBUG("ERROR: some alternatives are either singular or"
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"ERROR: some alternatives are either singular or"
 		" overspecified. All the alternatives have to be"
 		" either square or underspecified to complete the analysis"
 	  );
@@ -1187,21 +1164,21 @@ static int32 get_globally_consistent_set(slv_system_t server,
   }
   (*eliset)[elnum] = -1;
 
-  if (elnum == 0) {
-    if (terminate == 0) {
+  if(elnum == 0) {
+    if(terminate == 0) {
 #if DEBUG_CONSISTENCY_ANALYSIS
-      CONSOLE_DEBUG("Some alternatives are underspecified, but there does"
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Some alternatives are underspecified, but there does"
 		"not exist a set of eligible variables consistent "
 		"with all the alternatives"
 	  );
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
-    } else {
+    }else{
 #if DEBUG_CONSISTENCY_ANALYSIS
       CONSOLE_DEBUG("All alternatives are already square");
 #endif /* DEBUG_CONSISTENCY_ANALYSIS */
     }
     return 0;
-  } else {
+  }else{
     if (terminate == 1) {
 #if DEBUG_CONSISTENCY_ANALYSIS
       CONSOLE_DEBUG("All alternatives are square but the Eligible set is not null");
@@ -1212,13 +1189,13 @@ static int32 get_globally_consistent_set(slv_system_t server,
 }
 
 
-/*
- * Get the list of boolean variables which can potentially cause
- * a change in the structure of the problem
- */
+/**
+	Get the list of boolean variables which can potentially cause
+	a change in the structure of the problem
+*/
 static 
-struct gl_list_t *get_list_of_booleans_for_analysis(slv_system_t server)
-{
+struct gl_list_t *get_list_of_booleans_for_analysis(slv_system_t server){
+
   dis_filter_t dfilter;
   struct dis_discrete **boolist;
   struct dis_discrete *dvar;
@@ -1268,8 +1245,7 @@ struct gl_list_t *get_list_of_booleans_for_analysis(slv_system_t server)
  * Get a set of eligible variables consitent for all the alternative
  * configurations
  */
-int32 get_globally_consistent_eligible(slv_system_t server,int32 **eliset) 
-{
+int32 get_globally_consistent_eligible(slv_system_t server,int32 **eliset){
 
   struct dis_discrete **boolist;
   struct dis_discrete *dvar;
@@ -1325,11 +1301,10 @@ int32 get_globally_consistent_eligible(slv_system_t server,int32 **eliset)
 
 }
 
-/*
- * Main function of the consistency analysis.
- */
-int32 consistency_analysis(slv_system_t server,int32 **fixed) 
-{
+/**
+	Main function of the consistency analysis.
+*/
+int32 consistency_analysis(slv_system_t server,int32 **fixed){
 
   struct dis_discrete **boolist;
   struct dis_discrete *dvar;
