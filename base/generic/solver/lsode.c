@@ -282,7 +282,6 @@ void integrator_lsode_create(IntegratorSystem *blsys){
 	d->ydot_vars=NULL;
 	d->rlist=NULL;
 	d->dydx_dx=NULL;
-	CONSOLE_DEBUG("Created LSODE enginedata at %p",d);
 	blsys->enginedata=(void*)d;
 	integrator_lsode_params_default(blsys);
 
@@ -313,7 +312,6 @@ void integrator_lsode_free(void *enginedata){
 	if(d.dydx_dx!=NULL){
 		lsode_densematrix_destroy(d.dydx_dx, d.n_eqns);
 		d.dydx_dx =  NULL;
-		CONSOLE_DEBUG("Cleared dydx_dx");
 	}
 
 	d.n_eqns = 0L;
@@ -348,13 +346,11 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 	slv_destroy_parms(p);
 
 	if(p->parms==NULL){
-		CONSOLE_DEBUG("params NULL");
 		p->parms = ASC_NEW_ARRAY(struct slv_parameter, LSODE_PARAMS_SIZE);
 		if(p->parms==NULL)return -1;
 		p->dynamic_parms = 1;
 	}else{
 		asc_assert(p->num_parms == LSODE_PARAMS_SIZE);
-		CONSOLE_DEBUG("reusing parm memory");
 	}
 
 	/* reset the number of parameters to zero so that we can check it at the end */
@@ -403,9 +399,6 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 	);
 
 	asc_assert(p->num_parms == LSODE_PARAMS_SIZE);
-
-	CONSOLE_DEBUG("Created %d params", p->num_parms);
-
 	return 0;
 }	
 
@@ -669,8 +662,6 @@ int integrator_lsode_derivatives(IntegratorSystem *blsys
 
   asc_assert(blsys!=NULL);
   enginedata = (IntegratorLsodeData *)blsys->enginedata;
-  CONSOLE_DEBUG("blsys at %p",blsys);
-  CONSOLE_DEBUG("Enginedata at %p",enginedata);
   asc_assert(enginedata!=NULL);
   asc_assert(enginedata->dydx_dx!=NULL);
   asc_assert(enginedata->input_indices!=NULL);
@@ -810,7 +801,6 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
 #endif
 	lsodedata->stop = 1;
     lsodedata->status = lsode_nok;
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status);
   }else{
     lsodedata->status = lsode_ok;
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
@@ -851,9 +841,6 @@ static void LSODE_JEX(int *neq ,double *t, double *y
    * Make the real call.
    */
 
-  CONSOLE_DEBUG("blsys at %p",l_lsode_blsys);
-  CONSOLE_DEBUG("Enginedata at %p",lsodedata);
-
   nok = integrator_lsode_derivatives(l_lsode_blsys
 		, *neq
 		, *nrpd
@@ -867,7 +854,6 @@ static void LSODE_JEX(int *neq ,double *t, double *y
     return;
   }else{
     lsodedata->status = lsode_ok;
-	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
     lsodedata->lastcall = lsode_derivative;
   }
   /*
@@ -923,7 +909,6 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	d->input_indices = ASC_NEW_ARRAY_CLEAR(int, d->n_eqns);
 	d->output_indices = ASC_NEW_ARRAY_CLEAR(int, d->n_eqns);
 	d->dydx_dx = lsode_densematrix_create(d->n_eqns,d->n_eqns);
-    CONSOLE_DEBUG("Allocated dydx_dx into enginedata at %p",d);
 
 	d->y_vars = ASC_NEW_ARRAY(struct var_variable *,d->n_eqns+1);
 	d->ydot_vars = ASC_NEW_ARRAY(struct var_variable *, d->n_eqns+1);
@@ -1063,11 +1048,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
 # ifndef NO_SIGNAL_TRAPS
     }else{
-      FPRINTF(stderr,
-       "Integration terminated due to float error in LSODE call.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE call.");
       lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
       d->status = lsode_ok;		/* clean up before we go */
-      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",d->status);
       d->lastcall = lsode_none;
       return 6;
     }
@@ -1101,7 +1084,6 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to an error in derivative computations.");
       lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
       d->status = lsode_ok;		/* clean up before we go */
-      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"d->status = %d",d->status);
       d->lastcall = lsode_none;
       integrator_output_close(blsys);
       return 8;
@@ -1119,7 +1101,6 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration cancelled");
 		lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
 		d->status = lsode_ok;
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"d->status = %d",d->status);
 		d->lastcall = lsode_none;
 		integrator_output_close(blsys);
 		return 9;
@@ -1150,7 +1131,6 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE FEX call.");
         lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
         d->status = lsode_ok;               /* clean up before we go */
-        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"d->status = %d",d->status);
         d->lastcall = lsode_none;
         integrator_output_close(blsys);
         return 10;
@@ -1174,7 +1154,6 @@ int integrator_lsode_solve(IntegratorSystem *blsys
    */
 
   d->status = lsode_ok;
-  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"d->status = %d",d->status);
   d->lastcall = lsode_none;
 
   integrator_output_close(blsys);
