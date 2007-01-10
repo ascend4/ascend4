@@ -149,43 +149,85 @@ void InitTolNames(void)
   STATEATOL = AddSymbol("ode_atol");
 }
 
+/*--------------------------
+  Data space for use by LSODE
+*/
+
 /**
 	Because LSODE doesn't seem to make an allowance for 'client data' we
 	have to store this as a 'local global' and fish it out when we're in the
 	callbacks.
 */
-IntegratorSystem *l_lsode_blsys;
+static IntegratorSystem *l_lsode_blsys = 0;
 
-enum Lsode_enum {
-  lsode_none,				/* true on first call */
-  lsode_function, lsode_derivative,	/* functions or gradients done */
-  lsode_sparse, lsode_dense,		/* what type of backend should we */
-  lsode_band, 				/* use for the integrator */
-  lsode_ok, lsode_nok			/* bad return from func or grad */
-};
-
-static struct Lsode_Data {
-  enum Lsode_enum lastcall;		/* type of last call; func or grad */
-  enum Lsode_enum status;		/* solve status */
-  int partitioned;			/* partioned func evals or not */
-} lsodesys = {lsode_none, lsode_ok, 1};
-
-
-/*--------------------------
-  Data space for use by LSODE
+typedef enum{
+	lsode_none=0		/* true on first call */
+	, lsode_function	/**< a function evaluation */
+	, lsode_derivative	/**< a gradient evaluation */
+} IntegratorLsodeLastCallType;
+/**
+	Enumeration that tells ASCEND what was the most recent thing LSODE did.
 */
-typedef struct IntegratorLsodeDataStruct{
-  long n_eqns;                     /**< dimension of state vector */
-  int *input_indices;              /**< vector of state vars indexes */
-  int *output_indices;             /**< vector of derivative var indexes */
-  struct var_variable **y_vars;    /**< NULL terminated list of states vars */
-  struct var_variable **ydot_vars; /**< NULL terminated list of derivative vars*/
-  struct rel_relation **rlist;     /**< NULL terminated list of relevant rels
-                                        to be differentiated */
-  double **dydx_dx;                /**< change in derivatives wrt states
-                                        I prefer to call this: d(ydot)/dy */
+
+typedef enum{
+	lsode_ok=0			/**< success */
+	, lsode_nok			/**< bad return from func or grad */
+} IntegratorLsodeStatusCode;
+/**
+	Enumeration to tell ASCEND if anything failed in a FEX or JEX call.
+*/
+
+typedef struct{
+	IntegratorLsodeLastCallType lastcall;  /* type of last call; func or grad */
+	IntegratorLsodeStatusCode   status;    /* solve status */
+	char stop;                             /* stop requested? */
+	int partitioned;                       /* partioned func evals or not */
+} IntegratorLsodeStatus;
+/**<
+	Bits of data that LSODE needs to be able to send/recieve from inside a
+	JEX or FEX call.
+*/
+
+	typedef struct IntegratorLsodeDataStruct{
+	long n_eqns;                     /**< dimension of state vector */
+	int *input_indices;              /**< vector of state vars indexes */
+	int *output_indices;             /**< vector of derivative var indexes */
+	struct var_variable **y_vars;    /**< NULL terminated list of states vars */
+	struct var_variable **ydot_vars; /**< NULL terminated list of derivative vars*/
+	struct rel_relation **rlist;     /**< NULL terminated list of relevant rels
+	                                    to be differentiated */
+	double **dydx_dx;                /**< change in derivatives wrt states
+	                                    I prefer to call this: d(ydot)/dy */
+
+	IntegratorLsodeLastCallType lastcall;  /* type of last call; func or grad */
+	IntegratorLsodeStatusCode   status;    /* solve status */
+	char stop;                             /* stop requested? */
+	int partitioned;                       /* partioned func evals or not */
+  
 } IntegratorLsodeData;
 
+/**<
+	Global data structure for LSODE.
+
+	@NOTE LSODE is not reentrant! @ENDNOTE
+*/
+
+/** Macro to declare a local var and fetch the 'enginedata' stuff into it from l_lsode_blsys. */
+#define LSODEDATA_GET(N) \
+	IntegratorLsodeData *N; \
+	asc_assert(l_lsode_blsys!=NULL); \
+	N = (IntegratorLsodeData *)l_lsode_blsys->enginedata; \
+	asc_assert(N!=NULL)
+
+/** Macro to set the globa l_lsode_blsys to the currently blsys ptr. */
+#define LSODEDATA_SET(N) \
+	asc_assert(l_lsode_blsys==NULL); \
+	asc_assert(N!=NULL); \
+	l_lsode_blsys = N
+
+#define LSODEDATA_RELEASE() \
+	asc_assert(l_lsode_blsys!=NULL); \
+	l_lsode_blsys = NULL;
 
 /*----------------------------
   Function types that LSODE wants to use
@@ -240,6 +282,7 @@ void integrator_lsode_create(IntegratorSystem *blsys){
 	d->ydot_vars=NULL;
 	d->rlist=NULL;
 	d->dydx_dx=NULL;
+	CONSOLE_DEBUG("Created LSODE enginedata at %p",d);
 	blsys->enginedata=(void*)d;
 	integrator_lsode_params_default(blsys);
 
@@ -267,8 +310,11 @@ void integrator_lsode_free(void *enginedata){
 	if(d.rlist)ASC_FREE(d.rlist);
 	d.rlist =  NULL;
 
-	if(d.dydx_dx)lsode_densematrix_destroy(d.dydx_dx, d.n_eqns);
-	d.dydx_dx =  NULL;
+	if(d.dydx_dx!=NULL){
+		lsode_densematrix_destroy(d.dydx_dx, d.n_eqns);
+		d.dydx_dx =  NULL;
+		CONSOLE_DEBUG("Cleared dydx_dx");
+	}
 
 	d.n_eqns = 0L;
 }
@@ -409,44 +455,43 @@ int integrator_lsode_setup_diffs(IntegratorSystem *blsys) {
 	int *ip;
 
 	IntegratorLsodeData *enginedata;
+	asc_assert(blsys!=NULL);
 	enginedata = (IntegratorLsodeData *)blsys->enginedata;
-	assert(enginedata!=NULL);
 
 	assert(enginedata->n_eqns==blsys->n_y);
 
-  /*
-  	Put the
-  	Let us now process what we consider *inputs* to the problem as
-  	far as ASCEND is concerned; i.e. the state vars or the y_vars's
-  	if you prefer.
-  */
-  nch = enginedata->n_eqns;
+	/*
+		Put the
+		Let us now process what we consider *inputs* to the problem as
+		far as ASCEND is concerned; i.e. the state vars or the y_vars's
+		if you prefer.
+	*/
+	nch = enginedata->n_eqns;
 
+	vp = enginedata->y_vars;
+	ip = enginedata->input_indices;
+	for (i=0;i<nch;i++) {
+		*vp = (struct var_variable *)blsys->y[i];
+		*ip = var_sindex(*vp);
+		vp++;
+		ip++;
+	}
+	*vp = NULL;	/* terminate */
 
-  vp = enginedata->y_vars;
-  ip = enginedata->input_indices;
-  for (i=0;i<nch;i++) {
-    *vp = (struct var_variable *)blsys->y[i];
-    *ip = var_sindex(*vp);
-    vp++;
-    ip++;
-  }
-  *vp = NULL;	/* terminate */
+	/*
+		Let us now go for the outputs, ie the derivative terms.
+	*/
+	vp = enginedata->ydot_vars;
+	ip = enginedata->output_indices;
+	for (i=0;i<nch;i++) {
+		*vp = (struct var_variable *)blsys->ydot[i];
+		*ip = var_sindex(*vp);
+		vp++;		/* dont assume that a var is synonymous with */
+		ip++;		/* an Instance; that might/will change soon */
+	}
+	*vp = NULL;		/* terminate */
 
-  /*
-  	Let us now go for the outputs, ie the derivative terms.
-  */
-  vp = enginedata->ydot_vars;
-  ip = enginedata->output_indices;
-  for (i=0;i<nch;i++) {
-    *vp = (struct var_variable *)blsys->ydot[i];
-    *ip = var_sindex(*vp);
-    vp++;		/* dont assume that a var is synonymous with */
-    ip++;		/* an Instance; that might/will change soon */
-  }
-  *vp = NULL;		/* terminate */
-
-  return 0;
+	return 0;
 }
 
 /**
@@ -542,32 +587,33 @@ static double *lsode_get_rtol( IntegratorSystem *blsys) {
 	Write out a a status message based on the istate parameter.
 */
 static void lsode_write_istate( int istate) {
-  switch (istate) {
-  case -1:
-    FPRINTF(ASCERR,"Excess steps taken on this call (perhaps wrong MF).");
-    break;
-  case -2:
-    FPRINTF(ASCERR,"Excess accuracy requested (tolerances too small).");
-    break;
-  case -3:
-    FPRINTF(ASCERR,"Illegal input detected (see console).");
-    break;
-  case -4:
-    FPRINTF(ASCERR,"Repeated error test failures (check all inputs).");
-    break;
-  case -5:
-    FPRINTF(ASCERR,"Repeated convergence failures (perhaps bad Jacobian supplied, or wrong choice of MF or tolerances).");
-    break;
-  case -6:
-    FPRINTF(ASCERR,"Error weight became zero during problem (solution component i vanished, and atol or atol(i) = 0).");
-    break;
-  case -7:
-    FPRINTF(ASCERR,"Interrupted? User cancelled operation?");
-    break;
-  default:
-    FPRINTF(ASCERR,"Unknown 'istate' error code %d from LSODE.",istate);
-    break;
-  }
+	switch (istate) {
+		case -1:
+			FPRINTF(ASCERR,"Excess steps taken on this call"
+				" (perhaps wrong MF)."); break;
+		case -2:
+			FPRINTF(ASCERR,"Excess accuracy requested"
+				" (tolerances too small)."); break;
+		case -3:
+			FPRINTF(ASCERR,"Illegal input detected"
+				" (see console)."); break;
+		case -4:
+			FPRINTF(ASCERR,"Repeated error test failures"
+				" (check all inputs)."); break;
+		case -5:
+			FPRINTF(ASCERR,"Repeated convergence failures"
+				" (perhaps bad Jacobian supplied, or wrong choice of MF or tolerances)."); break;
+		case -6:
+			FPRINTF(ASCERR,"Error weight became zero during problem"
+				" (solution component i vanished, and atol or atol(i) = 0)."); break;
+		case -7:
+			FPRINTF(ASCERR,"Interrupted? User cancelled operation?"); break;
+		case -8:
+			FPRINTF(ASCERR,"Error in nonlinear solver"); break;
+		default:
+			FPRINTF(ASCERR,"Unknown 'istate' error code %d from LSODE.",istate);
+			break;
+	}
 }
 
 /**
@@ -599,70 +645,84 @@ static void lsode_free_mem(double *y, double *reltol, double *abtol, double *rwo
   }
 }
 
-/*
- *********************************************************************
- * This code is provided for the benefit of a temporary
- * fix for the derivative problem in Lsode.
- * The proper permanent fix for lsode is to dump it in favor of
- * cvode or dassl.
- * Extended 7/95 baa to deal with linsolqr and lsode.
- * It is assumed the system has been solved at the current point.
- *********************************************************************
- */
-int lsode_derivatives(slv_system_t sys, double **dy_dx,
-                       int *inputs_ndx_list, int ninputs,
-                       int *outputs_ndx_list, int noutputs)
-{
+/**
+	"Temporary" derivative evaluation routine (pre 1995!).
+
+	Ben says: "The proper permanent fix for lsode is to dump it in favor of
+	cvode or dassl." (so: see ida.c)
+
+	@return 0 on success
+
+	@NOTE It is assumed the system has been solved at the current point. @ENDNOTE
+*/
+int integrator_lsode_derivatives(IntegratorSystem *blsys
+		, int ninputs
+		, int noutputs
+){
   static int n_calls = 0;
-  linsolqr_system_t lqr_sys;	/* stuff for the linear system & matrix */
+  linsolqr_system_t linsys;	/* stuff for the linear system & matrix */
   mtx_matrix_t mtx;
   int32 capacity;
   real64 *scratch_vector = NULL;
   int result=0;
+  IntegratorLsodeData *enginedata;
+
+  asc_assert(blsys!=NULL);
+  enginedata = (IntegratorLsodeData *)blsys->enginedata;
+  CONSOLE_DEBUG("blsys at %p",blsys);
+  CONSOLE_DEBUG("Enginedata at %p",enginedata);
+  asc_assert(enginedata!=NULL);
+  asc_assert(enginedata->dydx_dx!=NULL);
+  asc_assert(enginedata->input_indices!=NULL);
+
+  double **dy_dx = enginedata->dydx_dx;
+  int *inputs_ndx_list = enginedata->input_indices;
+  int *outputs_ndx_list = enginedata->output_indices;
+  asc_assert(ninputs == blsys->n_y);
 
   (void)NumberFreeVars(NULL);		/* used to re-init the system */
   (void)NumberIncludedRels(NULL);	/* used to re-init the system */
-  if (!sys) {
+  if (!blsys->system) {
     FPRINTF(stderr,"The solve system does not exist !\n");
     return 1;
   }
 
-  result = Compute_J(sys);
+  result = Compute_J(blsys->system);
   if (result) {
     FPRINTF(stderr,"Early termination due to failure in calc Jacobian\n");
     return 1;
   }
 
-  lqr_sys = slv_get_linsolqr_sys(sys);	/* get the linear system */
-  if (lqr_sys==NULL) {
+  linsys = slv_get_linsolqr_sys(blsys->system);	/* get the linear system */
+  if (linsys==NULL) {
     FPRINTF(stderr,"Early termination due to missing linsolqr system.\n");
     return 1;
   }
-  mtx = slv_get_sys_mtx(sys);	/* get the matrix */
+  mtx = slv_get_sys_mtx(blsys->system);	/* get the matrix */
   if (mtx==NULL) {
     FPRINTF(stderr,"Early termination due to missing mtx in linsolqr.\n");
     return 1;
   }
   capacity = mtx_capacity(mtx);
   scratch_vector = ASC_NEW_ARRAY_CLEAR(real64,capacity);
-  linsolqr_add_rhs(lqr_sys,scratch_vector,FALSE);
+  linsolqr_add_rhs(linsys,scratch_vector,FALSE);
 
-  result = LUFactorJacobian(sys);
+  result = LUFactorJacobian(blsys->system);
   if (result) {
     FPRINTF(stderr,"Early termination due to failure in LUFactorJacobian\n");
     goto error;
   }
-  result = Compute_dy_dx_smart(sys, scratch_vector, dy_dx,
+  result = Compute_dy_dx_smart(blsys->system, scratch_vector, dy_dx,
                                inputs_ndx_list, ninputs,
                                outputs_ndx_list, noutputs);
 
-  linsolqr_remove_rhs(lqr_sys,scratch_vector);
+  linsolqr_remove_rhs(linsys,scratch_vector);
   if (result) {
     FPRINTF(stderr,"Early termination due to failure in Compute_dy_dx\n");
     goto error;
   }
 
- error:
+error:
   n_calls++;
   if (scratch_vector) {
     ascfree((char *)scratch_vector);
@@ -676,9 +736,9 @@ int lsode_derivatives(slv_system_t sys, double **dy_dx,
 	to do a *presolve* rather than a simply a *resolve* before doing
 	function calls.  This code below attempts to handle these cases.
 */
-static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
-{
+static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
   slv_status_t status;
+  LSODEDATA_GET(lsodedata);
 
   /*  slv_parameters_t parameters; pity lsode doesn't allow error returns */
   /* int i; */
@@ -705,12 +765,12 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
   time2 = tm_cpu_time();
 #endif
 
-  switch(lsodesys.lastcall) {
+  switch(lsodedata->lastcall) {
   case lsode_none:		/* first call */
 	CONSOLE_DEBUG("FIRST CALL...");
 
   case lsode_derivative:
-    if (lsodesys.partitioned) {
+    if (lsodedata->partitioned) {
 	  /* CONSOLE_DEBUG("PRE-SOLVE"); */
       slv_presolve(l_lsode_blsys->system);
     } else {
@@ -728,7 +788,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
   slv_solve(l_lsode_blsys->system);
   slv_get_status(l_lsode_blsys->system, &status);
   if(slv_check_bounds(l_lsode_blsys->system,0,-1,"")){
-    lsodesys.status = lsode_nok;
+    lsodedata->status = lsode_nok;
   }
 
   /* pass the solver status to the integrator */
@@ -748,13 +808,16 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
     }
     error_reporter_end_flush();
 #endif
-    lsodesys.status = lsode_nok;
+	lsodedata->stop = 1;
+    lsodedata->status = lsode_nok;
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status);
   }else{
-    lsodesys.status = lsode_ok;
+    lsodedata->status = lsode_ok;
+	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
   }
   integrator_get_ydot(l_lsode_blsys, ydot);
 
-  lsodesys.lastcall = lsode_function;
+  lsodedata->lastcall = lsode_function;
 #if DOTIME
   time1 = tm_cpu_time() - time1;
   CONSOLE_DEBUG("Function evalulation has been completed in time %g. True function call  time = %g",time1,time2);
@@ -764,13 +827,13 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot)
 /**
 	Evaluate the jacobian
 */
-static void LSODE_JEX(int *neq ,double *t, double *y,
-                      int *ml ,int *mu ,double *pd, int *nrpd)
-{
+static void LSODE_JEX(int *neq ,double *t, double *y
+		, int *ml ,int *mu ,double *pd, int *nrpd
+){
   int nok = 0;
   int i,j;
 
-  IntegratorLsodeData enginedata=*((IntegratorLsodeData *)l_lsode_blsys->enginedata);
+  LSODEDATA_GET(lsodedata);
 
   UNUSED_PARAMETER(t);
   UNUSED_PARAMETER(y);
@@ -787,22 +850,25 @@ static void LSODE_JEX(int *neq ,double *t, double *y,
   /*
    * Make the real call.
    */
-  nok = lsode_derivatives(l_lsode_blsys->system
-		, enginedata.dydx_dx
-		, enginedata.input_indices
+
+  CONSOLE_DEBUG("blsys at %p",l_lsode_blsys);
+  CONSOLE_DEBUG("Enginedata at %p",lsodedata);
+
+  nok = integrator_lsode_derivatives(l_lsode_blsys
 		, *neq
-		, enginedata.output_indices
 		, *nrpd
   );
 
-  if (nok) {
+  if(nok){
   	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in computing the derivatives for the system. Failing...");
-    lsodesys.status = lsode_nok;
-    lsodesys.lastcall = lsode_derivative;
+    lsodedata->status = lsode_nok;
+    lsodedata->lastcall = lsode_derivative;
+	lsodedata->stop = 1;
     return;
-  } else {
-    lsodesys.status = lsode_ok;
-    lsodesys.lastcall = lsode_derivative;
+  }else{
+    lsodedata->status = lsode_ok;
+	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
+    lsodedata->lastcall = lsode_derivative;
   }
   /*
 	Map data from C based matrix to Fortan matrix.
@@ -810,8 +876,8 @@ static void LSODE_JEX(int *neq ,double *t, double *y,
   */
   for (j=0;j<*neq;j++) { /* loop through columnns */
     for (i=0;i<*nrpd;i++){ /* loop through rows */
-	  /* CONSOLE_DEBUG("JAC[r=%d,c=%d]=%f",i,j,enginedata.dydx_dx[i][j]); */
-      *pd++ = enginedata.dydx_dx[i][j];
+	  /* CONSOLE_DEBUG("JAC[r=%d,c=%d]=%f",i,j,lsodedata.dydx_dx[i][j]); */
+      *pd++ = lsodedata->dydx_dx[i][j];
     }
   }
 
@@ -846,12 +912,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	int * iwork;
 	double *y, *abtol, *reltol, *obs, *dydx;
 	int my_neq;
-	FILE *y_out =NULL;
-	FILE *obs_out =NULL;
 	int reporterstatus;
-
-	/* store the local variable so that we can get at stuff from inside LSODE_FEX. */
-	l_lsode_blsys = blsys;
 
 	d = (IntegratorLsodeData *)(blsys->enginedata);
 
@@ -862,6 +923,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	d->input_indices = ASC_NEW_ARRAY_CLEAR(int, d->n_eqns);
 	d->output_indices = ASC_NEW_ARRAY_CLEAR(int, d->n_eqns);
 	d->dydx_dx = lsode_densematrix_create(d->n_eqns,d->n_eqns);
+    CONSOLE_DEBUG("Allocated dydx_dx into enginedata at %p",d);
 
 	d->y_vars = ASC_NEW_ARRAY(struct var_variable *,d->n_eqns+1);
 	d->ydot_vars = ASC_NEW_ARRAY(struct var_variable *, d->n_eqns+1);
@@ -870,16 +932,18 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
   /* this is a lie, but we will keep it.
      We handle any linsol/linsolqr based solver. */
-  if (strcmp(slv_solver_name(slv_get_selected_solver(blsys->system)),"QRSlv") != 0) {
+  if(strcmp(slv_solver_name(slv_get_selected_solver(blsys->system)),"QRSlv") != 0) {
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv must be selected before integration.");
     return 1;
   }
 
-  slv_get_status(l_lsode_blsys->system, &status);
+  CONSOLE_DEBUG("Solver selected is '%s'",slv_solver_name(slv_get_selected_solver(blsys->system)));
+
+  slv_get_status(blsys->system, &status);
 
   if (status.struct_singular) {
   	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration will not be performed. The system is structurally singular.");
-    lsodesys.status = lsode_nok;
+    d->status = lsode_nok;
     return 2;
   }
 
@@ -888,12 +952,13 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   /* here we assume integrators.c is in charge of dynamic loading */
 
   slv_get_parameters(blsys->system,&params);
-  lsodesys.partitioned = 1;
+  d->partitioned = 1;
+  d->stop = 0; /* clear 'stop' flag */
 
   nsamples = integrator_getnsamples(blsys);
   if (nsamples <2) {
   	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration will not be performed. The system has no end sample time defined.");
-    lsodesys.status = lsode_nok;
+    d->status = lsode_nok;
     return 3;
   }
   neq = blsys->n_y;
@@ -916,7 +981,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   if (!y || !obs || !abtol || !reltol || !rwork || !iwork || !dydx) {
     lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for lsode.");
-    lsodesys.status = lsode_nok;
+    d->status = lsode_nok;
     return 4;
   }
 
@@ -986,35 +1051,39 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       }
 	  */
 
+      /* provides some rudimentary locking to prevent reentrance*/
+      LSODEDATA_SET(blsys);
+
       LSODE(&(LSODE_FEX), &my_neq, y, x, &xend,
             &itol, reltol, abtol, &itask, &istate,
             &iopt ,rwork, &lrw, iwork, &liw, &(LSODE_JEX), &mf);
 
+      /* clear the global var */
+      LSODEDATA_RELEASE();
 
 # ifndef NO_SIGNAL_TRAPS
-    } else {
+    }else{
       FPRINTF(stderr,
        "Integration terminated due to float error in LSODE call.\n");
       lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
-      lsodesys.status = lsode_ok;		/* clean up before we go */
-      lsodesys.lastcall = lsode_none;
-      if (y_out!=NULL) {
-        fclose(y_out);
-      }
-      if (obs_out!=NULL) {
-        fclose(obs_out);
-      }
+      d->status = lsode_ok;		/* clean up before we go */
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",d->status);
+      d->lastcall = lsode_none;
       return 6;
     }
 # endif /* NO_SIGNAL_TRAPS */
 
     /* CONSOLE_DEBUG("AFTER %lu LSODE CALL\n", index); */
     /* this check is better done in fex,jex, but lsode takes no status */
-    if (Solv_C_CheckHalt()) {
+/*    if (Solv_C_CheckHalt()) {
       if (istate >= 0) {
         istate=-7;
       }
     }
+*/
+	if(d->stop){
+		istate=-8;
+	}	
 
     if (istate < 0 ) {
       /* some kind of error occurred... */
@@ -1028,11 +1097,12 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       return 7;
     }
 
-    if (lsodesys.status==lsode_nok) {
+    if (d->status==lsode_nok) {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to an error in derivative computations.");
       lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
-      lsodesys.status = lsode_ok;		/* clean up before we go */
-      lsodesys.lastcall = lsode_none;
+      d->status = lsode_ok;		/* clean up before we go */
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"d->status = %d",d->status);
+      d->lastcall = lsode_none;
       integrator_output_close(blsys);
       return 8;
     }
@@ -1048,8 +1118,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	if(reporterstatus==0){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration cancelled");
 		lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
-		lsodesys.status = lsode_ok;
-		lsodesys.lastcall = lsode_none;
+		d->status = lsode_ok;
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"d->status = %d",d->status);
+		d->lastcall = lsode_none;
 		integrator_output_close(blsys);
 		return 9;
 	}
@@ -1065,7 +1136,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
            x1 usually wouldn't be x0 precisely if the x1/x0
            scheme worked, which it doesn't anyway. */
 
+        LSODEDATA_SET(blsys);
         LSODE_FEX(&my_neq, x, y, dydx);
+        LSODEDATA_RELEASE();
 
         /* calculate observations, if any, at returned x and y. */
         obs = integrator_get_observations(blsys, obs);
@@ -1076,8 +1149,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       } else {
       	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE FEX call.");
         lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
-        lsodesys.status = lsode_ok;               /* clean up before we go */
-        lsodesys.lastcall = lsode_none;
+        d->status = lsode_ok;               /* clean up before we go */
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"d->status = %d",d->status);
+        d->lastcall = lsode_none;
         integrator_output_close(blsys);
         return 10;
       }
@@ -1099,8 +1173,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
    * return the system to its original state.
    */
 
-  lsodesys.status = lsode_ok;
-  lsodesys.lastcall = lsode_none;
+  d->status = lsode_ok;
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"d->status = %d",d->status);
+  d->lastcall = lsode_none;
 
   integrator_output_close(blsys);
 
@@ -1110,7 +1185,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 #else /* STATIC_LSOD || DYNAMIC_LSOD */
 
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration will not be performed. LSODE binary not available.");
-  lsodesys.status = lsode_nok;
+  d->status = lsode_nok;
   return 11;
 
 #endif
