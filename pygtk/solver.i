@@ -283,6 +283,7 @@ public:
 
 %feature("autodoc", "Return dict of available integration engines {id:name,...}") Integrator::getEngines;
 %include "integrator.h"
+/* findIndependentVar has changed to return void, throw exception */
 
 %extend Integrator{
 	%pythoncode{
