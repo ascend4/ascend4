@@ -426,24 +426,29 @@ class TestSteam(AscendSelfTester):
 #	def testiapwssat1(self):
 #		M = self._run('testiapwssat1',filename='steam/iapwssat.a4c')
 
-## @TODO fix bug with unpivoted node[i].hg_expr eqns.
-#	def testdsgsat(self):
-#		self.L.load('steam/dsgsat2.a4c')
-#		T = self.L.findType('dsgsat2')
-#		M = T.getSimulation('sim')
-#		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-#		M.run(T.getMethod('fixed_states'))
-#		I = ascpy.Integrator(M)
-#		I.setEngine('LSODE')
-#		I.setReporter(ascpy.IntegratorReporterConsole(I))
-#		I.setReporter(ascpy.IntegratorReporterConsole(I))
-#		I.setLinearTimesteps(ascpy.Units("s"), 0, 5, 100)
-#		I.setMinSubStep(0.01)
-#		I.setMaxSubStep(0.02)
-#		I.setInitialSubStep(0.1)
-#		I.analyse()
-#		I.solve()
-#		#M.checkStructuralSingularity() causes crash!
+# @TODO fix bug with unpivoted node[i].hg_expr eqns.
+	def testdsgsat(self):
+		self.L.load('steam/dsgsat2.a4c')
+		T = self.L.findType('dsgsat2')
+		M = T.getSimulation('sim',False)
+		try:
+			M.run(T.getMethod('on_load'))
+		except:
+			pass
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		M.run(T.getMethod('fixed_states'))
+		I = ascpy.Integrator(M)
+		I.setEngine('LSODE')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 5, 100)
+		I.setMinSubStep(0.01)
+		I.setMaxSubStep(0.02)
+		I.setInitialSubStep(0.1)
+		I.analyse()
+		I.solve()
+		I.solve()
+		#M.checkStructuralSingularity() causes crash!
 		
 #-------------------------------------------------------------------------------
 # Testing of freesteam external steam properties functions
