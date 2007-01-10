@@ -1,27 +1,13 @@
 #!/usr/bin/env python
 import unittest
-
 import os, subprocess,sys
-
-modelsdir = None
-if not os.environ.get('ASCENDLIBRARY'):
-	modelsdir = os.path.normpath(os.path.join(sys.path[0],"../models"))
-	print "models dir = %s",modelsdir
+import math
+import atexit
 
 import platform
 if platform.system() != "Windows":
 	import dl
 	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
-
-
-import ascpy
-import math
-import atexit
-
-try:
-	import cunit
-except:
-	pass
 
 class Ascend(unittest.TestCase):
 
@@ -693,6 +679,44 @@ class NotToBeTested:
 		pass
 
 if __name__=='__main__':
+	restart = 0
+	modelsdir = None
+
+	if not os.environ.get('ASCENDLIBRARY'):
+		modelsdir = os.path.normpath(os.path.join(sys.path[0],"../models"))
+		os.environ['ASCENDLIBRARY'] = modelsdir
+		restart = 1
+
+	if platform.system()=="Windows":
+		LD_LIBRARY_PATTH="PATH"
+		SEP = ";"
+	else:
+		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
+		SEP = ":"
+
+	libdirs = [".",".."]
+	libdirs = [os.path.normpath(os.path.join(sys.path[0],l)) for l in libdirs]
+	if not os.environ.get(LD_LIBRARY_PATH):
+		os.environ[LD_LIBRARY_PATH]=libdirs
+	else:
+		envlibdirs = [os.path.normpath(i) for i in os.environ[LD_LIBRARY_PATH].split(SEP)]
+		for l in libdirs:
+			if l not in envlibdirs:
+				envlibdirs.insert(0,l)
+				restart = 1
+		os.environ[LD_LIBRARY_PATH] = SEP.join(envlibdirs)
+
+	if restart:
+		script = os.path.join(sys.path[0],"test.py")
+		os.execvp("python",[script] + sys.argv)
+
+	import ascpy
+
+	try:
+		import cunit
+	except:
+		pass
+
 	atexit.register(ascpy.shutdown)
 	#suite = unittest.TestSuite()
 	#suite = unittest.defaultTestLoader.loadTestsFromName('__main__')
