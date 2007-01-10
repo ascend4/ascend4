@@ -22,7 +22,7 @@
 # this is still experimental.
 
 import unittest
-import os, subprocess,sys
+import os, sys
 import math
 import atexit
 
