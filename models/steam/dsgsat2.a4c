@@ -7,16 +7,15 @@ IMPORT "johnpye/solve";
 IMPORT "johnpye/solvernotes";
 
 (*
-	This model uses some ASCEND models from the freesteam library. See
-	http://freesteam.sf.net/ for more information. This model doesn't actually
-	require compiled binaries of freesteam, so you can just download the .a4c
-	files if you wish.
+	An attempt to model direct steam generation in pipe flow, limited to the
+	saturated regime, and with constant-valued friction factor. External heat
+	loss is also simplified.
 *)
 REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat2;
 	n IS_A integer_constant;
-	n :== 5;
+	n :== 10;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;
@@ -96,7 +95,6 @@ METHOD configure_onload;
 	RUN bound_self;
 	RUN values;
 	RUN ode_init;
-	EXTERNAL solve(SELF);
 END configure_onload;	
 METHOD default_self;
 	A := 5 {cm^2};
@@ -149,6 +147,7 @@ END bound_self;
 METHOD configure_steady;
 	RUN ClearAll;
 	RUN specify_steady;
+	RUN bound_self;
 	RUN values_steady;
 END configure_steady;
 METHOD specify_steady;
@@ -180,6 +179,7 @@ METHOD values_steady;
 		dmdot_dt[i] := 0.0 {kg/s/s};
 		node[i].v := 0.2 {L/kg};
 		node[i].rho := 6 {kg/L};
+		node[i].dp_dT := +0.5 {kPa/K};
 	END FOR;
 	(* nothing atm *)
 END values_steady;
