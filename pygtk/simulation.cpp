@@ -613,6 +613,19 @@ Simulation::getFixableVariables(){
 	return vars;
 }
 
+vector<Variable>
+Simulation::getFixedVariables(){
+	if(!sys)throw runtime_error("Simulation system not build yet");
+	vector<Variable> vars;
+	var_variable **vlist = slv_get_solvers_var_list(sys);
+	unsigned long nvars = slv_get_num_solvers_vars(sys);
+	for(int i=0;i<nvars;++i){
+		if(!var_fixed(vlist[i]))continue;
+		vars.push_back(Variable(this,vlist[i]));
+	}
+	return vars;
+}
+
 /**
 	Get the list of variables near their bounds. Helps to indentify why
 	you might be having non-convergence problems.

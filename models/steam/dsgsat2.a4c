@@ -15,7 +15,7 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat2;
 	n IS_A integer_constant;
-	n :== 10;
+	n :== 2;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;
@@ -103,6 +103,7 @@ METHOD default_self;
 		mdot[i] := 0.001 {kg/s};
 		vel[i] := 0.01 {m/s};
 		x[i] := 0.1;
+		node[i].T := (300 {K}) - (20.0 {K})*(1.0 / n * i);
 	END FOR;
 END default_self;
 METHOD specify;
@@ -184,21 +185,13 @@ METHOD values_steady;
 	(* nothing atm *)
 END values_steady;
 (*------------------------- the dynamic problem ------------------------------*)
-METHOD fixed_pressures;
+METHOD configure_dynamic;
 	RUN ClearAll;
 	RUN specify;
-	FOR i IN [1..n] DO
-		FREE node[i].T;
-		FIX node[i].p;
-		node[i].p := 5 {bar};
-		FREE node[i].x;
-		FIX dmdot_dt[i];
-(*
-		FIX dmdot_dt[i];
-		FREE node[i].x;
-		dmdot_dt[i] := 0 {kg/s/s};*)
-	END FOR;
-END fixed_pressures;
+	RUN fixed_states;
+	RUN ode_init;
+END configure_dynamic;
+
 METHOD fixed_states;
 	qdot_s := 10 {W/m};
 	FOR i IN [2..n] DO
