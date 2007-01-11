@@ -8,6 +8,7 @@
 %import "ascpy.i"
 
 %{
+#include "config.h"
 #include "integrator.h"
 #include "integratorreporter.h"
 #include "solver.h"
@@ -16,6 +17,11 @@
 #include "solverparameters.h"
 #include "solverreporter.h"
 #include "curve.h"
+
+#ifdef ASC_WITH_MFGRAPH
+# include <fstream>
+# include <mfgraph/mfg_draw_graph.h>
+#endif
 %}
 
 %pythoncode{
@@ -166,19 +172,8 @@ public:
 	}
 }
 
-/* Incidence matrix stuff */
-typedef enum{
-	IM_NULL=0, IM_ACTIVE_FIXED, IM_ACTIVE_FREE, IM_DORMANT_FIXED, IM_DORMANT_FREE
-} IncidencePointType;
-
-class IncidencePoint{
-public:
-	IncidencePoint(const IncidencePoint &);
-
-	int row;
-	int col;
-	IncidencePointType type;
-};
+%template(IncidencePointVector) std::vector<IncidencePoint>;
+%include "incidencematrix.h"
 
 %extend IncidencePoint{
 	%pythoncode{
@@ -187,26 +182,17 @@ public:
 	}
 }
 
-%template(IncidencePointVector) std::vector<IncidencePoint>;
-
-class IncidenceMatrix{
-public:
-	explicit IncidenceMatrix(Simulation &);
-	const std::vector<IncidencePoint> &getIncidenceData();
-	const int &getNumRows() const;
-	const int &getNumCols() const;
-	const Variable getVariable(const int &col);
-	const Relation getRelation(const int &col);
-	const int getBlockRow(const int &row) const;
-	const std::vector<Variable> getBlockVars(const int block);
-	const std::vector<Relation> getBlockRels(const int block);
-	const std::vector<int> getBlockLocation(const int &block) const;
-	const int getNumBlocks();
-};
-
+%extend IncidenceMatrix{
+#ifdef ASC_WITH_MFGRAPH
+	void writeBlockGraph(const char *filen,const int block){
+		mfg::DrawGraph G = self->getBlockGraph(block);
+		std::ofstream f(filen);
+		G.PrintAsDot(f);
+	}
+#endif
+}
 
 /* Variables and relations belong to solvers, so they're here: */
-
 
 %include "variable.h"
 

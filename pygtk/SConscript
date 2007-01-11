@@ -50,6 +50,12 @@ def get_new_swig_flags(env):
 	flags = []
 	if min==1 and maj==3 and pat>=28:
 		flags += ['-O']
+	sep = ":"
+	if platform.system=="Windows": sep=";"
+
+	print "FLAGS=%s" % env.get('MFGRAPH_CPPPATH')
+	if env.get('WITH_MFGRAPH') and env.get('MFGRAPH_CPPPATH'):
+		flags += ['-I%s' % i for i in env.get('MFGRAPH_CPPPATH').split(sep)]
 	return flags
 
 swig_env = python_env.Copy()
