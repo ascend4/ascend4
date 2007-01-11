@@ -27,8 +27,12 @@ class PythonSolverReporter(ascpy.SolverReporter):
 			_msg = "Solver exceeded iteration limit"
 		elif status.isDiverged():
 			_msg = "Solver diverged"
+		elif status.isInterrupted():
+			_msg = "Solver interrupted"
+		elif status.hasResidualCalculationErrors():
+			_msg = "Solve had residual calculation errors"
 		else:
-			_msg = "Solve failed (unknown reason: check console)"
+			_msg = "Solve failed"
 
 		_msg = _msg + " while solving block %d/%d (%d vars in block)" % (status.getCurrentBlockNum(),
 				status.getNumBlocks(),status.getCurrentBlockSize() )
@@ -160,6 +164,10 @@ class PopupSolverReporter(PythonSolverReporter):
 			self.progressbar.set_text("Exceeded iteration limit")
 		elif status.isDiverged():
 			self.progressbar.set_text("Diverged")
+		elif status.isOverDefined():
+			self.progressbar.set_text("Over-defined")
+		elif status.isUnderDefined():
+			self.progressbar.set_text("Under-defined")
 				
 		self.closebutton.set_sensitive(True)
 		self.stopbutton.set_sensitive(False)

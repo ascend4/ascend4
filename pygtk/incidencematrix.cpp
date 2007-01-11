@@ -4,6 +4,11 @@
 #include <iostream>
 using namespace std;
 
+#ifdef ASC_WITH_MFGRAPH
+# include <mfg_draw_graph.h>
+# include <mfg_graph_drawer.h>
+#endif
+
 #include "variable.h"
 #include "relation.h"
 
@@ -221,5 +226,24 @@ IncidenceMatrix::getNumBlocks(){
 	const mtx_block_t *bb = slv_get_solvers_blocks(sim.getSystem());
 	return bb->nblocks;
 }
-	
+
+#if ASC_WITH_MFGRAPH
+void
+IncidenceMatrix::writeBlockGraph(ostream &os, const int &block){
+    using namespace mfg;
+
+    DrawGraph g;
+    Node* a = g.CreateNode();
+    Node* x = g.CreateNode();
+    Edge* ax = g.CreateEdge(a, x);
+    ax->Attribs()["color"] = "red";
+    Subgraph* s = g.CreateSubgraph();
+    Node* b = g.CreateNode(s);
+    b->Attribs()["style"] = "filled";
+    b->Attribs()["fillcolor"] = "green";
+    Edge* ab = g.CreateEdge(a, b);
+
+    g.PrintAsDot(os);
+}
+#endif
 

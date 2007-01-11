@@ -4156,7 +4156,8 @@ static int slv3_solve(slv_system_t server, SlvClientToken asys){
   sys = SLV3(asys);
   if (server == NULL || sys==NULL) return 1;
   if (check_system(sys)) return 1;
-  while( sys->s.ready_to_solve ) err = err | slv3_iterate(server,sys);
+  while(sys->s.ready_to_solve) err = err | slv3_iterate(server,sys);
+  if(err)ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solver error %d",err);
   return err;
 }
 

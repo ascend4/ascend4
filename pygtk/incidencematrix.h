@@ -61,6 +61,9 @@ public:
 	const std::vector<Relation> getBlockRels(const int &block);
 	const std::vector<int> getBlockLocation(const int &block) const;
 	const int getNumBlocks();
+#ifdef ASC_WITH_MFGRAPH
+	void writeGraph(std::ostream &,const int &block) const;
+#endif;
 };
 
 #endif // ASCXX_INCIDENCEMATRIX_H

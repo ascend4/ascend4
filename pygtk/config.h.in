@@ -11,6 +11,10 @@
 # define ASCXX_USE_PYTHON
 #endif
 
+#ifndef ASC_WITH_MFGRAPH
+/* #define ASC_WITH_MFGRAPH @ASC_WITH_MFGRAPH@ */
+#endif
+
 #define ASC_BUILDING_INTERFACE
 
 #endif
