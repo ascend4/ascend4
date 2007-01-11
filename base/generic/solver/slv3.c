@@ -29,6 +29,7 @@
 
 #include <math.h>
 #include <stdarg.h>
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
@@ -1316,10 +1317,12 @@ static void calc_B( slv3_system_t sys){
 /**
 	Obtain the equations and variables which
 	are able to be pivoted.
-	return value is the row rank deficiency, which we hope is 0.
+	@return value is the row rank deficiency, which we hope is 0.
 */
 static int calc_pivots(slv3_system_t sys){
   int row_rank_defect=0, oldtiming;
+  FILE *fmtx = NULL;
+
   linsolqr_system_t lsys = sys->J.sys;
   FILE *fp = LIF(sys);
 
@@ -1329,6 +1332,7 @@ static int calc_pivots(slv3_system_t sys){
   g_linsolqr_timing = oldtiming;
 
   if (OPTIMIZING(sys)) {
+	CONSOLE_DEBUG("OPTIMISING");
     /* need things for nullspace move. don't care about
      * dependency coefficiency in any circumstances at present.
      */
@@ -1341,12 +1345,12 @@ static int calc_pivots(slv3_system_t sys){
   sys->J.rank = linsolqr_rank(lsys);
   sys->J.singular = FALSE;
   row_rank_defect = sys->J.reg.row.high - sys->J.reg.row.low+1 - sys->J.rank;
-  if( row_rank_defect > 0 ) {
+  if(row_rank_defect > 0) {
     int32 row,krow;
     mtx_sparse_t *uprows=NULL;
     sys->J.singular = TRUE;
     uprows = linsolqr_unpivoted_rows(lsys);
-    if (uprows !=NULL) {
+    if(uprows !=NULL){
       for( krow=0; krow < uprows->len ; krow++ ) {
         int32 org_row;
         struct rel_relation *rel;
@@ -1355,7 +1359,7 @@ static int calc_pivots(slv3_system_t sys){
         row = mtx_org_to_row(sys->J.mtx,org_row);
         rel = sys->rlist[org_row];
 
-		ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
+		ERROR_REPORTER_START_HERE(ASC_PROG_WARNING);
 		FPRINTF(ASCERR,"Relation '");
         print_rel_name(stderr,sys,rel);
 		FPRINTF(ASCERR,"' is not pivoted.");
@@ -1378,7 +1382,32 @@ static int calc_pivots(slv3_system_t sys){
       sys->residuals.accurate = TRUE;
       sys->update.weights = 0;  /* re-compute weights next iteration. */
     }
+
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Row rank defect = %d (block = %d rows, rank = %d)"
+		,row_rank_defect
+		,sys->J.reg.row.high - sys->J.reg.row.low+1
+		,sys->J.rank
+	);
+
+#ifdef ASC_WITH_MMIO
+#define SLV3_MMIO_FILE "slv3mmio.mtx"
+/* #define SLV3_MMIO_WHOLE */
+	if((fmtx = fopen(SLV3_MMIO_FILE,"w"))){
+#ifdef SLV3_MMIO_WHOLE
+		mtx_write_region_mmio(fmtx, sys->J.mtx, mtx_ENTIRE_MATRIX);
+#else
+		mtx_write_region_mmio(fmtx, sys->J.mtx, &(sys->J.reg));
+#endif
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Wrote matrix to '%s' (EXPERIMENTAL!)",SLV3_MMIO_FILE);
+		fclose(fmtx);
+	}else{
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+			"Unable to write matrix to '%s' (couldn't open for writing)",SLV3_MMIO_FILE
+		);
+	}
+#endif
   }
+
   if( sys->J.rank < sys->J.reg.col.high-sys->J.reg.col.low+1 ) {
     int32 col,kcol;
     mtx_sparse_t *upcols=NULL;

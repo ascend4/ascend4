@@ -36,6 +36,10 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/mem.h>
 #include "mtx.h"
+#ifdef ASC_WITH_MMIO
+# include <mmio.h>
+#endif
+
 /* grab our private parts */
 #define __MTX_C_SEEN__
 #include "mtx_use_only.h"
@@ -3250,6 +3254,76 @@ void mtx_write_region_matlab(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region)
     }
   }
 }
+
+#ifdef ASC_WITH_MMIO
+int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
+    MM_typecode matcode;                        
+    int nrows, ncols, nnz, *perm;
+	struct element_t Rewind, *elt;
+	mtx_coord_t nz;
+
+	if(!mtx_check_matrix(mtx))return 1;
+
+    mm_initialize_typecode(&matcode);
+    mm_set_matrix(&matcode);
+    mm_set_coordinate(&matcode);
+    mm_set_real(&matcode);
+
+    mm_write_banner(fp, matcode); 
+
+	if(region == mtx_ENTIRE_MATRIX)nrows = mtx->order-1;
+	else nrows = region->row.high - region->row.low + 1;
+
+	if(region == mtx_ENTIRE_MATRIX)ncols = mtx->order-1;
+	else ncols = region->col.high - region->col.low + 1;
+
+	nnz = mtx_nonzeros_in_region(mtx,region);
+
+	fprintf(fp,"%% Matrix Market file format\n");
+	fprintf(fp,"%% see http://math.nist.gov/MatrixMarket/\n");
+	fprintf(fp,"%% RANGE: rows = %d, cols = %d, num_of_non_zeros =%d\n",nrows,ncols,nnz);
+	fprintf(fp,"%% MATRIX: rows = %d, cols = %d\n",mtx->order,mtx->order,nnz);
+
+    mm_write_mtx_crd_size(fp, mtx->order, mtx->order, nnz);
+	
+    /*
+		NOTE: matrix market files use 1-based indices, i.e. first element
+		of a vector has index 1, not 0.
+	*/
+
+	fprintf(fp,"%% sparse value data:\n");
+	fprintf(fp,"%% row#, col#, value\n");
+
+	perm = mtx->perm.col.org_to_cur;
+	if(region == mtx_ENTIRE_MATRIX){
+		fprintf(fp,"%% whole matrix:\n");
+		for( nz.row = 0; nz.row < mtx->order; nz.row++ ) {
+			Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[nz.row]];
+			elt = &Rewind;
+			for( ; NULL != (elt = mtx_next_col(elt,mtx_ALL_COLS,perm)) ; ) {
+				fprintf(fp,"%d %d %.20g\n",nz.row,perm[elt->col],elt->value);
+			}
+		}
+	} else {
+		fprintf(fp,"%% matrix range:\n");
+		fprintf(fp,"%% row low = %d, row high = %d\n",region->row.low,region->row.high);
+		fprintf(fp,"%% col low = %d, col high = %d\n",region->col.low,region->col.high);
+		for( nz.row = region->row.low; nz.row <= region->row.high; nz.row++ ) {
+			Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[nz.row]];
+			elt = &Rewind;
+			for( ; NULL != (elt = mtx_next_col(elt,&(region->col),perm)) ; ) {
+				fprintf(fp,"%d %d %.20g\n",nz.row,perm[elt->col],elt->value);
+			}
+		}
+	}
+
+	fflush(fp);
+	CONSOLE_DEBUG("Wrote matrix range (%d x %d) to file",nrows,ncols);
+
+	return 0;
+}
+#endif
+
 
 void mtx_write_region_plot(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region)
 {

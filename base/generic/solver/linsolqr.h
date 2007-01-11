@@ -576,20 +576,21 @@ ASC_DLLSPEC int linsolqr_reorder(linsolqr_system_t sys,
  *  before every factorization. This is generally not cost effective.
  *  If region given is mtx_ENTIRE_MATRIX, a search will be done to find
  *  an appropriate bounding region in the coefficient mtx. This is
- *  not a particularly cheap search.<br><br>
+ *  not a particularly cheap search.
  *
  *  This function is analogous to slv_presolve. It
  *  takes care of any structural analysis necessary
  *  to the linear solution. The reorder call should be done (once) at
  *  the beginning of any series of linear solutions being performed on
- *  on structurally identical matrices.<br><br>
+ *  on structurally identical matrices.
  *
  *  The reordering done must be appropriate to the factorization class.
  *  You must reorder before doing a factorization or solution as reorder
  *  sets up the appropriate internal settings. Even were the internals
  *  method independent, the reordering is critical to the performance of
- *  these methods.<br><br>
- *  Return 0 if ok, 1 if not.
+ *  these methods.
+*
+ *  @return 0 if ok, 1 if not.
  *  <pre>
  *  Brief notes on the reorderings available.
  *     SPK1:     The region you give becomes the region for the problem,
@@ -610,11 +611,11 @@ ASC_DLLSPEC int linsolqr_factor(linsolqr_system_t sys,
  *  order to perform any of the operations below.  The numerical rank and
  *  the smallest pivot encountered during pivoting are computed in the
  *  process. Factorization method used is that given if it is compatible
- *  with the class set when the prep was done, otherwise the call fails.<br><br>
+ *  with the class set when the prep was done, otherwise the call fails.
  *
  *  If you are handed a linsolqr system and want to refactor it using the
  *  usual method, but don't know what that method is, call like:
- *  status = linsolqr_factor(sys,linsolqr_fmethod(sys));<br><br>
+ *  status = linsolqr_factor(sys,linsolqr_fmethod(sys));
  *
  *  Return 0 if ok, 1 if not.
  */
@@ -629,7 +630,7 @@ extern int linsolqr_get_pivot_sets(linsolqr_system_t sys,
  *  before calling this function.  They must also be previously NULLed.
  *  The system must be previously factored.
  *  The sets input should be the result of set_create(neqn),set_create(nvar).
- *  There is no association of rows with columns here.<br><br>
+ *  There is no association of rows with columns here.
  *
  *  @return Status is 0 if not factored, 1 if factored. If 0, sets will not be
  *  changed.
