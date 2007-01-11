@@ -710,7 +710,7 @@ if __name__=='__main__':
 	restart = 0
 
 	if platform.system()=="Windows":
-		LD_LIBRARY_PATTH="PATH"
+		LD_LIBRARY_PATH="PATH"
 		SEP = ";"
 	else:
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
