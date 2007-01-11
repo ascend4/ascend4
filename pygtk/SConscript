@@ -81,7 +81,11 @@ if not env.get('MSVS'):
 
 if env.get('WITH_DMALLOC'):
 	swig_env.Append(LIBS = ['dmalloc'])
-	swig_env.Append(LIBPATH = [env.get('DMALLOC_LIBPATH')])
+	swig_env.AppendUnique(LIBPATH = [env.get('DMALLOC_LIBPATH')])
+
+if env.get('WITH_MFGRAPH'):
+	swig_env.Append(LIBS = ['mfgraph'])
+	swig_env.AppendUnique(LIBPATH = [env.get('MFGRAPH_LIBPATH')])
 
 swiglib = swig_env.SharedLibrary("ascpy",objs + swigobjs
 	, SHLIBPREFIX = '_'
