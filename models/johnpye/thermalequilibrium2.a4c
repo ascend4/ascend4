@@ -2,9 +2,9 @@ REQUIRE "ivpsystem.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
 IMPORT "freesteam";
-IMPORT "johnpye/extpy/extpy";
+(* IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/solvernotes";
-IMPORT "johnpye/solve";
+IMPORT "johnpye/solve"; *)
 
 MODEL simple_state;
 	p IS_A pressure;
@@ -85,8 +85,8 @@ END ode_init;
 METHOD on_load;
 	RUN reset;
 	RUN values;
-	EXTERNAL solvernotes(SELF);
-	EXTERNAL solve(SELF);
+(*	EXTERNAL solvernotes(SELF);
+	EXTERNAL solve(SELF); *)
 	RUN ode_init;
 END on_load;
 
