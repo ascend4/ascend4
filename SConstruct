@@ -1596,7 +1596,7 @@ if with_dmalloc:
 if with_mfgraph:
 	if not conf.CheckMFGraph():
 		without_mfgraph_reason = 'mfgraph not found'
-		with_mfgrapg = False
+		with_mfgraph = False
 
 # IDA
 
