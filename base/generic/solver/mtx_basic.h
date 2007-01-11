@@ -1333,66 +1333,71 @@ extern void mtx_write_region_matlab(FILE *file,
                                     mtx_matrix_t mtx, 
                                     mtx_region_t *region);
 /**<
- ***  Outputs values of the nonzero elements in the
- ***  given region of the mtx to the file in matlab/harwell sparse format.
- ***  The "a=[\n" and trailing "];\n" are not supplied, since the caller
- ***  knows better what they should look like.
- ***  Row/column coordinates printed are the cur coordinates.
- **/
+	Outputs values of the nonzero elements in the
+	given region of the mtx to the file in matlab/harwell sparse format.
+	The "a=[\n" and trailing "];\n" are not supplied, since the caller
+	knows better what they should look like.
+	Row/column coordinates printed are the cur coordinates.
+*/
+
+extern int mtx_write_region_mmio(FILE *file
+	,mtx_matrix_t mtx, mtx_region_t *region);
+/**<
+	Outputs values of the nonzero elements in the
+	given region of the mtx to the file in Matrix Market sparse format
+	Row/column coordinates printed are the 'cur' coordinates.
+
+	@param region Set to mtx_ENTIRE_MATRIX for the entire matrix to be output
+	@param file Could be stderr, stdout, or a file pointer that you have opened
+	@return 0 on success
+	@see ASC_WITH_MMIO
+*/
+
 
 ASC_DLLSPEC void mtx_write_region_plot(FILE *file, 
-                                  mtx_matrix_t mtx, 
-                                  mtx_region_t *region);
+		mtx_matrix_t mtx, mtx_region_t *region);
 /**<
- ***  <!--  mtx_write_region_plot(file,mtx,region)                     -->
- ***  Outputs the coordinates of elements to file with format suitable
- ***  for xgraph consumption from the given region of the mtx.
- ***  A suitable xgraph invocation would be "xgraph -nl -m filename".
- ***  Doesn't care about master/slave status.
- **/
+	Outputs the coordinates of elements to file with format suitable
+	for xgraph consumption from the given region of the mtx.
+	A suitable xgraph invocation would be "xgraph -nl -m filename".
+	Doesn't care about master/slave status.
+*/
 
 ASC_DLLSPEC void mtx_write_region_csr(FILE *file,
-                                 mtx_matrix_t mtx,
-                                 mtx_region_t *region, 
-                                 int offset);
+		mtx_matrix_t mtx, mtx_region_t *region, int offset);
 /**<
- ***  Writes the given region of the matrix to the named file.
- ***  Will write the entire matrix if the region is mtx_ENTIRE_MATRIX.
- ***  This function writes out the matrix in compressed row format.
- ***  mtx_write_region_smms() writes out the matrix in a form digestible by
- ***  Alvarado's Sparse Matrix Manipulation System.
- ***  There may be a _ccs version (column based) one day.
- ***  offset controls whether fortran (1) or c style indexing is done.
- ***  Doesn't care about master/slave status.
- ***
- ***  @see http://citeseer.ist.psu.edu/366279.html
- **/
-ASC_DLLSPEC void mtx_write_region_smms(FILE *file,
-                                  mtx_matrix_t mtx,
-                                  mtx_region_t *region,
-                                  int offset);
-/**<
- ***  Writes the given region of the matrix to the named file.
- ***  Will write the entire matrix if the region is mtx_ENTIRE_MATRIX.
- ***  The _smms version writes out the matrix in a form digestible by
- ***  Alvarado's Sparse Matrix Manipulation System.
- ***  mtx_write_region_csr() writes out the matrix in compressed row format.
- ***  There may be a _ccs version (column based) one day.
- ***  offset controls whether fortran (1) or c style indexing is done.
- ***  Doesn't care about master/slave status.
- **/
-extern mtx_matrix_t mtx_read_smms(FILE *file,
-                                  mtx_matrix_t mtx,
-                                  int transpose);
+	This function writes out the matrix in compressed row format.
+	There may be a _ccs version (column based) one day.
+	Doesn't care about master/slave status.
+*/
 
+ASC_DLLSPEC void mtx_write_region_smms(FILE *file,
+		mtx_matrix_t mtx, mtx_region_t *region,	int offset);
 /**<
- ***  Reads a matrix in smms format. If a NULL matrix
- ***  is sent in, it will create and return it. If a non NULL matrix
- ***  is given, the order will be increased if necessary. The contents
- ***  of the old mtx, will be blown away. The transpose flag dictates
- ***  whether the transpose should be read in.
- ***  Doesn't care about master/slave status.
- **/
+	The _smms version writes out the matrix in a form digestible by
+	Alvarado's Sparse Matrix Manipulation System.
+	Doesn't care about master/slave status.
+
+	Writes the given region of the matrix to the named file.
+	Will write the entire matrix if the region is mtx_ENTIRE_MATRIX.
+	offset controls whether fortran (1) or c style indexing is done.
+
+	@NOTE I contacted Alvarado about his code and he's trying to dig it up.
+	At present it's not available anywhere.
+
+	@see http://citeseer.ist.psu.edu/366279.html
+*/
+
+extern mtx_matrix_t mtx_read_smms(FILE *file,
+		mtx_matrix_t mtx, int transpose);
+/**<
+	Reads a matrix in smms format. If a NULL matrix
+	is sent in, it will create and return it. If a non NULL matrix
+	is given, the order will be increased if necessary. The contents
+	of the old mtx, will be blown away. The transpose flag dictates
+	whether the transpose should be read in.
+	Doesn't care about master/slave status.
+*/
 
 extern void mtx_exception_recover(void);
 /**<
@@ -1413,11 +1418,11 @@ extern void mtx_exception_recover(void);
 
 extern void mtx__debug_output(FILE *file, mtx_matrix_t mtx);
 /**<
- ***  Debug outputs all internal information about a matrix to file.
- ***  In the process, integrity checks are performed.
- ***  If file is NULL, output goes to default (which is stderr.)
- ***  Doesn't care about master/slave status.
- **/
+	Debug-outputs all internal information about a matrix to file.
+	In the process, integrity checks are performed.
+	If file is NULL, output goes to default (which is stderr.)
+	Doesn't care about master/slave status.
+*/
 
 /** @} */
 

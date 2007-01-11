@@ -4278,19 +4278,17 @@ int linsolqr_reorder(linsolqr_system_t sys,mtx_region_t *region,
    return reostatus;
 }
 
-
-int linsolqr_factor(linsolqr_system_t sys, enum factor_method fmeth)
 /**
- ***  The region to factor is determined by the factorization method in use.
- ***  It is presumed it will contain no empty rows or columns and that it has
- ***  been previously reordered using linsolqr_reorder.
- ***
- ***  This function distributes to $method_entry. $method_entry is
- ***  responsible for any and all checking and allocation that needs
- ***  to be done and then calling a factorization routine and updating
- ***  status flags. The return from $method_entry is returned.
- **/
-{
+	The region to factor is determined by the factorization method in use.
+	It is presumed it will contain no empty rows or columns and that it has
+	been previously reordered using linsolqr_reorder.
+
+	This function distributes to $method_entry. $method_entry is
+	responsible for any and all checking and allocation that needs
+	to be done and then calling a factorization routine and updating
+	status flags. The return from $method_entry is returned.
+*/
+int linsolqr_factor(linsolqr_system_t sys, enum factor_method fmeth){
   int facstatus=0;
 
   CHECK_SYSTEM(sys);
@@ -4336,17 +4334,16 @@ int linsolqr_factor(linsolqr_system_t sys, enum factor_method fmeth)
   return facstatus;
 }
 
-int linsolqr_get_pivot_sets(linsolqr_system_t sys,
-                            unsigned *org_rowpivots,
-                            unsigned *org_colpivots)
-{
+int linsolqr_get_pivot_sets(linsolqr_system_t sys
+		,unsigned *org_rowpivots
+		,unsigned *org_colpivots
+){
    int32 ndx;
 
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
 #if LINSOL_DEBUG
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_get_pivot_sets\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"system not factored yet");
 #endif
       return 0;
    }
