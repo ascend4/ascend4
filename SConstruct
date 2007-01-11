@@ -488,6 +488,31 @@ opts.Add(BoolOption(
 	,False
 ))
 
+#------ mfgraph --------
+opts.Add(PackageOption(
+	'MFGRAPH_PREFIX'
+	,"Where are your MFGRAPH files?"
+	,default_prefix
+))
+
+opts.Add(PackageOption(
+	'MFGRAPH_CPPPATH'
+	,"Where are your MFGRAPH include files?"
+	,default_cpppath
+))
+
+opts.Add(PackageOption(
+	'MFGRAPH_LIBPATH'
+	,"Where are your MFGRAPH libraries?"
+	,default_libpath
+))
+
+opts.Add(BoolOption(
+	'WITH_MFGRAPH'
+	,"Link to the MFGRAPH library (if available) for debugging of memory usage."
+	,True
+))
+
 #-----------------------
 
 opts.Add(
@@ -611,6 +636,9 @@ without_scrollkeeper_reason = "disabled by options/config.py"
 
 with_dmalloc = env.get('WITH_DMALLOC')
 without_dmalloc_reason = "disabled by options/config.py"
+
+with_mfgraph = env.get('WITH_MFGRAPH')
+without_mfgraph_reason = "disabled by options/config.py"
 
 with_mmio = env.get('WITH_MMIO')
 without_mmio_reason = "disabled by options/config.py"
@@ -949,6 +977,21 @@ int main(void){
 
 def CheckDMalloc(context):
 	return CheckExtLib(context,'dmalloc',dmalloc_test_text)
+
+#----------------
+# mfgraph test
+
+mfgraph_test_text = """
+#include <mfgraph/mfg_draw_graph.h>
+int main(void){
+	using namespace mfg;
+	DrawGraph g;
+	return 0;
+}
+"""
+
+def CheckMFGraph(context):
+	return CheckExtLib(context,'mfgraph',mfgraph_test_text,ext=".cpp")
 
 #----------------
 # MATH test
@@ -1398,6 +1441,7 @@ conf = Configure(env
 		, 'CheckPythonLib' : CheckPythonLib
 		, 'CheckCUnit' : CheckCUnit
 		, 'CheckDMalloc' : CheckDMalloc
+		, 'CheckMFGraph' : CheckMFGraph
 		, 'CheckTcl' : CheckTcl
 		, 'CheckTclVersion' : CheckTclVersion
 		, 'CheckTk' : CheckTk
@@ -1546,6 +1590,13 @@ if with_dmalloc:
 	if not conf.CheckDMalloc():
 		without_dmalloc_reason = 'dmalloc not found'
 		with_dmalloc = False
+
+# DMALLOC
+
+if with_mfgraph:
+	if not conf.CheckMFGraph():
+		without_mfgraph_reason = 'mfgraph not found'
+		with_mfgrapg = False
 
 # IDA
 
@@ -1700,6 +1751,9 @@ if with_ida:
 
 if with_dmalloc:
 	subst_dict["/\\* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ \\*/"]='#define ASC_WITH_DMALLOC '
+
+if with_mfgraph:
+	subst_dict["/\\* #define ASC_WITH_MFGRAPH @ASC_WITH_MFGRAPH@ \\*/"]='#define ASC_WITH_MGRAPH '
 
 if with_conopt:
 	subst_dict["/\\* #define ASC_WITH_CONOPT @ASC_WITH_CONOPT@ \\*/"]='#define ASC_WITH_CONOPT '

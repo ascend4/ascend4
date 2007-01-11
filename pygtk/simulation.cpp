@@ -745,6 +745,8 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		if(status.isInconsistent())throw runtime_error("System is inconsistent");
 		if(status.hasExceededIterationLimit())throw runtime_error("Solver exceeded iteration limit");
 		if(status.hasExceededTimeLimit())throw runtime_error("Solver exceeded time limit");
+		if(status.isOverDefined())throw runtime_error("Solver system is over-defined");
+		if(status.isUnderDefined())throw runtime_error("Solver system is under-defined");
 		throw runtime_error("Error in solver (status.isOK()==FALSE but can't see why)");
 	}
 }

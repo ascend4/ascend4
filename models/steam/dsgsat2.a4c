@@ -16,7 +16,7 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat2;
 	n IS_A integer_constant;
-	n :== 70;
+	n :== 5;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;
@@ -71,28 +71,48 @@ MODEL dsgsat2;
 
 	(* differential equations *)
 	FOR i IN [2..n] CREATE
-		A * drho_dt[i] = - (node[i].mdot - node[i-1].mdot)/dz;
-		1/A*dmdot_dt[i] = -(node[i].p-node[i-1].p)/dz - f/D/2*node[i].rho*node[i].v^2* (node[i].rho*vel[i]^2 - node[i-1].rho*vel[i-1]^2)/dz;
-		A * drhou_dt[i] = qdot_t[i] - (node[i].Hdot - node[i-1].Hdot)/dz;
-		rho_w*A_w*c_w*dTw_dt[i] = qdot_s - qdot_l[i] - qdot_t[i];
-		qdot_l[i] = h_ext*(1{PI}*D_2)*(T_w[i] - T_amb);
-		qdot_t[i] = h_int*(1{PI}*D)  *(T_w[i] - node[i].T);
+		z_massbal[i]: A * drho_dt[i] = - (node[i].mdot - node[i-1].mdot)/dz;
+		z_mombal[i]:  1/A*dmdot_dt[i] = -(node[i].p-node[i-1].p)/dz 
+						- f/D/2*node[i].rho*node[i].v^2*(
+							node[i].rho*vel[i]^2 - node[i-1].rho*vel[i-1]^2
+						)/dz;
+		z_enbal[i]: A * drhou_dt[i] = qdot_t[i] - (node[i].Hdot - node[i-1].Hdot)/dz;
+		z_wall[i]:  rho_w*A_w*c_w*dTw_dt[i] = qdot_s - qdot_l[i] - qdot_t[i];
+		z_loss[i]:  qdot_l[i] = h_ext*(1{PI}*D_2)*(T_w[i] - T_amb);
+		z_trans[i]: qdot_t[i] = h_int*(1{PI}*D)  *(T_w[i] - node[i].T);
 	END FOR;
 
 	t IS_A time;
 METHODS
+METHOD on_load;
+	RUN configure_onload;
+	EXTERNAL solve(SELF);
+	RUN configure_steady;
+END on_load;
+(*----------------------- a reliable on-load configuration -------------------*)
+METHOD configure_onload;
+	RUN default_self;
+	RUN reset;
+	RUN bound_self;
+	RUN values;
+	RUN ode_init;
+	EXTERNAL solve(SELF);
+END configure_onload;	
 METHOD default_self;
 	A := 5 {cm^2};
 	FOR i IN [1..n] DO
 		RUN node[i].default_self;
 		mdot[i] := 0.001 {kg/s};
 		vel[i] := 0.01 {m/s};
+		x[i] := 0.1;
 	END FOR;
 END default_self;
-METHOD specify_easy;
+METHOD specify;
+	(* put the model in a state that we are sure it will solve: no big blocks, etc *)
+	RUN ClearAll;
 	FOR i IN [1..n] DO
 		RUN node[i].specify;
-		FIX dTw_dt[i];   FREE T_w[i];
+		FIX dTw_dt[i]; FREE T_w[i];
 		FREE rhou[i];
 	END FOR;
 	FIX qdot_s;
@@ -100,25 +120,9 @@ METHOD specify_easy;
 	FIX h_int, c_w, rho_w, h_ext;
 	FIX f, mu_f;
 	FIX T_amb;
-END specify_easy;	
-METHOD specify;
-	RUN node[1].specify;
-	FIX qdot_s;
-	FIX D, D_2, L;
-	FIX h_int, c_w, rho_w, h_ext;
-	FIX f, mu_f;
-	FIX T_amb;
-	(* fix derivatives to zero *)
-	FOR i IN [2..n] DO
-		FIX drho_dt[i];  FREE node[i].rho;
-		FIX dmdot_dt[i]; FREE node[i].mdot;
-		FIX drhou_dt[i]; FREE rhou[i];
-		FIX dTw_dt[i];   FREE T_w[i];
-	END FOR;
-	(* FIX node[3].rho; *)
 END specify;
 METHOD values;
-	node[1].T := 400 {K};
+	node[1].T := 424.98 {K};
 	node[1].x := 0.1;
 	qdot_s := 0 {W/m};
 	D := 60 {mm}; D_2 := 70 {mm};
@@ -134,26 +138,67 @@ METHOD values;
 		dTw_dt[i] := 0 {K/s};
 	END FOR;
 	t := 0 {s};
-END values;
+END values;	
 METHOD bound_self;
 	vel[1..n].upper_bound := 100 {m/s};
 	FOR i IN [1..n] DO
 		RUN node[i].bound_self;
 	END FOR;
 END bound_self;
-METHOD on_load;
-	RUN default_self;
+(*---------------- a physically sensible steady-state configuration-----------*)
+METHOD configure_steady;
 	RUN ClearAll;
-	RUN specify_easy;
-	(* EXTERNAL solvernotes(SELF); *)
-	(* EXTERNAL solve(SELF); *)
-	RUN bound_self;	
-	RUN values;
-	(* RUN ode_init;
-    EXTERNAL solvernotes(SELF);
-	EXTERNAL solve(SELF);
-	RUN fixed_states; *)
-END on_load;
+	RUN specify_steady;
+	RUN values_steady;
+END configure_steady;
+METHOD specify_steady;
+	(* change to a proper steady-state problem, with fluid properties FREEd *)
+	FOR i IN [1..n] DO
+		RUN node[i].specify;
+		FIX dTw_dt[i];   FREE T_w[i];
+		FREE rhou[i];
+	END FOR;
+	FIX node[1].p;
+	FREE node[1].T;
+	FIX qdot_s;
+	FIX D, D_2, L;
+	FIX h_int, c_w, rho_w, h_ext;
+	FIX f, mu_f;
+	FIX T_amb;
+	(* fix derivatives to zero *)
+	FOR i IN [2..n] DO
+		(* FIX dmdot_dt[i]; FREE node[i].mdot; *)
+		FREE node[i].x; FIX node[i].p;
+		FIX drho_dt[i];  FREE node[i].p;
+		FIX drhou_dt[i]; FREE node[i].T;
+		FREE mdot[i]; FIX dmdot_dt[i];
+	END FOR;
+END specify_steady;
+METHOD values_steady;
+	node[1].p := 5 {bar};
+	FOR i IN [2..n] DO
+		dmdot_dt[i] := 0.0 {kg/s/s};
+		node[i].v := 0.2 {L/kg};
+		node[i].rho := 6 {kg/L};
+	END FOR;
+	(* nothing atm *)
+END values_steady;
+(*------------------------- the dynamic problem ------------------------------*)
+METHOD fixed_pressures;
+	RUN ClearAll;
+	RUN specify;
+	FOR i IN [1..n] DO
+		FREE node[i].T;
+		FIX node[i].p;
+		node[i].p := 5 {bar};
+		FREE node[i].x;
+		FIX dmdot_dt[i];
+(*
+		FIX dmdot_dt[i];
+		FREE node[i].x;
+		dmdot_dt[i] := 0 {kg/s/s};*)
+	END FOR;
+END fixed_pressures;
 METHOD fixed_states;
 	qdot_s := 10 {W/m};
 	FOR i IN [2..n] DO
@@ -172,7 +217,7 @@ METHOD fixed_derivs;
 	END FOR;
 END fixed_derivs;
 METHOD ode_init;
-	(* get the model into the required state for solving as ODE *)
+	(* add the necessary meta data to allow solving with the integrator *)
 	t.ode_type := -1;
 	t.obs_id := 1;
 
@@ -188,13 +233,6 @@ METHOD ode_init;
 
 		dTw_dt[i].ode_id := 4*i+3;    T_w[i].ode_id := 4*i+3;
 		dTw_dt[i].ode_type := 2;      T_w[i].ode_type := 1;
-
-		(*
-		p[i].obs_id := 4*i;
-		x[i].obs_id := 4*i+1;
-		qdot_t[i].obs_id := 4*i+2;
-		T_w[i].obs_id := 4*i+3;
-		*)
 	END FOR;
 
 	FOR i IN [1..n] DO
