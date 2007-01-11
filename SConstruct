@@ -1597,6 +1597,7 @@ if with_mfgraph:
 	if not conf.CheckMFGraph():
 		without_mfgraph_reason = 'mfgraph not found'
 		with_mfgraph = False
+		env['WITH_MFGRAPH'] = False
 
 # IDA
 
