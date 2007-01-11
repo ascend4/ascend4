@@ -1747,22 +1747,22 @@ for k,v in {
 		subst_dict["/\\* #define "+v+' @'+v+"@ \\*/"]='# define '+v+' 1 '
 
 if with_ida:
-	subst_dict["/\\* #define ASC_WITH_IDA @ASC_WITH_IDA@ \\*/"]='#define ASC_WITH_IDA '
+	subst_dict["/\\* #define ASC_WITH_IDA @ASC_WITH_IDA@ \\*/"]='# define ASC_WITH_IDA '
 
 if with_dmalloc:
-	subst_dict["/\\* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ \\*/"]='#define ASC_WITH_DMALLOC '
+	subst_dict["/\\* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ \\*/"]='# define ASC_WITH_DMALLOC '
 
 if with_mfgraph:
-	subst_dict["/\\* #define ASC_WITH_MFGRAPH @ASC_WITH_MFGRAPH@ \\*/"]='#define ASC_WITH_MGRAPH '
+	subst_dict["/\\* #define ASC_WITH_MFGRAPH @ASC_WITH_MFGRAPH@ \\*/"]='# define ASC_WITH_MFGRAPH '
 
 if with_conopt:
-	subst_dict["/\\* #define ASC_WITH_CONOPT @ASC_WITH_CONOPT@ \\*/"]='#define ASC_WITH_CONOPT '
+	subst_dict["/\\* #define ASC_WITH_CONOPT @ASC_WITH_CONOPT@ \\*/"]='# define ASC_WITH_CONOPT '
 
 if with_lsode:
-	subst_dict["/\\* #define ASC_WITH_LSODE @ASC_WITH_LSODE@ \\*/"]='#define ASC_WITH_LSODE '
+	subst_dict["/\\* #define ASC_WITH_LSODE @ASC_WITH_LSODE@ \\*/"]='# define ASC_WITH_LSODE '
 
 if with_mmio:
-	subst_dict["/\\* #define ASC_WITH_MMIO @ASC_WITH_MMIO@ \\*/"]='#define ASC_WITH_MMIO '
+	subst_dict["/\\* #define ASC_WITH_MMIO @ASC_WITH_MMIO@ \\*/"]='# define ASC_WITH_MMIO '
 
 if with_python:
 	subst_dict['@ASCXX_USE_PYTHON@']="1"
