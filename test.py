@@ -35,7 +35,7 @@ class Ascend(unittest.TestCase):
 
 	def setUp(self):
 		import ascpy
-		self.L = ascpy.Library(modelsdir)
+		self.L = ascpy.Library()
 	
 	def tearDown(self):
 		self.L.clear()
@@ -706,13 +706,8 @@ class NotToBeTested:
 		pass
 
 if __name__=='__main__':
+	# a whole bag of tricks to make sure we get the necessary dirs in our ascend, python and ld path vars
 	restart = 0
-	modelsdir = None
-
-	if not os.environ.get('ASCENDLIBRARY'):
-		modelsdir = os.path.normpath(os.path.join(sys.path[0],"models"))
-		os.environ['ASCENDLIBRARY'] = modelsdir
-		restart = 1
 
 	if platform.system()=="Windows":
 		LD_LIBRARY_PATTH="PATH"
@@ -720,6 +715,17 @@ if __name__=='__main__':
 	else:
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
 		SEP = ":"
+
+	modelsdir = os.path.normpath(os.path.join(sys.path[0],"models"))
+	if not os.environ.get('ASCENDLIBRARY'):
+		os.environ['ASCENDLIBRARY'] = modelsdir
+		restart = 1
+	else:
+		envmodelsdir = [os.path.abspath(i) for i in os.environ['ASCENDLIBRARY'].split(SEP)]
+		if modelsdir not in envmodelsdir:
+			envmodelsdir.insert(0,modelsdir)
+			os.environ['ASCENDLIBRARY']=SEP.join(envmodelsdir)
+			restart = 1		
 
 	libdirs = ["pygtk","."]
 	libdirs = [os.path.normpath(os.path.join(sys.path[0],l)) for l in libdirs]
@@ -745,12 +751,15 @@ if __name__=='__main__':
 		envpypath = os.environ['PYTHONPATH'].split(SEP)
 		if pypath not in envpypath:
 			envpypath.insert(0,pypath)
+			os.environ['PYTHONPATH']=envpypath
 			restart = 1
 
 	if restart:
 		script = os.path.join(sys.path[0],"test.py")
 		print "Restarting"
 		print "LD_LIBRARY_PATH = %s" % os.environ.get(LD_LIBRARY_PATH)
+		print "PYTHONPATH = %s" % os.environ.get('PYTHONPATH')
+		print "ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
 		os.execvp("python",[script] + sys.argv)
 
 	import ascpy
