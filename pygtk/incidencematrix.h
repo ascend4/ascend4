@@ -8,6 +8,11 @@
 #include "simulation.h"
 
 #include "config.h"
+
+#ifdef ASC_WITH_MFGRAPH
+# include <mfgraph/mfg_draw_graph.h>
+#endif
+
 extern "C"{
 #include <solver/incidence.h>
 }
@@ -62,8 +67,8 @@ public:
 	const std::vector<int> getBlockLocation(const int &block) const;
 	const int getNumBlocks();
 #ifdef ASC_WITH_MFGRAPH
-	void writeGraph(std::ostream &,const int &block) const;
-#endif;
+	mfg::DrawGraph getBlockGraph(const int &block) const;
+#endif
 };
 
 #endif // ASCXX_INCIDENCEMATRIX_H

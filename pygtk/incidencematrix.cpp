@@ -4,11 +4,6 @@
 #include <iostream>
 using namespace std;
 
-#ifdef ASC_WITH_MFGRAPH
-# include <mfg_draw_graph.h>
-# include <mfg_graph_drawer.h>
-#endif
-
 #include "variable.h"
 #include "relation.h"
 
@@ -227,23 +222,28 @@ IncidenceMatrix::getNumBlocks(){
 	return bb->nblocks;
 }
 
-#if ASC_WITH_MFGRAPH
-void
-IncidenceMatrix::writeBlockGraph(ostream &os, const int &block){
+#ifdef ASC_WITH_MFGRAPH
+/**
+	Return an MFGRAPH object containing the incidence information for the
+	local block. It is intended that this should be passed back to the python
+	layer as a SWIGed object that Python can decode. It might prove easier
+	just to write a .dot from this C++ layer however.
+*/
+mfg::DrawGraph
+IncidenceMatrix::getBlockGraph(const int &block) const{
     using namespace mfg;
 
     DrawGraph g;
-    Node* a = g.CreateNode();
-    Node* x = g.CreateNode();
-    Edge* ax = g.CreateEdge(a, x);
+    Node *a = g.CreateNode();
+    Node *x = g.CreateNode();
+    Edge *ax = g.CreateEdge(a, x);
     ax->Attribs()["color"] = "red";
-    Subgraph* s = g.CreateSubgraph();
-    Node* b = g.CreateNode(s);
+    Subgraph *s = g.CreateSubgraph();
+    Node *b = g.CreateNode(s);
     b->Attribs()["style"] = "filled";
     b->Attribs()["fillcolor"] = "green";
-    Edge* ab = g.CreateEdge(a, b);
-
-    g.PrintAsDot(os);
+    Edge *ab = g.CreateEdge(a, b);
+	return g;
 }
 #endif
 
