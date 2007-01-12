@@ -88,11 +88,17 @@ METHOD bound_self;
 		RUN node[i].bound_self;
 	END FOR;
 END bound_self;
+METHOD default_self;
+	D := 0.06 {m};
+	D_2 := 0.07 {m};
+	A_w := 0.25{PI}*D_2^2 -0.25{PI}*D^2;
+END default_self; 
 METHOD on_load;
 	RUN configure_steady;
 END on_load;
 (*---------------- a physically sensible steady-state configuration-----------*)
 METHOD configure_steady;
+	RUN default_self;
 	RUN ClearAll;
 	RUN specify_steady;
 	RUN bound_steady;
