@@ -11,7 +11,7 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat2;
 	n IS_A integer_constant;
-	n :== 3;
+	n :== 10;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;
@@ -68,12 +68,12 @@ MODEL dsgsat2;
 
 	(* differential equations *)
 	FOR i IN [2..n] CREATE
-		z_massbal[i]: A * drho_dt[i] = - (node[i].mdot - node[i-1].mdot)/dz;
-		z_mombal[i]:  1/A*dmdot_dt[i] = -(node[i].p-node[i-1].p)/dz 
+		z_massbal[i]: A * drho_dt[i] * dz = - (node[i].mdot - node[i-1].mdot);
+		z_mombal[i]:  dz/A*dmdot_dt[i] = -(node[i].p-node[i-1].p) 
 						- f/D/2*node[i].rho*node[i].v^2*(
 							node[i].rho*vel[i]^2 - node[i-1].rho*vel[i-1]^2
-						)/dz;
-		z_enbal[i]: A * drhou_dt[i] = qdot_t[i] - (node[i].Hdot - node[i-1].Hdot)/dz;
+						);
+		z_enbal[i]: dz * (A * drhou_dt[i] - qdot_t[i]) = - (node[i].Hdot - node[i-1].Hdot);
 		z_wall[i]:  rho_w*A_w*c_w*dTw_dt[i] = qdot_s - qdot_l[i] - qdot_t[i];
 		z_loss[i]:  qdot_l[i] = h_ext*(1{PI}*D_2)*(T_w[i] - T_amb);
 		z_trans[i]: qdot_t[i] = h_int*(1{PI}*D)  *(T_w[i] - node[i].T);
@@ -81,60 +81,6 @@ MODEL dsgsat2;
 
 	t IS_A time;
 METHODS
-METHOD on_load;
-	RUN configure_steady;
-END on_load;
-(*----------- a reliable on-load configuration that we can solve--------------*)
-(* question: is there any point? *)
-METHOD configure_reliable;
-	RUN default_self;
-	RUN reset;
-	RUN bound_self;
-	RUN values;
-	RUN ode_init;
-END configure_reliable;	
-METHOD default_self;
-	A := 5 {cm^2};
-	FOR i IN [1..n] DO
-		RUN node[i].default_self;
-		mdot[i] := 0.05 {kg/s};
-		vel[i] := 0.01 {m/s};
-		x[i] := 0.1;
-		node[i].T := (300 {K}) (* - (20.0 {K})*(1.0 / n * i) *); 
-	END FOR;
-END default_self;
-METHOD specify;
-	(* put the model in a state that we are sure it will solve: no big blocks, etc *)
-	RUN ClearAll;
-	FOR i IN [1..n] DO
-		RUN node[i].specify;
-		FIX dTw_dt[i]; FREE T_w[i];
-		FREE rhou[i];
-	END FOR;
-	FIX qdot_s;
-	FIX D, D_2, L;
-	FIX h_int, c_w, rho_w, h_ext;
-	FIX f, mu_f;
-	FIX T_amb;
-END specify;
-METHOD values;
-	node[1].T := 424.98 {K};
-	node[1].x := 0.001;
-	qdot_s := 1000 {W/m^2} * D_2 * 1;
-	D := 60 {mm}; D_2 := 70 {mm};
-	L := 100 {m};
-	A_w := 1{PI}*D_2^2;
-	h_int := 10 {W/m^2/K}; c_w := 0.47 {J/g/K}; rho_w := 7.8 {g/cm^3}; h_ext := 10 {W/m^2/K};
-	f := 0.005; mu_f := 4.5e-5 {Pa*s};
-	T_amb := 300 {K};
-	FOR i IN [2..n] DO
-		drho_dt[i] := 0 {kg/m^3/s};
-		dmdot_dt[i] := 0 {kg/s/s};
-		drhou_dt[i] := 0 {kJ/m^3/s};
-		dTw_dt[i] := 0 {K/s};
-	END FOR;
-	t := 0 {s};
-END values;	
 METHOD bound_self;
 	vel[1..n].upper_bound := 100 {m/s};
 	qdot_l[2..n].lower_bound := 0 {W/m};
@@ -142,6 +88,9 @@ METHOD bound_self;
 		RUN node[i].bound_self;
 	END FOR;
 END bound_self;
+METHOD on_load;
+	RUN configure_steady;
+END on_load;
 (*---------------- a physically sensible steady-state configuration-----------*)
 METHOD configure_steady;
 	RUN ClearAll;
@@ -177,7 +126,13 @@ METHOD specify_steady;
 	END FOR;
 END specify_steady;
 METHOD values_steady;
+	L := 50 {m};
+	h_int := 5 {W/m^2/K};
+	h_ext := 10 {W/m^2/K};
+	node[1].mdot := 0.3 {kg/s};
 	node[1].p := 5 {bar};
+	node[1].x := 0.2;
+	qdot_s := 1000 {W/m^2} * D_2 * 10;
 	FOR i IN [2..n] DO
 		dmdot_dt[i] := 0.0 {kg/s/s};
 		drhou_dt[i] := 0 {kJ/m^3/s};
@@ -189,14 +144,7 @@ METHOD values_steady;
 END values_steady;
 (*------------------------- the dynamic problem ------------------------------*)
 METHOD configure_dynamic;
-	RUN ClearAll;
-	RUN specify;
-	RUN fixed_states;
 	RUN ode_init;
-END configure_dynamic;
-
-METHOD fixed_states;
-	qdot_s := 10 {W/m};
 	FOR i IN [2..n] DO
 		FREE drho_dt[i];  FIX node[i].rho;
 		FREE dmdot_dt[i]; FIX node[i].mdot;
@@ -205,15 +153,9 @@ METHOD fixed_states;
 		FREE node[i].x;
 		FREE node[i].T;
 	END FOR;
-END fixed_states;
-METHOD fixed_derivs;
-	FOR i IN [2..n] DO
-		FIX drho_dt[i];  FREE node[i].rho;
-		FIX dmdot_dt[i]; FREE node[i].mdot;
-		FIX drhou_dt[i]; FREE rhou[i];
-		FIX dTw_dt[i];   FREE T_w[i];
-	END FOR;
-END fixed_derivs;
+	t := 0 {s};
+END configure_dynamic;
+
 METHOD ode_init;
 	(* add the necessary meta data to allow solving with the integrator *)
 	t.ode_type := -1;
