@@ -525,6 +525,7 @@ if with_freesteam and have_freesteam:
 			self.assertAlmostEqual(float(M.t),3000);
 			print "Note that the above values have not been verified analytically"
 
+
 #-------------------------------------------------------------------------------
 # Testing of IDA models using DENSE linear solver
 

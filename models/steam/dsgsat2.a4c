@@ -2,10 +2,6 @@ REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
-IMPORT "johnpye/extpy/extpy";
-IMPORT "johnpye/solve";
-IMPORT "johnpye/solvernotes";
-
 (*
 	An attempt to model direct steam generation in pipe flow, limited to the
 	saturated regime, and with constant-valued friction factor. External heat
@@ -15,7 +11,7 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat2;
 	n IS_A integer_constant;
-	n :== 2;
+	n :== 3;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;
@@ -42,6 +38,7 @@ MODEL dsgsat2;
 	(* flow properties *)
 	vel[1..n] IS_A speed;
 	T_w[1..n] IS_A temperature;
+	T[1..n] IS_A temperature;
 
 	(* constants, for the moment: *)
 	f IS_A positive_factor;
@@ -66,6 +63,7 @@ MODEL dsgsat2;
 		x[i], node[i].x ARE_THE_SAME;
 		mdot[i], node[i].mdot ARE_THE_SAME;
 		p[i], node[i].p ARE_THE_SAME;
+		T[i], node[i].T ARE_THE_SAME;
 	END FOR;
 
 	(* differential equations *)
@@ -84,26 +82,25 @@ MODEL dsgsat2;
 	t IS_A time;
 METHODS
 METHOD on_load;
-	RUN configure_onload;
-	EXTERNAL solve(SELF);
 	RUN configure_steady;
 END on_load;
-(*----------------------- a reliable on-load configuration -------------------*)
-METHOD configure_onload;
+(*----------- a reliable on-load configuration that we can solve--------------*)
+(* question: is there any point? *)
+METHOD configure_reliable;
 	RUN default_self;
 	RUN reset;
 	RUN bound_self;
 	RUN values;
 	RUN ode_init;
-END configure_onload;	
+END configure_reliable;	
 METHOD default_self;
 	A := 5 {cm^2};
 	FOR i IN [1..n] DO
 		RUN node[i].default_self;
-		mdot[i] := 0.001 {kg/s};
+		mdot[i] := 0.05 {kg/s};
 		vel[i] := 0.01 {m/s};
 		x[i] := 0.1;
-		node[i].T := (300 {K}) - (20.0 {K})*(1.0 / n * i);
+		node[i].T := (300 {K}) (* - (20.0 {K})*(1.0 / n * i) *); 
 	END FOR;
 END default_self;
 METHOD specify;
@@ -122,8 +119,8 @@ METHOD specify;
 END specify;
 METHOD values;
 	node[1].T := 424.98 {K};
-	node[1].x := 0.1;
-	qdot_s := 0 {W/m};
+	node[1].x := 0.001;
+	qdot_s := 1000 {W/m^2} * D_2 * 1;
 	D := 60 {mm}; D_2 := 70 {mm};
 	L := 100 {m};
 	A_w := 1{PI}*D_2^2;
@@ -140,6 +137,7 @@ METHOD values;
 END values;	
 METHOD bound_self;
 	vel[1..n].upper_bound := 100 {m/s};
+	qdot_l[2..n].lower_bound := 0 {W/m};
 	FOR i IN [1..n] DO
 		RUN node[i].bound_self;
 	END FOR;
@@ -148,9 +146,13 @@ END bound_self;
 METHOD configure_steady;
 	RUN ClearAll;
 	RUN specify_steady;
-	RUN bound_self;
+	RUN bound_steady;
 	RUN values_steady;
 END configure_steady;
+METHOD bound_steady;
+	RUN bound_self;
+	T_w[1..n].upper_bound := 1000 {K};
+END bound_steady;
 METHOD specify_steady;
 	(* change to a proper steady-state problem, with fluid properties FREEd *)
 	FOR i IN [1..n] DO
@@ -178,6 +180,7 @@ METHOD values_steady;
 	node[1].p := 5 {bar};
 	FOR i IN [2..n] DO
 		dmdot_dt[i] := 0.0 {kg/s/s};
+		drhou_dt[i] := 0 {kJ/m^3/s};
 		node[i].v := 0.2 {L/kg};
 		node[i].rho := 6 {kg/L};
 		node[i].dp_dT := +0.5 {kPa/K};
@@ -199,6 +202,8 @@ METHOD fixed_states;
 		FREE dmdot_dt[i]; FIX node[i].mdot;
 		FREE drhou_dt[i]; FIX rhou[i];
 		FREE dTw_dt[i];   FIX T_w[i];
+		FREE node[i].x;
+		FREE node[i].T;
 	END FOR;
 END fixed_states;
 METHOD fixed_derivs;
@@ -243,12 +248,6 @@ METHOD fix_outlet_quality;
 	FIX x[n];
 	FREE node[1].mdot;
 END fix_outlet_quality;
-
-METHOD reinit;
-	RUN on_load;
-	EXTERNAL solve(SELF);
-	RUN fixed_states;
-END reinit;
 
 END dsgsat2;
 ADD NOTES IN dsgsat2;
