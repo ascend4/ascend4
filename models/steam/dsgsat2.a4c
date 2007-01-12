@@ -26,23 +26,23 @@ MODEL dsgsat2;
 	A, A_w IS_A area;
 	h_int IS_A heat_transfer_coefficient; (* internal *)
 	h_ext IS_A heat_transfer_coefficient; (* external *)
-	A = 1{PI}*D^2/4;
-	A_w = 1{PI}*(D_2^2 - D^2)/4;
+	z_A: A = 1{PI}*D^2/4;
+	z_Aw: A_w = 1{PI}*(D_2^2 - D^2)/4;
 	dz IS_A distance;
 	L IS_A distance;
-	dz = L / n;
+	z_dz: dz = L / n;
 
 	(* fluid properties *)
 	node[1..n] IS_A satsteamstream;
 	
 	(* flow properties *)
 	vel[1..n] IS_A speed;
-	T_w[1..n] IS_A temperature;
+	T_w[2..n] IS_A temperature;
 	T[1..n] IS_A temperature;
 
 	(* constants, for the moment: *)
 	f IS_A positive_factor;
-	mu_f IS_A viscosity;
+	(* mu_f IS_A viscosity; *)
 	T_amb IS_A temperature;
 
 	(* system dynamics *)	
@@ -51,8 +51,8 @@ MODEL dsgsat2;
 	rhou[1..n] IS_A	energy_per_volume;
 
 	FOR i IN [1..n] CREATE
-		vel[i] = node[i].v*node[i].mdot/A;
-		rhou[i] = node[i].rho * node[i].u;
+		z_vel[i]: vel[i] = node[i].v*node[i].mdot/A;
+		z_rhou[i]: rhou[i] = node[i].rho * node[i].u;
 	END FOR;
 
 	(* some aliases just for easier review of the state of the model *)
@@ -100,7 +100,7 @@ METHOD configure_steady;
 END configure_steady;
 METHOD bound_steady;
 	RUN bound_self;
-	T_w[1..n].upper_bound := 1000 {K};
+	T_w[2..n].upper_bound := 1000 {K};
 END bound_steady;
 METHOD specify_steady;
 	(* change to a proper steady-state problem, with fluid properties FREEd *)
@@ -114,7 +114,8 @@ METHOD specify_steady;
 	FIX qdot_s;
 	FIX D, D_2, L;
 	FIX h_int, c_w, rho_w, h_ext;
-	FIX f, mu_f;
+	FIX f;
+	(* FIX mu_f; *)
 	FIX T_amb;
 	(* fix derivatives to zero *)
 	FOR i IN [2..n] DO

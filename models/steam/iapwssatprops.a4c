@@ -109,7 +109,7 @@ MODEL iapwssatprops;
 	d_alpha IS_A real_constant;
 	d_alpha :== -1135.905627715;
 
-	hf_expr: h_f = alpha + T / rho_f * dp_dT;
+	hf_expr: h_f - alpha = T / rho_f * dp_dT;
 	hg_expr: h_g - alpha = T / rho_g * dp_dT;
 
 	d_phi IS_A real_constant;
