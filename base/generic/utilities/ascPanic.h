@@ -17,20 +17,19 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 	This file is part of the SLV solver.
-*/
-
-/** @file
+*//** @file
 	Ascend Panic - fatal error handling.
 
 	Requires
 	#include <stdarg.h>
-	#include "utilities/ascConfig.h"
 */
 
 /* removed changelog -- see ViewCVS for full history */
 
 #ifndef ASC_ASCPANIC_H
 #define ASC_ASCPANIC_H
+
+#include <utilities/ascConfig.h>
 
 #ifndef __GNUC__
 # ifndef __FUNCTION__
