@@ -1,6 +1,6 @@
 /*	ASCEND modelling environment
 	Copyright 1997, Carnegie Mellon University
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006-2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -16,9 +16,19 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//**
-	@file
-	LSODE integrator.
+*//** @file
+	LSODE Integrator
+
+	Here we are solving the system of first order ordinary differential
+	equations, ydot = F(y,t), with y(t_0)=y_0 given.
+
+	In some places 'x' is named instead of 't'. We're trying to migrate to using
+	't' to label the independent variable.
+
+	There is some excellent documentation about the LSODE integrator available
+	in the document "Description and Use of LSODE, the Livermore Solver for 
+	Ordinary Differential Equations, by K Radhakrishnan and A C Hindmarsh.
+	http://www.llnl.gov/CASC/nsde/pubs/u113855.pdf
 
 	(old implementation notes:)
 
@@ -34,16 +44,11 @@
 	a solve.
 
 	@NOTE The above doesn't work since lsode doesn't use the same t internally
-	that we hand it.
-
+	that we hand it. @ENDNOTE
 *//*
-	by Kirk Abbott and Ben Allan
-	Created: 1/94
-	Version: $Revision: 1.29 $
-	Version control file: $RCSfile: Lsode.c,v $
-	Date last modified: $Date: 2000/01/25 02:26:31 $
-	Last modified by: $Author: ballan $
- */
+	original version by Kirk Abbott and Ben Allan, Jan 1994.
+	Last in CVS $Revision: 1.29 $ $Date: 2000/01/25 02:26:31 $ $Author: ballan $
+*/
 
 #ifndef NO_SIGNAL_TRAPS
 #include <signal.h>
@@ -81,6 +86,7 @@ const IntegratorInternals integrator_lsode_internals = {
 	,integrator_lsode_params_default
 	,integrator_analyse_ode /* note, this routine is back in integrator.c */
 	,integrator_lsode_solve
+	,integrator_lsode_write_matrix
 	,integrator_lsode_free
 	,INTEG_LSODE
 	,"LSODE"
@@ -182,12 +188,11 @@ typedef struct IntegratorLsodeDataStruct{
 	long n_eqns;                     /**< dimension of state vector */
 	int *input_indices;              /**< vector of state vars indexes */
 	int *output_indices;             /**< vector of derivative var indexes */
-	struct var_variable **y_vars;    /**< NULL terminated list of states vars */
-	struct var_variable **ydot_vars; /**< NULL terminated list of derivative vars*/
-	struct rel_relation **rlist;     /**< NULL terminated list of relevant rels
+	struct var_variable **y_vars;    /**< NULL-terminated list of states vars */
+	struct var_variable **ydot_vars; /**< NULL-terminated list of derivative vars*/
+	struct rel_relation **rlist;     /**< NULL-terminated list of relevant rels
 	                                    to be differentiated */
-	DenseMatrix dydx_dx;             /**< change in derivatives wrt states
-	                                    I prefer to call this: d(ydot)/dy */
+	DenseMatrix dydot_dy;               /**< change in derivatives wrt states */
 
 	IntegratorLsodeLastCallType lastcall;  /* type of last call; func or grad */
 	IntegratorLsodeStatusCode   status;    /* solve status */
@@ -269,7 +274,7 @@ void integrator_lsode_create(IntegratorSystem *blsys){
 	d->y_vars=NULL;
 	d->ydot_vars=NULL;
 	d->rlist=NULL;
-	d->dydx_dx=(DenseMatrix){NULL,0,0};
+	d->dydot_dy=DENSEMATRIX_EMPTY;
 	blsys->enginedata=(void*)d;
 	integrator_lsode_params_default(blsys);
 
@@ -297,7 +302,7 @@ void integrator_lsode_free(void *enginedata){
 	if(d.rlist)ASC_FREE(d.rlist);
 	d.rlist =  NULL;
 
-	densematrix_destroy(d.dydx_dx);
+	densematrix_destroy(d.dydot_dy);
 
 	d.n_eqns = 0L;
 }
@@ -620,10 +625,10 @@ int integrator_lsode_derivatives(IntegratorSystem *blsys
   asc_assert(blsys!=NULL);
   enginedata = (IntegratorLsodeData *)blsys->enginedata;
   asc_assert(enginedata!=NULL);
-  asc_assert(DENSEMATRIX_DATA(enginedata->dydx_dx)!=NULL);
+  asc_assert(DENSEMATRIX_DATA(enginedata->dydot_dy)!=NULL);
   asc_assert(enginedata->input_indices!=NULL);
 
-  double **dy_dx = DENSEMATRIX_DATA(enginedata->dydx_dx);
+  double **dydot_dy = DENSEMATRIX_DATA(enginedata->dydot_dy);
   int *inputs_ndx_list = enginedata->input_indices;
   int *outputs_ndx_list = enginedata->output_indices;
   asc_assert(ninputs == blsys->n_y);
@@ -660,7 +665,7 @@ int integrator_lsode_derivatives(IntegratorSystem *blsys
     FPRINTF(stderr,"Early termination due to failure in LUFactorJacobian\n");
     goto error;
   }
-  result = Compute_dy_dx_smart(blsys->system, scratch_vector, dy_dx,
+  result = Compute_dy_dx_smart(blsys->system, scratch_vector, dydot_dy,
                                inputs_ndx_list, ninputs,
                                outputs_ndx_list, noutputs);
 
@@ -817,12 +822,12 @@ static void LSODE_JEX(int *neq ,double *t, double *y
 	Map data from C based matrix to Fortan matrix.
 	We will send in a column major ordering vector for pd.
   */
-  asc_assert(*neq == DENSEMATRIX_NCOLS(lsodedata->dydx_dx));
-  asc_assert(*nrpd == DENSEMATRIX_NROWS(lsodedata->dydx_dx));
+  asc_assert(*neq == DENSEMATRIX_NCOLS(lsodedata->dydot_dy));
+  asc_assert(*nrpd == DENSEMATRIX_NROWS(lsodedata->dydot_dy));
   for (j=0;j<*neq;j++) { /* loop through columnns */
     for (i=0;i<*nrpd;i++){ /* loop through rows */
-	  /* CONSOLE_DEBUG("JAC[r=%d,c=%d]=%f",i,j,lsodedata.dydx_dx[i][j]); */
-      *pd++ = DENSEMATRIX_ELEM(lsodedata->dydx_dx,i,j);
+	  /* CONSOLE_DEBUG("JAC[r=%d,c=%d]=%f",i,j,lsodedata.dydot_dy[i][j]); */
+      *pd++ = DENSEMATRIX_ELEM(lsodedata->dydot_dy,i,j);
     }
   }
 
@@ -867,7 +872,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
 	d->input_indices = ASC_NEW_ARRAY_CLEAR(int, d->n_eqns);
 	d->output_indices = ASC_NEW_ARRAY_CLEAR(int, d->n_eqns);
-	d->dydx_dx = densematrix_create(d->n_eqns,d->n_eqns);
+	d->dydot_dy = densematrix_create(d->n_eqns,d->n_eqns);
 
 	d->y_vars = ASC_NEW_ARRAY(struct var_variable *,d->n_eqns+1);
 	d->ydot_vars = ASC_NEW_ARRAY(struct var_variable *, d->n_eqns+1);
@@ -1207,3 +1212,24 @@ void XASCWV( char *msg, /* pointer to start of message */
 	}
 	error_reporter_end_flush();
 }
+
+int integrator_lsode_write_matrix(const IntegratorSystem *blsys, FILE *fp){
+	IntegratorLsodeData *enginedata;
+	asc_assert(blsys!=NULL);
+	asc_assert(blsys->engine==INTEG_LSODE);
+	asc_assert(blsys->enginedata);
+	enginedata = (IntegratorLsodeData *)blsys->enginedata;
+
+	if(!DENSEMATRIX_DATA(enginedata->dydot_dy)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"dydot_dy contains no data");
+	}
+
+	densematrix_write_mmio(enginedata->dydot_dy,fp);
+	CONSOLE_DEBUG("Returning after matrix output");
+	return 0;
+}
+	
+
+
+
+

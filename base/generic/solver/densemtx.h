@@ -1,6 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright 1997, Carnegie Mellon University
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -56,10 +55,11 @@ typedef struct DenseMatrixStruct{
 	unsigned ncols;
 } DenseMatrix;
 
-#define DENSEMATRIX_NROWS(M) ((M).nrows)
-#define DENSEMATRIX_NCOLS(M) ((M).ncols)
+#define DENSEMATRIX_NROWS(M)    ((M).nrows)
+#define DENSEMATRIX_NCOLS(M)    ((M).ncols)
 #define DENSEMATRIX_ELEM(M,I,J) ((M).data[I][I])
-#define DENSEMATRIX_DATA(M) ((M).data)
+#define DENSEMATRIX_DATA(M)     ((M).data)
+#define DENSEMATRIX_EMPTY       (DenseMatrix){NULL,0,0}
 
 DenseMatrix densematrix_create_empty();
 DenseMatrix densematrix_create(unsigned nrows, unsigned ncols);

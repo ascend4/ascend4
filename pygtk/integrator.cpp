@@ -137,6 +137,13 @@ Integrator::solve(){
 }
 
 void
+Integrator::writeMatrix(FILE *fp) const{
+	if(integrator_write_matrix(this->blsys, fp)){
+		throw runtime_error("Failed to write matrix");
+	}
+}
+
+void
 Integrator::setEngine(IntegratorEngine engine){
 	int res = integrator_set_engine(this->blsys, engine);
 	if(!res)return;
