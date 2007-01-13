@@ -187,9 +187,9 @@ void integrator_free(IntegratorSystem *sys){
 	in the instance hierarchy.
 */
 static void IntegInitSymbols(void){
-  STATEFLAG = AddSymbol("ode_type");
-  STATEINDEX = AddSymbol("ode_id");
-  OBSINDEX = AddSymbol("obs_id");
+	STATEFLAG = AddSymbol("ode_type");
+	STATEINDEX = AddSymbol("ode_id");
+	OBSINDEX = AddSymbol("obs_id");
 }
 
 /*------------------------------------------------------------------------------
@@ -1518,8 +1518,8 @@ double *integrator_get_observations(IntegratorSystem *sys, double *obsi) {
 }
 
 struct var_variable *integrator_get_observed_var(IntegratorSystem *sys, const long i){
-	assert(i>=0);
-	assert(i<sys->n_obs);
+	asc_assert(i>=0);
+	asc_assert(i<sys->n_obs);
 	return sys->obs[i];
 }
 
@@ -1531,6 +1531,18 @@ struct var_variable *integrator_get_independent_var(IntegratorSystem *sys){
 	return sys->x;
 }
 
+int integrator_write_matrix(const IntegratorSystem *sys, FILE *fp){
+	asc_assert(sys);
+	asc_assert(sys->enginedata);
+	asc_assert(sys->internals);
+	asc_assert(sys->internals->name);
+	if(sys->internals->writematrixfn){
+		return (sys->internals->writematrixfn)(sys,fp);
+	}else{
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Integrator '%s' defines no write_matrix function.",sys->internals->name);
+		return -1;
+	}
+}
 
 /*----------------------------------------------------
 	Build an analytic jacobian for solving the state system
@@ -1558,7 +1570,7 @@ struct var_variable *integrator_get_independent_var(IntegratorSystem *sys){
 static void Integ_SetObsId(struct var_variable *v, long index){
   struct Instance *c, *i;
   i = var_instance(v);
-  assert(i!=NULL);
+  asc_assert(i!=NULL);
   c = ChildByChar(i,OBSINDEX);
   if( c == NULL || InstanceKind(c) != INTEGER_INST || !AtomAssigned(c)) {
     return;
@@ -1597,15 +1609,15 @@ static int Integ_CmpDynVars(struct Integ_var_t *v1, struct Integ_var_t *v2){
 int integrator_set_reporter(IntegratorSystem *sys
 	, IntegratorReporter *reporter
 ){
-	assert(sys!=NULL);
+	asc_assert(sys!=NULL);
 	sys->reporter = reporter;
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"INTEGRATOR REPORTER HOOKS HAVE BEEN SET\n"); */
 	return 1;
 }
 
 int integrator_output_init(IntegratorSystem *sys){
-	assert(sys!=NULL);
-	assert(sys->reporter!=NULL);
+	asc_assert(sys!=NULL);
+	asc_assert(sys->reporter!=NULL);
 	if(sys->reporter->init!=NULL){
 		/* call the specified output function */
 		return (*(sys->reporter->init))(sys);
@@ -1616,7 +1628,7 @@ int integrator_output_init(IntegratorSystem *sys){
 
 int integrator_output_write(IntegratorSystem *sys){
 	static int reported_already=0;
-	assert(sys!=NULL);
+	asc_assert(sys!=NULL);
 	if(sys->reporter->write!=NULL){
 		return (*(sys->reporter->write))(sys);
 	}
@@ -1629,7 +1641,7 @@ int integrator_output_write(IntegratorSystem *sys){
 
 int integrator_output_write_obs(IntegratorSystem *sys){
 	static int reported_already=0;
-	assert(sys!=NULL);
+	asc_assert(sys!=NULL);
 	if(sys->reporter->write_obs!=NULL){
 		return (*(sys->reporter->write_obs))(sys);
 	}
@@ -1641,7 +1653,7 @@ int integrator_output_write_obs(IntegratorSystem *sys){
 }
 
 int integrator_output_close(IntegratorSystem *sys){
-	assert(sys!=NULL);
+	asc_assert(sys!=NULL);
 	if(sys->reporter->close!=NULL){
 		return (*(sys->reporter->close))(sys);
 	}

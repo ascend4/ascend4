@@ -1,6 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright 1997, Carnegie Mellon University
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -86,7 +85,7 @@ void densematrix_write_mmio(DenseMatrix matrix, FILE *fp){
     mm_write_mtx_array_size(fp, matrix.nrows, matrix.ncols);
 
 	for(j=0;j<matrix.nrows;++j){
-		for(i=0;i<matrix.ncols;++j){
+		for(i=0;i<matrix.ncols;++i){
 			fprintf(fp,"%0.20g\n",DENSEMATRIX_ELEM(matrix,i,j));
 		}
 	}

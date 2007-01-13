@@ -75,8 +75,9 @@ public:
 	Variable getIndependentVariable();
 
 	void findIndependentVar(); /**< find the independent variable (must not presume a certain choice of integration engine) */
-	void analyse(); /**< analysis gives you details about what your variables are etc */
+	void analyse();
 	void solve();
+	void writeMatrix(FILE *fp) const;
 
 	double getCurrentTime();
 	long getCurrentStep();

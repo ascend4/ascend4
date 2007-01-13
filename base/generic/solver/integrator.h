@@ -190,6 +190,14 @@ typedef int IntegratorSolveFn(struct IntegratorSystemStruct *blsys
 	integration.
 */
 
+typedef int IntegratorWriteMatrixFn(const struct IntegratorSystemStruct *blsys, FILE *fp);
+/**<
+	Write Matrix. This will output 'the integrator's matrix' to a file.
+	What exactly this matrix is will depend on the Integrator you're using.
+	Hope you find it useful, anyway. Check the implementation details of the
+	specific Integrator.
+*/
+
 typedef void IntegratorFreeFn(void *enginedata);
 /**<
 	Integrators must provide a function like this that frees internal
@@ -201,6 +209,7 @@ typedef struct IntegratorInternalsStruct{
 	IntegratorParamsDefaultFn *paramsdefaultfn;
 	IntegratorAnalyseFn *analysefn;
 	IntegratorSolveFn *solvefn;
+	IntegratorWriteMatrixFn *writematrixfn;
 	IntegratorFreeFn *freefn;
 	IntegratorEngine engine;
 	const char *name;
@@ -290,6 +299,12 @@ ASC_DLLSPEC int integrator_solve(IntegratorSystem *blsys, long i0, long i1);
 	current integration instance.
 
 	@return 0 on success, else error
+*/
+
+ASC_DLLSPEC int integrator_write_matrix(const IntegratorSystem *blsys, FILE *fp);
+/**<
+	Output 'the matrix' for the present integrator to file handle indicated.
+	What this will be depends on which integrator you are using.
 */
 
 ASC_DLLSPEC void integrator_free(IntegratorSystem *blsys);

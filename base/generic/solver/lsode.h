@@ -52,6 +52,7 @@ IntegratorCreateFn integrator_lsode_create;
 IntegratorParamsDefaultFn integrator_lsode_params_default;
 IntegratorSolveFn integrator_lsode_solve;
 IntegratorFreeFn integrator_lsode_free;
+IntegratorWriteMatrixFn integrator_lsode_write_matrix;
 
 const IntegratorInternals integrator_lsode_internals;
 

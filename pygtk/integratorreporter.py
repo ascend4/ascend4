@@ -39,6 +39,17 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			self.getIntegrator().solve()
 		except RuntimeError,e:
 			self.browser.reporter.reportError("Integrator failed: %s" % e)
+			if self.browser.prefs.getBoolPref("Integrator","writeendmatrix",True):
+				_fn = "/tmp/ascintegratormatrix.mtx"
+				self.browser.reporter.reportNote("Writing matrix to file '%s'" % _fn)
+				_fp = file(_fn,"w")
+				try:
+					try: 
+						self.getIntegrator().writeMatrix(_fp)
+					except RuntimeError,e:
+						self.browser.reporter.reportError(str(e))
+				finally:
+					_fp.close()
 		self.window.destroy()
 		return
 
