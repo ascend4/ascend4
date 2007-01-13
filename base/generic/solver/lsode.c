@@ -71,6 +71,7 @@
 #include "slv_client.h"
 #include "slv_stdcalls.h"
 #include <packages/sensitivity.h>
+#include "densemtx.h"
 
 #include "integrator.h"
 #include "lsode.h"
@@ -177,18 +178,7 @@ typedef enum{
 	Enumeration to tell ASCEND if anything failed in a FEX or JEX call.
 */
 
-typedef struct{
-	IntegratorLsodeLastCallType lastcall;  /* type of last call; func or grad */
-	IntegratorLsodeStatusCode   status;    /* solve status */
-	char stop;                             /* stop requested? */
-	int partitioned;                       /* partioned func evals or not */
-} IntegratorLsodeStatus;
-/**<
-	Bits of data that LSODE needs to be able to send/recieve from inside a
-	JEX or FEX call.
-*/
-
-	typedef struct IntegratorLsodeDataStruct{
+typedef struct IntegratorLsodeDataStruct{
 	long n_eqns;                     /**< dimension of state vector */
 	int *input_indices;              /**< vector of state vars indexes */
 	int *output_indices;             /**< vector of derivative var indexes */
@@ -196,7 +186,7 @@ typedef struct{
 	struct var_variable **ydot_vars; /**< NULL terminated list of derivative vars*/
 	struct rel_relation **rlist;     /**< NULL terminated list of relevant rels
 	                                    to be differentiated */
-	double **dydx_dx;                /**< change in derivatives wrt states
+	DenseMatrix dydx_dx;             /**< change in derivatives wrt states
 	                                    I prefer to call this: d(ydot)/dy */
 
 	IntegratorLsodeLastCallType lastcall;  /* type of last call; func or grad */
@@ -248,8 +238,6 @@ typedef void LsodeJacobianFn(int *, double *, double *, int *, int *, double *, 
 */
 
 int integrator_lsode_setup_diffs(IntegratorSystem *blsys);
-static double **lsode_densematrix_create(int nrows, int ncols);
-static void lsode_densematrix_destroy(double **matrix,int nrows);
 
 /**
 	void LSODE(&fex, &neq, y, &x, &xend, &itol, reltol, abtol, &itask,
@@ -281,7 +269,7 @@ void integrator_lsode_create(IntegratorSystem *blsys){
 	d->y_vars=NULL;
 	d->ydot_vars=NULL;
 	d->rlist=NULL;
-	d->dydx_dx=NULL;
+	d->dydx_dx=(DenseMatrix){NULL,0,0};
 	blsys->enginedata=(void*)d;
 	integrator_lsode_params_default(blsys);
 
@@ -309,10 +297,7 @@ void integrator_lsode_free(void *enginedata){
 	if(d.rlist)ASC_FREE(d.rlist);
 	d.rlist =  NULL;
 
-	if(d.dydx_dx!=NULL){
-		lsode_densematrix_destroy(d.dydx_dx, d.n_eqns);
-		d.dydx_dx =  NULL;
-	}
+	densematrix_destroy(d.dydx_dx);
 
 	d.n_eqns = 0L;
 }
@@ -401,34 +386,6 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 	asc_assert(p->num_parms == LSODE_PARAMS_SIZE);
 	return 0;
 }	
-
-/*---------------------------------------------------------
-  Couple of matrix methods...?
-*/
-
-static double **lsode_densematrix_create(int nrows, int ncols){
-  int c;
-  double **result;
-  assert(nrows>0);
-  assert(ncols>0);
-  result = ASC_NEW_ARRAY(double *, nrows);
-  for (c=0;c<nrows;c++) {
-    result[c] = ASC_NEW_ARRAY_CLEAR(double, ncols);
-  }
-  return result;
-}
-
-static void lsode_densematrix_destroy(double **matrix,int nrows){
-  int c;
-  if (matrix) {
-    for (c=0;c<nrows;c++) {
-      if (matrix[c]) {
-        ascfree((char *)matrix[c]);
-      }
-    }
-    ascfree((char *)matrix);
-  }
-}
 
 /*------------------------------------------------------------------------------
   PROBLEM ANALYSIS
@@ -663,10 +620,10 @@ int integrator_lsode_derivatives(IntegratorSystem *blsys
   asc_assert(blsys!=NULL);
   enginedata = (IntegratorLsodeData *)blsys->enginedata;
   asc_assert(enginedata!=NULL);
-  asc_assert(enginedata->dydx_dx!=NULL);
+  asc_assert(DENSEMATRIX_DATA(enginedata->dydx_dx)!=NULL);
   asc_assert(enginedata->input_indices!=NULL);
 
-  double **dy_dx = enginedata->dydx_dx;
+  double **dy_dx = DENSEMATRIX_DATA(enginedata->dydx_dx);
   int *inputs_ndx_list = enginedata->input_indices;
   int *outputs_ndx_list = enginedata->output_indices;
   asc_assert(ninputs == blsys->n_y);
@@ -860,10 +817,12 @@ static void LSODE_JEX(int *neq ,double *t, double *y
 	Map data from C based matrix to Fortan matrix.
 	We will send in a column major ordering vector for pd.
   */
+  asc_assert(*neq == DENSEMATRIX_NCOLS(lsodedata->dydx_dx));
+  asc_assert(*nrpd == DENSEMATRIX_NROWS(lsodedata->dydx_dx));
   for (j=0;j<*neq;j++) { /* loop through columnns */
     for (i=0;i<*nrpd;i++){ /* loop through rows */
 	  /* CONSOLE_DEBUG("JAC[r=%d,c=%d]=%f",i,j,lsodedata.dydx_dx[i][j]); */
-      *pd++ = lsodedata->dydx_dx[i][j];
+      *pd++ = DENSEMATRIX_ELEM(lsodedata->dydx_dx,i,j);
     }
   }
 
@@ -908,7 +867,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
 	d->input_indices = ASC_NEW_ARRAY_CLEAR(int, d->n_eqns);
 	d->output_indices = ASC_NEW_ARRAY_CLEAR(int, d->n_eqns);
-	d->dydx_dx = lsode_densematrix_create(d->n_eqns,d->n_eqns);
+	d->dydx_dx = densematrix_create(d->n_eqns,d->n_eqns);
 
 	d->y_vars = ASC_NEW_ARRAY(struct var_variable *,d->n_eqns+1);
 	d->ydot_vars = ASC_NEW_ARRAY(struct var_variable *, d->n_eqns+1);

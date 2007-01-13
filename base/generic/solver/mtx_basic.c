@@ -3294,6 +3294,10 @@ int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
 	fprintf(fp,"%% sparse value data:\n");
 	fprintf(fp,"%% row#, col#, value\n");
 
+	if(!nnz){
+		fprintf(fp,"%%\n%%\n%% note: as exported, there were no non-zeros in the matrix\n%%\n%%\n");
+	}
+
 	perm = mtx->perm.col.org_to_cur;
 	if(region == mtx_ENTIRE_MATRIX){
 		fprintf(fp,"%% whole matrix:\n");
