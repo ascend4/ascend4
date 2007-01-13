@@ -459,24 +459,38 @@ class TestSteam(AscendSelfTester):
 		self.L.load('steam/dsgsat2.a4c')
 		T = self.L.findType('dsgsat2')
 		M = T.getSimulation('sim',False)
-		try:
-			M.run(T.getMethod('on_load'))
-		except:
-			pass
+		M.run(T.getMethod('on_load'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		M.run(T.getMethod('fixed_states'))
+		self.assertAlmostEqual(M.dTw_dt[4],0.0);
+		M.run(T.getMethod('configure_dynamic'))
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		self.assertAlmostEqual(M.dTw_dt[4],0.0)
+		Tw1 = float(M.T_w[4])
 		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 5, 100)
-		I.setMinSubStep(0.01)
-		I.setMaxSubStep(0.02)
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 10)
+		I.setMinSubStep(0.0001)
+		I.setMaxSubStep(100)
 		I.setInitialSubStep(0.1)
 		I.analyse()
 		I.solve()
-		I.solve()
-		#M.checkStructuralSingularity() causes crash!
+		self.assertAlmostEqual(float(M.T_w[4]),Tw1)
+		M.qdot_s.setRealValueWithUnits(1000,"W/m")
+		self.assertAlmostEqual(M.qdot_s.as("W/m"),1000)
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		self.assertNotAlmostEqual(M.dTw_dt[4],0.0)
+#		I = ascpy.Integrator(M)
+#		I.setEngine('LSODE')
+#		I.setReporter(ascpy.IntegratorReporterConsole(I))
+#		I.setReporter(ascpy.IntegratorReporterConsole(I))
+#		I.setLinearTimesteps(ascpy.Units("s"), 0, 5, 100)
+#		I.setMinSubStep(0.0001)
+#		I.setMaxSubStep(100)
+#		I.setInitialSubStep(0.1)
+#		I.analyse()
+#		I.solve()
 		
 #-------------------------------------------------------------------------------
 # Testing of freesteam external steam properties functions
