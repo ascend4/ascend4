@@ -17,6 +17,7 @@
 #include "solverparameters.h"
 #include "solverreporter.h"
 #include "curve.h"
+#include "matrix.h"
 
 #ifdef ASC_WITH_MFGRAPH
 # include <fstream>
@@ -46,6 +47,15 @@
 		return self->getModel().getChild(SymChar(name));
 	}
 }
+
+%typemap(in) FILE * {
+    if (!PyFile_Check($input)) {
+        PyErr_SetString(PyExc_TypeError, "Need a file!");
+        return NULL;
+    }
+    $1 = PyFile_AsFile($input);
+}
+%include "matrix.h"
 
 // SOLVER PARAMETERS
 %pythoncode{

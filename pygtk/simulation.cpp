@@ -77,6 +77,7 @@ extern "C"{
 #include "variable.h"
 #include "solverstatus.h"
 #include "solverreporter.h"
+#include "matrix.h"
 
 Simulation::Simulation(){
 	throw runtime_error("Can't create Simulation without arguments");
@@ -613,17 +614,32 @@ Simulation::getFixableVariables(){
 	return vars;
 }
 
+/**
+	Return a list of ALL the fixed variables in the solver's variable list
+*/
 vector<Variable>
 Simulation::getFixedVariables(){
 	if(!sys)throw runtime_error("Simulation system not build yet");
 	vector<Variable> vars;
 	var_variable **vlist = slv_get_solvers_var_list(sys);
 	unsigned long nvars = slv_get_num_solvers_vars(sys);
-	for(int i=0;i<nvars;++i){
+	for(unsigned long i=0;i<nvars;++i){
 		if(!var_fixed(vlist[i]))continue;
 		vars.push_back(Variable(this,vlist[i]));
 	}
 	return vars;
+}
+
+/**
+	For solvers that store a big matrix for the system, return a pointer to that
+	matrix (struct mtx_header*) as a C++-wrapped object of class Matrix.
+*/
+Matrix
+Simulation::getMatrix(){
+	if(!sys)throw runtime_error("Simulation system not built yet");
+	mtx_matrix_t M = slv_get_sys_mtx(sys);
+	if(M==NULL)throw runtime_error("Simulation system does not possess a matrix");
+	return Matrix(M);
 }
 
 /**

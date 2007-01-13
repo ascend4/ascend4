@@ -1275,6 +1275,9 @@ ASC_DLLSPEC mtx_matrix_t slv_get_sys_mtx(slv_system_t sys);
 	Returns the mtx used, or NULL if none. The user should check.
 
 	@deprecated {THIS CALL SHOULD GO AWAY}
+
+	@NOTE this function is referenced by the C++ api (Simulation::getMatrix).
+	So don't don't vanish it! -- JP 20070113 @ENDNOTE
  **/
 
 ASC_DLLSPEC void slv_dump_internals(slv_system_t sys, int level);

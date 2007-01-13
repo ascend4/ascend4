@@ -22,6 +22,7 @@ class SolverParameters;
 class SolverStatus;
 class IncidenceMatrix;
 class SolverReporter;
+class Matrix;
 
 /**
 	A class to contain singularity information as returned by the DOF
@@ -93,6 +94,7 @@ public:
 	std::vector<Variable> getFixableVariables();
 	std::vector<Variable> getVariablesNearBounds(const double &epsilon=1e-4);
 	std::vector<Variable> getFixedVariables();
+	Matrix getMatrix();
 
 	void write();
 

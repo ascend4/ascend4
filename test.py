@@ -99,6 +99,12 @@ class TestSolver(AscendSelfTester):
 		self.assertAlmostEqual( float(M.t_solar), M.t_solar.as("s"))
 		self.assertAlmostEqual( float(M.t_solar)/3600, M.t_solar.as("h"))
 
+class TestMatrix(AscendSelfTester):
+	def testlog10(self):
+		M = self._run('testlog10')
+		print M.getMatrix().write(sys.stderr,"mmio")
+
+		
 class TestIntegrator(Ascend):
 
 	def testListIntegrators(self):

@@ -76,28 +76,28 @@ extern boolean check_sparse(const mtx_sparse_t * const sp,
 
 ASC_DLLSPEC mtx_coord_t *mtx_coord(mtx_coord_t *coordp, int32 row, int32 col);
 /**<
- ***  Places the values of row and col into coordp and returns
- ***  the coordp pointer again.
- ***
- ***  Typical usage:                                     <pre>
- ***    {
- ***      mtx_coord_t coord;
- ***      value = mtx_value(matrix,mtx_coord(&coord,row,col));
- ***    }                                                </pre>
- **/
+	Places the values of row and col into coordp and returns
+	the coordp pointer again.
+	
+	Typical usage:                                     <pre>
+	  {
+	    mtx_coord_t coord;
+	    value = mtx_value(matrix,mtx_coord(&coord,row,col));
+	  }                                                </pre>
+*/
 extern mtx_range_t *mtx_range(mtx_range_t *rangep, int32 low, int32 high);
 /**<
- ***  Places the values of low and high into rangep and returns
- ***  the rangep pointer again.
- **/
+	Places the values of low and high into rangep and returns
+	the rangep pointer again.
+*/
 ASC_DLLSPEC mtx_region_t *mtx_region(mtx_region_t *regionp,
                                 int32 rowlow, int32 rowhigh,
                                 int32 collow, int32 colhigh);
 /**<
- ***  Places the ranges specified by (rowlow,rowhigh) and
- ***  (collow,colhigh) into regionp and returns the
- ***  regionp pointer again.
- **/
+	Places the ranges specified by (rowlow,rowhigh) and
+	(collow,colhigh) into regionp and returns the
+	regionp pointer again.
+*/
 
 ASC_DLLSPEC void mtx_zero_int32(int32 *data, int len);
 /**< Zeros an int32 vector of specified length. Ignores NULL input vectors. */
@@ -107,14 +107,14 @@ extern void mtx_zero_ptr(void **data, int len);
 /**< Zeros a vector of pointers of specified length. Ignores NULL input vectors. */
 #define mtx_zero_char(ar,len) if ((ar)!=NULL) memset((ar),0,(len))
 /**<
- ***  Zeros a char vector of specified length. Ignores NULL input vectors.
- **/
+	Zeros a char vector of specified length. Ignores NULL input vectors.
+*/
 
 ASC_DLLSPEC mtx_matrix_t mtx_create(void);
 /**<
- ***  Creates a 0-order matrix and returns a handle to it.
- ***  Matrix created is a master with no slaves.
- **/
+	Creates a 0-order matrix and returns a handle to it.
+	Matrix created is a master with no slaves.
+*/
 
 extern mtx_matrix_t mtx_create_slave(mtx_matrix_t master);
 /**<
@@ -170,9 +170,6 @@ extern mtx_sparse_t *mtx_create_sparse(int32 capacity);
 
 ASC_DLLSPEC void mtx_destroy_sparse(mtx_sparse_t *sp);
 /**<
- ***  <!--  mtx_destroy_sparse(sp);                                    -->
- ***  <!--  mtx_sparse_t *sp;                                          -->
- ***
  ***  Given a pointer to the sparse structure, deallocates everything to
  ***  do with the structure, including the structure itself. The pointer
  ***  sp is invalidated. Handles NULL gracefully.
@@ -1207,94 +1204,70 @@ extern void mtx_write_region_human_f(FILE *file,
                                      int colwise,
                                      int orgwise);
 /**<
- ***  Internal function to output a matrix region to file.
- ***  Implementation function for
- ***    - mtx_write_region_human()
- ***    - mtx_write_region_human_rows()
- ***    - mtx_write_region_human_cols()
- ***    - mtx_write_region_human_orgrows()
- ***    - mtx_write_region_human_orgcols()
- ***
- ***  Outputs permutation and values of the nonzero elements in the
- ***  given region of the mtx to the file given.
- ***  If colwise != 0, output will be column grouped,
- ***  otherwise it will be row grouped.
- ***  If orgwise != 0, only org indices will be printed.
- ***  Doesn't care about master/slave status.
- **/
-/* OLD GROUP COMMENT */
-/*
- ***  MACROS:
- ***  mtx_write_region_human(file,mtx,region);
- ***    Grandfather support for the old usages.
- ***  mtx_write_region_human_rows(file,mtx,region);
- ***    Writes row oriented human readable output of a mtx region.
- ***  mtx_write_region_human_cols(file,mtx,region);
- ***    Writes column oriented human readable output of a mtx region.
- ***
- ***  Internal:
- ***  mtx_write_region_human_f(file,mtx,region,colwise,orgwise);
- ***  Outputs permutation and values of the nonzero elements in the
- ***  given region of the mtx to the file given.
- ***  If colwise != 0, output will be column grouped,
- ***  otherwise it will be row grouped.
- ***  If orgwise != 0, only org indices will be printed.
- ***  Doesn't care about master/slave status.
- ***
- mmm  macro extern void mtx_write_region_human(file,mtx,region)
- mmm  macro extern void mtx_write_region_human_rows(file,mtx,region)
- mmm  macro extern void mtx_write_region_human_cols(file,mtx,region)
- mmm  macro extern void mtx_write_region_human_orgrows(file,mtx,region)
- mmm  macro extern void mtx_write_region_human_orgcols(file,mtx,region)
- **/
+	Internal function to output a matrix region to file.
+	Implementation function for the intended user-callable functions
+	  - mtx_write_region_human()
+	  - mtx_write_region_human_rows()
+	  - mtx_write_region_human_cols()
+	  - mtx_write_region_human_orgrows()
+	  - mtx_write_region_human_orgcols()
+
+	Outputs permutation and values of the nonzero elements in the
+	given region of the mtx to the file given.
+	If colwise != 0, output will be column grouped,
+	otherwise it will be row grouped.
+	If orgwise != 0, only org indices will be printed.
+	Doesn't care about master/slave status.
+*/
+
 #define mtx_write_region_human(f,m,r) mtx_write_region_human_f((f),(m),(r),0,0)
 /**< 
- *  Grandfather support for the old usages.
- *  @see mtx_write_region_human_f().
- */
+	Grandfather support for the old usages.
+	@see mtx_write_region_human_f().
+*/
 #define mtx_write_region_human_rows(f,m,r) \
 mtx_write_region_human_f((f),(m),(r),0,0)
 /**< 
- *  Writes row oriented human readable output of a mtx region.
- *  @see mtx_write_region_human_f().
- */
+	Writes row oriented human readable output of a mtx region.
+	@see mtx_write_region_human_f().
+*/
 #define mtx_write_region_human_cols(f,m,r) \
 mtx_write_region_human_f((f),(m),(r),1,0)
 /**< 
- *  Writes column oriented human readable output of a mtx region. 
- *  @see mtx_write_region_human_f().
- */
+	Writes column oriented human readable output of a mtx region. 
+	@see mtx_write_region_human_f().
+*/
 #define mtx_write_region_human_orgrows(f,m,r) \
 mtx_write_region_human_f((f),(m),(r),0,1)
 /**< 
- *  Writes row oriented human readable output of a mtx region. 
- *  @see mtx_write_region_human_f(). 
- */
+	Writes row oriented human readable output of a mtx region. 
+	@see mtx_write_region_human_f(). 
+*/
 #define mtx_write_region_human_orgcols(f,m,r) \
 mtx_write_region_human_f((f),(m),(r),1,1)
 /**< 
- *  Writes column oriented human readable output of a mtx region.  
- *  @see mtx_write_region_human_f(). 
- */
+	Writes column oriented human readable output of a mtx region.  
+	@see mtx_write_region_human_f(). 
+*/
 
 ASC_DLLSPEC void mtx_write_region(FILE *file, 
                              mtx_matrix_t mtx, 
                              mtx_region_t *region);
 /**<
- ***  Outputs permutation and values of the nonzero elements in the
- ***  given region of the mtx to the file given along with the matrix
- ***  size.
- ***  The coordinates of the nonzeros written will be in original
- ***  (unpermuted) indexing. This file is for mtx_read_region, but is
- ***  in ASCII for portability.
- ***  Doesn't care about master/slave status.<br><br>
- ***  Not intended for human consumptions, but just so you know
- ***  permutations are written in order r2org org2r c2org org2c.
- ***  parity is not written.<br><br>
- ***  If the region given is mtx_ENTIRE_MATRIX, and there is a
- ***  block structure present in the matrix, it will be written as well
- ***  and the symbolic rank will go out with the block structure.
- **/
+	Outputs permutation and values of the nonzero elements in the
+	given region of the mtx to the file given along with the matrix
+	size.
+	The coordinates of the nonzeros written will be in original
+	(unpermuted) indexing. This file is for mtx_read_region, but is
+	in ASCII for portability.
+	Doesn't care about master/slave status.<br><br>
+	Not intended for human consumptions, but just so you know
+	permutations are written in order r2org org2r c2org org2c.
+	parity is not written.<br><br>
+	If the region given is mtx_ENTIRE_MATRIX, and there is a
+	block structure present in the matrix, it will be written as well
+	and the symbolic rank will go out with the block structure.
+*/
 
 extern mtx_matrix_t mtx_read_region(FILE *file, 
                                     mtx_matrix_t mtx, 
@@ -1329,7 +1302,7 @@ extern mtx_matrix_t mtx_read_region(FILE *file,
  ***  Doesn't care about master/slave status.
  **/
 
-extern void mtx_write_region_matlab(FILE *file, 
+ASC_DLLSPEC void mtx_write_region_matlab(FILE *file, 
                                     mtx_matrix_t mtx, 
                                     mtx_region_t *region);
 /**<
@@ -1340,7 +1313,7 @@ extern void mtx_write_region_matlab(FILE *file,
 	Row/column coordinates printed are the cur coordinates.
 */
 
-extern int mtx_write_region_mmio(FILE *file
+ASC_DLLSPEC int mtx_write_region_mmio(FILE *file
 	,mtx_matrix_t mtx, mtx_region_t *region);
 /**<
 	Outputs values of the nonzero elements in the
@@ -1352,7 +1325,6 @@ extern int mtx_write_region_mmio(FILE *file
 	@return 0 on success
 	@see ASC_WITH_MMIO
 */
-
 
 ASC_DLLSPEC void mtx_write_region_plot(FILE *file, 
 		mtx_matrix_t mtx, mtx_region_t *region);
@@ -1401,22 +1373,22 @@ extern mtx_matrix_t mtx_read_smms(FILE *file,
 
 extern void mtx_exception_recover(void);
 /**<
- ***  Cleans up after a floating point exception has
- ***  occurred during matrix manipulations.  You don't need to know 
- ***  what this does, except that you should call it any time this may
- ***  have occurred.  Several functions use
- ***  data structures that can cause insanity in the event of exception.<br><br>
- ***
- ***  Just for the curious, it resets several internal data structures
- ***  needed including ones used in the operators:
- ***    - mtx_add_row/col()
- ***    - mtx_add_row/col_series()
- ***    - mtx_add_row/col_series_init()
- ***    - mtx_assemble()
- ***    - mtx_add_outer_product()
- **/
+	Cleans up after a floating point exception has
+	occurred during matrix manipulations.  You don't need to know 
+	what this does, except that you should call it any time this may
+	have occurred.  Several functions use
+	data structures that can cause insanity in the event of exception.<br><br>
+	
+	Just for the curious, it resets several internal data structures
+	needed including ones used in the operators:
+	  - mtx_add_row/col()
+  - mtx_add_row/col_series()
+  - mtx_add_row/col_series_init()
+  - mtx_assemble()
+  - mtx_add_outer_product()
+*/
 
-extern void mtx__debug_output(FILE *file, mtx_matrix_t mtx);
+ASC_DLLSPEC void mtx__debug_output(FILE *file, mtx_matrix_t mtx);
 /**<
 	Debug-outputs all internal information about a matrix to file.
 	In the process, integrity checks are performed.
