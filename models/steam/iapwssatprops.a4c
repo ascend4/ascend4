@@ -134,12 +134,17 @@ METHOD default_self;
 	h_g := 3100 {kJ/kg};
 	u_f := 2000 {kJ/kg};
 	u_g := 4000 {kJ/kg};
+(*
 	s_f := 5 {kJ/kg/K};
 	s_g := 7 {kJ/kg/K};
 	mu_f := 2e-5 {Pa*s};
 	mu_g := 1e-7 {Pa*s};
+
+	rho_f.nominal := 900 {kg/m^3};
 	rho_f := 900 {kg/m^3};
+	rho_g.nominal := 1 {kg/m^3};
 	rho_g := 1 {kg/m^3};
+*)
 END default_self;
 METHOD specify;
 	FIX T;

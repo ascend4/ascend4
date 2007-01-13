@@ -92,6 +92,9 @@ METHOD default_self;
 	D := 0.06 {m};
 	D_2 := 0.07 {m};
 	A_w := 0.25{PI}*D_2^2 -0.25{PI}*D^2;
+	FOR i IN [1..n] DO
+		RUN node[i].default_self;
+	END FOR;
 END default_self; 
 METHOD on_load;
 	RUN configure_steady;
