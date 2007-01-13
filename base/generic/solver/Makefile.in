@@ -45,7 +45,8 @@ EXEC_LIBS =
 
 LIB_OBJS = \
 	analyze.o bnd.o bndman.o calc.o cond_config.o \
-	conditional.o conopt.o discrete.o incidence.o linsol.o \
+	conditional.o conopt.o densemtx.o discrete.o \
+	incidence.o linsol.o \
 	linsolqr.o linutils.o logrel.o logrelman.o model_reorder.o \
 	mps.o mtx_basic.o mtx_linal.o mtx_perms.o mtx_query.o \
 	mtx_reorder.o mtx_use_only.o mtx_vector.o  \
