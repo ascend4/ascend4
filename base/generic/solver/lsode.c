@@ -1224,9 +1224,14 @@ int integrator_lsode_write_matrix(const IntegratorSystem *blsys, FILE *fp){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"dydot_dy contains no data");
 	}
 
+#ifdef ASC_WITH_MMIO
 	densematrix_write_mmio(enginedata->dydot_dy,fp);
 	CONSOLE_DEBUG("Returning after matrix output");
 	return 0;
+#else
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"MMIO routines not available");
+	return 1;
+#endif
 }
 	
 

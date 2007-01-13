@@ -67,9 +67,9 @@ void densematrix_destroy(DenseMatrix matrix){
   }
 }
 
+#ifdef ASC_WITH_MMIO
 void densematrix_write_mmio(DenseMatrix matrix, FILE *fp){
 	int i,j;
-
     MM_typecode matcode;                        
 
     mm_initialize_typecode(&matcode);
@@ -92,4 +92,5 @@ void densematrix_write_mmio(DenseMatrix matrix, FILE *fp){
 	
 	CONSOLE_DEBUG("Wrote dense matrix (%u x %u) to file", matrix.nrows, matrix.ncols);
 }
+#endif
 

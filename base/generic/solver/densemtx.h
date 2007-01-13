@@ -49,6 +49,8 @@
 
 #include <stdio.h>
 
+#include <utilities/config.h>
+
 typedef struct DenseMatrixStruct{
 	double **data;
 	unsigned nrows;
@@ -64,6 +66,9 @@ typedef struct DenseMatrixStruct{
 DenseMatrix densematrix_create_empty();
 DenseMatrix densematrix_create(unsigned nrows, unsigned ncols);
 void densematrix_destroy(DenseMatrix matrix);
+
+#ifdef ASC_WITH_MMIO
 void densematrix_write_mmio(DenseMatrix matrix, FILE *fp);
+#endif
 
 #endif
