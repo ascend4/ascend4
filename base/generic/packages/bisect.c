@@ -13,8 +13,7 @@
 #include <compiler/extcall.h>
 #include "bisect.h"
 
-static int CheckArgTypes(struct gl_list_t *branch)
-{
+static int CheckArgTypes(struct gl_list_t *branch){
   struct Instance *i;
   enum inst_t kind;
   unsigned long len,c;
@@ -38,8 +37,7 @@ static int CheckArgTypes(struct gl_list_t *branch)
   return 0; /* all should be ok */
 }
 
-static int CheckArgVector(struct gl_list_t *branch)
-{
+static int CheckArgVector(struct gl_list_t *branch){
   if (!branch) {
     FPRINTF(stderr,"Empty arglists given\n");
     return 1;
@@ -49,20 +47,18 @@ static int CheckArgVector(struct gl_list_t *branch)
   return 0;
 }
 
-/*********************************************************************\
- * This function expects 3 arguements; the calling protocol
- * from ASCEND it expects to be invoked as:
- *
- * set_values(x1:array of generic_reals,
- *            x2:array of generic_reals,
- *            m: generic_real);
- *
- * The dimension of both x1, and x2 are expected to be the same;
- *
-\*********************************************************************/
+/**
+	This function expects 3 arguements; the calling protocol
+	from ASCEND it expects to be invoked as:
 
-static int CheckArgs_SetValues(struct gl_list_t *arglist)
-{
+	set_values(x1:array of generic_reals,
+	           x2:array of generic_reals,
+	           m: generic_real);
+
+	The dimension of both x1, and x2 are expected to be the same;
+
+*/
+static int CheckArgs_SetValues(struct gl_list_t *arglist){
   struct gl_list_t *branch;
   unsigned long len, dim1, dim2;
   char *error_msg = "all ok";
@@ -113,8 +109,7 @@ static int CheckArgs_SetValues(struct gl_list_t *arglist)
 }
 
 
-int do_set_values_eval( struct Instance *i, struct gl_list_t *arglist)
-{
+int do_set_values_eval( struct Instance *i, struct gl_list_t *arglist, void *userdata){
   unsigned long dimension,c;
   struct gl_list_t *inputs, *outputs, *branch;
   double value,multiplier,calculated;
@@ -141,20 +136,18 @@ int do_set_values_eval( struct Instance *i, struct gl_list_t *arglist)
 }
 
 
-/*********************************************************************\
- * This function expects 3 arguements; the calling protocol
- * from ASCEND it expects to be invoked as:
- *
- * set_values(x1:array of generic_reals,
- *            x2:array of generic_reals,
- *             y:array of generic_reals);
- *
- * The dimension of x1, x2 and y are expected to be the same;
- *
-\*********************************************************************/
+/**
+	This function expects 3 arguements; the calling protocol
+	from ASCEND it expects to be invoked as:
 
-static int CheckArgs_Bisection(struct gl_list_t *arglist)
-{
+	set_values(x1:array of generic_reals,
+	          x2:array of generic_reals,
+	           y:array of generic_reals);
+
+	The dimension of x1, x2 and y are expected to be the same;
+
+*/
+static int CheckArgs_Bisection(struct gl_list_t *arglist){
   struct gl_list_t *branch;
   unsigned long len,c;
   unsigned long dim1=0, dim2=0;
@@ -191,8 +184,7 @@ static int CheckArgs_Bisection(struct gl_list_t *arglist)
   return 1;
 }
 
-int do_bisection_eval( struct Instance *i, struct gl_list_t *arglist)
-{
+int do_bisection_eval( struct Instance *i, struct gl_list_t *arglist, void *userdata){
   unsigned long dimension,c;
   struct gl_list_t *vector1, *vector2, *outputs;
   double value1, value2, calculated;
@@ -216,19 +208,18 @@ int do_bisection_eval( struct Instance *i, struct gl_list_t *arglist)
   return 0;
 }
 
-int Bisection (void)
-{
+int Bisection (void){
 
   char set_values_help[] =
-    "This function accepts 3 args, The first 2 arg vectors of equal\n\
-length. The second is a multiplier to be applied to each element\n\
-of the first vector to yield the second vector.\n\
-Example: do_set_values(x[1..n], y[1..n], multiplier[1..n]).\n";
+    "This function accepts 3 args, The first 2 arg vectors of equal\n"
+    "length. The second is a multiplier to be applied to each element\n"
+	"of the first vector to yield the second vector.\n"
+	"Example: do_set_values(x[1..n], y[1..n], multiplier[1..n]).\n";
 
   char bisection_help[] =
-"This function accepts 3 args, each of which must be vectors.\n\
-It will bisect find the midpoint by bisection.\n\
-Example: do_bisection(x[1..n],x_par[1..n], y[1..n]). \n";
+	"This function accepts 3 args, each of which must be vectors.\n"
+	"It will bisect find the midpoint by bisection.\n"
+	"Example: do_bisection(x[1..n],x_par[1..n], y[1..n]). \n";
 
   int result;
   result = CreateUserFunctionMethod("do_set_values",
@@ -239,15 +230,4 @@ Example: do_bisection(x[1..n],x_par[1..n], y[1..n]). \n";
 			       3,bisection_help,NULL,NULL);
   return result;
 }
-
-/*
- * To compile for static linking do:
- * gcc -c -I../compiler  -g -DHAVE_PACKAGES -o bisect.o bisect.c
- *
- * To compiler for dynamic linking do:
- * gcc -c -I../compiler  -g -fpic -o bisect.o bisect.c
- * ld -o libbisect.so.1.0 bisect.o
- */
-
-
 
