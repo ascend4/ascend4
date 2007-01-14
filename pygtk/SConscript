@@ -3,7 +3,6 @@ Import('env')
 import platform
 
 srcs = Split("""
-
 	library.cpp compiler.cpp type.cpp module.cpp symchar.cpp
 	instance.cpp instanceinterfacedata.cpp
 	matrix.cpp method.cpp name.cpp
@@ -71,7 +70,7 @@ for swigf in Split("""
 		, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
 	)
 	swig_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
-	swig_env.Depends('ascpy.py',['ascpy.i'])
+	swig_env.Depends('ascpy_wrap.py',['ascpy.i','solver.i'])
 	swig_env.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
 	swig_env.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
 	swig_env.Clean('ascpy_wrap.h','ascpy$SWIGCXXFILESUFFIX')
