@@ -334,7 +334,7 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			" for the pure algebraic variables (ya) along with the derivatives"
 			" of the differential variables (yddot) (YA_YDP), or else don't solve"
 			" the intial conditions at all (NONE). See IDA manual p 41 (IDASetId)"
-		}, "YA_YDP"}, (char *[]){"Y", "YA_YDP", "NONE"}
+		}, "YA_YDP"}, (char *[]){"Y", "YA_YDP", "NONE",NULL}
 	);
 
 	slv_param_bool(p,IDA_PARAM_SAFEEVAL

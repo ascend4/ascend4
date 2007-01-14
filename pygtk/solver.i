@@ -46,6 +46,20 @@
 	Instanc __getattr__(const char *name){
 		return self->getModel().getChild(SymChar(name));
 	}
+	%pythoncode{
+		def setParameter(self,name,value):
+			""" set the value of a parameter for this integrator """
+			P = self.getParameters()
+			P.set(name,value)
+			self.setParameters(P)
+		def getParameterValue(self,name):
+			""" retrieve the *value* of the specified parameter """
+			P = self.getParameters()
+			for p in P:
+				if p.getName()==name:
+					return p.getValue()
+			raise KeyError
+	}
 }
 
 %typemap(in) FILE * {
