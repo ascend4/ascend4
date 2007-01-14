@@ -6,9 +6,9 @@ MODEL iapwssat REFINES iapwssatprops;
 	u IS_A specific_energy;
 	v IS_A specific_volume;
 
-	h_expr: h = (h_g - h_f)*x + h_f;
-	u_expr: u = (u_g - u_f)*x + u_f;
-	v_expr: v = (rho_g + (rho_f - rho_g)*x ) / ( rho_f * rho_g );
+	h_expr: h = (h_g - h_f) * x + h_f;
+	u_expr: u = (u_g - u_f) * x + u_f;
+	v_expr: v * ( rho_f * rho_g ) = (rho_g + (rho_f - rho_g)*x );
 METHODS
 METHOD default_self;
 	x := 0.5;

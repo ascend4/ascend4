@@ -1,3 +1,4 @@
+/* :ex: set ts=8 */
 /*	ASCEND modelling environment
 	Copyright (C) 2006 Carnegie Mellon University
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
@@ -84,7 +85,6 @@ int slv3_register(SlvFunctionsT *f)
 
 #define SLV3(s) ((slv3_system_t)(s))
 #define SERVER (sys->slv)
-#define slv3_PA_SIZE 44 /* MUST INCREMENT WHEN ADDING PARAMETERS */
 #define slv3_RA_SIZE 11
 
 /* do not delete (or extend) this array definition. */
@@ -110,95 +110,53 @@ static char *slv3_iaexpln[slv3_IA_SIZE] = {
 	"Stop line search after this many minor iterations"
 };
 
-/* change  slv3_PA_SIZE above (MUST INCREMENT) WHEN ADDING PARAMETERS */
-#define UPDATE_JACOBIAN_PTR	(sys->parm_array[0])
-#define UPDATE_JACOBIAN		((*(int *)UPDATE_JACOBIAN_PTR))
-#define UPDATE_WEIGHTS_PTR	(sys->parm_array[1])
-#define UPDATE_WEIGHTS		((*(int *)UPDATE_WEIGHTS_PTR))
-#define UPDATE_NOMINALS_PTR	(sys->parm_array[2])
-#define UPDATE_NOMINALS		((*(int *)UPDATE_NOMINALS_PTR))
-#define REDUCE_PTR		(sys->parm_array[3])
-#define REDUCE			((*(int *)REDUCE_PTR))
-#define EXACT_LINE_SEARCH_PTR	(sys->parm_array[4])
-#define EXACT_LINE_SEARCH	((*(int *)EXACT_LINE_SEARCH_PTR))
-#define DUMPCNORM_PTR		(sys->parm_array[5])
-#define DUMPCNORM		((*(int *)DUMPCNORM_PTR))
-#define TRUNCATE_PTR		(sys->parm_array[6])
-#define TRUNCATE		((*(int *)TRUNCATE_PTR))
-#define SAFE_CALC_PTR		(sys->parm_array[7])
-#define SAFE_CALC		((*(int *)SAFE_CALC_PTR))
-#define SCALEOPT_PTR		(sys->parm_array[8])
-#define SCALEOPT		((*(char **)SCALEOPT_PTR))
-#define UPDATE_RELNOMS_PTR	(sys->parm_array[9])
-#define UPDATE_RELNOMS		((*(int *)UPDATE_RELNOMS_PTR))
-#define ITSCALELIM_PTR		(sys->parm_array[10])
-#define ITSCALELIM		((*(int *)ITSCALELIM_PTR))
-#define RELNOMSCALE_PTR		(sys->parm_array[11])
-#define RELNOMSCALE		((*(int *)RELNOMSCALE_PTR))
-#define TOO_SMALL_PTR		(sys->parm_array[12])
-#define TOO_SMALL		((*(real64 *)TOO_SMALL_PTR))
-#define CNLOW_PTR		(sys->parm_array[13])
-#define CNLOW			((*(real64 *)CNLOW_PTR))
-#define CNHIGH_PTR		(sys->parm_array[14])
-#define CNHIGH			((*(real64 *)CNHIGH_PTR))
-#define TOWARD_BOUNDS_PTR	(sys->parm_array[15])
-#define TOWARD_BOUNDS		((*(real64 *)TOWARD_BOUNDS_PTR))
-#define POSITIVE_DEFINITE_PTR	(sys->parm_array[16])
-#define POSITIVE_DEFINITE	((*(real64 *)POSITIVE_DEFINITE_PTR))
-#define DETZERO_PTR		(sys->parm_array[17])
-#define DETZERO			((*(real64 *)DETZERO_PTR))
-#define STEPSIZEERR_MAX_PTR	(sys->parm_array[18])
-#define STEPSIZEERR_MAX		((*(real64 *)STEPSIZEERR_MAX_PTR))
-#define PARMRNG_MIN_PTR		(sys->parm_array[19])
-#define PARMRNG_MIN		((*(real64 *)PARMRNG_MIN_PTR))
-#define MIN_COEF_PTR		(sys->parm_array[20])
-#define MIN_COEF		((*(real64 *)MIN_COEF_PTR))
-#define MAX_COEF_PTR		(sys->parm_array[21])
-#define MAX_COEF		((*(real64 *)MAX_COEF_PTR))
-#define ITSCALETOL_PTR		(sys->parm_array[22])
-#define ITSCALETOL		((*(real64 *)ITSCALETOL_PTR))
-#define IGNORE_BOUNDS_PTR	(sys->parm_array[23])
-#define IGNORE_BOUNDS		((*(int32 *)IGNORE_BOUNDS_PTR))
-#define SHOW_MORE_IMPT_PTR	(sys->parm_array[24])
-#define SHOW_MORE_IMPT		((*(int32 *)SHOW_MORE_IMPT_PTR))
-#define RHO_PTR			(sys->parm_array[25])
-#define RHO			((*(real64 *)RHO_PTR))
-#define PARTITION_PTR		(sys->parm_array[26])
-#define PARTITION		((*(int32 *)PARTITION_PTR))
-#define SHOW_LESS_IMPT_PTR	(sys->parm_array[27])
-#define SHOW_LESS_IMPT		((*(int32 *)SHOW_LESS_IMPT_PTR))
-#define AUTO_RESOLVE_PTR	(sys->parm_array[28])
-#define AUTO_RESOLVE		((*(int32 *)AUTO_RESOLVE_PTR))
-#define TIME_LIMIT_PTR		(sys->parm_array[29])
-#define TIME_LIMIT		((*(int32 *)TIME_LIMIT_PTR))
-#define ITER_LIMIT_PTR		(sys->parm_array[30])
-#define ITER_LIMIT		((*(int32 *)ITER_LIMIT_PTR))
-#define STAT_TOL_PTR		(sys->parm_array[31])
-#define STAT_TOL		((*(real64 *)STAT_TOL_PTR))
-#define TERM_TOL_PTR		(sys->parm_array[32])
-#define TERM_TOL		((*(real64 *)TERM_TOL_PTR))
-#define SING_TOL_PTR		(sys->parm_array[33])
-#define SING_TOL		((*(real64 *)SING_TOL_PTR))
-#define PIVOT_TOL_PTR		(sys->parm_array[34])
-#define PIVOT_TOL		((*(real64 *)PIVOT_TOL_PTR))
-#define FEAS_TOL_PTR		(sys->parm_array[35])
-#define FEAS_TOL		((*(real64 *)FEAS_TOL_PTR))
-#define LIFDS_PTR		(sys->parm_array[36])
-#define LIFDS			((*(int32 *)LIFDS_PTR))
-#define SAVLIN_PTR		(sys->parm_array[37])
-#define SAVLIN			((*(int32 *)SAVLIN_PTR))
-#define REORDER_OPTION_PTR	(sys->parm_array[38])
-#define REORDER_OPTION		((*(char **)REORDER_OPTION_PTR))
-#define CUTOFF_PTR		(sys->parm_array[39])
-#define CUTOFF			((*(int32 *)CUTOFF_PTR))
-#define FACTOR_OPTION_PTR	(sys->parm_array[40])
-#define FACTOR_OPTION		((*(char **)FACTOR_OPTION_PTR))
-#define CONVOPT_PTR		(sys->parm_array[41])
-#define CONVOPT			((*(char **)CONVOPT_PTR))
-#define LINTIME_PTR		(sys->parm_array[42])
-#define LINTIME			((*(int *)LINTIME_PTR))
-#define MAX_MINOR_PTR		(sys->parm_array[43])
-#define MAX_MINOR	        ((*(int *)MAX_MINOR_PTR))
+enum SLV3_PARAMS{
+	IGNORE_BOUNDS
+	,SHOW_MORE_IMPT
+	,RHO
+	,PARTITION
+	,SHOW_LESS_IMPT
+	,AUTO_RESOLVE
+	,TIME_LIMIT
+	,ITER_LIMIT
+	,STAT_TOL
+	,TERM_TOL
+	,SING_TOL
+	,PIVOT_TOL
+	,FEAS_TOL
+	,LIFDS
+	,SAVLIN
+	,SAFE_CALC
+	,RELNOMSCALE
+	,CUTOFF
+	,UPDATE_JACOBIAN
+	,UPDATE_WEIGHTS
+	,UPDATE_NOMINALS
+	,UPDATE_RELNOMS
+	,ITSCALELIM
+	,CONVOPT
+	,SCALEOPT
+	,REDUCE
+	,EXACT_LINE_SEARCH
+	,DUMPCNORM
+	,LINTIME
+	,TRUNCATE
+	,REORDER_OPTION
+	,TOO_SMALL
+	,CNLOW
+	,CNHIGH
+	,TOWARD_BOUNDS
+	,POSITIVE_DEFINITE
+	,DETZERO
+	,STEPSIZEERR_MAX
+	,PARMRNG_MIN
+	,MIN_COEF
+	,MAX_COEF
+	,ITSCALETOL
+	,FACTOR_OPTION
+	,MAX_MINOR
+	,slv3_PA_SIZE
+};
 
 /* change  slv3_PA_SIZE above (MUST INCREMENT) WHEN ADDING PARAMETERS */
 
@@ -220,37 +178,37 @@ static char *slv3_raexpln[slv3_RA_SIZE] = {
 
 /*
  Subparameters implemented:   (value/meaning)
-   LIFDS   0=>do not show full detail info for singletons
+   SLV_PARAM_BOOL(&(sys->p),LIFDS)   0=>do not show full detail info for singletons
            1=>do (this value ignored if detailed solve info not on.
-   SAVLIN  0=>do not append linearizations arising in the newton
+   SLV_PARAM_BOOL(&(sys->p),SAVLIN)  0=>do not append linearizations arising in the newton
               scheme to the file SlvLinsol.dat.
            1=>do.
-   SCALEOPT
+   SLV_PARAM_CHAR(&(sys->p),SCALEOPT)
            0=>Use variable nominals and row two-norms for scaling
               the Jacobian and rhs.
               Use variable nominals and relation nominals for
-	      scaling the Jacobian and rhs.
-	   2=>Prescale by option 0 and then apply Fourer's
-	      iterative scaling routine.
-	   3=>Prescale by option 1 and then apply Fourer's
-	      iterative scaling routine.
-	   4=>Scale using only Fourer's iterative routine.
-   RELNOMSCALE
+              scaling the Jacobian and rhs.
+           2=>Prescale by option 0 and then apply Fourer's
+              iterative scaling routine.
+           3=>Prescale by option 1 and then apply Fourer's
+              iterative scaling routine.
+           4=>Scale using only Fourer's iterative routine.
+   SLV_PARAM_BOOL(&(sys->p),RELNOMSCALE)
            0=>use Jacobian row scaling for scaling residuals
-	      for purpose of detecting descent.
+              for purpose of detecting descent.
            1=>use most recently recorded relation nominals
-	      for scaling residuals for purpose of
-	      detecting descent.
-	      The residuals will also be scaled by the
-	      relation nominals AT THE CURRENT POINT
-	      for determining constraint satisfaction.
+              for scaling residuals for purpose of
+              detecting descent.
+              The residuals will also be scaled by the
+              relation nominals AT THE CURRENT POINT
+              for determining constraint satisfaction.
    UPRELNOM
            0-INF=> Set number of iterations to wait
-	      before updating vector of relation nominals.
-   CUTOFF] MODEL tearing/reordering cutoff number.
+              before updating vector of relation nominals.
+   SLV_PARAM_INT(&(sys->p),CUTOFF)] MODEL tearing/reordering cutoff number.
 
  [*] 	Generally cryptic parameters left by Joe. Someone
-	should play with and document them. See the defaults.
+        should play with and document them. See the defaults.
 
 */
 
@@ -265,9 +223,9 @@ struct update_data {
   int                    iterative;  /* Countdown on iterative scale update */
 };
 
-/* 
+/*
 	varpivots, relpivots used only in optimizing, if we rewrite calc_pivots
-	without them. 
+	without them.
 */
 struct jacobian_data {
   linsolqr_system_t      sys;            /* Linear system */
@@ -370,7 +328,7 @@ struct slv3_system_structure {
 */
 static int check_system(slv3_system_t sys){
   if( sys == NULL ) {
-	ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: NULL system handle.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: NULL system handle.");
     return 1;
   }
 
@@ -378,10 +336,10 @@ static int check_system(slv3_system_t sys){
   case OK:
     return 0;
   case DESTROYED:
-	ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: System was recently destroyed.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: System was recently destroyed.");
     return 1;
   default:
-	ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: System reused or never allocated.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: System reused or never allocated.");
     return 1;
   }
 }
@@ -433,7 +391,7 @@ static void debug_out_var_values(FILE *fp, slv3_system_t sys){
   for( col = sys->J.reg.col.low; col <= sys->J.reg.col.high ; col++ ) {
     var = sys->vlist[mtx_col_to_org(sys->J.mtx,col)];
     print_var_name(fp,sys,var);
-    FPRINTF(fp, "\nI	Lb	Value	Ub	Scale	Col	INom\n");
+    FPRINTF(fp, "\nI\tLb\tValue\tUb\tScale\tCol\tINom\n");
     FPRINTF(fp,"%d\t%.4g\t%.4g\t%.4g\t%.4g\t%d\t%.4g\n",
       var_sindex(var),var_lower_bound(var),var_value(var),
       var_upper_bound(var),var_nominal(var),
@@ -534,7 +492,7 @@ static int savlinnum=0;
 static boolean calc_objective( slv3_system_t sys){
   int calc_ok = TRUE;
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
-  sys->objective = (sys->obj ? relman_eval(sys->obj,&calc_ok,SAFE_CALC) : 0.0);
+  sys->objective = (sys->obj ? relman_eval(sys->obj,&calc_ok,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC)) : 0.0);
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
   return calc_ok ? TRUE : FALSE;
 }
@@ -555,7 +513,7 @@ static boolean calc_objectives( slv3_system_t sys){
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
   for (i = 0; i < len; i++) {
     if (rel_apply_filter(rlist[i],&rfilter)) {
-      relman_eval(rlist[i],&calc_ok_1,SAFE_CALC);
+      relman_eval(rlist[i],&calc_ok_1,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC));
       if(!calc_ok_1) {
 #if DEBUG
         CONSOLE_DEBUG("error with i = %d",i);
@@ -586,9 +544,9 @@ static boolean calc_inequalities( slv3_system_t sys){
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
   for (rp=sys->rlist;*rp != NULL; rp++) {
     if (rel_apply_filter(*rp,&rfilter)) {
-      relman_eval(*rp,&calc_ok_1,SAFE_CALC);
+      relman_eval(*rp,&calc_ok_1,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC));
       if(!calc_ok_1)calc_ok = FALSE;
-      satisfied = satisfied && relman_calc_satisfied(*rp,FEAS_TOL);
+      satisfied = satisfied && relman_calc_satisfied(*rp,SLV_PARAM_REAL(&(sys->p),FEAS_TOL));
     }
   }
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
@@ -600,7 +558,7 @@ static boolean calc_inequalities( slv3_system_t sys){
 
 /**
 	Calculates all of the residuals in the current block and computes
-	the residual norm for block status.  
+	the residual norm for block status.
 
 	@return 0 on failure, non-zero on success
 */
@@ -628,18 +586,18 @@ static boolean calc_residuals( slv3_system_t sys){
       );
     }
 #endif
-    sys->residuals.vec[row] = relman_eval(rel,&calc_ok_1,SAFE_CALC);
+    sys->residuals.vec[row] = relman_eval(rel,&calc_ok_1,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC));
     if(!calc_ok_1){
-		calc_ok = FALSE;
+        calc_ok = FALSE;
 #if DEBUG
-		CONSOLE_DEBUG("error calculating residual for row %d",row);
+        CONSOLE_DEBUG("error calculating residual for row %d",row);
 #endif
-	}
+    }
 
-    if (strcmp(CONVOPT,"ABSOLUTE") == 0) {
-      relman_calc_satisfied(rel,FEAS_TOL);
-    } else if (strcmp(CONVOPT,"RELNOM_SCALE") == 0) {
-      relman_calc_satisfied_scaled(rel,FEAS_TOL);
+    if (strcmp(SLV_PARAM_CHAR(&(sys->p),CONVOPT),"ABSOLUTE") == 0) {
+      relman_calc_satisfied(rel,SLV_PARAM_REAL(&(sys->p),FEAS_TOL));
+    } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),CONVOPT),"RELNOM_SCALE") == 0) {
+      relman_calc_satisfied_scaled(rel,SLV_PARAM_REAL(&(sys->p),FEAS_TOL));
     }
   }
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
@@ -675,7 +633,7 @@ static boolean calc_J( slv3_system_t sys){
   for( row = sys->J.reg.row.low; row <= sys->J.reg.row.high; row++ ) {
     struct rel_relation *rel;
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
-    relman_diffs(rel,&vfilter,sys->J.mtx,&resid,SAFE_CALC);
+    relman_diffs(rel,&vfilter,sys->J.mtx,&resid,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC));
   }
   sys->s.block.jactime += (tm_cpu_time() - time0);
   sys->s.block.jacs++;
@@ -699,8 +657,8 @@ static void calc_nominals( slv3_system_t sys){
   if( sys->nominals.accurate ) return;
   fp = MIF(sys);
   col = sys->nominals.rng->low;
-  if(strcmp(SCALEOPT,"NONE") == 0 ||
-     strcmp(SCALEOPT,"ITERATIVE") == 0){
+  if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"NONE") == 0 ||
+     strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"ITERATIVE") == 0){
     for( ; col <= sys->nominals.rng->high; col++ ) {
       sys->nominals.vec[col] = 1;
     }
@@ -711,27 +669,27 @@ static void calc_nominals( slv3_system_t sys){
       var = sys->vlist[mtx_col_to_org(sys->J.mtx,col)];
       n = var_nominal(var);
       if( n <= 0.0 ) {
-	if( n == 0.0 ) {
-	  n = TOO_SMALL;
+        if( n == 0.0 ) {
+          n = SLV_PARAM_REAL(&(sys->p),TOO_SMALL);
 
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-	  FPRINTF(fp,"QRSlv::calc_nominals: Variable '");
-	  print_var_name(fp,sys,var);
-	  FPRINTF(fp,"' has nominal value of zero. Resetting to %g.",n);
-	  error_reporter_end_flush();
+          FPRINTF(fp,"QRSlv::calc_nominals: Variable '");
+          print_var_name(fp,sys,var);
+          FPRINTF(fp,"' has nominal value of zero. Resetting to %g.",n);
+          error_reporter_end_flush();
 
-	  var_set_nominal(var,n);
-	} else {
-	  n =  -n;
+          var_set_nominal(var,n);
+        } else {
+          n =  -n;
 
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-	  FPRINTF(fp,"QRSlv::calc_nominals Variable ");
-	  print_var_name(fp,sys,var);
-	  FPRINTF(fp,"has negative nominal value. Resetting to %g.",n);
+          FPRINTF(fp,"QRSlv::calc_nominals Variable ");
+          print_var_name(fp,sys,var);
+          FPRINTF(fp,"has negative nominal value. Resetting to %g.",n);
       error_reporter_end_flush();
 
-	  var_set_nominal(var,n);
-	}
+          var_set_nominal(var,n);
+        }
       }
 #if DEBUG
       FPRINTF(fp,"Column %d is");
@@ -742,7 +700,7 @@ static void calc_nominals( slv3_system_t sys){
     }
   }
   square_norm( &(sys->nominals) );
-  sys->update.nominals = UPDATE_NOMINALS;
+  sys->update.nominals = SLV_PARAM_INT(&(sys->p),UPDATE_NOMINALS);
   sys->nominals.accurate = TRUE;
 }
 
@@ -758,26 +716,28 @@ static void calc_weights( slv3_system_t sys){
     return;
 
   nz.row = sys->weights.rng->low;
-  if(strcmp(SCALEOPT,"NONE") == 0 ||
-     strcmp(SCALEOPT,"ITERATIVE") == 0) {
+  if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"NONE") == 0 ||
+     strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"ITERATIVE") == 0) {
     for( ; nz.row <= sys->weights.rng->high; (nz.row)++ ) {
       sys->weights.vec[nz.row] = 1;
     }
-  } else if (strcmp(SCALEOPT,"ROW_2NORM") == 0 ||
-	     strcmp(SCALEOPT,"2NORM+ITERATIVE") == 0) {
+  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"ROW_2NORM") == 0 ||
+        strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"2NORM+ITERATIVE") == 0
+  ){
     for( ; nz.row <= sys->weights.rng->high; (nz.row)++ ) {
       sum=mtx_sum_sqrs_in_row(sys->J.mtx,nz.row,&(sys->J.reg.col));
       sys->weights.vec[nz.row] = (sum>0.0) ? 1.0/calc_sqrt_D0(sum) : 1.0;
     }
-  } else if (strcmp(SCALEOPT,"RELNOM") == 0 ||
-	     strcmp(SCALEOPT,"RELNOM+ITERATIVE") == 0) {
+  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0 ||
+        strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM+ITERATIVE") == 0
+  ){
     for( ; nz.row <= sys->weights.rng->high; (nz.row)++ ) {
       sys->weights.vec[nz.row] =
-	1.0/rel_nominal(sys->rlist[mtx_row_to_org(sys->J.mtx,nz.row)]);
+        1.0/rel_nominal(sys->rlist[mtx_row_to_org(sys->J.mtx,nz.row)]);
     }
   }
   square_norm( &(sys->weights) );
-  sys->update.weights = UPDATE_WEIGHTS;
+  sys->update.weights = SLV_PARAM_INT(&(sys->p),UPDATE_WEIGHTS);
   sys->residuals.accurate = FALSE;
   sys->weights.accurate = TRUE;
 }
@@ -805,19 +765,19 @@ static void scale_J( slv3_system_t sys){
 */
 static void jacobian_scaled(slv3_system_t sys){
   int32 col;
-  if (DUMPCNORM) {
+  if (SLV_PARAM_BOOL(&(sys->p),DUMPCNORM)) {
     for( col=sys->J.reg.col.low; col <= sys->J.reg.col.high; col++ ) {
       real64 cnorm;
       cnorm =
         calc_sqrt_D0(mtx_sum_sqrs_in_col(sys->J.mtx,col,&(sys->J.reg.row)));
-      if (cnorm >CNHIGH || cnorm <CNLOW) {
+      if (cnorm >SLV_PARAM_REAL(&(sys->p),CNHIGH) || cnorm <SLV_PARAM_REAL(&(sys->p),CNLOW)) {
         FPRINTF(stderr,"[col %d org %d] %g\n", col,
           mtx_col_to_org(sys->J.mtx,col), cnorm);
       }
     }
   }
 
-  sys->update.jacobian = UPDATE_JACOBIAN;
+  sys->update.jacobian = SLV_PARAM_INT(&(sys->p),UPDATE_JACOBIAN);
   sys->J.accurate = TRUE;
   sys->J.singular = FALSE;  /* yet to be determined */
 #if DEBUG
@@ -905,7 +865,7 @@ static void calc_relnoms(slv3_system_t sys){
   var = sys->vlist[col];
   /* restore variable values */
   while(var != NULL){
-   	 var_set_value(var, var_list[col]);
+    var_set_value(var, var_list[col]);
     col++;
     var = sys->vlist[col];
   }
@@ -920,8 +880,8 @@ static void calc_relnoms(slv3_system_t sys){
 	elements in the same column of mtx.  Only considers elements
 	in region reg.
 */
-static real64 col_max_ratio(mtx_matrix_t *mtx,
-			    mtx_region_t *reg
+static real64 col_max_ratio(mtx_matrix_t *mtx
+		,mtx_region_t *reg
 ){
   real64 ratio;
   real64 max_ratio;
@@ -929,8 +889,7 @@ static real64 col_max_ratio(mtx_matrix_t *mtx,
   mtx_coord_t coord;
 
   max_ratio = 0;
-  for(coord.col = reg->col.low;
-	coord.col <= reg->col.high; coord.col++) {
+  for(coord.col = reg->col.low;coord.col <= reg->col.high; coord.col++){
     ratio = 0;
     num = mtx_col_max(*mtx,&(coord),&(reg->row),&(dummy));
     denom = mtx_col_min(*mtx,&(coord),&(reg->row),&(dummy),1e-7);
@@ -955,8 +914,8 @@ static real64 col_max_ratio(mtx_matrix_t *mtx,
 	elements in the same row of mtx.  Only considers elements
 	in region reg.
 */
-static real64 row_max_ratio(mtx_matrix_t *mtx,
-			    mtx_region_t *reg
+static real64 row_max_ratio(mtx_matrix_t *mtx
+		,mtx_region_t *reg
 ){
   real64 ratio;
   real64 max_ratio;
@@ -964,8 +923,7 @@ static real64 row_max_ratio(mtx_matrix_t *mtx,
   mtx_coord_t coord;
   max_ratio = 0;
 
-  for(coord.row = reg->row.low;
-	coord.row <= reg->row.high; coord.row++) {
+  for(coord.row = reg->row.low;coord.row <= reg->row.high; coord.row++) {
     ratio = 0;
     num = mtx_row_max(*mtx,&(coord),&(reg->col),&(dummy));
     denom = mtx_row_min(*mtx,&(coord),&(reg->col),&(dummy),1e-7);
@@ -992,10 +950,10 @@ static real64 row_max_ratio(mtx_matrix_t *mtx,
 	For option = 1, returns scaling factor for
 	col number loc.
 */
-static real64 calc_fourer_scale(mtx_matrix_t mtx,
-			      mtx_region_t reg,
-			      int32 loc,
-			      int32 option
+static real64 calc_fourer_scale(mtx_matrix_t mtx
+		,mtx_region_t reg
+		,int32 loc
+		,int32 option
 ){
   mtx_coord_t coord;
   real64 min, max, dummy;
@@ -1060,22 +1018,22 @@ static void scale_J_iterative(slv3_system_t sys){
   while(done == 0){
     k++;
     for(row = sys->J.reg.row.low;
-	row <= sys->J.reg.row.high; row++){
+        row <= sys->J.reg.row.high; row++){
       rowscale = 1/calc_fourer_scale(sys->J.mtx,sys->J.reg,row,0);
       mtx_mult_row(sys->J.mtx,row,rowscale,&(sys->J.reg.col));
       rowvec[row] *= rowscale;
     }
     for(col = sys->J.reg.col.low;
-	col <= sys->J.reg.col.high; col++){
+        col <= sys->J.reg.col.high; col++){
       colscale = 1/calc_fourer_scale(sys->J.mtx,sys->J.reg,col,1);
       mtx_mult_col(sys->J.mtx,col,colscale,&(sys->J.reg.row));
       colvec[col] *= colscale;
     }
     rho_col_new = col_max_ratio(&(sys->J.mtx),&(sys->J.reg));
     rho_row_new = row_max_ratio(&(sys->J.mtx),&(sys->J.reg));
-    if((rho_col_new >= ITSCALETOL*rho_col_old &&
-	rho_row_new >= ITSCALETOL*rho_row_old)
-       || k >= ITSCALELIM){
+    if((rho_col_new >= SLV_PARAM_REAL(&(sys->p),ITSCALETOL)*rho_col_old &&
+        rho_row_new >= SLV_PARAM_REAL(&(sys->p),ITSCALETOL)*rho_row_old)
+       || k >= SLV_PARAM_INT(&(sys->p),ITSCALELIM)){
       done = 1;
 /*      FPRINTF(stderr,"%d ITERATIVE SCALING ITERATIONS\n",k);*/
     } else {
@@ -1084,11 +1042,11 @@ static void scale_J_iterative(slv3_system_t sys){
     }
   }
   square_norm( &(sys->nominals) );
-  sys->update.nominals = UPDATE_NOMINALS;
+  sys->update.nominals = SLV_PARAM_INT(&(sys->p),UPDATE_NOMINALS);
   sys->nominals.accurate = TRUE;
 
   square_norm( &(sys->weights) );
-  sys->update.weights = UPDATE_WEIGHTS;
+  sys->update.weights = SLV_PARAM_INT(&(sys->p),UPDATE_WEIGHTS);
   sys->residuals.accurate = FALSE;
   sys->weights.accurate = TRUE;
 }
@@ -1097,7 +1055,7 @@ static void scale_J_iterative(slv3_system_t sys){
 	Scale system dependent on interface parameters
 */
 static void scale_system( slv3_system_t sys ){
-  if(strcmp(SCALEOPT,"NONE") == 0){
+  if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"NONE") == 0){
     if(sys->J.accurate == FALSE){
       calc_nominals(sys);
       calc_weights(sys);
@@ -1107,8 +1065,8 @@ static void scale_system( slv3_system_t sys ){
     scale_residuals(sys);
     return;
   }
-  if(strcmp(SCALEOPT,"ROW_2NORM") == 0 ||
-     strcmp(SCALEOPT,"RELNOM") == 0){
+  if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"ROW_2NORM") == 0 ||
+     strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0){
     if(sys->J.accurate == FALSE){
       scale_J(sys);
       jacobian_scaled(sys);
@@ -1117,19 +1075,19 @@ static void scale_system( slv3_system_t sys ){
     scale_residuals(sys);
     return;
   }
-  if(strcmp(SCALEOPT,"2NORM+ITERATIVE") == 0 ||
-     strcmp(SCALEOPT,"RELNOM+ITERATIVE") == 0){
+  if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"2NORM+ITERATIVE") == 0 ||
+     strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM+ITERATIVE") == 0){
     if(sys->J.accurate == FALSE){
       --sys->update.iterative;
       if(sys->update.iterative <= 0) {
-	scale_J(sys);
-	scale_J_iterative(sys);
-	sys->update.iterative =
-	  UPDATE_WEIGHTS < UPDATE_NOMINALS ? UPDATE_WEIGHTS : UPDATE_NOMINALS;
-      } else {
-	sys->weights.accurate = TRUE;
-	sys->nominals.accurate = TRUE;
-	scale_J(sys); /* will use current scaling vectors */
+        scale_J(sys);
+        scale_J_iterative(sys);
+        sys->update.iterative =
+          SLV_PARAM_INT(&(sys->p),UPDATE_WEIGHTS) < SLV_PARAM_INT(&(sys->p),UPDATE_NOMINALS) ? SLV_PARAM_INT(&(sys->p),UPDATE_WEIGHTS) : SLV_PARAM_INT(&(sys->p),UPDATE_NOMINALS);
+      }else{
+        sys->weights.accurate = TRUE;
+        sys->nominals.accurate = TRUE;
+        scale_J(sys); /* will use current scaling vectors */
       }
       jacobian_scaled(sys);
     }
@@ -1137,19 +1095,19 @@ static void scale_system( slv3_system_t sys ){
     scale_residuals(sys);
     return;
   }
-  if(strcmp(SCALEOPT,"ITERATIVE") == 0){
+  if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"ITERATIVE") == 0){
     if(sys->J.accurate == FALSE){
       --sys->update.iterative;
       if(sys->update.iterative <= 0) {
-	calc_nominals(sys);
-	calc_weights(sys);
-	scale_J_iterative(sys);
-	sys->update.iterative =
-	  UPDATE_WEIGHTS < UPDATE_NOMINALS ? UPDATE_WEIGHTS : UPDATE_NOMINALS;
+        calc_nominals(sys);
+        calc_weights(sys);
+        scale_J_iterative(sys);
+        sys->update.iterative =
+          SLV_PARAM_INT(&(sys->p),UPDATE_WEIGHTS) < SLV_PARAM_INT(&(sys->p),UPDATE_NOMINALS) ? SLV_PARAM_INT(&(sys->p),UPDATE_WEIGHTS) : SLV_PARAM_INT(&(sys->p),UPDATE_NOMINALS);
       } else {
-	sys->weights.accurate = TRUE;
-	sys->nominals.accurate = TRUE;
-	scale_J(sys); /* will use current scaling vectors */
+        sys->weights.accurate = TRUE;
+        sys->nominals.accurate = TRUE;
+        scale_J(sys); /* will use current scaling vectors */
       }
       jacobian_scaled(sys);
     }
@@ -1187,7 +1145,7 @@ static boolean calc_gradient(slv3_system_t sys){
       col = mtx_org_to_col(sys->J.mtx,var_sindex(*vp));
       if( var_apply_filter(*vp,&vfilter) ) {
         /* the next line will core dump anyway since _diff not implemented */
-        relman_diff(sys->obj,*vp,&pd,SAFE_CALC); /* barf */
+        relman_diff(sys->obj,*vp,&pd,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC)); /* barf */
         sys->gradient.vec[col] = sys->nominals.vec[col]*pd;
       }
     }
@@ -1291,14 +1249,14 @@ static void calc_B( slv3_system_t sys){
     if( sys->B->ys == 0.0 && sys->B->sBs == 0.0 ) {
       theta = 0.0;
     } else {
-      theta = sys->B->ys < POSITIVE_DEFINITE*sys->B->sBs ?
-       (1.0-POSITIVE_DEFINITE)*sys->B->sBs/(sys->B->sBs - sys->B->ys):1.0;
+      theta = sys->B->ys < SLV_PARAM_REAL(&(sys->p),POSITIVE_DEFINITE)*sys->B->sBs ?
+       (1.0-SLV_PARAM_REAL(&(sys->p),POSITIVE_DEFINITE))*sys->B->sBs/(sys->B->sBs - sys->B->ys):1.0;
     }
 #if DEBUG
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ys, sBs, PD, theta = %g, %g, %g, %g\n",
             sys->B->ys,
             sys->B->sBs,
-            POSITIVE_DEFINITE,
+            SLV_PARAM_REAL(&(sys->p),POSITIVE_DEFINITE),
             theta);
 #endif
     if( theta < 1.0 ) {
@@ -1327,12 +1285,12 @@ static int calc_pivots(slv3_system_t sys){
   FILE *fp = LIF(sys);
 
   oldtiming = g_linsolqr_timing;
-  g_linsolqr_timing =LINTIME;
-  linsolqr_factor(lsys,sys->J.fm);        	/* factor */
+  g_linsolqr_timing =SLV_PARAM_BOOL(&(sys->p),LINTIME);
+  linsolqr_factor(lsys,sys->J.fm); /* factor */
   g_linsolqr_timing = oldtiming;
 
   if (OPTIMIZING(sys)) {
-	CONSOLE_DEBUG("OPTIMISING");
+    CONSOLE_DEBUG("OPTIMISING");
     /* need things for nullspace move. don't care about
      * dependency coefficiency in any circumstances at present.
      */
@@ -1359,10 +1317,10 @@ static int calc_pivots(slv3_system_t sys){
         row = mtx_org_to_row(sys->J.mtx,org_row);
         rel = sys->rlist[org_row];
 
-		ERROR_REPORTER_START_HERE(ASC_PROG_WARNING);
-		FPRINTF(ASCERR,"Relation '");
+        ERROR_REPORTER_START_HERE(ASC_PROG_WARNING);
+        FPRINTF(ASCERR,"Relation '");
         print_rel_name(stderr,sys,rel);
-		FPRINTF(ASCERR,"' is not pivoted.");
+        FPRINTF(ASCERR,"' is not pivoted.");
         error_reporter_end_flush();
 
         /*
@@ -1383,28 +1341,28 @@ static int calc_pivots(slv3_system_t sys){
       sys->update.weights = 0;  /* re-compute weights next iteration. */
     }
 
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Row rank defect = %d (block = %d rows, rank = %d)"
-		,row_rank_defect
-		,sys->J.reg.row.high - sys->J.reg.row.low+1
-		,sys->J.rank
-	);
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Row rank defect = %d (block = %d rows, rank = %d)"
+      ,row_rank_defect
+      ,sys->J.reg.row.high - sys->J.reg.row.low+1
+      ,sys->J.rank
+    );
 
 #ifdef ASC_WITH_MMIO
 #define SLV3_MMIO_FILE "slv3mmio.mtx"
 /* #define SLV3_MMIO_WHOLE */
-	if((fmtx = fopen(SLV3_MMIO_FILE,"w"))){
+    if((fmtx = fopen(SLV3_MMIO_FILE,"w"))){
 #ifdef SLV3_MMIO_WHOLE
-		mtx_write_region_mmio(fmtx, sys->J.mtx, mtx_ENTIRE_MATRIX);
+      mtx_write_region_mmio(fmtx, sys->J.mtx, mtx_ENTIRE_MATRIX);
 #else
-		mtx_write_region_mmio(fmtx, sys->J.mtx, &(sys->J.reg));
+      mtx_write_region_mmio(fmtx, sys->J.mtx, &(sys->J.reg));
 #endif
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Wrote matrix to '%s' (EXPERIMENTAL!)",SLV3_MMIO_FILE);
-		fclose(fmtx);
-	}else{
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,
-			"Unable to write matrix to '%s' (couldn't open for writing)",SLV3_MMIO_FILE
-		);
-	}
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Wrote matrix to '%s' (EXPERIMENTAL!)",SLV3_MMIO_FILE);
+      fclose(fmtx);
+    }else{
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "Unable to write matrix to '%s' (couldn't open for writing)",SLV3_MMIO_FILE
+      );
+    }
 #endif
   }
 
@@ -1434,7 +1392,7 @@ static int calc_pivots(slv3_system_t sys){
       mtx_destroy_sparse(upcols);
     }
   }
-  if (SHOW_LESS_IMPT) {
+  if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %d (%s)\n","Jacobian rank", sys->J.rank,
             sys->J.singular ? "deficient":"full");
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n","Smallest pivot",
@@ -1564,7 +1522,7 @@ static void calc_multipliers(slv3_system_t sys){
                             sys->weights.vec[row]);
 
       }
-      if (SAVLIN) {
+      if (SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
         FILE *ldat;
         int32 ov;
         sprintf(savlinfilename,"%s%d",savlinfilebase,savlinnum++);
@@ -1671,7 +1629,7 @@ static void calc_newton( slv3_system_t sys){
      sys->newton.vec[col] =
        linsolqr_var_value(lsys,sys->J.rhs,mtx_col_to_org(sys->J.mtx,col));
    }
-   if (SAVLIN) {
+   if (SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
      FILE *ldat;
      int32 ov;
      sprintf(savlinfilename,"%s%d",savlinfilebase,savlinnum++);
@@ -1838,7 +1796,7 @@ static void calc_varstep1( slv3_system_t sys){
       int32 col;
       col = sys->varstep1.rng->low;
       for( ; col <= sys->varstep1.rng->high; col++ )
-         sys->varstep1.vec[col] = RHO*sys->gamma.vec[col] -
+         sys->varstep1.vec[col] = SLV_PARAM_REAL(&(sys->p),RHO)*sys->gamma.vec[col] -
             sys->stationary.vec[col];
       square_norm( &(sys->varstep1) );
    }
@@ -2008,7 +1966,7 @@ static void calc_mulstep2( slv3_system_t sys){
       for( ; row <= sys->mulstep2.rng->high; row++ )
          sys->mulstep2.vec[row] = linsolqr_var_value
             (lsys,sys->J.rhs,mtx_row_to_org(sys->J.mtx,row));
-      if (SAVLIN) {
+      if (SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
         FILE *ldat;
         int32 ov;
         sprintf(savlinfilename,"%s%d",savlinfilebase,savlinnum++);
@@ -2042,7 +2000,7 @@ static void calc_phi( slv3_system_t sys){
    else {
       sys->phi = sys->objective;
       sys->phi += inner_product( &(sys->multipliers),&(sys->residuals) );
-      sys->phi += 0.5*RHO*sys->residuals.norm2;
+      sys->phi += 0.5*SLV_PARAM_REAL(&(sys->p),RHO)*sys->residuals.norm2;
    }
 }
 
@@ -2092,32 +2050,28 @@ static void calc_2x2_system(slv3_system_t sys, struct calc_step_vars *vars){
 */
 static void coefs_from_parm( slv3_system_t sys, struct calc_step_vars *vars){
 
-   sym_2x2_t coef;     /* Actual coefficient matrix */
-   real64 det;   /* Determinant of coefficient matrix */
-   int i;
+  sym_2x2_t coef;     /* Actual coefficient matrix */
+  real64 det;   /* Determinant of coefficient matrix */
+  int i;
 
-   for( i=0 ; i<3 ; ++i ) coef[i] =
-      vars->coef1[i] + vars->parms.guess * vars->coef2[i];
-   det = coef[0]*coef[2] - coef[1]*coef[1];
-   if( det < 0.0 )
+  for(i=0; i<3; ++i) coef[i]= vars->coef1[i] + vars->parms.guess * vars->coef2[i];
 
-      /* ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unexpected negative determinant %f.", det); */
-	  fprintf(stderr,"Unexpected negative determinant %f.\n",det);
+  det = coef[0]*coef[2] - coef[1]*coef[1];
+  if(det < 0.0){
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unexpected negative determinant %f.", det);
+  }
 
-      /* FPRINTF(MIF(sys),"%-40s ---> %g\n",
-              "    Unexpected negative determinant!",det); */
-
-   if( det <= DETZERO ) {
-      /*
-       * varstep2 and varstep1 are essentially parallel:
-       * adjust length of either
-       */
-      vars->alpha2 = 0.0;
-      vars->alpha1 = 1.0;
-   } else {
-      vars->alpha2  = (vars->rhs[0]*coef[2] - vars->rhs[1]*coef[1])/det;
-      vars->alpha1 = (vars->rhs[1]*coef[0] - vars->rhs[0]*coef[1])/det;
-   }
+  if( det <= SLV_PARAM_REAL(&(sys->p),DETZERO) ) {
+    /*
+    	varstep2 and varstep1 are essentially parallel:
+    	adjust length of either
+    */
+    vars->alpha2 = 0.0;
+    vars->alpha1 = 1.0;
+  }else{
+    vars->alpha2  = (vars->rhs[0]*coef[2] - vars->rhs[1]*coef[1])/det;
+    vars->alpha1 = (vars->rhs[1]*coef[0] - vars->rhs[0]*coef[1])/det;
+  }
 }
 
 /**
@@ -2165,10 +2119,10 @@ static void compute_step( slv3_system_t sys, struct calc_step_vars *vars){
          if( (vars->alpha2 == 1.0) && (vars->alpha1 == 0.0) ) {
             sys->varstep.vec[col] = sys->maxstep *
                sys->varstep2.vec[col]/calc_sqrt_D0(tot2_norm2);
-         } else if( (vars->alpha2 == 0.0) && (vars->alpha1 == 1.0) ) {
+         }else if( (vars->alpha2 == 0.0) && (vars->alpha1 == 1.0) ) {
             sys->varstep.vec[col] = sys->maxstep *
                sys->varstep1.vec[col]/calc_sqrt_D0(tot1_norm2);
-         } else if( (vars->alpha2 != 0.0) && (vars->alpha1 != 0.0) ) {
+         }else if( (vars->alpha2 != 0.0) && (vars->alpha1 != 0.0) ) {
             sys->varstep.vec[col] = sys->maxstep*
                (
                 vars->alpha2*sys->varstep2.vec[col]/calc_sqrt_D0(tot2_norm2) +
@@ -2182,10 +2136,10 @@ static void compute_step( slv3_system_t sys, struct calc_step_vars *vars){
          if( (vars->alpha2 == 1.0) && (vars->alpha1 == 0.0) ) {
             sys->mulstep.vec[row] = sys->maxstep *
                sys->mulstep2.vec[row]/calc_sqrt_D0(tot2_norm2);
-         } else if( (vars->alpha2 == 0.0) && (vars->alpha1 == 1.0) ) {
+         }else if( (vars->alpha2 == 0.0) && (vars->alpha1 == 1.0) ) {
             sys->mulstep.vec[row] = sys->maxstep *
                sys->mulstep1.vec[row]/calc_sqrt_D0(tot1_norm2);
-         } else if( (vars->alpha2 != 0.0) && (vars->alpha1 != 0.0) ) {
+         }else if( (vars->alpha2 != 0.0) && (vars->alpha1 != 0.0) ) {
             sys->mulstep.vec[row] = sys->maxstep*
                (
                 vars->alpha2*sys->mulstep2.vec[row]/calc_sqrt_D0(tot2_norm2) +
@@ -2217,7 +2171,7 @@ static void calc_step( slv3_system_t sys, int minor){
 
    if( sys->varstep.accurate && sys->mulstep.accurate )
       return;
-   if (SHOW_LESS_IMPT) {
+   if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\n%-40s ---> %d\n", "    Step trial",minor);
    }
 
@@ -2274,9 +2228,9 @@ static void calc_step( slv3_system_t sys, int minor){
       do {
          coefs_from_parm(sys, &vars);
          adjust_parms(sys, &vars);
-      } while( fabs(vars.error) > STEPSIZEERR_MAX &&
-              vars.parms.high - vars.parms.low > PARMRNG_MIN );
-      if (SHOW_LESS_IMPT) {
+      } while( fabs(vars.error) > SLV_PARAM_REAL(&(sys->p),STEPSIZEERR_MAX) &&
+              vars.parms.high - vars.parms.low > SLV_PARAM_REAL(&(sys->p),PARMRNG_MIN) );
+      if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                 "    parameter high", vars.parms.high);
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
@@ -2288,7 +2242,7 @@ static void calc_step( slv3_system_t sys, int minor){
       sys->mulstep.norm2 = 0.0;
    }
 
-   if (SHOW_LESS_IMPT) {
+   if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Alpha1 coefficient (normalized)",
              vars.alpha1);
      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Alpha2 coefficient (normalized)",
@@ -2366,7 +2320,7 @@ static void apply_step( slv3_system_t sys){
    real64 *vec;
    vec = (sys->nominals.vec);
 
-   if (TRUNCATE && (!sys->p.ignore_bounds))
+   if (SLV_PARAM_BOOL(&(sys->p),TRUNCATE) && (!sys->p.ignore_bounds))
       bounds_coef = required_coef_to_stay_inbounds(sys);
 
    for( col=sys->varstep.rng->low; col <= sys->varstep.rng->high; col++ ) {
@@ -2376,23 +2330,23 @@ static void apply_step( slv3_system_t sys){
       dx = vec[col]*sys->varstep.vec[col];
       val = var_value(var);
       if (bounds_coef < 1.0) {
-         dx = dx*TOWARD_BOUNDS*bounds_coef;
+         dx = dx*SLV_PARAM_REAL(&(sys->p),TOWARD_BOUNDS)*bounds_coef;
          sys->varstep.vec[col] = dx/vec[col];
       } else {
          if( !sys->p.ignore_bounds ) {
             if( val + dx > (bnd=var_upper_bound(var)) ) {
-               dx = TOWARD_BOUNDS*(bnd-val);
+               dx = SLV_PARAM_REAL(&(sys->p),TOWARD_BOUNDS)*(bnd-val);
                sys->varstep.vec[col] = dx/vec[col];
-               if (SHOW_LESS_IMPT) {
+               if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
                  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> ",
                          "    Variable projected to upper bound");
                  print_var_name(lif,sys,var); PUTC('\n',lif);
                }
                ++nproj;
             } else if( val + dx < (bnd=var_lower_bound(var)) ) {
-               dx = TOWARD_BOUNDS*(bnd-val);
+               dx = SLV_PARAM_REAL(&(sys->p),TOWARD_BOUNDS)*(bnd-val);
                sys->varstep.vec[col] = dx/vec[col];
-               if (SHOW_LESS_IMPT) {
+               if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
                  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> ",
                          "    Variable projected to lower bound");
                  print_var_name(lif,sys,var); PUTC('\n',lif);
@@ -2410,7 +2364,7 @@ static void apply_step( slv3_system_t sys){
          sys->progress = calc_sqrt_D0
             (calc_sqrt_D0((sys->varstep.norm2 + sys->mulstep.norm2)*
                           (sys->varstep1.norm2 + sys->mulstep1.norm2)));
-         if (SHOW_LESS_IMPT) {
+         if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
            ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Projected step length (scaled)",
            calc_sqrt_D0(sys->varstep.norm2 + sys->mulstep.norm2));
            ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
@@ -2419,7 +2373,7 @@ static void apply_step( slv3_system_t sys){
       }
       if (bounds_coef < 1.0) {
          square_norm(&(sys->varstep));
-         if (SHOW_LESS_IMPT) {
+         if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
             ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                     "    Truncated step length (scaled)",
                     calc_sqrt_D0(sys->varstep.norm2 + sys->mulstep.norm2));
@@ -2427,7 +2381,7 @@ static void apply_step( slv3_system_t sys){
          sys->progress = calc_sqrt_D0
             (calc_sqrt_D0((sys->varstep.norm2 + sys->mulstep.norm2)*
                           (sys->varstep1.norm2 + sys->mulstep1.norm2)));
-         if (SHOW_LESS_IMPT) {
+         if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
            ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                    "    Truncated progress", sys->progress);
          }
@@ -2542,8 +2496,8 @@ static void move_to_next_block( slv3_system_t sys){
     sys->s.cost[ci].resid	=	sys->s.block.residual;
 
     /* De-initialize previous block */
-    if (SHOW_LESS_IMPT && (sys->s.block.current_size >1 ||
-        LIFDS)) {
+    if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (sys->s.block.current_size >1 ||
+        SLV_PARAM_BOOL(&(sys->p),LIFDS))) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Block %d converged.\n",
               sys->s.block.current_block);
     }
@@ -2580,12 +2534,12 @@ static void move_to_next_block( slv3_system_t sys){
     sys->s.block.funcs = 0;
     sys->s.block.jacs = 0;
 
-    if(SHOW_LESS_IMPT && (LIFDS ||
+    if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (SLV_PARAM_BOOL(&(sys->p),LIFDS) ||
       sys->s.block.current_size > 1)) {
       debug_delimiter(LIF(sys));
       debug_delimiter(LIF(sys));
     }
-    if(SHOW_LESS_IMPT && LIFDS) {
+    if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && SLV_PARAM_BOOL(&(sys->p),LIFDS)) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\n%-40s ---> %d in [%d..%d]\n",
               "Current block number", sys->s.block.current_block,
               0, sys->s.block.number_of-1);
@@ -2597,7 +2551,7 @@ static void move_to_next_block( slv3_system_t sys){
     if( !(ok = calc_objective(sys)) ) {
       ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Objective calculation errors detected");
     }
-    if(SHOW_LESS_IMPT && sys->obj) {
+    if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && sys->obj) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Objective", sys->objective);
     }
     sys->s.calc_ok = sys->s.calc_ok && ok;
@@ -2612,9 +2566,9 @@ static void move_to_next_block( slv3_system_t sys){
       /* error_reporter will have been called somewhere else already */
       CONSOLE_DEBUG("Residual calculation errors detected in move_to_next_block.");
     }
-    if( SHOW_LESS_IMPT &&
+    if( SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) &&
         (sys->s.block.current_size >1 ||
-         LIFDS) ) {
+         SLV_PARAM_BOOL(&(sys->p),LIFDS)) ) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Residual norm (unscaled)",
         sys->s.block.residual);
     }
@@ -2672,7 +2626,7 @@ static void move_to_next_block( slv3_system_t sys){
     if( sys->s.struct_singular ) {
        /* black box w/singletons provoking bug here, maybe */
       sys->s.block.current_size = sys->rused - sys->rank;
-      if(SHOW_LESS_IMPT) {
+      if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
         debug_delimiter(LIF(sys));
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %d\n", "Unassigned Relations",
                 sys->s.block.current_size);
@@ -2687,25 +2641,25 @@ static void move_to_next_block( slv3_system_t sys){
 
       /** @TODO does this 'ok' needed to be ANDed with sys->s.calc_ok? */
 
-      if(SHOW_LESS_IMPT) {
+      if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Residual norm (unscaled)",
                 sys->s.block.residual);
       }
       if( block_feasible(sys) ) {
-        if(SHOW_LESS_IMPT) {
+        if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
           ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nUnassigned relations ok. Lucky you.\n");
         }
         sys->s.converged = TRUE;
       } else {
         ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Problem inconsistent: unassigned relations not satisfied");
-/*        if(SHOW_LESS_IMPT) {
+/*        if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
           ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nProblem inconsistent:  %s.\n",
                   "Unassigned relations not satisfied");
         }
 */
         sys->s.inconsistent = TRUE;
       }
-      if(SHOW_LESS_IMPT) {
+      if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
         debug_delimiter(LIF(sys));
       }
     } else {
@@ -2715,7 +2669,7 @@ static void move_to_next_block( slv3_system_t sys){
        we think equalities are ok. */
     if (sys->s.converged) {
       ok = calc_inequalities(sys);
-	  if(!ok && sys->s.inconsistent){
+      if(!ok && sys->s.inconsistent){
         sys->s.inconsistent = TRUE;
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"System marked inconsistent after inspecting inequalities");
       }
@@ -2729,7 +2683,7 @@ static void move_to_next_block( slv3_system_t sys){
 static void reorder_new_block(slv3_system_t sys){
   int32 method;
   if( sys->s.block.current_block < sys->s.block.number_of ) {
-    if (strcmp(REORDER_OPTION,"SPK1") == 0) {
+    if (strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"SPK1") == 0) {
       method = 2;
     } else {
       method = 1;
@@ -2750,29 +2704,29 @@ static void reorder_new_block(slv3_system_t sys){
     /* Let the slv client function take care of reordering things
      * and setting in block flags.
      */
-    if (strcmp(REORDER_OPTION,"SPK1") == 0) {
+    if (strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"SPK1") == 0) {
       sys->s.cost[sys->s.block.current_block].reorder_method = 2;
       slv_spk1_reorder_block(SERVER,sys->s.block.current_block,1);
-    } else if (strcmp(REORDER_OPTION,"TEAR_DROP") == 0) {
+    } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"TEAR_DROP") == 0) {
       sys->s.cost[sys->s.block.current_block].reorder_method = 1;
-      slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block,
-                                  CUTOFF,
-				  0,mtx_SPK1);
+      slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block
+      	,SLV_PARAM_INT(&(sys->p),CUTOFF), 0,mtx_SPK1
+      );
 /* khack: try tspk1 for transpose case */
-    } else if (strcmp(REORDER_OPTION,"OVER_TEAR") == 0) {
+    } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"OVER_TEAR") == 0) {
       sys->s.cost[sys->s.block.current_block].reorder_method = 1;
-      slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block,
-                                  CUTOFF,
-				  1,mtx_SPK1);
+      slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block
+        ,SLV_PARAM_INT(&(sys->p),CUTOFF), 1,mtx_SPK1
+      );
     } else {
       sys->s.cost[sys->s.block.current_block].reorder_method = 1;
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(MIF(sys),"QRSlv called with unknown reorder option\n");
       FPRINTF(MIF(sys),"QRSlv using single edge tear drop (TEAR_DROP).\n");
-	  error_reporter_end_flush();
+      error_reporter_end_flush();
 
       slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block,
-                                  CUTOFF,0,mtx_SPK1);
+                                  SLV_PARAM_INT(&(sys->p),CUTOFF),0,mtx_SPK1);
     }
     /* tell linsol to bless it and get on with things */
     linsolqr_reorder(sys->J.sys,&(sys->J.reg),natural);
@@ -2811,8 +2765,8 @@ static void iteration_begins( slv3_system_t sys){
    sys->clock = tm_cpu_time();
    ++(sys->s.block.iteration);
    ++(sys->s.iteration);
-   if(SHOW_LESS_IMPT&& (sys->s.block.current_size >1 ||
-      LIFDS)) {
+   if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)&& (sys->s.block.current_size >1 ||
+      SLV_PARAM_BOOL(&(sys->p),LIFDS))) {
      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\n%-40s ---> %d\n",
              "Iteration", sys->s.block.iteration);
      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %d\n",
@@ -2830,8 +2784,8 @@ static void iteration_ends( slv3_system_t sys){
    cpu_elapsed = (double)(tm_cpu_time() - sys->clock);
    sys->s.block.cpu_elapsed += cpu_elapsed;
    sys->s.cpu_elapsed += cpu_elapsed;
-   if(SHOW_LESS_IMPT && (sys->s.block.current_size >1 ||
-         LIFDS)) {
+   if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (sys->s.block.current_size >1 ||
+         SLV_PARAM_BOOL(&(sys->p),LIFDS))) {
      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
             "Elapsed time", sys->s.block.cpu_elapsed);
      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
@@ -2847,9 +2801,9 @@ static void update_status( slv3_system_t sys){
 
    if( !sys->s.converged ) {
       sys->s.time_limit_exceeded =
-         (sys->s.block.cpu_elapsed >= TIME_LIMIT);
+         (sys->s.block.cpu_elapsed >= SLV_PARAM_INT(&(sys->p),TIME_LIMIT));
       sys->s.iteration_limit_exceeded =
-         (sys->s.block.iteration >= ITER_LIMIT);
+         (sys->s.block.iteration >= SLV_PARAM_INT(&(sys->p),ITER_LIMIT));
    }
 
    unsuccessful = sys->s.diverged || sys->s.inconsistent ||
@@ -2857,47 +2811,32 @@ static void update_status( slv3_system_t sys){
 
 #if DEBUG
    if(unsuccessful){
-       CONSOLE_DEBUG("unsuccessful: diverged = %d, inconsistent = %d, iter_limit = %d, time_limit = %d"
-			,sys->s.diverged, sys->s.inconsistent
-			,sys->s.iteration_limit_exceeded, sys->s.time_limit_exceeded
-       );
+      CONSOLE_DEBUG("unsuccessful: diverged = %d, inconsistent = %d, iter_limit = %d, time_limit = %d"
+      	,sys->s.diverged, sys->s.inconsistent
+      	,sys->s.iteration_limit_exceeded, sys->s.time_limit_exceeded
+      );
    }
 #endif
 
    sys->s.ready_to_solve = !unsuccessful && !sys->s.converged;
 #if DEBUG
    CONSOLE_DEBUG("Updating solver status: unsuccessful = %d, calc_ok = %d, struct_sing = %d"
-		,unsuccessful,sys->s.calc_ok,sys->s.struct_singular
+   	,unsuccessful,sys->s.calc_ok,sys->s.struct_singular
    );
 #endif
 
    sys->s.ok = !unsuccessful && sys->s.calc_ok && !sys->s.struct_singular;
 }
 
+
 static
-int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys,
-				  slv_parameters_t *parameters)
-{
+int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
+		,slv_parameters_t *parameters
+){
   slv3_system_t sys = NULL;
   union parm_arg lo,hi,val;
   struct slv_parameter *new_parms = NULL;
   int32 make_macros = 0;
-
-  static char *factor_names[] = {
-    "SPK1/RANKI","SPK1/RANKI+ROW",
-    "Fast-SPK1/RANKI","Fast-SPK1/RANKI+ROW",
-    "Fastest-SPK1/MR-RANKI","CondQR","CPQR"
-/*    ,"GAUSS","GAUSS_EASY"  currently only works for ken */
-  };
-  static char *reorder_names[] = {
-    "SPK1","TEAR_DROP","OVER_TEAR"
-  };
-  static char *converge_names[] = {
-    "ABSOLUTE","RELNOM_SCALE"
-  };
-  static char *scaling_names[] = {
-    "NONE","ROW_2NORM","RELNOM"
-  };
 
   if (server != NULL && asys != NULL) {
     sys = SLV3(asys);
@@ -2922,240 +2861,326 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys,
   }
   parameters->num_parms = 0;
 
+  asc_assert(slv3_PA_SIZE==44);
+
+
   /* begin defining parameters */
 
-  slv_define_parm(parameters, bool_parm,
-	       "ignorebounds","ignore bounds?","ignore bounds?",
-	       U_p_bool(val,0),U_p_bool(lo,0),U_p_bool(hi,1),-1);
-  SLV_BPARM_MACRO(IGNORE_BOUNDS_PTR,parameters);
+  slv_param_bool(parameters,IGNORE_BOUNDS
+  	,(SlvParameterInitBool){{"ignorebounds"
+  		,"ignore bounds?",-1
+  		,"ignore bounds?"
+  	}, 0}
+  );
 
-  slv_define_parm(parameters, bool_parm,
-	       "showmoreimportant", "showmoreimportant", "showmoreimportant",
-	       U_p_bool(val,1),U_p_bool(lo,0),U_p_bool(hi,1),-1);
-  SLV_BPARM_MACRO(SHOW_MORE_IMPT_PTR,parameters);
+  slv_param_bool(parameters,SHOW_MORE_IMPT
+  	,(SlvParameterInitBool){{"showmoreimportant"
+  		,"showmoreimportant",-1
+  		,"showmoreimportant"
+  	}, 1}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "rho", "penalty parameter", "penalty parameter",
-	       U_p_real(val,100),U_p_real(lo, 0),U_p_real(hi,10e100), 1);
-  SLV_RPARM_MACRO(RHO_PTR,parameters);
+  slv_param_real(parameters,RHO
+  	,(SlvParameterInitReal){{"rho"
+  		,"penalty parameter",1
+  		,"penalty parameter"
+  	}, 100, 0, 10e100}
+  );
 
-  slv_define_parm(parameters, bool_parm,
-	       "partition", "partitioning enabled", "partitioning enabled",
-	       U_p_bool(val, 1),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(PARTITION_PTR,parameters);
+  slv_param_bool(parameters,PARTITION
+  	,(SlvParameterInitBool){{"partition"
+  		,"partitioning enabled",2
+  		,"partitioning enabled"
+  	}, 1}
+  );
 
-  slv_define_parm(parameters, bool_parm,
-	       "showlessimportant", "detailed solving info",
-               "detailed solving info",
-	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(SHOW_LESS_IMPT_PTR,parameters);
+  slv_param_bool(parameters,SHOW_LESS_IMPT
+  	,(SlvParameterInitBool){{"showlessimportant"
+  		,"detailed solving info",2
+  		,"detailed solving info"
+  	}, 0}
+  );
 
-  slv_define_parm(parameters, bool_parm,
-	       "autoresolve", "auto-resolve", "auto-resolve",
-	       U_p_bool(val,1),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(AUTO_RESOLVE_PTR,parameters);
+  slv_param_bool(parameters,AUTO_RESOLVE
+  	,(SlvParameterInitBool){{"autoresolve"
+  		,"auto-resolve",2
+  		,"auto-resolve"
+  	}, 1}
+  );
 
-  slv_define_parm(parameters, int_parm,
-	       "timelimit", "time limit (CPU sec/block)", "time limit (CPU sec/block)",
-	       U_p_int(val,1500),U_p_int(lo, 1),U_p_int(hi,20000),1);
-  SLV_IPARM_MACRO(TIME_LIMIT_PTR,parameters);
+  slv_param_int(parameters,TIME_LIMIT
+  	,(SlvParameterInitInt){{"timelimit"
+  		,"time limit (CPU sec/block)",1
+  		,"time limit (CPU sec/block)"
+  	}, 1500, 1, 20000}
+  );
 
-  slv_define_parm(parameters, int_parm,
-	       "iterationlimit", "max iterations/block", "max iterations/block",
-	       U_p_int(val, 30),U_p_int(lo, 1),U_p_int(hi,20000),1);
-  SLV_IPARM_MACRO(ITER_LIMIT_PTR,parameters);
+  slv_param_int(parameters,ITER_LIMIT
+  	,(SlvParameterInitInt){{"iterationlimit"
+  		,"max iterations/block",1
+  		,"max iterations/block"
+  	}, 30, 1, 20000}
+  );
 
-  slv_define_parm(parameters,real_parm,
-	       "stattol","stattol" ,"stattol" ,
-	       U_p_real(val,1e-6),U_p_real(lo,0),U_p_real(hi,1.0),-1);
-  SLV_RPARM_MACRO(STAT_TOL_PTR,parameters);
+  slv_param_real(parameters,STAT_TOL
+  	,(SlvParameterInitReal){{"stattol"
+  		,"stattol",-1
+  		,"stattol"
+  	}, 1e-6, 0, 1.0}
+  );
 
-  slv_define_parm(parameters,real_parm,
-	       "termtol","termtol" ,"termtol" ,
-	       U_p_real(val,1e-12),U_p_real(lo,0),U_p_real(hi,1.0),-1);
-  SLV_RPARM_MACRO(TERM_TOL_PTR,parameters);
+  slv_param_real(parameters,TERM_TOL
+  	,(SlvParameterInitReal){{"termtol"
+  		,"termtol",-1
+  		,"termtol"
+  	}, 1e-12, 0, 1.0}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "singtol", "epsilon (min pivot)", "epsilon (min pivot)",
-	       U_p_real(val, 1e-12),U_p_real(lo, 1e-12),U_p_real(hi,1.0),1);
-  SLV_RPARM_MACRO(SING_TOL_PTR,parameters);
+  slv_param_real(parameters,SING_TOL
+  	,(SlvParameterInitReal){{"singtol"
+  		,"epsilon (min pivot)",1
+  		,"epsilon (min pivot)"
+  	}, 1e-12, 1e-12, 1.0}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "pivottol", "condition tolerance", "condition tolerance",
-	       U_p_real(val, 0.5),U_p_real(lo, 0),U_p_real(hi, 1),1);
-  SLV_RPARM_MACRO(PIVOT_TOL_PTR,parameters);
+  slv_param_real(parameters,PIVOT_TOL
+  	,(SlvParameterInitReal){{"pivottol"
+  		,"condition tolerance",1
+  		,"condition tolerance"
+  	}, 0.5, 0, 1}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "feastol", "max residual (absolute)", "max residual (absolute)",
-	       U_p_real(val, 1e-8),U_p_real(lo, 1e-13),U_p_real(hi,100000.5),1);
-  SLV_RPARM_MACRO(FEAS_TOL_PTR,parameters);
+  slv_param_real(parameters,FEAS_TOL
+  	,(SlvParameterInitReal){{"feastol"
+  		,"max residual (absolute)",1
+  		,"max residual (absolute)"
+  	}, 1e-8, 1e-13, 100000.5}
+  );
 
-  slv_define_parm(parameters, bool_parm,
-	       "lifds", "show singletons details", IEX(0),
-	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(LIFDS_PTR,parameters);
+  slv_param_bool(parameters,LIFDS
+  	,(SlvParameterInitBool){{"lifds"
+  		,"show singletons details",2
+  		,IEX(0)
+  	}, 0}
+  );
 
-  slv_define_parm(parameters, bool_parm,
-	       "savlin", "write to file SlvLinsol.dat", IEX(1),
-	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(SAVLIN_PTR,parameters);
+  slv_param_bool(parameters,SAVLIN
+  	,(SlvParameterInitBool){{"savlin"
+  		,"write to file SlvLinsol.dat",2
+  		,IEX(1)
+  	}, 0}
+  );
 
-  slv_define_parm(parameters, bool_parm,
-	       "safe_calc", "safe calculations", IEX(12),
-	       U_p_bool(val, 1),U_p_bool(lo,0),U_p_bool(hi,1), 2);
+  slv_param_bool(parameters,SAFE_CALC
+  	,(SlvParameterInitBool){{"safe_calc"
+  		,"safe calculations",2
+  		,IEX(12)
+  	}, 1}
+  );
 
-  SLV_BPARM_MACRO(SAFE_CALC_PTR,parameters);
+  slv_param_bool(parameters,RELNOMSCALE
+  	,(SlvParameterInitBool){{"relnomscale"
+  		,"calc rel nominals",2
+  		,IEX(2)
+  	}, 1}
+  );
 
-  slv_define_parm(parameters, bool_parm,
-	       "relnomscale", "calc rel nominals", IEX(2),
-	       U_p_bool(val, 1),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(RELNOMSCALE_PTR,parameters);
-
-  slv_define_parm(parameters, int_parm,
-	       "cutoff", "block size cutoff (MODEL-based)", IEX(3),
-	       U_p_int(val, 500),U_p_int(lo,0),U_p_int(hi,20000), 2);
-  SLV_IPARM_MACRO(CUTOFF_PTR,parameters);
-
-
-  slv_define_parm(parameters, int_parm,
-	       "upjac", "Jacobian update frequency", IEX(4),
-	       U_p_int(val, 1),U_p_int(lo,0),U_p_int(hi,20000), 3);
-  SLV_IPARM_MACRO(UPDATE_JACOBIAN_PTR,parameters);
-
-  slv_define_parm(parameters, int_parm,
-	       "upwts", "Row scaling update frequency", IEX(5),
-	       U_p_int(val, 1),U_p_int(lo,0),U_p_int(hi,20000), 3);
-  SLV_IPARM_MACRO(UPDATE_WEIGHTS_PTR,parameters);
-
-  slv_define_parm(parameters, int_parm,
-	       "upnom", "Column scaling update frequency", IEX(6),
-	       U_p_int(val, 1000),U_p_int(lo,0),U_p_int(hi,20000), 3);
-  SLV_IPARM_MACRO(UPDATE_NOMINALS_PTR,parameters);
-
-  slv_define_parm(parameters, int_parm,
-	       "uprelnom", "Relation nominal update frequency", IEX(13),
-	       U_p_int(val, 5),U_p_int(lo,0),U_p_int(hi,20000), 3);
-  SLV_IPARM_MACRO(UPDATE_RELNOMS_PTR,parameters);
-
-  slv_define_parm(parameters, int_parm,
-	       "itscalelim", "Iteration lim for iterative scale", IEX(14),
-	       U_p_int(val, 10),U_p_int(lo,0),U_p_int(hi,20000), 3);
-  SLV_IPARM_MACRO(ITSCALELIM_PTR,parameters);
-
-  slv_define_parm(parameters, char_parm,
-	       "convopt", "convergence test", "convergence test",
-	       U_p_string(val,converge_names[0]),
-	       U_p_strings(lo,converge_names),
-	       U_p_int(hi,sizeof(converge_names)/sizeof(char *)),1);
-  SLV_CPARM_MACRO(CONVOPT_PTR,parameters);
-
-  slv_define_parm(parameters, char_parm,
-	       "scaleopt", "jacobian scaling option", IEX(15),
-	       U_p_string(val,scaling_names[1]),
-	       U_p_strings(lo,scaling_names),
-	       U_p_int(hi,sizeof(scaling_names)/sizeof(char *)),1);
-  SLV_CPARM_MACRO(SCALEOPT_PTR,parameters);
-
-  slv_define_parm(parameters, bool_parm,
-	       "reduce", "step reduction on?", IEX(7),
-	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(REDUCE_PTR,parameters);
-
-  slv_define_parm(parameters, bool_parm,
-	       "exact", "exact line search", IEX(8),
-	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(EXACT_LINE_SEARCH_PTR,parameters);
-
-  slv_define_parm(parameters, bool_parm,
-	       "cncols", "Check poorly scaled columns", IEX(9),
-	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(DUMPCNORM_PTR,parameters);
-
-  slv_define_parm(parameters, bool_parm,
-	       "lintime", "Enable linsolqr timing",
-               "Enable linsolqr factor timing",
-	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(LINTIME_PTR,parameters);
-
-  slv_define_parm(parameters, bool_parm,
-	       "btrunc", "truncate whole step vector", IEX(10),
-	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(TRUNCATE_PTR,parameters);
-
-  slv_define_parm(parameters, char_parm,
-	       "reorder", "reorder method", IEX(11),
-	       U_p_string(val,reorder_names[0]),
-	       U_p_strings(lo,reorder_names),
-	       U_p_int(hi,sizeof(reorder_names)/sizeof(char *)),1);
-  SLV_CPARM_MACRO(REORDER_OPTION_PTR,parameters);
+  slv_param_int(parameters,CUTOFF
+  	,(SlvParameterInitInt){{"cutoff"
+  		,"block size cutoff (MODEL-based)",2
+  		,IEX(3)
+  	}, 500, 0, 20000}
+  );
 
 
-  slv_define_parm(parameters, real_parm,
-	       "toosmall", "default for zero nominal", REX(0),
-	       U_p_real(val, 1e-8),U_p_real(lo, 1e-12),U_p_real(hi,1.5), 3);
-  SLV_RPARM_MACRO(TOO_SMALL_PTR,parameters);
+  slv_param_int(parameters,UPDATE_JACOBIAN
+  	,(SlvParameterInitInt){{"upjac"
+  		,"Jacobian update frequency",3
+  		,IEX(4)
+  	}, 1, 0, 20000}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "cnlow", "smallest allowable column norm", REX(1),
-	       U_p_real(val, 0.01),U_p_real(lo, 0),U_p_real(hi,100000000.5), 3);
-  SLV_RPARM_MACRO(CNLOW_PTR,parameters);
+  slv_param_int(parameters,UPDATE_WEIGHTS
+  	,(SlvParameterInitInt){{"upwts"
+  		,"Row scaling update frequency",3
+  		,IEX(5)
+  	}, 1, 0, 20000}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "cnhigh", "largest allowable column norm", REX(2),
-	       U_p_real(val, 100.0),U_p_real(lo,0),U_p_real(hi,100000000.5), 3);
-  SLV_RPARM_MACRO(CNHIGH_PTR,parameters);
+  slv_param_int(parameters,UPDATE_NOMINALS
+  	,(SlvParameterInitInt){{"upnom"
+  		,"Column scaling update frequency",3
+  		,IEX(6)
+  	}, 1000, 0, 20000}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "tobnds", "fraction move to bounds", REX(3),
-	       U_p_real(val, 0.95),U_p_real(lo, 0),U_p_real(hi,1.0), 3);
-  SLV_RPARM_MACRO(TOWARD_BOUNDS_PTR,parameters);
+  slv_param_int(parameters,UPDATE_RELNOMS
+  	,(SlvParameterInitInt){{"uprelnom"
+  		,"Relation nominal update frequency",3
+  		,IEX(13)
+  	}, 5, 0, 20000}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "posdef", "Positive Definite Hessian Check", REX(4),
-	       U_p_real(val, 0.01),U_p_real(lo,0),U_p_real(hi,1.0), 3);
-  SLV_RPARM_MACRO(POSITIVE_DEFINITE_PTR,parameters);
+  slv_param_int(parameters,ITSCALELIM
+  	,(SlvParameterInitInt){{"itscalelim"
+  		,"Iteration lim for iterative scale",3
+  		,IEX(14)
+  	}, 10, 0, 20000}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "detzero", "Min newt/grad determinant ||", REX(5),
-	       U_p_real(val, 1e-8),U_p_real(lo,0),U_p_real(hi,1.0), 3);
-  SLV_RPARM_MACRO(DETZERO_PTR,parameters);
+  slv_param_char(parameters,CONVOPT
+  	,(SlvParameterInitChar){{"convopt"
+  		,"convergence test",1
+  		,"convergence test"
+  	}, "ABSOLUTE"}, (char *[]){"ABSOLUTE","RELNOM_SCALE",NULL}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "steperrmax", "Step size precision", REX(6),
-	       U_p_real(val, 1e-4),U_p_real(lo, 1e-10),U_p_real(hi,1.0), 3);
-  SLV_RPARM_MACRO(STEPSIZEERR_MAX_PTR,parameters);
+  slv_param_char(parameters,SCALEOPT
+  	,(SlvParameterInitChar){{"scaleopt"
+  		,"jacobian scaling option",1
+  		,IEX(15)
+  	}, "ROW_2NORM"}, (char *[]){"NONE","ROW_2NORM","RELNOM",NULL}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "prngmin", "Parameter range tolerance (in-loop)", REX(7),
-	       U_p_real(val, 1e-12),U_p_real(lo, 1e-12),U_p_real(hi,1.0), 3);
-  SLV_RPARM_MACRO(PARMRNG_MIN_PTR,parameters);
+  slv_param_bool(parameters,REDUCE
+  	,(SlvParameterInitBool){{"reduce"
+  		,"step reduction on?",2
+  		,IEX(7)
+  	}, 0}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "mincoef", "'Largest' drop in maxstep allowed", REX(8),
-	       U_p_real(val, 0.05),U_p_real(lo, 1e-5),U_p_real(hi,1.0), 3);
-  SLV_RPARM_MACRO(MIN_COEF_PTR,parameters);
+  slv_param_bool(parameters,EXACT_LINE_SEARCH
+  	,(SlvParameterInitBool){{"exact"
+  		,"exact line search",2
+  		,IEX(8)
+  	}, 0}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "maxcoef", "'Smallest' drop in maxstep allowed", REX(9),
-	       U_p_real(val, 0.99999),U_p_real(lo,0),U_p_real(hi,1.0), 3);
-  SLV_RPARM_MACRO(MAX_COEF_PTR,parameters);
+  slv_param_bool(parameters,DUMPCNORM
+  	,(SlvParameterInitBool){{"cncols"
+  		,"Check poorly scaled columns",2
+  		,IEX(9)
+  	}, 0}
+  );
 
-  slv_define_parm(parameters, real_parm,
-	       "itscaletol", "Iterative scaling tolerance", REX(10),
-	       U_p_real(val, 0.99999),U_p_real(lo,0),U_p_real(hi,1.0), 3);
-  SLV_RPARM_MACRO(ITSCALETOL_PTR,parameters);
+  slv_param_bool(parameters,LINTIME
+  	,(SlvParameterInitBool){{"lintime"
+  		,"Enable linsolqr timing",2
+  		,"Enable linsolqr factor timing"
+  	}, 0}
+  );
 
-  slv_define_parm(parameters, char_parm,
-	       "bppivoting","linear method","linear method choice",
-	       U_p_string(val,factor_names[4]),
-	       U_p_strings(lo,factor_names),
-	       U_p_int(hi,sizeof(factor_names)/sizeof(char *)),1);
-  SLV_CPARM_MACRO(FACTOR_OPTION_PTR,parameters);
+  slv_param_bool(parameters,TRUNCATE
+  	,(SlvParameterInitBool){{"btrunc"
+  		,"truncate whole step vector",2
+  		,IEX(10)
+  	}, 0}
+  );
 
-  slv_define_parm(parameters, int_parm,
-	       "maxminor", "maximum line search iterations", IEX(16),
-	       U_p_int(val, 30),U_p_int(lo,5),U_p_int(hi,100), 2);
-  SLV_IPARM_MACRO(MAX_MINOR_PTR,parameters);
+  slv_param_char(parameters,REORDER_OPTION
+  	,(SlvParameterInitChar){{"reorder"
+  		,"reorder method",1
+  		,IEX(11)
+  	}, "SPK1"}, (char*[]){"SPK1","TEAR_DROP","OVER_TEAR",NULL}
+  );
+
+  slv_param_real(parameters,TOO_SMALL
+  	,(SlvParameterInitReal){{"toosmall"
+  		,"default for zero nominal",3
+  		,REX(0)
+  	}, 1e-8, 1e-12, 1.5}
+  );
+
+  slv_param_real(parameters,CNLOW
+  	,(SlvParameterInitReal){{"cnlow"
+  		,"smallest allowable column norm",3
+  		,REX(1)
+  	}, 0.01, 0, 100000000.5}
+  );
+
+  slv_param_real(parameters,CNHIGH
+  	,(SlvParameterInitReal){{"cnhigh"
+  		,"largest allowable column norm",3
+  		,REX(2)
+  	}, 100.0, 0, 100000000.5}
+  );
+
+  slv_param_real(parameters,TOWARD_BOUNDS
+  	,(SlvParameterInitReal){{"tobnds"
+  		,"fraction move to bounds",3
+  		,REX(3)
+  	}, 0.95, 0, 1.0}
+  );
+
+  slv_param_real(parameters,POSITIVE_DEFINITE
+  	,(SlvParameterInitReal){{"posdef"
+  		,"Positive Definite Hessian Check",3
+  		,REX(4)
+  	}, 0.01, 0, 1.0}
+  );
+
+  slv_param_real(parameters,DETZERO
+  	,(SlvParameterInitReal){{"detzero"
+  		,"Min newt/grad determinant ||",3
+  		,REX(5)
+  	}, 1e-8, 0, 1.0}
+  );
+
+  slv_param_real(parameters,STEPSIZEERR_MAX
+  	,(SlvParameterInitReal){{"steperrmax"
+  		,"Step size precision",3
+  		,REX(6)
+  	}, 1e-4, 1e-10, 1.0}
+  );
+
+  slv_param_real(parameters,PARMRNG_MIN
+  	,(SlvParameterInitReal){{"prngmin"
+  		,"Parameter range tolerance (in-loop)",3
+  		,REX(7)
+  	}, 1e-12, 1e-12, 1.0}
+  );
+
+  slv_param_real(parameters,MIN_COEF
+  	,(SlvParameterInitReal){{"mincoef"
+  		,"'Largest' drop in maxstep allowed",3
+  		,REX(8)
+  	}, 0.05, 1e-5, 1.0}
+  );
+
+  slv_param_real(parameters,MAX_COEF
+  	,(SlvParameterInitReal){{"maxcoef"
+  		,"'Smallest' drop in maxstep allowed",3
+  		,REX(9)
+  	}, 0.99999, 0, 1.0}
+  );
+
+  slv_param_real(parameters,ITSCALETOL
+  	,(SlvParameterInitReal){{"itscaletol"
+  		,"Iterative scaling tolerance",3
+  		,REX(10)
+  	}, 0.99999, 0, 1.0}
+  );
+
+  slv_param_char(parameters,FACTOR_OPTION
+  	,(SlvParameterInitChar){{"bppivoting"
+  		,"linear method",1
+  		,"linear method choice"
+  	}, "Fastest-SPK1/MR-RANKI"}, (char *[]){
+		"SPK1/RANKI","SPK1/RANKI+ROW",
+		"Fast-SPK1/RANKI","Fast-SPK1/RANKI+ROW",
+		"Fastest-SPK1/MR-RANKI","CondQR","CPQR",NULL
+  	}   /*,"GAUSS","GAUSS_EASY"  currently only works for ken */
+  );
+
+  slv_param_int(parameters,MAX_MINOR
+  	,(SlvParameterInitInt){{"maxminor"
+  		,"maximum line search iterations",2
+  		,IEX(16)
+  	}, 30, 5, 100}
+  );
+
+  asc_assert(parameters->num_parms==slv3_PA_SIZE);
+
   return 1;
 }
 
@@ -3377,7 +3402,7 @@ static void structural_analysis(slv_system_t server, slv3_system_t sys){
   sys->J.dofdata = slv_get_dofdata(server);
   sys->rank = sys->J.dofdata->structural_rank;
   sys->ZBZ.order = sys->obj ? (sys->vused - sys->rank) : 0;
-  if( !(PARTITION) || OPTIMIZING(sys) ) {
+  if( !(SLV_PARAM_BOOL(&(sys->p),PARTITION)) || OPTIMIZING(sys) ) {
     /* maybe we should reorder blocks here? maybe not */
     slv_block_unify(server);
   }
@@ -3395,21 +3420,21 @@ static void structural_analysis(slv_system_t server, slv3_system_t sys){
 
 static void set_factor_options (slv3_system_t sys)
 {
-  if (strcmp(FACTOR_OPTION,"SPK1/RANKI") == 0) {
+  if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI") == 0) {
     sys->J.fm = ranki_kw;
-  } else if (strcmp(FACTOR_OPTION,"SPK1/RANKI+ROW") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI+ROW") == 0) {
     sys->J.fm = ranki_jz;
-  } else if (strcmp(FACTOR_OPTION,"Fast-SPK1/RANKI") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI") == 0) {
     sys->J.fm = ranki_kw2;
-  } else if (strcmp(FACTOR_OPTION,"Fast-SPK1/RANKI+ROW") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI+ROW") == 0) {
     sys->J.fm = ranki_jz2;
-  } else if (strcmp(FACTOR_OPTION,"Fastest-SPK1/MR-RANKI") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fastest-SPK1/MR-RANKI") == 0) {
     sys->J.fm = ranki_ba2;
-/*  } else if (strcmp(FACTOR_OPTION,"GAUSS") == 0) {
+/*  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"GAUSS") == 0) {
     sys->J.fm = gauss_ba2;
-  } else if (strcmp(FACTOR_OPTION,"GAUSS_EASY") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"GAUSS_EASY") == 0) {
     sys->J.fm = gauss_easy;
-  } else if (strcmp(FACTOR_OPTION,"NGSLV-2-LEVEL") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"NGSLV-2-LEVEL") == 0) {
     sys->J.fm = ranki_kt2;*/
   } else {
     sys->J.fm = ranki_ba2;
@@ -3418,13 +3443,13 @@ static void set_factor_options (slv3_system_t sys)
 
   linsolqr_set_matrix(sys->J.sys,sys->J.mtx);
   linsolqr_prep(sys->J.sys,linsolqr_fmethod_to_fclass(sys->J.fm));
-  linsolqr_set_pivot_zero(sys->J.sys, SING_TOL);
+  linsolqr_set_pivot_zero(sys->J.sys, SLV_PARAM_REAL(&(sys->p),SING_TOL));
 
   /* KHACK NOTE: looks like drop tol never set on interface */
   linsolqr_set_drop_tolerance(sys->J.sys, sys->p.tolerance.drop);
-  linsolqr_set_pivot_tolerance(sys->J.sys, PIVOT_TOL);
+  linsolqr_set_pivot_tolerance(sys->J.sys, SLV_PARAM_REAL(&(sys->p),PIVOT_TOL));
   /* this next one is fishy, but we don't use qr so not panicking */
-  linsolqr_set_condition_tolerance(sys->J.sys, PIVOT_TOL);
+  linsolqr_set_condition_tolerance(sys->J.sys, SLV_PARAM_REAL(&(sys->p),PIVOT_TOL));
 }
 /*
   configures linsolqr system, among other things.
@@ -3597,28 +3622,28 @@ static void reset_cost(struct slv_block_cost *cost,int32 costsize){
 }
 
 static void slv3_update_linsolqr(slv3_system_t sys){
-  if (strcmp(FACTOR_OPTION,"SPK1/RANKI") == 0) {
+  if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI") == 0) {
     sys->J.fm = ranki_kw;
-  } else if (strcmp(FACTOR_OPTION,"SPK1/RANKI+ROW") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI+ROW") == 0) {
     sys->J.fm = ranki_jz;
-  } else if (strcmp(FACTOR_OPTION,"Fast-SPK1/RANKI") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI") == 0) {
     sys->J.fm = ranki_kw2;
-  } else if (strcmp(FACTOR_OPTION,"Fast-SPK1/RANKI+ROW") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI+ROW") == 0) {
     sys->J.fm = ranki_jz2;
-  } else if (strcmp(FACTOR_OPTION,"Fastest-SPK1/MR-RANKI") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fastest-SPK1/MR-RANKI") == 0) {
     sys->J.fm = ranki_ba2;
-/*  } else if (strcmp(FACTOR_OPTION,"GAUSS_EASY") == 0) {
+/*  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"GAUSS_EASY") == 0) {
     sys->J.fm = gauss_easy;
-  } else if (strcmp(FACTOR_OPTION,"NGSLV-2-LEVEL") == 0) {
+  } else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"NGSLV-2-LEVEL") == 0) {
     sys->J.fm = ranki_kt2;*/
   } else {
     sys->J.fm = ranki_ba2;
   }
-  linsolqr_set_pivot_zero(sys->J.sys, SING_TOL);
+  linsolqr_set_pivot_zero(sys->J.sys, SLV_PARAM_REAL(&(sys->p),SING_TOL));
   linsolqr_set_drop_tolerance(sys->J.sys, sys->p.tolerance.drop);
-  linsolqr_set_pivot_tolerance(sys->J.sys, PIVOT_TOL);
+  linsolqr_set_pivot_tolerance(sys->J.sys, SLV_PARAM_REAL(&(sys->p),PIVOT_TOL));
   /* this next one is fishy, but we don't use qr so not panicking */
-  linsolqr_set_condition_tolerance(sys->J.sys, PIVOT_TOL);
+  linsolqr_set_condition_tolerance(sys->J.sys, SLV_PARAM_REAL(&(sys->p),PIVOT_TOL));
 }
 
 static int slv3_presolve(slv_system_t server, SlvClientToken asys){
@@ -3646,7 +3671,7 @@ static int slv3_presolve(slv_system_t server, SlvClientToken asys){
 
   if(sys->presolved > 0) { /* system has been presolved before */
     if(!slv3_dof_changed(sys) /* no changes in fixed or included flags */
-       && PARTITION == sys->J.old_partition) {
+       && SLV_PARAM_BOOL(&(sys->p),PARTITION) == sys->J.old_partition) {
 #if DEBUG
       FPRINTF(stderr,"YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION\n");
 #endif
@@ -3674,7 +3699,7 @@ static int slv3_presolve(slv_system_t server, SlvClientToken asys){
     }
 
     sys->presolved = 1; /* full presolve recognized here */
-    sys->J.old_partition = PARTITION;
+    sys->J.old_partition = SLV_PARAM_BOOL(&(sys->p),PARTITION);
     destroy_matrices(sys);
     destroy_vectors(sys);
     create_matrices(server,sys);
@@ -3726,7 +3751,7 @@ static boolean slv3_change_basis(slv3_system_t sys,int32 var,
   boolean didit;
   didit = mtx_make_col_independent(sys->J.mtx,
     mtx_org_to_col(sys->J.mtx,var),rng);
-  if (didit && PARTITION && !OPTIMIZING(sys) ) {
+  if (didit && SLV_PARAM_BOOL(&(sys->p),PARTITION) && !OPTIMIZING(sys) ) {
     struct slv_block_cost oldpresolve;
     int32 oldblocks;
     oldblocks = sys->s.block.number_of;
@@ -3809,19 +3834,19 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     find_next_unconverged_block(sys);
 	if(!sys->s.calc_ok){
 #if DEBUG
-	  CONSOLE_DEBUG("Calculation errors after find_next_unconverged_block"); 
+	  CONSOLE_DEBUG("Calculation errors after find_next_unconverged_block");
 #endif
       return 10;
 	}
     update_status(sys);
-    if( RELNOMSCALE == 1 /*|| (strcmp(SCALEOPT,"RELNOM") == 0) ||
-       (strcmp(SCALEOPT,"RELNOM+ITERATIVE") == 0)*/ ){
+    if( SLV_PARAM_BOOL(&(sys->p),RELNOMSCALE) == 1 /*|| (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0) ||
+       (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM+ITERATIVE") == 0)*/ ){
       calc_relnoms(sys);
     }
     return 0; /* not sure if this is an error? */
   }
-  if (SHOW_LESS_IMPT && (sys->s.block.current_size >1 ||
-      LIFDS)) {
+  if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (sys->s.block.current_size >1 ||
+      SLV_PARAM_BOOL(&(sys->p),LIFDS))) {
     debug_delimiter(lif);
   }
   iteration_begins(sys);
@@ -3848,7 +3873,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     struct rel_relation *rel;
     var = sys->vlist[mtx_col_to_org(sys->J.mtx,sys->J.reg.col.low)];
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,sys->J.reg.row.low)];
-    if (SHOW_LESS_IMPT && LIFDS) {
+    if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && SLV_PARAM_BOOL(&(sys->p),LIFDS)) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> (%d)", "Singleton relation",
               mtx_row_to_org(sys->J.mtx,sys->J.reg.row.low));
       print_rel_name(lif,sys,rel); PUTC('\n',lif);
@@ -3860,18 +3885,18 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     /* Attempt direct solve */
     /* CONSOLE_DEBUG("Attempting direct solve..."); */
     time0=tm_cpu_time();
-    ds_status=slv_direct_solve(SERVER,rel,var,mif,FEAS_TOL,
-                               IGNORE_BOUNDS,0);
+    ds_status=slv_direct_solve(SERVER,rel,var,mif,SLV_PARAM_REAL(&(sys->p),FEAS_TOL),
+                               SLV_PARAM_BOOL(&(sys->p),IGNORE_BOUNDS),0);
     sys->s.block.functime += (tm_cpu_time()-time0);
 
     switch( ds_status ) {
     case 0:
-      if (SHOW_LESS_IMPT) {
+      if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Unable to directly solve symbolically.\n");
       }
       break;
     case 1:
-      if (SHOW_LESS_IMPT && LIFDS) {
+      if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && SLV_PARAM_BOOL(&(sys->p),LIFDS)) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Directly solved.\n");
       }
       sys->s.calc_ok = calc_residuals(sys);
@@ -3916,7 +3941,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   }
   set_factor_options(sys); /* KHACK: new call to fix lack of proper update */
   rank_defect = calc_pivots(sys);
-  if (SAVLIN) {
+  if (SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
     FILE *ldat;
     sprintf(savlinfilename,"%s%d",savlinfilebase,savlinnum++);
     ldat=fopen(savlinfilename,"w");
@@ -3931,7 +3956,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   calc_stationary(sys);
 
   if( OPTIMIZING(sys) && block_feasible(sys) &&
-      calc_sqrt_D0(sys->stationary.norm2) <= STAT_TOL ) {
+      calc_sqrt_D0(sys->stationary.norm2) <= SLV_PARAM_REAL(&(sys->p),STAT_TOL) ) {
     iteration_ends(sys);
     find_next_unconverged_block(sys);
     update_status(sys);
@@ -3939,7 +3964,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   }
   calc_phi(sys);
 
-  if (SHOW_LESS_IMPT) {
+  if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n","Phi", sys->phi);
   }
 
@@ -3947,7 +3972,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   calc_Jgamma(sys);
 
   if( !OPTIMIZING(sys) &&
-      sys->gamma.norm2 <= TERM_TOL*sys->phi ) {
+      sys->gamma.norm2 <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)*sys->phi ) {
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(ASCERR,"QRSlv: Problem diverged: Gamma norm too small.");
     error_reporter_end_flush();
@@ -3990,7 +4015,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     minor++;
 
 /* 2004.11.5 code by AWW to eliminate runaway minor loop */
-    if(minor >= MAX_MINOR){
+    if(minor >= SLV_PARAM_INT(&(sys->p),MAX_MINOR)){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv exceeded max line search iterations. Check for variables on bounds.");
       sys->s.inconsistent = TRUE;
       iteration_ends(sys);
@@ -4007,10 +4032,10 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     } else {
       if (!bounds_ok) {
         real64 maxstep_coef;
-        maxstep_coef = 0.5*(1.0 + TOWARD_BOUNDS*bounds_coef);
-        if (maxstep_coef < MIN_COEF) maxstep_coef = MIN_COEF;
-        if (maxstep_coef > MAX_COEF) maxstep_coef = MAX_COEF;
-        if (SHOW_LESS_IMPT) {
+        maxstep_coef = 0.5*(1.0 + SLV_PARAM_REAL(&(sys->p),TOWARD_BOUNDS)*bounds_coef);
+        if (maxstep_coef < SLV_PARAM_REAL(&(sys->p),MIN_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MIN_COEF);
+        if (maxstep_coef > SLV_PARAM_REAL(&(sys->p),MAX_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MAX_COEF);
+        if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
           ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
             "    Step reduction (bounds not ok)", maxstep_coef);
         }
@@ -4020,7 +4045,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
         if (!new_ok) {
           real64 maxstep_coef;
           maxstep_coef = 0.50;
-          if (SHOW_LESS_IMPT) {
+          if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
             ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
               "    Step reduction (calculations not ok)", maxstep_coef);
           }
@@ -4037,11 +4062,11 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 	      denom = sys->phi - oldphi +
 		sys->maxstep*calc_sqrt_D0(sys->gamma.norm2);
               maxstep_coef = denom > 0.0 ? 0.5*
-              sys->maxstep*calc_sqrt_D0(sys->gamma.norm2)/denom : MAX_COEF;
+              sys->maxstep*calc_sqrt_D0(sys->gamma.norm2)/denom : SLV_PARAM_REAL(&(sys->p),MAX_COEF);
             }
-            if (maxstep_coef < MIN_COEF) maxstep_coef = MIN_COEF;
-            if (maxstep_coef > MAX_COEF) maxstep_coef = MAX_COEF;
-            if (SHOW_LESS_IMPT) {
+            if (maxstep_coef < SLV_PARAM_REAL(&(sys->p),MIN_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MIN_COEF);
+            if (maxstep_coef > SLV_PARAM_REAL(&(sys->p),MAX_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MAX_COEF);
+            if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
               ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                 "    Step reduction (descent not ok)",maxstep_coef);
             }
@@ -4058,14 +4083,14 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
       calc_sqrt_D0((sys->varstep.norm2+sys->mulstep.norm2)*
       (sys->varstep1.norm2+sys->mulstep1.norm2)));
     sys->maxstep = calc_sqrt_D0(sys->varstep.norm2 + sys->mulstep.norm2);
-    if (SHOW_LESS_IMPT) {
+    if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
         "    Suggested step length (scaled)", sys->maxstep);
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
         "    Suggested progress", sys->progress);
     }
 
-    if (sys->progress <= TERM_TOL) {
+    if (sys->progress <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)) {
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(ASCERR,"QRSlv: Problem diverged: Suggested progress too small.");
 	  error_reporter_end_flush();
@@ -4080,7 +4105,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     /**
      ***  Check bounds.
      **/
-    bounds_ok = ((!REDUCE) || (IGNORE_BOUNDS) ||
+    bounds_ok = ((!SLV_PARAM_BOOL(&(sys->p),SLV_PARAM_BOOL(&(sys->p),REDUCE))) || (SLV_PARAM_BOOL(&(sys->p),IGNORE_BOUNDS)) ||
                 ((bounds_coef=required_coef_to_stay_inbounds(sys)) == 1.0));
     if( !bounds_ok ) {
       previous = oldphi;
@@ -4091,7 +4116,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
      ***  Apply step.
      **/
     apply_step(sys);
-    if (sys->progress <= TERM_TOL) {
+    if (sys->progress <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)) {
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(ASCERR,"Problem diverged: Applied progress too small.");
 	  error_reporter_end_flush();
@@ -4113,7 +4138,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
      */
     calc_objectives(sys);
     if (!sys->s.calc_ok) {
-      if (SHOW_LESS_IMPT) {
+      if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"    Step accepted.\n");
       }
       if (new_ok)
@@ -4135,16 +4160,16 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     scale_residuals(sys);
     calc_phi(sys);
     sys->phi += inner_product( &(sys->mulstep),&(sys->residuals) );
-    if (SHOW_LESS_IMPT) {
+    if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Anticipated phi",sys->phi);
     }
     descent_ok = (sys->phi < oldphi);
-    if (EXACT_LINE_SEARCH)
+    if (SLV_PARAM_BOOL(&(sys->p),EXACT_LINE_SEARCH))
       descent_ok = (descent_ok && (sys->phi >= previous));
   } /* end while */
 
   step_accepted(sys);
-  if (SHOW_LESS_IMPT) {
+  if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"    Step accepted.\n");
     if (sys->obj) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\n%-40s ---> %g\n", "Objective", sys->objective);
@@ -4212,8 +4237,7 @@ static int slv3_destroy(slv_system_t server, SlvClientToken asys)
   return 0;
 }
 
-int slv3_register(SlvFunctionsT *sft)
-{
+int slv3_register(SlvFunctionsT *sft){
   if (sft==NULL)  {
     FPRINTF(stderr,"slv3_register called with NULL pointer\n");
     return 1;

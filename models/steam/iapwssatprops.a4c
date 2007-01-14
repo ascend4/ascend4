@@ -54,6 +54,7 @@ MODEL iapwssatprops;
 	theta IS_A fraction;
 	theta_expr: theta = T / T_c;
 
+	(* note: I tried to rearrange this without the '/' but it caused divergence in dsgsat2.a4c in configure_dynamic mode *)
 	uf_expr: u_f = h_f - p/rho_f;
 	ug_expr: u_g = h_g - p/rho_g;
 

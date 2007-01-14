@@ -198,7 +198,7 @@ static int DoSolve(struct Instance *inst)
 	@see DoSolve
 */
 int do_solve_eval( struct Instance *i,
-		  struct gl_list_t *arglist)
+		  struct gl_list_t *arglist, void *user_data)
 {
   unsigned long len;
   int result;
@@ -333,7 +333,7 @@ static int finite_difference(struct gl_list_t *arglist)
 	Finite different evaluate...
 */
 int do_finite_diff_eval( struct Instance *i,
-			 struct gl_list_t *arglist)
+			 struct gl_list_t *arglist, void *user_data)
 {
   int result;
 
@@ -752,13 +752,15 @@ int LUFactorJacobian(slv_system_t sys){
   return 0;
 }
 
-
-/*
- * At this point the rhs would have already been added.
- *
- * Extended to handle either factorization code:
- * linsol or linsolqr.
- */
+
+/**
+	At this point the rhs would have already been added.
+
+	Extended to handle either factorization code:
+	linsol or linsolqr.
+
+	This routine is part of the 'temporary solution' for derivatives in lsode.c
+*/
 int Compute_dy_dx_smart(slv_system_t sys,
                                real64 *rhs,
                                real64 **dy_dx,
@@ -1331,7 +1333,7 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
 
 
 int do_sensitivity_eval( struct Instance *i,
-			 struct gl_list_t *arglist)
+			 struct gl_list_t *arglist, void *user_data)
 {
   int result;
   if (SensitivityCheckArgs(arglist)) {
@@ -1342,7 +1344,7 @@ int do_sensitivity_eval( struct Instance *i,
 }
 
 int do_sensitivity_eval_all( struct Instance *i,
-			    struct gl_list_t *arglist)
+			    struct gl_list_t *arglist, void *user_data)
 {
   int result;
   double step_length = 0.0;

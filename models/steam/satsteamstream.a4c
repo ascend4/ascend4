@@ -23,7 +23,7 @@ METHOD values;
 END values;
 METHOD bound_self;
 	RUN iapwssat::bound_self;
-	mdot.lower_bound := 0 {kg/s};
+	(* mdot.lower_bound := 0 {kg/s}; *)
 END bound_self;
 METHOD on_load;
 	RUN bound_self;

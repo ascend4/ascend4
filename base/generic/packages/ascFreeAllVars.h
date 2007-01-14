@@ -19,27 +19,17 @@
 *//**
 	@file
 	Variable clearing routines.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "compiler/instance_enum.h"
-	#include "compiler/compiler.h"
-	#include "general/list.h"
-	#include "compiler/extfunc.h"
 *//*
-	by Ben Allan
-	February 24, 1998
-	Part of ASCEND
-	Version: $Revision: 1.4 $
-	Version control file: $RCSfile: ascFreeAllVars.h,v $
-	Date last modified: $Date: 1998/06/16 16:42:10 $
-	Last modified by: $Author: mthomas $
+	by Ben Allan, February 24, 1998
+	Last in CVS: $Revision: 1.4 $ $Date: 1998/06/16 16:42:10 $ $Author: mthomas $
 */
 
 #ifndef ASC_ASCFREEALLVARS_H
 #define ASC_ASCFREEALLVARS_H
 
-#include <utilities/ascConfig.h>
+#include <compiler/compiler.h>
+#include <compiler/extfunc.h>
+#include <general/list.h>
 
 ASC_DLLSPEC int Asc_ClearVarsInTree(struct Instance *i);
 /**< Asc_ClearVarsInTree(i).
@@ -48,8 +38,7 @@ ASC_DLLSPEC int Asc_ClearVarsInTree(struct Instance *i);
  * of var in the DAG rooted at i.
  */
 
-ASC_DLLSPEC int Asc_FreeAllVars( struct Instance *rootinstance,
-                                    struct gl_list_t *arglist);
+ExtMethodRun Asc_FreeAllVars;
 /**<
  *  err = Asc_FreeAllVars(NULL,rootinstance,arglist,0);
  *  All arguments except rootinstance are ignored.

@@ -95,7 +95,7 @@ int Asc_ClearVarsInTree(struct Instance *i){
   return 0;
 }
 
-int Asc_FreeAllVars( struct Instance *root, struct gl_list_t *arglist){
+int Asc_FreeAllVars( struct Instance *root, struct gl_list_t *arglist, void *userdata){
   /* arglist is a list of gllist of instances */
   if (arglist == NULL ||
       gl_length(arglist) == 0L ||

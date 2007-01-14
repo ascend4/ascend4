@@ -83,29 +83,32 @@
 
 
 /* ignores: interp, i, whichvar */
-extern int do_solve_eval( struct Instance *i, struct gl_list_t *arglist);
+extern int do_solve_eval( struct Instance *i, struct gl_list_t *arglist, void *user_data);
 
 /* ignores: interp, i, whichvar */
-extern int do_finite_diff_eval( struct Instance *i, struct gl_list_t *arglist);
+extern int do_finite_diff_eval( struct Instance *i, struct gl_list_t *arglist, void *user_data);
 
 extern char sensitivity_help[];
 
 /* ignores: interp, i,  */
-extern int do_sensitivity_eval_all( struct Instance *i, struct gl_list_t *arglist);
+extern int do_sensitivity_eval_all( struct Instance *i, struct gl_list_t *arglist, void *user_data);
 
 /* ignores: interp, i,  */
-extern int do_sensitivity_eval( struct Instance *i, struct gl_list_t *arglist);
+extern int do_sensitivity_eval( struct Instance *i, struct gl_list_t *arglist, void *user_data);
 
 ASC_DLLSPEC int sensitivity_register(void);
 
 /*--------------------------------------------------
-	The following functions are provided only for use by BLSODE. We want to
+	The following functions are provided only for use by LSODE. We want to
 	phase this out and replace with a new solver like IDA.
 */
 int Compute_J(slv_system_t sys);
 int NumberFreeVars(slv_system_t sys);
 int NumberIncludedRels(slv_system_t sys);
 int LUFactorJacobian(slv_system_t sys);
+int Compute_dy_dx_smart(slv_system_t sys, real64 *rhs, real64 **dy_dx,
+		int *inputs, int ninputs, int *outputs, int noutputs
+);
 
 #endif  /* ASC_SENSITIVITY_H */
 
