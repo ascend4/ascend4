@@ -483,15 +483,18 @@ class TestSteam(AscendSelfTester):
 		I.solve()
 
 	def testintegIDA(self):	
+		M = self.testdsgsat()
 		self.assertAlmostEqual(M.dTw_dt[4],0.0)
 		Tw1 = float(M.T_w[4])
+		T = self.L.findType('dsgsat2')
+		M.run(T.getMethod('free_states'))
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setParameter('linsolver','DENSE')
 		I.setParameter('safeeval',True)
 		I.setParameter('rtol',1e-8)
 		I.setInitialSubStep(0.01)
-		I.setMinSubSteps(0.001)		
+		I.setMinSubStep(0.001)		
 		I.setMaxSubSteps(100)		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 100)
@@ -801,7 +804,7 @@ if __name__=='__main__':
 		envpypath = os.environ['PYTHONPATH'].split(SEP)
 		if pypath not in envpypath:
 			envpypath.insert(0,pypath)
-			os.environ['PYTHONPATH']=envpypath
+			os.environ['PYTHONPATH']=SEP.join(envpypath)
 			restart = 1
 
 	if restart:
