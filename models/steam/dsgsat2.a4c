@@ -165,7 +165,14 @@ METHOD configure_dynamic;
 	END FOR;
 	t := 0 {s};
 END configure_dynamic;
-
+METHOD free_states;
+	FOR i IN [2..n] DO
+		FREE node[i].rho;
+		FREE node[i].mdot;
+		FREE rhou[i];
+		FREE T_w[i];
+	END FOR;
+END free_states;	
 METHOD ode_init;
 	(* add the necessary meta data to allow solving with the integrator *)
 	t.ode_type := -1;

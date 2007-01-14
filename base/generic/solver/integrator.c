@@ -536,9 +536,12 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 			if(prev==NULL || info->index != prev->index){
 				/* derivative, but without undifferentiated var present in model */
 				varname = var_make_name(sys->system,info->i);
-				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Derivative %d of \"%s\" is present without its un-differentiated equivalent"
-					, info->type-1
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Variable \"%s\" is marked as"
+					" being a derivative (n=%d) but its un-differentiated"
+					" equivalent was not found in the list of solver variables."
+					" Check that the required var is present and not currently FIXED."
 					, varname
+					, info->type-1
 				);
 				ASC_FREE(varname); 
 				return 7;
