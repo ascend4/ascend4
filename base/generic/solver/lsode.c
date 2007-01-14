@@ -946,7 +946,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	/* read METH and MITER parameters, create MF value */
 	method = SLV_PARAM_CHAR(&(blsys->params),LSODE_PARAM_METH);
 	miter = SLV_PARAM_INT(&(blsys->params),LSODE_PARAM_MITER);
-	maxord = SLV_PARAM_INT(&(blsys->params),LSODE_PARAM_MITER);
+	maxord = SLV_PARAM_INT(&(blsys->params),LSODE_PARAM_MAXORD);
 	if(miter < 0 || miter > 3){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unacceptable value '%d' of parameter 'miter'",miter);
 		return 5;
@@ -1029,6 +1029,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   rwork[6] = integrator_get_minstep(blsys);
   iwork[5] = integrator_get_maxsubsteps(blsys);
 	iwork[4] = maxord;
+	CONSOLE_DEBUG("MAXORD = %d",maxord);
 
   if(x[0] > integrator_getsample(blsys, 2)){
     ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid initialisation time: exceeds second timestep value");
