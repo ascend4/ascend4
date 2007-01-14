@@ -1,3 +1,4 @@
+/* :ex: set ts=2 */
 /*	ASCEND modelling environment
 	Copyright 1997, Carnegie Mellon University
 	Copyright (C) 2006-2007 Carnegie Mellon University
@@ -312,7 +313,10 @@ void integrator_lsode_free(void *enginedata){
 */
 
 enum ida_parameters{
-	LSODE_PARAM_TIMING
+	LSODE_PARAM_METH
+	,LSODE_PARAM_MITER
+	,LSODE_PARAM_MAXORD
+	,LSODE_PARAM_TIMING
 	,LSODE_PARAM_RTOLVECT
 	,LSODE_PARAM_RTOL
 	,LSODE_PARAM_ATOLVECT
@@ -346,16 +350,48 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 	/* reset the number of parameters to zero so that we can check it at the end */
 	p->num_parms = 0;
 
+	slv_param_char(p,LSODE_PARAM_METH
+			,(SlvParameterInitChar){{"meth"
+			,"Integration method",1
+			,"AM=Adams-Moulton method (for non-stiff problems), BDF=Backwards"
+			" Difference Formular (for stiff problems). See 'Description and"
+			" Use of LSODE', section 3.1."
+		}, "BDF"}, (char *[]){"AM", "BDF"}
+	);
+
+	slv_param_int(p,LSODE_PARAM_MITER
+			,(SlvParameterInitInt){{"miter"
+			,"Corrector iteration technique", 1
+			,"0=Functional iteration, 1=Modified Newton iteration with user-"
+			"supplied analytical Jacobian, 2=Modified Newton iteration with"
+			" internally-generated numerical Jacobian, 3=Modified Jacobi-Newton"
+			" iteration with internally generated numerical Jacobian. See "
+			" 'Description and Use of LSODE', section 3.1. Note that not all"
+			" methods described there are available via ASCEND."
+		}, 1, 0, 3}
+	);
+
+	slv_param_int(p,LSODE_PARAM_MAXORD
+			,(SlvParameterInitInt){{"maxord"
+			,"Maximum method order", 1
+			,"See 'Description and Use of LSODE', p 92 and p 8. Limits <=12 for BDF"
+			" and <=5 for AM. Higher values are reduced automatically. See notes on"
+			" page 92 regarding oscillatory systems."
+		}, 12, 1, 12}
+	);
+
 	slv_param_bool(p,LSODE_PARAM_TIMING
 			,(SlvParameterInitBool){{"timing"
-			,"Output timing statistics?",1,NULL
+			,"Output timing statistics?",1
+			,"If TRUE, additional timing statistics will be output to the"
+			" console during integration."
 		}, TRUE}
 	);
 
 	slv_param_bool(p,LSODE_PARAM_ATOLVECT
 			,(SlvParameterInitBool){{"atolvect"
 			,"Use 'ode_atol' values as specified for each var?",1
-			,"If TRUE, values of 'ode_atol' are taken from your model and used "
+			,"If TRUE, values of 'ode_atol' are taken from your model and used"
 			" in the integration. If FALSE, a scalar absolute tolerance (atol)"
 			" is shared by all variables."
 		}, TRUE }
@@ -863,6 +899,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	double *y, *abtol, *reltol, *obs, *dydx;
 	int my_neq;
 	int reporterstatus;
+	const char *method; /* Table 3.1 in D&UoLSODE */
+	int miter; /* Table 3.2 in D&UoLSODE */
+	int maxord; /* page 92 in D&UoLSODE */
 
 	d = (IntegratorLsodeData *)(blsys->enginedata);
 
@@ -879,16 +918,16 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
 	integrator_lsode_setup_diffs(blsys);
 
-  /* this is a lie, but we will keep it.
-     We handle any linsol/linsolqr based solver. */
-  if(strcmp(slv_solver_name(slv_get_selected_solver(blsys->system)),"QRSlv") != 0) {
-    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv must be selected before integration.");
-    return 1;
-  }
+	/* LSODE should be OK to deal with any linsol/linsolqr-based solver. But for
+	the moment we restrict to just QRSlv. */
+	if(strcmp(slv_solver_name(slv_get_selected_solver(blsys->system)),"QRSlv") != 0) {
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv must be selected before integration.");
+		return 1;
+	}
 
-  CONSOLE_DEBUG("Solver selected is '%s'",slv_solver_name(slv_get_selected_solver(blsys->system)));
+	CONSOLE_DEBUG("Solver selected is '%s'",slv_solver_name(slv_get_selected_solver(blsys->system)));
 
-  slv_get_status(blsys->system, &status);
+	slv_get_status(blsys->system, &status);
 
   if (status.struct_singular) {
   	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration will not be performed. The system is structurally singular.");
@@ -904,6 +943,29 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   d->partitioned = 1;
   d->stop = 0; /* clear 'stop' flag */
 
+	/* read METH and MITER parameters, create MF value */
+	method = SLV_PARAM_CHAR(&(blsys->params),LSODE_PARAM_METH);
+	miter = SLV_PARAM_INT(&(blsys->params),LSODE_PARAM_MITER);
+	maxord = SLV_PARAM_INT(&(blsys->params),LSODE_PARAM_MITER);
+	if(miter < 0 || miter > 3){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unacceptable value '%d' of parameter 'miter'",miter);
+		return 5;
+	}
+	if(strcmp(method,"BDF")==0){
+		mf = 10 + miter;
+		if(maxord > 5){
+			maxord = 5;
+			CONSOLE_DEBUG("MAXORD reduced to 5 for BDF");
+		}
+	}else if(strcmp(method,"AM")==0){
+		mf = 20 + miter;
+  }else{
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unacceptable value '%d' of parameter 'meth'",method);
+		return 5;
+	}
+
+	CONSOLE_DEBUG("MF = %d",mf);
+
   nsamples = integrator_getnsamples(blsys);
   if (nsamples <2) {
   	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration will not be performed. The system has no end sample time defined.");
@@ -918,7 +980,22 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   /* x[0] = integrator_get_t(blsys); */
   x[0] = integrator_getsample(blsys, 0);
   x[1] = x[0]-1; /* make sure we don't start with wierd x[1] */
-  lrw = 22 + 9*neq + neq*neq;
+	
+	switch(mf){	
+		case 10: case 20:	
+			lrw = 20 + neq * (maxord + 1) + 3 * neq;
+			break;
+		case 11: case 12: case 21: case 22:
+			lrw = 22 + 9*neq + neq*neq;
+			break;
+		case 13: case 23:
+			lrw = 22 + neq * (maxord + 1) + 4 * neq;
+			break;
+		default:
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unknown size requirements for this value of 'mf'");
+			return 4;
+	}
+
   rwork = ASC_NEW_ARRAY_CLEAR(double, lrw+1);
   liw = 20 + neq;
   iwork = ASC_NEW_ARRAY_CLEAR(int, liw+1);
@@ -945,7 +1022,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   rwork[5] = integrator_get_maxstep(blsys);
   rwork[6] = integrator_get_minstep(blsys);
   iwork[5] = integrator_get_maxsubsteps(blsys);
-  mf = 21;		/* 21 = BDF with exact jacobian. 22 = BDF with finite diff Jacobian */
+	iwork[4] = maxord;
 
   if(x[0] > integrator_getsample(blsys, 2)){
     ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid initialisation time: exceeds second timestep value");
@@ -1168,12 +1245,23 @@ void XASCWV( char *msg, /* pointer to start of message */
 	asc_assert(*level!=2); // LSODE doesn't give level 2 in our version.
 
 	switch(*nerr){
+		case 17:
+			if(*ni==2){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"rwork length needed, lenrw = %d > %d = lrw",*i1, *i2);
+				return;
+			} break;				
 		case 52:
 			if(*nr==2){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Illegal t = %f, not in range (t - hu,t) = (%f,%f)", r1last, *r1, *r2);
 				return;
 			}else if(*nr==1){
 				r1last = *r1;
+				return;
+			} break;
+		case 201:
+			if(*nr==0 && *ni==0)return;
+			if(*nr==1 && *ni==1){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"At current t=%f, mxstep=%f steps taken on this call before reaching tout.",*r1,*i1);
 				return;
 			} break;
 		case 204:
@@ -1183,6 +1271,7 @@ void XASCWV( char *msg, /* pointer to start of message */
 				return;
 			} break;
 		case 205:
+			if(*nr==0 && *ni==0)return;
 			if(*nr==2){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Corrector convergence test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
 				return;
@@ -1198,17 +1287,15 @@ void XASCWV( char *msg, /* pointer to start of message */
 
 	/* note that %.*s means that a string length (integer) and string pointer are being required */
 	FPRINTF(stderr,"LSODE error: (%d) %.*s",*nerr,*nmes,msg);
-	if (*ni == 1) {
-	FPRINTF(stderr,"\nwhere i1 = %d",*i1);
+	if(*ni == 1) {
+		FPRINTF(stderr,"\nwhere i1 = %d",*i1);
+	}else	if(*ni == 2) {
+		FPRINTF(stderr,"\nwhere i1 = %d, i2 = %d",*i1,*i2);
 	}
-	if (*ni == 2) {
-	FPRINTF(stderr,"\nwhere i1 = %d, i2 = %d",*i1,*i2);
-	}
-	if (*nr == 1) {
-	FPRINTF(stderr,"\nwhere r1 = %.13g", *r1);
-	}
-	if (*nr == 2) {
-	FPRINTF(stderr,"\nwhere r1 = %.13g, r2 = %.13g", *r1,*r2);
+	if(*nr == 1) {
+		FPRINTF(stderr,"\nwhere r1 = %.13g", *r1);
+	}else if(*nr == 2) {
+		FPRINTF(stderr,"\nwhere r1 = %.13g, r2 = %.13g", *r1,*r2);
 	}
 	error_reporter_end_flush();
 }

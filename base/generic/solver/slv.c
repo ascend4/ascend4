@@ -1305,18 +1305,19 @@ int slv_param_char(slv_parameters_t *p, const int index
 	p1->type = char_parm;
 
 	/* find the length by hunting for the NULL at the end */
-	for(i=0; options[i]!=NULL; ++i);/*
+	for(i=0; options[i]!=NULL; ++i){
 		CONSOLE_DEBUG("FOUND init.options[%d]='%s'",i,options[i]);
-	}*/
+	}
 	noptions = i;
-	/* CONSOLE_DEBUG("THERE ARE %d CHAR OPTIONS IN PARAMETER '%s'", noptions, init.meta.codename); */
+	CONSOLE_DEBUG("THERE ARE %d CHAR OPTIONS IN PARAMETER '%s'", noptions, init.meta.codename);
 
 	p1->info.c.high = noptions;
 	p1->info.c.value = strdup(init.val);
 	p1->info.c.argv = ASC_NEW_ARRAY(char *,noptions);
 
 	for(i = 0; i < noptions; ++i){
-	    p1->info.c.argv[i] = ascstrdup(options + i);
+	    p1->info.c.argv[i] = strdup(options[i]);
+		CONSOLE_DEBUG("Copied '%s' --> argv[%d] = '%s'",options[i],i,p1->info.c.argv[i]);
 	}
 
 	slv_define_param_meta(p1, &(init.meta), index);

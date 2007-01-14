@@ -37,11 +37,7 @@
 
 #include "samplelist.h"
 
-/**
-	Define as TRUE to enable debug message printing.
-	@TODO this needs to go away.
-*/
-/* #define ANALYSE_DEBUG */
+#define ANALYSE_DEBUG
 /* #define SOLVE_DEBUG */
 /* #define CLASSIFY_DEBUG */
 
@@ -539,14 +535,12 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		}else{
 			if(prev==NULL || info->index != prev->index){
 				/* derivative, but without undifferentiated var present in model */
-#ifdef ANALYSE_DEBUG
 				varname = var_make_name(sys->system,info->i);
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Derivative %d of \"%s\" is present without its un-differentiated equivalent"
 					, info->type-1
 					, varname
 				);
-				ASC_FREE(varname);
-#endif
+				ASC_FREE(varname); 
 				return 7;
 			}else if(info->type != prev->type + 1){
 				/* derivative, but missing the next-lower-order derivative */

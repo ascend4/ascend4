@@ -98,8 +98,7 @@ void Init_BBoxInterp(struct BBoxInterp *interp)
 	@return 0 if success, 1 if failure.
 */
 static
-int Builtins_Init(void)
-{
+int Builtins_Init(void){
   int result = 0;
 
 #ifdef NO_PACKAGES
