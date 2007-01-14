@@ -27,7 +27,9 @@
 #include "densemtx.h"
 #include <utilities/ascMalloc.h>
 #include <utilities/error.h>
-#include <mmio.h>
+#ifdef ASC_WITH_MMIO
+# include <mmio.h>
+#endif
 
 DenseMatrix densematrix_create_empty(){
 	DenseMatrix result = {NULL,0,0};
