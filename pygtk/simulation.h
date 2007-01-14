@@ -101,8 +101,8 @@ public:
 	void setSolver(Solver &s);
 	const Solver getSolver() const;
 
-	SolverParameters getSolverParameters() const;
-	void setSolverParameters(SolverParameters &);
+	SolverParameters getParameters() const;
+	void setParameters(SolverParameters &);
 
 	IncidenceMatrix getIncidenceMatrix();
 

@@ -16,7 +16,7 @@ class SolverParametersWindow:
 		self.browser = browser
 		self.reporter = self.browser.reporter
 		self.sim = self.browser.sim
-		self.params = self.sim.getSolverParameters();		
+		self.params = self.sim.getParameters();		
 
 		_xml = gtk.glade.XML(browser.glade_file,"paramswin")
 		self.window = _xml.get_widget("paramswin")
@@ -250,7 +250,7 @@ class SolverParametersWindow:
 	
 	def on_paramswin_response(self,response,*args):
 		if response == gtk.RESPONSE_OK:
-			self.sim.setSolverParameters(self.params);
+			self.sim.setParameters(self.params);
 		elif response == gtk.RESPONSE_CANCEL or response == gtk.RESPONSE_CLOSE:
 			pass
 		

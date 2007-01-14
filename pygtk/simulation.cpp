@@ -549,7 +549,7 @@ Simulation::build(){
 	Get solver parameters struct wrapped up as a SolverParameters class.
 */
 SolverParameters
-Simulation::getSolverParameters() const{
+Simulation::getParameters() const{
 	//if(!is_built)throw runtime_error("Can't getSolverParameters: Simulation system has not been built yet.");
 	if(!sys)throw runtime_error("Can't getSolverParameters: Simulation system has no 'sys' assigned.");
 
@@ -562,7 +562,7 @@ Simulation::getSolverParameters() const{
 	Update the solver parameters by passing a new set back
 */
 void
-Simulation::setSolverParameters(SolverParameters &P){
+Simulation::setParameters(SolverParameters &P){
 	if(!sys)throw runtime_error("Can't set solver parameters: simulation has not been built yet.");
 	CONSOLE_DEBUG("Calling slv_set_parameters");
 	slv_set_parameters(sys, &(P.getInternalType()));

@@ -356,7 +356,7 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 			,"AM=Adams-Moulton method (for non-stiff problems), BDF=Backwards"
 			" Difference Formular (for stiff problems). See 'Description and"
 			" Use of LSODE', section 3.1."
-		}, "BDF"}, (char *[]){"AM", "BDF"}
+		}, "BDF"}, (char *[]){"AM","BDF",NULL}
 	);
 
 	slv_param_int(p,LSODE_PARAM_MITER
@@ -952,13 +952,19 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 		return 5;
 	}
 	if(strcmp(method,"BDF")==0){
-		mf = 10 + miter;
+		CONSOLE_DEBUG("method = BDF");
+		mf = 20 + miter;
 		if(maxord > 5){
 			maxord = 5;
 			CONSOLE_DEBUG("MAXORD reduced to 5 for BDF");
 		}
 	}else if(strcmp(method,"AM")==0){
-		mf = 20 + miter;
+		CONSOLE_DEBUG("method = AM");
+		if(maxord > 12){
+			maxord = 12;
+			CONSOLE_DEBUG("MAXORD reduced to 12 for AM");
+		}
+		mf = 10 + miter;
   }else{
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unacceptable value '%d' of parameter 'meth'",method);
 		return 5;

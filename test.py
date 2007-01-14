@@ -118,6 +118,8 @@ class TestIntegrator(Ascend):
 		self.L.load('johnpye/shm.a4c')
 		M = self.L.findType('shm').getSimulation('sim')
 		M.setSolver(ascpy.Solver('QRSlv'))
+		P = M.getParameters()
+		M.setParameter('feastol',1e-12)
 		print M.getChildren()
 		assert float(M.x) == 10.0
 		assert float(M.v) == 0.0
@@ -127,12 +129,14 @@ class TestIntegrator(Ascend):
 		I.setReporter(ascpy.IntegratorReporterNull(I))
 		I.setEngine(integratorname);
 		I.setLinearTimesteps(ascpy.Units("s"), 0.0, t_end, 100);
-		I.setMinSubStep(0.0005); # these limits are required by IDA at present (numeric diff)
-		I.setMaxSubStep(0.02);
+		I.setMinSubStep(0.0001); # these limits are required by IDA at present (numeric diff)
+		I.setMaxSubStep(0.1);
 		I.setInitialSubStep(0.001);
 		I.setMaxSubSteps(200);
 		if(integratorname=='IDA'):
 			I.setParameter('autodiff',False)
+		for p in M.getParameters():
+			print p.getName(),"=",p.getValue()
 		I.analyse();
 		I.solve();
 		print "At end of simulation,"

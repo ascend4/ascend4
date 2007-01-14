@@ -47,7 +47,7 @@ def solvernotes(self):
 
 	print "GETTINGS SOLVER PARAMS..."
 
-	params = sim.getSolverParameters()
+	params = sim.getParameters()
 
 	print "DONE SOLVER PARAMS"
 
