@@ -37,7 +37,7 @@
 
 #include "samplelist.h"
 
-#define ANALYSE_DEBUG
+/* #define ANALYSE_DEBUG */
 /* #define SOLVE_DEBUG */
 /* #define CLASSIFY_DEBUG */
 
@@ -434,8 +434,9 @@ int integrator_analyse(IntegratorSystem *sys){
 */
 int integrator_analyse_dae(IntegratorSystem *sys){
 	struct Integ_var_t *info, *prev;
+	char *varname;
 #ifdef ANALYSE_DEBUG
-	char *varname, *derivname;
+	char *derivname;
 #endif
 	int i;
 	int numstates;
