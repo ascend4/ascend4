@@ -98,6 +98,7 @@ METHOD default_self;
 END default_self; 
 METHOD on_load;
 	RUN configure_steady;
+	RUN ode_init;
 END on_load;
 (*---------------- a physically sensible steady-state configuration-----------*)
 METHOD configure_steady;
@@ -154,7 +155,6 @@ METHOD values_steady;
 END values_steady;
 (*------------------------- the dynamic problem ------------------------------*)
 METHOD configure_dynamic;
-	RUN ode_init;
 	FOR i IN [2..n] DO
 		FREE drho_dt[i];  FIX node[i].rho;
 		FREE dmdot_dt[i]; FIX node[i].mdot;

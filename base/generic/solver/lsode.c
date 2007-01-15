@@ -403,7 +403,7 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 			,"Default value of the scalar absolute error tolerance (for cases"
 			" where not specified in oda_atol var property. See 'lsode.f' for"
 			" details"
-		}, 1e-6, DBL_MIN, DBL_MAX }
+		}, 1e-6, 1e-15, 1e10 }
 	);
 
 	slv_param_bool(p,LSODE_PARAM_RTOLVECT
@@ -421,7 +421,7 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 			,"Default value of the scalar relative error tolerance (for cases"
 			" where not specified in oda_rtol var property. See 'lsode.f' for"
 			" details"
-		}, 1e-6, DBL_MIN, DBL_MAX }
+		}, 1e-6, 1e-15, 1 }
 	);
 
 	asc_assert(p->num_parms == LSODE_PARAMS_SIZE);

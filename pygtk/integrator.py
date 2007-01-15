@@ -155,8 +155,8 @@ class IntegratorWindow:
 					self.check_inputs()
 					_ok=True
 					break
-				elif _res == gtk.RESPONSE_CANCEL or _res == gtk.RESPONSE_NONE:
-					self.browser.reporter.reportNote("CANCEL event received");
+				else:
+					#self.browser.reporter.reportNote("CANCEL event received");
 					break
 			except IntegratorError,e:
 				self.browser.reporter.reportError(str(e))
