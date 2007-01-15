@@ -57,14 +57,12 @@ int
 IntegratorReporterConsole::initOutput(){
 	long nobs = integrator->getNumObservedVars();
 	stringstream ss;
+	f << "t";
+	ss<< "-------";
 	for(long i=0; i<nobs; ++i){
-		if(i){
-			f << "\t";
-			ss << "\t";
-		}
 		Variable v = integrator->getObservedVariable(i);
-		f << v.getName();
-		ss << "-------";
+		f << "\t" << v.getName();
+		ss<< "\t" << "-------";
 	}
 	f << endl;
 	f << ss.str() << endl;
@@ -80,8 +78,10 @@ int IntegratorReporterConsole::updateStatus(){
 }
 
 int IntegratorReporterConsole::recordObservedValues(){
+	IntegratorSystem *sys = integrator->getInternalType();
+	f << integrator_get_t(sys) << "\t";
 	vector<double> data(integrator->getNumObservedVars());
-	integrator_get_observations(integrator->getInternalType(),&data[0]);
+	integrator_get_observations(sys,&data[0]);
 	copy(data.begin(),data.end(),ostream_iterator<double>(f,"\t"));
 	f << endl;
 	return 1;

@@ -89,6 +89,8 @@
 #include "integrator.h"
 #include "lsode.h"
 
+/* #define TIMING_DEBUG */
+
 const IntegratorInternals integrator_lsode_internals = {
 	integrator_lsode_create
 	,integrator_lsode_params_default
@@ -149,7 +151,6 @@ const IntegratorInternals integrator_lsode_internals = {
 #define GETCOMMON GET_LSODE_COMMON
 #endif
 
-#define TIMING_DEBUG
 #define ASC_CLOCK_CHECK_PERIOD 1 /* number of FEX or JEX cycled between GUI updates */
 #define ASC_CLOCK_MAX_GUI_WAIT (0.5*CLOCKS_PER_SEC) /* max number of clock ticks between GUI updates */
 /* definitions of lsode supported children of atoms, etc */
@@ -880,7 +881,9 @@ static void LSODE_JEX(int *neq ,double *t, double *y
 	/* Do we need to do clock check? */
 	if((++clockcheck % ASC_CLOCK_CHECK_PERIOD)==0){
 		/* do we need to update the GUI? */
+#ifdef TIMING_DEBUG
 		CONSOLE_DEBUG("CLOCK = %ld", clock());
+#endif
 		if((clock() - lsodedata->lastwrite) > ASC_CLOCK_MAX_GUI_WAIT){
 			integrator_output_write(l_lsode_blsys);
 			lsodedata->lastwrite = clock(); /* don't count the update time, or we might never get anything done */
