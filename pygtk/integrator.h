@@ -56,7 +56,7 @@ public:
 	void setEngine(IntegratorEngine engine);
 	void setEngine(int engine);
 	void setEngine(const std::string &name);
-	std::string getEngineName() const;
+	std::string getName() const;
 
 	SolverParameters getParameters() const;
 	void setParameters(const SolverParameters &);

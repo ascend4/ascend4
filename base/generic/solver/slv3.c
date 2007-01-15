@@ -285,7 +285,7 @@ struct slv3_system_structure {
 	Checks sys for NULL and for integrity.
 */
 static int check_system(slv3_system_t sys){
-  if( sys == NULL ) {
+  if(sys == NULL){
     ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: NULL system handle.");
     return 1;
   }
@@ -470,7 +470,7 @@ static boolean calc_objectives( slv3_system_t sys){
   int calc_ok_1 = 0;
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
   for (i = 0; i < len; i++) {
-    if (rel_apply_filter(rlist[i],&rfilter)) {
+    if(rel_apply_filter(rlist[i],&rfilter)) {
       relman_eval(rlist[i],&calc_ok_1,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC));
       if(!calc_ok_1) {
 #if DEBUG
@@ -501,7 +501,7 @@ static boolean calc_inequalities( slv3_system_t sys){
 
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
   for (rp=sys->rlist;*rp != NULL; rp++) {
-    if (rel_apply_filter(*rp,&rfilter)) {
+    if(rel_apply_filter(*rp,&rfilter)) {
       relman_eval(*rp,&calc_ok_1,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC));
       if(!calc_ok_1)calc_ok = FALSE;
       satisfied = satisfied && relman_calc_satisfied(*rp,SLV_PARAM_REAL(&(sys->p),FEAS_TOL));
@@ -527,7 +527,7 @@ static boolean calc_residuals( slv3_system_t sys){
   boolean calc_ok = TRUE;
   int calc_ok_1;
 
-  if( sys->residuals.accurate ) return TRUE;
+  if(sys->residuals.accurate)return TRUE;
 
   row = sys->residuals.rng->low;
   time0=tm_cpu_time();
@@ -535,7 +535,7 @@ static boolean calc_residuals( slv3_system_t sys){
   for( ; row <= sys->residuals.rng->high; row++ ) {
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
 #if DEBUG
-    if (!rel) {
+    if(!rel) {
       int r;
       r=mtx_row_to_org(sys->J.mtx,row);
       ERROR_REPORTER_NOLINE(ASC_PROG_ERROR
@@ -552,9 +552,9 @@ static boolean calc_residuals( slv3_system_t sys){
 #endif
     }
 
-    if (strcmp(SLV_PARAM_CHAR(&(sys->p),CONVOPT),"ABSOLUTE") == 0) {
+    if(strcmp(SLV_PARAM_CHAR(&(sys->p),CONVOPT),"ABSOLUTE") == 0) {
       relman_calc_satisfied(rel,SLV_PARAM_REAL(&(sys->p),FEAS_TOL));
-    }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),CONVOPT),"RELNOM_SCALE") == 0) {
+    }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),CONVOPT),"RELNOM_SCALE") == 0) {
       relman_calc_satisfied_scaled(rel,SLV_PARAM_REAL(&(sys->p),FEAS_TOL));
     }
   }
@@ -580,8 +580,7 @@ static boolean calc_J( slv3_system_t sys){
   double time0;
   real64 resid;
 
-  if( sys->J.accurate )
-    return TRUE;
+  if(sys->J.accurate)return TRUE;
 
   calc_ok = TRUE;
   vfilter.matchbits = (VAR_INBLOCK | VAR_ACTIVE);
@@ -596,8 +595,8 @@ static boolean calc_J( slv3_system_t sys){
   sys->s.block.jactime += (tm_cpu_time() - time0);
   sys->s.block.jacs++;
 
-  if( --(sys->update.nominals) <= 0 ) sys->nominals.accurate = FALSE;
-  if( --(sys->update.weights) <= 0 ) sys->weights.accurate = FALSE;
+  if(--(sys->update.nominals) <= 0 )sys->nominals.accurate = FALSE;
+  if(--(sys->update.weights) <= 0 )sys->weights.accurate = FALSE;
 
   linsolqr_matrix_was_changed(sys->J.sys);
   return(calc_ok);
@@ -612,7 +611,7 @@ static void calc_nominals( slv3_system_t sys){
   int32 col;
   FILE *fp = MIF(sys);
 
-  if( sys->nominals.accurate ) return;
+  if(sys->nominals.accurate)return;
   fp = MIF(sys);
   col = sys->nominals.rng->low;
   if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"NONE") == 0 ||
@@ -626,11 +625,11 @@ static void calc_nominals( slv3_system_t sys){
       real64 n;
       var = sys->vlist[mtx_col_to_org(sys->J.mtx,col)];
       n = var_nominal(var);
-      if( n <= 0.0 ) {
-        if( n == 0.0 ) {
+      if(n <= 0.0){
+        if(n == 0.0){
           n = SLV_PARAM_REAL(&(sys->p),TOO_SMALL);
 
-      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
+          ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
           FPRINTF(fp,"QRSlv::calc_nominals: Variable '");
           print_var_name(fp,sys,var);
           FPRINTF(fp,"' has nominal value of zero. Resetting to %g.",n);
@@ -640,11 +639,11 @@ static void calc_nominals( slv3_system_t sys){
         }else{
           n =  -n;
 
-      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
+          ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
           FPRINTF(fp,"QRSlv::calc_nominals Variable ");
           print_var_name(fp,sys,var);
           FPRINTF(fp,"has negative nominal value. Resetting to %g.",n);
-      error_reporter_end_flush();
+          error_reporter_end_flush();
 
           var_set_nominal(var,n);
         }
@@ -670,8 +669,7 @@ static void calc_weights( slv3_system_t sys){
   mtx_coord_t nz;
   real64 sum;
 
-  if( sys->weights.accurate )
-    return;
+  if(sys->weights.accurate)return;
 
   nz.row = sys->weights.rng->low;
   if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"NONE") == 0 ||
@@ -679,14 +677,14 @@ static void calc_weights( slv3_system_t sys){
     for( ; nz.row <= sys->weights.rng->high; (nz.row)++ ) {
       sys->weights.vec[nz.row] = 1;
     }
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"ROW_2NORM") == 0 ||
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"ROW_2NORM") == 0 ||
         strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"2NORM+ITERATIVE") == 0
   ){
     for( ; nz.row <= sys->weights.rng->high; (nz.row)++ ) {
       sum=mtx_sum_sqrs_in_row(sys->J.mtx,nz.row,&(sys->J.reg.col));
       sys->weights.vec[nz.row] = (sum>0.0) ? 1.0/calc_sqrt_D0(sum) : 1.0;
     }
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0 ||
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0 ||
         strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM+ITERATIVE") == 0
   ){
     for( ; nz.row <= sys->weights.rng->high; (nz.row)++ ) {
@@ -707,7 +705,7 @@ static void scale_J( slv3_system_t sys){
   int32 row;
   int32 col;
 
-  if( sys->J.accurate ) return;
+  if(sys->J.accurate)return;
 
   calc_nominals(sys);
   for( col=sys->J.reg.col.low; col <= sys->J.reg.col.high; col++ )
@@ -723,12 +721,12 @@ static void scale_J( slv3_system_t sys){
 */
 static void jacobian_scaled(slv3_system_t sys){
   int32 col;
-  if (SLV_PARAM_BOOL(&(sys->p),DUMPCNORM)) {
+  if(SLV_PARAM_BOOL(&(sys->p),DUMPCNORM)) {
     for( col=sys->J.reg.col.low; col <= sys->J.reg.col.high; col++ ) {
       real64 cnorm;
       cnorm =
         calc_sqrt_D0(mtx_sum_sqrs_in_col(sys->J.mtx,col,&(sys->J.reg.row)));
-      if (cnorm >SLV_PARAM_REAL(&(sys->p),CNHIGH) || cnorm <SLV_PARAM_REAL(&(sys->p),CNLOW)) {
+      if(cnorm >SLV_PARAM_REAL(&(sys->p),CNHIGH) || cnorm <SLV_PARAM_REAL(&(sys->p),CNLOW)) {
         FPRINTF(stderr,"[col %d org %d] %g\n", col,
           mtx_col_to_org(sys->J.mtx,col), cnorm);
       }
@@ -752,7 +750,7 @@ static void jacobian_scaled(slv3_system_t sys){
 static void scale_variables( slv3_system_t sys){
   int32 col;
 
-  if( sys->variables.accurate ) return;
+  if(sys->variables.accurate)return;
 
   col = sys->variables.rng->low;
   for( ; col <= sys->variables.rng->high; col++ ) {
@@ -773,7 +771,7 @@ static void scale_variables( slv3_system_t sys){
 static void scale_residuals( slv3_system_t sys){
   int32 row;
 
-  if( sys->residuals.accurate ) return;
+  if(sys->residuals.accurate)return;
 
   row = sys->residuals.rng->low;
   for( ; row <= sys->residuals.rng->high; row++ ) {
@@ -1082,10 +1080,10 @@ static void scale_system( slv3_system_t sys ){
 */
 static boolean calc_gradient(slv3_system_t sys){
 
-  if( sys->gradient.accurate ) return TRUE;
+  if(sys->gradient.accurate)return TRUE;
 
   calc_ok = TRUE;
-  if ( !OPTIMIZING(sys) ) {
+  if(!OPTIMIZING(sys)){
     zero_vector(&(sys->gradient));
     sys->gradient.norm2 = 0.0;
   }else{
@@ -1101,7 +1099,7 @@ static boolean calc_gradient(slv3_system_t sys){
     for( vp = rel_incidence_list(sys->obj) ; *vp != NULL ; ++vp ) {
       int32 col;
       col = mtx_org_to_col(sys->J.mtx,var_sindex(*vp));
-      if( var_apply_filter(*vp,&vfilter) ) {
+      if(var_apply_filter(*vp,&vfilter)){
         /* the next line will core dump anyway since _diff not implemented */
         relman_diff(sys->obj,*vp,&pd,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC)); /* barf */
         sys->gradient.vec[col] = sys->nominals.vec[col]*pd;
@@ -1125,7 +1123,7 @@ static boolean calc_gradient(slv3_system_t sys){
 static void create_update(slv3_system_t sys){
   struct hessian_data *update;
 
-  if( !OPTIMIZING(sys) )
+  if(!OPTIMIZING(sys))
      return;
 
   update = ASC_NEW(struct hessian_data);
@@ -1145,10 +1143,10 @@ static void create_update(slv3_system_t sys){
 	B which accumulates curvature.
 */
 static void calc_B( slv3_system_t sys){
-  if( sys->s.block.iteration > 1 ) {
+  if(sys->s.block.iteration > 1){
     create_update(sys);
   }else{
-    if( sys->B ) {
+    if(sys->B){
       struct hessian_data *update;
       for( update=sys->B; update != NULL; ) {
         struct hessian_data *handle;
@@ -1161,12 +1159,12 @@ static void calc_B( slv3_system_t sys){
       sys->B = NULL;
     }
   }
-  if( sys->B ) {
+  if(sys->B){
     real64 theta;
     /*
      * The y vector
      */
-    if( !sys->B->y.accurate ) {
+    if(!sys->B->y.accurate ) {
       int32 col;
       matrix_product(sys->J.mtx, &(sys->multipliers),
                      &(sys->B->y), 1.0, TRUE);
@@ -1182,7 +1180,7 @@ static void calc_B( slv3_system_t sys){
    /*
     *  The Bs vector
     */
-    if( !sys->B->Bs.accurate ) {
+    if(!sys->B->Bs.accurate ) {
       struct hessian_data *update;
       copy_vector(&(sys->varstep),&(sys->B->Bs));
       for( update=sys->B->next; update != NULL; update = update->next ) {
@@ -1204,7 +1202,7 @@ static void calc_B( slv3_system_t sys){
     sys->B->ys = inner_product( &(sys->B->y),&(sys->varstep) );
     sys->B->sBs = inner_product( &(sys->B->Bs),&(sys->varstep) );
 
-    if( sys->B->ys == 0.0 && sys->B->sBs == 0.0 ) {
+    if(sys->B->ys == 0.0 && sys->B->sBs == 0.0 ) {
       theta = 0.0;
     }else{
       theta = sys->B->ys < SLV_PARAM_REAL(&(sys->p),POSITIVE_DEFINITE)*sys->B->sBs ?
@@ -1217,7 +1215,7 @@ static void calc_B( slv3_system_t sys){
             SLV_PARAM_REAL(&(sys->p),POSITIVE_DEFINITE),
             theta);
 #endif
-    if( theta < 1.0 ) {
+    if(theta < 1.0 ) {
        int32 col;
        col = sys->B->y.rng->low;
        for( ; col <= sys->B->y.rng->high; col++ )
@@ -1247,7 +1245,7 @@ static int calc_pivots(slv3_system_t sys){
   linsolqr_factor(lsys,sys->J.fm); /* factor */
   g_linsolqr_timing = oldtiming;
 
-  if (OPTIMIZING(sys)) {
+  if(OPTIMIZING(sys)){
     CONSOLE_DEBUG("OPTIMISING");
     /* need things for nullspace move. don't care about
      * dependency coefficiency in any circumstances at present.
@@ -1293,7 +1291,7 @@ static int calc_pivots(slv3_system_t sys){
       }
       mtx_destroy_sparse(uprows);
     }
-    if( !sys->residuals.accurate ) {
+    if(!sys->residuals.accurate ) {
       square_norm( &(sys->residuals) );
       sys->residuals.accurate = TRUE;
       sys->update.weights = 0;  /* re-compute weights next iteration. */
@@ -1324,10 +1322,10 @@ static int calc_pivots(slv3_system_t sys){
 #endif
   }
 
-  if( sys->J.rank < sys->J.reg.col.high-sys->J.reg.col.low+1 ) {
+  if(sys->J.rank < sys->J.reg.col.high-sys->J.reg.col.low+1 ) {
     int32 col,kcol;
     mtx_sparse_t *upcols=NULL;
-    if (NOTNULL(upcols)) {
+    if(NOTNULL(upcols)) {
       for( kcol=0; upcols != NULL && kcol < upcols->len ; kcol++ ) {
         int32 org_col;
         struct var_variable *var;
@@ -1343,14 +1341,14 @@ static int calc_pivots(slv3_system_t sys){
          * pivotable) or this was one of the dependent variables,
          * consider this variable as if it were fixed.
          */
-        if( col <= sys->J.reg.col.high - sys->ZBZ.order ) {
+        if(col <= sys->J.reg.col.high - sys->ZBZ.order ) {
           mtx_mult_col(sys->J.mtx,col,0.0,&(sys->J.reg.row));
         }
       }
       mtx_destroy_sparse(upcols);
     }
   }
-  if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+  if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %d (%s)\n","Jacobian rank", sys->J.rank,
             sys->J.singular ? "deficient":"full");
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n","Smallest pivot",
@@ -1366,7 +1364,7 @@ static int calc_pivots(slv3_system_t sys){
 static void calc_ZBZ(slv3_system_t sys){
    mtx_coord_t nz;
 
-   if( sys->ZBZ.accurate ) return;
+   if(sys->ZBZ.accurate ) return;
 
    for( nz.row = 0; nz.row < sys->ZBZ.order; nz.row++ ) {
       for( nz.col = 0; nz.col <= nz.row; nz.col++ ) {
@@ -1379,18 +1377,18 @@ static void calc_ZBZ(slv3_system_t sys){
          col = sys->J.reg.col.low;
          for( ; col <= sys->J.reg.col.high - sys->ZBZ.order; col++ ) {
             int32 ind = mtx_col_to_org(sys->J.mtx,col);
-            if( set_is_member(sys->J.varpivots,ind) )
+            if(set_is_member(sys->J.varpivots,ind) )
                sys->ZBZ.mtx[nz.row][nz.col] +=
                   (-linsolqr_org_col_dependency(sys->J.sys,depr,ind))*
                      (-linsolqr_org_col_dependency(sys->J.sys,depc,ind));
          }
-         if( nz.row != nz.col ) {
+         if(nz.row != nz.col ) {
             sys->ZBZ.mtx[nz.col][nz.row] =
                sys->ZBZ.mtx[nz.row][nz.col];
          }
       }
    }
-   if( OPTIMIZING(sys) ) {
+   if(OPTIMIZING(sys)){
       struct hessian_data *update;
       for( update=sys->B; update != NULL; update = update->next ) {
          for( nz.row=0; nz.row < sys->ZBZ.order; nz.row++ ) {
@@ -1402,7 +1400,7 @@ static void calc_ZBZ(slv3_system_t sys){
             col = sys->J.reg.col.low;
             for( ; col <= sys->J.reg.col.high - sys->ZBZ.order; col++ ) {
                int32 ind = mtx_col_to_org(sys->J.mtx,col);
-               if( set_is_member(sys->J.varpivots,ind) ) {
+               if(set_is_member(sys->J.varpivots,ind) ) {
                   sys->ZBZ.Zy[nz.row] += update->y.vec[col]*
                      (-linsolqr_org_col_dependency(sys->J.sys,dep,ind));
                   sys->ZBZ.ZBs[nz.row] += update->Bs.vec[col]*
@@ -1414,7 +1412,7 @@ static void calc_ZBZ(slv3_system_t sys){
                   sys->ZBZ.Zy[nz.row]*sys->ZBZ.Zy[nz.col]/update->ys : 0.0;
                sys->ZBZ.mtx[nz.row][nz.col] -= update->sBs > 0.0 ?
                   sys->ZBZ.ZBs[nz.row]*sys->ZBZ.ZBs[nz.col]/update->sBs : 0.0;
-               if( nz.row != nz.col ) {
+               if(nz.row != nz.col ) {
                   sys->ZBZ.mtx[nz.col][nz.row] =
                      sys->ZBZ.mtx[nz.row][nz.col];
                }
@@ -1439,7 +1437,7 @@ static void calc_ZBZ(slv3_system_t sys){
 static void calc_rhs(slv3_system_t sys, struct vec_vector *vec,
                      real64 scalar, boolean transpose
 ){
-  if( transpose ) {     /* vec is indexed by col */
+  if(transpose ) {     /* vec is indexed by col */
     int32 col;
     for( col=vec->rng->low; col<=vec->rng->high; col++ ) {
       sys->J.rhs[mtx_col_to_org(sys->J.mtx,col)] += scalar*vec->vec[col];
@@ -1458,10 +1456,10 @@ static void calc_rhs(slv3_system_t sys, struct vec_vector *vec,
 	Computes the lagrange multipliers for the equality constraints.
 */
 static void calc_multipliers(slv3_system_t sys){
-	   if( sys->multipliers.accurate )
-      return;
 
-   if ( !OPTIMIZING(sys) ) {
+   if(sys->multipliers.accurate)return;
+
+   if(!OPTIMIZING(sys)){
       zero_vector(&(sys->multipliers));
       sys->multipliers.norm2 = 0.0;
    }else{
@@ -1480,7 +1478,7 @@ static void calc_multipliers(slv3_system_t sys){
                             sys->weights.vec[row]);
 
       }
-      if (SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
+      if(SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
         FILE *ldat;
         int32 ov;
         sprintf(savlinfilename,"%s%d",savlinfilebase,savlinnum++);
@@ -1510,10 +1508,10 @@ static void calc_multipliers(slv3_system_t sys){
 	should be zero at the optimum solution.
 */
 static void calc_stationary( slv3_system_t sys){
-   if( sys->stationary.accurate )
+   if(sys->stationary.accurate )
       return;
 
-   if ( !OPTIMIZING(sys) ) {
+   if(!OPTIMIZING(sys)){
       zero_vector(&(sys->stationary));
       sys->stationary.norm2 = 0.0;
    }else{
@@ -1537,8 +1535,7 @@ static void calc_stationary( slv3_system_t sys){
 	Calculate the gamma vector.
 */
 static void calc_gamma( slv3_system_t sys){
-   if( sys->gamma.accurate )
-      return;
+   if(sys->gamma.accurate)return;
 
    matrix_product(sys->J.mtx, &(sys->residuals),
                   &(sys->gamma), -1.0, TRUE);
@@ -1554,8 +1551,7 @@ static void calc_gamma( slv3_system_t sys){
 	Calculate the Jgamma vector.
 */
 static void calc_Jgamma( slv3_system_t sys){
-   if( sys->Jgamma.accurate )
-      return;
+   if(sys->Jgamma.accurate)return;
 
    matrix_product(sys->J.mtx, &(sys->gamma),
                   &(sys->Jgamma), 1.0, FALSE);
@@ -1575,8 +1571,7 @@ static void calc_newton( slv3_system_t sys){
    linsolqr_system_t lsys = sys->J.sys;
    int32 col;
 
-   if( sys->newton.accurate )
-      return;
+   if(sys->newton.accurate)return;
 
    sys->J.rhs = linsolqr_get_rhs(lsys,1);
    mtx_zero_real64(sys->J.rhs,sys->cap);
@@ -1587,7 +1582,7 @@ static void calc_newton( slv3_system_t sys){
      sys->newton.vec[col] =
        linsolqr_var_value(lsys,sys->J.rhs,mtx_col_to_org(sys->J.mtx,col));
    }
-   if (SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
+   if(SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
      FILE *ldat;
      int32 ov;
      sprintf(savlinfilename,"%s%d",savlinfilebase,savlinnum++);
@@ -1613,10 +1608,9 @@ static void calc_newton( slv3_system_t sys){
 	Computes an update to the product B and newton.
 */
 static void calc_Bnewton( slv3_system_t sys){
-   if( sys->Bnewton.accurate )
-      return;
+   if(sys->Bnewton.accurate)return;
 
-   if ( !OPTIMIZING(sys) ) {
+   if(!OPTIMIZING(sys)){
       zero_vector(&(sys->Bnewton));
       sys->Bnewton.norm2 = 0.0;
    }else{
@@ -1648,10 +1642,9 @@ static void calc_Bnewton( slv3_system_t sys){
 	Calculate the nullspace move if OPTIMIZING.
 */
 static void calc_nullspace( slv3_system_t sys){
-   if( sys->nullspace.accurate )
-      return;
+   if(sys->nullspace.accurate)return;
 
-   if( !OPTIMIZING(sys) ) {
+   if(!OPTIMIZING(sys)){
       zero_vector(&(sys->nullspace));
       sys->nullspace.norm2 = 0.0;
    }else{
@@ -1666,10 +1659,11 @@ static void calc_nullspace( slv3_system_t sys){
          ndx = sys->J.reg.col.low;
          for( ; ndx <= sys->J.reg.col.high - sys->ZBZ.order; ndx++ ) {
             int32 ind = mtx_col_to_org(sys->J.mtx,ndx);
-            if( set_is_member(sys->J.varpivots,ind) )
+            if(set_is_member(sys->J.varpivots,ind)){
                sys->nullspace.vec[col] -=
                   (sys->stationary.vec[ndx] + sys->Bnewton.vec[ndx])*
-                     (-linsolqr_org_col_dependency(sys->J.sys,dep,ind));
+                  (-linsolqr_org_col_dependency(sys->J.sys,dep,ind));
+            }
          }
       }
       /*
@@ -1688,7 +1682,7 @@ static void calc_nullspace( slv3_system_t sys){
                sys->ZBZ.mtx[nz.row][nz.col] -=
                   sys->ZBZ.mtx[nz.row][col]*
                      sys->ZBZ.mtx[col][nz.col];
-            if( nz.row == nz.col )
+            if(nz.row == nz.col )
                sys->ZBZ.mtx[nz.row][nz.col] =
                   calc_sqrt_D0(sys->ZBZ.mtx[nz.row][nz.col]);
             else {
@@ -1744,10 +1738,10 @@ static void calc_nullspace( slv3_system_t sys){
 	in the variables.
 */
 static void calc_varstep1( slv3_system_t sys){
-   if( sys->varstep1.accurate )
+   if(sys->varstep1.accurate )
       return;
 
-   if( !OPTIMIZING(sys) ) {
+   if(!OPTIMIZING(sys)){
       copy_vector(&(sys->gamma),&(sys->varstep1));
       sys->varstep1.norm2 = sys->gamma.norm2;
    }else{
@@ -1770,10 +1764,10 @@ static void calc_varstep1( slv3_system_t sys){
 	Computes an update to the product B and varstep1.
 */
 static void calc_Bvarstep1( slv3_system_t sys){
-   if( sys->Bvarstep1.accurate )
+   if(sys->Bvarstep1.accurate )
       return;
 
-   if ( !OPTIMIZING(sys) ) {
+   if(!OPTIMIZING(sys)){
       zero_vector(&(sys->Bvarstep1));
       sys->Bvarstep1.norm2 = 0.0;
    }else{
@@ -1806,10 +1800,10 @@ static void calc_Bvarstep1( slv3_system_t sys){
 	in the variables.
 */
 static void calc_varstep2( slv3_system_t sys){
-   if( sys->varstep2.accurate )
+   if(sys->varstep2.accurate )
       return;
 
-   if( !OPTIMIZING(sys) ) {
+   if(!OPTIMIZING(sys)){
       copy_vector(&(sys->newton),&(sys->varstep2));
       sys->varstep2.norm2 = sys->newton.norm2;
    }else{
@@ -1819,7 +1813,7 @@ static void calc_varstep2( slv3_system_t sys){
          int32 dep;
          int32 ind = mtx_col_to_org(sys->J.mtx,col);
          sys->varstep2.vec[col] = sys->newton.vec[col];
-         if( set_is_member(sys->J.varpivots,ind) ) {
+         if(set_is_member(sys->J.varpivots,ind) ) {
             dep = sys->varstep2.rng->high + 1 - sys->ZBZ.order;
             for( ; dep <= sys->varstep2.rng->high; dep++ )
                sys->varstep2.vec[col] += sys->nullspace.vec[dep]*
@@ -1844,10 +1838,10 @@ static void calc_varstep2( slv3_system_t sys){
 	Computes an update to the product B and varstep2.
 */
 static void calc_Bvarstep2( slv3_system_t sys){
-   if( sys->Bvarstep2.accurate )
+   if(sys->Bvarstep2.accurate )
       return;
 
-   if ( !OPTIMIZING(sys) ) {
+   if(!OPTIMIZING(sys)){
       zero_vector(&(sys->Bvarstep2));
       sys->Bvarstep2.norm2 = 0.0;
    }else{
@@ -1880,10 +1874,10 @@ static void calc_Bvarstep2( slv3_system_t sys){
 	multipliers.
 */
 static void calc_mulstep1( slv3_system_t sys){
-   if( sys->mulstep1.accurate )
+   if(sys->mulstep1.accurate )
       return;
 
-   if( !OPTIMIZING(sys) ) {
+   if(!OPTIMIZING(sys)){
       zero_vector(&(sys->mulstep1));
       sys->mulstep1.norm2 = 0.0;
    }else{
@@ -1906,10 +1900,10 @@ static void calc_mulstep1( slv3_system_t sys){
 	multipliers.
 */
 static void calc_mulstep2( slv3_system_t sys){
-   if( sys->mulstep2.accurate )
+   if(sys->mulstep2.accurate )
       return;
 
-   if( !OPTIMIZING(sys) ) {
+   if(!OPTIMIZING(sys)){
       zero_vector(&(sys->mulstep2));
       sys->mulstep2.norm2 = 0.0;
    }else{
@@ -1924,7 +1918,7 @@ static void calc_mulstep2( slv3_system_t sys){
       for( ; row <= sys->mulstep2.rng->high; row++ )
          sys->mulstep2.vec[row] = linsolqr_var_value
             (lsys,sys->J.rhs,mtx_row_to_org(sys->J.mtx,row));
-      if (SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
+      if(SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
         FILE *ldat;
         int32 ov;
         sprintf(savlinfilename,"%s%d",savlinfilebase,savlinnum++);
@@ -1953,9 +1947,9 @@ static void calc_mulstep2( slv3_system_t sys){
 	Computes the global minimizing function Phi.
 */
 static void calc_phi( slv3_system_t sys){
-   if( !OPTIMIZING(sys) )
+   if(!OPTIMIZING(sys)){
       sys->phi = 0.5*sys->residuals.norm2;
-   else {
+   }else{
       sys->phi = sys->objective;
       sys->phi += inner_product( &(sys->multipliers),&(sys->residuals) );
       sys->phi += 0.5*SLV_PARAM_REAL(&(sys->p),RHO)*sys->residuals.norm2;
@@ -2019,7 +2013,7 @@ static void coefs_from_parm( slv3_system_t sys, struct calc_step_vars *vars){
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unexpected negative determinant %f.", det);
   }
 
-  if( det <= SLV_PARAM_REAL(&(sys->p),DETZERO) ) {
+  if(det <= SLV_PARAM_REAL(&(sys->p),DETZERO) ) {
     /*
     	varstep2 and varstep1 are essentially parallel:
     	adjust length of either
@@ -2050,7 +2044,7 @@ static real64 step_norm2( slv3_system_t sys, struct calc_step_vars *vars){
 */
 static void adjust_parms( slv3_system_t sys, struct calc_step_vars *vars){
    vars->error = (calc_sqrt_D0(step_norm2(sys,vars))/sys->maxstep) - 1.0;
-   if( vars->error > 0.0 ) {
+   if(vars->error > 0.0 ) {
       /* Increase parameter (to decrease step length) */
       vars->parms.low = vars->parms.guess;
       vars->parms.guess = (vars->parms.high>3.0*vars->parms.guess)
@@ -2072,15 +2066,15 @@ static void compute_step( slv3_system_t sys, struct calc_step_vars *vars){
 
    tot1_norm2 = sys->varstep1.norm2 + sys->mulstep1.norm2;
    tot2_norm2 = sys->varstep2.norm2 + sys->mulstep2.norm2;
-   if( !sys->varstep.accurate ) {
+   if(!sys->varstep.accurate ) {
       for( col=sys->varstep.rng->low ; col<=sys->varstep.rng->high ; ++col )
-         if( (vars->alpha2 == 1.0) && (vars->alpha1 == 0.0) ) {
+         if((vars->alpha2 == 1.0) && (vars->alpha1 == 0.0) ) {
             sys->varstep.vec[col] = sys->maxstep *
                sys->varstep2.vec[col]/calc_sqrt_D0(tot2_norm2);
-         }else if( (vars->alpha2 == 0.0) && (vars->alpha1 == 1.0) ) {
+         }else if((vars->alpha2 == 0.0) && (vars->alpha1 == 1.0) ) {
             sys->varstep.vec[col] = sys->maxstep *
                sys->varstep1.vec[col]/calc_sqrt_D0(tot1_norm2);
-         }else if( (vars->alpha2 != 0.0) && (vars->alpha1 != 0.0) ) {
+         }else if((vars->alpha2 != 0.0) && (vars->alpha1 != 0.0) ) {
             sys->varstep.vec[col] = sys->maxstep*
                (
                 vars->alpha2*sys->varstep2.vec[col]/calc_sqrt_D0(tot2_norm2) +
@@ -2089,15 +2083,15 @@ static void compute_step( slv3_system_t sys, struct calc_step_vars *vars){
          }
       sys->varstep.accurate = TRUE;
    }
-   if( !sys->mulstep.accurate ) {
+   if(!sys->mulstep.accurate ) {
       for( row=sys->mulstep.rng->low ; row<=sys->mulstep.rng->high ; ++row )
-         if( (vars->alpha2 == 1.0) && (vars->alpha1 == 0.0) ) {
+         if((vars->alpha2 == 1.0) && (vars->alpha1 == 0.0) ) {
             sys->mulstep.vec[row] = sys->maxstep *
                sys->mulstep2.vec[row]/calc_sqrt_D0(tot2_norm2);
-         }else if( (vars->alpha2 == 0.0) && (vars->alpha1 == 1.0) ) {
+         }else if((vars->alpha2 == 0.0) && (vars->alpha1 == 1.0) ) {
             sys->mulstep.vec[row] = sys->maxstep *
                sys->mulstep1.vec[row]/calc_sqrt_D0(tot1_norm2);
-         }else if( (vars->alpha2 != 0.0) && (vars->alpha1 != 0.0) ) {
+         }else if((vars->alpha2 != 0.0) && (vars->alpha1 != 0.0) ) {
             sys->mulstep.vec[row] = sys->maxstep*
                (
                 vars->alpha2*sys->mulstep2.vec[row]/calc_sqrt_D0(tot2_norm2) +
@@ -2127,15 +2121,15 @@ static void calc_step( slv3_system_t sys, int minor){
    struct calc_step_vars vars;
    real64 tot1_norm2, tot2_norm2;
 
-   if( sys->varstep.accurate && sys->mulstep.accurate )
+   if(sys->varstep.accurate && sys->mulstep.accurate )
       return;
-   if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+   if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\n%-40s ---> %d\n", "    Step trial",minor);
    }
 
    tot1_norm2 = sys->varstep1.norm2 + sys->mulstep1.norm2;
    tot2_norm2 = sys->varstep2.norm2 + sys->mulstep2.norm2;
-   if( (tot1_norm2 == 0.0) && (tot2_norm2 == 0.0) ) {
+   if((tot1_norm2 == 0.0) && (tot2_norm2 == 0.0) ) {
       /* Take no step at all */
       vars.alpha1 = 0.0;
       vars.alpha2 = 0.0;
@@ -2143,7 +2137,7 @@ static void calc_step( slv3_system_t sys, int minor){
       sys->varstep.norm2 = 0.0;
       sys->mulstep.norm2 = 0.0;
 
-   }else if( (tot2_norm2 > 0.0) && OPTIMIZING(sys) ) {
+   }else if(tot2_norm2 > 0.0 && OPTIMIZING(sys)){
       /* Stay in varstep2 direction */
       vars.alpha1 = 0.0;
       vars.alpha2 = 1.0;
@@ -2153,7 +2147,7 @@ static void calc_step( slv3_system_t sys, int minor){
       sys->mulstep.norm2 = calc_sqr_D0(sys->maxstep)*
          sys->mulstep2.norm2/tot2_norm2;
 
-   }else if( (tot2_norm2>0.0)&&(calc_sqrt_D0(tot2_norm2)<=sys->maxstep) ) {
+   }else if((tot2_norm2>0.0)&&(calc_sqrt_D0(tot2_norm2)<=sys->maxstep) ) {
       /* Attempt step in varstep2 direction */
       vars.alpha1 = 0.0;
       vars.alpha2 = 1.0;
@@ -2163,12 +2157,12 @@ static void calc_step( slv3_system_t sys, int minor){
       sys->mulstep.norm2 = calc_sqr_D0(sys->maxstep)*
          sys->mulstep2.norm2/tot2_norm2;
 
-   }else if( (tot2_norm2==0.0 || sys->s.block.current_size==1) &&
+   }else if((tot2_norm2==0.0 || sys->s.block.current_size==1) &&
              (tot1_norm2 > 0.0) ) {
       /* Attempt step in varstep1 direction */
       vars.alpha1 = 1.0;
       vars.alpha2 = 0.0;
-      if ( (sys->gamma.norm2/sys->Jgamma.norm2)*
+      if( (sys->gamma.norm2/sys->Jgamma.norm2)*
           calc_sqrt_D0(sys->gamma.norm2) <= sys->maxstep )
          sys->maxstep = (sys->gamma.norm2/sys->Jgamma.norm2)*
             calc_sqrt_D0(sys->gamma.norm2);
@@ -2188,7 +2182,7 @@ static void calc_step( slv3_system_t sys, int minor){
          adjust_parms(sys, &vars);
       } while( fabs(vars.error) > SLV_PARAM_REAL(&(sys->p),STEPSIZEERR_MAX) &&
               vars.parms.high - vars.parms.low > SLV_PARAM_REAL(&(sys->p),PARMRNG_MIN) );
-      if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+      if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                 "    parameter high", vars.parms.high);
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
@@ -2200,7 +2194,7 @@ static void calc_step( slv3_system_t sys, int minor){
       sys->mulstep.norm2 = 0.0;
    }
 
-   if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+   if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Alpha1 coefficient (normalized)",
              vars.alpha1);
      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Alpha2 coefficient (normalized)",
@@ -2243,7 +2237,7 @@ static real64 required_coef_to_stay_inbounds( slv3_system_t sys){
    real64 *vec;
    vec = (sys->nominals.vec);
 
-   if( sys->p.ignore_bounds )
+   if(sys->p.ignore_bounds )
       return(1.0);
 
    mincoef = 1.0;
@@ -2254,12 +2248,12 @@ static real64 required_coef_to_stay_inbounds( slv3_system_t sys){
       coef = 1.0;
       dx = sys->varstep.vec[col] * vec[col];
       bnd = var_upper_bound(var);
-      if( (val=var_value(var)) + dx > bnd )
+      if((val=var_value(var)) + dx > bnd )
          coef = MIN((bnd-val)/dx, 1.0);
       bnd = var_lower_bound(var);
-      if( val + dx < bnd )
+      if(val + dx < bnd )
          coef = MIN((bnd-val)/dx, 1.0);
-      if( coef < mincoef )
+      if(coef < mincoef )
          mincoef = coef;
    }
    return(mincoef);
@@ -2278,7 +2272,7 @@ static void apply_step( slv3_system_t sys){
    real64 *vec;
    vec = (sys->nominals.vec);
 
-   if (SLV_PARAM_BOOL(&(sys->p),TRUNCATE) && (!sys->p.ignore_bounds))
+   if(SLV_PARAM_BOOL(&(sys->p),TRUNCATE) && (!sys->p.ignore_bounds))
       bounds_coef = required_coef_to_stay_inbounds(sys);
 
    for( col=sys->varstep.rng->low; col <= sys->varstep.rng->high; col++ ) {
@@ -2287,24 +2281,24 @@ static void apply_step( slv3_system_t sys){
       var = sys->vlist[mtx_col_to_org(sys->J.mtx,col)];
       dx = vec[col]*sys->varstep.vec[col];
       val = var_value(var);
-      if (bounds_coef < 1.0) {
+      if(bounds_coef < 1.0) {
          dx = dx*SLV_PARAM_REAL(&(sys->p),TOWARD_BOUNDS)*bounds_coef;
          sys->varstep.vec[col] = dx/vec[col];
       }else{
-         if( !sys->p.ignore_bounds ) {
-            if( val + dx > (bnd=var_upper_bound(var)) ) {
+         if(!sys->p.ignore_bounds ) {
+            if(val + dx > (bnd=var_upper_bound(var)) ) {
                dx = SLV_PARAM_REAL(&(sys->p),TOWARD_BOUNDS)*(bnd-val);
                sys->varstep.vec[col] = dx/vec[col];
-               if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+               if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
                  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> ",
                          "    Variable projected to upper bound");
                  print_var_name(lif,sys,var); PUTC('\n',lif);
                }
                ++nproj;
-            }else if( val + dx < (bnd=var_lower_bound(var)) ) {
+            }else if(val + dx < (bnd=var_lower_bound(var)) ) {
                dx = SLV_PARAM_REAL(&(sys->p),TOWARD_BOUNDS)*(bnd-val);
                sys->varstep.vec[col] = dx/vec[col];
-               if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+               if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
                  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> ",
                          "    Variable projected to lower bound");
                  print_var_name(lif,sys,var); PUTC('\n',lif);
@@ -2316,22 +2310,22 @@ static void apply_step( slv3_system_t sys){
       var_set_value(var,val+dx);
    }
 
-   if( !sys->p.ignore_bounds ) {
-      if (nproj > 0) {
+   if(!sys->p.ignore_bounds ) {
+      if(nproj > 0) {
          square_norm(&(sys->varstep));
          sys->progress = calc_sqrt_D0
             (calc_sqrt_D0((sys->varstep.norm2 + sys->mulstep.norm2)*
                           (sys->varstep1.norm2 + sys->mulstep1.norm2)));
-         if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+         if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
            ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Projected step length (scaled)",
            calc_sqrt_D0(sys->varstep.norm2 + sys->mulstep.norm2));
            ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                    "    Projected progress", sys->progress);
          }
       }
-      if (bounds_coef < 1.0) {
+      if(bounds_coef < 1.0) {
          square_norm(&(sys->varstep));
-         if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+         if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
             ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                     "    Truncated step length (scaled)",
                     calc_sqrt_D0(sys->varstep.norm2 + sys->mulstep.norm2));
@@ -2339,7 +2333,7 @@ static void apply_step( slv3_system_t sys){
          sys->progress = calc_sqrt_D0
             (calc_sqrt_D0((sys->varstep.norm2 + sys->mulstep.norm2)*
                           (sys->varstep1.norm2 + sys->mulstep1.norm2)));
-         if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+         if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
            ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                    "    Truncated progress", sys->progress);
          }
@@ -2357,7 +2351,7 @@ static void apply_step( slv3_system_t sys){
 */
 static void step_accepted( slv3_system_t sys){
    /* Maintain update status on jacobian and weights */
-   if (--(sys->update.jacobian) <= 0)
+   if(--(sys->update.jacobian) <= 0)
       sys->J.accurate = FALSE;
 
    sys->ZBZ.accurate = FALSE;
@@ -2379,7 +2373,7 @@ static void step_accepted( slv3_system_t sys){
    sys->varstep.accurate = FALSE;
    sys->mulstep.accurate = FALSE;
 
-   if( !OPTIMIZING(sys) ) {
+   if(!OPTIMIZING(sys)){
       sys->ZBZ.accurate = TRUE;
       sys->gradient.accurate = TRUE;
       sys->multipliers.accurate = TRUE;
@@ -2398,7 +2392,7 @@ static void step_accepted( slv3_system_t sys){
 static void change_maxstep( slv3_system_t sys, real64 maxstep){
    sys->maxstep = maxstep;
    sys->varstep.accurate = FALSE;
-   if( OPTIMIZING(sys) ) sys->mulstep.accurate = FALSE;
+   if(OPTIMIZING(sys))sys->mulstep.accurate = FALSE;
 }
 
 
@@ -2413,12 +2407,12 @@ static void change_maxstep( slv3_system_t sys, real64 maxstep){
 static boolean block_feasible( slv3_system_t sys){
    int32 row;
 
-   if( !sys->s.calc_ok )
+   if(!sys->s.calc_ok )
       return(FALSE);
 
    for( row = sys->J.reg.row.low; row <= sys->J.reg.row.high; row++ ) {
       struct rel_relation *rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
-      if( !rel_satisfied(rel) ) return FALSE;
+      if(!rel_satisfied(rel) ) return FALSE;
    }
    return TRUE;
 }
@@ -2439,7 +2433,7 @@ static void move_to_next_block( slv3_system_t sys){
   int32 ci;
   boolean ok;
 
-  if( sys->s.block.current_block >= 0 ) {
+  if(sys->s.block.current_block >= 0 ) {
 
 
     /* Record cost accounting info here. */
@@ -2454,7 +2448,7 @@ static void move_to_next_block( slv3_system_t sys){
     sys->s.cost[ci].resid	=	sys->s.block.residual;
 
     /* De-initialize previous block */
-    if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (sys->s.block.current_size >1 ||
+    if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (sys->s.block.current_size >1 ||
         SLV_PARAM_BOOL(&(sys->p),LIFDS))) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Block %d converged.\n",
               sys->s.block.current_block);
@@ -2471,10 +2465,10 @@ static void move_to_next_block( slv3_system_t sys){
   }
 
   sys->s.block.current_block++;
-  if( sys->s.block.current_block < sys->s.block.number_of ) {
+  if(sys->s.block.current_block < sys->s.block.number_of ) {
 
     /* Initialize next block */
-    if( OPTIMIZING(sys) ) {
+    if(OPTIMIZING(sys)){
       mtx_region(&(sys->J.reg), 0, sys->rank-1, 0, sys->vused-1 );
     }else{
       sys->J.reg =
@@ -2506,7 +2500,7 @@ static void move_to_next_block( slv3_system_t sys){
     }
     sys->s.calc_ok = TRUE;
 
-    if( !(ok = calc_objective(sys)) ) {
+    if(!(ok = calc_objective(sys)) ) {
       ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Objective calculation errors detected");
     }
     if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && sys->obj) {
@@ -2514,17 +2508,17 @@ static void move_to_next_block( slv3_system_t sys){
     }
     sys->s.calc_ok = sys->s.calc_ok && ok;
 
-    if (!(sys->p.ignore_bounds) ) {
+    if(!(sys->p.ignore_bounds) ) {
       slv_ensure_bounds(SERVER, sys->J.reg.col.low,
                         sys->J.reg.col.high,MIF(sys));
     }
 
     sys->residuals.accurate = FALSE;
-    if( !(ok = calc_residuals(sys)) ) {
+    if(!(ok = calc_residuals(sys)) ) {
       /* error_reporter will have been called somewhere else already */
       CONSOLE_DEBUG("Residual calculation errors detected in move_to_next_block.");
     }
-    if( SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) &&
+    if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) &&
         (sys->s.block.current_size >1 ||
          SLV_PARAM_BOOL(&(sys->p),LIFDS)) ) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Residual norm (unscaled)",
@@ -2557,7 +2551,7 @@ static void move_to_next_block( slv3_system_t sys){
     sys->varstep.accurate = FALSE;
     sys->mulstep.accurate = FALSE;
 
-    if( !OPTIMIZING(sys) ) {
+    if(!OPTIMIZING(sys)){
       sys->ZBZ.accurate = TRUE;
       sys->gradient.accurate = TRUE;
       sys->multipliers.accurate = TRUE;
@@ -2581,7 +2575,7 @@ static void move_to_next_block( slv3_system_t sys){
      * This of course ignores that fact an objective function might
      * be present.  Then, feasibility isn't enough, is it now.
      */
-    if( sys->s.struct_singular ) {
+    if(sys->s.struct_singular ) {
        /* black box w/singletons provoking bug here, maybe */
       sys->s.block.current_size = sys->rused - sys->rank;
       if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
@@ -2592,7 +2586,7 @@ static void move_to_next_block( slv3_system_t sys){
       sys->J.reg.row.low = sys->J.reg.col.low = sys->rank;
       sys->J.reg.row.high = sys->J.reg.col.high = sys->rused - 1;
       sys->residuals.accurate = FALSE;
-      if( !(ok=calc_residuals(sys)) ) {
+      if(!(ok=calc_residuals(sys)) ) {
          FPRINTF(MIF(sys),
            "Residual calculation errors detected in leftover equations.\n");
       }
@@ -2603,7 +2597,7 @@ static void move_to_next_block( slv3_system_t sys){
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Residual norm (unscaled)",
                 sys->s.block.residual);
       }
-      if( block_feasible(sys) ) {
+      if(block_feasible(sys) ) {
         if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
           ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nUnassigned relations ok. Lucky you.\n");
         }
@@ -2625,7 +2619,7 @@ static void move_to_next_block( slv3_system_t sys){
     }
     /* nearly done checking. Must verify included inequalities if
        we think equalities are ok. */
-    if (sys->s.converged) {
+    if(sys->s.converged) {
       ok = calc_inequalities(sys);
       if(!ok && sys->s.inconsistent){
         sys->s.inconsistent = TRUE;
@@ -2640,14 +2634,14 @@ static void move_to_next_block( slv3_system_t sys){
 */
 static void reorder_new_block(slv3_system_t sys){
   int32 method;
-  if( sys->s.block.current_block < sys->s.block.number_of ) {
-    if (strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"SPK1") == 0) {
+  if(sys->s.block.current_block < sys->s.block.number_of ) {
+    if(strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"SPK1") == 0) {
       method = 2;
     }else{
       method = 1;
     }
 
-    if( sys->s.block.current_block <= sys->s.block.current_reordered_block &&
+    if(sys->s.block.current_block <= sys->s.block.current_reordered_block &&
        sys->s.cost[sys->s.block.current_block].reorder_method == method &&
        sys->s.block.current_block >= 0 ) {
 #if DEBUG
@@ -2662,16 +2656,16 @@ static void reorder_new_block(slv3_system_t sys){
     /* Let the slv client function take care of reordering things
      * and setting in block flags.
      */
-    if (strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"SPK1") == 0) {
+    if(strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"SPK1") == 0) {
       sys->s.cost[sys->s.block.current_block].reorder_method = 2;
       slv_spk1_reorder_block(SERVER,sys->s.block.current_block,1);
-    }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"TEAR_DROP") == 0) {
+    }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"TEAR_DROP") == 0) {
       sys->s.cost[sys->s.block.current_block].reorder_method = 1;
       slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block
       	,SLV_PARAM_INT(&(sys->p),CUTOFF), 0,mtx_SPK1
       );
 /* khack: try tspk1 for transpose case */
-    }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"OVER_TEAR") == 0) {
+    }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"OVER_TEAR") == 0) {
       sys->s.cost[sys->s.block.current_block].reorder_method = 1;
       slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block
         ,SLV_PARAM_INT(&(sys->p),CUTOFF), 1,mtx_SPK1
@@ -2688,7 +2682,7 @@ static void reorder_new_block(slv3_system_t sys){
     }
     /* tell linsol to bless it and get on with things */
     linsolqr_reorder(sys->J.sys,&(sys->J.reg),natural);
-    if (sys->s.block.current_block > sys->s.block.current_reordered_block) {
+    if(sys->s.block.current_block > sys->s.block.current_reordered_block) {
       sys->s.block.current_reordered_block = sys->s.block.current_block;
     }
   }
@@ -2706,7 +2700,7 @@ static void find_next_unconverged_block( slv3_system_t sys){
      debug_out_var_values(stderr,sys);
      debug_out_rel_residuals(stderr,sys);
 #endif
-   }while( !sys->s.converged && block_feasible(sys) && !OPTIMIZING(sys));
+   }while(!sys->s.converged && block_feasible(sys) && !OPTIMIZING(sys));
 
    reorder_new_block(sys);
 }
@@ -2757,7 +2751,7 @@ static void iteration_ends( slv3_system_t sys){
 static void update_status( slv3_system_t sys){
    boolean unsuccessful;
 
-   if( !sys->s.converged ) {
+   if(!sys->s.converged ) {
       sys->s.time_limit_exceeded =
          (sys->s.block.cpu_elapsed >= SLV_PARAM_INT(&(sys->p),TIME_LIMIT));
       sys->s.iteration_limit_exceeded =
@@ -2796,7 +2790,7 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
   struct slv_parameter *new_parms = NULL;
   int32 make_macros = 0;
 
-  if (server != NULL && asys != NULL) {
+  if(server != NULL && asys != NULL) {
     sys = SLV3(asys);
     make_macros = 1;
   }
@@ -2805,13 +2799,13 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
   lo.argr = hi.argr = val.argr = 0.0;
 #endif
 
-  if (parameters->parms == NULL) {
+  if(parameters->parms == NULL) {
     /* an external client wants our parameter list.
      * an instance of slv3_system_structure has this pointer
      * already set in slv3_create
      */
     new_parms = ASC_NEW_ARRAY_OR_NULL(struct slv_parameter,slv3_PA_SIZE);
-    if (new_parms == NULL) {
+    if(new_parms == NULL) {
       return -1;
     }
     parameters->parms = new_parms;
@@ -2878,10 +2872,13 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
   	}, 30, 1, 20000}
   );
 
+  /** @TODO improve description of this one */
   slv_param_real(parameters,STAT_TOL
   	,(SlvParameterInitReal){{"stattol"
   		,"stattol",-1
-  		,"stattol"
+  		,"For optimizing and when block is feasible, a block's"
+		" interation ends when the stationary norm2 value is beneath"
+		" this tolerance."
   	}, 1e-6, 0, 1.0}
   );
 
@@ -3151,7 +3148,7 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
   slv3_system_t sys;
 
   sys = (slv3_system_t)asccalloc(1, sizeof(struct slv3_system_structure) );
-  if (sys==NULL) {
+  if(sys==NULL) {
     *statusindex = 1;
     return sys;
   }
@@ -3173,13 +3170,13 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
   sys->vlist = slv_get_solvers_var_list(server);
   sys->rlist = slv_get_solvers_rel_list(server);
   sys->obj = slv_get_obj_relation(server);
-  if (sys->vlist == NULL) {
+  if(sys->vlist == NULL) {
     ascfree(sys);
     FPRINTF(stderr,"QRSlv called with no variables.\n");
     *statusindex = -2;
     return NULL; /* FIXME probably a leak here */
   }
-  if (sys->rlist == NULL && sys->obj == NULL) {
+  if(sys->rlist == NULL && sys->obj == NULL) {
     ascfree(sys);
     FPRINTF(stderr,"QRSlv called with no relations or objective.\n");
     *statusindex = -1;
@@ -3197,7 +3194,7 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
 
 static void destroy_matrices( slv3_system_t sys)
 {
-   if( sys->J.sys ) {
+   if(sys->J.sys ) {
       int count = linsolqr_number_of_rhs(sys->J.sys)-1;
       for( ; count >= 0; count-- ) {
          destroy_array(linsolqr_get_rhs(sys->J.sys,count));
@@ -3205,11 +3202,11 @@ static void destroy_matrices( slv3_system_t sys)
       mtx_destroy(linsolqr_get_matrix(sys->J.sys));
       linsolqr_set_matrix(sys->J.sys,NULL);
       linsolqr_destroy(sys->J.sys);
-      if( sys->J.relpivots ) set_destroy( sys->J.relpivots );
-      if( sys->J.varpivots ) set_destroy( sys->J.varpivots );
+      if(sys->J.relpivots ) set_destroy( sys->J.relpivots );
+      if(sys->J.varpivots ) set_destroy( sys->J.varpivots );
       sys->J.sys = NULL;
    }
-   if( sys->B ) {
+   if(sys->B ) {
       struct hessian_data *update;
       for( update=sys->B; update != NULL; ) {
          struct hessian_data *handle;
@@ -3221,7 +3218,7 @@ static void destroy_matrices( slv3_system_t sys)
       }
       sys->B = NULL;
    }
-   if( sys->ZBZ.order > 0 ) {
+   if(sys->ZBZ.order > 0 ) {
       int i;
       for( i = 0; i < sys->ZBZ.order; i++ )
          destroy_array(sys->ZBZ.mtx[i]);
@@ -3265,12 +3262,12 @@ static int slv3_eligible_solver(slv_system_t server)
   rfilter.matchbits = (REL_INCLUDED | REL_ACTIVE);
   rfilter.matchvalue = (REL_INCLUDED | REL_ACTIVE);
 
-  if (!slv_count_solvers_rels(server,&rfilter)) {
+  if(!slv_count_solvers_rels(server,&rfilter)) {
     return (FALSE);
   }
 
   for( rp=slv_get_solvers_rel_list(server); *rp != NULL ; ++rp ) {
-    if( rel_less(*rp) || rel_greater(*rp) ) return(FALSE);
+    if(rel_less(*rp) || rel_greater(*rp) ) return(FALSE);
   }
   return(TRUE);
 }
@@ -3282,7 +3279,7 @@ void slv3_get_parameters(slv_system_t server, SlvClientToken asys,
   slv3_system_t sys;
   (void) server;
   sys = SLV3(asys);
-  if (check_system(sys)) return;
+  if(check_system(sys)) return;
   mem_copy_cast(&(sys->p),parameters,sizeof(slv_parameters_t));
 }
 
@@ -3292,7 +3289,7 @@ static void slv3_set_parameters(slv_system_t server, SlvClientToken asys,
   slv3_system_t sys;
   (void) server;
   sys = SLV3(asys);
-  if (check_system(sys)) return;
+  if(check_system(sys)) return;
   mem_copy_cast(parameters,&(sys->p),sizeof(slv_parameters_t));
 }
 
@@ -3302,7 +3299,7 @@ static void slv3_get_status(slv_system_t server, SlvClientToken asys,
   slv3_system_t sys;
   (void) server;
   sys = SLV3(asys);
-  if (check_system(sys)) return;
+  if(check_system(sys)) return;
   mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
 }
 
@@ -3312,7 +3309,7 @@ static linsolqr_system_t slv3_get_linsolqr_sys(slv_system_t server,
   slv3_system_t sys;
   (void) server;
   sys = SLV3(asys);
-  if (check_system(sys)) return NULL;
+  if(check_system(sys)) return NULL;
   return(sys->J.sys);
 }
 
@@ -3352,13 +3349,13 @@ static void structural_analysis(slv_system_t server, slv3_system_t sys){
   /* Symbolic analysis */
   sys->rtot = slv_get_num_solvers_rels(server);
   sys->vtot = slv_get_num_solvers_vars(server);
-  if (sys->rtot) {
+  if(sys->rtot) {
     slv_block_partition(server);
   }
   sys->J.dofdata = slv_get_dofdata(server);
   sys->rank = sys->J.dofdata->structural_rank;
   sys->ZBZ.order = sys->obj ? (sys->vused - sys->rank) : 0;
-  if( !(SLV_PARAM_BOOL(&(sys->p),PARTITION)) || OPTIMIZING(sys) ) {
+  if(!(SLV_PARAM_BOOL(&(sys->p),PARTITION)) || OPTIMIZING(sys) ) {
     /* maybe we should reorder blocks here? maybe not */
     slv_block_unify(server);
   }
@@ -3376,21 +3373,21 @@ static void structural_analysis(slv_system_t server, slv3_system_t sys){
 
 static void set_factor_options (slv3_system_t sys)
 {
-  if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI") == 0) {
+  if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI") == 0) {
     sys->J.fm = ranki_kw;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI+ROW") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI+ROW") == 0) {
     sys->J.fm = ranki_jz;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI") == 0) {
     sys->J.fm = ranki_kw2;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI+ROW") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI+ROW") == 0) {
     sys->J.fm = ranki_jz2;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fastest-SPK1/MR-RANKI") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fastest-SPK1/MR-RANKI") == 0) {
     sys->J.fm = ranki_ba2;
-/*  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"GAUSS") == 0) {
+/*  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"GAUSS") == 0) {
     sys->J.fm = gauss_ba2;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"GAUSS_EASY") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"GAUSS_EASY") == 0) {
     sys->J.fm = gauss_easy;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"NGSLV-2-LEVEL") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"NGSLV-2-LEVEL") == 0) {
     sys->J.fm = ranki_kt2;*/
   }else{
     sys->J.fm = ranki_ba2;
@@ -3433,7 +3430,7 @@ static void create_matrices(slv_system_t server, slv3_system_t sys)
 
   structural_analysis(server,sys);
   sys->ZBZ.mtx = ASC_NEW_ARRAY_OR_NULL(real64 *,sys->ZBZ.order);
-  if( sys->ZBZ.mtx ) {
+  if(sys->ZBZ.mtx ) {
     int i;
     for( i=0; i<sys->ZBZ.order; i++ ) {
       sys->ZBZ.mtx[i] = ASC_NEW_ARRAY_OR_NULL(real64, sys->ZBZ.order);
@@ -3456,7 +3453,7 @@ slv3_system_t sys;
   sys->variables.rng = &(sys->J.reg.col);
   sys->residuals.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
   sys->residuals.rng = &(sys->J.reg.row);
-  if( OPTIMIZING(sys) ) {
+  if(OPTIMIZING(sys)){
     sys->gradient.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
     sys->gradient.rng = &(sys->J.reg.col);
     sys->multipliers.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
@@ -3470,7 +3467,7 @@ slv3_system_t sys;
   }
   sys->newton.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
   sys->newton.rng = &(sys->J.reg.col);
-  if( OPTIMIZING(sys) ) {
+  if(OPTIMIZING(sys)){
     sys->Bnewton.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
     sys->Bnewton.rng = &(sys->J.reg.col);
     sys->nullspace.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
@@ -3486,7 +3483,7 @@ slv3_system_t sys;
 
   sys->varstep1.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
   sys->varstep1.rng = &(sys->J.reg.col);
-  if( OPTIMIZING(sys) ) {
+  if(OPTIMIZING(sys)){
     sys->Bvarstep1.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
     sys->Bvarstep1.rng = &(sys->J.reg.col);
   }else{
@@ -3494,7 +3491,7 @@ slv3_system_t sys;
   }
   sys->varstep2.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
   sys->varstep2.rng = &(sys->J.reg.col);
-  if( OPTIMIZING(sys) ) {
+  if(OPTIMIZING(sys)){
     sys->Bvarstep2.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
     sys->Bvarstep2.rng = &(sys->J.reg.col);
   }else{
@@ -3515,7 +3512,7 @@ void slv3_dump_internals(slv_system_t server, SlvClientToken sys,int level)
 {
   (void) server;
   check_system(sys);
-  if (level > 0) {
+  if(level > 0) {
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(stderr,"QRSlv:slv3_dump_internals: QRSlv does not dump its internals.\n");
     error_reporter_end_flush();
@@ -3538,25 +3535,25 @@ static int32 slv3_dof_changed(slv3_system_t sys){
 
   /* search for vars that were fixed and are now free */
   for( ind = sys->vused; ind < sys->vtot; ++ind ) {
-    if( !var_fixed(sys->vlist[ind]) && var_active(sys->vlist[ind]) ) {
+    if(!var_fixed(sys->vlist[ind]) && var_active(sys->vlist[ind]) ) {
       ++result;
     }
   }
   /* search for rels that were unincluded and are now included */
   for( ind = sys->rused; ind < sys->rtot; ++ind ) {
-    if( rel_included(sys->rlist[ind]) && rel_active(sys->rlist[ind])) {
+    if(rel_included(sys->rlist[ind]) && rel_active(sys->rlist[ind])) {
       ++result;
     }
   }
   /* search for vars that were free and are now fixed */
   for( ind = sys->vused -1; ind >= 0; --ind ) {
-    if( var_fixed(sys->vlist[ind]) ||  !var_active(sys->vlist[ind])) {
+    if(var_fixed(sys->vlist[ind]) ||  !var_active(sys->vlist[ind])) {
       ++result;
     }
   }
   /* search for rels that were included and are now unincluded */
   for( ind = sys->rused -1; ind >= 0; --ind ) {
-    if( !rel_included(sys->rlist[ind]) || !rel_active(sys->rlist[ind]) ) {
+    if(!rel_included(sys->rlist[ind]) || !rel_active(sys->rlist[ind]) ) {
       ++result;
     }
   }
@@ -3578,19 +3575,19 @@ static void reset_cost(struct slv_block_cost *cost,int32 costsize){
 }
 
 static void slv3_update_linsolqr(slv3_system_t sys){
-  if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI") == 0) {
+  if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI") == 0) {
     sys->J.fm = ranki_kw;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI+ROW") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI+ROW") == 0) {
     sys->J.fm = ranki_jz;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI") == 0) {
     sys->J.fm = ranki_kw2;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI+ROW") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fast-SPK1/RANKI+ROW") == 0) {
     sys->J.fm = ranki_jz2;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fastest-SPK1/MR-RANKI") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"Fastest-SPK1/MR-RANKI") == 0) {
     sys->J.fm = ranki_ba2;
-/*  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"GAUSS_EASY") == 0) {
+/*  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"GAUSS_EASY") == 0) {
     sys->J.fm = gauss_easy;
-  }else if (strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"NGSLV-2-LEVEL") == 0) {
+  }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"NGSLV-2-LEVEL") == 0) {
     sys->J.fm = ranki_kt2;*/
   }else{
     sys->J.fm = ranki_ba2;
@@ -3612,13 +3609,13 @@ static int slv3_presolve(slv_system_t server, SlvClientToken asys){
   sys = SLV3(asys);
   iteration_begins(sys);
   check_system(sys);
-  if( sys->vlist == NULL ) {
+  if(sys->vlist == NULL ) {
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(stderr,"QRSlv::slv3_presolve: Variable list was never set.");
     error_reporter_end_flush();
     return 1;
   }
-  if( sys->rlist == NULL && sys->obj == NULL ) {
+  if(sys->rlist == NULL && sys->obj == NULL ) {
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(stderr,"QRSlv::slv3_presolve: Relation list and objective never set.");
 	error_reporter_end_flush();
@@ -3639,7 +3636,7 @@ static int slv3_presolve(slv_system_t server, SlvClientToken asys){
   for( ind = 0; ind < sys->rtot; ++ind ) {
     rel_set_satisfied(rp[ind],FALSE);
   }
-  if( matrix_creation_needed ) {
+  if(matrix_creation_needed){
 
     cap = slv_get_num_solvers_rels(SERVER);
     sys->cap = slv_get_num_solvers_vars(SERVER);
@@ -3673,7 +3670,7 @@ static int slv3_presolve(slv_system_t server, SlvClientToken asys){
   sys->s.block.previous_total_size = 0;
   sys->s.costsize = 1+sys->s.block.number_of;
 
-  if( matrix_creation_needed ) {
+  if(matrix_creation_needed){
     destroy_array(sys->s.cost);
     sys->s.cost = ASC_NEW_ARRAY_CLEAR(struct slv_block_cost,sys->s.costsize);
     for( ind = 0; ind < sys->s.costsize; ++ind ) {
@@ -3707,7 +3704,7 @@ static boolean slv3_change_basis(slv3_system_t sys,int32 var,
   boolean didit;
   didit = mtx_make_col_independent(sys->J.mtx,
     mtx_org_to_col(sys->J.mtx,var),rng);
-  if (didit && SLV_PARAM_BOOL(&(sys->p),PARTITION) && !OPTIMIZING(sys) ) {
+  if(didit && SLV_PARAM_BOOL(&(sys->p),PARTITION) && !OPTIMIZING(sys) ) {
     struct slv_block_cost oldpresolve;
     int32 oldblocks;
     oldblocks = sys->s.block.number_of;
@@ -3715,7 +3712,7 @@ static boolean slv3_change_basis(slv3_system_t sys,int32 var,
     mtx_partition(sys->J.mtx); /* this call needs to be replaced */
     sys->s.block.number_of =
       (slv_get_solvers_blocks(SERVER))->nblocks;
-    if (oldblocks != sys->s.block.number_of) {
+    if(oldblocks != sys->s.block.number_of) {
       ascfree(sys->s.cost);
       sys->s.costsize = sys->s.block.number_of+1;
       sys->s.cost = ASC_NEW_ARRAY_OR_NULL_CLEAR(struct slv_block_cost, sys->s.costsize);
@@ -3779,14 +3776,14 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   sys = SLV3(asys);
   mif = MIF(sys);
   lif = LIF(sys);
-  if (server == NULL || sys==NULL) return 1;
-  if (check_system(SLV3(sys))) return 2;
-  if( !sys->s.ready_to_solve ) {
+  if(server == NULL || sys==NULL) return 1;
+  if(check_system(SLV3(sys))) return 2;
+  if(!sys->s.ready_to_solve){
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv: Not ready to solve.");
     return 3;
   }
 
-  if (sys->s.block.current_block==-1) {
+  if(sys->s.block.current_block==-1) {
     find_next_unconverged_block(sys);
 	if(!sys->s.calc_ok){
 #if DEBUG
@@ -3795,20 +3792,20 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
       return 10;
 	}
     update_status(sys);
-    if( SLV_PARAM_BOOL(&(sys->p),RELNOMSCALE) == 1 /*|| (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0) ||
+    if(SLV_PARAM_BOOL(&(sys->p),RELNOMSCALE) == 1 /*|| (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0) ||
        (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM+ITERATIVE") == 0)*/ ){
       calc_relnoms(sys);
     }
     return 0; /* not sure if this is an error? */
   }
-  if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (sys->s.block.current_size >1 ||
+  if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (sys->s.block.current_size >1 ||
       SLV_PARAM_BOOL(&(sys->p),LIFDS))) {
     debug_delimiter(lif);
   }
   iteration_begins(sys);
 
 #if !CANOPTIMIZE
-  if( OPTIMIZING(sys) ) {
+  if(OPTIMIZING(sys)){
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(stderr,"QRSlv::slv3_iterate: QRSlv cannot presently optimize.");
     error_reporter_end_flush();
@@ -3823,13 +3820,14 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
    * Attempt direct solve if appropriate
    */
 
-  if( !OPTIMIZING(sys) && sys->s.block.iteration == 1 &&
-    sys->s.block.current_size == 1 ) {
+  if(!OPTIMIZING(sys) 
+  	&& sys->s.block.iteration == 1 && sys->s.block.current_size == 1
+  ){
     struct var_variable *var;
     struct rel_relation *rel;
     var = sys->vlist[mtx_col_to_org(sys->J.mtx,sys->J.reg.col.low)];
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,sys->J.reg.row.low)];
-    if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && SLV_PARAM_BOOL(&(sys->p),LIFDS)) {
+    if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && SLV_PARAM_BOOL(&(sys->p),LIFDS)) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> (%d)", "Singleton relation",
               mtx_row_to_org(sys->J.mtx,sys->J.reg.row.low));
       print_rel_name(lif,sys,rel); PUTC('\n',lif);
@@ -3847,16 +3845,16 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 
     switch( ds_status ) {
     case 0:
-      if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+      if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Unable to directly solve symbolically.\n");
       }
       break;
     case 1:
-      if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && SLV_PARAM_BOOL(&(sys->p),LIFDS)) {
+      if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && SLV_PARAM_BOOL(&(sys->p),LIFDS)) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Directly solved.\n");
       }
       sys->s.calc_ok = calc_residuals(sys);
-      if (sys->s.calc_ok) {
+      if(sys->s.calc_ok) {
         iteration_ends(sys);
         find_next_unconverged_block(sys);
         update_status(sys);
@@ -3880,7 +3878,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
       return 5;
     }
   } /* if fails with a 0, go on to newton a 1x1 */
-  if( !calc_J(sys) ) {
+  if(!calc_J(sys)){
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(MIF(sys),"Jacobian calculation errors detected.");
     error_reporter_end_flush();
@@ -3890,14 +3888,14 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 
   scale_system(sys);
 
-  if( !calc_gradient(sys) ){
+  if(!calc_gradient(sys)){
     ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv: Gradient calculation errors detected.");
     FPRINTF(MIF(sys),"QRSlv: Gradient calculation errors detected.\n");
     error_reporter_end_flush();
   }
   set_factor_options(sys); /* KHACK: new call to fix lack of proper update */
   rank_defect = calc_pivots(sys);
-  if (SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
+  if(SLV_PARAM_BOOL(&(sys->p),SAVLIN)) {
     FILE *ldat;
     sprintf(savlinfilename,"%s%d",savlinfilebase,savlinnum++);
     ldat=fopen(savlinfilename,"w");
@@ -3911,8 +3909,10 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   calc_multipliers(sys);
   calc_stationary(sys);
 
-  if( OPTIMIZING(sys) && block_feasible(sys) &&
-      calc_sqrt_D0(sys->stationary.norm2) <= SLV_PARAM_REAL(&(sys->p),STAT_TOL) ) {
+  if(OPTIMIZING(sys) 
+  	&& block_feasible(sys) 
+	&& calc_sqrt_D0(sys->stationary.norm2) <= SLV_PARAM_REAL(&(sys->p),STAT_TOL)
+  ){
     iteration_ends(sys);
     find_next_unconverged_block(sys);
     update_status(sys);
@@ -3920,15 +3920,16 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   }
   calc_phi(sys);
 
-  if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+  if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n","Phi", sys->phi);
   }
 
   calc_gamma(sys);
   calc_Jgamma(sys);
 
-  if( !OPTIMIZING(sys) &&
-      sys->gamma.norm2 <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)*sys->phi ) {
+  if(!OPTIMIZING(sys) 
+  	&& sys->gamma.norm2 <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)*sys->phi
+  ){
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(ASCERR,"QRSlv: Problem diverged: Gamma norm too small (termtol=%f)."
       ,SLV_PARAM_REAL(&(sys->p),TERM_TOL)
@@ -3945,9 +3946,9 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 
   calc_newton(sys);
 
-/*  if (sys->residuals.norm2 > 1.0e-32) {
+/*  if(sys->residuals.norm2 > 1.0e-32) {
     norm2 = inner_product(&(sys->newton),&(sys->gamma))/sys->residuals.norm2;
-    if( fabs(norm2 - 1.0) > 1e-4 ) {
+    if(fabs(norm2 - 1.0) > 1e-4 ) {
       FPRINTF(MIF(sys),"WARNING:(slv3) slv3_iterate\n");
       FPRINTF(MIF(sys),"        Jacobian inverse inaccurate.\n");
       FPRINTF(MIF(sys),"        Smallest pivot = %g, JJ' norm2 = %g\n",
@@ -3984,36 +3985,36 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 /* end of code by AWW */
 
 
-    if (first) {
+    if(first) {
       change_maxstep(sys, MAXDOUBLE);
       first = FALSE;
     }else{
-      if (!bounds_ok) {
+      if(!bounds_ok) {
         real64 maxstep_coef;
         maxstep_coef = 0.5*(1.0 + SLV_PARAM_REAL(&(sys->p),TOWARD_BOUNDS)*bounds_coef);
-        if (maxstep_coef < SLV_PARAM_REAL(&(sys->p),MIN_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MIN_COEF);
-        if (maxstep_coef > SLV_PARAM_REAL(&(sys->p),MAX_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MAX_COEF);
-        if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+        if(maxstep_coef < SLV_PARAM_REAL(&(sys->p),MIN_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MIN_COEF);
+        if(maxstep_coef > SLV_PARAM_REAL(&(sys->p),MAX_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MAX_COEF);
+        if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
           ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
             "    Step reduction (bounds not ok)", maxstep_coef);
         }
         restore_variables(sys);
         change_maxstep(sys, maxstep_coef*sys->maxstep);
       }else{
-        if (!new_ok) {
+        if(!new_ok) {
           real64 maxstep_coef;
           maxstep_coef = 0.50;
-          if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+          if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
             ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
               "    Step reduction (calculations not ok)", maxstep_coef);
           }
           restore_variables(sys);
           change_maxstep(sys, maxstep_coef*sys->maxstep);
         }else{
-          if (!descent_ok) {
+          if(!descent_ok) {
             real64 maxstep_coef;
             previous = MIN(sys->phi, oldphi);
-            if( OPTIMIZING(sys) ) {
+            if(OPTIMIZING(sys)){
               maxstep_coef = 0.5;
             }else{
               real64 denom;
@@ -4022,9 +4023,9 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
               maxstep_coef = denom > 0.0 ? 0.5*
               sys->maxstep*calc_sqrt_D0(sys->gamma.norm2)/denom : SLV_PARAM_REAL(&(sys->p),MAX_COEF);
             }
-            if (maxstep_coef < SLV_PARAM_REAL(&(sys->p),MIN_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MIN_COEF);
-            if (maxstep_coef > SLV_PARAM_REAL(&(sys->p),MAX_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MAX_COEF);
-            if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+            if(maxstep_coef < SLV_PARAM_REAL(&(sys->p),MIN_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MIN_COEF);
+            if(maxstep_coef > SLV_PARAM_REAL(&(sys->p),MAX_COEF)) maxstep_coef = SLV_PARAM_REAL(&(sys->p),MAX_COEF);
+            if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
               ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                 "    Step reduction (descent not ok)",maxstep_coef);
             }
@@ -4041,14 +4042,14 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
       calc_sqrt_D0((sys->varstep.norm2+sys->mulstep.norm2)*
       (sys->varstep1.norm2+sys->mulstep1.norm2)));
     sys->maxstep = calc_sqrt_D0(sys->varstep.norm2 + sys->mulstep.norm2);
-    if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+    if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
         "    Suggested step length (scaled)", sys->maxstep);
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
         "    Suggested progress", sys->progress);
     }
 
-    if (sys->progress <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)) {
+    if(sys->progress <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)) {
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(ASCERR,"QRSlv: Problem diverged: Suggested progress too small.");
 	  error_reporter_end_flush();
@@ -4065,7 +4066,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
      **/
     bounds_ok = ((!SLV_PARAM_BOOL(&(sys->p),SLV_PARAM_BOOL(&(sys->p),REDUCE))) || (SLV_PARAM_BOOL(&(sys->p),IGNORE_BOUNDS)) ||
                 ((bounds_coef=required_coef_to_stay_inbounds(sys)) == 1.0));
-    if( !bounds_ok ) {
+    if(!bounds_ok){
       previous = oldphi;
       continue;
     }
@@ -4074,7 +4075,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
      ***  Apply step.
      **/
     apply_step(sys);
-    if (sys->progress <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)) {
+    if(sys->progress <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)) {
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(ASCERR,"Problem diverged: Applied progress too small.");
 	  error_reporter_end_flush();
@@ -4095,11 +4096,11 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
      * should combine with above line???
      */
     calc_objectives(sys);
-    if (!sys->s.calc_ok) {
-      if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+    if(!sys->s.calc_ok) {
+      if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"    Step accepted.\n");
       }
-      if (new_ok)
+      if(new_ok)
         FPRINTF(mif,"\nCalculation errors resolved.\n");
       step_accepted(sys);
       sys->s.calc_ok = new_ok;
@@ -4107,7 +4108,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
       update_status(sys);
       return 0;
     }
-    if( !new_ok ) {
+    if(!new_ok){
       previous = oldphi;
       continue;
     }
@@ -4118,18 +4119,18 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     scale_residuals(sys);
     calc_phi(sys);
     sys->phi += inner_product( &(sys->mulstep),&(sys->residuals) );
-    if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+    if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Anticipated phi",sys->phi);
     }
     descent_ok = (sys->phi < oldphi);
-    if (SLV_PARAM_BOOL(&(sys->p),EXACT_LINE_SEARCH))
+    if(SLV_PARAM_BOOL(&(sys->p),EXACT_LINE_SEARCH))
       descent_ok = (descent_ok && (sys->phi >= previous));
   } /* end while */
 
   step_accepted(sys);
-  if (SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
+  if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT)) {
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"    Step accepted.\n");
-    if (sys->obj) {
+    if(sys->obj) {
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\n%-40s ---> %g\n", "Objective", sys->objective);
     }
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Residual norm (unscaled)",
@@ -4149,7 +4150,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   /* CONSOLE_DEBUG("Iteration ends..."); */
 
   iteration_ends(sys);
-  if( !OPTIMIZING(sys) && block_feasible(sys) )  {
+  if(!OPTIMIZING(sys) && block_feasible(sys)){
     if(rank_defect){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Block %d was singular one step before convergence."
         " You may wish to check for numeric dependency at solution."
@@ -4166,8 +4167,8 @@ static int slv3_solve(slv_system_t server, SlvClientToken asys){
   int err = 0;
   slv3_system_t sys;
   sys = SLV3(asys);
-  if (server == NULL || sys==NULL) return 1;
-  if (check_system(sys)) return 1;
+  if(server == NULL || sys==NULL) return 1;
+  if(check_system(sys)) return 1;
   while(sys->s.ready_to_solve) err = err | slv3_iterate(server,sys);
   if(err)ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solver error %d",err);
   return err;
@@ -4175,8 +4176,8 @@ static int slv3_solve(slv_system_t server, SlvClientToken asys){
 
 static mtx_matrix_t slv3_get_jacobian(slv_system_t server, SlvClientToken sys)
 {
-  if (server == NULL || sys==NULL) return NULL;
-  if (check_system(SLV3(sys))) return NULL;
+  if(server == NULL || sys==NULL) return NULL;
+  if(check_system(SLV3(sys))) return NULL;
   return SLV3(sys)->J.mtx;
 }
 
@@ -4185,18 +4186,18 @@ static int slv3_destroy(slv_system_t server, SlvClientToken asys)
   slv3_system_t sys;
   (void) server;
   sys = SLV3(asys);
-  if (check_system(sys)) return 1;
+  if(check_system(sys)) return 1;
   slv_destroy_parms(&(sys->p));
   destroy_matrices(sys);
   destroy_vectors(sys);
   sys->integrity = DESTROYED;
-  if (sys->s.cost) ascfree(sys->s.cost);
+  if(sys->s.cost) ascfree(sys->s.cost);
   ascfree( (POINTER)asys );
   return 0;
 }
 
 int slv3_register(SlvFunctionsT *sft){
-  if (sft==NULL)  {
+  if(sft==NULL)  {
     FPRINTF(stderr,"slv3_register called with NULL pointer\n");
     return 1;
   }

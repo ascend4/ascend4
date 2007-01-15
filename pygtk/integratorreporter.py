@@ -27,7 +27,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.window=_xml.get_widget("integratorstatusdialog")
 		self.window.set_transient_for(self.browser.window)
 		self.label=_xml.get_widget("integratorlabel")
-		self.label.set_text("Solving with "+self.getIntegrator().getEngineName())
+		self.label.set_text("Solving with "+self.getIntegrator().getName())
 		self.progress=_xml.get_widget("integratorprogress")
 		self.data = None
 

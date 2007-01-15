@@ -227,6 +227,7 @@ int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
 		return 0;
 	}
 	if(sys->engine!=INTEG_UNKNOWN){
+		CONSOLE_DEBUG("Freeing memory used by old integrator engine");
 		integrator_free_engine(sys);
 	}
 	sys->engine = engine;
