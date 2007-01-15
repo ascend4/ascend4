@@ -31,8 +31,11 @@
 #include <math.h>
 #include <stdarg.h>
 #include <utilities/config.h>
+#ifdef ASC_SIGNAL_TRAPS
+# include <utilities/ascSignal.h>
+#endif
+
 #include <utilities/ascConfig.h>
-#include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/set.h>
 #include <general/mathmacros.h>
@@ -449,9 +452,15 @@ static int savlinnum=0;
 */
 static boolean calc_objective( slv3_system_t sys){
   int calc_ok = TRUE;
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
+
   sys->objective = (sys->obj ? relman_eval(sys->obj,&calc_ok,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC)) : 0.0);
+
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
   return calc_ok ? TRUE : FALSE;
 }
 
@@ -468,7 +477,11 @@ static boolean calc_objectives( slv3_system_t sys){
   len = slv_get_num_solvers_objs(SERVER);
   boolean calc_ok = TRUE;
   int calc_ok_1 = 0;
+
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
+
   for (i = 0; i < len; i++) {
     if(rel_apply_filter(rlist[i],&rfilter)) {
       relman_eval(rlist[i],&calc_ok_1,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC));
@@ -480,7 +493,11 @@ static boolean calc_objectives( slv3_system_t sys){
       }
     }
   }
+
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
+
   return calc_ok;
 }
 
@@ -499,7 +516,10 @@ static boolean calc_inequalities( slv3_system_t sys){
   int calc_ok_1;
   boolean calc_ok = TRUE;
 
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
+
   for (rp=sys->rlist;*rp != NULL; rp++) {
     if(rel_apply_filter(*rp,&rfilter)) {
       relman_eval(*rp,&calc_ok_1,SLV_PARAM_BOOL(&(sys->p),SAFE_CALC));
@@ -507,7 +527,11 @@ static boolean calc_inequalities( slv3_system_t sys){
       satisfied = satisfied && relman_calc_satisfied(*rp,SLV_PARAM_REAL(&(sys->p),FEAS_TOL));
     }
   }
+
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
+
 #if DEBUG
   CONSOLE_DEBUG("inequalities: calc_ok = %d, satisfied = %d",calc_ok, satisfied);
 #endif
@@ -531,7 +555,10 @@ static boolean calc_residuals( slv3_system_t sys){
 
   row = sys->residuals.rng->low;
   time0=tm_cpu_time();
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
+
   for( ; row <= sys->residuals.rng->high; row++ ) {
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
 #if DEBUG
@@ -558,7 +585,10 @@ static boolean calc_residuals( slv3_system_t sys){
       relman_calc_satisfied_scaled(rel,SLV_PARAM_REAL(&(sys->p),FEAS_TOL));
     }
   }
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
+
   sys->s.block.functime += (tm_cpu_time() -time0);
   sys->s.block.funcs++;
   square_norm( &(sys->residuals) );

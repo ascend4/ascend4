@@ -105,8 +105,10 @@
 #ifndef ASC_ASCSIGNAL_H
 #define ASC_ASCSIGNAL_H
 
-#include <signal.h>
-#include <setjmp.h>
+#include <utilities/config.h>
+#ifdef ASC_SIGNAL_TRAPS
+/*-------------------- rest of file is conditional on ASC_SIGNAL_TRAPS--------*/
+#include <general/except.h>
 #include "utilities/ascConfig.h"
 
 #ifdef __WIN32__
@@ -126,38 +128,6 @@ typedef void SigHandlerFn(int);
 
 #define MAX_TRAP_DEPTH 40L
 /**< The maximum number of traps that can be nested. */
-
-/* #define ASC_JMP_INFO */
-/**< Whether to store additional information before making a setjmp call */
-
-#ifndef ASC_JMP_INFO
-# define SETJMP setjmp
-# define LONGJMP longjmp
-# define SIGNAL signal
-# define JMP_BUF jmp_buf
-#else
-# define SETJMP(ENV) (\
-		CONSOLE_DEBUG("SETJMP at %s:%d (%s=%p)",__FILE__,__LINE__,#ENV,ENV.jmp)\
-		,ENV.filename = __FILE__, ENV.line = __LINE__, ENV.func = __FUNCTION__\
-		,ENV.varname = #ENV\
-		, setjmp(ENV.jmp)\
-	)
-# define LONGJMP(ENV,VAL) (\
-		CONSOLE_DEBUG("LONGJMP to %s:%d (%s) (%s=%p)",ENV.filename,ENV.line,ENV.func,ENV.varname,ENV.jmp)\
-		, longjmp(ENV.jmp, VAL)\
-	)
-typedef struct{
-	jmp_buf jmp;
-	const char *filename;
-	int line;
-	const char *func;
-	const char *varname;
-} asc_jmp_buf;
-#define JMP_BUF asc_jmp_buf
-#define SIGNAL(SIG,HANDLER) (CONSOLE_DEBUG("SIGNAL(%d,%s)",SIG,#HANDLER),signal(SIG,HANDLER))
-#endif
-
-
 	
 ASC_DLLSPEC JMP_BUF g_fpe_env;   /**< Standard signal jmp_buf - floating point error. */
 ASC_DLLSPEC JMP_BUF g_seg_env;   /**< Standard signal jmp_buf - segmentation fault. */
@@ -319,6 +289,8 @@ ASC_DLLSPEC int Asc_SignalStackLength(int signum);
 	@return handler at top of specified stack, or NULL if stack is empty.
 */
 ASC_DLLSPEC SigHandlerFn *Asc_SignalStackTop(int signum);
+
+#endif /* ASC_SIGNAL_TRAPS */
 
 #endif  /* ASC_ASCSIGNAL_H */
 

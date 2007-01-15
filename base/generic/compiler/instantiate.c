@@ -30,11 +30,17 @@
 
 #include <stdarg.h>
 #include <errno.h>
-/*#include <stdlib.h>*/
+
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
+
+#ifdef ASC_SIGNAL_TRAPS
+# include <utilities/ascSignal.h>
+#endif
+
+/*#include <stdlib.h>*/
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
-#include <utilities/ascSignal.h>
 #include <utilities/error.h>
 #include <general/pool.h>
 #include <general/list.h>
@@ -6133,10 +6139,14 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
     asc_assert(GetEvaluationContext()==NULL);
     SetEvaluationContext(work);
 
+#ifdef ASC_SIGNAL_TRAPS
 	Asc_SignalHandlerPushDefault(SIGFPE);
 	if(SETJMP(g_fpe_env)==0){
-	    value = EvaluateExpr(AssignStatRHS(statement),NULL,
-    	                     InstanceEvaluateName);
+#endif
+
+	value = EvaluateExpr(AssignStatRHS(statement),NULL,InstanceEvaluateName);
+
+#ifdef ASC_SIGNAL_TRAPS
 	}else{
 		STATEMENT_ERROR(statement, "Floating-point error while evaluating assignment statement");
         MarkStatContext(statement,context_WRONG);
@@ -6144,7 +6154,7 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
 		return 1;
 	}
 	Asc_SignalHandlerPopDefault(SIGFPE);
-
+#endif
 
     SetEvaluationContext(NULL);
 

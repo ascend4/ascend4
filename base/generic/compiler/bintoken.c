@@ -31,6 +31,14 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
  * much of this goes in bintoken.h.
  */
 
+#include <unistd.h> /* for getpid() */
+
+#include <utilities/config.h>
+#ifdef ASC_SIGNAL_TRAPS
+# include <signal.h>
+# include <general/except.h>
+#endif
+
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPrint.h>
@@ -889,21 +897,21 @@ int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual)
       if (subroutine != NULL) {
         int ForG,status;
         ForG = BinTokenRESIDUAL;
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
         Asc_SignalHandlerPush(SIGFPE,Asc_SignalTrap);
         if (SETJMP(g_fpe_env)==0) {
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
           (*subroutine)(vars,NULL,residual,&ForG,&bindex,&status);
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
           Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
           return status;
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
         } else {
           Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
           return 1;
         }
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
       }
       return 1;
     }
@@ -936,21 +944,21 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
       }
       func = ctable[bindex].G;
       if (func != NULL) {
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
         Asc_SignalHandlerPush(SIGFPE,Asc_SignalTrap);
         if (SETJMP(g_fpe_env)==0) {
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
           (*func)(vars,gradient,residual);
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
           Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
           return 0;
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
         } else {
           Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
           return 1;
         }
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
       }
       return 1;
     }
@@ -966,22 +974,22 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
       if (subroutine != NULL) {
         int ForG,status;
         ForG = BinTokenGRADIENT;
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
         Asc_SignalHandlerPush(SIGFPE,Asc_SignalTrap);
         if (SETJMP(g_fpe_env)==0) {
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
           (*subroutine)(vars,gradient,residual,&ForG,&bindex,&status);
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
           Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
           return status;
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
         } else {
           status = 1;
         }
         Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
         return status;
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
       }
       return 1;
     }

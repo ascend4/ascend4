@@ -104,6 +104,12 @@ opts.Add(BoolOption(
 	,True
 ))
 
+opts.Add(BoolOption(
+	'WITH_SIGNALS'
+	,"Whether to permit use of signals for flow control in the C-level code"
+	,False
+))
+
 # You can turn off building of Tcl/Tk interface
 opts.Add(BoolOption(
 	'WITH_TCLTK'
@@ -643,6 +649,9 @@ without_mfgraph_reason = "disabled by options/config.py"
 with_mmio = env.get('WITH_MMIO')
 without_mmio_reason = "disabled by options/config.py"
 
+with_signals = env.get('WITH_SIGNALS')
+without_signals_reason = "disabled by options/config.py"
+
 if platform.system()=="Windows":
 	with_installer=1
 else:
@@ -678,7 +687,6 @@ if platform.system()=='Windows':
 	can_install = False
 
 env['CAN_INSTALL']=can_install
-
 env['INSTALL_MODELS']=env['INSTALL_ASCDATA']+"/models/"
 
 print "TCL_CPPPATH =",env['TCL_CPPPATH']
@@ -1502,9 +1510,10 @@ if conf.CheckGcc():
 
 # Catching SIGINT
 
-if not conf.CheckSIGINT():
-	print "SIGINT unable to be caught. Aborting."
-	exit(1)
+if env['WITH_SIGNALS']:
+	if not conf.CheckSIGINT():
+		with_signals = False
+		without_signals_reason = "SIGINT uncatchable"
 
 # Catching SIGFPE
 
@@ -1739,31 +1748,21 @@ if env.get('WITH_LOCAL_HELP'):
 
 # bool options...
 for k,v in {
-		'ABSOLUTE_PATHS' : 'ASC_ABSOLUTE_PATHS'
-		,'WITH_XTERM_COLORS' : 'ASC_XTERM_COLORS'
-		,'MALLOC_DEBUG' : 'MALLOC_DEBUG'
-}.iteritems():
-	if env.get(k):
-#		subst_dict['@'+v+'@']='1'
-		subst_dict["/\\* #define "+v+' @'+v+"@ \\*/"]='# define '+v+' 1 '
-
-if with_ida:
-	subst_dict["/\\* #define ASC_WITH_IDA @ASC_WITH_IDA@ \\*/"]='# define ASC_WITH_IDA '
-
-if with_dmalloc:
-	subst_dict["/\\* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ \\*/"]='# define ASC_WITH_DMALLOC '
-
-if with_mfgraph:
-	subst_dict["/\\* #define ASC_WITH_MFGRAPH @ASC_WITH_MFGRAPH@ \\*/"]='# define ASC_WITH_MFGRAPH '
-
-if with_conopt:
-	subst_dict["/\\* #define ASC_WITH_CONOPT @ASC_WITH_CONOPT@ \\*/"]='# define ASC_WITH_CONOPT '
-
-if with_lsode:
-	subst_dict["/\\* #define ASC_WITH_LSODE @ASC_WITH_LSODE@ \\*/"]='# define ASC_WITH_LSODE '
-
-if with_mmio:
-	subst_dict["/\\* #define ASC_WITH_MMIO @ASC_WITH_MMIO@ \\*/"]='# define ASC_WITH_MMIO '
+		'ASC_WITH_IDA':with_ida
+		,'ASC_WITH_DMALLOC':with_dmalloc
+		,'ASC_WITH_MFGRAPH':with_mfgraph
+		,'ASC_WITH_CONOPT':with_conopt
+		,'ASC_WITH_LSODE':with_lsode
+		,'ASC_WITH_MMIO':with_mmio
+		,'ASC_SIGNAL_TRAPS':with_signals
+		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
+		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
+		,'ASC_ABSOLUTE_PATHS':env.get('ASC_ABSOLUTE_PATHS')
+		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
+		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
+		}.iteritems():
+		
+	if v: subst_dict["/\\* #define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k
 
 if with_python:
 	subst_dict['@ASCXX_USE_PYTHON@']="1"
@@ -1772,50 +1771,12 @@ if with_python:
 if env.has_key('HAVE_GCCVISIBILITY'):
 	subst_dict['@HAVE_GCCVISIBILITY@'] = "1"
 
-if env.get('ASC_RESETNEEDED'):
-	subst_dict["/\\* #define ASC_RESETNEEDED @ASC_RESETNEEDED@ \\*/"]='#define ASC_RESETNEEDED '
-
-if env.get('HAVE_C99FPE'):
-	subst_dict["/\\* #define HAVE_C99FPE @HAVE_C99FPE@ \\*/"]='#define HAVE_C99FPE '
-
 env.Append(SUBST_DICT=subst_dict)
 
-#------------------------------------------------------
-# RECIPE: Fix up long command-line bug on Win2k
+#for k,v in subst_dict.iteritems():
+#	print "%-50s%s" % ("'%s'"%k,v)
 
-# Currently this is broken, awaiting help from the SCons users list
-
-if 0 and env['PLATFORM'] == 'win32':
-    import win32file
-    import win32event
-    import win32process
-    import win32security
-    import string
-
-    def my_spawn(sh, escape, cmd, args, spawnenv):
-        for var in spawnenv:
-            spawnenv[var] = spawnenv[var].encode('ascii', 'replace')
-
-        sAttrs = win32security.SECURITY_ATTRIBUTES()
-        StartupInfo = win32process.STARTUPINFO()
-        newargs = string.join(map(escape, args[1:]), ' ')
-        cmdline = cmd + " " + newargs
-
-        # check for any special operating system commands
-        if cmd == 'del':
-            for arg in args[1:]:
-                win32file.DeleteFile(arg)
-            exit_code = 0
-        else:
-            # otherwise execute the command.
-            hProcess, hThread, dwPid, dwTid = win32process.CreateProcess(None, cmdline, None, None, 1, 0, spawnenv, None, StartupInfo)
-            win32event.WaitForSingleObject(hProcess, win32event.INFINITE)
-            exit_code = win32process.GetExitCodeProcess(hProcess)
-            win32file.CloseHandle(hProcess);
-            win32file.CloseHandle(hThread);
-        return exit_code
-
-    env['SPAWN'] = my_spawn
+# REMOVED: long command-line support on Win2k
 
 #------------------------------------------------------
 # RECIPE: SWIG scanner

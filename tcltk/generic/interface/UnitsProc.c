@@ -29,15 +29,15 @@
 
 #define ASC_BUILDING_INTERFACE
 
-#ifndef NO_SIGNAL_TRAPS
-# include <signal.h>
-# include <setjmp.h>
+#include <utilities/config.h>
+#ifdef ASC_SIGNAL_TRAPS
+# include <utilities/ascSignal.h>
 #endif
 
 #include <stdarg.h>
 #include <tcl.h>
 #include <utilities/ascConfig.h>
-#include <utilities/ascSignal.h>
+
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <general/list.h>
@@ -100,10 +100,14 @@ static CONST char UnitsProcID[] = "$Id: UnitsProc.c,v 1.41 2003/08/23 18:43:08 b
 #define SNULL (char *)NULL
 #define UnitsFindType(s) FindType(AddSymbol(s))
 
-/* return info when units convert badly. because io may happen within
- * another trap context, we have our own return address and return function.
- */
+#ifdef ASC_SIGNAL_TRAPS
+/** 
+	return info when units convert badly. because io may happen within
+	another trap context, we have our own return address and return function.
+*/
 static jmp_buf g_unit_env;
+#endif
+
 
 struct Units * g_base_units[NUM_DIMENS];
 struct Units * g_SI_units[NUM_DIMENS];
@@ -415,7 +419,7 @@ void Unit_UpdateFundUnits(struct DisplayUnit *du)
   }
 }
 
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
 /* un/conversion error handling done in the next 5 procedures */
 static
 void uunconversion_trap(int sigval)
@@ -426,7 +430,7 @@ void uunconversion_trap(int sigval)
   FPRESET;
   longjmp(g_unit_env,SIGFPE);
 }
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
 
 /* respects any already active Asc_SignalTrap as we may want unit
  * output during another call which needs trapping.
@@ -439,21 +443,22 @@ static int Unit_UnconvertReal(double val, struct Units *u, double *retval)
   if (!u) {
     return 1;
   }
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,uunconversion_trap);
   if (setjmp(g_unit_env)==0) {
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
     status = 0;
     *retval = val*UnitsConvFactor(u);
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
   } else {
     status = 1;
   }
   Asc_SignalHandlerPop(SIGFPE,uunconversion_trap);
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
   return status;
 }
 
+#ifdef ASC_SIGNAL_TRAPS
 static
 void uconversion_trap(int sigval)
 {
@@ -463,6 +468,7 @@ void uconversion_trap(int sigval)
   FPRESET;
   longjmp(g_unit_env,SIGFPE);
 }
+#endif
 
 /* respects any already active fp_trap
  * retval is the display value in the units specified by u
@@ -473,21 +479,21 @@ static int Unit_ConvertReal(double val, struct Units *u, double *retval)
   if (!u) {
     return 1;
   }
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,uconversion_trap);
   if (setjmp(g_unit_env)==0) {
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
     status = 0;
 /* often enough debug
     FPRINTF(stderr,"Conversion: v%.16g f%.16g\n",val,UnitsConvFactor(u));
 */
     *retval = val/UnitsConvFactor(u);
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
   } else {
     status = 1;
   }
   Asc_SignalHandlerPop(SIGFPE,uconversion_trap);
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
   return status;
 }
 

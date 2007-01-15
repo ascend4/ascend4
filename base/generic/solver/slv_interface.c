@@ -36,8 +36,12 @@
  ***  much of slv_interface.h is not yet implemented for SLV.
  **/
 
+#include <utilities/config.h>
+#ifdef ASC_SIGNAL_TRAPS
+# include <utilities/ascSignal.h>
+#endif
+
 #include <utilities/ascConfig.h>
-#include <utilities/ascSignal.h>
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
@@ -295,7 +299,9 @@ static void write_rellist(FILE *out, slv_system_t sys, rel_filter_t *rfilter,
 
    FPRINTF(out,"#/block. residual ?included - name\\n   relation\n");
    num[0] = num[1] = 0L;
+#ifdef ASC_SIGNAL_TRAPS
    Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
    for( rp=slv_get_master_rel_list(sys) ; *rp != NULL ; ++rp ) {
       if( rel_apply_filter(*rp,rfilter) ) {
          real64 res;
@@ -313,7 +319,9 @@ static void write_rellist(FILE *out, slv_system_t sys, rel_filter_t *rfilter,
          write_rel(out,sys,*rp,suppress);
       }
    }
+#ifdef ASC_SIGNAL_TRAPS
    Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
    FPRINTF(out,"There are %d relations, %d included and %d ignored.\n",
 	   num[0]+num[1],num[1],num[0]);
    calc_ok = old_calc_ok;
@@ -331,9 +339,13 @@ static void write_obj(FILE *out, slv_system_t sys)
       FPRINTF(out,"Objective: ----NONE---- ( = 0.0)\n");
    else {
       char *str = relman_make_string_infix(sys,obj);
+#ifdef ASC_SIGNAL_TRAPS
       Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
       val = relman_eval(obj,&calc_ok,SAFE_FIX_ME);
+#ifdef ASC_SIGNAL_TRAPS
       Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
       FPRINTF(out,"Objective: %s ( = %g)\n",str,val);
       ascfree(str);
    }

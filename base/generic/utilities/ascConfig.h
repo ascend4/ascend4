@@ -413,14 +413,7 @@ typedef	unsigned   uint32;
 
 #endif
 
-/* use signals by default, but disable with configure. */
-#ifdef ASC_NO_TRAPS
-/** Don't use signals. */
-# define NO_SIGNAL_TRAPS 1
-#else
-/** Use signals. */
-# undef NO_SIGNAL_TRAPS
-#endif
+/* signal traps stuff moved to config.h.in */
 
 /*------------------------------------*
 	OUTPUT FILE* MAPPINGS

@@ -23,13 +23,15 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-
-#ifndef NO_SIGNAL_TRAPS
-#include <setjmp.h>
-#include <signal.h>
-#endif  /* NO_SIGNAL_TRAPS */
 #include <tcl.h>
 #include <tk.h>
+
+#include <utilities/config.h>
+#ifdef ASC_SIGNAL_TRAPS
+#include <setjmp.h>
+#include <general/except.h>
+#endif
+
 #include <utilities/ascConfig.h>
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>

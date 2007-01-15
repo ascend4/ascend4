@@ -32,6 +32,9 @@
 
 #include <tcl.h>
 #include <tk.h>
+
+#include <utilities/config.h>
+
 #include <utilities/ascConfig.h>
 #include <general/list.h>
 #include <compiler/compiler.h>
@@ -924,6 +927,7 @@ void Asc_CreateCommands(Tcl_Interp *interp)
     /* the stuff above should be replaced with header macros. */
   );
 
+#ifdef ASC_SIGNAL_TRAPS
   ASCADDCOM(interp,"slv_trapfp",Asc_SolvTrapFP,
     "solver",
     NULL,
@@ -955,6 +959,7 @@ void Asc_CreateCommands(Tcl_Interp *interp)
     NULL
     /* the stuff above should be replaced with header macros. */
   );
+#endif
 
   ASCADDCOM(interp,"slv_checksim",Asc_SolvIncompleteSim,
     "solver",
