@@ -15,6 +15,7 @@ METHOD default_self;
 	h := 3000 {kJ/kg};
 	u := 2300 {kJ/kg};
 	v := 100 {m^3/kg};
+	v.nominal := 0.01 {m^3/kg};
 	RUN iapwssatprops::default_self;
 END default_self;
 METHOD specify;

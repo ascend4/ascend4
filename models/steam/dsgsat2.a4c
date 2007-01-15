@@ -192,13 +192,13 @@ METHOD ode_init;
 	END FOR;
 
 	FOR i IN [1..n] DO
-		p[i].obs_id := 1 + 4*i;
-		x[i].obs_id := 2 + 4*i+1;
+		p[i].obs_id :=         1 + 5*i;
+		x[i].obs_id :=         2 + 5*i;
+		node[i].mdot.obs_id := 4 + 5*i;
 	END FOR;
-	FOR i IN [] DO
-		(* qdot_t[i].obs_id := 3 + 4*i; *)
-		node[i].mdot.obs_id := 3 + 4*i;
-		T_w[i].obs_id := 4 + 4*i;
+	FOR i IN [2..n] DO
+		qdot_t[i].obs_id :=    3 + 5*i;
+		T_w[i].obs_id :=       5 + 4*i;
 	END FOR;
 END ode_init;
 
