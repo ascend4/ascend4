@@ -915,7 +915,7 @@ class Browser:
 		_dialog.run()
 
 	def on_show_vars_far_from_nominals_activate(self,*args):
-		_bignum = self.prefs.getRealPref("Directories","librarypath",10);
+		_bignum = self.prefs.getRealPref("Browser","far_from_nominals",10);
 		text = "Variables Far from Nominals"
 		title=text;
 		text += "\n"
