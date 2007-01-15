@@ -137,6 +137,7 @@ METHOD default_self;
 	h_g.nominal := 2600 {kJ/g};
 	u_f := 2000 {kJ/kg};
 	u_g := 4000 {kJ/kg};
+	dp_dT.nominal := 10 {kPa/K};
 (*
 	s_f := 5 {kJ/kg/K};
 	s_g := 7 {kJ/kg/K};
@@ -176,8 +177,6 @@ METHOD values;
 	T := 273.16 {K};
 
 	u_g := 4000 {kJ/kg};	(* starting guess *)
-	dp_dT.nominal := 10 {kPa/K};
-
 END values;
 METHOD self_test;
 	ASSERT abs(p - 611.657 {Pa}) < 0.001 {Pa};
