@@ -5513,15 +5513,13 @@ Conversion to LyX and other formats:
 		  </child>
 
 		  <child>
-		    <widget class="GtkComboBoxEntry" id="engineselect">
+		    <widget class="GtkComboBox" id="engineselect">
 		      <property name="visible">True</property>
 		      <property name="items" translatable="yes">LSODE
 IDA
-Westerberg	</property>
+AWW</property>
 		      <property name="add_tearoffs">False</property>
-		      <property name="has_frame">True</property>
 		      <property name="focus_on_click">True</property>
-		      <signal name="key_press_event" handler="on_entry_key_press_event" last_modification_time="Mon, 05 Jun 2006 12:24:01 GMT"/>
 		    </widget>
 		    <packing>
 		      <property name="padding">0</property>
@@ -5918,7 +5916,7 @@ Westerberg	</property>
 			  <property name="editable">True</property>
 			  <property name="visibility">True</property>
 			  <property name="max_length">0</property>
-			  <property name="text" translatable="yes"></property>
+			  <property name="text" translatable="yes">4</property>
 			  <property name="has_frame">True</property>
 			  <property name="invisible_char">*</property>
 			  <property name="activates_default">False</property>
