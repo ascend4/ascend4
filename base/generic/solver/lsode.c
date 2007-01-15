@@ -51,7 +51,13 @@
 	Last in CVS $Revision: 1.29 $ $Date: 2000/01/25 02:26:31 $ $Author: ballan $
 */
 
+#include <time.h>
+#ifndef CLOCKS_PER_SEC
+# error "Where is CLOCKS_PER_SEC?"
+#endif
+
 #include <utilities/config.h>
+
 #ifdef ASC_SIGNAL_TRAPS
 # include <signal.h>
 # include <general/except.h>
@@ -143,8 +149,9 @@ const IntegratorInternals integrator_lsode_internals = {
 #define GETCOMMON GET_LSODE_COMMON
 #endif
 
-#define DOTIME FALSE
-
+#define TIMING_DEBUG
+#define ASC_CLOCK_CHECK_PERIOD 1 /* number of FEX or JEX cycled between GUI updates */
+#define ASC_CLOCK_MAX_GUI_WAIT (0.5*CLOCKS_PER_SEC) /* max number of clock ticks between GUI updates */
 /* definitions of lsode supported children of atoms, etc */
 /********************************************************************/
 /* solver_var children expected for state variables */
@@ -201,6 +208,7 @@ typedef struct IntegratorLsodeDataStruct{
 	char stop;                             /* stop requested? */
 	int partitioned;                       /* partioned func evals or not */
   
+	clock_t lastwrite;                     /* time of last call to the reporter 'write' function */
 } IntegratorLsodeData;
 
 /**<
@@ -727,6 +735,7 @@ error:
 	function calls.  This code below attempts to handle these cases.
 */
 static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
+	static short clockcheck = 0;
   slv_status_t status;
   LSODEDATA_GET(lsodedata);
 
@@ -734,15 +743,15 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
   /* int i; */
   unsigned long res;
 
-#if DOTIME
-  double time1,time2;
+#ifdef TIMING_DEBUG
+  clock_t time1,time2;
 #endif
 
   /* CONSOLE_DEBUG("Calling for a function evaluation"); */
 
-#if DOTIME
+#ifdef TIMING_DEBUG
   CONSOLE_DEBUG("Calling for a function evaluation");
-  time1 = tm_cpu_time();
+  time1 = clock();
 #endif
 
   /*
@@ -751,8 +760,8 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
   integrator_set_t(l_lsode_blsys, t[0]);
   integrator_set_y(l_lsode_blsys, y);
 
-#if DOTIME
-  time2 = tm_cpu_time();
+#ifdef TIMING_DEBUG
+  time2 = clock();
 #endif
 
   switch(lsodedata->lastcall) {
@@ -784,8 +793,16 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
   /* pass the solver status to the integrator */
   res = integrator_checkstatus(status);
 
-#if DOTIME
-  time2 = tm_cpu_time() - time2;
+	/* Do we need to do clock check? */
+	if((++clockcheck % ASC_CLOCK_CHECK_PERIOD)==0){
+		if((clock() - lsodedata->lastwrite) > ASC_CLOCK_MAX_GUI_WAIT){
+			integrator_output_write(l_lsode_blsys);
+			lsodedata->lastwrite = clock(); /* don't count the update time, or we might never get anything done */
+		}
+	}			
+		
+#ifdef TIMING_DEBUG
+  time2 = clock() - time2;
 #endif
 
   if(res){
@@ -810,9 +827,9 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
   integrator_get_ydot(l_lsode_blsys, ydot);
 
   lsodedata->lastcall = lsode_function;
-#if DOTIME
-  time1 = tm_cpu_time() - time1;
-  CONSOLE_DEBUG("Function evalulation has been completed in time %g. True function call  time = %g",time1,time2);
+#ifdef TIMING_DEBUG
+  time1 = clock() - time1;
+  CONSOLE_DEBUG("Function evalulation has been completed in %ld ticks. True function call time = %ld ticks",time1,time2);
 #endif
 }
 
@@ -822,6 +839,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
 static void LSODE_JEX(int *neq ,double *t, double *y
 		, int *ml ,int *mu ,double *pd, int *nrpd
 ){
+	static short clockcheck = 0;
   int nok = 0;
   int i,j;
 
@@ -833,11 +851,11 @@ static void LSODE_JEX(int *neq ,double *t, double *y
   UNUSED_PARAMETER(mu);
 
   /* CONSOLE_DEBUG("Calling for a gradient evaluation"); */
-#if DOTIME
-  double time1;
+#ifdef TIMING_DEBUG
+  clock_t time1;
 
   CONSOLE_DEBUG("Calling for a gradient evaluation");
-  time1 = tm_cpu_time();
+  time1 = clock();
 #endif
   /*
    * Make the real call.
@@ -858,6 +876,17 @@ static void LSODE_JEX(int *neq ,double *t, double *y
     lsodedata->status = lsode_ok;
     lsodedata->lastcall = lsode_derivative;
   }
+
+	/* Do we need to do clock check? */
+	if((++clockcheck % ASC_CLOCK_CHECK_PERIOD)==0){
+		/* do we need to update the GUI? */
+		CONSOLE_DEBUG("CLOCK = %ld", clock());
+		if((clock() - lsodedata->lastwrite) > ASC_CLOCK_MAX_GUI_WAIT){
+			integrator_output_write(l_lsode_blsys);
+			lsodedata->lastwrite = clock(); /* don't count the update time, or we might never get anything done */
+		}
+	}
+
   /*
 	Map data from C based matrix to Fortan matrix.
 	We will send in a column major ordering vector for pd.
@@ -871,9 +900,9 @@ static void LSODE_JEX(int *neq ,double *t, double *y
     }
   }
 
-#if DOTIME
-  time1 = tm_cpu_time() - time1;
-  CONSOLE_DEBUG("Time to do gradient evaluation %g",time1);
+#ifdef TIMING_DEBUG
+  time1 = clock() - time1;
+  CONSOLE_DEBUG("Time to do gradient evaluation %ld ticks",time1);
 #endif
 
   return;
@@ -1093,6 +1122,8 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       }
 	  */
 
+			d->lastwrite = clock();
+
       /* provides some rudimentary locking to prevent reentrance*/
       LSODEDATA_SET(blsys);
 
@@ -1277,7 +1308,7 @@ void XASCWV( char *msg, /* pointer to start of message */
 		case 201:
 			if(*nr==0 && *ni==0)return;
 			if(*nr==1 && *ni==1){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"At current t=%f, mxstep=%f steps taken on this call before reaching tout.",*r1,*i1);
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"At current t=%f, mxstep=%d steps taken on this call before reaching tout.",*r1,*i1);
 				return;
 			} break;
 		case 204:

@@ -2908,28 +2908,30 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
   		,"stattol",-1
   		,"For optimizing and when block is feasible, a block's"
 		" interation ends when the stationary norm2 value is beneath"
-		" this tolerance."
+		" this tolerance. (Need better explanation)"
   	}, 1e-6, 0, 1.0}
   );
 
   slv_param_real(parameters,TERM_TOL
   	,(SlvParameterInitReal){{"termtol"
   		,"termtol",-1
-  		,"termtol"
+  		,"For non-optimising systems, minimum value of gamma 2-norm"
+		" considered OK. If the value is smaller than this, problem"
+		" is considered to have diverged. (Need better explanation)"
   	}, 1e-12, 0, 1.0}
   );
 
   slv_param_real(parameters,SING_TOL
   	,(SlvParameterInitReal){{"singtol"
   		,"epsilon (min pivot)",1
-  		,"epsilon (min pivot)"
+  		,"Minimum acceptable pivot value (sent to linsolqr)"
   	}, 1e-12, 1e-12, 1.0}
   );
 
   slv_param_real(parameters,PIVOT_TOL
   	,(SlvParameterInitReal){{"pivottol"
   		,"condition tolerance",1
-  		,"condition tolerance"
+  		,"Pivot tolerance ('condition tolerance') (Need better explanation)"
   	}, 0.5, 0, 1}
   );
 
@@ -2943,14 +2945,15 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
   slv_param_bool(parameters,LIFDS
   	,(SlvParameterInitBool){{"lifds"
   		,"show singletons details",2
-  		,"If lifds != 0 and showlessimportant is TRUE, show direct solve details"
+  		,"If TRUE, QRSlv will show direct-solve progress (but only if"
+		" showlessimportant is also TRUE)"
   	}, 0}
   );
 
   slv_param_bool(parameters,SAVLIN
   	,(SlvParameterInitBool){{"savlin"
   		,"write to file SlvLinsol.dat",2
-  		,"If savlin != 0, write out matrix data file at each iteration to SlvLinsol.dat"
+  		,"If TRUE, write out matrix data file at each iteration to SlvLinsol.dat"
   	}, 0}
   );
 

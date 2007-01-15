@@ -473,6 +473,7 @@ class TestSteam(AscendSelfTester):
 		M = self.testdsgsat()
 		M.qdot_s.setRealValueWithUnits(1000,"W/m")
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		#M.setParameter('
 	 	I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
 		I.setParameter('meth','AM')
