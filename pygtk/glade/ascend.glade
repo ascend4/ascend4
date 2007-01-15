@@ -5997,27 +5997,6 @@ AWW</property>
 		      </child>
 
 		      <child>
-			<widget class="GtkButton" id="moreparametersbutton">
-			  <property name="visible">True</property>
-			  <property name="can_focus">True</property>
-			  <property name="label" translatable="yes">More parameters...</property>
-			  <property name="use_underline">True</property>
-			  <property name="relief">GTK_RELIEF_NORMAL</property>
-			  <property name="focus_on_click">True</property>
-			  <signal name="clicked" handler="on_moreparametersbutton_clicked" last_modification_time="Mon, 15 Jan 2007 03:59:12 GMT"/>
-			  <accelerator key="F11" modifiers="0" signal="activate"/>
-			</widget>
-			<packing>
-			  <property name="left_attach">1</property>
-			  <property name="right_attach">2</property>
-			  <property name="top_attach">4</property>
-			  <property name="bottom_attach">5</property>
-			  <property name="x_options">fill</property>
-			  <property name="y_options"></property>
-			</packing>
-		      </child>
-
-		      <child>
 			<widget class="GtkLabel" id="label105">
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes"></property>
@@ -6040,6 +6019,28 @@ AWW</property>
 			  <property name="right_attach">1</property>
 			  <property name="top_attach">4</property>
 			  <property name="bottom_attach">5</property>
+			  <property name="x_options">fill</property>
+			  <property name="y_options"></property>
+			</packing>
+		      </child>
+
+		      <child>
+			<widget class="GtkButton" id="moreparametersbutton">
+			  <property name="visible">True</property>
+			  <property name="can_focus">True</property>
+			  <property name="label" translatable="yes">_More parameters...</property>
+			  <property name="use_underline">True</property>
+			  <property name="relief">GTK_RELIEF_NORMAL</property>
+			  <property name="focus_on_click">True</property>
+			  <signal name="clicked" handler="on_moreparametersbutton_clicked" last_modification_time="Mon, 15 Jan 2007 03:59:12 GMT"/>
+			  <accelerator key="F11" modifiers="0" signal="activate"/>
+			</widget>
+			<packing>
+			  <property name="left_attach">1</property>
+			  <property name="right_attach">2</property>
+			  <property name="top_attach">4</property>
+			  <property name="bottom_attach">5</property>
+			  <property name="y_padding">4</property>
 			  <property name="x_options">fill</property>
 			  <property name="y_options"></property>
 			</packing>

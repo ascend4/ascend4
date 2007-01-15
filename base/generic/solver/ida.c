@@ -360,7 +360,7 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,"Scalar absolute error tolerance",1
 			,"Value of the scalar absolute error tolerance. See also 'atolvect'."
 			" See IDA manual, sections 5.5.1 and 5.5.2 'Advice on choice and use of tolerances'"
-		}, 1e-5, DBL_MIN, DBL_MAX }
+		}, 1e-5, 1e-15, 1.0e15 }
 	);
 
 	slv_param_real(p,IDA_PARAM_RTOL
@@ -370,7 +370,7 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			" it's not possible to set per-variable relative tolerances as it is"
 			" with LSODE)."
 			" See IDA manual, section 5.5.2 'Advice on choice and use of tolerances'"
-		}, 1e-4, 0, DBL_MAX }
+		}, 1e-4, 0, 1 }
 	);
 
 	slv_param_char(p,IDA_PARAM_LINSOLVER
