@@ -22,25 +22,26 @@
  */
 
 #include <stdio.h>
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
 #include <utilities/ascMalloc.h>
+#ifdef ASC_SIGNAL_TRAPS
 #include <utilities/ascSignal.h>
+#endif
 #include <utilities/ascPanic.h>
 #include "CUnit/CUnit.h"
 #include "test_ascSignal.h"
 #include "printutil.h"
 
-#include <signal.h>
-
+#ifdef ASC_SIGNAL_TRAPS
 static JMP_BUF my_jmp_buf1;
-
-#define MEMUSED(N) CU_TEST(ascmeminuse()==N)
-
+# define MEMUSED(N) CU_TEST(ascmeminuse()==N)
 static int f_handler1_called;
 static int f_handler1_sigval;
+
 /*
  *  Signal handler for unit tests.
  *  Resets the signal handlers and sets f_handler1_called to
@@ -122,7 +123,7 @@ static void store_current_signals(void){
   old_seg_handler = SIGNAL(SIGSEGV, my_handler1);
 }
 
-#define CHECK_SIGNALS_MATCH_STACKS(FPEFN,INTFN,SEGFN) \
+# define CHECK_SIGNALS_MATCH_STACKS(FPEFN,INTFN,SEGFN) \
 	{	SigHandlerFn *oldfpe, *oldint, *oldseg; \
 		oldfpe = signal(SIGFPE,SIG_IGN);\
 		CU_TEST(oldfpe == FPEFN);\
@@ -749,11 +750,14 @@ static void test_ascsignal_nestingsegv(void){
   MEMUSED(0);
 }
 
+#endif /* ASC_SIGNAL_TRAPS */
+
 /*===========================================================================*/
 /* Registration information */
 
 #define T(N) {#N,test_ascsignal_##N}
 static CU_TestInfo ascSignal_test_list[] = {
+#ifdef ASC_SIGNAL_TRAPS
 	T(basic)
 	, T(pushpopint)
 	, T(pushpop)
@@ -761,7 +765,9 @@ static CU_TestInfo ascSignal_test_list[] = {
 	, T(nestingfpe)
 	, T(nestingint)
 	, T(nestingsegv)
-	, CU_TEST_INFO_NULL
+	,
+#endif
+	CU_TEST_INFO_NULL
 };
 #undef T
 
