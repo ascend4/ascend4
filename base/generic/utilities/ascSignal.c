@@ -41,17 +41,22 @@
 	18 Dec 06   - Removed ascresetneeded (moved to SConstruct)
 */
 
-#define _GNU_SOURCE /* enables feenableexcept (http://gcc.gnu.org/ml/fortran/2005-10/msg00365.html) */
 #include <stdio.h>
+
 #include "config.h"
+#ifdef ASC_SIGNAL_TRAPS
+/*-------- this file will do nothing unless ASC_SIGNAL_TRAPS is turned on -----*/
+
+#define _GNU_SOURCE /* enables feenableexcept (http://gcc.gnu.org/ml/fortran/2005-10/msg00365.html) */
 #include "ascConfig.h"
 
 #include <signal.h>
-#include <setjmp.h>
+#include <general/except.h>
 
 #ifdef HAVE_C99FPE
 # include <fenv.h>
 #endif
+
 
 #ifdef __WIN32__
 # include <process.h>
@@ -605,3 +610,4 @@ static int fenv_pop(fenv_t *stack, int *top){
 
 #endif /* HAVE_C99FPE */
 
+#endif /* ASC_SIGNAL_TRAPS */

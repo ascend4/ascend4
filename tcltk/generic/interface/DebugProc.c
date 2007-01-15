@@ -29,13 +29,13 @@
 
 #define ASC_BUILDING_INTERFACE
 
-#ifndef NO_SIGNAL_TRAPS
-# include <signal.h>
-#endif /* NO_SIGNAL_TRAPS */
+#include <utilities/config.h>
+#ifdef ASC_SIGNAL_TRAPS
+# include <utilities/ascSignal.h>
+#endif /* ASC_SIGNAL_TRAPS */
 
 #include <tcl.h>
 #include <utilities/ascConfig.h>
-#include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <compiler/compiler.h>
@@ -2787,18 +2787,18 @@ int Asc_DebuNumBlockSing(ClientData cdata, Tcl_Interp *interp,
   }
   region = b->block[cur_block];
   linsolqr_set_region(lsys,region);
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
   if (SETJMP(g_fpe_env)==0) {
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
     dbg_factor_block(lsys,&region,mtx,rp,vp);
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
   } else {
     FPRINTF(ASCERR, "Floating point exception in dbg_num_block_singular.\n");
     Tcl_SetResult(interp, " Float error in dbg_num_block_singular. ",
                   TCL_STATIC);
     return TCL_ERROR;
   }
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
   switch (argv[3][0]) {
     case 'r':
       rc=0;
@@ -3109,20 +3109,20 @@ in the jmps due to float errors.
 static int dbg_calc_nominal(struct rel_relation *rel) {
   double nom;
   enum Expr_enum dummy;
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
   if (SETJMP(g_fpe_env)==0) {
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
     nom = CalcRelationNominal(rel_instance(rel));
     if (nom >0.0) {
       SetRelationNominal(
         (struct relation *)GetInstanceRelation(rel_instance(rel),&dummy), nom);
     }
     return 0;
-#ifndef NO_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS
   } else {
     return 2;
   }
-#endif /* NO_SIGNAL_TRAPS */
+#endif /* ASC_SIGNAL_TRAPS */
 }
 
 int Asc_DebuCheckRelFp(ClientData cdata, Tcl_Interp *interp,
@@ -3160,7 +3160,9 @@ int Asc_DebuCheckRelFp(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
 /* convert any int to a 0/1 int */
 #define ISTRUE(a) ((a)!=0)
   for (i=0; i<maxrel; i++) {
@@ -3176,7 +3178,9 @@ int Asc_DebuCheckRelFp(ClientData cdata, Tcl_Interp *interp,
       Tcl_AppendElement(interp, tmps);
     }
   }
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
 #undef ISTRUE
 /* if external relations special case. don't know what yet.
  * But the compiler while whine accordingly.

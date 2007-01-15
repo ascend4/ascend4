@@ -96,6 +96,22 @@ METHOD default_self;
 		RUN node[i].default_self;
 	END FOR;
 END default_self; 
+METHOD values;
+	L := 50 {m};
+	h_int := 5 {W/m^2/K};
+	h_ext := 10 {W/m^2/K};
+	node[1].mdot := 0.3 {kg/s};
+	node[1].p := 5 {bar};
+	node[1].x := 0.2;
+	qdot_s := 1000 {W/m^2} * D_2 * 10;
+	FOR i IN [2..n] DO
+		dmdot_dt[i] := 0.0 {kg/s/s};
+		drhou_dt[i] := 0 {kJ/m^3/s};
+		node[i].v := 0.2 {L/kg};
+		node[i].rho := 6 {kg/L};
+		node[i].dp_dT := +0.5 {kPa/K};
+	END FOR;
+END values;
 METHOD on_load;
 	RUN configure_steady;
 	RUN ode_init;
@@ -106,7 +122,7 @@ METHOD configure_steady;
 	RUN ClearAll;
 	RUN specify_steady;
 	RUN bound_steady;
-	RUN values_steady;
+	RUN values;
 END configure_steady;
 METHOD bound_steady;
 	RUN bound_self;
@@ -136,23 +152,6 @@ METHOD specify_steady;
 		FREE mdot[i]; FIX dmdot_dt[i];
 	END FOR;
 END specify_steady;
-METHOD values_steady;
-	L := 50 {m};
-	h_int := 5 {W/m^2/K};
-	h_ext := 10 {W/m^2/K};
-	node[1].mdot := 0.3 {kg/s};
-	node[1].p := 5 {bar};
-	node[1].x := 0.2;
-	qdot_s := 1000 {W/m^2} * D_2 * 10;
-	FOR i IN [2..n] DO
-		dmdot_dt[i] := 0.0 {kg/s/s};
-		drhou_dt[i] := 0 {kJ/m^3/s};
-		node[i].v := 0.2 {L/kg};
-		node[i].rho := 6 {kg/L};
-		node[i].dp_dT := +0.5 {kPa/K};
-	END FOR;
-	(* nothing atm *)
-END values_steady;
 (*------------------------- the dynamic problem ------------------------------*)
 METHOD configure_dynamic;
 	FOR i IN [2..n] DO

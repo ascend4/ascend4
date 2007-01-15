@@ -2502,14 +2502,20 @@ static void update_relations_residuals(slv_system_t server)
   rfilter.matchbits = (REL_INCLUDED | REL_EQUALITY);
   rfilter.matchvalue = (REL_INCLUDED | REL_EQUALITY);
 
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
+
   for (r=0; r<rlen; r++) {
     rel = master[r];
     if(rel_apply_filter(rel,&rfilter)) {
       resid = relman_eval(rel,&status,1);
     }
   }
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
+
 }
 
 
@@ -3720,7 +3726,11 @@ static real64 get_augmented_function_in_subregion(slv_system_t server,
 
   sqrnorm = 0.0;
   countrel = 0;
+
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
+
   for (cr=0; cr<ntotrel; cr++) {
     rel = rlist[cr];
     if (rel_apply_filter(rel,&rfilter)) {
@@ -3733,7 +3743,10 @@ static real64 get_augmented_function_in_subregion(slv_system_t server,
   }
   rel = sys->obj;
   resid = relman_eval(rel, &status, 1);
+
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
 
   sqrnorm = sqrnorm + resid;
 
@@ -3945,7 +3958,11 @@ static real64 get_invariant_of_obj_norm_in_subregions(slv_system_t server)
 
   sqrnorm = 0.0;
   countrel = 0;
+
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
+
   for (cr=0; cr<ntotrel; cr++) {
     rel = rlist[cr];
     if (rel_apply_filter(rel,&rfilter)) {
@@ -3954,7 +3971,10 @@ static real64 get_invariant_of_obj_norm_in_subregions(slv_system_t server)
       countrel++;
     }
   }
+
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
 
   if (countrel != nrel) {
     FPRINTF(ASCERR,"PANIC: number of invariant relations does not match\n");
@@ -3988,7 +4008,11 @@ static real64 get_variant_of_obj_norm_in_subregion(slv_system_t server)
 
   sqrnorm = 0.0;
   countrel = 0;
+
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
+
   for (cr=0; cr<ntotrel; cr++) {
     rel = rlist[cr];
     if (rel_apply_filter(rel,&rfilter)) {
@@ -3997,7 +4021,10 @@ static real64 get_variant_of_obj_norm_in_subregion(slv_system_t server)
       countrel++;
     }
   }
+
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
 
   if (countrel != nrel) {
     FPRINTF(ASCERR,"PANIC: number of variant relations does not match\n");

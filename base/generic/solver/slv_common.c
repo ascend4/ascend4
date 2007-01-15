@@ -28,8 +28,13 @@
 */
 
 #include <math.h>
+
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
-#include <utilities/ascSignal.h>
+#ifdef ASC_SIGNAL_TRAPS
+# include <utilities/ascSignal.h>
+#endif
+
 #include <compiler/compiler.h>
 #include <general/mathmacros.h>
 #include <utilities/ascMalloc.h>
@@ -220,9 +225,17 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
     if( var_lower_bound(var) > slist[nsolns] ) {
       save = var_value(var);
       var_set_value(var,var_lower_bound(var));
+
+#ifdef ASC_SIGNAL_TRAPS
       Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
+
       (void)relman_eval(rel,&status,SAFE_FIX_ME);
+
+#ifdef ASC_SIGNAL_TRAPS
       Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
+
       if (scaled) {
         if( relman_calc_satisfied_scaled(rel,epsilon) ) break;
       } else {
@@ -232,9 +245,13 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
     } else if( var_upper_bound(var) < slist[nsolns] ) {
       save = var_value(var);
       var_set_value(var,var_upper_bound(var));
+#ifdef ASC_SIGNAL_TRAPS
       Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
       (void)relman_eval(rel,&status,SAFE_FIX_ME);
+#ifdef ASC_SIGNAL_TRAPS
       Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
       if (scaled) {
         if( relman_calc_satisfied_scaled(rel,epsilon) ) break;
       } else {
@@ -243,9 +260,13 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
       var_set_value(var,save);
     } else {
       var_set_value(var,slist[nsolns]);
+#ifdef ASC_SIGNAL_TRAPS
       Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+#endif
       (void)relman_eval(rel,&status,SAFE_FIX_ME);
+#ifdef ASC_SIGNAL_TRAPS
       Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+#endif
       break;
     }
   }

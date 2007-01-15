@@ -51,10 +51,11 @@
 	Last in CVS $Revision: 1.29 $ $Date: 2000/01/25 02:26:31 $ $Author: ballan $
 */
 
-#ifndef NO_SIGNAL_TRAPS
-#include <signal.h>
-#include <setjmp.h>
-#endif /* NO_SIGNAL_TRAPS */
+#include <utilities/config.h>
+#ifdef ASC_SIGNAL_TRAPS
+# include <signal.h>
+# include <general/except.h>
+#endif
 
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
@@ -760,11 +761,11 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
 
   case lsode_derivative:
     if (lsodedata->partitioned) {
-	  /* CONSOLE_DEBUG("PRE-SOLVE"); */
+			/* CONSOLE_DEBUG("PRE-SOLVE"); */
       slv_presolve(l_lsode_blsys->system);
     } else {
-	  /** @TODO this doesn't ever seem to be called */
-	  CONSOLE_DEBUG("RE-SOLVE");
+			/** @TODO this doesn't ever seem to be called */
+			CONSOLE_DEBUG("RE-SOLVE");
       slv_resolve(l_lsode_blsys->system);
     }
     break;
@@ -788,7 +789,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
 #endif
 
   if(res){
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives (%d)",res);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives (%d)",res);
 #if 0
   	ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
     FPRINTF(ASCERR,"Unable to compute the vector of derivatives with the following values for the state variables:\n");
@@ -797,11 +798,14 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
     }
     error_reporter_end_flush();
 #endif
-	lsodedata->stop = 1;
+		lsodedata->stop = 1;
     lsodedata->status = lsode_nok;
+#ifdef ASC_SIGNAL_TRAPS
+		raise(SIGINT);
+#endif
   }else{
     lsodedata->status = lsode_ok;
-	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
+		/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
   }
   integrator_get_ydot(l_lsode_blsys, ydot);
 
@@ -848,7 +852,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y
   	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in computing the derivatives for the system. Failing...");
     lsodedata->status = lsode_nok;
     lsodedata->lastcall = lsode_derivative;
-	lsodedata->stop = 1;
+		lsodedata->stop = 1;
     return;
   }else{
     lsodedata->status = lsode_ok;
@@ -862,7 +866,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y
   asc_assert(*nrpd == DENSEMATRIX_NROWS(lsodedata->dydot_dy));
   for (j=0;j<*neq;j++) { /* loop through columnns */
     for (i=0;i<*nrpd;i++){ /* loop through rows */
-	  /* CONSOLE_DEBUG("JAC[r=%d,c=%d]=%f",i,j,lsodedata.dydot_dy[i][j]); */
+			/* CONSOLE_DEBUG("JAC[r=%d,c=%d]=%f",i,j,lsodedata.dydot_dy[i][j]); */
       *pd++ = DENSEMATRIX_ELEM(lsodedata->dydot_dy,i,j);
     }
   }
@@ -987,12 +991,13 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   x[0] = integrator_getsample(blsys, 0);
   x[1] = x[0]-1; /* make sure we don't start with wierd x[1] */
 	
+	/* RWORK memory requirements: see D&UoLSODE p 82 */
 	switch(mf){	
 		case 10: case 20:	
 			lrw = 20 + neq * (maxord + 1) + 3 * neq;
 			break;
 		case 11: case 12: case 21: case 22:
-			lrw = 22 + 9*neq + neq*neq;
+			lrw = 22 + neq * (maxord + 1) + 3 * neq + neq*neq;
 			break;
 		case 13: case 23:
 			lrw = 22 + neq * (maxord + 1) + 4 * neq;
@@ -1010,7 +1015,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   abtol = lsode_get_atol(blsys);
   obs = integrator_get_observations(blsys, NULL);
   dydx = ASC_NEW_ARRAY_CLEAR(double, neq+1);
-  if (!y || !obs || !abtol || !reltol || !rwork || !iwork || !dydx) {
+  if(!y || !obs || !abtol || !reltol || !rwork || !iwork || !dydx) {
     lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for lsode.");
     d->status = lsode_nok;
@@ -1055,15 +1060,19 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   */
   
   blsys->currentstep = 0;
-  for (index = start_index; index < finish_index; index++, 	blsys->currentstep++) {
+  for(index = start_index; index < finish_index; index++, 	blsys->currentstep++) {
     xend = integrator_getsample(blsys, index+1);
     xprev = x[0];
-	asc_assert(xend > xprev);
+		asc_assert(xend > xprev);
     /* CONSOLE_DEBUG("LSODE call #%lu: x = [%f,%f]", index,xprev,xend); */
 
-# ifndef NO_SIGNAL_TRAPS
-    if (SETJMP(g_fpe_env)==0) {
-# endif /* NO_SIGNAL_TRAPS */
+# ifdef ASC_SIGNAL_TRAPS
+		
+		Asc_SignalHandlerPushDefault(SIGFPE);
+		Asc_SignalHandlerPushDefault(SIGINT);
+
+    if(SETJMP(g_fpe_env)==0) {
+# endif /* ASC_SIGNAL_TRAPS */
 
 	  /* CONSOLE_DEBUG("Calling LSODE with end-time = %f",xend); */
       /*
@@ -1094,7 +1103,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       /* clear the global var */
       LSODEDATA_RELEASE();
 
-# ifndef NO_SIGNAL_TRAPS
+# ifdef ASC_SIGNAL_TRAPS
     }else{
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE call.");
       lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
@@ -1102,7 +1111,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       d->lastcall = lsode_none;
       return 6;
     }
-# endif /* NO_SIGNAL_TRAPS */
+# endif
 
     /* CONSOLE_DEBUG("AFTER %lu LSODE CALL\n", index); */
     /* this check is better done in fex,jex, but lsode takes no status */
@@ -1155,9 +1164,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	}
 
 	if (nobs > 0) {
-# ifndef NO_SIGNAL_TRAPS
+# ifdef ASC_SIGNAL_TRAPS
       if (SETJMP(g_fpe_env)==0) {
-# endif /* NO_SIGNAL_TRAPS */
+# endif /* ASC_SIGNAL_TRAPS */
 
         /* solve for obs since d isn't necessarily already
            computed there though lsode's x and y may be.
@@ -1174,7 +1183,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
         integrator_output_write_obs(blsys);
 
-# ifndef NO_SIGNAL_TRAPS
+# ifdef ASC_SIGNAL_TRAPS
       } else {
       	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE FEX call.");
         lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
@@ -1183,7 +1192,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
         integrator_output_close(blsys);
         return 10;
       }
-# endif /* NO_SIGNAL_TRAPS */
+# endif /* ASC_SIGNAL_TRAPS */
     }
     /* CONSOLE_DEBUG("Integration completed from %3g to %3g.",xprev,x[0]); */
   }

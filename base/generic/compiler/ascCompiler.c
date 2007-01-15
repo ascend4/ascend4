@@ -170,7 +170,9 @@ int Asc_CompilerInit(int simp)
  */
   gl_init();
   gl_init_pool();
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalInit();
+#endif
   Asc_InitEnvironment(10);
   name_init_pool();
   exprs_init_pool();
@@ -258,7 +260,9 @@ void Asc_CompilerDestroy(void)
   ppe_destroy_pool();
   exprs_destroy_pool();
   name_destroy_pool();
+#ifdef ASC_SIGNAL_TRAPS
   Asc_SignalDestroy();
+#endif
   gl_emptyrecycler();                  /* empty the reused list pool */
   gl_destroy_pool();                   /* empty the reused list head pool */
   ClearRecycleStack();                 /* empty the reused stack list  */

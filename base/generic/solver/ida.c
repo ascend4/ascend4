@@ -887,6 +887,7 @@ int integrator_ida_solve(
 
 		CONSOLE_DEBUG("SOLVING INITIAL CONDITIONS IDACalcIC (tout1 = %f)", tout1);
 
+#ifdef ASC_SIGNAL_TRAPS
 		/* catch SIGFPE if desired to */
 		if(enginedata->safeeval){
 			CONSOLE_DEBUG("SETTING TO IGNORE SIGFPE...");
@@ -898,6 +899,7 @@ int integrator_ida_solve(
 			Asc_SignalHandlerPushDefault(SIGFPE);
 		}
 		if (setjmp(g_fpe_env)==0) {
+#endif
 
 			//CONSOLE_DEBUG("Raising signal...");
 			//CONSOLE_DEBUG("1/0 = %f", div1(1.0,0.0));
@@ -933,6 +935,7 @@ int integrator_ida_solve(
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
 					return 12;
 			}
+#ifdef ASC_SIGNAL_TRAPS
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Floating point error while solving initial conditions");
 			return 13;
@@ -945,6 +948,7 @@ int integrator_ida_solve(
 			Asc_SignalHandlerPopDefault(SIGFPE);
 			CONSOLE_DEBUG("...pop");
 		}
+#endif
 
 	}
 
@@ -1073,16 +1077,18 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	is_error = 0;
 	relptr = enginedata->rellist;
 
+#ifdef ASC_SIGNAL_TRAPS
 	if(enginedata->safeeval){
 		Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
 	}else{
-#ifdef FEX_DEBUG
+# ifdef FEX_DEBUG
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"SETTING TO CATCH SIGFPE...");
-#endif
+# endif
 		Asc_SignalHandlerPushDefault(SIGFPE);
 	}
 
 	if (SETJMP(g_fpe_env)==0) {
+#endif
 		for(i=0, relptr = enginedata->rellist;
 				i< enginedata->nrels && relptr != NULL;
 				++i, ++relptr
@@ -1100,6 +1106,8 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 				CONSOLE_DEBUG("Calc OK");
 			}*/
 		}
+
+#ifdef ASC_SIGNAL_TRAPS
 	}else{
 		relname = rel_make_name(blsys->system, *relptr);
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Floating point error (SIGFPE) in rel '%s'",relname);
@@ -1112,6 +1120,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	}else{
 		Asc_SignalHandlerPopDefault(SIGFPE);
 	}
+#endif
 
 #ifdef FEX_DEBUG
 	/* output residuals to console */
@@ -1344,8 +1353,10 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	/* evaluate the derivatives... */
 	/* J = dG_dy = dF_dy + alpha * dF_dyp */
 
+#ifdef ASC_SIGNAL_TRAPS
 	Asc_SignalHandlerPushDefault(SIGFPE);
 	if (SETJMP(g_fpe_env)==0) {
+#endif
 		for(i=0, relptr = enginedata->rellist;
 				i< enginedata->nrels && relptr != NULL;
 				++i, ++relptr
@@ -1425,6 +1436,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 			return 1;
 #endif
 		}
+#ifdef ASC_SIGNAL_TRAPS
 	}else{
 		relname = rel_make_name(blsys->system, *relptr);
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Floating point error (SIGFPE) in rel '%s'",relname);
@@ -1432,6 +1444,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 		is_error = 1;
 	}
 	Asc_SignalHandlerPopDefault(SIGFPE);
+#endif
 
 	if(is_error){
 		CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");

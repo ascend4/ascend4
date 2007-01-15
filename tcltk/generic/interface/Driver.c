@@ -26,15 +26,17 @@
 
 #include <stdarg.h>
 #include <ctype.h>
-#include <signal.h>
 #include <time.h>
 #include <tcl.h>
 #include <tk.h>
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #include <general/ospath.h>
 #include <utilities/ascPrint.h>
 #include <utilities/error.h>
-#include <utilities/ascSignal.h>
+#ifdef ASC_SIGNAL_TRAPS
+# include <utilities/ascSignal.h>
+#endif
 
 #ifndef __WIN32__
 # include <unistd.h>
@@ -342,7 +344,10 @@ int AscDriver(int argc, CONST char **argv)
    */
   clock();
   /* the next line should NOT be Asc_SignalHandlerPush */
+#ifdef ASC_SIGNAL_TRAPS
   (void)SIGNAL(SIGINT, AscTrap);
+#endif
+
 #ifdef DEBUG_MALLOC
   InitDebugMalloc();
   ascstatus("Memory status after calling InitDebugMalloc()");
@@ -841,6 +846,7 @@ void AscPrintHelpExit(CONST char *invoke_name)
 }
 
 
+#ifdef ASC_SIGNAL_TRAPS
 /**
 	Function to call when we receive an interrupt.
  */
@@ -850,7 +856,7 @@ void AscTrap(int sig)
   putchar('\n');
   Asc_Panic(sig, "AscTrap", "Caught Signal: %d", sig);
 }
-
+#endif
 
 int Asc_LoadWin(ClientData cdata, Tcl_Interp *interp,
                 int argc, CONST84 char *argv[])
