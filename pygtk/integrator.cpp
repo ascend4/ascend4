@@ -192,7 +192,7 @@ Integrator::getEngines(){
 }
 
 string
-Integrator::getEngineName() const{
+Integrator::getName() const{
 	map<int,string> m=getEngines();
 	map<int,string>::iterator f = m.find(integrator_get_engine(blsys));
 	if(f==m.end()){

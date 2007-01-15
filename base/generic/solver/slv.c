@@ -1198,8 +1198,9 @@ void slv_destroy_parms(slv_parameters_t *p) {
       ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Unrecognized parameter type in slv_destroy_parms.");
     }
   }
-  if (p->parms && p->dynamic_parms) {
+  if(p->parms && p->dynamic_parms){
     ASC_FREE(p->parms);
+	p->parms = NULL;
   }
   CONSOLE_DEBUG("Destroyed slv_parameters_t");
 }

@@ -1067,8 +1067,17 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No simulation created yet!");		
 		self.sim.setSolver(self.solver)
-		_paramswin = SolverParametersWindow(self)
-		_paramswin.show()
+		_params = self.sim.getParameters()
+		_paramswin = SolverParametersWindow(
+			browser=self
+			,params=_params
+			,name=self.solver.getName()
+		)
+		if _paramswin.run() == gtk.RESPONSE_OK:
+			print "PARAMS UPDATED"
+			self.sim.setParameters(_paramswin.params)
+		else:
+			print "PARAMS NOT UPDATED"
 
 	def methodrun_click(self,*args):
 		_sel = self.methodsel.get_active_text()

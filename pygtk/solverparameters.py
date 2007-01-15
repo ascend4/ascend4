@@ -3,6 +3,7 @@ pygtk.require('2.0')
 import gtk
 import gtk.glade
 import pango
+import os.path
 
 CHANGED_COLOR = "#FFFF88"
 SOLVERPARAM_BOOL_TRUE = "Yes"
@@ -12,15 +13,16 @@ SOLVERPARAM_BOOL_FALSE = "No"
 # SOLVER PARAMETERS WINDOW
 
 class SolverParametersWindow:
-	def __init__(self,browser):
-		self.browser = browser
-		self.reporter = self.browser.reporter
-		self.sim = self.browser.sim
-		self.params = self.sim.getParameters();		
+	def __init__(self,browser,params,name,parent=None):
+		if parent==None:
+			self.parent = browser
+		self.reporter = browser.reporter
+		self.params = params
+		self.assets_dir = browser.options.assets_dir
 
 		_xml = gtk.glade.XML(browser.glade_file,"paramswin")
 		self.window = _xml.get_widget("paramswin")
-		self.window.set_transient_for(self.browser.window)
+		self.window.set_transient_for(self.parent.window)
 
 		self.paramdescription = _xml.get_widget("paramdescription")
 		self.paramname = _xml.get_widget("paramname")
@@ -28,7 +30,7 @@ class SolverParametersWindow:
 
 		_xml.signal_autoconnect(self)
 
-		self.solvername.set_text(self.sim.getSolver().getName())
+		self.solvername.set_text(name)
 		
 		self.paramsview = _xml.get_widget("paramsview")	
 		self.otank = {}
@@ -54,11 +56,6 @@ class SolverParametersWindow:
 		self.populate()
 
 		self.paramsview.expand_all()	
-
-	#def on_paramswin_key_press_event(self,widget,event):
-	#	if event.keyval == ESCAPE_KEY:
-	#		if not gtk.gdk.events_pending():
-	#			self.do_destroy()
 
 	def on_paramsview_row_activated(self,treeview,path,view_column,*args,**kwargs):
 		# get back the object we just clicked
@@ -99,7 +96,8 @@ class SolverParametersWindow:
 					_head.show()
 					_head.set_sensitive(False)
 					_img = gtk.Image()
-					_img.set_from_file('icons/folder-open.png')
+					_img.set_from_file(os.path.join(self.assets_dir,'folder-open.png'))
+
 					_head.set_image(_img)
 					_menu.append(_head)
 					_sep = gtk.SeparatorMenuItem(); _sep.show()
@@ -245,21 +243,7 @@ class SolverParametersWindow:
 		_dialog.run()
 		_dialog.destroy()
 
-	def show(self):
-		self.window.show()
-	
-	def on_paramswin_response(self,response,*args):
-		if response == gtk.RESPONSE_OK:
-			self.sim.setParameters(self.params);
-		elif response == gtk.RESPONSE_CANCEL or response == gtk.RESPONSE_CLOSE:
-			pass
-		
-		self.do_destroy()
-			
-	def on_paramswin_destroy(self,*args,**kwargs):
-		self.do_destroy()
-
-	def do_destroy(self):
-		self.window.hide()
-		del(self.window)
-		del(self.params)
+	def run(self):
+		_res = self.window.run()
+		self.window.destroy()
+		return _res

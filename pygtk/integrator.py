@@ -6,6 +6,7 @@ import time
 from varentry import *
 from preferences import *
 from integratorreporter import *
+from solverparameters import *
 
 class IntegratorError(RuntimeError):
 	def __init__(self,msg):
@@ -52,6 +53,9 @@ class IntegratorWindow:
 
 		# fill values from user preferences, system values, etc
 		self.fill_values()
+
+		# set the engine initially
+		self.integrator.setEngine(self.engines.keys()[self.engineselect.get_active()])
 
 	def fill_values(self):
 		_enginestore = gtk.ListStore(str)
@@ -115,6 +119,28 @@ class IntegratorWindow:
 			self.window.response(gtk.RESPONSE_CANCEL)
 			return True;
 		return False;
+
+	def on_engineselect_changed(self,widget,*args):
+		index = widget.get_active()
+		print "Setting engine to %d" % index
+		self.integrator.setEngine(self.engines.keys()[index])
+
+	def on_moreparametersbutton_clicked(self,*args):
+		print "ZO YOU WANT MORE PAHAMETERS EH!"
+		try:
+			_name = self.integrator.getName()
+			print "NAME = %s" % _name
+			_params = self.integrator.getParameters()
+		except RuntimeError,e:
+			self.browser.reporter.reportError(str(e))
+			return
+		print "CREATING SOLVERPARAMETERSWINDOW"
+		_paramswin = SolverParametersWindow(self.browser,_params,_name)
+		print "RUNNING SOLVERPARAMETERSWINDOW"
+		if _paramswin.run() == gtk.RESPONSE_OK:
+			print "GOT OK RESPONSE"
+			self.integrator.setParameters(_params)
+			print "PARAMETERS UPDATED"
 
 	def run(self):
 		# focus the engine select box when we start...

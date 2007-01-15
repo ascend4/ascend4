@@ -458,7 +458,6 @@ class TestSteam(AscendSelfTester):
 #	def testiapwssat1(self):
 #		M = self._run('testiapwssat1',filename='steam/iapwssat.a4c')
 
-# @TODO fix bug with unpivoted node[i].hg_expr eqns.
 	def testdsgsat(self):
 		self.L.load('steam/dsgsat2.a4c')
 		T = self.L.findType('dsgsat2')
@@ -476,7 +475,8 @@ class TestSteam(AscendSelfTester):
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 	 	I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
-		I.setParameter('meth','AM')
+		I.setParameter('meth','BDF')
+		I.setParameter('maxord',2)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 5, 1)
 		I.analyse()	
