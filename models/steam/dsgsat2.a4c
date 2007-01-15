@@ -11,7 +11,7 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat2;
 	n IS_A integer_constant;
-	n :== 20;
+	n :== 2;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;

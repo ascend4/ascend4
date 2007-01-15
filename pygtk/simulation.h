@@ -93,6 +93,7 @@ public:
 	void solve(Solver s, SolverReporter &reporter);
 	std::vector<Variable> getFixableVariables();
 	std::vector<Variable> getVariablesNearBounds(const double &epsilon=1e-4);
+	std::vector<Variable> getVariablesFarFromNominals(const double &bignum);
 	std::vector<Variable> getFixedVariables();
 	Matrix getMatrix();
 

@@ -914,6 +914,23 @@ class Browser:
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
 
+	def on_show_vars_far_from_nominals_activate(self,*args):
+		_bignum = self.prefs.getRealPref("Directories","librarypath",100);
+		text = "Variables Far from Nominals"
+		title=text;
+		text += "\n"
+		_vars = self.sim.getVariablesFarFromNominals(_bignum)
+		if len(_vars):
+			for _v in _vars:
+				text += "\n%s"%_v.getName()
+		else:
+			text +="\nnone"
+
+		text+="\n\nAbove calculated using a relative error of %f" % float(_bignum)
+		text+="\nModify this value in .ascend.ini, section '[Browswer]', key 'far_from_nominals'."
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
+
 #   --------------------------------------------
 #   MODULE LIST
 

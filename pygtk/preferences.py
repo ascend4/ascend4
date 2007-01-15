@@ -114,6 +114,15 @@ class Preferences:
 			return default
 		return _u;
 
+	def getRealPref(self,sect,key,default=None):
+		try:
+			_u = self.ini.get(sect,key)
+		except ConfigParser.NoSectionError:
+			return default
+		except ConfigParser.NoOptionError:
+			return default
+		return float(_u);		
+
 	def setStringPref(self,sect,key,value):
 		if not self.ini.has_section(sect):
 			self.ini.add_section(sect)

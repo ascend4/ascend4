@@ -680,10 +680,36 @@ Simulation::getVariablesNearBounds(const double &epsilon){
 			vars.push_back(Variable(this,var));
 		}
 	}
-	ascfree(vip);
+	ASC_FREE(vip);
 	return vars;
 }
 
+vector<Variable>
+Simulation::getVariablesFarFromNominals(const double &bignum){
+	vector<Variable> vars;
+
+	if(!sys){
+		throw runtime_error("Simulation system not yet built");
+	}
+
+	int *vip;
+	int nv;
+	CONSOLE_DEBUG("Calling slv_far_from_nominals...");
+	if((nv=slv_far_from_nominals(sys, bignum, &vip))){
+		struct var_variable **vp = slv_get_solvers_var_list(sys);
+		struct var_variable *var;
+		cerr << "VARS FAR FROM NOMINAL" << endl;
+		for(int i=0; i<nv; ++i){
+			var = vp[vip[i]];
+			char *varname = var_make_name(sys,var);
+			cerr << "FAR FROM NOMINAL: " << varname << endl;
+			ASC_FREE(varname);
+			vars.push_back(Variable(this,var));
+		};
+	}
+	ASC_FREE(vip);
+	return vars;
+}
 
 bool
 SingularityInfo::isSingular() const{
