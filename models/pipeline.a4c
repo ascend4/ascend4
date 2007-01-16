@@ -20,7 +20,7 @@
 REQUIRE "atoms.a4l";
 PROVIDE "pipeline.a4c";
 (*
-	The following the conditional model discussed in the PhD thesis of
+	The following the conditional model is discussed in the PhD thesis of
 	Vicente Rico-Ramirez,
 	https://pse.cheme.cmu.edu/ascend/ftp/pdfThesis/victhesis.pdf
 
@@ -351,6 +351,7 @@ METHODS
 	END values;
 
 	METHOD on_load;
+		RUN default_self;
 		RUN reset;
 		RUN values;
 	END on_load;
