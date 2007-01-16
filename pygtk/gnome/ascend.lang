@@ -151,11 +151,16 @@ John Pye (C) 2005
 	<keyword-list _name="Builtin Constants" style="Preprocessor" case-sensitive="true">
 		<keyword>FALSE</keyword>
 		<keyword>TRUE</keyword>
+
 		<keyword>real_constant</keyword>
-		<keyword>boolean</keyword>
-		<keyword>symbol</keyword>
-		<keyword>integer</keyword>
+		<keyword>integer_constant</keyword>
+		<keyword>symbol_constant</keyword>
+		<keyword>boolean_constant</keyword>
+
 		<keyword>real</keyword>
+		<keyword>integer</keyword>
+		<keyword>symbol</keyword>
+		<keyword>boolean</keyword>
 		<keyword>set</keyword>
 	</keyword-list>
 
@@ -243,6 +248,7 @@ John Pye (C) 2005
 	<keyword-list _name="Standard model methods" style="Function" case-sensitive="TRUE">
 		<keyword>default_self</keyword>
 		<keyword>on_load</keyword>
+		<keyword>ode_init</keyword>
 		<keyword>specify</keyword>
 		<keyword>values</keyword>
 		<keyword>self_test</keyword>
@@ -301,6 +307,7 @@ John Pye (C) 2005
 		<keyword>mole_scale</keyword>
 		<keyword>mole</keyword>
 		<keyword>mass_rate</keyword>
+		<keyword>mass_rate_rate</keyword>
 		<keyword>mass_flux</keyword>
 		<keyword>molar_rate_scale</keyword>
 		<keyword>conc_rate</keyword>
@@ -313,6 +320,7 @@ John Pye (C) 2005
 		<keyword>volume_expansivity</keyword>
 		<keyword>molar_density</keyword>
 		<keyword>mass_density</keyword>
+		<keyword>density_rate</keyword>
 		<keyword>molar_energy</keyword>
 		<keyword>energy_scale</keyword>
 		<keyword>energy_rate_scale</keyword>
@@ -324,6 +332,8 @@ John Pye (C) 2005
 		<keyword>molar_entropy</keyword>
 		<keyword>relative_volatility</keyword>
 		<keyword>power_per_length</keyword>
+		<keyword>power_per_volume</keyword>
+		<keyword>pressure_per_temperature</keyword>
 		<keyword>irradiance</keyword>
 		<keyword>irradiation</keyword>
 		<keyword>specific_energy</keyword>
@@ -359,6 +369,7 @@ John Pye (C) 2005
 		<keyword>electric_field</keyword>
 		<keyword>delta_distance</keyword>
 		<keyword>delta_temperature</keyword>
+		<keyword>temperature_rate</keyword>
 		<keyword>delta_pressure</keyword>
 		<keyword>delta_mass</keyword>
 		<keyword>delta_mole</keyword>

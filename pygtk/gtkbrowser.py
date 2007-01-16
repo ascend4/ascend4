@@ -760,7 +760,6 @@ class Browser:
 					sing = self.sim.getSingularityInfo()
 					title = "Structural singularity"
 					text = title
-					text += "\n\nThe singularity can be reduced by freeing the following variables:"
 					msgs = {
 						"The singularity can be reduced by freeing the following variables" : sing.freeablevars
 						,"Relations involved in the structural singularity" : sing.rels
