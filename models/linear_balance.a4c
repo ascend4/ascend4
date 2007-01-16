@@ -18,7 +18,6 @@
 	Boston, MA 02111-1307, USA.
 *)
 REQUIRE "atoms.a4l";
-PROVIDE "linear_balance.a4c";
 (*
 	Model of a linear mass balance as discussed in the PhD thesis of 
 	Vicente Rico-Ramirez, page 84.

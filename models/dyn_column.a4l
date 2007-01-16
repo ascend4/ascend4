@@ -1,47 +1,31 @@
+(*	ASCEND modelling environment
+	Copyright (C) 1998 Duncan Coffey
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
 REQUIRE "dyn_flash.a4l";
-(* => dyn_flash.a4l, splitter.a4l, stream_holdup.a4l thermodynamics.a4l,
- *    components.a4l, phases.a4l, atoms.a4l, measures.a4l, system.a4l,
- *    basemodel.a4l *)
 PROVIDE "dyn_column.a4l";
-
 (*
- *  dyn_colunm.a4l
- *  by Duncan Coffey
- *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:01:29 $
- *  $Revision: 1.2 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/dyn_column.a4l,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1998 Duncan Coffey
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
+	by Duncan Coffey
+*)
 
-
-(*********************************************************************
- *  Requires an empty ascend system.
- *********************************************************************)
-
-
-(* ***********************************+************************************ *)
-(* ********************           Reactor             ********************* *)
-(* ***********************************+************************************ *)
+(*-------------------------------------
+	REACTOR
+*)
 
 MODEL tray_stack(
     ntrays WILL_BE integer_constant;
@@ -122,7 +106,7 @@ MODEL tray_stack(
 	    Qin[i] ALIASES tray[i].Qin;
 	END FOR;
 
-	METHODS
+METHODS
 	METHOD check_self;
 	    FOR i IN [2..ntrays] DO
 		IF (liquid[i].flow < 1e-4 {mole/s}) THEN
@@ -301,7 +285,7 @@ MODEL column(
     reboiler IS_A reboiler(bottom_stack_liqout,vap_bottoms,liq_bottoms,
        reboiler_vapout,reboil_partial,t,dynamic,ode_offset,obs_offset);
 
-    METHODS
+METHODS
 	METHOD check_self;
 	    RUN condenser.check_self;
 	    RUN top_stack_vapout.check_self;
@@ -450,9 +434,9 @@ END column;
 
 
 
-(***************************************************************************)
-
-
+(*------------------------------------------
+	Test models?
+*)
 
 MODEL test_tray_stack() REFINES testflashmodel();
 
@@ -477,81 +461,79 @@ MODEL test_tray_stack() REFINES testflashmodel();
     boundwidth IS_A bound_width;
 
 METHODS
+	METHOD default_all;
+		RUN default_self;
+	END default_all;
 
-METHOD default_all;
-	RUN default_self;
-END default_all;
+	METHOD default_self;
+	        boundwidth := 10;
+		equilibrated :=TRUE;
+		ode_offset :=1;
+		obs_offset :=1;
+		RUN vin.default_self;
+		RUN lin.default_self;
+		RUN lout.default_self;
+		RUN vout.default_self;
+		RUN fl1.default_self;
+	END default_self;
 
-METHOD default_self;
-        boundwidth := 10;
-	equilibrated :=TRUE;
-	ode_offset :=1;
-	obs_offset :=1;
-	RUN vin.default_self;
-	RUN lin.default_self;
-	RUN lout.default_self;
-	RUN vout.default_self;
-	RUN fl1.default_self;
-END default_self;
+	METHOD check_all;
+		RUN check_self;
+	END check_all;
 
-METHOD check_all;
-	RUN check_self;
-END check_all;
+	METHOD check_self;
+	    RUN vin.check_self;
+	    RUN lin.check_self;
+	    RUN lout.check_self;
+	    RUN vout.check_self;
+	    RUN fl1.check_self;
+	END check_self;
 
-METHOD check_self;
-    RUN vin.check_self;
-    RUN lin.check_self;
-    RUN lout.check_self;
-    RUN vout.check_self;
-    RUN fl1.check_self;
-END check_self;
+	METHOD bound_all;
+		RUN bound_self;
+	END bound_all;
 
-METHOD bound_all;
-	RUN bound_self;
-END bound_all;
+	METHOD bound_self;
+	    fl1.boundwidth := boundwidth;
+	    lin.boundwidth := boundwidth;
+	    vin.boundwidth := boundwidth;
+	    lout.boundwidth := boundwidth;
+	    vout.boundwidth := boundwidth;
+	    RUN fl1.bound_all;
+	END bound_self;
 
-METHOD bound_self;
-    fl1.boundwidth := boundwidth;
-    lin.boundwidth := boundwidth;
-    vin.boundwidth := boundwidth;
-    lout.boundwidth := boundwidth;
-    vout.boundwidth := boundwidth;
-    RUN fl1.bound_all;
-END bound_self;
+	METHOD scale_self;
+	    RUN vin.scale_self;
+	    RUN lin.scale_self;
+	    RUN lout.scale_self;
+	    RUN vout.scale_self;
+	    RUN fl1.scale_self;
+	END scale_self;
 
-METHOD scale_self;
-    RUN vin.scale_self;
-    RUN lin.scale_self;
-    RUN lout.scale_self;
-    RUN vout.scale_self;
-    RUN fl1.scale_self;
-END scale_self;
+	METHOD specify;
+		RUN fl1.specify;
+	END specify;
 
-METHOD specify;
-	RUN fl1.specify;
-END specify;
-
-METHOD values;
-	vin.P := 1 {atm};
-	vin.T := 365 {K};
-	vin.f['methanol'] := 0.01 {kmol/s};
-	vin.f['ethanol'] := 0.015 {kmol/s};
-	vin.f['water'] := 0.02 {kmol/s};
-	lin.P := 1 {atm};
-	lin.T := 365 {K};
-	lin.f['methanol'] := 0.01 {kmol/s};
-	lin.f['ethanol'] := 0.015 {kmol/s};
-	lin.f['water'] := 0.02 {kmol/s};
-	FOR i IN [1..ntrays] DO
-	    fl1.cmo_ratio[i] := 1;
-	    fl1.tray_P[i] := 1 {atm};
-	    fl1.tray_T[i] := 365 {K};
-	    fl1.Qin[i] := 0 {kW};
-	    fl1.Vol[i] := 3 {m^3};
-	    fl1.vol_liq[i] := 1 {m^3};
-	END FOR;
-END values;
-
+	METHOD values;
+		vin.P := 1 {atm};
+		vin.T := 365 {K};
+		vin.f['methanol'] := 0.01 {kmol/s};
+		vin.f['ethanol'] := 0.015 {kmol/s};
+		vin.f['water'] := 0.02 {kmol/s};
+		lin.P := 1 {atm};
+		lin.T := 365 {K};
+		lin.f['methanol'] := 0.01 {kmol/s};
+		lin.f['ethanol'] := 0.015 {kmol/s};
+		lin.f['water'] := 0.02 {kmol/s};
+		FOR i IN [1..ntrays] DO
+		    fl1.cmo_ratio[i] := 1;
+		    fl1.tray_P[i] := 1 {atm};
+		    fl1.tray_T[i] := 365 {K};
+		    fl1.Qin[i] := 0 {kW};
+		    fl1.Vol[i] := 3 {m^3};
+		    fl1.vol_liq[i] := 1 {m^3};
+		END FOR;
+	END values;
 END test_tray_stack;
 
 MODEL test_column() REFINES testflashmodel();
@@ -581,95 +563,95 @@ MODEL test_column() REFINES testflashmodel();
     (* boundwidth might be unit specific *)
     boundwidth IS_A bound_width;
 
-    METHODS
-
+METHODS
     METHOD default_all;
-	RUN default_self;
+		RUN default_self;
     END default_all;
 
     METHOD default_self;
-	boundwidth := 10;
-	equilibrated :=FALSE;
-	ode_offset :=1;
-	obs_offset :=1;
-	RUN vap_dist.default_self;
-	RUN liq_dist.default_self;
-	RUN feed.default_self;
-	RUN vap_bot.default_self;
-	RUN liq_bot.default_self;
-	RUN col.default_self;
+		boundwidth := 10;
+		equilibrated :=FALSE;
+		ode_offset :=1;
+		obs_offset :=1;
+		RUN vap_dist.default_self;
+		RUN liq_dist.default_self;
+		RUN feed.default_self;
+		RUN vap_bot.default_self;
+		RUN liq_bot.default_self;
+		RUN col.default_self;
     END default_self;
 
     METHOD check_all;
-	RUN check_self;
+		RUN check_self;
     END check_all;
 
     METHOD check_self;
-	IF C_partial THEN
-	    RUN vap_dist.check_self;
-	ELSE
-	    RUN liq_dist.check_self;
-	END IF;
-	RUN feed.check_self;
-	IF R_partial THEN
-	    RUN liq_bot.check_self;
-	ELSE
-	    RUN vap_bot.check_self;
-	END IF;
-	RUN col.check_self;
+		IF C_partial THEN
+		    RUN vap_dist.check_self;
+		ELSE
+		    RUN liq_dist.check_self;
+		END IF;
+		RUN feed.check_self;
+		IF R_partial THEN
+		    RUN liq_bot.check_self;
+		ELSE
+		    RUN vap_bot.check_self;
+		END IF;
+		RUN col.check_self;
     END check_self;
 
     METHOD bound_all;
-	RUN bound_self;
+	;
     END bound_all;
 
     METHOD bound_self;
-	vap_dist.boundwidth := boundwidth;
-	liq_dist.boundwidth := boundwidth;
-	feed.boundwidth := boundwidth;
-	liq_bot.boundwidth := boundwidth;
-	vap_bot.boundwidth := boundwidth;
-	RUN col.bound_all;
+		vap_dist.boundwidth := boundwidth;
+		liq_dist.boundwidth := boundwidth;
+		feed.boundwidth := boundwidth;
+		liq_bot.boundwidth := boundwidth;
+		vap_bot.boundwidth := boundwidth;
+		RUN col.bound_all;
     END bound_self;
 
     METHOD scale_self;
-	RUN vap_dist.scale_self;
-	RUN liq_dist.scale_self;
-	RUN feed.scale_self;
-	RUN vap_bot.scale_self;
-	RUN liq_bot.scale_self;
-	RUN col.scale_self;
+		RUN vap_dist.scale_self;
+		RUN liq_dist.scale_self;
+		RUN feed.scale_self;
+		RUN vap_bot.scale_self;
+		RUN liq_bot.scale_self;
+		RUN col.scale_self;
     END scale_self;
 
     METHOD scale_all;
-	RUN scale_self;
+		RUN scale_self;
     END scale_all;
 
     METHOD specify;
-	RUN col.specify;
+		RUN col.specify;
     END specify;
 
-    METHOD values;
-	feed.P := 1 {atm};
-	feed.T := 365 {K};
-	feed.f['n_pentane'] := 0.01 {kmol/s};
-	feed.f['n_hexane'] := 0.01 {kmol/s};
-	feed.f['n_heptane'] := 0.01 {kmol/s};
-	vap_dist.flow :=0 {mol/s};
-	vap_bot.flow :=0 {mol/s};
-	col.condenser.Vol :=3 {m^3};
-	col.condenser.vol_liq :=1 {m^3};
-	col.reflux_ratio :=1.5;
-	col.feed_tray.Vol :=1 {m^3};
-	col.feed_tray.vol_liq :=0.3 {m^3};
-	col.feed_tray.q :=1;
-	col.top_stack.Vol[1..above] :=1 {m^3};
-	col.top_stack.vol_liq[1..above] :=0.3 {m^3};
-	col.bottom_stack.Vol[1..above] :=1 {m^3};
-	col.bottom_stack.vol_liq[1..above] :=0.3 {m^3};
-	col.reboiler.Vol :=3 {m^3};
-	col.reboiler.vol_liq :=1 {m^3};
-	col.reboil_ratio :=2;
-    END values;
-
+	METHOD values;
+		feed.P := 1 {atm};
+		feed.T := 365 {K};
+		feed.f['n_pentane'] := 0.01 {kmol/s};
+		feed.f['n_hexane'] := 0.01 {kmol/s};
+		feed.f['n_heptane'] := 0.01 {kmol/s};
+		vap_dist.flow :=0 {mol/s};
+		vap_bot.flow :=0 {mol/s};
+		col.condenser.Vol :=3 {m^3};
+		col.condenser.vol_liq :=1 {m^3};
+		col.reflux_ratio :=1.5;
+		col.feed_tray.Vol :=1 {m^3};
+		col.feed_tray.vol_liq :=0.3 {m^3};
+		col.feed_tray.q :=1;
+		col.top_stack.Vol[1..above] :=1 {m^3};
+		col.top_stack.vol_liq[1..above] :=0.3 {m^3};
+		col.bottom_stack.Vol[1..above] :=1 {m^3};
+		col.bottom_stack.vol_liq[1..above] :=0.3 {m^3};
+		col.reboiler.Vol :=3 {m^3};
+		col.reboiler.vol_liq :=1 {m^3};
+		col.reboil_ratio :=2;
+	END values;
 END test_column;
+
+(* :ex: set ts=4: *)

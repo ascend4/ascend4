@@ -1,44 +1,29 @@
+(*	ASCEND modelling environment
+	Copyright (C) 1998 Duncan Coffey
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
 REQUIRE "ivpsystem.a4l";
 REQUIRE "splitter.a4l";
-(* => splitter.a4l, stream_holdup.a4l thermodynamics.a4l, components.a4l,
- *    phases.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "dyn_flash.a4l";
-
 (*
- *  dyn_flash.a4l
- *  by Duncan Coffey
- *  Modified from flash.a4l by Ben Allan
- *  Part of the ASCEND Library
- *  $Date: 1998/06/20 15:12:02 $
- *  $Revision: 1.3 $
- *  $Author: ballan $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/dyn_flash.a4l,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *  The file provide basic vapor-liquid equilibrium flash calcuations
- *  in various unit operation configurations.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
+	dyn_flash.a4l by by Duncan Coffey (modified from flash.a4l by Ben Allan)
+*)
 
-MODEL flash_base(
-) REFINES cmumodel;
-
+MODEL flash_base REFINES cmumodel;
 NOTES
 'usage' SELF {
 Never create one of these directly.
@@ -56,7 +41,7 @@ detailed_tray - a tray with "detailed_stream" connections for use in stacks.
 }
 END NOTES;
 END flash_base;
-
+
 MODEL vapor_liquid_flash(
     feed WILL_BE stream;
     vapout WILL_BE stream;
@@ -92,8 +77,8 @@ the given output stream states.
 }
 END NOTES;
 
-        cd ALIASES feed.cd;
-        P ALIASES liqout.P;
+    cd ALIASES feed.cd;
+    P ALIASES liqout.P;
 	T ALIASES liqout.T;
 	equilibrated ALIASES vapout.equilibrated;
 	(* flash thermo options are derived from product streams *)
@@ -370,7 +355,7 @@ tray VLE MODEL from the given output stream states.
 }
 END NOTES;
 
-        cd ALIASES vapout.state.cd;
+	cd ALIASES vapout.state.cd;
 	P ALIASES liqout.P;
 	T ALIASES liqout.T;
 	equilibrated ALIASES vapout.state.equilibrated;
@@ -855,7 +840,7 @@ END NOTES;
 	                /H_flowscale;
 
 	boundwidth IS_A bound_width;
-	METHODS
+METHODS
 	METHOD check_self;
 	    IF (feed.flow < 1e-4 {mole/s}) THEN
 		STOP {feed flow dried up in flash};
@@ -1640,7 +1625,7 @@ END reboiler;
 
 
 MODEL testflashmodel() REFINES testcmumodel;
-(* root for flash based test models *)
+	(* root for flash based test models *)
 END testflashmodel;
 
 MODEL test_vapor_liquid_flash() REFINES testflashmodel();
@@ -1663,101 +1648,100 @@ MODEL test_vapor_liquid_flash() REFINES testflashmodel();
 
 	(* boundwidth might be unit specific *)
     boundwidth IS_A bound_width;
-
+
 METHODS
+	METHOD default_all;
+		RUN default_self;
+	END default_all;
 
-METHOD default_all;
-	RUN default_self;
-END default_all;
+	METHOD default_self;
+	        boundwidth := 10;
+		equilibrated :=TRUE;
+		ode_offset :=1;
+		obs_offset :=1;
+		RUN feed.default_self;
+		RUN liq.default_self;
+		RUN vap.default_self;
+		RUN fl1.default_self;
+	(* or could be RUN fl1.default_all; *)
+	END default_self;
 
-METHOD default_self;
-        boundwidth := 10;
-	equilibrated :=TRUE;
-	ode_offset :=1;
-	obs_offset :=1;
-	RUN feed.default_self;
-	RUN liq.default_self;
-	RUN vap.default_self;
-	RUN fl1.default_self;
-(* or could be RUN fl1.default_all; *)
-END default_self;
+	METHOD check_all;
+		RUN check_self;
+	END check_all;
 
-METHOD check_all;
-	RUN check_self;
-END check_all;
+	METHOD check_self;
+		RUN feed.check_self;
+		RUN liq.check_self;
+		RUN vap.check_self;
+		RUN fl1.check_self;
+	(* or could be RUN check_all; *)
+	END check_self;
 
-METHOD check_self;
-	RUN feed.check_self;
-	RUN liq.check_self;
-	RUN vap.check_self;
-	RUN fl1.check_self;
-(* or could be RUN check_all; *)
-END check_self;
+	METHOD bound_all;
+		RUN bound_self;
+	END bound_all;
 
-METHOD bound_all;
-	RUN bound_self;
-END bound_all;
+	METHOD bound_self;
+		fl1.boundwidth := boundwidth;
+		liq.boundwidth := boundwidth;
+		vap.boundwidth := boundwidth;
+		feed.boundwidth := boundwidth;
+	(* The right, later reusable, way to finish this method is as follows:
+		RUN feed.bound_self;
+		RUN liq.bound_self;
+		RUN vap.bound_self;
+		RUN fl1.bound_self;
+	 * where we didn't have to look inside the parts we're using because
+	 * we know they follow the standard in system.a4l.
+	 *)
+	(* The quick and dirty way, since there are no parts passed into
+	 * this MODEL is like so:
+	 *)
+		RUN fl1.bound_all;
+	(* This works, but we had to look into the VLflash MODEL to be sure. *)
+	END bound_self;
 
-METHOD bound_self;
-	fl1.boundwidth := boundwidth;
-	liq.boundwidth := boundwidth;
-	vap.boundwidth := boundwidth;
-	feed.boundwidth := boundwidth;
-(* The right, later reusable, way to finish this method is as follows:
-	RUN feed.bound_self;
-	RUN liq.bound_self;
-	RUN vap.bound_self;
-	RUN fl1.bound_self;
- * where we didn't have to look inside the parts we're using because
- * we know they follow the standard in system.a4l.
- *)
-(* The quick and dirty way, since there are no parts passed into
- * this MODEL is like so:
- *)
-	RUN fl1.bound_all;
-(* This works, but we had to look into the VLflash MODEL to be sure. *)
-END bound_self;
+	METHOD scale_self;
+		RUN feed.scale_self;
+		RUN liq.scale_self;
+		RUN vap.scale_self;
+		RUN fl1.scale_self;
+	(* or could be RUN fl1.scale_all; *)
+	END scale_self;
 
-METHOD scale_self;
-	RUN feed.scale_self;
-	RUN liq.scale_self;
-	RUN vap.scale_self;
-	RUN fl1.scale_self;
-(* or could be RUN fl1.scale_all; *)
-END scale_self;
+	METHOD specify;
+		RUN fl1.specify;
+	END specify;
 
-METHOD specify;
-	RUN fl1.specify;
-END specify;
+	METHOD values;
+		feed.P := 1 {atm};
+		feed.T := 365 {K};
+		feed.f['methanol'] := 0.01 {kmol/s};
+		feed.f['ethanol'] := 0.015 {kmol/s};
+		feed.f['water'] := 0.02 {kmol/s};
+		fl1.state.phase_fraction['vapor'] := 0.5;
+		fl1.P := 1 {atm};
+		fl1.T := 365 {K};
+		fl1.Qin := 0 {kW};
+		fl1.Vol := 10 {m^3};
+		fl1.vol_liq := 3 {m^3};
+	END values;
 
-METHOD values;
-	feed.P := 1 {atm};
-	feed.T := 365 {K};
-	feed.f['methanol'] := 0.01 {kmol/s};
-	feed.f['ethanol'] := 0.015 {kmol/s};
-	feed.f['water'] := 0.02 {kmol/s};
-	fl1.state.phase_fraction['vapor'] := 0.5;
-	fl1.P := 1 {atm};
-	fl1.T := 365 {K};
-	fl1.Qin := 0 {kW};
-	fl1.Vol := 10 {m^3};
-	fl1.vol_liq := 3 {m^3};
-END values;
+	METHOD on_load;
+		RUN default_self;
+		equilibrated := FALSE;
+		RUN values; RUN reset;
+	END on_load;
 
-METHOD on_load;
-	RUN default_self;
-	equilibrated := FALSE;
-	RUN values; RUN reset;
-END on_load;
-
-METHOD prepare_ode;
-	(* solve *)
-	RUN check_self;
-	dynamic := TRUE;
-	RUN fl1.seqmod;
-	RUN fl1.set_ode;
-	RUN fl1.set_obs;
-END prepare_ode;
+	METHOD prepare_ode;
+		(* solve *)
+		RUN check_self;
+		dynamic := TRUE;
+		RUN fl1.seqmod;
+		RUN fl1.set_ode;
+		RUN fl1.set_obs;
+	END prepare_ode;
 
 END test_vapor_liquid_flash;
 
@@ -1784,95 +1768,93 @@ MODEL test_tray() REFINES testflashmodel();
 	boundwidth IS_A bound_width;
 
 METHODS
+	METHOD default_all;
+		RUN default_self;
+	END default_all;
 
-METHOD default_all;
-	RUN default_self;
-END default_all;
+	METHOD default_self;
+	        boundwidth := 10;
+		equilibrated :=TRUE;
+		ode_offset :=1;
+		obs_offset :=1;
+		RUN vin.default_self;
+		RUN lin.default_self;
+		RUN lout.default_self;
+		RUN vout.default_self;
+		RUN fl1.default_self;
+	(* or could be RUN fl1.default_all; *)
+	END default_self;
 
-METHOD default_self;
-        boundwidth := 10;
-	equilibrated :=TRUE;
-	ode_offset :=1;
-	obs_offset :=1;
-	RUN vin.default_self;
-	RUN lin.default_self;
-	RUN lout.default_self;
-	RUN vout.default_self;
-	RUN fl1.default_self;
-(* or could be RUN fl1.default_all; *)
-END default_self;
+	METHOD check_all;
+		RUN check_self;
+	END check_all;
 
-METHOD check_all;
-	RUN check_self;
-END check_all;
+	METHOD check_self;
+	    RUN vin.check_self;
+	    RUN lin.check_self;
+	    RUN lout.check_self;
+	    RUN vout.check_self;
+	    RUN fl1.check_self;
+	(* or could be RUN check_all; *)
+	END check_self;
 
-METHOD check_self;
-    RUN vin.check_self;
-    RUN lin.check_self;
-    RUN lout.check_self;
-    RUN vout.check_self;
-    RUN fl1.check_self;
-(* or could be RUN check_all; *)
-END check_self;
+	METHOD bound_all;
+		RUN bound_self;
+	END bound_all;
 
-METHOD bound_all;
-	RUN bound_self;
-END bound_all;
+	METHOD bound_self;
+	    fl1.boundwidth := boundwidth;
+	    lin.boundwidth := boundwidth;
+	    vin.boundwidth := boundwidth;
+	    lout.boundwidth := boundwidth;
+	    vout.boundwidth := boundwidth;
+	(* The right, later reusable, way to finish this method is as follows:
+	    RUN vin.bound_self
+	    RUN lin.bound_self;
+		RUN lout.bound_self;
+		RUN vout.bound_self;
+		RUN fl1.bound_self;
+	 * where we didn't have to look inside the parts we're using because
+	 * we know they follow the standard in system.a4l.
+	 *)
+	(* The quick and dirty way, since there are no parts passed into
+	 * this MODEL is like so:
+	 *)
+		RUN fl1.bound_all;
+	(* This works, but we had to look into the VLflash MODEL to be sure. *)
+	END bound_self;
 
-METHOD bound_self;
-    fl1.boundwidth := boundwidth;
-    lin.boundwidth := boundwidth;
-    vin.boundwidth := boundwidth;
-    lout.boundwidth := boundwidth;
-    vout.boundwidth := boundwidth;
-(* The right, later reusable, way to finish this method is as follows:
-    RUN vin.bound_self
-    RUN lin.bound_self;
-	RUN lout.bound_self;
-	RUN vout.bound_self;
-	RUN fl1.bound_self;
- * where we didn't have to look inside the parts we're using because
- * we know they follow the standard in system.a4l.
- *)
-(* The quick and dirty way, since there are no parts passed into
- * this MODEL is like so:
- *)
-	RUN fl1.bound_all;
-(* This works, but we had to look into the VLflash MODEL to be sure. *)
-END bound_self;
+	METHOD scale_self;
+	    RUN vin.scale_self;
+	    RUN lin.scale_self;
+	    RUN lout.scale_self;
+	    RUN vout.scale_self;
+	    RUN fl1.scale_self;
+	(* or could be RUN fl1.scale_all; *)
+	END scale_self;
 
-METHOD scale_self;
-    RUN vin.scale_self;
-    RUN lin.scale_self;
-    RUN lout.scale_self;
-    RUN vout.scale_self;
-    RUN fl1.scale_self;
-(* or could be RUN fl1.scale_all; *)
-END scale_self;
+	METHOD specify;
+		RUN fl1.specify;
+	END specify;
 
-METHOD specify;
-	RUN fl1.specify;
-END specify;
-
-METHOD values;
-	vin.P := 1 {atm};
-	vin.T := 365 {K};
-	vin.f['methanol'] := 0.01 {kmol/s};
-	vin.f['ethanol'] := 0.015 {kmol/s};
-	vin.f['water'] := 0.02 {kmol/s};
-	lin.P := 1 {atm};
-	lin.T := 365 {K};
-	lin.f['methanol'] := 0.01 {kmol/s};
-	lin.f['ethanol'] := 0.015 {kmol/s};
-	lin.f['water'] := 0.02 {kmol/s};
-	fl1.cmo_ratio := 1;
-	fl1.P := 1 {atm};
-	fl1.T := 365 {K};
-	fl1.Qin := 0 {kW};
-	fl1.Vol := 10 {m^3};
-	fl1.vol_liq := 3 {m^3};
-END values;
-
+	METHOD values;
+		vin.P := 1 {atm};
+		vin.T := 365 {K};
+		vin.f['methanol'] := 0.01 {kmol/s};
+		vin.f['ethanol'] := 0.015 {kmol/s};
+		vin.f['water'] := 0.02 {kmol/s};
+		lin.P := 1 {atm};
+		lin.T := 365 {K};
+		lin.f['methanol'] := 0.01 {kmol/s};
+		lin.f['ethanol'] := 0.015 {kmol/s};
+		lin.f['water'] := 0.02 {kmol/s};
+		fl1.cmo_ratio := 1;
+		fl1.P := 1 {atm};
+		fl1.T := 365 {K};
+		fl1.Qin := 0 {kW};
+		fl1.Vol := 10 {m^3};
+		fl1.vol_liq := 3 {m^3};
+	END values;
 END test_tray;
 
 
@@ -1899,87 +1881,86 @@ MODEL test_feed_tray() REFINES testflashmodel();
 	boundwidth IS_A bound_width;
 
 METHODS
+	METHOD default_all;
+		RUN default_self;
+	END default_all;
 
-METHOD default_all;
-	RUN default_self;
-END default_all;
+	METHOD default_self;
+	        boundwidth := 10;
+		equilibrated :=TRUE;
+		ode_offset :=1;
+		obs_offset :=1;
+		RUN feed.default_self;
+		RUN vin.default_self;
+		RUN lin.default_self;
+		RUN lout.default_self;
+		RUN vout.default_self;
+		RUN fl1.default_self;
+	END default_self;
 
-METHOD default_self;
-        boundwidth := 10;
-	equilibrated :=TRUE;
-	ode_offset :=1;
-	obs_offset :=1;
-	RUN feed.default_self;
-	RUN vin.default_self;
-	RUN lin.default_self;
-	RUN lout.default_self;
-	RUN vout.default_self;
-	RUN fl1.default_self;
-END default_self;
+	METHOD check_all;
+		RUN check_self;
+	END check_all;
 
-METHOD check_all;
-	RUN check_self;
-END check_all;
+	METHOD check_self;
+	    RUN feed.check_self;
+	    RUN vin.check_self;
+	    RUN lin.check_self;
+	    RUN lout.check_self;
+	    RUN vout.check_self;
+	    RUN fl1.check_self;
+	END check_self;
 
-METHOD check_self;
-    RUN feed.check_self;
-    RUN vin.check_self;
-    RUN lin.check_self;
-    RUN lout.check_self;
-    RUN vout.check_self;
-    RUN fl1.check_self;
-END check_self;
+	METHOD bound_all;
+		RUN bound_self;
+	END bound_all;
 
-METHOD bound_all;
-	RUN bound_self;
-END bound_all;
+	METHOD bound_self;
+	    fl1.boundwidth := boundwidth;
+	    feed.boundwidth := boundwidth;
+	    lin.boundwidth := boundwidth;
+	    vin.boundwidth := boundwidth;
+	    lout.boundwidth := boundwidth;
+	    vout.boundwidth := boundwidth;
+	    RUN fl1.bound_all;
+	END bound_self;
 
-METHOD bound_self;
-    fl1.boundwidth := boundwidth;
-    feed.boundwidth := boundwidth;
-    lin.boundwidth := boundwidth;
-    vin.boundwidth := boundwidth;
-    lout.boundwidth := boundwidth;
-    vout.boundwidth := boundwidth;
-    RUN fl1.bound_all;
-END bound_self;
+	METHOD scale_self;
+	    RUN feed.scale_self;
+	    RUN vin.scale_self;
+	    RUN lin.scale_self;
+	    RUN lout.scale_self;
+	    RUN vout.scale_self;
+	    RUN fl1.scale_self;
+	END scale_self;
 
-METHOD scale_self;
-    RUN feed.scale_self;
-    RUN vin.scale_self;
-    RUN lin.scale_self;
-    RUN lout.scale_self;
-    RUN vout.scale_self;
-    RUN fl1.scale_self;
-END scale_self;
+	METHOD specify;
+		RUN fl1.specify;
+	END specify;
 
-METHOD specify;
-	RUN fl1.specify;
-END specify;
-
-METHOD values;
- 	feed.P := 1 {atm};
-	feed.T := 365 {K};
-	feed.f['methanol'] := 0.01 {kmol/s};
-	feed.f['ethanol'] := 0.015 {kmol/s};
-	feed.f['water'] := 0.02 {kmol/s};
-	vin.P := 1 {atm};
-	vin.T := 365 {K};
-	vin.f['methanol'] := 0.01 {kmol/s};
-	vin.f['ethanol'] := 0.015 {kmol/s};
-	vin.f['water'] := 0.02 {kmol/s};
-	lin.P := 1 {atm};
-	lin.T := 365 {K};
-	lin.f['methanol'] := 0.01 {kmol/s};
-	lin.f['ethanol'] := 0.015 {kmol/s};
-	lin.f['water'] := 0.02 {kmol/s};
-	fl1.q := 0;
-	fl1.P := 1 {atm};
-	fl1.T := 365 {K};
-	fl1.Qin := 0 {kW};
-	fl1.Vol := 10 {m^3};
-	fl1.vol_liq := 3 {m^3};
-END values;
+	METHOD values;
+	 	feed.P := 1 {atm};
+		feed.T := 365 {K};
+		feed.f['methanol'] := 0.01 {kmol/s};
+		feed.f['ethanol'] := 0.015 {kmol/s};
+		feed.f['water'] := 0.02 {kmol/s};
+		vin.P := 1 {atm};
+		vin.T := 365 {K};
+		vin.f['methanol'] := 0.01 {kmol/s};
+		vin.f['ethanol'] := 0.015 {kmol/s};
+		vin.f['water'] := 0.02 {kmol/s};
+		lin.P := 1 {atm};
+		lin.T := 365 {K};
+		lin.f['methanol'] := 0.01 {kmol/s};
+		lin.f['ethanol'] := 0.015 {kmol/s};
+		lin.f['water'] := 0.02 {kmol/s};
+		fl1.q := 0;
+		fl1.P := 1 {atm};
+		fl1.T := 365 {K};
+		fl1.Qin := 0 {kW};
+		fl1.Vol := 10 {m^3};
+		fl1.vol_liq := 3 {m^3};
+	END values;
 END test_feed_tray;
 
 
@@ -2007,78 +1988,77 @@ MODEL test_condenser() REFINES testflashmodel();
 	boundwidth IS_A bound_width;
 
 METHODS
+	METHOD default_all;
+		RUN default_self;
+	END default_all;
 
-METHOD default_all;
-	RUN default_self;
-END default_all;
+	METHOD default_self;
+	        boundwidth := 10;
+		equilibrated :=TRUE;
+		ode_offset :=1;
+		obs_offset :=1;
+		RUN vapin.default_self;
+		RUN liq.default_self;
+		RUN vap_dist.default_self;
+		RUN liq_dist.default_self;
+		RUN fl1.default_self;
+	(* or could be RUN fl1.default_all; *)
+	END default_self;
 
-METHOD default_self;
-        boundwidth := 10;
-	equilibrated :=TRUE;
-	ode_offset :=1;
-	obs_offset :=1;
-	RUN vapin.default_self;
-	RUN liq.default_self;
-	RUN vap_dist.default_self;
-	RUN liq_dist.default_self;
-	RUN fl1.default_self;
-(* or could be RUN fl1.default_all; *)
-END default_self;
+	METHOD check_all;
+		RUN check_self;
+	END check_all;
 
-METHOD check_all;
-	RUN check_self;
-END check_all;
+	METHOD check_self;
+		RUN vapin.check_self;
+		RUN liq.check_self;
+		IF partial THEN
+		    RUN vap_dist.check_self;
+		ELSE
+		    RUN liq_dist.check_self;
+		END IF;
+		RUN fl1.check_self;
+	(* or could be RUN fl1.check_all; *)
+	END check_self;
 
-METHOD check_self;
-	RUN vapin.check_self;
-	RUN liq.check_self;
-	IF partial THEN
-	    RUN vap_dist.check_self;
-	ELSE
-	    RUN liq_dist.check_self;
-	END IF;
-	RUN fl1.check_self;
-(* or could be RUN fl1.check_all; *)
-END check_self;
+	METHOD bound_all;
+		RUN bound_self;
+	END bound_all;
 
-METHOD bound_all;
-	RUN bound_self;
-END bound_all;
+	METHOD bound_self;
+		fl1.boundwidth := boundwidth;
+		liq.boundwidth := boundwidth;
+		liq_dist.boundwidth := boundwidth;
+		vap_dist.boundwidth := boundwidth;
+		vapin.boundwidth := boundwidth;
+		RUN fl1.bound_all;
+	END bound_self;
 
-METHOD bound_self;
-	fl1.boundwidth := boundwidth;
-	liq.boundwidth := boundwidth;
-	liq_dist.boundwidth := boundwidth;
-	vap_dist.boundwidth := boundwidth;
-	vapin.boundwidth := boundwidth;
-	RUN fl1.bound_all;
-END bound_self;
+	METHOD scale_self;
+		RUN vapin.scale_self;
+		RUN liq.scale_self;
+		RUN vap_dist.scale_self;
+		RUN liq_dist.scale_self;
+		RUN fl1.scale_self;
+	END scale_self;
 
-METHOD scale_self;
-	RUN vapin.scale_self;
-	RUN liq.scale_self;
-	RUN vap_dist.scale_self;
-	RUN liq_dist.scale_self;
-	RUN fl1.scale_self;
-END scale_self;
+	METHOD specify;
+		RUN fl1.specify;
+	END specify;
 
-METHOD specify;
-	RUN fl1.specify;
-END specify;
-
-METHOD values;
-	vapin.P := 1 {atm};
-	vapin.T := 365 {K};
-	vapin.f['methanol'] := 0.01 {kmol/s};
-	vapin.f['ethanol'] := 0.015 {kmol/s};
-	vapin.f['water'] := 0.02 {kmol/s};
-	fl1.reflux_ratio :=1;
-	fl1.P := 1 {atm};
-	fl1.T := 365 {K};
-	fl1.Qin := 0 {kW};
-	fl1.Vol := 3 {m^3};
-	fl1.vol_liq := 1 {m^3};
-END values;
+	METHOD values;
+		vapin.P := 1 {atm};
+		vapin.T := 365 {K};
+		vapin.f['methanol'] := 0.01 {kmol/s};
+		vapin.f['ethanol'] := 0.015 {kmol/s};
+		vapin.f['water'] := 0.02 {kmol/s};
+		fl1.reflux_ratio :=1;
+		fl1.P := 1 {atm};
+		fl1.T := 365 {K};
+		fl1.Qin := 0 {kW};
+		fl1.Vol := 3 {m^3};
+		fl1.vol_liq := 1 {m^3};
+	END values;
 END test_condenser;
 
 MODEL test_reboiler() REFINES testflashmodel();
@@ -2104,79 +2084,78 @@ MODEL test_reboiler() REFINES testflashmodel();
 	boundwidth IS_A bound_width;
 
 METHODS
+	METHOD default_all;
+		RUN default_self;
+	END default_all;
 
-METHOD default_all;
-	RUN default_self;
-END default_all;
+	METHOD default_self;
+	        boundwidth := 10;
+		equilibrated :=TRUE;
+		partial :=FALSE;
+		ode_offset :=1;
+		obs_offset :=1;
+		RUN liqin.default_self;
+		RUN vap.default_self;
+		RUN vap_bot.default_self;
+		RUN liq_bot.default_self;
+		RUN fl1.default_self;
+	(* or could be RUN fl1.default_all; *)
+	END default_self;
 
-METHOD default_self;
-        boundwidth := 10;
-	equilibrated :=TRUE;
-	partial :=FALSE;
-	ode_offset :=1;
-	obs_offset :=1;
-	RUN liqin.default_self;
-	RUN vap.default_self;
-	RUN vap_bot.default_self;
-	RUN liq_bot.default_self;
-	RUN fl1.default_self;
-(* or could be RUN fl1.default_all; *)
-END default_self;
+	METHOD check_all;
+		RUN check_self;
+	END check_all;
 
-METHOD check_all;
-	RUN check_self;
-END check_all;
+	METHOD check_self;
+		RUN liqin.check_self;
+		RUN vap.check_self;
+		IF partial THEN
+		    RUN liq_bot.check_self;
+		ELSE
+		    RUN vap_bot.check_self;
+		END IF;
+		RUN fl1.check_self;
+	(* or could be RUN check_all; *)
+	END check_self;
 
-METHOD check_self;
-	RUN liqin.check_self;
-	RUN vap.check_self;
-	IF partial THEN
-	    RUN liq_bot.check_self;
-	ELSE
-	    RUN vap_bot.check_self;
-	END IF;
-	RUN fl1.check_self;
-(* or could be RUN check_all; *)
-END check_self;
+	METHOD bound_all;
+		RUN bound_self;
+	END bound_all;
 
-METHOD bound_all;
-	RUN bound_self;
-END bound_all;
+	METHOD bound_self;
+		fl1.boundwidth := boundwidth;
+		vap.boundwidth := boundwidth;
+		liq_bot.boundwidth := boundwidth;
+		vap_bot.boundwidth := boundwidth;
+		liqin.boundwidth := boundwidth;
+		RUN fl1.bound_all;
+	END bound_self;
 
-METHOD bound_self;
-	fl1.boundwidth := boundwidth;
-	vap.boundwidth := boundwidth;
-	liq_bot.boundwidth := boundwidth;
-	vap_bot.boundwidth := boundwidth;
-	liqin.boundwidth := boundwidth;
-	RUN fl1.bound_all;
-END bound_self;
+	METHOD scale_self;
+		RUN liqin.scale_self;
+		RUN vap.scale_self;
+		RUN vap_bot.scale_self;
+		RUN liq_bot.scale_self;
+		RUN fl1.scale_self;
+	END scale_self;
 
-METHOD scale_self;
-	RUN liqin.scale_self;
-	RUN vap.scale_self;
-	RUN vap_bot.scale_self;
-	RUN liq_bot.scale_self;
-	RUN fl1.scale_self;
-END scale_self;
+	METHOD specify;
+		RUN fl1.specify;
+	END specify;
 
-METHOD specify;
-	RUN fl1.specify;
-END specify;
-
-METHOD values;
-	liqin.P := 1 {atm};
-	liqin.T := 365 {K};
-	liqin.f['methanol'] := 0.01 {kmol/s};
-	liqin.f['ethanol'] := 0.015 {kmol/s};
-	liqin.f['water'] := 0.02 {kmol/s};
-	fl1.reboil_ratio :=1;
-	fl1.P := 1 {atm};
-	fl1.T := 365 {K};
-	fl1.Qin := 0 {kW};
-	fl1.Vol := 3 {m^3};
-	fl1.vol_liq :=1 {m^3};
-END values;
+	METHOD values;
+		liqin.P := 1 {atm};
+		liqin.T := 365 {K};
+		liqin.f['methanol'] := 0.01 {kmol/s};
+		liqin.f['ethanol'] := 0.015 {kmol/s};
+		liqin.f['water'] := 0.02 {kmol/s};
+		fl1.reboil_ratio :=1;
+		fl1.P := 1 {atm};
+		fl1.T := 365 {K};
+		fl1.Qin := 0 {kW};
+		fl1.Vol := 3 {m^3};
+		fl1.vol_liq :=1 {m^3};
+	END values;
 END test_reboiler;
 
 
@@ -2208,77 +2187,75 @@ MODEL test_detailed_tray() REFINES testflashmodel();
 	boundwidth IS_A bound_width;
 
 METHODS
+	METHOD default_all;
+		RUN default_self;
+	END default_all;
 
-METHOD default_all;
-	RUN default_self;
-END default_all;
+	METHOD default_self;
+	        boundwidth := 10;
+		equilibrated :=TRUE;
+		ode_offset :=1;
+		obs_offset :=1;
+		RUN vin.default_self;
+		RUN lin.default_self;
+		RUN lout.default_self;
+		RUN vout.default_self;
+		RUN fl1.default_self;
+	END default_self;
 
-METHOD default_self;
-        boundwidth := 10;
-	equilibrated :=TRUE;
-	ode_offset :=1;
-	obs_offset :=1;
-	RUN vin.default_self;
-	RUN lin.default_self;
-	RUN lout.default_self;
-	RUN vout.default_self;
-	RUN fl1.default_self;
-END default_self;
+	METHOD check_all;
+		RUN check_self;
+	END check_all;
 
-METHOD check_all;
-	RUN check_self;
-END check_all;
+	METHOD check_self;
+	    RUN vin.check_self;
+	    RUN lin.check_self;
+	    RUN lout.check_self;
+	    RUN vout.check_self;
+	    RUN fl1.check_self;
+	END check_self;
 
-METHOD check_self;
-    RUN vin.check_self;
-    RUN lin.check_self;
-    RUN lout.check_self;
-    RUN vout.check_self;
-    RUN fl1.check_self;
-END check_self;
+	METHOD bound_all;
+		RUN bound_self;
+	END bound_all;
 
-METHOD bound_all;
-	RUN bound_self;
-END bound_all;
+	METHOD bound_self;
+	    fl1.boundwidth := boundwidth;
+	    lin.boundwidth := boundwidth;
+	    vin.boundwidth := boundwidth;
+	    lout.boundwidth := boundwidth;
+	    vout.boundwidth := boundwidth;
+	    RUN fl1.bound_all;
+	END bound_self;
 
-METHOD bound_self;
-    fl1.boundwidth := boundwidth;
-    lin.boundwidth := boundwidth;
-    vin.boundwidth := boundwidth;
-    lout.boundwidth := boundwidth;
-    vout.boundwidth := boundwidth;
-    RUN fl1.bound_all;
-END bound_self;
+	METHOD scale_self;
+	    RUN vin.scale_self;
+	    RUN lin.scale_self;
+	    RUN lout.scale_self;
+	    RUN vout.scale_self;
+	    RUN fl1.scale_self;
+	END scale_self;
 
-METHOD scale_self;
-    RUN vin.scale_self;
-    RUN lin.scale_self;
-    RUN lout.scale_self;
-    RUN vout.scale_self;
-    RUN fl1.scale_self;
-END scale_self;
+	METHOD specify;
+		RUN fl1.specify;
+	END specify;
 
-METHOD specify;
-	RUN fl1.specify;
-END specify;
-
-METHOD values;
-	vin.P := 1 {atm};
-	vin.T := 365 {K};
-	vin.f['methanol'] := 0.01 {kmol/s};
-	vin.f['ethanol'] := 0.015 {kmol/s};
-	vin.f['water'] := 0.02 {kmol/s};
-	lin.P := 1 {atm};
-	lin.T := 365 {K};
-	lin.f['methanol'] := 0.01 {kmol/s};
-	lin.f['ethanol'] := 0.015 {kmol/s};
-	lin.f['water'] := 0.02 {kmol/s};
-	fl1.cmo_ratio := 1;
-	fl1.P := 1 {atm};
-	fl1.T := 365 {K};
-	fl1.Qin := 0 {kW};
-	fl1.Vol := 10 {m^3};
-	fl1.vol_liq := 3 {m^3};
-END values;
-
+	METHOD values;
+		vin.P := 1 {atm};
+		vin.T := 365 {K};
+		vin.f['methanol'] := 0.01 {kmol/s};
+		vin.f['ethanol'] := 0.015 {kmol/s};
+		vin.f['water'] := 0.02 {kmol/s};
+		lin.P := 1 {atm};
+		lin.T := 365 {K};
+		lin.f['methanol'] := 0.01 {kmol/s};
+		lin.f['ethanol'] := 0.015 {kmol/s};
+		lin.f['water'] := 0.02 {kmol/s};
+		fl1.cmo_ratio := 1;
+		fl1.P := 1 {atm};
+		fl1.T := 365 {K};
+		fl1.Qin := 0 {kW};
+		fl1.Vol := 10 {m^3};
+		fl1.vol_liq := 3 {m^3};
+	END values;
 END test_detailed_tray;
