@@ -1,28 +1,3 @@
-# This file is part of the ASCEND Modeling Library and is released
-# under the GNU Public License as described at the end of this file.
-#
-# This file demonstrates the use of plotbvp.a4c
-
-DELETE TYPES;
-READ FILE "plotbvp.a4c";
-
-COMPILE pbd OF plot_bvp_demo1;
-RUN pbd.reset;
-SOLVE pbd
-PLOT {pbd.Plot_Y};
-SHOW LAST;
-
-##########  plotbvp.a4s ends here  ##########
-#
-#  plotbvp.a4s
-#  by Ben Allan
-#  May 1998
-#  Part of the ASCEND Library
-#  $Date: 1998/06/17 20:08:40 $
-#  $Revision: 1.2 $
-#  $Author: mthomas $
-#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/plotbvp.a4s,v $
-#
 #  This file is part of the ASCEND Modeling Library.
 #
 #  Copyright (C) 1998 Carnegie Mellon University
@@ -41,3 +16,15 @@ SHOW LAST;
 #  along with the program.  If not, write to the Free Software
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
 #  the file named COPYING.
+
+#  by Ben Allan, May 1998
+
+DELETE TYPES;
+READ FILE "plotbvp.a4c";
+
+COMPILE pbd OF plotbvp;
+RUN pbd.reset;
+SOLVE pbd
+PLOT {pbd.Plot_Y};
+SHOW LAST;
+
