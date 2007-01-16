@@ -279,10 +279,17 @@ class ModelView:
 
 	def on_treeview_event(self,widget,event):
 		_contextmenu = False;
-		if event.type==gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval)=='Menu':
-			_contextmenu = True
+		if event.type==gtk.gdk.KEY_PRESS:
+			_keyval = gtk.gdk.keyval_name(event.keyval)
 			_path, _col = self.modelview.get_cursor()
-			_button = 3;
+			if _keyval=='Menu':
+				_contextmenu = True
+				_button = 3;
+			elif _keyval == 'F2':
+				print "F2 pressed"
+				self.modelview.set_cursor(_path,self.tvcolumns[2],1)
+												
+				return
 		elif event.type==gtk.gdk.BUTTON_PRESS:
 			if event.button == 3:
 				_contextmenu = True
@@ -293,9 +300,9 @@ class ModelView:
 				if _pthinfo == None:
 					return
 				_path, _col, _cellx, _celly = _pthinfo
-		
-		# which button was clicked?
+
 		if not _contextmenu:
+			#print "NOT DOING ANYTHING ABOUT %s" % gtk.gdk.keyval_name(event.keyval)
 			return 
 
 		_canpop = False;
