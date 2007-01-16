@@ -1,72 +1,83 @@
+(*
+	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
 REQUIRE "atoms.a4l";
-(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
 PROVIDE "pipeline.a4c";
 (*
- * This file is part of the ASCEND Modeling Library and is released
- * under the GNU Public License as described at the end of this file.
- *
- *  Use of this module is demonstrated by the associated script file
- *  pipeline.a4s.
- *)
+	The following the conditional model discussed in the PhD thesis of
+	Vicente Rico-Ramirez,
+	https://pse.cheme.cmu.edu/ascend/ftp/pdfThesis/victhesis.pdf
 
-(*
-   Ascend model of the pipeline network example presented by Bullard
-and Biegler -- Iterated Linear Programming Strategies for Nonsmooth
-Simulation: Continuous and Mixed Integer Approaches. Comp. Chem. Eng.
-Vol. 16, 949-961, 1992 --. The problem consists of a  network of 38 pipes,
-5 of them including a check valve (so that the flow in those pipes is
-possible only in one direction). Each pipe is represented by a set of
-algebraic disjunctive equations. It represent a problem
-which we can represent as a conditional model and solve  with the
-ascend conditional solver CMSlv.
+	The problem consists of a  network of 38 pipes, 5 of them including a check
+	valve (so that the flow in those pipes is possible only in one direction).
+	Each pipe is represented by a set of algebraic disjunctive equations. It
+	represents a problem which we can represent as a conditional model and 
+	solve with the ASCEND conditional solver CMSlv.
 
-This model requires:
-			"system.a4l"
-		    	"atoms.a4l"
+	The problem was originally described in the paper by Bullard and Biegler,
+	
+	Bullard and Biegler, Iterated Linear Programming Strategies for Nonsmooth
+	Simulation: Continuous and Mixed Integer Approaches. Comp. Chem. Eng.
+	Vol. 16, 949-961, 1992
+
+	Note that you will need CONOPT installed on your system in order to solve
+	this problem.
+
+	Model by Vicente Rico-Ramirez, April 10, 1998
 *)
 
-(* ************************************************* *)
-
-(* Base model of a pipe *)
+(*---------------------------
+	Base model of a pipe
+*)
 MODEL arc;
 	k		IS_A k_constant;
 	Q		IS_A volume_rate;
 	H		IS_A distance;
-  METHODS
+METHODS
 END arc;
 
-
-(* ************************************************* *)
-
-(* Pipe without check valve *)
+(*---------------------------
+	Pipe without check valve
+*)
 MODEL arc_w_no_valve REFINES arc;
-
 	bol		IS_A boolean_var;
 
-(* Boundary *)
-
+	(* Boundary *)
 	CONDITIONAL
-	  cond: Q >= 0.0 {gpm};
+		cond: Q >= 0.0 {gpm};
 	END CONDITIONAL;
 
 	bol == SATISFIED(cond,1e-08 {gpm});
 
-(* Variant Equations *)
-
+	(* Variant Equations *)
 	eq1: H = k * sqr(Q);
 	eq2: H = -k * sqr(Q);
 
-(* Disjunctive Statement *)
-
-        WHEN (bol)
+	(* Disjunctive Statement *)
+    WHEN (bol)
 	  CASE TRUE:
 		USE eq1;
 	  CASE FALSE:
 		USE eq2;
 	END WHEN;
 
-  METHODS
-
+METHODS
     METHOD default_self;
     END default_self;
 
@@ -86,37 +97,33 @@ MODEL arc_w_no_valve REFINES arc;
 
 END arc_w_no_valve;
 
-(* ************************************************* *)
-
-(* Pipe with check valve *)
+(*---------------------------
+	Pipe with check valve
+*)
 MODEL arc_w_valve REFINES arc;
 
 	bol		IS_A boolean_var;
 
-(* Boundary *)
-
+	(* Boundary *)
 	CONDITIONAL
 	  cond: H >= 0.0 {ft};
 	END CONDITIONAL ;
 
 	bol == SATISFIED(cond,1e-08{ft});
 
-(* Variant Equations *)
-
+	(* Variant Equations *)
 	eq1: sqr(Q) = H/k;
 	eq2: Q = 0.0 {gpm};
 
-(* Disjunctive Statement *)
-
-        WHEN (bol)
+	(* Disjunctive Statement *)
+    WHEN (bol)
 	  CASE TRUE:
 		USE eq1;
 	  CASE FALSE:
 		USE eq2;
 	END WHEN;
 
-  METHODS
-
+METHODS
     METHOD default_self;
     END default_self;
 
@@ -134,9 +141,9 @@ MODEL arc_w_valve REFINES arc;
     END values;
 END arc_w_valve;
 
-(* ************************************************* *)
-
-(* Pipeline Network *)
+(*---------------------------
+	Pipeline Network 
+*)
 MODEL pipeline;
 
 	nodes		IS_A set OF integer_constant;
@@ -148,13 +155,11 @@ MODEL pipeline;
 	H[arcs]		IS_A distance;
 	k		IS_A k_constant;
 
-(* Sets definition *)
-
+	(* Sets definition *)
 	nodes :== [1..22];
 	arcs  :== [1..38];
 
-(* Wire up network *)
-
+	(* Now wire-up the network *)
 	Pipe[15],Pipe[19],Pipe[23],Pipe[32],
 	    Pipe[34] IS_REFINED_TO arc_w_valve;
 
@@ -181,7 +186,7 @@ MODEL pipeline;
 	    k,Pipe[i].k ARE_THE_SAME;
 	END FOR;
 
-(* Invariant Equations *)
+	(* Invariant Equations *)
 
 	(* Pressure Drops at each arc *)
 	P[1]  - P[6]  = H[1];
@@ -248,136 +253,105 @@ MODEL pipeline;
 	W[21] = Q[32] - Q[10] - Q[14] - Q[17];
 	W[22] = Q[17] + Q[33] - Q[16];
 
-
-  METHODS
-
+METHODS
     METHOD default_self;
     END default_self;
 
     METHOD specify;
-	FIX k;
-	FOR i IN nodes DO
-	    FIX W[i];
-	END FOR;
-	FREE W[18];
-	FIX P[17];
+		FIX k;
+		FOR i IN nodes DO
+		    FIX W[i];
+		END FOR;
+		FREE W[18];
+		FIX P[17];
     END specify;
 
-   METHOD bound_self;
-	FOR i IN nodes DO
-	    W[i].lower_bound := -1e50 {gpm};
-	END FOR;
-	FOR i IN nodes DO
-	    P[i].lower_bound := 0 {ft};
-	END FOR ;
-   END bound_self;
+	METHOD bound_self;
+		FOR i IN nodes DO
+		    W[i].lower_bound := -1e50 {gpm};
+		END FOR;
+		FOR i IN nodes DO
+		    P[i].lower_bound := 0 {ft};
+		END FOR ;
+	END bound_self;
 
-    METHOD bound_all;
-	FOR i IN arcs DO
-	    RUN Pipe[i].bound_self;
-	END FOR;
-        RUN bound_self;
-    END bound_all;
+	METHOD bound_all;
+		FOR i IN arcs DO
+		    RUN Pipe[i].bound_self;
+		END FOR;
+	    RUN bound_self;
+	END bound_all;
 
     METHOD values;
+		RUN bound_all;
+		FOR i IN arcs DO
+			RUN Pipe[i].values;
+		END FOR;
 
-        RUN bound_all;
+		(* fixed *)
+		k := 0.36412197 {s^2/ft^5};
 
-	FOR i IN arcs DO
-	    RUN Pipe[i].values;
-	END FOR;
+		FOR i IN nodes DO
+			W[i] := 0 {gpm};
+		END FOR;
+		W[1] := -897.6 {gpm};
+		W[7] := -1570.9 {gpm};
+		W[11] := 897.6 {gpm};
+		W[17] := 1795.3 {gpm};
+		W[20] := 448.8 {gpm};
+		W[22] := -673.2 {gpm};
 
-(* fixed *)
-	k := 0.36412197 {s^2/ft^5};
+		(* Initial guess *)
 
-	FOR i IN nodes DO
-	    W[i] := 0 {gpm};
-	END FOR;
-	W[1] := -897.6 {gpm};
-	W[7] := -1570.9 {gpm};
-	W[11] := 897.6 {gpm};
-	W[17] := 1795.3 {gpm};
-	W[20] := 448.8 {gpm};
-	W[22] := -673.2 {gpm};
+		(* Pressure head *)
+		FOR i IN nodes DO
+			P[i] := 0 {ft};
+		END FOR ;
+		P[17] := 0 {ft};
 
-(* Initial guess *)
+		(* volume rates *)
+		Q[1] :=  -48.5 {gpm};
+		Q[2] :=  -640.7 {gpm};
+		Q[3] :=  393.2 {gpm};
+		Q[4] :=  538.9 {gpm};
+		Q[5] :=  -32.3 {gpm};
+		Q[6] :=  490.2 {gpm};
+		Q[7] :=  649.9 {gpm};
+		Q[8] :=  904.7 {gpm};
+		Q[9] :=  112.2 {gpm};
+		Q[10] :=  232.5 {gpm};
+		Q[11] :=  402.3 {gpm};
+		Q[12] :=  -420.4 {gpm};
+		Q[13] :=  687.3 {gpm};
+		Q[14] :=  621.7 {gpm};
+		Q[15] :=  -719.2 {gpm};
+		Q[16] :=  52.7 {gpm};
+		Q[17] :=  1199 {gpm};
+		Q[18] :=  305.4 {gpm};
+		Q[19] :=  582.8 {gpm};
+		Q[20] :=  -247.5 {gpm};
+		Q[21] :=  -145.7 {gpm};
+		Q[22] :=  -684.6 {gpm};
+		Q[23] :=  293.6 {gpm};
+		Q[24] :=  -261.3 {gpm};
+		Q[25] :=  -229 {gpm};
+		Q[26] :=  -395.1 {gpm};
+		Q[27] :=  -254.8 {gpm};
+		Q[28] :=  -268.9 {gpm};
+		Q[29] :=  -890.6 {gpm};
+		Q[30] :=  120.3 {gpm};
+		Q[31] :=  -8.1{gpm};
+		Q[32] :=  -344.7 {gpm};
+		Q[33] :=  473.1 {gpm};
+		Q[34] :=  -206.2 {gpm};
+		Q[35] :=  -275 {gpm};
+		Q[36] :=  351.5 {gpm};
+		Q[37] :=  -481.2 {gpm};
+		Q[38] :=  353.9 {gpm};
+	END values;
 
-	(* Pressure head *)
-	FOR i IN nodes DO
-	    P[i] := 0 {ft};
-	END FOR ;
-	P[17] := 0 {ft};
-
-	(* volume rates *)
-	Q[1] :=  -48.5 {gpm};
-	Q[2] :=  -640.7 {gpm};
-	Q[3] :=  393.2 {gpm};
-	Q[4] :=  538.9 {gpm};
-	Q[5] :=  -32.3 {gpm};
-	Q[6] :=  490.2 {gpm};
-	Q[7] :=  649.9 {gpm};
-	Q[8] :=  904.7 {gpm};
-	Q[9] :=  112.2 {gpm};
-	Q[10] :=  232.5 {gpm};
-	Q[11] :=  402.3 {gpm};
-	Q[12] :=  -420.4 {gpm};
-	Q[13] :=  687.3 {gpm};
-	Q[14] :=  621.7 {gpm};
-	Q[15] :=  -719.2 {gpm};
-	Q[16] :=  52.7 {gpm};
-	Q[17] :=  1199 {gpm};
-	Q[18] :=  305.4 {gpm};
-	Q[19] :=  582.8 {gpm};
-	Q[20] :=  -247.5 {gpm};
-	Q[21] :=  -145.7 {gpm};
-	Q[22] :=  -684.6 {gpm};
-	Q[23] :=  293.6 {gpm};
-	Q[24] :=  -261.3 {gpm};
-	Q[25] :=  -229 {gpm};
-	Q[26] :=  -395.1 {gpm};
-	Q[27] :=  -254.8 {gpm};
-	Q[28] :=  -268.9 {gpm};
-	Q[29] :=  -890.6 {gpm};
-	Q[30] :=  120.3 {gpm};
-	Q[31] :=  -8.1{gpm};
-	Q[32] :=  -344.7 {gpm};
-	Q[33] :=  473.1 {gpm};
-	Q[34] :=  -206.2 {gpm};
-	Q[35] :=  -275 {gpm};
-	Q[36] :=  351.5 {gpm};
-	Q[37] :=  -481.2 {gpm};
-	Q[38] :=  353.9 {gpm};
-    END values;
-
+	METHOD on_load;
+		RUN reset;
+		RUN values;
+	END on_load;
 END pipeline;
-
-
-(*
- *  pipeline.a4c
- *  by Vicente Rico-Ramirez
- *  April 10, 1998
- *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:15:04 $
- *  $Revision: 1.3 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/pipeline.a4c,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
