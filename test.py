@@ -70,6 +70,9 @@ class TestSolver(AscendSelfTester):
 	def testlog10(self):
 		self._run('testlog10')
 
+	def testcollapsingcan(self):
+		self._run('collapsingcan',filename="collapsingcan.a4c")
+
 	def testconopt(self):
 		self._run('testconopt',"CONOPT")				
 
@@ -464,7 +467,7 @@ class TestSteam(AscendSelfTester):
 		M = T.getSimulation('sim',False)
 		M.run(T.getMethod('on_load'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		self.assertAlmostEqual(M.dTw_dt[4],0.0);
+		self.assertAlmostEqual(M.dTw_dt[2],0.0);
 		M.run(T.getMethod('configure_dynamic'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		return M
@@ -485,8 +488,8 @@ class TestSteam(AscendSelfTester):
 
 	def testintegIDA(self):	
 		M = self.testdsgsat()
-		self.assertAlmostEqual(M.dTw_dt[4],0.0)
-		Tw1 = float(M.T_w[4])
+		self.assertAlmostEqual(M.dTw_dt[2],0.0)
+		Tw1 = float(M.T_w[2])
 		T = self.L.findType('dsgsat2')
 		M.run(T.getMethod('free_states'))
 		I = ascpy.Integrator(M)
@@ -503,11 +506,11 @@ class TestSteam(AscendSelfTester):
 		I.solve()
 		I.analyse()
 		I.solve()
-		self.assertAlmostEqual(float(M.T_w[4]),Tw1)
+		self.assertAlmostEqual(float(M.T_w[2]),Tw1)
 		M.qdot_s.setRealValueWithUnits(1000,"W/m")
 		self.assertAlmostEqual(M.qdot_s.as("W/m"),1000)
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		self.assertNotAlmostEqual(M.dTw_dt[4],0.0)
+		self.assertNotAlmostEqual(M.dTw_dt[2],0.0)
 #		I = ascpy.Integrator(M)
 #		I.setEngine('LSODE')
 #		I.setReporter(ascpy.IntegratorReporterConsole(I))
