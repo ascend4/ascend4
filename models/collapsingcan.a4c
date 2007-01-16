@@ -1,0 +1,59 @@
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+(*
+	Solution the Horwitz A, "The Case of the Collapsing Can", Chemical
+	Engineering Progress, Jun 1997, pp.61-65.
+
+	"A fixed-volume vessel contains one pound of saturated water vapor at 14.7 
+	psia. One pound of water at 70 deg F and 14.7 psia is introduced
+	into the vessel. Assuming the entire process is adiabatic (no heat loss to
+	the surroundings), find the amount of liquid and vapor present in the
+	vessel, and the temperature and pressure in the vessel."
+
+	Model file created by John Pye, Jan 2007.
+*)
+MODEL collapsingcan;
+	(* Although these variables are dimensional, the way that the correlation
+	equations in the paper are writtem make it simplest to express this model
+	in non-dimensional terms *)
+	x IS_A  solver_var; (* lb *)
+	y IS_A  solver_var; (* lb *)
+	sv IS_A solver_var; (* ft^3 *)
+	ul IS_A solver_var; (* Btu/lb *)
+	uv IS_A solver_var; (* Btu/lb *)
+	p IS_A  solver_var; (* psia *)
+	T IS_A  solver_var; (* deg F *)
+	
+	x * 0.016 + y * sv = 26.8; (* final volume = initial volume *)
+	x + y = 2.0; (* mass balance *)
+
+	(* The following curves were based on regression-fits to Keenen and Keyes 
+	steam tables performed by the author specifically for the purpose of
+	solving this problem *)
+	38.2 + 1077 = ul * x + uv * y; (* internal energy balance *)
+	sv = 90.6607 -7.109 * p + 0.18803 * p^2; (* sv as fn of pressure *)
+	ul = 101.4992 + 7.2929 * p - 0.13267 * p^2; (* ul as fn of pressure *)
+	uv = 1060.0 + 1.25965 * p - 0.00535 * p^2; (* uv as fn of pressure *)
+	T = 133.65 + 7.2905 * p - 0.13339 * p^2; (* temperature as fn of pressure *)
+
+METHODS
+
+	METHOD on_load;
+		RUN ClearAll;
+	END on_load;
+
+	METHOD self_test;
+		(*  The following results use the solution values as published in the
+		original paper. Note that this model is tested regularly as part of the
+		ASCEND automated test suite, 'test.py'. *)
+		ASSERT abs(x - 1.1453809) <  0.0000002;
+		ASSERT abs(y - 0.85461909) <  0.00000002;
+		ASSERT abs(sv- 31.337556) <  0.000002;
+		ASSERT abs(ul- 171.66791) <  0.00002;
+		ASSERT abs(uv- 1074.8354) <  0.0002;
+		ASSERT abs(p - 12.434039) <  0.000002;
+		ASSERT abs(T - 203.67756) <  0.00002;
+	END self_test;
+	
+END collapsingcan;
