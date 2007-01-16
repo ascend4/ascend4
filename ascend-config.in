@@ -61,7 +61,7 @@ if options.cppflags:
 	if -1!=include.find(" "):
 		print "-I\""+include+"\""
 	else:
-		print "-L"+libs+" -lascend"
+		print "-I"+include
 	ok = True
 
 if options.libs:
