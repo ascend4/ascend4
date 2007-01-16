@@ -60,7 +60,7 @@ if __name__=='__main__':
 			print "   %s = %s" % (v,os.environ[v])
 		if os.environ.get('ASC_GDB'):
 			print "   via GDB..."
-			os.execvp("gdb",['--symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@','--args','python',script]+sys.argv)
+			os.execvp("gdb",['--symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@','--args','python',script]+sys.argv[1:])
 		else:
 			print "PYTHON... ",script
 			os.execvp("python",[script,script]+sys.argv[1:])
