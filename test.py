@@ -70,6 +70,9 @@ class TestSolver(AscendSelfTester):
 	def testlog10(self):
 		self._run('testlog10')
 
+	def testrootsofpoly(self):
+		self._run('roots_of_poly',filename="roots_of_poly.a4c")
+
 	def testcollapsingcan(self):
 		self._run('collapsingcan',filename="collapsingcan.a4c")
 
