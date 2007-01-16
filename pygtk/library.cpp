@@ -49,7 +49,7 @@ extern "C"{
 Library::Library(const char *defaultpath){
 	static int have_init;
 	if(!have_init){
-		cerr << "Initialising ASCEND library..." << endl;
+		//cerr << "Initialising ASCEND library..." << endl;
 
 #ifdef REIMPLEMENT_STREAMS
 		Asc_RedirectCompilerDefault(); // Ensure that error message reach stderr

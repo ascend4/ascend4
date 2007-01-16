@@ -1,15 +1,72 @@
-#!/bin/sh
+#!@PYTHON@
+# to debug this program using 'gdb', invoke 'ASC_GDB=1 ascdev'.
 
-export ASC_START=$PWD
-cd @SOURCE_ROOT@/pygtk
-export LD_LIBRARY_PATH=@SOURCE_ROOT@:@SOURCE_ROOT@/pygtk:$LD_LIBRARY_PATH
-export ASCENDLIBRARY=@SOURCE_ROOT@/models:$ASCENDLIBRARY
-export ASC_DEV=1
+import os.path, sys, platform;
 
-if [ "x$ASC_GDB" != "x" ]; then
-	cmd="gdb --symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@ --args python ascend"
-else
-	cmd="./ascend"
-fi
+def add_at_start(envvar,pathcomponents):
+	""" add path components at start of envvar, return 1 if changes made """
 
-$cmd $@
+	if not os.environ.get(envvar):
+		v = SEP.join(pathcomponents)
+		os.environ[envvar]=v
+		return 1
+
+	restart = 0
+	pathcomponents = [os.path.abspath(i) for i in pathcomponents]
+	envvals = [os.path.abspath(i) for i in os.environ[envvar].split(SEP)]
+	for k in range(0,len(pathcomponents)):
+		p = pathcomponents[k]
+		if p in envvals[k+1:]:
+			envvals.remove(p)
+			restart = 1
+	for p in reversed(pathcomponents):
+		if p not in envvals:
+			envvals.insert(0,p)
+			restart = 1
+	os.environ[envvar]=SEP.join(envvals)
+	return restart
+		
+if __name__=='__main__':
+	sourceroot="@SOURCE_ROOT@"
+	script=os.path.join(sys.argv[0])
+
+	if platform.system()=="Windows":
+		LD_LIBRARY_PATH="PATH"
+		SEP = ";"
+	else:
+		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
+		SEP = ":"
+
+	restart = []
+
+	# ensure that we have our 'models' dir in the ASCENDLIBRARY path
+	modeldirs = ["@SOURCE_ROOT@/models"]
+	if add_at_start('ASCENDLIBRARY',modeldirs):
+		restart.append('ASCENDLIBRARY')
+
+	# ensure that we have our shared libraries in the LD_LIBRARY_PATH
+	libdirs = ["@SOURCE_ROOT@","@SOURCE_ROOT@/pygtk"]
+	if add_at_start(LD_LIBRARY_PATH,libdirs):
+		restart.append(LD_LIBRARY_PATH)
+
+	# ensure our pygtk dir is in the PYTHONPATH
+	pypath = ["@SOURCE_ROOT@/pygtk"]
+	if add_at_start('PYTHONPATH',pypath):
+		restart.append('PYTHONPATH')
+
+	if restart:
+		print "\nRestarting with..."
+		for v in restart:
+			print "   %s = %s" % (v,os.environ[v])
+		if os.environ.get('ASC_GDB'):
+			print "   via GDB..."
+			os.execvp("gdb",['--symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@','--args','python',script]+sys.argv)
+		else:
+			print "PYTHON... ",script
+			os.execvp("python",[script,script]+sys.argv[1:])
+		# the above calls don't return so we can forget about line of enqiry
+
+	import ascpy
+	from gtkbrowser import *
+	B = Browser(assetspath=os.path.join(sourceroot,"pygtk/glade"))
+	B.run()	
