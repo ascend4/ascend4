@@ -40,3 +40,4 @@ METHODS
 		ASSERT (x - 1.0) < 1e-5;
 	END self_test;
 END roots_of_poly;
+(* :ex: set ts=4: *)
