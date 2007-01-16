@@ -1739,7 +1739,7 @@ subst_dict = {
 	, '@ASC_CONOPT_LIB@':env.get('CONOPT_LIB')
 	, '@ASC_CONOPT_ENVVAR@':env.get('CONOPT_ENVVAR')
 	, '@ASC_CONOPT_DLPATH@':c_escape(env.subst("$CONOPT_LIBPATH"))
-	, '@SOURCE_ROOT@':re.escape(os.path.abspath(str(env.Dir("#"))))
+	, '@SOURCE_ROOT@':os.path.abspath(str(env.Dir("#")))
 }
 
 if env.get('WITH_LOCAL_HELP'):
