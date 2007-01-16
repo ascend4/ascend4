@@ -1,323 +1,300 @@
+(*
+	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
 REQUIRE "atoms.a4l";
-(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
 PROVIDE "heatex.a4c";
 (*
- * This file is part of the ASCEND Modeling Library and is released
- * under the GNU Public License as described at the end of this file.
- *
- * Use of this module is demonstrated by the associated script file
- * heatex.a4s.
- *)
+	The following the conditional model is discussed in the PhD thesis of
+	Vicente Rico-Ramirez,
+	https://pse.cheme.cmu.edu/ascend/ftp/pdfThesis/victhesis.pdf
 
+	The original problem was presented by Joe Zaher
 
-(*
-   Ascend model of the heat exchanger example presented by
-Zaher -- Conditional Modeling. Ph.D. Thesis, Carnegie Mellon University,
-Pittsburgh, PA, 15213. 1995 --. The problem represents the condensation
-of vapor because the heat transfer between the vapor and cooling water in
-a heat exchanger. There are two disjunctive statement which represent
-the possible condensation of vapor in the different sections of the
-heat exchanger. This example shows how we can represent a conditional model
-containing differential equations. It represent a problem that we can
-solve  with the ascend conditional solver CMSlv.
+	Zaher, Conditional Modeling. Ph.D. Thesis, Carnegie Mellon University,
+	Pittsburgh, PA. 1995.
 
-This model requires:
-			"system.a4l"
-		    	"atoms.a4l"
+	The problem represents the condensation of vapor because the heat
+	transfer between the vapor and cooling water in heat exchanger. There 
+	are two disjunctive statement which represent the possible condensation
+	of vapor in the different sections of the heat exchanger. This example
+	shows how we can represent a conditional model containing differential 
+	equations. It represent a problem that we can solve with the ASCEND
+	conditional solver, CMSlv.
 *)
 
-(* ************************************************* *)
-
 MODEL heatex;
+	points			IS_A set OF integer_constant;
+	components      		IS_A set OF symbol_constant;
+	k_terms			IS_A set OF integer_constant;
+	z[components]   		IS_A fraction;
+	x[points][components]	IS_A fraction;
+	y[points][components]	IS_A fraction;
+	Tcr[components]		IS_A critical_temperature;
+	Pcr[components]		IS_A critical_pressure;
+	Hv[components]		IS_A molar_energy_constant;
+	B[components][k_terms]    IS_A factor_constant;
+	C[k_terms]    		IS_A factor_constant;
+	D[components][k_terms]    IS_A molar_energy_constant;
+	E[k_terms]    		IS_A factor_constant;
+	phi[points]		IS_A fraction;
+	eta[points]		IS_A fraction;
+	A				IS_A area;
+	Fc			IS_A molar_rate;
+	Fh			IS_A molar_rate;
+	P				IS_A pressure;
+	Tc[points]		IS_A temperature;
+	Th[points]		IS_A temperature;
+	Hc[points]     		IS_A molar_energy;
+	Hh[points]		IS_A molar_energy;
+	dQ[points]		IS_A energy_rate;
+	erscale   		IS_A energy_rate;
+	entscale  		IS_A factor;
+	bolphaq[1..2]		IS_A boolean_var;
 
-      points			IS_A set OF integer_constant;
-      components      		IS_A set OF symbol_constant;
-      k_terms			IS_A set OF integer_constant;
-      z[components]   		IS_A fraction;
-      x[points][components]	IS_A fraction;
-      y[points][components]	IS_A fraction;
-      Tcr[components]		IS_A critical_temperature;
-      Pcr[components]		IS_A critical_pressure;
-      Hv[components]		IS_A molar_energy_constant;
-      B[components][k_terms]    IS_A factor_constant;
-      C[k_terms]    		IS_A factor_constant;
-      D[components][k_terms]    IS_A molar_energy_constant;
-      E[k_terms]    		IS_A factor_constant;
-      phi[points]		IS_A fraction;
-      eta[points]		IS_A fraction;
-      A				IS_A area;
-      Fc			IS_A molar_rate;
-      Fh			IS_A molar_rate;
-      P				IS_A pressure;
-      Tc[points]		IS_A temperature;
-      Th[points]		IS_A temperature;
-      Hc[points]     		IS_A molar_energy;
-      Hh[points]		IS_A molar_energy;
-      dQ[points]		IS_A energy_rate;
-      erscale   		IS_A energy_rate;
-      entscale  		IS_A factor;
-      bolphaq[1..2]		IS_A boolean_var;
+	(* Boundaries *)
+	CONDITIONAL
+		cond1: SUM[x[0][i] | i IN components] + phi[0] >= 1.0;
+		cond2: SUM[x[2][i] | i IN components] + phi[1] >= 1.0;
+	END CONDITIONAL;
 
-(* Boundaries *)
+	bolphaq[1] == SATISFIED(cond1,1e-08);
+	bolphaq[2] == SATISFIED(cond2,1e-08);
 
-      CONDITIONAL
-        cond1: SUM[x[0][i] | i IN components] + phi[0] >= 1.0;
-        cond2: SUM[x[2][i] | i IN components] + phi[1] >= 1.0;
-      END CONDITIONAL;
+	(* Variant Equations *)
+	sum0: SUM[x[0][i] | i IN components] = 1.0;
+	frac0: phi[0] = 0.0;
 
-      bolphaq[1] == SATISFIED(cond1,1e-08);
-      bolphaq[2] == SATISFIED(cond2,1e-08);
+	sum2: SUM[x[2][i] | i IN components] = 1.0;
+	frac1: phi[1] = 0.0;
 
-(* Variant Equations *)
+	p1: eta[1] = 0.5;
+	p2: eta[2] = 0.5;
 
-      sum0: SUM[x[0][i] | i IN components] = 1.0;
-      frac0: phi[0] = 0.0;
+	sum1: SUM[x[1][i] | i IN components] = 1.0;
+	p12: eta[1] = 0.0;
 
-      sum2: SUM[x[2][i] | i IN components] = 1.0;
-      frac1: phi[1] = 0.0;
-
-      p1: eta[1] = 0.5;
-      p2: eta[2] = 0.5;
-
-      sum1: SUM[x[1][i] | i IN components] = 1.0;
-      p12: eta[1] = 0.0;
-
-(* Disjunctive Statements *)
-
-      WHEN (bolphaq[1])
+	(* Disjunctive Statements *)
+	WHEN (bolphaq[1])
 	CASE TRUE:
-	  USE sum0;
-	  USE sum1;
+		USE sum0;
+		USE sum1;
 	CASE FALSE:
-	  USE frac0;
-	  USE p12;
-      END WHEN;
+		USE frac0;
+		USE p12;
+	END WHEN;
 
-      WHEN (bolphaq[2])
+	WHEN (bolphaq[2])
 	CASE TRUE:
-	  USE sum2;
-	  USE p1;
+		USE sum2;
+		USE p1;
 	CASE FALSE:
-	  USE frac1;
-	  USE p2;
-      END WHEN;
+		USE frac1;
+		USE p2;
+	END WHEN;
 
-(* Invariant Equations *)
+	(* Invariant Equations *)
+	phi[2] = 0.0;
+	phi[3] = 0.0;
 
-      phi[2] = 0.0;
-      phi[3] = 0.0;
+	FOR i IN points CREATE
+		FOR j IN components CREATE
+			phi[i]*x[i][j] + (1 - phi[i])*y[i][j] = z[j];
+		END FOR;
+	END FOR;
 
-      FOR i IN points CREATE
-         FOR j IN components CREATE
-            phi[i]*x[i][j] + (1 - phi[i])*y[i][j] = z[j];
-         END FOR;
-      END FOR;
+	FOR i IN points CREATE
+		FOR j IN components CREATE
+			ln((y[i][j]*P)/(x[i][j]*Pcr[j])) = (Tcr[j]/Th[i])*(
+				SUM[B[j][k] *(1 - Th[i]/Tcr[j])^C[k]
+				| k IN k_terms] );
+		END FOR;
+	END FOR;
 
-      FOR i IN points CREATE
-         FOR j IN components CREATE
-            ln((y[i][j]*P)/(x[i][j]*Pcr[j])) = (Tcr[j]/Th[i])*(
-                                    SUM[B[j][k] *(1 - Th[i]/Tcr[j])^C[k]
-                                       | k IN k_terms] );
-         END FOR;
-      END FOR;
+	FOR i IN points CREATE
+		dQ[i]/erscale = 20{BTU/hour/ft^2/R}*(1 + 10*phi[i]) *
+			A*(Th[i] - Tc[i])/erscale;
+	END FOR;
 
-      FOR i IN points CREATE
-        dQ[i]/erscale = 20{BTU/hour/ft^2/R}*(1 + 10*phi[i])*
-                                A*(Th[i] - Tc[i])/erscale;
-      END FOR;
+	FOR i IN [0..2] CREATE
+		Fh*(Hh[i+1] - Hh[i])/erscale = Fc*(Hc[i+1] - Hc[i])/erscale;
 
-      FOR i IN [0..2] CREATE
-         Fh*(Hh[i+1] - Hh[i])/erscale =
-                                         Fc*(Hc[i+1] - Hc[i])/erscale;
+		Fc*(Hc[i+1] - Hc[i])/erscale = 0.5*(dQ[i] + dQ[i+1]) *
+			(eta[i+1] - eta[i])/erscale;
+	END FOR;
 
-         Fc*(Hc[i+1] - Hc[i])/erscale = 0.5*(dQ[i] + dQ[i+1])*
-                                         (eta[i+1] - eta[i])/erscale;
-      END FOR;
+	FOR i IN points CREATE
+		Hc[i]/entscale = 9720{BTU/lb_mole}*(Tc[i]/540{R} - 1)/entscale;
+	END FOR;
 
-      FOR i IN points CREATE
-         Hc[i]/entscale = 9720{BTU/lb_mole}*(Tc[i]/540{R} - 1)/entscale;
-      END FOR;
+	FOR j IN points CREATE
+		Hh[j]/entscale = (SUM[ z[i] *(
+			SUM[ D[i][k]*((Th[j]/540{R})^E[k] - 1)|k IN k_terms])
+			- phi[j]*x[j][i]*Hv[i] | i IN components])/entscale;
+	END FOR;
 
-      FOR j IN points CREATE
-      Hh[j]/entscale = (SUM[ z[i] *(
-                        SUM[ D[i][k]*((Th[j]/540{R})^E[k] - 1)|k IN k_terms])
-                        - phi[j]*x[j][i]*Hv[i] | i IN components])/entscale;
-      END FOR;
+	(* Definition of sets *)
+	components :== ['B','P5','H'];
+	points :== [0..3];
+	k_terms :== [1..4];
 
-(* Definition of sets *)
+	(* Constants *)
+	Tcr['B'] :== 765.4 {R};
+	Tcr['P5'] :== 845.3 {R};
+	Tcr['H'] :== 913.3 {R};
+	Pcr['B'] :== 37.5 {atm};
+	Pcr['P5'] :== 33.3 {atm};
+	Pcr['H'] :== 29.3 {atm};
+	Hv['B'] :== 9634 {BTU/lb_mole};
+	Hv['P5'] :== 11088{BTU/lb_mole};
+	Hv['H'] :== 12413 {BTU/lb_mole};
+	C[1] :== 1.0;
+	C[2] :== 1.5;
+	C[3] :== 3.0;
+	C[4] :== 6.0;
+	E[1] :== 1.0;
+	E[2] :== 2.0;
+	E[3] :== 3.0;
+	E[4] :== 4.0;
+	B['B'][1]:== -6.88709;
+	B['B'][2]:== 1.15157;
+	B['B'][3]:== -1.99873;
+	B['B'][4]:== -3.13003;
+	B['P5'][1]:== -7.28936;
+	B['P5'][2]:== 1.53679;
+	B['P5'][3]:== -3.08367;
+	B['P5'][4]:== -1.02456;
+	B['H'][1]:== -7.46765;
+	B['H'][2]:== 1.44211;
+	B['H'][3]:== -3.28222;
+	B['H'][4]:== -2.50941;
+	D['B'][1]:== 1224 {BTU/lb_mole};
+	D['B'][2]:== 6410 {BTU/lb_mole};
+	D['B'][3]:== -429 {BTU/lb_mole};
+	D['B'][4]:== -2 {BTU/lb_mole};
+	D['P5'][1]:== -468 {BTU/lb_mole};
+	D['P5'][2]:== 9428 {BTU/lb_mole};
+	D['P5'][3]:== -998 {BTU/lb_mole};
+	D['P5'][4]:== 46 {BTU/lb_mole};
+	D['H'][1]:== -569 {BTU/lb_mole};
+	D['H'][2]:== 11260 {BTU/lb_mole};
+	D['H'][3]:== -1207 {BTU/lb_mole};
+	D['H'][4]:== 57 {BTU/lb_mole};
 
-      components :== ['B','P5','H'];
-      points :== [0..3];
-      k_terms :== [1..4];
-
-(* Constants *)
-
-      Tcr['B'] :== 765.4 {R};
-      Tcr['P5'] :== 845.3 {R};
-      Tcr['H'] :== 913.3 {R};
-      Pcr['B'] :== 37.5 {atm};
-      Pcr['P5'] :== 33.3 {atm};
-      Pcr['H'] :== 29.3 {atm};
-      Hv['B'] :== 9634 {BTU/lb_mole};
-      Hv['P5'] :== 11088{BTU/lb_mole};
-      Hv['H'] :== 12413 {BTU/lb_mole};
-      C[1] :== 1.0;
-      C[2] :== 1.5;
-      C[3] :== 3.0;
-      C[4] :== 6.0;
-      E[1] :== 1.0;
-      E[2] :== 2.0;
-      E[3] :== 3.0;
-      E[4] :== 4.0;
-      B['B'][1]:== -6.88709;
-      B['B'][2]:== 1.15157;
-      B['B'][3]:== -1.99873;
-      B['B'][4]:== -3.13003;
-      B['P5'][1]:== -7.28936;
-      B['P5'][2]:== 1.53679;
-      B['P5'][3]:== -3.08367;
-      B['P5'][4]:== -1.02456;
-      B['H'][1]:== -7.46765;
-      B['H'][2]:== 1.44211;
-      B['H'][3]:== -3.28222;
-      B['H'][4]:== -2.50941;
-      D['B'][1]:== 1224 {BTU/lb_mole};
-      D['B'][2]:== 6410 {BTU/lb_mole};
-      D['B'][3]:== -429 {BTU/lb_mole};
-      D['B'][4]:== -2 {BTU/lb_mole};
-      D['P5'][1]:== -468 {BTU/lb_mole};
-      D['P5'][2]:== 9428 {BTU/lb_mole};
-      D['P5'][3]:== -998 {BTU/lb_mole};
-      D['P5'][4]:== 46 {BTU/lb_mole};
-      D['H'][1]:== -569 {BTU/lb_mole};
-      D['H'][2]:== 11260 {BTU/lb_mole};
-      D['H'][3]:== -1207 {BTU/lb_mole};
-      D['H'][4]:== 57 {BTU/lb_mole};
-
-  METHODS
-
+METHODS
     METHOD default_self;
     END default_self;
 
     METHOD specify;
-	FOR j IN components DO
-	    FIX z[j];
-        END FOR;
-	FIX A;
-	FIX P;
-	FIX Fc;
-	FIX Fh;
-        FIX erscale;
-        FIX entscale;
-	FIX eta[0];
-	FIX eta[3];
-	FIX Tc[0];
-	FIX Th[3];
+		FOR j IN components DO
+		    FIX z[j];
+		    END FOR;
+		FIX A;
+		FIX P;
+		FIX Fc;
+		FIX Fh;
+		    FIX erscale;
+		    FIX entscale;
+		FIX eta[0];
+		FIX eta[3];
+		FIX Tc[0];
+		FIX Th[3];
     END specify;
 
     METHOD values;
-        (* fixed *)
-        P := 1.0{atm};
-        z['B'] := 0.2;
-	z['P5'] := 0.5;
-        z['H'] := 0.3;
-        Fh := 250.0{lb_mole/hour};
-        Tc[0] := 540.0{R};
-        Th[3] := 600.0{R};
-        erscale := 1.0e6{BTU/hour};
-        entscale := 1000.0 ;
+		(* fixed *)
+		P := 1.0{atm};
+		z['B'] := 0.2;
+		z['P5'] := 0.5;
+		z['H'] := 0.3;
+		Fh := 250.0{lb_mole/hour};
+		Tc[0] := 540.0{R};
+		Th[3] := 600.0{R};
+		erscale := 1.0e6{BTU/hour};
+		entscale := 1000.0 ;
 
-        (* initial guess *)
-        A := 379.12{ft^2};
-	Fc := 1104.13{lb_mole/hour};
-	x[0]['B'] := 0.04183;
-	x[0]['P5'] := 0.32735;
-	x[0]['H'] := 0.58922;
-	x[1]['B'] := 0.04183;
-	x[1]['P5'] := 0.32735;
-	x[1]['H'] := 0.58922;
-	x[2]['B'] := 0.03558;
-	x[2]['P5'] := 0.27044;
-	x[2]['H'] := 0.47211;
-	x[3]['B'] := 0.03153;
-	x[3]['P5'] := 0.23457;
-	x[3]['H'] := 0.40038;
-	y[0]['B'] := 0.2;
-	y[0]['P5'] := 0.5;
-	y[0]['H'] := 0.3;
-	y[1]['B'] := 0.2;
-	y[1]['P5'] := 0.5;
-	y[1]['H'] := 0.3;
-	y[2]['B'] := 0.2;
-	y[2]['P5'] := 0.5;
-	y[2]['H'] := 0.3;
-	y[3]['B'] := 0.2;
-	y[3]['P5'] := 0.5;
-	y[3]['H'] := 0.3;
-	phi[0] := 0.0;
-	phi[1] := 0.0;
-	phi[2] := 0.0;
-	phi[3] := 0.0;
-        eta[0] := 0.0;
-	eta[1] := 0.0;
-	eta[2] := 0.5;
-        eta[3] := 1.0;
-	Tc[1] := 540.000{R};
-	Tc[2] := 559.820{R};
-	Tc[3] := 575.386{R};
-	Th[0] := 579.932{R};
-	Th[1] := 579.932{R};
-	Th[2] := 591.242{R};
-	Hc[0] := 0000.0{BTU/lb_mole};
-	Hc[1] := 0000.0{BTU/lb_mole};
-	Hc[2] := 356.768{BTU/lb_mole};
-	Hc[3] := 636.948{BTU/lb_mole};
-	Hh[0] := 1212.93{BTU/lb_mole};
-	Hh[1] := 1212.93{BTU/lb_mole};
-	Hh[2] := 1569.7{BTU/lb_mole};
-	Hh[3] := 1849.88{BTU/lb_mole};
-	dQ[0] := 199658{BTU/hour};
-	dQ[1] := 199658{BTU/hour};
-	dQ[2] := 157110{BTU/hour};
-	dQ[3] := 123070{BTU/hour};
-	eta[1].upper_bound := 0.5;
-	eta[2].lower_bound := 0.5;
-	eta[2].upper_bound := 1.0;
+		(* initial guess *)
+		A := 379.12{ft^2};
+		Fc := 1104.13{lb_mole/hour};
+		x[0]['B'] := 0.04183;
+		x[0]['P5'] := 0.32735;
+		x[0]['H'] := 0.58922;
+		x[1]['B'] := 0.04183;
+		x[1]['P5'] := 0.32735;
+		x[1]['H'] := 0.58922;
+		x[2]['B'] := 0.03558;
+		x[2]['P5'] := 0.27044;
+		x[2]['H'] := 0.47211;
+		x[3]['B'] := 0.03153;
+		x[3]['P5'] := 0.23457;
+		x[3]['H'] := 0.40038;
+		y[0]['B'] := 0.2;
+		y[0]['P5'] := 0.5;
+		y[0]['H'] := 0.3;
+		y[1]['B'] := 0.2;
+		y[1]['P5'] := 0.5;
+		y[1]['H'] := 0.3;
+		y[2]['B'] := 0.2;
+		y[2]['P5'] := 0.5;
+		y[2]['H'] := 0.3;
+		y[3]['B'] := 0.2;
+		y[3]['P5'] := 0.5;
+		y[3]['H'] := 0.3;
+		phi[0] := 0.0;
+		phi[1] := 0.0;
+		phi[2] := 0.0;
+		phi[3] := 0.0;
+		eta[0] := 0.0;
+		eta[1] := 0.0;
+		eta[2] := 0.5;
+		eta[3] := 1.0;
+		Tc[1] := 540.000{R};
+		Tc[2] := 559.820{R};
+		Tc[3] := 575.386{R};
+		Th[0] := 579.932{R};
+		Th[1] := 579.932{R};
+		Th[2] := 591.242{R};
+		Hc[0] := 0000.0{BTU/lb_mole};
+		Hc[1] := 0000.0{BTU/lb_mole};
+		Hc[2] := 356.768{BTU/lb_mole};
+		Hc[3] := 636.948{BTU/lb_mole};
+		Hh[0] := 1212.93{BTU/lb_mole};
+		Hh[1] := 1212.93{BTU/lb_mole};
+		Hh[2] := 1569.7{BTU/lb_mole};
+		Hh[3] := 1849.88{BTU/lb_mole};
+		dQ[0] := 199658{BTU/hour};
+		dQ[1] := 199658{BTU/hour};
+		dQ[2] := 157110{BTU/hour};
+		dQ[3] := 123070{BTU/hour};
+		eta[1].upper_bound := 0.5;
+		eta[2].lower_bound := 0.5;
+		eta[2].upper_bound := 1.0;
 
-        (* Initial value for booleans *)
-        bolphaq[1] := SATISFIED(cond1,1e-08);
-        bolphaq[2] := SATISFIED(cond2,1e-08);
+		(* Initial value for booleans *)
+		bolphaq[1] := SATISFIED(cond1,1e-08);
+		bolphaq[2] := SATISFIED(cond2,1e-08);
     END values;
 
+	METHOD on_load;
+		RUN default_self;
+		RUN reset;
+		RUN values;
+	END on_load;
+
 END heatex;
-
-
-(*
- *  heatex.a4c
- *  by Vicente Rico-Ramirez
- *  April 10, 1998
- *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:08:03 $
- *  $Revision: 1.3 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/heatex.a4c,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1998  Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
+(* :ex: set ts=4: *)
