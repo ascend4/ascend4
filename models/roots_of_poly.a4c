@@ -1,44 +1,42 @@
-REQUIRE "system.a4l";
-(* => system.a4l, basemodel.a4l *)
-PROVIDE "roots_of_poly.a4c";
-(*
- * This file is part of the ASCEND Modeling Library and is released
- * under the GNU Public License as described at the end of this file.
- *
- * This model is the first example in "Solved simple models with ASCEND."
- *)
+(*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
 
-MODEL polynomial_roots;
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
+REQUIRE "system.a4l";
+(*
+	Numeric root finding example, 5th order polynomial.
+	
+	This model is the first example in "Solved simple models with ASCEND"
+	@TODO citation needed
+
+	by Arthur Westerberg, 1997
+*)
+
+MODEL roots_of_poly;
     x IS_A generic_real;
     (x-1)*(x-5)*(x+7)*(x^2+1) = 0;
-END polynomial_roots;
 
+METHODS
+	(* test-case checks convergence to just one of these roots *)
+	METHOD on_load;
+		x := 7.0001;
+	END on_load;
 
-(*
- *  Numeric root finding example, 5th order polynomial.
- *  by Arthur Westerberg
- *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:25:07 $
- *  $Revision: 1.2 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/roots_of_poly.a4c,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1997 Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
+	METHOD self_test;
+		ASSERT (x - 1.0) < 1e-5;
+	END self_test;
+END roots_of_poly;

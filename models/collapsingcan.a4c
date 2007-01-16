@@ -57,3 +57,4 @@ METHODS
 	END self_test;
 	
 END collapsingcan;
+(* :ex: set ts=4: *)

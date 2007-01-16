@@ -1,6 +1,6 @@
 (*
 	ASCEND modelling environment
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -71,10 +71,10 @@ MODEL arc_w_no_valve REFINES arc;
 
 	(* Disjunctive Statement *)
     WHEN (bol)
-	  CASE TRUE:
-		USE eq1;
-	  CASE FALSE:
-		USE eq2;
+	CASE TRUE:
+			USE eq1;
+	CASE FALSE:
+			USE eq2;
 	END WHEN;
 
 METHODS
@@ -86,13 +86,13 @@ METHODS
     END specify;
 
     METHOD bound_self;
-	Q.lower_bound := -1e50{gpm};
-	H.lower_bound := -1e50{ft};
+		Q.lower_bound := -1e50{gpm};
+		H.lower_bound := -1e50{ft};
     END bound_self;
 
     METHOD values;
-	H := 0 {ft};
-	bol := SATISFIED(cond,1e-08 {gpm});
+		H := 0 {ft};
+		bol := SATISFIED(cond,1e-08 {gpm});
     END values;
 
 END arc_w_no_valve;
@@ -106,7 +106,7 @@ MODEL arc_w_valve REFINES arc;
 
 	(* Boundary *)
 	CONDITIONAL
-	  cond: H >= 0.0 {ft};
+		cond: H >= 0.0 {ft};
 	END CONDITIONAL ;
 
 	bol == SATISFIED(cond,1e-08{ft});
@@ -117,9 +117,9 @@ MODEL arc_w_valve REFINES arc;
 
 	(* Disjunctive Statement *)
     WHEN (bol)
-	  CASE TRUE:
+	CASE TRUE:
 		USE eq1;
-	  CASE FALSE:
+	CASE FALSE:
 		USE eq2;
 	END WHEN;
 
@@ -132,12 +132,12 @@ METHODS
     END specify;
 
     METHOD bound_self;
-	H.lower_bound := -1e50{ft};
+		H.lower_bound := -1e50{ft};
     END bound_self;
 
     METHOD values;
-	H := 1.0 {ft};
-	bol := SATISFIED(cond,1e-08{ft});
+		H := 1.0 {ft};
+		bol := SATISFIED(cond,1e-08{ft});
     END values;
 END arc_w_valve;
 
@@ -356,3 +356,4 @@ METHODS
 		RUN values;
 	END on_load;
 END pipeline;
+(* :ex: set ts=4: *)
