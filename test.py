@@ -625,6 +625,9 @@ if with_freesteam and have_freesteam:
 			self.assertAlmostEqual(float(M.t),3000);
 			print "Note that the above values have not been verified analytically"
 
+		def testcollapsingcan2(self):
+			""" solve the collapsing can model using IAPWS-IF97 steam props """
+			M = self._run("collapsingcan2",filename="collapsingcan2.a4c");
 
 #-------------------------------------------------------------------------------
 # Testing of IDA models using DENSE linear solver
