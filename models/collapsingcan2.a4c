@@ -1,0 +1,88 @@
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "freesteam";
+(* IMPORT "sensitivity/solve"; *)
+(*
+	A second solution the Horwitz A, "The Case of the Collapsing Can", Chemical
+	Engineering Progress, Jun 1997, pp.61-65.
+
+	"A fixed-volume vessel contains one pound of saturated water vapor at 14.7 
+	psia. One pound of water at 70 deg F and 14.7 psia is introduced
+	into the vessel. Assuming the entire process is adiabatic (no heat loss to
+	the surroundings), find the amount of liquid and vapor present in the
+	vessel, and the temperature and pressure in the vessel."
+
+	Whereas the 'collapsingcan.a4c' model uses the simple polynomial curve fits
+	published in the original article, this model will use full IAPWS steam
+	properties from the freesteam project.
+
+	Model file created by John Pye, Jan 2007.
+*)
+
+MODEL water;
+	p IS_A pressure;
+	T IS_A temperature;
+	v IS_A specific_volume;
+	x IS_A fraction;
+	u IS_A specific_energy;
+	m IS_A mass;
+	iapws: iapws97_Tvx_pu(
+		p,u   : INPUT;
+		T,v,x : OUTPUT
+	);
+METHODS
+	METHOD on_load;
+		p := 14.7 {psi};
+		x := 1.0;
+		m := 1 {lbm};
+		FIX p,x,m;
+	END on_load;
+END water;
+
+MODEL collapsingcan2;
+	vap IS_A water;
+	liq IS_A water;
+
+	mix IS_A water;
+	mix.m = vap.m + liq.m;
+	mix.m*mix.u = vap.m*vap.u + liq.m*liq.u;
+	mix.m*mix.v = vap.m*vap.v;
+
+	T_F IS_A temperature;
+	T_F = mix.T - 459.57 {R};
+
+	m_liq IS_A mass;
+	m_liq = (1-mix.x)*mix.m;
+
+	m_vap IS_A mass;
+	m_vap = mix.x*mix.m;
+	
+METHODS
+	METHOD on_load;
+		vap.p := 14.7 {psi};
+		vap.x := 1.0;
+		vap.m := 1 {lbm};
+		FIX vap.p, vap.x, vap.m;
+
+		liq.T := (70 {R} + 459.67 {R});
+		liq.p := 14.7 {psi};
+		liq.m := 1 {lbm};
+		FIX liq.T, liq.p, liq.m;
+		liq.u := 100 {kJ/kg}; (* initial guess *)
+	
+	(*	EXTERNAL do_solve(SELF);
+		RUN self_test; *)
+	END on_load;
+
+	METHOD self_test;
+		(*  The following results use the solution values as published in the
+		original paper. Note that this model is tested regularly as part of the
+		ASCEND automated test suite, 'test.py'. *)
+		ASSERT abs(m_liq - 1.1453809 {lbm}) <  0.00005 {lbm};
+		ASSERT abs(m_vap - 0.85461909 {lbm}) <  0.002 {lbm};
+		ASSERT abs(mix.p - 12.434039 {psi}) <  0.003 {psi};
+		ASSERT abs(mix.T - (203.67756 {R} + 459.67{R})) <  0.025 {R};
+	END self_test;
+
+END collapsingcan2;
+(* :ex: set ts=4: *)

@@ -2744,8 +2744,11 @@ static void ErrMsg_CommaName(CONST char *what, struct Name *name)
   /* the module may have be already closed */
   mod = Asc_CurrentModule();
 
-  error_reporter_current_line(ASC_USER_ERROR, "ASC-Error: Missing comma or operator before %s ",what);
+  ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
+  FPRINTF(ASCERR, "Missing comma or operator before %s '",what);
   WriteName(ASCERR,name);
+  FPRINTF(ASCERR, "'");
+  error_reporter_end_flush();
 }
 
 #if COMMAEXPR_NOTBUGGY

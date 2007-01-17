@@ -51,6 +51,24 @@ ExtMethodRun do_solve_eval;
 ASC_EXPORT int solve_register(void);
 
 /**
+	Build then presolve the solve an instance...
+*/
+int DoSolve(struct Instance *inst){
+  slv_system_t sys;
+
+  sys = system_build(inst);
+  if (!sys) {
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build system");
+    return 1;
+  }
+  (void)slv_select_solver(sys,0);
+  slv_presolve(sys);
+  slv_solve(sys);
+  system_destroy(sys);
+  return 0;
+}
+
+/**
 	Calls 'DoSolve'
 
 	@see DoSolve
@@ -65,8 +83,8 @@ int do_solve_eval( struct Instance *i,
 
   (void)i; /* not used */
 
-  if (len!=2) {
-	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Wrong number of args in (expected 2, got %d)",len);
+  if (len!=1) {
+	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Wrong number of args in (expected 1, got %d)",len);
     return 1;
   }
   inst = FetchElement(arglist,1,1);
@@ -87,30 +105,12 @@ static int ReSolve(slv_system_t sys)
 }
 #endif
 
-/**
-	Build then presolve the solve an instance...
-*/
-int DoSolve(struct Instance *inst){
-  slv_system_t sys;
-
-  sys = system_build(inst);
-  if (!sys) {
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build system");
-    return 1;
-  }
-  (void)slv_select_solver(sys,0);
-  slv_presolve(sys);
-  slv_solve(sys);
-  system_destroy(sys);
-  return 0;
-}
-
 /** Registration function */
-int finitediff_register(void){
+int solve_register(void){
 	int result;
 	result = CreateUserFunctionMethod("do_solve",
 		do_solve_eval,
-		2,NULL,NULL,NULL
+		1,NULL,NULL,NULL
 	);
 	return result;
 }
