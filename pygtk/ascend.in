@@ -1,6 +1,6 @@
 #!@PYTHON@
 
-import os.path, sys;
+import os.path, sys, platform
 
 LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH').split(":")
 restart = 0
@@ -8,27 +8,39 @@ restart = 0
 # this script handles restarting ascend if it's invoked without the full
 # complement of env vars
 
+if platform.system()=="Windows":
+	SEP=";"
+else:
+	SEP=":"
+
 if not os.environ.get('ASC_GDB'):
 	# restarting messes up GDB so don't allow it
 	if not "@INSTALL_LIB@" in LD_LIBRARY_PATH:
 		LD_LIBRARY_PATH = ["@INSTALL_LIB@"] + LD_LIBRARY_PATH
-		os.environ['LD_LIBRARY_PATH'] = ":".join(LD_LIBRARY_PATH)
+		os.environ['LD_LIBRARY_PATH'] = SEP.join(LD_LIBRARY_PATH)
 		restart = 1
 
 	PYTHONPATH = os.environ.get("PYTHONPATH")
 	if not PYTHONPATH:
-		os.environ['PYTHONPATH'] = ":".join(["@INSTALL_ASCDATA@"])
+		os.environ['PYTHONPATH'] = SEP.join(["@INSTALL_ASCDATA@"])
 		restart = 1
-	elif not "@INSTALL_ASCDATA@" in PYTHONPATH.split(":"):
-		os.environ['PYTHONPATH'] = ":".join(["@INSTALL_ASCDATA@"] + PYTHONPATH.split(":"))
+	elif not "@INSTALL_ASCDATA@" in PYTHONPATH.split(SEP):
+		os.environ['PYTHONPATH'] = SEP.join(["@INSTALL_ASCDATA@"] + PYTHONPATH.split(SEP))
 		restart = 1
 
+	if os.environ.get('ASCENDLIBRARY'):
+		envmodels = [os.path.abspath(i) for i in os.environ['ASCENDLIBRARY'].split(SEP)]
+		ascmodels = os.path.abspath("@INSTALL_ASCDATA@/models")
+		if not ascmodels in envmodels:
+			envmodels.append(ascmodels)
+			os.environ['ASCENDLIBRARY'] = SEP.join(envmodels)
+			restart = 1
+
 	if restart:
-		#print "argv = %s" % sys.argv
-		#print
 		print "Restarting with corrected environment..."
-		#print "   LD_LIBRARY_PATH = %s" % os.environ['LD_LIBRARY_PATH']
-		#print "   PYTHONPATH = %s" % os.environ['PYTHONPATH']
+		print "   LD_LIBRARY_PATH = %s" % os.environ['LD_LIBRARY_PATH']
+		print "   PYTHONPATH = %s" % os.environ['PYTHONPATH']
+		print "   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
 		script = os.path.join(sys.path[0],"ascend")
 		os.execv("@PYTHON@",[script] + sys.argv)
 
@@ -61,7 +73,7 @@ if os.environ.get('ASC_DEV'):
 	d,f = os.path.split(os.path.abspath(sys.argv[0]))
 	if os.environ.get('ASC_START'):
 		os.chdir(os.environ.get('ASC_START'))
-	librarypath = ":".join(['.',os.path.normpath(os.path.join(d,"../models"))])
+	librarypath = SEP.join(['.',os.path.normpath(os.path.join(d,"../models"))])
 	B = Browser(librarypath=librarypath,assetspath=os.path.join(d,"glade"))
 else:
 	B = Browser()
