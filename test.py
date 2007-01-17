@@ -76,6 +76,9 @@ class TestSolver(AscendSelfTester):
 	def testcollapsingcan(self):
 		self._run('collapsingcan',filename="collapsingcan.a4c")
 
+	def testdistancecalc(self):
+		self._run('distance_calc',filename="distance_calc.a4c")
+
 	def testconopt(self):
 		self._run('testconopt',"CONOPT")				
 

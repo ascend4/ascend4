@@ -20,13 +20,18 @@
 REQUIRE "system.a4l";
 IMPORT "sensitivity/sensitivity";
 (*
+	A very simple test model for the external sensitivity analysis
+	module.
+
+	by Ben Allan, 1996
+	Self-testing added by John Pye, 2007
+
+	--- old comments (don't seem to be accurate) ---
+
 	This module is used to calculate the sensitity matrix dX/dU where
 	X is a vector OF vapor compositions and U is a vector OF liquid
 	compositions. This sensitivity matrix is THEN used to calculate
 	J, the Jacobian, as described IN Fidkowski et al. (1995).
-
-	by Ben Allan, 1996
-	Self-testing added by John Pye, 2007
 *)
 
 MODEL sensitivity_test;
