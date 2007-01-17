@@ -435,6 +435,7 @@ class TestSensitivity(AscendSelfTester):
 		M.run(T.getMethod('on_load'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		M.run(T.getMethod('analyse'))
+		M.run(T.getMethod('self_test'))
 				
 #-------------------------------------------------------------------------------
 # Testing of a ExtPy - external python methods

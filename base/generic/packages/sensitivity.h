@@ -19,37 +19,7 @@
 	Sensitivity add-on for ASCEND
 	by Tom Epperly, Kirk Abbot
 
-	@note This is a static package in ASCEND. It can not be built as a dynamic package
-	because it doesn't contain the self-registration stuff.
-
-	This file attempts to implement the extraction of dy_dx from
-	a system of equations. If one considers a black-box where x are
-	the input variables, u are input parameters, y are the output
-	variables, f(x,y,u) is the system of equations that will be solved
-	for given x and u, then one can extract the sensitivity information
-	of y wrt x.
-
-	One crude but simple way of doing this is to finite-difference the
-	given black box, i.e, perturb x, n\subx times by delta x, resolve
-	the system of equations at the new value of x, and compute
-	dy/dx = (f(x\sub1) - f(x\sub2))/(x\sub1 - x\sub2).
-	This is known to be very expensive.
-
-	The solution that will be adopted here is to formulate the Jacobian J of
-	the system, (or the system is already solved, to grab the jacobian at
-	the solution. Develop the sensitivity matrix df/dx by exact numnerical
-	differentiation; this will be a n x n\subx matrix. Compute the LU factors
-	for J, and to solve column by column to : LU dz/dx = df/dx. Here
-	z, represents all the internal variables to the system and the strictly
-	output variables y. In other words J = df/dz.
-
-	Given the solution of the above problem we then simply extract the rows
-	of dz/dx, that pertain to the y variables that we are interested in;
-	this will give us dy/dx.
-
-	@todo Do we really need 2 files called [Ss]ensitivity.[ch]?  Other one is in tcltk.
-
-	@todo Make this self-registering so that it can be compiled as a dlopenable library.
+	-- notes here have been moved to models/sensitivity/sensitivity.c --
 */
 
 #ifndef ASC_SENSITIVITY_H
@@ -60,7 +30,6 @@
 #include <compiler/compiler.h>
 #include <general/list.h>
 #include <compiler/extfunc.h>
-
 #include <solver/mtx.h>
 #include <solver/mtx_basic.h>
 #include <solver/mtx_perms.h>
@@ -100,10 +69,6 @@ ASC_DLLSPEC int Compute_dy_dx_smart(slv_system_t sys, real64 *rhs, real64 **dy_d
 */
 
 ASC_DLLSPEC int DoSolve(struct Instance *inst);
-ASC_DLLSPEC int DoDataAnalysis(struct var_variable **inputs,
-			  struct var_variable **outputs,
-			  int ninputs, int noutputs,
-			  real64 **dy_dx);
 ASC_DLLSPEC int finite_difference(struct gl_list_t *arglist);
 ASC_DLLSPEC struct Instance *FetchElement(struct gl_list_t *arglist,
 				     unsigned long whichbranch,

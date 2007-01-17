@@ -25,6 +25,7 @@
 
 #include "sensitivity.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <utilities/error.h>
@@ -102,104 +103,6 @@ struct Instance *FetchElement(struct gl_list_t *arglist,
   element = (struct Instance *)gl_fetch(branch,whichelement);
   return element;
 }
-
-#if 0
-static int ReSolve(slv_system_t sys)
-{
-  if (!sys)
-    return 1;
-  slv_solve(sys);
-  return 0;
-}
-#endif
-
-/**
-	Build then presolve the solve an instance...
-*/
-int DoSolve(struct Instance *inst){
-  slv_system_t sys;
-
-  sys = system_build(inst);
-  if (!sys) {
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,
-      "Something radically wrong in creating solver.");
-    return 1;
-  }
-  (void)slv_select_solver(sys,0);
-  slv_presolve(sys);
-  slv_solve(sys);
-  system_destroy(sys);
-  return 0;
-}
-
-/**
-	Finite difference...
-*/
-int finite_difference(struct gl_list_t *arglist){
-  struct Instance *model_inst, *xinst, *inst;
-  slv_system_t sys;
-  int ninputs,noutputs;
-  int i,j,offset;
-  real64 **partials;
-  real64 *y_old, *y_new;
-  real64 x;
-  real64 interval = 1e-6;
-  int result=0;
-
-  model_inst = FetchElement(arglist,1,1);
-  sys = system_build(model_inst);
-  if (!sys) {
-    FPRINTF(stdout,"Something radically wrong in creating solver\n");
-    return 1;
-  }
-  (void)slv_select_solver(sys,0);
-  slv_presolve(sys);
-  slv_solve(sys);
-
-  /* Make the necessary vectors */
-
-  ninputs = (int)gl_length((struct gl_list_t *)gl_fetch(arglist,2));
-  noutputs = (int)gl_length((struct gl_list_t *)gl_fetch(arglist,3));
-  y_old = (real64 *)calloc(noutputs,sizeof(real64));
-  y_new = (real64 *)calloc(noutputs,sizeof(real64));
-  partials = make_matrix(noutputs,ninputs);
-  for (i=0;i<noutputs;i++) {      	/* get old yvalues */
-    inst = FetchElement(arglist,3,i+1);
-    y_old[i] = RealAtomValue(inst);
-  }
-  for (j=0;j<ninputs;j++) {
-    xinst = FetchElement(arglist,2,j+1);
-    x = RealAtomValue(xinst);
-    SetRealAtomValue(xinst,x+interval,(unsigned)0); /* perturb system */
-    slv_presolve(sys);
-    slv_solve(sys);
-
-    for (i=0;i<noutputs;i++) { 		/* get new yvalues */
-      inst = FetchElement(arglist,3,i+1);
-      y_new[i] = RealAtomValue(inst);
-      partials[i][j] = -1.0 * (y_old[i] - y_new[i])/interval;
-      PRINTF("y_old = %20.12g  y_new = %20.12g\n", y_old[i],y_new[i]);
-    }
-    SetRealAtomValue(xinst,x,(unsigned)0); /* unperturb system */
-  }
-  offset = 0;
-  for (i=0;i<noutputs;i++) {
-    for (j=0;j<ninputs;j++) {
-      inst = FetchElement(arglist,4,offset+j+1);
-      SetRealAtomValue(inst,partials[i][j],(unsigned)0);
-      PRINTF("%12.6f %s",partials[i][j], (j==(ninputs-1)) ? "\n" : "    ");
-    }
-    offset += ninputs;
-  }
-  /* error: */
-  free(y_old);
-  free(y_new);
-  free_matrix(partials,noutputs);
-  system_destroy(sys);
-  return result;
-}
-
-
 
 /**
 	Looks like it returns the number of relations in a solver's system
@@ -352,113 +255,10 @@ int Compute_J(slv_system_t sys)
   return(!calc_ok);
 }
 
-
-#if 0
 /**
- * At this point we should have an empty jacobian. We now
- * need to call relman_diff over the *entire* matrix.
- * Calculates the entire jacobian. It is initially unscaled.
- *
- * Note: this assumes the sys given is using one of the ascend solvers
- * with either linsol or linsolqr. Both are now allowed. baa 7/95
- */
-#define SAFE_FIX_ME 0
-static int Compute_J_OLD(slv_system_t sys)
-{
-  int32 row;
-  var_filter_t vfilter;
-  linsol_system_t lin_sys = NULL;
-  linsolqr_system_t lqr_sys = NULL;
-  mtx_matrix_t mtx;
-  struct rel_relation **rlist;
-  int nrows;
-  int qr=0;
-#\if DOTIME
-  double time1;
-#\endif
-
-#\if DOTIME
-  time1 = tm_cpu_time();
-#\endif
-  /*
-   * Get the linear system from the solve system.
-   * Get the matrix from the linear system.
-   * Get the relations list from the solve system.
-   */
-  lin_sys = slv_get_linsol_sys(sys);
-  if (lin_sys==NULL) {
-    qr=1;
-    lqr_sys=slv_get_linsolqr_sys(sys);
-  }
-  mtx = slv_get_sys_mtx(sys);
-  if (mtx==NULL || (lin_sys==NULL && lqr_sys==NULL)) {
-    FPRINTF(stderr,"Compute_dy_dx: error, found NULL.\n");
-    return 1;
-  }
-  rlist = slv_get_solvers_rel_list(sys);
-  nrows = NumberIncludedRels(sys);
-
-  calc_ok = TRUE;
-  vfilter.matchbits = VAR_SVAR;
-  vfilter.matchvalue = VAR_SVAR;
-  /*
-   * Clear the entire matrix and then compute
-   * the gradients at the current point.
-   */
-  mtx_clear_region(mtx,mtx_ENTIRE_MATRIX);
-  for(row=0; row<nrows; row++) {
-    struct rel_relation *rel;
-    /* added  */
-    double resid;
-
-    rel = rlist[mtx_row_to_org(mtx,row)];
-    (void)relman_diffs(rel,&vfilter,mtx,&resid,SAFE_FIX_ME);
-
-    /* added  */
-    rel_set_residual(rel,resid);
-
-  }
-  if (qr) {
-    linsolqr_matrix_was_changed(lqr_sys);
-  } else {
-    linsol_matrix_was_changed(lin_sys);
-  }
-#\if DOTIME
-  time1 = tm_cpu_time() - time1;
-  FPRINTF(stderr,"Time taken for Compute_J = %g\n",time1);
-#\endif
-  return(!calc_ok);
-}
-#endif
-
-/*
-	LU Factor Jacobian
-
-	@note The RHS will have been  will already have been added before
-		calling this function.
-
-	THERE SEEM TO BE TWO VERSIONS OF THIS... WHAT'S THE STORY?
-*/
-int LUFactorJacobian1(slv_system_t sys,int rank){
-  linsolqr_system_t lqr_sys;
-  mtx_region_t region;
-  enum factor_method fm;
-
-  mtx_region(&region,0,rank-1,0,rank-1);	/* set the region */
-  lqr_sys = slv_get_linsolqr_sys(sys);	/* get the linear system */
-
-  linsolqr_matrix_was_changed(lqr_sys);
-  linsolqr_reorder(lqr_sys,&region,natural);
-
-  fm = linsolqr_fmethod(lqr_sys);
-  if (fm == unknown_f) fm = ranki_kw2; /* make sure somebody set it */
-  linsolqr_factor(lqr_sys,fm);
-
-  return 0;
-}
-
-/**
-	This is the other version of this, pulled in from Tcl/Tk files.
+	@NOTE there is another (probably better?) version of this in models/sensitivity
+	that uses sparse matrices. This one got pulled out of some files in tcltk dir
+	and is used by the LSODE integrator.
 
  * Note a rhs would have been previously added
  * to keep the system happy.
@@ -510,7 +310,7 @@ int LUFactorJacobian(slv_system_t sys){
 
 #if DOTIME
   time1 = tm_cpu_time() - time1;
-  FPRINTF(stderr,"Time taken for LUFactorJacobian = %g\n",time1);
+  CONSOLE_DEBUG("Time taken for LUFactorJacobian = %g\n",time1);
 #endif
   return 0;
 }
@@ -605,158 +405,9 @@ int Compute_dy_dx_smart(slv_system_t sys,
 
 #if DOTIME
   time1 = tm_cpu_time() - time1;
-  FPRINTF(stderr,"Time for Compute_dy_dx_smart = %g\n",time1);
+  CONSOLE_DEBUG("Time for Compute_dy_dx_smart = %g\n",time1);
 #endif
   return 0;
 }
-
-#if 0
-static int ComputeInverse(slv_system_t sys,
-			  real64 *rhs)
-{
-  linsolqr_system_t lqr_sys;
-  mtx_matrix_t mtx;
-  int capacity,order;
-  real64 *solution = NULL;
-  int j,k;
-
-  lqr_sys = slv_get_linsolqr_sys(sys); 	/* get the linear system */
-  mtx = linsolqr_get_matrix(lqr_sys); 		/* get the matrix */
-
-  capacity = mtx_capacity(mtx);
-  zero_vector(rhs,capacity);		/* zero the rhs */
-  solution = ASC_NEW_ARRAY_CLEAR(real64,capacity);
-
-  order = mtx_order(mtx);
-  for (j=0;j<order;j++) {
-    rhs[j] = 1.0;
-    linsolqr_rhs_was_changed(lqr_sys,rhs);
-    linsolqr_solve(lqr_sys,rhs);			/* solve */
-    linsolqr_copy_solution(lqr_sys,rhs,solution);	/* get the solution */
-
-    FPRINTF(stderr,"This is the rhs and solution for rhs #%d\n",j);
-    for (k=0;k<order;k++) {
-      FPRINTF(stderr,"%12.8g  %12.8g\n",rhs[k],solution[k]);
-    }
-    rhs[j] = 0.0;
-  }
-  if (solution) ascfree((char *)solution);
-  return 0;
-}
-#endif
-
-/**
-	Do Data Analysis
-*/
-int DoDataAnalysis(struct var_variable **inputs,
-			  struct var_variable **outputs,
-			  int ninputs, int noutputs,
-			  real64 **dy_dx)
-{
-  FILE *fp;
-  double *norm_2, *norm_1;
-  double input_nominal,maxvalue,sum;
-  int i,j;
-
-  norm_1 = ASC_NEW_ARRAY_CLEAR(double,ninputs);
-  norm_2 = ASC_NEW_ARRAY_CLEAR(double,ninputs);
-
-  fp = fopen("sensitivity.out","w+");
-  if (!fp) return 0;
-
-  /*
-   * calculate the 1 and 2 norms; cache them away so that we
-   * can pretty print them. Style is everything !.
-   *
-   */
-  for (j=0;j<ninputs;j++) {
-    input_nominal = var_nominal(inputs[j]);
-    maxvalue = sum = 0;
-    for (i=0;i<noutputs;i++) {
-      dy_dx[i][j] *= input_nominal/var_nominal(outputs[i]);
-      maxvalue = MAX(fabs(dy_dx[i][j]),maxvalue);
-      sum += dy_dx[i][j]*dy_dx[i][j];
-    }
-    norm_1[j] = maxvalue;
-    norm_2[j] = sum;
-  }
-
-  for (j=0;j<ninputs;j++) {		/* print the var_index */
-    FPRINTF(fp,"%8d    ",var_mindex(inputs[j]));
-  }
-  FPRINTF(fp,"\n");
-
-  for (j=0;j<ninputs;j++) {		/* print the 1 norms */
-    FPRINTF(fp,"%-#18.8f    ",norm_1[j]);
-  }
-  FPRINTF(fp,"\n");
-
-  for (j=0;j<ninputs;j++) {		/* print the 2 norms */
-    FPRINTF(fp,"%-#18.8f    ",norm_2[j]);
-  }
-  FPRINTF(fp,"\n\n");
-  ascfree((char *)norm_1);
-  ascfree((char *)norm_2);
-
-  for (i=0;i<noutputs;i++) {		/* print the scaled data */
-    for (j=0;j<ninputs;j++) {
-      FPRINTF(fp,"%-#18.8f   %-4d",dy_dx[i][j],i);
-    }
-    if (var_fixed(outputs[i]))
-      FPRINTF(fp,"    **fixed*** \n");
-    else
-      PUTC('\n',fp);
-  }
-  FPRINTF(fp,"\n");
-  fclose(fp);
-  return 0;
-}
-
-#if 0
-static int DoProject_X(struct var_variable **old_inputs,
-		       struct var_variable **new_inputs, /* new values of u */
-		       double step_length,
-		       struct var_variable **outputs,
-		       int ninputs, int noutputs,
-		       real64 **dy_dx)
-{
-  struct var_variable *var;
-  real64 old_y, new_y, tmp;
-  real64 *delta_x;
-  int i,j;
-
-  delta_x = ASC_NEW_ARRAY_CLEAR(real64,ninputs);
-
-  for (j=0;j<ninputs;j++) {
-    delta_x[j] = var_value(new_inputs[j]) - var_value(old_inputs[j]);
-    /*    delta_x[j] = RealAtomValue(new_inputs[j]) - RealAtomValue(old_inputs[j]); */
-  }
-
-  for (i=0;i<noutputs;i++) {
-    var = outputs[i];
-    if (var_fixed(var) || !var_active(var))    /* project only the free vars */
-      continue;
-    tmp = 0.0;
-    for (j=0;j<ninputs;j++) {
-      tmp += (dy_dx[i][j] * delta_x[j]);
-    }
-    /*    old_y = RealAtomValue(var); */
-    old_y = var_value(var);
-    new_y = old_y + step_length*tmp;
-    /*    SetRealAtomValue(var,new_y,(unsigned)0);  */
-    var_set_value(var,new_y);
-# if  DEBUG
-    FPRINTF(stderr,"Old_y = %12.8g; Nex_y = %12.8g\n",old_y,new_y);
-# endif
-  }
-  ascfree((char *)delta_x);
-  return 0;
-}
-#endif
-
-
-
-
-
 
 #undef DEBUG
