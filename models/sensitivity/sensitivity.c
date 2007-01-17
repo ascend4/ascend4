@@ -17,6 +17,26 @@
 	Boston, MA 02111-1307, USA.
 *//** @file
 
+	The module permits sensitivity analysis in an ASCEND model. In your model
+	file, you need to create some additional arrays like so:
+
+	X[1..m] IS_A solver_var; (* outputs *)
+	U[1..n] IS_A solver_var; (* inputs *)
+	dx_du[1..m][1..n] IS_A solver_var; (* data space *)
+
+	You must then 'ARE_THE_SAME' your problem variables into the spaces in the
+	first two of the above arrays.
+
+	Then, run EXTERNAL do_sensitivity(SELF,U[1..n],X[1..m],dx_du[1..m][1..n]);
+
+	In the array dx_du[1..m][1..n], values of the corresponding sensitivity
+	derivatives will be calculated.
+
+	A test/example model is available in the models directory, called
+	sensitivity_test.a4c.
+
+	--- implementation notes ---
+
 	This file attempts to implement the extraction of dy_dx from
 	a system of equations. If one considers a black-box where x are
 	the input variables, u are input parameters, y are the output
@@ -44,7 +64,7 @@
 	of dz/dx, that pertain to the y variables that we are interested in;
 	this will give us dy/dx.
 
-	@todo There is are files in tcltk called Sensitivity.[ch]. Do we need them?
+	@todo There are files in tcltk called Sensitivity.[ch]. Do we need them?
 */
 
 #include <math.h>
@@ -60,15 +80,13 @@
 
 ASC_EXPORT int sensitivity_register(void);
 
-ExtMethodRun do_solve_eval;
-ExtMethodRun do_finite_diff_eval;
 ExtMethodRun do_sensitivity_eval;
 ExtMethodRun do_sensitivity_eval_all;
 
 /**
 	Build then presolve an instance
 */
-slv_system_t asc_sens_presolve(struct Instance *inst){
+slv_system_t sens_presolve(struct Instance *inst){
   slv_system_t sys;
   slv_parameters_t parameters;
   int ind;
@@ -80,8 +98,7 @@ slv_system_t asc_sens_presolve(struct Instance *inst){
 #endif
   sys = system_build(inst);
   if (sys==NULL) {
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,
-      "Something radically wrong in creating solver.");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build system.");
     return NULL;
   }
   if (g_SlvNumberOfRegisteredClients == 0) {
@@ -149,7 +166,6 @@ int LUFactorJacobian1(slv_system_t sys,int rank){
   return 0;
 }
 
-
 int sensitivity_anal(
 	     struct Instance *inst, /* not used but will be */
 	     struct gl_list_t *arglist
@@ -180,19 +196,19 @@ int sensitivity_anal(
 	(void)NumberFreeVars(NULL);		/* used to re-init the system */
 	(void)NumberRels(NULL);		/* used to re-init the system */
 	which_instance = FetchElement(arglist,1,1);
-	sys = asc_sens_presolve(which_instance);
+	sys = sens_presolve(which_instance);
 	if (!sys) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Early termination due to failure in Presolve\n");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to presolve");
 		result = 1;
-		goto error;
+		goto finish;
 	}
 
 	dof = slv_get_dofdata(sys);
 	if (!(dof->n_rows == dof->n_cols &&
 		dof->n_rows == dof->structural_rank)) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Early termination: non square system\n");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"System is not square");
 		result = 1;
-		goto error;
+		goto finish;
 	}
 
 	CONSOLE_DEBUG("Presolved, square");
@@ -220,10 +236,10 @@ int sensitivity_anal(
 			}
 			--ind;
 		}
-		if (!found) {
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Sensitivity input variable not found\n");
+		if(!found){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to find sensitivity input variable");
 			result = 1;
-			goto error;
+			goto finish;
 		}
 	}
 
@@ -247,9 +263,9 @@ int sensitivity_anal(
 			++ind;
 		}
 		if (!found) {
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Sensitivity ouput variable not found\n");
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to find sensitivity ouput variable");
 			result = 1;
-			goto error;
+			goto finish;
 		}
 	}
 	
@@ -262,8 +278,8 @@ int sensitivity_anal(
 
 	result = Compute_J(sys);
 	if (result) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Early termination due to failure in calc Jacobian\n");
-		goto error;
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to calculate Jacobian failure in calc Jacobian\n");
+		goto finish;
 	}
 
 	CONSOLE_DEBUG("Computed Jacobian");
@@ -280,8 +296,8 @@ int sensitivity_anal(
 	linsolqr_add_rhs(lqr_sys,scratch_vector,FALSE);
 	result = LUFactorJacobian1(sys,dof->structural_rank);
 	if(result){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Early termination due to failure in LUFactorJacobian\n");
-		goto error;
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to calculate LUFactorJacobian");
+		goto finish;
 	}
 	result = Compute_dy_dx_smart(sys, scratch_vector, dy_dx,
 		inputs_ndx_list, ninputs,
@@ -290,8 +306,8 @@ int sensitivity_anal(
 
 	linsolqr_remove_rhs(lqr_sys,scratch_vector);
 	if (result) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Early termination due to failure in Compute_dy_dx\n");
-		goto error;
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed Compute_dy_dx");
+		goto finish;
 	}
 	
 	CONSOLE_DEBUG("Computed dy/dx");
@@ -323,7 +339,7 @@ int sensitivity_anal(
 		,noutputs
 	);
 
-error:
+finish:
 	if (inputs_ndx_list) ascfree((char *)inputs_ndx_list);
 	if (outputs_ndx_list) ascfree((char *)outputs_ndx_list);
 	if (dy_dx) free_matrix(dy_dx,noutputs);
@@ -333,137 +349,7 @@ error:
 }
 
 /**
-	Finite-difference Check Arguments...?
-
-	@param arglist list of arguments
-
-	Argument list contains
-	. arg1 - model inst to be solved
-	. arg2 - array of input instances
-	. arg3 - array of output instances
-	. arg4 - matrix of partials to be written to
-*/
-static int FiniteDiffCheckArgs(struct gl_list_t *arglist)
-{
-  struct Instance *inst;
-  unsigned long len;
-  unsigned long ninputs, noutputs;
-
-  len = gl_length(arglist);
-  if (len != 4) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"wrong number of args -- 4 expected\n");
-    return 1;
-  }
-  inst = FetchElement(arglist,1,1);
-  if (InstanceKind(inst)!=MODEL_INST) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Arg #1 is not a model instance\n");
-    return 1;
-  }
-  ninputs = gl_length((struct gl_list_t *)gl_fetch(arglist,2));
-    /* input args */
-  noutputs = gl_length((struct gl_list_t *)gl_fetch(arglist,3));
-    /* output args */
-  len = gl_length((struct gl_list_t *)gl_fetch(arglist,4));
-    /* partials matrix */
-  if (len != (ninputs*noutputs)) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,
-	    "The array of partials is inconsistent with the args given."
-	);
-    return 1;
-  }
-  return 0;
-}
-
-
-
-/*-------------------------------------------------
-  SENSITIVITY ANALYSIS CODE
-*/
-
-/**
-	Sensitivity Analysis
-
-	@param arglist List of arguments
-
-	Argument list contains the following:
-	  . arg1 - model inst for which the sensitivity analysis is to be done.
-	  . arg2 - array of input instances.
-	  . arg3 - array of output instances.
-	  . arg4 matrix of partials to be written to.
-*/
-int SensitivityCheckArgs(struct gl_list_t *arglist){
-  struct Instance *inst;
-  unsigned long len;
-  unsigned long ninputs, noutputs;
-
-  len = gl_length(arglist);
-  if (len != 4) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"wrong number of args -- 4 expected\n");
-    return 1;
-  }
-  inst = FetchElement(arglist,1,1);
-  if (InstanceKind(inst)!=MODEL_INST) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Arg #1 is not a model instance\n");
-    return 1;
-  }
-  ninputs = gl_length((struct gl_list_t *)gl_fetch(arglist,2));
-    /* input args */
-  noutputs = gl_length((struct gl_list_t *)gl_fetch(arglist,3));
-   /* output args */
-  len = gl_length((struct gl_list_t *)gl_fetch(arglist,4));
-        /* partials matrix */
-  if (len != (ninputs*noutputs)) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,
-	    "The array of partials is inconsistent with the args given\n");
-    return 1;
-  }
-  return 0;
-}
-
-
-/**
-	@param arglist List of arguments
-	@param step_length ...?
-
-	The list of arguments should chontain
-
-   	  . arg1 - model inst for which the sensitivity analysis is to be done.
-	  . arg2 - array of input instances.
-	  . arg3 - new_input instances, for variable projection.
-	  . arg4 - instance representing the step_length for projection.
-
-	The result will be written to standard out.
-*/
-int SensitivityAllCheckArgs(struct gl_list_t *arglist, double *step_length)
-{
-  struct Instance *inst;
-  unsigned long len;
-
-  len = gl_length(arglist);
-  if (len != 4) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"wrong number of args -- 4 expected\n");
-    return 1;
-  }
-  inst = FetchElement(arglist,1,1);
-  if (InstanceKind(inst)!=MODEL_INST) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Arg #1 is not a model instance\n");
-    return 1;
-  }
-  /*
-   * we should be checking that arg2 list contains solver vars
-   * and that they are fixed. The same applies to arglist 3... later.
-   * We will check and return the steplength though. 0 means dont do
-   * the variable projection.
-   */
-  inst = FetchElement(arglist,4,1);
-  *step_length = RealAtomValue(inst);
-  if (fabs(*step_length) < 1e-08)
-    *step_length = 0.0;
-  return 0;
-}
-
-/**
-	Do Data Analysis
+	Do Data Analysis. Used by sensitivity_anal_all.
 */
 int DoDataAnalysis(struct var_variable **inputs,
 			  struct var_variable **outputs,
@@ -530,7 +416,6 @@ int DoDataAnalysis(struct var_variable **inputs,
 }
 
 
-
 /**
 	This function is very similar to sensitivity_anal, execept,
 	that it perform the analysis on the entire system, based on
@@ -594,11 +479,11 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
 	(void)NumberFreeVars(NULL);		/* used to re-init the system */
 	(void)NumberRels(NULL);		/* used to re-init the system */
 	which_instance = FetchElement(arglist,1,1);
-	sys = asc_sens_presolve(which_instance);
+	sys = sens_presolve(which_instance);
 	if (!sys) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Early termination due to failure in asc_sens_presolve\n");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to presolve");
 		result = 1;
-		goto error;
+		goto finish;
 	}
 	dof = slv_get_dofdata(sys);
 
@@ -648,8 +533,8 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
 
 	result = Compute_J(sys);
 	if (result) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Early termination due to failure in calc Jacobian\n");
-		goto error;
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to compute Jacobian");
+		goto finish;
 	}
 
 	/*
@@ -665,8 +550,8 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
 	result = LUFactorJacobian1(sys,dof->structural_rank);
 
 	if (result) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Early termination due to failure in LUFactorJacobian\n");
-		goto error;
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failure in LUFactorJacobian");
+		goto finish;
 	}
 
 	result = Compute_dy_dx_smart(sys, scratch_vector, dy_dx,
@@ -676,8 +561,8 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
 
 	linsolqr_remove_rhs(lqr_sys,scratch_vector);
 	if (result) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Early termination due to failure in Compute_dy_dx\n");
-		goto error;
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failure in Compute_dy_dx");
+		goto finish;
 	}
 
 	/*
@@ -694,7 +579,7 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
 	* result = 1;
 	*/
 
-error:
+finish:
 	if (inputs) ascfree((char *)inputs);
 	if (new_inputs) ascfree((char *)new_inputs);
 	if (inputs_ndx_list) ascfree((char *)inputs_ndx_list);
@@ -866,145 +751,44 @@ static int Compute_J_OLD(slv_system_t sys)
 #endif
 
 
-#if 0
-static int ReSolve(slv_system_t sys)
-{
-  if (!sys)
-    return 1;
-  slv_solve(sys);
-  return 0;
-}
-#endif
-
 /**
-	Build then presolve the solve an instance...
+	Sensitivity Analysis
+
+	@param arglist List of arguments
+
+	Argument list contains the following:
+	  . arg1 - model inst for which the sensitivity analysis is to be done.
+	  . arg2 - array of input instances.
+	  . arg3 - array of output instances.
+	  . arg4 matrix of partials to be written to.
 */
-int DoSolve(struct Instance *inst){
-  slv_system_t sys;
-
-  sys = system_build(inst);
-  if (!sys) {
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,
-      "Something radically wrong in creating solver.");
-    return 1;
-  }
-  (void)slv_select_solver(sys,0);
-  slv_presolve(sys);
-  slv_solve(sys);
-  system_destroy(sys);
-  return 0;
-}
-
-/**
-	Calls 'DoSolve'
-
-	@see DoSolve
-*/
-int do_solve_eval( struct Instance *i,
-		struct gl_list_t *arglist, void *user_data
-){
-  unsigned long len;
-  int result;
+int SensitivityCheckArgs(struct gl_list_t *arglist){
   struct Instance *inst;
+  unsigned long len;
+  unsigned long ninputs, noutputs;
+
   len = gl_length(arglist);
-
-  (void)i; /* not used */
-
-  if (len!=2) {
-	ERROR_REPORTER_HERE(ASC_USER_ERROR,
-      "Wrong number of args to do_solve_eval.");
+  if (len != 4) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"wrong number of args -- 4 expected\n");
     return 1;
   }
   inst = FetchElement(arglist,1,1);
-  if (!inst)
-    return 1;
-  result = DoSolve(inst);
-  return result;
-}
-
-
-/**
-	Finite difference...
-*/
-int finite_difference(struct gl_list_t *arglist){
-  struct Instance *model_inst, *xinst, *inst;
-  slv_system_t sys;
-  int ninputs,noutputs;
-  int i,j,offset;
-  real64 **partials;
-  real64 *y_old, *y_new;
-  real64 x;
-  real64 interval = 1e-6;
-  int result=0;
-
-  model_inst = FetchElement(arglist,1,1);
-  sys = system_build(model_inst);
-  if (!sys) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Something radically wrong in creating solver\n");
+  if (InstanceKind(inst)!=MODEL_INST) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Arg #1 is not a model instance\n");
     return 1;
   }
-  (void)slv_select_solver(sys,0);
-  slv_presolve(sys);
-  slv_solve(sys);
-
-  /* Make the necessary vectors */
-
-  ninputs = (int)gl_length((struct gl_list_t *)gl_fetch(arglist,2));
-  noutputs = (int)gl_length((struct gl_list_t *)gl_fetch(arglist,3));
-  y_old = (real64 *)calloc(noutputs,sizeof(real64));
-  y_new = (real64 *)calloc(noutputs,sizeof(real64));
-  partials = make_matrix(noutputs,ninputs);
-  for (i=0;i<noutputs;i++) {      	/* get old yvalues */
-    inst = FetchElement(arglist,3,i+1);
-    y_old[i] = RealAtomValue(inst);
+  ninputs = gl_length((struct gl_list_t *)gl_fetch(arglist,2));
+    /* input args */
+  noutputs = gl_length((struct gl_list_t *)gl_fetch(arglist,3));
+   /* output args */
+  len = gl_length((struct gl_list_t *)gl_fetch(arglist,4));
+        /* partials matrix */
+  if (len != (ninputs*noutputs)) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,
+	    "The array of partials is inconsistent with the args given\n");
+    return 1;
   }
-  for (j=0;j<ninputs;j++) {
-    xinst = FetchElement(arglist,2,j+1);
-    x = RealAtomValue(xinst);
-    SetRealAtomValue(xinst,x+interval,(unsigned)0); /* perturb system */
-    slv_presolve(sys);
-    slv_solve(sys);
-
-    for (i=0;i<noutputs;i++) { 		/* get new yvalues */
-      inst = FetchElement(arglist,3,i+1);
-      y_new[i] = RealAtomValue(inst);
-      partials[i][j] = -1.0 * (y_old[i] - y_new[i])/interval;
-      PRINTF("y_old = %20.12g  y_new = %20.12g\n", y_old[i],y_new[i]);
-    }
-    SetRealAtomValue(xinst,x,(unsigned)0); /* unperturb system */
-  }
-  offset = 0;
-  for (i=0;i<noutputs;i++) {
-    for (j=0;j<ninputs;j++) {
-      inst = FetchElement(arglist,4,offset+j+1);
-      SetRealAtomValue(inst,partials[i][j],(unsigned)0);
-      PRINTF("%12.6f %s",partials[i][j], (j==(ninputs-1)) ? "\n" : "    ");
-    }
-    offset += ninputs;
-  }
-  /* error: */
-  free(y_old);
-  free(y_new);
-  free_matrix(partials,noutputs);
-  system_destroy(sys);
-  return result;
-}
-
-
-
-/**
-	Finite different evaluate...
-*/
-int do_finite_diff_eval( struct Instance *i,
-		struct gl_list_t *arglist, void *user_data
-){
-	int result;
-	(void)i; /* not used */
-
-	if(FiniteDiffCheckArgs(arglist))
-		return 1;
-	result = finite_difference(arglist);
-	return result;
+  return 0;
 }
 
 
@@ -1016,6 +800,49 @@ int do_sensitivity_eval( struct Instance *i,
 
 	return sensitivity_anal(i,arglist);
 }
+
+
+/**
+	@param arglist List of arguments
+	@param step_length ...?
+
+	The list of arguments should chontain
+
+   	  . arg1 - model inst for which the sensitivity analysis is to be done.
+	  . arg2 - array of input instances.
+	  . arg3 - new_input instances, for variable projection.
+	  . arg4 - instance representing the step_length for projection.
+
+	The result will be written to standard out.
+*/
+int SensitivityAllCheckArgs(struct gl_list_t *arglist, double *step_length)
+{
+  struct Instance *inst;
+  unsigned long len;
+
+  len = gl_length(arglist);
+  if (len != 4) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"wrong number of args -- 4 expected\n");
+    return 1;
+  }
+  inst = FetchElement(arglist,1,1);
+  if (InstanceKind(inst)!=MODEL_INST) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Arg #1 is not a model instance\n");
+    return 1;
+  }
+  /*
+   * we should be checking that arg2 list contains solver vars
+   * and that they are fixed. The same applies to arglist 3... later.
+   * We will check and return the steplength though. 0 means dont do
+   * the variable projection.
+   */
+  inst = FetchElement(arglist,4,1);
+  *step_length = RealAtomValue(inst);
+  if (fabs(*step_length) < 1e-08)
+    *step_length = 0.0;
+  return 0;
+}
+
 
 int do_sensitivity_eval_all( struct Instance *i,
 		struct gl_list_t *arglist, void *user_data
@@ -1040,14 +867,6 @@ const char sensitivity_help[] =
 int sensitivity_register(void){
 	int result=0;
 
-	result = CreateUserFunctionMethod("do_solve",
-		do_solve_eval,
-		2,NULL,NULL,NULL
-	);
-	result += CreateUserFunctionMethod("do_finite_difference",
-		do_finite_diff_eval,
-		4,NULL,NULL,NULL
-	);
 	result += CreateUserFunctionMethod("do_sensitivity",
 		do_sensitivity_eval,
 		4,sensitivity_help,NULL,NULL
