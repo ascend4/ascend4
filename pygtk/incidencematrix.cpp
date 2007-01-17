@@ -232,8 +232,8 @@ IncidenceMatrix::getNumBlocks(){
 mfg::DrawGraph
 IncidenceMatrix::getBlockGraph(const int &block) const{
     using namespace mfg;
-
     DrawGraph g;
+
     Node *a = g.CreateNode();
     Node *x = g.CreateNode();
     Edge *ax = g.CreateEdge(a, x);
