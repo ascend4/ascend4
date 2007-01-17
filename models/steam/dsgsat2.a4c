@@ -30,7 +30,7 @@ MODEL dsgsat2;
 	z_Aw: A_w = 1{PI}*(D_2^2 - D^2)/4;
 	dz IS_A distance;
 	L IS_A distance;
-	z_dz: dz = L / n;
+	z_dz: dz = L / (n - 1);
 
 	(* fluid properties *)
 	node[1..n] IS_A satsteamstream;

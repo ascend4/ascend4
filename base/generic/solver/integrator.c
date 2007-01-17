@@ -38,7 +38,7 @@
 #include "samplelist.h"
 
 /* #define ANALYSE_DEBUG */
-/* #define SOLVE_DEBUG */
+#define SOLVE_DEBUG
 /* #define CLASSIFY_DEBUG */
 
 /*------------------------------------------------------------------------------

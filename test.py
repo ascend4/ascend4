@@ -448,17 +448,38 @@ class TestExtPy(AscendSelfTester):
 # Testing of saturated steam properties library (iapwssatprops.a4c)
 
 class TestSteam(AscendSelfTester):
+
 	def testiapwssatprops1(self):
 		M = self._run('testiapwssatprops1',filename='steam/iapwssatprops.a4c')
 	def testiapwssatprops2(self):
 		M = self._run('testiapwssatprops2',filename='steam/iapwssatprops.a4c')
 	def testiapwssatprops3(self):
 		M = self._run('testiapwssatprops3',filename='steam/iapwssatprops.a4c')
+
+	# test the stream model basically works
 	def testsatsteamstream(self):
 		M = self._run('satsteamstream',filename='steam/satsteamstream.a4c')
 
-	def testsatsteamstream(self):
-		M = self._run('satsteamstream',filename='steam/satsteamstream.a4c')
+	# test that we can solve in terms of various (rho,u)
+	def testsatuv(self):
+		self.L.load('steam/iapwssat.a4c')
+		T = self.L.findType('testiapwssatuv')
+		M = T.getSimulation('sim',False)
+		M.run(T.getMethod('on_load'))
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		print "p = %f bar" % M.p.as('bar');
+		print "T = %f C" % (M.T.as('K') - 273.15);
+		print "x = %f" % M.x;
+		M.run(T.getMethod('self_test'))
+		M.run(T.getMethod('values2'))
+#		M.v.setRealValueWithUnits(1.0/450,"m^3/kg");
+#		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		print "p = %f bar" % M.p.as('bar');
+		print "T = %f C" % (M.T.as('K') - 273.15);
+		print "x = %f" % M.x;
+		M.run(T.getMethod('self_test2'))
+		
 
 ## @TODO fix error capture from bounds checking during initialisation
 #	def testiapwssat1(self):

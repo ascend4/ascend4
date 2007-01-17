@@ -3964,7 +3964,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   	&& sys->gamma.norm2 <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)*sys->phi
   ){
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-    FPRINTF(ASCERR,"QRSlv: Problem diverged: Gamma norm too small (termtol=%f)."
+    FPRINTF(ASCERR,"QRSlv: Problem diverged: Gamma norm too small (termtol=%g)."
       ,SLV_PARAM_REAL(&(sys->p),TERM_TOL)
     );
     error_reporter_end_flush();

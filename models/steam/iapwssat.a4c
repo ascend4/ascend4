@@ -33,6 +33,10 @@ METHOD on_load;
 END on_load;
 END iapwssat;
 
+(*
+	not sure what to do with this test case. We are trying to show that
+	illegal values of quality 'x' will fix themselves up somehow.
+*)
 MODEL testiapwssat1 REFINES iapwssat;
 METHODS
 METHOD values;
@@ -46,3 +50,33 @@ METHOD self_test;
 	ASSERT x >= x.lower_bound;
 END self_test;
 END testiapwssat1;
+
+(*
+	test our ability to converge steam properties using the above when
+	(u,v) are fixed.
+*)
+MODEL testiapwssatuv REFINES iapwssat;
+METHODS
+METHOD specify;
+	FIX u,v;
+END specify;
+METHOD values;
+	v := 1.0 / (500 {kg/m^3});
+	u := 780 {kJ/kg};
+END values;
+METHOD self_test;
+	ASSERT abs(p - 10.540441 {bar}) < 0.000002 {bar};
+	ASSERT abs(T - (273.15{K} + 182.177917{K})) < 0.000001 {K};
+	ASSERT abs(x - 0.004734) < 0.000001;
+END self_test;
+METHOD values2;
+	v := 1.0 / (450 {kg/m^3});
+	u := 780 {kJ/kg};
+END values2;
+METHOD self_test2;
+	ASSERT abs(p - 10.426431 {bar}) < 0.000002 {bar};
+	ASSERT abs(T - (273.15{K} + 181.700586{K})) < 0.000001 {K};
+	ASSERT abs(x - 0.005885) < 0.000001;
+END self_test2;
+
+END testiapwssatuv;
