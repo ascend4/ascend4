@@ -1,68 +1,76 @@
-(*********************************************************************\
-                        sensitivity_test.asc
-                        by Ben Allan
-                        Part of the Ascend Library
+(*	ASCEND modelling environment
+	Copyright (C) 1996  Carnegie Mellon University
+	Copyright (C) 2006 Carnegie Mellon University
 
-This file is part of the Ascend modeling library.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-Copyright (C) 1996
-
-The Ascend modeling library is free software; you can redistribute
-it and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the
-License, or (at your option) any later version.
-
-The Ascend Language Interpreter is distributed in hope that it will be
-useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-the program; if not, write to the Free Software Foundation, Inc., 675
-Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
-
-This module is used to calculate the sensitity matrix dX/dU where
-X is a vector OF vapor compositions and U is a vector OF liquid
-compositions. This sensitivity matrix is THEN used to calculate
-J, the Jacobian, as described IN Fidkowski et al. (1995).
-
-\*********************************************************************)
-
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
 REQUIRE "system.a4l";
-
 IMPORT "sensitivity/sensitivity";
+(*
+	This module is used to calculate the sensitity matrix dX/dU where
+	X is a vector OF vapor compositions and U is a vector OF liquid
+	compositions. This sensitivity matrix is THEN used to calculate
+	J, the Jacobian, as described IN Fidkowski et al. (1995).
+
+	by Ben Allan, 1996
+	Self-testing added by John Pye, 2007
+*)
 
 MODEL sensitivity_test;
 	nc IS_A integer_constant;
 	X[1..nc] IS_A solver_var;
-	U[1..nc], Unew[1..nc] IS_A solver_var;
+	U[1..nc] IS_A solver_var;
 	dx_du[1..nc][1..nc] IS_A solver_var;
- (* system *)
+
+	(* system for investigation *)
 	k,x,y,u IS_A solver_var;
 	k*x - y = 7;
 	y = u^2; 
- (* dx/du = 2*u/k *)
+	(* hence, dx/du = 2*u/k *)
+
 	nc:==1;
 	u,U[1] ARE_THE_SAME;
 	x,X[1] ARE_THE_SAME;
 
 METHODS
+	METHOD values;
+		FOR j IN [1..nc] DO
+			U[j] := j;
+		END FOR;
+	END values;
 
-METHOD values;
-END values;
+	METHOD specify;
+		FIX u, k;
+	END specify;
 
-METHOD specify;
-	FIX u, k;
-END specify;
+	METHOD on_load;
+		RUN reset;
+		RUN values;
+	END on_load;
 
-METHOD on_load;
-	RUN reset;
-	RUN values;
-END on_load;
+	METHOD analyse;
+	  EXTERNAL do_sensitivity(SELF,U[1..nc],X[1..nc],dx_du[1..nc][1..nc]);
+	END analyse;
 
-METHOD analyse;
-  EXTERNAL do_sensitivity(SELF,U[1..nc],X[1..nc],dx_du[1..nc][1..nc]);
-END analyse;
-
+	METHOD self_test;
+		FOR i IN [1..nc] DO (* X[i] *)
+			FOR j IN [1..nc] DO (* U[j] *)
+				ASSERT abs(dx_du[i][j] - 2*U[j]/k) < 0.00001 * 2 * U[j]/k;
+			END FOR;
+		END FOR;
+	END self_test;
 END sensitivity_test;
 
