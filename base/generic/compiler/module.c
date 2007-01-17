@@ -43,6 +43,8 @@
 #include "library.h"
 #include <general/ospath.h>
 
+/* #define SEARCH_DEBUG */
+
 struct module_t {
   symchar *name;                /* module's name, including extension
                                  * and version number, no path information.
@@ -885,18 +887,20 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	struct FilePath *fp1;
 	struct ModuleSearchData *sd;
 	FILE *f;
-	/*char *tmp;*/
+#ifdef SEARCH_DEBUG
+	char *tmp;
+#endif
 
 	sd = (struct ModuleSearchData *)searchdata;
 	asc_assert(sd!=NULL);
 	asc_assert(sd->fp!=NULL);
 
 
-	/*
+#ifdef SEARCH_DEBUG	
 	tmp=ospath_str(sd->fp);
 	CONSOLE_DEBUG("About to concat path '%s'...",tmp);
 	ospath_free_str(tmp);
-	*/
+#endif
 
 	fp1 = ospath_concat(path,sd->fp);
 	if(fp1==NULL){
@@ -904,11 +908,11 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 		return 0;
 	}
 
-	/*
+#ifdef SEARCH_DEBUG
 	tmp  = ospath_str(sd->fp);
 	CONSOLE_DEBUG("Checking for path '%s'...",tmp);
 	ospath_free_str(tmp);
-	*/
+#endif
 
 	if(ospath_stat(fp1,&sd->buf)){
 		sd->error = errno;
@@ -920,7 +924,9 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	f = ospath_fopen(fp1, "r");
 	if(f==NULL){
 		sd->error = errno;
-		/* CONSOLE_DEBUG("Fopen failed"); */
+#ifdef SEARCH_DEBUG
+		CONSOLE_DEBUG("Fopen failed");
+#endif
 		ospath_free(fp1);
 		return 0;
 	}
@@ -929,7 +935,9 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	sd->f = f;
 	sd->fp_found = fp1;
 
-	/* CONSOLE_DEBUG("File found"); */
+#ifdef SEARCH_DEBUG
+	CONSOLE_DEBUG("File found");
+#endif
 	return 1;
 }
 
