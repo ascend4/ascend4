@@ -1,7 +1,6 @@
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "freesteam";
-(* IMPORT "sensitivity/solve"; *)
 (*
 	A second solution the Horwitz A, "The Case of the Collapsing Can", Chemical
 	Engineering Progress, Jun 1997, pp.61-65.
@@ -15,6 +14,19 @@ IMPORT "freesteam";
 	Whereas the 'collapsingcan.a4c' model uses the simple polynomial curve fits
 	published in the original article, this model will use full IAPWS steam
 	properties from the freesteam project.
+
+	Note that you will need to have freesteam (http://freesteam.sf.net) installed
+	on your machine for this to work. If you have already installed ASCEND and	
+	you have the command 'ascend-config' available on your path, it should
+	just be a matter of downloading freesteam and typing
+
+	$ tar jxvf freesteam-0.6.2.tar.bz2 
+	$ cd freesteam-0.6.2
+	$ scons ascend
+	$ scons install
+
+	The run the model--
+	$ ascend collapsingcan2.a4c
 
 	Model file created by John Pye, Jan 2007.
 *)
@@ -69,9 +81,6 @@ METHODS
 		liq.m := 1 {lbm};
 		FIX liq.T, liq.p, liq.m;
 		liq.u := 100 {kJ/kg}; (* initial guess *)
-	
-	(*	EXTERNAL do_solve(SELF);
-		RUN self_test; *)
 	END on_load;
 
 	METHOD self_test;
