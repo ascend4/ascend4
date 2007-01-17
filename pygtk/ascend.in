@@ -15,10 +15,11 @@ else:
 
 if not os.environ.get('ASC_GDB'):
 	# restarting messes up GDB so don't allow it
-	if not "@INSTALL_LIB@" in LD_LIBRARY_PATH:
-		LD_LIBRARY_PATH = ["@INSTALL_LIB@"] + LD_LIBRARY_PATH
-		os.environ['LD_LIBRARY_PATH'] = SEP.join(LD_LIBRARY_PATH)
-		restart = 1
+	if "@INSTALL_LIB@"!="/usr/lib":
+		if not "@INSTALL_LIB@" in LD_LIBRARY_PATH:
+			LD_LIBRARY_PATH = ["@INSTALL_LIB@"] + LD_LIBRARY_PATH
+			os.environ['LD_LIBRARY_PATH'] = SEP.join(LD_LIBRARY_PATH)
+			restart = 1
 
 	PYTHONPATH = os.environ.get("PYTHONPATH")
 	if not PYTHONPATH:
@@ -38,7 +39,7 @@ if not os.environ.get('ASC_GDB'):
 
 	if restart:
 		print "Restarting with corrected environment..."
-		print "   LD_LIBRARY_PATH = %s" % os.environ['LD_LIBRARY_PATH']
+		print "   LD_LIBRARY_PATH = %s" % os.environ.get('LD_LIBRARY_PATH')
 		print "   PYTHONPATH = %s" % os.environ['PYTHONPATH']
 		print "   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
 		script = os.path.join(sys.path[0],"ascend")

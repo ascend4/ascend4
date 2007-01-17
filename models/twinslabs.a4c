@@ -1,0 +1,88 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+(*
+	Lumped capacity heat transfer problem from p. 199 ff of Lienhard & Lienhard,
+	"A Heat	Transfer Textbook" 3rd Ed, Phlostigon Press, Cambridge MA. Available
+	free online at http://web.mit.edu/lienhard/www/ahtt.html
+
+	The problem involves two vertical slabs insulated at the left and sides.
+	One-dimensional conduction takes place from the first slab to the second,
+	then convection takes place at the boundary to the air.
+
+	The problem has an analytical solution that can be used to validate the
+	numerical solution obtained here. The values specified here can be be
+	thought to approximate the problem of a double-brick house wall warming up
+	on a hot day in summer. Integrate it over a period of 10 h.
+
+	@TODO attach a datareader to obtain a day-night cycle.
+
+	 \ \ \ \ \ \ \ \ \
+	\ \|------+------+
+	 \ |      |      |
+	\ \|  T_1 | T_2  | T_oo
+	 \ |   ----->   ---->
+	\ \| slab | slab | air
+	 \ |------+------+
+	\ \ \ \ \ \ \ \ \
+
+	by John Pye, Jan 2007.
+*)
+MODEL twinslabs;
+	T_1 IS_A temperature;
+	T_2 IS_A temperature;
+	T_inf IS_A temperature;
+
+	dT1_dt IS_A temperature_rate;
+	dT2_dt IS_A temperature_rate;
+
+	rhocV_1 IS_A heat_capacity;
+	rhocV_2 IS_A heat_capacity;
+
+	-rhocV_1 * dT1_dt =                        h_c*A*(T_1 - T_2);
+	-rhocV_2 * dT2_dt = hbar*A*(T_2 - T_inf) - h_c*A*(T_1 - T_2);
+
+	h_c IS_A heat_transfer_coefficient;
+	hbar IS_A heat_transfer_coefficient;
+	A IS_A area;
+
+	t IS_A time;
+
+METHODS
+	METHOD specify;
+		FIX rhocV_1, rhocV_2;
+		FIX T_inf;
+		FIX h_c, hbar, A;
+		FIX T_1, T_2; (* integration states *)
+	END specify;
+	METHOD ode_init;
+		dT1_dt.ode_id := 1;  dT1_dt.ode_type := 2;
+		T_1.ode_id := 1; T_1.ode_type := 1;
+
+		dT2_dt.ode_id := 2; dT2_dt.ode_type := 2;
+		T_2.ode_id := 2; T_2.ode_type := 1;
+
+		t.ode_type := -1;
+		t := 0 {s};
+	END ode_init;
+	METHOD values;
+		rhocV_1 := 1000 {kg/m^3} * 1.0 {kJ/kg/K} * 0.05 {m^3};
+		rhocV_2 := 1000 {kg/m^3} * 1.0 {kJ/kg/K} * 0.05 {m^3};
+		A := 1.0 {m^2};
+		h_c := 5 {W/m^2/K};
+		hbar := 20 {W/m^2/K};
+
+		(* initial values: a cool double-wall on a hot day *)		
+		T_1 := 290 {K};
+		T_2 := 285 {K};
+		T_inf := 313 {K};
+		T_1.obs_id := 1;
+		T_2.obs_id := 2;
+	END values;
+	METHOD on_load;
+		RUN reset;
+		RUN values;
+		RUN ode_init;
+	END on_load;
+END twinslabs;
