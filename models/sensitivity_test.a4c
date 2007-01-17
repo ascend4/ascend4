@@ -79,3 +79,16 @@ METHODS
 	END self_test;
 END sensitivity_test;
 
+MODEL sensitivity_test_all REFINES sensitivity_test;
+	U_new[1..nc] IS_A real;
+	stepsize IS_A real_constant;
+	stepsize :== 0.0001;
+METHODS
+	METHOD analyse;
+		EXTERNAL do_sensitivity_all(SELF,U[1..nc],U_new[1..nc],stepsize);
+	END analyse;
+
+	METHOD self_test;
+		ASSERT 1==0;
+	END self_test;
+END sensitivity_test_all;

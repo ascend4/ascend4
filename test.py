@@ -439,6 +439,15 @@ class TestSensitivity(AscendSelfTester):
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		M.run(T.getMethod('analyse'))
 		M.run(T.getMethod('self_test'))
+
+	def testall(self):
+		self.L.load('sensitivity_test.a4c')
+		T = self.L.findType('sensitivity_test_all')
+		M = T.getSimulation('sim',False)
+		M.run(T.getMethod('on_load'))
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		M.run(T.getMethod('analyse'))
+		M.run(T.getMethod('self_test'))
 				
 #-------------------------------------------------------------------------------
 # Testing of a ExtPy - external python methods
@@ -852,12 +861,16 @@ if __name__=='__main__':
 			restart = 1
 
 	if restart:
-		script = os.path.join(sys.path[0],"test.py")
+		script = os.path.join(sys.path[0],"test.py")					
 		print "Restarting with..."
 		print "   LD_LIBRARY_PATH = %s" % os.environ.get(LD_LIBRARY_PATH)
 		print "   PYTHONPATH = %s" % os.environ.get('PYTHONPATH')
 		print "   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
-		os.execvp("python",[script] + sys.argv)
+
+		if sys.argv[0] !="/usr/bin/gdb":
+			os.execvp("python",[script] + sys.argv)
+		else:
+			print "Can't restart from inside GDB"
 
 	import ascpy
 
