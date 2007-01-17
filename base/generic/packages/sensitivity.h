@@ -68,7 +68,6 @@ ASC_DLLSPEC int Compute_dy_dx_smart(slv_system_t sys, real64 *rhs, real64 **dy_d
 	the LSODE dependency goes away.
 */
 
-ASC_DLLSPEC int DoSolve(struct Instance *inst);
 ASC_DLLSPEC int finite_difference(struct gl_list_t *arglist);
 ASC_DLLSPEC struct Instance *FetchElement(struct gl_list_t *arglist,
 				     unsigned long whichbranch,
