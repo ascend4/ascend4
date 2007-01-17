@@ -245,24 +245,26 @@ void var_destroy(struct var_variable *var);
 	@see var_mindexF().
 */
 
-#ifdef NDEBUG
-# define var_set_mindex(var,index) (var)->mindex = (index)
-#else
-# define var_set_mindex(var,index) var_set_mindexF((var),(index))
-#endif
-/**<
+
+/**
 	Sets the index of the variable as it appears in a variable list.
 	@param var   struct var_variable *, the variable to modify.
 	@param index int32, the new value for the index.
 	@return No return value.
 	@see var_set_mindexF().
 */
-
-extern int32 var_mindexF(const struct var_variable *var);
+#ifdef NDEBUG
+# define var_set_mindex(var,index) (var)->mindex = (index)
+#else
+# define var_set_mindex(var,index) var_set_mindexF((var),(index))
+ASC_DLLSPEC int32 var_mindexF(const struct var_variable *var);
 /**<
 	Implementation function for var_mindex().  Do not call this
 	function directly - use var_mindex() instead.
 */
+#endif
+
+
 extern void var_set_mindexF(struct var_variable *var, int32 mindex);
 /**<
 	Implementation function for var_set_mindex().  Do not call this

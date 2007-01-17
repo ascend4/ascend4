@@ -56,40 +56,6 @@ static real64 *zero_vector(real64 *vec, int size)
 */
 
 /**
-	Allocate memory for a matrix
-	@param nrows Number of rows
-	@param ncols Number of colums
-	@return Pointer to the allocated matrix memory location
-*/
-real64 **make_matrix(int nrows, int ncols){
-  real64 **result;
-  int i;
-  result = (real64 **)calloc(nrows,sizeof(real64*));
-  for (i=0;i<nrows;i++) {
-    result[i] = (real64 *)calloc(ncols,sizeof(real64));
-  }
-  return result;
-}
-
-/**
-	Free a matrix from memory
-	@param matrix Memory location for the matrix
-	@param nrows Number of rows in the matrix
-*/
-void free_matrix(real64 **matrix, int nrows){
-  int i;
-  if (!matrix)
-    return;
-  for (i=0;i<nrows;i++) {
-    if (matrix[i]) {
-      free(matrix[i]);
-      matrix[i] = NULL;
-    }
-  }
-  free(matrix);
-}
-
-/**
 	Fetch an element from a branch of an arglist...?
 */
 struct Instance *FetchElement(struct gl_list_t *arglist,

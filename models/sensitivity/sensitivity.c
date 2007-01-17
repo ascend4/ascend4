@@ -83,6 +83,43 @@ ASC_EXPORT int sensitivity_register(void);
 ExtMethodRun do_sensitivity_eval;
 ExtMethodRun do_sensitivity_eval_all;
 
+
+
+/**
+	Allocate memory for a matrix
+	@param nrows Number of rows
+	@param ncols Number of colums
+	@return Pointer to the allocated matrix memory location
+*/
+real64 **make_matrix(int nrows, int ncols){
+  real64 **result;
+  int i;
+  result = (real64 **)calloc(nrows,sizeof(real64*));
+  for (i=0;i<nrows;i++) {
+    result[i] = (real64 *)calloc(ncols,sizeof(real64));
+  }
+  return result;
+}
+
+/**
+	Free a matrix from memory
+	@param matrix Memory location for the matrix
+	@param nrows Number of rows in the matrix
+*/
+void free_matrix(real64 **matrix, int nrows){
+  int i;
+  if (!matrix)
+    return;
+  for (i=0;i<nrows;i++) {
+    if (matrix[i]) {
+      free(matrix[i]);
+      matrix[i] = NULL;
+    }
+  }
+  free(matrix);
+}
+
+
 /**
 	Build then presolve an instance
 */
@@ -858,11 +895,27 @@ int do_sensitivity_eval_all( struct Instance *i,
 
 
 const char sensitivity_help[] =
-	"This function does sensitivity analysis dy/dx. It requires 4 args:\n"
+	"This function does sensitivity analysis dy/dx. It requires 4 args:\n\n"
 	"  1. name: name of a reference instance or SELF.\n"
 	"  2. x: x, where x is an array of > solver_var.\n"
 	"  3. y: where y is an array of > solver_var.\n"
-	"  4. dy/dx: which dy_dx[1..n_y][1..n_x].";
+	"  4. dy/dx: which dy_dx[1..n_y][1..n_x].\n\n"
+	"See also sensitivity_anal_all.";
+
+/** @TODO document what 'u_new' is all about...? */
+
+const char sensitivity_all_help[] =
+	"Analyse the sensitivity of *all* variables in the system with respect\n"
+	"to the specific set of inputs 'u'. Instead of returning values to a\n"
+	"a special array inside the model, the results are written to the\n"
+	"console. Usage example:\n\n"
+	"EXTERN sensitivity_anal_all(\n"
+	"	this_instance,\n"
+	"	u_old[1..n_inputs],\n"
+	"	u_new[1..n_inputs],\n"
+	"	step_length\n"
+	");\n\n"
+	"See also sensitivity_anal.";
 
 int sensitivity_register(void){
 	int result=0;
@@ -873,7 +926,7 @@ int sensitivity_register(void){
 	);
 	result += CreateUserFunctionMethod("do_sensitivity_all",
 		do_sensitivity_eval_all,
-		4,"See do_sensitivity_eval for details",NULL,NULL
+		4,sensitivity_all_help,NULL,NULL
 	);
 
 	return result;
