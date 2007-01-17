@@ -3,6 +3,7 @@ Import('env')
 # Build directories that contain external libraries
 env.SConscript(['johnpye/SConscript'],['env'])
 env.SConscript(['test/SConscript'],['env'])
+env.SConscript(['sensitivity/SConscript'],['env'])
 
 # Hunt for all models in the directory structure
 import os, os.path

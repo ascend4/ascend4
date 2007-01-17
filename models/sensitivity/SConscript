@@ -1,0 +1,12 @@
+Import('env')
+
+# To run the test, type
+#     ascdev sensitivity_test.a4c
+
+# Return the targs
+env['extfns'] += [env.SharedLibrary("sensitivity",["sensitivity.c"]
+	,LIBS = ['ascend']
+	,LIBPATH=['#']
+)]
+
+# vim: set syntax=python:
