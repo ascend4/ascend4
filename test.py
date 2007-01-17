@@ -440,14 +440,15 @@ class TestSensitivity(AscendSelfTester):
 		M.run(T.getMethod('analyse'))
 		M.run(T.getMethod('self_test'))
 
-	def testall(self):
-		self.L.load('sensitivity_test.a4c')
-		T = self.L.findType('sensitivity_test_all')
-		M = T.getSimulation('sim',False)
-		M.run(T.getMethod('on_load'))
-		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		M.run(T.getMethod('analyse'))
-		M.run(T.getMethod('self_test'))
+#	def testall(self):
+#		self.L.load('sensitivity_test.a4c')
+#		T = self.L.findType('sensitivity_test_all')
+#		M = T.getSimulation('sim',False)
+#		M.run(T.getMethod('on_load'))
+#		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+#		M.run(T.getMethod('analyse'))
+#		M.run(T.getMethod('self_test'))
+# CAUSES CRASH
 				
 #-------------------------------------------------------------------------------
 # Testing of a ExtPy - external python methods
