@@ -425,6 +425,18 @@ class TestExtFn(AscendSelfTester):
 		M = self._run('extrelrepeat',filename='johnpye/extfn/extrelrepeat.a4c')
 
 #-------------------------------------------------------------------------------
+# Testing of Sensitivity module
+
+class TestSensitivity(AscendSelfTester):
+	def test1(self):
+		self.L.load('sensitivity_test.a4c')
+		T = self.L.findType('sensitivity_test')
+		M = T.getSimulation('sim',False)
+		M.run(T.getMethod('on_load'))
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		M.run(T.getMethod('analyse'))
+				
+#-------------------------------------------------------------------------------
 # Testing of a ExtPy - external python methods
 
 class TestExtPy(AscendSelfTester):

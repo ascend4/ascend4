@@ -20,6 +20,13 @@
 	@file
 	Code to support dynamic and static loading of user packages.
 
+	'Packages' are bits of code that add functionality to ASCEND, like 'plugins'
+	or 'addins' on other projects. In ASCEND we have a few that are pretty much
+	essential -- the 'built in' packges. They are only packages in the sense
+	that a 'register' function must be called to connect them correctly with
+	the rest of the system.
+	
+	Next there are the 'static' packages. These ones are linked into
 	The default state is to have packages. As such it takes an explicit
 	definition of NO_PACKAGES, if packages are not to be handled.
 	An explicit definition of STATIC_PACKAGES or DYNAMIC_PACKAGES is also
@@ -217,32 +224,42 @@ static int StaticPackages_Init(void){
 	just the builtin packages will be loaded. If STATIC_PACKAGES then
 	builtin plus those called in 'StaticPackages_Init' will be loaded.
 */
-void AddUserFunctions(void)
-{
+void AddUserFunctions(void){
+
+	CONSOLE_DEBUG("ADDING USER FUNCTIONS");
+
 #ifdef NO_PACKAGES
 # ifdef __GNUC__
-#  warning "EXTERNAL PACKAGES ARE BEING DISABLED"
+#  warning "NO_PACKAGES was defined so external packages are disabled"
 # endif
-  ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"AddUserFunctions disabled at compile-time.");
+	ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"AddUserFunctions disabled at compile-time.");
 #else
 
-  /* Builtins are always statically linked */
-  if (Builtins_Init()) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Problem in Builtins_Init: Some user functions not created");
-  }
+	CONSOLE_DEBUG("ADDING BUILTINS");
+	/* Builtins are always statically linked */
+	if (Builtins_Init()) {
+		ERROR_REPORTER_NOLINE(ASC_PROG_WARNING
+			,"Problem in Builtins_Init: Some user functions not created"
+		);
+	}
 
 # ifdef DYNAMIC_PACKAGES
-  /* do nothing */
+
+	CONSOLE_DEBUG("ADDING DYNAMIC PACKAGES...");
+	/* do nothing. WHY? */
 
 # elif defined(STATIC_PACKAGES)
 #  ifdef __GNUC__
 #   warning "STATIC PACKAGES"
 #  endif
-
-  /*The following need to be reimplemented but are basically useful as is. */
-  if (StaticPackages_Init()) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Problem in StaticPackages_Init(): Some user functions not created");
-  }
+ 
+	CONSOLE_DEBUG("ADDING STATIC PACKAGES FUNCTIONS...");
+	/*The following need to be reimplemented but are basically useful as is. */
+	if (StaticPackages_Init()) {
+	    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING
+			,"Problem in StaticPackages_Init(): Some user functions not created"
+		);
+	}
 
 # endif
 #endif

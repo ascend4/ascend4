@@ -30,7 +30,7 @@ J, the Jacobian, as described IN Fidkowski et al. (1995).
 
 REQUIRE "system.a4l";
 
-IMPORT "sensitivity";
+IMPORT "sensitivity/sensitivity";
 
 MODEL sensitivity_test;
 	nc IS_A integer_constant;
@@ -51,21 +51,18 @@ METHODS
 METHOD values;
 END values;
 
-METHOD clear;
-END clear;
-
 METHOD specify;
 	FIX u, k;
 END specify;
 
-METHOD reset;
-	RUN clear;
-	RUN specify;
-END reset;      
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
 
-METHOD analyze;
+METHOD analyse;
   EXTERNAL do_sensitivity(SELF,U[1..nc],X[1..nc],dx_du[1..nc][1..nc]);
-END analyze;
+END analyse;
 
 END sensitivity_test;
 
