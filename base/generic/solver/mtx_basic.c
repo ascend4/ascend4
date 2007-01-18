@@ -2839,7 +2839,7 @@ void mtx_old_add_col_sparse(mtx_matrix_t mtx,
     mtx_renull_using_col(mtx,t_org,arr);
   }
   mtx_null_vector_release();
-} 
+}
 
 size_t mtx_size(mtx_matrix_t mtx) {
   size_t size=0;
@@ -3257,7 +3257,7 @@ void mtx_write_region_matlab(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region)
 
 #ifdef ASC_WITH_MMIO
 int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
-    MM_typecode matcode;                        
+    MM_typecode matcode;
     int nrows, ncols, nnz, *perm;
 	struct element_t Rewind, *elt;
 	mtx_coord_t nz;
@@ -3269,7 +3269,7 @@ int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
     mm_set_coordinate(&matcode);
     mm_set_real(&matcode);
 
-    mm_write_banner(fp, matcode); 
+    mm_write_banner(fp, matcode);
 
 	if(region == mtx_ENTIRE_MATRIX)nrows = mtx->order-1;
 	else nrows = region->row.high - region->row.low + 1;
@@ -3282,10 +3282,10 @@ int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
 	fprintf(fp,"%% Matrix Market file format\n");
 	fprintf(fp,"%% see http://math.nist.gov/MatrixMarket/\n");
 	fprintf(fp,"%% RANGE: rows = %d, cols = %d, num_of_non_zeros =%d\n",nrows,ncols,nnz);
-	fprintf(fp,"%% MATRIX: rows = %d, cols = %d\n",mtx->order,mtx->order,nnz);
+	fprintf(fp,"%% MATRIX: rows = %d, cols = %d\n",mtx->order,mtx->order);
 
     mm_write_mtx_crd_size(fp, mtx->order, mtx->order, nnz);
-	
+
     /*
 		NOTE: matrix market files use 1-based indices, i.e. first element
 		of a vector has index 1, not 0.

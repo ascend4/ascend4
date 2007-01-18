@@ -109,7 +109,10 @@ extern int zz_debug;
  */
 extern int  Tktable_Init(Tcl_Interp*);
 
+#ifdef ASC_SIGNAL_TRAPS
 static void AscTrap(int);
+#endi
+
 static void  AscCheckEnvironVars(Tcl_Interp*,const char *progname);
 static void AscPrintHelpExit(CONST char *);
 static int  AscProcessCommandLine(Tcl_Interp*, int, CONST char **);

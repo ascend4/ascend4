@@ -95,7 +95,7 @@ int samplelist_assign(SampleList *l, unsigned long n, double *values, const dim_
 // dim table or Wild or Dimensionless.
 #else
 		l->d = WildDimension();
-#endif 
+#endif
 
 #if SAMPLELIST_DEBUG
 		FPRINTF(ASCERR,"copy of wild dimen looks like\n");
@@ -124,7 +124,7 @@ double samplelist_get(CONST SampleList *l, CONST long i){
 	}
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Invalid sample index %ld."
             " Returning 0.", i);
-    return 0.;	
+    return 0.;
 }
 
 void samplelist_set(CONST SampleList *l, CONST long i, CONST double x){
@@ -141,8 +141,8 @@ void samplelist_set(CONST SampleList *l, CONST long i, CONST double x){
 
 void samplelist_debug(CONST SampleList *l){
 	long i;
-	CONSOLE_DEBUG("SAMPLELIST (%d)", l->ns);
+	CONSOLE_DEBUG("SAMPLELIST (%ld)", l->ns);
 	for(i=0; i < l->ns; ++i){
-		CONSOLE_DEBUG("sample[%d] = %f", i, l->x[i]);
+		CONSOLE_DEBUG("sample[%ld] = %f", i, l->x[i]);
 	}
 }
