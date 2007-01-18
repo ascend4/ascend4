@@ -1,0 +1,54 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+(*
+	This is an example of a DAE problem containing a 'canonical nonstate
+	subsystem' as described in the paper
+
+	Linda Petzold, "Differential/Algebraic Equations Are Not ODEs", SIAM J Sci
+	Stat Comput., vol 3, no 3, 1982, pp 367-384.
+	http://dx.doi.org/10.1137/0903023
+
+	It's not clear whether or not this model needs to be implemented using
+	conditional syntax.
+*)
+MODEL nonstate;
+	y1 IS_A solver_var;
+	y2 IS_A solver_var;
+
+	y1dot IS_A solver_var;
+	y2dot IS_A solver_var;
+
+	g IS_A solver_var;
+	t IS_A solver_var;
+
+	y2dot = y1;
+	0 = y2 - g;
+
+	c IS_A real_constant;
+	c :== 0.5;
+
+	g = c*t;
+
+METHODS
+	METHOD specify;
+		FIX y1, y2, t;
+	END specify;
+	METHOD values;
+		y1 := 0;
+		y2 := 0;
+		t := 0;
+	END values;
+	METHOD ode_init;
+		y1.ode_type := 1; y1dot.ode_type := 2;
+		y1.ode_id := 1; y1dot.ode_id := 1;
+
+		y2.ode_type := 1; y2dot.ode_type := 2;
+		y2.ode_id := 1; y2dot.ode_id := 1;
+
+		t.ode_type := -1;
+	END ode_init;
+	METHOD on_load;
+		RUN reset; RUN values;
+		RUN ode_init;
+	END on_load;
+END nonstate;
