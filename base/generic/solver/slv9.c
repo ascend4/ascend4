@@ -2920,7 +2920,7 @@ int COI_CALL slv9_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 	    FPRINTF(ASCERR,"Variable %d (Maybe it's '%s'): ",*COLNO,varname);
 		ASC_FREE(varname);
 	}else if(*COLNO == -1 ){
-	    FPRINTF(ASCERR,"Relation %d: ",*ROWNO); 
+	    FPRINTF(ASCERR,"Relation %d: ",*ROWNO);
 	}else{
 	    FPRINTF(ASCERR,"Variable %d (Maybe it's '%s') appearing in relation %d: ",*COLNO,varname,*ROWNO);
 		ASC_FREE(varname);
@@ -3118,7 +3118,6 @@ static void slv9_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
 	@see conopt.h
 */
 static void slv_conopt_iterate(slv9_system_t sys){
-  int n;
 
   if(sys->con.cntvect == NULL){
 	sys->con.cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
@@ -3137,7 +3136,7 @@ static void slv_conopt_iterate(slv9_system_t sys){
   COIDEF_NumNZ(sys->con.cntvect, &(sys->con.nz));
   COIDEF_NumNlNz(sys->con.cntvect, &(sys->con.nlnz));
   COIDEF_OptDir(sys->con.cntvect, &(sys->con.optdir));
-  
+
   COIDEF_ObjCon(sys->con.cntvect, &(sys->con.objcon)); /* objective will be last row     */
   COIDEF_Base(sys->con.cntvect, &(sys->con.base));
   COIDEF_ErrLim(sys->con.cntvect, &(DOMLIM));
@@ -3190,7 +3189,7 @@ static void slv_conopt_iterate(slv9_system_t sys){
   /*
    * do not keep model in memory after solution
    */
-  sys->con.kept = 0;	
+  sys->con.kept = 0;
 
   COI_Solve(sys->con.cntvect);
   /* conopt_start(&(sys->con.kept), usrmem, &(sys->con.lwork),
