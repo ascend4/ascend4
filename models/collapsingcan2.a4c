@@ -89,7 +89,7 @@ METHODS
 		ASCEND automated test suite, 'test.py'. *)
 		ASSERT abs(m_liq - 1.1453809 {lbm}) <  0.00005 {lbm};
 		ASSERT abs(m_vap - 0.85461909 {lbm}) <  0.002 {lbm};
-		ASSERT abs(mix.p - 12.434039 {psi}) <  0.003 {psi};
+		ASSERT abs(mix.p - 12.434039 {psi}) <  0.004 {psi};
 		ASSERT abs(mix.T - (203.67756 {R} + 459.67{R})) <  0.025 {R};
 	END self_test;
 
