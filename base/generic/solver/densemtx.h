@@ -31,18 +31,20 @@
 		densematrix_write_mmio(M,stdout);
 		densematrix_destroy(M);
 	@endcode
-		
+
 	Represents the matrix
-	
+
 	@code
 	[ 1, 2;
 	  3, 4 ]
 	@code
-	@endexample	
+	@endexample
 *//*
 	by John Pye, Jan 2007. Pulled out the routines from lsode.c and added
 	a file export function so that these matrices can be viewed using outside
 	tools.
+
+	Also using these routines in the external methods 'finitediff' and 'sensitivity'.
 */
 #ifndef ASC_DENSEMTX_H
 #define ASC_DENSEMTX_H
@@ -50,6 +52,7 @@
 #include <stdio.h>
 
 #include <utilities/config.h>
+#include <utilities/ascConfig.h>
 
 typedef struct DenseMatrixStruct{
 	double **data;
@@ -64,8 +67,8 @@ typedef struct DenseMatrixStruct{
 #define DENSEMATRIX_EMPTY       (DenseMatrix){NULL,0,0}
 
 DenseMatrix densematrix_create_empty();
-DenseMatrix densematrix_create(unsigned nrows, unsigned ncols);
-void densematrix_destroy(DenseMatrix matrix);
+ASC_DLLSPEC DenseMatrix densematrix_create(unsigned nrows, unsigned ncols);
+ASC_DLLSPEC void densematrix_destroy(DenseMatrix matrix);
 
 #ifdef ASC_WITH_MMIO
 void densematrix_write_mmio(DenseMatrix matrix, FILE *fp);

@@ -49,6 +49,7 @@
 #include <solver/slv_stdcalls.h>
 #include <solver/system.h>
 #include <solver/slv_client.h>
+#include <solver/densemtx.h>
 
 /*--------------------------------------------------
 	The following functions are provided only for use by LSODE. We want to
@@ -58,13 +59,13 @@ ASC_DLLSPEC int Compute_J(slv_system_t sys);
 ASC_DLLSPEC int NumberFreeVars(slv_system_t sys);
 int NumberIncludedRels(slv_system_t sys);
 int LUFactorJacobian(slv_system_t sys);
-ASC_DLLSPEC int Compute_dy_dx_smart(slv_system_t sys, real64 *rhs, real64 **dy_dx,
+ASC_DLLSPEC int Compute_dy_dx_smart(slv_system_t sys, real64 *rhs, DenseMatrix dy_dx,
 		int *inputs, int ninputs, int *outputs, int noutputs
 );
 
 /*--------------------------------------------------
 	The following are provided to the external module 'sensitivity'. We want
-	to move all of these out into the external shared object, but can't until 
+	to move all of these out into the external shared object, but can't until
 	the LSODE dependency goes away.
 */
 

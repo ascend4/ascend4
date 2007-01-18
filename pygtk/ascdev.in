@@ -40,17 +40,17 @@ if __name__=='__main__':
 	restart = []
 
 	# ensure that we have our 'models' dir in the ASCENDLIBRARY path
-	modeldirs = ["@SOURCE_ROOT@/models"]
+	modeldirs = [os.path.join(sourceroot,"models")]
 	if add_at_start('ASCENDLIBRARY',modeldirs):
 		restart.append('ASCENDLIBRARY')
 
 	# ensure that we have our shared libraries in the LD_LIBRARY_PATH
-	libdirs = ["@SOURCE_ROOT@","@SOURCE_ROOT@/pygtk"]
+	libdirs = [sourceroot,os.path.join(sourceroot,"pygtk")]
 	if add_at_start(LD_LIBRARY_PATH,libdirs):
 		restart.append(LD_LIBRARY_PATH)
 
 	# ensure our pygtk dir is in the PYTHONPATH
-	pypath = ["@SOURCE_ROOT@/pygtk"]
+	pypath = [os.path.join(sourceroot,"pygtk")]
 	if add_at_start('PYTHONPATH',pypath):
 		restart.append('PYTHONPATH')
 
@@ -63,10 +63,18 @@ if __name__=='__main__':
 			os.execvp("gdb",['--symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@','--args','python',script]+sys.argv[1:])
 		else:
 			print "PYTHON... ",script
+			sys.stdout.flush() # needed for rxvt on Windows
 			os.execvp("python",[script,script]+sys.argv[1:])
 		# the above calls don't return so we can forget about line of enqiry
 
+
+	print "\nRunning with..."
+	for v in [LD_LIBRARY_PATH,'ASCENDLIBRARY','PYTHONPATH']:
+		print "   %s = %s" % (v,os.environ[v])
+	
 	import ascpy
 	from gtkbrowser import *
-	B = Browser(assetspath=os.path.join(sourceroot,"pygtk/glade"))
+	assetspath =os.path.join(sourceroot,"pygtk","glade")
+	print "ASSETS PATH = %s" % assetspath
+	B = Browser(assetspath=assetspath)
 	B.run()	

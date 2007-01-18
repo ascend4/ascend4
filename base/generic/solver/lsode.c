@@ -27,7 +27,7 @@
 	't' to label the independent variable.
 
 	There is some excellent documentation about the LSODE integrator available
-	in the document "Description and Use of LSODE, the Livermore Solver for 
+	in the document "Description and Use of LSODE, the Livermore Solver for
 	Ordinary Differential Equations, by K Radhakrishnan and A C Hindmarsh.
 	http://www.llnl.gov/CASC/nsde/pubs/u113855.pdf
 
@@ -208,7 +208,7 @@ typedef struct IntegratorLsodeDataStruct{
 	IntegratorLsodeStatusCode   status;    /* solve status */
 	char stop;                             /* stop requested? */
 	int partitioned;                       /* partioned func evals or not */
-  
+
 	clock_t lastwrite;                     /* time of last call to the reporter 'write' function */
 } IntegratorLsodeData;
 
@@ -436,7 +436,7 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 
 	asc_assert(p->num_parms == LSODE_PARAMS_SIZE);
 	return 0;
-}	
+}
 
 /*------------------------------------------------------------------------------
   PROBLEM ANALYSIS
@@ -523,7 +523,7 @@ static double *lsode_get_atol( IntegratorSystem *blsys) {
   }else{
     InitTolNames();
     for (i=0; i<len; i++) {
-	  
+
       tol = ChildByChar(var_instance(blsys->y[i]),STATEATOL);
       if (tol == NULL || !AtomAssigned(tol) ) {
         atoli[i] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_ATOL);
@@ -574,7 +574,7 @@ static double *lsode_get_rtol( IntegratorSystem *blsys) {
         	"for ode_rtol child undefined for state variable %ld."
         	,rtoli[i], blsys->y_id[i]
         );
-  
+
       } else {
         rtoli[i] = RealAtomValue(tol);
       }
@@ -674,7 +674,6 @@ int integrator_lsode_derivatives(IntegratorSystem *blsys
   asc_assert(DENSEMATRIX_DATA(enginedata->dydot_dy)!=NULL);
   asc_assert(enginedata->input_indices!=NULL);
 
-  double **dydot_dy = DENSEMATRIX_DATA(enginedata->dydot_dy);
   int *inputs_ndx_list = enginedata->input_indices;
   int *outputs_ndx_list = enginedata->output_indices;
   asc_assert(ninputs == blsys->n_y);
@@ -711,7 +710,7 @@ int integrator_lsode_derivatives(IntegratorSystem *blsys
     FPRINTF(stderr,"Early termination due to failure in LUFactorJacobian\n");
     goto error;
   }
-  result = Compute_dy_dx_smart(blsys->system, scratch_vector, dydot_dy,
+  result = Compute_dy_dx_smart(blsys->system, scratch_vector, enginedata->dydot_dy,
                                inputs_ndx_list, ninputs,
                                outputs_ndx_list, noutputs);
 
@@ -723,7 +722,7 @@ int integrator_lsode_derivatives(IntegratorSystem *blsys
 
 error:
   n_calls++;
-  if (scratch_vector) {
+  if(scratch_vector){
     ascfree((char *)scratch_vector);
   }
   return result;
@@ -788,7 +787,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
   if((res =slv_solve(l_lsode_blsys->system))){
 		CONSOLE_DEBUG("solver returns error %ld",res);
 	}
-		
+
   slv_get_status(l_lsode_blsys->system, &status);
   if(slv_check_bounds(l_lsode_blsys->system,0,-1,"")){
     lsodedata->status = lsode_nok;
@@ -803,8 +802,8 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
 			integrator_output_write(l_lsode_blsys);
 			lsodedata->lastwrite = clock(); /* don't count the update time, or we might never get anything done */
 		}
-	}			
-		
+	}
+
 #ifdef TIMING_DEBUG
   time2 = clock() - time2;
 #endif
@@ -1025,10 +1024,10 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   /* x[0] = integrator_get_t(blsys); */
   x[0] = integrator_getsample(blsys, 0);
   x[1] = x[0]-1; /* make sure we don't start with wierd x[1] */
-	
+
 	/* RWORK memory requirements: see D&UoLSODE p 82 */
-	switch(mf){	
-		case 10: case 20:	
+	switch(mf){
+		case 10: case 20:
 			lrw = 20 + neq * (maxord + 1) + 3 * neq;
 			break;
 		case 11: case 12: case 21: case 22:
@@ -1093,7 +1092,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	the loop ahead in time, all we need to do is keep upping
 	xend.
   */
-  
+
   blsys->currentstep = 0;
   for(index = start_index; index < finish_index; index++, 	blsys->currentstep++) {
     xend = integrator_getsample(blsys, index+1);
@@ -1102,7 +1101,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
     /* CONSOLE_DEBUG("LSODE call #%lu: x = [%f,%f]", index,xprev,xend); */
 
 # ifdef ASC_SIGNAL_TRAPS
-		
+
 		Asc_SignalHandlerPushDefault(SIGFPE);
 		Asc_SignalHandlerPushDefault(SIGINT);
 
@@ -1160,7 +1159,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 */
 	if(d->stop){
 		istate=-8;
-	}	
+	}
 
     if (istate < 0 ) {
       /* some kind of error occurred... */
@@ -1302,7 +1301,7 @@ void XASCWV( char *msg, /* pointer to start of message */
 			if(*ni==2){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"rwork length needed, lenrw = %d > %d = lrw",*i1, *i2);
 				return;
-			} break;				
+			} break;
 		case 52:
 			if(*nr==2){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Illegal t = %f, not in range (t - hu,t) = (%f,%f)", r1last, *r1, *r2);
@@ -1373,7 +1372,7 @@ int integrator_lsode_write_matrix(const IntegratorSystem *blsys, FILE *fp){
 	return 1;
 #endif
 }
-	
+
 
 
 

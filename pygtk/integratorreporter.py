@@ -40,7 +40,11 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		except RuntimeError,e:
 			self.browser.reporter.reportError("Integrator failed: %s" % e)
 			if self.browser.prefs.getBoolPref("Integrator","writeendmatrix",True):
-				_fn = "/tmp/ascintegratormatrix.mtx"
+				if platform.system()=="Windows":
+					_deffn = "\\TEMP\\ascintegratormatrix.mtx"
+				else:
+					_deffn = "/tmp/ascintegratormatrix.mtx"
+				_fn = self.browser.prefs.getStringPref("Integrator","matrixfilepath",_deffn)
 				self.browser.reporter.reportNote("Writing matrix to file '%s'" % _fn)
 				_fp = file(_fn,"w")
 				try:

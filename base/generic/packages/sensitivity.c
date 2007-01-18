@@ -292,7 +292,7 @@ int LUFactorJacobian(slv_system_t sys){
 */
 int Compute_dy_dx_smart(slv_system_t sys,
                                real64 *rhs,
-                               real64 **dy_dx,
+                               DenseMatrix dy_dx,
                                int *inputs, int ninputs,
                                int *outputs, int noutputs)
 {
@@ -339,7 +339,7 @@ int Compute_dy_dx_smart(slv_system_t sys,
 
       for (i=0;i<noutputs;i++) {	/* copy the solution to dy_dx */
         row = outputs[i];
-        dy_dx[i][j] = -1.0*solution[row]; /* the -1 comes from the lin alg */
+        DENSEMATRIX_ELEM(dy_dx,i,j) = -1.0*solution[row]; /* the -1 comes from the lin alg */
       }
       /*
        * zero the vector using the incidence pattern of our column.
@@ -360,7 +360,7 @@ int Compute_dy_dx_smart(slv_system_t sys,
 
       for (i=0;i<noutputs;i++) {
         row = outputs[i];
-        dy_dx[i][j] = -1.0*solution[row];
+        DENSEMATRIX_ELEM(dy_dx,i,j) = -1.0*solution[row];
       }
       mtx_zr_org_vec_using_col(mtx,current_col,rhs,mtx_ALL_ROWS);
     }
