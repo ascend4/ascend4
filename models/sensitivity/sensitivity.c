@@ -10,7 +10,7 @@
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
@@ -75,6 +75,7 @@
 #include <utilities/ascMalloc.h>
 #include <compiler/extfunc.h>
 #include <general/mathmacros.h>
+#include <solver/densemtx.h>
 
 /* #define SENSITIVITY_DEBUG */
 
@@ -82,43 +83,6 @@ ASC_EXPORT int sensitivity_register(void);
 
 ExtMethodRun do_sensitivity_eval;
 ExtMethodRun do_sensitivity_eval_all;
-
-
-
-/**
-	Allocate memory for a matrix
-	@param nrows Number of rows
-	@param ncols Number of colums
-	@return Pointer to the allocated matrix memory location
-*/
-real64 **make_matrix(int nrows, int ncols){
-  real64 **result;
-  int i;
-  result = (real64 **)calloc(nrows,sizeof(real64*));
-  for (i=0;i<nrows;i++) {
-    result[i] = (real64 *)calloc(ncols,sizeof(real64));
-  }
-  return result;
-}
-
-/**
-	Free a matrix from memory
-	@param matrix Memory location for the matrix
-	@param nrows Number of rows in the matrix
-*/
-void free_matrix(real64 **matrix, int nrows){
-  int i;
-  if (!matrix)
-    return;
-  for (i=0;i<nrows;i++) {
-    if (matrix[i]) {
-      free(matrix[i]);
-      matrix[i] = NULL;
-    }
-  }
-  free(matrix);
-}
-
 
 /**
 	Build then presolve an instance
@@ -211,7 +175,7 @@ int sensitivity_anal(
 	struct gl_list_t *branch;
 	struct var_variable **vlist = NULL;
 	int *inputs_ndx_list = NULL, *outputs_ndx_list = NULL;
-	real64 **dy_dx = NULL;
+	DenseMatrix dy_dx;
 	slv_system_t sys = NULL;
 	int c;
 	int noutputs = 0;
@@ -305,13 +269,13 @@ int sensitivity_anal(
 			goto finish;
 		}
 	}
-	
+
 	CONSOLE_DEBUG("%d outputs",noutputs);
 
 	/*
 		prepare the results dy_dx.
 	*/
-	dy_dx = make_matrix(noutputs,ninputs);
+	dy_dx = densematrix_create(noutputs,ninputs);
 
 	result = Compute_J(sys);
 	if (result) {
@@ -346,7 +310,7 @@ int sensitivity_anal(
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed Compute_dy_dx");
 		goto finish;
 	}
-	
+
 	CONSOLE_DEBUG("Computed dy/dx");
 
 	/*
@@ -357,9 +321,9 @@ int sensitivity_anal(
 	for (i=0;i<noutputs;i++) {
 		for (j=0;j<ninputs;j++) {
 			tmp_inst = FetchElement(arglist,4,offset+j+1);
-			SetRealAtomValue(tmp_inst,dy_dx[i][j],(unsigned)0);
+			SetRealAtomValue(tmp_inst,DENSEMATRIX_ELEM(dy_dx,i,j),(unsigned)0);
 #ifdef SENSITIVITY_DEBUG
-			CONSOLE_DEBUG("%12.8f   i%d j%d",dy_dx[i][j],i,j);
+			CONSOLE_DEBUG("%12.8f   i%d j%d",DENSEMATRIX_ELEM(dy_dx,i,j),i,j);
 #endif
 		}
 #ifdef SENSITIVITY_DEBUG
@@ -379,7 +343,7 @@ int sensitivity_anal(
 finish:
 	if (inputs_ndx_list) ascfree((char *)inputs_ndx_list);
 	if (outputs_ndx_list) ascfree((char *)outputs_ndx_list);
-	if (dy_dx) free_matrix(dy_dx,noutputs);
+	densematrix_destroy(dy_dx);
 	if (scratch_vector) ascfree((char *)scratch_vector);
 	if (sys) system_destroy(sys);
 	return result;
@@ -391,7 +355,7 @@ finish:
 int DoDataAnalysis(struct var_variable **inputs,
 			  struct var_variable **outputs,
 			  int ninputs, int noutputs,
-			  real64 **dy_dx)
+			  DenseMatrix dy_dx)
 {
   FILE *fp;
   double *norm_2, *norm_1;
@@ -413,9 +377,9 @@ int DoDataAnalysis(struct var_variable **inputs,
     input_nominal = var_nominal(inputs[j]);
     maxvalue = sum = 0;
     for (i=0;i<noutputs;i++) {
-      dy_dx[i][j] *= input_nominal/var_nominal(outputs[i]);
-      maxvalue = MAX(fabs(dy_dx[i][j]),maxvalue);
-      sum += dy_dx[i][j]*dy_dx[i][j];
+      DENSEMATRIX_ELEM(dy_dx,i,j) *= input_nominal/var_nominal(outputs[i]);
+      maxvalue = MAX(fabs(DENSEMATRIX_ELEM(dy_dx,i,j)),maxvalue);
+      sum += DENSEMATRIX_ELEM(dy_dx,i,j)*DENSEMATRIX_ELEM(dy_dx,i,j);
     }
     norm_1[j] = maxvalue;
     norm_2[j] = sum;
@@ -440,7 +404,7 @@ int DoDataAnalysis(struct var_variable **inputs,
 
   for (i=0;i<noutputs;i++) {		/* print the scaled data */
     for (j=0;j<ninputs;j++) {
-      fprintf(fp,"%-#18.8f   %-4d",dy_dx[i][j],i);
+      fprintf(fp,"%-#18.8f   %-4d",DENSEMATRIX_ELEM(dy_dx,i,j),i);
     }
     if (var_fixed(outputs[i]))
       fprintf(fp,"    **fixed*** \n");
@@ -481,7 +445,7 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
 	dof_t *dof;
 	struct var_variable **inputs = NULL, **outputs = NULL;
 	int *inputs_ndx_list = NULL, *outputs_ndx_list = NULL;
-	real64 **dy_dx = NULL;
+	DenseMatrix dy_dx;
 	struct var_variable **vp,**ptr;
 	slv_system_t sys = NULL;
 	long c;
@@ -566,7 +530,7 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
 	* noutputs * ninputs matrix even for a short while so that I
 	* can compute a number of  different types of norms.
 	*/
-	dy_dx = make_matrix(noutputs,ninputs);
+	dy_dx = densematrix_create(noutputs,ninputs);
 
 	result = Compute_J(sys);
 	if (result) {
@@ -622,7 +586,7 @@ finish:
 	if (inputs_ndx_list) ascfree((char *)inputs_ndx_list);
 	if (outputs) ascfree((char *)outputs);
 	if (outputs_ndx_list) ascfree((char *)outputs_ndx_list);
-	if (dy_dx) free_matrix(dy_dx,noutputs);
+	densematrix_destroy(dy_dx);;
 	if (scratch_vector) ascfree((char *)scratch_vector);
 	if (sys) system_destroy(sys);
 	return result;
@@ -672,7 +636,7 @@ static int DoProject_X(struct var_variable **old_inputs,
 		       double step_length,
 		       struct var_variable **outputs,
 		       int ninputs, int noutputs,
-		       real64 **dy_dx)
+		       DenseMatrix dy_dx)
 {
   struct var_variable *var;
   real64 old_y, new_y, tmp;
@@ -692,7 +656,7 @@ static int DoProject_X(struct var_variable **old_inputs,
       continue;
     tmp = 0.0;
     for (j=0;j<ninputs;j++) {
-      tmp += (dy_dx[i][j] * delta_x[j]);
+      tmp += (DENSEMATRIX_ELEM(dy_dx,i,j)* delta_x[j]);
     }
     /*    old_y = RealAtomValue(var); */
     old_y = var_value(var);

@@ -10,7 +10,7 @@
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
@@ -33,6 +33,7 @@
 #include <utilities/ascMalloc.h>
 #include <compiler/extfunc.h>
 #include <general/mathmacros.h>
+#include <solver/densemtx.h>
 
 ExtMethodRun do_finite_diff_eval;
 
@@ -47,7 +48,7 @@ int finite_difference(struct gl_list_t *arglist){
   slv_system_t sys;
   int ninputs,noutputs;
   int i,j,offset;
-  real64 **partials;
+  DenseMatrix partials;
   real64 *y_old, *y_new;
   real64 x;
   real64 interval = 1e-6;
@@ -69,7 +70,7 @@ int finite_difference(struct gl_list_t *arglist){
   noutputs = (int)gl_length((struct gl_list_t *)gl_fetch(arglist,3));
   y_old = (real64 *)calloc(noutputs,sizeof(real64));
   y_new = (real64 *)calloc(noutputs,sizeof(real64));
-  partials = make_matrix(noutputs,ninputs);
+  partials = densematrix_create(noutputs,ninputs);
   for (i=0;i<noutputs;i++) {      	/* get old yvalues */
     inst = FetchElement(arglist,3,i+1);
     y_old[i] = RealAtomValue(inst);
@@ -84,7 +85,7 @@ int finite_difference(struct gl_list_t *arglist){
     for (i=0;i<noutputs;i++) { 		/* get new yvalues */
       inst = FetchElement(arglist,3,i+1);
       y_new[i] = RealAtomValue(inst);
-      partials[i][j] = -1.0 * (y_old[i] - y_new[i])/interval;
+      DENSEMATRIX_ELEM(partials,i,j) = -1.0 * (y_old[i] - y_new[i])/interval;
       PRINTF("y_old = %20.12g  y_new = %20.12g\n", y_old[i],y_new[i]);
     }
     SetRealAtomValue(xinst,x,(unsigned)0); /* unperturb system */
@@ -93,15 +94,15 @@ int finite_difference(struct gl_list_t *arglist){
   for (i=0;i<noutputs;i++) {
     for (j=0;j<ninputs;j++) {
       inst = FetchElement(arglist,4,offset+j+1);
-      SetRealAtomValue(inst,partials[i][j],(unsigned)0);
-      PRINTF("%12.6f %s",partials[i][j], (j==(ninputs-1)) ? "\n" : "    ");
+      SetRealAtomValue(inst,DENSEMATRIX_ELEM(partials,i,j),(unsigned)0);
+      PRINTF("%12.6f %s",DENSEMATRIX_ELEM(partials,i,j), (j==(ninputs-1)) ? "\n" : "    ");
     }
     offset += ninputs;
   }
   /* error: */
   free(y_old);
   free(y_new);
-  free_matrix(partials,noutputs);
+  densematrix_destroy(partials);
   system_destroy(sys);
   return result;
 }
