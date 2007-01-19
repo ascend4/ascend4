@@ -9,14 +9,14 @@ REQUIRE "johnpye/thermo_types.a4c";
 *)
 REQUIRE "steam/satsteamstream.a4c";
 
-MODEL dsgsat2;
+MODEL dsgsat3;
 	n IS_A integer_constant;
 	n :== 2;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;
 	dmdot_dt[2..n] IS_A mass_rate_rate;
-	drhou_dt[2..n] IS_A power_per_volume;
+	du_dt[2..n] IS_A power_per_volume;
 	dTw_dt[2..n] IS_A temperature_rate;
 
 	(* wall properties *)
@@ -48,11 +48,9 @@ MODEL dsgsat2;
 	(* system dynamics *)	
 	qdot_t[2..n], qdot_l[2..n] IS_A power_per_length;
 	qdot_s IS_A power_per_length;
-	rhou[1..n] IS_A	energy_per_volume;
 
 	FOR i IN [1..n] CREATE
 		z_vel[i]: vel[i] = node[i].v*node[i].mdot/A;
-		z_rhou[i]: rhou[i] = node[i].rho * node[i].u;
 	END FOR;
 
 	(* some aliases just for easier review of the state of the model *)
@@ -69,14 +67,31 @@ MODEL dsgsat2;
 	(* differential equations *)
 	FOR i IN [2..n] CREATE
 		z_massbal[i]: A * drho_dt[i] * dz = - (node[i].mdot - node[i-1].mdot);
+
+		z_enbal[i]: dz * (node[i].rho * A * du_dt[i] - qdot_t[i]) =
+			 - node[i].mdot * (node[i].u - node[i-1].u)
+			 - (node[i].p*node[i].v*node[i].mdot - node[i-1].p*node[i-1].v*node[i-1].mdot);
+
 		z_mombal[i]:  dz/A*dmdot_dt[i] = -(node[i].p-node[i-1].p) 
 						- f/D/2*node[i].rho*vel[i]^2*(
+							node[i].rho*vel[i]^2 - node[i-1].rho*vel[i-1]^2
+		              );
+
+		z_wall[i]:  rho_w*A_w*c_w*dTw_dt[i] = qdot_s - qdot_l[i] - qdot_t[i];
+		z_loss[i]:  qdot_l[i] = h_ext*(1{PI}*D_2)*(T_w[i] - T_amb);
+		z_trans[i]: qdot_t[i] = h_int*(1{PI}*D)  *(T_w[i] - node[i].T);
+
+(* -- original formulation --
+		z_massbal[i]: A * drho_dt[i] * dz = - (node[i].mdot - node[i-1].mdot);
+		z_mombal[i]:  dz/A*dmdot_dt[i] = -(node[i].p-node[i-1].p) 
+						- f/D/2*node[i].rho*node[i].v^2*(
 							node[i].rho*vel[i]^2 - node[i-1].rho*vel[i-1]^2
 						);
 		z_enbal[i]: dz * (A * drhou_dt[i] - qdot_t[i]) = - (node[i].Hdot - node[i-1].Hdot);
 		z_wall[i]:  rho_w*A_w*c_w*dTw_dt[i] = qdot_s - qdot_l[i] - qdot_t[i];
 		z_loss[i]:  qdot_l[i] = h_ext*(1{PI}*D_2)*(T_w[i] - T_amb);
 		z_trans[i]: qdot_t[i] = h_int*(1{PI}*D)  *(T_w[i] - node[i].T);
+*)
 	END FOR;
 
 	t IS_A time;
@@ -106,7 +121,7 @@ METHOD values;
 	qdot_s := 1000 {W/m^2} * D_2 * 10;
 	FOR i IN [2..n] DO
 		dmdot_dt[i] := 0.0 {kg/s/s};
-		drhou_dt[i] := 0 {kJ/m^3/s};
+		du_dt[i] := 0 {W/m^3};
 		node[i].v := 0.2 {L/kg};
 		node[i].rho := 6 {kg/L};
 		node[i].dp_dT := +0.5 {kPa/K};
@@ -133,7 +148,6 @@ METHOD specify_steady;
 	FOR i IN [1..n] DO
 		RUN node[i].specify;
 		FIX dTw_dt[i];   FREE T_w[i];
-		FREE rhou[i];
 	END FOR;
 	FIX node[1].p;
 	FREE node[1].T;
@@ -148,7 +162,7 @@ METHOD specify_steady;
 		(* FIX dmdot_dt[i]; FREE node[i].mdot; *)
 		FREE node[i].x; FIX node[i].p;
 		FIX drho_dt[i];  FREE node[i].p;
-		FIX drhou_dt[i]; FREE node[i].T;
+		FIX du_dt[i]; FREE node[i].T;
 		FREE mdot[i]; FIX dmdot_dt[i];
 	END FOR;
 END specify_steady;
@@ -157,7 +171,7 @@ METHOD configure_dynamic;
 	FOR i IN [2..n] DO
 		FREE drho_dt[i];  FIX node[i].rho;
 		FREE dmdot_dt[i]; FIX node[i].mdot;
-		FREE drhou_dt[i]; FIX rhou[i];
+		FREE du_dt[i];    FIX node[i].u;
 		FREE dTw_dt[i];   FIX T_w[i];
 		FREE node[i].x;
 		FREE node[i].T;
@@ -168,7 +182,7 @@ METHOD free_states;
 	FOR i IN [2..n] DO
 		FREE node[i].rho;
 		FREE node[i].mdot;
-		FREE rhou[i];
+		FREE node[i].u;
 		FREE T_w[i];
 	END FOR;
 END free_states;	
@@ -184,8 +198,8 @@ METHOD ode_init;
 		dmdot_dt[i].ode_id := 4*i+1;  node[i].mdot.ode_id := 4*i+1;
 		dmdot_dt[i].ode_type := 2;    node[i].mdot.ode_type := 1;
 		
-		drhou_dt[i].ode_id := 4*i+2;  rhou[i].ode_id := 4*i+2;
-		drhou_dt[i].ode_type := 2;    rhou[i].ode_type := 1;
+		du_dt[i].ode_id := 4*i+2;     node[i].u.ode_id := 4*i+2;
+		du_dt[i].ode_type := 2;       node[i].u.ode_type := 1;
 
 		dTw_dt[i].ode_id := 4*i+3;    T_w[i].ode_id := 4*i+3;
 		dTw_dt[i].ode_type := 2;      T_w[i].ode_type := 1;
@@ -207,7 +221,7 @@ METHOD fix_outlet_quality;
 	FREE node[1].mdot;
 END fix_outlet_quality;
 
-END dsgsat2;
+END dsgsat3;
 ADD NOTES IN dsgsat2;
 	'QRSlv' iterationlimit {50}
 END NOTES;
