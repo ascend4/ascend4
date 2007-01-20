@@ -29,17 +29,18 @@
 
 /** @file
  *  lin_utils: Ascend Linear Algebra Utilities.
- *  <pre>
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "mtx.h"
- *                #include "linsol.h"
- *                #include "linsolqr.h"
- *  </pre>
+
  *  @todo Document functions in linutils.h.
  */
 
-#ifndef linutils_already_included
-#define linutils_already_included
+#ifndef ASC_LINUTILS_H
+#define ASC_LINUTILS_H
+
+#include <utilities/ascConfig.h>
+#include "mtx.h"
+#include "linsol.h"
+#include "linsolqr.h"
+
 
 /**	@addtogroup linear Linear
 	@{

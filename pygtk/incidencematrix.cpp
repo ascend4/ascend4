@@ -8,20 +8,8 @@ using namespace std;
 #include "relation.h"
 
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <compiler/instance_enum.h>
-
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/logrel.h>
-#include <solver/bnd.h>
-#include <solver/mtx.h>
-#include <solver/linsol.h>
-#include <solver/linsolqr.h>
+#include <linear/mtx.h>
 #include <solver/slv_common.h>
-#include <solver/slv_types.h>
 #include <solver/slv_client.h>
 }
 

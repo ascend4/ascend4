@@ -1,45 +1,49 @@
-/*
- *  Model-based Reordering Routines
- *  by Benjamin Andrew Allan
- *  6/22/96
- *  Version: $Revision: 1.11 $
- *  Version control file: $RCSfile: model_reorder.c,v $
- *  Date last modified: $Date: 1997/07/18 12:14:43 $
- *  Last modified by: $Author: mthomas $
- *  Author $$
- *  Copyright(C) 1996 Benjamin Andrew Allan
- *
- *  This file is part of the ASCEND IV math programming system.
- *  These functions are part of a new design for feeding
- *  solvers from the ASCEND compiler.
- *
- *  File to play MODEL-relation based reordering games.
- *  We're starting with a basic RBBD implementation.
- *  Assumptions:
- *  - If the MODELs are hierarchical, then they have been indexed in a
- *  tree bottom-up fashion.
- *  - Input is a square block that needs tearing and not a rectangle.
- *
- *  The ASCEND IV math programming system is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The ASCEND IV math programming system is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright(C) 1996 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Model-based Reordering Routines
+
+	These functions are part of a new design for feeding
+	solvers from the ASCEND compiler.
+
+	We're starting with a basic RBBD implementation.
+
+	Assumptions:
+	  - If the MODELs are hierarchical, then they have been indexed in a
+	    tree bottom-up fashion.
+	  - Input is a square block that needs tearing and not a rectangle.
+*//*
+	by Benjamin Andrew Allan, 6/22/96
+	Last in CVS: $Revision: 1.11 $ $Date: 1997/07/18 12:14:43 $ $Author: mthomas $
+*/
+
+#include "model_reorder.h"
 
 #include <utilities/ascConfig.h>
 #include <compiler/compiler.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
+
+#include <linear/mtx.h>
+#include <linear/linsol.h>
+#include <linear/linsolqr.h>
+
 #include "slv_types.h"
 #include "var.h"
 #include "rel.h"
@@ -47,12 +51,8 @@
 #include "conditional.h"
 #include "logrel.h"
 #include "bnd.h"
-#include "mtx.h"
 #include "slv_common.h"
-#include "linsol.h"
-#include "linsolqr.h"
 #include "slv_client.h"
-#include "model_reorder.h"
 
 #define MRDEBUG 0
 /**< if !=0, generate spew while working */

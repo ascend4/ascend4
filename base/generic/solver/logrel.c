@@ -1,33 +1,29 @@
-/*
- *  Logical Relation Module
- *  by Vicente Rico-Ramirez
- *  Created: 09/96
- *  Version: $Revision: 1.8 $
- *  Version control file: $RCSfile: logrel.c,v $
- *  Date last modified: $Date: 1998/01/29 00:42:26 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*//** @file
+	Logical Relation Module.
+*//*
+	by Vicente Rico-Ramirez, 09/96
+	Last in CVS: $Revision: 1.8 $ $Date: 1998/01/29 00:42:26 $ $Author: ballan $
+*/
+
+#include "logrel.h"
 
 #include <math.h>
-#include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/mem.h>
 #include <general/list.h>
@@ -52,14 +48,13 @@
 #include <compiler/logrelation.h>
 #include <compiler/logrel_util.h>
 #include <compiler/packages.h>
+
+#include <linear/mtx.h>
+
 #define _SLV_SERVER_C_SEEN_ /* for the extrel stuff in header */
-#include "mtx.h"
-#include "slv_types.h"
 #include "var.h"
 #include "rel.h"
-#include "discrete.h"
 #include "conditional.h"
-#include "logrel.h"
 #include "bnd.h"
 #include "slv_server.h"
 

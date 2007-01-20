@@ -21,17 +21,18 @@
 	Ascend Instance Miscellaneous Queries.
 
 	Requires:
-	#include "instance_enum.h"
 	#include "compiler.h"
 *//*
-	by Tom Epperly & Ben Allan
+	by Tom Epperly & Ben Allan, 8/16/89
 	based on instance.c
-	8/16/89
 	Last in CVS: $Revision: 1.13 $ $Date: 1998/02/05 16:36:48 $ $Author: ballan $
 */
 
 #ifndef ASC_INSTQUERY_H
 #define ASC_INSTQUERY_H
+
+#include "compiler.h"
+#include "instance_enum.h"
 
 /**	@addtogroup compiler Compiler
 	@{

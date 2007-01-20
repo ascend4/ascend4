@@ -30,10 +30,12 @@
  *
  */
 
-#include <utilities/ascConfig.h>
+#include "var.h"
+
 #include <utilities/ascMalloc.h>
 #include <general/dstring.h>
 #include <general/list.h>
+
 #include <compiler/compiler.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_enum.h>
@@ -47,18 +49,11 @@
 #include <compiler/parentchild.h>
 #include <compiler/instquery.h>
 #include <compiler/instance_io.h>
-#include "mtx.h"
-#include "slv_types.h"
-#include "rel.h"
-#include "var.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
+
+#include <linear/mtx.h>
+
 #include "slv_server.h"
 #include "slv_common.h"
-#include "linsol.h"
-#include "linsolqr.h"
 #include "slv_client.h"
 
 /* useful cast */

@@ -29,14 +29,13 @@
  *  Logical Relation Solver registration module.
  *  <pre>
  *  Contents:     LRSlv module (Logical Relation Solver)
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "slv_client.h"
  *  </pre>
  */
 
 #ifndef ASC_SLV9A_H
 #define ASC_SLV9A_H
+
+#include "slv_client.h"
 
 /**	@addtogroup solver Solver
 	@{

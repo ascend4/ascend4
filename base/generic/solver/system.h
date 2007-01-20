@@ -43,12 +43,12 @@
 #ifndef ASC_SYSTEM_H
 #define ASC_SYSTEM_H
 
+#include <utilities/ascConfig.h>
+#include "slv_types.h"
+
 /**	@addtogroup solver Solver
 	@{
 */
-
-#include <utilities/ascConfig.h>
-#include "slv_types.h"
 
 ASC_DLLSPEC slv_system_t system_build(SlvBackendToken inst);
 /**<

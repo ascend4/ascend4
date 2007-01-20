@@ -72,7 +72,7 @@
 
 #include <packages/sensitivity.h>
 
-#include <solver/densemtx.h>
+#include <linear/densemtx.h>
 
 #include "integrator.h"
 #include "lsode.h"

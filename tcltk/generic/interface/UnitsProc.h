@@ -38,18 +38,15 @@
  *  appropriate combination of base units, aka fundamental units.
  *  This should keep the number of DIM/units on the internal lists from
  *  getting out of hand when talking about multipliers, derivatives, etc
- *
- *  Requires:   #include "utilities/ascConfig.h"
- *              #include "compiler/interface.h"
- *              #include "compiler/instance_enum.h"
- *              #include "general/list.h"
- *              #include "compiler/dimen.h"
- *              #include "compiler/units.h"
  *  </pre>
  */
 
 #ifndef ASCTK_UNITSPROC_H
 #define ASCTK_UNITSPROC_H
+
+#include <compiler/instance_enum.h>
+#include <general/list.h>
+#include <compiler/units.h>
 
 extern struct Units * g_base_units[NUM_DIMENS];
 /**< These are the working base units. */

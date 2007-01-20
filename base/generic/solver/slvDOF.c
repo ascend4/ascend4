@@ -26,31 +26,22 @@
 	Last in CVS: $Revision: 1.24 $ $Date: 1998/04/09 21:56:09 $ $Author: rv2a $
 */
 
+#include "slvDOF.h"
+
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
+
 #include <utilities/ascSignal.h>
 #include <compiler/compiler.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <general/list.h>
+#include <general/mathmacros.h>
 #include <utilities/mem.h>
-#include "mtx.h"
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
+
 #include "relman.h"
 #include "cond_config.h"
 #include "slv_common.h"
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_client.h"
 #include "slv_stdcalls.h"
-#include "slvDOF.h"
-#include <general/mathmacros.h>
 
 #define SLVDOF(s) ((slvDOF_system_t)(s))
 

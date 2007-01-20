@@ -57,15 +57,6 @@
 	The parameters and status struct definitions have been moved here,
 	being of general interest.
 	@ENDNOTE
-
-	Requires:
-	#include <stdio.h>
-	#include <utilities/ascConfig.h>
-	#include <solver/slv_types.h>
-	#include <solver/rel.h>
-	#include <solver/logrel.h>
-	#include <solver/mtx.h>
-	#include <general/list.h>
 */
 
 /** @page solver-parameters Solver Parameters in ASCEND
@@ -140,17 +131,20 @@
 #ifndef ASC_SLV_COMMON_H
 #define ASC_SLV_COMMON_H
 
-/**	@addtogroup solver Solver
-	@{
-*/
+#include <stdio.h>
 
 #include <utilities/ascConfig.h>
 #include <general/list.h>
 
+#include <linear/mtx.h>
+
 #include "slv_types.h"
 #include "rel.h"
 #include "logrel.h"
-#include "mtx.h"
+
+/**	@addtogroup solver Solver
+	@{
+*/
 
 #undef SLV_INSTANCES
 #define SLV_INSTANCES TRUE

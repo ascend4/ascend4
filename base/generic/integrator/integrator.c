@@ -40,7 +40,7 @@
 #include "samplelist.h"
 
 /* #define ANALYSE_DEBUG */
-#define SOLVE_DEBUG
+/* #define SOLVE_DEBUG */
 /* #define CLASSIFY_DEBUG */
 
 /*------------------------------------------------------------------------------
@@ -1086,7 +1086,7 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 				INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->dynvars);
 			}
 		}
-#if 0
+#if 1
 		else{
 			/* fixed variable, only include it if ode_type == 1 */
 			type = DynamicVarInfo(var,&index);

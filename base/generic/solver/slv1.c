@@ -35,18 +35,22 @@
  *  assumes old solver protocol.
  *  doesn't follow relman_eval signal trapping protocol.
  */
+
+#include "slv0.h"
+
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
+
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
-#include <general/tm_time.h>
 #include <utilities/set.h>
 #include <utilities/mem.h>
+#include <utilities/ascPanic.h>
+#include <general/tm_time.h>
+#include <general/list.h>
+
 #include <compiler/compiler.h>
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
 #include <compiler/extfunc.h>
 #include <compiler/dimen.h>
 #include <compiler/expr_types.h>
@@ -55,21 +59,11 @@
 #include <compiler/rel_blackbox.h>  /* relation enum */
 #include <compiler/vlist.h>
 #include <compiler/relation.h>  /* relation enum */
-#include "mtx.h"
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
+
 #include "calc.h"
 #include "relman.h"
-#include "slv_common.h"
 #include "slv_client.h"
-#include "slv1.h"
+
 #if !defined(STATIC_MINOS) && !defined(DYNAMIC_MINOS)
 /* do nothing */
 int slv1_register(SlvFunctionsT *f)

@@ -26,16 +26,20 @@
 #define ASC_SENSITIVITY_H
 
 #include <utilities/ascConfig.h>
-#include <compiler/instance_enum.h>
-#include <compiler/compiler.h>
 #include <general/list.h>
 #include <compiler/extfunc.h>
-#include <solver/mtx.h>
-#include <solver/mtx_basic.h>
-#include <solver/mtx_perms.h>
-#include <solver/mtx_query.h>
-#include <solver/linsol.h>
-#include <solver/linsolqr.h>
+
+#include <compiler/instance_enum.h>
+#include <compiler/compiler.h>
+
+#include <linear/mtx.h>
+#include <linear/mtx_basic.h>
+#include <linear/mtx_perms.h>
+#include <linear/mtx_query.h>
+#include <linear/linsol.h>
+#include <linear/linsolqr.h>
+#include <linear/densemtx.h>
+
 #include <solver/slv_types.h>
 #include <solver/var.h>
 #include <solver/rel.h>
@@ -49,7 +53,6 @@
 #include <solver/slv_stdcalls.h>
 #include <solver/system.h>
 #include <solver/slv_client.h>
-#include <solver/densemtx.h>
 
 /*--------------------------------------------------
 	The following functions are provided only for use by LSODE. We want to

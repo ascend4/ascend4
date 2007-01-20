@@ -24,6 +24,8 @@
 	Last in CVS: $Revision: 1.22 $ $Date: 2000/01/25 02:27:58 $ $Author: ballan $
 */
 
+#include "slv9.h"
+
 #include <math.h>
 
 #include <utilities/config.h>
@@ -32,33 +34,24 @@
 #include <utilities/ascMalloc.h>
 #include <general/tm_time.h>
 #include <utilities/mem.h>
-#include <compiler/compiler.h>
-#include <compiler/instance_enum.h>
 #include <general/list.h>
 #include <general/mathmacros.h>
+
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/functype.h>
 #include <compiler/func.h>
-#include "mtx.h"
-#include "mtx_reorder.h"
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
+
+#include <linear/mtx_reorder.h>
+
 #include "calc.h"
 #include "relman.h"
 #include "logrelman.h"
 #include "bndman.h"
 #include "cond_config.h"
 #include "slv_common.h"
-#include "slv_client.h"
-#include "slv9.h"
 #include "slv_stdcalls.h"
 #include "slvDOF.h"
 

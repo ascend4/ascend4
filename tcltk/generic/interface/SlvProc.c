@@ -29,22 +29,15 @@
 
 #include <math.h>
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+
 #include <utilities/ascMalloc.h>
-#include <general/list.h>		/* needed? */
 #include <compiler/instance_enum.h>
-#include <solver/slv_types.h>
-#include <solver/mtx.h>
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/logrel.h>
-#include <solver/bnd.h>
+
+#include <linear/mtx.h>
+
 #include <solver/slv_common.h>
-#include <solver/linsol.h>
-#include <solver/linsolqr.h>
 #include <solver/slv_client.h>
+
 #include "HelpProc.h"
 #include "SolverGlobals.h"
 #include "Commands.h" /* for registration function */

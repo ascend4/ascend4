@@ -30,17 +30,19 @@
  *  Set routine external definitions.
  *  <pre>
  *  When #including sets.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
  *         #include "dimen.h"
- *         #include "expr_types.h"
- *         #include "list.h"
  *  </pre>
  */
 
 #ifndef ASC_SETS_H
 #define ASC_SETS_H
+
+#include <utilities/ascConfig.h>
+#include <general/list.h>
+
+#include "fractions.h"
+#include "compiler.h"
+#include "expr_types.h"
 
 /**	@addtogroup compiler Compiler
 	@{
@@ -48,23 +50,17 @@
 
 extern struct Set *CreateSingleSet(struct Expr *ex);
 /**< 
- *  <!--  struct Set *CreateSingleSet(ex)                              -->
- *  <!--  struct Expr *ex;                                             -->
  *  Create a set node of type single with ex as its expression.
  */
 
 extern struct Set *CreateRangeSet(struct Expr *lower, struct Expr *upper);
 /**< 
- *  <!--  struct Set *CreateRangeSet(lower,upper)                      -->
- *  <!--  struct Expr *lower,*upper;                                   -->
  *  Create a set node of type range with lower as its lower bound and
  *  upper as its upper bound.
  */
 
 extern void LinkSets(struct Set *cur, struct Set *next);
 /**< 
- *  <!--  void LinkSets(cur,next)                                      -->
- *  <!--  struct Set *cur, *next;                                      -->
  *  Sets the next field of cur to next.
  */
 
@@ -81,10 +77,6 @@ extern void LinkSets(struct Set *cur, struct Set *next);
  */
 extern struct Set *NextSetF(CONST struct Set *s);
 /**<
- *  <!--  macro NextSet(s)                                             -->
- *  <!--  struct Set *NextSetF(s)                                      -->
- *  <!--  const struct Set *s;                                         -->
- *  <!--  Return the next set. (if in an expression of Set)            -->
  *  Implementation function for NextSet().  Do not call this
  *  function directly - use NextSet() instead.
  */
@@ -102,10 +94,6 @@ extern struct Set *NextSetF(CONST struct Set *s);
  */
 extern int SetTypeF(CONST struct Set *s);
 /**<
- *  <!--  macro SetType(s)                                             -->
- *  <!--  const int SetTypeF(s)                                        -->
- *  <!--  struct Set *s;                                               -->
- *  <!--  return the type of the set. (single expression or range (..))-->
  *  Implementation function for SetType().  Do not call this
  *  function directly - use SetType() instead.
  */
@@ -124,11 +112,6 @@ extern int SetTypeF(CONST struct Set *s);
  */
 extern CONST struct Expr *GetSingleExprF(CONST struct Set *s);
 /**<
- *  <!--  macro GetSingleExpr(s)                                       -->
- *  <!--  const struct Expr *GetSingleExprF(s)                         -->
- *  <!--  const struct Set *s;                                         -->
- *  <!--  Returns the expression for the single value.                 -->
- *  <!--  Assumes that s is not a range.                               -->
  *  Implementation function for GetSingleExpr().  Do not call this
  *  function directly - use GetSingleExpr() instead.
  */
@@ -146,10 +129,6 @@ extern CONST struct Expr *GetSingleExprF(CONST struct Set *s);
  */
 extern CONST struct Expr *GetLowerExprF(CONST struct Set *s);
 /**<
- *  <!--  macro GetLowerExpr(s)                                        -->
- *  <!--  const struct Expr *GetLowerExprF(s)                          -->
- *  <!--  const struct Set *s;                                         -->
- *  <!--  Assumes that s is a range.  Returns the lower value expression. -->
  *  Implementation function for GetLowerExpr().  Do not call this
  *  function directly - use GetLowerExpr() instead.
  */
@@ -167,18 +146,12 @@ extern CONST struct Expr *GetLowerExprF(CONST struct Set *s);
  */
 extern CONST struct Expr *GetUpperExprF(CONST struct Set *s);
 /**<
- *  <!--  macro GetUpperExpr(s)                                        -->
- *  <!--  const struct Expr *GetUpperExprF(s)                          -->
- *  <!--  const struct Set *s;                                         -->
- *  <!--  Assumes that s is a range.  Returns the upper value expression. -->
  *  Implementation function for GetUpperExpr().  Do not call this
  *  function directly - use GetUpperExpr() instead.
  */
 
 extern struct Set *CopySetNode(CONST struct Set *s);
 /**< 
- *  <!--  struct Set *CopySetNode(s)                                   -->
- *  <!--  const struct Set *s;                                         -->
  *  Return a copy of s, but not anything pointed at by s->next.
  *  copy->next = NULL.
  *  Handles NULL input gracefully, returning NULL.
@@ -186,24 +159,18 @@ extern struct Set *CopySetNode(CONST struct Set *s);
 
 extern struct Set *CopySetList(CONST struct Set *s);
 /**< 
- *  <!--  struct Set *CopySetList(s)                                   -->
- *  <!--  const struct Set *s;                                         -->
  *  Return a copy of s.
  *  Handles NULL input gracefully.
  */
 
 extern void DestroySetNode(struct Set *s);
 /**<
- *  <!--  void DestroySetNode(s)                                       -->
- *  <!--  struct Set *s;                                               -->
  *  Destroys Set node given and the expression contents of the sets.
  *  Pays not the slightest attention to the ref_count B.S.
  */
 
 extern void DestroySetList(struct Set *s);
 /**< 
- *  <!--  void DestroySetList(s)                                       -->
- *  <!--  struct Set *s;                                               -->
  *  Destroys Set chain given and the expression contents of the sets.
  *  Handles NULL input gracefully.
  *  Pays not the slightest attention to the ref_count B.S.
@@ -211,60 +178,44 @@ extern void DestroySetList(struct Set *s);
 
 extern void DestroySetHead(struct Set *s);
 /**< 
- *  <!--  void DestroySetHead(s)                                       -->
- *  <!--  struct Set *s;                                               -->
  *  Destroys Set node given but not the expression contents of the node.
  *  Normally should not be used.
  */
 
 extern struct Set *CopySetByReference(struct Set *s);
 /**< 
- *  <!--  struct Set *CopySetByReference(s)                            -->
- *  <!--  const struct Set *s;                                         -->
  *  Increase ref_count.
  */
 
 extern void DestroySetListByReference(struct Set *s);
 /**< 
- *  <!--  void DestroySetListByReference(s)                            -->
- *  <!--  struct Set *s;                                               -->
  *  Decrements the reference count and destroys the elements 
  *  in the set if the count is zero.
  */
 
 extern void DestroySetNodeByReference(struct Set *s);
 /**< 
- *  <!--  void DestroySetNodeByReference(s)                            -->
- *  <!--  struct Set *s;                                               -->
  *  Decrease ref_count.
  */
 
 extern struct Set *JoinSetLists(struct Set *s1, struct Set *s2);
 /**< 
- *  <!--  void JoinSetLists(s1,s2)                                     -->
- *  <!--  struct Set *s1, *s2;                                         -->
  *  Append list s2 to the end of s1.  Returns the pointer to the joined list.
  *  If s1 is NULL, it simply returns s2.
  */
 
 extern struct Set *ReverseSetList(struct Set *s);
 /**< 
- *  <!--  struct Set *ReverseSetList(s)                                -->
- *  <!--  struct Set *s;                                               -->
  *  Reverse the order of the set list.
  */
 
 extern int SetStructuresEqual(CONST struct Set *s1, CONST struct Set *s2);
 /**< 
- *  <!--  int SetStructuresEqual(s1,s2)                                -->
- *  <!--  const struct Set *s1,*s2;                                    -->
  *  Return TRUE if and only if, s1 and s2 are structurally equivalent.
  */
 
 extern int CompareSetStructures(CONST struct Set *s1, CONST struct Set *s2);
 /**< 
- *  <!--  int CompareSetStructures(s1,s2)                              -->
- *  <!--  const struct Set *s1,*s2;                                    -->
  *  Returns -1,0,1 as s1 < = > s2.
  *  compares on length and on content value.
  *  a range > an expression
@@ -286,8 +237,6 @@ extern struct gl_list_t *SetNameList(CONST struct Set *s);
 
 extern char *CreateStrFromSet(CONST struct Set *set);
 /**< 
- *  <!--  char *CreateStrFromSet(set);                                 -->
- *  <!--  const struct Set *set;                                       -->
  *  Returns a copy of the string representation of the given set.
  */
 

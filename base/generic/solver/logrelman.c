@@ -25,21 +25,22 @@
  *
  */
 
+#include "logrelman.h"
+
 #include <math.h>
-#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
-#include <utilities/ascMalloc.h>
 #include <compiler/functype.h>
 #include <compiler/safe.h>
-#include <general/list.h>
 #include <compiler/extfunc.h>
 #include <compiler/dimen.h>
 #include <compiler/expr_types.h>
 #include <compiler/exprs.h>
 #include <compiler/find.h>
-#include <general/list.h>
 #include <compiler/atomvalue.h>
 #include <compiler/mathinst.h>
 #include <compiler/relation_type.h>
@@ -53,16 +54,13 @@
 #include <compiler/logrelation.h>
 #include <compiler/logrel_util.h>
 #include <compiler/logrel_io.h>
+
 #define _SLV_SERVER_C_SEEN_
-#include "mtx.h"
 #include "slv_types.h"
 #include "var.h"
 #include "rel.h"
-#include "discrete.h"
 #include "conditional.h"
 #include "bnd.h"
-#include "logrel.h"
-#include "logrelman.h"
 #include "slv_server.h"
 
 #define IPTR(i) ((struct Instance *)(i))

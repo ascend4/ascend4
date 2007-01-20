@@ -18,11 +18,6 @@
 *//**
 	@file
 	Ascend Units Type definitions.
-
-	Requires:
-	#include "fractions.h"
-	#include "compiler.h"
-	#include "dimen.h"
 *//*
 	by Tom Epperly 8/18/89
 	Last in CVS: $Revision: 1.10 $ $Date: 1998/02/05 16:38:40 $ $Author: ballan $
@@ -31,12 +26,15 @@
 #ifndef ASC_UNITS_H
 #define ASC_UNITS_H
 
+#include <stdio.h>
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */
-
-#include <stdio.h>
-#include <utilities/ascConfig.h>
 
 #ifdef _HPUX_SOURCE
 #define ACAST char *

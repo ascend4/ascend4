@@ -17,8 +17,7 @@
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*//**
-	@file
+*//** @file
 	Relation module for the SLV solver.
 
 	This module provides a SLV solver (the "client") with access to
@@ -37,32 +36,21 @@
 			rel_filter_t data structure for perfoming all
 			relation filtering needs (eliminating the
 			filter module)
-
-	Client (ie solver engine) requires:
-	#include "var.h"
-
-	Server-side use (ie the ASCEND compiler, analyser, etc) *further* requires:
-	#include <expr.h> ??
-	#include <compiler/expr_types.h> ??
-	#include <compiler/extfunc.h>
-	#include <compiler/relation.h>
-	#include <compiler/packages.h>
-	#include <compiler/extcall.h>
-	#include "mtx.h"
 *//*
-	by Karl Michael Westerberg and Joseph Zaher
-	Created: 2/6/90
+	by Karl Michael Westerberg and Joseph Zaher, 2/6/90
 	Last CVS version: $Revision: 1.41 $ $Date: 1998/02/05 15:59:24 $ $Author: ballan $
 */
 
 #ifndef ASC_REL_H
 #define ASC_REL_H
 
+#include <utilities/ascConfig.h>
+#include "slv_types.h"
+#include "var.h"
+
 /**	@addtogroup solver Solver
 	@{
 */
-
-#include <utilities/ascConfig.h>
 
 /*------------------------------------------------------------------------------
   forward decls and typedefs
@@ -617,132 +605,6 @@ extern void rel_set_multiplier(struct rel_relation *rel, real64 multiplier);
  *  relate the gradient of the relation rel with that of some objective
  *  function.
  */
-
-/*------------------------------------------------------------------------------
-  SERVER-SIDE UTILITY FUNCTIONS
-
-	Things for the server side only. Not visible to clients.
-
-	Ok, really nosy clients courting death can cheat. Don't cry when
-	they break.
-	We make absolutely no commitment to being compatible with this portion
-	of the header at any time in the future.
-*/
-#ifdef _SLV_SERVER_C_SEEN_
-
-#ifdef DIEDIEDIE /* this is only the compiler's business. */
-extern double g_external_tolerance; /**< DEFAULT 1e-12 */
-
-/* - - - - - - - - - - - - -
-	EXTERNAL RELATION CACHE STUFF
-	this wasn't originally documented, so I've added my own understanding
-	of all this stuff here... feel free to revise... -- JP
-*/
-
-void extrel_store_input_vars(struct rel_relation *rel);
-/**<
-	Convert the ExtRelCache 'inputlist' into a list of var_variable pointers
-	inside the ExtRElCAche object.
-*/
-
-extern struct ExtRelCache *rel_extcache(struct rel_relation *rel);
-/**<
-	Retrieve external relation information.
-
-	This is the gateway to the external relation information
-	stashed away to make processing of external relations efficient.
-	See the file extrel.[ch] for functions to deal with the external
-	relations cache, unless of course you are a client in which CASE
-	don't.
-
-	@NOTE This applies ONLY to rels that have external nodes! Ensure this by
-	calling rel_extnodeinfo FIRST !
-*/
-
-extern void rel_set_extcache(struct rel_relation *rel, struct ExtRelCache *cache);
-/**<
-	Set external relation information.
-
-	This is the gateway to the external relation information
-	stashed away to make processing of external relations efficient.
-	See the file extrel.[ch] for functions to deal with the external
-	relations cache, unless of course you are a client in which CASE
-	don't.
-
-	@NOTE This applies ONLY to rels that have external nodes! Ensure this by 
-	calling rel_extnodeinfo FIRST!
-*/
-
-extern struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext);
-/**<
-	Create an external relation cache from a given ExtCallNode. Copies over
-	all the pointers inside the ExtCallNode object, but also allocates its own
-	memory for the input and output arrays and jacobian.
-
-	A pointer to the 'arglist' used by the ExtCallNode is put in the ExtRelCache
-	and also a linearised list of the inputs is put in the
-	'inputlist' of the ExtRelCache (and this list is owned by the ExtRelCache).
-*/
-
-struct ExtRelCache *CreateCacheFromInstance(SlvBackendToken relinst);
-
-extern void ExtRel_DestroyCache(struct ExtRelCache *cache);
-/**<
-	Destory an ExtRelCache object. Mostly we just throw away the pointers that
-	we have. The exception is the 'inputlist', which we own and must destroy
-	here.
-*/
-
-extern int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup);
-/**<
-	Presolve an external relation. This allows the external relation to
-	initialise its internal data if required, before the main solver
-	iterations begin. -- JP.
-
-	To deal with the first time we also want to do argument
-	checking, and then turn off the first_func_eval flag.
-	Turn on the evaluation_required flag. The rationale behind this is
-	as follows:
-	
-	The solver at the moment does not treat an external relation
-	specially, i.e., as a block. It also calls for its functions
-	a relation at a time. However the external relations compute
-	all their outputs at once. So as not to do unnecessary
-	recalculations we use these flag bits. We set evaluation_required
-	initially to true, so as to force *at least* one calculation
-	of the external relations. By similar reasoning first_func_eval (done)
-	is set to false.
-
-	@TODO Question: isn't the init function going to get called repeatedly here
-	for blackboxes with multiple outputs? -- JP
-*/
-
-extern real64 ExtRel_Evaluate_Residual(struct rel_relation *rel);
-/**<
-	Evaluate the external relation and return the required residual, but only
-	if evaluation is required. This means that current inputs are compared with
-	previous values to ensure that at least one has really changed.
-
-	Renamed from ExtRel_Evaluate_RHS (and *_LHS removed, because it was just
-	a placeholder).
-*/
-
-extern real64 ExtRel_Evaluate_RHS(struct rel_relation *rel);
-/**<
-	Evaluate the relation RHS, which is the externally-computed value of the
-	output for the current value of the inputs.
-*/
-
-extern real64 ExtRel_Evaluate_LHS(struct rel_relation *rel);
-/**<
-	Evaluate the relation LHS, which is always current value of the output
-	as retreived from the model.
-*/
-
-#endif /*DIEDIEDIE*/
-
-#endif /* _SLV_SERVER_C_SEEN_ */
-
 
 /* @} */
 

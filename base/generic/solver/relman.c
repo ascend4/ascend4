@@ -25,16 +25,21 @@
 	Last in CVS: $Revision: 1.44 $ $Date: 1998/04/23 23:56:22 $ $Author: ballan $
 */
 
+#include "relman.h"
+
 #include <math.h>
 #include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <general/mathmacros.h>
+
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
-#include <utilities/ascMalloc.h>
 #include <compiler/functype.h>
 #include <compiler/safe.h>
-#include <general/list.h>
+#include <compiler/rootfind.h>
 #include <compiler/extfunc.h>
 #include <compiler/dimen.h>
 #include <compiler/expr_types.h>
@@ -47,19 +52,13 @@
 #include <compiler/relation.h>
 #include <compiler/relation_util.h>
 #include <compiler/relation_io.h>
-#define _SLV_SERVER_C_SEEN_
-#include "mtx.h"
+
 #include "slv_types.h"
-#include "var.h"
-#include "rel.h"
 #include "discrete.h"
 #include "conditional.h"
 #include "logrel.h"
 #include "bnd.h"
-#include "relman.h"
-#include <compiler/rootfind.h>
 #include "slv_server.h"
-#include <general/mathmacros.h>
 
 #define IPTR(i) ((struct Instance *)(i))
 

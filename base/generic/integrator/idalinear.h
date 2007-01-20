@@ -38,7 +38,7 @@
 
 #include <ida/ida.h>
 #include <nvector/nvector_serial.h>
-#include <solver/mtx.h>
+#include <linear/mtx.h>
 
 /**
 	Function prototype for sparse jacobian evaluation as required by this linear solver

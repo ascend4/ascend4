@@ -5,12 +5,6 @@
 
 #include "config.h"
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <solver/slv_types.h>
-#include <solver/rel.h>
-#include <solver/logrel.h>
-#include <solver/mtx.h>
-#include <general/list.h>
 #include <solver/slv_common.h>
 }
 

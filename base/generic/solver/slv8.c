@@ -24,8 +24,10 @@
 	Last in CVS: $Revision: 1.31 $ $Date: 2000/01/25 02:27:50 $ $Author: ballan $
 */
 
+#include "slv8.h"
+
 #include <math.h>
-#include <utilities/ascConfig.h>
+
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <utilities/set.h>
@@ -33,29 +35,19 @@
 #include <general/mathmacros.h>
 #include <utilities/mem.h>
 #include <general/list.h>
+
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/functype.h>
 #include <compiler/func.h>
-#include "mtx.h"
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
+
+#include <linear/mtx_vector.h>
+
 #include "calc.h"
 #include "relman.h"
 #include "slv_common.h"
-#include "slv_client.h"
-#include "slv8.h"
 #include "slv_stdcalls.h"
-#include "mtx_vector.h"
-
-#include <solver/conopt.h>
+#include "conopt.h"
 
 #define slv8_register_conopt_function register_conopt_function
 #define slv8_coicsm coicsm

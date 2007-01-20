@@ -27,11 +27,6 @@ if solver_env.get('WITH_IDA'):
 			CPPPATH=solver_env.get('IDA_CPPPATH_EXTRA')
 		)
 
-	if solver_env.get('IDA_NEW_ANALYSE'):
-		sundials_env.AppendUnique(
-			CPPDEFINES=['IDA_NEW_ANALYSE']
-		)
-
 	libascend_env.AppendUnique(
 		LIBPATH=[solver_env.get('IDA_LIBPATH')]
 		, LIBS=[solver_env.get('IDA_LIB')]

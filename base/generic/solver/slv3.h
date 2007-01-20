@@ -25,10 +25,6 @@
 	02/95 - original version
 	Test bed version of Slv for linear solver changes
 	and eventually Slv kernal<-->ASCEND changes.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "slv_client.h"
 *//*
 	by Karl Michael Westerberg and Ben Allan
 	Created: 2/6/90
@@ -41,11 +37,12 @@
 #ifndef ASC_SLV3_H
 #define ASC_SLV3_H
 
+#include <utilities/ascConfig.h>
+#include "slv_client.h"
+
 /**	@addtogroup solver Solver
 	@{
 */
-
-#include <utilities/ascConfig.h>
 
 typedef struct slv3_system_structure *slv3_system_t;
 

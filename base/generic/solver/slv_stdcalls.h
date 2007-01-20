@@ -35,9 +35,10 @@
 #define ASC_SLV_STDCLIENTS_H
 
 #include <utilities/ascConfig.h>
+#include <linear/mtx.h>
+
 #include "system.h"
 #include "slv_client.h"
-#include "mtx.h"
 #include "slvDOF.h"
 
 /**	@addtogroup solver Solver

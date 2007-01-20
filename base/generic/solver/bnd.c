@@ -1,36 +1,39 @@
-/*
- *  Boundary Module
- *  Created: 04/97
- *  Version: $Revision: 1.8 $
- *  Version control file: $RCSfile: bnd.c,v $
- *  Date last modified: $Date: 1997/07/18 12:13:54 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2007 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
+	Boundary Module
+*//*
+	Created: 04/97
+	Last in CVS: $Revision: 1.8 $ $Date: 1997/07/18 12:13:54 $ $Author: mthomas $
+*/
+
+#include "bnd.h"
 
 #include <math.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
+#include <utilities/mem.h>
 #include <general/list.h>
 #include <general/dstring.h>
+
+#include <linear/mtx.h>
+
 #include <compiler/compiler.h>
 #include <compiler/fractions.h>
 #include <compiler/instance_enum.h>
@@ -46,16 +49,11 @@
 #include <compiler/mathinst.h>
 #include <compiler/parentchild.h>
 #include <compiler/instance_io.h>
+
 #define _SLV_SERVER_C_SEEN_
-#include <utilities/mem.h>
-#include "mtx.h"
-#include "slv_types.h"
 #include "var.h"
-#include "rel.h"
 #include "discrete.h"
 #include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
 #include "slv_server.h"
 
 #define IPTR(i) ((struct Instance *)(i))

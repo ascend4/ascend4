@@ -58,24 +58,21 @@
 #include <compiler/relation_util.h>
 #include <compiler/pending.h>
 #include <compiler/symtab.h>
+
+#include <linear/mtx.h>
+#include <linear/linsol.h>
+#include <linear/linsolqr.h>
+
+#include <solver/slv_client.h>
 #include <solver/slv_types.h>
-#include <solver/mtx.h>
 #include <solver/calc.h>
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/logrel.h>
-#include <solver/bnd.h>
 #include <solver/relman.h>
 #include <solver/slv_common.h>
-#include <solver/linsol.h>
-#include <solver/linsolqr.h>
-#include <solver/slv_client.h>
 #include <solver/slv_interface.h>
 #include <solver/slv_stdcalls.h>
 #include <solver/system.h>
 #include <solver/slvDOF.h>
+
 #include "old_utils.h"
 #include "HelpProc.h"
 #include "Qlfdid.h"

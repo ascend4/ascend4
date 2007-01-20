@@ -1,45 +1,35 @@
-/*
- *  Boundary Manipulator Module
- *  Created: 04/97
- *  Version: $Revision: 1.6 $
- *  Version control file: $RCSfile: bndman.h,v $
- *  Date last modified: $Date: 1997/07/18 12:13:58 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2007 Carnegie Mellon University
 
-/** @file
- *  Boundary Manipulator Module.
- *  <pre>
- *  Contents:     Boundary manipulator module
- *
- *  Dates:        04/97 - original version
- *
- *  Description:  This module will provide supplemental operations for
- *                boundaries such as evaluation.
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-#ifndef bndman__already_included
-#define bndman__already_included
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
+	Boundary Manipulator Module.
+
+	This module will provide supplemental operations for
+	boundaries such as evaluation.
+*//*
+	Created: 04/97
+	Last in CVS: $Revision: 1.6 $ $Date: 1997/07/18 12:13:58 $ $Author: mthomas $
+*/
+
+#ifndef ASC_BNDMAN_H
+#define ASC_BNDMAN_H
+
+#include <utilities/ascConfig.h>
+#include "bnd.h"
 
 /**	@addtogroup solver Solver
 	@{
@@ -47,33 +37,20 @@
 
 extern real64 bndman_real_eval(struct bnd_boundary *bnd);
 /**<  Returns the (real) residual of the boundary. */
+
 extern int32  bndman_log_eval(struct bnd_boundary *bnd);
 /**<
- *  <!--  value = bndman_real_eval(bnd)                                -->
- *  <!--  logvalue = bndman_log_eval(bnd)                              -->
- *  <!--  real64 value;                                                -->
- *  <!--  int32 logvalue;                                              -->
- *  <!--  struct bnd_boundary *bnd;                                    -->
- *
  *  Returns the (boolean) residual of the boundary.
  */
 
 extern int32 bndman_calc_satisfied(struct bnd_boundary *bnd);
 /**<
- *  <!--  value = bndman_calc_satisfied(bnd);                          -->
- *  <!--  int32 value;                                                 -->
- *  <!--  struct bnd_boundary *bnd;                                    -->
- *
  *  Returns whether the boundary is currently satisfied based on its
  *  calculated residual.
  */
 
 extern int32 bndman_calc_at_zero(struct bnd_boundary *bnd);
 /**<
- *  <!--  value = bndman_calc_at_zero(bnd);                            -->
- *  <!--  int32 value;                                                 -->
- *  <!--  struct bnd_boundary *bnd;                                    -->
- *
  *  Returns whether the current point lies at the zero of a boundary
  *  based on the calculation of the residual of the boundary
  *  Used only for real(not boolean) boundaries.
@@ -81,5 +58,4 @@ extern int32 bndman_calc_at_zero(struct bnd_boundary *bnd);
 
 /* @} */
 
-#endif  /* bndman__already_included */
-
+#endif /* ASC_BNDMAN_H */

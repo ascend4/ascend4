@@ -24,17 +24,6 @@
 	Server functions for the SLV solver.
 
 	Requires:
-	#include <solver/var.h>
-	#include <solver/rel.h>
-	#include <solver/discrete.h>
-	#include <solver/conditional.h>
-	#include <solver/logrel.h>
-	#include <solver/bnd.h>
-	#include <solver/linsol.h>
-	#include <solver/linsolqr.h>
-	#include <solver/slv_common.h>
-	#include <solver/slv_types.h>
-	#include <solver/slv_client.h>
 
 	@NOTE
 		We are going through a solver API definition restructuring.
@@ -51,11 +40,26 @@
 #ifndef ASC_SLV_SERVER_H
 #define ASC_SLV_SERVER_H
 
+#include <utilities/config.h>
+
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "slv_common.h"
+#include "slv_types.h"
+#include "slv_client.h"
+
+#include <linear/linsol.h>
+#include <linear/linsolqr.h>
+
+#include <utilities/ascConfig.h>
+
 /**	@addtogroup solver Solver
 	@{
 */
-
-#include <utilities/ascConfig.h>
 
 extern slv_system_t slv_create(void);
 /**<
@@ -364,7 +368,7 @@ ASC_DLLSPEC int32 slv_far_from_nominals(slv_system_t sys, real64 bignum, int32 *
 	The calling function must free rip.
 */
 
-#ifdef IDA_NEW_ANALYSE
+#ifdef ASC_IDA_NEW_ANALYSE
 const void *slv_get_diffvars(slv_system_t sys);
 int slv_set_diffvars(slv_system_t sys,void *diffvars);
 /**< @return 0 on success */

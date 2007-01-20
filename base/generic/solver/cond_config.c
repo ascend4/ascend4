@@ -1,58 +1,48 @@
-/*
- *  Conditional Modeling Configuration
- *  by Vicente Rico-Ramirez
- *  Created: 04/97
- *  Version: $Revision: 1.11 $
- *  Version control file: $RCSfile: cond_config.c,v $
- *  Date last modified: $Date: 2000/01/25 02:26:51 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2007 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
+	Conditional Modeling Configuration
+*//*
+	by Vicente Rico-Ramirez, 04/97
+	Last in CVS: Version: $Revision: 1.11 $ $Date: 2000/01/25 02:26:51 $ $Author: ballan $
+*/
+
+#include "cond_config.h"
+
 #include <stdarg.h>
+
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
+
 #include <compiler/compiler.h>
 #include <compiler/instance_enum.h>
 #include <compiler/check.h>
 #include <general/list.h>
 #include <general/dstring.h>
 #include <general/tm_time.h>
-#include "mtx.h"
-#include "slv_types.h"
-#include "var.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "linsolqr.h"
-#define _SLV_SERVER_C_SEEN_
 #include <compiler/extcall.h>
-#include "rel.h"
-#include "logrel.h"
-#include "bnd.h"
+
+#include <linear/mtx.h>
+
 #include "slv_server.h"
 #include "system.h"
 #include "analyze.h"
-#include "cond_config.h"
-#include "linsol.h"
-#include "slv_common.h"
-#include "slv_client.h"
 
 #define IPTR(i) ((struct Instance *) (i))
 #define USEDCODE 0

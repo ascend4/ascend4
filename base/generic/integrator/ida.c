@@ -31,23 +31,9 @@
 	by John Pye, May 2006
 */
 
-/* standard includes */
-#include <signal.h>
-
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
-#include <utilities/error.h>
-#include <utilities/ascSignal.h>
-#include <utilities/ascPanic.h>
-#include <compiler/instance_enum.h>
-
-#include <solver/slv_stdcalls.h>
-#include <solver/relman.h>
-#include <solver/analyze.h>
-
-/* ASCEND includes */
 #include "ida.h"
-#include "idalinear.h"
+
+#include <signal.h>
 
 /* SUNDIALS includes */
 #ifdef ASC_WITH_IDA
@@ -70,7 +56,18 @@
 # include <mmio.h>
 #endif
 
+#include <utilities/config.h>
+#include <utilities/ascConfig.h>
+#include <utilities/error.h>
+#include <utilities/ascSignal.h>
+#include <utilities/ascPanic.h>
+#include <compiler/instance_enum.h>
 
+#include <solver/slv_stdcalls.h>
+#include <solver/relman.h>
+#include <solver/analyze.h>
+
+#include "idalinear.h"
 
 /*
 	for cases where we don't have SUNDIALS_VERSION_MINOR defined, guess version 2.2
@@ -96,15 +93,13 @@
 #define STATS_DEBUG
 #define PREC_DEBUG
 
-/* #define IDA_NEW_ANALYSE */
-
 /**
 	Everthing that the outside world needs to know about IDA
 */
 const IntegratorInternals integrator_ida_internals = {
 	integrator_ida_create
 	,integrator_ida_params_default
-#ifdef IDA_NEW_ANALYSE
+#ifdef ASC_IDA_NEW_ANALYSE
 	,integrator_ida_analyse
 #else
 	,integrator_analyse_dae /* note, this routine is back in integrator.c */
@@ -446,7 +441,7 @@ IntegratorVarVisitorFn integrator_dae_classify_var;
 	@see integrator_analyse
 */
 int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
-#ifdef IDA_NEW_ANALYSE
+#ifdef ASC_IDA_NEW_ANALYSE
 	struct var_variable **solversvars;
 	const struct var_variable **vlist;
 	unsigned long nsolversvars, i, j, nderivs, nvlist, nfixed;

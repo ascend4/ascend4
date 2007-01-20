@@ -41,11 +41,6 @@
 	If we meet this goal, then it is a simple matter to connect any
 	arbitrary compiler backend to the solver API by replacing the rel
 	and var and analyze modules.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "system.h"
-	#include "instance_enum.h"
 *//*
 	by Benjamin Andrew Allan 5/19/96
 	Version: $Revision: 1.10 $
@@ -55,6 +50,13 @@
 
 #ifndef ASC_ANALYZE_H
 #define ASC_ANALYZE_H
+
+#include <utilities/config.h>
+#include <utilities/ascConfig.h>
+
+#include <compiler/instance_enum.h>
+#include "slv_types.h"
+#include "conditional.h"
 
 /**	@addtogroup analyse Analyse
 	@{
@@ -115,11 +117,13 @@ typedef struct SolverDiffVarCollectionStruct{
 	long maxorder;
 } SolverDiffVarCollection;
 
+#ifdef ASC_IDA_NEW_ANALYSE
 /**
 	Return the SolverDiffVarCollection for the system. You *don't* own the
 	returned list -- it belongs to the slv_system_t.
 */
-const SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys);
+extern const SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys);
+#endif
 
 /*------------------------------------------------------------------------------
   Some routines that arguably aren't part of the 'analysis' module per se.

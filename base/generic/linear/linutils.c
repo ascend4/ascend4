@@ -27,17 +27,22 @@
  *  COPYING is found in ../compiler.
  */
 
+#include "linutils.h"
+
 #include <stdio.h>
 #include <math.h>
+
 #include <utilities/ascConfig.h>
-#include <compiler/compiler.h>
+#include <general/mathmacros.h>
 #include <utilities/ascMalloc.h>
 #include <general/tm_time.h>
+
+#include <compiler/compiler.h>
+
 #include "mtx.h"
 #include "linsol.h"
 #include "linsolqr.h"
-#include "linutils.h"
-#include <general/mathmacros.h>
+
 
 /*
  * The A1 norm is:

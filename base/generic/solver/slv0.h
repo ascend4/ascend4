@@ -54,16 +54,15 @@
  *                slv0_system_t and slv0_eligible_solver() only takes one
  *                parameter: the system.  Note also that the select
  *                solver functions don't exist.
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "slv_client.h"
  *  </pre>
- *  @todo Slv (solver/slv0.c) is out-of-date and will not compile.
+ *  @todo Slv (solver/slv0.c) is out-of-date
  *        Should be either fixed or archived.
  */
 
 #ifndef ASC_SLV0_H
 #define ASC_SLV0_H
+
+#include "slv_client.h"
 
 /**	@addtogroup solver Solver
 	@{
