@@ -19,7 +19,7 @@ def add_at_start(envvar,pathcomponents):
 		if p in envvals[k+1:]:
 			envvals.remove(p)
 			restart = 1
-	for p in reversed(pathcomponents):
+	for p in [pathcomponents[i] for i in range(len(pathcomponents))[::-1]]:
 		if p not in envvals:
 			envvals.insert(0,p)
 			restart = 1
