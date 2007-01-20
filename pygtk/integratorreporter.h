@@ -26,7 +26,7 @@
 
 extern "C"{
 #include <utilities/ascConfig.h>
-#include <solver/integrator.h>
+#include <integrator/integrator.h>
 }
 
 #include <ostream>

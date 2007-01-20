@@ -39,10 +39,6 @@
 	numbers.  The coefficient matrix and each rhs will be
 	preserved throughout solving, except that the
 	coefficient matrix may be permuted during reordering.
-	
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "mtx.h"
 *//*
 	by Karl Michael Westerberg, created 2/6/90
 	Last in CVS: $Revision: 1.6 $ $Date: 1997/07/18 12:14:20 $ $Author: mthomas $
@@ -58,6 +54,9 @@
 
 #ifndef ASC_LINSOL_H
 #define ASC_LINSOL_H
+
+#include <utilities/ascConfig.h>
+#include "mtx.h"
 
 /**	@addtogroup linear Linear
 	@{

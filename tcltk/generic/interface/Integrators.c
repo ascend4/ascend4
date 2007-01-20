@@ -31,9 +31,9 @@
 #include <time.h>
 
 #include <utilities/ascConfig.h>
-#include <solver/integrator.h>
-#include <solver/lsode.h>
-#include <solver/samplelist.h>
+#include <integrator/integrator.h>
+#include <integrator/lsode.h>
+#include <integrator/samplelist.h>
 
 #include "HelpProc.h"
 #include "Integrators.h"

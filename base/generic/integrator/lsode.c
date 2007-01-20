@@ -70,21 +70,9 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 
-#include "slv_types.h"
-#include "mtx.h"
-#include "rel.h"
-#include "var.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "bnd.h"
-#include "logrel.h"
-#include "slv_common.h"
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_client.h"
-#include "slv_stdcalls.h"
 #include <packages/sensitivity.h>
-#include "densemtx.h"
+
+#include <solver/densemtx.h>
 
 #include "integrator.h"
 #include "lsode.h"
@@ -921,6 +909,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y
 int integrator_lsode_solve(IntegratorSystem *blsys
 		, unsigned long start_index, unsigned long finish_index
 ){
+
 	slv_status_t status;
 	slv_parameters_t params;
 	IntegratorLsodeData *d;
@@ -972,8 +961,6 @@ int integrator_lsode_solve(IntegratorSystem *blsys
     d->status = lsode_nok;
     return 2;
   }
-
-#if defined(STATIC_LSOD) || defined (DYNAMIC_LSOD)
 
   /* here we assume integrators.c is in charge of dynamic loading */
 
@@ -1254,13 +1241,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
   CONSOLE_DEBUG("--- LSODE done ---");
   return 0; /* success */
 
-#else /* STATIC_LSOD || DYNAMIC_LSOD */
-
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration will not be performed. LSODE binary not available.");
   d->status = lsode_nok;
   return 11;
-
-#endif
 }
 
 /**

@@ -24,14 +24,6 @@
 	Block partitioning gets done by a selected solver engine, at its
 	discretion. See functions 'structural_analysis' in slv3 and others.
 
-	Requires:
-	#include <stdio.h>
-	#include "utilities/ascConfig.h"
-	#include "system.h"
-	#include "slv_client.h"
-	#include "mtx.h"
-	#include "slvDOF.h"
-
 	@NOTE 'BLT' = block lower triangular, 'BUT' = block upper triangular.
 *//*
 	by Benjamin Andrew Allan
@@ -41,6 +33,12 @@
 
 #ifndef ASC_SLV_STDCLIENTS_H
 #define ASC_SLV_STDCLIENTS_H
+
+#include <utilities/ascConfig.h>
+#include "system.h"
+#include "slv_client.h"
+#include "mtx.h"
+#include "slvDOF.h"
 
 /**	@addtogroup solver Solver
 	@{

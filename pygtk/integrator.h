@@ -30,8 +30,8 @@
 
 #include "config.h"
 extern "C"{
-#include <solver/integrator.h>
-#include <solver/samplelist.h>
+#include <integrator/integrator.h>
+#include <integrator/samplelist.h>
 }
 
 const int LSODE = INTEG_LSODE;

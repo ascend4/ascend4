@@ -34,27 +34,20 @@
 /* standard includes */
 #include <signal.h>
 
-/* ASCEND includes */
-#include "ida.h"
-#include "idalinear.h"
-#include <utilities/error.h>
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
+#include <utilities/error.h>
 #include <utilities/ascSignal.h>
 #include <utilities/ascPanic.h>
 #include <compiler/instance_enum.h>
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_common.h"
-#include "slv_client.h"
-#include "slv_stdcalls.h"
-#include "relman.h"
-#include "analyze.h"
+
+#include <solver/slv_stdcalls.h>
+#include <solver/relman.h>
+#include <solver/analyze.h>
+
+/* ASCEND includes */
+#include "ida.h"
+#include "idalinear.h"
 
 /* SUNDIALS includes */
 #ifdef ASC_WITH_IDA
@@ -69,11 +62,15 @@
 # ifndef IDA_SUCCESS
 #  error "Failed to include SUNDIALS IDA header file"
 # endif
+#else
+# error "Where is IDA?"
 #endif
 
 #ifdef ASC_WITH_MMIO
 # include <mmio.h>
 #endif
+
+
 
 /*
 	for cases where we don't have SUNDIALS_VERSION_MINOR defined, guess version 2.2

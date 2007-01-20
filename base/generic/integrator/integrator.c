@@ -26,15 +26,17 @@
 */
 #include <time.h>
 #include <string.h>
+
+#include <utilities/ascPanic.h>
+
+#include <solver/slv_common.h>
+#include <solver/slv_client.h>
+#include <solver/slv_stdcalls.h>
+
 #include "integrator.h"
 #include "lsode.h"
 #include "aww.h"
 #include "ida.h"
-#include "slv_common.h"
-#include "slv_client.h"
-#include "slv_stdcalls.h"
-#include <utilities/ascPanic.h>
-
 #include "samplelist.h"
 
 /* #define ANALYSE_DEBUG */
