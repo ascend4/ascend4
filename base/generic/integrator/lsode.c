@@ -1240,10 +1240,6 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
   CONSOLE_DEBUG("--- LSODE done ---");
   return 0; /* success */
-
-  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration will not be performed. LSODE binary not available.");
-  d->status = lsode_nok;
-  return 11;
 }
 
 /**

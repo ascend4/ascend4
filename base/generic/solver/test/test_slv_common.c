@@ -26,18 +26,24 @@
 #ifdef __WIN32__
 #include <io.h>
 #endif
+
+#include "CUnit/CUnit.h"
+
 #include <utilities/ascMalloc.h>
+
+#include <general/list.h>
+
+#include <linear/mtx.h>
+#include <linear/mtx_vector.h>
+
 #include <solver/slv_types.h>
 #include <solver/rel.h>
 #include <solver/logrel.h>
-#include <solver/mtx.h>
-#include <general/list.h>
 #include <solver/slv_common.h>
-#include "CUnit/CUnit.h"
+
 #include "test_slv_common.h"
 #include "assertimpl.h"
 #include "printutil.h"
-#include <solver/mtx_vector.h>
 
 /*
  *  Independent calculation of a vector dot product.
