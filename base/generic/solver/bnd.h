@@ -1,46 +1,40 @@
-/*
- *  Boundary Module
- *  Created: 04/97
- *  Version: $Revision: 1.10 $                         
- *  Version control file: $RCSfile: bnd.h,v $
- *  Date last modified: $Date: 1997/07/18 12:13:55 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2007 Carnegie Mellon University
 
-/** @file
- *  Boundary Module.                           
- *  <pre>
- *  Description: This is the ascend version of the boundary module.
- *               This version should be used by any user who receives
- *               his/her formulation directly from an instance tree
- *               created by the ASCEND compiler.
- *
- *  Requires:    #include "utilities/ascConfig.h"
- *               #include "solver/slv_types.h"
- *               #include "solver/rel.h"
- *               #include "solver/logrel.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
+	Boundary Module
+
+	This is the ascend version of the boundary module.
+	This version should be used by any user who receives
+	his/her formulation directly from an instance tree
+	created by the ASCEND compiler.
+*//*
+	Created: 04/97
+	Last in CVS: $Revision: 1.10 $ $Date: 1997/07/18 12:13:55 $ $Author: mthomas $
+*/
 
 #ifndef ASC_BND_H
 #define ASC_BND_H
+
+#include <utilities/ascConfig.h>
+
+#include "slv_types.h"
+#include "rel.h"
+#include "logrel.h"
 
 /**	@addtogroup solver Solver
 	@{

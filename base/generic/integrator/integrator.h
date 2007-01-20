@@ -55,26 +55,30 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/dstring.h>
+
 #include <compiler/compiler.h>
 #include <compiler/instance_enum.h>
+#include <compiler/symtab.h>
+#include <compiler/parentchild.h>
+#include <compiler/instquery.h>
+#include <compiler/atomvalue.h>
 
+/* let's try and get by without all this stuff...
+#include <compiler/child.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/units.h>
 #include <compiler/module.h>
 #include <compiler/library.h>
 #include <compiler/expr_types.h>
-#include <compiler/child.h>
 #include <compiler/type_desc.h>
-#include <compiler/atomvalue.h>
 #include <compiler/instance_name.h>
-#include <compiler/instquery.h>
-#include <compiler/parentchild.h>
-#include <compiler/symtab.h>
 #include <compiler/instance_io.h>
+*/
+
+#include <linear/mtx.h>
 
 #include <solver/slv_types.h>
-#include <solver/mtx.h>
 #include <solver/var.h>
 #include <solver/rel.h>
 #include <solver/discrete.h>

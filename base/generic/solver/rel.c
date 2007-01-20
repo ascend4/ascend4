@@ -24,6 +24,8 @@
 	Last in CVS $Revision: 1.32 $ $Date: 1998/01/29 00:42:28 $ $Author: ballan $
 */
 
+#include "rel.h"
+
 #include <math.h>
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
@@ -32,6 +34,7 @@
 #include <utilities/mem.h>
 #include <general/list.h>
 #include <general/dstring.h>
+
 #include <compiler/compiler.h>
 #include <compiler/symtab.h>
 #include <compiler/fractions.h>
@@ -56,11 +59,9 @@
 #include <compiler/relation.h>
 #include <compiler/relation_util.h>
 #include <compiler/packages.h>
-#define _SLV_SERVER_C_SEEN_ /* for the extrel stuff in header */
-#include "mtx.h"
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
+
+#include <linear/mtx.h>
+
 #include "discrete.h"
 #include "conditional.h"
 #include "logrel.h"

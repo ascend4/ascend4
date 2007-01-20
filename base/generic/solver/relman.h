@@ -29,22 +29,20 @@
 	       06/93 - separated out exprman
 	       11/93 - added relman_calc_satisfied
 
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "mtx.h"
-	#include "var.h"
-	#include "rel.h"
 *//*
- *  by Karl Michael Westerberg and Joseph Zaher
- *  Created: 2/6/90
- *  Version: $Revision: 1.29 $
- *  Version control file: $RCSfile: relman.h,v $
- *  Date last modified: $Date: 1998/04/23 23:56:24 $
- *  Last modified by: $Author: ballan $
+	by Karl Michael Westerberg and Joseph Zaher, 2/6/90
+	Last in CVS: $Revision: 1.29 $ $Date: 1998/04/23 23:56:24 $ $Author: ballan $
 */
 
 #ifndef ASC_RELMAN_H
 #define ASC_RELMAN_H
+
+#include <utilities/ascConfig.h>
+
+#include <linear/mtx.h>
+
+#include "var.h"
+#include "rel.h"
 
 /**	@addtogroup solver Solver
 	@{

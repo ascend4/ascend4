@@ -36,19 +36,17 @@
 
 #include <stdarg.h>
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+
+#include "UnitsProc.h"
 
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include <compiler/compiler.h>
+
 #include <compiler/instance_enum.h>
 #include <compiler/cmpfunc.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
 #include <compiler/dimen_io.h>
-#include <compiler/units.h>
 #include <compiler/child.h>
 #include <compiler/type_desc.h>
 #include <compiler/module.h>
@@ -69,21 +67,14 @@
 #include <compiler/functype.h>
 #include <compiler/safe.h>
 #include <compiler/relation_util.h>
-#include <solver/slv_types.h>
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/logrel.h>
-#include <solver/bnd.h>
-#include <solver/mtx.h>
+
+#include <linear/mtx.h>
+
 #include <solver/slv_common.h>
-#include <solver/linsol.h>
-#include <solver/linsolqr.h>
 #include <solver/slv_client.h>
+
 #include "old_utils.h"
 #include "HelpProc.h"
-#include "UnitsProc.h"
 #include "BrowserQuery.h"
 #include "BrowserProc.h"
 #include "Qlfdid.h"

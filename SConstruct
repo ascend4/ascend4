@@ -1760,6 +1760,7 @@ for k,v in {
 		,'ASC_ABSOLUTE_PATHS':env.get('ASC_ABSOLUTE_PATHS')
 		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
+		,'ASC_IDA_NEW_ANALYSE':env.get('IDA_NEW_ANALYSE')
 		}.iteritems():
 		
 	if v: subst_dict["/\\* #define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k
@@ -1935,7 +1936,7 @@ else:
 
 libascend_env = env.Copy()
 
-dirs = ['general','utilities','compiler','solver','integrator','packages']
+dirs = ['general','utilities','compiler','solver','integrator','packages','linear']
 
 srcs = []
 for d in dirs:

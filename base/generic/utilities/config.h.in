@@ -171,6 +171,10 @@
 /* #define ASC_WITH_IDA @ASC_WITH_IDA@ */
 #endif
 
+#ifndef ASC_IDA_NEW_ANALYSE
+/* #define ASC_IDA_NEW_ANALYSE @ASC_IDA_NEW_ANALYSE@ */
+#endif
+
 /*-----------------------------------------------------------------------
   CONOPT
 */

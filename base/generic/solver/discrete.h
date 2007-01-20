@@ -1,52 +1,40 @@
-/*
- *  Discrete Variable Module
- *  by Vicente Rico-Ramirez
- *  Created: 06/96
- *  Version: $Revision: 1.7 $
- *  Version control file: $RCSfile: discrete.h,v $
- *  Date last modified: $Date: 1998/03/30 22:06:54 $
- *  Last modified by: $Author: rv2a $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- */                                   
+/*	ASCEND modelling environment
+	Copyright (C) 2007 Carnegie Mellon University
 
-/** @file
- *  Discrete Variable Module.
- *  <pre>
- *  Contents:     Discrete Variable module (ascend)
- *
- *  Dates:        06/96 - original version
- *
- *  Description:  This is the ascend version of the bvar module.  This
- *                version should be used by any user who receives his/her
- *                equations indirectly from an instance tree created by the
- *                ASCEND compiler.
- *
- *  Requires:     #include <stdio.h>
- *                #include "utilities/ascConfig.h"
- *                #include "slv_types.h"
- *                #include "list.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
+	Discrete variable module
+
+	This is the ascend version of the bvar module.  This
+	version should be used by any user who receives his/her
+	equations indirectly from an instance tree created by the
+	ASCEND compiler.
+*//*
+	by Vicente Rico-Ramirez, 0696
+	Last in CVS: $Revision: 1.7 $ $Date: 1998/03/30 22:06:54 $ $Author: rv2a $
+*/
 
 #ifndef ASC_DISCRETE_H
 #define ASC_DISCRETE_H
+
+#include <stdio.h>
+#include <utilities/ascConfig.h>
+#include <general/list.h>
+
+#include "slv_types.h"
 
 /**	@addtogroup solver Solver
 	@{
@@ -93,10 +81,6 @@ typedef struct dis_filter_structure {
 extern struct dis_discrete *dis_create(SlvBackendToken instance,
                                        struct dis_discrete *newdis);
 /**<
- *  <!--  dis_create(instance,newdis)                                  -->
- *  <!--  struct dis_discrete *newdis;                                 -->
- *  <!--  SlvBackendToken instance;                                    -->
- *
  *  Creates a discrete variable given the variable instance.
  *  If the discrete var  supplied is NULL, we allocate the memory for the
  *  discrete var  we return, else we just init the memory you hand us and
@@ -138,11 +122,6 @@ extern SlvBackendToken dis_instanceF(const struct dis_discrete *dis);
 */
 extern void dis_set_instanceF(struct dis_discrete *dis, SlvBackendToken i);
 /**<
- * <!--  i = dis_instance(dis);                                        -->
- * <!--  dis_set_instance(dis,i);                                      -->
- * <!--  struct dis_discrete *dis;                                     -->
- * <!--  SlvBackendToken i;                                            -->
- * <!--  Sets/returns the ATOM instance associated with the variable.  -->
  * Implementation function for dis_set_instance() (debug mode).
  * Do not call this function directly - use dis_set_instance() instead.
  */
@@ -150,10 +129,6 @@ extern void dis_set_instanceF(struct dis_discrete *dis, SlvBackendToken i);
 extern char *dis_make_name(const slv_system_t sys,
                            const struct dis_discrete *dis);
 /**<
- *  <!--  name = dis_make_name(sys,dis)                                -->
- *  <!--  name = dis_make_xname(dis)                                   -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *
  *  Creates and returns a sufficiently large string storing the
  *  qualified name of var as known by the solver instance tree.
  *  If the instance is not found, "?" is returned.  The string
@@ -173,7 +148,6 @@ extern void dis_write_name(const slv_system_t sys,
                            const struct dis_discrete *dis,
                            FILE *file);
 /**<
- *  <!--  dis_write_name(sys,dis,file);                                -->
  *  Writes a name to the file given.
  *  Does not print any whitespace, including carriage returns.
  *  If sys is NULL, writes full ascend name. If file or var is NULL
@@ -182,9 +156,6 @@ extern void dis_write_name(const slv_system_t sys,
 
 extern void dis_destroy(struct dis_discrete *dis);
 /**<
- *  <!--  dis_destroy(dis);                                            -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *
  *  Since someone else allocates dis en masse, this just sets
  *  our integrity check to ERROR.
  */
@@ -194,11 +165,6 @@ extern struct gl_list_t *dis_whens_list(struct dis_discrete *dis);
 extern void dis_set_whens_list(struct dis_discrete *dis,
                                struct gl_list_t *wlist);
 /**<
- *  <!--  wlist = dis_whens_list(dis)                                  -->
- *  <!--  dis_set_whens_list(dis,wlist)                                -->
- *  <!--  struct gl_list_t *wlist;                                     -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *
  *  Sets the list of whens of the given dis.
  */
 
@@ -235,11 +201,6 @@ extern enum discrete_kind dis_kindF(const struct dis_discrete *dis);
 extern void dis_set_kindF(struct dis_discrete *dis,
                           enum discrete_kind kind);
 /**<
- * <!--  enum discrete_kind dis_kind(dis);                             -->
- * <!--  void dis_set_kind(dis,kind);                                  -->
- * <!--  const struct dis_discrete *dis;                               -->
- * <!--  enum discrete_kind kind;                                      -->
- * <!--  Gets/sets the enumerated type that indicates the type of dis. -->
  * Implementation function for dis_set_kind() (debug mode).
  * Do not call this function directly - use dis_set_kind() instead.
  */
@@ -276,12 +237,6 @@ extern int32 dis_mindexF(const struct dis_discrete *dis);
  */
 extern void dis_set_mindexF(struct dis_discrete *dis, int32 mindex);
 /**<
- *  <!--  index = dis_mindex(dis)                                      -->
- *  <!--  dis_set_mindex(dis,index)                                    -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *
- *  <!--  Gets/sets the index of the variable as it appears in a variable list. -->
  *  Implementation function for dis_set_mindex() (debug mode).
  *  Do not call this function directly - use dis_set_mindex() instead.
  */
@@ -318,13 +273,6 @@ extern int32 dis_sindexF(const struct dis_discrete *dis);
  */
 extern void dis_set_sindexF(struct dis_discrete *dis, int32 sindex);
 /**<
- *  <!--  index = dis_sindex(dis)                                      -->
- *  <!--  dis_set_sindex(dis,index)                                    -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *
- *  <!--  Gets/sets the index of the variable as it appears            -->
- *  <!--  in a solvers variable list.                                  -->
  *  Implementation function for dis_set_sindex() (debug mode).
  *  Do not call this function directly - use dis_set_sindex() instead.
  */
@@ -335,11 +283,6 @@ extern int32 dis_value(const struct dis_discrete *dis);
  */
 extern void dis_set_value(struct dis_discrete *dis, int32 value);
 /**<
- *  <!--  value = dis_value(dis)                                       -->
- *  <!--  dis_set_value(dis,value)                                     -->
- *  <!--  int32 value;                                                 -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *
  *  Sets the currrent value field of the discrete variable.
  *  dis_set_value() also assigns the value before modification to
  *  the previous value field of the dis_discrete
@@ -373,26 +316,6 @@ extern void dis_set_value_from_inst(struct dis_discrete *dis,
  */
 #define dis_set_boolean_value(dis,val) dis_set_inst_and_field_value(dis,val)
 /**<
- *  <!--  void dis_set_inst_and_field_value                            -->
- *  <!--  Set the current value of the dis_discrete and the value of   -->
- *  <!--  the corresponding instance simultaneously. Such a value is   -->
- *  <!--  passed as argument                                           -->
- *  <!--  void dis_set_value_from_inst:                                -->
- *  <!--  Set the current value of a dis_discrete based on the value of the     -->
- *  <!--  corresponding instance.                                      -->
- *  <!--  In the case of symbols, dis_set_inst_and_field_value has no effect,   -->
- *  <!--  since the value of a symbol instance is not a integer, but a symchar, -->
- *  <!--  and a solver client will never redefine it.                  -->
- *  <!--  If the token is constant, the asssignment wont be done and the        --> 
- *  <!--  value is not affected.                                       -->
- *  <!--  the las function is particularly useful for symbol instances.-->
- *  <!--  It is used to assign integer values to the field             -->
- *  <!--  value of a dis, using values coming from dis->datom where    -->
- *  <!--  datom is a inst. In teh case of symbol, we get an "equivalent" -->
- *  <!--  integer value.                                               -->
- *
- *  <!--  They also assign the value before modification to            -->
- *  <!--  the previous value field of the dis_discrete                 -->
  *  Used to assign integer values to the field
  *  value of a dis, using values coming from dis->datom where
  *  datom is a inst. In the case of symbol, we get an "equivalent"
@@ -408,11 +331,6 @@ extern int32 dis_previous_value(const struct dis_discrete *dis);
 extern void dis_set_previous_value(struct dis_discrete *dis,
                                    int32 value);
 /**<
- *  <!--  value = dis_previous_value(dis)                              -->
- *  <!--  dis_set_previous_value(dis,value)                            -->
- *  <!--  int32 value;                                                 -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *
  *  Sets the previous value field of the discrete variable.
  */
 
@@ -427,8 +345,6 @@ extern void dis_set_previous_value(struct dis_discrete *dis,
 
 extern boolean boolean_var(SlvBackendToken inst);
 /**<
- *  <!--  e.g. if (boolean_var(inst)) {}                               -->
- *  <!--  SlvBackendToken inst;                                        -->
  *  Returns true if the instance in question matches the currently
  *  known definition of boolean_var.
  */
@@ -446,11 +362,6 @@ extern int32 dis_nominal(struct dis_discrete *dis);
  */
 extern void dis_set_nominal(struct dis_discrete *dis, int32 nominal);
 /**<
- *  <!--  nominal = dis_nominal(dis)                                   -->
- *  <!--  dis_set_nominal(dis,nominal)                                 -->
- *  <!--  int32 nominal;                                               -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *
  *  Sets the nominal value of the boolean variable.
  *  <!--  If no nominal field in dis, returns 1.                       -->
  */
@@ -463,11 +374,6 @@ extern uint32 dis_fixed(struct dis_discrete *dis);
  */
 extern void dis_set_fixed(struct dis_discrete *dis, uint32 fixed);
 /**<
- *  <!--  fixed = dis_fixed(dis)                                       -->
- *  <!--  dis_set_fixed(dis,fixed)                                     -->
- *  <!--  uint32 fixed;                                                -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *
  *  Sets the fixed flag of the boolean variable. This
  *  has side effects in the ascend instance, with which
  *  we are keeping the bits in sync.
@@ -524,15 +430,6 @@ extern uint32 dis_flagsF(const struct dis_discrete *dis);
  */
 extern void dis_set_flagsF(struct dis_discrete *dis, uint32 flags);
 /**<
- *  <!--  dis_flags(dis);                                              -->
- *  <!--  dis_set_flags(dis,flags);                                    -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *  <!--  uint32 flags;                                                -->
- *
- * <!--  dis_flags(dis) returns the flags field of the var.            -->
- * <!--  dis_set_flags(dis,flags) sets the entire flag field to the    -->
- * <!--  value of flags given. This flags value should be composed     -->
- * <!--  of the dis_xxx values defined above.                          -->
  * Implementation function for dis_set_flags() (debug mode).
  * Do not call this function directly - use dis_set_flags() instead.
  */
@@ -540,9 +437,6 @@ extern void dis_set_flagsF(struct dis_discrete *dis, uint32 flags);
 extern uint32 dis_flagbit(const struct dis_discrete *dis, 
                           const uint32 name);
 /**<
- *  <!--  dis_flagbit(dis,name);                                       -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *  <!--  uint32 name;                                                 -->
  *  Returns the value of the bit specified from the variable flags.
  *  name should be a DIS_xx flag defined above)
  */
@@ -550,10 +444,6 @@ extern uint32 dis_flagbit(const struct dis_discrete *dis,
 extern void dis_set_flagbit(struct dis_discrete *dis, 
                             uint32 NAME, uint32 oneorzero);
 /**<
- *  <!--  struct dis_discrete *dis;                                    -->
- *  <!--  unsigned int NAME,oneorzero;                                 -->
- *  <!--  dis_set_flagbit(dis,NAME,oneorzero)                          -->
- *
  *  Sets the bit, which should be referred to by its macro name,
  *  on if oneorzero is >0 and off is oneorzero is 0.
  *  The macro names are the defined up at the top of this file.
@@ -562,11 +452,6 @@ extern void dis_set_flagbit(struct dis_discrete *dis,
 extern int32 dis_apply_filter(const struct dis_discrete *dis,
                               const dis_filter_t *filter);
 /**<
- *  <!--  value = dis_apply_filter(dis,filter)                         -->
- *  <!--  int32 value;                                                 -->
- *  <!--  struct dis_discrete *dis;                                    -->
- *  <!--  dis_filter_t *filter;                                        -->
- *
  *  Returns 1 if filter and var flags are compatible, 0 elsewise.
  *  See the filter description in rel.h. This is exactly the same.
  */
@@ -616,12 +501,6 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
                                                SlvBackendToken *tokenlist,
                                                int32 len);
 /**<
- *  <!--  dislist = dis_BackendTokens_to_dis(sys,tokenlist,len);       -->
- *  <!--  slv_system_t sys;			System to get indexing from.             -->
- *  <!--  SlvBackendToken tokenlist[];	Array of backend tokens.        -->
- *  <!--  int32 len;			        Tokenlist size.                         -->
- *  <!--  struct dis_discrete *dislist[];	aka **dislist;               -->
- *
  *  dislist is NULL iff something is a miss, OTHERWISE it
  *  contains len struct dis_discrete *.
  *  The user should free the array dislist when done with it.

@@ -22,34 +22,28 @@
 	version should be used by any user who receives his/her
 	equations directly from an instance tree created by the
 	ASCEND compiler.
-
-	Requires
-	#include "utilities/ascConfig.h"
-	#include "solver/discrete.h"
 *//*
-	by Vicente Rico-Ramirez
-	Created: 09/96
-	Version: $Revision: 1.6 $
-	Version control file: $RCSfile: logrel.h,v $
-	Date last modified: $Date: 1997/07/29 15:47:43 $
-	Last modified by: $Author: rv2a $
+	by Vicente Rico-Ramirez, 09/96
+	Last in CVS: $Revision: 1.6 $ $Date: 1997/07/29 15:47:43 $ $Author: rv2a $
 */
 
 #ifndef ASC_LOGREL_H
 #define ASC_LOGREL_H
 
+#include <stdio.h>
+#include <utilities/ascConfig.h>
+#include "discrete.h"
+#include "slv_types.h"
+
 /**	@addtogroup solver Solver
 	@{
 */
-
-#include <utilities/ascConfig.h>
 
 /* ********************************************************************\
   logrel_relation basic type operators.
 \*********************************************************************/
 
 /**
- * <!--  enum logrel_enum:                                             -->
  * The operator of a logical relation.
  */
 enum logrel_enum {

@@ -38,14 +38,13 @@
  *                07/97 - Creating a structure of function pointers so that
  *                        multiple calls to CONOPT can be made
  *                08/97 - Improving CONOPT message report to ASCEND
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "slv_client.h"
  *  </pre>
  */
 
 #ifndef ASC_SLV8_H
 #define ASC_SLV8_H
+
+#include "slv_client.h"
 
 /**	@addtogroup solver Solver
 	@{

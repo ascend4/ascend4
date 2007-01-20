@@ -22,56 +22,30 @@
 	This file is part of the SLV solver.
 */
 
+#include <utilities/config.h>
+#include "slv_client.h"
+#include "slv_server.h"
+
 #include <math.h>
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
 
-ASC_EXPORT int g_SlvNumberOfRegisteredClients=0; /* see header */
-
-#include <compiler/instance_enum.h>
+/** @TODO should not be ANY compiler includes here, right? */
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <compiler/dimen.h>
 #include <compiler/atomvalue.h>
-#include "mtx.h"
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "logrel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "bnd.h"
+
+#include <linear/mtx.h>
+
 #include "bndman.h"
 #include "system.h"
-#include "slv_server.h"
-#include "slv_common.h"
 #include "analyze.h"
-#include "slv_client.h"
+
+ASC_EXPORT int g_SlvNumberOfRegisteredClients=0; /* see header */
 
 #define NEEDSTOBEDONE 0
-
-/**
- ***  Include all of the solvers involved,
- ***  even if they are not linked later
- ***  Defines are to take care of the unlinked ones.
- **/
-#if 0
-# include "slv0.h"
-# include "slv1.h"
-# include "slv2.h"
-# include "slv3.h"
-# include "slv4.h"
-# include "slv5.h"
-# include "slv6.h"
-# include "slv7.h"
-# include "slv8.h"
-# include "slv9.h"
-#endif
-
 
 struct slv_system_structure {
   int solver;
@@ -1681,7 +1655,7 @@ int32 slv_far_from_nominals(slv_system_t sys,real64 bignum,
   return vindex;
 }
 
-#ifdef IDA_NEW_ANALYSE
+#ifdef ASC_IDA_NEW_ANALYSE
 const void *slv_get_diffvars(slv_system_t sys){
 	return sys->diffvars;
 }

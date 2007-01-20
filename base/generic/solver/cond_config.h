@@ -1,41 +1,39 @@
-/* 
- *  Conditional Modeling Configuration File
- *  by Vicente Rico-Ramirez
- *  Created: 04/97
- *  Version: $Revision: 1.6 $
- *  Version control file: $RCSfile: cond_config.h,v $
- *  Date last modified: $Date: 1998/03/30 22:06:51 $
- *  Last modified by: $Author: rv2a $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2007 Carnegie Mellon University
 
-/** @file
- *  Conditional Modeling Configuration File.
- *  <pre>
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "system.h"
- *                #include "compiler/instance_enum.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
+	Conditional Modeling Configuration
+*//*
+	by Vicente Rico-Ramirez, 04/97
+	Last in CVS: $Revision: 1.6 $ $Date: 1998/03/30 22:06:51 $ $Author: rv2a $
+*/
 
 #ifndef ASC_COND_CONFIG_H
 #define ASC_COND_CONFIG_H
+
+#include <utilities/config.h>
+#include <utilities/ascConfig.h>
+#include <compiler/instance_enum.h>
+
+#include "system.h"
+#include "conditional.h"
+#include "rel.h"
+#include "logrel.h"
+
 
 /**	@addtogroup solver Solver
 	@{

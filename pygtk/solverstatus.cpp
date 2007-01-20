@@ -2,13 +2,6 @@
 #include "simulation.h"
 
 extern "C"{
-#include <compiler/instance_enum.h>
-#include <solver/var.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/bnd.h>
-#include <solver/linsol.h>
-#include <solver/linsolqr.h>
 #include <solver/slv_client.h>
 }
 

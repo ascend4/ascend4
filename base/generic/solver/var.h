@@ -41,11 +41,6 @@
 			filter module)
 	08/94 - added var_BackendTokens_to_vars. BAA.
 
-	Requires:
-	#include <stdio.h>
-	#include "utilities/ascConfig.h"
-	#include "solver/slv_types.h"
-
 	@TODO
 	At present there is some insanity about asking the instance tree
 	vs asking our data structure about the flag values - This needs to
@@ -64,7 +59,9 @@
 	@{
 */
 
+#include <stdio.h>
 #include <utilities/ascConfig.h>
+#include "slv_types.h"
 
 /*
 	The first section of flagbit definitions are those flags to be

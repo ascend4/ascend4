@@ -25,9 +25,6 @@
 	of freedom through the user interface. It uses
 	its own incidence matrix separate from the mtx of
 	any given solver.
-
-	Requires:
-	#include "slv_client.h"
 *//*
 	by Benjamin A Allan and Vicente Rico-Ramirez
 	Created: 7/11/94
@@ -41,6 +38,8 @@
 
 #ifndef ASC_SLVDOF_H
 #define ASC_SLVDOF_H
+
+#include "slv_client.h"
 
 /**	@addtogroup solver Solver
 	@{

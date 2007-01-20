@@ -26,9 +26,9 @@
  *
  */
 
-#include <utilities/ascConfig.h>
+#include "discrete.h"
+
 #include <utilities/ascMalloc.h>
-#include <general/list.h>
 #include <general/dstring.h>
 #include <compiler/compiler.h>
 #include <compiler/instance_enum.h>
@@ -43,21 +43,20 @@
 #include <compiler/parentchild.h>
 #include <compiler/instquery.h>
 #include <compiler/instance_io.h>
-#include "mtx.h"
-#include "slv_types.h"
+
+#include <linear/mtx.h>
+#include <linear/linsol.h>
+#include <linear/linsolqr.h>
+
 #include "var.h"
 #include "rel.h"
-#include "discrete.h"
 #include "conditional.h"
 #include "logrel.h"
 #include "bnd.h"
-#include "linsol.h"
-#include "linsolqr.h"
 #include "slv_server.h"
 #include "slv_common.h"
 #include "slv_client.h"
 #include "analyze.h"
-
 
 #ifndef IPTR
 #define IPTR(i) ((struct Instance *)(i))

@@ -22,24 +22,21 @@
 	Last in CVS: $Revision: 1.28 $ $Date: 1998/06/16 16:53:04 $ $Author: mthomas $
 */
 
+#include "slv_stdcalls.h"
+
 #include <utilities/ascConfig.h>
-#include <compiler/compiler.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
-#include "mtx.h"
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
+#include <general/mathmacros.h>
+
+#include <compiler/compiler.h>
+
+#include <linear/mtx.h>
+
 #include "relman.h"
 #include "logrelman.h"
-#include "bnd.h"
 #include "slv_common.h"
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_client.h"
+#include "model_reorder.h"
 
 /* headers of registered clients */
 #include "slv0.h"
@@ -51,10 +48,6 @@
 #include "slv8.h"
 #include "slv9.h"
 #include "slv9a.h"
-
-#include "model_reorder.h"
-#include "slv_stdcalls.h"
-#include <general/mathmacros.h>
 
 #define KILL 0 /* deleteme code. compile old code if kill = 1 */
 #define NEEDSTOBEDONE 0 /* indicates code/comments that are not yet ready */

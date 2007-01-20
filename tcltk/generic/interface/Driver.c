@@ -56,6 +56,8 @@
 #include <utilities/ascMalloc.h>    /* for ascshutdown */
 #include <utilities/ascPanic.h>     /* for Asc_Panic */
 #include <utilities/ascEnvVar.h>
+#include <utilities/ascPrint.h>
+
 #include <compiler/compiler.h>
 #include <compiler/ascCompiler.h>
 #include <compiler/instance_enum.h>
@@ -65,15 +67,17 @@
 #include <compiler/units.h>
 /* #include <compiler/redirectFile.h> */  /* for Asc_RedirectCompilerDefault() */
 #include <compiler/simlist.h>
+
+#include <linear/mtx.h>
+
 #include <solver/slv_types.h>
 #include <solver/var.h>
 #include <solver/rel.h>
 #include <solver/logrel.h>
 #include <solver/discrete.h>
-#include <solver/mtx.h>
 #include <solver/slv_stdcalls.h>
+
 #include "AscBitmaps.h"
-#include <utilities/ascPrint.h>
 #include "AscPrintTcl.h"
 #include "HelpProc.h"
 #include "Commands.h"

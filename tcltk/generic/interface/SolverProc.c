@@ -33,6 +33,8 @@
 #include <tcl.h>
 #include <tk.h>
 
+#include "SolverProc.h"
+
 #include <utilities/config.h>
 #ifdef ASC_SIGNAL_TRAPS
 # include <utilities/ascSignal.h>
@@ -43,6 +45,7 @@
 #include <general/tm_time.h>
 #include <general/list.h>
 #include <general/dstring.h>
+
 #include <compiler/compiler.h>
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>
@@ -69,34 +72,19 @@
 #include <compiler/stattypes.h>
 #include <compiler/instantiate.h>
 #include <compiler/watchpt.h>
-#include <solver/slv_types.h>
-#include <solver/mtx.h>
-#include <solver/rel.h>
-#include <solver/var.h>
-#include <solver/relman.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/logrel.h>
-#include <solver/bnd.h>
+
+#include <linear/mtx.h>
+
 #include <solver/slv_common.h>
-#include <solver/linsol.h>
-#include <solver/linsolqr.h>
 #include <solver/slv_client.h>
 #include <solver/slv_server.h>   /* KHACK: not sure if this should be here */
-/* #include "solver/slv0.h" */
-/* #include "solver/slv1.h" */
-/* #include "solver/slv2.h" */
-/* #include "solver/slv3.h" */
-#include <solver/slv6.h>             /*  modified by CWS 5/95 */
-#include <solver/slv7.h>
-#include <solver/slv9a.h>
 #include <solver/slv_interface.h>
 #include <solver/system.h>
 #include <solver/cond_config.h>
+
 #include "old_utils.h"
 #include "HelpProc.h"
 #include "SolverGlobals.h"
-#include "SolverProc.h"
 #include "DisplayProc.h"
 #include "Commands.h"
 #include "Qlfdid.h"
@@ -106,11 +94,6 @@
 #include "UnitsProc.h"   /* KHACK: not sure if this should be here */
 #include "ScriptProc.h"
 #include "Driver.h"
-
-#ifndef lint
-static CONST char SolverProcID[] = "$Id: SolverProc.c,v 1.65 2003/08/23 18:43:08 ballan Exp $";
-#endif
-
 
 #define QLFDID_LENGTH 1023
 #define YORN(b) ((b) ? "YES" : "NO")

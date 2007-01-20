@@ -40,6 +40,8 @@
 
 #include <utilities/config.h>
 
+#include "HelpProc.h"
+
 /*
  * The following global definitions (which should be going away)
  * have moved to SolverGlobals.h:

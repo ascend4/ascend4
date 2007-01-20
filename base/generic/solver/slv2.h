@@ -32,15 +32,14 @@
  *  Opt solver registration module.
  *  <pre>
  *  Contents:     OPT module
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "slv_client.h"
  *  </pre>
  *  @todo Remove deprecated declarations from solver/slv2.h.
  */
 
 #ifndef ASC_SLV2_H
 #define ASC_SLV2_H
+
+#include "slv_client.h"
 
 /**	@addtogroup solver Solver
 	@{

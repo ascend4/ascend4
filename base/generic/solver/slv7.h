@@ -37,15 +37,14 @@
  *  Authors:      Ben Allan, Kenneth Tyner
  *
  *  Dates:        02/96 - copy of QRSlv: Modifications Pending
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "slv_client.h"  
  *  </pre>
  *  @todo Update Dates note when modifactions complete.
  */
 
 #ifndef ASC_SLV7_H
 #define ASC_SLV7_H
+
+#include "slv_client.h"
 
 /**	@addtogroup solver Solver
 	@{

@@ -34,17 +34,19 @@
 #include <tk.h>
 
 #include <utilities/config.h>
-
 #include <utilities/ascConfig.h>
 #include <general/list.h>
+
 #include <compiler/compiler.h>
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/instance_name.h>
 #include <compiler/units.h>
+
+#include <linear/mtx.h>
+
 #include <solver/slv_types.h>
-#include <solver/mtx.h>
 #include <solver/var.h>
 #include <solver/rel.h>
 #include <solver/discrete.h>

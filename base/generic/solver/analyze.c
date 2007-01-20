@@ -74,16 +74,19 @@
 	@{
 */
 
+#include "analyze.h"
+
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
+
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/error.h>
 #include <general/list.h>
 #include <general/dstring.h>
+#include <general/mathmacros.h>
+
 #include <compiler/compiler.h>
 #include <compiler/symtab.h>
-#include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/atomvalue.h>
@@ -110,7 +113,11 @@
 #include <compiler/logrel_util.h>
 #include <compiler/case.h>
 #include <compiler/when_util.h>
-#include "mtx.h"
+
+#include <linear/mtx.h>
+#include <linear/linsol.h>
+#include <linear/linsolqr.h>
+
 #include "slv_types.h"
 #include "var.h"
 #define _SLV_SERVER_C_SEEN_
@@ -121,12 +128,8 @@
 #include "bnd.h"
 #include "slv_server.h"
 #include "slv_common.h"
-#include "linsol.h"
-#include "linsolqr.h"
 #include "slv_client.h"
 #include "cond_config.h"
-#include "analyze.h"
-#include <general/mathmacros.h>
 
 /* stuff to get rid of */
 #ifndef MAX_VAR_IN_LIST
@@ -396,7 +399,7 @@ struct problem_t {
   struct dis_discrete **logrelinciden;	/* logrel_relation incidence source */
 };
 
-#ifdef IDA_NEW_ANALYSE
+#ifdef ASC_IDA_NEW_ANALYSE
 int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob);
 #endif
 
@@ -2897,7 +2900,7 @@ extern void analyze_free_reused_mem(void){
   Routines for analysing differental/derivative variable lists
 */
 
-#ifdef IDA_NEW_ANALYSE
+#ifdef ASC_IDA_NEW_ANALYSE
 
 const SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys){
 	return (SolverDiffVarCollection *)slv_get_diffvars(sys);

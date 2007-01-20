@@ -27,28 +27,23 @@
 	slvX.c January 1995. Ben Allan.
 */
 
+#include "slv_common.h"
+
 #include <math.h>
 
 #include <utilities/config.h>
-#include <utilities/ascConfig.h>
 #ifdef ASC_SIGNAL_TRAPS
 # include <utilities/ascSignal.h>
 #endif
 
-#include <compiler/compiler.h>
 #include <general/mathmacros.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
-#include "mtx.h"
-#include "slv_types.h"
-#include "rel.h"
-#include "var.h"
-#include "discrete.h"
-#include "logrel.h"
-#include "slv_common.h"
 #include <utilities/mem.h>
+
 /* if libasc.a running around, the following: */
 #if SLV_INSTANCES
+#include <compiler/compiler.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/functype.h>
@@ -62,6 +57,9 @@
 #define ascnint(a) ascnintF(a)
 #endif /* NDEBUG */
 #endif /* instances */
+
+#include "var.h"
+#include "discrete.h"
 
 #define SAFE_FIX_ME 0
 

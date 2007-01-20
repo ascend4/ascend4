@@ -1,0 +1,33 @@
+Import('libascend_env')
+
+csrcs = Split("""
+	densemtx.c
+	linsol.c linsolqr.c linutils.c
+	mtx_basic.c mtx_linal.c mtx_perms.c mtx_query.c
+	mtx_reorder.c mtx_use_only.c mtx_vector.c
+""")
+
+solver_env = libascend_env.Copy()
+if solver_env.get('WITH_MMIO'):
+	solver_env.Append(CPPPATH=["#/mmio"])
+
+objs = []
+
+for c in csrcs:
+	objs += solver_env.SharedObject(c)
+
+#--------------------
+# INSTALL
+
+import glob
+
+if libascend_env.get('CAN_INSTALL'):
+	installdir = libascend_env['INSTALL_ROOT']+libascend_env['INSTALL_INCLUDE']+'/linear'
+
+	headers = glob.glob("*.h")
+	libascend_env.InstallHeader(installdir,headers)
+
+Return('objs')
+
+# vim: set syntax=python:
+

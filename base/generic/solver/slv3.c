@@ -28,43 +28,33 @@
 	Last *CVS* version ballan 2000/01/25 02:27:32
 */
 
+#include "slv3.h"
+
 #include <math.h>
 #include <stdarg.h>
+
 #include <utilities/config.h>
 #ifdef ASC_SIGNAL_TRAPS
 # include <utilities/ascSignal.h>
 #endif
 
-#include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/set.h>
 #include <general/mathmacros.h>
 #include <general/tm_time.h>
 #include <utilities/mem.h>
-/* #include "compiler/compiler.h" */
 #include <utilities/ascPanic.h>
 #include <general/list.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/functype.h>
 #include <compiler/func.h>
-#include "mtx.h"
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
+
+#include <linear/mtx_vector.h>
+
 #include "calc.h"
 #include "relman.h"
-#include "slv_common.h"
-#include "slv_client.h"
-#include "slv3.h"
 #include "slv_stdcalls.h"
-#include "mtx_vector.h"
 
 #define CANOPTIMIZE FALSE
 /**< TRUE iff optimization code completed, meaning relman_diff fixed. */

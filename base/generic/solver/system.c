@@ -24,31 +24,24 @@
 	Last in CVS: $Revision: 1.29 $ $Date: 2003/01/19 02:16:05 $ $Author: ballan $
 */
 
-#include <utilities/ascConfig.h>
-#include <compiler/instance_enum.h>
-#include <compiler/compiler.h>
-#include <compiler/check.h>
+#include "system.h"
+
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/tm_time.h>
-#include "mtx.h"
-#include "slv_types.h"
-#include "var.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "linsolqr.h"
-#define _SLV_SERVER_C_SEEN_
-#include <compiler/extcall.h>
-#include "rel.h"
-#include "relman.h"
-#include "logrel.h"
-#include "bnd.h"
-#include "slv_server.h"
-#include "system.h"
-#include "analyze.h"
-#include "linsol.h"
-#include "slv_common.h"
+
+#include <compiler/instance_enum.h>
+#include <compiler/compiler.h>
+#include <compiler/check.h>
+
+#include <linear/mtx.h>
+
 #include "slv_client.h"
+
+#include "relman.h"
+#include "slv_server.h"
+#include "analyze.h"
+#include "slv_common.h"
 
 #define IPTR(i) ((struct Instance *) (i))
 #define DOTIME 1

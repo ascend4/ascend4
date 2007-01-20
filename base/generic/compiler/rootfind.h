@@ -31,15 +31,7 @@
 
 /** @file
 	Root finding routine for the SLV solver.
-	<pre>
-	Requires:     #include "utilities/ascConfig.h"
-	
-	              #ifndef STAND_ALONE
-	                  #include "extfunc.h"  (for ExtValFunc())
-	              #else
-	                  #include "codegen_support.h"
-	              #endif
-	</pre>
+
 	@todo extfunc.h needed only for the definition of ExtEvalFunc -
 	      This definition should probably be moved to types.h. or compiler.h
 
@@ -48,6 +40,13 @@
 
 #ifndef ASC_ROOTFIND_H
 #define ASC_ROOTFIND_H
+
+#include <utilities/ascConfig.h>
+#ifndef STAND_ALONE
+# include "extfunc.h" /* for ExtVarFunc typedef */
+#else
+# include "codegen_support.h"
+#endif
 
 /**	@addtogroup compiler Compiler
 	@{

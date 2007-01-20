@@ -16,6 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
+
 #include "incidence.h"
 
 #include <utilities/ascSignal.h>
@@ -28,13 +29,14 @@
 
 #include <compiler/instance_enum.h>
 
+#include <linear/mtx.h>
+#include <linear/linsol.h>
+#include <linear/linsolqr.h>
+
 #include "discrete.h"
 #include "conditional.h"
 #include "logrel.h"
 #include "bnd.h"
-#include "mtx.h"
-#include "linsol.h"
-#include "linsolqr.h"
 
 #include "slv_common.h"
 

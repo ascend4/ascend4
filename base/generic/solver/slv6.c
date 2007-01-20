@@ -33,7 +33,9 @@
 /*  known bugs
  *  still uses pl_ functions and assumes the old slv protocol.
  */
-#include <utilities/ascConfig.h>
+
+#include "slv6.h"
+
 #include <utilities/ascMalloc.h>
 #include <utilities/set.h>
 #include <utilities/mem.h>
@@ -44,26 +46,13 @@
 #include <compiler/compiler.h>
 #include <compiler/library.h>
 #include <compiler/instance_io.h>
-#include "mtx.h"
-#include "linsol.h"
-#include "linsolqr.h"
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
+
+#include <linear/mtx.h>
+
 #include "calc.h"
 #include "relman.h"
 #include "slv_common.h"
-#include "slv_client.h"
-#include "slv6.h"
 #include "mps.h"
-/*
-#  include "interface/old_utils.h"
-*/
-
 
 #if !defined(STATIC_MPS) && !defined(DYNAMIC_MPS)
 int slv6_register(SlvFunctionsT *f)

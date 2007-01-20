@@ -27,13 +27,16 @@
 
 #include <math.h>
 
-#include <packages/sensitivity.h>
+#include <general/mathmacros.h>
+#include <utilities/ascMalloc.h>
+
 #include <compiler/instquery.h>
 #include <compiler/atomvalue.h>
-#include <utilities/ascMalloc.h>
 #include <compiler/extfunc.h>
-#include <general/mathmacros.h>
-#include <solver/densemtx.h>
+
+#include <linear/densemtx.h>
+
+#include <packages/sensitivity.h>
 
 ExtMethodRun do_finite_diff_eval;
 

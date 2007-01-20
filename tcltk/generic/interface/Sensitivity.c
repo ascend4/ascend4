@@ -52,28 +52,21 @@
 #include <math.h>
 #include <tcl.h>
 
-#include <packages/sensitivity.h>
-
-#include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <general/tm_time.h>
 #include <general/list.h>
-#include <solver/slv_types.h>
-#include <solver/mtx.h>
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/logrel.h>
-#include <solver/bnd.h>
+
+#include <linear/mtx.h>
+#include <linear/linutils.h>
+
 #include <solver/slv_common.h>
-#include <solver/linsol.h>
-#include <solver/linsolqr.h>
-#include <solver/linutils.h>
 #include <solver/calc.h>
 #include <solver/relman.h>
 #include <solver/slv_client.h>
 #include <solver/system.h>
+
+#include <packages/sensitivity.h>
+
 #include "HelpProc.h"
 #include "Sensitivity.h"
 #include "HelpProc.h"

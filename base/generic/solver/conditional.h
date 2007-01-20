@@ -1,50 +1,39 @@
-/*
- *  Conditional Module
- *  by Vicente Rico-Ramirez
- *  Created: 09/96
- *  Version: $Revision: 1.7 $
- *  Version control file: $RCSfile: conditional.h,v $
- *  Date last modified: $Date: 1998/03/30 22:06:53 $
- *  Last modified by: $Author: rv2a $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *                                    
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2007 Carnegie Mellon University
 
-/** @file
- *  Conditional Module.
- *  <pre>
- *  Contents:     Conditional  module (ascend)
- *
- *  Dates:        09/96 - original version
- *
- *  Description:  This is the ascend version of the conditional module
- *                This version should be used by any user who receives
- *                his/her equations directly from an instance tree created
- *                by the ASCEND compiler.
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "list.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
+	Conditional Module
+
+	This is the ascend version of the conditional module
+	This version should be used by any user who receives
+	his/her equations directly from an instance tree created
+	by the ASCEND compiler.
+*//*
+	by Vicente Rico-Ramirez, 09/96
+	Last in CVS: $Revision: 1.7 $ $Date: 1998/03/30 22:06:53 $ $Author: rv2a $
+*/
 
 #ifndef ASC_CONDITIONAL_H
 #define ASC_CONDITIONAL_H
+
+#include <utilities/ascConfig.h>
+#include <general/list.h>
+
+#include "slv_types.h"
 
 /**	@addtogroup solver Solver
 	@{

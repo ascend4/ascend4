@@ -32,9 +32,6 @@
  *  MINOS solver registration module.
  *  <pre>
  *  Contents:     MINOS module
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "slv_client.h"
  *  </pre>
  *  @todo MINOS (solver/slv1.c) is out-of-date and will not compile.
  *        Should be either fixed or archived.
@@ -42,6 +39,8 @@
 
 #ifndef ASC_SLV1_H
 #define ASC_SLV1_H
+
+#include "slv_client.h"
 
 /**	@addtogroup solver Solver
 	@{

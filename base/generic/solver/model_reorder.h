@@ -29,17 +29,18 @@
 	- If the MODELs are hierarchical, then they have been indexed in a
 	  tree bottom-up fashion.
 	- Input is a square block that needs tearing and not a rectangle.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "slv_types.h"
-	#include "mtx.h"
 *//*
 	by Benjamin Andrew Allan 6/22/96
 	Last in CVS: $Revision: 1.5 $ $Date: 1997/07/18 12:14:44 $ $Author: mthomas $
 */
 #ifndef ASC_MODEL_REORDER_H
 #define ASC_MODEL_REORDER_H
+
+#include <utilities/ascConfig.h>
+#include <linear/mtx.h>
+
+#include "slv_types.h"
+
 
 /**	@addtogroup solver Solver
 	@{

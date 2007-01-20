@@ -1,51 +1,38 @@
-/*
- *  Contents:     MPS module
- *
- *  Authors:      Craig Schmidt
- *
- *  Dates:        02/95 - Original version
- *
- *  Description:  This module will create an MPS file representation
- *  of the current system, and a file mapping
- *  variable names to MPS names.
- *
- *  Version: $Revision: 1.13 $
- *  Version control file: $RCSfile: mps.c,v $
- *  Date last modified: $Date: 2000/01/25 02:27:03 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *  The write_MPS routine is passed a mps_data_t
- *  data structure, the solver subparameters, and the
- *  name of the file.
- *
- *  The write_name_map routine creates a file linking the
- *  ascend name of a variable and CXXXXXXX
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *  Copyright (C) 1995 Craig Schmidt
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 1995 Craig Schmidt
+	Copyright (C) 2007 Carnegie Mellon University
 
-/***       MPS matrix strucutre
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Description:  This module will create an MPS file representation
+	of the current system, and a file mapping
+	variable names to MPS names.
+
+	This file is part of the SLV solver.
+	The write_MPS routine is passed a mps_data_t
+	data structure, the solver subparameters, and the
+	name of the file.
+
+	The write_name_map routine creates a file linking the
+	ascend name of a variable and CXXXXXXX
+
+ ***       MPS matrix strucutre
  ***                                    v
  ***       min/max cx:  Ax<=b           u
  ***                                    s
@@ -65,31 +52,35 @@
  ***                      +-            -+
  ***
  ***       crow       ->  [      c       ]
- **/
+*//*
+	by Craig Schmidt, 2/19/95
+	Last in CVS: $Revision: 1.13 $ $Date: 2000/01/25 02:27:03 $ $Author: ballan $
+*/
+
+#include "mps.h"
 
 #include <time.h>
 #include <errno.h>
-#include <utilities/ascConfig.h>
 #include <compiler/compiler.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <utilities/set.h>
 #include <general/tm_time.h>
 #include <utilities/mem.h>
-#include "mtx.h"
+
+#include <linear/linsol.h>
+#include <linear/linsolqr.h>
+#include <linear/mtx.h>
+
 #include "slv_types.h"
-#include "var.h"
 #include "rel.h"
 #include "discrete.h"
 #include "conditional.h"
 #include "logrel.h"
 #include "bnd.h"
 #include "slv_common.h"
-#include "linsol.h"
-#include "linsolqr.h"
 #include "slv_client.h"
 #include "slv6.h"
-#include "mps.h"
 
 #ifdef STATIC_MPS
 

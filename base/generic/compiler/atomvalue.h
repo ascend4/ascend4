@@ -27,14 +27,6 @@
 	Atoms are instances that ASCEND can deal with as a 'value'.They include
 	real numbers, integrers, boolean values and sets of integers and sets of
 	symbols.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "instance_enum.h"
-	#include "fractions.h"
-	#include "compiler.h"
-	#include "dimen.h"
-	#include "sets.h"
 *//*
 	based on instance.c
 	by Tom Epperly & Ben Allan, 8/16/89
@@ -43,6 +35,11 @@
 
 #ifndef ASC_ATOMVALUE_H
 #define ASC_ATOMVALUE_H
+
+#include <utilities/ascConfig.h>
+#include "instance_enum.h"
+#include "dimen.h"
+#include "sets.h"
 
 /**	@addtogroup compiler Compiler
 	@{

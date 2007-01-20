@@ -55,9 +55,6 @@
  *                slv6_system_t and slv6_eligible_solver() only takes one
  *                parameter: the system.  Note also that the select
  *                solver functions don't exist.
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "slv_client.h"
  *  </pre>
  *  @todo makeMPS (solver/slv6.c) is out-of-date and will not compile.
  *        Should be either fixed or archived.
@@ -67,6 +64,8 @@
 
 #ifndef ASC_SLV6_H
 #define ASC_SLV6_H
+
+#include "slv_client.h"
 
 /**	@addtogroup solver Solver
 	@{
