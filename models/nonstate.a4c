@@ -15,7 +15,6 @@ MODEL nonstate;
 	y1 IS_A solver_var;
 	y2 IS_A solver_var;
 
-	y1dot IS_A solver_var;
 	y2dot IS_A solver_var;
 
 	g IS_A solver_var;
@@ -31,7 +30,7 @@ MODEL nonstate;
 
 METHODS
 	METHOD specify;
-		FIX y1, y2, t;
+		FIX y2, t;
 	END specify;
 	METHOD values;
 		y1 := 0;
@@ -39,11 +38,11 @@ METHODS
 		t := 0;
 	END values;
 	METHOD ode_init;
-		y1.ode_type := 1; y1dot.ode_type := 2;
-		y1.ode_id := 1; y1dot.ode_id := 1;
-
 		y2.ode_type := 1; y2dot.ode_type := 2;
 		y2.ode_id := 1; y2dot.ode_id := 1;
+		
+		y1.obs_id := 1;
+		y2.obs_id := 2;
 
 		t.ode_type := -1;
 	END ode_init;

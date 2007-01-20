@@ -957,9 +957,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	slv_get_status(blsys->system, &status);
 
   if (status.struct_singular) {
-  	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration will not be performed. The system is structurally singular.");
-    d->status = lsode_nok;
-    return 2;
+  	ERROR_REPORTER_HERE(ASC_USER_WARNING,"The system (according to QRSlv) is structurally singular. The ODE system may also be singular, but not necessarily.");
+/*    d->status = lsode_nok;
+    return 2;*/
   }
 
   /* here we assume integrators.c is in charge of dynamic loading */
