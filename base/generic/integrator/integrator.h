@@ -73,15 +73,16 @@
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
 
-#include "slv_types.h"
-#include "mtx.h"
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
-#include "slv_common.h"
+#include <solver/slv_types.h>
+#include <solver/mtx.h>
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/discrete.h>
+#include <solver/conditional.h>
+#include <solver/logrel.h>
+#include <solver/bnd.h>
+#include <solver/slv_common.h>
+
 #include "samplelist.h"
 
 /*---------------------------*/

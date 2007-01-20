@@ -145,6 +145,12 @@
 */
 
 #include <utilities/ascConfig.h>
+#include <general/list.h>
+
+#include "slv_types.h"
+#include "rel.h"
+#include "logrel.h"
+#include "mtx.h"
 
 #undef SLV_INSTANCES
 #define SLV_INSTANCES TRUE

@@ -3,7 +3,7 @@
 
 extern "C"{
 #include <utilities/error.h>
-#include <solver/integrator.h>
+#include <integrator/integrator.h>
 }
 
 #include <vector>

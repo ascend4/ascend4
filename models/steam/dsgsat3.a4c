@@ -215,7 +215,6 @@ METHOD ode_init;
 		T_w[i].obs_id :=       5 + 4*i;
 	END FOR;
 END ode_init;
-
 METHOD fix_outlet_quality;
 	FIX x[n];
 	FREE node[1].mdot;
