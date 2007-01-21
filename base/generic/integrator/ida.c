@@ -63,9 +63,12 @@
 #include <utilities/ascPanic.h>
 #include <compiler/instance_enum.h>
 
-#include <solver/slv_stdcalls.h>
+#include <solver/slv_client.h>
 #include <solver/relman.h>
-#include <solver/analyze.h>
+#ifdef ASC_IDA_NEW_ANALYSE
+# include <solver/analyze.h>
+# include <solver/slv_stdcalls.h>
+#endif
 
 #include "idalinear.h"
 
@@ -424,6 +427,7 @@ typedef void (IntegratorVarVisitorFn)(IntegratorSystem *sys, struct var_variable
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
 IntegratorVarVisitorFn integrator_dae_classify_var;
 
+#ifdef ASC_IDA_NEW_ANALYSE
 /** 
 	Perform additional problem analysis to prepare problem for integration with 
 	IDA.
@@ -441,7 +445,6 @@ IntegratorVarVisitorFn integrator_dae_classify_var;
 	@see integrator_analyse
 */
 int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
-#ifdef ASC_IDA_NEW_ANALYSE
 	struct var_variable **solversvars;
 	const struct var_variable **vlist;
 	unsigned long nsolversvars, i, j, nderivs, nvlist, nfixed;
@@ -580,10 +583,10 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	/*   - block decomposition based on above */
     /*   - block decomposition results in reordering of y and y' */
 	/*   - boundaries (optional) */
-#endif
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Implementation incomplete");
 	return 1;
 }
+#endif
 
 /*-------------------------------------------------------------
   MAIN IDA SOLVER ROUTINE, see IDA manual, sec 5.4, p. 27 ff.

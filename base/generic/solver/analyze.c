@@ -141,7 +141,7 @@
   GLOBAL VARS
 */
 
-static symchar *g_strings[4];
+static symchar *g_strings[5];
 
 /* symbol table entries we need */
 #define INCLUDED_A g_strings[0]
@@ -158,13 +158,6 @@ static int g_bad_rel_in_list;
 
 /* used to give an integer value to each symbol used in a when */
 struct gl_list_t *g_symbol_values_list = NULL;
-
-
-/*-----------------------------------------------------------------------------
-  FORWARD DECLARATIONS
-*/
-static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
-                                 struct gl_list_t *, struct gl_list_t *);
 
 /*-----------------------------------------------------------------------------
   DATA STRUCTURES FOR USE DURING PROBLEM ANALYSIS
@@ -283,6 +276,7 @@ static struct reuse_t {
 struct problem_t {
 
   /* the following are established by CountStuffInTree */
+  /** @TODO rename these for consistency with eg pars --> npars, vars --> nvars */
   long nv;              /* number of solvervar/solveratom */
   long np;              /* number of real ATOM instance parameters */
   long nu;              /* number of real ATOM instance uninteresting */
@@ -296,7 +290,6 @@ struct problem_t {
   long nw;              /* number of whens */
   long ne;              /* number of external rels subset overestimate*/
   long nm;              /* number of models */
-
   /*
   	The following gllists contain pointers to interface ptrs as
   	locally defined.
@@ -320,6 +313,7 @@ struct problem_t {
   struct gl_list_t *rels;	/* ascend relations. relips */
   struct gl_list_t *objrels;	/* objective rels. relips */
   struct gl_list_t *logrels;	/* logical rels */
+  struct gl_list_t *diffvars;  /* subset of vars: all vars with ode_id set!=0 */
 
   /* bridge ip data */
   struct gl_list_t *oldips;	/* buffer of oldip crap we're protecting */
@@ -358,6 +352,7 @@ struct problem_t {
   int lrelincinuse;		/* incidence given to log relations so far */
 
   /* data to go to slv_system_t */
+  /** @TODO rename these for consisttency, eg mastervl -> mastervars */
   struct rel_relation *reldata;      /* rel data space, mass allocated */
   struct rel_relation *objdata;      /* objrel data space, mass allocated */
   struct rel_relation *condata;      /* cond rel data space, mass allocated*/
@@ -399,8 +394,14 @@ struct problem_t {
   struct dis_discrete **logrelinciden;	/* logrel_relation incidence source */
 };
 
+/*-----------------------------------------------------------------------------
+  FORWARD DECLARATIONS
+*/
+static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
+                                 struct gl_list_t *, struct gl_list_t *);
+
 #ifdef ASC_IDA_NEW_ANALYSE
-int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob);
+static int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob);
 #endif
 
 /*------------------------------------------------------------------------------
@@ -412,9 +413,9 @@ int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob);
 */
 static
 struct solver_ipdata *analyze_getip(void){
-  if (g_reuse.ipbuf!=NULL && g_reuse.ipused < g_reuse.ipcap) {
+  if(g_reuse.ipbuf!=NULL && g_reuse.ipused < g_reuse.ipcap) {
     return &(g_reuse.ipbuf[g_reuse.ipused++]);
-  } else {
+  }else{
     ASC_PANIC("Too many ips requested by analyze_getip");
   }
 }
@@ -430,27 +431,27 @@ struct solver_ipdata *analyze_getip(void){
 static
 int resize_ipbuf(size_t newcap, int resetmem){
   struct solver_ipdata *tmp;
-  if (newcap ==0) {
-    if (g_reuse.ipbuf != NULL) {
+  if(newcap ==0) {
+    if(g_reuse.ipbuf != NULL) {
       ascfree(g_reuse.ipbuf);
     }
     g_reuse.ipcap = g_reuse.ipused = 0;
     g_reuse.ipbuf = NULL;
     return 0;
   }
-  if (newcap > g_reuse.ipcap) {
-    if ( g_reuse.ipcap >0 ) {
+  if(newcap > g_reuse.ipcap) {
+    if( g_reuse.ipcap >0 ) {
       tmp = (struct solver_ipdata *)
         ascrealloc(g_reuse.ipbuf,newcap*sizeof(struct solver_ipdata));
-      if (tmp == NULL) {
+      if(tmp == NULL) {
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
         return 1;
       }
       g_reuse.ipbuf = tmp;
       g_reuse.ipcap = newcap;
-    } else {
+    }else{
       tmp = ASC_NEW_ARRAY(struct solver_ipdata,newcap);
-      if (tmp == NULL) {
+      if(tmp == NULL) {
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
         return 1;
       }
@@ -458,7 +459,7 @@ int resize_ipbuf(size_t newcap, int resetmem){
       g_reuse.ipcap = newcap;
     }
   }
-  if (resetmem) {
+  if(resetmem) {
     memset((char *)g_reuse.ipbuf,0,
            g_reuse.ipcap*sizeof(struct solver_ipdata));
   }
@@ -478,11 +479,11 @@ int resize_ipbuf(size_t newcap, int resetmem){
 static
 struct var_variable **get_incidence_space(int len, struct problem_t *p_data){
   struct var_variable **tmp;
-  if (p_data->relincidence == NULL) {
+  if(p_data->relincidence == NULL) {
     ASC_PANIC("get_incidence_space called prematurely. bye.\n");
   }
-  if (len <1) return NULL;
-  if (p_data->relincinuse + len > p_data->relincsize) {
+  if(len <1) return NULL;
+  if(p_data->relincinuse + len > p_data->relincsize) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"get_incidence_space called excessively.");
     return NULL;
   }
@@ -501,11 +502,11 @@ struct rel_relation **get_var_incidence_space(int len
 		,struct problem_t *p_data
 ){
   struct rel_relation **tmp;
-  if (p_data->varincidence == NULL) {
+  if(p_data->varincidence == NULL) {
     ASC_PANIC("get_var_incidence_space called prematurely. bye.\n");
   }
-  if (len <1) return NULL;
-  if (p_data->varincinuse + len > p_data->varincsize) {
+  if(len <1) return NULL;
+  if(p_data->varincinuse + len > p_data->varincsize) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"get_var_incidence_space called excessively.");
     return NULL;
   }
@@ -523,11 +524,11 @@ struct dis_discrete **get_logincidence_space(int len
 		,struct problem_t *p_data
 ){
   struct dis_discrete **tmp;
-  if (p_data->logrelinciden == NULL) {
+  if(p_data->logrelinciden == NULL) {
     ASC_PANIC("get_logincidence_space called prematurely. bye.\n");
   }
-  if (len <1) return NULL;
-  if (p_data->lrelincinuse + len > p_data->lrelincsize) {
+  if(len <1) return NULL;
+  if(p_data->lrelincinuse + len > p_data->lrelincsize) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"get_logincidence_space called excessively.");
     return NULL;
   }
@@ -547,7 +548,8 @@ struct dis_discrete **get_logincidence_space(int len
 	of the caller.
 	p_data->root is set to i.
 */
-static void InitTreeCounts(struct Instance *i,struct problem_t *p_data){
+static
+void InitTreeCounts(struct Instance *i,struct problem_t *p_data){
   memset((char *)p_data,0,sizeof(struct problem_t));
   p_data->root = i;
 }
@@ -594,39 +596,39 @@ void CollectArrayRelsAndWhens(struct Instance *i, long modindex
   struct solver_ipdata *rip;
   unsigned long nch,c;
 
-  if (i==NULL) return;
+  if(i==NULL) return;
   nch = NumberChildren(i);
   for (c=1;c<=nch;c++) {
     child = InstanceChild(i,c);
-    if (child==NULL) continue;
+    if(child==NULL) continue;
     switch (InstanceKind(child)) {
     case REL_INST:
       rip = SIP(GetInterfacePtr(child));
-      if (rip->u.r.model == 0) {
+      if(rip->u.r.model == 0) {
         rip->u.r.model = modindex;
-      } else {
+      }else{
         /* ah hah! found an array with two distinct MODEL parents! skip it */
         break;
       }
-      if (rip->u.r.cond) {
+      if(rip->u.r.cond) {
         gl_append_ptr(p_data->cnds,(VOIDPTR)rip);
       }
       else {
-        if (rip->u.r.obj) {
+        if(rip->u.r.obj) {
           gl_append_ptr(p_data->objrels,(VOIDPTR)rip);
-        } else {
+        }else{
           gl_append_ptr(p_data->rels,(VOIDPTR)rip);
         }
       }
       break;
     case LREL_INST:
       rip = SIP(GetInterfacePtr(child));
-      if (rip->u.lr.model == 0) {
+      if(rip->u.lr.model == 0) {
         rip->u.lr.model = modindex;
-      } else {
+      }else{
         break;
       }
-      if (rip->u.lr.cond) {
+      if(rip->u.lr.cond) {
         gl_append_ptr(p_data->logcnds,(VOIDPTR)rip);
       }
       else {
@@ -635,16 +637,16 @@ void CollectArrayRelsAndWhens(struct Instance *i, long modindex
       break;
     case WHEN_INST:
       rip = SIP(GetInterfacePtr(child));
-      if (rip->u.w.model == 0) {
+      if(rip->u.w.model == 0) {
         rip->u.w.model = modindex;
-      } else {
+      }else{
         break;
       }
       gl_append_ptr(p_data->whens,(VOIDPTR)rip);
       break;
     case ARRAY_ENUM_INST:
     case ARRAY_INT_INST:
-      if (ArrayIsRelation(child) ||
+      if(ArrayIsRelation(child) ||
           ArrayIsLogRel(child) ||
           ArrayIsWhen(child)
       ){
@@ -673,22 +675,22 @@ void CollectRelsAndWhens(struct solver_ipdata *ip
   struct solver_ipdata *rip;
   unsigned long nch,c;
 
-  if (ip->i==NULL) return;
+  if(ip->i==NULL) return;
   nch = NumberChildren(ip->i);
   for (c=1;c<=nch;c++) {
     child = InstanceChild(ip->i,c);
-    if (child==NULL) continue;
+    if(child==NULL) continue;
     switch (InstanceKind(child)) {
     case REL_INST:
       rip = SIP(GetInterfacePtr(child));
       rip->u.r.model = modindex;
-      if (rip->u.r.cond) {
+      if(rip->u.r.cond) {
         gl_append_ptr(p_data->cnds,(VOIDPTR)rip);
       }
       else {
-        if (rip->u.r.obj) {
+        if(rip->u.r.obj) {
           gl_append_ptr(p_data->objrels,(VOIDPTR)rip);
-        } else {
+        }else{
           gl_append_ptr(p_data->rels,(VOIDPTR)rip);
         }
       }
@@ -696,7 +698,7 @@ void CollectRelsAndWhens(struct solver_ipdata *ip
     case LREL_INST:
       rip = SIP(GetInterfacePtr(child));
       rip->u.lr.model = modindex;
-      if (rip->u.lr.cond) {
+      if(rip->u.lr.cond) {
         gl_append_ptr(p_data->logcnds,(VOIDPTR)rip);
       }
       else {
@@ -710,7 +712,7 @@ void CollectRelsAndWhens(struct solver_ipdata *ip
       break;
     case ARRAY_ENUM_INST:
     case ARRAY_INT_INST:
-      if (ArrayIsRelation(child) ||
+      if(ArrayIsRelation(child) ||
           ArrayIsLogRel(child)||
           ArrayIsWhen(child)
       ){
@@ -739,12 +741,12 @@ static void analyze_CountRelation(struct Instance *inst
   case e_less: case e_lesseq:
   case e_greater: case e_greatereq:
   case e_equal: case e_notequal:
-    if ( RelationIsCond(GetInstanceRelationOnly(inst)) ) {
+    if( RelationIsCond(GetInstanceRelationOnly(inst)) ) {
       p_data->nc++;
     }
     else {
       p_data->nr++;
-      if ( GetInstanceRelationType(inst)==e_blackbox ) {
+      if( GetInstanceRelationType(inst)==e_blackbox ) {
         p_data->ne++;
       }
     }
@@ -775,16 +777,16 @@ int GetIntFromSymbol(CONST char *symval
   int len,c,value;
   int symbol_list_count;
 
-  if (symbol_list != NULL) {
+  if(symbol_list != NULL) {
     len = gl_length(symbol_list);
     for (c=1; c<= len; c++) {
       dummy = (struct SymbolValues *)(gl_fetch(symbol_list,c));
-      if (!strcmp(dummy->name,symval)) {
+      if(!strcmp(dummy->name,symval)) {
 	return (dummy->value);
       }
     }
     symbol_list_count = len;
-  } else {
+  }else{
     symbol_list_count = 0;
     symbol_list = gl_create(2L);
   }
@@ -804,7 +806,7 @@ void DestroySymbolValuesList(struct gl_list_t *symbol_list)
 {
   struct SymbolValues *entry;
   int len,c;
-    if (symbol_list != NULL) {
+    if(symbol_list != NULL) {
       len = gl_length(symbol_list);
       for (c=1; c<= len; c++) {
         entry = (struct SymbolValues *)(gl_fetch(symbol_list,c));
@@ -821,7 +823,7 @@ void DestroySymbolValuesList(struct gl_list_t *symbol_list)
 */
 
 /*
-	classify_instance : to be called by PushInterfacPtrs.
+	classify_instance : to be called by PushInterfacePtrs.
 
 	This function classifies the given instance and appends into
 	the necessary list in the p_data structure.
@@ -853,12 +855,19 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
       ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
       ip->u.v.odeid = IntegerChildValue(inst,ODEID_A);
+	  /* CONSOLE_DEBUG("FOUND A VAR: deriv = %d, %s = %d",ip->u.v.deriv,SCP(ODEID_A),ip->u.v.odeid); */
 
       if(RelationsCount(inst)) {
         asc_assert((int)ip!=0x1);
         gl_append_ptr(p_data->vars,(POINTER)ip);
       }else{
         gl_append_ptr(p_data->unas,(POINTER)ip);
+      }
+
+	  /* in addition, if it's got an ode_id, add it to diffvars */
+	  if(ip->u.v.odeid){
+		CONSOLE_DEBUG("Adding var to diffvars");
+        gl_append_ptr(p_data->diffvars,(POINTER)ip);
       }
     }else{
       ip->u.v.fixed = 1;
@@ -971,7 +980,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     ip->u.dv.booleanvar=0;
     ip->u.dv.fixed = 1;
     ip->u.dv.active = 0;
-    if (g_symbol_values_list == NULL) {
+    if(g_symbol_values_list == NULL) {
       g_symbol_values_list = gl_create(2L);
     }
     ip->u.dv.value = GetIntFromSymbol(symval,g_symbol_values_list);
@@ -1046,7 +1055,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     ip = analyze_getip();
     ip->i = inst;
     ip->u.w.index = 0;
-    if ( WhensCount(inst) ) {
+    if( WhensCount(inst) ) {
       ip->u.w.inwhen = 1;
     }else{
       ip->u.w.inwhen = 0;
@@ -1070,7 +1079,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 static
 void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
   CONST char *symval;
-  if (inst!=NULL) {
+  if(inst!=NULL) {
     switch (InstanceKind(inst)) {
     case REL_INST:
       if( GetInstanceRelationOnly(inst) == NULL ||
@@ -1090,11 +1099,11 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
     case REAL_ATOM_INST:
       if( solver_var(inst) && RelationsCount(inst)) {
         p_data->nv++;
-      } else {
-        if (solver_par(inst) && RelationsCount(inst)) {
+      }else{
+        if(solver_par(inst) && RelationsCount(inst)) {
           /* never passes right now */
           p_data->np++;
-        } else {
+        }else{
           p_data->nu++;
         }
       }
@@ -1103,7 +1112,7 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
        */
       break;
     case BOOLEAN_ATOM_INST:
-      if ( ( boolean_var(inst) && LogRelationsCount(inst) ) ||
+      if( ( boolean_var(inst) && LogRelationsCount(inst) ) ||
 	   WhensCount(inst) ) {
 	p_data->ndv++;
       }
@@ -1114,15 +1123,15 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
     case BOOLEAN_CONSTANT_INST:
     case INTEGER_ATOM_INST:
     case INTEGER_CONSTANT_INST:
-      if (WhensCount(inst)) {
+      if(WhensCount(inst)) {
         p_data->ndv++;
       }
       break;
     case SYMBOL_ATOM_INST:
     case SYMBOL_CONSTANT_INST:
-      if (WhensCount(inst)) {
+      if(WhensCount(inst)) {
         symval = SCP(GetSymbolAtomValue(inst));
-        if (symval == NULL) {
+        if(symval == NULL) {
           ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
 		  FPRINTF(ASCERR,"CountStuffInTree found undefined symbol or symbol_constant in WHEN.\n");
           WriteInstanceName(ASCERR,inst,p_data->root);
@@ -1142,7 +1151,7 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
         g_bad_rel_in_list = TRUE;
         return;
       }
-      if ( LogRelIsCond(GetInstanceLogRel(inst)) ) {
+      if( LogRelIsCond(GetInstanceLogRel(inst)) ) {
         p_data->ncl++;
       }
       else {
@@ -1233,7 +1242,7 @@ int analyze_make_master_lists(struct problem_t *p_data){
        p_data->np + p_data->nu +  p_data->nud +  /* atoms */
        p_data->nw +                              /* when */
        p_data->nm;                               /* model */
-  if (reqlen <1)  {
+  if(reqlen <1)  {
     return 2;
   }
 
@@ -1243,7 +1252,7 @@ int analyze_make_master_lists(struct problem_t *p_data){
 #else
   stat = resize_ipbuf(reqlen,1);
 #endif /* NDEBUG */
-  if (stat) {
+  if(stat) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 1;
   }
@@ -1260,6 +1269,7 @@ int analyze_make_master_lists(struct problem_t *p_data){
   CL(cnds,nc);  /* conditional relations */
   CL(rels,nr);  /* relations */
   CL(logrels,nl);/* logical relations */
+  CL(diffvars,nr); /* differential variables */
   CL(logcnds,ncl);/* conditional logrelations */
   CL(extrels,ne); /* extrelations */
   CL(objrels,no); /* objectives */
@@ -1270,10 +1280,14 @@ int analyze_make_master_lists(struct problem_t *p_data){
   /* decorate the instance tree with ips, collecting vars and models. */
   p_data->oldips = PushInterfacePtrs(p_data->root,classify_instance,
                                     g_reuse.ipcap,1,p_data);
-  if (p_data->oldips == NULL) {
+  if(p_data->oldips == NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 1;
   }
+
+#ifdef ASC_IDA_NEW_ANALYSE
+	asc_assert(gl_length(p_data->diffvars));
+#endif
 
   /*
   	collect relations, objectives, logrels and whens recording the
@@ -1284,7 +1298,7 @@ int analyze_make_master_lists(struct problem_t *p_data){
     CollectRelsAndWhens(SIP(gl_fetch(p_data->models,c)),c,p_data);
     SIP(gl_fetch(p_data->models,c))->u.m.index = c;
   }
-  if ((long)gl_length(p_data->rels) != p_data->nr ||
+  if((long)gl_length(p_data->rels) != p_data->nr ||
       (long)gl_length(p_data->objrels) != p_data->no ||
       (long)gl_length(p_data->logrels) != p_data->nl ||
       (long)gl_length(p_data->whens) != p_data->nw
@@ -1377,13 +1391,13 @@ int analyze_make_master_lists(struct problem_t *p_data){
   */
   len = gl_length(p_data->vars);
   p_data->tmplist = gl_create(len);
-  if (p_data->tmplist == NULL) return 1;
+  if(p_data->tmplist == NULL) return 1;
   for (c=1; c <= len; c++) {
     /* dispose of var */
     vip = SIP(gl_fetch(p_data->vars,c));
-    if ( vip->u.v.incident == 1) {
+    if( vip->u.v.incident == 1) {
       gl_append_ptr(p_data->tmplist,vip);
-    } else {
+    }else{
       gl_append_ptr(p_data->unas,vip);
     }
   }
@@ -1395,15 +1409,15 @@ int analyze_make_master_lists(struct problem_t *p_data){
 
   len = gl_length(p_data->pars);
   p_data->tmplist = gl_create(len);
-  if (p_data->tmplist == NULL) {
+  if(p_data->tmplist == NULL){
     return 1;
   }
-  for (c=1; c <= len; c++) {
+  for(c=1; c <= len; c++){
     /* dispose of par */
     vip = SIP(gl_fetch(p_data->pars,c));
-    if ( vip->u.v.incident == 1) {
+    if( vip->u.v.incident == 1) {
       gl_append_ptr(p_data->tmplist,vip);
-    } else {
+    }else{
       gl_append_ptr(p_data->unas,vip);
     }
   }
@@ -1420,17 +1434,17 @@ int analyze_make_master_lists(struct problem_t *p_data){
   */
   p_data->lrelinc = 0;
   len = gl_length(p_data->dvars);
-  if ( len > 0) {
+  if( len > 0) {
     p_data->tmplist = gl_create(len);
     scratch = gl_create(2L);
-    if (p_data->tmplist == NULL) return 1;
+    if(p_data->tmplist == NULL) return 1;
     for (c=1; c <= len; c++) {
       /* dispose of incident discrete vars */
       vip = SIP(gl_fetch(p_data->dvars,c));
-      if ( vip->u.dv.incident == 1) {
+      if( vip->u.dv.incident == 1) {
         gl_append_ptr(p_data->tmplist,vip);
         p_data->lrelinc++;                  /* Number of incident dis vars */
-      } else {
+      }else{
         gl_append_ptr(scratch,vip);
       }
     }
@@ -1465,18 +1479,17 @@ int analyze_make_master_lists(struct problem_t *p_data){
   	SolverAtomInstance, which still needs parser and interpreter support
   */
 
-  if (p_data->nr != 0 &&  p_data->nv==0) {
+  if(p_data->nr != 0 &&  p_data->nv==0) {
 	ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-    FPRINTF(ASCERR, "Problem should contain at least one variable %s",
-            "and one relation\n");
-    FPRINTF(ASCERR, "There are relations into the system, but the number \n");
-    FPRINTF(ASCERR, "of variables is zero. That means that the existent \n");
-    FPRINTF(ASCERR, "vars were not recognized as solver_vars. A possible \n");
-    FPRINTF(ASCERR, "reason is that you have introduced conflicting \n");
-    FPRINTF(ASCERR, "definitions of solver_var into the system. Please \n");
-    FPRINTF(ASCERR, "delete all your types and reload your models \n");
-    FPRINTF(ASCERR, "with the appropriate definition of solver_var\n");
-    FPRINTF(ASCERR, "Solver system will not be built.");
+    FPRINTF(ASCERR,"Problem should contain at least one variable and one relation.\n");
+    FPRINTF(ASCERR,"There are relations into the system, but the number\n");
+    FPRINTF(ASCERR,"of variables is zero. That means that the existent\n");
+    FPRINTF(ASCERR,"vars were not recognized as solver_vars. A possible\n");
+    FPRINTF(ASCERR,"reason is that you have introduced conflicting\n");
+    FPRINTF(ASCERR,"definitions of solver_var into the system. Please\n");
+    FPRINTF(ASCERR,"delete all your types and reload your models\n");
+    FPRINTF(ASCERR,"with the appropriate definition of solver_var\n");
+    FPRINTF(ASCERR,"Solver system will not be built.");
 	error_reporter_end_flush();
     return 2;
   }
@@ -1549,13 +1562,13 @@ void ProcessValueList(struct Set *ValueList, int *value
   struct Set *s;
 
   s = ValueList;
-  if (ValueList!=NULL) {
+  if(ValueList!=NULL) {
     while (s != NULL) {
       expr = GetSingleExpr(s);
       switch(ExprType(expr)) {
         case e_boolean:
 	  *value = ExprBValue(expr);
-	  if (*value == 2) {   /* ANY */
+	  if(*value == 2) {   /* ANY */
 	    *value = -2;
 	  }
 	  break;
@@ -1571,7 +1584,7 @@ void ProcessValueList(struct Set *ValueList, int *value
       s = NextSet(s);
       value++;
     }
-  } else {
+  }else{
     *value = -1;  /* OTHERWISE */
   }
 }
@@ -1595,11 +1608,11 @@ void ProcessArraysInWhens(struct Instance *cur_inst
   struct solver_ipdata *ip;
   unsigned long c,nch;
 
-  if (cur_inst==NULL) return;
+  if(cur_inst==NULL) return;
   nch = NumberChildren(cur_inst);
   for (c=1;c<=nch;c++) {
     child = InstanceChild(cur_inst,c);
-    if (child==NULL) continue;
+    if(child==NULL) continue;
     switch (InstanceKind(child)) {
     case REL_INST:
       ip = SIP(GetInterfacePtr(child));
@@ -1624,7 +1637,7 @@ void ProcessArraysInWhens(struct Instance *cur_inst
       break;
     case ARRAY_ENUM_INST:
     case ARRAY_INT_INST:
-      if (ArrayIsRelation(child) || ArrayIsWhen(child)
+      if(ArrayIsRelation(child) || ArrayIsWhen(child)
          || ArrayIsLogRel(child) || ArrayIsModel(child)) {
         ProcessArraysInWhens(child,rels,logrels,whens);
       }
@@ -1651,11 +1664,11 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
   struct solver_ipdata *ip;
   unsigned long c,nch;
 
-  if (cur_inst==NULL) return;
+  if(cur_inst==NULL) return;
   nch = NumberChildren(cur_inst);
   for (c=1;c<=nch;c++) {
     child = InstanceChild(cur_inst,c);
-    if (child==NULL) continue;
+    if(child==NULL) continue;
     switch (InstanceKind(child)) {
     case REL_INST:
       ip = SIP(GetInterfacePtr(child));
@@ -1680,7 +1693,7 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
       break;
     case ARRAY_ENUM_INST:
     case ARRAY_INT_INST:
-      if (ArrayIsRelation(child) || ArrayIsWhen(child)
+      if(ArrayIsRelation(child) || ArrayIsWhen(child)
          || ArrayIsLogRel(child) || ArrayIsModel(child)) {
         ProcessArraysInWhens(child,rels,logrels,whens);
       }
@@ -1711,7 +1724,6 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
 */
 static
 void ProcessSolverWhens(struct w_when *when,struct Instance *i){
-
   struct gl_list_t *scratch;
   struct gl_list_t *wvars;
   struct gl_list_t *ref;
@@ -1735,14 +1747,14 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   len = gl_length(scratch);
   wvars = gl_create(len);
   when->dvars = wvars;
-  for (c=1;c<=len;c++) {
+  for(c=1;c<=len;c++){
     cur_inst = (struct Instance *)(gl_fetch(scratch,c));
     ip = SIP(GetInterfacePtr(cur_inst));
     dvar = ip->u.dv.data;
-    if (dis_whens_list(dvar)==NULL) {
+    if(dis_whens_list(dvar)==NULL){
       diswhens = gl_create(2L);
       dis_set_whens_list(dvar,diswhens);
-    } else {
+    }else{
       diswhens = dis_whens_list(dvar);
     }
     gl_append_ptr(diswhens,when);
@@ -1757,7 +1769,7 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     cur_case = (struct Case *)(gl_fetch(scratch,c));
     ValueList = GetCaseValues(cur_case);
     value = &(cur_sol_case->values[0]);
-    if (g_symbol_values_list == NULL) {
+    if(g_symbol_values_list == NULL) {
       g_symbol_values_list = gl_create(2L);
     }
     ProcessValueList(ValueList,value,g_symbol_values_list);
@@ -1766,12 +1778,12 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     rels = gl_create(lref);  /* maybe allocating less than needed (models) */
     logrels = gl_create(lref);  /* maybe allocating less than needed */
     whens = gl_create(lref); /* maybe allocating more than needed */
-    for (r=1;r<=lref;r++) {
+    for(r=1;r<=lref;r++){
       cur_inst = (struct Instance *)(gl_fetch(ref,r));
       switch(InstanceKind(cur_inst)){
       case REL_INST:
         ip = SIP(GetInterfacePtr(cur_inst));
-	ip->u.r.active = 0;
+		ip->u.r.active = 0;
         rel = ip->u.r.data;
         gl_append_ptr(rels,rel);
 	break;
@@ -1812,6 +1824,9 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
 	@return 
 		1 if discrete var is a member of the when var list, 
 		else 0
+
+	@DEPRECATED we want to get rid of this in order to clean up the
+	solver interface (divorce it from dependencies on compiler)
 */
 int dis_var_in_a_when(struct Instance *var, struct w_when *when){
   struct Instance *winst;
@@ -1824,6 +1839,9 @@ int dis_var_in_a_when(struct Instance *var, struct w_when *when){
 /**
 	Determine if the conditional variable inst is part of the
 	variable list of some when in the when list.
+
+	@DEPRECATED we want to get rid of this in order to clean up the
+	solver interface (divorce it from dependencies on compiler)
 */
 int varinst_found_in_whenlist(slv_system_t sys, struct Instance *inst){
   struct w_when **whenlist;
@@ -1833,7 +1851,7 @@ int varinst_found_in_whenlist(slv_system_t sys, struct Instance *inst){
   whenlist = slv_get_solvers_when_list(sys);
   for (c=0; whenlist[c]!=NULL; c++) {
     when = whenlist[c];
-    if (dis_var_in_a_when(inst,when)) {
+    if(dis_var_in_a_when(inst,when)) {
       return 1;
     }
   }
@@ -1859,7 +1877,7 @@ void GetListOfLogRels(struct bnd_boundary *bnd, struct Instance *inst){
 
   len = LogRelationsCount(inst);
 
-  if (len>0) {
+  if(len>0) {
     logrels = gl_create(len);
     for (c=1; c<=len; c++) {
       i = LogRelationsForInstance(inst,c);
@@ -1890,12 +1908,144 @@ void GetTolerance(struct bnd_boundary *bnd){
   for (c=1; c<=len; c++) {
     lrel = (struct logrel_relation *)(gl_fetch(logrels,c));
     i = (struct Instance *)(logrel_instance(lrel));
-    if (FindTolInSatTermOfLogRel(i,rel,&tolerance )) {
+    if(FindTolInSatTermOfLogRel(i,rel,&tolerance )) {
       bnd_set_tolerance(bnd,tolerance);
       return;
     }
   }
 }
+
+
+/*------------------------------------------------------------------------------
+	DERIVATIVES & DIFFERENTIAL VARIABLES
+*/
+
+#ifdef ASC_IDA_NEW_ANALYSE
+
+const SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys){
+	return (SolverDiffVarCollection *)slv_get_diffvars(sys);
+}
+
+static 
+int CmpDiffVars(const struct solver_ipdata *a, const struct solver_ipdata *b){
+	if(a->u.v.odeid < b->u.v.odeid)return -1;
+	if(a->u.v.odeid > b->u.v.odeid)return 1;
+	/* now, the ode_id is equal: next level of sorting... */
+	if(a->u.v.deriv < b->u.v.deriv)return -1;
+	if(a->u.v.deriv > b->u.v.deriv)return 1;
+	return 0;
+}
+
+/**
+	This function steals a lot of what was in integrator.c, but we try to make
+	it more general and capable of extracting info about high-order derivative
+	chains. One eye open to the possibility of doing Pantelides (or other?) 
+	style index reduction.
+
+	Also, note that we try to only use data from the struct problem_t, NOT
+	to go back to the instance hierarchy. The idea is that we have already got
+	what we need in classify_instance, etc.
+
+	@return 0 on success
+*/
+int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
+	SolverDiffVarCollection *diffvars = NULL;
+	struct solver_ipdata *vip, *vipnext;
+	SolverDiffVarSequence *seq;
+	struct gl_list_t *seqs;
+	long i, seqstart;
+	short j;
+	char cont/*, *varname*/;
+	short maxorder = 0;
+
+	asc_assert(prob);
+	
+	CONSOLE_DEBUG("Generating differential variable data....");
+
+	CONSOLE_DEBUG("There are %ld diffvars", gl_length(prob->diffvars));
+
+	CONSOLE_DEBUG("Sorting diffvars...");
+	
+	/* first sort the list of diffvars */
+	gl_sort(prob->diffvars, (CmpFunc)CmpDiffVars);
+
+	CONSOLE_DEBUG("Identifying chains...");
+	
+	/* scan the list for derivs that are missing vars */
+	i = 1; cont = TRUE; seqstart =1;
+	vip = (struct solver_ipdata *)gl_fetch(prob->diffvars,i);
+	seqs = gl_create(10L);
+	while(cont){
+		/* CONSOLE_DEBUG("Working, seqstart=%ld",seqstart); */
+		if(i >= gl_length(prob->diffvars))cont = FALSE;
+		else vipnext = (struct solver_ipdata *)gl_fetch(prob->diffvars,i+1);
+
+		if(cont && vipnext->u.v.odeid == vip->u.v.odeid){
+			/* same sequence, check that it's the next derivative */
+			asc_assert(vipnext->u.v.odeid == vip->u.v.odeid);
+			asc_assert(vip->u.v.deriv >= vip->u.v.deriv);
+
+			if(vipnext->u.v.deriv == vip->u.v.deriv){
+				ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+				FPRINTF(ASCERR,"Repeated ode_type %d for ode_id %d (var '",vip->u.v.deriv,vip->u.v.odeid);
+				WriteInstanceName(ASCWAR,vip->i,prob->root);
+				FPRINTF(ASCERR,"')");
+				error_reporter_end_flush();
+				return 1;
+			}else if(vipnext->u.v.deriv > vip->u.v.deriv + 1){
+				ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+				FPRINTF(ASCERR,"Missing ode_type %d for ode_id %d (check var '",vip->u.v.deriv+1,vip->u.v.odeid);
+				WriteInstanceName(ASCWAR,vip->i,prob->root);
+				FPRINTF(ASCERR,"')");
+				error_reporter_end_flush();
+				return 2;
+			}
+
+			/* allow this var into the sequence, loop again */
+			vip = vipnext; ++i; continue;
+		}
+
+		/* close the current sequence */
+		seq = ASC_NEW(SolverDiffVarSequence);
+		seq->n = i - seqstart + 1;
+		seq->ode_id = vip->u.v.odeid;
+		/* CONSOLE_DEBUG("Saving sequence ode_id = %ld, n = %d",seq->ode_id,seq->n); */
+		seq->vars = ASC_NEW_ARRAY(struct var_variable*,seq->n);
+		for(j=0;j<seq->n;++j){
+			vip = (struct solver_ipdata *)gl_fetch(prob->diffvars,seqstart+j);
+			seq->vars[j]=vip->u.v.data;
+			/* varname = var_make_name(sys,seq->vars[j]);
+			CONSOLE_DEBUG("seq, j=%d: '%s'",j,varname);
+			ASC_FREE(varname); */
+		}
+		gl_append_ptr(seqs,(void *)seq);
+		/* CONSOLE_DEBUG("Completed seq %ld",gl_length(seqs)); */
+
+		if(vip->u.v.deriv > maxorder){
+			maxorder = vip->u.v.deriv;
+			CONSOLE_DEBUG("maxorder increased to %d",maxorder);
+		}
+
+		++i; seqstart=i; vip=vipnext; continue;
+	}
+	
+	CONSOLE_DEBUG("Place chains in array structure");
+	diffvars = ASC_NEW(SolverDiffVarCollection);
+	diffvars->n = gl_length(seqs);
+	diffvars->seqs = ASC_NEW_ARRAY(SolverDiffVarSequence,diffvars->n);
+	for(i=0;i<diffvars->n;++i){
+		diffvars->seqs[i] = *(SolverDiffVarSequence *)gl_fetch(seqs,i+1);
+	}
+	gl_destroy(seqs);
+
+	slv_set_diffvars(sys,(void *)diffvars);
+
+	return 0;
+}
+
+#endif
+
+/*----------------------------------------------------------------------------*/
 
 /**
 	Here we roll the master lists and bridge data into relation/var/
@@ -1932,30 +2082,35 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   nnzold = p_data->nnz = p_data->nnztot
          = p_data->nnzobj = p_data->nnzcond = 0;
   p_data->nrow = 0; /* number of included relations */
+  /* loop through the relations we found */
   for (c=1,len = gl_length(p_data->rels); c <= len; c++) {
     rip = SIP(gl_fetch(p_data->rels,c));
     gut = GetInstanceRelationOnly(rip->i);
+	/* nnztot includes all vars in all relations */
     vlen = NumberVariables(gut);
     p_data->nnztot += vlen;
-    if (rip->u.r.included) {
+    if(rip->u.r.included) {
       p_data->nrow++;
       nnzold = p_data->nnz;
       for( v = 1 ; v <= vlen; v++ ) {
         i = RelationVariable(gut,v);
         vip = SIP(GetInterfacePtr(i));
-        if (!(vip->u.v.fixed)) {
+        if(!(vip->u.v.fixed)) {
+		  /* nnz includes only FREE vars in INCLUDE relations */
           p_data->nnz++;
         }
       }
-      if (p_data->nnz==nnzold) {
+      if(p_data->nnz==nnzold){
         ERROR_REPORTER_START_NOLINE(ASC_USER_WARNING);
-		FPRINTF(ASCERR,"No free variables in included relation '");
+		FPRINTF(ASCERR,"No free variables found in included relation '");
         WriteInstanceName(ASCERR,rip->i,p_data->root);
 		FPRINTF(ASCERR,"'");
 		error_reporter_end_flush();
       }
     }
   }
+
+  /* count the objective relations */
   for (c=1,len = gl_length(p_data->objrels); c <= len; c++) {
     rip = SIP(gl_fetch(p_data->objrels,c));
     gut = GetInstanceRelationOnly(rip->i);
@@ -1963,7 +2118,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     p_data->nnzobj += vlen;
   }
 
-  /* Conditional relations */
+  /* count the conditional relations */
   for (c=1,len = gl_length(p_data->cnds); c <= len; c++) {
     rip = SIP(gl_fetch(p_data->cnds,c));
     gut = GetInstanceRelationOnly(rip->i);
@@ -1971,40 +2126,40 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     p_data->nnzcond += vlen;
   }
 
-
-  /*
-  	calculate the number of free and incident variables, ncol
-  	we put all the nonincident on the unas list, so just check fixed.
-  */
+  /* count ncol, the number of non-FIXED incident variables. note that
+	non-incident variables are already taken out, in the unas list. */
   for (c=1,len = gl_length(p_data->vars); c <= len; c++) {
     vip = SIP(gl_fetch(p_data->vars,c));
-    if (!(vip->u.v.fixed)) p_data->ncol++;
+    if(!(vip->u.v.fixed)) p_data->ncol++;
   }
+
   /*
   	now, at last we have cols jacobian in the order we want the lists to
   	be handed to the solvers.
   */
 
-
+  /* count the incidences of bool vars and logrels */
   logorder = MAX((unsigned long)p_data->lrelinc,gl_length(p_data->logrels));
   lognnzold = p_data->lognnz = p_data->lrelincsize = 0;
   p_data->lognrow = 0; /* number of included logrelations */
   for (c=1,len = gl_length(p_data->logrels); c <= len; c++) {
     lrip = SIP(gl_fetch(p_data->logrels,c));
     lgut = GetInstanceLogRelOnly(lrip->i);
+	/* lrelincsize includes all boolean vars in all logical relations */
     vlen = NumberBoolVars(lgut);
     p_data->lrelincsize += vlen;
-    if (lrip->u.lr.included) {
+    if(lrip->u.lr.included) {
       p_data->lognrow++;
       lognnzold = p_data->lognnz;
       for( v = 1 ; v <= vlen; v++ ) {
         i = LogRelBoolVar(lgut,v);
         dvip = SIP(GetInterfacePtr(i));
-        if (!(dvip->u.dv.fixed)) {
+        if(!(dvip->u.dv.fixed)) {
+		  /* lognnz includes only FREE bools from INCLUDED logrels */
           p_data->lognnz++;
         }
       }
-      if (p_data->lognnz==lognnzold) {
+      if(p_data->lognnz==lognnzold) {
         ERROR_REPORTER_START_NOLINE(ASC_PROG_WARNING);
 		FPRINTF(ASCERR,"No free boolean variables in included logrelation:");
         WriteInstanceName(ASCWAR,rip->i,p_data->root);
@@ -2013,7 +2168,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     }
   }
 
-  /* Conditional logrelations */
+  /* count conditional logrels */
   for (c=1,len = gl_length(p_data->logcnds); c <= len; c++) {
     lrip = SIP(gl_fetch(p_data->logcnds,c));
     lgut = GetInstanceLogRelOnly(lrip->i);
@@ -2021,25 +2176,24 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     p_data->lrelincsize += vlen;
   }
 
-  if (!(p_data->nnztot+p_data->nnzobj) && !(p_data->lognnz)) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem should contain at least one"
-		" variable and one relation.");
+  /* ensure that we have at least one var-in-a-rel, or at least one bool var
+	in a logrel */
+  if(!(p_data->nnztot+p_data->nnzobj) && !(p_data->lognnz)) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR
+		,"Problem should contain at least one variable and one relation."
+	);
     return 2;
   }
-  /*
-  	we want at least one variable in one obj or rel,
-  	or at least one boolean variable in one logrel
-  */
-
 
   /* calculate the number of free and incident boolean variables, logncol */
   for (c=1,len = p_data->lrelinc; c <= len; c++) {
     dvip = SIP(gl_fetch(p_data->dvars,c));
-    if (!(dvip->u.dv.fixed)) p_data->logncol++;
+    if(!(dvip->u.dv.fixed)) p_data->logncol++;
   }
 
-  /* now malloc and build things, remember to punt the matrix soon */
-  /* remember we must NEVER free these things individually. */
+  /* allocate space for the lists that we will eventually hand over to slv.
+	now malloc and build things, remember to punt the matrix soon.
+  	remember we must NEVER free these things individually. */
 
 #define ALLOC_OR_NULL(T,N) ((N) > 0 ? ASC_NEW_ARRAY(T,N) : (T*)NULL)
 
@@ -2070,17 +2224,17 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   AL(bl,nc + p_data->ncl,bnd_boundary);
 #undef AL
 
-  p_data->relincidence = ALLOC_OR_NULL(struct varvariable*
-     , p_data->nnztot + p_data->nnzobj + p_data->nnzcond
+  p_data->relincidence = ALLOC_OR_NULL(struct var_variable*
+    ,p_data->nnztot + p_data->nnzobj + p_data->nnzcond
   );
 
   p_data->logrelinciden = ALLOC_OR_NULL(
     struct dis_discrete *
-    , p_data->lrelincsize
+    ,p_data->lrelincsize
   );
 
   /* check that lists have been allocated whereever number of expected elements > 0 */
-#define C(N,P) if ((p_data->N)>0 && (p_data->P##data)==NULL) return 1
+#define C(N,P) if((p_data->N)>0 && (p_data->P##data)==NULL)return 1
   C(nv,var);   C(np,par);  C(nu,un);
   C(ndv,dis);  C(nud,undis);
   C(nr,rel);  C(no,obj);  C(nc,con);
@@ -2090,7 +2244,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 #undef C
 
   /* check that all master lists were assigned */
-#define C(P) if ((p_data->master##P)==NULL)return 1
+#define C(P) if((p_data->master##P)==NULL)return 1
   C(vl);  C(pl);  C(ul);
   C(dl);  C(dul);
   C(rl);  C(ol);  C(cl);
@@ -2100,7 +2254,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 #undef C
 
   /* check that all the solver's lists were assigned */
-#define C(P) if ((p_data->solver##P)==NULL)return 1
+#define C(P) if((p_data->solver##P)==NULL)return 1
   C(vl);  C(pl);  C(ul);
   C(dl);  C(dul);
   C(rl);  C(ol);  C(cl);
@@ -2139,8 +2293,8 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
     if(!vip->u.v.basis)    flags |= VAR_NONBASIC;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
-    if(vip->u.v.deriv > 1) flags |= VAR_DERIV;
-	/* CONSOLE_DEBUG("VAR %p IS IN BLOCK",var); */
+    if(vip->u.v.deriv > 1) flags |= VAR_DERIV; /* so that we can do relman_diffs with just the ydot vars */
+
     var_set_flags(var,flags);
     p_data->mastervl[v] = var;
     p_data->solvervl[v] = var;
@@ -2161,10 +2315,10 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     var_set_sindex(var,v);
     flags = 0; /* all init to FALSE */
     /* turn on appropriate ones */
-    if (vip->u.v.incident)  flags |= VAR_INCIDENT;
-    if (vip->u.v.in_block)  flags |= VAR_INBLOCK;
-    if (vip->u.v.fixed)     flags |= VAR_FIXED;
-    if (vip->u.v.solvervar) flags |= VAR_SVAR; /* shouldn't this be here? */
+    if(vip->u.v.incident)  flags |= VAR_INCIDENT;
+    if(vip->u.v.in_block)  flags |= VAR_INBLOCK;
+    if(vip->u.v.fixed)     flags |= VAR_FIXED;
+    if(vip->u.v.solvervar) flags |= VAR_SVAR; /* shouldn't this be here? */
     var_set_flags(var,flags);
     p_data->masterpl[v] = var;
     p_data->solverpl[v] = var;
@@ -2185,9 +2339,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     var_set_sindex(var,v);
     flags = 0; /* all init to FALSE */
     /* turn on appropriate ones */
-    if (vip->u.v.incident)  flags |= VAR_INCIDENT;
-    if (vip->u.v.fixed)     flags |= VAR_FIXED;
-    if (vip->u.v.solvervar) flags |= VAR_SVAR;
+    if(vip->u.v.incident)  flags |= VAR_INCIDENT;
+    if(vip->u.v.fixed)     flags |= VAR_FIXED;
+    if(vip->u.v.solvervar) flags |= VAR_SVAR;
 	/* CONSOLE_DEBUG("VAR AT %p IS UNASSIGNED",var); */
     /* others may be appropriate (PVAR) */
     var_set_flags(var,flags);
@@ -2215,7 +2369,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     assert(gut!=NULL);
     len = NumberVariables(gut);
 	/* CONSOLE_DEBUG("FOR REL INSTANCE AT %p, NUM INCID VARS= %d",rip->i, len); */
-    if (len > 0) {
+    if(len > 0) {
       incidence = get_incidence_space(len,p_data);
       for( c = 0; c < len; c++ ) {
         i = RelationVariable(gut,c+1);
@@ -2224,16 +2378,16 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
       }
       /* CONSOLE_DEBUG("SETTING INCIDENCES FOR CONSTRAINING REL"); */
       rel_set_incidences(rel,len,incidence);
-    } else {
+    }else{
       rel_set_incidences(rel,0,NULL);
     }
     flags = 0; /* all init to FALSE */
     /* TURN ON APPROPRIATE ONES */
-    if (rip->u.r.included) flags |= (REL_INCLUDED | REL_INBLOCK);
-    if (rip->u.r.ext) flags |= REL_BLACKBOX;
-    if (rip->u.r.active) flags |= ( REL_ACTIVE | REL_INVARIANT);
-    if (rip->u.r.inwhen) flags |= REL_INWHEN;
-    if ( RelationRelop(GetInstanceRelationOnly(rip->i)) == e_equal ) {
+    if(rip->u.r.included) flags |= (REL_INCLUDED | REL_INBLOCK);
+    if(rip->u.r.ext) flags |= REL_BLACKBOX;
+    if(rip->u.r.active) flags |= ( REL_ACTIVE | REL_INVARIANT);
+    if(rip->u.r.inwhen) flags |= REL_INWHEN;
+    if( RelationRelop(GetInstanceRelationOnly(rip->i)) == e_equal ) {
       flags |= REL_EQUALITY;
     }
     rel_set_flags(rel,flags);
@@ -2266,7 +2420,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     gut = GetInstanceRelationOnly(rip->i);
     assert(gut!=NULL);
     len = NumberVariables(gut);
-    if (len > 0) {
+    if(len > 0) {
       incidence = get_incidence_space(len,p_data);
       for( c = 0; c < len; c++ ) {
         i = RelationVariable(gut,c+1);
@@ -2274,22 +2428,22 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
       }
       /* CONSOLE_DEBUG("SETTING INCIDENCES FOR OBJECTIVE FN REL"); */
       rel_set_incidences(rel,len,incidence);
-    } else {
+    }else{
       rel_set_incidences(rel,0,NULL);
     }
     /* black box objectives not supported. skip it */
     flags = 0; /* all init to FALSE */
     /* TURN ON APPROPRIATE ONES  */
-    if (rip->u.r.included) {
+    if(rip->u.r.included) {
       flags |= (REL_INCLUDED | REL_INBLOCK | REL_ACTIVE);
     }
-    if (rip->u.r.obj < 0) flags |= REL_OBJNEGATE;
+    if(rip->u.r.obj < 0) flags |= REL_OBJNEGATE;
     rel_set_flags(rel,flags);
     /* for c in objrellist set masterol, solverol pointer to point to data */
     p_data->masterol[v] = rel;
     p_data->solverol[v] = rel;
     /* set objective to first included objective on list */
-    if (!found && (rip->u.r.included)) {
+    if(!found && (rip->u.r.included)) {
       p_data->obj = rel;
       found = 1;
     }
@@ -2313,7 +2467,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     gut = GetInstanceRelationOnly(rip->i);
     assert(gut!=NULL);
     len = NumberVariables(gut);
-    if (len > 0) {
+    if(len > 0) {
       incidence = get_incidence_space(len,p_data);
       for( c = 0; c < len; c++ ) {
         i = RelationVariable(gut,c+1);
@@ -2321,16 +2475,16 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
       }
       /* CONSOLE_DEBUG("SETTING INCIDENCES FOR CONDITIONAL REL"); */
       rel_set_incidences(rel,len,incidence);
-    } else {
+    }else{
       rel_set_incidences(rel,0,NULL);
     }
     flags = 0; /* all init to FALSE */
     /* TURN ON APPROPRIATE ONES */
-    if (rip->u.r.included) {
+    if(rip->u.r.included) {
       flags |= (REL_INCLUDED | REL_INBLOCK | REL_ACTIVE);
     }
-    if (rip->u.r.cond) flags |= REL_CONDITIONAL;
-    if ( RelationRelop(GetInstanceRelationOnly(rip->i)) == e_equal ) {
+    if(rip->u.r.cond) flags |= REL_CONDITIONAL;
+    if( RelationRelop(GetInstanceRelationOnly(rip->i)) == e_equal ) {
       flags |= REL_EQUALITY;
     }
     rel_set_flags(rel,flags);
@@ -2379,12 +2533,12 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     }
     flags = 0; /* all init to FALSE */
     /* turn on appropriate ones */
-    if (dvip->u.dv.isconst)  flags |= DIS_CONST;
-    if (dvip->u.dv.incident)  flags |= DIS_INCIDENT;
-    if (dvip->u.dv.inwhen)  flags |= DIS_INWHEN;
-    if (dvip->u.dv.fixed)     flags |= DIS_FIXED;
-    if (dvip->u.dv.booleanvar) flags |= DIS_BVAR;
-    if (dis_kind(dvar) == e_dis_boolean_t) flags |= DIS_BOOLEAN;
+    if(dvip->u.dv.isconst)  flags |= DIS_CONST;
+    if(dvip->u.dv.incident)  flags |= DIS_INCIDENT;
+    if(dvip->u.dv.inwhen)  flags |= DIS_INWHEN;
+    if(dvip->u.dv.fixed)     flags |= DIS_FIXED;
+    if(dvip->u.dv.booleanvar) flags |= DIS_BVAR;
+    if(dis_kind(dvar) == e_dis_boolean_t) flags |= DIS_BOOLEAN;
     dis_set_flags(dvar,flags);
     p_data->masterdl[v] = dvar;
     p_data->solverdl[v] = dvar;
@@ -2407,8 +2561,8 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     dis_set_sindex(dvar,v);
     flags = 0; /* all init to FALSE */
     /* turn on appropriate ones */
-    if (dvip->u.dv.fixed)     flags |= DIS_FIXED;
-    if (dvip->u.dv.booleanvar) flags |= DIS_BVAR;
+    if(dvip->u.dv.fixed)     flags |= DIS_FIXED;
+    if(dvip->u.dv.booleanvar) flags |= DIS_BVAR;
     dis_set_flags(dvar,flags);
     p_data->masterdul[v] = dvar;
     p_data->solverdul[v] = dvar;
@@ -2438,22 +2592,22 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     lgut = GetInstanceLogRelOnly(lrip->i);
     assert(lgut!=NULL);
     len = NumberBoolVars(lgut);
-    if (len > 0) {
+    if(len > 0) {
       logincidence = get_logincidence_space(len,p_data);
       for( c = 0; c < len; c++ ) {
         i = LogRelBoolVar(lgut,c+1);
         logincidence[c] = SIP(GetInterfacePtr(i))->u.dv.data;
       }
       logrel_set_incidences(lrel,len,logincidence);
-    } else {
+    }else{
       logrel_set_incidences(lrel,0,NULL);
     }
     flags = 0; /* all init to FALSE */
     /* TURN ON APPROPRIATE ONES  */
-    if (lrip->u.lr.included) flags |= LOGREL_INCLUDED;
-    if (lrip->u.lr.active) flags |= LOGREL_ACTIVE;
-    if (lrip->u.lr.inwhen) flags |= LOGREL_INWHEN;
-    if ( LogRelRelop(GetInstanceLogRelOnly(lrip->i)) == e_boolean_eq ) {
+    if(lrip->u.lr.included) flags |= LOGREL_INCLUDED;
+    if(lrip->u.lr.active) flags |= LOGREL_ACTIVE;
+    if(lrip->u.lr.inwhen) flags |= LOGREL_INWHEN;
+    if( LogRelRelop(GetInstanceLogRelOnly(lrip->i)) == e_boolean_eq ) {
       flags |= LOGREL_EQUALITY;
     }
     logrel_set_flags(lrel,flags);
@@ -2481,21 +2635,21 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     lgut = GetInstanceLogRelOnly(lrip->i);
     assert(lgut!=NULL);
     len = NumberBoolVars(lgut);
-    if (len > 0) {
+    if(len > 0) {
       logincidence = get_logincidence_space(len,p_data);
       for( c = 0; c < len; c++ ) {
         i = LogRelBoolVar(lgut,c+1);
         logincidence[c] = SIP(GetInterfacePtr(i))->u.dv.data;
       }
       logrel_set_incidences(lrel,len,logincidence);
-    } else {
+    }else{
       logrel_set_incidences(lrel,0,NULL);
     }
     flags = 0; /* all init to FALSE */
     /* TURN ON APPROPRIATE ONES */
-    if (lrip->u.lr.included) flags |= (LOGREL_INCLUDED | LOGREL_ACTIVE);
-    if (lrip->u.lr.cond) flags |= LOGREL_CONDITIONAL;
-    if ( LogRelRelop(GetInstanceLogRelOnly(lrip->i)) == e_boolean_eq) {
+    if(lrip->u.lr.included) flags |= (LOGREL_INCLUDED | LOGREL_ACTIVE);
+    if(lrip->u.lr.cond) flags |= LOGREL_CONDITIONAL;
+    if( LogRelRelop(GetInstanceLogRelOnly(lrip->i)) == e_boolean_eq) {
       flags |= LOGREL_EQUALITY;
     }
     logrel_set_flags(lrel,flags);
@@ -2604,7 +2758,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     p_data->masterwl[v] = when;
     p_data->solverwl[v] = when;
     flags = 0;
-    if (wip->u.w.inwhen) flags |= WHEN_INWHEN;
+    if(wip->u.w.inwhen) flags |= WHEN_INWHEN;
     when_set_flags(when,flags);
   }
   p_data->masterwl[vlen] = NULL; /* terminator */
@@ -2623,7 +2777,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 
   /* configure the problem */
 
-  if (vlen > 0) { /* we have whens */
+  if(vlen > 0) { /* we have whens */
     configure_conditional_problem(vlen,p_data->masterwl,
                                   p_data->solverrl,p_data->solverll,
 				  p_data->mastervl);
@@ -2631,23 +2785,23 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     p_data->need_consistency = 0;
     for (v = 0; v < vlen; v++) {
       when = p_data->masterwl[v];
-      if (when_changes_structure(when)) {
+      if(when_changes_structure(when)) {
         p_data->need_consistency = 1;
         break;
       }
     }
 
 #if DEBUG_ANALYSIS
-    if ( p_data->need_consistency == 0 ) {
+    if( p_data->need_consistency == 0 ) {
       CONSOLE_DEBUG("All alternativeS HAVE THE SAME STRUCTURE: Consistency"
 		" analysis is not required \n"
 	  );
-    } else {
+    }else{
       CONSOLE_DEBUG("Consistency analysis may be required \n");
     }
 #endif /* DEBUG_ANALYSIS  */
 
-  } else {
+  }else{
 
     /*
     	All variables in active relations are set as active.
@@ -2709,7 +2863,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     i = var_instance(var);
     len = RelationsCount(i);
     r = 0;
-    if (len > 0) {
+    if(len > 0) {
       varincidence = get_var_incidence_space(len,p_data);
       for( c = 1; c <= len; c++ ) {
         i_r = RelationsForAtom(i,c);
@@ -2719,9 +2873,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 	}
       }
     }
-    if (r > 0) {
+    if(r > 0) {
       var_set_incidences(var,r,varincidence);
-    } else {
+    }else{
       var_set_incidences(var,0,NULL);
     }
   }
@@ -2815,6 +2969,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
   return 0;
 }
 
+/*----------------------------------------------------------------------------*/
 /*
 	This is the entry point for problem analysis. It takes the compiler
 	Instance, visits it with the 'CountStuffInTree' method, then constructs
@@ -2854,35 +3009,38 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   /* take the census */
   VisitInstanceTreeTwo(inst,(VisitTwoProc)CountStuffInTree,TRUE,FALSE,
                        (VOIDPTR)p_data);
-  if (g_bad_rel_in_list) {
+  if(g_bad_rel_in_list) {
     p_data->root = NULL;
     return 2;
   }
 
   /* decorate instances with temporary ips, collect them and etc */
   stat = analyze_make_master_lists(p_data);
-  if (stat == 2) {
+  if(stat == 2){
     analyze_free_lists(p_data);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Analyzer: Nothing to make a problem from in %s.",__FILE__);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Nothing to make a problem from!");
     return 2;
-  }
-  if (stat == 1) {
+  }else if(stat == 1){
     analyze_free_lists(p_data);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Analyser: Insufficient master memoryin %s.",__FILE__);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Insufficient memory (master lists)");
     return 1;
   }
+
   /* rearrange all the stuff we found and index things */
   stat = analyze_make_solvers_lists(p_data);
-  if (stat == 2) {
+  if(stat == 2){
     analyze_free_lists(p_data);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Analyzer: Nothing to make a problem from in %s.",__FILE__);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Nothing to make lists from (solver's lists)");
     return 2;
-  }
-  if (stat == 1) {
+  }else if(stat == 1){
     analyze_free_lists(p_data);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Analyzer: Insufficient solver memory in %s.",__FILE__);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Insufficient memory (solver's lists)");
     return 1;
   }
+
+#ifdef ASC_IDA_NEW_ANALYSE
+  analyse_generate_diffvars(sys,p_data);
+#endif
 
   /* tell the slv_system_t about it, and undecorate ips from instances */
   analyze_configure_system(sys,p_data);
@@ -2896,28 +3054,5 @@ extern void analyze_free_reused_mem(void){
   resize_ipbuf((size_t)0,0);
 }
 
-/*------------------------------------------------------------------------------
-  Routines for analysing differental/derivative variable lists
-*/
-
-#ifdef ASC_IDA_NEW_ANALYSE
-
-const SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys){
-	return (SolverDiffVarCollection *)slv_get_diffvars(sys);
-}	
-
-/**
-	@return 0 on success
-*/
-int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
-	SolverDiffVarCollection *diffvars;
-	diffvars = ASC_NEW(SolverDiffVarCollection);
-	slv_set_diffvars(sys,(void *)diffvars);
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
-	return 1;
-}
-
-#endif
-
-
 /* @} */
+/* :ex: set ts=4 : */

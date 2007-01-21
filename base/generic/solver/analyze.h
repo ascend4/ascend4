@@ -85,10 +85,6 @@ extern void analyze_free_reused_mem(void);
 /*------------------------------------------------------------------------------
   Stuff for retrieving differential and derivative variables from the system
 */
-typedef struct SolverDiffVarStruct{
-	struct var_variable *var;
-	long ode_type;
-} SolverDiffVar;
 
 /**
 	Structure that holds a differential variable and the sequence of
@@ -99,8 +95,8 @@ typedef struct SolverDiffVarStruct{
 */
 typedef struct SolverDiffVarSequenceStruct{
 	long ode_id;
-	int n;
-	struct SolverDiffVarStruct *vars;
+	short n;
+	struct var_variable **vars; /* will be in order of ascending ode_type, starting from 1 */
 } SolverDiffVarSequence;
 
 /**
@@ -126,32 +122,43 @@ extern const SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys);
 #endif
 
 /*------------------------------------------------------------------------------
-  Some routines that arguably aren't part of the 'analysis' module per se.
-  What is the argument for them being here?
+	These routines are in use elsewhere in the solver directory, but we want
+	to get rid of them, as they contain dependencies on the compiler's data
+	structures.
 */
 
 extern int varinst_found_in_whenlist(slv_system_t sys, struct Instance *inst);
 /**<
 	Determine if the conditional variable inst is part of the
 	variable list of some when in the when list of slv_system_t
+
+	@DEPRECATED we want to get rid of this in order to clean up the
+	solver interface (divorce it from dependencies on compiler)
 */
 
 extern int dis_var_in_a_when(struct Instance *var, struct w_when *when);
 /**<
 	Return 1 if the discrete var is a member of the when var list, else
 	return 0
-*/
+
+	@DEPRECATED we want to get rid of this in order to clean up the
+	solver interface (divorce it from dependencies on compiler)*/
 
 extern int GetIntFromSymbol(CONST char *symval, struct gl_list_t *symbol_list);
 /**<
 	Creates the gl_list of SymboValues struct to asign an integer
 	value to a symbol value
-*/
+
+	@DEPRECATED we want to get rid of this in order to clean up the
+	solver interface (divorce it from dependencies on compiler)*/
 
 extern void DestroySymbolValuesList(struct gl_list_t *symbol_list);
 /**<
 	Destroy the gl_list of SymbolValues struct created to asign an integer
 	value to symbol value
+
+	@DEPRECATED we want to get rid of this in order to clean up the
+	solver interface (divorce it from dependencies on compiler)
 */
 
 /* @} */
