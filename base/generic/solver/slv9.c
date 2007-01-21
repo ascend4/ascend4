@@ -37,11 +37,6 @@
 #include <general/list.h>
 #include <general/mathmacros.h>
 
-#include <compiler/compiler.h>
-#include <compiler/instance_enum.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
-#include <compiler/functype.h>
 #include <compiler/func.h>
 
 #include <linear/mtx_reorder.h>
@@ -63,8 +58,7 @@
 #endif
 
 #if !defined(STATIC_CMSLV) && !defined(DYNAMIC_CMSLV)
-int slv9_register(SlvFunctionsT *f)
-{
+int slv9_register(SlvFunctionsT *f){
   UNUSED_PARAMETER(f);
 
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"CMSlv was not built in this copy of ASCEND");
@@ -75,8 +69,7 @@ int slv9_register(SlvFunctionsT *f)
 #ifdef DYNAMIC_CMSLV
 /* do dynamic loading stuff.   yeah, right */
 
-#else /* following is used if STATIC_CMSLV is defined */
-
+#else /* - - - - following is used if STATIC_CMSLV is defined - - - - */
 
 /*
  * definitions to enable/disable the output of partial results in
@@ -305,8 +298,8 @@ struct slv9_system_structure {
 /*
  *  Checks sys for NULL and for integrity.
  */
-static int check_system(slv9_system_t sys)
-{
+static
+int check_system(slv9_system_t sys){
   if( sys == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) check_system\n");
     FPRINTF(ASCERR,"        NULL system handle.\n");
@@ -377,9 +370,10 @@ static int check_system(slv9_system_t sys)
 /*
  *  Appends the subregion_visited into the list
  */
-static void append_subregion(struct ds_subregion_list *sl,
-			     struct subregionID sub)
-{
+static
+void append_subregion(struct ds_subregion_list *sl,
+		struct subregionID sub
+){
   if( sl->length == sl->capacity ) {
     int32 newcap;
     struct subregionID *newlist;
@@ -400,9 +394,10 @@ static void append_subregion(struct ds_subregion_list *sl,
 /*
  *  Appends the subregion_visited into the list
  */
-static void append_sub_visited(struct ds_subregions_visited *sv,
-			       unsigned long sub_visited)
-{
+static
+void append_sub_visited(struct ds_subregions_visited *sv,
+		unsigned long sub_visited
+){
   if( sv->length == sv->capacity ) {
     int32 newcap;
     unsigned long *newlist;
@@ -420,8 +415,8 @@ static void append_sub_visited(struct ds_subregions_visited *sv,
   sv->visited[sv->length++] = sub_visited;
 }
 
-static unsigned long powoftwo (int32 expo)
-{
+static
+unsigned long powoftwo (int32 expo){
   unsigned long val;
   int32 c;
 
@@ -438,9 +433,10 @@ static unsigned long powoftwo (int32 expo)
  * Storage information (boolean values) about a subregion so that
  * we can visit it later for interactive strucutral analysis
  */
-static void ID_and_storage_subregion_information(slv_system_t server,
-						 SlvClientToken asys)
-{
+static
+void ID_and_storage_subregion_information(slv_system_t server,
+		SlvClientToken asys
+){
   slv9_system_t sys;
   struct dis_discrete **bvlist;
   struct dis_discrete *cur_dis;
@@ -529,8 +525,8 @@ static void ID_and_storage_subregion_information(slv_system_t server,
 /*
  * Destroys subregion information
  */
-static void destroy_subregion_information(SlvClientToken asys)
-{
+static
+void destroy_subregion_information(SlvClientToken asys){
   slv9_system_t sys;
   struct subregionID *sub;
   int32 lens, s;
@@ -610,8 +606,8 @@ static void restore_original_bool_values(struct gl_list_t *bollist,
  * the first element of cur_cases is in position one. The result is
  * the same array, but ordered and starting in position zero
  */
-static void cases_reorder(int32 *cur_cases, int32 *correct_cases, int32 ncases)
-{
+static
+void cases_reorder(int32 *cur_cases, int32 *correct_cases, int32 ncases){
   int32 cur_case,pos=0,tmp_num,c,ind;
 
   for (c=1; c<=ncases; c++) {
@@ -712,9 +708,10 @@ static struct gl_list_t *get_list_of_booleans(slv_system_t server,
  * 0 means the analysis has failed with the current parititioning
  * -1 means a memory problem has occurred
  */
-static int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
-			      int32 *terminate)
-{
+static
+int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
+		int32 *terminate
+){
   struct var_variable **vslist;
   struct var_variable **vmlist;
   struct var_variable *mvar, *svar;
@@ -826,10 +823,11 @@ static int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
  * 0 means the analysis has failed with the current partitioning
  * -1 means a memory problem or wierdness has occurred
  */
-static int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
-				    struct gl_list_t *disvars,
-				    int32 *terminate, int32 all_sub)
-{
+static
+int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
+		struct gl_list_t *disvars,
+		int32 *terminate, int32 all_sub
+){
   slv9_system_t sys;
   struct dis_discrete *cur_dis;
   struct subregionID *sub;
@@ -919,10 +917,11 @@ static int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
  * procedure. If all_subs is 0, the analysis is only for the current
  * and previous subregion.
  */
-static int32 consistency(slv_system_t server, SlvClientToken asys,
-			 struct gl_list_t *bollist,
-			 int32 all_subs, int32 *terminate)
-{
+static
+int32 consistency(slv_system_t server, SlvClientToken asys,
+		struct gl_list_t *bollist,
+		int32 all_subs, int32 *terminate
+){
   slv9_system_t sys;
   struct var_variable **vmlist;
   struct var_variable *mvar;
@@ -1159,11 +1158,12 @@ static int32 get_globally_eligible(slv_system_t server, SlvClientToken asys,
  * procedure. If all_subs is 0, the analysis is only for the current
  * and previous subregion.
  */
-static int32 consistent_eligible_set_for_subregions(slv_system_t server,
-						    SlvClientToken asys,
-				                    int32 **vlist,
-						    int32 all_subs)
-{
+static
+int32 consistent_eligible_set_for_subregions(slv_system_t server,
+		SlvClientToken asys,
+		int32 **vlist,
+		int32 all_subs
+){
   struct gl_list_t *blist;
   struct boolean_values bval;
   int32 result;
@@ -1205,9 +1205,10 @@ static int32 consistent_eligible_set_for_subregions(slv_system_t server,
  * procedure. If all_subs is 0, the analysis is only for the current
  * and previous subregion.
  */
-static int32 analyze_subregions(slv_system_t server,SlvClientToken asys,
-				int32 **vlist, int32 all_subs)
-{
+static
+int32 analyze_subregions(slv_system_t server,SlvClientToken asys,
+		int32 **vlist, int32 all_subs
+){
   slv9_system_t sys;
   struct var_variable ** vmlist;
   struct var_variable *mvar;
@@ -1294,10 +1295,11 @@ static int32 analyze_subregions(slv_system_t server,SlvClientToken asys,
  * Finds the globally eligible set of variables only for the current and
  * previous subregions
  */
-static int32 eligible_set_for_neighboring_subregions(slv_system_t server,
-					            SlvClientToken asys,
-						    int32 **vlist)
-{
+static
+int32 eligible_set_for_neighboring_subregions(slv_system_t server,
+		SlvClientToken asys,
+		int32 **vlist
+){
   slv9_system_t sys;
 
   sys = SLV9(asys);
@@ -1327,10 +1329,11 @@ static int32 eligible_set_for_neighboring_subregions(slv_system_t server,
  * Perform the consistency analysis algorithm only for the current and
  * previous subregions
  */
-static int32 consistency_for_neighboring_subregions(slv_system_t server,
-					            SlvClientToken asys,
-						    int32 **vlist)
-{
+static
+int32 consistency_for_neighboring_subregions(slv_system_t server,
+		SlvClientToken asys,
+		int32 **vlist
+){
   slv9_system_t sys;
 
   sys = SLV9(asys);
@@ -1362,10 +1365,11 @@ static int32 consistency_for_neighboring_subregions(slv_system_t server,
  * gets the subregions that the solution algorithm has visited and
  * analyzes them.
  */
-static int32 eligible_set_for_subregions(slv_system_t server,
-					 SlvClientToken asys,
-					 int32 **vlist)
-{
+static
+int32 eligible_set_for_subregions(slv_system_t server,
+		SlvClientToken asys,
+		int32 **vlist
+){
   slv9_system_t sys;
 
   sys = SLV9(asys);
@@ -1396,10 +1400,11 @@ static int32 eligible_set_for_subregions(slv_system_t server,
  * gets the subregions that the solution algorithm has visited and
  * analyzes them.
  */
-static int32 consistency_analysis_for_subregions(slv_system_t server,
-					         SlvClientToken asys,
-						 int32 **vlist)
-{
+static
+int32 consistency_analysis_for_subregions(slv_system_t server,
+		SlvClientToken asys,
+		int32 **vlist
+){
   slv9_system_t sys;
 
   sys = SLV9(asys);
@@ -1438,8 +1443,8 @@ static int32 consistency_analysis_for_subregions(slv_system_t server,
  * Solution of the logical relations encountered in the system based on
  * the current values of the discrete variables.
  */
-static void solve_logical_relations(slv_system_t server)
-{
+static
+void solve_logical_relations(slv_system_t server){
   slv_set_client_token(server,token[LOGICAL_SOLVER]);
   slv_set_solver_index(server,solver_index[LOGICAL_SOLVER]);
   slv_presolve(server);
@@ -1470,10 +1475,11 @@ union param_value {
 /*
  * Setting the value of a parameter in a subsidiary solver
  */
-static void set_param_in_solver(slv_system_t server, int32 solver,
-				enum parm_type types, char *param,
-				union param_value *value)
-{
+static
+void set_param_in_solver(slv_system_t server, int32 solver,
+		enum parm_type types, char *param,
+		union param_value *value
+){
   slv_parameters_t p;
   int32 len,length;
 
@@ -1522,8 +1528,8 @@ static void set_param_in_solver(slv_system_t server, int32 solver,
  * Compare current values of the discrete variables with their previous values
  * in order to know if some of them have changed.
  */
-static int32 some_dis_vars_changed(slv_system_t server, SlvClientToken asys)
-{
+static
+int32 some_dis_vars_changed(slv_system_t server, SlvClientToken asys){
   struct dis_discrete **dv, *cur_dis;
   int32 numdvs, ind;
   slv9_system_t sys;
@@ -1563,10 +1569,11 @@ static int32 some_dis_vars_changed(slv_system_t server, SlvClientToken asys)
  * TRUE. This will give us the boolean variable which will change as a
  * consequence of a boundary crossing.
  */
-static void search_for_modified_dvars(struct dis_discrete **dv,
-				      int32 numdvs,
-				      struct boolean_values *bval)
-{
+static
+void search_for_modified_dvars(struct dis_discrete **dv,
+		int32 numdvs,
+		struct boolean_values *bval
+){
   struct dis_discrete *cur_dis;
   int32 d;
   int32 orig_value;
@@ -1595,8 +1602,8 @@ static void search_for_modified_dvars(struct dis_discrete **dv,
  * bndman_calc_satisfied).
  */
 
-static void update_boundaries(slv_system_t server, SlvClientToken asys)
-{
+static
+void update_boundaries(slv_system_t server, SlvClientToken asys){
   struct bnd_boundary **bp;
   int32 numbnds, ind, value;
   slv9_system_t sys;
@@ -1638,8 +1645,8 @@ static void update_boundaries(slv_system_t server, SlvClientToken asys)
  * Look for some boundary with the CROSSED bit active. If this boundary
  * is used in some logical relation, the function returns 1, else returns 0
  */
-static int32 some_boundaries_crossed(slv_system_t server, SlvClientToken asys)
-{
+static
+int32 some_boundaries_crossed(slv_system_t server, SlvClientToken asys){
   struct bnd_boundary **bp, *cur_bnd;
   int32 numbnds, ind;
   slv9_system_t sys;
@@ -1668,8 +1675,8 @@ static int32 some_boundaries_crossed(slv_system_t server, SlvClientToken asys)
  * Look for some boundary with the AT_ZERO bit active.If this boundary
  * is used in some logical relation, the function returns 1, else returns 0
  */
-static int32 some_boundaries_at_zero(slv_system_t server, SlvClientToken asys)
-{
+static
+int32 some_boundaries_at_zero(slv_system_t server, SlvClientToken asys){
   struct bnd_boundary **bp, *cur_bnd;
   int32 numbnds, ind;
   slv9_system_t sys;
@@ -1701,13 +1708,14 @@ static int32 some_boundaries_at_zero(slv_system_t server, SlvClientToken asys)
  * specified boundaries) ON and OFF, and finding the boolean variables
  * affected for those changes in value of the SATISFIED terms.
  */
-static void do_perturbation_combinations(slv_system_t server,
-					 struct boolean_values *bval,
-					 struct bnd_boundary **bp,
-					 struct dis_discrete **dv,
-					 int32 numdvs,int32 *bndatzero,
-					 int32 ind, int32 numbndf)
-{
+static
+void do_perturbation_combinations(slv_system_t server,
+		struct boolean_values *bval,
+		struct bnd_boundary **bp,
+		struct dis_discrete **dv,
+		int32 numdvs,int32 *bndatzero,
+		int32 ind, int32 numbndf
+){
   slv_status_t status;
   int32 indpo;
 
@@ -1757,11 +1765,12 @@ static void do_perturbation_combinations(slv_system_t server,
  * finding which cases (in the WHENs) applies for each of the
  * combinations.
  */
-static void do_dvar_values_combinations(struct gl_list_t *disvars,
-				        struct matching_cases *cases,
-					int numdvf, int d,
-					int *pos_cases)
-{
+static
+void do_dvar_values_combinations(struct gl_list_t *disvars,
+		struct matching_cases *cases,
+		int numdvf, int d,
+		int *pos_cases
+){
   struct dis_discrete *cur_dis;
   int32 *cur_cases;
   int32 ncases, dpo;
@@ -1801,8 +1810,8 @@ static void do_dvar_values_combinations(struct gl_list_t *disvars,
  * Orders of the elements of each array of cases,
  * so that we can compare them easier.
  */
-static void order_case(int32 *case_list, int32 *newcaselist, int ncases)
-{
+static
+void order_case(int32 *case_list, int32 *newcaselist, int ncases){
   int32 cur_case,pos=0,tmp_num,c,ind;
 
   for (c=1; c<=ncases; c++) {
@@ -1825,8 +1834,8 @@ static void order_case(int32 *case_list, int32 *newcaselist, int ncases)
  * Calls for the ordering of the elements of each array of cases,
  * so that we can compare them easier.
  */
-static void order_cases(struct matching_cases *cases,int pos_cases)
-{
+static
+void order_cases(struct matching_cases *cases,int pos_cases){
   int32 *caselist;
   int32 cur_ncase,c;
   int32 *newcaselist;
@@ -1857,8 +1866,8 @@ static void order_cases(struct matching_cases *cases,int pos_cases)
  * Compare two arrays of cases (integer numbers). It returns 1 if they are
  * equal, else it returns 0.
  */
-static int32 compare_case(int32 *cur_set, int32 *comp_set, int cur_ncases)
-{
+static
+int32 compare_case(int32 *cur_set, int32 *comp_set, int cur_ncases){
   int32 cur_case, comp_case, ind;
 
   for (ind=0; ind<cur_ncases; ind++) {
@@ -1876,8 +1885,8 @@ static int32 compare_case(int32 *cur_set, int32 *comp_set, int cur_ncases)
  * Compare the arrays of cases so that we can find the number of
  * different alternatives (subregions)
  */
-static void compare_cases(struct matching_cases *cases,int pos_cases)
-{
+static
+void compare_cases(struct matching_cases *cases,int pos_cases){
   int32 *cur_set, *comp_set, cur_ncases, comp_ncases;
   int32 c,d;
 
@@ -1915,12 +1924,13 @@ static void compare_cases(struct matching_cases *cases,int pos_cases)
  * n_subregions and the cases applying for each of them is stored
  * in the structure subregions.
  */
-static int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
-                           int32 *n_subregions,
-			   struct matching_cases **subregions,
-		           int32 *cur_subregion,
-                           struct gl_list_t *disvars)
-{
+static
+int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
+		int32 *n_subregions,
+		struct matching_cases **subregions,
+		int32 *cur_subregion,
+		struct gl_list_t *disvars
+){
   slv9_system_t sys;
   struct bnd_boundary **bp, *cur_bnd;
   struct dis_discrete **dv, *cur_dis;
@@ -2191,11 +2201,12 @@ static int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
  * at that boundary. This factor is found by using the method of
  * bisection
  */
-static real64 return_to_first_boundary(slv_system_t server,
-				       SlvClientToken asys,
-				       struct real_values *rvalues,
-				       var_filter_t *vfilter)
-{
+static
+real64 return_to_first_boundary(slv_system_t server,
+		SlvClientToken asys,
+		struct real_values *rvalues,
+		var_filter_t *vfilter
+){
   slv9_system_t sys;
   struct bnd_boundary **bp, *cur_bnd;
   struct var_variable **incidences, **bnd_incidences;
@@ -2387,9 +2398,10 @@ static real64 return_to_first_boundary(slv_system_t server,
 /*
  * Store the values of the var_variables before a newton-like iteration
  */
-static void store_real_pre_values(slv_system_t server,
-				  struct real_values *rvalues)
-{
+static
+void store_real_pre_values(slv_system_t server,
+		struct real_values *rvalues
+){
   struct var_variable **master;
   struct var_variable *var;
   int v, vlen;
@@ -2408,9 +2420,10 @@ static void store_real_pre_values(slv_system_t server,
 /*
  * Store the values of the var_variables after a newton-like iteration
  */
-static void store_real_cur_values(slv_system_t server,
-				  struct real_values *rvalues)
-{
+static
+void store_real_cur_values(slv_system_t server,
+		struct real_values *rvalues
+){
   struct var_variable **master;
   struct var_variable *var;
   int v, vlen;
@@ -2431,10 +2444,11 @@ static void store_real_cur_values(slv_system_t server,
  * lies at a boundary, the values of all the variables is updated so that
  * they all reduce the length of their step by the same factor.
  */
-static void update_real_var_values(slv_system_t server,
-			           struct real_values *rvalues,
-				   var_filter_t *vfilter, real64 factor)
-{
+static
+void update_real_var_values(slv_system_t server,
+		struct real_values *rvalues,
+		var_filter_t *vfilter, real64 factor
+){
   struct var_variable **master;
   struct var_variable *var;
   real64 newvalue;
@@ -2460,9 +2474,10 @@ static void update_real_var_values(slv_system_t server,
  * Set the flagbit NONBASIC for all the variables in the list
  * to the value passed as argument
  */
-static void set_nonbasic_status_in_var_list(slv_system_t server,
-				            uint32 value)
-{
+static
+void set_nonbasic_status_in_var_list(slv_system_t server,
+		uint32 value
+){
   struct var_variable **master;
   struct var_variable *var;
   int v, vlen;
@@ -2543,7 +2558,8 @@ static void update_relations_residuals(slv_system_t server)
  * nz    - number of jacobian elements
  * usrmem- user memory defined by conopt
  */
-static int COI_CALL slv9_conopt_readmatrix(
+static
+int COI_CALL slv9_conopt_readmatrix(
 		double *lower, double *curr, double *upper
 		, int *vsta,  int *type, double *rhs
 		, int *esta,  int *colsta, int *rowno
@@ -2802,7 +2818,8 @@ static void slv9_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
  * be called only of the objective function, constraint number m.
  *
  */
-static int COI_CALL slv9_conopt_fdeval(
+static
+int COI_CALL slv9_conopt_fdeval(
 		double *x, double *g, double *jac
 		, int *rowno, int *jcnm, int *mode, int *ignerr
 		, int *errcnt, int *newpt, int *n, int *nj
@@ -2873,7 +2890,8 @@ static int COI_CALL slv9_conopt_fdeval(
  * objval - objective value
  * usrmem - user memory
  */
-static int COI_CALL slv9_conopt_status(int *modsta, int *solsta, int *iter
+static
+int COI_CALL slv9_conopt_status(int *modsta, int *solsta, int *iter
 		, double *objval, double *usrmem
 ){
   slv9_system_t sys;
@@ -2941,7 +2959,8 @@ int COI_CALL slv9_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
  * m      - number of constraints
  * usrmem - user memory
  */
-static int COI_CALL slv9_conopt_solution(double *xval, double *xmar, int *xbas, int *xsta,
+static
+int COI_CALL slv9_conopt_solution(double *xval, double *xmar, int *xbas, int *xsta,
 		double *yval, double *ymar, int *ybas, int * ysta,
 		int *n, int *m, double *usrmem
 ){
@@ -3000,7 +3019,8 @@ static void slv9_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
  * lval   - the value to be assigned to name if the cells contains a log value
  * usrmem - user memory
  */
-static int COI_CALL slv9_conopt_option(
+static
+int COI_CALL slv9_conopt_option(
 		int *NCALL, double *rval, int *ival, int *logical
 	    , double *usrmem, char *name, int lenname
 ){
@@ -3110,7 +3130,8 @@ static void slv9_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
 
 	@see conopt.h
 */
-static void slv_conopt_iterate(slv9_system_t sys){
+static
+void slv_conopt_iterate(slv9_system_t sys){
 
   if(sys->con.cntvect == NULL){
 	sys->con.cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
@@ -3207,24 +3228,25 @@ static void slv_conopt_iterate(slv9_system_t sys){
  * of the gradients of a subregion, which change depending on whether the
  * problem is a simulation or an optimization.
  */
-static void create_opt_matrix_and_vectors(int32 num_opt_eqns,
-					  int32 n_subregions,
-					  struct opt_matrix *coeff_matrix,
-					  struct opt_vector *opt_var_values,
-					  struct opt_vector *invariant,
-					  struct opt_vector *variant,
-					  struct opt_vector *gradient,
-					  struct opt_matrix *multipliers)
-{
+static
+void create_opt_matrix_and_vectors(int32 num_opt_eqns,
+		int32 n_subregions,
+		struct opt_matrix *coeff_matrix,
+		struct opt_vector *opt_var_values,
+		struct opt_vector *invariant,
+		struct opt_vector *variant,
+		struct opt_vector *gradient,
+		struct opt_matrix *multipliers
+){
   int32  c;
   int32 num_vars;
 
   num_vars = num_opt_eqns - 1 + n_subregions;
 
-  coeff_matrix->cols = ASC_NEW_ARRAY(struct opt_vector *,n_subregions);
+  coeff_matrix->cols = ASC_NEW_ARRAY(struct opt_vector,n_subregions);
 
   if (g_optimizing) {
-    multipliers->cols = ASC_NEW_ARRAY(struct opt_vector *,n_subregions);
+    multipliers->cols = ASC_NEW_ARRAY(struct opt_vector,n_subregions);
   }
 
   for (c=0; c<n_subregions; c++) {
@@ -3245,14 +3267,15 @@ static void create_opt_matrix_and_vectors(int32 num_opt_eqns,
  * destroy the arrays created to storage the gradients for the optimization
  * problem
  */
-static void destroy_opt_matrix_and_vectors(int32 n_subregions,
-					   struct opt_matrix *coeff_matrix,
-					   struct opt_vector *opt_var_values,
-					   struct opt_vector *invariant,
-					   struct opt_vector *variant,
-					   struct opt_vector *gradient,
-					   struct opt_matrix *multipliers)
-{
+static
+void destroy_opt_matrix_and_vectors(int32 n_subregions,
+		struct opt_matrix *coeff_matrix,
+		struct opt_vector *opt_var_values,
+		struct opt_vector *invariant,
+		struct opt_vector *variant,
+		struct opt_vector *gradient,
+		struct opt_matrix *multipliers
+){
   int32  c;
   for (c=0; c<n_subregions; c++) {
     destroy_array(coeff_matrix->cols[c].element);
@@ -3276,8 +3299,8 @@ static void destroy_opt_matrix_and_vectors(int32 n_subregions,
 /*
  * Set Factorization Options
  */
-static void set_factor_options (linsolqr_system_t lsys)
-{
+static
+void set_factor_options (linsolqr_system_t lsys){
   linsolqr_prep(lsys,linsolqr_fmethod_to_fclass(ranki_ba2));
   linsolqr_set_pivot_zero(lsys, 1e-12);
   linsolqr_set_drop_tolerance(lsys,1e-16);
@@ -3293,12 +3316,13 @@ static void set_factor_options (linsolqr_system_t lsys)
  * and than the rank is equal to the number of rows in the matrix.
  * Much more efficient checking must be done.
  */
-static void get_multipliers(SlvClientToken asys,
-			    int32 subregion,
-			    int32 nrel,
-			    real64 *grad_obj,
-			    struct opt_matrix *multipliers)
-{
+static
+void get_multipliers(SlvClientToken asys,
+		int32 subregion,
+		int32 nrel,
+		real64 *grad_obj,
+		struct opt_matrix *multipliers
+){
   slv9_system_t sys;
   linsolqr_system_t lsys;
   mtx_region_t  *newblocks, *oneblock;
@@ -3405,13 +3429,14 @@ static void get_multipliers(SlvClientToken asys,
 /*
  * Calculate the invariant part of the gradients of the subregions
  */
-static void get_gradient_in_subregion(slv_system_t server,
-				      SlvClientToken asys,
-				      int32 subregion,
-				      int32 num_opt_eqns,
-				      struct opt_vector *gradient,
-				      struct opt_matrix *multipliers)
-{
+static
+void get_gradient_in_subregion(slv_system_t server,
+		SlvClientToken asys,
+		int32 subregion,
+		int32 num_opt_eqns,
+		struct opt_vector *gradient,
+		struct opt_matrix *multipliers
+){
   slv9_system_t sys;
   struct rel_relation **rlist;
   struct var_variable **vlist;
@@ -3690,7 +3715,8 @@ static void get_gradient_in_subregion(slv_system_t server,
 /*
  * Calculate the invariant part of the norm of the objective function
  */
-static real64 get_augmented_function_in_subregion(slv_system_t server,
+static
+real64 get_augmented_function_in_subregion(slv_system_t server,
 					SlvClientToken asys,
 					int32 subregion,
 				        struct opt_matrix *multipliers)
@@ -3752,10 +3778,11 @@ static real64 get_augmented_function_in_subregion(slv_system_t server,
 /*
  * Calculate the invariant part of the gradients of the subregions
  */
-static void get_invariant_of_gradient_in_subregions(slv_system_t server,
-					  int32 num_opt_eqns,
-					  struct opt_vector *invariant)
-{
+static
+void get_invariant_of_gradient_in_subregions(slv_system_t server,
+		int32 num_opt_eqns,
+		struct opt_vector *invariant
+){
   struct rel_relation **rlist;
   struct var_variable **vlist;
   struct rel_relation *rel;
@@ -3841,10 +3868,11 @@ static void get_invariant_of_gradient_in_subregions(slv_system_t server,
 /*
  * Calculate the variant part of the gradients for the current subregion
  */
-static void get_variant_of_gradient_in_subregion(slv_system_t server,
-					    int32 num_opt_eqns,
-					    struct opt_vector *variant)
-{
+static
+void get_variant_of_gradient_in_subregion(slv_system_t server,
+		int32 num_opt_eqns,
+		struct opt_vector *variant
+){
   struct rel_relation **rlist;
   struct var_variable **vlist;
   struct rel_relation *rel;
@@ -3929,8 +3957,8 @@ static void get_variant_of_gradient_in_subregion(slv_system_t server,
 /*
  * Calculate the invariant part of the norm of the objective function
  */
-static real64 get_invariant_of_obj_norm_in_subregions(slv_system_t server)
-{
+static
+real64 get_invariant_of_obj_norm_in_subregions(slv_system_t server){
   struct rel_relation **rlist;
   struct rel_relation *rel;
   rel_filter_t rfilter;
@@ -3979,8 +4007,8 @@ static real64 get_invariant_of_obj_norm_in_subregions(slv_system_t server)
  * Calculate the variant part of the norm of the objective function for a
  * particular subregion
  */
-static real64 get_variant_of_obj_norm_in_subregion(slv_system_t server)
-{
+static
+real64 get_variant_of_obj_norm_in_subregion(slv_system_t server){
   struct rel_relation **rlist;
   struct rel_relation *rel;
   rel_filter_t rfilter;
@@ -4029,12 +4057,13 @@ static real64 get_variant_of_obj_norm_in_subregion(slv_system_t server)
  * Fill a column of the coefficient matrix used for the optimization
  * problem at a boundary
  */
-static void fill_opt_matrix_cols_with_vectors(int32 num_opt_eqns, int32 n,
-                                              struct opt_matrix *coeff_matrix,
-					      struct opt_vector *invariant,
-					      struct opt_vector *variant,
-					      struct opt_vector *gradient)
-{
+static
+void fill_opt_matrix_cols_with_vectors(int32 num_opt_eqns, int32 n,
+		struct opt_matrix *coeff_matrix,
+		struct opt_vector *invariant,
+		struct opt_vector *variant,
+		struct opt_vector *gradient
+){
   int32 num_eqn;
   real64 norm2;
 
@@ -4085,12 +4114,13 @@ static void fill_opt_matrix_cols_with_vectors(int32 num_opt_eqns, int32 n,
  * at a boundary.
  * It projects a variable to its bounds if required.
  */
-static void apply_optimization_step(slv_system_t server, SlvClientToken asys,
-			            int32 n_subregions,
-			            struct opt_vector *values,
-				    real64 factor,
-				    struct real_values *rvalues)
-{
+static
+void apply_optimization_step(slv_system_t server, SlvClientToken asys,
+		int32 n_subregions,
+		struct opt_vector *values,
+		real64 factor,
+		struct real_values *rvalues
+){
   slv9_system_t sys;
   struct var_variable **vlist;
   struct var_variable *var;
@@ -4181,13 +4211,14 @@ static void apply_optimization_step(slv_system_t server, SlvClientToken asys,
  * Creates the problem at a boundary and call the appropriate CONOPT
  * subroutines to perform the optimization problem.
  */
-static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
-                                  int32 *n_subregions,
-			          struct matching_cases *subregions,
-                                  int32 *cur_subregion,
-				  struct gl_list_t *disvars,
-				  struct real_values *rvalues)
-{
+static
+int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
+		int32 *n_subregions,
+		struct matching_cases *subregions,
+		int32 *cur_subregion,
+		struct gl_list_t *disvars,
+		struct real_values *rvalues
+){
   slv9_system_t sys;
   struct rel_relation **rlist;
   struct var_variable **vlist;
@@ -4472,8 +4503,8 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
  *  Prepares sys for entering an iteration, increasing the iteration counts
  *  and starting the clock.
  */
-static void iteration_begins( slv9_system_t sys)
-{
+static
+void iteration_begins(slv9_system_t sys){
    sys->clock = tm_cpu_time();
    ++(sys->s.block.iteration);
    ++(sys->s.iteration);
@@ -4489,8 +4520,8 @@ static void iteration_begins( slv9_system_t sys)
  *  Prepares sys for exiting an iteration, stopping the clock and recording
  *  the cpu time.
  */
-static void iteration_ends( slv9_system_t sys)
-{
+static
+void iteration_ends( slv9_system_t sys){
    double cpu_elapsed;   /* elapsed this iteration */
 
    cpu_elapsed = (double)(tm_cpu_time() - sys->clock);
@@ -4508,8 +4539,8 @@ static void iteration_ends( slv9_system_t sys)
 /*
  *  Updates the solver status.
  */
-static void update_status( slv9_system_t sys)
-{
+static
+void update_status( slv9_system_t sys){
   boolean unsuccessful;
 
   if( !sys->s.converged ) {
@@ -4529,8 +4560,8 @@ static void update_status( slv9_system_t sys)
  *  Updates the value of the flag unsuccessful based on the information
  *  of the nonlinear solver (square or optimizer)
  */
-static boolean update_unsuccessful( slv9_system_t sys, slv_status_t *status )
-{
+static
+boolean update_unsuccessful( slv9_system_t sys, slv_status_t *status){
   boolean unsuccessful;
 
   sys->s.time_limit_exceeded = (sys->s.block.cpu_elapsed >= TIME_LIMIT);
@@ -4546,8 +4577,8 @@ static boolean update_unsuccessful( slv9_system_t sys, slv_status_t *status )
 /*
  *  Updates structural information
  */
-static void update_struct_info( slv9_system_t sys, slv_status_t *status )
-{
+static
+void update_struct_info( slv9_system_t sys, slv_status_t *status){
   sys->s.over_defined = status->over_defined;
   sys->s.under_defined = status->under_defined;
   sys->s.struct_singular = status->struct_singular;
@@ -4564,9 +4595,8 @@ static void update_struct_info( slv9_system_t sys, slv_status_t *status )
  * completely dependent of the current structure, so I did not modify
  * that structure at all.
  */
-static void update_real_status(slv_status_t *main, slv_status_t *slave,
-			       int32 niter)
-{
+static
+void update_real_status(slv_status_t *main, slv_status_t *slave, int32 niter){
     main->block.number_of = slave->block.number_of;
     main->costsize = 1+slave->block.number_of;
     main->block.residual = slave->block.residual;
@@ -4582,10 +4612,11 @@ static void update_real_status(slv_status_t *main, slv_status_t *slave,
  *  Parameters assignment
  *  ----------------------------
  */
-static int32 slv9_get_default_parameters(slv_system_t server,
-					 SlvClientToken asys,
-					 slv_parameters_t *parameters)
-{
+static
+int32 slv9_get_default_parameters(slv_system_t server,
+		SlvClientToken asys,
+		slv_parameters_t *parameters
+){
   slv9_system_t sys = NULL;
   union parm_arg lo,hi,val;
   struct slv_parameter *new_parms = NULL;
@@ -4800,8 +4831,8 @@ static int32 slv9_get_default_parameters(slv_system_t server,
  * available, the function will return 1, and the system will not be
  * created.
  */
-static int32 get_solvers_tokens(  slv9_system_t sys, slv_system_t server)
-{
+static
+int32 get_solvers_tokens(  slv9_system_t sys, slv_system_t server){
   int32 newsolver;
   int32 num_log_reg, num_nl_reg, num_opt_reg, num_cond_reg;
   int32 num_solvers,si;
@@ -4934,8 +4965,8 @@ static int32 get_solvers_tokens(  slv9_system_t sys, slv_system_t server)
 
 
 
-static SlvClientToken slv9_create(slv_system_t server, int *statusindex)
-{
+static
+SlvClientToken slv9_create(slv_system_t server, int *statusindex){
   slv9_system_t sys;
 
   sys = (slv9_system_t)asccalloc(1, sizeof(struct slv9_system_structure) );
@@ -5019,8 +5050,8 @@ static SlvClientToken slv9_create(slv_system_t server, int *statusindex)
 
 
 
-static int slv9_eligible_solver(slv_system_t server)
-{
+static
+int slv9_eligible_solver(slv_system_t server){
   const char *msg;
   if(!slv_get_num_solvers_rels(server)){
 	msg = "No relations were found";
@@ -5038,9 +5069,10 @@ static int slv9_eligible_solver(slv_system_t server)
   return FALSE;
 }
 
-static void slv9_get_parameters(slv_system_t server, SlvClientToken asys,
-                                slv_parameters_t *parameters)
-{
+static
+void slv9_get_parameters(slv_system_t server, SlvClientToken asys,
+		slv_parameters_t *parameters
+){
   slv9_system_t sys;
   (void) server;
   sys = SLV9(asys);
@@ -5048,9 +5080,10 @@ static void slv9_get_parameters(slv_system_t server, SlvClientToken asys,
   mem_copy_cast(&(sys->p),parameters,sizeof(slv_parameters_t));
 }
 
-static void slv9_set_parameters(slv_system_t server, SlvClientToken asys,
-                                slv_parameters_t *parameters)
-{
+static
+void slv9_set_parameters(slv_system_t server, SlvClientToken asys,
+		slv_parameters_t *parameters
+){
   slv9_system_t sys;
   (void) server;
   sys = SLV9(asys);
@@ -5058,9 +5091,10 @@ static void slv9_set_parameters(slv_system_t server, SlvClientToken asys,
   mem_copy_cast(parameters,&(sys->p),sizeof(slv_parameters_t));
 }
 
-static void slv9_get_status(slv_system_t server, SlvClientToken asys,
-                            slv_status_t *status)
-{
+static
+void slv9_get_status(slv_system_t server, SlvClientToken asys,
+		slv_status_t *status
+){
   slv9_system_t sys;
   (void) server;
   sys = SLV9(asys);
@@ -5068,9 +5102,10 @@ static void slv9_get_status(slv_system_t server, SlvClientToken asys,
   mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
 }
 
-static linsolqr_system_t slv9_get_linsolqr_sys(slv_system_t server,
-                                               SlvClientToken asys)
-{
+static
+linsolqr_system_t slv9_get_linsolqr_sys(slv_system_t server,
+		SlvClientToken asys
+){
   slv9_system_t sys;
   sys = SLV9(asys);
   (void) server;
@@ -5080,9 +5115,10 @@ static linsolqr_system_t slv9_get_linsolqr_sys(slv_system_t server,
   return( NULL );
 }
 
-static linsol_system_t slv9_get_linsol_sys(slv_system_t server,
-                                           SlvClientToken asys)
-{
+static
+linsol_system_t slv9_get_linsol_sys(slv_system_t server,
+		SlvClientToken asys
+){
   slv9_system_t sys;
   (void) server;
   sys = SLV9(asys);
@@ -5092,11 +5128,10 @@ static linsol_system_t slv9_get_linsol_sys(slv_system_t server,
   return( NULL );
 }
 
-
-
-static void slv9_dump_internals(slv_system_t server,
-                                SlvClientToken sys,int level)
-{
+static
+void slv9_dump_internals(slv_system_t server,
+		SlvClientToken sys,int level
+){
   check_system(sys);
   (void) server;
   if (level > 0) {
@@ -5109,8 +5144,8 @@ static void slv9_dump_internals(slv_system_t server,
 /*
  * Set to zero the fields of the array cost
  */
-static void reset_cost(struct slv_block_cost *cost,int32 costsize)
-{
+static
+void reset_cost(struct slv_block_cost *cost,int32 costsize){
   int32 ci;
 
   for( ci = 0; ci < costsize; ++ci ) {
@@ -5135,9 +5170,10 @@ static void reset_cost(struct slv_block_cost *cost,int32 costsize)
  * completely dependent of the current structure, so I did not modify
  * that structure at all.
  */
-static void update_cost(struct slv_block_cost *cost, slv_status_t *status,
-                        int32 current_block, int32 previous_block)
-{
+static
+void update_cost(struct slv_block_cost *cost, slv_status_t *status,
+		int32 current_block, int32 previous_block
+){
   int32 ci;
 
   if(current_block >=0) {
@@ -5163,9 +5199,10 @@ static void update_cost(struct slv_block_cost *cost, slv_status_t *status,
   }
 }
 
-static int32 is_an_optimization_problem(slv_system_t server,
-					SlvClientToken asys)
-{
+static
+int32 is_an_optimization_problem(slv_system_t server,
+		SlvClientToken asys
+){
   slv9_system_t sys;
   slv_status_t status;
   mtx_matrix_t Jacobian;
@@ -5197,7 +5234,8 @@ static int32 is_an_optimization_problem(slv_system_t server,
   return optimizing;
 }
 
-static int slv9_presolve(slv_system_t server, SlvClientToken asys){
+static
+int slv9_presolve(slv_system_t server, SlvClientToken asys){
   slv9_system_t sys;
   struct var_variable **vp;
   struct rel_relation **rp;
@@ -5272,9 +5310,8 @@ static int slv9_presolve(slv_system_t server, SlvClientToken asys){
   return 0;
 }
 
-
-
-static int slv9_resolve(slv_system_t server, SlvClientToken asys){
+static
+int slv9_resolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
   slv9_system_t sys;
@@ -5309,7 +5346,8 @@ static int slv9_resolve(slv_system_t server, SlvClientToken asys){
   return 0;
 }
 
-static int slv9_iterate(slv_system_t server, SlvClientToken asys){
+static
+int slv9_iterate(slv_system_t server, SlvClientToken asys){
   slv9_system_t sys;
   slv_status_t status;
   struct matching_cases *subregions;
@@ -5591,8 +5629,8 @@ static int slv9_solve(slv_system_t server, SlvClientToken asys){
 }
 
 
-static mtx_matrix_t slv9_get_matrix(slv_system_t server, SlvClientToken sys)
-{
+static
+mtx_matrix_t slv9_get_matrix(slv_system_t server, SlvClientToken sys){
   if (server == NULL || sys==NULL) return NULL;
   if (check_system(SLV9(sys))) return NULL;
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv9 does not get matrix.");
@@ -5602,8 +5640,8 @@ static mtx_matrix_t slv9_get_matrix(slv_system_t server, SlvClientToken sys)
 /*
  * Destroy the client tokens of the different solvers
  */
-static void destroy_solvers_tokens(slv_system_t  server)
-{
+static
+void destroy_solvers_tokens(slv_system_t  server){
   slv_set_client_token(server,token[LOGICAL_SOLVER]);
   slv_set_solver_index(server,solver_index[LOGICAL_SOLVER]);
   slv_destroy_client(server);
@@ -5617,8 +5655,8 @@ static void destroy_solvers_tokens(slv_system_t  server)
   slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
 }
 
-static int slv9_destroy(slv_system_t server, SlvClientToken asys)
-{
+static
+int slv9_destroy(slv_system_t server, SlvClientToken asys){
   slv9_system_t sys;
   sys = SLV9(asys);
   if (check_system(sys)) return 1;
@@ -5632,8 +5670,7 @@ static int slv9_destroy(slv_system_t server, SlvClientToken asys)
 }
 
 
-int slv9_register(SlvFunctionsT *sft)
-{
+int slv9_register(SlvFunctionsT *sft){
   if (sft==NULL)  {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv9_register called with NULL pointer");
     return 1;
