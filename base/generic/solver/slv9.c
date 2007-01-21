@@ -5103,32 +5103,6 @@ void slv9_get_status(slv_system_t server, SlvClientToken asys,
 }
 
 static
-linsolqr_system_t slv9_get_linsolqr_sys(slv_system_t server,
-		SlvClientToken asys
-){
-  slv9_system_t sys;
-  sys = SLV9(asys);
-  (void) server;
-  check_system(sys);
-  FPRINTF(ASCERR,"ERROR:  (slv9) slv9_get_linsolqr_sys\n");
-  FPRINTF(ASCERR,"         slv9 does not get linsolqr_sys.\n");
-  return( NULL );
-}
-
-static
-linsol_system_t slv9_get_linsol_sys(slv_system_t server,
-		SlvClientToken asys
-){
-  slv9_system_t sys;
-  (void) server;
-  sys = SLV9(asys);
-  check_system(sys);
-  FPRINTF(ASCERR,"ERROR:  (slv9) slv9_get_linsol sys\n");
-  FPRINTF(ASCERR,"         slv9 does not get linsol_sys.\n");
-  return( NULL );
-}
-
-static
 void slv9_dump_internals(slv_system_t server,
 		SlvClientToken sys,int level
 ){
@@ -5688,8 +5662,8 @@ int slv9_register(SlvFunctionsT *sft){
   sft->presolve = slv9_presolve;
   sft->iterate = slv9_iterate;
   sft->resolve = slv9_resolve;
-  sft->getlinsol = slv9_get_linsol_sys;
-  sft->getlinsys = slv9_get_linsolqr_sys;
+  sft->getlinsol = NULL;
+  sft->getlinsys = NULL;
   sft->getsysmtx = slv9_get_matrix;
   sft->dumpinternals = slv9_dump_internals;
   return 0;
