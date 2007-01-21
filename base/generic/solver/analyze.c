@@ -1536,7 +1536,11 @@ void analyze_free_lists(struct problem_t *p_data){
   ADUN(unas);   ADUN(dunas);  ADUN(rels);
   ADUN(objrels);  ADUN(models);  ADUN(cnds);
   ADUN(logrels);  ADUN(logcnds);  ADUN(whens);
-  
+  ADUN(diffvars);
+  ADUN(algebvars);
+  ADUN(indepvars);
+  ADUN(obsvars); /* observed variables */
+
   /* blocks of memory use AFUN */
   AFUN(blocks);  AFUN(reldata);  AFUN(objdata);
   AFUN(condata);  AFUN(lrdata);  AFUN(logcondata);
@@ -1978,6 +1982,11 @@ int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 
 	asc_assert(prob);
 	
+	if(gl_length(prob->diffvars)==0){
+		CONSOLE_DEBUG("No differential variables found");
+		return 0;
+	}
+
 	CONSOLE_DEBUG("Generating differential variable data....");
 
 	CONSOLE_DEBUG("There are %ld diffvars", gl_length(prob->diffvars));
