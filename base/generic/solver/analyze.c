@@ -141,7 +141,7 @@
   GLOBAL VARS
 */
 
-static symchar *g_strings[5];
+static symchar *g_strings[6];
 
 /* symbol table entries we need */
 #define INCLUDED_A g_strings[0]
@@ -149,6 +149,7 @@ static symchar *g_strings[5];
 #define BASIS_A g_strings[2]
 #define DERIV_A g_strings[3]
 #define ODEID_A g_strings[4]
+#define OBSID_A g_strings[5]
 
 /*
 	Global variable. Set to true by classify if need be
@@ -175,6 +176,7 @@ struct varip {
 
   int deriv;              /* set in classify_instance */
   int odeid;              /* value loaded from the ode_id child integer atom */
+  int obsid;              /* value of obs_id from child integer atom */
 };
 
 
@@ -313,7 +315,11 @@ struct problem_t {
   struct gl_list_t *rels;	/* ascend relations. relips */
   struct gl_list_t *objrels;	/* objective rels. relips */
   struct gl_list_t *logrels;	/* logical rels */
+
   struct gl_list_t *diffvars;  /* subset of vars: all vars with ode_id set!=0 */
+  struct gl_list_t *algebvars; /* subset of vars: all vars with ode_id == 0 */
+  struct gl_list_t *indepvars; /* subset of vars: all vars with ode_type == -1 */
+  struct gl_list_t *obsvars; /* subset of vars: all vars with ode_type == -1 */
 
   /* bridge ip data */
   struct gl_list_t *oldips;	/* buffer of oldip crap we're protecting */
@@ -855,6 +861,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
       ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
       ip->u.v.odeid = IntegerChildValue(inst,ODEID_A);
+	  ip->u.v.obsid = IntegerChildValue(inst,OBSID_A);
 	  /* CONSOLE_DEBUG("FOUND A VAR: deriv = %d, %s = %d",ip->u.v.deriv,SCP(ODEID_A),ip->u.v.odeid); */
 
       if(RelationsCount(inst)) {
@@ -864,11 +871,23 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
         gl_append_ptr(p_data->unas,(POINTER)ip);
       }
 
-	  /* in addition, if it's got an ode_id, add it to diffvars */
-	  if(ip->u.v.odeid){
-		CONSOLE_DEBUG("Adding var to diffvars");
-        gl_append_ptr(p_data->diffvars,(POINTER)ip);
+	  if(ip->u.v.obsid){
+		gl_append_ptr(p_data->obsvars,(POINTER)ip);
+		CONSOLE_DEBUG("Added to obsvars");	
       }
+	  /* make the algebraic/differential/derivative cut */
+	  if(ip->u.v.odeid){
+        gl_append_ptr(p_data->diffvars,(POINTER)ip);
+		CONSOLE_DEBUG("Added var to diffvars");
+      }else{
+		if(ip->u.v.deriv==-1){
+		  gl_append_ptr(p_data->indepvars,(POINTER)ip);
+		  CONSOLE_DEBUG("Added to indep vars");
+		}else{
+		  gl_append_ptr(p_data->algebvars,(POINTER)ip);
+		  CONSOLE_DEBUG("Added var to algebvars");
+		}
+	  }
     }else{
       ip->u.v.fixed = 1;
       ip->u.v.solvervar=0;
@@ -1270,6 +1289,9 @@ int analyze_make_master_lists(struct problem_t *p_data){
   CL(rels,nr);  /* relations */
   CL(logrels,nl);/* logical relations */
   CL(diffvars,nr); /* differential variables */
+  CL(algebvars,nr); /* differential variables */
+  CL(indepvars,nr); /* independent variables */ /* @TODO there's wasted memory here */
+  CL(obsvars,nr); /* observed variables */
   CL(logcnds,ncl);/* conditional logrelations */
   CL(extrels,ne); /* extrelations */
   CL(objrels,no); /* objectives */
@@ -1284,10 +1306,6 @@ int analyze_make_master_lists(struct problem_t *p_data){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 1;
   }
-
-#ifdef ASC_IDA_NEW_ANALYSE
-	asc_assert(gl_length(p_data->diffvars));
-#endif
 
   /*
   	collect relations, objectives, logrels and whens recording the
@@ -2006,6 +2024,13 @@ int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		}
 
 		/* close the current sequence */
+		if(i == seqstart){
+			ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+			FPRINTF(ASCERR,"Variable '");
+			WriteInstanceName(ASCWAR,vip->i,prob->root);
+			FPRINTF(ASCERR,"' declared differential without derivative being identified (ode_id=%d)",vip->u.v.odeid);
+			error_reporter_end_flush();
+		}
 		seq = ASC_NEW(SolverDiffVarSequence);
 		seq->n = i - seqstart + 1;
 		seq->ode_id = vip->u.v.odeid;
@@ -2026,17 +2051,56 @@ int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 			CONSOLE_DEBUG("maxorder increased to %d",maxorder);
 		}
 
-		++i; seqstart=i; vip=vipnext; continue;
+		++i; seqstart=i; vip=vipnext;
+		if(cont && vip->u.v.deriv != 1){
+			ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+			FPRINTF(ASCERR,"Missing undifferentiated form of var '");
+			WriteInstanceName(ASCWAR,vip->i,prob->root);
+			FPRINTF(ASCERR,"' (ode_id = %d, ode_type = %d)",vip->u.v.odeid,vip->u.v.deriv);
+			error_reporter_end_flush();
+			return 4;
+		}
+		continue;
 	}
 	
-	CONSOLE_DEBUG("Place chains in array structure");
+	CONSOLE_DEBUG("Storing diff vars...");
+
 	diffvars = ASC_NEW(SolverDiffVarCollection);
-	diffvars->n = gl_length(seqs);
-	diffvars->seqs = ASC_NEW_ARRAY(SolverDiffVarSequence,diffvars->n);
-	for(i=0;i<diffvars->n;++i){
-		diffvars->seqs[i] = *(SolverDiffVarSequence *)gl_fetch(seqs,i+1);
+	diffvars->maxorder = maxorder;
+	diffvars->ndiff = gl_length(seqs);
+	diffvars->diff = ASC_NEW_ARRAY(SolverDiffVarSequence,diffvars->ndiff);
+	for(i=0;i<diffvars->ndiff;++i){
+		diffvars->diff[i] = *(SolverDiffVarSequence *)gl_fetch(seqs,i+1);
 	}
 	gl_destroy(seqs);
+
+	/* add the list of algebraic variables to the structure too */
+	CONSOLE_DEBUG("Storing algebraic vars...");
+	diffvars->nalgeb = gl_length(prob->algebvars);
+	diffvars->algeb = ASC_NEW_ARRAY(struct var_variable *,diffvars->nalgeb);
+	for(i=0;i<diffvars->nalgeb;++i){
+		vip = (struct solver_ipdata *)gl_fetch(prob->algebvars,i+1);	
+		diffvars->algeb[i] = vip->u.v.data;
+	}
+	CONSOLE_DEBUG("There are %ld algebraic vars",diffvars->nalgeb);
+
+	CONSOLE_DEBUG("Storing indep vars...");
+	diffvars->nindep = gl_length(prob->indepvars);
+	diffvars->indep = ASC_NEW_ARRAY(struct var_variable *,diffvars->nindep);
+	for(i=0;i<diffvars->nindep;++i){
+		vip = (struct solver_ipdata *)gl_fetch(prob->indepvars,i+1);
+		diffvars->indep[i] = vip->u.v.data;
+	}
+	CONSOLE_DEBUG("There are %ld indep vars",diffvars->nindep);
+
+	/* I know, I know, this might not be the best place for this... */
+	diffvars->nobs = gl_length(prob->obsvars);
+	diffvars->obs = ASC_NEW_ARRAY(struct var_variable *,diffvars->nobs);
+	for(i=0;i<diffvars->nobs;++i){
+		vip = (struct solver_ipdata *)gl_fetch(prob->obsvars,i+1);
+		diffvars->obs[i] = vip->u.v.data;
+	}
+	CONSOLE_DEBUG("There are %ld obs vers",diffvars->nobs);
 
 	slv_set_diffvars(sys,(void *)diffvars);
 
@@ -2997,11 +3061,12 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   struct problem_t thisproblem; /* note default zero intitialisation. note also: local var! */
   struct problem_t *p_data; /* need to malloc, free, or make &local */
 
-  INCLUDED_A = AddSymbolL("included",8);
-  FIXED_A = AddSymbolL("fixed",5);
-  BASIS_A = AddSymbolL("basis",5);
+  INCLUDED_A = AddSymbol("included");
+  FIXED_A = AddSymbol("fixed");
+  BASIS_A = AddSymbol("basis");
   DERIV_A = AddSymbol("ode_type");
   ODEID_A = AddSymbol("ode_id");
+  OBSID_A = AddSymbol("obs_id");
 
   p_data = &thisproblem;
   g_bad_rel_in_list = FALSE;
