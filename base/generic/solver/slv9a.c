@@ -657,31 +657,6 @@ static void slv9a_get_status(slv_system_t server, SlvClientToken asys,
   mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
 }
 
-
-static linsolqr_system_t slv9a_get_linsolqr_sys(slv_system_t server,
-                                                SlvClientToken asys)
-{
-  slv9a_system_t sys;
-  sys = SLV9A(asys);
-  if (server == NULL || sys==NULL) return NULL;;
-  FPRINTF(ASCERR,"ERROR:  (slv9a) slv9a_get_linsolqr_sys\n");
-  FPRINTF(ASCERR,"         slv9a has no linsolqr sys\n");
-  return ( NULL );
-}
-
-
-static linsol_system_t slv9a_get_linsol_sys(slv_system_t server,
-                                            SlvClientToken asys)
-{
-  slv9a_system_t sys;
-  sys = SLV9A(asys);
-  if (server == NULL || sys==NULL) return NULL;;
-  FPRINTF(ASCERR,"ERROR:  (slv9a) slv9a_get_linsol_sys\n");
-  FPRINTF(ASCERR,"         slv9a has no linsol sys\n");
-  return( NULL );
-}
-
-
 /*
  *  Performs structural analysis on the system, setting the flags in
  *  status.  The problem must be set up, the logrelation/dis_var list
@@ -1157,8 +1132,8 @@ int slv9a_register(SlvFunctionsT *sft)
   sft->presolve = slv9a_presolve;
   sft->iterate = slv9a_iterate;
   sft->resolve = slv9a_resolve;
-  sft->getlinsol = slv9a_get_linsol_sys;
-  sft->getlinsys = slv9a_get_linsolqr_sys;
+  sft->getlinsol = NULL;
+  sft->getlinsys = NULL;
   sft->getsysmtx = slv9a_get_structural_matrix;
   sft->dumpinternals = slv9a_dump_internals;
   return 0;

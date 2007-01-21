@@ -1490,8 +1490,9 @@ static void calc_multipliers(slv3_system_t sys){
       row = sys->multipliers.rng->low;
       for( ; row <= sys->multipliers.rng->high; row++ ) {
          struct rel_relation *rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
-         sys->multipliers.vec[row] = linsolqr_var_value
-            (lsys,sys->J.rhs,mtx_row_to_org(sys->J.mtx,row));
+         sys->multipliers.vec[row] = linsolqr_var_value(
+		lsys,sys->J.rhs,mtx_row_to_org(sys->J.mtx,row)
+	 );
          rel_set_multiplier(rel,sys->multipliers.vec[row]*
                             sys->weights.vec[row]);
 
@@ -3334,14 +3335,6 @@ static linsolqr_system_t slv3_get_linsolqr_sys(slv_system_t server,
   return(sys->J.sys);
 }
 
-static linsol_system_t slv3_get_linsol_sys(slv_system_t server,
-                                           SlvClientToken asys)
-{
-  (void) server;
-  (void) asys;
-  return( NULL );
-}
-
 /**
 	Performs structural analysis on the system, setting the flags in
 	status.  The problem must be set up, the relation/variable list
@@ -4235,7 +4228,7 @@ int slv3_register(SlvFunctionsT *sft){
   sft->presolve = slv3_presolve;
   sft->iterate = slv3_iterate;
   sft->resolve = slv3_resolve;
-  sft->getlinsol = slv3_get_linsol_sys;
+  sft->getlinsol = NULL;
   sft->getlinsys = slv3_get_linsolqr_sys;
   sft->getsysmtx = slv3_get_jacobian;
   sft->dumpinternals = slv3_dump_internals;

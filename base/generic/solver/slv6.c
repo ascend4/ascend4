@@ -1085,23 +1085,8 @@ int level;
 /**
  ***  External routines with minor modifications
  ***  -----------------
- ***  slv6_get_linsol_sys(sys)    just returns NULL & error msg
  ***  slv6_change_basis           just return FALSE & error msg
  **/
-
-
-linsol_system_t slv6_get_linsol_sys(sys)   /* just returns NULL & error msg */
-slv6_system_t sys;
-{
-
-/* In the MPS file maker, there is no linsol_sys to return.
-   So I just write out an error message, and return a NULL pointer  */
-
-   FPRINTF(stderr,"ERROR:  (slv6) slv6_change_basis\n");
-   FPRINTF(stderr,"        This solver does not support changing the basis.\n");
-
-   return NULL;
-}
 
 
 boolean slv6_change_basis(slv6_system_t sys,int32 var, mtx_range_t *rng){
@@ -1664,8 +1649,8 @@ int slv6_register(SlvFunctionsT *sft)
   sft->presolve = slv6_presolve;
   sft->iterate = slv6_iterate;
   sft->resolve = slv6_resolve;
-  sft->getlinsol = slv6_get_linsol_sys;
-  sft->getlinsys = slv6_get_linsolqr_sys;
+  sft->getlinsol = NULL;
+  sft->getlinsys = NULL;
   sft->getsysmtx = slv6_get_jacobian;
   sft->dumpinternals = slv6_dump_internals;
   return 0;

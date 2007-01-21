@@ -3543,12 +3543,6 @@ static linsolqr_system_t slv7_get_linsolqr_sys(slv_system_t server,
   return(sys->J.sys);
 }
 
-static linsol_system_t slv7_get_linsol_sys(slv_system_t server,
-                                           SlvClientToken asys)
-{
-  return( NULL );
-}
-
 static void structural_analysis(slv_system_t server, slv7_system_t sys)
 /**
  ***  Performs structural analysis on the system, setting the flags in
@@ -4514,7 +4508,7 @@ int slv7_register(SlvFunctionsT *sft)
   sft->presolve = slv7_presolve;
   sft->iterate = slv7_iterate;
   sft->resolve = slv7_resolve;
-  sft->getlinsol = slv7_get_linsol_sys;
+  sft->getlinsol = NULL;
   sft->getlinsys = slv7_get_linsolqr_sys;
   sft->getsysmtx = slv7_get_jacobian;
   sft->dumpinternals = slv7_dump_internals;
