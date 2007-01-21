@@ -867,9 +867,9 @@ if __name__=='__main__':
 	if restart:
 		script = os.path.join(sys.path[0],"test.py")					
 		print "Restarting with..."
-		print "   LD_LIBRARY_PATH = %s" % os.environ.get(LD_LIBRARY_PATH)
-		print "   PYTHONPATH = %s" % os.environ.get('PYTHONPATH')
-		print "   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
+		print "   LD_LIBRARY_PATH=%s" % os.environ.get(LD_LIBRARY_PATH)
+		print "   PYTHONPATH=%s" % os.environ.get('PYTHONPATH')
+		print "   ASCENDLIBRARY=%s" % os.environ.get('ASCENDLIBRARY')
 
 		if sys.argv[0] !="/usr/bin/gdb":
 			os.execvp("python",[script] + sys.argv)

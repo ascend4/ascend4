@@ -302,19 +302,19 @@ ASC_DLLSPEC void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
  *  gl_append_list() are the only procedures that will expand the
  *  length and/or the capacity of a list.  ptr is always stored in
  *  position gl_length(list)+1.  The specified list may not be
- *  NULL, and the list must be expandable (checked by assertion).<br><br>
+ *  NULL, and the list must be expandable (checked by assertion).
  *
  *  Because any pointer type is convertible to a void pointer, you
  *  pass in a pointer to your data structure.  It stores whatever pointer
- *  you give it.<br><br>
+ *  you give it.
  *
  *  Example:                                                       <pre>
  *      struct data_t *item;
  *      item = (struct data_t *)malloc(sizeof(struct data_t));
- *      various assignments to item->
- *      gl_append_ptr(list,item);   * This stores item             </pre>
+ *      \* ...various assignments to 'item'... *\
+ *      gl_append_ptr(list,item); \* store the item *\             </pre>
  *
- *  Complexity: worst case O(n)  <br>
+ *  Complexity: worst case O(n)
  *  where n is the capacity of the list.  Normally it is O(1).  It is
  *  only when the list capacity is increased that it takes O(n).  This
  *  may also be an over estimate.
@@ -331,16 +331,16 @@ ASC_DLLSPEC void gl_fast_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
  *  the list length or check it.  ptr is always stored in position
  *  gl_length(list)+1.   Only use this function in situations where
  *  you are absolutely sure the gl_length(list) < list->capacity.
- *  The specified list may not be NULL (checked by assertion).<br><br>
+ *  The specified list may not be NULL (checked by assertion).
  *
  *  Because any pointer type is convertible to a void pointer, you
  *  pass in a pointer to your data structure.  It stores whatever pointer
- *  you give it.<br><br>
+ *  you give it.
  *
- *  Example: See gl_append_ptr.<br>
+ *  Example: See gl_append_ptr.<
  *  Intended use is that you create a list of the size you know you
  *  need (but may want to expand at a later time) and then call this.
- *  This is faster than gl_store().<br><br>
+ *  This is faster than gl_store().
  *
  *  Complexity: O(1)
  *
