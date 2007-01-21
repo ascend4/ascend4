@@ -2022,12 +2022,6 @@ static void slv1_get_status(slv_system_t server, SlvClientToken asys,
   mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
 }
 
-static linsolqr_system_t slv1_get_linsolqr_sys(slv_system_t server,
-                                               SlvClientToken asys)
-{
-  return( NULL );
-}
-
 static linsol_system_t slv1_get_linsol_sys(slv_system_t server,
                                            SlvClientToken asys)
 {
@@ -2601,7 +2595,7 @@ int slv1_register(SlvFunctionsT *sft)
   sft->iterate = slv1_iterate;
   sft->resolve = slv1_resolve;
   sft->getlinsol = slv1_get_linsol_sys;
-  sft->getlinsys = slv1_get_linsolqr_sys;
+  sft->getlinsys = NULL;
   sft->getsysmtx = slv1_get_jacobian;
   sft->dumpinternals = slv1_dump_internals;
   return 0;

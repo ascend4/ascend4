@@ -369,7 +369,6 @@ ASC_DLLSPEC int32 slv_far_from_nominals(slv_system_t sys, real64 bignum, int32 *
 */
 
 #ifdef ASC_IDA_NEW_ANALYSE
-const void *slv_get_diffvars(slv_system_t sys);
 int slv_set_diffvars(slv_system_t sys,void *diffvars);
 /**< @return 0 on success */
 #endif

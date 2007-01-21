@@ -1609,16 +1609,6 @@ static linsolqr_system_t slv8_get_linsolqr_sys(slv_system_t server
   return(sys->J.sys);
 }
 
-
-static linsol_system_t slv8_get_linsol_sys(slv_system_t server
-		, SlvClientToken asys
-){
-  (void)server;  /* stop gcc whine about unused parameter */
-  UNUSED_PARAMETER(asys);
-  return( NULL );
-}
-
-
 /**
 	Perform structural analysis on the system, setting the flags in
 	status.
@@ -2947,7 +2937,7 @@ int32 slv8_register(SlvFunctionsT *sft){
   sft->presolve = slv8_presolve;
   sft->iterate = slv8_iterate;
   sft->resolve = slv8_resolve;
-  sft->getlinsol = slv8_get_linsol_sys;
+  sft->getlinsol = NULL;
   sft->getlinsys = slv8_get_linsolqr_sys;
   sft->getsysmtx = slv8_get_jacobian;
   sft->dumpinternals = slv8_dump_internals;
