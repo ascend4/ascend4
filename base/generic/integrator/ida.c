@@ -56,7 +56,6 @@
 # include <mmio.h>
 #endif
 
-#include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
 #include <utilities/ascSignal.h>
@@ -432,30 +431,31 @@ IntegratorVarVisitorFn integrator_dae_classify_var;
 	Perform additional problem analysis to prepare problem for integration with 
 	IDA.
 
-	Note, we can assume that analyse_make_problem has already been called.
+	We assume that the analyse_generate_diffvars routine has been called, so 
+	that we just need to call slv_get_diffvars to access the derivative
+	chains.
 
 	We can also assume that the independent variable has been found.
 
-	See emails ~Jan 8 2006.
+	See mailing list, ~Jan 2007.
 
 	Note, the stuff for identifying the static and output sub-problems should
-	be part of integrator.c, not this file.
+	be part of integrator.c, not this file. We will assume this is handled 
 
 	@return 0 on success 
 	@see integrator_analyse
 */
 int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
-	struct var_variable **solversvars;
-	const struct var_variable **vlist;
-	unsigned long nsolversvars, i, j, nderivs, nvlist, nfixed;
+	struct var_variable **solversvars, **vlist;
+	unsigned long nsolversvars;
 	struct rel_relation **solversrels;
-	unsigned long nsolversrels, dynamicstart, dynamicend;
+	unsigned long nsolversrels;
 	const SolverDiffVarCollection *diffvars;
+	long i, n_y, n_ydot;
+	var_filter_t vfilt;
 
 	struct var_variable *v;
-	struct var_variable **derivs, **derivs2;
 	char *varname;
-	struct Instance *inst;
 
 	CONSOLE_DEBUG("NEW integrator_ida_analyse------------------>");
 	
@@ -465,42 +465,6 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	solversvars = slv_get_solvers_var_list(sys->system);
 	nsolversvars = slv_get_num_solvers_vars(sys->system);
     CONSOLE_DEBUG("Solver has %lu vars",nsolversvars);
-
-	derivs = ASC_NEW_ARRAY(struct var_variable *,nsolversvars);
-	if(derivs==NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory");
-		return 3; 
-	}
-	j = 0;
-	nfixed = 0;
-	for(i=0; i<nsolversvars; ++i){
-		v = solversvars[i];
-		asc_assert((int)v!=0x1);
-
-		if(var_fixed(v))++nfixed;
-
-		/** @TODO remove this */
-		varname = var_make_name(sys->system,v);
-
-		/* the solver has marked derivs already, so just test */
-		if(var_deriv(v)){
-			CONSOLE_DEBUG("Found derivative var '%s'",varname);
-			derivs[j++] = v;
-		}
-	}
-	nderivs = j;
-	if(nderivs==0){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"System is not a dynamic problem: contains no derivatives");
-		return 1;
-	}
-	
-	/* shrink the list down to size */
-	derivs2 = derivs;
-	derivs = ASC_NEW_ARRAY(struct var_variable *,nderivs);
-	memcpy(derivs,derivs2,nderivs*sizeof(struct var_variable *));
-	ASC_FREE(derivs2);
-
-	CONSOLE_DEBUG("FOUND %lu DERIV VARS",nderivs);
 
 	/* partition into static, dynamic and output problems */
 	CONSOLE_DEBUG("Block partitioning system...");
@@ -513,78 +477,97 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	nsolversrels = slv_get_num_solvers_rels(sys->system);
 	CONSOLE_DEBUG("System has %lu rels",nsolversrels);
 
-	dynamicstart = nsolversrels;
-	dynamicend = 0;
-	for(i=0; i<nsolversrels; ++i){
-		vlist = rel_incidence_list(solversrels[i]);
-		nvlist = rel_n_incidences(solversrels[i]);
-		for(j=0; j<nvlist; ++j){
-			if(dynamicstart > i && var_deriv(vlist[j]) ){
-				CONSOLE_DEBUG("Start dynamic problem in rel %lu",i);
-				dynamicstart = i;
-			}
-			if(dynamicend < i && var_deriv(vlist[j])){
-				CONSOLE_DEBUG("End dynamic problem with rel %lu",i);
-				dynamicend = i + 1;
-			}
-		}
-	}
+	diffvars = slv_get_diffvars(sys->system);
+	asc_assert(diffvars!=NULL);
 
-	if(dynamicstart > 0){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Static problem is not implemented yet");
+	CONSOLE_DEBUG("Got %ld diffvars",diffvars->ndiff);
+	
+	if(diffvars->maxorder > 2){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+			,"System higher-order derivatives. You must manually reduce the"
+			" system to a first-order system of DAEs. (maxorder=%d)"
+			,diffvars->maxorder
+		);
+		return 1;
+	};
+	
+	/* set up the dynamic problem */
+	CONSOLE_DEBUG("Setting up the dynamic problem");
+
+	asc_assert(sys->y == NULL);
+
+	sys->y = ASC_NEW_ARRAY(struct var_variable *,diffvars->nalgeb + diffvars->ndiff);
+	sys->ydot = ASC_NEW_ARRAY(struct var_variable *,diffvars->nalgeb + diffvars->ndiff);
+	n_y = 0;
+	
+	/* add the algebraics */
+	for(i=0; i<diffvars->nalgeb; ++i){
+		v = diffvars->algeb[i];
+		varname = var_make_name(sys->system,v);
+		if(var_apply_filter(v,&vfilt)){
+			CONSOLE_DEBUG("'%s' is algebraic",varname);
+			sys->y[n_y] = v;
+			sys->ydot[n_y] = NULL;
+			n_y++;
+		}
+		ASC_FREE(varname);
+	}
+	/* add the differentials */
+	for(i=0; i<diffvars->ndiff; ++i){
+		asc_assert(diffvars->diff[i].n == 2);
+		sys->y[n_y] = diffvars->diff[i].vars[0];
+		varname = var_make_name(sys->system,sys->y[n_y]);
+		CONSOLE_DEBUG("'%s' is differential",varname);
+		ASC_FREE(varname);
+		sys->ydot[n_y] = diffvars->diff[i].vars[1];
+		varname = var_make_name(sys->system,sys->ydot[n_y]);
+		CONSOLE_DEBUG("'%s' is derivative",varname);
+		ASC_FREE(varname);
+		n_y++;
+	}
+	sys->n_y = n_y;
+	n_ydot = n_y;
+	asc_assert(n_y == diffvars->nalgeb + diffvars->ndiff);
+
+	if(sys->n_y != nsolversrels){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square: n_y = %d, n_rels = %d"
+			,sys->n_y, nsolversrels
+		);
 		return 2;
 	}
 
-	if(dynamicend < nsolversrels){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Output problem is not implemented yet");
+	/* check the indep var is same as was located elsewhere */
+	if(diffvars->nindep>1){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Multiple variables specified as independent (ode_type=-1)");
 		return 3;
-	}
-		
-	/* raise error if any of the above are non-square */
-	if(dynamicend - dynamicstart != nsolversvars - nfixed - nderivs){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Dynamic problem is not square:"
-			" %lu rels != %lu vars - %lu fixed - %lu derivs"
-			,(dynamicend-dynamicstart),nsolversvars,nfixed,nderivs
-		);
+	}else if(diffvars->nindep<1){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Independent var not set (ode_type=-1)");
 		return 4;
-	}
-	CONSOLE_DEBUG("Dynamic problem is square with %lu rels",dynamicend - dynamicstart);
-
-	/* get our list of differential variables */
-	/* analyse_generate_diffvars(sys->system); */
-	diffvars = analyse_get_diffvars(sys->system);
-	if(diffvars==NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"diffvars structure is NULL");
+	}else if(diffvars->indep[0]!=sys->x){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Indep var doesn't match");
 		return 5;
 	}
 
-	/* for(i=0; i<diffvars->n; ++i){
-		diffvars->seqs[i] */
+	/* get the observations */
+	sys->n_obs = diffvars->nobs;
+	sys->obs = ASC_NEW_ARRAY(struct var_variable *,sys->n_obs);
+	for(i=0;i<sys->n_obs;++i){
+		sys->obs[i] = diffvars->obs[i];
+		varname = var_make_name(sys->system,sys->obs[i]);
+		CONSOLE_DEBUG("'%s' is observation",varname);
+		ASC_FREE(varname);
+	}
 
-	/* get our list of algebraic varibles */
-	
-	
-
-	/* set up the static problem */
-	/*   - rel, var (etc) lists */
-    /*   - block decomposition */
-	CONSOLE_DEBUG("Skipping the static problem setup");
-
-	/* set up the output problem */
-	/*   - rel, var (etc) lists */
-    /*   - block decomposition */
-	CONSOLE_DEBUG("Skipping the output problem setup");
-
-	/* set up the dynamic problem */
-	CONSOLE_DEBUG("Setting up the dynamic problem");
 	/*   - 'y' list as [ya|yd] */
 	/*   - sparsity pattern for dF/dy and dF/dy' */
 	/*   - sparsity pattern for union of above */
 	/*   - block decomposition based on above */
     /*   - block decomposition results in reordering of y and y' */
 	/*   - boundaries (optional) */
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Implementation incomplete");
-	return 1;
+	/* ERROR_REPORTER_HERE(ASC_PROG_ERR,"Implementation incomplete");
+	return -1; */
+
+	return 0;
 }
 #endif
 

@@ -262,6 +262,7 @@ struct IntegratorSystemStruct{
   long *y_id;                 /**< array form of y/ydot user indices, for DAEs we use negatives here for derivative vars */
   long *obs_id;               /**< array form of obs user indices */
   long n_y;
+  long n_ydot;
   long n_obs;
   long currentstep;           /**< current step number (also @see integrator_getnsamples) */
 

@@ -108,8 +108,14 @@ typedef struct SolverDiffVarSequenceStruct{
       - z, dz/dt
 */
 typedef struct SolverDiffVarCollectionStruct{
-	SolverDiffVarSequence *seqs;
-	long n;
+	SolverDiffVarSequence *diff;
+	long ndiff;
+	struct var_variable **algeb;
+	long nalgeb;
+	struct var_variable **indep;
+	long nindep;
+	struct var_variable **obs;
+	long nobs;
 	long maxorder;
 } SolverDiffVarCollection;
 

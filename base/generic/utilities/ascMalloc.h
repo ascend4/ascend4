@@ -124,6 +124,8 @@
 
 #define ASC_FREE(PTR) ascfree(PTR)
 
+#define ASC_REALLOC(PTR,SIZE) ascrealloc(PTR,SIZE)
+
 ASC_DLLSPEC char *ascstrdupf(CONST char *str);
 /**<
  *  Implementation function for ascstrdup() if MALLOC_DEBUG
