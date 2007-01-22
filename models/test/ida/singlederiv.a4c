@@ -1,0 +1,98 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL singlederiv;
+	y IS_A solver_var;
+	dy_dt IS_A solver_var;
+	t IS_A solver_var;
+	dy_dt = exp(-t^2);
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+		t.ode_type:= -1;
+	END on_load;
+END singlederiv;
+
+(* bad ode_id present on 't' *)
+MODEL singlederivfail1;
+	y IS_A solver_var;
+	dy_dt IS_A solver_var;
+	t IS_A solver_var;
+	dy_dt = exp(-t^2);
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+		t.ode_id:= -1;
+	END on_load;
+END singlederivfail1;
+
+(* base ode_id present on dy_dt *)
+MODEL singlederivfail2;
+	y IS_A solver_var;
+	dy_dt IS_A solver_var;
+	t IS_A solver_var;
+	dy_dt = exp(-t^2);
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 2; dy_dt.ode_type := 2;
+		t.ode_type:= -1;
+	END on_load;
+END singlederivfail2;
+
+(* base ode_id present on dy_dt *)
+MODEL singlederivfail3;
+	y IS_A solver_var;
+	dy_dt IS_A solver_var;
+	t IS_A solver_var;
+	dy_dt = exp(-t^2);
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 3;
+		t.ode_type:= -1;
+	END on_load;
+END singlederivfail3;
+
+(* duplicate ode_type=1 in a chain *)
+MODEL singlederivfail4;
+	y IS_A solver_var;
+	dy_dt IS_A solver_var;
+	t IS_A solver_var;
+	dy_dt = exp(-t^2);
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 1;
+		t.ode_type:= -1;
+	END on_load;
+END singlederivfail4;
+
+(* duplicate ode_type=2 in a chain *)
+MODEL singlederivfail5;
+	y IS_A solver_var;
+	dy_dt IS_A solver_var;
+	t IS_A solver_var;
+	dy_dt = exp(-t^2);
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 2;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+		t.ode_type:= -1;
+	END on_load;
+END singlederivfail5;
+
+(* time gets ode_id=1 *)
+MODEL singlederivfail6;
+	y IS_A solver_var;
+	dy_dt IS_A solver_var;
+	t IS_A solver_var;
+	dy_dt = exp(-t^2);
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+		t.ode_type:= -1; t.ode_id := 1;
+	END on_load;
+END singlederivfail6;

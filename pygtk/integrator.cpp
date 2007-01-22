@@ -10,6 +10,9 @@ using namespace std;
 	'creating' an integrator in the context of the GUI just means an object
 	we can store the parameters that will be later sent to the underlying
 	C-code API.
+
+	@TODO at present the integrator requires a slv_system_t. This is the wrong
+	way around.
 */
 Integrator::Integrator(Simulation &simulation)
 		: simulation(simulation)

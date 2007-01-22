@@ -628,6 +628,64 @@ if with_freesteam and have_freesteam:
 			M = self._run("collapsingcan2",filename="collapsingcan2.a4c");
 
 #-------------------------------------------------------------------------------
+# Testing of IDA's analysis module
+
+class TestIDA(Ascend):
+	def _run(self,filen,modeln):
+		self.L.load(filen)
+		T = self.L.findType(modeln)
+		M = T.getSimulation('sim')
+		M.build()
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.analyse()
+
+	def testsinglederiv(self):
+		self._run('test/ida/singlederiv.a4c','singlederiv')
+
+	def testsinglederivfail1(self):
+		try:
+			self._run('test/ida/singlederiv.a4c','singlederivfail1')
+		except:
+			return
+		self.fail("t.ode_id=-1 did not trigger error")
+	
+	def testsinglederivfail2(self):
+		try:
+			self._run('test/ida/singlederiv.a4c','singlederivfail2')
+		except:
+			return
+		self.fail("dy_dt.ode_id=2 did not trigger error")
+
+	def testsinglederivfail3(self):
+		try:
+			self._run('test/ida/singlederiv.a4c','singlederivfail3')
+		except:
+			return
+		self.fail("dy_dt.ode_type=3 did not trigger error")
+
+	def testsinglederivfail4(self):
+		try:
+			self._run('test/ida/singlederiv.a4c','singlederivfail4')
+		except:
+			return
+		self.fail("duplicate ode_type=1 did not trigger error")
+
+	def testsinglederivfail5(self):
+		try:
+			self._run('test/ida/singlederiv.a4c','singlederivfail5')
+		except:
+			return
+		self.fail("duplicate ode_type=1 did not trigger error")
+
+	def testsinglederivfail6(self):
+		try:
+			self._run('test/ida/singlederiv.a4c','singlederivfail6')
+		except:
+			return
+		self.fail("duplicate ode_type=1 did not trigger error")
+
+#-------------------------------------------------------------------------------
 # Testing of IDA models using DENSE linear solver
 
 class TestIDADENSE(Ascend):

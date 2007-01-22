@@ -45,6 +45,8 @@
 
 ASC_EXPORT int g_SlvNumberOfRegisteredClients=0; /* see header */
 
+/* #define EMPTY_DEBUG */
+
 #define NEEDSTOBEDONE 0
 
 struct slv_system_structure {
@@ -785,11 +787,19 @@ struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 		sys->PROP.solver = vlist; \
 	}
 
+#ifdef EMPTY_DEBUG
+/* EW(SECT,NAME) makes an empty-list warning whenever a slv_get_*_*_list() method is called */
+# define EW(SECT,NAME) \
+		if (sys->PROP.solver == NULL) { \
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_" #SECT "_" #NAME "_list: returning NULL (?)."); \
+		}
+#else
+/* ... unless we've silenced it */
+# define EW(SECT,NAME)
+#endif
 #define DEFINE_GET_SOLVERS_LIST_METHOD(NAME,PROP,TYPE) \
 	struct TYPE **slv_get_solvers_##NAME##_list(slv_system_t sys){ \
-		if (sys->PROP.solver == NULL) { \
-			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_" #NAME "_list: returning NULL (?)."); \
-		} \
+		EW(solvers,NAME) \
 		return sys->PROP.solver; \
 	}
 
@@ -815,14 +825,14 @@ DEFINE_GETSET_LIST_METHODS(DEFINE_GET_SOLVERS_LIST_METHOD, DEFINE_GET_SOLVERS_LI
 
 #define DEFINE_GET_MASTER_LIST_METHOD(NAME,PROP,TYPE) \
 	struct TYPE **slv_get_master_##NAME##_list(slv_system_t sys){ \
-		if (sys->PROP.master == NULL) { \
-			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_" #NAME "_list returning NULL (?)."); \
-		} \
+		EW(master,NAME) \
 		return sys->PROP.master; \
 	}
 
 /* the slv_get_master_*_list are also all of the same form, so DEFINE...(D,D) */
 DEFINE_GETSET_LIST_METHODS(DEFINE_GET_MASTER_LIST_METHOD,DEFINE_GET_MASTER_LIST_METHOD) /*;*/
+
+#undef EW
 
 /*----------------------------------------------------------------------
 	Macros to define:
