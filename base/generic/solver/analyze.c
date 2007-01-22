@@ -2613,6 +2613,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
 	instance tree, eg telling the compiler about the new values of things, etc.
 
 	@return 0=success, 1=memory error, 2=bad instance error (nonzero=error)
+		3=failure with diffvars data
 
 	@TODO: are the following comments still relevant?
 	Makes variable/relations/when lists and objective function by heuristic.
@@ -2672,7 +2673,11 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   }
 
 #ifdef ASC_IDA_NEW_ANALYSE
-  analyse_generate_diffvars(sys,p_data);
+  stat = analyse_generate_diffvars(sys,p_data);
+  if(stat){
+	analyze_free_lists(p_data);
+	return 3;
+  }
 #endif
 
   /* tell the slv_system_t about it, and undecorate ips from instances */

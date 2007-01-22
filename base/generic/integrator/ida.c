@@ -452,7 +452,7 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	unsigned long nsolversrels;
 	const SolverDiffVarCollection *diffvars;
 	SolverDiffVarSequence seq;
-	long i, j, n_y, n_ydot, n_dyn;
+	long i, j, n_y, n_ydot, n_dyn, n_skipped_diff, n_skipped_alg, n_skipped_deriv;
 
 	struct var_variable *v;
 	char *varname;
@@ -502,6 +502,7 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	sys->ydot = ASC_NEW_ARRAY(struct var_variable *,diffvars->nalg + diffvars->ndiff);
 	sys->y_id = ASC_NEW_ARRAY(long,n_dyn);
 	n_y = 0;
+	n_skipped_alg = 0; n_skipped_diff = 0; n_skipped_deriv = 0;
 
 	/* initialise y_id to n_dyn (i.e. off limits) */
 	for(i=0;i<n_dyn;++i){
@@ -518,6 +519,7 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 			if(var_fixed(v)){
 				CONSOLE_DEBUG("'%s' is fixed",varname);
 				ASC_FREE(varname);
+				n_skipped_alg++;
 				continue;
 			}
 			CONSOLE_DEBUG("'%s' is algebraic",varname);
@@ -527,18 +529,22 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 			asc_assert(var_active(v));
 			if(var_fixed(v)){
 				CONSOLE_DEBUG("Differential var '%s' is fixed",varname);
+				n_skipped_diff++;
 				ASC_FREE(varname);
 				for(j=1; j<seq.n; ++j){
 					v = seq.vars[j];
 					varname = var_make_name(sys->system,v);
 					var_set_active(v,FALSE);
 					var_set_value(v,0);
-					CONSOLE_DEBUG("Derivative '%s' set inactive",varname);
+					CONSOLE_DEBUG("Derivative '%s' SET INACTIVE",varname);
 					ASC_FREE(varname);
+					n_skipped_deriv++;
 				}
 				continue;
 			}else if(var_fixed(seq.vars[1])){
-				CONSOLE_DEBUG("Derivative of var '%s' is fixed; converting to algebraic",varname);
+				/* diff var with fixed derivative */
+				CONSOLE_DEBUG("Derivative of var '%s' is fixed; CONVERTING TO ALGEBRAIC",varname);
+				n_skipped_deriv++;
 			}else{
 				/* seq.n > 1, var is not fixed, deriv is not fixed */
 				asc_assert(var_active(seq.vars[1]));
@@ -559,6 +565,7 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 		}
 		/* fall through: v is algebraic */
 		ASC_FREE(varname);
+		asc_assert(var_active(v));
 		sys->y[n_y] = v;
 		sys->ydot[n_y] = NULL;
 		sys->y_id[var_sindex(v)]=n_y;
@@ -569,8 +576,12 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	n_ydot = n_y;
 
 	if(sys->n_y != nsolversrels){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square: n_y = %d, n_rels = %d (n_alg = %d, n_diff = %d)"
-			,sys->n_y, nsolversrels, diffvars->nalg, diffvars->ndiff
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square: n_y = %d, n_rels = %d"
+			" (n_alg = %d - %d = %d"
+			", n_diff = 2 * %d - %d - %d)"
+			,sys->n_y, nsolversrels
+			, diffvars->nalg, n_skipped_alg, diffvars->nalg - n_skipped_alg
+			, diffvars->ndiff, n_skipped_diff, n_skipped_deriv
 		);
 		return 2;
 	}
@@ -605,6 +616,7 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	/*   - boundaries (optional) */
 	/* ERROR_REPORTER_HERE(ASC_PROG_ERR,"Implementation incomplete");
 	return -1; */
+	return 0;
 }
 #endif
 
@@ -1846,7 +1858,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 		var = vlist[i];
 
 		varname = var_make_name(sys->system, var);
-		fprintf(fp,"%d\t%-15s\t",i,varname);
+		fprintf(fp,"%ld\t%-15s\t",i,varname);
 
 		if(var_fixed(var)){
 			// it's fixed, so not really a DAE var
@@ -1870,10 +1882,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 			ASC_ASSERT_LT(-9999999L, y_id);
 		}
 		ASC_FREE(varname);
-
-
 	}
-
 
 	return 0; /* success */
 }

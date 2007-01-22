@@ -49,10 +49,6 @@
 slv_system_t system_build(SlvBackendToken inst){
   slv_system_t sys;
   int stat;
-#ifdef DIEDIEDIE
-  int i;
-  struct ExtRelCache **ep;
-#endif
 
 #if DOTIME
   double comptime;
@@ -73,10 +69,10 @@ slv_system_t system_build(SlvBackendToken inst){
     return sys;
   }
   stat = analyze_make_problem(sys,IPTR(inst));
-  if (stat) {
+  if(stat){
     system_destroy(sys);
     sys = NULL;
-    if (stat==2) {
+    if(stat==2) {
 	  ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
       FPRINTF(ASCERR,"Models sent to solver: \n");
       FPRINTF(ASCERR,"1 cannot have any pending parts\n");
@@ -92,16 +88,6 @@ slv_system_t system_build(SlvBackendToken inst){
 
   slv_set_instance(sys,inst);
 
-#ifdef DIEDIEDIE
-  /* perform the 'presolve' on the external relations, whatever that means */
-  if( (ep=slv_get_extrel_list(sys))!=NULL ) {
-    for( i = 0; ep[i]!=NULL; i++ ) {
-      /* each item in the list is a 'struct ExtRelCache *' */
-      ExtRel_PreSolve(ep[i],FALSE);
-    }
-  }
-#endif /*DIEDIEDIE*/
-
 #if DOTIME
   FPRINTF(stderr,"Time to build system = %g\n", (tm_cpu_time() - comptime));
 #endif
@@ -109,60 +95,28 @@ slv_system_t system_build(SlvBackendToken inst){
 }
 
 void system_destroy(slv_system_t sys){
-  struct var_variable **vp, **pp, **up;
-  struct dis_discrete **dp, **udp;
-  struct rel_relation **rp, **crp;
-  struct rel_relation **op;
-  struct logrel_relation **lp, **clp;
-  struct bnd_boundary **bp;
-  struct w_when **wp;
-#ifdef DIEDIEDIE
-  int i;
-  struct ExtRelCache **ep;
-#endif
-  struct gl_list_t *symbollist;
-  if((vp=slv_get_master_var_list(sys))!=NULL        )ascfree(vp);
-  if((pp=slv_get_master_par_list(sys))!=NULL        )ascfree(pp);
-  if((up=slv_get_master_unattached_list(sys))!=NULL )ascfree(up);
-  if((dp=slv_get_master_dvar_list(sys))!=NULL       )ascfree(dp);
-  if((udp=slv_get_master_disunatt_list(sys))!=NULL  )ascfree(udp);
-  if((rp=slv_get_master_rel_list(sys))!=NULL        )ascfree(rp);
-  if((crp=slv_get_master_condrel_list(sys))!=NULL   )ascfree(crp);
-  if((op=slv_get_master_obj_list(sys))!=NULL        )ascfree(op);
-  if((lp=slv_get_master_logrel_list(sys))!=NULL     )ascfree(lp);
-  if((clp=slv_get_master_condlogrel_list(sys))!=NULL)ascfree(clp);
-  if((wp=slv_get_master_when_list(sys))!=NULL       )ascfree(wp);
-  if((bp=slv_get_master_bnd_list(sys))!=NULL        )ascfree(bp);
-  if((vp=slv_get_solvers_var_list(sys))!=NULL       )ascfree(vp);
-  if((pp=slv_get_solvers_par_list(sys))!=NULL       )ascfree(pp);
-  if((up=slv_get_solvers_unattached_list(sys))!=NULL)ascfree(up);
-  if((dp=slv_get_solvers_dvar_list(sys))!=NULL      )ascfree(dp);
-  if((udp=slv_get_solvers_disunatt_list(sys))!=NULL )ascfree(udp);
-  if((rp=slv_get_solvers_rel_list(sys))!=NULL       )ascfree(rp);
-  if((crp=slv_get_solvers_condrel_list(sys))!=NULL  )ascfree(crp);
-  if((op=slv_get_solvers_obj_list(sys))!=NULL       )ascfree(op);
-  if((lp=slv_get_solvers_logrel_list(sys))!=NULL    )ascfree(lp);
-  if((clp=slv_get_solvers_condlogrel_list(sys))!=NULL)ascfree(clp);
-  if((wp=slv_get_solvers_when_list(sys))!=NULL      )ascfree(wp);
-  if((bp=slv_get_solvers_bnd_list(sys))!=NULL       )ascfree(bp);
+	struct gl_list_t *symbollist;
+	void *l;
 
-  symbollist=slv_get_symbol_list(sys);
-  if(symbollist != NULL) {
-    DestroySymbolValuesList(symbollist);
-  }
+#define FN(FUNCNAME) \
+		l=(void*)FUNCNAME(sys); if(l!=NULL)ASC_FREE(l);
+#define F(N) FN(slv_get_master_##N##_list)
+	F(var); F(par); F(unattached); F(dvar); F(disunatt); F(rel);
+	F(condrel); F(obj); F(logrel); F(condlogrel); F(when); F(bnd);
+#undef F
 
-#ifdef DIEDIEDIE
-  if( (ep=slv_get_extrel_list(sys))!=NULL ) {	/* extrels */
-    for(i = 0; ep[i]; i++ ) {
-      ExtRel_PreSolve(ep[i],FALSE);		/* allow them to cleanup */
-      ExtRel_DestroyCache(ep[i]);
-    }
-    ascfree(ep);
-  }
-#endif
-  slv_set_solvers_blocks(sys,0,NULL);
-  slv_set_solvers_log_blocks(sys,0,NULL);	/* free blocks lists */
-  slv_destroy(sys);				/* frees buf data */
+#define F(N) FN(slv_get_solvers_##N##_list)
+	F(var); F(par); F(unattached); F(dvar); F(disunatt); F(rel);
+	F(condrel); F(obj); F(logrel); F(condlogrel); F(when); F(bnd);
+#undef F
+#undef FN
+
+	symbollist=slv_get_symbol_list(sys);
+	if(symbollist != NULL)DestroySymbolValuesList(symbollist);
+
+	slv_set_solvers_blocks(sys,0,NULL);
+	slv_set_solvers_log_blocks(sys,0,NULL);	/* free blocks lists */
+	slv_destroy(sys); /* frees buf data */
 }
 
 void system_free_reused_mem()

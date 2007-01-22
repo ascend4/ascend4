@@ -139,6 +139,7 @@ int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 			WriteInstanceName(ASCWAR,vip->i,prob->root);
 			FPRINTF(ASCERR,"' declared differential without derivative being identified (ode_id=%d)",vip->u.v.odeid);
 			error_reporter_end_flush();
+			return 3;
 		}
 		seq = ASC_NEW(SolverDiffVarSequence);
 		seq->n = i - seqstart + 1;
@@ -173,7 +174,7 @@ int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		continue;
 	}
 	
-	CONSOLE_DEBUG("Identified %ld derivative chains, maximum length %d...",ndiff,maxorder);
+	CONSOLE_DEBUG("Identified %ld derivative chains, maximum length %d...",gl_length(seqs),maxorder);
 
 	diffvars = ASC_NEW(SolverDiffVarCollection);
 	diffvars->maxorder = maxorder;
@@ -202,6 +203,8 @@ int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		diffvars->obs[i] = vip->u.v.data;
 	}
 	CONSOLE_DEBUG("Identified %ld obs vers",diffvars->nobs);
+
+	CONSOLE_DEBUG("There were %ld rels",prob->nr);
 
 	slv_set_diffvars(sys,(void *)diffvars);
 

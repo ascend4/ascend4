@@ -516,6 +516,7 @@ Simulation::build(){
 	CONSOLE_DEBUG("============== REALLY building system...");
 	sys = system_build(simroot.getInternalType());
 	if(!sys){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build system");
 		throw runtime_error("Unable to build system");
 	}
 	
