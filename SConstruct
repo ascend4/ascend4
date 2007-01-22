@@ -190,7 +190,7 @@ opts.Add(BoolOption(
 opts.Add(BoolOption(
 	'IDA_NEW_ANALYSE'
 	,"Build with new IDA 'analyse' function? (see base/generic/solver/ida.c)"
-	,False
+	,True
 ))
 
 #----- default paths -----
