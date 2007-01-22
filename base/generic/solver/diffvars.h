@@ -51,6 +51,10 @@
 #include "analyze.h"
 #include "slv_client.h"
 
+/**	@addtogroup analyse Analyse
+	@{
+*/
+
 /*------------------------------------------------------------------------------
   Stuff for retrieving differential and derivative variables from the system
 */

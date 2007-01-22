@@ -26,6 +26,10 @@
 
 #include "slv_server.h"
 
+/**	@addtogroup system System
+	@{
+*/
+
 /*-----------------------------------------------------------------------------
   DATA STRUCTURES FOR USE DURING PROBLEM ANALYSIS
 */
