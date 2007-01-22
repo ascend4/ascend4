@@ -833,13 +833,13 @@ Simulation::processVarStatus(){
 	int nvars = slv_get_num_solvers_vars(getSystem());
 
 	slv_status_t status;
-	slv_get_status(sys, &status);
+	if(slv_get_status(sys, &status))throw runtime_error("Unable to retrieve system status");
 
 	if(status.block.number_of == 0){
 		cerr << "Variable statuses can't be set: block structure not yet determined." << endl;
 		return;
 	}
-
+	
 	int activeblock = status.block.current_block;
 	int low = bb->block[activeblock].col.low;
 	int high = bb->block[activeblock].col.high;

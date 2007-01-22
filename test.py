@@ -512,8 +512,8 @@ class TestSteam(AscendSelfTester):
 #		M = self._run('testiapwssat1',filename='steam/iapwssat.a4c')
 
 	def testdsgsat(self):
-		self.L.load('steam/dsgsat2.a4c')
-		T = self.L.findType('dsgsat2')
+		self.L.load('steam/dsgsat3.a4c')
+		T = self.L.findType('dsgsat3')
 		M = T.getSimulation('sim',False)
 		M.run(T.getMethod('on_load'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
@@ -540,7 +540,7 @@ class TestSteam(AscendSelfTester):
 		M = self.testdsgsat()
 		self.assertAlmostEqual(M.dTw_dt[2],0.0)
 		Tw1 = float(M.T_w[2])
-		T = self.L.findType('dsgsat2')
+		T = self.L.findType('dsgsat3')
 		M.run(T.getMethod('free_states'))
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
@@ -552,8 +552,6 @@ class TestSteam(AscendSelfTester):
 		I.setMaxSubSteps(100)		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 100)
-		I.analyse()
-		I.solve()
 		I.analyse()
 		I.solve()
 		self.assertAlmostEqual(float(M.T_w[2]),Tw1)

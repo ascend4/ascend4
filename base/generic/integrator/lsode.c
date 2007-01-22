@@ -85,6 +85,7 @@ const IntegratorInternals integrator_lsode_internals = {
 	,integrator_analyse_ode /* note, this routine is back in integrator.c */
 	,integrator_lsode_solve
 	,integrator_lsode_write_matrix
+	,NULL /* debugfn */
 	,integrator_lsode_free
 	,INTEG_LSODE
 	,"LSODE"

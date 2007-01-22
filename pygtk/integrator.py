@@ -7,6 +7,8 @@ from varentry import *
 from preferences import *
 from integratorreporter import *
 from solverparameters import *
+from infodialog import *
+import tempfile
 
 class IntegratorError(RuntimeError):
 	def __init__(self,msg):
@@ -168,6 +170,16 @@ class IntegratorWindow:
 			except RuntimeError,e:
 				self.browser.reporter.reportError(str(e))
 				self.window.destroy()
+				if self.prefs.getBoolPref("Integrator","debuganalyse",True):
+					fp = tempfile.TemporaryFile()
+					self.integrator.writeDebug(fp)
+					fp.seek(0)
+					text = fp.read()
+					fp.close()
+					title = "Integrator Analysis Failed"
+					_dialog = InfoDialog(self.browser,self.browser.window,text,title,tabs=(70,200,300,400,500))
+					_dialog.run()					
+
 				return None							
 			# if we're all ok, create the reporter window and close this one
 			_integratorreporter = IntegratorReporterPython(self.browser,self.integrator)

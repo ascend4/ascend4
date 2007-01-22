@@ -203,6 +203,15 @@ typedef int IntegratorWriteMatrixFn(const struct IntegratorSystemStruct *blsys, 
 	specific Integrator.
 */
 
+typedef int IntegratorDebugFn(const struct IntegratorSystemStruct *blsys, FILE *fp);
+/**<
+	Write debug info. This will output free text to the specified file.
+	The intention is that this text would be read over by a developer to check
+	that the integrator is doing what is intended. We add it here so that
+	debugging features can accessed from the GUI if desired.
+	@return 0 on successful output.
+*/
+
 typedef void IntegratorFreeFn(void *enginedata);
 /**<
 	Integrators must provide a function like this that frees internal
@@ -215,6 +224,7 @@ typedef struct IntegratorInternalsStruct{
 	IntegratorAnalyseFn *analysefn;
 	IntegratorSolveFn *solvefn;
 	IntegratorWriteMatrixFn *writematrixfn;
+	IntegratorDebugFn *debugfn;
 	IntegratorFreeFn *freefn;
 	IntegratorEngine engine;
 	const char *name;
@@ -310,6 +320,12 @@ ASC_DLLSPEC int integrator_solve(IntegratorSystem *blsys, long i0, long i1);
 ASC_DLLSPEC int integrator_write_matrix(const IntegratorSystem *blsys, FILE *fp);
 /**<
 	Output 'the matrix' for the present integrator to file handle indicated.
+	What this will be depends on which integrator you are using.
+*/
+
+ASC_DLLSPEC int integrator_debug(const IntegratorSystem *blsys, FILE *fp);
+/**<
+	Output debug info for the present integrator to file handle indicated.
 	What this will be depends on which integrator you are using.
 */
 

@@ -6,8 +6,9 @@ import gtk.glade
 import time
 from varentry import *
 from preferences import *
-
+from infodialog import *
 from observer import *
+import tempfile
 
 # When writing this class, we assume that the integrator class has already had
 # its "analyse" method called, so we know all that stuff like the number of
@@ -32,13 +33,17 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.data = None
 
 		self.cancelrequested=False
-
+		
 	def run(self):
 		# run the dialog: start solution, monitor use events
 		try:
 			self.getIntegrator().solve()
+			if self.browser.prefs.getBoolPref("Integrator","debugonsuccess",True):
+				self.showDebug()
+
 		except RuntimeError,e:
 			self.browser.reporter.reportError("Integrator failed: %s" % e)
+
 			if self.browser.prefs.getBoolPref("Integrator","writeendmatrix",True):
 				if platform.system()=="Windows":
 					_deffn = "\\TEMP\\ascintegratormatrix.mtx"
@@ -55,6 +60,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 				finally:
 					_fp.close()
 		self.window.destroy()
+		
 		return
 
 	def on_cancelbutton_clicked(self,*args):

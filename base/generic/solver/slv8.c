@@ -1586,15 +1586,16 @@ static void slv8_set_parameters(slv_system_t server, SlvClientToken asys,
 }
 
 
-static void slv8_get_status(slv_system_t server, SlvClientToken asys,
+static int slv8_get_status(slv_system_t server, SlvClientToken asys,
                             slv_status_t *status)
 {
-  slv8_system_t sys;
-  (void)server;  /* stop gcc whine about unused parameter */
+	slv8_system_t sys;
+	(void)server;  /* stop gcc whine about unused parameter */
 
-  sys = SLV8(asys);
-  if (check_system(sys)) return;
-  mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
+	sys = SLV8(asys);
+	if (check_system(sys)) return 1;
+	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
+	return 0;
 }
 
 
