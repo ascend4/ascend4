@@ -37,10 +37,12 @@ class Plot : public Instanc{
 
 private:
 	friend class Instanc;
-	Plot(const Instanc &);
-	
+	explicit Plot(const Instanc &);
+	Plot();
 public:
-	
+	Plot(const Plot &plot);	
+	Plot &operator=(const Plot &old);
+
 	const std::string getTitle() const;
 	const std::string getXLabel() const;
 	const std::string getYLabel() const;

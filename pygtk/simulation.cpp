@@ -64,10 +64,6 @@ extern "C"{
 #include "solverreporter.h"
 #include "matrix.h"
 
-Simulation::Simulation(){
-	throw runtime_error("Can't create Simulation without arguments");
-}
-
 /**
 	Create an instance of a type (call compiler etc)
 

@@ -1,7 +1,7 @@
 #include "curve.h"
 
 #include <compiler/plot.h>
-
+#include <stdexcept>
 using namespace std;
 
 Curve::Curve(const Instanc &i) : Instanc(i){
@@ -23,13 +23,20 @@ Curve::Curve(const Instanc &i) : Instanc(i){
 	}
 }
 
+Curve::Curve(){
+	throw runtime_error("not allowed");
+}
+
 Curve::Curve(const Curve &old) : Instanc(old.getInternalType()){
 	x = old.x;
 	y = old.y;
 }
 
-Curve::Curve(){
-	throw runtime_error("Explicit empty curve");
+Curve &
+Curve::operator=(const Curve &old){
+	this->x = old.x;
+	this->y = old.y;
+	return *this;
 }
 
 const string

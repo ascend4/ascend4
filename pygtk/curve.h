@@ -8,17 +8,17 @@
 #include "instance.h"
 
 class Curve : public Instanc{
-
+	friend class std::vector<Curve>;
 private:
 	friend class Plot;
-	Curve(const Instanc &);	
-public:
+	explicit Curve(const Instanc &);	
 	Curve();
+public:
 	Curve(const Curve &);
+	Curve &operator=(const Curve &old);
 	std::vector<double> x;
 	std::vector<double> y;
 	const std::string getLegend() const;
-
 };
 
 #endif

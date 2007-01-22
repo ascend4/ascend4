@@ -615,5 +615,8 @@ METHODS
 		RUN nodes[0..nstep*npoint].your_model.values;
 		RUN integral.values;
 	END values;
+	METHOD on_load;
+		RUN reset; RUN default_self; RUN values;
+	END on_load;
 END bvp_test;
 (* :ex: set ts=4: *)

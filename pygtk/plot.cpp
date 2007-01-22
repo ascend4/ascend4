@@ -2,7 +2,7 @@
 #include "curve.h"
 
 #include <compiler/plot.h>
-
+#include <stdexcept>
 #include <iostream>
 using namespace std;
 
@@ -16,6 +16,20 @@ Plot::Plot(const Instanc &i) : Instanc(i){
 	for(cci=cc.begin();cci<cc.end(); ++cci){
 		curves.push_back( Curve(*cci) );
 	}
+}
+
+Plot::Plot(){
+	throw runtime_error("Not allowed");
+}
+
+Plot &
+Plot::operator=(const Plot &old){
+	this->curves = old.curves;
+	return *this;
+}
+
+Plot::Plot(const Plot &old) : Instanc(old.i), curves(old.curves){
+	//nothing
 }
 
 const string

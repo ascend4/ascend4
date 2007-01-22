@@ -4,23 +4,7 @@ SWIG interface for plotting from ASCEND
 
 */
 
-
-class Plot : public Instanc{
-	
-public:
-	const std::string getTitle() const;
-	const std::string getXLabel() const;
-	const std::string getYLabel() const;
-	const bool isXLog() const;
-	const bool isYLog() const;
-	const double getXLow() const;
-	const double getXHigh() const;
-	const double getYLow() const;
-	const double getYHigh() const;
-	
-	std::vector<Curve> curves;
-};
-
+%include "plot.h"
 
 %extend Plot{
 	%pythoncode{
