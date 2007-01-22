@@ -833,8 +833,11 @@ Simulation::processVarStatus(){
 	int nvars = slv_get_num_solvers_vars(getSystem());
 
 	slv_status_t status;
-	if(slv_get_status(sys, &status))throw runtime_error("Unable to retrieve system status");
-
+	if(slv_get_status(sys, &status)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to update var status (get_status returns error)");
+		return;
+	}
+	
 	if(status.block.number_of == 0){
 		cerr << "Variable statuses can't be set: block structure not yet determined." << endl;
 		return;
@@ -863,6 +866,5 @@ Simulation::processVarStatus(){
 	}
 
 	CONSOLE_DEBUG(" ...done var status");
-
 }
 
