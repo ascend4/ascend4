@@ -55,7 +55,7 @@
 #ifndef ASC_VAR_H
 #define ASC_VAR_H
 
-/**	@addtogroup solver Solver
+/**	@addtogroup system System
 	@{
 */
 

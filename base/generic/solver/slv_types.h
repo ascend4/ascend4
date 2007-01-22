@@ -43,7 +43,7 @@
 #ifndef ASC_SLV_TYPES_H
 #define ASC_SLV_TYPES_H
 
-/**	@addtogroup solver Solver
+/**	@addtogroup system System
 	@{
 */
 

@@ -35,7 +35,7 @@
 #include "logrel.h"
 
 
-/**	@addtogroup solver Solver
+/**	@addtogroup analyse Analyse
 	@{
 */
 

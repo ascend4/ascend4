@@ -43,9 +43,7 @@
 	and var and analyze modules.
 *//*
 	by Benjamin Andrew Allan 5/19/96
-	Version: $Revision: 1.10 $
-	Date last modified: $Date: 1997/07/18 12:13:50 $
-	Last modified by: $Author: mthomas $
+	Last in CVS: $Revision: 1.10 $ $Date: 1997/07/18 12:13:50 $ $Author: mthomas $
 */
 
 #ifndef ASC_ANALYZE_H

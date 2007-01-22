@@ -36,7 +36,7 @@
 #include "rel.h"
 #include "logrel.h"
 
-/**	@addtogroup solver Solver
+/**	@addtogroup system System
 	@{
 */
 

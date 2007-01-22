@@ -23,7 +23,7 @@
 #ifndef ASC_INCIDENCE_H
 #define ASC_INCIDENCE_H
 
-/**	@addtogroup solver Solver
+/**	@addtogroup system System
 	@{
 */
 

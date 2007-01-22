@@ -48,7 +48,7 @@
 #include "slv_types.h"
 #include "var.h"
 
-/**	@addtogroup solver Solver
+/**	@addtogroup system System
 	@{
 */
 

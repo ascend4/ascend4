@@ -35,7 +35,7 @@
 
 #include "slv_types.h"
 
-/**	@addtogroup solver Solver
+/**	@addtogroup system System
 	@{
 */
 
