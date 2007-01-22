@@ -1126,7 +1126,7 @@ int slv9a_register(SlvFunctionsT *sft)
   sft->cdestroy = slv9a_destroy;
   sft->celigible = slv9a_eligible_solver;
   sft->getdefparam = slv9a_get_default_parameters;
-  sft->getparam = slv9a_get_parameters;
+  sft->get_parameters = slv9a_get_parameters;
   sft->setparam = slv9a_set_parameters;
   sft->getstatus = slv9a_get_status;
   sft->solve = slv9a_solve;
@@ -1135,7 +1135,7 @@ int slv9a_register(SlvFunctionsT *sft)
   sft->resolve = slv9a_resolve;
   sft->getlinsol = NULL;
   sft->getlinsys = NULL;
-  sft->getsysmtx = slv9a_get_structural_matrix;
+  sft->get_sys_mtx = slv9a_get_structural_matrix;
   sft->dumpinternals = slv9a_dump_internals;
   return 0;
 }

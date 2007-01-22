@@ -1458,7 +1458,7 @@ int32 slv_get_default_parameters(int sindex,
 		SF(sys,PROP)(sys,sys->ct, PARAMNAME); \
 	}
 
-DEFINE_SLV_PROXY_METHOD_PARAM(get_parameters,getparam,slv_parameters_t*,parameters) /*;*/
+DEFINE_SLV_PROXY_METHOD_PARAM(get_parameters,get_parameters,slv_parameters_t*,parameters) /*;*/
 
 void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
 {
@@ -1485,7 +1485,7 @@ DEFINE_SLV_PROXY_METHOD_PARAM(dump_internals,dumpinternals,int,level) /*;*/
 DEFINE_SLV_PROXY_METHOD(get_linsol_sys, getlinsol, linsol_system_t, NULL) /*;*/
 DEFINE_SLV_PROXY_METHOD(get_linsolqr_sys, getlinsys, linsolqr_system_t, NULL) /*;*/
 
-DEFINE_SLV_PROXY_METHOD(get_sys_mtx, getsysmtx, mtx_matrix_t, NULL) /*;*/
+DEFINE_SLV_PROXY_METHOD(get_sys_mtx, get_sys_mtx, mtx_matrix_t, NULL) /*;*/
 DEFINE_SLV_PROXY_METHOD(presolve,presolve,int,-1) /*;*/
 DEFINE_SLV_PROXY_METHOD(resolve,resolve,int,-1) /*;*/
 DEFINE_SLV_PROXY_METHOD(iterate,iterate,int,-1) /*;*/

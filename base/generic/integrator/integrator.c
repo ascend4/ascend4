@@ -407,7 +407,7 @@ int integrator_analyse(IntegratorSystem *sys){
 
 	if(!sys->indepvars || !gl_length(sys->indepvars)){
 		if(integrator_find_indep_var(sys)){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"No independent variable found: abandoning integration");
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Independent variable problem: abandoning integration");
 			return 2;
 		}else{
 			CONSOLE_DEBUG("got 0 from  integrator_find_indep_var");

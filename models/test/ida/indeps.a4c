@@ -1,0 +1,41 @@
+REQUIRE "ivpsystem.a4l";
+
+(* no indep var *)
+MODEL indepsfail1;
+	y IS_A solver_var;	dy_dt IS_A solver_var;
+	x IS_A solver_var;	dx_dt IS_A solver_var;
+	t IS_A solver_var;
+
+	dy_dt = exp(-t^2);
+	dx_dt = -y;
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+
+		x.ode_id := 2; x.ode_type := 1;
+		dx_dt.ode_id := 2; dx_dt.ode_type := 2;
+	END on_load;
+END indepsfail1;
+
+(* two indep vars *)
+MODEL indepsfail2;
+	y IS_A solver_var;	dy_dt IS_A solver_var;
+	x IS_A solver_var;	dx_dt IS_A solver_var;
+	t IS_A solver_var;
+	t2 IS_A solver_var;
+
+	dy_dt = exp(-t^2);
+	dx_dt = -y;
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+
+		x.ode_id := 2; x.ode_type := 1;
+		dx_dt.ode_id := 2; dx_dt.ode_type := 2;
+
+		t.ode_type := -1;
+		t2.ode_type := -1;
+	END on_load;
+END indepsfail2;

@@ -1642,7 +1642,7 @@ int slv6_register(SlvFunctionsT *sft)
   sft->ccreate = slv6_create;
   sft->cdestroy = slv6_destroy;
   sft->celigible = slv6_eligible_solver;
-  sft->getparam = slv6_get_parameters;
+  sft->get_parameters = slv6_get_parameters;
   sft->setparam = slv6_set_parameters;
   sft->getstatus = slv6_get_status;
   sft->solve = slv6_solve;
@@ -1651,7 +1651,7 @@ int slv6_register(SlvFunctionsT *sft)
   sft->resolve = slv6_resolve;
   sft->getlinsol = NULL;
   sft->getlinsys = NULL;
-  sft->getsysmtx = slv6_get_jacobian;
+  sft->get_sys_mtx = slv6_get_jacobian;
   sft->dumpinternals = slv6_dump_internals;
   return 0;
 }

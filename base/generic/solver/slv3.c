@@ -4222,7 +4222,7 @@ int slv3_register(SlvFunctionsT *sft){
   sft->cdestroy = slv3_destroy;
   sft->celigible = slv3_eligible_solver;
   sft->getdefparam = slv3_get_default_parameters;
-  sft->getparam = slv3_get_parameters;
+  sft->get_parameters = slv3_get_parameters;
   sft->setparam = slv3_set_parameters;
   sft->getstatus = slv3_get_status;
   sft->solve = slv3_solve;
@@ -4231,7 +4231,7 @@ int slv3_register(SlvFunctionsT *sft){
   sft->resolve = slv3_resolve;
   sft->getlinsol = NULL;
   sft->getlinsys = slv3_get_linsolqr_sys;
-  sft->getsysmtx = slv3_get_jacobian;
+  sft->get_sys_mtx = slv3_get_jacobian;
   sft->dumpinternals = slv3_dump_internals;
   return 0;
 }

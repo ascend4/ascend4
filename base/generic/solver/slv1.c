@@ -2587,7 +2587,7 @@ int slv1_register(SlvFunctionsT *sft)
   sft->ccreate = slv1_create;
   sft->cdestroy = slv1_destroy;
   sft->celigible = slv1_eligible_solver;
-  sft->getparam = slv1_get_parameters;
+  sft->get_parameters = slv1_get_parameters;
   sft->setparam = slv1_set_parameters;
   sft->getstatus = slv1_get_status;
   sft->solve = slv1_solve;
@@ -2596,7 +2596,7 @@ int slv1_register(SlvFunctionsT *sft)
   sft->resolve = slv1_resolve;
   sft->getlinsol = slv1_get_linsol_sys;
   sft->getlinsys = NULL;
-  sft->getsysmtx = slv1_get_jacobian;
+  sft->get_sys_mtx = slv1_get_jacobian;
   sft->dumpinternals = slv1_dump_internals;
   return 0;
 }

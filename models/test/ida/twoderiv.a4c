@@ -1,0 +1,90 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL twoderiv;
+	y IS_A solver_var;	dy_dt IS_A solver_var;
+	x IS_A solver_var;	dx_dt IS_A solver_var;
+	t IS_A solver_var;
+
+	dy_dt = exp(-t^2);
+	dx_dt = -y;
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+
+		x.ode_id := 2; x.ode_type := 1;
+		dx_dt.ode_id := 2; dx_dt.ode_type := 2;
+
+		t.ode_type:= -1;
+	END on_load;
+END twoderiv;
+
+(* duplicate ode_id on x & dx_dt *)
+MODEL twoderivfail1 REFINES twoderiv;
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+
+		x.ode_id := 1; x.ode_type := 1;
+		dx_dt.ode_id := 1; dx_dt.ode_type := 2;
+
+		t.ode_type:= -1;
+	END on_load;
+END twoderivfail1;
+
+(* missing lowest deriv on y, dy_dt *)
+MODEL twoderivfail2 REFINES twoderiv;
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 2;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 3;
+
+		x.ode_id := 2; x.ode_type := 1;
+		dx_dt.ode_id := 2; dx_dt.ode_type := 2;
+
+		t.ode_type:= -1;
+	END on_load;
+END twoderivfail2;
+
+(* missing lowest deriv on x,dx_dt *)
+MODEL twoderivfail3 REFINES twoderiv;
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+
+		x.ode_id := 2; x.ode_type := 2;
+		dx_dt.ode_id := 2; dx_dt.ode_type := 3;
+
+		t.ode_type:= -1;
+	END on_load;
+END twoderivfail3;
+
+(* skipping deriv on dy_dt *)
+MODEL twoderivfail4 REFINES twoderiv;
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 3;
+
+		x.ode_id := 2; x.ode_type := 1;
+		dx_dt.ode_id := 2; dx_dt.ode_type := 2;
+
+		t.ode_type:= -1;
+	END on_load;
+END twoderivfail4;
+
+(* skipping deriv on dx_dt *)
+MODEL twoderivfail5 REFINES twoderiv;
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+
+		x.ode_id := 2; x.ode_type := 1;
+		dx_dt.ode_id := 2; dx_dt.ode_type := 3;
+
+		t.ode_type:= -1;
+	END on_load;
+END twoderivfail5;

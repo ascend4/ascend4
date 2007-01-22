@@ -1,0 +1,50 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL fixedvars;
+	y IS_A solver_var;	dy_dt IS_A solver_var;
+	x IS_A solver_var;	dx_dt IS_A solver_var;
+	t IS_A solver_var;
+
+	dy_dt = exp(-t^2);
+	dx_dt = -y;
+METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+
+		x.ode_id := 2; x.ode_type := 1;
+		dx_dt.ode_id := 2; dx_dt.ode_type := 2;
+
+		t.ode_type:= -1;
+
+		RUN reset;
+	END on_load;
+	METHOD specify;
+		(* nothing here *)
+	END specify;
+END twoderiv;
+
+(* fix y and dy_dt should become inactive. add z so that problem remains square *)
+MODEL fixedvars1 REFINES fixedvars;
+	z IS_A solver_var;
+METHODS
+	METHOD specify;
+		FIX y;
+	END specify;
+END twoderiv;
+
+(* fix dy_dt and problem goes to x,dx_dt,y *)
+MODEL fixedvars2 REFINES fixedvars;
+METHODS
+	METHOD specify;
+		FIX dy_dt;
+	END specify;
+END twoderiv;
+
+(* fix dx_dt and problem goes to y,dy_dt,x *)
+MODEL fixedvars3 REFINES fixedvars;
+METHODS
+	METHOD specify;
+		FIX dx_dt;
+	END specify;
+END twoderiv;

@@ -3440,7 +3440,7 @@ int slv0_register(SlvFunctionsT *sft)
   sft->ccreate = slv0_create;
   sft->cdestroy = slv0_destroy;
   sft->celigible = slv0_eligible_solver;
-  sft->getparam = slv0_get_parameters;
+  sft->get_parameters = slv0_get_parameters;
   sft->setparam = slv0_set_parameters;
   sft->getstatus = slv0_get_status;
   sft->solve = slv0_solve;
@@ -3449,7 +3449,7 @@ int slv0_register(SlvFunctionsT *sft)
   sft->resolve = slv0_resolve;
   sft->getlinsol = slv0_get_linsol_sys;
   sft->getlinsys = NULL;
-  sft->getsysmtx = slv0_get_jacobian;
+  sft->get_sys_mtx = slv0_get_jacobian;
   sft->dumpinternals = slv0_dump_internals;
   return 0;
 }
