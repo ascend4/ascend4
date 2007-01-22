@@ -102,6 +102,14 @@ int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	/* scan the list for derivs that are missing vars */
 	i = 1; cont = TRUE; seqstart =1; ndiff = 0;
 	vip = (struct solver_ipdata *)gl_fetch(prob->diffvars,i);
+	if(vip->u.v.deriv > 1){
+		ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+		FPRINTF(ASCERR,"Missing ode_type %d for ode_id %d (check var '",vip->u.v.deriv+1,vip->u.v.odeid);
+		WriteInstanceName(ASCWAR,vip->i,prob->root);
+		FPRINTF(ASCERR,"')");
+		error_reporter_end_flush();
+		return 2;
+	}
 	while(cont){
 		/* CONSOLE_DEBUG("Working, seqstart=%ld",seqstart); */
 		if(i >= gl_length(prob->diffvars))cont = FALSE;

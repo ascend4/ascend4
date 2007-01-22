@@ -631,59 +631,65 @@ if with_freesteam and have_freesteam:
 # Testing of IDA's analysis module
 
 class TestIDA(Ascend):
-	def _run(self,filen,modeln):
-		self.L.load(filen)
-		T = self.L.findType(modeln)
+	def _run(self,filen,modeln=""):
+		self.L.load('test/ida/%s.a4c' % filen)
+		T = self.L.findType('%s%s' % (filen,modeln))
 		M = T.getSimulation('sim')
 		M.build()
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.analyse()
 
+	def _runfail(self,filen,n,msg="failed"):
+		try:
+			self._run(filen,'fail%d' % n)
+		except Exception,e:
+			print "(EXPECTED) ERROR: %s" % e
+			return
+		self.fail(msg)
+
 	def testsinglederiv(self):
-		self._run('test/ida/singlederiv.a4c','singlederiv')
+		self._run('singlederiv')
 
 	def testsinglederivfail1(self):
-		try:
-			self._run('test/ida/singlederiv.a4c','singlederivfail1')
-		except:
-			return
-		self.fail("t.ode_id=-1 did not trigger error")
-	
+		self._runfail('singlederiv',1
+			,"t.ode_id=-1 did not trigger error")
+
 	def testsinglederivfail2(self):
-		try:
-			self._run('test/ida/singlederiv.a4c','singlederivfail2')
-		except:
-			return
-		self.fail("dy_dt.ode_id=2 did not trigger error")
+		self._runfail('singlederiv',2
+			,"dy_dt.ode_id=2 did not trigger error")
 
 	def testsinglederivfail3(self):
-		try:
-			self._run('test/ida/singlederiv.a4c','singlederivfail3')
-		except:
-			return
-		self.fail("dy_dt.ode_type=3 did not trigger error")
+		self._runfail('singlederiv',3
+			,"dy_dt.ode_type=3 did not trigger error")
 
 	def testsinglederivfail4(self):
-		try:
-			self._run('test/ida/singlederiv.a4c','singlederivfail4')
-		except:
-			return
-		self.fail("duplicate ode_type=1 did not trigger error")
+		self._runfail('singlederiv',4
+			,"duplicate ode_type=1 did not trigger error")
 
 	def testsinglederivfail5(self):
-		try:
-			self._run('test/ida/singlederiv.a4c','singlederivfail5')
-		except:
-			return
-		self.fail("duplicate ode_type=1 did not trigger error")
+		self._runfail('singlederiv',5
+			,"duplicate ode_type=1 did not trigger error")
 
 	def testsinglederivfail6(self):
-		try:
-			self._run('test/ida/singlederiv.a4c','singlederivfail6')
-		except:
-			return
-		self.fail("duplicate ode_type=1 did not trigger error")
+		self._runfail('singlederiv',6
+			,"duplicate ode_type=1 did not trigger error")
+
+	def testtwoderiv(self):
+		self._run('twoderiv')
+
+	def testtwoderivfail1(self):
+		self._runfail('twoderiv',1)
+
+	def testtwoderivfail2(self):
+		self._runfail('twoderiv',2)
+
+	def testtwoderivfail3(self):
+		self._runfail('twoderiv',3)
+	def testtwoderivfail4(self):
+		self._runfail('twoderiv',4)
+	def testtwoderivfail5(self):
+		self._runfail('twoderiv',5)
 
 #-------------------------------------------------------------------------------
 # Testing of IDA models using DENSE linear solver
