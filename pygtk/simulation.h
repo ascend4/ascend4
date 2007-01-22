@@ -75,7 +75,6 @@ private:
 
 protected:
 	slv_system_structure *getSystem();
-	Simulation();
 
 public:
 	explicit Simulation(Instance *i, const SymChar &name);

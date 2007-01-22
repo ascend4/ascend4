@@ -99,6 +99,7 @@ METHODS
 
 	METHOD on_load;
 		RUN reset;
+		RUN default_self;
 	END on_load;
 
 END plotbvp;

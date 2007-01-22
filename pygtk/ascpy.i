@@ -543,9 +543,7 @@ void shutdown(){
 
 %include "plot.i"
 
-class Curve : public Instanc{
-public:
-	std::vector<double> x;
-	std::vector<double> y;
-	const std::string getLegend() const;
-};
+%ignore Curve::Curve();
+
+%include "curve.h"
+

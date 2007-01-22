@@ -70,8 +70,8 @@ Instanc::Instanc(const Instanc&old) : i(old.i), name(old.name){
 	// nothing else
 }
 
-Instanc::Instanc() : name("unnamed2"){
-	throw runtime_error("Can't construct empty instances");
+Instanc::Instanc() : i(NULL), name("unnamed0"){
+	// nothing else
 }
 
 /*
@@ -588,7 +588,7 @@ Instanc::getChild(const long &index) const{
 	InstanceIntIndex(n) = index;
 	long childindex = ChildSearch(i,&n);
 	if(childindex){
-    	return InstanceChild(i,childindex);
+    	return Instanc(InstanceChild(i,childindex));
 	}
 	stringstream ss;
 	ss << "Invalid child index '" << index << "' for instance '" << getName() << "'";

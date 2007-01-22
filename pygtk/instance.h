@@ -60,7 +60,7 @@ typedef enum{
 	this in the mailing list.
 */
 class Instanc{
-private:
+protected:
 	struct Instance *i;
 	SymChar name;
 	std::vector<Instanc> children;
