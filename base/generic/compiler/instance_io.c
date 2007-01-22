@@ -252,10 +252,9 @@ char *WritePathString(CONST struct gl_list_t *path)
   INSTANCE NAME OUTPUTTERS
 */
 
-int WriteInstanceName(FILE *f,
-		      CONST struct Instance *i,
-		      CONST struct Instance *ref)
-{
+int WriteInstanceName(FILE *f
+	, CONST struct Instance *i, CONST struct Instance *ref
+){
   struct gl_list_t *path;
   int count;
   /*if (i==ref && i !=NULL) {

@@ -62,6 +62,8 @@
 	@{
 */
 
+struct problem_t;
+
 /** Used to give an integer value to each symbol used in a when */
 struct SymbolValues {
   char *name;
@@ -81,51 +83,6 @@ extern void analyze_free_reused_mem(void);
 /**< 
 	Resets all internal memory recycles.
 */
-
-/*------------------------------------------------------------------------------
-  Stuff for retrieving differential and derivative variables from the system
-*/
-
-/**
-	Structure that holds a differential variable and the sequence of
-	its derivatives as found explicity in the model.
-
-	For example,
-	  - x, dx/dt
-*/
-typedef struct SolverDiffVarSequenceStruct{
-	long ode_id;
-	short n;
-	struct var_variable **vars; /* will be in order of ascending ode_type, starting from 1 */
-} SolverDiffVarSequence;
-
-/**
-	Array of diff var sequences. Once generated, this will hold all of the 
-	This would hold all of the differential and derivative variables found
-	in the system. For example, with each row being a SolverDiffVarSequence:
-	  - y, dy/dt, d2y/dt2
-	  - x, dx/dt
-      - z, dz/dt
-*/
-typedef struct SolverDiffVarCollectionStruct{
-	SolverDiffVarSequence *diff;
-	long ndiff;
-	struct var_variable **algeb;
-	long nalgeb;
-	struct var_variable **indep;
-	long nindep;
-	struct var_variable **obs;
-	long nobs;
-	long maxorder;
-} SolverDiffVarCollection;
-
-#ifdef ASC_IDA_NEW_ANALYSE
-/**
-	Return the SolverDiffVarCollection for the system. You *don't* own the
-	returned list -- it belongs to the slv_system_t.
-*/
-extern const SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys);
-#endif
 
 /*------------------------------------------------------------------------------
 	These routines are in use elsewhere in the solver directory, but we want

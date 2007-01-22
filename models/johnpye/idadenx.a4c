@@ -45,6 +45,7 @@ END specify;
 METHOD ode_init;
 	FREE y1, y2;
 	t.ode_type := -1; t := 0 {s};
+
 	dy1_dt.ode_id := 1; dy1_dt.ode_type := 2;
 	y1.ode_id := 1; y1.ode_type := 1;
 

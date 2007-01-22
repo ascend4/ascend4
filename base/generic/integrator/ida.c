@@ -65,7 +65,7 @@
 #include <solver/slv_client.h>
 #include <solver/relman.h>
 #ifdef ASC_IDA_NEW_ANALYSE
-# include <solver/analyze.h>
+# include <solver/diffvars.h>
 # include <solver/slv_stdcalls.h>
 #endif
 
@@ -451,8 +451,8 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	struct rel_relation **solversrels;
 	unsigned long nsolversrels;
 	const SolverDiffVarCollection *diffvars;
-	long i, n_y, n_ydot;
-	var_filter_t vfilt;
+	SolverDiffVarSequence seq;
+	long i, j, n_y, n_ydot, n_dyn;
 
 	struct var_variable *v;
 	char *varname;
@@ -480,7 +480,7 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	diffvars = slv_get_diffvars(sys->system);
 	asc_assert(diffvars!=NULL);
 
-	CONSOLE_DEBUG("Got %ld diffvars",diffvars->ndiff);
+	CONSOLE_DEBUG("Got %ld chains",diffvars->nseqs);
 	
 	if(diffvars->maxorder > 2){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
@@ -490,44 +490,82 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 		);
 		return 1;
 	};
-	
+
+	n_dyn = diffvars->nalg + 2 * diffvars->ndiff;
+
 	/* set up the dynamic problem */
 	CONSOLE_DEBUG("Setting up the dynamic problem");
 
 	asc_assert(sys->y == NULL);
 
-	sys->y = ASC_NEW_ARRAY(struct var_variable *,diffvars->nalgeb + diffvars->ndiff);
-	sys->ydot = ASC_NEW_ARRAY(struct var_variable *,diffvars->nalgeb + diffvars->ndiff);
+	sys->y = ASC_NEW_ARRAY(struct var_variable *,diffvars->nalg + diffvars->ndiff);
+	sys->ydot = ASC_NEW_ARRAY(struct var_variable *,diffvars->nalg + diffvars->ndiff);
+	sys->y_id = ASC_NEW_ARRAY(long,n_dyn);
 	n_y = 0;
+
+	/* initialise y_id to n_dyn (i.e. off limits) */
+	for(i=0;i<n_dyn;++i){
+		sys->y_id[i] = n_dyn;
+	}                 
 	
-	/* add the algebraics */
-	for(i=0; i<diffvars->nalgeb; ++i){
-		v = diffvars->algeb[i];
-		varname = var_make_name(sys->system,v);
-		if(var_apply_filter(v,&vfilt)){
+	for(i=0; i<diffvars->nseqs; ++i){
+		seq = diffvars->seqs[i];
+		asc_assert(seq.n >= 1);
+		if(seq.n == 1){
+			v = seq.vars[0];
+			varname = var_make_name(sys->system,v);
+			if(var_fixed(v)){
+				CONSOLE_DEBUG("'%s' is fixed",varname);
+				ASC_FREE(varname);
+				continue;
+			}
 			CONSOLE_DEBUG("'%s' is algebraic",varname);
-			sys->y[n_y] = v;
-			sys->ydot[n_y] = NULL;
-			n_y++;
+		}else{
+			v = seq.vars[0];
+			varname = var_make_name(sys->system,v);
+			asc_assert(var_active(v));
+			if(var_fixed(v)){
+				CONSOLE_DEBUG("Differential var '%s' is fixed",varname);
+				ASC_FREE(varname);
+				for(j=1; j<seq.n; ++j){
+					v = seq.vars[j];
+					varname = var_make_name(sys->system,v);
+					var_set_active(v,FALSE);
+					var_set_value(v,0);
+					CONSOLE_DEBUG("Derivative '%s' set inactive",varname);
+					ASC_FREE(varname);
+				}
+				continue;
+			}else if(var_fixed(seq.vars[1])){
+				CONSOLE_DEBUG("Derivative of var '%s' is fixed; converting to algebraic",varname);
+			}else{
+				/* seq.n > 1, var is not fixed, deriv is not fixed */
+				asc_assert(var_active(seq.vars[1]));
+				asc_assert(seq.n == 2);
+				sys->y[n_y] = v;
+				sys->y_id[var_sindex(v)] = n_y;
+				CONSOLE_DEBUG("'%s' is differential",varname);
+				ASC_FREE(varname);
+				v = seq.vars[1];
+				sys->ydot[n_y] = v;
+				sys->y_id[var_sindex(v)] = -n_y-1;
+				varname = var_make_name(sys->system,v);
+				CONSOLE_DEBUG("'%s' is derivative",varname);
+				ASC_FREE(varname);
+				n_y++;
+				continue;
+			}
 		}
+		/* fall through: v is algebraic */
 		ASC_FREE(varname);
-	}
-	/* add the differentials */
-	for(i=0; i<diffvars->ndiff; ++i){
-		asc_assert(diffvars->diff[i].n == 2);
-		sys->y[n_y] = diffvars->diff[i].vars[0];
-		varname = var_make_name(sys->system,sys->y[n_y]);
-		CONSOLE_DEBUG("'%s' is differential",varname);
-		ASC_FREE(varname);
-		sys->ydot[n_y] = diffvars->diff[i].vars[1];
-		varname = var_make_name(sys->system,sys->ydot[n_y]);
-		CONSOLE_DEBUG("'%s' is derivative",varname);
-		ASC_FREE(varname);
+		sys->y[n_y] = v;
+		sys->ydot[n_y] = NULL;
+		sys->y_id[var_sindex(v)]=n_y;
 		n_y++;
+		continue;
 	}
 	sys->n_y = n_y;
 	n_ydot = n_y;
-	asc_assert(n_y == diffvars->nalgeb + diffvars->ndiff);
 
 	if(sys->n_y != nsolversrels){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square: n_y = %d, n_rels = %d"
@@ -1224,6 +1262,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 		fprintf(stderr,"\n");
 #endif
 		/* insert values into the Jacobian row in appropriate spots (can assume Jac starts with zeros -- IDA manual) */
+		asc_assert(blsys->y_id);
 		for(j=0; j < count; ++j){
 			var_yindex = blsys->y_id[variables[j]];
 			/* the SUNDIALS headers seem not to store 'N' on Windows */
@@ -1360,6 +1399,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 			*/
 
 			Jv_i = 0;
+			asc_assert(blsys->y_id);
 			for(j=0; j < count; ++j){
 				/* CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y);
 				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
@@ -1521,6 +1561,7 @@ int integrator_ida_psetup_jacobi(realtype tt,
 		}
 		/* CONSOLE_DEBUG("Got %d derivatives from relation %d",count,i); */
 		/* find the diagonal elements */
+		asc_assert(blsys->y_id);
 		for(j=0; j<count; ++j){
 			if(variables[j]==i){
 				var_yindex = blsys->y_id[variables[j]];
@@ -1686,6 +1727,7 @@ void integrator_ida_write_jacobian(IntegratorSystem *blsys, realtype c_j, FILE *
 			break;
 		}
 
+		asc_assert(blsys->y_id);
 		for(j=0; j<count; ++j){
 			var_yindex = blsys->y_id[variables[j]];
 			if(var_yindex >= 0 && type == II_WRITE_Y){
@@ -1740,6 +1782,7 @@ void integrator_ida_write_incidence(IntegratorSystem *blsys){
 		fprintf(stderr,"%3d:%-15s:",i,relname);		
 		ASC_FREE(relname);
 
+		asc_assert(blsys->y_id);
 		for(j=0; j<count; ++j){
 			var_yindex = blsys->y_id[variables[j]];
 			if(var_yindex >= 0){
