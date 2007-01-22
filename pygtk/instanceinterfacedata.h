@@ -18,6 +18,8 @@
 	From the interface, python will be able to call
 	instance.getInterfaceValue(ASCXX_VAR_STATUS) and
 	will then be able to show an icon accordingly.
+
+	@NOTE LEAKY!
 */
 class InstanceInterfaceData{
 private:

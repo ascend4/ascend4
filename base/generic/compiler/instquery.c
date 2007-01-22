@@ -283,10 +283,11 @@ VOIDPTR GetInterfacePtr(CONST struct Instance *i)
   case BOOLEAN_INST:		/* fall through */
   case SET_INST:		/* fall through */
   case SYMBOL_INST:		/* fall through */
-    FPRINTF(ASCERR,"Instance type does not possess an GetInterfacePtr.\n");
+    /* FPRINTF(ASCERR,"Instance type does not possess an GetInterfacePtr."); */
+	break;
   default:
-    ASC_PANIC("Undefined instance type passed to GetInterfacePtr.\n");
-  }
+    ASC_PANIC("Undefined instance type %d passed to GetInterfacePtr",i->t);
+  } 
   return NULL;
 }
 
@@ -343,7 +344,8 @@ void SetInterfacePtr(struct Instance *i, VOIDPTR c)
   case BOOLEAN_INST:		/* fall through */
   case SET_INST:		/* fall through */
   case SYMBOL_INST:		/* fall through */
-    FPRINTF(ASCERR,"Instance type does not possess an InterfacePtr.\n");
+    FPRINTF(ASCERR,"Instance type does not possess an InterfacePtr.");
+	return;
   default:
     ASC_PANIC("Undefined instance type passed to InterfacePtr.\n");
   }

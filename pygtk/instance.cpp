@@ -88,6 +88,14 @@ Instanc::Instanc(const Instanc &parent, const unsigned long &childnum)
 	There's no data owned by this object, so nothing to be done here.
 */
 Instanc::~Instanc(){
+/* we seriously need a way to free 'interface pointer' data. this doesn't work
+	though, because Python gets messed up
+	InstanceInterfaceData *d = (InstanceInterfaceData *)GetInterfacePtr(i);
+	if(d){
+		cerr << "Destroying interface pointer data" << endl;
+		delete d;
+	}
+*/
 	//cerr << "DESTROYING INSTANC OBJECT" << endl;
 }
 
