@@ -108,6 +108,7 @@ const IntegratorInternals integrator_ida_internals = {
 #endif
 	,integrator_ida_solve
 	,NULL /* writematrixfn */
+	,integrator_ida_debug
 	,integrator_ida_free
 	,INTEG_IDA
 	,"IDA"
@@ -130,11 +131,10 @@ typedef void IntegratorIdaPrecFreeFn(struct IntegratorIdaDataStruct *enginedata)
 */
 typedef struct IntegratorIdaDataStruct{
 	struct rel_relation **rellist;   /**< NULL terminated list of rels */
-	struct var_variable **varlist;   /**< NULL terminated list of vars. ONLY USED FOR DEBUGGING -- get rid of it! */
 	struct bnd_boundary **bndlist;	 /**< NULL-terminated list of boundaries, for use in the root-finding  code */
 	int nrels;
 	int safeeval;                    /**< whether to pass the 'safe' flag to relman_eval */
-	var_filter_t vfilter;            /**< Used to filter variables from varlist in relman_diff2 etc */
+	var_filter_t vfilter;
 	rel_filter_t rfilter;            /**< Used to filter relations from rellist (@TODO needs work) */
 	void *precdata;                  /**< For use by the preconditioner */
 	IntegratorIdaPrecFreeFn *pfree;	 /**< Store instructions here on how to free precdata */
@@ -230,7 +230,6 @@ void integrator_ida_create(IntegratorSystem *blsys){
 	IntegratorIdaData *enginedata;
 	enginedata = ASC_NEW(IntegratorIdaData);
 	enginedata->rellist = NULL;
-	enginedata->varlist = NULL;
 	enginedata->safeeval = 0;
 	enginedata->vfilter.matchbits =  VAR_SVAR | VAR_ACTIVE | VAR_FIXED;
 	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_ACTIVE;
@@ -425,6 +424,7 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 typedef void (IntegratorVarVisitorFn)(IntegratorSystem *sys, struct var_variable *var, const int *varindx);
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
 IntegratorVarVisitorFn integrator_dae_classify_var;
+void integrator_dae_show_var(IntegratorSystem *sys, struct var_variable *var, const int *varindx);
 
 #ifdef ASC_IDA_NEW_ANALYSE
 /** 
@@ -508,6 +508,7 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 		sys->y_id[i] = n_dyn;
 	}                 
 	
+	/* add the variables from the derivative chains */
 	for(i=0; i<diffvars->nseqs; ++i){
 		seq = diffvars->seqs[i];
 		asc_assert(seq.n >= 1);
@@ -568,8 +569,8 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	n_ydot = n_y;
 
 	if(sys->n_y != nsolversrels){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square: n_y = %d, n_rels = %d"
-			,sys->n_y, nsolversrels
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square: n_y = %d, n_rels = %d (n_alg = %d, n_diff = %d)"
+			,sys->n_y, nsolversrels, diffvars->nalg, diffvars->ndiff
 		);
 		return 2;
 	}
@@ -604,8 +605,6 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	/*   - boundaries (optional) */
 	/* ERROR_REPORTER_HERE(ASC_PROG_ERR,"Implementation incomplete");
 	return -1; */
-
-	return 0;
 }
 #endif
 
@@ -652,7 +651,6 @@ int integrator_ida_solve(
 	/* store reference to list of relations (in enginedata) */
 	enginedata->nrels = slv_get_num_solvers_rels(blsys->system);
 	enginedata->rellist = slv_get_solvers_rel_list(blsys->system);
-	enginedata->varlist = slv_get_solvers_var_list(blsys->system);
 	enginedata->bndlist = slv_get_solvers_bnd_list(blsys->system);
 
 	CONSOLE_DEBUG("Number of relations: %d",enginedata->nrels);
@@ -1180,6 +1178,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	IntegratorIdaData *enginedata;
 	char *relname;
 #ifdef DJEX_DEBUG
+	struct var_variable **varlist;
 	char *varname;
 #endif
 	int status;
@@ -1203,6 +1202,8 @@ int integrator_ida_djex(long int Neq, realtype tt
 	integrator_set_ydot(blsys, NV_DATA_S(yp));
 
 #ifdef DJEX_DEBUG
+	varlist = slv_get_solvers_var_list(blsys->system);
+
 	/* print vars */
 	for(i=0; i < blsys->n_y; ++i){
 		varname = var_make_name(blsys->system, blsys->y[i]);
@@ -1250,7 +1251,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 		fprintf(stderr,"%d: '%s': ",i,relname);
 		ASC_FREE(relname);
 		for(j=0;j<count;++j){
-			varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
+			varname = var_make_name(blsys->system, varlist[variables[j]]);
 			var_yindex = blsys->y_id[variables[j]];
 			if(var_yindex >=0){
 				fprintf(stderr,"  var[%d]='%s'=y[%ld]",variables[j],varname,var_yindex);
@@ -1269,10 +1270,14 @@ int integrator_ida_djex(long int Neq, realtype tt
 			ASC_ASSERT_RANGE(var_yindex, -blsys->n_y, blsys->n_y);
 
 			if(var_yindex >= 0){
-				asc_assert(blsys->y[var_yindex]==enginedata->varlist[variables[j]]);
+#ifdef DJEX_DEBUG
+				asc_assert(blsys->y[var_yindex]==varlist[variables[j]]);
+#endif
 				DENSE_ELEM(Jac,i,var_yindex) += derivatives[j];
 			}else{
-				asc_assert(blsys->ydot[-var_yindex-1]==enginedata->varlist[variables[j]]);
+#ifdef DJEX_DEBUG
+				asc_assert(blsys->ydot[-var_yindex-1]==varlist[variables[j]]);
+#endif
 				DENSE_ELEM(Jac,i,-var_yindex-1) += derivatives[j] * c_j;
 			}
 		}
@@ -1345,12 +1350,15 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	int *variables;
 	double *derivatives;
 	int count;
+	struct var_variable **varlist;
 #ifdef JEX_DEBUG
+
 	CONSOLE_DEBUG("EVALUATING JACOBIAN...");
 #endif
 
 	blsys = (IntegratorSystem *)jac_data;
 	enginedata = integrator_ida_enginedata(blsys);
+	varlist = slv_get_solvers_var_list(blsys->system);
 
 	/* pass the values of everything back to the compiler */
 	integrator_set_t(blsys, (double)tt);
@@ -1413,7 +1421,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 				/* we don't calculate derivatives wrt indep var */
 				asc_assert(variables[j]>=0);
-				if(enginedata->varlist[variables[j]] == blsys->x) continue;
+				if(varlist[variables[j]] == blsys->x) continue;
 
 				var_yindex = blsys->y_id[variables[j]];
 #ifdef JEX_DEBUG
@@ -1421,10 +1429,10 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 #endif
 
 				ASC_ASSERT_RANGE(-var_yindex-1, -NV_LENGTH_S(v),NV_LENGTH_S(v));
-
+				
 				if(var_yindex >= 0){
 #ifdef JEX_DEBUG
-					asc_assert(blsys->y[var_yindex]==enginedata->varlist[variables[j]]);
+					asc_assert(blsys->y[var_yindex]==varlist[variables[j]]);
 					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dy[%ld] = %f, v[%ld] = %f)\n", i
 						, derivatives[j] * NV_Ith_S(v,var_yindex)
 						, i, var_yindex, derivatives[j]
@@ -1440,7 +1448,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 						, -var_yindex-1, NV_Ith_S(v,-var_yindex-1)
 					);
 #endif
-					asc_assert(blsys->ydot[-var_yindex-1]==enginedata->varlist[variables[j]]);
+					asc_assert(blsys->ydot[-var_yindex-1]==varlist[variables[j]]);
 					Jv_i += derivatives[j] * NV_Ith_S(v,-var_yindex-1) * c_j;
 				}
 			}
@@ -1648,7 +1656,7 @@ void integrator_ida_write_stats(IntegratorIdaStats *stats){
 }
 
 /*------------------------------------------------------------------------------
-  JACOBIAN / INCIDENCE MATRIX OUTPUT
+  OUTPUT OF INTERNALS: JACOBIAN / INCIDENCE MATRIX / DEBUG INFO
 */
 
 enum integrator_ida_write_jac_enum{
@@ -1795,6 +1803,79 @@ void integrator_ida_write_incidence(IntegratorSystem *blsys){
 	}
 	ASC_FREE(variables);
 	ASC_FREE(derivatives);
+}
+
+/* @return 0 on success */
+int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
+	char *varname;
+	struct var_variable **vlist, *var;
+	int vlen;
+	long i, y_id;
+
+	fprintf(fp,"THERE ARE %ld VARIABLES IN THE INTEGRATION SYSTEM\n\n",sys->n_y);
+
+	/* if(integrator_sort_obs_vars(sys))return 10; */
+
+	fprintf(fp,"RESULTS OF ANALYSIS\n\n");
+	fprintf(fp,"index\ty\tydot\n");
+	fprintf(fp,"-----\t-----\t-----\n");
+	for(i=0;i<sys->n_y;++i){
+		varname = var_make_name(sys->system, sys->y[i]);
+		fprintf(fp,"%ld\t%s\t",i,varname);
+		if(sys->ydot[i]){
+			ASC_FREE(varname);
+			varname = var_make_name(sys->system, sys->ydot[i]);
+			fprintf(fp,"%s\n",varname);
+			ASC_FREE(varname);
+		}else{
+			fprintf(fp,".\n",varname);
+			ASC_FREE(varname);
+		}
+	}
+
+	fprintf(fp,"\n\nCORRESPONDENCE OF SOLVER VARS TO INTEGRATOR VARS\n\n");
+	fprintf(fp,"index\t%-15s\ty_id\ty\tydot\n","name");
+	fprintf(fp,"-----\t%-15s\t-----\t-----\t-----\n","----");
+
+
+	/* visit all the slv_system_t master var lists to collect vars */
+	/* find the vars mostly in this one */
+	vlist = slv_get_solvers_var_list(sys->system);
+	vlen = slv_get_num_solvers_vars(sys->system);
+	for (i=0;i<vlen;i++) {
+		var = vlist[i];
+
+		varname = var_make_name(sys->system, var);
+		fprintf(fp,"%d\t%-15s\t",i,varname);
+
+		if(var_fixed(var)){
+			// it's fixed, so not really a DAE var
+			fprintf(fp,"(fixed)\n");
+		}else if(!var_active(var)){
+			// inactive
+			fprintf(fp,"(inactive)\n");
+		}else{
+			// a DAE var, otherwise
+			y_id = sys->y_id[i];
+
+			fprintf(fp,"%ld", y_id);
+			if(y_id >= 0){
+				fprintf(fp,"\ty[%ld]\t.\n",y_id);
+			}else{
+				fprintf(fp,"\t.\tydot[%ld]\n",-y_id-1);
+			}
+
+			ASC_ASSERT_LT(i,1e7L);
+			ASC_ASSERT_LT(y_id, 9999999L);
+			ASC_ASSERT_LT(-9999999L, y_id);
+		}
+		ASC_FREE(varname);
+
+
+	}
+
+
+	return 0; /* success */
 }
 
 /*----------------------------------------------

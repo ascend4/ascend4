@@ -647,14 +647,15 @@ static void slv9a_set_parameters(slv_system_t server, SlvClientToken asys,
 
 
 
-static void slv9a_get_status(slv_system_t server, SlvClientToken asys,
-                            slv_status_t *status)
-{
-  slv9a_system_t sys;
-  (void) server;
-  sys = SLV9A(asys);
-  if (check_system(sys)) return;
-  mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
+static int slv9a_get_status(slv_system_t server, SlvClientToken asys
+		,slv_status_t *status
+){
+	slv9a_system_t sys;
+	(void) server;
+	sys = SLV9A(asys);
+	if (check_system(sys)) return 1;
+	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
+	return 0;
 }
 
 /*

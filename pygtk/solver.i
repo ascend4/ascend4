@@ -311,7 +311,7 @@ public:
 			raise KeyError
 	}
 }
-		
+
 %feature("director") IntegratorReporterCxx;
 
 %ignore ascxx_integratorreporter_init;

@@ -144,6 +144,13 @@ Integrator::writeMatrix(FILE *fp) const{
 }
 
 void
+Integrator::writeDebug(FILE *fp) const{
+	if(integrator_debug(this->blsys, fp)){
+		throw runtime_error("Failed to write debug output");
+	}
+}
+
+void
 Integrator::setEngine(IntegratorEngine engine){
 	int res = integrator_set_engine(this->blsys, engine);
 	if(!res)return;

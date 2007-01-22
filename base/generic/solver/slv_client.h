@@ -360,7 +360,7 @@ typedef int (SlvClientEligibleF) (slv_system_t);
 typedef int32 (SlvGetDefParamsF) (slv_system_t,SlvClientToken,slv_parameters_t *);
 typedef void (SlvGetParamsF) (slv_system_t, SlvClientToken, slv_parameters_t *);
 typedef void (SlvSetParamsF) (slv_system_t, SlvClientToken, slv_parameters_t *);
-typedef void (SlvGetStatusF) (slv_system_t, SlvClientToken, slv_status_t *);
+typedef int (SlvGetStatusF) (slv_system_t, SlvClientToken, slv_status_t *);
 typedef linsol_system_t (SlvGetLinsolF)(slv_system_t, SlvClientToken);
 typedef linsolqr_system_t (SlvGetLinSysF)(slv_system_t, SlvClientToken);
 typedef mtx_matrix_t (SlvGetSysMtxF)(slv_system_t, SlvClientToken);
@@ -1257,9 +1257,10 @@ extern void slv_set_solver_index(slv_system_t sys, int sindex);
 	Sets the solver index of the slv_system_t.
 */
 
-ASC_DLLSPEC void slv_get_status(slv_system_t sys, slv_status_t *status);
+ASC_DLLSPEC int slv_get_status(slv_system_t sys, slv_status_t *status);
 /**<
 	Copies the current system status into the given structure.
+	@return 0 on success, or nonzero if there is a problem determining status.
 */
 
 ASC_DLLSPEC linsolqr_system_t slv_get_linsolqr_sys(slv_system_t sys);

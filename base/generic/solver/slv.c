@@ -1465,7 +1465,11 @@ void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
   SF(sys,setparam)(sys,sys->ct,parameters);
 }
 
-DEFINE_SLV_PROXY_METHOD_PARAM(get_status,getstatus,slv_status_t*,status) /*;*/
+int slv_get_status(slv_system_t sys, slv_status_t *status){
+	if(CF(sys,getstatus)==NULL){printinfo(sys,"get_status");return -1;}
+	return SF(sys,getstatus)(sys,sys->ct,status);
+}
+
 DEFINE_SLV_PROXY_METHOD_PARAM(dump_internals,dumpinternals,int,level) /*;*/
 
 DEFINE_SLV_PROXY_METHOD(get_linsol_sys, getlinsol, linsol_system_t, NULL) /*;*/

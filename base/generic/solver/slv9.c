@@ -5092,14 +5092,15 @@ void slv9_set_parameters(slv_system_t server, SlvClientToken asys,
 }
 
 static
-void slv9_get_status(slv_system_t server, SlvClientToken asys,
+int slv9_get_status(slv_system_t server, SlvClientToken asys,
 		slv_status_t *status
 ){
-  slv9_system_t sys;
-  (void) server;
-  sys = SLV9(asys);
-  if (check_system(sys)) return;
-  mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
+	slv9_system_t sys;
+	(void) server;
+	sys = SLV9(asys);
+	if (check_system(sys)) return 1;
+	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
+	return 0;
 }
 
 static

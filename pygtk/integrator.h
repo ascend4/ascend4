@@ -78,6 +78,7 @@ public:
 	void analyse();
 	void solve();
 	void writeMatrix(FILE *fp) const;
+	void writeDebug(FILE *fp) const;
 
 	double getCurrentTime();
 	long getCurrentStep();

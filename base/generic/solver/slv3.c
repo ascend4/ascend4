@@ -3315,14 +3315,15 @@ static void slv3_set_parameters(slv_system_t server, SlvClientToken asys,
   mem_copy_cast(parameters,&(sys->p),sizeof(slv_parameters_t));
 }
 
-static void slv3_get_status(slv_system_t server, SlvClientToken asys,
-                            slv_status_t *status)
-{
-  slv3_system_t sys;
-  (void) server;
-  sys = SLV3(asys);
-  if(check_system(sys)) return;
-  mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
+static int slv3_get_status(slv_system_t server, SlvClientToken asys
+	,slv_status_t *status
+){
+	slv3_system_t sys;
+	(void) server;
+	sys = SLV3(asys);
+	if(check_system(sys))return 1;
+	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
+	return 0;
 }
 
 static linsolqr_system_t slv3_get_linsolqr_sys(slv_system_t server,

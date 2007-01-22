@@ -705,12 +705,13 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	CONSOLE_DEBUG("CORRESPONDENCE OF SOLVER VARS TO INTEGRATOR VARS");
 	fprintf(stderr,"index\t%-15s\ty_id\ty\tydot\n","name");
 	fprintf(stderr,"-----\t%-15s\t-----\t-----\t-----\n","----");
-	integrator_visit_system_vars(sys,integrator_dae_show_var);
+	/* integrator_visit_system_vars(sys,integrator_dae_show_var); */
 #endif
 
 	return 0;
 }
 
+#if 0
 void integrator_dae_show_var(IntegratorSystem *sys
 		, struct var_variable *var, const int *varindx
 ){
@@ -753,6 +754,7 @@ void integrator_dae_show_var(IntegratorSystem *sys
 	}
 	ASC_FREE(varname);
 }
+#endif
 
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitfn){
   struct var_variable **vlist;
@@ -1539,6 +1541,19 @@ int integrator_write_matrix(const IntegratorSystem *sys, FILE *fp){
 	asc_assert(sys->internals->name);
 	if(sys->internals->writematrixfn){
 		return (sys->internals->writematrixfn)(sys,fp);
+	}else{
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Integrator '%s' defines no write_matrix function.",sys->internals->name);
+		return -1;
+	}
+}
+
+int integrator_debug(const IntegratorSystem *sys, FILE *fp){
+	asc_assert(sys);
+	asc_assert(sys->enginedata);
+	asc_assert(sys->internals);
+	asc_assert(sys->internals->name);
+	if(sys->internals->debugfn){
+		return (sys->internals->debugfn)(sys,fp);
 	}else{
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Integrator '%s' defines no write_matrix function.",sys->internals->name);
 		return -1;

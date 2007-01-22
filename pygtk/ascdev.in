@@ -57,7 +57,7 @@ if __name__=='__main__':
 	if restart:
 		print "\nRestarting with..."
 		for v in restart:
-			print "   %s = %s" % (v,os.environ[v])
+			print "   export %s=%s" % (v,os.environ[v])
 		if os.environ.get('ASC_GDB'):
 			print "   via GDB..."
 			os.execvp("gdb",['--symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@','--args','python',script]+sys.argv[1:])

@@ -32,6 +32,7 @@ const IntegratorInternals integrator_aww_internals = {
 	,integrator_aww_analyse
 	,integrator_aww_solve
 	,NULL /* writematrixfn */
+	,NULL /* debugfn */
 	,integrator_aww_free
 	,INTEG_AWW
 	,"AWW"
