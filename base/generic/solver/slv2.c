@@ -1864,7 +1864,7 @@ int slv2_register(SlvFunctionsT *sft)
   sft->cdestroy = slv2_destroy;
   sft->celigible = slv2_eligible_solver;
   sft->getdefparam = slv2_get_default_parameters;
-  sft->getparam = slv2_get_parameters;
+  sft->get_parameters = slv2_get_parameters;
   sft->setparam = slv2_set_parameters;
   sft->getstatus = slv2_get_status;
   sft->solve = slv2_solve;
@@ -1873,7 +1873,7 @@ int slv2_register(SlvFunctionsT *sft)
   sft->resolve = NULL;
   sft->getlinsol = NULL;
   sft->getlinsys = NULL;
-  sft->getsysmtx = NULL;
+  sft->get_sys_mtx = NULL;
   sft->dumpinternals = slv2_dump_internals;
   /* it should be safe, but unnecessary, to call this at every iteration
    * according to Dave.

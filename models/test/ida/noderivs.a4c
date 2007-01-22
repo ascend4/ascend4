@@ -1,0 +1,15 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL noderivsfail1;
+	y IS_A solver_var;	dy_dt IS_A solver_var;
+	x IS_A solver_var;	dx_dt IS_A solver_var;
+	t IS_A solver_var;
+
+	dy_dt = exp(-t^2);
+	dx_dt = -y;
+METHODS
+	METHOD on_load;
+		t.ode_type := -1;
+		(* do nothing *)
+	END on_load;
+END noderivs;

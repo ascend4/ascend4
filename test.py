@@ -691,6 +691,28 @@ class TestIDA(Ascend):
 	def testtwoderivfail5(self):
 		self._runfail('twoderiv',5)
 
+	def testnoderivs(self):
+		self._runfail('noderivs',1)
+
+	def testnoindeps(self):
+		self._runfail('indeps',1)
+
+	def testtwoindeps(self):
+		self._runfail('indeps',2)
+
+	def testfixedvars(self):
+		self._run('fixedvars')
+
+	def testfixedvars1(self):
+		self._run('fixedvars',1)
+
+	def testfixedvars2(self):
+		self._run('fixedvars',2)
+
+	def testfixedvars3(self):
+		self._run('fixedvars',3)
+
+
 #-------------------------------------------------------------------------------
 # Testing of IDA models using DENSE linear solver
 

@@ -4501,7 +4501,7 @@ int slv7_register(SlvFunctionsT *sft)
   sft->ccreate = slv7_create;
   sft->cdestroy = slv7_destroy;
   sft->celigible = slv7_eligible_solver;
-  sft->getparam = slv7_get_parameters;
+  sft->get_parameters = slv7_get_parameters;
   sft->setparam = slv7_set_parameters;
   sft->getstatus = slv7_get_status;
   sft->solve = slv7_solve;
@@ -4510,7 +4510,7 @@ int slv7_register(SlvFunctionsT *sft)
   sft->resolve = slv7_resolve;
   sft->getlinsol = NULL;
   sft->getlinsys = slv7_get_linsolqr_sys;
-  sft->getsysmtx = slv7_get_jacobian;
+  sft->get_sys_mtx = slv7_get_jacobian;
   sft->dumpinternals = slv7_dump_internals;
   return 0;
 }

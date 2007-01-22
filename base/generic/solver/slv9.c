@@ -5656,7 +5656,7 @@ int slv9_register(SlvFunctionsT *sft){
   sft->cdestroy = slv9_destroy;
   sft->celigible = slv9_eligible_solver;
   sft->getdefparam = slv9_get_default_parameters;
-  sft->getparam = slv9_get_parameters;
+  sft->get_parameters = slv9_get_parameters;
   sft->setparam = slv9_set_parameters;
   sft->getstatus = slv9_get_status;
   sft->solve = slv9_solve;
@@ -5665,7 +5665,7 @@ int slv9_register(SlvFunctionsT *sft){
   sft->resolve = slv9_resolve;
   sft->getlinsol = NULL;
   sft->getlinsys = NULL;
-  sft->getsysmtx = slv9_get_matrix;
+  sft->get_sys_mtx = slv9_get_matrix;
   sft->dumpinternals = slv9_dump_internals;
   return 0;
 }

@@ -276,7 +276,7 @@
 #ifndef ASC_SLV_CLIENT_H
 #define ASC_SLV_CLIENT_H
 
-/**	@addtogroup solver Solver
+/**	@addtogroup slvclient Solver Client
 	@{
 */
 
@@ -383,7 +383,7 @@ typedef struct slv_registration_data {
   SlvClientDestroyF   *cdestroy;      /**<  (required) */
   SlvClientEligibleF  *celigible;     /**<  (required) */
   SlvGetDefParamsF    *getdefparam;   /**< Function that will create default solver-parameter structure (required) */
-  SlvGetParamsF       *getparam;      /**<  (required) */
+  SlvGetParamsF       *get_parameters;/**<  (required) */
   SlvSetParamsF       *setparam;      /**<  (required) */
   SlvGetStatusF       *getstatus;     /**<  (required) */
   SlvSolveF           *solve;         /**<  (required) */
@@ -401,7 +401,7 @@ typedef struct slv_registration_data {
   */
   SlvGetLinsolF       *getlinsol;     /**<  (optional) */
   SlvGetLinSysF       *getlinsys;     /**<  (optional) */
-  SlvGetSysMtxF       *getsysmtx;     /**<  (optional) */
+  SlvGetSysMtxF       *get_sys_mtx;   /**<  (optional) */
   SlvDumpInfoF        *dumpinternals; /**<  (optional) */
 } SlvFunctionsT;
 

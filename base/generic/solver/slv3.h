@@ -18,20 +18,15 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//**
-	@file
+*//** @file
 	QRSlv solver registration module.
 
 	02/95 - original version
 	Test bed version of Slv for linear solver changes
-	and eventually Slv kernal<-->ASCEND changes.
+	and eventually Slv kernel<-->ASCEND changes.
 *//*
-	by Karl Michael Westerberg and Ben Allan
-	Created: 2/6/90
-	Version: $Revision: 1.9 $
-	Version control file: $RCSfile: slv3.h,v $
-	Date last modified: $Date: 1997/07/18 12:16:16 $
-	Last modified by: $Author: mthomas $
+	by Karl Michael Westerberg and Ben Allan -- created 2/6/90
+	Last in CVS: $Revision: 1.9 $ $Date: 1997/07/18 12:16:16 $ $Author: mthomas $
 */
 
 #ifndef ASC_SLV3_H

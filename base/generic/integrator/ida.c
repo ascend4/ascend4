@@ -478,7 +478,10 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	CONSOLE_DEBUG("System has %lu rels",nsolversrels);
 
 	diffvars = slv_get_diffvars(sys->system);
-	asc_assert(diffvars!=NULL);
+	if(diffvars==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Derivative structure is empty");
+		return 6;
+	}
 
 	CONSOLE_DEBUG("Got %ld chains",diffvars->nseqs);
 	
@@ -1840,7 +1843,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 			fprintf(fp,"%s\n",varname);
 			ASC_FREE(varname);
 		}else{
-			fprintf(fp,".\n",varname);
+			fprintf(fp,".\n");
 			ASC_FREE(varname);
 		}
 	}

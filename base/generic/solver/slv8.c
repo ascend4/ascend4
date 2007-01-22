@@ -2931,7 +2931,7 @@ int32 slv8_register(SlvFunctionsT *sft){
   sft->cdestroy = slv8_destroy;
   sft->celigible = slv8_eligible_solver;
   sft->getdefparam = slv8_get_default_parameters;
-  sft->getparam = slv8_get_parameters;
+  sft->get_parameters = slv8_get_parameters;
   sft->setparam = slv8_set_parameters;
   sft->getstatus = slv8_get_status;
   sft->solve = slv8_solve;
@@ -2940,7 +2940,7 @@ int32 slv8_register(SlvFunctionsT *sft){
   sft->resolve = slv8_resolve;
   sft->getlinsol = NULL;
   sft->getlinsys = slv8_get_linsolqr_sys;
-  sft->getsysmtx = slv8_get_jacobian;
+  sft->get_sys_mtx = slv8_get_jacobian;
   sft->dumpinternals = slv8_dump_internals;
   return 0;
 }
