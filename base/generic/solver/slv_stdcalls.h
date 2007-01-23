@@ -32,9 +32,7 @@
 #include <utilities/ascConfig.h>
 #include <linear/mtx.h>
 
-#include "system.h"
 #include "slv_client.h"
-#include "slvDOF.h"
 
 /**	@addtogroup system System
 	@{

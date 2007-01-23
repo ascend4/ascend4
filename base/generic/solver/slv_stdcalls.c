@@ -24,19 +24,11 @@
 
 #include "slv_stdcalls.h"
 
-#include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include <general/list.h>
 #include <general/mathmacros.h>
-
-#include <compiler/compiler.h>
-
-#include <linear/mtx.h>
 
 #include "relman.h"
 #include "logrelman.h"
-#include "slv_common.h"
-#include "model_reorder.h"
 
 /* headers of registered clients */
 #include "slv0.h"
@@ -49,13 +41,7 @@
 #include "slv9.h"
 #include "slv9a.h"
 
-#define KILL 0 /* deleteme code. compile old code if kill = 1 */
-#define NEEDSTOBEDONE 0 /* indicates code/comments that are not yet ready */
-#define USECODE 0  /* Code in good shape but not used currently */
-
 #define MIMDEBUG 0 /* slv_std_make_incidence_mtx debugging */
-#define RIDEBUG 0 /* reindex debugging */
-#define SBPDEBUG 0 /* slv_block_partition_real debugging */
 #define SLBPDEBUG 0 /* slv_log_block_partition debugging */
 
 /*
