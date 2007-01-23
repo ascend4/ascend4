@@ -36,8 +36,10 @@
  *  </pre>
  */
 
-#ifndef __MTX_REORDER_H_SEEN__
-#define __MTX_REORDER_H_SEEN__
+#ifndef ASC_MTX_REORDER_H
+#define ASC_MTX_REORDER_H
+
+#include "mtx.h"
 
 /**	@addtogroup linear Linear
 	@{
@@ -54,11 +56,6 @@ extern int mtx_reorder(mtx_matrix_t mtx,
                        mtx_region_t *region, 
                        enum mtx_reorder_method rmeth);
 /**<
- ***  <!--  mtx_reorder(sys,region,rmeth)                              -->
- ***  <!--  mtx_matrix_t mtx;                                          -->
- ***  <!--  mtx_region_t *region;                                      -->
- ***  <!--  enum mtx_reorder_method;                                   -->
- ***
  ***  The specified region of the coefficient matrix is reordered.
  ***  The specified region
  ***  is assumed to contain only nonempty rows and columns and have a full
@@ -98,5 +95,5 @@ extern int mtx_reorder(mtx_matrix_t mtx,
 
 /** @} */
 
-#endif /* __MTX_REORDER_H_SEEN__ */
+#endif /* ASC_MTX_REORDER_H */
 

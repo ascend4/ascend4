@@ -27,8 +27,8 @@
 	Last in CVS: $Revision: 1.9 $ $Date: 1997/07/18 12:15:12 $ $Author: mthomas $
 */
 
-#ifndef __MTX_QUERY_H_SEEN__
-#define __MTX_QUERY_H_SEEN__
+#ifndef ASC_MTX_QUERY_H
+#define ASC_MTX_QUERY_H
 
 /**	@addtogroup linear Linear
 	@{
@@ -524,4 +524,4 @@ extern void mtx_cur_vec_add_row(mtx_matrix_t mtx,
 
 /** @} */
 
-#endif /* __MTX_QUERY_H_SEEN__ */
+#endif /* ASC_MTX_QUERY_H_SEEN */
