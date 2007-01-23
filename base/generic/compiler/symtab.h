@@ -23,27 +23,20 @@
 	now all the symbol table has to do is make sure that only one copy of each
 	string is stored(to save space).  In the future it could have more
 	information store in it.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "compiler.h"
 *//*
-	by Tom Epperly
-	7/24/89
-	Version: $Revision: 1.7 $
-	Version control file: $RCSfile: symtab.h,v $
-	Date last modified: $Date: 1998/02/05 16:38:07 $
-	Last modified by: $Author: ballan $
+	by Tom Epperly, 7/24/89
+	Last in CVS $Revision: 1.7 $ $Date: 1998/02/05 16:38:07 $ $Author: ballan $
 */
 
 #ifndef ASC_SYMTAB_H
 #define ASC_SYMTAB_H
 
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */
-
-#include <utilities/ascConfig.h>
 
 #define MAXIMUM_STRING_LENGTH (2*MAXTOKENLENGTH)
 

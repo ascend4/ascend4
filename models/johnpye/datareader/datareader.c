@@ -23,8 +23,6 @@
 #include <utilities/ascPanic.h>
 #include <utilities/error.h>
 
-#include <compiler/fractions.h>
-#include <compiler/compiler.h>
 #include <compiler/dimen.h>
 #include <compiler/child.h>
 #include <general/list.h>

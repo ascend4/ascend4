@@ -46,8 +46,6 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/readln.h> /* you wot? */
 
-#include <compiler/fractions.h>
-#include <compiler/compiler.h>
 #include <compiler/dimen.h>
 #include <compiler/plot.h>
 

@@ -31,7 +31,6 @@
 
 /** @TODO should not be ANY compiler includes here, right? */
 #include <compiler/fractions.h>
-#include <compiler/compiler.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <compiler/dimen.h>

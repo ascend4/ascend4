@@ -51,11 +51,6 @@
 
 #include <linear/mtx.h>
 
-#define _SLV_SERVER_C_SEEN_ /* for the extrel stuff in header */
-#include "var.h"
-#include "rel.h"
-#include "conditional.h"
-#include "bnd.h"
 #include "slv_server.h"
 
 #ifndef IPTR

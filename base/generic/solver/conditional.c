@@ -37,12 +37,6 @@
 #include <compiler/instquery.h>
 #include <compiler/instance_io.h>
 
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "logrel.h"
-#include "bnd.h"
 #include "slv_server.h"
 #include "analyze.h"
 

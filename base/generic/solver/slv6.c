@@ -43,7 +43,6 @@
 #include <general/list.h>
 #include <general/dstring.h>
 #include <compiler/module.h>
-#include <compiler/compiler.h>
 #include <compiler/library.h>
 #include <compiler/instance_io.h>
 
