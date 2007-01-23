@@ -627,7 +627,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 				sys->ydot[n_y] = v;
 				sys->y_id[var_sindex(v)] = -n_y-1;
 				varname = var_make_name(sys->system,v);
-				CONSOLE_DEBUG("'%s' is derivative (%ld)",varname,n_y);
+				CONSOLE_DEBUG("'%s' is derivative (%ld, %p, %p)",varname,n_y,v,sys->ydot[-sys->y_id[var_sindex(v)]-1]);
 				ASC_FREE(varname);
 				n_y++;
 				continue;
@@ -716,6 +716,10 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	/*   - boundaries (optional) */
 	/* ERROR_REPORTER_HERE(ASC_PROG_ERR,"Implementation incomplete");
 	return -1; */
+
+	if(integrator_ida_check_lists(sys)){
+		integrator_debug(sys,stderr);
+	}
 	return 0;
 }
 #endif
@@ -1958,8 +1962,8 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	}
 
 	fprintf(fp,"\n\nCORRESPONDENCE OF SOLVER VARS TO INTEGRATOR VARS\n\n");
-	fprintf(fp,"index\t%-15s\ty_id\ty\tydot\n","name");
-	fprintf(fp,"-----\t%-15s\t-----\t-----\t-----\n","----");
+	fprintf(fp,"sindex\t%-15s\ty_id\ty\tydot\n","name");
+	fprintf(fp,"------\t%-15s\t-----\t-----\t-----\n","----");
 
 
 	/* visit all the slv_system_t master var lists to collect vars */
@@ -2019,6 +2023,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 static int integrator_ida_check_lists(const IntegratorSystem *sys){
 	long i, y_id;
 	struct var_variable **svars;
+	char *varname1, *varname2;
 	long n;
 	int err = 0;
 	svars = slv_get_solvers_var_list(sys->system);
@@ -2029,15 +2034,30 @@ static int integrator_ida_check_lists(const IntegratorSystem *sys){
 			CONSOLE_DEBUG("Skipping y_id[%ld] = %ld",i,y_id);
 			continue;
 		}
-		if(y_id > 0){
+		varname1 = var_make_name(sys->system,svars[i]);
+		if(y_id >= 0){
 			if(sys->y[y_id]!=svars[i]){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error y: y_id[%ld] = %ld",i,y_id);
+				varname2 = var_make_name(sys->system,sys->y[y_id]);
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error y: y_id[%ld]=%ld-->'%s', but svars[%ld]='%s'"
+					,i,y_id,varname2,i,varname1
+				);
+				ASC_FREE(varname2);
 				err++;
 			}
-		}else if(sys->ydot[-y_id-1]!=svars[i]){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error ydot: y_id[%ld] = %ld",i,y_id);
-			err++;
+		}else if(sys->ydot[-y_id-1] != NULL){
+			CONSOLE_DEBUG("y_id = %ld  --> -y_id-1 = %ld --> sys->ydot[%ld] = %p"
+				,y_id, -y_id-1, -y_id-1, sys->ydot[-y_id-1]
+			);
+			varname2 = var_make_name(sys->system,sys->ydot[-y_id-1]);
+			if(sys->ydot[-y_id-1]!=svars[i]){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error y: y_id[%ld]=%ld-->'%s', but svars[%ld]='%s'"
+					,i,-y_id-1,varname2,i,varname1
+				);
+				err++;
+			}
+			ASC_FREE(varname2);
 		}
+		ASC_FREE(varname1);
 	}
 	return err;
 }
