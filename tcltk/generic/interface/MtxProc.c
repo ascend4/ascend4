@@ -38,8 +38,8 @@
 #include <utilities/mem.h>
 #include <utilities/set.h>
 #include <general/list.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
+
+
 
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>

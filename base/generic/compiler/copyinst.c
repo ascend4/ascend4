@@ -36,8 +36,8 @@
 
 #include "bit.h"
 #include "symtab.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "expr_types.h"
 #include "childinfo.h"

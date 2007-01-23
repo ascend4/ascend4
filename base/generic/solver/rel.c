@@ -37,7 +37,7 @@
 
 
 #include <compiler/symtab.h>
-#include <compiler/fractions.h>
+
 #include <compiler/instance_enum.h>
 #include <compiler/instance_io.h>
 #include <compiler/symtab.h>
@@ -45,7 +45,7 @@
 #include <compiler/extcall.h>
 #include <compiler/functype.h>
 #include <compiler/safe.h>
-#include <compiler/dimen.h>
+
 #include <compiler/expr_types.h>
 #include <compiler/find.h>
 #include <compiler/atomvalue.h>

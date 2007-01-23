@@ -41,6 +41,8 @@
 #ifndef ASC_DIMEN_IO_H
 #define ASC_DIMEN_IO_H
 
+#include "dimen.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */

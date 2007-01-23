@@ -61,8 +61,8 @@
 
 #include <compiler/ascCompiler.h>
 #include <compiler/instance_enum.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
+
+
 
 #include <compiler/units.h>
 /* #include <compiler/redirectFile.h> */  /* for Asc_RedirectCompilerDefault() */

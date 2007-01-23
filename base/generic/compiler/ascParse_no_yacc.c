@@ -299,8 +299,8 @@
 #include <compiler/symtab.h>		/* the global string/symbol table */
 #include <compiler/notate.h>		/* notes database wrapper */
 #include <compiler/braced.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
+
+
 #include <compiler/functype.h>
 #include <compiler/func.h>
 #include <compiler/expr_types.h>

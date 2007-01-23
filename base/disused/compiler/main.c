@@ -42,8 +42,8 @@
 #include "ascCompiler.h"
 #include "module.h"
 #include "symtab.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "types.h"
 #include "instance_enum.h"

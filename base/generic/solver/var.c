@@ -38,10 +38,10 @@
 
 #include <compiler/symtab.h>
 #include <compiler/instance_enum.h>
-#include <compiler/fractions.h>
+
 #include <compiler/module.h>
 #include <compiler/library.h>
-#include <compiler/dimen.h>
+
 #include <compiler/child.h>
 #include <compiler/type_desc.h>
 #include <compiler/atomvalue.h>

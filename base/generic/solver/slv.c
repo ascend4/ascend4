@@ -30,10 +30,10 @@
 #include <stdarg.h>
 
 /** @TODO should not be ANY compiler includes here, right? */
-#include <compiler/fractions.h>
+
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
-#include <compiler/dimen.h>
+
 #include <compiler/atomvalue.h>
 
 #include <linear/mtx.h>

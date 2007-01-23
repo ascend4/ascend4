@@ -36,8 +36,8 @@
 */
 
 #include <utilities/ascConfig.h>
-#include "fractions.h"
 #include "compiler.h"
+#include "fractions.h"
 
 
 /* Keep these defines current with DimNames in dimen.h. */

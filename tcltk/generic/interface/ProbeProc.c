@@ -38,8 +38,8 @@
 
 #include <compiler/symtab.h>
 #include <compiler/instance_enum.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
+
+
 #include <compiler/instquery.h>
 #include <compiler/visitinst.h>
 #include <compiler/instance_name.h>

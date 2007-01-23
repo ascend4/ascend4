@@ -29,8 +29,8 @@
 
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "setinstval.h"
 #include "childinfo.h"
 #include <general/mathmacros.h>

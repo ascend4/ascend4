@@ -31,8 +31,8 @@
 #include<math.h>
 #include <utilities/ascConfig.h>
 
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "safe.h"
 #include "func.h"

@@ -37,8 +37,8 @@
 #include <utilities/ascMalloc.h>
 
 #include <utilities/ascPanic.h>
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "func.h"
 #include "safe.h"

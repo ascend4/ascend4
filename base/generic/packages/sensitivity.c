@@ -34,8 +34,8 @@
 #include <utilities/ascPanic.h>
 
 #include <compiler/packages.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
+
+
 #include <compiler/atomvalue.h>
 #include <compiler/instquery.h>
 

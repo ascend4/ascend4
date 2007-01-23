@@ -28,14 +28,15 @@
  *
  */
 
+#include "dimen.h"
+
 #include <utilities/ascConfig.h>
 
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/error.h>
 #include <general/list.h>
-#include "fractions.h"
-#include "dimen.h"
+
 #include <general/mathmacros.h>
 
 struct gl_list_t *g_dimen_list;

@@ -29,8 +29,8 @@
 #include <utilities/ascMalloc.h>
 #include <general/dstring.h>
 
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "dimen_io.h"
 
 #ifndef lint

@@ -23,7 +23,7 @@
 #include <utilities/ascPanic.h>
 #include <utilities/error.h>
 
-#include <compiler/dimen.h>
+
 #include <compiler/child.h>
 #include <general/list.h>
 #include <compiler/module.h>

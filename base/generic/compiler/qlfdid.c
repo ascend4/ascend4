@@ -41,8 +41,8 @@
 #include "instance_name.h"
 #include "instquery.h"
 #include "parentchild.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "expr_types.h"
 #include "stattypes.h"
 #include "instantiate.h"

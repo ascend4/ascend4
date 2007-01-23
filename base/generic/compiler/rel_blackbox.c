@@ -32,7 +32,7 @@
 #include "symtab.h"
 #include "functype.h"
 #include "safe.h"
-#include "dimen.h"
+
 #include "vlist.h"
 #include "dimen_io.h"
 #include "find.h"

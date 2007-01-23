@@ -49,9 +49,9 @@
 #include <general/list.h>
 
 #include <compiler/instance_enum.h>
-#include <compiler/fractions.h>
+
 #include <compiler/extfunc.h>
-#include <compiler/dimen.h>
+
 #include <compiler/expr_types.h>
 #include <compiler/find.h>
 #include <compiler/relation_type.h>

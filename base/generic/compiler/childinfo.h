@@ -45,6 +45,8 @@
 #ifndef ASC_CHILDINFO_H
 #define ASC_CHILDINFO_H
 
+#include "dimen.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */

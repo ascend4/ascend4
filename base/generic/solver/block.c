@@ -957,6 +957,15 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
 
 
 extern int block_debug(slv_system_t sys, FILE *fp){
-	fprintf(fp,"\n\nHello from block_debug\n\n");
+	dof_t *dof;
+	dof = slv_get_dofdata(sys);
+	
+	fprintf(fp,"\n\nSLV_SYSTEM BLOCK INFO\n\n");
+	
+	fprintf(fp,"Structural rank: %d\n",dof->structural_rank);
+	fprintf(fp,"Included rels: %d\n",dof->n_rows);
+	fprintf(fp,"Incident, free vars: %d\n",dof->n_cols);
+	fprintf(fp,"Fixed vars: %d\n",dof->n_fixed);
+	fprintf(fp,"Unincluded rels: %d\n",dof->n_unincluded);
 }
 	

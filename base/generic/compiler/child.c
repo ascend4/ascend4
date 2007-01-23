@@ -35,8 +35,8 @@
 
 #include "symtab.h"
 #include "instance_enum.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "expr_types.h"
 #include "stattypes.h"
 #include "statio.h"

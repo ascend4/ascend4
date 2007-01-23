@@ -19,9 +19,6 @@
 *//**
 	@file
 	Fraction module for ASCEND.
-
-	Requires:
-	#include <utilities/ascConfig.h>
 *//*
 	by Tom Epperly
 	8/18/89
@@ -33,6 +30,8 @@
 
 #ifndef ASC_FRACTIONS_H
 #define ASC_FRACTIONS_H
+
+#include <utilities/ascConfig.h>
 
 /**	@addtogroup compiler Compiler
 	@{

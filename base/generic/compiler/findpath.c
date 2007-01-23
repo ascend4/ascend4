@@ -30,8 +30,8 @@
 #include <general/dstring.h>
 
 #include "symtab.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "expr_types.h"
 #include "child.h"

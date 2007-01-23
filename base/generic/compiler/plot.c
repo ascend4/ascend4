@@ -35,10 +35,10 @@
 #include <utilities/error.h>
 #include <general/list.h>
 #include "instance_enum.h"
-#include "fractions.h"
+
 
 #include "symtab.h"
-#include "dimen.h"
+
 #include "atomvalue.h"
 #include "instance_name.h"
 #include "parentchild.h"

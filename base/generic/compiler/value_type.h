@@ -61,6 +61,8 @@
 #ifndef ASC_VALUE_TYPE_H
 #define ASC_VALUE_TYPE_H
 
+#include "dimen.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */

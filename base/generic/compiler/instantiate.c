@@ -52,8 +52,8 @@
 #endif
 #include "bit.h"
 #include "symtab.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "expr_types.h"
 #include "instance_enum.h"
@@ -68,7 +68,7 @@
 #include "setio.h"
 #include "extfunc.h"
 #include "extcall.h"
-#include "dimen.h"
+
 #include "forvars.h"
 #include "exprs.h"
 #include "name.h"

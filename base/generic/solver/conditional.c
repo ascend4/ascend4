@@ -29,8 +29,8 @@
 #include <compiler/instance_enum.h>
 
 #include <compiler/child.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
+
+
 #include <compiler/type_desc.h>
 #include <compiler/atomvalue.h>
 #include <compiler/parentchild.h>

@@ -33,8 +33,8 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "expr_types.h"
 #include "stattypes.h"
 #include "slist.h"
