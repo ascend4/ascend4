@@ -468,6 +468,9 @@ class TestExtPy(AscendSelfTester):
 		M.run(T.getMethod('pythonthing'))
 		M.run(T.getMethod('pythonthing'))
 		M.run(T.getMethod('pythonthing'))
+		M.run(T.getMethod('pythonthing'))
+		M.run(T.getMethod('pythonthing'))
+		M.run(T.getMethod('pythonthing'))
 		# causes crash!
 
 #-------------------------------------------------------------------------------
@@ -552,7 +555,12 @@ class TestSteam(AscendSelfTester):
 		I.setMaxSubSteps(100)		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 100)
-		I.analyse()
+		try:
+			I.analyse()
+		except Exception,e:
+			print "ERROR: %s" % e
+			I.writeDebug(sys.stdout)
+		
 		I.solve()
 		self.assertAlmostEqual(float(M.T_w[2]),Tw1)
 		M.qdot_s.setRealValueWithUnits(1000,"W/m")

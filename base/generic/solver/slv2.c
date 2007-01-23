@@ -52,6 +52,7 @@
 #include "relman.h"
 #include "slv_stdcalls.h"
 #include "rsqp.h"
+#include "block.h"
 
 /*
  * name of this solver.

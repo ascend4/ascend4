@@ -53,6 +53,7 @@
 #include "calc.h"
 #include "relman.h"
 #include "slv_stdcalls.h"
+#include "block.h"
 
 #define CANOPTIMIZE FALSE
 /**< TRUE iff optimization code completed, meaning relman_diff fixed. */
@@ -3419,6 +3420,7 @@ static void set_factor_options (slv3_system_t sys)
   /* this next one is fishy, but we don't use qr so not panicking */
   linsolqr_set_condition_tolerance(sys->J.sys, SLV_PARAM_REAL(&(sys->p),PIVOT_TOL));
 }
+
 /*
   configures linsolqr system, among other things.
   sets type to be ranki_kw or ranki_jz as determined by
