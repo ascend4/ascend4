@@ -31,8 +31,8 @@
 	Last in CVS: $Revision: 1.13 $ $Date: 2000/01/25 02:27:10 $ $Author: ballan $
 */
 
-#ifndef __MTX_BASIC_H_SEEN__
-#define __MTX_BASIC_H_SEEN__
+#ifndef ASC_MTX_BASIC_H_
+#define ASC_MTX_BASIC_H
 
 /**	@addtogroup linear Linear
 	@{
@@ -1398,4 +1398,4 @@ ASC_DLLSPEC void mtx__debug_output(FILE *file, mtx_matrix_t mtx);
 
 /** @} */
 
-#endif /**< __MTX_BASIC_H_SEEN__ */
+#endif /**< ASC_MTX_BASIC_H */

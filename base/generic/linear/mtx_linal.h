@@ -26,8 +26,8 @@
 	Last in CVS: $Revision: 1.4 $ $Date: 1997/07/18 12:15:02 $ $Author: mthomas $
 */
 
-#ifndef __MTX_LINAL_H_SEEN__
-#define __MTX_LINAL_H_SEEN__
+#ifndef ASC_MTX_LINAL_H
+#define ASC_MTX_LINAL_H
 
 /**	@addtogroup linear Linear
 	@{
@@ -65,4 +65,4 @@ extern void mtx_householder_transform_region(mtx_matrix_t mtx,
 
 /** @} */
 
-#endif /* __MTX_LINAL_H_SEEN__ */
+#endif /* ASC_MTX_LINAL_H */

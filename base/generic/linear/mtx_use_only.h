@@ -69,8 +69,8 @@
  *  <pre>
  */
 
-#ifndef __MTX_INTERNAL_USE_ONLY_H__
-#define __MTX_INTERNAL_USE_ONLY_H__
+#ifndef ASC_MTX_USE_ONLY_H
+#define ASC_MTX_USE_ONLY_H
 
 /**	@addtogroup linear Linear
 	@{
@@ -704,6 +704,6 @@ extern void mtx_renull_all(mtx_matrix_t mtx, struct element_t **arr);
 
 /** @} */
 
-#endif /* __MTX_INTERNAL_USE_ONLY_H__ */
+#endif /* ASC_MTX_USE_ONLY_H */
 #endif /* none of your business if you aren't mtx_*.c */
 
