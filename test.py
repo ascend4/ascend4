@@ -749,6 +749,22 @@ class TestIDA(Ascend):
 	def testincidence(self):
 		self._run('incidence')
 
+	def testincidence1(self):
+		self._run('incidence',1)
+	def testincidence2(self):
+		self._run('incidence',2)
+	def testincidence3(self):
+		self._run('incidence',3)
+	def testincidence4(self):
+		self._run('incidence',4)
+	def testincidencefail5(self):
+		self._runfail('incidence',5)
+
+# doesn't work yet:
+#	def testincidence5(self):
+#		self._run('incidence',5)
+
+
 #-------------------------------------------------------------------------------
 # Testing of IDA models using DENSE linear solver
 

@@ -450,7 +450,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	CONSOLE_DEBUG("Starting DAE analysis");
 	IntegInitSymbols();
 
-	assert(sys->system);
+	asc_assert(sys->system);
 
 	CONSOLE_DEBUG("Block partitioning system...");
 	if(slv_block_partition(sys->system)){
@@ -458,7 +458,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 		return 1;
 	}
 
-	assert(sys->indepvars==NULL);
+	asc_assert(sys->indepvars==NULL);
 
 	sys->indepvars = gl_create(10L);  /* t var info */
 	sys->dynvars = gl_create(200L);  /* y and ydot var info */
@@ -1067,7 +1067,7 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 	vfilt.matchbits = VAR_SVAR;
 	vfilt.matchvalue = VAR_SVAR;
 
-	assert(var != NULL && var_instance(var)!=NULL );
+	asc_assert(var != NULL && var_instance(var)!=NULL );
 
 	if( var_apply_filter(var,&vfilt) ) {
 		if(!var_active(var)){
@@ -1123,7 +1123,7 @@ void integrator_ode_classify_var(IntegratorSystem *sys, struct var_variable *var
   vfilt.matchbits = VAR_SVAR;
   vfilt.matchvalue = VAR_SVAR;
 
-  assert(var != NULL && var_instance(var)!=NULL );
+  asc_assert(var != NULL && var_instance(var)!=NULL );
 
   if( var_apply_filter(var,&vfilt) ) {
 	/* it's a solver var: what type of variable? */
@@ -1165,7 +1165,7 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 	char *varname;
 #endif
 
-	assert(var != NULL && var_instance(var)!=NULL );
+	asc_assert(var != NULL && var_instance(var)!=NULL );
 	vfilt.matchbits = VAR_SVAR;
 	vfilt.matchvalue = VAR_SVAR;
 
@@ -1212,9 +1212,9 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 static long DynamicVarInfo(struct var_variable *v,long *index){
   struct Instance *c, *d, *i;
   i = var_instance(v);
-  assert(i!=NULL);
-  assert(STATEFLAG!=NULL);
-  assert(STATEINDEX!=NULL);
+  asc_assert(i!=NULL);
+  asc_assert(STATEFLAG!=NULL);
+  asc_assert(STATEINDEX!=NULL);
   c = ChildByChar(i,STATEFLAG);
   d = ChildByChar(i,STATEINDEX);
   /* lazy evaluation is important in the following if */
@@ -1246,7 +1246,7 @@ static long DynamicVarInfo(struct var_variable *v,long *index){
 static struct var_variable *ObservationVar(struct var_variable *v, long *index){
   struct Instance *c,*i;
   i = var_instance(v);
-  assert(i!=NULL);
+  asc_assert(i!=NULL);
   c = ChildByChar(i,OBSINDEX);
   if( c == NULL || InstanceKind(c) != INTEGER_INST || !AtomAssigned(c)) {
     return NULL;
@@ -1271,10 +1271,10 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 
 	long nstep;
 	unsigned long start_index=0, finish_index=0;
-	assert(sys!=NULL);
+	asc_assert(sys!=NULL);
 
-	assert(sys->internals);
-	assert(sys->engine!=INTEG_UNKNOWN);
+	asc_assert(sys->internals);
+	asc_assert(sys->engine!=INTEG_UNKNOWN);
 
 	nstep = integrator_getnsamples(sys)-1;
 	/* check for at least 2 steps and dimensionality of x vs steps here */
@@ -1332,26 +1332,26 @@ GETTER_AND_SETTER(int,maxsubsteps) /*;*/
 #undef GETTER_AND_SETTER
 
 long integrator_getnsamples(IntegratorSystem *sys){
-	assert(sys!=NULL);
-	assert(sys->samples!=NULL);
+	asc_assert(sys!=NULL);
+	asc_assert(sys->samples!=NULL);
 	return samplelist_length(sys->samples);
 }
 
 double integrator_getsample(IntegratorSystem *sys, long i){
-	assert(sys!=NULL);
-	assert(sys->samples!=NULL);
+	asc_assert(sys!=NULL);
+	asc_assert(sys->samples!=NULL);
 	return samplelist_get(sys->samples,i);
 }
 
 void integrator_setsample(IntegratorSystem *sys, long i,double xi){
-	assert(sys!=NULL);
-	assert(sys->samples!=NULL);
+	asc_assert(sys!=NULL);
+	asc_assert(sys->samples!=NULL);
 	samplelist_set(sys->samples,i,xi);
 }
 
 const dim_type *integrator_getsampledim(IntegratorSystem *sys){
-	assert(sys!=NULL);
-	assert(sys->samples!=NULL);
+	asc_assert(sys!=NULL);
+	asc_assert(sys->samples!=NULL);
 	return samplelist_dim(sys->samples);
 }
 
@@ -1368,7 +1368,7 @@ ASC_DLLSPEC long integrator_getcurrentstep(IntegratorSystem *sys){
 	and return it as a double.
 */
 double integrator_get_t(IntegratorSystem *sys){
-	assert(sys->x!=NULL);
+	asc_assert(sys->x!=NULL);
 	return var_value(sys->x);
 }
 
@@ -1399,7 +1399,7 @@ double *integrator_get_y(IntegratorSystem *sys, double *y) {
   }
 
   for (i=0; i< sys->n_y; i++) {
-	assert(sys->y[i]!=NULL);
+	asc_assert(sys->y[i]!=NULL);
     y[i] = var_value(sys->y[i]);
     /* CONSOLE_DEBUG("ASCEND --> y[%ld] = %g", i+1, y[i]); */
   }
@@ -1418,7 +1418,7 @@ void integrator_set_y(IntegratorSystem *sys, double *y) {
 #endif
 
   for (i=0; i < sys->n_y; i++) {
-	assert(sys->y[i]!=NULL);
+	asc_assert(sys->y[i]!=NULL);
     var_set_value(sys->y[i],y[i]);
 #ifdef SOLVE_DEBUG
 	varname = var_make_name(sys->system, sys->y[i]);
@@ -1487,9 +1487,9 @@ double *integrator_get_atol(IntegratorSystem *sys, double *atol){
 	}
 
 	for (i=0; i< sys->n_y; i++) {
-		assert(sys->y[i]!=NULL);
+		asc_assert(sys->y[i]!=NULL);
 		atol[i] = var_odeatol(sys->y[i]);
-		assert(atol[i]!=-1);
+		asc_assert(atol[i]!=-1);
 		varname = var_make_name(sys->system,sys->y[i]);
 		CONSOLE_DEBUG("%s.ode_atol = %8.2e",varname,atol[i]);
 		ASC_FREE(varname);
