@@ -79,6 +79,7 @@
 #include <linear/densemtx.h>
 
 #include <packages/sensitivity.h>
+#include <solver/system.h>
 
 
 /* #define SENSITIVITY_DEBUG */

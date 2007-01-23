@@ -40,18 +40,9 @@
 #include <linear/linsolqr.h>
 #include <linear/densemtx.h>
 
-#include <solver/slv_types.h>
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/logrel.h>
-#include <solver/bnd.h>
 #include <solver/calc.h>
 #include <solver/relman.h>
-#include <solver/slv_common.h>
 #include <solver/slv_stdcalls.h>
-#include <solver/system.h>
 #include <solver/slv_client.h>
 
 /*--------------------------------------------------

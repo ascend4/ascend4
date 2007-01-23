@@ -55,7 +55,6 @@
 #include "bnd.h"
 #include "slv_server.h"
 #include "slv_common.h"
-#include "slv_client.h"
 #include "analyze.h"
 
 #ifndef IPTR

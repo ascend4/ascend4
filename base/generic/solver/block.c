@@ -954,3 +954,9 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
   mr_reorder_destroy(mrsys);
   return 0;
 }
+
+
+extern int block_debug(slv_system_t sys, FILE *fp){
+	fprintf(fp,"\n\nHello from block_debug\n\n");
+}
+	
