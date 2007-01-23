@@ -29,7 +29,7 @@
  */
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
-#include "compiler.h"
+
 #include <utilities/ascPanic.h>
 #include <general/list.h>
 #include "fractions.h"

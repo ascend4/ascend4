@@ -25,11 +25,6 @@
  *  building code because we may not have the compiler
  *  directory available. btprolog.h is installed with
  *  the ascend binaries or scripts.
- *  <pre>
- *  When #including bintoken.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "instance_enum.h"
- *  </pre>
 *//*
 	By Benjamin A. Allan
 	Jan 7, 1998.
@@ -38,6 +33,9 @@
 
 #ifndef ASC_BINTOKEN_H
 #define ASC_BINTOKEN_H
+
+#include <utilities/ascConfig.h>
+#include "compiler.h"
 
 /**	@addtogroup compiler Compiler
 	@{

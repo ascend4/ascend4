@@ -44,6 +44,8 @@
 #ifndef ASC_SIMLIST_H
 #define ASC_SIMLIST_H
 
+#include "compiler.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */

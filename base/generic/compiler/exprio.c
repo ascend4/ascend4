@@ -27,7 +27,7 @@
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"

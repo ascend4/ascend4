@@ -31,7 +31,7 @@
 
 #include <utilities/ascConfig.h>
 #include <general/list.h>
-#include "compiler.h"
+
 #include "stattypes.h"
 #include "slist.h"
 #include "statio.h"

@@ -61,7 +61,7 @@
 
 #include <time.h>
 #include <errno.h>
-#include <compiler/compiler.h>
+
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <utilities/set.h>

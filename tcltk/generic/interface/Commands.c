@@ -37,7 +37,7 @@
 #include <utilities/ascConfig.h>
 #include <general/list.h>
 
-#include <compiler/compiler.h>
+
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>

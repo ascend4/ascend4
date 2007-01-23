@@ -37,7 +37,7 @@
 /* #include <general/pairlist.h> */
 #include <general/stack.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"

@@ -11,12 +11,12 @@ using namespace std;
 
 extern "C"{
 #include <utilities/ascConfig.h>
-#include <compiler/compiler.h>
+
 #include <general/list.h>
 #include <compiler/slist.h>
 #include <compiler/ascCompiler.h>
 #include <compiler/fractions.h>
-#include <compiler/compiler.h>
+
 /* #include <compiler/redirectFile.h> */
 #include <compiler/module.h>
 #include <compiler/prototype.h>

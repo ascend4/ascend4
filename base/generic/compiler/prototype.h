@@ -39,11 +39,14 @@
 #ifndef ASC_PROTOTYPE_H
 #define ASC_PROTOTYPE_H
 
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "instance_enum.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */
 
-#include <utilities/ascConfig.h>
 
 extern void InitializePrototype(void);
 /**<  Must be called before any other prototype procedure. */

@@ -26,7 +26,7 @@
 #include<stdio.h>
 #include<assert.h>
 #include <utilities/ascConfig.h>
-#include "compiler.h"
+
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include "fractions.h"

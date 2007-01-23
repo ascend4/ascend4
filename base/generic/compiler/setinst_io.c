@@ -27,7 +27,7 @@
  */
 #include<stdio.h>
 #include <utilities/ascConfig.h>
-#include "compiler.h"
+
 #include "setinstval.h"
 #include "setinst_io.h"
 

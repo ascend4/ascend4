@@ -46,7 +46,7 @@
 #include <general/list.h>
 #include <general/dstring.h>
 
-#include <compiler/compiler.h>
+
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>

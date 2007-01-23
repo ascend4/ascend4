@@ -32,11 +32,11 @@
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include "compiler.h"
+
 #include "instance_enum.h"
 #include "cmpfunc.h"
 #include <general/list.h>
-#include "compiler.h"
+
 #include "symtab.h"
 #include "notate.h"
 #include "fractions.h"

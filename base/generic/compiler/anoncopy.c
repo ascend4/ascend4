@@ -31,7 +31,7 @@
 #include <time.h>
 #include <stdarg.h>
 
-#include "compiler.h"
+
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <general/pool.h>

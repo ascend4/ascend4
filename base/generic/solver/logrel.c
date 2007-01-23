@@ -30,7 +30,7 @@
 #include <general/dstring.h>
 #include <compiler/fractions.h>
 #include <compiler/instance_enum.h>
-#include <compiler/compiler.h>
+
 #include <compiler/symtab.h>
 #include <compiler/extfunc.h>
 #include <compiler/extcall.h>

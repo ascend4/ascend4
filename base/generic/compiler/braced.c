@@ -23,7 +23,7 @@
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include "compiler.h"
+
 #include "braced.h"
 
 /*

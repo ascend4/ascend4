@@ -33,7 +33,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/pool.h>
-#include "compiler.h"
+
 #include "symtab.h"
 #include "instance_enum.h"
 #include "cmpfunc.h"

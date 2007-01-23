@@ -32,7 +32,7 @@
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
-#include "compiler.h"
+
 #include "bit.h"
 #include "fractions.h"
 #include "dimen.h"

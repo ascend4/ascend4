@@ -39,6 +39,8 @@
 #ifndef ASC_SETINSTVAL_H
 #define ASC_SETINSTVAL_H
 
+#include "compiler.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */

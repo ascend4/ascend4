@@ -37,7 +37,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/tm_time.h>
 
-#include <compiler/compiler.h>
+
 
 #include "mtx.h"
 #include "linsol.h"

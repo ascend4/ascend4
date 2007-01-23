@@ -39,6 +39,8 @@
 #ifndef ASC_INSTANCE_NAME_H
 #define ASC_INSTANCE_NAME_H
 
+#include "compiler.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */

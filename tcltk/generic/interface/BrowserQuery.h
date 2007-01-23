@@ -40,7 +40,6 @@
 #ifndef ASCTK_BROWSERQUERY_H
 #define ASCTK_BROWSERQUERY_H
 
-
 extern int Asc_BrowIsRelationCmd(ClientData cdata, Tcl_Interp *interp,
                                  int argc, CONST84 char *argv[]);
 /**<

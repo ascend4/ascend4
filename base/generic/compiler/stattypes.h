@@ -46,6 +46,8 @@
 #ifndef ASC_STATTYPES_H
 #define ASC_STATTYPES_H
 
+#include "compiler.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */

@@ -32,7 +32,7 @@
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
-#include "compiler.h"
+
 #include "symtab.h"
 #include "instance_enum.h"
 #include "cmpfunc.h"

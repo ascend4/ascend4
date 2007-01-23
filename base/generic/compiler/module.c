@@ -35,7 +35,7 @@
 #include <utilities/ascPanic.h>
 #include <general/list.h>
 #include "scanner.h"
-#include "compiler.h"
+
 #include "instance_enum.h"
 #include "cmpfunc.h"
 #include "symtab.h"

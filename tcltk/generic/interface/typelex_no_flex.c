@@ -597,7 +597,7 @@ char *yytext;
 #include <general/list.h>
 #ifndef TYPER_TEST
 /* for handling string modules and results in interp */
-#include <compiler/compiler.h>
+
 #include <compiler/symtab.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>

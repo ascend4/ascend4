@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <math.h>		/* !!! dont ever forget this and -lm */
 #include <utilities/ascConfig.h>
-#include "compiler.h"
+
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include "fractions.h"

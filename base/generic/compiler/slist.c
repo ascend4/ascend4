@@ -29,7 +29,7 @@
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include "compiler.h"
+
 #include <general/list.h>
 #include "fractions.h"
 #include "dimen.h"

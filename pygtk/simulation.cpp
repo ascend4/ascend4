@@ -32,7 +32,7 @@ extern "C"{
 #include <general/tm_time.h>
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
-#include <compiler/compiler.h>
+
 #include <compiler/dimen.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>

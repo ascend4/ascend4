@@ -31,7 +31,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
-#include <compiler/compiler.h>
+
 #include <compiler/symtab.h>
 #include <compiler/module.h>
 #include <compiler/library.h>

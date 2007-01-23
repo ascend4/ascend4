@@ -38,7 +38,7 @@
 #include <general/tm_time.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include <compiler/compiler.h>
+
 #include <compiler/instance_enum.h>
 #include <compiler/cmpfunc.h>
 #include <compiler/check.h>

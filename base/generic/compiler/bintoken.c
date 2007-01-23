@@ -48,7 +48,7 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include <general/list.h>
 #include <general/dstring.h>
 #include <general/pretty.h>
-#include "compiler.h" /* for symchar */
+
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"

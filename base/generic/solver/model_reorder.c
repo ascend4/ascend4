@@ -36,7 +36,7 @@
 #include "model_reorder.h"
 
 #include <utilities/ascConfig.h>
-#include <compiler/compiler.h>
+
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 

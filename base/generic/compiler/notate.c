@@ -31,7 +31,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/pool.h>
-#include "compiler.h"
+
 #include "symtab.h"
 #include "braced.h"
 #include "vlist.h"

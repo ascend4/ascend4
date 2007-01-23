@@ -34,7 +34,7 @@
 
 #include <linear/mtx.h>
 
-#include <compiler/compiler.h>
+
 #include <compiler/fractions.h>
 #include <compiler/instance_enum.h>
 #include <compiler/extfunc.h>

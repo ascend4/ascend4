@@ -49,12 +49,12 @@
 #include <utilities/ascMalloc.h> /* for ascshutdown */
 #include <utilities/ascPanic.h>  /* for Asc_Panic */
 #include <utilities/ascEnvVar.h>
-#include <compiler/compiler.h>
+
 #include <compiler/ascCompiler.h>
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
-#include <compiler/compiler.h> /* for symchar for units.h */
+
 #include <compiler/units.h>
 #include <solver/slv_types.h>
 #include <solver/var.h>

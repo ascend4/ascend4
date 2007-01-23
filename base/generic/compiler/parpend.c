@@ -35,7 +35,7 @@
 #include <utilities/ascPanic.h>
 #include <general/pool.h>
 #include "fractions.h"
-#include "compiler.h"
+
 #include "dimen.h"
 #include "expr_types.h"
 #include "stattypes.h"

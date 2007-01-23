@@ -32,7 +32,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascPrint.h>
 #include <general/list.h>
-#include <compiler/compiler.h>
+
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/child.h>
