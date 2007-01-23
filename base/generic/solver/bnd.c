@@ -50,7 +50,6 @@
 #include <compiler/parentchild.h>
 #include <compiler/instance_io.h>
 
-#define _SLV_SERVER_C_SEEN_
 #include "var.h"
 #include "discrete.h"
 #include "conditional.h"

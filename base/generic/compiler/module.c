@@ -462,7 +462,7 @@ struct module_t *FindModuleFile(CONST char *name,
 	a message and exit the function
   */
   if( result == -1 ) {
-    CONSOLE_DEBUG("ModuleSearchPath returned -1, name=%s, filename=%s",name,filename);
+    CONSOLE_DEBUG("ModuleSearchPath returned -1, name=%s",name);
     WriteWhyNotFound(name, error);
     DeleteModule(new_module);
     *status = -2;

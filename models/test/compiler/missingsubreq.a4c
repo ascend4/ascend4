@@ -1,0 +1,6 @@
+REQUIRE "test/compiler/missingreq.a4c";
+
+MODEL missingsubreqfail1 REFINES missingreqfail1;
+	x IS_A solver_var;
+	x = 4;
+END missingsubreqfail1;

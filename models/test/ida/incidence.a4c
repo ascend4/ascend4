@@ -1,0 +1,7 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "test/ida/twoderiv.a4c";
+
+MODEL incidence REFINES twoderiv;
+METHODS
+	(* nothing new *)
+END incidence;
