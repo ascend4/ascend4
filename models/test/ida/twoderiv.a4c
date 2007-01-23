@@ -8,7 +8,11 @@ MODEL twoderiv;
 	dy_dt = -x;
 	dx_dt = -y;
 METHODS
+	METHOD specify;
+		(* nothing yet *)
+	END specify;
 	METHOD on_load;
+		RUN specify;
 		y.ode_id := 1; y.ode_type := 1;
 		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
 

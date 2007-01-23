@@ -5,3 +5,62 @@ MODEL incidence REFINES twoderiv;
 METHODS
 	(* nothing new *)
 END incidence;
+
+(* check that non-incident var is not added to the integration system *)
+MODEL incidence1 REFINES twoderiv;
+	aaa IS_A solver_var;
+METHODS
+	(* nothing new *)
+END incidence1;
+
+(* check that non-incident var is not added to the integration system *)
+MODEL incidence2 REFINES twoderiv;
+	aaa IS_A solver_var;
+METHODS
+	METHOD specify;
+		FIX aaa;
+	END specify;
+END incidence2;
+
+(*---------------------------*)
+
+(* check that non-incident var & deriv cause don't cause problems *)
+MODEL incidence3 REFINES twoderiv;
+	aaa IS_A solver_var;
+	daaa_dt IS_A solver_var;
+METHODS
+	METHOD on_load;
+		RUN twoderiv::on_load;
+		aaa.ode_id := 10; aaa.ode_type := 1;
+		daaa_dt.ode_id := 10; daaa_dt.ode_type := 2;
+	END on_load;
+END incidence3;
+
+(* check that non-incident var & deriv are removed when var is fixed *)
+MODEL incidence4 REFINES incidence3;
+METHODS
+	METHOD specify;
+		FIX aaa;
+	END specify;
+END incidence4;
+
+(*---------------------------*)
+
+(* check that higher-order derivative causes error *)
+MODEL incidencefail5 REFINES twoderiv;
+	d2y_dt2 IS_A solver_var;
+METHODS
+	METHOD on_load;
+		RUN twoderiv::on_load;
+		d2y_dt2.ode_id := 1; d2y_dt2.ode_type := 3;
+	END on_load;
+END incidencefail5;
+
+(* check that higher-order derivative, if set fixed, is removed *)
+(* DOESN'T WORK YET *)
+MODEL incidence5 REFINES incidencefail5;
+METHODS
+	METHOD specify;
+		FIX d2y_dt2;
+	END specify;
+END incidence5;

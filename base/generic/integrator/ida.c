@@ -541,7 +541,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 		return 6;
 	}
 
-	CONSOLE_DEBUG("Got %ld chains",diffvars->nseqs);
+	CONSOLE_DEBUG("Got %ld chains, maxorder = %d",diffvars->nseqs,diffvars->maxorder);
 	
 	if(diffvars->maxorder > 2){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
