@@ -56,14 +56,40 @@ class AscendSelfTester(Ascend):
 
 class TestCompiler(Ascend):
 
+	def _run(self,filen,modeln=""):
+		self.L.load('test/compiler/%s.a4c' % filen)
+		T = self.L.findType('%s%s' % (filen,modeln))
+		M = T.getSimulation('sim')
+		M.build()
+
+	def _runfail(self,filen,n,msg="failed"):
+		try:
+			self._run(filen,'fail%d' % n)
+		except Exception,e:
+			print "(EXPECTED) ERROR: %s" % e
+			return
+		self.fail(msg)
+
+
 	def testloading(self):
+		"""library startup"""
 		pass
 
 	def testsystema4l(self):
+		"""loading system.a4l?"""
 		self.L.load('system.a4l')
 
 	def testatomsa4l(self):
+		"""loading atoms.a4l?"""
 		self.L.load('atoms.a4l')
+
+	def testmissingreq(self):
+		"""flagging a missing REQUIRE"""
+		self._runfail('missingreq',1)
+
+	def testmissingsubreq(self):
+		"""flagging a subsidiary missing REQUIRE"""
+		self._runfail('missingreq',1)
 
 class TestSolver(AscendSelfTester):
 	
@@ -720,6 +746,8 @@ class TestIDA(Ascend):
 	def testfixedvars3(self):
 		self._run('fixedvars',3)
 
+	def testincidence(self):
+		self._run('incidence')
 
 #-------------------------------------------------------------------------------
 # Testing of IDA models using DENSE linear solver

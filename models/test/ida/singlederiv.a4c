@@ -4,7 +4,7 @@ MODEL singlederiv;
 	y IS_A solver_var;
 	dy_dt IS_A solver_var;
 	t IS_A solver_var;
-	dy_dt = exp(-t^2);
+	dy_dt = -4 * y;
 METHODS
 	METHOD on_load;
 		y.ode_id := 1; y.ode_type := 1;

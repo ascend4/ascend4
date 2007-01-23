@@ -49,7 +49,7 @@
 #  error "Failed to include SUNDIALS IDA header file"
 # endif
 #else
-# error "Where is IDA?"
+# error "If you're building this file, you should have ASC_WITH_IDA"
 #endif
 
 #ifdef ASC_WITH_MMIO
@@ -96,7 +96,7 @@
 #define SOLVE_DEBUG
 #define STATS_DEBUG
 #define PREC_DEBUG
-
+/* #define ANALYSE_DEBUG */
 /**
 	Everthing that the outside world needs to know about IDA
 */
@@ -233,8 +233,8 @@ void integrator_ida_create(IntegratorSystem *blsys){
 	enginedata = ASC_NEW(IntegratorIdaData);
 	enginedata->rellist = NULL;
 	enginedata->safeeval = 0;
-	enginedata->vfilter.matchbits =  VAR_SVAR | VAR_ACTIVE | VAR_FIXED;
-	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_ACTIVE;
+	enginedata->vfilter.matchbits =  VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | VAR_FIXED;
+	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE;
 	enginedata->pfree = NULL;
 
 	enginedata->rfilter.matchbits =  REL_EQUALITY | REL_INCLUDED | REL_ACTIVE;
@@ -423,6 +423,70 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
   ANALYSIS ROUTINE (new implementation)
 */
 
+static int integrator_ida_block_check(IntegratorSystem *sys){
+	int res;
+ 	int dof;
+#ifdef ANALYSE_DEBUG
+	long *vlist, *vp, i, nv, nv_ok;
+	char *varname;
+	struct var_variable **solversvars;
+
+	var_filter_t vfilt = {
+		VAR_ACTIVE | VAR_INCIDENT | VAR_FIXED,
+		VAR_ACTIVE | VAR_INCIDENT | 0
+	};
+			
+	nv = slv_get_num_solvers_vars(sys->system);
+	solversvars = slv_get_solvers_var_list(sys->system);
+	CONSOLE_DEBUG("-------------- nv = %ld -------------",nv);
+	for(nv_ok=0, i=0; i < nv; ++i){
+		if(var_apply_filter(solversvars[i],&vfilt)){
+			varname = var_make_name(sys->system,solversvars[i]);
+			fprintf(stderr,"%s\n",varname);
+			ASC_FREE(varname);
+			nv_ok++;
+		}
+	}
+	CONSOLE_DEBUG("----------- got %ld ok -------------",nv_ok);
+#endif
+
+	if(!slvDOF_status(sys->system, &res, &dof)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to determine DOF status");
+		return -1;
+	}
+	switch(res){
+		case 1: CONSOLE_DEBUG("With derivatives fixed, system is underspecified (%d degrees of freedom)",dof);break;
+		case 2: CONSOLE_DEBUG("With derivatives fixed, system is square"); return 0; /* all OK */
+		case 3: CONSOLE_DEBUG("With derivatives fixed, system is structurally singular"); break;
+		case 4: CONSOLE_DEBUG("With derivatives fixed, system is overspecified"); break;
+		default: 
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unrecognised slfDOF_status");
+			return -2;
+	}
+
+#ifdef ANALYSE_DEBUG
+	/* if it was underspecified, what vars could be fixed? */
+	if(res==1){
+		CONSOLE_DEBUG("Need to FIX %d of the following vars:",dof);
+		solversvars = slv_get_solvers_var_list(sys->system);
+		if(!slvDOF_eligible(sys->system, &vlist)){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to det slvDOF_eligble list");
+			return -3;
+		}
+		for(vp=vlist;*vp!=-1;++vp){
+			varname = var_make_name(sys->system, solversvars[*vp]);
+			CONSOLE_DEBUG("Fixable var: %s",varname);
+			ASC_FREE(varname);
+		}
+		CONSOLE_DEBUG("(Found %ld fixable vars)",(int)(vp-vlist));
+		return 1;
+	}
+#endif
+
+	return res;
+}
+
+
 typedef void (IntegratorVarVisitorFn)(IntegratorSystem *sys, struct var_variable *var, const int *varindx);
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
 IntegratorVarVisitorFn integrator_dae_classify_var;
@@ -447,7 +511,7 @@ void integrator_dae_show_var(IntegratorSystem *sys, struct var_variable *var, co
 	@return 0 on success 
 	@see integrator_analyse
 */
-int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
+int integrator_ida_analyse(IntegratorSystem *sys){
 	struct var_variable **solversvars;
 	unsigned long nsolversvars;
 	struct rel_relation **solversrels;
@@ -455,7 +519,6 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	const SolverDiffVarCollection *diffvars;
 	SolverDiffVarSequence seq;
 	long i, j, n_y, n_ydot, n_dyn, n_skipped_diff, n_skipped_alg, n_skipped_deriv;
-	int dof;
 	int res;
 
 	struct var_variable *v;
@@ -465,35 +528,12 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	
 	asc_assert(sys->engine==INTEG_IDA);
 
-	/* get our list of derivative variables */
-	solversvars = slv_get_solvers_var_list(sys->system);
-	nsolversvars = slv_get_num_solvers_vars(sys->system);
-    CONSOLE_DEBUG("Solver has %lu vars",nsolversvars);
-
 	/* partition into static, dynamic and output problems */
 	CONSOLE_DEBUG("Block partitioning system...");
 	if(slv_block_partition(sys->system)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to block-partition system");
 		return 1;
 	}
-
-	if(!slvDOF_status(sys->system, &res, &dof)){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to determine DOF status");
-		return 7;
-	}
-	switch(res){
-		case 1: CONSOLE_DEBUG("System is underspecified (%d degrees of freedom)",dof); break;
-		case 2: CONSOLE_DEBUG("System is square"); break;
-		case 3: CONSOLE_DEBUG("System is structurally singular"); break;
-		case 4: CONSOLE_DEBUG("System is overspecified"); break;
-		default: 
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unrecognised slfDOF_status");
-			return 8;
-	}
-
-	solversrels = slv_get_solvers_rel_list(sys->system);
-	nsolversrels = slv_get_num_solvers_rels(sys->system);
-	CONSOLE_DEBUG("System has %lu rels",nsolversrels);
 
 	diffvars = slv_get_diffvars(sys->system);
 	if(diffvars==NULL){
@@ -531,6 +571,7 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	}                 
 	
 	/* add the variables from the derivative chains */
+	CONSOLE_DEBUG("Counting vars (%ld)",n_y);
 	for(i=0; i<diffvars->nseqs; ++i){
 		seq = diffvars->seqs[i];
 		asc_assert(seq.n >= 1);
@@ -542,8 +583,13 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 				ASC_FREE(varname);
 				n_skipped_alg++;
 				continue;
+			}else if(!var_incident(v)){
+				CONSOLE_DEBUG("'%s' is not incident",varname);
+				ASC_FREE(varname);
+				n_skipped_alg++;
+				continue;
 			}
-			CONSOLE_DEBUG("'%s' is algebraic",varname);
+			CONSOLE_DEBUG("'%s' is algebraic (%ld)",varname,n_y);
 		}else{
 			v = seq.vars[0];
 			varname = var_make_name(sys->system,v);
@@ -572,13 +618,13 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 				asc_assert(seq.n == 2);
 				sys->y[n_y] = v;
 				sys->y_id[var_sindex(v)] = n_y;
-				CONSOLE_DEBUG("'%s' is differential",varname);
+				CONSOLE_DEBUG("'%s' is differential (%ld)",varname,n_y);
 				ASC_FREE(varname);
 				v = seq.vars[1];
 				sys->ydot[n_y] = v;
 				sys->y_id[var_sindex(v)] = -n_y-1;
 				varname = var_make_name(sys->system,v);
-				CONSOLE_DEBUG("'%s' is derivative",varname);
+				CONSOLE_DEBUG("'%s' is derivative (%ld)",varname,n_y);
 				ASC_FREE(varname);
 				n_y++;
 				continue;
@@ -596,11 +642,37 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	sys->n_y = n_y;
 	n_ydot = n_y;
 
-	CONSOLE_DEBUG("Creating block structure");
-	slv_block_partition(sys->system);
-	CONSOLE_DEBUG("Done creating block structure");
+	/* FIX the derivatives */
+	CONSOLE_DEBUG("Checking system with derivatives fixed...");
+	for(i=0;i<n_y;++i){
+		if(sys->ydot[i])var_set_fixed(sys->ydot[i],1);
+	}
 
-	if(sys->n_y != nsolversrels){
+	slv_block_partition(sys->system);
+	res = integrator_ida_block_check(sys);
+	if(res)return 100 + res;
+
+	/* FREE the derivatives, FIX the diffvars */
+	for(i=0;i<n_y;++i){
+		if(sys->ydot[i]){
+			var_set_fixed(sys->ydot[i],0);
+			var_set_fixed(sys->y[i],1);
+		}
+	}
+
+	CONSOLE_DEBUG("Checking system with differential variables fixed...");
+	slv_block_partition(sys->system);
+	res = integrator_ida_block_check(sys);
+	if(res)return 200 + res;
+	
+	/* FREE the diffvars */
+	for(i=0;i<n_y;++i){
+		if(sys->ydot[i]){
+			var_set_fixed(sys->y[i],0);
+		}
+	}		
+
+	/*if(sys->n_y != nsolversrels){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square: n_y = %d, n_rels = %d"
 			" (n_alg = %d - %d = %d"
 			", n_diff = 2 * %d - %d - %d)"
@@ -609,7 +681,7 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 			, diffvars->ndiff, n_skipped_diff, n_skipped_deriv
 		);
 		return 2;
-	}
+	}*/
 
 	/* check the indep var is same as was located elsewhere */
 	if(diffvars->nindep>1){

@@ -5,7 +5,7 @@ MODEL twoderiv;
 	x IS_A solver_var;	dx_dt IS_A solver_var;
 	t IS_A solver_var;
 
-	dy_dt = exp(-t^2);
+	dy_dt = -x;
 	dx_dt = -y;
 METHODS
 	METHOD on_load;

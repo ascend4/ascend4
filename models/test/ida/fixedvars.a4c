@@ -5,8 +5,8 @@ MODEL fixedvars;
 	x IS_A solver_var;	dx_dt IS_A solver_var;
 	t IS_A solver_var;
 
-	dy_dt = exp(-t^2);
-	dx_dt = -y;
+	dy_dt = x + y;
+	dx_dt = 2*x - y;
 METHODS
 	METHOD on_load;
 		y.ode_id := 1; y.ode_type := 1;
@@ -25,9 +25,25 @@ METHODS
 END twoderiv;
 
 (* fix y and dy_dt should become inactive. add z so that problem remains square *)
-MODEL fixedvars1 REFINES fixedvars;
-	z IS_A solver_var;
+MODEL fixedvars1;
+	y IS_A solver_var;	dy_dt IS_A solver_var;
+	x IS_A solver_var;	dx_dt IS_A solver_var;
+	t IS_A solver_var;
+
+	(* take out the dy_dt equation else it will be overspecified *)
+	dx_dt = 2*x - y;
 METHODS
+	METHOD on_load;
+		y.ode_id := 1; y.ode_type := 1;
+		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
+
+		x.ode_id := 2; x.ode_type := 1;
+		dx_dt.ode_id := 2; dx_dt.ode_type := 2;
+
+		t.ode_type:= -1;
+
+		RUN reset;
+	END on_load;
 	METHOD specify;
 		FIX y;
 	END specify;

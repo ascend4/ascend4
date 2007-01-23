@@ -1,0 +1,6 @@
+REQUIRE "nonexistantfile12813283418.a4c";
+
+MODEL missingreqfail1;
+	x IS_A solver_var;
+	x = 4;
+END missingreqfail1;
