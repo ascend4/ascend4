@@ -29,7 +29,7 @@
 #include<stdio.h>
 #include<assert.h>
 #include <utilities/ascConfig.h>
-#include "compiler.h"
+
 #include "instance_enum.h"
 #include "cmpfunc.h"
 #include <utilities/ascMalloc.h>

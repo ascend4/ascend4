@@ -39,7 +39,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include <compiler/compiler.h>
+
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/functype.h>

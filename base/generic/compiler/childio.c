@@ -34,7 +34,7 @@
 #include <utilities/ascPanic.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "symtab.h"
 #include "instance_enum.h"
 #include "fractions.h"

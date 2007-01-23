@@ -38,7 +38,7 @@
 #ifndef FIRSTCHOICE 
 #include <general/hashpjw.h>
 #endif
-#include "compiler.h"
+
 #include "symtab.h"
 #include "instance_enum.h"
 #include "cmpfunc.h"

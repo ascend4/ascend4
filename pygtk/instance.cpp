@@ -15,7 +15,7 @@ extern "C"{
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
 #include <general/dstring.h>
-#include <compiler/compiler.h>
+
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
 #include <compiler/instantiate.h>

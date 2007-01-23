@@ -37,7 +37,7 @@
 #include <general/pool.h>
 #include <general/dstring.h>
 #include <general/pretty.h>
-#include "compiler.h"
+
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"

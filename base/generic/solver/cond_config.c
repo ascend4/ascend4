@@ -30,7 +30,7 @@
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
 
-#include <compiler/compiler.h>
+
 #include <compiler/instance_enum.h>
 #include <compiler/check.h>
 #include <general/list.h>

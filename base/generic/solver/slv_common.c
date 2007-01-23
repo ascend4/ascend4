@@ -43,7 +43,7 @@
 
 /* if libasc.a running around, the following: */
 #if SLV_INSTANCES
-#include <compiler/compiler.h>
+
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/functype.h>

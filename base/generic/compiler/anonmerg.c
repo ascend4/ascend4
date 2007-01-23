@@ -38,7 +38,7 @@
 #include <general/list.h>
 #include <general/listio.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #if TIMECOMPILER
 #include <time.h>
 #include <general/tm_time.h>

@@ -28,7 +28,7 @@
 
 #include <utilities/ascConfig.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "functype.h"
 #include "fractions.h"
 #include "dimen.h"

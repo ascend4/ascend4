@@ -28,7 +28,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "fractions.h"
 #include "dimen.h"
 #include "dimen_io.h"

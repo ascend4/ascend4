@@ -40,7 +40,7 @@
 #include <general/list.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
-#include <compiler/compiler.h>
+
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_name.h>

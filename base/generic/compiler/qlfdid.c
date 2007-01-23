@@ -33,7 +33,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "instance_enum.h"
 #include "symtab.h"
 #include "simlist.h"

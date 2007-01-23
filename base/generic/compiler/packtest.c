@@ -35,7 +35,7 @@
 
 #include <general/ospath.h>
 
-#include "compiler.h"
+
 #include <utilities/ascMalloc.h>
 #include <utilities/ascEnvVar.h>
 #include <general/list.h>

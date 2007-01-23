@@ -27,7 +27,7 @@
 #include<stdio.h>
 #include<assert.h>
 #include <utilities/ascConfig.h>
-#include "compiler.h"
+
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include "bit.h"

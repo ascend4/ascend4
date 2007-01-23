@@ -31,7 +31,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
-#include "compiler.h"
+
 #include <utilities/ascPanic.h>
 #include "rounded.h"
 #include "interval.h"

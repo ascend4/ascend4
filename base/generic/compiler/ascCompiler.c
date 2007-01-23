@@ -32,7 +32,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascEnvVar.h>
-#include "compiler.h"
+
 #include "ascCompiler.h"
 #include <utilities/ascSignal.h>
 #include <utilities/ascPanic.h>

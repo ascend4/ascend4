@@ -35,7 +35,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/dstring.h>
 #include <general/list.h>
-#include <compiler/compiler.h>
+
 #include <compiler/symtab.h>
 #include <compiler/braced.h>
 #include <compiler/notate.h>

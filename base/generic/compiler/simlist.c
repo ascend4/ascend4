@@ -32,7 +32,7 @@
  */
 
 #include <utilities/ascConfig.h>
-#include "compiler.h"
+
 #include <general/list.h>
 #include "instance_enum.h"
 #include "destroyinst.h"
@@ -103,7 +103,7 @@ void Asc_DestroySimulations(void)
 #include <general/tm_time.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "instance_enum.h"
 #include "cmpfunc.h"
 #include "fractions.h"

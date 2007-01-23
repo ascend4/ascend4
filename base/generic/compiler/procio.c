@@ -29,7 +29,7 @@
 #include<stdio.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include "compiler.h"
+
 #include <general/dstring.h>
 #include <general/list.h>
 #include "fractions.h"

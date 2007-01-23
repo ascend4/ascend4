@@ -49,6 +49,8 @@
 #ifndef ASC_CMPFUNC_H
 #define ASC_CMPFUNC_H
 
+#include "compiler.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */

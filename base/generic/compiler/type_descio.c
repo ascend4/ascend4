@@ -30,7 +30,7 @@
 #include <utilities/ascConfig.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"

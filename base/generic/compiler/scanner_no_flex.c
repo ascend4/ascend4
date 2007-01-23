@@ -937,7 +937,7 @@ char *yytext;
 #include <math.h>
 #include "utilities/ascConfig.h"
 #include "utilities/ascMalloc.h"
-#include "compiler/compiler.h"
+
 /* everything between here and the next comment is only here */
 #include "compiler/fractions.h"
 #include "compiler/dimen.h"

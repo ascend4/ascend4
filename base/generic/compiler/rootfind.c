@@ -41,7 +41,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <utilities/ascConfig.h>
-#include "compiler.h"
+
 #include "instance_enum.h"
 #include <general/list.h>
 #include "extfunc.h"

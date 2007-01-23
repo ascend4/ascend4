@@ -35,7 +35,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "symtab.h"
 #include "fractions.h"
 #include "dimen.h"

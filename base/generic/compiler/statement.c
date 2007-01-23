@@ -31,7 +31,7 @@
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include "compiler.h"
+
 #include "symtab.h"
 #include "braced.h"
 #include <utilities/ascPanic.h>

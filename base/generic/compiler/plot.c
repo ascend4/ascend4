@@ -36,7 +36,7 @@
 #include <general/list.h>
 #include "instance_enum.h"
 #include "fractions.h"
-#include "compiler.h"
+
 #include "symtab.h"
 #include "dimen.h"
 #include "atomvalue.h"

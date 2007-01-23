@@ -34,7 +34,7 @@
 #include <utilities/ascPrint.h>
 #include <general/list.h>
 #include "instance_enum.h"
-#include "compiler.h"
+
 #include "symtab.h"
 #include "module.h"
 #include "library.h"

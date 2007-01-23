@@ -36,7 +36,7 @@
 
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
-#include <compiler/compiler.h>
+
 #include <compiler/functype.h>
 #include <compiler/safe.h>
 #include <compiler/rootfind.h>

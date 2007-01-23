@@ -32,7 +32,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
-#include <compiler/compiler.h>
+
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>
 #include <compiler/fractions.h>

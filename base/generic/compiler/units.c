@@ -33,7 +33,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/hashpjw.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "instance_enum.h"
 #include "cmpfunc.h"
 #include "symtab.h"
@@ -41,7 +41,7 @@
 #include "dimen.h"
 #include "dimen_io.h"
 #include "units.h"
-#include "compiler.h"
+
 
 #ifndef lint
 static CONST char UnitsModuleID[] = "$Id: units.c,v 1.18 1998/04/11 01:32:11 ballan Exp $";

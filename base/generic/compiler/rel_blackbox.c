@@ -28,7 +28,7 @@
 
 #include <general/pairlist.h>
 #include <general/dstring.h>
-#include "compiler.h"
+
 #include "symtab.h"
 #include "functype.h"
 #include "safe.h"

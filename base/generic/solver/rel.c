@@ -35,7 +35,7 @@
 #include <general/list.h>
 #include <general/dstring.h>
 
-#include <compiler/compiler.h>
+
 #include <compiler/symtab.h>
 #include <compiler/fractions.h>
 #include <compiler/instance_enum.h>

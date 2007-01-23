@@ -38,6 +38,8 @@
 #ifndef ASC_CHILD_H
 #define ASC_CHILD_H
 
+#include "compiler.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */

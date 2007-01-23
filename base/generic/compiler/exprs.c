@@ -23,7 +23,7 @@
 	Requires:
 	#include "utilities/ascConfig.h"
 	#include "fractions.h"
-	#include "compiler.h"
+	
 	#include "dimen.h"
 	#include "expr_types.h"
 *//*
@@ -36,7 +36,7 @@
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
-#include "compiler.h"
+
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/pool.h>

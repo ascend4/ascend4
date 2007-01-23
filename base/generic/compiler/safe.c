@@ -35,7 +35,7 @@
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include "compiler.h"
+
 #include <utilities/ascPanic.h>
 #include "fractions.h"
 #include "dimen.h"

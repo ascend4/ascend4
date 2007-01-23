@@ -294,7 +294,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include <compiler/compiler.h>
+
 #include <compiler/scanner.h>
 #include <compiler/symtab.h>		/* the global string/symbol table */
 #include <compiler/notate.h>		/* notes database wrapper */
