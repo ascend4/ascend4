@@ -93,6 +93,7 @@
 
 /* #define FEX_DEBUG */
 #define JEX_DEBUG
+#define DJEX_DEBUG
 #define SOLVE_DEBUG
 #define STATS_DEBUG
 #define PREC_DEBUG
@@ -196,6 +197,8 @@ typedef struct IntegratorIdaStatsStruct{
 int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
 void integrator_ida_write_stats(IntegratorIdaStats *stats);
 void integrator_ida_write_incidence(IntegratorSystem *blsys);
+static int integrator_ida_check_lists(const IntegratorSystem *sys);
+
 /*------
   Jacobi preconditioner -- experimental 
 */
@@ -512,10 +515,10 @@ void integrator_dae_show_var(IntegratorSystem *sys, struct var_variable *var, co
 	@see integrator_analyse
 */
 int integrator_ida_analyse(IntegratorSystem *sys){
-	struct var_variable **solversvars;
+/*	struct var_variable **solversvars;
 	unsigned long nsolversvars;
 	struct rel_relation **solversrels;
-	unsigned long nsolversrels;
+	unsigned long nsolversrels;*/
 	const SolverDiffVarCollection *diffvars;
 	SolverDiffVarSequence seq;
 	long i, j, n_y, n_ydot, n_dyn, n_skipped_diff, n_skipped_alg, n_skipped_deriv;
@@ -541,7 +544,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 		return 6;
 	}
 
-	CONSOLE_DEBUG("Got %ld chains, maxorder = %d",diffvars->nseqs,diffvars->maxorder);
+	CONSOLE_DEBUG("Got %ld chains, maxorder = %ld",diffvars->nseqs,diffvars->maxorder);
 	
 	if(diffvars->maxorder > 2){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
@@ -769,6 +772,11 @@ int integrator_ida_solve(
 	if(enginedata->nrels!=size){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration problem is not square (%d rels, %d vars)", enginedata->nrels, size);
 		return 1; /* failure */
+	}
+
+	if(integrator_ida_check_lists(blsys)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Inconsistent integrator lists");
+		return 1;
 	}
 
 	/* retrieve initial values from the system */
@@ -1380,7 +1388,13 @@ int integrator_ida_djex(long int Neq, realtype tt
 
 			if(var_yindex >= 0){
 #ifdef DJEX_DEBUG
-				asc_assert(blsys->y[var_yindex]==varlist[variables[j]]);
+				varname = var_make_name(blsys->system, blsys->y[var_yindex]);
+				CONSOLE_DEBUG("blsys->y[var_yindex] = '%s'",varname);
+				ASC_FREE(varname);
+				varname = var_make_name(blsys->system, varlist[variables[j]]);
+				CONSOLE_DEBUG("varlist[variables[j]] = '%s'",varname);
+				ASC_FREE(varname);
+				ASC_ASSERT_EQ_PTR(blsys->y[var_yindex],varlist[variables[j]]);
 #endif
 				DENSE_ELEM(Jac,i,var_yindex) += derivatives[j];
 			}else{
@@ -2000,6 +2014,32 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	block_debug(sys->system, fp);
 		
 	return 0; /* success */
+}
+
+static int integrator_ida_check_lists(const IntegratorSystem *sys){
+	long i, y_id;
+	struct var_variable **svars;
+	long n;
+	int err = 0;
+	svars = slv_get_solvers_var_list(sys->system);
+	n = slv_get_num_solvers_vars(sys->system);
+	for(i=0; i<n; ++i){
+		y_id = sys->y_id[i];
+		if(y_id >= sys->n_y || y_id <= -sys->n_y - 1){
+			CONSOLE_DEBUG("Skipping y_id[%ld] = %ld",i,y_id);
+			continue;
+		}
+		if(y_id > 0){
+			if(sys->y[y_id]!=svars[i]){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error y: y_id[%ld] = %ld",i,y_id);
+				err++;
+			}
+		}else if(sys->ydot[-y_id-1]!=svars[i]){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error ydot: y_id[%ld] = %ld",i,y_id);
+			err++;
+		}
+	}
+	return err;
 }
 
 /*----------------------------------------------

@@ -53,11 +53,6 @@
 #include <compiler/relation_util.h>
 #include <compiler/relation_io.h>
 
-#include "slv_types.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
 #include "slv_server.h"
 
 #define IPTR(i) ((struct Instance *)(i))

@@ -577,7 +577,6 @@ class TestSteam(AscendSelfTester):
 		I.setParameter('safeeval',True)
 		I.setParameter('rtol',1e-8)
 		I.setInitialSubStep(0.01)
-		I.setMinSubStep(0.001)		
 		I.setMaxSubSteps(100)		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 100)

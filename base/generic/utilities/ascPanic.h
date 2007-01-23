@@ -85,9 +85,16 @@ NORETURN ASC_DLLSPEC void asc_panic_nofunc(CONST char *format, ...);
 #define ASC_ASSERT_EQ(A,B) \
 	(((A)==(B)) ? (void)0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
 		, __FILE__, __LINE__, __FUNCTION__\
-		,"Assertion failed: %s < %s (lhs = %f, rhs = %f)" \
+		,"Assertion failed: %s == %s (lhs = %f, rhs = %f)" \
 		, #A, #B \
-		, (float)A, (float)B))
+		, (float)(A), (float)(B)))
+
+#define ASC_ASSERT_EQ_PTR(A,B) \
+	(((A)==(B)) ? (void)0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
+		, __FILE__, __LINE__, __FUNCTION__\
+		,"Assertion failed: %s == %s (lhs = %p, rhs = %p)" \
+		, #A, #B \
+		, (A), (B)))
 
 #define ASC_ASSERT_RANGE(A,B,C) \
 	((A) >= (B) && (A) < (C) ? (void)0 : asc_panic_line(ASCERR_ASSERTION_FAILED\
