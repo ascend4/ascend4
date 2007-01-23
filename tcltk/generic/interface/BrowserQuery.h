@@ -46,8 +46,6 @@
 extern int Asc_BrowIsRelationCmd(ClientData cdata, Tcl_Interp *interp,
                                  int argc, CONST84 char *argv[]);
 /**<
- *  <!--  Asc_BrowIsRelationCmd;                                       -->
- *
  *  Will return 1, if the the instance in question is of relation type
  *  of is an array, of array ... of relation. The normal InstanceType
  *  routines return the empty string for array of relations, and it is
@@ -59,8 +57,6 @@ extern int Asc_BrowIsRelationCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowIsLogRelCmd(ClientData cdata, Tcl_Interp *interp,
                                int argc, CONST84 char *argv[]);
 /**<
- *  <!--  Asc_BrowIsLogRelCmd;                                         -->
- *
  *  Will return 1, if the the instance in question is of logical relation
  *  type of is an array, of array ... of logical relation. The normal
  *  InstanceType routines return the empty string for array of logical
@@ -73,8 +69,6 @@ extern int Asc_BrowIsLogRelCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowIsWhenCmd(ClientData cdata, Tcl_Interp *interp,
                              int argc, CONST84 char *argv[]);
 /**<
- *  <!--  Asc_BrowIsWhenCmd;                                           -->
- *
  *  Will return 1, if the the instance in question is of when
  *  type of is an array, of array ... of when. The normal
  *  InstanceType routines return the empty string for array of whens,
@@ -87,8 +81,6 @@ extern int Asc_BrowIsWhenCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowIsInstanceInWhenCmd(ClientData cdata, Tcl_Interp *interp,
                                        int argc, CONST84 char *argv[]);
 /**<
- *  <!--  Asc_BrowIsInstanceInWhenCmd;                                 -->
- *
  *  Will return 1, if the the instance in question may be in the list
  *  of variables or in some CASE of a WHEN Statement: boolean, integer,
  *  symbol, relations.<br><br>
@@ -99,8 +91,6 @@ extern int Asc_BrowIsInstanceInWhenCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowIsModelCmd(ClientData cdata, Tcl_Interp *interp,
                               int argc, CONST84 char *argv[]);
 /**<
- *  <!--  Asc_BrowIsModelCmd;                                          -->
- *
  *  Will return 1, if the the instance in question is of model type
  *  of is an array, of array ... of model. The normal InstanceType
  *  routines return the empty string for array of models, and it is
@@ -136,7 +126,6 @@ extern int Asc_BrowWriteAtomValue(char *ftorv, CONST struct Instance *i);
 extern int Asc_BrowWriteInstanceNameCmd(ClientData cdata, Tcl_Interp *interp,
                                         int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_BrowWriteInstanceName;                               -->
  *  Print the instance's name to the specified file. The shortest path to
  *  root is always printed. For the purposes of interface1, root is always
  *  the 'first' instance of a simulation (aka as the simulation base ptr)
@@ -149,7 +138,6 @@ extern int Asc_BrowWriteInstanceNameCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowCountNamesCmd(ClientData cdata, Tcl_Interp *interp,
                                  int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_BrowCountNamesCmd;                                   -->
  *  Returns the counts of ALIASES for all instances in the entire subtree
  *  given current or search.
  *  returned is a list (with labels) of:
@@ -173,7 +161,6 @@ extern int Asc_BrowCountNamesCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowWriteAliasesCmd(ClientData cdata, Tcl_Interp *interp,
                                    int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_BrowWriteAliases;                                    -->
  *  Print the instance's names to the interpreter.
  *
  *  Registered as "ALIASES"
@@ -182,7 +169,6 @@ extern int Asc_BrowWriteAliasesCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowWriteISAsCmd(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_BrowWriteISAs;                                       -->
  *  Print the instance's construction names to the interpreter.
  *
  *  Registered as \"isas\"
@@ -191,7 +177,6 @@ extern int Asc_BrowWriteISAsCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowWriteCliqueCmd(ClientData cdata, Tcl_Interp *interp,
                                   int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_WriteClique(f,i)                                     -->
  *  Print all the instance's clique members.
  *
  *  Registered as \"cliques\"
@@ -200,7 +185,6 @@ extern int Asc_BrowWriteCliqueCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowWriteInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                     int argc, CONST84 char *argv[]);
 /**<
- *  <!--  Asc_BrowWriteInstanceCmd(cdata,interp,argc,argv)             -->
  */
 
 /**  Registered as. */
@@ -218,7 +202,6 @@ extern int Asc_BrowWriteInstanceCmd(ClientData cdata, Tcl_Interp *interp,
 
 extern int Asc_BrowWriteAtomChildren(Tcl_Interp *interp, CONST struct Instance *i);
 /**<
- *  <!--  Asc_BrowWriteAtomChildren                                    -->
  *  Append the children of an atom (with values in display units) to
  *  the interp->result as list elements.
  */
@@ -235,7 +218,6 @@ extern int Asc_BrowWriteDimensions(char *fdims, CONST dim_type *dimp);
 extern int Asc_BrowIsPlotAllowedCmd(ClientData cdata, Tcl_Interp *interp,
                                     int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_BrowIsPlotAllowedCmd;                                -->
  *  Will accept the current of search instance and determine if the type
  *  of the instance is 'plottable'. The current implementation makes use
  *  of the type `plt_plot' as the basis of this decision. Will return 1
@@ -247,7 +229,6 @@ extern int Asc_BrowIsPlotAllowedCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowPreparePlotFileCmd(ClientData cdata, Tcl_Interp *interp,
                                       int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_BrowPreparePlotFileCmd;                              -->
  *  Will operate on the current or the search instance to produce a file
  *  that may be plotted by the existing plotting programs. Requires a
  *  filename arguement and an optional plot_type specifier
@@ -259,7 +240,6 @@ extern int Asc_BrowPreparePlotFileCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowRefinesMeCmd(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_BrowRefinesMeCmd;                                    -->
  *  Will return ALL the library types that refine the current instance.
  *  If instance typedesc is out of sync with library, returns none.
  *  Will return the empty string if not refined by any types.<br><br>
@@ -270,7 +250,6 @@ extern int Asc_BrowRefinesMeCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowWriteValues(ClientData cdata, Tcl_Interp *interp,
                                int argc, CONST84 char *argv[]);
 /**<
- *  <!--  bwritevalues [qlfdid] filename acmd <current,root,qlfdid>    -->
  *  Write out the real and boolean values of an instance tree starting
  *  at the instance indicated to a file filname. current/root refer to
  *  browser. qlfdid is a full id. Only the first letter of the last arg
@@ -346,7 +325,6 @@ extern int Asc_BrowFindTypeCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowRelationRelopCmd(ClientData cdata, Tcl_Interp *interp,
                                     int argc, CONST84 char *argv[]);
 /**<
- *  <!--  Usage :  __brow_reln_relop ?cur?search?.                     -->
  *  Returns the a string describing the type of the relation. Valid
  *  results are:
  *  equal, notequal, less, greater, maximize, minimize.
@@ -355,8 +333,6 @@ extern int Asc_BrowRelationRelopCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowClearVarsCmd(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[]);
 /**<
- *  <!--  Asc_BrowClearVarsCmd                                         -->
- *  <!--  usage: free_all_vars [qlfdid]                                -->
  *  Sets fixed flag of all variables to FALSE in Browser current instance,or if
  *  qlfdid given, in the qlfdid instance.
  */

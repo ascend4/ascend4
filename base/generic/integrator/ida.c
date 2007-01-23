@@ -481,7 +481,6 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to determine DOF status");
 		return 7;
 	}
-	CONSOLE_DEBUG("DOF status is %d",res);
 	switch(res){
 		case 1: CONSOLE_DEBUG("System is underspecified (%d degrees of freedom)",dof); break;
 		case 2: CONSOLE_DEBUG("System is square"); break;
