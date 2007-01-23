@@ -46,16 +46,11 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/readln.h> /* you wot? */
 
-
 #include <compiler/plot.h>
 
-#include <linear/mtx.h>
-
 #include "slv_client.h"
-
 #include "calc.h"
 #include "relman.h"
-#include "slv_common.h"
 #include "system.h"
 #include "checkdim.h"
 

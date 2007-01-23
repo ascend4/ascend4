@@ -26,6 +26,7 @@
 
 #include "block.h"
 #include <utilities/ascMalloc.h>
+#include <utilities/ascPrint.h>
 #include <general/mathmacros.h>
 #include "slv_client.h"
 #include "slv_stdcalls.h"
@@ -957,8 +958,15 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
 
 
 extern int block_debug(slv_system_t sys, FILE *fp){
+	int i,j,nr,nc;
 	dof_t *dof;
+	char *relname, *varname;
+	struct var_variable **vlist;
+	struct rel_relation **rlist;
+	mtx_region_t b;
 	dof = slv_get_dofdata(sys);
+	char s[80];
+	char color;
 	
 	fprintf(fp,"\n\nSLV_SYSTEM BLOCK INFO\n\n");
 	
@@ -967,5 +975,40 @@ extern int block_debug(slv_system_t sys, FILE *fp){
 	fprintf(fp,"Incident, free vars: %d\n",dof->n_cols);
 	fprintf(fp,"Fixed vars: %d\n",dof->n_fixed);
 	fprintf(fp,"Unincluded rels: %d\n",dof->n_unincluded);
+	fprintf(fp,"Number of blocks: %d\n",dof->blocks.nblocks);
+
+	vlist = slv_get_solvers_var_list(sys);
+	rlist = slv_get_solvers_rel_list(sys);
+	color = (fp == stderr || fp==stdout);
+	for(i=0;i<dof->blocks.nblocks;++i){
+		if(color){
+			if(i%2)color_on(fp,"0;33");
+			else color_on(fp,"0;30");
+		}
+		b = dof->blocks.block[i];
+		nr = b.row.high - b.row.low + 1;
+		nc = b.col.high - b.col.low + 1;
+		snprintf(s,80,"BLOCK %d (%d x %d)",i,nr,nc);
+		fprintf(fp,"%-18s",s);
+		snprintf(s,80,"%-18s","");
+		for(j=0;j<MAX(nr,nc); ++j){
+			fprintf(fp,"%s%d",(j?s:""),j);
+			if(j<nr){
+				relname = rel_make_name(sys,rlist[b.row.low + j]);
+				fprintf(fp,"\t%-20s",relname);
+				ASC_FREE(relname);
+			}else{
+				fprintf(fp,"\t%-20s","");
+			}
+			if(j<nc){
+				varname = var_make_name(sys,vlist[b.col.low + j]);
+				fprintf(fp,"\t%-20s",varname);
+				ASC_FREE(varname);
+			}
+			fprintf(fp,"\n");
+		}
+	}
+	if(color)color_off(fp);
+	return 0;				
 }
 	
