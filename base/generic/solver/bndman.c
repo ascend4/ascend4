@@ -52,10 +52,6 @@
 #define _SLV_SERVER_C_SEEN_
 #include <linear/mtx.h>
 
-#include "slv_types.h"
-#include "var.h"
-#include "discrete.h"
-#include "conditional.h"
 #include "relman.h"
 #include "logrelman.h"
 #include "slv_server.h"

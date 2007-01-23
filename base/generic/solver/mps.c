@@ -68,17 +68,6 @@
 #include <general/tm_time.h>
 #include <utilities/mem.h>
 
-#include <linear/linsol.h>
-#include <linear/linsolqr.h>
-#include <linear/mtx.h>
-
-#include "slv_types.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
-#include "slv_common.h"
 #include "slv_client.h"
 #include "slv6.h"
 

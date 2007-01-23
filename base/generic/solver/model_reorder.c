@@ -40,18 +40,6 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 
-#include <linear/mtx.h>
-#include <linear/linsol.h>
-#include <linear/linsolqr.h>
-
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
-#include "slv_common.h"
 #include "slv_client.h"
 
 #define MRDEBUG 0
