@@ -1906,6 +1906,9 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 		fprintf(fp,"%ld\t%s\n",i,relname);
 		ASC_FREE(relname);
 	}
+
+	/* and lets write block debug output */
+	block_debug(sys->system, fp);
 		
 	return 0; /* success */
 }

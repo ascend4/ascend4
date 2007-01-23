@@ -40,12 +40,15 @@
 
 #include <math.h>
 
-#include <packages/sensitivity.h>
+#include <general/mathmacros.h>
+#include <utilities/ascMalloc.h>
+
 #include <compiler/instquery.h>
 #include <compiler/atomvalue.h>
-#include <utilities/ascMalloc.h>
 #include <compiler/extfunc.h>
-#include <general/mathmacros.h>
+
+#include <packages/sensitivity.h>
+#include <solver/system.h>
 
 ExtMethodRun do_solve_eval;
 ASC_EXPORT int solve_register(void);

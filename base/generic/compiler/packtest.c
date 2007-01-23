@@ -20,6 +20,7 @@
 	Code to support testing of certain function logic.
 	As usual, the test code is itself incorrect.
 
+	The only place this stuff is being called is from interface.c, which is out of date.
 */
 
 #include <math.h>

@@ -29,7 +29,6 @@
 #include <utilities/ascConfig.h>
 #include <compiler/instance_enum.h>
 
-#include "system.h"
 #include "conditional.h"
 #include "rel.h"
 #include "logrel.h"

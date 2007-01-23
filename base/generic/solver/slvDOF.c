@@ -838,6 +838,11 @@ static int32 get_eligible_vars(slv_system_t server,struct gl_list_t *disvars
   return 1;
 }
 
+
+/*------------------------------------------------------------------------------
+  CONSISTENCY ANALYSIS for CONDITIONAL MODELS
+*/
+
 /**
 	Get the eligible set of variables for each of the combinations generated
 	by modifying the values of the boolean variables

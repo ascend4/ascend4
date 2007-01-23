@@ -31,6 +31,7 @@
 */
 
 #include "slv_types.h"
+#include <stdio.h>
 #include <linear/mtx_reorder.h>
 
 /*------------------------------------------------------------------------------
@@ -46,8 +47,8 @@
 extern int slv_block_partition_real(slv_system_t sys, int uppertriangular);
 /**<
 	Takes a system and reorders its solvers_vars and solvers_rels
-	list so that they fall into a block lower(upper) triangular form and
-	the system's block list is set to match.
+	list so that they fall into a BUT/BLT (block upper/lower triangular) form 
+	and	the system's block list is set to match.
 	Only included equality relations and free, incident solver_var
 	are so ordered.
 	
@@ -63,6 +64,7 @@ extern int slv_block_partition_real(slv_system_t sys, int uppertriangular);
 	we move to using only the bit flags.  Currently var_fixed and
 	rel_included are in charge of the syncronization.
 
+	@param upppertriangular if 1, partition into BUT form. If 0, partitition into BLT for.
 	@return 0 on success, 2 on out-of-memory, 1 on any other failure
 */
 
@@ -78,40 +80,12 @@ int slv_block_unify(slv_system_t sys);
 
 extern int slv_set_up_block(slv_system_t sys, int32 block);
 /**<
- *  This function should be called on blocks which have previously
- *  been reordered.  Variable and relation maintanence is performed
- *  so that the block will be ready for an interation.
- *  ***rest of this is cut from slv_spk1_reorder***<br><br>
- *
- *  System should have first been processed by slv_block_partition,
- *  so that all the current rows and columns within the block
- *  correspond to org rows and columns within the block.
- *  solvers_vars and solvers_rels lists are
- *  reordered and reindexed within that region to match.<br><br>
- *
- *  The block should contain only included equality relations and
- *  free, incident solver_vars.
- *  If we made a matrix out of the block, it should have a full<br><br>
- *  diagonal.
- *
-	@return 0 on success, 2 on out-of-memory, 1 on any other failure.
- *
- *  Preconditions of use:
- *    No vars outside the block in the solvers_var list should have
- *    VAR_INBLOCK set to TRUE.<br><br>
- *
- *  Sideeffects:
- *  We will diddle with all the vars in the solvers_vars and solver_rels
- *  list so that all rel/vars inside the block respond TRUE to in_block.
- *  We will do this even if we decide to block is too small to be worth
- *  reordering or is the wrong shape.<br><br>
- *
- *  @bug This should optionally take a user supplied matrix so it doesn't
- *       allocate a big matrix header+perms every time. This needs some
- *       thought.
- *
- *  @todo Revisit design of slv_set_up_block() - take user matrix?
- */
+	This function should be called on blocks which have previously
+	been reordered.  Variable and relation maintanence is performed
+	so that the block will be ready for an interation.
+
+	The further comments under slv_spk1_reorder_block also apply.
+*/
 
 extern int slv_spk1_reorder_block(slv_system_t sys,
 		int32 block, int32 transpose);
@@ -174,3 +148,8 @@ extern int slv_tear_drop_reorder_block(slv_system_t sys,
 	@return ???
  */
 
+extern int block_debug(slv_system_t sys, FILE *fp);
+/**<
+	Create debug output detailing the current block structure of the system.
+*/
+	
