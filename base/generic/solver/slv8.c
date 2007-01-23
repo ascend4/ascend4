@@ -45,6 +45,7 @@
 #include "slv_common.h"
 #include "slv_stdcalls.h"
 #include "conopt.h"
+#include "block.h"
 
 #define slv8_register_conopt_function register_conopt_function
 #define slv8_coicsm coicsm

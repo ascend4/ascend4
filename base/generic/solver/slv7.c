@@ -55,6 +55,7 @@
 #include "relman.h"
 #include "slv_common.h"
 #include "slv_stdcalls.h"
+#include "block.h"
 
 #if !defined(STATIC_NGSLV) && !defined(DYNAMIC_NGSLV)
 int slv7_register(SlvFunctionsT *f)

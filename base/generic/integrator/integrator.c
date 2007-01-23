@@ -32,6 +32,7 @@
 #include <solver/slv_common.h>
 #include <solver/slv_client.h>
 #include <solver/slv_stdcalls.h>
+#include <solver/block.h>
 
 #include "integrator.h"
 #include "lsode.h"

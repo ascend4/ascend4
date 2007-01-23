@@ -63,6 +63,7 @@
 #include <compiler/instance_enum.h>
 
 #include <solver/slv_client.h>
+#include <solver/block.h>
 #include <solver/relman.h>
 #ifdef ASC_IDA_NEW_ANALYSE
 # include <solver/diffvars.h>
@@ -446,7 +447,7 @@ void integrator_dae_show_var(IntegratorSystem *sys, struct var_variable *var, co
 	@see integrator_analyse
 */
 int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
-	struct var_variable **solversvars, **vlist;
+	struct var_variable **solversvars;
 	unsigned long nsolversvars;
 	struct rel_relation **solversrels;
 	unsigned long nsolversrels;
@@ -577,6 +578,10 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	}
 	sys->n_y = n_y;
 	n_ydot = n_y;
+
+	CONSOLE_DEBUG("Creating block structure");
+	slv_block_partition(sys->system);
+	CONSOLE_DEBUG("Done creating block structure");
 
 	if(sys->n_y != nsolversrels){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square: n_y = %d, n_rels = %d"
@@ -1822,9 +1827,10 @@ void integrator_ida_write_incidence(IntegratorSystem *blsys){
 
 /* @return 0 on success */
 int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
-	char *varname;
+	char *varname, *relname;
 	struct var_variable **vlist, *var;
-	int vlen;
+	struct rel_relation **rlist, *rel;
+	long vlen, rlen;
 	long i, y_id;
 
 	fprintf(fp,"THERE ARE %ld VARIABLES IN THE INTEGRATION SYSTEM\n\n",sys->n_y);
@@ -1857,7 +1863,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	/* find the vars mostly in this one */
 	vlist = slv_get_solvers_var_list(sys->system);
 	vlen = slv_get_num_solvers_vars(sys->system);
-	for (i=0;i<vlen;i++) {
+	for(i=0;i<vlen;i++){
 		var = vlist[i];
 
 		varname = var_make_name(sys->system, var);
@@ -1887,6 +1893,20 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 		ASC_FREE(varname);
 	}
 
+	/* let's write out the relations too */
+	rlist = slv_get_solvers_rel_list(sys->system);
+	rlen = slv_get_num_solvers_rels(sys->system);
+	
+	fprintf(fp,"\nRELATIONS (%ld)\n\n",rlen);
+	fprintf(fp,"index\tname\n");
+	fprintf(fp,"-----\t----\n");
+	for(i=0; i<rlen; ++i){
+		rel = rlist[i];
+		relname = rel_make_name(sys->system,rel);
+		fprintf(fp,"%ld\t%s\n",i,relname);
+		ASC_FREE(relname);
+	}
+		
 	return 0; /* success */
 }
 
