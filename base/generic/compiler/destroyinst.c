@@ -39,11 +39,8 @@
 
 #include "symtab.h"
 #include "bit.h"
-
-
 #include "functype.h"
 #include "expr_types.h"
-#include "instance_enum.h"
 #include "instance_name.h"
 #include "instance_io.h"
 #include "child.h"

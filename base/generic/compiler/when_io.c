@@ -32,11 +32,8 @@
 #include <general/dstring.h>
 
 #include "symtab.h"
-
-
 #include "functype.h"
 #include "expr_types.h"
-#include "instance_enum.h"
 #include "instance_types.h"
 #include "mathinst.h"
 #include "case.h"

@@ -34,13 +34,10 @@
 
 #include "bit.h"
 #include "symtab.h"
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "child.h"
 #include "type_desc.h"
-#include "instance_enum.h"
 #include "instance_name.h"
 #include "instance_io.h"
 #include "instmacro.h"
