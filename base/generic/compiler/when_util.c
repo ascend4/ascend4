@@ -32,11 +32,8 @@
 
 #include <utilities/ascPanic.h>
 #include <general/list.h>
-
-
 #include "functype.h"
 #include "expr_types.h"
-#include "instance_enum.h"
 #include "case.h"
 #include "extfunc.h"
 #include "find.h"

@@ -35,12 +35,9 @@
 #include <general/pool.h>
 #include "bit.h"
 #include <general/list.h>
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "stattypes.h"
-#include "instance_enum.h"
 #include "instance_types.h"
 #include "instquery.h"
 #include "visitinst.h"

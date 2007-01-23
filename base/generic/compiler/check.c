@@ -42,7 +42,6 @@
 
 #include "functype.h"
 #include "expr_types.h"
-#include "instance_enum.h"
 #include "stattypes.h"
 #include "statio.h"
 #include "module.h"

@@ -39,8 +39,6 @@
 
 #include "bit.h"
 #include "symtab.h"
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "stattypes.h"
@@ -56,7 +54,6 @@
 #include "prototype.h"
 #include "pending.h"
 #include "find.h"
-#include "instance_enum.h"
 #include "relation_type.h"
 #include "extfunc.h"
 #include "rel_blackbox.h"

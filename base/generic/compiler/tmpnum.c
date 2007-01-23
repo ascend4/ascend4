@@ -34,13 +34,10 @@
 #include <general/list.h>
 
 #include "bit.h"
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "child.h"
 #include "type_desc.h"
-#include "instance_enum.h"
 #include "instance_types.h"
 #include "instmacro.h"
 #include "visitinst.h"

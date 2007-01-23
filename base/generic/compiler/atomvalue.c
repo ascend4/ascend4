@@ -41,7 +41,6 @@
 #include "child.h"
 #include "type_desc.h"
 #include "type_descio.h"
-#include "instance_enum.h"
 #include "instance_name.h"
 #include "instance_io.h"
 #include "instmacro.h"
