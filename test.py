@@ -1007,10 +1007,7 @@ if __name__=='__main__':
 		print "  export PYTHONPATH=%s" % os.environ.get('PYTHONPATH')
 		print "  export ASCENDLIBRARY=%s" % os.environ.get('ASCENDLIBRARY')
 
-		if sys.argv[0] !="/usr/bin/gdb":
-			os.execvp("python",[script] + sys.argv)
-		else:
-			print "Can't restart from inside GDB"
+		os.execvp("python",[script] + sys.argv)
 
 	import ascpy
 
