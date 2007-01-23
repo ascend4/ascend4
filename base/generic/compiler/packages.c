@@ -60,8 +60,8 @@
 #include <utilities/ascPanic.h>
 #include <general/list.h>
 #include "symtab.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "expr_types.h"
 #include "extcall.h"

@@ -46,7 +46,7 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/readln.h> /* you wot? */
 
-#include <compiler/dimen.h>
+
 #include <compiler/plot.h>
 
 #include <linear/mtx.h>

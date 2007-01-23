@@ -41,8 +41,8 @@
 #include <general/list.h>
 #include <general/pool.h>
 #include "symtab.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "expr_types.h"
 #include "func.h"

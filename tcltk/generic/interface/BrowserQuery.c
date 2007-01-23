@@ -39,9 +39,9 @@
 #include <general/dstring.h>
 
 #include <compiler/instance_enum.h>
-#include <compiler/fractions.h>
+
 #include <compiler/instance_name.h>
-#include <compiler/dimen.h>
+
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
 #include <compiler/expr_types.h>

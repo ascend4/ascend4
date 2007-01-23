@@ -36,8 +36,8 @@
 #include "symtab.h"
 #include "instance_enum.h"
 #include "cmpfunc.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "value_type.h"
 #include "temp.h"

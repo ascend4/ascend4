@@ -31,8 +31,8 @@
 #include <general/list.h>
 #include <general/dstring.h>
 
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "expr_types.h"
 #include "symtab.h"

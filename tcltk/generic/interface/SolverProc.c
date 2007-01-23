@@ -50,8 +50,8 @@
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
+
+
 #include <compiler/expr_types.h>
 #include <compiler/relation_type.h>
 #include <compiler/extfunc.h>

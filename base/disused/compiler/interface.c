@@ -51,8 +51,8 @@
 #include "ascCompiler.h"
 #include "commands.h"
 #include "termsetup.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "types.h"
 #include "instance_enum.h"

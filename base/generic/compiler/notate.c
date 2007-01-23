@@ -35,8 +35,8 @@
 #include "symtab.h"
 #include "braced.h"
 #include "vlist.h"
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "expr_types.h"
 #include "sets.h"
 #include "name.h"

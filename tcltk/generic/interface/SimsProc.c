@@ -39,8 +39,8 @@
 
 #include <compiler/instance_enum.h>
 #include <compiler/cmpfunc.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
+
+
 #include <compiler/expr_types.h>
 #include <compiler/stattypes.h>
 #include <compiler/statement.h>

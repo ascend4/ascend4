@@ -599,8 +599,8 @@ char *yytext;
 /* for handling string modules and results in interp */
 
 #include <compiler/symtab.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
+
+
 #include <compiler/child.h>
 #include <compiler/type_desc.h>
 #include <compiler/library.h>

@@ -64,6 +64,7 @@
 
 #include <solver/slv_client.h>
 #include <solver/block.h>
+#include <solver/slvDOF.h>
 #include <solver/relman.h>
 #ifdef ASC_IDA_NEW_ANALYSE
 # include <solver/diffvars.h>
@@ -454,6 +455,8 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	const SolverDiffVarCollection *diffvars;
 	SolverDiffVarSequence seq;
 	long i, j, n_y, n_ydot, n_dyn, n_skipped_diff, n_skipped_alg, n_skipped_deriv;
+	int dof;
+	int res;
 
 	struct var_variable *v;
 	char *varname;
@@ -472,6 +475,21 @@ int integrator_ida_analyse(struct IntegratorSystemStruct *sys){
 	if(slv_block_partition(sys->system)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to block-partition system");
 		return 1;
+	}
+
+	if(!slvDOF_status(sys->system, &res, &dof)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to determine DOF status");
+		return 7;
+	}
+	CONSOLE_DEBUG("DOF status is %d",res);
+	switch(res){
+		case 1: CONSOLE_DEBUG("System is underspecified (%d degrees of freedom)",dof); break;
+		case 2: CONSOLE_DEBUG("System is square"); break;
+		case 3: CONSOLE_DEBUG("System is structurally singular"); break;
+		case 4: CONSOLE_DEBUG("System is overspecified"); break;
+		default: 
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unrecognised slfDOF_status");
+			return 8;
 	}
 
 	solversrels = slv_get_solvers_rel_list(sys->system);

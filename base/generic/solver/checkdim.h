@@ -45,6 +45,8 @@
 #ifndef chkdim__already_included
 #define chkdim__already_included
 
+#include <compiler/dimen.h>
+
 /**	@addtogroup solver Solver
 	@{
 */
@@ -72,19 +74,12 @@ typedef struct chkdim_system_structure {
 
 extern chkdim_create_system();
 /**<
- *  <!--  chkdim_create_system(chk,rlist)                              -->
- *  <!--  chkdim_system_t *chk;                                        -->
- *  <!--  struct rel_relation **rlist;                                 -->
- *
  *  Initializes the structure and appends the relations appearing in rlist
  *  in the sense of chkdim_append_rel().
  */
 
 extern chkdim_destroy_system();
 /**<
- *  <!--  chkdim_destroy_system(chk)                                   -->
- *  <!--  chkdim_system_t *chk;                                        -->
- *
  *  Destroys everything in the structure.  The structure itself is not
  *  deallocated since chkdim_create_system() did not allocate it.
  */
@@ -92,12 +87,6 @@ extern chkdim_destroy_system();
 extern chkdim_append_expr();
 extern chkdim_append_rel();
 /**<
- *  <!--  chkdim_append_expr(chk,expr)                                 -->
- *  <!--  chkdim_append_rel(chk,rel)                                   -->
- *  <!--  chkdim_system_t *chk;                                        -->
- *  <!--  expr_t expr;                                                 -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Adds the given expression/relation (i.e. all dimensional equations
  *  implied by the expression/relation) to the system of dimensional
  *  equations.  In the case of expressions, the dimensional equations
@@ -107,10 +96,6 @@ extern chkdim_append_rel();
 
 extern chkdim_assign_dimensions();
 /**<
- *  <!--  chkdim_assign_dimensions(chk,p)                              -->
- *  <!--  chkdim_system_t *chk;                                        -->
- *  <!--  slv_parameters_t *p;                                         -->
- *
  *  Solves the dimensional equations and assigns the dimensions to the
  *  wild-dimensioned variables as directed by the solution, writing the
  *  assignments to p->output.more_important.  No regard is given to
@@ -119,11 +104,6 @@ extern chkdim_assign_dimensions();
 
 extern int chkdim_check_dimensions();
 /**<
- *  <!--  nerrs = chkdim_check_dimensions(chk,p)                       -->
- *  <!--  int nerrs;                                                   -->
- *  <!--  chkdim_system_t *chk;                                        -->
- *  <!--  slv_parameters_t *p;                                         -->
- *
  *  Solves the dimensional equations and checks the solution for
  *  consistency, writing messages to p->output.more_important.  Returns
  *  the number of errors (non-zero residuals).

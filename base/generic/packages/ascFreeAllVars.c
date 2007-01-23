@@ -33,8 +33,8 @@
 #include <utilities/ascPrint.h>
 #include <general/list.h>
 
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
+
+
 #include <compiler/child.h>
 #include <compiler/type_desc.h>
 #include <compiler/symtab.h>

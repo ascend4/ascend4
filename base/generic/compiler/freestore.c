@@ -33,8 +33,8 @@
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
 #include <general/stack.h>
-#include "fractions.h"
-#include "dimen.h"
+
+
 #include "functype.h"
 #include "expr_types.h"
 #include "relation_type.h"
