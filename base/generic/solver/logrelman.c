@@ -55,12 +55,6 @@
 #include <compiler/logrel_util.h>
 #include <compiler/logrel_io.h>
 
-#define _SLV_SERVER_C_SEEN_
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
-#include "conditional.h"
-#include "bnd.h"
 #include "slv_server.h"
 
 #define IPTR(i) ((struct Instance *)(i))

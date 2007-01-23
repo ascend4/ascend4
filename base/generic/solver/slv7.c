@@ -45,10 +45,6 @@
 #include <utilities/ascPanic.h>
 #include <general/list.h>
 
-#include <compiler/compiler.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
-#include <compiler/functype.h>
 #include <compiler/func.h>
 
 #include "calc.h"

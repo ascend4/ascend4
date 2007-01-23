@@ -1,6 +1,6 @@
 /*	ASCEND modelling environment
 	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006-2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -26,30 +26,25 @@
 	The type library will only maintain one definition for a given type
 	name.  The library will complain if you try to add two types with the
 	same name unless it happens when reloading a module.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "compiler/compiler.h"
-	#include "compiler/type_desc.h"
-	#include "compiler/module.h"
-	#include "general/list.h"
 *//*
-	by Tom Epperly
-	Created: 1/12/90
-	Version: $Revision: 1.17 $
-	Version control file: $RCSfile: library.h,v $
-	Date last modified: $Date: 1998/04/16 00:43:24 $
-	Last modified by: $Author: ballan $
+	by Tom Epperly, 1/12/90
+	Last in CVS: $Revision: 1.17 $ $Date: 1998/04/16 00:43:24 $ $Author: ballan $
 */
 
 #ifndef ASC_LIBRARY_H
 #define ASC_LIBRARY_H
 
+#include <utilities/ascConfig.h>
+#include <general/list.h>
+
+#include "compiler.h"
+#include "type_desc.h"
+#include "module.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */
 
-#include <utilities/ascConfig.h>
 
 /** For use in constructing hierarchies. */
 struct HierarchyNode {

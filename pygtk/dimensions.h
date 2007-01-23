@@ -8,8 +8,6 @@
 
 extern "C"{
 #include <utilities/ascConfig.h>
-#include <compiler/fractions.h>
-#include <compiler/compiler.h>
 #include <compiler/dimen.h>
 }
 

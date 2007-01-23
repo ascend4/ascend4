@@ -27,13 +27,11 @@
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include <compiler/compiler.h>
+#include <utilities/ascPanic.h>
+
 #include <compiler/packages.h>
 #include <compiler/instance_enum.h>
-#include <utilities/ascPanic.h>
 /* next 4 needed only because we use RealAtomValue on the DATA instance. */
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
 #include <compiler/atomvalue.h>
 #include <compiler/instquery.h>
 

@@ -31,7 +31,6 @@
 #include <general/tm_time.h>
 
 #include <compiler/instance_enum.h>
-#include <compiler/compiler.h>
 #include <compiler/check.h>
 
 #include <linear/mtx.h>

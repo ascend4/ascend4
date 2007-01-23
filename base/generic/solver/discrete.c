@@ -45,16 +45,8 @@
 #include <compiler/instance_io.h>
 
 #include <linear/mtx.h>
-#include <linear/linsol.h>
-#include <linear/linsolqr.h>
 
-#include "var.h"
-#include "rel.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
 #include "slv_server.h"
-#include "slv_common.h"
 #include "analyze.h"
 
 #ifndef IPTR
