@@ -440,8 +440,11 @@ static int integrator_ida_check_partitioning(IntegratorSystem *sys){
 	struct var_variable **vlist, *v;
 	nv = slv_get_num_solvers_vars(sys->system);
 	vlist = slv_get_solvers_var_list(sys->system);
+	var_filter_t vf = {VAR_SVAR|VAR_ACTIVE|VAR_INCIDENT|VAR_FIXED
+					  ,VAR_SVAR|VAR_ACTIVE|VAR_INCIDENT|0 };
 	for(i=0;i<nv;++i){
 		v=vlist[i];
+		if(!var_apply_filter(v,&vf))continue;
 		varname = var_make_name(sys->system,v);
 		if(!var_deriv(v)){
 			fprintf(stderr,"vlist[%ld] = '%s' (nonderiv)\n",i,varname);
@@ -600,7 +603,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	const SolverDiffVarCollection *diffvars;
 	SolverDiffVarSequence seq;
 	long i, j, n_y, n_ydot, n_skipped_diff, n_skipped_alg, n_skipped_deriv;
-	int res;
+	/* int res; */
 
 	struct var_variable *v;
 	char *varname;
@@ -1423,7 +1426,8 @@ int integrator_ida_djex(long int Neq, realtype tt
 	/* print vars */
 	for(i=0; i < blsys->n_y; ++i){
 		varname = var_make_name(blsys->system, blsys->y[i]);
-		CONSOLE_DEBUG("%s = %f = %f",varname,NV_Ith_S(yy,i),var_value(blsys->y[i]));
+		CONSOLE_DEBUG("%s = %f = %f",varname,NV_Ith_S(yy,i));
+		asc_assert(NV_Ith_S(yy,i) == var_value(blsys->y[i]));
 		ASC_FREE(varname);
 	}
 
@@ -1431,20 +1435,18 @@ int integrator_ida_djex(long int Neq, realtype tt
 	for(i=0; i < blsys->n_y; ++i){
 		if(blsys->ydot[i]){
 			varname = var_make_name(blsys->system, blsys->ydot[i]);
-			CONSOLE_DEBUG("%s = %f =%f",varname,NV_Ith_S(yp,i),var_value(blsys->ydot[i]));
+			CONSOLE_DEBUG("%s = %f =%g",varname,NV_Ith_S(yp,i),var_value(blsys->ydot[i]));
 			ASC_FREE(varname);
 		}else{
 			varname = var_make_name(blsys->system, blsys->y[i]);
-			CONSOLE_DEBUG("diff(%s) = %f",varname,NV_Ith_S(yp,i));
+			CONSOLE_DEBUG("diff(%s) = %g",varname,NV_Ith_S(yp,i));
 			ASC_FREE(varname);
 		}
 	}
 
 	/* print step size */
-	CONSOLE_DEBUG("<c_j> = %f",c_j);
+	CONSOLE_DEBUG("<c_j> = %g",c_j);
 #endif
-
-	integrator_ida_check_partitioning(blsys);
 
 	/* build up the dense jacobian matrix... */
 	status = 0;
@@ -1465,7 +1467,6 @@ int integrator_ida_djex(long int Neq, realtype tt
 		/* output what's going on here ... */
 #ifdef DJEX_DEBUG
 		relname = rel_make_name(blsys->system, *relptr);
-		CONSOLE_DEBUG("RELATION %d '%s'",i,relname);
 		fprintf(stderr,"%d: '%s': ",i,relname);
 		ASC_FREE(relname);
 		for(j=0;j<count;++j){
@@ -1484,15 +1485,17 @@ int integrator_ida_djex(long int Neq, realtype tt
 		/* insert values into the Jacobian row in appropriate spots (can assume Jac starts with zeros -- IDA manual) */
 		for(j=0; j < count; ++j){
 			if(!var_deriv(variables[j])){
+#ifdef DJEX_DEBUG1
 				CONSOLE_DEBUG("Jac = %p, i = %d, j = %d, variables[j] = %p, sindex = %d, deriv = %f"
 					,Jac, i, j,  variables[j], var_sindex(variables[j]),derivatives[j]
 				);
 				CONSOLE_DEBUG("var flags = 0x%o",var_flags(variables[j]));
-				var_make_name(blsys->system,variables[j]);
+				varname = var_make_name(blsys->system,variables[j]);
 				CONSOLE_DEBUG("var name '%s'",varname);
 				ASC_FREE(varname);
 				asc_assert(var_sindex(variables[j]) >= 0);
 				ASC_ASSERT_LT(var_sindex(variables[j]) , Neq);
+#endif
 				DENSE_ELEM(Jac,i,var_sindex(variables[j])) += derivatives[j];
 			}else{
 				DENSE_ELEM(Jac,i,integrator_ida_diffindex(blsys,variables[j])) += derivatives[j] * c_j;
