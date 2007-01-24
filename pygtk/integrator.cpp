@@ -33,6 +33,7 @@ Integrator::~Integrator(){
 	CONSOLE_DEBUG("DESTROYING Integrator (C++) at %p",this);
 	CONSOLE_DEBUG("DESTROYING IntegratorSystem at %p",blsys);
 	integrator_free(blsys);
+	CONSOLE_DEBUG("done");
 	CONSOLE_DEBUG("DESTROYING samplelist at %p",samplelist);
 	if(samplelist)samplelist_free(samplelist);
 }

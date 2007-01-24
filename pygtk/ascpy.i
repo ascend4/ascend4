@@ -299,6 +299,7 @@ public:
 %include "compiler.h"
 /* we can always disown Compiler * as it's a singleton */
 %apply SWIGTYPE *DISOWN { Compiler * };
+%apply SWIGTYPE *DISOWN { Simulation * };
 
 %include "type.h"
 

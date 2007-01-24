@@ -1155,7 +1155,7 @@ void slv_set_char_parameter(char **cp, CONST char *newvalue)
     if (*cp != NULL) {
       ascfree(*cp);
     }
-    *cp = ascstrdup(newvalue);
+    *cp = ASC_STRDUP(newvalue);
   }
 }
 
@@ -1220,9 +1220,9 @@ static void slv_define_param_meta(struct slv_parameter *p1, const SlvParameterIn
 	/* copy the codename, guiname and description */
 	asc_assert(meta!=NULL);
 	asc_assert(p1!=NULL);
-	p1->name = ascstrdup(meta->codename);
-	p1->interface_label = ascstrdup(meta->guiname);
-	p1->description = ascstrdup(meta->description);
+	p1->name = ASC_STRDUP(meta->codename);
+	p1->interface_label = ASC_STRDUP(meta->guiname);
+	p1->description = ASC_STRDUP(meta->description);
 	p1->display = meta->guipagenum;
 
 	/* record the index of this parameter */		
@@ -1296,7 +1296,7 @@ int slv_param_char(slv_parameters_t *p, const int index
 	/* CONSOLE_DEBUG("THERE ARE %d CHAR OPTIONS IN PARAMETER '%s'", noptions, init.meta.codename); */
 
 	p1->info.c.high = noptions;
-	p1->info.c.value = strdup(init.val);
+	p1->info.c.value = ASC_STRDUP(init.val);
 	p1->info.c.argv = ASC_NEW_ARRAY(char *,noptions);
 
 	for(i = 0; i < noptions; ++i){

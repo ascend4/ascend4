@@ -15,7 +15,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//**
+*//** @file
 	Dense matrix module, as used by the LSODE Integrator in ASCEND.
 
 	@example
@@ -54,6 +54,10 @@
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 
+/**	@addtogroup linear Linear
+	@{
+*/
+
 typedef struct DenseMatrixStruct{
 	double **data;
 	unsigned nrows;
@@ -62,7 +66,7 @@ typedef struct DenseMatrixStruct{
 
 #define DENSEMATRIX_NROWS(M)    ((M).nrows)
 #define DENSEMATRIX_NCOLS(M)    ((M).ncols)
-#define DENSEMATRIX_ELEM(M,I,J) ((M).data[I][I])
+#define DENSEMATRIX_ELEM(M,I,J) ((M).data[I][J])
 #define DENSEMATRIX_DATA(M)     ((M).data)
 #define DENSEMATRIX_EMPTY       (DenseMatrix){NULL,0,0}
 
@@ -73,5 +77,7 @@ ASC_DLLSPEC void densematrix_destroy(DenseMatrix matrix);
 #ifdef ASC_WITH_MMIO
 void densematrix_write_mmio(DenseMatrix matrix, FILE *fp);
 #endif
+
+/* @} */
 
 #endif

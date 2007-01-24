@@ -517,6 +517,56 @@ int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
   }
 }
 
+
+/* return 0 on success */
+int relman_diff3(struct rel_relation *rel, var_filter_t *filter,
+                 real64 *derivatives, struct var_variable **variables,
+		 int32 *count, int32 safe)
+{
+  const struct var_variable **vlist=NULL;
+  real64 *gradient;
+  int32 len,c;
+  int status;
+
+  assert(rel!=NULL && filter!=NULL);
+  len = rel_n_incidences(rel);
+  vlist = rel_incidence_list(rel);
+
+  gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
+  assert(gradient !=NULL);
+  *count = 0;
+  if(safe){
+    status =(int32)RelationCalcGradientSafe(rel_instance(rel),gradient);
+    safe_error_to_stderr( (enum safe_err *)&status );
+    /* always map when using safe functions */
+    for (c=0; c < len; c++) {
+      if (var_apply_filter(vlist[c],filter)) {
+        variables[*count] = vlist[c];
+        derivatives[*count] = gradient[c];
+        /* CONSOLE_DEBUG("Var %d = %f",var_sindex(vlist[c]),gradient[c]); */
+        (*count)++;
+      }
+    }
+	/* CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status); */
+	return status;
+  }else{
+    if((status=RelationCalcGradient(rel_instance(rel),gradient)) == 0) {
+      /* successful */
+      for (c=0; c < len; c++) {
+        if (var_apply_filter(vlist[c],filter)) {
+          variables[*count] = vlist[c];
+          derivatives[*count] = gradient[c];
+          (*count)++;
+        }
+      }
+    }
+	/* SOLE_DEBUG("RETURNING (NON-SAFE) calc_ok=%d",status); */
+ 	return status;
+  }
+}
+
+
+
 int relman_diff_grad(struct rel_relation *rel, var_filter_t *filter,
                      real64 *derivatives, int32 *variables_master,
 		     int32 *variables_solver, int32 *count, real64 *resid,

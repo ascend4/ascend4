@@ -611,7 +611,7 @@ ASC_DLLSPEC void slv_destroy_parms(slv_parameters_t *p);
 /**<
 	Deallocates any allocated memory held by a parameter structure.
 
-	   * All the 'meta' strings are freed, as they are allocated using ascstrdup.
+	   * All the 'meta' strings are freed, as they are allocated using ASC_STRDUP.
 	   * String values and option arrays are
 
 	Only the held memory is freed, not p itself.  Further, if

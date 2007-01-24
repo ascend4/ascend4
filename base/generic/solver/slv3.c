@@ -278,7 +278,7 @@ struct slv3_system_structure {
 */
 static int check_system(slv3_system_t sys){
   if(sys == NULL){
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: NULL system handle.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"NULL system handle.");
     return 1;
   }
 
@@ -286,10 +286,10 @@ static int check_system(slv3_system_t sys){
   case OK:
     return 0;
   case DESTROYED:
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: System was recently destroyed.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"System was recently destroyed.");
     return 1;
   default:
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: System reused or never allocated.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"System reused or never allocated.");
     return 1;
   }
 }
@@ -554,8 +554,8 @@ static boolean calc_residuals( slv3_system_t sys){
     if(!rel) {
       int r;
       r=mtx_row_to_org(sys->J.mtx,row);
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR
-        ,"QRSlv::calc_residuals: NULL relation found at ropw %d rel %d !"
+      ERROR_REPORTER_HERE(ASC_PROG_ERROR
+        ,"NULL relation found at ropw %d rel %d !"
         ,(int)row,r
       );
     }
@@ -648,8 +648,8 @@ static void calc_nominals( slv3_system_t sys){
         if(n == 0.0){
           n = SLV_PARAM_REAL(&(sys->p),TOO_SMALL);
 
-          ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-          FPRINTF(fp,"QRSlv::calc_nominals: Variable '");
+          ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
+          FPRINTF(fp,"Variable '");
           print_var_name(fp,sys,var);
           FPRINTF(fp,"' has nominal value of zero. Resetting to %g.",n);
           error_reporter_end_flush();
@@ -658,8 +658,8 @@ static void calc_nominals( slv3_system_t sys){
         }else{
           n =  -n;
 
-          ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-          FPRINTF(fp,"QRSlv::calc_nominals Variable ");
+          ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
+          FPRINTF(fp,"Variable ");
           print_var_name(fp,sys,var);
           FPRINTF(fp,"has negative nominal value. Resetting to %g.",n);
           error_reporter_end_flush();
@@ -3524,18 +3524,6 @@ slv3_system_t sys;
   sys->mulstep.rng = &(sys->J.reg.row);
 }
 
-static
-void slv3_dump_internals(slv_system_t server, SlvClientToken sys,int level)
-{
-  (void) server;
-  check_system(sys);
-  if(level > 0) {
-    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-    FPRINTF(stderr,"QRSlv:slv3_dump_internals: QRSlv does not dump its internals.\n");
-    error_reporter_end_flush();
-  }
-}
-
 /**
 	Here we will check if any fixed or included flags have
 	changed since the last presolve.
@@ -3627,14 +3615,14 @@ static int slv3_presolve(slv_system_t server, SlvClientToken asys){
   iteration_begins(sys);
   check_system(sys);
   if(sys->vlist == NULL ) {
-    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-    FPRINTF(stderr,"QRSlv::slv3_presolve: Variable list was never set.");
+    ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
+    FPRINTF(stderr,"Variable list was never set.");
     error_reporter_end_flush();
     return 1;
   }
   if(sys->rlist == NULL && sys->obj == NULL ) {
-    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-    FPRINTF(stderr,"QRSlv::slv3_presolve: Relation list and objective never set.");
+    ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
+    FPRINTF(stderr,"Relation list and objective never set.");
 	error_reporter_end_flush();
     return 1;
   }
@@ -3796,7 +3784,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   if(server == NULL || sys==NULL) return 1;
   if(check_system(SLV3(sys))) return 2;
   if(!sys->s.ready_to_solve){
-    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv: Not ready to solve.");
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,"Not ready to solve.");
     return 3;
   }
 
@@ -3823,8 +3811,8 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 
 #if !CANOPTIMIZE
   if(OPTIMIZING(sys)){
-    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-    FPRINTF(stderr,"QRSlv::slv3_iterate: QRSlv cannot presently optimize.");
+    ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
+    FPRINTF(stderr,"QRSlv cannot presently optimize.");
     error_reporter_end_flush();
 
     sys->s.diverged = 1;
@@ -3877,7 +3865,10 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
         update_status(sys);
         return 0;
       }
-	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Direct solve found numerically impossible equation given variables solved in previous blocks.");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR
+        ,"Direct-solve found numerically impossible equation, given"
+        " variable values solved in previous blocks."
+      );
     case -1:
 
       sys->s.inconsistent = TRUE;
@@ -3990,17 +3981,14 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 
     minor++;
 
-/* 2004.11.5 code by AWW to eliminate runaway minor loop */
+    /* detect runaway minor loop -- AWW, Nov 2004 */
     if(minor >= SLV_PARAM_INT(&(sys->p),MAX_MINOR)){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv exceeded max line search iterations. Check for variables on bounds.");
       sys->s.inconsistent = TRUE;
       iteration_ends(sys);
       update_status(sys);
       return 7;
-    }
-
-/* end of code by AWW */
-
+    } /* end -- AWW */
 
     if(first) {
       change_maxstep(sys, MAXDOUBLE);
@@ -4078,19 +4066,22 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     }
 
 
-    /**
-     ***  Check bounds.
-     **/
-    bounds_ok = ((!SLV_PARAM_BOOL(&(sys->p),SLV_PARAM_BOOL(&(sys->p),REDUCE))) || (SLV_PARAM_BOOL(&(sys->p),IGNORE_BOUNDS)) ||
-                ((bounds_coef=required_coef_to_stay_inbounds(sys)) == 1.0));
+    /*
+    	Check bounds.
+    */
+    bounds_ok = (
+	(!SLV_PARAM_BOOL(&(sys->p),SLV_PARAM_BOOL(&(sys->p),REDUCE)))
+	|| (SLV_PARAM_BOOL(&(sys->p),IGNORE_BOUNDS))
+	|| ((bounds_coef=required_coef_to_stay_inbounds(sys)) == 1.0)
+    );
     if(!bounds_ok){
       previous = oldphi;
       continue;
     }
 
-    /**
-     ***  Apply step.
-     **/
+    /*
+    	Apply step.
+    */
     apply_step(sys);
     if(sys->progress <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)) {
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
@@ -4105,7 +4096,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     }
 
     /*
-      Check calculations at new point.
+   	Check calculations at new point.
     */
     new_ok = (calc_objective(sys) && calc_residuals(sys));
     /* calculate all included objectives
@@ -4131,7 +4122,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
     }
 
     /*
-      Check for descent
+    	Check for descent
     */
     scale_residuals(sys);
     calc_phi(sys);
@@ -4158,10 +4149,10 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   	Check for equation solving convergence within the block
   */
 #if DEBUG
-      FPRINTF(stderr,"******end of iteration*************\n");
-      debug_out_var_values(LIF(sys), sys);
-      debug_out_rel_residuals(LIF(sys), sys);
-      FPRINTF(stderr,"***********************************\n");
+  FPRINTF(stderr,"******end of iteration*************\n");
+  debug_out_var_values(LIF(sys), sys);
+  debug_out_rel_residuals(LIF(sys), sys);
+  FPRINTF(stderr,"***********************************\n");
 #endif
 
   /* CONSOLE_DEBUG("Iteration ends..."); */
@@ -4191,15 +4182,13 @@ static int slv3_solve(slv_system_t server, SlvClientToken asys){
   return err;
 }
 
-static mtx_matrix_t slv3_get_jacobian(slv_system_t server, SlvClientToken sys)
-{
+static mtx_matrix_t slv3_get_jacobian(slv_system_t server, SlvClientToken sys){
   if(server == NULL || sys==NULL) return NULL;
   if(check_system(SLV3(sys))) return NULL;
   return SLV3(sys)->J.mtx;
 }
 
-static int slv3_destroy(slv_system_t server, SlvClientToken asys)
-{
+static int slv3_destroy(slv_system_t server, SlvClientToken asys){
   slv3_system_t sys;
   (void) server;
   sys = SLV3(asys);
@@ -4234,7 +4223,7 @@ int slv3_register(SlvFunctionsT *sft){
   sft->getlinsol = NULL;
   sft->getlinsys = slv3_get_linsolqr_sys;
   sft->get_sys_mtx = slv3_get_jacobian;
-  sft->dumpinternals = slv3_dump_internals;
+  sft->dumpinternals = NULL;
   return 0;
 }
 

@@ -197,8 +197,10 @@ typedef struct IntegratorIdaStatsStruct{
 int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
 void integrator_ida_write_stats(IntegratorIdaStats *stats);
 void integrator_ida_write_incidence(IntegratorSystem *blsys);
-static int integrator_ida_check_lists(const IntegratorSystem *sys);
 
+static int integrator_ida_rebuild_diffindex(IntegratorSystem *sys);
+static int integrator_ida_diffindex(const IntegratorSystem *sys, const struct var_variable *deriv);
+static int integrator_ida_check_partitioning(IntegratorSystem *sys);
 /*------
   Jacobi preconditioner -- experimental 
 */
@@ -234,10 +236,11 @@ void integrator_ida_create(IntegratorSystem *blsys){
 	CONSOLE_DEBUG("ALLOCATING IDA ENGINE DATA");
 	IntegratorIdaData *enginedata;
 	enginedata = ASC_NEW(IntegratorIdaData);
+	CONSOLE_DEBUG("enginedata = %p",enginedata);
 	enginedata->rellist = NULL;
 	enginedata->safeeval = 0;
 	enginedata->vfilter.matchbits =  VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | VAR_FIXED;
-	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE;
+	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | 0;
 	enginedata->pfree = NULL;
 
 	enginedata->rfilter.matchbits =  REL_EQUALITY | REL_INCLUDED | REL_ACTIVE;
@@ -249,14 +252,18 @@ void integrator_ida_create(IntegratorSystem *blsys){
 }
 
 void integrator_ida_free(void *enginedata){
-	CONSOLE_DEBUG("DELETING IDA ENGINE DATA");
+	CONSOLE_DEBUG("DESTROYING IDA engine data at %p",enginedata);
 	IntegratorIdaData *d = (IntegratorIdaData *)enginedata;
+	asc_assert(d);
 	if(d->pfree){
+		CONSOLE_DEBUG("DESTROYING preconditioner data using fn at %p",d->pfree);
 		/* free the preconditioner data, whatever it happens to be */
 		(d->pfree)(enginedata);
 	}
 	/* note, we don't own the rellist, so don't need to free it */
+	CONSOLE_DEBUG("Now destroying the enginedata");
 	ASC_FREE(d);
+	CONSOLE_DEBUG("enginedata freed");
 }
 
 IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *blsys){
@@ -426,6 +433,32 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
   ANALYSIS ROUTINE (new implementation)
 */
 
+static int integrator_ida_check_partitioning(IntegratorSystem *sys){
+	long i, nv;
+	int err=0;
+	char *varname;
+	struct var_variable **vlist, *v;
+	nv = slv_get_num_solvers_vars(sys->system);
+	vlist = slv_get_solvers_var_list(sys->system);
+	for(i=0;i<nv;++i){
+		v=vlist[i];
+		varname = var_make_name(sys->system,v);
+		if(!var_deriv(v)){
+			fprintf(stderr,"vlist[%ld] = '%s' (nonderiv)\n",i,varname);
+			if(i>=sys->n_y)err++;
+		}else{
+			fprintf(stderr,"vlist[%ld] = '%s' (derivative)\n",i,varname);
+			if(i<sys->n_y)err++;
+		}
+		ASC_FREE(varname);
+	}
+	if(err){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in IDA partitioning");
+		return 1;
+	}
+	return 0;
+}
+
 static int integrator_ida_block_check(IntegratorSystem *sys){
 	int res;
  	int dof;
@@ -458,10 +491,10 @@ static int integrator_ida_block_check(IntegratorSystem *sys){
 		return -1;
 	}
 	switch(res){
-		case 1: CONSOLE_DEBUG("With derivatives fixed, system is underspecified (%d degrees of freedom)",dof);break;
-		case 2: CONSOLE_DEBUG("With derivatives fixed, system is square"); return 0; /* all OK */
-		case 3: CONSOLE_DEBUG("With derivatives fixed, system is structurally singular"); break;
-		case 4: CONSOLE_DEBUG("With derivatives fixed, system is overspecified"); break;
+		case 1: CONSOLE_DEBUG("System is underspecified (%d degrees of freedom)",dof);break;
+		case 2: CONSOLE_DEBUG("System is square"); return 0; /* all OK */
+		case 3: CONSOLE_DEBUG("System is structurally singular"); break;
+		case 4: CONSOLE_DEBUG("System is overspecified"); break;
 		default: 
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unrecognised slfDOF_status");
 			return -2;
@@ -487,6 +520,51 @@ static int integrator_ida_block_check(IntegratorSystem *sys){
 #endif
 
 	return res;
+}
+
+static int integrator_ida_rebuild_diffindex(IntegratorSystem *sys){
+	int i;
+	const SolverDiffVarCollection *diffvars;
+	SolverDiffVarSequence seq;
+	char *varname;
+
+	CONSOLE_DEBUG("Rebuilding diffindex vector");
+
+	diffvars = slv_get_diffvars(sys->system);
+	asc_assert(diffvars);
+
+	if(sys->y_id == NULL){
+		CONSOLE_DEBUG("y_id not allocated");
+		return 1;
+	}
+	for(i=0; i<diffvars->nseqs; ++i){
+		CONSOLE_DEBUG("i = %d",i);
+		seq = diffvars->seqs[i];
+		if(seq.n == 2){
+			CONSOLE_DEBUG("seq.vars[0] = %p",seq.vars[0]);
+			varname = var_make_name(sys->system,seq.vars[0]);
+			CONSOLE_DEBUG("diff var is '%s'",varname);
+			ASC_FREE(varname);
+			varname = var_make_name(sys->system,seq.vars[1]);
+			CONSOLE_DEBUG("deriv var is '%s'",varname);
+			ASC_FREE(varname);
+			CONSOLE_DEBUG("sindex deriv %d, diff %d",var_sindex(seq.vars[1]), var_sindex(seq.vars[0]));
+			sys->y_id[var_sindex(seq.vars[1])] = var_sindex(seq.vars[0]);
+		}
+	}
+	CONSOLE_DEBUG("Completed integrator_ida_rebuild_diffindex");
+	return 0;
+}
+
+/**
+	Provide a macro implementation of this
+*/
+static int integrator_ida_diffindex(const IntegratorSystem *sys, const struct var_variable *deriv){
+	struct var_variable **vlist;
+	vlist = slv_get_solvers_var_list(sys->system);
+	asc_assert(var_deriv(deriv));
+	asc_assert(var_sindex(deriv) >= sys->n_y);
+	return sys->y_id[var_sindex(deriv)];
 }
 
 
@@ -521,7 +599,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	unsigned long nsolversrels;*/
 	const SolverDiffVarCollection *diffvars;
 	SolverDiffVarSequence seq;
-	long i, j, n_y, n_ydot, n_dyn, n_skipped_diff, n_skipped_alg, n_skipped_deriv;
+	long i, j, n_y, n_ydot, n_skipped_diff, n_skipped_alg, n_skipped_deriv;
 	int res;
 
 	struct var_variable *v;
@@ -531,11 +609,19 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	
 	asc_assert(sys->engine==INTEG_IDA);
 
+#if 0
 	/* partition into static, dynamic and output problems */
 	CONSOLE_DEBUG("Block partitioning system...");
 	if(slv_block_partition(sys->system)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to block-partition system");
 		return 1;
+	}
+#endif
+
+	/* check that we have some relations */
+	if(0==slv_get_num_solvers_rels(sys->system)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"There are no relations!");
+		return -1;
 	}
 
 	diffvars = slv_get_diffvars(sys->system);
@@ -555,8 +641,6 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 		return 1;
 	};
 
-	n_dyn = diffvars->nalg + 2 * diffvars->ndiff;
-
 	/* set up the dynamic problem */
 	CONSOLE_DEBUG("Setting up the dynamic problem");
 
@@ -564,14 +648,8 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 	sys->y = ASC_NEW_ARRAY(struct var_variable *,diffvars->nalg + diffvars->ndiff);
 	sys->ydot = ASC_NEW_ARRAY(struct var_variable *,diffvars->nalg + diffvars->ndiff);
-	sys->y_id = ASC_NEW_ARRAY(long,n_dyn);
-	n_y = 0;
+	n_y = 0; n_ydot = 0;
 	n_skipped_alg = 0; n_skipped_diff = 0; n_skipped_deriv = 0;
-
-	/* initialise y_id to n_dyn (i.e. off limits) */
-	for(i=0;i<n_dyn;++i){
-		sys->y_id[i] = n_dyn;
-	}                 
 	
 	/* add the variables from the derivative chains */
 	CONSOLE_DEBUG("Counting vars (%ld)",n_y);
@@ -620,14 +698,13 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 				asc_assert(var_active(seq.vars[1]));
 				asc_assert(seq.n == 2);
 				sys->y[n_y] = v;
-				sys->y_id[var_sindex(v)] = n_y;
 				CONSOLE_DEBUG("'%s' is differential (%ld)",varname,n_y);
 				ASC_FREE(varname);
 				v = seq.vars[1];
 				sys->ydot[n_y] = v;
-				sys->y_id[var_sindex(v)] = -n_y-1;
+				n_ydot++;
 				varname = var_make_name(sys->system,v);
-				CONSOLE_DEBUG("'%s' is derivative (%ld, %p, %p)",varname,n_y,v,sys->ydot[-sys->y_id[var_sindex(v)]-1]);
+				CONSOLE_DEBUG("'%s' is derivative (%ld)",varname,n_y);
 				ASC_FREE(varname);
 				n_y++;
 				continue;
@@ -638,14 +715,29 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 		asc_assert(var_active(v));
 		sys->y[n_y] = v;
 		sys->ydot[n_y] = NULL;
-		sys->y_id[var_sindex(v)]=n_y;
 		n_y++;
 		continue;
 	}
 	sys->n_y = n_y;
-	n_ydot = n_y;
 
-	/* FIX the derivatives */
+	CONSOLE_DEBUG("Got %ld non-derivative vars and %ld derivative vars", n_y, n_ydot);
+
+	asc_assert(sys->y_id==NULL);
+	if(sys->y_id == NULL){
+		sys->y_id = ASC_NEW_ARRAY_CLEAR(int, n_y);
+		CONSOLE_DEBUG("Allocated y_id (n_y = %ld)",sys->n_y);
+	}		
+
+	/* the following causes TestIDA.testincidence3 to fail:
+	if(sys->n_y != slv_get_num_solvers_rels(sys->system)){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square");
+		return 2;
+	}*/
+
+#if 0
+	/* check structural singularity for the two IDACalcIC scenarios */
+
+	/* ...(1) FIX the derivatives */
 	CONSOLE_DEBUG("Checking system with derivatives fixed...");
 	for(i=0;i<n_y;++i){
 		if(sys->ydot[i])var_set_fixed(sys->ydot[i],1);
@@ -655,36 +747,45 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	res = integrator_ida_block_check(sys);
 	if(res)return 100 + res;
 
-	/* FREE the derivatives, FIX the diffvars */
+	/* ...(2) FREE the derivatives, FIX the diffvars */
+	CONSOLE_DEBUG("Checking system with differential variables fixed...");
 	for(i=0;i<n_y;++i){
 		if(sys->ydot[i]){
 			var_set_fixed(sys->ydot[i],0);
 			var_set_fixed(sys->y[i],1);
 		}
 	}
-
-	CONSOLE_DEBUG("Checking system with differential variables fixed...");
 	slv_block_partition(sys->system);
 	res = integrator_ida_block_check(sys);
 	if(res)return 200 + res;
 	
-	/* FREE the diffvars */
+	/* ...(3) restore as it was, FREE the diffvars */
 	for(i=0;i<n_y;++i){
 		if(sys->ydot[i]){
 			var_set_fixed(sys->y[i],0);
 		}
-	}		
+	}	
+#endif
 
-	/*if(sys->n_y != nsolversrels){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square: n_y = %d, n_rels = %d"
-			" (n_alg = %d - %d = %d"
-			", n_diff = 2 * %d - %d - %d)"
-			,sys->n_y, nsolversrels
-			, diffvars->nalg, n_skipped_alg, diffvars->nalg - n_skipped_alg
-			, diffvars->ndiff, n_skipped_diff, n_skipped_deriv
-		);
-		return 2;
-	}*/
+	CONSOLE_DEBUG("Creating DAE partitioning...");
+	if(block_sort_dae_rels_and_vars(sys->system)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error sorting rels and vars");
+		return 250;
+	}
+
+	if(integrator_ida_check_partitioning(sys)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error with partitioning");
+		return 300;
+	}
+
+	CONSOLE_DEBUG("DAE partitioning is OK");
+
+	/** @TODO check that derivatives are all beyond the diffvars and alg vars */
+
+	if(integrator_ida_rebuild_diffindex(sys)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error updating var_sindex values for derivative variables");
+		return 350;
+	}
 
 	/* check the indep var is same as was located elsewhere */
 	if(diffvars->nindep>1){
@@ -699,6 +800,8 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	}
 
 	/* get the observations */
+	/** @TODO this should use a 'problem provider' API instead of static data
+	from the system object */
 	sys->n_obs = diffvars->nobs;
 	sys->obs = ASC_NEW_ARRAY(struct var_variable *,sys->n_obs);
 	for(i=0;i<sys->n_obs;++i){
@@ -717,9 +820,6 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	/* ERROR_REPORTER_HERE(ASC_PROG_ERR,"Implementation incomplete");
 	return -1; */
 
-	if(integrator_ida_check_lists(sys)){
-		integrator_debug(sys,stderr);
-	}
 	return 0;
 }
 #endif
@@ -776,11 +876,6 @@ int integrator_ida_solve(
 	if(enginedata->nrels!=size){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration problem is not square (%d rels, %d vars)", enginedata->nrels, size);
 		return 1; /* failure */
-	}
-
-	if(integrator_ida_check_lists(blsys)){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Inconsistent integrator lists");
-		return 1;
 	}
 
 	/* retrieve initial values from the system */
@@ -1306,15 +1401,15 @@ int integrator_ida_djex(long int Neq, realtype tt
 	struct rel_relation **relptr;
 	int i;
 	double *derivatives;
-	int *variables;
+	struct var_variable **variables;
 	int count, j;
-	long var_yindex;
 
 	blsys = (IntegratorSystem *)jac_data;
 	enginedata = integrator_ida_enginedata(blsys);
 
-	/* allocate space for returns from relman_diff2: we *should* be able to use 'tmp1' and 'tmp2' here... */
-	variables = ASC_NEW_ARRAY(int, NV_LENGTH_S(yy) * 2);
+	/* allocate space for returns from relman_diff3 */
+	/** @TODO instead, we should use 'tmp1' and 'tmp2' here... */
+	variables = ASC_NEW_ARRAY(struct var_variable*, NV_LENGTH_S(yy) * 2);
 	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
 
 	/* pass the values of everything back to the compiler */
@@ -1349,6 +1444,8 @@ int integrator_ida_djex(long int Neq, realtype tt
 	CONSOLE_DEBUG("<c_j> = %f",c_j);
 #endif
 
+	integrator_ida_check_partitioning(blsys);
+
 	/* build up the dense jacobian matrix... */
 	status = 0;
 	for(i=0, relptr = enginedata->rellist;
@@ -1356,7 +1453,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 			++i, ++relptr
 	){
 		/* get derivatives for this particular relation */
-		status = relman_diff2(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
+		status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 
 		if(status){
 			relname = rel_make_name(blsys->system, *relptr);
@@ -1372,40 +1469,33 @@ int integrator_ida_djex(long int Neq, realtype tt
 		fprintf(stderr,"%d: '%s': ",i,relname);
 		ASC_FREE(relname);
 		for(j=0;j<count;++j){
-			varname = var_make_name(blsys->system, varlist[variables[j]]);
-			var_yindex = blsys->y_id[variables[j]];
-			if(var_yindex >=0){
-				fprintf(stderr,"  var[%d]='%s'=y[%ld]",variables[j],varname,var_yindex);
+			varname = var_make_name(blsys->system, variables[j]);
+			if(var_deriv(variables[j])){
+				fprintf(stderr,"  '%s'=",varname);
+				fprintf(stderr,"ydot[%d]",integrator_ida_diffindex(blsys,variables[j]));
 			}else{
-				fprintf(stderr,"  var[%d]='%s'=ydot[%ld]",variables[j],varname,-var_yindex-1);
+				fprintf(stderr,"  '%s'=y[%d]",varname,var_sindex(variables[j]));
 			}
 			ASC_FREE(varname);
 		}
 		fprintf(stderr,"\n");
 #endif
-		/* insert values into the Jacobian row in appropriate spots (can assume Jac starts with zeros -- IDA manual) */
-		asc_assert(blsys->y_id);
-		for(j=0; j < count; ++j){
-			var_yindex = blsys->y_id[variables[j]];
-			/* the SUNDIALS headers seem not to store 'N' on Windows */
-			ASC_ASSERT_RANGE(var_yindex, -blsys->n_y, blsys->n_y);
 
-			if(var_yindex >= 0){
-#ifdef DJEX_DEBUG
-				varname = var_make_name(blsys->system, blsys->y[var_yindex]);
-				CONSOLE_DEBUG("blsys->y[var_yindex] = '%s'",varname);
+		/* insert values into the Jacobian row in appropriate spots (can assume Jac starts with zeros -- IDA manual) */
+		for(j=0; j < count; ++j){
+			if(!var_deriv(variables[j])){
+				CONSOLE_DEBUG("Jac = %p, i = %d, j = %d, variables[j] = %p, sindex = %d, deriv = %f"
+					,Jac, i, j,  variables[j], var_sindex(variables[j]),derivatives[j]
+				);
+				CONSOLE_DEBUG("var flags = 0x%o",var_flags(variables[j]));
+				var_make_name(blsys->system,variables[j]);
+				CONSOLE_DEBUG("var name '%s'",varname);
 				ASC_FREE(varname);
-				varname = var_make_name(blsys->system, varlist[variables[j]]);
-				CONSOLE_DEBUG("varlist[variables[j]] = '%s'",varname);
-				ASC_FREE(varname);
-				ASC_ASSERT_EQ_PTR(blsys->y[var_yindex],varlist[variables[j]]);
-#endif
-				DENSE_ELEM(Jac,i,var_yindex) += derivatives[j];
+				asc_assert(var_sindex(variables[j]) >= 0);
+				ASC_ASSERT_LT(var_sindex(variables[j]) , Neq);
+				DENSE_ELEM(Jac,i,var_sindex(variables[j])) += derivatives[j];
 			}else{
-#ifdef DJEX_DEBUG
-				asc_assert(blsys->ydot[-var_yindex-1]==varlist[variables[j]]);
-#endif
-				DENSE_ELEM(Jac,i,-var_yindex-1) += derivatives[j] * c_j;
+				DENSE_ELEM(Jac,i,integrator_ida_diffindex(blsys,variables[j])) += derivatives[j] * c_j;
 			}
 		}
 	}
@@ -1472,9 +1562,8 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	char *relname;
 	int status;
 	double Jv_i;
-	long var_yindex;
 
-	int *variables;
+	struct var_variable **variables;
 	double *derivatives;
 	int count;
 	struct var_variable **varlist;
@@ -1499,7 +1588,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 #ifdef JEX_DEBUG
 	CONSOLE_DEBUG("Allocating 'variables' with length %d",i);
 #endif
-	variables = ASC_NEW_ARRAY(int, i);
+	variables = ASC_NEW_ARRAY(struct var_variable*, i);
 	derivatives = ASC_NEW_ARRAY(double, i);
 
 	/* evaluate the derivatives... */
@@ -1514,7 +1603,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				++i, ++relptr
 		){
 			/* get derivatives for this particular relation */
-			status = relman_diff2(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
+			status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 #ifdef JEX_DEBUG
 			CONSOLE_DEBUG("Got derivatives against %d matching variables, status = %d", count,status);
 #endif
@@ -1534,7 +1623,6 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 			*/
 
 			Jv_i = 0;
-			asc_assert(blsys->y_id);
 			for(j=0; j < count; ++j){
 				/* CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], blsys->n_y);
 				varname = var_make_name(blsys->system, enginedata->varlist[variables[j]]);
@@ -1548,35 +1636,35 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 				/* we don't calculate derivatives wrt indep var */
 				asc_assert(variables[j]>=0);
-				if(varlist[variables[j]] == blsys->x) continue;
-
-				var_yindex = blsys->y_id[variables[j]];
+				if(variables[j] == blsys->x) continue;
 #ifdef JEX_DEBUG
-				CONSOLE_DEBUG("j = %d: variables[j] = %d, y_id = %ld",j,variables[j],var_yindex);
-#endif
-
-				ASC_ASSERT_RANGE(-var_yindex-1, -NV_LENGTH_S(v),NV_LENGTH_S(v));
-				
-				if(var_yindex >= 0){
+				CONSOLE_DEBUG("j = %d: variables[j] = %d",j,var_sindex(variables[j]));
+#endif				
+				if(var_deriv(variables[j])){
+#define DIFFINDEX integrator_ida_diffindex(blsys,variables[j])
 #ifdef JEX_DEBUG
-					asc_assert(blsys->y[var_yindex]==varlist[variables[j]]);
-					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dy[%ld] = %f, v[%ld] = %f)\n", i
-						, derivatives[j] * NV_Ith_S(v,var_yindex)
-						, i, var_yindex, derivatives[j]
-						, var_yindex, NV_Ith_S(v,var_yindex)
+					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dydot[%d] = %f, v[%d] = %f)\n", i
+						, derivatives[j] * NV_Ith_S(v,DIFFINDEX)
+						, i, DIFFINDEX, derivatives[j]
+						, DIFFINDEX, NV_Ith_S(v,DIFFINDEX)
 					);
 #endif
-					Jv_i += derivatives[j] * NV_Ith_S(v,var_yindex);
+					asc_assert(blsys->ydot[DIFFINDEX]==variables[j]);
+					Jv_i += derivatives[j] * NV_Ith_S(v,DIFFINDEX) * c_j;
+#undef DIFFINDEX
 				}else{
+#define VARINDEX var_sindex(variables[j])
 #ifdef JEX_DEBUG
-					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dydot[%ld] = %f, v[%ld] = %f)\n", i
-						, derivatives[j] * NV_Ith_S(v,-var_yindex-1)
-						, i, -var_yindex-1, derivatives[j]
-						, -var_yindex-1, NV_Ith_S(v,-var_yindex-1)
+					asc_assert(blsys->y[VARINDEX]==variables[j]);
+					fprintf(stderr,"Jv[%d] += %f (dF[%d]/dy[%d] = %f, v[%d] = %f)\n"
+						, i
+						, derivatives[j] * NV_Ith_S(v,VARINDEX)
+						, i, VARINDEX, derivatives[j]
+						, VARINDEX, NV_Ith_S(v,VARINDEX)
 					);
 #endif
-					asc_assert(blsys->ydot[-var_yindex-1]==varlist[variables[j]]);
-					Jv_i += derivatives[j] * NV_Ith_S(v,-var_yindex-1) * c_j;
+					Jv_i += derivatives[j] * NV_Ith_S(v,VARINDEX);
+#undef VARINDEX
 				}
 			}
 
@@ -1585,7 +1673,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 			CONSOLE_DEBUG("rel = %p",*relptr);
 			relname = rel_make_name(blsys->system, *relptr);
 			CONSOLE_DEBUG("'%s': Jv[%d] = %f", relname, i, NV_Ith_S(Jv,i));
-			//ASC_FREE(relname);
+			ASC_FREE(relname);
 			return 1;
 #endif
 		}
@@ -1656,7 +1744,7 @@ int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector tmp1, N_Vector tmp2,
 		 N_Vector tmp3
 ){
-	int i, j;
+	int i, j, res;
 	IntegratorSystem *blsys;
 	IntegratorIdaData *enginedata;
 	IntegratorIdaPrecDataJacobi *precdata;
@@ -1666,14 +1754,13 @@ int integrator_ida_psetup_jacobi(realtype tt,
 	enginedata = blsys->enginedata;
 	precdata = (IntegratorIdaPrecDataJacobi *)(enginedata->precdata);
 	double *derivatives;
-	int *variables;
+	struct var_variable **variables;
 	int count, status;
 	char *relname;
-	int var_yindex;
 
 	CONSOLE_DEBUG("Setting up Jacobi preconditioner");
 
-	variables = ASC_NEW_ARRAY(int, NV_LENGTH_S(yy) * 2);
+	variables = ASC_NEW_ARRAY(struct var_variable*, NV_LENGTH_S(yy) * 2);
 	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
 
 	/**
@@ -1687,7 +1774,7 @@ int integrator_ida_psetup_jacobi(realtype tt,
 	){
 
 		/* get derivatives for this particular relation */
-		status = relman_diff2(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
+		status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 		if(status){
 			relname = rel_make_name(blsys->system, *relptr);
 			CONSOLE_DEBUG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
@@ -1696,15 +1783,14 @@ int integrator_ida_psetup_jacobi(realtype tt,
 		}
 		/* CONSOLE_DEBUG("Got %d derivatives from relation %d",count,i); */
 		/* find the diagonal elements */
-		asc_assert(blsys->y_id);
 		for(j=0; j<count; ++j){
-			if(variables[j]==i){
-				var_yindex = blsys->y_id[variables[j]];
-				if(var_yindex >= 0){
-					NV_Ith_S(precdata->PIii, i) = 1./derivatives[j];
-				}else{
+			if(var_sindex(variables[j])==i){
+				if(var_deriv(variables[j])){
 					NV_Ith_S(precdata->PIii, i) = 1./(c_j * derivatives[j]);
+				}else{
+					NV_Ith_S(precdata->PIii, i) = 1./derivatives[j];
 				}
+
 			}
 		}
 #ifdef PREC_DEBUG
@@ -1714,15 +1800,16 @@ int integrator_ida_psetup_jacobi(realtype tt,
 
 	if(status){
 		CONSOLE_DEBUG("Error found when evaluating derivatives");
-		return 1; /* recoverable */
+		res = 1; goto finish; /* recoverable */
 	}
 
 	integrator_ida_write_incidence(blsys);
 
+	res = 0;
+finish:
 	ASC_FREE(variables);
 	ASC_FREE(derivatives);
-
-	return 0;
+	return res;
 };
 
 /**
@@ -1799,20 +1886,15 @@ void integrator_ida_write_jacobian(IntegratorSystem *blsys, realtype c_j, FILE *
 	MM_typecode matcode;                        
 	int nnz, rhomax;
 	double *derivatives;
-	int *variables;
+	struct var_variable **variables;
 	struct rel_relation **relptr;
-	int i, j, status, count, var_yindex;
+	int i, j, status, count;
 	char *relname;
 
-	var_filter_t vfiltery  = {
+	var_filter_t vfilter = {
 		VAR_SVAR | VAR_FIXED | VAR_DERIV
-	    , VAR_SVAR 
+	   ,VAR_SVAR | 0         | 0
 	};
-	var_filter_t vfilteryd = {
-		VAR_SVAR | VAR_FIXED | VAR_DERIV
-		, VAR_SVAR | VAR_DERIV
-	};
-
 	enginedata = (IntegratorIdaData *)blsys->enginedata;
 
 	/* number of non-zeros for all the non-FIXED solver_vars,
@@ -1835,7 +1917,7 @@ void integrator_ida_write_jacobian(IntegratorSystem *blsys, realtype c_j, FILE *
     mm_write_banner(f, matcode); 
     mm_write_mtx_crd_size(f, enginedata->nrels, enginedata->nrels, nnz);	
 
-	variables = ASC_NEW_ARRAY(int, blsys->n_y * 2);
+	variables = ASC_NEW_ARRAY(struct var_variable *, blsys->n_y * 2);
 	derivatives = ASC_NEW_ARRAY(double, blsys->n_y * 2);
 
 	CONSOLE_DEBUG("Writing sparse Jacobian to file...");
@@ -1847,29 +1929,25 @@ void integrator_ida_write_jacobian(IntegratorSystem *blsys, realtype c_j, FILE *
 		relname = rel_make_name(blsys->system, *relptr);
 
 		/* get derivatives of y */
-		status = relman_diff2(*relptr, &vfiltery, derivatives, variables, &count, enginedata->safeeval);
+		status = relman_diff3(*relptr, &vfilter, derivatives, variables, &count, enginedata->safeeval);
 		if(status){
 			CONSOLE_DEBUG("ERROR calculating derivatives for relation '%s'",relname);
 			ASC_FREE(relname);
 			break;
 		}
 
-		/* get derivatives of y */
-		status = relman_diff2(*relptr, &vfilteryd, derivatives, variables, &count, enginedata->safeeval);
-		if(status){
-			CONSOLE_DEBUG("ERROR calculating derivatives for relation '%s'",relname);
-			ASC_FREE(relname);
-			break;
-		}
-
-		asc_assert(blsys->y_id);
-		for(j=0; j<count; ++j){
-			var_yindex = blsys->y_id[variables[j]];
-			if(var_yindex >= 0 && type == II_WRITE_Y){
-		        fprintf(f, "%d %d %10.3g\n", i, var_yindex, derivatives[j]);
-			}else if(var_yindex < 0 && type == II_WRITE_YDOT){
-				fprintf(f, "%d %d %10.3g\n", i, -var_yindex-1, derivatives[j]);
+		if(type==II_WRITE_YDOT){
+			for(j=0; j<count; ++j){
+				if(var_deriv(variables[j])){
+					fprintf(f, "%d %d %10.3g\n", i, integrator_ida_diffindex(blsys,variables[j]), derivatives[j]);
+				}
 			}
+		}else if(type==II_WRITE_Y){
+			for(j=0; j<count; ++j){
+				if(!var_deriv(variables[j])){
+					fprintf(f, "%d %d %10.3g\n", i, var_sindex(variables[j]), derivatives[j]);
+				}
+			}								
 		}
 	}
 	ASC_FREE(variables);
@@ -1885,17 +1963,16 @@ void integrator_ida_write_incidence(IntegratorSystem *blsys){
 	struct rel_relation **relptr;
 	IntegratorIdaData *enginedata = blsys->enginedata;
 	double *derivatives;
-	int *variables;
+	struct var_variable **variables;
 	int count, status;
 	char *relname;
-	int var_yindex;
 
 	if(enginedata->nrels > 100){
 		CONSOLE_DEBUG("Ignoring call (matrix size too big = %d)",enginedata->nrels);
 		return;
 	}
 
-	variables = ASC_NEW_ARRAY(int, blsys->n_y * 2);
+	variables = ASC_NEW_ARRAY(struct var_variable *, blsys->n_y * 2);
 	derivatives = ASC_NEW_ARRAY(double, blsys->n_y * 2);
 
 	CONSOLE_DEBUG("Outputting incidence information to console...");
@@ -1907,7 +1984,7 @@ void integrator_ida_write_incidence(IntegratorSystem *blsys){
 		relname = rel_make_name(blsys->system, *relptr);
 
 		/* get derivatives for this particular relation */
-		status = relman_diff2(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
+		status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 		if(status){
 			CONSOLE_DEBUG("ERROR calculating derivatives for relation '%s'",relname);
 			ASC_FREE(relname);
@@ -1917,13 +1994,11 @@ void integrator_ida_write_incidence(IntegratorSystem *blsys){
 		fprintf(stderr,"%3d:%-15s:",i,relname);		
 		ASC_FREE(relname);
 
-		asc_assert(blsys->y_id);
 		for(j=0; j<count; ++j){
-			var_yindex = blsys->y_id[variables[j]];
-			if(var_yindex >= 0){
-				fprintf(stderr," %d:y[%d]",variables[j],var_yindex);
+			if(var_deriv(variables[j])){
+				fprintf(stderr," %p:ydot[%d]",variables[j],integrator_ida_diffindex(blsys,variables[j]));
 			}else{
-				fprintf(stderr," %d:ydot[%d]",variables[j],-var_yindex-1);
+				fprintf(stderr," %p:y[%d]",variables[j],var_sindex(variables[j]));
 			}
 		}
 		fprintf(stderr,"\n");
@@ -1938,7 +2013,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	struct var_variable **vlist, *var;
 	struct rel_relation **rlist, *rel;
 	long vlen, rlen;
-	long i, y_id;
+	long i;
 
 	fprintf(fp,"THERE ARE %ld VARIABLES IN THE INTEGRATION SYSTEM\n\n",sys->n_y);
 
@@ -1962,8 +2037,8 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	}
 
 	fprintf(fp,"\n\nCORRESPONDENCE OF SOLVER VARS TO INTEGRATOR VARS\n\n");
-	fprintf(fp,"sindex\t%-15s\ty_id\ty\tydot\n","name");
-	fprintf(fp,"------\t%-15s\t-----\t-----\t-----\n","----");
+	fprintf(fp,"sindex\t%-15s\ty    \tydot \n","name");
+	fprintf(fp,"------\t%-15s\t-----\t-----\n","----");
 
 
 	/* visit all the slv_system_t master var lists to collect vars */
@@ -1982,20 +2057,17 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 		}else if(!var_active(var)){
 			// inactive
 			fprintf(fp,"(inactive)\n");
+		}else if(!var_incident(var)){
+			// not incident
+			fprintf(fp,"(not incident)\n");
 		}else{
-			// a DAE var, otherwise
-			y_id = sys->y_id[i];
-
-			fprintf(fp,"%ld", y_id);
-			if(y_id >= 0){
-				fprintf(fp,"\ty[%ld]\t.\n",y_id);
+			if(var_deriv(var)){
+				ASC_FREE(varname);
+				varname = var_make_name(sys->system,vlist[integrator_ida_diffindex(sys,var)]);
+				fprintf(fp,"\t.\tdiff(%d='%s')\n",integrator_ida_diffindex(sys,var),varname);
 			}else{
-				fprintf(fp,"\t.\tydot[%ld]\n",-y_id-1);
+				fprintf(fp,"\t%d\t.\n",var_sindex(var));
 			}
-
-			ASC_ASSERT_LT(i,1e7L);
-			ASC_ASSERT_LT(y_id, 9999999L);
-			ASC_ASSERT_LT(-9999999L, y_id);
 		}
 		ASC_FREE(varname);
 	}
@@ -2018,48 +2090,6 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	block_debug(sys->system, fp);
 		
 	return 0; /* success */
-}
-
-static int integrator_ida_check_lists(const IntegratorSystem *sys){
-	long i, y_id;
-	struct var_variable **svars;
-	char *varname1, *varname2;
-	long n;
-	int err = 0;
-	svars = slv_get_solvers_var_list(sys->system);
-	n = slv_get_num_solvers_vars(sys->system);
-	for(i=0; i<n; ++i){
-		y_id = sys->y_id[i];
-		if(y_id >= sys->n_y || y_id <= -sys->n_y - 1){
-			CONSOLE_DEBUG("Skipping y_id[%ld] = %ld",i,y_id);
-			continue;
-		}
-		varname1 = var_make_name(sys->system,svars[i]);
-		if(y_id >= 0){
-			if(sys->y[y_id]!=svars[i]){
-				varname2 = var_make_name(sys->system,sys->y[y_id]);
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error y: y_id[%ld]=%ld-->'%s', but svars[%ld]='%s'"
-					,i,y_id,varname2,i,varname1
-				);
-				ASC_FREE(varname2);
-				err++;
-			}
-		}else if(sys->ydot[-y_id-1] != NULL){
-			CONSOLE_DEBUG("y_id = %ld  --> -y_id-1 = %ld --> sys->ydot[%ld] = %p"
-				,y_id, -y_id-1, -y_id-1, sys->ydot[-y_id-1]
-			);
-			varname2 = var_make_name(sys->system,sys->ydot[-y_id-1]);
-			if(sys->ydot[-y_id-1]!=svars[i]){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error y: y_id[%ld]=%ld-->'%s', but svars[%ld]='%s'"
-					,i,-y_id-1,varname2,i,varname1
-				);
-				err++;
-			}
-			ASC_FREE(varname2);
-		}
-		ASC_FREE(varname1);
-	}
-	return err;
 }
 
 /*----------------------------------------------

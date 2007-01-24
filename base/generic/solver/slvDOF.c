@@ -146,10 +146,10 @@ static void destroy_matrices(slvDOF_system_t sys)
   if( sys->J.mtx ) {
     mtx_destroy(sys->J.mtx);
   }
-  ASC_FREE(sys->rows);
-  ASC_FREE(sys->cols);
-  ASC_FREE(sys->rowlist);
-  ASC_FREE(sys->collist);
+  if(sys->rows)ASC_FREE(sys->rows);
+  if(sys->cols)ASC_FREE(sys->cols);
+  if(sys->rowlist)ASC_FREE(sys->rowlist);
+  if(sys->collist)ASC_FREE(sys->collist);
 }
 
 static
@@ -221,7 +221,7 @@ static void create_matrices(slv_system_t server,slvDOF_system_t sys){
   vfilter.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_ACTIVE);
   sys->vused = slv_count_solvers_vars(server,&vfilter);
 
-  if(slv_std_make_incidence_mtx(server,sys->J.mtx,&vfilter,&rfilter)){
+  if(slv_make_incidence_mtx(server,sys->J.mtx,&vfilter,&rfilter)){
     ASC_PANIC("slv_std_make_indicidence_mtx failed");
   }
 
