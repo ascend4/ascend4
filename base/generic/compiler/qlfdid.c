@@ -506,7 +506,7 @@ int Asc_QlfdidSearch3(CONST char *str, int relative)
   if (str==NULL) {
     return 1;
   }
-  temp = ascstrdup((char *)str);
+  temp = ASC_STRDUP((char *)str);
   if (temp==NULL) {
     return 1;
   }

@@ -80,7 +80,7 @@ int CreateUserFunctionBlackBox(CONST char *name,
     efunc = ASC_NEW(struct ExternalFunc);
     asc_assert(efunc!=NULL);
     efunc->help = NULL;
-    efunc->name = ascstrdup(SCP(AddSymbol(name)));
+    efunc->name = ASC_STRDUP(SCP(AddSymbol(name)));
 	/* CONSOLE_DEBUG("Created new efunc at %p",efunc); */
 	/* add or find name in symbol table */
 	/* the main symtab owns the string */
@@ -120,7 +120,7 @@ int CreateUserFunctionBlackBox(CONST char *name,
   efunc->u.black.inputTolerance = inputTolerance;
   if(help){
     if (efunc->help) ascfree((char *)efunc->help);
-    efunc->help = ascstrdup(help);
+    efunc->help = ASC_STRDUP(help);
   }else{
     efunc->help = NULL;
   }
@@ -259,7 +259,7 @@ int CreateUserFunctionGlassBox(CONST char *name,
     efunc = ASC_NEW(struct ExternalFunc);
     asc_assert(efunc!=NULL);
     efunc->help = NULL;
-    efunc->name = ascstrdup(SCP(AddSymbol(name)));
+    efunc->name = ASC_STRDUP(SCP(AddSymbol(name)));
 	/* add or find name in symbol table */
 	/* the main symtab owns the string */
   }
@@ -274,7 +274,7 @@ int CreateUserFunctionGlassBox(CONST char *name,
   efunc->u.glass.final = final;
   if (help) {
     if (efunc->help) ascfree((char *)efunc->help);
-    efunc->help = ascstrdup(help);
+    efunc->help = ASC_STRDUP(help);
   } else {
     efunc->help = NULL;
   }
@@ -348,7 +348,7 @@ int CreateUserFunctionMethod(CONST char *name
     efunc = ASC_NEW(struct ExternalFunc);
     asc_assert(efunc!=NULL);
     efunc->help = NULL;
-    efunc->name = ascstrdup(SCP(AddSymbol(name)));
+    efunc->name = ASC_STRDUP(SCP(AddSymbol(name)));
 	/* add or find name in symbol table, and copy because  */
 	/* the main symtab owns the string */
   }
@@ -363,7 +363,7 @@ int CreateUserFunctionMethod(CONST char *name
 
   if (help) {
     if (efunc->help) { ascfree((char *)efunc->help); }
-    efunc->help = ascstrdup(help);
+    efunc->help = ASC_STRDUP(help);
   } else {
     efunc->help = NULL;
   }
