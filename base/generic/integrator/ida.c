@@ -448,10 +448,18 @@ static int integrator_ida_check_partitioning(IntegratorSystem *sys){
 		varname = var_make_name(sys->system,v);
 		if(!var_deriv(v)){
 			fprintf(stderr,"vlist[%ld] = '%s' (nonderiv)\n",i,varname);
-			if(i>=sys->n_y)err++;
+			if(i>=sys->n_y){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"non-deriv var '%' is not at the start",varname);
+				err++;
+			}
 		}else{
 			fprintf(stderr,"vlist[%ld] = '%s' (derivative)\n",i,varname);
-			if(i<sys->n_y)err++;
+			if(i<sys->n_y){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"deriv var '%s' is not at the end (n_y = %d, i = %d)"
+					,varname, sys->n_y, i
+				);
+				err++;
+			}
 		}
 		ASC_FREE(varname);
 	}
