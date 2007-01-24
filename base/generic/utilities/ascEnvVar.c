@@ -417,7 +417,7 @@ int Asc_AppendPath(char *envvar, char *newelement)
   }
   ev = FindEnvVar(envvar);
   if (ev == NULL) {
-    keepname = ascstrdup(envvar);
+    keepname = ASC_STRDUP(envvar);
     if (keepname == NULL) {
       return 1;
     }
@@ -428,7 +428,7 @@ int Asc_AppendPath(char *envvar, char *newelement)
     }
     AppendEnvVar(g_env_list, ev);
   }
-  keepval = ascstrdup(newelement);
+  keepval = ASC_STRDUP(newelement);
 
   if (keepval == NULL) {
     return 1;

@@ -77,7 +77,7 @@ char *ascstrdupf(CONST char *s)
 
 
 /*
- *  Here's the debug version of ascstrdup -
+ *  Here's the debug version of ASC_STRDUP -
  *  all memory calls should be to the local debug versions.
  */
 char *ascstrdupf_dbg(CONST char *s){

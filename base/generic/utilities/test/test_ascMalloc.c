@@ -74,10 +74,10 @@ static void test_ascMalloc(void)
   CU_FAIL("test_ascMalloc() compiled without MALLOC_DEBUG - memory management not tested.");
 #endif
 
-  /* test ascstrdup() */
-  CU_ASSERT(NULL == ascstrdup(NULL));                   /* NULL str */
+  /* test ASC_STRDUP() */
+  CU_ASSERT(NULL == ASC_STRDUP(NULL));                   /* NULL str */
 
-  p_str1 = ascstrdup("Just a simple little string.");  /* normal operation with literal*/
+  p_str1 = ASC_STRDUP("Just a simple little string.");  /* normal operation with literal*/
   CU_ASSERT(NULL != p_str1);
   CU_ASSERT(0 == strcmp(p_str1, "Just a simple little string."));
   CU_ASSERT(0 != ascmeminuse());
@@ -85,7 +85,7 @@ static void test_ascMalloc(void)
   CU_ASSERT(0 == ascmeminuse());
 
   snprintf(str1, STR_LEN-1, "I'm a simple string.");
-  p_str1 = ascstrdup(str1);                            /* normal operation with literal*/
+  p_str1 = ASC_STRDUP(str1);                            /* normal operation with literal*/
   CU_ASSERT(NULL != p_str1);
   CU_ASSERT(0 == strcmp(p_str1, str1));
   CU_ASSERT(0 != ascmeminuse());
