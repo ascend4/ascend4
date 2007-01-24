@@ -724,7 +724,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 	asc_assert(sys->y_id==NULL);
 	if(sys->y_id == NULL){
-		sys->y_id = ASC_NEW_ARRAY_CLEAR(int, n_y);
+		sys->y_id = ASC_NEW_ARRAY_CLEAR(int, slv_get_num_solvers_vars(sys->system));
 		CONSOLE_DEBUG("Allocated y_id (n_y = %ld)",sys->n_y);
 	}		
 
