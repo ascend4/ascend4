@@ -72,6 +72,7 @@ extern real64 relman_linear_coef(struct rel_relation *rel,
  *  something will be returned, but it won't be very meaningful.
  */
 
+#if 0
 extern void relman_simplify(struct rel_relation *rel, int opt_level);
 /**<  NOT IMPLEMENTED
  *  The left and right hand sides of the given relation are simplified
@@ -84,6 +85,7 @@ extern void relman_dissolve_vars(struct rel_relation *rel, var_filter_t *filter)
  *  Variables which pass through the filter are replaced in the
  *  relation by their current values.
  */
+#endif
 
 extern void relman_decide_incidence(struct rel_relation *rel);
 /**<
@@ -173,6 +175,15 @@ extern int relman_diff2(struct rel_relation *rel,
 
 	@return 0 on success, non-zero if an error is encountered in the calculation
 */
+
+
+extern int relman_diff3(struct rel_relation *rel,
+                        var_filter_t *filter,
+                        real64 *derivatives,
+                        struct var_variable **variables,
+                        int32 *count,
+                        int32 safe);
+/**< as relman_diff2 but fills a var_variable* array intest of an index array. */
 
 extern int relman_diff_grad(struct rel_relation *rel,
                             var_filter_t *filter,
@@ -353,11 +364,12 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
 	@see relman_make_string_postfix
 	@see relman_make_string_infix
 */
+
 #if 0 /* needs compiler-side work */
-#define relman_make_xstring_postfix(sys,rel) \
+# define relman_make_xstring_postfix(sys,rel) \
       relman_make_vstring_postfix((sys),(rel),FALSE)
 #else
-#define relman_make_xstring_postfix(sys,rel) \
+# define relman_make_xstring_postfix(sys,rel) \
       dummy_rel_string((sys),(rel),0)
 #endif
 /**<
@@ -387,9 +399,7 @@ extern char *dummyrelstring(slv_system_t sys,
 /**<  Temporary no-op function to placehold unimplemented io functions. */
 
 extern void relman_free_reused_mem(void);
-/**<
- * Call when desired to free memory cached internally.
- */
+/**< Call when desired to free memory cached internally. */
 
 /* @} */
 

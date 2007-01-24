@@ -30,9 +30,16 @@
 	Last in CVS: $Revision: 1.8 $ $Date: 1998/06/16 16:53:07 $ $Author: mthomas $
 */
 
+#ifndef ASC_SLV_BLOCK_H
+#define ASC_SLV_BLOCK_H
+
 #include "slv_types.h"
 #include <stdio.h>
 #include <linear/mtx_reorder.h>
+
+/**	@addtogroup system System
+	@{
+*/
 
 /*------------------------------------------------------------------------------
   BLOCK PARTITIONING
@@ -152,4 +159,17 @@ extern int block_debug(slv_system_t sys, FILE *fp);
 /**<
 	Create debug output detailing the current block structure of the system.
 */
+
+/*------------------------------------------------------------------------------
+  PARTITIONING FOR DAE SYSTEMS
+*/
+
+int block_sort_dae_rels_and_vars(slv_system_t sys);
+/**
+	Moves the active incident non-fixed non-derivative solver_vars to the start
+	and the others are jumbled up at the end.
+	Likewise moves active included equalities to the start and the rest to the
+	end.
+*/
 	
+#endif

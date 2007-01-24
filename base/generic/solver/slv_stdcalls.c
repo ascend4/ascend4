@@ -41,7 +41,7 @@
 #include "slv9.h"
 #include "slv9a.h"
 
-#define MIMDEBUG 0 /* slv_std_make_incidence_mtx debugging */
+#define MIMDEBUG 0 /* slv_make_incidence_mtx debugging */
 #define SLBPDEBUG 0 /* slv_log_block_partition debugging */
 
 /*
@@ -75,7 +75,7 @@
 */
 
 /* see slv_stdcalls.h */
-int slv_std_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
+int slv_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
                                var_filter_t *vf,rel_filter_t *rf)
 {
 #if MIMDEBUG
@@ -111,17 +111,13 @@ int slv_std_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
   return 0;
 }
 
-void slv_sort_rels_and_vars(slv_system_t sys,
-			    int32 *rel_count,
-			    int32 *var_count)
-{
-  struct rel_relation **rp;
-  struct rel_relation **rtmp;
-  struct rel_relation *rel;
-  struct var_variable **vp;
-  struct var_variable **vtmp;
-  struct var_variable *var;
-  int32 nrow,ncol,rlen,vlen,order,rel_tmp_end;
+void slv_sort_rels_and_vars(slv_system_t sys
+		,int32 *rel_count, int32 *var_count
+){
+  struct rel_relation **rp, **rtmp, *rel;
+  struct var_variable **vp, **vtmp, *var;
+
+  int32 nrow,ncol,rlen,vlen,rel_tmp_end;
   int32 r,c,var_tmp_end,len;
   var_filter_t vf;
   rel_filter_t rf;
@@ -132,13 +128,12 @@ void slv_sort_rels_and_vars(slv_system_t sys,
   rlen = slv_get_num_solvers_rels(sys);
   vlen = slv_get_num_solvers_vars(sys);
   if (rlen ==0 || vlen == 0) return;
-  order = MAX(rlen,vlen);
 
   assert(var_count != NULL && rel_count != NULL);
   *var_count = *rel_count = -1;
 
   /* allocate temp arrays */
-  vtmp = (struct var_variable **)ascmalloc(vlen*sizeof(struct var_variable *));
+  vtmp = ASC_NEW_ARRAY(struct var_variable *,vlen);
   if (vtmp == NULL) {
     return;
   }
@@ -414,7 +409,7 @@ int SlvRegisterStandardClients(void){
  *                        slv_get_num_solvers_dvars(sys));
  * returns 0 if went ok.
  */
-int slv_std_make_log_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
+int slv_make_log_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
                                    dis_filter_t *dvf,logrel_filter_t *lrf)
 {
 #if MLIMDEBUG
@@ -470,8 +465,7 @@ static int reindex_dvars_from_mtx(slv_system_t sys, int32 lo, int32 hi,
   dvp = slv_get_solvers_dvar_list(sys);
   vlen = slv_get_num_solvers_dvars(sys);
   /* on dvtmp we DONT have the terminating null */
-  dvtmp = (struct dis_discrete **)
-                                ascmalloc(vlen*sizeof(struct dis_discrete *));
+  dvtmp = ASC_NEW_ARRAY(struct dis_discrete *,vlen);
   if (dvtmp == NULL) {
     return 1;
   }
@@ -506,8 +500,7 @@ static int reindex_logrels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
   lrp = slv_get_solvers_logrel_list(sys);
   rlen = slv_get_num_solvers_logrels(sys);
   /* on lrtmp we DONT have the terminating null */
-  lrtmp = (struct logrel_relation **)
-                             ascmalloc(rlen*sizeof(struct logrel_relation *));
+  lrtmp = ASC_NEW_ARRAY(struct logrel_relation *,rlen);
   if (lrtmp == NULL) {
     return 1;
   }
@@ -585,7 +578,7 @@ int slv_log_block_partition(slv_system_t sys)
   mtx = slv_get_sys_mtx(sys);
   mtx_set_order(mtx,order);
 
-  if (slv_std_make_log_incidence_mtx(sys,mtx,&dvf,&lrf)) {
+  if (slv_make_log_incidence_mtx(sys,mtx,&dvf,&lrf)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"failure in creating incidence matrix.");
     mtx_destroy(mtx);
     return 1;

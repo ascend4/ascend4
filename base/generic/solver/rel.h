@@ -126,6 +126,8 @@ struct rel_relation {
 	when different outputs values are required for the same set of input
 	values. Not sure how complete etc it is -- JP.
 
+	@TODO what do those ':1' mean eg for evaluation_required?
+
 	Originally present in a separate file 'extrel.h', but now merged into
 	'rel.h' in the solver directory.
 */
@@ -142,9 +144,9 @@ struct ExtRelCache{
   double *inputs;
   double *outputs;
   double *jacobian;
-  unsigned evaluation_required     :1;     /**< bits needed to control */
-  unsigned first_func_eval  :1;     /**< recalculation. until we can */
-  unsigned first_deriv_eval :1;     /**< do proper block coding */
+  unsigned evaluation_required :1;  /**< bits needed to control */
+  unsigned first_func_eval     :1;  /**< recalculation. until we can */
+  unsigned first_deriv_eval    :1;  /**< do proper block coding */
 };
 
 /*------------------------------------------------------------------------------

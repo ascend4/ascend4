@@ -214,13 +214,16 @@ ASC_DLLSPEC int32 system_reanalyze(slv_system_t sys, SlvBackendToken inst);
 extern int build_rel_solver_from_master(struct rel_relation **masterrl,
                                         struct rel_relation **solverrl);
 /**<
- * Build the rel solver list from the master list in the case of our
- * problem contains when's. This function is not currently in use. It
- * could be use to build a solver rel list of ACTIVE relations, by
- * using a master rel list with all of the relations in it. These
- * ACTIVE relations could be INCLUDED or UNINCLUDED. It returns the
- * number of relation in the list.
- */
+	Build the rel solver list from the master list in the case of our
+	problem contains WHENs. This function is not currently in use.
+
+	OK, so what function *is* in for this purpose? -- JP
+
+	It could be use to build a solver rel list of ACTIVE relations, by
+	using a master rel list with all of the relations in it. These
+	ACTIVE relations could be INCLUDED or UNINCLUDED. It returns the
+	number of relation in the list.
+*/
 
 extern int32 build_logrel_solver_from_master(struct logrel_relation **masterll,
                                              struct logrel_relation **solverll);

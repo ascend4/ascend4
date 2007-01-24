@@ -37,7 +37,6 @@
 %ignore registerStandardSolvers;
 %include "solver.h"
 
-
 %include "simulation.h"
 %extend Simulation{
 	Instanc __getitem__(const long &index){

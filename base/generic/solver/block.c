@@ -27,6 +27,7 @@
 #include "block.h"
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPrint.h>
+#include <utilities/ascPanic.h>
 #include <general/mathmacros.h>
 #include "slv_client.h"
 #include "slv_stdcalls.h"
@@ -125,7 +126,9 @@ static int reindex_rels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
   return 0;
 }
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
+  PARTITIONING INTO BLOCK LOWER/UPPER TRIANGULAR FORM
+*/
 
 /**
 	Perform var and rel reordering to achieve block form.
@@ -183,7 +186,7 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
   mtx = mtx_create();
   mtx_set_order(mtx,order);
 
-  if (slv_std_make_incidence_mtx(sys,mtx,&vf,&rf)) {
+  if (slv_make_incidence_mtx(sys,mtx,&vf,&rf)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"failure in creating incidence matrix.");
     mtx_destroy(mtx);
     return 1;
@@ -782,7 +785,7 @@ int slv_spk1_reorder_block(slv_system_t sys,int bnum,int transpose)
      */
   }
 
-  if (slv_std_make_incidence_mtx(sys,mtx,&vf,&rf)) {
+  if (slv_make_incidence_mtx(sys,mtx,&vf,&rf)) {
     FPRINTF(stderr,
       "slv_spk1_reorder_block: failure in creating incidence matrix.\n");
     mtx_destroy(mtx);
@@ -897,7 +900,7 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
     return 0; /* must be 3x3 or bigger to have any effect */
   }
 
-  if (slv_std_make_incidence_mtx(sys,mtx,&vf,&rf)) {
+  if (slv_make_incidence_mtx(sys,mtx,&vf,&rf)) {
     FPRINTF(stderr,
       "slv_tear_drop_reorder_block: failure in creating incidence matrix.\n");
     mtx_destroy(mtx);
@@ -956,6 +959,12 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
   return 0;
 }
 
+/*------------------------------------------------------------------------------
+  DEBUG OUTPUT for BLOCK STRUCTURE
+
+  (it *would* belong in the 'mtx' section, but it outputs var and rel names
+  instead of just numbers *)
+*/
 
 extern int block_debug(slv_system_t sys, FILE *fp){
 	int i,j,nr,nc;
@@ -1012,3 +1021,96 @@ extern int block_debug(slv_system_t sys, FILE *fp){
 	return 0;				
 }
 	
+/*------------------------------------------------------------------------------
+  PARTITIONING for DIFFERENTIAL/ALGEBRAIC SYSTEMS
+*/
+
+/**
+	Put our derivatives at the end with all the other guff. We don't care
+	too much about the order of the guff though, so keep it simple for now.
+
+	@return 0 on success
+*/
+int block_sort_dae_rels_and_vars(slv_system_t sys){
+	struct rel_relation **rp, **rtmp, *rel;	 rel_filter_t rf;
+	struct var_variable **vp, **vtmp, *var;  var_filter_t vf;
+	int rlen,vlen;
+	int start, end, i;
+
+	asc_assert(sys);
+
+	/* allocate working space  */
+	rp = slv_get_solvers_rel_list(sys);
+	rlen = slv_get_num_solvers_rels(sys);
+	if(rlen==0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"There are no relations!");
+		return -1;
+	}
+
+	vp = slv_get_solvers_var_list(sys);
+	vlen = slv_get_num_solvers_vars(sys);
+	if(vlen==0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"There are no variables!");
+		return -2;
+	}
+
+	CONSOLE_DEBUG("vlen = %d, rlen = %d", vlen,rlen);
+
+	rtmp = ASC_NEW_ARRAY(struct rel_relation *,rlen); 
+	if(!rtmp)return 1;
+
+	vtmp = ASC_NEW_ARRAY(struct var_variable *,vlen);
+	if(!vtmp){
+		ASC_FREE(rtmp); 
+		return 2;
+	}
+
+	/* set up filters */
+	rf = (rel_filter_t){ REL_INCLUDED | REL_EQUALITY | REL_ACTIVE
+	                   , REL_INCLUDED | REL_EQUALITY | REL_ACTIVE };
+
+	vf = (var_filter_t){ VAR_INCIDENT |VAR_SVAR |VAR_FIXED |VAR_ACTIVE |VAR_DERIV
+	                   , VAR_INCIDENT |VAR_SVAR |0         |VAR_ACTIVE |0 };
+
+  	/* add rels into working space, with those failing the filter at end */
+	start  = 0;    /* start of the working area */
+	end = rlen;    /* just beyond the end of the working area*/
+	for(i=0; i < rlen; ++i){
+		rel = rp[i];
+		if(rel_apply_filter(rel,&rf)){
+		    rtmp[start++] = rel;
+		}else{
+		    rtmp[--end] = rel;
+		}
+	}
+
+	CONSOLE_DEBUG("Moved %d rels to start",start);
+	
+	/* the same with the vars */
+	start = 0;
+	end = vlen;
+	for(i=0; i < vlen; ++i){
+		var = vp[i];
+		if(var_apply_filter(var,&vf)){
+			vtmp[start++] = var;
+		}else{
+			vtmp[--end] = var;
+		}
+	}
+
+	CONSOLE_DEBUG("Moved %d vars to start",start);
+
+	/* update the solver's lists, and fix the sindex fields */
+	for(i=0; i<vlen; ++i){
+		vp[i] = vtmp[i];
+		var_set_sindex(vp[i],i);
+	}
+	for(i=0; i<rlen; ++i){
+		rp[i] = rtmp[i];
+		rel_set_sindex(rp[i],i);
+	}
+
+	ASC_FREE(vtmp);
+	ASC_FREE(rtmp);
+	return 0;
+}

@@ -2041,12 +2041,12 @@ int32 build_disvar_solver_from_master(struct dis_discrete **masterdl,
 #if USEDCODE
 
 /**
- ** Not currently in use, but maybe someday :) . It creates the solver
- ** lists based in the master lists. The solver lists build based on
- ** this function contains only ACTIVE vars, rels and logrels.
- ** We are using the function system_reanalyze instead
- **/
-
+	Not currently in use, but maybe someday :) . It creates the solver
+	lists based in the master lists. The solver lists build based on
+	this function contains only ACTIVE vars, rels and logrels.
+	
+	We are using the function system_reanalyze instead
+*/
 void rebuild_solvers_from_masters(slv_system_t sys)
 {
   struct rel_relation **masterrl;

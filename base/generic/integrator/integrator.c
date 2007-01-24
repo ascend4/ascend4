@@ -160,6 +160,8 @@ void integrator_free(IntegratorSystem *sys){
 
 	integrator_free_engine(sys);
 
+	CONSOLE_DEBUG("Engine freed, destroying internal data");
+
 	if(sys->states != NULL)gl_destroy(sys->states);
 	if(sys->derivs != NULL)gl_destroy(sys->derivs);
 
@@ -167,12 +169,22 @@ void integrator_free(IntegratorSystem *sys){
 	if(sys->obslist != NULL)gl_free_and_destroy(sys->obslist);    /* and obslist */
 	if (sys->indepvars != NULL)gl_free_and_destroy(sys->indepvars);  /* and indepvars */
 
-	/* if(sys->y_id != NULL)ASC_FREE(sys->y_id); */
+	CONSOLE_DEBUG("...");
+	if(sys->y_id != NULL)ASC_FREE(sys->y_id);
+	CONSOLE_DEBUG("...");
+
 	if(sys->obs_id != NULL)ASC_FREE(sys->obs_id);
 
-	if(sys->y != NULL && !sys->ycount)ASC_FREE(sys->y);
-	if(sys->ydot != NULL && !sys->ydotcount)ASC_FREE(sys->ydot);
-	if(sys->obs != NULL && !sys->obscount)ASC_FREE(sys->obs);
+	CONSOLE_DEBUG("...");
+
+	if(sys->y != NULL)ASC_FREE(sys->y);
+	CONSOLE_DEBUG("...");
+
+	if(sys->ydot != NULL)ASC_FREE(sys->ydot);
+	CONSOLE_DEBUG("...");
+
+	if(sys->obs != NULL)ASC_FREE(sys->obs);
+	CONSOLE_DEBUG("...");
 
 	slv_destroy_parms(&(sys->params));
 
@@ -232,6 +244,7 @@ int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
 	if(sys->engine!=INTEG_UNKNOWN){
 		CONSOLE_DEBUG("Freeing memory used by old integrator engine");
 		integrator_free_engine(sys);
+		CONSOLE_DEBUG("done");
 	}
 	sys->engine = engine;
 	switch(sys->engine){
@@ -263,12 +276,15 @@ void integrator_free_engine(IntegratorSystem *sys){
 	if(sys->engine==INTEG_UNKNOWN)return;
 	if(sys->enginedata){
 		if(sys->internals){
+			CONSOLE_DEBUG("Running engine's freefn");
 			(sys->internals->freefn)(sys->enginedata);
+			CONSOLE_DEBUG("Done with freefn");
 			sys->enginedata=NULL;
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to free engine data: no sys->internals");
 		}
 	}
+	CONSOLE_DEBUG("Done with integrator_free_engine");
 }
 
 /**
@@ -279,8 +295,10 @@ void integrator_free_engine(IntegratorSystem *sys){
 	during the solve stage (and freed inside integrator_free_engine)
 */
 void integrator_create_engine(IntegratorSystem *sys){
+	asc_assert(sys);
 	asc_assert(sys->engine!=INTEG_UNKNOWN);
 	asc_assert(sys->internals);
+	asc_assert(sys->internals->createfn);
 	asc_assert(sys->enginedata==NULL);
 	(sys->internals->createfn)(sys);
 }
@@ -594,7 +612,7 @@ int integrator_analyse_dae(IntegratorSystem *sys){
 	/* allocate storage for the 'y' and 'ydot' arrays */
 	sys->y = ASC_NEW_ARRAY(struct var_variable *,numy);
 	sys->ydot = ASC_NEW_ARRAY_CLEAR(struct var_variable *,numy);
-	sys->y_id = ASC_NEW_ARRAY(long, slv_get_num_master_vars(sys->system));
+	sys->y_id = ASC_NEW_ARRAY(int, slv_get_num_master_vars(sys->system));
 
 	for(i=0; i<numy; ++i){
 		asc_assert(sys->ydot[i]==NULL);
@@ -876,8 +894,8 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   }
   sys->n_y = half;
   sys->y = ASC_NEW_ARRAY(struct var_variable *, half);
-  sys->y_id = ASC_NEW_ARRAY(long, half);
   sys->ydot = ASC_NEW_ARRAY(struct var_variable *, half);
+  sys->y_id = ASC_NEW_ARRAY(int, half);
   if (sys->y==NULL || sys->ydot==NULL || sys->y_id==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 6;
@@ -957,7 +975,7 @@ static int integrator_sort_obs_vars(IntegratorSystem *sys){
   /* make into arrays */
   half = gl_length(sys->obslist);
   sys->obs = ASC_NEW_ARRAY(struct var_variable *,half);
-  sys->obs_id = ASC_NEW_ARRAY(long, half);
+  sys->obs_id = ASC_NEW_ARRAY(int, half);
   if ( sys->obs==NULL || sys->obs_id==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 1;

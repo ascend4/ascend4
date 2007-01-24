@@ -2246,7 +2246,7 @@ int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
   }
 
   status=Asc_BrowQlfdidSearchCmd(cdata, interp, (int)2, argv);
-  temp = ascstrdup(Tcl_GetStringResult(interp));
+  temp = ASC_STRDUP(Tcl_GetStringResult(interp));
   Tcl_ResetResult(interp);
 
   if (status==TCL_OK) {

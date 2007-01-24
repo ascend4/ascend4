@@ -306,7 +306,7 @@ int texttable_readheader(texttable *tt, FILE *file, char delimiter,
     for (columns = 0;(tok = texttable_strsep(&input, delimiter)) != NULL; 
       columns++)
     {
-      tt->name[columns] = strdup(tok);
+      tt->name[columns] = ASC_STRDUP(tok);
       if (tt->name[columns] == NULL)
       {
         texttable_free(tt);
@@ -666,7 +666,7 @@ int texttable_readdata(texttable *tt, FILE *file, char delimiter)
         }
         case TEXTTABLE_STRING:
         {
-          char *newstr = strdup(tok);
+          char *newstr = ASC_STRDUP(tok);
           if (newstr == NULL)
           {
             free(buf);

@@ -42,7 +42,7 @@
   MATRIX GENERATION AND REORDERING
 */
 
-extern int slv_std_make_incidence_mtx(slv_system_t sys, 
+extern int slv_make_incidence_mtx(slv_system_t sys, 
 		mtx_matrix_t mtx, var_filter_t *vf, rel_filter_t *rf);
 /**<
 	Populates a matrix according to the sys solvers_vars, solvers_rels
@@ -119,7 +119,7 @@ ASC_DLLSPEC int SlvRegisterStandardClients(void);
   OUTPUT ASSIGNMENT AND PARTITIONING IN LOGICAL RELATIONS
 */
 
-extern int slv_std_make_log_incidence_mtx(slv_system_t sys, 
+extern int slv_make_log_incidence_mtx(slv_system_t sys, 
                                           mtx_matrix_t mtx,
                                           dis_filter_t *dvf, 
                                           logrel_filter_t *lrf);
