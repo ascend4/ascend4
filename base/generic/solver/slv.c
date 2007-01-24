@@ -1164,10 +1164,10 @@ void slv_destroy_parms(slv_parameters_t *p) {
   for(i = 0; i < p->num_parms; i++){
     switch(p->parms[i].type) {
     case char_parm:
-      ASC_FREE(p->parms[i].info.c.value);
+      /* ASC_FREE(p->parms[i].info.c.value);
       for (j = 0; j < p->parms[i].info.c.high; j++) {
         ASC_FREE(p->parms[i].info.c.argv[j]);
-      }
+      }*/
       ASC_FREE(p->parms[i].info.c.argv);
       /* FALL THROUGH */
     case int_parm:

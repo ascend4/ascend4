@@ -43,17 +43,18 @@
  *  The "non-debug" version of ascstrdupf -
  *  all memory calls should be to the system versions.
  */
-char *ascstrdupf(CONST char *s)
-{
+char *ascstrdupf(CONST char *s){
 	char *result;
 
-	if (NULL == s) {
-    return NULL;
-  }
-	result = (char *)malloc(strlen(s) + 1);
-  if (NULL != result) {
-    strcpy(result, s);
-  }
+	if(s == NULL){
+		return NULL;
+	}
+
+	result = ASC_NEW_ARRAY(char,strlen(s) + 1);
+
+	if(result != NULL){
+		strcpy(result, s);
+	}
 	return result;
 }
 
