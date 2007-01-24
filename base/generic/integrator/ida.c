@@ -686,8 +686,8 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 			v = seq.vars[0];
 			varname = var_make_name(sys->system,v);
 			asc_assert(var_active(v));
-			if(var_fixed(v)){
-				CONSOLE_DEBUG("Differential var '%s' is fixed",varname);
+			if(var_fixed(v) || !var_incident(v)){
+				CONSOLE_DEBUG("Differential var '%s' is fixed/not incident",varname);
 				n_skipped_diff++;
 				ASC_FREE(varname);
 				for(j=1; j<seq.n; ++j){
