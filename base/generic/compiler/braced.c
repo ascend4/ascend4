@@ -47,7 +47,7 @@ struct bracechar *AddBraceChar(CONST char *s, symchar *l){
   bc = BCMALLOC;
   assert(bc!= NULL);
   bc->lang = l;
-  bc->string = ascstrdup((char *)s); /* fixme */
+  bc->string = ASC_STRDUP((char *)s); /* fixme */
   bc->slen = strlen((char *)s);
   bc->refcount = 0;
   return bc;

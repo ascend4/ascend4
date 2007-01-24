@@ -726,7 +726,7 @@ enum bintoken_error BinTokenLoadC(struct gl_list_t *rellist,
                          g_bt_data.nextid,(int)c);
   }
   g_bt_data.tables[g_bt_data.nextid].refcount = (int)len;
-  g_bt_data.tables[g_bt_data.nextid].name = ascstrdup(libname);
+  g_bt_data.tables[g_bt_data.nextid].name = ASC_STRDUP(libname);
   return BTE_ok;
 }
 
