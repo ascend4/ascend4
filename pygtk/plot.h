@@ -41,7 +41,6 @@ private:
 	Plot();
 public:
 	Plot(const Plot &plot);	
-	Plot &operator=(const Plot &old);
 
 	const std::string getTitle() const;
 	const std::string getXLabel() const;

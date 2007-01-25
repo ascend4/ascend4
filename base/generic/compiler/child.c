@@ -29,6 +29,8 @@
  *  Implementation of Child list stuff.
  */
 
+#include "child.h"
+
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
@@ -40,7 +42,6 @@
 #include "expr_types.h"
 #include "stattypes.h"
 #include "statio.h"
-#include "child.h"
 #include "type_desc.h"
 #include "cmpfunc.h"
 #define __CHILD_ILLEGAL_ACCESS__
