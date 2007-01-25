@@ -1490,11 +1490,13 @@ if not conf.CheckFunc('snprintf'):
 
 # Math library
 
-if need_libm:
-	if not conf.CheckMath():
+if conf.CheckMath():
+	conf.env['HAVE_IEEE']=True
+else:
+	if need_libm:
 		print 'Did not find math library, exiting!'
 		Exit(1)
-	#pass
+	conf.env['HAVE_IEEE']=False
 
 # Where is 'isnan'?
 
@@ -1761,6 +1763,7 @@ for k,v in {
 		,'ASC_SIGNAL_TRAPS':with_signals
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
+		,'HAVE_IEEE':env.get('IEEE')
 		,'ASC_ABSOLUTE_PATHS':env.get('ASC_ABSOLUTE_PATHS')
 		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')

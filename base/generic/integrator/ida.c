@@ -31,7 +31,13 @@
 	by John Pye, May 2006
 */
 
+#define _GNU_SOURCE
+
 #include "ida.h"
+
+#include <signal.h>
+#include <setjmp.h>
+#include <fenv.h>
 
 /* SUNDIALS includes */
 #ifdef ASC_WITH_IDA
@@ -96,6 +102,7 @@
 #define STATS_DEBUG
 #define PREC_DEBUG
 /* #define ANALYSE_DEBUG */
+
 /**
 	Everthing that the outside world needs to know about IDA
 */
@@ -1266,6 +1273,36 @@ int integrator_ida_solve(
 /*--------------------------------------------------
   RESIDUALS AND JACOBIAN
 */
+
+typedef void (SignalHandlerFn)(int);
+SignalHandlerFn integrator_ida_sig;
+SignalHandlerFn *integrator_ida_sig_old;
+jmp_buf integrator_ida_jmp_buf;
+fenv_t integrator_ida_fenv_old;
+
+void integrator_ida_sig(int sig){
+	/* the wrong signal: rethrow to the default handler */
+	if(sig!=SIGFPE){
+		signal(SIGFPE,SIG_DFL);
+		raise(sig);
+	}
+	integrator_ida_write_feinfo();
+	CONSOLE_DEBUG("Caught SIGFPE=%d (in signal handler). Jumping to...",sig);
+	longjmp(integrator_ida_jmp_buf,sig);
+}
+
+void integrator_ida_write_feinfo(){
+	int f;
+	f = fegetexcept();
+	CONSOLE_DEBUG("Locating nature of exception...");
+	if(f & FE_DIVBYZERO)ERROR_REPORTER_HERE(ASC_PROG_ERR,"DIV BY ZERO");
+	if(f & FE_INEXACT)ERROR_REPORTER_HERE(ASC_PROG_ERR,"INEXACT");
+	if(f & FE_INVALID)ERROR_REPORTER_HERE(ASC_PROG_ERR,"INVALID");
+	if(f & FE_OVERFLOW)ERROR_REPORTER_HERE(ASC_PROG_ERR,"OVERFLOW");
+	if(f & FE_UNDERFLOW)ERROR_REPORTER_HERE(ASC_PROG_ERR,"UNDERFLOW");
+	if(f==0)ERROR_REPORTER_HERE(ASC_PROG_ERR,"FLAGS ARE CLEAR?!?");
+}
+
 /**
 	Function to evaluate system residuals, in the form required for IDA.
 
@@ -1318,6 +1355,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	is_error = 0;
 	relptr = enginedata->rellist;
 
+/*
 #ifdef ASC_SIGNAL_TRAPS
 	if(enginedata->safeeval){
 		Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
@@ -1330,6 +1368,14 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 
 	if (SETJMP(g_fpe_env)==0) {
 #endif
+*/
+	
+	integrator_ida_sig_old = signal(SIGFPE,&integrator_ida_sig);
+	if(fegetenv(&integrator_ida_fenv_old))ASC_PANIC("fenv problem");
+	if(feenableexcept(FE_ALL_EXCEPT))ASC_PANIC("fenv problem");
+	switch(setjmp(integrator_ida_jmp_buf)){
+	case 0:
+		feraiseexcept(FE_ALL_EXCEPT);
 		for(i=0, relptr = enginedata->rellist;
 				i< enginedata->nrels && relptr != NULL;
 				++i, ++relptr
@@ -1347,7 +1393,32 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 				CONSOLE_DEBUG("Calc OK");
 			}*/
 		}
+		break;
+	case SIGFPE:
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"...here! Caught SIGFPE");
+		integrator_ida_write_feinfo();
+		is_error=1;
+		break;
+	default:
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"What exception?");
+		is_error=1;		
+	}
+	if(signal(SIGFPE,integrator_ida_sig_old)!=&integrator_ida_sig)ASC_PANIC("signal problem");
+	if(fesetenv(&integrator_ida_fenv_old))ASC_PANIC("fenv problem");
+	feraiseexcept(FE_DIVBYZERO);
+	if(!is_error){
+		for(i=0;i< enginedata->nrels; ++i){
+			if(isnan(NV_Ith_S(rr,i))){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"NAN detected in residual %d",i);
+				is_error=1;
+			}
+		}
+		if(!is_error){
+			CONSOLE_DEBUG("No NAN detected");
+		}
+	}
 
+/*
 #ifdef ASC_SIGNAL_TRAPS
 	}else{
 		relname = rel_make_name(blsys->system, *relptr);
@@ -1362,6 +1433,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 		Asc_SignalHandlerPopDefault(SIGFPE);
 	}
 #endif
+*/
 
 #ifdef FEX_DEBUG
 	/* output residuals to console */
