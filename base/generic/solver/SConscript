@@ -11,6 +11,7 @@ csrcs = Split("""
 	rel.c relman.c
 	slv.c slv0.c slv1.c slv2.c slv3.c slv6.c slv7.c
 	slv8.c slv9.c slv9a.c slvDOF.c slv_common.c
+	slv_param.c
 	slv_interface.c slv_stdcalls.c system.c var.c
 """)
 

@@ -77,10 +77,6 @@
 #include "visitinst.h"
 #include "instquery.h"
 
-#ifndef lint
-static CONST char InstQueryModuleID[] = "$Id: instquery.c,v 1.19 1998/06/23 13:44:33 ballan Exp $";
-#endif
-
 /**** GLOBAL VARIABLE SECTION ****/
 
 void (*InterfacePtrATS)() = NULL;

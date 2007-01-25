@@ -34,8 +34,6 @@
 #include <utilities/mem.h>
 #include <general/list.h>
 
-#include <compiler/func.h>
-
 #include "calc.h"
 #include "relman.h"
 #include "logrelman.h"

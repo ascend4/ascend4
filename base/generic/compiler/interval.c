@@ -39,10 +39,6 @@
 
 #define TEST(x) assert(((x).low) <= ((x).high))
 
-#ifndef lint
-static CONST char IntervalRoutinesRCSid[] = "$Id: interval.c,v 1.7 1998/02/27 16:29:02 mthomas Exp $";
-#endif
-
 /* take the max of 4 numbers using two temporaries */
 #define MAX4(a,b,c,d,u,v) \
   ( u = ((a > b) ? a : b) , v = ((c > d) ? c : d) , (u > v) ? u : v )

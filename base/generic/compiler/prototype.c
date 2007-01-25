@@ -40,11 +40,6 @@
 #include "instquery.h"
 #include "destroyinst.h"
 
-#ifndef lint
-static CONST char PrototypeID[] = "$Id: prototype.c,v 1.9 1998/02/05 22:23:32 ballan Exp $";
-#endif
-
-
 #define PROTOTYPEHASHSIZE 1024
 #define PROTOHASH(p) (((((long) (p))*1103515245) >> 20) & 1023)
 

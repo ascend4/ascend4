@@ -45,8 +45,6 @@
 #include <utilities/ascPanic.h>
 #include <general/list.h>
 
-#include <compiler/func.h>
-
 #include "calc.h"
 #include "relman.h"
 #include "slv_common.h"

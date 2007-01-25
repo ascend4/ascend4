@@ -39,11 +39,6 @@
 #include "sets.h"
 #include "setio.h"
 
-#ifndef lint
-static CONST char NameIOId[] = "$Id: nameio.c,v 1.10 1998/04/16 00:43:27 ballan Exp $";
-#endif
-
-
 void WriteNameNode(FILE *f, CONST struct Name *n)
 {
   if (n==NULL) return;

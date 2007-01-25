@@ -86,6 +86,7 @@
 #include <solver/logrel.h>
 #include <solver/bnd.h>
 #include <solver/slv_common.h>
+#include <solver/slv_param.h>
 
 #include "samplelist.h"
 

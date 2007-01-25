@@ -37,8 +37,6 @@
 #include <general/list.h>
 #include <general/mathmacros.h>
 
-#include <compiler/func.h>
-
 #include <linear/mtx_reorder.h>
 
 #include "calc.h"

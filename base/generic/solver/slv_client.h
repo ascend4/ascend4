@@ -296,6 +296,7 @@
 #include "bnd.h"
 #include "slv_common.h"
 #include "slv_types.h"
+#include "slv_param.h"
 
 typedef void *SlvClientToken;
 /**<

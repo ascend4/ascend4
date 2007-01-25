@@ -52,10 +52,6 @@
 #include "module.h"
 #include "library.h"
 
-#ifndef lint
-static CONST char LibraryRCSid[]="$Id: library.c,v 1.28 1998/06/23 22:02:08 ballan Exp $";
-#endif
-
 /*
  * hashing on heap symbol pointer. SIZE must be 2^n (n even)
  * and mask in LIBHASHINDEX must be 2^n - 1.

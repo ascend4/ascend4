@@ -29,6 +29,8 @@
  *
  */
 
+#include "proc.h"
+
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 
@@ -43,13 +45,8 @@
 #include "stattypes.h"
 #include "statement.h"
 #include "slist.h"
-#include "proc.h"
 
 #define PMALLOC(x) x = ASC_NEW(struct InitProcedure)
-#ifndef lint
-static CONST char ProcedureRCSid[] = "$Id: proc.c,v 1.18 1998/04/11 01:31:21 ballan Exp $";
-#endif
-
 /*
  * UNIVERSAL method list for all models.
  * If a method lookup fails, this list is consulted.

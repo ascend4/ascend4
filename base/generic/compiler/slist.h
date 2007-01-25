@@ -19,12 +19,6 @@
 *//**
 	@file
 	Statement list routines.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "compiler.h"
-	#include "list.h"
-	#include "stattypes.h"
 *//*
 	by Tom Epperly
 	Version: $Revision: 1.9 $
@@ -35,6 +29,11 @@
 
 #ifndef ASC_SLIST_H
 #define ASC_SLIST_H
+
+#include <utilities/ascConfig.h>
+#include <general/list.h>
+#include "compiler.h"
+#include "stattypes.h"
 
 /**	@addtogroup compiler Compiler
 	@{

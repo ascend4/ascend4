@@ -1,66 +1,54 @@
-/*
- *  SLV: Ascend Numeric Solver
- *  by Karl Michael Westerberg
- *  Created: 2/6/90
- *  Version: $Revision: 1.8 $
- *  Version control file: $RCSfile: calc.h,v $
- *  Date last modified: $Date: 1997/07/21 17:01:04 $
- *  Last modified by: $Author: kt2g $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 2005-2007 Carnegie Mellon University
 
-/** @file
- *  SLV: Ascend Numeric Solver - Calculation module.
- *  <pre>
- *  Contents:     Calculation module
- *
- *  Authors:      Karl Westerberg
- *                Joseph Zaher
- *
- *  Dates:        06/90 - original version
- *                08/93 - removed calc_D0, calc_D1, calc_D2, calc_Dn
- *                        and added them as internal functions of the
- *                        exprman module.
- *                04/94 - enhanced error messaging
- *
- *  Description:  Operations are provided for computing unary and binary
- *                functions.  First, second, and nth derivatives may
- *                also be computed for all of the functions featured.  A
- *                global boolean variable calc_ok, which is declared
- *                external so that it may be monitored from other
- *                modules, will be set to FALSE in the event of a
- *                calculation error.  Also, to suppress printing of error
- *                messages in the event of an error, set the global
- *                variable calc_print_errors to FALSE.
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "compiler/func.h"
- *  </pre>
- *  @todo Complete documentation of solver/calc.h.
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-#ifndef calc__already_included
-#define calc__already_included
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Calculation module
+
+	Operations are provided for computing unary and binary
+	functions.  First, second, and nth derivatives may
+	also be computed for all of the functions featured.  A
+	global boolean variable calc_ok, which is declared
+	external so that it may be monitored from other
+	modules, will be set to FALSE in the event of a
+	calculation error.  Also, to suppress printing of error
+	messages in the event of an error, set the global
+	variable calc_print_errors to FALSE.
+
+	@todo Complete documentation of solver/calc.h.
+*//*
+	by Karl Michael Westerberg and Joseph Zaher, 1990
+	Last in CVS: $Revision: 1.8 $ $Date: 1997/07/21 17:01:04 $ $Author: kt2g $
+
+	Dates:        06/90 - original version
+	              08/93 - removed calc_D0, calc_D1, calc_D2, calc_Dn
+	                      and added them as internal functions of the
+	                      exprman module.
+	              04/94 - enhanced error messaging
+*/
+
+#ifndef ASC_SLV_CALC_H
+#define ASC_SLV_CALC_H
+
+#include <utilities/config.h>
+#include <utilities/ascConfig.h>
+#include <compiler/func.h>
 
 /**	@addtogroup solver Solver
 	@{
@@ -270,5 +258,5 @@ extern real64 calc_pow_Dn(real64 x, real64 y, int nwrt0, int nwrt1); /**< Comput
 
 /* @} */
 
-#endif  /* calc__already_included */
+#endif  /* ASC_SLV_CALC_H */
 
