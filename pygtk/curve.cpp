@@ -32,13 +32,6 @@ Curve::Curve(const Curve &old) : Instanc(old.getInternalType()){
 	y = old.y;
 }
 
-Curve &
-Curve::operator=(const Curve &old){
-	this->x = old.x;
-	this->y = old.y;
-	return *this;
-}
-
 const string
 Curve::getLegend() const{
 	Instanc li = getChild(PLOT_LEGEND);

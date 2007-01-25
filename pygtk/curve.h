@@ -15,7 +15,6 @@ private:
 	Curve();
 public:
 	Curve(const Curve &);
-	Curve &operator=(const Curve &old);
 	std::vector<double> x;
 	std::vector<double> y;
 	const std::string getLegend() const;

@@ -22,12 +22,6 @@ Plot::Plot(){
 	throw runtime_error("Not allowed");
 }
 
-Plot &
-Plot::operator=(const Plot &old){
-	this->curves = old.curves;
-	return *this;
-}
-
 Plot::Plot(const Plot &old) : Instanc(old.i), curves(old.curves){
 	//nothing
 }
