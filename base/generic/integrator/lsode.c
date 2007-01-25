@@ -1130,6 +1130,9 @@ int integrator_lsode_solve(IntegratorSystem *blsys
       d->lastcall = lsode_none;
       return 6;
     }
+		Asc_SignalHandlerPopDefault(SIGFPE);
+		Asc_SignalHandlerPopDefault(SIGINT);
+
 # endif
 
     /* CONSOLE_DEBUG("AFTER %lu LSODE CALL\n", index); */
