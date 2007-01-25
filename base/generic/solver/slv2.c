@@ -42,11 +42,6 @@
 #include <utilities/mem.h>
 #include <general/list.h>
 
-
-
-#include <compiler/functype.h>
-#include <compiler/func.h>
-
 #include "calc.h"
 #include "relman.h"
 #include "slv_stdcalls.h"

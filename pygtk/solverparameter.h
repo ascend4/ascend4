@@ -6,7 +6,7 @@
 
 #include "config.h"
 extern "C"{
-#include "solver/slv_common.h"
+#include "solver/slv_param.h"
 }
 
 class SolverParameter{

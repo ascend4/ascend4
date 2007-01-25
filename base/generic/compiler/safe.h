@@ -58,17 +58,16 @@
  *                version of errno.
  *                At present, not all functions here are completely safe.
  *                It's floating point. Can they ever be?
- *
- *  When #including safe.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *         #include "functype.h"
  *  </pre>
  *  @todo Complete documentation of compiler/safe.h.
  */
 
 #ifndef ASC_SAFE_H
 #define ASC_SAFE_H
+
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "functype.h"
 
 /**	@addtogroup compiler Compiler
 	@{

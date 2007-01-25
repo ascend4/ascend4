@@ -36,8 +36,6 @@
 #include <utilities/mem.h>
 #include <general/list.h>
 
-#include <compiler/func.h>
-
 #include <linear/mtx_vector.h>
 
 #include "calc.h"

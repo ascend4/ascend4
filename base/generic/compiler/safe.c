@@ -31,6 +31,8 @@
  *
  */
 
+#include "safe.h"
+
 #include <math.h>
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
@@ -38,10 +40,7 @@
 
 #include <utilities/ascPanic.h>
 
-
-#include "functype.h"
 #include "func.h"
-#include "safe.h"
 
 #define BIGNUM 1.0e8
 

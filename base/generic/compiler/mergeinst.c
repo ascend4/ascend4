@@ -79,10 +79,6 @@
 #include "setinstval.h"
 #include "mergeinst.h"
 
-#ifndef lint
-static CONST char MergeInstModuleID[] = "$Id: mergeinst.c,v 1.16 1998/03/17 22:09:08 ballan Exp $";
-#endif
-
 /* forward declarations */
 static
 struct Instance *RecursiveMergeInstance(struct Instance *, struct Instance *);

@@ -73,10 +73,6 @@
 #include "childio.h"
 #include "parentchild.h"
 
-#ifndef lint
-static CONST char ParentChildModuleID[] = "$Id: parentchild.c,v 1.15 1998/06/11 15:28:33 ballan Exp $";
-#endif
-
 unsigned long NumberParents(CONST struct Instance *i)
 {
   AssertMemory(i);

@@ -56,6 +56,7 @@
 #define F_LIM_CUBE    5.6438030941223618e101  /**< cbrt(maxdouble)*/
 #define F_LIM_SQR     1.0e154                 /**< sqrt(maxdouble) */
 
+
 #ifdef __STDC__
 # if __STDC__
 /**
@@ -65,7 +66,6 @@
  * functions.
  */
 ASC_DLLSPEC double cbrt(double);
-
 #  ifdef HAVE_ERF
 extern double erf(double);
 #  endif /* HAVE_ERF */
@@ -75,6 +75,7 @@ extern double erf(double);
  * should provide cbrt, erf.
  */
 #endif /* stdc defined */
+
 
 extern CONST struct Func *LookupFunc(CONST char *name);
 /**<
@@ -127,6 +128,7 @@ extern double FuncGetLnmEpsilon(void);
  */
 #define FuncGetLnmEpsilon() (g_lnm_epsilon)
 
+
 extern void FuncSetLnmEpsilon(double e);
 /**<
  *  Change the current epsilon for the modified log function lnm.
@@ -136,6 +138,7 @@ ASC_DLLSPEC double g_lnm_epsilon;
 #define FuncSetLnmEpsilon(e) \
    (e>(double)0.0 ? g_lnm_epsilon=e : FPRINTF(ASCERR,"bad lnm eps"))
 
+
 /**<
  *  declare cbrt() and erf() since some vendors put
  *  these functions in odd headers
@@ -144,6 +147,7 @@ ASC_DLLSPEC double cbrt(double);
 #ifdef HAVE_ERF
 extern double erf(double);
 #endif /* HAVE_ERF */
+
 
 #ifdef NDEBUG
 # define ascnint(d) (((int) (d)>=0.0 ? floor((d) + 0.5) : -floor(0.5 - (d))))
@@ -164,8 +168,8 @@ ASC_DLLSPEC int ascnintF(double);
  *  Implementation function for debug version of ascnint().
  *  Do not call this function directly - use ascnint() instead.
  */
-
 #endif
+
 
 ASC_DLLSPEC double dln(double x);
 ASC_DLLSPEC double dln2(double x);

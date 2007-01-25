@@ -20,12 +20,6 @@
 /**
 	@file
 	Procedure Data Structure.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "compiler.h"
-	#include"list.h"
-	#include"slist.h"
 *//*
 	by Tom Epperly
 	Created: 1/10/90
@@ -35,11 +29,12 @@
 #ifndef ASC_PROC_H
 #define ASC_PROC_H
 
+#include "slist.h"
+#include "compiler.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */
-
-#include <utilities/ascConfig.h>
 
 struct InitProcedure {
   symchar *name;                /**< procedure's name */

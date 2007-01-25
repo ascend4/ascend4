@@ -44,10 +44,6 @@
 #include "instantiate.h"
 #include "pending.h"
 
-#ifndef lint
-static CONST char PendingRCSid[] = "$Id: pending.c,v 1.9 1998/01/27 11:00:08 ballan Exp $";
-#endif
-
 #define FAST_PENDINGS 1
 /* if FAST_PENDINGS, then the instance and pendings are mutually referred.
  * this makes some operations faster and many bitlist operation unneeded.

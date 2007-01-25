@@ -43,10 +43,6 @@
 #include "instance_types.h"
 #include "instmacro.h"
 
-#ifndef lint
-static CONST char InstanceMacroModuleID[] = "$Id: instmacro.c,v 1.6 1997/07/18 12:30:43 mthomas Exp $";
-#endif
-
 /* temporary global variables used for debugging only */
 #ifndef NDEBUG
 /* fundies */

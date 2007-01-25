@@ -50,11 +50,6 @@
 #include "initialize.h"
 #include "procio.h"
 
-#ifndef lint
-static CONST char ProcedureIORCSid[] = "$Id: procio.c,v 1.11 1998/05/12 19:57:43 ballan Exp $";
-#endif
-
-
 void WriteInitWarn(struct procFrame *fm, char *str)
 {
   CONSOLE_DEBUG("...");

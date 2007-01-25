@@ -41,22 +41,17 @@
 #include <utilities/ascPanic.h>
 #include <utilities/mem.h>
 
-/* if libasc.a running around, the following: */
-#if SLV_INSTANCES
-
-
-
-#include <compiler/functype.h>
-#include <compiler/func.h>
-#include "relman.h"
-#include "logrelman.h"
+#ifdef SLV_STANDALONE
+# ifdef NDEBUG
+#  define ascnint(a) (((int) (a)>=0.0 ? floor((a) + 0.5) : -floor(0.5 - (a))))
+# else
+#  define ascnint(a) ascnintF(a)
+# endif
 #else
-#ifdef NDEBUG
-#define ascnint(a) (((int) (a)>=0.0 ? floor((a) + 0.5) : -floor(0.5 - (a))))
-#else
-#define ascnint(a) ascnintF(a)
-#endif /* NDEBUG */
-#endif /* instances */
+# include <compiler/func.h>
+# include "relman.h"
+# include "logrelman.h"
+#endif
 
 #include "var.h"
 #include "discrete.h"
@@ -109,7 +104,7 @@ FILE *slv_get_output_file(FILE *fp)
 #define MIF(sys) slv_get_output_file( (sys)->p.output.more_important )
 #define LIF(sys) slv_get_output_file( (sys)->p.output.less_important )
 
-#if SLV_INSTANCES
+#ifndef SLV_STANDALONE
 
 void slv_print_var_name( FILE *out,slv_system_t sys, struct var_variable *var)
 {
@@ -297,10 +292,11 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
  ***             of the variable and display an error message.
  ***    -1  ==>  No solution found.
  **/
-int slv_direct_log_solve(slv_system_t server, struct logrel_relation *lrel,
-                         struct dis_discrete *dvar, FILE *fp, int perturb,
-                         struct gl_list_t *insts)
-{
+int slv_direct_log_solve(slv_system_t server
+		,struct logrel_relation *lrel
+		,struct dis_discrete *dvar, FILE *fp, int perturb
+		,struct gl_list_t *insts
+){
   int32 able;
   int32 nsolns, c;
   int32 *slist;
@@ -333,10 +329,10 @@ int slv_direct_log_solve(slv_system_t server, struct logrel_relation *lrel,
   }
 }
 
-#endif    /* SLV_INSTANCES */
+#endif /* SLV_STANDALONE */
 
-int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *clientregion)
-{
+
+int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *clientregion){
   int32 **map, *data, rl, order;
   real64 val;
   mtx_coord_t coord;
@@ -366,7 +362,7 @@ int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *clientregion)
   range.low = region.col.low;
   range.high = region.col.high;
 
-  data = (int32 *)ascmalloc((order+2*mtx_nonzeros_in_region(mtx, &region))*sizeof(int32));
+  data = ASC_NEW_ARRAY(int32, order + 2 * mtx_nonzeros_in_region(mtx, &region));
   if (NULL == data) {
     return NULL;
   }
@@ -389,7 +385,7 @@ int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *clientregion)
     while( val = mtx_next_in_row(mtx, &coord, &range),
            coord.col != mtx_LAST) {
       data[0] = coord.col;
-      data[1] = (int32)ascnint(val);
+      data[1] = ascnint(val);
       data += 2;
     }
   }

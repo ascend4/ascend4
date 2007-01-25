@@ -215,10 +215,6 @@ static char *g_trychildexpansion_errmessage = NULL;
 #define REASSIGN_MESG1 "Attempt to reassign constant "
 #define REASSIGN_MESG2 " value."
 
-#ifndef lint
-static CONST char InstantiatorRCSid[] = "$Id: instantiate.c,v 1.84 2003/02/06 04:08:30 ballan Exp $";
-#endif
-
 /*------------------------------------------------------------------------------
 	forward declarations
 */

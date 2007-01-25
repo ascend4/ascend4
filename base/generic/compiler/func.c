@@ -28,14 +28,10 @@
  *
  */
 
-#include<math.h>
-#include <utilities/ascConfig.h>
-
-
-
-#include "functype.h"
-#include "safe.h"
 #include "func.h"
+
+#include<math.h>
+#include "safe.h"
 
 #ifndef M_PI
 #define M_PI F_PI
@@ -47,11 +43,6 @@
 #ifndef NULL
 #define NULL 0L
 #endif
-
-#ifndef lint
-static CONST char FunctionEvalRCSid[]="$Id: func.c,v 1.18 2001/01/31 22:23:53 ballan Exp $";
-#endif
-
 
 double g_lnm_epsilon = 1.0e-8;
 
