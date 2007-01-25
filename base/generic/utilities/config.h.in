@@ -54,6 +54,13 @@
 #endif
 
 /**
+	If we have IEEE math library include 'isnan' etc.
+*/
+#ifndef HAVE_IEEE
+/* #define HAVE_IEEE @HAVE_IEEE@ */
+#endif
+
+/**
 	Prefix for shared libraries
 */
 #define ASC_SHLIBPREFIX "@SHLIBPREFIX@"
