@@ -58,10 +58,6 @@
 #include "instance_enum.h"
 #include "cmpfunc.h"
 
-#ifndef lint
-static CONST char StatementIOID[] = "$Id: statio.c,v 1.41 1998/04/21 23:49:55 ballan Exp $";
-#endif
-
 static int g_show_statement_detail = 1;
 /* global to control display detail. It's default value 1 means
  * print the expression with relations. On occasion this is burdensome
@@ -688,6 +684,8 @@ void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
   /* old behavior */
   const char *filename=NULL;
   int line=0;
+  error_severity_t sev;
+
   if(stat!=NULL){
     filename=Asc_ModuleBestName(StatementModule(stat));
     line=StatementLineNum(stat);
@@ -696,9 +694,7 @@ void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
   if(level < 0){
     level = 1;
   }
-
-  error_severity_t sev;
-
+  
   switch(level){
 		case 1:	sev = ASC_USER_NOTE; break;
 		case 2: sev = ASC_USER_WARNING; break;

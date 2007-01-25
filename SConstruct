@@ -1484,6 +1484,10 @@ if not conf.CheckHeader('stdio.h'):
 		print "%-30s%s" % ("%s :" % k, v)
 	Exit(1)
 
+if not conf.CheckFunc('snprintf'):
+	print "Didn't find snprintf";
+	exit(1)
+
 # Math library
 
 if need_libm:
@@ -1731,8 +1735,8 @@ subst_dict = {
 	, '@RELEASE@':release
 	, '@DISTTAR_NAME@':env['DISTTAR_NAME']
 	, '@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
-	, '@ASC_SHLIBSUFFIX@':env['SHLIBSUFFIX']
-	, '@ASC_SHLIBPREFIX@':env['SHLIBPREFIX']
+	, '@SHLIBSUFFIX@':env['SHLIBSUFFIX']
+	, '@SHLIBPREFIX@':env['SHLIBPREFIX']
 	, '@ASC_ENV_TK_DEFAULT@' : '$$ASCENDDIST/tcltk'
 	, '@ASC_DISTDIR_REL_BIN@' : default_rel_distdir
 	, '@PYTHON@' : python_exe

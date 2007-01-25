@@ -38,8 +38,6 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		# run the dialog: start solution, monitor use events
 		try:
 			self.getIntegrator().solve()
-			if self.browser.prefs.getBoolPref("Integrator","debugonsuccess",True):
-				self.showDebug()
 
 		except RuntimeError,e:
 			self.browser.reporter.reportError("Integrator failed: %s" % e)

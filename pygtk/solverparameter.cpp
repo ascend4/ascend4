@@ -4,10 +4,18 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <iostream>
 using namespace std;
 
 SolverParameter::SolverParameter(slv_parameter *p) : p(p){
 	// created new SolverParameter wrapper
+}
+
+SolverParameter &
+SolverParameter::operator=(const SolverParameter &old){
+	cerr << "ctor" << endl;
+	p = old.p;
+	return *this;
 }
 
 const std::string

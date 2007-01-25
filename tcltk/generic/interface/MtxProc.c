@@ -27,11 +27,6 @@
 #include <tk.h>
 
 #include <utilities/config.h>
-#ifdef ASC_SIGNAL_TRAPS
-#include <setjmp.h>
-#include <general/except.h>
-#endif
-
 #include <utilities/ascConfig.h>
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
@@ -59,12 +54,6 @@
 #include "DisplayProc.h"
 #include "HelpProc.h"
 #include "SolverGlobals.h"
-
-
-#ifndef lint
-static CONST char MtxProcID[] = "$Id: MtxProc.c,v 1.29 2003/08/23 18:43:07 ballan Exp $";
-#endif
-
 
 #define TORF(b) ((b) ? "TRUE" : "FALSE")
 #define YORN(b) ((b) ? "YES" : "NO")

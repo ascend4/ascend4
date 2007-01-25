@@ -27,6 +27,7 @@
 #ifndef IMPORTHANDLER_H
 #define IMPORTHANDLER_H
 
+#include <utilities/ascConfig.h>
 #include <general/ospath.h>
 
 /*------------------------------------------------------------------------------

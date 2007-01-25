@@ -105,11 +105,29 @@
 #ifndef ASC_ASCSIGNAL_H
 #define ASC_ASCSIGNAL_H
 
-#include <utilities/config.h>
-#ifdef ASC_SIGNAL_TRAPS
-/*-------------------- rest of file is conditional on ASC_SIGNAL_TRAPS--------*/
+#include "config.h"
+#ifndef ASC_SIGNAL_TRAPS
+
+/* if our wizzband PITA signal handing isn't turned on, at least allow
+	use of feenableexcept(FE_EXCEPT_ALL) here and there.
+*/
+# ifndef ASC_SIGNAL_TRAPS
+#  ifdef HAVE_C99FPE
+#   if __GNUC__ && !defined(_GNU_SOURCE)
+#    define _GNU_SOURCE /* enables feenableexcept (http://gcc.gnu.org/ml/fortran/2005-10/msg00365.html) */
+#   endif
+#   include <fenv.h>
+#  endif
+# endif
+
+#else
+/*-------------- rest of file is conditional on ASC_SIGNAL_TRAPS--------------*/
+
+#include "ascConfig.h"
+
 #include <general/except.h>
-#include "utilities/ascConfig.h"
+
+#include <signal.h>
 
 #ifdef __WIN32__
 #  include <process.h>

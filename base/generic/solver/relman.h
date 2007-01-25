@@ -166,12 +166,15 @@ extern int relman_diff2(struct rel_relation *rel,
 	respect to the variable whose solver index is stored in
 	variables[i].
 
+	User must allocate space for the output values in advance. User must
+	ensure that sufficient space is allocated.
+
 	@param rel         Relation being differentiated
 	@param filter	   Filter for variables for which derivs are desired
 	@param safe        If nonzero, "safe" functions are used to for the calculations
-	@param derivatives output vector (allocated by the calling function)
-	@param variables   output vector (allocated by the calling function)
-	@param count       output value, will be set to the number of elements assigned upon exit.
+	@param derivatives (output) calculated derivatives
+	@param variables   (output) var_sindex val for each var in the derivatives vector
+	@param count       (output) num of values assigned to derivatives and variables vectors
 
 	@return 0 on success, non-zero if an error is encountered in the calculation
 */

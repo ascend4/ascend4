@@ -41,17 +41,15 @@
 	18 Dec 06   - Removed ascresetneeded (moved to SConstruct)
 */
 
-#include <stdio.h>
-
-#include "config.h"
+#include "ascSignal.h"
 #ifdef ASC_SIGNAL_TRAPS
+
 /*-------- this file will do nothing unless ASC_SIGNAL_TRAPS is turned on -----*/
 
-#define _GNU_SOURCE /* enables feenableexcept (http://gcc.gnu.org/ml/fortran/2005-10/msg00365.html) */
-#include "ascConfig.h"
+#include <stdio.h>
+
 
 #include <signal.h>
-#include <general/except.h>
 
 #ifdef HAVE_C99FPE
 # include <fenv.h>
@@ -182,7 +180,7 @@ int Asc_SignalInit(void)
   initstack(f_int_traps, &f_int_top_of_stack, SIGINT);
   initstack(f_seg_traps, &f_seg_top_of_stack, SIGSEGV);
 
-#if 0 && defined(HAVE_C99FPE)
+#if defined(HAVE_C99FPE)
   CONSOLE_DEBUG("Initialise FPE state to stack (%d)",f_fenv_stack_top);
   fenv_push(f_fenv_stack,&f_fenv_stack_top,0);
 #endif 

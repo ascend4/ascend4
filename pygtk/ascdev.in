@@ -60,7 +60,7 @@ if __name__=='__main__':
 			print "   export %s=%s" % (v,os.environ[v])
 		if os.environ.get('ASC_GDB'):
 			print "   via GDB..."
-			os.execvp("gdb",['--symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@','--args','python',script]+sys.argv[1:])
+			os.execvp("gdb",['--symbols=../@SHLIBPREFIX@ascend@SHLIBSUFFIX@','--args','python',script]+sys.argv[1:])
 		else:
 			print "PYTHON... ",script
 			sys.stdout.flush() # needed for rxvt on Windows

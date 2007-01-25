@@ -296,11 +296,10 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 	return nok;
 }
 
-struct Instance *BlackBoxGetOutputVar(CONST struct relation *r)
-{
-	assert(r != NULL);
+struct Instance *BlackBoxGetOutputVar(CONST struct relation *r){
  	unsigned long lhsVarNumber;
 	struct Instance *i;
+	assert(r != NULL);
 
 	lhsVarNumber = RBBOX(r).lhsvar;
 	i = RelationVariable(r, lhsVarNumber);
@@ -308,8 +307,7 @@ struct Instance *BlackBoxGetOutputVar(CONST struct relation *r)
 }
 
 static int g_cbbdcount=0;
-struct BlackBoxData *CreateBlackBoxData(struct BlackBoxCache *common)
-{
+struct BlackBoxData *CreateBlackBoxData(struct BlackBoxCache *common){
 	struct BlackBoxData *b = (struct BlackBoxData *)malloc(sizeof(struct BlackBoxData));
 	g_cbbdcount++;
 	b->count = g_cbbdcount;
@@ -323,13 +321,12 @@ struct BlackBoxData *CreateBlackBoxData(struct BlackBoxCache *common)
 }
 
 static
-struct BlackBoxCache *CloneBlackBoxCache(struct BlackBoxCache *b)
-{
+struct BlackBoxCache *CloneBlackBoxCache(struct BlackBoxCache *b){
 	return CreateBlackBoxCache(b->inputsLen , b->outputsLen, b->argListNames, b->dataName, b->efunc);
 }
 
-void CopyBlackBoxDataByReference(struct relation *src, struct relation *dest, void * bboxtable_p)
-{
+void CopyBlackBoxDataByReference(struct relation *src
+		, struct relation *dest, void * bboxtable_p){
 	unsigned long entry;
 	struct pairlist_t *bboxtable = (struct pairlist_t *)bboxtable_p;
 	struct BlackBoxCache * newCache = NULL, *oldCache;
@@ -388,8 +385,8 @@ void DestroyBlackBoxData(struct relation *rel, struct BlackBoxData *b)
 
 	@TODO add some awareness of boundaries in this, hopefully.
 */
-static inline double blackbox_peturbation(double varvalue){
-  return (1.0e-05);
+static double blackbox_peturbation(double varvalue){
+  return 1.0e-05;
 }
 
 /**

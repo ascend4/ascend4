@@ -34,11 +34,6 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include <unistd.h> /* for getpid() */
 
 #include <utilities/config.h>
-#ifdef ASC_SIGNAL_TRAPS
-# include <signal.h>
-# include <general/except.h>
-#endif
-
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPrint.h>

@@ -18,7 +18,7 @@ SolverParameterIterator::operator=(const SolverParameterIterator &old){
 
 void
 SolverParameterIterator::operator++(){
-	cerr << "INCREMENT P" << endl;
+	//cerr << "INCREMENT P" << endl;
 	p++;
 }
 

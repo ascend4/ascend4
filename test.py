@@ -820,13 +820,14 @@ class TestIDADENSE(Ascend):
 		M.setSolver(ascpy.Solver("QRSlv"))
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
-		I.setParameter('calcic','YA_YPD')
+		I.setParameter('calcic','YA_YDP')
 		I.setParameter('linsolver','DENSE')
+		I.setParameter('safeeval',False)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11)
 		I.setMaxSubStep(0);
 		I.setInitialSubStep(0)
-		I.setMaxSubSteps(0);
+		I.setMaxSubSteps(0)
 		I.setParameter('autodiff',True)
 		I.analyse()
 		I.solve()
