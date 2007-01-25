@@ -36,13 +36,9 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 
-
-#include "functype.h"
-#include "func.h"
 #include "expr_types.h"
 #include "instance_enum.h"
 #include "freestore.h"
-#include "relation_type.h"
 #include "find.h"
 #include "extfunc.h"
 #include "rel_blackbox.h"

@@ -92,7 +92,6 @@
 #include <compiler/mathinst.h>
 #include <compiler/instquery.h>
 #include <compiler/instance_io.h>
-#include <compiler/relation_type.h>
 #include <compiler/find.h>
 #include <compiler/extfunc.h>
 #include <compiler/extcall.h>

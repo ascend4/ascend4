@@ -38,10 +38,6 @@
 #include <general/dstring.h>
 #include <general/pretty.h>
 
-
-
-#include "functype.h"
-#include "func.h"
 #include "expr_types.h"
 #include "extcall.h"
 #include "instance_enum.h"
@@ -52,7 +48,6 @@
 #include "instquery.h"
 #include "tmpnum.h"
 #include "find.h"
-#include "relation_type.h"
 #include "extfunc.h"
 #include "rel_blackbox.h"
 #include "extfunc.h"
@@ -63,11 +58,6 @@
 #include "relation_io.h"
 #include "instance_io.h"
 #include "nameio.h"
-
-#ifndef lint
-static CONST char RelationOutputRoutinesRCS[]="$Id: relation_io.c,v 1.16 1998/04/10 23:25:47 ballan Exp $";
-#endif
-
 
 static char g_shortbuf[256];
 #define SB255 g_shortbuf

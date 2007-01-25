@@ -46,7 +46,6 @@
 #include <compiler/find.h>
 #include <compiler/atomvalue.h>
 #include <compiler/mathinst.h>
-#include <compiler/relation_type.h>
 #include <compiler/rel_blackbox.h>
 #include <compiler/vlist.h>
 #include <compiler/relation.h>

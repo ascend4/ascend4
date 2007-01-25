@@ -53,7 +53,6 @@
 #include <compiler/mathinst.h>
 #include <compiler/parentchild.h>
 #include <compiler/instance_io.h>
-#include <compiler/relation_type.h>
 #include <compiler/rel_blackbox.h>
 #include <compiler/vlist.h>
 #include <compiler/relation.h>

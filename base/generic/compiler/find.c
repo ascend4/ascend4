@@ -38,8 +38,6 @@
 #include <general/dstring.h>
 
 #include "symtab.h"
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "child.h"
@@ -60,7 +58,6 @@
 #include "setinstval.h"
 #include "find.h"
 #include "safe.h"
-#include "relation_type.h"
 #include "relation_util.h"
 #include "logical_relation.h"
 #include "logrelation.h"

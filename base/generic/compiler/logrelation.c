@@ -37,8 +37,6 @@
 #include <general/dstring.h>
 #include <general/stack.h>
 
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "name.h"
@@ -48,7 +46,6 @@
 #include "evaluate.h"
 #include "forvars.h"
 #include "find.h"
-#include "relation_type.h"
 #include "logical_relation.h"
 #include "relation_util.h"
 #include "logrelation.h"

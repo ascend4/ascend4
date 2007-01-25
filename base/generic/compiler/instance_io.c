@@ -34,8 +34,6 @@
 #include <general/dstring.h>
 #include <general/table.h>
 
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "stattypes.h"
@@ -50,7 +48,6 @@
 #include "mathinst.h"
 #include "tmpnum.h"
 #include "visitinst.h"
-#include "relation_type.h"
 #include "relation_util.h"
 #include "relation_io.h"
 #include "logical_relation.h"

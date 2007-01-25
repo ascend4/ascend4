@@ -76,7 +76,6 @@
 #include "statio.h"
 #include "pending.h"
 #include "find.h"
-#include "relation_type.h"
 #include "extfunc.h"
 #include "relation.h"
 #include "logical_relation.h"

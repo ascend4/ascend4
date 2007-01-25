@@ -39,7 +39,6 @@
 
 
 #include <compiler/expr_types.h>
-#include <compiler/relation_type.h>
 #include <compiler/relation_io.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>

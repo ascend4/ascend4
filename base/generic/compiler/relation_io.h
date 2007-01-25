@@ -46,6 +46,7 @@
 */
 
 #include <utilities/ascConfig.h>
+#include "relation_type.h"
 
 /**<
  * This enum controls the format of function names and other
