@@ -58,7 +58,6 @@
 #include "instantiate.h"
 #include "find.h"
 #include "extfunc.h"
-#include "relation_type.h"
 #include "logical_relation.h"
 #include "rel_blackbox.h"
 #include "relation.h"
@@ -73,10 +72,6 @@
 #include "instance_name.h"
 #include "cmpfunc.h"
 #include "check.h"
-
-#ifndef lint
-static CONST char CheckModuleID[] = "$Id: check.c,v 1.25 1998/06/23 13:44:24 ballan Exp $";
-#endif
 
 /*
  * If 1, statistics can take a real long time.

@@ -50,7 +50,6 @@
 #include <compiler/statio.h>
 #include <compiler/extfunc.h>
 #include <compiler/find.h>
-#include <compiler/relation_type.h>
 #include <compiler/relation_io.h>
 #include <compiler/functype.h>
 #include <compiler/safe.h>

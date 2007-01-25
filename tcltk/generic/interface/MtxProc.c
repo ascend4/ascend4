@@ -39,8 +39,6 @@
 #include <utilities/set.h>
 #include <general/list.h>
 
-
-
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_name.h>

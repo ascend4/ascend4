@@ -38,10 +38,6 @@
 #include <general/stack.h>
 #include <general/dstring.h>
 
-
-
-#include "functype.h"
-#include "func.h"
 #include "expr_types.h"
 #include "name.h"
 #include "nameio.h"
@@ -58,7 +54,6 @@
 #include "setinstval.h"
 #include "instance_io.h"
 #include "extcall.h"
-#include "relation_type.h"
 #include "relation_util.h"
 #include "rel_common.h"
 #include "extfunc.h"

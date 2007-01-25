@@ -66,7 +66,6 @@
 #include "statio.h"
 #include "pending.h"
 #include "find.h"
-#include "relation_type.h"
 #include "extfunc.h"
 #include "rel_blackbox.h"
 #include "relation.h"

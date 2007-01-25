@@ -30,7 +30,6 @@ extern "C"{
 #include <compiler/plot.h>
 #include <compiler/expr_types.h>
 #include <compiler/find.h>
-#include <compiler/relation_type.h>
 #include <compiler/exprs.h>
 #include <compiler/relation.h>
 #include <compiler/relation_io.h>

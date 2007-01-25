@@ -46,14 +46,10 @@
 #include <general/list.h>
 #include <general/dstring.h>
 
-
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
-
-
 #include <compiler/expr_types.h>
-#include <compiler/relation_type.h>
 #include <compiler/extfunc.h>
 #include <compiler/find.h>
 #include <compiler/rel_blackbox.h>

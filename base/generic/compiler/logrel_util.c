@@ -34,8 +34,6 @@
 
 #include "symtab.h"
 #include "instance_enum.h"
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "instance_name.h"
@@ -46,7 +44,6 @@
 #include "logrelation.h"
 #include "logrel_util.h"
 #include "extfunc.h"
-#include "relation_type.h"
 #include "rel_blackbox.h"
 #include "vlist.h"
 #include "relation.h"

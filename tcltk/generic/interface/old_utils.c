@@ -40,8 +40,6 @@
 #include <general/list.h>
 #include <general/dstring.h>
 
-
-
 #include <compiler/functype.h>
 #include <compiler/expr_types.h>
 #include <compiler/sets.h>
@@ -60,7 +58,6 @@
 #include <compiler/exprs.h>
 #include <compiler/value_type.h>
 #include <compiler/find.h>
-#include <compiler/relation_type.h>
 #include <compiler/rel_blackbox.h>
 #include <compiler/vlist.h>
 #include <compiler/relation.h>

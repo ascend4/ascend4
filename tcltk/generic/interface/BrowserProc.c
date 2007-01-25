@@ -45,7 +45,6 @@
 
 
 #include <compiler/expr_types.h>
-#include <compiler/relation_type.h>
 #include <compiler/setinstval.h>
 #include <compiler/extfunc.h>
 #include <compiler/find.h>
