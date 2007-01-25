@@ -54,21 +54,19 @@
 
 #include "slv_server.h"
 
-#define DIFF_DEBUG
-
 #define IPTR(i) ((struct Instance *)(i))
 
 #define KILL 0 /* compile dead code if kill = 1 */
 #define REIMPLEMENT 0 /* code that needs to be reimplemented */
 
-#if 0
+static POINTER rel_tmpalloc( int nbytes)
 /**
-	Temporarily allocates a given number of bytes.  The memory need
-	not be freed, but the next call to this function will reuse the
-	previous allocation. Memory returned will NOT be zeroed.
-	Calling with nbytes==0 will free any memory allocated.
-*/
-static POINTER rel_tmpalloc( int nbytes){
+ ***  Temporarily allocates a given number of bytes.  The memory need
+ ***  not be freed, but the next call to this function will reuse the
+ ***  previous allocation. Memory returned will NOT be zeroed.
+ ***  Calling with nbytes==0 will free any memory allocated.
+ **/
+{
   static char *ptr = NULL;
   static int cap = 0;
 
@@ -89,13 +87,12 @@ static POINTER rel_tmpalloc( int nbytes){
     return NULL;
   }
 }
-#endif
 
-#define REL_TMPALLOC_ARRAY(type,nelts)  \
+#define rel_tmpalloc_array(nelts,type)  \
    ((nelts) > 0 ? (type *)tmpalloc((nelts)*sizeof(type)) : NULL)
-/**<
-	Creates an array of "nelts" objects, each with type "type".
-*/
+/**
+ ***  Creates an array of "nelts" objects, each with type "type".
+ **/
 
 void relman_free_reused_mem(void)
 {
@@ -486,7 +483,7 @@ int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
   len = rel_n_incidences(rel);
   vlist = rel_incidence_list(rel);
 
-  gradient = REL_TMPALLOC_ARRAY(real64,len);
+  gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
   *count = 0;
   if(safe){
@@ -520,15 +517,11 @@ int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
 }
 
 
-/*
-	Return derivatives as well as struct var_variables
-	@return 0 on success 
-*/
-int relman_diff3(struct rel_relation *rel
-		,var_filter_t *filter
-		,real64 *derivatives, struct var_variable **variables
-		,int32 *count, int32 safe
-){
+/* return 0 on success */
+int relman_diff3(struct rel_relation *rel, var_filter_t *filter,
+                 real64 *derivatives, struct var_variable **variables,
+		 int32 *count, int32 safe)
+{
   const struct var_variable **vlist=NULL;
   real64 *gradient;
   int32 len,c;
@@ -538,47 +531,39 @@ int relman_diff3(struct rel_relation *rel
   len = rel_n_incidences(rel);
   vlist = rel_incidence_list(rel);
 
-  gradient = REL_TMPALLOC_ARRAY(real64,len);
+  gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
   *count = 0;
-
   if(safe){
-    status = RelationCalcGradientSafe(rel_instance(rel),gradient);
+    status =(int32)RelationCalcGradientSafe(rel_instance(rel),gradient);
     safe_error_to_stderr( (enum safe_err *)&status );
     /* always map when using safe functions */
     for (c=0; c < len; c++) {
       if (var_apply_filter(vlist[c],filter)) {
         variables[*count] = vlist[c];
         derivatives[*count] = gradient[c];
-#ifdef DIFF_DEBUG
-        CONSOLE_DEBUG("Var %d = %f",var_sindex(vlist[c]),gradient[c]);
-#endif
+        /* CONSOLE_DEBUG("Var %d = %f",var_sindex(vlist[c]),gradient[c]); */
         (*count)++;
       }
     }
+	/* CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status); */
 	return status;
-  }
-
-  /* NON-SAFE */
-  if(RelationCalcGradient(rel_instance(rel),gradient) == 0) {
-    /* successful */
-    for (c=0; c < len; c++) {
-      if (var_apply_filter(vlist[c],filter)) {
-        variables[*count] = vlist[c];
-
-#ifdef DIFF_DEBUG
-        CONSOLE_DEBUG("Var %d = %f",var_sindex(vlist[c]),gradient[c]);
-#endif
-        derivatives[*count] = gradient[c];
-        (*count)++;
+  }else{
+    if((status=RelationCalcGradient(rel_instance(rel),gradient)) == 0) {
+      /* successful */
+      for (c=0; c < len; c++) {
+        if (var_apply_filter(vlist[c],filter)) {
+          variables[*count] = vlist[c];
+          derivatives[*count] = gradient[c];
+          (*count)++;
+        }
       }
     }
- 	return 0;
+	/* SOLE_DEBUG("RETURNING (NON-SAFE) calc_ok=%d",status); */
+ 	return status;
   }
-
-  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in relman_diff3 (unsafe mode)");
-  return 1;
 }
+
 
 
 int relman_diff_grad(struct rel_relation *rel, var_filter_t *filter,
@@ -595,7 +580,7 @@ int relman_diff_grad(struct rel_relation *rel, var_filter_t *filter,
   len = rel_n_incidences(rel);
   vlist = rel_incidence_list(rel);
 
-  gradient = REL_TMPALLOC_ARRAY(real64,len);
+  gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
   *count = 0;
   if( safe ) {
@@ -658,7 +643,7 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
       rel = rlist[r];
       len = rel_n_incidences(rel);
       vlist = rel_incidence_list(rel);
-      gradient = REL_TMPALLOC_ARRAY(real64,len);
+      gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
       if (gradient == NULL) {
         return 1;
       }
@@ -680,7 +665,7 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
       rel = rlist[r];
       len = rel_n_incidences(rel);
       vlist = rel_incidence_list(rel);
-      gradient = REL_TMPALLOC_ARRAY(real64,len);
+      gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
       if (gradient == NULL) {
         return 1;
       }
@@ -755,7 +740,7 @@ int relman_diffs(struct rel_relation *rel, var_filter_t *filter,
   coord.row = rel_sindex(rel);
   assert(coord.row>=0 && coord.row < mtx_order(mtx));
 
-  gradient = REL_TMPALLOC_ARRAY(real64,len);
+  gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
   if( safe ) {
     status =(int32)RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
@@ -964,7 +949,7 @@ void relman_cookup_indices(struct RXNameData *rd,
   const struct var_variable **vlist;
 
   nvars = rel_n_incidences(rel);
-  rd->indices = REL_TMPALLOC_ARRAY(int, 1+nvars);
+  rd->indices = rel_tmpalloc_array(1+nvars,int);
   if (rd->indices == NULL) {
     return;
   }
