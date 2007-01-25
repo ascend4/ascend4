@@ -30,7 +30,11 @@ SolverParameters::toString() const{
 	iterator i;
 	for(i = begin(); i<end(); ++i){
 		SolverParameter p = *i;
+#if 0
 		ss << p.getLabel() << " [" << p.getDescription() << "]: ";
+#else
+		ss << p.getName() << ": ";
+#endif
 		if(p.isInt()){
 			ss << p.getIntValue();
 		}else if(p.isReal()){
@@ -65,6 +69,19 @@ SolverParameters::getLength() const{
 SolverParameter
 SolverParameters::getParameter(const int &index) const{
 	return SolverParameter(&(p.parms[index]));
+}
+
+SolverParameter 
+SolverParameters::getParameter(const string &name) const{
+	for(int i=0;i<p.num_parms;++i){
+		//cerr << "Looking at " << p.parms[i].name << endl;
+		if(p.parms[i].name==name){
+			return SolverParameter(&(p.parms[i]));
+		}
+	}
+	stringstream ss;
+	ss << "Invalid parameter name '" << name << "'";
+	throw runtime_error(ss.str());
 }
 
 slv_parameters_t &

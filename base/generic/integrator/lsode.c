@@ -56,13 +56,9 @@
 # error "Where is CLOCKS_PER_SEC?"
 #endif
 
+#include "lsode.h"
+
 #include <utilities/config.h>
-
-#ifdef ASC_SIGNAL_TRAPS
-# include <signal.h>
-# include <general/except.h>
-#endif
-
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
 #include <compiler/instance_enum.h>
@@ -75,7 +71,6 @@
 #include <linear/densemtx.h>
 
 #include "integrator.h"
-#include "lsode.h"
 
 /* #define TIMING_DEBUG */
 
@@ -522,7 +517,7 @@ static double *lsode_get_atol( IntegratorSystem *blsys) {
         );
       } else {
         atoli[i] = RealAtomValue(tol);
-        CONSOLE_DEBUG("Using atol %3g for state variable %ld.",atoli[i], blsys->y_id[i]);
+        CONSOLE_DEBUG("Using atol %3g for state variable %d.",atoli[i], blsys->y_id[i]);
       }
     }
   }

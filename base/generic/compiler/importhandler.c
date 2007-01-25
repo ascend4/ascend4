@@ -24,14 +24,16 @@
 	Created Sept 26, 2006
 */
 
-#include <utilities/ascConfig.h>
+#include "importhandler.h"
+
 #include <utilities/config.h>
 #include <utilities/error.h>
 #include <utilities/ascDynaLoad.h>
 #include <utilities/ascPanic.h>
 #include <utilities/ascEnvVar.h>
 #include <general/table.h>
-#include "importhandler.h"
+
+#include <string.h>
 
 /* #define IMPORTHANDLER_VERBOSE */
 
@@ -108,8 +110,11 @@ char *importhandler_extlib_filename(const char *partialname){
 		this is the preferred operation: SCons reports what the local system
 		uses as its shared library file extension.
 	*/
-	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,s1,ASC_SHLIBSUFFIX);
+	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,partialname,ASC_SHLIBSUFFIX);
 #else
+#ifdef __GNUC__
+# warning "You should be using Use ASC_SHLIBPREFIX and ASC_SHLIBSUFFIX!"
+#endif
 	/**
 		@DEPRECATED
 

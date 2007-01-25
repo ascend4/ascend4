@@ -14,6 +14,12 @@
 	you just need to uncomment these lines; no changes to the SCons build
 	will be necessary (as it will also hunt for @FLAGNAME@ in its
 	text-subst.
+
+	@NOTE
+	This file should NEVER contain any #include statements! It is important
+	that the configuration can be determined without any other headers being
+	loaded and muddying the waters.
+	@ENDNOTE
 */
 #ifndef ASC_CONFIG_H
 #define ASC_CONFIG_H
@@ -46,6 +52,16 @@
 #ifndef HAVE_C99FPE
 /* #define HAVE_C99FPE @HAVE_C99FPE@ */
 #endif
+
+/**
+	Prefix for shared libraries
+*/
+#define ASC_SHLIBPREFIX "@SHLIBPREFIX@"
+
+/**
+	Suffix for shared libraries
+*/
+#define ASC_SHLIBSUFFIX "@SHLIBSUFFIX@"
 
 /**
 	The name of the environment variable containing a list' of paths

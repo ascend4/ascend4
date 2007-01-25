@@ -15,6 +15,7 @@ private:
 
 public:
 	explicit SolverParameter(slv_parameter *);
+	SolverParameter &operator=(const SolverParameter &);
 
 	const std::string getName() const;
 	const std::string getDescription() const;

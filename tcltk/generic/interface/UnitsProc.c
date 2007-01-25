@@ -29,16 +29,17 @@
 
 #define ASC_BUILDING_INTERFACE
 
+#include <stdarg.h>
+#include <tcl.h>
+
 #include <utilities/config.h>
 #ifdef ASC_SIGNAL_TRAPS
 # include <utilities/ascSignal.h>
 #endif
 
-#include <stdarg.h>
-#include <tcl.h>
-
 #include "UnitsProc.h"
 
+#include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <general/list.h>
@@ -80,11 +81,6 @@
 #include "Driver.h"
 #include "HelpProc.h"
 #include "SolverGlobals.h"
-
-#ifndef lint
-static CONST char UnitsProcID[] = "$Id: UnitsProc.c,v 1.41 2003/08/23 18:43:08 ballan Exp $";
-#endif
-
 
 /* convenience macros */
 #define SNULL (char *)NULL

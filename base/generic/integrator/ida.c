@@ -33,8 +33,6 @@
 
 #include "ida.h"
 
-#include <signal.h>
-
 /* SUNDIALS includes */
 #ifdef ASC_WITH_IDA
 # include <sundials/sundials_config.h>
@@ -91,7 +89,7 @@
 # error "Failed to include ASCEND IDA header file"
 #endif
 
-/* #define FEX_DEBUG */
+#define FEX_DEBUG
 #define JEX_DEBUG
 #define DJEX_DEBUG
 #define SOLVE_DEBUG
@@ -470,7 +468,7 @@ static int integrator_ida_check_partitioning(IntegratorSystem *sys){
 	return 0;
 }
 
-static int integrator_ida_block_check(IntegratorSystem *sys){
+int integrator_ida_block_check(IntegratorSystem *sys){
 	int res;
  	int dof;
 #ifdef ANALYSE_DEBUG
@@ -1117,8 +1115,10 @@ int integrator_ida_solve(
 		}
 		IDASetId(ida_mem, id);
 		N_VDestroy_Serial(id);
-	}else{
+	}else if(strcmp(SLV_PARAM_CHAR(&blsys->params,IDA_PARAM_CALCIC),"NONE")==0){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Not solving initial conditions: check current residuals");
+	}else{
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid 'iccalc' value: check solver parameters.");
 	}
 
 	if(icopt){
@@ -1134,9 +1134,9 @@ int integrator_ida_solve(
 			CONSOLE_DEBUG("SETTING TO IGNORE SIGFPE...");
 			Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
 		}else{
-#ifdef FEX_DEBUG
+# ifdef FEX_DEBUG
 			CONSOLE_DEBUG("SETTING TO CATCH SIGFPE...");
-#endif
+# endif
 			Asc_SignalHandlerPushDefault(SIGFPE);
 		}
 		if (setjmp(g_fpe_env)==0) {
@@ -1434,7 +1434,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	/* print vars */
 	for(i=0; i < blsys->n_y; ++i){
 		varname = var_make_name(blsys->system, blsys->y[i]);
-		CONSOLE_DEBUG("%s = %f = %f",varname,NV_Ith_S(yy,i));
+		CONSOLE_DEBUG("%s = %f",varname,NV_Ith_S(yy,i));
 		asc_assert(NV_Ith_S(yy,i) == var_value(blsys->y[i]));
 		ASC_FREE(varname);
 	}
@@ -1476,7 +1476,6 @@ int integrator_ida_djex(long int Neq, realtype tt
 #ifdef DJEX_DEBUG
 		relname = rel_make_name(blsys->system, *relptr);
 		fprintf(stderr,"%d: '%s': ",i,relname);
-		ASC_FREE(relname);
 		for(j=0;j<count;++j){
 			varname = var_make_name(blsys->system, variables[j]);
 			if(var_deriv(variables[j])){
@@ -1487,31 +1486,29 @@ int integrator_ida_djex(long int Neq, realtype tt
 			}
 			ASC_FREE(varname);
 		}
+		/* relname is freed further down */
 		fprintf(stderr,"\n");
 #endif
 
 		/* insert values into the Jacobian row in appropriate spots (can assume Jac starts with zeros -- IDA manual) */
 		for(j=0; j < count; ++j){
+			varname = var_make_name(blsys->system,variables[j]);
+			fprintf(stderr,"d(%s)/d(%s) = %g",relname,varname,derivatives[j]);
+			ASC_FREE(varname);
 			if(!var_deriv(variables[j])){
-#ifdef DJEX_DEBUG1
-				CONSOLE_DEBUG("Jac = %p, i = %d, j = %d, variables[j] = %p, sindex = %d, deriv = %f"
-					,Jac, i, j,  variables[j], var_sindex(variables[j]),derivatives[j]
-				);
-				CONSOLE_DEBUG("var flags = 0x%o",var_flags(variables[j]));
-				varname = var_make_name(blsys->system,variables[j]);
-				CONSOLE_DEBUG("var name '%s'",varname);
-				ASC_FREE(varname);
+				fprintf(stderr," --> J[%d,%d]\n", i,j);
 				asc_assert(var_sindex(variables[j]) >= 0);
 				ASC_ASSERT_LT(var_sindex(variables[j]) , Neq);
-#endif
 				DENSE_ELEM(Jac,i,var_sindex(variables[j])) += derivatives[j];
 			}else{
 				DENSE_ELEM(Jac,i,integrator_ida_diffindex(blsys,variables[j])) += derivatives[j] * c_j;
+				fprintf(stderr," --> * c_j --> J[%d,%d] (DERIVATIVE)\n", i,j);
 			}
 		}
 	}
 
 #ifdef DJEX_DEBUG
+	ASC_FREE(relname);
 	CONSOLE_DEBUG("PRINTING JAC");
 	fprintf(stderr,"\t");
 	for(j=0; j < blsys->n_y; ++j){
@@ -1541,6 +1538,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 
 #ifdef DJEX_DEBUG
 	CONSOLE_DEBUG("DJEX RETURNING 0");
+	/* ASC_PANIC("Quitting"); */
 #endif
 	return 0;
 }

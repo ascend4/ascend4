@@ -259,7 +259,8 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
     return 1;
   }
   if (NULL != initFun) {
-    install = (int (*)())dlsym(xlib, initFun);
+	/* https://www.opengroup.org/sophocles/show_mail.tpl?source=L&listname=austin-review-l&id=2252 */
+    *(void**)(&install) = dlsym(xlib, initFun);
     if (install == NULL) {
       ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"%s",(char *)dlerror());
       dlclose(xlib);

@@ -41,7 +41,8 @@ public:
 	const std::string toString() const;
 
 	const int getLength() const; ///< Number of parameters
-	SolverParameter getParameter(const int &) const;
+	SolverParameter getParameter(const int &index) const;
+	SolverParameter getParameter(const std::string &name) const;
 
 	const SolverParameterIterator begin() const;
 	const SolverParameterIterator end() const;

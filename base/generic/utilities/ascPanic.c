@@ -150,7 +150,7 @@ void asc_panic_line(const int status, const char *filename, const int line
 #endif
 }
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if !defined(__GNUC__) || defined(__STRICT_ANSI__)
 /**
 	we only need this function if our platform doesn't support var-arg macros 
 */
@@ -190,7 +190,7 @@ void asc_panic_nofunc(const char *fmt, ...){
 # endif
 }
 
-#endif /* __GNUC__ & !__STRICT_ANSI__ */
+#endif /* !__GNUC__ || __STRICT_ANSI__ */
 
 void Asc_PanicSetOutfile(CONST char *filename)
 {

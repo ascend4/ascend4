@@ -32,7 +32,6 @@
 
 #include <stdarg.h>
 #include <ctype.h>
-#include <signal.h>
 #include <time.h>
 #include <utilities/ascConfig.h>
 
@@ -49,6 +48,7 @@
 #include <utilities/ascMalloc.h> /* for ascshutdown */
 #include <utilities/ascPanic.h>  /* for Asc_Panic */
 #include <utilities/ascEnvVar.h>
+#include <utilities/ascSignal.h>
 
 #include <compiler/ascCompiler.h>
 #include <compiler/instance_enum.h>

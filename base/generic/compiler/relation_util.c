@@ -111,7 +111,6 @@ struct ds_soln_list {
 */
 
 static struct fraction real_to_frac(double real);
-char *tmpalloc(int nbytes);
 int ArgsForRealToken(enum Expr_enum type);
 static int IsZero(struct dimnode *node);
 
@@ -711,10 +710,7 @@ RelationEvaluatePostfixBranch(CONST struct relation *r,
     (*pos)--;
     return FuncEval(funcptr, RelationEvaluatePostfixBranch(r, pos, lhs));
   default:
-    ASC_PANIC(
-              "Don't know this type of relation type\n"
-              "in function RelationEvaluatePostfixBranch\n");
-
+    ASC_PANIC("unrecognised relation type");
     break;
   }
 }
@@ -1615,16 +1611,21 @@ enum Expr_enum RelationRelop(CONST struct relation *rel)
 /**
 	This query only applies to TokenRelations and OpcodeRelations.
 */
-unsigned long RelationLength(CONST struct relation *rel, int lhs)
-{
+unsigned long RelationLength(CONST struct relation *rel, int lhs){
   assert(rel!=NULL);
   AssertAllocatedMemory(rel,sizeof(struct relation));
-  if (lhs){
-    if (RTOKEN(rel).lhs) return (RTOKEN(rel).lhs_len);
-    else return 0;
+  if(lhs){
+    if(RTOKEN(rel).lhs){
+	  asc_assert(RTOKEN(rel).lhs_len >= 0);
+	  return RTOKEN(rel).lhs_len;
+    }
+    return 0;
   }
-  if (RTOKEN(rel).rhs) return (RTOKEN(rel).rhs_len);
-  else return 0;
+  if(RTOKEN(rel).rhs){
+	asc_assert(RTOKEN(rel).rhs_len >= 0);
+    return RTOKEN(rel).rhs_len;
+  }
+  return 0;
 }
 
 struct gl_list_t *RelationBlackBoxArgNames(CONST struct relation *rel)
@@ -2136,14 +2137,14 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
       length_lhs = RelationLength(r, 1);
       length_rhs = RelationLength(r, 0);
 
-      if(length_lhs > 0){
+      if(length_lhs){
         length_lhs--;
         *res = RelationEvaluatePostfixBranchSafe(r, &length_lhs, 1,&status);
       }else{
         *res = 0.0;
       }
 
-      if(length_rhs > 0){
+      if(length_rhs){
         length_rhs--;
         *res -= RelationEvaluatePostfixBranchSafe(r, &length_rhs, 0,&status);
       }
@@ -2169,8 +2170,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
       if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
         status = safe_problem;
       }else{
-          ASC_PANIC("RelationCalcResidualPostfixSafe: reached end of routine!");
-        exit(2);
+          ASC_PANIC("Reached end of routine!");
       }
   }
   return status;
@@ -2200,37 +2200,35 @@ RelationCalcResidualPostfix(struct Instance *i, double *res){
   ASC_FREE(tmp);
   */
 
-  if( reltype == e_token ) {
-    length_lhs = RelationLength(r, 1);
-    length_rhs = RelationLength(r, 0);
-    if( length_lhs > 0 ) {
-      length_lhs--;
-      *res = RelationEvaluatePostfixBranch(r, &length_lhs, 1);
-    }
-    else {
-      *res = 0.0;
-    }
-    if( length_rhs > 0 ) {
-      length_rhs--;
-      *res -= RelationEvaluatePostfixBranch(r, &length_rhs, 0);
-    }
-    return 0;
-  }else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
+  switch(reltype){
+	case e_token:
+      length_lhs = RelationLength(r, 1);
+      length_rhs = RelationLength(r, 0);
+      if(length_lhs > 0){
+        length_lhs--;
+        *res = RelationEvaluatePostfixBranch(r, &length_lhs, 1);
+      }else{
+        *res = 0.0;
+      }
+      if(length_rhs > 0){
+        length_rhs--;
+        *res -= RelationEvaluatePostfixBranch(r, &length_rhs, 0);
+      }
+      return 0;
 
-    if (reltype == e_blackbox){
-      return BlackBoxCalcResidual(i, res, r);
-    }
-    if (reltype == e_glassbox){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
-    }
-    if (reltype == e_opcode)    {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
-    }
+	case e_blackbox:
+	  return BlackBoxCalcResidual(i, res, r);
 
-    return 1;
-  }else{
-    ASC_PANIC("reached end of routine");
+	case e_glassbox:
+	case e_opcode:
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode/glassbox not supported");
+	  return 1;
+
+	default: break;
   }
+
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"invalid relation type");
+  return 1;
 }
 
 int RelationCalcExceptionsInfix(struct Instance *i){
@@ -2286,9 +2284,9 @@ int RelationCalcExceptionsInfix(struct Instance *i){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"relation type not implemented (%s)",__FUNCTION__);
     glob_rel = NULL;
     return -1;
-  }else{
-    ASC_PANIC("reached end of routine");
   }
+
+  ASC_PANIC("reached end of routine");
 }
 
 
@@ -2318,9 +2316,9 @@ int RelationCalcResidualInfix(struct Instance *i, double *res){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not implemented (%s)",__FUNCTION__);
     glob_rel = NULL;
     return 1;
-  }else{
-    ASC_PANIC("reached end of routine");
   }
+
+  ASC_PANIC("reached end of routine");
 }
 
 
@@ -2346,9 +2344,9 @@ RelationCalcResidualPostfix2(struct Instance *i, double *res){
   }else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not implemented (%s)",__FUNCTION__);
     return 1;
-  }else{
-    ASC_PANIC("reached end of routine");
   }
+
+  ASC_PANIC("reached end of routine");
 }
 
 
@@ -2386,20 +2384,17 @@ RelationCalcResidGrad(struct Instance *i, double *residual, double *gradient){
 
   r = (struct relation *)GetInstanceRelation(i, &reltype);
   if( r == NULL ) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation");
     return 1;
   }
 
   if(reltype == e_token ){
     return RelationEvaluateResidualGradient(r, residual, gradient);
-
-  }else if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not implemented (%s)",__FUNCTION__);
-    return 1;
-
-  }else{
-    ASC_PANIC( "reached end of routine");
   }
+
+  assert(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH);
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not implemented");
+  return 1;
 }
 
 enum safe_err
@@ -2456,9 +2451,8 @@ RelationCalcResidGradSafe(struct Instance *i
     not_safe = safe_problem;
     return not_safe;
   }
-  else {
-    ASC_PANIC( "reached end of routine");
-  }
+
+  ASC_PANIC( "reached end of routine");
 }
 
 
@@ -2496,9 +2490,7 @@ RelationCalcDerivative(struct Instance *i,
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not supported (%s)",__FUNCTION__);
     return 1;
   }
-  else {
-    ASC_PANIC( "reached end of routine");
-  }
+  ASC_PANIC( "reached end of routine");
 }
 
 enum safe_err
@@ -2537,10 +2529,8 @@ RelationCalcDerivativeSafe(struct Instance *i,
     not_safe = safe_problem;
     return not_safe;
   }
-  else {
-    ASC_PANIC( "reached end of routine");
 
-  }
+  ASC_PANIC( "reached end of routine");
 }
 
 /**
@@ -3045,7 +3035,7 @@ static int RelationTmpCopySide(union RelationTermUnion *old,
     case e_equal: case e_notequal: case e_less:
     case e_greater: case e_lesseq: case e_greatereq:
     default:
-      ASC_PANIC("Unknown term type in RelationSide");
+      ASC_PANIC("Unknown term type");
       break;
     }
   }
@@ -3246,9 +3236,7 @@ static int SearchEval_Branch(struct relation_term *term){
     }
     return 1;
  default:
-   ASC_PANIC(
-             "error in SearchEval_Branch routine\n"
-             "relation term type not recognized\n");
+   ASC_PANIC("term type not recognized");
     return 1;
   }
 }
