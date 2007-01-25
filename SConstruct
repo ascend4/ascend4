@@ -107,7 +107,7 @@ opts.Add(BoolOption(
 opts.Add(BoolOption(
 	'WITH_SIGNALS'
 	,"Whether to permit use of signals for flow control in the C-level code"
-	,False
+	,True
 ))
 
 # You can turn off building of Tcl/Tk interface
