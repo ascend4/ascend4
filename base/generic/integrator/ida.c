@@ -95,7 +95,7 @@
 # error "Failed to include ASCEND IDA header file"
 #endif
 
-#define FEX_DEBUG
+/* #define FEX_DEBUG */
 #define JEX_DEBUG
 #define DJEX_DEBUG
 #define SOLVE_DEBUG
@@ -1355,7 +1355,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	is_error = 0;
 	relptr = enginedata->rellist;
 
-/*
+
 #ifdef ASC_SIGNAL_TRAPS
 	if(enginedata->safeeval){
 		Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
@@ -1368,14 +1368,15 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 
 	if (SETJMP(g_fpe_env)==0) {
 #endif
-*/
+
 	
+/*
 	integrator_ida_sig_old = signal(SIGFPE,&integrator_ida_sig);
 	if(fegetenv(&integrator_ida_fenv_old))ASC_PANIC("fenv problem");
 	if(feenableexcept(FE_ALL_EXCEPT))ASC_PANIC("fenv problem");
 	switch(setjmp(integrator_ida_jmp_buf)){
 	case 0:
-		feraiseexcept(FE_ALL_EXCEPT);
+*/
 		for(i=0, relptr = enginedata->rellist;
 				i< enginedata->nrels && relptr != NULL;
 				++i, ++relptr
@@ -1393,7 +1394,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 				CONSOLE_DEBUG("Calc OK");
 			}*/
 		}
-		break;
+/*		break;
 	case SIGFPE:
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"...here! Caught SIGFPE");
 		integrator_ida_write_feinfo();
@@ -1417,8 +1418,8 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 			CONSOLE_DEBUG("No NAN detected");
 		}
 	}
+*/
 
-/*
 #ifdef ASC_SIGNAL_TRAPS
 	}else{
 		relname = rel_make_name(blsys->system, *relptr);
@@ -1433,7 +1434,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 		Asc_SignalHandlerPopDefault(SIGFPE);
 	}
 #endif
-*/
+
 
 #ifdef FEX_DEBUG
 	/* output residuals to console */
