@@ -1052,9 +1052,11 @@ LIST_DEBUG(rel,rel_relation)
 /**
 	This is a big durtie macro to perform cuts on our solvers_*_lists.
 	The function will start at position 'begin' and move through all elements
-	of the list from that point to the end. Any items matching the filter are
-	moved to the start of the range traversed. At the end, the number of
-	items matching the filter is returned in 'numgood'.
+	of the list from that point to the end. Any 'good' items matching the filter
+	are	moved to the start of the range traversed. And 'bad' ones that dont
+	get moved to the end. At the end, the number of items found matching the
+	filter is returned in 'numgood'. There will be that many 'good' items 
+	in place from position 'begin' onwards.
 */
 #define SYSTEM_CUT_LIST(TYPE,FULLTYPE) \
 	int system_cut_##TYPE##s(slv_system_t sys, const int begin, const TYPE##_filter_t *filt, int *numgood){ \

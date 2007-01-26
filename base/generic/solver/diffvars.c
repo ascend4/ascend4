@@ -232,8 +232,9 @@ int analyse_diffvars_debug(slv_system_t sys,FILE *fp){
 		fprintf(fp,"%d: ",i);
 		for(j=0; j<seq.n; ++j){
 			if(j)fprintf(fp," <-- ");
+			fprintf(fp,"%d: (%p)",var_sindex(seq.vars[j]),seq.vars[j]);
 			varname = var_make_name(sys,seq.vars[j]);
-			fprintf(fp,"%d:'%s'",var_sindex(seq.vars[j]),varname);
+			fprintf(fp,"'%s'",varname);
 			ASC_FREE(varname);
 		}
 		fprintf(fp,"\n");
