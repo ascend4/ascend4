@@ -103,7 +103,7 @@
 #define STATS_DEBUG
 #define PREC_DEBUG
 /* #define DIFFINDEX_DEBUG */
-/* #define ANALYSE_DEBUG */
+#define ANALYSE_DEBUG
 /**
 	Everthing that the outside world needs to know about IDA
 */
@@ -550,6 +550,9 @@ static int integrator_ida_rebuild_diffindex(IntegratorSystem *sys){
 
 	CONSOLE_DEBUG("Rebuilding diffindex vector");
 
+	/* we can assume the diffvars are already sorted */
+	/* analyse_diffvars_sort(sys->system); */
+
 	diffvars = slv_get_diffvars(sys->system);
 	asc_assert(diffvars);
 
@@ -557,7 +560,7 @@ static int integrator_ida_rebuild_diffindex(IntegratorSystem *sys){
 		CONSOLE_DEBUG("y_id not allocated");
 		return 1;
 	}
-	for(i=0; i<diffvars->nseqs; ++i){
+	for(i=0; i<sys->n_y; ++i){
 		CONSOLE_DEBUG("i = %d",i);
 		seq = diffvars->seqs[i];
 		if(seq.n == 2){
@@ -679,9 +682,11 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	struct var_variable *v;
 	char *varname;
 
-	CONSOLE_DEBUG("NEW integrator_ida_analyse------------------>");
-	
 	asc_assert(sys->engine==INTEG_IDA);
+
+#ifdef ANALYSE_DEBUG
+	CONSOLE_DEBUG("Starting IDA analysis");
+#endif
 
 #if 0
 	/* partition into static, dynamic and output problems */
@@ -698,17 +703,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 		return -1;
 	}
 
-	CONSOLE_DEBUG("Creating DAE partitioning...");
-	if(block_sort_dae_rels_and_vars(sys->system, &(sys->n_y))){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error sorting rels and vars");
-		return 250;
-	}
-
-	if(integrator_ida_check_partitioning(sys)){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error with partitioning");
-		return 300;
-	}
-	CONSOLE_DEBUG("DAE partitioning is OK");
+	/* get the vars and mark those which are not incident/active etc */
 
 	/* set up the dynamic problem */
 	CONSOLE_DEBUG("Setting up the dynamic problem");
@@ -808,15 +803,35 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 	CONSOLE_DEBUG("Got %ld non-derivative vars and %ld derivative vars", n_y, n_ydot);
 
-	if(analyse_diffvars_debug(sys->system,stderr)){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error getting diffvars debug info");
-		return 340;
+	CONSOLE_DEBUG("Creating DAE partitioning...");
+	if(block_sort_dae_rels_and_vars(sys->system, &(sys->n_y))){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error sorting rels and vars");
+		return 250;
 	}
 
+	if(integrator_ida_check_partitioning(sys)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error with partitioning");
+		return 300;
+	}
+	CONSOLE_DEBUG("DAE partitioning is OK");
+
+	/* alloce space for the deriv-to-diff lookup */
 	asc_assert(sys->y_id==NULL);
 	if(sys->y_id == NULL){
 		sys->y_id = ASC_NEW_ARRAY_CLEAR(int, slv_get_num_solvers_vars(sys->system));
 		CONSOLE_DEBUG("Allocated y_id (n_y = %ld)",sys->n_y);
+	}
+
+	integrator_ida_debug(sys,stderr);
+
+	if(integrator_ida_rebuild_diffindex(sys)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error updating var_sindex values for derivative variables");
+		return 350;
+	}
+
+	if(integrator_ida_check_diffindex(sys)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error with diffindex");
+		return 360;
 	}
 
 	/* the following causes TestIDA.testincidence3 to fail:
@@ -857,18 +872,6 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 		}
 	}	
 #endif
-
-	/** @TODO check that derivatives are all beyond the diffvars and alg vars */
-
-	if(integrator_ida_rebuild_diffindex(sys)){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error updating var_sindex values for derivative variables");
-		return 350;
-	}
-
-	if(integrator_ida_check_diffindex(sys)){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error with diffindex");
-		return 360;
-	}
 
 	/* check the indep var is same as was located elsewhere */
 	if(diffvars->nindep>1){
@@ -2266,6 +2269,14 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 		ASC_FREE(relname);
 	}
 
+	/* write out the derivative chains */
+	fprintf(fp,"\nDERIVATIVE CHAINS\n");
+	if(analyse_diffvars_debug(sys->system,stderr)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error getting diffvars debug info");
+		return 340;
+	}
+	fprintf(fp,"\n");
+	
 	/* and lets write block debug output */
 	block_debug(sys->system, fp);
 		
