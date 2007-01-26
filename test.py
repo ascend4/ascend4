@@ -672,6 +672,7 @@ class TestIDA(Ascend):
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.analyse()
+		return M;
 
 	def _runfail(self,filen,n,msg="failed"):
 		try:
@@ -739,13 +740,11 @@ class TestIDA(Ascend):
 	def testfixedvars1(self):
 		self._run('fixedvars',1)
 
-# CAUSES A CRASH !?!?!!
-#	def testfixedvars2(self):
-#		self._run('fixedvars',2)
+	def testfixedvars2(self):
+		self._run('fixedvars',2)
 
-# CAUSES A CRASH !!!?!?!?
-#	def testfixedvars3(self):
-#		self._run('fixedvars',3)
+	def testfixedvars3(self):
+		self._run('fixedvars',3)
 
 	def testincidence(self):
 		self._run('incidence')
@@ -755,7 +754,8 @@ class TestIDA(Ascend):
 	def testincidence2(self):
 		self._run('incidence',2)
 	def testincidence3(self):
-		self._run('incidence',3)
+		M = self._run('incidence',3)
+
 	def testincidence4(self):
 		self._run('incidence',4)
 	def testincidencefail5(self):

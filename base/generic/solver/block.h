@@ -168,6 +168,10 @@ extern int system_block_debug(slv_system_t sys, FILE *fp);
   PARTITIONING FOR DAE SYSTEMS
 */
 
+void system_var_list_debug(slv_system_t sys);
+void system_rel_list_debug(slv_system_t sys);
+
+
 int system_cut_vars(slv_system_t sys, const int start, const var_filter_t *vfilt, int *nvars);
 /**
 	We start at position 'start' in the solver's var list. Any variable 

@@ -92,9 +92,9 @@
 # error "Failed to include ASCEND IDA header file"
 #endif
 
-#define FEX_DEBUG
+/* #define FEX_DEBUG */
 #define JEX_DEBUG
-#define DJEX_DEBUG
+/* #define DJEX_DEBUG */
 #define SOLVE_DEBUG
 #define STATS_DEBUG
 #define PREC_DEBUG
@@ -736,7 +736,7 @@ int integrator_ida_solve(
 		/* catch SIGFPE if desired to */
 		if(enginedata->safeeval){
 			CONSOLE_DEBUG("SETTING TO IGNORE SIGFPE...");
-			Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
+			Asc_SignalHandlerPush(SIGFPE,SIG_DFL);
 		}else{
 # ifdef FEX_DEBUG
 			CONSOLE_DEBUG("SETTING TO CATCH SIGFPE...");
@@ -787,7 +787,7 @@ int integrator_ida_solve(
 		}
 
 		if(enginedata->safeeval){
-			Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
+			Asc_SignalHandlerPop(SIGFPE,SIG_DFL);
 		}else{
 			CONSOLE_DEBUG("pop...");
 			Asc_SignalHandlerPopDefault(SIGFPE);
@@ -1729,21 +1729,25 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 
 	/* if(integrator_sort_obs_vars(sys))return 10; */
 
-	fprintf(fp,"CONTENTS OF THE 'Y' AND 'YDOT' LISTS\n\n");
-	fprintf(fp,"index\ty\tydot\n");
-	fprintf(fp,"-----\t-----\t-----\n");
-	for(i=0;i<sys->n_y;++i){
-		varname = var_make_name(sys->system, sys->y[i]);
-		fprintf(fp,"%ld\t%s\t",i,varname);
-		if(sys->ydot[i]){
-			ASC_FREE(varname);
-			varname = var_make_name(sys->system, sys->ydot[i]);
-			fprintf(fp,"%s\n",varname);
-			ASC_FREE(varname);
-		}else{
-			fprintf(fp,".\n");
-			ASC_FREE(varname);
+	if(sys->y && sys->ydot){
+		fprintf(fp,"CONTENTS OF THE 'Y' AND 'YDOT' LISTS\n\n");
+		fprintf(fp,"index\ty\tydot\n");
+		fprintf(fp,"-----\t-----\t-----\n");
+		for(i=0;i<sys->n_y;++i){
+			varname = var_make_name(sys->system, sys->y[i]);
+			fprintf(fp,"%ld\t%s\t",i,varname);
+			if(sys->ydot[i]){
+				ASC_FREE(varname);
+				varname = var_make_name(sys->system, sys->ydot[i]);
+				fprintf(fp,"%s\n",varname);
+				ASC_FREE(varname);
+			}else{
+				fprintf(fp,".\n");
+				ASC_FREE(varname);
+			}
 		}
+	}else{
+		fprintf(fp,"'Y' and 'YDOT' LISTS ARE NOT SET!\n");
 	}
 
 	fprintf(fp,"\n\nCONTENTS OF THE VAR_FLAGS AND VAR_SINDEX\n\n");
