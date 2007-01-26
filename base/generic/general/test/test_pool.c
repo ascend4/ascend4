@@ -27,7 +27,6 @@
 #include <general/pool.h>
 #include <general/list.h>
 #include "CUnit/CUnit.h"
-#include "test_pool.h"
 
 static void test_pool(void)
 {

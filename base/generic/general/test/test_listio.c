@@ -31,7 +31,6 @@
 #include <general/listio.h>
 #include "CUnit/CUnit.h"
 #include "assertimpl.h"
-#include "test_listio.h"
 #include "redirectStdStreams.h"
 
 /*

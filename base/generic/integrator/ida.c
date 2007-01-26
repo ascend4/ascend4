@@ -92,9 +92,9 @@
 # error "Failed to include ASCEND IDA header file"
 #endif
 
-/* #define FEX_DEBUG */
+#define FEX_DEBUG
 #define JEX_DEBUG
-/* #define DJEX_DEBUG */
+#define DJEX_DEBUG
 #define SOLVE_DEBUG
 #define STATS_DEBUG
 #define PREC_DEBUG

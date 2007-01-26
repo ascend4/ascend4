@@ -30,7 +30,6 @@
 #include <general/table.h>
 #include "CUnit/CUnit.h"
 #include "assertimpl.h"
-#include "test_table.h"
 
 /* transform function used in test_list(). */
 static

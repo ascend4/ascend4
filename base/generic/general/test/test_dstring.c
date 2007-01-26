@@ -27,7 +27,6 @@
 #include <general/dstring.h>
 #include <utilities/ascMalloc.h>
 
-#include "test_dstring.h"
 #include <assertimpl.h>
 
 static void test_dstring(void)
