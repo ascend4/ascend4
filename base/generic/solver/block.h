@@ -37,6 +37,10 @@
 #include <stdio.h>
 #include <linear/mtx_reorder.h>
 
+#include "var.h"
+#include "rel.h"
+
+
 /**	@addtogroup system System
 	@{
 */
@@ -155,7 +159,7 @@ extern int slv_tear_drop_reorder_block(slv_system_t sys,
 	@return ???
  */
 
-extern int block_debug(slv_system_t sys, FILE *fp);
+extern int system_block_debug(slv_system_t sys, FILE *fp);
 /**<
 	Create debug output detailing the current block structure of the system.
 */
@@ -164,12 +168,19 @@ extern int block_debug(slv_system_t sys, FILE *fp);
   PARTITIONING FOR DAE SYSTEMS
 */
 
-int block_sort_dae_rels_and_vars(slv_system_t sys, long *nvars);
+int system_cut_vars(slv_system_t sys, const int start, const var_filter_t *vfilt, int *nvars);
 /**
-	Moves the active incident non-fixed non-derivative solver_vars to the start
-	and the others are jumbled up at the end.
-	Likewise moves active included equalities to the start and the rest to the
-	end.
+	We start at position 'start' in the solver's var list. Any variable 
+	that does not meet the filter 'vfilt' is moved to the back, and any
+	var that does stays. The number nvars of vars meeting the filter is returned.
+
+	Afterwards, we have start vars left as-is, followed by the nvars vars that
+	meed vfilt, followed by all remaining vars in the solvers var list.
 */
-	
+
+
+int system_cut_rels(slv_system_t sys, const int start, const rel_filter_t *rfilt, int *nrels);
+/**
+	@see system_cut_vars. Same, but for rels.
+*/
 #endif

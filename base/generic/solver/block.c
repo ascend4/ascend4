@@ -966,7 +966,7 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
   instead of just numbers *)
 */
 
-extern int block_debug(slv_system_t sys, FILE *fp){
+extern int system_block_debug(slv_system_t sys, FILE *fp){
 	int i,j,nr,nc;
 	dof_t *dof;
 	char *relname, *varname;
@@ -1026,100 +1026,90 @@ extern int block_debug(slv_system_t sys, FILE *fp){
 */
 
 /**
-	Put our derivatives at the end with all the other guff. We don't care
-	too much about the order of the guff though, so keep it simple for now.
-
-	@return 0 on success
+	This macro will generate 'var_list_debug(sys)' and 'rel_list_debug(sys)'
+	and maybe other useful things if you're lucky.
 */
-int block_sort_dae_rels_and_vars(slv_system_t sys, long *nvars){
-	struct rel_relation **rp, **rtmp, *rel;	 rel_filter_t rf;
-	struct var_variable **vp, **vtmp, *var;  var_filter_t vf;
-	int rlen,vlen;
-	int start, end, i;
-	char *varname;
-
-	asc_assert(sys);
-	asc_assert(nvars);
-
-	/* allocate working space  */
-	rp = slv_get_solvers_rel_list(sys);
-	rlen = slv_get_num_solvers_rels(sys);
-	if(rlen==0){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"There are no relations!");
-		return -1;
+#define LIST_DEBUG(TYPE,FULLTYPE) \
+	static void TYPE##_list_debug(slv_system_t sys){ \
+		struct FULLTYPE **list; \
+		int n, i; \
+		n = slv_get_num_solvers_##TYPE##s(sys); \
+		list = slv_get_solvers_##TYPE##_list(sys); \
+	 \
+		CONSOLE_DEBUG("printing " #TYPE " list"); \
+		char *name; \
+		for(i=0;i<n;++i){ \
+			name = TYPE##_make_name(sys,list[i]); \
+			fprintf(stderr,"%d: %s\n",i,name); \
+			ASC_FREE(name); \
+		} \
+		fprintf(stderr,"-----\n\n"); \
 	}
 
-	vp = slv_get_solvers_var_list(sys);
-	vlen = slv_get_num_solvers_vars(sys);
-	if(vlen==0){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"There are no variables!");
-		return -2;
-	}
+LIST_DEBUG(var,var_variable)
+LIST_DEBUG(rel,rel_relation)
 
-	CONSOLE_DEBUG("vlen = %d, rlen = %d", vlen,rlen);
+/**
+	This is a big durtie macro to perform cuts on our solvers_*_lists.
+	The function will start at position 'begin' and move through all elements
+	of the list from that point to the end. Any items matching the filter are
+	moved to the start of the range traversed. At the end, the number of
+	items matching the filter is returned in 'numgood'.
+*/
+#define SYSTEM_CUT_LIST(TYPE,FULLTYPE) \
+	int system_cut_##TYPE##s(slv_system_t sys, const int begin, const TYPE##_filter_t *filt, int *numgood){ \
+		struct FULLTYPE **list, **start, **end, *swap; \
+		int len, i; \
+		char *name; \
+	 \
+		asc_assert(filt); \
+	 \
+		TYPE##_list_debug(sys); \
+	 \
+		list = slv_get_solvers_##TYPE##_list(sys); \
+		len = slv_get_num_solvers_##TYPE##s(sys); \
+		if(len==0){ \
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"There are no " #TYPE "s!"); \
+			return 1; \
+		} \
+	 \
+		CONSOLE_DEBUG("SORTING"); \
+	 \
+		start = list + begin; \
+		end = list + len; \
+		while(start < end){ \
+			if(TYPE##_apply_filter(*start,filt)){ \
+				start++; continue; \
+			} \
+			if(!TYPE##_apply_filter(*(--end),filt))continue; \
+			swap = *end; \
+			*end = *start; \
+			*start = swap; \
+			start++; \
+		} \
+	 \
+		TYPE##_list_debug(sys); \
+	 \
+		CONSOLE_DEBUG("UPDATING"); \
+	 \
+		/* update the sindex for each after start */ \
+		*numgood = 0; \
+		for(i=begin;i<len;++i){ \
+			name = TYPE##_make_name(sys,list[i]); \
+			if(TYPE##_apply_filter(list[i],filt)){ \
+				CONSOLE_DEBUG("%s: good",name); \
+				(*numgood)++; \
+			}else{ \
+				CONSOLE_DEBUG("%s: bad",name); \
+			} \
+			ASC_FREE(name); \
+			TYPE##_set_sindex(list[i],i); \
+		} \
+		CONSOLE_DEBUG("numgood = %d",*numgood); \
+		 \
+		return 0; \
+	} 
 
-	rtmp = ASC_NEW_ARRAY(struct rel_relation *,rlen); 
-	if(!rtmp)return 1;
+SYSTEM_CUT_LIST(var,var_variable);
+SYSTEM_CUT_LIST(rel,rel_relation);
 
-	vtmp = ASC_NEW_ARRAY(struct var_variable *,vlen);
-	if(!vtmp){
-		ASC_FREE(rtmp); 
-		return 2;
-	}
-
-	/* set up filters */
-	rf = (rel_filter_t){ REL_INCLUDED | REL_EQUALITY | REL_ACTIVE
-	                   , REL_INCLUDED | REL_EQUALITY | REL_ACTIVE };
-
-	vf = (var_filter_t){ VAR_INCIDENT |VAR_SVAR |VAR_FIXED |VAR_ACTIVE |VAR_DERIV
-	                   , VAR_INCIDENT |VAR_SVAR |0         |VAR_ACTIVE |0 };
-
-  	/* add rels into working space, with those failing the filter at end */
-	start  = 0;    /* start of the working area */
-	end = rlen;    /* just beyond the end of the working area*/
-	for(i=0; i < rlen; ++i){
-		rel = rp[i];
-		if(rel_apply_filter(rel,&rf)){
-		    rtmp[start++] = rel;
-		}else{
-		    rtmp[--end] = rel;
-		}
-	}
-
-	CONSOLE_DEBUG("Moved %d rels to start",start);
-	
-	/* the same with the vars */
-	start = 0;
-	end = vlen;
-	for(i=0; i < vlen; ++i){
-		var = vp[i];
-		if(var_apply_filter(var,&vf)){
-			vtmp[start++] = var;
-		}else{
-			vtmp[--end] = var;
-		}
-	}
-
-	CONSOLE_DEBUG("Moved %d vars to start",start);
-	*nvars = start;
-
-	/* update the solver's lists, and fix the sindex fields */
-	for(i=0; i<vlen; ++i){
-		vp[i] = vtmp[i];
-		var_set_sindex(vp[i],i);
-		varname = var_make_name(sys,vp[i]);
-		CONSOLE_DEBUG("sindex for '%s' = %d",varname,i);
-		ASC_FREE(varname);
-	}
-	for(i=0; i<rlen; ++i){
-		rp[i] = rtmp[i];
-		rel_set_sindex(rp[i],i);
-	}
-
-	/* sort the diffvars struct to reflect this order */
-	analyse_diffvars_sort(sys);
-
-	ASC_FREE(vtmp);
-	ASC_FREE(rtmp);
-	return 0;
-}

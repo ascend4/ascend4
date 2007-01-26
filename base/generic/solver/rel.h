@@ -393,7 +393,7 @@ ASC_DLLSPEC const struct var_variable**rel_incidence_list(struct rel_relation *r
 */
 
 ASC_DLLSPEC int32 rel_apply_filter(const struct rel_relation *rel,
-                              rel_filter_t *filter);
+                              const rel_filter_t *filter);
 /**<
  *  Returns 1 only if all of the positions specified in
  *  filter->matchbits have the same values in

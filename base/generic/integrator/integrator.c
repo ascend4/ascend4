@@ -144,6 +144,7 @@ IntegratorSystem *integrator_new(slv_system_t slvsys, struct Instance *inst){
 	sys->y = NULL;
 	sys->ydot = NULL;
 	sys->obs = NULL;
+	sys->n_y = 0;
 	return sys;
 }
 

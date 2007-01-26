@@ -362,7 +362,7 @@ void rel_set_included( struct rel_relation *rel, uint32 included){
 	rel_set_flagbit(rel,REL_INCLUDED,included);
 }
 
-int32 rel_apply_filter( const struct rel_relation *rel, rel_filter_t *filter){
+int32 rel_apply_filter( const struct rel_relation *rel, const rel_filter_t *filter){
   if (rel==NULL || filter==NULL) {
     FPRINTF(stderr,"rel_apply_filter miscalled with NULL\n");
     return FALSE;
