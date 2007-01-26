@@ -244,15 +244,42 @@ int analyse_diffvars_debug(slv_system_t sys,FILE *fp){
 typedef int CmpFn(const void *,const void *);
 /**
 	Comparison function for use by analyse_diffvars_sort.
+	All we're trying to do is to reproduce the ordering in var_sindex, so
+	no need to actually look at the flags.
 */
 static int analyse_diffvars_cmp(const SolverDiffVarSequence *a, const SolverDiffVarSequence *b){
+	const struct var_variable *va;
+	const struct var_variable *vb;
 	int ia;
 	int ib;
+#if 0
+	int aok;
+
+	var_filter_t vf = {VAR_FIXED|VAR_INCIDENT|VAR_ACTIVE|VAR_SVAR|VAR_DERIV
+	                  ,0        |VAR_INCIDENT|VAR_ACTIVE|VAR_SVAR|0 };
+#endif
+
 	asc_assert(a->n >= 1);
 	asc_assert(b->n >= 1);
 
-	ia = var_sindex(a->vars[0]);
-	ib = var_sindex(b->vars[0]);
+	va = a->vars[0];
+	vb = b->vars[0];
+
+#if 0
+	aok = var_apply_filter(va,&vf);
+	if(var_apply_filter(vb,&vf)){
+		if(!aok){
+			/* 'b' better */
+			return 1;
+		}
+	}else if(aok){
+		/* 'a' better */
+		return -1;
+	}
+#endif
+
+	ia = var_sindex(va);
+	ib = var_sindex(vb);
 
 	if(ia<ib)return -1;
 	if(ia==ib)return 0;

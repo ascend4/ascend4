@@ -32,7 +32,7 @@ if solver_env.get('WITH_IDA'):
 		, LIBS=[solver_env.get('IDA_LIB')]
 	)
 
-	idasrcs = ['ida.c','idalinear.c']
+	idasrcs = ['ida.c','idalinear.c', 'idaanalyse.c']
 	for s in idasrcs:
 		objs += sundials_env.SharedObject(s)
 else:
