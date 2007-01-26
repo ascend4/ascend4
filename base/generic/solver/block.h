@@ -164,7 +164,7 @@ extern int block_debug(slv_system_t sys, FILE *fp);
   PARTITIONING FOR DAE SYSTEMS
 */
 
-int block_sort_dae_rels_and_vars(slv_system_t sys);
+int block_sort_dae_rels_and_vars(slv_system_t sys, long *nvars);
 /**
 	Moves the active incident non-fixed non-derivative solver_vars to the start
 	and the others are jumbled up at the end.

@@ -35,7 +35,7 @@
 
 #ifdef ASC_IDA_NEW_ANALYSE
 
-const SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys){
+SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys){
 	return (SolverDiffVarCollection *)slv_get_diffvars(sys);
 }
 
@@ -218,5 +218,57 @@ int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 
 	return 0;
 }
+
+
+int analyse_diffvars_debug(slv_system_t sys,FILE *fp){
+	int i, j;
+	char *varname;
+	const SolverDiffVarCollection *diffvars;
+	SolverDiffVarSequence seq;
+	diffvars = analyse_get_diffvars(sys);
+
+	for(i=0; i<diffvars->nseqs;++i){
+		seq = diffvars->seqs[i];
+		fprintf(fp,"%d: ",i);
+		for(j=0; j<seq.n; ++j){
+			if(j)fprintf(fp," <-- ");
+			varname = var_make_name(sys,seq.vars[j]);
+			fprintf(fp,"%d:'%s'",var_sindex(seq.vars[j]),varname);
+			ASC_FREE(varname);
+		}
+		fprintf(fp,"\n");
+	}
+	return 0;
+}
+
+typedef int CmpFn(const void *,const void *);
+/**
+	Comparison function for use by analyse_diffvars_sort.
+*/
+static int analyse_diffvars_cmp(const SolverDiffVarSequence *a, const SolverDiffVarSequence *b){
+	int ia;
+	int ib;
+	asc_assert(a->n >= 1);
+	asc_assert(b->n >= 1);
+
+	ia = var_sindex(a->vars[0]);
+	ib = var_sindex(b->vars[0]);
+
+	if(ia<ib)return -1;
+	if(ia==ib)return 0;
+
+	return 1;
+}
+
+int analyse_diffvars_sort(slv_system_t sys){
+	int i, j;
+	char *varname;
+	const SolverDiffVarCollection *diffvars;
+	SolverDiffVarSequence seq;
+	diffvars = analyse_get_diffvars(sys);
+
+	qsort(diffvars->seqs,diffvars->nseqs,sizeof(SolverDiffVarSequence),(CmpFn*)(&analyse_diffvars_cmp));
+}
+
 
 #endif

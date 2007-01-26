@@ -82,7 +82,7 @@ Library::Library(const char *defaultpath){
 }
 
 Library::~Library(){
-	//ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"DESTROYED LIBRARY!");
+	ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"DESTROYED LIBRARY!////////////////////////////////////////");
 	//DestroyLibrary();
 	// ... need to use some kind of reference counting before you can do that...
 }
