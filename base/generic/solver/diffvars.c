@@ -226,7 +226,10 @@ int analyse_diffvars_debug(slv_system_t sys,FILE *fp){
 	const SolverDiffVarCollection *diffvars;
 	SolverDiffVarSequence seq;
 	diffvars = analyse_get_diffvars(sys);
-
+	if(diffvars==NULL){
+		fprintf(fp,"NO DIFFVARS (NULL)");
+		return 0;
+	}
 	for(i=0; i<diffvars->nseqs;++i){
 		seq = diffvars->seqs[i];
 		fprintf(fp,"%d: ",i);
