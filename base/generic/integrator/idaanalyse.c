@@ -40,8 +40,10 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 	int n_y = 0;
 	int i, j;
 	struct var_variable *v;
-
 	SolverDiffVarSequence seq;
+
+	CONSOLE_DEBUG("BEFORE CHECKING VARS");
+	integrator_ida_analyse_debug(sys,stderr);
 
 	/* we shouldn't have allocated these yet: just be sure */
 	asc_assert(sys->y==NULL);
@@ -57,6 +59,11 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 	
 	/* add the variables from the derivative chains */
 	for(i=0; i<diffvars->nseqs; ++i){
+
+
+		CONSOLE_DEBUG("BEFORE CHAIN %d",i);
+		integrator_ida_analyse_debug(sys,stderr);
+
 		seq = diffvars->seqs[i];
 		asc_assert(seq.n >= 1);
 		v = seq.vars[0];
@@ -70,7 +77,7 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 				var_set_value(v,0);
 				varname = var_make_name(sys->system,v);				
 				CONSOLE_DEBUG("Derivative '%s' SET ZERO AND INACTIVE",varname);
-				ASC_FREE(v);
+				ASC_FREE(varname);
 			}
 			continue;
 		}
@@ -114,6 +121,10 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 
 	CONSOLE_DEBUG("Found %d good non-derivative vars", n_y);
 	sys->n_y = n_y;
+
+	CONSOLE_DEBUG("AFTER CHECKING VARS");
+	integrator_ida_analyse_debug(sys,stderr);
+
 	return 0;
 }
 
@@ -124,6 +135,10 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 */
 static int integrator_ida_sort_rels_and_vars(IntegratorSystem *sys){
 	int ny1, nydot, nr;
+
+
+	CONSOLE_DEBUG("BEFORE SORTING RELS AND VARS");
+	integrator_ida_analyse_debug(sys,stderr);
 
 	/* we should not have allocated y or ydot yet */
 	asc_assert(sys->y==NULL && sys->ydot==NULL);
@@ -176,12 +191,16 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	const SolverDiffVarCollection *diffvars;
 	int i, j;
 	struct var_variable *v;
+	char *varname;
 
 	SolverDiffVarSequence seq;
 
 	asc_assert(sys->y==NULL);
 	asc_assert(sys->ydot==NULL);
 	asc_assert(sys->y_id== NULL);
+
+	CONSOLE_DEBUG("BEFORE MAKING LISTS");
+	integrator_ida_analyse_debug(sys,stderr);
 
 	/* get the the dervative chains from the system */
 	diffvars = slv_get_diffvars(sys->system);
@@ -196,19 +215,39 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	sys->ydot = ASC_NEW_ARRAY_CLEAR(struct var_variable *,sys->n_y);
 	j = 0;
 
+	CONSOLE_DEBUG("Passing through chains...");
+
 	/* add the variables from the derivative chains */
 	for(i=0; i<diffvars->nseqs; ++i){
+
+		CONSOLE_DEBUG("i = %d",i);
+			
 		seq = diffvars->seqs[i];
 		asc_assert(seq.n >= 1);
 		v = seq.vars[0];
+
+		varname = var_make_name(sys->system, v);
+		CONSOLE_DEBUG("alg '%s'",varname);
+		ASC_FREE(varname);
+
+
 		if(!var_apply_filter(v,&integrator_ida_nonderiv)){
 			continue;
 		}
 
+		varname = var_make_name(sys->system, v);
+		CONSOLE_DEBUG("alg '%s' is GOOD",varname);
+		ASC_FREE(varname);
+
 		if(seq.n > 1 && var_apply_filter(seq.vars[1],&integrator_ida_deriv)){
-			asc_assert(var_sindex(seq.vars[1])-sys->n_y >= 0);
+			asc_assert(var_sindex(seq.vars[1]) >= sys->n_y);
 			asc_assert(var_sindex(seq.vars[1])-sys->n_y < sys->n_y);
-			sys->y_id[var_sindex(seq.vars[1])-sys->n_y] = j;
+
+			varname = var_make_name(sys->system, seq.vars[1]);
+			CONSOLE_DEBUG("diff '%s' IS GOOD",varname);
+			ASC_FREE(varname);
+
+			sys->y_id[var_sindex(seq.vars[1]) - sys->n_y] = j;
 			sys->ydot[j] = seq.vars[1];
 		}else{
 			asc_assert(sys->ydot[j]==NULL);
@@ -217,6 +256,9 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 		sys->y[j] = v;
 		j++;
 	}
+
+	CONSOLE_DEBUG("AFTER MAKING LISTS");
+	integrator_ida_analyse_debug(sys,stderr);
 
 	return 0;
 }
@@ -545,6 +587,10 @@ int integrator_ida_diffindex(const IntegratorSystem *sys, const struct var_varia
 }
 
 
+/**
+	This function will output the data structures provided to use BY THE
+	SYSTEM -- not the ones we're working with here IN THE SOLVER.
+*/
 int integrator_ida_analyse_debug(const IntegratorSystem *sys,FILE *fp){
 	return analyse_diffvars_debug(sys->system,fp);
 }
