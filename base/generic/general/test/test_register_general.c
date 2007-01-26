@@ -25,40 +25,22 @@
 #include <utilities/ascConfig.h>
 #include "test_register_general.h"
 
-#include "test_dstring.h"
-#include "test_hashpjw.h"
-#include "test_list.h"
-#include "test_listio.h"
-#include "test_pool.h"
-#include "test_pretty.h"
-#include "test_stack.h"
-#include "test_table.h"
-#include "test_tm_time.h"
 
-#define REGISTER(NAME) \
+#define PROTO_GENERAL(NAME) PROTO(general,NAME)
+TESTS(PROTO_GENERAL)
+#undef PROTO_GENERAL
+
+#define REGISTER_TEST(NAME) \
 	result = test_register_general_##NAME(); \
 	if(CUE_SUCCESS!=result){ \
 		return result; \
-	} \
+	}
 
+#define REGISTER_SUITE(SUITENAME,TESTS) \
+	CU_ErrorCode test_register_##SUITENAME(void){ \
+		CU_ErrorCode result = CUE_SUCCESS; \
+		TESTS(REGISTER_TEST) \
+		return result; \
+	}	
 
-CU_ErrorCode test_register_general(void){
-
-	CU_ErrorCode result = CUE_SUCCESS;
-
-	/* for new tests, add the test registration call to the following sequence: */
-
-	REGISTER(dstring)
-	REGISTER(hashpjw)
-	REGISTER(list)
-	REGISTER(listio)
-	REGISTER(pool)
-	REGISTER(pretty)
-	REGISTER(stack)
-	REGISTER(table)
-	REGISTER(tm_time)
-	REGISTER(ospath)
-
-	return result;
-}
-
+REGISTER_SUITE(general,TESTS)

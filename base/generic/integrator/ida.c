@@ -69,6 +69,7 @@
 
 #include <solver/slv_client.h>
 #include <solver/relman.h>
+#include <solver/block.h>
 
 #include "idalinear.h"
 #include "idaanalyse.h"
@@ -196,10 +197,10 @@ typedef struct IntegratorIdaStatsStruct{
 } IntegratorIdaStats;
 
 typedef void (IntegratorVarVisitorFn)(IntegratorSystem *sys, struct var_variable *var, const int *varindx);
-static IntegratorVarVisitorFn integrator_dae_classify_var;
 
+/*static IntegratorVarVisitorFn integrator_dae_classify_var;
 static void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
-static void integrator_dae_show_var(IntegratorSystem *sys, struct var_variable *var, const int *varindx);
+static void integrator_dae_show_var(IntegratorSystem *sys, struct var_variable *var, const int *varindx); */
 
 int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
 void integrator_ida_write_stats(IntegratorIdaStats *stats);
@@ -479,13 +480,16 @@ int integrator_ida_solve(
 	enginedata->bndlist = slv_get_solvers_bnd_list(blsys->system);
 
 	CONSOLE_DEBUG("Number of relations: %d",enginedata->nrels);
-	CONSOLE_DEBUG("Number of dependent vars: %ld",blsys->n_y);
+	CONSOLE_DEBUG("Number of dependent vars: %d",blsys->n_y);
 	size = blsys->n_y;
 
 	if(enginedata->nrels!=size){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration problem is not square (%d rels, %d vars)", enginedata->nrels, size);
 		return 1; /* failure */
 	}
+
+
+	integrator_ida_debug(blsys,stderr);
 
 	/* retrieve initial values from the system */
 
@@ -1721,7 +1725,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	long vlen, rlen;
 	long i;
 
-	fprintf(fp,"THERE ARE %ld VARIABLES IN THE INTEGRATION SYSTEM\n\n",sys->n_y);
+	fprintf(fp,"THERE ARE %d VARIABLES IN THE INTEGRATION SYSTEM\n\n",sys->n_y);
 
 	/* if(integrator_sort_obs_vars(sys))return 10; */
 
@@ -1801,7 +1805,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	fprintf(fp,"\n");
 	
 	/* and lets write block debug output */
-	block_debug(sys->system, fp);
+	system_block_debug(sys->system, fp);
 		
 	return 0; /* success */
 }

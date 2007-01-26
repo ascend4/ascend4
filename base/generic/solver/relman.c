@@ -54,6 +54,8 @@
 
 #include "slv_server.h"
 
+/* #define DIFF_DEBUG */
+
 #define IPTR(i) ((struct Instance *)(i))
 
 #define KILL 0 /* compile dead code if kill = 1 */
@@ -535,7 +537,9 @@ int relman_diff3(struct rel_relation *rel, var_filter_t *filter,
   assert(gradient !=NULL);
   *count = 0;
   if(safe){
+#ifdef DIFF_DEBUG
 	CONSOLE_DEBUG("SAFE EVALUATION");
+#endif
     status =(int32)RelationCalcGradientSafe(rel_instance(rel),gradient);
     safe_error_to_stderr( (enum safe_err *)&status );
     /* always map when using safe functions */
@@ -550,7 +554,9 @@ int relman_diff3(struct rel_relation *rel, var_filter_t *filter,
 	/* CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status); */
 	return status;
   }else{
+#ifdef DIFF_DEBUG
 	CONSOLE_DEBUG("UNSAFE EVALUATION");
+#endif
     if((status=RelationCalcGradient(rel_instance(rel),gradient)) == 0) {
       /* successful */
       for (c=0; c < len; c++) {

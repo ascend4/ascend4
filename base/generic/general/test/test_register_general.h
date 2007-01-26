@@ -28,17 +28,33 @@
  *  </pre>
  */
 
-#ifndef TEST_REGISTER_GENERAL_H_SEEN
-#define TEST_REGISTER_GENERAL_H_SEEN
+#define SUITE general
+
+#define TESTS(T) \
+	T(dstring) \
+	T(hashpjw) \
+	T(list) \
+	T(listio) \
+	T(pool) \
+	T(pretty) \
+	T(stack) \
+	T(table) \
+	T(tm_time) \
+	T(ospath)
+/* 	T(qsort1) */
+
+#define PROTO(SUITE,NAME) CU_ErrorCode test_register_##SUITE##_##NAME(void);
+
+
+#define PROTO_SUITE(SUITE) CU_ErrorCode test_register_##SUITE(void)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-CU_ErrorCode test_register_general(void);
+PROTO_SUITE(SUITE);
 /**< 
  *  Registers all tests for the ASCEND general component.
  *  Returns a CUnit error code (CUE_SUCCESS if no errors).
  */
 
-#endif  /* TEST_REGISTER_GENERAL_H_SEEN */

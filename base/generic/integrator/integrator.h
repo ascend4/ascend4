@@ -272,10 +272,10 @@ struct IntegratorSystemStruct{
   struct var_variable **obs;  /**< array form of observed variables */
   int *y_id;                 /**< array form of y/ydot user indices, for DAEs we use negatives here for derivative vars */
   int *obs_id;               /**< array form of obs user indices */
-  long n_y;
-  long n_ydot;
-  long n_obs;
-  long currentstep;           /**< current step number (also @see integrator_getnsamples) */
+  int n_y;
+  int n_ydot;
+  int n_obs;
+  int currentstep;           /**< current step number (also @see integrator_getnsamples) */
 
   /** @TODO move the following to the 'params' structure? Or maybe better not to? */
   int maxsubsteps;               /**< most steps between mesh poins */
