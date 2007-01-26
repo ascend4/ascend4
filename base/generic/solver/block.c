@@ -1030,7 +1030,7 @@ extern int system_block_debug(slv_system_t sys, FILE *fp){
 	and maybe other useful things if you're lucky.
 */
 #define LIST_DEBUG(TYPE,FULLTYPE) \
-	static void TYPE##_list_debug(slv_system_t sys){ \
+	void system_##TYPE##_list_debug(slv_system_t sys){ \
 		struct FULLTYPE **list; \
 		int n, i; \
 		n = slv_get_num_solvers_##TYPE##s(sys); \
@@ -1066,7 +1066,7 @@ LIST_DEBUG(rel,rel_relation)
 	 \
 		asc_assert(filt); \
 	 \
-		TYPE##_list_debug(sys); \
+		system_##TYPE##_list_debug(sys); \
 	 \
 		list = slv_get_solvers_##TYPE##_list(sys); \
 		len = slv_get_num_solvers_##TYPE##s(sys); \
@@ -1090,7 +1090,7 @@ LIST_DEBUG(rel,rel_relation)
 			start++; \
 		} \
 	 \
-		TYPE##_list_debug(sys); \
+		system_##TYPE##_list_debug(sys); \
 	 \
 		CONSOLE_DEBUG("UPDATING"); \
 	 \

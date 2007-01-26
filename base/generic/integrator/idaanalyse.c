@@ -15,9 +15,19 @@ static int integrator_ida_check_partitioning(IntegratorSystem *sys);
 static int integrator_ida_check_diffindex(IntegratorSystem *sys);
 static int integrator_ida_rebuild_diffindex(IntegratorSystem *sys);
 
+/**
+	A var can be non-incident. If it *is* non incident and we're going to
+	keep it, it will have to have derivative that *is* incident, and that
+	meets the following filter.
+
+	If it doesn't have a valid derivative (eg the derivative is fixed, or
+	the variable doesn't HAVE a derivative), we will mark the non-deriv
+	var non-ACTIVE, so anyway it will end up meeting this filter after we've
+	run	integrator_ida_check_vars.
+*/
 const var_filter_t integrator_ida_nonderiv = {
-	VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | VAR_FIXED | VAR_DERIV,
-	VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | 0         | 0
+	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV,
+	VAR_SVAR | VAR_ACTIVE | 0         | 0
 };
 
 const var_filter_t integrator_ida_deriv = {
@@ -36,11 +46,17 @@ const rel_filter_t integrator_ida_rel = {
 */
 static int integrator_ida_check_vars(IntegratorSystem *sys){
 	const SolverDiffVarCollection *diffvars;
-	char *varname, *derivname;
+	char *varname;
 	int n_y = 0;
 	int i, j;
 	struct var_variable *v;
 	SolverDiffVarSequence seq;
+	int vok;
+
+#define VARMSG(MSG) \
+	varname = var_make_name(sys->system,v); \
+	CONSOLE_DEBUG(MSG,varname); \
+	ASC_FREE(varname)
 
 	CONSOLE_DEBUG("BEFORE CHECKING VARS");
 	integrator_ida_analyse_debug(sys,stderr);
@@ -56,35 +72,43 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Derivative structure is empty");
 		return 1;
 	}
+
+	system_var_list_debug(sys->system);
 	
 	/* add the variables from the derivative chains */
 	for(i=0; i<diffvars->nseqs; ++i){
-
-
-		CONSOLE_DEBUG("BEFORE CHAIN %d",i);
-		integrator_ida_analyse_debug(sys,stderr);
-
 		seq = diffvars->seqs[i];
 		asc_assert(seq.n >= 1);
 		v = seq.vars[0];
-		if(!var_apply_filter(v,&integrator_ida_nonderiv)){
-			varname = var_make_name(sys->system,v);
-			CONSOLE_DEBUG("'%s' fails non-deriv filter",varname);
-			ASC_FREE(varname);			
+
+		vok = var_apply_filter(v,&integrator_ida_nonderiv);
+
+		if(vok && !var_incident(v)){
+			VARMSG("good var '%s' is not incident");
+			/* var meets our filter, but perhaps it's not incident? */
+			if(seq.n == 1 || var_apply_filter(seq.vars[1],&integrator_ida_nonderiv)){
+				VARMSG("DEACTIVATING NON-INCIDENT VAR '%s' (NO DERIVATIVE)");
+				var_set_active(v,0);
+				vok = 0;
+			}else{
+				VARMSG("'%s' has a derivative that's OK");
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Non-incident var with an incident derivative. ASCEND can't handle this case at the moment, but we hope to fix it.");
+				return 1;
+			}
+		}		
+
+		if(!vok){
+			VARMSG("'%s' fails non-deriv filter");
 			for(j=1;j<seq.n;++j){
 				v = seq.vars[j];
 				var_set_active(v,FALSE);
 				var_set_value(v,0);
-				varname = var_make_name(sys->system,v);				
-				CONSOLE_DEBUG("Derivative '%s' SET ZERO AND INACTIVE",varname);
-				ASC_FREE(varname);
+				VARMSG("Derivative '%s' SET ZERO AND INACTIVE");
 			}
 			continue;
-		}
+		}		
 
-		varname = var_make_name(sys->system,v);
-		CONSOLE_DEBUG("We will use var '%s'",varname);
-		ASC_FREE(varname);
+		VARMSG("We will use var '%s'");
 		if(seq.n > 2){
 			varname = var_make_name(sys->system,v);				
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Too-long derivative chain with var '%s'",varname);
@@ -95,24 +119,16 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 			if(var_apply_filter(seq.vars[1],&integrator_ida_deriv)){
 				/* add the diff & deriv vars to the lists */
 				n_y++;
-				varname = var_make_name(sys->system,v);
-				derivname = var_make_name(sys->system,seq.vars[1]);
-				CONSOLE_DEBUG("Added '%s' and '%s'",varname,derivname);
-				ASC_FREE(varname);
-				ASC_FREE(derivname);
+				VARMSG("Added diff var '%s'");
+				v = seq.vars[1]; VARMSG("and its derivative '%s'");
 				continue;
 			}
-			varname = var_make_name(sys->system,v);
-			derivname = var_make_name(sys->system,seq.vars[1]);
-			CONSOLE_DEBUG("Derivative '%s' of '%s' fails filter; convert '%s' to algebraic",derivname,varname,varname);
-			ASC_FREE(varname);
-			ASC_FREE(derivname);
+			VARMSG("Diff var '%s' being converted to alg var...");
+			v = seq.vars[1]; VARMSG("...because deriv var '%s' fails filter");
 			/* fall through */
 		}
 
-		varname = var_make_name(sys->system,v);
-		CONSOLE_DEBUG("Adding '%s' to algebraic",varname);
-		ASC_FREE(varname);
+		VARMSG("Adding '%s' to algebraic");
 		n_y++;
 	}
 
@@ -121,9 +137,6 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 
 	CONSOLE_DEBUG("Found %d good non-derivative vars", n_y);
 	sys->n_y = n_y;
-
-	CONSOLE_DEBUG("AFTER CHECKING VARS");
-	integrator_ida_analyse_debug(sys,stderr);
 
 	return 0;
 }
@@ -457,7 +470,7 @@ int integrator_ida_block_check(IntegratorSystem *sys){
 	int res;
  	int dof;
 #ifdef ANALYSE_DEBUG
-	long *vlist, *vp, i, nv, nv_ok;
+	int *vlist, *vp, i, nv, nv_ok;
 	char *varname;
 	struct var_variable **solversvars;
 
@@ -468,7 +481,7 @@ int integrator_ida_block_check(IntegratorSystem *sys){
 			
 	nv = slv_get_num_solvers_vars(sys->system);
 	solversvars = slv_get_solvers_var_list(sys->system);
-	CONSOLE_DEBUG("-------------- nv = %ld -------------",nv);
+	CONSOLE_DEBUG("-------------- nv = %d -------------",nv);
 	for(nv_ok=0, i=0; i < nv; ++i){
 		if(var_apply_filter(solversvars[i],&vfilt)){
 			varname = var_make_name(sys->system,solversvars[i]);
@@ -477,7 +490,7 @@ int integrator_ida_block_check(IntegratorSystem *sys){
 			nv_ok++;
 		}
 	}
-	CONSOLE_DEBUG("----------- got %ld ok -------------",nv_ok);
+	CONSOLE_DEBUG("----------- got %d ok -------------",nv_ok);
 #endif
 
 	if(!slvDOF_status(sys->system, &res, &dof)){
