@@ -22,9 +22,9 @@ METHODS
 	METHOD specify;
 		(* nothing here *)
 	END specify;
-END twoderiv;
+END fixedvars;
 
-(* fix y and dy_dt should become inactive. add z so that problem remains square *)
+(* fix y and dy_dt should become inactive *)
 MODEL fixedvars1;
 	y IS_A solver_var;	dy_dt IS_A solver_var;
 	x IS_A solver_var;	dx_dt IS_A solver_var;
@@ -47,7 +47,7 @@ METHODS
 	METHOD specify;
 		FIX y;
 	END specify;
-END twoderiv;
+END fixedvars1;
 
 (* fix dy_dt and problem goes to x,dx_dt,y *)
 MODEL fixedvars2 REFINES fixedvars;
@@ -55,7 +55,7 @@ METHODS
 	METHOD specify;
 		FIX dy_dt;
 	END specify;
-END twoderiv;
+END fixedvars2;
 
 (* fix dx_dt and problem goes to y,dy_dt,x *)
 MODEL fixedvars3 REFINES fixedvars;
@@ -63,4 +63,4 @@ METHODS
 	METHOD specify;
 		FIX dx_dt;
 	END specify;
-END twoderiv;
+END fixedvars3;
