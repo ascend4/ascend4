@@ -822,7 +822,7 @@ class TestIDADENSE(Ascend):
 		I.setEngine('IDA')
 		I.setParameter('calcic','YA_YDP')
 		I.setParameter('linsolver','DENSE')
-		I.setParameter('safeeval',False)
+		I.setParameter('safeeval',True)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLogTimesteps(ascpy.Units("s"), 0.4, 4e10, 11)
 		I.setMaxSubStep(0);

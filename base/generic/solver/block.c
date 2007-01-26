@@ -1031,13 +1031,15 @@ extern int block_debug(slv_system_t sys, FILE *fp){
 
 	@return 0 on success
 */
-int block_sort_dae_rels_and_vars(slv_system_t sys){
+int block_sort_dae_rels_and_vars(slv_system_t sys, long *nvars){
 	struct rel_relation **rp, **rtmp, *rel;	 rel_filter_t rf;
 	struct var_variable **vp, **vtmp, *var;  var_filter_t vf;
 	int rlen,vlen;
 	int start, end, i;
+	char *varname;
 
 	asc_assert(sys);
+	asc_assert(nvars);
 
 	/* allocate working space  */
 	rp = slv_get_solvers_rel_list(sys);
@@ -1099,16 +1101,23 @@ int block_sort_dae_rels_and_vars(slv_system_t sys){
 	}
 
 	CONSOLE_DEBUG("Moved %d vars to start",start);
+	*nvars = start;
 
 	/* update the solver's lists, and fix the sindex fields */
 	for(i=0; i<vlen; ++i){
 		vp[i] = vtmp[i];
 		var_set_sindex(vp[i],i);
+		varname = var_make_name(sys,vp[i]);
+		CONSOLE_DEBUG("sindex for '%s' = %d",varname,i);
+		ASC_FREE(varname);
 	}
 	for(i=0; i<rlen; ++i){
 		rp[i] = rtmp[i];
 		rel_set_sindex(rp[i],i);
 	}
+
+	/* sort the diffvars struct to reflect this order */
+	analyse_diffvars_sort(sys);
 
 	ASC_FREE(vtmp);
 	ASC_FREE(rtmp);

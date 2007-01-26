@@ -97,9 +97,22 @@ typedef struct SolverDiffVarCollectionStruct{
 	Return the SolverDiffVarCollection for the system. You *don't* own the
 	returned list -- it belongs to the slv_system_t.
 */
-extern const SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys);
+extern SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys);
 
 int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob);
+
+/**
+	Write contents of diffvars struct to stream fp
+*/
+int analyse_diffvars_debug(slv_system_t sys,FILE *fp);
+
+
+/**
+	Reorder the diffvars list to match the var_sindex values of the first
+	var in each chain.
+*/
+int analyse_diffvars_sort(slv_system_t sys);
+
 #endif
 
 #endif

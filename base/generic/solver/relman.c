@@ -522,7 +522,7 @@ int relman_diff3(struct rel_relation *rel, var_filter_t *filter,
                  real64 *derivatives, struct var_variable **variables,
 		 int32 *count, int32 safe)
 {
-  const struct var_variable **vlist=NULL;
+  struct var_variable **vlist=NULL;
   real64 *gradient;
   int32 len,c;
   int status;
@@ -535,6 +535,7 @@ int relman_diff3(struct rel_relation *rel, var_filter_t *filter,
   assert(gradient !=NULL);
   *count = 0;
   if(safe){
+	CONSOLE_DEBUG("SAFE EVALUATION");
     status =(int32)RelationCalcGradientSafe(rel_instance(rel),gradient);
     safe_error_to_stderr( (enum safe_err *)&status );
     /* always map when using safe functions */
@@ -549,6 +550,7 @@ int relman_diff3(struct rel_relation *rel, var_filter_t *filter,
 	/* CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status); */
 	return status;
   }else{
+	CONSOLE_DEBUG("UNSAFE EVALUATION");
     if((status=RelationCalcGradient(rel_instance(rel),gradient)) == 0) {
       /* successful */
       for (c=0; c < len; c++) {
