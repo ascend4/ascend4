@@ -30,7 +30,6 @@
 #include <general/stack.h>
 #include "CUnit/CUnit.h"
 #include "assertimpl.h"
-#include "test_stack.h"
 
 /* transform function used in test_stack(). */
 static
