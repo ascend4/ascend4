@@ -34,7 +34,9 @@
 	DERIVATIVES & DIFFERENTIAL VARIABLES
 */
 
-#ifdef ASC_IDA_NEW_ANALYSE
+SolverDiffVarCollection *system_get_diffvars(slv_system_t sys){
+	return sys->diffvars;
+}
 
 static 
 int CmpDiffVars(const struct solver_ipdata *a, const struct solver_ipdata *b){
@@ -242,61 +244,3 @@ int system_diffvars_debug(slv_system_t sys,FILE *fp){
 	return 0;
 }
 
-typedef int CmpFn(const void *,const void *);
-/**
-	Comparison function for use by system_diffvars_sort.
-	All we're trying to do is to reproduce the ordering in var_sindex, so
-	no need to actually look at the flags.
-*/
-static int system_diffvars_cmp(const SolverDiffVarSequence *a, const SolverDiffVarSequence *b){
-	const struct var_variable *va;
-	const struct var_variable *vb;
-	int ia;
-	int ib;
-#if 0
-	int aok;
-
-	var_filter_t vf = {VAR_FIXED|VAR_INCIDENT|VAR_ACTIVE|VAR_SVAR|VAR_DERIV
-	                  ,0        |VAR_INCIDENT|VAR_ACTIVE|VAR_SVAR|0 };
-#endif
-
-	asc_assert(a->n >= 1);
-	asc_assert(b->n >= 1);
-
-	va = a->vars[0];
-	vb = b->vars[0];
-
-#if 0
-	aok = var_apply_filter(va,&vf);
-	if(var_apply_filter(vb,&vf)){
-		if(!aok){
-			/* 'b' better */
-			return 1;
-		}
-	}else if(aok){
-		/* 'a' better */
-		return -1;
-	}
-#endif
-
-	ia = var_sindex(va);
-	ib = var_sindex(vb);
-
-	if(ia<ib)return -1;
-	if(ia==ib)return 0;
-
-	return 1;
-}
-
-int system_diffvars_sort(slv_system_t sys){
-	int i, j;
-	char *varname;
-	const SolverDiffVarCollection *diffvars;
-	SolverDiffVarSequence seq;
-	diffvars = sys->diffvars;
-
-	qsort(diffvars->seqs,diffvars->nseqs,sizeof(SolverDiffVarSequence),(CmpFn*)(&system_diffvars_cmp));
-}
-
-
-#endif

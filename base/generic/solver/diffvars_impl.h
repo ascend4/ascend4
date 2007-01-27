@@ -48,7 +48,7 @@ typedef struct SolverDiffVarSequenceStruct{
 	  - x, dx/dt
       - z, dz/dt
 */
-typedef struct SolverDiffVarCollectionStruct{
+struct SolverDiffVarCollectionStruct{
 	SolverDiffVarSequence *seqs;
 	long nseqs;
 	long nalg;

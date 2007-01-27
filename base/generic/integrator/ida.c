@@ -1776,9 +1776,13 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 			fprintf(fp,"(not incident)\n");
 		}else{
 			if(var_deriv(var)){
-				ASC_FREE(varname);
-				varname = var_make_name(sys->system,vlist[integrator_ida_diffindex(sys,var)]);
-				fprintf(fp,".\tdiff(%d='%s')\n",integrator_ida_diffindex(sys,var),varname);
+				if(sys->y_id){
+					ASC_FREE(varname);
+					varname = var_make_name(sys->system,vlist[integrator_ida_diffindex(sys,var)]);
+					fprintf(fp,".\tdiff(%d='%s')\n",integrator_ida_diffindex(sys,var),varname);
+				}else{
+					fprintf(fp,".\tderiv... of??\n");
+				}
 			}else{
 				fprintf(fp,"%d\t.\n",var_sindex(var));
 			}
