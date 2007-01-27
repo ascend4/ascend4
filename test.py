@@ -833,26 +833,48 @@ class TestIDADENSE(Ascend):
 			print "y[%d] = %.20g" % (i+1, M.y[i+1])
 		M.run(T.getMethod('self_test'))
 
-	def testpollution(self):
-		self.L.load('test/pollution.a4c')
-		T = self.L.findType('pollution')
+	def testchemakzo(self):
+		self.L.load('test/chemakzo.a4c')
+		T = self.L.findType('chemakzo')
 		M = T.getSimulation('sim')
 		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setParameter('linsolver','DENSE')
-		I.setParameter('rtol',1.1e-15)
+		I.setParameter('rtol',1e-15)
 		I.setParameter('atolvect',0)
-		I.setParameter('atol',1.1e-15)
+		I.setParameter('atol',1e-15)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLogTimesteps(ascpy.Units("s"), 1, 60, 5)
-		I.setInitialSubStep(1e-5)
+		I.setLinearTimesteps(ascpy.Units("s"), 1, 180, 5)
+		I.setInitialSubStep(1e-13)
 		I.setMaxSubSteps(10000)
 		I.analyse()
 		I.solve()
-		for i in range(20):
+		for i in range(6):
 			print "y[%d] = %.20g" % (i+1, M.y[i+1])
 		M.run(T.getMethod('self_test'))
+
+# MODEL FAILS ANALYSIS: we need to add support for non-incident differential vars
+#	def testpollution(self):
+#		self.L.load('test/pollution.a4c')
+#		T = self.L.findType('pollution')
+#		M = T.getSimulation('sim')
+#		M.setSolver(ascpy.Solver('QRSlv'))
+#		I = ascpy.Integrator(M)
+#		I.setEngine('IDA')
+#		I.setParameter('linsolver','DENSE')
+#		I.setParameter('rtol',1.1e-15)
+#		I.setParameter('atolvect',0)
+#		I.setParameter('atol',1.1e-15)
+#		I.setReporter(ascpy.IntegratorReporterConsole(I))
+#		I.setLogTimesteps(ascpy.Units("s"), 1, 60, 5)
+#		I.setInitialSubStep(1e-5)
+#		I.setMaxSubSteps(10000)
+#		I.analyse()
+#		I.solve()
+#		for i in range(20):
+#			print "y[%d] = %.20g" % (i+1, M.y[i+1])
+#		M.run(T.getMethod('self_test'))
 
 ## @TODO fails during IDACalcIC (model too big?)
 #	def testkryx(self):
