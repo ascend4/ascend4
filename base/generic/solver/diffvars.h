@@ -56,6 +56,17 @@
 	@{
 */
 
+struct SolverDiffVarCollectionStruct;
+/**<
+	This is the structure that contains the 'derivative chains'. It's opaque
+	when viewed at this level (implementation is in system_impl.h)
+*/
+
+typedef struct SolverDiffVarCollectionStruct SolverDiffVarCollection;
+/**
+	ditto, @see SolverDiffVarCollectionStruct
+*/
+
 /*------------------------------------------------------------------------------
   Stuff for retrieving differential and derivative variables from the system
 */
