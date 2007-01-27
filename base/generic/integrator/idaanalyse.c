@@ -47,6 +47,8 @@ const rel_filter_t integrator_ida_rel = {
 };
 
 /**
+	This is the first step in the DAE analysis process. We inspect the
+	derivative chains from the solver's analyse() routine.
 	Check derivative chains: if a var or derivative is inelligible,
 	follow down the chain fixing & setting zero any derivatives.
 */

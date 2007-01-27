@@ -46,7 +46,9 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/readln.h> /* you wot? */
 
+/* DISABLED -- JP 
 #include <compiler/plot.h>
+*/
 
 #include "slv_client.h"
 #include "calc.h"
@@ -86,7 +88,7 @@
 #define C_ITERATE               22
 #define C_SOLVE                 23
 #define C_DUMP_SYSTEM           25
-#define C_PLOT                  26
+/* #define C_PLOT                  26 */
 
 static struct command_list_t {
    char *name;
@@ -127,8 +129,8 @@ static struct command_list_t {
    { "resolve" , "Re-solves system" , C_RESOLVE } ,
    { "iterate" , "Perform one iteration" , C_ITERATE } ,
    { "solve" , "Attempts to solve entire system" , C_SOLVE } ,
-   { "dump system" , "Dump solve system to a file" , C_DUMP_SYSTEM } ,
-   { "plot" , "Plots the solve instance" , C_PLOT }
+   { "dump system" , "Dump solve system to a file" , C_DUMP_SYSTEM }/* ,
+   { "plot" , "Plots the solve instance" , C_PLOT } */
 };
 #define NCOMMANDS array_length(commands)
 
@@ -780,7 +782,7 @@ static boolean do_command(int command)
          break;
       }
 
-      case C_PLOT: {
+/*      case C_PLOT: {
          char args[50];
          static char plotfilename[] = "~/ascend.plot";
 
@@ -793,8 +795,8 @@ static boolean do_command(int command)
          readln(args,sizeof(args));
          plot_prepare_file(inst,plotfilename);
          PRINTF("Plot left in %s\n",plotfilename);
-         break;
-      }
+         break; 
+      }*/
    }
    return(TRUE);
 }

@@ -1,7 +1,8 @@
 REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 (*
-	Sample problem 'HIRES' from the parallel-IVP-algorithm group of CWI:
+	Sample problem 'HIRES' from the Test Set for IVP Solvers
+
 	'High Irradiance RESponse', from plant physiology, describing how light is
 	involved in morphogenesis.
 
