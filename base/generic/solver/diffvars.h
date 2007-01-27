@@ -76,7 +76,7 @@ typedef struct SolverDiffVarCollectionStruct SolverDiffVarCollection;
 	Return the SolverDiffVarCollection for the system. You *don't* own the
 	returned list -- it belongs to the slv_system_t.
 */
-extern SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys);
+extern SolverDiffVarCollection *system_get_diffvars(slv_system_t sys);
 
 int system_diffvars_build(slv_system_t sys, struct problem_t *prob);
 
