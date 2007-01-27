@@ -103,14 +103,14 @@ METHODS
 	END on_load;
 
 	METHOD self_test;
-		ASSERT abs( y[1] +  0.5562145012262709e-002 ) < 1e-7;
-		ASSERT abs( y[2] -  3.006522471903042 ) < 1e-7;
-		ASSERT abs( y[3] -  2.849958788608128 ) < 1e-7;
-		ASSERT abs( y[4] -  2.926422536206241 ) < 1e-7;
-		ASSERT abs( y[5] -  2.704617865010554 ) < 1e-7;
-		ASSERT abs( y[6] -  2.761837778393145 ) < 1e-6;
-		ASSERT abs( y[7] -  4.770927631616772 ) < 1e-7;
-		ASSERT abs( y[8] -  1.236995868091548 ) < 1e-7;	
+		ASSERT abs( y[1] +  0.5562145012262709e-2 ) < 5e-6;
+		ASSERT abs( y[2] -  3.006522471903042 ) < 5e-6;
+		ASSERT abs( y[3] -  2.849958788608128 ) < 5e-6;
+		ASSERT abs( y[4] -  2.926422536206241 ) < 5e-6;
+		ASSERT abs( y[5] -  2.704617865010554 ) < 5e-6;
+		ASSERT abs( y[6] -  2.761837778393145 ) < 5e-7;
+		ASSERT abs( y[7] -  4.770927631616772 ) < 5e-6;
+		ASSERT abs( y[8] -  1.236995868091548 ) < 5e-6;	
 	END self_test;
 END transamp;
 
