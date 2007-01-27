@@ -222,51 +222,53 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	
 	/* allocate space (more than enough) */
 	sys->y = ASC_NEW_ARRAY(struct var_variable *,sys->n_y);
-	sys->y_id = ASC_NEW_ARRAY_CLEAR(int,sys->n_y);
 	sys->ydot = ASC_NEW_ARRAY_CLEAR(struct var_variable *,sys->n_y);
-	j = 0;
+	sys->n_ydot = 0;
 
 	CONSOLE_DEBUG("Passing through chains...");
 
-	/* add the variables from the derivative chains */
+	/* create the lists y and ydot, ignoring 'bad' vars */
 	for(i=0; i<diffvars->nseqs; ++i){
-
 		CONSOLE_DEBUG("i = %d",i);
 			
 		seq = diffvars->seqs[i];
 		asc_assert(seq.n >= 1);
 		v = seq.vars[0];
-
-		varname = var_make_name(sys->system, v);
-		CONSOLE_DEBUG("alg '%s'",varname);
-		ASC_FREE(varname);
-
+		j = var_sindex(v);
 
 		if(!var_apply_filter(v,&integrator_ida_nonderiv)){
 			continue;
 		}
 
-		varname = var_make_name(sys->system, v);
-		CONSOLE_DEBUG("alg '%s' is GOOD",varname);
-		ASC_FREE(varname);
+		sys->y[j] = v;
+		VARMSG("'%s' is good non-deriv");
 
 		if(seq.n > 1 && var_apply_filter(seq.vars[1],&integrator_ida_deriv)){
-			asc_assert(var_sindex(seq.vars[1]) >= sys->n_y);
-			asc_assert(var_sindex(seq.vars[1])-sys->n_y < sys->n_y);
+			v = seq.vars[1];
+			asc_assert(var_sindex(v) >= sys->n_y);
+			asc_assert(var_sindex(v)-sys->n_y < sys->n_y);
 
-			varname = var_make_name(sys->system, seq.vars[1]);
-			CONSOLE_DEBUG("diff '%s' IS GOOD",varname);
-			ASC_FREE(varname);
-
-			sys->y_id[var_sindex(seq.vars[1]) - sys->n_y] = j;
-			sys->ydot[j] = seq.vars[1];
+			sys->ydot[j] = v;
+			sys->n_ydot++;
+			VARMSG("'%s' is good deriv");
 		}else{
 			asc_assert(sys->ydot[j]==NULL);
 		}
+	}
 
-		sys->y[j] = v;
+	CONSOLE_DEBUG("Found %d good non-derivs",j);
+
+	/* create the list y_id by looking at non-NULLs from ydot */
+	sys->y_id = ASC_NEW_ARRAY(int,sys->n_ydot);
+	for(i=0,j=0; i <  sys->n_y; ++i){
+		if(sys->ydot[i]==NULL)continue;
+		v = sys->ydot[i]; VARMSG("deriv '%s'...");
+		v = sys->y[i]; VARMSG("diff '%s'...");
+		sys->y_id[var_sindex(sys->ydot[i]) - sys->n_y] = i;
 		j++;
 	}
+	
+	asc_assert(j==sys->n_ydot);
 
 	return 0;
 }
@@ -596,10 +598,10 @@ static int integrator_ida_check_diffindex(IntegratorSystem *sys){
 		v = list[i];
 		if(!var_apply_filter(v, &integrator_ida_nonderiv)){
 			msg = "'%s' (in first n_y vars) fails non-deriv filter"; goto finish;
-		}else if(v != sys->y[i]){
-			msg = "'%s' not matched in y vector"; goto finish;
 		}else if(var_sindex(v) != i){
 			msg = "'%s' has wrong var_sindex"; goto finish;
+		}else if(v != sys->y[i]){
+			msg = "'%s' not matched in y vector"; goto finish;
 		}
 		/* meets filter, matches in y vector, has correct var_sindex. */
 	}
@@ -659,25 +661,13 @@ finish:
 }
 
 /**
-	@TODO provide a macro implementation of this
+	Given a derivative variable, return the index of its corresponding differential
+	variable in the y vector (and equivalently the var_sindex of the diff var)
 */
 int integrator_ida_diffindex(const IntegratorSystem *sys, const struct var_variable *deriv){
-	int diffindex;
-#ifdef DIFFINDEX_DEBUG
-	asc_assert( var_deriv    (deriv));
-	asc_assert( var_active   (deriv));
-	asc_assert( var_incident (deriv));
-	asc_assert( var_svar     (deriv));
-
-	asc_assert(!var_fixed    (deriv));
-
 	asc_assert(var_sindex(deriv) >= sys->n_y);
-	asc_assert(diffindex == var_sindex(sys->y[diffindex]));
-#endif
-	asc_assert(var_sindex(deriv) >= sys->n_y);
-	diffindex = sys->y_id[var_sindex(deriv) - sys->n_y];
-
-	return diffindex;
+	asc_assert(var_sindex(deriv) < sys->n_y + sys->n_ydot);
+	return sys->y_id[var_sindex(deriv) - sys->n_y];
 }
 
 
