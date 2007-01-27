@@ -111,7 +111,7 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 			continue;
 		}		
 
-		VARMSG("We will use var '%s'");
+		/* VARMSG("We will use var '%s'"); */
 		if(seq.n > 2){
 			varname = var_make_name(sys->system,v);				
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Too-long derivative chain with var '%s'",varname);

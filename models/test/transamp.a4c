@@ -1,0 +1,112 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+(*
+	This is the 'Transistor amplifier' problem from the Test Set for IVP Solvers
+	
+	The problem is a stiff Differential Algebraic Equation of index 1, 
+	consisting of 8 equations. The problem originates from electrical circuit 
+	analysis, and is a model for the transistor amplifier. A complete 
+	description of the problem could be found in transamp.pdf
+
+	http://pitagora.dm.uniba.it/~testset/problems/transamp.php
+
+	We're not really concerned with the details of this problem. We're just	
+	trying to determine that our solver gets the right answer. High-precision
+	solution results are provided online and we aim to reproduce those here.
+*)
+MODEL transamp;
+
+	U_b, U_F, alpha, beta, C[1..5], R[0..9] IS_A real_constant;
+	FOR k IN [1..5] CREATE
+		C[k] :== k * 1e-6;
+	END FOR;
+	
+	R[0] :== 1000;
+	FOR k IN [1..9] CREATE
+		R[k] :== 9000;
+	END FOR;
+
+	U_b :== 6;
+	U_F :== 0.026;
+	alpha :== 0.99;
+	beta :== 1e-6;
+	
+	y[1..8], dy_dt[1..8] IS_A solver_var;
+	t IS_A solver_var;
+
+	U_e IS_A solver_var;
+	U_e = 0.1 * sin(200{PI}*t);
+
+	g23, g56 IS_A solver_var;
+	(* note, comments about possible overflow with this fn *)
+	g23 = beta * (exp((y[2] - y[3])/U_F) - 1);
+	g56 = beta * (exp((y[5] - y[6])/U_F) - 1);
+
+	-C[1]*dy_dt[1] + C[1]*dy_dt[2] = (y[1] - U_e) / R[0];
+	 C[1]*dy_dt[1] - C[1]*dy_dt[2] = y[2] / R[1] + (y[2] - U_b) / R[2] + (1 - alpha)*g23;
+	-C[2]*dy_dt[3]                 = y[3] / R[3] - g23;
+	-C[3]*dy_dt[4] + C[3]*dy_dt[5] = (y[4] - U_b) / R[4] + alpha*g23;
+	 C[3]*dy_dt[4] - C[3]*dy_dt[5] = y[5] / R[5] + (y[5] - U_b) / R[6] + (1 - alpha)*g56;
+	-C[4]*dy_dt[6]                 = y[6] / R[7] - g56;
+	-C[5]*dy_dt[7] + C[5]*dy_dt[8] = (y[7] - U_b) / R[8] + alpha*g56;
+	 C[5]*dy_dt[7] - C[5]*dy_dt[8] = y[8] / R[9];
+
+METHODS
+	METHOD values;
+		y[1] := 0;
+		y[2] := U_b/(R[2]/R[1] + 1);
+		y[3] := U_b/(R[2]/R[1] + 1);
+		y[4] := U_b;
+		y[5] := U_b/(R[6]/R[5] + 1);
+		y[6] := U_b/(R[6]/R[5] + 1);
+		y[7] := U_b;
+		y[8] := 0;	
+
+		dy_dt[3] := -y[2]/(C[2]*R[3]);
+		dy_dt[6] := -y[5]/(C[4]*R[7]);
+
+		(* these were already calculated, numerically *)
+		dy_dt[1] :=  51.338775;
+		dy_dt[2] :=  51.338775;
+		dy_dt[4] := -24.9757667;
+		dy_dt[5] := -24.9757667;
+		dy_dt[7] := -10.00564453;
+		dy_dt[8] := -10.00564453;
+
+		t := 0 {s};
+	END values;
+
+	METHOD specify;
+		FIX t; (* t is incident in the equations, so we need to explicitly fix it *)
+	END specify;
+
+	METHOD ode_init;
+		FOR i IN [1..8] DO
+			y[i].ode_id := i; y[i].ode_type := 1;
+			dy_dt[i].ode_id := i; dy_dt[i].ode_type := 2;
+		END FOR;
+		FOR i IN [1..8] DO
+			y[i].obs_id := i;
+		END FOR;
+		t.ode_type := -1;
+	END ode_init;
+
+	METHOD on_load;
+		RUN reset;
+		RUN values;
+		RUN ode_init;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs( y[1] +  0.5562145012262709e-002 ) < 1e-7;
+		ASSERT abs( y[2] -  3.006522471903042 ) < 1e-7;
+		ASSERT abs( y[3] -  2.849958788608128 ) < 1e-7;
+		ASSERT abs( y[4] -  2.926422536206241 ) < 1e-7;
+		ASSERT abs( y[5] -  2.704617865010554 ) < 1e-7;
+		ASSERT abs( y[6] -  2.761837778393145 ) < 1e-6;
+		ASSERT abs( y[7] -  4.770927631616772 ) < 1e-7;
+		ASSERT abs( y[8] -  1.236995868091548 ) < 1e-7;	
+	END self_test;
+END transamp;
+
+
