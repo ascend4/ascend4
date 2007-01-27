@@ -850,7 +850,7 @@ class TestIDADENSE(Ascend):
 		I.setMaxSubSteps(10000)
 		I.analyse()
 		I.solve()
-		for i in range(8):
+		for i in range(6):
 			print "y[%d] = %.20g" % (i+1, M.y[i+1])
 		M.run(T.getMethod('self_test'))
 
