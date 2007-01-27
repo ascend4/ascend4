@@ -835,6 +835,26 @@ class TestIDADENSE(Ascend):
 		assert abs(float(M.y2) - 2.0437e-13) < 2e-14
 		assert abs(float(M.y3) - 1.0) < 1e-5
 
+	def testhires(self):
+		self.L.load('test/hires.a4c')
+		T = self.L.findType('hires')
+		M = T.getSimulation('sim')
+		M.setSolver(ascpy.Solver('QRSlv'))
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setParameter('linsolver','DENSE')
+		I.setParameter('rtol',1e-7)
+		I.setParameter('atolvect',0)
+		I.setParameter('atol',1e-7)
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLogTimesteps(ascpy.Units(""), 1, 321.8122, 5)
+		I.setMaxSubStep(1);
+		I.setInitialSubStep(1e-9)
+		I.setMaxSubSteps(5000)
+		I.analyse()
+		I.solve()
+		M.run(T.getMethod('self_test'))
+
 ## @TODO fails during IDACalcIC (model too big?)
 #	def testkryx(self):
 #		self.L.load('johnpye/idakryx.a4c')

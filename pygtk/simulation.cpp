@@ -113,7 +113,7 @@ Simulation::getModel(){
 }
 
 
-slv_system_structure *
+slv_system_t
 Simulation::getSystem(){
 	if(!sys)throw runtime_error("Can't getSystem: simulation not yet built");
 	return sys;

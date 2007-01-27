@@ -25,7 +25,6 @@
 #define ASC_ANALYSE_IMPL_H
 
 #include "slv_server.h"
-
 /**	@addtogroup system System
 	@{
 */

@@ -2672,7 +2672,7 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   }
 
 #ifdef ASC_IDA_NEW_ANALYSE
-  stat = analyse_generate_diffvars(sys,p_data);
+  stat = system_generate_diffvars(sys,p_data);
   if(stat){
 	analyze_free_lists(p_data);
 	return 3;

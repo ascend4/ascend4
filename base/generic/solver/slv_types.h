@@ -69,11 +69,15 @@ typedef void *SlvBackendToken;
 	the other backends we can think of.
 */
 
-typedef struct slv_system_structure *slv_system_t;
+typedef struct system_structure *slv_system_t;
 /**<
 	This is the handle which should be used in all of the functions
 	in slv and system to reference a mathematical problem.
 */
+
+
+struct SolverDiffVarCollectionStruct;
+typedef struct SolverDiffVarCollectionStruct SolverDiffVarCollection;
 
 /* @} */
 

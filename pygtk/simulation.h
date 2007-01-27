@@ -68,13 +68,13 @@ class Simulation : public Instanc{
 
 private:
 	Instanc simroot;
-	slv_system_structure *sys;
+	slv_system_t sys;
 	bool is_built;
 	SingularityInfo *sing; /// will be used to store this iff singularity found
 	int activeblock;
 
 protected:
-	slv_system_structure *getSystem();
+	slv_system_t getSystem();
 
 public:
 	explicit Simulation(Instance *i, const SymChar &name);

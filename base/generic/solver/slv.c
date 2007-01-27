@@ -1,5 +1,4 @@
-/*
-	SLV: Ascend Nonlinear Solver
+/*	ASCEND modelling environment
 	Copyright (C) 1990 Karl Michael Westerberg
 	Copyright (C) 1993 Joseph Zaher
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
@@ -39,179 +38,14 @@
 #include <linear/mtx.h>
 
 #include "bndman.h"
-#include "system.h"
 #include "analyze.h"
+#include "system_impl.h"
 
 ASC_EXPORT int g_SlvNumberOfRegisteredClients=0; /* see header */
 
 /* #define EMPTY_DEBUG */
 
 #define NEEDSTOBEDONE 0
-
-struct slv_system_structure {
-  int solver;
-
-  int serial_id;
-	/**< Through time, two systems may have the same pointer but never
-		simultaneously. The serial_id provides a unique tag that will
-		never repeat. Clients concerned with identity but not capable
-		of tracking time must use the serial_id for checks. */
-
-  SlvBackendToken instance;	/* should be void * in the most generic case */
-
-  /* All solver handles.  sysI can't be dereferenced outside slvI.c
-   * should be an array of pointers to arrays of the functions provided
-   * by dynamically loaded clients, or at least by the client which this
-   * system is currently supporting.
-   */
-
-  SlvClientToken ct;
-  /* This is a pointer that the client returns on registration.
-   * If it is not null, the registration was successful.
-   * This token will be handed back to the client code on all calls
-   * originating from here.
-   */
-
-  dof_t dof;                    /* non linear blocks */
-  dof_t logdof;                 /* logical blocks */
-
-  /* In the following NULL terminated lists, note that snum and mnum
-   * are the lengths of the arrays WITHOUT the NULL pointer at the end.
-   * Note objs is a list of relations that are objectives
-   * (e_maximize,e_minimize). this list will include the first included obj.
-   */
-  struct {
-    int snum;			/* length of the solver list */
-    int mnum;			/* length of the master list */
-    struct var_variable **solver;
-    struct var_variable **master;
-	struct var_variable *buf;
-  } vars;
-
-  struct {
-    int snum;		        	/* length of the solver list */
-    int mnum;			       /* length of the master list */
-    struct dis_discrete **solver;
-    struct dis_discrete **master;
-	struct dis_discrete *buf;
-	int bufnum;
-  } dvars;
-
-  struct {
-    int snum;			/* length of the solver list */
-    int mnum;			/* length of the master list */
-    struct rel_relation **solver;
-    struct rel_relation **master;
-    struct rel_relation *buf;
-  } rels;
-
-  struct {
-    int snum;
-    int mnum;
-    struct rel_relation **solver;
-    struct rel_relation **master;
-    struct rel_relation *buf;
-  } objs;
-
-  struct {
-    int snum;			/* length of the solver list */
-    int mnum;			/* length of the master list */
-    struct rel_relation **solver;
-    struct rel_relation **master;
-	struct rel_relation *buf;
-  } condrels;
-
-  struct {
-    int snum;			/* length of the solver list */
-    int mnum;			/* length of the master list */
-    struct logrel_relation **solver;
-    struct logrel_relation **master;
-	struct logrel_relation *buf;
-  } logrels;
-
-  struct {
-    int snum;			/* length of the solver list */
-    int mnum;			/* length of the master list */
-    struct logrel_relation **solver;
-    struct logrel_relation **master;
-	struct logrel_relation *buf;
-  } condlogrels;
-
-  struct {
-    int snum;			/* length of the solver list */
-    int mnum;			/* length of the master list */
-    struct w_when **solver;
-    struct w_when **master;
-	struct w_when *buf;
-	int bufnum;
-  } whens;
-
-  struct {
-    int snum;			/* length of the solver list */
-    int mnum;			/* length of the master list */
-    struct bnd_boundary **solver;
-    struct bnd_boundary **master;
-	struct bnd_boundary *buf;
-	int bufnum;
-  } bnds;
-
-  struct {
-    int snum;
-    int mnum;
-    struct var_variable **solver;
-    struct var_variable **master;
-	struct var_variable *buf;
-  } pars;
-
-  struct {
-    int snum;
-    int mnum;
-    struct var_variable **solver;
-    struct var_variable **master;
-	struct var_variable *buf;
-  } unattached;
-
-  struct {
-    int snum;
-    int mnum;
-    struct dis_discrete **solver;
-    struct dis_discrete **master;
-	struct dis_discrete *buf;
-  } disunatt;
-
-  void *diffvars;
-  /**
-	This will be a pointer to a SolverDiffVarCollection, but we don't want
-	to force all solvers to know what that is. Default to NULL, thankfully.
-  */
-
-  /* the data that follows is for internal consumption only. */
-  struct {
-    int num_extrels;
-    struct ExtRelCache **erlist;
-  } extrels;
-
-  struct rel_relation *obj; /* selected for optimization from list */
-  struct var_variable *objvar; /* selected for optimization from list */
-  struct gl_list_t *symbollist; /* list of symbol values struct used to */
-                                /* assign an integer value to a symbol value */
-  struct {
-    struct var_variable **incidence; /* all relation incidence list memory */
-    struct rel_relation **varincidence; /* all variable incidence list memory */
-    struct dis_discrete **logincidence; /* all logrel incidence list memory */
-    long incsize;     /* size of incidence array */
-    long varincsize;  /* size of varincidence array */
-    long logincsize;  /* size of discrete incidence array */
-#if NEEDSTOBEDONE
-/* we should be group allocating this data, but aren't */
-    struct ExtRelCache *ebuf; /* data space for all extrel caches */
-#endif
-  } data;
-
-  int32 nmodels;
-  int32 need_consistency; /* consistency analysis required for conditional model ? */
-  real64 objvargrad; /* maximize -1 minimize 1 noobjvar 0 */
-};
 
 /**
  global variable used to communicate information between solvers and
@@ -321,7 +155,7 @@ slv_system_t slv_create(void)
 {
   slv_system_t sys;
   static unsigned nextid = 1;
-  sys = (slv_system_t)asccalloc(1,sizeof(struct slv_system_structure) );
+  sys = (slv_system_t)asccalloc(1,sizeof(struct system_structure) );
   /* all lists, sizes, pointers DEFAULT to 0/NULL */
   sys->solver = -1; /* a nonregistration */
   sys->serial_id = nextid++;
