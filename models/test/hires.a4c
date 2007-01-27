@@ -53,14 +53,14 @@ METHODS
 		t.ode_type := -1;
 	END ode_init;
 	METHOD self_test;
-		ASSERT abs(y[1] - 0.7371312573325668e-3) < 1e-8;
-		ASSERT abs(y[2] - 0.1442485726316185e-3) < 1e-8;
-		ASSERT abs(y[3] - 0.5888729740967575e-4) < 1e-8;
-		ASSERT abs(y[4] - 0.1175651343283149e-2) < 1e-8;
-		ASSERT abs(y[5] - 0.2386356198831331e-2) < 1e-8;
-		ASSERT abs(y[6] - 0.6238968252742796e-2) < 1e-8;
-		ASSERT abs(y[7] - 0.2849998395185769e-2) < 1e-8;
-		ASSERT abs(y[8] - 0.2850001604814231e-2) < 1e-8;
+		ASSERT abs(y[1] - 0.7371312573325668e-3) < 1e-15;
+		ASSERT abs(y[2] - 0.1442485726316185e-3) < 1e-15;
+		ASSERT abs(y[3] - 0.5888729740967575e-4) < 1e-15;
+		ASSERT abs(y[4] - 0.1175651343283149e-2) < 1e-15;
+		ASSERT abs(y[5] - 0.2386356198831331e-2) < 1e-13;
+		ASSERT abs(y[6] - 0.6238968252742796e-2) < 1e-13;
+		ASSERT abs(y[7] - 0.2849998395185769e-2) < 1e-14;
+		ASSERT abs(y[8] - 0.2850001604814231e-2) < 1e-14;
 	END self_test;
 	METHOD specify;
 		(* nothing needs to be fixed *)

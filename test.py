@@ -772,29 +772,6 @@ class TestIDA(Ascend):
 class TestIDADENSE(Ascend):
 	"""IDA DAE integrator, DENSE linear solver"""
 
-	def testnewton(self):
-		sys.stderr.write("STARTING TESTNEWTON\n")
-		self.L.load('johnpye/newton.a4c')
-		T = self.L.findType('newton')
-		M = T.getSimulation('sim')
-		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
-		I = ascpy.Integrator(M)
-		I.setEngine('IDA')
-		I.setParameter('linsolver','DENSE')
-		I.setParameter('safeeval',True)
-		I.setParameter('rtol',1e-8)
-		I.setMaxSubStep(0.001)
-		I.setMaxSubSteps(10000)
-		
-		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.v)/float(M.g), 2)
-		I.analyse()
-		I.solve()
-		print "At end of simulation,"
-		print "x = %f" % M.x
-		print "v = %f" % M.v
-		M.run(T.getMethod('self_test'))
-
 	def testlotka(self):
 		self.L.load('johnpye/lotka.a4c')
 		M = self.L.findType('lotka').getSimulation('sim')
@@ -843,16 +820,17 @@ class TestIDADENSE(Ascend):
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setParameter('linsolver','DENSE')
-		I.setParameter('rtol',1e-7)
+		I.setParameter('rtol',1.1e-15)
 		I.setParameter('atolvect',0)
-		I.setParameter('atol',1e-7)
+		I.setParameter('atol',1.1e-15)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLogTimesteps(ascpy.Units(""), 1, 321.8122, 5)
-		I.setMaxSubStep(1);
-		I.setInitialSubStep(1e-9)
-		I.setMaxSubSteps(5000)
+		I.setInitialSubStep(1e-5)
+		I.setMaxSubSteps(10000)
 		I.analyse()
 		I.solve()
+		for i in range(8):
+			print "y[%d] = %.20g" % (i+1, M.y[i+1])
 		M.run(T.getMethod('self_test'))
 
 ## @TODO fails during IDACalcIC (model too big?)
@@ -966,6 +944,29 @@ class TestIDASPGMR:#(Ascend):
 class NotToBeTested:
 	def nothing(self):
 		pass
+
+	def testnewton(self):
+		sys.stderr.write("STARTING TESTNEWTON\n")
+		self.L.load('johnpye/newton.a4c')
+		T = self.L.findType('newton')
+		M = T.getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setParameter('linsolver','DENSE')
+		I.setParameter('safeeval',True)
+		I.setParameter('rtol',1e-8)
+		I.setMaxSubStep(0.001)
+		I.setMaxSubSteps(10000)
+		
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.v)/float(M.g), 2)
+		I.analyse()
+		I.solve()
+		print "At end of simulation,"
+		print "x = %f" % M.x
+		print "v = %f" % M.v
+		M.run(T.getMethod('self_test'))
 
 if __name__=='__main__':
 	# a whole bag of tricks to make sure we get the necessary dirs in our ascend, python and ld path vars

@@ -370,7 +370,7 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 			,"Scalar absolute error tolerance",1
 			,"Value of the scalar absolute error tolerance. See also 'atolvect'."
 			" See IDA manual, sections 5.5.1 and 5.5.2 'Advice on choice and use of tolerances'"
-		}, 1e-5, 1e-15, 1.0e15 }
+		}, 1e-5, 0, 1e10 }
 	);
 
 	slv_param_real(p,IDA_PARAM_RTOL
