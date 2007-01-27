@@ -50,6 +50,7 @@
 #include <utilities/config.h>
 #include "analyze.h"
 #include "slv_client.h"
+#include "system.h"
 
 /**	@addtogroup analyse Analyse
 	@{
@@ -59,39 +60,6 @@
   Stuff for retrieving differential and derivative variables from the system
 */
 
-/**
-	Structure that holds a differential variable and the sequence of
-	its derivatives as found explicity in the model.
-
-	For example,
-	  - x, dx/dt
-*/
-typedef struct SolverDiffVarSequenceStruct{
-	long ode_id;
-	short n;
-	struct var_variable **vars; /* will be in order of ascending ode_type, starting from 1 */
-} SolverDiffVarSequence;
-
-/**
-	Array of diff var sequences. Once generated, this will hold all of the 
-	This would hold all of the differential and derivative variables found
-	in the system. For example, with each row being a SolverDiffVarSequence:
-	  - y, dy/dt, d2y/dt2
-	  - x, dx/dt
-      - z, dz/dt
-*/
-typedef struct SolverDiffVarCollectionStruct{
-	SolverDiffVarSequence *seqs;
-	long nseqs;
-	long nalg;
-	long ndiff;
-	struct var_variable **indep;
-	long nindep;
-	struct var_variable **obs;
-	long nobs;
-	long maxorder;
-} SolverDiffVarCollection;
-
 #ifdef ASC_IDA_NEW_ANALYSE
 /**
 	Return the SolverDiffVarCollection for the system. You *don't* own the
@@ -99,19 +67,20 @@ typedef struct SolverDiffVarCollectionStruct{
 */
 extern SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys);
 
-int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob);
+int system_diffvars_build(slv_system_t sys, struct problem_t *prob);
 
+void system_diffvars_destroy(slv_system_t sys);
 /**
 	Write contents of diffvars struct to stream fp
 */
-int analyse_diffvars_debug(slv_system_t sys,FILE *fp);
+int system_diffvars_debug(slv_system_t sys,FILE *fp);
 
 
 /**
 	Reorder the diffvars list to match the var_sindex values of the first
 	var in each chain.
 */
-int analyse_diffvars_sort(slv_system_t sys);
+int system_diffvars_sort(slv_system_t sys);
 
 #endif
 

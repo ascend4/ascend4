@@ -45,7 +45,7 @@ class IncidenceMatrix{
 
 private:
 	Simulation &sim;
-	slv_system_structure *sys;
+	slv_system_t sys;
 
 	std::vector<IncidencePoint> data;
 	incidence_vars_t i;

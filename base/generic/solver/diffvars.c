@@ -28,16 +28,13 @@
 #include <compiler/instance_io.h>
 
 #include "analyse_impl.h"
+#include "system_impl.h"
 
 /*------------------------------------------------------------------------------
 	DERIVATIVES & DIFFERENTIAL VARIABLES
 */
 
 #ifdef ASC_IDA_NEW_ANALYSE
-
-SolverDiffVarCollection *analyse_get_diffvars(slv_system_t sys){
-	return (SolverDiffVarCollection *)slv_get_diffvars(sys);
-}
 
 static 
 int CmpDiffVars(const struct solver_ipdata *a, const struct solver_ipdata *b){
@@ -61,7 +58,7 @@ int CmpDiffVars(const struct solver_ipdata *a, const struct solver_ipdata *b){
 
 	@return 0 on success
 */
-int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
+int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	SolverDiffVarCollection *diffvars = NULL;
 	struct solver_ipdata *vip, *vipnext;
 	SolverDiffVarSequence *seq;
@@ -220,12 +217,12 @@ int analyse_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 }
 
 
-int analyse_diffvars_debug(slv_system_t sys,FILE *fp){
+int system_diffvars_debug(slv_system_t sys,FILE *fp){
 	int i, j;
 	char *varname;
 	const SolverDiffVarCollection *diffvars;
 	SolverDiffVarSequence seq;
-	diffvars = analyse_get_diffvars(sys);
+	diffvars = sys->diffvars;
 	if(diffvars==NULL){
 		fprintf(fp,"NO DIFFVARS (NULL)");
 		return 0;
@@ -247,11 +244,11 @@ int analyse_diffvars_debug(slv_system_t sys,FILE *fp){
 
 typedef int CmpFn(const void *,const void *);
 /**
-	Comparison function for use by analyse_diffvars_sort.
+	Comparison function for use by system_diffvars_sort.
 	All we're trying to do is to reproduce the ordering in var_sindex, so
 	no need to actually look at the flags.
 */
-static int analyse_diffvars_cmp(const SolverDiffVarSequence *a, const SolverDiffVarSequence *b){
+static int system_diffvars_cmp(const SolverDiffVarSequence *a, const SolverDiffVarSequence *b){
 	const struct var_variable *va;
 	const struct var_variable *vb;
 	int ia;
@@ -291,14 +288,14 @@ static int analyse_diffvars_cmp(const SolverDiffVarSequence *a, const SolverDiff
 	return 1;
 }
 
-int analyse_diffvars_sort(slv_system_t sys){
+int system_diffvars_sort(slv_system_t sys){
 	int i, j;
 	char *varname;
 	const SolverDiffVarCollection *diffvars;
 	SolverDiffVarSequence seq;
-	diffvars = analyse_get_diffvars(sys);
+	diffvars = sys->diffvars;
 
-	qsort(diffvars->seqs,diffvars->nseqs,sizeof(SolverDiffVarSequence),(CmpFn*)(&analyse_diffvars_cmp));
+	qsort(diffvars->seqs,diffvars->nseqs,sizeof(SolverDiffVarSequence),(CmpFn*)(&system_diffvars_cmp));
 }
 
 

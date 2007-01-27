@@ -6,6 +6,7 @@
 # include <solver/diffvars.h>
 # include <solver/slv_stdcalls.h>
 # include <solver/block.h>
+# include <solver/system_impl.h>
 #include <solver/slvDOF.h>
 #endif
 
@@ -67,7 +68,7 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 	asc_assert(sys->n_y==0);
 
 	/* get the the dervative chains from the system */
-	diffvars = slv_get_diffvars(sys->system);
+	diffvars = sys->system->diffvars;
 	if(diffvars==NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Derivative structure is empty");
 		return 1;
@@ -216,7 +217,7 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	integrator_ida_analyse_debug(sys,stderr);
 
 	/* get the the dervative chains from the system */
-	diffvars = slv_get_diffvars(sys->system);
+	diffvars = sys->system->diffvars;
 	if(diffvars==NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Derivative structure is empty");
 		return 1;
@@ -387,7 +388,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 #endif
 
 	/* get the the dervative chains from the system */
-	diffvars = slv_get_diffvars(sys->system);
+	diffvars = sys->system->diffvars;
 
 	/* check the indep var is same as was located elsewhere */
 	if(diffvars->nindep>1){
@@ -605,6 +606,6 @@ int integrator_ida_diffindex(const IntegratorSystem *sys, const struct var_varia
 	SYSTEM -- not the ones we're working with here IN THE SOLVER.
 */
 int integrator_ida_analyse_debug(const IntegratorSystem *sys,FILE *fp){
-	return analyse_diffvars_debug(sys->system,fp);
+	return system_diffvars_debug(sys->system,fp);
 }
 
