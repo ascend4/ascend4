@@ -850,6 +850,27 @@ class TestIDADENSE(Ascend):
 		I.setMaxSubSteps(10000)
 		I.analyse()
 		I.solve()
+		for i in range(8):
+			print "y[%d] = %.20g" % (i+1, M.y[i+1])
+		M.run(T.getMethod('self_test'))
+
+	def testtransamp(self):
+		self.L.load('test/transamp.a4c')
+		T = self.L.findType('transamp')
+		M = T.getSimulation('sim')
+		M.setSolver(ascpy.Solver('QRSlv'))
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setParameter('linsolver','DENSE')
+		I.setParameter('rtol',1e-7)
+		I.setParameter('atolvect',0)
+		I.setParameter('atol',1e-7)
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0.05, 0.2, 20)
+		I.setInitialSubStep(0.00001)
+		I.setMaxSubSteps(10000)
+		I.analyse()
+		I.solve()
 		for i in range(6):
 			print "y[%d] = %.20g" % (i+1, M.y[i+1])
 		M.run(T.getMethod('self_test'))

@@ -95,7 +95,7 @@
 /* #define FEX_DEBUG */
 #define JEX_DEBUG
 /* #define DJEX_DEBUG */
-#define SOLVE_DEBUG
+/* #define SOLVE_DEBUG */
 #define STATS_DEBUG
 #define PREC_DEBUG
 /* #define DIFFINDEX_DEBUG */
@@ -745,41 +745,41 @@ int integrator_ida_solve(
 		}
 		if (setjmp(g_fpe_env)==0) {
 #endif
-
-			//CONSOLE_DEBUG("Raising signal...");
-			//CONSOLE_DEBUG("1/0 = %f", div1(1.0,0.0));
-			//CONSOLE_DEBUG("Still here...");
 		
-			/* correct initial values, given derivatives */
 # if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
-			/* note the new API from version 2.3 and onwards */
-			flag = IDACalcIC(ida_mem, icopt, tout1);
+		flag = IDACalcIC(ida_mem, icopt, tout1);/* new API from v2.3  */
 # else
-			flag = IDACalcIC(ida_mem, t0, y0, yp0, icopt, tout1);
+		flag = IDACalcIC(ida_mem, t0, y0, yp0, icopt, tout1);
 # endif
+		/* check flags and output status */
+		switch(flag){
+			case IDA_SUCCESS:
+				CONSOLE_DEBUG("Initial conditions solved OK");
+				break;
 
-			switch(flag){
-				case IDA_SUCCESS:
-					CONSOLE_DEBUG("Initial conditions solved OK");
-					break;
-
-				case IDA_LSETUP_FAIL:
-				case IDA_LINIT_FAIL:
-				case IDA_LSOLVE_FAIL:
-				case IDA_NO_RECOVERY:
-					flag1 = -999;
-					flag = (flagfn)(ida_mem,&flag1);
-					if(flag){
-						ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to retrieve error code from %s (err %d)",flagfntype,flag);
-						return 12;
-					}
-					ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s returned flag '%s' (value = %d)",flagfntype,(flagnamefn)(flag1),flag1);
+			case IDA_LSETUP_FAIL:
+			case IDA_LINIT_FAIL:
+			case IDA_LSOLVE_FAIL:
+			case IDA_NO_RECOVERY:
+				flag1 = -999;
+				flag = (flagfn)(ida_mem,&flag1);
+				if(flag){
+					ERROR_REPORTER_HERE(ASC_PROG_ERR
+						,"Unable to retrieve error code from %s (err %d)"
+						,flagfntype,flag
+					);
 					return 12;
+				}
+				ERROR_REPORTER_HERE(ASC_PROG_ERR
+					,"%s returned flag '%s' (value = %d)"
+					,flagfntype,(flagnamefn)(flag1),flag1
+				);
+				return 12;
 
-				default:
-					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
-					return 12;
-			}
+			default:
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
+				return 12;
+		}
 #ifdef ASC_SIGNAL_TRAPS
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Floating point error while solving initial conditions");
@@ -794,8 +794,7 @@ int integrator_ida_solve(
 			CONSOLE_DEBUG("...pop");
 		}
 #endif
-
-	}
+	}/* icopt */
 
 	/* optionally, specify ROO-FINDING PROBLEM */
 
