@@ -19,6 +19,9 @@
 	Data structures used by the 'analyze.c' implementation. DO NOT include
 	this file unless you are inside the implementation of problem analysis.
 	(so, only analyse.c and diffvars.c, at this stage).
+
+	DO NOT include this file if you are implementing a new solver or integration
+	engine. Deal instead with the routines in slv_client.h.
 */
 
 #ifndef ASC_ANALYSE_IMPL_H

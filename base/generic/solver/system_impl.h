@@ -18,7 +18,6 @@
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-	This file is part of the SLV solver.
 *//**
 	Implementation a the 'slv_system_t' class. This is a private header file
 	to be used only by SLV *server* code. If you are writing a new solver, you
@@ -26,12 +25,16 @@
 
 	This structure is subject to change. Access it through the methods and
 	macros defined in slv_client.h in order to avoid problems.
+
+	Note that this file includes diffvars.h but NOT diffvars_impl.h. So,
+	you don't get access to the derivative chains structs unless you explicitly
+	ask for it by including diffvars_impl.h.
 *//**
 	Split from slv.c by John Pye -- Jan 2007
 */
 
 #include "system.h"
-
+#include "diffvars.h"
 
 /**
 	Structure that holds a differential variable and the sequence of
