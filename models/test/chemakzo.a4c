@@ -1,0 +1,89 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+(*
+	This is the 'Chemical Akzo Nobel' problem from the Test Set for IVP Solvers
+
+	This IVP is a stiff system of 6 non-linear Differential Algebraic Equations
+	of index 1. The problem originates from Akzo Nobel Central research in
+	Arnhern, The Netherlands, and describes a chemical process in which 2
+	species are mixed, while carbon dioxide is continuously added. A complete
+	description of the problem could be found in  chemakzo.pdf
+
+	http://pitagora.dm.uniba.it/~testset/problems/chemakzo.php
+
+	We're not really concerned with the details of this problem. We're just	
+	trying to determine that our solver gets the right answer.	High-precision
+	solution results are provided online and we aim to reproduce those here.
+*)
+MODEL chemakzo;
+	k1,k2,k3,k4,kbig,kla,ks,po2,hen IS_A real_constant;
+	k1   :== 18.7;
+	k2   :== 0.58;
+	k3   :== 0.09;
+	k4   :== 0.42;
+	kbig :== 34.4;
+	kla  :== 3.3;
+	ks   :== 115.83;
+	po2  :== 0.9;
+	hen  :== 737;
+
+	y[1..6], dy_dt[1..6] IS_A solver_var;
+	t IS_A time;
+
+	r[1..5], F_in IS_A solver_var;
+	
+	r[1]  = k1 * (y[1]^4) * sqrt(y[2]);
+	r[2]  = k2 * y[3] * y[4];
+	r[3]  = k2 / kbig * y[1] * y[5];
+	r[4]  = k3 * y[1] * (y[4]^2);
+	r[5]  = k4 * (y[6]^2) * sqrt(y[2]);
+	F_in = kla * (po2 / hen-y[2]);
+
+	dy_dt[1] =   -2*r[1] +r[2] -r[3]   -r[4];
+	dy_dt[2] = -0.5*r[1]               -r[4] -0.5*r[5] + F_in;
+	dy_dt[3] =      r[1] -r[2] +r[3];
+	dy_dt[4] =           -r[2] +r[3] -2*r[4];
+	dy_dt[5] =            r[2] -r[3]             +r[5];
+
+	       0 = ks * y[1] * y[4]  - y[6];
+
+METHODS
+	METHOD values;
+		y[1] := 0.444;
+		y[2] := 0.00123;
+		y[3] := 0;
+		y[4] := 0.007;
+		y[5] := 0;
+		y[6] := ks * y[1] * y[4];
+		t := 0 {s};
+	END values;
+
+	METHOD specify;
+		(* nothing needs to be fixed *)
+	END specify;
+
+	METHOD ode_init;
+		FOR i IN [1..6] DO
+			y[i].ode_id := i; y[i].ode_type := 1;
+			dy_dt[i].ode_id := i; dy_dt[i].ode_type := 2;
+		END FOR;
+		t.ode_type := -1;
+	END ode_init;
+
+	METHOD on_load;
+		RUN reset;
+		RUN values;
+		RUN ode_init;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs( y[1] -  0.1150794920661702 ) < 1e-12;
+		ASSERT abs( y[2] -  0.1203831471567715e-2 ) < 1e-14;
+		ASSERT abs( y[3] -  0.1611562887407974 ) < 1e-12;
+		ASSERT abs( y[4] -  0.3656156421249283e-3 ) < 1e-15;
+		ASSERT abs( y[5] -  0.1708010885264404e-1 ) < 1e-13;
+		ASSERT abs( y[6] -  0.4873531310307455e-2 ) < 1e-13;		
+	END self_test;
+END chemakzo;
+
+
