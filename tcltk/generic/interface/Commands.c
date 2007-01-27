@@ -921,6 +921,7 @@ void Asc_CreateCommands(Tcl_Interp *interp)
   );
 #endif /* DELETEME */
 
+#if 0 
   ASCADDCOM(interp,"solve",Asc_SolvCurInst,
     "solver",
     NULL,
@@ -928,6 +929,7 @@ void Asc_CreateCommands(Tcl_Interp *interp)
     NULL
     /* the stuff above should be replaced with header macros. */
   );
+#endif
 
 #ifdef ASC_SIGNAL_TRAPS
   ASCADDCOM(interp,"slv_trapfp",Asc_SolvTrapFP,

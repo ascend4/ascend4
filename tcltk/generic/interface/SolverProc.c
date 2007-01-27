@@ -1496,6 +1496,7 @@ int Asc_SolvSimInst(ClientData cdata, Tcl_Interp *interp,
 
 #endif /* DELETEME */
 
+#if 0 
 /*
  *  Solves g_curinst with solver specified.
  *  This is for commandline use only.
@@ -1524,6 +1525,7 @@ int Asc_SolvCurInst(ClientData cdata, Tcl_Interp *interp,
   Solve(g_solvinst_cur);
   return TCL_OK;
 }
+#endif
 
 int Asc_SolvGetVRCounts(ClientData cdata, Tcl_Interp *interp,
                        int argc, CONST84 char *argv[])

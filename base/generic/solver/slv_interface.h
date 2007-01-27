@@ -41,13 +41,13 @@
 #define ASC_SLV_INTERFACE_H
 
 #include <utilities/ascConfig.h>
-#include <compiler/instance_enum.h>
+/* #include <compiler/instance_enum.h> */
 
 /**	@addtogroup solver Solver
 	@{
 */
 
-ASC_DLLSPEC void Solve(struct Instance *inst);
+/* ASC_DLLSPEC void Solve(struct Instance *inst); */
 /**<
  *  This is the link that the command line interface should call. 
 

@@ -111,6 +111,7 @@ extern int Asc_SolvSimInst(ClientData cdata, Tcl_Interp *interp,
  */
 #endif /* DELETEME */
 
+#if 0 
 extern int Asc_SolvCurInst(ClientData cdata, Tcl_Interp *interp,
                            int argc, CONST84 char *argv[]);
 /**<
@@ -119,6 +120,7 @@ extern int Asc_SolvCurInst(ClientData cdata, Tcl_Interp *interp,
  *  Just a wrapper of slv_interface.c Solve() for now.
  *  this function is Extremely buggy.
  */
+#endif
 
 extern int Asc_SolvGetModKids(ClientData cdata, Tcl_Interp *interp,
                               int argc, CONST84 char *argv[]);

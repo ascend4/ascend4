@@ -1,0 +1,158 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+(* 
+	This is the 'pollution' problem from the Test Set for IVP Solvers
+
+	http://pitagora.dm.uniba.it/~testset/problems/pollu.php
+
+	This IVP is a stiff system of 20 non-linear Ordinary Differential Equations.
+	It describes a chemical reaction part of the air pollution model developed 
+	at The Dutch National Institute of Public Health and Environmental
+	Protection (RIVM), and consists of 25 reaction and 20 reacting compounds.
+	A complete description of the problem could be found in pollu.pdf
+
+	We're not really concerned with the details of this problem. We're just	
+	trying to determine that our solver gets the right answer.	High-precision
+	solution results are provided online and we aim to reproduce those here.
+
+	@see hires.a4c
+*)
+MODEL pollution;
+	k[1..25] IS_A real_constant;
+
+	k[1] :== 0.35e0;
+	k[2] :== 0.266e2;
+	k[3] :== 0.123e5;
+	k[4] :== 0.86e-3;
+	k[5] :== 0.82e-3;
+	k[6] :== 0.15e5;
+	k[7] :== 0.13e-3;
+	k[8] :== 0.24e5;
+	k[9] :== 0.165e5;
+	k[10] :== 0.9e4;
+	k[11] :== 0.22e-1;
+	k[12] :== 0.12e5;
+	k[13] :== 0.188e1;
+	k[14] :== 0.163e5;
+	k[15] :== 0.48e7;
+	k[16] :== 0.35e-3;
+	k[17] :== 0.175e-1;
+	k[18] :== 0.1e9;
+	k[19] :== 0.444e12;
+	k[20] :== 0.124e4;
+	k[21] :== 0.21e1;
+	k[22] :== 0.578e1;
+	k[23] :== 0.474e-1;
+	k[24] :== 0.178e4;
+	k[25] :== 0.312e1;
+
+	r[1..25] IS_A solver_var;
+	r[1] = k[1] * y[1]; 
+	r[2] = k[2] * y[2] * y[4]; 
+	r[3] = k[3] * y[5] * y[2]; 
+	r[4] = k[4] * y[7]; 
+	r[5] = k[5] * y[7]; 
+	r[6] = k[6] * y[7] * y[6]; 
+	r[7] = k[7] * y[9]; 
+	r[8] = k[8] * y[9] * y[6]; 
+	r[9] = k[9] * y[11] * y[2]; 
+	r[10] = k[10] * y[11] * y[1]; 
+	r[11] = k[11] * y[13]; 
+	r[12] = k[12] * y[10] * y[2]; 
+	r[13] = k[13] * y[14]; 
+	r[14] = k[14] * y[1] * y[6]; 
+	r[15] = k[15] * y[3]; 
+	r[16] = k[16] * y[4]; 
+	r[17] = k[17] * y[4]; 
+	r[18] = k[18] * y[16]; 
+	r[19] = k[19] * y[16]; 
+	r[20] = k[20] * y[17] * y[6]; 
+	r[21] = k[21] * y[19]; 
+	r[22] = k[22] * y[19]; 
+	r[23] = k[23] * y[1] * y[4]; 
+	r[24] = k[24] * y[19] * y[1]; 
+	r[25] = k[25] * y[20];
+
+	y[1..20] IS_A solver_var;
+	dy_dt[1..20] IS_A solver_var;
+
+	dy_dt[1] =  - r[1] - r[10] - r[14] - r[23] - r[24] +  r[2] +  r[3] +  r[9] +  r[11] +  r[12] +  r[22] +  r[25];
+	dy_dt[2] =  - r[2] - r[3] - r[9] - r[12] +  r[1] +  r[21];
+	dy_dt[3] =  - r[15] +  r[1] +  r[17] +  r[19] +  r[22];
+	dy_dt[4] =  - r[2] - r[16] - r[17] - r[23] +  r[15];
+	dy_dt[5] =  - r[3] +  r[4] +  r[4] +  r[6] +  r[7] +  r[13] +  r[20];
+	dy_dt[6] =  - r[6] - r[8] - r[14] - r[20] +  r[3] +  r[18] +  r[18];
+	dy_dt[7] =  - r[4] - r[5] - r[6] +  r[13];
+	dy_dt[8] = r[4] +  r[5] +  r[6] +  r[7];
+	dy_dt[9] =  - r[7] - r[8];
+	dy_dt[10] =  - r[12] +  r[7] +  r[9];
+	dy_dt[11] =  - r[9] - r[10] +  r[8] +  r[11];
+	dy_dt[12] = r[9];
+	dy_dt[13] =  - r[11] +  r[10];
+	dy_dt[14] =  - r[13] +  r[12];
+	dy_dt[15] = r[14];
+	dy_dt[16] =  - r[18] - r[19] +  r[16];
+	dy_dt[17] =  - r[20];
+	dy_dt[18] = r[20];
+	dy_dt[19] =  - r[21] - r[22] - r[24] +  r[23] +  r[25];
+	dy_dt[20] =  - r[25] +  r[24];
+
+	t IS_A time;
+
+METHODS
+	METHOD values;
+		FOR i IN [1..20] DO
+			y[i] := 0;
+		END FOR;
+		y[2] := 0.2;
+		y[4] := 0.04;
+		y[7] := 0.1;
+		y[8] := 0.3;
+		y[9] := 0.01;
+		y[17] := 0.007;
+	END values;
+
+	METHOD ode_init;
+		FOR i IN [1..20] DO
+			y[i].ode_id := i; y[i].ode_type := 1;
+			dy_dt[i].ode_id := i; dy_dt[i].ode_type := 2;
+		END FOR;
+		t.ode_type := -1;
+	END ode_ide;
+
+	METHOD specify;
+		(* nothing needs to be fixed *)
+	END specify;
+
+	METHOD on_load;
+		RUN reset;
+		RUN values;
+		RUN ode_init;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs( y[1] - 0.5646255480022769e-01) < 1e-15;
+		ASSERT abs( y[2] - 0.1342484130422339e+00) < 1e-15;
+		ASSERT abs( y[3] - 0.4139734331099427e-08) < 1e-15;
+		ASSERT abs( y[4] - 0.5523140207484359e-02) < 1e-15;
+		ASSERT abs( y[5] - 0.2018977262302196e-06) < 1e-15;
+		ASSERT abs( y[6] - 0.1464541863493966e-06) < 1e-15;
+		ASSERT abs( y[7] - 0.7784249118997964e-01) < 1e-15;
+		ASSERT abs( y[8] - 0.3245075353396018e+00) < 1e-15;
+		ASSERT abs( y[9] - 0.7494013383880406e-02) < 1e-15;
+		ASSERT abs( y[10] - 0.1622293157301561e-07) < 1e-15;
+		ASSERT abs( y[11] - 0.1135863833257075e-07) < 1e-15;
+		ASSERT abs( y[12] - 0.2230505975721359e-02) < 1e-15;
+		ASSERT abs( y[13] - 0.2087162882798630e-03) < 1e-15;
+		ASSERT abs( y[14] - 0.1396921016840158e-04) < 1e-15;
+		ASSERT abs( y[15] - 0.8964884856898295e-02) < 1e-15;
+		ASSERT abs( y[16] - 0.4352846369330103e-17) < 1e-15;
+		ASSERT abs( y[17] - 0.6899219696263405e-02) < 1e-15;
+		ASSERT abs( y[18] - 0.1007803037365946e-03) < 1e-15;
+		ASSERT abs( y[19] - 0.1772146513969984e-05) < 1e-15;
+		ASSERT abs( y[20] - 0.5682943292316392e-04) < 1e-15;		
+	END self_test;
+
+
+END pollution;
+

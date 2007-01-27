@@ -282,7 +282,6 @@
 
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
-#include <compiler/instance_enum.h>
 
 #include <linear/mtx.h>
 #include <linear/linsol.h>

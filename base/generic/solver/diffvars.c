@@ -25,8 +25,6 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 
-#include <compiler/instance_io.h>
-
 #include "analyse_impl.h"
 #include "system_impl.h"
 

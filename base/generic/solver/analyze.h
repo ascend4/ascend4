@@ -70,7 +70,10 @@ struct SymbolValues {
 
 extern int analyze_make_problem(slv_system_t sys, struct Instance *inst);
 /**<
-	Takes a system and populates the guts of it from the instance.
+	Takes a system and populates the guts of it from the instance. Called by	
+	system_build -- you don't need to call it yourself.
+
+	@TODO this routine should be part of the 'problem provider' API?
 
 	@NOTE 
 		This implementation of analyze is specific to the ASCEND Compiler
@@ -119,7 +122,7 @@ extern void DestroySymbolValuesList(struct gl_list_t *symbol_list);
 	value to symbol value
 
 	@DEPRECATED we want to get rid of this in order to clean up the
-	solver interface (divorce it from dependencies on compiler)
+	solver interface (divorce it from dependencies on compiler) -- JP
 */
 
 /* @} */
