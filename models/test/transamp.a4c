@@ -13,6 +13,11 @@ REQUIRE "atoms.a4l";
 	We're not really concerned with the details of this problem. We're just	
 	trying to determine that our solver gets the right answer. High-precision
 	solution results are provided online and we aim to reproduce those here.
+
+	Note that, according to the graphs given at the above link, the DASSL
+	solver is not so great at this particular problem. Not sure why this is,
+	but it was certainly observed that it wasn't possible to obtain results
+	at the same precision as obtained for the other examples from the Test Set.
 *)
 MODEL transamp;
 
