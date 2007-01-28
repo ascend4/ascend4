@@ -2,7 +2,7 @@
 
 /*
  * Copyright (c) 2003,2004, Jean-Sebastien Roy (js@jeannot.org)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,10 +10,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -80,7 +80,7 @@ static char *texttable_fgetln(FILE *file);
  * Return NULL if an error occurs.
  * If non NULL, the returned pointer point to a '\0' terminated string.
  * The end of line character '\n' is ommited.
- * Temporary storage of size '*bufsize' provided by 'buf' is used if 
+ * Temporary storage of size '*bufsize' provided by 'buf' is used if
  * buff != NULL, buf may be reallocated. In this case, the returned pointer
  * point to the reallocated buffer. *bufsize contains the new size of the
  * buffer.
@@ -90,7 +90,7 @@ static char *texttable_fgets(FILE *file, char *buf, size_t *bufsize);
 /*
  * Separate strings using 'delimiter' as the delimiter.
  * Locate and replace in the *stringp the first occurence of the delimiter
- * character. The location of the next character after the delimiter 
+ * character. The location of the next character after the delimiter
  * character (or NULL, if the end of the string was reached) is stored in
  * *stringp.  The original value of *stringp is returned.
  *
@@ -111,10 +111,10 @@ char *texttable_fgets(FILE *file, char *buf, size_t *bufsize)
 {
   char *nbuf, *cur;
   size_t remsize, tbufsize = 0;
-  
+
   if (bufsize == NULL)
     bufsize = &tbufsize;
-  
+
   if (buf == NULL)
   {
     if (*bufsize < 2)
@@ -127,7 +127,7 @@ char *texttable_fgets(FILE *file, char *buf, size_t *bufsize)
   while (1)
   {
     char *res;
-    
+
     res = fgets(cur, (int) remsize, file);
     if (res == NULL)
     {
@@ -141,7 +141,7 @@ char *texttable_fgets(FILE *file, char *buf, size_t *bufsize)
     }
     if (feof(file))
       return buf;
-    
+
     nbuf = realloc(buf, (*bufsize)*2*sizeof(*buf));
     if (nbuf == NULL)
     {
@@ -185,10 +185,10 @@ int texttable_new(texttable *tt, size_t columns)
   tt->data.dvoid = NULL;
   tt->rows = 0;
   tt->columns = columns;
-  
+
   if (tt->columns == 0)
     return TEXTTABLE_NOERR;
-  
+
   tt->type = malloc(sizeof(*tt->type)*tt->columns);
   if (tt->type == NULL)
   {
@@ -249,7 +249,7 @@ void texttable_free(texttable *tt)
     free(tt->data.dvoid);
     tt->data.dvoid = NULL;
   }
-  
+
   if (tt->type != NULL)
   {
     free(tt->type);
@@ -265,11 +265,11 @@ int texttable_readheader(texttable *tt, FILE *file, char delimiter,
   int err;
   char *header;
   long offset;
-  
+
   offset = ftell(file);
   if (offset == -1)
     return TEXTTABLE_EFERROR;
-  
+
   header = texttable_fgetln(file);
   if (header == NULL)
   {
@@ -277,36 +277,36 @@ int texttable_readheader(texttable *tt, FILE *file, char delimiter,
       return TEXTTABLE_EFERROR;
     return TEXTTABLE_ENOMEM;
   }
-    
+
   /* Counting the columns */
   c = header;
   columns = 1;
   while (*c)
     if (*(c++) == delimiter)
       columns ++;
-  
+
   if (!hasnames)
   {
     err = fseek(file, offset, SEEK_SET);
     if (err)
       return TEXTTABLE_EFERROR;
   }
-  
+
   err = texttable_new(tt, columns);
   if (err)
   {
     free(header);
     return err;
   }
-  
+
   /* Reading the names */
   if (hasnames)
   {
     char *input = header, *tok;
-    for (columns = 0;(tok = texttable_strsep(&input, delimiter)) != NULL; 
+    for (columns = 0;(tok = texttable_strsep(&input, delimiter)) != NULL;
       columns++)
     {
-      tt->name[columns] = ASC_STRDUP(tok);
+      tt->name[columns] = strdup(tok);
       if (tt->name[columns] == NULL)
       {
         texttable_free(tt);
@@ -315,9 +315,9 @@ int texttable_readheader(texttable *tt, FILE *file, char delimiter,
       }
     }
   }
-  
+
   free(header);
-  
+
   return TEXTTABLE_NOERR;
 }
 
@@ -327,11 +327,11 @@ int texttable_guesstype(texttable *tt, FILE *file, char delimiter, size_t rows)
   int err;
   char *buf;
   long offset;
-  
+
   offset = ftell(file);
   if (offset == -1)
     return TEXTTABLE_EFERROR;
-  
+
   while ((rows--) && (buf = texttable_fgetln(file)) != NULL)
   {
     char *input = buf, *tok;
@@ -462,16 +462,16 @@ int texttable_guesstype(texttable *tt, FILE *file, char delimiter, size_t rows)
           return TEXTTABLE_EUNKTYPE;
       }
     }
-  
+
     free(buf);
   }
-    
+
   if (ferror(file))
     return TEXTTABLE_EFERROR;
-  
+
   if (!feof(file) && (rows != -1))
     return TEXTTABLE_ENOMEM;
-  
+
   err = fseek(file, offset, SEEK_SET);
   if (err)
     return TEXTTABLE_EFERROR;
@@ -495,10 +495,10 @@ int texttable_reallocate(texttable *tt, size_t maxrows)
   for (column=0;column<tt->columns;column++)
     if (tt->type[column]<0 || tt->type[column]>=TEXTTABLE_UNKNOWN)
       return TEXTTABLE_EUNKTYPE;
-  
+
   if (maxrows<tt->rows)
     tt->rows = maxrows;
-  
+
   for (column=0;column<tt->columns;column++)
   {
     void *ndata;
@@ -520,7 +520,7 @@ int texttable_readdata(texttable *tt, FILE *file, char delimiter)
   int err;
 
   maxrows = tt->rows;
-  
+
   while ((buf = texttable_fgets(file, buf, &bufsize)) != NULL)
   {
     char *input = buf, *tok;
@@ -533,7 +533,7 @@ int texttable_readdata(texttable *tt, FILE *file, char delimiter)
         maxrows = 256;
       texttable_reallocate(tt, maxrows);
     }
-  
+
     for (column = 0;
       (tok = texttable_strsep(&input, delimiter)) != NULL;column++)
     {
@@ -542,7 +542,7 @@ int texttable_readdata(texttable *tt, FILE *file, char delimiter)
         free(buf);
         return TEXTTABLE_ETOOMANYC; /* To many columns */
       }
-        
+
       switch (tt->type[column])
       {
         case TEXTTABLE_CHAR:
@@ -666,7 +666,7 @@ int texttable_readdata(texttable *tt, FILE *file, char delimiter)
         }
         case TEXTTABLE_STRING:
         {
-          char *newstr = ASC_STRDUP(tok);
+          char *newstr = strdup(tok);
           if (newstr == NULL)
           {
             free(buf);
@@ -686,10 +686,10 @@ int texttable_readdata(texttable *tt, FILE *file, char delimiter)
       free(buf);
       return TEXTTABLE_ETOOFEWC; /* Too few columns */
     }
-    
+
     tt->rows ++;
   }
-  
+
   /* Unallocate surplus */
   if (maxrows > tt->rows)
   {
@@ -697,13 +697,13 @@ int texttable_readdata(texttable *tt, FILE *file, char delimiter)
     if (err)
       return err; /* NOTREACHED */
   }
-    
+
   if (ferror(file))
     return TEXTTABLE_EFERROR;
-  
+
   if (!feof(file))
     return TEXTTABLE_ENOMEM;
-  
+
   /* We should test for a file error */
 
   return TEXTTABLE_NOERR;
@@ -713,7 +713,7 @@ int texttable_write(texttable *tt, FILE *file, char delimiter, int hasnames)
 {
   size_t row, column;
   int err;
-  
+
   if (hasnames)
   {
     for (column=0;column<tt->columns;column++)
@@ -732,7 +732,7 @@ int texttable_write(texttable *tt, FILE *file, char delimiter, int hasnames)
     if (err == EOF)
       return TEXTTABLE_EFERROR;
   }
-  
+
   for (row = 0;row<tt->rows;row++)
   {
     for (column = 0;column<tt->columns;column++)
@@ -793,7 +793,7 @@ int texttable_write(texttable *tt, FILE *file, char delimiter, int hasnames)
         if (err == EOF)
           return TEXTTABLE_EFERROR;
       }
-    }  
+    }
     err = putc('\n', file);
     if (err == EOF)
       return TEXTTABLE_EFERROR;
@@ -812,7 +812,7 @@ char *texttable_strerror(int err)
 void texttable_perror(int status, char *file, int line)
 {
 #ifndef NDEBUG
-  fprintf(stderr, "%s source=%s line=%d\n", texttable_strerror(status), 
+  fprintf(stderr, "%s source=%s line=%d\n", texttable_strerror(status),
     file, line);
 #else
   fprintf(stderr, "%s\n", texttable_strerror(status));
@@ -873,7 +873,7 @@ int texttable_readtable(FILE *file, char delimiter, int hasnames,
     *name = tt.name;
     tt.name = NULL;
   }
-    
+
 cleanUp:
   texttable_free(&tt);
   return status;
