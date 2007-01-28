@@ -53,6 +53,7 @@
 #else
 # define MAX_INT MAXINT
 # define MAX_REAL MAXDOUBLE
+# define CONOPT_BOUNDLIMIT 1e12
 #endif
 
 #if !defined(STATIC_CMSLV) && !defined(DYNAMIC_CMSLV)
