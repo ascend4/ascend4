@@ -618,5 +618,8 @@ METHODS
 	METHOD on_load;
 		RUN reset; RUN default_self; RUN values;
 	END on_load;
+	METHOD self_test;
+		(* no tests yet *)
+	END self_test;
 END bvp_test;
 (* :ex: set ts=4: *)
