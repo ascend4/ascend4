@@ -38,33 +38,33 @@ PROVIDE "heatex.a4c";
 *)
 
 MODEL heatex;
-	points			IS_A set OF integer_constant;
-	components      		IS_A set OF symbol_constant;
-	k_terms			IS_A set OF integer_constant;
-	z[components]   		IS_A fraction;
-	x[points][components]	IS_A fraction;
-	y[points][components]	IS_A fraction;
-	Tcr[components]		IS_A critical_temperature;
-	Pcr[components]		IS_A critical_pressure;
-	Hv[components]		IS_A molar_energy_constant;
-	B[components][k_terms]    IS_A factor_constant;
-	C[k_terms]    		IS_A factor_constant;
-	D[components][k_terms]    IS_A molar_energy_constant;
-	E[k_terms]    		IS_A factor_constant;
-	phi[points]		IS_A fraction;
-	eta[points]		IS_A fraction;
-	A				IS_A area;
-	Fc			IS_A molar_rate;
-	Fh			IS_A molar_rate;
-	P				IS_A pressure;
-	Tc[points]		IS_A temperature;
-	Th[points]		IS_A temperature;
-	Hc[points]     		IS_A molar_energy;
-	Hh[points]		IS_A molar_energy;
-	dQ[points]		IS_A energy_rate;
-	erscale   		IS_A energy_rate;
-	entscale  		IS_A factor;
-	bolphaq[1..2]		IS_A boolean_var;
+	points                 IS_A set OF integer_constant;
+	components             IS_A set OF symbol_constant;
+	k_terms                IS_A set OF integer_constant;
+	z[components]          IS_A fraction;
+	x[points][components]  IS_A fraction;
+	y[points][components]  IS_A fraction;
+	Tcr[components]        IS_A critical_temperature;
+	Pcr[components]        IS_A critical_pressure;
+	Hv[components]         IS_A molar_energy_constant;
+	B[components][k_terms] IS_A factor_constant;
+	C[k_terms]             IS_A factor_constant;
+	D[components][k_terms] IS_A molar_energy_constant;
+	E[k_terms]             IS_A factor_constant;
+	phi[points]            IS_A fraction;
+	eta[points]            IS_A fraction;
+	A                      IS_A area;
+	Fc                     IS_A molar_rate;
+	Fh                     IS_A molar_rate;
+	P                      IS_A pressure;
+	Tc[points]             IS_A temperature;
+	Th[points]             IS_A temperature;
+	Hc[points]             IS_A molar_energy;
+	Hh[points]             IS_A molar_energy;
+	dQ[points]             IS_A energy_rate;
+	erscale                IS_A energy_rate;
+	entscale               IS_A factor;
+	bolphaq[1..2]          IS_A boolean_var;
 
 	(* Boundaries *)
 	CONDITIONAL
@@ -294,6 +294,10 @@ METHODS
 		RUN reset;
 		RUN values;
 	END on_load;
+
+	METHOD self_test;
+		(* nothing tested here as yet *)
+	END self_test;
 
 END heatex;
 (* :ex: set ts=4: *)

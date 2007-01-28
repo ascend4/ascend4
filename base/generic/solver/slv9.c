@@ -2568,12 +2568,17 @@ int COI_CALL slv9_conopt_readmatrix(
   struct var_variable *var;
   struct var_variable **varlist;
   struct opt_matrix *coeff_matrix;
-  static var_filter_t vfilter;
   real64 /*obj_val,*/ deriv;
   real64 nominal, up, low, uplow;
   int32 num_var, n_subregions, c, num_eqns;
   int32 numnz, eq;
   int32 count, totvar;
+  double limit;
+
+  static var_filter_t vfilter = {
+      VAR_ACTIVE_AT_BND | VAR_INCIDENT | VAR_SVAR | VAR_FIXED
+     ,VAR_ACTIVE_AT_BND | VAR_INCIDENT | VAR_SVAR | 0
+  };
 
   UNUSED_PARAMETER(vsta);
   UNUSED_PARAMETER(esta);
@@ -2584,11 +2589,13 @@ int COI_CALL slv9_conopt_readmatrix(
   num_var = (*n) - n_subregions;
   num_eqns = num_var + 1;
 
-  vfilter.matchbits = (VAR_ACTIVE_AT_BND | VAR_INCIDENT
-		       | VAR_SVAR | VAR_FIXED);
-  vfilter.matchvalue = (VAR_ACTIVE_AT_BND | VAR_INCIDENT | VAR_SVAR);
   varlist = sys->mvlist;
   totvar = sys->mvtot;
+ 
+  /* fetch the configured bound from solver parameters */
+  limit = ASC_INFINITY;
+
+  /* CONSOLE_DEBUG("Got limit value of %g",limit); */
 
   /*
    * Variables: Current Value, lower value and upper value. Note that for
@@ -2607,18 +2614,18 @@ int COI_CALL slv9_conopt_readmatrix(
       up = var_upper_bound(var);
       uplow = fabs( up - low);
 
-      if(-uplow > -CONOPT_BOUNDLIMIT){
+      if(-uplow > -limit){
 	      lower[count] = -uplow;
       }else{
-          lower[count] = -0.5*CONOPT_BOUNDLIMIT;
-          CONSOLE_DEBUG("REDUCING LOWER BOUND LIMIT FOR VAR %d TO %e",count,lower[count]);
+          lower[count] = -0.5*limit;
+          /* CONSOLE_DEBUG("Reducing lower bound limit for var %d to %e",count,lower[count]); */
       }
 
-      if(uplow < CONOPT_BOUNDLIMIT){
+      if(uplow < limit){
           upper[count] = uplow;
       }else{
-          upper[count] = 0.5*CONOPT_BOUNDLIMIT;
-          CONSOLE_DEBUG("REDUCING UPPER BOUND LIMIT FOR VAR %d TO %e",count,upper[count]);
+          upper[count] = 0.5*limit;
+          /* CONSOLE_DEBUG("Reducing upper bound limit for var %d to %e",count,upper[count]); */
       }
 
       curr[count] = 0.5 * nominal;
@@ -2632,6 +2639,10 @@ int COI_CALL slv9_conopt_readmatrix(
       curr[c] =  1.0;
   }
 
+  /*CONSOLE_DEBUG("ALL BOUNDS:");
+  for(c=0;c<(*n);++c){
+    fprintf(stderr,"%d: lower = %g, upper = %g\n",c,lower[c],upper[c]);
+  }*/
 
   /*
    * vsta not in use since STATOK, ipsz[14], is zero
@@ -2705,19 +2716,14 @@ int COI_CALL slv9_conopt_readmatrix(
   */
 
   numnz = 0;
-  CONSOLE_DEBUG("NUM_VAR = %d",num_var);
   for (c=0; c<num_var; c++) {
-	CONSOLE_DEBUG("C = %d",c);
     rowno[numnz] = c;
     nlflag[numnz] = 0;
     value[numnz] = -1;
     numnz++;
-	CONSOLE_DEBUG("NUMNZ = %d",numnz);
     rowno[numnz] = *m - 1;
     nlflag[numnz] = 1;
-	CONSOLE_DEBUG("FOUND A NONLINEAR NONZERO");
     numnz++;
-	CONSOLE_DEBUG("NUMNZ = %d",numnz);
   }
 
   for (c=num_var; c<(*n); c++) {
@@ -4745,9 +4751,11 @@ int32 slv9_get_default_parameters(slv_system_t server,
 	       U_p_int(val, 100),U_p_int(lo, 1),U_p_int(hi,MAX_INT),3);
   SLV_IPARM_MACRO(OPT_ITER_LIMIT_PTR,parameters);
 
+  ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Default value of RTMAX = %g",CONOPT_BOUNDLIMIT);
+
   slv_define_parm(parameters, real_parm,
 	       "infinity","RTMAXV","internal value of infinity",
-	       U_p_real(val,1e20),U_p_real(lo,10),U_p_real(hi,MAX_REAL),3);
+	       U_p_real(val,CONOPT_BOUNDLIMIT),U_p_real(lo,10),U_p_real(hi,MAX_REAL),3);
   SLV_RPARM_MACRO(INFINITY_PTR,parameters);
 
   slv_define_parm(parameters, real_parm,
@@ -5002,31 +5010,31 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
   sys->opt_var_values = NULL;
   if (sys->vlist == NULL) {
     ascfree(sys);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"CMSlv called with no variables.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no variables.");
     *statusindex = -2;
     return NULL;
   }
   if (sys->rlist == NULL && sys->obj == NULL) {
     ascfree(sys);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"CMSlv called with no relations or objective.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no relations or objective.\n");
     *statusindex = -1;
     return NULL;
   }
   if (sys->dvlist == NULL) {
     ascfree(sys);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"CMSlv called with no discrete variables.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no discrete variables.\n");
     *statusindex = -2;
     return NULL;
   }
   if (sys->lrlist == NULL) {
     ascfree(sys);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"CMSlv called with no logrelations.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no logrelations.\n");
     *statusindex = -1;
     return NULL;
   }
   if (sys->blist == NULL) {
     ascfree(sys);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"CMSlv called with no boundaries.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no boundaries.\n");
     *statusindex = -2;
     return NULL;
   }
@@ -5036,7 +5044,7 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
 
   if (get_solvers_tokens(sys,server)) {
     ascfree(sys);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Solver(s) required by CMSlv were not registered. System cannot be created.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Solver(s) required by CMSlv were not registered. System cannot be created.");
     *statusindex = -1;
     return NULL;
   }
@@ -5061,7 +5069,7 @@ int slv9_eligible_solver(slv_system_t server){
     return TRUE;
   }
 
-  ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+  ERROR_REPORTER_HERE(ASC_USER_ERROR
 	,"CMSlv not elegible for this model: %s",msg
   );
   return FALSE;
@@ -5370,7 +5378,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
     slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
     slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
     store_real_pre_values(server,&(rvalues));
-    ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Solving Optimization Problem at boundary...");
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Solving Optimization Problem at boundary...\n");
     if(optimize_at_boundary(server,asys,&(n_subregions),
                             subregions,&(cur_subregion),disvars,&(rvalues))){
       store_real_cur_values(server,&(rvalues));
@@ -5379,7 +5387,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         vfilter.matchbits = (VAR_ACTIVE_AT_BND | VAR_INCIDENT
 			     | VAR_SVAR | VAR_FIXED);
         vfilter.matchvalue = (VAR_ACTIVE_AT_BND | VAR_INCIDENT | VAR_SVAR);
-        ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Boundary(ies) crossed. Returning to boundary first crossed...");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Boundary(ies) crossed. Returning to boundary first crossed...\n");
         factor = return_to_first_boundary(server,asys,&rvalues,&vfilter);
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);
@@ -5478,7 +5486,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       store_real_pre_values(server,&(rvalues));
       (sys->nliter)++;
       if (sys->nliter == 1  || system_was_reanalyzed ==1) {
-        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Iterating with Non Linear solver...");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Iterating with Non Linear solver...\n");
         slv_presolve(server);
         slv_get_status(server,&status);
         update_struct_info(sys,&status);
@@ -5530,7 +5538,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         vfilter.matchbits = (VAR_ACTIVE | VAR_INCIDENT
 			     | VAR_SVAR | VAR_FIXED);
         vfilter.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
-        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Boundary(ies) crossed. Returning to boundary first crossed...");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Boundary(ies) crossed. Returning to boundary first crossed...\n");
         factor = return_to_first_boundary(server,asys,&rvalues,&vfilter);
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);

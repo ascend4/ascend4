@@ -229,7 +229,7 @@ int COI_CALL asc_conopt_message( int* SMSG, int* DMSG, int* NMSG, int* LLEN
       j = LLEN[i];
       for( l= 0; l<j; l++ ) line[l] = MSGV[k+l];
       line[j] = '\0';
-      ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"%s\n", line);
+      ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"(CONOPT) %s", line);
       k += MSGLEN;
    }
    return 0;

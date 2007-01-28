@@ -599,7 +599,7 @@ int slv_log_block_partition(slv_system_t sys)
   }
   if (ncol == nrow) {
     if (ncol == rank) {
-      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"System of logical relations does not need Logic Inference.");
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"System of logical relations does not need Logic Inference.\n");
     }
     if (ncol != rank) {
       ERROR_REPORTER_HERE(ASC_PROG_WARNING,"but ncol!=rank. Rank deficient?");
