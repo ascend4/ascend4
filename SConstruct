@@ -1490,13 +1490,12 @@ if not conf.CheckFunc('snprintf'):
 
 # Math library
 
-if conf.CheckMath():
-	conf.env['HAVE_IEEE']=True
-else:
-	if need_libm:
-		print 'Did not find math library, exiting!'
-		Exit(1)
+conf.env['HAVE_IEEE']=True
+
+if need_libm and not conf.CheckMath():
 	conf.env['HAVE_IEEE']=False
+	print 'Did not find math library, exiting!'
+	Exit(1)
 
 # Where is 'isnan'?
 
