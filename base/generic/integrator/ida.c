@@ -153,7 +153,7 @@ typedef struct IntegratorIdaPrecDJStruct{
 	Hold all the function pointers associated with a particular preconditioner
 	We don't need to store the 'pfree' function here as it is allocated to the enginedata struct
 	by the pcreate function (ensures that corresponding 'free' and 'create' are always used)
-	
+
 	@note IDA uses a different convention for function pointer types, so no '*'.
 */
 typedef struct IntegratorIdaPrecStruct{
@@ -207,7 +207,7 @@ void integrator_ida_write_stats(IntegratorIdaStats *stats);
 void integrator_ida_write_incidence(IntegratorSystem *blsys);
 
 /*------
-  Jacobi preconditioner -- experimental 
+  Jacobi preconditioner -- experimental
 */
 
 int integrator_ida_psetup_jacobi(realtype tt,
@@ -745,7 +745,7 @@ int integrator_ida_solve(
 		}
 		if (setjmp(g_fpe_env)==0) {
 #endif
-		
+
 # if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
 		flag = IDACalcIC(ida_mem, icopt, tout1);/* new API from v2.3  */
 # else
@@ -870,6 +870,7 @@ int integrator_ida_solve(
   RESIDUALS AND JACOBIAN
 */
 
+#if 0
 typedef void (SignalHandlerFn)(int);
 SignalHandlerFn integrator_ida_sig;
 SignalHandlerFn *integrator_ida_sig_old;
@@ -899,6 +900,7 @@ void integrator_ida_sig(int sig){
 	CONSOLE_DEBUG("Caught SIGFPE=%d (in signal handler). Jumping to...",sig);
 	longjmp(integrator_ida_jmp_buf,sig);
 }
+#endif
 
 /**
 	Function to evaluate system residuals, in the form required for IDA.
@@ -966,7 +968,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	if (SETJMP(g_fpe_env)==0) {
 #endif
 
-	
+
 /*
 	integrator_ida_sig_old = signal(SIGFPE,&integrator_ida_sig);
 	if(fegetenv(&integrator_ida_fenv_old))ASC_PANIC("fenv problem");
@@ -999,7 +1001,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 		break;
 	default:
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"What exception?");
-		is_error=1;		
+		is_error=1;
 	}
 	if(signal(SIGFPE,integrator_ida_sig_old)!=&integrator_ida_sig)ASC_PANIC("signal problem");
 	if(fesetenv(&integrator_ida_fenv_old))ASC_PANIC("fenv problem");
@@ -1348,7 +1350,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				if(variables[j] == blsys->x) continue;
 #ifdef JEX_DEBUG
 				CONSOLE_DEBUG("j = %d: variables[j] = %d",j,var_sindex(variables[j]));
-#endif				
+#endif
 				if(var_deriv(variables[j])){
 #define DIFFINDEX integrator_ida_diffindex(blsys,variables[j])
 #ifdef JEX_DEBUG
@@ -1592,7 +1594,7 @@ enum integrator_ida_write_jac_enum{
 */
 void integrator_ida_write_jacobian(IntegratorSystem *blsys, realtype c_j, FILE *f, enum integrator_ida_write_jac_enum type){
 	IntegratorIdaData *enginedata;
-	MM_typecode matcode;                        
+	MM_typecode matcode;
 	int nnz, rhomax;
 	double *derivatives;
 	struct var_variable **variables;
@@ -1623,8 +1625,8 @@ void integrator_ida_write_jacobian(IntegratorSystem *blsys, realtype c_j, FILE *
 	mm_set_matrix(&matcode);
 	mm_set_coordinate(&matcode);
 	mm_set_real(&matcode);
-    mm_write_banner(f, matcode); 
-    mm_write_mtx_crd_size(f, enginedata->nrels, enginedata->nrels, nnz);	
+    mm_write_banner(f, matcode);
+    mm_write_mtx_crd_size(f, enginedata->nrels, enginedata->nrels, nnz);
 
 	variables = ASC_NEW_ARRAY(struct var_variable *, blsys->n_y * 2);
 	derivatives = ASC_NEW_ARRAY(double, blsys->n_y * 2);
@@ -1656,7 +1658,7 @@ void integrator_ida_write_jacobian(IntegratorSystem *blsys, realtype c_j, FILE *
 				if(!var_deriv(variables[j])){
 					fprintf(f, "%d %d %10.3g\n", i, var_sindex(variables[j]), derivatives[j]);
 				}
-			}								
+			}
 		}
 	}
 	ASC_FREE(variables);
@@ -1700,7 +1702,7 @@ void integrator_ida_write_incidence(IntegratorSystem *blsys){
 			break;
 		}
 
-		fprintf(stderr,"%3d:%-15s:",i,relname);		
+		fprintf(stderr,"%3d:%-15s:",i,relname);
 		ASC_FREE(relname);
 
 		for(j=0; j<count; ++j){
@@ -1792,7 +1794,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	/* let's write out the relations too */
 	rlist = slv_get_solvers_rel_list(sys->system);
 	rlen = slv_get_num_solvers_rels(sys->system);
-	
+
 	fprintf(fp,"\nALL RELATIONS IN THE SOLVER'S LIST (%ld)\n\n",rlen);
 	fprintf(fp,"index\tname\n");
 	fprintf(fp,"-----\t----\n");
@@ -1810,10 +1812,10 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 		return 340;
 	}
 	fprintf(fp,"\n");
-	
+
 	/* and lets write block debug output */
 	system_block_debug(sys->system, fp);
-		
+
 	return 0; /* success */
 }
 
