@@ -1763,7 +1763,7 @@ for k,v in {
 		,'ASC_SIGNAL_TRAPS':with_signals
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
-		,'HAVE_IEEE':env.get('IEEE')
+		,'HAVE_IEEE':env.get('HAVE_IEEE')
 		,'ASC_ABSOLUTE_PATHS':env.get('ASC_ABSOLUTE_PATHS')
 		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
