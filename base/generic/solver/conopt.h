@@ -47,9 +47,9 @@
 #define C2F(x) x + 1
 
 /*
-	Bound limit for CONOPT
+	Default bound limit for CONOPT
 */
-#define CONOPT_BOUNDLIMIT 3.1e13
+#define CONOPT_BOUNDLIMIT 3.1e11
 
 /**
  * Parameter required for CONOPT subroutines

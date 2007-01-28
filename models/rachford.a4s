@@ -6,7 +6,7 @@
 DELETE TYPES
 READ FILE "rachford.a4c";
 
-COMPILE {t1} OF {simple_flash};
+COMPILE {t1} OF {rachford};
 BROWSE {t1};
 RUN {t1.reset};
 RUN {t1.values};

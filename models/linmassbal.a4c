@@ -162,7 +162,9 @@ END unit_op2;
 
 (*-----------------------------------*)
 
-MODEL flowsheet;
+(* the flowsheet *)
+
+MODEL linmassbal;
 
 	U[num_units1]	IS_A unit_op1;
 	U2[num_units2]	IS_A unit_op2;
@@ -343,5 +345,13 @@ METHODS
 
 	END values;
 	
-END flowsheet;
+	METHOD on_load;
+		RUN default_self; RUN reset; RUN values;
+	END on_load;
+	
+	METHOD self_test;
+		(* no tests yet *)
+	END self_test;
+
+END linmassbal;
 (* :ex: set ts=4: *)

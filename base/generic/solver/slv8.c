@@ -53,7 +53,7 @@
 int slv8_register(SlvFunctionsT *f){
   (void)f;  /* stop gcc whine about unused parameter */
 
-  FPRINTF(stderr,"CONOPT not compiled in this ASCEND IV.\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT has not been compiled into this copy of ASCEND.");
   return 1;
 }
 #else
@@ -75,50 +75,50 @@ int slv8_register(SlvFunctionsT *f){
 */
 #define DEBUG FALSE
 
-#define SLV8(s) ((slv8_system_t)(s))
-#define MI8F(s) slv_get_output_file( SLV8(s)->p.output.more_important )
-#define SERVER (sys->slv)
+#define SLV8(s)        ((slv8_system_t)(s))
+#define MI8F(s)        slv_get_output_file( SLV8(s)->p.output.more_important )
+#define SERVER         (sys->slv)
 #define slv8_PA_SIZE 56
-#define SAFE_CALC_PTR (sys->parm_array[0])
-#define SAFE_CALC     ((*(int *)SAFE_CALC_PTR))
-#define SCALEOPT_PTR (sys->parm_array[1])
-#define SCALEOPT     ((*(char **)SCALEOPT_PTR))
-#define TOO_SMALL_PTR (sys->parm_array[2])
-#define TOO_SMALL     ((*(real64 *)TOO_SMALL_PTR))
+#define SAFE_CALC_PTR  (sys->parm_array[0])
+#define SAFE_CALC      ((*(int *)SAFE_CALC_PTR))
+#define SCALEOPT_PTR   (sys->parm_array[1])
+#define SCALEOPT       ((*(char **)SCALEOPT_PTR))
+#define TOO_SMALL_PTR  (sys->parm_array[2])
+#define TOO_SMALL      ((*(real64 *)TOO_SMALL_PTR))
 #define UPDATE_NOMINALS_PTR (sys->parm_array[3])
 #define UPDATE_NOMINALS     ((*(int *)UPDATE_NOMINALS_PTR))
 #define UPDATE_RELNOMS_PTR (sys->parm_array[4])
-#define UPDATE_RELNOMS     ((*(int *)UPDATE_RELNOMS_PTR))
+#define UPDATE_RELNOMS ((*(int *)UPDATE_RELNOMS_PTR))
 #define UPDATE_WEIGHTS_PTR (sys->parm_array[5])
-#define UPDATE_WEIGHTS     ((*(int *)UPDATE_WEIGHTS_PTR))
-#define DUMPCNORM_PTR (sys->parm_array[6])
-#define DUMPCNORM     ((*(int *)DUMPCNORM_PTR))
-#define CNLOW_PTR (sys->parm_array[7])
-#define CNLOW     ((*(real64 *)CNLOW_PTR))
-#define CNHIGH_PTR (sys->parm_array[8])
-#define CNHIGH     ((*(real64 *)CNHIGH_PTR))
+#define UPDATE_WEIGHTS ((*(int *)UPDATE_WEIGHTS_PTR))
+#define DUMPCNORM_PTR  (sys->parm_array[6])
+#define DUMPCNORM      ((*(int *)DUMPCNORM_PTR))
+#define CNLOW_PTR      (sys->parm_array[7])
+#define CNLOW          ((*(real64 *)CNLOW_PTR))
+#define CNHIGH_PTR     (sys->parm_array[8])
+#define CNHIGH         ((*(real64 *)CNHIGH_PTR))
 #define UPDATE_JACOBIAN_PTR   (sys->parm_array[9])
 #define UPDATE_JACOBIAN       ((*(int *)UPDATE_JACOBIAN_PTR))
 #define ITSCALELIM_PTR (sys->parm_array[10])
 #define ITSCALELIM     ((*(int *)ITSCALELIM_PTR))
 #define ITSCALETOL_PTR (sys->parm_array[11])
 #define ITSCALETOL     ((*(real64 *)ITSCALETOL_PTR))
-#define LIFDS_PTR (sys->parm_array[12])
-#define LIFDS     ((*(int32 *)LIFDS_PTR))
+#define LIFDS_PTR      (sys->parm_array[12])
+#define LIFDS          ((*(int32 *)LIFDS_PTR))
 #define REORDER_OPTION_PTR (sys->parm_array[13])
-#define REORDER_OPTION     ((*(char **)REORDER_OPTION_PTR))
-#define CUTOFF_PTR (sys->parm_array[14])
-#define CUTOFF     ((*(int32 *)CUTOFF_PTR))
+#define REORDER_OPTION ((*(char **)REORDER_OPTION_PTR))
+#define CUTOFF_PTR     (sys->parm_array[14])
+#define CUTOFF         ((*(int32 *)CUTOFF_PTR))
 #define RELNOMSCALE_PTR (sys->parm_array[15])
-#define RELNOMSCALE     ((*(int *)RELNOMSCALE_PTR))
+#define RELNOMSCALE    ((*(int *)RELNOMSCALE_PTR))
 #define ITER_LIMIT_PTR (sys->parm_array[16])
 #define ITER_LIMIT     ((*(int32 *)ITER_LIMIT_PTR))
 #define TIME_LIMIT_PTR (sys->parm_array[17])
 #define TIME_LIMIT     ((*(int32 *)TIME_LIMIT_PTR))
-#define DOMLIM_PTR (sys->parm_array[18])
-#define DOMLIM     ((*(int32 *)DOMLIM_PTR))
-#define RTMAXJ_PTR (sys->parm_array[19])
-#define RTMAXJ     ((*(real64 *)RTMAXJ_PTR))
+#define DOMLIM_PTR     (sys->parm_array[18])
+#define DOMLIM         ((*(int32 *)DOMLIM_PTR))
+#define RTMAXJ_PTR     (sys->parm_array[19])
+#define RTMAXJ         ((*(real64 *)RTMAXJ_PTR))
 
 /*
   Auxiliary structures
@@ -217,8 +217,7 @@ struct slv8_system_structure {
 static int check_system(slv8_system_t sys)
 {
   if( sys == NULL ) {
-    FPRINTF(stderr,"ERROR:  (slv8) check_system\n");
-    FPRINTF(stderr,"        NULL system handle.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL system handle");
     return 1;
   }
 
@@ -226,12 +225,10 @@ static int check_system(slv8_system_t sys)
   case OK:
     return 0;
   case DESTROYED:
-    FPRINTF(stderr,"ERROR:  (slv8) check_system\n");
-    FPRINTF(stderr,"        System was recently destroyed.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System was recently destroyed.");
     return 1;
   default:
-    FPRINTF(stderr,"ERROR:  (slv8) check_system\n");
-    FPRINTF(stderr,"        System reused or never allocated.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System reused or never allocated.");
     return 1;
   }
 }
@@ -1896,10 +1893,10 @@ static int COI_CALL slv8_conopt_readmatrix(
     nominal = sys->nominals.vec[col];
     low = var_lower_bound(var)/nominal;
     up = var_upper_bound(var)/nominal;
-/* KHACK: get rid of hard coded numbers */
-	/* CONSOLE_DEBUG("SETTING VALUES FOR VARIABLE %d",col-offset); */
+
     lower[col-offset] = low > -CONOPT_BOUNDLIMIT ? low : -CONOPT_BOUNDLIMIT;
     upper[col-offset] = up < CONOPT_BOUNDLIMIT ? up : CONOPT_BOUNDLIMIT;
+	CONSOLE_DEBUG("BOUNDS for var %d: [%g,%g]",col-offset,lower[col-offset],upper[col-offset]);
     curr[col-offset] = sys->variables.vec[col]; /* already scaled */
     vsta[col-offset] = !var_nonbasic(var);
   }

@@ -355,5 +355,10 @@ METHODS
 		RUN reset;
 		RUN values;
 	END on_load;
+
+	METHOD self_test;
+		(* no tests yet *)
+	END self_test;
+
 END pipeline;
 (* :ex: set ts=4: *)

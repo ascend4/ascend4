@@ -4,9 +4,9 @@
 # This file demonstrates the use of linear_balance.a4c
 
 DELETE TYPES
-READ FILE "linear_balance.a4c";
+READ FILE "linmassbal.a4c";
 
-COMPILE {t1} OF {flowsheet};
+COMPILE {t1} OF {linmassbal};
 BROWSE {t1};
 RUN {t1.reset};
 RUN {t1.values};

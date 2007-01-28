@@ -43,13 +43,15 @@ class Ascend(unittest.TestCase):
 
 class AscendSelfTester(Ascend):
 
-	def _run(self,modelname,solvername="QRSlv",filename=None):
+	def _run(self,modelname,solvername="QRSlv",filename=None,parameters={}):
 		if filename==None:
 			filename = 'johnpye/%s.a4c' % modelname
 		self.L.load(filename)
 		T = self.L.findType(modelname)
 		M = T.getSimulation('sim')
-		M.build()
+		M.setSolver(ascpy.Solver(solvername))
+		for k,v in parameters.iteritems():
+			M.setParameter(k,v)
 		M.solve(ascpy.Solver(solvername),ascpy.SolverReporter())	
 		M.run(T.getMethod('self_test'))
 		return M
@@ -133,6 +135,22 @@ class TestSolver(AscendSelfTester):
 		M = self._run('example_1_6_1',"QRSlv","johnpye/sunpos.a4c")
 		self.assertAlmostEqual( float(M.t_solar), M.t_solar.as("s"))
 		self.assertAlmostEqual( float(M.t_solar)/3600, M.t_solar.as("h"))
+
+
+class TestCMSlv(AscendSelfTester):
+	def testheatex(self):
+		self._run('heatex',"CMSlv","heatex.a4c")
+	def testphaseeq(self):
+		self._run('phaseq',"CMSlv","phaseq.a4c")
+	def testpipeline(self):
+		self._run('pipeline',"CMSlv","pipeline.a4c"
+			,{'infinity':3.2e9}
+		)
+	def testrachford(self):
+		self._run('rachford',"CMSlv","rachford.a4c")
+	def testlinmassbal(self):
+		self._run('linmassbal',"CMSlv","linmassbal.a4c")
+
 
 class TestMatrix(AscendSelfTester):
 	def testlog10(self):
