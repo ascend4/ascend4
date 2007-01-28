@@ -1,6 +1,6 @@
 import sys, os, commands, platform, distutils.sysconfig, os.path, re
 
-version = "0.9.5.106"
+version = "0.9.5.107"
 
 #------------------------------------------------------
 # OPTIONS
@@ -1423,7 +1423,7 @@ def CheckSigReset(context):
 	(is_ok,output) = context.TryRun(sigreset_test_text,'.c')
 	if not is_ok:
 		context.Result("ERROR")
-		return 0
+		return False
 	if int(output)==1:
 		context.Result("required");
 		context.env['ASC_RESETNEEDED'] = True
@@ -1532,7 +1532,7 @@ else:
 
 if not conf.CheckSigReset():
 	print "Unable to determine if signal reset is required"
-	exit(1)
+	Exit(1)
 
 # YACC
 
