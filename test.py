@@ -569,21 +569,33 @@ class TestSteam(AscendSelfTester):
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		return M
 
-	def testintegLSODE(self):
+	def teststeadylsode(self):
+		"test that steady conditions are stable with LSODE"
+		M = self.testdsgsat()
+		#M.qdot_s.setRealValueWithUnits(1000,"W/m")
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		#M.setParameter('
+	 	I = ascpy.Integrator(M)
+		I.setEngine('LSODE')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 5, 1)
+		I.analyse()	
+		I.solve()
+
+	def testpeturblsode(self):
+		"test that steady conditions are stable with LSODE"
 		M = self.testdsgsat()
 		M.qdot_s.setRealValueWithUnits(1000,"W/m")
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		#M.setParameter('
 	 	I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
-		I.setParameter('meth','AM')
-		I.setParameter('maxord',12)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 5, 1)
 		I.analyse()	
 		I.solve()
 
-	def testintegIDA(self):	
+	def teststeadyida(self):	
 		M = self.testdsgsat()
 		self.assertAlmostEqual(M.dTw_dt[2],0.0)
 		Tw1 = float(M.T_w[2])
@@ -593,7 +605,7 @@ class TestSteam(AscendSelfTester):
 		I.setEngine('IDA')
 		I.setParameter('linsolver','DENSE')
 		I.setParameter('safeeval',True)
-		I.setParameter('rtol',1e-8)
+		I.setParameter('rtol',1e-5)
 		I.setInitialSubStep(0.01)
 		I.setMaxSubSteps(100)		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
@@ -610,17 +622,7 @@ class TestSteam(AscendSelfTester):
 		self.assertAlmostEqual(M.qdot_s.as("W/m"),1000)
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		self.assertNotAlmostEqual(M.dTw_dt[2],0.0)
-#		I = ascpy.Integrator(M)
-#		I.setEngine('LSODE')
-#		I.setReporter(ascpy.IntegratorReporterConsole(I))
-#		I.setReporter(ascpy.IntegratorReporterConsole(I))
-#		I.setLinearTimesteps(ascpy.Units("s"), 0, 5, 100)
-#		I.setMinSubStep(0.0001)
-#		I.setMaxSubStep(100)
-#		I.setInitialSubStep(0.1)
-#		I.analyse()
-#		I.solve()
-		
+
 #-------------------------------------------------------------------------------
 # Testing of freesteam external steam properties functions
 

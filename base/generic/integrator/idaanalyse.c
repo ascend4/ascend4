@@ -84,8 +84,10 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 		asc_assert(seq.n >= 1);
 		v = seq.vars[0];
 
+		/* update the var_fixed flag */
+		(void)var_fixed(v);
 		vok = var_apply_filter(v,&integrator_ida_nonderiv);
-
+		
 		if(vok && !var_incident(v)){
 			VARMSG("good var '%s' is not incident");
 			/* var meets our filter, but perhaps it's not incident? */
@@ -102,6 +104,13 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 
 		if(!vok){
 			VARMSG("'%s' fails non-deriv filter");
+			if(var_fixed(v)){
+				CONSOLE_DEBUG("(var is fixed");
+			}
+			CONSOLE_DEBUG("passes nonderiv? %s (flags = 0x%x)"
+				, (var_apply_filter(v,&integrator_ida_nonderiv) ? "TRUE" : "false")
+				, var_flags(v));
+
 			for(j=1;j<seq.n;++j){
 				v = seq.vars[j];
 				var_set_active(v,FALSE);
