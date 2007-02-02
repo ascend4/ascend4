@@ -585,9 +585,9 @@ class TestSteam(AscendSelfTester):
 	def testpeturblsode(self):
 		"test that steady conditions are stable with LSODE"
 		M = self.testdsgsat()
+		# here is the peturbation...
 		M.qdot_s.setRealValueWithUnits(1000,"W/m")
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		#M.setParameter('
 	 	I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
@@ -609,7 +609,7 @@ class TestSteam(AscendSelfTester):
 		I.setInitialSubStep(0.01)
 		I.setMaxSubSteps(100)		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 100)
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 5)
 		try:
 			I.analyse()
 		except Exception,e:
@@ -621,8 +621,28 @@ class TestSteam(AscendSelfTester):
 		M.qdot_s.setRealValueWithUnits(1000,"W/m")
 		self.assertAlmostEqual(M.qdot_s.as("W/m"),1000)
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		print "dTw/dt = %f" % M.dTw_dt[2]
 		self.assertNotAlmostEqual(M.dTw_dt[2],0.0)
 
+	def testpeturbida(self):	
+		M = self.testdsgsat()
+		self.assertAlmostEqual(M.dTw_dt[2],0.0)
+		T = self.L.findType('dsgsat3')
+		M.run(T.getMethod('free_states'))
+		# here is the peturbation...
+		M.qdot_s.setRealValueWithUnits(2000,"W/m")
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+	
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setParameter('linsolver','DENSE')
+		I.setParameter('safeeval',True)
+		I.setParameter('rtol',1e-5)
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 10000, 10)
+		I.analyse()
+		I.solve()
+		
 #-------------------------------------------------------------------------------
 # Testing of freesteam external steam properties functions
 
