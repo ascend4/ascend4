@@ -422,6 +422,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	sys->n_obs = diffvars->nobs;
 	sys->obs = ASC_NEW_ARRAY(struct var_variable *,sys->n_obs);
 	for(i=0;i<sys->n_obs;++i){
+		/* we get them all, regardless of flags etc */
 		sys->obs[i] = diffvars->obs[i];
 		varname = var_make_name(sys->system,sys->obs[i]);
 		CONSOLE_DEBUG("'%s' is observation",varname);
