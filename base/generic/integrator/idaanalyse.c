@@ -235,12 +235,15 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	sys->y = ASC_NEW_ARRAY(struct var_variable *,sys->n_y);
 	sys->ydot = ASC_NEW_ARRAY_CLEAR(struct var_variable *,sys->n_y);
 	sys->n_ydot = 0;
+	for(i=0;i<sys->n_y;++i){
+		asc_assert(sys->ydot[i] == 0);
+	}
 
 	CONSOLE_DEBUG("Passing through chains...");
 
 	/* create the lists y and ydot, ignoring 'bad' vars */
 	for(i=0; i<diffvars->nseqs; ++i){
-		CONSOLE_DEBUG("i = %d",i);
+		/* CONSOLE_DEBUG("i = %d",i); */
 			
 		seq = diffvars->seqs[i];
 		asc_assert(seq.n >= 1);
@@ -252,7 +255,7 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 		}
 
 		sys->y[j] = v;
-		VARMSG("'%s' is good non-deriv");
+		/* VARMSG("'%s' is good non-deriv"); */
 
 		if(seq.n > 1 && var_apply_filter(seq.vars[1],&integrator_ida_deriv)){
 			v = seq.vars[1];
@@ -261,7 +264,7 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 
 			sys->ydot[j] = v;
 			sys->n_ydot++;
-			VARMSG("'%s' is good deriv");
+			/* VARMSG("'%s' is good deriv"); */
 		}else{
 			asc_assert(sys->ydot[j]==NULL);
 		}
@@ -537,9 +540,10 @@ int integrator_ida_block_check(IntegratorSystem *sys){
 }
 
 /* return 0 on succes */
-static int check_dups(struct var_variable **list,int n,int allownull){
+static int check_dups(IntegratorSystem *sys, struct var_variable **list,int n,int allownull){
 	int i,j;
 	struct var_variable *v;
+	char *varname;
 	for(i=0; i< n; ++i){
 		v=list[i];
 		if(v==NULL){
@@ -548,7 +552,17 @@ static int check_dups(struct var_variable **list,int n,int allownull){
 		}
 		for(j=0; j<i-1;++j){
 			if(list[j]==NULL)continue;
-			if(v==list[j])return 1;
+			if(v==list[j]){
+				CONSOLE_DEBUG("duplicate found (%d, v = %p)",j,v);
+				varname = var_make_name(sys->system,v);
+				if(varname){
+					CONSOLE_DEBUG("Duplicate of '%s' found",varname);
+					ASC_FREE(varname);
+				}else{
+					CONSOLE_DEBUG("Duplicate found (couldn't retrieve name)");
+				}
+				return 1;
+			}
 		}
 	}
 	return 0;
@@ -589,12 +603,12 @@ static int integrator_ida_check_diffindex(IntegratorSystem *sys){
 	list = slv_get_solvers_var_list(sys->system);
 	n_vars = slv_get_num_solvers_vars(sys->system);
 	
-	if(check_dups(list,n_vars,FALSE)){
+	if(check_dups(sys, list, n_vars,FALSE)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"duplicates or NULLs in solver's var list");
 		return 1;
 	}
 
-	if(check_dups(sys->ydot,n_vars,TRUE)){
+	if(check_dups(sys, sys->ydot, n_vars,TRUE)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"duplicates in ydot vector");
 		return 1;
 	}
