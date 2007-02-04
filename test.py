@@ -644,34 +644,13 @@ class TestSteam(AscendSelfTester):
 		print "dTw/dt = %f" % M.dTw_dt[2]
 		self.assertNotAlmostEqual(M.dTw_dt[2],0.0)
 
-	def teststeadyida2(self):
-		""" test steady with higher radiation level """
-		M = self.testdsgsat()
-		T = self.L.findType('dsgsat3')
-		M.qdot_s.setRealValueWithUnits(1000,"W/m")
-		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		M.run(T.getMethod('free_states'))
-		I = ascpy.Integrator(M)
-		I.setEngine('IDA')
-		I.setParameter('linsolver','DENSE')
-		I.setParameter('safeeval',True)
-		I.setParameter('rtol',1e-5)
-		I.setParameter('atolvect',False)
-		I.setParameter('atol',1e-5)
-		I.setInitialSubStep(0.01)
-		I.setMaxSubSteps(100)		
-		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLogTimesteps(ascpy.Units("s"), 1, 3600, 5)
-		I.analyse()
-		I.solve()
-
 	def testpeturbida(self):	
 		M = self.testdsgsat()
 		self.assertAlmostEqual(M.dTw_dt[2],0.0)
 		T = self.L.findType('dsgsat3')
 		M.run(T.getMethod('free_states'))
 		# here is the peturbation...
-		M.qdot_s.setRealValueWithUnits(1000,"W/m")
+		M.qdot_s.setRealValueWithUnits(1300,"W/m")
 		# IDA has its own initial conditions solver, so no need to call QRSlv here
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
@@ -682,7 +661,7 @@ class TestSteam(AscendSelfTester):
 		I.setParameter('atol',1e-5)
 		I.setInitialSubStep(0.1)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLogTimesteps(ascpy.Units("s"), 1, 100, 20)
+		I.setLogTimesteps(ascpy.Units("s"), 1, 3600, 20)
 		I.analyse()
 		I.solve()
 		
