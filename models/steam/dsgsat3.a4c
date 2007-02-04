@@ -122,7 +122,7 @@ METHOD default_self;
 	END FOR;
 END default_self; 
 METHOD values;
-	L := 200 {m};
+	L := 50 {m};
 	h_int := 100 {W/m^2/K};
 	h_ext := 10 {W/m^2/K};
 	f := 0.01;

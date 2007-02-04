@@ -33,8 +33,9 @@
 #include "slv_stdcalls.h"
 #include "model_reorder.h"
 
-#define RIDEBUG 0 /* reindex debugging */
-#define SBPDEBUG 0 /* slv_block_partition_real debugging */
+/* #define REINDEX_DEBUG */
+/* #define BLOCKPARTITION_DEBUG */
+/* #define CUT_DEBUG */
 
 /* global to get around the mr header (for tear_subreorder) */
 static
@@ -110,7 +111,7 @@ static int reindex_rels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
    * do this only in the row range of interest. */
   for (c=lo;c<=hi;c++) {
     v = mtx_row_to_org(mtx,c);
-#if RIDEBUG
+#ifdef REINDEX_DEBUG
 	if(c!=v){
 	  CONSOLE_DEBUG("Old rel sindex (org) %d becoming sindex (cur) %d\n",v,c);
     }
@@ -138,7 +139,7 @@ static int reindex_rels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
 	@callergraph
 */
 int slv_block_partition_real(slv_system_t sys,int uppertriangular){
-#if SBPDEBUG
+#ifdef BLOCKPARTITION_DEBUG
   FILE *fp;
 #endif
   struct rel_relation **rp;
@@ -256,7 +257,7 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
   d->reorder.basis_selection = 0;	/* none yet */
   d->reorder.block_reordering = 0;	/* none */
 
-#if SBPDEBUG
+#ifdef BLOCKPARTITION_DEBUG
   fp = fopen("/tmp/sbp1.plot","w+");
   if (fp !=NULL) {
     mtx_write_region_plot(fp,mtx,mtx_ENTIRE_MATRIX);
@@ -321,7 +322,7 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
 #endif
 
 
-#if SBPDEBUG
+#ifdef BLOCKPARTITION_DEBUG
   fp = fopen("/tmp/sbp2.plot","w+");
   if (fp !=NULL) {
     mtx_write_region_plot(fp,mtx,mtx_ENTIRE_MATRIX);
@@ -360,10 +361,10 @@ extern void mc13emod();
  * doesn't grok inequalities.
  * CURRENTLY DOESN'T DO WELL WHEN NCOL<NROW
  */
-#define SBPDEBUG 0
+#define BLOCKPARTITION_DEBUG 0
 int slv_block_partition_harwell(slv_system_t sys)
 {
-#\if SBPDEBUG
+#\if BLOCKPARTITION_DEBUG
   FILE *fp;
 #\endif
   struct rel_relation **rp;
@@ -1026,7 +1027,7 @@ extern int system_block_debug(slv_system_t sys, FILE *fp){
 */
 
 /**
-	This macro will generate 'var_list_debug(sys)' and 'rel_list_debug(sys)'
+	This macro will generate 'system_var_list_debug(sys)' and 'system_rel_list_debug(sys)'
 	and maybe other useful things if you're lucky.
 */
 #define LIST_DEBUG(TYPE,FULLTYPE) \
@@ -1049,6 +1050,14 @@ extern int system_block_debug(slv_system_t sys, FILE *fp){
 LIST_DEBUG(var,var_variable)
 LIST_DEBUG(rel,rel_relation)
 
+#ifdef CUT_DEBUG
+# define MAYBE_WRITE_LIST(TYPE) system_##TYPE##_list_debug(sys)
+# define MAYBE_CONSOLE_DEBUG(MSG,...) CONSOLE_DEBUG(MSG,#ARGS)
+#else
+# define MAYBE_WRITE_LIST(TYPE)
+# define MAYBE_CONSOLE_DEBUG(MSG,...)
+#endif
+
 /**
 	This is a big durtie macro to perform cuts on our solvers_*_lists.
 	The function will start at position 'begin' and move through all elements
@@ -1066,7 +1075,7 @@ LIST_DEBUG(rel,rel_relation)
 	 \
 		asc_assert(filt); \
 	 \
-		system_##TYPE##_list_debug(sys); \
+		MAYBE_WRITE_LIST(TYPE); \
 	 \
 		list = slv_get_solvers_##TYPE##_list(sys); \
 		len = slv_get_num_solvers_##TYPE##s(sys); \
@@ -1075,7 +1084,7 @@ LIST_DEBUG(rel,rel_relation)
 			return 1; \
 		} \
 	 \
-		CONSOLE_DEBUG("SORTING"); \
+		MAYBE_CONSOLE_DEBUG("SORTING"); \
 	 \
 		start = list + begin; \
 		end = list + len; \
@@ -1090,24 +1099,24 @@ LIST_DEBUG(rel,rel_relation)
 			start++; \
 		} \
 	 \
-		system_##TYPE##_list_debug(sys); \
+		MAYBE_WRITE_LIST(TYPE); \
 	 \
-		CONSOLE_DEBUG("UPDATING"); \
+		MAYBE_CONSOLE_DEBUG("UPDATING"); \
 	 \
 		/* update the sindex for each after start */ \
 		*numgood = 0; \
 		for(i=begin;i<len;++i){ \
 			name = TYPE##_make_name(sys,list[i]); \
 			if(TYPE##_apply_filter(list[i],filt)){ \
-				CONSOLE_DEBUG("%s: good",name); \
+				MAYBE_CONSOLE_DEBUG("%s: good",name); \
 				(*numgood)++; \
 			}else{ \
-				CONSOLE_DEBUG("%s: bad",name); \
+				MAYBE_CONSOLE_DEBUG("%s: bad",name); \
 			} \
 			ASC_FREE(name); \
 			TYPE##_set_sindex(list[i],i); \
 		} \
-		CONSOLE_DEBUG("numgood = %d",*numgood); \
+		MAYBE_CONSOLE_DEBUG("numgood = %d",*numgood); \
 		 \
 		return 0; \
 	} 

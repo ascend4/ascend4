@@ -936,19 +936,21 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	CONSOLE_DEBUG("EVALUTE RESIDUALS...");
 #endif
 
-	/* pass the values of everything back to the compiler */
-	integrator_set_t(blsys, (double)tt);
-	integrator_set_y(blsys, NV_DATA_S(yy));
-	integrator_set_ydot(blsys, NV_DATA_S(yp));
-
 	if(NV_LENGTH_S(rr)!=enginedata->nrels){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid residuals nrels!=length(rr)");
 		return -1; /* unrecoverable */
 	}
 
-	/**
-		@TODO does this function (fex) do bounds checking already?
-	*/
+	/* pass the values of everything back to the compiler */
+	integrator_set_t(blsys, (double)tt);
+	integrator_set_y(blsys, NV_DATA_S(yy));
+	integrator_set_ydot(blsys, NV_DATA_S(yp));
+
+	/* perform bounds checking on all variables */
+	if(slv_check_bounds(blsys->system, 0, -1)){
+		/* ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Variable(s) out of bounds"); */
+		return 1;
+	}
 
 	/* evaluate each residual in the rellist */
 	is_error = 0;
@@ -1101,6 +1103,12 @@ int integrator_ida_djex(long int Neq, realtype tt
 	integrator_set_t(blsys, (double)tt);
 	integrator_set_y(blsys, NV_DATA_S(yy));
 	integrator_set_ydot(blsys, NV_DATA_S(yp));
+
+	/* perform bounds checking on all variables */
+	if(slv_check_bounds(blsys->system, 0, -1)){
+		/* ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Variable(s) out of bounds"); */
+		return 1;
+	}
 
 #ifdef DJEX_DEBUG
 	varlist = slv_get_solvers_var_list(blsys->system);

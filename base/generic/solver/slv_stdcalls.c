@@ -302,7 +302,7 @@ int slv_check_bounds(const slv_system_t sys
   len = slv_get_num_solvers_vars(sys);
   if(hi < 0)hi+= len; /* so you can use -1 to mean 'the last' */
   if(lo < 0)lo+= len;
-  if (lo > len || hi > len || lo < 0 || hi < 0 || lo > hi) {
+  if(lo > len || hi > len || lo < 0 || hi < 0 || lo > hi){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv_check_bounds miscalled");
     return -1;
   }
