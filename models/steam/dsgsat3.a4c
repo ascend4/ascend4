@@ -11,12 +11,12 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat3;
 	n IS_A integer_constant;
-	n :== 4;
+	n :== 5;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;
 	dmdot_dt[2..n] IS_A mass_rate_rate;
-	du_dt[2..n] IS_A power_per_volume;
+	du_dt[2..n] IS_A specific_energy_rate;
 	dTw_dt[2..n] IS_A temperature_rate;
 
 	(* wall properties *)
@@ -107,12 +107,33 @@ METHOD default_self;
 	D := 0.06 {m};
 	D_2 := 0.07 {m};
 	A_w := 0.25{PI}*D_2^2 -0.25{PI}*D^2;
+	A := 1 {m^2};
+	L := 50 {m};
+	T_amb := 298 {K};
+	dz := 3.08 {m};
+	f := 0.01;
+	h_ext := 10 {W/m^2/K};
+	h_int := 100 {W/m^2/K};
+	qdot_s := 700 {W/m};
+	rho_w := 1000 {kg/m^3};
+	t := 0 {s};
 	FOR i IN [1..n] DO
+		T[i] := 298 {K};
+		vel[i] := 1 {m/s};
 		RUN node[i].default_self;
+	END FOR;
+	FOR i IN [2..n] DO
+		T_w[i] := 298 {K};
+		drho_dt[i] := 0 {kg/m^3/s};
+		dmdot_dt[i] := 0 {kg/s/s};
+		du_dt[i] := 0 {kJ/kg/s};
+		dTw_dt[i] := 0 {K/s};
+		qdot_t[i] := 0 {W/m};
+		qdot_l[i] := 0 {W/m};
 	END FOR;
 END default_self; 
 METHOD values;
-	L := 1 {m};
+	L := 3 {m};
 	h_int := 100 {W/m^2/K};
 	h_ext := 10 {W/m^2/K};
 	f := 0.01;
@@ -122,7 +143,7 @@ METHOD values;
 	qdot_s := 1000 {W/m^2} * D_2 * 10;
 	FOR i IN [2..n] DO
 		dmdot_dt[i] := 0.0 {kg/s/s};
-		du_dt[i] := 0 {W/m^3};
+		du_dt[i] := 0 {kJ/kg/s};
 		node[i].v := 0.2 {L/kg};
 		node[i].rho := 6 {kg/L};
 		node[i].dp_dT := +0.5 {kPa/K};
