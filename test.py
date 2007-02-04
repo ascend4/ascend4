@@ -580,6 +580,19 @@ class TestSteam(AscendSelfTester):
 		M.run(T.getMethod('on_load'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 
+	def testvary(self):
+		self.L.load('steam/dsgsat3.a4c')
+		T = self.L.findType('dsgsat3')
+		M = T.getSimulation('sim',False)
+		M.run(T.getMethod('on_load'))
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		print "----- setting qdot_s -----"
+		M.qdot_s.setRealValueWithUnits(1000,"W/m")
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		print "----- setting qdot_s -----"
+		M.qdot_s.setRealValueWithUnits(2000,"W/m")
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+
 	def teststeadylsode(self):
 		"test that steady conditions are stable with LSODE"
 		M = self.testdsgsat()
@@ -622,12 +635,7 @@ class TestSteam(AscendSelfTester):
 		I.setMaxSubSteps(100)		
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 5)
-		try:
-			I.analyse()
-		except Exception,e:
-			print "ERROR: %s" % e
-			I.writeDebug(sys.stdout)
-		
+		I.analyse()
 		I.solve()
 		self.assertAlmostEqual(float(M.T_w[2]),Tw1)
 		M.qdot_s.setRealValueWithUnits(1000,"W/m")
@@ -635,6 +643,27 @@ class TestSteam(AscendSelfTester):
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		print "dTw/dt = %f" % M.dTw_dt[2]
 		self.assertNotAlmostEqual(M.dTw_dt[2],0.0)
+
+	def teststeadyida2(self):
+		""" test steady with higher radiation level """
+		M = self.testdsgsat()
+		T = self.L.findType('dsgsat3')
+		M.qdot_s.setRealValueWithUnits(1000,"W/m")
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		M.run(T.getMethod('free_states'))
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.setParameter('linsolver','DENSE')
+		I.setParameter('safeeval',True)
+		I.setParameter('rtol',1e-5)
+		I.setParameter('atolvect',False)
+		I.setParameter('atol',1e-5)
+		I.setInitialSubStep(0.01)
+		I.setMaxSubSteps(100)		
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLogTimesteps(ascpy.Units("s"), 1, 3600, 5)
+		I.analyse()
+		I.solve()
 
 	def testpeturbida(self):	
 		M = self.testdsgsat()
@@ -651,9 +680,9 @@ class TestSteam(AscendSelfTester):
 		I.setParameter('rtol',1e-5)
 		I.setParameter('atolvect',False)
 		I.setParameter('atol',1e-5)
-		I.setInitialSubStep(0.0001)
+		I.setInitialSubStep(0.1)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLogTimesteps(ascpy.Units("s"), 1, 10, 20)
+		I.setLogTimesteps(ascpy.Units("s"), 1, 100, 20)
 		I.analyse()
 		I.solve()
 		
