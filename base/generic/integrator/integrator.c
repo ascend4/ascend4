@@ -161,7 +161,7 @@ void integrator_free(IntegratorSystem *sys){
 
 	integrator_free_engine(sys);
 
-	CONSOLE_DEBUG("Engine freed, destroying internal data");
+	/* CONSOLE_DEBUG("Engine freed, destroying internal data"); */
 
 	if(sys->states != NULL)gl_destroy(sys->states);
 	if(sys->derivs != NULL)gl_destroy(sys->derivs);
@@ -170,22 +170,11 @@ void integrator_free(IntegratorSystem *sys){
 	if(sys->obslist != NULL)gl_free_and_destroy(sys->obslist);    /* and obslist */
 	if (sys->indepvars != NULL)gl_free_and_destroy(sys->indepvars);  /* and indepvars */
 
-	CONSOLE_DEBUG("...");
 	if(sys->y_id != NULL)ASC_FREE(sys->y_id);
-	CONSOLE_DEBUG("...");
-
 	if(sys->obs_id != NULL)ASC_FREE(sys->obs_id);
-
-	CONSOLE_DEBUG("...");
-
 	if(sys->y != NULL)ASC_FREE(sys->y);
-	CONSOLE_DEBUG("...");
-
 	if(sys->ydot != NULL)ASC_FREE(sys->ydot);
-	CONSOLE_DEBUG("...");
-
 	if(sys->obs != NULL)ASC_FREE(sys->obs);
-	CONSOLE_DEBUG("...");
 
 	slv_destroy_parms(&(sys->params));
 

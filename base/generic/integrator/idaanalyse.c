@@ -10,7 +10,7 @@
 #include <solver/slvDOF.h>
 #endif
 
-#define ANALYSE_DEBUG
+/* #define ANALYSE_DEBUG */
 
 #define VARMSG(MSG) \
 	varname = var_make_name(sys->system,v); \
@@ -61,8 +61,10 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 	SolverDiffVarSequence seq;
 	int vok;
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("BEFORE CHECKING VARS");
 	integrator_ida_analyse_debug(sys,stderr);
+#endif
 
 	/* we shouldn't have allocated these yet: just be sure */
 	asc_assert(sys->y==NULL);
@@ -76,7 +78,9 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 		return 1;
 	}
 
+#ifdef ANALYSE_DEBUG
 	system_var_list_debug(sys->system);
+#endif
 	
 	/* add the variables from the derivative chains */
 	for(i=0; i<diffvars->nseqs; ++i){
@@ -148,7 +152,9 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 	/* we assert that all vars in y meet the integrator_ida_nonderiv filter */
 	/* we assert that all vars in ydot meet the integrator_ida_deriv filter */
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Found %d good non-derivative vars", n_y);
+#endif
 	sys->n_y = n_y;
 
 	return 0;
@@ -163,8 +169,10 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *sys){
 	int ny1, nydot, nr;
 
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("BEFORE SORTING RELS AND VARS");
 	integrator_ida_analyse_debug(sys,stderr);
+#endif
 
 	/* we should not have allocated y or ydot yet */
 	asc_assert(sys->y==NULL && sys->ydot==NULL);
@@ -177,7 +185,9 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *sys){
 		return 1;
 	}
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("cut_vars: ny1 = %d, sys->n_y = %d",ny1,sys->n_y);
+#endif
 	asc_assert(ny1 == sys->n_y);
 
 	if(system_cut_vars(sys->system, ny1, &integrator_ida_deriv, &nydot)){
@@ -217,7 +227,9 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	const SolverDiffVarCollection *diffvars;
 	int i, j;
 	struct var_variable *v;
+#ifdef ANALYSE_DEBUG
 	char *varname;
+#endif
 
 	SolverDiffVarSequence seq;
 
@@ -240,8 +252,9 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 		asc_assert(sys->ydot[i] == 0);
 	}
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Passing through chains...");
-
+#endif
 	/* create the lists y and ydot, ignoring 'bad' vars */
 	for(i=0; i<diffvars->nseqs; ++i){
 		/* CONSOLE_DEBUG("i = %d",i); */
@@ -271,8 +284,9 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 		}
 	}
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Found %d good non-derivs",j);
-
+#endif
 	/* create the list y_id by looking at non-NULLs from ydot */
 	sys->y_id = ASC_NEW_ARRAY(int,sys->n_ydot);
 	for(i=0,j=0; i <  sys->n_y; ++i){
@@ -309,8 +323,10 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 int integrator_ida_analyse(IntegratorSystem *sys){
 	int res;
 	const SolverDiffVarCollection *diffvars;
-	char *varname;
 	int i;
+#ifdef ANALYSE_DEBUG
+	char *varname;
+#endif
 
 	asc_assert(sys->engine==INTEG_IDA);
 
@@ -336,10 +352,10 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Creating lists");
-#endif
 
 	CONSOLE_DEBUG("BEFORE MAKING LISTS");
 	integrator_ida_debug(sys,stderr);
+#endif
 
 	res = integrator_ida_create_lists(sys);
 	if(res){
@@ -349,13 +365,13 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Checking lists");
-#endif
 
 	asc_assert(sys->y);
 	asc_assert(sys->ydot);
 	asc_assert(sys->y_id);
 
 	integrator_ida_debug(sys,stderr);
+#endif
 
 	if(integrator_ida_check_diffindex(sys)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error with diffindex");
@@ -428,9 +444,11 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	for(i=0;i<sys->n_obs;++i){
 		/* we get them all, regardless of flags etc */
 		sys->obs[i] = diffvars->obs[i];
+#ifdef ANALYSE_DEBUG
 		varname = var_make_name(sys->system,sys->obs[i]);
 		CONSOLE_DEBUG("'%s' is observation",varname);
 		ASC_FREE(varname);
+#endif
 	}
 
 	return 0;
@@ -454,13 +472,17 @@ static int integrator_ida_check_partitioning(IntegratorSystem *sys){
 		if(!var_apply_filter(v,&vf))continue;
 		varname = var_make_name(sys->system,v);
 		if(!var_deriv(v)){
+#ifdef ANALYSE_DEBUG
 			fprintf(stderr,"vlist[%ld] = '%s' (nonderiv)\n",i,varname);
+#endif
 			if(i>=sys->n_y){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"non-deriv var '%s' is not at the start",varname);
 				err++;
 			}
 		}else{
+#ifdef ANALYSE_DEBUG
 			fprintf(stderr,"vlist[%ld] = '%s' (derivative)\n",i,varname);
+#endif
 			if(i<sys->n_y){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"deriv var '%s' is not at the end (n_y = %d, i = %d)"
 					,varname, sys->n_y, i
@@ -544,17 +566,20 @@ int integrator_ida_block_check(IntegratorSystem *sys){
 static int check_dups(IntegratorSystem *sys, struct var_variable **list,int n,int allownull){
 	int i,j;
 	struct var_variable *v;
+#ifdef ANALYSE_DEBUG
 	char *varname;
+#endif
 	for(i=0; i< n; ++i){
 		v=list[i];
 		if(v==NULL){
 			if(allownull)continue;
 			else return 2;
 		}
-		asc_assert(v!=0x31);
+		asc_assert(v!=(void *)0x31);
 		for(j=0; j<i-1;++j){
 			if(list[j]==NULL)continue;
 			if(v==list[j]){
+#ifdef ANALYSE_DEBUG
 				varname = var_make_name(sys->system,v);
 				if(varname){
 					CONSOLE_DEBUG("Duplicate of '%s' found",varname);
@@ -563,6 +588,7 @@ static int check_dups(IntegratorSystem *sys, struct var_variable **list,int n,in
 					CONSOLE_DEBUG("Duplicate found (couldn't retrieve name)");
 				}
 				ASC_FREE(varname);
+#endif
 				return 1;
 			}
 		}
@@ -595,7 +621,9 @@ static int integrator_ida_check_diffindex(IntegratorSystem *sys){
 	int diffindex;
 	const char *msg;
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Checking diffindex vector");
+#endif
 
 	if(sys->y_id == NULL || sys->y == NULL || sys->ydot == NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"list(s) NULL");

@@ -89,9 +89,9 @@ extern int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
 	const char *label
 );
 /**<
-	Takes a system and a range of vars (lo,hi) and makes sure all the
-	variables are within bounds and bounds are reasonable. 
-	Reports errors in all cases where they are not.
+	Takes a system and a range of vars (lo,hi) from the solver's var list
+	and makes sure all the variables are within bounds and bounds are 
+	make sense (lower < upper). Reports errors in all cases where they are not.
 	Does not change anything.
 
 	You can express lo,hi as negative numbers, which means you count back from
