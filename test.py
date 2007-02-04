@@ -569,6 +569,17 @@ class TestSteam(AscendSelfTester):
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		return M
 
+	def testdsgsatrepeat(self):
+		self.L.load('steam/dsgsat3.a4c')
+		T = self.L.findType('dsgsat3')
+		M = T.getSimulation('sim',False)
+		M.run(T.getMethod('on_load'))
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		M.run(T.getMethod('on_load'))
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		M.run(T.getMethod('on_load'))
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+
 	def teststeadylsode(self):
 		"test that steady conditions are stable with LSODE"
 		M = self.testdsgsat()
@@ -631,7 +642,7 @@ class TestSteam(AscendSelfTester):
 		T = self.L.findType('dsgsat3')
 		M.run(T.getMethod('free_states'))
 		# here is the peturbation...
-		M.qdot_s.setRealValueWithUnits(1000,"W/m")
+		M.qdot_s.setRealValueWithUnits(2000,"W/m")
 		# IDA has its own initial conditions solver, so no need to call QRSlv here
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
@@ -639,10 +650,10 @@ class TestSteam(AscendSelfTester):
 		I.setParameter('safeeval',True)
 		I.setParameter('rtol',1e-5)
 		I.setParameter('atolvect',False)
-		I.setParameter('atol',1e-4)
+		I.setParameter('atol',1e-5)
 		I.setInitialSubStep(0.0001)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLogTimesteps(ascpy.Units("s"), 1, 3600, 20)
+		I.setLogTimesteps(ascpy.Units("s"), 1, 5, 20)
 		I.analyse()
 		I.solve()
 		

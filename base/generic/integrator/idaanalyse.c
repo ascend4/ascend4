@@ -89,33 +89,34 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 		vok = var_apply_filter(v,&integrator_ida_nonderiv);
 		
 		if(vok && !var_incident(v)){
-			VARMSG("good var '%s' is not incident");
+			/* VARMSG("good var '%s' is not incident"); */
 			/* var meets our filter, but perhaps it's not incident? */
 			if(seq.n == 1 || var_apply_filter(seq.vars[1],&integrator_ida_nonderiv)){
-				VARMSG("DEACTIVATING NON-INCIDENT VAR '%s' (NO DERIVATIVE)");
+				/* VARMSG("DEACTIVATING NON-INCIDENT VAR '%s' (NO DERIVATIVE)"); */
 				var_set_active(v,0);
 				vok = 0;
 			}else{
-				VARMSG("'%s' has a derivative that's OK");
+				/* VARMSG("'%s' has a derivative that's OK"); */
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Non-incident var with an incident derivative. ASCEND can't handle this case at the moment, but we hope to fix it.");
 				return 1;
 			}
 		}		
 
 		if(!vok){
-			VARMSG("'%s' fails non-deriv filter");
+			/* VARMSG("'%s' fails non-deriv filter");
 			if(var_fixed(v)){
 				CONSOLE_DEBUG("(var is fixed");
 			}
 			CONSOLE_DEBUG("passes nonderiv? %s (flags = 0x%x)"
 				, (var_apply_filter(v,&integrator_ida_nonderiv) ? "TRUE" : "false")
-				, var_flags(v));
-
+				, var_flags(v)
+			);
+			*/
 			for(j=1;j<seq.n;++j){
 				v = seq.vars[j];
 				var_set_active(v,FALSE);
 				var_set_value(v,0);
-				VARMSG("Derivative '%s' SET ZERO AND INACTIVE");
+				/* VARMSG("Derivative '%s' SET ZERO AND INACTIVE"); */
 			}
 			continue;
 		}		
@@ -131,16 +132,16 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 			if(var_apply_filter(seq.vars[1],&integrator_ida_deriv)){
 				/* add the diff & deriv vars to the lists */
 				n_y++;
-				VARMSG("Added diff var '%s'");
-				v = seq.vars[1]; VARMSG("and its derivative '%s'");
+				/* VARMSG("Added diff var '%s'");
+				v = seq.vars[1]; VARMSG("and its derivative '%s'"); */
 				continue;
 			}
-			VARMSG("Diff var '%s' being converted to alg var...");
-			v = seq.vars[1]; VARMSG("...because deriv var '%s' fails filter");
+			/* VARMSG("Diff var '%s' being converted to alg var...");
+			v = seq.vars[1]; VARMSG("...because deriv var '%s' fails filter"); */
 			/* fall through */
 		}
 
-		VARMSG("Adding '%s' to algebraic");
+		/* VARMSG("Adding '%s' to algebraic"); */
 		n_y++;
 	}
 
@@ -276,8 +277,8 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	sys->y_id = ASC_NEW_ARRAY(int,sys->n_ydot);
 	for(i=0,j=0; i <  sys->n_y; ++i){
 		if(sys->ydot[i]==NULL)continue;
-		v = sys->ydot[i]; VARMSG("deriv '%s'...");
-		v = sys->y[i]; VARMSG("diff '%s'...");
+		/* v = sys->ydot[i]; VARMSG("deriv '%s'..."); */
+		/* v = sys->y[i]; VARMSG("diff '%s'..."); */
 		sys->y_id[var_sindex(sys->ydot[i]) - sys->n_y] = i;
 		j++;
 	}
@@ -550,10 +551,10 @@ static int check_dups(IntegratorSystem *sys, struct var_variable **list,int n,in
 			if(allownull)continue;
 			else return 2;
 		}
+		asc_assert(v!=0x31);
 		for(j=0; j<i-1;++j){
 			if(list[j]==NULL)continue;
 			if(v==list[j]){
-				CONSOLE_DEBUG("duplicate found (%d, v = %p)",j,v);
 				varname = var_make_name(sys->system,v);
 				if(varname){
 					CONSOLE_DEBUG("Duplicate of '%s' found",varname);
@@ -561,6 +562,7 @@ static int check_dups(IntegratorSystem *sys, struct var_variable **list,int n,in
 				}else{
 					CONSOLE_DEBUG("Duplicate found (couldn't retrieve name)");
 				}
+				ASC_FREE(varname);
 				return 1;
 			}
 		}
@@ -608,7 +610,7 @@ static int integrator_ida_check_diffindex(IntegratorSystem *sys){
 		return 1;
 	}
 
-	if(check_dups(sys, sys->ydot, n_vars,TRUE)){
+	if(check_dups(sys, sys->ydot, sys->n_y,TRUE)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"duplicates in ydot vector");
 		return 1;
 	}
