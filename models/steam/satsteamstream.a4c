@@ -9,6 +9,7 @@ METHOD default_self;
 	rho := 200 {kg/m^3};
 	rho.nominal := 10 {kg/m^3};
 	mdot := 0.1 {kg/s};
+	mdot.nominal := 0.1 {kg/s};
 	RUN iapwssat::default_self;
 END default_self;
 METHOD specify;
@@ -22,7 +23,7 @@ METHOD values;
 END values;
 METHOD bound_self;
 	RUN iapwssat::bound_self;
-	(* mdot.lower_bound := 0 {kg/s}; *)
+	mdot.lower_bound := 0 {kg/s};
 END bound_self;
 METHOD on_load;
 	RUN bound_self;

@@ -650,7 +650,7 @@ class TestSteam(AscendSelfTester):
 		T = self.L.findType('dsgsat3')
 		M.run(T.getMethod('free_states'))
 		# here is the peturbation...
-		M.qdot_s.setRealValueWithUnits(1300,"W/m")
+		M.qdot_s.setRealValueWithUnits(6000,"W/m")
 		# IDA has its own initial conditions solver, so no need to call QRSlv here
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
