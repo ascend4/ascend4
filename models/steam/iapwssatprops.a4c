@@ -132,7 +132,7 @@ METHOD default_self;
 	h_f := 800 {kJ/kg};
 	h_f.nominal := 700 {kJ/kg};
 	h_g := 2900 {kJ/kg};
-	h_g.nominal := 2600 {kJ/g};
+	h_g.nominal := 2600 {kJ/kg};
 	u_f := 700 {kJ/kg};
 	u_g := 2700 {kJ/kg};
 	dp_dT.nominal := 10 {kPa/K};

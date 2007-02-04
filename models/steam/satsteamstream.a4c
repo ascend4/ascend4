@@ -7,6 +7,7 @@ MODEL satsteamstream REFINES iapwssat;
 METHODS
 METHOD default_self;
 	rho := 200 {kg/m^3};
+	rho.nominal := 10 {kg/m^3};
 	mdot := 0.1 {kg/s};
 	RUN iapwssat::default_self;
 END default_self;
