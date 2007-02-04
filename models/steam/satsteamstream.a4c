@@ -2,15 +2,13 @@ REQUIRE "steam/iapwssat.a4c";
 
 MODEL satsteamstream REFINES iapwssat;
 	mdot IS_A mass_rate;
-	Hdot IS_A energy_rate;
-	Hdot = mdot*h;
 	rho IS_A mass_density;
 	rho * v = 1;
 METHODS
 METHOD default_self;
-	RUN iapwssat::default_self;
 	rho := 200 {kg/m^3};
-	Hdot := 0.1 {kg/s} * 3000 {kJ/kg};
+	mdot := 0.1 {kg/s};
+	RUN iapwssat::default_self;
 END default_self;
 METHOD specify;
 	RUN iapwssat::specify;
@@ -34,6 +32,5 @@ METHOD self_test;
 	ASSERT mdot == 0.1 {kg/s};
 	ASSERT abs(p - 101.418{kPa}) < 0.0005{kPa};
 	ASSERT abs(h - 1547.4616{kJ/kg}) < 0.0005{kJ/kg};
-	ASSERT Hdot == h*mdot;
 END self_test;
 END satsteamstream;

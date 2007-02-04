@@ -14,31 +14,34 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, USA.
 *)
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
 (*
-	This model implements the complete set of equations from the IAPWS release:
-	'Revised Supplementary Release on Saturation Properties of Ordinary Water Substance'
-	from the International Association for the Properties of Water and Steam,
-	St Petersburg, Russia, September 1992.
+	This model implements the complete set of equations from the IAPWS
+	release, 'Revised Supplementary Release on Saturation Properties of
+	Ordinary Water Substance' from the International Association for the
+	Properties of Water and Steam, St Petersburg, Russia, September 1992.
 	http://www.iapws.org/relguide/supsat.pdf
 
-	These equations are not compatible with the full IAPWS-IF97 correlations;
-	the only implement properties inside the saturation region, using relatively
-	simple correlations.
+	These equations are not compatible with the full IAPWS-IF97 
+	correlations; they only implement properties inside the saturation
+	region, using relatively simple correlations.
 *)
 MODEL iapwssatprops;
 	T IS_A temperature;
 	p IS_A pressure;
 	h_f, h_g IS_A specific_enthalpy;
-	mu_f, mu_g IS_A viscosity;
 	rho_f, rho_g IS_A mass_density;
 	u_f, u_g IS_A specific_energy;
-
+	s_f, s_g IS_A specific_entropy;	
+	dp_dT IS_A pressure_per_temperature;
+	tau IS_A fraction;
+	theta IS_A fraction;
 	alpha IS_A specific_energy;
+	phi IS_A specific_entropy;
 
 	p_c IS_A pressure_constant;
 	p_c :== 22.064 {MPa};
@@ -49,9 +52,7 @@ MODEL iapwssatprops;
 	rho_c IS_A real_constant;
 	rho_c :== 322 {kg/m^3};
 
-	tau IS_A fraction;
 	tau_expr: tau = 1 - theta;
-	theta IS_A fraction;
 	theta_expr: theta = T / T_c;
 
 	(* note: I tried to rearrange this without the '/' but it caused divergence in dsgsat2.a4c in configure_dynamic mode *)
@@ -76,7 +77,6 @@ MODEL iapwssatprops;
 
 	ln(p / p_c) = T_c/T * SUM[a[i]*tau^n[i] | i IN [1..6]];
 
-	dp_dT IS_A pressure_per_temperature;
 	dpdT_expr: dp_dT = - p/T * T_c/T * SUM[a[i]*n[i]*tau^(n[i]-1) + a[i]*(1-n[i])*tau^n[i] | i IN [1..6]];
 	
 	b[1..6] IS_A real_constant;
@@ -119,10 +119,8 @@ MODEL iapwssatprops;
 	phi_0 IS_A real_constant;
 	phi_0 :== 1000 {J/kg} / 647.096 {K};
 
-	phi IS_A specific_entropy;
 	phi_expr: phi / phi_0 = d_phi + 19/20*d[1]*theta^(-20) + d[2]*ln(theta) + 9/7*d[3]*theta^3.5 + 5/4*d[4]*theta^4 + 109/107*d[5]*theta^53.5;
 
-	s_f, s_g IS_A specific_entropy;	
 	sf_expr: s_f = phi + 1/rho_f * dp_dT;
 	sg_expr: s_g = phi + 1/rho_g * dp_dT;
 METHODS
@@ -131,24 +129,28 @@ METHOD on_load;
 	RUN reset; RUN values; RUN bound_self;
 END on_load;
 METHOD default_self;
-	h_f := 1500 {kJ/kg};
+	h_f := 800 {kJ/kg};
 	h_f.nominal := 700 {kJ/kg};
-	h_g := 3100 {kJ/kg};
+	h_g := 2900 {kJ/kg};
 	h_g.nominal := 2600 {kJ/g};
-	u_f := 2000 {kJ/kg};
-	u_g := 4000 {kJ/kg};
+	u_f := 700 {kJ/kg};
+	u_g := 2700 {kJ/kg};
 	dp_dT.nominal := 10 {kPa/K};
-(*
-	s_f := 5 {kJ/kg/K};
-	s_g := 7 {kJ/kg/K};
-	mu_f := 2e-5 {Pa*s};
-	mu_g := 1e-7 {Pa*s};
+	rho_f := 1000 {kg/m^3};
+	rho_f.nominal := 1000 {kg/m^3};
+	rho_g := 5 {kg/m^3};
+	rho_g.nominal := 10 {kg/m^3};
 
-	rho_f.nominal := 900 {kg/m^3};
-	rho_f := 900 {kg/m^3};
-	rho_g.nominal := 1 {kg/m^3};
-	rho_g := 1 {kg/m^3};
-*)
+	T := 298 {K};
+	p := 7 {bar};
+	dp_dT := 1 {Pa/K};
+
+	s_f := 6 {kJ/kg/K};
+	s_g := 6 {kJ/kg/K};
+	theta := 0.5;
+	tau := 0.5;
+	alpha := 1000 {kJ/kg};
+	phi := 6 {kJ/kg/K};
 END default_self;
 METHOD specify;
 	FIX T;

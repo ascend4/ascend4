@@ -926,7 +926,7 @@ class Browser:
 			text +="\nnone"
 
 		text+="\n\nAbove calculated using a relative error of %f" % float(_bignum)
-		text+="\nModify this value in .ascend.ini, section '[Browswer]', key 'far_from_nominals'."
+		text+="\nModify this value in .ascend.ini, section '[Browser]', key 'far_from_nominals'."
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
 

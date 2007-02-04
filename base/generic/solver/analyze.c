@@ -612,19 +612,19 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 
 	  if(ip->u.v.obsid){
 		gl_append_ptr(p_data->obsvars,(POINTER)ip);
-		CONSOLE_DEBUG("Added to obsvars");	
+		/* CONSOLE_DEBUG("Added to obsvars"); */
       }
 	  /* make the algebraic/differential/derivative cut */
 	  if(ip->u.v.odeid){
         gl_append_ptr(p_data->diffvars,(POINTER)ip);
-		CONSOLE_DEBUG("Added var to diffvars");
+		/* CONSOLE_DEBUG("Added var to diffvars"); */
       }else{
 		if(ip->u.v.deriv==-1){
 		  gl_append_ptr(p_data->indepvars,(POINTER)ip);
-		  CONSOLE_DEBUG("Added to indep vars");
+		  /* CONSOLE_DEBUG("Added to indep vars"); */
 		}else{
 		  gl_append_ptr(p_data->algebvars,(POINTER)ip);
-		  CONSOLE_DEBUG("Added var to algebvars");
+		  /* CONSOLE_DEBUG("Added var to algebvars"); */
 		}
 	  }
     }else{
