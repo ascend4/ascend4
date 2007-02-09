@@ -661,7 +661,7 @@ class TestSteam(AscendSelfTester):
 		I.setParameter('atol',1e-5)
 		I.setInitialSubStep(0.1)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLogTimesteps(ascpy.Units("s"), 1, 3600, 20)
+		I.setLogTimesteps(ascpy.Units("s"), 0.01, 3600, 20)
 		I.analyse()
 		I.solve()
 		
