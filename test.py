@@ -225,16 +225,17 @@ class TestIntegrator(Ascend):
 		P = I.getParameters()
 		for p in P:
 			print p.getName(),"=",p.getValue()
-		assert len(P)==11
+		assert len(P)==12
 		assert P[0].isStr()
 		assert P[0].getName()=="linsolver"
 		assert P[0].getValue()=='SPGMR'
-		assert P[2].getName()=="autodiff"
-		assert P[2].getValue()==True
-		assert P[7].getName()=="atolvect"
-		assert P[7].getBoolValue() == True
-		P[2].setBoolValue(False)
-		assert P[2].getBoolValue()==False
+		assert P[2].getName()=="maxord"
+		assert P[3].getName()=="autodiff"
+		assert P[3].getValue()==True
+		assert P[8].getName()=="atolvect"
+		assert P[8].getBoolValue() == True
+		P[3].setBoolValue(False)
+		assert P[3].getBoolValue()==False
 		I.setParameters(P)
 		assert I.getParameterValue('autodiff')==False
 		I.setParameter('autodiff',True)
@@ -602,7 +603,7 @@ class TestSteam(AscendSelfTester):
 	 	I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 5, 1)
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 10)
 		I.analyse()	
 		I.solve()
 
@@ -630,11 +631,13 @@ class TestSteam(AscendSelfTester):
 		I.setEngine('IDA')
 		I.setParameter('linsolver','DENSE')
 		I.setParameter('safeeval',True)
-		I.setParameter('rtol',1e-5)
-		I.setInitialSubStep(0.01)
-		I.setMaxSubSteps(100)		
+		I.setParameter('rtol',1e-4)
+		I.setParameter('atolvect',False)
+		I.setParameter('atol',1e-4)
+		I.setParameter('maxord',3)		
+		I.setInitialSubStep(0.001)
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 5)
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 10)
 		I.analyse()
 		I.solve()
 		self.assertAlmostEqual(float(M.T_w[2]),Tw1)
