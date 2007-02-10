@@ -99,7 +99,7 @@
 #define STATS_DEBUG
 #define PREC_DEBUG
 /* #define DIFFINDEX_DEBUG */
-#define ANALYSE_DEBUG
+/* #define ANALYSE_DEBUG */
 /**
 	Everthing that the outside world needs to know about IDA
 */
@@ -287,6 +287,7 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *blsys){
 enum ida_parameters{
 	IDA_PARAM_LINSOLVER
 	,IDA_PARAM_MAXL
+	,IDA_PARAM_MAXORD
 	,IDA_PARAM_AUTODIFF
 	,IDA_PARAM_CALCIC
 	,IDA_PARAM_SAFEEVAL
@@ -404,6 +405,14 @@ int integrator_ida_params_default(IntegratorSystem *blsys){
 		}, 0, 0, 20 }
 	);
 
+	slv_param_int(p,IDA_PARAM_MAXORD
+			,(SlvParameterInitInt){{"maxord"
+			,"Maximum order of linear multistep method",0
+			,"The maximum order of the linear multistep method with IDA. See"
+			" IDA manual p 38."
+		}, 5, 1, 5 }
+	);
+
 	slv_param_bool(p,IDA_PARAM_GSMODIFIED
 			,(SlvParameterInitBool){{"gsmodified"
 			,"Gram-Schmidt Orthogonalisation Scheme", 2
@@ -488,8 +497,9 @@ int integrator_ida_solve(
 		return 1; /* failure */
 	}
 
-
+#ifdef SOLVE_DEBUG
 	integrator_ida_debug(blsys,stderr);
+#endif
 
 	/* retrieve initial values from the system */
 
@@ -561,6 +571,9 @@ int integrator_ida_solve(
 
 	CONSOLE_DEBUG("MAXNCF = %d",SLV_PARAM_INT(&blsys->params,IDA_PARAM_MAXNCF));
     IDASetMaxConvFails(ida_mem,SLV_PARAM_INT(&blsys->params,IDA_PARAM_MAXNCF));
+
+	CONSOLE_DEBUG("MAXORD = %d",SLV_PARAM_INT(&blsys->params,IDA_PARAM_MAXORD));
+    IDASetMaxOrd(ida_mem,SLV_PARAM_INT(&blsys->params,IDA_PARAM_MAXORD));
 
 	/* there's no capability for setting *minimum* step size in IDA */
 
@@ -709,11 +722,15 @@ int integrator_ida_solve(
 		for(i=0; i < blsys->n_y; ++i){
 			if(blsys->ydot[i] == NULL){
 				NV_Ith_S(id,i) = 0.0;
+#ifdef SOLVE_DEBUG
 				varname = var_make_name(blsys->system,blsys->y[i]);
 				CONSOLE_DEBUG("y[%d] = '%s' is pure algebraic",i,varname);
 				ASC_FREE(varname);
+#endif
 			}else{
+#ifdef SOLVE_DEBUG
 				CONSOLE_DEBUG("y[%d] is differential",i);
+#endif
 				NV_Ith_S(id,i) = 1.0;
 			}
 		}
