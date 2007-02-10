@@ -11,7 +11,7 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat3;
 	n IS_A integer_constant;
-	n :== 5;
+	n :== 47;
 
 	(* temporal derivatives *)
 	drho_dt[2..n] IS_A density_rate;
@@ -77,10 +77,10 @@ MODEL dsgsat3;
 		z_mombal[i]:  - dz/A*dmdot_dt[i] =
 						(node[i+1].p-node[i-1].p) / 2.0
 						+ dz * f/D/2 * node[i].rho * vel[i]^2
-						+ (node[i].rho*vel[i]^2 - node[i-1].rho*vel[i-1]^2);
+						+ (node[i+1].rho*vel[i+1]^2 - node[i-1].rho*vel[i-1]^2) / 2.0;
 	END FOR;
 
-	(* the last equations use backwards difference *)
+	(* the equations for the last node use backwards difference *)
 	FOR i IN [n] CREATE
 		z_massbal1[i]: A * drho_dt[i] * dz = - (node[i].mdot - node[i-1].mdot);
 
@@ -92,7 +92,6 @@ MODEL dsgsat3;
 						(node[i].p-node[i-1].p) 
 						+ dz * f/D/2 * node[i].rho * vel[i]^2
 						+ (node[i].rho*vel[i]^2 - node[i-1].rho*vel[i-1]^2);
-
 	END FOR;
 
 	(* these equation have no spatial derivatives *)
@@ -112,6 +111,7 @@ METHODS
 		END FOR;
 	END bound_self;
 	METHOD default_self;
+		(* these are DEFAULT values and are overwritten in METHOD values below *)
 		D := 0.06 {m};
 		D_2 := 0.07 {m};
 		A_w := 0.25{PI}*D_2^2 -0.25{PI}*D^2;
@@ -164,13 +164,13 @@ METHODS
 		END FOR;
 	END specify;
 	METHOD values;
-		L := 9 {m};
+		L := 10 {m};
 		h_int := 100 {W/m^2/K};
 		h_ext := 20 {W/m^2/K};
-		f := 0.01;
-		node[1].mdot := 0.5 {kg/s};
-		node[1].p := 8 {bar};
-		node[1].x := 0.3;
+		f := 0.03;
+		node[1].mdot := 0.26 {kg/s};
+		node[1].p := 10 {bar};
+		node[1].x := 0.23;
 		qdot_s := 1000 {W/m^2} * D_2 * 10;
 		FOR i IN [2..n] DO
 			dmdot_dt[i] := 0.0 {kg/s/s};
@@ -239,13 +239,19 @@ METHODS
 			(* p[i].obs_id :=         1 + 10*i; *)
 			(* x[i].obs_id :=         2 + 10*i; *)
 			(* node[i].mdot.obs_id := 4 + 10*i; *)
-			node[i].h.obs_id :=    3 + 10*i;
+			(* node[i].h.obs_id :=    3 + 10*i; *)
 		END FOR;
 		FOR i IN [2..n] DO
 			(* qdot_t[i].obs_id :=    3 + 10*i; *)
 			(* T_w[i].obs_id :=       5 + 10*i; *)
 			(* T[i].obs_id :=         6 + 10*i;*)
 		END FOR;
+
+		node[n].mdot.obs_id := 1;
+		node[n].x.obs_id := 1;
+		p[n].obs_id := 1;
+		vel[n].obs_id := 1;
+
 	END ode_init;
 	METHOD fix_outlet_quality;
 		FIX x[n];
