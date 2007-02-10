@@ -1088,6 +1088,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 
 /**
 	Dense Jacobian evaluation. Only suitable for small problems!
+	Has been seen working for problems up to around 2000 vars, FWIW.
 */
 int integrator_ida_djex(long int Neq, realtype tt
 		, N_Vector yy, N_Vector yp, N_Vector rr
