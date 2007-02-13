@@ -35,6 +35,8 @@
 
 #include <string.h>
 
+#define SEARCH_DEBUG
+
 /* #define IMPORTHANDLER_VERBOSE */
 
 /*
@@ -302,7 +304,9 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 		to store the full path when found */
 	FILE *f;
 	char *filename;
-	/* char *fullpath; */
+#ifdef SEARCH_DEBUG
+	char *fullpath;
+#endif
 	struct ImportHandlerSearch *searchdata;
 	struct FilePath *fp, *fp1, *fp2;
 	int i;
@@ -310,10 +314,12 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 
 	searchdata = (struct ImportHandlerSearch *)userdata;
 
-	/* char *pathcomponent;
+#ifdef SEARCH_DEBUG
+	char *pathcomponent;
 	pathcomponent = ospath_str(path); //eg '/home/john'
 	CONSOLE_DEBUG("In directory '%s'...",pathcomponent);
-	ASC_FREE(pathcomponent); */
+	ASC_FREE(pathcomponent);
+#endif
 
 	asc_assert(importhandler_library!=NULL);
 
@@ -329,29 +335,34 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 		ASC_FREE(filename);
 		asc_assert(fp!=NULL);
 
-		/* fullpath = ospath_str(searchdata->relativedir);
+		fullpath = ospath_str(searchdata->relativedir);
 		CONSOLE_DEBUG("Relative dir is '%s'",fullpath);
-		ASC_FREE(fullpath); */
+		ASC_FREE(fullpath);
 
 		fp1 = ospath_concat(path,searchdata->relativedir); /* eg '/home/john/path/to' */
 		asc_assert(fp1!=NULL);
 
-		/*fullpath = ospath_str(fp1);
-		CONSOLE_DEBUG("Path is '%s'",fullpath);
-		ASC_FREE(fullpath);*/
 
-		/*fullpath = ospath_str(fp);
+#ifdef SEARCH_DEBUG
+		fullpath = ospath_str(fp1);
+		CONSOLE_DEBUG("Path is '%s'",fullpath);
+		ASC_FREE(fullpath);
+
+		fullpath = ospath_str(fp);
 		CONSOLE_DEBUG("Filename is '%s'",fullpath);
-		ASC_FREE(fullpath);*/
+		ASC_FREE(fullpath);
+#endif
 
 		fp2 = ospath_concat(fp1,fp); /* eg '/home/john/path/to/libmyext.so' */
 		asc_assert(fp2!=NULL);
 		ospath_free(fp1);
 		ospath_free(fp);
 
-		/* fullpath = ospath_str(fp2);
+#ifdef SEARCH_DEBUG
+		fullpath = ospath_str(fp2);
 		CONSOLE_DEBUG("Checking for readable '%s'",fullpath);
-		ASC_FREE(fullpath); */
+		ASC_FREE(fullpath);
+#endif
 
 		if(0==ospath_stat(fp2,&buf) && NULL!=(f = ospath_fopen(fp2,"r"))){
 			fclose(f);
@@ -368,10 +379,13 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 struct FilePath *importhandler_findinpath(const char *partialname
 		, char *defaultpath, char *envv, struct ImportHandler **handler
 ){
-	struct FilePath *fp1; /* relative path */
+	struct FilePath *fp, *fp1; /* relative path */
 	struct ImportHandlerSearch searchdata;
-	char *path;
+	char *path, *filename;
 	struct FilePath **sp;
+	int i;
+	ospath_stat_t buf;
+	FILE *f;
 
 	fp1 = ospath_new_noclean(partialname); /* eg 'path/to/myext' */
 	if(fp1==NULL){
@@ -398,7 +412,55 @@ struct FilePath *importhandler_findinpath(const char *partialname
 	searchdata.foundpath = NULL;
 	searchdata.handler = NULL;
 
-	/** @TODO first, attempt to open without searching in path */
+	/* first, attempt to open without searching in path */
+
+	for(i=0; i<IMPORTHANDLER_MAX && importhandler_library[i]!=NULL; ++i){
+
+		filename = (*(importhandler_library[i]->filenamefn))(searchdata.partialname); /* eg 'myext' -> 'libmyext.so' */
+		if(filename==NULL){
+			CONSOLE_DEBUG("Unable to create filename from partialname '%s'",searchdata.partialname);
+			continue;
+		}
+		
+		fp = ospath_new(filename); /* eg 'libmyext.so' */
+		ASC_FREE(filename);
+		asc_assert(fp!=NULL);
+
+#ifdef SEARCH_DEBUG
+		path = ospath_str(searchdata.relativedir);
+		CONSOLE_DEBUG("Relative dir is '%s'",path);
+		ASC_FREE(path);
+
+		path = ospath_str(fp);
+		CONSOLE_DEBUG("Filename is '%s'",path);
+		ASC_FREE(path);
+#endif
+
+		fp1 = ospath_concat(searchdata.relativedir,fp); /* eg '/home/john/path/to/libmyext.so' */
+		asc_assert(fp1!=NULL);
+		ospath_free(fp);
+
+#ifdef SEARCH_DEBUG
+		path = ospath_str(fp1);
+		CONSOLE_DEBUG("Checking for readable '%s'",path);
+		ASC_FREE(path);
+#endif
+
+		if(0==ospath_stat(fp1,&buf) && NULL!=(f = ospath_fopen(fp1,"r"))){
+			CONSOLE_DEBUG("FOUND!");
+			fclose(f);
+			ASC_FREE(searchdata.partialname);
+			ospath_free(searchdata.relativedir);
+			*handler = importhandler_library[i];
+			return fp1;
+		}else{
+			CONSOLE_DEBUG("Not found");
+		}
+
+		ospath_free(fp1);
+	}
+
+	/*-----------------------*/
 
 	path=Asc_GetEnv(envv);
 	if(path==NULL){
