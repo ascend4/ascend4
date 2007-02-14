@@ -1,6 +1,6 @@
 /*	ASCEND modelling environment
 	Copyright (C) 1998 Carnegie Mellon University
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006, 2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	Variable clearing routines.
+	Variable clearing routines, for implementation of METHOD ClearAll.
 *//*
 	by Ben Allan, February 24, 1998
 	Last in CVS: $Revision: 1.4 $ $Date: 1998/06/16 16:42:10 $ $Author: mthomas $
@@ -27,25 +27,22 @@
 #ifndef ASC_ASCFREEALLVARS_H
 #define ASC_ASCFREEALLVARS_H
 
-#include <compiler/compiler.h>
 #include <compiler/extfunc.h>
 #include <general/list.h>
 
 ASC_DLLSPEC int Asc_ClearVarsInTree(struct Instance *i);
-/**< Asc_ClearVarsInTree(i).
- * A service routine which assumes a solver_var modeling world
- * and clears (set var.fixed := FALSE) all var and refinements
- * of var in the DAG rooted at i.
- */
+/**<
+	A service routine which assumes a solver_var modeling world
+	and clears (set var.fixed := FALSE) all var and refinements
+	of var in the DAG rooted at i.
+*/
 
 ExtMethodRun Asc_FreeAllVars;
 /**<
- *  err = Asc_FreeAllVars(NULL,rootinstance,arglist,0);
- *  All arguments except rootinstance are ignored.
- *  rootinstance is used as the argument to a call to Asc_ClearVarsInTree.
- *  This wrapper exists only for old EXTERNAL a la abbott compatibility
- *  and should be trashed ASAP.
- */
+	err = Asc_FreeAllVars(NULL,rootinstance,arglist,0);
+	All arguments except rootinstance are ignored.
+	rootinstance is used as the argument to a call to Asc_ClearVarsInTree.
+*/
 
 #endif /* ASC_ASCFREEALLVARS_H */
 

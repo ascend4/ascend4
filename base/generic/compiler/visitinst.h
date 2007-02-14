@@ -1,46 +1,35 @@
-/*
- *  Ascend Instance Tree Type Visit Implementation
- *  by Tom Epperly, Ben Allan, Vicente Rico-Ramirez
- *  8/16/89
- *  Version: $Revision: 1.12 $
- *  Version control file: $RCSfile: visitinst.h,v $
- *  Date last modified: $Date: 1997/12/20 17:51:56 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1996 Ben Allan, Vicente' Rico-Ramirez
- *  Based on
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 1996 Ben Allan, Vicente Rico-Ramirez
+	Copyright (C) 2007 Carnegie Mellon University
 
-/** @file
- *  Ascend Instance Tree Type Visit Implementation.
- *  <pre>
- *  When #including visitinst.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "instance_enum.h"
- *         #include "compiler.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Ascend Instance Tree Type Visit Implementation
+*//*
+	by Tom Epperly. 8/16,89. revised Ben Allan, Vicente Rico-Ramirez
+	Last in CVS: $Revision: 1.12 $ $Date: 1997/12/20 17:51:56 $ $Author: ballan $
+*/
 
 #ifndef ASC_VISITINST_H
 #define ASC_VISITINST_H
+
+#include <utilities/ascConfig.h>
+#include "instance_enum.h"
+#include "compiler.h"
 
 /**	@addtogroup compiler Compiler
 	@{
@@ -97,8 +86,6 @@ struct visitmapinfo {
 
 extern void ResetVisitCounts(struct Instance *inst);
 /**< 
- *  <!--  void ResetVisitCounts(i);                                    -->
- *
  *  Resets the visit count of all instances in the tree rooted at i to 0.
  *  i must NOT be a fundamental instance (i.e. atom child) or a SIM_INST.
  *  Set global_visit_num = 0 after calling this on all instances.
@@ -121,11 +108,6 @@ extern void ResetVisitCounts(struct Instance *inst);
 ASC_DLLSPEC void SilentVisitInstanceTree(struct Instance *inst,
                                     VisitProc proc, int depth, int leaf);
 /**<
- *  <!--  void SilentVisitInstanceTree(inst,proc,depth,leaf)           -->
- *  <!--  struct Instance *inst;                                       -->
- *  <!--  VisitProc proc;                                              -->
- *  <!--  int depth,leaf;                                              -->
- *
  *  Visit every node of an instance tree and call proc for each node.
  *  proc will be called on inst regardless of leaf, even it is an
  *  atom or child of an atom.<br><br>
@@ -152,11 +134,6 @@ ASC_DLLSPEC void SilentVisitInstanceTree(struct Instance *inst,
 extern void FastVisitInstanceTree(struct Instance *inst,
                                   VisitProc proc, int depth, int leaf);
 /**<
- *  <!--  void FastVisitInstanceTree(inst,proc,depth,leaf)             -->
- *  <!--  struct Instance *inst;                                       -->
- *  <!--  VisitProc proc;                                              -->
- *  <!--  int depth,leaf;                                              -->
- *
  *  Visit every node of an instance tree and call proc for each node.
  *  proc will be called on inst regardless of leaf, even it is an
  *  atom or child of an atom.<br><br>
@@ -181,11 +158,6 @@ extern void FastVisitInstanceTree(struct Instance *inst,
 ASC_DLLSPEC void SlowVisitInstanceTree(struct Instance *inst, 
                                   VisitProc proc, int depth, int leaf);
 /**<
- *  <!--  void SlowVisitInstanceTree(inst,proc,depth,leaf)             -->
- *  <!--  struct Instance *inst;                                       -->
- *  <!--  VisitProc proc;                                              -->
- *  <!--  int depth,leaf;                                              -->
- *
  *  Visit every node of an instance tree and call proc for each node.
  *  proc will be called on inst regardless of leaf, even it is an
  *  atom or child of an atom.<br><br>
@@ -263,14 +235,6 @@ extern void IndexedVisitInstanceTree(struct Instance *inst,
                                      unsigned int * llen,
                                      VOIDPTR userdata);
 /**<
- *  <!--  void IndexedVisitInstanceTree(inst,proc,depth,leaf,llist,llen,userdata) -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  IndexedVisitProc proc;                                       -->
- *  <!--  int depth,leaf;                                              -->
- *  <!--  unsigned long **llist;                                       -->
- *  <!--  unsigned int *llen;                                          -->
- *  <!--  VOIDPTR userdata; (Treated as in VisitInstanceTreeTwo.)      -->
- *
  *  As SilentVisitInstancetree(), except that at each visited node,
  *  proc is called with llist and the current length of the data
  *  in the llist. The data in the llist is the child list index of
@@ -291,11 +255,6 @@ extern void SilentVisitInstanceTreeTwo(struct Instance *inst,
                                        int leaf,
                                        VOIDPTR userdata);
 /**<
- *  <!--  void SilentVisitInstanceTreeTwo(inst,proc,depth,leaf,userdata-->)
- *  <!--  struct Instance *inst;                                       -->
- *  <!--  VisitTwoProc proc;                                           -->
- *  <!--  int depth, leaf;                                             -->
- *  <!--  VOIDPTR userdata;                                            -->
  *  This function has exactly the same functionality as SilentVisitInstanceTree(),
  *  *except* that it allows the user to pass in an optional argument.
  *  This may be a pointer to anything and must be cast appropriately.
@@ -312,11 +271,6 @@ extern void VisitInstanceTreeTwo(struct Instance *inst,
                                  int leaf,
                                  VOIDPTR userdata);
 /**<
- *  <!--  void VisitInstanceTreeTwo(inst,proc,depth,leaf,userdata)     -->
- *  <!--  struct Instance *inst;                                       -->
- *  <!--  VisitTwoProc proc;                                           -->
- *  <!--  int depth,leaf;                                              -->
- *  <!--  VOIDPTR userdata;                                            -->
  *  This function has exactly the same functionality as FastVisitInstanceTree(),
  *  *except* that it allows the user to pass in an optional argument.
  *  This may be a pointer to anything and must be cast appropriately.
@@ -336,12 +290,6 @@ extern void SilentVisitInstanceFringeTwo(struct Instance *inst,
                                          int leaf,
                                          VOIDPTR userdata);
 /**<
- *  <!--  void SilentVisitInstanceFringeTwo(inst,proc1,proc2,depth,leaf,userdata) -->
- *  <!--  struct Instance *inst;                                       -->
- *  <!--  VisitTwoProc proc1,proc2;                                    -->
- *  <!--  int depth, leaf;                                              -->
- *  <!--  VOIDPTR userdata;                                            -->
- *
  *  This function has exactly the same functionality as
  *  SilentVisitInstanceTreeTwo(), *except* when an instance is seen again,
  *  it is revisited with proc2,  but there the revisit stops --
@@ -359,12 +307,6 @@ extern void VisitInstanceFringeTwo(struct Instance *inst,
                                    int leaf,
                                    VOIDPTR userdata);
 /**<
- *  <!--  void VisitInstanceFringeTwo(inst,proc1,proc2,depth,leaf,userdata) -->
- *  <!--  struct Instance *inst;                                       -->
- *  <!--  VisitTwoProc proc1,proc2;                                    -->
- *  <!--  int depth, leaf;                                             -->
- *  <!--  VOIDPTR userdata;                                            -->
- *
  *  This function has exactly the same functionality as
  *  VisitInstanceTreeTwo(), *except* when an instance is seen again,
  *  it is revisited with proc2, but there the revisit stops --
@@ -380,8 +322,6 @@ extern void SilentVisitInstanceRootsTwo(struct Instance *inst,
                                         int depth,
                                         VOIDPTR userdata);
 /**<
- * <!--  void SilentVisitInstanceRootsTwo(i,proc,depth,userdata);      -->
- *
  * Like SilentVisitInstanceTreeTwo(), except goes up the tree instead
  * of down, so leaf is not needed. The meaning of depth is sort of
  * inverted also. Eg. when visiting the instances in the name a.b.c,
@@ -390,11 +330,6 @@ extern void SilentVisitInstanceRootsTwo(struct Instance *inst,
 
 extern struct visitmapinfo *MakeVisitMap(struct Instance *inst, unsigned long *maplen);
 /**<
- * <!--  map = MakeVisitMap(i,&maplen);                                -->
- * <!--  struct Instance *i; (input)                                   -->
- * <!--  struct visitmapinfo *map;                                     -->
- * <!--  unsigned long *maplen; (output)                               -->
- *
  * Returns a map of the instances which will be encountered (and how)
  * in the course of a VisitInstance(). User should free map when done with it.
  * maplist is as described by the comments for visitmapinfo above.
