@@ -6,7 +6,6 @@ from solverreporter import *
 def fourbarplot(self):
 	"""Plot the geometry of the four-bar linkage"""
 	# following is an unfortunate necessity in the current system architecture:
-	self = ascpy.Registry().getInstance('context')
 
 	browser = extpy.getbrowser()
 	browser.do_solve()
@@ -18,9 +17,12 @@ def fourbarplot(self):
 
 	for alpha in range(10,74,4):
 		self.alpha.setRealValueWithUnits(alpha,"deg")
-
-		browser.sim.solve(browser.solver,SimpleSolverReporter(browser))
-
+		try:
+			browser.sim.solve(browser.solver,SimpleSolverReporter(browser))
+		except:
+			browser.reporter.reportError('Failed to solve for alpha = %d' % alpha)
+			continue
+	
 		x = [float(x) for x in [self.x_A, self.x_B, self.x_C, self.x_D]]
 		y = [float(y) for y in [self.y_A, self.y_B, self.y_C, self.y_D]]
 
