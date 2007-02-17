@@ -275,7 +275,7 @@ va_error_reporter(
     , const int errline
     , const char *errfunc
     , const char *fmt
-    , const va_list args
+    , va_list args
 ){
 	int res;
 
@@ -330,7 +330,7 @@ va_error_reporter(
   DROP-IN replacements for stdio.h / ascPrint.h
 */
 
-int vfprintf_error_reporter(FILE *file, const char *fmt, const va_list args){
+int vfprintf_error_reporter(FILE *file, const char *fmt, va_list args){
 	char *msg;
 	int len;
 	int res;
