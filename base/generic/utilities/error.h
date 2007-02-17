@@ -223,7 +223,7 @@ ASC_DLLSPEC int fprintf_error_reporter(FILE *file, const char *fmt, ...);
 /**
 	For use when implementing higher-level error handling routines
 */
-ASC_DLLSPEC int vfprintf_error_reporter(FILE *file, const char *fmt, const va_list args);
+ASC_DLLSPEC int vfprintf_error_reporter(FILE *file, const char *fmt, va_list args);
 
 /**
 	If file!=stderr, this will do the usual thing. If file==stderr, it will output
@@ -258,7 +258,7 @@ ASC_DLLSPEC int error_reporter_end_flush();
   , const int line \
   , const char *funcname \
   , const char *fmt \
-  , const va_list args
+  , va_list args
 
 /*
 	In you have functions which pass-through callback parameters,
