@@ -1671,6 +1671,8 @@ if need_fortran:
 				, src_suffix='.f'
 			)
 			conf.env.Append(BUILDERS={'Fortran':fortran_builder})
+		if platform.system()=="Linux":
+			conf.env.Append(SHFORTRANFLAGS=['-fPIC'])
 	else:
 		with_lsode=False;
 		without_lsode_reason="FORTRAN-77 required but not found"
