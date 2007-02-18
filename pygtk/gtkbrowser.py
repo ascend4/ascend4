@@ -29,7 +29,7 @@ try:
 
 	if platform.system() != "Windows":
 		try:
-			import dlxxx
+			import dl
 			_dlflags = dl.RTLD_GLOBAL|dl.RTLD_NOW
 		except:
 			# On platforms that unilaterally refuse to provide the 'dl' module
