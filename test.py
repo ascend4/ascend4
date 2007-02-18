@@ -28,8 +28,16 @@ import atexit
 
 import platform
 if platform.system() != "Windows":
-	import dl
-	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
+	try:
+		import dl
+		_dlflags = dl.RTLD_GLOBAL|dl.RTLD_NOW
+	except:
+		# On platforms that unilaterally refuse to provide the 'dl' module
+		# we'll just set the value and see if it works.
+		print "Note: python 'dl' module not available on this system, guessing value of RTLD_* flags"
+		_dlflags = 258
+
+	sys.setdlopenflags(_dlflags)
 
 class Ascend(unittest.TestCase):
 
