@@ -28,10 +28,17 @@ try:
 	import os.path
 
 	if platform.system() != "Windows":
-		import dl
+		try:
+			import dlxxx
+			_dlflags = dl.RTLD_GLOBAL|dl.RTLD_NOW
+		except:
+			# On platforms that unilaterally refuse to provide the 'dl' module
+			# we'll just set the value and see if it works.
+			print_loading_status("Setting dlopen flags","Python 'dl' module not available on this system")
+			_dlflags = 258
 		# This sets the flags for dlopen used by python so that the symbols in the
 		# ascend library are made available to libraries dlopened within ASCEND:
-		sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
+		sys.setdlopenflags(_dlflags)
 
 	print_loading_status("Loading LIBASCEND/ascpy")
 	import ascpy
