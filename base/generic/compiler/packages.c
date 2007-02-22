@@ -79,6 +79,7 @@
 #include "extfunc.h"
 #include <packages/sensitivity.h>
 #include <packages/ascFreeAllVars.h>
+#include <packages/defaultall.h>
 #include "module.h"
 #include "packages.h"
 
@@ -115,6 +116,15 @@ int Builtins_Init(void){
 		,Asc_FreeAllVars
 		,1 /* num of args */
 		,"Unset 'fixed' flag of all items of type 'solver_var'" /* help */
+		,NULL /* user_data */
+		,NULL /* destroy fn */
+  );
+
+  ERROR_REPORTER_DEBUG("Registering EXTERNAL asc_default_self");
+  result = CreateUserFunctionMethod("asc_default_self"
+		,Asc_DefaultSelf
+		,1 /* num of args */
+		,"Set local child atoms to their ATOMs' DEFAULT values. Also recurses into arrays." /* help */
 		,NULL /* user_data */
 		,NULL /* destroy fn */
   );
