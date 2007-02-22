@@ -8,6 +8,7 @@ Import('libascend_env')
 srcs = Split("""
 
 	sensitivity.c ascFreeAllVars.c bisect.c kvalues.c
+	defaultall.c
 
 """)
 
