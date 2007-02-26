@@ -1,49 +1,29 @@
+(*	ASCEND modelling environment
+	Copyright (C) 1998, 2007 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
 PROVIDE "basemodel.a4l";
-
 (*
- *  basemodel.a4l
- *  by Benjamin A. Allan
- *  Part of the ASCEND Library
- *  $Date: 1998/06/17 14:15:10 $
- *  $Revision: 1.3 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/basemodel.a4l,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
+	basemodel.a4l, by Benjamin A. Allan 03/98 - Original Code
 
-(*============================================================================*
-
-    B A S E M O D E L . A 4 L
-    -------------------------
-
-    AUTHOR:      Benjamin A. Allan
-
-    DATES:       03/98 - Original Code
-
-    CONTENTS:	 Basic definitions cmu libraries and standard
-		 methods.
-		 This file is necessary for all
-		 other CMU authored ASCEND models to work in ASCEND IV.
-
-*============================================================================*)
+    Basic definitions cmu libraries and standard methods.
+	This file is necessary for all other CMU authored ASCEND models to work 
+	in ASCEND IV.
+*)
 
 MODEL catch_Word_model (* Bill Gates sacrificial goat *);
 (* This MODEL does nothing.
@@ -59,6 +39,8 @@ MODEL catch_Word_model (* Bill Gates sacrificial goat *);
  * Here is the message of recovery when this MODEL fails:
 Asc-Error: Model definition "catch_Word_model" abandoned due to syntax errors.
 Asc-Error: Rejected "catch_Word_model" at line basemodel.a4l:62.
+
+	@TODO document how this works
  *)
 END catch_Word_model;
 
@@ -219,7 +201,6 @@ By default, just 'default_self' will be run (this was the previous behaviour).
 Any model that has an on_load method can override this behaviour however.
 Note that this behaviour applies only in the C++/python interface at this stage.
 } END NOTES;
-	RUN reset;
 	RUN default_all;
 END on_load;
 
@@ -227,7 +208,7 @@ METHOD default;
 NOTES 'purpose' SELF {
 This method exists for the purpose ofOVERRIDING atom defaults in the local
 MODEL. Hopefully this approach can replace the current practise of writing
-'default_self' methods for most MODELs. It should be superiour, since using 
+'default_self' methods for most MODELs. It should be superior, since using 
 'default' instead of 'default_self' will always result in ALL variables in a
 model being reset to default values, rather than only those explicitly stated
 by the modeller.
@@ -254,7 +235,8 @@ Define it anyway, leaving it empty.
 
 When a top-level simulation is built by the compiler, this
 method will be run at the end of compilation by the
-compiler.
+compiler. See notes in on_load method for new behaviour in
+the PyGTK GUI.
 } END NOTES;
 	EXTERNAL asc_default_self(SELF);
 	RUN default;
