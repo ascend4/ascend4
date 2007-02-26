@@ -182,3 +182,106 @@ METHODS
 		ASSERT B[2].w == 4.0;
 	END self_test;
 END testdefault11;
+
+(* test what happens when two variables are ARE_THE_SAMEd *)
+MODEL testdefault12;
+	x IS_A var_default_one;
+	y IS_A var_default_one;
+	x,y ARE_THE_SAME;
+METHODS
+	METHOD default;
+		x := 2.0;
+	END default;
+	METHOD self_test;
+		ASSERT x == 2.0;
+		ASSERT y == 2.0;
+	END self_test;
+END testdefault12;
+
+(* when two models are ARE_THE_SAMEd, the default_all is kept *)
+MODEL testdefault13;
+	A IS_A ModelA;
+	C IS_A ModelC;
+	A,C ARE_THE_SAME;
+METHODS
+	METHOD self_test;
+		ASSERT A.x == 5.0;
+		ASSERT A.y == 6.0;
+		ASSERT C.x == 5.0;
+		ASSERT C.y == 6.0;
+	END self_test;
+END testdefault13;
+
+(* override default value for one var inside one of two are-the-same submodels *) 
+MODEL ModelD;
+	A IS_A ModelA;
+END ModelD;
+
+MODEL testdefault14;
+	A IS_A ModelA;
+	D IS_A ModelD;
+	A,D.A ARE_THE_SAME;
+METHODS
+	METHOD default;
+		A.x := 7.0;
+	END default;
+	METHOD self_test;
+		ASSERT A.x == 7.0;
+		ASSERT A.y == 2.0;
+		ASSERT D.A.x == 7.0;
+		ASSERT D.A.y == 2.0;
+	END self_test;
+END testdefault14;
+
+(* override 'default' method inside one of two are-the-same submodels *) 
+MODEL ModelD1;
+	A IS_A ModelA;
+METHODS
+	METHOD default;
+		A.y := 8.0;
+	END default;
+END ModelD1;
+
+MODEL testdefault15;
+	A IS_A ModelA;
+	D IS_A ModelD1;
+	A,D.A ARE_THE_SAME;
+METHODS
+	METHOD default;
+		A.x := 7.0;
+	END default;
+	METHOD self_test;
+		ASSERT A.x == 7.0;
+		ASSERT A.y == 8.0;
+	END self_test;
+END testdefault15;
+
+(* behaviour in this case is undefined, @TODO warn user about use of ARE_THE_SAME *) 
+MODEL ModelE REFINES ModelA;
+METHODS
+	METHOD default;
+		y := 9.0;
+	END default;
+END ModelE;
+
+MODEL ModelF;
+	E IS_A ModelE;
+METHODS
+	METHOD default;
+		E.y := 8.0;
+	END default;
+END ModelF;
+
+MODEL testdefault16;
+	E IS_A ModelE;
+	F IS_A ModelF;
+	F.E, E ARE_THE_SAME;
+METHODS
+	METHOD default;
+		E.x := 7.0;
+	END default;
+	METHOD self_test;
+		ASSERT E.x == 7.0;
+		ASSERT E.y == 8.0;
+	END self_test;
+END testdefault16;

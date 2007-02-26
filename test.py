@@ -101,6 +101,62 @@ class TestCompiler(Ascend):
 		"""flagging a subsidiary missing REQUIRE"""
 		self._runfail('missingreq',1)
 
+	def defaultmethodstest(self,modelname):
+		self.L.load("test/defaultmethods.a4c")
+		T = self.L.findType(modelname)
+		M = T.getSimulation('sim')
+		M.run(T.getMethod('on_load'))
+		M.run(T.getMethod('self_test'))
+		return M
+
+	def testdefault1(self):
+		self.defaultmethodstest('testdefault1')
+
+	def testdefault2(self):
+		self.defaultmethodstest('testdefault2')
+
+	def testdefault3(self):
+		self.defaultmethodstest('testdefault3')
+
+	def testdefault4(self):
+		self.defaultmethodstest('testdefault4')
+
+	def testdefault5(self):
+		self.defaultmethodstest('testdefault5')
+
+	def testdefault6(self):
+		self.defaultmethodstest('testdefault6')
+
+	def testdefault7(self):
+		self.defaultmethodstest('testdefault7')
+
+	def testdefault8(self):
+		self.defaultmethodstest('testdefault8')
+
+	def testdefault9(self):
+		self.defaultmethodstest('testdefault9')
+
+	def testdefault10(self):
+		self.defaultmethodstest('testdefault10')
+
+	def testdefault11(self):
+		self.defaultmethodstest('testdefault11')
+
+	def testdefault12(self):
+		self.defaultmethodstest('testdefault12')
+
+	def testdefault13(self):
+		self.defaultmethodstest('testdefault13')
+
+	def testdefault14(self):
+		self.defaultmethodstest('testdefault14')
+
+	def testdefault15(self):
+		self.defaultmethodstest('testdefault15')
+
+	def testdefault16(self):
+		self.defaultmethodstest('testdefault16')
+
 class TestSolver(AscendSelfTester):
 	
 	def testlog10(self):
