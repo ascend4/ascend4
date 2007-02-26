@@ -1,57 +1,48 @@
-REQUIRE "atoms.a4l";
-(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "vesselPlain.a4c";
-(*
- * This file is part of the ASCEND Modeling Library and is released
- * under the GNU Public License as described at the end of this file.
- *)
+(*	ASCEND modelling environment
+	Copyright (C) 1998, 2007 Carnegie Mellon University
 
-MODEL vessel;
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
+REQUIRE "atoms.a4l"; (* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+(*
+	by Art Westerberg, 1998
+
+	This model illustrates how variables are declared and relations written.
+	The model contains no initialisation for any of the variable values, and
+	does not specify which variables are 'fixed' and which ones should be
+	solved for. For this reason, when loaded, this model will cause problems
+	that ASCEND will attempt to resolve through warnings to the user.
+*)
+
+MODEL vesselPlain;
 
 	(* variables *)
-	side_area, end_area	IS_A	area;
-	vessel_vol, wall_vol	IS_A	volume;
-	wall_thickness, H, D	IS_A	distance;
-	H_to_D_ratio		IS_A	factor;
-	metal_density		IS_A	mass_density;
-	metal_mass		IS_A	mass;
+	side_area, end_area	 IS_A area;
+	vessel_vol, wall_vol IS_A volume;
+	wall_thickness, H, D IS_A distance;
+	H_to_D_ratio         IS_A factor;
+	metal_density        IS_A mass_density;
+	metal_mass           IS_A mass;
 
 	(* equations *)
-FlatEnds:	end_area = 1{PI} * D^2 / 4;
-Sides:		side_area = 1{PI} * D * H;
-Cylinder:	vessel_vol = end_area * H;
-Metal_volume:	(side_area + 2 * end_area) * wall_thickness = wall_vol;
-HD_definition:	D * H_to_D_ratio = H;
-VesselMass:	metal_mass = metal_density * wall_vol;
+	FlatEnds:      end_area = 1{PI} * D^2 / 4;
+	Sides:         side_area = 1{PI} * D * H;
+	Cylinder:      vessel_vol = end_area * H;
+	Metal_volume:  (side_area + 2 * end_area) * wall_thickness = wall_vol;
+	HD_definition: D * H_to_D_ratio = H;
+	VesselMass:    metal_mass = metal_density * wall_vol;
 
-END vessel;
-
-
-(*
- *  vesselPlain.a4c
- *  by Arthur W. Westerberg
- *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:35:05 $
- *  $Revision: 1.2 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/vesselPlain.a4c,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1998  Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
+END vesselPlain;
