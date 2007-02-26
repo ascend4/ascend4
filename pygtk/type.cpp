@@ -16,7 +16,7 @@ extern "C"{
 #include <compiler/dimen.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
-#include <compiler/instantiate.h>
+#include <compiler/type_desc.h>
 #include <compiler/bintoken.h>
 #include <linear/mtx.h>
 #include <solver/calc.h>
@@ -177,20 +177,22 @@ Type::getMethods() const{
 
 Method
 Type::getMethod(const SymChar &name) const{
-	struct gl_list_t *l = GetInitializationList(getInternalType());
-	if(l==NULL){
+	if(GetBaseType(t)!=model_type){
 		stringstream ss;
-		ss << "No methods present in type '" << getName() << "'";
+		ss << "Type '" << getName() << "' is not a MODEL";
 		throw runtime_error(ss.str());
 	}
+
 	struct InitProcedure *m;
-	m = SearchProcList(l,name.getInternalType());
+	m = FindMethod(t,name.getInternalType());
+
 	if(m==NULL){
 		stringstream ss;
 		ss << "No method named '" << name << "' in type '" << getName() << "'";
 		throw runtime_error(ss.str());
 		return NULL;
 	}
+
 	return Method(m);
 }	
 

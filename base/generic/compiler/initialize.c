@@ -35,8 +35,6 @@
 #include <general/dstring.h>
 
 #include "symtab.h"
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "forvars.h"
@@ -49,7 +47,6 @@
 #include "statement.h"
 #include "statio.h"
 #include "switch.h"
-#include "module.h"
 #include "evaluate.h"
 #include "value_type.h"
 #include "setinstval.h"
@@ -59,8 +56,6 @@
 #include "nameio.h"
 #include "atomvalue.h"
 #include "instquery.h"
-#include "slist.h"
-#include "child.h"
 #include "type_desc.h"
 #include "library.h"
 #include "extcall.h"
@@ -200,23 +195,11 @@ struct InitProcedure *SearchProcList(CONST struct gl_list_t *l,
 }
 
 struct InitProcedure *FindProcedure(CONST struct Instance *i,
-        			    symchar *procname)
-{
+        			    symchar *procname
+){
   struct TypeDescription *desc;
-  struct gl_list_t *plist;
-  struct InitProcedure *result = NULL;
-
   desc = InstanceTypeDesc(i);
-  plist = GetInitializationList(desc);
-  if (plist != NULL){
-    result = SearchProcList(plist,procname);
-  }
-  plist = GetUniversalProcedureList();
-  if (result == NULL && plist != NULL) {
-    /* try for a UNIVERSAL method seen since parsing MODEL of i */
-    result = SearchProcList(plist,procname);
-  }
-  return result;
+  return FindMethod(desc, procname); /* this code in type_desc.c now -- JP */
 }
 
 

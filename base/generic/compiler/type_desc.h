@@ -396,6 +396,20 @@ extern int ReplaceMethods(struct TypeDescription *d,
 	@return Returns 0 if successful, 1 if not.
 */
 
+ASC_DLLSPEC struct InitProcedure *FindMethod(const struct TypeDescription *d, const symchar *procname);
+/**<
+	Find procedure with the given name in a type's METHOD list, or failing that,
+	from the universal procedure list. Functionality was part of initialise.c
+	but moved here in interest of object-orientation.
+
+	Note that calling this method too early may cause problems if UNIVERSAL
+	methods have not yet been parsed.
+
+	@param d Type in which to search
+	@param procname Name of the method to look for (as a symchar)
+	@return pointer to the method, or NULL if not found
+*/
+
 #ifdef NDEBUG
 #define CopyTypeDesc(d) ((d)->ref_count++)
 #else

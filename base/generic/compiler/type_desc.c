@@ -24,13 +24,13 @@
 	Last in CVS: $Revision: 1.41 $ $Date: 1998/05/18 16:36:48 $ $Author: ballan $
 */
 
+#include "type_desc.h"
+#include "type_descio.h"
+
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
+
 #include <utilities/ascMalloc.h>
-
 #include <utilities/ascPanic.h>
-#include <general/list.h>
-
 
 #include "functype.h"
 #include "expr_types.h"
@@ -41,18 +41,12 @@
 #include "stattypes.h"
 #include "statement.h"
 #include "statio.h"
-#include "slist.h"
 #include "select.h"
-#include "child.h"
-#include "childinfo.h"
 #include "instance_enum.h"
 #include "cmpfunc.h"
-#include "module.h"
 #include "library.h"
 #include "watchpt.h"
 #include "initialize.h"
-#include "type_desc.h"
-#include "type_descio.h"
 
 #define TYPELINKDEBUG 0
 /*
@@ -1202,6 +1196,23 @@ int ReplaceMethods(struct TypeDescription *d,struct gl_list_t *pl, int err){
     return 1;
   }
 }
+
+struct InitProcedure *FindMethod(const struct TypeDescription *d, const symchar *procname){
+	struct gl_list_t *plist;
+	struct InitProcedure *result = NULL;
+
+	plist = GetInitializationList(d);
+	if(plist != NULL){
+		result = SearchProcList(plist,procname);
+	}
+	plist = GetUniversalProcedureList();
+	if(result == NULL && plist != NULL) {
+		/* try for a UNIVERSAL method seen since parsing MODEL of i */
+		result = SearchProcList(plist,procname);
+	}
+	return result;
+}
+
 
 void CopyTypeDescF(struct TypeDescription *d)
 {

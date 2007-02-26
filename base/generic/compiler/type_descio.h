@@ -27,21 +27,17 @@
  */
 
 /** @file
- *  Type Description Output.
- *  <pre>
- *  When #including type_descio.h, make sure these files are #included first:
- *         #include <stdio.h>
- *         #include "utilities/ascConfig.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
- *         #include "dimen.h"
- *         #include "child.h"
- *         #include "type_desc.h"
- *  </pre>
- */
+	Type Description Output.
+*/
 
 #ifndef ASC_TYPE_DESCIO_H
 #define ASC_TYPE_DESCIO_H
+
+#include <stdio.h>
+
+#include <utilities/ascConfig.h>
+
+#include "type_desc.h"
 
 /**	@addtogroup compiler Compiler
 	@{
