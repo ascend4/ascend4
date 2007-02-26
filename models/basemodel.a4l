@@ -184,7 +184,7 @@ STOP does not crash the ASCEND system.
 
 } END NOTES;
 
-  STOP {Error! Standard method "check_self" called but not written in MODEL.};
+  (* STOP {Error! Standard method "check_self" called but not written in MODEL.}; *)
 
 END check_self;
 
@@ -198,7 +198,7 @@ all the received models and variables, then check the local
 stuff.
 } END NOTES;
 
-  STOP {Error! Standard method "check_all" called but not written in MODEL.};
+  (* STOP {Error! Standard method "check_all" called but not written in MODEL.}; *)
   RUN check_self; (* intentionally _second_ *)
 
 END check_all;
@@ -219,8 +219,21 @@ By default, just 'default_self' will be run (this was the previous behaviour).
 Any model that has an on_load method can override this behaviour however.
 Note that this behaviour applies only in the C++/python interface at this stage.
 } END NOTES;
-  RUN default_self;
+	RUN reset;
+	RUN default_all;
 END on_load;
+
+METHOD default;
+NOTES 'purpose' SELF {
+This method exists for the purpose ofOVERRIDING atom defaults in the local
+MODEL. Hopefully this approach can replace the current practise of writing
+'default_self' methods for most MODELs. It should be superiour, since using 
+'default' instead of 'default_self' will always result in ALL variables in a
+model being reset to default values, rather than only those explicitly stated
+by the modeller.
+} END NOTES;
+	(* nothing here *)
+END default;
 
 METHOD default_self;
 NOTES 'purpose' SELF {
@@ -243,8 +256,8 @@ When a top-level simulation is built by the compiler, this
 method will be run at the end of compilation by the
 compiler.
 } END NOTES;
-
-  STOP {Error! Standard method "default_self" called but not written in MODEL.};
+	EXTERNAL asc_default_self(SELF);
+	RUN default;
 END default_self;
 
 METHOD default_all;
@@ -260,8 +273,6 @@ through the parameter list. After these have been done, it
 should then call default_self to take care of all locally
 declared default needs.
 } END NOTES;
-
-  STOP {Error! Standard method "default_all" called but not written in MODEL.};
 	RUN default_self;
 END default_all;
 
@@ -328,7 +339,7 @@ you are modeling.
 
 } END NOTES;
 
-  STOP {Error! Standard method "specify" called but not written in MODEL.};
+  (* STOP {Error! Standard method "specify" called but not written in MODEL.}; *)
 
 END specify;
 
@@ -394,7 +405,7 @@ This method should not bound variables passed into the
 MODEL definition or parts passed into the definition.
 } END NOTES;
 
-  STOP {Error! Standard method "bound_self" called but not written in MODEL.};
+  (* STOP {Error! Standard method "bound_self" called but not written in MODEL.}; *)
 END bound_self;
 
 METHOD bound_all;
@@ -404,7 +415,7 @@ passed in variables and calls bound_self on the passed in parts.
 It should then call bound_self.
 } END NOTES;
 
-  STOP {Error! Standard method "bound_all" called but not written in MODEL.};
+  (* STOP {Error! Standard method "bound_all" called but not written in MODEL.}; *)
   RUN bound_self;
 END bound_all;
 
@@ -444,7 +455,7 @@ variables that are received through the parameter list of
 the MODEL.
 } END NOTES;
 
-  STOP {Error! Standard method "scale_self" called but not written in MODEL.};
+  (* STOP {Error! Standard method "scale_self" called but not written in MODEL.}; *)
 END scale_self;
 
 METHOD scale_all;
@@ -455,7 +466,7 @@ parameter list. It should then call scale_self to take care of
 the local variables and models.
 } END NOTES;
 
-  STOP {Error! Standard method "scale_all" called but not written in MODEL.};
+  (* STOP {Error! Standard method "scale_all" called but not written in MODEL.}; *)
   RUN scale_self;
 END scale_all;
 END METHODS;
@@ -493,11 +504,11 @@ METHOD values;
  * Do this so noone need reinvent that set the next time
  * you use the MODEL or someone picks the MODEL up after you.
  *)
-  STOP {Error! Standard method "values" called but not written in MODEL.};
+  (* STOP {Error! Standard method "values" called but not written in MODEL.}; *)
 END values;
 
 METHOD specify;
-  STOP {Error! Standard method "specify" called but not written in test MODEL.};
+  (* STOP {Error! Standard method "specify" called but not written in test MODEL.}; *)
 END specify;
 (*
 METHOD ClearAll;

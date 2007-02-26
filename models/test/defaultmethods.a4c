@@ -1,0 +1,86 @@
+REQUIRE "system.a4l";
+
+ATOM var_default_one REFINES solver_var
+    DIMENSIONLESS
+    DEFAULT 1.0;
+    nominal := 100;
+    lower_bound := 0.0;
+    upper_bound := 10000;
+END var_default_one;
+
+ATOM var_default_two REFINES solver_var
+    DIMENSIONLESS
+    DEFAULT 2.0;
+    nominal := 100;
+    lower_bound := 0.0;
+    upper_bound := 10000;
+END var_default_two;
+
+(* check that the on_load method sets 'x' to 1.0 *)
+MODEL testdefault1;
+	x IS_A var_default_one;
+METHODS
+	METHOD self_test;
+		ASSERT x == 1.0;
+	END self_test;
+END testdefault1;
+
+(*
+	check that the 'default_self' default method sets x DEFAULT to 2.0,
+	even if we override on_load
+*)
+MODEL testdefault2;
+	x IS_A var_default_two;
+METHODS
+	METHOD on_load;
+		RUN default_self;
+	END on_load;
+	METHOD self_test;
+		ASSERT x == 2.0;
+	END self_test;
+END testdefault2;
+
+(* check the 'default' method gets called by on_load *)
+MODEL testdefault3;
+	x IS_A var_default_one;
+	y IS_A var_default_one;
+METHODS
+	METHOD default;
+		x := 3.0;
+	END default;
+	METHOD self_test;
+		ASSERT x == 3.0;
+	END self_test;
+END testdefault3;
+
+(* test that 'default' gets called even if defined in a parent model *)
+MODEL testdefault4 REFINES testdefault3;
+METHODS
+	METHOD self_test;
+		ASSERT x == 3.0;
+	END self_test;
+END testdefault4;
+
+(* test that we can override a 'default' method defined in a parent model *)
+MODEL testdefault5 REFINES testdefault4;
+METHODS
+	METHOD default;
+		x := 4.0;
+	END default;
+	METHOD self_test;
+		ASSERT x == 4.0;
+	END self_test;
+END testdefault5;
+
+(* test that a new 'default_self' method will kill the call to 'default' *)
+MODEL testdefault6 REFINES testdefault4;
+METHODS
+	METHOD default_self;
+		x := 5.0;
+		y := 6.0;
+	END default;
+	METHOD self_test;
+		ASSERT x == 5.0;
+		ASSERT y == 6.0;
+	END self_test;
+END testdefault5;
