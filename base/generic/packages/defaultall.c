@@ -23,19 +23,25 @@
 	by John Pye, 15 Feb 2007.
 */
 
+#include <packages/defaultall.h>
+
+#include <compiler/proc.h>
+#include <compiler/name.h>
+
 #include <utilities/ascConfig.h>
 #include <utilities/ascPrint.h>
 #include <utilities/ascPanic.h>
 
+#include <compiler/instquery.h>
 #include <compiler/child.h>
 #include <compiler/type_desc.h>
 #include <compiler/symtab.h>
-#include <compiler/instquery.h>
 #include <compiler/atomvalue.h>
 #include <compiler/visitinst.h>
 #include <compiler/parentchild.h>
 #include <compiler/library.h>
-#include <packages/ascFreeAllVars.h>
+#include <compiler/watchpt.h>
+#include <compiler/initialize.h>
 
 /**
 	Find atom children in the present model and set them to their ATOM DEFAULT
@@ -72,67 +78,50 @@ int Asc_DefaultSelf1(struct Instance *inst){
 	return 0;
 }
 
-#if 0
+struct DefaultAll_data{
+	symchar *default_all;
+};
+
 /**
 	Find child models in the present model and run their 'default_all' methods
 */
 static
-void Asc_DefaultAll(struct Instance *inst){
-	int i, n;
-
+int Asc_DefaultAll1(struct Instance *inst, struct DefaultAll_data *data){
+	int i, n, err = 0;
 	struct Instance *c;
 	struct TypeDescription *type;
+	struct InitProcedure *method;
+	enum Proc_enum pe;
 
 	type = InstanceTypeDesc(inst);
 
-	if(model_type == GetBaseType(type)){
-		if(0/*has a 'default' method...*/){
-			/* run the 'default' method */
-			return;
-		}
-	}
-
-	/* default any child atoms' values */
+	/* loop through child atoms */
 	n = NumberChildren(inst);
 	for(i = 1; i <= n; ++i){
-		c = InstanceChild(inst);
+		c = InstanceChild(inst,i);
 		type = InstanceTypeDesc(c);
-		if(BaseTypeIsAtomic(type)){
-			if(!AtomDefaulted(type))continue;
-			switch(GetBaseType(type)){
-				case real_type: SetRealAtomValue(c, GetRealDefault(type)); break;
-				case integer_type: SetIntAtomValue(c, GetIntDefault(type)); break;
-				case boolean_type: SetBooleanAtomValue(c, GetBoolDefault(type)); break;
-				case symbol_type: SetSymbolAtomValue(c, GetSymDefault(type)); break;
-				case set_type: /* what is the mechanism for defaulting of sets? */
-				default: ASC_PANIC("invalid type");
+		if(model_type == GetBaseType(type)){
+			/* run 'default_all' for all child models */
+			method = FindMethod(type,data->default_all);
+			if(method){
+				CONSOLE_DEBUG("Running default_all on '%s'",SCP(GetName(type)));
+				pe = Initialize(c , CreateIdName(ProcName(method)), "__not_named__"
+					,ASCERR
+					,0, NULL, NULL
+				);
+				if(pe!=Proc_all_ok)err += 1;
+			}else{
+				CONSOLE_DEBUG("Recursing into array...");
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"No 'default_all' found for type '%s'",SCP(GetName(type)));
+				return 1;
 			}
-		}else if(BaseTypeIsCompound(type)){
-			/* descend into MODELs, arrays and 'patches' (whatever they are) */
-			Asc_RecursiveDefault(c);
+		}else if(array_type == GetBaseType(type)){
+			if(Asc_DefaultAll1(c,data))err += 1;
 		}
 	}
+
+	return err;
 }
-
-int Asc_DefaultAllVars(struct Instance *root, struct gl_list_t *arglist, void *userdata){
-	/* arglist is a list of gllist of instances */
-	if (arglist == NULL ||
-	    gl_length(arglist) == 0L ||
-	    gl_length((struct gl_list_t *)gl_fetch(arglist,1)) != 1 ||
-	    gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),1) == NULL
-	){
-		/* run on the 'root' instance */
-		return Asc_RecursiveDefault(root);
-	} else {
-		/* take the first item from the first arglist */
-		return Asc_RecursiveDefault(
-			(struct Instance *)gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),1)
-		);
-	}
-}
-#endif
-
-
 
 int Asc_DefaultSelf(struct Instance *root, struct gl_list_t *arglist, void *userdata){
   /* arglist is a list of gllist of instances */
@@ -144,4 +133,21 @@ int Asc_DefaultSelf(struct Instance *root, struct gl_list_t *arglist, void *user
   }else{
     return Asc_DefaultSelf1((struct Instance *)gl_fetch( (struct gl_list_t *)gl_fetch(arglist,1),1 ));
   }
+}
+
+int Asc_DefaultAll(struct Instance *root, struct gl_list_t *arglist, void *userdata){
+	struct DefaultAll_data data;
+	data.default_all = AddSymbol("default_all");
+	
+	/* arglist is a list of gllist of instances */
+	if (arglist == NULL ||
+		    gl_length(arglist) == 0L ||
+		    gl_length((struct gl_list_t *)gl_fetch(arglist,1)) != 1 ||
+		    gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),1) == NULL) {
+		return Asc_DefaultAll1(root,&data);
+	}else{
+		return Asc_DefaultAll1((struct Instance *)gl_fetch( (struct gl_list_t *)gl_fetch(arglist,1),1 )
+			, &data
+		);
+	}
 }

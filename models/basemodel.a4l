@@ -261,7 +261,6 @@ compiler.
 END default_self;
 
 METHOD default_all;
-
 NOTES 'purpose' SELF {
 This method assumes that the arguments to the MODEL
 instance have not been properly initialized, as is
@@ -273,6 +272,7 @@ through the parameter list. After these have been done, it
 should then call default_self to take care of all locally
 declared default needs.
 } END NOTES;
+	EXTERNAL asc_default_all(SELF);
 	RUN default_self;
 END default_all;
 

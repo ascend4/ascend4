@@ -19,13 +19,6 @@
 *//**
 	@file
 	Temporary name output routine.
-
-	Requires:
-	#include <stdio.h>
-	#include "utilities/ascConfig.h"
-	#include "compiler.h"
-	#include "expr_types.h"
-	#include "symtab.h"
 *//*
 	by Tom Epperly
 	Last in CVS: $Revision: 1.5 $ $Date: 1998/04/16 00:43:29 $ $Author: ballan $
@@ -34,11 +27,16 @@
 #ifndef ASC_NAMEIO_H
 #define ASC_NAMEIO_H
 
+#include <stdio.h>
+#include <utilities/ascConfig.h>
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/expr_types.h>
+#include <compiler/symtab.h>
+
 /**	@addtogroup compiler Compiler
 	@{
 */
-
-#include <utilities/ascConfig.h>
 
 extern void WriteName(FILE *f, CONST struct Name *n);
 /**<
