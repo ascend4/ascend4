@@ -58,6 +58,7 @@ MODEL testdefault4 REFINES testdefault3;
 METHODS
 	METHOD self_test;
 		ASSERT x == 3.0;
+		ASSERT y == 1.0;
 	END self_test;
 END testdefault4;
 
@@ -69,6 +70,7 @@ METHODS
 	END default;
 	METHOD self_test;
 		ASSERT x == 4.0;
+		ASSERT y == 1.0;
 	END self_test;
 END testdefault5;
 
@@ -78,9 +80,105 @@ METHODS
 	METHOD default_self;
 		x := 5.0;
 		y := 6.0;
-	END default;
+	END default_self;
 	METHOD self_test;
 		ASSERT x == 5.0;
 		ASSERT y == 6.0;
 	END self_test;
-END testdefault5;
+END testdefault6;
+
+(* test that 'default_self' goes inside arrays as well *)
+MODEL testdefault7;
+	x[1..3] IS_A var_default_two;
+	y[1..2] IS_A var_default_one;
+METHODS
+	METHOD self_test;
+		ASSERT x[1] == 2.0;
+		ASSERT x[2] == 2.0;
+		ASSERT x[3] == 2.0;
+		ASSERT y[1] == 1.0;
+		ASSERT y[2] == 1.0;
+	END self_test;
+END testdefault7;
+
+(* test that 'default_self' goes inside arrays inside parent types *)
+MODEL testdefault8 REFINES testdefault7;
+METHODS
+	METHOD self_test;
+		ASSERT x[1] == 2.0;
+		ASSERT x[2] == 2.0;
+		ASSERT x[3] == 2.0;
+		ASSERT y[1] == 1.0;
+		ASSERT y[2] == 1.0;
+	END self_test;
+END testdefault8;
+
+(* test that default_all recurses into submodels *)
+MODEL ModelA;
+	x IS_A var_default_one;
+	y IS_A var_default_two;
+END ModelA;
+
+MODEL ModelB;
+	z IS_A var_default_one;
+	w IS_A var_default_two;
+METHODS
+	METHOD default;
+		z := 3.0;
+		w := 4.0;
+	END default;
+END ModelB;
+
+MODEL testdefault9;
+	A IS_A ModelA;
+	B IS_A ModelB;
+METHODS
+	METHOD self_test;
+		ASSERT A.x == 1.0;
+		ASSERT A.y == 2.0;
+		ASSERT B.z == 3.0;
+		ASSERT B.w == 4.0;
+	END self_test;
+END testdefault9;
+
+(* test that default_all recurses into arrays containing submodels *)
+MODEL testdefault10;
+	A[1..2] IS_A ModelA;
+	B[1..2] IS_A ModelB;
+METHODS
+	METHOD self_test;
+		ASSERT A[1].x == 1.0;
+		ASSERT A[1].y == 2.0;
+		ASSERT A[2].x == 1.0;
+		ASSERT A[2].y == 2.0;
+		ASSERT B[1].z == 3.0;
+		ASSERT B[1].w == 4.0;
+		ASSERT B[2].z == 3.0;
+		ASSERT B[2].w == 4.0;
+	END self_test;
+END testdefault10;
+
+(* test that an override of default_all in a submodel gets found *)
+MODEL ModelC REFINES ModelA;
+METHODS
+	METHOD default_all;
+		x := 5.0;
+		y := 6.0;
+	END default_all;
+END ModelC;
+
+MODEL testdefault11;
+	A[1..2] IS_A ModelC;
+	B[1..2] IS_A ModelB;
+METHODS
+	METHOD self_test;
+		ASSERT A[1].x == 5.0;
+		ASSERT A[1].y == 6.0;
+		ASSERT A[2].x == 5.0;
+		ASSERT A[2].y == 6.0;
+		ASSERT B[1].z == 3.0;
+		ASSERT B[1].w == 4.0;
+		ASSERT B[2].z == 3.0;
+		ASSERT B[2].w == 4.0;
+	END self_test;
+END testdefault11;

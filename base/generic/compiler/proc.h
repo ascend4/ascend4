@@ -19,10 +19,11 @@
 */
 /**
 	@file
-	Procedure Data Structure.
+	Procedure Data Structure (aka METHODs)
+
+	@todo make naming of methods/procedures/initialize more consistent!
 *//*
-	by Tom Epperly
-	Created: 1/10/90
+	by Tom Epperly, created: 1/10/90
 	Last in CVS: $Revision: 1.13 $ $Date: 1998/04/11 01:31:54 $ $Author: ballan $
 */
 

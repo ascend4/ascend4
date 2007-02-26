@@ -29,12 +29,11 @@ Method::getInternalType() const{
 const char*
 Method::getName() const{
 	if(initproc==NULL)throw runtime_error("NULL initproc value");
-	return SCP( initproc->name );
+	return SCP( ProcName(initproc) );
 }
 
 SymChar
 Method::getSym() const{
 	/// @TODO this is not efficient. couldn't make it work the right way though...
-	if(initproc==NULL)throw runtime_error("NULL initproc value");
-	return SymChar( SCP( initproc->name ));
+	return SymChar(getName());
 }

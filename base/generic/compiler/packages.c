@@ -128,6 +128,15 @@ int Builtins_Init(void){
 		,NULL /* user_data */
 		,NULL /* destroy fn */
   );
+
+  ERROR_REPORTER_DEBUG("Registering EXTERNAL asc_default_all");
+  result = CreateUserFunctionMethod("asc_default_all"
+		,Asc_DefaultAll
+		,1 /* num of args */
+		,"Call 'default_all' methods on sub-models, then run 'default_self' locally." /* help */
+		,NULL /* user_data */
+		,NULL /* destroy fn */
+  );
 #endif
   return result;
 }

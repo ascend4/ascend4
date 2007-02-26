@@ -30,13 +30,6 @@
 	know how to find the child (grandchild, etc) with the given name.
 	A name without a context (either an instance or a type definition)
 	means nothing.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "fractions.h"
-	#include "compiler.h"
-	#include "dimen.h"
-	#include "expr_types.h"
 *//*
 	by Tom Epperly
 	July 31, 1989
@@ -45,6 +38,10 @@
 
 #ifndef ASC_NAME_H
 #define ASC_NAME_H
+
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "expr_types.h"
 
 /**	@addtogroup compiler Compiler
 	@{
