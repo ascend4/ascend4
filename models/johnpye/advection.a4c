@@ -1,0 +1,169 @@
+(*
+	A model of the advection equation, "the simplest imaginable PDE,...
+	the great difficult of solving it numerically causes considerable
+	embararassment to that attempting to solve complex PDE systems."
+
+	Carver and Hinds, 'The method of lines and the advective equation'
+	/Simulation/, 1978.
+	http://sim.sagepub.com/cgi/content/abstract/31/2/59
+
+	(incidentally, in that paper, watch out for the error in equation (13) in 
+	the sign of the u_{i-2} term)
+
+	Here we model the linear advective equation as given by Carver and Hinds.
+	We will investigate our ability to solve it with different integrators
+	in ASCEND, using the method of lines to (manually) discretise in space.
+*)
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL advection_common;
+
+	(* discretisation *)
+	L IS_A real_constant;
+	L :== 10 {m};
+	n IS_A integer_constant;
+	n :== 200;
+	dx IS_A real_constant;
+	dx :== L / n;
+
+	(* node sets *)
+	nodes, ends, central, blip IS_A set OF integer_constant;
+	nodes :== [1..n];
+	ends :== [1, n];
+	central :== nodes - ends;
+	blip :== [10..29];
+
+	(* advection speed *)
+	v IS_A speed;
+
+	(* the advecting quantity *)
+	u[nodes] IS_A mass_density;
+	du_dt[nodes] IS_A density_rate;
+	t IS_A time;
+
+	x[nodes] IS_A real_constant;
+	FOR i IN nodes CREATE
+		x[i] :== i * dx;
+	END FOR;
+
+METHODS
+	METHOD default;
+		FOR i IN nodes DO
+			u[i] := 1 {kg/m^3};
+			du_dt[i] := 0 {kg/m^3/s};
+		END FOR;
+	END default;
+
+	METHOD specify;
+		FIX du_dt[1];
+		FIX u[1];
+		FIX v;
+	END specify;
+	
+	METHOD values;
+		t := 0 {s};
+		v := 1 {m/s};
+		du_dt[1] := 0 {kg/m^3/s};
+		u[1] := 1 {kg/m^3};
+		u[blip] := 10 {kg/m^3};
+	END values;
+
+	METHOD bound_self;
+		u[nodes].lower_bound := -1e5 {kg/m^3};
+		u[nodes].upper_bound := 1e5 {kg/m^3};
+	END bound_self;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN bound_self;
+		RUN ode_init;
+		RUN reset;
+		RUN values;
+	END on_load;
+
+	METHOD reset_steady;
+		RUN ClearAll;
+		RUN specify;
+		FIX du_dt[butfirst];
+	END reset_steady;
+
+	METHOD ode_init;
+		FOR i IN nodes DO
+			u[i].ode_id := i;
+			du_dt[i].ode_id := i;
+			u[i].ode_type := 1;
+			du_dt[i].ode_type := 2;
+		END FOR;
+		t.ode_type := -1;
+		
+		FOR i IN [5..120] DO
+			u[i].obs_id := 2*i;
+		END FOR;
+
+	END ode_init;
+
+END advection_common;
+
+MODEL advection_upwind2 REFINES advection_common;
+
+	upwind2 IS_A set OF integer_constant;
+	upwind2 :== nodes - [1];
+
+	(* use two-point upwind approximation to du_dx *)
+	FOR i IN upwind2 CREATE
+		du_dt[i] + v * (u[i] - u[i - 1]) / dx = 0;
+	END FOR;
+
+END advection_upwind2;
+
+MODEL advection_central3 REFINES advection_common;
+
+	central3 IS_A set OF integer_constant;
+	central3 :== nodes - [1,n];
+
+	(* use two-point upwind approximation for du_dt[2] and du_dt[n] *)
+	FOR i IN [n] CREATE
+		du_dt[i] + v * (u[i] - u[i - 1]) / dx = 0;
+	END FOR;
+
+	(* use central difference 3-point approximation for remaining points *)
+	FOR i IN central3 CREATE
+		du_dt[i] + v * (u[i+1] - u[i-1]) / 2. / dx = 0;
+	END FOR;
+
+END advection_central3;
+
+MODEL advection_upwind3 REFINES advection_common;
+
+	upwind3 IS_A set OF integer_constant;
+	upwind3 :== nodes - [1,2];
+
+	(* use two-point upwind approximation for du_dt[2] *)
+	FOR i IN [2] CREATE
+		du_dt[i] + v * (u[i] - u[i - 1]) / dx = 0;
+	END FOR;
+
+	(* use three-point upwind approximation for remaining points *)
+	FOR i IN upwind3 CREATE
+		du_dt[i] + v * (3 * u[i] - 4 * u[i-1] + u[i-2]) / 2. / dx = 0;
+	END FOR;
+
+END advection_upwind3;
+
+MODEL advection_upwind4 REFINES advection_common;
+
+	upwind4 IS_A set OF integer_constant;
+	upwind4 :== nodes - [1,2,n];
+
+	(* use two-point upwind approximation for du_dt[2] and du_dt[n]*)
+	FOR i IN [2,n] CREATE
+		du_dt[i] + v * (u[i] - u[i - 1]) / dx = 0;
+	END FOR;
+
+	(* use four-point upwind approximation for remaining points *)
+	FOR i IN upwind4 CREATE
+		du_dt[i] + v * (-u[i+1] + 6.*u[i] - 3.*u[i-1] - 2.*u[i-2]) / 6. / dx = 0;
+	END FOR;
+
+END advection_upwind4;
