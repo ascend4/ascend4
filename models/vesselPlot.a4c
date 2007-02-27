@@ -1,16 +1,29 @@
-REQUIRE "atoms.a4l";
-(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-REQUIRE "plot.a4l";
-(* => plot.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "vesselPlot.a4c";
-(*
- * This file is part of the ASCEND Modeling Library and is released
- * under the GNU Public License as described at the end of this file.
- *
- * Use of this module is demonstrated by the associated script file
- * vesselPlot.a4s.
- *)
+(*	ASCEND modelling environment
+	Copyright (C) 1998, 2007 Carnegie Mellon University
 
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
+REQUIRE "atoms.a4l";
+REQUIRE "plot.a4l";
+(*
+	by Arthur W. Westerberg
+	If using the Tcl/Tk GUI, see the accompanying vesselPlot.a4s file.
+*)
+
+(* a PARAMETERISED version of the vessel model developed earlier... *)
 MODEL vessel(
 	vessel_vol	WILL_BE volume;
 	wall_thickness	WILL_BE distance;
@@ -22,7 +35,7 @@ MODEL vessel(
 NOTES 'purpose' SELF {
 This model relates the mass of metal in the walls to the diameter
 and height of a thin-walled storage vessel.  The vessel is cylindrical
-with two flat ends. Extensive documentation exist for this model to
+with two flat ends. Extensive documentation exists for this model to
 teach a new user of ascend how to write, debug, and run ASCEND
 models.
 }
@@ -34,37 +47,40 @@ END NOTES;
 	H, D			IS_A distance;
 
 	(* equations *)
-FlatEnds:	end_area = 1{PI} * D^2 / 4;
-Sides:		side_area = 1{PI} * D * H;
-Cylinder:	vessel_vol = end_area * H;
-Metal_volume:	(side_area + 2 * end_area) * wall_thickness = wall_vol;
-HD_definition:	D * H_to_D_ratio = H;
-VesselMass:	metal_mass = metal_density * wall_vol;
+	FlatEnds:	end_area = 1{PI} * D^2 / 4;
+	Sides:		side_area = 1{PI} * D * H;
+	Cylinder:	vessel_vol = end_area * H;
+	Metal_volume:	(side_area + 2 * end_area) * wall_thickness = wall_vol;
+	HD_definition:	D * H_to_D_ratio = H;
+	VesselMass:	metal_mass = metal_density * wall_vol;
 
 METHODS
+	METHOD default_self;
+		D			:=	1 {m};
+		H			:=	1 {m};
+	END default_self;
 
-METHOD default_self;
-	D			:=	1 {m};
-	H			:=	1 {m};
-END default_self;
+	METHOD specify;
+		FIX vessel_vol;
+		FIX H_to_D_ratio;
+		FIX wall_thickness;
+		FIX metal_density;
+	END specify;
 
-METHOD specify;
-	FIX vessel_vol;
-	FIX H_to_D_ratio;
-	FIX wall_thickness;
-	FIX metal_density;
-END specify;
-
-METHOD values;
-	H_to_D_ratio		:=	2;
-	vessel_vol		:=	250 {ft^3};
-	wall_thickness		:=	5 {mm};
-	metal_density		:=	5000 {kg/m^3};
-END values;
-
+	METHOD values;
+		H_to_D_ratio		:=	2;
+		vessel_vol		:=	250 {ft^3};
+		wall_thickness		:=	5 {mm};
+		metal_density		:=	5000 {kg/m^3};
+	END values;
 END vessel;
 
-MODEL tabulated_vessel_values;
+(*
+	This model tabulates a set of parametric 'vessel' objects and loads the
+	results into a data structure ('plt_curve') that ASCEND understands and
+	can plot graphically.
+*)
+MODEL vesselPlot;
 	vessel_volume IS_A volume;
 	wall_thickness IS_A distance;
 	metal_density IS_A mass_density;
@@ -90,60 +106,32 @@ MODEL tabulated_vessel_values;
 
 METHODS
 
-METHOD default_self;
-    (* set the title for the plot and the labels for the ordinate and abscissa
-     *)
-    massVSratio.title :=
-	'Metal mass of the walls vs H to D ratio for a thin-walled cylindrical vessel';
-    massVSratio.XLabel := 'H to D ratio';
-    massVSratio.YLabel := 'metal mass IN kg/m^3';
-END default_self;
+	METHOD default_self;
+	    (* set the title for the plot and the labels for the ordinate and abscissa
+	     *)
+	    massVSratio.title :=
+		'Metal mass of the walls vs H to D ratio for a thin-walled cylindrical vessel';
+	    massVSratio.XLabel := 'H to D ratio';
+	    massVSratio.YLabel := 'metal mass IN kg/m^3';
+	END default_self;
 
-METHOD specify;
-	RUN v[1..n_entries].specify;
-END specify;
+	METHOD specify;
+		RUN v[1..n_entries].specify;
+	END specify;
 
-METHOD values;
-	vessel_volume := 250 {ft^3};
-	wall_thickness := 5 {mm};
-	metal_density := 5000 {kg/m^3};
-	FOR i IN [1..n_entries] DO
-		H_to_D_ratio[i] := i/10.0;
-	END FOR;
-END values;
+	METHOD values;
+		vessel_volume := 250 {ft^3};
+		wall_thickness := 5 {mm};
+		metal_density := 5000 {kg/m^3};
+		FOR i IN [1..n_entries] DO
+			H_to_D_ratio[i] := i/10.0;
+		END FOR;
+	END values;
 
-METHOD scale_self;
-END scale_self;
+	METHOD on_load;
+		RUN default_self;
+		RUN reset;
+		RUN values;
+	END on_load;
 
-END tabulated_vessel_values;
-
-
-(*
- *  vesselPlot.a4c
- *  by Arthur W. Westerberg
- *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:35:06 $
- *  $Revision: 1.2 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/vesselPlot.a4c,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1998  Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *
- *)
+END vesselPlot;
