@@ -2502,8 +2502,9 @@ int COI_CALL slv8_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 	if(*ROWNO!=-1){
 		rp=slv_get_solvers_rel_list(SERVER);
 		rp = rp + (*ROWNO + sys->J.reg.row.low);
-		asc_assert(*rp!=NULL);
-		relname = rel_make_name(SERVER,*rp);
+		if(*rp!=NULL){
+			relname = rel_make_name(SERVER,*rp);
+		}
 	}
 
 	ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
@@ -2512,11 +2513,11 @@ int COI_CALL slv8_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 		ASC_FREE(varname);
 	}else if(*COLNO == -1 ){
 	    FPRINTF(ASCERR,"Relation '%s' : ",relname);
-		ASC_FREE(relname);
+		if(relname)ASC_FREE(relname);
 	}else{
 	    FPRINTF(ASCERR,"Variable '%s' appearing in relation '%s' : ",varname,relname);
 		ASC_FREE(varname);
-		ASC_FREE(relname);
+		if(relname)ASC_FREE(relname);
 	}
 	FPRINTF(ASCERR,"%*s", *MSGLEN, MSG);
 	error_reporter_end_flush();
