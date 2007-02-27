@@ -1,7 +1,7 @@
 (*
 	A model of the advection equation, "the simplest imaginable PDE,...
-	the great difficult of solving it numerically causes considerable
-	embararassment to that attempting to solve complex PDE systems."
+	the great difficulty of solving it numerically causes considerable
+	embararassment to those attempting to solve complex PDE systems."
 
 	Carver and Hinds, 'The method of lines and the advective equation'
 	/Simulation/, 1978.
@@ -10,9 +10,12 @@
 	(incidentally, in that paper, watch out for the error in equation (13) in 
 	the sign of the u_{i-2} term)
 
-	Here we model the linear advective equation as given by Carver and Hinds.
-	We will investigate our ability to solve it with different integrators
-	in ASCEND, using the method of lines to (manually) discretise in space.
+	Here we model the linear advection equation as given by Carver and Hinds.
+	We will investigate the affect of different spatial discretisations when
+	integrating with the multi-step integrators (IDA and LSODE) currently 
+	provided with ASCEND.
+
+	by John Pye, Feb 2007.
 *)
 REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
@@ -28,10 +31,8 @@ MODEL advection_common;
 	dx :== L / n;
 
 	(* node sets *)
-	nodes, ends, central, blip IS_A set OF integer_constant;
+	nodes, blip IS_A set OF integer_constant;
 	nodes :== [1..n];
-	ends :== [1, n];
-	central :== nodes - ends;
 	blip :== [10..29];
 
 	(* advection speed *)
