@@ -440,7 +440,7 @@ static void SlowVisitTree(struct Instance *inst,
         }
       }
       if (nullchildren) {
-	    ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
+	    ERROR_REPORTER_START_HERE(ASC_PROG_WARNING);
         FPRINTF(ASCERR,"Found %u NULL children of '",nullchildren);
         WriteInstanceName(ASCERR,inst,NULL);
         FPRINTF(ASCERR,"'.\n");
