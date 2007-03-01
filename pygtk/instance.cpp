@@ -115,7 +115,9 @@ Instanc::getInternalType() const{
 
 const enum inst_t
 Instanc::getKind() const{
-	if(i==NULL)throw runtime_error("NULL instance in Instanc::getKind");
+	if(i==NULL){
+		return DUMMY_INST;
+	}
 	return InstanceKind(i);
 }
 
@@ -161,6 +163,9 @@ Instanc::getKindStr() const{
 
 const Type
 Instanc::getType() const{
+	if(i==NULL){
+		throw runtime_error("Invalid NULL instance (getType)");
+	}
 	try{
 		const TypeDescription *t = InstanceTypeDesc(i);
 		if(t==NULL)throw runtime_error("No type defined");
@@ -468,7 +473,9 @@ Instanc::getResidual() const{
 		throw runtime_error("getResidual: not a relation");
 	}
 	struct RelationInstance * const ri = (struct RelationInstance * const) i;
-
+	if(NULL == ri->ptr){
+		throw runtime_error("getResidual: ri->ptr is NULL");
+	}
 	return RelationResidual( ri->ptr );
 }
 

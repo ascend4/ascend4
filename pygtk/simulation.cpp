@@ -297,10 +297,6 @@ Simulation::run(const Method &method, Instanc &model){
 */
 void
 Simulation::checkInstance(){
-	//cerr << "CHECKING SIMULATION INSTANCE" << endl;
-	if(!is_built){
-		build();
-	}
 	Instance *i1 = getModel().getInternalType();
 	CheckInstance(stderr, &*i1);
 	//cerr << "DONE CHECKING INSTANCE" << endl;
