@@ -299,7 +299,8 @@ void RecursiveCheckInstance(FILE *f, CONST struct Instance *i,
   /* check if i is connected to its parent */
   if (parent != NULL &&
       InstanceKind(i) != DUMMY_INST &&
-      SearchForParent(i,parent) == 0){
+      SearchForParent(i,parent) == 0
+  ){
     WriteInstanceName(f,parent,NULL);
     FPRINTF(f," thinks that it is a parent of ");
     WriteInstanceName(f,i,NULL);
@@ -352,25 +353,27 @@ void RecursiveCheckInstance(FILE *f, CONST struct Instance *i,
     if (ptr) {
       RecursiveCheckInstance(f,ptr,i,pass);
     } else {
-      if (!SuppressNullInstance(ChildRefines(i,c))) {
-        FPRINTF(f,"Instance ");
+      if(!SuppressNullInstance(ChildRefines(i,c))) {
+		ERROR_REPORTER_START_NOLINE(ASC_USER_WARNING);
+        FPRINTF(f,"Instance '");
         WriteInstanceName(f,i,NULL);
-        FPRINTF(f," is missing part `");
+        FPRINTF(f,"' is missing part '");
         name = ChildName(i,c);
         switch(InstanceNameType(name)){
         case IntArrayIndex:
-          FPRINTF(f,"[%ld]'\n",InstanceIntIndex(name));
+          FPRINTF(f,"[%ld]'",InstanceIntIndex(name));
           break;
         case StrArrayIndex:
-          FPRINTF(f,"[%s]'\n",SCP(InstanceStrIndex(name)));
+          FPRINTF(f,"[%s]'",SCP(InstanceStrIndex(name)));
           break;
         case StrName:
-          FPRINTF(f,"%s'\n",SCP(InstanceNameStr(name)));
+          FPRINTF(f,"%s'",SCP(InstanceNameStr(name)));
           break;
         default:
-          FPRINTF(f,"BAD NAME!!!'\n");
+          FPRINTF(f,"<BAD NAME>");
           break;
         }
+		error_reporter_end_flush();
       }
     }
   }
