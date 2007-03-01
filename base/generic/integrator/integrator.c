@@ -43,6 +43,7 @@
 /* #define ANALYSE_DEBUG */
 /* #define SOLVE_DEBUG */
 /* #define CLASSIFY_DEBUG */
+/* #define DESTROY_DEBUG */
 
 /*------------------------------------------------------------------------------
    The following names are of solver_var children or attributes
@@ -179,7 +180,9 @@ void integrator_free(IntegratorSystem *sys){
 	slv_destroy_parms(&(sys->params));
 
 	ASC_FREE(sys);
+#ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("Destroyed IntegratorSystem");
+#endif
 	sys=NULL;
 }
 
@@ -232,9 +235,13 @@ int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
 		return 0;
 	}
 	if(sys->engine!=INTEG_UNKNOWN){
+#ifdef DESTROY_DEBUG
 		CONSOLE_DEBUG("Freeing memory used by old integrator engine");
+#endif
 		integrator_free_engine(sys);
+#ifdef DESTROY_DEBUG
 		CONSOLE_DEBUG("done");
+#endif
 	}
 	sys->engine = engine;
 	switch(sys->engine){
@@ -266,15 +273,21 @@ void integrator_free_engine(IntegratorSystem *sys){
 	if(sys->engine==INTEG_UNKNOWN)return;
 	if(sys->enginedata){
 		if(sys->internals){
+#ifdef DESTROY_DEBUG
 			CONSOLE_DEBUG("Running engine's freefn");
+#endif
 			(sys->internals->freefn)(sys->enginedata);
+#ifdef DESTROY_DEBUG
 			CONSOLE_DEBUG("Done with freefn");
+#endif
 			sys->enginedata=NULL;
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to free engine data: no sys->internals");
 		}
 	}
+#ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("Done with integrator_free_engine");
+#endif
 }
 
 /**
