@@ -26,6 +26,8 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 
+/* #define DESTROY_DEBUG */
+
 void slv_set_char_parameter(char **cp, CONST char *newvalue)
 {
   if (cp != NULL) {
@@ -62,7 +64,9 @@ void slv_destroy_parms(slv_parameters_t *p) {
     ASC_FREE(p->parms);
 	p->parms = NULL;
   }
+#ifdef DESTROY_DEBUG
   CONSOLE_DEBUG("Destroyed slv_parameters_t");
+#endif
 }
 
 /*------------------------------------------------------------------------------

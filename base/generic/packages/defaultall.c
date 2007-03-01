@@ -43,6 +43,8 @@
 #include <compiler/watchpt.h>
 #include <compiler/initialize.h>
 
+/* #define DEFAULT_DEBUG */
+
 /**
 	Find atom children in the present model and set them to their ATOM DEFAULT
 	values.
@@ -56,8 +58,12 @@ int Asc_DefaultSelf1(struct Instance *inst){
 	/* default any child atoms' values */
 	n = NumberChildren(inst);
 	for(i = 1; i <= n; ++i){
+#ifdef DEFAULT_DEBUG
 		CONSOLE_DEBUG("Child %d...", i);
+#endif
 		c = InstanceChild(inst,i);
+		if(c==NULL)continue;
+
 		type = InstanceTypeDesc(c);
 		if(BaseTypeIsAtomic(type)){
 			if(!AtomDefaulted(type))continue;
@@ -69,7 +75,9 @@ int Asc_DefaultSelf1(struct Instance *inst){
 				case set_type: /* what is the mechanism for defaulting of sets? */
 				default: ASC_PANIC("invalid type");
 			}
+#ifdef DEFAULT_DEBUG
 			CONSOLE_DEBUG("Reset atom to default value");
+#endif
 		}else if(GetBaseType(type)==array_type){
 			/* descend into arrays */
 			Asc_DefaultSelf1(c);
@@ -99,19 +107,25 @@ int Asc_DefaultAll1(struct Instance *inst, struct DefaultAll_data *data){
 	n = NumberChildren(inst);
 	for(i = 1; i <= n; ++i){
 		c = InstanceChild(inst,i);
+		if(c==NULL)continue;
+
 		type = InstanceTypeDesc(c);
 		if(model_type == GetBaseType(type)){
 			/* run 'default_all' for all child models */
 			method = FindMethod(type,data->default_all);
 			if(method){
+#ifdef DEFAULT_DEBUG
 				CONSOLE_DEBUG("Running default_all on '%s'",SCP(GetName(type)));
+#endif
 				pe = Initialize(c , CreateIdName(ProcName(method)), "__not_named__"
 					,ASCERR
 					,0, NULL, NULL
 				);
 				if(pe!=Proc_all_ok)err += 1;
 			}else{
+#ifdef DEFAULT_DEBUG
 				CONSOLE_DEBUG("Recursing into array...");
+#endif
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"No 'default_all' found for type '%s'",SCP(GetName(type)));
 				return 1;
 			}

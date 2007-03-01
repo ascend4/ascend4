@@ -6,6 +6,8 @@
 #include <cmath>
 using namespace std;
 
+// #define DESTROY_DEBUG
+
 /**
 	'creating' an integrator in the context of the GUI just means an object
 	we can store the parameters that will be later sent to the underlying
@@ -30,11 +32,15 @@ Integrator::Integrator(Simulation &simulation)
 }
 
 Integrator::~Integrator(){
+#ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("DESTROYING Integrator (C++) at %p",this);
 	CONSOLE_DEBUG("DESTROYING IntegratorSystem at %p",blsys);
+#endif
 	integrator_free(blsys);
+#ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("done");
 	CONSOLE_DEBUG("DESTROYING samplelist at %p",samplelist);
+#endif
 	if(samplelist)samplelist_free(samplelist);
 }
 

@@ -100,6 +100,8 @@
 #define PREC_DEBUG
 /* #define DIFFINDEX_DEBUG */
 /* #define ANALYSE_DEBUG */
+/* #define DESTROY_DEBUG */
+
 /**
 	Everthing that the outside world needs to know about IDA
 */
@@ -257,7 +259,9 @@ void integrator_ida_create(IntegratorSystem *blsys){
 }
 
 void integrator_ida_free(void *enginedata){
+#ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("DESTROYING IDA engine data at %p",enginedata);
+#endif
 	IntegratorIdaData *d = (IntegratorIdaData *)enginedata;
 	asc_assert(d);
 	if(d->pfree){
@@ -266,9 +270,13 @@ void integrator_ida_free(void *enginedata){
 		(d->pfree)(enginedata);
 	}
 	/* note, we don't own the rellist, so don't need to free it */
+#ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("Now destroying the enginedata");
+#endif
 	ASC_FREE(d);
+#ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("enginedata freed");
+#endif
 }
 
 IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *blsys){
