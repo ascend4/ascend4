@@ -285,3 +285,58 @@ METHODS
 		ASSERT E.y == 8.0;
 	END self_test;
 END testdefault16;
+
+(* test with some tricky set notation (see following, related) *)
+MODEL testdefault17;
+	nodes,head,tail IS_A set OF integer_constant;
+	x IS_A var_default_one;
+	n IS_A integer_constant;
+	n :== 3;
+	nodes :== [1..n];
+	head :== [1];
+	tail :== nodes - head;
+	y[1..n] IS_A var_default_two;
+	FOR i IN head CREATE
+		y_eq[i]: y[i] = x;
+	END FOR;
+	FOR i IN tail CREATE
+		y_eq2[i]: y[i] = y[i-1];
+	END FOR;
+METHODS
+	METHOD self_test;
+		ASSERT x == 1.0;
+		ASSERT y[1] == 2.0;
+		ASSERT y[1] == 2.0;
+		ASSERT y[1] == 2.0;
+	END self_test;
+END testdefault17;
+
+(* test with NULL children *)
+MODEL testdefault18;
+	nodes,head,tail IS_A set OF integer_constant;
+	x IS_A var_default_one;
+	n IS_A integer_constant;
+	n :== 3;
+	nodes :== [1..n];
+	head :== [1,2,3];
+	tail :== nodes - head;
+	y[1..n] IS_A var_default_two;
+	FOR i IN head CREATE
+		y_eq[i]: y[i] = x;
+	END FOR;
+	FOR i IN tail CREATE (* empty list *)
+		y_eq2[i]: y[i] = y[i-1];
+	END FOR;
+METHODS
+	METHOD self_test;
+		ASSERT x == 1.0;
+		ASSERT y[1] == 2.0;
+		ASSERT y[1] == 2.0;
+		ASSERT y[1] == 2.0;
+	END self_test;
+END testdefault18;
+
+	
+
+
+

@@ -157,6 +157,11 @@ class TestCompiler(Ascend):
 	def testdefault16(self):
 		self.defaultmethodstest('testdefault16')
 
+	def testdefault17(self):
+		self.defaultmethodstest('testdefault17')
+	def testdefault18(self):
+		self.defaultmethodstest('testdefault18')
+
 class TestSolver(AscendSelfTester):
 	
 	def testlog10(self):
