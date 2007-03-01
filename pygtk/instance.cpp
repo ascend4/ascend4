@@ -540,6 +540,7 @@ Instanc::getChildren()
 		for(unsigned long ci=1; ci<=len; ++ci){
 			Instanc c(*this, ci);
 			if(!TypeShow(c.getType().getInternalType()))continue;
+			if(c.i==NULL)continue;
 			children.push_back(c);
 		}
 		return children;
@@ -564,6 +565,7 @@ Instanc::getChildren()
 		if(!ChildVisible(clist,ci))continue;
 
 		Instanc c( *this, ci );
+		if(c.i==NULL)continue;
 		//cerr << "FOUND CHILD #" << ci << ": " << c.getName() << endl;
 
 		children.push_back(c);
