@@ -107,7 +107,10 @@ class ModelView:
 		self.sim = sim
 		self.modelstore.clear()
 		self.otank = {} # map path -> (name,value)
-		self.make( self.sim.getName(),self.sim.getModel() )
+		try:
+			self.make( self.sim.getName(),self.sim.getModel() )
+		except Exception,e:
+			self.browser.reporter.reportError("Error building tree: %s" % e);
 		self.browser.maintabs.set_current_page(1);
 
 	def clear(self):
@@ -154,7 +157,7 @@ class ModelView:
 		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon]
 
 	def make_row( self, piter, name, value ): # for instance browser
-
+		assert(value)
 		_piter = self.modelstore.append( piter, self.get_tree_row_data(value) )
 		return _piter
 
@@ -241,15 +244,19 @@ class ModelView:
 		self.browser.do_solve_if_auto()
 
 	def make_children(self, value, piter ):
+		assert(value)
 		if value.isCompound():
 			children=value.getChildren();
 			for child in children:
-				_name = child.getName();
-				_piter = self.make_row(piter,_name,child)
-				_path = self.modelstore.get_path(_piter)
-				self.otank[_path]=(_name,child)
-				#self.browser.reporter.reportError("2 Added %s at path %s" % (_name,repr(_path)))
-
+				try:
+					_name = child.getName();
+					_piter = self.make_row(piter,_name,child)
+					_path = self.modelstore.get_path(_piter)
+					self.otank[_path]=(_name,child)
+					#self.browser.reporter.reportError("2 Added %s at path %s" % (_name,repr(_path)))
+				except Exception,e:
+					self.browser.reporter.reportError("%s: %s" % (_name,e))
+	
 	def make(self, name=None, value=None, path=None, depth=1):
 		if path is None:
 			# make root node
@@ -258,11 +265,14 @@ class ModelView:
 			self.otank[ path ] = (name, value)
 			#self.browser.reporter.reportError("4 Added %s at path %s" % (name, path))
 		else:
-		    name, value = self.otank[ path ]
+			name, value = self.otank[ path ]
+
+		assert(value)
 
 		piter = self.modelstore.get_iter( path )
 		if not self.modelstore.iter_has_child( piter ):
-		    self.make_children(value,piter)
+			#self.browser.reporter.reportNote( "name=%s has CHILDREN..." % name )
+			self.make_children(value,piter)
 
 		if depth:
 		    for i in range( self.modelstore.iter_n_children( piter ) ):

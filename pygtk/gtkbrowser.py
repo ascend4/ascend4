@@ -661,7 +661,6 @@ class Browser:
 			self.reporter.reportError(str(e))
 			return
 
-		print "...DONE 'getSimulation'"		
 		self.stop_waiting()
 
 		# get method names and load them into the GUI
