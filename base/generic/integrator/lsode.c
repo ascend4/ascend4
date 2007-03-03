@@ -1330,8 +1330,15 @@ void XASCWV( char *msg, /* pointer to start of message */
 	error_reporter_end_flush();
 }
 
-int integrator_lsode_write_matrix(const IntegratorSystem *blsys, FILE *fp){
+/*
+	As with the IDA write_matrix function, we want this function to work based
+	on the state of the *system* rather than the integrator, so that we
+	can work out these matrices even before we start solving the problem.
+*/
+int integrator_lsode_write_matrix(const IntegratorSystem *blsys, FILE *fp,const char *type){
 	IntegratorLsodeData *enginedata;
+
+	UNUSED_PARAMETER(type);
 	asc_assert(blsys!=NULL);
 	asc_assert(blsys->engine==INTEG_LSODE);
 	asc_assert(blsys->enginedata);

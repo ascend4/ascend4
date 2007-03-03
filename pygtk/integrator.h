@@ -77,7 +77,7 @@ public:
 	void findIndependentVar(); /**< find the independent variable (must not presume a certain choice of integration engine) */
 	void analyse();
 	void solve();
-	void writeMatrix(FILE *fp) const;
+	void writeMatrix(FILE *fp,const char *type=NULL) const;
 	void writeDebug(FILE *fp) const;
 
 	double getCurrentTime();

@@ -147,8 +147,8 @@ Integrator::solve(){
 }
 
 void
-Integrator::writeMatrix(FILE *fp) const{
-	if(integrator_write_matrix(this->blsys, fp)){
+Integrator::writeMatrix(FILE *fp,const char *type) const{
+	if(integrator_write_matrix(this->blsys, fp, type)){
 		throw runtime_error("Failed to write matrix");
 	}
 }
