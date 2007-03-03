@@ -297,7 +297,7 @@ class TestIntegrator(Ascend):
 		assert len(P)==12
 		assert P[0].isStr()
 		assert P[0].getName()=="linsolver"
-		assert P[0].getValue()=='SPGMR'
+		assert P[0].getValue()=='DENSE'
 		assert P[2].getName()=="maxord"
 		assert P[3].getName()=="autodiff"
 		assert P[3].getValue()==True
