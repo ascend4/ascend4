@@ -1556,13 +1556,13 @@ struct var_variable *integrator_get_independent_var(IntegratorSystem *sys){
 	return sys->x;
 }
 
-int integrator_write_matrix(const IntegratorSystem *sys, FILE *fp){
+int integrator_write_matrix(const IntegratorSystem *sys, FILE *fp,const char *type){
 	asc_assert(sys);
 	asc_assert(sys->enginedata);
 	asc_assert(sys->internals);
 	asc_assert(sys->internals->name);
 	if(sys->internals->writematrixfn){
-		return (sys->internals->writematrixfn)(sys,fp);
+		return (sys->internals->writematrixfn)(sys,fp,type);
 	}else{
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Integrator '%s' defines no write_matrix function.",sys->internals->name);
 		return -1;

@@ -38,6 +38,7 @@ IntegratorParamsDefaultFn integrator_ida_params_default;
 IntegratorSolveFn integrator_ida_solve;
 IntegratorFreeFn integrator_ida_free;
 IntegratorDebugFn integrator_ida_debug;
+IntegratorWriteMatrixFn integrator_ida_write_matrix;
 
 const IntegratorInternals integrator_ida_internals;
 

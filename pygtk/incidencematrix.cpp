@@ -216,6 +216,9 @@ IncidenceMatrix::getNumBlocks(){
 	local block. It is intended that this should be passed back to the python
 	layer as a SWIGed object that Python can decode. It might prove easier
 	just to write a .dot from this C++ layer however.
+
+	Further investigation has shown that GraphViz comes with its own perfectly
+	good graphing API and we should really just use that.
 */
 mfg::DrawGraph
 IncidenceMatrix::getBlockGraph(const int &block) const{

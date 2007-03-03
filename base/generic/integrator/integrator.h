@@ -196,12 +196,16 @@ typedef int IntegratorSolveFn(struct IntegratorSystemStruct *blsys
 	integration.
 */
 
-typedef int IntegratorWriteMatrixFn(const struct IntegratorSystemStruct *blsys, FILE *fp);
+typedef int IntegratorWriteMatrixFn(const struct IntegratorSystemStruct *blsys, FILE *fp, const char *type);
 /**<
-	Write Matrix. This will output 'the integrator's matrix' to a file.
-	What exactly this matrix is will depend on the Integrator you're using.
-	Hope you find it useful, anyway. Check the implementation details of the
-	specific Integrator.
+	Write Matrix. This method allows the user to request output of 'a matrix'
+	from the integrator to a file. The type of output can be requested using 
+	the type parameter. Check the implementation details of the specific
+	integrator.
+
+	@param type type of matrix to be output. For IDA, use 'y' or 'ydot'. NULL
+	will give the default (eg dy/dx for LSODE)
+	@param fp file to which output will be sent (still need to close the file)
 */
 
 typedef int IntegratorDebugFn(const struct IntegratorSystemStruct *blsys, FILE *fp);
@@ -314,7 +318,9 @@ ASC_DLLSPEC int integrator_solve(IntegratorSystem *blsys, long i0, long i1);
 	@return 0 on success, else error
 */
 
-ASC_DLLSPEC int integrator_write_matrix(const IntegratorSystem *blsys, FILE *fp);
+ASC_DLLSPEC int integrator_write_matrix(const IntegratorSystem *blsys
+		, FILE *fp, const char *type
+);
 /**<
 	Output 'the matrix' for the present integrator to file handle indicated.
 	What this will be depends on which integrator you are using.

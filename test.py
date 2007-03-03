@@ -896,6 +896,24 @@ class TestIDA(Ascend):
 	def testincidencefail5(self):
 		self._runfail('incidence',5)
 
+	def testwritematrix(self):
+		self.L.load('test/ida/writematrix.a4c')
+		T = self.L.findType('writematrix')
+		M = T.getSimulation('sim')
+		M.build()
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.analyse()
+		F = os.tmpfile()
+		I.writeMatrix(F,"y")
+		F.seek(0)
+		print F.read()
+		F1 = os.tmpfile()
+		I.writeMatrix(F1,"ydot")
+		F1.seek(0)
+		print F1.read()
+		# for the moment you'll have to check these results manually.
+
 # doesn't work yet:
 #	def testincidence5(self):
 #		self._run('incidence',5)
