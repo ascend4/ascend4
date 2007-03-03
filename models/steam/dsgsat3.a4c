@@ -11,12 +11,12 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat3;
 	n IS_A integer_constant;
-	n :== 50;(* with L = 10m: 5,6,7,8,9,10,11 *)
+	n :== 7;(* with L = 10m: 5,6,7,8,9,10,11 *)
 	         (* with L =  5m: 2,3,4,5,7,9,11,12,13,1415,16 *)
 
 	dz IS_A real_constant;
 	L IS_A real_constant;
-	L :== 5 {m};
+	L :== 10 {m};
 	dz :== L / (n-1);
 
 	nodes,butfirst1,upwind4,central IS_A set OF integer_constant;
@@ -110,19 +110,19 @@ MODEL dsgsat3;
 	END FOR;
 
 	(* momentum conservation *)
-	FOR i IN upwind4 CREATE
+	FOR i IN [] CREATE
 		z_mombal2[i]:  - dz/A * dmdot_dt[i]
 			 =	(p[i]-p[i-1])  (* backdiff for pressure *)
 				+ dz * f/D/2 * rho[i] * vel[i]^2
 				+ (rho[i+1]*vel[i+1]^2 + 6.*rho[i]*vel[i]^2 - 3.*rho[i-1]*vel[i-1]^2 - 2.*rho[i-2]*vel[i-2]^2) / 6.;
 	END FOR;
-	FOR i IN [] CREATE
+	FOR i IN central CREATE
 		z_mombal1[i]:  - dz/A * dmdot_dt[i]
 			 =	(p[i+1]-p[i-1]) / 2.
 				+ dz * f/D/2 * rho[i] * vel[i]^2
 				+ (rho[i+1]*vel[i+1]^2 - rho[i-1]*vel[i-1]^2) / 2.;
 	END FOR;
-	FOR i IN [2,n] CREATE
+	FOR i IN [n] CREATE
 		z_mombal[i]:  - dz/A * dmdot_dt[i]
 			 =	(p[i]-p[i-1]) 
 				+ dz * f/D/2 * rho[i] * vel[i]^2
@@ -199,10 +199,10 @@ METHODS
 	METHOD values;
 		h_int := 100 {W/m^2/K};
 		h_ext := 20 {W/m^2/K};
-		f := 0.0;
+		f := 0.03;
 		mdot[1] := 0.26 {kg/s};
 		p[1]    := 10 {bar};
-		x[1]    := 0.1;
+		x[1]    := 0.23;
 		qdot_s := 1000 {W/m^2} * D_2 * 10;
 		FOR i IN [2..n] DO
 			dmdot_dt[i] := 0.0 {kg/s/s};
