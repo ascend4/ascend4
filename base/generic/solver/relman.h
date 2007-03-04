@@ -151,7 +151,7 @@ extern real64 relman_scale(struct rel_relation *rel);
 */
 
 extern int relman_diff2(struct rel_relation *rel,
-                        var_filter_t *filter,
+                        const var_filter_t *filter,
                         real64 *derivatives,
                         int32 *variables,
                         int32 *count,
@@ -178,7 +178,7 @@ extern int relman_diff2(struct rel_relation *rel,
 
 
 extern int relman_diff3(struct rel_relation *rel,
-                        var_filter_t *filter,
+                        const var_filter_t *filter,
                         real64 *derivatives,
                         struct var_variable **variables,
                         int32 *count,
@@ -186,7 +186,7 @@ extern int relman_diff3(struct rel_relation *rel,
 /**< as relman_diff2 but fills a var_variable* array intest of an index array. */
 
 extern int relman_diff_grad(struct rel_relation *rel,
-                            var_filter_t *filter,
+                            const var_filter_t *filter,
                             real64 *derivatives,
                             int32 *variables_master,
                             int32 *variables_solver,
@@ -216,7 +216,7 @@ extern int relman_diff_grad(struct rel_relation *rel,
  */
 
 ASC_DLLSPEC int relman_diffs(struct rel_relation *rel,
-		var_filter_t *filter, mtx_matrix_t mtx,
+		const var_filter_t *filter, mtx_matrix_t mtx,
 		real64 *resid, int safe);
 /**<
 	Calculates the row of the jacobian matrix (the transpose gradient of

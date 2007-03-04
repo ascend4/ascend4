@@ -74,6 +74,7 @@
 
 #include "idalinear.h"
 #include "idaanalyse.h"
+#include "ida_impl.h"
 
 /*
 	for cases where we don't have SUNDIALS_VERSION_MINOR defined, guess version 2.2
@@ -102,6 +103,7 @@
 /* #define DIFFINDEX_DEBUG */
 /* #define ANALYSE_DEBUG */
 /* #define DESTROY_DEBUG */
+/* #define MATRIX_DEBUG */
 
 /**
 	Everthing that the outside world needs to know about IDA
@@ -1622,12 +1624,111 @@ void integrator_ida_write_stats(IntegratorIdaStats *stats){
 */
 
 enum integrator_ida_write_jac_enum{
-	II_WRITE_Y
-	, II_WRITE_YDOT
+	II_WRITE_DFDY
+	, II_WRITE_DFDYDOT
+	, II_WRITE_DGDYA
 };
 
 /**
-	Our tasks here is to write the matrices that IDA *should* be seeing. We
+	Create the matrix dg/dy_a. This is the derivative
+	of the residual function for the algebraic equations with respect to 
+	the algebraic variables.
+*/
+mtx_matrix_t integrator_ida_dgdya(const IntegratorSystem *sys){
+	IntegratorIdaData *enginedata;
+	int i,j,n,status,count, row, col;
+	struct rel_relation **rels, *rel;
+	double *derivatives;
+	int *variables;
+	int *algvars;
+#ifdef MATRIX_DEBUG
+	char *varname, *relname;
+#endif
+	mtx_matrix_t M;
+	mtx_coord_t coord;
+
+	enginedata = (IntegratorIdaData *)sys->enginedata;
+
+	/* create a mapping from var_sindex to algebraic variable # */
+	algvars = ASC_NEW_ARRAY(int, sys->n_y);
+	col=0;
+	for(i=0; i<sys->n_y; ++i){
+		if(sys->ydot[i]==NULL){
+#ifdef MATRIX_DEBUG
+			varname = var_make_name(sys->system,sys->y[i]);
+			CONSOLE_DEBUG("alg-var %d is '%s'",col,varname);
+			ASC_FREE(varname);
+#endif
+			algvars[i]=col++;
+		}else{
+			algvars[i]=-1;
+		}
+	}
+#ifdef MATRIX_DEBUG
+	CONSOLE_DEBUG("Found %d alg-vars",col);
+#endif
+
+	/* allocate space for the matrix */
+	M = mtx_create();
+	mtx_set_order(M, sys->n_y - sys->n_ydot);
+
+	/* fill in the matrix, making sure we only visit algebraic vars in the algebraic equations */
+	n = slv_get_num_solvers_rels(sys->system);
+	rels = slv_get_solvers_rel_list(sys->system);
+	derivatives = ASC_NEW_ARRAY(double, sys->n_y - sys->n_ydot);
+	variables = ASC_NEW_ARRAY(int, sys->n_y - sys->n_ydot);
+	row = 0;
+	for(i=0;i<n;++i){
+		rel = rels[i];
+#ifdef MATRIX_DEBUG
+		relname = rel_make_name(sys->system, rel);
+		CONSOLE_DEBUG("Row %d is alg-eq %d '%s'",i,row,relname);
+#endif
+		if(rel_differential(rel)){
+#ifdef MATRIX_DEBUG
+			CONSOLE_DEBUG("... '%s' is differential",relname);
+			ASC_FREE(relname);
+#endif
+			continue;
+		}
+#ifdef MATRIX_DEBUG
+		CONSOLE_DEBUG("...'%s' is algebraic",relname);
+#endif
+		/* use relman_diff2, which returns var_sindex valuues in the 'variables' vector */
+		status = relman_diff2(rel, &integrator_ida_nonderiv, derivatives, variables, &count, enginedata->safeeval);
+
+#ifdef MATRIX_DEBUG
+		CONSOLE_DEBUG("Found %d derivs for relation '%s'",count,relname);
+#endif
+		for(j=0;j<count;++j){
+			if(sys->ydot[variables[j]]!=NULL){
+#ifdef MATRIX_DEBUG
+				varname = var_make_name(sys->system,sys->y[variables[j]]);
+				CONSOLE_DEBUG("%s is differential, d%s/d%s = %f",varname,relname,varname,derivatives[j]);
+				ASC_FREE(varname);		
+#endif
+				/* it is a differential variable (y_d) */
+				continue;
+			}
+#ifdef MATRIX_DEBUG
+			varname = var_make_name(sys->system,sys->y[variables[j]]);
+			CONSOLE_DEBUG("%s is algebraic var %d, d%s/d%s = %f",varname,algvars[variables[j]],relname,varname,derivatives[j]);
+			ASC_FREE(varname);
+#endif
+			asc_assert(algvars[variables[j]] != -1);
+			mtx_set_value(M, mtx_coord(&coord,row,algvars[variables[j]]), derivatives[j]);
+		}
+		++row;
+#ifdef MATRIX_DEBUG
+		ASC_FREE(relname);
+#endif
+	}
+
+	return M;
+}
+
+/**
+	Our task here is to write the matrices that IDA *should* be seeing. We
 	are actually making calls to relman_diff in order to do that, so we're
 	really going back to the variables in the actualy system and computing
 	row by row what the values are. This should mean just a single call to
@@ -1648,13 +1749,20 @@ int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char
 		VAR_SVAR | VAR_FIXED | VAR_DERIV
 	   ,VAR_SVAR | 0         | 0
 	};
+	mtx_matrix_t M;
 
-	if(NULL==type || 0 != strcmp(type,"ydot")){
-		type1 = II_WRITE_Y;
-		vfilter.matchvalue &= ~VAR_DERIV; /* clear the VAR_DERIV bit */
-	}else{
-		type1 = II_WRITE_YDOT;
+	if(type!=NULL && 0==strcmp(type,"dg/dya")){
+		CONSOLE_DEBUG("Writing dg/dya to file");
+		M = integrator_ida_dgdya(sys);
+		mtx_write_region_mmio(f,M,mtx_ENTIRE_MATRIX);
+		return 0;
+	}else if(type!=NULL && 0==strcmp(type,"dF/dydot")){
+		type1 = II_WRITE_DFDYDOT;
 		vfilter.matchvalue |= VAR_DERIV; /* set the VAR_DERIV bit */
+	}else{
+		/* the default for type==NULL */
+		type1 = II_WRITE_DFDY;
+		vfilter.matchvalue &= ~VAR_DERIV; /* clear the VAR_DERIV bit */
 	}
 
 	enginedata = (IntegratorIdaData *)sys->enginedata;
@@ -1685,7 +1793,7 @@ int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char
 	variables = ASC_NEW_ARRAY(struct var_variable *, sys->n_y * 2);
 	derivatives = ASC_NEW_ARRAY(double, sys->n_y * 2);
 
-	CONSOLE_DEBUG("Writing matrix dF/d%s (%d rels) to file...",(type1==II_WRITE_Y ? "y" : "y'"),enginedata->nrels);
+	CONSOLE_DEBUG("Writing matrix dF/d%s (%d rels) to file...",(type1==II_WRITE_DFDY ? "y" : "y'"),enginedata->nrels);
 
 	for(i=0, relptr = enginedata->rellist;
 			i< enginedata->nrels && relptr != NULL;
@@ -1702,12 +1810,12 @@ int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char
 		}
 
 		for(j=0; j<count; ++j){
-			if(type1==II_WRITE_Y){
-				CONSOLE_DEBUG("looking at rel=%d, var_sindex=%d, val=%f",i,var_sindex(variables[j]),derivatives[j]);
+			if(type1==II_WRITE_DFDY){
+				/* CONSOLE_DEBUG("looking at rel=%d, var_sindex=%d, val=%f",i,var_sindex(variables[j]),derivatives[j]); */
 				fprintf(f, "%d %d %10.3g\n", i, var_sindex(variables[j]), derivatives[j]);
 			}else{
 				varname = var_make_name(sys->system,variables[j]);
-				CONSOLE_DEBUG("looking at rel=%d, var_sindex=%d ('%s'), val=%f",i,integrator_ida_diffindex(sys,variables[j]),varname,derivatives[j]);
+				/* CONSOLE_DEBUG("looking at rel=%d, var_sindex=%d ('%s'), val=%f",i,integrator_ida_diffindex(sys,variables[j]),varname,derivatives[j]); */
 				fprintf(f, "%d %d %10.3g\n", i, integrator_ida_diffindex(sys,variables[j]), derivatives[j]);
 				ASC_FREE(varname);
 			}

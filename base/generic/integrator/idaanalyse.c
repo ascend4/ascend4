@@ -7,8 +7,11 @@
 # include <solver/slv_stdcalls.h>
 # include <solver/block.h>
 # include <solver/diffvars_impl.h>
-#include <solver/slvDOF.h>
+# include <solver/slvDOF.h>
+# include <linear/linsolqr.h>
 #endif
+
+#include "ida_impl.h"
 
 /* #define ANALYSE_DEBUG */
 
@@ -21,16 +24,6 @@ static int integrator_ida_check_partitioning(IntegratorSystem *sys);
 static int integrator_ida_check_diffindex(IntegratorSystem *sys);
 /* static int integrator_ida_rebuild_diffindex(IntegratorSystem *sys); */
 
-/**
-	A var can be non-incident. If it *is* non incident and we're going to
-	keep it, it will have to have derivative that *is* incident, and that
-	meets the following filter.
-
-	If it doesn't have a valid derivative (eg the derivative is fixed, or
-	the variable doesn't HAVE a derivative), we will mark the non-deriv
-	var non-ACTIVE, so anyway it will end up meeting this filter after we've
-	run	integrator_ida_check_vars.
-*/
 const var_filter_t integrator_ida_nonderiv = {
 	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV,
 	VAR_SVAR | VAR_ACTIVE | 0         | 0
@@ -160,6 +153,25 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 	return 0;
 }
 
+/**
+	Flag relations that contain derivatives as 'REL_DIFFERENTIAL'
+*/
+static int integrator_ida_flag_rels(IntegratorSystem *sys){
+	int i, n, c, nd=0;
+	struct rel_relation **rels;
+	n = slv_get_num_solvers_rels(sys->system);
+	rels = slv_get_solvers_rel_list(sys->system);
+	for(i=0;i<n;++i){
+		c = rel_classify_differential(rels[i]);
+		if(c){
+			nd++;
+			/* CONSOLE_DEBUG("Rel %d is DIFFERENTIAL", i); */
+		}
+	}
+	CONSOLE_DEBUG("Found %d differential equations (so %d algebraic)",nd, n - nd);
+	sys->n_diffeqs = nd;
+	return 0;
+}
 
 /**
 	Sort the lists. First we will put the non-derivative vars, then we will
@@ -227,9 +239,6 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	const SolverDiffVarCollection *diffvars;
 	int i, j;
 	struct var_variable *v;
-#ifdef ANALYSE_DEBUG
-	char *varname;
-#endif
 
 	SolverDiffVarSequence seq;
 
@@ -302,6 +311,59 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	return 0;
 }
 
+/**
+	Construct the matrix dg/y_a and evaluate whether or not it is singular.
+	If non-singular, it means that provided the differential equations are in 
+	semi-implicit form, our system will be of index 1
+*/
+int integrator_ida_check_index(IntegratorSystem *sys){
+	mtx_matrix_t M;
+	linsolqr_system_t L;
+	mtx_region_t R;
+	int r;
+
+	CONSOLE_DEBUG("There are %d algebraic variables",sys->n_y - sys->n_ydot);
+	if(0 == sys->n_y - sys->n_ydot){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No algebraic variables were found; unable to check for index problems");
+		return 0;
+	}
+
+	if(0 == slv_get_num_solvers_rels(sys->system) - sys->n_diffeqs){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No algebraic equations were found; unable to check for index problems");
+		return 0;
+	}
+	
+	M = integrator_ida_dgdya(sys);
+	if(mtx_order(M)==0){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Matrix dg/dya is empty; unable to check for index problems.");
+		return 0;
+	}
+
+	CONSOLE_DEBUG("Order of M is %d",mtx_order(M));
+
+	R.row.low = R.col.low = 0;
+	R.row.high = R.col.high = mtx_order(M) - 1;
+
+	L = linsolqr_create_default();
+	linsolqr_set_matrix(L,M);
+	linsolqr_set_region(L,R);
+	linsolqr_prep(L,linsolqr_fmethod_to_fclass(linsolqr_fmethod(L)));
+	linsolqr_reorder(L, &R, linsolqr_rmethod(L));
+	linsolqr_factor(L,linsolqr_fmethod(L));
+	r = linsolqr_rank(L);
+
+	linsolqr_destroy(L);
+	/* mtx_destroy(M); */
+
+	if(r == sys->n_y - sys->n_ydot){
+		CONSOLE_DEBUG("No index problem :-) ...so long as differential equations are semi-explicit");
+		return 0;
+	}
+	
+	CONSOLE_DEBUG("RANK of dg/dy_a is %d",r);
+	return 1;
+}	
+
 /** 
 	Perform additional problem analysis to prepare problem for integration with 
 	IDA.
@@ -337,6 +399,12 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	res = integrator_ida_check_vars(sys);
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem with vars");
+		return 1;
+	}
+
+	res = integrator_ida_flag_rels(sys);
+	if(res){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem classifying differential equations");
 		return 1;
 	}
 
@@ -417,10 +485,16 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	}	
 #endif
 
+	res = integrator_ida_check_index(sys);
+	if(res){
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Your DAE system has an index problem");
+		return 100 + res;
+	}
+
 	/* get the the dervative chains from the system */
 	diffvars = system_get_diffvars(sys->system);
 
-	/* check the indep var is same as was located elsewhere */
+	/* check the indep var is same as was located earlier */
 	if(diffvars->nindep>1){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Multiple variables specified as independent (ode_type=-1)");
 		return 3;
@@ -618,7 +692,6 @@ static int integrator_ida_check_diffindex(IntegratorSystem *sys){
 	int i, n_vars, n_ydot=0;
 	struct var_variable **list, *v;
 	char *varname;
-	int diffindex;
 	const char *msg;
 
 #ifdef ANALYSE_DEBUG
@@ -725,7 +798,6 @@ int integrator_ida_diffindex(const IntegratorSystem *sys, const struct var_varia
 	asc_assert(var_sindex(deriv) < sys->n_y + sys->n_ydot);
 	return sys->y_id[var_sindex(deriv) - sys->n_y];
 }
-
 
 /**
 	This function will output the data structures provided to use BY THE

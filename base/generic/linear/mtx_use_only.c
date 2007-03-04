@@ -69,8 +69,8 @@ struct element_t *mtx_create_element(mtx_matrix_t mtx,
 
 #if MTX_DEBUG
   if( NOTNULL(mtx_find_element(mtx,org_row,org_col)) ) {
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) create_element\n");
-    FPRINTF(g_mtxerr,"        Element (%d,%d) already exists.\n",
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element (%d,%d) already exists.\n",
             org_row,org_col);
   }
 #endif
@@ -94,8 +94,8 @@ struct element_t *mtx_create_element_value(mtx_matrix_t mtx,
 
 #if MTX_DEBUG
   if( NOTNULL(mtx_find_element(mtx,org_row,org_col)) ) {
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) create_element_value\n");
-    FPRINTF(g_mtxerr,"        Element (%d,%d) already exists.\n",
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element (%d,%d) already exists.\n",
             org_row,org_col);
   }
 #endif

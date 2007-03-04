@@ -323,6 +323,8 @@ typedef struct mtx_header *mtx_matrix_t;
 
 /**
 	Refers to (row,col) element of a matrix
+
+	Base ZERO.
 */
 typedef struct mtx_coord_struct {
    int32 row,col;
@@ -341,6 +343,8 @@ typedef struct mtx_range_struct {
 } mtx_range_t;
 /**<
 	Range refered to is low..high, inclusive.  If low>high, range is empty
+
+	Base ZERO.
 */
 
 typedef struct mtx_region_struct {

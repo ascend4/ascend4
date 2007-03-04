@@ -416,3 +416,26 @@ struct rel_extnode *rel_extnodeinfo( struct rel_relation *rel)
 {
   return(rel->nodeinfo);
 }
+
+/**
+	Flag relations that contain a derivative (with respect to the indep var).
+
+	This function must only be run once the Integrator's analysis has been
+	completed, otherwise the var_deriv flags won't have been set.
+
+	@return 1 if the rel was differential, 0 if not.
+*/
+int rel_classify_differential(struct rel_relation *rel){
+	const struct var_variable **vars;
+	int i, diff = 0;
+	vars = rel_incidence_list(rel);
+	for(i=0; i < rel_n_incidences(rel); ++i){
+		if(var_deriv(vars[i])){
+			diff = 1;
+			break;
+		}
+	}
+	rel_set_differential(rel,diff);
+	return diff;
+}
+

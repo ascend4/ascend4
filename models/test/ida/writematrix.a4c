@@ -36,3 +36,40 @@ METHODS
 		RUN ode_init;
 	END on_load;
 END writematrix;
+
+(*
+	This model tests the ida_write_matrix function for a system that includes
+	two algebraic equations and one differential equation
+*)
+MODEL writematrix2;
+	rho IS_A solver_var;
+	v IS_A solver_var;
+	w IS_A solver_var;
+	drho_dt IS_A solver_var;
+	t IS_A time;
+
+	difeq: drho_dt + v * rho = 0;
+	algeq: 100 * v + rho = 0;
+	alg2: v + w*v = 1000;
+
+METHODS
+	METHOD ode_init;
+		drho_dt.ode_id := 1;
+		rho.ode_id := 1;
+		drho_dt.ode_type := 2;
+		rho.ode_type := 1;
+		rho.obs_id := 1;
+		t.ode_type := -1;
+	END ode_init;
+	METHOD values;
+		v := 10;
+		w := 0.1;	
+		rho := 7;
+	END values;		
+	METHOD on_load;
+		RUN reset;
+		RUN default_self;
+		RUN values;
+		RUN ode_init;
+	END on_load;
+END writematrix;
