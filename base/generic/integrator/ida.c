@@ -850,7 +850,18 @@ int integrator_ida_solve(
 		CONSOLE_DEBUG("Integrating from t0 = %f to t = %f", t0, t);
 #endif
 
+#ifdef ASC_SIGNAL_TRAPS
+		Asc_SignalHandlerPushDefault(SIGINT);
+		if(setjmp(g_int_env)==0) {
+#endif
 		flag = IDASolve(ida_mem, t, &tret, yret, ypret, IDA_NORMAL);
+#ifdef ASC_SIGNAL_TRAPS
+		}else{
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Caught interrupt");
+			flag = -555;
+		}
+		Asc_SignalHandlerPopDefault(SIGINT);
+#endif
 
 		/* pass the values of everything back to the compiler */
 		integrator_set_t(sys, (double)tret);
@@ -886,6 +897,11 @@ int integrator_ida_solve(
 
 	/* free solver memory */
 	IDAFree(ida_mem);
+
+	if(flag < 500){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", t);
+		return -flag;
+	}
 
 	if(flag < 0){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solving aborted while attempting t = %f", t);
