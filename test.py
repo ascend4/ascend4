@@ -735,12 +735,12 @@ class TestSteam(AscendSelfTester):
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLogTimesteps(ascpy.Units("s"), 0.001, 3600, 40)
 		I.analyse()
-		F = file('tmp-y.mm','w')
-		I.writeMatrix(F,'dF/dy')
-		F = file('tmp-ydot.mm','w')
-		I.writeMatrix(F,'dF/dydot')
-		F = file('tmp-dgdya.mm','w')
-		I.writeMatrix(F,'dg/dya')
+		#F = file('tmp-y.mm','w')
+		#I.writeMatrix(F,'dF/dy')
+		#F = file('tmp-ydot.mm','w')
+		#I.writeMatrix(F,'dF/dydot')
+		#F = file('tmp-dgdya.mm','w')
+		#I.writeMatrix(F,'dg/dya')
 		I.solve()
 		
 #-------------------------------------------------------------------------------

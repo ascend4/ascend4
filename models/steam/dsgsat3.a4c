@@ -147,31 +147,17 @@ METHODS
 	END bound_self;
 	METHOD default;
 		(* these are initial guesses only; fixed parameters are overwritten by 'values' below *)
-		D := 0.06 {m};
-		D_2 := 0.07 {m};
-		A_w := 0.25{PI}*D_2^2 -0.25{PI}*D^2;
-		A := 1 {m^2};
-		T_amb := 298 {K};
-		f := 0.0;
-		h_ext := 10 {W/m^2/K};
-		h_int := 100 {W/m^2/K};
-		qdot_s := 1000 {W/m};
-		rho_w := 1000 {kg/m^3};
 		t := 0 {s};
 		FOR i IN nodes DO
-			T[i] := 298 {K};
-			vel[i] := 1 {m/s};
 			RUN node[i].default_self;
 		END FOR;
 		FOR i IN butfirst1 DO
-			T_w[i] := 298 {K};
 			drho_dt[i] := 0 {kg/m^3/s};
 			dmdot_dt[i] := 0 {kg/s/s};
 			du_dt[i] := 0 {kJ/kg/s};
 			dTw_dt[i] := 0 {K/s};
 			qdot_t[i] := 0 {W/m};
 			qdot_l[i] := 0 {W/m};
-			x[i] := x[1];
 		END FOR;
 	END default; 
 	METHOD specify;
@@ -189,7 +175,7 @@ METHODS
 		(* FIX mu_f; *)
 		FIX T_amb;
 		(* fix derivatives to zero *)
-		FOR i IN [2..n] DO
+		FOR i IN butfirst1 DO
 			FREE x[i]; FIX p[i];
 			FIX drho_dt[i];  FREE p[i];
 			FIX du_dt[i]; FREE T[i];
@@ -197,14 +183,19 @@ METHODS
 		END FOR;
 	END specify;
 	METHOD values;
+		T_amb := 298 {K};
+		D := 0.06 {m};
+		D_2 := 0.07 {m};
 		h_int := 100 {W/m^2/K};
 		h_ext := 20 {W/m^2/K};
+		rho_w := 1000 {kg/m^3};
 		f := 0.03;
 		mdot[1] := 0.26 {kg/s};
 		p[1]    := 10 {bar};
 		x[1]    := 0.23;
 		qdot_s := 1000 {W/m^2} * D_2 * 10;
-		FOR i IN [2..n] DO
+		FOR i IN butfirst1 DO
+			T_w[i] := 298 {K};
 			dmdot_dt[i] := 0.0 {kg/s/s};
 			du_dt[i] := 0 {kJ/kg/s};
 			v[i] := 0.2 {L/kg};
@@ -227,11 +218,11 @@ METHODS
 	END configure_steady;
 	METHOD bound_steady;
 		RUN bound_self;
-		T_w[2..n].upper_bound := 1000 {K};
+		T_w[butfirst1].upper_bound := 1000 {K};
 	END bound_steady;
 	(*------------------------- the dynamic problem ------------------------------*)
 	METHOD configure_dynamic;
-		FOR i IN [2..n] DO
+		FOR i IN butfirst1 DO
 			FREE drho_dt[i];  FIX rho[i];
 			FREE dmdot_dt[i]; FIX mdot[i];
 			FREE du_dt[i];    FIX u[i];
@@ -242,7 +233,7 @@ METHODS
 		t := 0 {s};
 	END configure_dynamic;
 	METHOD free_states;
-		FOR i IN [2..n] DO
+		FOR i IN butfirst1 DO
 			FREE rho[i];
 			FREE mdot[i];
 			FREE u[i];
@@ -253,7 +244,7 @@ METHODS
 		(* add the necessary meta data to allow solving with the integrator *)
 		t.ode_type := -1;
 
-		FOR i IN [2..n] DO
+		FOR i IN butfirst1 DO
 			drho_dt[i].ode_id := 4*i;     rho[i].ode_id := 4*i;
 			drho_dt[i].ode_type := 2;     rho[i].ode_type := 1;
 
@@ -273,7 +264,7 @@ METHODS
 			(* mdot[i].obs_id := 4 + 10*i; *)
 			(* node[i].h.obs_id :=    3 + 10*i; *)
 		END FOR;
-		FOR i IN [2..n] DO
+		FOR i IN butfirst1 DO
 			(* qdot_t[i].obs_id :=    3 + 10*i; *)
 			(* T_w[i].obs_id :=       5 + 10*i; *)
 			(* T[i].obs_id :=         6 + 10*i;*)

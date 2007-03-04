@@ -898,7 +898,7 @@ int integrator_ida_solve(
 	/* free solver memory */
 	IDAFree(ida_mem);
 
-	if(flag < 500){
+	if(flag < -500){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", t);
 		return -flag;
 	}
