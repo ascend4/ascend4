@@ -9,6 +9,7 @@ extern "C"{
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <iomanip>
 #include <iterator>
 #include <sstream>
 using namespace std;
@@ -61,8 +62,8 @@ IntegratorReporterConsole::initOutput(){
 	ss<< "-------";
 	for(long i=0; i<nobs; ++i){
 		Variable v = integrator->getObservedVariable(i);
-		f << "\t" << v.getName();
-		ss<< "\t" << "-------";
+		f << "\t" << setw(12) << v.getName();
+		ss<< "\t" << setw(12) << "-------";
 	}
 	f << endl;
 	f << ss.str() << endl;
@@ -79,10 +80,13 @@ int IntegratorReporterConsole::updateStatus(){
 
 int IntegratorReporterConsole::recordObservedValues(){
 	IntegratorSystem *sys = integrator->getInternalType();
-	f << integrator_get_t(sys) << "\t";
+	f << setw(12) << integrator_get_t(sys);
 	vector<double> data(integrator->getNumObservedVars());
 	integrator_get_observations(sys,&data[0]);
-	copy(data.begin(),data.end(),ostream_iterator<double>(f,"\t"));
+	//copy(data.begin(),data.end(),ostream_iterator<double>(f,"\t"));
+	for(vector<double>::iterator i=data.begin();i<data.end();++i){
+		f << '\t' << setw(12) << *i;
+	}
 	f << endl;
 	return 1;
 }
