@@ -676,7 +676,6 @@ class TestSteam(AscendSelfTester):
 		I.analyse()	
 		I.solve()
 
-# DOESN'T CONVERGE
 #	def testpeturblsode(self):
 #		"test that steady conditions are stable with LSODE"
 #		M = self.testdsgsat()
@@ -736,6 +735,12 @@ class TestSteam(AscendSelfTester):
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLogTimesteps(ascpy.Units("s"), 0.001, 3600, 40)
 		I.analyse()
+		F = file('tmp-y.mm','w')
+		I.writeMatrix(F,'dF/dy')
+		F = file('tmp-ydot.mm','w')
+		I.writeMatrix(F,'dF/dydot')
+		F = file('tmp-dgdya.mm','w')
+		I.writeMatrix(F,'dg/dya')
 		I.solve()
 		
 #-------------------------------------------------------------------------------
@@ -905,14 +910,50 @@ class TestIDA(Ascend):
 		I.setEngine('IDA')
 		I.analyse()
 		F = os.tmpfile()
-		I.writeMatrix(F,"y")
+		I.writeMatrix(F,"dF/dy")
 		F.seek(0)
 		print F.read()
 		F1 = os.tmpfile()
-		I.writeMatrix(F1,"ydot")
+		I.writeMatrix(F1,"dF/dydot")
+		F1.seek(0)
+		print F1.read()
+		F1 = os.tmpfile()
+		I.writeMatrix(F1,"dg/dya")
 		F1.seek(0)
 		print F1.read()
 		# for the moment you'll have to check these results manually.
+
+	def testwritematrix2(self):
+		self.L.load('test/ida/writematrix.a4c')
+		T = self.L.findType('writematrix2')
+		M = T.getSimulation('sim')
+		M.build()
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.analyse()
+		F = os.tmpfile()
+		I.writeMatrix(F,"dF/dy")
+		F.seek(0)
+		print F.read()
+		F1 = os.tmpfile()
+		I.writeMatrix(F1,"dF/dydot")
+		F1.seek(0)
+		print F1.read()
+		F1 = os.tmpfile()
+		I.writeMatrix(F1,"dg/dya")
+		F1.seek(0)
+		print F1.read()
+		# for the moment you'll have to check these results manually.
+
+	def testindexproblem(self):
+		self.L.load('test/ida/indexproblem.a4c')
+		T = self.L.findType('indexproblem')
+		M = T.getSimulation('sim')
+		M.build()
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.analyse()
+
 
 # doesn't work yet:
 #	def testincidence5(self):

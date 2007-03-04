@@ -1,0 +1,37 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(* 
+	This model is to test that IDA correctly detects an index problem
+*)
+MODEL indexproblem;
+	y[1,2] IS_A solver_var;
+	dy_dt[1,2] IS_A solver_var;
+	t IS_A time;
+
+	dy_dt[1] = 4 * y[1];
+	y[2] = dy_dt[1];
+METHODS
+	METHOD ode_init;
+		FOR i IN [1,2] DO
+			dy_dt[i].ode_type := 2; dy_dt[i].ode_id := i;
+			y[i].ode_type := 1;     y[i].ode_id := i;
+		END FOR;
+		y[1..2].obs_id := 1;
+		t.ode_type := -1;
+	END ode_init;
+	METHOD values;
+		y[1] := 3;
+		y[2] := 100;
+	END values;		
+	METHOD on_load;
+		RUN reset;
+		RUN default_self;
+		RUN values;
+		RUN ode_init;
+	END on_load;
+END indexproblem;
+
+(* case where no alg eqs *)
+
+(* case where no alg vars (equivalent) *)

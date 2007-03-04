@@ -279,8 +279,9 @@ struct IntegratorSystemStruct{
   int n_y;
   int n_ydot;
   int n_obs;
+  int n_diffeqs;              /**< number of differential equations (used by idaanalyse) */
   int currentstep;           /**< current step number (also @see integrator_getnsamples) */
-
+ 
   /** @TODO move the following to the 'params' structure? Or maybe better not to? */
   int maxsubsteps;               /**< most steps between mesh poins */
   double stepzero;            /**< initial step length, SI units. */

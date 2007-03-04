@@ -212,6 +212,8 @@
 #ifndef ASC_LINSOLQR_H
 #define ASC_LINSOLQR_H
 
+#include "mtx.h"
+
 /** 	@addtogroup linear Linear
 	@{
 */
@@ -310,8 +312,6 @@ extern enum factor_class linsolqr_fmethod_to_fclass(enum factor_method fm);
 
 ASC_DLLSPEC char *linsolqr_enum_to_rmethod(enum reorder_method m);
 /**<
- * <!--  s=linsolqr_enum_to_rmethod(m);                                -->
- *
  * Returns the name of a reorder method with the enum m.
  * If you implement a new method, update this function.
  * Do not free the name.
@@ -345,6 +345,13 @@ extern linsolqr_system_t linsolqr_create(void);
  *  Creates a linear system and returns a pointer to it.  Initially the
  *  system has no coefficient matrix and no rhs.
  */
+
+linsolqr_system_t linsolqr_create_default(void);
+/**<
+	Creates a linsolqr system as per linsolqr_default but sets default
+	preferences for reordering and factoring methods, so the lazy user (me)
+	doesn't	have to.
+*/
 
 extern void linsolqr_destroy(linsolqr_system_t sys);
 /**< 
@@ -616,6 +623,8 @@ ASC_DLLSPEC int linsolqr_factor(linsolqr_system_t sys,
  *  If you are handed a linsolqr system and want to refactor it using the
  *  usual method, but don't know what that method is, call like:
  *  status = linsolqr_factor(sys,linsolqr_fmethod(sys));
+ *
+ *  linsolqr_reorder must be called before factoring the matrix -- JP -- check?
  *
  *  Return 0 if ok, 1 if not.
  */

@@ -1,10 +1,28 @@
-/*
- *  Author: Benjamin A Allan
- *  Version: $Revision: 1.9 $
- *  Version control file: $RCSfile: plainqr.c,v $
- *  Date last modified: $Date: 1997/07/18 12:15:22 $
- *  Last modified by: $Author: mthomas $
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2007 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	Author: Benjamin A Allan
+	Last in CVS: $Revision: 1.9 $ $Date: 1997/07/18 12:15:22 $ $Author: mthomas $
+*/
+
+#include <utilities/ascConfig.h>
+#include <utilities/error.h>
+
 /***************************************************************************\
   CPQR implementation.
   an insert to linsolqr.c of a column pivoted (with ptol) householder qr
@@ -32,7 +50,8 @@ static int ul_rectangle_region(linsolqr_system_t sys, mtx_region_t *r)
        r->col.low > cmax || r->col.high > cmax ||
        r->col.low > r->col.high || r->row.low > r->row.high
      ) {
-    FPRINTF(stderr,"(linsolqr.c) ul_rectangle_region: Insane region given.\n");
+    CONSOLE_DEBUG("Region rows=[%d,%d], cols=[%d,%d]",r->row.low,r->row.high,r->col.low,r->col.high);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad matrix region specified (cmax = %d)",cmax);
     return 1;
   }
   if (r->row.low > r->col.low) {
@@ -41,16 +60,15 @@ static int ul_rectangle_region(linsolqr_system_t sys, mtx_region_t *r)
     r->row.low = r->col.low;
   }
   if ( r->col.low > r->col.high || r->row.low > r->row.high ) {
-    FPRINTF(stderr,
-      "(linsolqr.c) ul_rectangle_region: Region given off diagonal.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Region given off diagonal.\n");
     return 1;
   }
   sys->rng.low = r->col.low;
   sys->rng.high = MIN(r->col.high,r->row.high);
 #if CPQR_DEBUG
-  FPRINTF(stderr,"factor region: rows (%d,%d) cols (%d,%d)\n",
+  CONSOLE_DEBUG("factor region: rows (%d,%d) cols (%d,%d)\n",
                   r->row.low,r->row.high, r->col.low,r->col.high);
-  FPRINTF(stderr,"factor range: cols %d- %d\n",sys->rng.low,sys->rng.high);
+  CONSOLE_DEBUG("factor range: cols %d- %d\n",sys->rng.low,sys->rng.high);
 #endif
   return 0;
 }
@@ -79,13 +97,13 @@ static real64 cpqr_compute_alpha(real64 * const alpha,
     tsqr = mtx_sum_sqrs_in_col(mtx,col,&(reg->row));
     alpha[col] = sqrt(tsqr);
 #if CPQR_DEBUG
-    FPRINTF(stderr,"alpha[%d](org %d) = %g\n",
+    CONSOLE_DEBUG("alpha[%d](org %d) = %g\n",
       col,mtx_col_to_org(mtx,col),alpha[col]);
 #endif
     anorm += tsqr;
   }
 #if CPQR_DEBUG
-  FPRINTF(stderr,"region frobenius norm: %g\n",sqrt(anorm));
+  CONSOLE_DEBUG("region frobenius norm: %g\n",sqrt(anorm));
 #endif
   return sqrt(anorm);
 }
@@ -173,7 +191,7 @@ static real64 cpqr_permute(linsolqr_system_t sys,
 {
   real64 tmp;
 #if CPQR_DEBUG
-  FPRINTF(stderr,"cpqr_permuted called to move %d back to %d\n",
+  CONSOLE_DEBUG("cpqr_permuted called to move %d back to %d\n",
     newcol,active->low);
 #endif
   if (newcol <= active->low) return D_ZERO;
@@ -277,8 +295,7 @@ static boolean cpqr_get_householder(linsolqr_system_t sys,
   if ( alpha[curcol] == D_ZERO) {
     /* somebody dumb called us and we set them straight. Case 1 */
     sys->qrdata->tau[curcol] = D_ZERO;   /* signal weirdness */
-    FPRINTF(stderr,"ERROR: (linsolqr.c)  cpqr_get_householder called\n");
-    FPRINTF(stderr,"                     with alpha[col] = 0.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with alpha[col] = 0.\n");
     return FALSE;
   }
 
@@ -290,15 +307,14 @@ static boolean cpqr_get_householder(linsolqr_system_t sys,
   /* fetch and empty the column we build u from */
   mtx_steal_org_col_sparse(mtx,curcol,sp,rng);
 #if CPQR_DEBUG
-  FPRINTF(stderr,"cpqr_get_householder found column %d:\n",curcol);
+  CONSOLE_DEBUG("cpqr_get_householder found column %d:\n",curcol);
   mtx_write_sparse(stderr,sp);
 #endif
   /* check sp sanity  backup Case 1 */
   if ( sp->len < 1 ) {
     alpha[curcol] = D_ZERO; /* somebody lied and we set them straight */
     sys->qrdata->tau[curcol] = D_ZERO;   /* signal weirdness */
-    FPRINTF(stderr,"ERROR: (linsolqr.c)  cpqr_get_householder called\n");
-    FPRINTF(stderr,"                     with empty column, norm = 0.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with empty column, norm = 0.\n");
     return FALSE;
   }
   /* check for Identity = H , Case 2 */
@@ -360,7 +376,7 @@ static boolean cpqr_get_householder(linsolqr_system_t sys,
     /* record min pivot size */
     apiv = fabs(alpha[curcol]);
 #if CPQR_DEBUG
-    FPRINTF(stderr,"pivotsize = %g\n",apiv);
+    CONSOLE_DEBUG("pivotsize = %g\n",apiv);
     mtx_write_sparse(stderr,sp);
 #endif
     if (apiv < sys->smallest_pivot) {
@@ -368,8 +384,7 @@ static boolean cpqr_get_householder(linsolqr_system_t sys,
     }
     return TRUE;
   } else {
-    FPRINTF(stderr,"ERROR: (linsolqr.c)  cpqr_get_householder called\n");
-    FPRINTF(stderr,"                     with small column, underflow.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with small column, underflow.\n");
     return FALSE;
   }
 }
@@ -543,12 +558,12 @@ static int cpqr_factor(linsolqr_system_t sys)
   }
 
 #if CPQR_DEBUG
-  FPRINTF(stderr,"R\n");
+  CONSOLE_DEBUG("R\n");
   mtx_write_region_human_cols(stderr,sys->factors,&(data->facreg));
-  FPRINTF(stderr,"hhcols\n");
+  CONSOLE_DEBUG("hhcols\n");
   mtx_write_region_human_cols(stderr,data->hhvects,&(data->facreg));
   for (col = data->facreg.col.low; col <= data->facreg.col.high; col++) {
-    FPRINTF(stderr,"alpha[%d](org %d) = %g\n",
+    CONSOLE_DEBUG("alpha[%d](org %d) = %g\n",
       col,mtx_col_to_org(sys->factors,col),alpha[col]);
   }
 #endif
@@ -801,25 +816,25 @@ static int cpqr_entry(linsolqr_system_t sys,mtx_region_t *region)
    sys->smallest_pivot = MAXDOUBLE;
    for( rl = sys->rl ; NOTNULL(rl)  ; rl = rl->next )
      rl->solved = FALSE;
-   insure_capacity(sys); /* this should zero the vectors if needed */
-   insure_qr_capacity(sys); /* this should zero the vectors if needed */
+   ensure_capacity(sys); /* this should zero the vectors if needed */
+   ensure_qr_capacity(sys); /* this should zero the vectors if needed */
 
    rank_deficient = cpqr_factor(sys);
    if (rank_deficient) {
 #if LINSOLQR_DEBUG
      int j;
 #endif
-     FPRINTF(stderr,"Warning:  cpqr found column rank %d of %d\n",sys->rank,
+     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"cpqr found column rank %d of %d\n",sys->rank,
      sys->rng.high-sys->rng.low+1);
 #if LINSOLQR_DEBUG
-     FPRINTF(stderr,"alpha vec:(curcol,val)\n");
+     CONSOLE_DEBUG("alpha vec:(curcol,val)\n");
        for (j=sys->qrdata->facreg.col.low;
             j<= sys->qrdata->facreg.col.high; j++)
-         FPRINTF(stderr,"alpha[%d] = %.8g\n",j,sys->qrdata->alpha[j]);
-     FPRINTF(stderr,"tau vec:(curcol,val)\n");
+         CONSOLE_DEBUG("alpha[%d] = %.8g\n",j,sys->qrdata->alpha[j]);
+     CONSOLE_DEBUG("tau vec:(curcol,val)\n");
        for (j=sys->qrdata->facreg.col.low;
             j<= sys->qrdata->facreg.col.high; j++)
-         FPRINTF(stderr,"tau[%d] = %.8g\n",j,sys->qrdata->tau[j]);
+         CONSOLE_DEBUG("tau[%d] = %.8g\n",j,sys->qrdata->tau[j]);
 #endif
    }
    sys->factored = TRUE;

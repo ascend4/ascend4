@@ -472,7 +472,7 @@ real64 relman_diff(struct rel_relation *rel, struct var_variable *var,
 #endif
 
 /* return 0 on success */
-int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
+int relman_diff2(struct rel_relation *rel, const var_filter_t *filter,
                  real64 *derivatives, int32 *variables,
 		 int32 *count, int32 safe)
 {
@@ -520,10 +520,11 @@ int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
 
 
 /* return 0 on success */
-int relman_diff3(struct rel_relation *rel, var_filter_t *filter,
-                 real64 *derivatives, struct var_variable **variables,
-		 int32 *count, int32 safe)
-{
+int relman_diff3(struct rel_relation *rel
+		, const var_filter_t *filter
+		, real64 *derivatives, struct var_variable **variables
+		, int32 *count, int32 safe
+){
   struct var_variable **vlist=NULL;
   real64 *gradient;
   int32 len,c;
@@ -574,11 +575,12 @@ int relman_diff3(struct rel_relation *rel, var_filter_t *filter,
 
 
 
-int relman_diff_grad(struct rel_relation *rel, var_filter_t *filter,
-                     real64 *derivatives, int32 *variables_master,
-		     int32 *variables_solver, int32 *count, real64 *resid,
-		     int32 safe)
-{
+int relman_diff_grad(struct rel_relation *rel
+		, const var_filter_t *filter
+		, real64 *derivatives, int32 *variables_master
+		, int32 *variables_solver, int32 *count, real64 *resid
+		, int32 safe
+){
   const struct var_variable **vlist=NULL;
   real64 *gradient;
   int32 len,c;
@@ -733,9 +735,10 @@ int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen,
   return result;
 }
 
-int relman_diffs(struct rel_relation *rel, var_filter_t *filter,
-                 mtx_matrix_t mtx, real64 *resid, int safe)
-{
+int relman_diffs(struct rel_relation *rel
+		, const var_filter_t *filter
+		, mtx_matrix_t mtx, real64 *resid, int safe
+){
   const struct var_variable **vlist=NULL;
   real64 *gradient;
   int32 len,c;

@@ -496,6 +496,12 @@ ASC_DLLSPEC void rel_set_flagbit(struct rel_relation *rel,
  *  Temporary relation that doesn't exist independently in the backend,
  *  but is made by some process of the backend or the solver client.
  *  Is rel fake and cooked up for this system only? */
+#define REL_DIFFERENTIAL 0x20000
+/**<
+	Relation found to contain differential variables (for separating the
+	algebraic and differential equations in a system, for the purpose of
+	checking index problems).
+*/
 
 /*
  * the bit flag lookups
@@ -526,6 +532,7 @@ ASC_DLLSPEC void rel_set_flagbit(struct rel_relation *rel,
 #define rel_conditional(rel)      ((rel)->flags & REL_CONDITIONAL)
 #define rel_in_cur_subregion(rel) ((rel)->flags & REL_IN_CUR_SUBREGION)
 #define rel_generated(rel)        ((rel)->flags & REL_GENERATED)
+#define rel_differential(rel)     ((rel)->flags & REL_DIFFERENTIAL)
 #else
 #define rel_partition(rel)        rel_flagbit((rel),REL_PARTITION)
 #define rel_torn(rel)             rel_flagbit((rel),REL_TORN)
@@ -552,6 +559,7 @@ ASC_DLLSPEC void rel_set_flagbit(struct rel_relation *rel,
 #define rel_conditional(rel)      rel_flagbit((rel),REL_CONDITIONAL)
 #define rel_in_cur_subregion(rel) rel_flagbit((rel),REL_IN_CUR_SUBREGION)
 #define rel_generated(rel)        rel_flagbit((rel),REL_GENERATED)
+#define rel_differential(rel)     rel_flagbit((rel),REL_DIFFERENTIAL)
 #endif /* NDEBUG */
 
 /*
@@ -575,7 +583,8 @@ ASC_DLLSPEC void rel_set_flagbit(struct rel_relation *rel,
         rel_set_flagbit((rel),REL_CONDITIONAL,(bitval))
 #define rel_set_in_cur_subregion(rel,bitval)  \
         rel_set_flagbit((rel),REL_IN_CUR_SUBREGION,(bitval))
-#define rel_set_generated(rel,bitval)		rel_set_flagbit((rel),REL_GENERATED,(bitval))
+#define rel_set_generated(rel,bitval)    rel_set_flagbit((rel),REL_GENERATED,(bitval))
+#define rel_set_differential(rel,bitval) rel_set_flagbit((rel),REL_DIFFERENTIAL,(bitval))
 
 ASC_DLLSPEC uint32 rel_included(struct rel_relation *rel);
 /**<
@@ -609,5 +618,16 @@ extern void rel_set_multiplier(struct rel_relation *rel, real64 multiplier);
  */
 
 /* @} */
+
+int rel_classify_differential(struct rel_relation *rel);
+/**<
+	Classify a relation as being a differential equation or not. This is done
+	by looking to see if there are any incident variables that are marked
+	as derivatives. Nothing fancy is done wrt checking the other flags on those
+	variables.
+
+	Make sure you run this AFTER the analyser has determined which variables
+	are derivatives and which are not (eg integrator_ida_analyse).
+*/
 
 #endif /* ASC_REL_H  */

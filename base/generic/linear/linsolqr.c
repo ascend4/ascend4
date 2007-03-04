@@ -62,6 +62,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
+#include <utilities/error.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <utilities/mem.h>
@@ -312,8 +313,7 @@ static int check_system(linsolqr_system_t sys, char *file, int line)
    UNUSED_PARAMETER(file);
 
    if( ISNULL(sys) ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) check_system\n");
-      FPRINTF(stderr,"        NULL system handle.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL system handle.");
       return 1;
    }
 
@@ -321,12 +321,10 @@ static int check_system(linsolqr_system_t sys, char *file, int line)
    case OK:
       return 0;
    case DESTROYED:
-      FPRINTF(stderr,"ERROR:  (linsolqr) check_system, line %d\n",line);
-      FPRINTF(stderr,"        System was recently destroyed.\n");
+      error_reporter(ASC_PROG_ERR,file,line,__FUNCTION__,"System was recently destroyed.");
       break;
    default:
-      FPRINTF(stderr,"ERROR:  (linsolqr) check_system, line %d\n",line);
-      FPRINTF(stderr,"        System was reused or never created.\n");
+      error_reporter(ASC_PROG_ERR,file,line,__FUNCTION__,"System was reused or never created.");
       break;
    }
    return 1;
@@ -364,7 +362,7 @@ static struct rhs_list *find_rhs(struct rhs_list *rl,real64 *rhs)
 static struct lu_auxdata *create_ludata()
 /**
  *** Creates an empty zeroed ludata struct.
- *** Filled up by insure_lu_capacity.
+ *** Filled up by ensure_lu_capacity.
  **/
 {
   struct lu_auxdata *d;
@@ -375,7 +373,7 @@ static struct lu_auxdata *create_ludata()
 static struct qr_auxdata *create_qrdata()
 /**
  *** Creates an empty zeroed qrdata struct.
- *** Filled up by insure_qr_capacity.
+ *** Filled up by ensure_qr_capacity.
  **/
 {
   struct qr_auxdata *d;
@@ -444,16 +442,22 @@ linsolqr_system_t linsolqr_create()
    return(sys);
 }
 
+linsolqr_system_t linsolqr_create_default(){
+	linsolqr_system_t L;
+	L = linsolqr_create();
+	L->fmethod = plain_qr;
+	L->rmethod = tspk1;
+	return L;
+}
+
 void linsolqr_destroy(linsolqr_system_t sys)
 {
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,"Bad linsolqr_system_t found. Not destroyed.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. Not destroyed.");
      return;
    }
    if( NOTNULL(sys->coef) ) {
-     FPRINTF(stderr,"Notice:  (linsolqr) non-NULL coefficient matrix\n");
-     FPRINTF(stderr,"                    in linsolqr system not being\n");
-     FPRINTF(stderr,"                    destroyed with linsolqr_system_t.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"linsolqr contains coef mtx which will NOT be destroyed\n");
    }
    if( NOTNULL(sys->inverse) )
       mtx_destroy(sys->inverse);
@@ -469,7 +473,7 @@ void linsolqr_destroy(linsolqr_system_t sys)
 void linsolqr_set_matrix(linsolqr_system_t sys,mtx_matrix_t mtx)
 {
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,"Bad linsolqr_system_t found. coef mtx not set.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Bad linsolqr_system_t found. coef mtx not set.");
      return;
    }
    sys->coef = mtx;
@@ -479,9 +483,10 @@ void linsolqr_set_matrix(linsolqr_system_t sys,mtx_matrix_t mtx)
 void linsolqr_set_region(linsolqr_system_t sys,mtx_region_t region)
 {
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,"Bad linsolqr_system_t found. coef mtx not set.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. coef mtx not set.");
      return;
    }
+   CONSOLE_DEBUG("Region rows=[%d,%d], cols=[%d,%d]",region.row.low,region.row.high,region.col.low,region.col.high);
    sys->reg = region;
 }
 
@@ -504,7 +509,7 @@ void linsolqr_add_rhs(linsolqr_system_t sys,
    struct rhs_list *rl;
 
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,"Bad linsolqr_system_t found. rhs not added.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. rhs not added.");
      return;
    }
    rl = find_rhs(sys->rl,rhs);
@@ -533,7 +538,7 @@ void linsolqr_remove_rhs(linsolqr_system_t sys,real64 *rhs)
    struct rhs_list **q;
 
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,"Bad linsolqr_system_t found. rhs not removed.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. RHS not removed.");
      return;
    }
    for( q = &(sys->rl) ; NOTNULL(*q) ; q = &((*q)->next) )
@@ -548,8 +553,7 @@ void linsolqr_remove_rhs(linsolqr_system_t sys,real64 *rhs)
       ascfree( (POINTER)p );
       --(sys->rlength);
    } else if( NOTNULL(rhs) ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_remove_rhs\n");
-      FPRINTF(stderr,"        Rhs does not exist.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs does not exist.");
    }
 }
 
@@ -576,8 +580,7 @@ real64 *linsolqr_get_rhs(linsolqr_system_t sys,int n)
 void linsolqr_matrix_was_changed(linsolqr_system_t sys)
 {
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,
-       "Bad linsolqr_system_t found. matrix change message ignored.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. matrix change message ignored.");
      return;
    }
    sys->rowdeps = sys->coldeps = sys->factored = FALSE;
@@ -588,27 +591,25 @@ void linsolqr_rhs_was_changed(linsolqr_system_t sys, real64 *rhs)
    struct rhs_list *rl;
 
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,"Bad linsolqr_system_t found. rhs change ignored.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. rhs change ignored.");
      return;
    }
    rl = find_rhs(sys->rl,rhs);
    if( NOTNULL(rl) ) {
       rl->solved = FALSE;
    } else if( NOTNULL(rhs) ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_rhs_was_modified\n");
-      FPRINTF(stderr,"        Rhs does not exist.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs does not exist.");
    }
 }
 
 void linsolqr_set_pivot_zero(linsolqr_system_t sys,real64 pivot_zero)
 {
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,"Bad linsolqr_system_t found. set_pivot_zero ignored.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. set_pivot_zero ignored.");
      return;
    }
    if( pivot_zero < D_ZERO ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_set_pivot_zero\n");
-      FPRINTF(stderr,"        Invalid pivot zero of %g\n",pivot_zero);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid pivot zero of %g",pivot_zero);
    } else {
       sys->pivot_zero = pivot_zero;
       linsolqr_matrix_was_changed(sys);
@@ -624,12 +625,11 @@ real64 linsolqr_pivot_zero(linsolqr_system_t sys)
 void linsolqr_set_pivot_tolerance(linsolqr_system_t sys, real64 ptol)
 {
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,"Bad linsolqr_system_t found. set_pivot_tol ignored.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. set_pivot_tol ignored.");
      return;
    }
    if( ptol < D_ZERO || ptol > D_ONE ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_set_pivot_tolerance\n");
-      FPRINTF(stderr,"        Invalid pivot tolerance of %g\n",ptol);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid pivot tolerance of %g",ptol);
    } else {
       sys->ptol = ptol;
       linsolqr_matrix_was_changed(sys);
@@ -639,13 +639,11 @@ void linsolqr_set_pivot_tolerance(linsolqr_system_t sys, real64 ptol)
 void linsolqr_set_condition_tolerance(linsolqr_system_t sys, real64 ctol)
 {
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,
-       "Bad linsolqr_system_t found. set_condition_tolerance ignored.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. set_condition_tolerance ignored.");
      return;
    }
    if( ctol < D_ZERO || ctol > D_ONE ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_set_condition_tolerance\n");
-      FPRINTF(stderr,"        Invalid condition tolerance of %g\n",ctol);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid condition tolerance of %g.",ctol);
    } else {
       sys->ctol = ctol;
       linsolqr_matrix_was_changed(sys);
@@ -655,13 +653,11 @@ void linsolqr_set_condition_tolerance(linsolqr_system_t sys, real64 ctol)
 void linsolqr_set_drop_tolerance(linsolqr_system_t sys, real64 dtol)
 {
    if(CHECK_SYSTEM(sys)) {
-     FPRINTF(stderr,
-       "Bad linsolqr_system_t found. set_drop_tolerance ignored.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. set_drop_tolerance ignored.");
      return;
    }
    if( dtol < D_ZERO || dtol > D_ONE ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_set_drop_tolerance\n");
-      FPRINTF(stderr,"        Invalid drop tolerance of %g\n",dtol);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid drop tolerance of %g.",dtol);
    } else {
       sys->dtol = dtol;
       linsolqr_matrix_was_changed(sys);
@@ -706,8 +702,7 @@ int32 linsolqr_rank(linsolqr_system_t sys)
 {
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_rank\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
    }
    return(sys->rank);
 }
@@ -717,8 +712,7 @@ real64 linsolqr_smallest_pivot(linsolqr_system_t sys)
    CHECK_SYSTEM(sys);
 #if LINSOL_DEBUG
    if( !sys->factored ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_smallest_pivot\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
    }
 #endif
    return(sys->smallest_pivot);
@@ -726,9 +720,9 @@ real64 linsolqr_smallest_pivot(linsolqr_system_t sys)
 
 /***************************************************************************\
   Commonly used internal functions for sparse linear solvers based on mtx.
-   void insure_capacity(sys)
-   void insure_lu_capacity(sys)
-   void insure_qr_capacity(sys)
+   void ensure_capacity(sys)
+   void ensure_lu_capacity(sys)
+   void ensure_qr_capacity(sys)
    void forward_substitute(sys,rvec,transpose)
    void backward_substitute(sys,rvec,transpose)
    macro SQR(x)
@@ -839,9 +833,9 @@ static struct qr_fill_t *raise_qr_fill_capacity(struct qr_fill_t *vec,
   return newvec;
 }
 
-static void insure_capacity(linsolqr_system_t sys)
+static void ensure_capacity(linsolqr_system_t sys)
 /**
- ***  Insures that the capacity of all of the solution vectors
+ ***  ensures that the capacity of all of the solution vectors
  ***  for each rhs is large enough.
  ***  The above implies a malloc if varvalue is null.
  ***  Assumes varvalue are at sys->capacity already.
@@ -859,16 +853,16 @@ static void insure_capacity(linsolqr_system_t sys)
    }
 }
 
-static void insure_lu_capacity(linsolqr_system_t sys)
+static void ensure_lu_capacity(linsolqr_system_t sys)
 /**
- ***  Insures that the capacity of all of the ludata vectors.
+ ***  ensures that the capacity of all of the ludata vectors.
  ***  The above implies a malloc if vector is null.
  ***  If not null, implies an extension if needed.
  **/
 {
   int32 req_cap;
   if (!sys || !(sys->coef) || !(sys->ludata)) {
-    FPRINTF(stderr,"linsolqr: insure_lu_capacity called with NULL pointer");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with NULL pointer");
     return;
   }
   req_cap = mtx_capacity(sys->coef);
@@ -882,9 +876,9 @@ static void insure_lu_capacity(linsolqr_system_t sys)
   }
 }
 
-static void insure_qr_capacity(linsolqr_system_t sys)
+static void ensure_qr_capacity(linsolqr_system_t sys)
 /**
- ***  Insures that the capacity of all of the qrdata vectors
+ ***  ensures that the capacity of all of the qrdata vectors
  ***  is large enough.
  ***  The above implies a calloc if vector is null.
  ***  If not null, implies an extension and zeroing of the vector.
@@ -893,7 +887,7 @@ static void insure_qr_capacity(linsolqr_system_t sys)
 {
   int32 req_cap;
   if (!sys || !(sys->coef) || !(sys->qrdata)) {
-    FPRINTF(stderr,"linsolqr: insure_qr_capacity called with NULL pointer");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with NULL pointer");
     return;
   }
   req_cap = mtx_capacity(sys->coef);
@@ -1998,8 +1992,7 @@ static int ranki_reorder(linsolqr_system_t sys,mtx_region_t *region)
    struct reorder_vars vars;
    CHECK_SYSTEM(sys);
    if (sys->fclass != ranki) {
-     FPRINTF(stderr,"linsolqr_reorder:  spk1 reorder called on system\n");
-     FPRINTF(stderr,"                   with inappropriate factor class\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"called on system with inappropriate factor class");
      return 1;
    }
    if( region == mtx_ENTIRE_MATRIX ) determine_pivot_range(sys);
@@ -2023,8 +2016,7 @@ static int tranki_reorder(linsolqr_system_t sys,mtx_region_t *region)
    struct creorder_vars vars;
    CHECK_SYSTEM(sys);
    if ( !(sys->fclass==ranki || sys->fclass==s_qr) ) {
-     FPRINTF(stderr,"linsolqr_reorder:  tspk1 reorder called on system\n");
-     FPRINTF(stderr,"                   with inappropriate factor method\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"reorder called on system with inappropriate factor method");
      return 1;
    }
    if( region == mtx_ENTIRE_MATRIX ) determine_pivot_range(sys);
@@ -2258,8 +2250,7 @@ static void rankikw_factor(linsolqr_system_t sys)
          --last_row;
 #undef KAA_DEBUG
 #ifdef KAA_DEBUG
-	 FPRINTF(stderr,"Warning: Row %d is dependent with pivot %20.8g\n",
-		 nz.row,pivot);
+	 ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Warning: Row %d is dependent with pivot %20.8g",nz.row,pivot);
 #endif /* KAA_DEBUG */
       } else {
          /* Independent row: nz contains best pivot */
@@ -2399,8 +2390,8 @@ static int ranki_entry(linsolqr_system_t sys,mtx_region_t *region)
    sys->smallest_pivot = MAXDOUBLE;
    for( rl = sys->rl ; NOTNULL(rl) ; rl = rl->next )
       rl->solved = FALSE;
-   insure_capacity(sys);
-   insure_lu_capacity(sys);
+   ensure_capacity(sys);
+   ensure_lu_capacity(sys);
 
    comptime = tm_cpu_time();
    switch(sys->fmethod) {
@@ -2421,9 +2412,8 @@ static int ranki_entry(linsolqr_system_t sys,mtx_region_t *region)
 #undef KAA_DEBUG
 #if KAA_DEBUG
    comptime = tm_cpu_time() - comptime;
-   FPRINTF(stderr,"Time for Inversion = %f\n",comptime);
-   FPRINTF(stderr,"Non-zeros in Inverse = %d\n",
-	   mtx_nonzeros_in_region(sys->factors,region));
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Time for Inversion = %f",comptime);
+   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-zeros in Inverse = %d",mtx_nonzeros_in_region(sys->factors,region));
 #endif
    return 0;
 }
@@ -2624,7 +2614,7 @@ static void rankikw2_factor(linsolqr_system_t sys)
       FPRINTF(gscr,"Cheap pivot col %d (org %d)\n",
         nz.row, mtx_col_to_org(mtx,nz.row));
       if (nz.row ==179) {
-        FPRINTF(stderr,"ben, stop here\n");
+        CONSOLE_DEBUG("ben, stop here");
       }
 #endif
       ++(nz.row);
@@ -3067,8 +3057,8 @@ int ranki2_entry(linsolqr_system_t sys, mtx_region_t *region)
   sys->smallest_pivot = MAXDOUBLE;
   for (rl = sys->rl ; NOTNULL(rl) ; rl = rl->next)
     rl->solved = FALSE;
-  insure_capacity(sys);
-  insure_lu_capacity(sys);
+  ensure_capacity(sys);
+  ensure_lu_capacity(sys);
 
   comptime = tm_cpu_time();
   switch(sys->fmethod) {
@@ -3102,7 +3092,7 @@ int ranki2_entry(linsolqr_system_t sys, mtx_region_t *region)
     fnz = mtx_nonzeros_in_region(sys->factors,region) +
       mtx_nonzeros_in_region(sys->inverse,0);
     comptime = tm_cpu_time() - comptime;
-    FPRINTF(stderr,"A-NNZ: %d Factor time: %f Fill %g\n",
+    CONSOLE_DEBUG("A-NNZ: %d Factor time: %f Fill %g",
       anz,comptime,( anz>0 ? (double)fnz/(double)anz : 0));
   }
 #endif /* KAA_DEBUG */
@@ -3208,7 +3198,7 @@ int kirk1_factor(linsolqr_system_t sys,
       number_drag(pivots,nz.row,last_row);
       --last_row;
 #ifdef KAA_DEBUG
-      FPRINTF(stderr,"Warning: Row %d is dependent with pivot %20.8g\n",
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING"Row %d is dependent with pivot %20.8g",
 	      nz.row,pivot);
 #endif /* KAA_DEBUG */
     } else {
@@ -3228,7 +3218,7 @@ int kirk1_factor(linsolqr_system_t sys,
   mem_destroy_store(eltbuffer);
 
 #ifdef NOP_DEBUG
-  FPRINTF(stderr,"Number operations	= %d\n",mtx_number_ops);
+  CONSOLE_DEBUG("Number operations	= %d",mtx_number_ops);
 #endif /* NOP_DEBUG */
 
   sys->rank = last_row - sys->rng.low + 1;
@@ -3560,11 +3550,10 @@ static real64 qr_permute(linsolqr_system_t sys,
   i=coord.row;
 
   if ( 0 == ( found = (cmax >= sys->pivot_zero) ) ) {
-    FPRINTF(stderr,
-      "linsolqr: column %d has no good pivot. Poor pivot= %g accepted\n",
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"column %d has no good pivot. Poor pivot= %g accepted",
       newcol,pivot);
     if (pivot==D_ZERO)  /* how the hell did we get here? */
-      FPRINTF(stderr,"Expect disaster VERY shortly!\n");
+      CONSOLE_DEBUG("Expect disaster VERY shortly!");
   }
 
 #if (LINSOLQR_DEBUG==FALSE)
@@ -3769,7 +3758,7 @@ static void qr_apply_householder(linsolqr_system_t sys,
         }
       }
       hhrowlist[col]=(-1);
-      FPRINTF(stderr,"hhrow density (col %d) %g\n",
+      CONSOLE_DEBUG("hhrow density (col %d) %g",
         curcol,(D_ONE*col)/(rowlim-curcol+1));
     }
 #undef MINROWSIZE
@@ -4159,25 +4148,25 @@ static int condqr_entry(linsolqr_system_t sys,mtx_region_t *region)
    sys->smallest_pivot = MAXDOUBLE;
    for( rl = sys->rl ; NOTNULL(rl)  ; rl = rl->next )
       rl->solved = FALSE;
-   insure_capacity(sys);
-   insure_qr_capacity(sys);
+   ensure_capacity(sys);
+   ensure_qr_capacity(sys);
 
    rank_deficient=condqr_factor(sys);
    if (rank_deficient) {
 #if LINSOLQR_DEBUG
      int j;
 #endif
-     FPRINTF(stderr,"Warning:  condqr found rank %d of %d\n",sys->rank,
+     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"condqr found rank %d of %d",sys->rank,
      sys->rng.high-sys->rng.low+1);
 #if LINSOLQR_DEBUG
-     FPRINTF(stderr,"alpha vec:(curcol,val)\n");
+     CONSOLE_DEBUG("alpha vec:(curcol,val)");
        for (j=sys->qrdata->facreg.col.low;
             j<= sys->qrdata->facreg.col.high; j++)
-         FPRINTF(stderr,"alpha[%d] = %.8g\n",j,sys->qrdata->alpha[j]);
-     FPRINTF(stderr,"tau vec:(curcol,val)\n");
+         CONSOLE_DEBUG("alpha[%d] = %.8g",j,sys->qrdata->alpha[j]);
+     CONSOLE_DEBUG("tau vec:(curcol,val)");
        for (j=sys->qrdata->facreg.col.low;
             j<= sys->qrdata->facreg.col.high; j++)
-         FPRINTF(stderr,"tau[%d] = %.8g\n",j,sys->qrdata->tau[j]);
+         CONSOLE_DEBUG("tau[%d] = %.8g",j,sys->qrdata->tau[j]);
 #endif
 /* asssumes lu. not autodone anyway. see the other protocol.
    calc_dependent_rows_ranki1(sys);
@@ -4220,7 +4209,7 @@ int linsolqr_prep(linsolqr_system_t sys,enum factor_class fclass)
 {
 /* this will get a little more involved if sacrifice options come along */
   if(CHECK_SYSTEM(sys)) {
-    FPRINTF(stderr,"linsolqr_prep:  called with bad linsolqr_system.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with bad linsolqr_system.");
     return 1;
   }
   switch (fclass) {
@@ -4237,7 +4226,7 @@ int linsolqr_prep(linsolqr_system_t sys,enum factor_class fclass)
     sys->ludata=NULL;
     break;
   default:
-    FPRINTF(stderr,"linsolqr_prep:  called with unsupported factor class\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with unsupported factor class");
     sys->fclass=unknown_c;
     return 1;
   }
@@ -4271,7 +4260,7 @@ int linsolqr_reorder(linsolqr_system_t sys,mtx_region_t *region,
       break;
    }
    if (reostatus) {
-      FPRINTF(stderr,"Error %d in reordering with %s\n",reostatus,
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error %d in reordering with %s",reostatus,
         linsolqr_enum_to_rmethod(method));
       sys->rmethod=unknown_r;
    }
@@ -4328,7 +4317,7 @@ int linsolqr_factor(linsolqr_system_t sys, enum factor_method fmeth){
     break;
   }
   if (facstatus) {
-    FPRINTF(stderr,"Error %d in factoring with %s\n",facstatus,
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error %d in factoring with %s",facstatus,
 	    linsolqr_enum_to_fmethod(sys->fmethod));
   }
   return facstatus;
@@ -4343,7 +4332,7 @@ int linsolqr_get_pivot_sets(linsolqr_system_t sys
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
 #if LINSOL_DEBUG
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"system not factored yet");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"system not factored yet.");
 #endif
       return 0;
    }
@@ -4361,16 +4350,14 @@ mtx_sparse_t *linsolqr_unpivoted_rows(linsolqr_system_t sys)
 
   CHECK_SYSTEM(sys);
   if( !sys->factored  || ISNULL(sys->ludata) || ISNULL(sys->ludata->pivlist)) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_unpivoted_rows\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
     return ret;
   }
   defect = sys->rng.high - (sys->rng.low + sys->rank -1);
   if (defect <= 0) return ret; /* actually, should never be negative. */
   ret = mtx_create_sparse(defect);
   if (ISNULL(ret)) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_unpivoted_rows\n");
-    FPRINTF(stderr,"        mtx_sparse_t create failed.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"mtx_sparse_t create failed.");
     return ret;
   }
   ret->len = defect;
@@ -4389,16 +4376,14 @@ mtx_sparse_t *linsolqr_unpivoted_cols(linsolqr_system_t sys)
 
   CHECK_SYSTEM(sys);
   if( !sys->factored  || ISNULL(sys->ludata) || ISNULL(sys->ludata->pivlist)) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_unpivoted_cols\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
     return ret;
   }
   defect = sys->rng.high - (sys->rng.low + sys->rank -1);
   if (defect <= 0) return ret; /* actually, should never be negative. */
   ret = mtx_create_sparse(defect);
   if (ISNULL(ret)) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_unpivoted_cols\n");
-    FPRINTF(stderr,"        mtx_sparse_t create failed.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"mtx_sparse_t create failed.");
     return ret;
   }
   ret->len = defect;
@@ -4417,15 +4402,13 @@ mtx_sparse_t *linsolqr_pivoted_rows(linsolqr_system_t sys)
 
   CHECK_SYSTEM(sys);
   if( !sys->factored  || ISNULL(sys->ludata) || ISNULL(sys->ludata->pivlist)) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_pivoted_rows\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
     return ret;
   }
   if (sys->rank < 0 ) return ret; /* actually, should never be negative. */
   ret = (mtx_sparse_t *)ascmalloc(sizeof(mtx_sparse_t));
   if (ISNULL(ret)) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_pivoted_rows\n");
-    FPRINTF(stderr,"        Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory");
     return ret;
   }
   ret->cap = sys->rank;
@@ -4433,8 +4416,7 @@ mtx_sparse_t *linsolqr_pivoted_rows(linsolqr_system_t sys)
   ret->data = (real64 *)ascmalloc(sizeof(real64)*sys->rank);
   ret->idata = (int32 *)ascmalloc(sizeof(int32)*sys->rank);
   if (ISNULL(ret->data) || ISNULL(ret->idata)) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_pivoted_rows\n");
-    FPRINTF(stderr,"        Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     mtx_destroy_sparse(ret);
     ret = NULL;
     return ret;
@@ -4454,15 +4436,13 @@ mtx_sparse_t *linsolqr_pivoted_cols(linsolqr_system_t sys)
 
   CHECK_SYSTEM(sys);
   if( !sys->factored  || ISNULL(sys->ludata) || ISNULL(sys->ludata->pivlist)) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_pivoted_cols\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
     return ret;
   }
   if (sys->rank <= 0) return ret; /* actually, should never be negative. */
   ret = (mtx_sparse_t *)ascmalloc(sizeof(mtx_sparse_t));
   if (ISNULL(ret)) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_pivoted_cols\n");
-    FPRINTF(stderr,"        Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return ret;
   }
   ret->cap = sys->rank;
@@ -4470,8 +4450,7 @@ mtx_sparse_t *linsolqr_pivoted_cols(linsolqr_system_t sys)
   ret->data = (real64 *)ascmalloc(sizeof(real64)*sys->rank);
   ret->idata = (int32 *)ascmalloc(sizeof(int32)*sys->rank);
   if (ISNULL(ret->data) || ISNULL(ret->idata)) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_pivoted_cols\n");
-    FPRINTF(stderr,"        Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     mtx_destroy_sparse(ret);
     ret = NULL;
     return ret;
@@ -4495,8 +4474,7 @@ int32 linsolqr_org_row_to_org_col(linsolqr_system_t sys,
 {
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_org_row_to_org_col\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
    }
    return( org_row_to_org_col(sys,org_row) );
 }
@@ -4506,8 +4484,7 @@ int32 linsolqr_org_col_to_org_row(linsolqr_system_t sys,
 {
   CHECK_SYSTEM(sys);
   if( !sys->factored ) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_org_col_to_org_row\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
   }
   return( org_col_to_org_row(sys,org_col) );
 }
@@ -4518,8 +4495,7 @@ void linsolqr_calc_row_dependencies(linsolqr_system_t sys)
 {
   CHECK_SYSTEM(sys);
   if( !sys->factored ) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_calc_row_dependencies\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
   }
   switch (sys->fmethod) {
   case ranki_kw:
@@ -4532,9 +4508,10 @@ void linsolqr_calc_row_dependencies(linsolqr_system_t sys)
     calc_dependent_rows_ranki2(sys);
     break;
   default:
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_calc_row_dependencies\n");
-    FPRINTF(stderr,"        Don't know how to calculate for method %s.\n",
-            linsolqr_enum_to_fmethod(sys->fmethod));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,
+      "Don't know how to calculate for method %s."
+      ,linsolqr_enum_to_fmethod(sys->fmethod)
+    );
   }
   return;
 }
@@ -4542,8 +4519,7 @@ void linsolqr_calc_row_dependencies(linsolqr_system_t sys)
 void linsolqr_calc_col_dependencies(linsolqr_system_t sys)
 {
   if( !sys->factored ) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_calc_col_dependencies\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
   }
   switch (sys->fmethod) {
   case ranki_kw:
@@ -4556,8 +4532,7 @@ void linsolqr_calc_col_dependencies(linsolqr_system_t sys)
     calc_dependent_cols_ranki2(sys);
     break;
   default:
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_calc_col_dependencies\n");
-    FPRINTF(stderr,"        Don't know how to calculate for method %s.\n",
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Don't know how to calculate for method %s.",
             linsolqr_enum_to_fmethod(sys->fmethod));
   }
   return;
@@ -4575,16 +4550,14 @@ mtx_sparse_t *linsolqr_row_dependence_coefs(linsolqr_system_t sys,
   CHECK_SYSTEM(sys);
   if( !sys->factored ) {
 #if LINSOL_DEBUG
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_row_dependence_coefs\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
 #endif
     return NULL;
   }
 
   if( !sys->rowdeps ) {
 #if LINSOL_DEBUG
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_row_dependence_coefs\n");
-    FPRINTF(stderr,"        Dependency not yet calculated.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Dependency not yet calculated.");
 #endif
     return NULL;
   }
@@ -4625,16 +4598,14 @@ mtx_sparse_t *linsolqr_col_dependence_coefs(linsolqr_system_t sys,
   CHECK_SYSTEM(sys);
   if( !sys->factored ) {
 #if LINSOL_DEBUG
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_col_dependence_coefs\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
 #endif
     return NULL;
   }
 
   if( !sys->rowdeps ) {
 #if LINSOL_DEBUG
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_col_dependence_coefs\n");
-    FPRINTF(stderr,"        Dependency not yet calculated.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Dependency not yet calculated.");
 #endif
     return NULL;
   }
@@ -4673,19 +4644,15 @@ real64 linsolqr_org_row_dependency(linsolqr_system_t sys,
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
 #if LINSOL_DEBUG
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_org_row_dependency\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
-      FPRINTF(stderr,"        Returning 0.0.\n");
+      FERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet. Returning 0.");
 #endif
       return(D_ZERO);
    }
 
    nz.col = mtx_org_to_row(sys->factors,ind);
    if( (sys->rng.low > nz.col) || (nz.col > sys->rng.low+sys->rank-1) ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_org_row_dependency\n");
-      FPRINTF(stderr,"        Original row %ld is not independent.\n",
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Original row %ld is not independent. Returning 0.",
 	      (long)ind);
-      FPRINTF(stderr,"        Returning 0.0.\n");
       return(D_ZERO);
    }
 
@@ -4705,19 +4672,15 @@ real64 linsolqr_org_col_dependency(linsolqr_system_t sys,
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
 #if LINSOL_DEBUG
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_org_col_dependency\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
-      FPRINTF(stderr,"        Returning 0.0.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet. Returning 0.");
       return(D_ZERO);
 #endif
    }
 
    nz.row = mtx_org_to_col(sys->factors,ind);
    if( (sys->rng.low > nz.row) || (nz.row > sys->rng.low+sys->rank-1) ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_org_col_dependency\n");
-      FPRINTF(stderr,"        Original col %ld is not independent.\n",
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Original col %ld is not independent. Returning 0.",
 	      (long)ind);
-      FPRINTF(stderr,"        Returning 0.0.\n");
       return(D_ZERO);
    }
 
@@ -4784,8 +4747,7 @@ int linsolqr_solve(linsolqr_system_t sys,real64 *rhs)
 
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_solve\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
    }
    rl = find_rhs(sys->rl,rhs);
    if( NOTNULL(rl) ) {
@@ -4819,16 +4781,14 @@ int linsolqr_solve(linsolqr_system_t sys,real64 *rhs)
       if (!solstatus) {
          rl->solved = TRUE;
       } else {
-        FPRINTF(stderr,"Error %d in solving with %s\n",solstatus,
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error %d in solving with %s",solstatus,
           linsolqr_enum_to_fmethod(sys->fmethod));
       }
    } else {
      if( NOTNULL(rhs) ) {
-       FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_solve\n");
-       FPRINTF(stderr,"        Rhs not found on list.\n");
+       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not found on list.");
      } else {
-       FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_solve\n");
-       FPRINTF(stderr,"        No rhs exist at all.\n");
+       ERROR_REPORTER_HERE(ASC_PROG_ERR,"No rhs exist at all.");
      }
    }
    return solstatus;
@@ -4864,15 +4824,13 @@ real64 linsolqr_var_value(linsolqr_system_t sys,
 
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_var_value\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
       return D_ZERO;
    }
    rl = find_rhs(sys->rl,rhs);
    if( NOTNULL(rl) ) {
       if( !(rl->solved) ) {
-	 FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_var_value\n");
-	 FPRINTF(stderr,"        Rhs not solved yet.\n");
+	 ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not solved yet.");
          return D_ZERO;
       }
       if( rl->transpose )
@@ -4883,14 +4841,11 @@ real64 linsolqr_var_value(linsolqr_system_t sys,
 	 return( rl->varvalue[org_col_to_org_row(sys,ndx)] );
    } else {
      if( NOTNULL(rhs) ) {
-        FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_var_value\n");
-        FPRINTF(stderr,"        Rhs does not exist.\n");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs does not exist.");
         return D_ZERO;
      }
    }
-   FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_var_value\n");
-   FPRINTF(stderr,"        NULL rhs given does not exist, idiot.\n");
-   FPRINTF(stderr,"        Returning 0.0.\n");
+   ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL rhs given does not exist, idiot (yeah, nice one, computer). Returning 0.");
    return D_ZERO;
 }
 
@@ -4903,20 +4858,17 @@ boolean linsolqr_copy_solution(linsolqr_system_t sys, real64 *rhs,
 
   CHECK_SYSTEM(sys);
   if( !sys->factored ) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_copy_solution\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
     return TRUE;
   }
   rl = find_rhs(sys->rl,rhs);
   if( NOTNULL(rl) ) {
     if( !(rl->solved) ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_copy_solution\n");
-      FPRINTF(stderr,"        Rhs not solved yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not solved yet.");
       return TRUE;
     }
     if( ISNULL(rl->varvalue) ) { /* shouldn't be possible! */
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_copy_solution\n");
-      FPRINTF(stderr,"        Rhs solved, but solution missing!\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs solved, but solution missing!");
       return TRUE;
     }
 
@@ -4932,8 +4884,7 @@ boolean linsolqr_copy_solution(linsolqr_system_t sys, real64 *rhs,
       }
     }
   } else if( NOTNULL(rhs) ) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_copy_solution\n");
-    FPRINTF(stderr,"        Rhs not found.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not found.");
     return TRUE;
   }
   return FALSE;
@@ -4952,8 +4903,7 @@ real64 linsolqr_eqn_residual(linsolqr_system_t sys,
    CHECK_SYSTEM(sys);
    mtx = sys->coef;
    if( !sys->factored ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_eqn_residual\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
       return (real64)MAXDOUBLE;
    }
    rl = find_rhs(sys->rl,rhs);
@@ -4963,8 +4913,7 @@ real64 linsolqr_eqn_residual(linsolqr_system_t sys,
       eqnrhs=rl->rhs;
       lhs = D_ZERO;
       if( !(rl->solved) ) {
-	 FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_eqn_residual\n");
-	 FPRINTF(stderr,"        Rhs not solved yet.\n");
+	 ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not solved yet.");
          return (real64)MAXDOUBLE;
       }
       if (rl->transpose) {
@@ -4992,13 +4941,11 @@ real64 linsolqr_eqn_residual(linsolqr_system_t sys,
       }
    } else {
       if( NOTNULL(rhs) ) {
-         FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_eqn_residual\n");
-         FPRINTF(stderr,"        Rhs does not exist.\n");
+         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs does not exist.");
          return (real64)MAXDOUBLE;
       }
    }
-   FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_eqn_residual\n");
-   FPRINTF(stderr,"        NULL rhs does not exist, idiot.\n");
+   ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL rhs does not exist, idiot.");
    return (real64)MAXDOUBLE;
 }
 
@@ -5013,8 +4960,7 @@ boolean linsolqr_calc_residual(linsolqr_system_t sys,
   CHECK_SYSTEM(sys);
   mtx = sys->coef;
   if( !sys->factored ) {
-    FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_calc_residual\n");
-    FPRINTF(stderr,"        System not factored yet.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
     return TRUE;
   }
   rl = find_rhs(sys->rl,rhs);
@@ -5024,13 +4970,11 @@ boolean linsolqr_calc_residual(linsolqr_system_t sys,
     real64 *varvalue, *eqnrhs;
 
     if( !(rl->solved) ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_calc_residual\n");
-      FPRINTF(stderr,"        Rhs not solved yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not solved yet.");
       return TRUE;
     }
     if( ISNULL(rl->varvalue) ) { /* shouldn't be possible! */
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_calc_residual\n");
-      FPRINTF(stderr,"        Rhs solved, but solution missing!\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs solved, but solution missing!");
       return TRUE;
     }
 
@@ -5075,13 +5019,11 @@ boolean linsolqr_calc_residual(linsolqr_system_t sys,
     return FALSE;
   } else {
     if( NOTNULL(rhs) ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_calc_residual\n");
-      FPRINTF(stderr,"        Rhs does not exist.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs does not exist.");
       return TRUE;
     }
   }
-  FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_eqn_residual\n");
-  FPRINTF(stderr,"        NULL rhs does not exist, idiot.\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL rhs does not exist, idiot.");
   return TRUE;
 }
 
@@ -5176,8 +5118,7 @@ int linsolqr_setup_ngslv(linsolqr_system_t sys,
 
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_setup_ngslv\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
    }
    rl = find_rhs(sys->rl,rhs);
    if( NOTNULL(rl) ) {
@@ -5204,11 +5145,9 @@ int linsolqr_setup_ngslv(linsolqr_system_t sys,
       status=1;
    } else {
      if( NOTNULL(rhs) ) {
-       FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_solve\n");
-       FPRINTF(stderr,"        Rhs not found on list.\n");
+       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not found on list.");
      } else {
-       FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_solve\n");
-       FPRINTF(stderr,"        No rhs exist at all.\n");
+       ERROR_REPORTER_HERE(ASC_PROG_ERR,"No rhs exist at all.");
      }
    }
    return 0;  /* Function had no return statement.  Added this line.  OK? */
@@ -5220,8 +5159,7 @@ int linsolqr_setup_ngslv(linsolqr_system_t sys,
 
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
-      FPRINTF(stderr,"ERROR:  (linsolqr) linsolqr_var_value\n");
-      FPRINTF(stderr,"        System not factored yet.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
       return D_ZERO;
    }
    rl = find_rhs(sys->rl,rhs);

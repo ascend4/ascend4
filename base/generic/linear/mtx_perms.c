@@ -70,8 +70,7 @@ static void fix_org2cur_from_cur2org(int32 *c2o, int32 start,
                                 int32 *o2c, int32 len) {
   int32 i;
   if (ISNULL(c2o) || ISNULL(o2c) || start <0 || len < 1) {
-    FPRINTF(g_mtxerr,"ERROR (mtx-internal) fix_org2cur_from_cur2org");
-    FPRINTF(g_mtxerr,"                     got bogus args");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"got bogus args");
     return;
   }
   for (i=start; i < len ; i++) {
@@ -90,24 +89,18 @@ extern mtx_block_perm_t mtx_create_block_perm(mtx_matrix_t mtx)
   }
   if (!mtx_check_matrix(mtx)) return NULL;
   if (mtx->capacity < 2) {
-    FPRINTF(g_mtxerr,"ERROR: mtx_create_block_perm:   mtx given is too\n");
-    FPRINTF(g_mtxerr,"                                small to permute.\n");
-    FPRINTF(g_mtxerr,"                                Returning NULL.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"mtx given is too small to permute. Returning NULL.\n");
     return NULL;
   }
   if (mtx->data->symbolic_rank < 0) {
-    FPRINTF(g_mtxerr,"ERROR: mtx_create_block_perm:   mtx given is not\n");
-    FPRINTF(g_mtxerr,"                                output assigned.\n");
-    FPRINTF(g_mtxerr,"                                Returning NULL.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"mtx given is not output assigned. Returning NULL.\n");
     return NULL;
   }
 
   /* create same size matrix information */
   bp = alloc_block_perm();
   if (ISNULL(bp)) {
-    FPRINTF(g_mtxerr,"ERROR: mtx_create_block_perm:   insufficient memory\n");
-    FPRINTF(g_mtxerr,"                                allocating bperm (1).\n");
-    FPRINTF(g_mtxerr,"                                Returning NULL.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"insufficient memory allocating bperm (1). Returning NULL.\n");
     return NULL;
   }
   bp->order = mtx->order;
@@ -123,9 +116,7 @@ extern mtx_block_perm_t mtx_create_block_perm(mtx_matrix_t mtx)
       ISNULL(bp->perm.row.cur_to_org) ||
       ISNULL(bp->perm.col.org_to_cur) ||
       ISNULL(bp->perm.col.cur_to_org) ) {
-    FPRINTF(g_mtxerr,"ERROR: mtx_create_block_perm:   insufficient memory\n");
-    FPRINTF(g_mtxerr,"                                allocating bperm (2).\n");
-    FPRINTF(g_mtxerr,"                                Returning NULL.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"insufficient memory allocating bperm (2). Returning NULL.\n");
     mtx_free_perm(bp->perm.row.org_to_cur);
     mtx_free_perm(bp->perm.row.cur_to_org);
     mtx_free_perm(bp->perm.col.org_to_cur);
@@ -172,34 +163,28 @@ int mtx_restore_block_perm(mtx_matrix_t mtx, int32 bnum,
 {
   int32 len;
   if (mtx_check_matrix(mtx) != 1) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx) restore_block_perm:  Called with bad\n");
-    FPRINTF(g_mtxerr,"                                  mtx.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with bad mtx.\n");
     return 1;
   }
   if (ISSLAVE(mtx)) {
     return(mtx_restore_block_perm(mtx,bnum,bp));
   }
   if (ISNULL(bp) || bp->integrity != OK) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx) restore_block_perm:  Called with bad\n");
-    FPRINTF(g_mtxerr,"                                  bperm.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with bad bperm.\n");
     return 2;
   }
   if (bp->mtx != mtx) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx) restore_block_perm:  Mismatched mtx\n");
-    FPRINTF(g_mtxerr,"                                  and bperm given.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Mismatched mtx and bperm given.\n");
     return 3;
   }
   if (bp->order != mtx->order) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx) restore_block_perm:  Mismatched order mtx\n");
-    FPRINTF(g_mtxerr,"                                  and bperm given.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Mismatched order mtx and bperm given.\n");
     return 3;
   }
   if (bnum != mtx_ALL_BLOCKS && bp->data->nblocks != 0) {
     /* check block sanity */
     if (mtx->data->symbolic_rank < 0) {
-      FPRINTF(g_mtxerr,"ERROR: mtx_restore_block_perm:   mtx given is not\n");
-      FPRINTF(g_mtxerr,"                                 output assigned.\n");
-      FPRINTF(g_mtxerr,"                                 Returning NULL.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"mtx given is not output assigned. Returning NULL.\n");
       return 3;
     }
     if ( bp->data->nblocks != mtx->data->nblocks ||
@@ -267,8 +252,7 @@ int mtx_restore_block_perm(mtx_matrix_t mtx, int32 bnum,
   }
 #if MTX_DEBUG
   if (super_check_matrix(mtx)) {
-    FPRINTF(g_mtxerr,"ERROR: mtx_restore_block_perm:   mtx restored now\n");
-    FPRINTF(g_mtxerr,"                                 fails sanity.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"mtx restored now fails sanity.\n");
     return 3;
   }
 #endif
@@ -279,13 +263,9 @@ extern int mtx_destroy_block_perm(mtx_block_perm_t bp)
 {
   if (bp->integrity != OK) {
     if (bp->integrity == DESTROYED) {
-      FPRINTF(g_mtxerr,
-	"ERROR: mtx_destroy_block_perm:  Called with recently\n");
-      FPRINTF(g_mtxerr,"                                destroyed bperm.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with recently destroyed bperm.\n");
     } else {
-      FPRINTF(g_mtxerr,
-        "ERROR: mtx_destroy_block_perm: Called with apparently\n");
-      FPRINTF(g_mtxerr,"                               corrupted bperm.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with apparently corrupted bperm.\n");
     }
     return 1;
   }
@@ -773,8 +753,8 @@ int32 mtx_symbolic_rank( mtx_matrix_t mtx)
 
   if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
 #if MTX_DEBUG
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_symbolic_rank\n");
-    FPRINTF(g_mtxerr,"        Matrix not output assigned.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
 #endif
   }
   return (mtx->data->symbolic_rank);
@@ -799,8 +779,8 @@ boolean mtx_make_col_independent( mtx_matrix_t mtx, int32 col, mtx_range_t *rng)
   }
   if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
 #if MTX_DEBUG
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_make_col_independent\n");
-    FPRINTF(g_mtxerr,"        Matrix not output assigned.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
 #endif
     if(!mtx_check_matrix(mtx)) return -2;
   }
@@ -1110,8 +1090,8 @@ int32 mtx_transpose(mtx_matrix_t mtx)
 
 #if MTX_DEBUG
   if( !mtx_check_matrix(mtx) ) {
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_transpose\n");
-    FPRINTF(g_mtxerr,"        Matrix given is in error.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix given is in error.\n");
     return mtx_NONE; /*ben*/
   }
 #endif
@@ -1119,16 +1099,16 @@ int32 mtx_transpose(mtx_matrix_t mtx)
     mtx = mtx->master;
 #if MTX_DEBUG
     if( !mtx_check_matrix(mtx) ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_transpose\n");
-      FPRINTF(g_mtxerr,"        Matrix given is in error.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix given is in error.\n");
       return mtx_NONE;
     }
 #endif
   }
   master = mtx;
   if (master->perm.transpose == mtx_NONE) {
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_transpose\n");
-    FPRINTF(g_mtxerr,"        Matrix given is 0 order.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix given is 0 order.\n");
     return mtx_NONE;
   }
   master->perm.transpose = !(master->perm.transpose);
@@ -1182,8 +1162,8 @@ int32 mtx_isa_transpose(mtx_matrix_t mtx)
 {
 #if MTX_DEBUG
   if( !mtx_check_matrix(mtx) ) {
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_isa_transpose\n");
-    FPRINTF(g_mtxerr,"        Matrix given is in error.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix given is in error.\n");
     return mtx_NONE; /*ben*/
   }
 #endif
@@ -1191,8 +1171,8 @@ int32 mtx_isa_transpose(mtx_matrix_t mtx)
     mtx = mtx->master;
 #if MTX_DEBUG
     if( !mtx_check_matrix(mtx) ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_isa_transpose\n");
-      FPRINTF(g_mtxerr,"        Matrix given's master is in error.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix given's master is in error.\n");
       return mtx_NONE;
     }
 #endif
@@ -1222,8 +1202,7 @@ mtx_block_t *mtx_block_partition( mtx_matrix_t mtx, mtx_region_t *reg)
     int mc = mtx_check_matrix(mtx);
     if (!mc) return NULL;
     if (mtx_full_diagonal(mtx,&(reg->row),1)) {
-      FPRINTF(g_mtxerr,"WARNING:  (mtx) mtx_block_partition\n");
-      FPRINTF(g_mtxerr,"          Assignment bad. partitioning may be bad..\n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Assignment bad. partitioning may be bad.");
     }
   }
 
@@ -1305,8 +1284,8 @@ void mtx_partition( mtx_matrix_t mtx)
   }
   if( !mtx_output_assigned(mtx) ) {
     int mc=mtx_check_matrix(mtx);
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_partition\n");
-    FPRINTF(g_mtxerr,"        Matrix not output assigned.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
     if(!mc) return;
   }
 
@@ -1372,8 +1351,8 @@ void mtx_ut_partition( mtx_matrix_t mtx)
   }
   if( !mtx_output_assigned(mtx) ) {
     int mc=mtx_check_matrix(mtx);
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_ut_partition\n");
-    FPRINTF(g_mtxerr,"        Matrix not output assigned.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
     if(!mc) return;
   }
 
@@ -1431,8 +1410,8 @@ function matters... */
 void mtx_org_permute(mtx_matrix_t mtx, mtx_region_t *reg)
 {
   if (ISNULL(mtx)) {
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_org_permute\n");
-    FPRINTF(g_mtxerr,"        NULL matrix given.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL matrix given.\n");
     return;
   }
   if (ISSLAVE(mtx)) {
@@ -1448,8 +1427,8 @@ void mtx_org_permute(mtx_matrix_t mtx, mtx_region_t *reg)
       /* create sort space */
       top=sort=ASC_NEW_ARRAY(int,len);
       if (ISNULL(sort)) {
-        FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_org_permute\n");
-        FPRINTF(g_mtxerr,"        Insufficient memory. Not permuted.\n");
+        
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory. Not permuted.\n");
         return;
       }
       /* copy current org ordering into array */
@@ -1476,8 +1455,8 @@ void mtx_org_permute(mtx_matrix_t mtx, mtx_region_t *reg)
     if (len>1) {
       top=sort=ASC_NEW_ARRAY(int,len);
       if (ISNULL(sort)) {
-        FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_org_permute\n");
-        FPRINTF(g_mtxerr,"        Insufficient memory. Not permuted.\n");
+        
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory. Not permuted.\n");
         return;
       }
       for (i = reg->row.low; i <= reg->row.high; i++) {
@@ -1511,8 +1490,8 @@ boolean mtx_check_blocks( mtx_matrix_t mtx)
     mtx = mtx->master;
   }
   if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_check_blocks\n");
-    FPRINTF(g_mtxerr,"        Matrix not output assigned.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
     return( FALSE );
   }
 
@@ -1540,14 +1519,14 @@ boolean mtx_check_blocks( mtx_matrix_t mtx)
 int32 mtx_number_of_blocks( mtx_matrix_t mtx)
 {
    if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_number_of_blocks\n");
-      FPRINTF(g_mtxerr,"        Matrix not output assigned.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
    }
 
 #if MTX_DEBUG
    if( !mtx_check_blocks(mtx) ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_number_of_blocks\n");
-      FPRINTF(g_mtxerr,"        Invalid partition.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid partition.\n");
       return mtx_NONE;
    }
 #endif
@@ -1562,23 +1541,23 @@ int32 mtx_block( mtx_matrix_t mtx, int32 block_number, mtx_region_t *block)
 
    if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
 #if MTX_DEBUG
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_block\n");
-      FPRINTF(g_mtxerr,"        Matrix not output assigned.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
 #endif
       error=1;
    }
 
 #if MTX_DEBUG
    if( !mtx_check_blocks(mtx) ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_block\n");
-      FPRINTF(g_mtxerr,"        Invalid partition.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid partition.\n");
    }
 #endif
 
    if( (block_number > mtx->data->nblocks-1) || (block_number<0) ) {
 #if MTX_DEBUG
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_block\n");
-      FPRINTF(g_mtxerr,"        Block number doesn't exist.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Block number doesn't exist.\n");
 #endif
       error=1;
    }
@@ -1602,16 +1581,16 @@ int32 mtx_block_containing_row(mtx_matrix_t mtx, int32 row, mtx_region_t *block)
 
    if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
 #if MTX_DEBUG
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_block_containing_row\n");
-      FPRINTF(g_mtxerr,"        Matrix not output assigned.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
 #endif
       return 0;
    }
 
 #if MTX_DEBUG
    if( !mtx_check_blocks(mtx) ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_block_containing_row\n");
-      FPRINTF(g_mtxerr,"        Invalid partition.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid partition.\n");
    }
 #endif
 
@@ -1639,16 +1618,16 @@ int32 mtx_block_containing_col(mtx_matrix_t mtx, int32 col, mtx_region_t *block)
 
    if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
 #if MTX_DEBUG
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_block_containing_col\n");
-      FPRINTF(g_mtxerr,"        Matrix not output assigned.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
 #endif
       return 0;
    }
 
 #if MTX_DEBUG
    if( !mtx_check_blocks(mtx) ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_block_containing_col\n");
-      FPRINTF(g_mtxerr,"        Invalid partition.\n");
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid partition.\n");
    }
 #endif
 

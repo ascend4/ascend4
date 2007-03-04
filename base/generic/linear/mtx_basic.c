@@ -45,32 +45,31 @@
 #include "mtx_use_only.h"
 #include <general/mathmacros.h>
 
-/* this returns an error count */
-int super_check_matrix( mtx_matrix_t mtx)
 /**
- ***  Really check the matrix.
- **/
-{
+	*Really* check the matrix.
+	@return an error count
+*/
+int super_check_matrix( mtx_matrix_t mtx){
   int32 ndx,errcnt=0;
   int32 rowc,colc;
 
   /* Test consistency of permutation arrays */
   for( ndx=ZERO ; ndx < mtx->capacity ; ++ndx ) {
     if( mtx->perm.row.org_to_cur[mtx->perm.row.cur_to_org[ndx]] != ndx ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) super_check_matrix\n");
-      FPRINTF(g_mtxerr,"        Permutation violation in row %d.\n", ndx);
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Permutation violation in row %d.\n", ndx);
         errcnt++;
     }
     if( mtx->perm.col.org_to_cur[mtx->perm.col.cur_to_org[ndx]] != ndx ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) super_check_matrix\n");
-      FPRINTF(g_mtxerr,"        Permutation violation in col %d.\n",ndx);
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Permutation violation in col %d.\n",ndx);
       errcnt++;
     }
   }
 
   if( mtx->order > mtx->capacity ) {
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) super_check_matrix\n");
-    FPRINTF(g_mtxerr,"        Capacity %d is less than order %d\n",
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Capacity %d is less than order %d\n",
       mtx->capacity,mtx->order);
     errcnt++;
   }
@@ -81,13 +80,13 @@ int super_check_matrix( mtx_matrix_t mtx)
     org_row = mtx->perm.row.cur_to_org[ndx];
     org_col = mtx->perm.col.cur_to_org[ndx];
     if( NOTNULL(mtx->hdr.row[org_row]) ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) super_check_matrix\n");
-      FPRINTF(g_mtxerr,"        Non-zeros found in non-existent row %d.\n",ndx);
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-zeros found in non-existent row %d.\n",ndx);
       errcnt++;
     }
     if( NOTNULL(mtx->hdr.col[org_col]) ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) super_check_matrix\n");
-      FPRINTF(g_mtxerr,"        Non-zeros found in non-existent col %d.\n",ndx);
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-zeros found in non-existent col %d.\n",ndx);
       errcnt++;
     }
   }
@@ -102,13 +101,13 @@ int super_check_matrix( mtx_matrix_t mtx)
       if( elt->row != mtx_NONE ) {
         ++rowc;
         if( elt->row != org_row ) {
-          FPRINTF(g_mtxerr,"ERROR:  (mtx) super_check_matrix\n");
-          FPRINTF(g_mtxerr,"        Element mismatch in row %d.\n", ndx);
+          
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element mismatch in row %d.\n", ndx);
           errcnt++;
         }
       } else {
-        FPRINTF(g_mtxerr,"ERROR:  (mtx) super_check_matrix\n");
-        FPRINTF(g_mtxerr,"        Disclaimed element in row %d.\n", ndx);
+        
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Disclaimed element in row %d.\n", ndx);
         errcnt++;
       }
     }
@@ -116,35 +115,34 @@ int super_check_matrix( mtx_matrix_t mtx)
       if( elt->col != mtx_NONE ) {
         ++colc;
         if( elt->col != org_col ) {
-          FPRINTF(g_mtxerr,"ERROR:  (mtx) super_check_matrix\n");
-          FPRINTF(g_mtxerr,"        Element mismatch in col %d.\n", ndx);
+          
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element mismatch in col %d.\n", ndx);
           errcnt++;
         }
       } else {
-        FPRINTF(g_mtxerr,"ERROR:  (mtx) super_check_matrix\n");
-        FPRINTF(g_mtxerr,"        Disclaimed element in col %d.\n", ndx);
+        
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Disclaimed element in col %d.\n", ndx);
         errcnt++;
       }
     }
   }
   if( rowc != colc ) {
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) super_check_matrix\n");
-    FPRINTF(g_mtxerr,"        Non-zero discrepancy, %d by row, %d by col.\n",
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-zero discrepancy, %d by row, %d by col.\n",
       rowc, colc);
     errcnt++;
   }
   return errcnt;
 }
 
-boolean check_matrix( mtx_matrix_t mtx, char *file, int line)
 /**
- ***  Checks the integrity flag of the matrix.
- **/
-{
+	Checks the integrity flag of the matrix.
+*/
+boolean check_matrix( mtx_matrix_t mtx, char *file, int line){
 
    if( ISNULL(mtx) ) {
-      FPRINTF(g_mtxerr,"ERROR:  (mtx) check_matrix\n");
-      FPRINTF(g_mtxerr,"        NULL matrix in %s line %d.\n",file,line);
+      
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL matrix in %s line %d.\n",file,line);
       return 0;
    }
 
@@ -152,13 +150,13 @@ boolean check_matrix( mtx_matrix_t mtx, char *file, int line)
       case OK:
          break;
       case DESTROYED:
-         FPRINTF(g_mtxerr,"ERROR:  (mtx) check_matrix\n");
+         
          FPRINTF(g_mtxerr,
            "        Matrix deceased found in %s line %d.\n",file,line);
          return 0;
       default:
-         FPRINTF(g_mtxerr,"ERROR:  (mtx) check_matrix\n");
-         FPRINTF(g_mtxerr,"        Matrix garbage found in %s line %d.\n",
+         
+         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix garbage found in %s line %d.\n",
            file,line);
          return 0;
    }
@@ -173,16 +171,17 @@ boolean check_matrix( mtx_matrix_t mtx, char *file, int line)
    return 1;
 }
 
-/* this function checks the consistency of a sparse as best it can.
-   returns FALSE if something wierd. */
+/* 
+	this function checks the consistency of a sparse as best it can.
+	@return FALSE if something wierd
+*/
 boolean check_sparse(const mtx_sparse_t * const sp, char *file, int line)
 {
   if ( ISNULL(sp) ||
        sp->len > sp->cap ||
        ( sp->cap > 0 && ( ISNULL(sp->idata) || ISNULL(sp->data) ) )
      ) {
-    FPRINTF(g_mtxerr,"ERROR:  (mtx) check_sparse - Inconsistent or\n");
-    FPRINTF(g_mtxerr,"        NULL sparse in %s line %d.\n",file,line);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Inconsistent or NULL sparse in %s line %d.\n",file,line);
     return 0;
   }
   return 1;
@@ -197,80 +196,61 @@ static void free_unless_null(POINTER ptr)
 }
 */
 
-void mtx_zero_int32(int32 *data, int len)
-{
+void mtx_zero_int32(int32 *data, int len){
   int i;
   if (data==NULL) return;
   for (i=0; i<len; i++) data[i]=0;
 }
 
-void mtx_zero_real64(real64 *data, int len)
-{
+void mtx_zero_real64(real64 *data, int len){
   int i;
   if (data==NULL) return;
   for (i=0; i<len; i++) data[i]=0.0;
 }
 
-void mtx_zero_ptr(void **data, int len)
-{
+void mtx_zero_ptr(void **data, int len){
   int i;
   if (data==NULL) return;
   for (i=0; i<len; i++) data[i]=NULL;
 }
 
-static mtx_matrix_t alloc_header(void)
-/**
- ***  Allocates a matrix header and returns a pointer to it.
- **/
-{
+/*
+	Allocates a matrix header and returns a pointer to it.
+*/
+static mtx_matrix_t alloc_header(void){
    mtx_matrix_t mtx;
    mtx = (mtx_matrix_t)ascmalloc( sizeof(struct mtx_header) );
    mtx->integrity = OK;
    return(mtx);
 }
 
-static void free_header(mtx_matrix_t mtx)
 /**
- ***  Frees a matrix header.
- **/
-{
+	Frees a matrix header.
+*/
+static void free_header(mtx_matrix_t mtx){
    mtx->integrity = DESTROYED;
    ascfree(mtx);
 }
 
-#ifdef DELETE_THIS_UNUSED_FUNCTION
-/* not IN use? */
-static struct element_t **alloc_nz_header(int32 cap)
 /**
- ***  Allocates a row or column header randomly initialized.
- **/
-{
-   return(cap > 0 ? (struct element_t **)
-          ascmalloc(cap*sizeof(struct element_t *)) : NULL);
-}
-#endif /* DELETE_THIS_UNUSED_FUNCTION */
-
-
-static struct element_t **calloc_nz_header(int32 cap)
-/**
- ***  Allocates a zeroed row or column header.
- **/
-{
+	Allocates a zeroed row or column header.
+*/
+static struct element_t **calloc_nz_header(int32 cap){
    return(cap > 0 ? ASC_NEW_ARRAY_CLEAR(struct element_t *,cap) : NULL);
 }
 
-static void copy_nz_header(struct element_t **tarhdr,
-			 struct element_t **srchdr, int32 cap)
 /**
- ***  Copies srchdr to tarhdr given the capacity of srchdr.
- **/
-{
+	Copies srchdr to tarhdr given the capacity of srchdr.
+*/
+static void copy_nz_header(struct element_t **tarhdr,
+			 struct element_t **srchdr, int32 cap
+){
    mem_copy_cast(srchdr,tarhdr,cap*sizeof(struct element_t *));
 }
 
 #define free_nz_header(hdr) free_unless_null( (POINTER)(hdr) )
 /**
- ***  Frees a row or column header
+	Frees a row or column header
  **/
 
 
@@ -301,16 +281,15 @@ these operations.
 */
 static mtx_matrix_t last_value_matrix = NULL;
 
-static void disclaim_element(struct element_t *element)
 /**
- ***  Indicates that one of the row or column (it doesn't matter) in which
- ***  this element appears will no longer point to this element (it has
- ***  already been removed from the list).  Elements disclaimed once have
- ***  their row,col indices set to mtx_NONE.  Elements disclaimed twice are
- ***  discarded.
- ***  NOTE WELL: last_value_mtx must be set before this function is called.
- **/
-{
+	Indicates that one of the row or column (it doesn't matter) in which
+	this element appears will no longer point to this element (it has
+	already been removed from the list).  Elements disclaimed once have
+	their row,col indices set to mtx_NONE.  Elements disclaimed twice are
+	discarded.
+	NOTE WELL: last_value_mtx must be set before this function is called.
+*/
+static void disclaim_element(struct element_t *element){
   if( element->row == mtx_NONE ) {
     mem_free_element(last_value_matrix->ms,(void *)element);
   } else {
@@ -318,14 +297,13 @@ static void disclaim_element(struct element_t *element)
   }
 }
 
-static void delete_from_row(struct element_t **link)
 /**
- ***  Deletes the element from the row it is in, given a pointer to
- ***  the row link which leads to this element.
- ***  On return the pointer pointed to by link points to the new next element.
- ***  NOTE WELL: last_value_mtx must be set before this function is called.
- **/
-{
+	Deletes the element from the row it is in, given a pointer to
+	the row link which leads to this element.
+	On return the pointer pointed to by link points to the new next element.
+	NOTE WELL: last_value_mtx must be set before this function is called.
+*/
+static void delete_from_row(struct element_t **link){
    struct element_t *p;
    p = *link;
    *link = p->next.col;
@@ -334,13 +312,12 @@ static void delete_from_row(struct element_t **link)
    last_value_matrix->last_value = NULL;
 }
 
-static void delete_from_col(struct element_t **link)
 /**
- ***  Deletes the element from the col it is in, given a pointer to
- ***  the col link which leads to this element.
- ***  NOTE WELL: last_value_mtx must be set before this function is called.
- **/
-{
+	Deletes the element from the col it is in, given a pointer to
+	the col link which leads to this element.
+	NOTE WELL: last_value_mtx must be set before this function is called.
+*/
+static void delete_from_col(struct element_t **link){
    struct element_t *p;
    p = *link;
    *link = p->next.row;
@@ -349,19 +326,17 @@ static void delete_from_col(struct element_t **link)
    last_value_matrix->last_value = NULL;
 }
 
-static void nuke_fishnet(mtx_matrix_t mtx)
 /**
- ***  Deletes every element even remotely associated with a matrix
- ***  and nulls the headers. Also nulls the headers of slaves
- ***  and cleans out their elements.
- **/
-{
+	Deletes every element even remotely associated with a matrix
+	and nulls the headers. Also nulls the headers of slaves
+	and cleans out their elements.
+*/
+static void nuke_fishnet(mtx_matrix_t mtx){
   int32 i;
 
   if ( ISNULL(mtx) || ISNULL(mtx->hdr.row) ||
        ISNULL(mtx->hdr.col) || ISSLAVE(mtx)) {
-    FPRINTF(g_mtxerr,"WARNING:     (mtx) nuke_fishnet called\n");
-    FPRINTF(g_mtxerr,"                   with bad matrix.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with bad matrix.");
     return;
   }
   if (mtx->capacity<1) return;
@@ -375,14 +350,13 @@ static void nuke_fishnet(mtx_matrix_t mtx)
   }
 }
 
-static void blast_row( mtx_matrix_t mtx, int32 org, mtx_range_t *rng)
 /**
- ***  Destroys all elements in the given row with (current)
- ***  col index in the given col range: if rng == mtx_ALL_COLS,
- ***  entire row is destroyed.
- ***  NOTE WELL: last_value_mtx must be set before this function is called.
- **/
-{
+	Destroys all elements in the given row with (current)
+	col index in the given col range: if rng == mtx_ALL_COLS,
+	entire row is destroyed.
+	NOTE WELL: last_value_mtx must be set before this function is called.
+*/
+static void blast_row( mtx_matrix_t mtx, int32 org, mtx_range_t *rng){
   struct element_t **link;
 
   link = &(mtx->hdr.row[org]);
@@ -402,14 +376,13 @@ static void blast_row( mtx_matrix_t mtx, int32 org, mtx_range_t *rng)
   }
 }
 
-static void blast_col( mtx_matrix_t mtx, int32 org, mtx_range_t *rng)
 /**
- ***  Destroys all elements in the given col with (current)
- ***  row index in the given row range: if rng == mtx_ALL_ROWS,
- ***  entire col is destroyed.
- ***  NOTE WELL: last_value_mtx must be set before this function is called.
- **/
-{
+	Destroys all elements in the given col with (current)
+	row index in the given row range: if rng == mtx_ALL_ROWS,
+	entire col is destroyed.
+	NOTE WELL: last_value_mtx must be set before this function is called.
+*/
+static void blast_col( mtx_matrix_t mtx, int32 org, mtx_range_t *rng){
   struct element_t **link;
 
   link = &(mtx->hdr.col[org]);
@@ -429,13 +402,12 @@ static void blast_col( mtx_matrix_t mtx, int32 org, mtx_range_t *rng)
   }
 }
 
-static void clean_row(mtx_matrix_t mtx, int32 org)
 /**
- ***  Disclaims all elements in the given row which have already been
- ***  disclaimed once.
- ***  NOTE WELL: last_value_mtx must be set before this function is called.
- **/
-{
+	Disclaims all elements in the given row which have already been
+	disclaimed once.
+	NOTE WELL: last_value_mtx must be set before this function is called.
+*/
+static void clean_row(mtx_matrix_t mtx, int32 org){
   struct element_t **link;
 
   link = &(mtx->hdr.row[org]);
@@ -446,13 +418,12 @@ static void clean_row(mtx_matrix_t mtx, int32 org)
       link = &((*link)->next.col);
 }
 
-static void clean_col(mtx_matrix_t mtx, int32 org)
 /**
- ***  Disclaims all elements in the given col which have already been
- ***  disclaimed once.
- ***  NOTE WELL: last_value_mtx must be set before this function is called.
- **/
-{
+	Disclaims all elements in the given col which have already been
+	disclaimed once.
+	NOTE WELL: last_value_mtx must be set before this function is called.
+*/
+static void clean_col(mtx_matrix_t mtx, int32 org){
   struct element_t **link;
 
   link = &(mtx->hdr.col[org]);
@@ -464,23 +435,21 @@ static void clean_col(mtx_matrix_t mtx, int32 org)
 }
 /********************************************************************/
 
-mtx_coord_t *mtx_coord(mtx_coord_t *coordp, int32 row, int32 col)
-{
+mtx_coord_t *mtx_coord(mtx_coord_t *coordp, int32 row, int32 col){
    coordp->row = row;
    coordp->col = col;
    return(coordp);
 }
 
-mtx_range_t *mtx_range(mtx_range_t *rangep, int32 low, int32 high)
-{
+mtx_range_t *mtx_range(mtx_range_t *rangep, int32 low, int32 high){
    rangep->low = low;
    rangep->high = high;
    return(rangep);
 }
 
 mtx_region_t *mtx_region( mtx_region_t *regionp, int32 rowlow, int32 rowhigh,
-			int32 collow, int32 colhigh)
-{
+			int32 collow, int32 colhigh
+){
    mtx_range(&(regionp->row),rowlow,rowhigh);
    mtx_range(&(regionp->col),collow,colhigh);
    return(regionp);
@@ -488,19 +457,18 @@ mtx_region_t *mtx_region( mtx_region_t *regionp, int32 rowlow, int32 rowhigh,
 
 static int g_mtx_debug_redirect = 0;
 
-void mtx_debug_redirect_freeze() {
+void mtx_debug_redirect_freeze(){
   g_mtx_debug_redirect = 1;
 }
 
-static void mtx_redirectErrors(FILE *f) {
+static void mtx_redirectErrors(FILE *f){
   if (!g_mtx_debug_redirect) {
     assert(f != NULL);
     g_mtxerr = f;
   }
 }
 
-mtx_matrix_t mtx_create(void)
-{
+mtx_matrix_t mtx_create(void){
   mtx_matrix_t mtx;
 
   mtx_redirectErrors(stderr); /* call mtx_debug_redirect_freeze() to bypass */
@@ -539,8 +507,7 @@ mtx_matrix_t mtx_create(void)
  ** All slaves of a master appear as pointers in the masters slaves list
  ** which is nslaves long. slaves do not have slaves.
  **/
-mtx_matrix_t mtx_create_slave(mtx_matrix_t master)
-{
+mtx_matrix_t mtx_create_slave(mtx_matrix_t master){
   mtx_matrix_t mtx, *mlist;
   int32 newcnt;
   mtx_redirectErrors(stderr); /* call mtx_debug_redirect_freeze() to bypass */
@@ -597,8 +564,7 @@ mtx_matrix_t mtx_create_slave(mtx_matrix_t master)
   return(mtx);
 }
 
-static void destroy_slave(mtx_matrix_t master, mtx_matrix_t mtx)
-{
+static void destroy_slave(mtx_matrix_t master, mtx_matrix_t mtx){
   int32 sid,i;
 
   if(!mtx_check_matrix(mtx) || !mtx_check_matrix(master)) {
@@ -644,8 +610,7 @@ static void destroy_slave(mtx_matrix_t master, mtx_matrix_t mtx)
   free_header(mtx);
 }
 
-void mtx_destroy(mtx_matrix_t mtx)
-{
+void mtx_destroy(mtx_matrix_t mtx){
   int32 i;
   if(!mtx_check_matrix(mtx)) return;
   if (ISSLAVE(mtx)) {
@@ -671,9 +636,9 @@ void mtx_destroy(mtx_matrix_t mtx)
   mtx_clear_region(mtx,mtx_ENTIRE_MATRIX);
   /* mtx_check_matrix is called again if MTX_DEBUG*/
   /**
-   ***  The fishnet structure is
-   ***  destroyed, just leaving
-   ***  the headers and maybe ms.
+  	The fishnet structure is
+  	destroyed, just leaving
+  	the headers and maybe ms.
    **/
   mem_destroy_store(mtx->ms);
 
@@ -693,7 +658,7 @@ void mtx_destroy(mtx_matrix_t mtx)
   free_header(mtx);
 }
 
-mtx_sparse_t *mtx_create_sparse(int32 cap) {
+mtx_sparse_t *mtx_create_sparse(int32 cap){
   mtx_sparse_t *ret;
   ret = (mtx_sparse_t *)ascmalloc(sizeof(mtx_sparse_t));
   if (ISNULL(ret)) {
@@ -718,24 +683,23 @@ mtx_sparse_t *mtx_create_sparse(int32 cap) {
   return ret;
 }
 
-void mtx_destroy_sparse(mtx_sparse_t *ret)
-{
+void mtx_destroy_sparse(mtx_sparse_t *ret){
   if (ISNULL(ret)) return;
   if (NOTNULL(ret->idata)) ascfree(ret->idata);
   if (NOTNULL(ret->data)) ascfree(ret->data);
   ascfree(ret);
 }
 
-void mtx_destroy_blocklist(mtx_block_t *bl)
-{
+void mtx_destroy_blocklist(mtx_block_t *bl){
   if (ISNULL(bl)) return;
   if (NOTNULL(bl->block) && bl->nblocks>0) ascfree(bl->block);
   ascfree(bl);
 }
 
-mtx_matrix_t mtx_duplicate_region(mtx_matrix_t mtx, mtx_region_t *reg,
-                                  real64 drop)
-{
+mtx_matrix_t mtx_duplicate_region(mtx_matrix_t mtx
+		, mtx_region_t *reg
+		, real64 drop
+){
   mtx_matrix_t new;
   int32 org_row;
   struct element_t *elt;
@@ -819,10 +783,11 @@ mtx_matrix_t mtx_duplicate_region(mtx_matrix_t mtx, mtx_region_t *reg,
 /* WARNING: this function assumes sufficient memory is available.
  * it needs to be check for null returns in allocs and doesn't.
  */
-mtx_matrix_t mtx_copy_options(mtx_matrix_t mtx, boolean blocks,
-                              boolean incidence, mtx_region_t *reg,
-                              real64 drop)
-{
+mtx_matrix_t mtx_copy_options(mtx_matrix_t mtx
+		, boolean blocks
+		, boolean incidence, mtx_region_t *reg
+		, real64 drop
+){
   mtx_matrix_t copy;
   int32 org_row;
   struct element_t *elt;
@@ -962,21 +927,18 @@ mtx_matrix_t mtx_copy_options(mtx_matrix_t mtx, boolean blocks,
   return(copy);
 }
 
-int32 mtx_order( mtx_matrix_t mtx)
-{
+int32 mtx_order( mtx_matrix_t mtx){
    if (!mtx_check_matrix(mtx)) return -1;
    return(mtx->order);
 }
 
-int32 mtx_capacity( mtx_matrix_t mtx)
-{
+int32 mtx_capacity( mtx_matrix_t mtx){
    if (!mtx_check_matrix(mtx)) return -1;
    return(mtx->capacity);
 }
 
 /* this is only to be called from in mtx_set_order */
-static void trim_incidence(mtx_matrix_t mtx, int32 order)
-{
+static void trim_incidence(mtx_matrix_t mtx, int32 order){
    int32 ndx;
    int32 *toorg;
 
@@ -995,8 +957,7 @@ static void trim_incidence(mtx_matrix_t mtx, int32 order)
 }
 
 /* this is only to be called from in mtx_set_order */
-static void enlarge_nzheaders(mtx_matrix_t mtx, int32 order)
-{
+static void enlarge_nzheaders(mtx_matrix_t mtx, int32 order){
   struct element_t **newhdr;
 
   /* realloc does not initialize, so calloc is the best we can do here */
@@ -1012,14 +973,13 @@ static void enlarge_nzheaders(mtx_matrix_t mtx, int32 order)
   mtx->hdr.col = newhdr;
 }
 
-void mtx_set_order( mtx_matrix_t mtx, int32 order)
 /**
- ***  This function will preserve the fact that all of the arrays are
- ***  "correct" out to the capacity of the arrays, not just out to the order
- ***  of the matrix.  In other words, extensions to orders which still do
- ***  not exceed the capacity of the arrays are trivial.
- **/
-{
+	This function will preserve the fact that all of the arrays are
+	"correct" out to the capacity of the arrays, not just out to the order
+	of the matrix.  In other words, extensions to orders which still do
+	not exceed the capacity of the arrays are trivial.
+*/
+void mtx_set_order( mtx_matrix_t mtx, int32 order){
   int32 i;
   if(!mtx_check_matrix(mtx)) return;
   if (ISSLAVE(mtx)) {
@@ -1046,7 +1006,7 @@ void mtx_set_order( mtx_matrix_t mtx, int32 order)
       enlarge_nzheaders(mtx->slaves[i],order);
     }
 
-/* realloc not in order here.  Happens only on the master. */
+    /* realloc not in order here.  Happens only on the master. */
     newperm = mtx_alloc_perm(order);
     mtx_copy_perm(newperm,mtx->perm.row.org_to_cur,mtx->capacity);
     for( ndx=mtx->capacity ; ndx < order ; ++ndx )
@@ -1091,8 +1051,7 @@ void mtx_set_order( mtx_matrix_t mtx, int32 order)
   }
 }
 
-void mtx_clear_coord(mtx_matrix_t mtx, int32 row, int32 col)
-{
+void mtx_clear_coord(mtx_matrix_t mtx, int32 row, int32 col){
    struct element_t **rlink, **clink;
    int32 org_row, org_col;
 
@@ -1114,8 +1073,7 @@ void mtx_clear_coord(mtx_matrix_t mtx, int32 row, int32 col)
    delete_from_col(clink);
 }
 
-void mtx_clear_row( mtx_matrix_t mtx, int32 row, mtx_range_t *rng)
-{
+void mtx_clear_row( mtx_matrix_t mtx, int32 row, mtx_range_t *rng){
    struct element_t **rlink, **clink;
    int32 org_row;
 
@@ -1148,8 +1106,7 @@ void mtx_clear_row( mtx_matrix_t mtx, int32 row, mtx_range_t *rng)
    }
 }
 
-void mtx_clear_col( mtx_matrix_t mtx, int32 col, mtx_range_t *rng)
-{
+void mtx_clear_col( mtx_matrix_t mtx, int32 col, mtx_range_t *rng){
    struct element_t **clink, **rlink;
    int32 org_col;
 
@@ -1182,8 +1139,7 @@ void mtx_clear_col( mtx_matrix_t mtx, int32 col, mtx_range_t *rng)
    }
 }
 
-void mtx_clear_region(mtx_matrix_t mtx, mtx_region_t *region)
-{
+void mtx_clear_region(mtx_matrix_t mtx, mtx_region_t *region){
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return;
 #endif
@@ -1213,8 +1169,7 @@ void mtx_clear_region(mtx_matrix_t mtx, mtx_region_t *region)
 }
 
 
-void mtx_reset_perm(mtx_matrix_t mtx)
-{
+void mtx_reset_perm(mtx_matrix_t mtx){
   int32 ndx;
 
 #if MTX_DEBUG
@@ -1241,8 +1196,7 @@ void mtx_reset_perm(mtx_matrix_t mtx)
   }
 }
 
-void mtx_clear(mtx_matrix_t mtx)
-{
+void mtx_clear(mtx_matrix_t mtx){
   if (ISSLAVE(mtx)) {
     mtx_clear_region(mtx->master,mtx_ENTIRE_MATRIX);
   }
@@ -1250,8 +1204,7 @@ void mtx_clear(mtx_matrix_t mtx)
   mtx_reset_perm(mtx);
 }
 
-real64 mtx_value(mtx_matrix_t mtx, mtx_coord_t *coord)
-{
+real64 mtx_value(mtx_matrix_t mtx, mtx_coord_t *coord){
    struct element_t *elt;
    register int32 org_row,org_col;
 
@@ -1265,8 +1218,7 @@ real64 mtx_value(mtx_matrix_t mtx, mtx_coord_t *coord)
    return( ISNULL(elt) ? D_ZERO : elt->value );
 }
 
-void mtx_set_value( mtx_matrix_t mtx, mtx_coord_t *coord, real64 value)
-{
+void mtx_set_value( mtx_matrix_t mtx, mtx_coord_t *coord, real64 value){
   register int32 org_row,org_col;
 
 #if MTX_DEBUG
@@ -1290,8 +1242,7 @@ void mtx_set_value( mtx_matrix_t mtx, mtx_coord_t *coord, real64 value)
   }
 }
 
-void mtx_fill_value(mtx_matrix_t mtx, mtx_coord_t *coord, real64 value)
-{
+void mtx_fill_value(mtx_matrix_t mtx, mtx_coord_t *coord, real64 value){
    register int32 org_row,org_col;
 
 #if MTX_DEBUG
@@ -1302,9 +1253,10 @@ void mtx_fill_value(mtx_matrix_t mtx, mtx_coord_t *coord, real64 value)
    mtx_create_element_value(mtx,org_row,org_col,value);
 }
 
-void mtx_fill_org_value(mtx_matrix_t mtx, const mtx_coord_t *coord,
-			real64 value)
-{
+void mtx_fill_org_value(mtx_matrix_t mtx
+		, const mtx_coord_t *coord
+		, real64 value
+){
 #if MTX_DEBUG
    if(!mtx_check_matrix(mtx)) return;
 #endif
@@ -1344,8 +1296,7 @@ void mtx_fill_org_value(mtx_matrix_t mtx, const mtx_coord_t *coord,
     endfor
    My god, the tricks we play on a linked list.
 */
-int32 mtx_assemble(mtx_matrix_t mtx)
-{
+int32 mtx_assemble(mtx_matrix_t mtx){
   char *real_mv=NULL, *mv;
   struct element_t **real_ev=NULL, **ev, **prevlink, *elt;
   int32 orgrow, orgcol, lowmark,highmark,dup;
@@ -1437,8 +1388,7 @@ int32 mtx_assemble(mtx_matrix_t mtx)
   return -dup;
 }
 
-void mtx_del_zr_in_row(mtx_matrix_t mtx, int32 row)
-{
+void mtx_del_zr_in_row(mtx_matrix_t mtx, int32 row){
    register int32 org;
    struct element_t **rlink, **clink;
 
@@ -1460,8 +1410,7 @@ void mtx_del_zr_in_row(mtx_matrix_t mtx, int32 row)
          rlink = &((*rlink)->next.col);
 }
 
-void mtx_del_zr_in_col(mtx_matrix_t mtx, int32 col)
-{
+void mtx_del_zr_in_col(mtx_matrix_t mtx, int32 col){
    register int32 org;
    struct element_t **clink, **rlink;
 
@@ -1483,8 +1432,7 @@ void mtx_del_zr_in_col(mtx_matrix_t mtx, int32 col)
          clink = &((*clink)->next.row);
 }
 
-void mtx_del_zr_in_rowrange(mtx_matrix_t mtx, mtx_range_t *rng)
-{
+void mtx_del_zr_in_rowrange(mtx_matrix_t mtx, mtx_range_t *rng){
   register int32 org,row,rowhi, *toorg;
   struct element_t **rlink, **clink;
 
@@ -1513,8 +1461,7 @@ void mtx_del_zr_in_rowrange(mtx_matrix_t mtx, mtx_range_t *rng)
   }
 }
 
-void mtx_del_zr_in_colrange(mtx_matrix_t mtx, mtx_range_t *rng)
-{
+void mtx_del_zr_in_colrange(mtx_matrix_t mtx, mtx_range_t *rng){
   register int32 org,col,colhi, *toorg;
   struct element_t **clink, **rlink;
 
@@ -1543,9 +1490,9 @@ void mtx_del_zr_in_colrange(mtx_matrix_t mtx, mtx_range_t *rng)
   }
 }
 
-void mtx_steal_org_row_vec(mtx_matrix_t mtx, int32 row,
-                           real64 *vec, mtx_range_t *rng)
-{
+void mtx_steal_org_row_vec(mtx_matrix_t mtx, int32 row
+		, real64 *vec, mtx_range_t *rng
+){
   struct element_t **rlink, **clink;
   int32 org_row;
 
@@ -1583,9 +1530,9 @@ void mtx_steal_org_row_vec(mtx_matrix_t mtx, int32 row,
   }
 }
 
-void mtx_steal_org_col_vec(mtx_matrix_t mtx, int32 col,
-                           real64 *vec, mtx_range_t *rng)
-{
+void mtx_steal_org_col_vec(mtx_matrix_t mtx, int32 col
+		, real64 *vec, mtx_range_t *rng
+){
   struct element_t **clink, **rlink;
   int32 org_col;
 
@@ -1623,9 +1570,9 @@ void mtx_steal_org_col_vec(mtx_matrix_t mtx, int32 col,
   }
 }
 
-void mtx_steal_cur_row_vec(mtx_matrix_t mtx, int32 row,
-                           real64 *vec, mtx_range_t *rng)
-{
+void mtx_steal_cur_row_vec(mtx_matrix_t mtx, int32 row
+		, real64 *vec, mtx_range_t *rng
+){
   struct element_t **rlink, **clink;
   int32 org_row, *tocur;
 
@@ -1662,9 +1609,9 @@ void mtx_steal_cur_row_vec(mtx_matrix_t mtx, int32 row,
   }
 }
 
-void mtx_steal_cur_col_vec(mtx_matrix_t mtx, int32 col,
-                           real64 *vec, mtx_range_t *rng)
-{
+void mtx_steal_cur_col_vec(mtx_matrix_t mtx, int32 col
+		, real64 *vec, mtx_range_t *rng
+){
   struct element_t **clink, **rlink;
   int32 org_col, *tocur;
 
@@ -1709,12 +1656,11 @@ void mtx_steal_cur_col_vec(mtx_matrix_t mtx, int32 col,
  * (exception: buggy realloc implementations may shrink it, ack!)
  * Data/idata values up to the old capacity (ret->cap) are preserved.
  */
-static int enlarge_sparse(mtx_sparse_t *ret, int32 len)
-{
+static int enlarge_sparse(mtx_sparse_t *ret, int32 len){
   int32 *inew;
   real64 *dnew;
   if (ISNULL(ret)) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)    enlarge_sparse called with NULL.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with NULL.\n");
     return 1;
   }
   if (len <= ret->cap || len <1) return 0; /* already big enough */
@@ -1725,8 +1671,8 @@ static int enlarge_sparse(mtx_sparse_t *ret, int32 len)
     inew = (int32 *)ascrealloc(ret->idata,sizeof(int32)*len);
   }
   if (ISNULL(inew)) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)    enlarge_sparse\n");
-    FPRINTF(g_mtxerr,"                  Insufficient memory.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"          Insufficient memory.\n");
     return 1;
   }
   ret->idata = inew; /* dnew can still fail without losing inew memory. */
@@ -1737,8 +1683,8 @@ static int enlarge_sparse(mtx_sparse_t *ret, int32 len)
     dnew = (real64 *)ascrealloc(ret->data,sizeof(real64)*len);
   }
   if (ISNULL(dnew)) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)    enlarge_sparse\n");
-    FPRINTF(g_mtxerr,"                  Insufficient memory.\n");
+    
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"          Insufficient memory.\n");
     return 1;
   }
   ret->data = dnew; /* we succeeded */
@@ -1750,9 +1696,9 @@ static int enlarge_sparse(mtx_sparse_t *ret, int32 len)
 
 /* going to try to make steal also handle sparse creation ...*/
 /* don't you dare, whoever you are! */
-boolean mtx_steal_org_row_sparse(mtx_matrix_t mtx, int32 row,
-                                 mtx_sparse_t *sp, mtx_range_t *rng)
-{
+boolean mtx_steal_org_row_sparse(mtx_matrix_t mtx, int32 row
+		, mtx_sparse_t *sp, mtx_range_t *rng
+){
   struct element_t **rlink, **clink;
   int32 org_row;
   int32 len,k;
@@ -1761,8 +1707,7 @@ boolean mtx_steal_org_row_sparse(mtx_matrix_t mtx, int32 row,
   if( !mtx_check_matrix(mtx) ) return TRUE;
 #endif
   if (sp == mtx_CREATE_SPARSE) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)  mtx_steal_org_row_sparse called with\n");
-    FPRINTF(g_mtxerr,"                mtx_CREATE_SPARSE. Not supported.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with mtx_CREATE_SPARSE. Not supported.\n");
     return TRUE;
   }
   if (rng == mtx_ALL_COLS) {
@@ -1772,8 +1717,7 @@ boolean mtx_steal_org_row_sparse(mtx_matrix_t mtx, int32 row,
   }
   if (sp->cap < len) {
     sp->len = 0;
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)  mtx_steal_org_row_sparse called with\n");
-    FPRINTF(g_mtxerr,"                sparse of insufficient capacity.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with sparse of insufficient capacity.\n");
     return TRUE;
   }
 
@@ -1815,9 +1759,9 @@ boolean mtx_steal_org_row_sparse(mtx_matrix_t mtx, int32 row,
   return FALSE;
 }
 
-boolean mtx_steal_org_col_sparse(mtx_matrix_t mtx, int32 col,
-                                 mtx_sparse_t *sp, mtx_range_t *rng)
-{
+boolean mtx_steal_org_col_sparse(mtx_matrix_t mtx, int32 col
+		, mtx_sparse_t *sp, mtx_range_t *rng
+){
   struct element_t **clink, **rlink;
   int32 org_col;
   int32 len,k;
@@ -1826,8 +1770,7 @@ boolean mtx_steal_org_col_sparse(mtx_matrix_t mtx, int32 col,
   if( !mtx_check_matrix(mtx) ) return TRUE;
 #endif
   if (sp == mtx_CREATE_SPARSE) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)  mtx_steal_org_col_sparse called with\n");
-    FPRINTF(g_mtxerr,"                mtx_CREATE_SPARSE. Not supported.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with mtx_CREATE_SPARSE. Not supported.\n");
     return TRUE;
   }
   if (rng == mtx_ALL_ROWS) {
@@ -1837,8 +1780,7 @@ boolean mtx_steal_org_col_sparse(mtx_matrix_t mtx, int32 col,
   }
   if (sp->cap < len) {
     sp->len = 0;
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)  mtx_steal_org_col_sparse called with\n");
-    FPRINTF(g_mtxerr,"                sparse of insufficient capacity.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with sparse of insufficient capacity.\n");
     return TRUE;
   }
 
@@ -1880,9 +1822,9 @@ boolean mtx_steal_org_col_sparse(mtx_matrix_t mtx, int32 col,
   return FALSE;
 }
 
-boolean mtx_steal_cur_row_sparse(mtx_matrix_t mtx, int32 row,
-                                 mtx_sparse_t *sp, mtx_range_t *rng)
-{
+boolean mtx_steal_cur_row_sparse(mtx_matrix_t mtx, int32 row
+		, mtx_sparse_t *sp, mtx_range_t *rng
+){
   struct element_t **rlink, **clink;
   int32 org_row, *tocur;
   int32 len,k;
@@ -1891,8 +1833,7 @@ boolean mtx_steal_cur_row_sparse(mtx_matrix_t mtx, int32 row,
   if( !mtx_check_matrix(mtx) ) return TRUE;
 #endif
   if (sp == mtx_CREATE_SPARSE) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)  mtx_steal_cur_row_sparse called with\n");
-    FPRINTF(g_mtxerr,"                mtx_CREATE_SPARSE. Not supported.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with mtx_CREATE_SPARSE. Not supported.\n");
     return TRUE;
   }
   if (rng == mtx_ALL_COLS) {
@@ -1902,8 +1843,7 @@ boolean mtx_steal_cur_row_sparse(mtx_matrix_t mtx, int32 row,
   }
   if (sp->cap < len) {
     sp->len = 0;
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)  mtx_steal_cur_row_sparse called with\n");
-    FPRINTF(g_mtxerr,"                sparse of insufficient capacity.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with sparse of insufficient capacity.\n");
     return TRUE;
   }
 
@@ -1944,9 +1884,9 @@ boolean mtx_steal_cur_row_sparse(mtx_matrix_t mtx, int32 row,
   return FALSE;
 }
 
-boolean mtx_steal_cur_col_sparse(mtx_matrix_t mtx, int32 col,
-                                 mtx_sparse_t *sp, mtx_range_t *rng)
-{
+boolean mtx_steal_cur_col_sparse(mtx_matrix_t mtx, int32 col
+		, mtx_sparse_t *sp, mtx_range_t *rng
+){
   struct element_t **clink, **rlink;
   int32 org_col, *tocur;
   int32 len,k;
@@ -1955,8 +1895,7 @@ boolean mtx_steal_cur_col_sparse(mtx_matrix_t mtx, int32 col,
   if( !mtx_check_matrix(mtx) ) return TRUE;
 #endif
   if (sp == mtx_CREATE_SPARSE) {
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)  mtx_steal_cur_col_sparse called with\n");
-    FPRINTF(g_mtxerr,"                mtx_CREATE_SPARSE. Not supported.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with mtx_CREATE_SPARSE. Not supported.\n");
     return TRUE;
   }
   if (rng == mtx_ALL_ROWS) {
@@ -1966,8 +1905,7 @@ boolean mtx_steal_cur_col_sparse(mtx_matrix_t mtx, int32 col,
   }
   if (sp->cap < len) {
     sp->len = 0;
-    FPRINTF(g_mtxerr,"ERROR: (mtx.c)  mtx_steal_cur_col_sparse called with\n");
-    FPRINTF(g_mtxerr,"                sparse of insufficient capacity.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with sparse of insufficient capacity.\n");
     return TRUE;
   }
 
@@ -2008,9 +1946,9 @@ boolean mtx_steal_cur_col_sparse(mtx_matrix_t mtx, int32 col,
   return FALSE;
 }
 
-void mtx_fill_org_row_vec(mtx_matrix_t mtx, int32 row,
-                          real64 *vec, mtx_range_t *rng)
-{
+void mtx_fill_org_row_vec(mtx_matrix_t mtx, int32 row
+		, real64 *vec, mtx_range_t *rng
+){
   int32 org_row,highcol, *toorg;
   register int32 org_col;
   register real64 value;
@@ -2038,9 +1976,9 @@ void mtx_fill_org_row_vec(mtx_matrix_t mtx, int32 row,
   }
 }
 
-void mtx_fill_org_col_vec(mtx_matrix_t mtx, int32 col,
-                          real64 *vec, mtx_range_t *rng)
-{
+void mtx_fill_org_col_vec(mtx_matrix_t mtx
+		, int32 col, real64 *vec, mtx_range_t *rng
+){
   int32 org_col,highrow, *toorg;
   register int32 org_row;
   register real64 value;
@@ -2068,9 +2006,9 @@ void mtx_fill_org_col_vec(mtx_matrix_t mtx, int32 col,
   }
 }
 
-void mtx_fill_cur_row_vec(mtx_matrix_t mtx, int32 row,
-                          real64 *vec, mtx_range_t *rng)
-{
+void mtx_fill_cur_row_vec(mtx_matrix_t mtx
+		, int32 row, real64 *vec, mtx_range_t *rng
+){
   int32 org_row,highcol,lowcol, *toorg;
   register int32 cur_col;
   register real64 value;
@@ -2094,9 +2032,9 @@ void mtx_fill_cur_row_vec(mtx_matrix_t mtx, int32 row,
   }
 }
 
-void mtx_fill_cur_col_vec(mtx_matrix_t mtx, int32 col,
-                          real64 *vec, mtx_range_t *rng)
-{
+void mtx_fill_cur_col_vec(mtx_matrix_t mtx
+		, int32 col, real64 *vec, mtx_range_t *rng
+){
   int32 org_col,highrow,lowrow, *toorg;
   register int32 cur_row;
   register real64 value;
@@ -2122,8 +2060,8 @@ void mtx_fill_cur_col_vec(mtx_matrix_t mtx, int32 col,
 
 void mtx_dropfill_cur_col_vec(mtx_matrix_t mtx, int32 col,
                               real64 *vec, mtx_range_t *rng,
-                              real64 tol)
-{
+                              real64 tol
+){
   int32 org_col,highrow,lowrow, *toorg;
   register int32 cur_row;
   register real64 value;
@@ -2154,8 +2092,8 @@ void mtx_dropfill_cur_col_vec(mtx_matrix_t mtx, int32 col,
 
 void mtx_dropfill_cur_row_vec(mtx_matrix_t mtx, int32 row,
                               real64 *vec, mtx_range_t *rng,
-                              real64 tol)
-{
+                              real64 tol
+){
   int32 org_row,highcol,lowcol, *toorg;
   register int32 cur_col;
   register real64 value;
@@ -2185,8 +2123,8 @@ void mtx_dropfill_cur_row_vec(mtx_matrix_t mtx, int32 row,
 }
 
 void mtx_fill_org_row_sparse(mtx_matrix_t mtx, int32 row,
-                             const mtx_sparse_t *sp)
-{
+                             const mtx_sparse_t *sp
+){
   int32 orgrow,i;
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx) || !mtx_check_sparse(sp)) return;
@@ -2204,8 +2142,8 @@ void mtx_fill_org_row_sparse(mtx_matrix_t mtx, int32 row,
 }
 
 void mtx_fill_org_col_sparse(mtx_matrix_t mtx, int32 col,
-                             const mtx_sparse_t *sp)
-{
+                             const mtx_sparse_t *sp
+){
   int32 orgcol,i;
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx) || !mtx_check_sparse(sp)) return;
@@ -2223,8 +2161,8 @@ void mtx_fill_org_col_sparse(mtx_matrix_t mtx, int32 col,
 }
 
 void mtx_fill_cur_row_sparse(mtx_matrix_t mtx, int32 row,
-                             const mtx_sparse_t *sp)
-{
+                             const mtx_sparse_t *sp
+){
   int32 orgrow,i;
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx) || !mtx_check_sparse(sp)) return;
@@ -2244,8 +2182,8 @@ void mtx_fill_cur_row_sparse(mtx_matrix_t mtx, int32 row,
 }
 
 void mtx_fill_cur_col_sparse(mtx_matrix_t mtx, int32 col,
-                             const mtx_sparse_t *sp)
-{
+                             const mtx_sparse_t *sp
+){
   int32 orgcol,i;
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx) || !mtx_check_sparse(sp)) return;
@@ -2265,8 +2203,7 @@ void mtx_fill_cur_col_sparse(mtx_matrix_t mtx, int32 col,
   }
 }
 
-void mtx_mult_row(mtx_matrix_t mtx, int32 row, real64 factor, mtx_range_t *rng)
-{
+void mtx_mult_row(mtx_matrix_t mtx, int32 row, real64 factor, mtx_range_t *rng){
    struct element_t *elt;
    int32 *tocur;
 
@@ -2289,8 +2226,7 @@ void mtx_mult_row(mtx_matrix_t mtx, int32 row, real64 factor, mtx_range_t *rng)
          if( in_range(rng,tocur[elt->col]) ) elt->value *= factor;
 }
 
-void mtx_mult_col(mtx_matrix_t mtx, int32 col, real64 factor, mtx_range_t *rng)
-{
+void mtx_mult_col(mtx_matrix_t mtx, int32 col, real64 factor, mtx_range_t *rng){
    struct element_t *elt;
    int32 *tocur;
 
@@ -2313,8 +2249,7 @@ void mtx_mult_col(mtx_matrix_t mtx, int32 col, real64 factor, mtx_range_t *rng)
          if( in_range(rng,tocur[elt->row]) ) elt->value *= factor;
 }
 
-void mtx_mult_row_zero(mtx_matrix_t mtx, int32 row, mtx_range_t *rng)
-{
+void mtx_mult_row_zero(mtx_matrix_t mtx, int32 row, mtx_range_t *rng){
    struct element_t *elt;
    int32 *tocur;
 
@@ -2331,8 +2266,7 @@ void mtx_mult_row_zero(mtx_matrix_t mtx, int32 row, mtx_range_t *rng)
          if( in_range(rng,tocur[elt->col]) ) elt->value = D_ZERO;
 }
 
-void mtx_mult_col_zero(mtx_matrix_t mtx, int32 col, mtx_range_t *rng)
-{
+void mtx_mult_col_zero(mtx_matrix_t mtx, int32 col, mtx_range_t *rng){
    struct element_t *elt;
    int32 *tocur;
 
@@ -2350,8 +2284,8 @@ void mtx_mult_col_zero(mtx_matrix_t mtx, int32 col, mtx_range_t *rng)
 }
 
 void mtx_add_row(mtx_matrix_t mtx, int32 s_cur, int32 t_cur, real64 factor,
-		mtx_range_t *rng)
-{
+		mtx_range_t *rng
+){
    register int32 org_col;
    int32 t_org,*tocur;
    struct element_t **arr,*elt;
@@ -2398,8 +2332,8 @@ void mtx_add_row(mtx_matrix_t mtx, int32 s_cur, int32 t_cur, real64 factor,
 }
 
 void mtx_add_col(mtx_matrix_t mtx, int32 s_cur, int32 t_cur, real64 factor,
-		 mtx_range_t *rng)
-{
+		 mtx_range_t *rng
+){
    int32 t_org,*tocur;
    struct element_t **arr,*elt;
 
@@ -2439,14 +2373,13 @@ void mtx_add_col(mtx_matrix_t mtx, int32 s_cur, int32 t_cur, real64 factor,
    mtx_null_vector_release();
 }
 
-static struct element_t **mtx_expand_row_series( mtx_matrix_t mtx, int32 org)
 /**
- ***  Expands the given row into an array of pointers, indexed on original
- ***  col number.  The array is obtained from mtx_null_row_vector().
- ***  Be sure to call mtx_null_row_vector_release() when done with the vector and
- ***  you have rezeroed it.
- **/
-{
+	Expands the given row into an array of pointers, indexed on original
+	col number.  The array is obtained from mtx_null_row_vector().
+	Be sure to call mtx_null_row_vector_release() when done with the vector and
+	you have rezeroed it.
+*/
+static struct element_t **mtx_expand_row_series( mtx_matrix_t mtx, int32 org){
    struct element_t **arr;
    struct element_t *elt;
 
@@ -2456,14 +2389,13 @@ static struct element_t **mtx_expand_row_series( mtx_matrix_t mtx, int32 org)
    return(arr);
 }
 
-static struct element_t **mtx_expand_col_series(mtx_matrix_t mtx, int32 org)
 /**
- ***  Expands the given col into an array of pointers, indexed on original
- ***  row number.  The array is obtained from mtx_null_col_vector().
- *** Be sure to call mtx_null_col_vector_release() when done with the vector and
- ***  you have rezeroed it.
- **/
-{
+	Expands the given col into an array of pointers, indexed on original
+	row number.  The array is obtained from mtx_null_col_vector().
+	Be sure to call mtx_null_col_vector_release() when done with the vector and
+	you have rezeroed it.
+*/
+static struct element_t **mtx_expand_col_series(mtx_matrix_t mtx, int32 org){
    struct element_t **arr;
    struct element_t *elt;
 
@@ -2484,8 +2416,7 @@ static struct add_series_data
   rsdata={NULL,NULL,NULL,mtx_NONE},
   csdata={NULL,NULL,NULL,mtx_NONE};
 
-static void add_series_data_release(void)
-{
+static void add_series_data_release(void){
   /* if apparently sane, and have array release the arr */
   if (NOTNULL(rsdata.mtx) && NOTNULL(rsdata.tocur)
       && rsdata.t_org >= 0 && NOTNULL(rsdata.arr)) {
@@ -2508,8 +2439,7 @@ static void add_series_data_release(void)
   csdata.t_org = mtx_NONE;
 }
 
-void mtx_add_row_series_init(mtx_matrix_t mtx,int32 t_cur,boolean use)
-{
+void mtx_add_row_series_init(mtx_matrix_t mtx,int32 t_cur,boolean use){
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return;
@@ -2523,21 +2453,17 @@ void mtx_add_row_series_init(mtx_matrix_t mtx,int32 t_cur,boolean use)
       rsdata.t_org = mtx->perm.row.cur_to_org[t_cur];
       rsdata.arr   = mtx_expand_row_series(mtx,rsdata.t_org);
     } else {
-      FPRINTF(g_mtxerr,"ERROR:     mtx_add_row_series_init called\n");
-      FPRINTF(g_mtxerr,"           for grab with invalid column or mtx.\n");
-      FPRINTF(g_mtxerr,"           col number %d.\n",t_cur);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"called for grab with invalid column or mtx. col number %d.\n",t_cur);
     }
     return;
   } else {
     /* this is supposed to be a releasing call */
     if (t_cur != mtx_NONE) {
-      FPRINTF(g_mtxerr,"ERROR:     mtx_add_row_series_init called for\n");
-      FPRINTF(g_mtxerr,"           release without mtx_NONE.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"called for release without mtx_NONE.\n");
       return;
     }
     if (mtx != rsdata.mtx) {
-      FPRINTF(g_mtxerr,"ERROR:     mtx_add_row_series_init called for\n");
-      FPRINTF(g_mtxerr,"           release with ungrabbed matrix.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"called for release with ungrabbed matrix.\n");
       return;
     }
     if (use) {
@@ -2553,16 +2479,14 @@ void mtx_add_row_series_init(mtx_matrix_t mtx,int32 t_cur,boolean use)
   }
 }
 
-void mtx_add_row_series(int32 s_cur,real64 factor,mtx_range_t *rng)
-{
+void mtx_add_row_series(int32 s_cur,real64 factor,mtx_range_t *rng){
   register int32 org_col;
   int32 t_org,*tocur;
   struct element_t **arr,*elt;
   mtx_matrix_t mtx;
 
   if ( !(rsdata.mtx) ) {
-    FPRINTF(g_mtxerr,"ERROR:     mtx_add_row_series called for\n");
-    FPRINTF(g_mtxerr,"           without grabbing target row first.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called without grabbing target row first.\n");
     return;
   }
   mtx   = rsdata.mtx;
@@ -2605,8 +2529,7 @@ void mtx_add_row_series(int32 s_cur,real64 factor,mtx_range_t *rng)
   }
 }
 
-void mtx_add_col_series_init(mtx_matrix_t mtx,int32 t_cur,boolean use)
-{
+void mtx_add_col_series_init(mtx_matrix_t mtx,int32 t_cur,boolean use){
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return;
@@ -2620,21 +2543,17 @@ void mtx_add_col_series_init(mtx_matrix_t mtx,int32 t_cur,boolean use)
       csdata.t_org = mtx->perm.col.cur_to_org[t_cur];
       csdata.arr   = mtx_expand_col_series(mtx,csdata.t_org);
     } else {
-      FPRINTF(g_mtxerr,"ERROR:     mtx_add_col_series_init called\n");
-      FPRINTF(g_mtxerr,"           for grab with invalid row or mtx.\n");
-      FPRINTF(g_mtxerr,"           row number %d.\n",t_cur);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"called for grab with invalid row or mtx. row number %d.\n",t_cur);
     }
     return;
   } else {
     /* this is supposed to be a releasing call */
     if (t_cur != mtx_NONE) {
-      FPRINTF(g_mtxerr,"ERROR:     mtx_add_col_series_init called for\n");
-      FPRINTF(g_mtxerr,"           release without mtx_NONE.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"called for release without mtx_NONE.\n");
       return;
     }
     if (mtx != csdata.mtx) {
-      FPRINTF(g_mtxerr,"ERROR:     mtx_add_col_series_init called for\n");
-      FPRINTF(g_mtxerr,"           release with ungrabbed matrix.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"called for release with ungrabbed matrix.\n");
       return;
     }
     if (use) {
@@ -2650,16 +2569,14 @@ void mtx_add_col_series_init(mtx_matrix_t mtx,int32 t_cur,boolean use)
   }
 }
 
-void mtx_add_col_series(int32 s_cur,real64 factor,mtx_range_t *rng)
-{
+void mtx_add_col_series(int32 s_cur,real64 factor,mtx_range_t *rng){
   register int32 org_row;
   int32 t_org,*tocur;
   struct element_t **arr,*elt;
   mtx_matrix_t mtx;
 
   if ( !(csdata.mtx) ) {
-    FPRINTF(g_mtxerr,"ERROR:     mtx_add_col_series called for\n");
-    FPRINTF(g_mtxerr,"           without grabbing target col first.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called for without grabbing target col first.\n");
     return;
   }
   mtx   = csdata.mtx;
@@ -2701,12 +2618,12 @@ void mtx_add_col_series(int32 s_cur,real64 factor,mtx_range_t *rng)
 }
 
 void mtx_old_add_row_sparse(mtx_matrix_t mtx,
-                       int32 t_cur,   /* cur index of target row */
-                       real64 *s_cur, /* dense source row, curindexed */
-                       real64 factor, /* coefficient */
-                       mtx_range_t *rng,
-                       int32 *ilist)  /* list to add over */
-{
+		int32 t_cur,   /* cur index of target row */
+		real64 *s_cur, /* dense source row, curindexed */
+		real64 factor, /* coefficient */
+		mtx_range_t *rng,
+		int32 *ilist  /* list to add over */
+){
   int32 t_org,*toorg,cindex,orgcindex,hilim;
   struct element_t **arr;
   real64 value;
@@ -2775,8 +2692,8 @@ void mtx_old_add_col_sparse(mtx_matrix_t mtx,
                        real64 *s_cur, /* dense source col, curindexed */
                        real64 factor, /* coefficient */
                        mtx_range_t *rng,    /* range to add over or */
-                       int32 *ilist)  /* list to add over */
-{
+                       int32 *ilist  /* list to add over */
+){
   int32 t_org,*toorg,rowindex,orgrowindex,hilim;
   struct element_t **arr;
   real64 value;
@@ -2878,22 +2795,20 @@ size_t mtx_chattel_size(mtx_matrix_t mtx) {
   return size;
 }
 
-void mtx_free_reused_mem(void)
-{
+void mtx_free_reused_mem(void){
   (void)mtx_null_mark((int32)0);
   (void)mtx_null_vector((int32)0);
   (void)mtx_null_row_vector((int32)0);
   (void)mtx_null_col_vector((int32)0);
 }
 
-
-void mtx_write_sparse(FILE *fp,mtx_sparse_t *v)
-{
+
+void mtx_write_sparse(FILE *fp,mtx_sparse_t *v){
   int32 k;
   if (NOTNULL(v) && NOTNULL(fp)) {
     FPRINTF(fp,"len %d, cap %d\n",v->len,v->cap);
   } else {
-    FPRINTF(g_mtxerr,"ERROR:  (mtx.c)  mtx_write_sparse called with NULL.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with NULL.\n");
     return;
   }
   if ( NOTNULL(v->data) && NOTNULL(v->idata) ){
@@ -2907,8 +2822,8 @@ void mtx_write_sparse(FILE *fp,mtx_sparse_t *v)
 }
 
 void mtx_write_region_human_f(FILE *fp,mtx_matrix_t mtx,
-                              mtx_region_t *greg,int colwise,int orgmajor)
-{
+                              mtx_region_t *greg,int colwise,int orgmajor
+){
   mtx_coord_t nz,org;
   real64 value;
   mtx_region_t reg;
@@ -3018,8 +2933,7 @@ static char permmagic[]="#endperm\0";
 static char blockmagic[]="#endperm_beginblock\0";
 static char blockend[]="#endblock\0";
 
-void mtx_write_region(FILE *fp,mtx_matrix_t mtx,mtx_region_t *greg)
-{
+void mtx_write_region(FILE *fp,mtx_matrix_t mtx,mtx_region_t *greg){
   mtx_coord_t nz;
   mtx_region_t reg;
   mtx_range_t *rng;
@@ -3086,7 +3000,7 @@ static int getregion(FILE* fp, mtx_region_t *reg) {
   return 1;
 }
 
-static int getcoef(FILE* fp, int *row, int *col, double *val) {
+static int getcoef(FILE* fp, int *row, int *col, double *val){
   char buf[80];
   if( fscanf(fp,"%d %d",row,col)==EOF) {
     return 0;
@@ -3097,8 +3011,7 @@ static int getcoef(FILE* fp, int *row, int *col, double *val) {
   }
 }
 
-mtx_matrix_t mtx_read_region(FILE *fp,mtx_matrix_t mtx,int transpose)
-{
+mtx_matrix_t mtx_read_region(FILE *fp,mtx_matrix_t mtx,int transpose){
   real64 value;
   mtx_region_t reg;
   int32 orgrow,orgcol, ord,inc,nblocks;
@@ -3217,8 +3130,7 @@ mtx_matrix_t mtx_read_region(FILE *fp,mtx_matrix_t mtx,int transpose)
   return mtx;
 }
 
-void mtx_write_region_matlab(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region)
-{
+void mtx_write_region_matlab(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
   struct element_t Rewind, *elt;
   int32 *perm;
   mtx_coord_t nz;
@@ -3271,10 +3183,10 @@ int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
 
     mm_write_banner(fp, matcode);
 
-	if(region == mtx_ENTIRE_MATRIX)nrows = mtx->order-1;
+	if(region == mtx_ENTIRE_MATRIX)nrows = mtx->order;
 	else nrows = region->row.high - region->row.low + 1;
 
-	if(region == mtx_ENTIRE_MATRIX)ncols = mtx->order-1;
+	if(region == mtx_ENTIRE_MATRIX)ncols = mtx->order;
 	else ncols = region->col.high - region->col.low + 1;
 
 	nnz = mtx_nonzeros_in_region(mtx,region);
@@ -3305,7 +3217,7 @@ int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
 			Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[nz.row]];
 			elt = &Rewind;
 			for( ; NULL != (elt = mtx_next_col(elt,mtx_ALL_COLS,perm)) ; ) {
-				fprintf(fp,"%d %d %.20g\n",nz.row,perm[elt->col],elt->value);
+				fprintf(fp,"%d %d %.20g\n",nz.row + 1,perm[elt->col] + 1,elt->value);
 			}
 		}
 	} else {
@@ -3316,7 +3228,7 @@ int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
 			Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[nz.row]];
 			elt = &Rewind;
 			for( ; NULL != (elt = mtx_next_col(elt,&(region->col),perm)) ; ) {
-				fprintf(fp,"%d %d %.20g\n",nz.row,perm[elt->col],elt->value);
+				fprintf(fp,"%d %d %.20g\n",nz.row + 1,perm[elt->col] + 1,elt->value);
 			}
 		}
 	}
@@ -3329,8 +3241,7 @@ int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
 #endif
 
 
-void mtx_write_region_plot(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region)
-{
+void mtx_write_region_plot(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
   struct element_t Rewind, *elt;
   int32 *perm;
   mtx_coord_t nz;
@@ -3394,8 +3305,8 @@ void mtx_write_region_plot(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region)
  */
 
 void mtx_write_region_csr(FILE *fp,mtx_matrix_t mtx,
-			  mtx_region_t *region, int offset)
-{
+			  mtx_region_t *region, int offset
+){
   mtx_region_t reg;
   mtx_coord_t nz;
   real64 value;
@@ -3526,8 +3437,8 @@ void mtx_write_region_csr(FILE *fp,mtx_matrix_t mtx,
  *
  */
 void mtx_write_region_smms(FILE *fp, mtx_matrix_t mtx,
-			   mtx_region_t *region, int offset)
-{
+			   mtx_region_t *region, int offset
+){
   mtx_coord_t nz;
   real64 value;
   mtx_region_t reg;
@@ -3566,8 +3477,7 @@ void mtx_write_region_smms(FILE *fp, mtx_matrix_t mtx,
   FPRINTF(fp,"0 0 0.0\n");			/* terminate */
 }
 
-mtx_matrix_t mtx_read_smms(FILE *fp,mtx_matrix_t mtx,int transpose)
-{
+mtx_matrix_t mtx_read_smms(FILE *fp,mtx_matrix_t mtx,int transpose){
   real64 value;
   int32 orgrow,orgcol, ord, count;
   int32 nrows=0, ncols=0;
@@ -3657,14 +3567,12 @@ mtx_matrix_t mtx_read_smms(FILE *fp,mtx_matrix_t mtx,int transpose)
   return mtx;
 }
 
-void mtx_exception_recover(void)
-{
+void mtx_exception_recover(void){
   add_series_data_release();
   mtx_reset_null_vectors();
 }
 
-void mtx__debug_output(FILE *fp,mtx_matrix_t mtx)
-{
+void mtx__debug_output(FILE *fp,mtx_matrix_t mtx){
    if (fp)
      g_mtxerr=fp;
    else
