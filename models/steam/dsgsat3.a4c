@@ -11,7 +11,7 @@ REQUIRE "steam/satsteamstream.a4c";
 
 MODEL dsgsat3;
 	n IS_A integer_constant;
-	n :== 7;(* with L = 10m: 5,6,7,8,9,10,11 *)
+	n :== 11;(* with L = 10m: 5,6,7,8,9,10,11 *)
 	         (* with L =  5m: 2,3,4,5,7,9,11,12,13,1415,16 *)
 
 	dz IS_A real_constant;
@@ -155,16 +155,6 @@ METHODS
 	END bound_self;
 	METHOD default;
 		(* these are initial guesses only; fixed parameters are overwritten by 'values' below *)
-		D := 0.06 {m};
-		D_2 := 0.07 {m};
-		A_w := 0.25{PI}*D_2^2 -0.25{PI}*D^2;
-		A := 1 {m^2};
-		T_amb := 298 {K};
-		f := 0.0;
-		h_ext := 10 {W/m^2/K};
-		h_int := 100 {W/m^2/K};
-		qdot_s := 1000 {W/m};
-		rho_w := 1000 {kg/m^3};
 		t := 0 {s};
 		FOR i IN nodes DO
 			T[i] := 298 {K};
@@ -172,7 +162,6 @@ METHODS
 			RUN node[i].default_self;
 		END FOR;
 		FOR i IN butfirst1 DO
-			T_w[i] := 298 {K};
 			drho_dt[i] := 0 {kg/m^3/s};
 			dmdot_dt[i] := 0 {kg/s/s};
 			du_dt[i] := 0 {kJ/kg/s};
@@ -205,14 +194,19 @@ METHODS
 		END FOR;
 	END specify;
 	METHOD values;
+		D := 0.06 {m};
+		D_2 := 0.07 {m};
+		T_amb := 298 {K};
 		h_int := 100 {W/m^2/K};
 		h_ext := 20 {W/m^2/K};
 		f := 0.03;
 		mdot[1] := 0.26 {kg/s};
 		p[1]    := 10 {bar};
 		x[1]    := 0.23;
+		rho_w := 1000 {kg/m^3};
 		qdot_s := 1000 {W/m^2} * D_2 * 10;
 		FOR i IN butfirst1 DO
+			T_w[i] := 298 {K};
 			dmdot_dt[i] := 0.0 {kg/s/s};
 			du_dt[i] := 0 {kJ/kg/s};
 			v[i] := 0.2 {L/kg};
