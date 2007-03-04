@@ -72,6 +72,8 @@
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
 
+#define INIT_DEBUG
+
 /*********************************************************************\
   There is a stack of procedure calls kept for tracing and breaking
   recursion errors.
@@ -1684,7 +1686,9 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
   int previous_context = GetDeclarativeContext();
 
   morename = WriteNameString(name);
+#ifdef INIT_DEBUG
   CONSOLE_DEBUG("Running method '%s'...",morename);
+#endif
   ASC_FREE(morename);
 
   SetDeclarativeContext(1); /* set up for procedural processing */
@@ -1827,7 +1831,9 @@ enum Proc_enum Initialize(struct Instance *context,
   enum Proc_enum rval;
   struct procFrame fm;
   
+#ifdef INIT_DEBUG
   CONSOLE_DEBUG("RUNNING METHOD...");
+#endif
 
   assert(err != NULL);
   g_proc.depth = 0;
@@ -1836,7 +1842,7 @@ enum Proc_enum Initialize(struct Instance *context,
     InitNormalTopProcFrame(&fm,context,cname,err,options);
     rval = NormalInitialize(&fm,name);
   } else {
-    CONSOLE_DEBUG("DEBUG");
+    CONSOLE_DEBUG("Running method with debug...");
     rval = DebugInitialize(context,name,cname,err,options,watchpoints,log,&fm);
   }
   return rval;

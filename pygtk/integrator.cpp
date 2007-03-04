@@ -256,7 +256,7 @@ Integrator::setLogTimesteps(UnitsM units, double start, double end, unsigned lon
 	double inc = exp((log(end)-log(start))/num);
 	for(unsigned long i=0;i<=num;++i){
 		samplelist_set(samplelist,i,val);
-		CONSOLE_DEBUG("samplelist[%lu] = %f",i,val);
+		// CONSOLE_DEBUG("samplelist[%lu] = %f",i,val);
 		val *= inc;
 	}
 	integrator_set_samples(blsys,samplelist);
