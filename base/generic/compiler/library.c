@@ -376,9 +376,11 @@ int AddType(struct TypeDescription *desc)
     if (GetName(desc) == GetName(ptr->type)) {
       if (CmpDescModPtrs(desc,ptr->type)) {
 	if (Asc_ModuleTimesOpened(GetModule(desc)) <= ptr->open_count) {
-	  FPRINTF(ASCERR,"Multiple definitions of type %s in module %s.\n",
-		  SCP(GetName(desc)),Asc_ModuleName(GetModule(desc)));
-	  FPRINTF(ASCERR,"  Overwriting previous definition.\n");
+          ERROR_REPORTER_HERE(ASC_USER_WARNING,"Multiple definitions of type"
+	      " %s in module %s. Overwriting earlier definition."
+              , SCP(GetName(desc))
+              , Asc_ModuleName(GetModule(desc))
+          );
 	} else {
 	  if (GetRefinement(desc) == GetRefinement(ptr->type)) {
             /* here's the one cases */
