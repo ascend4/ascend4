@@ -48,7 +48,7 @@
 #include <compiler/extfunc.h>
 
 #include <packages/sensitivity.h>
-#include <solver/system.h>
+#include <system/system.h>
 
 ExtMethodRun do_solve_eval;
 ASC_EXPORT int solve_register(void);

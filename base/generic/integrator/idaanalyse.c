@@ -3,12 +3,14 @@
 #include <utilities/ascPanic.h>
 
 #ifdef ASC_IDA_NEW_ANALYSE
-# include <solver/diffvars.h>
-# include <solver/slv_stdcalls.h>
-# include <solver/block.h>
-# include <solver/diffvars_impl.h>
-# include <solver/slvDOF.h>
 # include <linear/linsolqr.h>
+
+# include <system/diffvars.h>
+# include <system/slv_stdcalls.h>
+# include <system/block.h>
+# include <system/diffvars_impl.h>
+
+# include <solver/slvDOF.h>
 #endif
 
 #include "ida_impl.h"

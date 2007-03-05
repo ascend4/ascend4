@@ -5,7 +5,7 @@
 
 #include "config.h"
 extern "C"{
-#include <solver/slv_common.h>
+#include <system/slv_common.h>
 }
 
 #include "simulation.h"

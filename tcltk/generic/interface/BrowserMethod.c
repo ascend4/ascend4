@@ -35,8 +35,6 @@
 
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>
-
-
 #include <compiler/expr_types.h>
 #include <compiler/stattypes.h>
 #include <compiler/slist.h>
@@ -53,7 +51,9 @@
 #include <compiler/type_desc.h>
 #include <compiler/units.h>
 #include <compiler/qlfdid.h>
-#include <solver/slv_types.h>
+
+#include <system/slv_types.h>
+
 #include "HelpProc.h"
 #include "BrowserProc.h"
 #include "BrowserMethod.h"

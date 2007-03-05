@@ -35,8 +35,6 @@
 #include <general/list.h>
 #include <general/dstring.h>
 
-
-
 #include <compiler/expr_types.h>
 #include <compiler/exprs.h>
 #include <compiler/instance_enum.h>
@@ -57,17 +55,12 @@
 #include <compiler/when_io.h>
 #include <compiler/instance_name.h>
 #include <compiler/qlfdid.h>
-#include <solver/slv_types.h>
+#include <system/slv_types.h>
 #include "HelpProc.h"
 #include "BrowWhen_io.h"
 #include "Qlfdid.h"
 #include "BrowserQuery.h"
 #include "BrowserProc.h"
-
-
-#ifndef lint
-static CONST char BrowWhenIOID[] = "$Id: BrowWhen_io.c,v 1.9 2003/08/23 18:43:04 ballan Exp $";
-#endif
 
 
 /**************************************************************************/

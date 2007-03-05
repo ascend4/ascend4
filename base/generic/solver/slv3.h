@@ -32,8 +32,9 @@
 #ifndef ASC_SLV3_H
 #define ASC_SLV3_H
 
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
-#include "slv_client.h"
+#include <system/slv_client.h>
 
 /**	@addtogroup solver Solver
 	@{
@@ -47,6 +48,7 @@ typedef struct slv3_system_structure *slv3_system_t;
 #else
 # define HAVE_QRSLV 0
 #endif
+
 
 ASC_DLLSPEC int slv3_register(SlvFunctionsT *f);
 /**<

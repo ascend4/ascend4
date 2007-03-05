@@ -50,10 +50,10 @@
 #include <compiler/plot.h>
 */
 
-#include "slv_client.h"
-#include "calc.h"
-#include "relman.h"
-#include "system.h"
+#include <system/slv_client.h>
+#include <system/calc.h>
+#include <system/relman.h>
+#include <system/system.h>
 #include "checkdim.h"
 
 #define prompt printf

@@ -52,21 +52,12 @@
 
 #include <compiler/ascCompiler.h>
 #include <compiler/instance_enum.h>
-
-
-
 #include <compiler/units.h>
-#include <solver/slv_types.h>
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/logrel.h>
-#include <solver/discrete.h>
-#include <solver/mtx.h>
-#include <solver/slv_stdcalls.h>
 
-#ifndef lint
-static CONST char DriverID[] = "$Id: DriverNoTickle.c,v 1.1 2004/07/13 07:42:30 ballan Exp $";
-#endif
+#include <linear/mtx.h>
+
+#include <system/slv_client.h>
+#include <system/slv_stdcalls.h>
 
 /*
  *  EXPORTED VARIABLES

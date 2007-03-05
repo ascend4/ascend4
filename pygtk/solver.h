@@ -8,10 +8,7 @@
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <compiler/instance_enum.h>
-#include <solver/slv_types.h>
-#include <linear/mtx.h>
-#include <solver/slv_common.h>
-#include <solver/slv_client.h>
+#include <system/slv_client.h>
 }
 
 /**

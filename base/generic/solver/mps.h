@@ -35,7 +35,7 @@
 #define ASC_MPS_H
 
 #include <utilities/ascConfig.h>
-#include "var.h"
+#include <system/var.h>
 
 /**	@addtogroup solver Solver
 	@{

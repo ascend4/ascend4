@@ -39,9 +39,7 @@
 #include <general/dstring.h>
 
 #include <compiler/instance_enum.h>
-
 #include <compiler/instance_name.h>
-
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
 #include <compiler/expr_types.h>
@@ -72,7 +70,7 @@
 #include <compiler/setinst_io.h>
 #include <compiler/units.h>
 #include <compiler/qlfdid.h>
-#include <solver/slv_types.h>
+#include <system/slv_types.h>
 #include "HelpProc.h"
 #include <compiler/plot.h>
 #include "BrowserQuery.h"
@@ -81,11 +79,6 @@
 #include "BrowserProc.h"
 #include "UnitsProc.h"
 #include <packages/ascFreeAllVars.h>
-
-#ifndef lint
-static CONST char BrowserQueryID[] = "$Id: BrowserQuery.c,v 1.51 2003/08/23 18:43:04 ballan Exp $";
-#endif
-
 
 #ifndef MAXIMUM_STRING_LENGTH
 #define MAXIMUM_STRING_LENGTH 2048

@@ -78,15 +78,7 @@
 
 #include <linear/mtx.h>
 
-#include <solver/slv_types.h>
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/logrel.h>
-#include <solver/bnd.h>
-#include <solver/slv_common.h>
-#include <solver/slv_param.h>
+#include <system/slv_client.h>
 
 #include "samplelist.h"
 

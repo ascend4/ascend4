@@ -39,7 +39,7 @@
 #include <compiler/atomvalue.h>
 #include <compiler/instquery.h>
 
-#include <solver/system.h>
+#include <system/system.h>
 
 #define DEBUG 1
 

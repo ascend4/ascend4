@@ -36,8 +36,6 @@
 #include <general/dstring.h>
 
 #include <compiler/instance_enum.h>
-
-
 #include <compiler/expr_types.h>
 #include <compiler/relation_io.h>
 #include <compiler/symtab.h>
@@ -57,7 +55,7 @@
 #include <compiler/extcall.h>
 #include <compiler/instance_name.h>
 #include <compiler/qlfdid.h>
-#include <solver/slv_types.h>
+#include <system/slv_types.h>
 #include "HelpProc.h"
 #include "BrowserProc.h"
 #include "BrowserRel_io.h"

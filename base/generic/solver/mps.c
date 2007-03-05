@@ -68,7 +68,7 @@
 #include <general/tm_time.h>
 #include <utilities/mem.h>
 
-#include "slv_client.h"
+#include <system/slv_client.h>
 #include "slv6.h"
 
 #ifdef STATIC_MPS

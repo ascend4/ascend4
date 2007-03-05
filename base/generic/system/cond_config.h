@@ -29,9 +29,9 @@
 #include <utilities/ascConfig.h>
 #include <compiler/instance_enum.h>
 
-#include "conditional.h"
-#include "rel.h"
-#include "logrel.h"
+#include <system/conditional.h>
+#include <system/rel.h>
+#include <system/logrel.h>
 
 
 /**	@addtogroup analyse Analyse

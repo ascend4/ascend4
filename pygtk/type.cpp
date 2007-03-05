@@ -19,12 +19,10 @@ extern "C"{
 #include <compiler/type_desc.h>
 #include <compiler/bintoken.h>
 #include <linear/mtx.h>
-#include <solver/calc.h>
-#include <solver/relman.h>
-#include <solver/slv_common.h>
-#include <solver/slv_client.h>
-#include <solver/system.h>
-#include <solver/slv_interface.h>
+#include <system/calc.h>
+#include <system/relman.h>
+#include <system/slv_client.h>
+#include <system/system.h>
 #include <compiler/simlist.h>
 }
 

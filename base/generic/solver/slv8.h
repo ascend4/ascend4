@@ -26,7 +26,7 @@
 #ifndef ASC_SLV8_H
 #define ASC_SLV8_H
 
-#include "slv_client.h"
+#include <system/slv_client.h>
 
 /**	@addtogroup solver Solver
 	@{

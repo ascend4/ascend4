@@ -28,8 +28,8 @@ extern "C"{
 #include <compiler/typedef.h>
 #include <compiler/library.h>
 #include <compiler/childinfo.h>
-#include <solver/slv_types.h>
-#include <solver/system.h>
+#include <system/slv_types.h>
+#include <system/system.h>
 #include <utilities/ascEnvVar.h>
 #include <compiler/symtab.h>
 #include <general/table.h>

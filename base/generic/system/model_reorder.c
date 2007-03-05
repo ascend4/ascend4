@@ -40,7 +40,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 
-#include "slv_client.h"
+#include <system/slv_client.h>
 
 #define MRDEBUG 0
 /**< if !=0, generate spew while working */

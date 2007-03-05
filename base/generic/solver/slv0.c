@@ -41,10 +41,6 @@
 #include <general/tm_time.h>
 #include <utilities/mem.h>
 
-#include "calc.h"
-#include "relman.h"
-#include "slv_common.h"
-
 #if !defined(STATIC_SLV) && !defined(DYNAMIC_SLV)
 /* do nothing */
 int slv0_register(SlvFunctionsT *f)

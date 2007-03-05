@@ -71,12 +71,11 @@
 
 #include <linear/mtx.h>
 
-#include <solver/slv_common.h>
-#include <solver/slv_client.h>
-#include <solver/slv_server.h>   /* KHACK: not sure if this should be here */
+#include <system/slv_client.h>
+#include <system/slv_server.h>   /* KHACK: not sure if this should be here */
+#include <system/system.h>
+#include <system/cond_config.h>
 #include <solver/slv_interface.h>
-#include <solver/system.h>
-#include <solver/cond_config.h>
 
 #include "old_utils.h"
 #include "HelpProc.h"

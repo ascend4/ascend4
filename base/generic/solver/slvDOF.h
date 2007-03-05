@@ -39,7 +39,7 @@
 #ifndef ASC_SLVDOF_H
 #define ASC_SLVDOF_H
 
-#include "slv_client.h"
+#include <system/slv_client.h>
 
 /**	@addtogroup solver Solver
 	@{

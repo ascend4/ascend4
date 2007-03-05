@@ -1944,7 +1944,7 @@ else:
 
 libascend_env = env.Copy()
 
-dirs = ['general','utilities','compiler','solver','integrator','packages','linear']
+dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear']
 
 srcs = []
 for d in dirs:

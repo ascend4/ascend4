@@ -35,23 +35,16 @@
 #include <compiler/symtab.h>
 #include <compiler/module.h>
 #include <compiler/library.h>
-
-
 #include <compiler/child.h>
 #include <compiler/type_desc.h>
 #include <compiler/type_descio.h>
 #include <compiler/expr_types.h>
 #include <compiler/stattypes.h>
 #include <compiler/statio.h>
-#include <solver/slv_types.h>
+#include <system/slv_types.h>
 #include "HelpProc.h"
 #include "DisplayProc.h"
 #include "Commands.h"
-
-#ifndef lint
-static CONST char DisplayProcID[] = "$Id: DisplayProc.c,v 1.19 2003/08/23 18:43:05 ballan Exp $";
-#endif
-
 
 #define MAXIMUM_ID_LENGTH 80
 #define MAXIMUM_STR_LENGTH 256

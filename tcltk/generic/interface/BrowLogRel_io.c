@@ -60,7 +60,7 @@
 #include <compiler/logrel_io.h>
 #include <compiler/instance_name.h>
 #include <compiler/qlfdid.h>
-#include <solver/slv_types.h>
+#include <system/slv_types.h>
 #include "HelpProc.h"
 #include "BrowserProc.h"
 #include "BrowLogRel_io.h"

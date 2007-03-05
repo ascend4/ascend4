@@ -45,11 +45,11 @@
 #include <utilities/ascPanic.h>
 #include <general/list.h>
 
-#include "calc.h"
-#include "relman.h"
-#include "slv_common.h"
-#include "slv_stdcalls.h"
-#include "block.h"
+#include <system/calc.h>
+#include <system/relman.h>
+#include <system/slv_common.h>
+#include <system/slv_stdcalls.h>
+#include <system/block.h>
 
 #if !defined(STATIC_NGSLV) && !defined(DYNAMIC_NGSLV)
 int slv7_register(SlvFunctionsT *f)
