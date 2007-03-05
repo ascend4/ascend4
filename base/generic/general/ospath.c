@@ -642,8 +642,22 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 			STRCAT(sub,PATH_SEPARATOR_STR);
 		}
 	}else{
-		E("NO PARENT DIR");
-		return ospath_new_noclean(fp->path);
+		/* ie pos<fp->path */
+		M("NO PARENT DIR");
+		if(fp->path[0]==PATH_SEPARATOR_CHAR){
+			E("NO PARENT DIR");
+			return ospath_new_noclean(fp->path);
+		}else{
+			M("RETURNING '.'");
+#ifdef WINPATHS
+			/* eg 'c:bin' --> 'c:' */
+			STRCPY(sub,fp->drive);
+			return ospath_new_noclean(sub);
+#else
+			/* eg 'bin' --> '.' */
+			return ospath_new_noclean(".");
+#endif
+		}
 	}
 
 	M("Creating 'sub'");
