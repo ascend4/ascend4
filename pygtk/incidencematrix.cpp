@@ -9,8 +9,7 @@ using namespace std;
 
 extern "C"{
 #include <linear/mtx.h>
-#include <solver/slv_common.h>
-#include <solver/slv_client.h>
+#include <system/slv_client.h>
 }
 
 IncidencePoint::IncidencePoint(const int&row, const int &col, const IncidencePointType &type) : row(row), col(col), type(type){

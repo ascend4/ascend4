@@ -67,10 +67,10 @@
 #include <utilities/ascPanic.h>
 #include <compiler/instance_enum.h>
 
-#include <solver/slv_client.h>
-#include <solver/relman.h>
-#include <solver/block.h>
-#include <solver/slv_stdcalls.h>
+#include <system/slv_client.h>
+#include <system/relman.h>
+#include <system/block.h>
+#include <system/slv_stdcalls.h>
 
 #include "idalinear.h"
 #include "idaanalyse.h"

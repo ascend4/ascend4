@@ -48,10 +48,10 @@
 
 #include <linear/mtx_vector.h>
 
-#include "calc.h"
-#include "relman.h"
-#include "slv_stdcalls.h"
-#include "block.h"
+#include <system/calc.h>
+#include <system/slv_stdcalls.h>
+#include <system/relman.h>
+#include <system/block.h>
 
 #define CANOPTIMIZE FALSE
 /**< TRUE iff optimization code completed, meaning relman_diff fixed. */

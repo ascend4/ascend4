@@ -42,11 +42,10 @@
 #include <utilities/mem.h>
 #include <general/list.h>
 
-#include "calc.h"
-#include "relman.h"
-#include "slv_stdcalls.h"
+#include <system/slv_stdcalls.h>
+#include <system/block.h>
+
 #include "rsqp.h"
-#include "block.h"
 
 /*
  * name of this solver.

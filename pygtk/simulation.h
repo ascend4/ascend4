@@ -14,7 +14,7 @@
 #include "config.h"
 extern "C"{
 #include <compiler/createinst.h>
-#include <solver/slv_types.h>
+#include <system/slv_types.h>
 }
 
 class Solver;

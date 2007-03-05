@@ -39,17 +39,17 @@
 
 #include <linear/mtx_reorder.h>
 
-#include "calc.h"
-#include "relman.h"
-#include "logrelman.h"
-#include "bndman.h"
-#include "cond_config.h"
-#include "slv_common.h"
-#include "slv_stdcalls.h"
+#include <system/calc.h>
+#include <system/relman.h>
+#include <system/logrelman.h>
+#include <system/bndman.h>
+#include <system/slv_stdcalls.h>
+#include <system/cond_config.h>
+
 #include "slvDOF.h"
 
 #ifdef ASC_WITH_CONOPT
-# include <solver/conopt.h>
+# include "conopt.h"
 #else
 # define MAX_INT MAXINT
 # define MAX_REAL MAXDOUBLE

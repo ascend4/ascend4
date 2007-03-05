@@ -40,10 +40,10 @@
 #include <linear/linsolqr.h>
 #include <linear/densemtx.h>
 
-#include <solver/calc.h>
-#include <solver/relman.h>
-#include <solver/slv_stdcalls.h>
-#include <solver/slv_client.h>
+#include <system/calc.h>
+#include <system/relman.h>
+#include <system/slv_stdcalls.h>
+#include <system/slv_client.h>
 
 /*--------------------------------------------------
 	The following functions are provided only for use by LSODE. We want to

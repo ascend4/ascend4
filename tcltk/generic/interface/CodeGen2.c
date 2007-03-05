@@ -53,8 +53,8 @@ static CONST char CodeGen2ID[] = "$Id: CodeGen2.c,v 1.22 2003/08/23 18:43:05 bal
 #include <compiler/instance_io.h>
 #include <compiler/instance_enum.h>
 #include <compiler/relation_io.h>
-#include <solver/system.h>
-#include <solver/var.h>
+#include <system/system.h>
+#include <system/var.h>
 #include "Qlfdid.h"
 #include "UnitsProc.h"
 #include "CodeGen.h"

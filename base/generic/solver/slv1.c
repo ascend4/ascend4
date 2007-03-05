@@ -59,10 +59,6 @@
 #include <compiler/vlist.h>
 #include <compiler/relation.h>  /* relation enum */
 
-#include "calc.h"
-#include "relman.h"
-#include "slv_client.h"
-
 #if !defined(STATIC_MINOS) && !defined(DYNAMIC_MINOS)
 /* do nothing */
 int slv1_register(SlvFunctionsT *f)

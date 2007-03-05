@@ -37,15 +37,14 @@
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_name.h>
-
-#include <solver/incidence.h>
-
 #include <compiler/expr_types.h>
 #include <compiler/functype.h>
 #include <compiler/func.h>
 #include <compiler/extfunc.h>
 #include <compiler/extcall.h>
 #include <compiler/relation_type.h>
+
+#include <solver/incidence.h>
 
 #include "old_utils.h"
 #include "HelpProc.h"

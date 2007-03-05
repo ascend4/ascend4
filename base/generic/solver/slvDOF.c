@@ -37,10 +37,9 @@
 #include <general/mathmacros.h>
 #include <utilities/mem.h>
 
-#include "relman.h"
-#include "cond_config.h"
-#include "slv_common.h"
-#include "slv_stdcalls.h"
+#include <system/relman.h>
+#include <system/slv_stdcalls.h>
+#include <system/cond_config.h>
 
 #define SLVDOF(s) ((slvDOF_system_t)(s))
 

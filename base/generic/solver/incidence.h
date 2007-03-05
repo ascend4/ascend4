@@ -31,9 +31,9 @@
 
 /* The includes required just for this *header* to load */
 #include <utilities/ascConfig.h>
-#include "slv_types.h"
-#include "var.h"
-#include "rel.h"
+#include <system/slv_types.h>
+#include <system/var.h>
+#include <system/rel.h>
 
 /* Note, removed 'own' attribute from mplotvars struct since it was unused */
 

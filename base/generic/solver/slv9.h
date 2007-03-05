@@ -38,7 +38,7 @@
 	@{
 */
 
-#include "slv_client.h"
+#include <system/slv_client.h>
 
 typedef struct slv9_system_structure *slv9_system_t;
 

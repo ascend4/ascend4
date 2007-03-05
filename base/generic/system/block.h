@@ -33,12 +33,12 @@
 #ifndef ASC_SLV_BLOCK_H
 #define ASC_SLV_BLOCK_H
 
-#include "slv_types.h"
+#include <system/slv_types.h>
 #include <stdio.h>
 #include <linear/mtx_reorder.h>
 
-#include "var.h"
-#include "rel.h"
+#include <system/var.h>
+#include <system/rel.h>
 
 
 /**	@addtogroup system System

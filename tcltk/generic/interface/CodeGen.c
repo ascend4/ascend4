@@ -48,7 +48,7 @@
 #include <compiler/exprsym.h>
 #include <compiler/relation_util.h>
 #include <compiler/relation_io.h>
-#include <solver/system.h>
+#include <system/system.h>
 #include "Qlfdid.h"
 #include "CodeGen.h"
 

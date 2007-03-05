@@ -39,8 +39,6 @@
 #include <compiler/symtab.h>
 #include <compiler/braced.h>
 #include <compiler/notate.h>
-
-
 #include <compiler/expr_types.h>
 #include <compiler/syntax.h>
 #include <compiler/module.h>
@@ -58,7 +56,7 @@
 #include <compiler/proc.h>
 #include <compiler/nameio.h>
 #include <compiler/parser.h>
-#include <solver/slv_types.h>
+#include <system/slv_types.h>
 #include "HelpProc.h"
 #include "LibraryProc.h"
 #include "Commands.h"

@@ -59,11 +59,10 @@
 #include <linear/mtx.h>
 #include <linear/linutils.h>
 
-#include <solver/slv_common.h>
-#include <solver/calc.h>
-#include <solver/relman.h>
-#include <solver/slv_client.h>
-#include <solver/system.h>
+#include <system/calc.h>
+#include <system/relman.h>
+#include <system/slv_client.h>
+#include <system/system.h>
 
 #include <packages/sensitivity.h>
 

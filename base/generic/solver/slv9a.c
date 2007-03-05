@@ -34,14 +34,12 @@
 #include <utilities/mem.h>
 #include <general/list.h>
 
-#include "calc.h"
-#include "relman.h"
-#include "logrelman.h"
-#include "bndman.h"
-#include "slv_common.h"
-#include "cond_config.h"
-#include "slv_stdcalls.h"
-
+#include <system/calc.h>
+#include <system/relman.h>
+#include <system/logrelman.h>
+#include <system/bndman.h>
+#include <system/slv_stdcalls.h>
+#include <system/cond_config.h>
 
 #if !defined(STATIC_LRSLV) || defined(DYNAMIC_LRSLV)
 int slv9a_register(SlvFunctionsT *f)

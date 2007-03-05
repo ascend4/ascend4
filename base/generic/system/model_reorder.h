@@ -39,7 +39,7 @@
 #include <utilities/ascConfig.h>
 #include <linear/mtx.h>
 
-#include "slv_types.h"
+#include <system/slv_types.h>
 
 
 /**	@addtogroup solver Solver

@@ -37,7 +37,7 @@
 #include <linear/densemtx.h>
 
 #include <packages/sensitivity.h>
-#include <solver/system.h>
+#include <system/system.h>
 
 ExtMethodRun do_finite_diff_eval;
 

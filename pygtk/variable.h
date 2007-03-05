@@ -30,8 +30,8 @@ struct Relation;
 #include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
-#include <solver/slv_types.h>
-#include <solver/var.h>
+#include <system/slv_types.h>
+#include <system/var.h>
 }
 
 /**

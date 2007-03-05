@@ -35,7 +35,7 @@
 #ifndef ASC_SLV9A_H
 #define ASC_SLV9A_H
 
-#include "slv_client.h"
+#include <system/slv_client.h>
 
 /**	@addtogroup solver Solver
 	@{

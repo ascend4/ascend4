@@ -45,13 +45,12 @@ extern "C"{
 #include <compiler/pending.h>
 #include <compiler/importhandler.h>
 #include <linear/mtx.h>
-#include <solver/calc.h>
-#include <solver/relman.h>
-#include <solver/system.h>
-#include <solver/slv_interface.h>
+#include <system/calc.h>
+#include <system/relman.h>
+#include <system/system.h>
 #include <solver/slvDOF.h>
-#include <solver/slv_stdcalls.h>
-#include <solver/slv_server.h>
+#include <system/slv_stdcalls.h>
+#include <system/slv_server.h>
 }
 
 #include "simulation.h"

@@ -21,8 +21,8 @@
 */
 
 #include <utilities/config.h>
-#include "slv_client.h"
-#include "slv_server.h"
+#include <system/slv_client.h>
+#include <system/slv_server.h>
 
 #include <math.h>
 #include <stdarg.h>
@@ -36,9 +36,9 @@
 
 #include <linear/mtx.h>
 
-#include "bndman.h"
-#include "analyze.h"
-#include "system_impl.h"
+#include <system/bndman.h>
+#include <system/analyze.h>
+#include <system/system_impl.h>
 
 ASC_EXPORT int g_SlvNumberOfRegisteredClients=0; /* see header */
 

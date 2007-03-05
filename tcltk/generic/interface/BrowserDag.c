@@ -34,9 +34,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <compiler/instance_enum.h>
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/slv_client.h>
+#include <system/slv_client.h>
 #include "BrowserQuery.h"
 #include "BrowserDag.h"
 #include <general/mathmacros.h>

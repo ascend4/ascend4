@@ -33,14 +33,12 @@
 #include <linear/linsol.h>
 #include <linear/linsolqr.h>
 
-#include "discrete.h"
-#include "conditional.h"
-#include "logrel.h"
-#include "bnd.h"
-
-#include "slv_common.h"
-
-#include "slv_client.h"
+#include <system/discrete.h>
+#include <system/conditional.h>
+#include <system/logrel.h>
+#include <system/bnd.h>
+#include <system/slv_common.h>
+#include <system/slv_client.h>
 
 /*
 	--removed some old notes from 1996-1997, please see code repository--

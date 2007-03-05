@@ -42,8 +42,6 @@
 #include <compiler/instance_enum.h>
 #include <compiler/cmpfunc.h>
 #include <compiler/check.h>
-
-
 #include <compiler/expr_types.h>
 #include <compiler/setinstval.h>
 #include <compiler/extfunc.h>
@@ -75,7 +73,9 @@
 #include <compiler/simlist.h>
 #include <compiler/anontype.h>
 #include <compiler/qlfdid.h>
-#include <solver/slv_types.h>
+
+#include <system/slv_types.h>
+
 #include "HelpProc.h"
 #include "BrowserProc.h"
 #include "Qlfdid.h"

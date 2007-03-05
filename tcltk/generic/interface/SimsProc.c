@@ -69,7 +69,7 @@
 #include <compiler/bit.h>
 #include <compiler/simlist.h>
 #include <compiler/qlfdid.h>
-#include <solver/slv_types.h>
+#include <system/slv_types.h>
 #include "HelpProc.h"
 #include "Qlfdid.h"
 #include "Driver.h"

@@ -37,21 +37,14 @@
 #include <utilities/ascConfig.h>
 #include <general/list.h>
 
-
 #include <compiler/instance_enum.h>
-
-
 #include <compiler/instance_name.h>
 #include <compiler/units.h>
 
 #include <linear/mtx.h>
 
-#include <solver/slv_types.h>
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/discrete.h>
-#include <solver/logrel.h>
-#include <solver/slv_common.h>
+#include <system/slv_client.h>
+
 #include "HelpProc.h"
 #include "Commands.h"
 #include "LibraryProc.h"

@@ -48,9 +48,9 @@
 
 #include <linear/mtx.h>
 
-#include "calc.h"
-#include "relman.h"
-#include "slv_common.h"
+#include <system/calc.h>
+#include <system/relman.h>
+#include <system/slv_common.h>
 #include "mps.h"
 
 #if !defined(STATIC_MPS) && !defined(DYNAMIC_MPS)
