@@ -4,6 +4,7 @@ REQUIRE "johnpye/thermo_types.a4c";
 (*
 	Solution the Horwitz A, "The Case of the Collapsing Can", Chemical
 	Engineering Progress, Jun 1997, pp.61-65.
+	http://proquest.umi.com/pqdweb?did=18074937&sid=2&Fmt=2&clientId=25620&RQT=309&VName=PQD
 
 	"A fixed-volume vessel contains one pound of saturated water vapor at 14.7 
 	psia. One pound of water at 70 deg F and 14.7 psia is introduced

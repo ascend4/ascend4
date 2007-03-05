@@ -445,8 +445,8 @@ linsolqr_system_t linsolqr_create()
 linsolqr_system_t linsolqr_create_default(){
 	linsolqr_system_t L;
 	L = linsolqr_create();
-	L->fmethod = plain_qr;
-	L->rmethod = tspk1;
+	L->fmethod = ranki_ba2;
+	L->rmethod = spk1;
 	return L;
 }
 

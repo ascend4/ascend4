@@ -9,7 +9,7 @@
 # include <system/slv_stdcalls.h>
 # include <system/block.h>
 # include <system/diffvars_impl.h>
-
+# include <system/jacobian.h>
 # include <solver/slvDOF.h>
 #endif
 
@@ -314,56 +314,116 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 }
 
 /**
-	Construct the matrix dg/y_a and evaluate whether or not it is singular.
-	If non-singular, it means that provided the differential equations are in 
-	semi-implicit form, our system will be of index 1
+	Check for index-1 DAE system. We plan to do this by checking that df/dyd'
+	and dg/dya are both non-singular (and of course square). Valid systems
+	can (we think?) be written that don't meet these requirements but they
+	will have index problems and may not solve with IDA.
 */
 int integrator_ida_check_index(IntegratorSystem *sys){
-	mtx_matrix_t M;
 	linsolqr_system_t L;
 	mtx_region_t R;
-	int r;
+	int res, r;
+	struct SystemJacobianStruct df_dydp, dg_dya;
 
-	CONSOLE_DEBUG("There are %d algebraic variables",sys->n_y - sys->n_ydot);
-	if(0 == sys->n_y - sys->n_ydot){
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No algebraic variables were found; unable to check for index problems");
-		return 0;
+	CONSOLE_DEBUG("system has total of %d rels and %d vars"
+		,slv_get_num_solvers_rels(sys->system)
+		,slv_get_num_solvers_vars(sys->system)
+	);
+
+	CONSOLE_DEBUG("VAR_DERIV = 0x%x = %d",VAR_DERIV, VAR_DERIV);
+	CONSOLE_DEBUG("system_vfilter_deriv.matchbits = 0x%x",system_vfilter_deriv.matchbits);
+	CONSOLE_DEBUG("system_vfilter_deriv.matchvalue= 0x%x",system_vfilter_deriv.matchvalue);
+
+	asc_assert(system_vfilter_deriv.matchbits & VAR_DERIV);
+	asc_assert(system_vfilter_deriv.matchvalue & VAR_DERIV);
+
+	res = system_jacobian(sys->system
+		, &system_rfilter_diff
+		, &system_vfilter_deriv
+		, 1 /* safe evaluation */
+		, &df_dydp
+	);
+
+	if(res){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating df/dyd'");
+	}
+	CONSOLE_DEBUG("df/dyd': nr = %d, nv = %d",df_dydp.n_rels,df_dydp.n_vars);
+
+	res = system_jacobian(sys->system
+		, &system_rfilter_algeb
+		, &system_vfilter_algeb
+		, 1 /* safe evaluation */
+		, &dg_dya
+	);
+
+	if(res){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating dg/dya");
+	}
+	CONSOLE_DEBUG("dg/dya: nr = %d, nv = %d",dg_dya.n_rels,dg_dya.n_vars);
+
+	if((df_dydp.n_rels == 0) ^ (df_dydp.n_vars == 0)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"df/dyd' is a bit ambiguous");
+	}
+		
+	if(dg_dya.n_rels <= 0){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No algebraic equations were found in the DAE system!");
+	}else if(dg_dya.n_rels != dg_dya.n_vars){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"The algebraic part of the DAE jacobian, dg/dya, is not square!");
+	}else{
+		/* check the rank */
+		R.row.low = R.col.low = 0;
+		R.row.high = R.col.high = mtx_order(dg_dya.M) - 1;
+
+		L = linsolqr_create_default();
+		linsolqr_set_matrix(L,dg_dya.M);
+		linsolqr_set_region(L,R);
+		linsolqr_prep(L,linsolqr_fmethod_to_fclass(linsolqr_fmethod(L)));
+		linsolqr_reorder(L, &R, linsolqr_rmethod(L));
+		linsolqr_factor(L,linsolqr_fmethod(L));
+		r = linsolqr_rank(L);
+
+		linsolqr_destroy(L);
+		
+		if(r != dg_dya.n_rels){
+			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Your DAE system has an index problem: the matrix dg/dya is not full rank");
+		}
 	}
 
-	if(0 == slv_get_num_solvers_rels(sys->system) - sys->n_diffeqs){
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No algebraic equations were found; unable to check for index problems");
-		return 0;
+	if(df_dydp.n_rels <= 0){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No differential equations were found in the DAE system!");
+	}else if(df_dydp.n_rels != df_dydp.n_vars){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"The differential part of the the jacobian dg/dya is not square!");
+	}else{
+		/* check the rank */
+		R.row.low = R.col.low = 0;
+		R.row.high = R.col.high = mtx_order(df_dydp.M) - 1;
+
+		L = linsolqr_create_default();
+		linsolqr_set_matrix(L,dg_dya.M);
+		linsolqr_set_region(L,R);
+		linsolqr_prep(L,linsolqr_fmethod_to_fclass(linsolqr_fmethod(L)));
+		linsolqr_reorder(L, &R, linsolqr_rmethod(L));
+		linsolqr_factor(L,linsolqr_fmethod(L));
+		r = linsolqr_rank(L);
+
+		linsolqr_destroy(L);
+
+		if(r != df_dydp.n_rels){
+			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Your DAE system has an index problem: the matrix df/dyd' is not full rank");
+		}
 	}
-	
-	M = integrator_ida_dgdya(sys);
-	if(mtx_order(M)==0){
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Matrix dg/dya is empty; unable to check for index problems.");
-		return 0;
+
+	if(df_dydp.n_rels + dg_dya.n_rels == 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Both df/dyd' and dg/dya were empty!");
 	}
 
-	CONSOLE_DEBUG("Order of M is %d",mtx_order(M));
-
-	R.row.low = R.col.low = 0;
-	R.row.high = R.col.high = mtx_order(M) - 1;
-
-	L = linsolqr_create_default();
-	linsolqr_set_matrix(L,M);
-	linsolqr_set_region(L,R);
-	linsolqr_prep(L,linsolqr_fmethod_to_fclass(linsolqr_fmethod(L)));
-	linsolqr_reorder(L, &R, linsolqr_rmethod(L));
-	linsolqr_factor(L,linsolqr_fmethod(L));
-	r = linsolqr_rank(L);
-
-	linsolqr_destroy(L);
-	/* mtx_destroy(M); */
-
-	if(r == sys->n_y - sys->n_ydot){
-		CONSOLE_DEBUG("No index problem :-) ...so long as differential equations are semi-explicit");
-		return 0;
-	}
-	
-	CONSOLE_DEBUG("RANK of dg/dy_a is %d",r);
-	return 1;
+	ASC_FREE(df_dydp.vars);
+	ASC_FREE(df_dydp.rels);
+	ASC_FREE(dg_dya.vars);
+	ASC_FREE(dg_dya.rels);
+	mtx_destroy(dg_dya.M);
+	mtx_destroy(df_dydp.M);
+	return 0;
 }	
 
 /** 

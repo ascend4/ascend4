@@ -991,145 +991,145 @@ extern int32 slv_get_num_models(slv_system_t sys);
 	@ref masterlists
 */
 
-ASC_DLLSPEC int32 slv_count_solvers_vars(slv_system_t sys, var_filter_t *vfilter);
+ASC_DLLSPEC int32 slv_count_solvers_vars(slv_system_t sys, const var_filter_t *vfilter);
 /**< 
 	Returns the number of solver variables matching the specified filter.
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_pars(slv_system_t sys, var_filter_t *vfilter);
+extern int32 slv_count_solvers_pars(slv_system_t sys, const var_filter_t *vfilter);
 /**<
 	Returns the number of solver parameters matching the specified filter.
 	@ref solverslists
 */
 
-ASC_DLLSPEC int32 slv_count_solvers_unattached(slv_system_t sys, var_filter_t *vfilter);
+ASC_DLLSPEC int32 slv_count_solvers_unattached(slv_system_t sys, const var_filter_t *vfilter);
 /**< 
 	Returns the number of solver unattached variables matching the specified filter.
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_dvars(slv_system_t sys, dis_filter_t *dfilter);
+extern int32 slv_count_solvers_dvars(slv_system_t sys, const dis_filter_t *dfilter);
 /**< 
 	Returns the number of solver discrete variables matching the specified filter. 
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_disunatt(slv_system_t sys, dis_filter_t *dfilter);
+extern int32 slv_count_solvers_disunatt(slv_system_t sys, const dis_filter_t *dfilter);
 /**< 
 	Returns the number of solver unattached discrete variables matching the specified filter. 
 	@ref varlists
 */
 
-ASC_DLLSPEC int32 slv_count_solvers_rels(slv_system_t sys, rel_filter_t *rfilter);
+ASC_DLLSPEC int32 slv_count_solvers_rels(slv_system_t sys, const rel_filter_t *rfilter);
 /**< 
 	Returns the number of solver relations matching the specified filter. 
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_condrels(slv_system_t sys, rel_filter_t *rfilter);
+extern int32 slv_count_solvers_condrels(slv_system_t sys, const rel_filter_t *rfilter);
 /**<
 	Returns the number of solver conditional relations matching the specified filter.
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_objs(slv_system_t sys, rel_filter_t *rfilter);
+extern int32 slv_count_solvers_objs(slv_system_t sys, const rel_filter_t *rfilter);
 /**< 
 	Returns the number of solver objective relations matching the specified filter.
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_logrels(slv_system_t sys, logrel_filter_t *lrfilter);
+extern int32 slv_count_solvers_logrels(slv_system_t sys, const logrel_filter_t *lrfilter);
 /**<
 	Returns the number of solver logical relations matching the specified filter.
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_condlogrels(slv_system_t sys, logrel_filter_t *lrfilter);
+extern int32 slv_count_solvers_condlogrels(slv_system_t sys, const logrel_filter_t *lrfilter);
 /**<
 	Returns the number of solver conditional logical relations matching the specified filter. 
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_whens(slv_system_t sys, when_filter_t *wfilter);
+extern int32 slv_count_solvers_whens(slv_system_t sys, const when_filter_t *wfilter);
 /**<
 	Returns the number of solver whens matching the specified filter.
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_bnds(slv_system_t sys, bnd_filter_t *bfilter);
+extern int32 slv_count_solvers_bnds(slv_system_t sys, const bnd_filter_t *bfilter);
 /**<
 	Returns the number of solver boundaries matching the specified filter.
 	@ref solverslists
 */
 
-extern int32 slv_count_master_vars(slv_system_t sys, var_filter_t *vfilter);
+extern int32 slv_count_master_vars(slv_system_t sys, const var_filter_t *vfilter);
 /**<
 	Returns the number of master variables matching the specified filter.
 	@ref masterlists
 */
 
-extern int32 slv_count_master_pars(slv_system_t sys, var_filter_t *vfilter);
+extern int32 slv_count_master_pars(slv_system_t sys, const var_filter_t *vfilter);
 /**<
 	Returns the number of master parameters matching the specified filter.
 	@ref masterlists
 */
 
-extern int32 slv_count_master_unattached(slv_system_t sys, var_filter_t *vfilter);
+extern int32 slv_count_master_unattached(slv_system_t sys, const var_filter_t *vfilter);
 /**<
 	Returns the number of master unattached variables matching the specified filter.
 	@ref masterlists
 */
 
-extern int32 slv_count_master_dvars(slv_system_t sys, dis_filter_t *dfilter);
+extern int32 slv_count_master_dvars(slv_system_t sys, const dis_filter_t *dfilter);
 /**<
 	Returns the number of master discrete variables matching the specified filter.
 	@ref masterlists
 */
 
-extern int32 slv_count_master_disunatt(slv_system_t sys, dis_filter_t *dfilter);
+extern int32 slv_count_master_disunatt(slv_system_t sys, const dis_filter_t *dfilter);
 /**<
 	Returns the number of master unattached discrete variables matching the specified filter.
 	@ref masterlists
 */
 
-extern int32 slv_count_master_rels(slv_system_t sys, rel_filter_t *rfilter);
+extern int32 slv_count_master_rels(slv_system_t sys, const rel_filter_t *rfilter);
 /**<
 	Returns the number of master relations matching the specified filter.
 	@ref masterlists
 */
 
-extern int32 slv_count_master_condrels(slv_system_t sys, rel_filter_t *rfilter);
+extern int32 slv_count_master_condrels(slv_system_t sys, const rel_filter_t *rfilter);
 /**<
 	Returns the number of master conditional relations matching the specified filter.
 	@ref masterlists
 */
 
-extern int32 slv_count_master_objs(slv_system_t sys, rel_filter_t *rfilter);
+extern int32 slv_count_master_objs(slv_system_t sys, const rel_filter_t *rfilter);
 /**<
 	Returns the number of master objective relations matching the specified filter. 
 	@ref masterlists
 */
 
-extern int32 slv_count_master_logrels(slv_system_t sys, logrel_filter_t *lrfilter);
+extern int32 slv_count_master_logrels(slv_system_t sys, const logrel_filter_t *lrfilter);
 /**<
 	Returns the number of master logical relations matching the specified filter.
 	@ref masterlists
 */
 
-extern int32 slv_count_master_condlogrels(slv_system_t sys, logrel_filter_t *lrfilter);
+extern int32 slv_count_master_condlogrels(slv_system_t sys, const logrel_filter_t *lrfilter);
 /**<
 	Returns the number of master conditional logical relations matching the specified filter.
 	@ref masterlists
 */
 
-extern int32 slv_count_master_whens(slv_system_t sys, when_filter_t *wfilter);
+extern int32 slv_count_master_whens(slv_system_t sys, const when_filter_t *wfilter);
 /**<
 	Returns the number of master whens matching the specified filter.
 	@ref masterlists
 */
 
-extern int32 slv_count_master_bnds(slv_system_t sys, bnd_filter_t *bfilter);
+extern int32 slv_count_master_bnds(slv_system_t sys, const bnd_filter_t *bfilter);
 /**<
 	Returns the number of master boundaries matching the specified filter.
 	@ref masterlists

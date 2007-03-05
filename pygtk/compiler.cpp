@@ -73,7 +73,7 @@ Compiler::sendBinaryCompilationOptions(){
 		);
 		bintoken_options_sent = true;
 	}else{
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"disabling bintoken compilation");
+		/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"disabling bintoken compilation\n"); */
 		bintoken_options_sent = false;
 		BinTokenSetOptions(NULL,NULL,NULL,NULL,NULL,0,1,1);
 	}

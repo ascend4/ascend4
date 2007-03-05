@@ -540,7 +540,7 @@ void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
     return;
   }
   if (TCEM != NULL) {
-    FPRINTF(ASCERR,"%s\n",TCEM);
+    CONSOLE_DEBUG("TCEM = %s",TCEM);
     TCEM = NULL;
   }
   if (StatInFOR(statement)) {
@@ -11585,8 +11585,7 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
     atl = Asc_DeriveAnonList(result);
 #if TIMECOMPILER
     classt = clock();
-    FPRINTF(ASCERR,
-            "Classification \t\t%lu (for relation sharing)\n",
+    CONSOLE_DEBUG("Classification: %lu (for relation sharing)",
             (unsigned long)(classt-start));
     start = clock();
 #endif
@@ -11629,16 +11628,14 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
       /* we did something, so try the binary compile */
 #if TIMECOMPILER
       classt = clock();
-      FPRINTF(ASCERR,
-            "Making tokens \t\t%lu (for relations)\n",
+      CONSOLE_DEBUG("Making tokens: %lu (for relations)",
             (unsigned long)(classt-start));
       start = clock();
 #endif
       BinTokensCreate(result,BT_C);
 #if TIMECOMPILER
       classt = clock();
-      FPRINTF(ASCERR,
-              "build/link \t\t%lu (for bintokens)\n",
+      CONSOLE_DEBUG("build/link: %lu (for bintokens)",
               (unsigned long)(classt-start));
 #endif
     }
@@ -12247,7 +12244,7 @@ static struct Instance *Pass2InstantiateModel(struct Instance *result,
 #endif
       Pass2ProcessPendingInstancesAnon(result);
 #if TIMECOMPILER
-      FPRINTF(ASCERR, "Relations in the instance U %d + C %d = T %d.\n" ,
+      CONSOLE_DEBUG("Relations in the instance U %d + C %d = T %d." ,
          g_ExecuteREL_CreateTokenRelation_calls,g_CopyAnonRelation,
          g_CopyAnonRelation+g_ExecuteREL_CreateTokenRelation_calls);
 #endif
@@ -12515,16 +12512,16 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
 #else
     char *timeunit = "microseconds";
 #endif
-    FPRINTF(ASCERR,"Compilation times (%s):\n",timeunit);
-    FPRINTF(ASCERR,"Phase 1 models \t\t%lu\n",
+    CONSOLE_DEBUG("Compilation times (%s):\n",timeunit);
+    CONSOLE_DEBUG("Phase 1 models \t\t%lu\n",
             (unsigned long)(phase1t-start));
-    FPRINTF(ASCERR,"Phase 2 relations \t\t%lu\n",
+    CONSOLE_DEBUG("Phase 2 relations \t\t%lu\n",
             (unsigned long)(phase2t-phase1t));
-    FPRINTF(ASCERR,"Phase 3 logical \t\t%lu\n",
+    CONSOLE_DEBUG("Phase 3 logical \t\t%lu\n",
             (unsigned long)(phase3t-phase2t));
-    FPRINTF(ASCERR,"Phase 4 when-case \t\t%lu\n",
+    CONSOLE_DEBUG("Phase 4 when-case \t\t%lu\n",
             (unsigned long)(phase4t-phase3t));
-    FPRINTF(ASCERR,"Phase 5 defaults\t\t%lu\n",
+    CONSOLE_DEBUG("Phase 5 defaults\t\t%lu\n",
             (unsigned long)(phase5t-phase4t));
   }
   CONSOLE_DEBUG("Total = %lu",(unsigned long)(phase5t-start));
@@ -12797,17 +12794,17 @@ void NewReInstantiate(struct Instance *i)
   }
 #if TIMECOMPILER
   phase5t = clock();
-  FPRINTF(ASCERR,"Reinstantiation times (microseconds):\n");
-  FPRINTF(ASCERR,"Phase 1 models \t\t%lu\n",(unsigned long)(phase1t-start));
-  FPRINTF(ASCERR,"Phase 2 relations \t\t%lu\n",
+  CONSOLE_DEBUG("Reinstantiation times (microseconds):\n");
+  CONSOLE_DEBUG("Phase 1 models \t\t%lu\n",(unsigned long)(phase1t-start));
+  CONSOLE_DEBUG("Phase 2 relations \t\t%lu\n",
           (unsigned long)(phase2t-phase1t));
-  FPRINTF(ASCERR,
+  CONSOLE_DEBUG(
           "Phase 3 logicals \t\t%lu\n",(unsigned long)(phase3t-phase2t));
-  FPRINTF(ASCERR,"Phase 4 when-case \t\t%lu\n",
+  CONSOLE_DEBUG("Phase 4 when-case \t\t%lu\n",
           (unsigned long)(phase4t-phase3t));
-  FPRINTF(ASCERR,
+  CONSOLE_DEBUG(
           "Phase 5 defaults \t\t%lu\n",(unsigned long)(phase5t-phase4t));
-  FPRINTF(ASCERR,"Total\t\t%lu\n",(unsigned long)(phase5t-start));
+  CONSOLE_DEBUG("Total\t\t%lu\n",(unsigned long)(phase5t-start));
 #endif
   return;
 }

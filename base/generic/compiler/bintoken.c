@@ -776,7 +776,7 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
   int verbose = g_bt_data.verbose;
 
   if (g_bt_data.maxrels == 0) {
-    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"BinTokensCreate disabled (maxrels=0)");
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"BinTokensCreate disabled (maxrels=0)\n");
     return;
   }
   if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {
@@ -793,7 +793,7 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
     return;
   }
 
-  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Creating bintokens");
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Creating bintokens\n");
 
   switch (method) {
   case BT_C:
