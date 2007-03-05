@@ -4,12 +4,12 @@ Thanks for downloading ASCEND! We hope you'll find it straight-
 forward to set up and run ASCEND. If you have any comments on
 your experience with this, we're very keen to hear about that.
 Please check out the up-to-date contact details at:
-https://pse.cheme.cmu.edu/wiki/view/Ascend/WebHome
+https://ascendserver.cheme.cmu.edu/wiki/
 
 There are older versions of this document, which include instructions
 on how to build ASCEND with GNU Autotools. This may or may not work
 with the version you are currently looking at.
-https://pse.cheme.cmu.edu/svn-view/ascend/code/trunk/INSTALL.txt?view=log
+https://ascendserver.cheme.cmu.edu/svn/ascend/code/branches/extfn/INSTALL.txt?view=log
 
 -----
 BUILDING ON LINUX AND WINDOWS
@@ -45,11 +45,11 @@ already present if you have SCons!). The Tcl/Tk interface requires that you
 have Tcl/Tk and TkTable installed on your system.
 
 For updates on this information, and PLATFORM-SPECIFIC INFORMATION, please check
-https://pse.cheme.cmu.edu/wiki/view/Ascend/BuildingAscend
+http://ascendserver.cheme.cmu.edu/wiki/index.php/BuildingAscend
 
 For specific information on building the Python interface and
 setting up the PyGTK GUI, please see
-https://pse.cheme.cmu.edu/wiki/view/Ascend/PythonWrapper
+http://ascendserver.cheme.cmu.edu/wiki/index.php/PythonWrapper
 
 ------
 BUILDING ON SOLARIS
@@ -173,6 +173,5 @@ ASCEND user's website:
 http://ascend.cheme.cmu.edu/
 
 ASCEND developer's wiki:
-https://pse.cheme.cmu.edu/wiki/view/Ascend/WebHome
+https://ascendserver.cheme.cmu.edu/wiki/
 
-1
