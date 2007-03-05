@@ -36,7 +36,7 @@
  *  doesn't follow relman_eval signal trapping protocol.
  */
 
-#include "slv0.h"
+#include "slv1.h"
 
 #include <stdarg.h>
 
@@ -98,7 +98,7 @@ int slv1_register(SlvFunctionsT *f)
 
 /*********************************************************************
  Ben Allan 5-8-94
- The MINOS interface parameters, and it's relation to the slv0 shoebox:
+ The MINOS interface parameters, and its relation to the slv0 shoebox:
  (compare slv.h and MINOS 5.4 User's Guide Chapter 3, and App. A
   Technical Report SOL 83-20R)
 

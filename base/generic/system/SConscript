@@ -5,6 +5,7 @@ csrcs = Split("""
 	bnd.c bndman.c calc.c cond_config.c
 	conditional.c discrete.c
 	diffvars.c
+	jacobian.c
 	logrel.c logrelman.c model_reorder.c
 	rel.c relman.c
 	slv.c

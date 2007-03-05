@@ -72,4 +72,4 @@ METHODS
 		RUN values;
 		RUN ode_init;
 	END on_load;
-END writematrix;
+END writematrix2;

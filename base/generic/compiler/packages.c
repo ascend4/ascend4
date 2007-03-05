@@ -120,7 +120,7 @@ int Builtins_Init(void){
 		,NULL /* destroy fn */
   );
 
-  ERROR_REPORTER_DEBUG("Registering EXTERNAL asc_default_self");
+  /* ERROR_REPORTER_DEBUG("Registering EXTERNAL asc_default_self"); */
   result = CreateUserFunctionMethod("asc_default_self"
 		,Asc_DefaultSelf
 		,1 /* num of args */
@@ -129,7 +129,7 @@ int Builtins_Init(void){
 		,NULL /* destroy fn */
   );
 
-  ERROR_REPORTER_DEBUG("Registering EXTERNAL asc_default_all");
+  /* ERROR_REPORTER_DEBUG("Registering EXTERNAL asc_default_all"); */
   result = CreateUserFunctionMethod("asc_default_all"
 		,Asc_DefaultAll
 		,1 /* num of args */
