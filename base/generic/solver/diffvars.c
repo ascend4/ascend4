@@ -24,9 +24,14 @@
 
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
+#include <utilities/error.h>
+
+#include <compiler/instance_io.h>
 
 #include "analyse_impl.h"
 #include "system_impl.h"
+
+/* #define DIFFVARS_DEBUG */
 
 /*------------------------------------------------------------------------------
 	DERIVATIVES & DIFFERENTIAL VARIABLES
@@ -65,7 +70,7 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	struct gl_list_t *seqs;
 	long i, seqstart, nalg, ndiff;
 	short j;
-	char cont/*, *varname*/;
+	char cont;
 	short maxorder = 0;
 
 	asc_assert(prob);
@@ -89,9 +94,10 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		seq->vars[0] = vip->u.v.data;
 		gl_append_ptr(seqs,(void *)seq);
 	}
+#ifdef DIFFVARS_DEBUG
 	CONSOLE_DEBUG("Added %ld algebraic vars to chains",nalg);
-
 	CONSOLE_DEBUG("Sorting %ld differential & derivative vars...",gl_length(prob->diffvars));
+#endif
 	
 	/* first sort the list of diffvars */
 	gl_sort(prob->diffvars, (CmpFunc)CmpDiffVars);
@@ -102,7 +108,7 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	if(vip->u.v.deriv > 1){
 		ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 		FPRINTF(ASCERR,"Missing ode_type %d for ode_id %d (check var '",vip->u.v.deriv+1,vip->u.v.odeid);
-		WriteInstanceName(ASCWAR,vip->i,prob->root);
+		WriteInstanceName(ASCERR,vip->i,prob->root);
 		FPRINTF(ASCERR,"')");
 		error_reporter_end_flush();
 		return 2;
@@ -114,20 +120,19 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 
 		if(cont && vipnext->u.v.odeid == vip->u.v.odeid){
 			/* same sequence, check that it's the next derivative */
-			asc_assert(vipnext->u.v.odeid == vip->u.v.odeid);
 			asc_assert(vip->u.v.deriv >= vip->u.v.deriv);
 
 			if(vipnext->u.v.deriv == vip->u.v.deriv){
 				ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-				FPRINTF(ASCERR,"Repeated ode_type %d for ode_id %d (var '",vip->u.v.deriv,vip->u.v.odeid);
-				WriteInstanceName(ASCWAR,vip->i,prob->root);
+				FPRINTF(ASCERR,"Repeated ode_type %d for ode_id %d (var '%s')",vip->u.v.deriv,vip->u.v.odeid);
+				WriteInstanceName(ASCERR,vip->i,prob->root);
 				FPRINTF(ASCERR,"')");
 				error_reporter_end_flush();
 				return 1;
 			}else if(vipnext->u.v.deriv > vip->u.v.deriv + 1){
 				ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 				FPRINTF(ASCERR,"Missing ode_type %d for ode_id %d (check var '",vip->u.v.deriv+1,vip->u.v.odeid);
-				WriteInstanceName(ASCWAR,vip->i,prob->root);
+				WriteInstanceName(ASCERR,vip->i,prob->root);
 				FPRINTF(ASCERR,"')");
 				error_reporter_end_flush();
 				return 2;
@@ -149,18 +154,28 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		seq = ASC_NEW(SolverDiffVarSequence);
 		seq->n = i - seqstart + 1;
 		seq->ode_id = vip->u.v.odeid;
-		/* CONSOLE_DEBUG("Saving sequence ode_id = %ld, n = %d",seq->ode_id,seq->n); */
 		seq->vars = ASC_NEW_ARRAY(struct var_variable*,seq->n);
+#ifdef DIFFVARS_DEBUG
+		CONSOLE_DEBUG("Saving sequence ode_id = %ld, n = %d",seq->ode_id,seq->n);
+#endif
 		for(j=0;j<seq->n;++j){
 			vip = (struct solver_ipdata *)gl_fetch(prob->diffvars,seqstart+j);
 			seq->vars[j]=vip->u.v.data;
-			/* varname = var_make_name(sys,seq->vars[j]);
-			CONSOLE_DEBUG("seq, j=%d: '%s'",j,varname);
-			ASC_FREE(varname); */
+			/* set the VAR_ALGEB flag as req */
+			var_set_diff(seq->vars[j],j==0 && seq->n > 1);
+#ifdef DIFFVARS_DEBUG
+			CONSOLE_DEBUG("seq, j=%d: is %s",j
+				,(var_diff(seq->vars[j]) ? "DIFF" : 
+					(var_deriv(seq->vars[j]) ? "deriv" : "alg")
+				) 
+			);
+#endif
 		}
 		gl_append_ptr(seqs,(void *)seq);
 		ndiff++;
-		/* CONSOLE_DEBUG("Completed seq %ld",gl_length(seqs)); */
+#ifdef DIFFVARS_DEBUG
+		CONSOLE_DEBUG("Completed seq %ld",gl_length(seqs));
+#endif
 
 		if(vip->u.v.deriv > maxorder){
 			maxorder = vip->u.v.deriv;
@@ -179,7 +194,9 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		continue;
 	}
 	
+#ifdef DIFFVARS_DEBUG
 	CONSOLE_DEBUG("Identified %ld derivative chains, maximum length %d...",gl_length(seqs),maxorder);
+#endif
 
 	diffvars = ASC_NEW(SolverDiffVarCollection);
 	diffvars->maxorder = maxorder;
@@ -198,7 +215,9 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		vip = (struct solver_ipdata *)gl_fetch(prob->indepvars,i+1);
 		diffvars->indep[i] = vip->u.v.data;
 	}
+#ifdef DIFFVARS_DEBUG
 	CONSOLE_DEBUG("Identified %ld indep vars",diffvars->nindep);
+#endif
 
 	/* I know, I know, this might not be the best place for this... */
 	diffvars->nobs = gl_length(prob->obsvars);
@@ -207,9 +226,10 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		vip = (struct solver_ipdata *)gl_fetch(prob->obsvars,i+1);
 		diffvars->obs[i] = vip->u.v.data;
 	}
+#ifdef DIFFVARS_DEBUG
 	CONSOLE_DEBUG("Identified %ld obs vers",diffvars->nobs);
-
 	CONSOLE_DEBUG("There were %ld rels",prob->nr);
+#endif
 
 	slv_set_diffvars(sys,(void *)diffvars);
 
