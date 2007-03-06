@@ -39,6 +39,15 @@ extern const var_filter_t system_vfilter_diff;
 extern const var_filter_t system_vfilter_deriv;
 extern const var_filter_t system_vfilter_nonderiv;
 
+/**
+	This mischevious data structure is a quick dodge to avoid having to
+	set some some big complicated slv_system_t structure for the purpose of
+	reporting back on a matrix slice. It seems that the better way to do 
+	all this would be using a mtx_matrix_t with rol/col permutations mapping
+	back to the solvers_var/rel_list.
+
+	@DEPRECATED from day one, therefore. Only used by IDA at this stage.
+*/
 struct SystemJacobianStruct{
 	mtx_matrix_t M;
 	struct rel_relation **rels;

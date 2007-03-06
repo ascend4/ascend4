@@ -59,7 +59,6 @@
 #include <compiler/symtab.h>
 
 #include <linear/mtx.h>
-#include <linear/linsol.h>
 #include <linear/linsolqr.h>
 
 #include <system/slv_client.h>
@@ -2610,20 +2609,20 @@ static boolean dbg_calc_jacobian(mtx_matrix_t mtx,
 
 
 #ifdef THIS_MAY_BE_UNUSED_CODE
-static void dbg_invert_block(linsol_system_t lsys,
+static void dbg_invert_block(linsolqr_system_t lsys,
                              mtx_region_t *reg,
                              mtx_matrix_t mtx,
                              struct rel_relation **rp,
                              struct var_variable **vp) {
   int status=1;
-  linsol_matrix_was_changed(lsys);
+  linsolqr_matrix_was_changed(lsys);
   status=dbg_calc_jacobian(mtx,*reg,rp,vp);
   if (!status) {
     FPRINTF(ASCERR,"Error in jacobian calculation: attempting check anyway.");
   }
   calc_ok=TRUE;
-  linsol_reorder(lsys,reg);
-  linsol_invert(lsys,reg);
+  linsolqr_reorder(lsys,reg);
+  linsolqr_invert(lsys,reg);
 }
 #endif
 
@@ -3901,7 +3900,6 @@ int Asc_DebuMtxWritePlotCmd(ClientData cdata, Tcl_Interp *interp,
   FILE *fp = NULL;
   int rank, coeff_or_inverse = 0;
   int offset = 1;                        /* set to 0 for c-style indexing */
-  linsol_system_t linsys;
   linsolqr_system_t linsysqr;
   mtx_matrix_t mtx = NULL;
   mtx_region_t reg;
@@ -3941,11 +3939,6 @@ int Asc_DebuMtxWritePlotCmd(ClientData cdata, Tcl_Interp *interp,
   } else {
     /* WARNING: developers ui hack only! */
     switch(slv_get_selected_solver(g_solvsys_cur)) {
-    case 0:
-      linsys = slv_get_linsol_sys(g_solvsys_cur);
-      mtx = linsol_get_inverse(linsys);
-      rhs = linsol_get_rhs(linsys,1);
-      break;
     case 3:
     case 5:
       linsysqr = slv_get_linsolqr_sys(g_solvsys_cur);

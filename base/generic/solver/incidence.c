@@ -29,15 +29,8 @@
 
 #include <compiler/instance_enum.h>
 
-#include <linear/mtx.h>
-#include <linear/linsol.h>
 #include <linear/linsolqr.h>
 
-#include <system/discrete.h>
-#include <system/conditional.h>
-#include <system/logrel.h>
-#include <system/bnd.h>
-#include <system/slv_common.h>
 #include <system/slv_client.h>
 
 /*

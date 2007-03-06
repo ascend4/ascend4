@@ -38,7 +38,6 @@
 
 #include <utilities/ascConfig.h>
 #include "mtx.h"
-#include "linsol.h"
 #include "linsolqr.h"
 
 
@@ -59,9 +58,7 @@ ASC_DLLSPEC double linutils_A_condqr_kaa(linsolqr_system_t lin_sys,
                                     mtx_matrix_t mtx,
                                     mtx_region_t *reg);
 
-ASC_DLLSPEC double linutils_A_cond_kaa(linsol_system_t lin_sys,
-                                  mtx_matrix_t mtx,
-                                  mtx_region_t *reg);
+/* removed linutils_A_cond_kaa because it uses linsol (dead) */
 
 /**	@} */
 

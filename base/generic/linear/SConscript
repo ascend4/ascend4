@@ -2,7 +2,7 @@ Import('libascend_env')
 
 csrcs = Split("""
 	densemtx.c
-	linsol.c linsolqr.c linutils.c
+	linsolqr.c linutils.c
 	mtx_basic.c mtx_linal.c mtx_perms.c mtx_query.c
 	mtx_reorder.c mtx_use_only.c mtx_vector.c
 """)

@@ -226,8 +226,8 @@ int Compute_J(slv_system_t sys)
 
 /**
 	@NOTE there is another (probably better?) version of this in models/sensitivity
-	that uses sparse matrices. This one got pulled out of some files in tcltk dir
-	and is used by the LSODE integrator.
+	that uses sparse(??) matrices. This one got pulled out of some files in tcltk dir
+	and is used by the LSODE integrator. -- JP (trying to make sense)
 
  * Note a rhs would have been previously added
  * to keep the system happy.
@@ -238,7 +238,6 @@ int Compute_J(slv_system_t sys)
  * to this routine.
 */
 int LUFactorJacobian(slv_system_t sys){
-  linsol_system_t lin_sys=NULL;
   linsolqr_system_t lqr_sys=NULL;
   mtx_region_t region;
   int size,nvars,nrels;
@@ -250,32 +249,25 @@ int LUFactorJacobian(slv_system_t sys){
   time1 = tm_cpu_time();
 #endif
 
-  nvars = NumberFreeVars(sys);
-  nrels = NumberIncludedRels(sys);
-  size = MAX(nvars,nrels);		/* get size of matrix */
-  mtx_region(&region,0,size-1,0,size-1);	/* set the region */
-  lin_sys = slv_get_linsol_sys(sys);	/* get the linear system */
-  if (lin_sys!=NULL) {
-    linsol_matrix_was_changed(lin_sys);
-    linsol_reorder(lin_sys,&region);	/* This was entire_MATRIX */
-    linsol_invert(lin_sys,&region); 	/* invert the given matrix over
-                                         * the given region */
-  } else {
-    enum factor_method fm;
-    int oldtiming;
-    lqr_sys = slv_get_linsolqr_sys(sys);
-    /* WE are ASSUMING that the system has been qr_preped before now! */
-    linsolqr_matrix_was_changed(lqr_sys);
-    linsolqr_reorder(lqr_sys,&region,natural); /* should retain original */
-    fm = linsolqr_fmethod(lqr_sys);
-    if (fm == unknown_f) {
-      fm = ranki_kw2; /* make sure somebody set it */
-    }
-    oldtiming = g_linsolqr_timing;
-    g_linsolqr_timing = 0;
-    linsolqr_factor(lqr_sys,fm);
-    g_linsolqr_timing = oldtiming;
-  }
+	nvars = NumberFreeVars(sys);
+	nrels = NumberIncludedRels(sys);
+	size = MAX(nvars,nrels);		/* get size of matrix */
+	mtx_region(&region,0,size-1,0,size-1);	/* set the region */
+
+	enum factor_method fm;
+	int oldtiming;
+	lqr_sys = slv_get_linsolqr_sys(sys);
+	/* WE are ASSUMING that the system has been qr_preped before now! */
+	linsolqr_matrix_was_changed(lqr_sys);
+	linsolqr_reorder(lqr_sys,&region,natural); /* should retain original */
+	fm = linsolqr_fmethod(lqr_sys);
+	if (fm == unknown_f) {
+	    fm = ranki_kw2; /* make sure somebody set it */
+	}
+	oldtiming = g_linsolqr_timing;
+	g_linsolqr_timing = 0;
+	linsolqr_factor(lqr_sys,fm);
+	g_linsolqr_timing = oldtiming;
 
 #if DOTIME
   time1 = tm_cpu_time() - time1;
@@ -299,7 +291,6 @@ int Compute_dy_dx_smart(slv_system_t sys,
                                int *inputs, int ninputs,
                                int *outputs, int noutputs)
 {
-  linsol_system_t lin_sys=NULL;
   linsolqr_system_t lqr_sys=NULL;
   mtx_matrix_t mtx;
   int col,current_col;
@@ -315,7 +306,6 @@ int Compute_dy_dx_smart(slv_system_t sys,
   time1 = tm_cpu_time();
 #endif
 
-  lin_sys = slv_get_linsol_sys(sys); 	/* get the linear system */
   lqr_sys = slv_get_linsolqr_sys(sys); 	/* get the linear system */
   mtx = slv_get_sys_mtx(sys);	 	/* get the matrix */
 
@@ -330,28 +320,6 @@ int Compute_dy_dx_smart(slv_system_t sys,
    * necessary for the computed solution as the solve routine returns
    * the results in the *original* order rather than the *current* order.
    */
-  if (lin_sys!=NULL) {
-    for (j=0;j<ninputs;j++) {
-      col = inputs[j];
-      current_col = mtx_org_to_col(mtx,col);
-      mtx_org_col_vec(mtx,current_col,rhs,mtx_ALL_ROWS); /* get the column */
-
-      linsol_rhs_was_changed(lin_sys,rhs);
-      linsol_solve(lin_sys,rhs);			/* solve */
-      linsol_copy_solution(lin_sys,rhs,solution);	/* get the solution */
-
-      for (i=0;i<noutputs;i++) {	/* copy the solution to dy_dx */
-        row = outputs[i];
-        DENSEMATRIX_ELEM(dy_dx,i,j) = -1.0*solution[row]; /* the -1 comes from the lin alg */
-      }
-      /*
-       * zero the vector using the incidence pattern of our column.
-       * This is faster than the naiive approach of zeroing
-       * everything especially if the vector is large.
-       */
-      mtx_zr_org_vec_using_col(mtx,current_col,rhs,mtx_ALL_ROWS);
-    }
-  } else {
     for (j=0;j<ninputs;j++) {
       col = inputs[j];
       current_col = mtx_org_to_col(mtx,col);
@@ -367,7 +335,7 @@ int Compute_dy_dx_smart(slv_system_t sys,
       }
       mtx_zr_org_vec_using_col(mtx,current_col,rhs,mtx_ALL_ROWS);
     }
-  }
+
   if (solution) {
     ascfree((char *)solution);
   }

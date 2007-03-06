@@ -1648,7 +1648,6 @@ int slv6_register(SlvFunctionsT *sft)
   sft->presolve = slv6_presolve;
   sft->iterate = slv6_iterate;
   sft->resolve = slv6_resolve;
-  sft->getlinsol = NULL;
   sft->getlinsys = NULL;
   sft->get_sys_mtx = slv6_get_jacobian;
   sft->dumpinternals = slv6_dump_internals;

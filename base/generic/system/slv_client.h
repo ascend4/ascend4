@@ -284,7 +284,6 @@
 #include <utilities/ascConfig.h>
 
 #include <linear/mtx.h>
-#include <linear/linsol.h>
 #include <linear/linsolqr.h>
 
 #include "var.h"
@@ -361,7 +360,6 @@ typedef int32 (SlvGetDefParamsF) (slv_system_t,SlvClientToken,slv_parameters_t *
 typedef void (SlvGetParamsF) (slv_system_t, SlvClientToken, slv_parameters_t *);
 typedef void (SlvSetParamsF) (slv_system_t, SlvClientToken, slv_parameters_t *);
 typedef int (SlvGetStatusF) (slv_system_t, SlvClientToken, slv_status_t *);
-typedef linsol_system_t (SlvGetLinsolF)(slv_system_t, SlvClientToken);
 typedef linsolqr_system_t (SlvGetLinSysF)(slv_system_t, SlvClientToken);
 typedef mtx_matrix_t (SlvGetSysMtxF)(slv_system_t, SlvClientToken);
 typedef void (SlvDumpInfoF)(slv_system_t, SlvClientToken,int);
@@ -399,7 +397,6 @@ typedef struct slv_registration_data {
   /**
 	Strictly Optional Functions
   */
-  SlvGetLinsolF       *getlinsol;     /**<  (optional) */
   SlvGetLinSysF       *getlinsys;     /**<  (optional) */
   SlvGetSysMtxF       *get_sys_mtx;   /**<  (optional) */
   SlvDumpInfoF        *dumpinternals; /**<  (optional) */
@@ -1266,12 +1263,6 @@ ASC_DLLSPEC int slv_get_status(slv_system_t sys, slv_status_t *status);
 ASC_DLLSPEC linsolqr_system_t slv_get_linsolqr_sys(slv_system_t sys);
 /**<
 	Returns the linsolqr system used, or NULL if none.
-	@deprecated { THIS CALL SHOULD GO AWAY }
-*/
-
-ASC_DLLSPEC linsol_system_t slv_get_linsol_sys(slv_system_t sys);
-/**<
-	Returns the linsol system used, or NULL if none.
 	@deprecated { THIS CALL SHOULD GO AWAY }
 */
 

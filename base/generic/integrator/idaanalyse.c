@@ -320,6 +320,7 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	will have index problems and may not solve with IDA.
 */
 int integrator_ida_check_index(IntegratorSystem *sys){
+#if 0
 	linsolqr_system_t L;
 	mtx_region_t R;
 	int res, r;
@@ -424,6 +425,10 @@ int integrator_ida_check_index(IntegratorSystem *sys){
 	mtx_destroy(dg_dya.M);
 	mtx_destroy(df_dydp.M);
 	return 0;
+#else
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"check_index disabled");
+	return 0;
+#endif
 }	
 
 /** 

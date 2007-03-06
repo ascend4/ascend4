@@ -52,7 +52,6 @@
 #include "slv_types.h"
 #include "slv_client.h"
 
-#include <linear/linsol.h>
 #include <linear/linsolqr.h>
 
 #include <utilities/ascConfig.h>

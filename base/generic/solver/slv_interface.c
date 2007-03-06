@@ -227,7 +227,7 @@ static void write_varlist(FILE *out, slv_system_t sys, var_filter_t *vfilter, bo
  ***  passing through filter.
  **/
 {
-   linsol_system_t lsys;
+   linsolqr_system_t lsys;
    mtx_matrix_t mtx;
    mtx_region_t reg;
    int32 col;
@@ -235,8 +235,8 @@ static void write_varlist(FILE *out, slv_system_t sys, var_filter_t *vfilter, bo
    int32 num[2][2];   /* num[?fixed][?incident] */
    int32 tnum[2];     /* tnum[?incident] */
 
-   lsys = slv_get_linsol_sys(sys);
-   mtx = linsol_get_matrix(lsys);
+   lsys = slv_get_linsolqr_sys(sys);
+   mtx = linsolqr_get_matrix(lsys);
    FPRINTF(out,"#/block. value (nominal) [LB,UB] ");
    FPRINTF(out,"?fixed ?incident ?solved - name\n");
    num[0][0] = num[0][1] = num[1][0] = num[1][1] = 0;
@@ -274,7 +274,7 @@ static void write_rellist(FILE *out, slv_system_t sys, rel_filter_t *rfilter,
  ***  passing through filter.
  **/
 {
-   linsol_system_t lsys;
+   linsolqr_system_t lsys;
    mtx_matrix_t mtx;
    mtx_region_t reg;
    int32 row;
@@ -283,8 +283,8 @@ static void write_rellist(FILE *out, slv_system_t sys, rel_filter_t *rfilter,
    int32 num[2];   /* [?included] */
 
    old_calc_ok = calc_ok;
-   lsys = slv_get_linsol_sys(sys);
-   mtx = linsol_get_matrix(lsys);
+   lsys = slv_get_linsolqr_sys(sys);
+   mtx = linsolqr_get_matrix(lsys);
 
    FPRINTF(out,"#/block. residual ?included - name\\n   relation\n");
    num[0] = num[1] = 0L;
@@ -568,15 +568,15 @@ static boolean do_command(int command)
       case C_COUNT_IN_BLOCK: {
          slv_status_t s;
 	 int32 bnum;
-	 linsol_system_t lsys;
+	 linsolqr_system_t lsys;
 	 mtx_matrix_t mtx;
 	 mtx_region_t reg;
 
          slv_get_status(sys,&s);
          PRINTF("Block number [%d]: ",s.block.current_block);
          bnum = (int32)readlong((long)s.block.current_block);
-	 lsys = slv_get_linsol_sys(sys);
-	 mtx = linsol_get_matrix(lsys);
+	 lsys = slv_get_linsolqr_sys(sys);
+	 mtx = linsolqr_get_matrix(lsys);
 	 mtx_block(mtx,bnum,&reg);
 	 FPRINTF(stdout,"There are %d variables in block %d.\n",
 		 (reg.col.high-reg.col.low+1),bnum);
@@ -607,15 +607,15 @@ static boolean do_command(int command)
 	 struct var_variable **vp = slv_get_solvers_var_list(sys);
          slv_status_t s;
 	 int32 bnum;
-	 linsol_system_t lsys;
+	 linsolqr_system_t lsys;
 	 mtx_matrix_t mtx;
 	 mtx_region_t reg;
 
          slv_get_status(sys,&s);
          PRINTF("Block number [%d]: ",s.block.current_block);
          bnum = (int32)readlong((long)s.block.current_block);
-	 lsys = slv_get_linsol_sys(sys);
-	 mtx = linsol_get_matrix(lsys);
+	 lsys = slv_get_linsolqr_sys(sys);
+	 mtx = linsolqr_get_matrix(lsys);
 	 mtx_block(mtx,bnum,&reg);
 	 for( ; reg.col.low <= reg.col.high; reg.col.low++ ) {
 	    struct var_variable *var = vp[mtx_col_to_org(mtx,reg.col.low)];
@@ -651,15 +651,15 @@ static boolean do_command(int command)
 	 struct rel_relation **rp = slv_get_solvers_rel_list(sys);
          slv_status_t s;
 	 int32 bnum;
-	 linsol_system_t lsys;
+	 linsolqr_system_t lsys;
 	 mtx_matrix_t mtx;
 	 mtx_region_t reg;
 
          slv_get_status(sys,&s);
          PRINTF("Block number [%d]: ",s.block.current_block);
          bnum = (int32)readlong((long)s.block.current_block);
-	 lsys = slv_get_linsol_sys(sys);
-	 mtx = linsol_get_matrix(lsys);
+	 lsys = slv_get_linsolqr_sys(sys);
+	 mtx = linsolqr_get_matrix(lsys);
 	 mtx_block(mtx,bnum,&reg);
 	 for( ; reg.row.low <= reg.row.high; reg.row.low++ ) {
 	    struct rel_relation *rel = rp[mtx_row_to_org(mtx,reg.row.low)];

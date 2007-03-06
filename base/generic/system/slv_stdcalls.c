@@ -31,8 +31,6 @@
 #include "logrelman.h"
 
 /* headers of registered clients */
-#include <solver/slv0.h>
-#include <solver/slv1.h>
 #include <solver/slv2.h>
 #include <solver/slv3.h>
 #include <solver/slv6.h>

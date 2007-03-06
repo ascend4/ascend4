@@ -32,11 +32,6 @@
 #include <compiler/instance_enum.h>
 #include <compiler/compiler.h>
 
-#include <linear/mtx.h>
-#include <linear/mtx_basic.h>
-#include <linear/mtx_perms.h>
-#include <linear/mtx_query.h>
-#include <linear/linsol.h>
 #include <linear/linsolqr.h>
 #include <linear/densemtx.h>
 
