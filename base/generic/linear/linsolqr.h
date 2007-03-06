@@ -20,7 +20,7 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//** @file
- *  linsol II:  Ascend Linear Equation Solver.
+ *  linsolqr:  Ascend Linear Equation Solver.
  * 
  *                A linear system consists of a coefficient matrix (A)
  *                and possibly several right-hand-sides (rhs).  The
@@ -324,14 +324,14 @@ extern char *linsolqr_enum_to_fmethod(enum factor_method m);
  * Do not free the name.
  */
 
-ASC_DLLSPEC char *linsolqr_rmethod_description(enum reorder_method meth);
+ASC_DLLSPEC const char *linsolqr_rmethod_description(const enum reorder_method meth);
 /**<  
  * Returns a string describing the method inquired on. Do not mess
  * with the string: linsolqr owns it.
  * If you implement a new method, update this function.
  */
 
-ASC_DLLSPEC char *linsolqr_fmethod_description(enum factor_method meth);
+ASC_DLLSPEC const char *linsolqr_fmethod_description(const enum factor_method meth);
 /**<  
  * Returns a string describing the method inquired on. Do not mess
  * with the string: linsolqr owns it.
