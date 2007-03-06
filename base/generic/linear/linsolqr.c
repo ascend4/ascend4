@@ -1,63 +1,59 @@
-/*
- *  linsol II: Ascend Sparse Linear Solvers
- *  by Benjamin Allan
- *  Created: 2/6/90
- *  Version: $Revision: 1.26 $
- *  Version control file: $RCSfile: linsolqr.c,v $
- *  Date last modified: $Date: 2000/01/25 02:26:58 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1994 Benjamin Andrew Allan
- *
- *  Based on linsol:
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *  and on sqr.pas v1.5:
- *  Copyright (C) 1994 Boyd Safrit
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Boyd Safrit
+	Copyright (C) 1994 Benjamin Andrew Allan
+	Copyright (C) 1994-1995 Benjamin Andrew Allan
+	Copyright (C) 1995 Kirk Andre Abbott
+	Copyright (C) 2006-2007 Carnegie Mellon University
 
-/*
- *  Implementation Notes:
- *   9/95: there are many places in linsolqr.c where lower level matrix
- *   operations have been replaced by higher level ones. These used to
- *   be flagged as such so that people who wanted to construct newer
- *   operations from the lowest level mtx operators could see how to
- *   use the lowlevel operators.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-	Later note (JP, 2007): The earlier version of linsolqr, named linsol,
-	has been removed completely. There was some comment about it here but 
-	it's not here any more.
- *
- *   10/95: (BAA) I attempted to optimize number_drag through use of
- *   pointer arithmetic. Testing the resulting code without optimization
- *   turned on gave about 20% improvement over the original on an alpha
- *   using the native compiler. However, with optimization on the array
- *   subscripted version which is left here won by ~40%.
- *   The results for gcc were similar: pointer 10% better unoptimized,
- *   subscripted 30% better when -O2.
- *   For both compilers -O3 was worse! gcc was ~1.8x slower than the
- *   native cc both optimized and not.
- *   I have not tested a loop unrolled drag, but I expect unrolling is
- *   exactly what the optimizer is doing, so why bother?
- */
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	linsolqr: sparse direct linear solver module
+
+	Implementation Notes:
+
+	9/95: there are many places in linsolqr.c where lower level matrix
+	operations have been replaced by higher level ones. These used to
+	be flagged as such so that people who wanted to construct newer
+	operations from the lowest level mtx operators could see how to
+	use the lowlevel operators.
+
+		Later note (JP, 2007): The earlier version of linsolqr, named linsol,
+		has been removed completely. There was some comment about it here but 
+		it's not here any more.
+
+	10/95: (BAA) I attempted to optimize number_drag through use of
+	pointer arithmetic. Testing the resulting code without optimization
+	turned on gave about 20% improvement over the original on an alpha
+	using the native compiler. However, with optimization on the array
+	subscripted version which is left here won by ~40%.
+	The results for gcc were similar: pointer 10% better unoptimized,
+	subscripted 30% better when -O2.
+	For both compilers -O3 was worse! gcc was ~1.8x slower than the
+	native cc both optimized and not.
+	I have not tested a loop unrolled drag, but I expect unrolling is
+	exactly what the optimizer is doing, so why bother?
+*//*
+	based on linsol
+	by Karl Westerberg, Joseph Zaher, Ben Allan. Created: 2/6/90
+	and on sqr.pas v1.5, by Boyd Safrit, 1994.
+	
+	Last in CVS: $Revision: 1.26 $ $Date: 2000/01/25 02:26:58 $ $Author: ballan $
+*/
 
 #include <math.h>
 #include <stdarg.h>
@@ -91,29 +87,31 @@
 
 
 #define RBADEBUG 0
-/* turns on spew that will generate output files
- * comparable to and in the same location as for rankiba2
- * user specific hardcoded pathnames are involved.
- * don't try this at home.
- */
+/*	turns on spew that will generate output files
+	comparable to and in the same location as for rankiba2
+	user specific hardcoded pathnames are involved.
+	don't try this at home.
+*/
+
 #if RBADEBUG
 extern FILE *gscr;
 #endif
 
 /*
- * timing messages disable flag.
- */
+	timing messages disable flag.
+*/
 int g_linsolqr_timing = 1;
 
-/***************************************************************************\
-  Data structures for linsol
+/*-----------------------------------------------------------------------------
+  DATA STRUCTURES
+
   Any time you modify these, please verify linsolqr_size is still correct.
-\***************************************************************************/
+*/
 struct rhs_list {
    real64 *rhs;            /* Vector of rhs values */
    real64 *varvalue;       /* Solution of the linear system */
-   boolean solved;               /* ? has the rhs been solved */
-   boolean transpose;            /* ? transpose the coef matrix */
+   boolean solved;         /* ? has the rhs been solved */
+   boolean transpose;      /* ? transpose the coef matrix */
    struct rhs_list *next;
 };
 
@@ -125,16 +123,16 @@ struct qr_fill_t {
 };
 /* fill counting structure for sparse qr */
 
-struct lu_auxdata {       /* all indexed by cur row or cur col number */
+struct lu_auxdata { /* all indexed by cur row or cur col number */
   real64 *pivlist;  /* vector of pivots (diagonal of L for ranki) */
   real64 *tmp;      /* row elimination, dependency buffer */
   int32 cap;        /* current capacity of the vectors if not null */
 };
 /* structure for lu algorithms */
 
-struct qr_auxdata {       /* all indexed by cur row or cur col number */
+struct qr_auxdata { /* all indexed by cur row or cur col number */
   mtx_matrix_t hhvects;   /* slave matrix of sys->factors for holding u's */
-  mtx_sparse_t sp;        /* sparse data space */
+  mtx_sparse_t sp;  /* sparse data space */
   real64 *alpha;    /* column norms for the Q\R factor matrix */
   real64 *sigma;    /* column norms for the S (R inverse) matrix */
   real64 *tau;      /* column tau of the Householder transforms */
@@ -154,14 +152,14 @@ struct linsolqr_header {
    enum factor_class fclass;     /* Type of factoring expected */
    enum factor_method fmethod;   /* Method factoring expected */
    enum reorder_method rmethod;  /* Type of most recent reordering */
-   int32 capacity;         /* Capacity of arrays */
+   int32 capacity;               /* Capacity of arrays */
    mtx_matrix_t coef;            /* Coefficient matrix */
    struct rhs_list *rl;          /* List of rhs vectors */
    int rlength;                  /* Length of rhs list */
-   real64 pivot_zero;      /* Smallest acceptable pivot */
-   real64 ptol;            /* Pivot selection tolerance */
-   real64 ctol;            /* Condition selection tolerance */
-   real64 dtol;            /* Matrix entry drop tolerance */
+   real64 pivot_zero;            /* Smallest acceptable pivot */
+   real64 ptol;                  /* Pivot selection tolerance */
+   real64 ctol;                  /* Condition selection tolerance */
+   real64 dtol;                  /* Matrix entry drop tolerance */
    mtx_matrix_t factors;         /* Matrix with UL and dependence info (ranki),
                                     or L and dependence info  (ranki2),
                                     or R and dependence info (qr methods)  */
@@ -172,16 +170,16 @@ struct linsolqr_header {
    boolean coldeps;              /* ? have col dependencies been calc'ed */
    mtx_range_t rng;              /* Pivot range */
    mtx_region_t reg;             /* Bounding region given */
-   int32 rank;             /* Rank of the matrix */
-   real64 smallest_pivot;  /* Smallest pivot accepted */
+   int32 rank;                   /* Rank of the matrix */
+   real64 smallest_pivot;        /* Smallest pivot accepted */
    struct qr_auxdata *qrdata;    /* Data vectors for qr methods */
    struct lu_auxdata *ludata;    /* Data vectors for lu methods */
 };
 /* linsol main structure */
 
-/***************************************************************************\
-  string functions for linsol io
-\***************************************************************************/
+/*-----------------------------------------------------------------------------
+  STRING FUNCTIONS
+*/
 
 char *linsolqr_rmethods() {
   static char names[]="Natural, SPK1, TSPK1";
@@ -242,74 +240,62 @@ enum factor_class linsolqr_fmethod_to_fclass(enum factor_method fm)
 
 /** **/
 char *linsolqr_enum_to_rmethod(enum reorder_method meth) {
-  switch (meth) {
-  case spk1: return "SPK1";
-  case tspk1: return "TSPK1";
-  case natural: return "Natural";
-  default: return "Unknown reordering method.";
-  }
+	switch (meth) {
+		case spk1: return "SPK1";
+		case tspk1: return "TSPK1";
+		case natural: return "Natural";
+		default: return "<unknown reordering method>";
+	}
 }
 
 char *linsolqr_enum_to_fmethod(enum factor_method meth) {
-  switch (meth) {
-  case ranki_kw: return "SPK1/RANKI";
-  case ranki_jz: return "SPK1/RANKI+ROW";
-  case ranki_ba2: return "Fastest-SPK1/MR-RANKI";
-  case ranki_kw2: return "Fast-SPK1/RANKI";
-  case ranki_jz2: return "Fast-SPK1/RANKI+ROW";
-  case ranki_ka: return "KIRK-STUFF";
-  case cond_qr: return "CondQR";
-  case plain_qr: return "CPQR";
-  default: return "Unknown factorization method.";
-  }
+	switch (meth) {
+		case ranki_kw: return "SPK1/RANKI";
+		case ranki_jz: return "SPK1/RANKI+ROW";
+		case ranki_ba2: return "Fastest-SPK1/MR-RANKI";
+		case ranki_kw2: return "Fast-SPK1/RANKI";
+		case ranki_jz2: return "Fast-SPK1/RANKI+ROW";
+		case ranki_ka: return "KIRK-STUFF";
+		case cond_qr: return "CondQR";
+		case plain_qr: return "CPQR";
+		default: return "<unknown factorization method>";
+	}
 }
 
-/** **/
-char *linsolqr_rmethod_description(enum reorder_method meth) {
-  static char sspk1[]="SPK1 reordering ala Stadtherr.";
-  static char stspk1[]="SPK1 reordering column wise ala Stadtherr.";
-  static char nat[]="Ordering as received from user";
-  switch (meth) {
-  case spk1: return sspk1;
-  case tspk1: return stspk1;
-  case natural: return nat;
-  default: return "Unknown reordering method.";
-  }
+const char *linsolqr_rmethod_description(const enum reorder_method meth) {
+	switch (meth) {
+		case spk1: return "SPK1 reordering ala Stadtherr";
+		case tspk1: return "SPK1 reordering column wise a la Stadtherr";
+		case natural: return "Ordering as received from user";
+		default: return "<unknown reordering method>";
+	}
 }
 
-char *linsolqr_fmethod_description(enum factor_method meth) {
-  static char ex_ranki[] =
-    "SPK1 reordering with RANKI LU factoring ala Stadtherr.";
-  static char ex_rankib[] =
-    "SPK1 reordering with RANKI LU factoring ala Stadtherr, but fast.";
-  static char ex_rankij[]="SPK1/RANKI LU with pseudo-complete pivoting";
-  static char ex_rankik[]="KIRK-STUFF/RANKI LU with pseudo-complete pivoting";
-  static char ex_condqr[]="Sparse QR with condition controlled pivoting.";
-  static char ex_plainqr[]="Sparse QR with column pivoting.";
-  switch (meth) {
-  case ranki_kw: return ex_ranki;
-  case ranki_kw2: return ex_ranki;
-  case ranki_ba2: return ex_rankib;
-  case ranki_jz: return ex_rankij;
-  case ranki_jz2: return ex_rankij;
-  case ranki_ka: return ex_rankik;
-  case cond_qr: return ex_condqr;
-  case plain_qr: return ex_plainqr;
-  default: return "Unknown factorization method.";
-  }
+const char *linsolqr_fmethod_description(const enum factor_method meth) {
+	switch (meth) {
+		case ranki_kw: return "SPK1 reordering with RANKI LU factoring a la Stadtherr";
+		case ranki_kw2: return "SPK1 reordering with RANKI LU factoring a la Stadtherr (KW2)";
+		case ranki_ba2: return "SPK1 reordering with RANKI LU factoring a la Stadtherr, but fast";
+		case ranki_jz: return "SPK1/RANKI LU with pseudo-complete pivoting (JZ)";
+		case ranki_jz2: return "SPK1/RANKI LU with pseudo-complete pivoting (JZ2)";
+		case ranki_ka: return "KIRK-STUFF/RANKI LU with pseudo-complete pivoting";
+		case cond_qr: return "Sparse QR with condition controlled pivoting";
+		case plain_qr: return "Sparse QR with column pivoting";
+		default: return "<unknown factorization method>";
+	}
 }
 
-/***************************************************************************\
-  internal check routines
-\***************************************************************************/
+/*-----------------------------------------------------------------------------
+  INTERNAL CHECK ROUTINES
+*/
 #define OK        ((int)439828676)
 #define DESTROYED ((int)839276847)
 #define CHECK_SYSTEM(a) check_system((a),__FILE__,__LINE__)
-static int check_system(linsolqr_system_t sys, char *file, int line)
+
 /**
- ***  Checks the system handle. Return 0 if ok, 1 otherwise.
- **/
-{
+	Checks the system handle. Return 0 if ok, 1 otherwise.
+*/
+static int check_system(linsolqr_system_t sys, char *file, int line){
    UNUSED_PARAMETER(file);
 
    if( ISNULL(sys) ) {
@@ -330,61 +316,58 @@ static int check_system(linsolqr_system_t sys, char *file, int line)
    return 1;
 }
 
-/***************************************************************************\
-  external calls (and some of their internals)
-\***************************************************************************/
-static void destroy_rhs_list(struct rhs_list *rl)
+/*-----------------------------------------------------------------------------
+  EXTERNAL CALLS (and some of their internals)
+*/
+
 /**
- ***  Destroys rhs list.
- **/
-{
+	Destroys rhs list.
+*/
+static void destroy_rhs_list(struct rhs_list *rl){
    while( NOTNULL(rl) ) {
       struct rhs_list *p;
       p = rl;
       rl = rl->next;
       if( NOTNULL(p->varvalue)  )
-	 ascfree( (POINTER)(p->varvalue) );
+         ascfree( (POINTER)(p->varvalue) );
       ascfree( (POINTER)p );
    }
 }
 
-static struct rhs_list *find_rhs(struct rhs_list *rl,real64 *rhs)
 /**
- ***  Searches for rhs in rhs list, returning it or NULL if not found.
- **/
-{
+	Searches for rhs in rhs list, returning it or NULL if not found.
+*/
+static struct rhs_list *find_rhs(struct rhs_list *rl,real64 *rhs){
    for( ; NOTNULL(rl) ; rl = rl->next )
       if( rl->rhs == rhs )
          break;
    return(rl);
 }
 
-static struct lu_auxdata *create_ludata()
 /**
- *** Creates an empty zeroed ludata struct.
- *** Filled up by ensure_lu_capacity.
- **/
-{
+	Creates an empty zeroed ludata struct.
+	Filled up by ensure_lu_capacity.
+*/
+static struct lu_auxdata *create_ludata(){
   struct lu_auxdata *d;
   d=ASC_NEW_CLEAR(struct lu_auxdata);
   return d;
 }
 
-static struct qr_auxdata *create_qrdata()
 /**
- *** Creates an empty zeroed qrdata struct.
- *** Filled up by ensure_qr_capacity.
- **/
-{
+	Creates an empty zeroed qrdata struct.
+	Filled up by ensure_qr_capacity.
+*/
+static struct qr_auxdata *create_qrdata(){
   struct qr_auxdata *d;
   d=ASC_NEW_CLEAR(struct qr_auxdata);
   return d;
 }
 
-static void destroy_ludata(struct lu_auxdata *d) {
 /**
- *** Conditionally destroys a ludata struct and its parts.
- **/
+	Conditionally destroys a ludata struct and its parts.
+*/
+static void destroy_ludata(struct lu_auxdata *d) {
   if (NOTNULL(d)) {
     if (NOTNULL(d->pivlist))  ascfree(d->pivlist);
     d->pivlist=NULL;
@@ -394,10 +377,10 @@ static void destroy_ludata(struct lu_auxdata *d) {
   }
 }
 
-static void destroy_qrdata(struct qr_auxdata *d) {
 /**
- *** Conditionally destroys a qrdata struct and its parts.
- **/
+	Conditionally destroys a qrdata struct and its parts.
+*/
+static void destroy_qrdata(struct qr_auxdata *d) {
   if (NOTNULL(d)) {
     if (NOTNULL(d->alpha)) ascfree(d->alpha);
     if (NOTNULL(d->sigma)) ascfree(d->sigma);
@@ -410,36 +393,35 @@ static void destroy_qrdata(struct qr_auxdata *d) {
   }
 }
 
-linsolqr_system_t linsolqr_create()
-{
-   linsolqr_system_t sys;
+linsolqr_system_t linsolqr_create(){
+	linsolqr_system_t sys;
 
-   sys = (linsolqr_system_t)ascmalloc( sizeof(struct linsolqr_header) );
-   sys->fclass = unknown_c;
-   sys->fmethod = unknown_f;
-   sys->rmethod = unknown_r;
-   sys->integrity = OK;
-   sys->capacity = 0;
-   sys->coef = NULL;
-   sys->rl = NULL;
-   sys->rlength = 0;
-   sys->pivot_zero = 1e-12;           /* default value */
-   sys->ptol = 0.1;                   /* default value */
-   sys->ctol = 0.1;                   /* default value */
-   sys->dtol = LINQR_DROP_TOLERANCE;  /* default value */
-   sys->factors = NULL;
-   sys->inverse = NULL;
-   sys->factored = FALSE;
-   sys->rowdeps = FALSE;
-   sys->coldeps = FALSE;
-   sys->rng.low = sys->rng.high = -1;
-   sys->reg.row.low = sys->reg.row.high = -1;
-   sys->reg.col.low = sys->reg.col.high = -1;
-   sys->rank = -1;
-   sys->smallest_pivot = MAXDOUBLE;
-   sys->qrdata = NULL;
-   sys->ludata = NULL;
-   return(sys);
+	sys = (linsolqr_system_t)ascmalloc( sizeof(struct linsolqr_header) );
+	sys->fclass = unknown_c;
+	sys->fmethod = unknown_f;
+	sys->rmethod = unknown_r;
+	sys->integrity = OK;
+	sys->capacity = 0;
+	sys->coef = NULL;
+	sys->rl = NULL;
+	sys->rlength = 0;
+	sys->pivot_zero = 1e-12;           /* default value */
+	sys->ptol = 0.1;                   /* default value */
+	sys->ctol = 0.1;                   /* default value */
+	sys->dtol = LINQR_DROP_TOLERANCE;  /* default value */
+	sys->factors = NULL;
+	sys->inverse = NULL;
+	sys->factored = FALSE;
+	sys->rowdeps = FALSE;
+	sys->coldeps = FALSE;
+	sys->rng.low = sys->rng.high = -1;
+	sys->reg.row.low = sys->reg.row.high = -1;
+	sys->reg.col.low = sys->reg.col.high = -1;
+	sys->rank = -1;
+	sys->smallest_pivot = MAXDOUBLE;
+	sys->qrdata = NULL;
+	sys->ludata = NULL;
+	return(sys);
 }
 
 linsolqr_system_t linsolqr_create_default(){
@@ -450,8 +432,7 @@ linsolqr_system_t linsolqr_create_default(){
 	return L;
 }
 
-void linsolqr_destroy(linsolqr_system_t sys)
-{
+void linsolqr_destroy(linsolqr_system_t sys){
    if(CHECK_SYSTEM(sys)) {
      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. Not destroyed.");
      return;
@@ -470,8 +451,7 @@ void linsolqr_destroy(linsolqr_system_t sys)
    ascfree( (POINTER)sys );
 }
 
-void linsolqr_set_matrix(linsolqr_system_t sys,mtx_matrix_t mtx)
-{
+void linsolqr_set_matrix(linsolqr_system_t sys,mtx_matrix_t mtx){
    if(CHECK_SYSTEM(sys)) {
      ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Bad linsolqr_system_t found. coef mtx not set.");
      return;
@@ -480,8 +460,7 @@ void linsolqr_set_matrix(linsolqr_system_t sys,mtx_matrix_t mtx)
 }
 
 
-void linsolqr_set_region(linsolqr_system_t sys,mtx_region_t region)
-{
+void linsolqr_set_region(linsolqr_system_t sys,mtx_region_t region){
    if(CHECK_SYSTEM(sys)) {
      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. coef mtx not set.");
      return;
@@ -491,21 +470,19 @@ void linsolqr_set_region(linsolqr_system_t sys,mtx_region_t region)
 }
 
 
-mtx_matrix_t linsolqr_get_matrix(linsolqr_system_t sys)
-{
+mtx_matrix_t linsolqr_get_matrix(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
    return( sys->coef );
 }
 
-mtx_region_t *linsolqr_get_region(linsolqr_system_t sys)
-{
+mtx_region_t *linsolqr_get_region(linsolqr_system_t sys){
     return &(sys->reg);
 }
 
 void linsolqr_add_rhs(linsolqr_system_t sys,
                       real64 *rhs,
-                      boolean transpose)
-{
+                      boolean transpose
+){
    struct rhs_list *rl;
 
    if(CHECK_SYSTEM(sys)) {
@@ -533,8 +510,7 @@ void linsolqr_add_rhs(linsolqr_system_t sys,
    }
 }
 
-void linsolqr_remove_rhs(linsolqr_system_t sys,real64 *rhs)
-{
+void linsolqr_remove_rhs(linsolqr_system_t sys,real64 *rhs){
    struct rhs_list **q;
 
    if(CHECK_SYSTEM(sys)) {
@@ -543,13 +519,13 @@ void linsolqr_remove_rhs(linsolqr_system_t sys,real64 *rhs)
    }
    for( q = &(sys->rl) ; NOTNULL(*q) ; q = &((*q)->next) )
       if( (*q)->rhs == rhs )
-	 break;
+         break;
    if( NOTNULL(*q) ) {
       struct rhs_list *p;
       p = *q;
       *q = p->next;
       if( NOTNULL(p->varvalue) )
-	 ascfree( (POINTER)(p->varvalue) );
+         ascfree( (POINTER)(p->varvalue) );
       ascfree( (POINTER)p );
       --(sys->rlength);
    } else if( NOTNULL(rhs) ) {
@@ -557,14 +533,12 @@ void linsolqr_remove_rhs(linsolqr_system_t sys,real64 *rhs)
    }
 }
 
-int32 linsolqr_number_of_rhs(linsolqr_system_t sys)
-{
+int32 linsolqr_number_of_rhs(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
    return( sys->rlength );
 }
 
-real64 *linsolqr_get_rhs(linsolqr_system_t sys,int n)
-{
+real64 *linsolqr_get_rhs(linsolqr_system_t sys,int n){
    struct rhs_list *rl;
    int count;
 
@@ -577,8 +551,7 @@ real64 *linsolqr_get_rhs(linsolqr_system_t sys,int n)
    return( ISNULL(rl) ? NULL : rl->rhs );
 }
 
-void linsolqr_matrix_was_changed(linsolqr_system_t sys)
-{
+void linsolqr_matrix_was_changed(linsolqr_system_t sys){
    if(CHECK_SYSTEM(sys)) {
      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. matrix change message ignored.");
      return;
@@ -586,8 +559,7 @@ void linsolqr_matrix_was_changed(linsolqr_system_t sys)
    sys->rowdeps = sys->coldeps = sys->factored = FALSE;
 }
 
-void linsolqr_rhs_was_changed(linsolqr_system_t sys, real64 *rhs)
-{
+void linsolqr_rhs_was_changed(linsolqr_system_t sys, real64 *rhs){
    struct rhs_list *rl;
 
    if(CHECK_SYSTEM(sys)) {
@@ -602,8 +574,7 @@ void linsolqr_rhs_was_changed(linsolqr_system_t sys, real64 *rhs)
    }
 }
 
-void linsolqr_set_pivot_zero(linsolqr_system_t sys,real64 pivot_zero)
-{
+void linsolqr_set_pivot_zero(linsolqr_system_t sys,real64 pivot_zero){
    if(CHECK_SYSTEM(sys)) {
      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. set_pivot_zero ignored.");
      return;
@@ -616,14 +587,12 @@ void linsolqr_set_pivot_zero(linsolqr_system_t sys,real64 pivot_zero)
    }
 }
 
-real64 linsolqr_pivot_zero(linsolqr_system_t sys)
-{
+real64 linsolqr_pivot_zero(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
    return( sys->pivot_zero );
 }
 
-void linsolqr_set_pivot_tolerance(linsolqr_system_t sys, real64 ptol)
-{
+void linsolqr_set_pivot_tolerance(linsolqr_system_t sys, real64 ptol){
    if(CHECK_SYSTEM(sys)) {
      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. set_pivot_tol ignored.");
      return;
@@ -636,8 +605,7 @@ void linsolqr_set_pivot_tolerance(linsolqr_system_t sys, real64 ptol)
    }
 }
 
-void linsolqr_set_condition_tolerance(linsolqr_system_t sys, real64 ctol)
-{
+void linsolqr_set_condition_tolerance(linsolqr_system_t sys, real64 ctol){
    if(CHECK_SYSTEM(sys)) {
      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. set_condition_tolerance ignored.");
      return;
@@ -650,8 +618,7 @@ void linsolqr_set_condition_tolerance(linsolqr_system_t sys, real64 ctol)
    }
 }
 
-void linsolqr_set_drop_tolerance(linsolqr_system_t sys, real64 dtol)
-{
+void linsolqr_set_drop_tolerance(linsolqr_system_t sys, real64 dtol){
    if(CHECK_SYSTEM(sys)) {
      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. set_drop_tolerance ignored.");
      return;
@@ -664,42 +631,35 @@ void linsolqr_set_drop_tolerance(linsolqr_system_t sys, real64 dtol)
    }
 }
 
-real64 linsolqr_pivot_tolerance(linsolqr_system_t sys)
-{
+real64 linsolqr_pivot_tolerance(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
    return( sys->ptol );
 }
 
-real64 linsolqr_condition_tolerance(linsolqr_system_t sys)
-{
+real64 linsolqr_condition_tolerance(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
    return( sys->ctol );
 }
 
-real64 linsolqr_drop_tolerance(linsolqr_system_t sys)
-{
+real64 linsolqr_drop_tolerance(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
    return( sys->dtol );
 }
 
-extern enum factor_class linsolqr_fclass(linsolqr_system_t sys)
-{
+extern enum factor_class linsolqr_fclass(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
    return( sys->fclass );
 }
-extern enum factor_method linsolqr_fmethod(linsolqr_system_t sys)
-{
+extern enum factor_method linsolqr_fmethod(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
    return( sys->fmethod );
 }
-extern enum reorder_method linsolqr_rmethod(linsolqr_system_t sys)
-{
+extern enum reorder_method linsolqr_rmethod(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
    return( sys->rmethod );
 }
 
-int32 linsolqr_rank(linsolqr_system_t sys)
-{
+int32 linsolqr_rank(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
@@ -707,8 +667,7 @@ int32 linsolqr_rank(linsolqr_system_t sys)
    return(sys->rank);
 }
 
-real64 linsolqr_smallest_pivot(linsolqr_system_t sys)
-{
+real64 linsolqr_smallest_pivot(linsolqr_system_t sys){
    CHECK_SYSTEM(sys);
 #if LINSOL_DEBUG
    if( !sys->factored ) {
@@ -718,7 +677,7 @@ real64 linsolqr_smallest_pivot(linsolqr_system_t sys)
    return(sys->smallest_pivot);
 }
 
-/***************************************************************************\
+/*-----------------------------------------------------------------------------
   Commonly used internal functions for sparse linear solvers based on mtx.
    void ensure_capacity(sys)
    void ensure_lu_capacity(sys)
@@ -727,18 +686,19 @@ real64 linsolqr_smallest_pivot(linsolqr_system_t sys)
    void backward_substitute(sys,rvec,transpose)
    macro SQR(x)
    int find_pivot_number(vec,len,tol,eps,ivec,rvec,maxi)
-\***************************************************************************/
+*/
 
+
+/**
+	Raises the capacity of the array and returns a new array.
+	It is assumed that oldcap < newcap.  vec is destroyed or
+	returned as appropriate.
+	If !NDEBUG, the vector expanded is also set to 0.
+*/
 static real64 *raise_capacity(real64 *vec,
                                     int32 oldcap,
-                                    int32 newcap)
-/**
- ***  Raises the capacity of the array and returns a new array.
- ***  It is assumed that oldcap < newcap.  vec is destroyed or
- ***  returned as appropriate.
- ***  If !NDEBUG, the vector expanded is also set to 0.
- **/
-{
+                                    int32 newcap
+){
   real64 *newvec=NULL;
 #ifndef NDEBUG
   int i;
@@ -766,16 +726,16 @@ static real64 *raise_capacity(real64 *vec,
   return newvec;
 }
 
+/**
+	Raises the capacity of the index array and returns a new array.
+	It is assumed that oldcap < newcap.  vec is destroyed or
+	returned as appropriate. vec returned is zeroed.
+	calling with newcap=0 does not force deallocation.
+*/
 static int32 *raise_qr_int_capacity(int32 *vec,
                                           int32 oldcap,
-                                          int32 newcap)
-/**
- ***  Raises the capacity of the index array and returns a new array.
- ***  It is assumed that oldcap < newcap.  vec is destroyed or
- ***  returned as appropriate. vec returned is zeroed.
- ***  calling with newcap=0 does not force deallocation.
- **/
-{
+                                          int32 newcap
+){
   int32 *newvec=NULL;
   if (newcap < oldcap)
     return vec;
@@ -788,16 +748,16 @@ static int32 *raise_qr_int_capacity(int32 *vec,
   return newvec;
 }
 
+/**
+	Raises the capacity of the real array and returns a new array.
+	It is assumed that oldcap < newcap.  vec is destroyed or
+	returned as appropriate. vec returned is zeroed.
+	calling with newcap=0 does not force deallocation.
+ **/
 static real64 *raise_qr_real_capacity(real64 *vec,
                                        int32 oldcap,
-                                       int32 newcap)
-/**
- ***  Raises the capacity of the real array and returns a new array.
- ***  It is assumed that oldcap < newcap.  vec is destroyed or
- ***  returned as appropriate. vec returned is zeroed.
- ***  calling with newcap=0 does not force deallocation.
- **/
-{
+                                       int32 newcap
+){
   real64 *newvec=NULL;
   if (newcap < oldcap)
     return vec;
@@ -814,10 +774,10 @@ static struct qr_fill_t *raise_qr_fill_capacity(struct qr_fill_t *vec,
                                                 int32 oldcap,
                                                 int32 newcap)
 /**
- ***  Raises the capacity of the fill array and returns a new array.
- ***  It is assumed that oldcap < newcap.  vec is destroyed or
- ***  returned as appropriate. vec returned is zeroed.
- ***  calling with newcap=0 does not force deallocation.
+	Raises the capacity of the fill array and returns a new array.
+	It is assumed that oldcap < newcap.  vec is destroyed or
+	returned as appropriate. vec returned is zeroed.
+	calling with newcap=0 does not force deallocation.
  **/
 {
   struct qr_fill_t *newvec=NULL;
@@ -835,10 +795,10 @@ static struct qr_fill_t *raise_qr_fill_capacity(struct qr_fill_t *vec,
 
 static void ensure_capacity(linsolqr_system_t sys)
 /**
- ***  ensures that the capacity of all of the solution vectors
- ***  for each rhs is large enough.
- ***  The above implies a malloc if varvalue is null.
- ***  Assumes varvalue are at sys->capacity already.
+	ensures that the capacity of all of the solution vectors
+	for each rhs is large enough.
+	The above implies a malloc if varvalue is null.
+	Assumes varvalue are at sys->capacity already.
  **/
 {
    int32 req_cap;
@@ -855,9 +815,9 @@ static void ensure_capacity(linsolqr_system_t sys)
 
 static void ensure_lu_capacity(linsolqr_system_t sys)
 /**
- ***  ensures that the capacity of all of the ludata vectors.
- ***  The above implies a malloc if vector is null.
- ***  If not null, implies an extension if needed.
+	ensures that the capacity of all of the ludata vectors.
+	The above implies a malloc if vector is null.
+	If not null, implies an extension if needed.
  **/
 {
   int32 req_cap;
@@ -878,11 +838,11 @@ static void ensure_lu_capacity(linsolqr_system_t sys)
 
 static void ensure_qr_capacity(linsolqr_system_t sys)
 /**
- ***  ensures that the capacity of all of the qrdata vectors
- ***  is large enough.
- ***  The above implies a calloc if vector is null.
- ***  If not null, implies an extension and zeroing of the vector.
- ***  Also zeroes the simple elements of the qrdata.
+	ensures that the capacity of all of the qrdata vectors
+	is large enough.
+	The above implies a calloc if vector is null.
+	If not null, implies an extension and zeroing of the vector.
+	Also zeroes the simple elements of the qrdata.
  **/
 {
   int32 req_cap;
@@ -925,22 +885,22 @@ static void forward_substitute(linsolqr_system_t sys,
                                real64 *arr,
                                boolean transpose)
 /**
- ***  Forward substitute.  It is assumed that the L (or U) part of
- ***  sys->factors is computed.  This function converts c to x in place.  The
- ***  values are stored in arr indexed by original row number (or original
- ***  column number).
- ***
- ***     transpose = FALSE:                  transpose = TRUE:
- ***                                          T
- ***     L x = c                             U x = c
- ***
- ***  The following formula holds:
- ***     0<=k<r ==> x(k) = [c(k) - L(k,(0..k-1)) dot x(0..k-1)] / L(k,k)
- ***  or
- ***     0<=k<r ==> x(k) = [c(k) - U((0..k-1),k) dot x(0..k-1)] / U(k,k)
- ***
- ***  U(k,k) is 1 by construction. L(k,k) is stored in sys->ludata->pivlist[k]
- ***  and in matrix.
+	Forward substitute.  It is assumed that the L (or U) part of
+	sys->factors is computed.  This function converts c to x in place.  The
+	values are stored in arr indexed by original row number (or original
+	column number).
+
+	   transpose = FALSE:                  transpose = TRUE:
+	                                        T
+	   L x = c                             U x = c
+
+	The following formula holds:
+	   0<=k<r ==> x(k) = [c(k) - L(k,(0..k-1)) dot x(0..k-1)] / L(k,k)
+	or
+	   0<=k<r ==> x(k) = [c(k) - U((0..k-1),k) dot x(0..k-1)] / U(k,k)
+
+	U(k,k) is 1 by construction. L(k,k) is stored in sys->ludata->pivlist[k]
+	and in matrix.
  **/
 {
    mtx_range_t dot_rng;
@@ -991,26 +951,26 @@ static void backward_substitute(linsolqr_system_t sys,
                                 real64 *arr,
                                 boolean transpose)
 /**
- ***  Backward substitute.  It is assumed that the U (or L) part of
- ***  sys->factors is computed.  This function converts rhs to c in place.  The
- ***  values are stored in arr indexed by original row number (or original
- ***  column number).
- ***
- ***    transpose = FALSE:                  transpose = TRUE:
- ***                                         T
- ***    U c = rhs                           L c = rhs
- ***
- ***  The following formula holds:
- ***  transpose=FALSE: (the usual for J.dx=-f where rhs is -f)
- ***     0<=k<r ==> c(k) = [rhs(k) - U(k,(k+1..r-1)) dot c(k+1..r-1)] / U(k,k)
- ***     working up from the bottom.
- ***  or
- ***  transpose=TRUE:
- ***     0<=k<r ==> c(k) = [rhs(k) - L((k+1..r-1),k) dot c(k+1..r-1)] / L(k,k)
- ***     working right to left.
- ***
- ***  U(k,k) is 1 by construction. L(k,k) is stored in sys->ludata->pivlist[k]
- ***  and in matrix.
+	Backward substitute.  It is assumed that the U (or L) part of
+	sys->factors is computed.  This function converts rhs to c in place.  The
+	values are stored in arr indexed by original row number (or original
+	column number).
+
+	  transpose = FALSE:                  transpose = TRUE:
+	                                       T
+	  U c = rhs                           L c = rhs
+
+	The following formula holds:
+	transpose=FALSE: (the usual for J.dx=-f where rhs is -f)
+	   0<=k<r ==> c(k) = [rhs(k) - U(k,(k+1..r-1)) dot c(k+1..r-1)] / U(k,k)
+	   working up from the bottom.
+	or
+	transpose=TRUE:
+	   0<=k<r ==> c(k) = [rhs(k) - L((k+1..r-1),k) dot c(k+1..r-1)] / L(k,k)
+	   working right to left.
+
+	U(k,k) is 1 by construction. L(k,k) is stored in sys->ludata->pivlist[k]
+	and in matrix.
  **/
 {
    mtx_range_t dot_rng;
@@ -1066,44 +1026,45 @@ static void backward_substitute(linsolqr_system_t sys,
 }
 
 #ifdef SQR
-#undef SQR
+# undef SQR
 #endif
 #define SQR(x) ((x)*(x))
 /*
- *   int32 find_pivot_number(vec,len,tol,eps,ivec,rvec,maxi);
- *   real64 *vec,*rvec,tol;
- *   int32 len, *ivec, *maxi;
- *
- *   Search array vec of positive numbers for the first entry, k, which passes
- *   (vec[k] >= tol*vecmax) where vecmax is the largest value in vec.
- *   vec is an array len long. rvec, ivec are (worst case) len long.
- *   *maxi will be set to the index of the first occurence of the largest
- *   number in vec which is >= eps.
- *   0.0 <= tol <= 1.
- *   If tol <=0, no search is done (*maxi = 0, k = 0).
- *   Eps is an absolute number which vec values must be >= to before
- *   being eligible for the tol test.
- *
- *   Best case, highly nonlinear feature:
- *     if on entry *maxi = len, we will do a simplified search for the
- *     first k which satisfies tol and eps tests, based on the value
- *     stored at vec[len-1].
- *
- *   We could allocate and deallocate rvec/ivec since they are
- *   temporaries, but it is more efficient for caller to manage that.
- *   If tol>=1.0, rvec and ivec are ignored and may be NULL.
- *   NOTE: we are going on value vec[i], not fabs(vec[i]).
- *   Returns k.
- * Remember: GIGO.
- * Failure modes- if all numbers are <= 0.0, k and *maxi will be returned 0.
- * Failure modes- if all numbers are < eps, k and *maxi will be returned 0.
- *
- * find_pivot_index, should we implement, would search an int vector.
- *
- * Hint: if you know you have not increased any values in vec and have not
- * changed the value at vec[maxi] before a subsequent search, then call
- * with len = previous maxi+1 to reduce the search time.
- */
+	 int32 find_pivot_number(vec,len,tol,eps,ivec,rvec,maxi);
+	 real64 *vec,*rvec,tol;
+	 int32 len, *ivec, *maxi;
+
+	 Search array vec of positive numbers for the first entry, k, which passes
+	 (vec[k] >= tol*vecmax) where vecmax is the largest value in vec.
+	 vec is an array len long. rvec, ivec are (worst case) len long.
+	 *maxi will be set to the index of the first occurence of the largest
+	 number in vec which is >= eps.
+	 0.0 <= tol <= 1.
+	 If tol <=0, no search is done (*maxi = 0, k = 0).
+	 Eps is an absolute number which vec values must be >= to before
+	 being eligible for the tol test.
+
+	 Best case, highly nonlinear feature:
+	   if on entry *maxi = len, we will do a simplified search for the
+	   first k which satisfies tol and eps tests, based on the value
+	   stored at vec[len-1].
+
+	 We could allocate and deallocate rvec/ivec since they are
+	 temporaries, but it is more efficient for caller to manage that.
+	 If tol>=1.0, rvec and ivec are ignored and may be NULL.
+	 NOTE: we are going on value vec[i], not fabs(vec[i]).
+	 Returns k.
+
+	Remember: GIGO.
+	Failure modes- if all numbers are <= 0.0, k and *maxi will be returned 0.
+	Failure modes- if all numbers are < eps, k and *maxi will be returned 0.
+
+	find_pivot_index, should we implement, would search an int vector.
+	
+	Hint: if you know you have not increased any values in vec and have not
+	changed the value at vec[maxi] before a subsequent search, then call
+	with len = previous maxi+1 to reduce the search time.
+*/
 static int32 find_pivot_number(const real64 *vec,
                                      const int32 len,
                                      const real64 tol,
@@ -1263,15 +1224,15 @@ static void calc_dependent_cols_ranki1(linsolqr_system_t sys)
 }
 
 /**
- *** Given a matrix and a diagonal range, sets the diagonal elements to 0
- *** but does not delete them in the range low to high inclusive.
- *** worst cost= k*(nonzeros in rows of range treated).
- *** likely cost= k*(nonzeros in column pivoted rows of range treated)
- ***              since you can smartly put in the diagonal last and find
- ***              it first on many occasions.
- *** This is a good bit cheaper than deleting the elements unless one
- *** expects thousands of solves.
- **/
+	Given a matrix and a diagonal range, sets the diagonal elements to 0
+	but does not delete them in the range low to high inclusive.
+	worst cost= k*(nonzeros in rows of range treated).
+	likely cost= k*(nonzeros in column pivoted rows of range treated)
+	            since you can smartly put in the diagonal last and find
+	            it first on many occasions.
+	This is a good bit cheaper than deleting the elements unless one
+	expects thousands of solves.
+*/
 static void zero_diagonal_elements(mtx_matrix_t mtx,
                                    int32 low, int32 high)
 {
@@ -1286,7 +1247,7 @@ static void zero_unpivoted_vars(linsolqr_system_t sys,
 				real64 *varvalues,
 				boolean transpose)
 /**
- ***  Sets the values of unpivoted variables to zero.
+	Sets the values of unpivoted variables to zero.
  **/
 {
    int32 ndx,order;
@@ -1310,8 +1271,8 @@ static void zero_unpivoted_vars(linsolqr_system_t sys,
 #if LINSOL_DEBUG
 static void debug_out_factors(FILE *fp,linsolqr_system_t sys)
 /**
- ***  Outputs permutation and values of the nonzero elements in the
- ***  factor matrix square region given by sys->rng.
+	Outputs permutation and values of the nonzero elements in the
+	factor matrix square region given by sys->rng.
  **/
 {
    mtx_region_t reg;
@@ -1321,15 +1282,12 @@ static void debug_out_factors(FILE *fp,linsolqr_system_t sys)
 }
 #endif /* LINSOL_DEBUG */
 
-/***************************************************************************\
+/*-----------------------------------------------------------------------------
   Reordering functions for SPK1, and possibly for other schemes to be
   implemented later.
   The stuff here is almost, but not quite, black magic. Don't tinker with it.
-\***************************************************************************/
+*/
 
-/*********************************
- begin of spk1 stuff
-*********************************/
 struct reorder_list {            /* List of rows/columns and their counts. */
    int32 ndx;
    int32 count;
@@ -1346,7 +1304,7 @@ struct reorder_vars {
 
 static void adjust_row_count(struct reorder_vars *vars,int32 removed_col)
 /**
- ***  Adjusts the row counts to account for the (to be) removed column.
+	Adjusts the row counts to account for the (to be) removed column.
  **/
 {
    mtx_coord_t nz;
@@ -1354,7 +1312,7 @@ static void adjust_row_count(struct reorder_vars *vars,int32 removed_col)
    nz.col = removed_col;
    nz.row = mtx_FIRST;
    while( value = mtx_next_in_col(vars->mtx,&nz,&(vars->reg.row)),
-	 nz.row != mtx_LAST )
+         nz.row != mtx_LAST )
       --(vars->rowcount[nz.row]);
 }
 
@@ -1362,12 +1320,12 @@ static void assign_row_and_col(struct reorder_vars *vars,
                           int32 row,
                           int32 col)
 /**
- ***  Assigns the given row to the given column, moving the row and column
- ***  to the beginning of the active region and removing them (readjusting
- ***  the region).  The row counts are NOT adjusted.  If col == mtx_NONE,
- ***  then no column is assigned and the row is moved to the end of the
- ***  active block instead.  Otherwise, it is assumed that the column
- ***  is active.
+	Assigns the given row to the given column, moving the row and column
+	to the beginning of the active region and removing them (readjusting
+	the region).  The row counts are NOT adjusted.  If col == mtx_NONE,
+	then no column is assigned and the row is moved to the end of the
+	active block instead.  Otherwise, it is assumed that the column
+	is active.
  **/
 {
    if( col == mtx_NONE ) {
@@ -1385,8 +1343,8 @@ static void assign_row_and_col(struct reorder_vars *vars,
 
 static void push_column_on_stack(struct reorder_vars *vars,int32 col)
 /**
- ***  Pushes the given column onto the stack.  It is assumed that the
- ***  column is active.  Row counts are adjusted.
+	Pushes the given column onto the stack.  It is assumed that the
+	column is active.  Row counts are adjusted.
  **/
 {
    adjust_row_count(vars,col);
@@ -1396,11 +1354,11 @@ static void push_column_on_stack(struct reorder_vars *vars,int32 col)
 
 static int32 pop_column_from_stack(struct reorder_vars *vars)
 /**
- ***  Pops the column on the "top" of the stack off of the stack and
- ***  returns the column index, where it now lies in the active region.
- ***  If the stack is empty, mtx_NONE is returned.  Row counts are NOT
- ***  adjusted (this together with a subsequent assignment of this column
- ***  ==> no row count adjustment necessary).
+	Pops the column on the "top" of the stack off of the stack and
+	returns the column index, where it now lies in the active region.
+	If the stack is empty, mtx_NONE is returned.  Row counts are NOT
+	adjusted (this together with a subsequent assignment of this column
+	==> no row count adjustment necessary).
  **/
 {
    if( vars->reg.col.high < vars->colhigh )
@@ -1411,9 +1369,9 @@ static int32 pop_column_from_stack(struct reorder_vars *vars)
 
 static void assign_null_rows(struct reorder_vars *vars)
 /**
- ***  Assigns empty rows, moving them to the assigned region.  It is
- ***  assumed that row counts are correct.  Columns are assigned off the
- ***  stack.
+	Assigns empty rows, moving them to the assigned region.  It is
+	assumed that row counts are correct.  Columns are assigned off the
+	stack.
  **/
 {
    int32 row;
@@ -1425,9 +1383,9 @@ static void assign_null_rows(struct reorder_vars *vars)
 
 static void forward_triangularize(struct reorder_vars *vars)
 /**
- ***  Forward triangularizes the region, assigning singleton rows with their
- ***  one and only incident column until there are no more.  The row counts
- ***  must be correct, and they are updated.
+	Forward triangularizes the region, assigning singleton rows with their
+	one and only incident column until there are no more.  The row counts
+	must be correct, and they are updated.
  **/
 {
    boolean change;
@@ -1452,8 +1410,8 @@ static void forward_triangularize(struct reorder_vars *vars)
 
 static int32 select_row(struct reorder_vars *vars)
 /**
- ***  Selects a row and returns its index.  It is assumed that there is a
- ***  row.  Row counts must be correct.  vars->tlist will be used.
+	Selects a row and returns its index.  It is assumed that there is a
+	row.  Row counts must be correct.  vars->tlist will be used.
  **/
 {
    int32 min_row_count;
@@ -1477,8 +1435,8 @@ static int32 select_row(struct reorder_vars *vars)
          vars->tlist[nties++].ndx = row;
       }
    /**
-    ***  vars->tlist[0..nties-1] is a list of row numbers which tie for
-    ***   minimum row count.
+   	vars->tlist[0..nties-1] is a list of row numbers which tie for
+   	 minimum row count.
     **/
 
    max_col_count = -1;   /* < any possible value */
@@ -1492,7 +1450,7 @@ static int32 select_row(struct reorder_vars *vars)
       nz.row = vars->tlist[i].ndx;
       nz.col = mtx_FIRST;
       while( value = mtx_next_in_row(mtx,&nz,colrng),
-	    nz.col != mtx_LAST )
+            nz.col != mtx_LAST )
          sum += mtx_nonzeros_in_col(mtx,nz.col,rowrng);
       if( sum > max_col_count ) {
          max_col_count = sum;
@@ -1501,54 +1459,54 @@ static int32 select_row(struct reorder_vars *vars)
       i++;
    }
    /**
-    ***  Now row contains the row with the minimum row count, which has the
-    ***  greatest total column count of incident columns among all rows with
-    ***  the same (minimum) row count.  Select it.
+   	Now row contains the row with the minimum row count, which has the
+   	greatest total column count of incident columns among all rows with
+   	the same (minimum) row count.  Select it.
     **/
    return(row);
 }
 
 static void spk1_reorder(struct reorder_vars *vars)
 /**
- ***  Reorders the assigned matrix vars->mtx within the specified bounding
- ***  block region vars->reg.  The region is split into 6 subregions during
- ***  reordering:  the rows are divided in two, and the columns divided in
- ***  three.  Initially everything is in the active subregion.  Ultimately,
- ***  everything will be assigned.
- ***
- ***          <-- assigned -->|<-- active-->|<-- on stack -->|
- ***     ----+----------------+-------------+----------------+
- ***       a |                |             |                |
- ***       s |                |             |                |
- ***       s |                |             |                |
- ***       i |    (SQUARE)    |             |                |
- ***       g |                |             |                |
- ***       n |                |             |                |
- ***       e |                |             |                |
- ***       d |                |             |                |
- ***     ----+----------------+-------------+----------------+
- ***       a |                |             |                |
- ***       c |                |    ACTIVE   |                |
- ***       t |                |    REGION   |                |
- ***       i |                |             |                |
- ***       v |                |             |                |
- ***       e |                |             |                |
- ***     ----+----------------+-------------+----------------+
- ***
- ***  The algorithm is roughly as follows:
- ***    (1) select a row (by some criterion).
- ***    (2) push columns incident on that row onto the stack in decreasing
- ***        order of their length.
- ***    (3) pop first column off the stack and assign it to the selected
- ***        row.
- ***    (4) forward-triangularize (assign singleton rows with their one
- ***        and only incident column, until no longer possible).
- ***
- ***    (1)-(4) should be repeated until the active subregion becomes empty.
- ***
- ***  Everything above was written as though the entire matrix is
- ***  involved.  In reality, only the relevant square region is involved.
- **/
+	Reorders the assigned matrix vars->mtx within the specified bounding
+	block region vars->reg.  The region is split into 6 subregions during
+	reordering:  the rows are divided in two, and the columns divided in
+	three.  Initially everything is in the active subregion.  Ultimately,
+	everything will be assigned.
+
+	        <-- assigned -->|<-- active-->|<-- on stack -->|
+	   ----+----------------+-------------+----------------+
+	     a |                |             |                |
+	     s |                |             |                |
+	     s |                |             |                |
+	     i |    (SQUARE)    |             |                |
+	     g |                |             |                |
+	     n |                |             |                |
+	     e |                |             |                |
+	     d |                |             |                |
+	   ----+----------------+-------------+----------------+
+	     a |                |             |                |
+	     c |                |    ACTIVE   |                |
+	     t |                |    REGION   |                |
+	     i |                |             |                |
+	     v |                |             |                |
+	     e |                |             |                |
+	   ----+----------------+-------------+----------------+
+
+	The algorithm is roughly as follows:
+	  (1) select a row (by some criterion).
+	  (2) push columns incident on that row onto the stack in decreasing
+	      order of their length.
+	  (3) pop first column off the stack and assign it to the selected
+	      row.
+	  (4) forward-triangularize (assign singleton rows with their one
+	      and only incident column, until no longer possible).
+
+	  (1)-(4) should be repeated until the active subregion becomes empty.
+
+	Everything above was written as though the entire matrix is
+	involved.  In reality, only the relevant square region is involved.
+*/
 {
    int32 row, size;
    int32 *rowcount_array_origin;
@@ -1565,7 +1523,7 @@ static void spk1_reorder(struct reorder_vars *vars)
    /* Establish row counts */
    for( row = vars->reg.row.low ; row <= vars->reg.row.high ; ++row )
       vars->rowcount[row] =
-	 mtx_nonzeros_in_row(mtx,row,&(vars->reg.col));
+         mtx_nonzeros_in_row(mtx,row,&(vars->reg.col));
 
    while(TRUE) {
       struct reorder_list *head;
@@ -1576,12 +1534,12 @@ static void spk1_reorder(struct reorder_vars *vars)
       forward_triangularize(vars);
       assign_null_rows(vars);
       if( vars->reg.row.low>vars->reg.row.high ||
-	 vars->reg.col.low>vars->reg.col.high ) {
-	 /* Active region is now empty, done */
-	 if( NOTNULL(vars->tlist) )
-	    ascfree( vars->tlist );
-	 if( NOTNULL(rowcount_array_origin) )
-	    ascfree( rowcount_array_origin );
+         vars->reg.col.low>vars->reg.col.high ) {
+         /* Active region is now empty, done */
+         if( NOTNULL(vars->tlist) )
+            ascfree( vars->tlist );
+         if( NOTNULL(rowcount_array_origin) )
+            ascfree( rowcount_array_origin );
          return;
       }
 
@@ -1590,7 +1548,7 @@ static void spk1_reorder(struct reorder_vars *vars)
       nz.row = select_row(vars);
       nz.col = mtx_FIRST;
       while( value = mtx_next_in_row(mtx,&nz,&(vars->reg.col)),
-	    nz.col != mtx_LAST ) {
+            nz.col != mtx_LAST ) {
          struct reorder_list **q,*p;
 
          p = &(vars->tlist[nelts++]);
@@ -1601,8 +1559,8 @@ static void spk1_reorder(struct reorder_vars *vars)
          *q = p;
       }
       /**
-       ***  We now have a list of columns which intersect the selected row.
-       ***  The list is in order of decreasing column count.
+      	We now have a list of columns which intersect the selected row.
+      	The list is in order of decreasing column count.
        **/
 
       /* Push incident columns on stack */
@@ -1615,12 +1573,14 @@ static void spk1_reorder(struct reorder_vars *vars)
    /*  Not reached. */
 }
 
-/*********************************
- end of spk1 stuff
-*********************************/
-/*********************************
+/*
+	end of spk1 stuff
+*/
+
+/*-----------------------------------------------------------------------------
  begin of tspk1 stuff
-*********************************/
+*/
+
 struct creorder_list {            /* List of columns/rows and their counts. */
    int32 ndx;
    int32 count;
@@ -1637,7 +1597,7 @@ struct creorder_vars {
 
 static void adjust_col_count(struct creorder_vars *vars,int32 removed_row)
 /**
- ***  Adjusts the column counts to account for the (to be) removed row.
+	Adjusts the column counts to account for the (to be) removed row.
  **/
 {
    mtx_coord_t nz;
@@ -1645,7 +1605,7 @@ static void adjust_col_count(struct creorder_vars *vars,int32 removed_row)
    nz.row = removed_row;
    nz.col = mtx_FIRST;
    while( value = mtx_next_in_row(vars->mtx,&nz,&(vars->reg.col)),
-	 nz.col != mtx_LAST )
+         nz.col != mtx_LAST )
       --(vars->colcount[nz.col]);
 }
 
@@ -1653,12 +1613,12 @@ static void assign_col_and_row(struct creorder_vars *vars,
                           int32 col,
                           int32 row)
 /**
- ***  Assigns the given row to the given column, moving the row and column
- ***  to the beginning of the active region and removing them (readjusting
- ***  the region).  The col counts are NOT adjusted.  If col == mtx_NONE,
- ***  then no column is assigned and the col is moved to the end of the
- ***  active block instead.  Otherwise, it is assumed that the row
- ***  is active.
+	Assigns the given row to the given column, moving the row and column
+	to the beginning of the active region and removing them (readjusting
+	the region).  The col counts are NOT adjusted.  If col == mtx_NONE,
+	then no column is assigned and the col is moved to the end of the
+	active block instead.  Otherwise, it is assumed that the row
+	is active.
  **/
 {
    if( row == mtx_NONE ) {
@@ -1676,8 +1636,8 @@ static void assign_col_and_row(struct creorder_vars *vars,
 
 static void push_row_on_stack(struct creorder_vars *vars,int32 row)
 /**
- ***  Pushes the given row onto the stack.  It is assumed that the
- ***  row is active.  Col counts are adjusted.
+	Pushes the given row onto the stack.  It is assumed that the
+	row is active.  Col counts are adjusted.
  **/
 {
    adjust_col_count(vars,row);
@@ -1687,11 +1647,11 @@ static void push_row_on_stack(struct creorder_vars *vars,int32 row)
 
 static int32 pop_row_from_stack(struct creorder_vars *vars)
 /**
- ***  Pops the row on the "top" of the stack off of the stack and
- ***  returns the row index, where it now lies in the active region.
- ***  If the stack is empty, mtx_NONE is returned.  Col counts are NOT
- ***  adjusted (this together with a subsequent assignment of this row
- ***  ==> no col count adjustment necessary).
+	Pops the row on the "top" of the stack off of the stack and
+	returns the row index, where it now lies in the active region.
+	If the stack is empty, mtx_NONE is returned.  Col counts are NOT
+	adjusted (this together with a subsequent assignment of this row
+	==> no col count adjustment necessary).
  **/
 {
    if( vars->reg.row.high < vars->rowhigh )
@@ -1702,9 +1662,9 @@ static int32 pop_row_from_stack(struct creorder_vars *vars)
 
 static void assign_null_cols(struct creorder_vars *vars)
 /**
- ***  Assigns empty cols, moving them to the assigned region.  It is
- ***  assumed that col counts are correct.  Rows are assigned off the
- ***  stack.
+	Assigns empty cols, moving them to the assigned region.  It is
+	assumed that col counts are correct.  Rows are assigned off the
+	stack.
  **/
 {
    int32 col;
@@ -1716,9 +1676,9 @@ static void assign_null_cols(struct creorder_vars *vars)
 
 static void cforward_triangularize(struct creorder_vars *vars)
 /**
- ***  Forward triangularizes the region, assigning singleton columns with their
- ***  one and only incident row until there are no more.  The column counts
- ***  must be correct, and they are updated.
+	Forward triangularizes the region, assigning singleton columns with their
+	one and only incident row until there are no more.  The column counts
+	must be correct, and they are updated.
  **/
 {
    boolean change;
@@ -1743,8 +1703,8 @@ static void cforward_triangularize(struct creorder_vars *vars)
 
 static int32 select_col(struct creorder_vars *vars)
 /**
- ***  Selects a col and returns its index.  It is assumed that there is a
- ***  col.  Col counts must be correct.  vars->tlist will be used.
+	Selects a col and returns its index.  It is assumed that there is a
+	col.  Col counts must be correct.  vars->tlist will be used.
  **/
 {
    int32 min_col_count;
@@ -1768,8 +1728,8 @@ static int32 select_col(struct creorder_vars *vars)
          vars->tlist[nties++].ndx = col;
       }
    /**
-    ***  vars->tlist[0..nties-1] is a list of row numbers which tie for
-    ***   minimum col count.
+   	vars->tlist[0..nties-1] is a list of row numbers which tie for
+   	 minimum col count.
     **/
 
    max_row_count = -1;   /* < any possible value */
@@ -1783,7 +1743,7 @@ static int32 select_col(struct creorder_vars *vars)
       nz.row = mtx_FIRST;
       nz.col = vars->tlist[i].ndx;
       while( value = mtx_next_in_col(mtx,&nz,rowrng),
-	    nz.row != mtx_LAST )
+            nz.row != mtx_LAST )
          sum += mtx_nonzeros_in_row(mtx,nz.row,colrng);
       if( sum > max_row_count ) {
          max_row_count = sum;
@@ -1792,54 +1752,54 @@ static int32 select_col(struct creorder_vars *vars)
       i++;
    }
    /**
-    ***  Now col contains the col with the minimum col count, which has the
-    ***  greatest total row count of incident rows among all cols with
-    ***  the same (minimum) col count.  Select it.
+   	Now col contains the col with the minimum col count, which has the
+   	greatest total row count of incident rows among all cols with
+   	the same (minimum) col count.  Select it.
     **/
    return(col);
 }
 
 static void tspk1_reorder(struct creorder_vars *vars)
 /**
- ***  Transpose the picture and explanation that follows:
- ***  Reorders the assigned matrix vars->mtx within the specified bounding
- ***  block region vars->reg.  The region is split into 6 subregions during
- ***  reordering:  the rows are divided in two, and the columns divided in
- ***  three.  Initially everything is in the active subregion.  Ultimately,
- ***  everything will be assigned.
- ***
- ***          <-- assigned -->|<-- active-->|<-- on stack -->|
- ***     ----+----------------+-------------+----------------+
- ***       a |                |             |                |
- ***       s |                |             |                |
- ***       s |                |             |                |
- ***       i |    (SQUARE)    |             |                |
- ***       g |                |             |                |
- ***       n |                |             |                |
- ***       e |                |             |                |
- ***       d |                |             |                |
- ***     ----+----------------+-------------+----------------+
- ***       a |                |             |                |
- ***       c |                |    ACTIVE   |                |
- ***       t |                |    REGION   |                |
- ***       i |                |             |                |
- ***       v |                |             |                |
- ***       e |                |             |                |
- ***     ----+----------------+-------------+----------------+
- ***
- ***  The algorithm is roughly as follows:
- ***    (1) select a row (by some criterion).
- ***    (2) push columns incident on that row onto the stack in decreasing
- ***        order of their length.
- ***    (3) pop first column off the stack and assign it to the selected
- ***        row.
- ***    (4) forward-triangularize (assign singleton rows with their one
- ***        and only incident column, until no longer possible).
- ***
- ***    (1)-(4) should be repeated until the active subregion becomes empty.
- ***
- ***  Everything above was written as though the entire matrix is
- ***  involved.  In reality, only the relevant square region is involved.
+	Transpose the picture and explanation that follows:
+	Reorders the assigned matrix vars->mtx within the specified bounding
+	block region vars->reg.  The region is split into 6 subregions during
+	reordering:  the rows are divided in two, and the columns divided in
+	three.  Initially everything is in the active subregion.  Ultimately,
+	everything will be assigned.
+
+	        <-- assigned -->|<-- active-->|<-- on stack -->|
+	   ----+----------------+-------------+----------------+
+	     a |                |             |                |
+	     s |                |             |                |
+	     s |                |             |                |
+	     i |    (SQUARE)    |             |                |
+	     g |                |             |                |
+	     n |                |             |                |
+	     e |                |             |                |
+	     d |                |             |                |
+	   ----+----------------+-------------+----------------+
+	     a |                |             |                |
+	     c |                |    ACTIVE   |                |
+	     t |                |    REGION   |                |
+	     i |                |             |                |
+	     v |                |             |                |
+	     e |                |             |                |
+	   ----+----------------+-------------+----------------+
+
+	The algorithm is roughly as follows:
+	  (1) select a row (by some criterion).
+	  (2) push columns incident on that row onto the stack in decreasing
+	      order of their length.
+	  (3) pop first column off the stack and assign it to the selected
+	      row.
+	  (4) forward-triangularize (assign singleton rows with their one
+	      and only incident column, until no longer possible).
+
+	  (1)-(4) should be repeated until the active subregion becomes empty.
+
+	Everything above was written as though the entire matrix is
+	involved.  In reality, only the relevant square region is involved.
  **/
 {
    int32 col, size;
@@ -1861,7 +1821,7 @@ static void tspk1_reorder(struct creorder_vars *vars)
    /* Establish col counts */
    for( col = vars->reg.col.low ; col <= vars->reg.col.high ; ++col )
       vars->colcount[col] =
-	 mtx_nonzeros_in_col(mtx,col,&(vars->reg.row));
+         mtx_nonzeros_in_col(mtx,col,&(vars->reg.row));
 
    while(TRUE) {
       struct creorder_list *head;
@@ -1872,12 +1832,12 @@ static void tspk1_reorder(struct creorder_vars *vars)
       cforward_triangularize(vars);
       assign_null_cols(vars);
       if( vars->reg.col.low > vars->reg.col.high ||
-	 vars->reg.row.low > vars->reg.row.high ) {
-	 /* Active region is now empty, done */
-	 if( NOTNULL(vars->tlist) )
-	    ascfree( vars->tlist );
-	 if( NOTNULL(colcount_array_origin) )
-	    ascfree( colcount_array_origin );
+         vars->reg.row.low > vars->reg.row.high ) {
+         /* Active region is now empty, done */
+         if( NOTNULL(vars->tlist) )
+            ascfree( vars->tlist );
+         if( NOTNULL(colcount_array_origin) )
+            ascfree( colcount_array_origin );
          return;
       }
 
@@ -1886,7 +1846,7 @@ static void tspk1_reorder(struct creorder_vars *vars)
       nz.row = mtx_FIRST;
       nz.col = select_col(vars);
       while( value = mtx_next_in_col(mtx,&nz,&(vars->reg.row)),
-	    nz.row != mtx_LAST ) {
+            nz.row != mtx_LAST ) {
          struct creorder_list **q,*p;
 
          p = &(vars->tlist[nelts++]);
@@ -1897,8 +1857,8 @@ static void tspk1_reorder(struct creorder_vars *vars)
          *q = p;
       }
       /**
-       ***  We now have a list of columns which intersect the selected row.
-       ***  The list is in order of decreasing column count.
+      	We now have a list of columns which intersect the selected row.
+      	The list is in order of decreasing column count.
        **/
 
       /* Push incident rows on stack */
@@ -1911,13 +1871,13 @@ static void tspk1_reorder(struct creorder_vars *vars)
    /*  Not reached. */
 }
 
-/*********************************
+/*
  end of tspk1 stuff
-*********************************/
+ -----------------------------------------------------------------------------*/
 
 static boolean nonempty_row(mtx_matrix_t mtx,int32 row)
 /**
- ***  ? row not empty in mtx.
+	? row not empty in mtx.
  **/
 {
    mtx_coord_t nz;
@@ -1928,7 +1888,7 @@ static boolean nonempty_row(mtx_matrix_t mtx,int32 row)
 
 static boolean nonempty_col(mtx_matrix_t mtx,int32 col)
 /**
- ***  ? column not empty in mtx.
+	? column not empty in mtx.
  **/
 {
    mtx_coord_t nz;
@@ -1939,7 +1899,7 @@ static boolean nonempty_col(mtx_matrix_t mtx,int32 col)
 
 static void determine_pivot_range(linsolqr_system_t sys)
 /**
- ***  Calculates sys->rng from sys->coef.
+	Calculates sys->rng from sys->coef.
  **/
 {
    sys->reg.row.low = sys->reg.row.high = -1;
@@ -1947,11 +1907,11 @@ static void determine_pivot_range(linsolqr_system_t sys)
 
    for( sys->rng.high=mtx_order(sys->coef) ; --(sys->rng.high) >= 0 ; ) {
       if( nonempty_row(sys->coef,sys->rng.high) &&
-	 sys->reg.row.high < 0 )
-	 sys->reg.row.high = sys->rng.high;
+         sys->reg.row.high < 0 )
+         sys->reg.row.high = sys->rng.high;
       if( nonempty_col(sys->coef,sys->rng.high) &&
-	 sys->reg.col.high < 0 )
-	 sys->reg.col.high = sys->rng.high;
+         sys->reg.col.high < 0 )
+         sys->reg.col.high = sys->rng.high;
       if( nonempty_row(sys->coef,sys->rng.high) &&
          nonempty_col(sys->coef,sys->rng.high) )
          break;
@@ -1959,11 +1919,11 @@ static void determine_pivot_range(linsolqr_system_t sys)
 
    for( sys->rng.low=0 ; sys->rng.low <= sys->rng.high ; ++(sys->rng.low) ) {
       if( nonempty_row(sys->coef,sys->rng.low) &&
-	 sys->reg.row.low < 0 )
-	 sys->reg.row.low = sys->rng.low;
+         sys->reg.row.low < 0 )
+         sys->reg.row.low = sys->rng.low;
       if( nonempty_col(sys->coef,sys->rng.low) &&
-	 sys->reg.col.low < 0 )
-	 sys->reg.col.low = sys->rng.low;
+         sys->reg.col.low < 0 )
+         sys->reg.col.low = sys->rng.low;
       if( nonempty_row(sys->coef,sys->rng.low) &&
          nonempty_col(sys->coef,sys->rng.low) )
          break;
@@ -1972,8 +1932,8 @@ static void determine_pivot_range(linsolqr_system_t sys)
 
 static void square_region(linsolqr_system_t sys,mtx_region_t *region)
 /**
- *** Get the largest square confined to the diagonal within the region given
- *** and set sys->rng accordingly.
+	 Get the largest square confined to the diagonal within the region given
+	 and set sys->rng accordingly.
  **/
 {
       sys->reg = *region;
@@ -1983,10 +1943,10 @@ static void square_region(linsolqr_system_t sys,mtx_region_t *region)
 
 static int ranki_reorder(linsolqr_system_t sys,mtx_region_t *region)
 /**
- ***  The region to reorder is first isolated by truncating the region
- ***  provided to the largest square region confined to the matrix diagonal.
- ***  It is presumed it will contain no empty rows or columns and will
- ***  provide the basis of candidate pivots when factoring.
+	The region to reorder is first isolated by truncating the region
+	provided to the largest square region confined to the matrix diagonal.
+	It is presumed it will contain no empty rows or columns and will
+	provide the basis of candidate pivots when factoring.
  **/
 {
    struct reorder_vars vars;
@@ -2007,10 +1967,10 @@ static int ranki_reorder(linsolqr_system_t sys,mtx_region_t *region)
 
 static int tranki_reorder(linsolqr_system_t sys,mtx_region_t *region)
 /**
- ***  The region to reorder is first isolated by truncating the region
- ***  provided to the largest square region confined to the matrix diagonal.
- ***  It is presumed it will contain no empty rows or columns and will
- ***  provide the basis of candidate pivots when factoring.
+	The region to reorder is first isolated by truncating the region
+	provided to the largest square region confined to the matrix diagonal.
+	It is presumed it will contain no empty rows or columns and will
+	provide the basis of candidate pivots when factoring.
  **/
 {
    struct creorder_vars vars;
@@ -2029,13 +1989,13 @@ static int tranki_reorder(linsolqr_system_t sys,mtx_region_t *region)
    return 0;
 }
 
-/***************************************************************************\
+/*
   End of reordering functions for SPK1.
-\***************************************************************************/
+*/
 
-/***************************************************************************\
+/*-----------------------------------------------------------------------------
   RANKI implementation functions.
-\***************************************************************************/
+*/
 
 static void eliminate_row(mtx_matrix_t mtx,
                           mtx_range_t *rng,
@@ -2043,14 +2003,14 @@ static void eliminate_row(mtx_matrix_t mtx,
                           real64 *tmp,    /* temporary array */
                           real64 *pivots) /* prior pivots array */
 /**
- ***  Eliminates the given row to the left of the diagonal element, assuming
- ***  valid pivots for all of the diagonal elements above it (the elements
- ***  above those diagonal elements, if any exist, are assumed to be U
- ***  elements and therefore ignored).  The temporary array is used by this
- ***  function to do its job.  tmp[k], where rng->low <= k <= rng->high must
- ***  be defined (allocated) but need not be initialized.
- ***  pivots[k] where rng->low <= k <=rng->high must be allocated and
- ***  pivots[rng->low] to pivots[row-1] must contain the previous pivots.
+	Eliminates the given row to the left of the diagonal element, assuming
+	valid pivots for all of the diagonal elements above it (the elements
+	above those diagonal elements, if any exist, are assumed to be U
+	elements and therefore ignored).  The temporary array is used by this
+	function to do its job.  tmp[k], where rng->low <= k <= rng->high must
+	be defined (allocated) but need not be initialized.
+	pivots[k] where rng->low <= k <=rng->high must be allocated and
+	pivots[rng->low] to pivots[row-1] must contain the previous pivots.
  **/
 {
    mtx_coord_t nz;
@@ -2104,9 +2064,9 @@ static void eliminate_row(mtx_matrix_t mtx,
 #if BUILD_DEAD_CODE /* yes, baa */
 static int32 top_of_spike(linsolqr_system_t sys,int32 col)
 /**
- ***  Determines the top row (row of lowest index) in a possible spike
- ***  above the diagonal element in the given column.  If there is no spike,
- ***  then (row = ) col is returned.
+	Determines the top row (row of lowest index) in a possible spike
+	above the diagonal element in the given column.  If there is no spike,
+	then (row = ) col is returned.
  **/
 {
    mtx_range_t above_diagonal;
@@ -2119,7 +2079,7 @@ static int32 top_of_spike(linsolqr_system_t sys,int32 col)
    top_row = nz.col = col;
    nz.row = mtx_FIRST;
    while( value = mtx_next_in_col(sys->factors,&nz,&above_diagonal),
-	 nz.row != mtx_LAST )
+         nz.row != mtx_LAST )
       if( nz.row < top_row )
          top_row = nz.row;
    return( top_row );
@@ -2128,10 +2088,10 @@ static int32 top_of_spike(linsolqr_system_t sys,int32 col)
 
 static boolean col_is_a_spike(linsolqr_system_t sys,int32 col)
 /**
- ***  Determines if the col is a spike, characterized by having any
- ***  nonzeros above the diagonal. By construction there shouldn't
- ***  be any numeric 0 nonzeros above the diagonal, so we don't prune
- ***  them out here.
+	Determines if the col is a spike, characterized by having any
+	nonzeros above the diagonal. By construction there shouldn't
+	be any numeric 0 nonzeros above the diagonal, so we don't prune
+	them out here.
  **/
 {
   mtx_range_t above_diagonal;
@@ -2173,35 +2133,35 @@ static void number_drag(real64 *vec, int32 rfrom, int32 rto)
 
 static void rankikw_factor(linsolqr_system_t sys)
 /**
- ***  (the following description also applies to rankijz_factor which is
- ***  different only in pivot selection strategy.)
- ***  This is the heart of the linear equation solver.  This function
- ***  factorizes the matrix into a lower (L) and upper (U) triangular
- ***  matrix.  sys->smallest_pivot and sys->rank are calculated.  The
- ***  RANKI method is utilized.  At the end of elimination, the matrix A
- ***  is factored into A = U L, where U and L are stored as follows:
- ***
- ***      <----- r ----> <- n-r ->
- ***     +--------------+---------+
- ***     |              |         |
- ***     |         U    |         |
- ***     |              |         |
- ***     |   L          |         | r
- ***     |              |         |
- ***     +--------------+---------+
- ***     |              |         |
- ***     |              |   0     | n-r
- ***     |              |         |
- ***     +--------------+---------+
- ***
- ***  The rows and columns have been permuted so that all of the pivoted
- ***  original rows and columns are found in the first r rows and columns
- ***  of the region.  The last n-r rows and columns are unpivoted.  U has
- ***  1's on its diagonal, whereas L's diagonal is stored in the matrix.
- ***
- ***  Everything above was written as though the entire matrix is
- ***  involved.  In reality, only the relevant square region is involved.
- **/
+	(the following description also applies to rankijz_factor which is
+	different only in pivot selection strategy.)
+	This is the heart of the linear equation solver.  This function
+	factorizes the matrix into a lower (L) and upper (U) triangular
+	matrix.  sys->smallest_pivot and sys->rank are calculated.  The
+	RANKI method is utilized.  At the end of elimination, the matrix A
+	is factored into A = U L, where U and L are stored as follows:
+
+	    <----- r ----> <- n-r ->
+	   +--------------+---------+
+	   |              |         |
+	   |         U    |         |
+	   |              |         |
+	   |   L          |         | r
+	   |              |         |
+	   +--------------+---------+
+	   |              |         |
+	   |              |   0     | n-r
+	   |              |         |
+	   +--------------+---------+
+
+	The rows and columns have been permuted so that all of the pivoted
+	original rows and columns are found in the first r rows and columns
+	of the region.  The last n-r rows and columns are unpivoted.  U has
+	1's on its diagonal, whereas L's diagonal is stored in the matrix.
+
+	Everything above was written as though the entire matrix is
+	involved.  In reality, only the relevant square region is involved.
+*/
 {
    mtx_coord_t nz;
    int32 last_row;
@@ -2226,9 +2186,9 @@ static void rankikw_factor(linsolqr_system_t sys)
       pivots[nz.row]=pivot = mtx_value(mtx,&nz);
       pivot = fabs(pivot);
       if( pivot > sys->pivot_zero &&
-	 pivot >= sys->ptol * mtx_row_max(mtx,&nz,&pivot_candidates,NULL) &&
-	 !col_is_a_spike(sys,nz.row) ) {
-	 /* Good pivot and not a spike: continue with next row */
+         pivot >= sys->ptol * mtx_row_max(mtx,&nz,&pivot_candidates,NULL) &&
+         !col_is_a_spike(sys,nz.row) ) {
+         /* Good pivot and not a spike: continue with next row */
          if( pivot < sys->smallest_pivot )
             sys->smallest_pivot = pivot;
          ++(nz.row);
@@ -2236,9 +2196,9 @@ static void rankikw_factor(linsolqr_system_t sys)
       }
       /* pivots for rows nz.row back to sys->rng->low are stored in pivots */
       /**
-       ***  Row is a spike row or will
-       ***  be when a necessary column
-       ***  exchange occurs.
+      	Row is a spike row or will
+      	be when a necessary column
+      	exchange occurs.
        **/
       eliminate_row(mtx,&(sys->rng),nz.row,tmp,pivots);
       /* pivot will be largest of those available. get size and value */
@@ -2250,13 +2210,13 @@ static void rankikw_factor(linsolqr_system_t sys)
          --last_row;
 #undef KAA_DEBUG
 #ifdef KAA_DEBUG
-	 ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Warning: Row %d is dependent with pivot %20.8g",nz.row,pivot);
+         ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Warning: Row %d is dependent with pivot %20.8g",nz.row,pivot);
 #endif /* KAA_DEBUG */
       } else {
          /* Independent row: nz contains best pivot */
-	 /* Move pivot to diagonal */
+         /* Move pivot to diagonal */
          mtx_swap_cols(mtx,nz.row,nz.col);
-	 mtx_drag( mtx , nz.row , sys->rng.low );
+         mtx_drag( mtx , nz.row , sys->rng.low );
          number_drag(pivots,nz.row,sys->rng.low);
          if( pivot < sys->smallest_pivot )
             sys->smallest_pivot = pivot;
@@ -2267,12 +2227,12 @@ static void rankikw_factor(linsolqr_system_t sys)
    sys->rank = last_row - sys->rng.low + 1;
 }
 
-
+
 static void rankijz_factor(linsolqr_system_t sys)
 /**
- ***  This is an alternate pivoting strategy introduced by Joe Zaher.
- ***  it looks down and across for good pivots rather than just across.
- ***
+	This is an alternate pivoting strategy introduced by Joe Zaher.
+	it looks down and across for good pivots rather than just across.
+	
  **/
 {
    real64 biggest;
@@ -2315,9 +2275,9 @@ static void rankijz_factor(linsolqr_system_t sys)
       }
       /* pivots for rows nz.row back to sys->rng->low are stored in pivots */
       /**
-       ***  Row is a spike row or will
-       ***  be when a necessary column
-       ***  exchange occurs.
+      	Row is a spike row or will
+      	be when a necessary column
+      	exchange occurs.
        **/
       eliminate_row(mtx,&(sys->rng),nz.row,tmp,pivots);
       /* pivot will be largest of those available. get size and value */
@@ -2350,14 +2310,14 @@ int ranki_entry(linsolqr_system_t sys,mtx_region_t *region)
 static int ranki_entry(linsolqr_system_t sys,mtx_region_t *region)
 #endif
 /**
- ***  The region to factor is first isolated by truncating the region
- ***  provided to the largest square region confined to the matrix diagonal.
- ***  It is presumed it will contain no empty rows or columns and that it has
- ***  been previously reordered using linsolqr_reorder(sys,region,spk1)
- ***  or a sane variant of spk1.
- ***  This is the entry point for all ranki based strategies, regardless of
- ***  pivot selection subtleties.
- **/
+	The region to factor is first isolated by truncating the region
+	provided to the largest square region confined to the matrix diagonal.
+	It is presumed it will contain no empty rows or columns and that it has
+	been previously reordered using linsolqr_reorder(sys,region,spk1)
+	or a sane variant of spk1.
+	This is the entry point for all ranki based strategies, regardless of
+	pivot selection subtleties.
+*/
 {
    struct rhs_list *rl;
    double comptime;
@@ -2426,9 +2386,8 @@ static int ranki_solve(linsolqr_system_t sys, struct rhs_list *rl)
    return 0;
 }
 
-
-/*
- *********************************************************************
+
+/*------------------------------------------------------------------------------
  * Start of the 2 bodied factorization schemes.
  *
  * ranki2_entry will be used to access these routines.
@@ -2443,7 +2402,6 @@ static int ranki_solve(linsolqr_system_t sys, struct rhs_list *rl)
  *
  * We have fixed the calc_col_dependent and calc_row_dependent
  * routines.
- *********************************************************************
  */
 
 extern int32 mtx_number_ops;
@@ -2451,14 +2409,13 @@ extern int32 mtx_number_ops;
 /* this function does no permutation of any sort */
 static
 void eliminate_row2(mtx_matrix_t mtx,
-		   mtx_matrix_t upper_mtx,
-		   mtx_range_t *rng,
-		   int32 row,       /* row to eliminate */
-		   real64 *tmp,     /* temporary array */
-		   real64 *pivots,  /* prior pivots array */
-                   real64 dtol      /* drop tolerance */
-                   )
-{
+		mtx_matrix_t upper_mtx,
+		mtx_range_t *rng,
+		int32 row,       /* row to eliminate */
+		real64 *tmp,     /* temporary array */
+		real64 *pivots,  /* prior pivots array */
+		real64 dtol      /* drop tolerance */
+){
   mtx_coord_t nz;
   int j,low,high;
   double tmpval;
@@ -2494,8 +2451,8 @@ void eliminate_row2(mtx_matrix_t mtx,
   high = rng->high;
   for (j = row-1 ; j >= low ; --(j) ) {
     if (tmp[j] == D_ZERO)
-      continue;			/* Nothing to do for this row */
-    tmpval = tmp[j]/pivots[j];	/* Compute multiplier */
+      continue;                 /* Nothing to do for this row */
+    tmpval = tmp[j]/pivots[j];  /* Compute multiplier */
 
     /*
      * tmpval is now the multiplier. We use it to eliminate the row,
@@ -2503,7 +2460,7 @@ void eliminate_row2(mtx_matrix_t mtx,
      * mtx_cur_vec_add_row over all columns will stomp on tmp[j]
      */
     mtx_cur_vec_add_row(mtx,tmp,j,-tmpval,mtx_ALL_COLS,FALSE);
-    tmp[j] = tmpval;		/* patch the diagonal */
+    tmp[j] = tmpval;            /* patch the diagonal */
   }
 
   /*
@@ -2537,14 +2494,14 @@ void eliminate_row2(mtx_matrix_t mtx,
   for (j=high;j>=low;j--) {
     if (tmp[j] != D_ZERO) {
       if (fabs(tmp[j]) > dtol) {
-	nz.col = j;
-	mtx_fill_value(mtx,&nz,tmp[j]);
+        nz.col = j;
+        mtx_fill_value(mtx,&nz,tmp[j]);
 #if RBADEBUG
         FPRINTF(gscr,"fillingL: or %d oc %d %24.18g\n",
           mtx_row_to_org(mtx,nz.row), mtx_col_to_org(mtx,nz.col), tmp[j]);
 #endif
       }
-      tmp[j] = D_ZERO;		/* zero element regardless */
+      tmp[j] = D_ZERO; /* zero element regardless */
     }
   }
   tmp[row] = D_ZERO;
@@ -2608,7 +2565,7 @@ static void rankikw2_factor(linsolqr_system_t sys)
        !col_is_a_spike(sys,nz.row) ) {
       /* Good pivot and not a spike: continue with next row */
       if( pivot < sys->smallest_pivot )  {
-	sys->smallest_pivot = pivot;
+        sys->smallest_pivot = pivot;
       }
 #if RBADEBUG
       FPRINTF(gscr,"Cheap pivot col %d (org %d)\n",
@@ -2622,9 +2579,9 @@ static void rankikw2_factor(linsolqr_system_t sys)
     }
     /* pivots for rows nz.row back to sys->rng->low are stored in pivots */
     /**
-     ***  Row is a spike row or will
-     ***  be when a necessary column
-     ***  exchange occurs.
+    	Row is a spike row or will
+    	be when a necessary column
+    	exchange occurs.
      **/
     eliminate_row2(mtx,upper_mtx,&(sys->rng),nz.row,tmp,pivots,sys->dtol);
     /* pivot will be leftmost of those that pass ptol and eps, or 0.0. */
@@ -2653,12 +2610,12 @@ static void rankikw2_factor(linsolqr_system_t sys)
       defect = 1;
     } else {
       /* Independent row: nz contains selected pivot */
-      mtx_swap_cols(mtx, nz.row, nz.col);	/* this Fixes U as well */
+      mtx_swap_cols(mtx, nz.row, nz.col);   /* this Fixes U as well */
       /* Move pivot to diagonal */
-      mtx_drag(mtx, nz.row, sys->rng.low );	/* this Fix U as well */
+      mtx_drag(mtx, nz.row, sys->rng.low ); /* this Fix U as well */
       number_drag(pivots, nz.row, sys->rng.low);
       if( pivot < sys->smallest_pivot )
-	sys->smallest_pivot = pivot;
+        sys->smallest_pivot = pivot;
       ++(nz.row);
     }
   }
@@ -2745,21 +2702,21 @@ static void rankijz2_factor(linsolqr_system_t sys)
       mtx_col_max(mtx,&best,&(candidates.row),&biggest);
       /* make sure we aren't missing someone really nice in the column */
       if( fabs(biggest) >= sys->pivot_zero ) {
-	if( pivot < sys->pivot_zero || pivot < sys->ptol*fabs(biggest) ) {
-	  mtx_swap_rows(mtx,nz.row,best.row); /* Fixes U as well */
-	  pivots[nz.row] = biggest;
-	  pivot = fabs(biggest);
-	}
-	if( pivot < sys->smallest_pivot ) sys->smallest_pivot = pivot;
-	++(nz.row);
-	continue;
+        if( pivot < sys->pivot_zero || pivot < sys->ptol*fabs(biggest) ) {
+          mtx_swap_rows(mtx,nz.row,best.row); /* Fixes U as well */
+          pivots[nz.row] = biggest;
+          pivot = fabs(biggest);
+        }
+        if( pivot < sys->smallest_pivot ) sys->smallest_pivot = pivot;
+        ++(nz.row);
+        continue;
       }
     }
     /* pivots for rows nz.row back to sys->rng->low are stored in pivots */
     /**
-     ***  Row is a spike row or will
-     ***  be when a necessary column
-     ***  exchange occurs.
+    	Row is a spike row or will
+    	be when a necessary column
+    	exchange occurs.
      **/
     eliminate_row2(mtx,upper_mtx,&(sys->rng),nz.row,tmp,pivots,sys->dtol);
     /* pivot will be largest of those available. get size and value */
@@ -2772,12 +2729,12 @@ static void rankijz2_factor(linsolqr_system_t sys)
       --(candidates.row.high);
     } else {
       /* Independent row, drag nz to upper left */
-      mtx_swap_cols(mtx,nz.row,nz.col);		/* this Fixes U as well */
+      mtx_swap_cols(mtx,nz.row,nz.col); /* this Fixes U as well */
       mtx_drag(mtx ,nz.row ,sys->rng.low);
 
       number_drag(pivots,nz.row,sys->rng.low);
       if( pivot < sys->smallest_pivot )
-	sys->smallest_pivot = pivot;
+        sys->smallest_pivot = pivot;
       ++(nz.row);
     }
   }
@@ -2791,26 +2748,26 @@ static void rankijz2_factor(linsolqr_system_t sys)
  * matrix as well as making use of mtx_ALL_COLS and
  * mtx_ALL_ROWS whereever possible.
  * We make the following additional assumptions here:
- *   (if they do not hold, do NOT use this function)
+	 (if they do not hold, do NOT use this function)
  * - sys->inverse (U) has no incidence that is not multipliers
- *   (and the diagonal of 1s is NOT in sys->inverse.)
- *   As of 10/95, this is how ranki2 U is constructed.
+	 (and the diagonal of 1s is NOT in sys->inverse.)
+	 As of 10/95, this is how ranki2 U is constructed.
  * - sys->factors (L) has no incidence on the upper triangle,
- *   including the diagonal, or outside the factored region.
- *    relaxation: incidence anywhere allowed if value = 0.0
- *                since 0 doesn't contribute to a dot product
- *                and the only thing we do with triangles is dot them.
+	 including the diagonal, or outside the factored region.
+	  relaxation: incidence anywhere allowed if value = 0.0
+	              since 0 doesn't contribute to a dot product
+	              and the only thing we do with triangles is dot them.
  * - There may be singular rows and columns in the factorization,
- *   but any additions coming from these rows/columns during
- *   mtx_ALL_*O*S operations will not contribute to sums because the
- *   user zeroed the arr entries corresponding to these before
- *   calling this function.
+	 but any additions coming from these rows/columns during
+	 mtx_ALL_*O*S operations will not contribute to sums because the
+	 user zeroed the arr entries corresponding to these before
+	 calling this function.
  */
 static
 void forward_substitute2(linsolqr_system_t sys,
-				real64 *arr,
-				boolean transpose)
-{
+		real64 *arr,
+		boolean transpose
+){
   mtx_coord_t nz;
   real64 sum, *pivlist;
   mtx_matrix_t mtx;
@@ -2819,7 +2776,7 @@ void forward_substitute2(linsolqr_system_t sys,
 
   pivlist=sys->ludata->pivlist;
   dotlim = sys->rng.low+sys->rank;
-  if (transpose) {		/* arr is indexed by original column number */
+  if (transpose) { /* arr is indexed by original column number */
     mtx=sys->inverse;
     for( nz.col=sys->rng.low; nz.col < dotlim; ++(nz.col) ) {
       register int32 org_col;
@@ -2827,12 +2784,12 @@ void forward_substitute2(linsolqr_system_t sys,
       org_col = mtx_col_to_org(mtx,nz.col);
       if (arr[org_col]!=D_ZERO) nonzero_found=TRUE;
       if (nonzero_found) {
-	sum=mtx_col_dot_full_org_vec(mtx,nz.col,arr,mtx_ALL_ROWS,TRUE);
-	/* arr[org_col] = (arr[org_col] - sum)  / D_ONE */;
-	arr[org_col] -= sum;
+        sum=mtx_col_dot_full_org_vec(mtx,nz.col,arr,mtx_ALL_ROWS,TRUE);
+        /* arr[org_col] = (arr[org_col] - sum)  / D_ONE */;
+        arr[org_col] -= sum;
       }
     }
-  } else {			/* arr is indexed by original row number */
+  } else { /* arr is indexed by original row number */
     mtx=sys->factors;
     for( nz.row=sys->rng.low; nz.row < dotlim; ++(nz.row) ) {
       register int32 org_row;
@@ -2840,12 +2797,12 @@ void forward_substitute2(linsolqr_system_t sys,
       org_row = mtx_row_to_org(mtx,nz.row);
       if (arr[org_row]!=D_ZERO) nonzero_found=TRUE;
       if (nonzero_found) {
-	sum = mtx_row_dot_full_org_vec(mtx,nz.row,arr,mtx_ALL_COLS,TRUE);
-	/*
-	   nz.col = nz.row;
-	   arr[org_row] = (arr[org_row] - sum) / mtx_value(mtx,&nz);
-	 */
-	arr[org_row] = (arr[org_row] - sum) / pivlist[nz.row];
+        sum = mtx_row_dot_full_org_vec(mtx,nz.row,arr,mtx_ALL_COLS,TRUE);
+        /*
+           nz.col = nz.row;
+           arr[org_row] = (arr[org_row] - sum) / mtx_value(mtx,&nz);
+         */
+        arr[org_row] = (arr[org_row] - sum) / pivlist[nz.row];
       }
     }
   }
@@ -2860,19 +2817,19 @@ void forward_substitute2(linsolqr_system_t sys,
  */
 static
 void backward_substitute2(linsolqr_system_t sys,
-				 real64 *arr,
-				 boolean transpose)
-{
+		real64 *arr,
+		boolean transpose
+){
   mtx_coord_t nz;
   real64 sum, *pivlist;
   mtx_matrix_t mtx;
   int32 dotlim;
-  boolean nonzero_found=FALSE;	/* once TRUE, substitution must be done
-				   over remaining rows/cols */
+  boolean nonzero_found=FALSE; /* once TRUE, substitution must be done
+                                  over remaining rows/cols */
 
   dotlim=sys->rng.low;
   pivlist=sys->ludata->pivlist;
-  if (transpose) {		/* arr is indexed by original column number */
+  if (transpose) { /* arr is indexed by original column number */
     mtx = sys->factors;
     for( nz.col = sys->rng.low+sys->rank-1; nz.col >= dotlim ; --(nz.col) ) {
       register int32 org_col;
@@ -2880,8 +2837,8 @@ void backward_substitute2(linsolqr_system_t sys,
       org_col = mtx_col_to_org(mtx,nz.col);
       if (arr[org_col] != D_ZERO) nonzero_found=TRUE;
       if (nonzero_found) {
-	sum = mtx_col_dot_full_org_vec(mtx,nz.col,arr,mtx_ALL_ROWS,TRUE);
-	arr[org_col] = (arr[org_col] - sum) / pivlist[nz.col];
+        sum = mtx_col_dot_full_org_vec(mtx,nz.col,arr,mtx_ALL_ROWS,TRUE);
+        arr[org_col] = (arr[org_col] - sum) / pivlist[nz.col];
       }
     }
   } else {			/* arr is indexed by original row number */
@@ -2893,8 +2850,8 @@ void backward_substitute2(linsolqr_system_t sys,
       org_row = mtx_row_to_org(mtx,nz.row);
       if (arr[org_row]!=D_ZERO) nonzero_found=TRUE;
       if (nonzero_found) {
-	sum= mtx_row_dot_full_org_vec(mtx,nz.row,arr,mtx_ALL_COLS,TRUE);
-	arr[org_row] -= sum;
+        sum= mtx_row_dot_full_org_vec(mtx,nz.row,arr,mtx_ALL_COLS,TRUE);
+        arr[org_row] -= sum;
       }
     }
   }
@@ -3010,8 +2967,9 @@ This is our fastest (far and away) ranki implementation -- drag free.
 
 static
 int kirk1_factor(linsolqr_system_t sys,
-		  mtx_region_t *A11,
-		  int kirk_method);
+	mtx_region_t *A11,
+	int kirk_method
+);
 
 #endif /* BUILD_KIRK_CODE */
 
@@ -3100,22 +3058,19 @@ int ranki2_entry(linsolqr_system_t sys, mtx_region_t *region)
   return 0;
 }
 
-/***************************************************************************\
-  End of RANKI implementation functions.
-\***************************************************************************/
-
-
-#ifdef BUILD_KIRK_CODE
 /*
- ***************************************************************************
+  End of RANKI implementation functions.
+*/
+
+
+#ifdef BUILD_KIRK_CODE
+/*-----------------------------------------------------------------------------
  * Start of kirk_* routines
  *
  * kirk1_factor:
  * 	This routine is  based on rankikw2_factor, except that it takes
  * 	an additional region, so as to do some *global* pivot restriction.
  *	This is for the case of a single border for the entire matrix.
- *
- ***************************************************************************
  */
 
 /*
@@ -3130,9 +3085,9 @@ struct dlinklist {
 
 static
 int kirk1_factor(linsolqr_system_t sys,
-		  mtx_region_t *A11,
-		  int kirk_method)
-{
+		mtx_region_t *A11,
+		int kirk_method
+){
   mtx_coord_t nz;
   int32 last_row;
   mtx_range_t pivot_candidates;
@@ -3142,7 +3097,7 @@ int kirk1_factor(linsolqr_system_t sys,
   mtx_matrix_t mtx, upper_mtx;
   real64 maxa;
 
-  int32 *inserted = NULL;		/* stuff for the link list */
+  int32 *inserted = NULL; /* stuff for the link list */
   mem_store_t eltbuffer = NULL;
 
 #ifdef NOP_DEBUG
@@ -3157,7 +3112,7 @@ int kirk1_factor(linsolqr_system_t sys,
   upper_mtx = sys->inverse;
   inserted = ASC_NEW_ARRAY_CLEAR(int32,length);
   eltbuffer = mem_create_store(2,256,sizeof(struct dlinklist),
-			       2,256);
+                               2,256);
 
   sys->smallest_pivot = MAXDOUBLE;
   last_row = pivot_candidates.high = sys->rng.high;
@@ -3168,23 +3123,23 @@ int kirk1_factor(linsolqr_system_t sys,
     pivot = fabs(pivot);
     maxa = mtx_row_max(mtx,&nz,&pivot_candidates,NULL);
     if ((pivot > sys->pivot_zero) && (pivot >= sys->ptol*maxa) &&
-	!col_is_a_spike(sys,nz.row)) {
+        !col_is_a_spike(sys,nz.row)) {
       if (pivot < sys->smallest_pivot)
-	sys->smallest_pivot = pivot;
+        sys->smallest_pivot = pivot;
       ++(nz.row);
       continue;
     }
     /* pivots for rows nz.row back to sys->rng->low are stored in pivots */
     /**
-     ***  Row is a spike row or will
-     ***  be when a necessary column
-     ***  exchange occurs.
+    	Row is a spike row or will
+    	be when a necessary column
+    	exchange occurs.
      **/
     if (kirk_method==1)
       eliminate_row2(mtx,upper_mtx,&(sys->rng),nz.row,tmp,pivots,sys->dtol);
     else{
       mtx_eliminate_row2(mtx,upper_mtx,&(sys->rng),
-			 nz.row,tmp,pivots,inserted,eltbuffer);
+                         nz.row,tmp,pivots,inserted,eltbuffer);
       mem_clear_store(eltbuffer);
     }
     /* pivot will be largest of those available. get size and value */
@@ -3199,16 +3154,16 @@ int kirk1_factor(linsolqr_system_t sys,
       --last_row;
 #ifdef KAA_DEBUG
       ERROR_REPORTER_HERE(ASC_PROG_WARNING"Row %d is dependent with pivot %20.8g",
-	      nz.row,pivot);
+              nz.row,pivot);
 #endif /* KAA_DEBUG */
     } else {
       /* Independent row: nz contains best pivot */
-      mtx_swap_cols(mtx,nz.row,nz.col);		/* this Fixes U as well */
+      mtx_swap_cols(mtx,nz.row,nz.col); /* this Fixes U as well */
       /* Move pivot to diagonal */
-      mtx_drag(mtx , nz.row , sys->rng.low );	/* this Fix U as well */
+      mtx_drag(mtx , nz.row , sys->rng.low ); /* this Fix U as well */
       number_drag(pivots,nz.row,sys->rng.low);
       if( pivot < sys->smallest_pivot )
-	sys->smallest_pivot = pivot;
+        sys->smallest_pivot = pivot;
       ++(nz.row);
     }
   }
@@ -3218,11 +3173,11 @@ int kirk1_factor(linsolqr_system_t sys,
   mem_destroy_store(eltbuffer);
 
 #ifdef NOP_DEBUG
-  CONSOLE_DEBUG("Number operations	= %d",mtx_number_ops);
+  CONSOLE_DEBUG("Number operations = %d",mtx_number_ops);
 #endif /* NOP_DEBUG */
 
   sys->rank = last_row - sys->rng.low + 1;
-  return 0;	/* this return code needs to be useful */
+  return 0; /* this return code needs to be useful */
 }
 #endif /* BUILD_KIRK_CODE */
 
@@ -3230,9 +3185,9 @@ int kirk1_factor(linsolqr_system_t sys,
 #include "ascgauss.c"
 #endif
 
-/***************************************************************************\
+/*-----------------------------------------------------------------------------
   CondQR implementation.
-\***************************************************************************/
+*/
 
 static int qr_cmp_fill(struct qr_fill_t *f1, struct qr_fill_t *f2)
 {
@@ -3282,16 +3237,16 @@ static int qr_fillable_cols(linsolqr_system_t sys,
                             int32 pivot,
                             mtx_range_t *rng)
 /*
- *  It is possible to calculate the exact fill, but this is not done.
- *  Fill is estimated by Boyd/Art method.
- *  For exact fill use the overlap as a counter
- *  instead of just a marker.
- *  fill(p)  = andcount * fill[p].cnt - SUM(fill[j].overlap |j IN rng)
- *  where andcount = number of nonpivot columns found with overlaps.
- *  The performance difference is small on test problems. It comes into
- *  play when the first few choices (based on sparsity) are all rejected
- *  for other reasons and the choice is then between several pivots with
- *  high fillin.
+	It is possible to calculate the exact fill, but this is not done.
+	Fill is estimated by Boyd/Art method.
+	For exact fill use the overlap as a counter
+	instead of just a marker.
+	fill(p)  = andcount * fill[p].cnt - SUM(fill[j].overlap |j IN rng)
+	where andcount = number of nonpivot columns found with overlaps.
+	The performance difference is small on test problems. It comes into
+	play when the first few choices (based on sparsity) are all rejected
+	for other reasons and the choice is then between several pivots with
+	high fillin.
  */
 {
   mtx_matrix_t mtx;
@@ -3333,23 +3288,23 @@ static void qr_get_fill_data(linsolqr_system_t sys,
                              int32 curcol,
                              mtx_range_t *colrange)
 /**
- ***  Cook up a list of columns sorted by increasing fill potential.
- ***  Due to the possibility of cancellations and zeros, this must
- ***  be redeveloped every time from scratch.
- ***  On exit, the colrange portion of sys->qrdata->fill will contain
- ***  the sorted list of columns. Pivoting column fill[j].col will
- ***  create estimated fill <= pivoting column fill[j+1].col. The fill
- ***  estimate for fill[j].col is fill[j].fill. The only way to access
- ***  fill counts by column number is linear search.
- ***
- ***  The Boyd and Art estimate for fill is:
- ***    for column P being the pivot from a column set indexed over j,
- ***    FILL(P)= NFC(P) * (NZ(P)-1)
- ***      where NZ is the number of nonzeros in column P
- ***      and NFC is the number of columns that P overlaps with, i.e.
- ***      NFC(P)=SUM[ (sparsity(j) & sparsity(P) > 0) | j!=P]
- ***  This implementation does not count 0.0 into the sparsity pattern.
- ***
+	Cook up a list of columns sorted by increasing fill potential.
+	Due to the possibility of cancellations and zeros, this must
+	be redeveloped every time from scratch.
+	On exit, the colrange portion of sys->qrdata->fill will contain
+	the sorted list of columns. Pivoting column fill[j].col will
+	create estimated fill <= pivoting column fill[j+1].col. The fill
+	estimate for fill[j].col is fill[j].fill. The only way to access
+	fill counts by column number is linear search.
+	
+	The Boyd and Art estimate for fill is:
+	  for column P being the pivot from a column set indexed over j,
+	  FILL(P)= NFC(P) * (NZ(P)-1)
+	    where NZ is the number of nonzeros in column P
+	    and NFC is the number of columns that P overlaps with, i.e.
+	    NFC(P)=SUM[ (sparsity(j) & sparsity(P) > 0) | j!=P]
+	This implementation does not count 0.0 into the sparsity pattern.
+	
  **/
 {
   int32 col;
@@ -3381,13 +3336,13 @@ static real64 qr_square_compute_alpha(real64 *alpha,
                                             mtx_matrix_t mtx,
                                             mtx_range_t *rng)
 /**
- *** Computes alphas for columns in a square region indicated by rng.
- *** alpha are frobenius norms : sqrt( sum(sqr(aij)|i,j) )
- *** as opposed
- *** to matrix 2-norm: (the largest eigenvalue of At dot A, see stewart p 180)
- *** or the matrix 1 norm: max( sum(abs(aij) | i) |j)
- *** or the matrix inf norm: max( sum(abs(aij) | j) |i)
- *** Returns the Frobenius norm of the region calculated.
+	 Computes alphas for columns in a square region indicated by rng.
+	 alpha are frobenius norms : sqrt( sum(sqr(aij)|i,j) )
+	 as opposed
+	 to matrix 2-norm: (the largest eigenvalue of At dot A, see stewart p 180)
+	 or the matrix 1 norm: max( sum(abs(aij) | i) |j)
+	 or the matrix inf norm: max( sum(abs(aij) | j) |i)
+	 Returns the Frobenius norm of the region calculated.
  **/
 {
   int32 hilim,col;
@@ -3407,11 +3362,11 @@ static boolean qr_min_incr_col(linsolqr_system_t sys,
                                real64 *incr,
                                real64 max)
 /**
- ***  qr_min_incr_col(sys,curcol,newcol,&min_incr,fin)
- ***  This function finds the column with minimal value
- ***  (1+sigma[k]**2)/alpha[k]**2 in range curcol->fin.
- ***  Returns FALSE if no nonzero alpha^2 are available.
- ***  If all alpha are zero, the curent set of columns is singular.
+	qr_min_incr_col(sys,curcol,newcol,&min_incr,fin)
+	This function finds the column with minimal value
+	(1+sigma[k]**2)/alpha[k]**2 in range curcol->fin.
+	Returns FALSE if no nonzero alpha^2 are available.
+	If all alpha are zero, the curent set of columns is singular.
  **/
 {
   int32 j,tmp;
@@ -3448,17 +3403,17 @@ static int32 qr_square_select_col(linsolqr_system_t sys,
                                     int32 *newcol,
                                     mtx_range_t *rng)
 /*
- *  qr_square_select_col(sys,col,newcolptr,colrange)
+	qr_square_select_col(sys,col,newcolptr,colrange)
  *
- *  This function returns the number of nonzeros in the column it picks
- *  for newcol. Newcol is the column that has the least fill but also
- *  satisfies the relationship column_incr*ctol <= min_column_incr
- *  where 0 <= ctol <= 1. The column_incr is the condition increment
- *  used in Stewart's algorithm to determine the next column to factor in.
- *  If no satisfactory column is found, col is returned in newcol and the
- *  return value is 0.
+	This function returns the number of nonzeros in the column it picks
+	for newcol. Newcol is the column that has the least fill but also
+	satisfies the relationship column_incr*ctol <= min_column_incr
+	where 0 <= ctol <= 1. The column_incr is the condition increment
+	used in Stewart's algorithm to determine the next column to factor in.
+	If no satisfactory column is found, col is returned in newcol and the
+	return value is 0.
  *
- *  This is where we enforce pivot selection strategies.
+	This is where we enforce pivot selection strategies.
  */
 {
   boolean found, ok_min_column;
@@ -3521,16 +3476,16 @@ static real64 qr_permute(linsolqr_system_t sys,
                                int32 newcol,
                                mtx_range_t *rng)
 /*
- *  This permutes coef, factors and inverse by swapping curcol and newcol
- *  and swapping rows such that the largest non zero col element is in the
- *  position curcol, curcol.
- *  Swaps are performed in the qrdata vectors as needed.
- *  It is hoped that the permutations in the coef matrix will be done
- *  mostly on the first solution in any series of similar linear solves.
- *  Further, the ordering of the resulting coef matrix will give the
- *  user some idea of the variables contributing to ill conditioning,
- *  bad variables being more on the right edge.
- *  The return value is the new a(curcol,curcol).
+	This permutes coef, factors and inverse by swapping curcol and newcol
+	and swapping rows such that the largest non zero col element is in the
+	position curcol, curcol.
+	Swaps are performed in the qrdata vectors as needed.
+	It is hoped that the permutations in the coef matrix will be done
+	mostly on the first solution in any series of similar linear solves.
+	Further, the ordering of the resulting coef matrix will give the
+	user some idea of the variables contributing to ill conditioning,
+	bad variables being more on the right edge.
+	The return value is the new a(curcol,curcol).
  */
 {
   real64 tmp, *vec,pivot,cmax;
@@ -3587,41 +3542,41 @@ static boolean qr_get_householder(linsolqr_system_t sys,
                                   real64 *xdothhcol,
                                   real64 x1)
 /**
- *** A Householder matrix is H = I - tau hhcol dot Transpose(hhcol)
- *** where hhcol is a Householder vector. Here H dot x = -s * e1.
- *** We suppose the matrix column (x) being transformed is well-scaled:
- *** i.e. no gymnastics to avoid over or underflow are needed.
- ***
- *** Calculate the Householder vector hhcol and coefficient tau(curcol)
- *** as follows (Intro to Matrix Computations, Stewart, 1971, p233):
- *** (the order of operations has been improved to return hhcol dot x)
- ***
- ***  0) alpha = 2norm of curcol, precomputed.
- ***  1) x1=A(c,c)                      (expected to be nonzero passed in)
- ***  2) s = alpha = copysign(alpha,x1) (avoid cancellation in xdothhcol)
- ***     Note A(c,c) is overwritten by u(c)(c).
- ***     R(c,c) is now -s, (alias -alpha[c].)
- ***  3) xdothhcoll = s*(x1+s)          (Stewart's pi)
- ***  4) x1 = x1+s;                     (combined with step 3 in code)
- ***  5) tau[curcol] = 1/xdothhcol unless xdothhcol==0 in which case tau=0
- ***                               and we get out of here.
- ***  6) A(curcol,curcol) = x1          (now Stewart's v1)
- ***
- *** The result is an orthogonal vector, normalized by tau[c].
- *** Any time you want to do something with the normalized vector, don't
- *** forget to use tau[c] as part of the coefficient for the operation.
- *** The useful bit is that only A(c,c) must be changed in the matrix.
- *** We change A(c,c) here and stuff xdothhcol with x[] dot hhcol.
- ***
- *** Be sure to watch the signs if updating alpha later: not just the norm.
- *** It is best if mtx(curcol,curcol) is the largest element in its column.
- ***
+	 A Householder matrix is H = I - tau hhcol dot Transpose(hhcol)
+	 where hhcol is a Householder vector. Here H dot x = -s * e1.
+	 We suppose the matrix column (x) being transformed is well-scaled:
+	 i.e. no gymnastics to avoid over or underflow are needed.
+	
+	 Calculate the Householder vector hhcol and coefficient tau(curcol)
+	 as follows (Intro to Matrix Computations, Stewart, 1971, p233):
+	 (the order of operations has been improved to return hhcol dot x)
+	
+	  0) alpha = 2norm of curcol, precomputed.
+	  1) x1=A(c,c)                      (expected to be nonzero passed in)
+	  2) s = alpha = copysign(alpha,x1) (avoid cancellation in xdothhcol)
+	     Note A(c,c) is overwritten by u(c)(c).
+	     R(c,c) is now -s, (alias -alpha[c].)
+	  3) xdothhcoll = s*(x1+s)          (Stewart's pi)
+	  4) x1 = x1+s;                     (combined with step 3 in code)
+	  5) tau[curcol] = 1/xdothhcol unless xdothhcol==0 in which case tau=0
+	                               and we get out of here.
+	  6) A(curcol,curcol) = x1          (now Stewart's v1)
+	
+	 The result is an orthogonal vector, normalized by tau[c].
+	 Any time you want to do something with the normalized vector, don't
+	 forget to use tau[c] as part of the coefficient for the operation.
+	 The useful bit is that only A(c,c) must be changed in the matrix.
+	 We change A(c,c) here and stuff xdothhcol with x[] dot hhcol.
+	
+	 Be sure to watch the signs if updating alpha later: not just the norm.
+	 It is best if mtx(curcol,curcol) is the largest element in its column.
+	
  ! ! Column curcol will have soft zeros deleted from it before any of the
  ! ! above takes place.
- ***
- *** On an empty or zero curcol this will return FALSE, but this should
- *** never have been called with such a column. If FALSE, nothing was
- *** done to A and xdothhcol and tau[curcol] are 0.
+	
+	 On an empty or zero curcol this will return FALSE, but this should
+	 never have been called with such a column. If FALSE, nothing was
+	 done to A and xdothhcol and tau[curcol] are 0.
  **/
 {
   real64 s,t;
@@ -3678,13 +3633,13 @@ static void qr_apply_householder(linsolqr_system_t sys,
  * alpha[curcol] on exit.
  * The remaining columns in rng are transformed as follows:
  *
- *   calculate hhrow (a row vector) = Transpose(hhcol) dot A
- *   then calculate
- *     A' = A' - tau(curcol) * hhcol dot hhrow
- *   where A' is A sans column curcol.
+	 calculate hhrow (a row vector) = Transpose(hhcol) dot A
+	 then calculate
+	   A' = A' - tau(curcol) * hhcol dot hhrow
+	 where A' is A sans column curcol.
  *
  * This is equivalent to:                     T
- *    A = [ I  - tau(curcol) * hhcol dot hhcol ] dot A = H dot A
+	  A = [ I  - tau(curcol) * hhcol dot hhcol ] dot A = H dot A
  * This will change the sparsity of A, by removing 0s and
  * generating nonzeros.
  * xdothhcol is stuffed with x dot hhcol.
@@ -3809,20 +3764,21 @@ static void qr_update_inverse_norm(struct qr_auxdata *data,int32 col)
   data->nu=sqrt( SQR(tmpn) + (1+SQR(tmps)) / SQR(tmpa) );
 }
 
+/**
+	Assumes sys->inverse starts out empty.
+
+	Update the R inverse matrix (columnwise) as follows:
+		Scale existing column(col) by 1/R(col,col), add element 1/R(col,col)
+		to sys->inverse(col,col).
+
+	Note R(c,c) is not in sys->factors but in the alpha vector since the
+	diagonal of R is the (correctly signed) norms of the reduced A(c).
+	For each v=incidence in columns col+1 to rng->high in row 'col' of R,
+	add -v*column(col) to column(vlocation) of sys->inverse.
+*/
 static void qr_update_inverse(linsolqr_system_t sys,
                               int32 col,
-                              mtx_range_t *rng)
-/**
- *** Assumes sys->inverse starts out empty.
- *** Update the R inverse matrix (columnwise) as follows:
- ***  Scale existing column(col) by 1/R(col,col), add element 1/R(col,col)
- ***  to sys->inverse(col,col).
- ***  Note R(c,c) is not in sys->factors but in the alpha vector since the
- ***  diagonal of R is the (correctly signed) norms of the reduced A(c).
- ***  For each v=incidence in columns col+1 to rng->high in row 'col' of R,
- ***  add -v*column(col) to column(vlocation) of sys->inverse.
- **/
-{
+                              mtx_range_t *rng){
   real64 value,icc, *sigma;
   mtx_matrix_t inv, mtx;
   mtx_range_t newcols;
@@ -3850,23 +3806,22 @@ static void qr_update_inverse(linsolqr_system_t sys,
   }
 }
 
-static int condqr_factor(linsolqr_system_t sys)
 /**
- ***  FACTORIZATION
- ***  -------------
- ***  The QR factorization calculated of the square on the diagonal
- ***  from d.low to d.high takes the form
- ***
- ***  Q = H(NR-1)H(NR-2)..H(1),
- ***  R = Q*A  where A is the coef matrix,
- ***  H(i) = I - tau(i)*v(i)*Transpose(v(i)) with d.low <= i < d.high.
- ***
- ***  The factors matrix contains the H(i) in the lower triangle,
- ***  while the diagonal of R is stored densely (in col order)
- ***  as -alpha[] and the off-diagonal elements of R are in the
- ***  superdiagonal triangle of factors.
- **/
-{
+	QR factorisation
+
+	The QR factorization calculated of the square on the diagonal
+	from d.low to d.high takes the form
+
+	Q = H(NR-1)H(NR-2)..H(1),
+	R = Q*A  where A is the coef matrix,
+	H(i) = I - tau(i)*v(i)*Transpose(v(i)) with d.low <= i < d.high.
+
+	The factors matrix contains the H(i) in the lower triangle,
+	while the diagonal of R is stored densely (in col order)
+	as -alpha[] and the off-diagonal elements of R are in the
+	superdiagonal triangle of factors.
+*/
+static int condqr_factor(linsolqr_system_t sys){
   mtx_range_t active; /* range within sys->rng yet to be pivoted */
   int32 col,newcol=(-1);
   int32 colfound=0;
@@ -3920,28 +3875,27 @@ static int condqr_factor(linsolqr_system_t sys)
 }
 
 #if LINSOLQR_DEBUG
+/*
+	qr_apply_inverse(sys,rhs,transpose):
+	 convert rhs to c in place.
+	 This is generally a bad idea when qr_backward_substitute is available,
+	 but this can be used to test the production of Rinvers used in
+	 calculating the condition number for CondQR.
+
+	 transpose=FALSE
+	 c=Rinverse.rhs
+	 could as easily be named upper_tri_plus_diag_dot_org_row_vec.
+	 (assuming independent columns/rows 1 to rank)
+	 for i=1 to rank
+	   c(i)=row(i,(i..rank)) dot rhs(i..rank)
+	 endfor
+	 transpose=TRUE
+	 not implemented.
+*/
 static void qr_apply_inverse(linsolqr_system_t sys,
                              real64 *arr,
-                             boolean transpose)
-/*
- *  qr_apply_inverse(sys,rhs,transpose):
- *   convert rhs to c in place.
- *   This is generally a bad idea when qr_backward_substitute is available,
- *   but this can be used to test the production of Rinvers used in
- *   calculating the condition number for CondQR.
- *
- *   transpose=FALSE
- *   c=Rinverse.rhs
- *   could as easily be named upper_tri_plus_diag_dot_org_row_vec.
- *   (assuming independent columns/rows 1 to rank)
- *   for i=1 to rank
- *     c(i)=row(i,(i..rank)) dot rhs(i..rank)
- *   endfor
- *   transpose=TRUE
- *   not implemented.
- *
- */
-{
+                             boolean transpose
+){
   mtx_range_t dot_rng;
   mtx_matrix_t mtx;
 
@@ -3959,30 +3913,29 @@ static void qr_apply_inverse(linsolqr_system_t sys,
 }
 #endif
 
+/**
+	convert rhs to c in place (only stored u of H= I-tau u dot Transpose(u)
+
+	transpose=FALSE
+	  c=Q.rhs.
+	  (assuming independent columns/rows 1 to rank)
+	  for j= 1 to rank (apply H(j) to rhs, HH foward elim)
+	    if (tau(j)!= 0)
+	      w=tau(j)* (Transpose(u(j)) dot c)
+	      if (w!=0)
+	        c -= w*u(j)
+	      endif
+	    endif
+	  endfor
+
+	transpose=TRUE
+	  Solve Transpose(R).c=rhs.  (given R in untransposed form)
+	  0<=k<r ==> x(k) = [c(k) - R((0..k-1),k) dot x(0..k-1)]/R(k,k)
+*/
 static void qr_forward_eliminate(linsolqr_system_t sys,
                                  real64 *arr,
-                                 boolean transpose)
-/**
- *** qr_forward_eliminate(sys,c,transpose)
- ***  convert rhs to c in place (only stored u of H= I-tau u dot Transpose(u)
- ***
- ***  transpose=FALSE
- ***    c=Q.rhs.
- ***    (assuming independent columns/rows 1 to rank)
- ***    for j= 1 to rank (apply H(j) to rhs, HH foward elim)
- ***      if (tau(j)!= 0)
- ***        w=tau(j)* (Transpose(u(j)) dot c)
- ***        if (w!=0)
- ***          c -= w*u(j)
- ***        endif
- ***      endif
- ***    endfor
- ***
- ***  transpose=TRUE
- ***    Solve Transpose(R).c=rhs.  (given R in untransposed form)
- ***    0<=k<r ==> x(k) = [c(k) - R((0..k-1),k) dot x(0..k-1)]/R(k,k)
- **/
-{
+                                 boolean transpose
+){
   mtx_range_t dot_rng;
   real64 sum;
   mtx_matrix_t mtx;
@@ -4028,30 +3981,30 @@ static void qr_forward_eliminate(linsolqr_system_t sys,
   }
 }
 
-static void qr_backward_substitute(linsolqr_system_t sys, real64 *arr,
-                                   boolean transpose)
 /**
- ***  qr_backward_substitute(sys,rhs,transpose):
- ***  It is assumed that the R (or Q) part of sys->factors is computed.
- ***  This function converts rhs to c in place by solving one of the
- ***  following:
- ***
- ***  transpose = FALSE               transpose = TRUE
- ***    R.c = rhs                       Q.c = rhs
- ***
- ***  The following formulae hold:
- ***  (for rank=r, upper left is R(0,0) transpose= FALSE
- ***     r>k>=0 --> c(k) = [rhs(k) - R(k,(k+1..r-1)) dot c(k+1..r-1)] / R(k,k)
- ***     -R(k,k) is assumed to be in sys->qrdata->alpha[k]
- ***  or
- ***  (for rank=r, upper left is Q(0,0) transpose= TRUE
- ***    c=Transpose(Q).rhs ==>
- ***    for k = rank..1
- ***      c = H(k).rhs = rhs - tau*(Transpose(uk) dot rhs) *uk
- ***      rhs <-- c
- ***    endfor
- **/
-{
+	qr_backward_substitute(sys,rhs,transpose):
+	It is assumed that the R (or Q) part of sys->factors is computed.
+	This function converts rhs to c in place by solving one of the
+	following:
+
+	transpose = FALSE               transpose = TRUE
+	  R.c = rhs                       Q.c = rhs
+
+	The following formulae hold:
+	(for rank=r, upper left is R(0,0) transpose= FALSE
+	   r>k>=0 --> c(k) = [rhs(k) - R(k,(k+1..r-1)) dot c(k+1..r-1)] / R(k,k)
+	   -R(k,k) is assumed to be in sys->qrdata->alpha[k]
+	or
+	(for rank=r, upper left is Q(0,0) transpose= TRUE
+	  c=Transpose(Q).rhs ==>
+	  for k = rank..1
+	    c = H(k).rhs = rhs - tau*(Transpose(uk) dot rhs) *uk
+	    rhs <-- c
+	  endfor
+*/
+static void qr_backward_substitute(linsolqr_system_t sys, real64 *arr,
+                                   boolean transpose
+){
   mtx_range_t dot_rng;
   real64 sum;
   mtx_matrix_t mtx;
@@ -4067,9 +4020,9 @@ static void qr_backward_substitute(linsolqr_system_t sys, real64 *arr,
     tau=sys->qrdata->tau;
 
 /***    for k = rank..1
- ***      c = H(k).rhs = rhs - tau*(Transpose(uk) dot rhs) *uk
- ***      rhs <-- c
- ***    endfor
+	    c = H(k).rhs = rhs - tau*(Transpose(uk) dot rhs) *uk
+	    rhs <-- c
+	  endfor
 */
     for (dot_rng.low=dot_rng.high-1; dot_rng.low >=dotlim; dot_rng.low--) {
     /* H(rank) is I for square, nonsingular systems. for sing. sys this
@@ -4106,16 +4059,15 @@ static void qr_backward_substitute(linsolqr_system_t sys, real64 *arr,
   }
 }
 
-static int condqr_entry(linsolqr_system_t sys,mtx_region_t *region)
 /**
- ***  The region to factor is first isolated by truncating the region
- ***  provided to the largest square region confined to the matrix diagonal.
- ***  It is presumed it will contain no empty rows or columns and that it has
- ***  been previously reordered using linsolqr_reorder(sys,region,tspk1).
- ***  on exit, sys->coef, sys->factors, and sys->inverse will have been
- ***  permuted identically by solution process.
- **/
-{
+	The region to factor is first isolated by truncating the region
+	provided to the largest square region confined to the matrix diagonal.
+	It is presumed it will contain no empty rows or columns and that it has
+	been previously reordered using linsolqr_reorder(sys,region,tspk1).
+	on exit, sys->coef, sys->factors, and sys->inverse will have been
+	permuted identically by solution process.
+*/
+static int condqr_entry(linsolqr_system_t sys,mtx_region_t *region){
    struct rhs_list *rl;
    boolean rank_deficient;
 
@@ -4178,9 +4130,9 @@ static int condqr_entry(linsolqr_system_t sys,mtx_region_t *region)
 }
 
 /**
- *** Solve a previously qr factorized matrix with a rhs b.
- *** If b is not transposed (is org row ordered):
- *** c:=Q.b, then solve R.x=c for x.
+	 Solve a previously qr factorized matrix with a rhs b.
+	 If b is not transposed (is org row ordered):
+	 c:=Q.b, then solve R.x=c for x.
  **/
 static int condqr_solve(linsolqr_system_t sys,struct rhs_list *rl)
 {
@@ -4190,20 +4142,27 @@ static int condqr_solve(linsolqr_system_t sys,struct rhs_list *rl)
   zero_unpivoted_vars(sys,rl->varvalue,rl->transpose);
   return 0;
 }
-/***************************************************************************\
+/*
   End of CondQR implementation.
-\***************************************************************************/
-/* include CPQR implementation. Note that this is VERY VERY bad style
-and needs to be fixed immediately by splitting up the linsolqr file.
+*/
+
+/*----------------------------------------------------------------------------*/
+
+/*
+	include CPQR implementation. Note that this is VERY VERY bad style
+	and needs to be fixed immediately by splitting up the linsolqr file.
+
+	(said by someone about 12 years ago -- JP 2007)
 */
 #if 1
 #include "plainqr.c"
+               /* ^-- gawd that is so naughty */
 #endif
 
-/***************************************************************************\
+/*-----------------------------------------------------------------------------
   more external calls, likely to distribute over the method of reorder
   or factor.
-\***************************************************************************/
+*/
 
 int linsolqr_prep(linsolqr_system_t sys,enum factor_class fclass)
 {
@@ -4234,14 +4193,14 @@ int linsolqr_prep(linsolqr_system_t sys,enum factor_class fclass)
   return 0;
 }
 
-int linsolqr_reorder(linsolqr_system_t sys,mtx_region_t *region,
-                     enum reorder_method method)
 /**
- ***  The region to reorder is handled according to the method specified.
- ***  This function distributes to reorder_$method and sets the method for
- ***  factoring. If reorder fails, method is set unknown.
- **/
-{
+	The region to reorder is handled according to the method specified.
+	This function distributes to reorder_$method and sets the method for
+	factoring. If reorder fails, method is set unknown.
+*/
+int linsolqr_reorder(linsolqr_system_t sys,mtx_region_t *region,
+                     enum reorder_method method
+){
    int reostatus=0;
    CHECK_SYSTEM(sys);
    sys->rmethod=method; /* set method of this call */
@@ -4318,7 +4277,7 @@ int linsolqr_factor(linsolqr_system_t sys, enum factor_method fmeth){
   }
   if (facstatus) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error %d in factoring with %s",facstatus,
-	    linsolqr_enum_to_fmethod(sys->fmethod));
+            linsolqr_enum_to_fmethod(sys->fmethod));
   }
   return facstatus;
 }
@@ -4369,8 +4328,7 @@ mtx_sparse_t *linsolqr_unpivoted_rows(linsolqr_system_t sys)
   return ret;
 }
 
-mtx_sparse_t *linsolqr_unpivoted_cols(linsolqr_system_t sys)
-{
+mtx_sparse_t *linsolqr_unpivoted_cols(linsolqr_system_t sys){
   mtx_sparse_t *ret = NULL;
   int32 k=0,defect,ndx;
 
@@ -4395,8 +4353,8 @@ mtx_sparse_t *linsolqr_unpivoted_cols(linsolqr_system_t sys)
   return ret;
 }
 
-mtx_sparse_t *linsolqr_pivoted_rows(linsolqr_system_t sys)
-{
+
+mtx_sparse_t *linsolqr_pivoted_rows(linsolqr_system_t sys){
   mtx_sparse_t *ret = NULL;
   int32 k=0,ndx;
 
@@ -4429,8 +4387,8 @@ mtx_sparse_t *linsolqr_pivoted_rows(linsolqr_system_t sys)
   return ret;
 }
 
-mtx_sparse_t *linsolqr_pivoted_cols(linsolqr_system_t sys)
-{
+
+mtx_sparse_t *linsolqr_pivoted_cols(linsolqr_system_t sys){
   mtx_sparse_t *ret = NULL;
   int32 k=0,ndx;
 
@@ -4470,8 +4428,8 @@ mtx_sparse_t *linsolqr_pivoted_cols(linsolqr_system_t sys)
    mtx_row_to_org((sys)->factors,mtx_org_to_col((sys)->factors,(org_col)))
 
 int32 linsolqr_org_row_to_org_col(linsolqr_system_t sys,
-                                        int32 org_row)
-{
+                                        int32 org_row
+){
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
@@ -4489,10 +4447,11 @@ int32 linsolqr_org_col_to_org_row(linsolqr_system_t sys,
   return( org_col_to_org_row(sys,org_col) );
 }
 
-/* this is a distributor to the appropriate functions.  This function
-should probably have more arguments in the future. */
-void linsolqr_calc_row_dependencies(linsolqr_system_t sys)
-{
+/* 
+	this is a distributor to the appropriate functions.  This function
+	should probably have more arguments in the future.
+*/
+void linsolqr_calc_row_dependencies(linsolqr_system_t sys){
   CHECK_SYSTEM(sys);
   if( !sys->factored ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
@@ -4516,8 +4475,7 @@ void linsolqr_calc_row_dependencies(linsolqr_system_t sys)
   return;
 }
 
-void linsolqr_calc_col_dependencies(linsolqr_system_t sys)
-{
+void linsolqr_calc_col_dependencies(linsolqr_system_t sys){
   if( !sys->factored ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
   }
@@ -4538,9 +4496,7 @@ void linsolqr_calc_col_dependencies(linsolqr_system_t sys)
   return;
 }
 
-mtx_sparse_t *linsolqr_row_dependence_coefs(linsolqr_system_t sys,
-                                            int32 org)
-{
+mtx_sparse_t *linsolqr_row_dependence_coefs(linsolqr_system_t sys, int32 org){
   mtx_coord_t nz;
   mtx_sparse_t *ret=NULL;
   int32 k;
@@ -4574,7 +4530,7 @@ mtx_sparse_t *linsolqr_row_dependence_coefs(linsolqr_system_t sys,
   cols.low = sys->rng.low;
   cols.high = sys->rng.low + sys->rank -1;
   ret = mtx_create_sparse(MAX(sys->reg.row.high - sys->reg.row.low + 1,
-				  sys->reg.row.high - sys->reg.row.low + 1));
+                                  sys->reg.row.high - sys->reg.row.low + 1));
   ret = mtx_cur_row_sparse(mtx,nz.row,ret,&cols,mtx_IGNORE_ZEROES);
   if (ISNULL(ret)) return ret; /* a very weird event! */
 
@@ -4586,9 +4542,7 @@ mtx_sparse_t *linsolqr_row_dependence_coefs(linsolqr_system_t sys,
   return ret;
 }
 
-mtx_sparse_t *linsolqr_col_dependence_coefs(linsolqr_system_t sys,
-                                            int32 org)
-{
+mtx_sparse_t *linsolqr_col_dependence_coefs(linsolqr_system_t sys, int32 org){
   mtx_coord_t nz;
   mtx_sparse_t *ret=NULL;
   int32 k;
@@ -4622,7 +4576,7 @@ mtx_sparse_t *linsolqr_col_dependence_coefs(linsolqr_system_t sys,
   rows.low = sys->rng.low;
   rows.high = sys->rng.low + sys->rank -1;
   ret = mtx_create_sparse(MAX(sys->reg.row.high - sys->reg.row.low + 1,
-				  sys->reg.row.high - sys->reg.row.low + 1));
+                                  sys->reg.row.high - sys->reg.row.low + 1));
   ret = mtx_cur_col_sparse(mtx,nz.col,ret,&rows,mtx_IGNORE_ZEROES);
 
   if (ISNULL(ret)) return ret; /* a very weird event! */
@@ -4636,9 +4590,9 @@ mtx_sparse_t *linsolqr_col_dependence_coefs(linsolqr_system_t sys,
 }
 
 real64 linsolqr_org_row_dependency(linsolqr_system_t sys,
-                                         int32 dep,
-                                         int32 ind)
-{
+		int32 dep,
+		int32 ind
+){
    mtx_coord_t nz;
 
    CHECK_SYSTEM(sys);
@@ -4652,7 +4606,7 @@ real64 linsolqr_org_row_dependency(linsolqr_system_t sys,
    nz.col = mtx_org_to_row(sys->factors,ind);
    if( (sys->rng.low > nz.col) || (nz.col > sys->rng.low+sys->rank-1) ) {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Original row %ld is not independent. Returning 0.",
-	      (long)ind);
+              (long)ind);
       return(D_ZERO);
    }
 
@@ -4680,7 +4634,7 @@ real64 linsolqr_org_col_dependency(linsolqr_system_t sys,
    nz.row = mtx_org_to_col(sys->factors,ind);
    if( (sys->rng.low > nz.row) || (nz.row > sys->rng.low+sys->rank-1) ) {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Original col %ld is not independent. Returning 0.",
-	      (long)ind);
+              (long)ind);
       return(D_ZERO);
    }
 
@@ -4691,57 +4645,57 @@ real64 linsolqr_org_col_dependency(linsolqr_system_t sys,
    return(mtx_value(sys->factors,&nz));
 }
 
-int linsolqr_solve(linsolqr_system_t sys,real64 *rhs)
+
 /**
- ***  Assuming the bounding block region of the matrix has been previously
- ***  factored, the specified rhs can then be applied.
- ***
- ***  Application is specific to the method in question.
- ***
- ***  SPK1/RANKI and variants:
- ***   If rhs has transpose==FALSE
- ***      A x = U L x = rhs.  Define c := L x, solve U c = rhs and L x = c.
- ***
- ***   or
- ***   If rhs has transpose==TRUE
- ***       T     T T                       T          T             T
- ***      A x = L U x = rhs.  Define c := U x, solve L c = rhs and U x = c.
- ***
- ***   The variables associated with any of the unpivoted original rows
- ***   and columns are assigned the value of zero by convention.
- ***   The diagonal has the element of L, the diag of U 1 by construction.
- ***
- ***  CondQR:
- ***      Define Q :=PROD( H(i) | i in rank...1 ) (note H(rank)= I)
- ***      R = Q.A                                 (note Q^-1 = Q^T)
- ***                                              (why? H^T=H=H^-1)
- ***
- ***   If rhs has transpose==FALSE
- ***      A.x=rhs.  Define c := Q.rhs, then solve R.x = c.
- ***      Notes: If A is singular, x will be the least squares solution.
- ***   or
- ***   If rhs has transpose==TRUE
- ***      Notes: If A is singular, what the heck does solving the transpose
- ***      mean?
- ***
- ***           -1      T        T     T   T    T
- ***      A = Q  .R = Q .R, so A  = (Q .R)  = R .Q, then:
- ***
- ***       T      T                                   T
- ***      A .x = R .Q.x = rhs. Define Q.x = c. Solve R .c = rhs for c.
- ***
- ***       -1        -1           T
- ***      Q  .Q.x = Q  .c => x = Q .c = PROD( H(i) | i in 1...rank ).c.
- ***
- ***   The variables associated with any of the unpivoted original rows
- ***   and collumns are assigned the value of zero by convention.
- ***   The diagonal has the element of H, the diag of R is stored elsewhere.
- ***
- ***  The *_solve functions called from here are expected to zero or
- ***  leave a least squares value set in the solution vector for unpivoted
- ***  relations/variables.
+	Assuming the bounding block region of the matrix has been previously
+	factored, the specified rhs can then be applied.
+	
+	Application is specific to the method in question.
+	
+	SPK1/RANKI and variants:
+	 If rhs has transpose==FALSE
+	    A x = U L x = rhs.  Define c := L x, solve U c = rhs and L x = c.
+	
+	 or
+	 If rhs has transpose==TRUE
+	     T     T T                       T          T             T
+	    A x = L U x = rhs.  Define c := U x, solve L c = rhs and U x = c.
+	
+	 The variables associated with any of the unpivoted original rows
+	 and columns are assigned the value of zero by convention.
+	 The diagonal has the element of L, the diag of U 1 by construction.
+	
+	CondQR:
+	    Define Q :=PROD( H(i) | i in rank...1 ) (note H(rank)= I)
+	    R = Q.A                                 (note Q^-1 = Q^T)
+	                                            (why? H^T=H=H^-1)
+	
+	 If rhs has transpose==FALSE
+	    A.x=rhs.  Define c := Q.rhs, then solve R.x = c.
+	    Notes: If A is singular, x will be the least squares solution.
+	 or
+	 If rhs has transpose==TRUE
+	    Notes: If A is singular, what the heck does solving the transpose
+	    mean?
+	
+	         -1      T        T     T   T    T
+	    A = Q  .R = Q .R, so A  = (Q .R)  = R .Q, then:
+	
+	     T      T                                   T
+	    A .x = R .Q.x = rhs. Define Q.x = c. Solve R .c = rhs for c.
+	
+	     -1        -1           T
+	    Q  .Q.x = Q  .c => x = Q .c = PROD( H(i) | i in 1...rank ).c.
+	
+	 The variables associated with any of the unpivoted original rows
+	 and collumns are assigned the value of zero by convention.
+	 The diagonal has the element of H, the diag of R is stored elsewhere.
+	
+	The *_solve functions called from here are expected to zero or
+	leave a least squares value set in the solution vector for unpivoted
+	  relations/variables.
  **/
-{
+int linsolqr_solve(linsolqr_system_t sys,real64 *rhs){
    struct rhs_list *rl;
    int solstatus=0;
 
@@ -4752,7 +4706,7 @@ int linsolqr_solve(linsolqr_system_t sys,real64 *rhs)
    rl = find_rhs(sys->rl,rhs);
    if( NOTNULL(rl) ) {
       if( rl->solved )
-	 return 0;
+         return 0;
       if( ISNULL(rl->varvalue) ) { /* rhs wasn't around at factor time */
         rl->varvalue=(real64 *)
           ascmalloc(sys->capacity*sizeof(real64));
@@ -4794,26 +4748,28 @@ int linsolqr_solve(linsolqr_system_t sys,real64 *rhs)
    return solstatus;
 }
 /** Some notes for internal consumption on the ordering of rl->varvalue.
-baa. 1-10-95
-On a matrix permuted during solution:
-  If rl is not a transpose:
-    At the beginning of solution, rl->varvalue[eqn] is the residual of
-    the equation to be solved in original matrix row number eqn (M).
-    After solution, rl->varvalue[eqn] is the value of the variable
-    pivoted under in that equation.
+	baa. 1-10-95
 
-    To get the value of the variable
-    corresponding to original column N, you must find column P,
-    the current column that N became during solution. The pivoting
-    happened at A(currow,curcol) = A(P,P). Now take row P and find
-    the equation M (original row number).
-    The value of variable(N) is stored in varvalue(M).
+	On a matrix permuted during solution:
 
-    The macros org_row_to_org_col and org_col_to_org_row
-    take care if translating between org_cols(N) and org_rows(M).
+	If rl is not a transpose:
+	    At the beginning of solution, rl->varvalue[eqn] is the residual of
+	    the equation to be solved in original matrix row number eqn (M).
+	    After solution, rl->varvalue[eqn] is the value of the variable
+	    pivoted under in that equation.
 
-  If rl is a transpose:
-    Well, you figure it out.
+	    To get the value of the variable
+	    corresponding to original column N, you must find column P,
+	    the current column that N became during solution. The pivoting
+	    happened at A(currow,curcol) = A(P,P). Now take row P and find
+	    the equation M (original row number).
+	    The value of variable(N) is stored in varvalue(M).
+
+	    The macros org_row_to_org_col and org_col_to_org_row
+	    take care if translating between org_cols(N) and org_rows(M).
+
+	If rl is a transpose:
+		Well, you figure it out.
  **/
 
 real64 linsolqr_var_value(linsolqr_system_t sys,
@@ -4830,15 +4786,15 @@ real64 linsolqr_var_value(linsolqr_system_t sys,
    rl = find_rhs(sys->rl,rhs);
    if( NOTNULL(rl) ) {
       if( !(rl->solved) ) {
-	 ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not solved yet.");
+         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not solved yet.");
          return D_ZERO;
       }
       if( rl->transpose )
-	 /* ndx is an original row index */
-	 return( rl->varvalue[org_row_to_org_col(sys,ndx)] );
+         /* ndx is an original row index */
+         return( rl->varvalue[org_row_to_org_col(sys,ndx)] );
       else
-	 /* ndx is an original column index */
-	 return( rl->varvalue[org_col_to_org_row(sys,ndx)] );
+         /* ndx is an original column index */
+         return( rl->varvalue[org_col_to_org_row(sys,ndx)] );
    } else {
      if( NOTNULL(rhs) ) {
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs does not exist.");
@@ -4913,31 +4869,31 @@ real64 linsolqr_eqn_residual(linsolqr_system_t sys,
       eqnrhs=rl->rhs;
       lhs = D_ZERO;
       if( !(rl->solved) ) {
-	 ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not solved yet.");
+         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not solved yet.");
          return (real64)MAXDOUBLE;
       }
       if (rl->transpose) {
-	 /* ndx is an original column index */
+         /* ndx is an original column index */
          /* rl->varvalue is indexed peculiarly. see above */
-	 nz.col = mtx_org_to_col(mtx,ndx);
-	 nz.row = mtx_FIRST;
-	 while( value = mtx_next_in_col(mtx,&nz,&(sys->reg.row)),
-	       nz.row != mtx_LAST )
-	    lhs += value *
+         nz.col = mtx_org_to_col(mtx,ndx);
+         nz.row = mtx_FIRST;
+         while( value = mtx_next_in_col(mtx,&nz,&(sys->reg.row)),
+               nz.row != mtx_LAST )
+            lhs += value *
                varvalue[org_row_to_org_col(sys,mtx_row_to_org(mtx,nz.row))];
-	 return( lhs - eqnrhs[ndx] );
+         return( lhs - eqnrhs[ndx] );
       } else {
-	 /* ndx is an original row index */
+         /* ndx is an original row index */
          /* rl->varvalue is indexed as described above */
          /* there isn't much to speed this up except move the
             functionality down to mtx, and it doesn't belong there */
-	 nz.row = mtx_org_to_row(mtx,ndx);
-	 nz.col = mtx_FIRST;
-	 while( value = mtx_next_in_row(mtx,&nz,&(sys->reg.col)),
-	       nz.col != mtx_LAST )
-	    lhs += value *
+         nz.row = mtx_org_to_row(mtx,ndx);
+         nz.col = mtx_FIRST;
+         while( value = mtx_next_in_row(mtx,&nz,&(sys->reg.col)),
+               nz.col != mtx_LAST )
+            lhs += value *
               varvalue[org_col_to_org_row(sys,mtx_col_to_org(mtx,nz.col))];
-	 return( lhs - eqnrhs[ndx] );
+         return( lhs - eqnrhs[ndx] );
       }
    } else {
       if( NOTNULL(rhs) ) {
@@ -4966,7 +4922,7 @@ boolean linsolqr_calc_residual(linsolqr_system_t sys,
   rl = find_rhs(sys->rl,rhs);
   if( NOTNULL(rl) ) {
     int32 curcol,hicol,currow,hirow;
-    real64 *orgvars=NULL;		/* scratch work space */
+    real64 *orgvars=NULL;                /* scratch work space */
     real64 *varvalue, *eqnrhs;
 
     if( !(rl->solved) ) {
@@ -5099,13 +5055,9 @@ mtx_matrix_t linsolqr_get_inverse(linsolqr_system_t sys)
   return sys->inverse;
 }
 
-
- /*
- *********************************************************************
- *Ken's Playground for NGSlv linear functions
- *
- *********************************************************************
- */
+/*------------------------------------------------------------------------------
+  Ken's (Ken Tyner, I presume -- JP) Playground for NGSlv linear functions
+*/
 
 /* this function needs to return some value in all cases */
 int linsolqr_setup_ngslv(linsolqr_system_t sys,
@@ -5123,7 +5075,7 @@ int linsolqr_setup_ngslv(linsolqr_system_t sys,
    rl = find_rhs(sys->rl,rhs);
    if( NOTNULL(rl) ) {
       if( rl->solved )
-	 return 0;
+         return 0;
       if( ISNULL(rl->varvalue) ) { /* rhs wasn't around at factor time */
         rl->varvalue=(real64 *)
           ascmalloc(sys->capacity*sizeof(real64));
@@ -5135,7 +5087,7 @@ int linsolqr_setup_ngslv(linsolqr_system_t sys,
 /* OK it looks like zero_unpivoted_vars uses row_to_org */
 /* also remove dereferencing */
       for (k = un_p_rng->low; k <= un_p_rng->high; k++){
-	  tmpvec[mtx_row_to_org(sys->factors,k)] = rl->varvalue[mtx_row_to_org(sys->factors,k)];
+          tmpvec[mtx_row_to_org(sys->factors,k)] = rl->varvalue[mtx_row_to_org(sys->factors,k)];
       }
       zero_unpivoted_vars(sys,rl->varvalue,rl->transpose);
       backward_substitute2(sys,rl->varvalue,rl->transpose);
@@ -5153,21 +5105,7 @@ int linsolqr_setup_ngslv(linsolqr_system_t sys,
    return 0;  /* Function had no return statement.  Added this line.  OK? */
 }
 
-/* real64 *linsolqr_get_varvalue(linsolqr_system_t sys,real64 *rhs)
-{
-   struct rhs_list *rl;
-
-   CHECK_SYSTEM(sys);
-   if( !sys->factored ) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System not factored yet.");
-      return D_ZERO;
-   }
-   rl = find_rhs(sys->rl,rhs);
-   return( ISNULL(rl) ? NULL : rl->varvalue );
-}
-*/
-real64 *linsolqr_get_varvalue(linsolqr_system_t sys,int n)
-{
+real64 *linsolqr_get_varvalue(linsolqr_system_t sys,int n){
    struct rhs_list *rl;
    int count;
 

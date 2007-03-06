@@ -48,6 +48,8 @@ static void test_qr2x2(void){
 	G.row = R;
 	G.col = R;
 
+	mtx_write_region_mmio(stderr,M,&G);
+
 	L = linsolqr_create_default();
 	linsolqr_set_matrix(L,M);
 	linsolqr_set_region(L,G);
