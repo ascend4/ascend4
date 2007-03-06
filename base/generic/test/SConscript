@@ -10,7 +10,7 @@ testsrcs = ['#test/'+i for i in Split("""
 basesrcs = ['test_ascend_base.c']
 
 srcs = []
-for dir in ['general','utilities','solver']:
+for dir in ['general','utilities','solver','linear']:
 	srcs += env['TESTSRCS_'+dir.upper()]
 
 cpppath = ['#test','#base/generic']

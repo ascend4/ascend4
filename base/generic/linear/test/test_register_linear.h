@@ -17,7 +17,7 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//*  @file
-	Test registration function for the ASCEND general component.
+	Test registration function for the 'linear' component.
 */
 
 #include "CUnit/CUnit.h"
@@ -25,20 +25,9 @@
 #define SUITE general
 
 #define TESTS(T) \
-	T(dstring) \
-	T(hashpjw) \
-	T(list) \
-	T(listio) \
-	T(pool) \
-	T(pretty) \
-	T(stack) \
-	T(table) \
-	T(tm_time) \
-	T(ospath)
-/* 	T(qsort1) */
+	T(qr2x2)
 
 #define PROTO(SUITE,NAME) CU_ErrorCode test_register_##SUITE##_##NAME(void);
-
 
 #define PROTO_SUITE(SUITE) CU_ErrorCode test_register_##SUITE(void)
 
