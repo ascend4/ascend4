@@ -16,39 +16,27 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//*  @file
-	Test registration function for the ASCEND general component.
 */
 
 #include "CUnit/CUnit.h"
+#include <utilities/ascConfig.h>
+#include "test_register_linear.h"
 
-#define SUITE general
+#define PROTO_TEST(NAME) PROTO(linear,NAME)
+TESTS(PROTO_TEST)
+#undef PROTO_TEST
 
-#define TESTS(T) \
-	T(dstring) \
-	T(hashpjw) \
-	T(list) \
-	T(listio) \
-	T(pool) \
-	T(pretty) \
-	T(stack) \
-	T(table) \
-	T(tm_time) \
-	T(ospath)
-/* 	T(qsort1) */
+#define REGISTER_TEST(NAME) \
+	result = test_register_linear_##NAME(); \
+	if(CUE_SUCCESS!=result){ \
+		return result; \
+	}
 
-#define PROTO(SUITE,NAME) CU_ErrorCode test_register_##SUITE##_##NAME(void);
+#define REGISTER_SUITE(SUITENAME,TESTS) \
+	CU_ErrorCode test_register_##SUITENAME(void){ \
+		CU_ErrorCode result = CUE_SUCCESS; \
+		TESTS(REGISTER_TEST) \
+		return result; \
+	}	
 
-
-#define PROTO_SUITE(SUITE) CU_ErrorCode test_register_##SUITE(void)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-PROTO_SUITE(SUITE);
-/**< 
- *  Registers all tests for the ASCEND general component.
- *  Returns a CUnit error code (CUE_SUCCESS if no errors).
- */
-
+REGISTER_SUITE(linear,TESTS)

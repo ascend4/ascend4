@@ -384,7 +384,7 @@ ASC_DLLSPEC real64 mtx_value(mtx_matrix_t matrix, mtx_coord_t *coord);
  -$-  Returns 0.0/does nothing from/to a bad matrix.
  **/
 
-extern void mtx_set_value(mtx_matrix_t matrix,
+ASC_DLLSPEC void mtx_set_value(mtx_matrix_t matrix,
                           mtx_coord_t *coord, real64 value);
 /**<
  ***  Sets the value of the given element in the matrix.

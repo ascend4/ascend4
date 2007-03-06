@@ -304,7 +304,7 @@ extern enum factor_method linsolqr_fmethod_to_enum(char *s);
  * If you implement a new method, update this function.
  */
 
-extern enum factor_class linsolqr_fmethod_to_fclass(enum factor_method fm);
+ASC_DLLSPEC enum factor_class linsolqr_fmethod_to_fclass(enum factor_method fm);
 /**<
  * Returns the enum of the factor class containing the method given.
  * If you implement a new method or class, update this function.
@@ -340,26 +340,26 @@ ASC_DLLSPEC char *linsolqr_fmethod_description(enum factor_method meth);
 
 /* Functions for specifying problems and controlling them */
 
-extern linsolqr_system_t linsolqr_create(void);
+ASC_DLLSPEC linsolqr_system_t linsolqr_create(void);
 /**< 
  *  Creates a linear system and returns a pointer to it.  Initially the
  *  system has no coefficient matrix and no rhs.
  */
 
-linsolqr_system_t linsolqr_create_default(void);
+ASC_DLLSPEC linsolqr_system_t linsolqr_create_default(void);
 /**<
 	Creates a linsolqr system as per linsolqr_default but sets default
 	preferences for reordering and factoring methods, so the lazy user (me)
 	doesn't	have to.
 */
 
-extern void linsolqr_destroy(linsolqr_system_t sys);
+ASC_DLLSPEC void linsolqr_destroy(linsolqr_system_t sys);
 /**< 
  *  Destroys the linear system.  The coefficient matrix and each rhs are
  *  not destroyed by this call.
  */
 
-extern void linsolqr_set_matrix(linsolqr_system_t sys, mtx_matrix_t mtx);
+ASC_DLLSPEC void linsolqr_set_matrix(linsolqr_system_t sys, mtx_matrix_t mtx);
 /**<
  *  Sets the coefficient matrix to mtx.
  */
@@ -530,7 +530,7 @@ ASC_DLLSPEC enum reorder_method linsolqr_rmethod(linsolqr_system_t sys);
  *  The system should be previously prepped.
  */
 
-extern int32 linsolqr_rank(linsolqr_system_t sys);
+ASC_DLLSPEC int32 linsolqr_rank(linsolqr_system_t sys);
 /**<
  *  Returns the rank of the system.  The system must be previously
  *  factored.
@@ -543,8 +543,7 @@ extern real64 linsolqr_smallest_pivot(linsolqr_system_t sys);
  *  MAXDOUBLE is returned.
  */
 
-extern int linsolqr_prep(linsolqr_system_t sys, 
-                         enum factor_class fclass);
+ASC_DLLSPEC int linsolqr_prep(linsolqr_system_t sys, enum factor_class fclass);
 /**<
  *  This function is analogous to slv_select_solver. It
  *  takes care of allocations. The prep call should be done (once) at

@@ -36,10 +36,10 @@
 #include <linear/mtx.h>
 #include <linear/mtx_vector.h>
 
-#include <solver/slv_types.h>
-#include <solver/rel.h>
-#include <solver/logrel.h>
-#include <solver/slv_common.h>
+#include <system/slv_types.h>
+#include <system/rel.h>
+#include <system/logrel.h>
+#include <system/slv_common.h>
 
 #include "test_slv_common.h"
 #include "assertimpl.h"
