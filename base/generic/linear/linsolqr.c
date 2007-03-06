@@ -40,11 +40,11 @@
  *   operations have been replaced by higher level ones. These used to
  *   be flagged as such so that people who wanted to construct newer
  *   operations from the lowest level mtx operators could see how to
- *   use the lowlevel operators. Since it has been decided that the old
- *   linsol will NOT be discarded completely (we like having easy
- *   benchmarks to look better than), the user wishing to code new
- *   operations is directed back to linsol to see how lowlevel operations
- *   can be expensively done.
+ *   use the lowlevel operators.
+
+	Later note (JP, 2007): The earlier version of linsolqr, named linsol,
+	has been removed completely. There was some comment about it here but 
+	it's not here any more.
  *
  *   10/95: (BAA) I attempted to optimize number_drag through use of
  *   pointer arithmetic. Testing the resulting code without optimization
