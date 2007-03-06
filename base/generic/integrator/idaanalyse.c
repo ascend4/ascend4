@@ -320,8 +320,9 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	will have index problems and may not solve with IDA.
 */
 int integrator_ida_check_index(IntegratorSystem *sys){
-#if 0
+#if 1
 	linsolqr_system_t L;
+	mtx_range_t range;
 	mtx_region_t R;
 	int res, r;
 	struct SystemJacobianStruct df_dydp, dg_dya;
@@ -372,8 +373,8 @@ int integrator_ida_check_index(IntegratorSystem *sys){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"The algebraic part of the DAE jacobian, dg/dya, is not square!");
 	}else{
 		/* check the rank */
-		R.row.low = R.col.low = 0;
-		R.row.high = R.col.high = mtx_order(dg_dya.M) - 1;
+		range.low = 0; range.high = mtx_order(dg_dya.M) - 1;
+		R.row = range; R.col = range;
 
 		L = linsolqr_create_default();
 		linsolqr_set_matrix(L,dg_dya.M);
@@ -390,17 +391,25 @@ int integrator_ida_check_index(IntegratorSystem *sys){
 		}
 	}
 
+	ASC_FREE(dg_dya.vars);
+	ASC_FREE(dg_dya.rels);
+	mtx_destroy(dg_dya.M);
+
 	if(df_dydp.n_rels <= 0){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No differential equations were found in the DAE system!");
 	}else if(df_dydp.n_rels != df_dydp.n_vars){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"The differential part of the the jacobian dg/dya is not square!");
+		ASC_FREE(df_dydp.vars);
+		ASC_FREE(df_dydp.rels);
+		mtx_destroy(df_dydp.M);
+		return 1;
 	}else{
 		/* check the rank */
-		R.row.low = R.col.low = 0;
-		R.row.high = R.col.high = mtx_order(df_dydp.M) - 1;
+		range.low = 0; range.high = mtx_order(df_dydp.M) - 1;
+		R.row = range; R.col = range;
 
 		L = linsolqr_create_default();
-		linsolqr_set_matrix(L,dg_dya.M);
+		linsolqr_set_matrix(L,df_dydp.M);
 		linsolqr_set_region(L,R);
 		linsolqr_prep(L,linsolqr_fmethod_to_fclass(linsolqr_fmethod(L)));
 		linsolqr_reorder(L, &R, linsolqr_rmethod(L));
@@ -420,9 +429,6 @@ int integrator_ida_check_index(IntegratorSystem *sys){
 
 	ASC_FREE(df_dydp.vars);
 	ASC_FREE(df_dydp.rels);
-	ASC_FREE(dg_dya.vars);
-	ASC_FREE(dg_dya.rels);
-	mtx_destroy(dg_dya.M);
 	mtx_destroy(df_dydp.M);
 	return 0;
 #else
@@ -554,7 +560,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 	res = integrator_ida_check_index(sys);
 	if(res){
-		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Your DAE system has an index problem");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Your DAE system has an index problem");
 		return 100 + res;
 	}
 

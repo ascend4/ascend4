@@ -105,9 +105,12 @@ Integrator::analyse(){
 		code, as it gets called by Simulation::build.
 	*/
 	res = integrator_analyse(blsys);
+	CONSOLE_DEBUG("Got %d",res);
 
 	if(res){
-		stringstream ss; ss << "Failed system analysis (error " << res << ")";
+		CONSOLE_DEBUG("...which is bad");
+		stringstream ss;
+		ss << "Failed system analysis (error " << res << ")";
 		throw runtime_error(ss.str());
 	}
 }

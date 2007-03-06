@@ -124,7 +124,7 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 
 			if(vipnext->u.v.deriv == vip->u.v.deriv){
 				ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-				FPRINTF(ASCERR,"Repeated ode_type %d for ode_id %d (var '%s')",vip->u.v.deriv,vip->u.v.odeid);
+				FPRINTF(ASCERR,"Repeated ode_type %d for ode_id %d (var '",vip->u.v.deriv,vip->u.v.odeid);
 				WriteInstanceName(ASCERR,vip->i,prob->root);
 				FPRINTF(ASCERR,"')");
 				error_reporter_end_flush();
