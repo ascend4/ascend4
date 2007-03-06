@@ -1129,7 +1129,6 @@ int slv9a_register(SlvFunctionsT *sft)
   sft->presolve = slv9a_presolve;
   sft->iterate = slv9a_iterate;
   sft->resolve = slv9a_resolve;
-  sft->getlinsol = NULL;
   sft->getlinsys = NULL;
   sft->get_sys_mtx = slv9a_get_structural_matrix;
   sft->dumpinternals = slv9a_dump_internals;

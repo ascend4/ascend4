@@ -4503,7 +4503,6 @@ int slv7_register(SlvFunctionsT *sft)
   sft->presolve = slv7_presolve;
   sft->iterate = slv7_iterate;
   sft->resolve = slv7_resolve;
-  sft->getlinsol = NULL;
   sft->getlinsys = slv7_get_linsolqr_sys;
   sft->get_sys_mtx = slv7_get_jacobian;
   sft->dumpinternals = slv7_dump_internals;

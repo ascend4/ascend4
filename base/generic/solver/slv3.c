@@ -4218,7 +4218,6 @@ int slv3_register(SlvFunctionsT *sft){
   sft->presolve = slv3_presolve;
   sft->iterate = slv3_iterate;
   sft->resolve = slv3_resolve;
-  sft->getlinsol = NULL;
   sft->getlinsys = slv3_get_linsolqr_sys;
   sft->get_sys_mtx = slv3_get_jacobian;
   sft->dumpinternals = NULL;

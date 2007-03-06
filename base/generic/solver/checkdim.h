@@ -30,21 +30,14 @@
 /** @file
  *  This module defines the dimensionality derivation and some other
  *  auxillaries for Ascend.
- *  <pre>
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "compiler/dimen.h"
- *                #include "solver/mtx.h"
- *                #include "solver/linsol.h"
- *                #include "solver/var.h"
- *                #include "solver/rel.h"
- *                #include "solver/slv_client.h"
- *  </pre>
  *  @todo checkdim.h appears to be a work in progress - complete or remove.
  */
 
 #ifndef chkdim__already_included
 #define chkdim__already_included
 
+#include <linear/linsolqr.h>
+#include <system/slv_client.h>
 #include <compiler/dimen.h>
 
 /**	@addtogroup solver Solver
@@ -56,7 +49,7 @@
 /* See relman.h for the definition of list of relations/variables */
 
 typedef struct chkdim_system_structure {
-   linsol_system_t sys;
+   linsolqr_system_t sys;
    mtx_matrix_t mtx;              /**< Coefficient matrix                 */
    real64 *(rhs[NUM_DIMENS]);     /**< RHS's (one for each fundamental
                                        dimension)                         */

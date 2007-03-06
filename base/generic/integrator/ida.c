@@ -1640,10 +1640,45 @@ void integrator_ida_write_stats(IntegratorIdaStats *stats){
   OUTPUT OF INTERNALS: JACOBIAN / INCIDENCE MATRIX / DEBUG INFO
 */
 
-enum integrator_ida_write_jac_enum{
-	II_WRITE_DFDY
-	, II_WRITE_DFDYDOT
-};
+/**
+	Here we construct the local transfer matrix. It's a bit of a naive
+	approach; probably far more efficient ways can be worked out. But it will
+	hopefully be a useful way to examine stability of some spatial
+	discretisation schemes for PDAE systems.
+
+	http://ascendserver.cheme.cmu.edu/wiki/index.php/IDA#Stability
+*/
+static int integrator_ida_transfer_matrix(const IntegratorSystem *sys, struct SystemJacobianStruct *J){
+	int i=0, res;
+	enum submat{II_GA=0, II_GD, II_FA, II_FD, II_FDP, II_NUM};
+
+	const var_filter_t *matvf[II_NUM] = {
+		&system_vfilter_algeb
+		,&system_vfilter_diff
+		,&system_vfilter_algeb
+		,&system_vfilter_diff
+		,&system_vfilter_deriv
+	};
+
+	const rel_filter_t *matrf[II_NUM] = {
+		&system_rfilter_algeb
+		,&system_rfilter_algeb
+		,&system_rfilter_diff
+		,&system_rfilter_diff
+		,&system_rfilter_diff
+	};
+
+	struct SystemJacobianStruct D[II_NUM];
+	
+	for(i=0;i<II_NUM;++i){
+		res = system_jacobian(sys->system, matrf[i], matvf[i], 1/*safe*/ ,&(D[i]));
+	}
+
+	/* compute inverses for matrices that need it */
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
+	return 1;
+}
+
 
 /**
 	Our task here is to write the matrices that IDA *should* be seeing. We
@@ -1654,16 +1689,9 @@ enum integrator_ida_write_jac_enum{
 	correctly).
 */
 int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char *type){
-	IntegratorIdaData *enginedata;
+	/* IntegratorIdaData *enginedata; */
 	struct SystemJacobianStruct J;
-	int i, j, status=1, count;
-	char *relname, *varname;
-	enum integrator_ida_write_jac_enum type1;
-	var_filter_t vfilter = {
-		VAR_SVAR | VAR_FIXED | VAR_DERIV
-	   ,VAR_SVAR | 0         | 0
-	};
-	mtx_matrix_t M;
+	int status=1;
 
 	if(type==NULL)type = "dg/dya";
 
@@ -1716,6 +1744,9 @@ int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char
 			, 1 /* safe */
 			, &J
 		);
+	}else if(0==strcmp(type,"dydp/dyd")){
+		/* system state transfer matrix dyd'/dyd */
+		status = integrator_ida_transfer_matrix(sys, &J);
 	}else{
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid matrix type '%s'",type);
 		return 1;

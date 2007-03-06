@@ -5670,7 +5670,6 @@ int slv9_register(SlvFunctionsT *sft){
   sft->presolve = slv9_presolve;
   sft->iterate = slv9_iterate;
   sft->resolve = slv9_resolve;
-  sft->getlinsol = NULL;
   sft->getlinsys = NULL;
   sft->get_sys_mtx = slv9_get_matrix;
   sft->dumpinternals = slv9_dump_internals;

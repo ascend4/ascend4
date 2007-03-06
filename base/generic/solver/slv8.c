@@ -2934,7 +2934,6 @@ int32 slv8_register(SlvFunctionsT *sft){
   sft->presolve = slv8_presolve;
   sft->iterate = slv8_iterate;
   sft->resolve = slv8_resolve;
-  sft->getlinsol = NULL;
   sft->getlinsys = slv8_get_linsolqr_sys;
   sft->get_sys_mtx = slv8_get_jacobian;
   sft->dumpinternals = slv8_dump_internals;

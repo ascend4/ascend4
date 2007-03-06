@@ -118,7 +118,6 @@ int Asc_MtxNormsCmd(ClientData cdata, Tcl_Interp *interp,
                 int argc, CONST84 char *argv[])
 {
   slv_system_t sys;
-  linsol_system_t lin_sys = NULL;
   linsolqr_system_t linqr_sys = NULL;
   mtx_matrix_t mtx;
   mtx_region_t reg;
@@ -140,20 +139,6 @@ int Asc_MtxNormsCmd(ClientData cdata, Tcl_Interp *interp,
   solver = slv_get_selected_solver(sys);
   switch(solver) {
   default:
-  case 0:
-    lin_sys = slv_get_linsol_sys(sys);
-    mtx = linsol_get_matrix(lin_sys);
-    reg.col.low = reg.row.low = 0;
-    reg.col.high = reg.row.high = mtx_symbolic_rank(mtx);
-    norm = linutils_A_1_norm(mtx,&reg);
-    FPRINTF(stderr,"A_1_norm = %g\n",norm);
-    norm = linutils_A_infinity_norm(mtx,&reg);
-    FPRINTF(stderr,"A_infinity_norm = %g\n",norm);
-    norm = linutils_A_Frobenius_norm(mtx,&reg);
-    FPRINTF(stderr,"A_Frobenius_norm = %g\n",norm);
-    norm = linutils_A_cond_kaa(lin_sys,mtx,NULL);
-    FPRINTF(stderr,"A_condition # = %g\n",norm);
-    break;
   case 3:
   case 5:
     linqr_sys = slv_get_linsolqr_sys(sys);

@@ -1865,7 +1865,6 @@ int slv2_register(SlvFunctionsT *sft)
   sft->presolve = slv2_presolve;
   sft->iterate = slv2_iterate;
   sft->resolve = NULL;
-  sft->getlinsol = NULL;
   sft->getlinsys = NULL;
   sft->get_sys_mtx = NULL;
   sft->dumpinternals = slv2_dump_internals;
