@@ -45,12 +45,44 @@
 	@{
 */
 
+/**
+	The A1 norm is:
+
+		||A||\1 = max (i<=j<=n) SUM\1..m |Aij|
+
+	Because we have the mtx_sum_sqrs_in_col operator, we will instead
+	do:
+
+		||A||\1 = max (i<=j<=n) SUM\1..m (Aij)^2.0
+	
+*/
 ASC_DLLSPEC double linutils_A_1_norm(mtx_matrix_t mtx,
                                 mtx_region_t *reg);
 
+
+/**
+	The A_infinity norm is:
+		
+		||A||    = max (i<=i<=m) SUM\1..n |Aij|
+	         inf
+
+	where i,m refers to rows and j,n refers to columns.
+	Because we have the mtx_sum_sqrs_in_row operator, we will instead
+	do:
+
+		||A||     =   max      SUM   (Aij)^2.0
+	         inf    (i<=i<=m) (1..n)
+*/
 ASC_DLLSPEC double linutils_A_infinity_norm(mtx_matrix_t mtx,
                                        mtx_region_t *reg);
 
+/**
+	The Frobenius norm is given as:
+
+	            /                          \ ^ 0.5
+	||A||   =  |    SUM      SUM    Aij^2   |
+	     F      \  1<=j<=n  1<=i<=m        /
+*/
 ASC_DLLSPEC double linutils_A_Frobenius_norm(mtx_matrix_t mtx,
                                         mtx_region_t *reg);
 
