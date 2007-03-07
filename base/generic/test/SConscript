@@ -31,6 +31,9 @@ libs = ['ascend','m','cunit']
 if platform.system()!="Windows":
 	libs += ['dl']
 
+if env['WITH_UFSPARSE']:
+	libs += ['cxsparse']
+
 objs = []
 for src in srcs+testsrcs:
 	objs += env.SharedObject(src

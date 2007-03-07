@@ -25,7 +25,8 @@
 #define SUITE general
 
 #define TESTS(T) \
-	T(qr2x2)
+	T(qr2x2) \
+	T(mtx)
 
 #define PROTO(SUITE,NAME) CU_ErrorCode test_register_##SUITE##_##NAME(void);
 

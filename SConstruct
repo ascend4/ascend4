@@ -494,7 +494,7 @@ opts.Add(BoolOption(
 	,False
 ))
 
-#------ mfgraph --------
+#------ f --------
 opts.Add(PackageOption(
 	'MFGRAPH_PREFIX'
 	,"Where are your MFGRAPH files?"
@@ -515,7 +515,33 @@ opts.Add(PackageOption(
 
 opts.Add(BoolOption(
 	'WITH_MFGRAPH'
-	,"Link to the MFGRAPH library (if available) for debugging of memory usage."
+	,"Link to the MFGRAPH library (if available, for generating incidence graphs)"
+	,True
+))
+
+
+#------ ufsparse --------
+opts.Add(PackageOption(
+	'UFSPARSE_PREFIX'
+	,"Where are your UFSPARSE files?"
+	,default_prefix
+))
+
+opts.Add(PackageOption(
+	'UFSPARSE_CPPPATH'
+	,"Where are your UFSPARSE include files?"
+	,default_cpppath
+))
+
+opts.Add(PackageOption(
+	'UFSPARSE_LIBPATH'
+	,"Where are your UFSPARSE libraries?"
+	,default_libpath
+))
+
+opts.Add(BoolOption(
+	'WITH_UFSPARSE'
+	,"Link to the UFSPARSE library (if available, for additional sparse matrix routines)"
 	,True
 ))
 
@@ -645,6 +671,9 @@ without_dmalloc_reason = "disabled by options/config.py"
 
 with_mfgraph = env.get('WITH_MFGRAPH')
 without_mfgraph_reason = "disabled by options/config.py"
+
+with_ufsparse = env.get('WITH_UFSPARSE')
+without_ufsparse_reason = "disabled by options/config.py"
 
 with_mmio = env.get('WITH_MMIO')
 without_mmio_reason = "disabled by options/config.py"
@@ -1000,6 +1029,26 @@ int main(void){
 
 def CheckMFGraph(context):
 	return CheckExtLib(context,'mfgraph',mfgraph_test_text,ext=".cpp")
+
+#----------------
+# ufsparse test
+
+ufsparse_test_text = """
+#include <ufsparse/cs.h>
+int main(void){
+	cs *A,*B,*C;
+	C = cs_multiply(A,B);
+	return 0;
+}
+"""
+
+def CheckUFSparse(context):
+	return CheckExtLib(context
+		,libname='cxsparse'
+		,varprefix='ufsparse'
+		,text=ufsparse_test_text
+		,ext=".c"
+	)
 
 #----------------
 # MATH test
@@ -1450,6 +1499,7 @@ conf = Configure(env
 		, 'CheckCUnit' : CheckCUnit
 		, 'CheckDMalloc' : CheckDMalloc
 		, 'CheckMFGraph' : CheckMFGraph
+		, 'CheckUFSparse' : CheckUFSparse
 		, 'CheckTcl' : CheckTcl
 		, 'CheckTclVersion' : CheckTclVersion
 		, 'CheckTk' : CheckTk
@@ -1605,13 +1655,21 @@ if with_dmalloc:
 		without_dmalloc_reason = 'dmalloc not found'
 		with_dmalloc = False
 
-# DMALLOC
+# MFGRAPH
 
 if with_mfgraph:
 	if not conf.CheckMFGraph():
 		without_mfgraph_reason = 'mfgraph not found'
 		with_mfgraph = False
 		env['WITH_MFGRAPH'] = False
+
+# UFSPARSE
+
+if with_ufsparse:
+	if not conf.CheckUFSparse():
+		without_ufsparse_reason = 'mfgraph not found'
+		with_ufsparse = False
+		env['WITH_UFSPARSE'] = False
 
 # IDA
 
@@ -1758,6 +1816,7 @@ for k,v in {
 		'ASC_WITH_IDA':with_ida
 		,'ASC_WITH_DMALLOC':with_dmalloc
 		,'ASC_WITH_MFGRAPH':with_mfgraph
+		,'ASC_WITH_UFSPARSE':with_ufsparse
 		,'ASC_WITH_CONOPT':with_conopt
 		,'ASC_WITH_LSODE':with_lsode
 		,'ASC_WITH_MMIO':with_mmio
@@ -1977,6 +2036,9 @@ else:
 
 if with_dmalloc:
 	libascend_env.Append(LIBS=['dmalloc'])
+
+if with_ufsparse:
+	libascend_env.Append(LIBS=['cxsparse'])
 
 libascend = libascend_env.SharedLibrary('ascend',srcs)
 

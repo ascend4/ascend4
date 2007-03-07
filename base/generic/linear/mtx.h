@@ -305,13 +305,13 @@
 #ifndef ASC_MTX_H
 #define ASC_MTX_H
 
-/**	addtogroup linear Linear
-	@{
-*/
-
 #include <stdio.h>
 #include <string.h>
 #include <utilities/ascConfig.h>
+
+/**	addtogroup linear Linear
+	@{
+*/
 
 /***********************************************************************\
   public mtx data structures

@@ -41,18 +41,7 @@
 #include "linsolqr.h"
 
 
-/*
- * The A1 norm is:
- *   ||A||\1 = max (i<=j<=n) SUM\1..m |Aij|
- * Because we have the mtx_sum_sqrs_in_col operator, we will instead
- * do:
- *   ||A||\1 = max (i<=j<=n) SUM\1..m (Aij)^2.0
- *
- */
-
-double linutils_A_1_norm(mtx_matrix_t mtx, mtx_region_t *reg)
-
-{
+double linutils_A_1_norm(mtx_matrix_t mtx, mtx_region_t *reg){
   mtx_region_t mtxreg;
   double value, maxvalue = 0;
   int col;
@@ -74,16 +63,6 @@ double linutils_A_1_norm(mtx_matrix_t mtx, mtx_region_t *reg)
   return maxvalue;
 }
 
-
-/*
- * The A\infinity norm is:
- *   ||A||\infinity = max (i<=i<=m) SUM\1..n |Aij|
- * where i,m refers to rows and j,n refers to columns.
- * Because we have the mtx_sum_sqrs_in_row operator, we will instead
- * do:
- *   ||A||\infinity =   max      SUM   (Aij)^2.0
- *		     (i<=i<=m) (1..n)
- */
 
 double linutils_A_infinity_norm(mtx_matrix_t mtx, mtx_region_t *reg)
 
@@ -109,14 +88,8 @@ double linutils_A_infinity_norm(mtx_matrix_t mtx, mtx_region_t *reg)
   return maxvalue;
 }
 
-/*
- * The Frobenius norm is given as:
- *
- * ||A||\F =   ( sum     sum   Aij^2 )^ 1/2
- *            1<=j<=n  1<=i<=m
- */
-double linutils_A_Frobenius_norm(mtx_matrix_t mtx, mtx_region_t *reg)
-{
+
+double linutils_A_Frobenius_norm(mtx_matrix_t mtx, mtx_region_t *reg){
   mtx_region_t mtxreg;
   double value;
   /* double maxvalue = 0; */

@@ -269,6 +269,18 @@
 #endif
 
 /*--------------------------------------------------------------------------
+  UFSPARSE sparse matrix library
+*/
+
+/*
+	Whether to provide additional matrix functionality from the UFSPARSE
+	library (CXSparse in particular)
+*/
+#ifndef ASC_WITH_UFSPARSE
+/* #define ASC_WITH_UFSPARSE @ASC_WITH_UFSPARSE@ */
+#endif
+
+/*--------------------------------------------------------------------------
   ENV VAR
 */
 
