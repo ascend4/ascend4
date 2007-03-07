@@ -1690,7 +1690,7 @@ static int integrator_ida_transfer_matrix(const IntegratorSystem *sys, struct Sy
 */
 int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char *type){
 	/* IntegratorIdaData *enginedata; */
-	struct SystemJacobianStruct J;
+	struct SystemJacobianStruct J = {NULL,NULL,NULL,0,0};
 	int status=1;
 
 	if(type==NULL)type = "dg/dya";

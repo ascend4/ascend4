@@ -223,6 +223,8 @@
 #define LINQR_DROP_TOLERANCE 1.0e-16
 /**< This is the default for drop tolerances in methods which use a drop tol */
 
+struct rhs_list;
+
 typedef struct linsolqr_header *linsolqr_system_t;
 /**<  linsolqr_system_t is the linear system handle. */
 

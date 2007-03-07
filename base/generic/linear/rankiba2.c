@@ -37,7 +37,16 @@
  *  things really fast at a cost of memory = k*sys->capacity ints.
  *  k is a small 2 digit integer.
  */
-
+
+#include "rankiba2.h"
+
+#include <math.h>
+
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+
+#include "linsolqr_impl.h"
+#include "ranki_impl.h"
 
 #ifndef RBADEBUG
 #define RBADEBUG 0
@@ -183,9 +192,7 @@ FILE *gscr = NULL;
  * scratch, possibly discarding memory, and return 0 after
  * whining about the error.
  */
-static
-int reset_elimination_data(int32 size, int init)
-{
+int reset_elimination_data(int32 size, int init){
   int i;
   struct NZListEntry *tmpn = NULL;
   struct PivListEntry *tmpp = NULL;
@@ -879,9 +886,7 @@ void eliminate_row2_ba(	mtx_matrix_t mtx,
  * There is no rankiba_factor.
  */
 
-static
-void rankiba2_factor(linsolqr_system_t sys)
-{
+void rankiba2_factor(linsolqr_system_t sys){
 
   /* old stuff */
   mtx_coord_t nz, org;
