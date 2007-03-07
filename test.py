@@ -945,6 +945,10 @@ class TestIDA(Ascend):
 		I.writeMatrix(F1,"dg/dya")
 		F1.seek(0)
 		print F1.read()
+		F1 = os.tmpfile()
+		I.writeMatrix(F1,"dydp/dyd")
+		F1.seek(0)
+		print F1.read()
 		# for the moment you'll have to check these results manually.
 
 	def testindexproblem(self):

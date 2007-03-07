@@ -20,19 +20,17 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *//** @file
-	mtx2: Ascend Sparse Matrix Package.
-	
-	Requires
-	#include "utilities/ascConfig.h"
-	#include "mtx.h"
+	Basic matrix operations
 *//*
 	Originally 'mtx' by Karl Michael Westerberg, 5/3/90
 	New version 'mtx2' by Benjamin Andrew Allan
 	Last in CVS: $Revision: 1.13 $ $Date: 2000/01/25 02:27:10 $ $Author: ballan $
 */
 
-#ifndef ASC_MTX_BASIC_H_
+#ifndef ASC_MTX_BASIC_H
 #define ASC_MTX_BASIC_H
+
+#include "mtx.h"
 
 /**	@addtogroup linear Linear
 	@{

@@ -5,6 +5,10 @@ csrcs = Split("""
 	linsolqr.c linutils.c
 	mtx_basic.c mtx_linal.c mtx_perms.c mtx_query.c
 	mtx_reorder.c mtx_use_only.c mtx_vector.c
+	ranki.c
+	rankiba2.c
+	ranki2.c
+	plainqr.c
 """)
 
 solver_env = libascend_env.Copy()

@@ -20,8 +20,16 @@
 	Last in CVS: $Revision: 1.9 $ $Date: 1997/07/18 12:15:22 $ $Author: mthomas $
 */
 
+#include "plainqr.h"
+
+#include "linsolqr_impl.h"
+#include "ranki_impl.h"
+
+#include <general/mathmacros.h>
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
+
+#include <math.h>
 
 /***************************************************************************\
   CPQR implementation.
@@ -432,8 +440,8 @@ static void cpqr_apply_householder(linsolqr_system_t sys,
   }
   /* else we have a very empty column and what are we doing here? */
 }
-
-static int cpqr_factor(linsolqr_system_t sys)
+
+
 /**
  ***  FACTORIZATION
  ***  -------------
@@ -463,7 +471,8 @@ static int cpqr_factor(linsolqr_system_t sys)
  ***  These operations are trivial compared to the cost of
  ***  Householder transformations.
  **/
-{
+int cpqr_factor(linsolqr_system_t sys){
+
   mtx_range_t active; /* range within sys->rng yet to be pivoted */
   mtx_range_t search; /* range of columns to be examined for pivots */
   mtx_region_t ak;    /* reduced A at each step */
@@ -768,8 +777,7 @@ static void cpqr_backward_substitute(linsolqr_system_t sys,
   }
 }
 #undef TAU_ONE
-
-static int cpqr_entry(linsolqr_system_t sys,mtx_region_t *region)
+
 /**
  ***  The region to factor is first isolated by truncating the region
  ***  provided to the largest rectangular region with an upper left
@@ -782,7 +790,7 @@ static int cpqr_entry(linsolqr_system_t sys,mtx_region_t *region)
  ***  permuted identically by solution process. sys->coef will not be
  ***  permuted.
  **/
-{
+int cpqr_entry(linsolqr_system_t sys,mtx_region_t *region){
    struct rhs_list *rl;
    boolean rank_deficient;
    mtx_region_t factor_region;
@@ -842,18 +850,18 @@ static int cpqr_entry(linsolqr_system_t sys,mtx_region_t *region)
 }
 
 /**
- *** Solve a previously qr factorized matrix with a rhs b.
- *** If b is not transposed (is org row ordered):
- *** c:=Q.b, then solve R.x=c for x.
- **/
-static int cpqr_solve(linsolqr_system_t sys,struct rhs_list *rl)
-{
+	Solve a previously qr factorized matrix with a rhs b.
+	If b is not transposed (is org row ordered):
+	c:=Q.b, then solve R.x=c for x.
+*/
+int cpqr_solve(linsolqr_system_t sys,struct rhs_list *rl){
   cpqr_forward_eliminate(sys,rl->varvalue,rl->transpose);
   cpqr_backward_substitute(sys,rl->varvalue,rl->transpose);
   /* doesn't the following destroy the least squares solution? */
   zero_unpivoted_vars(sys,rl->varvalue,rl->transpose);
   return 0;
 }
+
 /***************************************************************************\
   End of CPQR implementation.
 \***************************************************************************/
