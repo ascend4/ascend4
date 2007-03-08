@@ -1,0 +1,25 @@
+REQUIRE "johnpye/shm.a4c";
+
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/roots";
+
+(*
+	Do a plot of the roots of the system when it first loads. Requires that you
+	have ASCEND built with IDA. You also need to run with the PyGTK interface
+	and you need to have scipy and matplotlib installed.
+*)
+MODEL shmroots REFINES shm
+
+METHODS
+	
+METHOD on_load;
+	RUN reset; RUN values;
+	RUN ode_init;
+	RUN roots;
+END on_load;
+
+METHOD roots;
+	EXTERNAL roots(SELF);
+END roots;
+
+END shmroots;

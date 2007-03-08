@@ -11,14 +11,13 @@ import os.path
 import subprocess
 import sys
 
+derivs = ['dg/dz','dg/dx','df/dz','df/dx',"df/dx'"]
+
 def createfiles():
-	return {
-		'dg/dz' : os.tempnam()
-		,'dg/dx' : os.tempnam()
-		,'df/dz' : os.tempnam()
-		,'df/dx' : os.tempnam()
-		,"df/dx'": os.tempnam()
-	}
+	fff = {}
+	for d in derivs:
+		fff[d] = os.tempnam()
+	return fff
 
 def deletefiles(fff):
 	for f in fff.values():
@@ -30,8 +29,9 @@ def roots(self):
 
 	browser = extpy.getbrowser()
 	M = browser.sim
+	M.setSolver(ascpy.Solver('QRSlv'))
 
-	# get IDA to analyse the
+	# get IDA to analyse the DAE structure
 	I = ascpy.Integrator(M)
 	I.setEngine('IDA')
 	I.setReporter(ascpy.IntegratorReporterConsole(I))
@@ -51,7 +51,7 @@ def roots(self):
 
 	script = os.path.expanduser('~/ascend/models/johnpye/roots_subproc.py')
 	if os.path.exists(script):
-		P = subprocess.Popen(['python',script]+fff.values(),stdout=subprocess.PIPE,close_fds=True)
+		P = subprocess.Popen(['python',script]+[fff[d] for d in derivs],stdout=subprocess.PIPE,close_fds=True)
 		ret = P.wait()
 		if ret:
 			print "GOT ERROR CODE FROM roots_subproc.py"

@@ -26,9 +26,10 @@ I.setParameter('rtol',1e-4)
 I.setParameter('atolvect',False)
 I.setParameter('atol',1e-4)
 I.setParameter('maxord',3)
+I.setParameter('calcic','YA_YDP')
 I.setInitialSubStep(0.001)
 I.setReporter(ascpy.IntegratorReporterConsole(I))
-I.setLogTimesteps(ascpy.Units("s"), 0.001, 3600, 10)
+I.setLogTimesteps(ascpy.Units("s"), 0.001, 0.002, 10)
 I.analyse()
 F = file('ga.mm','w')
 I.writeMatrix(F,'dg/dya')
@@ -121,5 +122,14 @@ print "min re(e)",min(e.real)
 print "max im(e)",max(e.imag)
 print "min in(e)",min(e.imag)
 
+I.solve()
+
+import pylab, sys
+sys.stderr.write("about to plot...")
+pylab.plot(e.real,e.imag,'rx')
+pylab.show()
+sys.stderr.write("DONE\n")
+
+I.setLogTimesteps(ascpy.Units("s"), 0.002, 3600, 10)
 I.solve()
 

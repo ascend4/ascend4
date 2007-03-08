@@ -366,7 +366,7 @@ void linsolqr_destroy(linsolqr_system_t sys){
      return;
    }
    if( NOTNULL(sys->coef) ) {
-     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"linsolqr contains coef mtx which will NOT be destroyed\n");
+     CONSOLE_DEBUG("linsolqr contains coef mtx which will NOT be destroyed");
    }
    if( NOTNULL(sys->inverse) )
       mtx_destroy(sys->inverse);

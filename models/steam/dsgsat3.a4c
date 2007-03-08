@@ -9,6 +9,9 @@ REQUIRE "johnpye/thermo_types.a4c";
 *)
 REQUIRE "steam/satsteamstream.a4c";
 
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/roots";
+
 MODEL dsgsat3;
 	n IS_A integer_constant;
 	n :== 11;(* with L = 10m: 5,6,7,8,9,10,11 *)
@@ -291,6 +294,10 @@ METHODS
 		FIX x[n];
 		FREE mdot[1];
 	END fix_outlet_quality;
+
+	METHOD roots;
+		EXTERNAL roots(SELF);
+	END roots;
 
 END dsgsat3;
 ADD NOTES IN dsgsat2;
