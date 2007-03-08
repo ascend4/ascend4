@@ -72,7 +72,7 @@
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
 
-#define INIT_DEBUG
+/* #define INIT_DEBUG */
 
 /*********************************************************************\
   There is a stack of procedure calls kept for tracing and breaking

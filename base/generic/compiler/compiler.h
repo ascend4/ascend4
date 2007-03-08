@@ -48,7 +48,7 @@
 */
 
 #ifndef TIMECOMPILER
-#define TIMECOMPILER 1
+#define TIMECOMPILER 0
 /**<  Set to 1 for timing spew or 0 for not. */
 #endif
 

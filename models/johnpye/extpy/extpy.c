@@ -38,6 +38,8 @@
 #include <compiler/importhandler.h>
 #include <compiler/extfunc.h>
 
+/* #define EXTPY_DEBUG */
+
 
 ImportHandlerCreateFilenameFn extpy_filename;
 ImportHandlerImportFn extpy_import;
@@ -318,7 +320,9 @@ char *extpy_filename(const char *partialname){
 	name = ASC_NEW_ARRAY_CLEAR(char,len+4);
 	strcpy(name,partialname);
 	strcat(name,".py");
+#ifdef EXTPY_DEBUG
 	CONSOLE_DEBUG("New filename is '%s'",name);
+#endif
 	return name;
 }
 

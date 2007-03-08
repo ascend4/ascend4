@@ -31,26 +31,26 @@ I.setInitialSubStep(0.001)
 I.setReporter(ascpy.IntegratorReporterConsole(I))
 I.setLogTimesteps(ascpy.Units("s"), 0.001, 0.002, 10)
 I.analyse()
-F = file('ga.mm','w')
-I.writeMatrix(F,'dg/dya')
-F = file('gd.mm','w')
-I.writeMatrix(F,'dg/dyd')
-F = file('fa.mm','w')
-I.writeMatrix(F,'df/dya')
-F = file('fd.mm','w')
-I.writeMatrix(F,'df/dyd')
-F = file('fdp.mm','w')
-I.writeMatrix(F,'df/dydp')
+F = file('gz.mm','w')
+I.writeMatrix(F,'dg/dz')
+F = file('gx.mm','w')
+I.writeMatrix(F,'dg/dx')
+F = file('fz.mm','w')
+I.writeMatrix(F,'df/dz')
+F = file('fx.mm','w')
+I.writeMatrix(F,'df/dx')
+F = file('fxp.mm','w')
+I.writeMatrix(F,"df/dx'")
 #I.solve()
 
 from scipy import io
 from scipy import linalg
 
-gz = io.mmread('ga.mm')
-gx = io.mmread('gd.mm')
-fz = io.mmread('fa.mm')
-fx = io.mmread('fd.mm')
-fxp = io.mmread('fdp.mm')
+gz = io.mmread('gz.mm')
+gx = io.mmread('gx.mm')
+fz = io.mmread('fz.mm')
+fx = io.mmread('fx.mm')
+fxp = io.mmread('fxp.mm')
 
 print "gz", gz.shape
 print "gx", gx.shape
@@ -131,5 +131,6 @@ pylab.show()
 sys.stderr.write("DONE\n")
 
 I.setLogTimesteps(ascpy.Units("s"), 0.002, 3600, 10)
+I.setParameter('calcic','Y')
 I.solve()
 
