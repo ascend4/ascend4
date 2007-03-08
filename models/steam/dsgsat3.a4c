@@ -83,7 +83,7 @@ MODEL dsgsat3;
 
 	(* mass conservation *)
 	mass_upwind4 :== upwind4;
-	mass_central :== [];
+	mass_central :== central - mass_upwind4;
 	FOR i IN mass_upwind4 CREATE (* 4-pt upwind biased *)
 		z_massbal1[i]: A * drho_dt[i] * dz =
 				- (mdot[i+1] + 6.*mdot[i] - 3.*mdot[i-1] - 2.*mdot[i-2]) / 6.;
@@ -98,7 +98,7 @@ MODEL dsgsat3;
 
 	(* energy conservation *)
 	en_upwind4 :== [];
-	en_central :== central;
+	en_central :== central - en_upwind4;
 	FOR i IN en_upwind4 CREATE
 		z_enbal2[i]: dz * (qdot_t[i] - rho[i] * A * du_dt[i]) =
 			 + mdot[i] * (node[i+1].u + 6.*u[i] - 3.*u[i-1] - 2.*u[i-1]) / 6.
@@ -117,7 +117,7 @@ MODEL dsgsat3;
 
 	(* momentum conservation *)
 	mom_upwind4 :== [];
-	mom_central :== central;
+	mom_central :== central - mom_upwind4;
 	FOR i IN mom_upwind4 CREATE
 		z_mombal2[i]:  - dz/A * dmdot_dt[i]
 			 =	(p[i]-p[i-1])  (* backdiff for pressure *)
