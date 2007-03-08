@@ -1694,38 +1694,38 @@ int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char
 	int status=1;
 	mtx_region_t R;
 
-	if(type==NULL)type = "dg/dya";
+	if(type==NULL)type = "dx'/dx";
 
-	if(0==strcmp(type,"dg/dya")){
-		CONSOLE_DEBUG("Calculating dg/dya...");
+	if(0==strcmp(type,"dg/dz")){
+		CONSOLE_DEBUG("Calculating dg/dz...");
 		status = system_jacobian(sys->system
 			, &system_rfilter_algeb, &system_vfilter_algeb
 			, 1 /* safe */
 			, &J
 		);
-	}else if(0==strcmp(type,"dg/dyd")){
-		CONSOLE_DEBUG("Calculating dg/dyd...");
+	}else if(0==strcmp(type,"dg/dx")){
+		CONSOLE_DEBUG("Calculating dg/dx...");
 		status = system_jacobian(sys->system
 			, &system_rfilter_algeb, &system_vfilter_diff
 			, 1 /* safe */
 			, &J
 		);
-	}else if(0==strcmp(type,"df/dydp")){
-		CONSOLE_DEBUG("Calculating df/dydp...");
+	}else if(0==strcmp(type,"df/dx'")){
+		CONSOLE_DEBUG("Calculating df/dx'...");
 		status = system_jacobian(sys->system
 			, &system_rfilter_diff, &system_vfilter_deriv
 			, 1 /* safe */
 			, &J
 		);
-	}else if(0==strcmp(type,"df/dya")){
-		CONSOLE_DEBUG("Calculating df/dya...");
+	}else if(0==strcmp(type,"df/dz")){
+		CONSOLE_DEBUG("Calculating df/dz...");
 		status = system_jacobian(sys->system
 			, &system_rfilter_diff, &system_vfilter_algeb
 			, 1 /* safe */
 			, &J
 		);
-	}else if(0==strcmp(type,"df/dyd")){
-		CONSOLE_DEBUG("Calculating df/dyd...");
+	}else if(0==strcmp(type,"df/dx")){
+		CONSOLE_DEBUG("Calculating df/dx...");
 		status = system_jacobian(sys->system
 			, &system_rfilter_diff, &system_vfilter_diff
 			, 1 /* safe */
@@ -1738,14 +1738,14 @@ int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char
 			, 1 /* safe */
 			, &J
 		);
-	}else if(0==strcmp(type,"dF/dydot")){
+	}else if(0==strcmp(type,"dF/dy'")){
 		CONSOLE_DEBUG("Calculating dF/dy'...");
 		status = system_jacobian(sys->system
 			, &system_rfilter_all, &system_vfilter_deriv
 			, 1 /* safe */
 			, &J
 		);
-	}else if(0==strcmp(type,"dydp/dyd")){
+	}else if(0==strcmp(type,"dx'/dx")){
 		/* system state transfer matrix dyd'/dyd */
 		status = integrator_ida_transfer_matrix(sys, &J);
 	}else{
@@ -1759,6 +1759,7 @@ int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char
 		/* send the region explicitly, so that we handle non-square correctly */
 		R.row.low = 0; R.col.low = 0;
 		R.row.high = J.n_rels - 1; R.col.high = J.n_vars - 1;
+		/* note that we're not fussy about empty matrices here... */
 		mtx_write_region_mmio(f,J.M,&R);
 	}
 
