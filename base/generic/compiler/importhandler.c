@@ -35,7 +35,7 @@
 
 #include <string.h>
 
-#define SEARCH_DEBUG
+/* #define SEARCH_DEBUG */
 
 /* #define IMPORTHANDLER_VERBOSE */
 
@@ -335,10 +335,11 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 		ASC_FREE(filename);
 		asc_assert(fp!=NULL);
 
+#ifdef SEARCH_DEBUG
 		fullpath = ospath_str(searchdata->relativedir);
 		CONSOLE_DEBUG("Relative dir is '%s'",fullpath);
 		ASC_FREE(fullpath);
-
+#endif
 		fp1 = ospath_concat(path,searchdata->relativedir); /* eg '/home/john/path/to' */
 		asc_assert(fp1!=NULL);
 
@@ -453,9 +454,12 @@ struct FilePath *importhandler_findinpath(const char *partialname
 			ospath_free(searchdata.relativedir);
 			*handler = importhandler_library[i];
 			return fp1;
-		}else{
+		}
+#ifdef SEARCH_DEBUG
+		else{
 			CONSOLE_DEBUG("Not found");
 		}
+#endif
 
 		ospath_free(fp1);
 	}

@@ -21,7 +21,7 @@
 #include "slv_client.h"
 #include <utilities/ascMalloc.h>
 
-#define JACOBIAN_DEBUG
+/* #define JACOBIAN_DEBUG */
 
 int system_jacobian(slv_system_t sys
 	, const rel_filter_t *rfilter, const var_filter_t *vfilter, const int safe

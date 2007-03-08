@@ -24,7 +24,7 @@ def deletefiles(fff):
 		os.unlink(f)
 
 def roots(self):
-	"""Plot the geometry of the four-bar linkage"""
+	"""Plot the complex eigenvalues of a DAE system"""
 	# following is an unfortunate necessity in the current system architecture:
 
 	browser = extpy.getbrowser()
