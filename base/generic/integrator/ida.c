@@ -1692,6 +1692,7 @@ int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char
 	/* IntegratorIdaData *enginedata; */
 	struct SystemJacobianStruct J = {NULL,NULL,NULL,0,0};
 	int status=1;
+	mtx_region_t R;
 
 	if(type==NULL)type = "dg/dya";
 
@@ -1755,7 +1756,10 @@ int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char
 	if(status){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating matrix");
 	}else{
-		mtx_write_region_mmio(f,J.M,mtx_ENTIRE_MATRIX);
+		/* send the region explicitly, so that we handle non-square correctly */
+		R.row.low = 0; R.col.low = 0;
+		R.row.high = J.n_rels - 1; R.col.high = J.n_vars - 1;
+		mtx_write_region_mmio(f,J.M,&R);
 	}
 
 	if(J.vars)ASC_FREE(J.vars);

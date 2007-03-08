@@ -61,12 +61,14 @@ static void test_csparse(void){
 	G.row = R;
 	G.col = R;
 
+	mtx_write_region_mmio(stderr,M,mtx_ENTIRE_MATRIX);
+
 	csm = mtx_to_cs(M);
 	cs_print(csm,1);
 
-	CU_ASSERT(cs->nz==7);
-	CU_ASSERT(cs->m==3);
-	CU_ASSERT(cs->n==3);
+	CU_ASSERT(csm->nz==7);
+	CU_ASSERT(csm->m==3);
+	CU_ASSERT(csm->n==3);
 
 	M2 = mtx_from_cs(csm);
 	mtx_write_region_mmio(stderr,M2,mtx_ENTIRE_MATRIX);

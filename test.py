@@ -735,12 +735,16 @@ class TestSteam(AscendSelfTester):
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLogTimesteps(ascpy.Units("s"), 0.001, 3600, 40)
 		I.analyse()
-		#F = file('tmp-y.mm','w')
-		#I.writeMatrix(F,'dF/dy')
-		#F = file('tmp-ydot.mm','w')
-		#I.writeMatrix(F,'dF/dydot')
-		#F = file('tmp-dgdya.mm','w')
-		#I.writeMatrix(F,'dg/dya')
+		F = file('ga.mm','w')
+		I.writeMatrix(F,'dg/dya')
+		F = file('gd.mm','w')
+		I.writeMatrix(F,'dg/dyd')
+		F = file('fa.mm','w')
+		I.writeMatrix(F,'df/dya')
+		F = file('fd.mm','w')
+		I.writeMatrix(F,'df/dyd')
+		F = file('fdp.mm','w')
+		I.writeMatrix(F,'df/dydp')
 		I.solve()
 		
 #-------------------------------------------------------------------------------
@@ -945,10 +949,10 @@ class TestIDA(Ascend):
 		I.writeMatrix(F1,"dg/dya")
 		F1.seek(0)
 		print F1.read()
-		F1 = os.tmpfile()
-		I.writeMatrix(F1,"dydp/dyd")
-		F1.seek(0)
-		print F1.read()
+		#F1 = os.tmpfile()
+		#I.writeMatrix(F1,"dydp/dyd")
+		#F1.seek(0)
+		#print F1.read()
 		# for the moment you'll have to check these results manually.
 
 	def testindexproblem(self):
