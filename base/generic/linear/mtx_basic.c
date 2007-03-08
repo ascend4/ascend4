@@ -3193,7 +3193,7 @@ int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
 	fprintf(fp,"%% RANGE: rows = %d, cols = %d, num_of_non_zeros =%d\n",nrows,ncols,nnz);
 	fprintf(fp,"%% MATRIX: rows = %d, cols = %d\n",mtx->order,mtx->order);
 
-    mm_write_mtx_crd_size(fp, mtx->order, mtx->order, nnz);
+    mm_write_mtx_crd_size(fp, nrows , ncols, nnz);
 
     /*
 		NOTE: matrix market files use 1-based indices, i.e. first element
@@ -3225,7 +3225,7 @@ int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
 			Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[nz.row]];
 			elt = &Rewind;
 			for( ; NULL != (elt = mtx_next_col(elt,&(region->col),perm)) ; ) {
-				fprintf(fp,"%d %d %.20g\n",nz.row + 1,perm[elt->col] + 1,elt->value);
+				fprintf(fp,"%d %d %.20g\n",nz.row - region->row.low + 1,perm[elt->col] - region->col.low + 1,elt->value);
 			}
 		}
 	}
