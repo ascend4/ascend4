@@ -27,7 +27,6 @@
 
 #include <assertimpl.h>
 
-#ifdef ASC_WITH_UFSPARSE
 
 /*
 	Test the rank of matrix 
@@ -37,11 +36,11 @@
 	  0 6 7 ]
 */
 static void test_csparse(void){
+#ifdef ASC_WITH_UFSPARSE
 	mtx_matrix_t M, M2;
 	mtx_coord_t C;
 	mtx_range_t R;
 	mtx_region_t G;
-	int r;
 	cs *csm;
 
 	/* build the matrix [[1,0],[1,1]] */
@@ -74,6 +73,10 @@ static void test_csparse(void){
 	mtx_write_region_mmio(stderr,M2,mtx_ENTIRE_MATRIX);
 
 	/* @TODO compare these outputs with expected values */
+
+#else
+	CONSOLE_DEBUG("CSparse not present -- skipping test");
+#endif
 }
 
 /*===========================================================================*/
@@ -94,4 +97,3 @@ CU_ErrorCode test_register_linear_mtx(void){
 	return CU_register_suites(suites);
 }
 
-#endif
