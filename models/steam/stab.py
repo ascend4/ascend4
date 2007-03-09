@@ -10,12 +10,14 @@ L.load('steam/dsgsat3.a4c')
 T = L.findType('dsgsat3')
 M = T.getSimulation('sim',False)
 M.run(T.getMethod('on_load'))
+print "STEADY-STATE SOLUTION..."
 M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 M.run(T.getMethod('configure_dynamic'))
 M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-T = L.findType('dsgsat3')
+
 M.run(T.getMethod('free_states'))
 # here is the peturbation...
+print "CREATING PETURBATION..."
 M.qdot_s.setRealValueWithUnits(6000,"W/m")
 # IDA has its own initial conditions solver, so no need to call QRSlv here
 I = ascpy.Integrator(M)
@@ -116,21 +118,24 @@ e,v = linalg.eig(D.todense())
 
 #print e
 
+print "ROOT RANGE-----------"
 print "max re(e)",max(e.real)
 print "min re(e)",min(e.real)
-
 print "max im(e)",max(e.imag)
 print "min in(e)",min(e.imag)
+sys.stdout.flush()
 
-I.solve()
+#I.solve()
 
 import pylab, sys
 sys.stderr.write("about to plot...")
 pylab.plot(e.real,e.imag,'rx')
+pylab.xlabel('Real axis')
+pylab.ylabel('Imaginary axis')
 pylab.show()
 sys.stderr.write("DONE\n")
 
-I.setLogTimesteps(ascpy.Units("s"), 0.002, 3600, 10)
+I.setLogTimesteps(ascpy.Units("s"), 0.0005, 3600, 10)
 I.setParameter('calcic','Y')
 I.solve()
 

@@ -1,0 +1,76 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(*
+	Test case for boundary-monitoring in IDA.
+
+	This is a second order linear system with a ramp input. The idea is that
+	IDA will re-start when the ramp first starts, then again then the ramp
+	end is reached. This will ensure that discontinuities in derivatives across
+	the jump are managed as well as possible.
+*)
+MODEL boundaries;
+	nodes IS_A set OF integer_constant;
+	nodes :== [1..2];
+
+	t IS_A time;
+	x[nodes], dx_dt[nodes] IS_A solver_var; (* system states *)
+	u[1] IS_A solver_var; (* input signals *)
+
+	(* second-order transfer function G(s) = 1 / (1 + s + 0.5 s^2) *)
+	0.5 * dx_dt[1] = u[1] -x[1] - x[2];
+	dx_dt[2] = x[1];
+
+	(* ramp input 
+		u = u1     t < t1
+        u = u2     t > t2
+        linear     t1 < t < t2
+	*)
+	t1 IS_A solver_var;
+	t2 IS_A solver_var;
+	uisbefore, uisafter IS_A boolean_var;
+	u1,u2 IS_A solver_var;
+	CONDITIONAL
+		ubeforecond: t <= t1; (* mysteriously, I can't make t1 and t2 constants! *)
+		uaftercond: t >= t2; (* and these conditions really don't behave themselves... *)
+	END CONDITIONAL;
+	satbefore: uisbefore == SATISFIED(ubeforecond,1e-8{s});
+	satend: uisafter == SATISFIED(ubeforecond,1e-8{s});
+	(* variant equations *)
+	ubefore: u[1] = u1;
+	uduring: u[1] = u1 + (t - t1)*(u2 - u1)/(t2 - t1);
+	uafter:  u[1] = u2;
+	(* disjunctive statements *)
+	WHEN (uisbefore,uisafter)
+		CASE TRUE,FALSE:
+			USE ubefore;
+		CASE FALSE,TRUE:
+			USE uafter;
+		CASE FALSE,FALSE:
+			USE uduring;
+	END WHEN;
+
+METHODS
+	METHOD ode_init;
+		FOR i IN nodes DO
+			x[i].ode_type := 1; dx_dt[i].ode_type := 2;
+			x[i].ode_id := i; dx_dt[i].ode_id := i;
+		END FOR;
+	END ode_init;
+	METHOD specify;
+		FIX t1,t2;
+		FIX u1,u2;
+	END specify;
+	METHOD values;
+		x[1] := 0;
+		x[2] := 0;
+		t1 := 1 {s}; u1 := 5;
+		t2 := 2 {s}; u2 := 10;
+	END values;
+	METHOD on_load;
+		RUN default_self;
+		RUN reset;
+		RUN values;
+		RUN ode_init;
+	END on_load;
+END boundaries;

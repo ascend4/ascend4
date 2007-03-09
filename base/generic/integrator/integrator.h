@@ -220,7 +220,7 @@ typedef struct IntegratorInternalsStruct{
 	IntegratorParamsDefaultFn *paramsdefaultfn;
 	IntegratorAnalyseFn *analysefn;
 	IntegratorSolveFn *solvefn;
-	IntegratorWriteMatrixFn *writematrixfn;
+	IntegratorWriteMatrixFn *writematrixfn; /* this is a general file-reporting mechanism actually */
 	IntegratorDebugFn *debugfn;
 	IntegratorFreeFn *freefn;
 	IntegratorEngine engine;
@@ -242,7 +242,7 @@ typedef struct IntegratorInternalsStruct{
 struct IntegratorSystemStruct{
   struct Instance *instance;  /**< not sure if this one is really necessary... -- JP */
   slv_system_t system;        /**< the system that we're integrating in ASCEND */
-  IntegratorEngine engine;    /**< enum containing the ID of the integrator engine we're using */
+  IntegratorEngine engine;    /**< enum containing the ID of the integrator engine we're using. Should go away -- fully replaced by 'internals' */
   const IntegratorInternals *internals;/**< pointers to the various functions belonging to this integrator */
   IntegratorReporter *reporter;/**< functions for reporting integration results */
   SampleList *samples;        /**< pointer to the list of samples. we *don't own* this **/
@@ -255,7 +255,7 @@ struct IntegratorSystemStruct{
   int nderivs;                /**< ditto, as for nstates */
 
   /* temporaries for build. these elements will be NULL to clients */
-  struct gl_list_t *indepvars;  /**< all apparent independent vars */
+  struct gl_list_t *indepvars;/**< all apparent independent vars */
   struct gl_list_t *dynvars;  /**< all state and deriv instances plus indices */
   struct gl_list_t *obslist;  /**< observation instance plus indices */
   struct gl_list_t *states;   /**< ordered list of state variables and indices*/
@@ -266,16 +266,16 @@ struct IntegratorSystemStruct{
   struct var_variable **y;    /**< array form of states */
   struct var_variable **ydot; /**< array form of derivatives */
   struct var_variable **obs;  /**< array form of observed variables */
-  int *y_id;                 /**< array form of y/ydot user indices, for DAEs we use negatives here for derivative vars */
-  int *obs_id;               /**< array form of obs user indices */
+  int *y_id;                  /**< array form of y/ydot user indices, for DAEs we use negatives here for derivative vars */
+  int *obs_id;                /**< array form of obs user indices */
   int n_y;
   int n_ydot;
   int n_obs;
   int n_diffeqs;              /**< number of differential equations (used by idaanalyse) */
-  int currentstep;           /**< current step number (also @see integrator_getnsamples) */
+  int currentstep;            /**< current step number (also @see integrator_getnsamples) */
  
   /** @TODO move the following to the 'params' structure? Or maybe better not to? */
-  int maxsubsteps;               /**< most steps between mesh poins */
+  int maxsubsteps;            /**< most steps between mesh poins */
   double stepzero;            /**< initial step length, SI units. */
   double minstep;             /**< shortest step length, SI units. */
   double maxstep;             /**< longest step length, SI units. */

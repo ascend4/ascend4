@@ -425,12 +425,6 @@ opts.Add(
 )
 
 opts.Add(
-	'INSTALL_DOC'
-	,'Location to install documentation files'
-	,"$INSTALL_SHARE/doc"
-)
-
-opts.Add(
 	'INSTALL_ASCDATA'
 	,"Location of ASCEND shared data (TK, python, models etc)"
 	,"$INSTALL_SHARE/ascend"
@@ -2086,7 +2080,7 @@ ascendconfig = env.SubstInFile('ascend-config.in')
 
 if env.get('CAN_INSTALL'):
 
-	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE', 'INSTALL_DOC']
+	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE']
 	install_dirs = [env.Entry(env['INSTALL_ROOT']+env[d]) for d in dirs]
 	install_dirs += modeldirs
 

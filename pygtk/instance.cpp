@@ -686,7 +686,9 @@ Instanc::setVarStatus(const VarStatus &s){
 		d = new InstanceInterfaceData();
 		SetInterfacePtr(i,d);
 	}
-	d->status = s;
+	if(d!=NULL){
+		d->status = s;
+	}
 }
 
 /**
