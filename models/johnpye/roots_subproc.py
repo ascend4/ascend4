@@ -1,4 +1,5 @@
-# this python script is called from roots.py to work around a crash in scipy
+# This python script is called from roots.py to work around a crash in scipy
+# when called from an embedded python interpreter.
 
 import sys
 from scipy import io
