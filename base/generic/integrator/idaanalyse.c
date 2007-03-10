@@ -3,17 +3,16 @@
 #include <utilities/ascPanic.h>
 #include <utilities/error.h>
 
-#ifdef ASC_IDA_NEW_ANALYSE
-# include <linear/linsolqr.h>
+#include <linear/linsolqr.h>
 
-# include <system/diffvars.h>
-# include <system/slv_stdcalls.h>
-# include <system/block.h>
-# include <system/diffvars_impl.h>
-# include <system/jacobian.h>
-# include <system/cond_config.h>
-# include <solver/slvDOF.h>
-#endif
+#include <system/diffvars.h>
+#include <system/slv_stdcalls.h>
+#include <system/block.h>
+#include <system/diffvars.h>
+#include <system/diffvars_impl.h>
+#include <system/jacobian.h>
+#include <system/cond_config.h>
+#include <solver/slvDOF.h>
 
 #include "ida_impl.h"
 
@@ -439,6 +438,10 @@ int integrator_ida_check_index(IntegratorSystem *sys){
 #endif
 }	
 
+/*------------------------------------------------------------------------------
+  ANALYSIS ROUTINE (new implementation)
+*/
+
 /** 
 	Perform additional problem analysis to prepare problem for integration with 
 	IDA.
@@ -640,9 +643,6 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	return 0;
 }
 
-/*------------------------------------------------------------------------------
-  ANALYSIS ROUTINE (new implementation)
-*/
 
 static int integrator_ida_check_partitioning(IntegratorSystem *sys){
 	long i, nv;

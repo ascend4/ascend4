@@ -1263,7 +1263,6 @@ int32 slv_far_from_nominals(slv_system_t sys,real64 bignum,
   return vindex;
 }
 
-#ifdef ASC_IDA_NEW_ANALYSE
 const void *slv_get_diffvars(slv_system_t sys){
 	return sys->diffvars;
 }
@@ -1272,5 +1271,4 @@ int slv_set_diffvars(slv_system_t sys,void *diffvars){
 	sys->diffvars = diffvars;
 	return 0;
 }
-#endif
 

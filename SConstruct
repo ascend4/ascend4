@@ -186,13 +186,6 @@ opts.Add(BoolOption(
 	,True
 ))
 
-
-opts.Add(BoolOption(
-	'IDA_NEW_ANALYSE'
-	,"Build with new IDA 'analyse' function? (see base/generic/solver/ida.c)"
-	,True
-))
-
 #----- default paths -----
 opts.Add(PackageOption(
 	'DEFAULT_PREFIX'
@@ -1821,7 +1814,6 @@ for k,v in {
 		,'ASC_ABSOLUTE_PATHS':env.get('ASC_ABSOLUTE_PATHS')
 		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
-		,'ASC_IDA_NEW_ANALYSE':env.get('IDA_NEW_ANALYSE')
 		}.iteritems():
 		
 	if v: subst_dict["/\\* #define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k

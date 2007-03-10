@@ -1384,10 +1384,8 @@ extern void slv_print_output(FILE *fp, slv_system_t sys);
 	@TODO make more general in the future.
 */
 
-#ifdef ASC_IDA_NEW_ANALYSE
 const void *slv_get_diffvars(slv_system_t sys);
 /**< @return NULL if not present */
-#endif
 
 /* @} */
 

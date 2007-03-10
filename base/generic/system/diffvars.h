@@ -71,7 +71,6 @@ typedef struct SolverDiffVarCollectionStruct SolverDiffVarCollection;
   Stuff for retrieving differential and derivative variables from the system
 */
 
-#ifdef ASC_IDA_NEW_ANALYSE
 /**
 	Return the SolverDiffVarCollection for the system. You *don't* own the
 	returned list -- it belongs to the slv_system_t.
@@ -92,7 +91,5 @@ int system_diffvars_debug(slv_system_t sys,FILE *fp);
 	var in each chain.
 */
 int system_diffvars_sort(slv_system_t sys);
-
-#endif
 
 #endif

@@ -2672,13 +2672,11 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
     return 1;
   }
 
-#ifdef ASC_IDA_NEW_ANALYSE
   stat = system_generate_diffvars(sys,p_data);
   if(stat){
 	analyze_free_lists(p_data);
 	return 3;
   }
-#endif
 
   /* tell the slv_system_t about it, and undecorate ips from instances */
   analyze_configure_system(sys,p_data);
