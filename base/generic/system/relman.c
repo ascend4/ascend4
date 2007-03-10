@@ -55,7 +55,7 @@
 #include "slv_server.h"
 
 /* #define DIFF_DEBUG */
-#define EVAL_DEBUG
+/* #define EVAL_DEBUG */
 
 #define IPTR(i) ((struct Instance *)(i))
 

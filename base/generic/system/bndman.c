@@ -46,13 +46,14 @@ double bndman_real_eval(struct bnd_boundary *bnd){
   calc_ok = 1;
   rel = bnd_rel(bnd_real_cond(bnd));
   res = relman_eval(rel,&calc_ok,1);
-  CONSOLE_DEBUG("Got res = %f",res);
   if(!calc_ok){
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Error evaluating rel");
-  }else{
+  }
+#ifdef EVAL_DEBUG
+  else{
     CONSOLE_DEBUG("bnd rel eval ok, res = %f", res);
   }
-  CONSOLE_DEBUG("Returning res = %f",res);
+#endif
   return res;
 }
 
