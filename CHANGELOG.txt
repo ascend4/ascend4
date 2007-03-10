@@ -1,0 +1,32 @@
+
+10 March 2007: created this changelog using file releases list from old website -- JP
+
+
+April 24 2000
+-------------
+
+Version IV 0.9.1
+
+ - Expanded chemical species database
+ - Dynamic simulation modeling libraries
+
+June 23 1998
+------------
+
+ - WinNT, Win95, UNIX sources
+ - WinNT, Win95 binaries
+ - Redhat Linux 5 RPM binary
+ - Redhat Linux 5 RPM source
+ - Dynamic simulation modeling libraries
+ - Howto-ascend examples and modeling guidelines manual, indexed.
+ - GUI and syntax document manual, partially revised.
+
+October 1997
+------------
+
+ASCEND IV 0.8 
+
+ - WinNT, Win95, UNIX sources
+ - WinNT, Win95 binaries
+ - GUI and syntax document manual.
+
