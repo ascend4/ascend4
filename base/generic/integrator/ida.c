@@ -99,9 +99,11 @@
 /* #define FEX_DEBUG */
 #define JEX_DEBUG
 /* #define DJEX_DEBUG */
-#define SOLVE_DEBUG
+/* #define SOLVE_DEBUG */
 #define STATS_DEBUG
 #define PREC_DEBUG
+/* #define ROOT_DEBUG */
+
 /* #define DIFFINDEX_DEBUG */
 /* #define ANALYSE_DEBUG */
 /* #define DESTROY_DEBUG */
@@ -113,11 +115,7 @@
 const IntegratorInternals integrator_ida_internals = {
 	integrator_ida_create
 	,integrator_ida_params_default
-#ifdef ASC_IDA_NEW_ANALYSE
 	,integrator_ida_analyse
-#else
-	,integrator_analyse_dae /* note, this routine is back in integrator.c */
-#endif
 	,integrator_ida_solve
 	,integrator_ida_write_matrix
 	,integrator_ida_debug
@@ -913,6 +911,30 @@ int integrator_ida_solve(
 		Asc_SignalHandlerPopDefault(SIGINT);
 #endif
 
+		/* check for roots found */
+		if(enginedata->nbnds){
+			rootsfound = ASC_NEW_ARRAY(int,enginedata->nbnds);
+			if(IDA_SUCCESS == IDAGetRootInfo(ida_mem, rootsfound)){
+				for(i=0; i < enginedata->nbnds; ++i){
+					if(rootsfound[i]){
+#ifdef SOLVE_DEBUG
+						relname = bnd_make_name(sys->system,enginedata->bndlist[i]);
+						ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary '%s' crossed",relname);
+						ASC_FREE(relname);
+#else
+						ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary crossed!");
+#endif
+					}
+				}
+			}else{
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
+			}
+			ASC_FREE(rootsfound);
+			/* so, now we need to restart the integration. we will assume that
+			everything changes: number of variables, etc, etc, etc. */
+		}			
+
+
 		/* pass the values of everything back to the compiler */
 		integrator_set_t(sys, (double)tret);
 		integrator_set_y(sys, NV_DATA_S(yret));
@@ -928,7 +950,8 @@ int integrator_ida_solve(
 		/* -- store the current values of all the stuff */
 		integrator_output_write(sys);
 		integrator_output_write_obs(sys);
-	}
+
+	}/* loop through next sample timestep */
 
 	/* -- close the IntegratorReporter */
 	integrator_output_close(sys);
@@ -942,27 +965,6 @@ int integrator_ida_solve(
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch stats!?!?");
 	}
 #endif
-
-	/* check for roots found */
-	if(enginedata->nbnds){
-		rootsfound = ASC_NEW_ARRAY(int,enginedata->nbnds);
-		if(IDA_SUCCESS == IDAGetRootInfo(ida_mem, rootsfound)){
-			for(i=0; i < enginedata->nbnds; ++i){
-				if(rootsfound[i]){
-#ifdef SOLVE_DEBUG
-					relname = bnd_make_name(sys->system,enginedata->bndlist[i]);
-					ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary '%s' crossed",relname);
-					ASC_FREE(relname);
-#else
-					ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary crossed!");
-#endif
-				}
-			}
-		}else{
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
-		}
-		ASC_FREE(rootsfound);
-	}			
 
 	/* free solution memory */
 	N_VDestroy_Serial(yret);
@@ -1541,14 +1543,18 @@ int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout,
 
 	asc_assert(gout!=NULL);
 
+#ifdef ROOT_DEBUG
 	CONSOLE_DEBUG("t = %f",tt);
+#endif
 
 	/* evaluate the residuals for each of the boundaries */
 	for(i=0; i < enginedata->nbnds; ++i){
 		switch(bnd_kind(enginedata->bndlist[i])){
 			case e_bnd_rel: /* real-valued boundary relation */
 				gout[i] = bndman_real_eval(enginedata->bndlist[i]);
+#ifdef ROOT_DEBUG
 				CONSOLE_DEBUG("gout[%d] = %f",i,gout[i]);
+#endif
 				break;
 			case e_bnd_logrel:
 				if(bndman_log_eval(enginedata->bndlist[i])){
