@@ -1766,7 +1766,7 @@ int Asc_SolvReanalyze(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
   if (g_solvsys_cur!=NULL) {
-    system_reanalyze(g_solvsys_cur,NULL);
+    system_reanalyze(g_solvsys_cur);
     return TCL_OK;
   } else {
     FPRINTF(ASCERR, "Reanalyze called with NULL system.\n");
@@ -1795,7 +1795,7 @@ int Asc_SolvCheckAndReanalyze(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
   if (g_solvsys_cur!=NULL) {
-    system_reanalyze(g_solvsys_cur,NULL);
+    system_reanalyze(g_solvsys_cur);
     return TCL_OK;
   } else {
     FPRINTF(ASCERR, "CheckAndReanalyze called with NULL system.\n");

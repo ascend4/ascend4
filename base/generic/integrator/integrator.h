@@ -247,7 +247,7 @@ struct IntegratorSystemStruct{
   IntegratorReporter *reporter;/**< functions for reporting integration results */
   SampleList *samples;        /**< pointer to the list of samples. we *don't own* this **/
   void *enginedata;           /**< space where the integrator engine can store stuff */
-  void *clientdata;           /**< any stuff that the GUI/CLI needs to associate with this */
+  void *clientdata;           /**< any stuff that the GUI/CLI needs to associate with this (eg pointer to C++ object) */
 
   slv_parameters_t params;   /**< structure containing parameters applicable to this Integrator */
 

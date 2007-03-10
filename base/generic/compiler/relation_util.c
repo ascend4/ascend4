@@ -2121,11 +2121,9 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
   enum safe_err status = safe_ok;
   unsigned long length_lhs, length_rhs;
 
-
   CHECK_INST_RES(i,res,1);
 
   r = (struct relation *)GetInstanceRelation(i, &reltype);
-
 
   if( r == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation");

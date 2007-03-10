@@ -59,7 +59,9 @@ typedef void *SlvBackendToken;
 typedef struct system_structure *slv_system_t;
 /**<
 	This is the handle which should be used in all of the functions
-	in slv and system to reference a mathematical problem.
+	in slv and system to reference a mathematical problem. The details of this
+	structure are in system_impl.h, which you should only include if you 
+	are writing code in the 'system' dir.
 */
 
 /* @} */

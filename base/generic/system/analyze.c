@@ -2409,6 +2409,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   /* configure the problem */
 
   if(vlen > 0) { /* we have whens */
+    CONSOLE_DEBUG("ANALYSING %d 'WHENS' IN THE PROBLEM",vlen);
     configure_conditional_problem(vlen,p_data->masterwl,
                                   p_data->solverrl,p_data->solverll,
 				  p_data->mastervl);
@@ -2425,10 +2426,10 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 #if DEBUG_ANALYSIS
     if( p_data->need_consistency == 0 ) {
       CONSOLE_DEBUG("All alternativeS HAVE THE SAME STRUCTURE: Consistency"
-		" analysis is not required \n"
+		" analysis is not required"
 	  );
     }else{
-      CONSOLE_DEBUG("Consistency analysis may be required \n");
+      CONSOLE_DEBUG("Consistency analysis may be required");
     }
 #endif /* DEBUG_ANALYSIS  */
 

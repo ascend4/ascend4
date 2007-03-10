@@ -469,11 +469,12 @@ int RelationCalcResidualBinary(CONST struct relation *rel, double *res);
 enum safe_err
 RelationCalcResidualPostfixSafe(struct Instance *i, double *res);
 /**<
- *  Sets *res to the value (leftside - rightside) of the relation.
- *  status != 0 (safe_ok = 0) implies a problem.
- *  This function is slower than RelationCalcResidual() because it does
- *  a lot of range checking AND a floating point trap.
- */
+	Sets *res to the value (leftside - rightside) of the relation.
+	This function is slower than RelationCalcResidual() because it does
+	a lot of range checking AND a floating point trap.
+
+	@return 0 on success, non-zero in there was a problem.
+*/
 
 int RelationCalcResidualPostfix(struct Instance *i, double *res);
 /**<

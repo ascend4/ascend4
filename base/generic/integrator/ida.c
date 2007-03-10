@@ -72,6 +72,7 @@
 #include <system/block.h>
 #include <system/slv_stdcalls.h>
 #include <system/jacobian.h>
+#include <system/bndman.h>
 
 #include "idalinear.h"
 #include "idaanalyse.h"
@@ -98,7 +99,7 @@
 /* #define FEX_DEBUG */
 #define JEX_DEBUG
 /* #define DJEX_DEBUG */
-/* #define SOLVE_DEBUG */
+#define SOLVE_DEBUG
 #define STATS_DEBUG
 #define PREC_DEBUG
 /* #define DIFFINDEX_DEBUG */
@@ -136,20 +137,27 @@ struct IntegratorIdaDataStruct;
 typedef void IntegratorIdaPrecCreateFn(IntegratorSystem *sys);
 typedef void IntegratorIdaPrecFreeFn(struct IntegratorIdaDataStruct *enginedata);
 
+
 /**
 	Struct containing any stuff that IDA needs that doesn't fit into the
 	common IntegratorSystem struct.
 */
 typedef struct IntegratorIdaDataStruct{
-	struct rel_relation **rellist;   /**< NULL terminated list of rels */
+
+	struct rel_relation **rellist;   /**< NULL terminated list of ACTIVE rels */
+	int nrels; /* number of ACTIVE rels */
+
 	struct bnd_boundary **bndlist;	 /**< NULL-terminated list of boundaries, for use in the root-finding  code */
-	int nrels;
+	int nbnds; /* number of boundaries */
+
 	int safeeval;                    /**< whether to pass the 'safe' flag to relman_eval */
 	var_filter_t vfilter;
-	rel_filter_t rfilter;            /**< Used to filter relations from rellist (@TODO needs work) */
+	rel_filter_t rfilter;            /**< Used to filter relations from solver's rellist (@TODO needs work) */
 	void *precdata;                  /**< For use by the preconditioner */
 	IntegratorIdaPrecFreeFn *pfree;	 /**< Store instructions here on how to free precdata */
+
 } IntegratorIdaData;
+
 
 typedef struct IntegratorIdaPrecDJStruct{
 	N_Vector PIii; /**< diagonal elements of the inversed Jacobi preconditioner */
@@ -191,6 +199,9 @@ int integrator_ida_djex(long int Neq, realtype tt
 
 /* sparse jacobian evaluation for ASCEND's sparse direct solver */
 IntegratorSparseJacFn integrator_ida_sjex;
+
+/* boundary-detection function */
+int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout, void *g_data);
 
 typedef struct IntegratorIdaStatsStruct{
 	long nsteps;
@@ -273,7 +284,9 @@ void integrator_ida_free(void *enginedata){
 		/* free the preconditioner data, whatever it happens to be */
 		(d->pfree)(enginedata);
 	}
-	/* note, we don't own the rellist, so don't need to free it */
+
+	ASC_FREE(d->rellist);	
+
 #ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("Now destroying the enginedata");
 #endif
@@ -343,14 +356,14 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 	p->num_parms = 0;
 
 	slv_param_bool(p,IDA_PARAM_AUTODIFF
-			,(SlvParameterInitBool){{"autodiff"
+		,(SlvParameterInitBool){{"autodiff"
 			,"Use auto-diff?",1
 			,"Use automatic differentiation of expressions (1) or use numerical derivatives (0)"
 		}, TRUE}
 	);
 
 	slv_param_char(p,IDA_PARAM_CALCIC
-			,(SlvParameterInitChar){{"calcic"
+		,(SlvParameterInitChar){{"calcic"
 			,"Initial conditions calcuation",1
 			,"Use specified values of ydot to solve for inital y (Y),"
 			" or use the the values of the differential variables (yd) to solve"
@@ -361,7 +374,7 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 	);
 
 	slv_param_bool(p,IDA_PARAM_SAFEEVAL
-			,(SlvParameterInitBool){{"safeeval"
+		,(SlvParameterInitBool){{"safeeval"
 			,"Use safe evaluation?",1
 			,"Use 'safe' function evaluation routines (TRUE) or allow ASCEND to "
 			"throw SIGFPE errors which will then halt integration."
@@ -370,7 +383,7 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 
 
 	slv_param_bool(p,IDA_PARAM_ATOLVECT
-			,(SlvParameterInitBool){{"atolvect"
+		,(SlvParameterInitBool){{"atolvect"
 			,"Use 'ode_atol' values as specified?",1
 			,"If TRUE, values of 'ode_atol' are taken from your model and used "
 			" in the integration. If FALSE, a scalar absolute tolerance value"
@@ -379,7 +392,7 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 	);
 
 	slv_param_real(p,IDA_PARAM_ATOL
-			,(SlvParameterInitReal){{"atol"
+		,(SlvParameterInitReal){{"atol"
 			,"Scalar absolute error tolerance",1
 			,"Value of the scalar absolute error tolerance. See also 'atolvect'."
 			" See IDA manual, sections 5.5.1 and 5.5.2 'Advice on choice and use of tolerances'"
@@ -387,7 +400,7 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 	);
 
 	slv_param_real(p,IDA_PARAM_RTOL
-			,(SlvParameterInitReal){{"rtol"
+		,(SlvParameterInitReal){{"rtol"
 			,"Scalar relative error tolerance",1
 			,"Value of the scalar relative error tolerance. (Note that for IDA,"
 			" it's not possible to set per-variable relative tolerances as it is"
@@ -397,7 +410,7 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 	);
 
 	slv_param_char(p,IDA_PARAM_LINSOLVER
-			,(SlvParameterInitChar){{"linsolver"
+		,(SlvParameterInitChar){{"linsolver"
 			,"Linear solver",1
 			,"See IDA manual, section 5.5.3. Choose 'ASCEND' to use the linsolqr"
 			" direct linear solver bundled with ASCEND, 'DENSE' to use the dense"
@@ -408,7 +421,7 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 	);
 
 	slv_param_int(p,IDA_PARAM_MAXL
-			,(SlvParameterInitInt){{"maxl"
+		,(SlvParameterInitInt){{"maxl"
 			,"Maximum Krylov dimension",0
 			,"The maximum dimension of Krylov space used by the linear solver"
 			" (for SPGMR, SPBCG, SPTFQMR) with IDA. See IDA manual section 5.5."
@@ -418,7 +431,7 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 	);
 
 	slv_param_int(p,IDA_PARAM_MAXORD
-			,(SlvParameterInitInt){{"maxord"
+		,(SlvParameterInitInt){{"maxord"
 			,"Maximum order of linear multistep method",0
 			,"The maximum order of the linear multistep method with IDA. See"
 			" IDA manual p 38."
@@ -426,7 +439,7 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 	);
 
 	slv_param_bool(p,IDA_PARAM_GSMODIFIED
-			,(SlvParameterInitBool){{"gsmodified"
+		,(SlvParameterInitBool){{"gsmodified"
 			,"Gram-Schmidt Orthogonalisation Scheme", 2
 			,"TRUE = GS_MODIFIED, FALSE = GS_CLASSICAL. See IDA manual section"
 			" 5.5.6.6. Only applies when linsolve=SPGMR is selected."
@@ -434,7 +447,7 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 	);
 
 	slv_param_int(p,IDA_PARAM_MAXNCF
-			,(SlvParameterInitInt){{"maxncf"
+		,(SlvParameterInitInt){{"maxncf"
 			,"Max nonlinear solver convergence failures per step", 2
 			,"Maximum number of allowable nonlinear solver convergence failures"
 			" on one step. See IDA manual section 5.5.6.1."
@@ -442,7 +455,7 @@ int integrator_ida_params_default(IntegratorSystem *sys){
 	);
 
 	slv_param_char(p,IDA_PARAM_PREC
-			,(SlvParameterInitChar){{"prec"
+		,(SlvParameterInitChar){{"prec"
 			,"Preconditioner",1
 			,"See IDA manual, section section 5.6.8."
 		},"NONE"}, (char *[]){"NONE","DIAG",NULL}
@@ -473,7 +486,7 @@ int integrator_ida_solve(
 		, unsigned long finish_index
 ){
 	void *ida_mem;
-	int size, flag, flag1, t_index;
+	int flag, flag1, t_index;
 	realtype t0, reltol, abstol, t, tret, tout1;
 	N_Vector y0, yp0, abstolvect, ypret, yret, id;
 	IntegratorIdaData *enginedata;
@@ -483,10 +496,14 @@ int integrator_ida_solve(
 	IdaFlagNameFn *flagnamefn;
 	const char *flagfntype;
 	char *pname = NULL;
+	struct rel_relation **rels;
+	int *rootsfound;
+
 #ifdef SOLVE_DEBUG
-	char *varname;
+	char *varname, *relname;
 #endif
-	int i;
+
+	int i,j,n_activerels,n_solverrels;
 	const IntegratorIdaPrec *prec = NULL;
 	int icopt; /* initial conditions strategy */
 
@@ -498,16 +515,45 @@ int integrator_ida_solve(
 	CONSOLE_DEBUG("safeeval = %d",enginedata->safeeval);
 
 	/* store reference to list of relations (in enginedata) */
-	enginedata->nrels = slv_get_num_solvers_rels(sys->system);
-	enginedata->rellist = slv_get_solvers_rel_list(sys->system);
+	n_solverrels = slv_get_num_solvers_rels(sys->system);
+
+	n_activerels = slv_count_solvers_rels(sys->system, &integrator_ida_rel);
+
 	enginedata->bndlist = slv_get_solvers_bnd_list(sys->system);
+	enginedata->nbnds = slv_get_num_solvers_bnds(sys->system);
 
-	CONSOLE_DEBUG("Number of relations: %d",enginedata->nrels);
+	enginedata->rellist = ASC_NEW_ARRAY(struct rel_relation *, n_activerels);
+
+	rels = slv_get_solvers_rel_list(sys->system);
+
+	j=0;
+	for(i=0; i < n_solverrels; ++i){
+		if(rel_apply_filter(rels[i], &integrator_ida_rel)){
+#ifdef SOLVE_DEBUG
+			relname = rel_make_name(sys->system, rels[i]);
+			CONSOLE_DEBUG("rel '%s': 0x%x", relname, rel_flags(rels[i]));
+			ASC_FREE(relname);
+#endif
+			enginedata->rellist[j++]=rels[i];
+		}
+	}
+	asc_assert(j==n_activerels);
+
+	CONSOLE_DEBUG("rels matchbits:  0x%x",integrator_ida_rel.matchbits);
+	CONSOLE_DEBUG("rels matchvalue: 0x%x",integrator_ida_rel.matchvalue);
+
+	CONSOLE_DEBUG("Number of relations: %d",n_solverrels);
+	CONSOLE_DEBUG("Number of active relations: %d",n_activerels);
 	CONSOLE_DEBUG("Number of dependent vars: %d",sys->n_y);
-	size = sys->n_y;
+	CONSOLE_DEBUG("Number of boundaries: %d",enginedata->nbnds);
 
-	if(enginedata->nrels!=size){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration problem is not square (%d rels, %d vars)", enginedata->nrels, size);
+	enginedata->nrels = n_activerels;
+
+	if(enginedata->nrels != sys->n_y){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+			,"Integration problem is not square (%d active rels, %d vars)"
+			,n_activerels, sys->n_y
+		);
 		return 1; /* failure */
 	}
 
@@ -523,14 +569,14 @@ int integrator_ida_solve(
 
 	CONSOLE_DEBUG("RETRIEVING y0");
 
-	y0 = N_VNew_Serial(size);
+	y0 = N_VNew_Serial(sys->n_y);
 	integrator_get_y(sys,NV_DATA_S(y0));
 
 #ifdef SOLVE_DEBUG
 	CONSOLE_DEBUG("RETRIEVING yp0");
 #endif
 
-	yp0 = N_VNew_Serial(size);
+	yp0 = N_VNew_Serial(sys->n_y);
 	integrator_get_ydot(sys,NV_DATA_S(yp0));
 
 #ifdef SOLVE_DEBUG
@@ -549,7 +595,7 @@ int integrator_ida_solve(
 	if(SLV_PARAM_BOOL(&(sys->params),IDA_PARAM_ATOLVECT)){
 		/* vector of absolute tolerances */
 		CONSOLE_DEBUG("USING VECTOR OF ATOL VALUES");
-		abstolvect = N_VNew_Serial(size);
+		abstolvect = N_VNew_Serial(sys->n_y);
 		integrator_get_atol(sys,NV_DATA_S(abstolvect));
 
 		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SV, reltol, abstolvect);
@@ -596,8 +642,8 @@ int integrator_ida_solve(
 	linsolver = SLV_PARAM_CHAR(&(sys->params),IDA_PARAM_LINSOLVER);
 	CONSOLE_DEBUG("ASSIGNING LINEAR SOLVER '%s'",linsolver);
 	if(strcmp(linsolver,"ASCEND")==0){
-		CONSOLE_DEBUG("ASCEND DIRECT SOLVER, size = %d",size);
-		IDAASCEND(ida_mem,size);
+		CONSOLE_DEBUG("ASCEND DIRECT SOLVER, size = %d",sys->n_y);
+		IDAASCEND(ida_mem,sys->n_y);
 		IDAASCENDSetJacFn(ida_mem, &integrator_ida_sjex, (void *)sys);
 
 		flagfntype = "IDAASCEND";
@@ -605,8 +651,8 @@ int integrator_ida_solve(
 		flagnamefn = &IDAASCENDGetReturnFlagName;
 
 	}else if(strcmp(linsolver,"DENSE")==0){
-		CONSOLE_DEBUG("DENSE DIRECT SOLVER, size = %d",size);
-		flag = IDADense(ida_mem, size);
+		CONSOLE_DEBUG("DENSE DIRECT SOLVER, size = %d",sys->n_y);
+		flag = IDADense(ida_mem, sys->n_y);
 		switch(flag){
 			case IDADENSE_SUCCESS: break;
 			case IDADENSE_MEM_NULL: ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL"); return 5;
@@ -827,7 +873,10 @@ int integrator_ida_solve(
 #endif
 	}/* icopt */
 
-	/* optionally, specify ROO-FINDING PROBLEM */
+	/* optionally, specify ROO-FINDING problem */
+	if(enginedata->nbnds){
+		IDARootInit(ida_mem, enginedata->nbnds, &integrator_ida_rootfn, (void *)sys);
+	}
 
 	/* -- set up the IntegratorReporter */
 	integrator_output_init(sys);
@@ -889,8 +938,31 @@ int integrator_ida_solve(
 	IntegratorIdaStats stats;
 	if(IDA_SUCCESS == integrator_ida_stats(ida_mem, &stats)){
 		integrator_ida_write_stats(&stats);
+	}else{
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch stats!?!?");
 	}
 #endif
+
+	/* check for roots found */
+	if(enginedata->nbnds){
+		rootsfound = ASC_NEW_ARRAY(int,enginedata->nbnds);
+		if(IDA_SUCCESS == IDAGetRootInfo(ida_mem, rootsfound)){
+			for(i=0; i < enginedata->nbnds; ++i){
+				if(rootsfound[i]){
+#ifdef SOLVE_DEBUG
+					relname = bnd_make_name(sys->system,enginedata->bndlist[i]);
+					ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary '%s' crossed",relname);
+					ASC_FREE(relname);
+#else
+					ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary crossed!");
+#endif
+				}
+			}
+		}else{
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
+		}
+		ASC_FREE(rootsfound);
+	}			
 
 	/* free solution memory */
 	N_VDestroy_Serial(yret);
@@ -914,7 +986,7 @@ int integrator_ida_solve(
 }
 
 /*--------------------------------------------------
-  RESIDUALS AND JACOBIAN
+  RESIDUALS AND JACOBIAN AND IDAROOTFN
 */
 
 #if 0
@@ -1018,44 +1090,24 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 #endif
 
 
-/*
-	integrator_ida_sig_old = signal(SIGFPE,&integrator_ida_sig);
-	if(fegetenv(&integrator_ida_fenv_old))ASC_PANIC("fenv problem");
-	if(feenableexcept(FE_ALL_EXCEPT))ASC_PANIC("fenv problem");
-	switch(setjmp(integrator_ida_jmp_buf)){
-	case 0:
-*/
-		for(i=0, relptr = enginedata->rellist;
+	for(i=0, relptr = enginedata->rellist;
 				i< enginedata->nrels && relptr != NULL;
 				++i, ++relptr
-		){
-			resid = relman_eval(*relptr, &calc_ok, enginedata->safeeval);
+	){
+		resid = relman_eval(*relptr, &calc_ok, enginedata->safeeval);
 
-			NV_Ith_S(rr,i) = resid;
-			if(!calc_ok){
-				relname = rel_make_name(sys->system, *relptr);
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Calculation error in rel '%s'",relname);
-				ASC_FREE(relname);
-				/* presumable some output already made? */
-				is_error = 1;
-			}/*else{
-				CONSOLE_DEBUG("Calc OK");
-			}*/
-		}
-/*		break;
-	case SIGFPE:
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"...here! Caught SIGFPE");
-		integrator_ida_write_feinfo();
-		is_error=1;
-		break;
-	default:
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"What exception?");
-		is_error=1;
+		NV_Ith_S(rr,i) = resid;
+		if(!calc_ok){
+			relname = rel_make_name(sys->system, *relptr);
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Calculation error in rel '%s'",relname);
+			ASC_FREE(relname);
+			/* presumable some output already made? */
+			is_error = 1;
+		}/*else{
+			CONSOLE_DEBUG("Calc OK");
+		}*/
 	}
-	if(signal(SIGFPE,integrator_ida_sig_old)!=&integrator_ida_sig)ASC_PANIC("signal problem");
-	if(fesetenv(&integrator_ida_fenv_old))ASC_PANIC("fenv problem");
-	feraiseexcept(FE_DIVBYZERO);
-*/
+	
 	if(!is_error){
 		for(i=0;i< enginedata->nrels; ++i){
 			if(isnan(NV_Ith_S(rr,i))){
@@ -1471,12 +1523,54 @@ int integrator_ida_sjex(long int Neq, realtype tt
 	return -1;
 }
 
+/* root finding function */
+
+int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout, void *g_data){
+	IntegratorSystem *sys;
+	IntegratorIdaData *enginedata;
+	int i;
+
+	asc_assert(g_data!=NULL);
+	sys = (IntegratorSystem *)g_data;
+	enginedata = integrator_ida_enginedata(sys);
+	
+	/* pass the values of everything back to the compiler */
+	integrator_set_t(sys, (double)tt);
+	integrator_set_y(sys, NV_DATA_S(yy));
+	integrator_set_ydot(sys, NV_DATA_S(yp));
+
+	asc_assert(gout!=NULL);
+
+	CONSOLE_DEBUG("t = %f",tt);
+
+	/* evaluate the residuals for each of the boundaries */
+	for(i=0; i < enginedata->nbnds; ++i){
+		switch(bnd_kind(enginedata->bndlist[i])){
+			case e_bnd_rel: /* real-valued boundary relation */
+				gout[i] = bndman_real_eval(enginedata->bndlist[i]);
+				CONSOLE_DEBUG("gout[%d] = %f",i,gout[i]);
+				break;
+			case e_bnd_logrel:
+				if(bndman_log_eval(enginedata->bndlist[i])){
+					CONSOLE_DEBUG("bnd[%d] = TRUE",i);
+					gout[i] = +2.0;
+				}else{
+					CONSOLE_DEBUG("bnd[%d] = FALSE",i);
+					gout[i] = -2.0;
+				}
+				break;
+		}
+	}
+
+	return 0; /* no way to detect errors in bndman_*_eval at this stage */
+}
+
 /*----------------------------------------------
   JACOBI PRECONDITIONER -- EXPERIMENTAL.
 */
 
 void integrator_ida_pcreate_jacobi(IntegratorSystem *sys){
-	IntegratorIdaData * enginedata =sys->enginedata;
+	IntegratorIdaData *enginedata =sys->enginedata;
 	IntegratorIdaPrecDataJacobi *precdata;
 	precdata = ASC_NEW(IntegratorIdaPrecDataJacobi);
 

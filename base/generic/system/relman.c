@@ -55,20 +55,22 @@
 #include "slv_server.h"
 
 /* #define DIFF_DEBUG */
+#define EVAL_DEBUG
 
 #define IPTR(i) ((struct Instance *)(i))
 
 #define KILL 0 /* compile dead code if kill = 1 */
 #define REIMPLEMENT 0 /* code that needs to be reimplemented */
 
-static POINTER rel_tmpalloc( int nbytes)
+
 /**
- ***  Temporarily allocates a given number of bytes.  The memory need
- ***  not be freed, but the next call to this function will reuse the
- ***  previous allocation. Memory returned will NOT be zeroed.
- ***  Calling with nbytes==0 will free any memory allocated.
- **/
-{
+	Temporarily allocates a given number of bytes.  The memory need
+	not be freed, but the next call to this function will reuse the
+	previous allocation. Memory returned will NOT be zeroed.
+	Calling with nbytes==0 will free any memory allocated.
+*/
+static
+void *rel_tmpalloc( int nbytes){
   static char *ptr = NULL;
   static int cap = 0;
 
@@ -78,7 +80,7 @@ static POINTER rel_tmpalloc( int nbytes)
       ptr = ASC_NEW_ARRAY(char,nbytes);
       cap = nbytes;
     }
-  } else {
+  }else{
     if (ptr) ascfree(ptr);
     ptr=NULL;
     cap=0;
@@ -90,31 +92,31 @@ static POINTER rel_tmpalloc( int nbytes)
   }
 }
 
+
 #define rel_tmpalloc_array(nelts,type)  \
    ((nelts) > 0 ? (type *)tmpalloc((nelts)*sizeof(type)) : NULL)
-/**
- ***  Creates an array of "nelts" objects, each with type "type".
- **/
+/**<
+	Creates an array of "nelts" objects, each with type "type".
+*/
 
-void relman_free_reused_mem(void)
-{
+
+void relman_free_reused_mem(void){
   /* rel_tmpalloc(0); */
   RelationFindRoots(NULL,0,0,0,0,NULL,NULL,NULL);
 }
 
 
 #if REIMPLEMENT
-boolean relman_is_linear( struct rel_relation *rel, var_filter_t *filter)
-{
+boolean relman_is_linear( struct rel_relation *rel, var_filter_t *filter){
    return (
       exprman_is_linear(rel,rel_lhs(rel),filter) &&
       exprman_is_linear(rel,rel_rhs(rel),filter)
    );
 }
 
-real64 relman_linear_coef(struct rel_relation *rel, struct var_variable *var,
- var_filter_t *filter)
-{
+real64 relman_linear_coef(struct rel_relation *rel, struct var_variable *var
+		, var_filter_t *filter
+){
    return(
       exprman_linear_coef(rel,rel_lhs(rel),var,filter) -
       exprman_linear_coef(rel,rel_rhs(rel),var,filter)
@@ -122,9 +124,9 @@ real64 relman_linear_coef(struct rel_relation *rel, struct var_variable *var,
 }
 #endif
 
+
 #if KILL
-void relman_decide_incidence( struct rel_relation *rel)
-{
+void relman_decide_incidence( struct rel_relation *rel){
   struct var_variable **list;
   int c;
 
@@ -134,9 +136,10 @@ void relman_decide_incidence( struct rel_relation *rel)
 }
 #endif
 
-void relman_get_incidence(struct rel_relation *rel, var_filter_t *filter,
- mtx_matrix_t mtx)
-{
+
+void relman_get_incidence(struct rel_relation *rel, var_filter_t *filter
+		, mtx_matrix_t mtx
+){
   const struct var_variable **list;
   mtx_coord_t nz;
   int c,len;
@@ -154,6 +157,7 @@ void relman_get_incidence(struct rel_relation *rel, var_filter_t *filter,
   }
 }
 
+
 #ifdef RELOCATE_GB_NEEDED
 /*
  *********************************************************************
@@ -165,12 +169,12 @@ static double dsolve_scratch = 0.0;		/* some workspace */
 #define DSOLVE_TOLERANCE 1.0e-08                /* no longer needed */
 
 static
-real64 *relman_glassbox_dsolve(struct rel_relation *rel,
-                               struct var_variable *solvefor,
-                               int *able,
-                               int *nsolns,
-                               real64 tolerance)
-{
+real64 *relman_glassbox_dsolve(struct rel_relation *rel
+		, struct var_variable *solvefor
+		, int *able
+		, int *nsolns
+		, real64 tolerance
+){
   int n,m,j,dummy = 0;
   int mode, result;
   int index,solve_for_index = -1;
@@ -247,8 +251,7 @@ real64 *relman_glassbox_dsolve(struct rel_relation *rel,
 
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
 static
-real64 relman_glassbox_eval(struct rel_relation *rel)
-{
+real64 relman_glassbox_eval(struct rel_relation *rel){
   int n,m,mode,result;
   int index,j;
   CONST struct relation *cmplr_reln;
@@ -294,8 +297,8 @@ real64 relman_glassbox_eval(struct rel_relation *rel)
 /* fills filter passing gradient elements to matrix */
 /* this needs to be buried on the compiler side. */
 void relman_map_grad2mtx( struct rel_relation *rel, var_filter_t *filter,
-  mtx_matrix_t mtx, CONST struct gl_list_t *varlist, double *g, int m, int n)
-{
+  mtx_matrix_t mtx, CONST struct gl_list_t *varlist, double *g, int m, int n
+){
   mtx_coord_t nz;
   struct var_variable *var;
   double value;
@@ -303,7 +306,7 @@ void relman_map_grad2mtx( struct rel_relation *rel, var_filter_t *filter,
 
   nz.row = m; /* org row of glassbox reln? rel_sindex? */
 
-  for (j=0;j<n;j++) {
+  for(j=0;j<n;j++){
 /*    var = (struct Instance *)gl_fetch(varlist,(unsigned long)(j+1)); */
     var = rel_incidence(rel)[j];
     if (var_apply_filter(var)) {
@@ -315,8 +318,8 @@ void relman_map_grad2mtx( struct rel_relation *rel, var_filter_t *filter,
 }
 
 real64 relman_glassbox_diffs( struct rel_relation *rel,
- var_filter_t *filter, mtx_matrix_t mtx)
-{
+		var_filter_t *filter, mtx_matrix_t mtx
+){
   int n,m,mode,result;
   int index,j;
   struct Instance *var;
@@ -366,69 +369,56 @@ real64 relman_glassbox_diffs( struct rel_relation *rel,
 
 #endif /* RELOCATE_GB_NEEDED */
 
-real64 relman_eval(struct rel_relation *rel, int32 *status, int safe)
-{
-  real64 res;
-  asc_assert(status!=NULL && rel!=NULL);
-  if ( rel->type == e_rel_token ) {
-    if (!RelationCalcResidualBinary(
-          GetInstanceRelationOnly(IPTR(rel->instance)),&res)) {
-      *status = 1; /* calc_ok */
-      rel_set_residual(rel,res);
-      return res;
-    }
-    /* else we don't care -- go on to the old handling which
-     * is reasonably correct, if slow.
-     */
-  }
-  if( safe ) {
-    *status = (int32)RelationCalcResidualSafe(rel_instance(rel),&res);
-	if(*status)CONSOLE_DEBUG("Relation evaluation returned error");
-    /* CONSOLE_DEBUG("residual = %g",res); */
-    safe_error_to_stderr( (enum safe_err *)status );
-    /* always set the relation residual when using safe functions */
-    rel_set_residual(rel,res);
-  } else {
-    *status = RelationCalcResidual(rel_instance(rel),&res);
-    if ( *status ) {
-      /* an error occured */
-      res = 1.0e8;
-    } else {
-      rel_set_residual(rel,res);
-    }
-  }
-  /* flip the status flag: all values other than safe_ok become 0 */
-  *status = !(*status);
-  /* CONSOLE_DEBUG("returning %g",res); */
-  return res;
 
-#if REIMPLEMENT /* all this is to be done on the compiler side, without
-all the indirection idiocy. */
-   it may take some changes in the CalcResidual header to do so.
-   switch (rel->type) {
-   case e_token:
-     res = exprman_eval(rel,rel_lhs(rel)) - exprman_eval(rel,rel_rhs(rel));
-     break;
-   case e_opcode:
-     FPRINTF(stderr,"opcode relation processing not yet supported\n");
-     res = 1.0e08;
-     break;
-   case e_glassbox:
-     res = relman_glassbox_eval(rel);
-     break;
-   case e_blackbox:
-     res = ExtRel_Evaluate_LHS(rel) - ExtRel_Evaluate_RHS(rel);
-     break;
-   default:
-     FPRINTF(stderr,"unknown relation type in (relman_eval)\n");
-     res = 1.0e08;
-     break;
-   }
+real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
+	real64 res;
+	asc_assert(calc_ok!=NULL && rel!=NULL);
+	if(rel->type == e_rel_token){
+		if(!RelationCalcResidualBinary(
+		        GetInstanceRelationOnly(IPTR(rel->instance)),&res)
+		){
+			*calc_ok = 1; /* calc_ok */
+			rel_set_residual(rel,res);
+			return res;
+		}/* else {
+			we don't care -- go on to the old handling which
+			is reasonably correct, if slow.
+		} */
+	}
+
+	if(safe){
+		*calc_ok = RelationCalcResidualSafe(rel_instance(rel),&res);
+		if(*calc_ok){
+			/* this actually means there was an ERROR due to return protocol of ^^^ */
+#ifdef EVAL_DEBUG
+			CONSOLE_DEBUG("residual error, res = %g",res);
 #endif
+			safe_error_to_stderr( (enum safe_err *)calc_ok );
+			*calc_ok = 0; /* error was returned: not ok */
+		}else{
+			*calc_ok = 1; /* all good */
+		}
+		/* always set the relation residual when using safe functions */
+		rel_set_residual(rel,res);
+		if(!(*calc_ok))CONSOLE_DEBUG("RELMAN_EVAL WAS NOT OK");
+		return res;
+	}
 
+	*calc_ok = RelationCalcResidual(rel_instance(rel),&res);
+	if(*calc_ok){
+		/* an error occured */
+		res = 1.0e8;
+	}else{
+		/* no error */
+		rel_set_residual(rel,res);
+	}
+	*calc_ok = !(*calc_ok);
+	if(!(*calc_ok))CONSOLE_DEBUG("RELMAN_EVAL WAS NOT OK");
+	return res;
 }
-int32 relman_obj_direction(struct rel_relation *rel)
-{
+
+
+int32 relman_obj_direction(struct rel_relation *rel){
   assert(rel!=NULL);
   switch( RelationRelop(GetInstanceRelationOnly(IPTR(rel->instance))) ) {
   case e_minimize:
@@ -440,8 +430,8 @@ int32 relman_obj_direction(struct rel_relation *rel)
   }
 }
 
-real64 relman_scale(struct rel_relation *rel)
-{
+
+real64 relman_scale(struct rel_relation *rel){
   real64 relnom;
   assert(rel!=NULL);
   relnom = CalcRelationNominal(rel_instance(rel));
@@ -453,10 +443,11 @@ real64 relman_scale(struct rel_relation *rel)
   return relnom;
 }
 
+
 #if REIMPLEMENT /* compiler */
 real64 relman_diff(struct rel_relation *rel, struct var_variable *var,
-                   int safe)
-{
+                   int safe
+){
 		/* FIX FIX FIX meaning kirk couldn't be botghered... */
    real64 res = 0.0;
    switch(rel->type) {
@@ -471,11 +462,12 @@ real64 relman_diff(struct rel_relation *rel, struct var_variable *var,
 }
 #endif
 
+
 /* return 0 on success */
-int relman_diff2(struct rel_relation *rel, const var_filter_t *filter,
-                 real64 *derivatives, int32 *variables,
-		 int32 *count, int32 safe)
-{
+int relman_diff2(struct rel_relation *rel, const var_filter_t *filter
+		,real64 *derivatives, int32 *variables
+		,int32 *count, int32 safe
+){
   const struct var_variable **vlist=NULL;
   real64 *gradient;
   int32 len,c;
@@ -574,7 +566,6 @@ int relman_diff3(struct rel_relation *rel
 }
 
 
-
 int relman_diff_grad(struct rel_relation *rel
 		, const var_filter_t *filter
 		, real64 *derivatives, int32 *variables_master
@@ -625,11 +616,12 @@ int relman_diff_grad(struct rel_relation *rel
   return !status;  /* flip the status flag */
 }
 
-int32 relman_diff_harwell(struct rel_relation **rlist,
-                          var_filter_t *vfilter, rel_filter_t *rfilter,
-                          int32 rlen, int32 bias, int32 mORs,
-                          real64 *avec, int32 *ivec, int32 *jvec)
-{
+
+int32 relman_diff_harwell(struct rel_relation **rlist
+		, var_filter_t *vfilter, rel_filter_t *rfilter
+		, int32 rlen, int32 bias, int32 mORs
+		, real64 *avec, int32 *ivec, int32 *jvec
+){
   const struct var_variable **vlist = NULL;
   struct rel_relation *rel;
   real64 residual, *resid;
@@ -687,14 +679,14 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
       }
       if (mORs & 2) {
         coord.row = rel_sindex(rel);
-      } else {
+      }else{
         coord.row = rel_mindex(rel);
       }
       for (c=0; c < len; c++) {
       if (var_apply_filter(vlist[c],vfilter)) {
           if (mORs & 1) {
             coord.col = var_sindex(vlist[c]);
-          } else {
+          }else{
               coord.col = var_mindex(vlist[c]);
           }
           avec[k] = gradient[c];
@@ -708,10 +700,11 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
   return errcnt;
 }
 
-int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen,
-                            var_filter_t *vfilter,
-                            rel_filter_t *rfilter, int32 *max)
-{
+
+int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen
+		, var_filter_t *vfilter
+		, rel_filter_t *rfilter, int32 *max
+){
   int32 len, result=0, row, count, c;
   const struct var_variable **list;
   struct rel_relation *rel;
@@ -734,6 +727,7 @@ int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen,
   }
   return result;
 }
+
 
 int relman_diffs(struct rel_relation *rel
 		, const var_filter_t *filter
@@ -781,10 +775,11 @@ int relman_diffs(struct rel_relation *rel
   return !status;
 }
 
+
 #if REIMPLEMENT /* this needs to be reimplemented in the compiler */
-real64 relman_diffs_orig( struct rel_relation *rel, var_filter_t *filter,
-mtx_matrix_t mtx)
-{
+real64 relman_diffs_orig( struct rel_relation *rel, var_filter_t *filter
+		,mtx_matrix_t mtx
+){
   real64 res = 0.0;
   int32 row;
   row = mtx_org_to_row(mtx,rel_sindex(rel));
@@ -793,7 +788,7 @@ mtx_matrix_t mtx)
     mtx_mult_row(mtx,row,-1.0,mtx_ALL_COLS);
     res += ExtRel_Diffs_LHS(rel,filter,row,mtx);
     return res;
-  } else {
+  }else{
     res -= exprman_diffs(rel,rel_rhs(rel),filter,row,mtx);
     mtx_mult_row(mtx,row,-1.0,mtx_ALL_COLS);
     res += exprman_diffs(rel,rel_lhs(rel),filter,row,mtx);
@@ -802,8 +797,8 @@ mtx_matrix_t mtx)
 }
 #endif
 
-boolean relman_calc_satisfied( struct rel_relation *rel, real64 tolerance)
-{
+
+boolean relman_calc_satisfied( struct rel_relation *rel, real64 tolerance){
    real64 res;
    res = rel_residual(rel);
    if (!asc_finite(res)) {
@@ -862,11 +857,12 @@ boolean relman_calc_satisfied_scaled(struct rel_relation *rel, real64 tolerance)
    return( rel_satisfied(rel) );
 }
 
+
 #if REIMPLEMENT
-real64 *relman_directly_solve_new( struct rel_relation *rel,
-  struct var_variable *solvefor, int *able, int *nsolns,
-  real64 tolerance)
-{
+real64 *relman_directly_solve_new( struct rel_relation *rel
+		,struct var_variable *solvefor, int *able, int *nsolns
+		,real64 tolerance
+){
   double *value;
    if( rel_less(rel) || rel_greater(rel) || !rel_equal(rel) ||
       rel_extnodeinfo(rel)) {
@@ -885,11 +881,10 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
      return value;
    }
 }
-
 #else /* temporary */
 real64 *relman_directly_solve_new( struct rel_relation *rel,
-  struct var_variable *solvefor, int *able, int *nsolns, real64 tolerance)
-{
+		struct var_variable *solvefor, int *able, int *nsolns, real64 tolerance
+){
   double *value;
    if( rel_less(rel) ||
        rel_greater(rel) ||
@@ -936,8 +931,8 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
 }
 #endif
 
-char *dummyrelstring(slv_system_t sys, struct rel_relation *rel, int style)
-{
+
+char *dummyrelstring(slv_system_t sys, struct rel_relation *rel, int style){
   char *result;
   UNUSED_PARAMETER(sys);
   UNUSED_PARAMETER(rel);
@@ -953,9 +948,9 @@ char *dummyrelstring(slv_system_t sys, struct rel_relation *rel, int style)
  * if mORs == TRUE master indices are used, else solver.
  */
 static
-void relman_cookup_indices(struct RXNameData *rd,
-                           struct rel_relation *rel,int mORs)
-{
+void relman_cookup_indices(struct RXNameData *rd
+		,struct rel_relation *rel,int mORs
+){
   int nvars,n;
   const struct var_variable **vlist;
 
@@ -969,23 +964,24 @@ void relman_cookup_indices(struct RXNameData *rd,
     for (n = 0; n < nvars; n++) {
       rd->indices[n+1] = var_mindex(vlist[n]);
     }
-  } else {
+  }else{
     for (n = 0; n < nvars; n++) {
       rd->indices[n+1] = var_sindex(vlist[n]);
     }
   }
 }
 
-char *relman_make_vstring_infix(slv_system_t sys,
-                                struct rel_relation *rel, int style)
-{
+
+char *relman_make_vstring_infix(slv_system_t sys
+		,struct rel_relation *rel, int style
+){
   char *sbeg;
   struct RXNameData rd = {"x",NULL,""};
 
   if (style) {
     sbeg = WriteRelationString(rel_instance(rel),slv_instance(sys),
                                NULL,NULL,relio_ascend,NULL);
-  } else {
+  }else{
     /* need to cook up output indices */
     relman_cookup_indices(&rd,rel,1);
     sbeg = WriteRelationString(rel_instance(rel),slv_instance(sys),
@@ -995,14 +991,15 @@ char *relman_make_vstring_infix(slv_system_t sys,
   return(sbeg);
 }
 
+
 char *relman_make_vstring_postfix(slv_system_t sys,
-                                  struct rel_relation *rel, int style)
-{
+		struct rel_relation *rel, int style
+){
    char  *sbeg;
 
    if (style) {
      sbeg = WriteRelationPostfixString(rel_instance(rel),slv_instance(sys));
-   } else {
+   }else{
 #if REIMPLEMENT
      left = exprman_make_xstring_postfix(rel,sys,rel_lhs(rel));
      right = exprman_make_xstring_postfix(rel,sys,rel_rhs(rel));

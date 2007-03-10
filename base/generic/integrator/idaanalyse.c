@@ -1,6 +1,7 @@
 #include "idaanalyse.h"
 
 #include <utilities/ascPanic.h>
+#include <utilities/error.h>
 
 #ifdef ASC_IDA_NEW_ANALYSE
 # include <linear/linsolqr.h>
@@ -10,6 +11,7 @@
 # include <system/block.h>
 # include <system/diffvars_impl.h>
 # include <system/jacobian.h>
+# include <system/cond_config.h>
 # include <solver/slvDOF.h>
 #endif
 
@@ -465,10 +467,26 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 	asc_assert(sys->engine==INTEG_IDA);
 
+	CONSOLE_DEBUG("System contains a total of %d bnds and %d reals"
+		,slv_get_num_solvers_bnds(sys->system)
+		,slv_get_num_solvers_rels(sys->system)
+	);
+
+	/* set the active flags on  variables depending on the state of WHENs */
+	CONSOLE_DEBUG("Currently %d rels active",slv_count_solvers_rels(sys->system, &integrator_ida_rel));
+
+	reanalyze_solver_lists(sys->system);
+
+	CONSOLE_DEBUG("After analysing WHENs, there are %d rels active"
+		,slv_count_solvers_rels(sys->system, &integrator_ida_rel)
+	);
+
+
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Starting IDA analysis");
 #endif
 
+	/* set the flags on differential and derivative and algebraic vars */
 	res = integrator_ida_check_vars(sys);
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem with vars");
@@ -504,6 +522,10 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 		return 1;
 	}
 
+	CONSOLE_DEBUG("After ida_create_lists, there are %d rels active"
+		,slv_count_solvers_rels(sys->system, &integrator_ida_rel)
+	);
+
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Checking lists");
 
@@ -518,6 +540,11 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error with diffindex");
 		return 360;
 	}
+
+
+	CONSOLE_DEBUG("After ida_check_diffindex, there are %d rels active"
+		,slv_count_solvers_rels(sys->system, &integrator_ida_rel)
+	);
 
 	/* the following causes TestIDA.testincidence3 to fail:
 	if(sys->n_y != slv_get_num_solvers_rels(sys->system)){
@@ -564,6 +591,11 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 		return 100 + res;
 	}
 
+	CONSOLE_DEBUG("After ida_check_index, there are %d rels active"
+		,slv_count_solvers_rels(sys->system, &integrator_ida_rel)
+	);
+
+
 	/* get the the dervative chains from the system */
 	diffvars = system_get_diffvars(sys->system);
 
@@ -597,6 +629,13 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 		ASC_FREE(varname);
 #endif
 	}
+
+	CONSOLE_DEBUG("rels matchbits:  0x%x",integrator_ida_rel.matchbits);
+	CONSOLE_DEBUG("rels matchvalue: 0x%x",integrator_ida_rel.matchvalue);
+
+	CONSOLE_DEBUG("At the end of ida_analyse, there are %d rels active"
+		,slv_count_solvers_rels(sys->system, &integrator_ida_rel)
+	);
 
 	return 0;
 }

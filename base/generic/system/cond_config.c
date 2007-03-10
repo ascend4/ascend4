@@ -29,14 +29,11 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
+#include <utilities/error.h>
 
-
-#include <compiler/instance_enum.h>
-#include <compiler/check.h>
 #include <general/list.h>
 #include <general/dstring.h>
 #include <general/tm_time.h>
-#include <compiler/extcall.h>
 
 #include <linear/mtx.h>
 
@@ -44,41 +41,47 @@
 #include "system.h"
 #include "analyze.h"
 
-#define IPTR(i) ((struct Instance *) (i))
 #define USEDCODE 0
-#define DEBUG FALSE
-#define CASE_NUMBER FALSE
-#define DEBUG_PRE_ANALYSIS FALSE
+
+#define PREANALYSIS_DEBUG
+#define WHEN_DEBUG
+
+#ifdef WHEN_DEBUG
+static slv_system_t g_whendebug_sys;
+# define SET_WHENDEBUG(SYS) \
+	CONSOLE_DEBUG("SETTING g_whendebug_sys"); \
+	g_whendebug_sys = SYS;
+#else
+# define SET_WHENDEBUG(SYS)
+#endif
 
 /*
- *              Configuration of Conditional Models
- */
-
-
-/*
- * structure dynamically allocated/reallocated to store the number of
- * matched cases in a list of when statements
- */
-
+	structure dynamically allocated/reallocated to store the number of
+	matched cases in a list of when statements
+*/
 struct ds_case_list {
    int32 length,capacity;
    int32 *case_number;
 };
 
-/*
- * forward declarations
- */
+/*-----------------------------------------------------------------------------
+	forward declarations
+*/
 void analyze_when(struct w_when *);
 static void simplified_analyze_when(struct w_when *);
 static void cases_matching_in_when_list(struct gl_list_t *,
 					struct ds_case_list *,
 					int32 *);
+
 /*
- * global variable for finding the number of cases in a when and
- * enumerating the cases
- */
+	global variable for finding the number of cases in a when and
+	enumerating the cases
+*/
 static int32 g_case_number = 0;
 
+/*----------------------------------------------------------------------------
+	
+*/
 /**
 	Set the ACTIVE bit to value for all the relations
 	included in the case
@@ -161,37 +164,50 @@ void set_rels_status_in_when(struct w_when *when, uint32 value)
  * recursively.
  */
 
-static void apply_case(struct when_case *cur_case)
-{
+static void apply_case(struct when_case *cur_case){
   struct gl_list_t *rels;
   struct gl_list_t *logrels;
   struct gl_list_t *whens;
   struct rel_relation *rel;
   struct logrel_relation *lrel;
   struct w_when *when;
-  int32 r,rlen,w,wlen,lr,lrlen;
+  int i,n;
 
+#ifdef WHEN_DEBUG
+  CONSOLE_DEBUG("Applying case %d in WHEN",when_case_case_number(cur_case));
+#endif
   rels = when_case_rels_list(cur_case);
-  if (rels != NULL) {
-    rlen = gl_length(rels);
-    for(r=1;r<=rlen;r++) {
-      rel = (struct rel_relation *)(gl_fetch(rels,r));
+  if(rels != NULL) {
+    n = gl_length(rels);
+    for(i=1; i<=n; i++) {
+      rel = (struct rel_relation *)(gl_fetch(rels,i));
+#ifdef WHEN_DEBUG
+      CONSOLE_DEBUG("Setting rel %d active in WHEN case %d", i, when_case_case_number(cur_case));
+#endif
       rel_set_active(rel,TRUE);
     }
   }
+
   logrels = when_case_logrels_list(cur_case);
-  if (logrels != NULL) {
-    lrlen = gl_length(logrels);
-    for(lr=1;lr<=lrlen;lr++) {
-      lrel = (struct logrel_relation *)(gl_fetch(logrels,lr));
+  if(logrels != NULL) {
+    n = gl_length(logrels);
+    for(i=1; i<=n; i++) {
+#ifdef WHEN_DEBUG
+      CONSOLE_DEBUG("Setting logrel %d active in WHEN case %d", i, when_case_case_number(cur_case));
+#endif
+      lrel = (struct logrel_relation *)(gl_fetch(logrels,i));
       logrel_set_active(lrel,TRUE);
     }
   }
+
   whens = when_case_whens_list(cur_case);
   if (whens != NULL) {
-    wlen = gl_length(whens);
-    for(w=1;w<=wlen;w++) {
-      when = (struct w_when *)(gl_fetch(whens,w));
+    n = gl_length(whens);
+    for(i=1; i<=n; i++) {
+#ifdef WHEN_DEBUG
+      CONSOLE_DEBUG("Analysing nested WHEN %d in WHEN case %d", i, when_case_case_number(cur_case));
+#endif
+      when = (struct w_when *)(gl_fetch(whens,i));
       analyze_when(when);
     }
   }
@@ -240,42 +256,47 @@ static int32 analyze_case(struct when_case *cur_case,
  * applies for the current values of the conditional variables.
  * The relations in that case are set ACTIVE
  */
-
-void analyze_when(struct w_when *when)
-{
+void analyze_when(struct w_when *when){
   struct gl_list_t *dvars;
   struct gl_list_t *cases;
   int32 values[MAX_VAR_IN_LIST];
   struct when_case *cur_case;
   int32 c,clen;
-  int32 case_match;
+  int case_match;
   int32 *value;
   int32 *case_values;
+#ifdef WHEN_DEBUG
+  char *whenname;
+#endif
 
   dvars = when_dvars_list(when);
   cases = when_cases_list(when);
   clen = gl_length(cases);
-  case_match =0;
-  for (c=1;c<=clen;c++){
-    if(case_match==1){
-      break;
-    }
+
+  for(c=1, case_match=0; !case_match && c<=clen; c++){
+    asc_assert(case_match==0);
     cur_case = (struct when_case *)(gl_fetch(cases,c));
     value = &(values[0]);
     case_values = when_case_values_list(cur_case);
     *value = *case_values;
-    if (values[0]!=-1) {
+    if(values[0]!=-1){
+#ifdef WHEN_DEBUG
+	  whenname = when_make_name(g_whendebug_sys,when);
+	  CONSOLE_DEBUG("Looking at case %d in WHEN '%s'",c,whenname);
+	  ASC_FREE(whenname);
+#endif
       case_match = analyze_case(cur_case,dvars);
-    } else {
-      if (case_match==0) {
-	apply_case(cur_case);
-        when_case_set_active(cur_case,TRUE);  /* Otherwise case active */
-        case_match = 1;
-      }
+      if(case_match)CONSOLE_DEBUG("FOUND MATCHING CASE");
+    }else{
+      /* The case is 'OTHERWISE', set it active */
+      asc_assert(case_match==0);
+      apply_case(cur_case);
+      when_case_set_active(cur_case,TRUE);
+      case_match = 1;
     }
   }
-  if (case_match == 0) {
-    FPRINTF(ASCERR,"No case matched in when\n");
+  if(!case_match){
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,"No case matched in when");
   }
 }
 
@@ -411,7 +432,7 @@ static void simplified_analyze_when(struct w_when *when)
     *value = *case_values;
     if (values[0]!=-1) {
       case_match = simplified_analyze_case(cur_case,dvars);
-    } else {
+    }else{
       if (case_match==0) {
 	simplified_apply_case(cur_case);
         when_case_set_active(cur_case,TRUE);  /* Otherwise case active */
@@ -454,7 +475,7 @@ void set_active_rels_as_invariant(struct rel_relation **rlist)
     rel = rlist[c];
     if (rel_active(rel) && rel_included(rel) && rel_equality(rel)) {
       rel_set_invariant(rel,TRUE);
-    } else {
+    }else{
       rel_set_invariant(rel,FALSE);
     }
   }
@@ -635,8 +656,7 @@ void set_active_disvars_in_active_logrels(struct logrel_relation **solverll)
  * Set the ACTIVE_AT_BDN bit to TRUE for all the variables incident in all
  * the relations of all the subregions neighboring a boundary(ies)
  */
-void set_active_vars_at_bnd(slv_system_t sys, struct gl_list_t *disvars)
-{
+void set_active_vars_at_bnd(slv_system_t sys, struct gl_list_t *disvars){
   struct rel_relation **solverrl;
   struct var_variable **solvervl;
   struct dis_discrete *dis;
@@ -646,6 +666,8 @@ void set_active_vars_at_bnd(slv_system_t sys, struct gl_list_t *disvars)
 
   solverrl = slv_get_solvers_rel_list(sys);
   solvervl = slv_get_solvers_var_list(sys);
+
+  SET_WHENDEBUG(sys)
 
   if (disvars == NULL) {
     return;
@@ -686,6 +708,8 @@ void identify_invariant_rels_at_bnd(slv_system_t sys,
   struct gl_list_t *whens;
   struct w_when *when;
   int32 d,dlen,w,wlen;
+
+  SET_WHENDEBUG(sys)
 
   solverrl = slv_get_solvers_rel_list(sys);
 
@@ -753,7 +777,7 @@ static int32 case_in_nested_whens(int32 *cases, int32 ncases,
         if (case_in_nested_whens(cases,ncases,nested_case)) { /* recursion */
           return 1;
 	}
-      } else {
+      }else{
         if(case_in_array_of_cases(num_case,cases,ncases)) {
           return 1;
 	}
@@ -795,7 +819,7 @@ static void set_active_rels_in_cases(int32 *cases, int32 ncases,
           set_active_rels_in_cases(cases,ncases,nested_when); /* recursion */
         }
       }
-    } else {
+    }else{
       if(case_in_array_of_cases(num_case,cases,ncases)) {
         when_case_set_active(cur_case,TRUE);
         set_rels_status_in_case(cur_case,TRUE);
@@ -821,6 +845,8 @@ void set_active_rels_in_subregion(slv_system_t sys, int32 *cases,
   int32 d,dlen,w,wlen;
 
   solverrl = slv_get_solvers_rel_list(sys);
+
+  SET_WHENDEBUG(sys)
 
   if (disvars == NULL) {
     return;
@@ -874,6 +900,8 @@ void identify_variant_rels_in_subregion(slv_system_t sys)
   struct rel_relation **solverrl;
   solverrl = slv_get_solvers_rel_list(sys);
 
+  SET_WHENDEBUG(sys)
+
   /* initialize in_cur_subregion flag */
   set_in_cur_subregion_in_rels_list(solverrl,FALSE);
 
@@ -893,6 +921,8 @@ void set_active_vars_in_subregion(slv_system_t sys)
 
   solverrl = slv_get_solvers_rel_list(sys);
   solvervl = slv_get_solvers_var_list(sys);
+
+  SET_WHENDEBUG(sys)
 
   set_inactive_vars_in_list(solvervl);
   set_active_vars_in_active_rels(solverrl);
@@ -983,19 +1013,19 @@ static int32 compare_alternative_cases(struct when_case *cur_case1,
 
   numcase1 = when_case_case_number(cur_case1);
   numcase2 = when_case_case_number(cur_case2);
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
   FPRINTF(ASCERR,"Making comparison of CASEs:\n");
   FPRINTF(ASCERR,"case A = %d  case B = %d \n",numcase1,numcase2);
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
 
   nrel1 = when_case_num_rels(cur_case1);
   nrel2 = when_case_num_rels(cur_case2);
 
   if (nrel1 != nrel2) {
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
     FPRINTF(ASCERR,"CASEs have different number of relations\n");
     FPRINTF(ASCERR,"case A = %d   case B = %d\n",nrel1,nrel2);
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
     return 0;
   }
 
@@ -1003,10 +1033,10 @@ static int32 compare_alternative_cases(struct when_case *cur_case1,
   nvar2 = when_case_num_inc_var(cur_case2);
 
   if (nvar1 != nvar2) {
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
     FPRINTF(ASCERR,"CASEs have different number of incidences\n");
     FPRINTF(ASCERR,"case A = %d   case B = %d\n",nvar1,nvar2);
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
     return 0;
   }
 
@@ -1018,10 +1048,10 @@ static int32 compare_alternative_cases(struct when_case *cur_case1,
     ind2 = ninc2[v];
 
     if (ind1 != ind2) {
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
       FPRINTF(ASCERR,"Incidences are different in CASEs\n");
       FPRINTF(ASCERR,"index in case A =%d  index in case B =%d\n",ind1,ind2);
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
       return 0;
     }
   }
@@ -1035,12 +1065,12 @@ static int32 compare_alternative_cases(struct when_case *cur_case1,
     nivr1 = rel_n_incidences(rel1);
     nivr2 = rel_n_incidences(rel2);
     if (nivr1 != nivr2) {
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
       FPRINTF(ASCERR,"relations of different CASEs have different ");
       FPRINTF(ASCERR,"number of incidences\n");
       FPRINTF(ASCERR,"No. in rel of A = %d   No. in rel of B = %d\n",
 	      nivr1,nivr2);
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
       return 0;
     }
     inc1 = rel_incidence_list_to_modify(rel1);
@@ -1051,12 +1081,12 @@ static int32 compare_alternative_cases(struct when_case *cur_case1,
       ind1 = ord_ind1[v];
       ind2 = ord_ind2[v];
       if (ind1 != ind2) {
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
         FPRINTF(ASCERR,"relations of different CASEs have different \n");
          FPRINTF(ASCERR,"Incidences\n");
         FPRINTF(ASCERR,"index in rel of A =%d  index in rel pf B =%d\n",
 		ind1,ind2);
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
         ascfree(ord_ind1);
         ascfree(ord_ind2);
         return 0;
@@ -1066,9 +1096,9 @@ static int32 compare_alternative_cases(struct when_case *cur_case1,
     ascfree(ord_ind2);
   }
 
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
         FPRINTF(ASCERR,"CASEs have the same structure \n");
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
   return 1;
 }
 
@@ -1096,17 +1126,17 @@ static int32 compare_alternative_structures_in_when(struct w_when *when)
     for (c=2; c<=clen; c++) {
       cur_case2 = (struct when_case *)(gl_fetch(cases,c));
       if (!compare_alternative_cases(cur_case1,cur_case2)) {
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
         FPRINTF(ASCERR,"CASEs have different structure\n");
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
         return 0;
       }
     }
     return 1;
-  } else {
+  }else{
     if (clen == 1 ) {
       return 0;
-    } else {
+    }else{
       return 1;
     }
   }
@@ -1177,10 +1207,10 @@ static void get_incidences_in_case(struct when_case *cur_case,
     }
      when_case_set_num_inc_var(cur_case,ninc);
      when_case_set_ind_inc(cur_case,inc);
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
      FPRINTF(ASCERR,"Number of incidences = %d \n",ninc);
-#endif /* DEBUG_PRE_ANALYSIS */
-  } else {
+#endif
+  }else{
      when_case_set_num_inc_var(cur_case,0);
   }
 }
@@ -1235,7 +1265,7 @@ static void order_relations_by_incidences(struct gl_list_t *scratch)
           if (vindex > vind ) {
             vindex = vind;
             rind = rin;
-          } else {
+          }else{
             if (vindex == vind) {
               for(vv=0; vv<num_inc; vv++) {
                 n1 = var_ind[rind][v];
@@ -1363,10 +1393,10 @@ static void order_relations_in_case(struct when_case *cur_case)
              if (rcount == rind) {
                glob_count = glob_count+1;
                continue;
-	     } else {
+	     }else{
                break;
 	     }
-	   } else {
+	   }else{
              break;
 	   }
          }
@@ -1382,7 +1412,7 @@ static void order_relations_in_case(struct when_case *cur_case)
             gl_append_ptr(tmp,rel);
 	   }
            gl_destroy(scratch);
-	 } else {
+	 }else{
             rel = (struct rel_relation *)(gl_fetch(rels,glob_count+1));
             gl_append_ptr(tmp,rel);
 	 }
@@ -1417,9 +1447,9 @@ static int32 analyze_structure_of_case(struct when_case *cur_case,
   int32 wlen;
 
   whens = when_case_whens_list(cur_case);
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
   FPRINTF(ASCERR,"case # = %d  \n",when_case_case_number(cur_case));
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
 /*
  * No nested WHENs right now
  * Here we'll need to recursively call
@@ -1430,9 +1460,9 @@ static int32 analyze_structure_of_case(struct when_case *cur_case,
   if (whens != NULL) {
     wlen = gl_length(whens);
     if (wlen > 0) {
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
       FPRINTF(ASCERR,"CASE contains nested WHENs\n");
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
       return 0;
     }
   }
@@ -1440,13 +1470,13 @@ static int32 analyze_structure_of_case(struct when_case *cur_case,
   rels = when_case_rels_list(cur_case);
   if (rels != NULL) {
     rlen = gl_length(rels);
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
     FPRINTF(ASCERR,"Number of relations = %d \n",rlen);
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
     when_case_set_num_rels(cur_case,rlen);
     order_relations_in_case(cur_case);
     get_incidences_in_case(cur_case,mastervl);
-  } else {
+  }else{
     when_case_set_num_rels(cur_case,0);
     when_case_set_num_inc_var(cur_case,0);
   }
@@ -1480,27 +1510,27 @@ static int32 analyze_alternative_structures_in_when(struct w_when *when,
     cur_case = (struct when_case *)(gl_fetch(cases,c));
     if (!analyze_structure_of_case(cur_case,mastervl)) {
       when_set_changes_structure(when,TRUE);
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
       FPRINTF(ASCERR,"WHEN CHANGES structure\n");
       FPRINTF(ASCERR,"\n");
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
       return 0;
     }
   }
 
   if (!compare_alternative_structures_in_when(when)) {
     when_set_changes_structure(when,TRUE);
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
       FPRINTF(ASCERR,"WHEN CHANGES structure\n");
       FPRINTF(ASCERR,"\n");
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
     return 0;
   }
   when_set_changes_structure(when,FALSE);
-#if DEBUG_PRE_ANALYSIS
+#ifdef PREANALYSIS_DEBUG
       FPRINTF(ASCERR,"WHEN DOES NOT CHANGE structure\n");
       FPRINTF(ASCERR,"\n");
-#endif /* DEBUG_PRE_ANALYSIS */
+#endif
   return 1;
 }
 
@@ -1552,11 +1582,11 @@ void enumerate_cases_in_when(struct w_when *when)
     if ( (whens == NULL) || (gl_length(whens) == 0) ) {
       g_case_number++;
       when_case_set_case_number(cur_case,g_case_number);
-#if CASE_NUMBER
+#ifdef WHEN_DEBUG
       FPRINTF(ASCERR,"Case number = %d \n",
                            when_case_case_number(cur_case));
-#endif /* CASE NUMBER*/
-    } else {
+#endif/* CASE NUMBER*/
+    }else{
       wlen = gl_length(whens);
       for (w=1;w<=wlen;w++) {
         when_case_set_case_number(cur_case,-1); /* nested cases */
@@ -1606,7 +1636,7 @@ static void remove_case_number( struct ds_case_list *cl, int32 ndx)
   copy_case_num((char *)(cl->case_number+ndx+1),
   	     (char *)(cl->case_number+ndx), --(cl->length) - ndx);
 }
-#endif /* USEDCODE */
+#endif/* USEDCODE */
 
 
 
@@ -1636,7 +1666,7 @@ static void cases_matching_in_when(struct w_when *when,
       if (case_number == -1) {
         whens_in_case = when_case_whens_list(cur_case);
         cases_matching_in_when_list(whens_in_case,cl,ncases);
-      } else {
+      }else{
         append_case_number(cl,case_number);
 	(*ncases)++;
       }
@@ -1770,8 +1800,8 @@ void configure_conditional_problem(int32 numwhens,
   }
 
   /*
-   *All rel_relations and logrel_relations explicitly or implicitly
-   * (models) inside a w_when are deactivated
+	All rel_relations and logrel_relations explicitly or implicitly
+	(models) inside a w_when are deactivated
    */
   for (w = 0; w < numwhens; w++) {
     when = whenlist[w];
@@ -1784,13 +1814,12 @@ void configure_conditional_problem(int32 numwhens,
   set_active_rels_as_invariant(solverrl);
 
   /*
-   * Analyze whens and find active relations and logrelations
-   * in each of them
+	Analyze whens and find active relations and logrelations
+	in each of them
    */
-
   for (w = 0; w < numwhens; w++) {
     when = whenlist[w];
-    if (!when_inwhen(when)) {
+    if(!when_inwhen(when)){
       analyze_when(when);
     }
   }
@@ -1834,6 +1863,8 @@ void reanalyze_solver_lists(slv_system_t sys)
   dislist =  slv_get_master_dvar_list(sys);
   symbol_list = slv_get_symbol_list(sys);
 
+  SET_WHENDEBUG(sys)
+
   set_inactive_vars_in_list(solvervl);
   set_inactive_disvars_in_list(solverdl);
   set_active_rels_in_list(solverrl);
@@ -1874,20 +1905,14 @@ void reanalyze_solver_lists(slv_system_t sys)
  * supossed to work only with the structures in the solver side.
  * The reason is that this function is receiving the information from
  * the user interface, which is working in the compiler side.
- */
 
-int32 system_reanalyze(slv_system_t sys, SlvBackendToken inst)
-{
-  if (inst==NULL) {
+	Removed the second parameter because it was insane and it wasn't being used
+	anywhere AFAICT -- JP.
+*/
+int32 system_reanalyze(slv_system_t sys){
+	SET_WHENDEBUG(sys)
     reanalyze_solver_lists(sys);
     return 1;
-  }
-  if (varinst_found_in_whenlist(sys,IPTR(inst))) {
-    reanalyze_solver_lists(sys);
-    return 1;
-  } else {
-    return 0;
-  }
 }
 
 
@@ -2080,6 +2105,8 @@ void rebuild_solvers_from_masters(slv_system_t sys)
       ascfree(solverrl);
   }
 
+  SET_WHENDEBUG(sys)
+
   set_inactive_vars_in_list(mastervl);
   set-active_rels_in_list(masterrl);
   set_inactive_disvars_in_list(masterdl);
@@ -2117,8 +2144,4 @@ void rebuild_solvers_from_masters(slv_system_t sys)
   slv_set_solvers_dvar_list(sys,solverdl,ndvar_active);
 }
 
-#endif  /* USEDCODE */
-
-
-
-
+#endif /* USEDCODE */
