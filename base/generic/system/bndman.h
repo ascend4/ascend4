@@ -35,7 +35,7 @@
 	@{
 */
 
-extern real64 bndman_real_eval(struct bnd_boundary *bnd);
+extern double bndman_real_eval(struct bnd_boundary *bnd);
 /**<  Returns the (real) residual of the boundary. */
 
 extern int32  bndman_log_eval(struct bnd_boundary *bnd);

@@ -68,10 +68,6 @@ struct w_when {
 extern struct w_when *when_create(SlvBackendToken instance,
                                   struct w_when *newwhen);
 /**<
- *  <!--  when_create(instance,newwhen)                                -->
- *  <!--  struct w_when *newwhen;                                      -->
- *  <!--  SlvBackendToken instance;                                    -->
- *
  *  Creates a when given the when instance.
  *  If the when supplied is NULL, we allocate the memory for the
  *  when we return, else we just init the memory you hand us and
@@ -83,9 +79,6 @@ extern struct w_when *when_create(SlvBackendToken instance,
 
 extern SlvBackendToken when_instance(struct w_when *when);
 /**<
- *  <!--  when_instance(when)                                          -->
- *  <!--  struct w_when *when;                                         -->
- *
  *  Returns the instance pointer from a when.
  */
 
@@ -93,8 +86,6 @@ extern void when_write_name(slv_system_t sys,
                             struct w_when *when,
                             FILE *file);
 /**<
- *  <!--  when_write_name(sys,when,file);                              -->
- *
  *  Writes a name to the file given. Handles
  *  If sys is NULL, writes full ascend name. If file or when is NULL
  *  does not write.
@@ -102,27 +93,16 @@ extern void when_write_name(slv_system_t sys,
 
 extern void when_destroy_cases(struct w_when *when);
 /**<
- *  <!--  when_destroy_cases(when)                                     -->
- *  <!--  struct w_when *when;                                         -->
- *
  *  Destroys a the list of cases of a when.
  */
 
 extern void when_destroy(struct w_when *when);
 /**<
- *  <!--  when_destroy(when)                                           -->
- *  <!--  struct w_when *when;                                         -->
- *
  *  Destroys a when.
  */
 
-extern char *when_make_name(slv_system_t sys, struct w_when *when);
+ASC_DLLSPEC char *when_make_name(slv_system_t sys, struct w_when *when);
 /**<
- *  <!--  name = when_make_name(sys,when)                              -->
- *  <!--  slv_system_t sys;                                            -->
- *  <!--  struct w_when *when;                                         -->
- *  <!--  char *name;                                                  -->
- *
  *  Copies of the when instance name can be made and returned.
  *  The string returned should be freed when no longer in use.
  */
@@ -132,11 +112,6 @@ extern struct gl_list_t *when_dvars_list( struct w_when *when);
 extern void when_set_dvars_list( struct w_when *when,
                                  struct gl_list_t *dvlist);
 /**<
- *  <!--  dvars = when_dvars_list(when)                                -->
- *  <!--  when_set_dvars_list(when,dvlist)                             -->
- *  <!--  struct gl_list_t *dvlist;                                    -->
- *  <!--  struct w_when *when;                                         -->
- *
  *  Sets the list of dis variables of the given when.
  */
 
@@ -145,11 +120,6 @@ extern struct gl_list_t *when_cases_list( struct w_when *when);
 extern void when_set_cases_list( struct w_when *when,
                                  struct gl_list_t *clist);
 /**<
- *  <!--  cases = when_cases_list(when)                                -->
- *  <!--  when_set_cases_list(when,clist)                              -->
- *  <!--  struct gl_list_t *clist;                                     -->
- *  <!--  struct w_when *when;                                         -->
- *
  *  Sets the list of cases of the given when.
  */
 
@@ -158,11 +128,6 @@ extern int32 when_num_cases(struct w_when *when);
  *  appears in a slv_system_t master when list. */
 extern void when_set_num_cases(struct w_when *when, int32 num_cases);
 /**<
- *  <!--  num_cases = when_num_cases(when)                             -->
- *  <!--  when_set_num_cases(when,num_cases)                           -->
- *  <!--  int32 num_cases;                                             -->
- *  <!--  struct w_when *when;                                         -->
- *
  *  Sets the number of cases of the given when as it
  *  appears in a slv_system_t master when list.
  */
@@ -172,11 +137,6 @@ extern int32 when_mindex(struct w_when *when);
  *  appears in a slv_system_t master when list. */
 extern void when_set_mindex(struct w_when *when, int32 mindex);
 /**<
- *  <!--  index = when_mindex(when)                                    -->
- *  <!--  when_set_mindex(when,index)                                  -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct w_when *when;                                         -->
- *
  *  Sets the index number of the given when as it
  *  appears in a slv_system_t master when list.
  */
@@ -186,11 +146,6 @@ extern int32 when_sindex(struct w_when *when);
  *  appears in a solvers when list. */
 extern void when_set_sindex(struct w_when *when, int32 sindex);
 /**<
- *  <!--  index = when_sindex(when)                                    -->
- *  <!--  when_set_sindex(when,index)                                  -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct w_when *when;                                         -->
- *
  *  Sets the index number of the given relation as it
  *  appears in a solvers when list.
  */
@@ -201,11 +156,6 @@ extern int32 when_model(const struct w_when *when);
  *  models. Models are numbered from 1 to some upper limit. */
 extern void when_set_model(struct w_when *when, int32 mindex);
 /**<
- *  <!--  index = when_model(when)                                     -->
- *  <!--  when_set_model(when,index)                                   -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct w_when *when;                                         -->
- *
  *  Sets the model number of the given when.
  *  In a hierarchy, whens come associated with
  *  models. Models are numbered from 1 to some upper limit.
@@ -228,11 +178,6 @@ typedef struct when_filter_structure {
 
 extern int32 when_apply_filter(struct w_when *when, when_filter_t *filter);
 /**<
- *  <!--  value = when_apply_filter(when,filter)                       -->
- *  <!--  int32 value;                                                 -->
- *  <!--  struct w_when *when;                                         -->
- *  <!--  when_filter_t *filter;                                       -->
- *
  *  Returns 1 only if all of the positions specified in
  *  filter->matchbits have the same values in
  *  filter->matchvalue and the when's flags value.
@@ -243,17 +188,11 @@ extern uint32 when_flags(struct w_when *when);
 /**< Returns the flags field of the when. */
 extern void when_set_flags(struct w_when *when, uint32 flags);
 /**<
- *  <!--  struct w_when *when;                                         -->
- *  <!--  uint32 flags;                                                -->
- *
  * Sets the entire flag field to the value of flags given.
  */
 
 extern uint32 when_flagbit(struct w_when *when, uint32 name);
 /**<
- *  <!--  when_flagbit(when,name);                                     -->
- *  <!--  struct w_when *when;                                         -->
- *  <!--  uint32 name;                                                 -->
  *  Returns the value of the bit specified from the when flags.
  *  name should be a WHEN_xx flag defined above)
  */
@@ -261,10 +200,6 @@ extern uint32 when_flagbit(struct w_when *when, uint32 name);
 extern void when_set_flagbit(struct w_when *when,
                              uint32 NAME, uint32 oneorzero);
 /**<
- *  <!--  struct w_when *when;                                         -->
- *  <!--  uint32 NAME,oneorzero;                                       -->
- *  <!--  when_set_flagbit(when,NAME,oneorzero)                        -->
- *
  *  Sets the bit, which should be referred to by its macro name,
  *  on if oneorzero is >0 and off is oneorzero is 0.
  *  The macro names are the defined up at the top of this file.<br><br>
@@ -346,9 +281,6 @@ struct when_case {
 
 extern struct when_case *when_case_create(struct when_case *newcase);
 /**<
- *  <!--  when_case_create(newcase)                                    -->
- *  <!--  struct when_case *newcase;                                   -->
- *
  *  Creates a when case.
  *  If the case supplied is NULL, we allocate the memory for the
  *  case we return, else we just init the memory you hand us and
@@ -357,9 +289,6 @@ extern struct when_case *when_case_create(struct when_case *newcase);
 
 extern void when_case_destroy(struct when_case *wc);
 /**<
- *  <!--  when_case_destroy(wc)                                        -->
- *  <!--  struct when_case *wc;                                        -->
- *
  *  Destroys a when case.
  */
 
@@ -367,11 +296,6 @@ extern int32 *when_case_values_list( struct when_case *wc);
 /**< Retrieves the list of values of the given case. */
 extern void when_case_set_values_list( struct when_case *wc, int32 *vallist);
 /**<
- *  <!--  values = when_case_values_list(wc)                           -->
- *  <!--  when_case_set_values_list(wc,vallist)                        -->
- *  <!--  int32 *vallist;                                              -->
- *  <!--  struct when_case *wc;                                        -->
- *
  *  Sets the list of values of the given case.
  */
 
@@ -380,11 +304,6 @@ extern struct gl_list_t *when_case_rels_list( struct when_case *wc);
 extern void when_case_set_rels_list(struct when_case *wc,
                                     struct gl_list_t *rlist);
 /**<
- *  <!--  rels = when_case_rels_list(wc)                               -->
- *  <!--  when_case_set_rels_list(wc,rlist)                            -->
- *  <!--  struct gl_list_t *rlist;                                     -->
- *  <!--  struct when_case *wc;                                        -->
- *
  *  Sets the list of rels of the given case.
  */
 
@@ -393,11 +312,6 @@ extern struct gl_list_t *when_case_logrels_list( struct when_case *wc);
 extern void when_case_set_logrels_list(struct when_case *wc,
                                        struct gl_list_t *lrlist);
 /**<
- *  <!--  logrels = when_case_logrels_list(wc)                         -->
- *  <!--  when_case_set_logrels_list(wc,lrlist)                        -->
- *  <!--  struct gl_list_t *lrlist;                                    -->
- *  <!--  struct when_case *wc;                                        -->
- *
  *  Sets the list of logrels of the given case.
  */
 
@@ -406,11 +320,6 @@ extern struct gl_list_t *when_case_whens_list( struct when_case *wc);
 extern void when_case_set_whens_list( struct when_case *wc,
                                       struct gl_list_t *wlist);
 /**<
- *  <!--  whens = when_case_whens_list(wc)                             -->
- *  <!--  when_case_set_whens_list(wc,wlist)                           -->
- *  <!--  struct gl_list_t *wlist;                                     -->
- *  <!--  struct when_case *wc;                                        -->
- *
  *  Sets the list of whens nested in the given case.
  */
 
@@ -418,9 +327,6 @@ extern int32 when_case_case_number(struct when_case *wc);
 /**< Returns the number of the case wc. */
 extern void when_case_set_case_number(struct when_case *wc, int32 case_number);
 /**<
- *  <!--  struct when_case *wc;                                        -->
- *  <!--  int32 case_number;                                           -->
- *
  * Sets the case_number field of a case to the value of the case_number given.
  */
 
@@ -428,9 +334,6 @@ extern int32 when_case_num_rels( struct when_case *wc);
 /**< Returns the number of the relations in wc. */
 extern void when_case_set_num_rels(struct when_case *wc, int32 num_rels);
 /**<
- *  <!--  struct when_case *wc;                                        -->
- *  <!--  int32 num_rels;                                              -->
- *
  * Sets the num_rels field of a case to the value of the num_rels given.
  */
 
@@ -439,9 +342,6 @@ extern int32 when_case_num_inc_var( struct when_case *wc);
  * in the relations contained in wc. */
 extern void when_case_set_num_inc_var(struct when_case *wc, int32 num_inc_var);
 /**<
- *  <!--  struct when_case *wc;                                        -->
- *  <!--  int32 num_inc_var;                                           -->
- *
  * Sets the num_inc_var field of a case to the value of the num_inc_var given.
  */
 
@@ -450,9 +350,6 @@ extern int32 *when_case_ind_inc( struct when_case *wc);
  *  variables incident in the relations contained in wc. */
 extern void when_case_set_ind_inc(struct when_case *wc, int32 *ind_inc);
 /**<
- *  <!--  struct when_case *wc;                                        -->
- *  <!--  int32 *ind_inc;                                              -->
- *
  * Sets the ind_inc pointer of a case to the value of the array ind_inc given.
  */
 
@@ -470,11 +367,6 @@ typedef struct when_case_filter_structure {
 extern int32 when_case_apply_filter(struct when_case *wc,
                                     when_case_filter_t *filter);
 /**<
- *  <!--  value = when_case_apply_filter(wc,filter)                    -->
- *  <!--  int32 value;                                                 -->
- *  <!--  struct when_case *wc;                                        -->
- *  <!--  when_case_filter_t *filter;                                  -->
- *
  *  Returns 1 only if all of the positions specified in
  *  filter->matchbits have the same values in
  *  filter->matchvalue and the when's flags value.
@@ -485,17 +377,11 @@ extern uint32 when_case_flags(struct when_case *wc);
 /**< Returns the flags field of the case wc. */
 extern void when_case_set_flags(struct when_case *wc, uint32 flags);
 /**<
- *  <!--  struct when_case *wc;                                        -->
- *  <!--  uint32 flags;                                                -->
- *
  * Sets the entire flag field to the value of flags given.
  */
 
 extern uint32 when_case_flagbit(struct when_case *wc, uint32 name);
 /**<
- *  <!--  when_case_flagbit(wc,name);                                  -->
- *  <!--  struct when_case *wc;                                        -->
- *  <!--  uint32 name;                                                 -->
  *  Returns the value of the bit specified from the case flags.
  *  name should be a WHEN_CASE_xx flag
  */
@@ -503,10 +389,6 @@ extern uint32 when_case_flagbit(struct when_case *wc, uint32 name);
 extern void when_case_set_flagbit(struct when_case *wc,
                                   uint32 NAME, uint32 oneorzero);
 /**<
- *  <!--  struct when_case *wc;                                        -->
- *  <!--  uint32 NAME,oneorzero;                                       -->
- *  <!--  when_case_set_flagbit(wc,NAME,oneorzero)                     -->
- *
  *  Sets the bit, which should be referred to by its macro name,
  *  on if oneorzero is >0 and off is oneorzero is 0.
  *  The macro names are the defined up at the top of this file.

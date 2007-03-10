@@ -29,6 +29,8 @@ Integrator::Integrator(Simulation &simulation)
 	setMaxSubStep(0);
 	setMaxSubSteps(0);
 	setInitialSubStep(0);
+
+	/* we *don't* initialise a reporter here, cause we don't want to own it */
 }
 
 Integrator::~Integrator(){
@@ -60,10 +62,10 @@ Integrator::setParameters(const SolverParameters &params){
 
 void
 Integrator::setReporter(IntegratorReporterCxx *reporter){
-	this->blsys->clientdata = reporter;
+	blsys->clientdata = reporter; /* this *is* necessary, as well as the following */
 	integrator_set_reporter(blsys,reporter->getInternalType());
 	//CONSOLE_DEBUG("REPORTER HAS BEEN SET");
-	(*(this->blsys->reporter->init))(blsys);
+	(*(blsys->reporter->init))(blsys);
 	//CONSOLE_DEBUG("DONE TESTING OUTPUT_INIT");
 }
 
@@ -133,7 +135,11 @@ Integrator::solve(){
 
 	assert(samplelist!=NULL);
 	assert(samplelist->ns>0);
-	assert(blsys->reporter!=NULL);
+
+	if(blsys->reporter==NULL){
+		throw runtime_error("No reporter has been assigned to the integrator");
+	}
+
 	assert(blsys->clientdata!=NULL);
 
 	int res;

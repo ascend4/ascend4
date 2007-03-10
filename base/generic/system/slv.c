@@ -798,11 +798,13 @@ int32 slv_need_consistency(slv_system_t sys)
 #define DEFINE_SLV_COUNT_METHOD(NAME,FILTER,TYPE) \
 	static int slv_count_##NAME(const FILTER##_filter_t *filter, struct TYPE **list){ \
 		int ret=0; \
-		assert(list!=NULL); \
+		asc_assert(list!=NULL); \
+		/* CONSOLE_DEBUG("COUNTING " #NAME " WITH FILTER 0x%x -> 0x%x",filter->matchbits,filter->matchvalue); */ \
 		while(*list!=NULL){ \
 			ret += FILTER##_apply_filter(*list,filter); \
 			list++; \
 		} \
+		/* CONSOLE_DEBUG("Returning %d",ret); */ \
 		return ret; \
 	}
 
@@ -826,9 +828,10 @@ DEFINE_SLV_COUNT_METHODS(DEFINE_SLV_COUNT_METHOD) /*;*/
 #define DEFINE_SLV_COUNT_SOLVER_METHOD(NAME,PROP,TYPE,COUNT) \
 	int slv_count_solvers_ ## NAME ( slv_system_t sys, const TYPE ##_filter_t *xxx){ \
 		if(sys==NULL || sys->PROP.solver == NULL || xxx==NULL){ \
-			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_cound_solvers_" #NAME " called with NULL"); \
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_" #NAME " called with NULL"); \
 			return 0; \
 		} \
+		/* CONSOLE_DEBUG("slv_count" #COUNT "(filter,sys->" #PROP ".solver)");*/ \
 		return slv_count_##COUNT(xxx,sys->PROP.solver); \
 	}
 
@@ -836,7 +839,7 @@ DEFINE_SLV_COUNT_METHODS(DEFINE_SLV_COUNT_METHOD) /*;*/
 #define DEFINE_SLV_COUNT_MASTER_METHOD(NAME,PROP,TYPE,COUNT) \
 	int slv_count_master_ ## NAME ( slv_system_t sys, const TYPE ##_filter_t *xxx){ \
 		if(sys==NULL || sys->PROP.master == NULL || xxx==NULL){ \
-			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_cound_master_" #NAME " called with NULL"); \
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_" #NAME " called with NULL"); \
 			return 0; \
 		} \
 		return slv_count_##COUNT(xxx,sys->PROP.master); \

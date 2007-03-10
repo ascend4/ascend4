@@ -418,7 +418,9 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 int integrator_analyse(IntegratorSystem *sys){
 	int res;
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Analysing integration system...");
+#endif
 	asc_assert(sys);
 	if(sys->engine==INTEG_UNKNOWN){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No engine selected: can't analyse");
@@ -431,13 +433,18 @@ int integrator_analyse(IntegratorSystem *sys){
 		if(integrator_find_indep_var(sys)){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Independent variable problem: abandoning integration");
 			return 2;
-		}else{
+		}
+#ifdef ANALYSE_DEBUG
+		else{
 			CONSOLE_DEBUG("got 0 from  integrator_find_indep_var");
 		}
+#endif
 	}
 
 	res = (sys->internals->analysefn)(sys);
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("integrator_analyse returning %d",res);
+#endif
 	return res;
 }
 

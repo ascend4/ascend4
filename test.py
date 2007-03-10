@@ -978,6 +978,22 @@ class TestIDA(Ascend):
 			return
 		self.fail("Index problem not detected")
 
+	def testboundaries(self):
+		self.L.load('test/ida/boundaries.a4c')
+		T = self.L.findType('boundaries')
+		M = T.getSimulation('sim')
+		M.build()
+		I = ascpy.Integrator(M)
+		I.setEngine('IDA')
+		I.analyse()
+		I.setLogTimesteps(ascpy.Units("s"), 0.1, 20, 20)
+		I.setParameter('linsolver','DENSE')
+		I.setParameter('calcic','Y')
+		I.setParameter('linsolver','DENSE')
+		I.setParameter('safeeval',False)
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.solve()
+
 # doesn't work yet:
 #	def testincidence5(self):
 #		self._run('incidence',5)

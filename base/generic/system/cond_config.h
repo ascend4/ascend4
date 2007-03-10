@@ -29,9 +29,9 @@
 #include <utilities/ascConfig.h>
 #include <compiler/instance_enum.h>
 
-#include <system/conditional.h>
-#include <system/rel.h>
-#include <system/logrel.h>
+#include "conditional.h" 
+#include "rel.h"
+#include "logrel.h"
 
 
 /**	@addtogroup analyse Analyse
@@ -189,7 +189,6 @@ extern void configure_conditional_problem(int numwhens,
                                           struct logrel_relation **solverll,
                                           struct var_variable **mastervl);
 /**<
- * <!--  configure_conditional_problem                                 -->
  * Analyze the when statements included in our problem so that, we
  * determine which rels, vars, disvars, and logrels are currently
  * active. It is called by analyze.c at the time of the system
@@ -199,17 +198,17 @@ extern void configure_conditional_problem(int numwhens,
 
 extern void reanalyze_solver_lists(slv_system_t sys);
 /**<
- * For conditional modeling. This functions analyzes the when's
+ * For conditional modeling. This functions analyzes the WHENs
  * of the solver when list  and set the current value of the
  * flag ACTIVE for variables and relations in the solvers lists.
  */
 
-ASC_DLLSPEC int32 system_reanalyze(slv_system_t sys, SlvBackendToken inst);
+ASC_DLLSPEC int32 system_reanalyze(slv_system_t sys);
 /**<
- * For conditional modeling. If a whenvarlist has been changed
- * or a method has been run, this function calls
- * reanlyze_solver_lists.
- */
+	For conditional modeling. If a whenvarlist has been changed
+	or a method has been run, this function calls
+	reanlyze_solver_lists.
+*/
 
 extern int build_rel_solver_from_master(struct rel_relation **masterrl,
                                         struct rel_relation **solverrl);
@@ -229,7 +228,7 @@ extern int32 build_logrel_solver_from_master(struct logrel_relation **masterll,
                                              struct logrel_relation **solverll);
 /**<
  * Build the logrel solver list from the master list in the case of our
- * problem contains when's. This function is not currently in use. It
+ * problem contains WHENs. This function is not currently in use. It
  * could be use to build a solver logrel list of ACTIVE logrelations, by
  * using a master logrel list with all of the logrelations in it. These
  * ACTIVE logrelations could be INCLUDED or UNINCLUDED. It returns the
@@ -240,7 +239,7 @@ extern int32 build_var_solver_from_master(struct var_variable **mastervl,
                                           struct var_variable **solvervl);
 /**<
  * Build the var solver list from the master list in the case of our
- * problem contains when's.  This function is not currently in use. It
+ * problem contains WHENs.  This function is not currently in use. It
  * could be use to build a solver var list of ACTIVE variables (Vars
  * incident in ACTIVE relations). It returns the number of variables
  * in the list.
@@ -250,7 +249,7 @@ extern int32 build_disvar_solver_from_master(struct dis_discrete **masterdl,
                                              struct dis_discrete **solverdl);
 /**<
  * Build the discrete var solver list from the master list in the case
- * of our problem contains when's.  This function is not currently in use.
+ * of our problem contains WHENs.  This function is not currently in use.
  * It could be use to build a solver discrete var list of ACTIVE discrete
  * variables (Discrete Vars incident in ACTIVE logrelations). It returns
  * the number of discrete variables in the list.

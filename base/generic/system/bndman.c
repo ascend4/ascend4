@@ -22,64 +22,47 @@
 	Last in CVS: $Revision: 1.6 $ $Date: 1997/07/18 12:13:57 $ $Author: mthomas $
 */
 
-#include <math.h>
-
 #include "bndman.h"
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 
-#include <compiler/instance_enum.h>
-
-
-#include <compiler/functype.h>
-#include <compiler/safe.h>
-#include <compiler/extfunc.h>
-
-#include <compiler/expr_types.h>
-#include <compiler/find.h>
-#include <compiler/atomvalue.h>
-#include <compiler/mathinst.h>
-#include <compiler/extfunc.h>
-#include <compiler/rel_blackbox.h>
-#include <compiler/vlist.h>
-#include <compiler/relation.h>
-#include <compiler/relation_util.h>
-#include <compiler/relation_io.h>
-
-#define _SLV_SERVER_C_SEEN_
-#include <linear/mtx.h>
-
 #include "relman.h"
 #include "logrelman.h"
 #include "slv_server.h"
 
+#include <math.h>
 
-real64 bndman_real_eval(struct bnd_boundary *bnd)
-{
+double bndman_real_eval(struct bnd_boundary *bnd){
   struct rel_relation *rel;
-  real64 res;
-  int32 status;
+  double res;
+  int32 calc_ok;
 
   if (bnd_kind(bnd)!=e_bnd_rel) {
-    FPRINTF(stderr,"Incorrect bnd passed to bnd_real_eval.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad bnd type");
     return 0.0;
   }
-  status = 0;
+  calc_ok = 1;
   rel = bnd_rel(bnd_real_cond(bnd));
-  res = relman_eval(rel,&status,1);
+  res = relman_eval(rel,&calc_ok,1);
+  CONSOLE_DEBUG("Got res = %f",res);
+  if(!calc_ok){
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Error evaluating rel");
+  }else{
+    CONSOLE_DEBUG("bnd rel eval ok, res = %f", res);
+  }
+  CONSOLE_DEBUG("Returning res = %f",res);
   return res;
 }
 
 
-int32 bndman_log_eval(struct bnd_boundary *bnd)
-{
+int32 bndman_log_eval(struct bnd_boundary *bnd){
   struct logrel_relation *lrel;
   int32 status,res;
 
   if (bnd_kind(bnd)!=e_bnd_logrel) {
-    FPRINTF(stderr,"Incorrect bnd passed to bnd_log_eval.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad bnd type");
     return 0;
   }
 
@@ -90,8 +73,7 @@ int32 bndman_log_eval(struct bnd_boundary *bnd)
 }
 
 
-int32 bndman_calc_satisfied(struct bnd_boundary *bnd)
-{
+int32 bndman_calc_satisfied(struct bnd_boundary *bnd){
   int32 logres;
   struct rel_relation *rel;
   real64 res,tol;
@@ -112,18 +94,17 @@ int32 bndman_calc_satisfied(struct bnd_boundary *bnd)
       logres = bndman_log_eval(bnd); /* force to reset boolean residual */
       return logres;
     default:
-      FPRINTF(stderr,"Incorrect bnd passed to bnd_calc_satisfied.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad bnd type");
       return 0;
   }
 }
 
 
-int32 bndman_calc_at_zero(struct bnd_boundary *bnd)
-{
+int32 bndman_calc_at_zero(struct bnd_boundary *bnd){
   real64 tol,res;
 
   if (bnd_kind(bnd)!=e_bnd_rel) {
-    FPRINTF(stderr,"Incorrect bnd passed to bnd_calc_at_zero.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad bnd type");
     return 0;
   }
   tol = bnd_tolerance(bnd);

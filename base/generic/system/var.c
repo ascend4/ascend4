@@ -90,8 +90,7 @@ void var_set_instanceF(struct var_variable *var, SlvBackendToken i)
 }
 
 
-char *var_make_name(const slv_system_t sys,const  struct var_variable *var)
-{
+char *var_make_name(const slv_system_t sys,const  struct var_variable *var){
   return WriteInstanceNameString(IPTR(var->ratom),IPTR(slv_instance(sys)));
 }
 
