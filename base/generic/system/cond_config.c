@@ -44,7 +44,7 @@
 #define USEDCODE 0
 
 #define PREANALYSIS_DEBUG
-#define WHEN_DEBUG
+/* #define WHEN_DEBUG */
 
 #ifdef WHEN_DEBUG
 static slv_system_t g_whendebug_sys;
