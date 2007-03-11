@@ -404,7 +404,7 @@ int CalcSetType(symchar *c, struct Statement *statement)
       /* lint should keep us from ever getting here */
       return -2;
     }
-  } else{
+  }else{
     STATEMENT_ERROR(statement, "Unable to determine type of set.");
     return -2;
   }
@@ -548,7 +548,7 @@ void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
     STATEMENT_ERROR(statement, "Add another FOR index. In FOR loops,"
          " all array subscripts must be scalar values, not sets.");
     WSS(ASCERR,statement);
-  } else {
+  }else{
     MarkStatContext(statement,context_WRONG);
     STATEMENT_ERROR(statement, "Subscripts of conflicting or incorrect types"
          " in rectangular array.");
@@ -584,7 +584,7 @@ int TryChildExpansion(struct Instance *child,
     if (GetEvaluationContext() != NULL) {
       error++;
       FPRINTF(ASCERR,"TryChildExpansion with mixed instance\n");
-    } else {
+    }else{
       SetEvaluationContext(parent); /* could be wrong for mixed style arrays */
       value = EvaluateSet(setp,InstanceEvaluateName);
       SetEvaluationContext(NULL);
@@ -681,7 +681,7 @@ int FindExprType(CONST struct Expr *ex, struct Instance *parent,
         FPRINTF(ASCERR,"Incorrect index type; guessing integer index.\n");
         return 1;
       }
-    } else {
+    }else{
       if (ilist!=NULL) gl_destroy(ilist);
       if (GetEvaluationForTable()!=NULL) {
         symchar *name;
@@ -777,7 +777,7 @@ struct gl_list_t *ArrayIndices(CONST struct Name *name,
     if ((settype = DeriveSetType(sptr,parent,0)) >= 0){
       gl_append_ptr(result,
                     (VOIDPTR)CreateIndexType(CopySetList(sptr),settype));
-    } else{
+    }else{
       DestroyIndexList(result);
       return NULL;
     }
@@ -836,7 +836,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
         STATEMENT_ERROR(stat, "Index to sparse array is of an incorrect type");
         DestroyValue(&value);
         return NULL;
-      } else {
+      }else{
         setval = CreateSetFromList(value);
         intset = (SetKind(SetValue(setval)) == integer_set);
         DestroyValue(&value);
@@ -871,7 +871,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
       ASC_PANIC("Unknown result value type in MakeIndex.\n");
 
     }
-  } else { /* checking subscripts on dense ALIASES/param'd IS_A statement */
+  }else{ /* checking subscripts on dense ALIASES/param'd IS_A statement */
     if (sptr==NULL) {
       SetEvaluationContext(NULL);
       return NULL;
@@ -934,7 +934,7 @@ struct gl_list_t *MakeIndices(struct Instance *inst,
     ptr = MakeIndex(inst,sptr,stat,last);
     if (ptr !=  NULL) {
       gl_append_ptr(result,(VOIDPTR)ptr);
-    } else {
+    }else{
       DestroyIndexList(result);
       return NULL;
     }
@@ -979,7 +979,7 @@ struct Instance *GetArrayHead(struct Instance *inst, CONST struct Name *name)
     pos=ChildSearch(inst,&rec);
     if (pos>0) {
       return InstanceChild(inst,pos);
-    } else {
+    }else{
       return NULL;
     }
   }
@@ -1031,7 +1031,7 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
       STATEMENT_ERROR(stat, "Index to array is of an incorrect type");
       DestroyValue(&value);
       return NULL;
-    } else {
+    }else{
       /* we are at last subscript of ALIASES/IS_A in for loop. */
       /* expand using rhslist pretending dense array. */
       setval = CreateSetFromList(value);
@@ -1103,7 +1103,7 @@ struct Instance *AddArrayChild(struct Instance *parentofary,
       name = NextName(name);
     }
     return ptr;
-  } else {
+  }else{
     return NULL;
   }
 }
@@ -1173,7 +1173,7 @@ struct Instance *MakeSparseArray(struct Instance *parent,
     aryinst = CreateArrayInstance(desc,1);
     LinkToParentByName(parent,aryinst,NameIdPtr(name));
     return AddArrayChild(parent,name,stat,rhsinst,arginst,rhslist);
-  } else {
+  }else{
     return NULL;
   }
 }
@@ -1229,7 +1229,7 @@ void MakeAliasInstance(CONST struct Name *name,
           /* case where we don't already have it at this scope */
           AddParent(inst,parent);
         }
-      } else{			/* redefining instance */
+      }else{			/* redefining instance */
         /* case of part already there and we barf */
         char *msg = ASC_NEW_ARRAY(char,SCLEN(childname)+strlen(REDEFINE_CHILD_MESG2)+1);
         strcpy(msg,REDEFINE_CHILD_MESG2);
@@ -1237,17 +1237,17 @@ void MakeAliasInstance(CONST struct Name *name,
         STATEMENT_ERROR(statement,msg);
         ascfree(msg);
       }
-    } else{			/* unknown child name */
+    }else{			/* unknown child name */
       /* case of part not expected */
       STATEMENT_ERROR(statement, "Unknown child name.  Never should happen");
       ASC_PANIC("Unknown child name.  Never should happen");
     }
-  } else{
+  }else{
     /* if reach the else, means compound identifier or garbage */
     indices = ArrayIndices(name,parent);
     if (rhsinst != NULL) {
       def = InstanceTypeDesc(rhsinst);
-    } else {
+    }else{
       def = (struct TypeDescription *)basedef;
     }
     if (indices!=NULL){ /* array of some sort */
@@ -1270,17 +1270,17 @@ void MakeAliasInstance(CONST struct Name *name,
             if (tce != 0) {
               SignalChildExpansionFailure(parent,pos);
             }
-          } else {
+          }else{
             STATEMENT_ERROR(statement, "Unable to create alias array instance");
             ASC_PANIC("Unable to create alias array instance");
           }
-        } else {
+        }else{
           DeleteTypeDesc(arydef);
           STATEMENT_ERROR(statement,
                "Unknown array child name. Never should happen");
           ASC_PANIC("Unknown array child name. Never should happen");
         }
-      } else {
+      }else{
         /* sparse array */
         DestroyIndexList(indices);
         if (pos>0) {
@@ -1290,19 +1290,19 @@ void MakeAliasInstance(CONST struct Name *name,
             (void)
             MakeSparseArray(parent,name,statement,def,
                             intset,rhsinst,NULL,rhslist);
-          } else {
+          }else{
             /* need to add alias array element */
             /* should check for NULL return here */
             (void) AddArrayChild(parent,name,statement,
                                  rhsinst,NULL,rhslist);
           }
-        } else {
+        }else{
           STATEMENT_ERROR(statement,
             "Unknown array child name. Never should happen");
           ASC_PANIC("Unknown array child name. Never should happen");
         }
       }
-    } else {
+    }else{
       /* bad child name. cannot create parts of parts. should never
        * happen, being trapped out in typelint.
        */
@@ -1440,7 +1440,7 @@ symchar *UniquifyString(char *s, struct set_t *strset)
     Asc_Panic(2, NULL,
               "Unable to generate unique compound alias subscript.\n");
 
-  } else {
+  }else{
     ascfree(s);
     return tmp;
   }
@@ -1528,7 +1528,7 @@ struct value_t ComputeArrayElements(struct Instance *inst,
         ptr->name.index = FetchIntMember(sip,c);
         gl_append_ptr(*rhslist,(VOIDPTR)ptr);
       }
-    } else {
+    }else{
       for (c = 1; c <= len; c++) {
         ptr = MALLOCPOOLAC;
         ptr->inst = gl_fetch(rhsinstlist,c);
@@ -1537,7 +1537,7 @@ struct value_t ComputeArrayElements(struct Instance *inst,
       }
     }
     return result;
-  } else {
+  }else{
     /* cook up the users list */
     asc_assert(GetEvaluationContext()==NULL);
     SetEvaluationContext(inst);
@@ -1609,7 +1609,7 @@ struct value_t ComputeArrayElements(struct Instance *inst,
         ptr->name.index = FetchIntMember(sip,c);
         gl_append_ptr(*rhslist,(VOIDPTR)ptr);
       }
-    } else {
+    }else{
       for (c = 1; c <= len; c++) {
         ptr = MALLOCPOOLAC;
         ptr->inst = gl_fetch(rhsinstlist,c);
@@ -1685,7 +1685,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
     if (ErrorValue(subsset) == undefined_value) {
       DestroyValue(&subsset);
       return 0;
-    } else {
+    }else{
       DestroyValue(&subsset);
       return 1;
     }
@@ -1708,7 +1708,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
     WSS(ASCERR,statement);
     /* should nuke entire compound ALIASES/IS_A array pair already built */
     return 1;
-  } else {
+  }else{
     setinst = (struct Instance *)gl_fetch(setinstl,1);
     gl_destroy(setinstl);
     AssignSetAtomList(setinst,CopySet(SetValue(subsset)));
@@ -1868,7 +1868,7 @@ int ArgValuesUnassigned(struct Instance *ipass)
     SilentVisitInstanceTree(ipass,CountUnassignedConst,0,0);
     if (g_unasscon_count != 0) {
       return 1;
-    } else {
+    }else{
       return 0;
     }
   case REAL_INST:
@@ -1967,7 +1967,7 @@ int ArrayElementsTypeCompatible(CONST struct Instance *ipass,
         /* set type mismatch */
         gl_destroy(achildren);
         return -1;
-      } else {
+      }else{
         /* assumption about arrays of sets being sane, if 1 element is. */
         gl_destroy(achildren);
         return 1;
@@ -2286,12 +2286,12 @@ int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
       if (BooleanValue(value) != FALSE) {
         DestroyValue(&value);
         return MPIOK;
-      } else {
+      }else{
         DestroyValue(&value);
         STATEMENT_ERROR(statement, "Arguments do not conform to requirements");
         return MPIBADREL;
       }
-    } else {
+    }else{
       DestroyValue(&value);
       STATEMENT_ERROR(statement, "Requirements cannot be satisfied by variables");
       return MPIVARREL;
@@ -2363,7 +2363,7 @@ int InsertParameterInst(struct Instance *parent,
         AddParent(child,parent);
       }
       return 1;
-    } else {			/* redefining instance */
+    }else{			/* redefining instance */
       char *msg = ASC_NEW_ARRAY(char,SCLEN(childname)+strlen(REDEFINE_CHILD_MESG)+1);
       strcpy(msg,REDEFINE_CHILD_MESG);
       strcat(msg,SCP(childname));
@@ -2371,7 +2371,7 @@ int InsertParameterInst(struct Instance *parent,
       ascfree(msg);
       return 0;
     }
-  } else {			/* unknown name */
+  }else{			/* unknown name */
     STATEMENT_ERROR(statement, "Unknown parameter name.  Never should happen");
     ASC_PANIC("Unknown parameter name.  Never should happen");
 
@@ -2433,7 +2433,7 @@ void mpierror(struct Set *argset,
   int arrloc;
   if (errcode<0) {
     arrloc = (-errcode);
-  } else {
+  }else{
     return;
     /* why are we here? */
   }
@@ -2459,7 +2459,7 @@ void MPIwum(struct Set *argset,
   }
   if (msgcode<0) {
     arrloc = (-msgcode);
-  } else {
+  }else{
     return;
     /* why are we here? */
   }
@@ -2499,7 +2499,7 @@ int MPIMakeSimple(struct Instance *parent,
     if (tverr == 1) { /* try later */
       MPIwum(argset,argn,statement,MPIUNASSD);
       return MPIWAIT;
-    } else { /* hopeless */
+    }else{ /* hopeless */
       mpierror(argset,argn,statement,MPIBADVAL);
       return MPIBADVAL;
     }
@@ -2738,7 +2738,7 @@ int MakeParameterInst(struct Instance *parent,
             ClearMPImem(args,NULL,tmpinst,NULL,NULL);
             return MPIWAIT;
           }
-        } else {
+        }else{
           /* arg must be scalar/set/MODEL */
           atype = InstanceTypeDesc(ipass);
           if (atype==ptype) {
@@ -2751,7 +2751,7 @@ int MakeParameterInst(struct Instance *parent,
                 return MPIARGTYPE;
               }
             }
-          } else {
+          }else{
             mrtype = MoreRefined(atype,ptype);
             if (mrtype==NULL) {
               mpierror(argset,argn,statement,MPIARGTYPE);
@@ -2809,7 +2809,7 @@ int MakeParameterInst(struct Instance *parent,
           ClearMPImem(args,NULL,tmpinst,NULL,NULL);
           return suberr;
         }
-      } else {
+      }else{
         /* check completedness, assignedness, base type of array-by-value
          * and copy. Note that what we copy may prove to be incompatible
          * later when we check the names of subscripts.
@@ -2959,7 +2959,7 @@ int MakeParameterInst(struct Instance *parent,
   ClearMPImem(args,NULL,NULL,NULL,NULL);
   if (keepargs == KEEPARGINST) {
     *arginstptr = tmpinst;
-  } else {
+  }else{
     DestroyParameterInst(tmpinst);
   }
   return MPIOK;
@@ -3002,7 +3002,7 @@ int MPICheckWBTS(struct Instance *tmpinst, struct Statement *statement)
           "WILL_BE_THE_SAME statement contains incompatible instances");
         gl_destroy(instances);
         return MPIBADWBTS;
-      } else {
+      }else{
         /* maybe merge later */
         WriteUnexecutedMessage(ASCERR,statement,
           "Unmerged instances in WILL_BE_THE_SAME");
@@ -3281,7 +3281,7 @@ CreateParameterPendings(struct Instance *tmpinst,
         /* arrays were connected already, but no subscript check */
         new->inst = GetArrayHead(tmpinst,NamePointer(GetStatVarList(new->s)));
         new->status = pp_ARR;
-      } else {
+      }else{
         /* scalar */
         ex = GetStatCheckValue(new->s);
         if (ex != NULL) {
@@ -3291,13 +3291,13 @@ CreateParameterPendings(struct Instance *tmpinst,
             new->status = pp_WV;
             new->inst =
               GetNamedInstance(NamePointer(GetStatVarList(new->s)),tmpinst);
-          } else {
+          }else{
             /* nothing further to check. done already */
             DestroyPPE(new);
             new = NULL;
           }
           gl_destroy(nlist);
-        } else {
+        }else{
           DestroyPPE(new);
           new = NULL;
         }
@@ -3308,7 +3308,7 @@ CreateParameterPendings(struct Instance *tmpinst,
         /* subscript check */
         new->inst = GetArrayHead(tmpinst,NamePointer(GetStatVarList(new->s)));
         new->status = pp_ARR;
-      } else {
+      }else{
         /* nothing further to check. assumed done already */
         DestroyPPE(new);
         new = NULL;
@@ -3339,7 +3339,7 @@ CreateParameterPendings(struct Instance *tmpinst,
         /* array needed and subscript check */
         new->status = pp_ISAARR;
         /* after construction, no check until fully assigned at end */
-      } else {
+      }else{
         /* simplename */
         new->status = pp_ISA;
       }
@@ -3407,13 +3407,13 @@ int DigestArguments(
             SCP(GetName(InstanceTypeDesc(tmpinst))));
           WriteStatement(ASCERR,pp->s,2);
           mpierror(NULL,0,statement,suberr);
-        } else {
+        }else{
           pp->inst =
             GetNamedInstance(NamePointer(GetStatVarList(pp->s)),tmpinst);
           if (pp->inst != NULL) {
             suberr = MPIOK;
             pp->status = pp_ASSC;
-          } else {
+          }else{
             suberr = MPIWEIRD;
             pp->status = pp_ERR;
             FPRINTF(ASCERR,"While executing (2) absorbed statement in %s:\n",
@@ -3446,7 +3446,7 @@ int DigestArguments(
               SCP(GetName(InstanceTypeDesc(tmpinst))));
             WriteStatement(ASCERR,pp->s,2);
             mpierror(NULL,0,statement,suberr);
-          } else {
+          }else{
             pp->inst =GetArrayHead(tmpinst,NamePointer(GetStatVarList(pp->s)));
             if (pp->inst == NULL) {
               suberr = MPIWEIRD;
@@ -3455,7 +3455,7 @@ int DigestArguments(
                 SCP(GetName(InstanceTypeDesc(tmpinst))));
               WriteStatement(ASCERR,pp->s,2);
               mpierror(NULL,0,statement,suberr);
-            } else {
+            }else{
               suberr = MPIOK;
               pp->status = pp_ASAR; /* needs assigning */
             }
@@ -3529,13 +3529,13 @@ int DigestArguments(
           pplast->next = pp->next;
           DestroyPPE(pp);
           pp = pplast->next; /* could be null */
-        } else {
+        }else{
           /* we're at the top */
           pphead = pp->next;
           DestroyPPE(pp);
           pp = pphead; /* could be null */
         }
-      } else {
+      }else{
         /* just advance the list, even if pperr. */
         pplast = pp;
         pp = pplast->next;
@@ -3789,7 +3789,7 @@ int CompareChildInsts(struct Instance *i1, struct Instance *i2,
   }
   if (IsArrayInstance(ch1)) {
     return CmpArrayInsts(ch1,ch2);
-  } else {
+  }else{
     return CmpAtomValues(ch1,ch2);
   }
 }
@@ -3868,7 +3868,7 @@ int CheckParamRefinement(struct Instance *parent,
         ASC_PANIC("arginst caught with alien child. Bye!");
       }
     }
-  } else {
+  }else{
     /* increased child list */
     for (c=1; c <= newlen; c++) {
       switch(ChildOrigin(aicl,c)) {
@@ -3956,18 +3956,18 @@ void MakeInstance(CONST struct Name *name,
       if (InstanceChild(parent,pos)==NULL){
         inst = MakeSimpleInstance(def,intset,statement,arginst);
         LinkToParentByPos(parent,inst,pos);
-      } else {			/* redefining instance */
+      }else{			/* redefining instance */
         char *msg = ASC_NEW_ARRAY(char,SCLEN(childname)+strlen(REDEFINE_CHILD_MESG)+1);
         strcpy(msg,REDEFINE_CHILD_MESG);
         strcat(msg,SCP(childname));
         STATEMENT_ERROR(statement,msg);
         ascfree(msg);
       }
-    } else {			/* unknown child name */
+    }else{			/* unknown child name */
       STATEMENT_ERROR(statement, "Unknown child name.  Never should happen");
       ASC_PANIC("Unknown child name.  Never should happen");
     }
-  } else {
+  }else{
     /* if reach the else, means compound identifier or garbage */
     indices = ArrayIndices(name,parent);
     if (indices!=NULL){ /* array of some sort */
@@ -3989,17 +3989,17 @@ void MakeInstance(CONST struct Name *name,
             if (tce != 0) {
               SignalChildExpansionFailure(parent,pos);
             }
-          } else {
+          }else{
             STATEMENT_ERROR(statement, "Unable to create array instance");
             ASC_PANIC("Unable to create array instance");
           }
-        } else {
+        }else{
           DeleteTypeDesc(arydef);
           STATEMENT_ERROR(statement,
                "Unknown array child name. Never should happen");
           ASC_PANIC("Unknown array child name. Never should happen");
         }
-      } else {
+      }else{
         DestroyIndexList(indices);
         if (pos>0) {
           if (InstanceChild(parent,pos)==NULL) {
@@ -4007,17 +4007,17 @@ void MakeInstance(CONST struct Name *name,
             (void) /* should check for NULL return here */
             MakeSparseArray(parent,name,statement,
                             def,intset,NULL,arginst,NULL);
-          } else {
+          }else{
             /* must add array element */ /* should check for NULL return here */
             (void)AddArrayChild(parent,name,statement,NULL,arginst,NULL);
           }
-        } else {
+        }else{
           STATEMENT_ERROR(statement,
             "Unknown array child name. Never should happen");
           ASC_PANIC("Unknown array child name. Never should happen");
         }
       }
-    } else {
+    }else{
       /* bad child name. cannot create parts of parts.  should never
        * happen, being trapped out in typelint.
        */
@@ -4059,7 +4059,7 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
         WriteUnexecutedMessage(ASCERR,statement,
           "Possibly undefined arguments in IS_A statement.");
         return 0;
-      } else {
+      }else{
         /* bogus args or definition. punt IS_A permanently. */
         MarkStatContext(statement,context_WRONG);
         WSS(ASCERR,statement);
@@ -4081,7 +4081,7 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
       DestroyParameterInst(arginst);
     }
     return 1;
-  } else{
+  }else{
     /*
      * Should never happen, due to lint.
      */
@@ -4123,14 +4123,14 @@ void MakeDummyInstance(CONST struct Name *name,
         inst = CreateDummyInstance(def);
       }
       LinkToParentByPos(parent,inst,pos);
-    } else {			/* redefining instance */
+    }else{			/* redefining instance */
       char *msg = ASC_NEW_ARRAY(char,SCLEN(childname) + strlen(REDEFINE_CHILD_MESG)+1);
       strcpy(msg,REDEFINE_CHILD_MESG);
       strcat(msg,SCP(childname));
       STATEMENT_ERROR(statement,msg);
       ascfree(msg);
     }
-  } else {			/* unknown child name */
+  }else{			/* unknown child name */
       STATEMENT_ERROR(statement, "Unknown child name.  Never should happen");
       ASC_PANIC("Unknown child name.  Never should happen");
   }
@@ -4157,7 +4157,7 @@ int ExecuteUnSelectedISA( struct Instance *inst, struct Statement *statement)
       vlist = NextVariableNode(vlist);
     }
     return 1;
-  } else{
+  }else{
     /*
      * Should never happen, due to lint.
      */
@@ -4306,7 +4306,7 @@ void MissingInsts(struct Instance *inst,
 			"Instance not found"
 		);
 		error_reporter_end_flush();
-      } else {
+      }else{
         gl_destroy(temp);
       }
       list = NextVariableNode(list);
@@ -4407,11 +4407,11 @@ int ListContainsParameterized(struct gl_list_t *list)
         if (TypeHasParameterizedInsts(d)!=0) {
           return 1;
         }
-      } else {
+      }else{
         FPRINTF(ASCERR,"NULL TypeDescription in ExecuteAA\n");
         return 1;
       }
-    } else {
+    }else{
       FPRINTF(ASCERR,"NULL instance in ExecuteAA\n");
       return 1;
     }
@@ -4452,7 +4452,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
           WriteUnexecutedMessage(ASCERR,statement,
             "Possibly undefined arguments in IS_REFINED_TO statement.");
           return 0;
-        } else {
+        }else{
           /* bogus args or definition. punt IRT permanently. */
           MarkStatContext(statement,context_WRONG);
           WSS(ASCERR,statement);
@@ -4520,7 +4520,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
       DestroyParameterInst(arginst);
       gl_destroy(instances);
       return 1;
-    } else {
+    }else{
       switch(err){
       case impossible_instance:
         STATEMENT_ERROR(statement,
@@ -4534,7 +4534,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
         return 0; /* statement is not ready to be executed */
       }
     }
-  } else {
+  }else{
     char *msg = ASC_NEW_ARRAY(char,strlen(IRT_UNDEFINED_TYPE)+SCLEN(GetStatType(statement))+1);
     strcpy(msg,IRT_UNDEFINED_TYPE);
     strcat(msg,SCP(GetStatType(statement)));
@@ -4556,7 +4556,7 @@ void RemoveDuplicates(struct gl_list_t *list)
   while(c<=gl_length(list)){
     if (ptr == gl_fetch(list,c)) {
       gl_delete(list,c,0);
-    } else {
+    }else{
       ptr = gl_fetch(list,c);
       c++;
     }
@@ -4619,13 +4619,13 @@ int ExecuteATS(struct Instance *inst, struct Statement *statement)
         }
         PostMergeCheck(inst1);
       }
-    } else {
+    }else{
       STATEMENT_ERROR(statement,
            "ARE_THE_SAME statement contains unconformable instances");
     }
     gl_destroy(instances);
     return 1;
-  } else {
+  }else{
     switch(err){
     case impossible_instance:
       MissingInsts(inst,GetStatVarList(statement),1);
@@ -4684,13 +4684,13 @@ int ExecuteAA(struct Instance *inst, struct Statement *statement)
           MergeCliques(inst1,inst2);
         }
       }
-    } else {
+    }else{
       STATEMENT_ERROR(statement,
                     "ARE_ALIKE statement contains unconformable instances");
     }
     gl_destroy(instances);
     return 1;
-  } else {
+  }else{
     switch(err){
     case impossible_instance:
       MissingInsts(inst,GetStatVarList(statement),1);
@@ -4732,10 +4732,10 @@ struct Instance *MakeRelationInstance(struct Name *name,
       child = CreateRelationInstance(def,type);	/* token, bbox relation so far */
       LinkToParentByPos(parent,child,pos);
       return child;
-    } else {
+    }else{
       return NULL;
     }
-  } else {				/* sparse array of relations */
+  }else{				/* sparse array of relations */
     childname = NameIdPtr(name);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,childname);
@@ -4744,12 +4744,12 @@ struct Instance *MakeRelationInstance(struct Name *name,
       if (InstanceChild(parent,pos)==NULL){
         /* must make array */
         child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
-      } else {
+      }else{
       	/* must add array element */
         child = AddArrayChild(parent,name,stat,NULL,NULL,NULL);
       }
       return child;
-    } else {
+    }else{
       return NULL;
     }
   }
@@ -4787,12 +4787,12 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
        /* print a better message here if needed. maybe an if!makeindices moan*/
         return 1;
       }
-    } else {
+    }else{
       /* undefined instances in the relation name, or out of memory */
       WSSM(ASCERR,statement, "Unable to execute relation label",3);
       return 1;
     }
-  } else {
+  }else{
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
       asc_assert((InstanceKind(child)==REL_INST)||(InstanceKind(child)==DUMMY_INST));
@@ -4806,7 +4806,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
 #ifdef DEBUG_RELS
       STATEMENT_ERROR(statement, "REL_INST found in compiling relation.");
 #endif
-    } else {
+    }else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);	/* bizarre! */
       return 1;
@@ -4836,7 +4836,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
       STATEMENT_NOTE(statement, "Created relation.");
 #endif
       return 1;
-    } else {
+    }else{
       SetInstanceRelation(child,NULL,e_token);
       switch(err){
       case incorrect_structure:
@@ -4890,7 +4890,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
 #ifdef DEBUG_RELS
     STATEMENT_NOTE(statement, "   Failed relation -- unexpected scenario.");
 #endif
-  } else{
+  }else{
     /*  Do nothing, somebody already completed the relation.  */
 #ifdef DEBUG_RELS
         STATEMENT_NOTE(statement, "Already compiled in compiling relation?!.");
@@ -4935,7 +4935,7 @@ void MarkREL(struct Instance *inst, struct Statement *statement)
         return ;
       }
       SetRelationIsCond(reln);
-    } else{         /* expression name refers to more than one object */
+    }else{         /* expression name refers to more than one object */
       gl_destroy(instances);
       return;
     }
@@ -4990,7 +4990,7 @@ void MarkLOGREL(struct Instance *inst, struct Statement *statement)
         return;
       }
       SetLogRelIsCond(lreln);
-    } else{          /* expression name refers to more than one object */
+    }else{          /* expression name refers to more than one object */
       gl_destroy(instances);
       return;
     }
@@ -5029,12 +5029,12 @@ int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
   /* see if the relation is there already */
   if (instances==NULL) {
     MakeDummyInstance(name,FindDummyType(),inst,statement);
-  } else {
+  }else{
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
       asc_assert(InstanceKind(child)==DUMMY_INST);
       gl_destroy(instances);
-    } else{
+    }else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
       ASC_PANIC("Expression name refers to more than one object");
@@ -5069,21 +5069,21 @@ struct Instance *MakeLogRelInstance(struct Name *name,
       child = CreateLogRelInstance(def);
       LinkToParentByPos(parent,child,pos);
       return child;
-    } else {
+    }else{
       return NULL;
     }
-  } else {				/* sparse array of logical relations */
+  }else{				/* sparse array of logical relations */
     childname = NameIdPtr(name);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,childname);
     if(0 != (pos = ChildSearch(parent,&rec))){
       if (InstanceChild(parent,pos)==NULL){ /* need to make array */
         child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
-      } else {			/* need to add array element */
+      }else{			/* need to add array element */
         child = AddArrayChild(parent,name,stat,NULL,NULL,NULL);
       }
       return child;
-    } else {
+    }else{
       return NULL;
     }
   }
@@ -5125,7 +5125,7 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
       if (InstanceKind(child)==DUMMY_INST) {
         return 1;
       }
-    } else{
+    }else{
       WUEMPASS3(ASCERR,statement,
                            "Expression name refers to more than one object");
       gl_destroy(instances);
@@ -5140,11 +5140,12 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
     /*    if ( (g_instantiate_relns & TOKRELS) ==0) {
       return 1;
     }  */
-    if ((lreln = CreateLogicalRelation(inst,child,
-                            LogicalRelStatExpr(statement),&err,&ferr))!=NULL){
+    if((lreln = CreateLogicalRelation(inst,child,
+                            LogicalRelStatExpr(statement),&err,&ferr))!=NULL
+    ){
       SetInstanceLogRel(child,lreln);
       return 1;
-    } else {
+    }else{
       SetInstanceLogRel(child,NULL);
       switch(err){
       case incorrect_logstructure:
@@ -5199,7 +5200,7 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
 
       }
     }
-  } else{
+  }else{
     /* do nothing. someone already completed the logrelation */
     return 1;
   }
@@ -5333,7 +5334,7 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
   }
   if ( executeStatus ) {
     return 1;
-  } else{
+  }else{
     return 0;
   }
 }
@@ -5546,12 +5547,12 @@ int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struc
        /* print a better message here if needed. maybe an if!makeindices moan*/
         return 1;
       }
-    } else {
+    }else{
       /* undefined instances in the relation name, or out of memory */
       WSSM(ASCERR,statement, "Unable to execute blackbox label",3);
       return 1;
     }
-  } else {
+  }else{
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
       asc_assert((InstanceKind(child)==REL_INST) || (InstanceKind(child)==DUMMY_INST));
@@ -5565,7 +5566,7 @@ int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struc
 #ifdef DEBUG_RELS
       STATEMENT_ERROR(statement, "REL_INST found in compiling blackbox.");
 #endif
-    } else {
+    }else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);	/* bizarre! */
       return 1;
@@ -5596,7 +5597,7 @@ int ExecuteBBOXElement(struct Instance *inst, struct Statement *statement, struc
     STATEMENT_NOTE(statement, "Created bbox relation.");
 #endif
     return 1;
-  } else{
+  }else{
     /*  Do nothing, somebody already completed the relation.  */
 #ifdef DEBUG_RELS
         STATEMENT_NOTE(statement, "Already compiled element in blackbox?!.");
@@ -5652,7 +5653,7 @@ struct gl_list_t *CheckGlassBoxArgs(struct Instance *inst,
         gl_append_ptr(varlist,(VOIDPTR)var);
       }
       gl_destroy(tmp);
-    } else {			/* ferr will be already be set */
+    }else{			/* ferr will be already be set */
       error++;
       goto cleanup;
     }
@@ -5664,9 +5665,9 @@ struct gl_list_t *CheckGlassBoxArgs(struct Instance *inst,
   if (error) {
     gl_destroy(varlist);
     return NULL;
-  }
-  else
+  }else{
     return varlist;
+  }
 }
 
 static
@@ -5702,8 +5703,7 @@ int CheckGlassBoxIndex(struct Instance *inst,
     result = iresult; /* range errror possible. */
     *err = okay;
     return result;
-  }
-  else{
+  }else{
     *err = incorrect_structure;		/* we really need to expand */
     return -1;				/* the relation_error types. !! */
   }
@@ -5746,19 +5746,16 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
         STATEMENT_ERROR(statement, "Unable to create expression structure");
         return 1;
       }
-    }
-    else {
+    }else{
       STATEMENT_ERROR(statement, "Unable to execute expression");
       return 1;
     }
-  }
-  else{
+  }else{
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
       ASC_ASSERT_EQ(InstanceKind(child), REL_INST);
       gl_destroy(instances);
-    }
-    else{
+    }else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
       return 1;
@@ -5956,13 +5953,13 @@ int AssignStructuralValue(struct Instance *inst,
          ) {
         ReAssignmentError(SCP(GetBaseTypeName(real_constant_type)),statement);
         return 0;
-      } else {
+      }else{
         if (!AtomAssigned(inst)) {
           if ( !IsWild(RealAtomDims(inst)) &&
                !SameDimen(RealValueDimensions(value),RealAtomDims(inst)) ) {
             STATEMENT_ERROR(statement, "Dimensionally inconsistent assignment");
             return 0;
-          } else {
+          }else{
       	    if (IsWild(RealAtomDims(inst))) {
               SetRealAtomDims(inst,RealValueDimensions(value));
             }
@@ -5980,13 +5977,13 @@ int AssignStructuralValue(struct Instance *inst,
         ReAssignmentError(SCP(GetBaseTypeName(real_constant_type)),
                           statement);
         return 0;
-      } else {
+      }else{
         if (!AtomAssigned(inst)) {
           if ( !IsWild(RealAtomDims(inst)) &&
                !SameDimen(Dimensionless(),RealAtomDims(inst)) ) {
             STATEMENT_ERROR(statement, "Dimensionally inconsistent assignment");
             return 0;
-          } else {
+          }else{
       	    if (IsWild(RealAtomDims(inst))) {
               SetRealAtomDims(inst,Dimensionless());
             }
@@ -6006,13 +6003,13 @@ int AssignStructuralValue(struct Instance *inst,
       STATEMENT_ERROR(statement,
       "Attempt to assign a non-boolean value to a boolean instance");
       return 0;
-    } else {
+    }else{
       if ( AtomAssigned(inst) &&
            BooleanValue(value) != GetBooleanAtomValue(inst) ) {
         ReAssignmentError(SCP(GetBaseTypeName(boolean_constant_type)),
                           statement);
         return 0;
-      } else {
+      }else{
         if (!AtomAssigned(inst)) {
           SetBooleanAtomValue(inst,BooleanValue(value),0);
         }
@@ -6027,7 +6024,7 @@ int AssignStructuralValue(struct Instance *inst,
         ReAssignmentError(SCP(GetBaseTypeName(integer_constant_type)),
                           statement);
         return 0;
-      } else {
+      }else{
         if (!AtomAssigned(inst)) {
           SetIntegerAtomValue(inst,IntegerValue(value),0);
         }
@@ -6037,7 +6034,7 @@ int AssignStructuralValue(struct Instance *inst,
       if ( RealValue(value)==0.0 && IsWild(RealValueDimensions(value)) ) {
         if (!AtomAssigned(inst)) {
           SetIntegerAtomValue(inst,(long)0,0);
-        } else{
+        }else{
           if (AtomAssigned(inst) && (GetIntegerAtomValue(inst)!=0)) {
             ReAssignmentError(SCP(GetBaseTypeName(integer_constant_type)),
                               statement);
@@ -6060,7 +6057,7 @@ int AssignStructuralValue(struct Instance *inst,
         ReAssignmentError(SCP(GetBaseTypeName(set_type)),
                           statement);
         return 0;
-      } else{
+      }else{
         if(!AtomAssigned(inst)) {
           struct set_t *cslist;
           cslist = CopySet(SetValue(value));
@@ -6072,7 +6069,7 @@ int AssignStructuralValue(struct Instance *inst,
         /* quietly ignore benign reassignment */
       }
       return 1;
-    } else {
+    }else{
       STATEMENT_ERROR(statement,
            "Attempt to assign a non-set value to a set instance");
       return 0;
@@ -6085,13 +6082,13 @@ int AssignStructuralValue(struct Instance *inst,
         ReAssignmentError(SCP(GetBaseTypeName(symbol_constant_type)),
                           statement);
         return 0;
-      } else{
+      }else{
         if (!AtomAssigned(inst)) {
           SetSymbolAtomValue(inst,SymbolValue(value));
         }
       }
       return 1;
-    } else {
+    }else{
       STATEMENT_ERROR(statement,
               "Attempt to assign a non-symbol value to a symbol instance");
     }
@@ -6160,7 +6157,7 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
           WSS(ASCERR,statement);
         }
         return rval;
-      } else {
+      }else{
         gl_destroy(instances);
         SetDeclarativeContext(previous_context);
         StructuralAsgnErrorReport(statement,&value);
@@ -6169,7 +6166,7 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
         WSS(ASCERR,statement);
         return 1;
       }
-    } else {
+    }else{
       /* good rhs value, but may be mismatched to set ATOM */
       len = gl_length(instances);
       for(c=1;c<=len;c++){
@@ -6185,7 +6182,7 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
       SetDeclarativeContext(previous_context);
       return 1;
     }
-  } else {
+  }else{
     switch(err){
     case impossible_instance:
       STATEMENT_ERROR(statement, "Left hand side of assignment statement"
@@ -6349,7 +6346,7 @@ int FailsCompoundArrayCheck(struct Instance *inst,
       if (ok == 0 ) {
         return 1;
       }
-    } else {
+    }else{
       return 1;
     }
     name = NextName(name);
@@ -6402,7 +6399,7 @@ int FailsIndexCheck(CONST struct Name *name, struct Statement *statement,
       }
       name = NextName(name);
     }
-  } else {
+  }else{
     asc_assert(statement!=NULL);
     if (arrsetname == NULL) {
       /* sparse IS_A or ALIASES but not ALIASES/IS_A */
@@ -6410,10 +6407,10 @@ int FailsIndexCheck(CONST struct Name *name, struct Statement *statement,
       if (indices != NULL) {
         DestroyIndexList(indices);
         return 0;
-      } else {
+      }else{
         return 1;
       }
-    } else {
+    }else{
       /* sparse or dense ALIASES-IS_A where we have to handle a
        * special name we
        * can't tell the value of yet because the IS_A hasn't been
@@ -6617,7 +6614,7 @@ int CheckVarList(struct Instance *inst, struct Statement *statement)
   instances = VerifyInsts(inst,GetStatVarList(statement),&err);
   if (instances){
     return 1;
-  } else {
+  }else{
     switch(err){
     case impossible_instance: return 1;
     default: return 0;
@@ -6676,7 +6673,7 @@ int CheckCASGN(struct Instance *inst, struct Statement *statement)
     }
     DestroyValue(&value);
     return 1;			/* everything is okay */
-  } else {
+  }else{
     switch(err){
     case impossible_instance: return 1;
     default:
@@ -6738,8 +6735,7 @@ int CheckRelName(struct Instance *work, struct Name *name)
   instances = FindInstances(work,name,&ferr);
   if (instances==NULL){
     return 1;
-  }
-  else{
+  }else{
     if (gl_length(instances)==1){
       inst = (struct Instance *)gl_fetch(instances,1);
       asc_assert((InstanceKind(inst)==REL_INST) || (InstanceKind(inst)==DUMMY_INST));
@@ -6748,8 +6744,7 @@ int CheckRelName(struct Instance *work, struct Name *name)
         return -1;
       }
       return 1;
-    }
-    else {
+    }else{
       gl_destroy(instances);
       return 0;
     }
@@ -6811,8 +6806,7 @@ int CheckLogRelName(struct Instance *work, struct Name *name)
   instances = FindInstances(work,name,&ferr);
   if (instances==NULL){
     return 1;
-  }
-  else{
+  }else{
     if (gl_length(instances)==1){
       inst = (struct Instance *)gl_fetch(instances,1);
       asc_assert((InstanceKind(inst)==LREL_INST) || (InstanceKind(inst)==DUMMY_INST));
@@ -6821,8 +6815,7 @@ int CheckLogRelName(struct Instance *work, struct Name *name)
         return -1;
       }
       return 1;
-    }
-    else {
+    }else {
       gl_destroy(instances);
       return 0;
     }
@@ -6900,8 +6893,7 @@ int CheckRelModName(struct Instance *work, struct Name *name)
 	);
     gl_destroy(instances);
     return 0;
-  }
-  else{
+  }else{
     if (gl_length(instances)==1){
      inst = (struct Instance *)gl_fetch(instances,1);
      switch (InstanceKind(inst)) {
@@ -6929,8 +6921,7 @@ int CheckRelModName(struct Instance *work, struct Name *name)
        gl_destroy(instances);
        return 0;
      }
-    }
-    else {
+    }else{
     instantiation_name_error(ASC_USER_ERROR,name
 		,"Error in 'WHEN'. Name assigned to more than one instance type"
 	);
@@ -6946,12 +6937,12 @@ int CheckRelModName(struct Instance *work, struct Name *name)
 	were already created
 */
 static
-int CheckFNAME(struct Instance *inst, struct Statement *statement)
-{
-  if (!CheckRelModName(inst,FnameStat(statement)))
+int CheckFNAME(struct Instance *inst, struct Statement *statement){
+  if(!CheckRelModName(inst,FnameStat(statement))){
     return 0;
-  else
+  }else{
     return 1;
+  }
 }
 
 /**
@@ -7092,8 +7083,7 @@ int CheckWhenName(struct Instance *work, struct Name *name)
   instances = FindInstances(work,name,&ferr);
   if (instances==NULL){
     return 1;
-  }
-  else{
+  }else{
     if (gl_length(instances)==1){
       inst = (struct Instance *)gl_fetch(instances,1);
       asc_assert((InstanceKind(inst)==WHEN_INST)||(InstanceKind(inst)==DUMMY_INST) );
@@ -7102,8 +7092,7 @@ int CheckWhenName(struct Instance *work, struct Name *name)
         return -1;
       }
       return 1;
-    }
-    else {
+    }else {
       gl_destroy(instances);
       return 0;
     }
@@ -7154,7 +7143,7 @@ int CheckWhenSetNode(struct Instance *ref, CONST struct Expr *expr,
   case e_boolean:
     if (ExprBValue(expr)==2) {
       *p2 = 3;  /*  ANY */
-    } else {
+    }else{
       *p2=1;
     }
     return 1;
@@ -7171,13 +7160,11 @@ int CheckWhenSetNode(struct Instance *ref, CONST struct Expr *expr,
       if (GetForKind(fvp)==f_integer){
         *p2=0;
         return 1;
-      }
-      else {
+      }else{
         if (GetForKind(fvp)==f_symbol){
           *p2=2;
           return 1;
-        }
-        else {
+        }else{
 	  	  instantiation_name_error(ASC_USER_ERROR,ExprName(expr)
 			,"Inappropriate index in the list of values of a CASE in a 'WHEN'\n"
 			"(only symbols or integers are allowed)"
@@ -7185,8 +7172,7 @@ int CheckWhenSetNode(struct Instance *ref, CONST struct Expr *expr,
 	  return 0;
 	}
       }
-    }
-    else {
+    }else{
 		instantiation_name_error(ASC_USER_ERROR,ExprName(expr),
 			"Inappropriate value type in the list of values of a CASE of a 'WHEN'\n"
 			"(index has not been created)"
@@ -7263,7 +7249,7 @@ int CheckWhenVariableNode(struct Instance *ref,
       WriteName(ASCERR,name);
       return 0;
     }
-  } else {
+  }else{
     if (gl_length(instances)==1) {
       inst = (struct Instance *)gl_fetch(instances,1);
       gl_destroy(instances);
@@ -7275,7 +7261,7 @@ int CheckWhenVariableNode(struct Instance *ref,
         if (AtomAssigned(inst)) {
           *p1=1;
           return 1;
-        } else {
+        }else{
           FPRINTF(ASCERR,"Undefined constant in the list of %s\n",
 	          "variables of a WHEN statement");
           WriteName(ASCERR,name);
@@ -7288,7 +7274,7 @@ int CheckWhenVariableNode(struct Instance *ref,
         if (AtomAssigned(inst)) {
            *p1=0;
            return 1;
-        } else {
+        }else{
           FPRINTF(ASCERR,"Undefined constant in the list of %s\n",
 	          "variables of a WHEN statement");
           WriteName(ASCERR,name);
@@ -7301,7 +7287,7 @@ int CheckWhenVariableNode(struct Instance *ref,
         if (AtomAssigned(inst)) {
           *p1=2;
           return 1;
-        } else {
+        }else{
           FPRINTF(ASCERR,"Undefined constant in the list of %s\n",
 	          "variables of a WHEN statement");
           WriteName(ASCERR,name);
@@ -7314,7 +7300,7 @@ int CheckWhenVariableNode(struct Instance *ref,
         WriteName(ASCERR,name);
 	return 0;
       }
-    } else {
+    }else{
       gl_destroy(instances);
       FPRINTF(ASCERR,"Inappropriate instance in the list of %s\n",
 	      "variables of a WHEN statement");
@@ -7505,8 +7491,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
 		 " the following statement will not be executed: \n");
 	    return 0;
 	  }
-      }
-      else {
+      }else{
           numother++;
           if (numother>1) {
             FPRINTF(ASCERR,"More than one default case in a WHEN\n");
@@ -7629,7 +7614,7 @@ int CheckSelectSetNode(struct Instance *ref, CONST struct Expr *expr,
     case e_boolean:
       if (ExprBValue(expr)==2) {
        *p2 = 3;  /*  ANY */
-      } else {
+      }else{
        *p2=1;
       }
        return 1;
@@ -7646,16 +7631,16 @@ int CheckSelectSetNode(struct Instance *ref, CONST struct Expr *expr,
         if (GetForKind(fvp)==f_integer){
           *p2=0;
           return 1;
-        }
-        else {
-          if (GetForKind(fvp)==f_symbol){
+        }else{
+          if(GetForKind(fvp)==f_symbol){
             *p2=2;
             return 1;
           }
-          else return 0;
+          return 0;
         }
+      }else{
+        return 0;
       }
-      else return 0;
     case e_set:
       set = expr->v.s;
       if (set->range) {
@@ -7714,8 +7699,7 @@ int CheckSelectVariableNode(struct Instance *ref,
     default:
       return 0;
     }
-  }
-  else{
+  }else{
     if (gl_length(instances)==1) {
       inst = (struct Instance *)gl_fetch(instances,1);
       gl_destroy(instances);
@@ -7724,31 +7708,27 @@ int CheckSelectVariableNode(struct Instance *ref,
           if (AtomAssigned(inst)) {
             *p1 = 1;
             return 1;
-          }
-          else {
+          }else{
             return 0;
           }
         case INTEGER_CONSTANT_INST:
           if (AtomAssigned(inst)) {
             *p1 = 0;
             return 1;
-          }
-          else {
+          }else{
             return 0;
           }
         case SYMBOL_CONSTANT_INST:
           if (AtomAssigned(inst)) {
             *p1 = 2;
             return 1;
-          }
-          else {
+          }else{
             return 0;
           }
         default:
           return 0;
       }
-    }
-    else {
+    }else{
       gl_destroy(instances);
       return 0;
     }
@@ -7833,8 +7813,7 @@ int CheckSELECT(struct Instance *inst, struct Statement *statement)
       p1 = &vl[0];
       p2 = &casel[0];
       if (!CompListInArray(numsvar,p1,p2)) return 0;
-    }
-    else {
+    }else{
       numother++;
       if (numother>1) return 0;
     }
@@ -8178,10 +8157,9 @@ int Pass3ExecuteCondStatements(struct Instance *inst,
     case LOGREL:
       return ExecuteLOGREL(inst,statement);
     case FOR:
-      if ( ForContainsLogRelations(statement) ) {
-      return Pass3ExecuteFOR(inst,statement);
-      }
-      else {
+      if ( ForContainsLogRelations(statement) ) { 
+        return Pass3ExecuteFOR(inst,statement);
+      }else{
         return 1;
       }
     case EXT:
@@ -8225,8 +8203,7 @@ int Pass3ExecuteCOND(struct Instance *inst, struct Statement *statement)
 
   if (Pass3RealExecuteCOND(inst,statement)) {
     return_value = 1;
-  }
-  else{
+  }else{
     return_value = 0;
   }
   Pass3MarkCondLogRelStat(inst,statement);
@@ -8395,8 +8372,7 @@ int Pass2ExecuteCOND(struct Instance *inst, struct Statement *statement)
 
   if (Pass2RealExecuteCOND(inst,statement)) {
     return_value = 1;
-  }
-  else{
+  }else{
     return_value = 0;
   }
   Pass2MarkCondRelStat(inst,statement);
@@ -8479,8 +8455,7 @@ struct gl_list_t *MakeWhenVarList(struct Instance *inst,
     instances = FindInstances(inst,name,&err);
     if (instances == NULL){
       ASC_PANIC("Instance not found in MakeWhenVarList \n");
-    }
-    else{
+    }else{
       if (gl_length(instances)==1) {
         var = (struct Instance *)gl_fetch(instances,1);
         gl_destroy(instances);
@@ -8498,8 +8473,7 @@ struct gl_list_t *MakeWhenVarList(struct Instance *inst,
             Asc_Panic(2, NULL,
                       "Incorrect instance type in MakeWhenVarList \n");
         }
-      }
-      else {
+      }else{
         gl_destroy(instances);
         Asc_Panic(2, NULL,
                   "Variable name assigned to more than one instance \n");
@@ -8582,7 +8556,7 @@ void MakeWhenReference(struct Instance *ref,
     Asc_Panic(2, NULL,
               "Name of an unmade instance (Relation-Model)"
               " inside a WHEN statement \n");
-  } else {
+  }else{
     if (gl_length(instances)==1){
       inst = (struct Instance *)gl_fetch(instances,1);
       gl_destroy(instances);
@@ -8621,7 +8595,7 @@ void MakeWhenReference(struct Instance *ref,
                     "Incorrect instance name inside a WHEN statement\n");
           break;
       }
-    } else {
+    }else{
       gl_destroy(instances);
       WriteName(ASCERR,name);
       Asc_Panic(2, NULL,
@@ -8739,21 +8713,21 @@ struct Instance *MakeWhenInstance(struct Instance *parent,
       child = CreateWhenInstance(desc);
       LinkToParentByPos(parent,child,pos);
       return child;
+    }else{
+      return NULL;
     }
-    else return NULL;
-  } else{				/* sparse array of when */
+  }else{				/* sparse array of when */
     when_name = NameIdPtr(name);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,when_name);
     if(0 != (pos = ChildSearch(parent,&rec))){
       if (InstanceChild(parent,pos)==NULL){ /* need to make array */
         child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
-      } else {			/* need to add array element */
+      }else{			/* need to add array element */
         child = AddArrayChild(parent,name,stat,NULL,NULL,NULL);
       }
       return child;
-    }
-    else {
+    }else{
       return NULL;
     }
   }
@@ -8856,7 +8830,7 @@ void RealExecuteWHEN(struct Instance *inst, struct Statement *statement)
       STATEMENT_ERROR(statement,"Unable to execute statement");
       ASC_PANIC("Unable to execute statement");
     }  */
-  } else {
+  }else{
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
       asc_assert((InstanceKind(child)==WHEN_INST) || (InstanceKind(child)==DUMMY_INST));
@@ -8864,7 +8838,7 @@ void RealExecuteWHEN(struct Instance *inst, struct Statement *statement)
       if (InstanceKind(child)==DUMMY_INST) {
         return;
       }
-    } else{
+    }else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
       ASC_PANIC("Expression name refers to more than one object");
@@ -8894,8 +8868,7 @@ int ExecuteWHEN(struct Instance *inst, struct Statement *statement)
   if (CheckWHEN(inst,statement)){
     RealExecuteWHEN(inst,statement);
     return 1;
-  }
-  else{
+  }else{
     return 0;
   }
 }
@@ -8959,13 +8932,12 @@ int ExecuteUnSelectedWHEN(struct Instance *inst, struct Statement *statement)
   if (instances==NULL) {
     def = FindDummyType();
     MakeDummyInstance(wname,def,inst,statement);
-  }
-  else {
+  }else{
     if(gl_length(instances)==1){
       child = (struct Instance *)gl_fetch(instances,1);
       asc_assert(InstanceKind(child)==DUMMY_INST);
       gl_destroy(instances);
-    } else{
+    }else{
       STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
       ASC_PANIC("Expression name refers to more than one object");
@@ -9271,17 +9243,14 @@ void RealExecuteSELECT(struct Instance *inst, unsigned long *c,
         case_match = AnalyzeSelectCase(inst,vlist,set);
         if (case_match==1) {
           ExecuteSelectStatements(inst,c,sl);
-        }
-        else {
+        }else{
           ExecuteUnSelectedStatements(inst,c,sl);
         }
-      }
-      else {
+      }else{
         ExecuteSelectStatements(inst,c,sl);
         case_match = 1;
       }
-    }
-    else {
+    }else{
       ExecuteUnSelectedStatements(inst,c,sl);
     }
     sel1 = NextSelectCase(sel1);
@@ -9315,8 +9284,7 @@ int ExecuteSELECT(struct Instance *inst, unsigned long *c,
     ClearBit(blist,*c);
     RealExecuteSELECT(inst,c,statement);
     return 1;
-  }
-  else{
+  }else{
     tmp = SelectStatNumberStats(statement);
     *c = (*c) + tmp;
     return 0;
@@ -9404,8 +9372,7 @@ void SetBitsOnOfSELECTStats(struct Instance *inst, unsigned long *count,
           case SELECT:
             if (SelectContainsRelations(s)) {
               ReEvaluateSELECT(inst,count,s,pass,changed);
-            }
-            else {
+            }else{
               *count = *count + SelectStatNumberStats(s);
             }
             break;
@@ -9434,8 +9401,7 @@ void SetBitsOnOfSELECTStats(struct Instance *inst, unsigned long *count,
           case SELECT:
             if (SelectContainsLogRelations(s)) {
               ReEvaluateSELECT(inst,count,s,pass,changed);
-            }
-            else {
+            }else{
               *count = *count + SelectStatNumberStats(s);
             }
             break;
@@ -9458,8 +9424,7 @@ void SetBitsOnOfSELECTStats(struct Instance *inst, unsigned long *count,
           case SELECT:
             if (SelectContainsWhen(s)) {
               ReEvaluateSELECT(inst,count,s,pass,changed);
-            }
-            else {
+            }else{
               *count = *count + SelectStatNumberStats(s);
             }
             break;
@@ -9507,17 +9472,14 @@ void SetBitOfSELECTStat(struct Instance *inst, unsigned long *c,
         case_match = AnalyzeSelectCase(inst,vlist,set);
         if (case_match==1) {
           SetBitsOnOfSELECTStats(inst,c,sl,pass,changed);
-        }
-        else {
+        }else{
           JumpSELECTStats(c,sl);
         }
-      }
-      else {
+      }else{
         SetBitsOnOfSELECTStats(inst,c,sl,pass,changed);
         case_match = 1;
       }
-    }
-    else {
+    }else{
       JumpSELECTStats(c,sl);
     }
     sel1 = NextSelectCase(sel1);
@@ -9548,8 +9510,7 @@ void ReEvaluateSELECT(struct Instance *inst, unsigned long *c,
   blist = InstanceBitList(inst);
   if (CheckSELECT(inst,statement)){
     SetBitOfSELECTStat(inst,c,statement,pass,changed);
-  }
-  else{
+  }else{
     tmp = SelectStatNumberStats(statement);
     *c = (*c) + tmp;
   }
@@ -9633,17 +9594,14 @@ void ExecuteDefaultsInSELECTStat(struct Instance *inst, unsigned long *c,
         case_match = AnalyzeSelectCase(inst,vlist,set);
         if (case_match==1) {
           ExecuteDefaultsInSELECTCase(inst,c,sl,depth);
-        }
-        else {
+        }else{
           JumpSELECTStats(c,sl);
         }
-      }
-      else {
+      }else{
         ExecuteDefaultsInSELECTCase(inst,c,sl,depth);
         case_match = 1;
       }
-    }
-    else {
+    }else{
       JumpSELECTStats(c,sl);
     }
     sel1 = NextSelectCase(sel1);
@@ -9672,8 +9630,7 @@ void ExecuteDefaultsInSELECT(struct Instance *inst, unsigned long *c,
 
   if (CheckSELECT(inst,statement)){
     ExecuteDefaultsInSELECTStat(inst,c,statement,depth);
-  }
-  else{
+  }else{
     tmp = SelectStatNumberStats(statement);
     *c = (*c) + tmp;
   }
@@ -9824,8 +9781,7 @@ int Pass3ExecuteForStatements(struct Instance *inst,
     case LOGREL:
       if (ExecuteLOGREL(inst,statement)) {
         return_value = 1;
-      }
-      else {
+      }else{
         return_value = 0;
       }
       break;
@@ -10768,8 +10724,7 @@ int Pass4RealCheckFOR (struct Instance *inst, struct Statement *statement)
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 1;
-  }
-  else {
+  }else{
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 0;
@@ -10866,7 +10821,7 @@ int Pass3RealCheckFOR (struct Instance *inst, struct Statement *statement)
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 1;
-  } else {
+  }else{
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 0;
@@ -10965,8 +10920,7 @@ int Pass2RealCheckFOR (struct Instance *inst, struct Statement *statement)
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 1;
-  }
-  else {
+  }else{
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 0;
@@ -11064,7 +11018,7 @@ int Pass1RealCheckFOR(struct Instance *inst, struct Statement *statement)
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 1;
-  } else {
+  }else{
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 0;
@@ -11083,8 +11037,7 @@ int Pass4ExecuteFOR(struct Instance *inst, struct Statement *statement)
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 1;
-  }
-  else{
+  }else{
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 0;
@@ -11116,8 +11069,7 @@ int Pass3ExecuteFOR(struct Instance *inst, struct Statement *statement)
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 1;
-  }
-  else{
+  }else{
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 0;
@@ -11140,8 +11092,7 @@ int Pass2ExecuteFOR(struct Instance *inst, struct Statement *statement)
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 1;
-  }
-  else{
+  }else{
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 0;
@@ -11159,7 +11110,7 @@ int Pass1ExecuteFOR(struct Instance *inst, struct Statement *statement)
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 1;
-  } else{
+  }else{
     DestroyForTable(GetEvaluationForTable());
     SetEvaluationForTable(SavedForTable);
     return 0;
@@ -11445,7 +11396,7 @@ void Pass4ProcessPendingInstances(void)
       if (work!=NULL) {
         inst = PendingInstance(work);
         blist = InstanceBitList(inst);
-      } else {
+      }else{
         blist = NULL;   /* this shouldn't be necessary, but is */
 		inst = NULL;
       }
@@ -11455,22 +11406,21 @@ void Pass4ProcessPendingInstances(void)
         /* we do away with TryArrayExpansion because it doesn't do whens */
         if (BitListEmpty(blist)) {
           /*
-	   * delete PENDING model.
-	   */
-	  RemoveInstance(PendingInstance(work));
-        } else {
-	  /*
-	   * bitlist is still unhappy, but there's nothing to do about it.
+		   * delete PENDING model.
+		   */
+          RemoveInstance(PendingInstance(work));
+        }else{
+		  /*
+		   * bitlist is still unhappy, but there's nothing to do about it.
            * Move the instance to the bottom and increase the counter
-	   * so that we do not visit it again.
-	   */
+		   * so that we do not visit it again.
+		   */
           if (work == TopEntry()) {
             MoveToBottom(work);
-	  }
+          }
           c++;
         }
-      }
-      else{
+      }else{
         /* We do not attempt to expand non-when arrays in pass4. */
       }
     }
@@ -11508,7 +11458,7 @@ void Pass3ProcessPendingInstances(void)
         inst = PendingInstance(work);
         /* WriteInstanceName(stderr,inst,NULL); FPRINTF(stderr,"\n"); */
         blist = InstanceBitList(inst);
-      } else {
+      }else{
         blist = NULL; /* this shouldn't be necessary, but is */
         inst = NULL;
       }
@@ -11534,14 +11484,13 @@ void Pass3ProcessPendingInstances(void)
 #if (PASS3MAXNUMBER > 1)
         /* we aren't touching any model twice, so this isn't needed
                 unless back to uglier scheme */
-        } else {
+        }else{
           if (work == TopEntry())
             MoveToBottom(work);
           c++;
         }
 #endif
-      }
-      else{
+      }else{
         /* We do not attempt to expand non-logical relation arrays in pass3.*/
       }
     }
@@ -11624,7 +11573,7 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
     Asc_DestroyAnonList(atl);
     if (!anychange) {
       g_iteration++;		/* The global iteration counter */
-    } else {
+    }else{
       /* we did something, so try the binary compile */
 #if TIMECOMPILER
       classt = clock();
@@ -11667,7 +11616,7 @@ void Pass2ProcessPendingInstances(void)
         inst = PendingInstance(work);
         /* WriteInstanceName(stderr,inst,NULL); FPRINTF(stderr,"\n"); */
         blist = InstanceBitList(inst);
-      } else {
+      }else{
         blist = NULL; /* this shouldn't be necessary, but is */
         inst = NULL;
       }
@@ -11693,13 +11642,13 @@ void Pass2ProcessPendingInstances(void)
 #if (PASS2MAXNUMBER > 1)
         /* we aren't touching any model twice, so this isn't needed
                 unless back to uglier scheme */
-        } else {
+        }else{
           if (work == TopEntry())
             MoveToBottom(work);
           c++;
         }
 #endif
-      } else{
+      }else{
         /* We do not attempt to expand non-relation arrays in pass2. */
       }
     }
@@ -11745,13 +11694,13 @@ void Pass1ProcessPendingInstances(void)
           /* instance could move while being worked. reget the pointer.
              work itself cannot move, in memory that is. its list position
              can change */
-        } else {
+        }else{
           if (work == TopEntry()) {
             MoveToBottom(work);
           }
           c++;
         }
-      } else {
+      }else{
         TryArrayExpansion(inst,&changed);
         /* try to expand any nonalias,nonparameterized arrays */
         if (ArraysExpanded(inst)) {
@@ -11760,7 +11709,7 @@ void Pass1ProcessPendingInstances(void)
           /* instance could move while being worked. reget the pointer.
              work itself cannot move, in memory that is. its list position
              can change */
-        } else {
+        }else{
           if (work == TopEntry())
             MoveToBottom(work);
           c++;
@@ -11824,13 +11773,13 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
               STATEMENT_ERROR(stat,"Bad real default value");
               break;
             }
-          } else {
+          }else{
             switch(ValueKind(value)) {
             case real_value:
               if ( !SameDimen(RealValueDimensions(value),RealAtomDims(ptr)) ){
                 STATEMENT_ERROR(stat,
                 "Default right hand side is dimensionally inconsistent");
-              } else {
+              }else{
                 SetRealAtomValue(ptr,RealValue(value),*depth);
               }
               break;
@@ -11838,7 +11787,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
               if ( !SameDimen(Dimensionless(),RealAtomDims(ptr)) ){
                 STATEMENT_ERROR(stat,
                 "Default right hand side is dimensionally inconsistent");
-              } else {
+              }else{
                 SetRealAtomValue(ptr,(double)IntegerValue(value),*depth);
               }
               break;
@@ -11861,8 +11810,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
           SetEvaluationContext(NULL);
           if (ValueKind(value) == boolean_value){
             SetBooleanAtomValue(ptr,BooleanValue(value),*depth);
-          }
-          else{
+          }else{
             STATEMENT_ERROR(stat, "Bad boolean default value");
           }
           DestroyValue(&value);
@@ -11878,8 +11826,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
         SetEvaluationContext(NULL);
         if (ValueKind(value) == integer_value){
           SetIntegerAtomValue(ptr,IntegerValue(value),0);
-        }
-        else{
+        }else{
           STATEMENT_ERROR(stat, "Bad integer default value");
         }
         DestroyValue(&value);
@@ -11893,8 +11840,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
         SetEvaluationContext(NULL);
         if (ValueKind(value) == symbol_value){
           SetSymbolAtomValue(ptr,SymbolValue(value));
-        }
-        else{
+        }else{
           STATEMENT_ERROR(stat, "Bad symbol default value");
         }
         DestroyValue(&value);
@@ -11904,8 +11850,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
       }
     }
     gl_destroy(lvals);
-  }
-  else{
+  }else{
     STATEMENT_ERROR(stat, "Nonexistent LHS variable in default statement.");
   }
 }
@@ -12048,8 +11993,7 @@ void DefaultStatementList(struct Instance *i,
       case SELECT:
         if (SelectContainsDefaults(stat)) {
           ExecuteDefaultsInSELECT(i,&c,stat,depth);
-        }
-        else {
+        }else{
           c = c + SelectStatNumberStats(stat) ;
         }
         break;
@@ -12124,12 +12068,10 @@ void Pass4SetWhenBits(struct Instance *inst)
         if (st == SELECT) {
           if (SelectContainsWhen(stat)) {
             ReEvaluateSELECT(inst,&c,stat,4,&changed);
-          }
-          else {
+          }else{
             c = c + SelectStatNumberStats(stat);
           }
-        }
-        else {
+        }else{
           if ( st == WHEN || (st == FOR && ForContainsWhen(stat)) ) {
             SetBit(blist,c);
             changed++;
@@ -12196,12 +12138,10 @@ void Pass3SetLogRelBits(struct Instance *inst)
         if (st == SELECT) {
           if (SelectContainsLogRelations(stat)) {
             ReEvaluateSELECT(inst,&c,stat,3,&changed);
-          }
-          else {
+          }else{
             c = c + SelectStatNumberStats(stat);
           }
-        }
-        else {
+        }else{
           if ((st == LOGREL)
               || (st == COND && CondContainsLogRelations(stat))
               || (st == FOR && ForContainsLogRelations(stat)) ) {
@@ -12248,7 +12188,7 @@ static struct Instance *Pass2InstantiateModel(struct Instance *result,
          g_ExecuteREL_CreateTokenRelation_calls,g_CopyAnonRelation,
          g_CopyAnonRelation+g_ExecuteREL_CreateTokenRelation_calls);
 #endif
-    } else {
+    }else{
       Pass2ProcessPendingInstances();
     }
     if (NumberPending()!=0) {
@@ -12295,10 +12235,10 @@ void Pass2SetRelationBits(struct Instance *inst)
               SelectContainsExternal(stat))
           {
             ReEvaluateSELECT(inst,&c,stat,2,&changed);
-          } else {
+          }else{
             c = c + SelectStatNumberStats(stat);
           }
-        } else {
+        }else{
           if ( st == REL ||
                st == EXT ||
 	       (st == COND &&
@@ -12361,14 +12301,14 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
       result = CreateModelInstance(def); /*need to account for absorbed here.*/
       /* at present, creating parameterized sims illegal */
     }
-  } else {
+  }else{
     result = oldresult;
   }
   if (result!=NULL) {
     ClearList();
     if (oldresult !=NULL) {
       SilentVisitInstanceTree(result,AddIncompleteInst,1,0);
-    } else {
+    }else{
       AddBelow(NULL,result);
     }
 
@@ -12382,11 +12322,11 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
         if (g_compiler_warnings < 2 && *pcount >10L) {
           FPRINTF(ASCWAR,"More than 10 pending statements and warning %s",
             "level too low to allow printing.\n");
-        } else {
+        }else{
           FPRINTF(ASCWAR,"---- Pass 1 pending: -------------\n");
           if (g_compiler_warnings > 1) {
             CheckInstanceLevel(ASCWAR,result,1);
-          } else {
+          }else{
             FPRINTF(ASCWAR,"(Total object check suppressed.)\n");
           }
           FPRINTF(ASCWAR,"---- End pass 1 pending-----------\n");
@@ -12452,7 +12392,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
 #ifdef DEBUG_RELS
     debug_rels_work = NULL;
 #endif
-  } else {
+  }else{
     return result;
   }
 #if TIMECOMPILER
@@ -12473,7 +12413,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
      */
     result = Pass3InstantiateModel(result,&pass3pendings);
    /* result will not move as currently implemented */
-  } else {
+  }else{
     return result;
   }
 #if TIMECOMPILER
@@ -12487,7 +12427,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
     /* at present order 0, so we do lower models before those near root */
     result = Pass4InstantiateModel(result,&pass4pendings);
    /* result will not move as currently implemented */
-  } else {
+  }else{
     return result;
   }
 #if TIMECOMPILER
@@ -12497,8 +12437,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   if (result!=NULL) {
     if (!pass1pendings && !pass2pendings && !pass3pendings && !pass4pendings){
       DefaultInstanceTree(result);
-    }
-    else{
+    }else{
       ERROR_REPORTER_NOLINE(ASC_USER_WARNING,"There are unexecuted statements "
 		"in the instance.\nDefault assignments not executed.");
     }
@@ -12758,7 +12697,7 @@ void NewReInstantiate(struct Instance *i)
   if (result!=NULL) {
     SilentVisitInstanceTree(result,Pass2SetRelationBits,0,0);
     result = Pass2InstantiateModel(result,&pass2pendings);
-  } else {
+  }else{
     ASC_PANIC("Reinstantiation phase 2 went insane. Bye!\n");
   }
 #if TIMECOMPILER
@@ -12767,7 +12706,7 @@ void NewReInstantiate(struct Instance *i)
   if (result!=NULL) {
     SilentVisitInstanceTree(result,Pass3SetLogRelBits,0,0);
     result = Pass3InstantiateModel(result,&pass3pendings);
-  } else {
+  }else{
     ASC_PANIC("Reinstantiation phase 3 went insane. Bye!\n");
   }
 #if TIMECOMPILER
@@ -12776,7 +12715,7 @@ void NewReInstantiate(struct Instance *i)
   if (result!=NULL) {
     SilentVisitInstanceTree(result,Pass4SetWhenBits,0,0);
     result = Pass4InstantiateModel(result,&pass4pendings);
-  } else {
+  }else{
     ASC_PANIC("Reinstantiation phase 4 went insane. Bye!\n");
   }
 #if TIMECOMPILER
@@ -12785,11 +12724,11 @@ void NewReInstantiate(struct Instance *i)
   if (result!=NULL) {
     if (!pass1pendings && !pass2pendings && !pass3pendings && !pass4pendings){
       DefaultInstanceTree(result);
-    } else{
+    }else{
       FPRINTF(ASCERR,"There are unexecuted statements in the instance.\n");
       FPRINTF(ASCERR,"Default assignments not executed.\n");
     }
-  } else {
+  }else{
     ASC_PANIC("Reinstantiation phase 5 went insane. Bye!\n");
   }
 #if TIMECOMPILER
@@ -12855,20 +12794,17 @@ void UpdateInstance(struct Instance *root, /* the simulation root */
       name = ExternalStatScope(stat);
       if (name==NULL) {
         scope = target;
-      }
-      else{
+      }else{
         instances = FindInstances(target,name,&ferr);
         if (instances) {
           if (gl_length(instances)!=1) {
             FPRINTF(ASCERR,"More than 1 scope instance found !!\n");
 			scope = NULL;
-          }
-          else{
+          }else{
             scope = (struct Instance *)gl_fetch(instances,1L);
           }
           gl_destroy(instances);
-        }
-        else{
+        }else{
           FPRINTF(ASCERR,"Unable to find scope instance !!\n");
           scope = target;
         }
@@ -12930,8 +12866,7 @@ struct Instance *InstantiatePatch(symchar *patch,
       goto cleanup;
     }
     UpdateInstance(root,root,GetStatementList(patchdef)); /* cast statement?*/
-  }
-  else{
+  }else{
     FPRINTF(ASCERR,"Instantiation failure: NULL simulation\n");
   }
 
