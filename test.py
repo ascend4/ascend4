@@ -206,6 +206,10 @@ class TestSolver(AscendSelfTester):
 		self.assertAlmostEqual( float(M.t_solar)/3600, M.t_solar.as("h"))
 
 
+class TestLRSlv(AscendSelfTester):
+	def testonerel(self):
+		self._run('onerel',"LRSlv","test/lrslv/onerel.a4c")
+
 class TestCMSlv(AscendSelfTester):
 	def testheatex(self):
 		self._run('heatex',"CMSlv","heatex.a4c")

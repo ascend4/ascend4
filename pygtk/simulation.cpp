@@ -28,12 +28,10 @@ extern "C"{
 #include <utilities/error.h>
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
-#include <general/dstring.h>
-#include <general/tm_time.h>
-#include <compiler/instance_enum.h>
-#include <compiler/fractions.h>
+#include <utilities/ascPanic.h>
 
-#include <compiler/dimen.h>
+#include <general/tm_time.h>
+
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
 #include <compiler/instantiate.h>
@@ -833,8 +831,15 @@ Simulation::processVarStatus(){
 		cerr << "Variable statuses can't be set: block structure not yet determined." << endl;
 		return;
 	}
+
+	if(!bb->block){
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"No blocks identified in system");
+		return;
+	}
 	
 	int activeblock = status.block.current_block;
+	asc_assert(activeblock < status.block.number_of);
+
 	int low = bb->block[activeblock].col.low;
 	int high = bb->block[activeblock].col.high;
 	bool allsolved = status.converged;

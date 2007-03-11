@@ -118,7 +118,8 @@
 #ifndef MAX_VAR_IN_LIST
 #define MAX_VAR_IN_LIST 20
 #endif /* MAX_VAR_IN_LIST  */
-#define DEBUG_ANALYSIS FALSE
+
+#define ANALYSE_DEBUG
 
 /*------------------------------------------------------------------------------
   GLOBAL VARS
@@ -1748,6 +1749,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     vlen = NumberVariables(gut);
     p_data->nnzobj += vlen;
   }
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Found %d objective relations",p_data->nnzobj);
+#endif
 
   /* count the conditional relations */
   for (c=1,len = gl_length(p_data->cnds); c <= len; c++) {
@@ -1756,6 +1760,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     vlen = NumberVariables(gut);
     p_data->nnzcond += vlen;
   }
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Found %d conditional relations",p_data->nnzcond);
+#endif
 
   /* count ncol, the number of non-FIXED incident variables. note that
 	non-incident variables are already taken out, in the unas list. */
@@ -1763,6 +1770,10 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     vip = SIP(gl_fetch(p_data->vars,c));
     if(!(vip->u.v.fixed)) p_data->ncol++;
   }
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Found %d conditional incident non-fixed vars",p_data->ncol);
+#endif
+
 
   /*
   	now, at last we have cols jacobian in the order we want the lists to
@@ -1798,6 +1809,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
       }
     }
   }
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Found %d non-fixed logical vars and %d included logical relations",p_data->lognnz,p_data->lognrow);
+#endif
 
   /* count conditional logrels */
   for (c=1,len = gl_length(p_data->logcnds); c <= len; c++) {
@@ -1806,6 +1820,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     vlen = NumberBoolVars(lgut);
     p_data->lrelincsize += vlen;
   }
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Found %ld CONDITIONAL logical relations",gl_length(p_data->logcnds));
+#endif
 
   /* ensure that we have at least one var-in-a-rel, or at least one bool var
 	in a logrel */
@@ -1821,6 +1838,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     dvip = SIP(gl_fetch(p_data->dvars,c));
     if(!(dvip->u.dv.fixed)) p_data->logncol++;
   }
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Found %d incident non-fixed logical variables",p_data->logncol);
+#endif
 
   /* allocate space for the lists that we will eventually hand over to slv.
 	now malloc and build things, remember to punt the matrix soon.
@@ -1855,6 +1875,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   AL(bl,nc + p_data->ncl,bnd_boundary);
 #undef AL
 
+  CONSOLE_DEBUG("For relincidence, size will be %d",p_data->nnztot + p_data->nnzobj + p_data->nnzcond); 
   p_data->relincidence = ALLOC_OR_NULL(struct var_variable*
     ,p_data->nnztot + p_data->nnzobj + p_data->nnzcond
   );
@@ -1864,8 +1885,16 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     ,p_data->lrelincsize
   );
 
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Allocated memory, checking for errors now...");
+#endif
+
   /* check that lists have been allocated whereever number of expected elements > 0 */
-#define C(N,P) if((p_data->N)>0 && (p_data->P##data)==NULL)return 1
+#define C(N,P) \
+	if((p_data->N)>0 && (p_data->P##data)==NULL){ \
+		CONSOLE_DEBUG("malloc err with P" #P " (" #N "=%ld",p_data->N); \
+		return 1; \
+	}
   C(nv,var);   C(np,par);  C(nu,un);
   C(ndv,dis);  C(nud,undis);
   C(nr,rel);  C(no,obj);  C(nc,con);
@@ -1874,8 +1903,12 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   C(nc + p_data->ncl,bnd);
 #undef C
 
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Checking master lists...");
+#endif
+
   /* check that all master lists were assigned */
-#define C(P) if((p_data->master##P)==NULL)return 1
+#define C(P) if((p_data->master##P)==NULL){CONSOLE_DEBUG("malloc err with master" #P); return 1;}
   C(vl);  C(pl);  C(ul);
   C(dl);  C(dul);
   C(rl);  C(ol);  C(cl);
@@ -1883,9 +1916,13 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   C(wl);
   C(bl);
 #undef C
+
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Checking solver lists...");
+#endif
 
   /* check that all the solver's lists were assigned */
-#define C(P) if((p_data->solver##P)==NULL)return 1
+#define C(P) if((p_data->solver##P)==NULL){CONSOLE_DEBUG("malloc err with solver" #P); return 1;}
   C(vl);  C(pl);  C(ul);
   C(dl);  C(dul);
   C(rl);  C(ol);  C(cl);
@@ -1894,12 +1931,26 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   C(bl);
 #undef C
 
-  if(p_data->relincidence==NULL)return 1;
-  if(p_data->lrelincsize > 0 && p_data->logrelinciden==NULL) return 1;
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Checking some odds n ends...");
+#endif
+
+  if((p_data->nnztot + p_data->nnzobj + p_data->nnzcond) && p_data->relincidence==NULL){
+	CONSOLE_DEBUG("relincidence==NULL");
+    return 1;
+  }
+  if(p_data->lrelincsize > 0 && p_data->logrelinciden==NULL){
+	CONSOLE_DEBUG("logrelinciden==NULL");
+    return 1;
+  }
 
   p_data->relincsize = p_data->nnztot+p_data->nnzobj + p_data->nnzcond;
   p_data->relincinuse = 0;
   p_data->lrelincinuse = 0;
+
+#ifdef ANALYSE_DEBUG
+  CONSOLE_DEBUG("Finished checking for allocation errors; copying data into lists");
+#endif
 
   /*-------*/
   /*
@@ -2423,7 +2474,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
       }
     }
 
-#if DEBUG_ANALYSIS
+#ifdef ANALYSE_DEBUG
     if( p_data->need_consistency == 0 ) {
       CONSOLE_DEBUG("All alternativeS HAVE THE SAME STRUCTURE: Consistency"
 		" analysis is not required"
@@ -2431,7 +2482,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     }else{
       CONSOLE_DEBUG("Consistency analysis may be required");
     }
-#endif /* DEBUG_ANALYSIS  */
+#endif
 
   }else{
 
