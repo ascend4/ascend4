@@ -838,7 +838,7 @@ Simulation::processVarStatus(){
 	}
 	
 	int activeblock = status.block.current_block;
-	asc_assert(activeblock < status.block.number_of);
+	asc_assert(activeblock <= status.block.number_of);
 
 	int low = bb->block[activeblock].col.low;
 	int high = bb->block[activeblock].col.high;

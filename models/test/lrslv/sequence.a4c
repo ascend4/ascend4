@@ -1,0 +1,34 @@
+REQUIRE "atoms.a4l";
+
+MODEL onerel;
+	healthy, wealthy, wise IS_A boolean_var;
+	
+	healthy == wealthy;
+	wise == healthy AND wealthy;
+METHODS
+	METHOD default;
+		(* set everything wrong! *)
+		healthy := FALSE;
+		wealthy := FALSE;
+		wise := FALSE;
+	END default;
+
+	METHOD specify;
+		healthy.fixed := TRUE;
+	END specify;
+
+	METHOD values;
+		healthy := TRUE;
+	END values;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN reset;
+		RUN values;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT wise == TRUE;
+	END self_test;
+END onerel;
+	
