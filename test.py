@@ -210,6 +210,14 @@ class TestLRSlv(AscendSelfTester):
 	def testonerel(self):
 		self._run('onerel',"LRSlv","test/lrslv/onerel.a4c")
 
+# need to migrate to 'FIX boolvar', currently not supported...
+#	def testonerel(self):
+#		self._run('onerel',"LRSlv","test/lrslv/onerel.a4c")
+
+	def testsequence(self):
+		self._run('onerel',"LRSlv","test/lrslv/sequence.a4c")
+
+
 class TestCMSlv(AscendSelfTester):
 	def testheatex(self):
 		self._run('heatex',"CMSlv","heatex.a4c")
