@@ -1,148 +1,142 @@
-REQUIRE "atoms.a4l";
-(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "sonic.a4c";
-(*
- * This file is part of the ASCEND Modeling Library and is released
- * under the GNU Public License as described at the end of this file.
- *
- * Use of this module is demonstrated by the associated script file
- * sonic.a4s.
- *)
+(*	ASCEND modelling environment
+	Copyright (C) 1998, 2007 Carnegie Mellon University
 
-(*
-   Ascend model of the Adiabatic compressible flow  example presented by
-Zaher -- Conditional Modeling. Ph.D. Thesis, Carnegie Mellon University,
-Pittsburgh, PA, 15213. 1995 --. The problem represents the flow of a
-compressible gas in a circular pipe of constant diameter. There is a
-disjunctive statement which represents whether the flow is sonic or
-subsonic. It represent a problem which we can represent as a conditional
-model and  solve  with the ascend conditional solver CMSlv.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-This model requires:
-			"system.a4l"
-		    	"atoms.a4l"
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *)
+REQUIRE "atoms.a4l";
+(*
+	Model of adiabatic compressible flow. The problem represents the flow of a
+	compressible gas in a circular pipe of constant diameter. There is a
+	disjunctive statement which represents whether the flow is sonic or
+	subsonic. This model requires the conditional solver CMSlv.
 
-(* ************************************************* *)
+	The problem is described in the thesis
+	J Zaher, 'Conditional Modeling', Ph.D. Thesis, Carnegie Mellon University,
+	Pittsburgh, PA, 15213. 1995.
 
+	Model by Vicente Rico-Ramirez, 10 Apr 1998.
+
+	If using the Tcl/Tk interface, see the associated script file sonic.a4s.
+*)
 MODEL sonic;
 
-	Pi 		IS_A pressure;
-	Pf  		IS_A pressure;
-	Pd  		IS_A pressure;
-	Ti  		IS_A temperature;
-	Tf 		IS_A temperature;
-	Mi 		IS_A fraction;
-	Mf  		IS_A fraction;
-	D  		IS_A distance;
-	F 		IS_A molar_rate;
-	friction  	IS_A factor;
-	gamma 		IS_A factor;
-	mw 		IS_A molar_mass;
-	L       	IS_A distance;
-	R		IS_A gas_constant;
-	Pifac           IS_A factor;
-        sonic_flow	IS_A boolean_var;
+	Pi         IS_A pressure;
+	Pf         IS_A pressure;
+	Pd         IS_A pressure;
+	Ti         IS_A temperature;
+	Tf         IS_A temperature;
+	Mi         IS_A fraction;
+	Mf         IS_A fraction;
+	D          IS_A distance;
+	F          IS_A molar_rate;
+	friction   IS_A factor;
+	gamma      IS_A factor;
+	mw         IS_A molar_mass;
+	L          IS_A distance;
+	R          IS_A gas_constant;
+	Pifac      IS_A factor;
+	sonic_flow IS_A boolean_var;
 
-(* boundary *)
-        CONDITIONAL
+	(* boundary *)
+	CONDITIONAL
           cond: (Pd - Pf) * 1.0 {atm^-1} <= Mf - 1.0;
 	END CONDITIONAL;
 
-        sonic_flow == SATISFIED(cond,1e-08);
+	sonic_flow == SATISFIED(cond,1e-08);
 
-(* Variant Equations *)
+	(* Variant Equations *)
 
 	not_sonic: Pf = Pd;
 	sonic: Mf = 1.0;
 
-(* Disjunctive statement *)
+	(* Disjunctive statement *)
 
-        WHEN (sonic_flow)
-          CASE TRUE:
-		USE sonic;
-          CASE FALSE:
-		USE not_sonic;
+	WHEN (sonic_flow)
+		CASE TRUE:
+			USE sonic;
+		CASE FALSE:
+			USE not_sonic;
 	END WHEN;
 
-(* Invariant Equations *)
+	(* Invariant Equations *)
 
 	R * F * Ti / Pi = Pifac * (D^2) * Mi/4.0 * (gamma * R *Ti/mw)^(1/2);
+
 	R * F * Tf / Pf = Pifac * (D^2) * Mf/4.0 * (gamma * R *Tf/mw)^(1/2);
+
 	Tf/Ti = (1 + 0.5*(gamma-1)*(Mi^2))/(1 + 0.5*(gamma-1)*(Mf^2));
 
-        1/(Mi^2) - 1/(Mf^2) - 4*gamma*friction*L/D = 0.5*(gamma+1)*
-	                         ln( ((Mf^2)*(1 + 0.5*(gamma-1)*(Mi^2)))/
-	                             ((Mi^2)*(1 + 0.5*(gamma-1)*(Mf^2)))  );
+    1/(Mi^2) - 1/(Mf^2) - 4 * gamma * friction * L / D = 
+		0.5 * (gamma + 1) *	ln(
+			((Mf^2)*(1 + 0.5*(gamma-1)*(Mi^2)))
+			/ ((Mi^2)*(1 + 0.5*(gamma-1)*(Mf^2)))  
+		);
 
-  METHODS
+METHODS
 
-    METHOD default_self;
-    END default_self;
+	METHOD default_self;
+	END default_self;
 
-    METHOD specify;
-	FIX friction;
-	FIX gamma;
-	FIX mw;
-	FIX L;
-	FIX Ti;
-	FIX Pi;
-	FIX Pd;
-	FIX D;
-	FIX Pifac;
-    END specify;
+	METHOD specify;
+		FIX friction;
+		FIX gamma;
+		FIX mw;
+		FIX L;
+		FIX Ti;
+		FIX Pi;
+		FIX Pd;
+		FIX D;
+		FIX Pifac;
+	END specify;
 
-    METHOD values;
-        (* fixed values*)
-	friction := 0.01;
-	gamma := 1.292;
-	mw := 16 {g/g_mole};
-	L := 1 {m};
-	Ti := 300.0 {K};
-	Pi := 10.0 {atm};
-	Pd := 5.0 {atm};
-	D :=  5.0 {cm};      (* boundary is 4.08844 {cm} *)
-	Pifac := 3.14159;
-        (* initial values *)
-	Mi := 0.5;
-	Mf := 0.5;
-	Tf := 300.0 {K};
-	Pf := 5.0 {atm};
-	F  := 200.0 {g_mole/s};
+	METHOD values;
+		(* fixed values*)
+		friction := 0.01;
+		gamma := 1.292;
+		mw := 16 {g/g_mole};
+		L := 1 {m};
+		Ti := 300.0 {K};
+		Pi := 10.0 {atm};
+		Pd := 5.0 {atm};
+		D :=  5.0 {cm};      (* boundary is 4.08844 {cm} *)
+		Pifac := 3.14159;
 
-        (* initial boolean value *)
-        sonic_flow := SATISFIED(cond,1e-08);
-    END values;
+		(* initial values *)
+		Mi := 0.5;
+		Mf := 0.5;
+		Tf := 300.0 {K};
+		Pf := 5.0 {atm};
+		F  := 200.0 {g_mole/s};
+
+		(* initial boolean value *)
+		sonic_flow := SATISFIED(cond,1e-08);
+	END values;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN reset;
+		RUN values;
+	END on_load;
+
+	METHOD self_test;
+		IF D < 4.08844 {cm} THEN
+			ASSERT sonic_flow == FALSE;
+		ELSE
+			ASSERT sonic_flow == TRUE;
+		END IF;
+	END self_test;
 
 END sonic;
-
-
-(*
- *  sonic.a4c
- *  by Vicente Rico-Ramirez
- *  April 10, 1998
- *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:15:06 $
- *  $Revision: 1.3 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/sonic.a4c,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)

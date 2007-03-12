@@ -219,6 +219,17 @@ class TestLRSlv(AscendSelfTester):
 
 
 class TestCMSlv(AscendSelfTester):
+	def testsonic(self):
+		M = self._run('sonic',"CMSlv","sonic.a4c")
+		assert(M.sonic_flow.getBoolValue())
+
+		# other side of boundary...
+		M.D.setRealValueWithUnits(4.,"cm")	
+		T = self.L.findType('sonic')
+		M.solve(ascpy.Solver('CMSlv'),ascpy.SolverReporter())
+		M.run(T.getMethod('self_test'))
+		assert(not M.sonic_flow.getBoolValue())
+
 	def testheatex(self):
 		self._run('heatex',"CMSlv","heatex.a4c")
 	def testphaseeq(self):
