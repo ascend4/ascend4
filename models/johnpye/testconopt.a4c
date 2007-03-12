@@ -1,5 +1,9 @@
 REQUIRE "atoms.a4l";
 
+(*
+	This example model comes from the CONOPT documentation, which is
+	distributed with CONOPT.
+*)
 MODEL testconopt;
 	Profit, Inp, Out IS_A solver_var;
 	P, L IS_A solver_var;
