@@ -613,8 +613,8 @@ Instanc::getPlot() const{
 }
 
 void
-Instanc::write(FILE *fp){
-	if(fp==NULL)fp=stdout;
+Instanc::write(FILE *fp) const{
+	if(!fp)throw runtime_error("NULL file pointer");
 	WriteInstance(fp,i);
 }
 

@@ -136,7 +136,7 @@ Simulation::getNumVars(){
 	A general purpose routine for reporting from simulations.
 */
 void
-Simulation::write(const string &type, FILE *fp){
+Simulation::write(FILE *fp, const char *type) const{
 	int res;
 
 	const var_filter_t vfilter = {
@@ -149,11 +149,11 @@ Simulation::write(const string &type, FILE *fp){
 		, REL_INCLUDED | REL_EQUALITY | REL_ACTIVE 
 	};
 
-	if(type==""){
+	if(type==NULL){
 		CONSOLE_DEBUG("Writing simroot...");
 		simroot.write(fp);
 		return;
-	}else if(type == "dot"){
+	}else if(string(type) == "dot"){
 		if(!sys)throw runtime_error("Can't write DOT file: simulation not built");
 		CONSOLE_DEBUG("Writing graph...");
 		if(!fp)fp=stdout;

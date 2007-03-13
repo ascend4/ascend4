@@ -29,6 +29,14 @@
 	import types
 }
 
+%typemap(in) FILE * {
+    if (!PyFile_Check($input)) {
+        PyErr_SetString(PyExc_TypeError, "Need a file!");
+        return NULL;
+    }
+    $1 = PyFile_AsFile($input);
+}
+
 %template(VariableVector) std::vector<Variable>;
 %template(RelationVector) std::vector<Relation>;
 %template(SolverVector) std::vector<Solver>;
@@ -61,13 +69,6 @@
 	}
 }
 
-%typemap(in) FILE * {
-    if (!PyFile_Check($input)) {
-        PyErr_SetString(PyExc_TypeError, "Need a file!");
-        return NULL;
-    }
-    $1 = PyFile_AsFile($input);
-}
 %include "matrix.h"
 
 // SOLVER PARAMETERS
