@@ -20,6 +20,8 @@
 #include "relman.h"
 #include "slv_client.h"
 #include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/mathmacros.h>
 
 /* #define JACOBIAN_DEBUG */
 

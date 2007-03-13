@@ -6,6 +6,7 @@ csrcs = Split("""
 	conditional.c discrete.c
 	diffvars.c
 	jacobian.c
+	graph.c
 	logrel.c logrelman.c model_reorder.c
 	rel.c relman.c
 	slv.c

@@ -11,6 +11,8 @@
 #include "variable.h"
 #include "relation.h"
 
+#include <cstdio>
+
 #include "config.h"
 extern "C"{
 #include <compiler/createinst.h>
@@ -96,7 +98,7 @@ public:
 	std::vector<Variable> getFixedVariables();
 	Matrix getMatrix();
 
-	void write();
+	void write(FILE *fp=NULL, const char *type=NULL);
 
 	void setSolver(Solver &s);
 	const Solver getSolver() const;
