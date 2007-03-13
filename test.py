@@ -214,6 +214,13 @@ class TestLRSlv(AscendSelfTester):
 #	def testonerel(self):
 #		self._run('onerel',"LRSlv","test/lrslv/onerel.a4c")
 
+	def testsequencecrash(self):
+		try:
+			self._run('onerel',"LRSlv","test/lrslv/sequencecrash.a4c")
+		except:
+			pass
+			# it just has to not crash, that's all
+
 	def testsequence(self):
 		self._run('onerel',"LRSlv","test/lrslv/sequence.a4c")
 
