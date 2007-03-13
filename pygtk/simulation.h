@@ -98,7 +98,7 @@ public:
 	std::vector<Variable> getFixedVariables();
 	Matrix getMatrix();
 
-	void write(FILE *fp=NULL, const char *type=NULL);
+	void write(const std::string &type,FILE *fp=NULL);
 
 	void setSolver(Solver &s);
 	const Solver getSolver() const;

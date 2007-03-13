@@ -614,7 +614,7 @@ Instanc::getPlot() const{
 
 void
 Instanc::write(FILE *fp){
-	if(fp==NULL)fp=stderr;
+	if(fp==NULL)fp=stdout;
 	WriteInstance(fp,i);
 }
 
