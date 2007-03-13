@@ -273,7 +273,7 @@ static int ConvertLogTermBuf(struct logrel_side_temp *tmp)
   realloc_term_stack(0);
   len = g_logterm_ptrs.len;
   if (len < 1) return 0;
-  arr = ASC_NEW(union LogRelTermUnion);
+  arr = ASC_NEW_ARRAY(union LogRelTermUnion,len);
   if (arr==NULL) {
     FPRINTF(ASCERR,"Create Logical Relation: Insufficient memory :-(.\n");
     return 0;

@@ -1,0 +1,8 @@
+REQUIRE "atoms.a4l";
+
+MODEL onerel;
+	healthy, wealthy, wise IS_A boolean_var;
+	
+	healthy == wealthy;
+	wise == healthy AND wealthy;
+END onerel;
