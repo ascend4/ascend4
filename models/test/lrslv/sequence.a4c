@@ -4,7 +4,7 @@ MODEL onerel;
 	healthy, wealthy, wise IS_A boolean_var;
 	
 	healthy == wealthy;
-	wise == healthy AND wealthy;
+	wise == healthy;
 METHODS
 	METHOD default;
 		(* set everything wrong! *)

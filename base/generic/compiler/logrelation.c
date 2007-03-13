@@ -387,16 +387,15 @@ static struct logrel_term *CreateSatisfiedTerm(CONST struct Name *n,
 
 
 /*
- * This function create and *must* create the memory
- * for the structure and for the union that the stucuture
- * points to. Too much code depends on the pre-existent
- * of a properly initialized union.
- */
+	This function creates (and *must* create) the memory for the structure
+	and for the union that the stucuture points to. Too much code depends on 
+	the pre-existence of a properly initialized union.
+*/
 struct logrelation *CreateLogRelStructure(enum Expr_enum t)
 {
   struct logrelation *result;
   result = ASC_NEW(struct logrelation);
-  assert(result!=NULL);
+  asc_assert(result!=NULL);
   memset((char *)&(result->token),0,sizeof(struct TokenLogRel));
   result->logresidual = 0;
   result->logiscond = 0;

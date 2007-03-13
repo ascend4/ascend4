@@ -49,6 +49,7 @@ extern "C"{
 #include <solver/slvDOF.h>
 #include <system/slv_stdcalls.h>
 #include <system/slv_server.h>
+#include <system/graph.h>
 }
 
 #include "simulation.h"
@@ -131,10 +132,35 @@ Simulation::getNumVars(){
 	return slv_get_num_solvers_vars(getSystem());
 }
 
-
+/**
+	A general purpose routine for reporting from simulations.
+*/
 void
-Simulation::write(){
-	simroot.write();
+Simulation::write(FILE *fp, const char *type){
+	int res;
+
+	const var_filter_t vfilter = {
+		  VAR_SVAR | VAR_ACTIVE | VAR_INCIDENT | VAR_FIXED
+		, VAR_SVAR | VAR_ACTIVE | VAR_INCIDENT | 0
+	};
+
+	const rel_filter_t rfilter = {
+		  REL_INCLUDED | REL_EQUALITY | REL_ACTIVE 
+		, REL_INCLUDED | REL_EQUALITY | REL_ACTIVE 
+	};
+
+	if(type==NULL){
+		simroot.write(fp);
+	}else if(type=="dot"){
+		if(!sys)throw runtime_error("Can't write DOT file: simulation not built");
+		CONSOLE_DEBUG("Writing graph...");
+		res = system_write_graph(sys, fp, &rfilter, &vfilter);
+		if(res){
+			stringstream ss;
+			ss << "Error running system_write_graph (err " << res << ")";
+			throw runtime_error(ss.str());
+		}
+	}
 }
 
 //------------------------------------------------------------------------------

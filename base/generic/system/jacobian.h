@@ -27,9 +27,6 @@
 
 #include <linear/mtx.h>
 
-#include <general/mathmacros.h>
-#include <utilities/ascPanic.h>
-
 extern const rel_filter_t system_rfilter_algeb;
 extern const rel_filter_t system_rfilter_diff;
 extern const rel_filter_t system_rfilter_all;
