@@ -165,7 +165,7 @@ class TestCompiler(Ascend):
 class TestSolver(AscendSelfTester):
 	
 	def testlog10(self):
-		self._run('testlog10')
+		M = self._run('testlog10')
 
 	def testrootsofpoly(self):
 		self._run('roots_of_poly',filename="roots_of_poly.a4c")
@@ -204,6 +204,10 @@ class TestSolver(AscendSelfTester):
 		M = self._run('example_1_6_1',"QRSlv","johnpye/sunpos.a4c")
 		self.assertAlmostEqual( float(M.t_solar), M.t_solar.as("s"))
 		self.assertAlmostEqual( float(M.t_solar)/3600, M.t_solar.as("h"))
+
+	def testwritegraph(self):
+		M = self._run('testlog10')
+		M.write("dot")		
 
 
 class TestLRSlv(AscendSelfTester):

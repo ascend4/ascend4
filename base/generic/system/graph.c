@@ -27,6 +27,7 @@
 #include "graph.h"
 #include "slv_client.h"
 #include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
 
 int system_write_graph(slv_system_t sys
 	, FILE *fp
@@ -37,6 +38,9 @@ int system_write_graph(slv_system_t sys
 	struct rel_relation **srels;
 	struct var_variable **svars, **ivars;
 	char *relname, *varname;
+	
+	CONSOLE_DEBUG("Writing graph...");
+	asc_assert(fp!=NULL);
 
 	fprintf(fp,"digraph G{\n");
 
@@ -84,6 +88,7 @@ int system_write_graph(slv_system_t sys
 	fprintf(fp,"}\n");
 
 	CONSOLE_DEBUG("Completed graph output");
+	return 0;
 }
 		
 

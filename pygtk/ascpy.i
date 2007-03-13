@@ -333,6 +333,9 @@ typedef enum{
 	ASCXX_VAR_STATUS_UNKNOWN=0, ASCXX_VAR_FIXED, ASCXX_VAR_UNSOLVED, ASCXX_VAR_ACTIVE, ASCXX_VAR_SOLVED
 } VarStatus;
 
+/*
+	we really want to get rid of this and just %include... 
+*/
 class Instanc{
 private:
 	Instanc();
@@ -388,7 +391,7 @@ public:
 	void setRealValueWithUnits(const double &, const char *);
 	void setBoolValue(const bool &val);
 	void setSymbolValue(const SymChar &sym);
-	void write();
+	void write(FILE *fp);
 
 	const VarStatus getVarStatus() const;
 

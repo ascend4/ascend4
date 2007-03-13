@@ -136,7 +136,7 @@ Simulation::getNumVars(){
 	A general purpose routine for reporting from simulations.
 */
 void
-Simulation::write(FILE *fp, const char *type){
+Simulation::write(const string &type, FILE *fp){
 	int res;
 
 	const var_filter_t vfilter = {
@@ -149,18 +149,26 @@ Simulation::write(FILE *fp, const char *type){
 		, REL_INCLUDED | REL_EQUALITY | REL_ACTIVE 
 	};
 
-	if(type==NULL){
+	if(type==""){
+		CONSOLE_DEBUG("Writing simroot...");
 		simroot.write(fp);
-	}else if(type=="dot"){
+		return;
+	}else if(type == "dot"){
 		if(!sys)throw runtime_error("Can't write DOT file: simulation not built");
 		CONSOLE_DEBUG("Writing graph...");
+		if(!fp)fp=stdout;
 		res = system_write_graph(sys, fp, &rfilter, &vfilter);
 		if(res){
 			stringstream ss;
 			ss << "Error running system_write_graph (err " << res << ")";
 			throw runtime_error(ss.str());
 		}
+		return;
 	}
+
+	stringstream ss;
+	ss << "Unrecognised type '" << type << "' in Simulation::write";
+	throw runtime_error(ss.str());
 }
 
 //------------------------------------------------------------------------------
