@@ -137,7 +137,7 @@ public:
 	}
 
 	const enum set_kind getSetType() const;
-	void write(FILE *fp=NULL);
+	void write(FILE *fp) const;
 	Instance *getInternalType() const;
 
 	void setVarStatus(const VarStatus &); ///< make this one private, just for friend Simulation?

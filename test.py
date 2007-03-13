@@ -748,6 +748,8 @@ class TestSteam(AscendSelfTester):
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		print "dTw/dt = %f" % M.dTw_dt[2]
 		self.assertNotAlmostEqual(M.dTw_dt[2],0.0)
+		F=file('dsgsat.dot','w')
+		M.write(F,'dot')
 
 	def testpeturbida(self):	
 		M = self.testdsgsat()
