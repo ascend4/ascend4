@@ -125,6 +125,7 @@ John Pye (C) 2005
 		<keyword>THEN</keyword>
 		<keyword>UNIVERSAL</keyword>
 		<keyword>UNION</keyword>
+		<keyword>UNITS</keyword>
 		<keyword>USE</keyword>
 		<keyword>WHEN</keyword>
 		<keyword>WHERE</keyword>
@@ -179,6 +180,7 @@ John Pye (C) 2005
 		<keyword>critical_temperature</keyword>
 		<keyword>reference_temperature</keyword>
 		<keyword>UNIFAC_a</keyword>
+		<keyword>length_constant</keyword>		
 		<keyword>pressure_constant</keyword>
 		<keyword>critical_pressure</keyword>
 		<keyword>reference_pressure</keyword>
@@ -383,6 +385,7 @@ John Pye (C) 2005
 		<keyword>delta_entropy_rate</keyword>
 		<keyword>mass_sec</keyword>
 		<keyword>mole_sec</keyword>
+		<keywork>rate</keywork>
 	</keyword-list>
 
 	<keyword-list _name = "Data Types" style = "Data Type" case-sensitive="TRUE">

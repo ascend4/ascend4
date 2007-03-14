@@ -167,13 +167,15 @@ struct BBoxInterp {
 
 };
 
-typedef int ExtBBoxInitFunc(struct BBoxInterp *interp,
-                            struct Instance *data,
-                            struct gl_list_t *arglist);
+typedef int ExtBBoxInitFunc(struct BBoxInterp *interp
+		, struct Instance *data
+		, struct gl_list_t *arglist
+);
 /**<
-	Note Well: References to ascend instances must not be
+	Note Well: References to ASCEND instances must not be
 	cached in the user_data of interp, as instances may move
-	in the dynamically typed ASCEND world.
+	in the dynamically typed ASCEND world!
+
 	@param interp is the structure that all subsequent calls to
 		evaluation functions will include.
 	@param data is the DATA instance from the ascend model.
@@ -504,57 +506,65 @@ ASC_DLLSPEC int CreateUserFunctionBlackBox(CONST char *name,
 */
 
 
-ASC_DLLSPEC int DefaultExtBBoxInitFunc(struct BBoxInterp *interp,
-                            struct Instance *data,
-                            struct gl_list_t *arglist);
-/**< Default init code for black boxes.
-If the user does not supply an init function (possibly because they have
-no per-instance data to manage), they should pass this function
-instead to CreateUserFunctionBlackBox.
+ASC_DLLSPEC int DefaultExtBBoxInitFunc(struct BBoxInterp *interp
+		, struct Instance *data
+		, struct gl_list_t *arglist
+);
+/**< 
+	Default init code for black boxes.
+	If the user does not supply an init function (possibly because they have
+	no per-instance data to manage), they should pass this function (or NULL)
+	instead to CreateUserFunctionBlackBox. If NULL is supplied, this will be 
+	used.
 */
 
-ASC_DLLSPEC int ErrorExtBBoxValueFunc(
-		struct BBoxInterp *interp,
-		int ninputs,
-		int noutputs,
-		double *inputs,
-		double *outputs,
-		double *jacobian
+ASC_DLLSPEC int ErrorExtBBoxValueFunc(struct BBoxInterp *interp
+		, int ninputs, int noutputs
+		, double *inputs, double *outputs
+		, double *jacobian
 );
-/**< Default residual code for black boxes. NOT VERY INTERESTING.
-If the user does not supply a value function (possibly because they have
-no brain) they will get this. It whines. always returns -1.
+/**<
+	Default residual code for black boxes. NOT VERY INTERESTING.
+	If the user does not supply a value function (possibly because they have
+	no brain) they will get this. It whines. always returns -1.
 */
 
-ASC_DLLSPEC int DefaultExtBBoxFuncDerivFD(
-		struct BBoxInterp *interp,
-		int ninputs,
-		int noutputs,
-		double *inputs,
-		double *outputs,
-		double *jacobian
+ASC_DLLSPEC int DefaultExtBBoxFuncDerivFD(struct BBoxInterp *interp
+		, int ninputs, int noutputs
+		, double *inputs, double *outputs
+		, double *jacobian
 );
-/**< Default finite-differencing code for blackboxes.
-If the user does not supply a derivative function they wrote,
-they must supply this derivative function instead.
-John Pye claims to have filled this in.
+/**<
+	Default finite-differencing code for blackboxes. If the user does not
+	supply a derivative function they wrote, they must supply this derivative
+	function (or NULL) instead. If NULL is supplied, this will be used.
+
+	John Pye claims to have filled this in. This has yet to be tested in 
+	the courts, however. He is confident that his client will prevail.
 */
 
-ASC_DLLSPEC int DefaultExtBBoxFuncDeriv2FD(
-		struct BBoxInterp *interp,
-		int ninputs,
-		int noutputs,
-		double *inputs,
-		double *outputs,
-		double *jacobian
+ASC_DLLSPEC int DefaultExtBBoxFuncDeriv2FD(struct BBoxInterp *interp
+		, int ninputs, int noutputs
+		, double *inputs, double *outputs
+		, double *jacobian
 );
-/**< Currently a pipe dream. returns an error.  */
+/**< 
+	Currently a pipe dream. returns an error. Although the API permits this
+	function to be used, there is as yet no solver that utilises it. CONOPT
+	appears to be able to make use of it but we haven't wired it up yet.
+
+	If the user does not supply a hessian function they wrote, they should
+	supply this derivative function (or NULL) instead. If NULL is supplied, 
+	this will be used. If NULL is supplied, this will be used.
+*/
 
 ASC_DLLSPEC void DefaultExtBBoxFinalFunc(struct BBoxInterp *interp);
-/**< Default finalize code for black boxes.
-If the user does not supply a final function (possibly because they have
-no per-instance data to manage), they should pass this function
-instead to CreateUserFunctionBlackBox.
+/**<
+	Default finalize code for black boxes.
+	If the user does not supply a final function (possibly because they have
+	no per-instance data to manage), they should pass this function
+	instead to CreateUserFunctionBlackBox. If NULL is supplied, this will be 
+	used.
 */
 
 /*-----------------------------------------------------------------------------
