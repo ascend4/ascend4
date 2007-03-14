@@ -1,9 +1,5 @@
-REQUIRE "system.a4l";   (* => system.a4l, basemodel.a4l *)
-REQUIRE "measures.a4l"; (* => measures.a4l *)
-PROVIDE "atoms.a4l";
-
 (*  ASCEND modelling environment
- *  Copyright (C) 1994-2006 Carnegie Mellon University
+ *  Copyright (C) 1994-2007 Carnegie Mellon University
  *
  *  The ASCEND Modeling Library is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public
@@ -19,42 +15,26 @@ PROVIDE "atoms.a4l";
  *  along with the program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
  *)
+REQUIRE "system.a4l";   (* => system.a4l, basemodel.a4l *)
+REQUIRE "measures.a4l"; (* => measures.a4l *)
+PROVIDE "atoms.a4l";
+(*
+    Original Author: Joseph J. Zaher
+	Contributors: Ben Allan, Bob Huss, John Pye.
 
-(*============================================================================*
+	ASCEND atom definitions for engineering variable types.
+	Many of the anticipated dimensional variables which occur
+	in engineering design calculations are given to provide a
+	means of standardization.  Chosen defaults, nominal, and
+	lower and upper bound values should be re-specified if
+	necessary to enhance the convergence properties of
+	specific models.  Units to be displayed are to be controlled
+	using the UNITS tool kit of the environment.
 
-    A  T  O  M  S  .  A  4  L
-    -------------------------
-
-    AUTHOR:      Joseph J. Zaher
-
-    DATES:       07/91 - Original code.
-                 02/92 - Eliminated "display_units" assignments, added
-                         commonly used UNIVERSAL constants and transport
-                         quantities.
-                 04/92 - Added electro-magnetic quantities.
-                 06/92 - Converted by Ben Allan to be compatible with ASCEND3C
-		 08/92 - Additional monetary atoms added by Bob Huss
-		 02/96 - Brought proper constants into the library. Ben Allan.
-                 07/96 - Incorporated Ken Tyner's substitution atoms. BAA.
-		 07/96 - Switched to REQUIRE syntax.
-		 08/96 - Switched to REQUIRE ivpsystem.a4l.
-		 08/97 - Switched to REQUIRE/PROVIDE syntax.
-
-    CONTENTS:    ASCEND atom definitions for engineering variable types.
-                 Many of the anticipated dimensional variables which occur
-                 in engineering design calculations are given to provide a
-                 means of standardization.  Chosen defaults, nominal, and
-                 lower and upper bound values should be re-specified if
-                 necessary to enhance the convergence properties of
-                 specific models.  Units to be displayed are to be controlled
-                 using the UNITS tool kit of the environment.
-
-    REQUIRES:   see top of file.
-
-    This file by Joseph J. Zaher, Benjamin A. Allan, Robert S. Huss, John Pye
-    Last in CVS: $Date: 1998/08/17 13:07:11 $ $Revision: 1.11 $
-
- *===========================================================================*)
+	If you add a new type here, you are encouraged to also make corresponding
+	changes to the syntax definition files pygtk/gnome/ascend.lang (for gedit 
+	on GNOME) and ascend.syn (for TextPad on Windows).
+*)
 
 (*  G E N E R I C    C O N S T A N T S      ( C H E M .  E .   B I A S )
     --------------------------------------------------------------------  *)
@@ -1160,5 +1140,3 @@ END length_parameter;
         upper_bound := 5000 {MPa};
         nominal := 1.0 {MPa};
     END stress;
-
-	

@@ -103,7 +103,7 @@ static int LookupData(struct Vpdata *vp)
   return 1;
 }
 
-
+
 /*
 	The 2nd. argument is the array of mole fractions.
 	the length of this list is then the number of components.
@@ -187,10 +187,10 @@ static int GetComponentData(
 }
 
 
-static int CheckArgsOK(struct BBoxInterp *interp,
-		       struct Instance *data,
-		       struct gl_list_t *arglist,
-		       struct KVALUES_problem *problem
+static int CheckArgsOK(struct BBoxInterp *interp
+		, struct Instance *data
+		, struct gl_list_t *arglist
+		, struct KVALUES_problem *problem
 ){
   unsigned long len,ninputs,noutputs;
   int n_components;
@@ -198,16 +198,16 @@ static int CheckArgsOK(struct BBoxInterp *interp,
   (void)interp;
 
   if (!arglist) {
-    FPRINTF(stderr,"External function arguement list does not exist\n");
+    FPRINTF(stderr,"External function argument list does not exist\n");
     return 1;
   }
   len = gl_length(arglist);
   if (!len) {
-    FPRINTF(stderr,"No arguements to external function statement\n");
+    FPRINTF(stderr,"No arguments to external function statement\n");
     return 1;
   }
   if ((len!=(N_INPUT_ARGS+N_OUTPUT_ARGS))) {
-    FPRINTF(stderr,"Number of arguements does not match\n");
+    FPRINTF(stderr,"Number of arguments does not match\n");
     FPRINTF(stderr,"external function prototype\n");
     return 1;
   }
@@ -227,9 +227,8 @@ static int CheckArgsOK(struct BBoxInterp *interp,
   return 0;
 }
 
-
-static void kvalues_final( struct BBoxInterp *interp)
-{
+
+static void kvalues_final( struct BBoxInterp *interp){
   struct KVALUES_problem *problem;
   if (interp && interp->user_data) {
     problem = (struct KVALUES_problem *)interp->user_data;
@@ -288,7 +287,7 @@ int kvalues_preslv(struct BBoxInterp *interp,
   return 0;
 }
 
-
+
 /*
 	This function provides support to kvalues_fex which is one of the
 	registered functions. The input variables are T,x[1..ncomps],P.

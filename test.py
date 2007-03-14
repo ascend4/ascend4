@@ -408,6 +408,14 @@ class TestLSODE(Ascend):
 		assert abs(M.R - 832) < 1.0
 		assert abs(M.F - 21.36) < 0.1
 
+	def testwritegraph(self):
+		self.L.load('johnpye/lotka.a4c')
+		M = self.L.findType('lotka').getSimulation('sim')
+		F = file('lotka.dot','w')
+		M.build()
+		M.write(F,"dot")		
+
+
 #-------------------------------------------------------------------------------
 # Testing of a external blackbox functions
 

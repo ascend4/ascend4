@@ -1,66 +1,54 @@
+(*  ASCEND modelling environment
+	Copyright(C) 1990 Thomas Guthrie Epperly
+	Copyright(C) 1994-1997 Carnegie Mellon University
+	Copyright (C) 2007 Carnegie Mellon University
+
+	The ASCEND Modeling Library is free software; you can redistribute
+	it and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
+	
+	The ASCEND Modeling Library is distributed in hope that it
+	will be useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	See the GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with the program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
+ *)
 PROVIDE "measures.a4l";
-
 (*
- *  measures.a4l
- *  by Tom Epperly and Ben Allan
- *  Part of the ASCEND Library
- *  $Date: 1998/08/17 13:07:04 $
- *  $Revision: 1.5 $
- *  $Author: ballan $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/measures.a4l,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  This provides common unit definitions. The user may write additional
- *  files of unit definitions particular to their problem or site.
- *
- *  Copyright (C) 1997 Carnegie Mellon University.
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
+	Original author: Tom Epperly, 1990.
+	Contributors: Ben Allan, John Pye.
 
-(*
- * Units input file
- * by Tom Epperly
- * Copyright(C) 1990 Thomas Guthrie Epperly
- * Copyright(C) 1994-1997 Carnegie Mellon University
- *
- * This is a file defining the conversion factors ASCEND will recognize when
- * it sees them as {units). Note that the assignment x:= 0.5 {100};; yields
- *   x == 50, and that there are no 'offset conversions,' e.g. F=9/5C+32;
- * Added money which isn't really time 3-94 BAA
- * Expanded, including some of Karl's units, constants. 4-94 BAA
- * Updated with supplementary SI dimensions and less ambiguous mole dim. jz/baa
- *
- * Please keep unit names to 20 characters or less as this makes life pretty.
- * This is not a hard limit however.
- *
- * The root system units in SI MKS system are set in the C code to:
- * unitname  DIMENSION
- * define kilogram   M;        internal mass unit SI
- * define mole       Q;        internal quantity unit SI
- * define second     T;        internal time unit SI
- * define meter      L;        internal length unit SI
- * define Kelvin     TMP;      internal temperature unit SI
- * define currency   C;        internal currency unit
- * define ampere     E;        internal electric current unit SI suggested
- * define candela    LUM;      internal luminous intensity unit SI
- * define radian     P;        internal plane angle unit SI suggested
- * define steradian  S;        internal solid angle unit SI suggested
- *)
+	
+	This provides common unit definitions. The user may write additional
+	files of unit definitions particular to their problem or site.
+
+	* This is a file defining the conversion factors ASCEND will recognize when
+	* it sees them as {units). Note that the assignment x:= 0.5 {100};; yields
+	*   x == 50, and that there are no 'offset conversions,' e.g. F=9/5C+32;
+	* Added money which isn't really time 3-94 BAA
+	* Expanded, including some of Karl's units, constants. 4-94 BAA
+	* Updated with supplementary SI dimensions and less ambiguous mole dim. jz/baa
+	*
+	* Please keep unit names to 20 characters or less as this makes life pretty.
+	* This is not a hard limit however.
+	*
+	* The root system units in SI MKS system are set in the C code to:
+	* unitname  DIMENSION
+	* define kilogram   M;        internal mass unit SI
+	* define mole       Q;        internal quantity unit SI
+	* define second     T;        internal time unit SI
+	* define meter      L;        internal length unit SI
+	* define Kelvin     TMP;      internal temperature unit SI
+	* define currency   C;        internal currency unit
+	* define ampere     E;        internal electric current unit SI suggested
+	* define candela    LUM;      internal luminous intensity unit SI
+	* define radian     P;        internal plane angle unit SI suggested
+	* define steradian  S;        internal solid angle unit SI suggested
+*)
 
 UNITS
 
@@ -467,5 +455,7 @@ MINIMUMWAGE = {5.15*USD/h}; (* Dec 2005, see http://www.dol.gov/ *)
 * conversions we'd like to see , but probably won't
 * milliHelen = {beauty/ship};
 * Helen = {documentation/project};
+* who's helen?
+* AscendWorldDomination = {big/estimate};
 *)
 END UNITS;
