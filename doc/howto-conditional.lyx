@@ -1,4 +1,4 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -35,9 +35,42 @@ Conditional Modelling
 
 \begin_layout Standard
 This chapter hasn't yet been converted from the Framemaker version.
+ There are other references however:
 \end_layout
 
-\begin_layout Standard
+\begin_layout Itemize
+Vicente Rico-Ramirez' doctoral thesis 
+\begin_inset LatexCommand \cite{Rico-Ramirez}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+A tech report by Rico-Ramirez, Allan and Westerberg 
+\begin_inset LatexCommand \cite{Rico-Ramirez1998a}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+A report on a complementarity formulation by Rico-Ramirez 
+\begin_inset LatexCommand \cite{Rico-Ramirez1998}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Joe Zaher's doctoral thesis 
+\begin_inset LatexCommand \cite{Zaher1995}
+
+\end_inset
+
 
 \end_layout
 

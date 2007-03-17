@@ -1,4 +1,4 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -54,6 +54,42 @@ There are four major ways to prepare a model for reuse.
  And fourth, you should prepare a script that a future user can run to solve
  a sample problem involving an instance of the model.
  We shall consider each of these items in turn in what follows.
+\begin_inset Foot
+status open
+
+\begin_layout Standard
+More detail on these is available in papers and reports by Allan, Zaher,
+ Chittur et al 
+\begin_inset LatexCommand \cite{Allan1997d}
+
+\end_inset
+
+,
+\begin_inset LatexCommand \cite{Allan1997b}
+
+\end_inset
+
+,
+\begin_inset LatexCommand \cite{Allan1997}
+
+\end_inset
+
+,
+\begin_inset LatexCommand \cite{Krishnan1993}
+
+\end_inset
+
+,
+\begin_inset LatexCommand \cite{Zaher1991}
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
