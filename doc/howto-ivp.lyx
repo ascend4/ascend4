@@ -1,4 +1,4 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -65,6 +65,22 @@ This chapter assumes you have read Chapter
 The purpose of this chapter is to be a good first step along the path to
  learning how to use ASCEND for dynamic simulations
 \begin_inset LatexCommand \index{dynamic simulation}
+
+\end_inset
+
+
+\begin_inset Foot
+status open
+
+\begin_layout Standard
+Some further information on this topic is available in the report by Perry
+ and Allan 
+\begin_inset LatexCommand \cite{Perry1996}
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -241,6 +257,16 @@ Meaning
 
 \begin_layout Standard
 Typical Units
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+as entered into ASCEND
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
