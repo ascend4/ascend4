@@ -16,7 +16,13 @@
 
 #include "ida_impl.h"
 
-/* #define ANALYSE_DEBUG */
+#define ANALYSE_DEBUG
+
+/*
+	define DERIV_WITHOUT_DIFF to enable experimental handling of derivatives
+	for which corresponding differential vars were not found to be incident.
+*/
+/* #define DERIV_WITHOUT_DIFF */
 
 #define VARMSG(MSG) \
 	varname = var_make_name(sys->system,v); \
@@ -98,7 +104,11 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 			}else{
 				/* VARMSG("'%s' has a derivative that's OK"); */
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Non-incident var with an incident derivative. ASCEND can't handle this case at the moment, but we hope to fix it.");
+#ifdef DERIV_WITHOUT_DIFF
+				var_set_incident(v,1);
+#else				
 				return 1;
+#endif
 			}
 		}		
 

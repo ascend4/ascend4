@@ -40,7 +40,6 @@
 #include "instance_enum.h"
 #include "freestore.h"
 #include "find.h"
-#include "extfunc.h"
 #include "rel_blackbox.h"
 #include "vlist.h"
 #include "relation.h"

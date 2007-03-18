@@ -873,10 +873,10 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
     case BOOLEAN_ATOM_INST:
       if( ( boolean_var(inst) && LogRelationsCount(inst) ) ||
 	   WhensCount(inst) ) {
-	p_data->ndv++;
+        p_data->ndv++;
       }
       else {
-	p_data->nud++;
+        p_data->nud++;
       }
       break;
     case BOOLEAN_CONSTANT_INST:
@@ -892,7 +892,7 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
         symval = SCP(GetSymbolAtomValue(inst));
         if(symval == NULL) {
           ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
-		  FPRINTF(ASCERR,"CountStuffInTree found undefined symbol or symbol_constant in WHEN.\n");
+          FPRINTF(ASCERR,"CountStuffInTree found undefined symbol or symbol_constant in WHEN.\n");
           WriteInstanceName(ASCERR,inst,p_data->root);
           error_reporter_end_flush();
           g_bad_rel_in_list = TRUE;
@@ -904,7 +904,7 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
     case LREL_INST:
       if( GetInstanceLogRelOnly(inst) == NULL ) {
         ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
-		FPRINTF(ASCERR,"CountStuffInTree found bad logrel.\n");
+        FPRINTF(ASCERR,"CountStuffInTree found bad logrel.\n");
         WriteInstanceName(ASCERR,inst,p_data->root);
         error_reporter_end_flush();
         g_bad_rel_in_list = TRUE;
@@ -1017,8 +1017,8 @@ int analyze_make_master_lists(struct problem_t *p_data){
   }
 
 #define CL(L,N) \
-  p_data->L = gl_create(p_data->N); \
-  if(p_data->vars == NULL)return 1
+	p_data->L = gl_create(p_data->N); \
+	if(p_data->vars == NULL)return 1
 
   CL(vars,nv);	/* variables */
   CL(dvars,ndv);/* discrete variables */
@@ -1068,11 +1068,10 @@ int analyze_make_master_lists(struct problem_t *p_data){
     FPRINTF(ASCERR,"LogRels: Counted %lu\t Found %ld\n",gl_length(p_data->logrels),p_data->nl);
     FPRINTF(ASCERR,"Whens: Counted %lu\t Found %ld\n",gl_length(p_data->whens), p_data->nw);
     error_reporter_end_flush();
-	
   }
   /*
   	relation list is now grouped by model, and the order will be
-  	invariant with hardware and ascend invocation so long as
+  	invariant with hardware and ASCEND invocation so long as
   	set FIRSTCHOICE holds in compilation.
   */
   /* mark vars in constraints incident and index rels */
@@ -1220,7 +1219,7 @@ int analyze_make_master_lists(struct problem_t *p_data){
   }
 
   /*
-  	The following patch is to avoid the system to crash.
+  	The following patch is to prevent the slv_system from causing crashes.
   	When multiple definitions of a solver_var have introduced into the
   	system, ASCEND may fail in identifying that a REAL_ATOM is a refinement
   	of a solver_var. This causes the system to think that, even that there

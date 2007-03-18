@@ -70,7 +70,6 @@
 #include "arrayinst.h"
 #include "relation_type.h"
 #include "relation_io.h"
-#include "extfunc.h"
 #include "find.h"
 #include "rel_blackbox.h"
 #include "relation.h"

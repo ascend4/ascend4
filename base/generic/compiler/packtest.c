@@ -50,7 +50,6 @@
 #include "instquery.h"
 #include "atomvalue.h"
 #include "find.h"
-#include "extfunc.h"
 #include "rel_blackbox.h"
 #include "vlist.h"
 #include "relation.h"

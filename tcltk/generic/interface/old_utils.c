@@ -52,7 +52,6 @@
 #include <compiler/safe.h>
 #include <compiler/interval.h>
 #include <compiler/func.h>
-#include <compiler/extfunc.h>
 #include <compiler/extcall.h>
 #include <compiler/setinstval.h>
 #include <compiler/exprs.h>

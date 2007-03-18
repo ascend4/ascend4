@@ -57,7 +57,6 @@
 #include "instance_io.h"
 #include "instantiate.h"
 #include "find.h"
-#include "extfunc.h"
 #include "logical_relation.h"
 #include "rel_blackbox.h"
 #include "relation.h"

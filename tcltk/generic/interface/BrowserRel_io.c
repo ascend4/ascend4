@@ -43,7 +43,6 @@
 #include <compiler/instquery.h>
 #include <compiler/visitinst.h>
 #include <compiler/mathinst.h>
-#include <compiler/extfunc.h>
 #include <compiler/find.h>
 #include <compiler/functype.h>
 #include <compiler/safe.h>
