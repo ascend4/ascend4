@@ -52,7 +52,6 @@
 #include "prototype.h"
 #include "pending.h"
 #include "find.h"
-#include "extfunc.h"
 #include "rel_blackbox.h"
 #include "relation.h"
 #include "logical_relation.h"

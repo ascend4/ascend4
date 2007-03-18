@@ -19,7 +19,17 @@ MODEL testtmy;
 	E IS_A solver_var; (* total radiation *)
 	Gb IS_A solver_var;
 
-	(* source data: http://rredc.nrel.gov/solar/old_data/nsrdb/tmy2/unix/23161.tm2.Z *)
+	(*
+		You will need to download the following TMY (.tm2) file
+		which corresponds to a 'typical meteorological year' in 
+		Daggett, California, site of the world's largest
+		solar thermal power station, which has been generating 
+		354 MW electrical since the 1980s.
+
+		This file must me unzipped -- use 'gzip' on linux or '7-zip' on windows.
+		
+		http://rredc.nrel.gov/solar/old_data/nsrdb/tmy2/unix/23161.tm2.Z
+	*)
 	tmydata IS_A drconf;
 	tmydata.filename :== 'johnpye/datareader/23161.tm2';
 

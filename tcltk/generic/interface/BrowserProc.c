@@ -44,7 +44,6 @@
 #include <compiler/check.h>
 #include <compiler/expr_types.h>
 #include <compiler/setinstval.h>
-#include <compiler/extfunc.h>
 #include <compiler/find.h>
 #include <compiler/functype.h>
 #include <compiler/safe.h>

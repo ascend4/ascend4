@@ -59,7 +59,6 @@
 #include <compiler/expr_types.h>
 #include <compiler/mathinst.h>
 #include <compiler/instance_name.h>
-#include <compiler/extfunc.h>
 #include <compiler/find.h>
 #include <compiler/rel_blackbox.h>
 #include <compiler/vlist.h>

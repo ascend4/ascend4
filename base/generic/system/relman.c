@@ -35,13 +35,10 @@
 #include <general/mathmacros.h>
 
 #include <compiler/instance_enum.h>
-
-
 #include <compiler/functype.h>
 #include <compiler/safe.h>
 #include <compiler/rootfind.h>
 #include <compiler/extfunc.h>
-
 #include <compiler/expr_types.h>
 #include <compiler/find.h>
 #include <compiler/atomvalue.h>

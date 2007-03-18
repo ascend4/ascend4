@@ -35,7 +35,6 @@
 #include "functype.h"
 #include "expr_types.h"
 #include "case.h"
-#include "extfunc.h"
 #include "find.h"
 #include "rel_blackbox.h"
 #include "vlist.h"

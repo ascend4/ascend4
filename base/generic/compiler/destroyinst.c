@@ -61,7 +61,6 @@
 #include "type_desc.h"
 #include "prototype.h"
 #include "pending.h"
-#include "extfunc.h"
 #include "rel_blackbox.h"
 #include "vlist.h"
 #include "relation.h"

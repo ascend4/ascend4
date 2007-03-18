@@ -56,7 +56,6 @@
 #include "extcall.h"
 #include "relation_util.h"
 #include "rel_common.h"
-#include "extfunc.h"
 #include "rel_blackbox.h"
 #include "temp.h"
 #include "atomvalue.h"
