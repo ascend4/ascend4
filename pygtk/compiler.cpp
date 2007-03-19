@@ -1,5 +1,8 @@
 #include "compiler.h"
 
+/* #define COMPILER_DEBUG */
+/* #define BINTOKEN_DEBUG */
+
 extern "C"{
 #include <compiler/compiler.h>
 #include <compiler/bintoken.h>
@@ -9,7 +12,9 @@ extern "C"{
 using namespace std;
 
 Compiler::Compiler(){
+#ifdef COMPILE_DEBUG
 	CONSOLE_DEBUG("Creating compiler");
+#endif
 
 	/* set some default for bintoken compilation */
 	use_bintoken = false;
@@ -25,7 +30,9 @@ Compiler::Compiler(){
 }
 
 Compiler::~Compiler(){
+#ifdef COMPILER_DEBUG
 	CONSOLE_DEBUG("Destroying compiler...");;
+#endif
 }
 
 Compiler *
@@ -56,21 +63,27 @@ Compiler::setUseRelationSharing(const bool &use_relation_sharing){
 void
 Compiler::setBinaryCompilation(const bool &use_bintoken){
 	this->use_bintoken = use_bintoken;
+#ifdef BINTOKEN_DEBUG
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"usebintoken = %d",int(use_bintoken));
+#endif
 }
 
 void
 Compiler::sendBinaryCompilationOptions(){
 	if(use_bintoken && !bintoken_options_sent){
+#ifdef BINTOKEN_DEBUG
 		CONSOLE_DEBUG("SETUP BINTOKENS...");
-
+#endif
 		BinTokenSetOptions(bt_srcname.c_str(), bt_objname.c_str(), bt_libname.c_str()
 			, bt_cmd.c_str(), bt_rm.c_str(), 1000, 1, 0
 		);
 
+#ifdef BINTOKEN_DEBUG
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"srcname = %s, objname = %s, libname = %s, cmd = %s, rm = %s",
 			bt_srcname.c_str(), bt_objname.c_str(), bt_libname.c_str(), bt_cmd.c_str(), bt_rm.c_str()
 		);
+#endif
+
 		bintoken_options_sent = true;
 	}else{
 		/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"disabling bintoken compilation\n"); */

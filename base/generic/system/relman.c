@@ -53,6 +53,7 @@
 
 /* #define DIFF_DEBUG */
 /* #define EVAL_DEBUG */
+/* #define DSOLVE_DEBUG */
 
 #define IPTR(i) ((struct Instance *)(i))
 
@@ -854,31 +855,7 @@ boolean relman_calc_satisfied_scaled(struct rel_relation *rel, real64 tolerance)
    return( rel_satisfied(rel) );
 }
 
-
-#if REIMPLEMENT
-real64 *relman_directly_solve_new( struct rel_relation *rel
-		,struct var_variable *solvefor, int *able, int *nsolns
-		,real64 tolerance
-){
-  double *value;
-   if( rel_less(rel) || rel_greater(rel) || !rel_equal(rel) ||
-      rel_extnodeinfo(rel)) {
-      *able = FALSE;
-      *nsolns = 0;
-      return(NULL);
-   }
-   else if (rel->type == e_glassbox) {
-     value = relman_glassbox_dsolve(rel,solvefor,able,nsolns,tolerance);
-     return value;
-   }
-   else{
-     value =
-       exprman_directly_solve(rel,rel_lhs(rel),rel_rhs(rel),
-           solvefor,able,nsolns);
-     return value;
-   }
-}
-#else /* temporary */
+/* temporary */
 real64 *relman_directly_solve_new( struct rel_relation *rel,
 		struct var_variable *solvefor, int *able, int *nsolns, real64 tolerance
 ){
@@ -914,7 +891,9 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
 					return value;
 				}
 			case e_rel_blackbox:
-				CONSOLE_DEBUG("Attmpeting direct solve of blackbox");
+#ifdef DSOLVE_DEBUG
+				CONSOLE_DEBUG("Attempting direct solve of blackbox");
+#endif
 				return blackbox_dsolve(
 						IPTR(rel_instance(rel))
 						,IPTR(var_instance(solvefor))
@@ -939,7 +918,6 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
 	*nsolns = 0;
 	return(NULL);	
 }
-#endif
 
 
 char *dummyrelstring(slv_system_t sys, struct rel_relation *rel, int style){

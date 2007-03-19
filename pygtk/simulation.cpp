@@ -852,7 +852,7 @@ void
 Simulation::processVarStatus(){
 	if(!sys)throw runtime_error("No system built");
 
-	CONSOLE_DEBUG("Getting var status");
+	//CONSOLE_DEBUG("Getting var status");
 
 	// this is a cheap function call:
 	const mtx_block_t *bb = slv_get_solvers_blocks(getSystem());
@@ -900,6 +900,6 @@ Simulation::processVarStatus(){
 		i.setVarStatus(s);
 	}
 
-	CONSOLE_DEBUG(" ...done var status");
+	//CONSOLE_DEBUG(" ...done var status");
 }
 
