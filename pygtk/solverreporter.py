@@ -136,47 +136,51 @@ class PopupSolverReporter(PythonSolverReporter):
 		return 0
 
 	def finalise(self,status):
-		_time = time.clock()
+		try:
+			_time = time.clock()
 
-		_p = self.browser.prefs;
-		_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged",True);
-		_close_on_nonconverged = _p.getBoolPref("SolverReporter","close_on_nonconverged",False);
+			_p = self.browser.prefs;
+			_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged",True);
+			_close_on_nonconverged = _p.getBoolPref("SolverReporter","close_on_nonconverged",False);
 
 
-		if status.isConverged() and _close_on_converged:
+			if status.isConverged() and _close_on_converged:
+				self.report_to_browser(status)
+				self.window.response(gtk.RESPONSE_CLOSE)
+				return
+			
+			if not status.isConverged() and _close_on_nonconverged:
+				print "CLOSING, NOT CONVERGED"
+				self.report_to_browser(status)
+				if self.window:
+					self.window.response(gtk.RESPONSE_CLOSE)
+				return
+
+			self.fill_values(status)
+
+			if status.isConverged():
+				self.progressbar.set_fraction(1.0)
+				self.progressbar.set_text("Converged")
+			elif status.hasExceededTimeLimit():
+				self.progressbar.set_text("Exceeded time limit")
+			elif status.hasExceededIterationLimit():
+				self.progressbar.set_text("Exceeded iteration limit")
+			elif status.isDiverged():
+				self.progressbar.set_text("Diverged")
+			elif status.isOverDefined():
+				self.progressbar.set_text("Over-defined")
+			elif status.isUnderDefined():
+				self.progressbar.set_text("Under-defined")
+					
+			self.closebutton.set_sensitive(True)
+			self.stopbutton.set_sensitive(False)
+
 			self.report_to_browser(status)
-			self.window.response(gtk.RESPONSE_CLOSE)
-			return
-		
-		if not status.isConverged() and _close_on_nonconverged:
-			self.report_to_browser(status)
-			self.window.response(gtk.RESPONSE_CLOSE)
-			return
 
-		self.fill_values(status)
-
-		if status.isConverged():
-			self.progressbar.set_fraction(1.0)
-			self.progressbar.set_text("Converged")
-		elif status.hasExceededTimeLimit():
-			self.progressbar.set_text("Exceeded time limit")
-		elif status.hasExceededIterationLimit():
-			self.progressbar.set_text("Exceeded iteration limit")
-		elif status.isDiverged():
-			self.progressbar.set_text("Diverged")
-		elif status.isOverDefined():
-			self.progressbar.set_text("Over-defined")
-		elif status.isUnderDefined():
-			self.progressbar.set_text("Under-defined")
-				
-		self.closebutton.set_sensitive(True)
-		self.stopbutton.set_sensitive(False)
-
-		self.report_to_browser(status)
-
-		self.guitime = self.guitime + (time.clock() - _time)
-		print "TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime
-
+			self.guitime = self.guitime + (time.clock() - _time)
+			print "TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime
+		except Exception,e:
+			print "SOME PROBLEM: %s" % str(e)
 
 class SimpleSolverReporter(PythonSolverReporter):
 	def __init__(self,browser):

@@ -40,7 +40,24 @@
 #include "expr_types.h"
 #include "extfunc.h"
 
+/**
+	Direct solve of blackbox. Only returns non-NULL if the requested
+	variable is the output of the blackbox (not one of the inputs)
+
+	@param ri relation instance (asserted to be e_blackbox type)
+	@param v variable for which value is wanted
+	@param able (returned) 1 if able to solve for v
+	@param nsolns (returned) will always return 1 or 0.
+	@return NULL if solution not possible, else an array of double of length 1
+*/
+real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
+		, int *able
+		, int *nsolns
+);
+
+
 extern int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r);
+
 
 /** Compute standard form residual and gradient. 
 See relation_util.h gradient functions

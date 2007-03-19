@@ -2725,12 +2725,8 @@ void PrintRelationResiduals(struct Instance *i){
   'RELATIONFINDROOTS' AND SUPPORT FUNCTIONS
 
 	The following functions support RelationFindRoots which
-	is the compiler implementation of our old DirectSolve
+	is the compiler-side implementation of our old solver-side DirectSolve
 	function.
-
-	I suspect that a lot of this stuff is deprecated -- JP
-
-	Really?! Why?
 */
 
 double *RelationFindRoots(struct Instance *i,

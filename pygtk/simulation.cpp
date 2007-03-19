@@ -783,6 +783,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		status.getSimulationStatus(*this);
 
 		if(res || reporter.report(&status)){
+			CONSOLE_DEBUG("STOPPING!");
 			stop = true;
 		}
 	}
@@ -792,8 +793,12 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	
 	activeblock = status.getCurrentBlockNum();
 
-	// reporter can do output of num of iterations etc, if it wants to.
-	reporter.finalise(&status);
+	try{
+		// reporter can do output of num of iterations etc, if it wants to.
+		reporter.finalise(&status);
+	}catch(std::exception &e){
+		CONSOLE_DEBUG("Error finalising solver reporter (%s)",e.what());
+	}
 
 	// communicate solver variable status back to the instance tree
 	processVarStatus();

@@ -25,6 +25,12 @@ METHODS
 		FIX x[1..3];
 		FREE y[1..3];
 	END specify;
+	METHOD self_test;
+		(* don't test x[2],y[2] coz it can't be true *)
+		FOR i IN [1,3..n] DO
+			ASSERT y[i] = coef*x[i];
+		END FOR;
+	END self_test;	
 END pass64;
 
 (*  bbox in reinstantiate merge of inputs *)

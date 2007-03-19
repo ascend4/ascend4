@@ -49,6 +49,8 @@
 #include "packages.h" /* for init slv interp */
 #include "name.h" /* for copy/destroy name */
 
+#define WITH_BLACKBOX_DSOLVE
+
 #define BBDEBUG 0 /* set 0 if not wanting spew */
 
 static int32 ArgsDifferent(double new, double old, double tol)
@@ -59,6 +61,58 @@ static int32 ArgsDifferent(double new, double old, double tol)
 		return 0;
 	}
 }
+
+/*------------------------------------------------------------------------------
+  DIRECT SOLVE ROUTINE
+*/
+
+real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
+		, int *able
+		, int *nsolns
+){
+#ifdef WITH_BLACKBOX_DSOLVE
+	enum Expr_enum reltype;
+	struct relation *r;
+	int lhsvar;
+	struct Instance *arg;
+	double resid;
+	double *solns;
+
+	r = (struct relation *)GetInstanceRelation(ri, &reltype);
+
+	asc_assert(reltype == e_blackbox);
+
+	lhsvar = RBBOX(r).lhsvar;
+	/* return lhsval - value */
+	arg = RelationVariable(r,lhsvar);
+
+	if(arg != v){
+		CONSOLE_DEBUG("Direct solve not possible, wrong variable requested");
+		*able = 0;
+		*nsolns = 0;
+		return NULL;
+	}
+
+	if(BlackBoxCalcResidual(NULL, &resid, r)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to evaluate blackbox");
+		*able = 0;
+		*nsolns = 0;
+		return NULL;
+	}
+
+	solns = ASC_NEW_ARRAY(double,1);
+	solns[0] = RealAtomValue(v) - resid;
+	CONSOLE_DEBUG("Got solution %f for blackbox output", solns[0]);
+	*able = 1;
+	*nsolns = 1;
+	return solns;
+#else
+	(void)ri; (void)v;
+	*able = 0;
+	*nsolns = 0;
+	return NULL;
+#endif
+}	
 
 /*------------------------------------------------------------------------------
   RESIDUAL AND GRADIENT EVALUATION ROUTINES
