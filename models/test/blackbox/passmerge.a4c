@@ -40,6 +40,12 @@ METHODS
 		RUN pass1::specify;
 		x[1].fixed := FALSE;
 	END specify;
+	METHOD self_test;
+		(* don't assert that the first relation is correct *)
+		FOR i IN [2..n] DO
+			ASSERT y[i] = coef*x[i];
+		END FOR;
+	END self_test;
 END pass11;
 
 (*  merged input/output reverse solve *)

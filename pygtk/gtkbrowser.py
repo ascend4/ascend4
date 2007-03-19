@@ -744,8 +744,10 @@ class Browser:
 		
 
 	def do_check(self):
-		if not self.sim:
-			self.reporter.reportError("No simulation yet")
+		try:
+			self.sim.build()
+		except RuntimeError,e:
+			self.reporter.reportError("Couldn't build system: %s",str(e));
 			return
 
 		self.start_waiting("Checking system...")

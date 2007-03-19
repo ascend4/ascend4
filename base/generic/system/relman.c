@@ -521,7 +521,7 @@ int relman_diff3(struct rel_relation *rel
 
   assert(rel!=NULL && filter!=NULL);
   len = rel_n_incidences(rel);
-  vlist = rel_incidence_list(rel);
+  vlist = (struct var_variable**)rel_incidence_list(rel);
 
   gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
@@ -882,49 +882,62 @@ real64 *relman_directly_solve_new( struct rel_relation *rel
 real64 *relman_directly_solve_new( struct rel_relation *rel,
 		struct var_variable *solvefor, int *able, int *nsolns, real64 tolerance
 ){
-  double *value;
-   if( rel_less(rel) ||
-       rel_greater(rel) ||
-       !rel_equal(rel) ||
-       rel_extnodeinfo(rel)) {
-      *able = FALSE;
-      *nsolns = 0;
-      return(NULL);
-   }
-   switch (rel->type ) {
-#if 0 /* default */
-   case e_rel_glassbox:
-     value = relman_glassbox_dsolve(rel,solvefor,able,nsolns,tolerance);
-     return value;
-#endif
-   case e_rel_token:
-     {
-       int nvars,n;
-       const struct var_variable **vlist;
-       unsigned long vindex; /* index to the compiler */
-       nvars = rel_n_incidences(rel);
-       vlist = rel_incidence_list(rel);
-       vindex = 0;
-       for (n=0;n <nvars; n++) {
-         if (vlist[n]==solvefor) {
-           vindex = n+1; /*compiler counts from 1 */
-           break;
-         }
-       }
-       value = RelationFindRoots(IPTR(rel_instance(rel)),
-                                 var_lower_bound(solvefor),
-			         var_upper_bound(solvefor),
-			         var_nominal(solvefor),
-			         tolerance,
-			         &(vindex),
-			         able,nsolns);
-       return value;
-     }
-   default: /* e_rel_blackbox, glassbox */
-     *able = FALSE;
-     *nsolns = 0;
-     return(NULL);
-   }
+	double *value;
+	if(rel_less(rel) ||
+	       rel_greater(rel) ||
+	       !rel_equal(rel) ||
+	       rel_extnodeinfo(rel)
+	){
+		/* fall through; not able to directly solve */
+	}else{
+	   switch (rel->type ) {
+			case e_rel_token:
+				{
+					int nvars,n;
+					const struct var_variable **vlist;
+					unsigned long vindex; /* index to the compiler */
+					nvars = rel_n_incidences(rel);
+					vlist = rel_incidence_list(rel);
+					vindex = 0;
+					for (n=0; n < nvars; n++) {
+					    if (vlist[n]==solvefor) {
+						    vindex = n+1; /*compiler counts from 1 */
+						    break;
+					    }
+					}
+					value = RelationFindRoots(IPTR(rel_instance(rel))
+							, var_lower_bound(solvefor)
+							, var_upper_bound(solvefor)
+							, var_nominal(solvefor)
+							, tolerance, &(vindex), able, nsolns
+					);
+					return value;
+				}
+			case e_rel_blackbox:
+				CONSOLE_DEBUG("Attmpeting direct solve of blackbox");
+				return blackbox_dsolve(
+						IPTR(rel_instance(rel))
+						,IPTR(var_instance(solvefor))
+						,able,nsolns
+				);
+				/*
+					we *could* directly solve if the solvefor variable is the output
+					of this particular relation, but we don't support that at this stage
+				*/
+				break;
+#if 0
+			case e_rel_glassbox:
+				/* I think glassbox functionality might be dead at the moment? */
+				break;
+#endif 
+			default:
+				/* anything else? */
+				break;
+		}
+	}
+	*able = FALSE;
+	*nsolns = 0;
+	return(NULL);	
 }
 #endif
 
