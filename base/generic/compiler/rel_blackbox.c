@@ -50,6 +50,7 @@
 #include "name.h" /* for copy/destroy name */
 
 #define WITH_BLACKBOX_DSOLVE
+/* #define BLACKBOX_DEBUG */
 
 #define BBDEBUG 0 /* set 0 if not wanting spew */
 
@@ -87,14 +88,18 @@ real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
 	arg = RelationVariable(r,lhsvar);
 
 	if(arg != v){
+# ifdef BLACKBOX_DEBUG
 		CONSOLE_DEBUG("Direct solve not possible, wrong variable requested");
+# endif
 		*able = 0;
 		*nsolns = 0;
 		return NULL;
 	}
 
 	if(BlackBoxCalcResidual(NULL, &resid, r)){
+# ifdef BLACKBOX_DEBUG
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to evaluate blackbox");
+# endif
 		*able = 0;
 		*nsolns = 0;
 		return NULL;
@@ -102,7 +107,9 @@ real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
 
 	solns = ASC_NEW_ARRAY(double,1);
 	solns[0] = RealAtomValue(v) - resid;
+# ifdef BLACKBOX_DEBUG
 	CONSOLE_DEBUG("Got solution %f for blackbox output", solns[0]);
+# endif
 	*able = 1;
 	*nsolns = 1;
 	return solns;

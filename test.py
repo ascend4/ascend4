@@ -207,7 +207,7 @@ class TestSolver(AscendSelfTester):
 
 	def testwritegraph(self):
 		M = self._run('testlog10')
-		M.write("dot")		
+		M.write(sys.stderr,"dot")		
 
 
 class TestLRSlv(AscendSelfTester):
