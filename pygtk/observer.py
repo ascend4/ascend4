@@ -3,6 +3,7 @@ pygtk.require('2.0')
 import gtk
 import gtk.glade
 import pango
+import os.path
 
 OBSERVER_EDIT_COLOR = "#008800"
 OBSERVER_NOEDIT_COLOR = "#000088"
@@ -146,7 +147,7 @@ class ObserverTab:
 
 		self.keptimg =  gtk.Image()
 		self.activeimg = gtk.Image()
-		self.activeimg.set_from_file("glade/active.png")
+		self.activeimg.set_from_file(os.path.join(browser.options.assets_dir,"active.png"))
 		# create PixBuf objects from these?
 		self.rows = []
 		_store = gtk.TreeStore(object)
