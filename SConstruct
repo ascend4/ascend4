@@ -1510,6 +1510,29 @@ conf = Configure(env
 #	, config_h = "config.h"
 )
 
+def sconsversioncheck():
+
+#	uncomment the following line to skip the version check:
+#	return 1
+
+	import SCons
+	v = SCons.__version__.split(".")
+	if v[0] != '0':
+		return 0
+	if v[1] != '96':
+		return 0
+	micro = int(v[2])
+	if micro == 92 or micro == 93:
+		return 1;
+	return 0
+
+if not sconsversioncheck():
+	print "Scons version is not OK. Please try version 0.96.92 or 0.96.93,"
+	print "or consult the developers in the case of newer versions. Modify"
+	print "the function 'sconsversioncheck' in the file SConstruct if you"
+	print "want to *force* SCons to continue."
+	Exit(1)
+
 # stdio -- just to check that compiler is behaving
 
 if not conf.CheckHeader('stdio.h'):
@@ -1704,6 +1727,7 @@ if need_fortran:
 	if detect_fortran:
 		# For some reason, g77 doesn't get detected properly on MinGW
 		if not env.has_key('F77') and not env.has_key('FORTRAN'):
+			print "Fixing detection of F77 on MinGW...(?)"
 			conf.env.Replace(F77=detect_fortran)
 			conf.env.Replace(F77COM='$F77 $F77FLAGS -c -o $TARGET $SOURCE')
 			conf.env.Replace(F77FLAGS='')
