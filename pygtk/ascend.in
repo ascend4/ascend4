@@ -68,14 +68,14 @@ if os.environ.get('OSTYPE')=='cygwin':
 elif os.environ.get('OSTYPE')=='msys':
 	print "MSYS..."
 
-import ascpy
-from gtkbrowser import *
-if os.environ.get('ASC_DEV'):
-	d,f = os.path.split(os.path.abspath(sys.argv[0]))
-	if os.environ.get('ASC_START'):
-		os.chdir(os.environ.get('ASC_START'))
-	librarypath = SEP.join(['.',os.path.normpath(os.path.join(d,"../models"))])
-	B = Browser(librarypath=librarypath,assetspath=os.path.join(d,"glade"))
+if os.environ.get('ASC_GDB'):
+	args = sys.argv
+	args.pop(0)
+	cmd = ["gdb","--args","python",os.path.join("@INSTALL_ASCDATA@","gtkbrowser.py")]+args
+	print cmd
+	os.execv("/usr/bin/gdb",cmd)
 else:
+	import ascpy
+	from gtkbrowser import *
 	B = Browser()
-B.run()
+	B.run()
