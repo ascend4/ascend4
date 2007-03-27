@@ -683,13 +683,13 @@ Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &de
 }
 
 /**
-	Set the instance variable status. See @getVarStatus
+	Set the instance variable status. See @getInstanceStatus
 */
 void
-Instanc::setVarStatus(const VarStatus &s){
+Instanc::setStatus(const InstanceStatus &s){
 	InstanceInterfaceData *d;
 	d = (InstanceInterfaceData *)GetInterfacePtr(i);
-	if(d==NULL && s!=ASCXX_VAR_STATUS_UNKNOWN){
+	if(d==NULL && s!=ASCXX_INST_STATUS_UNKNOWN){
 		d = new InstanceInterfaceData();
 		SetInterfacePtr(i,d);
 	}
@@ -704,12 +704,12 @@ Instanc::setVarStatus(const VarStatus &s){
 	that we can be sure we'll get it, regardless of which
 	instance of an Instanc we have in our hands :-)
 */
-const VarStatus
-Instanc::getVarStatus() const{
+const InstanceStatus
+Instanc::getStatus() const{
 	InstanceInterfaceData *d;
 	d = (InstanceInterfaceData *)GetInterfacePtr(i);
 	if(d==NULL){
-		return ASCXX_VAR_STATUS_UNKNOWN;
+		return ASCXX_INST_STATUS_UNKNOWN;
 	}
     return d->status;
 }

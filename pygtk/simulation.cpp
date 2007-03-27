@@ -860,6 +860,9 @@ Simulation::processVarStatus(){
 	var_variable **vlist = slv_get_solvers_var_list(getSystem());
 	int nvars = slv_get_num_solvers_vars(getSystem());
 
+	rel_relation **rlist = slv_get_solvers_rel_list(getSystem());
+	int nrels = slv_get_num_solvers_rels(getSystem());
+
 	slv_status_t status;
 	if(slv_get_status(sys, &status)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to update var status (get_status returns error)");
@@ -885,7 +888,7 @@ Simulation::processVarStatus(){
 	for(int c=0; c < nvars; ++c){
 		var_variable *v = vlist[c];
 		Instanc i((Instance *)var_instance(v));
-		VarStatus s = ASCXX_VAR_STATUS_UNKNOWN;
+		InstanceStatus s = ASCXX_INST_STATUS_UNKNOWN;
 		if(i.isFixed()){
 			s = ASCXX_VAR_FIXED;
 		}else if(var_incident(v) && var_active(v)){
@@ -897,9 +900,22 @@ Simulation::processVarStatus(){
 				s = ASCXX_VAR_UNSOLVED;
 			}
 		}
-		i.setVarStatus(s);
+		i.setStatus(s);
 	}
 
+	for(int j=0; j < nrels; ++j){
+		rel_relation *r = rlist[j];
+		Instanc i((Instance *)rel_instance(r));
+		InstanceStatus s = ASCXX_INST_STATUS_UNKNOWN;
+		if(rel_in_when(r)){
+			if(!rel_active(r)){
+				s = ASCXX_REL_INACTIVE;
+			}				
+		}
+		i.setStatus(s);
+	}
+				
 	//CONSOLE_DEBUG(" ...done var status");
 }
+
 

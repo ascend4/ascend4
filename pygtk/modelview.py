@@ -136,9 +136,11 @@ class ModelView:
 			else:
 				_fgcolor = BROWSER_FREE_COLOR
 				_fontweight = pango.WEIGHT_BOLD
-			_status = instance.getVarStatus();
+			_status = instance.getStatus();
 			_statusicon = self.browser.statusicons[_status]
 		elif instance.isRelation():
+			_status = instance.getStatus();
+			_statusicon = self.browser.statusicons[_status]
 			if not instance.isIncluded():
 				_fgcolor = BROWSER_UNINCLUDED_COLOR
 		elif instance.isBool() or instance.isReal() or instance.isInt():
@@ -172,8 +174,9 @@ class ModelView:
 					self.modelstore.set_value(_iter,3,BROWSER_FIXED_COLOR)
 				elif not _instance.isFixed() and self.modelstore.get_value(_iter,3)==BROWSER_FIXED_COLOR:
 					self.modelstore.set_value(_iter,3,BROWSER_FREE_COLOR)
-				self.modelstore.set_value(_iter, 6, self.browser.statusicons[_instance.getVarStatus()])
+				self.modelstore.set_value(_iter, 6, self.browser.statusicons[_instance.getStatus()])
 			elif _instance.isRelation():
+				self.modelstore.set_value(_iter, 6, self.browser.statusicons[_instance.getStatus()])
 				if _instance.isIncluded():
 					self.modelstore.set_value(_iter,3,BROWSER_INCLUDED_COLOR)
 				else:
