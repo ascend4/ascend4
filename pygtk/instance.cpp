@@ -197,13 +197,13 @@ Instanc::isFixed() const{
 	return getChild("fixed").getBoolValue();
 }
 
-/** Is the relation currently included in the simulation (ie active WHEN) */
+/** Is the relation currently included in the simulation */
 const bool
-Instanc::isActive() const{
+Instanc::isIncluded() const{
 	if(getKind()==REL_INST){
 		return getChild("included").getBoolValue();
 	}
-	throw runtime_error("Instanc::isActive: Not a relation");
+	throw runtime_error("Instanc::isIncluded: Not a relation");
 }
 
 const bool
@@ -626,6 +626,12 @@ Instanc::setFixed(const bool &val){
 	if(isFixed()==val)return;
 	//CONSOLE_DEBUG("Fixing solver_var at %p",i);
 	getChild("fixed").setBoolValue(val);
+}
+
+void
+Instanc::setIncluded(const bool &val){
+	if(isIncluded()==val)return;
+	getChild("included").setBoolValue(val);
 }
 
 void

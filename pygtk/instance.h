@@ -82,7 +82,7 @@ public:
 	const Type getType() const;
 	const bool isAtom() const;
 	const bool isFixed() const;
-	const bool isActive() const;
+	const bool isIncluded() const;
 
 	const bool isFund() const;
 	const bool isConst() const;
@@ -118,6 +118,7 @@ public:
 	const bool isPlottable() const;
 
 	void setFixed(const bool &val=true);
+	void setIncluded(const bool &val=true);
 	void setBoolValue(const bool&, const unsigned &depth=0);
 	void setRealValue(const double&, const unsigned &depth=0);
 	void setRealValueWithUnits(double, const char *, const unsigned &depth=0);

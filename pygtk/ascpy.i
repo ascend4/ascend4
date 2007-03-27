@@ -349,7 +349,7 @@ public:
 	const Type getType() const;
 	const bool isAtom() const;
 	const bool isFixed() const;
-	const bool isActive() const;
+	const bool isIncluded() const;
 	const bool isFund() const;
 	const bool isConst() const;
 	const bool isAssigned() const;
@@ -387,6 +387,7 @@ public:
 	const ASCXX_Set<SymChar> getSetValue<SymChar>() const;
 	const bool isChildless() const;
 	void setFixed(const bool &val=true);
+	void setIncluded(const bool &val=true);
 	void setRealValue(const double &val);
 	void setRealValueWithUnits(const double &, const char *);
 	void setBoolValue(const bool &val);
