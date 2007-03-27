@@ -55,7 +55,7 @@ class RelPropsWin:
 			for i in c:
 				text += "%s = %s\n" % (self.browser.sim.getInstanceName(i), i.getValue())
 		else:
-				text += "This variable has no 'child' properties"
+				text += "This relation has no 'child' properties"
 		_dialog = InfoDialog(self.browser,self.window,text,title)
 		_dialog.run()
 
