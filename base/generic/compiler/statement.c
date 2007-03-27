@@ -508,7 +508,7 @@ struct Statement *CreateEXTERNBlackBox(
   register struct Statement *result;
   struct Name *bbsuffix;
   symchar *bsuf;
-  ERROR_REPORTER_DEBUG("Found blackbox equation statement '%s'\n",funcname);
+  /* ERROR_REPORTER_DEBUG("Found blackbox equation statement '%s'\n",funcname); */
 
   result=create_statement_here(EXT);
   result->v.ext.mode = ek_black;

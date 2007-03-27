@@ -5449,9 +5449,11 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   outputs = LinearizeArgList(arglist,start,end);
   n_outputs_actual = gl_length(outputs);
 
+/*
   char *tempnamestr = WriteNameString(dataName);
   CONSOLE_DEBUG("dataName = %s", tempnamestr);
   ASC_FREE(tempnamestr);
+*/
 
   /* Now create the relations, all with the same common. */
   common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, argListNames, dataName, efunc);
