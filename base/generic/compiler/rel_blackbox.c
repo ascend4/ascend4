@@ -567,7 +567,9 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b)
 	}
 
 	/* convert arglistnames to arglist. */
-	WriteNamesInList2D(ASCERR, b->argListNames, ", ", "\n");
+#if BBDEBUG
+    WriteNamesInList2D(ASCERR, b->argListNames, ", ", "\n");
+#endif
 	nbr = gl_length(b->argListNames);
 	arglist = gl_create(nbr);
 	for (br = 1; br <= nbr; br++) {

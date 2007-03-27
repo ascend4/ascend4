@@ -156,7 +156,7 @@ int LoadArchiveLibrary(CONST char *partialpath, CONST char *initfunc){
 			  should be used to open it, then make the call.
 	*/
 
-	CONSOLE_DEBUG("Searching for external library '%s'",partialpath);
+	/* CONSOLE_DEBUG("Searching for external library '%s'",partialpath); */
 
 	importhandler_createlibrary();
 

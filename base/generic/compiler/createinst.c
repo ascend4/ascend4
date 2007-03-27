@@ -710,7 +710,7 @@ struct Instance *CreateRelationInstance(struct TypeDescription *type,
     result->tmp_num = 0;
     result->anon_flags = 0;
     /* relation stuff */
-    CONSOLE_DEBUG("Creating relation instance at %p with NULL rel ptr",result);
+    /* CONSOLE_DEBUG("Creating relation instance at %p with NULL rel ptr",result); */
     result->ptr = NULL;
     result->whens = NULL;
     result->logrels = NULL;
