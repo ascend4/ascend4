@@ -24,6 +24,9 @@ class RelPropsWin:
 		self.expr.set_buffer(self.exprbuff)
 		self.morepropsbutton = _xml.get_widget("morepropsbutton");
 
+		self.statusimg = _xml.get_widget("statusimg");
+		self.statusmessage = _xml.get_widget("statusmessage");
+
 		self.fill_values()
 		_xml.signal_autoconnect(self)
 
@@ -32,6 +35,11 @@ class RelPropsWin:
 		self.residual.set_text( str( self.instance.getResidual() ) )
 		self.exprbuff.set_text( self.instance.getRelationAsString(self.browser.sim.getModel() ) )
 		self.included.set_active( self.instance.isIncluded() )
+
+		_status = self.instance.getStatus()		
+		self.statusimg.set_from_pixbuf(self.browser.statusicons[_status]);
+		self.statusmessage.set_text(self.browser.statusmessages[_status]);
+
 
 	def on_relpropswin_close(self,*args):
 		self.window.response(gtk.RESPONSE_CANCEL)
@@ -119,7 +127,7 @@ class VarPropsWin:
 		else:
 			self.free.set_active(True);
 
-		_status = self.instance.getVarStatus()
+		_status = self.instance.getStatus()
 		
 		self.statusimg.set_from_pixbuf(self.browser.statusicons[_status]);
 		self.statusmessage.set_text(self.browser.statusmessages[_status]);

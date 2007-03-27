@@ -299,7 +299,7 @@ struct slv9_system_structure {
  */
 static
 int check_system(slv9_system_t sys){
-  if( sys == NULL ) {
+  if(sys == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) check_system\n");
     FPRINTF(ASCERR,"        NULL system handle.\n");
     return 1;
@@ -336,7 +336,7 @@ int check_system(slv9_system_t sys){
  *     create_zero_array(len,type)
  */
 #define destroy_array(p)  \
-   if( (p) != NULL ) ascfree((p))
+   if((p) != NULL ) ascfree((p))
 #define create_array(len,type)  \
    ((len) > 0 ? (type *)ascmalloc((len)*sizeof(type)) : NULL)
 #define create_zero_array(len,type)  \
@@ -373,14 +373,14 @@ static
 void append_subregion(struct ds_subregion_list *sl,
 		struct subregionID sub
 ){
-  if( sl->length == sl->capacity ) {
+  if(sl->length == sl->capacity ) {
     int32 newcap;
     struct subregionID *newlist;
 
     newcap = sl->capacity + 10;
     newlist = alloc_array(newcap,struct subregionID);
     copy_subregions((char *)sl->sub_stack,(char *)newlist,sl->length);
-    if( sl->sub_stack != NULL ) {
+    if(sl->sub_stack != NULL ) {
       ascfree(sl->sub_stack);
     }
     sl->sub_stack = newlist;
@@ -397,14 +397,14 @@ static
 void append_sub_visited(struct ds_subregions_visited *sv,
 		unsigned long sub_visited
 ){
-  if( sv->length == sv->capacity ) {
+  if(sv->length == sv->capacity ) {
     int32 newcap;
     unsigned long *newlist;
 
     newcap = sv->capacity + 10;
     newlist = alloc_array(newcap,unsigned long);
     copy_nums((char *)sv->visited,(char *)newlist,sv->length);
-    if( sv->visited != NULL ) {
+    if(sv->visited != NULL ) {
       ascfree(sv->visited);
     }
     sv->visited = newlist;
@@ -462,10 +462,10 @@ void ID_and_storage_subregion_information(slv_system_t server,
   dfilter.matchvalue = (DIS_INWHEN | DIS_BOOLEAN);
   numdvf = slv_count_master_dvars(server,&dfilter);
 
-  if (numdvf > 0) {
+  if(numdvf > 0) {
     sub = (struct subregionID *)(ascmalloc(sizeof(struct subregionID)));
     sub->bool_values = (int32 *)(ascmalloc(numdvf*sizeof(int32)));
-  } else {
+  }else{
     FPRINTF(ASCERR,"ERROR: ID_and_storage_subregion_information.\n");
     FPRINTF(ASCERR,"       No boolean variables in the problem \n");
     return;
@@ -475,15 +475,15 @@ void ID_and_storage_subregion_information(slv_system_t server,
   val = 0;
   for (d=0; d<numdvs; d++) {
     cur_dis = bvlist[d];
-    if (dis_apply_filter(cur_dis,&dfilter)) {
+    if(dis_apply_filter(cur_dis,&dfilter)) {
       sub->bool_values[dcount] = dis_value(cur_dis);
       dcount++;
-      if (sub->bool_values[dcount - 1] == 1) {
+      if(sub->bool_values[dcount - 1] == 1) {
         val = val + powoftwo(numdvf - dcount);
       }
     }
   }
-  if ( (val == 0 ) && (numdvf > 0) ) {
+  if((val == 0 ) && (numdvf > 0) ) {
     val = powoftwo(numdvf);
   }
   sub->ID_number = val;
@@ -493,10 +493,10 @@ void ID_and_storage_subregion_information(slv_system_t server,
   visited = val;
   found = 0;
   len = sys->subregions_visited.length;
-  if (len > 0) {
+  if(len > 0) {
     for (s=0; s<len; s++) {
       sID = sys->subregions_visited.visited[s];
-      if (visited == sID) {
+      if(visited == sID) {
         found = 1;
         break;
       }
@@ -506,13 +506,13 @@ void ID_and_storage_subregion_information(slv_system_t server,
   sv = &(sys->subregions_visited);
   append_sub_visited(sv,visited);
 
-  if (found == 0) {
+  if(found == 0) {
 #if DEBUG_CONSISTENCY
       FPRINTF(ASCERR,"Saving alternative\n");
 #endif /* DEBUG_CONSISTENCY */
     sl = &(sys->subregion_list);
     append_subregion(sl,(*sub));
-  } else {
+  }else{
     destroy_array(sub->bool_values);
     ascfree(sub);
   }
@@ -533,25 +533,25 @@ void destroy_subregion_information(SlvClientToken asys){
   sys = SLV9(asys);
   check_system(sys);
 
-  if (sys->subregions_visited.visited != NULL) {
+  if(sys->subregions_visited.visited != NULL) {
     destroy_array(sys->subregions_visited.visited);
   }
 
   lens = sys->subregion_list.length;
-  if (lens != 0) {
+  if(lens != 0) {
     for (s=0; s<lens; s++) {
       sub = &(sys->subregion_list.sub_stack[s]);
-      if (sub->bool_values != NULL) {
+      if(sub->bool_values != NULL) {
         destroy_array(sub->bool_values);
       }
     }
   }
 
-  if (sys->subregion_list.sub_stack != NULL) {
+  if(sys->subregion_list.sub_stack != NULL) {
     destroy_array(sys->subregion_list.sub_stack);
   }
 
-  if (sys->bool_mindex != NULL) {
+  if(sys->bool_mindex != NULL) {
     destroy_array(sys->bool_mindex);
   }
 }
@@ -613,7 +613,7 @@ void cases_reorder(int32 *cur_cases, int32 *correct_cases, int32 ncases){
     tmp_num = 0;
     for (ind=1; ind<=ncases; ind++) {
       cur_case = cur_cases[ind];
-      if (tmp_num < cur_case) {
+      if(tmp_num < cur_case) {
         pos = ind;
         tmp_num  = cur_case;
       }
@@ -676,7 +676,7 @@ static struct gl_list_t *get_list_of_booleans(slv_system_t server,
   dfilter.matchvalue = (DIS_INWHEN | DIS_BOOLEAN);
   numdvf = slv_count_master_dvars(server,&dfilter);
 
-  if (numdvf == 0) {
+  if(numdvf == 0) {
     FPRINTF(ASCERR,"ERROR: (slv9) get_list_of_booleans.\n");
     FPRINTF(ASCERR,"       No boolean variables in the problem \n");
     return NULL;
@@ -688,7 +688,7 @@ static struct gl_list_t *get_list_of_booleans(slv_system_t server,
   dcount = 0;
   for (d=0; d<numdvs; d++) {
     cur_dis = bvlist[d];
-    if (dis_apply_filter(cur_dis,&(dfilter))) {
+    if(dis_apply_filter(cur_dis,&(dfilter))) {
       gl_append_ptr(boolvars,cur_dis);
       sys->bool_mindex[dcount] = d;
       dcount++;
@@ -743,19 +743,19 @@ int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
   FPRINTF(ASCERR,"Analyzing alternative:\n");
 #endif /* DEBUG_CONSISTENCY */
 
-  if (!slvDOF_status(server,(&status),(&dof))) {
+  if(!slvDOF_status(server,(&status),(&dof))) {
    FPRINTF(ASCERR,"ERROR in combinatorial search\n");
    FPRINTF(ASCERR,"Combinatorial search aborted\n");
    return -1;
-  } else {
-    if (status == 3) {
+  }else{
+    if(status == 3) {
 #if DEBUG_CONSISTENCY
       FPRINTF(ASCERR,"Alternative is structurally singular\n");
 #endif /* DEBUG_CONSISTENCY */
       (*terminate) = 0;
       return 0;
-    } else {
-      if (status == 4) {
+    }else{
+      if(status == 4) {
 #if DEBUG_CONSISTENCY
          FPRINTF(ASCERR,"Alternative is overspecified\n");
 #endif /* DEBUG_CONSISTENCY */
@@ -765,13 +765,13 @@ int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
     }
   }
 
-  if (status == 1) {
+  if(status == 1) {
     (*terminate) = 0;
 #if DEBUG_CONSISTENCY
     FPRINTF(ASCERR,"Alternative has % d degrees of freedom.\n", dof);
 
 #endif /* DEBUG_CONSISTENCY */
-    if (slvDOF_eligible(server,&(vars))) {
+    if(slvDOF_eligible(server,&(vars))) {
       count = 0;
       while (vars[count] != -1) {
         ind = vars[count];
@@ -783,7 +783,7 @@ int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
       }
       destroy_array(vars);
     }
-    if (dof > count) {
+    if(dof > count) {
 #if DEBUG_CONSISTENCY
       FPRINTF(ASCERR,
               "Alternative does not have enough number of eligible vars\n");
@@ -792,7 +792,7 @@ int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
     }
   }
 
-  if (status == 2) {
+  if(status == 2) {
 #if DEBUG_CONSISTENCY
     FPRINTF(ASCERR,"Alternative is square.\n");
 #endif /* DEBUG_CONSISTENCY */
@@ -843,14 +843,14 @@ int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
   lenv = sys->subregions_visited.length;
   lens = sys->subregion_list.length;
 
-  if (all_sub == 0) { /* current and previous subregion */
+  if(all_sub == 0) { /* current and previous subregion */
     for (v=lenv-2; v<lenv; v++) {
       test = 0;
       vID = sys->subregions_visited.visited[v];
       for (s=lens-1; s>=0; s--) {
         sub = &(sys->subregion_list.sub_stack[s]);
         visited = sub->ID_number;
-        if (vID == visited) {
+        if(vID == visited) {
           values = sub->bool_values;
           test = 1;
           FPRINTF(ASCERR,"s = %d \n",s);
@@ -858,7 +858,7 @@ int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
 	}
       }
 
-      if (test == 0) {
+      if(test == 0) {
         FPRINTF(ASCERR,"ERROR:  (slv9) do_search_alternatives \n");
         FPRINTF(ASCERR,"         subregion not found \n");
         return -1;
@@ -869,19 +869,19 @@ int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
       for (d=0; d<dlen; d++) {
 	assert(values != NULL); /* if null, test was 0 above and we returned, in theory */
         cur_dis = (struct dis_discrete *)(gl_fetch(disvars,d+1));
-	 if (values[d] == 1) {
+	 if(values[d] == 1) {
            dis_set_boolean_value(cur_dis,TRUE);
-	 } else {
+	 }else{
            dis_set_boolean_value(cur_dis,FALSE);
 	 }
       }
       result = get_eligible_set(server,disvars,terminate);
-      if (result != 1) {
+      if(result != 1) {
         return result;
       }
     }
 
-  } else { /* all visited subregions */
+  }else{ /* all visited subregions */
 
     for (s=lens-1; s>=0; s--) {
       sub = &(sys->subregion_list.sub_stack[s]);
@@ -892,14 +892,14 @@ int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
 #endif /* DEBUG_CONSISTENCY */
       for (d=0; d<dlen; d++) {
         cur_dis = (struct dis_discrete *)(gl_fetch(disvars,d+1));
-        if (values[d] == 1) {
+        if(values[d] == 1) {
           dis_set_boolean_value(cur_dis,TRUE);
-	} else {
+	}else{
           dis_set_boolean_value(cur_dis,FALSE);
 	}
       }
       result = get_eligible_set(server,disvars,terminate);
-      if (result != 1) {
+      if(result != 1) {
         return result;
       }
     }
@@ -951,7 +951,7 @@ int32 consistency(slv_system_t server, SlvClientToken asys,
 #endif /* DEBUG_CONSISTENCY */
   result = do_search_alternatives(server,asys,bollist,terminate,all_subs);
 
-  if (result != 1) {
+  if(result != 1) {
 #if DEBUG_CONSISTENCY
     FPRINTF(ASCERR,"returning failed search after S e a r c h \n");
 #endif /* DEBUG_CONSISTENCY */
@@ -965,7 +965,7 @@ int32 consistency(slv_system_t server, SlvClientToken asys,
   vfilter.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_ELIGIBLE);
   elnum = slv_count_master_vars(server,&vfilter);
 
-  if (elnum > 0) {
+  if(elnum > 0) {
     globeli = ASC_NEW_ARRAY(int32,elnum);
     elnum = 0;
     for (v=0; v<mnum; v++) {
@@ -984,8 +984,8 @@ int32 consistency(slv_system_t server, SlvClientToken asys,
    * Recursively analysis
    */
 
-  if ((*terminate) == 1) {
-    if (elnum != 0) {
+  if((*terminate) == 1) {
+    if(elnum != 0) {
 #if DEBUG_CONSISTENCY
       FPRINTF(ASCERR,"All alternatives are square but the \n");
       FPRINTF(ASCERR,"Eligible set is not null\n");
@@ -993,8 +993,8 @@ int32 consistency(slv_system_t server, SlvClientToken asys,
       destroy_array(globeli);
     }
     return 1;
-  } else {
-    if (elnum == 0) {
+  }else{
+    if(elnum == 0) {
 #if DEBUG_CONSISTENCY
       FPRINTF(ASCERR,"No globally eligible variables to be fixed.\n");
 #endif /* DEBUG_CONSISTENCY */
@@ -1012,22 +1012,22 @@ int32 consistency(slv_system_t server, SlvClientToken asys,
 #endif /* DEBUG_CONSISTENCY */
       result = consistency(server,asys,bollist,all_subs,&iter);
 
-      if (result != 1) {
+      if(result != 1) {
 #if DEBUG_CONSISTENCY
         FPRINTF(ASCERR,"%d eliminated\n",globeli[v]);
 #endif /* DEBUG_CONSISTENCY */
         var_set_fixed(mvar,FALSE);
         var_set_potentially_fixed(mvar,FALSE);
         continue;
-      } else {
-        if (iter == 1) {
+      }else{
+        if(iter == 1) {
           (*terminate) = 1;
 #if DEBUG_CONSISTENCY
           FPRINTF(ASCERR,"%d Acepted \n",globeli[v]);
 #endif /* DEBUG_CONSISTENCY */
           destroy_array(globeli);
           return 1;
-        } else {
+        }else{
           var_set_fixed(mvar,FALSE);
           var_set_potentially_fixed(mvar,FALSE);
           continue;
@@ -1087,8 +1087,8 @@ static int32 get_globally_eligible(slv_system_t server, SlvClientToken asys,
 #endif /* DEBUG_CONSISTENCY */
   result = do_search_alternatives(server,asys,bollist,&terminate,all_subs);
 
-  if (result != 1) {
-    if (terminate == 0) {
+  if(result != 1) {
+    if(terminate == 0) {
 #if DEBUG_CONSISTENCY
       FPRINTF(ASCERR,"ERROR: some alternatives are either singular or\n");
       FPRINTF(ASCERR,"overspecified. All the alternatives have to be\n");
@@ -1122,22 +1122,22 @@ static int32 get_globally_eligible(slv_system_t server, SlvClientToken asys,
   }
   (*eliset)[elnum] = -1;
 
-  if (elnum == 0) {
-    if (terminate == 0) {
+  if(elnum == 0) {
+    if(terminate == 0) {
 #if DEBUG_CONSISTENCY
       FPRINTF(ASCERR,
 	      "Some alternatives are underspecified, but there does\n");
       FPRINTF(ASCERR,"not exist a set of eligible variables consistent \n");
       FPRINTF(ASCERR,"with all the alternatives\n");
 #endif /* DEBUG_CONSISTENCY */
-    } else {
+    }else{
 #if DEBUG_CONSISTENCY
       FPRINTF(ASCERR,"All alternatives are already square\n");
 #endif /* DEBUG_CONSISTENCY */
     }
     return 0;
-  } else {
-    if (terminate == 1) {
+  }else{
+    if(terminate == 1) {
 #if DEBUG_CONSISTENCY
       FPRINTF(ASCERR,"All alternatives are square but the \n");
       FPRINTF(ASCERR,"Eligible set is not null\n");
@@ -1167,7 +1167,7 @@ int32 consistent_eligible_set_for_subregions(slv_system_t server,
   struct boolean_values bval;
   int32 result;
 
-  if (server==NULL || vlist == NULL) {
+  if(server==NULL || vlist == NULL) {
     FPRINTF(ASCERR,
 	    "consistent_eligible_set_for_subregions called with NULL.\n");
     return 0;
@@ -1175,7 +1175,7 @@ int32 consistent_eligible_set_for_subregions(slv_system_t server,
 
   blist = get_list_of_booleans(server,asys);
 
-  if ( (blist == NULL) || (gl_length(blist) == 0) ) {
+  if((blist == NULL) || (gl_length(blist) == 0) ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) consistent_eligible_set_for_subregions \n");
     FPRINTF(ASCERR,"        List of boolean vars could not be found\n");
     return 0;
@@ -1188,9 +1188,9 @@ int32 consistent_eligible_set_for_subregions(slv_system_t server,
   restore_configuration(server,blist);
   gl_destroy(blist);
 
-  if (result == 1) {
+  if(result == 1) {
     return 1;
-  } else {
+  }else{
     return 0;
   }
 
@@ -1221,13 +1221,13 @@ int32 analyze_subregions(slv_system_t server,SlvClientToken asys,
   sys = SLV9(asys);
   check_system(sys);
 
-  if (server==NULL || vlist == NULL) {
+  if(server==NULL || vlist == NULL) {
     FPRINTF(ASCERR,"(slv9) analyze_subregions called with NULL.\n");
     return 0;
   }
 
   blist = get_list_of_booleans(server,asys);
-  if ( (blist == NULL) || (gl_length(blist) == 0) ) {
+  if((blist == NULL) || (gl_length(blist) == 0) ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) analyze_subregions \n");
     FPRINTF(ASCERR,"        List of boolean vars could not be found\n");
     return 0;
@@ -1248,7 +1248,7 @@ int32 analyze_subregions(slv_system_t server,SlvClientToken asys,
 
   result = consistency(server,asys,blist,all_subs,&terminate);
 
-  if (result == 1) {
+  if(result == 1) {
   /*
    * Getting the set of eligible variables
    */
@@ -1274,7 +1274,7 @@ int32 analyze_subregions(slv_system_t server,SlvClientToken asys,
     restore_configuration(server,blist);
     gl_destroy(blist);
     return 1;
-  } else {
+  }else{
     for (v=0; v<mnum; v++) {
       mvar = vmlist[v];
       if(var_apply_filter(mvar,&vfilter)) {
@@ -1304,19 +1304,19 @@ int32 eligible_set_for_neighboring_subregions(slv_system_t server,
   sys = SLV9(asys);
   check_system(sys);
 
-  if( sys->mdvlist == NULL ) {
+  if(sys->mdvlist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) eligible_set_for_neighboring_subregions\n");
     FPRINTF(ASCERR,"        Discrete Variable list was never set.\n");
     return 0;
   }
 
-  if (!(sys->need_consistency_analysis)) {
+  if(!(sys->need_consistency_analysis)) {
     FPRINTF(ASCERR,"Globally eligible set not necessary\n");
     FPRINTF(ASCERR,"All the subregions have the same structure \n");
     return 0;
   }
 
-  if (consistent_eligible_set_for_subregions(server,asys,vlist,0)) {
+  if(consistent_eligible_set_for_subregions(server,asys,vlist,0)) {
     return 1;
   }
 
@@ -1338,19 +1338,19 @@ int32 consistency_for_neighboring_subregions(slv_system_t server,
   sys = SLV9(asys);
   check_system(sys);
 
-  if( sys->mdvlist == NULL ) {
+  if(sys->mdvlist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) consistency_for_neighboring_subregions\n");
     FPRINTF(ASCERR,"        Discrete Variable list was never set.\n");
     return 0;
   }
 
-  if (!(sys->need_consistency_analysis)) {
+  if(!(sys->need_consistency_analysis)) {
     FPRINTF(ASCERR,"consistency_analysis is not required\n");
     FPRINTF(ASCERR,"All the subregions have the same structure \n");
     return 0;
   }
 
-  if (analyze_subregions(server,asys,vlist,0)) {
+  if(analyze_subregions(server,asys,vlist,0)) {
     return 1;
   }
 
@@ -1374,19 +1374,19 @@ int32 eligible_set_for_subregions(slv_system_t server,
   sys = SLV9(asys);
   check_system(sys);
 
-  if( sys->mdvlist == NULL ) {
+  if(sys->mdvlist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) eligible_set_for_subregions \n");
     FPRINTF(ASCERR,"        Discrete Variable list was never set.\n");
     return 0;
   }
 
-  if (!(sys->need_consistency_analysis)) {
+  if(!(sys->need_consistency_analysis)) {
     FPRINTF(ASCERR,"Globally eligible set not necessary \n");
     FPRINTF(ASCERR,"All the subregions have the same structure \n");
     return 0;
   }
 
-  if (consistent_eligible_set_for_subregions(server,asys,vlist,1)) {
+  if(consistent_eligible_set_for_subregions(server,asys,vlist,1)) {
     return 1;
   }
 
@@ -1409,19 +1409,19 @@ int32 consistency_analysis_for_subregions(slv_system_t server,
   sys = SLV9(asys);
   check_system(sys);
 
-  if( sys->mdvlist == NULL ) {
+  if(sys->mdvlist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) consistency_analysis_for_subregions\n");
     FPRINTF(ASCERR,"        Discrete Variable list was never set.\n");
     return 0;
   }
 
-  if (!(sys->need_consistency_analysis)) {
+  if(!(sys->need_consistency_analysis)) {
     FPRINTF(ASCERR,"consistency_analysis is not required\n");
     FPRINTF(ASCERR,"All the subregions have the same structure \n");
     return 0;
   }
 
-  if (analyze_subregions(server,asys,vlist,1)) {
+  if(analyze_subregions(server,asys,vlist,1)) {
     return 1;
   }
 
@@ -1487,25 +1487,25 @@ void set_param_in_solver(slv_system_t server, int32 solver,
   slv_get_parameters(server,&p);
   length = p.num_parms;
   for (len = 0; len < length; len++) {
-    if (p.parms[len].type == types) {
+    if(p.parms[len].type == types) {
       switch (p.parms[len].type) {
         case bool_parm:
-          if (strcmp(param,p.parms[len].name) == 0) {
+          if(strcmp(param,p.parms[len].name) == 0) {
             p.parms[len].info.b.value = value->b;
           }
           break;
         case real_parm:
-          if (strcmp(param,p.parms[len].name) == 0) {
+          if(strcmp(param,p.parms[len].name) == 0) {
             p.parms[len].info.r.value = value->r;
           }
           break;
         case char_parm:
-          if (strcmp(param,p.parms[len].name) == 0) {
+          if(strcmp(param,p.parms[len].name) == 0) {
             p.parms[len].info.c.value = value->c;
           }
           break;
         case int_parm:
-          if (strcmp(param,p.parms[len].name) == 0) {
+          if(strcmp(param,p.parms[len].name) == 0) {
             p.parms[len].info.i.value = value->i;
           }
           break;
@@ -1536,7 +1536,7 @@ int32 some_dis_vars_changed(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   check_system(sys);
 
-  if( sys->dvlist == NULL ) {
+  if(sys->dvlist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) some_dis_vars_changed\n");
     FPRINTF(ASCERR,"         Discrete variable list was never set.\n");
     return 0;
@@ -1551,8 +1551,8 @@ int32 some_dis_vars_changed(slv_system_t server, SlvClientToken asys){
     FPRINTF(ASCERR,"Current Value = %d\n",dis_value(cur_dis));
     FPRINTF(ASCERR,"Previous Value = %d\n",dis_previous_value(cur_dis));
 #endif /* SHOW_LOGICAL_DETAILS */
-    if ((dis_kind(cur_dis)==e_dis_boolean_t ) && dis_inwhen(cur_dis) ) {
-      if (dis_value(cur_dis) != dis_previous_value(cur_dis)) {
+    if((dis_kind(cur_dis)==e_dis_boolean_t ) && dis_inwhen(cur_dis) ) {
+      if(dis_value(cur_dis) != dis_previous_value(cur_dis)) {
         return 1;
       }
     }
@@ -1581,7 +1581,7 @@ void search_for_modified_dvars(struct dis_discrete **dv,
     cur_dis = dv[d];
     if(dis_inwhen(cur_dis) && dis_boolean(cur_dis)) {
       orig_value = bval->cur_val[d];
-      if (orig_value != dis_value(cur_dis)) {
+      if(orig_value != dis_value(cur_dis)) {
 	dis_set_val_modified(cur_dis,TRUE);
       }
     }
@@ -1610,7 +1610,7 @@ void update_boundaries(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   check_system(sys);
 
-  if( sys->blist == NULL ) {
+  if(sys->blist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) update_boundaries.\n");
     FPRINTF(ASCERR,"         Boundary list was never set.\n");
     return;
@@ -1624,16 +1624,16 @@ void update_boundaries(slv_system_t server, SlvClientToken asys){
     bnd_set_pre_status(bp[ind],value);
     value = bndman_calc_satisfied(bp[ind]);
     bnd_set_cur_status(bp[ind],value);
-    if ( (bnd_status_cur(bp[ind]) != bnd_status_pre(bp[ind])) &&
+    if((bnd_status_cur(bp[ind]) != bnd_status_pre(bp[ind])) &&
         bnd_kind(bp[ind]) == e_bnd_rel  && !bnd_at_zero(bp[ind])) {
       bnd_set_crossed(bp[ind],TRUE);
-    } else {
+    }else{
       bnd_set_crossed(bp[ind],FALSE);
     }
-    if (bnd_kind(bp[ind]) == e_bnd_rel) {
+    if(bnd_kind(bp[ind]) == e_bnd_rel) {
       value = bndman_calc_at_zero(bp[ind]);
       bnd_set_at_zero(bp[ind],value);
-    } else {
+    }else{
       bnd_set_at_zero(bp[ind],FALSE);
     }
   }
@@ -1653,7 +1653,7 @@ int32 some_boundaries_crossed(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   check_system(sys);
 
-  if( sys->blist == NULL ) {
+  if(sys->blist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) some_boundaries_crossed\n");
     FPRINTF(ASCERR,"         Boundary list was never set.\n");
     return 0;
@@ -1663,7 +1663,7 @@ int32 some_boundaries_crossed(slv_system_t server, SlvClientToken asys){
   numbnds = slv_get_num_solvers_bnds(server);
   for( ind = 0; ind < numbnds; ++ind ) {
     cur_bnd = bp[ind];
-    if (bnd_crossed(cur_bnd) && bnd_in_logrel(cur_bnd)) {
+    if(bnd_crossed(cur_bnd) && bnd_in_logrel(cur_bnd)) {
       return 1;
     }
   }
@@ -1683,7 +1683,7 @@ int32 some_boundaries_at_zero(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   check_system(sys);
 
-  if( sys->blist == NULL ) {
+  if(sys->blist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) some_boundaries_at_zero\n");
     FPRINTF(ASCERR,"         Boundary list was never set.\n");
     return 0;
@@ -1693,7 +1693,7 @@ int32 some_boundaries_at_zero(slv_system_t server, SlvClientToken asys){
   numbnds = slv_get_num_solvers_bnds(server);
   for( ind = 0; ind < numbnds; ++ind ) {
     cur_bnd = bp[ind];
-    if (bnd_at_zero(cur_bnd) && bnd_in_logrel(cur_bnd)) {
+    if(bnd_at_zero(cur_bnd) && bnd_in_logrel(cur_bnd)) {
       return 1;
     }
   }
@@ -1726,8 +1726,8 @@ void do_perturbation_combinations(slv_system_t server,
     bnd_set_perturb(bp[bndatzero[ind]],FALSE);
     do_perturbation_combinations(server,bval,bp,dv,numdvs,
 				 bndatzero,indpo,numbndf);
-  } else {
-    if (ind < numbndf) {
+  }else{
+    if(ind < numbndf) {
       bnd_set_perturb(bp[bndatzero[ind]],TRUE);
       solve_logical_relations(server);
       slv_get_status(server,&status);
@@ -1735,7 +1735,7 @@ void do_perturbation_combinations(slv_system_t server,
         FPRINTF(ASCERR,"WARNING: \n");
         FPRINTF(ASCERR,"(slv9) do_perturbation_combinations\n");
         FPRINTF(ASCERR," Not convergence in logical solver \n");
-      } else {
+      }else{
         search_for_modified_dvars(dv,numdvs,bval);
       }
       bnd_set_perturb(bp[bndatzero[ind]],FALSE);
@@ -1745,10 +1745,10 @@ void do_perturbation_combinations(slv_system_t server,
         FPRINTF(ASCERR,"WARNING: \n");
         FPRINTF(ASCERR,"(slv9) do_perturbation_combinations\n");
         FPRINTF(ASCERR," Not convergence in logical solver \n");
-      } else {
+      }else{
         search_for_modified_dvars(dv,numdvs,bval);
       }
-    } else {
+    }else{
       FPRINTF(ASCERR,"ERROR:  (slv9) do_perturbation_combinations\n");
       FPRINTF(ASCERR,"         Wrong boundary index as argument\n");
     }
@@ -1781,8 +1781,8 @@ void do_dvar_values_combinations(struct gl_list_t *disvars,
     do_dvar_values_combinations(disvars,cases,numdvf,dpo,pos_cases);
     dis_set_boolean_value(cur_dis,FALSE);
     do_dvar_values_combinations(disvars,cases,numdvf,dpo,pos_cases);
-  } else {
-    if (d == numdvf) {
+  }else{
+    if(d == numdvf) {
       cur_dis = (struct dis_discrete *)(gl_fetch(disvars,d));
       dis_set_boolean_value(cur_dis,TRUE);
       cur_cases = cases_matching(disvars,&ncases);
@@ -1796,7 +1796,7 @@ void do_dvar_values_combinations(struct gl_list_t *disvars,
       cases[(*pos_cases)].ncases = ncases;
       cases[(*pos_cases)].diff_subregion = 1;
       (*pos_cases)++;
-    } else {
+    }else{
       FPRINTF(ASCERR,"ERROR: (slv9) do_dvar_values_combinations\n");
       FPRINTF(ASCERR,"        Wrong discrete var index as argument\n");
     }
@@ -1817,7 +1817,7 @@ void order_case(int32 *case_list, int32 *newcaselist, int ncases){
     tmp_num = 0;
     for (ind=1; ind<=ncases; ind++) {
       cur_case = case_list[ind];
-      if (tmp_num < cur_case) {
+      if(tmp_num < cur_case) {
         pos = ind;
         tmp_num  = cur_case;
       }
@@ -1842,13 +1842,13 @@ void order_cases(struct matching_cases *cases,int pos_cases){
   for (c=0; c<pos_cases;c++) {
     caselist  = cases[c].case_list;
     cur_ncase = cases[c].ncases;
-    if (cur_ncase > 1) {
+    if(cur_ncase > 1) {
       newcaselist = create_array(cur_ncase,int32);
       order_case(caselist,newcaselist,cur_ncase);
       cases[c].case_list = newcaselist;
       destroy_array(caselist);
-    } else {
-      if (cur_ncase == 1) {
+    }else{
+      if(cur_ncase == 1) {
       newcaselist = create_array(1,int32);
       newcaselist[0] = caselist[1];
       cases[c].case_list = newcaselist;
@@ -1872,7 +1872,7 @@ int32 compare_case(int32 *cur_set, int32 *comp_set, int cur_ncases){
   for (ind=0; ind<cur_ncases; ind++) {
     cur_case = cur_set[ind];
     comp_case = comp_set[ind];
-    if (cur_case != comp_case) {
+    if(cur_case != comp_case) {
       return 0;
     }
   }
@@ -1892,17 +1892,17 @@ void compare_cases(struct matching_cases *cases,int pos_cases){
   for (c=0; c<pos_cases; c++) {
     cur_set = cases[c].case_list;
     cur_ncases = cases[c].ncases;
-    if (cur_ncases == 0) {
+    if(cur_ncases == 0) {
       cases[c].diff_subregion = 0;
       continue;
     }
     for(d=0; d<c; d++) {
       comp_set = cases[d].case_list;
       comp_ncases = cases[d].ncases;
-      if (cur_ncases != comp_ncases) {
+      if(cur_ncases != comp_ncases) {
         continue;
-      } else {
-        if (compare_case(cur_set,comp_set,cur_ncases)) {
+      }else{
+        if(compare_case(cur_set,comp_set,cur_ncases)) {
           cases[c].diff_subregion = 0;
           break;
 	}
@@ -1951,19 +1951,19 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
   sys = SLV9(asys);
   check_system(sys);
 
-  if( sys->blist == NULL ) {
+  if(sys->blist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) at_a_boundary\n");
     FPRINTF(ASCERR,"         Boundary list was never set.\n");
     return 0;
   }
 
-  if( sys->dvlist == NULL ) {
+  if(sys->dvlist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) at_a_boundary\n");
     FPRINTF(ASCERR,"         Discrete Variable list was never set.\n");
     return 0;
   }
 
-  if (!some_boundaries_at_zero(server,asys)) {
+  if(!some_boundaries_at_zero(server,asys)) {
     return 0;
   }
 
@@ -1977,7 +1977,7 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
   for (b=0; b<numbnds; b++) {
     cur_bnd = bp[b];
     bnd_set_perturb(cur_bnd,FALSE);
-    if (bnd_at_zero(cur_bnd)) {
+    if(bnd_at_zero(cur_bnd)) {
 #if SHOW_BOUNDARY_ANALYSIS_DETAILS
     FPRINTF(ASCERR,"boundary at zero = %d\n",b);
 #endif /* SHOW_BOUNDARY_ANALYSIS_DETAILS */
@@ -2031,7 +2031,7 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
   dfilter.matchvalue = (DIS_VAL_MODIFIED);
   numdvf = slv_count_solvers_dvars(server,&dfilter);
 
-  if (numdvf == 0) {
+  if(numdvf == 0) {
     FPRINTF(ASCERR,"Not really at a boundary\n");
     for (d=0; d<numdvs; d++) {
       cur_dis = dv[d];
@@ -2089,7 +2089,7 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
     }
   }
 
-  if ((*n_subregions)==0) {
+  if((*n_subregions)==0) {
     FPRINTF(ASCERR,"ERROR: at least one subregion must be found\n");
     for (d=0; d<numdvs; d++) {
       cur_dis = dv[d];
@@ -2106,7 +2106,7 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
     return 0;
   }
 
-  if ((*n_subregions)==1) {
+  if((*n_subregions)==1) {
     FPRINTF(ASCERR,"Not really at a boundary\n");
     for (d=0; d<numdvs; d++) {
       cur_dis = dv[d];
@@ -2123,7 +2123,7 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
     return 0;
   }
 
-  if ((*n_subregions) > 0) {
+  if((*n_subregions) > 0) {
     (*subregions) = (struct matching_cases *)
                  (ascmalloc(((*n_subregions))*sizeof(struct matching_cases)));
     (*n_subregions) = 0;
@@ -2157,13 +2157,13 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
   }
   cur_cases = cases_matching(disvars,&cur_ncases);
   caselist = cur_cases;
-  if (cur_ncases > 1) {
+  if(cur_ncases > 1) {
     newcaselist = create_array(cur_ncases,int32);
     order_case(caselist,newcaselist,cur_ncases);
     cur_cases = newcaselist;
     destroy_array(caselist);
-  } else {
-    if (cur_ncases == 1) {
+  }else{
+    if(cur_ncases == 1) {
       newcaselist = create_array(1,int32);
       newcaselist[0] = caselist[1];
       cur_cases = newcaselist;
@@ -2171,7 +2171,7 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
     }
   }
   for(comb=0; comb<(*n_subregions);comb++) {
-    if ((*subregions)[comb].ncases == cur_ncases) {
+    if((*subregions)[comb].ncases == cur_ncases) {
       if(compare_case((*subregions)[comb].case_list,cur_cases,cur_ncases)) {
         (*cur_subregion) = comb;
         assign_cur_sub = 1;
@@ -2180,7 +2180,7 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
     }
   }
 
-  if (!assign_cur_sub) {
+  if(!assign_cur_sub) {
     FPRINTF(ASCERR,"PANIC: original configuration not found\n");
   }
 
@@ -2224,13 +2224,13 @@ real64 return_to_first_boundary(slv_system_t server,
   check_system(sys);
   lif = LIF(sys);
 
-  if( sys->blist == NULL ) {
+  if(sys->blist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) return_to_first_boundary\n");
     FPRINTF(ASCERR,"         Boundary list was never set.\n");
     return 1.0;
   }
 
-  if (!some_boundaries_crossed(server,asys)) {
+  if(!some_boundaries_crossed(server,asys)) {
     return 1.0;
   }
 
@@ -2245,7 +2245,7 @@ real64 return_to_first_boundary(slv_system_t server,
   ind = 0;
   for (b=0; b<numbnds; b++) {
     cur_bnd = bp[b];
-    if (bnd_crossed(cur_bnd)) {
+    if(bnd_crossed(cur_bnd)) {
       bndcrossed[ind] = b;
       bval.cur_val[ind] = bnd_status_cur(cur_bnd);
       bval.pre_val[ind] = bnd_status_pre(cur_bnd);
@@ -2307,7 +2307,7 @@ real64 return_to_first_boundary(slv_system_t server,
 
   while (conv_flag == 0) {
     iter++;
-    if (iter>n_iterations) {
+    if(iter>n_iterations) {
       FPRINTF(ASCERR,"ERROR:  (slv9) return_to_first_boundary\n");
       FPRINTF(ASCERR,"Could not find the first boundary crossed \n");
       FPRINTF(ASCERR,"Returning the last factor calculated\n");
@@ -2342,22 +2342,22 @@ real64 return_to_first_boundary(slv_system_t server,
       FPRINTF(lif,"previous status = %d\n", bval.pre_val[b]);
       FPRINTF(lif,"status aftert factor = %d\n",bnd_status_cur(cur_bnd));
 #endif /* SHOW_BISECTION_DETAILS */
-      if ( bnd_status_cur(cur_bnd) != bval.pre_val[b] ) {
+      if(bnd_status_cur(cur_bnd) != bval.pre_val[b] ) {
         still_crossed = 1;
       }
     }
 #if SHOW_BISECTION_DETAILS
       FPRINTF(lif,"still_crossed = %d\n",still_crossed);
 #endif /* SHOW_BISECTION_DETAILS */
-    if (still_crossed) {
+    if(still_crossed) {
       fup = factor;
-    } else {
+    }else{
       flo = factor;
       for (b=0; b<numbndf; b++) {
         cur_bnd = bp[bndcrossed[b]];
         bnd_set_pre_status(cur_bnd,bval.pre_val[b]);
         bnd_set_cur_status(cur_bnd,bval.pre_val[b]);
-        if (bnd_at_zero(cur_bnd)) {
+        if(bnd_at_zero(cur_bnd)) {
 #if SHOW_BOUNDARY_ANALYSIS_DETAILS
           FPRINTF(ASCERR,"boundary at zero = %d\n",bndcrossed[b]);
           FPRINTF(lif,"factor = %f\n",factor);
@@ -2609,7 +2609,7 @@ int COI_CALL slv9_conopt_readmatrix(
   count = 0;
   for (c=0; c<totvar; c++) {
     var = varlist[c];
-    if (var_apply_filter(var,&vfilter)) {
+    if(var_apply_filter(var,&vfilter)) {
       nominal = var_nominal(var);
       low = var_lower_bound(var);
       up = var_upper_bound(var);
@@ -2733,10 +2733,10 @@ int COI_CALL slv9_conopt_readmatrix(
       rowno[numnz] = eq;
       nlflag[numnz] = 0;
       deriv = -1.0 * (coeff_matrix->cols[c - num_var].element[eq]);
-      if (deriv > RTMAXJ ) {
+      if(deriv > RTMAXJ ) {
         deriv = 0.5 * RTMAXJ;
-      } else {
-        if (deriv < -RTMAXJ ) {
+      }else{
+        if(deriv < -RTMAXJ ) {
           deriv = -0.5*RTMAXJ;
         }
       }
@@ -2843,14 +2843,14 @@ int COI_CALL slv9_conopt_fdeval(
   sys = (slv9_system_t)usrmem;
   num_vars = sys->con.n - sys->subregions;
 
-  if (*mode == 1 || *mode == 3) {
-    if (*rowno == sys->con.m - 1){
+  if(*mode == 1 || *mode == 3) {
+    if(*rowno == sys->con.m - 1){
       obj = 0.0;
       for (v=0; v<num_vars; v++) {
         obj = obj + (x[v] * x[v]);
       }
       *g = obj;
-    } else {
+    }else{
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Wrong number of constraints");
       return 1;
     }
@@ -2861,20 +2861,20 @@ int COI_CALL slv9_conopt_fdeval(
    * from complaining about large derivatives.
    */
 
-  if (*mode == 2 || *mode == 3) {
-    if (*rowno == sys->con.m - 1){
+  if(*mode == 2 || *mode == 3) {
+    if(*rowno == sys->con.m - 1){
       for (v=0; v<num_vars; v++) {
         deriv = 2.0 * x[v];
-        if (deriv > RTMAXJ ) {
+        if(deriv > RTMAXJ ) {
           deriv = 0.5*RTMAXJ;
-        } else {
-          if (deriv < -RTMAXJ ) {
+        }else{
+          if(deriv < -RTMAXJ ) {
             deriv = -0.5*RTMAXJ;
           }
         }
         jac[v] = deriv;
       }
-    } else {
+    }else{
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Wrong number of constraints");
 	  return 1;
     }
@@ -3036,15 +3036,15 @@ int COI_CALL slv9_conopt_option(
 
   name = memset(name,' ',8);
   while (sys->con.opt_count < slv9_PA_SIZE) {
-    if (strlen(sys->p.parms[sys->con.opt_count].interface_label) == 6) {
-      if (strncmp(sys->p.parms[sys->con.opt_count].interface_label,
+    if(strlen(sys->p.parms[sys->con.opt_count].interface_label) == 6) {
+      if(strncmp(sys->p.parms[sys->con.opt_count].interface_label,
                   "R",1) == 0) {
 	name = strncpy(name, sys->p.parms[sys->con.opt_count]. /* . break */
                                   interface_label,6);
 	*rval = sys->p.parms[sys->con.opt_count].info.r.value;
 	sys->con.opt_count++;
 	return 0;
-      } else if (strncmp(sys->p.parms[sys->con.opt_count]. /* . break */
+      } else if(strncmp(sys->p.parms[sys->con.opt_count]. /* . break */
                              interface_label,"L",1) == 0) {
 	name = strncpy(name,sys->p.parms[sys->con.opt_count]. /* . break */
                                  interface_label,6);
@@ -3250,7 +3250,7 @@ void create_opt_matrix_and_vectors(int32 num_opt_eqns,
 
   coeff_matrix->cols = ASC_NEW_ARRAY(struct opt_vector,n_subregions);
 
-  if (g_optimizing) {
+  if(g_optimizing) {
     multipliers->cols = ASC_NEW_ARRAY(struct opt_vector,n_subregions);
   }
 
@@ -3259,9 +3259,9 @@ void create_opt_matrix_and_vectors(int32 num_opt_eqns,
   }
   opt_var_values->element = ASC_NEW_ARRAY(real64,num_vars);
 
-  if (g_optimizing) {
+  if(g_optimizing) {
     gradient->element = ASC_NEW_ARRAY(real64,num_opt_eqns);
-  } else {
+  }else{
     invariant->element = ASC_NEW_ARRAY(real64,num_opt_eqns);
     variant->element = ASC_NEW_ARRAY(real64,num_opt_eqns);
   }
@@ -3284,16 +3284,16 @@ void destroy_opt_matrix_and_vectors(int32 n_subregions,
   int32  c;
   for (c=0; c<n_subregions; c++) {
     destroy_array(coeff_matrix->cols[c].element);
-    if (g_optimizing) {
+    if(g_optimizing) {
       destroy_array(multipliers->cols[c].element);
     }
   }
   destroy_array(coeff_matrix->cols);
   destroy_array(opt_var_values->element);
-  if (g_optimizing) {
+  if(g_optimizing) {
     destroy_array(multipliers->cols);
     destroy_array(gradient->element);
-  } else {
+  }else{
     destroy_array(invariant->element);
     destroy_array(variant->element);
   }
@@ -3344,7 +3344,7 @@ void get_multipliers(SlvClientToken asys,
   mtx_partition(sys->lin_mtx);
   len = mtx_number_of_blocks(sys->lin_mtx);
   newblocks = ASC_NEW_ARRAY(mtx_region_t,len);
-  if (newblocks == NULL) {
+  if(newblocks == NULL) {
     mtx_destroy(sys->lin_mtx);
     return;
   }
@@ -3371,9 +3371,9 @@ void get_multipliers(SlvClientToken asys,
   weights = ASC_NEW_ARRAY(real64,nrel);
   for (row=0; row<nrel; row++) {
     summ = mtx_sum_sqrs_in_row(sys->lin_mtx,row,&(oneblock->col));
-    if (summ <= 0.0) {
+    if(summ <= 0.0) {
       weights[row] = 1.0;
-    } else {
+    }else{
       weights[row] = 1.0 / sqrt(summ);
     }
 #if DEBUG
@@ -3480,7 +3480,7 @@ void get_gradient_in_subregion(slv_system_t server,
   rfilter.matchvalue =(REL_INCLUDED | REL_EQUALITY | REL_ACTIVE );
   nrel = slv_count_master_rels(server,&rfilter);
 
-  if (nrel != nvar) {
+  if(nrel != nvar) {
     FPRINTF(ASCERR," nrel = %d\n",nrel);
     FPRINTF(ASCERR," nvar = %d\n",nvar);
     FPRINTF(ASCERR,
@@ -3579,7 +3579,7 @@ void get_gradient_in_subregion(slv_system_t server,
   countnbv = 0;
   for (cr=0; cr<ntotrel; cr++) {
     rel = rlist[cr];
-    if (rel_apply_filter(rel,&rfilter)) {
+    if(rel_apply_filter(rel,&rfilter)) {
       rel_set_sindex(rel,countrel);
       coord.col = rel_sindex(rel);
       len = rel_n_incidences(rel);
@@ -3595,12 +3595,12 @@ void get_gradient_in_subregion(slv_system_t server,
 #endif /*  SHOW_LAGRANGE_DETAILS  */
       for (cv=0; cv<count;cv++) {
         var = vlist[variables_master[cv]];
-        if (!var_nonbasic(var)) {
+        if(!var_nonbasic(var)) {
           tmp_value[variables_master[cv]] = tmp_value[variables_master[cv]] +
                                             derivatives[cv] * RHO * resid;
           if(var_active(var)) {
             coord.row = var_sindex(var);
-            if (coord.row == -1) {
+            if(coord.row == -1) {
               var_set_sindex(var,countvar);
               coord.row = countvar;
               countvar++;
@@ -3613,8 +3613,8 @@ void get_gradient_in_subregion(slv_system_t server,
 #endif /*  SHOW_LAGRANGE_DETAILS  */
             mtx_fill_org_value(sys->lin_mtx,&coord,derivatives[cv]);
 	  }
-	} else {
-          if (var_sindex(var)== -1) {
+	}else{
+          if(var_sindex(var)== -1) {
             var_set_sindex(var,countnbv);
             countnbv++;
 	  }
@@ -3646,13 +3646,13 @@ void get_gradient_in_subregion(slv_system_t server,
 		    variables_solver,&count,&resid,1);
   for (cv=0; cv<count;cv++) {
     var = vlist[variables_master[cv]];
-    if (!var_nonbasic(var)) {
+    if(!var_nonbasic(var)) {
 #if SHOW_LAGRANGE_DETAILS
       FPRINTF(ASCERR,"Objective row = %d \n",var_sindex(var));
       FPRINTF(ASCERR,"Derivative = %f \n",derivatives[cv]);
 #endif /*  SHOW_LAGRANGE_DETAILS  */
       grad_obj[var_sindex(var)] = -1.0 * derivatives[cv];
-    } else {
+    }else{
 #if SHOW_LAGRANGE_DETAILS
       FPRINTF(ASCERR,"Non Basic Variable = %d \n",var_sindex(var));
       FPRINTF(ASCERR,"Derivative in Objective = %f \n",derivatives[cv]);
@@ -3672,13 +3672,13 @@ void get_gradient_in_subregion(slv_system_t server,
   countvar = 0;
   for (cv = 0; cv<ntotvar; cv++) {
     var = vlist[cv];
-    if (var_apply_filter(var,&vfilter)) {
-      if (!var_nonbasic(var)) {
+    if(var_apply_filter(var,&vfilter)) {
+      if(!var_nonbasic(var)) {
         gradient->element[countvar] = tmp_value[cv];
         countvar++;
-      } else {
+      }else{
 	vind = var_sindex(var);
-        if ( (vind != -1) && (vind < nvnb) ) {
+        if((vind != -1) && (vind < nvnb) ) {
           gradient->element[countvar] = f_red_grad[vind];
           for (cr=0; cr<nrel; cr++) {
             gradient->element[countvar] = gradient->element[countvar] +
@@ -3702,15 +3702,15 @@ void get_gradient_in_subregion(slv_system_t server,
   }
   destroy_array(rel_red_grad.cols);
 
-  if (countrel != nrel) {
+  if(countrel != nrel) {
     FPRINTF(ASCERR,"PANIC: number of invariant relations does not match\n");
   }
 
-  if (countvar != ( num_opt_eqns - 1)) {
+  if(countvar != ( num_opt_eqns - 1)) {
     FPRINTF(ASCERR,"PANIC: number of variables does not match at boundary\n");
   }
   /*
-  if (countvar != nvar) {
+  if(countvar != nvar) {
     FPRINTF(ASCERR,"PANIC: number of variables does not match at boundary\n");
   }
   */
@@ -3756,7 +3756,7 @@ real64 get_augmented_function_in_subregion(slv_system_t server,
 
   for (cr=0; cr<ntotrel; cr++) {
     rel = rlist[cr];
-    if (rel_apply_filter(rel,&rfilter)) {
+    if(rel_apply_filter(rel,&rfilter)) {
       resid = relman_eval(rel, &status, 1);
       sqrnorm = sqrnorm + (resid *
                            ( multipliers->cols[subregion].element[countrel] +
@@ -3773,7 +3773,7 @@ real64 get_augmented_function_in_subregion(slv_system_t server,
 
   sqrnorm = sqrnorm + resid;
 
-  if (countrel != nrel) {
+  if(countrel != nrel) {
     FPRINTF(ASCERR,"PANIC: number of invariant relations does not match\n");
   }
   return sqrnorm;
@@ -3827,7 +3827,7 @@ void get_invariant_of_gradient_in_subregions(slv_system_t server,
   countrel = 0;
   for (cr=0; cr<ntotrel; cr++) {
     rel = rlist[cr];
-    if (rel_apply_filter(rel,&rfilter)) {
+    if(rel_apply_filter(rel,&rfilter)) {
       len = rel_n_incidences(rel);
       variables = ASC_NEW_ARRAY(int32,len);
       derivatives = ASC_NEW_ARRAY(real64,len);
@@ -3847,7 +3847,7 @@ void get_invariant_of_gradient_in_subregions(slv_system_t server,
 
   countvar = 0;
   for (cv = 0; cv<ntotvar; cv++) {
-    if (var_apply_filter(vlist[cv],&vfilter)) {
+    if(var_apply_filter(vlist[cv],&vfilter)) {
       invariant->element[countvar] = tmp_value[cv];
       countvar++;
     }
@@ -3855,15 +3855,15 @@ void get_invariant_of_gradient_in_subregions(slv_system_t server,
   invariant->element[countvar] = 1.0;
   destroy_array(tmp_value);
 
-  if (countrel != nrel) {
+  if(countrel != nrel) {
     FPRINTF(ASCERR,"PANIC: number of invariant relations does not match\n");
   }
 
-  if (countvar != ( num_opt_eqns - 1)) {
+  if(countvar != ( num_opt_eqns - 1)) {
     FPRINTF(ASCERR,"PANIC: number of variables does not match at boundary\n");
   }
 
-  if (countvar != nvar) {
+  if(countvar != nvar) {
     FPRINTF(ASCERR,"PANIC: number of variables does not match at boundary\n");
   }
 
@@ -3917,7 +3917,7 @@ void get_variant_of_gradient_in_subregion(slv_system_t server,
   countrel = 0;
   for (cr=0; cr<ntotrel; cr++) {
     rel = rlist[cr];
-    if (rel_apply_filter(rel,&rfilter)) {
+    if(rel_apply_filter(rel,&rfilter)) {
       len = rel_n_incidences(rel);
       variables = ASC_NEW_ARRAY(int32,len);
       derivatives = ASC_NEW_ARRAY(real64,len);
@@ -3937,7 +3937,7 @@ void get_variant_of_gradient_in_subregion(slv_system_t server,
 
   countvar = 0;
   for (cv = 0; cv<ntotvar; cv++) {
-    if (var_apply_filter(vlist[cv],&vfilter)) {
+    if(var_apply_filter(vlist[cv],&vfilter)) {
       variant->element[countvar] = tmp_value[cv];
       countvar++;
     }
@@ -3945,15 +3945,15 @@ void get_variant_of_gradient_in_subregion(slv_system_t server,
   variant->element[countvar] = 0.0;
   destroy_array(tmp_value);
 
-  if (countrel != nrel) {
+  if(countrel != nrel) {
     FPRINTF(ASCERR,"PANIC: number of variant relations does not match\n");
   }
 
-  if (countvar != ( num_opt_eqns - 1)) {
+  if(countvar != ( num_opt_eqns - 1)) {
     FPRINTF(ASCERR,"PANIC: number of variables does not match at boundary\n");
   }
 
-  if (countvar != nvar) {
+  if(countvar != nvar) {
     FPRINTF(ASCERR,"PANIC: number of variables does not match at boundary\n");
   }
 
@@ -3990,7 +3990,7 @@ real64 get_invariant_of_obj_norm_in_subregions(slv_system_t server){
 
   for (cr=0; cr<ntotrel; cr++) {
     rel = rlist[cr];
-    if (rel_apply_filter(rel,&rfilter)) {
+    if(rel_apply_filter(rel,&rfilter)) {
       resid = relman_eval(rel, &status, 1);
       sqrnorm = sqrnorm + (resid * resid);
       countrel++;
@@ -4001,7 +4001,7 @@ real64 get_invariant_of_obj_norm_in_subregions(slv_system_t server){
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
 #endif
 
-  if (countrel != nrel) {
+  if(countrel != nrel) {
     FPRINTF(ASCERR,"PANIC: number of invariant relations does not match\n");
   }
   return sqrnorm;
@@ -4040,7 +4040,7 @@ real64 get_variant_of_obj_norm_in_subregion(slv_system_t server){
 
   for (cr=0; cr<ntotrel; cr++) {
     rel = rlist[cr];
-    if (rel_apply_filter(rel,&rfilter)) {
+    if(rel_apply_filter(rel,&rfilter)) {
       resid = relman_eval(rel, &status, 1);
       sqrnorm = sqrnorm + (resid * resid);
       countrel++;
@@ -4051,7 +4051,7 @@ real64 get_variant_of_obj_norm_in_subregion(slv_system_t server){
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
 #endif
 
-  if (countrel != nrel) {
+  if(countrel != nrel) {
     FPRINTF(ASCERR,"PANIC: number of variant relations does not match\n");
   }
   return sqrnorm;
@@ -4074,17 +4074,17 @@ void fill_opt_matrix_cols_with_vectors(int32 num_opt_eqns, int32 n,
 
   norm2 = 0.0;
   for(num_eqn=0; num_eqn<num_opt_eqns; num_eqn++) {
-    if (g_optimizing) {
+    if(g_optimizing) {
       coeff_matrix->cols[n].element[num_eqn] = gradient->element[num_eqn];
-    } else {
+    }else{
       coeff_matrix->cols[n].element[num_eqn] = invariant->element[num_eqn] +
                                                  variant->element[num_eqn];
     }
-    if (num_eqn < (num_opt_eqns - 1) ) {
+    if(num_eqn < (num_opt_eqns - 1) ) {
 #if SHOW_OPTIMIZATION_DETAILS
-      if (g_optimizing) {
+      if(g_optimizing) {
         FPRINTF(ASCERR," gradient = %f \n", gradient->element[num_eqn]);
-      } else {
+      }else{
         FPRINTF(ASCERR," variant = %f \n", variant->element[num_eqn]);
         FPRINTF(ASCERR," invariant = %f \n", invariant->element[num_eqn]);
       }
@@ -4150,7 +4150,7 @@ void apply_optimization_step(slv_system_t server, SlvClientToken asys,
   norm2 = 0.0;
   for (c=0; c<totvars; c++) {
     var = vlist[c];
-    if (var_apply_filter(var,&vfilter)) {
+    if(var_apply_filter(var,&vfilter)) {
       norm2 = norm2 + ( values->element[count] * values->element[count] );
       count++;
     }
@@ -4161,7 +4161,7 @@ void apply_optimization_step(slv_system_t server, SlvClientToken asys,
   for (c=0; c<totvars; c++) {
     var = vlist[c];
     pre_val = rvalues->pre_values[c];
-    if (var_apply_filter(var,&vfilter)) {
+    if(var_apply_filter(var,&vfilter)) {
       nominal = var_nominal(var);
       low = var_lower_bound(var);
       up = var_upper_bound(var);
@@ -4172,23 +4172,23 @@ void apply_optimization_step(slv_system_t server, SlvClientToken asys,
       FPRINTF(lif,"dx = %f\n",dx);
 #endif /* SHOW_OPTIMIZATION_DETAILS */
       test_value = pre_val + dx;
-      if ( (test_value < low) || (test_value > up) ) {
-        if (test_value < low) {
+      if((test_value < low) || (test_value > up) ) {
+        if(test_value < low) {
           value = low;
-          if (SHOW_LESS_IMPT) {
+          if(SHOW_LESS_IMPT) {
              FPRINTF(lif,"%-40s ---> ",
                          "    Variable projected to lower bound");
              print_var_name(lif,sys,var); PUTC('\n',lif);
           }
-	} else {
+	}else{
           value = up;
-          if (SHOW_LESS_IMPT) {
+          if(SHOW_LESS_IMPT) {
              FPRINTF(lif,"%-40s ---> ",
                          "    Variable projected to upper bound");
              print_var_name(lif,sys,var); PUTC('\n',lif);
           }
 	}
-      } else {
+      }else{
         value = test_value;
       }
       var_set_value(var,value);
@@ -4280,7 +4280,7 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 
   identify_invariant_rels_at_bnd(server,disvars);
 
-  if (!g_optimizing) {
+  if(!g_optimizing) {
     get_invariant_of_gradient_in_subregions(server,num_opt_eqns,
 					    &invariant_vect_values);
   }
@@ -4296,10 +4296,10 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 				 subregions[n].ncases,disvars);
     set_active_vars_in_subregion(server);
     identify_variant_rels_in_subregion(server);
-    if (g_optimizing) {
+    if(g_optimizing) {
       get_gradient_in_subregion(server,asys,n,num_opt_eqns,
 			        &gradient,&multipliers);
-    } else {
+    }else{
       get_variant_of_gradient_in_subregion(server,num_opt_eqns,
 					   &variant_vect_values);
     }
@@ -4342,7 +4342,7 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
    * Analyze and apply CONOPT step
    */
 
-  if (fabs(obj_val) > OBJ_TOL) {
+  if(fabs(obj_val) > OBJ_TOL) {
 
     return_value = 1;
 
@@ -4350,7 +4350,7 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 
     identify_invariant_rels_at_bnd(server,disvars);
 
-    if (!g_optimizing) {
+    if(!g_optimizing) {
       invnorm = get_invariant_of_obj_norm_in_subregions(server);
     }
 
@@ -4364,10 +4364,10 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 				   subregions[n].ncases,disvars);
       set_active_vars_in_subregion(server);
       identify_variant_rels_in_subregion(server);
-      if (g_optimizing) {
+      if(g_optimizing) {
         varnorm[n] = get_augmented_function_in_subregion(server,asys,n,
 						        &multipliers);
-      } else {
+      }else{
         varnorm[n] = get_variant_of_obj_norm_in_subregion(server);
         varnorm[n] = varnorm[n] + invnorm;
         varnorm[n] = sqrt(varnorm[n]);
@@ -4389,13 +4389,13 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 
     while (global_decrease == 0) {
       niter++;
-      if (niter > ITER_BIS_LIMIT) {
+      if(niter > ITER_BIS_LIMIT) {
         ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Could not reduce the residuals of all the neighboring subregions.");
         return_value = 0;
         break;
       }
 
-      if ( (factor*factor*obj_val) < OBJ_TOL) {
+      if((factor*factor*obj_val) < OBJ_TOL) {
         ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Could not reduce the residuals of all the neighboring subregions.");
         return_value = 0;
         break;
@@ -4404,7 +4404,7 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
       apply_optimization_step(server,asys,*n_subregions,
 			      sys->opt_var_values,factor,rvalues);
       identify_invariant_rels_at_bnd(server,disvars);
-      if (!g_optimizing) {
+      if(!g_optimizing) {
         invnorm = get_invariant_of_obj_norm_in_subregions(server);
       }
 
@@ -4414,10 +4414,10 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 				     subregions[n].ncases,disvars);
         identify_variant_rels_in_subregion(server);
 
-        if (g_optimizing) {
+        if(g_optimizing) {
           testnorm[n] = get_augmented_function_in_subregion(server,asys,n,
 							    &multipliers);
-	} else {
+	}else{
           testnorm[n] = get_variant_of_obj_norm_in_subregion(server);
           testnorm[n] = testnorm[n] + invnorm;
           testnorm[n] = sqrt(testnorm[n]);
@@ -4426,7 +4426,7 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 
       red_step = 0;
       for (n=0;n<(*n_subregions);n++) {
-        if (testnorm[n] > varnorm[n]) {
+        if(testnorm[n] > varnorm[n]) {
           factor = 0.5 * factor;
           red_step = 1;
 #if SHOW_LINEAR_SEARCH_DETAILS
@@ -4439,7 +4439,7 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 	}
       }
 
-      if (!red_step) {
+      if(!red_step) {
         global_decrease = 1;
 #if SHOW_LINEAR_SEARCH_DETAILS
         FPRINTF(ASCERR,"factor accepted \n");
@@ -4453,7 +4453,7 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
     */
     destroy_array(varnorm);
     destroy_array(testnorm);
-  } else {
+  }else{
     return_value = 0;
   }
 
@@ -4485,7 +4485,7 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 				 &variant_vect_values,&gradient,
 				 &multipliers);
   sys->coeff_matrix = NULL;
-  if ((*n_subregions) > 0) {
+  if((*n_subregions) > 0) {
     for(n=0; n<(*n_subregions);n++) {
       destroy_array(subregions[n].case_list);
     }
@@ -4548,7 +4548,7 @@ static
 void update_status( slv9_system_t sys){
   boolean unsuccessful;
 
-  if( !sys->s.converged ) {
+  if(!sys->s.converged ) {
     sys->s.time_limit_exceeded = (sys->s.block.cpu_elapsed >= TIME_LIMIT);
     sys->s.iteration_limit_exceeded = (sys->s.block.iteration >= ITER_LIMIT);
    }
@@ -4607,7 +4607,7 @@ void update_real_status(slv_status_t *main, slv_status_t *slave, int32 niter){
     main->block.residual = slave->block.residual;
     main->block.current_size = slave->block.current_size;
     main->block.current_block = slave->block.current_block;
-    if (niter ==1 ) {
+    if(niter ==1 ) {
       main->block.iteration =  slave->block.iteration;
     }
     main->block.previous_total_size = slave->block.previous_total_size;
@@ -4636,19 +4636,19 @@ int32 slv9_get_default_parameters(slv_system_t server,
     "CONOPT"
   };
 
-  if (server != NULL && asys != NULL) {
+  if(server != NULL && asys != NULL) {
     sys = SLV9(asys);
     make_macros = 1;
   }
 
-  if (parameters->parms == NULL) {
+  if(parameters->parms == NULL) {
    /* an external client wants our parameter list.
      * an instance of slv9_system_structure has this pointer
      * already set in slv9_create
      */
     new_parms = (struct slv_parameter *)
     ascmalloc((slv9_PA_SIZE)*sizeof(struct slv_parameter));
-    if (new_parms == NULL) {
+    if(new_parms == NULL) {
       return -1;
     }
 
@@ -4857,7 +4857,7 @@ int32 get_solvers_tokens(  slv9_system_t sys, slv_system_t server){
 
   /* registration number of logical solver  */
   for (si=0; si < num_solvers; si++) {
-    if (strcmp(LOGSOLVER_OPTION,slv_solver_name(si)) == 0) {
+    if(strcmp(LOGSOLVER_OPTION,slv_solver_name(si)) == 0) {
       num_log_reg = si;
       break;
     }
@@ -4865,7 +4865,7 @@ int32 get_solvers_tokens(  slv9_system_t sys, slv_system_t server){
 
   /* registration number of nonlinear solver  */
   for (si=0; si < num_solvers; si++) {
-    if (strcmp(NONLISOLVER_OPTION,slv_solver_name(si)) == 0) {
+    if(strcmp(NONLISOLVER_OPTION,slv_solver_name(si)) == 0) {
       num_nl_reg = si;
       break;
     }
@@ -4875,7 +4875,7 @@ int32 get_solvers_tokens(  slv9_system_t sys, slv_system_t server){
    * registration number of optimization solver.
    */
   for (si=0; si < num_solvers; si++) {
-    if (strcmp(OPTSOLVER_OPTION,slv_solver_name(si)) == 0) {
+    if(strcmp(OPTSOLVER_OPTION,slv_solver_name(si)) == 0) {
       num_opt_reg = si;
       break;
     }
@@ -4883,7 +4883,7 @@ int32 get_solvers_tokens(  slv9_system_t sys, slv_system_t server){
 
   /* registration number of current conditional solver  */
   for (si=0; si < num_solvers; si++) {
-    if (strcmp("CMSlv",slv_solver_name(si)) == 0) {
+    if(strcmp("CMSlv",slv_solver_name(si)) == 0) {
       num_cond_reg = si;
       break;
     }
@@ -4893,22 +4893,22 @@ int32 get_solvers_tokens(  slv9_system_t sys, slv_system_t server){
    * Check if all the solver required are available. If they are not,
    * this solver's system will not be created.
    */
-  if ( num_log_reg == -1 ) {
+  if(num_log_reg == -1 ) {
     FPRINTF(ASCERR,"Solver %s not available\n",LOGSOLVER_OPTION);
     return 1;
   }
 
-  if ( num_nl_reg == -1 ) {
+  if(num_nl_reg == -1 ) {
     FPRINTF(ASCERR,"Solver %s not available\n",NONLISOLVER_OPTION);
     return 1;
   }
 
-  if ( num_opt_reg == -1 ) {
+  if(num_opt_reg == -1 ) {
     FPRINTF(ASCERR,"Solver %s not available\n",OPTSOLVER_OPTION);
     return 1;
   }
 
-  if ( num_cond_reg == -1 ) {
+  if(num_cond_reg == -1 ) {
     FPRINTF(ASCERR,"Solver CMSlv was not registered\n");
     return 1;
   }
@@ -4977,7 +4977,7 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
   slv9_system_t sys;
 
   sys = (slv9_system_t)asccalloc(1, sizeof(struct slv9_system_structure) );
-  if (sys==NULL) {
+  if(sys==NULL) {
     *statusindex = 1;
     return sys;
   }
@@ -5009,31 +5009,31 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
   sys->mvtot = slv_get_num_master_vars(server);
   sys->coeff_matrix = NULL;
   sys->opt_var_values = NULL;
-  if (sys->vlist == NULL) {
+  if(sys->vlist == NULL) {
     ascfree(sys);
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no variables.");
     *statusindex = -2;
     return NULL;
   }
-  if (sys->rlist == NULL && sys->obj == NULL) {
+  if(sys->rlist == NULL && sys->obj == NULL) {
     ascfree(sys);
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no relations or objective.\n");
     *statusindex = -1;
     return NULL;
   }
-  if (sys->dvlist == NULL) {
+  if(sys->dvlist == NULL) {
     ascfree(sys);
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no discrete variables.\n");
     *statusindex = -2;
     return NULL;
   }
-  if (sys->lrlist == NULL) {
+  if(sys->lrlist == NULL) {
     ascfree(sys);
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no logrelations.\n");
     *statusindex = -1;
     return NULL;
   }
-  if (sys->blist == NULL) {
+  if(sys->blist == NULL) {
     ascfree(sys);
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no boundaries.\n");
     *statusindex = -2;
@@ -5043,7 +5043,7 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
   slv_check_dvar_initialization(server);
   slv_bnd_initialization(server);
 
-  if (get_solvers_tokens(sys,server)) {
+  if(get_solvers_tokens(sys,server)) {
     ascfree(sys);
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Solver(s) required by CMSlv were not registered. System cannot be created.");
     *statusindex = -1;
@@ -5083,7 +5083,7 @@ void slv9_get_parameters(slv_system_t server, SlvClientToken asys,
   slv9_system_t sys;
   (void) server;
   sys = SLV9(asys);
-  if (check_system(sys)) return;
+  if(check_system(sys)) return;
   mem_copy_cast(&(sys->p),parameters,sizeof(slv_parameters_t));
 }
 
@@ -5094,7 +5094,7 @@ void slv9_set_parameters(slv_system_t server, SlvClientToken asys,
   slv9_system_t sys;
   (void) server;
   sys = SLV9(asys);
-  if (check_system(sys)) return;
+  if(check_system(sys)) return;
   mem_copy_cast(parameters,&(sys->p),sizeof(slv_parameters_t));
 }
 
@@ -5105,7 +5105,7 @@ int slv9_get_status(slv_system_t server, SlvClientToken asys,
 	slv9_system_t sys;
 	(void) server;
 	sys = SLV9(asys);
-	if (check_system(sys)) return 1;
+	if(check_system(sys)) return 1;
 	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
 	return 0;
 }
@@ -5116,7 +5116,7 @@ void slv9_dump_internals(slv_system_t server,
 ){
   check_system(sys);
   (void) server;
-  if (level > 0) {
+  if(level > 0) {
     FPRINTF(ASCERR,"ERROR:  (slv9) slv9_dump_internals\n");
     FPRINTF(ASCERR,"         slv9 does not dump its internals.\n");
   }
@@ -5226,11 +5226,11 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   iteration_begins(sys);
   check_system(sys);
-  if( sys->vlist == NULL ) {
+  if(sys->vlist == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable list was never set.");
     return 1;
   }
-  if( sys->rlist == NULL && sys->obj == NULL ) {
+  if(sys->rlist == NULL && sys->obj == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation list and objective never set.");
     return 2;
   }
@@ -5351,9 +5351,9 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
   mif = MIF(sys);
   lif = LIF(sys);
 
-  if (server == NULL || sys==NULL) return 1;
-  if (check_system(SLV9(sys))) return 2;
-  if( !sys->s.ready_to_solve ) {
+  if(server == NULL || sys==NULL) return 1;
+  if(check_system(SLV9(sys))) return 2;
+  if(!sys->s.ready_to_solve ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
     return 3;
   }
@@ -5384,7 +5384,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
                             subregions,&(cur_subregion),disvars,&(rvalues))){
       store_real_cur_values(server,&(rvalues));
       update_boundaries(server,asys);
-      if (some_boundaries_crossed(server,asys)) {
+      if(some_boundaries_crossed(server,asys)) {
         vfilter.matchbits = (VAR_ACTIVE_AT_BND | VAR_INCIDENT
 			     | VAR_SVAR | VAR_FIXED);
         vfilter.matchvalue = (VAR_ACTIVE_AT_BND | VAR_INCIDENT | VAR_SVAR);
@@ -5415,9 +5415,9 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
     solve_logical_relations(server);
     slv_get_status(server,&status);
     sys->s.converged  = status.converged;
-    if( !sys->s.converged ) {
+    if(!sys->s.converged ) {
       unsuccessful = update_unsuccessful(sys,&status);
-      if (unsuccessful) {
+      if(unsuccessful) {
         sys->s.ready_to_solve = !unsuccessful;
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-convergence in logical solver.");
         slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
@@ -5431,7 +5431,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
     /*
      * reconfigure the system if necessary
      */
-    if ( some_dis_vars_changed(server,asys) ) {
+    if(some_dis_vars_changed(server,asys) ) {
       reanalyze_solver_lists(server);
       update_relations_residuals(server);
       system_was_reanalyzed = 1;
@@ -5440,7 +5440,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
     /*
      * Nonlinear solution technique
      */
-    if (g_optimizing) {
+    if(g_optimizing) {
     /*
      * SetUp Optimizer
      */
@@ -5449,12 +5449,12 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       store_real_pre_values(server,&(rvalues));
       set_nonbasic_status_in_var_list(server,FALSE);
       (sys->nliter)++;
-      if (sys->nliter == 1  || system_was_reanalyzed ==1) {
+      if(sys->nliter == 1  || system_was_reanalyzed ==1) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Iterating with Optimizer...");
         slv_presolve(server);
         slv_get_status(server,&status);
         update_real_status(&(sys->s),&status,0);
-        if (sys->s.cost) {
+        if(sys->s.cost) {
           destroy_array(sys->s.cost);
         }
         sys->s.cost =
@@ -5463,17 +5463,17 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       }else{
         slv_get_status(server,&status);
         update_struct_info(sys,&status);
-        if (status.converged) {
+        if(status.converged) {
           slv_presolve(server);
           update_real_status(&(sys->s),&status,0);
-          if (sys->s.cost) {
+          if(sys->s.cost) {
             destroy_array(sys->s.cost);
           }
           sys->s.cost =
 	            create_zero_array(sys->s.costsize,struct slv_block_cost);
           reset_cost(sys->s.cost,sys->s.costsize);
         }else{
-          if (!status.ready_to_solve) {
+          if(!status.ready_to_solve) {
             slv_resolve(server);
           }
         }
@@ -5486,13 +5486,13 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       slv_set_solver_index(server,solver_index[NONLINEAR_SOLVER]);
       store_real_pre_values(server,&(rvalues));
       (sys->nliter)++;
-      if (sys->nliter == 1  || system_was_reanalyzed ==1) {
+      if(sys->nliter == 1  || system_was_reanalyzed ==1) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Iterating with Non Linear solver...\n");
         slv_presolve(server);
         slv_get_status(server,&status);
         update_struct_info(sys,&status);
         update_real_status(&(sys->s),&status,sys->nliter);
-        if (sys->s.cost) {
+        if(sys->s.cost) {
           destroy_array(sys->s.cost);
         }
         sys->s.cost =
@@ -5505,10 +5505,10 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       }
       slv_get_status(server,&status);
       update_struct_info(sys,&status);
-      if (status.converged) {
+      if(status.converged) {
         slv_presolve(server);
         update_real_status(&(sys->s),&status,0);
-        if (sys->s.cost) {
+        if(sys->s.cost) {
           destroy_array(sys->s.cost);
         }
         sys->s.cost =
@@ -5532,10 +5532,10 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
     update_real_status(&(sys->s),&status,0);
     update_cost(sys->s.cost,&status,
                 sys->s.block.current_block,previous_block);
-    if( !sys->s.converged || some_boundaries_crossed(server,asys) ) {
+    if(!sys->s.converged || some_boundaries_crossed(server,asys) ) {
       sys->s.converged = FALSE;
       sys->s.ready_to_solve = !sys->s.converged;
-      if (some_boundaries_crossed(server,asys)) {
+      if(some_boundaries_crossed(server,asys)) {
         vfilter.matchbits = (VAR_ACTIVE | VAR_INCIDENT
 			     | VAR_SVAR | VAR_FIXED);
         vfilter.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
@@ -5543,19 +5543,19 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         factor = return_to_first_boundary(server,asys,&rvalues,&vfilter);
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);
-	update_relations_residuals(server);
-      } else {
+        update_relations_residuals(server);
+      }else{
         destroy_array(rvalues.cur_values);
         destroy_array(rvalues.pre_values);
       }
       unsuccessful = update_unsuccessful(sys,&status);
-      if (unsuccessful) {
+      if(unsuccessful) {
 
 #if TEST_CONSISTENCY
-        if (sys->s.iteration_limit_exceeded) {
+        if(sys->s.iteration_limit_exceeded) {
           eligible_set_for_subregions(server,asys,&test);
-  	  consistency_analysis_for_subregions(server,asys,&test);
-          if (test != NULL) {
+            consistency_analysis_for_subregions(server,asys,&test);
+          if(test != NULL) {
             ascfree(test);
           }
         }
@@ -5564,7 +5564,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         sys->s.ready_to_solve = !unsuccessful;
         ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Non-convergence in nonlinear step.");
       }
-    } else {
+    }else{
       sys->s.ready_to_solve = !sys->s.converged;
       /*
         The following was added 4/2
@@ -5572,9 +5572,9 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       unsuccessful = update_unsuccessful(sys,&status);
 
 #if TEST_CONSISTENCY
-      if (sys->s.iteration_limit_exceeded) {
+      if(sys->s.iteration_limit_exceeded) {
         consistency_analysis_for_subregions(server,asys,&test);
-        if (test != NULL) {
+        if(test != NULL) {
           ascfree(test);
         }
       }
@@ -5613,8 +5613,8 @@ static int slv9_solve(slv_system_t server, SlvClientToken asys){
 
 static
 mtx_matrix_t slv9_get_matrix(slv_system_t server, SlvClientToken sys){
-  if (server == NULL || sys==NULL) return NULL;
-  if (check_system(SLV9(sys))) return NULL;
+  if(server == NULL || sys==NULL) return NULL;
+  if(check_system(SLV9(sys))) return NULL;
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv9 does not get matrix.");
   return( NULL );
 }
@@ -5641,19 +5641,19 @@ static
 int slv9_destroy(slv_system_t server, SlvClientToken asys){
   slv9_system_t sys;
   sys = SLV9(asys);
-  if (check_system(sys)) return 1;
+  if(check_system(sys)) return 1;
   destroy_subregion_information(asys);
   destroy_solvers_tokens(server);
   slv_destroy_parms(&(sys->p));
   sys->integrity = DESTROYED;
-  if (sys->s.cost) ascfree(sys->s.cost);
+  if(sys->s.cost) ascfree(sys->s.cost);
   ascfree( (POINTER)asys );
   return 0;
 }
 
 
 int slv9_register(SlvFunctionsT *sft){
-  if (sft==NULL)  {
+  if(sft==NULL)  {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv9_register called with NULL pointer");
     return 1;
   }

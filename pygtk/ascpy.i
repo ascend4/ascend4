@@ -330,8 +330,9 @@ public:
 }
 
 typedef enum{
-	ASCXX_VAR_STATUS_UNKNOWN=0, ASCXX_VAR_FIXED, ASCXX_VAR_UNSOLVED, ASCXX_VAR_ACTIVE, ASCXX_VAR_SOLVED
-} VarStatus;
+	ASCXX_INST_STATUS_UNKNOWN=0, ASCXX_VAR_FIXED, ASCXX_VAR_UNSOLVED, ASCXX_VAR_ACTIVE, ASCXX_VAR_SOLVED
+	, ASCXX_REL_INACTIVE
+} InstanceStatus;
 
 /*
 	we really want to get rid of this and just %include... 
@@ -394,7 +395,7 @@ public:
 	void setSymbolValue(const SymChar &sym);
 	void write(FILE *fp);
 
-	const VarStatus getVarStatus() const;
+	const InstanceStatus getStatus() const;
 
 	void setLowerBound(const double &);
 	void setUpperBound(const double &);

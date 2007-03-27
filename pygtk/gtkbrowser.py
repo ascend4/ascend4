@@ -316,27 +316,33 @@ class Browser:
 		self.fixedimg = gtk.Image()
 		self.fixedimg.set_from_file(os.path.join(self.options.assets_dir,'locked.png'))
 
+		self.inactiveimg = gtk.Image()
+		self.inactiveimg.set_from_file(os.path.join(self.options.assets_dir,'unattached.png'))
+
 		self.iconstatusunknown = None
 		self.iconfixed = self.fixedimg.get_pixbuf()
 		self.iconsolved = self.window.render_icon(gtk.STOCK_YES,gtk.ICON_SIZE_MENU)
 		self.iconactive = self.window.render_icon(gtk.STOCK_NO,gtk.ICON_SIZE_MENU)
+		self.iconinactive = self.inactiveimg.get_pixbuf()
 		self.iconunsolved = None
 
 		self.statusicons={
-			ascpy.ASCXX_VAR_STATUS_UNKNOWN: self.iconstatusunknown
+			ascpy.ASCXX_INST_STATUS_UNKNOWN: self.iconstatusunknown
 			,ascpy.ASCXX_VAR_FIXED: self.iconfixed
 			,ascpy.ASCXX_VAR_SOLVED: self.iconsolved
 			,ascpy.ASCXX_VAR_ACTIVE: self.iconactive
 			,ascpy.ASCXX_VAR_UNSOLVED: self.iconunsolved
+			,ascpy.ASCXX_REL_INACTIVE: self.iconinactive
 		}
 
 
 		self.statusmessages={
-			ascpy.ASCXX_VAR_STATUS_UNKNOWN: "Status unknown"
+			ascpy.ASCXX_INST_STATUS_UNKNOWN: "Status unknown"
 			,ascpy.ASCXX_VAR_FIXED: "Fixed"
 			,ascpy.ASCXX_VAR_SOLVED: "Converged"
 			,ascpy.ASCXX_VAR_ACTIVE: "Active (unconverged)"
 			,ascpy.ASCXX_VAR_UNSOLVED: "Not yet visited"
+			,ascpy.ASCXX_REL_INACTIVE: "Inactive"
 		}
 
 		#-------------------

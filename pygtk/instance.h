@@ -41,8 +41,9 @@ extern "C"{
 #include <vector>
 
 typedef enum{
-	ASCXX_VAR_STATUS_UNKNOWN=0, ASCXX_VAR_FIXED, ASCXX_VAR_UNSOLVED, ASCXX_VAR_ACTIVE, ASCXX_VAR_SOLVED
-} VarStatus;
+	ASCXX_INST_STATUS_UNKNOWN=0, ASCXX_VAR_FIXED, ASCXX_VAR_UNSOLVED, ASCXX_VAR_ACTIVE, ASCXX_VAR_SOLVED
+	, ASCXX_REL_INACTIVE
+} InstanceStatus;
 
 /**
 	This class has to be called 'Instanc' in C++ to avoid a name clash
@@ -141,8 +142,8 @@ public:
 	void write(FILE *fp) const;
 	Instance *getInternalType() const;
 
-	void setVarStatus(const VarStatus &); ///< make this one private, just for friend Simulation?
-	const VarStatus getVarStatus() const;
+	void setStatus(const InstanceStatus &); ///< make this one private, just for friend Simulation?
+	const InstanceStatus getStatus() const;
 
 	void setLowerBound(const double &);
 	void setUpperBound(const double &);

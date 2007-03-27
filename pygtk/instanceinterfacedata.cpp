@@ -4,5 +4,5 @@
 
 InstanceInterfaceData::InstanceInterfaceData(){
 	// nothing here
-	status = ASCXX_VAR_STATUS_UNKNOWN;
+	status = ASCXX_INST_STATUS_UNKNOWN;
 }

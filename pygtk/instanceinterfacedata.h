@@ -25,7 +25,7 @@ class InstanceInterfaceData{
 private:
 	friend class Instanc;
 	InstanceInterfaceData();
-	VarStatus status;
+	InstanceStatus status;
 };
 	
 

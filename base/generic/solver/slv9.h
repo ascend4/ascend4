@@ -18,17 +18,9 @@
 *//**
 	@file
 	Conditional Modeling Solver (CMSlv) registration module.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "slv_client.h"
 *//*
-	by Vicente Rico-Ramirez
-	Created: 04/97
-	Version: $Revision: 1.4 $
-	Version control file: $RCSfile: slv9.h,v $
-	Date last modified: $Date: 1997/07/29 15:48:07 $
-	Last modified by: $Author: rv2a $
+	by Vicente Rico-Ramirez, 04/1997
+	Last in CVS: $Revision: 1.4 $ $Date: 1997/07/29 15:48:07 $ $Author: rv2a $
 */
 
 #ifndef ASC_SLV9_H
