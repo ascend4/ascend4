@@ -10,8 +10,8 @@ BROWSER_FIXED_COLOR = "#008800"
 BROWSER_FREE_COLOR = "#000088"
 BROWSER_SETTING_COLOR = "#4444AA"
 
-BROWSER_ACTIVE_COLOR = "black"
-BROWSER_INACTIVE_COLOR = "#888888"
+BROWSER_INCLUDED_COLOR = "black"
+BROWSER_UNINCLUDED_COLOR = "#888888"
 
 class ModelView:
 	def __init__(self,browser,glade):
@@ -124,7 +124,7 @@ class ModelView:
 		_value = str(instance.getValue())
 		_type = str(instance.getType())
 		_name = str(instance.getName())
-		_fgcolor = BROWSER_ACTIVE_COLOR
+		_fgcolor = BROWSER_INCLUDED_COLOR
 		_fontweight = pango.WEIGHT_NORMAL
 		_editable = False
 		_statusicon = None
@@ -139,8 +139,8 @@ class ModelView:
 			_status = instance.getVarStatus();
 			_statusicon = self.browser.statusicons[_status]
 		elif instance.isRelation():
-			if not instance.isActive():
-				_fgcolor = BROWSER_INACTIVE_COLOR
+			if not instance.isIncluded():
+				_fgcolor = BROWSER_UNINCLUDED_COLOR
 		elif instance.isBool() or instance.isReal() or instance.isInt():
 			# TODO can't edit constants that have already been refined
 			_editable = True
@@ -174,10 +174,10 @@ class ModelView:
 					self.modelstore.set_value(_iter,3,BROWSER_FREE_COLOR)
 				self.modelstore.set_value(_iter, 6, self.browser.statusicons[_instance.getVarStatus()])
 			elif _instance.isRelation():
-				if _instance.isActive():
-					self.modelstore.set_value(_iter,3,BROWSER_ACTIVE_COLOR)
+				if _instance.isIncluded():
+					self.modelstore.set_value(_iter,3,BROWSER_INCLUDED_COLOR)
 				else:
-					self.modelstore.set_value(_iter,3,BROWSER_INACTIVE_COLOR)
+					self.modelstore.set_value(_iter,3,BROWSER_UNINCLUDED_COLOR)
 
 	def cell_edited_callback(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)

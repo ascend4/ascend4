@@ -19,8 +19,10 @@ class RelPropsWin:
 		self.residual = _xml.get_widget("residual")
 		self.expr = _xml.get_widget("expr")
 		self.included = _xml.get_widget("included")
+		self.active = _xml.get_widget("active")
 		self.exprbuff = gtk.TextBuffer();
 		self.expr.set_buffer(self.exprbuff)
+		self.morepropsbutton = _xml.get_widget("morepropsbutton");
 
 		self.fill_values()
 		_xml.signal_autoconnect(self)
@@ -29,7 +31,7 @@ class RelPropsWin:
 		self.relname.set_text( self.browser.sim.getInstanceName(self.instance) )
 		self.residual.set_text( str( self.instance.getResidual() ) )
 		self.exprbuff.set_text( self.instance.getRelationAsString(self.browser.sim.getModel() ) )
-		self.included.set_active( self.instance.isActive() )
+		self.included.set_active( self.instance.isIncluded() )
 
 	def on_relpropswin_close(self,*args):
 		self.window.response(gtk.RESPONSE_CANCEL)
@@ -44,6 +46,22 @@ class RelPropsWin:
 	def run(self):
 		self.window.run()
 		self.window.hide()
+
+	def on_morepropsbutton_clicked(self,*args):
+		title = "All properties of '%s'" % self.browser.sim.getInstanceName(self.instance)
+		text = title + "\n\n"
+		c = self.instance.getChildren()
+		if c:
+			for i in c:
+				text += "%s = %s\n" % (self.browser.sim.getInstanceName(i), i.getValue())
+		else:
+				text += "This variable has no 'child' properties"
+		_dialog = InfoDialog(self.browser,self.window,text,title)
+		_dialog.run()
+
+	def on_included_toggled(self,widget,*args):
+		self.instance.setIncluded(widget.get_active())
+		self.browser.do_solve_if_auto()
 
 class VarPropsWin:
 	def __init__(self,browser,instance):

@@ -68,7 +68,7 @@ extern "C"{
 	@TODO fix mutex on compile command filenames
 */
 Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), simroot(GetSimulationRoot(i),SymChar("simroot")){
-	CONSOLE_DEBUG("Created simulation");	
+	// CONSOLE_DEBUG("Created simulation");	
 	sys = NULL;
 	//is_built = false;
 	// Create an Instance object for the 'simulation root' (we'll call
