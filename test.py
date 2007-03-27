@@ -207,7 +207,30 @@ class TestSolver(AscendSelfTester):
 
 	def testwritegraph(self):
 		M = self._run('testlog10')
-		M.write(sys.stderr,"dot")		
+		if platform.system!="Windows":
+			M.write(sys.stderr,"dot")		
+		else:
+			self.fail("not implemented on windows")
+
+	def testrelinclude(self):
+		self.L.load('test/relinclude.a4c')
+		T = self.L.findType('relinclude')
+		M = T.getSimulation('sim')
+		M.eq1.setIncluded(True)
+		M.eq2.setIncluded(False)
+		M.eq3.setIncluded(False)
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		self.assertAlmostEqual( float(M.z), 2.0)
+		M.eq1.setIncluded(False)
+		M.eq2.setIncluded(True)
+		M.eq3.setIncluded(False)
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		self.assertAlmostEqual( float(M.z), 4.0)
+		M.eq1.setIncluded(False)
+		M.eq2.setIncluded(False)
+		M.eq3.setIncluded(True)
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+		self.assertAlmostEqual( float(M.z), 4.61043629206)
 
 
 class TestLRSlv(AscendSelfTester):
