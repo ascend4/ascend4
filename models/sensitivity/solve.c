@@ -66,7 +66,9 @@ int DoSolve(struct Instance *inst){
   }
   (void)slv_select_solver(sys,0);
   slv_presolve(sys);
+  CONSOLE_DEBUG("Calling slv_solve...");
   slv_solve(sys);
+  CONSOLE_DEBUG("... completed slv_solve");	
   system_destroy(sys);
   return 0;
 }
