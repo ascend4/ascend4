@@ -45,7 +45,7 @@ def solvernotes(self):
 
 	notes = db.getNotes(self.getType(),ascpy.SymChar(solvername))
 
-	print "GETTINGS SOLVER PARAMS..."
+	print "GETTING SOLVER PARAMS..."
 
 	params = sim.getParameters()
 
@@ -75,7 +75,7 @@ def solvernotes(self):
 			elif param.isReal():
 				v = float( note.getText() )
 				param.setRealValue(v)
-			elif param.isString():
+			elif param.isStr():
 				v = note.getText()
 				param.setStrValue(v)
 			elif param.isBool():
