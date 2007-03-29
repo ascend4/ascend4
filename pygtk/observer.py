@@ -189,7 +189,7 @@ class ObserverTab:
 	def on_clear_clicked(self,*args):
 		_store = self.view.get_model()
 		_store.clear();
-		self.rows = {}
+		self.rows = []
 		self.activeiter = _store.append(None, [ObserverRow()] )
 
 	def do_add_row(self,values=None):
