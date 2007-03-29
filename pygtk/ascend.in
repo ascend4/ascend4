@@ -2,7 +2,6 @@
 
 import os.path, sys, platform
 
-LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH').split(":")
 restart = 0
 
 # this script handles restarting ascend if it's invoked without the full
@@ -13,9 +12,16 @@ if platform.system()=="Windows":
 else:
 	SEP=":"
 
+if os.environ.get('LD_LIBRARY_PATH'):
+	LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH').split(SEP)
+else:
+	#LD_LIBRARY_PATH = ['/usr/local/lib']
+	LD_LIBRARY_PATH = []
+
 if not os.environ.get('ASC_GDB'):
 	# restarting messes up GDB so don't allow it
 	if "@INSTALL_LIB@"!="/usr/lib":
+		
 		if not "@INSTALL_LIB@" in LD_LIBRARY_PATH:
 			LD_LIBRARY_PATH = ["@INSTALL_LIB@"] + LD_LIBRARY_PATH
 			os.environ['LD_LIBRARY_PATH'] = SEP.join(LD_LIBRARY_PATH)
