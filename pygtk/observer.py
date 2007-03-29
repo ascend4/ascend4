@@ -121,12 +121,15 @@ class ObserverRow:
 
 	def get_values(self,table):
 		if not self.active:
-			return self.values
+			vv = []
+			for k,v in table.cols.iteritems():
+				if k<len(self.values):
+					vv.append(self.values[k]/v.units.getConversion())
+			return vv
 		else:
-			_v = []
-			for index,col in table.cols.iteritems():
-				_v.append( col.instance.getRealValue() )
-			return _v
+			return [col.instance.getRealValue()/col.units.getConversion() \
+				for index,col in table.cols.iteritems() \
+			]
 
 class ObserverTab:
 
@@ -239,7 +242,9 @@ class ObserverTab:
 	def copy_to_clipboard(self,clip):
 		_s = []
 		_s.append('\t'.join([_v.title for _k,_v in self.cols.iteritems()]))
+		_cf = [_v.units.getConversion() for _k,_v in self.cols.iteritems()]
 		print "COPYING %d ROWS" % len(self.rows)
+		print "CONVERSIONS:",_cf
 		for _r in self.rows:
 			_s.append("\t".join([`_v` for _v in _r.get_values(self)]))
 
