@@ -4,7 +4,7 @@ import gtk
 import gtk.glade
 
 class PythonSolverReporter(ascpy.SolverReporter):
-	def __init__(self,browser):
+	def __init__(self,browser,message=None):
 		self.browser=browser
 		self.updateinterval = self.browser.prefs.getBoolPref("SolverReporter","update_interval", 0.5)
 		self.reporter = self.browser.reporter
@@ -12,7 +12,10 @@ class PythonSolverReporter(ascpy.SolverReporter):
 			raise RuntimeError("Can't find reporter")
 		self.starttime = time.clock()
 		self.statusbarcontext = self.browser.statusbar.get_context_id("pythonsolverreporter")
-		self.browser.statusbar.push(self.statusbarcontext,"Solving...")
+		if message:
+			self.browser.statusbar.push(self.statusbarcontext,"Solving (%s)..." % message)
+		else:
+			self.browser.statusbar.push(self.statusbarcontext,"Solving..." )
 		ascpy.SolverReporter.__init__(self)
 
 	def report_to_browser(self,status):
@@ -183,9 +186,9 @@ class PopupSolverReporter(PythonSolverReporter):
 			print "SOME PROBLEM: %s" % str(e)
 
 class SimpleSolverReporter(PythonSolverReporter):
-	def __init__(self,browser):
+	def __init__(self,browser,message=None):
 		#print "CREATING SIMPLESOLVERREPORTER..."
-		PythonSolverReporter.__init__(self,browser)
+		PythonSolverReporter.__init__(self,browser,message)
 		self.lasttime = self.starttime
 
 	def report(self,status):
