@@ -527,8 +527,10 @@ Simulation::getSolver() const{
 void
 Simulation::build(){
 	if(sys){
-		CONSOLE_DEBUG("System is already built (%p)",sys);
+		//CONSOLE_DEBUG("System is already built (%p)",sys);
 		return;
+	}else{
+		CONSOLE_DEBUG("Building system...");
 	}
 
 	if(simroot.getKind() != MODEL_INST){
