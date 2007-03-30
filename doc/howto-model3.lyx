@@ -1,4 +1,4 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -104,7 +104,7 @@ H_to_D_ratio
 \series bold
 Plot
 \series default
- tool
+ option
 \begin_inset LatexCommand \index{tool, Plot}
 
 \end_inset
@@ -114,11 +114,11 @@ Plot
 
 \end_inset
 
- under the 
+ under the Display menu in the 
 \series bold
-Display
+Browser
 \series default
- button in the Browser window.
+ window.
  While not obvious, it turns out we can plot the arrays we produce when
  we include instances of type 
 \family typewriter
@@ -143,7 +143,11 @@ plt_plot_symbol
 \family typewriter
 plot.a4l
 \family default
- located in the ASCEND4 models directory which is distributed with ASCEND.
+ located in the ASCEND 
+\family typewriter
+models
+\family default
+ directory which is distributed with ASCEND.
  Figure 
 \begin_inset LatexCommand \ref{fig:model3.plot.a4l}
 
@@ -151,8 +155,7 @@ plot.a4l
 
 
 \noun off
- is a print out of that file (but with line numbers added so we can reference
- them here).
+ is shows a distilled version of that file.
 \end_layout
 
 \begin_layout Standard
@@ -170,54 +173,7 @@ PROVIDE "plot.a4l";
 \end_layout
 
 \begin_layout LyX-Code
-(* some lines removed here...
- *)
-\end_layout
 
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-(*=============================================================================*
-\end_layout
-
-\begin_layout LyX-Code
- P L O T .
- A 4 L
-\end_layout
-
-\begin_layout LyX-Code
- ---------------
-\end_layout
-
-\begin_layout LyX-Code
-AUTHOR:Ben Allan
-\end_layout
-
-\begin_layout LyX-Code
-provoked by plot.lib by Peter Piela and Kirk A.
- Abbott
-\end_layout
-
-\begin_layout LyX-Code
-DATES:03/97 - Original code.
-\end_layout
-
-\begin_layout LyX-Code
-CONTENTS:
-\end_layout
-
-\begin_layout LyX-Code
-A parameterized plot library mostly compatible
-\end_layout
-
-\begin_layout LyX-Code
-with plot.lib, but with variable graph titles.
-\end_layout
-
-\begin_layout LyX-Code
-*)
 \end_layout
 
 \begin_layout LyX-Code
@@ -229,19 +185,23 @@ END pltmodel;
 \end_layout
 
 \begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
 MODEL plt_point(
 \end_layout
 
 \begin_layout LyX-Code
-x WILL_BE real;
+    x WILL_BE real;
 \end_layout
 
 \begin_layout LyX-Code
-y WILL_BE real;
+    y WILL_BE real;
 \end_layout
 
 \begin_layout LyX-Code
-) REFINES pltmodel();
+)REFINES pltmodel();
 \end_layout
 
 \begin_layout LyX-Code
@@ -249,7 +209,7 @@ END plt_point;
 \end_layout
 
 \begin_layout LyX-Code
-(***************************************************************)
+
 \end_layout
 
 \begin_layout LyX-Code
@@ -257,47 +217,35 @@ MODEL plt_curve(
 \end_layout
 
 \begin_layout LyX-Code
-npnts IS_A set OF integer_constant;
+    npnts IS_A set OF integer_constant;
 \end_layout
 
 \begin_layout LyX-Code
-y_data[npnts] WILL_BE real;
+    y_data[npnts] WILL_BE real;
 \end_layout
 
 \begin_layout LyX-Code
-x_data[npnts] WILL_BE real;
+    x_data[npnts] WILL_BE real;
 \end_layout
 
 \begin_layout LyX-Code
-) REFINES pltmodel();
+)REFINES pltmodel();
 \end_layout
 
 \begin_layout LyX-Code
-(* points of matching subscript will be plotted in order of
+    legendIS_A symbol;
 \end_layout
 
 \begin_layout LyX-Code
- * increasing subscript value.
+    FOR i IN [npnts] CREATE
 \end_layout
 
 \begin_layout LyX-Code
- *)
+        pnt[i]IS_A plt_point(x_data[i],y_data[i]);
 \end_layout
 
 \begin_layout LyX-Code
-legendIS_A symbol; (* mutable now! *)
-\end_layout
-
-\begin_layout LyX-Code
-FOR i IN [npnts] CREATE
-\end_layout
-
-\begin_layout LyX-Code
-pnt[i]IS_A plt_point(x_data[i],y_data[i]);
-\end_layout
-
-\begin_layout LyX-Code
-END FOR;
+    END FOR;
 \end_layout
 
 \begin_layout LyX-Code
@@ -305,7 +253,7 @@ END plt_curve;
 \end_layout
 
 \begin_layout LyX-Code
-(***************************************************************)
+
 \end_layout
 
 \begin_layout LyX-Code
@@ -313,43 +261,43 @@ MODEL plt_plot_integer(
 \end_layout
 
 \begin_layout LyX-Code
-curve_set IS_A set OF integer_constant;
+    curve_set IS_A set OF integer_constant;
 \end_layout
 
 \begin_layout LyX-Code
-curve[curve_set] WILL_BE plt_curve;
+    curve[curve_set] WILL_BE plt_curve;
 \end_layout
 
 \begin_layout LyX-Code
-) REFINES pltmodel();
+)REFINES pltmodel();
 \end_layout
 
 \begin_layout LyX-Code
-title, XLabel, YLabel IS_A symbol; (* mutable now! *)
+    title, XLabel, YLabel IS_A symbol;
 \end_layout
 
 \begin_layout LyX-Code
-Xlow IS_A real;
+    Xlow IS_A real;
 \end_layout
 
 \begin_layout LyX-Code
-Ylow IS_A real;
+    Ylow IS_A real;
 \end_layout
 
 \begin_layout LyX-Code
-Xhigh IS_A real;
+    Xhigh IS_A real;
 \end_layout
 
 \begin_layout LyX-Code
-Yhigh IS_A real;
+    Yhigh IS_A real;
 \end_layout
 
 \begin_layout LyX-Code
-Xlog IS_A boolean;
+    Xlog IS_A boolean;
 \end_layout
 
 \begin_layout LyX-Code
-Ylog IS_A boolean;
+    Ylog IS_A boolean;
 \end_layout
 
 \begin_layout LyX-Code
@@ -357,7 +305,7 @@ END plt_plot_integer;
 \end_layout
 
 \begin_layout LyX-Code
-(***************************************************************)
+
 \end_layout
 
 \begin_layout LyX-Code
@@ -365,43 +313,43 @@ MODEL plt_plot_symbol(
 \end_layout
 
 \begin_layout LyX-Code
-curve_set IS_A set OF symbol_constant;
+    curve_set IS_A set OF symbol_constant;
 \end_layout
 
 \begin_layout LyX-Code
-curve[curve_set] WILL_BE plt_curve;
+    curve[curve_set] WILL_BE plt_curve;
 \end_layout
 
 \begin_layout LyX-Code
-) REFINES pltmodel();
+)REFINES pltmodel();
 \end_layout
 
 \begin_layout LyX-Code
-title, XLabel, YLabel IS_A symbol; (* mutable now! *)
+    title, XLabel, YLabel IS_A symbol; (* mutable now! *)
 \end_layout
 
 \begin_layout LyX-Code
-Xlow IS_A real;
+    Xlow IS_A real;
 \end_layout
 
 \begin_layout LyX-Code
-Ylow IS_A real;
+    Ylow IS_A real;
 \end_layout
 
 \begin_layout LyX-Code
-Xhigh IS_A real;
+    Xhigh IS_A real;
 \end_layout
 
 \begin_layout LyX-Code
-Yhigh IS_A real;
+    Yhigh IS_A real;
 \end_layout
 
 \begin_layout LyX-Code
-Xlog IS_A boolean;
+    Xlog IS_A boolean;
 \end_layout
 
 \begin_layout LyX-Code
-Ylog IS_A boolean;
+    Ylog IS_A boolean;
 \end_layout
 
 \begin_layout LyX-Code
@@ -428,13 +376,10 @@ The file plot.a4l
 \end_layout
 
 \begin_layout Standard
-As you can see, this file contains the two types we seek -- starting in
- lines 59 and 71, respectively.
+As you can see, this file contains the two types we seek.
  However, before we can use them, we do need to understand them.
  We are, so to speak, on the receiving end of the reusability issue.
- If you spend some time, you will find that you can decipher these model
- definitions.
- To make that less painful, we will help you do so here.
+ To make that less painful, we will examine how the above code works.
  If these models were better documented, they would be much less difficult
  to interpret.
  In time we will add Notes to them to remedy this deficiency.
@@ -655,9 +600,9 @@ If we look into this file we see the refinement hierarchy
  
 \noun default
 '
-\noun off
+\family typewriter
 cmumodel
-\noun default
+\family default
 '
 \noun off
  is the parent model for all these models.
@@ -709,7 +654,7 @@ The refinement hierarchy in the file plot.a4l
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 reasons for refinement
@@ -1038,41 +983,41 @@ METHODS
 \end_layout
 
 \begin_layout LyX-Code
-METHOD default_self;
+    METHOD default_self;
 \end_layout
 
 \begin_layout LyX-Code
-(* set the title for the plot and the labels
+        (* set the title for the plot and the labels
 \end_layout
 
 \begin_layout LyX-Code
-   for the ordinate and abscissa *)
+           for the ordinate and abscissa *)
 \end_layout
 
 \begin_layout LyX-Code
-    massVSratio.title :=
+        massVSratio.title :=
 \end_layout
 
 \begin_layout LyX-Code
-     'Metal mass of the walls vs H to D ratio 
+            'Metal mass of the walls vs H to D ratio 
 \backslash
 
 \end_layout
 
 \begin_layout LyX-Code
-         for a thin-walled cylindrical vessel';
+             for a thin-walled cylindrical vessel';
 \end_layout
 
 \begin_layout LyX-Code
-    massVSratio.XLabel := 'H to D ratio';
+        massVSratio.XLabel := 'H to D ratio';
 \end_layout
 
 \begin_layout LyX-Code
-    massVSratio.YLabel := 'metal mass IN kg/m^3';
+        massVSratio.YLabel := 'metal mass IN kg/m^3';
 \end_layout
 
 \begin_layout LyX-Code
-END default_self;
+    END default_self;
 \end_layout
 
 \begin_layout Caption
@@ -1165,7 +1110,7 @@ The base case
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 compile a vessel
@@ -1173,10 +1118,6 @@ compile a vessel
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 Select and compile the vessel model.
  Give the simulation the name V.
  Select the simulation V in the bottom pane of the Library window and use
@@ -1185,7 +1126,7 @@ Select and compile the vessel model.
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 solving the base case
@@ -1193,10 +1134,6 @@ solving the base case
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 In the Browser, place the mouse cursor over the upper left pane.
  Use the right mouse button to run methods reset and values, then send the
  model to the Solver by typing Alt-x s.
@@ -1206,7 +1143,7 @@ In the Browser, place the mouse cursor over the upper left pane.
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 graphical case study optimization
@@ -1214,10 +1151,6 @@ graphical case study optimization
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 We now know that it takes 535.7 kg of metal to make a 250 cubic foot vessel
  which is twice as high as it is broad.
  Suppose that now we want to know the largest volume that this amount of
@@ -1232,7 +1165,7 @@ We now know that it takes 535.7 kg of metal to make a 250 cubic foot vessel
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 script recorded so far
@@ -1240,10 +1173,6 @@ script recorded so far
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 Turn off the recording button on the Script window.
  The recording should look something like
 \end_layout
@@ -1294,7 +1223,7 @@ Case study examples
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 configuring a case study
@@ -1302,10 +1231,6 @@ configuring a case study
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 The STUDY command takes a lot of arguments.
  Well explain them all momentarily, but should you forget them simply enter
  the command STUDY without arguments in the ASCEND Console window or xterm
@@ -1584,7 +1509,7 @@ STUDY behavior details
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 variable list
@@ -1592,10 +1517,6 @@ variable list
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 We now turn to the details of the STUDY statement.
  As we saw in Section 4.2.2.1, any number of variables to be monitored can
  follow the STUDY keyword.
@@ -1604,7 +1525,7 @@ We now turn to the details of the STUDY statement.
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 IN clause
@@ -1612,10 +1533,6 @@ IN clause
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 The IN clause specifies which part of a simulation is to be sent to the
  Solver; a small part of a much larger model can be studied if you so desire.
  All the variable and parameter names that follow the STUDY keyword and
@@ -1625,7 +1542,7 @@ The IN clause specifies which part of a simulation is to be sent to the
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 parameter list
@@ -1633,10 +1550,6 @@ parameter list
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 The VARYING clauses is a list of lists.
  Each inner list gives the name of the parameter to vary followed by its
  list of values.
@@ -1648,7 +1561,7 @@ ter studies.
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 solver name
@@ -1656,10 +1569,6 @@ solver name
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 The solver named in the USING clause is invoked on each case.
  The solver may be any of the algebraic solvers or optimizers, but the integrato
 rs (e.g.
@@ -1669,7 +1578,7 @@ rs (e.g.
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 data file name
@@ -1677,10 +1586,6 @@ data file name
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 The case data are stored in the file name which appears in the OUTFILE clause.
  By default, this file is overwritten when a STUDY is started, so if you
  want multiple result files, use separate file names.
@@ -1688,7 +1593,7 @@ The case data are stored in the file name which appears in the OUTFILE clause.
 
 \begin_layout Standard
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Standard
 error handling
@@ -1696,10 +1601,6 @@ error handling
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 When the solver fails to converge or encounters an error, the STUDY can
  either ignore it (ERROR IGNORE) and go on to the next case, warn you (ERROR
  WARN) and go on to the next case, or stop (ERROR STOP).
