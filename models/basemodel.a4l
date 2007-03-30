@@ -351,6 +351,9 @@ END NOTES;
 
 END reset;
 
+METHOD values;
+END values;
+
 METHOD bound_self;
 NOTES 'purpose' SELF {
 Much of the art of nonlinear physical modeling is in
