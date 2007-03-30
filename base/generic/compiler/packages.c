@@ -120,19 +120,19 @@ int Builtins_Init(void){
   );
 
   /* ERROR_REPORTER_DEBUG("Registering EXTERNAL asc_default_self"); */
-  result = CreateUserFunctionMethod("asc_default_self"
-		,Asc_DefaultSelf
+  result = CreateUserFunctionMethod("defaultself_visit_childatoms"
+		,defaultself_visit_childatoms
 		,1 /* num of args */
-		,"Set local child atoms to their ATOMs' DEFAULT values. Also recurses into arrays." /* help */
+		,"Set local child atoms to their ATOMs' DEFAULT values; recurse into arrays." /* help */
 		,NULL /* user_data */
 		,NULL /* destroy fn */
   );
 
   /* ERROR_REPORTER_DEBUG("Registering EXTERNAL asc_default_all"); */
-  result = CreateUserFunctionMethod("asc_default_all"
-		,Asc_DefaultAll
+  result = CreateUserFunctionMethod("defaultself_visit_submodels"
+		,defaultself_visit_submodels
 		,1 /* num of args */
-		,"Call 'default_all' methods on sub-models, then run 'default_self' locally." /* help */
+		,"Call 'default_self' methods on any nested sub-models." /* help */
 		,NULL /* user_data */
 		,NULL /* destroy fn */
   );

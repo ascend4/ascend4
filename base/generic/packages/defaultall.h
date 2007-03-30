@@ -30,7 +30,7 @@
 #include <general/list.h>
 #include <compiler/instance_enum.h>
 
-int Asc_DefaultSelf(struct Instance *root, struct gl_list_t *arglist, void *userdata);
-int Asc_DefaultAll(struct Instance *root, struct gl_list_t *arglist, void *userdata);
+int defaultself_visit_submodels(struct Instance *root, struct gl_list_t *arglist, void *userdata);
+int defaultself_visit_childatoms(struct Instance *root, struct gl_list_t *arglist, void *userdata);
 
 #endif /* ASC_DEFAULTALL_H */

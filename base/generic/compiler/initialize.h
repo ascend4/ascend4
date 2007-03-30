@@ -51,19 +51,20 @@ extern void SetProcStackLimit(unsigned long l);
  */
 
 /** Initial stack limit. */
-#define INITSTACKLIMIT 20
+#define INITSTACKLIMIT 40
 
 /** Get the procedure stack limit currently set. */
 extern unsigned long GetProcStackLimit(void);
 
 /** Run a METHOD on a model. */
-ASC_DLLSPEC enum Proc_enum Initialize(struct Instance *context,
-							    struct Name *name,
-							    char *cname,
-							    FILE *err,
-							    wpflags options,
-							    struct gl_list_t *watchpoints,
-							    FILE *dplog);
+ASC_DLLSPEC enum Proc_enum Initialize(struct Instance *context
+	,struct Name *name
+	,char *cname
+	,FILE *err
+	,wpflags options
+	,struct gl_list_t *watchpoints
+	,FILE *dplog
+);
 /**<
 	@param context instance in which to run the METHOD.
 	@param name initialisation METHOD being called
@@ -83,14 +84,15 @@ ASC_DLLSPEC enum Proc_enum Initialize(struct Instance *context,
  */
 
 /** Run a class-access METHOD, eg "RUN MyType::values" */
-extern enum Proc_enum ClassAccessInitialize(struct Instance *context,
-                                            struct Name *class_name,
-                                            struct Name *name,
-                                            char *cname,
-                                            FILE *err,
-                                            wpflags options,
-                                            struct gl_list_t *watchpoints,
-                                            FILE *dplog);
+extern enum Proc_enum ClassAccessInitialize(struct Instance *context
+	,struct Name *class_name
+	,struct Name *name
+	,char *cname
+	,FILE *err
+	,wpflags options
+	,struct gl_list_t *watchpoints
+	,FILE *dplog
+);
 /**<
 	@param class_name the class being called (eg MyType)
 	@param name the METHOD being called (eg values)
