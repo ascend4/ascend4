@@ -389,7 +389,10 @@ class ModelView:
 
 	def run_activate(self,widget,instance,method):
 		print "RUNNING %s" % method.getName()
-		self.browser.sim.run(method,instance)
+		try:
+			self.browser.sim.run(method,instance)
+		except Exception,e:
+			self.browser.reporter.reportError(str(e))
 		self.refreshtree()		
 
 	def fix_activate(self,widget):
