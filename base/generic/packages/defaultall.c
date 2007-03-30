@@ -43,14 +43,36 @@
 #include <compiler/watchpt.h>
 #include <compiler/initialize.h>
 
-/* #define DEFAULT_DEBUG */
+#define DEFAULT_DEBUG
+
+/*------------------------------------------------------------------------------
+  visit child atoms of the current model (don't visit sub models) and set
+  to ATOM default values
+*/
+
+static int defaultself_visit_childatoms1(struct Instance *inst);
+
+int defaultself_visit_childatoms(struct Instance *root, struct gl_list_t *arglist, void *userdata){
+	/* arglist is a list of gllist of instances */
+	if (arglist == NULL ||
+	    gl_length(arglist) == 0L ||
+	    gl_length((struct gl_list_t *)gl_fetch(arglist,1)) != 1 ||
+	    gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),1) == NULL) {
+	return defaultself_visit_childatoms1(root);
+	}else{
+		return defaultself_visit_childatoms1(
+			(struct Instance *)gl_fetch( (struct gl_list_t *)gl_fetch(arglist,1),1 )
+		);
+	}
+}
+
 
 /**
 	Find atom children in the present model and set them to their ATOM DEFAULT
 	values.
 */
 static
-int Asc_DefaultSelf1(struct Instance *inst){
+int defaultself_visit_childatoms1(struct Instance *inst){
 	int i,n;
 	struct Instance *c;
 	struct TypeDescription *type;	
@@ -68,7 +90,10 @@ int Asc_DefaultSelf1(struct Instance *inst){
 		if(BaseTypeIsAtomic(type)){
 			if(!AtomDefaulted(type))continue;
 			switch(GetBaseType(type)){
-				case real_type: SetRealAtomValue(c, GetRealDefault(type), 0); break;
+				case real_type:
+					CONSOLE_DEBUG("Setting to atom default = %f",GetRealDefault(type));
+					SetRealAtomValue(c, GetRealDefault(type), 0); 
+					break;
 				case integer_type: SetIntegerAtomValue(c, GetIntDefault(type), 0); break;
 				case boolean_type: SetBooleanAtomValue(c, GetBoolDefault(type), 0); break;
 				case symbol_type: SetSymbolAtomValue(c, GetSymDefault(type)); break;
@@ -80,21 +105,52 @@ int Asc_DefaultSelf1(struct Instance *inst){
 #endif
 		}else if(GetBaseType(type)==array_type){
 			/* descend into arrays */
-			Asc_DefaultSelf1(c);
+			defaultself_visit_childatoms1(c);
 		}
 	}
+	CONSOLE_DEBUG("defaultself_visit_childatoms1 returning %d",0);
 	return 0;
 }
 
+/*------------------------------------------------------------------------------
+  visit submodels, running 'default_self' on each
+*/
+
 struct DefaultAll_data{
-	symchar *default_all;
+	symchar *method_name;
 };
 
+static int defaultself_visit_submodels1(struct Instance *inst
+		, struct DefaultAll_data *data
+);
+
+int defaultself_visit_submodels(struct Instance *root
+		, struct gl_list_t *arglist, void *userdata
+){
+	struct DefaultAll_data data;
+	data.method_name = AddSymbol("default_self");
+	
+	/* arglist is a list of gllist of instances */
+	if (arglist == NULL ||
+		    gl_length(arglist) == 0L ||
+		    gl_length((struct gl_list_t *)gl_fetch(arglist,1)) != 1 ||
+		    gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),1) == NULL) {
+		return defaultself_visit_submodels1(root,&data);
+	}else{
+		return defaultself_visit_submodels1(
+			(struct Instance *)gl_fetch( (struct gl_list_t *)gl_fetch(arglist,1),1 )
+			, &data
+		);
+	}
+}
+
 /**
-	Find child models in the present model and run their 'default_all' methods
+	Find child models in the present model and run their 'default_self' methods
 */
 static
-int Asc_DefaultAll1(struct Instance *inst, struct DefaultAll_data *data){
+int defaultself_visit_submodels1(struct Instance *inst
+		, struct DefaultAll_data *data
+){
 	int i, n, err = 0;
 	struct Instance *c;
 	struct TypeDescription *type;
@@ -112,56 +168,63 @@ int Asc_DefaultAll1(struct Instance *inst, struct DefaultAll_data *data){
 		type = InstanceTypeDesc(c);
 		if(model_type == GetBaseType(type)){
 			/* run 'default_all' for all child models */
-			method = FindMethod(type,data->default_all);
+			method = FindMethod(type,data->method_name);
 			if(method){
 #ifdef DEFAULT_DEBUG
-				CONSOLE_DEBUG("Running default_all on '%s'",SCP(GetName(type)));
+				CONSOLE_DEBUG("Running METHOD %s on '%s'",SCP(data->method_name),SCP(GetName(type)));
 #endif
-				pe = Initialize(c , CreateIdName(ProcName(method)), "__not_named__"
+				CONSOLE_DEBUG("ENTERING INITIALISE CALL...");
+				pe = Initialize(c , CreateIdName(ProcName(method))
+					, SCP(data->method_name)
 					,ASCERR
 					,0, NULL, NULL
 				);
+				CONSOLE_DEBUG("...BACK FROM INITIALISE CALL");
 				if(pe!=Proc_all_ok)err += 1;
 			}else{
 #ifdef DEFAULT_DEBUG
 				CONSOLE_DEBUG("Recursing into array...");
 #endif
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"No 'default_all' found for type '%s'",SCP(GetName(type)));
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"No '%s' found for type '%s'",SCP(data->method_name),SCP(GetName(type)));
 				return 1;
 			}
 		}else if(array_type == GetBaseType(type)){
-			if(Asc_DefaultAll1(c,data))err += 1;
+			if(defaultself_visit_submodels1(c,data))err += 1;
 		}
 	}
 
+	CONSOLE_DEBUG("defaultself_visit_submodels1 return ing %d",err);
 	return err;
 }
 
-int Asc_DefaultSelf(struct Instance *root, struct gl_list_t *arglist, void *userdata){
-  /* arglist is a list of gllist of instances */
-  if (arglist == NULL ||
-      gl_length(arglist) == 0L ||
-      gl_length((struct gl_list_t *)gl_fetch(arglist,1)) != 1 ||
-      gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),1) == NULL) {
-    return Asc_DefaultSelf1(root);
-  }else{
-    return Asc_DefaultSelf1((struct Instance *)gl_fetch( (struct gl_list_t *)gl_fetch(arglist,1),1 ));
-  }
-}
-
-int Asc_DefaultAll(struct Instance *root, struct gl_list_t *arglist, void *userdata){
+#if 0
+/**
+	NOTE YET IMPLEMENTED: we need to be able to pass string constants to
+	methods, which I don't think is possible yet.
+*/
+int Asc_VisitSubmodels(struct Instance *root
+		, struct gl_list_t *arglist, void *userdata
+){
 	struct DefaultAll_data data;
-	data.default_all = AddSymbol("default_all");
-	
-	/* arglist is a list of gllist of instances */
-	if (arglist == NULL ||
-		    gl_length(arglist) == 0L ||
-		    gl_length((struct gl_list_t *)gl_fetch(arglist,1)) != 1 ||
-		    gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),1) == NULL) {
-		return Asc_DefaultAll1(root,&data);
-	}else{
-		return Asc_DefaultAll1((struct Instance *)gl_fetch( (struct gl_list_t *)gl_fetch(arglist,1),1 )
-			, &data
-		);
+	(void)userdata;
+
+	ERROR_REPORTER_HERE(ASC_USER_ERROR,"not implemented");		
+	return 1;
+	if (arglist == NULL
+		    || gl_length(arglist) == 0L
+		    || gl_length((struct gl_list_t *)gl_fetch(arglist,1)) != 2
+		    || gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),1) == NULL
+			|| gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),2) == NULL
+	){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"EXTERNAL visit_submodels(SELF,'methodname') called with bad argument list");
+		return 1;
 	}
+
+	data.method_name = AddSymbol("default_all");
+	
+	return Asc_DefaultAll1(
+		(struct Instance *)gl_fetch( (struct gl_list_t *)gl_fetch(arglist,1),1 )
+		, &data
+	);
 }
+#endif

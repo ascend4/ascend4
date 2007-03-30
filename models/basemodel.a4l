@@ -238,8 +238,9 @@ method will be run at the end of compilation by the
 compiler. See notes in on_load method for new behaviour in
 the PyGTK GUI.
 } END NOTES;
-	EXTERNAL asc_default_self(SELF);
-	RUN default;
+	EXTERNAL defaultself_visit_childatoms(SELF);
+	EXTERNAL defaultself_visit_submodels(SELF); (* overwrite ATOM defaults explicit nested code if needed *)
+	RUN default; (* local overrides *)
 END default_self;
 
 METHOD default_all;
@@ -254,7 +255,7 @@ through the parameter list. After these have been done, it
 should then call default_self to take care of all locally
 declared default needs.
 } END NOTES;
-	EXTERNAL asc_default_all(SELF);
+	(* INITIALISATION OF PARAMETERS IS NOT IMPLEMENTED YET *)
 	RUN default_self;
 END default_all;
 
@@ -478,44 +479,43 @@ MODEL testcmumodel();
  * rooted here or be a final refinement of a reusable MODEL.
  *)
 METHODS
-METHOD values;
-(*
- * In a final application MODEL, you should record at least one set of
- * input values (values of the fixed variables and guesses of key
- * solved-for variables) that leads to a good solution.
- * Do this so noone need reinvent that set the next time
- * you use the MODEL or someone picks the MODEL up after you.
- *)
-  (* STOP {Error! Standard method "values" called but not written in MODEL.}; *)
-END values;
+	METHOD values;
+	(*
+	 * In a final application MODEL, you should record at least one set of
+	 * input values (values of the fixed variables and guesses of key
+	 * solved-for variables) that leads to a good solution.
+	 * Do this so noone need reinvent that set the next time
+	 * you use the MODEL or someone picks the MODEL up after you.
+	 *)
+	  (* STOP {Error! Standard method "values" called but not written in MODEL.}; *)
+	END values;
 
-METHOD specify;
-  (* STOP {Error! Standard method "specify" called but not written in test MODEL.}; *)
-END specify;
-(*
-METHOD ClearAll;
-  EXTERNAL asc_free_all_variables(SELF);
-END ClearAll;
+	METHOD specify;
+	  (* STOP {Error! Standard method "specify" called but not written in test MODEL.}; *)
+	END specify;
 
-METHOD reset;
-(* This method gets the MODEL to some standard starting state,
- * though not necessarily the most useful starting state for
- * a particular application. In Chem. Eng. terms, this method
- * establishes a base case.
- * There is no 'one perfect "reset"' for all purposes. This
- * routine should merely define a reasonably useful base configuration
- * of the MODEL.
- * Other reset_whatElseYouWant methods can (should) also be
- * written.
- *
- * Normally you do not need to write this method: your models
- * will inherit this one unless you override it (redefine it)
- * in your MODEL.
- *)
-	RUN ClearAll;
-	RUN specify;
-END reset;
-*)
+	METHOD ClearAll;
+	  EXTERNAL asc_free_all_variables(SELF);
+	END ClearAll;
+
+	METHOD reset;
+	(* This method gets the MODEL to some standard starting state,
+	 * though not necessarily the most useful starting state for
+	 * a particular application. In Chem. Eng. terms, this method
+	 * establishes a base case.
+	 * There is no 'one perfect "reset"' for all purposes. This
+	 * routine should merely define a reasonably useful base configuration
+	 * of the MODEL.
+	 * Other reset_whatElseYouWant methods can (should) also be
+	 * written.
+	 *
+	 * Normally you do not need to write this method: your models
+	 * will inherit this one unless you override it (redefine it)
+	 * in your MODEL.
+	 *)
+		RUN ClearAll;
+		RUN specify;
+	END reset;
 END testcmumodel;
 
 MODEL your_site_models();

@@ -161,10 +161,10 @@ END testdefault10;
 (* test that an override of default_all in a submodel gets found *)
 MODEL ModelC REFINES ModelA;
 METHODS
-	METHOD default_all;
+	METHOD default_self;
 		x := 5.0;
 		y := 6.0;
-	END default_all;
+	END default_self;
 END ModelC;
 
 MODEL testdefault11;
@@ -336,7 +336,88 @@ METHODS
 	END self_test;
 END testdefault18;
 
-	
+(* test of double-nested methods: this one fails *)
+MODEL testdefault19A;
+	v1 IS_A var_default_one;
+	v2 IS_A var_default_two;
+END testdefault19A;
+MODEL testdefault19B;
+	v1 IS_A var_default_one;
+	v2 IS_A var_default_two;
+METHODS
+	METHOD default;
+		v1 := 5;
+	END default;
+END testdefault19B;
+MODEL testdefault19C;
+	v1 IS_A var_default_one;
+	v2 IS_A var_default_two;
+END testdefault19C;
+
+(* this one passes *)
+MODEL testdefault19;
+	A1 IS_A testdefault19A;
+	A2 IS_A testdefault19B;
+	A1.v1, A2.v1 ARE_THE_SAME;
+METHODS
+	METHOD self_test;
+		ASSERT A1.v1 == 5.0;
+		ASSERT A1.v2 == 2.0;
+		ASSERT A2.v1 == 5.0;
+		ASSERT A2.v2 == 2.0;
+	END self_test;
+END testdefault19;
+
+(* this one FAILS. same at the above but initialisation order has changed *)
+MODEL testdefault19fail;
+	A1 IS_A testdefault19B;
+	A2 IS_A testdefault19C;
+	A1.v1, A2.v1 ARE_THE_SAME;
+METHODS
+	METHOD self_test;
+		ASSERT A1.v1 == 5.0;
+		ASSERT A1.v2 == 2.0;
+		ASSERT A2.v1 == 5.0;
+		ASSERT A2.v2 == 2.0;
+	END self_test;
+END testdefault19fail;
+
+(* this one passes *)
+MODEL testdefault20;
+	A1 IS_A testdefault19A;
+	A2 IS_A testdefault19B;
+	A1.v1, A2.v1 ARE_THE_SAME;
+METHODS
+	METHOD on_load;
+		RUN default_self;
+		RUN reset; RUN values;
+	END on_load;
+	METHOD self_test;
+		ASSERT A1.v1 == 5.0;
+		ASSERT A1.v2 == 2.0;
+		ASSERT A2.v1 == 5.0;
+		ASSERT A2.v2 == 2.0;
+	END self_test;
+END testdefault20;
 
 
-
+(* this one FAILS MYSTERIOUSLY *)
+MODEL testdefault20fail;
+	A1 IS_A testdefault19A;
+	A2 IS_A testdefault19B;
+	A1.v1, A2.v1 ARE_THE_SAME;
+METHODS
+	METHOD default_all;
+		RUN default_self;
+	END default_all;
+	METHOD on_load;
+		RUN default_all;
+		RUN reset; RUN values;
+	END on_load;
+	METHOD self_test;
+		ASSERT A1.v1 == 5.0;
+		ASSERT A1.v2 == 2.0;
+		ASSERT A2.v1 == 5.0;
+		ASSERT A2.v2 == 2.0;
+	END self_test;
+END testdefault20fail;

@@ -192,8 +192,7 @@ void SetNextCliqueMember(struct Instance *i, struct Instance *next)
   }
 }
 
-struct Instance *NextCliqueMember(CONST struct Instance *i)
-{
+struct Instance *NextCliqueMember(CONST struct Instance *i){
   AssertMemory(i);
   switch(i->t) {
   case MODEL_INST:
