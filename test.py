@@ -884,6 +884,13 @@ if with_freesteam and have_freesteam:
 			M = self._run("collapsingcan2",filename="collapsingcan2.a4c");
 
 #-------------------------------------------------------------------------------
+# Testing of the brent-solver EXTERNAL method
+
+class TestBrent(AscendSelfTester):
+	def testbrent(self):
+		M = self._run('brent1',filename='test/brent.a4c')
+
+#-------------------------------------------------------------------------------
 # Testing of IDA's analysis module
 
 class TestIDA(Ascend):

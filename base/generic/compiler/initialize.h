@@ -20,13 +20,6 @@
 	@file
 	Initialization Routines.
 
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "instance_enum.h"
-	#include "fractions.h"
-	#include "compiler.h"
-	#include "dimen.h"
-	#include "expr_types.h"
 *//*
 	by Tom Epperly
 	Created: 3/24/1990
@@ -41,6 +34,14 @@
 */
 
 #include <utilities/ascConfig.h>
+#include "instance_enum.h"
+#include "fractions.h"
+#include "compiler.h"
+#include "dimen.h"
+#include "expr_types.h"
+#include "watchpt.h"
+#include "name.h"
+#include "proc.h"
 
 /** Set the procedure stack limit */
 extern void SetProcStackLimit(unsigned long l);
