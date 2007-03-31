@@ -1,0 +1,28 @@
+REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/brent/brent";
+IMPORT "sensitivity/solve";
+
+MODEL brent1;
+	x IS_A solver_var;
+	y IS_A solver_var;
+	z IS_A solver_var;
+	y = -x^2 - 4*x + 4;
+	z = sin(x);
+	err IS_A solver_var;
+	err = y - z;
+METHODS
+	METHOD on_load;
+		FIX x;
+		x.lower_bound := 0;
+		x.upper_bound := 10;
+		err.nominal := 1;
+		RUN intersect;
+	END on_load;
+	METHOD solve;
+		EXTERNAL do_solve(SELF);
+	END solve;
+	METHOD intersect;
+		EXTERNAL brent(SELF,err,x);
+	END intersect;
+END brent1;
