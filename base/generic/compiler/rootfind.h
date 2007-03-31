@@ -41,6 +41,7 @@
 #ifndef ASC_ROOTFIND_H
 #define ASC_ROOTFIND_H
 
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #ifndef STAND_ALONE
 # include "extfunc.h" /* for ExtVarFunc typedef */
@@ -52,7 +53,7 @@
 	@{
 */
 
-extern double zbrent(ExtEvalFunc *func,
+ASC_DLLSPEC double zbrent(ExtEvalFunc *func,
                      double *lowbound,
                      double *upbound,
                      int *mode,

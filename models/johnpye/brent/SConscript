@@ -1,0 +1,15 @@
+Import('env')
+brent_env = env.Copy()
+
+srcs = Split("""
+	brent.c
+""")
+
+brent_env.Append(LIBPATH=['#'])
+brent_env.Append(LIBS=['ascend'])
+targets = []
+targets.append( brent_env.SharedLibrary("brent",srcs) )
+
+env['extfns'] += targets
+
+# vim: set syntax=python:

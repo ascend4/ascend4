@@ -40,10 +40,9 @@
 #include <compiler/visitinst.h>
 #include <compiler/parentchild.h>
 #include <compiler/library.h>
-#include <compiler/watchpt.h>
 #include <compiler/initialize.h>
 
-#define DEFAULT_DEBUG
+/* #define DEFAULT_DEBUG */
 
 /*------------------------------------------------------------------------------
   visit child atoms of the current model (don't visit sub models) and set
@@ -91,7 +90,9 @@ int defaultself_visit_childatoms1(struct Instance *inst){
 			if(!AtomDefaulted(type))continue;
 			switch(GetBaseType(type)){
 				case real_type:
+#ifdef DEFAULT_DEBUG
 					CONSOLE_DEBUG("Setting to atom default = %f",GetRealDefault(type));
+#endif
 					SetRealAtomValue(c, GetRealDefault(type), 0); 
 					break;
 				case integer_type: SetIntegerAtomValue(c, GetIntDefault(type), 0); break;
@@ -108,7 +109,9 @@ int defaultself_visit_childatoms1(struct Instance *inst){
 			defaultself_visit_childatoms1(c);
 		}
 	}
+#ifdef DEFAULT_DEBUG
 	CONSOLE_DEBUG("defaultself_visit_childatoms1 returning %d",0);
+#endif
 	return 0;
 }
 
@@ -173,13 +176,11 @@ int defaultself_visit_submodels1(struct Instance *inst
 #ifdef DEFAULT_DEBUG
 				CONSOLE_DEBUG("Running METHOD %s on '%s'",SCP(data->method_name),SCP(GetName(type)));
 #endif
-				CONSOLE_DEBUG("ENTERING INITIALISE CALL...");
 				pe = Initialize(c , CreateIdName(ProcName(method))
 					, SCP(data->method_name)
 					,ASCERR
 					,0, NULL, NULL
 				);
-				CONSOLE_DEBUG("...BACK FROM INITIALISE CALL");
 				if(pe!=Proc_all_ok)err += 1;
 			}else{
 #ifdef DEFAULT_DEBUG
@@ -193,7 +194,9 @@ int defaultself_visit_submodels1(struct Instance *inst
 		}
 	}
 
+#ifdef DEFAULT_DEBUG
 	CONSOLE_DEBUG("defaultself_visit_submodels1 return ing %d",err);
+#endif
 	return err;
 }
 

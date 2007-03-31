@@ -58,19 +58,19 @@
 	the x-vector, of the variable that we are solving for.
 	Our residuals are always written to f[0].
 */
-double zbrent(ExtEvalFunc *func,	/* the evaluation function */
-	      double *lowbound,		/* low bound */
-	      double *upbound,		/* up bound */
-	      int *mode,		/* to pass to the eval func */
-	      int *m,			/* the relation index */
-	      int *n,			/* the variable index */
-	      double *x,	/* the x vector -- needed by eval func */
-	      double *u,	/* the u vector -- needed by eval func */
-	      double *f,		/* vector of residuals */
-	      double *g,		/* vector of gradients */
-	      double *tolerance,	/* accuracy of solution */
-	      int *status)		/* success or failure */
-{
+double zbrent(ExtEvalFunc *func	/* the evaluation function */
+	,double *lowbound		/* low bound */
+	,double *upbound		/* up bound */
+	,int *mode		/* to pass to the eval func */
+	,int *m			/* the relation index */
+	,int *n			/* the variable index */
+	,double *x	/* the x vector -- needed by eval func */
+	,double *u	/* the u vector -- needed by eval func */
+	,double *f		/* vector of residuals */
+	,double *g		/* vector of gradients */
+	,double *tolerance	/* accuracy of solution */
+	,int *status		/* success or failure */
+){
   int iter, result;
   double x1, x2;
   double a, b, c;
