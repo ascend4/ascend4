@@ -16,7 +16,7 @@
 
 #include "ida_impl.h"
 
-#define ANALYSE_DEBUG
+/* #define ANALYSE_DEBUG */
 
 /*
 	define DERIV_WITHOUT_DIFF to enable experimental handling of derivatives
