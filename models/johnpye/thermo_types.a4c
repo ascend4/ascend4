@@ -73,6 +73,16 @@ ATOM specific_energy REFINES solver_var
 	nominal := 1000{kJ/kg};
 END specific_energy;
 
+ATOM delta_specific_enthalpy REFINES solver_var
+		DIMENSION L^2/T^2
+		DEFAULT 1000{kJ/kg};
+
+	lower_bound := -10000{kJ/kg};
+	upper_bound := 10000{kJ/kg};
+	nominal := 1000{kJ/kg};
+
+END delta_specific_enthalpy;
+
 ATOM specific_power REFINES solver_var
 		DIMENSION L^2/T^3
 		DEFAULT 100{W/kg};
