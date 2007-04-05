@@ -516,9 +516,13 @@ Instanc::isPlottable() const{
 
 const enum set_kind
 Instanc::getSetType() const{
-	if(!isSet() || (!isConst() && !isDefined())){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not set-valued or not defined",getName().toString());
+	if(!isSet())throw runtime_error("Not a set");
+	if(!isConst() && !isDefined()){
+		stringstream ss;
+		ss << "Value of set '" << getName().toString() <<  "' is not defined";
+		throw runtime_error(ss.str());
 	}
+	if(SetAtomList(i)==NULL)return empty_set;
 	return SetKind(SetAtomList(i));
 }
 
