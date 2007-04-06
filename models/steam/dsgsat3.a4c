@@ -14,12 +14,12 @@ IMPORT "johnpye/roots";
 
 MODEL dsgsat3;
 	n IS_A integer_constant;
-	n :== 5;(* with L = 10m: 5,6,7,8,9,10,11 *)
+	n :== 30;(* with L = 10m: 5,6,7,8,9,10,11 *)
 	         (* with L =  5m: 2,3,4,5,7,9,11,12,13,1415,16 *)
 
 	dz IS_A real_constant;
 	L IS_A real_constant;
-	L :== 10 {m};
+	L :== 11 {m};
 	dz :== L / (n-1);
 
 	nodes,butfirst1,upwind4,central IS_A set OF integer_constant;
@@ -30,7 +30,7 @@ MODEL dsgsat3;
 
 	(* temporal derivatives *)
 	drho_dt[butfirst1] IS_A density_rate;
-	dmdot_dt[butfirst1] IS_A mass_rate_rate;
+	(* dmdot_dt[butfirst1] IS_A mass_rate_rate; *)
 	du_dt[butfirst1] IS_A specific_energy_rate;
 	dTw_dt[butfirst1] IS_A temperature_rate;
 
@@ -61,10 +61,6 @@ MODEL dsgsat3;
 	qdot_t[butfirst1], qdot_l[butfirst1] IS_A power_per_length;
 	qdot_s IS_A power_per_length;
 
-	FOR i IN nodes CREATE
-		z_vel[i]: vel[i] = v[i]*mdot[i]/A;
-	END FOR;
-
 	(* some aliases just for easier review of the state of the model *)
 	x[nodes] IS_A fraction;
 	mdot[nodes] IS_A mass_rate;
@@ -72,6 +68,14 @@ MODEL dsgsat3;
 	rho[nodes] IS_A mass_density;
 	u[nodes] IS_A specific_energy;
 	v[nodes] IS_A specific_volume;
+
+(*	Qdot_t IS_A energy_rate;
+	Qdot_t = SUM[qdot_t[i] | i IN butfirst1]; *)
+
+	FOR i IN nodes CREATE
+		z_vel[i]: vel[i] = v[i]*mdot[i]/A;
+	END FOR;
+
 	FOR i IN nodes CREATE
 		x[i],    node[i].x ARE_THE_SAME;
 		mdot[i], node[i].mdot ARE_THE_SAME;
@@ -118,12 +122,17 @@ MODEL dsgsat3;
 			 + (p[i]*v[i]*mdot[i] - p[i-1]*v[i-1]*mdot[i-1]);
 	END FOR;
 
-	(* momentum conservation *)
+	(* stationary momentum *)
+	FOR i IN butfirst1 CREATE
+		z_mombal[i]: p[i] = p[i-1] - dz  * f/D/2 * rho[i] * vel[i]^2;
+	END FOR;
 	mom_upwind4 :== [];
-	mom_central :== central - mom_upwind4;
+	mom_central :== [];
+(*
+	* momentum conservation *
 	FOR i IN mom_upwind4 CREATE
 		z_mombal2[i]:  - dz/A * dmdot_dt[i]
-			 =	(p[i]-p[i-1])  (* backdiff for pressure *)
+			 =	(p[i]-p[i-1])  * backdiff for pressure *
 				+ dz * f/D/2 * rho[i] * vel[i]^2
 				+ (rho[i+1]*vel[i+1]^2 + 6.*rho[i]*vel[i]^2 - 3.*rho[i-1]*vel[i-1]^2 - 2.*rho[i-2]*vel[i-2]^2) / 6.;
 	END FOR;
@@ -139,6 +148,7 @@ MODEL dsgsat3;
 				+ dz * f/D/2 * rho[i] * vel[i]^2
 				+ (rho[i]*vel[i]^2 - rho[i-1]*vel[i-1]^2);
 	END FOR;
+*)
 
 	(* internal/external convection, and thermal mass of wall -- no spatial derivs here *)
 	FOR i IN butfirst1 CREATE
@@ -148,7 +158,9 @@ MODEL dsgsat3;
 	END FOR;
 
 	t IS_A time;
+
 METHODS
+
 	METHOD bound_self;
 		vel[nodes].upper_bound := 100 {m/s};
 		qdot_l[butfirst1].lower_bound := 0 {W/m};
@@ -166,7 +178,7 @@ METHODS
 		END FOR;
 		FOR i IN butfirst1 DO
 			drho_dt[i] := 0 {kg/m^3/s};
-			dmdot_dt[i] := 0 {kg/s/s};
+(* 			dmdot_dt[i] := 0 {kg/s/s}; *)
 			du_dt[i] := 0 {kJ/kg/s};
 			dTw_dt[i] := 0 {K/s};
 			qdot_t[i] := 0 {W/m};
@@ -190,27 +202,27 @@ METHODS
 		FIX T_amb;
 		(* fix derivatives to zero *)
 		FOR i IN butfirst1 DO
-			FREE x[i]; FIX p[i];
+			FREE x[i]; FIX p[i]; FREE node[i].mdot;
 			FIX drho_dt[i];  FREE p[i];
 			FIX du_dt[i]; FREE T[i];
-			FREE mdot[i]; FIX dmdot_dt[i];
+(*			FREE mdot[i]; FIX dmdot_dt[i]; *)
 		END FOR;
 	END specify;
 	METHOD values;
 		D := 0.06 {m};
 		D_2 := 0.07 {m};
 		T_amb := 298 {K};
-		h_int := 100 {W/m^2/K};
-		h_ext := 20 {W/m^2/K};
+		h_int := 1000 {W/m^2/K};
+		h_ext := 5 {W/m^2/K};
 		f := 0.03;
 		mdot[1] := 0.26 {kg/s};
 		p[1]    := 10 {bar};
 		x[1]    := 0.23;
 		rho_w := 1000 {kg/m^3};
-		qdot_s := 1000 {W/m^2} * D_2 * 10;
+		qdot_s := 100 {W/m^2} * D_2 * 10 * 11{m} / L;
 		FOR i IN butfirst1 DO
 			T_w[i] := 298 {K};
-			dmdot_dt[i] := 0.0 {kg/s/s};
+(*			dmdot_dt[i] := 0.0 {kg/s/s};*)
 			du_dt[i] := 0 {kJ/kg/s};
 			v[i] := 0.2 {L/kg};
 			rho[i] := 6 {kg/L};
@@ -224,7 +236,8 @@ METHODS
 	END on_load;
 	(*---------------- a physically sensible steady-state configuration-----------*)
 	METHOD configure_steady;
-		RUN default_self;
+		EXTERNAL defaultself_visit_childatoms(SELF);
+		EXTERNAL defaultself_visit_submodels(SELF); 
 		RUN ClearAll;
 		RUN specify;
 		RUN bound_steady;
@@ -238,7 +251,7 @@ METHODS
 	METHOD configure_dynamic;
 		FOR i IN butfirst1 DO
 			FREE drho_dt[i];  FIX rho[i];
-			FREE dmdot_dt[i]; FIX mdot[i];
+(*			FREE dmdot_dt[i]; FIX mdot[i]; *)
 			FREE du_dt[i];    FIX u[i];
 			FREE dTw_dt[i];   FIX T_w[i];
 			FREE x[i];
@@ -249,7 +262,7 @@ METHODS
 	METHOD free_states;
 		FOR i IN butfirst1 DO
 			FREE rho[i];
-			FREE mdot[i];
+(*			FREE mdot[i]; *)
 			FREE u[i];
 			FREE T_w[i];
 		END FOR;
@@ -262,8 +275,8 @@ METHODS
 			drho_dt[i].ode_id := 4*i;     rho[i].ode_id := 4*i;
 			drho_dt[i].ode_type := 2;     rho[i].ode_type := 1;
 
-			dmdot_dt[i].ode_id := 4*i+1;  mdot[i].ode_id := 4*i+1;
-			dmdot_dt[i].ode_type := 2;    mdot[i].ode_type := 1;
+(*			dmdot_dt[i].ode_id := 4*i+1;  mdot[i].ode_id := 4*i+1;
+			dmdot_dt[i].ode_type := 2;    mdot[i].ode_type := 1;*)
 			
 			du_dt[i].ode_id := 4*i+2;     u[i].ode_id := 4*i+2;
 			du_dt[i].ode_type := 2;       u[i].ode_type := 1;
@@ -288,6 +301,7 @@ METHODS
 		x[n].obs_id := 1;
 		p[n].obs_id := 1;
 		vel[n].obs_id := 1;
+		T_w[n].obs_id := 2;
 
 	END ode_init;
 	METHOD fix_outlet_quality;

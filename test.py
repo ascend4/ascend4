@@ -809,18 +809,22 @@ class TestSteam(AscendSelfTester):
 		T = self.L.findType('dsgsat3')
 		M.run(T.getMethod('free_states'))
 		# here is the peturbation...
-		M.qdot_s.setRealValueWithUnits(6000,"W/m")
+		qdot_s = float(M.qdot_s)
+		print "OLD QDOT_S = %f" % qdot_s
+		M.qdot_s.setRealValueWithUnits(250,"W/m")
 		# IDA has its own initial conditions solver, so no need to call QRSlv here
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.setParameter('linsolver','DENSE')
 		I.setParameter('safeeval',True)
-		I.setParameter('rtol',1e-4)
+		I.setParameter('rtol',1e-5)
 		I.setParameter('atolvect',False)
 		I.setParameter('atol',1e-4)
 		I.setParameter('maxord',3)
 		I.setInitialSubStep(0.001)
+		#I.setMaxSubStep(1);
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		#I.setLinearTimesteps(ascpy.Units("s"), 0,300,300)
 		I.setLogTimesteps(ascpy.Units("s"), 0.001, 3600, 40)
 		I.analyse()
 		F = file('ga.mm','w')

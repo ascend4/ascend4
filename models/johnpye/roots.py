@@ -3,6 +3,9 @@
 #
 # This script must be run via the PyGTK GUI or it will throw an
 # exception at extpy.getbrowser().
+#
+# This script in turn calls roots_subproc.py, in order to work around a
+# bug in scipy (used for the computation of matrix eigenvalues)
 
 import extpy;
 from solverreporter import *
@@ -25,8 +28,8 @@ def deletefiles(fff):
 
 def roots(self):
 	"""Plot the complex eigenvalues of a DAE system"""
-	# following is an unfortunate necessity in the current system architecture:
 
+	# the following is an unfortunate necessity in the current system architecture:
 	browser = extpy.getbrowser()
 	M = browser.sim
 	M.setSolver(ascpy.Solver('QRSlv'))
