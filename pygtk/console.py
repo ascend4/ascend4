@@ -4,14 +4,25 @@ argv=['-gthread','-pi1','In <\\#>:','-pi2','   .\\D.:','-po','Out<\\#>:','-nocon
 banner = "\n\n>>> ASCEND PYTHON CONSOLE: type 'help(ascpy)' for info, ctrl-D to resume ASCEND"
 exitmsg = '>>> CONSOLE EXIT'
 
-try:
-	from IPython.Shell import IPShellEmbed
-	have_ipython=True;
-	embed = IPShellEmbed(argv,banner=banner,exit_msg=exitmsg);
-except ImportError,e:
-	have_ipython=False;
-	embed = lambda:None
+import gtk
+import pango
 
-def start(browser):
-	embed();
+FONT = "Luxi Mono 10"
 
+import ipython_view
+
+if ipython_view.IPython:
+	def create_widget(browser):
+		V = ipython_view.IPythonView()
+		V.modify_font(pango.FontDescription(FONT))
+		V.set_wrap_mode(gtk.WRAP_CHAR)
+		V.show()
+		browser.consolescroll.add(V)
+		V.updateNamespace({'browser': browser})
+else:
+	def create_widget(browser):
+		V = gtk.Label()
+		V.set_text("IPython not found. Is it installed?");
+		V.show()
+		browser.consolescroll.add(V)
+		

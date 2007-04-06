@@ -80,11 +80,6 @@ try:
 		print_loading_status("","FAILED TO LOAD MATPLOTLIB")
 		raise RuntimeError("Failed to load MATPLOTLIB (is it installed?). Details:"+str(e))
 
-	print_loading_status("Loading IPython")
-	import console;
-	if not console.have_ipython:
-		print_loading_status("","IPython couldn't be loaded")
-
 	print_loading_status("Loading ASCEND python modules")
 	from preferences import *      # loading/saving of .ini options
 	from solverparameters import * # 'solver parameters' window
@@ -288,6 +283,8 @@ class Browser:
 		self.methodsel=glade.get_widget("methodsel")
 
 		self.maintabs = glade.get_widget("maintabs")
+		self.lowertabs = glade.get_widget("lowertabs")
+		self.consolescroll = glade.get_widget("consolescroll")
 
 		self.statusbar = glade.get_widget("statusbar")
 
@@ -537,6 +534,12 @@ class Browser:
 						self.reporter.reportError("Unknown model type '%s': %s" 
 							%(_model, str(e))
 						);		
+
+		#--------
+		# IPython console, if available
+
+		import console
+		console.create_widget(self)
 
 	def run(self):
 		self.window.show()
@@ -1081,10 +1084,7 @@ class Browser:
 		self.do_solve()
 
 	def console_click(self,*args):
-		try:
-			console.start(self)
-		except RuntimeError,e:
-			self.reporter.reportError("Unable to start console: "+str(e));
+		self.lowertabs.set_current_page(1)
 
 	def integrate_click(self,*args):
 		self.do_integrate()

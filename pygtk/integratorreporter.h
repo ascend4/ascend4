@@ -34,7 +34,7 @@ extern "C"{
 class Integrator;
 
 /**
-	Observer API to allow ASCEND to add rows/columbs to the observer panel
+	Observer API to allow ASCEND to add rows/columns to the observer panel
 	in the Python interface.
 	
 	Should also be generalisable so that we can output observations to files
