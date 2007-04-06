@@ -6,8 +6,12 @@ exitmsg = '>>> CONSOLE EXIT'
 
 import gtk
 import pango
+import platform
 
-FONT = "Luxi Mono 10"
+if platform.system()=="Windows":
+	FONT = "Lucida Console 9"
+else:
+	FONT = "Luxi Mono 10"
 
 import ipython_view
 

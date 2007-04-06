@@ -88,7 +88,7 @@ Simulation::~Simulation(){
 	CONSOLE_DEBUG("Destroying Simulation...");
 	/*
 	// FIXME removing this here, because Python overzealously seems to delete simulations
-	
+
 	CONSOLE_DEBUG("Deleting simulation %s", getName().toString());
 	system_free_reused_mem();
 	if(sys){
@@ -145,8 +145,8 @@ Simulation::write(FILE *fp, const char *type) const{
 	};
 
 	const rel_filter_t rfilter = {
-		  REL_INCLUDED | REL_EQUALITY | REL_ACTIVE 
-		, REL_INCLUDED | REL_EQUALITY | REL_ACTIVE 
+		  REL_INCLUDED | REL_EQUALITY | REL_ACTIVE
+		, REL_INCLUDED | REL_EQUALITY | REL_ACTIVE
 	};
 
 	if(type==NULL){
@@ -156,7 +156,10 @@ Simulation::write(FILE *fp, const char *type) const{
 	}else if(string(type) == "dot"){
 		if(!sys)throw runtime_error("Can't write DOT file: simulation not built");
 		CONSOLE_DEBUG("Writing graph...");
-		if(!fp)fp=stdout;
+		if(!fp){
+			CONSOLE_DEBUG("... to stdout");
+			fp=stdout;
+		}
 		res = system_write_graph(sys, fp, &rfilter, &vfilter);
 		if(res){
 			stringstream ss;
@@ -190,8 +193,8 @@ Simulation::runDefaultMethod(){
 		ERROR_REPORTER_NOLINE(ASC_USER_WARNING,"There is no 'on_load' method defined for type '%s'",type.getName().toString());
 		return;
 	}
-	run(m);		
-}	
+	run(m);
+}
 
 void
 Simulation::run(const Method &method, Instanc &model){
@@ -366,7 +369,7 @@ Simulation::checkDoF() const{
 	Check consistency
 
 	@TODO what is the difference between this and checkStructuralSingularity?
-	
+
 	@return list of freeable variables. List will be empty if sys is consistent.
 */
 vector<Variable>
@@ -540,14 +543,14 @@ Simulation::build(){
 	if(NumberPendingInstances(simroot.getInternalType())){
 		throw runtime_error("System has pending instances; can't yet send to solver.");
 	}
-	
+
 	CONSOLE_DEBUG("============== REALLY building system...");
 	sys = system_build(simroot.getInternalType());
 	if(!sys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build system");
 		throw runtime_error("Unable to build system");
 	}
-	
+
 	CONSOLE_DEBUG("System built OK");
 }
 
@@ -581,7 +584,7 @@ Simulation::setParameters(SolverParameters &P){
 //------------------------------------------------------------------------------
 // PRE-SOLVE DIAGNOSTICS
 
-/** 
+/**
 	Get a list of variables to fix to make an underspecified system
 	become square. Also seems to return stuff when you have a structurally
 	singuler system.
@@ -733,7 +736,7 @@ SingularityInfo::isSingular() const{
 // SOLVING
 
 /**
-	Solve the system through to convergence. This function is hardwired with 
+	Solve the system through to convergence. This function is hardwired with
 	a maximum of 1000 iterations, but will interrupt itself when the 'stop'
 	condition comes back from the SolverReporter.
 */
@@ -792,7 +795,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 
 	double elapsed = tm_cpu_time() - starttime;
 	CONSOLE_DEBUG("Elapsed time: %0.3f", elapsed);
-	
+
 	activeblock = status.getCurrentBlockNum();
 
 	try{
@@ -870,7 +873,7 @@ Simulation::processVarStatus(){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to update var status (get_status returns error)");
 		return;
 	}
-	
+
 	if(status.block.number_of == 0){
 		cerr << "Variable statuses can't be set: block structure not yet determined." << endl;
 		return;
@@ -880,7 +883,7 @@ Simulation::processVarStatus(){
 		ERROR_REPORTER_HERE(ASC_USER_WARNING,"No blocks identified in system");
 		return;
 	}
-	
+
 	int activeblock = status.block.current_block;
 	asc_assert(activeblock <= status.block.number_of);
 

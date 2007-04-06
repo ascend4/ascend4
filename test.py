@@ -293,8 +293,17 @@ class TestCMSlv(AscendSelfTester):
 class TestMatrix(AscendSelfTester):
 	def testlog10(self):
 		M = self._run('testlog10')
-		print M.getMatrix().write(sys.stderr,"mmio")
-
+		print "FETCHING MATRIX................."
+		X = M.getMatrix()
+# this stuff crashes Windows because the FILE* structure used by Python is not the same
+# as used by MinGW...
+		#print "GOT MATRIX"
+		#sys.stderr.flush()
+		#sys.stdout.flush()
+		#F = os.tmpfile()
+		#X.write(F.fileno,"mmio")
+		#F.seek(0)
+		#print F.read()
 		
 class TestIntegrator(Ascend):
 
@@ -1001,19 +1010,20 @@ class TestIDA(Ascend):
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.analyse()
-		F = os.tmpfile()
-		I.writeMatrix(F,"dF/dy")
-		F.seek(0)
-		print F.read()
-		F1 = os.tmpfile()
-		I.writeMatrix(F1,"dF/dy'")
-		F1.seek(0)
-		print F1.read()
-		F1 = os.tmpfile()
-		I.writeMatrix(F1,"dg/dx")
-		F1.seek(0)
-		print F1.read()
-		# for the moment you'll have to check these results manually.
+# this stuff fails on Windows because FILE structure is different python vs mingw
+#		F = os.tmpfile()
+#		I.writeMatrix(F,"dF/dy")
+#		F.seek(0)
+#		print F.read()
+#		F1 = os.tmpfile()
+#		I.writeMatrix(F1,"dF/dy'")
+#		F1.seek(0)
+#		print F1.read()
+#		F1 = os.tmpfile()
+#		I.writeMatrix(F1,"dg/dx")
+#		F1.seek(0)
+#		print F1.read()
+#		# for the moment you'll have to check these results manually.
 
 	def testwritematrix2(self):
 		self.L.load('test/ida/writematrix.a4c')
@@ -1023,18 +1033,19 @@ class TestIDA(Ascend):
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
 		I.analyse()
-		F = os.tmpfile()
-		I.writeMatrix(F,"dF/dy")
-		F.seek(0)
-		print F.read()
-		F1 = os.tmpfile()
-		I.writeMatrix(F1,"dF/dy'")
-		F1.seek(0)
-		print F1.read()
-		F1 = os.tmpfile()
-		I.writeMatrix(F1,"dg/dx")
-		F1.seek(0)
-		print F1.read()
+# this stuff fails on Windows because FILE structure is different python vs mingw
+#		F = os.tmpfile()
+#		I.writeMatrix(F,"dF/dy")
+#		F.seek(0)
+#		print F.read()
+#		F1 = os.tmpfile()
+#		I.writeMatrix(F1,"dF/dy'")
+#		F1.seek(0)
+#		print F1.read()
+#		F1 = os.tmpfile()
+#		I.writeMatrix(F1,"dg/dx")
+#		F1.seek(0)
+#		print F1.read()
 		#F1 = os.tmpfile()
 		#I.writeMatrix(F1,"dydp/dyd")
 		#F1.seek(0)
@@ -1407,13 +1418,16 @@ if __name__=='__main__':
 			restart = 1
 
 	if restart:
-		script = os.path.join(sys.path[0],"test.py")					
-		print "Restarting with..."
-		print "  export LD_LIBRARY_PATH=%s" % os.environ.get(LD_LIBRARY_PATH)
-		print "  export PYTHONPATH=%s" % os.environ.get('PYTHONPATH')
-		print "  export ASCENDLIBRARY=%s" % os.environ.get('ASCENDLIBRARY')
-
-		os.execvp("python",[script] + sys.argv)
+		if platform.system()=="Windows":
+			pass
+		else:
+			script = os.path.join(sys.path[0],"test.py")					
+			sys.stderr.write("Restarting with...\n")
+			sys.stderr.write("  export LD_LIBRARY_PATH=%s\n" % os.environ.get(LD_LIBRARY_PATH))
+			sys.stderr.write("  export PYTHONPATH=%s\n" % os.environ.get('PYTHONPATH'))
+			sys.stderr.write("  export ASCENDLIBRARY=%s\n" % os.environ.get('ASCENDLIBRARY'))
+			sys.stderr.flush()
+			os.execvp("python",[script] + sys.argv)
 
 	import ascpy
 

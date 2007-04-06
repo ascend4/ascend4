@@ -38,10 +38,11 @@ int system_write_graph(slv_system_t sys
 	struct rel_relation **srels;
 	struct var_variable **svars, **ivars;
 	char *relname, *varname;
-	
+
 	CONSOLE_DEBUG("Writing graph...");
 	asc_assert(fp!=NULL);
 
+	CONSOLE_DEBUG("FP = %p",fp);
 	fprintf(fp,"digraph G{\n");
 
 	/* first create nodes for the rels */
@@ -74,7 +75,7 @@ int system_write_graph(slv_system_t sys
 	fprintf(fp,"\n\n\t/* incidences */\n\n");
 	for(i=0; i<nsr; ++i){
 		if(!rel_apply_filter(srels[i],rfilter))continue;
-		
+
 		ivars = rel_incidence_list(srels[i]);
 		niv = rel_n_incidences(srels[i]);
 
@@ -90,7 +91,7 @@ int system_write_graph(slv_system_t sys
 	CONSOLE_DEBUG("Completed graph output");
 	return 0;
 }
-		
 
-	
+
+
 

@@ -28,7 +28,7 @@ if tcl_env.get('TCL_CPPPATH'):
 if tcl_env.get('TK_CPPPATH'):
 	tcl_env.AppendUnique(CPPPATH=[tcl_env['TK_CPPPATH']])
 
-tcl_env.Append(LIBS=['ascend'])
+tcl_env.AppendUnique(LIBS=['ascend'])
 tcl_env.AppendUnique(LIBPATH=['#'])
 
 if tcl_env.get('STATIC_TCLTK'):
@@ -60,7 +60,7 @@ else:
 	tcl_env.Prepend(LIBPATH=['.'])
 
 	ascendtclprog = tcl_env.Program("ascend4",["main.c"]
-		, LIBS = tcl_env['LIBS']+['ascendtcl','ascend']
+		, LIBS = tcl_env['LIBS']+['ascendtcl']
 	)
 
 	if tcl_env.get('CAN_INSTALL'):
