@@ -282,7 +282,7 @@ ASC_DLLSPEC FILE*g_ascend_information;    /**< File stream to receive general me
 #  define ASCINF g_ascend_information
 # endif
 
-#else 
+#else
 # define ASCERR stderr
 # define ASCWAR stderr
 # define ASCINF stderr
@@ -303,7 +303,10 @@ ASC_DLLSPEC FILE*g_ascend_information;    /**< File stream to receive general me
 # define	FALSE      0
 #endif
 typedef	char       *POINTER;       /**< Generic pointer. */
-typedef	char       boolean;        /**< Boolean type. */
+
+typedef	unsigned char boolean;        /**< Boolean type. */
+/* changed from 'char' to 'unsigned char' for compatibility with standard headers with MinGW GCC 3.4.2 */
+
 typedef	int        ALIGN;          /**< Data alignment. */
 /**
  *  real64:

@@ -32,10 +32,13 @@ Matrix::Matrix(mtx_matrix_t M) : M(M){
 */
 int
 Matrix::write(FILE *fp, const string &format) const{
-	asc_assert(M!=NULL);
-	asc_assert(fp!=NULL);
+
+	CONSOLE_DEBUG("HERE IN MATRIX::WRITE");
 
 	CONSOLE_DEBUG("Writing matrix in format '%s'",format.c_str());
+
+	if(M==NULL)throw runtime_error("Matrix is NULL");
+	if(fp==NULL)throw runtime_error("File is NULL");
 
 	if(format=="matlab"){
 		mtx_write_region_matlab(fp, M, mtx_ENTIRE_MATRIX);

@@ -1,6 +1,6 @@
 import sys, os, commands, platform, distutils.sysconfig, os.path, re
 
-version = "0.9.5.107"
+version = "0.9.5.108"
 
 #------------------------------------------------------
 # OPTIONS
@@ -632,6 +632,8 @@ env = Environment(
 	, tools=tools
 	, **envadditional
 )
+
+print "PATH =",os.environ['PATH']
 
 opts.Update(env)
 opts.Save('options.cache',env)
@@ -1723,7 +1725,7 @@ else:
 
 if need_fortran:
 	conf.env.Tool('fortran')
-	detect_fortran = conf.env.Detect(['g77','f77','gfortran'])
+	detect_fortran = conf.env.Detect(['gfortran','g77'])
 	if detect_fortran:
 		# For some reason, g77 doesn't get detected properly on MinGW
 		if not env.has_key('F77') and not env.has_key('FORTRAN'):
@@ -1753,7 +1755,8 @@ if need_fortran:
 
 if need_fortran:
 	if platform.system()=="Windows":
-		conf.env.Append(LIBPATH='c:\mingw\lib')
+		pass
+		#conf.env.Append(LIBPATH='c:\mingw\lib')
 
 # scrollkeeper
 

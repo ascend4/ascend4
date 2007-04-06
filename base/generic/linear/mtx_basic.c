@@ -53,19 +53,19 @@ int super_check_matrix( mtx_matrix_t mtx){
   /* Test consistency of permutation arrays */
   for( ndx=ZERO ; ndx < mtx->capacity ; ++ndx ) {
     if( mtx->perm.row.org_to_cur[mtx->perm.row.cur_to_org[ndx]] != ndx ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Permutation violation in row %d.\n", ndx);
         errcnt++;
     }
     if( mtx->perm.col.org_to_cur[mtx->perm.col.cur_to_org[ndx]] != ndx ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Permutation violation in col %d.\n",ndx);
       errcnt++;
     }
   }
 
   if( mtx->order > mtx->capacity ) {
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Capacity %d is less than order %d\n",
       mtx->capacity,mtx->order);
     errcnt++;
@@ -77,12 +77,12 @@ int super_check_matrix( mtx_matrix_t mtx){
     org_row = mtx->perm.row.cur_to_org[ndx];
     org_col = mtx->perm.col.cur_to_org[ndx];
     if( NOTNULL(mtx->hdr.row[org_row]) ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-zeros found in non-existent row %d.\n",ndx);
       errcnt++;
     }
     if( NOTNULL(mtx->hdr.col[org_col]) ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-zeros found in non-existent col %d.\n",ndx);
       errcnt++;
     }
@@ -98,12 +98,12 @@ int super_check_matrix( mtx_matrix_t mtx){
       if( elt->row != mtx_NONE ) {
         ++rowc;
         if( elt->row != org_row ) {
-          
+
           ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element mismatch in row %d.\n", ndx);
           errcnt++;
         }
       } else {
-        
+
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Disclaimed element in row %d.\n", ndx);
         errcnt++;
       }
@@ -112,19 +112,19 @@ int super_check_matrix( mtx_matrix_t mtx){
       if( elt->col != mtx_NONE ) {
         ++colc;
         if( elt->col != org_col ) {
-          
+
           ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element mismatch in col %d.\n", ndx);
           errcnt++;
         }
       } else {
-        
+
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Disclaimed element in col %d.\n", ndx);
         errcnt++;
       }
     }
   }
   if( rowc != colc ) {
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-zero discrepancy, %d by row, %d by col.\n",
       rowc, colc);
     errcnt++;
@@ -138,7 +138,7 @@ int super_check_matrix( mtx_matrix_t mtx){
 boolean check_matrix( mtx_matrix_t mtx, char *file, int line){
 
    if( ISNULL(mtx) ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL matrix in %s line %d.\n",file,line);
       return 0;
    }
@@ -147,12 +147,12 @@ boolean check_matrix( mtx_matrix_t mtx, char *file, int line){
       case OK:
          break;
       case DESTROYED:
-         
+
          FPRINTF(g_mtxerr,
            "        Matrix deceased found in %s line %d.\n",file,line);
          return 0;
       default:
-         
+
          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix garbage found in %s line %d.\n",
            file,line);
          return 0;
@@ -168,7 +168,7 @@ boolean check_matrix( mtx_matrix_t mtx, char *file, int line){
    return 1;
 }
 
-/* 
+/*
 	this function checks the consistency of a sparse as best it can.
 	@return FALSE if something wierd
 */
@@ -1668,7 +1668,7 @@ static int enlarge_sparse(mtx_sparse_t *ret, int32 len){
     inew = (int32 *)ascrealloc(ret->idata,sizeof(int32)*len);
   }
   if (ISNULL(inew)) {
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"          Insufficient memory.\n");
     return 1;
   }
@@ -1680,7 +1680,7 @@ static int enlarge_sparse(mtx_sparse_t *ret, int32 len){
     dnew = (real64 *)ascrealloc(ret->data,sizeof(real64)*len);
   }
   if (ISNULL(dnew)) {
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"          Insufficient memory.\n");
     return 1;
   }
@@ -3170,6 +3170,8 @@ int mtx_write_region_mmio(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region){
     int nrows, ncols, nnz, *perm;
 	struct element_t Rewind, *elt;
 	mtx_coord_t nz;
+
+	CONSOLE_DEBUG("ABOUT TO PRINT MATRIX");
 
 	if(!mtx_check_matrix(mtx))return 1;
 
