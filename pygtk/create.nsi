@@ -23,8 +23,8 @@ OutFile ascend-setup.exe
 !endif
 
 
-;SetCompressor /FINAL zlib
-SetCompressor /SOLID lzma
+SetCompressor /FINAL zlib
+;SetCompressor /SOLID lzma
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\ASCEND
@@ -46,6 +46,7 @@ UninstPage instfiles
 
 ;--------------------------------
 
+Var /GLOBAL DEFAULTPATH
 Var /GLOBAL PYOK
 Var /GLOBAL PYPATH
 Var /GLOBAL GTKOK
@@ -56,10 +57,13 @@ Var /GLOBAL PYINSTALLED
 Var /GLOBAL TCLOK
 Var /GLOBAL TCLPATH
 Var /GLOBAL TCLINSTALLED
+Var /GLOBAL PATH
 
 Function .onInit
 	StrCpy $PYINSTALLED ""
 	StrCpy $TCLINSTALLED ""
+	
+	ExpandEnvStrings $DEFAULTPATH "%WINDIR%;%WINDIR%\system32"
 
 	Call DetectPython
 	Pop $PYOK
@@ -77,6 +81,8 @@ Function .onInit
 	Pop $TCLOK
 	Pop $TCLPATH	
 	
+	StrCpy $PATH "$DEFAULTPATH;$PYPATH;$GTKPATH"
+
 FunctionEnd
 
 
@@ -133,7 +139,7 @@ Section "ASCEND (required)"
 	FileWrite $0 "@echo off"
 	FileWriteByte $0 "13"
 	FileWriteByte $0 "10"
-	FileWrite $0 "set PATH=$PYPATH;$GTKPATH"
+	FileWrite $0 "set PATH=$PATH"
 	FileWriteByte $0 "13"
 	FileWriteByte $0 "10"
 	FileWrite $0 "cd "
@@ -183,7 +189,7 @@ Section "PyGTK GUI"
 				FileWrite $0 "@echo off"
 				FileWriteByte $0 "13"
 				FileWriteByte $0 "10"
-				FileWrite $0 "set PATH=$PYPATH;$GTKPATH"
+				FileWrite $0 "set PATH=$PATH"
 				FileWriteByte $0 "13"
 				FileWriteByte $0 "10"
 				FileWrite $0 "cd "

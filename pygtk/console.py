@@ -6,27 +6,36 @@ exitmsg = '>>> CONSOLE EXIT'
 
 import gtk
 import pango
-import platform
 
+import platform
 if platform.system()=="Windows":
 	FONT = "Lucida Console 9"
 else:
 	FONT = "Luxi Mono 10"
 
-import ipython_view
+try:
+	import ipython_view
+	have_ipython = 1
+except:
+	have_ipython = 0
 
-if ipython_view.IPython:
-	def create_widget(browser):
+def create_widget(browser):
+	try:
+		if not have_ipython:
+			raise Exception("IPython could not be load (is it installed?)")
 		V = ipython_view.IPythonView()
-		V.modify_font(pango.FontDescription(FONT))
-		V.set_wrap_mode(gtk.WRAP_CHAR)
-		V.show()
-		browser.consolescroll.add(V)
-		V.updateNamespace({'browser': browser})
-else:
-	def create_widget(browser):
+	except Exception,e:
 		V = gtk.Label()
-		V.set_text("IPython not found. Is it installed?");
+		V.set_text("IPython error: %s" % str(e));
 		V.show()
 		browser.consolescroll.add(V)
+		browser.consoletext = V
+		return
+
+	V.modify_font(pango.FontDescription(FONT))
+	V.set_wrap_mode(gtk.WRAP_CHAR)
+	V.show()
+	browser.consolescroll.add(V)
+	browser.consoletext = V
+	V.updateNamespace({'browser': browser})
 		

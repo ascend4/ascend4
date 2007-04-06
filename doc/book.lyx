@@ -1,4 +1,4 @@
-#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -50,6 +50,19 @@ The ASCEND Modelling and Simulation Environment
 \end_layout
 
 \begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+frontmatter
+\end_layout
+
+\end_inset
+
+
 \begin_inset LatexCommand \tableofcontents{}
 
 \end_inset
@@ -67,6 +80,22 @@ The ASCEND Modelling and Simulation Environment
 
 \begin_layout Standard
 \begin_inset FloatList table
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Title
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+mainmatter
+\end_layout
 
 \end_inset
 
