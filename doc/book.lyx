@@ -1,10 +1,10 @@
-#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
 \textclass book
 \begin_preamble
-\usepackage[bookmarks]{hyperref}
+\usepackage[bookmarks,bookmarksnumbered=true]{hyperref}
 \usepackage{lmodern}
 \end_preamble
 \language english
@@ -13,7 +13,7 @@
 \graphics default
 \paperfontsize default
 \spacing single
-\papersize default
+\papersize custom
 \use_geometry true
 \use_amsmath 1
 \cite_engine basic
@@ -242,6 +242,11 @@ preview false
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
+\start_of_appendix
 
 \end_layout
 
