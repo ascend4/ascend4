@@ -21,9 +21,9 @@ import os
 from StringIO import StringIO
 
 try:
-  import IPython
-except ImportError:
-  IPython = None
+	import IPython
+except Exception,e:
+	raise "Error importing IPython (%s)" % str(e)
 
 ansi_colors =  {'0;30': 'Black',
                 '0;31': 'Red',
@@ -53,6 +53,9 @@ class IterableIPShell:
       IPython.Shell.Term.cout = cout
     if cerr:
       IPython.Shell.Term.cerr = cerr
+
+    if argv is None:
+      argv=[]
 
     # This is to get rid of the blockage that occurs during 
     # IPython.Shell.InteractiveShell.user_setup()

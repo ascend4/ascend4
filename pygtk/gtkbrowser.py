@@ -1085,6 +1085,7 @@ class Browser:
 
 	def console_click(self,*args):
 		self.lowertabs.set_current_page(1)
+		self.consoletext.grab_focus()
 
 	def integrate_click(self,*args):
 		self.do_integrate()
