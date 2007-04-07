@@ -3,6 +3,52 @@
 \begin_document
 \begin_header
 \textclass book
+\begin_preamble
+\usepackage[bookmarks,bookmarksnumbered=true]{hyperref}
+\usepackage{lmodern}
+\usepackage{color}
+\definecolor{darkred}{rgb}{0.55,0,0}
+\definecolor{darkgreen}{rgb}{0,0.55,0}
+
+\usepackage{listings}
+
+\lstdefinelanguage{ascend}{
+  morekeywords=[1]{
+     REQUIRE,IMPORT,NOTES,
+     ATOM,MODEL,METHOD,METHODS,
+     UNIVERSAL,CONSTANT,DIMENSION,DEFAULT,
+     END,FOR,CREATE,DO,EXTERNAL,  
+     CONDITIONAL,SATISFIED,WHEN,CASE,OTHERWISE,TRUE,
+     FALSE,SELF,
+  },
+  morekeywords=[2]{
+     REFINES,IS_A,WILL_BE,ALIASES,INPUT,OUTPUT,DATA,
+     FIX,FREE,RUN,ARE_THE_SAME
+  },
+  morekeywords=[3]{
+     solver_var,integer_constant
+  },
+  sensitive=true,
+  morecomment=[s][\color{blue}]{(*}{*)},
+  morestring=[b][\color{darkgreen}]',
+  morestring=[b][\color{darkgreen}]",
+  morecomment=[s][\color{darkgreen}]{\{}{\}},
+}
+
+\lstnewenvironment{ascend}
+  {\lstset{basicstyle=\ttfamily\small, keywordstyle=\color{darkred}}}
+  {}
+
+\lstdefinestyle{ascendlisting}{
+  style=ascendlisting,
+  basicstyle=\small\ttfamily, 
+  numbers=left, 
+  numbersep=5pt, 
+  numberstyle=\tiny, 
+  escapeinside={(*@}{@*)}
+  backgroundcolor=\color{lightgrey} 
+}
+\end_preamble
 \language english
 \inputencoding auto
 \fontscheme default

@@ -896,21 +896,33 @@ In Table
  we describe additional methods we require before we will put a model into
  one of our libraries.
  Each of these had two versions, both of which we require.
- The designation _self
+ The designation 
+\family typewriter
+\noun default
+_self
+\family default
+\noun off
+
 \begin_inset LatexCommand \index{\_self}
 
 \end_inset
 
  is for a method to do something for all the variables and/or parts we have
  defined locally within the current model with an IS_A statement.
- The designation _all
+ The designation 
+\family typewriter
+\noun default
+_all
+\family default
+\noun off
+
 \begin_inset LatexCommand \index{\_all}
 
 \end_inset
 
- is for a method to do something for parts that are defined within an "outer"
+ is for a method to do something for parts that are defined within an `outer'
  model that has an instance of this model as a part.
- The "outer" model is at a higher scope
+ The `outer' model is at a higher scope
 \begin_inset LatexCommand \index{scope}
 
 \end_inset
@@ -931,7 +943,13 @@ Section
 \noun default
  
 \noun off
-Only the _self versions of these methods are relevant here and are in 
+Only the 
+\family typewriter
+\noun default
+_self
+\family default
+\noun off
+ versions of these methods are relevant here and are in 
 \noun default
 Figure 
 \noun off
@@ -1227,13 +1245,25 @@ Exit ASCEND and repeat all the steps above to edit, load and compile this
 
 \begin_layout Itemize
 In the Browser window, examine the values for those variables mentioned
- in the default_self method.
+ in the 
+\family typewriter
+default_self
+\family default
+ method.
  Note they already have their default values.
 \end_layout
 
 \begin_layout Itemize
-To place the new instance v in a solvable state, go to the Browser window.
- Pick the command Run method under the Edit button.
+To place the new instance 
+\family typewriter
+v
+\family default
+ in a solvable state, go to the Browser window.
+ Select 
+\series bold
+Run method
+\series default
+ under the Edit menu.
  Select first the method values and hit OK.
 \end_layout
 
@@ -1261,14 +1291,22 @@ In the Browser, examine the values for the variables listed in the method
 \end_layout
 
 \begin_layout Itemize
-Finally export v to the Solver.
+Finally export 
+\family typewriter
+v
+\family default
+ to the Solver.
  The Eligible window should NOT appear; rather that Solver should report
  the model to be square.
  
 \end_layout
 
 \begin_layout Itemize
-Solve by selecting Solve under the Execute button.
+Solve by selecting 
+\series bold
+Solve
+\series default
+ under the Execute menu.
 \end_layout
 
 \begin_layout Standard
