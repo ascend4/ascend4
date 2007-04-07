@@ -3,6 +3,52 @@
 \begin_document
 \begin_header
 \textclass book
+\begin_preamble
+\usepackage[bookmarks,bookmarksnumbered=true]{hyperref}
+\usepackage{lmodern}
+\usepackage{color}
+\definecolor{darkred}{rgb}{0.55,0,0}
+\definecolor{darkgreen}{rgb}{0,0.55,0}
+
+\usepackage{listings}
+
+\lstdefinelanguage{ascend}{
+  morekeywords=[1]{
+     REQUIRE,IMPORT,NOTES,
+     ATOM,MODEL,METHOD,METHODS,
+     UNIVERSAL,CONSTANT,DIMENSION,DEFAULT,
+     END,FOR,CREATE,DO,EXTERNAL,  
+     CONDITIONAL,SATISFIED,WHEN,CASE,OTHERWISE,TRUE,
+     FALSE,SELF,
+  },
+  morekeywords=[2]{
+     REFINES,IS_A,WILL_BE,ALIASES,INPUT,OUTPUT,DATA,
+     FIX,FREE,RUN,ARE_THE_SAME
+  },
+  morekeywords=[3]{
+     solver_var,integer_constant
+  },
+  sensitive=true,
+  morecomment=[s][\color{blue}]{(*}{*)},
+  morestring=[b][\color{darkgreen}]',
+  morestring=[b][\color{darkgreen}]",
+  morecomment=[s][\color{darkgreen}]{\{}{\}},
+}
+
+\lstnewenvironment{ascend}
+  {\lstset{basicstyle=\ttfamily\small, keywordstyle=\color{darkred}}}
+  {}
+
+\lstdefinestyle{ascendlisting}{
+  style=ascendlisting,
+  basicstyle=\small\ttfamily, 
+  numbers=left, 
+  numbersep=5pt, 
+  numberstyle=\tiny, 
+  escapeinside={(*@}{@*)}
+  backgroundcolor=\color{lightgrey} 
+}
+\end_preamble
 \language english
 \inputencoding auto
 \fontscheme default
@@ -133,7 +179,31 @@ In ASCEND we can create traditional comments for a model -- i.e., add text
 \end_layout
 
 \begin_layout LyX-Code
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+begin{ascend}
+\end_layout
+
+\begin_layout Standard
+
 (* This is a comment *)
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+end{ascend}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -161,17 +231,7 @@ We suggest we can do more for the modeler with the concept of Notes, a form
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-notes are active comments
 \begin_inset LatexCommand \index{comments, active}
-
-\end_inset
-
-
-\end_layout
 
 \end_inset
 
@@ -183,14 +243,20 @@ In Figure
 
 \noun off
  we show two types of notes the modeler can add.
- Longer notes are set off in block style starting with the keyword 
-\family typewriter
+ 
+\series bold
+\noun default
+Longer notes
+\series default
+\noun off
+ are set off in block style starting with the keyword 
+\family sans
 \noun default
 NOTES
 \family default
 \noun off
  and ending with 
-\family typewriter
+\family sans
 \noun default
 END NOTES
 \family default
@@ -198,8 +264,13 @@ END NOTES
 .
  In this model, we declare two notes in this manner: (1) to indicate who
  the author is and (2) to indicate the creation date for this model.
- Note that the notes are director to documenting SELF, which is the model
- itself -- i.e., the vessel model as a whole object.
+ Note that the notes are director to documenting 
+\family sans
+\noun default
+SELF
+\family default
+\noun off
+, which is the model itself -- i.e., the vessel model as a whole object.
  The object one documents can be any instance in the model -- any variable,
  equation or part.
  The tools for handling notes can sort on the terms enclosed in single quotes
@@ -207,183 +278,15 @@ END NOTES
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
+Vessel model with 
+\family sans
+NOTES
+\family default
+ added (model 
+\family typewriter
+vesselNotes.a4c
+\family default
 
-\begin_layout LyX-Code
-REQUIRE "atoms.a4l";
-\end_layout
-
-\begin_layout LyX-Code
-MODEL vessel;
-\end_layout
-
-\begin_layout LyX-Code
-    NOTES
-\end_layout
-
-\begin_layout LyX-Code
-        'author'SELF {Arthur W.
- Westerberg}
-\end_layout
-
-\begin_layout LyX-Code
-        'creation date' SELF {May, 1998}
-\end_layout
-
-\begin_layout LyX-Code
-    END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-    (* variables *)
-\end_layout
-
-\begin_layout LyX-Code
-    side_area "the area of the cylindrical side wall of the vessel",
-\end_layout
-
-\begin_layout LyX-Code
-    end_area "the area of the flat ends of the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A area;
-\end_layout
-
-\begin_layout LyX-Code
-    vessel_vol "the volume contained within the cylindrical vessel",
-\end_layout
-
-\begin_layout LyX-Code
-    wall_vol "the volume of the walls for the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A volume;
-\end_layout
-
-\begin_layout LyX-Code
-    wall_thickness "the thickness of all of the vessel walls",
-\end_layout
-
-\begin_layout LyX-Code
-    H "the vessel height (of the cylindrical side walls)",
-\end_layout
-
-\begin_layout LyX-Code
-    D "the vessel diameter"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A distance;
-\end_layout
-
-\begin_layout LyX-Code
-    H_to_D_ratio "the ratio of vessel height to diameter"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A factor;
-\end_layout
-
-\begin_layout LyX-Code
-    metal_density "density of the metal from which the vessel
-\end_layout
-
-\begin_layout LyX-Code
-                 is constructed"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A mass_density;
-\end_layout
-
-\begin_layout LyX-Code
-    metal_mass "the mass of the metal in the walls of the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A mass;
-\end_layout
-
-\begin_layout LyX-Code
-    (* equations *)
-\end_layout
-
-\begin_layout LyX-Code
-    FlatEnds:end_area = 1{PI} * D^2 / 4;
-\end_layout
-
-\begin_layout LyX-Code
-    Sides:side_area = 1{PI} * D * H;
-\end_layout
-
-\begin_layout LyX-Code
-    Cylinder:vessel_vol = end_area * H;
-\end_layout
-
-\begin_layout LyX-Code
-    Metal_volume:(side_area + 2 * end_area) * wall_thickness = wall_vol;
-\end_layout
-
-\begin_layout LyX-Code
-    HD_definition:D * H_to_D_ratio = H;
-\end_layout
-
-\begin_layout LyX-Code
-    VesselMass:metal_mass = metal_density * wall_vol;
-\end_layout
-
-\begin_layout LyX-Code
-END vessel;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-ADD NOTES IN vessel;
-\end_layout
-
-\begin_layout LyX-Code
-    'description' SELF {This model relates the dimensions of a
-\end_layout
-
-\begin_layout LyX-Code
-        cylindrical vessel -- e.g., diameter, 
-\end_layout
-
-\begin_layout LyX-Code
-        height and wall thicknes to the volume of metal 
-\end_layout
-
-\begin_layout LyX-Code
-        in the walls.
-  It uses a thin wall assumption 
-\end_layout
-
-\begin_layout LyX-Code
-        -- i.e., that the volume of metal is the area of
-\end_layout
-
-\begin_layout LyX-Code
-        the vessel times the wall thickness.}
-\end_layout
-
-\begin_layout LyX-Code
-    'purpose' SELF {to illustrate the insertion of notes into a model}
-\end_layout
-
-\begin_layout LyX-Code
-END NOTES;
-\end_layout
-
-\begin_layout Caption
-Vessel model with Notes added (model vesselNotes.a4c
 \begin_inset LatexCommand \index{vesselNotes.a4c}
 
 \end_inset
@@ -393,6 +296,28 @@ Vessel model with Notes added (model vesselNotes.a4c
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+lstset{language=ASCEND}
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+lstinputlisting[firstline=24]{../models/vesselNotes.a4c}
+\end_layout
+
+\begin_layout Standard
 
 \end_layout
 
@@ -410,16 +335,11 @@ A user may use any term desired in the single quotes.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-there are short notes, long notes and separate notes
-\end_layout
-
-\end_inset
-
-There are also short notes we can attach to every variable in the model.
+There are also 
+\series bold
+short notes
+\series default
+ we can attach to every variable in the model.
  A "one liner
 \begin_inset LatexCommand \index{notes, one liner}
 
@@ -442,7 +362,19 @@ The last few lines of Figure
 
 
 \noun off
- shows adding notes we write in a separate ADD NOTES IN object
+ shows adding 
+\series bold
+\noun default
+separate notes
+\series default
+\noun off
+ we write using 
+\family sans
+\noun default
+ADD NOTES IN
+\family default
+\noun off
+ syntax
 \begin_inset LatexCommand \index{ADD NOTES IN object}
 
 \end_inset
@@ -791,15 +723,6 @@ a method to establish typical values for the variables we have fixed in
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-writing the specify and values methods
-\end_layout
-
-\end_inset
-
 To write the 
 \family typewriter
 specify
@@ -810,8 +733,8 @@ values
 \family default
  methods for our vessel model, we note that we have successfully solved
  the vessel model in at least two different ways above.
- Thus both variations are examples of being âwell-posed.â We can choose which
- variation we shall use when creating the 
+ Thus both variations are examples of being `well-posed'.
+ We can choose which variation we shall use when creating the 
 \family typewriter
 specify
 \family default
@@ -832,8 +755,23 @@ metal_density
 \family typewriter
 wall_thickness
 \family default
- and provided them with the values of 250 ft^3, 3, 5000 kg/m^3 and 5 mm
- respectively to be our âstandardâ specification.
+ and provided them with the values of 
+\family typewriter
+250 ft^3
+\family default
+, 
+\family typewriter
+3
+\family default
+, 
+\family typewriter
+5000 kg/m^3
+\family default
+ and 
+\family typewriter
+5 mm
+\family default
+ respectively to be our `standard' specification.
  Default methods 
 \family typewriter
 ClearAll
@@ -846,22 +784,20 @@ reset
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-default methods ClearAll and reset are appropriate
-\end_layout
-
-\end_inset
-
 As already noted, the purpose of 
 \family typewriter
 ClearAll
 \family default
- is to set all the fixed flags to FALSE, a well-defined state from which
- we can start over to set these flags as we wish them set.
- 
+ is to set all the variables to 
+\family sans
+FREE
+\family default
+, a well-defined state from which we can start over to set variables 
+\family sans
+FIX
+\family default
+ed as we wish.
+ The method 
 \family typewriter
 reset
 \family default
@@ -869,11 +805,11 @@ reset
 \family typewriter
 ClearAll
 \family default
- and then 
+ followed by the 
 \family typewriter
 specify
 \family default
- for a model.
+ method for a model.
  The default versions for these two methods are generally exactly what one
  wants so one need not write these.
 \end_layout
@@ -905,312 +841,15 @@ values
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
+Version of vessel with 
+\family sans
+METHODS
+\family default
+ added (
+\family typewriter
+vesselMethods.a4c
+\family default
 
-\begin_layout LyX-Code
-REQUIRE "atoms.a4l";
-\end_layout
-
-\begin_layout LyX-Code
-MODEL vessel;
-\end_layout
-
-\begin_layout LyX-Code
-    NOTES
-\end_layout
-
-\begin_layout LyX-Code
-        'author' SELF {Arthur W.
- Westerberg}
-\end_layout
-
-\begin_layout LyX-Code
-        'creation date' SELF {May, 1998}
-\end_layout
-
-\begin_layout LyX-Code
-    END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-    
-\end_layout
-
-\begin_layout LyX-Code
-    (* variables *)
-\end_layout
-
-\begin_layout LyX-Code
-    side_area "the area of the cylindrical side wall of the vessel",
-\end_layout
-
-\begin_layout LyX-Code
-    end_area "the area of the flat ends of the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A area;
-\end_layout
-
-\begin_layout LyX-Code
-    vessel_vol "the volume contained within the cylindrical vessel",
-\end_layout
-
-\begin_layout LyX-Code
-    wall_vol "the volume of the walls for the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A volume;
-\end_layout
-
-\begin_layout LyX-Code
-    wall_thickness "the thickness of all of the vessel walls",
-\end_layout
-
-\begin_layout LyX-Code
-    H "the vessel height (of the cylindrical side walls)",
-\end_layout
-
-\begin_layout LyX-Code
-    D "the vessel diameter"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A distance;
-\end_layout
-
-\begin_layout LyX-Code
-    H_to_D_ratio "the ratio of vessel height to diameter"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A factor;
-\end_layout
-
-\begin_layout LyX-Code
-    metal_density "density of the metal from which the vessel
-\end_layout
-
-\begin_layout LyX-Code
-                 is constructed"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A mass_density;
-\end_layout
-
-\begin_layout LyX-Code
-    metal_mass "the mass of the metal in the walls of the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A mass;
-\end_layout
-
-\begin_layout LyX-Code
-    (* equations *)
-\end_layout
-
-\begin_layout LyX-Code
-    FlatEnds:end_area = 1{PI} * D^2 / 4;
-\end_layout
-
-\begin_layout LyX-Code
-    Sides:side_area = 1{PI} * D * H;
-\end_layout
-
-\begin_layout LyX-Code
-    Cylinder:vessel_vol = end_area * H;
-\end_layout
-
-\begin_layout LyX-Code
-    Metal_volume:(side_area + 2 * end_area) * wall_thickness = wall_vol;
-\end_layout
-
-\begin_layout LyX-Code
-    HD_definition:D * H_to_D_ratio = H;
-\end_layout
-
-\begin_layout LyX-Code
-    VesselMass:metal_mass = metal_density * wall_vol;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-METHODS 
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD specify;
-\end_layout
-
-\begin_layout LyX-Code
-        NOTES
-\end_layout
-
-\begin_layout LyX-Code
-            'purpose' SELF {to fix four variables and make the problem well-pose
-d}
-\end_layout
-
-\begin_layout LyX-Code
-        END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-        vessel_vol.fixed:=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-        H_to_D_ratio.fixed:=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-        wall_thickness.fixed  :=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-        metal_density.fixed:=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-    END specify;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD values;
-\end_layout
-
-\begin_layout LyX-Code
-        NOTES
-\end_layout
-
-\begin_layout LyX-Code
-            'purpose' SELF {to set the values for the fixed variables}
-\end_layout
-
-\begin_layout LyX-Code
-        END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-        H_to_D_ratio            :=   2;
-\end_layout
-
-\begin_layout LyX-Code
-        vessel_vol              :=   250 {ft^3};
-\end_layout
-
-\begin_layout LyX-Code
-        wall_thickness          :=      5 {mm};
-\end_layout
-
-\begin_layout LyX-Code
-        metal_density           :=   5000 {kg/m^3};
-\end_layout
-
-\begin_layout LyX-Code
-    END values;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD bound_self;
-\end_layout
-
-\begin_layout LyX-Code
-    END bound_self;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD scale_self;
-\end_layout
-
-\begin_layout LyX-Code
-    END scale_self;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD default_self;
-\end_layout
-
-\begin_layout LyX-Code
-        D:=1 {m};
-\end_layout
-
-\begin_layout LyX-Code
-        H:=1 {m};
-\end_layout
-
-\begin_layout LyX-Code
-        H_to_D_ratio            :=1;
-\end_layout
-
-\begin_layout LyX-Code
-        vessel_vol              := 1 {m^3};
-\end_layout
-
-\begin_layout LyX-Code
-        wall_thickness          :=5 {mm};
-\end_layout
-
-\begin_layout LyX-Code
-        metal_density           :=5000 {kg/m^3};
-\end_layout
-
-\begin_layout LyX-Code
-    END default_self;
-\end_layout
-
-\begin_layout LyX-Code
-END vessel;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-ADD NOTES IN vessel;
-\end_layout
-
-\begin_layout LyX-Code
-    'description' SELF {This model relates the dimensions of a
-\end_layout
-
-\begin_layout LyX-Code
-        cylindrical vessel -- e.g., diameter, height and wall thickness
-\end_layout
-
-\begin_layout LyX-Code
-        to the volume of metal in the walls.
-  It uses a thin wall
-\end_layout
-
-\begin_layout LyX-Code
-        assumption -- i.e., that the volume of metal is the area of
-\end_layout
-
-\begin_layout LyX-Code
-        the vessel times the wall thickness.}
-\end_layout
-
-\begin_layout LyX-Code
-    'purpose' SELF {to illustrate the insertion of notes into a model}
-\end_layout
-
-\begin_layout LyX-Code
-END NOTES;
-\end_layout
-
-\begin_layout Caption
-Version of vessel with methods added (vesselMethods.a4c
 \begin_inset LatexCommand \index{vesselMethods.a4c}
 
 \end_inset
@@ -1221,6 +860,24 @@ Version of vessel with methods added (vesselMethods.a4c
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+lstset{language=ASCEND}
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+lstinputlisting[firstline=23]{../models/vesselMethods.a4c}
 \end_layout
 
 \end_inset
@@ -1534,15 +1191,6 @@ a method to check that the computations make sense.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-standard methods to a model definition
-\end_layout
-
-\end_inset
-
 The 
 \family typewriter
 bound_self
@@ -1572,15 +1220,6 @@ defaults_self
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status open
-
-\begin_layout Standard
-using methods when solving
-\end_layout
-
-\end_inset
-
 Exit ASCEND and repeat all the steps above to edit, load and compile this
  new vessel type definition.
  Then proceed as follows.
@@ -1648,16 +1287,6 @@ Parameterizing the vessel model
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-let's compute metal_mass vs.
- H_to_D_ratio
-\end_layout
-
-\end_inset
-
 Reuse generally implies creating a model which will have as a part an instance
  of a previously defined type.
  For example, let us compute metal_mass as a function of the H_to_D_ratio
@@ -1673,15 +1302,6 @@ Creating a parameterized version of vessel
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-parameters indicate likely object sharing
-\end_layout
-
-\end_inset
-
 To use instances of our model as parts in another model, we can parameterize
  it.
  We use parameterization to tell a future user that the parameters are objects
@@ -1747,355 +1367,6 @@ The code in Figure
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout LyX-Code
-REQUIRE "atoms.a4l";
-\end_layout
-
-\begin_layout LyX-Code
-MODEL vessel(
-\end_layout
-
-\begin_layout LyX-Code
-    vessel_vol "the volume contained within the cylindrical vessel"
-\end_layout
-
-\begin_layout LyX-Code
-        WILL_BE volume;
-\end_layout
-
-\begin_layout LyX-Code
-    wall_thickness "the thickness of all of the vessel walls"
-\end_layout
-
-\begin_layout LyX-Code
-        WILL_BE distance;
-\end_layout
-
-\begin_layout LyX-Code
-    metal_density "density of the metal from which the vessel
-\end_layout
-
-\begin_layout LyX-Code
-            is constructed"
-\end_layout
-
-\begin_layout LyX-Code
-        WILL_BE mass_density;
-\end_layout
-
-\begin_layout LyX-Code
-    H_to_D_ratio "the ratio of vessel height to diameter"
-\end_layout
-
-\begin_layout LyX-Code
-        WILL_BE factor;
-\end_layout
-
-\begin_layout LyX-Code
-    metal_mass "the mass of the metal in the walls of the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-        WILL_BE mass;
-\end_layout
-
-\begin_layout LyX-Code
-);
-\end_layout
-
-\begin_layout LyX-Code
-    NOTES
-\end_layout
-
-\begin_layout LyX-Code
-        'author' SELF {Arthur W.
- Westerberg}
-\end_layout
-
-\begin_layout LyX-Code
-        'creation date' SELF {May, 1998}
-\end_layout
-
-\begin_layout LyX-Code
-    END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-    
-\end_layout
-
-\begin_layout LyX-Code
-    (* variables *)
-\end_layout
-
-\begin_layout LyX-Code
-    side_area "the area of the cylindrical side wall of the vessel",
-\end_layout
-
-\begin_layout LyX-Code
-    end_area "the area of the flat ends of the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A area;
-\end_layout
-
-\begin_layout LyX-Code
-    wall_vol "the volume of the walls for the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A volume;
-\end_layout
-
-\begin_layout LyX-Code
-    H "the vessel height (of the cylindrical side walls)",
-\end_layout
-
-\begin_layout LyX-Code
-    D "the vessel diameter"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A distance;
-\end_layout
-
-\begin_layout LyX-Code
-    (* equations *)
-\end_layout
-
-\begin_layout LyX-Code
-    FlatEnds:end_area = 1{PI} * D^2 / 4;
-\end_layout
-
-\begin_layout LyX-Code
-    Sides:side_area = 1{PI} * D * H;
-\end_layout
-
-\begin_layout LyX-Code
-    Cylinder:vessel_vol = end_area * H;
-\end_layout
-
-\begin_layout LyX-Code
-    Metal_volume:(side_area + 2 * end_area) * wall_thickness = wall_vol;
-\end_layout
-
-\begin_layout LyX-Code
-    HD_definition:D * H_to_D_ratio = H;
-\end_layout
-
-\begin_layout LyX-Code
-    VesselMass:metal_mass = metal_density * wall_vol;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-METHODS 
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD specify;
-\end_layout
-
-\begin_layout LyX-Code
-        NOTES
-\end_layout
-
-\begin_layout LyX-Code
-            'purpose' SELF {to fix four variables and make the problem well-pose
-d}
-\end_layout
-
-\begin_layout LyX-Code
-        END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-        vessel_vol.fixed:=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-        H_to_D_ratio.fixed:=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-        wall_thickness.fixed  :=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-        metal_density.fixed:=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-    END specify;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD values;
-\end_layout
-
-\begin_layout LyX-Code
-        NOTES
-\end_layout
-
-\begin_layout LyX-Code
-           'purpose' SELF {to set the values for the fixed variables}
-\end_layout
-
-\begin_layout LyX-Code
-        END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-        H_to_D_ratio:=2;
-\end_layout
-
-\begin_layout LyX-Code
-        vessel_vol:=250 {ft^3};
-\end_layout
-
-\begin_layout LyX-Code
-        wall_thickness:=5 {mm};
-\end_layout
-
-\begin_layout LyX-Code
-        metal_density:=5000 {kg/m^3};
-\end_layout
-
-\begin_layout LyX-Code
-    END values;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD bound_self;
-\end_layout
-
-\begin_layout LyX-Code
-    END bound_self;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD bound_all;
-\end_layout
-
-\begin_layout LyX-Code
-        RUN bound_self;
-\end_layout
-
-\begin_layout LyX-Code
-    END bound_all;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD scale_self;
-\end_layout
-
-\begin_layout LyX-Code
-    END scale_self;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD scale_all;
-\end_layout
-
-\begin_layout LyX-Code
-        RUN scale_self;
-\end_layout
-
-\begin_layout LyX-Code
-    END scale_all;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD default_self;
-\end_layout
-
-\begin_layout LyX-Code
-        D:=1 {m};
-\end_layout
-
-\begin_layout LyX-Code
-        H:=1 {m};
-\end_layout
-
-\begin_layout LyX-Code
-    END default_self;
-\end_layout
-
-\begin_layout LyX-Code
-    METHOD default_all;
-\end_layout
-
-\begin_layout LyX-Code
-       RUN default_self;
-\end_layout
-
-\begin_layout LyX-Code
-       vessel_vol:=1 {m^3};
-\end_layout
-
-\begin_layout LyX-Code
-       wall_thickness:=5 {mm};
-\end_layout
-
-\begin_layout LyX-Code
-       metal_density:=5000 {kg/m^3};
-\end_layout
-
-\begin_layout LyX-Code
-       H_to_D_ratio:=1;
-\end_layout
-
-\begin_layout LyX-Code
-    END default_all;
-\end_layout
-
-\begin_layout LyX-Code
-END vessel;
-\end_layout
-
-\begin_layout LyX-Code
-ADD NOTES IN vessel;
-\end_layout
-
-\begin_layout LyX-Code
-    'description' SELF {This model relates the dimensions of a
-\end_layout
-
-\begin_layout LyX-Code
-        cylindrical vessel -- e.g., diameter, height and wall thickness
-\end_layout
-
-\begin_layout LyX-Code
-        to the volume of metal in the walls.
-  It uses a thin wall
-\end_layout
-
-\begin_layout LyX-Code
-        assumption -- i.e., that the volume of metal is the area of
-\end_layout
-
-\begin_layout LyX-Code
-        the vessel times the wall thickness.}
-\end_layout
-
-\begin_layout LyX-Code
-    'purpose' SELF {to illustrate the insertion of notes into a model}
-\end_layout
-
-\begin_layout LyX-Code
-END NOTES;
-\end_layout
-
-\begin_layout Caption
 \begin_inset LatexCommand \label{fig:model2.parameterizedVessel}
 
 \end_inset
@@ -2106,6 +1377,24 @@ The parameterized version of vessel model (
 \end_inset
 
 vesselParams.a4c)
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+lstset{language=ASCEND}
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+lstinputlisting[firstline=24]{../models/vesselParams.a4c}
 \end_layout
 
 \end_inset
@@ -2160,22 +1449,12 @@ Using the parameterized vessel model
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-Creating a 
+A type definition  will set up our 
 \begin_inset LatexCommand \index{1014611}
 
 \end_inset
 
-table of metal_mass values vs.
- H_to_D_ratio
-\end_layout
-
-\end_inset
-
-A type definition  will set up our table of H_to_D_ratio values vs.
+table of H_to_D_ratio values vs.
  metal_mass so we can observe approximately where it attains a minimum value.
  ASCEND allows us to create arrays of instances of any type.
  Here we shall create an array of vessels.
@@ -2192,560 +1471,30 @@ A type definition  will set up our table of H_to_D_ratio values vs.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout LyX-Code
-REQUIRE "atoms.a4l";
-\end_layout
-
-\begin_layout LyX-Code
-MODEL vessel(
-\end_layout
-
-\begin_layout LyX-Code
-vessel_vol "the volume contained within the cylindrical vessel"
-\end_layout
-
-\begin_layout LyX-Code
-WILL_BE volume;
-\end_layout
-
-\begin_layout LyX-Code
-wall_thickness "the thickness of all of the vessel walls"
-\end_layout
-
-\begin_layout LyX-Code
-WILL_BE distance;
-\end_layout
-
-\begin_layout LyX-Code
-metal_density "density of the metal from which the vessel
-\end_layout
-
-\begin_layout LyX-Code
-                 is constructed"
-\end_layout
-
-\begin_layout LyX-Code
-WILL_BE mass_density;
-\end_layout
-
-\begin_layout LyX-Code
-H_to_D_ratio "the ratio of vessel height to diameter"
-\end_layout
-
-\begin_layout LyX-Code
-WILL_BE factor;
-\end_layout
-
-\begin_layout LyX-Code
-metal_mass "the mass of the metal in the walls of the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-WILL_BE mass;
-\end_layout
-
-\begin_layout LyX-Code
-);
-\end_layout
-
-\begin_layout LyX-Code
-    NOTES
-\end_layout
-
-\begin_layout LyX-Code
-'author' SELF {Arthur W.
- Westerberg}
-\end_layout
-
-\begin_layout LyX-Code
-'creation date' SELF {May, 1998}
-\end_layout
-
-\begin_layout LyX-Code
-    END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-    
-\end_layout
-
-\begin_layout LyX-Code
-(* variables *)
-\end_layout
-
-\begin_layout LyX-Code
-side_area "the area of the cylindrical side wall of the vessel",
-\end_layout
-
-\begin_layout LyX-Code
-end_area "the area of the flat ends of the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A area;
-\end_layout
-
-\begin_layout LyX-Code
-wall_vol "the volume of the walls for the vessel"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A volume;
-\end_layout
-
-\begin_layout LyX-Code
-H "the vessel height (of the cylindrical side walls)",
-\end_layout
-
-\begin_layout LyX-Code
-D "the vessel diameter"
-\end_layout
-
-\begin_layout LyX-Code
-                IS_A distance;
-\end_layout
-
-\begin_layout LyX-Code
-(* equations *)
-\end_layout
-
-\begin_layout LyX-Code
-FlatEnds:end_area = 1{PI} * D^2 / 4;
-\end_layout
-
-\begin_layout LyX-Code
-Sides:side_area = 1{PI} * D * H;
-\end_layout
-
-\begin_layout LyX-Code
-Cylinder:vessel_vol = end_area * H;
-\end_layout
-
-\begin_layout LyX-Code
-Metal_volume:(side_area + 2 * end_area) * wall_thickness = wall_vol;
-\end_layout
-
-\begin_layout LyX-Code
-HD_definition:D * H_to_D_ratio = H;
-\end_layout
-
-\begin_layout LyX-Code
-VesselMass:metal_mass = metal_density * wall_vol;
-\end_layout
-
-\begin_layout LyX-Code
-METHODS 
-\end_layout
-
-\begin_layout LyX-Code
-METHOD specify;
-\end_layout
-
-\begin_layout LyX-Code
-    NOTES
-\end_layout
-
-\begin_layout LyX-Code
-'purpose' SELF {to fix four variables and make the problem well-posed}
-\end_layout
-
-\begin_layout LyX-Code
-    END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-vessel_vol.fixed:=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-H_to_D_ratio.fixed:=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-wall_thickness.fixed:=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-metal_density.fixed:=TRUE;
-\end_layout
-
-\begin_layout LyX-Code
-END specify;
-\end_layout
-
-\begin_layout LyX-Code
-METHOD values;
-\end_layout
-
-\begin_layout LyX-Code
-    NOTES
-\end_layout
-
-\begin_layout LyX-Code
-'purpose' SELF {to set the values for the fixed variables}
-\end_layout
-
-\begin_layout LyX-Code
-    END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-H_to_D_ratio:=2;
-\end_layout
-
-\begin_layout LyX-Code
-vessel_vol:=250 {ft^3};
-\end_layout
-
-\begin_layout LyX-Code
-wall_thickness:=5 {mm};
-\end_layout
-
-\begin_layout LyX-Code
-metal_density:=5000 {kg/m^3};
-\end_layout
-
-\begin_layout LyX-Code
-END values;
-\end_layout
-
-\begin_layout LyX-Code
-METHOD bound_self;
-\end_layout
-
-\begin_layout LyX-Code
-END bound_self;
-\end_layout
-
-\begin_layout LyX-Code
-METHOD bound_all;
-\end_layout
-
-\begin_layout LyX-Code
-    RUN bound_self;
-\end_layout
-
-\begin_layout LyX-Code
-END bound_all;
-\end_layout
-
-\begin_layout LyX-Code
-METHOD scale_self;
-\end_layout
-
-\begin_layout LyX-Code
-END scale_self;
-\end_layout
-
-\begin_layout LyX-Code
-METHOD scale_all;
-\end_layout
-
-\begin_layout LyX-Code
-    RUN scale_self;
-\end_layout
-
-\begin_layout LyX-Code
-END scale_all;
-\end_layout
-
-\begin_layout LyX-Code
-METHOD default_self;
-\end_layout
-
-\begin_layout LyX-Code
-D:= 1 {m};
-\end_layout
-
-\begin_layout LyX-Code
-H:=1 {m};
-\end_layout
-
-\begin_layout LyX-Code
-END default_self;
-\end_layout
-
-\begin_layout LyX-Code
-METHOD default_all;
-\end_layout
-
-\begin_layout LyX-Code
-    RUN default_self;
-\end_layout
-
-\begin_layout LyX-Code
-vessel_vol:=1 {m^3};
-\end_layout
-
-\begin_layout LyX-Code
-wall_thickness:=5 {mm};
-\end_layout
-
-\begin_layout LyX-Code
-metal_density:=5000 {kg/m^3};
-\end_layout
-
-\begin_layout LyX-Code
-H_to_D_ratio:=1;
-\end_layout
-
-\begin_layout LyX-Code
-END default_all;
-\end_layout
-
-\begin_layout LyX-Code
-END vessel;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-ADD NOTES IN vessel;
-\end_layout
-
-\begin_layout LyX-Code
-'description' SELF {This model relates the dimensions of a
-\end_layout
-
-\begin_layout LyX-Code
-           cylindrical vessel -- e.g., diameter, height and wall thickness
-\end_layout
-
-\begin_layout LyX-Code
-           to the volume of metal in the walls.
-  It uses a thin wall
-\end_layout
-
-\begin_layout LyX-Code
-           assumption -- i.e., that the volume of metal is the area of
-\end_layout
-
-\begin_layout LyX-Code
-           the vessel times the wall thickness.}
-\end_layout
-
-\begin_layout LyX-Code
-'purpose' SELF {to illustrate the insertion of notes into a model}
-\end_layout
-
-\begin_layout LyX-Code
-END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-MODEL tabulated_vessel_values;
-\end_layout
-
-\begin_layout LyX-Code
-    vessel_volume "volume of all the tabulated vessels"
-\end_layout
-
-\begin_layout LyX-Code
-            IS_A volume;
-\end_layout
-
-\begin_layout LyX-Code
-    wall_thickness "thickness of all the walls for all the vessels"
-\end_layout
-
-\begin_layout LyX-Code
-    IS_A distance;
-\end_layout
-
-\begin_layout LyX-Code
-    metal_density "density of metal used for all vessels"
-\end_layout
-
-\begin_layout LyX-Code
-    IS_A mass_density;
-\end_layout
-
-\begin_layout LyX-Code
-    n_entries "number of vessels to simulate"
-\end_layout
-
-\begin_layout LyX-Code
-            IS_A integer_constant;
-\end_layout
-
-\begin_layout LyX-Code
-    n_entries :== 20;
-\end_layout
-
-\begin_layout LyX-Code
-    H_to_D_ratio[1..n_entries]"set of H to D ratios for which we are
-\end_layout
-
-\begin_layout LyX-Code
-                 computing metal mass"
-\end_layout
-
-\begin_layout LyX-Code
-            IS_A factor;
-\end_layout
-
-\begin_layout LyX-Code
-    metal_mass[1..n_entries]"mass of metal in walls of vessels"
-\end_layout
-
-\begin_layout LyX-Code
-    IS_A mass;
-\end_layout
-
-\begin_layout LyX-Code
-    FOR i IN [1..n_entries] CREATE 
-\end_layout
-
-\begin_layout LyX-Code
-        v[i] "the i-th vessel model"
-\end_layout
-
-\begin_layout LyX-Code
-        IS_A  vessel(vessel_volume, wall_thickness,
-\end_layout
-
-\begin_layout LyX-Code
-                 metal_density, H_to_D_ratio[i], metal_mass[i]);
-\end_layout
-
-\begin_layout LyX-Code
-    END FOR;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-METHODS
-\end_layout
-
-\begin_layout LyX-Code
-METHOD default_self;
-\end_layout
-
-\begin_layout LyX-Code
-END default_self;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-METHOD specify;
-\end_layout
-
-\begin_layout LyX-Code
-RUN v[1..n_entries].specify;
-\end_layout
-
-\begin_layout LyX-Code
-END specify;
-\end_layout
-
-\begin_layout LyX-Code
-METHOD values;
-\end_layout
-
-\begin_layout LyX-Code
-    NOTES 'purpose' SELF {to set up 20 vessel models having H to D ratios
-\end_layout
-
-\begin_layout LyX-Code
-        ranging from 0.1 to 2.}
-\end_layout
-
-\begin_layout LyX-Code
-    END NOTES;
-\end_layout
-
-\begin_layout LyX-Code
-vessel_volume := 250 {ft^3};
-\end_layout
-
-\begin_layout LyX-Code
-wall_thickness := 5 {mm};
-\end_layout
-
-\begin_layout LyX-Code
-metal_density := 5000 {kg/m^3};
-\end_layout
-
-\begin_layout LyX-Code
-FOR i IN [1..n_entries] DO
-\end_layout
-
-\begin_layout LyX-Code
-H_to_D_ratio[i] := i/10.0;
-\end_layout
-
-\begin_layout LyX-Code
-END FOR;
-\end_layout
-
-\begin_layout LyX-Code
-END values;
-\end_layout
-
-\begin_layout LyX-Code
-METHOD scale_self;
-\end_layout
-
-\begin_layout LyX-Code
-END scale_self;
-\end_layout
-
-\begin_layout LyX-Code
-END tabulated_vessel_values;
-\end_layout
-
-\begin_layout LyX-Code
-    
-\end_layout
-
-\begin_layout LyX-Code
-ADD NOTES IN tabulated_vessel_values;
-\end_layout
-
-\begin_layout LyX-Code
-'description' SELF {This model sets up an array of vessels to
-\end_layout
-
-\begin_layout LyX-Code
-           compute a range of metal_mass values for different values
-\end_layout
-
-\begin_layout LyX-Code
-           of H_to_D_ratio.}
-\end_layout
-
-\begin_layout LyX-Code
-'purpose' SELF {to illustrate the use of arrays in ASCEND}
-\end_layout
-
-\begin_layout LyX-Code
-END NOTES;
-\end_layout
-
-\begin_layout Caption
 tabulated_vessel_values model
 \begin_inset LatexCommand \label{fig:model2.tabulatedVessel}
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+lstset{language=ASCEND}
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+lstinputlisting[firstline=26]{../models/vesselTabulated.a4c}
 \end_layout
 
 \end_inset
@@ -3119,40 +1868,10 @@ You will run the same sequence of instructions you ran to create the script.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
+\begin_inset LatexCommand \label{fig:model2.scriptVesselTabulated}
 
-\begin_layout LyX-Code
-DELETE TYPES;
-\end_layout
+\end_inset
 
-\begin_layout LyX-Code
-READ FILE "C:/My Documents/1998/ascdata/vesselTabulated.a4c";
-\end_layout
-
-\begin_layout LyX-Code
-COMPILE tv OF tabulated_vessel_values;
-\end_layout
-
-\begin_layout LyX-Code
-BROWSE {tv};
-\end_layout
-
-\begin_layout LyX-Code
-RUN {tv.reset};
-\end_layout
-
-\begin_layout LyX-Code
-RUN {tv.values};
-\end_layout
-
-\begin_layout LyX-Code
-SOLVE {tv} WITH QRSlv;
-\end_layout
-
-\begin_layout Caption
 Script to run 
 \family typewriter
 vesselTabulated.a4c
@@ -3167,11 +1886,17 @@ vesselTabulated.a4s
 \end_inset
 
 )
-\begin_inset LatexCommand \label{fig:model2.scriptVesselTabulated}
+\end_layout
 
-\end_inset
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Standard
 
 
+\backslash
+lstinputlisting[firstline=29]{../models/vesselTabulated.a4s}
 \end_layout
 
 \end_inset

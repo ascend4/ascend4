@@ -83,6 +83,7 @@ We also have in ASCEND the ability to do case studies over a model instance,
  ASCEND only has to compile one instance and solve it repeatedly rather
  than produce an array of models.
  We finish this chapter showing you how to use this case study tool.
+ 
 \end_layout
 
 \begin_layout Section
@@ -159,204 +160,6 @@ models
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout LyX-Code
-REQUIRE "system.a4l";
-\end_layout
-
-\begin_layout LyX-Code
-PROVIDE "plot.a4l";
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-MODEL pltmodel() REFINES cmumodel();
-\end_layout
-
-\begin_layout LyX-Code
-END pltmodel;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-MODEL plt_point(
-\end_layout
-
-\begin_layout LyX-Code
-    x WILL_BE real;
-\end_layout
-
-\begin_layout LyX-Code
-    y WILL_BE real;
-\end_layout
-
-\begin_layout LyX-Code
-)REFINES pltmodel();
-\end_layout
-
-\begin_layout LyX-Code
-END plt_point;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-MODEL plt_curve(
-\end_layout
-
-\begin_layout LyX-Code
-    npnts IS_A set OF integer_constant;
-\end_layout
-
-\begin_layout LyX-Code
-    y_data[npnts] WILL_BE real;
-\end_layout
-
-\begin_layout LyX-Code
-    x_data[npnts] WILL_BE real;
-\end_layout
-
-\begin_layout LyX-Code
-)REFINES pltmodel();
-\end_layout
-
-\begin_layout LyX-Code
-    legendIS_A symbol;
-\end_layout
-
-\begin_layout LyX-Code
-    FOR i IN [npnts] CREATE
-\end_layout
-
-\begin_layout LyX-Code
-        pnt[i]IS_A plt_point(x_data[i],y_data[i]);
-\end_layout
-
-\begin_layout LyX-Code
-    END FOR;
-\end_layout
-
-\begin_layout LyX-Code
-END plt_curve;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-MODEL plt_plot_integer(
-\end_layout
-
-\begin_layout LyX-Code
-    curve_set IS_A set OF integer_constant;
-\end_layout
-
-\begin_layout LyX-Code
-    curve[curve_set] WILL_BE plt_curve;
-\end_layout
-
-\begin_layout LyX-Code
-)REFINES pltmodel();
-\end_layout
-
-\begin_layout LyX-Code
-    title, XLabel, YLabel IS_A symbol;
-\end_layout
-
-\begin_layout LyX-Code
-    Xlow IS_A real;
-\end_layout
-
-\begin_layout LyX-Code
-    Ylow IS_A real;
-\end_layout
-
-\begin_layout LyX-Code
-    Xhigh IS_A real;
-\end_layout
-
-\begin_layout LyX-Code
-    Yhigh IS_A real;
-\end_layout
-
-\begin_layout LyX-Code
-    Xlog IS_A boolean;
-\end_layout
-
-\begin_layout LyX-Code
-    Ylog IS_A boolean;
-\end_layout
-
-\begin_layout LyX-Code
-END plt_plot_integer;
-\end_layout
-
-\begin_layout LyX-Code
-
-\end_layout
-
-\begin_layout LyX-Code
-MODEL plt_plot_symbol(
-\end_layout
-
-\begin_layout LyX-Code
-    curve_set IS_A set OF symbol_constant;
-\end_layout
-
-\begin_layout LyX-Code
-    curve[curve_set] WILL_BE plt_curve;
-\end_layout
-
-\begin_layout LyX-Code
-)REFINES pltmodel();
-\end_layout
-
-\begin_layout LyX-Code
-    title, XLabel, YLabel IS_A symbol; (* mutable now! *)
-\end_layout
-
-\begin_layout LyX-Code
-    Xlow IS_A real;
-\end_layout
-
-\begin_layout LyX-Code
-    Ylow IS_A real;
-\end_layout
-
-\begin_layout LyX-Code
-    Xhigh IS_A real;
-\end_layout
-
-\begin_layout LyX-Code
-    Yhigh IS_A real;
-\end_layout
-
-\begin_layout LyX-Code
-    Xlog IS_A boolean;
-\end_layout
-
-\begin_layout LyX-Code
-    Ylog IS_A boolean;
-\end_layout
-
-\begin_layout LyX-Code
-END plt_plot_symbol;
-\end_layout
-
-\begin_layout Caption
 The file plot.a4l
 \begin_inset LatexCommand \index{plot.a4l}
 
@@ -368,6 +171,24 @@ The file plot.a4l
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+lstset{language=ASCEND}
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+lstinputlisting[firstline=28]{../models/plot.a4l}
 \end_layout
 
 \end_inset
@@ -433,35 +254,61 @@ sideways false
 status open
 
 \begin_layout LyX-Code
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+begin{ascend}
+\end_layout
+
+\begin_layout Standard
+
 MODEL cmumodel();
 \end_layout
 
-\begin_layout LyX-Code
-(* This MODEL does nothing except provide a root
+\begin_layout Standard
+
+(*  This MODEL does nothing except provide a root
 \end_layout
 
-\begin_layout LyX-Code
- * for a collection of loosely related models.
+\begin_layout Standard
+
+    for a collection of loosely related models.
 \end_layout
 
-\begin_layout LyX-Code
- * If it happens to reveal a few bugs in the software,
+\begin_layout Standard
+
+    If it happens to reveal a few bugs in the software,
 \end_layout
 
-\begin_layout LyX-Code
- * and perhaps masks others, well, what me worry? 
+\begin_layout Standard
+
+    and perhaps masks others, well, what me worry? BAA, 8/97.
 \end_layout
 
-\begin_layout LyX-Code
- * BAA, 8/97.
+\begin_layout Standard
+
+*)
 \end_layout
 
-\begin_layout LyX-Code
- *)
-\end_layout
+\begin_layout Standard
 
-\begin_layout LyX-Code
 END cmumodel;
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+end{ascend}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Caption
@@ -715,9 +562,16 @@ We know what can substitute
  -- and typically more.
  We can use an instance of the child as a replacement for an instance of
  the parent.
- Thus if you were to write a model with the part A1 of type A in it, someone
- else can create an instance of your model and substitute a part B1 which
- is of type B.
+ Thus if you were to write a model with the part 
+\family typewriter
+A1
+\family default
+ of type 
+\family typewriter
+A
+\family default
+ in it, someone else can create an instance of your model and substitute
+ a part B1 which is of type B.
  This substituted part will have all the needed variables in it that you
  assumed would be there.
 \end_layout
@@ -904,120 +758,170 @@ sideways false
 status open
 
 \begin_layout LyX-Code
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+begin{ascend}
+\end_layout
+
+\begin_layout Standard
+
 CurveSet "the index set for all the curves to be plotted"
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
             IS_A set OF symbol_constant;
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
     CurveSet :== ['5 mm'];
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
 
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
     Curves['5 mm'] 
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
       "the one curve of 20 points for metal_mass 
 \backslash
 
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
        vs.
  H_to_D_ratio"
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
             IS_A plt_curve(
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
                [1..n_entries], 
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
                metal_mass, 
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
                H_to_D_ratio
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
                ); 
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
     massVSratio "the object ASCEND can plot"
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
             IS_A plt_plot_symbol(
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
                CurveSet, 
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
                Curves
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
                );
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
     
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 METHODS
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
     METHOD default_self;
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
         (* set the title for the plot and the labels
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
            for the ordinate and abscissa *)
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
         massVSratio.title :=
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
             'Metal mass of the walls vs H to D ratio 
 \backslash
 
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
              for a thin-walled cylindrical vessel';
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
         massVSratio.XLabel := 'H to D ratio';
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
         massVSratio.YLabel := 'metal mass IN kg/m^3';
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
     END default_self;
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+end{ascend}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Caption
@@ -1040,7 +944,31 @@ Also just after the first line in this file -- which reads
 \end_layout
 
 \begin_layout LyX-Code
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+begin{ascend}
+\end_layout
+
+\begin_layout Standard
+
 REQUIRE "atoms.a4l";
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+end{ascend}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1048,23 +976,72 @@ place the instruction
 \end_layout
 
 \begin_layout LyX-Code
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+begin{ascend}
+\end_layout
+
+\begin_layout Standard
+
 REQUIRE "plot.a4l";
 \end_layout
 
 \begin_layout Standard
-When you solve this new instance and make massSVratio the current object,
- you will find the Plot tool under the Display button in the Browser window
- lights up and can be selected.
- If you do this, you will get a plot of metal_mass vs.
- H_to_D_ratio.
- A clear minimum is apparent on this plot at H_to_D_ratio equal to approximately
- one.
+
+
+\backslash
+end{ascend}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-You should create a script to run this model just as you did for vesselTabulated.
-a4c in the previous chapter.
- Save it as vesselPlot.a4s.
+When you solve this new instance and make 
+\family typewriter
+massSVratio
+\family default
+ the current object, you will find the Plot option under the Display menu
+ in the 
+\series bold
+Browser
+\series default
+ window lights up and can be selected.
+ If you do this, you will get a plot of 
+\family typewriter
+metal_mass
+\family default
+ vs.
+ 
+\family typewriter
+H_to_D_ratio
+\family default
+.
+ A clear minimum is apparent on this plot at 
+\family typewriter
+H_to_D_ratio
+\family default
+ equal to approximately one.
+\end_layout
+
+\begin_layout Standard
+You should create a script to run this model just as you did for 
+\family typewriter
+vesselTabulated.a4c
+\family default
+ in the previous chapter.
+ Save it as 
+\family typewriter
+vesselPlot.a4s
+\family default
+.
 \end_layout
 
 \begin_layout Section
@@ -1099,8 +1076,11 @@ We will step through creating a base case and a case study using the vessel
  button of the Scripts edit menu.
  In the Library window run the Delete all types button to clear out any
  previous simulations.
- Load the vessel model from the file vesselMethods.a4c you created in Section
- 3.2.
+ Load the vessel model from the file 
+\family typewriter
+vesselMethods.a4c
+\family default
+ you created in Section 3.2????.
  
 \end_layout
 
@@ -1109,57 +1089,68 @@ The base case
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-compile a vessel
-\end_layout
-
-\end_inset
-
 Select and compile the vessel model.
- Give the simulation the name V.
- Select the simulation V in the bottom pane of the Library window and use
- the right mouse button (or Alt-x b) to send the simulation to the Browser.
+ Give the simulation the name 
+\family typewriter
+V
+\family default
+.
+ Select the simulation 
+\family typewriter
+V
+\family default
+ in the bottom pane of the Library window and use the right mouse button
+ (or 
+\series bold
+Alt-x b
+\series default
+) to send the simulation to the Browser.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-solving the base case
-\end_layout
-
-\end_inset
-
 In the Browser, place the mouse cursor over the upper left pane.
  Use the right mouse button to run methods reset and values, then send the
- model to the Solver by typing Alt-x s.
- Move the mouse to the Solver window and hit the F5 key to solve the model.
+ model to the Solver by typing 
+\series bold
+Alt-x s
+\series default
+.
+ Move the mouse to the 
+\series bold
+Solver
+\series default
+ window and hit the 
+\series bold
+F5
+\series default
+ key to solve the model.
  
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-graphical case study optimization
-\end_layout
-
-\end_inset
-
 We now know that it takes 535.7 kg of metal to make a 250 cubic foot vessel
  which is twice as high as it is broad.
  Suppose that now we want to know the largest volume that this amount of
  metal can contain assuming the same wall thickness is required.
  Perhaps a skinnier or fatter vessel can hold more, so we need to do a case
- study using the aspect ratio (H_to_D_ratio) as the independent variable.
- Use the Browser to change V.metal_mass.fixed to TRUE, since we are using
- a constant amount of metal.
- The solver will want you to free a variable now, so select V.vessel_vol
+ study using the aspect ratio (
+\family typewriter
+H_to_D_ratio
+\family default
+) as the independent variable.
+ Use the Browser to change 
+\family typewriter
+V.metal_mass.fixed
+\family default
+ to 
+\family sans
+TRUE
+\family default
+, since we are using a constant amount of metal.
+ The solver will want you to free a variable now, so select 
+\family typewriter
+V.vessel_vol
+\family default
  to be freed, since volume is what we want to study.
 \end_layout
 
@@ -1178,59 +1169,90 @@ Turn off the recording button on the Script window.
 \end_layout
 
 \begin_layout LyX-Code
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+begin{ascend}
+\end_layout
+
+\begin_layout Standard
+
 DELETE TYPES;
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 READ FILE {vesselMethods.a4c};
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 COMPILE V OF vessel;
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 BROWSE {V};
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 RUN {V.reset};
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 SOLVE {V} WITH QRSlv;
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 ASSIGN {V.metal_mass.fixed} TRUE {};
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 # you must type the next line in the script yourself.
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 ASSIGN {V.vessel_vol.fixed} FALSE {};
 \end_layout
 
 \begin_layout Standard
-The file ascend4/models/vesselStudy.a4s was recorded in a similar manner.
-\end_layout
 
-\begin_layout Subsection
-Case study examples
-\end_layout
 
-\begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-configuring a case study
+\backslash
+end{ascend}
 \end_layout
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
+The file 
+\family typewriter
+vesselStudy.a4s
+\family default
+ was recorded in a similar manner.
+\end_layout
+
+\begin_layout Subsection
+\begin_inset LatexCommand \label{sub:Case-study-examples}
+
+\end_inset
+
+Case study examples
+\end_layout
+
+\begin_layout Standard
 The STUDY command takes a lot of arguments.
  Well explain them all momentarily, but should you forget them simply enter
  the command STUDY without arguments in the ASCEND Console window or xterm
@@ -1508,68 +1530,64 @@ STUDY behavior details
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-variable list
-\end_layout
+We now turn to the details of the 
+\family sans
+STUDY
+\family default
+ statement.
+ As we saw in Section 
+\begin_inset LatexCommand \ref{sub:Case-study-examples}
 
 \end_inset
 
-We now turn to the details of the STUDY statement.
- As we saw in Section 4.2.2.1, any number of variables to be monitored can
- follow the STUDY keyword.
+, any number of variables to be monitored can follow the 
+\family sans
+STUDY
+\family default
+ keyword.
  
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-IN clause
-\end_layout
-
-\end_inset
-
-The IN clause specifies which part of a simulation is to be sent to the
- Solver; a small part of a much larger model can be studied if you so desire.
- All the variable and parameter names that follow the STUDY keyword and
- that appear in the VARYING clause must be found in this part of the simulation.
+The 
+\family sans
+IN
+\family default
+ clause specifies which part of a simulation is to be sent to the Solver;
+ a small part of a much larger model can be studied if you so desire.
+ All the variable and parameter names that follow the 
+\family sans
+STUDY
+\family default
+ keyword and that appear in the VARYING clause must be found in this part
+ of the simulation.
  
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-parameter list
-\end_layout
-
-\end_inset
-
-The VARYING clauses is a list of lists.
+The 
+\family sans
+VARYING
+\family default
+ clauses is a list of lists.
  Each inner list gives the name of the parameter to vary followed by its
  list of values.
  Each possible combination of parameter values will be attempted in multi-parame
 ter studies.
  If a case fails to solve, then the study will behave according to the option
- set in the ERROR clause.
+ set in the 
+\family sans
+ERROR
+\family default
+ clause.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-solver name
-\end_layout
-
-\end_inset
-
-The solver named in the USING clause is invoked on each case.
+The solver named in the 
+\family sans
+USING
+\family default
+ clause is invoked on each case.
  The solver may be any of the algebraic solvers or optimizers, but the integrato
 rs (e.g.
  LSODE) are not allowed.
@@ -1577,43 +1595,58 @@ rs (e.g.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-data file name
-\end_layout
-
-\end_inset
-
-The case data are stored in the file name which appears in the OUTFILE clause.
- By default, this file is overwritten when a STUDY is started, so if you
- want multiple result files, use separate file names.
+The case data are stored in the file name which appears in the 
+\family sans
+OUTFILE
+\family default
+ clause.
+ By default, this file is overwritten when a 
+\family sans
+STUDY
+\family default
+ is started, so if you want multiple result files, use separate file names.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Standard
-error handling
-\end_layout
-
-\end_inset
-
-When the solver fails to converge or encounters an error, the STUDY can
- either ignore it (ERROR IGNORE) and go on to the next case, warn you (ERROR
- WARN) and go on to the next case, or stop (ERROR STOP).
- The ERROR option makes it possible start a case study and go to lunch.
+When the solver fails to converge or encounters an error, the 
+\family sans
+STUDY
+\family default
+ can either ignore it (
+\family sans
+ERROR IGNORE
+\family default
+) and go on to the next case, warn you (
+\family sans
+ERROR WARN
+\family default
+) and go on to the next case, or stop (
+\family sans
+ERROR STOP
+\family default
+).
+ The 
+\family sans
+ERROR
+\family default
+ option makes it possible start a case study and go to lunch.
  Cases which fail to solve will not appear in the output data file.
 \end_layout
 
 \begin_layout Standard
 Note that if the model is numerically ill-behaved it is possible for a case
  to fail when there is in fact a solution for that combination of parameters.
- STUDY uses the solution of the last successfully solved case as the initial
- guess for the next case, but sometimes this is not the best strategy.
- STUDY also does not attempt to rescale the problem from case to case.
+ 
+\family sans
+STUDY
+\family default
+ uses the solution of the last successfully solved case as the initial guess
+ for the next case, but sometimes this is not the best strategy.
+ 
+\family sans
+STUDY
+\family default
+ also does not attempt to rescale the problem from case to case.
  When a case that you think should succeed fails, go back and investigate
  that region of the model again manually or with a more narrowly defined
  study.

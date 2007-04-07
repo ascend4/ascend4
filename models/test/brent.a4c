@@ -25,4 +25,7 @@ METHODS
 	METHOD intersect;
 		EXTERNAL brent(SELF,err,x);
 	END intersect;
+	METHOD self_test;
+		ASSERT abs(x - 0.710658) < 0.000001;
+	END self_test;
 END brent1;

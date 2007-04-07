@@ -386,6 +386,14 @@ END length_parameter;
         nominal := 1.0{atm};
     END pressure;
     
+    ATOM pressure_rate REFINES solver_var
+        DIMENSION M/L/T^3
+        DEFAULT -1 {kPa/s};
+        lower_bound := -5 {bar/s};
+        upper_bound := +5 {bar/s};
+        nominal := 1 {kPa/s};
+    END pressure_rate;
+
     ATOM delta_pressure REFINES solver_var
         DIMENSION M/L/T^2
         DEFAULT 1.0{atm};

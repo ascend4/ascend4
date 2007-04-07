@@ -1,30 +1,3 @@
-# This file is part of the ASCEND Modeling Library and is released
-# under the GNU Public License as described at the end of this file.
-#
-# This script loads and runs the results for the model
-# "tabulated_vessel_values" that is contained in the file
-# vesselTabulated.a4c.
-
-DELETE TYPES;
-READ FILE "vesselTabulated.a4c";
-
-COMPILE tvv OF tabulated_vessel_values;
-BROWSE {tvv};
-RUN {tvv.reset};
-RUN {tvv.values};
-SOLVE {tvv} WITH QRSlv;
-
-##########  vesselTabulated.a4s ends here  ##########
-#
-#  vesselTabulated.a4s
-#  by Arthur W. Westerberg
-#  May 1998
-#  Part of the ASCEND Library
-#  $Date: 1998/06/17 20:08:50 $
-#  $Revision: 1.3 $
-#  $Author: mthomas $
-#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/vesselTabulated.a4s,v $
-#
 #  This file is part of the ASCEND Modeling Library.
 #
 #  Copyright (C) 1998 Carnegie Mellon University
@@ -43,3 +16,21 @@ SOLVE {tvv} WITH QRSlv;
 #  along with the program.  If not, write to the Free Software
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
 #  the file named COPYING.
+
+# by Arthur W. Westerberg
+# May 1998
+
+# This script loads and runs the results for the model
+# "tabulated_vessel_values" that is contained in the file
+# vesselTabulated.a4c.
+
+# THIS FILE IS AUTO-IMPORTED INTO THE ASCEND MANUAL! BE CAREFUL WITH EDITS.
+
+DELETE TYPES;
+READ FILE "vesselTabulated.a4c";
+
+COMPILE tvv OF tabulated_vessel_values;
+BROWSE {tvv};
+RUN {tvv.reset};
+RUN {tvv.values};
+SOLVE {tvv} WITH QRSlv;
