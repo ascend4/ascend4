@@ -55,7 +55,7 @@ class ObserverColumn:
 			units = instance.getType().getDimensions().getDefaultUnits()
 		
 		uname = str(units.getName())
-		if uname.find("/")!=-1:
+		if len(uname) or uname.find("/")!=-1:
 			uname = "["+uname+"]"
 
 		if uname == "":
@@ -192,6 +192,64 @@ class ObserverTab:
 		self.rows = []
 		self.activeiter = _store.append(None, [ObserverRow()] )
 
+	def plot(self,x=None,y=None,y2=None):
+		"""create a plot from two columns in the ObserverTable"""
+		import platform
+		import matplotlib
+		matplotlib.use('GTKAgg')
+		import pylab
+		pylab.ioff()
+		if x is None or y is None:
+			if len(self.cols)<2:
+				raise Exception("Not enough columns to plot (need 2+)")
+			if x is None:
+				x=self.cols[0]
+			if y is None:
+				y=self.cols[1]
+
+		if x.__class__ is int and x>=0 and x<len(self.cols):
+			x=self.cols[x]
+		if y.__class__ is int and y>=0 and y<len(self.cols):
+			y=self.cols[y]
+		if y2.__class__ is int and y2>=0 and y2<len(self.cols):
+			y2=self.cols[y2]			
+
+		ncols = 2
+		if y2 is not None:
+			ncols+=1
+
+		A = pylab.zeros((len(self.rows),ncols),'f')
+		for i in range(len(self.rows)):
+			r = self.rows[i].get_values(self)
+			A[i,0]=r[x.index]
+			A[i,1]=r[y.index]
+			if y2 is not None:
+				A[i,2]=r[y2.index]
+		print A
+		pylab.figure()
+		p1 = pylab.plot(A[:,0],A[:,1],'b-')
+		pylab.xlabel(x.title)
+		pylab.ylabel(y.title)
+
+		if y2 is not None:
+			ax2 = pylab.twinx()
+			p2 = pylab.plot(A[:,0],A[:,2],'r-')
+			pylab.ylabel(y2.title)
+			ax2.yaxis.tick_right()
+			pylab.legend([y.name,y2.name])
+
+		pylab.ion()
+		if platform.system()=="Windows":
+			pylab.show()
+		else:
+			pylab.show(False)				
+		
+	def on_plot_clicked(self,*args):
+		try:
+			self.plot()
+		except Exception,e:
+			self.browser.reporter.reportError(str(e))
+
 	def do_add_row(self,values=None):
 		_store = self.view.get_model()
 		if self.alive:
@@ -242,9 +300,9 @@ class ObserverTab:
 	def copy_to_clipboard(self,clip):
 		_s = []
 		_s.append('\t'.join([_v.title for _k,_v in self.cols.iteritems()]))
-		_cf = [_v.units.getConversion() for _k,_v in self.cols.iteritems()]
+		#_cf = [_v.units.getConversion() for _k,_v in self.cols.iteritems()]
 		print "COPYING %d ROWS" % len(self.rows)
-		print "CONVERSIONS:",_cf
+		#print "CONVERSIONS:",_cf
 		for _r in self.rows:
 			_s.append("\t".join([`_v` for _v in _r.get_values(self)]))
 

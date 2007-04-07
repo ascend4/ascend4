@@ -374,6 +374,7 @@ John Pye (C) 2005
 		<keyword>delta_distance</keyword>
 		<keyword>delta_temperature</keyword>
 		<keyword>temperature_rate</keyword>
+		<keyword>pressure_rate</keyword>
 		<keyword>delta_pressure</keyword>
 		<keyword>delta_mass</keyword>
 		<keyword>delta_mole</keyword>

@@ -67,7 +67,7 @@ class Simulation : public Instanc{
 	friend class IncidenceMatrix;
 	friend class SolverStatus;
 	friend class Integrator;
-
+	friend class System;
 private:
 	Instanc simroot;
 	slv_system_t sys;
@@ -77,7 +77,7 @@ private:
 
 protected:
 	slv_system_t getSystem();
-
+	Instanc getRoot();
 public:
 	explicit Simulation(Instance *i, const SymChar &name);
 	Simulation(const Simulation &);

@@ -2388,8 +2388,12 @@ RelationCalcResidGrad(struct Instance *i, double *residual, double *gradient){
     return RelationEvaluateResidualGradient(r, residual, gradient);
   }
 
+  if(reltype == e_blackbox){
+    return BlackBoxCalcResidGrad(i, residual, gradient, r);
+  }
+
   assert(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH);
-  ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not implemented");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype %d not implemented",reltype);
   return 1;
 }
 

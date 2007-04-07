@@ -1051,8 +1051,9 @@ LIST_DEBUG(var,var_variable)
 LIST_DEBUG(rel,rel_relation)
 
 #ifdef CUT_DEBUG
+/* if you need this to work with non-GCC, take a page out of the utilities/error.h book */
 # define MAYBE_WRITE_LIST(TYPE) system_##TYPE##_list_debug(sys)
-# define MAYBE_CONSOLE_DEBUG(MSG,...) CONSOLE_DEBUG(MSG,#ARGS)
+# define MAYBE_CONSOLE_DEBUG(MSG,ARGS...) CONSOLE_DEBUG(MSG,##ARGS)
 #else
 # define MAYBE_WRITE_LIST(TYPE)
 # define MAYBE_CONSOLE_DEBUG(MSG,...)
@@ -1075,6 +1076,7 @@ LIST_DEBUG(rel,rel_relation)
 	 \
 		asc_assert(filt); \
 	 \
+		MAYBE_CONSOLE_DEBUG("CUTTING " #TYPE " LIST (filter=0x%8x,mask=0x%8x)...",filt->matchvalue,filt->matchbits); \
 		MAYBE_WRITE_LIST(TYPE); \
 	 \
 		list = slv_get_solvers_##TYPE##_list(sys); \
@@ -1105,13 +1107,14 @@ LIST_DEBUG(rel,rel_relation)
 	 \
 		/* update the sindex for each after start */ \
 		*numgood = 0; \
+		MAYBE_CONSOLE_DEBUG("numgood = %d",*numgood); \
 		for(i=begin;i<len;++i){ \
 			name = TYPE##_make_name(sys,list[i]); \
 			if(TYPE##_apply_filter(list[i],filt)){ \
 				MAYBE_CONSOLE_DEBUG("%s: good",name); \
 				(*numgood)++; \
 			}else{ \
-				MAYBE_CONSOLE_DEBUG("%s: bad",name); \
+				MAYBE_CONSOLE_DEBUG("'%s' will cut to back (flags=0x%8x)",name,var_flags(list[i])); \
 			} \
 			ASC_FREE(name); \
 			TYPE##_set_sindex(list[i],i); \

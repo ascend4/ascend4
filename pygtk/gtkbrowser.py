@@ -258,37 +258,17 @@ class Browser:
 		if _geom2:
 			self.browserpaned.set_position(_geom2)
 
-		self.openbutton=glade.get_widget("openbutton")
-		self.openbutton.connect("clicked",self.open_click)
+		buttons = ["open","reload","solve","integrate","check","methodrun"]
+		for n in buttons:
+			name = "%sbutton"%n
+			setattr(self,name,glade.get_widget(name))
+			getattr(self,name).connect("clicked",getattr(self,"%s_click"%n))
 
-		self.reloadbutton=glade.get_widget("reloadbutton")
-		self.reloadbutton.connect("clicked",self.reload_click)
-		
-		self.solvebutton=glade.get_widget("solvebutton")
-		self.solvebutton.connect("clicked",self.solve_click)
+		widgets = ["autotoggle","automenu","methodsel","maintabs","lowertabs","consolescroll","statusbar","browsermenu"]
+		for n in widgets:
+			setattr(self,n,glade.get_widget(n))
 
-		self.integratebutton=glade.get_widget("integratebutton")
-		self.integratebutton.connect("clicked",self.integrate_click)
-
-		self.checkbutton=glade.get_widget("checkbutton")
-		self.checkbutton.connect("clicked",self.check_click)
-
-		self.autotoggle=glade.get_widget("autotoggle")
-		self.automenu = glade.get_widget("automenu")
 		self.autotoggle.connect("toggled",self.auto_toggle)
-
-		self.methodrunbutton=glade.get_widget("methodrunbutton")
-		self.methodrunbutton.connect("clicked",self.methodrun_click)
-
-		self.methodsel=glade.get_widget("methodsel")
-
-		self.maintabs = glade.get_widget("maintabs")
-		self.lowertabs = glade.get_widget("lowertabs")
-		self.consolescroll = glade.get_widget("consolescroll")
-
-		self.statusbar = glade.get_widget("statusbar")
-
-		self.menu = glade.get_widget("browsermenu")
 
 		self.show_solving_popup=glade.get_widget("show_solving_popup")
 		self.show_solving_popup.set_active(self.prefs.getBoolPref("SolverReporter","show_popup",True))

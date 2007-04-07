@@ -11,6 +11,14 @@ IntegratorAnalyseFn integrator_ida_analyse; /* for new approach -- JP Jan 2007 *
 */
 int integrator_ida_diffindex(const IntegratorSystem *sys, const struct var_variable *deriv);
 
+/**
+	Same as integrator_ida_diffindex but returns -1 instead of aborting
+*/
+int integrator_ida_diffindex1(const IntegratorSystem *sys, const struct var_variable *deriv);
+
+/**
+	Lots of helpful advice to help you mend your evil inclinations.
+*/
 int integrator_ida_analyse_debug(const IntegratorSystem *sys,FILE *fp);
 
 /**

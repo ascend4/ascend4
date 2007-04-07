@@ -1930,6 +1930,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	struct rel_relation **rlist, *rel;
 	long vlen, rlen;
 	long i;
+	long di;
 
 	fprintf(fp,"THERE ARE %d VARIABLES IN THE INTEGRATION SYSTEM\n\n",sys->n_y);
 
@@ -1937,11 +1938,11 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 
 	if(sys->y && sys->ydot){
 		fprintf(fp,"CONTENTS OF THE 'Y' AND 'YDOT' LISTS\n\n");
-		fprintf(fp,"index\ty\tydot\n");
-		fprintf(fp,"-----\t-----\t-----\n");
+		fprintf(fp,"index\t%-15s\tydot\n","y");
+		fprintf(fp,"-----\t%-15s\t-----\n","-----");
 		for(i=0;i<sys->n_y;++i){
 			varname = var_make_name(sys->system, sys->y[i]);
-			fprintf(fp,"%ld\t%s\t",i,varname);
+			fprintf(fp,"%ld\t%-15s\t",i,varname);
 			if(sys->ydot[i]){
 				ASC_FREE(varname);
 				varname = var_make_name(sys->system, sys->ydot[i]);
@@ -1983,9 +1984,14 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 		}else{
 			if(var_deriv(var)){
 				if(sys->y_id){
-					ASC_FREE(varname);
-					varname = var_make_name(sys->system,vlist[integrator_ida_diffindex(sys,var)]);
-					fprintf(fp,".\tdiff(%d='%s')\n",integrator_ida_diffindex(sys,var),varname);
+					di = integrator_ida_diffindex1(sys,var);
+					if(di>=0){
+						ASC_FREE(varname);
+						varname = var_make_name(sys->system,vlist[di]);
+						fprintf(fp,".\tdiff(%ld='%s')\n",di,varname);
+					}else{
+						fprintf(fp,".\tdiff(???,err=%ld)\n",di);
+					}
 				}else{
 					fprintf(fp,".\tderiv... of??\n");
 				}

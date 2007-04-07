@@ -282,7 +282,7 @@ opts.Add(
 opts.Add(
 	"F2C_LIB"
 	,"F2C library (eg. g2c, gfortran, f2c)"
-	,"g2c"
+	,"gfortran" # the default is gfortran now
 )
 
 opts.Add(PackageOption(
@@ -2188,4 +2188,3 @@ env.Default(default_targets)
 print "Building targets:"," ".join([str(i) for i in BUILD_TARGETS])
 
 # vim: set syntax=python:
-

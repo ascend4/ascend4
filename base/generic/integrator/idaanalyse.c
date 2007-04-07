@@ -215,6 +215,7 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *sys){
 #endif
 	asc_assert(ny1 == sys->n_y);
 
+	ERROR_REPORTER_HERE(ASC_USER_NOTE,"moving derivs to start of remainder\n");
 	if(system_cut_vars(sys->system, ny1, &integrator_ida_deriv, &nydot)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting derivs");
 		return 1;
@@ -349,6 +350,8 @@ int integrator_ida_check_index(IntegratorSystem *sys){
 
 	asc_assert(system_vfilter_deriv.matchbits & VAR_DERIV);
 	asc_assert(system_vfilter_deriv.matchvalue & VAR_DERIV);
+
+	CONSOLE_DEBUG("system has %d vars matching deriv filter",slv_count_solvers_vars(sys->system, &system_vfilter_deriv));
 
 	res = system_jacobian(sys->system
 		, &system_rfilter_diff
@@ -570,7 +573,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 	/* ...(1) FIX the derivatives */
 	CONSOLE_DEBUG("Checking system with derivatives fixed...");
-	for(i=0;i<n_y;++i){
+	for(i=0;i<sys->n_y;++i){
 		if(sys->ydot[i])var_set_fixed(sys->ydot[i],1);
 	}
 
@@ -580,7 +583,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 	/* ...(2) FREE the derivatives, FIX the diffvars */
 	CONSOLE_DEBUG("Checking system with differential variables fixed...");
-	for(i=0;i<n_y;++i){
+	for(i=0;i<sys->n_y;++i){
 		if(sys->ydot[i]){
 			var_set_fixed(sys->ydot[i],0);
 			var_set_fixed(sys->y[i],1);
@@ -591,7 +594,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	if(res)return 200 + res;
 	
 	/* ...(3) restore as it was, FREE the diffvars */
-	for(i=0;i<n_y;++i){
+	for(i=0;i<sys->n_y;++i){
 		if(sys->ydot[i]){
 			var_set_fixed(sys->y[i],0);
 		}
@@ -918,6 +921,15 @@ finish:
 int integrator_ida_diffindex(const IntegratorSystem *sys, const struct var_variable *deriv){
 	asc_assert(var_sindex(deriv) >= sys->n_y);
 	asc_assert(var_sindex(deriv) < sys->n_y + sys->n_ydot);
+	return sys->y_id[var_sindex(deriv) - sys->n_y];
+}
+
+/**
+	A less assertive version of diffindex...
+*/
+int integrator_ida_diffindex1(const IntegratorSystem *sys, const struct var_variable *deriv){
+	if(var_sindex(deriv) >= sys->n_y)return -1;
+	if(var_sindex(deriv) < sys->n_y + sys->n_ydot)return -2;
 	return sys->y_id[var_sindex(deriv) - sys->n_y];
 }
 

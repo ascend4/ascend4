@@ -40,10 +40,11 @@
 #include "ida.h"
 #include "samplelist.h"
 
-/* #define ANALYSE_DEBUG */
+#define ANALYSE_DEBUG
 /* #define SOLVE_DEBUG */
 /* #define CLASSIFY_DEBUG */
 /* #define DESTROY_DEBUG */
+/* #define ATOL_DEBUG */
 
 /*------------------------------------------------------------------------------
    The following names are of solver_var children or attributes
@@ -1171,7 +1172,9 @@ void integrator_set_ydot(IntegratorSystem *sys, double *dydx) {
 */
 double *integrator_get_atol(IntegratorSystem *sys, double *atol){
 	long i;
+#ifdef ATOL_DEBUG
 	char *varname;
+#endif
 
 	if (atol==NULL) {
 		atol = ASC_NEW_ARRAY_CLEAR(double, sys->n_y);
@@ -1181,9 +1184,11 @@ double *integrator_get_atol(IntegratorSystem *sys, double *atol){
 		asc_assert(sys->y[i]!=NULL);
 		atol[i] = var_odeatol(sys->y[i]);
 		asc_assert(atol[i]!=-1);
+#ifdef ATOL_DEBUG
 		varname = var_make_name(sys->system,sys->y[i]);
 		CONSOLE_DEBUG("%s.ode_atol = %8.2e",varname,atol[i]);
 		ASC_FREE(varname);
+#endif
 	}
 	return atol;
 }
