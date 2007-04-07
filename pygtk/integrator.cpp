@@ -107,7 +107,7 @@ Integrator::analyse(){
 		code, as it gets called by Simulation::build.
 	*/
 	res = integrator_analyse(blsys);
-	CONSOLE_DEBUG("Got %d",res);
+	CONSOLE_DEBUG("Got return-code '%d' from integrator_analyse",res);
 
 	if(res){
 		CONSOLE_DEBUG("...which is bad");

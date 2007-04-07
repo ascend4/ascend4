@@ -34,6 +34,7 @@ class IncidenceMatrixWindow:
 		_im_cmap =  LinearSegmentedColormap('im_cmap',  cmapdata, 4)
 
 		pylab.ioff()
+		pylab.figure()
 		ax = pylab.subplot(111)
 		ax.axis('equal') # aspect ratio = 1.0
 		ax.imshow(self.data, cmap=_im_cmap, interpolation='nearest') 

@@ -84,6 +84,10 @@ Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroo
 	sing = NULL;
 }
 
+Instanc Simulation::getRoot(){
+	return simroot;
+}
+
 Simulation::~Simulation(){
 	CONSOLE_DEBUG("Destroying Simulation...");
 	/*
