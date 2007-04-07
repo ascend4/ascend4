@@ -1,10 +1,26 @@
-REQUIRE "atoms.a4l";
-(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "vesselParams.a4c";
+(*	ASCEND modelling environment
+	Copyright (C) 1998, 2007 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
 (*
- * This file is part of the ASCEND Modeling Library and is released
- * under the GNU Public License as described at the end of this file.
- *)
+	by Arthur W. Westerberg
+	THIS FILE IS AUTO-IMPORTED INTO THE ASCEND MANUAL! BE CAREFUL WITH EDITS.
+*)
+REQUIRE "atoms.a4l";
 
 MODEL vessel(
 	vessel_vol	"the volume contained within the cylindrical vessel"
@@ -37,99 +53,67 @@ MODEL vessel(
 		IS_A distance;
 
 	(* equations *)
-FlatEnds:	end_area = 1{PI} * D^2 / 4;
-Sides:		side_area = 1{PI} * D * H;
-Cylinder:	vessel_vol = end_area * H;
-Metal_volume:	(side_area + 2 * end_area) * wall_thickness = wall_vol;
-HD_definition:	D * H_to_D_ratio = H;
-VesselMass:	metal_mass = metal_density * wall_vol;
+    FlatEnds:      end_area = 1{PI} * D^2 / 4;
+    Sides:         side_area = 1{PI} * D * H;
+    Cylinder:      vessel_vol = end_area * H;
+    Metal_volume:  (side_area + 2 * end_area) * wall_thickness = wall_vol;
+    HD_definition: D * H_to_D_ratio = H;
+    VesselMass:    metal_mass = metal_density * wall_vol;
 
 METHODS
+	METHOD specify;
+	    NOTES
+		'purpose' SELF {to fix four variables and make the problem well-posed}
+	    END NOTES;
+		FIX vessel_vol;
+		FIX H_to_D_ratio;
+		FIX wall_thickness;
+		FIX metal_density;
+	END specify;
 
-METHOD specify;
-    NOTES
-	'purpose' SELF {to fix four variables and make the problem well-posed}
-    END NOTES;
-	FIX vessel_vol;
-	FIX H_to_D_ratio;
-	FIX wall_thickness;
-	FIX metal_density;
-END specify;
+	METHOD values;
+	    NOTES
+		'purpose' SELF {to set the values for the fixed variables}
+	    END NOTES;
+		H_to_D_ratio		:=	2;
+		vessel_vol		:=	250 {ft^3};
+		wall_thickness		:=	5 {mm};
+		metal_density		:=	5000 {kg/m^3};
+	END values;
 
-METHOD values;
-    NOTES
-	'purpose' SELF {to set the values for the fixed variables}
-    END NOTES;
-	H_to_D_ratio		:=	2;
-	vessel_vol		:=	250 {ft^3};
-	wall_thickness		:=	5 {mm};
-	metal_density		:=	5000 {kg/m^3};
-END values;
+	METHOD bound_self;
+	END bound_self;
 
-METHOD bound_self;
-END bound_self;
+	METHOD bound_all;
+	    RUN bound_self;
+	END bound_all;
 
-METHOD bound_all;
-    RUN bound_self;
-END bound_all;
+	METHOD scale_self;
+	END scale_self;
 
-METHOD scale_self;
-END scale_self;
+	METHOD scale_all;
+	    RUN scale_self;
+	END scale_all;
 
-METHOD scale_all;
-    RUN scale_self;
-END scale_all;
+	METHOD default_self;
+		D			:=	1 {m};
+		H			:=	1 {m};
+	END default_self;
 
-METHOD default_self;
-	D			:=	1 {m};
-	H			:=	1 {m};
-END default_self;
-
-METHOD default_all;
-    RUN default_self;
-	vessel_vol		:=	1 {m^3};
-	wall_thickness		:=	5 {mm};
-	metal_density		:=	5000 {kg/m^3};
-	H_to_D_ratio		:=	1;
-END default_all;
-
+	METHOD default_all;
+	    RUN default_self;
+		vessel_vol		:=	1 {m^3};
+		wall_thickness		:=	5 {mm};
+		metal_density		:=	5000 {kg/m^3};
+		H_to_D_ratio		:=	1;
+	END default_all;
 END vessel;
 
 ADD NOTES IN vessel;
-'description' SELF {This model relates the dimensions of a
+    'description' SELF {This model relates the dimensions of a
 	   cylindrical vessel -- e.g., diameter, height and wall thickness
 	   to the volume of metal in the walls.  It uses a thin wall
 	   assumption -- i.e., that the volume of metal is the area of
 	   the vessel times the wall thickness.}
-'purpose' SELF {to illustrate the insertion of notes into a model}
+    'purpose' SELF {to illustrate the insertion of notes into a model}
 END NOTES;
-
-
-(*
- *  vesselParams.a4c
- *  by Arthur W. Westerberg
- *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:35:04 $
- *  $Revision: 1.2 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/vesselParams.a4c,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1998  Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it will
- *  be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the
- *  file named COPYING.
- *)

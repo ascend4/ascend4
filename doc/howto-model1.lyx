@@ -1,8 +1,44 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
 \textclass book
+\begin_preamble
+\usepackage[bookmarks,bookmarksnumbered=true]{hyperref}
+\usepackage{lmodern}
+\usepackage{color}
+\definecolor{darkred}{rgb}{0.55,0,0}
+
+\usepackage{listings}
+
+\lstdefinelanguage{ascend}{
+  morekeywords=[1]{
+     REQUIRE,IMPORT,
+     ATOM,MODEL,METHOD,METHODS,
+     UNIVERSAL,CONSTANT,DIMENSION,DEFAULT,
+     END,FOR,CREATE,DO,EXTERNAL,  
+     CONDITIONAL,SATISFIED,WHEN,CASE,OTHERWISE,TRUE,
+     FALSE,SELF,
+  },
+  morekeywords=[2]{
+     REFINES,IS_A,WILL_BE,ALIASES,INPUT,OUTPUT,DATA,
+     FIX,FREE,RUN,ARE_THE_SAME
+  },
+  morekeywords=[3]{
+     solver_var,integer_constant
+  },
+  sensitive=true,
+  morecomment=[s]{(*}{*)},
+  morestring=[b]',
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily,
+  commentstyle=\color{blue},
+  keywordstyle=\color{darkred},
+}
+\end_preamble
 \language english
 \inputencoding auto
 \fontscheme default
@@ -1151,37 +1187,78 @@ wide false
 sideways false
 status open
 
-\begin_layout LyX-Code
-ATOM
+\begin_layout Standard
 \begin_inset LatexCommand \index{ATOM}
 
 \end_inset
 
- volume REFINES solver_var 
+ 
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+lstset{language=ASCEND}
 \end_layout
 
-\begin_layout LyX-Code
-DIMENSION L^3 
+\begin_layout Standard
+
+
+\backslash
+begin{lstlisting}
 \end_layout
 
-\begin_layout LyX-Code
-DEFAULT 100.0{ft^3};
+\begin_layout Standard
+
+ATOM volume REFINES solver_var 
 \end_layout
 
-\begin_layout LyX-Code
-lower_bound := 0.0{ft^3};
+\begin_layout Standard
+
+    DIMENSION L^3 
 \end_layout
 
-\begin_layout LyX-Code
-upper_bound := 1e50{ft^3};
+\begin_layout Standard
+
+    DEFAULT 100.0{ft^3};
 \end_layout
 
-\begin_layout LyX-Code
-nominal := 100.0{ft^3};  
+\begin_layout Standard
+
+  lower_bound := 0.0{ft^3};
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
+  upper_bound := 1e50{ft^3};
+\end_layout
+
+\begin_layout Standard
+
+  nominal := 100.0{ft^3};
+\end_layout
+
+\begin_layout Standard
+
 END volume;
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+end{lstlisting}
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Caption
@@ -1290,7 +1367,7 @@ L^3
  says volume must be a nonnegative number.
  ASCEND used the nominal value for scaling a variable of type volume when
  solving, here 
-\begin_inset Formula $100\,{\mathrm{ft}}^{3}$
+\begin_inset Formula $100\,\mathrm{ft}^{3}$
 \end_inset
 
 .
@@ -1439,11 +1516,36 @@ sideways false
 status open
 
 \begin_layout LyX-Code
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+begin{ascend}
+\end_layout
+
+\begin_layout Standard
+
 UNIVERSAL CONSTANT circle_constant 
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
     REFINES real_constant :== 1{PI};
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+end{ascend}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Caption
@@ -1578,79 +1680,120 @@ sideways false
 status open
 
 \begin_layout LyX-Code
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+begin{ascend}
+\end_layout
+
+\begin_layout Standard
+
 REQUIRE "atoms.a4l";
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 MODEL vessel;
 \end_layout
 
-\begin_layout LyX-Code
-(* variables *)
+\begin_layout Standard
+
+  (* variables *)
 \end_layout
 
-\begin_layout LyX-Code
-side_area, end_areaIS_Aarea;
+\begin_layout Standard
+
+  side_area, end_area     IS_A area;
 \end_layout
 
-\begin_layout LyX-Code
-vessel_vol, wall_vol    IS_Avolume;
+\begin_layout Standard
+
+  vessel_vol, wall_vol    IS_A volume;
 \end_layout
 
-\begin_layout LyX-Code
-wall_thickness, H, D    IS_Adistance;
+\begin_layout Standard
+
+  wall_thickness, H, D    IS_A distance;
 \end_layout
 
-\begin_layout LyX-Code
-H_to_D_ratio            IS_A    factor;
+\begin_layout Standard
+
+  H_to_D_ratio            IS_A factor;
 \end_layout
 
-\begin_layout LyX-Code
-metal_density           IS_A    mass_density;
+\begin_layout Standard
+
+  metal_density           IS_A mass_density;
 \end_layout
 
-\begin_layout LyX-Code
-metal_mass              IS_A    mass;
+\begin_layout Standard
+
+  metal_mass              IS_A mass;
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
 
 \end_layout
 
-\begin_layout LyX-Code
-(* equations *)
+\begin_layout Standard
+
+  (* equations *)
 \end_layout
 
-\begin_layout LyX-Code
-FlatEnds:end_area = 1{PI} * D^2 / 4;
+\begin_layout Standard
+
+  FlatEnds:end_area = 1{PI} * D^2 / 4;
 \end_layout
 
-\begin_layout LyX-Code
-Sides:side_area = 1{PI} * D * H;
+\begin_layout Standard
+
+  Sides:side_area = 1{PI} * D * H;
 \end_layout
 
-\begin_layout LyX-Code
-Cylinder:vessel_vol = end_area * H;
+\begin_layout Standard
+
+  Cylinder:vessel_vol = end_area * H;
 \end_layout
 
-\begin_layout LyX-Code
-Metal_volume:(side_area + 2 * end_area) *
+\begin_layout Standard
+
+  Metal_volume:(side_area + 2 * end_area) *
 \end_layout
 
-\begin_layout LyX-Code
-wall_thickness = wall_vol;
+\begin_layout Standard
+
+  wall_thickness = wall_vol;
 \end_layout
 
-\begin_layout LyX-Code
-HD_definition:D * H_to_D_ratio = H;
+\begin_layout Standard
+
+  HD_definition:D * H_to_D_ratio = H;
 \end_layout
 
-\begin_layout LyX-Code
-VesselMass:metal_mass = metal_density * wall_vol;
+\begin_layout Standard
+
+  VesselMass:metal_mass = metal_density * wall_vol;
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 END vessel;
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+end{ascend}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Caption
@@ -3459,43 +3602,80 @@ You can now solve this model.
 \end_layout
 
 \begin_layout LyX-Code
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+
+\backslash
+begin{ascend}
+\end_layout
+
+\begin_layout Standard
+
 D = 1.21922 meter
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 H = 3.65765 meter
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 H_to_D_ratio = 3
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 end_area = 1.16748 meter^2
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 metal_density = 5000 kilogram/meter^3
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 metal_mass = 408.62 kilogram
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 side_area = 14.0098 meter^2
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 vessel_vol = 4.27025 meter^3
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 wall_thickness = 0.005 meter
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Standard
+
 wall_vol = 0.0817239 meter^3
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+end{ascend}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+
 \end_layout
 
 \begin_layout Standard
