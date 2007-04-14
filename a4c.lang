@@ -1,0 +1,33 @@
+# ASCEND language definition for Andre Simon's 'highlight' source code highlighter.
+# Add this file to the directory /usr/share/highlight/langDefs (and add a symlink
+# from a4l.lang to a4c.lang.
+
+$DESCRIPTION=ASCEND model file
+
+$KW_LIST(kwa)=ADD AND ALIASES ARE_ALIKE ARE_THE_SAME ARE_NOT_THE_SAME ASSERT ATOM CALL CASE CARD CHECK CHOICE
+CONSTANT CONDITIONAL CREATE DATA DEFAULT DEFINITION DO ELSE FIX FOR FREE IF IN INPUT
+INTERSECTION IS_A IS_REFINED_TO MAX MAXIMIZE MIN MINIMIZE NOTES OF OR
+OTHERWISE OUTPUT PROVIDE PROD REPLACE REFINES RUN SATISFIED SELECT SELF STUDY SUCH_THAT
+SUM SWITCH THEN UNIVERSAL UNION UNITS USE WHEN WHERE WITH_VALUE WILL_BE WILL_BE_THE_SAME
+WILL_NOT_BE_THE_SAME
+
+$KW_LIST(kwb)=FALSE TRUE real_constant integer_constant symbol_constant boolean_constant real integer symbol
+boolean set
+
+$KW_LIST(kwc)=IMPORT REQUIRE MODEL END METHOD METHODS
+
+$KW_RE(kwd)=regex((\w+?)\s*\()
+
+$STRINGDELIMITERS='
+
+$ML_COMMENT=(* *)
+
+$ALLOWNESTEDCOMMENTS=true
+
+$IGNORECASE=false
+
+$ESCCHAR=\
+
+$SYMBOLS= ( ) [ ] { } , ; . : & | < > !  = / *  %  + - ~
+
+$REFORMATTING=true
