@@ -1,6 +1,4 @@
-# ASCEND language definition for Andre Simon's 'highlight' source code highlighter.
-# Add this file to the directory /usr/share/highlight/langDefs (and add a symlink
-# from a4l.lang to a4c.lang.
+# ASCEND language definition for 'highlight'
 
 $DESCRIPTION=ASCEND model file
 
@@ -19,6 +17,7 @@ $KW_LIST(kwc)=IMPORT REQUIRE MODEL END METHOD METHODS
 $KW_RE(kwd)=regex((\w+?)\s*\()
 
 $STRINGDELIMITERS='
+$STRING_UNEQUAL={ }
 
 $ML_COMMENT=(* *)
 
