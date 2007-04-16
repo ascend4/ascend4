@@ -24,11 +24,11 @@ class ASHighlight{
 	}
 
 	function start_line_numbers_at($start_line){
-		$this->start_line = int($start_line);
+		$this->start_line = floor($start_line);
 	}
 
 	function set_tab_width($tabwidth){
-		$this->tabwidth=int($tabwidth);
+		$this->tabwidth=floor($tabwidth);
 	}
 
 	function parse_code($text,$lang=""){
