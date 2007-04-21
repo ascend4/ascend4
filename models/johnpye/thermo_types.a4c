@@ -116,7 +116,7 @@ ATOM specific_enthalpy_rate REFINES solver_var
 	lower_bound := -1e8 {kJ/kg/s};
 	upper_bound := 1e8 {kJ/kg/s};
 	nominal := 100{ J/kg/s};
-END specific_energy_rate;
+END specific_enthalpy_rate;
 
 ATOM ua_value REFINES solver_var
 		DIMENSION M/T^3/TMP*L^2
