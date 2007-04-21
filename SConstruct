@@ -1524,7 +1524,7 @@ def sconsversioncheck():
 	if v[1] != '96':
 		return 0
 	micro = int(v[2])
-	if micro == 92 or micro == 93:
+	if micro == 92 or micro == 93 or micro == 96:
 		return 1;
 	return 0
 
