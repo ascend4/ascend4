@@ -4,11 +4,11 @@ MODEL iapwssat REFINES iapwssatprops;
 	x IS_A fraction; (* ensures we stay in the required region *)
 	h IS_A specific_enthalpy;
 	u IS_A specific_energy;
-	v IS_A specific_volume;
+	rho IS_A mass_density;
 
 	h_expr: h = (h_g - h_f) * x + h_f;
 	u_expr: u = (u_g - u_f) * x + u_f;
-	v_expr: v * ( rho_f * rho_g ) = (rho_g + (rho_f - rho_g)*x );
+	rho_expr: ( rho_f * rho_g )/ (rho_g + (rho_f - rho_g)*x ) = rho ;
 METHODS
 METHOD default_self;
 	x := 0.5;
@@ -17,8 +17,8 @@ METHOD default_self;
 	h.nominal := 500 {kJ/kg};
 	u := 2300 {kJ/kg};
 	u.nominal := 400 {kJ/kg};
-	v := 0.001 {m^3/kg};
-	v.nominal := 0.07 {m^3/kg};
+	rho := 1000 {kg/m^3};
+	rho.nominal := 1. / (0.07 {m^3/kg});
 	RUN iapwssatprops::default_self;
 END default_self;
 METHOD bound_self;
@@ -64,10 +64,10 @@ END testiapwssat1;
 MODEL testiapwssatuv REFINES iapwssat;
 METHODS
 METHOD specify;
-	FIX u,v;
+	FIX u,rho;
 END specify;
 METHOD values;
-	v := 1.0 / (500 {kg/m^3});
+	rho := 500 {kg/m^3};
 	u := 780 {kJ/kg};
 END values;
 METHOD self_test;
@@ -76,7 +76,7 @@ METHOD self_test;
 	ASSERT abs(x - 0.004734) < 0.000001;
 END self_test;
 METHOD values2;
-	v := 1.0 / (450 {kg/m^3});
+	rho := 450 {kg/m^3};
 	u := 780 {kJ/kg};
 END values2;
 METHOD self_test2;

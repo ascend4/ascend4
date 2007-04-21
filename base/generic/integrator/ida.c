@@ -161,6 +161,10 @@ typedef struct IntegratorIdaPrecDJStruct{
 	N_Vector PIii; /**< diagonal elements of the inversed Jacobi preconditioner */
 } IntegratorIdaPrecDataJacobi;
 
+typedef struct IntegratorIdaPrecDJFStruct{
+	linsolqr_system_t L;
+} IntegratorIdaPrecDataJacobian;
+
 /**
 	Hold all the function pointers associated with a particular preconditioner
 	We don't need to store the 'pfree' function here as it is allocated to the enginedata struct
@@ -220,6 +224,34 @@ static void integrator_dae_show_var(IntegratorSystem *sys, struct var_variable *
 int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
 void integrator_ida_write_stats(IntegratorIdaStats *stats);
 void integrator_ida_write_incidence(IntegratorSystem *sys);
+
+/*------
+  Full jacobian preconditioner -- experimental
+*/
+
+int integrator_ida_psetup_jacobian(realtype tt,
+		 N_Vector yy, N_Vector yp, N_Vector rr,
+		 realtype c_j, void *prec_data,
+		 N_Vector tmp1, N_Vector tmp2,
+		 N_Vector tmp3
+);
+
+int integrator_ida_psolve_jacobian(realtype tt,
+		 N_Vector yy, N_Vector yp, N_Vector rr,
+		 N_Vector rvec, N_Vector zvec,
+		 realtype c_j, realtype delta, void *prec_data,
+		 N_Vector tmp
+);
+
+void integrator_ida_pcreate_jacobian(IntegratorSystem *sys);
+
+void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata);
+
+static const IntegratorIdaPrec prec_jacobian = {
+	integrator_ida_pcreate_jacobian
+	, integrator_ida_psetup_jacobian
+	, integrator_ida_psolve_jacobian
+};
 
 /*------
   Jacobi preconditioner -- experimental
@@ -1565,11 +1597,174 @@ int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout,
 					gout[i] = -2.0;
 				}
 				break;
+			case e_bnd_undefined:
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid boundary type e_bnd_undefined");
+				return 1;
 		}
 	}
 
 	return 0; /* no way to detect errors in bndman_*_eval at this stage */
 }
+
+
+/*----------------------------------------------
+  FULL JACOBIAN PRECONDITIONER -- EXPERIMENTAL.
+*/
+
+void integrator_ida_pcreate_jacobian(IntegratorSystem *sys){
+	IntegratorIdaData *enginedata =sys->enginedata;
+	IntegratorIdaPrecDataJacobian *precdata;
+	precdata = ASC_NEW(IntegratorIdaPrecDataJacobian);
+	mtx_matrix_t P;
+	asc_assert(sys->n_y);
+	precdata->L = linsolqr_create_default();
+
+	/* allocate matrix to be used by linsolqr */
+	P = mtx_create();
+	mtx_set_order(P, sys->n_y);
+	linsolqr_set_matrix(precdata->L, P);
+
+	enginedata->pfree = &integrator_ida_pfree_jacobian;
+	enginedata->precdata = precdata;
+	CONSOLE_DEBUG("Allocated memory for Full Jacobian preconditioner");
+}
+
+void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
+	mtx_matrix_t P;
+	IntegratorIdaPrecDataJacobian *precdata;
+
+	if(enginedata->precdata){
+		precdata = (IntegratorIdaPrecDataJacobian *)enginedata->precdata;
+		P = linsolqr_get_matrix(precdata->L);
+		mtx_destroy(P);
+		linsolqr_destroy(precdata->L);
+		ASC_FREE(precdata);
+		enginedata->precdata = NULL;
+
+		CONSOLE_DEBUG("Freed memory for Full Jacobian preconditioner");
+	}
+	enginedata->pfree = NULL;
+}
+
+/**
+	EXPERIMENTAL. Full Jacobian preconditioner for use with IDA Krylov solvers
+
+	'setup' function.
+*/
+int integrator_ida_psetup_jacobian(realtype tt,
+		 N_Vector yy, N_Vector yp, N_Vector rr,
+		 realtype c_j, void *p_data,
+		 N_Vector tmp1, N_Vector tmp2,
+		 N_Vector tmp3
+){
+	int i, j, res;
+	IntegratorSystem *sys;
+	IntegratorIdaData *enginedata;
+	IntegratorIdaPrecDataJacobian *precdata;
+	linsolqr_system_t L;
+	mtx_matrix_t P;
+
+	L = precdata->L;
+	P = linsolqr_get_matrix(L);
+	mtx_clear(P);
+
+	struct rel_relation **relptr;
+
+	sys = (IntegratorSystem *)p_data;
+	enginedata = sys->enginedata;
+	precdata = (IntegratorIdaPrecDataJacobian *)(enginedata->precdata);
+	double *derivatives;
+	struct var_variable **variables;
+	int count, status;
+	char *relname;
+	mtx_coord_t C;
+
+	CONSOLE_DEBUG("Setting up Jacobian preconditioner");
+
+	variables = ASC_NEW_ARRAY(struct var_variable*, NV_LENGTH_S(yy) * 2);
+	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
+
+	/**
+		@TODO FIXME here we are using the very inefficient and contorted approach
+		of calculating the whole jacobian, then extracting just the diagonal elements.
+	*/
+
+	for(i=0, relptr = enginedata->rellist;
+			i< enginedata->nrels && relptr != NULL;
+			++i, ++relptr
+	){
+		/* get derivatives for this particular relation */
+		status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
+		if(status){
+			relname = rel_make_name(sys->system, *relptr);
+			CONSOLE_DEBUG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
+			ASC_FREE(relname);
+			break;
+		}
+		/* CONSOLE_DEBUG("Got %d derivatives from relation %d",count,i); */
+		/* find the diagonal elements */
+		for(j=0; j<count; ++j){
+			if(var_deriv(variables[j])){
+				mtx_fill_value(P, mtx_coord(&C, i, var_sindex(variables[j])), c_j * derivatives[j]);
+			}else{
+				mtx_fill_value(P, mtx_coord(&C, i, var_sindex(variables[j])), derivatives[j]);
+			}
+		}
+	}
+
+	mtx_assemble(P);
+
+	if(status){
+		CONSOLE_DEBUG("Error found when evaluating derivatives");
+		res = 1; goto finish; /* recoverable */
+	}
+
+	integrator_ida_write_incidence(sys);
+
+	res = 0;
+finish:
+	ASC_FREE(variables);
+	ASC_FREE(derivatives);
+	return res;
+};
+
+/**
+	EXPERIMENTAL. Full Jacobian preconditioner for use with IDA Krylov solvers
+
+	'solve' function.
+*/
+int integrator_ida_psolve_jacobian(realtype tt,
+		 N_Vector yy, N_Vector yp, N_Vector rr,
+		 N_Vector rvec, N_Vector zvec,
+		 realtype c_j, realtype delta, void *p_data,
+		 N_Vector tmp
+){
+	IntegratorSystem *sys;
+	IntegratorIdaData *data;
+	IntegratorIdaPrecDataJacobian *precdata;
+	sys = (IntegratorSystem *)p_data;
+	data = sys->enginedata;
+	precdata = (IntegratorIdaPrecDataJacobian *)(data->precdata);
+	linsolqr_system_t L = precdata->L;
+
+	linsolqr_add_rhs(L,NV_DATA_S(rvec),FALSE);
+
+	mtx_region_t R;	
+	R.row.low = R.col.low = 0;
+	R.row.high = R.col.high = mtx_order(linsolqr_get_matrix(L)) - 1;
+    linsolqr_set_region(L,R);
+
+    linsolqr_prep(L,linsolqr_fmethod_to_fclass(linsolqr_fmethod(L)));
+    linsolqr_reorder(L, &R, linsolqr_rmethod(L));		
+
+	/// @TODO more here
+
+	linsolqr_remove_rhs(L,NV_DATA_S(rvec));
+
+	CONSOLE_DEBUG("Solving Jacobian preconditioner (c_j = %f)",c_j);
+	return 0;
+};
+
 
 /*----------------------------------------------
   JACOBI PRECONDITIONER -- EXPERIMENTAL.

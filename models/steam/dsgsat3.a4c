@@ -14,12 +14,12 @@ IMPORT "johnpye/roots";
 
 MODEL dsgsat3;
 	n IS_A integer_constant;
-	n :== 30;(* with L = 10m: 5,6,7,8,9,10,11 *)
+	n :== 7;(* with L = 10m: 5,6,7,8,9,10,11 *)
 	         (* with L =  5m: 2,3,4,5,7,9,11,12,13,1415,16 *)
 
 	dz IS_A real_constant;
 	L IS_A real_constant;
-	L :== 11 {m};
+	L :== 16 {m};
 	dz :== L / (n-1);
 
 	nodes,butfirst1,upwind4,central IS_A set OF integer_constant;
@@ -67,13 +67,12 @@ MODEL dsgsat3;
 	p[nodes] IS_A pressure;
 	rho[nodes] IS_A mass_density;
 	u[nodes] IS_A specific_energy;
-	v[nodes] IS_A specific_volume;
 
 (*	Qdot_t IS_A energy_rate;
 	Qdot_t = SUM[qdot_t[i] | i IN butfirst1]; *)
 
 	FOR i IN nodes CREATE
-		z_vel[i]: vel[i] = v[i]*mdot[i]/A;
+		z_vel[i]: vel[i]*rho[i]*A = mdot[i];
 	END FOR;
 
 	FOR i IN nodes CREATE
@@ -83,72 +82,49 @@ MODEL dsgsat3;
 		T[i],    node[i].T ARE_THE_SAME;
 		rho[i],  node[i].rho ARE_THE_SAME;
 		u[i],    node[i].u ARE_THE_SAME;
-		v[i],    node[i].v ARE_THE_SAME;
+		h[i] ALIASES node[i].h;
 	END FOR;
 
 	en_upwind4,en_central,mom_upwind4,mom_central,mass_upwind4,mass_central IS_A set OF integer_constant;
 
 	(* mass conservation *)
-	mass_upwind4 :== upwind4;
+	mass_upwind4 :== [];
 	mass_central :== central - mass_upwind4;
 	FOR i IN mass_upwind4 CREATE (* 4-pt upwind biased *)
-		z_massbal1[i]: A * drho_dt[i] * dz =
-				- (mdot[i+1] + 6.*mdot[i] - 3.*mdot[i-1] - 2.*mdot[i-2]) / 6.;
+		z_massbal1[i]: A * drho_dt[i] * dz = - (rho[i+1]*A*vel[i+1] + 6 * rho[i]*A*vel[i] - 3. * rho[i-1]*A*vel[i-1] - 2. * rho[i-2]*A*vel[i-2]) / 6;
 	END FOR;
 	FOR i IN mass_central CREATE
-		z_massbal2[i]: A * drho_dt[i] * dz =
-				- (mdot[i+1] - mdot[i-1]) / 2.;
+		z_massbal2[i]: A * drho_dt[i] * dz = - (rho[i+1]*A*vel[i+1] - rho[i-1]*A*vel[i-1]) / 2.;
 	END FOR;
 	FOR i IN butfirst1 - mass_upwind4 - mass_central CREATE
-		z_massbal[i]: A * drho_dt[i] * dz = - (mdot[i] - mdot[i-1]);
+		z_massbal[i]: A * drho_dt[i] * dz = - (rho[i]*A*vel[i] - rho[i-1]*A*vel[i-1]);
 	END FOR;
 
 	(* energy conservation *)
 	en_upwind4 :== [];
-	en_central :== central - en_upwind4;
+	en_central :== [](*central - en_upwind4*);
 	FOR i IN en_upwind4 CREATE
 		z_enbal2[i]: dz * (qdot_t[i] - rho[i] * A * du_dt[i]) =
 			 + mdot[i] * (node[i+1].u + 6.*u[i] - 3.*u[i-1] - 2.*u[i-1]) / 6.
-			 + (p[i+1]*node[i+1].v*mdot[i+1] - p[i-1]*v[i-1]*mdot[i-1]) / 2.;
+			 + (p[i+1]/rho[i+1]*mdot[i+1] - p[i-1]/rho[i-1]*mdot[i-1]) / 2.;
 	END FOR;
 	FOR i IN en_central CREATE
 		z_enbal1[i]: dz * (qdot_t[i] - rho[i] * A * du_dt[i]) =
 			 + mdot[i] * (u[i] - u[i-1]) (* NOTE: not central *)
-			 + (p[i+1]*v[i+1]*mdot[i+1] - p[i-1]*v[i-1]*mdot[i-1]) / 2.;
+			 + (p[i+1]/rho[i+1]*mdot[i+1] - p[i-1]/rho[i-1]*mdot[i-1]) / 2.;
 	END FOR;
 	FOR i IN butfirst1 - en_upwind4 - en_central CREATE
-		z_enbal[i]: dz * (qdot_t[i] - rho[i] * A * du_dt[i]) =
-			 + mdot[i] * (u[i] - u[i-1])
-			 + (p[i]*v[i]*mdot[i] - p[i-1]*v[i-1]*mdot[i-1]);
+		z_enbal3[i]: dz * (qdot_t[i] - A * rho[i]*du_dt[i]) = 
+			+ mdot[i] * (h[i] - h[i-1]) 
+			+ p[i]/rho[i]*(mdot[i] - mdot[i-1]);
 	END FOR;
 
 	(* stationary momentum *)
 	FOR i IN butfirst1 CREATE
-		z_mombal[i]: p[i] = p[i-1] - dz  * f/D/2 * rho[i] * vel[i]^2;
+		z_mombal[i]: p[i] = p[i-1] - dz * f/D/2 * rho[i] * vel[i]^2;
 	END FOR;
 	mom_upwind4 :== [];
 	mom_central :== [];
-(*
-	* momentum conservation *
-	FOR i IN mom_upwind4 CREATE
-		z_mombal2[i]:  - dz/A * dmdot_dt[i]
-			 =	(p[i]-p[i-1])  * backdiff for pressure *
-				+ dz * f/D/2 * rho[i] * vel[i]^2
-				+ (rho[i+1]*vel[i+1]^2 + 6.*rho[i]*vel[i]^2 - 3.*rho[i-1]*vel[i-1]^2 - 2.*rho[i-2]*vel[i-2]^2) / 6.;
-	END FOR;
-	FOR i IN mom_central CREATE
-		z_mombal1[i]:  - dz/A * dmdot_dt[i]
-			 =	(p[i+1]-p[i-1]) / 2.
-				+ dz * f/D/2 * rho[i] * vel[i]^2
-				+ (rho[i+1]*vel[i+1]^2 - rho[i-1]*vel[i-1]^2) / 2.;
-	END FOR;
-	FOR i IN butfirst1 - mom_upwind4 - mom_central CREATE
-		z_mombal[i]:  - dz/A * dmdot_dt[i]
-			 =	(p[i]-p[i-1]) 
-				+ dz * f/D/2 * rho[i] * vel[i]^2
-				+ (rho[i]*vel[i]^2 - rho[i-1]*vel[i-1]^2);
-	END FOR;
-*)
 
 	(* internal/external convection, and thermal mass of wall -- no spatial derivs here *)
 	FOR i IN butfirst1 CREATE
@@ -224,7 +200,6 @@ METHODS
 			T_w[i] := 298 {K};
 (*			dmdot_dt[i] := 0.0 {kg/s/s};*)
 			du_dt[i] := 0 {kJ/kg/s};
-			v[i] := 0.2 {L/kg};
 			rho[i] := 6 {kg/L};
 			node[i].dp_dT := +0.5 {kPa/K};
 			p[i] := 5 {bar};
@@ -300,8 +275,10 @@ METHODS
 		mdot[n].obs_id := 1;
 		x[n].obs_id := 1;
 		p[n].obs_id := 1;
-		vel[n].obs_id := 1;
-		T_w[n].obs_id := 2;
+		h[n].obs_id := 15;
+		vel[n].obs_id := 10;
+		T[n].obs_id := 20;
+		T_w[n].obs_id := 30;
 
 	END ode_init;
 	METHOD fix_outlet_quality;

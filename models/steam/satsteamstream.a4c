@@ -2,8 +2,6 @@ REQUIRE "steam/iapwssat.a4c";
 
 MODEL satsteamstream REFINES iapwssat;
 	mdot IS_A mass_rate;
-	rho IS_A mass_density;
-	rho * v = 1;
 METHODS
 METHOD default_self;
 	rho := 200 {kg/m^3};

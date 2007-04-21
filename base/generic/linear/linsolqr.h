@@ -351,8 +351,8 @@ ASC_DLLSPEC linsolqr_system_t linsolqr_create(void);
 ASC_DLLSPEC linsolqr_system_t linsolqr_create_default(void);
 /**<
 	Creates a linsolqr system as per linsolqr_default but sets default
-	preferences for reordering and factoring methods, so the lazy user (me)
-	doesn't	have to.
+	'recommended' preferences for reordering and factoring methods, so the
+	ignorant user (me) doesn't have to worry about it every time they use this.
 */
 
 ASC_DLLSPEC void linsolqr_destroy(linsolqr_system_t sys);
