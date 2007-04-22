@@ -291,6 +291,12 @@ opts.Add(PackageOption(
 	,"off"
 ))
 
+opts.Add(
+	"FORTRAN"
+	,"Fortran compiler (eg g77, gfortran)"
+	,"gfortran"
+)
+
 #------- tcl/tk --------
 
 opts.Add(
