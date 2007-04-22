@@ -165,14 +165,14 @@ class TestCompiler(Ascend):
 	def testdefault19(self):
 		self.defaultmethodstest('testdefault19')
 
-	def testdefault19fail(self):
-		self.defaultmethodstest('testdefault19fail')
+	#def testdefault19fail(self):
+	#	self.defaultmethodstest('testdefault19fail')
 
 	def testdefault20(self):
 		self.defaultmethodstest('testdefault20')
 
-	def testdefault20fail(self):
-		self.defaultmethodstest('testdefault20fail')
+	#def testdefault20fail(self):
+	#	self.defaultmethodstest('testdefault20fail')
 
 class TestSolver(AscendSelfTester):
 	
