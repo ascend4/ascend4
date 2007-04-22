@@ -1,0 +1,105 @@
+Source: ascend
+Section: contrib/science
+Priority: extra
+Maintainer: John Pye <john@curioussymbols.com>
+Build-Depends: gcc, flex, bison, scons, swig, python-dev, libumfpack4-dev, gfortran, scrollkeeper, refblas3
+Standards-Version: 3.6.1
+
+Package: libascend
+Architecture: any
+Depends: libumfpack4, libsundials-serial0, refblas3
+Recommends: ascend-pygtk
+Description: ASCEND core functionality
+  ASCEND is a modelling and simulation environment for
+  solving systems of nonlinear equations. It includes
+  a modelling language, in which you write the equations
+  that represent your system-to-be-modelled, as well as
+  a user interface that lets to interact with your model,
+  solve it, adjust values, and report results.
+  .
+  This package provides the core ASCEND functionality
+  including compiler, parser, solvers and integrators.
+
+Package: libascend-dev
+Architecture: any
+Depends: libascend, python-dev, libsundials-serial-dev, refblas3-dev
+Description: ASCEND development headers
+  ASCEND is a modelling and simulation environment for
+  solving systems of nonlinear equations. It includes
+  a modelling language, in which you write the equations
+  that represent your system-to-be-modelled, as well as
+  a user interface that lets to interact with your model,
+  solve it, adjust values, and report results.
+  .
+  This package provides header files for use when creating
+  ASCEND external libraries including external methods
+  and new solver or integrator plugins.
+
+Package: ascend-pygtk
+Architecture: any
+Depends: libascend
+Depends: python, python-gtk2, python-matplotlib, python-numpy
+Depends: ascend-models
+Recommends: ipython
+Provides: ascend-gui
+Description: ASCEND PyGTK GUI
+  ASCEND is a modelling and simulation environment for
+  solving systems of nonlinear equations. It includes
+  a modelling language, in which you write the equations
+  that represent your system-to-be-modelled, as well as
+  a user interface that lets to interact with your model,
+  solve it, adjust values, and report results.
+  .
+  This package provides the more modern (but less stable)
+  PyGTK-based GUI for ASCEND under GNOME. It also
+  includes necessary bindings for using ASCEND directly
+  from the Python programming language.
+
+Package: ascend-tcltk
+Architecture: any
+Depends: libascend
+Depends: tcl8.4, tk8.4, tktable
+Depends: ascend-models
+Recommends: xgraph
+Provides: ascend-gui
+Description: ASCEND Tcl/Tk GUI
+  ASCEND is a modelling and simulation environment for
+  solving systems of nonlinear equations. It includes
+  a modelling language, in which you write the equations
+  that represent your system-to-be-modelled, as well as
+  a user interface that lets to interact with your model,
+  solve it, adjust values, and report results.
+  .
+  This package provides the older (but more complete)
+  Tcl/Tk GUI for ASCEND.
+
+Package: ascend-models
+Architecture: all
+Recommends: libascend
+Description: ASCEND Model Library
+  ASCEND is a modelling and simulation environment for
+  solving systems of nonlinear equations. It includes
+  a modelling language, in which you write the equations
+  that represent your system-to-be-modelled, as well as
+  a user interface that lets to interact with your model,
+  solve it, adjust values, and report results.
+  .
+  This package provides the ASCEND Model Library, a
+  set of standard model files which provide material
+  properties, units of measurement and many example
+  problems.
+
+Package: ascend-doc
+Architecture: all
+Recommends: ascend-gui
+Description: ASCEND Documentation
+  ASCEND is a modelling and simulation environment for
+  solving systems of nonlinear equations. It includes
+  a modelling language, in which you write the equations
+  that represent your system-to-be-modelled, as well as
+  a user interface that lets to interact with your model,
+  solve it, adjust values, and report results.
+  .
+  This package provides the user manual and HOWTO
+  information for ASCEND.
+
