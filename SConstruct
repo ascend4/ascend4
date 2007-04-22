@@ -56,7 +56,7 @@ else:
 	default_tcl_libpath = "$TCL/lib"	
 	default_rel_distdir = '../share/ascend'
 	default_absolute_paths = True
-	default_ida_prefix="/usr/local"
+	default_ida_prefix="/usr"
 	default_conopt_prefix="/usr"
 	default_conopt_libpath="$CONOPT_PREFIX/lib"
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
@@ -224,27 +224,21 @@ opts.Add(PackageOption(
 #-------- ida -------
 
 opts.Add(PackageOption(
-	"IDA_PREFIX"
+	"SUNDIALS_PREFIX"
 	,"Prefix for your IDA install (IDA ./configure --prefix)"
 	,default_ida_prefix
 ))
 
 opts.Add(
-	"IDA_LIB"
-	,"Libraries linked to for IDA"
-	,['sundials_nvecserial','sundials_ida','m']
-)
-
-opts.Add(
-	'IDA_CPPPATH'
+	'SUNDIALS_CPPPATH'
 	,"Where is your ida.h?"
-	,"$IDA_PREFIX/include"
+	,"$SUNDIALS_PREFIX/include"
 )
 
 opts.Add(
-	'IDA_LIBPATH'
+	'SUNDIALS_LIBPATH'
 	,"Where are your SUNDIALS libraries installed?"
-	,"$IDA_PREFIX/lib"
+	,"$SUNDIALS_PREFIX/lib"
 )
 
 # ----- conopt-----
@@ -1172,9 +1166,16 @@ int main(){
 """
 
 ida_test_text = """
-# include <ida/ida.h>
-# include <nvector/nvector_serial.h>
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
+# include <sundials/sundials_config.h>
+# include <sundials/sundials_nvector.h>
+# include <ida.h>
 # include <ida/ida_spgmr.h>
+#else
+# include <sundials/sundials_config.h>
+# include <nvector/nvector_serial.h>
+# include <ida/ida.h>
+#endif
 int main(){
 	void *ida_mem;
 	ida_mem = IDACreate();
@@ -1182,22 +1183,10 @@ int main(){
 }
 """
 
-def CheckIDA(context):
-	context.Message( 'Checking for IDA (SUNDIALS)... ' )
-
-	keep = KeepContext(context,"IDA")
-	
-	is_ok = context.TryLink(ida_test_text,".c")
-	context.Result(is_ok)
-	
-	keep.restore(context)
-		
-	return is_ok
-
 # slightly changed calling convention (IDACalcID) in newer versions of SUNDIALS,
 # so detect the version and act accordingly.
-def CheckIDAVersion(context):
-	keep = KeepContext(context,'IDA')
+def CheckSUNDIALS(context):
+	keep = KeepContext(context,'SUNDIALS')
 	context.Message("Checking SUNDIALS version... ")
 	(is_ok,output) = context.TryRun(sundials_version_text,'.c')
 	keep.restore(context)
@@ -1217,8 +1206,37 @@ def CheckIDAVersion(context):
 		
 	# good version
 	context.Result("%d.%d.%d, good" % (major,minor,patch))
+
+	if major==2 and minor==2:
+		context.env.Append(SUNDIALS_CPPEXTRA=["$SUNDIALS_CPPPATH/sundials","$SUNDIALS_CPPPATH/ida"])
+		context.env.Append(SUNDIALS_LIBEXTRA=["$SUNDIALS_CPPPATH/sundials","$SUNDIALS_CPPPATH/ida"])
 	return 1
 	
+
+def CheckIDA(context):
+	context.Message( 'Checking for IDA (SUNDIALS)... ' )
+
+	keep = KeepContext(context,"IDA")
+
+	major = context.env['SUNDIALS_VERSION_MAJOR']
+	minor = context.env['SUNDIALS_VERSION_MINOR'] 
+
+	context.env.Append(CPPDEFINES=[('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR"),('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")])
+
+	if major==2 and minor==2:
+		context.env.Append(CPPPATH=["$SUNDIALS_CPPPATH/sundials"])
+		context.env.AppendUnique(LIBS=["sundials_ida","m"])
+	else:
+		context.env.AppendUnique(LIBS=["sundials_nvecserial","sundials_ida","m"])
+	
+	is_ok = context.TryLink(ida_test_text,".c")
+	context.Result(is_ok)
+	
+	keep.restore(context)
+		
+	return is_ok
+
+
 #----------------
 # CONOPT test
 
@@ -1514,7 +1532,7 @@ conf = Configure(env
 		, 'CheckTkTable' : CheckTkTable
 		, 'CheckX11' : CheckX11
 		, 'CheckIDA' : CheckIDA
-		, 'CheckIDAVersion' : CheckIDAVersion
+		, 'CheckSUNDIALS' : CheckSUNDIALS
 		, 'CheckCONOPT' : CheckCONOPT
 		, 'CheckScrollkeeperConfig' : CheckScrollkeeperConfig
 		, 'CheckFPE' : CheckFPE
@@ -1701,12 +1719,12 @@ if with_ufsparse:
 
 if not with_ida:
 	without_ida_reason = "Not selected (see config option WITH_SOLVERS)"
+elif not conf.CheckSUNDIALS():
+	with_ida = False
+	without_ida_reason = "SUNDIALS not found, or bad version"
 elif not conf.CheckIDA():
 	with_ida = False
-	without_ida_reason = "IDA not found"
-elif not conf.CheckIDAVersion():
-	with_ida = False
-	without_ida_reason = "Unsupported (or undetected) SUNDIALS version"
+	without_ida_reason = "Unable to compile/link against SUNDIALS/IDA"
 
 # CONOPT
 
