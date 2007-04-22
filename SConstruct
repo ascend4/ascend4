@@ -1187,11 +1187,11 @@ int main(){
 # so detect the version and act accordingly.
 def CheckSUNDIALS(context):
 	keep = KeepContext(context,'SUNDIALS')
-	context.Message("Checking SUNDIALS version... ")
+	context.Message("Checking for SUNDIALS... ")
 	(is_ok,output) = context.TryRun(sundials_version_text,'.c')
 	keep.restore(context)
 	if not is_ok:
-		context.Result("failed to run check")
+		context.Result(0)
 		return 0
 
 	major,minor,patch = tuple([int(i) for i in output.split(".")])
@@ -1214,7 +1214,7 @@ def CheckSUNDIALS(context):
 	
 
 def CheckIDA(context):
-	context.Message( 'Checking for IDA (SUNDIALS)... ' )
+	context.Message( 'Checking for IDA... ' )
 
 	keep = KeepContext(context,"IDA")
 

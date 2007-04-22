@@ -19,11 +19,16 @@ if solver_env.get('WITH_IDA'):
 		CPPPATH=[solver_env.get('IDA_CPPPATH')]
 	)
 
-	sundials_env.Append(
-		CPPDEFINES=[('SUNDIALS_VERSION_MAJOR','$SUNDIALS_VERSION_MAJOR')
-			,('SUNDIALS_VERSION_MINOR','$SUNDIALS_VERSION_MINOR')
-		]
-	)
+	major = sundials_env['SUNDIALS_VERSION_MAJOR']
+	minor = sundials_env['SUNDIALS_VERSION_MINOR'] 
+
+	sundials_env.Append(CPPDEFINES=[('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR"),('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")])
+
+	if major==2 and minor==2:
+		sundials_env.Append(CPPPATH=["$SUNDIALS_CPPPATH/sundials"])
+		sundials_env.AppendUnique(LIBS=["sundials_ida","m"])
+	else:
+		sundials_env.AppendUnique(LIBS=["sundials_nvecserial","sundials_ida","m"])
 
 	if solver_env.get('IDA_CPPPATH_EXTRA'):
 		sundials_env.AppendUnique(
@@ -59,6 +64,7 @@ if libascend_env.get('CAN_INSTALL'):
 	headers = glob.glob("*.h")
 	libascend_env.InstallHeader(installdir,headers)
 
+print "OBJS =",objs
 Return('objs')
 
 # :ex: set syntax=python:
