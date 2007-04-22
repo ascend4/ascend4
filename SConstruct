@@ -1176,6 +1176,7 @@ ida_test_text = """
 #if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
 # include <sundials/sundials_config.h>
 # include <sundials/sundials_nvector.h>
+# include <nvector_serial.h>
 # include <ida.h>
 # include <ida/ida_spgmr.h>
 #else
