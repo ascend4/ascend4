@@ -36,8 +36,17 @@
 	@{
 */
 
-#include <ida/ida.h>
-#include <nvector/nvector_serial.h>
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
+# include <sundials/sundials_config.h>
+# include <sundials/sundials_nvector.h>
+# include <ida.h>
+# include <ida/ida_spgmr.h>
+#else
+# include <sundials/sundials_config.h>
+# include <nvector/nvector_serial.h>
+# include <ida/ida.h>
+#endif
+
 #include <linear/mtx.h>
 
 /**
