@@ -235,10 +235,17 @@ opts.Add(
 	,"$SUNDIALS_PREFIX/include"
 )
 
+# 
 opts.Add(
 	'SUNDIALS_LIBPATH'
 	,"Where are your SUNDIALS libraries installed?"
 	,"$SUNDIALS_PREFIX/lib"
+)
+
+opts.Add(
+	'SUNDIALS_LIBS'
+	,"Where are your SUNDIALS libraries installed?"
+	,['sundials_nvecserial','sundials_ida','m']
 )
 
 # ----- conopt-----
@@ -1207,31 +1214,37 @@ def CheckSUNDIALS(context):
 	# good version
 	context.Result("%d.%d.%d, good" % (major,minor,patch))
 
-	if major==2 and minor==2:
-		context.env.Append(SUNDIALS_CPPEXTRA=["$SUNDIALS_CPPPATH/sundials","$SUNDIALS_CPPPATH/ida"])
-		context.env.Append(SUNDIALS_LIBEXTRA=["$SUNDIALS_CPPPATH/sundials","$SUNDIALS_CPPPATH/ida"])
 	return 1
 	
 
 def CheckIDA(context):
 	context.Message( 'Checking for IDA... ' )
 
-	keep = KeepContext(context,"IDA")
+	keep = KeepContext(context,"SUNDIALS")
 
 	major = context.env['SUNDIALS_VERSION_MAJOR']
 	minor = context.env['SUNDIALS_VERSION_MINOR'] 
 
-	context.env.Append(CPPDEFINES=[('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR"),('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")])
+	cppdef = context.env.get('CPPDEFINES')
 
+	context.env.Append(CPPDEFINES=[
+		('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR")
+		,('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")
+	])
+
+	context.env['SUNDIALS_CPPPATH_EXTRA']=[]
 	if major==2 and minor==2:
-		context.env.Append(CPPPATH=["$SUNDIALS_CPPPATH/sundials"])
-		context.env.AppendUnique(LIBS=["sundials_ida","m"])
-	else:
-		context.env.AppendUnique(LIBS=["sundials_nvecserial","sundials_ida","m"])
-	
+		context.env.Append(SUNDIALS_CPPPATH_EXTRA = ["$SUNDIALS_CPPPATH/sundials"])
+
+	context.env.Append(CPPDEFINES=[('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR"),('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")])
+	context.env.AppendUnique(LIBS=context.env['SUNDIALS_LIBS'])
+	context.env.AppendUnique(CPPPATH=context.env['SUNDIALS_CPPPATH_EXTRA'])
+
 	is_ok = context.TryLink(ida_test_text,".c")
 	context.Result(is_ok)
 	
+	if cppdef:
+		context.env['CPPDEFINES']=cppdef
 	keep.restore(context)
 		
 	return is_ok
