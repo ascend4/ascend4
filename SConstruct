@@ -32,6 +32,7 @@ if platform.system()=="Windows":
 	default_conopt_prefix = "c:\\Program Files\\CONOPT"
 	default_conopt_libpath="$CONOPT_PREFIX"
 	default_conopt_cpppath="$CONOPT_PREFIX"
+	default_conopt_dlpath="$CONOPT_PREFIX"
 	default_conopt_lib="conopt3"
 	default_conopt_envvar="CONOPT_PATH"
 
@@ -59,6 +60,7 @@ else:
 	default_conopt_prefix="/usr"
 	default_conopt_libpath="$CONOPT_PREFIX/lib"
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
+	default_conopt_dlpath= default_conopt_libpath + ":/usr/local/lib"
 	default_conopt_lib="consub3"
 	default_conopt_envvar="CONOPT_PATH"
 
@@ -267,8 +269,14 @@ opts.Add(
 
 opts.Add(
 	'CONOPT_LIBPATH'
-	,"Where is your CONOPT libraries installed?"
+	,"Where is your CONOPT library installed?"
 	,default_conopt_libpath
+)
+
+opts.Add(
+	'CONOPT_DLPATH'
+	,"What is the default search path that ASCEND should use when dlopening the CONOPT library at runtime?"
+	,default_conopt_dlpath
 )
 
 opts.Add(
@@ -1823,7 +1831,7 @@ subst_dict = {
 	, '@PYTHON@' : python_exe
 	, '@ASC_CONOPT_LIB@':env.get('CONOPT_LIB')
 	, '@ASC_CONOPT_ENVVAR@':env.get('CONOPT_ENVVAR')
-	, '@ASC_CONOPT_DLPATH@':c_escape(env.subst("$CONOPT_LIBPATH"))
+	, '@ASC_CONOPT_DLPATH@':c_escape(env.subst("$CONOPT_DLPATH"))
 	, '@SOURCE_ROOT@':c_escape(os.path.abspath(str(env.Dir("#"))))
 }
 
