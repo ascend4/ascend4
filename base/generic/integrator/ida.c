@@ -42,14 +42,25 @@
 
 /* SUNDIALS includes */
 #ifdef ASC_WITH_IDA
+
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
 # include <sundials/sundials_config.h>
-# include <sundials/sundials_dense.h>
-# include <ida/ida.h>
+# include <sundials/sundials_nvector.h>
+# include <ida/ida_spgmr.h>
+# include <ida.h>
+# include <nvector_serial.h>
+#else
+# include <sundials/sundials_config.h>
 # include <nvector/nvector_serial.h>
+# include <ida/ida.h>
+#endif
+
+# include <sundials/sundials_dense.h>
 # include <ida/ida_spgmr.h>
 # include <ida/ida_spbcgs.h>
 # include <ida/ida_sptfqmr.h>
 # include <ida/ida_dense.h>
+
 # ifndef IDA_SUCCESS
 #  error "Failed to include SUNDIALS IDA header file"
 # endif
@@ -1908,10 +1919,19 @@ int integrator_ida_psolve_jacobi(realtype tt,
 	@return IDA_SUCCESS on sucess.
 */
 int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s){
+
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
+
+	return IDA_MEM_NULL;
+
+#else
+
 	return IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals, &s->nlinsetups
 		,&s->netfails, &s->qlast, &s->qcur, &s->hinused
 		,&s->hlast, &s->hcur, &s->tcur
 	);
+
+#endif
 }
 
 /**
