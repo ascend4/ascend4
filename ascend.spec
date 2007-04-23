@@ -118,6 +118,8 @@ update-mime-database /usr/share/mime
 %files
 %defattr(-, root, root)
 %doc INSTALL.txt LICENSE.txt
+%{_datadir}/ascend/book.pdf
+
 %{_bindir}/ascend-config
 %{_datadir}/ascend/models
 %{_libdir}/libascend.so
@@ -149,6 +151,7 @@ update-mime-database /usr/share/mime
 %{_includedir}/solver
 %{_includedir}/linear
 %{_includedir}/integrator
+%{_includedir}/system
 
 %changelog
 * Mon Apr 23 2007 John Pye <john.pye@student.unsw.edu.au>
