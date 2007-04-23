@@ -1,5 +1,29 @@
 
-10 March 2007: created this changelog using file releases list from old website -- JP
+23 April 2007
+-------------
+
+Version 0.9.5.108
+
+Alpha relase including new PyGTK GUI. This release continues a sequence of
+releases in the ASCEND Wiki, but is the first version we are releasing using
+the SF.net File Releases system.
+
+ - Fedora Core 6 RPM
+ - PyGTK GUI
+ - Plotting with Matplotlib
+ - ExtPy functionality for script-based METHODS
+ - External 'black box' function support restored 
+ - Documentation converted to LyX
+ - Python-based test suite
+ - CONOPT and CMSlv support restored
+
+
+10 March 2007
+-------------
+
+(No release)
+
+ - created this changelog using file releases list from old website -- JP
 
 
 April 24 2000
@@ -9,6 +33,7 @@ Version IV 0.9.1
 
  - Expanded chemical species database
  - Dynamic simulation modeling libraries
+
 
 June 23 1998
 ------------
@@ -20,6 +45,7 @@ June 23 1998
  - Dynamic simulation modeling libraries
  - Howto-ascend examples and modeling guidelines manual, indexed.
  - GUI and syntax document manual, partially revised.
+
 
 October 1997
 ------------

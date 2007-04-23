@@ -317,7 +317,7 @@ int AscDriver(int argc, CONST char **argv)
 
   color_on(stderr,"34;1");
   ASC_FPRINTF(stderr,"\nASCEND modelling environment\n");
-  ASC_FPRINTF(stderr,"Copyright(C) 1997, 2006 Carnegie Mellon University\n");
+  ASC_FPRINTF(stderr,"Copyright(C) 1997, 2006-2007 Carnegie Mellon University\n");
   ASC_FPRINTF(stderr,"Copyright(C) 1993-1996 Kirk Andre Abbott, Ben Allan\n");
   ASC_FPRINTF(stderr,"Copyright(C) 1990, 1993, 1994 Thomas Guthrie Epperly\n");
   ASC_FPRINTF(stderr,"Built %s %s %s\n\n",__DATE__,__TIME__,build_name);
@@ -571,6 +571,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
         CONSOLE_DEBUG("DIST = %s",s1);
 
 # else
+		CONSOLE_DEBUG("ASC_ABSOLUTE_PATHS=%d",ASC_ABSOLUTE_PATHS);
 		distfp = ospath_new(ASC_DATADIR);
 		(void)progname;
 # endif
@@ -619,7 +620,6 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		OSPATH_PUTENV(ASC_ENV_LIBRARY,libraryfp);
 		librarydir = ospath_str(libraryfp);
 	}
-
 
     CONSOLE_DEBUG("CHECKING FOR AscendRC FILE");
 
