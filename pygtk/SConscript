@@ -124,13 +124,28 @@ idatest = swig_env.Program('idatest',['idatest.cpp'] + objs)
 #---------------------------------------------
 # INSTALLATION
 
+# python compile bytecode
+
+import py_compile
+def pyc_build(target, source, env):
+	py_compile.compile(str(source[0]),str(target[0]),"",True)
+	return None	
+env.Append(BUILDERS = {'PYC' : Builder(action = pyc_build,suffix='.pyc',src_suffix='.py')})
+
 if env.get('CAN_INSTALL'):
 	env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_BIN'],ascendcmd)
 
 	import glob
 	pythonfiles = glob.glob("*.py")
 
-	env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/",pythonfiles)
+	pythonpycs = []
+	for f in pythonfiles:
+		pythonpycs.append( env.PYC(f) )
+	print pythonpycs
+
+	for f in pythonfiles + pythonpycs:
+		env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/",f)
+
 	env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/","config.py")
 
 	gladefiles = glob.glob("glade/*")
