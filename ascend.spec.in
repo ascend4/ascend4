@@ -92,6 +92,8 @@ install -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.de
 install -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/ascend-app.png
 install -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend.png
 install -m 644 -D ascend.xml %{buildroot}/%{_datadir}/mime/packages/ascend.xml
+popd
+pushd tools/gedit
 install -m 644 -D ascend.lang %{buildroot}/%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
 popd
 
@@ -148,6 +150,9 @@ update-mime-database /usr/share/mime
 %{_includedir}/solver
 
 %changelog
+* Mon Apr 23 2007 John Pye <john.pye@student.unsw.edu.au>
+- File ascend.lang has moved
+
 * Fri Jul 28 2006 John Pye <john.pye@student.unsw.edu.au>
 - Added CONOPT support
 
