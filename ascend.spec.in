@@ -128,7 +128,6 @@ update-mime-database /usr/share/mime
 %{_bindir}/ascend
 %{_datadir}/ascend/*.py
 %{_datadir}/ascend/*.pyc
-%{_datadir}/ascend/*.pyo
 %{_datadir}/ascend/glade
 %{_datadir}/ascend/_ascpy.so
 %{_datadir}/applications/ascend.desktop
