@@ -147,10 +147,14 @@ update-mime-database /usr/share/mime
 %{_includedir}/general
 %{_includedir}/utilities
 %{_includedir}/solver
+%{_includedir}/linear
+%{_includedir}/integrator
 
 %changelog
 * Mon Apr 23 2007 John Pye <john.pye@student.unsw.edu.au>
-- File ascend.lang has moved
+- File ascend.lang has moved.
+- book.pdf is included in package.
+- some header files have been moved.
 
 * Fri Jul 28 2006 John Pye <john.pye@student.unsw.edu.au>
 - Added CONOPT support
