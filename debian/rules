@@ -13,7 +13,7 @@
 #export DH_VERBOSE=1
 
 CFLAGS = -Wall -g
-SCONS_OPTIONS= prefix=/usr 
+SCONS_OPTIONS = CC="ccache gcc" CXX="ccache g++" INSTALL_PREFIX=/usr -j2 
 SCONS= scons $(SCONS_OPTIONS)
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
@@ -30,38 +30,36 @@ endif
 version=0.95.108
 major=0
 
-# option 2, assuming the library is created as src/.libs/libfoo.so.2.0.5 or so
-#version=`ls src/.libs/lib*.so.* | \
-# awk '{if (match($$0,/[0-9]+\.[0-9]+\.[0-9]+$$/)) print substr($$0,RSTART)}'`
-#major=`ls src/.libs/lib*.so.* | \
-# awk '{if (match($$0,/\.so\.[0-9]+$$/)) print substr($$0,RSTART+4)}'`
-
 build: build-stamp
 build-stamp:
 	dh_testdir
-	cd $(CURDIR); $(SCONS) 
+	cd $(CURDIR) && $(SCONS) libascend tcltk pygtk models
+	cd $(CURDIR) && $(SCONS) doc/book.pdf
 	touch build-stamp
 
 clean:
 	dh_testdir
-	dh_testroot
 	rm -f build-stamp
 	-cd $(CURDIR) && $(SCONS) -c
-	find $(CURDIR) -name .scon* | xargs rm -rf
-	find $(CURDIR) -type f -name *.pyc | xargs rm -rf
-	find $(CURDIR) -type f -name *.o | xargs rm -rf
-	find $(CURDIR) -type f -name *.os | xargs rm -rf
-	find $(CURDIR) -type f -name *.a | xargs rm -rf
+	find $(CURDIR) -name ".scon*" | xargs rm -rf
+	find $(CURDIR) -type f -name "*.pyc" | xargs rm -rf
+	find $(CURDIR) -type f -name "*.pyo" | xargs rm -rf
+	find $(CURDIR) -type f -name "*.o" | xargs rm -rf
+	find $(CURDIR) -type f -name "*.os" | xargs rm -rf
+	find $(CURDIR) -type f -name "*.a" | xargs rm -rf
+	-rm $(CURDIR)/doc/*.tex
+	-rm -rf $(CURDIR)/doc/html
+#	dh_testroot
 	dh_clean 
 
 install: build
 	dh_testdir
-	dh_testroot
+#	dh_testroot
 	dh_clean -k 
 	dh_installdirs
 	mkdir -p $(CURDIR)/debian/tmp/usr
-	cd $(CURDIR) && scons INSTALL_PREFIX=$(CURDIR)/debian/tmp/usr install
-	dh_install --sourcedir=debian/tmp
+	cd $(CURDIR) && $(SCONS) INSTALL_ROOT=$(CURDIR)/debian/tmp install
+	dh_install --autodest
 
 # Build architecture-independent files here.
 binary-indep:
@@ -83,7 +81,7 @@ binary-arch: build install
 	dh_fixperms
 	dh_makeshlibs
 	dh_installdeb
-	dh_shlibdeps -L libascend0 -l debian/libascend0/usr/lib
+	dh_shlibdeps -L ascend -l debian/ascend/usr/lib
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

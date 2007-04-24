@@ -141,7 +141,6 @@ if env.get('CAN_INSTALL'):
 	pythonpycs = []
 	for f in pythonfiles:
 		pythonpycs.append( env.PYC(f) )
-	print pythonpycs
 
 	for f in pythonfiles + pythonpycs:
 		env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/",f)

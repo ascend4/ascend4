@@ -730,6 +730,7 @@ print "CXX =",env['CXX']
 print "FORTRAN=",env.get('FORTRAN')
 
 print "ABSOLUTE PATHS =",env['ABSOLUTE_PATHS']
+print "INSTALL_PREFIX =",env['INSTALL_PREFIX']
 #------------------------------------------------------
 # SPECIAL CONFIGURATION TESTS
 
