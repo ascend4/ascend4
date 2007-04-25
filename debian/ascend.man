@@ -1,4 +1,4 @@
-.TH ASTYLE 1 "April 21, 2007" ascend "User's Manual"
+.TH ASCEND 1 "April 21, 2007" ascend "User's Manual"
 .SH NAME
 ascend \- A modelling environment for solving equations
 

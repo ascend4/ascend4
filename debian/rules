@@ -27,7 +27,7 @@ ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
 endif
 
 # shared library versions, option 1
-version=0.95.108
+version=0.95.109
 major=0
 
 build: build-stamp
@@ -35,6 +35,7 @@ build-stamp:
 	dh_testdir
 	cd $(CURDIR) && $(SCONS) libascend tcltk pygtk models
 	cd $(CURDIR) && $(SCONS) doc/book.pdf
+	dh_strip --dbg=ascend-dbg
 	touch build-stamp
 
 clean:
