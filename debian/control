@@ -2,10 +2,10 @@ Source: ascend
 Section: contrib/science
 Priority: extra
 Maintainer: John Pye <john@curioussymbols.com>
-Build-Depends: gcc, flex, bison, scons, swig, python-dev, libumfpack4-dev, libsundials-serial-dev, gfortran, scrollkeeper, refblas3-dev, lyx, ccache, libtktable-dev
+Build-Depends: gcc, flex, bison, scons, swig, python-dev, libufsparse-dev, libsundials-serial-dev, gfortran, scrollkeeper, refblas3-dev, lyx, ccache, libtktable-dev
 Standards-Version: 3.6.1
 
 Package: ascend
 Architecture: any
-Depends: libumfpack4, libsundials-serial0, refblas3, python-gtk2, python-matplotlib, python-numpy, tcl8.4, tk8.4, libtktable
+Depends: libufsparse, libsundials-serial0, refblas3, python-gtk2, python-matplotlib, python-numpy, tcl8.4, tk8.4, libtktable
 Recommends: ipython, xgraph
