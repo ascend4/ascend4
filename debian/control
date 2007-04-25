@@ -3,9 +3,21 @@ Section: contrib/science
 Priority: extra
 Maintainer: John Pye <john@curioussymbols.com>
 Build-Depends: gcc, flex, bison, scons, swig, python-dev, libufsparse-dev, libsundials-serial-dev, gfortran, scrollkeeper, refblas3-dev, lyx, ccache, libtktable-dev
-Standards-Version: 3.6.1
+Standards-Version: 3.7.2
 
 Package: ascend
 Architecture: any
-Depends: libufsparse, libsundials-serial0, refblas3, python-gtk2, python-matplotlib, python-numpy, tcl8.4, tk8.4, libtktable
+Depends: python, libufsparse, libsundials-serial0, refblas3, python-gtk2, python-matplotlib, python-numpy, tcl8.4, tk8.4, libtktable
 Recommends: ipython, xgraph
+Description:
+  ASCEND is a modelling and simulation environment for
+  solving systems of nonlinear equations. It includes
+  a modelling language, in which you write the equations
+  that represent your system-to-be-modelled, as well as
+  a user interface that lets to interact with your model,
+  solve it, adjust values, and report results.
+  .
+  This package includes both the mature Tcl/Tkl GUI and
+  the newer PyGTK-based GUI, as well as documentation
+  and the model library.
+

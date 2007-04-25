@@ -1,6 +1,6 @@
 import sys, os, commands, platform, distutils.sysconfig, os.path, re
 
-version = "0.9.5.108"
+version = "0.9.5.109"
 
 #------------------------------------------------------
 # OPTIONS
@@ -2190,7 +2190,7 @@ if with_scrollkeeper:
 env['DISTTAR_FORMAT']='bz2'
 env.Append(
 	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.cc','.cache','.pyc','.cvsignore','.dblite','.log','.pl','.out']
-	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist']
+	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian']
 )
 
 tar = env.DistTar("dist/"+env['DISTTAR_NAME']
