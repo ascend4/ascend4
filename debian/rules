@@ -1,16 +1,5 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
-# Sample debian/rules that uses debhelper.
-# This file was originally written by Joey Hess and Craig Small.
-# As a special exception, when this file is copied by dh-make into a
-# dh-make output file, you may use that output file without restriction.
-# This special exception was added by Craig Small in version 0.37 of dh-make.
-#
-# File sourced from http://iua-share.upf.edu/svn/clam/trunk/CLAM/debian/rules
-# by John Pye on 21 Apr 2007
-
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
 
 CFLAGS = -Wall -g
 SCONS_OPTIONS = CC="ccache gcc" CXX="ccache g++" INSTALL_PREFIX=/usr -j2 
@@ -27,8 +16,10 @@ ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
 endif
 
 # shared library versions, option 1
-version=0.95.109
 major=0
+
+INSTALLROOT=$(CURDIR)/debian/tmp
+DATADIR=$(INSTALLROOT)/usr/share
 
 build: build-stamp
 build-stamp:
@@ -57,9 +48,18 @@ install: build
 #	dh_testroot
 	dh_clean -k 
 	dh_installdirs
-	mkdir -p $(CURDIR)/debian/tmp/usr
-	cd $(CURDIR) && $(SCONS) INSTALL_ROOT=$(CURDIR)/debian/tmp install
+	mkdir -p $(INSTALLROOT)/usr
+	cd $(CURDIR) && $(SCONS) INSTALL_ROOT=$(INSTALLROOT) install
+#
+	cd $(CURDIR)/pygtk/gnome &&
+	install -m 644 -D ascend.desktop $(INSTALLROOT)$(DATADIR)/applications/ascend.desktop &&
+	install -m 644 -D ascend.png $(INSTALLROOT)$(DATADIR)/icons/ascend-app.png && 
+	install -m 644 -D ascend.png $(INSTALLROOT)$(DATADIR)/icons/hicolor/64x64/ascend.png &&
+	install -m 644 -D ascend.xml $(CURDIR)/debian/ascend.mime
+#
 	dh_install --autodest
+	dh_desktop
+	dh_installmime
 	dh_installman debian/ascend.man 
 	dh_installman debian/ascend4.man 
 	dh_installman debian/ascend-config.man 
