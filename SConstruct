@@ -633,8 +633,9 @@ if platform.system()=="Windows":
 else:
 	if os.environ.get('TARGET')=='mingw':
 		envenv = os.environ
-		tools=['crossmingw','lex','yacc','disttar','nsis','doxygen']
-		envadditional['CPPPATH']=['/usr/local/lib/gcc/i386-mingw32/3.4.5/include','/usr/include']
+		tools=['crossmingw','nsis']
+		envadditional['CPPPATH']=['/usr/lib/gcc/i586-mingw32msvc/3.4.5/include','/usr/include']
+		envadditional['LIBS']=['gcc']
 	else:
 		envenv = os.environ
 		tools=['default','lex','yacc','fortran','swig','disttar','nsis']
@@ -648,7 +649,9 @@ env = Environment(
 	, **envadditional
 )
 
-print "PATH =",os.environ['PATH']
+#print "PATH =",os.environ['PATH']
+#print "PROGSUFFIX =",env['PROGSUFFIX']
+#print "CPPPATH =",env['CPPPATH']
 
 opts.Update(env)
 opts.Save('options.cache',env)
@@ -1074,6 +1077,7 @@ int main(void){
 	acosh(x); asinh(x); atanh(x); cbrt(x); expm1(x); erf(x); erfc(x); isnan(x);
 	j0(x); j1(x); jn(i,x); ilogb(x); logb(x); log1p(x); rint(x);
 	y0(x); y1(x); yn(i,x);
+/* this part causes problems with crossmingw... */
 #ifdef _THREAD_SAFE
 	gamma_r(x,&i);
 	lgamma_r(x,&i);

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import sys
 def print_loading_status(status,msg=None):
 	sys.stderr.write("\r                                                 \r")
