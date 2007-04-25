@@ -1,6 +1,12 @@
+ascend (0.9.5.109-1) unstable; urgency=low
+
+  * Working towards addition to Ubuntu Universe...
+
+ -- John Pye <john@curioussymbols.com>  Wed, 25 Apr 2007 14:34:03 +1000
+
 ascend (0.9.5.108-1) unstable; urgency=low
 
-  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+  * Initial release, package added to sourceforge.net.
 
  -- John Pye <john@curioussymbols.com>  Sat, 21 Apr 2007 17:02:03 +1000
 

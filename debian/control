@@ -10,22 +10,22 @@ Architecture: any
 Depends: python, libufsparse, libsundials-serial0, refblas3, python-gtk2, python-matplotlib, python-numpy, tcl8.4, tk8.4, libtktable
 Recommends: ipython, xgraph
 Description: A solver for systems of equations and ODEs/DAEs.
-ASCEND is a modelling and simulation environment for
-solving systems of nonlinear equations. It includes
-a modelling language, in which you write the equations
-that represent your system-to-be-modelled, as well as
-a user interface that lets to interact with your model,
-solve it, adjust values, and report results. There is also
-a model library with many example problems, and a database of
-thermodynamic properties for various materials.
-.
-ASCEND was developed at Carnegie Mellon University starting
-in the 1980s and continues as an active open source project.
-.
-This package includes both the mature Tcl/Tkl GUI and
-the newer PyGTK-based GUI, as well as documentation
-and the model library.
-.
-For more information, see our web page:
-http://ascend.cheme.cmu.edu/
+  ASCEND is a modelling and simulation environment for
+  solving systems of nonlinear equations. It includes
+  a modelling language, in which you write the equations
+  that represent your system-to-be-modelled, as well as
+  a user interface that lets to interact with your model,
+  solve it, adjust values, and report results. There is also
+  a model library with many example problems, and a database of
+  thermodynamic properties for various materials.
+  .
+  ASCEND was developed at Carnegie Mellon University starting
+  in the 1980s and continues as an active open source project.
+  .
+  This package includes both the mature Tcl/Tkl GUI and
+  the newer PyGTK-based GUI, as well as documentation
+  and the model library.
+  .
+  For more information, see our web page:
+  http://ascend.cheme.cmu.edu/
 
