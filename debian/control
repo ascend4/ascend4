@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: ascend
 Architecture: any
-Depends: python, libufsparse, libsundials-serial0, refblas3, python-gtk2, python-matplotlib, python-numpy, tcl8.4, tk8.4, libtktable
+Depends: ${shlibs:Depends}, python, libufsparse, libsundials-serial0, refblas3, python-gtk2, python-matplotlib, python-numpy, tcl8.4, tk8.4, libtktable
 Recommends: ipython, xgraph
 Description: A solver for systems of equations and ODEs/DAEs.
   ASCEND is a modelling and simulation environment for
