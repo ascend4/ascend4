@@ -4,9 +4,27 @@ ascend \- A modelling environment for solving equations
 
 .SH SYNOPSIS
 .B ascend
-[\fIOPTIONS\fR] \fIfilename.a4c\fR
+
+Usage: ascend [[-m typename] file
+
+Options:
+  --version             show program's version number and exit
+  -h, --help            show this help message and exit
+  -m MODEL, --model=MODEL
+                        specify the model to instantiate upon loading modules
+  --pygtk-assets=ASSETS_DIR
+                        override the configuration value for the location of
+                        assets required by PyGTK for the ASCEND GUI, optional
+  --library=LIBRARY_PATH
+                        override the configuration value for the library path
+  --no-auto-sim         disable auto-instantiation of MODEL named as the file
+                        stem
 
 .SH DESCRIPTION
+
+\fbascend\fR will run the ne PyGTK GUI for ASCEND. It gives console output
+as well as using a GTK window.
+
 \fBASCEND\fR (or \fBascend\fR) is modelling program that allows you
 to solve systems of equations. You write model files (*.a4c) that describe
 your system of equations, then you load them into the ASCEND GUI and examine

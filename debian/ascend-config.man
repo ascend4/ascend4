@@ -1,0 +1,28 @@
+.TH ASCEND 1 "April 21, 2007" ascend "User's Manual"
+.SH NAME
+ascend-config \- Output configuration data for ASCEND
+
+.SH SYNOPSIS
+.B ascend-config [--help,...]
+
+Options:
+  --version   show program's version number and exit
+  -h, --help  show this help message and exit
+  --libs      show linker flags (for ASCEND libraries)
+  --cppflags  show C pre-processor flags (for ASCEND h
+  --data      show location of ASCEND data files
+  --models    show location of ASCEND model library
+
+.SH DESCRIPTION
+
+\fBascend-config\fR can be used when building packages that depend
+on ASCEND, ensuring that you are using the correct C preprocessor or
+library linking flags for the particular system you're on.
+
+\fBASCEND\fR (or \fBascend\fR) is modelling program that allows you
+to solve systems of equations. You write model files (*.a4c) that describe
+your system of equations, then you load them into the ASCEND GUI and examine
+and solve your equations. For more information see the ASCEND wiki at
+
+http://ascendwiki.cheme.cmu.edu/
+
