@@ -35,7 +35,6 @@ build-stamp:
 	dh_testdir
 	cd $(CURDIR) && $(SCONS) libascend tcltk pygtk models
 	cd $(CURDIR) && $(SCONS) doc/book.pdf
-	dh_strip --dbg=ascend-dbg
 	touch build-stamp
 
 clean:
@@ -61,6 +60,9 @@ install: build
 	mkdir -p $(CURDIR)/debian/tmp/usr
 	cd $(CURDIR) && $(SCONS) INSTALL_ROOT=$(CURDIR)/debian/tmp install
 	dh_install --autodest
+	dh_installman debian/ascend.man 
+	dh_installman debian/ascend4.man 
+	dh_installman debian/ascend-config.man 
 
 # Build architecture-independent files here.
 binary-indep:
