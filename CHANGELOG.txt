@@ -1,4 +1,12 @@
 
+25 April 2007
+-------------
+
+Version 0.9.5.109
+
+Some very minor changes to the Debian packaging. No changes to main code.
+
+
 23 April 2007
 -------------
 

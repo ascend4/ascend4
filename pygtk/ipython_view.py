@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 Backend to the console plugin.
 
