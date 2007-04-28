@@ -30,11 +30,16 @@
 }
 
 %typemap(in) FILE * {
+%#ifdef __MINGW32__
+	PyErr_SetString(PyExc_TypeError,"File passing from python to ASCEND not yet implemented on Windows");
+	return NULL;
+%#else
     if (!PyFile_Check($input)) {
         PyErr_SetString(PyExc_TypeError, "Need a file!");
         return NULL;
     }
     $1 = PyFile_AsFile($input);
+%#endif
 }
 
 %template(VariableVector) std::vector<Variable>;
@@ -49,7 +54,7 @@
 %extend Simulation{
 	Instanc __getitem__(const long &index){
 		return self->getModel().getChild(index);
-	} 		
+	}
 	Instanc __getattr__(const char *name){
 		return self->getModel().getChild(SymChar(name));
 	}
@@ -122,7 +127,7 @@ public:
 				if p.getName()==codename:
 					p.setValue(value)
 					return
-			raise KeyError						
+			raise KeyError
 	}
 }
 
