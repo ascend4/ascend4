@@ -23,8 +23,8 @@ OutFile ascend-setup.exe
 !endif
 
 
-SetCompressor /FINAL zlib
-;SetCompressor /SOLID lzma
+;SetCompressor /FINAL zlib
+SetCompressor /SOLID lzma
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\ASCEND
@@ -106,7 +106,7 @@ Section "ASCEND (required)"
 
 	SetOutPath $INSTDIR
 	File "Makefile.bt"
-	File "ascend.syn"
+	File "..\tools\textpad\ascend.syn"
 
 	${If} ${FileExists} "$APPDATA\.ascend.ini"
 		MessageBox MB_OK "The '$APPDATA\.ascend.ini' is NOT being updated. Manually delete this file if ASCEND doesn't behave as expected."
