@@ -9,6 +9,7 @@ class ASHighlight{
 		$this->dir=$dir;
 		$this->encoding="ascii";	
 		$this->line_numbers=false;
+		$this->tabwidth=0;//zero means that we haven't specified it
 		$this->default_lang=$default_lang;
 	}
 
@@ -50,6 +51,8 @@ class ASHighlight{
 			}
 		}
 
+		// only if the tabwidth value is non-zero will this
+		// flag be shown
 		if($this->tabwidth)$cmd.=" --replace-tabs=".$this->tabwidth;
 
 		$css = $this->dir . "/" . "highlight.css";
