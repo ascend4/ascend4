@@ -1,3 +1,9 @@
+ascend (0.9.5.109-3) unstable; urgency=low
+
+  * Removed some binary files that had crept into the tarball
+
+ -- John Pye <john@curioussymbols.com>  Sun, 06 May 2007 23:00:00 +1000
+
 ascend (0.9.5.109-2) unstable; urgency=low
 
   * Added debian/compat
