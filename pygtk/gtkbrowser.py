@@ -18,12 +18,28 @@ try:
 
 	print_loading_status("Loading python standard libraries")
 
+	import pygtk 
+	pygtk.require('2.0') 
+	import gtk
+
+	_w = gtk.Window(gtk.WINDOW_TOPLEVEL)
+	_w.set_decorated(False)
+	_w.set_position(gtk.WIN_POS_CENTER)
+	_i = gtk.Image()
+	_i.set_pixel_size(3)
+	_i.set_from_file(sys.path[0]+'/glade/ascend-loading.svg')
+	_w.add(_i)
+	_i.show()
+	_w.show()
+
+	while gtk.events_pending():
+		gtk.main_iteration(False)
+
 	import re
 	import urlparse
 	import optparse
 	import platform
 	import sys
-	import os.path
 
 	if platform.system() != "Windows":
 		try:
@@ -38,14 +54,14 @@ try:
 		# ascend library are made available to libraries dlopened within ASCEND:
 		sys.setdlopenflags(_dlflags)
 
+
+
 	print_loading_status("Loading LIBASCEND/ascpy")
 	import ascpy
+	import os.path
 
 	print_loading_status("Loading PyGTK, glade, pango")
 
-	import pygtk 
-	pygtk.require('2.0') 
-	import gtk
 	import gtk.glade
 	import pango
 
@@ -93,6 +109,8 @@ try:
 	from infodialog import *       # general-purpose textual information dialog
 	from versioncheck import *     # version check (contacts ascend.cruncher2.dyndns.org)
 	import config
+
+	_w.destroy()
 
 except RuntimeError, e:
 	print "ASCEND had problems starting up. Please report the following"
