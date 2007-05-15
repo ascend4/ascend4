@@ -1153,6 +1153,17 @@ class Browser:
 		_help = Help(HELP_ROOT)
 		_help.run()
 
+	def on_report_a_bug_click(self,*args):
+		import urllib
+		import platform
+		_plat = str(platform.system())
+		_version = config.VERSION
+		_help = Help(
+			url="http://ascendbugs.cheme.cmu.edu/report/?platform=%s&build=%s"
+				% (_plat,_version)
+		)
+		_help.run()
+
 	def on_help_check_for_updates_click(self,*args):
 		v = VersionCheck()
 		title = "Check for updates"
