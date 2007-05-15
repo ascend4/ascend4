@@ -4,21 +4,26 @@ import platform
 import config
 
 class Help:
-	def __init__(self,helproot=None):
+	def __init__(self,helproot=None,url=None):
 		print "HELPROOT =",config.HELPROOT
 		self.goonline=False
-		self.webhelproot = config.WEBHELPROOT
-		
-		if helproot==None:
-			self.helproot = os.path.expanduser(config.HELPROOT)
-		else:
-			self.helproot = helproot
-		
-		if os.path.exists(self.helproot):
-			print "HELP PATH FOUND"
-		else:
-			print "LOCAL HELP FILES NOT FOUND, WILL USE ONLINE COPY"
+
+		if url is not None:
+			self.webhelproot = url
 			self.goonline = True
+		else:
+			self.webhelproot = config.WEBHELPROOT
+			
+			if helproot==None:
+				self.helproot = os.path.expanduser(config.HELPROOT)
+			else:
+				self.helproot = helproot
+			
+			if os.path.exists(self.helproot):
+				print "HELP PATH FOUND"
+			else:
+				print "LOCAL HELP FILES NOT FOUND, WILL USE ONLINE COPY"
+				self.goonline = True
 
 	def run(self,topic=None):
 			
@@ -42,7 +47,7 @@ class Help:
 			_p = os.path.join(self.helproot,"book.html")
 			_u = "file://"+_p
 		
-		print "OPENING WEB PAGE:",_u
+		#print "OPENING WEB PAGE:",_u
 		_b.open(_u);
 
 if __name__ == "__main__":
