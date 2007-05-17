@@ -1159,7 +1159,7 @@ class Browser:
 		_plat = str(platform.system())
 		_version = config.VERSION
 		_help = Help(
-			url="http://ascendbugs.cheme.cmu.edu/report/?platform=%s&build=%s"
+			url="http://ascendbugs.cheme.cmu.edu/report/?project_id=ascend&platform=%s&build=%s"
 				% (_plat,_version)
 		)
 		_help.run()

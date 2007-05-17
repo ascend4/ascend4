@@ -475,7 +475,7 @@ def reduce(names):
     for k, g in groupby(data, lambda x: len(x)):
         if k == 1:
             indexed = {}
-            seq = set(get(indexed, item) for item in g)
+            seq = set([get(indexed, item) for item in g])
             res['[global]'] = [ i+fold(indexed.get(i, [])) for i in sorted(seq) ]
         else:
             for key, g1 in groupby(g, lambda x: '.'.join(x[:-1])):
