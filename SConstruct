@@ -1185,6 +1185,7 @@ ida_test_text = """
 # include <ida.h>
 # include <ida/ida_spgmr.h>
 #else
+# error "NEW VERSION"
 # include <sundials/sundials_config.h>
 # include <nvector/nvector_serial.h>
 # include <ida/ida.h>
@@ -1572,6 +1573,8 @@ def sconsversioncheck():
 	v = SCons.__version__.split(".")
 	if v[0] != '0':
 		return 0
+	if int(v[1]) >= 97:
+		return 1
 	if v[1] != '96':
 		return 0
 	micro = int(v[2])
@@ -2157,9 +2160,9 @@ if env.get('CAN_INSTALL'):
 	# TODO: add install options
 	env.Alias('install',install_dirs)
 
-	env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_LIB'],libascend)
+	env.InstallShared(env.subst("$INSTALL_ROOT$INSTALL_LIB"),libascend)
 
-	env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_BIN'],ascendconfig)
+	env.InstallProgram(env.subst("$INSTALL_ROOT$INSTALL_BIN"),ascendconfig)
 
 #------------------------------------------------------
 # WINDOWS INSTALLER

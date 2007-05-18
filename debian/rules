@@ -18,7 +18,7 @@ endif
 # shared library versions, option 1
 major=0
 
-INSTALLROOT=$(CURDIR)/debian/tmp
+INSTALLROOT=$(CURDIR)/debian/tmp/
 DATADIR=$(INSTALLROOT)/usr/share
 
 build: build-stamp
