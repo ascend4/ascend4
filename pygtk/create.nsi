@@ -280,6 +280,7 @@ unpython:
 	Delete $INSTDIR\_ascpy.dll
 	Delete $INSTDIR\ascend.bat
 	Delete $INSTDIR\*.py
+	Delete $INSTDIR\*.pyc
 	Delete $INSTDIR\glade\*.glade
 	Delete $INSTDIR\glade\*.png
 	Delete $INSTDIR\glade\ascend.ico
@@ -294,6 +295,7 @@ unnopython:
 	${If} $0 != 0
 		DetailPrint "--- REMOVING TCL/TK COMPONENTS ---"
 		Delete $INSTDIR\ascendtcl.dll
+		Delete $INSTDIR\ascend4.exe
 		RMDir /r $INSTDIR\tcltk
 	${EndIf}
 
@@ -318,13 +320,17 @@ unnostart:
 
 	; Remove files and uninstaller
 
+	Delete $INSTDIR\ascend-config
+	Delete $INSTDIR\ascend-config.bat
 	Delete $INSTDIR\ascend.dll
 	Delete $INSTDIR\Makefile.bt
 	Delete $INSTDIR\ascend.syn
 	RMDir /r $INSTDIR\models
 
 	; Remove directories used
-	RMDir "$INSTDIR"
+
+	Delete $INSTDIR\uninstall.exe
+	RMDir $INSTDIR
 
 SectionEnd
 
