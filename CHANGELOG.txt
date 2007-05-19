@@ -1,10 +1,29 @@
 
-25 April 2007
+?????????????
+-------------
+
+Version 0.9.5.110
+
+Added loading splash screen
+Added icon in Windows Start menu
+Console now minimised by default on Windows
+Added bug tracker link to help menu
+Added missing .svg files in Windows installer
+
+28 April 2007
 -------------
 
 Version 0.9.5.109
 
-Some very minor changes to the Debian packaging. No changes to main code.
+Added Debian packaging.
+
+Suppressed passing of FILE* objects between Python and C on 
+the Windows platform, owing to a bug/limitation in GCC on 
+MinGW.
+
+First upload of Windows installer to SF.net (there have been 
+earlier versions on the Wiki though).
+
 
 
 23 April 2007
@@ -12,9 +31,9 @@ Some very minor changes to the Debian packaging. No changes to main code.
 
 Version 0.9.5.108
 
-Alpha relase including new PyGTK GUI. This release continues a sequence of
-releases in the ASCEND Wiki, but is the first version we are releasing using
-the SF.net File Releases system.
+Alpha relase including new PyGTK GUI. This release continues 
+a sequence of releases in the ASCEND Wiki, but is the first 
+version we are releasing using the SF.net File Releases system.
 
  - Fedora Core 6 RPM
  - PyGTK GUI
@@ -31,7 +50,8 @@ the SF.net File Releases system.
 
 (No release)
 
- - created this changelog using file releases list from old website -- JP
+ - created this changelog using file releases list from old 
+   website -- JP
 
 
 April 24 2000
