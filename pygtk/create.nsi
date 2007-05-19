@@ -181,6 +181,8 @@ Section "PyGTK GUI"
 				SetOutPath $INSTDIR\glade
 				File "glade\*.glade"
 				File "glade\*.png"
+				File "glade\*.svg"
+				File "glade\ascend.ico"
 
 				; Create 'ascend.bat' launcher for PyGTK interface
 				ClearErrors
@@ -258,7 +260,7 @@ Section "Start Menu Shortcuts"
   ; Link to PyGTK GUI
   StrCmp $PYINSTALLED "" smdone smpython
 smpython:
-  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$INSTDIR\ascend.bat" "" "$INSTDIR\ascend.bat" 0
+  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$INSTDIR\ascend.bat" "" "$INSTDIR\glade\ascend.ico" 0 "SW_SHOWMINIMIZED"
 smdone:
   
 SectionEnd
@@ -280,6 +282,8 @@ unpython:
 	Delete $INSTDIR\*.py
 	Delete $INSTDIR\glade\*.glade
 	Delete $INSTDIR\glade\*.png
+	Delete $INSTDIR\glade\ascend.ico
+	Delete $INSTDIR\glade\*.svg
 	RmDir $INSTDIR\glade
 
 unnopython:

@@ -1,6 +1,6 @@
 import sys, os, commands, platform, distutils.sysconfig, os.path, re
 
-version = "0.9.5.109"
+version = "0.9.5.110"
 
 #------------------------------------------------------
 # OPTIONS
@@ -1185,7 +1185,6 @@ ida_test_text = """
 # include <ida.h>
 # include <ida/ida_spgmr.h>
 #else
-# error "NEW VERSION"
 # include <sundials/sundials_config.h>
 # include <nvector/nvector_serial.h>
 # include <ida/ida.h>
@@ -2196,7 +2195,7 @@ if with_scrollkeeper:
 
 env['DISTTAR_FORMAT']='bz2'
 env.Append(
-	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.cc','.cache','.pyc','.cvsignore','.dblite','.log','.pl','.out','.tex','.aux','.idx','.toc','.lof','.lot','.mm','.warnings','.tm2']
+	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.lib','.cc','.cache','.pyc','.cvsignore','.dblite','.log','.pl','.out','.exe','.aux','.idx','.toc','.lof','.lot','.mm','.warnings','.tm2']
 	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian']
 )
 
