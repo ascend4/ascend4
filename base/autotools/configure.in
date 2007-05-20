@@ -1555,7 +1555,7 @@ ASC_DISTDIR_REL_BIN=".."
 # Next we determine whether models and TK get installed in
 # prefix or datadir. If datadir not explicitly given, we
 # use prefix.
-if test "x$datadir" = 'x${prefix}/share'; then
+if test "x$datadir" = 'x${prefix}/share' -o "x$datarootdir" = 'x${prefix}/share'; then
   echo "--------PREFIX"
   INSTALL_ASCDATA="$prefix"
 else
@@ -1637,6 +1637,8 @@ AC_SUBST(models_topbuilddir)
 AC_SUBST(help_dir_root)
 AC_SUBST(help_topbuilddir)
 
+#      ../../jam/Jamrules
+#      ../../tcltk/generic/Jamrules_tcltk
 AC_OUTPUT(
        ConfigAscend:../../base/generic/ConfigAscend.in
        Makefile:../../base/generic/Makefile.in
@@ -1649,11 +1651,12 @@ AC_OUTPUT(
        interface/Makefile:../../tcltk/generic/interface/Makefile.in
        lib/Makefile:../../base/generic/lib/Makefile.in
        packages/Makefile:../../base/generic/packages/Makefile.in
+       linear/Makefile:../../base/generic/linear/Makefile.in
+       system/Makefile:../../base/generic/system/Makefile.in
        solver/Makefile:../../base/generic/solver/Makefile.in
+       integrator/Makefile:../../base/generic/integrator/Makefile.in
        utilities/Makefile:../../base/generic/utilities/Makefile.in
        ../../base/generic/utilities/config.h
-       ../../jam/Jamrules
-       ../../tcltk/generic/Jamrules_tcltk
        $tkdir_makefiles
        $models_makefiles
        $help_makefiles
