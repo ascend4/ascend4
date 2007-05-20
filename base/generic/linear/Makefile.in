@@ -1,23 +1,12 @@
-#  ASCEND external packages makefile
-#  Kirk Abbott, Ben Allan
-#  August 26, 1994
-
-# This file builds the objects from external sources. The
-# ascend interfaces to these objects are currently built
-# in the compiler, though they should probably be built here
-# as well. Since that is the case, this file assumes libpackages.a
-# exists in ../archive and adds the external objects to it.
-# This means this directory should be remade anytime libpackages.a
-# is remade via the compiler.
-#
-# Eventually this should also be the home to the BLAS files that
-# are common to minos, lsode, etc.
+#  ASCEND Solver Makefile
+#  Ben Allan
+#  January 4, 1994
 
 
 SHELL = /bin/sh
 builddir = ..
-srcdir = @fullpathsrcdir@/../generic/packages
-VPATH := @fullpathsrcdir@/../generic/packages
+srcdir = @fullpathsrcdir@/../generic/linear
+VPATH := @fullpathsrcdir@/../generic/linear
 
 
 
@@ -27,7 +16,7 @@ VPATH := @fullpathsrcdir@/../generic/packages
 
 EXECUTABLE = 
 
-LIBRARY  = libascpackages.a
+LIBRARY = libasclinear.a
 
 
 default: $(LIBRARY)
@@ -36,12 +25,12 @@ default: $(LIBRARY)
 
 #  Defines and Includes that are specific to this directory
 
-DIR_SPECIFIC_DEFS = $(HAVE_PACKAGES)
+DIR_SPECIFIC_DEFS = $(SOLVER_DEFS)
 DIR_SPECIFIC_INCS = 
 
 
 
-#  The next variables list the source files (EXEC_SRCS) to compile
+#  The next variables list the source files (EXEC_SCRS) to compile
 #  into the object files (EXEC_OBJS) that are linked with the
 #  library files (EXEC_LIBS) to make EXECUTABLE
 
@@ -51,23 +40,33 @@ EXEC_OBJS =
 
 EXEC_LIBS = 
 
-
-
 #  The next variables list the source files (LIB_SCRS) to compile
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
 LIB_OBJS = \
-sensitivity.o ascFreeAllVars.o bisect.o kvalues.o defaultall.o
+densemtx.o  mtx_basic.o    mtx_perms.o    mtx_use_only.o  ranki2.o \
+linsolqr.o  mtx_csparse.o  mtx_query.o    mtx_vector.o    rankiba2.o \
+linutils.o  mtx_linal.o    mtx_reorder.o  plainqr.o       ranki.o \
 
 
-LIB_SRCS = $(LIB_OBJS:%.o=%.c)
 
-
+LIB_SRCS = $(LIB_OBJS:%.c=%.o)
 
 #  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)
 #  
 include $(builddir)/ConfigAscend
 include $(builddir)/Makefile.Rules
+
+
+
+#  debugging for mtx (typically defined in mtx.c)
+#
+#MTX_DEBUG = 
+#
+#  debugging for minos (typically defined in slv1.c)
+#
+#MINOS_DEBUG = 
+
 
 
 # DO NOT DELETE THIS LINE -- g++dep uses it.

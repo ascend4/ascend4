@@ -5,8 +5,8 @@
 
 SHELL = /bin/sh
 builddir = ..
-srcdir = @fullpathsrcdir@/../generic/solver
-VPATH := @fullpathsrcdir@/../generic/solver
+srcdir = @fullpathsrcdir@/../generic/system
+VPATH := @fullpathsrcdir@/../generic/system
 
 
 
@@ -16,7 +16,7 @@ VPATH := @fullpathsrcdir@/../generic/solver
 
 EXECUTABLE = 
 
-LIBRARY = libascsolver.a
+LIBRARY = libascsystem.a
 
 
 default: $(LIBRARY)
@@ -44,8 +44,11 @@ EXEC_LIBS =
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
 LIB_OBJS= \
-conopt.o     mps.o   slv3.o  slv7.o  slv9a.o  slvDOF.o \
-incidence.o  slv2.o  slv6.o  slv8.o  slv9.o   slv_interface.o
+analyze.o  calc.o         discrete.o  logrelman.o      slv.o           system.o \
+block.o    cond_config.o  graph.o     model_reorder.o  slv_common.o    var.o \
+bnd.o      conditional.o  jacobian.o  rel.o            slv_param.o \
+bndman.o   diffvars.o     logrel.o    relman.o         slv_stdcalls.o
+
 
 
 LIB_SRCS = $(LIB_OBJS:%.c=%.o)

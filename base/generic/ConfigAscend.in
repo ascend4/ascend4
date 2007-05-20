@@ -549,7 +549,7 @@ ASC_INCS = -I@fullpathsrcdir@/../generic  -I@fullpathsrcdir@/../../tcltk/generic
 
 #  library files for ascend
 #
-ASC_LIB_STEMS=if compiler solver utilities general
+ASC_LIB_STEMS=if compiler integrator system solver linear utilities general
 ASC_LIBS=$(ASC_LIB_STEMS:%=../archive/libasc%.a) $(PACK_LIBS)
 
 #  The time/place stamp for the executable.

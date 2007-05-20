@@ -10404,7 +10404,7 @@ ASC_DISTDIR_REL_BIN=".."
 # Next we determine whether models and TK get installed in
 # prefix or datadir. If datadir not explicitly given, we
 # use prefix.
-if test "x$datadir" = 'x${prefix}/share'; then
+if test "x$datadir" = 'x${prefix}/share' -o "x$datarootdir" = 'x${prefix}/share'; then
   echo "--------PREFIX"
   INSTALL_ASCDATA="$prefix"
 else
@@ -10486,7 +10486,9 @@ echo "LIBRARY----------- $DEFAULT_ASCENDLIBRARY"
 
 
 
-ac_config_files="$ac_config_files ConfigAscend:../../base/generic/ConfigAscend.in Makefile:../../base/generic/Makefile.in bin/ascend4.sh:../../base/generic/bin/ascend4.sh.in Makefile.Rules:../../base/generic/Makefile.Rules.in archive/Makefile:../../base/generic/archive/Makefile.in bin/Makefile:../../base/generic/bin/Makefile.in compiler/Makefile:../../base/generic/compiler/Makefile.in general/Makefile:../../base/generic/general/Makefile.in interface/Makefile:../../tcltk/generic/interface/Makefile.in lib/Makefile:../../base/generic/lib/Makefile.in packages/Makefile:../../base/generic/packages/Makefile.in solver/Makefile:../../base/generic/solver/Makefile.in utilities/Makefile:../../base/generic/utilities/Makefile.in ../../base/generic/utilities/config.h ../../jam/Jamrules ../../tcltk/generic/Jamrules_tcltk $tkdir_makefiles $models_makefiles $help_makefiles $blaslib_makefile $lpaklib_makefile $lsodlib_makefile"
+#      ../../jam/Jamrules
+#      ../../tcltk/generic/Jamrules_tcltk
+ac_config_files="$ac_config_files ConfigAscend:../../base/generic/ConfigAscend.in Makefile:../../base/generic/Makefile.in bin/ascend4.sh:../../base/generic/bin/ascend4.sh.in Makefile.Rules:../../base/generic/Makefile.Rules.in archive/Makefile:../../base/generic/archive/Makefile.in bin/Makefile:../../base/generic/bin/Makefile.in compiler/Makefile:../../base/generic/compiler/Makefile.in general/Makefile:../../base/generic/general/Makefile.in interface/Makefile:../../tcltk/generic/interface/Makefile.in lib/Makefile:../../base/generic/lib/Makefile.in packages/Makefile:../../base/generic/packages/Makefile.in linear/Makefile:../../base/generic/linear/Makefile.in system/Makefile:../../base/generic/system/Makefile.in solver/Makefile:../../base/generic/solver/Makefile.in integrator/Makefile:../../base/generic/integrator/Makefile.in utilities/Makefile:../../base/generic/utilities/Makefile.in ../../base/generic/utilities/config.h $tkdir_makefiles $models_makefiles $help_makefiles $blaslib_makefile $lpaklib_makefile $lsodlib_makefile"
 
 
 
@@ -10982,11 +10984,12 @@ do
     "interface/Makefile") CONFIG_FILES="$CONFIG_FILES interface/Makefile:../../tcltk/generic/interface/Makefile.in" ;;
     "lib/Makefile") CONFIG_FILES="$CONFIG_FILES lib/Makefile:../../base/generic/lib/Makefile.in" ;;
     "packages/Makefile") CONFIG_FILES="$CONFIG_FILES packages/Makefile:../../base/generic/packages/Makefile.in" ;;
+    "linear/Makefile") CONFIG_FILES="$CONFIG_FILES linear/Makefile:../../base/generic/linear/Makefile.in" ;;
+    "system/Makefile") CONFIG_FILES="$CONFIG_FILES system/Makefile:../../base/generic/system/Makefile.in" ;;
     "solver/Makefile") CONFIG_FILES="$CONFIG_FILES solver/Makefile:../../base/generic/solver/Makefile.in" ;;
+    "integrator/Makefile") CONFIG_FILES="$CONFIG_FILES integrator/Makefile:../../base/generic/integrator/Makefile.in" ;;
     "utilities/Makefile") CONFIG_FILES="$CONFIG_FILES utilities/Makefile:../../base/generic/utilities/Makefile.in" ;;
     "../../base/generic/utilities/config.h") CONFIG_FILES="$CONFIG_FILES ../../base/generic/utilities/config.h" ;;
-    "../../jam/Jamrules") CONFIG_FILES="$CONFIG_FILES ../../jam/Jamrules" ;;
-    "../../tcltk/generic/Jamrules_tcltk") CONFIG_FILES="$CONFIG_FILES ../../tcltk/generic/Jamrules_tcltk" ;;
     "$tkdir_makefiles") CONFIG_FILES="$CONFIG_FILES $tkdir_makefiles" ;;
     "$models_makefiles") CONFIG_FILES="$CONFIG_FILES $models_makefiles" ;;
     "$help_makefiles") CONFIG_FILES="$CONFIG_FILES $help_makefiles" ;;

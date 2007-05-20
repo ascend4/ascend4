@@ -16,7 +16,7 @@ IFACE_DIR=../../tcltk/generic/
 IFACE_DIR=.
 
 
-ASCEND_SUBDIRS   = utilities general compiler packages solver $(IFACE_DIR)/interface lib
+ASCEND_SUBDIRS   = utilities general compiler packages linear integrator system solver $(IFACE_DIR)/interface lib
 ASC_TK_SUBDIRS   = @tkdir_root@
 MODELS_SUBDIRS   = @models_dir_root@
 HELP_SUBDIRS     = @help_dir_root@
@@ -41,7 +41,7 @@ support_libs: \
 #AWW20041129: 	$(CONOPTLIB) \
 #AWW20041129: 	$(MINOSLIB)
 
-asclibs = compiler general utilities solver packages
+asclibs = compiler general utilities integrator system solver linear packages
 
 all_libs: $(asclibs:%=libasc%.a) libascif.a btlib
 
