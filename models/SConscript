@@ -14,6 +14,7 @@ excludedirs = ['.svn','CVS']
 excludefiles = ['Makefile.in','SConscript','update-Makefile.pl']
 
 modeldir = env.Dir(".").abspath
+#print "MODEL DIR =",modeldir
 
 cwd = os.getcwd()
 os.chdir(modeldir)
@@ -24,16 +25,21 @@ for root,dirs,files in os.walk("."):
 	for f in files:
 		if f in excludefiles:
 			continue
+
+		#print "ADDING",os.path.normpath(os.path.join(root,f))
 		modelfiles.append( os.path.normpath(os.path.join(root,f)) )
 os.chdir(cwd)
 
-modelsroot = env['INSTALL_ROOT']+env['INSTALL_MODELS']
+#print "CWD =",cwd
+
+modelsroot = '$INSTALL_ROOT$INSTALL_MODELS'
 
 installeddirs = []
 
 for f in modelfiles:
 	head,tail = os.path.split(f)
-	targetdir = os.path.join(modelsroot,head)
+	targetdir = Dir(env.subst(modelsroot)+"/"+head)
+	
 	if not targetdir in installeddirs:
 		installeddirs.append(targetdir)
 	env.InstallShared(targetdir,f)

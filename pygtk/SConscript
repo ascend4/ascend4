@@ -133,7 +133,7 @@ def pyc_build(target, source, env):
 env.Append(BUILDERS = {'PYC' : Builder(action = pyc_build,suffix='.pyc',src_suffix='.py')})
 
 if env.get('CAN_INSTALL'):
-	env.InstallProgram(env.subst("$INSTALL_ROOT$INSTALL_BIN"),ascendcmd)
+	env.InstallProgram(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),ascendcmd)
 
 	import glob
 	pythonfiles = glob.glob("*.py")
@@ -143,14 +143,14 @@ if env.get('CAN_INSTALL'):
 		pythonpycs.append( env.PYC(f) )
 
 	for f in pythonfiles + pythonpycs:
-		env.InstallShared(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/"),f)
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA")),f)
 
-	env.InstallShared(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/"),"config.py")
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA")),"config.py")
 
 	gladefiles = glob.glob("glade/*")
-	env.InstallShared(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/glade/"),gladefiles)
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/glade")),gladefiles)
 
-	env.InstallShared(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/"),swiglib)
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA")),swiglib)
 
 if platform.system()=="Windows":
 	env.Append(NSISDEFINES={'OUTFILE':"#dist/"+env['WIN_INSTALLER_NAME']})
