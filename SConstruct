@@ -725,6 +725,7 @@ if platform.system()=='Windows':
 env['CAN_INSTALL']=can_install
 env['INSTALL_MODELS']=env['INSTALL_ASCDATA']+"/models/"
 
+print "TCL=",env['TCL']
 print "TCL_CPPPATH =",env['TCL_CPPPATH']
 print "TCL_LIBPATH =",env['TCL_LIBPATH']
 print "TCL_LIB =",env['TCL_LIB']

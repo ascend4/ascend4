@@ -69,7 +69,7 @@ else:
 
 		import glob
 
-		tkdir = Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/tcltk"))
+		tkdir = "$INSTALL_ROOT$INSTALL_ASCDATA/tcltk"
 
 		import os
 		import os.path
@@ -81,9 +81,9 @@ else:
 
 		for root, dirs, files in os.walk("."):
 			#print root, "..."
-			dest = os.path.normpath(os.path.join(env.subst(tkdir),root))
+			dest = Dir(env.subst(tkdir)+"/"+root)
 			for name in files:
-				env.InstallShared(env.subst(dest),"#tcltk/TK/"+os.path.join(root, name))
+				env.InstallShared(dest,"#tcltk/TK/"+os.path.join(root, name))
 				#print dest,"<---",os.path.join(root, name)
 
 			if 'CVS' in dirs:
