@@ -64,12 +64,12 @@ else:
 	)
 
 	if tcl_env.get('CAN_INSTALL'):
-		env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_BIN'],ascendtclprog)
-		env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_LIB'],ascendtcllib)
+		env.InstallProgram(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),ascendtclprog)
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_LIB")),ascendtcllib)
 
 		import glob
 
-		tkdir = env['INSTALL_ROOT']+env['INSTALL_ASCDATA'] + "/tcltk/"
+		tkdir = Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/tcltk"))
 
 		import os
 		import os.path

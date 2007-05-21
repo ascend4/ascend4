@@ -2153,15 +2153,15 @@ ascendconfig = env.SubstInFile('ascend-config.in')
 if env.get('CAN_INSTALL'):
 
 	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE']
-	install_dirs = [env.Entry(env['INSTALL_ROOT']+env[d]) for d in dirs]
+	install_dirs = [Dir(env.subst("$INSTALL_ROOT$"+d)) for d in dirs]
 	install_dirs += modeldirs
 
 	# TODO: add install options
 	env.Alias('install',install_dirs)
 
-	env.InstallShared(env.subst("$INSTALL_ROOT$INSTALL_LIB"),libascend)
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_LIB")),libascend)
 
-	env.InstallProgram(env.subst("$INSTALL_ROOT$INSTALL_BIN"),ascendconfig)
+	env.InstallProgram(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),ascendconfig)
 
 #------------------------------------------------------
 # WINDOWS INSTALLER

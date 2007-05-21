@@ -77,7 +77,7 @@ for s in [csrcs]:
 # INSTALL
 
 if libascend_env.get('CAN_INSTALL'):
-	installdir = libascend_env['INSTALL_ROOT']+libascend_env['INSTALL_INCLUDE']+'/compiler'
+	installdir = Dir(libascend_env.subst("$INSTALL_ROOT$INSTALL_INCLUDE/compiler"))
 
 	headers = glob.glob("*.h")
 	libascend_env.InstallHeader(installdir,headers)
