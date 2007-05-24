@@ -48,6 +48,10 @@ BuildRequires: tktable < 2.10, tktable >= 2.8
 # ... GNOME
 BuildRequires: desktop-file-utils
 
+# ... documentation
+#BuildRequires: lyx
+#BuildRequires: tetex lmodern
+
 #-----------runtime dependencies-----------
 
 # ...general

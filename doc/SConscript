@@ -32,7 +32,7 @@ env.Depends(html,epsfigs)
 #------------------------
 # install docs
 
-if env.get('CAN_INSTALL'):
+if env.get('CAN_INSTALL') and env.get('WITH_LOCAL_HELP'):
 	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA")),[pdf])
 
 
