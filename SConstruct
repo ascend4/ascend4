@@ -141,8 +141,20 @@ opts.Add(ListOption(
 # Where will the local copy of the help files be kept?
 opts.Add(BoolOption(
 	'WITH_DOC'
-	, "Should help files be built and installed? If not, ASCEND will access online help files"
+	, "Should we try to build and install help files? If not, ASCEND will access online help files"
 	, True
+))
+
+opts.Add(BoolOption(
+	'WITH_DOC_BUILD'
+	, "If true, we'll attempt to build docs. Set false, we'll assume we already have then (eg from the tarball)"
+	, "$WITH_DOC"
+))
+
+opts.Add(BoolOption(
+	'WITH_DOC_INSTALL'
+	, "If true, SCons will install the documentation file(s). If false, assume rpm or dpkg is going to do it."
+	, "$WITH_DOC"
 ))
 
 opts.Add(
@@ -702,6 +714,11 @@ without_signals_reason = "disabled by options/config.py"
 
 with_doc = env.get('WITH_DOC')
 without_doc_reason = "disabled by options/config.py"
+
+with_doc_build = env.get('WITH_DOC_BUILD');
+without_doc_build = "disabled by options/config.py"
+if not with_doc:
+	without_doc_build = "disabled by with_doc"
 
 with_latex2html = False
 
@@ -2208,8 +2225,6 @@ if env.get('CAN_INSTALL'):
 	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE','INSTALL_DOC']
 	install_dirs = [Dir(env.subst("$INSTALL_ROOT$"+d)) for d in dirs]
 	install_dirs += modeldirs
-	for d in install_dirs:
-		print d
 
 	# TODO: add install options
 	env.Alias('install',install_dirs)
@@ -2250,7 +2265,7 @@ if platform.system()=="Linux":
 
 env['DISTTAR_FORMAT']='bz2'
 env.Append(
-	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.lib','.cc','.cache','.pyc','.cvsignore','.dblite','.log','.pl','.out','.exe','.aux','.idx','.toc','.lof','.lot','.mm','.warnings','.tm2']
+	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.lib','.cc','.cache','.pyc','.cvsignore','.dblite','.log','.pl','.out','.exe','.aux','.idx','.toc','.lof','.lot','.mm','.warnings','.tm2','.swp',',tmp','.gz','.bz2','.7z']
 	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian']
 )
 
@@ -2292,7 +2307,7 @@ if with_installer:
 	default_targets.append('installer')
 if with_extfns:
 	default_targets.append('extfns')
-if with_doc:
+if with_doc_build:
 	default_targets.append('doc')
 
 env.Default(default_targets)
