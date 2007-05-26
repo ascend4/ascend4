@@ -139,11 +139,17 @@ opts.Add(ListOption(
 ))
 
 # Where will the local copy of the help files be kept?
-opts.Add(PackageOption(
-	'WITH_LOCAL_HELP'
-	, "Directory containing the local copy of the help files (optional)"
-	, "no"
+opts.Add(BoolOption(
+	'WITH_DOC'
+	, "Should help files be built and installed? If not, ASCEND will access online help files"
+	, True
 ))
+
+opts.Add(
+	'HELP_ROOT'
+	, "Location of the main help file"
+	, "$INSTALL_DOC/book.pdf"
+)
 
 # Will bintoken support be enabled?
 opts.Add(BoolOption(
@@ -439,6 +445,12 @@ opts.Add(
 )
 
 opts.Add(
+	'INSTALL_DOC'
+	,"Location of ASCEND documentation files"
+	,"$INSTALL_SHARE/doc/ascend-"+version
+)
+
+opts.Add(
 	'INSTALL_INCLUDE'
 	,'Location to put header files during installation'
 	,"$INSTALL_PREFIX/include"
@@ -687,6 +699,11 @@ without_mmio_reason = "disabled by options/config.py"
 
 with_signals = env.get('WITH_SIGNALS')
 without_signals_reason = "disabled by options/config.py"
+
+with_doc = env.get('WITH_DOC')
+without_doc_reason = "disabled by options/config.py"
+
+with_latex2html = False
 
 if platform.system()=="Windows":
 	with_installer=1
@@ -1523,6 +1540,27 @@ def CheckSigReset(context):
 	return is_ok
 
 #----------------
+# LyX on this system?
+
+def CheckLyx(context):
+	context.Message("Checking for LyX... ")
+	r = context.env.WhereIs("lyx")
+	context.Result(r)
+	return r
+
+#----------------
+# Latex2HTML on this system?
+
+def CheckLatex2HTML(context):
+	context.Message("Checking for latex2html...")
+	if context.env.WhereIs("latex2html"):
+		r = True
+	else:
+		r = False
+	context.Result(r)
+	return r
+
+#----------------
 # GCC Version sniffing
 
 # TODO FIXME
@@ -1539,6 +1577,8 @@ conf = Configure(env
 		, 'CheckPythonLib' : CheckPythonLib
 		, 'CheckCUnit' : CheckCUnit
 		, 'CheckDMalloc' : CheckDMalloc
+		, 'CheckLyx' : CheckLyx
+		, 'CheckLatex2HTML' : CheckLatex2HTML
 		, 'CheckMFGraph' : CheckMFGraph
 		, 'CheckUFSparse' : CheckUFSparse
 		, 'CheckTcl' : CheckTcl
@@ -1819,6 +1859,15 @@ if with_scrollkeeper:
 		with_scrollkeeper=False
 		without_scrollkeeper_reason="unable to detect scrollkeeper-config"
 
+# lyx
+
+if with_doc:
+	if not conf.CheckLyx():
+		with_doc = False
+		without_doc_reason="unable to locate lyx"
+
+	with_latext2html = conf.CheckLatex2HTML()
+
 # TODO: -D_HPUX_SOURCE is needed
 
 # TODO: check size of void*
@@ -1875,9 +1924,9 @@ subst_dict = {
 	, '@SOURCE_ROOT@':c_escape(os.path.abspath(str(env.Dir("#"))))
 }
 
-if env.get('WITH_LOCAL_HELP'):
-	print "WITH_LOCAL_HELP:",env['WITH_LOCAL_HELP']
-	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
+if env.get('WITH_DOC'):
+	print "WITH_DOC:",env['WITH_DOC']
+	subst_dict['@HELP_ROOT@']=env['HELP_ROOT']
 
 # bool options...
 for k,v in {
@@ -1902,6 +1951,9 @@ for k,v in {
 if with_python:
 	subst_dict['@ASCXX_USE_PYTHON@']="1"
 	env['WITH_PYTHON']=1;
+
+if with_latex2html:
+	env['WITH_LATEX2HTML']=1
 
 if env.has_key('HAVE_GCCVISIBILITY'):
 	subst_dict['@HAVE_GCCVISIBILITY@'] = "1"
@@ -2153,9 +2205,11 @@ ascendconfig = env.SubstInFile('ascend-config.in')
 
 if env.get('CAN_INSTALL'):
 
-	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE']
+	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE','INSTALL_DOC']
 	install_dirs = [Dir(env.subst("$INSTALL_ROOT$"+d)) for d in dirs]
 	install_dirs += modeldirs
+	for d in install_dirs:
+		print d
 
 	# TODO: add install options
 	env.Alias('install',install_dirs)
@@ -2187,9 +2241,9 @@ if platform.system()=="Linux":
 #------------------------------------------------------
 # CREATE OMF FILE FOR USE WITH SCROLLKEEPER
 
-if with_scrollkeeper:
-	env.SubstInFile('#/pygtk/gnome/ascend.omf.in')
-	env.InstallShared(env['INSTALL_ROOT']+env['OMFDIR'],"#/pygtk/gnome/ascend.omf")
+#if with_scrollkeeper:
+#	#env.SubstInFile('#/pygtk/gnome/ascend.omf.in')
+#	#env.InstallShared(env['INSTALL_ROOT']+env['OMFDIR'],"#/pygtk/gnome/ascend.omf")
 
 #------------------------------------------------------
 # DISTRIBUTION TAR FILE
@@ -2205,6 +2259,7 @@ tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 )
 
 env.Depends(tar,'ascend.spec')
+env.Depends(tar,'#doc/book.pdf')
 
 Alias('dist',tar)
 
@@ -2212,6 +2267,7 @@ Alias('dist',tar)
 # USER'S MANUAL
 
 env.SConscript('doc/SConscript',['env'])
+
 
 #------------------------------------------------------
 # LIBASCEND DOXYGEN DOCUMENTATION
@@ -2236,6 +2292,8 @@ if with_installer:
 	default_targets.append('installer')
 if with_extfns:
 	default_targets.append('extfns')
+if with_doc:
+	default_targets.append('doc')
 
 env.Default(default_targets)
 

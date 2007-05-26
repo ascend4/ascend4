@@ -114,6 +114,8 @@ scons %{_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
 	INSTALL_BIN=%{_bindir} \
 	INSTALL_INCLUDE=%{_includedir} \
 	WITH_SOLVERS=QRSLV,LSOD,CMSLV,IDA,LRSLV,CONOPT \
+	WITH_LOCAL_DOC=1 \
+	INSTALL_DOC=%{_datadir}/doc/%{name}-%{version} \
 	ABSOLUTE_PATHS=1 \
 	pygtk tcltk
 
@@ -153,7 +155,7 @@ update-mime-database /usr/share/mime
 %files
 %defattr(-, root, root)
 %doc INSTALL.txt LICENSE.txt
-%{_datadir}/ascend/book.pdf
+%{_datadir}/doc/%{name}-%{version}/book.pdf
 
 %{_bindir}/ascend-config
 %{_datadir}/ascend/models
