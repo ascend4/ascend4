@@ -1,13 +1,7 @@
 import sys
-def print_loading_status(status,msg=None):
-	sys.stderr.write("\r                                                 \r")
-	if msg!=None:
-		sys.stderr.write(msg+"\n")
-	sys.stderr.write(status+"...\r")
-	sys.stderr.flush()
-
 try:
-	#print_loading_status("Loading PSYCO")
+	import loading
+	#loading.print_status("Loading PSYCO")
 	#try:
 	#	import psyco
 	#	psyco.full()
@@ -15,25 +9,11 @@ try:
 	#except ImportError:
 	#	pass
 
-
-	print_loading_status("Loading python standard libraries")
+	loading.print_status("Loading python standard libraries")
 
 	import pygtk 
 	pygtk.require('2.0') 
 	import gtk
-
-	_w = gtk.Window(gtk.WINDOW_TOPLEVEL)
-	_w.set_decorated(False)
-	_w.set_position(gtk.WIN_POS_CENTER)
-	_i = gtk.Image()
-	_i.set_pixel_size(3)
-	_i.set_from_file(sys.path[0]+'/glade/ascend-loading.svg')
-	_w.add(_i)
-	_i.show()
-	_w.show()
-
-	while gtk.events_pending():
-		gtk.main_iteration(False)
 
 	import re
 	import urlparse
@@ -48,7 +28,7 @@ try:
 		except:
 			# On platforms that unilaterally refuse to provide the 'dl' module
 			# we'll just set the value and see if it works.
-			print_loading_status("Setting dlopen flags","Python 'dl' module not available on this system")
+			loading.print_status("Setting dlopen flags","Python 'dl' module not available on this system")
 			_dlflags = 258
 		# This sets the flags for dlopen used by python so that the symbols in the
 		# ascend library are made available to libraries dlopened within ASCEND:
@@ -56,45 +36,18 @@ try:
 
 
 
-	print_loading_status("Loading LIBASCEND/ascpy")
+	loading.print_status("Loading LIBASCEND/ascpy")
 	import ascpy
 	import os.path
 
-	print_loading_status("Loading PyGTK, glade, pango")
+	loading.print_status("Loading PyGTK, glade, pango")
 
 	import gtk.glade
 	import pango
 
-	print_loading_status("Loading python matplotlib")
-	try:
-		import matplotlib
-		matplotlib.use('GTKAgg')
+	loading.load_matplotlib()
 
-		try:
-			print_loading_status("Trying python numpy")
-			import numpy
-			matplotlib.rcParams['numerix'] = 'numpy'  
-			print_loading_status("","Using python module numpy")
-		except ImportError:
-			try:
-				print_loading_status("Trying python numarray")
-				import numarray
-				matplotlib.rcParams['numerix'] = 'numarray'  
-				print_loading_status("","Using python module numarray")
-			except ImportError:
-				try:
-					print_loading_status("Trying python Numeric")
-					import Numeric
-					matplotlib.rcParams['numerix'] = 'Numeric'  
-					print_loading_status("","Using python module Numeric")
-				except ImportError:
-					print_loading_status("","FAILED TO LOAD A NUMERIC MODULE FOR PYTHON")
-
-	except ImportError,e:
-		print_loading_status("","FAILED TO LOAD MATPLOTLIB")
-		raise RuntimeError("Failed to load MATPLOTLIB (is it installed?). Details:"+str(e))
-
-	print_loading_status("Loading ASCEND python modules")
+	loading.print_status("Loading ASCEND python modules")
 	from preferences import *      # loading/saving of .ini options
 	from solverparameters import * # 'solver parameters' window
 	from help import *             # viewing help files
@@ -110,7 +63,7 @@ try:
 	from versioncheck import *     # version check (contacts ascend.cruncher2.dyndns.org)
 	import config
 
-	_w.destroy()
+	loading.complete();
 
 except RuntimeError, e:
 	print "ASCEND had problems starting up. Please report the following"
@@ -135,7 +88,7 @@ except ImportError, e:
 	sys.stdin.readline();
 	sys.exit();
 
-print_loading_status("Starting GUI")
+loading.print_status("Starting GUI")
 
 # This is my first ever GUI code so please be nice :)
 # But I *have* at least read 
@@ -167,7 +120,7 @@ class Browser:
 		#--------
 		# load the file referenced in the command line, if any
 
-		print_loading_status("Parsing options","CONFIG = %s"%config.VERSION)
+		loading.print_status("Parsing options","CONFIG = %s"%config.VERSION)
 		
 		parser = optparse.OptionParser(usage="%prog [[-m typename] file]", version="gtkbrowser $rev$" )
 		# add options here if we want
@@ -207,7 +160,7 @@ class Browser:
 		#--------
 		# load up the preferences ini file
 
-		print_loading_status("Loading preferences")
+		loading.print_status("Loading preferences")
 
 		self.prefs = Preferences()
 
@@ -241,7 +194,7 @@ class Browser:
 		#--------
 		# Create the ASCXX 'Library' object
 		
-		print_loading_status("Creating ASCEND 'Library' object","PATH = "+_path+" FROM "+_pathsrc)
+		loading.print_status("Creating ASCEND 'Library' object","PATH = "+_path+" FROM "+_pathsrc)
 		self.library = ascpy.Library(_path)
 
 		self.sim = None
@@ -251,7 +204,7 @@ class Browser:
 
 		self.glade_file = os.path.join(self.assets_dir,config.GLADE_FILE)
 
-		print_loading_status("Setting up windows") #,"GLADE_FILE = %s" % self.glade_file)
+		loading.print_status("Setting up windows") #,"GLADE_FILE = %s" % self.glade_file)
 
 		glade = gtk.glade.XML(self.glade_file,"browserwin")
 
@@ -539,7 +492,7 @@ class Browser:
 
 	def run(self):
 		self.window.show()
-		print_loading_status("ASCEND is now running")
+		loading.print_status("ASCEND is now running")
 		gtk.main()
 
 #   ------------------
@@ -813,7 +766,7 @@ class Browser:
 		self.modelview.refreshtree()
 
 	def do_quit(self):
-		print_loading_status("Saving window location")		
+		loading.print_status("Saving window location")		
 		self.reporter.clearPythonErrorCallback()
 
 		_w,_h = self.window.get_size()
@@ -824,25 +777,25 @@ class Browser:
 		_p = self.browserpaned.get_position()
 		self.prefs.setGeometryValue(_display,"browserpaned",_p);
 
-		print_loading_status("Saving current directory")			
+		loading.print_status("Saving current directory")			
 		self.prefs.setStringPref("Directories","fileopenpath",self.fileopenpath)
 
 		self.prefs.setBoolPref("Browser","auto_solve",self.is_auto)
 
-		print_loading_status("Saving preferences")
+		loading.print_status("Saving preferences")
 		# causes prefs to be saved unless they are still being used elsewher
 		del(self.prefs)
 
-		print_loading_status("Clearing error callback")		
+		loading.print_status("Clearing error callback")		
 		self.reporter.clearPythonErrorCallback()
 
-		print_loading_status("Closing down GTK")
+		loading.print_status("Closing down GTK")
 		gtk.main_quit()
 
-		print_loading_status("Clearing library")			
+		loading.print_status("Clearing library")			
 		self.library.clear()
 		
-		print_loading_status("Quitting")
+		loading.print_status("Quitting")
 
 		return False
 
@@ -1017,7 +970,7 @@ class Browser:
 #   BUTTON METHODS
 
 	def open_click(self,*args):
-		#print_loading_status("CURRENT FILEOPENPATH is",self.fileopenpath)
+		#loading.print_status("CURRENT FILEOPENPATH is",self.fileopenpath)
 		dialog = gtk.FileChooserDialog("Open ASCEND model...",
 			self.window,
 			gtk.FILE_CHOOSER_ACTION_OPEN,

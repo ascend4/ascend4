@@ -9,6 +9,8 @@ SWIG interface for plotting from ASCEND
 %extend Plot{
 	%pythoncode{
 		def show(self,mainloop=True):
+			import loading
+			loading.load_matplotlib(throw=True)
 			import pylab
 			import platform
 			pylab.ioff()
