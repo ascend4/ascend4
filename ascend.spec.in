@@ -1,3 +1,7 @@
+%define pyver %(python -c 'import sys ; print sys.version[:3]')
+%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+
 Name:		ascend
 Summary:	ASCEND modelling environment
 Version:	@VERSION@
@@ -5,7 +9,6 @@ Version:	@VERSION@
 # Use release 0.* so that other users can do patch releases with a higher number
 # and still have the update occur automatically.
 Release:	@RELEASE@%{?dist}
-
 
 License:	GPL
 Group:		Applications/Engineering
@@ -15,7 +18,8 @@ URL:		http://ascend.cheme.cmu.edu/
 Prefix:		%{_prefix}
 Packager:	John Pye
 Vendor:		Carnegie Mellon University
-BuildRoot:	%{_tmppath}/%{name}-%{version}-root
+
+Buildroot: /var/tmp/%{name}-buildroot
 
 %description
 ASCEND IV is both a large-scale object-oriented mathematical
@@ -114,9 +118,12 @@ scons %{_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
 	INSTALL_BIN=%{_bindir} \
 	INSTALL_INCLUDE=%{_includedir} \
 	WITH_SOLVERS=QRSLV,LSOD,CMSLV,IDA,LRSLV,CONOPT \
-	WITH_LOCAL_DOC=1 \
-	INSTALL_DOC=%{_datadir}/doc/%{name}-%{version} \
+	INSTALL_DOC=%{_docdir}/%{name}-%{version} \
+	WITH_DOC_BUILD=0 \
+	WITH_DOC_INSTALL=0 \
 	ABSOLUTE_PATHS=1 \
+	CC="%{?ccache} gcc" \
+	CXX="%{?ccache} g++" \
 	pygtk tcltk
 
 %install
@@ -133,6 +140,10 @@ popd
 pushd tools/gedit
 install -m 644 -D ascend.lang %{buildroot}/%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
 popd
+
+# TODO...
+#%__python -c 'from compileall import *; compile_dir("'$RPM_BUILD_ROOT'/%{python_sitelib}",10,"%{python_sitelib}")'
+#%__python -O -c 'from compileall import *; compile_dir("'$RPM_BUILD_ROOT'/%{python_sitelib}",10,"%{python_sitelib}")'
 
 # Install menu entry for Tcl/Tk interface
 pushd tcltk/gnome
@@ -155,7 +166,7 @@ update-mime-database /usr/share/mime
 %files
 %defattr(-, root, root)
 %doc INSTALL.txt LICENSE.txt
-%{_datadir}/doc/%{name}-%{version}/book.pdf
+%doc doc/book.pdf
 
 %{_bindir}/ascend-config
 %{_datadir}/ascend/models

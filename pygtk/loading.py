@@ -1,4 +1,6 @@
 import sys
+import config
+import os.path
 
 try:
 	import pygtk 
@@ -86,7 +88,7 @@ def create_window():
 	_v.show()
 	_i = gtk.Image()
 	_i.set_pixel_size(3)
-	_i.set_from_file(sys.path[0]+'/glade/ascend-loading.svg')
+	_i.set_from_file(os.path.join(config.PYGTK_ASSETS,'ascend-loading.svg'))
 	_v.add(_i)
 	_i.show()
 	_l = gtk.Label("Loading ASCEND...")
