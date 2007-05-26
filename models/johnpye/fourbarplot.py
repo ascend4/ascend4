@@ -1,6 +1,10 @@
 import extpy;
 
-from pylab import *
+try:
+	from pylab import *
+except:
+	pass
+
 from solverreporter import *
 
 def fourbarplot(self):

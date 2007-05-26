@@ -2,7 +2,6 @@ import extpy;
 browser = extpy.getbrowser()
 
 import ascpy;
-import matplotlib;
 
 def mypythonmethod(self):
 	"""I don't want to talk to you no more, you empty headed animal food trough wiper!"""

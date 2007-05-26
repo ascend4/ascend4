@@ -26,8 +26,8 @@ END values;
 
 METHOD default_self;
 	RUN plot1.default_self;
-	RUN curve1.default_self;
-	RUN F.default_self;
+	(* RUN curve1.default_self;
+	RUN F.default_self; *)
 	plot1.title := 'four bar node positions';
 	plot1.XLabel := 'x';
 	plot1.YLabel := 'y';

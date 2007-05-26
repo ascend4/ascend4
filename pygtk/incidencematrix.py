@@ -1,9 +1,6 @@
 import config
-import matplotlib
-matplotlib.use('GTKAgg')
-import pylab
+import loading
 import platform
-from matplotlib.colors import LinearSegmentedColormap
 
 class IncidenceMatrixWindow:
 
@@ -11,6 +8,11 @@ class IncidenceMatrixWindow:
 		self.im = im # IncidenceMatrix object
 		self.lastcol = None;
 		self.lastrow = None;
+
+		loading.load_matplotlib(throw=True)
+		import matplotlib		
+		import pylab
+		from matplotlib.colors import LinearSegmentedColormap
 
 	def run(self):
 		# convert incidence map to pylab numarray type:
