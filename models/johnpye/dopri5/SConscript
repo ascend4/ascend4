@@ -1,0 +1,14 @@
+Import('env')
+
+# To run the test, type
+#     ascdev johnpye/dopri5/dopri5.a4c
+
+dopri5obj = env.SharedObject("dopri5.c")
+
+if 0:
+	env['extfns'] += [env.SharedLibrary("dopri5",["asc_dopri5.c",dopri5obj]
+		,LIBS = ['ascend']
+		,LIBPATH = ['#']
+	)]
+
+# vim: set syntax=python:

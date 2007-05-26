@@ -1,7 +1,7 @@
 Import('env')
 extenv = env.Copy()
 
-for d in ['extfn','datareader','brent']:
+for d in ['extfn','datareader','brent','dopri5']:
 	extenv.SConscript(d+'/SConscript',['env']);
 
 if extenv.get('WITH_PYTHON'):
