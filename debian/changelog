@@ -1,3 +1,10 @@
+ascend (0.9.5.110-4) unstable; urgency=low
+
+  * Removed runtime requirement for matplotlib, numpy.
+  * Splash screen and bug-reporting link in help menu.
+
+ -- John Pye <john@curioussymbols.com>  Sat, 26 May 2007 14:00:00 +1000
+
 ascend (0.9.5.109-3) unstable; urgency=low
 
   * Removed some binary files that had crept into the tarball
