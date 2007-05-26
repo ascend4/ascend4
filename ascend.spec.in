@@ -49,8 +49,10 @@ BuildRequires: tktable < 2.10, tktable >= 2.8
 BuildRequires: desktop-file-utils
 
 # ... documentation
-#BuildRequires: lyx
-#BuildRequires: tetex lmodern
+# There are no dependencies for documentation as the tarball
+# will always contain documentation in compiled form. Only
+# when building from subversion are targets formats of the
+# documentation files not available.
 
 #-----------runtime dependencies-----------
 
