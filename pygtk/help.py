@@ -19,9 +19,7 @@ class Help:
 			else:
 				self.helproot = helproot
 			
-			if os.path.exists(self.helproot):
-				print "HELP PATH FOUND"
-			else:
+			if not os.path.exists(self.helproot):
 				print "LOCAL HELP FILES NOT FOUND, WILL USE ONLINE COPY"
 				self.goonline = True
 
@@ -44,7 +42,7 @@ class Help:
 		if self.goonline:
 			_u = self.webhelproot
 		else:
-			_p = os.path.join(self.helproot,"book.html")
+			_p = os.path.join(self.helproot)
 			_u = "file://"+_p
 		
 		#print "OPENING WEB PAGE:",_u
