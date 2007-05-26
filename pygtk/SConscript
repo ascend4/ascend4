@@ -70,7 +70,7 @@ for swigf in Split("""
 		, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
 	)
 	swig_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
-	swig_env.Depends('ascpy$SWIGCXXFILESUFFIX',['ascpy.i','solver.i'])
+	swig_env.Depends('ascpy$SWIGCXXFILESUFFIX',['ascpy.i','solver.i','plot.i'])
 	swig_env.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
 	swig_env.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
 	swig_env.Clean('ascpy_wrap.h','ascpy$SWIGCXXFILESUFFIX')

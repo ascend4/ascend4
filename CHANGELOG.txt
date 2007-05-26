@@ -1,14 +1,23 @@
 
-?????????????
--------------
+26 May 2007
+-----------
 
 Version 0.9.5.110
 
+Removed dependency on matplotlib and numpy when ASCEND PyGTK
+first load.
+
+Fixed some problems with files left behind after uninstall
+on Windows.
+
+Added bug tracker link to help menu.
+
 Added loading splash screen
+Eliminated some cruft form the tarball.
+Restored basic build suppot for Autotools (Ben)
+Added missing .svg files in Windows installer
 Added icon in Windows Start menu
 Console now minimised by default on Windows
-Added bug tracker link to help menu
-Added missing .svg files in Windows installer
 
 28 April 2007
 -------------
