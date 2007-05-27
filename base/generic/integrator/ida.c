@@ -1922,8 +1922,21 @@ int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s){
 
 #if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
 
-	return IDA_MEM_NULL;
+	int res;
 
+	/* 
+		There is an error in the documentation for this function in Sundials 2.2.
+		According the the header file, the hinused stat is not provided.
+	*/
+	res = IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals, &s->nlinsetups,
+		&s->netfails, &s->qlast, &s->qcur, &s->hlast, &s->hcur,
+		&s->tcur
+	);
+
+	/* get the missing statistic */
+	IDAGetActualInitStep(ida_mem, &s->hinused);
+	
+	return res;
 #else
 
 	return IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals, &s->nlinsetups
