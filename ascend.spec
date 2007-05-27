@@ -177,8 +177,8 @@ update-mime-database /usr/share/mime
 # %package -n ascend-python
 %{_bindir}/ascend
 %{_datadir}/ascend/*.py
-%{_datadir}/ascend/*.pyc
-%{_datadir}/ascend/*.pyo
+%{_datadir}/ascend/*.py[co]
+
 %{_datadir}/ascend/glade
 %{_datadir}/ascend/_ascpy.so
 %{_datadir}/applications/ascend.desktop
