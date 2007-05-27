@@ -138,5 +138,54 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			return 0
 		return 1
 
+class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
+	def __init__(self,integrator,filep):
+		self.filep=filep
+	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)		
+		
+	def run(self):
+		self.getIntegrator().solve()
 
+	def initOutput(self):
+		try:
+			sys.stderr.write("Integrating")
+			I = self.getIntegrator()
+			names = [I.getObservedVariable(i).getName() for i \
+				in range(I.getNumObservedVars())
+			]
+			self.filep.write("#%s\t" % I.getIndependentVariable().getName())
+			self.filep.write("\t".join(names)+"\n")
+		except Exception,e:
+			print "ERROR %s" % str(e)
+			return 0
+		return 1
+
+	def closeOutput(self):
+		sys.stderr.write(" "*20+chr(8)*20)
+		sys.stderr.write("done!\n")
+		self.filep.write("#end\n")
+		return 0
+
+	def updateStatus(self):
+		try:
+			t = "%3f" % self.getIntegrator().getCurrentTime()
+			sys.stderr.write(".")
+			sys.stderr.write(t)
+			sys.stderr.write(chr(8)*len(t))
+		except Exception,e:
+			print "ERROR %s" % str(e)
+			return 0
+		return 1
+
+	def recordObservedValues(self):
+		try:
+			I = self.getIntegrator()
+			obs = I.getCurrentObservations()
+			#print str(obs)
+			self.filep.write("%f\t" % I.getCurrentTime())
+			self.filep.write("\t".join([str(i) for i in obs])+"\n")
+		except Exception,e:
+			print "ERROR %s" % str(e)
+			return 0
+		return 1
 
