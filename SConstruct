@@ -775,6 +775,47 @@ print "INSTALL_PREFIX =",env['INSTALL_PREFIX']
 need_fortran = False
 
 #----------------
+# CC
+
+cc_test_text = """
+int main(void){
+	return 0;
+}
+""";
+
+def CheckCC(context):
+	context.Message("Checking C compiler ('%s')... " % context.env.get('CC'))
+	is_ok = context.TryCompile(cc_test_text,".c")
+	context.Result(is_ok)
+	return is_ok
+
+#----------------
+# CXX
+
+cxx_test_text = """
+template<class X>
+class pair{
+public:
+	X a;
+	X b;
+};
+
+int main(void){
+	pair<double> P;
+	P.a = 0;
+	return 0;
+}
+""";
+
+def CheckCXX(context):
+	context.Message("Checking C++ compiler ('%s')... " % context.env.get('CXX'))
+	is_ok = context.TryCompile(cc_test_text,".cpp")
+	context.Result(is_ok)
+	return is_ok
+
+	
+
+#----------------
 # SWIG
 
 import os,re
@@ -1589,7 +1630,9 @@ gcc_version4 = False
 
 conf = Configure(env
 	, custom_tests = { 
-		'CheckMath' : CheckMath
+		'CheckCC' : CheckCC
+		, 'CheckCXX' : CheckCXX
+		, 'CheckMath' : CheckMath
 		, 'CheckSwigVersion' : CheckSwigVersion
 		, 'CheckPythonLib' : CheckPythonLib
 		, 'CheckCUnit' : CheckCUnit
@@ -1644,6 +1687,18 @@ if not sconsversioncheck():
 	print "or consult the developers in the case of newer versions. Modify"
 	print "the function 'sconsversioncheck' in the file SConstruct if you"
 	print "want to *force* SCons to continue."
+	Exit(1)
+
+# check C compiler
+
+if not conf.CheckCC():
+	print "Failed to build simple test file with your C compiler."
+	print "Check your compiler is installed and running correctly."
+	Exit(1)
+
+if not conf.CheckCXX():
+	print "Failed to build simple test file with your C++ compiler."
+	print "Check your compiler is installed and running correctly."
 	Exit(1)
 
 # stdio -- just to check that compiler is behaving
