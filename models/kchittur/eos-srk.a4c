@@ -1,0 +1,103 @@
+REQUIRE "thermodynamics.a4l";
+
+IMPORT "johnpye/extpy/extpy";
+IMPORT "zplot";
+MODEL srk(P WILL_BE pressure;
+T WILL_BE temperature;
+V WILL_BE molar_volume; 
+Z WILL_BE factor; 
+data WILL_BE td_component_constants;); 
+
+R IS_A gas_constant;
+Pc IS_A pressure;
+Tc IS_A temperature;
+T_degC IS_A factor;
+alpha, beta, q,Tr, Pr, omega IS_A factor;
+
+PSI, OMEGA, sigma, eps IS_A real_constant; 
+
+PSI :== 0.42748; 
+OMEGA :== 0.08664; 
+sigma :== 1.0; 
+eps :== 0.0; 
+
+Pc = data.Pc;
+Tc = data.Tc;
+omega = data.omega;
+
+eq1: Tr = T/Tc;
+eq2: Pr = P/Pc;
+eq3: T_degC = T/1{K} - 273.15;
+
+eq4: alpha = (1.0 + (0.480+1.574*omega-0.176*omega^2)*(1.0-Tr^(0.5)))^2;
+eq5: q = PSI*alpha/(OMEGA*Tr);
+eq6: beta = OMEGA*Pr/Tr;
+eq7: Z = 1.0 + beta - q*beta*(Z - beta)/((Z + eps*beta)*(Z + sigma*beta));
+eq8: P*V = Z*R*T;
+
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+        METHOD specify;
+        P.fixed := TRUE;
+        T.fixed := TRUE;
+        T_degC.fixed := FALSE;
+        END specify;
+        METHOD values;
+        P := 12.0 {bar};
+        T := 298.15 {K};
+        Z.lower_bound := 0.0;
+        Z.upper_bound := 10.0;
+        Z.nominal := 1.0;
+        END values;
+
+END srk;
+MODEL testsrk;
+
+c1 IS_A symbol_constant;
+c1 :== 'ethylene';
+cd IS_A components_data([c1],c1);
+Tr, Pr IS_A factor;
+P IS_A pressure;
+T IS_A temperature;
+V IS_A molar_volume; 
+Z IS_A factor; 
+tsrk IS_A srk(P,T,V,Z,cd.data[c1]); 
+
+eqTr: Tr = T/cd.data[c1].Tc;
+eqPr: Pr = P/cd.data[c1].Pc;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+    METHOD specify;
+    P.fixed := TRUE;
+    V.fixed := FALSE;
+    Z.fixed := FALSE;  
+    T.fixed := TRUE;
+    RUN tsrk.specify;
+    END specify;
+    METHOD values;
+    P := 12.0 {bar};
+    T := 298.15 {K};
+    RUN tsrk.values;
+    END values;
+
+    METHOD on_load;
+    RUN default_self;
+    END on_load;
+
+    METHOD fancyplot;
+    EXTERNAL zplot(SELF);
+    END fancyplot;
+
+END testsrk; 

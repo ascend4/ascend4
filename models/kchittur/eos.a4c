@@ -1,0 +1,679 @@
+REQUIRE "thermodynamics.a4l";
+
+ATOM vdwa REFINES solver_var
+DIMENSION M*L^5/Q^2/T^2
+DEFAULT 0.1 {kg*m^5/mole^2/sec^2};
+lower_bound := 0.0 {kg*m^5/mole^2/sec^2};
+upper_bound := 10.0 {kg*m^5/mole^2/sec^2};
+nominal := 0.1 {kg*m^5/mole^5/sec^2};
+END vdwa;
+
+ATOM virialC REFINES solver_var
+DIMENSION L^6/Q^2
+DEFAULT 7000.0 {cm^6/mol^2};
+lower_bound := 0.0 {cm^6/mol^2};
+upper_bound := 1.0 {m^6/mol^2};
+nominal := 7000.0 {cm^6/mol^2};
+END virialC;
+
+ATOM virialB REFINES solver_var
+DIMENSION L^3/Q
+DEFAULT 1.0 {m^3/mol};
+lower_bound := -1000.00 {m^3/mol};
+upper_bound := 1000.0 {m^3/mol};
+nominal := 1.0 {m^3/mol};
+END virialB;
+
+
+MODEL idealgas(P WILL_BE pressure;
+T WILL_BE temperature;
+V WILL_BE molar_volume;);
+
+R IS_A gas_constant;
+
+eq: P*V = R*T;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+    METHOD specify;
+    P.fixed := TRUE;
+    T.fixed := TRUE;
+    V.fixed := FALSE;
+    END specify;
+    METHOD values;
+    P := 1.0 {atm};
+    T := 298.0 {K};
+    END values;
+
+END idealgas;
+
+MODEL vanderwaals(P WILL_BE pressure;
+T WILL_BE temperature;
+V WILL_BE molar_volume;
+Z WILL_BE factor;
+data WILL_BE td_component_constants;);
+
+R IS_A gas_constant;
+b IS_A molar_volume;
+a IS_A vdwa;
+Pc IS_A pressure;
+Tc IS_A temperature;
+
+eq: (P*V^2 + a)*(V - b) = R*T*V^2;
+eqb: b*8.0*data.Pc = R*data.Tc;
+eqa: a*64.0*data.Pc = 27.0*R^2*(data.Tc)^2;
+eqc: Z*R*T = P*V;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+        METHOD specify;
+        P.fixed := TRUE;
+        T.fixed := TRUE;
+        V.fixed := FALSE;
+        Z.fixed := FALSE;
+        END specify;
+        METHOD values;
+        P := 12.0 {atm};
+        T := 298.15 {K};
+        V := 0.075 {m^3/mole};
+        V.nominal := 0.05 {m^3/mole};
+        V.upper_bound := 100 {m^3/mole};
+        END values;
+
+END vanderwaals;
+
+MODEL truncated_virial_equation (P WILL_BE pressure;
+T WILL_BE temperature; V WILL_BE molar_volume; Z WILL_BE factor;  
+data WILL_BE td_component_constants;);
+
+R IS_A gas_constant;
+Pc IS_A pressure;
+Tc IS_A temperature;
+T_degC IS_A factor;
+omega IS_A factor; 
+Tr, Pr IS_A factor;
+B IS_A virialB;
+C IS_A virialC;
+
+Bhat, B0, B1 IS_A factor;
+
+Pc = data.Pc;
+Tc = data.Tc;
+omega = data.omega;
+
+eq1: Tr = T/Tc;
+eq2: Pr = P/Pc;
+eq3: T_degC = T/1{K} - 273.15;
+
+eq4: Bhat = B0 + omega*B1;
+eq5: B0*Tr^(1.6) = 0.083*Tr^(1.6) - 0.422;
+eq6: B1*Tr^(4.2) = 0.139*Tr^(4.2) - 0.172;
+
+eq7: Z = 1.0 + B0*Pr/Tr + omega*B1*Pr/Tr;
+
+eq8: Z*R*T = P*V;
+eq9: B = Bhat*1.0{m^3/mol};
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+        METHOD specify;
+        P.fixed := TRUE;
+        T_degC.fixed := FALSE;
+        T.fixed := TRUE;  
+        END specify;
+        METHOD values;
+        P := 12.0 {bar};
+        T := 298.15 {K};
+        END values;
+
+END truncated_virial_equation;
+
+MODEL rk(P WILL_BE pressure;
+T WILL_BE temperature;
+V WILL_BE molar_volume; 
+Z WILL_BE factor; 
+data WILL_BE td_component_constants;); 
+
+R IS_A gas_constant;
+Pc IS_A pressure;
+Tc IS_A temperature;
+T_degC IS_A factor;
+alpha, beta, q,Tr, Pr, omega IS_A factor;
+
+PSI, OMEGA, sigma, eps IS_A real_constant; 
+
+PSI :== 0.42748; 
+OMEGA :== 0.08664; 
+sigma :== 1.0; 
+eps :== 0.0; 
+
+Pc = data.Pc;
+Tc = data.Tc;
+omega = data.omega;
+
+eq1: Tr = T/Tc;
+eq2: Pr = P/Pc;
+eq3: T_degC = T/1{K} - 273.15;
+
+eq4: alpha = Tr^(0.5);
+eq5: q = PSI*alpha/(OMEGA*Tr);
+eq6: beta = OMEGA*Pr/Tr;
+eq7: Z = 1.0 + beta - q*beta*(Z - beta)/((Z + eps*beta)*(Z + sigma*beta));
+eq8: P*V = Z*R*T;
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+        METHOD specify;
+        P.fixed := TRUE;
+        T_degC.fixed := FALSE;
+        T.fixed := TRUE;
+        END specify;
+        METHOD values;
+        P := 12.0 {bar};
+        T := 298.15 {K};
+        Z.lower_bound := 0.0;
+        Z.upper_bound := 10.0;
+        Z.nominal := 1.0;
+        END values;
+
+END rk;
+
+MODEL srk(P WILL_BE pressure;
+T WILL_BE temperature;
+V WILL_BE molar_volume; 
+Z WILL_BE factor; 
+data WILL_BE td_component_constants;); 
+
+R IS_A gas_constant;
+Pc IS_A pressure;
+Tc IS_A temperature;
+T_degC IS_A factor;
+alpha, beta, q,Tr, Pr, omega IS_A factor;
+
+PSI, OMEGA, sigma, eps IS_A real_constant; 
+
+PSI :== 0.42748; 
+OMEGA :== 0.08664; 
+sigma :== 1.0; 
+eps :== 0.0; 
+
+Pc = data.Pc;
+Tc = data.Tc;
+omega = data.omega;
+
+eq1: Tr = T/Tc;
+eq2: Pr = P/Pc;
+eq3: T_degC = T/1{K} - 273.15;
+
+eq4: alpha = (1.0 + (0.480+1.574*omega-0.176*omega^2)*(1.0-Tr^(0.5)))^2;
+eq5: q = PSI*alpha/(OMEGA*Tr);
+eq6: beta = OMEGA*Pr/Tr;
+eq7: Z = 1.0 + beta - q*beta*(Z - beta)/((Z + eps*beta)*(Z + sigma*beta));
+eq8: P*V = Z*R*T;
+
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+        METHOD specify;
+        P.fixed := TRUE;
+        T.fixed := TRUE;
+        T_degC.fixed := FALSE;
+        END specify;
+        METHOD values;
+        P := 12.0 {bar};
+        T := 298.15 {K};
+        Z.lower_bound := 0.0;
+        Z.upper_bound := 10.0;
+        Z.nominal := 1.0;
+        END values;
+
+END srk;
+
+MODEL pengrobinson(P WILL_BE pressure;
+T WILL_BE temperature;
+V WILL_BE molar_volume; 
+Z WILL_BE factor; 
+data WILL_BE td_component_constants;); 
+
+R IS_A gas_constant;
+Pc IS_A pressure;
+Tc IS_A temperature;
+T_degC IS_A factor;
+alpha, beta, q,Tr, Pr, omega IS_A factor;
+
+PSI, OMEGA, sigma, eps IS_A real_constant; 
+
+PSI :== 0.42748; 
+OMEGA :== 0.07780; 
+sigma :== 2.414213562; 
+eps :== 0.414213562; 
+
+Pc = data.Pc;
+Tc = data.Tc;
+omega = data.omega;
+
+eq1: Tr = T/Tc;
+eq2: Pr = P/Pc;
+eq3: T_degC = T/1{K} - 273.15;
+
+eq4: alpha = (1.0 + (0.37464+1.54226*omega-0.26992*omega^2)*(1.0-Tr^(0.5)))^2;
+eq5: q = PSI*alpha/(OMEGA*Tr);
+eq6: beta = OMEGA*Pr/Tr;
+eq7: Z = 1.0 + beta - q*beta*(Z - beta)/((Z + eps*beta)*(Z + sigma*beta));
+eq8: P*V = Z*R*T;
+
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+        METHOD specify;
+        P.fixed := TRUE;
+        T.fixed := TRUE;
+        T_degC.fixed := FALSE;
+        END specify;
+        METHOD values;
+        P := 12.0 {bar};
+        T := 298.15 {K};
+        Z.lower_bound := 0.0;
+        Z.upper_bound := 10.0;
+        Z.nominal := 0.1;
+        END values;
+
+END pengrobinson;
+
+MODEL vdw(P WILL_BE pressure;
+T WILL_BE temperature;
+V WILL_BE molar_volume; 
+Z WILL_BE factor; 
+data WILL_BE td_component_constants;); 
+
+R IS_A gas_constant;
+Pc IS_A pressure;
+Tc IS_A temperature;
+T_degC IS_A factor;
+beta, q,Tr, Pr, omega IS_A factor;
+
+alpha, PSI, OMEGA, sigma, eps IS_A real_constant; 
+
+PSI :== 27.0/64.0; 
+OMEGA :== 1.0/8.0; 
+sigma :== 0.0; 
+eps :== 0.0; 
+alpha :== 1.0;
+
+Pc = data.Pc;
+Tc = data.Tc;
+omega = data.omega;
+
+eq1: Tr = T/Tc;
+eq2: Pr = P/Pc;
+eq3: T_degC = T/1{K} - 273.15;
+
+eq5: q = PSI*alpha/(OMEGA*Tr);
+eq6: beta = OMEGA*Pr/Tr;
+eq7: Z = 1.0 + beta - q*beta*(Z - beta)/((Z + eps*beta)*(Z + sigma*beta));
+eq8: P*V = Z*R*T;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+        METHOD specify;
+        P.fixed := TRUE;
+        T.fixed := TRUE;
+        T_degC.fixed := FALSE;
+        END specify;
+        METHOD values;
+        P := 12.0 {bar};
+        T := 298.15 {K};
+        Z.lower_bound := 0.0;
+        Z.upper_bound := 10.0;
+        Z.nominal := 0.1;
+        END values;
+
+END vdw;
+
+MODEL testidealgas;
+
+ig IS_A idealgas(P,T,V);
+P IS_A pressure;
+T IS_A temperature;
+V IS_A molar_volume;
+    
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+    METHOD specify;
+    P.fixed := TRUE;
+    T.fixed := TRUE;
+    V.fixed := FALSE;
+    RUN ig.specify;
+    END specify;
+    METHOD values;
+    P := 1.0 {atm};
+    T := 800.0 {K};
+    RUN ig.values;
+    END values;
+
+END testidealgas;
+
+MODEL testvanderwaals;
+
+c1 IS_A symbol_constant;
+vd IS_A vanderwaals(P,T,V,Z,cd.data[c1]);
+Tr, Pr IS_A factor;
+P IS_A pressure;
+T IS_A temperature;
+V IS_A molar_volume;
+Z IS_A factor;
+
+c1 :== 'ethylene';  
+cd IS_A components_data([c1],c1);
+
+eqTr: Tr = T/cd.data[c1].Tc;
+eqPr: Pr = P/cd.data[c1].Pc;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+    METHOD specify;
+    P.fixed := TRUE;
+    V.fixed := FALSE;
+    T.fixed := TRUE;
+    Z.fixed := FALSE;
+    RUN vd.specify;
+    END specify;
+    METHOD values;
+    P := 12.0 {bar};
+    T := 298.15 {K};
+    RUN vd.values;
+    END values;
+
+END testvanderwaals;
+
+MODEL testtruncatedvirial;
+
+c1 IS_A symbol_constant;
+c1 :== 'acetonitrile';
+cd IS_A components_data([c1],c1);
+Tr, Pr IS_A factor;
+P IS_A pressure;
+T IS_A temperature;
+V IS_A molar_volume; 
+Z IS_A factor; 
+tve IS_A truncated_virial_equation(P,T,V,Z,cd.data[c1]); 
+
+eqTr: Tr = T/cd.data[c1].Tc;
+eqPr: Pr = P/cd.data[c1].Pc;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+    METHOD specify;
+    P.fixed := TRUE;
+    V.fixed := FALSE;
+    Z.fixed := FALSE;  
+    T.fixed := TRUE;
+    RUN tve.specify;
+    END specify;
+    METHOD values;
+    P := 12.0 {bar};
+    T := 298.15 {K};
+    RUN tve.values;
+    END values;
+
+END testtruncatedvirial; 
+ 
+MODEL testrk;
+
+c1 IS_A symbol_constant;
+c1 :== 'ethylene';
+cd IS_A components_data([c1],c1);
+Tr, Pr IS_A factor;
+P IS_A pressure;
+T IS_A temperature;
+V IS_A molar_volume; 
+Z IS_A factor; 
+trk IS_A rk(P,T,V,Z,cd.data[c1]); 
+
+eqTr: Tr = T/cd.data[c1].Tc;
+eqPr: Pr = P/cd.data[c1].Pc;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+    METHOD specify;
+    P.fixed := TRUE;
+    V.fixed := FALSE;
+    Z.fixed := FALSE;  
+    T.fixed := TRUE;
+    RUN trk.specify;
+    END specify;
+    METHOD values;
+    P := 12.0 {bar};
+    T := 298.15 {K};
+    RUN trk.values;
+    END values;
+
+END testrk; 
+
+MODEL testsrk;
+
+c1 IS_A symbol_constant;
+c1 :== 'ethylene';
+cd IS_A components_data([c1],c1);
+Tr, Pr IS_A factor;
+P IS_A pressure;
+T IS_A temperature;
+V IS_A molar_volume; 
+Z IS_A factor; 
+tsrk IS_A srk(P,T,V,Z,cd.data[c1]); 
+
+eqTr: Tr = T/cd.data[c1].Tc;
+eqPr: Pr = P/cd.data[c1].Pc;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+    METHOD specify;
+    P.fixed := TRUE;
+    V.fixed := FALSE;
+    Z.fixed := FALSE;  
+    T.fixed := TRUE;
+    RUN tsrk.specify;
+    END specify;
+    METHOD values;
+    P := 12.0 {bar};
+    T := 298.15 {K};
+    RUN tsrk.values;
+    END values;
+
+END testsrk; 
+ 
+MODEL testpengrobinson;
+
+c1 IS_A symbol_constant;
+c1 :== 'ethylene';
+cd IS_A components_data([c1],c1);
+Tr, Pr IS_A factor;
+P IS_A pressure;
+T IS_A temperature;
+V IS_A molar_volume; 
+Z IS_A factor; 
+tpeng IS_A pengrobinson(P,T,V,Z,cd.data[c1]); 
+
+eqTr: Tr = T/cd.data[c1].Tc;
+eqPr: Pr = P/cd.data[c1].Pc;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+    METHOD specify;
+    P.fixed := TRUE;
+    V.fixed := FALSE;
+    Z.fixed := FALSE;  
+    T.fixed := TRUE;
+    RUN tpeng.specify;
+    END specify;
+    METHOD values;
+    P := 12.0 {bar};
+    T := 298.15 {K};
+    RUN tpeng.values;
+    END values;
+  
+END testpengrobinson; 
+
+MODEL testvdw;
+
+c1 IS_A symbol_constant;
+c1 :== 'ethylene';
+cd IS_A components_data([c1],c1);
+Tr, Pr IS_A factor;
+P IS_A pressure;
+T IS_A temperature;
+V IS_A molar_volume; 
+Z IS_A factor; 
+tvdw IS_A vdw(P,T,V,Z,cd.data[c1]); 
+
+eqTr: Tr = T/cd.data[c1].Tc;
+eqPr: Pr = P/cd.data[c1].Pc;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+    METHOD specify;
+    P.fixed := TRUE;
+    V.fixed := FALSE;
+    Z.fixed := FALSE;  
+    T.fixed := TRUE;
+    RUN tvdw.specify;
+    END specify;
+    METHOD values;
+    P := 12.0 {bar};
+    T := 298.15 {K};
+    RUN tvdw.values;
+    END values;
+
+END testvdw; 
+
+MODEL testall;
+
+P IS_A pressure;
+T IS_A temperature;
+Vvanderwaals, Vvdw, Videal, Vtruncvirial, Vrk, Vsrk, Vpeng IS_A molar_volume; 
+Zvanderwaals, Zvdw, Ztruncvirial, Zrk, Zsrk, Zpeng IS_A factor; 
+
+c1 IS_A symbol_constant;
+c1 :== 'acetonitrile';
+cd IS_A components_data([c1],c1);
+Tr, Pr IS_A factor;
+ig IS_A idealgas(P,T,Videal);
+vd IS_A vanderwaals(P,T,Vvanderwaals,Zvanderwaals,cd.data[c1]);
+vdd IS_A vdw(P,T,Vvdw,Zvdw,cd.data[c1]);
+tve IS_A truncated_virial_equation(P,T,Vtruncvirial,Ztruncvirial,cd.data[c1]);
+trk IS_A rk(P,T,Vrk,Zrk,cd.data[c1]);
+tsrk IS_A srk(P,T,Vsrk,Zsrk,cd.data[c1]); 
+tpeng IS_A pengrobinson(P,T,Vpeng,Zpeng,cd.data[c1]); 
+
+eqTr: Tr = T/cd.data[c1].Tc;
+eqPr: Pr = P/cd.data[c1].Pc;
+
+METHODS
+    METHOD default_self;
+(*    RUN ClearAll; *)
+    RUN specify;
+    RUN values;
+    END default_self;
+    METHOD specify;
+    P.fixed := TRUE;
+    T.fixed := TRUE;
+    Videal.fixed := FALSE;
+    Vvanderwaals.fixed := FALSE;
+    Vvdw.fixed := FALSE;
+    Vtruncvirial.fixed := FALSE;
+    Vrk.fixed := FALSE;
+    Vsrk.fixed := FALSE;
+    Vpeng.fixed := FALSE;
+    Zvanderwaals.fixed := FALSE;
+    Zvdw.fixed := FALSE;
+    Ztruncvirial.fixed := FALSE;
+    Zrk.fixed := FALSE;
+    Zsrk.fixed := FALSE;
+    Zpeng.fixed := FALSE;
+    RUN ig.specify;
+    RUN vd.specify;
+    RUN vdd.specify;
+    RUN tve.specify;
+    RUN trk.specify;
+    RUN tsrk.specify;
+    RUN tpeng.specify;
+    END specify;
+    METHOD values;
+    P := 306.12 {atm};
+    T := 561 {K};
+    RUN ig.values;
+    RUN vd.values;
+    RUN vdd.values;
+    RUN tve.values;
+    RUN trk.values;
+    RUN tsrk.values;
+    RUN tpeng.values;
+    END values;
+
+END testall;
+

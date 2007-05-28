@@ -1,0 +1,55 @@
+DELETE TYPES;
+READ FILE eos.a4c;
+COMPILE ex1 OF testidealgas;
+RUN {ex1.default_self};
+SOLVE {ex1} WITH QRSlv;
+BROWSE ex1;
+
+DELETE TYPES;
+READ FILE eos.a4c;
+COMPILE ex1 OF testvanderwaals;
+RUN {ex1.default_self};
+SOLVE {ex1} WITH QRSlv;
+BROWSE ex1;
+
+DELETE TYPES;
+READ FILE eos.a4c;
+COMPILE ex1 OF testvdw;
+RUN {ex1.default_self};
+SOLVE {ex1} WITH QRSlv;
+BROWSE ex1;
+
+DELETE TYPES;
+READ FILE eos.a4c;
+COMPILE ex1 OF testtruncatedvirial;
+RUN {ex1.default_self};
+SOLVE {ex1} WITH QRSlv;
+BROWSE ex1;
+
+DELETE TYPES;
+READ FILE eos.a4c;
+COMPILE ex1 OF testrk;
+RUN {ex1.default_self};
+SOLVE {ex1} WITH QRSlv;
+BROWSE ex1;
+
+DELETE TYPES;
+READ FILE eos.a4c;
+COMPILE ex1 OF testsrk;
+RUN {ex1.default_self};
+SOLVE {ex1} WITH QRSlv;
+BROWSE ex1;
+
+DELETE TYPES;
+READ FILE eos.a4c;
+COMPILE ex1 OF testpengrobinson;
+RUN {ex1.default_self};
+SOLVE {ex1} WITH QRSlv;
+BROWSE ex1;
+
+DELETE TYPES;
+READ FILE eos.a4c;
+COMPILE ex1 OF testall;
+RUN {ex1.default_self};
+SOLVE {ex1} WITH QRSlv;
+BROWSE ex1;
