@@ -3,4 +3,16 @@ Equation of state models and calculation of
 compressibility as a function of reduced Temperatures
 and pressures.  
 
+eos.a4c : Models for ideal gas, van der waals, pengrobinson
+          Redlich Kwong and Soave Redlich Kwong (along with models
+          that can be used to test them) 
+eos.a4s : tcltk script to run many/most models in eos.a4c 
+
+eos-pengrobinson.a4c : pretty much what's there in eos.a4c, except
+                       there is a method called zplot (in python) 
+                       to plot Z as a function of Tr and Pr 
+eos-rk.a4c : Redlich Kwong (Z as a function of Tr and Pr also) 
+eos-srk.a4c : Soave Redlich Kwong (Z(Tr, Pr)) 
+eos-vdw.a4c : Vander Waals (Z(Tr, Pr)) 
+zplot.py : Python script/files for plotting (written by John Pye) 
 
