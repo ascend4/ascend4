@@ -309,8 +309,8 @@ class TestIntegrator(Ascend):
 
 	def testListIntegrators(self):
 		I = ascpy.Integrator.getEngines()
-		s1 = sorted([str(i) for i in I.values()])
-		s2 = sorted(['IDA','LSODE','AWW'])
+		s1 = sorted([str(i) for i in I])
+		s2 = sorted(['IDA','LSODE'])
 		assert s1==s2
 
 	# this routine is reused by both testIDA and testLSODE
@@ -353,7 +353,7 @@ class TestIntegrator(Ascend):
 		I = ascpy.Integrator(M)
 		try:
 			I.setEngine('___NONEXISTENT____')
-		except RuntimeError:
+		except IndexError:
 			return
 		self.fail("setEngine did not raise error!")
 

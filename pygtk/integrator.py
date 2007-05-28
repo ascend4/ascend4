@@ -57,7 +57,7 @@ class IntegratorWindow:
 		self.fill_values()
 
 		# set the engine initially
-		self.integrator.setEngine(self.engines.keys()[self.engineselect.get_active()])
+		self.integrator.setEngine(self.engines[self.engineselect.get_active()])
 
 	def fill_values(self):
 		_enginestore = gtk.ListStore(str)
@@ -72,8 +72,8 @@ class IntegratorWindow:
 		if len(self.engines):
 			for k in self.engines:
 				_row = _enginestore.append()
-				_enginestore.set(_row,0,self.engines[k])
-				if self.engines[k]==_engpref:
+				_enginestore.set(_row,0,k)
+				if k==_engpref:
 					_engindex=_i
 				_i += 1
 
@@ -125,7 +125,9 @@ class IntegratorWindow:
 	def on_engineselect_changed(self,widget,*args):
 		index = widget.get_active()
 		print "Setting engine to %d" % index
-		self.integrator.setEngine(self.engines.keys()[index])
+		print "Engines are",self.engines
+		print "Selection is %s" % self.engines[index]
+		self.integrator.setEngine(self.engines[index])
 
 	def on_moreparametersbutton_clicked(self,*args):
 		print "ZO YOU WANT MORE PAHAMETERS EH!"
@@ -242,9 +244,9 @@ class IntegratorWindow:
 
 		self.color_entry(self.engineselect,"white")
 
-		self.prefs.setStringPref("Integrator","engine",self.engines.values()[engine])
+		self.prefs.setStringPref("Integrator","engine",self.engines[engine])
 
 		try:
-			_res = self.integrator.setEngine(self.engines.keys()[engine])			
+			_res = self.integrator.setEngine(self.engines[engine])			
 		except IndexError,e:
 			raise IntegratorERror("Unable to set engine: %s",e) 

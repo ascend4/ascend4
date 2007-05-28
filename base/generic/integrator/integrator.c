@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
 
 #include <system/slv_common.h>
 #include <system/slv_client.h>
@@ -201,73 +202,96 @@ static void IntegInitSymbols(void){
 */
 
 /**
-	At present, integrators are all present at compile-time so this is a static
-	list; we just return the list.
+	Local function that holds the list of available integrators. The value 
+	returned is NOT owned by the called.
+
+	@param free_space if 0, call as normal. if 1, free the list and maybe do some
+	cleaning up etc. Should be called whenever a simulation is destroyed.
 */
-const IntegratorLookup *integrator_get_engines(){
-#define S ,
-#define I(N,P) {INTEG_##N, #N}
-	static const IntegratorLookup list[] = {
-		INTEG_LIST
-		,{INTEG_UNKNOWN,NULL}
-	};
-#undef S
-#undef I
-	return list;
+static struct gl_list_t *integrator_get_list(int free_space){
+	static int init = 0;
+	static struct gl_list_t *L;
+	if(free_space){
+		if(init && L)ASC_FREE(L);
+		init = 0;
+		return NULL;
+	}
+	if(!init){
+		L = gl_create(10);
+		gl_append_ptr(L, (IntegratorInternals *)&integrator_ida_internals);
+#ifdef ASC_WITH_IDA
+		gl_append_ptr(L, (IntegratorInternals *)&integrator_lsode_internals);
+#endif
+		init = 1;
+	}
+	return L;
+}
+
+/**
+	Return gl_list of IntegratorInternals. C++ will use this to produce a
+	nice little list of integrator names that can be used in Python :-/
+*/
+const struct gl_list_t *integrator_get_engines(){
+	return integrator_get_list(0);
 }
 
 /* return 0 on success */
-int integrator_set_engine(IntegratorSystem *sys, IntegratorEngine engine){
+int integrator_set_engine(IntegratorSystem *sys, const char *name){
+	const struct gl_list_t *L = integrator_get_engines();
+	int i;
+	const IntegratorInternals *I, *Ifound=NULL;
+	for(i=1; i <= gl_length(L); ++i){
+		I = gl_fetch(L,i);
+		if(strcmp(I->name,name)==0){
+			Ifound = I;
+			break;
+		}
+	}
+	if(Ifound){
+		/** @TODO tests for applicability of this engine... */
 
-	CONSOLE_DEBUG("Setting engine...");
+		CONSOLE_DEBUG("Setting engine...");
+		if(Ifound->engine == sys->engine){
+			// already set...
+			return 0;
+		}
 
-	/* verify integrator type ok. always passes for nonNULL inst. */
-	if(engine==INTEG_UNKNOWN){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR
-			,"Integrator has not been specified (or is unknown)."
-		);
-		return 1;
+		// clean up if old engine is there
+		if(sys->engine!=INTEG_UNKNOWN){
+#ifdef DESTROY_DEBUG
+			CONSOLE_DEBUG("Freeing memory used by old integrator engine");
+#endif
+			integrator_free_engine(sys);
+#ifdef DESTROY_DEBUG
+			CONSOLE_DEBUG("done");
+#endif
+		}
+
+		sys->engine = Ifound->engine;
+
+		sys->internals = Ifound;
 	}else{
-		/** @TODO other engine-specific tests */
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid engine name '%s'",name);
+		return 1;
 	}
-
-	if(engine==sys->engine){
-		return 0;
-	}
-	if(sys->engine!=INTEG_UNKNOWN){
-#ifdef DESTROY_DEBUG
-		CONSOLE_DEBUG("Freeing memory used by old integrator engine");
-#endif
-		integrator_free_engine(sys);
-#ifdef DESTROY_DEBUG
-		CONSOLE_DEBUG("done");
-#endif
-	}
-	sys->engine = engine;
-	switch(sys->engine){
-#ifdef ASC_WITH_IDA
-		case INTEG_IDA: sys->internals = &integrator_ida_internals; break;
-#endif
-		case INTEG_LSODE: sys->internals = &integrator_lsode_internals; break;
-		case INTEG_AWW: sys->internals = &integrator_aww_internals; break;
-		default:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown integrator engine");
-			sys->internals = NULL;
-			return 1;
-	};
 
 	asc_assert(sys->internals);
 	integrator_create_engine(sys);
 	return 0;
 }
 
-IntegratorEngine integrator_get_engine(const IntegratorSystem *sys){
-	return sys->engine;
+/**
+	@TODO rename this
+*/	
+const IntegratorInternals *integrator_get_engine(const IntegratorSystem *sys){
+	return sys->internals;
 }
 
 /**
 	Free any engine-specific  data that was required for the solution of
 	this system. Note that this data is pointed to by sys->enginedata.
+
+	@TODO rename this
 */
 void integrator_free_engine(IntegratorSystem *sys){
 	if(sys->engine==INTEG_UNKNOWN)return;
@@ -296,6 +320,8 @@ void integrator_free_engine(IntegratorSystem *sys){
 	is that we want to use a specified integrator engine, not the full details
 	of the problem at hand. Allocating space inside enginedata should be done
 	during the solve stage (and freed inside integrator_free_engine)
+
+	@TODO rename this
 */
 void integrator_create_engine(IntegratorSystem *sys){
 	asc_assert(sys);
@@ -304,6 +330,35 @@ void integrator_create_engine(IntegratorSystem *sys){
 	asc_assert(sys->internals->createfn);
 	asc_assert(sys->enginedata==NULL);
 	(sys->internals->createfn)(sys);
+}
+
+int integrator_register(const IntegratorInternals *integ){
+	/* get the current list of registered engines */
+	const struct gl_list_t *L;
+	L = integrator_get_engines();
+
+	CONSOLE_DEBUG("REGISTERING INTEGRATOR");
+	CONSOLE_DEBUG("There were %d registered integrators", gl_length(integrator_get_list(0)));
+
+	int i;
+	const IntegratorInternals *I;
+	for(i=1; i < gl_length(L); ++i){
+		I = (const IntegratorInternals *)gl_fetch(L,i);
+		if(strcmp(integ->name,I->name)==0){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integrator with name '%s' is already registered",integ->name);
+			return 1;
+		}
+		if(integ->engine == I->engine){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integrator with ID '%d' is already registered",integ->engine);
+		}
+	}
+
+	CONSOLE_DEBUG("Adding engine '%s'",integ->name);
+
+	gl_append_ptr(L,(IntegratorInternals *)integ);
+	
+	CONSOLE_DEBUG("There are now %d registered integrators", gl_length(integrator_get_list(0)));
+	return 0;
 }
 
 /*------------------------------------------------------------------------------
