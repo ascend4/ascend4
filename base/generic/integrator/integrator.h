@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006-2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -330,14 +330,14 @@ ASC_DLLSPEC void integrator_free(IntegratorSystem *blsys);
 	Deallocates any memory used and sets all integration global points to NULL.
 */
 
-ASC_DLLSPEC const IntegratorLookup *integrator_get_engines();
+ASC_DLLSPEC const struct gl_list_t *integrator_get_engines();
 /**<
 	Return a {INTEG_UNKNOWN,NULL} terminated list of integrator currently
 	available. At present this is determined at compile time but will be
 	changed to being determined at load time if necessary.
 */
 
-ASC_DLLSPEC int integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine engine);
+ASC_DLLSPEC int integrator_set_engine(IntegratorSystem *blsys, const char *name);
 /**<
 	Sets the engine for this integrator. Checks that the integrator can be used
 	on the given system.
@@ -347,10 +347,10 @@ ASC_DLLSPEC int integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine 
 		2 if invalid engine (not suitable for this present problem)
 */
 
-ASC_DLLSPEC IntegratorEngine integrator_get_engine(const IntegratorSystem *blsys);
+ASC_DLLSPEC const IntegratorInternals *integrator_get_engine(const IntegratorSystem *blsys);
 /**<
-	Returns the engine (ID) selected for use in this IntegratorSystem (may return
-	INTEG_UNKNOWN if none or invalid setting).
+	Returns the engine 'internals' structure in use in this IntegratorSystem, or
+	NULL if none is in use.
 */
 
 ASC_DLLSPEC int integrator_params_get(const IntegratorSystem *blsys, slv_parameters_t *parameters);
@@ -574,6 +574,11 @@ extern int integrator_output_write_obs(IntegratorSystem *blsys);
 	user notification or screen update, etc.
 */
 extern int integrator_output_close(IntegratorSystem *blsys);
+
+/*----------------------------------
+	DYNAMIC LIST OF INTEGRATORS
+*/
+ASC_DLLSPEC int integrator_register(const IntegratorInternals *integ);
 
 /* @} */
 

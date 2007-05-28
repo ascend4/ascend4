@@ -170,61 +170,39 @@ Integrator::writeDebug(FILE *fp) const{
 }
 
 void
-Integrator::setEngine(IntegratorEngine engine){
-	int res = integrator_set_engine(this->blsys, engine);
-	if(!res)return;
+Integrator::setEngine(const string &name){
+	int res = integrator_set_engine(this->blsys, name.c_str());
+	if(!res)return; // all OK
 	if(res==1)throw range_error("Unknown integrator");
 	if(res==2)throw range_error("Invalid integrator");
+
 	stringstream ss;
 	ss << "Unknown error in setEngine (res = " << res << ")";
 	throw runtime_error(ss.str());
-}
-
-void
-Integrator::setEngine(int engine){
-	setEngine((IntegratorEngine)engine);
-}
-
-void
-Integrator::setEngine(const string &name){
-	CONSOLE_DEBUG("Setting integration engine to '%s'",name.c_str());
-	IntegratorEngine engine = INTEG_UNKNOWN;
-#ifdef ASC_WITH_LSODE
-	if(name=="LSODE")engine = INTEG_LSODE;
-#endif
-#ifdef ASC_WITH_IDA
-	if(name=="IDA")engine = INTEG_IDA;
-#endif
-	if(engine==INTEG_UNKNOWN){
-		throw runtime_error("Unkown integrator name");
-	}
-	setEngine(engine);
 }
 
 /**
 	Ideally this list would be dynamically generated based on what solvers
 	are available or are in memory.
 */
-map<int,string>
+vector<string>
 Integrator::getEngines(){
-	map<int,string> m;
-	const IntegratorLookup *list = integrator_get_engines();
-	while(list->id != INTEG_UNKNOWN){
-		if(list->name==NULL)throw runtime_error("list->name is NULL");
-		m.insert(pair<int,string>(list->id,list->name));
-		++list;
+	vector<string> m;
+	const gl_list_t *L = integrator_get_engines();
+	for(unsigned long i=1; i<=gl_length(L); ++i){
+		const IntegratorInternals *I = (const IntegratorInternals *)gl_fetch(L,i);
+		m.push_back(I->name);
 	}
 	return m;
 }
 
 string
 Integrator::getName() const{
-	map<int,string> m=getEngines();
-	map<int,string>::iterator f = m.find(integrator_get_engine(blsys));
-	if(f==m.end()){
+	const IntegratorInternals *I = integrator_get_engine(blsys);
+	if(I==NULL){
 		throw runtime_error("No engine selected");
 	}
-	return f->second;
+	return I->name;
 }
 
 /**

@@ -48,7 +48,7 @@ const IntegratorInternals integrator_dopri5_internals =
 		,integrator_dopri5_params_default
 		,integrator_analyse_ode /* note, this routine is back in integrator.c */
 		,integrator_dopri5_solve
-		,integrator_dopri5_write_matrix
+		,NULL
 		,NULL /* debugfn */
 		,integrator_dopri5_free
 		,INTEG_DOPRI5
@@ -57,8 +57,8 @@ const IntegratorInternals integrator_dopri5_internals =
 
 extern ASC_EXPORT int dopri5_register(void)
 {
-	CONSOLE_DEBUG("DOPRI5");
-	return 0;
+	CONSOLE_DEBUG("Registering DOPRI5...");
+	return integrator_register(&integrator_dopri5_internals);
 }
 
 enum dopri5_status{
@@ -88,6 +88,46 @@ typedef struct IntegratorDopri5DataStruct
 IntegratorDopri5Data;
 
 /*------------------------------------------------------------------------------
+	CREATE/FREE
+*/
+
+void integrator_dopri5_create(struct IntegratorSystemStruct *blsys){
+	IntegratorDopri5Data *d;
+	d = ASC_NEW_CLEAR(IntegratorDopri5Data);
+	d->n_eqns=0;
+	d->input_indices=NULL;
+	d->output_indices=NULL;
+	d->y_vars=NULL;
+	d->ydot_vars=NULL;
+	d->rlist=NULL;
+	blsys->enginedata=(void*)d;
+	integrator_dopri5_params_default(blsys);
+	CONSOLE_DEBUG("CREATED DOPRI5");
+}
+
+void integrator_dopri5_free(void *enginedata){
+	IntegratorDopri5Data d;
+	d = *((IntegratorDopri5Data *)enginedata);
+
+	if(d.input_indices)ASC_FREE(d.input_indices);
+	d.input_indices = NULL;
+
+	if(d.output_indices)ASC_FREE(d.output_indices);
+	d.output_indices = NULL;
+
+	if(d.y_vars)ASC_FREE(d.y_vars);
+	d.y_vars = NULL;
+
+	if(d.ydot_vars)ASC_FREE(d.ydot_vars);
+	d.ydot_vars = NULL;
+
+	if(d.rlist)ASC_FREE(d.rlist);
+	d.rlist =  NULL;
+
+	d.n_eqns = 0L;
+}
+
+/*------------------------------------------------------------------------------
 	PARAMETERS
 */
 
@@ -110,12 +150,7 @@ enum dopri5_parameters{
 #endif
 };
 
-/**
-	Here the full set of parameters is defined, along with upper/lower bounds,
-	etc. The values are stuck into the blsys->params structure.
- 
-	@return 0 on success
-*/
+
 int integrator_dopri5_params_default(IntegratorSystem *blsys){
 
 	asc_assert(blsys!=NULL);
@@ -399,6 +434,7 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 							, unsigned long start_index, unsigned long finish_index
 ){
 	IntegratorDopri5Data *d;
+	slv_status_t status;
 
 	double x;
 	double xend,xprev;
@@ -436,6 +472,28 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	d->ydot_vars = ASC_NEW_ARRAY(struct var_variable *, d->n_eqns+1);
 
 	/* set up the NLA solver here */
+
+	/* 
+		DOPRI5 should be OK to deal with any linsol/linsolqr-based solver.
+		But for the moment we restrict to just QRSlv :-(
+	*/
+	if(strcmp(slv_solver_name(slv_get_selected_solver(blsys->system)),"QRSlv") != 0) {
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv must be selected before integration.");
+		return 1;
+	}
+
+	CONSOLE_DEBUG("Solver selected is '%s'",slv_solver_name(slv_get_selected_solver(blsys->system)));
+
+	slv_get_status(blsys->system, &status);
+
+	if(status.struct_singular){
+		ERROR_REPORTER_HERE(ASC_USER_WARNING	
+			,"The system (according to QRSlv) is structurally singular."
+			" The ODE system may also be singular, but not necessarily."
+		);
+		/*    d->status = lsode_nok;
+		return 2;*/
+	}
 
 	/* here we assume integrators.c is in charge of dynamic loading */
 

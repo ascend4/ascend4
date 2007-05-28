@@ -713,7 +713,6 @@ int Asc_IntegInstIntegrableCmd(ClientData cdata,Tcl_Interp *interp,
 int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
                    int argc, CONST84 char *argv[])
 {
-  IntegratorEngine integrator = INTEG_UNKNOWN;
   char buf[MAXIMUM_NUMERIC_LENGTH];         /* string to hold integer */
   CONST84 char *engine = NULL;
   int result = 0;         /* 0 = FALSE; 1 = TRUE */
@@ -771,23 +770,6 @@ int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  if (engine != NULL && strncmp(engine,"BLSODE",3)==0) {
-    integrator = INTEG_LSODE;
-    ifound=1;
-  }
-
-#ifdef ASC_WITH_IDA
-  if (engine != NULL && strncmp(engine,"IDA",3)==0) {
-    integrator = INTEG_IDA;
-    ifound=1;
-  }
-#endif
-
-  if (!ifound) {
-    Tcl_SetResult(interp, "Unsupported integrator", TCL_STATIC);
-    Tcl_AppendResult(interp," ",engine,SNULL);
-    return TCL_ERROR;
-  }
   if (ci0 != NULL && ci1 != NULL) {
     /* get i0, i1 if both supplied. */
     long i;
@@ -840,7 +822,15 @@ int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
   reporter = Asc_GetIntegReporter();
 
   blsys = integrator_new(g_solvsys_cur,g_solvinst_cur);
-  integrator_set_engine(blsys, integrator);
+  result = integrator_set_engine(blsys, engine);
+
+  if(result) {
+	integrator_free(blsys);
+    Tcl_SetResult(interp, "Unsupported integrator", TCL_STATIC);
+    Tcl_AppendResult(interp," ",engine,SNULL);
+    return TCL_ERROR;
+  } 
+
   integrator_set_reporter(blsys, reporter);
   integrator_set_samples(blsys,&l_samplelist);
   integrator_set_stepzero(blsys,dt0);
@@ -850,8 +840,9 @@ int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
 
   result = integrator_analyse(blsys);
   if(result){
-      Tcl_SetResult(interp, "integrate_analyse: error returned", TCL_STATIC);
-      return TCL_ERROR;
+     integrator_free(blsys);
+     Tcl_SetResult(interp, "integrate_analyse: error returned", TCL_STATIC);
+     return TCL_ERROR;
   }
 
   /* go and solve it */

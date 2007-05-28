@@ -3,7 +3,7 @@
 	Copyright (C) 1993 Joseph Zaher
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
 	Copyright (C) 1996 Benjamin Andrew Allan
-	Copyright (C) 2005-2006 Carnegie Mellon University
+	Copyright (C) 2005-2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -252,10 +252,10 @@ typedef struct{
 
 struct slv_parameters_structure;
 
-int slv_param_int (struct slv_parameters_structure *p, const int index, const SlvParameterInitInt);
-int slv_param_bool(struct slv_parameters_structure *p, const int index, const SlvParameterInitBool);
-int slv_param_real(struct slv_parameters_structure *p, const int index, const SlvParameterInitReal);
-int slv_param_char(struct slv_parameters_structure *p, const int index, const SlvParameterInitChar, char *options[]);
+ASC_DLLSPEC int slv_param_int (struct slv_parameters_structure *p, const int index, const SlvParameterInitInt);
+ASC_DLLSPEC int slv_param_bool(struct slv_parameters_structure *p, const int index, const SlvParameterInitBool);
+ASC_DLLSPEC int slv_param_real(struct slv_parameters_structure *p, const int index, const SlvParameterInitReal);
+ASC_DLLSPEC int slv_param_char(struct slv_parameters_structure *p, const int index, const SlvParameterInitChar, char *options[]);
 
 /* macros to access values from your solver code 
 

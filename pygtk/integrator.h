@@ -52,9 +52,7 @@ public:
 	Integrator(Simulation &);
 	~Integrator();
 
-	static std::map<int,std::string> getEngines();
-	void setEngine(IntegratorEngine engine);
-	void setEngine(int engine);
+	static std::vector<std::string> getEngines();
 	void setEngine(const std::string &name);
 	std::string getName() const;
 
