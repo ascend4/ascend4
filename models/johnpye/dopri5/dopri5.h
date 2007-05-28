@@ -46,7 +46,7 @@
 	Version of April 28, 1994.
  
 	Remarks about the C version : this version allocates memory by itself, the
-	iwork array (among the initial FORTRAN parameters) has been splitted into
+	iwork array (among the initial FORTRAN parameters) has been split into
 	independant initial parameters, the statistical variables and last step size
 	and x have been encapsulated in the module and are now accessible through
 	dedicated functions, the variable names have been kept to maintain a kind
@@ -199,8 +199,8 @@
 #include <stdio.h>
 #include <limits.h>
 
-typedef void FcnEqDiff(unsigned n, double x, double *y, double *f);
-typedef void SolTrait(long nr, double xold, double x, double* y, unsigned n, int* irtrn);
+typedef void FcnEqDiff(unsigned n, double x, double *y, double *f, void *user_data);
+typedef void SolTrait(long nr, double xold, double x, double* y, unsigned n, int* irtrn, void *user_data);
 
 extern int dopri5(
         unsigned n,      /* dimension of the system <= UINT_MAX-1*/
@@ -227,6 +227,7 @@ extern int dopri5(
         unsigned nrdens, /* number of components for which dense outpout is required */
         unsigned* icont, /* indexes of components for which dense output is required, >= nrdens */
         unsigned licont  /* declared length of icon */
+		,void *user_data /* passed to solout and fcn */
     );
 
 extern double contd5(

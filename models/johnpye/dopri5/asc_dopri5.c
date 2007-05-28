@@ -25,9 +25,14 @@
 */
 
 #include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascSignal.h>
 #include <utilities/error.h>
 #include <general/ospath.h>
 #include <integrator/integrator.h>
+#include <system/slv_client.h>
+#include <system/slv_stdcalls.h>
+#include "dopri5.h"
 
 #define INTEG_DOPRI5 5
 
@@ -36,8 +41,6 @@ IntegratorParamsDefaultFn integrator_dopri5_params_default;
 IntegratorSolveFn integrator_dopri5_solve;
 IntegratorFreeFn integrator_dopri5_free;
 IntegratorWriteMatrixFn integrator_dopri5_write_matrix;
-
-const IntegratorInternals integrator_lsode_internals;
 
 const IntegratorInternals integrator_dopri5_internals =
 	{
@@ -57,6 +60,15 @@ extern ASC_EXPORT int dopri5_register(void)
 	CONSOLE_DEBUG("DOPRI5");
 	return 0;
 }
+
+enum dopri5_status{
+	DOPRI5_SUCCESS=1
+	,DOPRI5_INTERRUPT=2
+	,DOPRI5_BADINPUT=-1
+	,DOPRI5_ITERLIMIT=-2
+	,DOPRI5_STEPSMALL=-3
+	,DOPRI5_STIFF=-4
+};
 
 typedef struct IntegratorDopri5DataStruct
 {
@@ -79,12 +91,12 @@ IntegratorDopri5Data;
 	PARAMETERS
 */
 
-enum ida_parameters{
-	DOPRI5_PARAMS_
-	,DOPRI5_PARAMS_RTOL
-	,DOPRI5_PARAMS_ATOL
-	,DOPRI5_PARAMS_TOLVECT
-
+enum dopri5_parameters{
+	DOPRI5_PARAM_RTOL
+	,DOPRI5_PARAM_ATOL
+	,DOPRI5_PARAM_TOLVECT
+	,DOPRI5_PARAM_NSTIFF
+		,DOPRI5_PARAMS_SIZE
 #if 0
 	// more parameters for adding later...
 	SolTrait *solout, /* function providing the numerical solution during integration */
@@ -95,16 +107,7 @@ enum ida_parameters{
 	double fac1,     /* parameters for step size selection */
 	double fac2,
 	double beta,     /* for stabilized step size control */
-
-	double hmax,     /* maximal step size */
-	double h,        /* initial step size */
-	long nmax,       /* maximal number of allowed steps */
-
-	int meth,        /* switch for the choice of the coefficients */
-	long nstiff,     /* test for stiffness */
 #endif
-
-	,DOPRI5_PARAMS_SIZE
 };
 
 /**
@@ -123,11 +126,11 @@ int integrator_dopri5_params_default(IntegratorSystem *blsys){
 	slv_destroy_parms(p);
 
 	if(p->parms==NULL) {
-		p->parms = ASC_NEW_ARRAY(struct slv_parameter, LSODE_PARAMS_SIZE);
+		p->parms = ASC_NEW_ARRAY(struct slv_parameter, DOPRI5_PARAMS_SIZE);
 		if(p->parms==NULL)return -1;
 		p->dynamic_parms = 1;
 	} else {
-		asc_assert(p->num_parms == LSODE_PARAMS_SIZE);
+		asc_assert(p->num_parms == DOPRI5_PARAMS_SIZE);
 	}
 
 	/* reset the number of parameters to zero so that we can check it at the end */
@@ -139,7 +142,8 @@ int integrator_dopri5_params_default(IntegratorSystem *blsys){
 						   ,"Use per-variable tolerances?",1
 						   ,"If TRUE, values of 'ode_rtol' and 'ode_atol' are taken from your"
 						   " model and used in the integration. If FALSE, scalar values are"
-						   " used (see 'rtol' and 'atol') and shared by all variables."
+						   " used (see 'rtol' and 'atol') and shared by all variables. See"
+						   " 'itoler' in DOPRI5 code."
 					   }
 					   , TRUE
 				   }
@@ -169,8 +173,18 @@ int integrator_dopri5_params_default(IntegratorSystem *blsys){
 				   }
 				  );
 
-/*
+	slv_param_int(p,DOPRI5_PARAM_NSTIFF
+				  ,(SlvParameterInitInt) {
+					  {"nstiff"
+						  ,"Number of steps considered stiff", 1
+						  ,"Test for stiffness is activated when the current step number is a"
+						  " multiple of nstiff. A negative value means no test."
+					  }
+					  , 1000, -1, 1e6
+				  }
+				 );
 
+/*
 	slv_param_bool(p,DOPRI5_PARAMS_DENSEREPORTING
 				   ,(SlvParameterInitBool) {
 					   {"densereporting"
@@ -183,56 +197,17 @@ int integrator_dopri5_params_default(IntegratorSystem *blsys){
 				   }
 				  );
 
-
-	slv_param_char(p,LSODE_PARAM_METH
+	slv_param_char(p,DOPRI5_PARAM_METH
 				   ,(SlvParameterInitChar) {
 					   {"meth"
 						   ,"Integration method",1
 						   ,"AM=Adams-Moulton method (for non-stiff problems), BDF=Backwards"
 						   " Difference Formular (for stiff problems). See 'Description and"
-						   " Use of LSODE', section 3.1."
+						   " Use of DOPRI5', section 3.1."
 					   }
 					   , "BDF"
 				   }
 				   , (char *[]) {"AM","BDF",NULL
-				   }
-				  );
-
-	slv_param_int(p,LSODE_PARAM_MITER
-				  ,(SlvParameterInitInt) {
-					  {"miter"
-						  ,"Corrector iteration technique", 1
-						  ,"0=Functional iteration, 1=Modified Newton iteration with user-"
-						  "supplied analytical Jacobian, 2=Modified Newton iteration with"
-						  " internally-generated numerical Jacobian, 3=Modified Jacobi-Newton"
-						  " iteration with internally generated numerical Jacobian. See "
-						  " 'Description and Use of LSODE', section 3.1. Note that not all"
-						  " methods described there are available via ASCEND."
-					  }
-					  , 1, 0, 3
-				  }
-				 );
-
-	slv_param_int(p,LSODE_PARAM_MAXORD
-				  ,(SlvParameterInitInt) {
-					  {"maxord"
-						  ,"Maximum method order", 1
-						  ,"See 'Description and Use of LSODE', p 92 and p 8. Limits <=12 for BDF"
-						  " and <=5 for AM. Higher values are reduced automatically. See notes on"
-						  " page 92 regarding oscillatory systems."
-					  }
-					  , 12, 1, 12
-				  }
-				 );
-
-	slv_param_bool(p,LSODE_PARAM_TIMING
-				   ,(SlvParameterInitBool) {
-					   {"timing"
-						   ,"Output timing statistics?",1
-						   ,"If TRUE, additional timing statistics will be output to the"
-						   " console during integration."
-					   }
-					   , TRUE
 				   }
 				  );
 */
@@ -241,9 +216,21 @@ int integrator_dopri5_params_default(IntegratorSystem *blsys){
 	return 0;
 }
 
+/* solver_var children expected for state variables */
+static symchar *g_symbols[2];
+#define STATERTOL g_symbols[0]
+#define STATEATOL g_symbols[1]
+
+static void InitTolNames(void){
+  STATERTOL = AddSymbol("ode_rtol");
+  STATEATOL = AddSymbol("ode_atol");
+}
+
 
 /**
-	Allocates, fills, and returns the rtol vector based on LSODE
+	Allocates, fills, and returns the atoler or rtoler data, which may be either
+	a vector of values for each variable, or may be a single value to be
+	shared by all.
 
 	State variables missing child ode_rtol will be defaulted to RTOL
 
@@ -271,7 +258,7 @@ static double *dopri5_get_artol(IntegratorSystem *blsys, int is_r, int tolvect) 
 	}
 
 	*tol = tolval;
-	return tolval;
+	return tol;
 
   }else{
     tol = ASC_NEW_ARRAY(double, blsys->n_y+1);
@@ -280,7 +267,7 @@ static double *dopri5_get_artol(IntegratorSystem *blsys, int is_r, int tolvect) 
 	  return tol;
 	}
 
-	tolval = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOL)
+	tolval = SLV_PARAM_REAL(&(blsys->params),DOPRI5_PARAM_RTOL);
 
     InitTolNames(); // from where?
 	if(is_r)tolname = STATERTOL;
@@ -299,50 +286,144 @@ static double *dopri5_get_artol(IntegratorSystem *blsys, int is_r, int tolvect) 
       }
     }
   }
-  tol[len] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOL);
+  tol[len] = SLV_PARAM_REAL(&(blsys->params),DOPRI5_PARAM_RTOL);
   return tol;
 }
+
+/*------------------------------------------------------------------------------
+  STATS
+*/
+
+/* 
+	Several functions provide access to different values :
+ 
+	xRead   x value for which the solution has been computed (x=xend after
+		successful return).
+ 
+	hRead   Predicted step size of the last accepted step (useful for a
+		subsequent call to dopri5).
+ 
+	nstepRead   Number of used steps.
+	naccptRead  Number of accepted steps.
+	nrejctRead  Number of rejected steps.
+	nfcnRead    Number of function calls.
+*/
+typedef struct IntegratorDopri5StatsStruct{
+	long nfcn;
+	long nstep;
+	long naccpt;
+	long nrejct;
+	double h;
+	double x;
+} IntegratorDopri5Stats;
 
 /*------------------------------------------------------------------------------
   FUNCTION EVALUATION
 */
 
-FcnEqDiff integrator_dopri5_fex;
+static FcnEqDiff integrator_dopri5_fex;
+
+/**
+	Evaluation function.
+	@param n_eq number of equations, number of y and number of ydot.
+	@param t indep var value
+	@param y input vector of variable values
+	@param ydot return vector of calculated derivatives
+	@param user_data point to whatever we want, in this case the IntegratorSystem	
+*/
+static void integrator_dopri5_fex(
+		unsigned n_eq, double t, double *y, double *ydot
+		, void *user_data
+){
+	slv_status_t status;
+	IntegratorSystem *blsys = (IntegratorSystem *)user_data;
+
+	/*  slv_parameters_t parameters; pity lsode doesn't allow error returns */
+	/* int i; */
+	unsigned long res;
+
+	CONSOLE_DEBUG("Calling for a function evaluation");
+
+	/* pass the time and the unknowns back to the System */
+	integrator_set_t(blsys, t);
+	integrator_set_y(blsys, y);
+
+    slv_resolve(blsys->system);
+
+	if((res = slv_solve(blsys->system))){
+		CONSOLE_DEBUG("solver returns error %ld",res);
+	}
+
+	slv_get_status(blsys->system, &status);
+	if(slv_check_bounds(blsys->system,0,-1,"")){
+		// TODO relay that system has gone out of bounds
+	}
+
+	/* pass the solver status to the integrator */
+	res = integrator_checkstatus(status);
+
+	integrator_output_write(blsys);
+
+  	if(res){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives (%d)",res);
+		// TODO raise SIGINT here
+	}else{
+		/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
+	}
+
+	integrator_get_ydot(blsys, ydot);
+	// DONE, OK
+}
 
 /*------------------------------------------------------------------------------
   REPORTING
 */
 
-SolTrait integrator_dopri5_reporter;
+static SolTrait integrator_dopri5_reporter;
+
+static void integrator_dopri5_reporter(
+		long nr, double xold, double x, double* y
+		, unsigned n, int* irtrn, void *user_data
+){
+	IntegratorSystem *blsys = (IntegratorSystem *)user_data;
+	integrator_output_write(blsys);
+}
 
 /*------------------------------------------------------------------------------
   SOLVE
 */
+
+#define DOPRI5_FREE CONSOLE_DEBUG("FREE DOPRI5")
+
 int integrator_dopri5_solve(IntegratorSystem *blsys
 							, unsigned long start_index, unsigned long finish_index
 ){
+	IntegratorDopri5Data *d;
 
-	slv_status_t status;
-	slv_parameters_t params;
-	IntegratorLsodeData *d;
-
-	double x[2];
+	double x;
 	double xend,xprev;
 	unsigned long nsamples, neq;
 	long nobs;
-	int  itol, itask, mf, lrw, liw;
+	//int  itol, itask, mf, lrw, liw;
 	unsigned long index;
-	int istate, iopt;
-	double * rwork;
-	int * iwork;
-	double *y, *atoler, *rtoler, *obs, *dydx;
+	//int istate, iopt;
+	//double * rwork;
+	//int * iwork;
+	double *y, *atoler, *rtoler, *obs;
 	int my_neq;
-	int reporterstatus;
-	const char *method; /* Table 3.1 in D&UoLSODE */
-	int miter; /* Table 3.2 in D&UoLSODE */
-	int maxord; /* page 92 in D&UoLSODE */
+	enum dopri5_status res;
 
-	d = (IntegratorLsodeData *)(blsys->enginedata);
+	double hmax, h;
+	long nmax;
+	long nstiff;
+
+#if 0
+	const char *method; /* Table 3.1 in D&Uo... */
+	int miter; /* Table 3.2 in D&Uo... */
+	int maxord; /* page 92 in D&Uo... */
+#endif
+
+	d = (IntegratorDopri5Data *)(blsys->enginedata);
 
 	/* the numer of equations must be equal to blsys->n_y, the number of states */
 	d->n_eqns = blsys->n_y;
@@ -360,46 +441,17 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 
 	/* set up parameteers for sending to DOPRI5 */
 
-#if 0
-	method = SLV_PARAM_CHAR(&(blsys->params),LSODE_PARAM_METH);
-	miter = SLV_PARAM_INT(&(blsys->params),LSODE_PARAM_MITER);
-	maxord = SLV_PARAM_INT(&(blsys->params),LSODE_PARAM_MAXORD);
-	if(miter < 0 || miter > 3) {
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unacceptable value '%d' of parameter 'miter'",miter);
-		return 5;
-	}
-	if(strcmp(method,"BDF")==0) {
-		CONSOLE_DEBUG("method = BDF");
-		mf = 20 + miter;
-		if(maxord > 5) {
-			maxord = 5;
-			CONSOLE_DEBUG("MAXORD reduced to 5 for BDF");
-		}
-	} else if(strcmp(method,"AM")==0) {
-		CONSOLE_DEBUG("method = AM");
-		if(maxord > 12) {
-			maxord = 12;
-			CONSOLE_DEBUG("MAXORD reduced to 12 for AM");
-		}
-		mf = 10 + miter;
-	} else {
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unacceptable value '%d' of parameter 'meth'",method);
-		return 5;
-	}
-
-	CONSOLE_DEBUG("MF = %d",mf);
-#endif
-
 	nsamples = integrator_getnsamples(blsys);
 	if (nsamples <2) {
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration will not be performed. The system has no end sample time defined.");
-		d->status = lsode_nok;
+		//d->status = dopri5_nok;
 		return 3;
 	}
 	neq = blsys->n_y;
 	nobs = blsys->n_obs;
 
 #if 0
+	// TODO implement these:
 	unsigned nrdens, /* number of components for which dense outpout is required */
 	unsigned* icont, /* indexes of components for which dense output is required, >= nrdens */
 	unsigned licont  /* declared length of icon */
@@ -411,76 +463,31 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 
 	/* samplelist_debug(blsys->samples); */
 
-#if 0
-	/* x[0] = integrator_get_t(blsys); */
-	x[0] = integrator_getsample(blsys, 0);
-	x[1] = x[0]-1; /* make sure we don't start with wierd x[1] */
+	x = integrator_getsample(blsys, 0);
 
-	/* RWORK memory requirements: see D&UoLSODE p 82 */
-	switch(mf) {
-	case 10:
-	case 20:
-		lrw = 20 + neq * (maxord + 1) + 3 * neq;
-		break;
-	case 11:
-	case 12:
-	case 21:
-	case 22:
-		lrw = 22 + neq * (maxord + 1) + 3 * neq + neq*neq;
-		break;
-	case 13:
-	case 23:
-		lrw = 22 + neq * (maxord + 1) + 4 * neq;
-		break;
-	default:
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unknown size requirements for this value of 'mf'");
-		return 4;
-	}
-
-	rwork = ASC_NEW_ARRAY_CLEAR(double, lrw+1);
-	liw = 20 + neq;
-
-#endif
-
-	iwork = ASC_NEW_ARRAY_CLEAR(int, liw+1);
 	y = integrator_get_y(blsys, NULL);
 	
-	rtoler = lsode_get_artol(blsys,1,tolvect);
-	atoler = lsode_get_artol(blsys,0,tolvect);
+	rtoler = dopri5_get_artol(blsys,1,tolvect);
+	atoler = dopri5_get_artol(blsys,0,tolvect);
 
 	obs = integrator_get_observations(blsys, NULL);
 
-#if 0
-	dydx = ASC_NEW_ARRAY_CLEAR(double, neq+1);
-	if(!y || !obs || !atoler || !rtoler || !rwork || !iwork || !dydx) {
-		lsode_free_mem(y,rtoler,atoler,rwork,iwork,obs,dydx);
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for lsode.");
-		d->status = lsode_nok;
-		return 4;
-	}
-#endif
+	// TODO check memory allocations
 
-	/*
-		Prepare args and call lsode.
-	*/
-	itol = 4;
-	itask = 1;
-	istate = 1;
-	iopt = 1;
-	rwork[4] = integrator_get_stepzero(blsys);
-	rwork[5] = integrator_get_maxstep(blsys);
-	rwork[6] = integrator_get_minstep(blsys);
-	iwork[5] = integrator_get_maxsubsteps(blsys);
-	iwork[4] = maxord;
-	CONSOLE_DEBUG("MAXORD = %d",maxord);
+	h = integrator_get_stepzero(blsys);
+	hmax = integrator_get_maxstep(blsys);
+	/* rwork[6] = integrator_get_minstep(blsys); */ /* ignored */
+	nmax = integrator_get_maxsubsteps(blsys);
 
-	if(x[0] > integrator_getsample(blsys, 2)) {
+	nstiff = SLV_PARAM_INT(&(blsys->params),DOPRI5_PARAM_NSTIFF);
+
+	if(x > integrator_getsample(blsys, 2)) {
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid initialisation time: exceeds second timestep value");
 		return 5;
 	}
 
 	/* put the values from derivative system into the record */
-	integrator_setsample(blsys, start_index, x[0]);
+	integrator_setsample(blsys, start_index, x);
 
 	integrator_output_init(blsys);
 
@@ -490,19 +497,12 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 
 	my_neq = (int)neq;
 
-	/*
-	First time entering lsode, x is input. After that,
-	lsode uses x as output (y output is y(x)). To drive
-	the loop ahead in time, all we need to do is keep upping
-	xend.
-	*/
-
 	blsys->currentstep = 0;
 	for(index = start_index; index < finish_index; index++, 	blsys->currentstep++) {
 		xend = integrator_getsample(blsys, index+1);
-		xprev = x[0];
+		xprev = x;
 		asc_assert(xend > xprev);
-		/* CONSOLE_DEBUG("LSODE call #%lu: x = [%f,%f]", index,xprev,xend); */
+		/* CONSOLE_DEBUG("DOPRI5 call #%lu: x = [%f,%f]", index,xprev,xend); */
 
 # ifdef ASC_SIGNAL_TRAPS
 
@@ -512,39 +512,55 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 		if(SETJMP(g_fpe_env)==0) {
 # endif /* ASC_SIGNAL_TRAPS */
 
-			/* CONSOLE_DEBUG("Calling LSODE with end-time = %f",xend); */
-			/*
-			switch(mf){
-			case 10:
-			CONSOLE_DEBUG("Non-stiff (Adams) method; no Jacobian will be used"); break;
-			case 21:
-			CONSOLE_DEBUG("Stiff (BDF) method, user-supplied full Jacobian"); break;
-			case 22:
-			CONSOLE_DEBUG("Stiff (BDF) method, internally generated full Jacobian"); break;
-			case 24:
-			CONSOLE_DEBUG("Stiff (BDF) method, user-supplied banded jacobian"); break;
-			case 25:
-			CONSOLE_DEBUG("Stiff (BDF) method, internally generated banded jacobian"); break;
-			default:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid method id %d for LSODE",mf);
-			return 0; * failure *
-			}
-			*/
+			/* CONSOLE_DEBUG("Calling DOPRI5 with end-time = %f",xend); */
 
 			d->lastwrite = clock();
 
-			// tolvect = 0 : scalars
-			LSODE(&(LSODE_FEX), &my_neq, y, x, &xend,
-				  &itol, rtoler, atoler, &itask, &istate,
-				  &iopt ,rwork, &lrw, iwork, &liw, &(LSODE_JEX), &mf);
+#if 0
+extern int dopri5(
+        unsigned n,      /* dimension of the system <= UINT_MAX-1*/
+        FcnEqDiff *fcn,   /* function computing the value of f(x,y) */
+        double x,        /* initial x-value */
+        double* y,       /* initial values for y */
+        double xend,     /* final x-value (xend-x may be positive or negative) */
 
-		    res = dopri5 (my_neq, &integrator_dopri5_fex, x, y, xend, rtoler, atoler, itoler, integrator_dopri5_reporter, iout,
-				stdout, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, NULL, 0);
+        double* rtoler,  /* relative error tolerance */
+        double* atoler,  /* absolute error tolerance */
+        int itoler,      /* switch for rtoler and atoler */
+        SolTrait *solout, /* function providing the numerical solution during integration */
+        int iout,        /* switch for calling solout */
+
+        FILE* fileout,   /* messages stream */
+        double uround,   /* rounding unit */
+        double safe,     /* safety factor */
+        double fac1,     /* parameters for step size selection */
+        double fac2,
+
+        double beta,     /* for stabilized step size control */
+        double hmax,     /* maximal step size */
+        double h,        /* initial step size */
+        long nmax,       /* maximal number of allowed steps */
+        int meth,        /* switch for the choice of the coefficients */
+
+        long nstiff,     /* test for stiffness */
+        unsigned nrdens, /* number of components for which dense outpout is required */
+        unsigned* icont, /* indexes of components for which dense output is required, >= nrdens */
+        unsigned licont  /* declared length of icon */
+    );
+#endif
+		    res = dopri5 (my_neq, &integrator_dopri5_fex, x, y, xend
+				, rtoler, atoler, tolvect, integrator_dopri5_reporter, iout
+				, stdout, 0.0, 0.0, 0.0, 0.0
+				, 0.0 /* beta */, hmax, h, nmax, 0
+				, nstiff, 0, NULL, 0
+				, (void *)blsys
+			);
 
 # ifdef ASC_SIGNAL_TRAPS
-		} else {
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE call.");
+		}else{
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in DOPRI5 call.");
 			//dopri5_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
+			DOPRI5_FREE;
 			return 6;
 		}
 		Asc_SignalHandlerPopDefault(SIGFPE);
@@ -552,88 +568,38 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 
 # endif
 
-		/* CONSOLE_DEBUG("AFTER %lu LSODE CALL\n", index); */
-		/* this check is better done in fex,jex, but lsode takes no status */
-		/*    if (Solv_C_CheckHalt()) {
-		      if (istate >= 0) {
-		        istate=-7;
-		      }
-		    }
-		*/
-		if(d->stop) {
-			istate=-8;
-		}
+	switch(res){
+		case DOPRI5_SUCCESS:
+			break;
+		case DOPRI5_INTERRUPT:
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"DOPRI5 interrupted by user");
+			break;
+		case DOPRI5_BADINPUT:
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad input to DOPRI5");
+			break;
+		case DOPRI5_ITERLIMIT:
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Iteration limit exceeded in DOPRI5");
+			break;
+		case DOPRI5_STEPSMALL:
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Step size became too small in DOPRI5");
+			break;
+		case DOPRI5_STIFF:
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem appears stiff in DOPRI5");
+			break;
+	}
 
-		if (istate < 0 ) {
-			/* some kind of error occurred... */
-			ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
-			//lsode_write_istate(istate);
-			FPRINTF(ASCERR, "\nFurthest point reached was t = %g.\n",x[0]);
-			error_reporter_end_flush();
+	if(res<0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Furthest point reached was t = %g.\n",x);
+		DOPRI5_FREE;
+		return 7;
+	}
 
-			//dopri5_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
-			integrator_output_close(blsys);
-			return 7;
-		}
+	integrator_setsample(blsys, index+1, x);
+	/* record when dopri5 actually came back */
+	integrator_set_t(blsys, x);
+	integrator_set_y(blsys, y);
+	/* put x,y in d in case dopri5 got x,y by interpolation, as it does  */
 
-		if (d->status==lsode_nok) {
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to an error in derivative computations.");
-			//lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
-			//d->status = lsode_ok;		/* clean up before we go */
-			//d->lastcall = lsode_none;
-			integrator_output_close(blsys);
-			return 8;
-		}
-
-		integrator_setsample(blsys, index+1, x[0]);
-		/* record when lsode actually came back */
-		integrator_set_t(blsys, x[0]);
-		integrator_set_y(blsys, y);
-		/* put x,y in d in case lsode got x,y by interpolation, as it does  */
-
-		reporterstatus = integrator_output_write(blsys);
-
-		if(reporterstatus==0) {
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration cancelled");
-			//lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
-			//d->status = lsode_ok;
-			//d->lastcall = lsode_none;
-			integrator_output_close(blsys);
-			return 9;
-		}
-
-		if (nobs > 0) {
-# ifdef ASC_SIGNAL_TRAPS
-			if (SETJMP(g_fpe_env)==0) {
-# endif /* ASC_SIGNAL_TRAPS */
-
-				/* solve for obs since d isn't necessarily already
-				   computed there though lsode's x and y may be.
-				   Note that since lsode usually steps beyond xend
-				   x1 usually wouldn't be x0 precisely if the x1/x0
-				   scheme worked, which it doesn't anyway. */
-
-				//LSODEDATA_SET(blsys);
-				//LSODE_FEX(&my_neq, x, y, dydx);
-				//LSODEDATA_RELEASE();
-
-				/* calculate observations, if any, at returned x and y. */
-				obs = integrator_get_observations(blsys, obs);
-
-				integrator_output_write_obs(blsys);
-
-# ifdef ASC_SIGNAL_TRAPS
-			}else{
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE FEX call.");
-				lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
-				d->status = lsode_ok;               /* clean up before we go */
-				d->lastcall = lsode_none;
-				integrator_output_close(blsys);
-				return 10;
-			}
-# endif /* ASC_SIGNAL_TRAPS */
-		}
-		/* CONSOLE_DEBUG("Integration completed from %3g to %3g.",xprev,x[0]); */
 	}
 
 	integrator_output_close(blsys);
@@ -641,6 +607,4 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	CONSOLE_DEBUG("--- DOPRI5 done ---");
 	return 0; /* success */
 }
-
-#endif
 
