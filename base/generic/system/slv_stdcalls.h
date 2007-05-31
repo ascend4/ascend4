@@ -85,7 +85,7 @@ extern int slv_ensure_bounds(slv_system_t sys, int32 lo, int32 hi, FILE *fp);
 	@return number of repairs made or -1 if something weird found.
 */
 
-extern int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
+ASC_DLLSPEC int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
 	const char *label
 );
 /**<

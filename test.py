@@ -1331,6 +1331,21 @@ class TestIDASPGMR:#(Ascend):
 		assert abs(float(M.y2) - 2.0437e-13) < 1e-15
 		assert abs(float(M.y3) - 1.0) < 1e-5
 
+class TestDOPRI5(Ascend):
+	def testlotka(self):
+		self.L.load('johnpye/dopri5/dopri5test.a4c')
+		M = self.L.findType('dopri5test').getSimulation('sim')
+		M.setSolver(ascpy.Solver("QRSlv"))
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		I = ascpy.Integrator(M)
+		I.setEngine('DOPRI5')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 20)
+		I.setParameter('rtol',1e-8)
+		I.analyse()
+		assert I.getNumVars()==1
+		I.solve()
+
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
 	def nothing(self):

@@ -338,7 +338,7 @@ int integrator_register(const IntegratorInternals *integ){
 	L = integrator_get_engines();
 
 	CONSOLE_DEBUG("REGISTERING INTEGRATOR");
-	CONSOLE_DEBUG("There were %d registered integrators", gl_length(integrator_get_list(0)));
+	CONSOLE_DEBUG("There were %lu registered integrators", gl_length(integrator_get_list(0)));
 
 	int i;
 	const IntegratorInternals *I;
@@ -357,7 +357,7 @@ int integrator_register(const IntegratorInternals *integ){
 
 	gl_append_ptr(L,(IntegratorInternals *)integ);
 	
-	CONSOLE_DEBUG("There are now %d registered integrators", gl_length(integrator_get_list(0)));
+	CONSOLE_DEBUG("There are now %lu registered integrators", gl_length(integrator_get_list(0)));
 	return 0;
 }
 
