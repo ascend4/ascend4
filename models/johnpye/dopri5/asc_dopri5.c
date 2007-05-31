@@ -79,7 +79,7 @@ typedef struct IntegratorDopri5DataStruct
 	struct var_variable **ydot_vars; /**< NULL-terminated list of derivative vars*/
 	struct rel_relation **rlist;     /**< NULL-terminated list of relevant rels
 								                                      to be differentiated */
-
+	long currentsample;
 	char stop;                             /* stop requested? */
 	int partitioned;                       /* partioned func evals or not */
 
@@ -373,15 +373,17 @@ static void integrator_dopri5_fex(
 	slv_status_t status;
 	IntegratorSystem *blsys = (IntegratorSystem *)user_data;
 
-	/*  slv_parameters_t parameters; pity lsode doesn't allow error returns */
-	/* int i; */
+	int i;
 	unsigned long res;
 
-	CONSOLE_DEBUG("Calling for a function evaluation");
+	//CONSOLE_DEBUG("Calling for a function evaluation");
 
 	/* pass the time and the unknowns back to the System */
 	integrator_set_t(blsys, t);
 	integrator_set_y(blsys, y);
+	//CONSOLE_DEBUG("t = %f: y[0] = %f",t,y[0]);
+
+	asc_assert(blsys->system);
 
     slv_resolve(blsys->system);
 
@@ -390,23 +392,37 @@ static void integrator_dopri5_fex(
 	}
 
 	slv_get_status(blsys->system, &status);
+
+
 	if(slv_check_bounds(blsys->system,0,-1,"")){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variables went outside boundaries...");
 		// TODO relay that system has gone out of bounds
 	}
 
-	/* pass the solver status to the integrator */
+	/* pass the NLA solver status to the integrator */
 	res = integrator_checkstatus(status);
 
 	integrator_output_write(blsys);
 
   	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives (%d)",res);
-		// TODO raise SIGINT here
+#if 1
+		ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
+		FPRINTF(ASCERR,"Unable to compute the vector of derivatives with the following values for the state variables:\n");
+		for (i = 0; i< n_eq; i++) {
+			FPRINTF(ASCERR,"y[%4d] = %f\n",i, y[i]);
+		}
+		error_reporter_end_flush();
+#endif
+#ifdef ASC_SIGNAL_TRAPS
+		raise(SIGINT);
+#endif
 	}else{
 		/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
 	}
 
 	integrator_get_ydot(blsys, ydot);
+	//CONSOLE_DEBUG("ydot[0] = %f",ydot[0]);
 	// DONE, OK
 }
 
@@ -417,10 +433,23 @@ static void integrator_dopri5_fex(
 static SolTrait integrator_dopri5_reporter;
 
 static void integrator_dopri5_reporter(
-		long nr, double xold, double x, double* y
+		long nr, double told, double t, double* y
 		, unsigned n, int* irtrn, void *user_data
 ){
+	double ts;
 	IntegratorSystem *blsys = (IntegratorSystem *)user_data;
+	IntegratorDopri5Data *d = (IntegratorDopri5Data *)(blsys->enginedata);
+
+	ts = integrator_getsample(blsys,d->currentsample);
+	if(t>ts){
+		integrator_output_write_obs(blsys);
+		while(t>ts){
+			d->currentsample++;
+			ts = integrator_getsample(blsys,d->currentsample);
+		}
+	}
+
+	//CONSOLE_DEBUG("t = %f, y[0] = %f",t,y[0]);
 	integrator_output_write(blsys);
 }
 
@@ -522,6 +551,7 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	/* samplelist_debug(blsys->samples); */
 
 	x = integrator_getsample(blsys, 0);
+	d->currentsample = 0;
 
 	y = integrator_get_y(blsys, NULL);
 	

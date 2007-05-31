@@ -63,19 +63,6 @@
 #include <compiler/instquery.h>
 #include <compiler/atomvalue.h>
 
-/* let's try and get by without all this stuff...
-#include <compiler/child.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
-#include <compiler/units.h>
-#include <compiler/module.h>
-#include <compiler/library.h>
-#include <compiler/expr_types.h>
-#include <compiler/type_desc.h>
-#include <compiler/instance_name.h>
-#include <compiler/instance_io.h>
-*/
-
 #include <linear/mtx.h>
 
 #include <system/slv_client.h>
@@ -388,7 +375,7 @@ ASC_DLLSPEC int integrator_find_indep_var(IntegratorSystem *blsys);
 	@return 0 if found, non-zero on error.
 */
 
-extern int integrator_checkstatus(slv_status_t status);
+ASC_DLLSPEC int integrator_checkstatus(slv_status_t status);
 /**<
 	Takes a status and checks for convergence, and prints status info if the
 	system is not converged.
@@ -445,7 +432,7 @@ ASC_DLLSPEC long integrator_getcurrentstep(IntegratorSystem *blsys);
 	zero inside your solver's integrator_*_solve method.
 */
 
-extern double integrator_getsample(IntegratorSystem *blsys, long i);
+ASC_DLLSPEC double integrator_getsample(IntegratorSystem *blsys, long i);
 /**<	The following functions fetch and set parts with names specific to
 	the type definitions in ivp.lib, the ASCEND initial value problem
 	model file. They are for use by any ivp solver interface.
@@ -456,7 +443,7 @@ extern double integrator_getsample(IntegratorSystem *blsys, long i);
 	back the pointer to the xsamples vector.
 */
 
-extern void integrator_setsample(IntegratorSystem *blsys, long i, double val);
+ASC_DLLSPEC void integrator_setsample(IntegratorSystem *blsys, long i, double val);
 /**<
 	Sets the value stored in xsamples[i] to val.  Will whine if
 	if xsample[i] does not exist.   No, there is no way to get
@@ -484,14 +471,14 @@ ASC_DLLSPEC double integrator_get_t(IntegratorSystem *blsys);
 	(retrieves the value from the ASCEND compiler's instance hierarchy)
 */
 
-extern void integrator_set_t(IntegratorSystem *blsys, double value);
+ASC_DLLSPEC void integrator_set_t(IntegratorSystem *blsys, double value);
 /**<
 	Sets value of the independent variable in the model (inserts the value in
 	the correct place in the compiler's instance hierarchy via the var_variable
 	API).
 */
 
-extern double *integrator_get_y(IntegratorSystem *blsys, double *vector);
+ASC_DLLSPEC double *integrator_get_y(IntegratorSystem *blsys, double *vector);
 /**<
 	Gets the value of vector 'y' from the model (what 'y' is depends on your
 	particular integrator).
@@ -500,12 +487,12 @@ extern double *integrator_get_y(IntegratorSystem *blsys, double *vector);
 	Vector, if given, should be IntegGet_d_neq()+1 long.
 */
 
-extern void integrator_set_y(IntegratorSystem *blsys, double *vector);
+ASC_DLLSPEC void integrator_set_y(IntegratorSystem *blsys, double *vector);
 /**<
 	Sets d.y[] to values in vector.
 */
 
-extern double *integrator_get_ydot(IntegratorSystem *blsys, double *vector);
+ASC_DLLSPEC double *integrator_get_ydot(IntegratorSystem *blsys, double *vector);
 /**<
 	Returns the vector ydot (derivatives of the 'states')
 
@@ -549,7 +536,7 @@ extern double *integrator_get_atol(IntegratorSystem *blsys, double *vector);
 	This call should be used to get the file streams ready, output column
 	headings etc.
 */
-extern int integrator_output_init(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_output_init(IntegratorSystem *blsys);
 
 /**
 	This call should be used to output the immediate integration results from
@@ -560,20 +547,20 @@ extern int integrator_output_init(IntegratorSystem *blsys);
 
 	@return 1 on success, return 0 on failure (integration will be cancelled)
 */
-extern int integrator_output_write(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_output_write(IntegratorSystem *blsys);
 
 /**
 	Write out the 'observed values' for the integration. In the case of ODE
 	integration, we assume that the values of all the algabraic variables are
 	also now calculated.
 */
-extern int integrator_output_write_obs(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_output_write_obs(IntegratorSystem *blsys);
 
 /**
 	This call will close file stream and perhaps perform some kind of
 	user notification or screen update, etc.
 */
-extern int integrator_output_close(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_output_close(IntegratorSystem *blsys);
 
 /*----------------------------------
 	DYNAMIC LIST OF INTEGRATORS

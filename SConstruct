@@ -637,10 +637,11 @@ def c_escape(str):
 
 envadditional={}
 
+tools = ['lex','yacc','fortran','swig','nsis','substinfile','disttar']
 if platform.system()=="Windows":
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
 		envenv = os.environ;
-		tools = ['mingw','lex','yacc','fortran','swig','disttar','nsis']
+		tools += ['mingw']
 		#TODO removed 'doxygen' for SCons 0.96.93
 		envadditional['IS_MINGW']=True
 	else:
@@ -651,18 +652,18 @@ if platform.system()=="Windows":
 			,'LIB':os.environ['LIB']
 			,'MSVS_IGNORE_IDE_PATHS':1
 		}
-		tools=['default','lex','yacc','fortran','swig','disttar','nsis']	
+		tools += ['default']
 		#TODO removed 'doxygen' for SCons 0.96.93
 		envadditional['CPPDEFINES']=['_CRT_SECURE_NO_DEPRECATE']
 else:
 	if os.environ.get('TARGET')=='mingw':
 		envenv = os.environ
-		tools=['crossmingw','nsis']
+		tools += ['crossmingw']
 		envadditional['CPPPATH']=['/usr/lib/gcc/i586-mingw32msvc/3.4.5/include','/usr/include']
 		envadditional['LIBS']=['gcc']
 	else:
 		envenv = os.environ
-		tools=['default','lex','yacc','fortran','swig','disttar','nsis']
+		tools += ['default']
 		#TODO removed 'doxygen' for SCons 0.96.93
 	
 	
@@ -2050,86 +2051,6 @@ SWIGScanner = SCons.Scanner.ClassicCPP(
 )
 
 env.Append(SCANNERS=[SWIGScanner])
-
-#------------------------------------------------------
-# RECIPE: 'SubstInFile', used in pygtk SConscript
-
-import re
-from SCons.Script import *  # the usual scons stuff you get in a SConscript
-
-def TOOL_SUBST(env):
-    """Adds SubstInFile builder, which substitutes the keys->values of SUBST_DICT
-    from the source to the target.
-    The values of SUBST_DICT first have any construction variables expanded
-    (its keys are not expanded).
-    If a value of SUBST_DICT is a python callable function, it is called and
-    the result is expanded as the value.
-    If there's more than one source and more than one target, each target gets
-    substituted from the corresponding source.
-    """
-    env.Append(TOOLS = 'SUBST')
-    def do_subst_in_file(targetfile, sourcefile, dict):
-        """Replace all instances of the keys of dict with their values.
-        For example, if dict is {'%VERSION%': '1.2345', '%BASE%': 'MyProg'},
-        then all instances of %VERSION% in the file will be replaced with 1.2345 etc.
-        """
-        try:
-            f = open(sourcefile, 'rb')
-            contents = f.read()
-            f.close()
-        except:
-            raise SCons.Errors.UserError, "Can't read source file %s"%sourcefile
-        for (k,v) in dict.items():
-        	try:
-        		#print "%s ---> %s" % (k,v)
-        		contents = re.sub(k, v, contents)
-        	except Exception,e:
-        		sys.stderr.write("Failed to substute '%s' with '%s': %s\n" % (k,v,e))
-        
-        try:
-            f = open(targetfile, 'wb')
-            f.write(contents)
-            f.close()
-        except:
-            raise SCons.Errors.UserError, "Can't write target file %s"%targetfile
-        return 0 # success
-
-    def subst_in_file(target, source, env):
-        if not env.has_key('SUBST_DICT'):
-            raise SCons.Errors.UserError, "SubstInFile requires SUBST_DICT to be set."
-        d = dict(env['SUBST_DICT']) # copy it
-        for (k,v) in d.items():
-            if callable(v):
-                d[k] = env.subst(v())
-            elif SCons.Util.is_String(v):
-                d[k]=env.subst(v)
-            else:
-                raise SCons.Errors.UserError, "SubstInFile: key %s: %s must be a string or callable"%(k, repr(v))
-        for (t,s) in zip(target, source):
-            return do_subst_in_file(str(t), str(s), d)
-
-    def subst_in_file_string(target, source, env):
-        """This is what gets printed on the console."""
-        return '\n'.join(['Substituting vars from %s into %s'%(str(s), str(t))
-                          for (t,s) in zip(target, source)])
-
-    def subst_emitter(target, source, env):
-        """Add dependency from substituted SUBST_DICT to target.
-        Returns original target, source tuple unchanged.
-        """
-        d = env['SUBST_DICT'].copy() # copy it
-        for (k,v) in d.items():
-            if callable(v):
-                d[k] = env.subst(v())
-            elif SCons.Util.is_String(v):
-                d[k]=env.subst(v)
-        Depends(target, SCons.Node.Python.Value(d))
-        return target, source
-
-    subst_action=SCons.Action.Action(subst_in_file, subst_in_file_string)
-    env['BUILDERS']['SubstInFile'] = Builder(action=subst_action, emitter=subst_emitter)
-
-TOOL_SUBST(env)
 
 #------------------------------------------------------
 # Recipe for 'CHMOD' ACTION 	 
