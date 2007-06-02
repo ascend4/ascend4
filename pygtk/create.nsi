@@ -178,11 +178,13 @@ Section "PyGTK GUI"
 				; Python interface
 				File "_ascpy.dll"
 				File "*.py"
+				File "glade\ascend.ico"
+				File "glade\ascend-doc.ico"
+				
 				SetOutPath $INSTDIR\glade
 				File "glade\*.glade"
 				File "glade\*.png"
 				File "glade\*.svg"
-				File "glade\ascend.ico"
 
 				; Create 'ascend.bat' launcher for PyGTK interface
 				ClearErrors
@@ -210,6 +212,45 @@ Section "PyGTK GUI"
 
 				StrCpy $PYINSTALLED "1"
 				WriteRegDWORD HKLM "SOFTWARE\ASCEND" "Python" 1	
+
+				;---- file association ----
+
+				; back up old value of .a4c file association
+				ReadRegStr $1 HKCR ".a4c" ""
+				StrCmp $1 "" a4cnobkp
+				StrCmp $1 "ASCEND.model" a4cnobkp
+
+				; Remember the old file association if necessary
+				WriteRegStr HKLM "SOFTWARE\ASCEND" "BackupAssocA4C" $1
+
+a4cnobkp:
+				WriteRegStr HKCR ".a4c" "" "ASCEND.model"
+
+				; back up old value of .a4c file association
+				ReadRegStr $1 HKCR ".a4l" ""
+				StrCmp $1 "" a4lnobkp
+				StrCmp $1 "ASCEND.model" a4lnobkp
+
+				; Remember the old file association if necessary
+				WriteRegStr HKLM "SOFTWARE\ASCEND" "BackupAssocA4L" $1
+
+a4lnobkp:
+				WriteRegStr HKCR ".a4l" "" "ASCEND.model"
+
+				; So, what does an A4L or A4C file actually do?
+				
+				ReadRegStr $0 HKCR "ASCEND.model" ""
+				StrCmp $0 "" 0 a4cskip
+
+				WriteRegStr HKCR "ASCEND.model" "" "ASCEND model file"
+				WriteRegStr HKCR "ASCEND.model\shell" "" "open"
+				WriteRegStr HKCR "ASCEND.model\DefaultIcon" "" "$INSTDIR\ascend-doc.ico"
+
+a4cskip:
+				WriteRegStr HKCR "ASCEND.model\shell\open\command" "" '$INSTDIR\ascend.bat "%1"'
+
+				System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
+
 			${Else}
 				MessageBox MB_OK "PyGTK GUI can not be installed, because Glade was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($GLADEPATH)"
 			${EndIf}				
@@ -239,7 +280,7 @@ ${Else}
 	File "..\tcltk\generic\interface\ascendtcl.dll"
 	File "..\tcltk\generic\interface\ascend4.exe"
 	
-	StrCpy $TCLINSTALLED "!"
+	StrCpy $TCLINSTALLED "1"
 	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "TclTk" 1
 
 ${EndIf}
@@ -255,12 +296,15 @@ Section "Start Menu Shortcuts"
 
   CreateDirectory "$SMPROGRAMS\ASCEND"
   CreateShortCut "$SMPROGRAMS\ASCEND\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+
+  ; Link to Tcl/Tk GUI  
+  StrCmp $TCLINSTALLED "" smnotcl 0  
   CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
+smnotcl:
 
   ; Link to PyGTK GUI
-  StrCmp $PYINSTALLED "" smdone smpython
-smpython:
-  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$INSTDIR\ascend.bat" "" "$INSTDIR\glade\ascend.ico" 0 "SW_SHOWMINIMIZED"
+  StrCmp $PYINSTALLED "" smdone 0
+  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$INSTDIR\ascend.bat" "" "$INSTDIR\ascend.ico" 0 "SW_SHOWMINIMIZED"
 smdone:
   
 SectionEnd
@@ -283,9 +327,43 @@ unpython:
 	Delete $INSTDIR\*.pyc
 	Delete $INSTDIR\glade\*.glade
 	Delete $INSTDIR\glade\*.png
-	Delete $INSTDIR\glade\ascend.ico
 	Delete $INSTDIR\glade\*.svg
 	RmDir $INSTDIR\glade
+	Delete $INSTDIR\ascend.ico
+	Delete $INSTDIR\ascend-doc.ico
+
+;--- file association (for Python GUI) ---
+  
+	DetailPrint "--- REMOVING FILE ASSOCIATION ---"
+	;start of restore script
+	ReadRegStr $1 HKCR ".a4c" ""
+	${If} $1 == "ASCEND.model"
+		ReadRegStr $1 HKLM "SOFTWARE\ASCEND" "BackupAssocA4C"
+		${If} $1 == ""
+			; nothing to restore: delete it
+			DeleteRegKey HKCR ".a4c"
+		${Else}
+			WriteRegStr HKCR ".a4c" "" $1
+		${EndIf}
+		DeleteRegValue HKLM "SOFTWARE\ASCEND" "BackupAssocA4C"
+	${EndIf}
+
+	ReadRegStr $1 HKCR ".a4l" ""	
+	${If} $1 == "ASCEND.model"
+		ReadRegStr $1 HKLM "SOFTWARE\ASCEND" "BackupAssocA4L"
+		${If} $1 == ""
+			; nothing to restore: delete it
+			DeleteRegKey HKCR ".a4l"
+		${Else}
+			WriteRegStr HKCR ".a4l" "" $1
+		${EndIf}
+		DeleteRegValue HKLM "SOFTWARE\ASCEND" "BackupAssocA4L"
+	${EndIf}
+
+	DeleteRegKey HKCR "ASCEND.model" ;Delete key with association settings
+
+	System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
+	;rest of script
 
 unnopython:
 
