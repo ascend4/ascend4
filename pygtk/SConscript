@@ -151,12 +151,6 @@ if env.get('CAN_INSTALL'):
 	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/glade")),gladefiles)
 
 	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA")),swiglib)
-
-if platform.system()=="Windows":
-	env.Append(NSISDEFINES={'OUTFILE':"#dist/"+env['WIN_INSTALLER_NAME']})
-	installer = env.Installer('create.nsi')
-	Depends(installer,[swiglib,configpy,configh,"../models","../ascend-config"])
-	env.Alias('installer',installer)
-
+	
 # vim: set syntax=python:
 
