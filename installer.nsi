@@ -4,17 +4,25 @@
 ;--------------------------------
 
 ; The name of the installer
-Name "ASCEND"
+
+!ifndef VERSION
+!define VERSION 0.svn
+!endif
+
+Name "ASCEND ${VERSION}"
 
 !include LogicLib.nsh
 
-; The file to write
-!ifdef OUTFILE
-OutFile ${OUTFILE}.exe
-!else
-OutFile ascend-setup.exe
+!ifndef PYVERSION
+!define PYVERSION "2.5"
 !endif
 
+; The file to write
+!ifdef OUTFILE
+OutFile ${OUTFILE}
+!else
+OutFile "ascend-${VERSION}-py${PYVERSION}.exe"
+!endif
 
 SetCompressor /FINAL zlib
 ;SetCompressor /SOLID lzma
@@ -45,6 +53,9 @@ Var /GLOBAL PYPATH
 Var /GLOBAL GTKOK
 Var /GLOBAL GTKPATH
 Var /GLOBAL GLADEOK
+Var /GLOBAL PYGTKOK
+Var /GLOBAL PYGOBJECTOK
+Var /GLOBAL PYCAIROOK
 Var /GLOBAL GLADEPATH
 Var /GLOBAL PYINSTALLED
 Var /GLOBAL TCLOK
@@ -72,7 +83,16 @@ Function .onInit
 	
 	Call DetectTcl
 	Pop $TCLOK
-	Pop $TCLPATH	
+	Pop $TCLPATH
+	
+	Call DetectPyGTK
+	Pop $PYGTKOK
+
+	Call DetectPyGObject
+	Pop $PYGOBJECTOK
+
+	Call DetectPyCairo
+	Pop $PYCAIROOK
 	
 	StrCpy $PATH "$DEFAULTPATH;$PYPATH;$GTKPATH"
 
@@ -90,7 +110,8 @@ Section "ASCEND (required)"
 	File "ascend.dll"
 	File "ascend-config"
 	File "pygtk\glade\ascend.ico"
-
+	File "LICENSE.txt"
+	File "CHANGELOG.txt"
 
 	; Model Library
 	SetOutPath $INSTDIR\models
@@ -161,76 +182,79 @@ SectionEnd
 ;--------------------------------
 
 Section "PyGTK GUI"
-	${If} $PYOK == 'OK'
-		${If} $GTKOK == 'OK'
-			${If} $GLADEOK == 'OK'
-				;MessageBox MB_OK "Python: $PYPATH, GTK: $GTKPATH"
+	; Check the dependencies of the PyGTK GUI before proceding...
+	${If} $PYOK == 'NOK'
+		MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(PYPATH=$PYPATH)"
+	${ElseIf} $GTKOK == 'NOK'
+		MessageBox MB_OK "PyGTK GUI cannot be installed, because GTK+ 2.x was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(GTKPATH=$GTKPATH)"
+	${ElseIf} $GLADEOK == 'NOK'
+		MessageBox MB_OK "PyGTK GUI cannot be installed, because Glade 2.x was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(GTKPATH=$GTKPATH)"
+	${ElseIf} $PYGTKOK == "NOK"
+		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyGTK was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
+	${ElseIf} $PYCAIROOK == "NOK"
+		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyCairo was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
+	${ElseIf} $PYGOBJECTOK == "NOK"
+		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyGObject was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
+	${Else}
+		;MessageBox MB_OK "Python: $PYPATH, GTK: $GTKPATH"
 
-				DetailPrint "--- PYTHON INTERFACE ---"
+		DetailPrint "--- PYTHON INTERFACE ---"
 
-				; Set output path to the installation directory.
-				SetOutPath $INSTDIR
+		; Set output path to the installation directory.
+		SetOutPath $INSTDIR
 
-				; Python interface
-				File "pygtk\_ascpy.dll"
-				File "pygtk\*.py"
-				File "pygtk\ascend"
-				File "pygtk\glade\ascend-doc.ico"
-				
-				SetOutPath $INSTDIR\glade
-				File "pygtk\glade\*.glade"
-				File "pygtk\glade\*.png"
-				File "pygtk\glade\*.svg"
+		; Python interface
+		File "pygtk\_ascpy.pyd"
+		File "pygtk\*.py"
+		File "pygtk\ascend"
+		File "pygtk\glade\ascend-doc.ico"
 
-				StrCpy $PYINSTALLED "1"
-				WriteRegDWORD HKLM "SOFTWARE\ASCEND" "Python" 1	
+		SetOutPath $INSTDIR\glade
+		File "pygtk\glade\*.glade"
+		File "pygtk\glade\*.png"
+		File "pygtk\glade\*.svg"
 
-				;---- file association ----
+		StrCpy $PYINSTALLED "1"
+		WriteRegDWORD HKLM "SOFTWARE\ASCEND" "Python" 1	
 
-				; back up old value of .a4c file association
-				ReadRegStr $1 HKCR ".a4c" ""
-				StrCmp $1 "" a4cnobkp
-				StrCmp $1 "ASCEND.model" a4cnobkp
+		;---- file association ----
 
-				; Remember the old file association if necessary
-				WriteRegStr HKLM "SOFTWARE\ASCEND" "BackupAssocA4C" $1
+		; back up old value of .a4c file association
+		ReadRegStr $1 HKCR ".a4c" ""
+		StrCmp $1 "" a4cnobkp
+		StrCmp $1 "ASCEND.model" a4cnobkp
+
+		; Remember the old file association if necessary
+		WriteRegStr HKLM "SOFTWARE\ASCEND" "BackupAssocA4C" $1
 
 a4cnobkp:
-				WriteRegStr HKCR ".a4c" "" "ASCEND.model"
+		WriteRegStr HKCR ".a4c" "" "ASCEND.model"
 
-				; back up old value of .a4c file association
-				ReadRegStr $1 HKCR ".a4l" ""
-				StrCmp $1 "" a4lnobkp
-				StrCmp $1 "ASCEND.model" a4lnobkp
+		; back up old value of .a4c file association
+		ReadRegStr $1 HKCR ".a4l" ""
+		StrCmp $1 "" a4lnobkp
+		StrCmp $1 "ASCEND.model" a4lnobkp
 
-				; Remember the old file association if necessary
-				WriteRegStr HKLM "SOFTWARE\ASCEND" "BackupAssocA4L" $1
+		; Remember the old file association if necessary
+		WriteRegStr HKLM "SOFTWARE\ASCEND" "BackupAssocA4L" $1
 
 a4lnobkp:
-				WriteRegStr HKCR ".a4l" "" "ASCEND.model"
+		WriteRegStr HKCR ".a4l" "" "ASCEND.model"
 
-				; So, what does an A4L or A4C file actually do?
-				
-				ReadRegStr $0 HKCR "ASCEND.model" ""
-				StrCmp $0 "" 0 a4cskip
+		; So, what does an A4L or A4C file actually do?
 
-				WriteRegStr HKCR "ASCEND.model" "" "ASCEND model file"
-				WriteRegStr HKCR "ASCEND.model\shell" "" "open"
-				WriteRegStr HKCR "ASCEND.model\DefaultIcon" "" "$INSTDIR\ascend-doc.ico"
+		ReadRegStr $0 HKCR "ASCEND.model" ""
+		StrCmp $0 "" 0 a4cskip
+
+		WriteRegStr HKCR "ASCEND.model" "" "ASCEND model file"
+		WriteRegStr HKCR "ASCEND.model\shell" "" "open"
+		WriteRegStr HKCR "ASCEND.model\DefaultIcon" "" "$INSTDIR\ascend-doc.ico"
 
 a4cskip:
-				WriteRegStr HKCR "ASCEND.model\shell\open\command" "" '$PYPATH\pythonw "$INSTDIR\ascend" "%1"'
+		WriteRegStr HKCR "ASCEND.model\shell\open\command" "" '$PYPATH\pythonw "$INSTDIR\ascend" "%1"'
 
-				System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
+		System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
 
-			${Else}
-				MessageBox MB_OK "PyGTK GUI can not be installed, because Glade was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($GLADEPATH)"
-			${EndIf}				
-		${Else}
-			MessageBox MB_OK "PyGTK GUI can not be installed, because GTK+ 2.0 was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($GTKPATH)"
-		${EndIf}
-	${Else}
-		MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($PYPATH)"
 	${EndIf}
 	Return
 
@@ -280,6 +304,10 @@ smdone:
   CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
 smnotcl:
 
+  ; Information files
+  CreateShortCut "$SMPROGRAMS\ASCEND\LICENSE.txt.lnk" "$INSTDIR\LICENSE.txt" '' "$INSTDIR\LICENSE.txt" 0
+  CreateShortCut "$SMPROGRAMS\ASCEND\CHANGELOG.txt.lnk" "$INSTDIR\CHANGELOG.txt" '' "$INSTDIR\CHANGELOG.txt" 0
+
   CreateShortCut "$SMPROGRAMS\ASCEND\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   
 SectionEnd
@@ -296,7 +324,7 @@ Section "Uninstall"
   
 unpython:
 	DetailPrint "--- REMOVING PYTHON COMPONENTS ---"
-	Delete $INSTDIR\_ascpy.dll
+	Delete $INSTDIR\_ascpy.pyd
 	Delete $INSTDIR\ascend
 	Delete $INSTDIR\*.py
 	Delete $INSTDIR\*.pyc
@@ -375,6 +403,8 @@ unnostart:
 	Delete $INSTDIR\ascend-config
 	Delete $INSTDIR\ascend-config.bat
 	Delete $INSTDIR\ascend.dll
+	Delete $INSTDIR\LICENSE.txt
+	Delete $INSTDIR\CHANGELOG.txt
 	Delete $INSTDIR\ascend.ico
 	Delete $INSTDIR\Makefile.bt
 	Delete $INSTDIR\ascend.syn
@@ -391,9 +421,9 @@ SectionEnd
 ; UTILITY ROUTINES
 
 Function DetectPython
-	ReadRegStr $R6 HKCU "SOFTWARE\Python\PythonCore\2.4\InstallPath" ""
+	ReadRegStr $R6 HKCU "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
 	${If} $R6 == ''
-		ReadRegStr $R6 HKLM "SOFTWARE\Python\PythonCore\2.4\InstallPath" ""
+		ReadRegStr $R6 HKLM "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
 		${If} $R6 == ''
 			Push "No registry key found"
 			Push "NOK"
@@ -429,6 +459,33 @@ Function DetectGTK
 		Push "OK"
 	${Else}
 		Push "No libgtk-win32-2.0-0.dll found in'$R6'"
+		Push "NOK"
+	${EndIf}
+FunctionEnd
+
+;--------------------------------------------------------------------
+; Are necessary PyGTK bits and pieces available?
+
+Function DetectPyGTK
+	${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\gtk\__init__.py"
+		Push "OK"
+	${Else}
+		Push "NOK"
+	${EndIf}
+FunctionEnd
+
+Function DetectPyCairo
+	${If} ${FileExists} "$PYPATH\Lib\site-packages\cairo\__init__.py"
+		Push "OK"
+	${Else}
+		Push "NOK"
+	${EndIf}
+FunctionEnd
+
+Function DetectPyGObject
+	${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\gobject\__init__.py"
+		Push "OK"
+	${Else}
 		Push "NOK"
 	${EndIf}
 FunctionEnd

@@ -1,4 +1,25 @@
 
+3 Jun 2007
+----------
+
+Version 0.9.5.111
+
+Windows packaging improvements:
+ - Launch via pythonw.exe instead of batch file
+ - File association for .a4c and .a4l files
+ - Add Model Library link to Start menu
+ - Add CHANGELOG.txt and LICENSE.txt to Start menu
+ - Detect missing PyGTK, PyCairo or PyGObject at install-time
+ - Fix message for missing matplotlib in fourbarplot.py
+
+DOPRI5 integrator
+ - Experimental release of DOPRI5 integrator for testing
+ - Changes to Integrator API to allow loading external DLL/SOs
+
+Linux packaging improvements
+ - Add SONAME to libascend
+ 
+ 
 26 May 2007
 -----------
 

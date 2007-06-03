@@ -61,6 +61,9 @@ swig_env = python_env.Copy()
 if '-Wall' in swig_env.get('CCFLAGS'):
 	swig_env['CCFLAGS'] = swig_env['CCFLAGS'].remove('-Wall')
 
+if platform.system()=="Windows":
+	swig_env['SHLIBSUFFIX']='.pyd'
+
 swigobjs = []
 
 for swigf in Split("""
