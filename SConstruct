@@ -596,7 +596,7 @@ opts.Add(BoolOption(
 opts.Add(
 	'WIN_INSTALLER_NAME'
 	,"Name of the installer .exe to create under Windows (minus the '.exe')"
-	,"ascend-"+version+"-py"+pyversion
+	,"ascend-"+version+"-py"+pyversion+".exe"
 )
 
 opts.Add(BoolOption(
@@ -2217,7 +2217,11 @@ if env.get('CAN_INSTALL'):
 # For the windows installer, please see pygtk/SConscript
 
 if with_installer:
-	env.Append(NSISDEFINES={'OUTFILE':"#dist/"+env['WIN_INSTALLER_NAME']})
+	env.Append(NSISDEFINES={
+		'OUTFILE':"#dist/"+env['WIN_INSTALLER_NAME']
+		,"VERSION":version
+		,'PYVERSION':pyversion
+	})
 	installer = env.Installer('installer.nsi')
 	Depends(installer,["pygtk","tcltk","ascend.dll","models","ascend-config"])
 	env.Alias('installer',installer)

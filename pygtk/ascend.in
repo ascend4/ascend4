@@ -79,14 +79,6 @@ if not os.environ.get('ASC_GDB'):
 		LDPATH = [INSTALL_LIB] + LDPATH
 		os.environ[LDPATHVAR] = SEP.join(LDPATH)
 		restart = 1
-	
-	PYTHONPATH = os.environ.get("PYTHONPATH")
-	if not PYTHONPATH:
-		os.environ['PYTHONPATH'] = SEP.join([INSTALL_ASCDATA])
-		restart = 1
-	elif not INSTALL_ASCDATA in PYTHONPATH.split(SEP):
-		os.environ['PYTHONPATH'] = SEP.join([INSTALL_ASCDATA] + PYTHONPATH.split(SEP))
-		restart = 1
 
 	if os.environ.get('ASCENDLIBRARY'):
 		envmodels = [os.path.abspath(i) for i in os.environ['ASCENDLIBRARY'].split(SEP)]
@@ -99,7 +91,6 @@ if not os.environ.get('ASC_GDB'):
 	if restart:
 		print "Restarting with corrected environment..."
 		print "   %s = %s" % (LDPATHVAR,os.environ.get(LDPATHVAR))
-		print "   PYTHONPATH = %s" % os.environ['PYTHONPATH']
 		print "   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
 		script = os.path.join(sys.path[0],"ascend")
 		print "PYTHON =",PYTHON
@@ -112,7 +103,7 @@ if not os.environ.get('ASC_GDB'):
 
 print "Running with..."
 print "   %s = %s" % (LDPATHVAR, os.environ.get(LDPATHVAR))
-print "   PYTHONPATH = %s" % os.environ.get('PYTHONPATH')
+print "   sys.path = %s" % sys.path
 print "   argv = %s" % sys.argv
 
 if os.environ.get('ASCENDLIBRARY'):
