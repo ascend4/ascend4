@@ -1,4 +1,4 @@
-import extpy;
+import extpy
 
 try:
 	from pylab import *
@@ -11,8 +11,11 @@ def fourbarplot(self):
 	"""Plot the geometry of the four-bar linkage"""
 	# following is an unfortunate necessity in the current system architecture:
 
+	import loading
+	loading.load_matplotlib(throw=True)
+
 	browser = extpy.getbrowser()
-	browser.do_solve()
+	browser.do_solve()	
 
 	ioff()
 	figure()

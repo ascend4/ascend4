@@ -1,6 +1,6 @@
 import sys, os, commands, platform, distutils.sysconfig, os.path, re
 
-version = "0.9.5.110"
+version = "0.9.5.111"
 
 #------------------------------------------------------
 # OPTIONS
