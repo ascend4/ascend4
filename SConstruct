@@ -2,6 +2,8 @@ import sys, os, commands, platform, distutils.sysconfig, os.path, re
 
 version = "0.9.5.111"
 
+pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
+
 #------------------------------------------------------
 # OPTIONS
 #
@@ -594,7 +596,7 @@ opts.Add(BoolOption(
 opts.Add(
 	'WIN_INSTALLER_NAME'
 	,"Name of the installer .exe to create under Windows (minus the '.exe')"
-	,"ascend-"+version
+	,"ascend-"+version+"-py"+pyversion
 )
 
 opts.Add(BoolOption(
@@ -1991,7 +1993,7 @@ subst_dict = {
 	, '@ASC_ENV_TK_DEFAULT@' : '$$ASCENDDIST/tcltk'
 	, '@ASC_DISTDIR_REL_BIN@' : default_rel_distdir
 	, '@PYTHON@' : python_exe
-	, '@PYVERSION@' : "%d.%d" % (sys.version_info[0],sys.version_info[1])
+	, '@PYVERSION@' : pyversion
 	, '@ASC_CONOPT_LIB@':env.get('CONOPT_LIB')
 	, '@ASC_CONOPT_ENVVAR@':env.get('CONOPT_ENVVAR')
 	, '@ASC_CONOPT_DLPATH@':c_escape(env.subst("$CONOPT_DLPATH"))
