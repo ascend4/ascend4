@@ -1606,7 +1606,10 @@ def CheckSigReset(context):
 def CheckLyx(context):
 	context.Message("Checking for LyX... ")
 	r = context.env.WhereIs("lyx")
-	context.Result(r)
+	if r:
+		context.Result(r)
+	else:
+		context.Result(0)
 	return r
 
 #----------------

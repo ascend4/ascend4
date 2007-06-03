@@ -112,7 +112,8 @@ Section "ASCEND (required)"
 	File "pygtk\glade\ascend.ico"
 	File "LICENSE.txt"
 	File "CHANGELOG.txt"
-
+	File "README-windows.txt"
+	
 	; Model Library
 	SetOutPath $INSTDIR\models
 	File /r /x .svn "models\*.a4*"
@@ -305,8 +306,9 @@ smdone:
 smnotcl:
 
   ; Information files
-  CreateShortCut "$SMPROGRAMS\ASCEND\LICENSE.txt.lnk" "$INSTDIR\LICENSE.txt" '' "$INSTDIR\LICENSE.txt" 0
-  CreateShortCut "$SMPROGRAMS\ASCEND\CHANGELOG.txt.lnk" "$INSTDIR\CHANGELOG.txt" '' "$INSTDIR\CHANGELOG.txt" 0
+  CreateShortCut "$SMPROGRAMS\ASCEND\LICENSE.lnk" "$INSTDIR\LICENSE.txt" '' "$INSTDIR\LICENSE.txt" 0
+  CreateShortCut "$SMPROGRAMS\ASCEND\CHANGELOG.lnk" "$INSTDIR\CHANGELOG.txt" '' "$INSTDIR\CHANGELOG.txt" 0
+  CreateShortCut "$SMPROGRAMS\ASCEND\README.lnk" "$INSTDIR\README-windows.txt" '' "$INSTDIR\README-windows.txt" 0
 
   CreateShortCut "$SMPROGRAMS\ASCEND\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   
@@ -404,6 +406,7 @@ unnostart:
 	Delete $INSTDIR\ascend-config.bat
 	Delete $INSTDIR\ascend.dll
 	Delete $INSTDIR\LICENSE.txt
+	Delete $INSTDIR\README-windows.txt
 	Delete $INSTDIR\CHANGELOG.txt
 	Delete $INSTDIR\ascend.ico
 	Delete $INSTDIR\Makefile.bt
