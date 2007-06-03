@@ -716,12 +716,12 @@ with_signals = env.get('WITH_SIGNALS')
 without_signals_reason = "disabled by options/config.py"
 
 with_doc = env.get('WITH_DOC')
-without_doc_reason = "disabled by options/config.py"
 
 with_doc_build = env.get('WITH_DOC_BUILD');
-without_doc_build = "disabled by options/config.py"
+without_doc_build_reason = "disabled by options/config.py"
 if not with_doc:
-	without_doc_build = "disabled by with_doc"
+	with_doc_build = False
+	without_doc_build_reason = "disabled by with_doc"
 
 with_latex2html = False
 
@@ -1939,10 +1939,10 @@ if with_scrollkeeper:
 
 # lyx
 
-if with_doc:
+if with_doc_build:
 	if not conf.CheckLyx():
-		with_doc = False
-		without_doc_reason="unable to locate lyx"
+		with_doc_build = False
+		without_doc_build_reason="unable to locate lyx"
 
 	with_latext2html = conf.CheckLatex2HTML()
 
@@ -2276,6 +2276,9 @@ env.SConscript('doc/SConscript',['env'])
 
 #------------------------------------------------------
 # LIBASCEND DOXYGEN DOCUMENTATION
+
+if not with_doc_build:
+	print "Skipping... Windows installer isn't being built:",without_doc_build_reason
 
 env.SConscript('base/doc/SConscript',['env'])
 
