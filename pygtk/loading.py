@@ -37,7 +37,7 @@ def complete():
 	loadingwindow.destroy()
 	_is_loading = False
 
-def load_matplotlib(throw=False):
+def load_matplotlib(throw=False,alert=False):
 	print_status("Loading python matplotlib")
 	try:
 		import matplotlib
@@ -65,15 +65,16 @@ def load_matplotlib(throw=False):
 
 	except ImportError,e:
 		print_status("","FAILED TO LOAD MATPLOTLIB")
-		if throw:
+		if alert or throw:
 			_d = gtk.MessageDialog(None,gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
 				,gtk.MESSAGE_ERROR,gtk.BUTTONS_CLOSE,"Plotting functions are not available unless you have 'matplotlib' installed.\n\nSee http://matplotlib.sf.net/\n\nFailed to load matplotlib (%s)" % str(e)
 			)
 			_d.run()
 			_d.destroy()
 			while gtk.events_pending():
-				gtk.main_iteration(False)			
-			raise RuntimeError("Failed to load plotting library 'matplotlib'. Details:"+str(e))
+				gtk.main_iteration(False)		
+		if throw:
+			raise RuntimeError("Failed to load plotting library 'matplotlib'. (%s)" % str(e))
 
 def create_window():
 	_w = gtk.Window(gtk.WINDOW_TOPLEVEL)

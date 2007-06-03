@@ -96,6 +96,8 @@ Section "ASCEND (required)"
 	SetOutPath $INSTDIR
 	File "..\ascend.dll"
 	File "..\ascend-config"
+	File "glade\ascend.ico"
+
 
 	; Model Library
 	SetOutPath $INSTDIR\models
@@ -180,8 +182,6 @@ Section "PyGTK GUI"
 				File "_ascpy.dll"
 				File "*.py"
 				File "ascend"
-				
-				File "glade\ascend.ico"
 				File "glade\ascend-doc.ico"
 				
 				SetOutPath $INSTDIR\glade
@@ -240,9 +240,7 @@ a4cskip:
 		MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system. If you do want to use the PyGTK GUI, please check the installation instructions ($PYPATH)"
 	${EndIf}
 	Return
-	
-pydone:
-	MessageBox MB_OK "PyGTK GUI was not installed properly -- problems with creating ascend.bar"	
+
 SectionEnd
 
 ;---------------------------------
@@ -272,19 +270,24 @@ SectionEnd
 Section "Start Menu Shortcuts"
   
   WriteRegDWORD HKLM "SOFTWARE\ASCEND" "StartMenu" 1
-
-  CreateDirectory "$SMPROGRAMS\ASCEND"
-  CreateShortCut "$SMPROGRAMS\ASCEND\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-
-  ; Link to Tcl/Tk GUI  
-  StrCmp $TCLINSTALLED "" smnotcl 0  
-  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
-smnotcl:
+  
+  CreateDirectory "$SMPROGRAMS\ASCEND"  
 
   ; Link to PyGTK GUI
   StrCmp $PYINSTALLED "" smdone 0
   CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$PYPATH\pythonw.exe" '"$INSTDIR\ascend"' "$INSTDIR\ascend.ico" 0
 smdone:
+
+  ; Model library shortcut
+  CreateShortCut "$SMPROGRAMS\ASCEND\Model Library.lnk" "$INSTDIR\models" "" "$INSTDIR\models" 0
+
+ 
+  ; Link to Tcl/Tk GUI  
+  StrCmp $TCLINSTALLED "" smnotcl 0  
+  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
+smnotcl:
+
+  CreateShortCut "$SMPROGRAMS\ASCEND\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   
 SectionEnd
 
@@ -308,7 +311,6 @@ unpython:
 	Delete $INSTDIR\glade\*.png
 	Delete $INSTDIR\glade\*.svg
 	RmDir $INSTDIR\glade
-	Delete $INSTDIR\ascend.ico
 	Delete $INSTDIR\ascend-doc.ico
 
 ;--- file association (for Python GUI) ---
@@ -380,6 +382,7 @@ unnostart:
 	Delete $INSTDIR\ascend-config
 	Delete $INSTDIR\ascend-config.bat
 	Delete $INSTDIR\ascend.dll
+	Delete $INSTDIR\ascend.ico
 	Delete $INSTDIR\Makefile.bt
 	Delete $INSTDIR\ascend.syn
 	RMDir /r $INSTDIR\models
