@@ -23,8 +23,8 @@ OutFile ascend-setup.exe
 !endif
 
 
-;SetCompressor /FINAL zlib
-SetCompressor /SOLID lzma
+SetCompressor /FINAL zlib
+;SetCompressor /SOLID lzma
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\ASCEND
@@ -131,6 +131,7 @@ Section "ASCEND (required)"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_INCLUDE" "$INSTDIR\include"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_ASCDATA" "$INSTDIR"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_MODELS" "$INSTDIR\models"
+	WriteRegStr HKLM SOFTWARE\ASCEND "GTKLIBS" "$GTKPATH"
 
 	; Create 'ascend-config.bat' batch file for launching the python script 'ascend-config'.
 	ClearErrors
@@ -178,6 +179,8 @@ Section "PyGTK GUI"
 				; Python interface
 				File "_ascpy.dll"
 				File "*.py"
+				File "ascend"
+				
 				File "glade\ascend.ico"
 				File "glade\ascend-doc.ico"
 				
@@ -185,30 +188,6 @@ Section "PyGTK GUI"
 				File "glade\*.glade"
 				File "glade\*.png"
 				File "glade\*.svg"
-
-				; Create 'ascend.bat' launcher for PyGTK interface
-				ClearErrors
-				FileOpen $0 $INSTDIR\ascend.bat w
-				IfErrors pydone
-				FileWrite $0 "@echo off"
-				FileWriteByte $0 "13"
-				FileWriteByte $0 "10"
-				FileWrite $0 "set PATH=$PATH"
-				FileWriteByte $0 "13"
-				FileWriteByte $0 "10"
-				FileWrite $0 "cd "
-				FileWrite $0 $INSTDIR 
-				FileWriteByte $0 "13"
-				FileWriteByte $0 "10"
-				FileWrite $0 "$PYPATH\python gtkbrowser.py --pygtk-assets="
-				FileWriteByte $0 "34" 
-				FileWrite $0 "$INSTDIR\glade"
-				FileWriteByte $0 "34"
-				FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
-				FileWriteByte $0 "13"
-				FileWriteByte $0 "10"
-
-				FileClose $0
 
 				StrCpy $PYINSTALLED "1"
 				WriteRegDWORD HKLM "SOFTWARE\ASCEND" "Python" 1	
@@ -247,7 +226,7 @@ a4lnobkp:
 				WriteRegStr HKCR "ASCEND.model\DefaultIcon" "" "$INSTDIR\ascend-doc.ico"
 
 a4cskip:
-				WriteRegStr HKCR "ASCEND.model\shell\open\command" "" '$INSTDIR\ascend.bat "%1"'
+				WriteRegStr HKCR "ASCEND.model\shell\open\command" "" '$PYPATH\pythonw "$INSTDIR\ascend" "%1"'
 
 				System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
 
@@ -304,7 +283,7 @@ smnotcl:
 
   ; Link to PyGTK GUI
   StrCmp $PYINSTALLED "" smdone 0
-  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$INSTDIR\ascend.bat" "" "$INSTDIR\ascend.ico" 0 "SW_SHOWMINIMIZED"
+  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$PYPATH\pythonw.exe" '"$INSTDIR\ascend"' "$INSTDIR\ascend.ico" 0
 smdone:
   
 SectionEnd
@@ -322,7 +301,7 @@ Section "Uninstall"
 unpython:
 	DetailPrint "--- REMOVING PYTHON COMPONENTS ---"
 	Delete $INSTDIR\_ascpy.dll
-	Delete $INSTDIR\ascend.bat
+	Delete $INSTDIR\ascend
 	Delete $INSTDIR\*.py
 	Delete $INSTDIR\*.pyc
 	Delete $INSTDIR\glade\*.glade

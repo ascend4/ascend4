@@ -1991,6 +1991,7 @@ subst_dict = {
 	, '@ASC_ENV_TK_DEFAULT@' : '$$ASCENDDIST/tcltk'
 	, '@ASC_DISTDIR_REL_BIN@' : default_rel_distdir
 	, '@PYTHON@' : python_exe
+	, '@PYVERSION@' : "%d.%d" % (sys.version_info[0],sys.version_info[1])
 	, '@ASC_CONOPT_LIB@':env.get('CONOPT_LIB')
 	, '@ASC_CONOPT_ENVVAR@':env.get('CONOPT_ENVVAR')
 	, '@ASC_CONOPT_DLPATH@':c_escape(env.subst("$CONOPT_DLPATH"))

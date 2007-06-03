@@ -4,40 +4,93 @@ import os.path, sys, platform
 
 restart = 0
 
-# this script handles restarting ascend if it's invoked without the full
-# complement of env vars
+# This script handles restarting ascend if it's invoked without the full
+# complement of env vars. You can override values used by this script
+# by setting the appropriate env vars before this script is run.
+
+# Note that as well as env vars, ASCEND is also controllable using the 
+# .ascend.ini file in the user's home directory.
+
+#-----------------------------------------------------------------------
+# Get locations of the installed files. On windows, these are defined in
+# in the registry. On other systems, these are defined at compile time
+# by @VARNAME@ substitution.
 
 if platform.system()=="Windows":
-	SEP=";"
-else:
-	SEP=":"
+	import _winreg as wreg
+	k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, "SOFTWARE\ASCEND")
+	print k	
 
-if os.environ.get('LD_LIBRARY_PATH'):
-	LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH').split(SEP)
+	# for some reason, QueryValue doesn't work on Py 2.4, need to use QueryValueEx.
+	DEFAULT_ASCENDLIBRARY,t = wreg.QueryValueEx(k,"INSTALL_MODELS")
+	INSTALL_LIB,t = wreg.QueryValueEx(k,"INSTALL_LIB")
+	INSTALL_ASCDATA,t = wreg.QueryValueEx(k,"INSTALL_ASCDATA")
+	GTKLIBS,t = wreg.QueryValueEx(k,"GTKLIBS");
+	
+	PYVERSION = "@PYVERSION@"
+	
+	k = wreg.OpenKey(wreg.HKEY_CURRENT_USER,"SOFTWARE\Python\PythonCore\%s\InstallPath" % PYVERSION)
+	pypath,t = wreg.QueryValueEx(k,"")
+	if pypath == '':
+		k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE,"SOFTWARE\Python\PythonCore\%s\InstallPath" % PYVERSION)
+		pypath,t = wreg.QueryValueEx(k,"")
+		if pypath == '':
+			import winsound
+			winsound.MessageBeep(MB_ICONEXCLAMATION)
+			print "Unable to locate Python install path"
+			sys.exit(1)
+	
+	print "pypath =",pypath
+	
+	PYTHON=os.path.join(pypath,"pythonw.exe")
+	
+	print "PYTHON =",PYTHON
+	SEP=";"
+	LDPATHVAR = 'PATH'
 else:
-	#LD_LIBRARY_PATH = ['/usr/local/lib']
-	LD_LIBRARY_PATH = []
+	INSTALL_LIB="@INSTALL_LIB@"
+	INSTALL_ASCDATA="@INSTALL_ASCDATA@"
+	PYTHON="@PYTHON@"
+	DEFAULT_ASCENDLIBRARY="""@DEFAULT_ASCENDLIBRARY@"""
+	SEP=":"
+	LDPATHVAR = 'LD_LIBRARY_PATH'
+	GTKLIBS = None # assume the GTK will be in the standard library path
+
+#-----------------------------------------------------------------------
+
+if os.environ.get(LDPATHVAR):
+	LDPATH = os.environ.get(LDPATHVAR).split(SEP)
+else:
+	LDPATH = []
 
 if not os.environ.get('ASC_GDB'):
 	# restarting messes up GDB so don't allow it
-	if "@INSTALL_LIB@"!="/usr/lib":
-		
-		if not "@INSTALL_LIB@" in LD_LIBRARY_PATH:
-			LD_LIBRARY_PATH = ["@INSTALL_LIB@"] + LD_LIBRARY_PATH
-			os.environ['LD_LIBRARY_PATH'] = SEP.join(LD_LIBRARY_PATH)
-			restart = 1
 
+	if platform.system()=="Windows":
+		# Put INSTALL_LIB then GTK at start of path
+		if GTKLIBS in LDPATH:
+			LDPATH.remove(GTKLIBS)
+		LDPATH=[INSTALL_LIB,GTKLIBS]+LDPATH
+		os.environ[LDPATHVAR] = SEP.join(LDPATH)
+		restart = 1
+
+	elif INSTALL_LIB != "/usr/lib" and not INSTALL_LIB in LDPATH:
+		# don't worry about GTK location; just ensure that LDPATH includes INSTALL_LIB
+		LDPATH = [INSTALL_LIB] + LDPATH
+		os.environ[LDPATHVAR] = SEP.join(LDPATH)
+		restart = 1
+	
 	PYTHONPATH = os.environ.get("PYTHONPATH")
 	if not PYTHONPATH:
-		os.environ['PYTHONPATH'] = SEP.join(["@INSTALL_ASCDATA@"])
+		os.environ['PYTHONPATH'] = SEP.join([INSTALL_ASCDATA])
 		restart = 1
-	elif not "@INSTALL_ASCDATA@" in PYTHONPATH.split(SEP):
-		os.environ['PYTHONPATH'] = SEP.join(["@INSTALL_ASCDATA@"] + PYTHONPATH.split(SEP))
+	elif not INSTALL_ASCDATA in PYTHONPATH.split(SEP):
+		os.environ['PYTHONPATH'] = SEP.join([INSTALL_ASCDATA] + PYTHONPATH.split(SEP))
 		restart = 1
 
 	if os.environ.get('ASCENDLIBRARY'):
 		envmodels = [os.path.abspath(i) for i in os.environ['ASCENDLIBRARY'].split(SEP)]
-		ascmodels = os.path.abspath("@INSTALL_ASCDATA@/models")
+		ascmodels = os.path.abspath(INSTALL_ASCDATA+"/models")
 		if not ascmodels in envmodels:
 			envmodels.append(ascmodels)
 			os.environ['ASCENDLIBRARY'] = SEP.join(envmodels)
@@ -45,15 +98,20 @@ if not os.environ.get('ASC_GDB'):
 
 	if restart:
 		print "Restarting with corrected environment..."
-		print "   LD_LIBRARY_PATH = %s" % os.environ.get('LD_LIBRARY_PATH')
+		print "   %s = %s" % (LDPATHVAR,os.environ.get(LDPATHVAR))
 		print "   PYTHONPATH = %s" % os.environ['PYTHONPATH']
 		print "   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
 		script = os.path.join(sys.path[0],"ascend")
-		os.execv("@PYTHON@",[script] + sys.argv)
-
+		print "PYTHON =",PYTHON
+		print "script =",script
+		if platform.system()=="Windows":
+			print "DROPPING THROUGH"
+		else:
+			os.execve(PYTHON,[script] + sys.argv, os.environ)
+		
 
 print "Running with..."
-print "   LD_LIBRARY_PATH = %s" % os.environ.get('LD_LIBRARY_PATH')
+print "   %s = %s" % (LDPATHVAR, os.environ.get(LDPATHVAR))
 print "   PYTHONPATH = %s" % os.environ.get('PYTHONPATH')
 print "   argv = %s" % sys.argv
 
@@ -61,13 +119,13 @@ if os.environ.get('ASCENDLIBRARY'):
 	ASCENDLIBRARY = os.environ.get('ASCENDLIBRARY')
 	print "USING ASCENDLIBRARY=%s" % ASCENDLIBRARY
 else:
-	ASCENDLIBRARY = """@DEFAULT_ASCENDLIBRARY@"""
+	ASCENDLIBRARY = DEFAULT_ASCENDLIBRARY
 
 print "sys.path[0] = %s" % sys.path[0]
 
-if not "@INSTALL_ASCDATA@" in sys.path:
-	print "Where is @INSTALL_ASCDATA@?"
-	sys.path.append("@INSTALL_ASCDATA@")
+if not INSTALL_ASCDATA in sys.path:
+	print "Adding INSTALL_ASCDATA to python path?"
+	sys.path.append(INSTALL_ASCDATA)
 
 if os.environ.get('OSTYPE')=='cygwin':
 	print "CYGWIN..."
@@ -77,11 +135,14 @@ elif os.environ.get('OSTYPE')=='msys':
 if os.environ.get('ASC_GDB'):
 	args = sys.argv
 	args.pop(0)
-	cmd = ["gdb","--args","python",os.path.join("@INSTALL_ASCDATA@","gtkbrowser.py")]+args
+	cmd = ["gdb","--args","python",os.path.join(INSTALL_ASCDATA,"gtkbrowser.py")]+args
 	print cmd
 	os.execv("/usr/bin/gdb",cmd)
 else:
 	import ascpy
+	olddir = os.getcwd()
+	os.chdir(INSTALL_ASCDATA)
 	from gtkbrowser import *
-	B = Browser()
+	os.chdir(olddir)
+	B = Browser(librarypath=ASCENDLIBRARY,assetspath=os.path.join(INSTALL_ASCDATA,"glade"))
 	B.run()
