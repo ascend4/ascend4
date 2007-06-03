@@ -24,8 +24,8 @@ OutFile ${OUTFILE}
 OutFile "ascend-${VERSION}-py${PYVERSION}.exe"
 !endif
 
-SetCompressor /FINAL zlib
-;SetCompressor /SOLID lzma
+;SetCompressor /FINAL zlib
+SetCompressor /SOLID lzma
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\ASCEND
