@@ -2215,9 +2215,13 @@ if env.get('CAN_INSTALL'):
 # For the windows installer, please see pygtk/SConscript
 
 if with_installer:
-	pass
+	env.Append(NSISDEFINES={'OUTFILE':"#dist/"+env['WIN_INSTALLER_NAME']})
+	installer = env.Installer('installer.nsi')
+	Depends(installer,["pygtk","tcltk","ascend.dll","models","ascend-config"])
+	env.Alias('installer',installer)
 else:
 	print "Skipping... Windows installer isn't being built:",without_installer_reason
+
 
 #------------------------------------------------------
 # PROJECT FILE for MSVC

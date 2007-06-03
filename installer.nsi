@@ -1,13 +1,6 @@
-; NSIS script to create an ASCEND binary installer.
-; by John Pye, 2006.
+; NSIS script to create an ASCEND binary installer for Windows
+; by John Pye, 2006-2007.
 ;
-; Based on example2.nsi from the NSIS distribution.
-;
-; This script is based on example1.nsi, but it remembers the directory, 
-; has uninstall support and (optionally) installs start menu shortcuts.
-;
-; It will install example2.nsi into a directory that the user selects,
-
 ;--------------------------------
 
 ; The name of the installer
@@ -94,21 +87,21 @@ Section "ASCEND (required)"
 
 	; Set output path to the installation directory.
 	SetOutPath $INSTDIR
-	File "..\ascend.dll"
-	File "..\ascend-config"
-	File "glade\ascend.ico"
+	File "ascend.dll"
+	File "ascend-config"
+	File "pygtk\glade\ascend.ico"
 
 
 	; Model Library
 	SetOutPath $INSTDIR\models
-	File /r /x .svn "..\models\*.a4*"
-	File /r /x .svn "..\models\*.tcl"
-	File /r /x .svn "..\models\*.dll" ; extension modules
-	File /r /x .svn "..\models\*.py"; python modules
+	File /r /x .svn "models\*.a4*"
+	File /r /x .svn "models\*.tcl"
+	File /r /x .svn "models\*.dll" ; extension modules
+	File /r /x .svn "models\*.py"; python modules
 
 	SetOutPath $INSTDIR
-	File "Makefile.bt"
-	File "..\tools\textpad\ascend.syn"
+	;File "Makefile.bt"
+	File "tools\textpad\ascend.syn"
 
 	${If} ${FileExists} "$APPDATA\.ascend.ini"
 		MessageBox MB_OK "The '$APPDATA\.ascend.ini' is NOT being updated. Manually delete this file if ASCEND doesn't behave as expected."
@@ -179,15 +172,15 @@ Section "PyGTK GUI"
 				SetOutPath $INSTDIR
 
 				; Python interface
-				File "_ascpy.dll"
-				File "*.py"
-				File "ascend"
-				File "glade\ascend-doc.ico"
+				File "pygtk\_ascpy.dll"
+				File "pygtk\*.py"
+				File "pygtk\ascend"
+				File "pygtk\glade\ascend-doc.ico"
 				
 				SetOutPath $INSTDIR\glade
-				File "glade\*.glade"
-				File "glade\*.png"
-				File "glade\*.svg"
+				File "pygtk\glade\*.glade"
+				File "pygtk\glade\*.png"
+				File "pygtk\glade\*.svg"
 
 				StrCpy $PYINSTALLED "1"
 				WriteRegDWORD HKLM "SOFTWARE\ASCEND" "Python" 1	
@@ -252,10 +245,10 @@ ${If} $TCLOK != 'OK'
 ${Else}
 	DetailPrint "--- TCL/TK INTERFACE ---"
 	SetOutPath $INSTDIR\tcltk
-	File /r /x .svn "..\tcltk\TK\*"
+	File /r /x .svn "tcltk\TK\*"
 	SetOutPath $INSTDIR
-	File "..\tcltk\generic\interface\ascendtcl.dll"
-	File "..\tcltk\generic\interface\ascend4.exe"
+	File "tcltk\generic\interface\ascendtcl.dll"
+	File "tcltk\generic\interface\ascend4.exe"
 	
 	StrCpy $TCLINSTALLED "1"
 	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "TclTk" 1
