@@ -1,7 +1,7 @@
 REQUIRE "thermodynamics.a4l";
 
 IMPORT "johnpye/extpy/extpy";
-IMPORT "zplot";
+IMPORT "kchittur/zplot";
 
 ATOM vdwa REFINES solver_var
 DIMENSION M*L^5/Q^2/T^2
