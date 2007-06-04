@@ -345,11 +345,12 @@ int integrator_register(const IntegratorInternals *integ){
 	for(i=1; i < gl_length(L); ++i){
 		I = (const IntegratorInternals *)gl_fetch(L,i);
 		if(strcmp(integ->name,I->name)==0){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integrator with name '%s' is already registered",integ->name);
-			return 1;
+			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Integrator with name '%s' is already registered",integ->name);
+			return 0;
 		}
 		if(integ->engine == I->engine){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integrator with ID '%d' is already registered",integ->engine);
+			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Integrator with ID '%d' is already registered",integ->engine);
+			return 0;
 		}
 	}
 
