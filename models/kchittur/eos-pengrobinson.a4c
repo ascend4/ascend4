@@ -1,7 +1,8 @@
 REQUIRE "thermodynamics.a4l";
 
 IMPORT "johnpye/extpy/extpy";
-IMPORT "zplot";
+IMPORT "kchittur/zplot";
+
 MODEL pengrobinson(P WILL_BE pressure;
 T WILL_BE temperature;
 V WILL_BE molar_volume; 

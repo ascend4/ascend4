@@ -1,8 +1,10 @@
-# python script for calculating Pressure versus y from T and x 
-# binary system, modified raoult's law, simple activity coefficient model
-
 import extpy
-from pylab import *
+
+try:
+	from pylab import *
+except:
+	pass
+
 from solverreporter import *
 
 def zplot(self):
