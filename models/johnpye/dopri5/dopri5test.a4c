@@ -1,0 +1,25 @@
+IMPORT "johnpye/dopri5/dopri5";
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL dopri5test;
+	x,y IS_A delta_distance;
+	t IS_A time;
+	dy_dt IS_A speed;
+
+	dy_dt = -x;
+	x = y;
+METHODS
+	METHOD on_load;
+		y.ode_id := 1;
+		y.ode_type := 1;
+		dy_dt.ode_id := 1;
+		dy_dt.ode_type := 2;
+		t.ode_type := -1;
+		y.obs_id := 1;
+		dy_dt.obs_id := 2;
+		x.obs_id := 3;
+		y := 1.0 {m};
+		t := 0.0 {s};
+	END on_load;
+END dopri5test;
