@@ -10,6 +10,12 @@ from infodialog import *
 from observer import *
 import tempfile
 
+import gobject
+try:
+	import pylab
+except:
+	pass
+		
 # When writing this class, we assume that the integrator class has already had
 # its "analyse" method called, so we know all that stuff like the number of
 # observed variables, what our time samples are, what the independent variable 
@@ -141,19 +147,24 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 	def __init__(self,integrator,filep):
 		self.filep=filep
-	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)		
+		self.numsteps=0
+		self.indepname="t"
+	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)
+		
 		
 	def run(self):
 		self.getIntegrator().solve()
 
 	def initOutput(self):
 		try:
-			sys.stderr.write("Integrating")
+			sys.stderr.write("Integrating...\n")
 			I = self.getIntegrator()
+			self.numsteps=I.getNumSteps()
+			self.indepname = I.getIndependentVariable().getName()
 			names = [I.getObservedVariable(i).getName() for i \
 				in range(I.getNumObservedVars())
 			]
-			self.filep.write("#%s\t" % I.getIndependentVariable().getName())
+			self.filep.write("#%s\t" % self.indepname)
 			self.filep.write("\t".join(names)+"\n")
 		except Exception,e:
 			print "ERROR %s" % str(e)
@@ -162,16 +173,16 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 
 	def closeOutput(self):
 		sys.stderr.write(" "*20+chr(8)*20)
-		sys.stderr.write("done!\n")
+		sys.stderr.write("Finished, %d samples recorded.\n" % self.numsteps)
 		self.filep.write("#end\n")
 		return 0
 
 	def updateStatus(self):
 		try:
-			t = "%3f" % self.getIntegrator().getCurrentTime()
-			sys.stderr.write(".")
-			sys.stderr.write(t)
-			sys.stderr.write(chr(8)*len(t))
+			I = self.getIntegrator()
+			t = I.getCurrentTime()
+			pct = 100.0 * I.getCurrentStep() / self.numsteps;
+			sys.stderr.write("%3.0f%% (%s = %6.3f)           \r" % (pct,self.indepname,t))
 		except Exception,e:
 			print "ERROR %s" % str(e)
 			return 0
@@ -188,4 +199,65 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 			print "ERROR %s" % str(e)
 			return 0
 		return 1
+
+class IntegratorReporterPlot(ascpy.IntegratorReporterCxx):
+	"""Plotting integrator reporter"""
+	def __init__(self,integrator):
+		self.numsteps=0
+		self.indepname="t"
+	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)		
+		
+	def run(self):
+		import loading
+		loading.load_matplotlib(throw=True)
+		self.getIntegrator().solve()
+
+	def initOutput(self):
+		try:
+			sys.stderr.write("Integrating...\n")
+			self.ax = pylab.subplot(111)
+			self.canvas = self.ax.figure.canvas
+			I = self.getIntegrator()
+			self.numsteps=I.getNumSteps()
+			self.indepname = I.getIndependentVariable().getName()
+			self.x = []
+			self.y = []	
+			self.line, = pylab.plot(self.x,self.y,animated=True)	
+			self.bg = self.canvas.copy_from_bbox(self.ax.bbox)
+			gobject.idle_add(self.plotupdate)
+			pylab.show()
+		except Exception,e:
+			print "ERROR %s" % str(e)
+			return 0
+		return 1
+
+	def closeOutput(self):
+		sys.stderr.write(" "*20+chr(8)*20)
+		sys.stderr.write("Finished, %d samples recorded.\n" % self.numsteps)
+		return 0
+
+	def updateStatus(self):
+		return 1
+
+	def plotupdate(self):
+		sys.stderr.write("%d...\r " % len(self.x))
+		try:
+			self.canvas.restore_region(self.bg)
+			self.line.set_data(self.x, self.y)
+			self.ax.draw_artist(self.line)
+			self.canvas.blit(self.ax.bbox)
+		except Exception,e:
+			print "ERROR %s" % str(e)
+
+	def recordObservedValues(self):
+		try:
+			I = self.getIntegrator()
+			obs = I.getCurrentObservations()
+			self.x.append(I.getCurrentTime())
+			self.y.append(obs[0])
+		except Exception,e:
+			print "ERROR %s" % str(e)
+			return 0
+		return 1
+	
 

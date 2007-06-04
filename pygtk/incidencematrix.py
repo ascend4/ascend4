@@ -2,6 +2,13 @@ import config
 import loading
 import platform
 
+try:
+	import matplotlib		
+	import pylab
+	from matplotlib.colors import LinearSegmentedColormap
+except:
+	pass
+
 class IncidenceMatrixWindow:
 
 	def __init__(self,im):
@@ -10,9 +17,6 @@ class IncidenceMatrixWindow:
 		self.lastrow = None;
 
 		loading.load_matplotlib(throw=True)
-		import matplotlib		
-		import pylab
-		from matplotlib.colors import LinearSegmentedColormap
 
 	def run(self):
 		# convert incidence map to pylab numarray type:

@@ -4,7 +4,7 @@
 
 Name:		ascend
 Summary:	ASCEND modelling environment
-Version:	0.9.5.110
+Version:	0.9.5.111
 
 # Use release 0.* so that other users can do patch releases with a higher number
 # and still have the update occur automatically.
@@ -12,7 +12,7 @@ Release:	0%{?dist}
 
 License:	GPL
 Group:		Applications/Engineering
-Source:		ascend-0.9.5.110.tar.bz2
+Source:		ascend-0.9.5.111.tar.bz2
 URL:		http://ascend.cheme.cmu.edu/
 
 Prefix:		%{_prefix}
@@ -87,7 +87,7 @@ Provides: ascend-gui
 # simple for end-users.
 
 #%package -n ascend-python
-#Version:    0.9.5.110
+#Version:    0.9.5.111
 #Summary:    PyGTK user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -97,7 +97,7 @@ Provides: ascend-gui
 #access to all of the ASCEND functionality provided by the Tcl/Tk interface.
 #
 #%package -n ascend-tcltk
-#Version:    0.9.5.110
+#Version:    0.9.5.111
 #Summary:    Tcl/Tk user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -108,7 +108,7 @@ Provides: ascend-gui
 #functionality not provided by the PyGTK interface.
 
 %prep
-%setup -q -n ascend-0.9.5.110
+%setup -q -n ascend-0.9.5.111
 
 %build
 scons %{_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
