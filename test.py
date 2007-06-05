@@ -1353,8 +1353,8 @@ class TestDOPRI5(Ascend):
 		I = ascpy.Integrator(M)
 		I.setEngine('DOPRI5')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
-		xend = 17.0652165601579625588917206249
-		I.setLinearTimesteps(ascpy.Units("s"), 0, xend, int(xend/2.0))
+		#xend = 17.0652165601579625588917206249
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 17.0652165601579625588917206249, 20)
 		I.setParameter('rtol',1e-7)
 		I.setParameter('atol',1e-7)
 		I.setParameter('tolvect',False)

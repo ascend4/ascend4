@@ -22,15 +22,15 @@ MODEL aren;
 	(* variables *)
 	r1, r2, sqr IS_A factor;
 	y[0..3] IS_A factor;
-	f[0..3] IS_A factor;
+	dy_dt[0..3] IS_A factor;
 
 	r1 = ( (y[0] + amu)^2 + y[1]^2 ) ^ (3/2);
 	r2 = ( (y[0] - amup)^2 + y[1]^2 ) ^ (3/2);
 
-	ode0: f[0] = y[2];
-	ode1: f[1] = y[3];
-	ode2: f[2] = y[0] + 2.0 * y[3] - amup * (y[0]+amu) / r1 - amu * (y[0]-amup) / r2;
-	ode3: f[3] = y[1] - 2.0 * y[2] - amup * y[1] / r1 - amu * y[1] / r2;
+	ode0: dy_dt[0] = y[2];
+	ode1: dy_dt[1] = y[3];
+	ode2: dy_dt[2] = y[0] + 2.0 * y[3] - amup * (y[0]+amu) / r1 - amu * (y[0]-amup) / r2;
+	ode3: dy_dt[3] = y[1] - 2.0 * y[2] - amup * y[1] / r1 - amu * y[1] / r2;
 
 	x IS_A time;
 METHODS
@@ -49,15 +49,10 @@ METHODS
 			y[i].ode_id := i+1;
 			y[i].ode_type := 1;
 			FIX y[i];
-			f[i].ode_id := i+1;
-			f[i].ode_type := 2;
+			dy_dt[i].ode_id := i+1;
+			dy_dt[i].ode_type := 2;
 			y[i].obs_id := i+1;
 		END FOR;
 		x.ode_type := -1;
 	END on_load;
-	METHOD specify;
-		FREE y[0..3];
-		FIX f[0..3];
-		f[0..3] := 0;
-	END specify;
 END aren;
