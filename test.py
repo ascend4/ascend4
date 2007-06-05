@@ -1345,6 +1345,21 @@ class TestDOPRI5(Ascend):
 		I.analyse()
 		assert I.getNumVars()==1
 		I.solve()
+	def testaren(self):
+		self.L.load('johnpye/dopri5/aren.a4c')
+		M = self.L.findType('aren').getSimulation('sim')
+		M.setSolver(ascpy.Solver("QRSlv"))
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		I = ascpy.Integrator(M)
+		I.setEngine('DOPRI5')
+		I.setReporter(ascpy.IntegratorReporterConsole(I))
+		xend = 17.0652165601579625588917206249
+		I.setLinearTimesteps(ascpy.Units("s"), 0, xend, int(xend/2.0))
+		I.setParameter('rtol',1e-7)
+		I.setParameter('atol',1e-7)
+		I.setParameter('tolvect',False)
+		I.analyse()
+		I.solve()	
 
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
