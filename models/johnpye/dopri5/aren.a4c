@@ -1,38 +1,50 @@
+(*
+	This is the Arenstorf Orbit problem distributed as a sample problem with 
+	the DOPRI5 integrator code.
+
+	We're not really concerned with the details of this problem. We're just	
+	trying to determine that our solver gets the right answer.	FORTRAN and
+	C code are provided that solve tihs problem; we aim to reproduce those
+	results here using pure ASCEND code.
+*)
 REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 
+(* load the DOPRI5 integrator dynamically *)
 IMPORT "johnpye/dopri5/dopri5";
 
 MODEL aren;
-
+	(* constants *)
 	amu, amup IS_A real_constant;
+	amu :== 0.012277471;
+	amup :== 1.0 - amu;
+
+	(* variables *)
 	r1, r2, sqr IS_A factor;
 	y[0..3] IS_A factor;
 	f[0..3] IS_A factor;
 
-	amu :== 0.012277471;
-	amup :== 1.0 - amu;
+	r1 = ( (y[0] + amu)^2 + y[1]^2 ) ^ (3/2);
+	r2 = ( (y[0] - amup)^2 + y[1]^2 ) ^ (3/2);
 
 	ode0: f[0] = y[2];
 	ode1: f[1] = y[3];
-	sqr = y[0] + amu;
-	r1 = sqr*sqr + y[1]*y[1];
-	r1 = r1 * sqrt(r1);
-	sqr = y[0] - amup;
-	r2 = sqr*sqr + y[1]*y[1];
-	r2 = r2 * sqrt(r2);
 	ode2: f[2] = y[0] + 2.0 * y[3] - amup * (y[0]+amu) / r1 - amu * (y[0]-amup) / r2;
 	ode3: f[3] = y[1] - 2.0 * y[2] - amup * y[1] / r1 - amu * y[1] / r2;
 
 	x IS_A time;
 METHODS
-	METHOD on_load;
+	METHOD values;
+		(* initial values *)
 		x := 0.0 {s};
 		y[0] := 0.994;
 		y[1] := 0.0;
 		y[2] := 0.0;
 		y[3] := -2.00158510637908252240537862224;
+	END values;
+	METHOD on_load;
 		(* xend = 17.0652165601579625588917206249; *)
+		RUN values;
 		FOR i IN [0..3] DO
 			y[i].ode_id := i+1;
 			y[i].ode_type := 1;
