@@ -82,6 +82,7 @@ typedef struct IntegratorDopri5DataStruct
 	long currentsample;
 	char stop;                             /* stop requested? */
 	int partitioned;                       /* partioned func evals or not */
+	double *yinter;						   /* interpolated y values */
 
 	clock_t lastwrite;                     /* time of last call to the reporter 'write' function */
 }
@@ -123,6 +124,9 @@ void integrator_dopri5_free(void *enginedata){
 
 	if(d.rlist)ASC_FREE(d.rlist);
 	d.rlist =  NULL;
+
+	if(d.yinter)ASC_FREE(d.yinter);
+	d.yinter = NULL;
 
 	d.n_eqns = 0L;
 }
@@ -441,6 +445,50 @@ static void integrator_dopri5_reporter(
 	IntegratorDopri5Data *d = (IntegratorDopri5Data *)(blsys->enginedata);
 
 	ts = integrator_getsample(blsys,d->currentsample);
+
+#if 0 /* sub-step output */
+	int i;
+	enum dopri5_status res;
+	slv_status_t status;
+
+	while(t>ts){
+		for(i=0; i<nr; ++i){
+			d->yinter[i] = contd5(i,ts);
+		}
+		integrator_set_y(blsys, d->yinter);
+
+		if((res = slv_solve(blsys->system))){
+			CONSOLE_DEBUG("solver returns error %ld",res);
+		}
+
+		slv_get_status(blsys->system, &status);
+
+		if(slv_check_bounds(blsys->system,0,-1,"")){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variables went outside boundaries...");
+			// TODO relay that system has gone out of bounds
+		}
+
+		/* pass the NLA solver status to the integrator */
+		res = integrator_checkstatus(status);
+
+	  	if(res){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve inter-step state (%d)",res);
+
+#ifdef ASC_SIGNAL_TRAPS
+			raise(SIGINT);
+#endif
+		}
+
+		integrator_output_write_obs(blsys);
+
+		d->currentsample++;
+		ts = integrator_getsample(blsys,d->currentsample);
+	}
+
+	//CONSOLE_DEBUG("t = %f, y[0] = %f",t,y[0]);
+	integrator_output_write(blsys);
+#else
+	ts = integrator_getsample(blsys,d->currentsample);
 	if(t>ts){
 		//CONSOLE_DEBUG("t=%f > ts=%f (currentsample = %ld",t,ts,d->currentsample);
 		integrator_output_write_obs(blsys);
@@ -452,6 +500,7 @@ static void integrator_dopri5_reporter(
 
 	//CONSOLE_DEBUG("t = %f, y[0] = %f",t,y[0]);
 	integrator_output_write(blsys);
+#endif
 }
 
 /*------------------------------------------------------------------------------
@@ -467,11 +516,11 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	slv_status_t status;
 
 	double x;
-	double xend,xprev;
+	double xend;
 	unsigned long nsamples, neq;
 	long nobs;
 	//int  itol, itask, mf, lrw, liw;
-	unsigned long index;
+	//unsigned long index;
 	//int istate, iopt;
 	//double * rwork;
 	//int * iwork;
@@ -500,6 +549,8 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 
 	d->y_vars = ASC_NEW_ARRAY(struct var_variable *,d->n_eqns+1);
 	d->ydot_vars = ASC_NEW_ARRAY(struct var_variable *, d->n_eqns+1);
+	
+	d->yinter = ASC_NEW_ARRAY(double,d->n_eqns);
 
 	/* set up the NLA solver here */
 

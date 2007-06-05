@@ -1155,9 +1155,9 @@ double *integrator_get_y(IntegratorSystem *sys, double *y) {
 }
 
 /**
-	Take the values of the derivatives from the array that the integrator
-	uses, and use them to update the values of the corresponding variables
-	in ASCEND.
+	Take the values of the differential variables from the array that the
+	integrator uses, and use them to update the values of the corresponding 
+	variables in ASCEND.
 */
 void integrator_set_y(IntegratorSystem *sys, double *y) {
   long i;
