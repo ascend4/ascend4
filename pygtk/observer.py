@@ -225,7 +225,6 @@ class ObserverTab:
 			A[i,1]=r[y.index]
 			if y2 is not None:
 				A[i,2]=r[y2.index]
-		print A
 		pylab.figure()
 		p1 = pylab.plot(A[:,0],A[:,1],'b-')
 		pylab.xlabel(x.title)

@@ -442,6 +442,7 @@ static void integrator_dopri5_reporter(
 
 	ts = integrator_getsample(blsys,d->currentsample);
 	if(t>ts){
+		//CONSOLE_DEBUG("t=%f > ts=%f (currentsample = %ld",t,ts,d->currentsample);
 		integrator_output_write_obs(blsys);
 		while(t>ts){
 			d->currentsample++;
@@ -586,11 +587,8 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	my_neq = (int)neq;
 
 	blsys->currentstep = 0;
-	for(index = start_index; index < finish_index; index++, 	blsys->currentstep++) {
-		xend = integrator_getsample(blsys, index+1);
-		xprev = x;
-		asc_assert(xend > xprev);
-		/* CONSOLE_DEBUG("DOPRI5 call #%lu: x = [%f,%f]", index,xprev,xend); */
+
+	xend = integrator_getsample(blsys, finish_index);
 
 # ifdef ASC_SIGNAL_TRAPS
 
@@ -600,47 +598,13 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 		if(SETJMP(g_fpe_env)==0) {
 # endif /* ASC_SIGNAL_TRAPS */
 
-			/* CONSOLE_DEBUG("Calling DOPRI5 with end-time = %f",xend); */
-
 			d->lastwrite = clock();
 
-#if 0
-extern int dopri5(
-        unsigned n,      /* dimension of the system <= UINT_MAX-1*/
-        FcnEqDiff *fcn,   /* function computing the value of f(x,y) */
-        double x,        /* initial x-value */
-        double* y,       /* initial values for y */
-        double xend,     /* final x-value (xend-x may be positive or negative) */
-
-        double* rtoler,  /* relative error tolerance */
-        double* atoler,  /* absolute error tolerance */
-        int itoler,      /* switch for rtoler and atoler */
-        SolTrait *solout, /* function providing the numerical solution during integration */
-        int iout,        /* switch for calling solout */
-
-        FILE* fileout,   /* messages stream */
-        double uround,   /* rounding unit */
-        double safe,     /* safety factor */
-        double fac1,     /* parameters for step size selection */
-        double fac2,
-
-        double beta,     /* for stabilized step size control */
-        double hmax,     /* maximal step size */
-        double h,        /* initial step size */
-        long nmax,       /* maximal number of allowed steps */
-        int meth,        /* switch for the choice of the coefficients */
-
-        long nstiff,     /* test for stiffness */
-        unsigned nrdens, /* number of components for which dense outpout is required */
-        unsigned* icont, /* indexes of components for which dense output is required, >= nrdens */
-        unsigned licont  /* declared length of icon */
-    );
-#endif
 		    res = dopri5 (my_neq, &integrator_dopri5_fex, x, y, xend
 				, rtoler, atoler, tolvect, integrator_dopri5_reporter, iout
-				, stdout, 0.0, 0.0, 0.0, 0.0
+				, stdout, 0.0 /* uround */, 0.0 /*safe*/, 0.0 /*fac1*/, 0.0/*fac2*/
 				, 0.0 /* beta */, hmax, h, nmax, 0
-				, nstiff, 0, NULL, 0
+				, nstiff, 0/*nrdens*/, NULL/*icont*/, 0/*licont*/
 				, (void *)blsys
 			);
 
@@ -682,6 +646,7 @@ extern int dopri5(
 		return 7;
 	}
 
+#if 0
 	integrator_setsample(blsys, index+1, x);
 	/* record when dopri5 actually came back */
 	integrator_set_t(blsys, x);
@@ -689,6 +654,7 @@ extern int dopri5(
 	/* put x,y in d in case dopri5 got x,y by interpolation, as it does  */
 
 	}
+#endif
 
 	integrator_output_close(blsys);
 
