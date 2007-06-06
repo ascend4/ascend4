@@ -1916,7 +1916,7 @@ int integrator_ida_psolve_jacobi(realtype tt,
 	A simple wrapper to the IDAGetIntegratorStats function. Returns all the
 	status in a struct instead of separately.
 
-	@return IDA_SUCCESS on sucess.
+	@return IDA_SUCCESS on success.
 */
 int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s){
 

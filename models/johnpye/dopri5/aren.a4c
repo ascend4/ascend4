@@ -6,6 +6,21 @@
 	trying to determine that our solver gets the right answer.	FORTRAN and
 	C code are provided that solve tihs problem; we aim to reproduce those
 	results here using pure ASCEND code.
+
+	Expected output from the FORTRAN version:
+
+	 X =  0.00    Y =  0.9940000000E+00  0.0000000000E+00    NSTEP =   0
+	 X =  2.00    Y = -0.5798781411E+00  0.6090775251E+00    NSTEP =  60
+	 X =  4.00    Y = -0.1983335270E+00  0.1137638086E+01    NSTEP =  73
+	 X =  6.00    Y = -0.4735743943E+00  0.2239068118E+00    NSTEP =  91
+	 X =  8.00    Y = -0.1174553350E+01 -0.2759466982E+00    NSTEP = 110
+	 X = 10.00    Y = -0.8398073466E+00  0.4468302268E+00    NSTEP = 122
+	 X = 12.00    Y =  0.1314712468E-01 -0.8385751499E+00    NSTEP = 145
+	 X = 14.00    Y = -0.6031129504E+00 -0.9912598031E+00    NSTEP = 159
+	 X = 16.00    Y =  0.2427110999E+00 -0.3899948833E+00    NSTEP = 177
+	 X = XEND     Y =  0.9940021016E+00  0.8911185056E-05
+	     tol=0.10D-06   fcn= 1442 step= 240 accpt= 216 rejct= 22
+
 *)
 REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
@@ -20,12 +35,13 @@ MODEL aren;
 	amup :== 1.0 - amu;
 
 	(* variables *)
-	r1, r2, sqr IS_A factor;
+	r1, r2 IS_A factor;
 	y[0..3] IS_A factor;
 	dy_dt[0..3] IS_A factor;
 
-	r1 = ( (y[0] + amu)^2 + y[1]^2 ) ^ (3/2);
-	r2 = ( (y[0] - amup)^2 + y[1]^2 ) ^ (3/2);
+	
+	r1 = ( (y[0] + amu)^2 + y[1]^2 ) ^ (3./2);
+	r2 = ( (y[0] - amup)^2 + y[1]^2 ) ^ (3./2);
 
 	ode0: dy_dt[0] = y[2];
 	ode1: dy_dt[1] = y[3];
