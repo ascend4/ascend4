@@ -1354,12 +1354,16 @@ class TestDOPRI5(Ascend):
 		I.setEngine('DOPRI5')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		#xend = 17.0652165601579625588917206249
-		I.setLinearTimesteps(ascpy.Units("s"), 0, 17.0652165601579625588917206249, 20)
+		I.setLinearTimesteps(ascpy.Units("s"), 0, 17.0652165601579625588917206249, 10)
 		I.setParameter('rtol',1e-7)
 		I.setParameter('atol',1e-7)
 		I.setParameter('tolvect',False)
+		I.setMaxSubStep(0);
+		I.setInitialSubStep(0);
 		I.analyse()
-		I.solve()	
+		I.solve()
+		assert abs(float(M.y[0]) - 0.994) < 1e-5
+		assert abs(float(M.y[1]) - 0.0) < 1e-5
 
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:

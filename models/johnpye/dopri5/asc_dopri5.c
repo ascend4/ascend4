@@ -36,6 +36,8 @@
 
 #define INTEG_DOPRI5 5
 
+#define STATS_DEBUG
+
 IntegratorCreateFn integrator_dopri5_create;
 IntegratorParamsDefaultFn integrator_dopri5_params_default;
 IntegratorSolveFn integrator_dopri5_solve;
@@ -356,6 +358,43 @@ typedef struct IntegratorDopri5StatsStruct{
 	double x;
 } IntegratorDopri5Stats;
 
+
+/*----------------------------------------------
+  STATS
+*/
+
+/**
+	A simple wrapper to the IDAGetIntegratorStats function. Returns all the
+	status in a struct instead of separately.
+
+	@return 0 on success.
+*/
+int integrator_dopri5_stats(IntegratorSystem *blsys, IntegratorDopri5Stats *s){
+
+#define S(NAME) s->NAME = NAME##Read()
+	S(nfcn); S(nstep); S(naccpt); S(nrejct);
+	S(h); S(x);
+#undef S
+
+	return 0;
+}
+
+/**
+	This routine just outputs the stats to the CONSOLE_DEBUG routine.
+
+	@TODO provide a GUI way of stats reporting from DOPRI5
+*/
+void integrator_dopri5_write_stats(IntegratorDopri5Stats *stats){
+# define SL(N) CONSOLE_DEBUG("%s = %ld",#N,stats->N)
+# define SI(N) CONSOLE_DEBUG("%s = %d",#N,stats->N)
+# define SR(N) CONSOLE_DEBUG("%s = %f",#N,stats->N)
+	SL(nfcn); SL(nstep); SL(naccpt); SL(nrejct);
+	SR(h); SR(x);
+# undef SL
+# undef SI
+# undef SR
+}
+
 /*------------------------------------------------------------------------------
   FUNCTION EVALUATION
 */
@@ -485,13 +524,13 @@ static void integrator_dopri5_reporter(
 		ts = integrator_getsample(blsys,d->currentsample);
 	}
 
-	//CONSOLE_DEBUG("t = %f, y[0] = %f",t,y[0]);
 	integrator_output_write(blsys);
 #else
 	ts = integrator_getsample(blsys,d->currentsample);
 	if(t>ts){
 		//CONSOLE_DEBUG("t=%f > ts=%f (currentsample = %ld",t,ts,d->currentsample);
 		integrator_output_write_obs(blsys);
+		CONSOLE_DEBUG("step = %ld", nr-1);	
 		while(t>ts){
 			d->currentsample++;
 			ts = integrator_getsample(blsys,d->currentsample);
@@ -578,7 +617,7 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 
 	/* here we assume integrators.c is in charge of dynamic loading */
 
-	/* set up parameteers for sending to DOPRI5 */
+	/* set up parameters for sending to DOPRI5 */
 
 	nsamples = integrator_getnsamples(blsys);
 	if (nsamples <2) {
@@ -596,14 +635,14 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	unsigned licont  /* declared length of icon */
 #endif
 
-	int iout = 1; /* SLV_PARAM_BOOL(&(blsys->params),DOPRI5_PARAM_DENSEREPORTING) */
+	int iout = 2; /* SLV_PARAM_BOOL(&(blsys->params),DOPRI5_PARAM_DENSEREPORTING) */
 
 	int tolvect = SLV_PARAM_BOOL(&(blsys->params),DOPRI5_PARAM_TOLVECT);
 
 	/* samplelist_debug(blsys->samples); */
 
 	x = integrator_getsample(blsys, 0);
-	d->currentsample = 0;
+	d->currentsample = 1;
 
 	y = integrator_get_y(blsys, NULL);
 	
@@ -616,6 +655,8 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 
 	h = integrator_get_stepzero(blsys);
 	hmax = integrator_get_maxstep(blsys);
+	CONSOLE_DEBUG("init step = %f, max step = %f", h, hmax);
+
 	/* rwork[6] = integrator_get_minstep(blsys); */ /* ignored */
 	nmax = integrator_get_maxsubsteps(blsys);
 
@@ -637,6 +678,16 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 
 	my_neq = (int)neq;
 
+	unsigned *icont = NULL;
+	unsigned nrdens = 0;
+	unsigned licont = nrdens;
+#if 0
+	unsigned licont = 2;
+	icont = ASC_NEW_ARRAY(unsigned, licont);
+	icont[0] = 0;
+	icont[1] = 1;
+#endif
+
 	blsys->currentstep = 0;
 
 	xend = integrator_getsample(blsys, finish_index);
@@ -655,7 +706,7 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 				, rtoler, atoler, tolvect, integrator_dopri5_reporter, iout
 				, stdout, 0.0 /* uround */, 0.0 /*safe*/, 0.0 /*fac1*/, 0.0/*fac2*/
 				, 0.0 /* beta */, hmax, h, nmax, 0
-				, nstiff, 0/*nrdens*/, NULL/*icont*/, 0/*licont*/
+				, nstiff, nrdens, icont, licont
 				, (void *)blsys
 			);
 
@@ -697,6 +748,9 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 		return 7;
 	}
 
+	/* write final step output */
+	integrator_output_write_obs(blsys);
+
 #if 0
 	integrator_setsample(blsys, index+1, x);
 	/* record when dopri5 actually came back */
@@ -708,6 +762,15 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 #endif
 
 	integrator_output_close(blsys);
+
+#ifdef STATS_DEBUG
+	IntegratorDopri5Stats stats;
+	if(0 == integrator_dopri5_stats(blsys, &stats)){
+		integrator_dopri5_write_stats(&stats);
+	}else{
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch stats!?!?");
+	}
+#endif
 
 	CONSOLE_DEBUG("--- DOPRI5 done ---");
 	return 0; /* success */
