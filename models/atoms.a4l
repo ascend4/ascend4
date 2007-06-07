@@ -475,6 +475,9 @@ END length_parameter;
         nominal := 100.0{g/s};
     END mass_rate;
 
+    CONSTANT mass_rate_constant
+    REFINES real_constant DIMENSION M/T;
+
 	ATOM mass_flux REFINES solver_var
         DIMENSION M/T/L^2
         DEFAULT 10{kg/s/m^2};
@@ -482,7 +485,6 @@ END length_parameter;
         upper_bound := 1e12{kg/s/m^2};
         nominal := 10.0{kg/s/m^2};
     END mass_flux;
-
 
     ATOM mass_rate_rate REFINES solver_var
         DIMENSION M/T^2
@@ -768,6 +770,9 @@ END length_parameter;
         nominal := 1.0{USD/lbm};
 	END cost_per_mass;
 
+    CONSTANT cost_per_mass_constant
+    REFINES real_constant DIMENSION C/M;
+
 	ATOM cost_per_mole REFINES solver_var
         DIMENSION C/Q
         DEFAULT 1.0{USD/lb_mole};
@@ -792,6 +797,9 @@ END length_parameter;
         nominal := 1.0{USD/BTU};
 	END cost_per_energy;
 
+    CONSTANT cost_per_mass_per_distance_constant
+    REFINES real_constant DIMENSION C/M/L;
+
 
 (*  S U R V E Y I N G   Q U A N T I T I E S
     ---------------------------------------  *)
@@ -803,6 +811,9 @@ END length_parameter;
         upper_bound := 1e50{ft};
         nominal := 10.0{ft};
     END distance;
+
+    CONSTANT distance_constant
+    REFINES real_constant DIMENSION L;	
 
     ATOM area REFINES solver_var
         DIMENSION L^2
