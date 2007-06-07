@@ -1,0 +1,74 @@
+REQUIRE "atoms.a4l";
+(*
+	Solution of the 'toy' problem given in the GAMS documentation at
+	http://www.gams.com/docs/example.htm
+
+	Here is a standard algebraic description of the problem, which is to 
+	minimize the cost of shipping goods from 2 plants to 3 markets, subject 
+	to supply and demand constraints.
+
+	This model doesn't currently agree with the GAMS solution when solving using
+	CONOPT. We're still debugging it.
+*)
+
+MODEL markets;
+	(* canning plants *)
+	I IS_A set OF symbol_constant;
+	I :== ['Seattle','San Diego'];
+	
+	(* markets *)
+	J IS_A set OF symbol_constant;
+	J :== ['New York','Chicago','Topeka'];
+
+	(* plant capacities *)
+	A[I] IS_A real_constant;
+	A['Seattle'] :== 350;
+	A['San Diego'] :== 600;
+
+	(* market demands *)
+	B[J] IS_A real_constant;
+	B['New York'] :== 325;
+	B['Chicago'] :== 300;
+	B['Topeka'] :== 275;
+
+	(* distances *)
+	D[I][J] IS_A real_constant;
+	D['Seattle']['New York'] :== 2500 {mi};
+	D['Seattle']['Chicago'] :== 1700 {mi};
+	D['Seattle']['Topeka'] :== 1800 {mi};
+	D['San Diego']['New York'] :== 2500 {mi};
+	D['San Diego']['Chicago'] :== 1800 {mi};
+	D['San Diego']['Topeka'] :== 1400 {mi};
+
+	(* freight costs *)
+	F IS_A real_constant;
+	F :== 90 {USD} / 1000 {mi}; (* per case *)
+
+	C[I][J] IS_A real_constant; (* cost per case, for each route *)
+ 	FOR i IN I CREATE
+		FOR j IN J CREATE
+			C[i][j] :== F * D[i][j];
+		END FOR;
+	END FOR;
+
+	(* variables *)
+	X[I][J] IS_A positive_factor;
+	Z IS_A monetary_unit;
+
+	(* equations *)
+	COST: Z = SUM[SUM[C[i][j] | i IN I] | j IN J];
+
+	supplyslack[I] IS_A positive_factor;
+	FOR i IN I CREATE
+		SUPPLY[i]: SUM[X[i][j] | j IN J] = A[i] + supplyslack[i];
+	END FOR;
+
+	demandslack[J] IS_A positive_factor;
+	FOR j IN J CREATE
+		DEMAND[j]: SUM[X[i][j] | i IN I] = B[j] + demandslack[j];
+	END FOR;
+
+	MINEXPR: MINIMIZE Z;
+
+END markets;
+	
