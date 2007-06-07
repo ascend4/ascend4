@@ -3,29 +3,8 @@ REQUIRE "thermodynamics.a4l";
 IMPORT "johnpye/extpy/extpy";
 IMPORT "kchittur/zplot";
 
-ATOM vdwa REFINES solver_var
-DIMENSION M*L^5/Q^2/T^2
-DEFAULT 0.1 {kg*m^5/mole^2/sec^2};
-lower_bound := 0.0 {kg*m^5/mole^2/sec^2};
-upper_bound := 10.0 {kg*m^5/mole^2/sec^2};
-nominal := 0.1 {kg*m^5/mole^5/sec^2};
-END vdwa;
-
-ATOM virialC REFINES solver_var
-DIMENSION L^6/Q^2
-DEFAULT 7000.0 {cm^6/mol^2};
-lower_bound := 0.0 {cm^6/mol^2};
-upper_bound := 1.0 {m^6/mol^2};
-nominal := 7000.0 {cm^6/mol^2};
-END virialC;
-
-ATOM virialB REFINES solver_var
-DIMENSION L^3/Q
-DEFAULT 1.0 {m^3/mol};
-lower_bound := -1000.00 {m^3/mol};
-upper_bound := 1000.0 {m^3/mol};
-nominal := 1.0 {m^3/mol};
-END virialB;
+(* this form of the vanderwaals equation is obtained from the generic
+    CUBIC equation of state and appropriate parameters *)
 
 MODEL vdw(P WILL_BE pressure;
 T WILL_BE temperature;

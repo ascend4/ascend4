@@ -1,0 +1,98 @@
+REQUIRE "thermodynamics.a4l";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "kchittur/zplot";
+
+(* vanderwaals EOS as usually written *)
+
+ATOM vdwa REFINES solver_var
+DIMENSION M*L^5/Q^2/T^2
+DEFAULT 0.1 {kg*m^5/mole^2/sec^2};
+lower_bound := 0.0 {kg*m^5/mole^2/sec^2};
+upper_bound := 10.0 {kg*m^5/mole^2/sec^2};
+nominal := 0.1 {kg*m^5/mole^5/sec^2};
+END vdwa;
+
+MODEL vanderwaals(P WILL_BE pressure;
+T WILL_BE temperature;
+V WILL_BE molar_volume;
+Z WILL_BE factor;
+data WILL_BE td_component_constants;);
+
+R IS_A gas_constant;
+b IS_A molar_volume;
+a IS_A vdwa;
+Pc IS_A pressure;
+Tc IS_A temperature;
+
+eq: (P*V^2 + a)*(V - b) = R*T*V^2;
+eqb: b*8.0*data.Pc = R*data.Tc;
+eqa: a*64.0*data.Pc = 27.0*R^2*(data.Tc)^2;
+eqc: Z*R*T = P*V;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+        METHOD specify;
+        P.fixed := TRUE;
+        T.fixed := TRUE;
+        V.fixed := FALSE;
+        Z.fixed := FALSE;
+        END specify;
+        METHOD values;
+        P := 12.0 {atm};
+        T := 298.15 {K};
+        V := 0.075 {m^3/mole};
+        V.nominal := 0.05 {m^3/mole};
+        V.upper_bound := 100 {m^3/mole};
+        END values;
+
+END vanderwaals;
+
+MODEL testvanderwaals;
+
+c1 IS_A symbol_constant;
+c1 :== 'ethylene';
+cd IS_A components_data([c1],c1);
+Tr, Pr IS_A factor;
+P IS_A pressure;
+T IS_A temperature;
+V IS_A molar_volume; 
+Z IS_A factor; 
+tvanderwaals IS_A vanderwaals(P,T,V,Z,cd.data[c1]); 
+
+eqTr: Tr = T/cd.data[c1].Tc;
+eqPr: Pr = P/cd.data[c1].Pc;
+
+METHODS
+    METHOD default_self;
+    RUN ClearAll;
+    RUN specify;
+    RUN values;
+    END default_self;
+
+    METHOD specify;
+    P.fixed := TRUE;
+    V.fixed := FALSE;
+    Z.fixed := FALSE;  
+    T.fixed := TRUE;
+    RUN tvanderwaals.specify;
+    END specify;
+    METHOD values;
+    P := 12.0 {bar};
+    T := 298.15 {K};
+    RUN tvanderwaals.values;
+    END values;
+
+    METHOD on_load;
+    RUN default_self;
+    END on_load;
+
+    METHOD fancyplot;
+    EXTERNAL zplot(SELF);
+    END fancyplot;
+
+END testvanderwaals; 
+
