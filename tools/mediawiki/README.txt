@@ -20,6 +20,10 @@ Then, edit your LocalSettings.php file to include the ashighlight.php file, eg
 
 require_once( "{$IP}/extensions/ASHighlight/ashighlight.php" );
 
+If you highlight .lang files are in a non-standard location, edit the file
+ashighlight.class.php and modify the value of ASHIGHLIGHT_LANG_ROOT. This
+file location is used by ashighlight.php to generate the list of allowed
+file extensions for the 'lang=' attribute of the <source> tag.
 
 Usage
 -----
