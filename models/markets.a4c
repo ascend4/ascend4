@@ -47,7 +47,7 @@ MODEL markets;
 	C[I][J] IS_A cost_per_mass_constant; (* shipping cost per mass, for each route *)
  	FOR i IN I CREATE
 		FOR j IN J CREATE
-			C[i][j] :== F * D[i][j];
+			C[i][j] :== F * D[i][j] ;
 		END FOR;
 	END FOR;
 
@@ -55,8 +55,8 @@ MODEL markets;
 	X[I][J] IS_A mass_rate;
 	Z IS_A cost_per_time;
 
-	(* equations *)
-	COST: Z = SUM[SUM[C[i][j] | i IN I] | j IN J];
+	(* equations *) 
+	COST: Z = SUM[SUM[C[i][j]*X[i][j] | i IN I] | j IN J];
 
 	supplyslack[I] IS_A mass_rate;
 	FOR i IN I CREATE
@@ -72,7 +72,7 @@ MODEL markets;
 
 METHODS
 	METHOD on_load;
-		Z := 0 {USD};
+		Z := 0 {USD/d};
 	END on_load;
 	METHOD self_test;
 		ASSERT abs(Z - 153.675 {USD/d}) < 0.001 {USD/d};
