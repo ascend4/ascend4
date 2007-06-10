@@ -32,9 +32,7 @@
 #ifndef ASC_SLV3_H
 #define ASC_SLV3_H
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
-#include <system/slv_client.h>
+#include "solver.h"
 
 /**	@addtogroup solver Solver
 	@{
@@ -42,25 +40,15 @@
 
 typedef struct slv3_system_structure *slv3_system_t;
 
-/* used by StaticSolverRegistration to detect this solver: */
-#if defined(STATIC_QRSLV) || defined(DYNAMIC_QRSLV)
-# define HAVE_QRSLV 1
-#else
-# define HAVE_QRSLV 0
-#endif
+/**
+	Solver ID for QRSlv. QRSlv will always have this number.
+*/
+#define SOLVER_QRSLV 3
 
+#define HAVE_QRSLV 1
 
-ASC_DLLSPEC int slv3_register(SlvFunctionsT *f);
-/**<
- *  Registration function for the ASCEND QRSlv nonlinear solver.
- *  This is the function that tells the system about the QRSlv solver.
- *  Our index is not necessarily going to be 3.  That everything here is
- *  named slv3* is just a historical result and a convenient way of
- *  shutting up the linker.
- *
- *  @param f SlvFunctionsT to receive the solver registration info.
- *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
- */
+SolverRegisterFn slv3_register;
+
 
 /* @} */
 

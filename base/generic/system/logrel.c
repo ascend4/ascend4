@@ -318,7 +318,7 @@ struct dis_discrete
 
 
 int logrel_apply_filter( struct logrel_relation *logrel,
-			 logrel_filter_t *filter)
+			 const logrel_filter_t *filter)
 {
   if (logrel==NULL || filter==NULL) {
     FPRINTF(stderr,"logrel_apply_filter miscalled with NULL\n");

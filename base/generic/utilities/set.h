@@ -175,10 +175,6 @@ ASC_DLLSPEC void set_change_member(unsigned int *set, int k, boolean value);
 extern unsigned int *set_copy(unsigned int *set, unsigned int *target,
                               int n, int n2);
 /**<
- *  <!--  set_copy(set,target,n,n2)                                    -->
- *  <!--  unsigned *set, *target;                                      -->
- *  <!--  int n,n2;                                                    -->
- *
  *  Copies one set to another.  The bit size of the source and
  *  target must be given.  If the size of the target is less
  *  than the source, then the set is truncated.  If the size of
@@ -191,11 +187,6 @@ extern unsigned int *set_copy(unsigned int *set, unsigned int *target,
 extern void set_change_member_rng(unsigned int *set,
                                   int k1, int k2, boolean value);
 /**<
- *  <!--  set_change_member_rng(set,k1,k2,value)                       -->
- *  <!--  unsigned *set;                                               -->
- *  <!--  int k1, k2;                                                  -->
- *  <!--  boolean value;                                               -->
- *
  *  Changes the membership status for all elements
  *  in k1..k2 (see set_change_member).  It is assumed
  *  that 0 <= k1,k2 < n.
@@ -204,11 +195,6 @@ extern void set_change_member_rng(unsigned int *set,
 
 extern int set_find_next(unsigned int *set, int k, int n);
 /**<
- *  <!--  next = set_find_next(set,k,n)                                -->
- *  <!--  int next;                                                    -->
- *  <!--  unsigned *set;                                               -->
- *  <!--  int k, n;                                                    -->
- *
  *  Returns the first member of set greater than k.
  *  If k=-1 upon entering, the minimum of the set is
  *  returned.  If return>=n upon exiting, then there is no
@@ -218,21 +204,12 @@ extern int set_find_next(unsigned int *set, int k, int n);
 
 extern int set_count(unsigned int *set, int n);
 /**<
- *  <!--  count = set_count(set,n)                                     -->
- *  <!--  int count;                                                   -->
- *  <!--  unsigned *set;                                               -->
- *  <!--  int n;                                                       -->
- *
  *  Returns the cardinality of the set.
  *  @deprecated This function is not in use or supported.
  */
 
 extern unsigned *set_complement(unsigned int *set, int n);
 /**<
- *  <!--  set_complement(set,n)                                        -->
- *  <!--  unsigned *set;                                               -->
- *  <!--  int n;                                                       -->
- *
  *  Removes all elements which are currently in the
  *  set and adds all elements which were not.
  *  Returns pointer to set.
@@ -243,10 +220,6 @@ extern unsigned *set_intersect(unsigned int *set1,
                                unsigned int *set2,
                                int n, int n2);
 /**<
- *  <!--  set_intersect(set,set2,n,n2)                                 -->
- *  <!--  unsigned *set, *set2;                                        -->
- *  <!--  int n,n2;                                                    -->
- *
  *  Replaces set with the intersection of set and set2.
  *  The bit-sizes of each set must be given (if they are
  *  different, then set2 is effectively extended or truncated
@@ -260,10 +233,6 @@ extern unsigned *set_union(unsigned int *set,
                            unsigned int *set2,
                            int n, int n2);
 /**<
- *  <!--  set_union(set,set2,n,n2)                                     -->
- *  <!--  unsigned *set, *set2;                                        -->
- *  <!--  int n,n2;                                                    -->
- *
  *  Replaces set with the union of set and set2.
  *  Size mismatch handled as for intersection.
  *  Returns the pointer to set, which has been modified.

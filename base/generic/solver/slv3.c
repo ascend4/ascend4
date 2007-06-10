@@ -59,20 +59,6 @@
 #define DEBUG FALSE
 /**< makes lots of extra spew */
 
-#if !defined(STATIC_QRSLV) && !defined(DYNAMIC_QRSLV)
-int slv3_register(SlvFunctionsT *f)
-{
-  UNUSED_PARAMETER(f);
-  FPRINTF(stderr,"QRSlv not compiled in this ASCEND IV.\n");
-  return 1;
-}
-#else /* either STATIC_QRSLV or DYNAMIC_QRSLV is defined */
-#ifdef DYNAMIC_QRSLV
-	/* do dynamic loading stuff.   yeah, right */
-#else
-    /*--------------------------------------------------------------------
-	  rest of the file is for the case where STATIC_QRSLV is defined... */
-
 #define SLV3(s) ((slv3_system_t)(s))
 #define SERVER (sys->slv)
 
@@ -4200,29 +4186,27 @@ static int slv3_destroy(slv_system_t server, SlvClientToken asys){
   return 0;
 }
 
-int slv3_register(SlvFunctionsT *sft){
-  if(sft==NULL)  {
-    FPRINTF(stderr,"slv3_register called with NULL pointer\n");
-    return 1;
-  }
 
-  sft->name = "QRSlv";
-  sft->ccreate = slv3_create;
-  sft->cdestroy = slv3_destroy;
-  sft->celigible = slv3_eligible_solver;
-  sft->getdefparam = slv3_get_default_parameters;
-  sft->get_parameters = slv3_get_parameters;
-  sft->setparam = slv3_set_parameters;
-  sft->getstatus = slv3_get_status;
-  sft->solve = slv3_solve;
-  sft->presolve = slv3_presolve;
-  sft->iterate = slv3_iterate;
-  sft->resolve = slv3_resolve;
-  sft->getlinsys = slv3_get_linsolqr_sys;
-  sft->get_sys_mtx = slv3_get_jacobian;
-  sft->dumpinternals = NULL;
-  return 0;
+static const SlvFunctionsT slv3_internals = {
+	SOLVER_QRSLV
+	,"QRSlv"
+	,slv3_create
+  	,slv3_destroy
+	,slv3_eligible_solver
+	,slv3_get_default_parameters
+	,slv3_get_parameters
+	,slv3_set_parameters
+	,slv3_get_status
+	,slv3_solve
+	,slv3_presolve
+	,slv3_iterate
+	,slv3_resolve
+	,slv3_get_linsolqr_sys
+	,slv3_get_jacobian
+	,NULL
+};
+
+int slv3_register(void){
+	return solver_register(&slv3_internals);
 }
 
-#endif /* #else clause of DYNAMIC_QRSLV */
-#endif /* #else clause of !STATIC_QRSLV && !DYNAMIC_QRSLV */

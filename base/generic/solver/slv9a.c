@@ -41,19 +41,6 @@
 #include <system/slv_stdcalls.h>
 #include <system/cond_config.h>
 
-#if !defined(STATIC_LRSLV) || defined(DYNAMIC_LRSLV)
-int slv9a_register(SlvFunctionsT *f)
-{
-  (void)f;  /* stop gcc whine about unused parameter */
-
-  FPRINTF(ASCERR,"LRSlv not compiled in this ASCEND IV.\n");
-  return 1;
-}
-#else /* either STATIC_LRSLV or DYNAMIC_LRSLV is defined */
-#ifdef DYNAMIC_LRSLV
-/* do dynamic loading stuff.   yeah, right */
-#else /* following is used if STATIC_LRSLV is defined */
-
 #define SLV9A(s) ((slv9a_system_t)(s))
 #define SERVER (sys->slv)
 #define slv9a_PA_SIZE 6 /* MUST INCREMENT WHEN ADDING PARAMETERS */
@@ -1098,43 +1085,26 @@ static int slv9a_destroy(slv_system_t server, SlvClientToken asys)
   return 0;
 }
 
-static void slv9a_dump_internals(slv_system_t server,
-				 SlvClientToken sys,int level)
-{
-  check_system(sys);
-  (void) server;
-  if (level > 0) {
-    FPRINTF(ASCERR,"ERROR:  (slv9a) slv9a_dump_internals\n");
-    FPRINTF(ASCERR,"         slv9a does not dump its internals.\n");
-  }
+static const SlvFunctionsT slv9a_internals = {
+	99
+	,"LRSlv"
+	,slv9a_create
+  	,slv9a_destroy
+	,slv9a_eligible_solver
+	,slv9a_get_default_parameters
+	,slv9a_get_parameters
+	,slv9a_set_parameters
+	,slv9a_get_status
+	,slv9a_solve
+	,slv9a_presolve
+	,slv9a_iterate
+	,slv9a_resolve
+	,NULL
+	,slv9a_get_structural_matrix
+	,NULL
+};
+
+int slv9a_register(void){
+	return solver_register(&slv9a_internals);
 }
-
-
-int slv9a_register(SlvFunctionsT *sft)
-{
-  if (sft==NULL)  {
-    FPRINTF(ASCERR,"slv9a_register called with NULL pointer\n");
-    return 1;
-  }
-
-  sft->name = "LRSlv";
-  sft->ccreate = slv9a_create;
-  sft->cdestroy = slv9a_destroy;
-  sft->celigible = slv9a_eligible_solver;
-  sft->getdefparam = slv9a_get_default_parameters;
-  sft->get_parameters = slv9a_get_parameters;
-  sft->setparam = slv9a_set_parameters;
-  sft->getstatus = slv9a_get_status;
-  sft->solve = slv9a_solve;
-  sft->presolve = slv9a_presolve;
-  sft->iterate = slv9a_iterate;
-  sft->resolve = slv9a_resolve;
-  sft->getlinsys = NULL;
-  sft->get_sys_mtx = slv9a_get_structural_matrix;
-  sft->dumpinternals = slv9a_dump_internals;
-  return 0;
-}
-
-#endif /* #else clause of DYNAMIC_LRSLV */
-#endif /* #else clause of !STATIC_LRSLV && !DYNAMIC_LRSLV */
 

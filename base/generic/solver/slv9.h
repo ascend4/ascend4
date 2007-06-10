@@ -30,29 +30,17 @@
 	@{
 */
 
-#include <system/slv_client.h>
+#include "solver.h"
 
 typedef struct slv9_system_structure *slv9_system_t;
 
-/* used by StaticSolverRegistration to detect this solver: */
-#if defined(STATIC_CMSLV) || defined(DYNAMIC_CMSLV)
-# define HAVE_CMSLV 1
+#ifdef ASC_WITH_CONOPT
+#define HAVE_CMSLV 1
 #else
-# define HAVE_CMSLV 0
+#define HAVE_CMSLV 0
 #endif
 
-
-ASC_DLLSPEC int slv9_register(SlvFunctionsT *f);
-/**<
- *  Registration function for the ASCEND CMSlv solver.
- *  This is the function that tells the system about the CMSlv solver.
- *  Our index is not necessarily going to be 9. That everything here is
- *  named slv9* is just a historical result and a convenient way of
- *  shutting up the linker.
- *
- *  @param f SlvFunctionsT to receive the solver registration info.
- *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
- */
+SolverRegisterFn slv9_register;
 
 /* @} */
 

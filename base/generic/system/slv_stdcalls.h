@@ -101,21 +101,6 @@ ASC_DLLSPEC int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
 */
 
 /*------------------------------------------------------------------------------
-  SOLVER REGISTRATION
-*/
-
-ASC_DLLSPEC int SlvRegisterStandardClients(void);
-/**<
-	Attempts to register solvers slv0 through (as of 6/96) slv7.
-
-	The solvers registered here are those linked at build time of the
-	ascend binary. See slv_client.h for registering dynamically loaded
-	solvers.
-
-	@return number of solvers registered successfully
-*/
-
-/*------------------------------------------------------------------------------
   OUTPUT ASSIGNMENT AND PARTITIONING IN LOGICAL RELATIONS
 */
 

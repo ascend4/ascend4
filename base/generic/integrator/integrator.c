@@ -40,6 +40,7 @@
 #include "aww.h"
 #include "ida.h"
 #include "samplelist.h"
+#include <solver/slv3.h>
 
 #define ANALYSE_DEBUG
 /* #define SOLVE_DEBUG */
@@ -356,7 +357,7 @@ int integrator_register(const IntegratorInternals *integ){
 
 	CONSOLE_DEBUG("Adding engine '%s'",integ->name);
 
-	gl_append_ptr(L,(IntegratorInternals *)integ);
+	gl_append_ptr(L,(const IntegratorInternals *)integ);
 	
 	CONSOLE_DEBUG("There are now %lu registered integrators", gl_length(integrator_get_list(0)));
 	return 0;
@@ -556,7 +557,7 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   char *varname1, *varname2;
 
   asc_assert(sys->system!=NULL);
-  asc_assert(strcmp("QRSlv",slv_solver_name(slv_get_selected_solver(sys->system)))==0);
+  asc_assert(SOLVER_QRSLV==slv_get_selected_solver(sys->system));
   CONSOLE_DEBUG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
 
   CONSOLE_DEBUG("Starting ODE analysis");

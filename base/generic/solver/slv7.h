@@ -44,7 +44,7 @@
 #ifndef ASC_SLV7_H
 #define ASC_SLV7_H
 
-#include <system/slv_client.h>
+#include "solver.h"
 
 /**	@addtogroup solver Solver
 	@{

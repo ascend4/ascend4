@@ -269,7 +269,7 @@ typedef struct logrel_filter_structure {
 /**< logrel filter type */
 
 extern int logrel_apply_filter(struct logrel_relation *logrel,
-                               logrel_filter_t *filter);
+                               const logrel_filter_t *filter);
 /**<
  *  Returns 1 only if all of the positions specified in
  *  filter->matchbits have the same values in

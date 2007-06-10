@@ -80,7 +80,7 @@
 
 #include <packages/sensitivity.h>
 #include <system/system.h>
-
+#include <solver/solver.h>
 
 /* #define SENSITIVITY_DEBUG */
 
@@ -95,7 +95,7 @@ ExtMethodRun do_sensitivity_eval_all;
 slv_system_t sens_presolve(struct Instance *inst){
   slv_system_t sys;
   slv_parameters_t parameters;
-  int ind;
+  const SlvFunctionsT *S;
 #ifdef SENSITIVITY_DEBUG
   struct var_variable **vp;
   struct rel_relation **rp;
@@ -107,19 +107,12 @@ slv_system_t sens_presolve(struct Instance *inst){
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build system.");
     return NULL;
   }
-  if (g_SlvNumberOfRegisteredClients == 0) {
-    return NULL;
+  S = solver_engine_named("QRSlv");
+  if(!S){
+	 ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv solver not found (required for sensitivity)");
+     return NULL;
   }
-  ind = 0;
-  while (strcmp(slv_solver_name(ind),"QRSlv")) {
-    if (ind >= g_SlvNumberOfRegisteredClients) {
-	  ERROR_REPORTER_HERE(ASC_PROG_ERR,
-        "QRSlv must be registered client.");
-      return NULL;
-    }
-    ++ind;
-  }
-  slv_select_solver(sys,ind);
+  slv_select_solver(sys,S->number);
 
   slv_get_parameters(sys,&parameters);
   parameters.partition = 0;

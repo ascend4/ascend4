@@ -194,7 +194,7 @@ void when_set_model( struct w_when *when, int32 mindex){
 	when->model = mindex;
 }
 
-int32 when_apply_filter(struct w_when *w, when_filter_t *filter){
+int32 when_apply_filter(struct w_when *w, const when_filter_t *filter){
   if (w==NULL || filter==NULL) {
     FPRINTF(stderr,"when_apply_filter miscalled with NULL\n");
     return FALSE;
@@ -386,7 +386,7 @@ void when_case_set_ind_inc(struct when_case *wc, int32* ind_inc){
 }
 
 int32 when_case_apply_filter(struct when_case *wc,
-		when_case_filter_t *filter
+		const when_case_filter_t *filter
 ){
   if (wc==NULL || filter==NULL) {
     FPRINTF(stderr,"when_case_apply_filter miscalled with NULL\n");
