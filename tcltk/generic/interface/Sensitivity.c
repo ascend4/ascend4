@@ -61,8 +61,9 @@
 
 #include <system/calc.h>
 #include <system/relman.h>
-#include <system/slv_client.h>
 #include <system/system.h>
+
+#include <solver/solver.h>
 
 #include <packages/sensitivity.h>
 
@@ -72,23 +73,8 @@
 #include "SolverGlobals.h"
 #include <general/mathmacros.h>
 
-#ifndef lint
-static CONST char SensitivityID[] = "$Id: Sensitivity.c,v 1.31 2003/08/23 18:43:08 ballan Exp $";
-#endif
-
 #define DOTIME FALSE
 #define DEBUG 1
-
-#ifdef THIS_MAY_BE_UNUSED_CODE
-static real64 *zero_vector(real64 *vec, int size)
-{
-  int c;
-  for (c=0;c<size;c++) {
-    vec[c] = 0.0;
-  }
-  return vec;
-}
-#endif
 
 /*
  *********************************************************************
