@@ -23,6 +23,7 @@
 #include <utilities/config.h>
 #include <system/slv_client.h>
 #include <system/slv_server.h>
+#include <solver/solver.h>
 
 #include <math.h>
 #include <stdarg.h>
@@ -40,8 +41,6 @@
 #include <system/analyze.h>
 #include <system/system_impl.h>
 
-ASC_EXPORT int g_SlvNumberOfRegisteredClients=0; /* see header */
-
 /* #define EMPTY_DEBUG */
 
 #define NEEDSTOBEDONE 0
@@ -54,11 +53,10 @@ ASC_EXPORT int g_SlvNumberOfRegisteredClients=0; /* see header */
 */
 int Solv_C_CheckHalt_Flag = 0;
 
-
-/* ASC_EXPORT int g_SlvNumberOfRegisteredClients=0; */
-
+#if 0
 /** making ANSI assumption that RegisteredClients is init to 0/NULLs */
 static SlvFunctionsT SlvClientsData[SLVMAXCLIENTS];
+#endif
 
 /*-----------------------------------------------------------------*/
 /**
@@ -78,80 +76,42 @@ static SlvFunctionsT SlvClientsData[SLVMAXCLIENTS];
 /** Return the solver index for a given slv_system_t */
 #define SNUM(sys) ((sys)->solver)
 
-/** Number of registered clients */
-#define NORC g_SlvNumberOfRegisteredClients
-
 /** Return the pointer to a registered SLV client's data space. @see SF, related.
 	@param i registered solver ID
 */
-#define SCD(i) SlvClientsData[(i)]
+//#define SCD(i) SlvClientsData[(i)]
 
 /**	Get the solver index for a system and return TRUE if the solver
 	index is in the range [0,NORC). 'sys' should not be null
 	@param sys system, slv_system_t.
+
+	== 'is a valid solver assigned?'
  */
-#define LS(sys) ( (sys)->solver >= 0 && (sys)->solver < g_SlvNumberOfRegisteredClients )
+//#define LS(sys) (sys->internals!=NULL))
 
-/** Boolean test that i is in the range [0,NORC) */
-#define LSI(i) ( (i) >= 0 && (i) < g_SlvNumberOfRegisteredClients )
+/** Boolean test that i is in the range [0,NORC) 
+	== 'is *i* a value solver?
+*/
+//#define LSI(i) (solver_engine(i)!=NULL)
 
-/** Check and return a function pointer. See @SF */
-#define CF(sys,ptr) ( LS(sys) ?  SlvClientsData[(sys)->solver].ptr : NULL )
+/** Check and return a function pointer. See @SF 
+	== get ptr to solver method 'ptr' on system
+*/
+//#define CF(sys,ptr) (sys->internals && sys-> LS(sys) ? (solver_engine((sys)->solver))->ptr : NULL )
 
 /** Return the pointer to the client-supplied function or char if
 	the client supplied one, else NULL. This should only be called
 	with nonNULL sys after CF is happy. @see CF
 */
-#define SF(sys,ptr) ( SlvClientsData[(sys)->solver].ptr )
+//#define SF(sys,ptr) ( (solver_engine((sys)->solver))->ptr )
 
 /** Free a pointer provided it's not NULL */
-#define SFUN(p) if ((p) != NULL) ascfree(p)
+#define SFUN(p) if ((p) != NULL)ASC_FREE(p)
 
-/*-----------------------------------------------------------------
-	SERVER FUNCTIONS
+/*-------------------------------------------------------------------------
+  SERVER STUFF
 */
-
-int slv_lookup_client( const char *solverName )
-{
-  int i;
-  if (solverName == NULL) { return -1; }
-  for (i = 0; i < NORC; i++) {
-    if ( strcmp( SCD(i).name, solverName)==0) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-/** 
-	Register a new solver.
-	
-	@TODO This needs work still, particularly of the dynamic loading
-	sort. it would be good if here we farmed out the dynamic loading
-	to another file so we don't have to crap this one all up.
-*/
-int slv_register_client(SlvRegistration registerfunc, CONST char *func
-		,CONST char *file, int *new_client_id)
-{
-  int status;
-
-  UNUSED_PARAMETER(func);
-  UNUSED_PARAMETER(file);
-
-  status = registerfunc(&( SlvClientsData[NORC]));
-  if (!status) { /* ok */
-    SlvClientsData[NORC].number = NORC;
-	*new_client_id = NORC;
-    NORC++;
-  } else {
-  	*new_client_id = -2;
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Client %d registration failure (%d)!",NORC,status);
-  }
-  return status;
-}
-
-slv_system_t slv_create(void)
-{
+slv_system_t slv_create(void){
   slv_system_t sys;
   static unsigned nextid = 1;
   sys = (slv_system_t)asccalloc(1,sizeof(struct system_structure) );
@@ -161,8 +121,7 @@ slv_system_t slv_create(void)
   return(sys);
 }
 
-unsigned slv_serial_id(slv_system_t sys)
-{
+unsigned slv_serial_id(slv_system_t sys){
   return sys->serial_id;
 }
 
@@ -262,12 +221,13 @@ DEFINE_DESTROY_BUFFERS(DEFINE_DESTROY_BUFFER)
 int slv_destroy(slv_system_t sys)
 {
   int ret = 0;
-  if (sys->ct != NULL) {
-    if ( CF(sys,cdestroy) == NULL ) {
+  if(sys->ct != NULL){
+	asc_assert(sys->internals);
+    if(sys->internals->cdestroy == NULL ) {
 	  ERROR_REPORTER_HERE(ASC_PROG_FATAL,"slv_destroy: SlvClientToken 0x%p not freed by %s",
-        sys->ct,SF(sys,name));
+        sys->ct,sys->internals->name);
     } else {
-      if ( SF(sys,cdestroy)(sys,sys->ct) ) {
+      if((sys->internals->cdestroy)(sys,sys->ct)){
         ret++;
       }
     }
@@ -291,13 +251,14 @@ void slv_destroy_client(slv_system_t sys)
 {
 
   if (sys->ct != NULL) {
-    if ( CF(sys,cdestroy) == NULL ) {
+	asc_assert(sys->internals);
+    if(sys->internals->cdestroy == NULL){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,
 		"SlvClientToken 0x%p not freed in slv_destroy_client",sys->ct);
-    } else {
-      if ( SF(sys,cdestroy)(sys,sys->ct) ) {
+    }else{
+      if((sys->internals->cdestroy)(sys,sys->ct) ) {
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv_destroy_client: SlvClientToken not freed");
-      } else {
+      }else{
 	sys->ct = NULL;
       }
     }
@@ -471,22 +432,6 @@ int Solv_C_CheckHalt()
     return 1;
   else
     return 0;
-}
-
-const char *slv_solver_name(int sindex)
-{
-  static char errname[] = "ErrorSolver";
-  if (sindex >= 0 && sindex < NORC) {
-    if ( SlvClientsData[sindex].name == NULL ) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_solver_name: unnamed solver: index='%d'",sindex);
-      return errname;
-    } else {
-	  return SlvClientsData[sindex].name;
-    }
-  } else {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_solver_name: invalid solver index '%d'", sindex);
-    return errname;
-  }
 }
 
 const mtx_block_t *slv_get_solvers_blocks(slv_system_t sys)
@@ -865,253 +810,6 @@ DEFINE_COUNT_METHODS(DEFINE_SLV_COUNT_SOLVER_METHOD) /*;*/
 /** Invoke the DEFINE_COUNT_METHODS macro for MASTER methods */
 DEFINE_COUNT_METHODS(DEFINE_SLV_COUNT_MASTER_METHOD) /*;*/
 
-/*------------------------------------------------------*/
-
-static void printwarning(const char * fname, slv_system_t sys)
-{
-  ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,
-    "%s called with bad registered client (%s).",fname,
-    slv_solver_name(slv_get_selected_solver(sys)));
-}
-
-static void printinfo(slv_system_t sys, const char *rname)
-{
-  if (CF(sys,name) == NULL ) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,
-      "Client %s does not support function '%s'.",
-      slv_solver_name(slv_get_selected_solver(sys)),rname);
-  }
-}
-
-int slv_eligible_solver(slv_system_t sys)
-{
-  if ( CF(sys,celigible) == NULL ) {
-    printwarning("slv_eligible_solver",sys);
-    return 0;
-  }
-  return SF(sys,celigible)(sys);
-}
-
-int slv_select_solver(slv_system_t sys,int solver){
-
-  int status_index;
-  SlvClientDestroyF *destroy;
-
-  if (sys ==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_select_solver called with NULL system.");
-    return -1;
-  }
-  if ( solver >= 0 && solver < NORC ) {
-    if (sys->ct != NULL && solver != sys->solver) {
-      CONSOLE_DEBUG("g_SlvNumberOfRegisteredClients = %d, sys->solver = %d", g_SlvNumberOfRegisteredClients, sys->solver);
-	  asc_assert(sys->solver >= -1);
-	  asc_assert(g_SlvNumberOfRegisteredClients > 0);
-	  asc_assert(sys->solver < g_SlvNumberOfRegisteredClients);
-      destroy = SlvClientsData[sys->solver].cdestroy;
-      if(destroy!=NULL) {
-        (destroy)(sys,sys->ct);
-        sys->ct = NULL;
-      } else {
-        ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_select_solver: 'cdestroy' is undefined on solver '%s' (index %d).",
-          slv_solver_name(sys->solver), sys->solver);
-      }
-    }
-
-    if (sys->ct != NULL) {
-      return sys->solver;
-    }
-
-    status_index = solver;
-    sys->solver = solver;
-    if ( CF(sys,ccreate) != NULL) {
-      sys->ct = SF(sys,ccreate)(sys,&status_index);
-    } else {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_select_solver create failed due to bad client '%s'.",
-        slv_solver_name(sys->solver));
-      return sys->solver;
-    }
-    if (sys->ct==NULL) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate failed in slv_select_solver.");
-      sys->solver = -1;
-    } else {
-      if (status_index) {
-        ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate succeeded with warning %d %s.",
-          status_index," in slv_select_solver");
-      }
-      /* we could do a better job explaining the client warnings... */
-      sys->solver = solver;
-    }
-  } else {
-    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_select_solver: invalid solver index '%d'.",
-      solver);
-    return -1;
-  }
-  return sys->solver;
-}
-
-
-int slv_switch_solver(slv_system_t sys,int solver)
-{
-  int status_index;
-
-  if (sys ==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver called with NULL system.");
-    return -1;
-  }
-  if( solver >= 0 && solver < g_SlvNumberOfRegisteredClients ){
-    status_index = solver;
-    sys->solver = solver;
-    if ( CF(sys,ccreate) != NULL) {
-      sys->ct = SF(sys,ccreate)(sys,&status_index);
-    } else {
-      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver create failed due to bad client '%s'.",
-         slv_solver_name(sys->solver));
-      return sys->solver;
-    }
-    if (sys->ct==NULL) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"SlvClientCreate failed in slv_switch_solver.");
-      sys->solver = -1;
-    } else {
-      if (status_index) {
-        ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate succeeded with warning %d %s.",
-           status_index," in slv_switch_solver");
-      }
-      sys->solver = solver;
-    }
-  } else {
-    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver called with unknown client '%d'.",solver);
-    return -1;
-  }
-  return sys->solver;
-}
-
-/*--------------------------------*/
-
-int slv_get_selected_solver(slv_system_t sys){
-  if (sys!=NULL) return sys->solver;
-  return -1;
-}
-
-
-int32 slv_get_default_parameters(int sindex,
-				slv_parameters_t *parameters)
-{
-  if (sindex >= 0 && sindex < NORC) {
-    if ( SlvClientsData[sindex].getdefparam == NULL ) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_default_parameters called with parameterless index.");
-      return 0;
-    } else {
-      /* send NULL system when setting up interface */
-      (SlvClientsData[sindex].getdefparam)(NULL,NULL,parameters);
-      return 1;
-    }
-  } else {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_default_parameters called with unregistered index.");
-    return 0;
-  }
-}
-
-/*-----------------------------------------------------------
-	These macros do some more elimination of repetition. Here we're
-	trying to replace some more complex 'method-like' calls on
-	slv_system_t:
-
-	These macros use macro-argument-concatenation and macro stringification.
-	Verified that the former works with Visual C++.
-	http://www.codeproject.com/macro/metamacros.asp
-*/
-
-/** Define a method like 'void slv_METHODNAME(sys)' */
-#define DEFINE_SLV_PROXY_METHOD_VOID(METHOD) \
-	void slv_ ## METHOD (slv_system_t sys){ \
-		if(CF(sys,METHOD)==NULL){ \
-			printwarning(#METHOD,sys); \
-			return; \
-		} \
-		SF(sys,METHOD)(sys,sys->ct); \
-	}
-
-/** Define a method like 'RETURNTYPE slv_METHOD(sys)'; */
-#define DEFINE_SLV_PROXY_METHOD(METHOD,PROP,RETTYPE,ERRVAL) \
-	RETTYPE slv_ ## METHOD (slv_system_t sys){ \
-		if(CF(sys,PROP)==NULL){ \
-			printinfo(sys, #METHOD); \
-			return ERRVAL; \
-		} \
-		return SF(sys,PROP)(sys,sys->ct); \
-	}
-
-/** Define a method like 'void slv_METHOD(sys,TYPE PARAMNAME)'; */
-#define DEFINE_SLV_PROXY_METHOD_PARAM(METHOD,PROP,PARAMTYPE,PARAMNAME) \
-	void slv_ ## METHOD (slv_system_t sys, PARAMTYPE PARAMNAME){ \
-		if(CF(sys,PROP)==NULL){ \
-			printwarning(#METHOD,sys); \
-			return; \
-		} \
-		SF(sys,PROP)(sys,sys->ct, PARAMNAME); \
-	}
-
-DEFINE_SLV_PROXY_METHOD_PARAM(get_parameters,get_parameters,slv_parameters_t*,parameters) /*;*/
-
-void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
-{
-  if ( CF(sys,setparam) == NULL ) {
-    printwarning("slv_set_parameters",sys);
-    return;
-  }
-  if (parameters->whose != sys->solver) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,
-		"slv_set_parameters cannot pass parameters from one solver to a"
-		" another.");
-    return;
-  }
-  SF(sys,setparam)(sys,sys->ct,parameters);
-}
-
-int slv_get_status(slv_system_t sys, slv_status_t *status){
-	if(CF(sys,getstatus)==NULL){printinfo(sys,"get_status");return -1;}
-	return SF(sys,getstatus)(sys,sys->ct,status);
-}
-
-DEFINE_SLV_PROXY_METHOD_PARAM(dump_internals,dumpinternals,int,level) /*;*/
-
-DEFINE_SLV_PROXY_METHOD(get_linsolqr_sys, getlinsys, linsolqr_system_t, NULL) /*;*/
-
-DEFINE_SLV_PROXY_METHOD(get_sys_mtx, get_sys_mtx, mtx_matrix_t, NULL) /*;*/
-DEFINE_SLV_PROXY_METHOD(presolve,presolve,int,-1) /*;*/
-DEFINE_SLV_PROXY_METHOD(resolve,resolve,int,-1) /*;*/
-DEFINE_SLV_PROXY_METHOD(iterate,iterate,int,-1) /*;*/
-DEFINE_SLV_PROXY_METHOD(solve,solve,int,-1) /*;*/
-
-/*-----------------------------------------------------------*/
-
-SlvClientToken slv_get_client_token(slv_system_t sys)
-{
-  if (sys==NULL) {
-    FPRINTF(stderr,"slv_get_client_token called with NULL system.");
-    return NULL;
-  }
-  return sys->ct;
-}
-
-
-void slv_set_client_token(slv_system_t sys, SlvClientToken ct)
-{
-  if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_client_token called with NULL system.");
-    return;
-  }
-  sys->ct = ct;
-}
-
-void slv_set_solver_index(slv_system_t sys, int solver)
-{
-  if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solver_index called with NULL system.");
-    return;
-  }
-  sys->solver = solver;
-}
 
 /*********************************************************************\
   unregistered client functions that need to go elsewhere(other files).

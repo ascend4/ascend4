@@ -9,7 +9,7 @@ using namespace std;
 
 extern "C"{
 #include <system/system.h>
-#include <system/slv_stdcalls.h>
+#include <solver/solver.h>
 #include <solver/slvDOF.h>
 }
 
@@ -40,7 +40,7 @@ Solver::getIndex() const{
 		ss << "Unknown or unregistered solver '" << name << "'";
 		throw runtime_error(ss.str());
 	}
-	//cerr << "))))))))))))))SOLVER INDEX RETURNED IS " << index << endl;
+	//cerr << "))))))))))))))SOLVER INDEX RETURNED IS " << index << endl;s
 	return index;
 }
 
@@ -53,25 +53,27 @@ Solver::getName() const{
 // >>>> GLOBAL FUNCTIONS <<<<
 // for registering solvers and querying the complete list
 
+#if 0
 void
 registerSolver(SlvRegistration regfuncptr){
 	int newclient =-1;
-	int res = slv_register_client(regfuncptr,NULL,NULL,&newclient);
+	int res = solver_register(slv_register_client(regfuncptr,NULL,NULL,&newclient);
 	if(res!=0){
 		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register solver");
 		throw runtime_error("Solver::registerSolver: Unable to register solver");
-	}else{
+e	}else{
 		string name = slv_solver_name(newclient);
 		cerr << "Registered solver '" << name << "' (index " << newclient << ")" << endl;
 	}
 }
+#endif
 
 const vector<Solver>
 getSolvers(){
-	ASC_DLLSPEC int g_SlvNumberOfRegisteredClients;
+	const struct gl_list_t *L = solver_get_engines();
 	vector<Solver> v;
-	for(int i=0; i < g_SlvNumberOfRegisteredClients; ++i){
-		v.push_back(Solver(slv_solver_name(i)));
+	for(unsigned long i=1; i <gl_length(L); ++i){
+		v.push_back(Solver( ( (SlvFunctionsT *)(gl_fetch(L,i)))->name) );
 	}
 	return v;
 }

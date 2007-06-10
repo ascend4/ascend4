@@ -35,32 +35,17 @@
 #ifndef ASC_SLV9A_H
 #define ASC_SLV9A_H
 
-#include <system/slv_client.h>
+#include "solver.h"
 
 /**	@addtogroup solver Solver
 	@{
 */
 
-/* used by StaticSolverRegistration to detect this solver: */
-#if defined(STATIC_LRSLV) || defined(DYNAMIC_LRSLV)
 # define HAVE_LRSLV 1
-#else
-# define HAVE_LRSLV 0
-#endif
 
 typedef struct slv9a_system_structure *slv9a_system_t;
 
-int slv9a_register(SlvFunctionsT *sft);
-/**<
- *  Registration function for the ASCEND LRSlv solver.
- *  This is the function that tells the system about the LRSlv solver.
- *  Our index is not necessarily going to be 9a. That everything here is
- *  named slv9a* is just a historical result and a convenient way of
- *  shutting up the linker.
- *
- *  @param sft SlvFunctionsT to receive the solver registration info.
- *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
- */
+SolverRegisterFn slv9a_register;
 
 /* @} */
 

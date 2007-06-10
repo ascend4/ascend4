@@ -235,7 +235,7 @@ typedef struct bnd_filter_structure {
 /**< Boundary filter type. */
 
 extern int bnd_apply_filter(const struct bnd_boundary *bnd,
-                            bnd_filter_t *filter);
+                            const bnd_filter_t *filter);
 /**<
  *  Applies a filter to a boundary.
  *  Returns 1 only if all of the positions specified in

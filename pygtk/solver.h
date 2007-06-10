@@ -35,7 +35,7 @@ public:
 	Some global functions
 */
 void registerStandardSolvers();
-void registerSolver(SlvRegistration regfuncptr);
+//void registerSolver(SlvRegistration regfuncptr);
 const std::vector<Solver> getSolvers();
 
 #endif

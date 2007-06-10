@@ -45,8 +45,11 @@
 #include <system/bndman.h>
 #include <system/slv_stdcalls.h>
 #include <system/cond_config.h>
+#include <solver/solver.h>
 
 #include "slvDOF.h"
+
+#define SOLVER_CMSLV 9
 
 #ifdef ASC_WITH_CONOPT
 # include "conopt.h"
@@ -55,20 +58,6 @@
 # define MAX_REAL MAXDOUBLE
 # define CONOPT_BOUNDLIMIT 1e12
 #endif
-
-#if !defined(STATIC_CMSLV) && !defined(DYNAMIC_CMSLV)
-int slv9_register(SlvFunctionsT *f){
-  UNUSED_PARAMETER(f);
-
-  ERROR_REPORTER_HERE(ASC_PROG_ERR,"CMSlv was not built in this copy of ASCEND");
-  return 1;
-}
-#else /* either STATIC_CMSLV or DYNAMIC_CMSLV is defined */
-
-#ifdef DYNAMIC_CMSLV
-/* do dynamic loading stuff.   yeah, right */
-
-#else /* - - - - following is used if STATIC_CMSLV is defined - - - - */
 
 /*
  * definitions to enable/disable the output of partial results in
@@ -1481,7 +1470,9 @@ void set_param_in_solver(slv_system_t server, int32 solver,
 ){
   slv_parameters_t p;
   int32 len,length;
+  SlvClientToken origtoken = slv_get_client_token(server);
 
+  CONSOLE_DEBUG("...");
   slv_set_client_token(server,token[solver]);
   slv_set_solver_index(server,solver_index[solver]);
   slv_get_parameters(server,&p);
@@ -1514,6 +1505,11 @@ void set_param_in_solver(slv_system_t server, int32 solver,
       }
     }
   }
+
+  /* return to original state */
+  slv_set_solver_index(server,SOLVER_CMSLV);
+  slv_set_client_token(server,origtoken);
+
   return;
 }
 
@@ -4497,12 +4493,12 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
 }
 
 
-/*
- *  Iteration begin/end routines
- *  ----------------------------
- *     iteration_begins(sys)
- *     iteration_ends(sys)
- */
+/*------------------------------------------------------------------------------
+  ITERATION BEGIN/END ROUTINES
+
+	iteration_begins(sys)
+	iteration_ends(sys)
+*/
 
 /*
  *  Prepares sys for entering an iteration, increasing the iteration counts
@@ -4613,10 +4609,10 @@ void update_real_status(slv_status_t *main, slv_status_t *slave, int32 niter){
     main->block.previous_total_size = slave->block.previous_total_size;
 }
 
-/*
- *  Parameters assignment
- *  ----------------------------
- */
+/*------------------------------------------------------------------------------
+  PARAMETER ASSIGNMENT
+*/
+
 static
 int32 slv9_get_default_parameters(slv_system_t server,
 		SlvClientToken asys,
@@ -4814,162 +4810,137 @@ int32 slv9_get_default_parameters(slv_system_t server,
   return 1;
 }
 
-/*
- *  External routines
- *  -----------------
- */
+/*------------------------------------------------------------------------------
+  EXTERNAL ROUTINES
+*/
 
-/*
- * Create the tokens for the nonlinear solver and the logical solver.
- * The token of the conditional solver will be assigned until the
- * end slv9_create, which calls this function. Regarding the optimizer,
- * we use CONOPT in two different ways.  We are using only calls
- * for solving optmization at aboundary, but we can also use a token
- * created by slv8.c if the problem is itself an optimization problem.
- * The vars and rels for the optimization problem at the boundary do
- * not correspond to the vars of the slv, and therefore we have to
- * create the data and calculate the gradients and residuals on the
- * fly. In order to check for the existence of CONOPT, we look
- * for the registration number of slv8.c.  Here we are assuming that
- * slv8 was registred only if CONOPT is available.
- *
- * This function will return 0 if successful. If some of the solvers
- * required by the nonlinear, logical or optimization steps are not
- * available, the function will return 1, and the system will not be
- * created.
- */
+/**
+	Create the tokens for the nonlinear solver and the logical solver.
+	The token of the conditional solver will be assigned until the
+	end slv9_create, which calls this function. Regarding the optimizer,
+	we use CONOPT in two different ways.  We are using only calls
+	for solving optmization at aboundary, but we can also use a token
+	created by slv8.c if the problem is itself an optimization problem.
+	The vars and rels for the optimization problem at the boundary do
+	not correspond to the vars of the slv, and therefore we have to
+	create the data and calculate the gradients and residuals on the
+	fly. In order to check for the existence of CONOPT, we look
+	for the registration number of slv8.c.  Here we are assuming that
+	slv8 was registred only if CONOPT is available.
+
+	This function will return 0 if successful. If some of the solvers
+	required by the nonlinear, logical or optimization steps are not
+	available, the function will return 1, and the system will not be
+	created.
+*/
 static
-int32 get_solvers_tokens(  slv9_system_t sys, slv_system_t server){
-  int32 newsolver;
-  int32 num_log_reg, num_nl_reg, num_opt_reg, num_cond_reg;
-  int32 num_solvers,si;
-  char *param;
-  union param_value u;
+int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
+	int32 newsolver;
+	int32 num_log_reg, num_nl_reg, num_opt_reg, num_cond_reg;
+	int32 si;
+	char *param;
+	union param_value u;
 
-  num_solvers = slv_number_of_solvers;
-  /*
-   * Initally all registration indeces equal to -1
-   */
-  num_log_reg = -1;
-  num_nl_reg = -1;
-  num_opt_reg = -1;
-  num_cond_reg = -1;
+	const SlvFunctionsT *S;
+	S = solver_engine_named(LOGSOLVER_OPTION);
+	if(!S){
+		FPRINTF(ASCERR,"Solver %s not available\n",LOGSOLVER_OPTION);
+		return 1;
+	}
+	num_log_reg = S->number;
 
-  /* registration number of logical solver  */
-  for (si=0; si < num_solvers; si++) {
-    if(strcmp(LOGSOLVER_OPTION,slv_solver_name(si)) == 0) {
-      num_log_reg = si;
-      break;
-    }
-  }
+	S = solver_engine_named(NONLISOLVER_OPTION);
+	if(!S){
+		FPRINTF(ASCERR,"Solver %s not available\n",NONLISOLVER_OPTION);
+		return 1;
+	}
+	num_nl_reg = S->number;
 
-  /* registration number of nonlinear solver  */
-  for (si=0; si < num_solvers; si++) {
-    if(strcmp(NONLISOLVER_OPTION,slv_solver_name(si)) == 0) {
-      num_nl_reg = si;
-      break;
-    }
-  }
+	S = solver_engine_named(OPTSOLVER_OPTION);
+	if(!S){
+		FPRINTF(ASCERR,"Solver %s not available\n",OPTSOLVER_OPTION);
+		return 1;
+	}
+	CONSOLE_DEBUG("CONOPT found with name '%s'",S->name);
+	CONSOLE_DEBUG("CONOPT found with number '%d'",S->number);
+	num_opt_reg = S->number;
 
-  /*
-   * registration number of optimization solver.
-   */
-  for (si=0; si < num_solvers; si++) {
-    if(strcmp(OPTSOLVER_OPTION,slv_solver_name(si)) == 0) {
-      num_opt_reg = si;
-      break;
-    }
-  }
+	/* this is us! */
+	S = solver_engine_named("CMSlv");
+	if(!S){
+		FPRINTF(ASCERR,"Solver CMSlv was not registered\n");
+		return 1;
+	}
+	num_cond_reg = S->number;
 
-  /* registration number of current conditional solver  */
-  for (si=0; si < num_solvers; si++) {
-    if(strcmp("CMSlv",slv_solver_name(si)) == 0) {
-      num_cond_reg = si;
-      break;
-    }
-  }
+	/*
+		Create solver tokens
+	*/
 
-  /*
-   * Check if all the solver required are available. If they are not,
-   * this solver's system will not be created.
-   */
-  if(num_log_reg == -1 ) {
-    FPRINTF(ASCERR,"Solver %s not available\n",LOGSOLVER_OPTION);
-    return 1;
-  }
+	CONSOLE_DEBUG("SETTING UP SUB-SOLVERS");
 
-  if(num_nl_reg == -1 ) {
-    FPRINTF(ASCERR,"Solver %s not available\n",NONLISOLVER_OPTION);
-    return 1;
-  }
+	CONSOLE_DEBUG("SETTING UP CMSLV");
+	solver_index[CONDITIONAL_SOLVER] = num_cond_reg;
 
-  if(num_opt_reg == -1 ) {
-    FPRINTF(ASCERR,"Solver %s not available\n",OPTSOLVER_OPTION);
-    return 1;
-  }
+	CONSOLE_DEBUG("SETTING UP LRSLV");
+	newsolver = slv_switch_solver(server,num_log_reg);
+	token[LOGICAL_SOLVER] = slv_get_client_token(server);
+	solver_index[LOGICAL_SOLVER] = slv_get_selected_solver(server);
 
-  if(num_cond_reg == -1 ) {
-    FPRINTF(ASCERR,"Solver CMSlv was not registered\n");
-    return 1;
-  }
+	CONSOLE_DEBUG("SETTING UP QRSLV");
+	newsolver = slv_switch_solver(server,num_nl_reg);
+	token[NONLINEAR_SOLVER] = slv_get_client_token(server);
+	solver_index[NONLINEAR_SOLVER] = slv_get_selected_solver(server);
 
-  /*
-   * Create solver tokens
-   */
-  solver_index[CONDITIONAL_SOLVER] = num_cond_reg;
-  newsolver = slv_switch_solver(server,num_log_reg);
-  token[LOGICAL_SOLVER] = slv_get_client_token(server);
-  solver_index[LOGICAL_SOLVER] = slv_get_selected_solver(server);
-  newsolver = slv_switch_solver(server,num_nl_reg);
-  token[NONLINEAR_SOLVER] = slv_get_client_token(server);
-  solver_index[NONLINEAR_SOLVER] = slv_get_selected_solver(server);
-  newsolver = slv_switch_solver(server,num_opt_reg);
-  token[OPTIMIZATION_SOLVER] = slv_get_client_token(server);
-  solver_index[OPTIMIZATION_SOLVER] = slv_get_selected_solver(server);
+	CONSOLE_DEBUG("SETTING UP CONOPT (%d)",num_opt_reg);
+	newsolver = slv_switch_solver(server,num_opt_reg);
+	token[OPTIMIZATION_SOLVER] = slv_get_client_token(server);
+	solver_index[OPTIMIZATION_SOLVER] = slv_get_selected_solver(server);
+
+	/*
+		Disabling the partition mode flag in the non linear solver.
+		PARTITION is a boolean parameter of the nonlinear solver
+		QRSlv. This parameter tells the solver whether it should block
+		partition or not.
+		As long as we do not have a special subroutine to partition
+		conditional models, this option should be disabled while using
+		the conditional solver CMSlv
+	*/
+	CONSOLE_DEBUG("setting QRSlv.partition");
+	param = "partition";
+	u.b = 0;
+	set_param_in_solver(server,NONLINEAR_SOLVER,bool_parm,param,&u);
 
 
-  /*
-   * Disabling the partition mode flag in the non linear solver.
-   * PARTITION is a boolean parameter of the nonlinear solver
-   * QRSlv. This parameter tells the solver whether it should block
-   * partition or not.
-   * As long as we do not have a special subroutine to partition
-   * conditional models, this option should be disabled while using
-   * the conditional solver CMSlv
-   */
-  param = "partition";
-  u.b = 0;
-  set_param_in_solver(server,NONLINEAR_SOLVER,bool_parm,param,&u);
+	/*
+		Setting the value of the number of iterations in the optimizer.
+		For us, the optimizer is a blackbox. The only way of asking the
+		values of the variables at each iteration is to stop the optimizer
+		at each iteration by assigning the number of iterations equal to 1.
+		We have seen though  that, because CONOPT work in four different
+		phases, we need to assign a number of iterations a little bit bigger,
+		so that CONOPT is able to determine optimality if we are
+		already at the solution.
+	*/
+	CONSOLE_DEBUG("setting CONOPT.iterationlimit");
+	param = "iterationlimit";
+	u.i = 20;
+	set_param_in_solver(server,OPTIMIZATION_SOLVER,int_parm,param,&u);
 
+	/*
+		Maximum number of subsequent iterations in nonlinear solver.
+		We will give a big value to this parameter, since we really do
+		not care about the limits in the number of iterations in the
+		nonlinear solver; what we care about here is in the number
+		of iterations controlled by CMSlv.
+	*/
+	CONSOLE_DEBUG("setting QRSlv.iterationlimit");
+	param = "iterationlimit";
+	u.i = 150;
+	set_param_in_solver(server,NONLINEAR_SOLVER,int_parm,param,&u);
 
-  /*
-   * Setting the value of the number of iterations in the optimizer.
-   * For us, the optimizer is a blackbox. The only way of asking the
-   * values of the variables at each iteration is to stop the optimizer
-   * at each iteration by assigning the number of iterations equal to 1.
-   * We have seen though  that, because CONOPT work in four different
-   * phases, we need to assign a number of iterations a little bit bigger,
-   * so that CONOPT is able to determine optimality if we are
-   * already at the solution.
-   */
-  param = "iterationlimit";
-  u.i = 20;
-  set_param_in_solver(server,OPTIMIZATION_SOLVER,int_parm,param,&u);
-
-  /*
-   * Maximum number of subsequent iterations in nonlinear solver.
-   * We will give a big value to this parameter, since we really do
-   * not care about the limits in the number of iterations in the
-   * nonlinear solver, what we care about here is in the number
-   * of iterations controlled by CMSlv.
-   */
-  param = "iterationlimit";
-  u.i = 150;
-  set_param_in_solver(server,NONLINEAR_SOLVER,int_parm,param,&u);
-
-  return 0;
+	return 0;
 }
-
 
 
 static
@@ -5222,6 +5193,8 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
   int32 cap, ind;
+
+  CONSOLE_DEBUG("...");
 
   sys = SLV9(asys);
   iteration_begins(sys);
@@ -5652,29 +5625,38 @@ int slv9_destroy(slv_system_t server, SlvClientToken asys){
 }
 
 
-int slv9_register(SlvFunctionsT *sft){
-  if(sft==NULL)  {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv9_register called with NULL pointer");
-    return 1;
-  }
+static const SlvFunctionsT slv9_internals = {
+	SOLVER_CMSLV
+	,"CMSlv"
+	,slv9_create
+  	,slv9_destroy
+	,slv9_eligible_solver
+	,slv9_get_default_parameters
+	,slv9_get_parameters
+	,slv9_set_parameters
+	,slv9_get_status
+	,slv9_solve
+	,slv9_presolve
+	,slv9_iterate
+	,slv9_resolve
+	,NULL
+	,slv9_get_matrix
+	,slv9_dump_internals
+};
 
-  sft->name = "CMSlv";
-  sft->ccreate = slv9_create;
-  sft->cdestroy = slv9_destroy;
-  sft->celigible = slv9_eligible_solver;
-  sft->getdefparam = slv9_get_default_parameters;
-  sft->get_parameters = slv9_get_parameters;
-  sft->setparam = slv9_set_parameters;
-  sft->getstatus = slv9_get_status;
-  sft->solve = slv9_solve;
-  sft->presolve = slv9_presolve;
-  sft->iterate = slv9_iterate;
-  sft->resolve = slv9_resolve;
-  sft->getlinsys = NULL;
-  sft->get_sys_mtx = slv9_get_matrix;
-  sft->dumpinternals = slv9_dump_internals;
-  return 0;
+int slv9_register(void){
+	if(!solver_engine_named("CONOPT")){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT must be registered before CMSlv");
+		return 1;
+	}
+	if(!solver_engine_named("LRSlv")){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"LRSlv must be registered before CMSlv");
+		return 1;
+	}
+	if(!solver_engine_named("QRSlv")){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv must be registered before CMSlv");
+		return 1;
+	}
+	return solver_register(&slv9_internals);
 }
 
-#endif /* #else clause of DYNAMIC_CMSLV */
-#endif /* #else clause of !STATIC_CMSLV && !DYNAMIC_CMSLV */

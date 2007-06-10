@@ -35,6 +35,7 @@
 
 #include "system.h"
 #include "diffvars.h"
+#include <solver/solver.h>
 
 /**
 	Structure that holds a differential variable and the sequence of
@@ -57,7 +58,7 @@ typedef struct SolverDiffVarSequenceStruct{
 	  - x, dx/dt
       - z, dz/dt
 */
-typedef struct SolverDiffVarCollectionStruct{
+struct SolverDiffVarCollectionStruct{
 	SolverDiffVarSequence *seqs;
 	long nseqs;
 	long nalg;
@@ -69,9 +70,9 @@ typedef struct SolverDiffVarCollectionStruct{
 	long maxorder;
 };
 
-
 struct system_structure {
   int solver;
+  const SlvFunctionsT *internals;
 
   int serial_id;
 	/**< Through time, two systems may have the same pointer but never

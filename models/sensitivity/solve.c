@@ -49,6 +49,7 @@
 
 #include <packages/sensitivity.h>
 #include <system/system.h>
+#include <solver/slv3.h>
 
 ExtMethodRun do_solve_eval;
 ASC_EXPORT int solve_register(void);
@@ -64,7 +65,7 @@ int DoSolve(struct Instance *inst){
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build system");
     return 1;
   }
-  (void)slv_select_solver(sys,0);
+  (void)slv_select_solver(sys,SOLVER_QRSLV);
   slv_presolve(sys);
   CONSOLE_DEBUG("Calling slv_solve...");
   slv_solve(sys);

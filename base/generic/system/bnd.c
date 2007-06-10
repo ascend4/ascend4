@@ -240,7 +240,7 @@ int32 bnd_n_real_incidences(struct bnd_boundary *bnd)
 }
 
 
-int32 bnd_apply_filter( const struct bnd_boundary *bnd, bnd_filter_t *filter)
+int32 bnd_apply_filter( const struct bnd_boundary *bnd, const bnd_filter_t *filter)
 {
   if (bnd==NULL || filter==NULL) {
     FPRINTF(stderr,"bnd_apply_filter miscalled with NULL\n");

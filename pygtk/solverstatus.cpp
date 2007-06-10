@@ -2,7 +2,7 @@
 #include "simulation.h"
 
 extern "C"{
-#include <system/slv_client.h>
+#include <solver/solver.h>
 }
 
 SolverStatus::SolverStatus(){

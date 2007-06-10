@@ -37,6 +37,7 @@
  **/
 
 #include "slv_interface.h"
+#include "solver.h"
 
 #include <utilities/config.h>
 #ifdef ASC_SIGNAL_TRAPS
@@ -698,29 +699,39 @@ static boolean do_command(int command)
       }
 
       case C_ELIGIBLE_SOLVERS: {
-         int cur,n;
+         int cur,i;
+		 const struct gl_list_t *L;
+		 const SlvFunctionsT *S;
 /* broken 6/96 baa */
+/* maybe fixed -- JP Jun 2007  */
          cur = slv_get_selected_solver(sys);
+		 L = solver_get_engines();
          PRINTF("Solver   Name       ?Eligible\n");
          PRINTF("-----------------------------\n");
-         for( n=0 ; n<slv_number_of_solvers ; ++n )
+         for(i=1; i<=gl_length(L); ++i){
+ 			S = gl_fetch(L,i);
             PRINTF("%c%3d     %-11s    %s\n",
-		   (n==cur?'*':' '),n,slv_solver_name(n),
+		   (S->number==cur?'*':' '),S->number,S->name,
 		   yorn(slv_eligible_solver(sys)) );
+		 }
          break;
       }
 
       case C_SELECT_SOLVER: {
-         int n;
-
+		 const struct gl_list_t *L;
+		 const SlvFunctionsT *S;
+		 L = solver_get_engines();
          PRINTF("Solver   Name\n");
          PRINTF("----------------------\n");
-         for( n=0 ; n<slv_number_of_solvers ; ++n )
-            PRINTF("%4d     %s\n",n,slv_solver_name(n));
-         PRINTF("Which solver? [%d]: ",n=slv_get_selected_solver(sys));
-         n = (int)readlong((long)n);
+		 long unsigned i;
+         for(i=1; i<=gl_length(L); ++i){
+			S = (const SlvFunctionsT *)gl_fetch(L,i);
+			PRINTF("%4d     %s\n",S->number,S->name);
+		 }
+         PRINTF("Which solver? [%d]: ",i=slv_get_selected_solver(sys));
+         i = (int)readlong((long)i);
 
-         slv_select_solver(sys,n);
+         slv_select_solver(sys,i);
          break;
       }
 

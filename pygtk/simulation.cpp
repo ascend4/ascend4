@@ -50,6 +50,7 @@ extern "C"{
 #include <system/slv_stdcalls.h>
 #include <system/slv_server.h>
 #include <system/graph.h>
+#include <solver/solver.h>
 }
 
 #include "simulation.h"
@@ -498,7 +499,7 @@ Simulation::setSolver(Solver &solver){
 
 	CONSOLE_DEBUG("Selecting solver '%s'",solver.getName().c_str());
 	int selected = slv_select_solver(sys, solver.getIndex());
-	//cerr << "Simulation::setSolver: slv_select_solver returned " << selected << endl;
+	cerr << "Simulation::setSolver: slv_select_solver returned " << selected << endl;
 
 	if(selected<0){
 		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Failed to select solver");

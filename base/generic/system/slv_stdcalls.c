@@ -339,63 +339,6 @@ int slv_check_bounds(const slv_system_t sys
 }
 
 /*------------------------------------------------------------------------------
-  SOLVER REGISTRATION
-*/
-
-/* rewrote this stuff to get rid of all the #ifdefs -- JP */
-
-struct StaticSolverRegistration{
-	int is_active;
-	const char *name;
-	SlvRegistration *regfunc;
-};
-
-/*
-	The names here are only used to provide information in the case where
-	solver registration fails. The definitive solver names are in the slv*.c
-	files.
-*/
-static const struct StaticSolverRegistration slv_reg[]={
-/* 	{0,"SLV",&slv0_register} */
-/*	,{0,"MINOS",&slv1_register} */
-	{HAVE_QRSLV,"QRSLV",&slv3_register}
-/*	,{0,"CSLV",&slv4_register} */
-/*	,{0,"LSSLV",&slv5_register} */
-/*	,{0,"MPS",&slv6_register} */
-/*	,{0,"NGSLV",&slv7_register} */
-/* 	,{0,"OPTSQP",&slv2_register} */
-	,{HAVE_CONOPT,"CONOPT",&slv8_register}
-	,{HAVE_CMSLV,"CMSLV",&slv9_register}
-	,{HAVE_LRSLV,"LRSLV",&slv9a_register}
-	,{0,NULL,NULL}
-};
-
-int SlvRegisterStandardClients(void){
-	int nclients = 0;
-	int newclient=0;
-	int error;
-	int i;
-	/* CONSOLE_DEBUG("REGISTERING STANDARD SOLVER ENGINES"); */
-	for(i=0;slv_reg[i].name!=NULL;++i){
-		if(slv_reg[i].is_active && slv_reg[i].regfunc){
-			error = slv_register_client(slv_reg[i].regfunc,NULL,NULL,&newclient);
-			if(error){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR
-					,"Unable to register solver '%s' (error %d)."
-					,slv_reg[i].name,error
-				);
-			}else{
-				CONSOLE_DEBUG("Solver '%s' registered OK",slv_solver_name(newclient));
-				nclients++;
-			}
-		}else{
-			CONSOLE_DEBUG("Solver '%s' was not compiled.",slv_reg[i].name);
-		}
-	}
-  return nclients;
-}
-
-/*------------------------------------------------------------------------------
   OUTPUT ASSIGNMENT AND PARTITIONG IN LOGICAL RELATIONS
 */
 

@@ -213,8 +213,10 @@ struct slv8_system_structure {
 /**
 	Checks sys for NULL and for integrity.
 */
-static int check_system(slv8_system_t sys)
-{
+static int check_system(slv8_system_t sys){
+
+  CONSOLE_DEBUG("...");
+
   if( sys == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL system handle");
     return 1;
@@ -1564,30 +1566,33 @@ static void slv8_get_parameters(slv_system_t server, SlvClientToken asys
   (void)server;  /* stop gcc whine about unused parameter */
 
   sys = SLV8(asys);
+  CONSOLE_DEBUG("...");
   if (check_system(sys)) return;
   mem_copy_cast(&(sys->p),parameters,sizeof(slv_parameters_t));
 }
 
 
-static void slv8_set_parameters(slv_system_t server, SlvClientToken asys,
-                                slv_parameters_t *parameters)
-{
+static void slv8_set_parameters(slv_system_t server, SlvClientToken asys
+		,slv_parameters_t *parameters
+){
   slv8_system_t sys;
   (void)server;  /* stop gcc whine about unused parameter */
 
   sys = SLV8(asys);
+  CONSOLE_DEBUG("...");
   if (check_system(sys)) return;
   mem_copy_cast(parameters,&(sys->p),sizeof(slv_parameters_t));
 }
 
 
-static int slv8_get_status(slv_system_t server, SlvClientToken asys,
-                            slv_status_t *status)
-{
+static int slv8_get_status(slv_system_t server, SlvClientToken asys
+		,slv_status_t *status
+){
 	slv8_system_t sys;
 	(void)server;  /* stop gcc whine about unused parameter */
 
 	sys = SLV8(asys);
+    CONSOLE_DEBUG("...");
 	if (check_system(sys)) return 1;
 	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
 	return 0;
@@ -1595,12 +1600,13 @@ static int slv8_get_status(slv_system_t server, SlvClientToken asys,
 
 
 static linsolqr_system_t slv8_get_linsolqr_sys(slv_system_t server
-		, SlvClientToken asys
+		,SlvClientToken asys
 ){
   slv8_system_t sys;
   (void)server;  /* stop gcc whine about unused parameter */
 
   sys = SLV8(asys);
+  CONSOLE_DEBUG("...");
   if (check_system(sys)) return NULL;
   return(sys->J.sys);
 }
@@ -1702,6 +1708,7 @@ static void slv8_dump_internals(slv_system_t server
 ){
   (void)server;  /* stop gcc whine about unused parameter */
 
+  CONSOLE_DEBUG("...");
   check_system(sys);
   if (level > 0) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Can't dump internals with CONOPT");
@@ -2782,6 +2789,7 @@ static int slv8_resolve(slv_system_t server, SlvClientToken asys){
 
   sys = SLV8(asys);
 
+  CONSOLE_DEBUG("...");
   check_system(sys);
   for( vp = sys->vlist ; *vp != NULL ; ++vp ) {
     var_set_in_block(*vp,FALSE);
@@ -2820,6 +2828,7 @@ static int slv8_iterate(slv_system_t server, SlvClientToken asys){
   sys = SLV8(asys);
   mif = MIF(sys);
   lif = LIF(sys);
+  CONSOLE_DEBUG("...");
   if (server == NULL || sys==NULL) return -1;
   if (check_system(SLV8(sys))) return -2;
   if( !sys->s.ready_to_solve ) {
@@ -2865,6 +2874,7 @@ static int slv8_solve(slv_system_t server, SlvClientToken asys){
   slv8_system_t sys;
   int err = 0;
   sys = SLV8(asys);
+  CONSOLE_DEBUG("...");
   if (server == NULL || sys==NULL) return -1;
   if (check_system(sys)) return -2;
   while( sys->s.ready_to_solve )err = err | slv8_iterate(server,sys);
@@ -2875,6 +2885,7 @@ static int slv8_solve(slv_system_t server, SlvClientToken asys){
 	@TODO document this
 */
 static mtx_matrix_t slv8_get_jacobian(slv_system_t server, SlvClientToken sys){
+  CONSOLE_DEBUG("...");
   if (server == NULL || sys==NULL) return NULL;
   if (check_system(SLV8(sys))) return NULL;
   return SLV8(sys)->J.mtx;
@@ -2891,6 +2902,7 @@ static int32 slv8_destroy(slv_system_t server, SlvClientToken asys){
    */
   (void)server;
 
+  CONSOLE_DEBUG("...");
   sys = SLV8(asys);
   if (check_system(sys)) return 1;
   destroy_vectors(sys);
@@ -2909,35 +2921,33 @@ static int32 slv8_destroy(slv_system_t server, SlvClientToken asys){
   return 0;
 }
 
-int32 slv8_register(SlvFunctionsT *sft){
-  if (sft==NULL)  {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL pointer.");
-    return 1;
-  }
+static const SlvFunctionsT slv8_internals = {
+	8
+	,"CONOPT"
+	,slv8_create
+  	,slv8_destroy
+	,slv8_eligible_solver
+	,slv8_get_default_parameters
+	,slv8_get_parameters
+	,slv8_set_parameters
+	,slv8_get_status
+	,slv8_solve
+	,slv8_presolve
+	,slv8_iterate
+	,slv8_resolve
+	,slv8_get_linsolqr_sys
+	,slv8_get_jacobian
+	,slv8_dump_internals
+};
 
+int slv8_register(void){
 #ifndef ASC_LINKED_CONOPT
-  if(asc_conopt_load()){
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to load CONOPT");
-	return 1;
-  }
+	if(asc_conopt_load()){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to load CONOPT");
+		return 1;
+	}
 #endif
-
-  sft->name = "CONOPT";
-  sft->ccreate = slv8_create;
-  sft->cdestroy = slv8_destroy;
-  sft->celigible = slv8_eligible_solver;
-  sft->getdefparam = slv8_get_default_parameters;
-  sft->get_parameters = slv8_get_parameters;
-  sft->setparam = slv8_set_parameters;
-  sft->getstatus = slv8_get_status;
-  sft->solve = slv8_solve;
-  sft->presolve = slv8_presolve;
-  sft->iterate = slv8_iterate;
-  sft->resolve = slv8_resolve;
-  sft->getlinsys = slv8_get_linsolqr_sys;
-  sft->get_sys_mtx = slv8_get_jacobian;
-  sft->dumpinternals = slv8_dump_internals;
-  return 0;
+	return solver_register(&slv8_internals);
 }
 
 #endif

@@ -176,7 +176,7 @@ typedef struct when_filter_structure {
  * these bits and for operations on the whole set.
  */
 
-extern int32 when_apply_filter(struct w_when *when, when_filter_t *filter);
+extern int32 when_apply_filter(struct w_when *when, const when_filter_t *filter);
 /**<
  *  Returns 1 only if all of the positions specified in
  *  filter->matchbits have the same values in
@@ -365,7 +365,7 @@ typedef struct when_case_filter_structure {
  */
 
 extern int32 when_case_apply_filter(struct when_case *wc,
-                                    when_case_filter_t *filter);
+                                    const when_case_filter_t *filter);
 /**<
  *  Returns 1 only if all of the positions specified in
  *  filter->matchbits have the same values in
