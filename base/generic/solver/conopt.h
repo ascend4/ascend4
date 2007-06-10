@@ -74,7 +74,7 @@
   DLOPENED CONOPT
 */
 
-int asc_conopt_load();
+ASC_DLLSPEC int asc_conopt_load();
 
 # define CONOPT_DISABLE_FN_DECLS
 # include <conopt.h>
@@ -157,7 +157,7 @@ int asc_conopt_load();
 	Declare local functions to hook into the DLL
 */
 # define FN_PTR_HDR(T,A,V,L) \
-	int COI_CALL T A;
+	ASC_DLLSPEC int COI_CALL T A;
 # define SPACE
 
 CONOPT_FNS(FN_PTR_HDR,SPACE)
@@ -221,24 +221,26 @@ typedef struct conopt_function_pointers *conopt_pointers;
 
 /* reporting functions (derived from 'std.c' in CONOPT examples) */
 
-int COI_CALL asc_conopt_message( int* SMSG, int* DMSG, int* NMSG, int* LLEN
+/* the symbols are exported because they are used in teh solvers, which are dlopened. */
+
+ASC_DLLSPEC int COI_CALL asc_conopt_message( int* SMSG, int* DMSG, int* NMSG, int* LLEN
 		,double* USRMEM, char* MSGV, int MSGLEN
 );
 
-int COI_CALL asc_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
+ASC_DLLSPEC int COI_CALL asc_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 		, double* USRMEM, char* MSG, int LENMSG
 );
 
-int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
+ASC_DLLSPEC int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		, int* ITER, double* OBJVAL, double* USRMEM
 );
 
-int COI_CALL asc_conopt_solution( double* XVAL, double* XMAR, int* XBAS
+ASC_DLLSPEC int COI_CALL asc_conopt_solution( double* XVAL, double* XMAR, int* XBAS
 		, int* XSTA, double* YVAL, double* YMAR, int* YBAS, int* YSTA
 		, int* N, int* M, double* USRMEM
 );
 
-int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT, int* LEN_RL
+ASC_DLLSPEC int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT, int* LEN_RL
 		, double* RL, double* X, double* USRMEM
 );
 

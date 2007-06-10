@@ -193,7 +193,7 @@ extern void dis_set_whens_list(struct dis_discrete *dis,
  * @see dis_set_kindF()
  */
 
-extern enum discrete_kind dis_kindF(const struct dis_discrete *dis);
+ASC_DLLSPEC enum discrete_kind dis_kindF(const struct dis_discrete *dis);
 /**<
  * Implementation function for dis_kind() (debug mode).
  * Do not call this function directly - use dis_kind() instead.
@@ -277,18 +277,19 @@ extern void dis_set_sindexF(struct dis_discrete *dis, int32 sindex);
  *  Do not call this function directly - use dis_set_sindex() instead.
  */
 
-extern int32 dis_value(const struct dis_discrete *dis);
+ASC_DLLSPEC int32 dis_value(const struct dis_discrete *dis);
 /**<
  *  Gets the currrent value field of the discrete variable.
  */
-extern void dis_set_value(struct dis_discrete *dis, int32 value);
+
+ASC_DLLSPEC void dis_set_value(struct dis_discrete *dis, int32 value);
 /**<
  *  Sets the currrent value field of the discrete variable.
  *  dis_set_value() also assigns the value before modification to
  *  the previous value field of the dis_discrete
  */
 
-extern void dis_set_inst_and_field_value(struct dis_discrete *dis,
+ASC_DLLSPEC void dis_set_inst_and_field_value(struct dis_discrete *dis,
                                          int32 value);
 /**<
  *  Set the current value of the dis_discrete and the value of
@@ -303,6 +304,7 @@ extern void dis_set_inst_and_field_value(struct dis_discrete *dis,
  *  It also assigns the value before modification to
  *  the previous value field of the dis_discrete
  */
+
 extern void dis_set_value_from_inst(struct dis_discrete *dis,
                                     struct gl_list_t *symbol_list);
 /**<
@@ -326,9 +328,9 @@ extern void dis_set_value_from_inst(struct dis_discrete *dis,
  *  the previous value field of the dis_discrete
  */
 
-extern int32 dis_previous_value(const struct dis_discrete *dis);
+ASC_DLLSPEC int32 dis_previous_value(const struct dis_discrete *dis);
 /**<  Gets the previous value field of the discrete variable. */
-extern void dis_set_previous_value(struct dis_discrete *dis,
+ASC_DLLSPEC void dis_set_previous_value(struct dis_discrete *dis,
                                    int32 value);
 /**<
  *  Sets the previous value field of the discrete variable.
@@ -366,7 +368,7 @@ extern void dis_set_nominal(struct dis_discrete *dis, int32 nominal);
  *  <!--  If no nominal field in dis, returns 1.                       -->
  */
 
-extern uint32 dis_fixed(struct dis_discrete *dis);
+ASC_DLLSPEC uint32 dis_fixed(struct dis_discrete *dis);
 /**<
  *  Gets the fixed flag of the boolean variable. This
  *  has side effects in the ascend instance, with which
@@ -434,14 +436,14 @@ extern void dis_set_flagsF(struct dis_discrete *dis, uint32 flags);
  * Do not call this function directly - use dis_set_flags() instead.
  */
 
-extern uint32 dis_flagbit(const struct dis_discrete *dis, 
+ASC_DLLSPEC uint32 dis_flagbit(const struct dis_discrete *dis, 
                           const uint32 name);
 /**<
  *  Returns the value of the bit specified from the variable flags.
  *  name should be a DIS_xx flag defined above)
  */
 
-extern void dis_set_flagbit(struct dis_discrete *dis, 
+ASC_DLLSPEC void dis_set_flagbit(struct dis_discrete *dis, 
                             uint32 NAME, uint32 oneorzero);
 /**<
  *  Sets the bit, which should be referred to by its macro name,

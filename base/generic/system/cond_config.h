@@ -112,21 +112,21 @@ set_active_disvars_in_active_logrels(struct logrel_relation **solverlr);
  * ACTIVE logrelations.
  */
 
-extern void set_active_vars_at_bnd(slv_system_t sys,
+ASC_DLLSPEC void set_active_vars_at_bnd(slv_system_t sys,
                                    struct gl_list_t *disvars);
 /**<
  * Set the ACTIVE bit to TRUE for all the variables incident in all
  * the relations of all the subregions neighboring a boundary(ies)
  */
 
-extern void identify_invariant_rels_at_bnd(slv_system_t sys,
+ASC_DLLSPEC void identify_invariant_rels_at_bnd(slv_system_t sys,
                                                     struct gl_list_t *disvars);
 /**<
  * Set the INVARIANT flag to TRUE for all the relations invariant with
  * respect to the current boundary(ies)
  */
 
-extern void set_active_rels_in_subregion(slv_system_t sys,
+ASC_DLLSPEC void set_active_rels_in_subregion(slv_system_t sys,
                                          int32 *cases,
                                          int32 ncases,
                                          struct gl_list_t *disvars);
@@ -137,14 +137,14 @@ extern void set_active_rels_in_subregion(slv_system_t sys,
  * as argument in cases.
  */
 
-extern void identify_variant_rels_in_subregion(slv_system_t sys);
+ASC_DLLSPEC void identify_variant_rels_in_subregion(slv_system_t sys);
 /**<
  * For each relation active and not invariant, set the flag
  * in_cur_subregion as TRUE. First, the same flag is initialized
  * to FALSE for all of the relations
  */
 
-extern void set_active_vars_in_subregion(slv_system_t sys);
+ASC_DLLSPEC void set_active_vars_in_subregion(slv_system_t sys);
 /**<
  * Set the ACTIVE bit flag as TRUE, for all of the variables
  * incident in the currently active relations. Used for analysis
@@ -169,7 +169,7 @@ extern void enumerate_cases_in_when(struct w_when *when);
  * function has to reinitialize that global variable if it is required.
  */
 
-extern int *cases_matching(struct gl_list_t *disvars, int *ncases);
+ASC_DLLSPEC int *cases_matching(struct gl_list_t *disvars, int *ncases);
 /**<
  * Given a list of discrete variables, it finds which cases apply
  * in the whens depending on those variables.
@@ -196,7 +196,7 @@ extern void configure_conditional_problem(int numwhens,
  * reanalyze_solver_lists
  */
 
-extern void reanalyze_solver_lists(slv_system_t sys);
+ASC_DLLSPEC void reanalyze_solver_lists(slv_system_t sys);
 /**<
  * For conditional modeling. This functions analyzes the WHENs
  * of the solver when list  and set the current value of the

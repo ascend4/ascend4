@@ -28,12 +28,13 @@
 	Last *CVS* version ballan 2000/01/25 02:27:32
 */
 
-#include "slv3.h"
-
 #include <math.h>
 #include <stdarg.h>
 
+#define ASC_BUILDING_INTERFACE
+
 #include <utilities/config.h>
+#include <utilities/ascConfig.h>
 #ifdef ASC_SIGNAL_TRAPS
 # include <utilities/ascSignal.h>
 #endif
@@ -52,6 +53,7 @@
 #include <system/slv_stdcalls.h>
 #include <system/relman.h>
 #include <system/block.h>
+#include <solver/solver.h>
 
 #define CANOPTIMIZE FALSE
 /**< TRUE iff optimization code completed, meaning relman_diff fixed. */
@@ -59,10 +61,12 @@
 #define DEBUG FALSE
 /**< makes lots of extra spew */
 
-#define SLV3(s) ((slv3_system_t)(s))
+#define QRSLV(s) ((qrslv_system_t)(s))
 #define SERVER (sys->slv)
 
-enum SLV3_PARAMS{
+#define SOLVER_QRSLV_EXT 33
+
+enum QRSLV_PARAMS{
 	IGNORE_BOUNDS
 	,SHOW_MORE_IMPT
 	,RHO
@@ -107,7 +111,7 @@ enum SLV3_PARAMS{
 	,ITSCALETOL
 	,FACTOR_OPTION
 	,MAX_MINOR
-	,slv3_PA_SIZE
+	,qrslv_PA_SIZE
 };
 
 /*
@@ -193,7 +197,7 @@ struct reduced_data {
   boolean          accurate;     /* Ready to re-compute ? */
 };
 
-struct slv3_system_structure {
+struct qrslv_system_structure {
 
   /* Problem definition */
   slv_system_t                slv;     /* slv_system_t back-link */
@@ -214,8 +218,8 @@ struct slv3_system_structure {
   int32                  rused;        /* Included relations */
   int32                  rtot;         /* length of rellist */
   double                 clock;        /* CPU time */
-  void *parm_array[slv3_PA_SIZE];      /* array of pointers to param values */
-  struct slv_parameter pa[slv3_PA_SIZE];/* &pa[0] => sys->p.parms */
+  void *parm_array[qrslv_PA_SIZE];      /* array of pointers to param values */
+  struct slv_parameter pa[qrslv_PA_SIZE];/* &pa[0] => sys->p.parms */
 
   /* Calculated data (scaled) */
   struct jacobian_data   J;            /* linearized system */
@@ -250,6 +254,8 @@ struct slv3_system_structure {
   real64                 progress;     /* Steepest directional derivative */
 };
 
+typedef struct qrslv_system_structure *qrslv_system_t;
+
 
 /*-----------------------------------------------------------------------------
   INTEGRITY CHECKS
@@ -260,7 +266,7 @@ struct slv3_system_structure {
 /**
 	Checks sys for NULL and for integrity.
 */
-static int check_system(slv3_system_t sys){
+static int check_system(qrslv_system_t sys){
   if(sys == NULL){
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"NULL system handle.");
     return 1;
@@ -301,7 +307,7 @@ static void debug_delimiter( FILE *fp){
 /**
 	Outputs a vector.
 */
-static void debug_out_vector(FILE *fp, slv3_system_t sys
+static void debug_out_vector(FILE *fp, qrslv_system_t sys
 		,struct vec_vector *vec
 ){
   int32 ndx;
@@ -317,7 +323,7 @@ static void debug_out_vector(FILE *fp, slv3_system_t sys
 /**
 	Outputs all variable values in current block.
 */
-static void debug_out_var_values(FILE *fp, slv3_system_t sys){
+static void debug_out_var_values(FILE *fp, qrslv_system_t sys){
   int32 col;
   struct var_variable *var;
 
@@ -336,7 +342,7 @@ static void debug_out_var_values(FILE *fp, slv3_system_t sys){
 /**
 	Outputs all relation residuals in current block.
 */
-static void debug_out_rel_residuals( FILE *fp, slv3_system_t sys){
+static void debug_out_rel_residuals( FILE *fp, qrslv_system_t sys){
   int32 row;
 
   FPRINTF(fp,"Rel residuals --> \n");
@@ -354,7 +360,7 @@ static void debug_out_rel_residuals( FILE *fp, slv3_system_t sys){
 	Outputs permutation and values of the nonzero elements in the
 	the jacobian matrix.
 */
-static void debug_out_jacobian( FILE *fp, slv3_system_t sys){
+static void debug_out_jacobian( FILE *fp, qrslv_system_t sys){
   mtx_coord_t nz;
   real64 value;
 
@@ -375,7 +381,7 @@ static void debug_out_jacobian( FILE *fp, slv3_system_t sys){
 	Outputs permutation and values of the nonzero elements in the
 	reduced hessian matrix.
 */
-static void debug_out_hessian( FILE *fp, slv3_system_t sys){
+static void debug_out_hessian( FILE *fp, qrslv_system_t sys){
   mtx_coord_t nz;
 
   for( nz.row = 0; nz.row < sys->ZBZ.order; nz.row++ ) {
@@ -423,7 +429,7 @@ static int savlinnum=0;
 /**
 	Evaluate the objective function.
 */
-static boolean calc_objective( slv3_system_t sys){
+static boolean calc_objective( qrslv_system_t sys){
   int calc_ok = TRUE;
 #ifdef ASC_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
@@ -440,7 +446,7 @@ static boolean calc_objective( slv3_system_t sys){
 /**
 	Evaluate all objectives.
 */
-static boolean calc_objectives( slv3_system_t sys){
+static boolean calc_objectives( qrslv_system_t sys){
   int32 len,i;
   static rel_filter_t rfilter;
   struct rel_relation **rlist=NULL;
@@ -480,7 +486,7 @@ static boolean calc_objectives( slv3_system_t sys){
 	Returns true iff (calculations preceded without error and
 	all inequalities are satisfied.)
 */
-static boolean calc_inequalities( slv3_system_t sys){
+static boolean calc_inequalities( qrslv_system_t sys){
   struct rel_relation **rp;
   boolean satisfied=TRUE;
   static rel_filter_t rfilter;
@@ -517,7 +523,7 @@ static boolean calc_inequalities( slv3_system_t sys){
 
 	@return 0 on failure, non-zero on success
 */
-static boolean calc_residuals( slv3_system_t sys){
+static boolean calc_residuals( qrslv_system_t sys){
   int32 row;
   struct rel_relation *rel;
   double time0;
@@ -577,7 +583,7 @@ static boolean calc_residuals( slv3_system_t sys){
 	Calculates the current block of the jacobian.
 	It is initially unscaled.
 */
-static boolean calc_J( slv3_system_t sys){
+static boolean calc_J( qrslv_system_t sys){
   int32 row;
   var_filter_t vfilter;
   double time0;
@@ -610,7 +616,7 @@ static boolean calc_J( slv3_system_t sys){
 	Retrieves the nominal values of all of the block variables,
 	insuring that they are all strictly positive.
 */
-static void calc_nominals( slv3_system_t sys){
+static void calc_nominals( qrslv_system_t sys){
   int32 col;
   FILE *fp = MIF(sys);
 
@@ -668,7 +674,7 @@ static void calc_nominals( slv3_system_t sys){
 	Calculates the weights of all of the block relations
 	to scale the rows of the Jacobian.
 */
-static void calc_weights( slv3_system_t sys){
+static void calc_weights( qrslv_system_t sys){
   mtx_coord_t nz;
   real64 sum;
 
@@ -704,7 +710,7 @@ static void calc_weights( slv3_system_t sys){
 /**
 	Scales the jacobian.
 */
-static void scale_J( slv3_system_t sys){
+static void scale_J( qrslv_system_t sys){
   int32 row;
   int32 col;
 
@@ -722,7 +728,7 @@ static void scale_J( slv3_system_t sys){
 /**
 	...?
 */
-static void jacobian_scaled(slv3_system_t sys){
+static void jacobian_scaled(qrslv_system_t sys){
   int32 col;
   if(SLV_PARAM_BOOL(&(sys->p),DUMPCNORM)) {
     for( col=sys->J.reg.col.low; col <= sys->J.reg.col.high; col++ ) {
@@ -750,7 +756,7 @@ static void jacobian_scaled(slv3_system_t sys){
 /**
 	...?
 */
-static void scale_variables( slv3_system_t sys){
+static void scale_variables( qrslv_system_t sys){
   int32 col;
 
   if(sys->variables.accurate)return;
@@ -771,7 +777,7 @@ static void scale_variables( slv3_system_t sys){
 /**
 	Scales the previously calculated residuals.
 */
-static void scale_residuals( slv3_system_t sys){
+static void scale_residuals( qrslv_system_t sys){
   int32 row;
 
   if(sys->residuals.accurate)return;
@@ -793,7 +799,7 @@ static void scale_residuals( slv3_system_t sys){
 	Calculates relnoms for all relations in sys
 	using variable nominals.
 */
-static void calc_relnoms(slv3_system_t sys){
+static void calc_relnoms(qrslv_system_t sys){
   int32 row, col;
   struct var_variable *var;
   struct rel_relation *rel;
@@ -959,7 +965,7 @@ static real64 calc_fourer_scale(mtx_matrix_t mtx
 	by another method (during this iteration) then these vectors
 	should contain the scale factors used in that scaling.
 */
-static void scale_J_iterative(slv3_system_t sys){
+static void scale_J_iterative(qrslv_system_t sys){
   real64 rho_col_old, rho_col_new;
   real64 rho_row_old, rho_row_new;
   int32 k;
@@ -1013,7 +1019,7 @@ static void scale_J_iterative(slv3_system_t sys){
 /**
 	Scale system dependent on interface parameters
 */
-static void scale_system( slv3_system_t sys ){
+static void scale_system( qrslv_system_t sys ){
   if(strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"NONE") == 0){
     if(sys->J.accurate == FALSE){
       calc_nominals(sys);
@@ -1081,7 +1087,7 @@ static void scale_system( slv3_system_t sys ){
 
 	@TODO This entire function needs to be reimplemented with relman_diffs.
 */
-static boolean calc_gradient(slv3_system_t sys){
+static boolean calc_gradient(qrslv_system_t sys){
 
   if(sys->gradient.accurate)return TRUE;
 
@@ -1123,7 +1129,7 @@ static boolean calc_gradient(slv3_system_t sys){
 	Create a new hessian_data structure for storing
 	latest update information.
 */
-static void create_update(slv3_system_t sys){
+static void create_update(qrslv_system_t sys){
   struct hessian_data *update;
 
   if(!OPTIMIZING(sys))
@@ -1145,7 +1151,7 @@ static void create_update(slv3_system_t sys){
 	Computes a rank 2 BFGS update to the hessian matrix
 	B which accumulates curvature.
 */
-static void calc_B( slv3_system_t sys){
+static void calc_B( qrslv_system_t sys){
   if(sys->s.block.iteration > 1){
     create_update(sys);
   }else{
@@ -1236,7 +1242,7 @@ static void calc_B( slv3_system_t sys){
 	are able to be pivoted.
 	@return value is the row rank deficiency, which we hope is 0.
 */
-static int calc_pivots(slv3_system_t sys){
+static int calc_pivots(qrslv_system_t sys){
   int row_rank_defect=0, oldtiming;
   FILE *fmtx = NULL;
 
@@ -1307,19 +1313,19 @@ static int calc_pivots(slv3_system_t sys){
     );
 
 #ifdef ASC_WITH_MMIO
-#define SLV3_MMIO_FILE "slv3mmio.mtx"
-/* #define SLV3_MMIO_WHOLE */
-    if((fmtx = fopen(SLV3_MMIO_FILE,"w"))){
-#ifdef SLV3_MMIO_WHOLE
+#define QRSLV_MMIO_FILE "qrslvmmio.mtx"
+/* #define QRSLV_MMIO_WHOLE */
+    if((fmtx = fopen(QRSLV_MMIO_FILE,"w"))){
+#ifdef QRSLV_MMIO_WHOLE
       mtx_write_region_mmio(fmtx, sys->J.mtx, mtx_ENTIRE_MATRIX);
 #else
       mtx_write_region_mmio(fmtx, sys->J.mtx, &(sys->J.reg));
 #endif
-      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Wrote matrix to '%s' (EXPERIMENTAL!)",SLV3_MMIO_FILE);
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Wrote matrix to '%s' (EXPERIMENTAL!)",QRSLV_MMIO_FILE);
       fclose(fmtx);
     }else{
       ERROR_REPORTER_HERE(ASC_PROG_ERR,
-        "Unable to write matrix to '%s' (couldn't open for writing)",SLV3_MMIO_FILE
+        "Unable to write matrix to '%s' (couldn't open for writing)",QRSLV_MMIO_FILE
       );
     }
 #endif
@@ -1364,7 +1370,7 @@ static int calc_pivots(slv3_system_t sys){
 	Updates the reduced hessian matrix.
 	if !OPTIMIZING just sets zbz.accurate true and returns.
 */
-static void calc_ZBZ(slv3_system_t sys){
+static void calc_ZBZ(qrslv_system_t sys){
    mtx_coord_t nz;
 
    if(sys->ZBZ.accurate ) return;
@@ -1437,7 +1443,7 @@ static void calc_ZBZ(slv3_system_t sys){
 	already be calculated and scaled so as to simply be added to the
 	rhs.  Caller is responsible for initially zeroing the rhs vector.
 */
-static void calc_rhs(slv3_system_t sys, struct vec_vector *vec,
+static void calc_rhs(qrslv_system_t sys, struct vec_vector *vec,
                      real64 scalar, boolean transpose
 ){
   if(transpose ) {     /* vec is indexed by col */
@@ -1458,7 +1464,7 @@ static void calc_rhs(slv3_system_t sys, struct vec_vector *vec,
 /**
 	Computes the lagrange multipliers for the equality constraints.
 */
-static void calc_multipliers(slv3_system_t sys){
+static void calc_multipliers(qrslv_system_t sys){
 
    if(sys->multipliers.accurate)return;
 
@@ -1511,7 +1517,7 @@ static void calc_multipliers(slv3_system_t sys){
 	Computes the gradient of the lagrangian which
 	should be zero at the optimum solution.
 */
-static void calc_stationary( slv3_system_t sys){
+static void calc_stationary( qrslv_system_t sys){
    if(sys->stationary.accurate )
       return;
 
@@ -1538,7 +1544,7 @@ static void calc_stationary( slv3_system_t sys){
 /**
 	Calculate the gamma vector.
 */
-static void calc_gamma( slv3_system_t sys){
+static void calc_gamma( qrslv_system_t sys){
    if(sys->gamma.accurate)return;
 
    matrix_product(sys->J.mtx, &(sys->residuals),
@@ -1554,7 +1560,7 @@ static void calc_gamma( slv3_system_t sys){
 /**
 	Calculate the Jgamma vector.
 */
-static void calc_Jgamma( slv3_system_t sys){
+static void calc_Jgamma( qrslv_system_t sys){
    if(sys->Jgamma.accurate)return;
 
    matrix_product(sys->J.mtx, &(sys->gamma),
@@ -1571,7 +1577,7 @@ static void calc_Jgamma( slv3_system_t sys){
 /**
 	Computes a step to solve the linearized equations.
 */
-static void calc_newton( slv3_system_t sys){
+static void calc_newton( qrslv_system_t sys){
    linsolqr_system_t lsys = sys->J.sys;
    int32 col;
 
@@ -1611,7 +1617,7 @@ static void calc_newton( slv3_system_t sys){
 /**
 	Computes an update to the product B and newton.
 */
-static void calc_Bnewton( slv3_system_t sys){
+static void calc_Bnewton( qrslv_system_t sys){
    if(sys->Bnewton.accurate)return;
 
    if(!OPTIMIZING(sys)){
@@ -1645,7 +1651,7 @@ static void calc_Bnewton( slv3_system_t sys){
 /**
 	Calculate the nullspace move if OPTIMIZING.
 */
-static void calc_nullspace( slv3_system_t sys){
+static void calc_nullspace( qrslv_system_t sys){
    if(sys->nullspace.accurate)return;
 
    if(!OPTIMIZING(sys)){
@@ -1741,7 +1747,7 @@ static void calc_nullspace( slv3_system_t sys){
 	Calculate the 1st order descent direction for phi
 	in the variables.
 */
-static void calc_varstep1( slv3_system_t sys){
+static void calc_varstep1( qrslv_system_t sys){
    if(sys->varstep1.accurate )
       return;
 
@@ -1767,7 +1773,7 @@ static void calc_varstep1( slv3_system_t sys){
 /**
 	Computes an update to the product B and varstep1.
 */
-static void calc_Bvarstep1( slv3_system_t sys){
+static void calc_Bvarstep1( qrslv_system_t sys){
    if(sys->Bvarstep1.accurate )
       return;
 
@@ -1803,7 +1809,7 @@ static void calc_Bvarstep1( slv3_system_t sys){
 	Calculate the 2nd order descent direction for phi
 	in the variables.
 */
-static void calc_varstep2( slv3_system_t sys){
+static void calc_varstep2( qrslv_system_t sys){
    if(sys->varstep2.accurate )
       return;
 
@@ -1841,7 +1847,7 @@ static void calc_varstep2( slv3_system_t sys){
 /**
 	Computes an update to the product B and varstep2.
 */
-static void calc_Bvarstep2( slv3_system_t sys){
+static void calc_Bvarstep2( qrslv_system_t sys){
    if(sys->Bvarstep2.accurate )
       return;
 
@@ -1877,7 +1883,7 @@ static void calc_Bvarstep2( slv3_system_t sys){
 	Calculate the negative gradient direction of phi in the
 	multipliers.
 */
-static void calc_mulstep1( slv3_system_t sys){
+static void calc_mulstep1( qrslv_system_t sys){
    if(sys->mulstep1.accurate )
       return;
 
@@ -1903,7 +1909,7 @@ static void calc_mulstep1( slv3_system_t sys){
 	Calculate the mulstep2 direction of phi in the
 	multipliers.
 */
-static void calc_mulstep2( slv3_system_t sys){
+static void calc_mulstep2( qrslv_system_t sys){
    if(sys->mulstep2.accurate )
       return;
 
@@ -1950,7 +1956,7 @@ static void calc_mulstep2( slv3_system_t sys){
 /**
 	Computes the global minimizing function Phi.
 */
-static void calc_phi( slv3_system_t sys){
+static void calc_phi( qrslv_system_t sys){
    if(!OPTIMIZING(sys)){
       sys->phi = 0.5*sys->residuals.norm2;
    }else{
@@ -1984,7 +1990,7 @@ struct calc_step_vars {
 /**
 	Calculates 2x2 system (coef1,coef2,rhs).
 */
-static void calc_2x2_system(slv3_system_t sys, struct calc_step_vars *vars){
+static void calc_2x2_system(qrslv_system_t sys, struct calc_step_vars *vars){
    vars->coef1[0] = (2.0*sys->phi/sys->newton.norm2)*
       calc_sqrt_D0(sys->newton.norm2)/calc_sqrt_D0(sys->gamma.norm2);
    vars->coef1[1] = 1.0;
@@ -2004,7 +2010,7 @@ static void calc_2x2_system(slv3_system_t sys, struct calc_step_vars *vars){
 /**
 	Determines alpha1 and alpha2 from the parameter (guess).
 */
-static void coefs_from_parm( slv3_system_t sys, struct calc_step_vars *vars){
+static void coefs_from_parm( qrslv_system_t sys, struct calc_step_vars *vars){
 
   sym_2x2_t coef;     /* Actual coefficient matrix */
   real64 det;   /* Determinant of coefficient matrix */
@@ -2034,7 +2040,7 @@ static void coefs_from_parm( slv3_system_t sys, struct calc_step_vars *vars){
 	Computes step vector length based on 1st order and 2nd order
 	vectors and their coefficients.
 */
-static real64 step_norm2( slv3_system_t sys, struct calc_step_vars *vars){
+static real64 step_norm2( qrslv_system_t sys, struct calc_step_vars *vars){
    return sys->maxstep*sys->maxstep*
       (vars->alpha2 * vars->alpha2 +
        vars->alpha2 * vars->alpha1 * sys->phi/
@@ -2046,7 +2052,7 @@ static real64 step_norm2( slv3_system_t sys, struct calc_step_vars *vars){
 /**
 	Re-guesses the parameters based on step size vs. target value.
 */
-static void adjust_parms( slv3_system_t sys, struct calc_step_vars *vars){
+static void adjust_parms( qrslv_system_t sys, struct calc_step_vars *vars){
    vars->error = (calc_sqrt_D0(step_norm2(sys,vars))/sys->maxstep) - 1.0;
    if(vars->error > 0.0 ) {
       /* Increase parameter (to decrease step length) */
@@ -2064,7 +2070,7 @@ static void adjust_parms( slv3_system_t sys, struct calc_step_vars *vars){
 /**
 	Computes the step based on the coefficients in vars.
 */
-static void compute_step( slv3_system_t sys, struct calc_step_vars *vars){
+static void compute_step( qrslv_system_t sys, struct calc_step_vars *vars){
    int32 row,col;
    real64 tot1_norm2, tot2_norm2;
 
@@ -2120,7 +2126,7 @@ static void compute_step( slv3_system_t sys, struct calc_step_vars *vars){
 	the step is not checked for legitimacy.
 	NOTE: the step is scaled.
 */
-static void calc_step( slv3_system_t sys, int minor){
+static void calc_step( qrslv_system_t sys, int minor){
 
    struct calc_step_vars vars;
    real64 tot1_norm2, tot2_norm2;
@@ -2217,7 +2223,7 @@ static void calc_step( slv3_system_t sys, int minor){
 	Restores the values of the variables before applying
 	a step.
 */
-static void restore_variables( slv3_system_t sys){
+static void restore_variables( qrslv_system_t sys){
    int32 col;
    real64 *vec;
    vec = (sys->nominals.vec);
@@ -2235,7 +2241,7 @@ static void restore_variables( slv3_system_t sys){
 	returned.  It is assumed that the current variable values
 	are within their bounds.  The step must be calculated.
 */
-static real64 required_coef_to_stay_inbounds( slv3_system_t sys){
+static real64 required_coef_to_stay_inbounds( qrslv_system_t sys){
    real64 mincoef;
    int32 col;
    real64 *vec;
@@ -2268,7 +2274,7 @@ static real64 required_coef_to_stay_inbounds( slv3_system_t sys){
 	Adds sys->varstep to the variable values in block: projecting
 	near bounds.
 */
-static void apply_step( slv3_system_t sys){
+static void apply_step( qrslv_system_t sys){
    FILE *lif = LIF(sys);
    int nproj = 0;
    real64 bounds_coef = 1.0;
@@ -2353,7 +2359,7 @@ static void apply_step( slv3_system_t sys){
 /**
 	This function should be called when the step is accepted.
 */
-static void step_accepted( slv3_system_t sys){
+static void step_accepted( qrslv_system_t sys){
    /* Maintain update status on jacobian and weights */
    if(--(sys->update.jacobian) <= 0)
       sys->J.accurate = FALSE;
@@ -2393,7 +2399,7 @@ static void step_accepted( slv3_system_t sys){
 	This function changes sys->maxstep to the given number and should be
 	called whenever sys->maxstep is to be changed.
 */
-static void change_maxstep( slv3_system_t sys, real64 maxstep){
+static void change_maxstep( qrslv_system_t sys, real64 maxstep){
    sys->maxstep = maxstep;
    sys->varstep.accurate = FALSE;
    if(OPTIMIZING(sys))sys->mulstep.accurate = FALSE;
@@ -2408,7 +2414,7 @@ static void change_maxstep( slv3_system_t sys, real64 maxstep){
 	Returns TRUE if the current block is feasible, FALSE otherwise.
 	It is assumed that the residuals have been computed.
 */
-static boolean block_feasible( slv3_system_t sys){
+static boolean block_feasible( qrslv_system_t sys){
    int32 row;
 
    if(!sys->s.calc_ok )
@@ -2429,7 +2435,7 @@ static boolean block_feasible( slv3_system_t sys){
 	converged.  Otherwise, the residuals for the new block will be computed
 	and sys->s.calc_ok set according.
 */
-static void move_to_next_block( slv3_system_t sys){
+static void move_to_next_block( qrslv_system_t sys){
   struct var_variable *var;
   struct rel_relation *rel;
   int32 row;
@@ -2636,7 +2642,7 @@ static void move_to_next_block( slv3_system_t sys){
 /**
 	Calls the appropriate reorder function on a block
 */
-static void reorder_new_block(slv3_system_t sys){
+static void reorder_new_block(qrslv_system_t sys){
   int32 method;
   if(sys->s.block.current_block < sys->s.block.number_of ) {
     if(strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"SPK1") == 0) {
@@ -2696,7 +2702,7 @@ static void reorder_new_block(slv3_system_t sys){
 	Moves to next unconverged block, assuming that the current block has
 	converged (or is -1, to start).
 */
-static void find_next_unconverged_block( slv3_system_t sys){
+static void find_next_unconverged_block( qrslv_system_t sys){
 
    do{
      move_to_next_block(sys);
@@ -2717,7 +2723,7 @@ static void find_next_unconverged_block( slv3_system_t sys){
 	Prepares sys for entering an iteration, increasing the iteration counts
 	and starting the clock.
 */
-static void iteration_begins( slv3_system_t sys){
+static void iteration_begins( qrslv_system_t sys){
    sys->clock = tm_cpu_time();
    ++(sys->s.block.iteration);
    ++(sys->s.iteration);
@@ -2734,7 +2740,7 @@ static void iteration_begins( slv3_system_t sys){
 	Prepares sys for exiting an iteration, stopping the clock and recording
 	the cpu time.
 */
-static void iteration_ends( slv3_system_t sys){
+static void iteration_ends( qrslv_system_t sys){
    double cpu_elapsed;   /* elapsed this iteration */
 
    cpu_elapsed = (double)(tm_cpu_time() - sys->clock);
@@ -2752,7 +2758,7 @@ static void iteration_ends( slv3_system_t sys){
 /**
 	Updates the solver status.
 */
-static void update_status( slv3_system_t sys){
+static void update_status( qrslv_system_t sys){
    boolean unsuccessful;
 
    if(!sys->s.converged ) {
@@ -2786,16 +2792,16 @@ static void update_status( slv3_system_t sys){
 
 
 static
-int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
+int32 qrslv_get_default_parameters(slv_system_t server, SlvClientToken asys
 		,slv_parameters_t *parameters
 ){
-  slv3_system_t sys = NULL;
+  qrslv_system_t sys = NULL;
   union parm_arg lo,hi,val;
   struct slv_parameter *new_parms = NULL;
   int32 make_macros = 0;
 
   if(server != NULL && asys != NULL) {
-    sys = SLV3(asys);
+    sys = QRSLV(asys);
     make_macros = 1;
   }
 
@@ -2805,10 +2811,10 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
 
   if(parameters->parms == NULL) {
     /* an external client wants our parameter list.
-     * an instance of slv3_system_structure has this pointer
-     * already set in slv3_create
+     * an instance of qrslv_system_structure has this pointer
+     * already set in qrslv_create
      */
-    new_parms = ASC_NEW_ARRAY_OR_NULL(struct slv_parameter,slv3_PA_SIZE);
+    new_parms = ASC_NEW_ARRAY_OR_NULL(struct slv_parameter,qrslv_PA_SIZE);
     if(new_parms == NULL) {
       return -1;
     }
@@ -2817,7 +2823,7 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
   }
 
   parameters->num_parms = 0;
-  asc_assert(slv3_PA_SIZE==44);
+  asc_assert(qrslv_PA_SIZE==44);
   /* begin defining parameters */
 
   slv_param_bool(parameters,IGNORE_BOUNDS
@@ -2998,7 +3004,7 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
   slv_param_char(parameters,SCALEOPT
   	,(SlvParameterInitChar){{"scaleopt"
   		,"jacobian scaling option",1
-  		,"Jacobian scaling option. See slv3.c."
+  		,"Jacobian scaling option. See qrslv.c."
   	}, "ROW_2NORM"}, (char *[]){"NONE","ROW_2NORM","RELNOM",NULL}
   );
 
@@ -3139,7 +3145,7 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
   	}, 30, 5, 100}
   );
 
-  asc_assert(parameters->num_parms==slv3_PA_SIZE);
+  asc_assert(parameters->num_parms==qrslv_PA_SIZE);
 
   return 1;
 }
@@ -3150,11 +3156,11 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys
   see slv_client.h
 */
 
-static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
+static SlvClientToken qrslv_create(slv_system_t server, int *statusindex)
 {
-  slv3_system_t sys;
+  qrslv_system_t sys;
 
-  sys = (slv3_system_t)asccalloc(1, sizeof(struct slv3_system_structure) );
+  sys = (qrslv_system_t)asccalloc(1, sizeof(struct qrslv_system_structure) );
   if(sys==NULL) {
     *statusindex = 1;
     return sys;
@@ -3162,7 +3168,7 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
   SERVER = server;
   sys->p.parms = sys->pa;
   sys->p.dynamic_parms = 0;
-  slv3_get_default_parameters(server,(SlvClientToken)sys,&(sys->p));
+  qrslv_get_default_parameters(server,(SlvClientToken)sys,&(sys->p));
   sys->integrity = OK;
   sys->presolved = 0;
   sys->p.output.more_important = stdout;
@@ -3199,7 +3205,7 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
 
 }
 
-static void destroy_matrices( slv3_system_t sys)
+static void destroy_matrices( qrslv_system_t sys)
 {
    if(sys->J.sys ) {
       int count = linsolqr_number_of_rhs(sys->J.sys)-1;
@@ -3236,7 +3242,7 @@ static void destroy_matrices( slv3_system_t sys)
    }
 }
 
-static void destroy_vectors( slv3_system_t sys)
+static void destroy_vectors( qrslv_system_t sys)
 {
    destroy_array(sys->nominals.vec);
    destroy_array(sys->weights.vec);
@@ -3261,7 +3267,7 @@ static void destroy_vectors( slv3_system_t sys)
    destroy_array(sys->mulstep.vec);
 }
 
-static int slv3_eligible_solver(slv_system_t server)
+static int qrslv_eligible_solver(slv_system_t server)
 {
   struct rel_relation **rp;
   rel_filter_t rfilter;
@@ -3280,43 +3286,43 @@ static int slv3_eligible_solver(slv_system_t server)
 }
 
 static
-void slv3_get_parameters(slv_system_t server, SlvClientToken asys,
+void qrslv_get_parameters(slv_system_t server, SlvClientToken asys,
                          slv_parameters_t *parameters)
 {
-  slv3_system_t sys;
+  qrslv_system_t sys;
   (void) server;
-  sys = SLV3(asys);
+  sys = QRSLV(asys);
   if(check_system(sys)) return;
   mem_copy_cast(&(sys->p),parameters,sizeof(slv_parameters_t));
 }
 
-static void slv3_set_parameters(slv_system_t server, SlvClientToken asys,
+static void qrslv_set_parameters(slv_system_t server, SlvClientToken asys,
                          slv_parameters_t *parameters)
 {
-  slv3_system_t sys;
+  qrslv_system_t sys;
   (void) server;
-  sys = SLV3(asys);
+  sys = QRSLV(asys);
   if(check_system(sys)) return;
   mem_copy_cast(parameters,&(sys->p),sizeof(slv_parameters_t));
 }
 
-static int slv3_get_status(slv_system_t server, SlvClientToken asys
+static int qrslv_get_status(slv_system_t server, SlvClientToken asys
 	,slv_status_t *status
 ){
-	slv3_system_t sys;
+	qrslv_system_t sys;
 	(void) server;
-	sys = SLV3(asys);
+	sys = QRSLV(asys);
 	if(check_system(sys))return 1;
 	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
 	return 0;
 }
 
-static linsolqr_system_t slv3_get_linsolqr_sys(slv_system_t server,
+static linsolqr_system_t qrslv_get_linsolqr_sys(slv_system_t server,
                                                SlvClientToken asys)
 {
-  slv3_system_t sys;
+  qrslv_system_t sys;
   (void) server;
-  sys = SLV3(asys);
+  sys = QRSLV(asys);
   if(check_system(sys)) return NULL;
   return(sys->J.sys);
 }
@@ -3330,7 +3336,7 @@ static linsolqr_system_t slv3_get_linsolqr_sys(slv_system_t server,
 	On entry there isn't yet a correspondence between var_sindex and
 	jacobian column. Here we establish that.
 */
-static void structural_analysis(slv_system_t server, slv3_system_t sys){
+static void structural_analysis(slv_system_t server, qrslv_system_t sys){
   var_filter_t vfilter;
   rel_filter_t rfilter;
 
@@ -3371,7 +3377,7 @@ static void structural_analysis(slv_system_t server, slv3_system_t sys){
   sys->s.block.number_of = (slv_get_solvers_blocks(SERVER))->nblocks;
 }
 
-static void set_factor_options (slv3_system_t sys)
+static void set_factor_options (qrslv_system_t sys)
 {
   if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI") == 0) {
     sys->J.fm = ranki_kw;
@@ -3410,7 +3416,7 @@ static void set_factor_options (slv3_system_t sys)
   sets type to be ranki_kw or ranki_jz as determined by
   parameters.
 */
-static void create_matrices(slv_system_t server, slv3_system_t sys)
+static void create_matrices(slv_system_t server, qrslv_system_t sys)
 {
   sys->J.sys = linsolqr_create();
   sys->J.mtx = mtx_create();
@@ -3442,7 +3448,7 @@ static void create_matrices(slv_system_t server, slv3_system_t sys)
 }
 
 static void create_vectors(sys)
-slv3_system_t sys;
+qrslv_system_t sys;
 {
   sys->nominals.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
   sys->nominals.rng = &(sys->J.reg.col);
@@ -3512,7 +3518,7 @@ slv3_system_t sys;
 	Here we will check if any fixed or included flags have
 	changed since the last presolve.
 */
-static int32 slv3_dof_changed(slv3_system_t sys){
+static int32 qrslv_dof_changed(qrslv_system_t sys){
   int32 ind, result = 0;
   /* Currently we have two copies of the fixed and included flags
      which must be kept in sync.  The var_fixed and rel_included
@@ -3563,7 +3569,7 @@ static void reset_cost(struct slv_block_cost *cost,int32 costsize){
   }
 }
 
-static void slv3_update_linsolqr(slv3_system_t sys){
+static void qrslv_update_linsolqr(qrslv_system_t sys){
   if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI") == 0) {
     sys->J.fm = ranki_kw;
   }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),FACTOR_OPTION),"SPK1/RANKI+ROW") == 0) {
@@ -3588,14 +3594,14 @@ static void slv3_update_linsolqr(slv3_system_t sys){
   linsolqr_set_condition_tolerance(sys->J.sys, SLV_PARAM_REAL(&(sys->p),PIVOT_TOL));
 }
 
-static int slv3_presolve(slv_system_t server, SlvClientToken asys){
+static int qrslv_presolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
   int32 cap, ind;
   int32 matrix_creation_needed = 1;
-  slv3_system_t sys;
+  qrslv_system_t sys;
 
-  sys = SLV3(asys);
+  sys = QRSLV(asys);
   iteration_begins(sys);
   check_system(sys);
   if(sys->vlist == NULL ) {
@@ -3612,7 +3618,7 @@ static int slv3_presolve(slv_system_t server, SlvClientToken asys){
   }
 
   if(sys->presolved > 0) { /* system has been presolved before */
-    if(!slv3_dof_changed(sys) /* no changes in fixed or included flags */
+    if(!qrslv_dof_changed(sys) /* no changes in fixed or included flags */
        && SLV_PARAM_BOOL(&(sys->p),PARTITION) == sys->J.old_partition) {
 #if DEBUG
       FPRINTF(stderr,"YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION\n");
@@ -3649,7 +3655,7 @@ static int slv3_presolve(slv_system_t server, SlvClientToken asys){
 
     sys->s.block.current_reordered_block = -2;
   }else{
-    slv3_update_linsolqr(sys);
+    qrslv_update_linsolqr(sys);
   }
 
   /* Reset status */
@@ -3684,7 +3690,7 @@ static int slv3_presolve(slv_system_t server, SlvClientToken asys){
 }
 
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
-static boolean slv3_change_basis(slv3_system_t sys,int32 var,
+static boolean qrslv_change_basis(qrslv_system_t sys,int32 var,
                                  mtx_range_t *rng){
   (void) sys;
   (void) rng;
@@ -3715,12 +3721,12 @@ static boolean slv3_change_basis(slv3_system_t sys,int32 var,
 }
 #endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
-static int slv3_resolve(slv_system_t server, SlvClientToken asys){
+static int qrslv_resolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
-  slv3_system_t sys;
+  qrslv_system_t sys;
   (void) server;
-  sys = SLV3(asys);
+  sys = QRSLV(asys);
 
   check_system(sys);
   for( vp = sys->vlist ; *vp != NULL ; ++vp ) {
@@ -3749,8 +3755,8 @@ static int slv3_resolve(slv_system_t server, SlvClientToken asys){
 }
 
 
-static int slv3_iterate(slv_system_t server, SlvClientToken asys){
-  slv3_system_t sys;
+static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
+  qrslv_system_t sys;
   FILE              *mif;
   FILE              *lif;
   real64      bounds_coef=1.0;
@@ -3761,12 +3767,12 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
   int               minor = 0,ds_status=0, rank_defect=0;
   double            time0;
 
-  /* CONSOLE_DEBUG("Begin 'slv3_iterate'"); */
-  sys = SLV3(asys);
+  /* CONSOLE_DEBUG("Begin 'qrslv_iterate'"); */
+  sys = QRSLV(asys);
   mif = MIF(sys);
   lif = LIF(sys);
   if(server == NULL || sys==NULL) return 1;
-  if(check_system(SLV3(sys))) return 2;
+  if(check_system(QRSLV(sys))) return 2;
   if(!sys->s.ready_to_solve){
     ERROR_REPORTER_HERE(ASC_USER_ERROR,"Not ready to solve.");
     return 3;
@@ -3941,7 +3947,7 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 /*  if(sys->residuals.norm2 > 1.0e-32) {
     norm2 = inner_product(&(sys->newton),&(sys->gamma))/sys->residuals.norm2;
     if(fabs(norm2 - 1.0) > 1e-4 ) {
-      FPRINTF(MIF(sys),"WARNING:(slv3) slv3_iterate\n");
+      FPRINTF(MIF(sys),"WARNING:(qrslv) qrslv_iterate\n");
       FPRINTF(MIF(sys),"        Jacobian inverse inaccurate.\n");
       FPRINTF(MIF(sys),"        Smallest pivot = %g, JJ' norm2 = %g\n",
               linsolqr_smallest_pivot(sys->J.sys), norm2);
@@ -4155,27 +4161,27 @@ static int slv3_iterate(slv_system_t server, SlvClientToken asys){
 }
 
 
-static int slv3_solve(slv_system_t server, SlvClientToken asys){
+static int qrslv_solve(slv_system_t server, SlvClientToken asys){
   int err = 0;
-  slv3_system_t sys;
-  sys = SLV3(asys);
+  qrslv_system_t sys;
+  sys = QRSLV(asys);
   if(server == NULL || sys==NULL) return 1;
   if(check_system(sys)) return 1;
-  while(sys->s.ready_to_solve) err = err | slv3_iterate(server,sys);
+  while(sys->s.ready_to_solve) err = err | qrslv_iterate(server,sys);
   if(err)ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solver error %d",err);
   return err;
 }
 
-static mtx_matrix_t slv3_get_jacobian(slv_system_t server, SlvClientToken sys){
+static mtx_matrix_t qrslv_get_jacobian(slv_system_t server, SlvClientToken sys){
   if(server == NULL || sys==NULL) return NULL;
-  if(check_system(SLV3(sys))) return NULL;
-  return SLV3(sys)->J.mtx;
+  if(check_system(QRSLV(sys))) return NULL;
+  return QRSLV(sys)->J.mtx;
 }
 
-static int slv3_destroy(slv_system_t server, SlvClientToken asys){
-  slv3_system_t sys;
+static int qrslv_destroy(slv_system_t server, SlvClientToken asys){
+  qrslv_system_t sys;
   (void) server;
-  sys = SLV3(asys);
+  sys = QRSLV(asys);
   if(check_system(sys)) return 1;
   slv_destroy_parms(&(sys->p));
   destroy_matrices(sys);
@@ -4187,26 +4193,26 @@ static int slv3_destroy(slv_system_t server, SlvClientToken asys){
 }
 
 
-static const SlvFunctionsT slv3_internals = {
-	SOLVER_QRSLV
+static const SlvFunctionsT qrslv_internals = {
+	SOLVER_QRSLV_EXT
 	,"QRSlv"
-	,slv3_create
-  	,slv3_destroy
-	,slv3_eligible_solver
-	,slv3_get_default_parameters
-	,slv3_get_parameters
-	,slv3_set_parameters
-	,slv3_get_status
-	,slv3_solve
-	,slv3_presolve
-	,slv3_iterate
-	,slv3_resolve
-	,slv3_get_linsolqr_sys
-	,slv3_get_jacobian
+	,qrslv_create
+  	,qrslv_destroy
+	,qrslv_eligible_solver
+	,qrslv_get_default_parameters
+	,qrslv_get_parameters
+	,qrslv_set_parameters
+	,qrslv_get_status
+	,qrslv_solve
+	,qrslv_presolve
+	,qrslv_iterate
+	,qrslv_resolve
+	,qrslv_get_linsolqr_sys
+	,qrslv_get_jacobian
 	,NULL
 };
 
-int slv3_register(void){
-	return solver_register(&slv3_internals);
+ASC_EXPORT int qrslv_register(void){
+	return solver_register(&qrslv_internals);
 }
 

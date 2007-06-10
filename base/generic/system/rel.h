@@ -222,7 +222,7 @@ unsigned long rel_extwhichvar(struct rel_relation *rel);
 	@return index into argument list, or a value <= 0 on error.
 */
 
-extern boolean rel_less(struct rel_relation *rel);
+ASC_DLLSPEC boolean rel_less(struct rel_relation *rel);
 /**<
 	Returns true if the given relation is satisfied if "less than"
 	is among those that make up the comparator of the relation
@@ -237,7 +237,7 @@ extern boolean rel_equal(struct rel_relation *rel);
 	(i.e. =, >=, or <=).<br><br>
 	eq==TRUE implies rel would be satisfied if lhs ~ rhs
 */
-extern boolean rel_greater(struct rel_relation *rel);
+ASC_DLLSPEC boolean rel_greater(struct rel_relation *rel);
 /**<
 	Returns true if the given relation is satisfied if "greater than"
 	is among those that make up the comparator of the relation
@@ -274,7 +274,7 @@ ASC_DLLSPEC int32 rel_sindex(const struct rel_relation *rel);
 	to assign the relation to a specific original row of a matrix.
 */
 
-extern void rel_set_sindex(struct rel_relation *rel, int32 sindex);
+ASC_DLLSPEC void rel_set_sindex(struct rel_relation *rel, int32 sindex);
 /**<
 	Sets the index number of the given relation as it
 	appears in a solvers relation list. The index is most often used

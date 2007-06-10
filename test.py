@@ -189,7 +189,7 @@ class TestSolver(AscendSelfTester):
 		self._run('distance_calc',filename="distance_calc.a4c")
 
 	def testconopt(self):
-		self._run('testconopt',"CONOPT")				
+		self._run('conopttest',"CONOPT",filename="johnpye/conopt/conopttest.a4c")				
 
 	def testcmslv2(self):
 		self._run('testcmslv2',"CMSlv")	
@@ -310,8 +310,8 @@ class TestIntegrator(Ascend):
 	def testListIntegrators(self):
 		I = ascpy.Integrator.getEngines()
 		s1 = sorted([str(i) for i in I])
-		s2 = sorted(['IDA','LSODE'])
-		assert s1==s2
+		assert 'IDA' in s1
+		assert 'LSODE' in s1
 
 	# this routine is reused by both testIDA and testLSODE
 	def _testIntegrator(self,integratorname):

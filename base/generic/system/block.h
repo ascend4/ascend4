@@ -55,7 +55,7 @@
 #define slv_block_partition_upper(s) slv_block_partition_real((s),1)
 /**< do block upper triangular permutation to system solver's lists */
 
-extern int slv_block_partition_real(slv_system_t sys, int uppertriangular);
+ASC_DLLSPEC int slv_block_partition_real(slv_system_t sys, int uppertriangular);
 /**<
 	Takes a system and reorders its solvers_vars and solvers_rels
 	list so that they fall into a BUT/BLT (block upper/lower triangular) form 
@@ -80,16 +80,16 @@ extern int slv_block_partition_real(slv_system_t sys, int uppertriangular);
 */
 
      
-int slv_block_unify(slv_system_t sys);
+ASC_DLLSPEC int slv_block_unify(slv_system_t sys);
 /**<
  *  Takes a system that has been through slv_block_partition and combines
  *  the blocks that comprise rows 0 -> (structural_rank -1) and
  *  columns 0 to ncols-1 in the system's dof_t into one block.
  *  This may be useful for optimizers which want a whole rectangular
- *  block.
+ *  block, and is used by our CONOPT wrapper.
  */
 
-extern int slv_set_up_block(slv_system_t sys, int32 block);
+ASC_DLLSPEC int slv_set_up_block(slv_system_t sys, int32 block);
 /**<
 	This function should be called on blocks which have previously
 	been reordered.  Variable and relation maintanence is performed
@@ -98,7 +98,7 @@ extern int slv_set_up_block(slv_system_t sys, int32 block);
 	The further comments under slv_spk1_reorder_block also apply.
 */
 
-extern int slv_spk1_reorder_block(slv_system_t sys,
+ASC_DLLSPEC int slv_spk1_reorder_block(slv_system_t sys,
 		int32 block, int32 transpose);
 /**<
  *  System should have first been processed by slv_block_partition,

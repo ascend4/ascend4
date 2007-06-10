@@ -38,6 +38,7 @@
 
 #include <packages/sensitivity.h>
 #include <system/system.h>
+#include <solver/solver.h>
 
 ExtMethodRun do_finite_diff_eval;
 

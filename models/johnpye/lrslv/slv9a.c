@@ -1,30 +1,27 @@
-/*
- *  Logical Relation Solver
- *  by Vicente Rico-Ramirez
- *  Version: $Revision: 1.10 $
- *  Version control file: $RCSfile: slv9a.c,v $
- *  Date last modified: $Date: 2000/01/25 02:28:03 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1997-2007 Carnegie Mellon University
 
-#include "slv9a.h"
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Logical Relation Solver module, used by CMSlv.
+*//*
+	Logical Relation Solver
+	by Vicente Rico-Ramirez
+	Created: 04/97
+*/
 
 #include <math.h>
 
@@ -40,6 +37,14 @@
 #include <system/bndman.h>
 #include <system/slv_stdcalls.h>
 #include <system/cond_config.h>
+
+#include <solver/solver.h>
+
+# define HAVE_LRSLV 1
+
+typedef struct slv9a_system_structure *slv9a_system_t;
+
+ASC_DLLSPEC SolverRegisterFn lrslv_register;
 
 #define SLV9A(s) ((slv9a_system_t)(s))
 #define SERVER (sys->slv)
@@ -1104,7 +1109,7 @@ static const SlvFunctionsT slv9a_internals = {
 	,NULL
 };
 
-int slv9a_register(void){
+int lrslv_register(void){
 	return solver_register(&slv9a_internals);
 }
 

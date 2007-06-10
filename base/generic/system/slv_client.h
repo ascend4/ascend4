@@ -419,8 +419,9 @@ ASC_DLLSPEC dof_t *slv_get_dofdata(slv_system_t server);
 	@return pointer to the system's dof structure for a nonlinear solver.
 
 	@see slv_get_log_dofdata().
- **/
-extern dof_t *slv_get_log_dofdata(slv_system_t server);
+*/
+
+ASC_DLLSPEC dof_t *slv_get_log_dofdata(slv_system_t server);
 /**<
 	@return pointer to the system's dof structure for a logical solver.
 	Data in the structure should be consistent with
@@ -453,7 +454,7 @@ ASC_DLLSPEC const mtx_block_t*slv_get_solvers_blocks(slv_system_t sys);
 	@see slv_get_solvers_log_blocks()
 */
 
-extern const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t sys);
+ASC_DLLSPEC const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t sys);
 /**< Decomposition information for the logical solver.
 
 	@param sys system being analysed.
@@ -503,21 +504,21 @@ extern void slv_set_solvers_log_blocks(slv_system_t sys,
 	old data. The should be told to reinitialize themselves.
 */
 
-extern void slv_check_var_initialization(slv_system_t sys);
+ASC_DLLSPEC void slv_check_var_initialization(slv_system_t sys);
 /**<
 	Checks that all the variables on the solvers_var_list have
 	been assigned at least once. If any has not, it is assigned
 	its scaling value (var_nominal) since this is generally a
 	much better starting value than 0.0.
 */
-extern void slv_check_dvar_initialization(slv_system_t sys);
+ASC_DLLSPEC void slv_check_dvar_initialization(slv_system_t sys);
 /**<
 	Checks that all the boolean variables on the solvers_dvar_list have
 	been assigned at least once. If any has not, it is assigned
 	a value of TRUE.
 */
 
-extern void slv_bnd_initialization(slv_system_t sys);
+ASC_DLLSPEC void slv_bnd_initialization(slv_system_t sys);
 /**<
 	Initializes the status of a boundary (satisfied ?).
 	At the initial point, it will be given the same value to
@@ -630,7 +631,7 @@ ASC_DLLSPEC struct var_variable **slv_get_solvers_unattached_list(slv_system_t s
 	@ref solverslists
 */
 
-extern struct dis_discrete **slv_get_solvers_dvar_list(slv_system_t sys);
+ASC_DLLSPEC struct dis_discrete **slv_get_solvers_dvar_list(slv_system_t sys);
 /**< Returns the most recently set discrete variable list (never NULL) from the system.
 	@ref solverslists
 */
@@ -650,7 +651,7 @@ ASC_DLLSPEC struct var_variable **slv_get_master_unattached_list(slv_system_t sy
 /**< Returns the most recently set master unattached variable list (never NULL) from the system.
 	@ref masterlists
 */
-extern struct dis_discrete **slv_get_master_dvar_list(slv_system_t sys);
+ASC_DLLSPEC struct dis_discrete **slv_get_master_dvar_list(slv_system_t sys);
 /**< Returns the most recently set master discrete variable list (never NULL) from the system.
 	@ref masterlists
 */
@@ -678,7 +679,7 @@ ASC_DLLSPEC struct rel_relation **slv_get_solvers_obj_list(slv_system_t sys);
 	@ref solverslists
 */
 
-extern struct logrel_relation **slv_get_solvers_logrel_list(slv_system_t sys);
+ASC_DLLSPEC struct logrel_relation **slv_get_solvers_logrel_list(slv_system_t sys);
 /**<
 	Returns the (NULL-terminated) list of solver logical relations. 
 	@ref solverslists
@@ -696,7 +697,7 @@ extern struct w_when **slv_get_solvers_when_list(slv_system_t sys);
 	@ref solverslists
 */
 
-extern struct bnd_boundary **slv_get_solvers_bnd_list(slv_system_t sys);
+ASC_DLLSPEC struct bnd_boundary **slv_get_solvers_bnd_list(slv_system_t sys);
 /**< 
 	Returns the (NULL-terminated) list of solver boundaries.
 	@ref solverslists
@@ -750,7 +751,7 @@ extern struct gl_list_t *slv_get_symbol_list(slv_system_t sys);
 	@ref varlists
 */
 
-extern int32 slv_need_consistency(slv_system_t sys);
+ASC_DLLSPEC int32 slv_need_consistency(slv_system_t sys);
 /**< Gets the int need_consistency associated with the system. */
 
 ASC_DLLSPEC int32 slv_get_num_solvers_vars(slv_system_t sys);
@@ -771,7 +772,7 @@ ASC_DLLSPEC int32 slv_get_num_solvers_unattached(slv_system_t sys);
 	@ref solverslists
 */
 
-extern int32 slv_get_num_solvers_dvars(slv_system_t sys);
+ASC_DLLSPEC int32 slv_get_num_solvers_dvars(slv_system_t sys);
 /**< Returns the length of the solver discrete variables list.
 	The length does NOT include the terminating NULL.
 	@ref solverslists
@@ -800,7 +801,7 @@ ASC_DLLSPEC int32 slv_get_num_solvers_objs(slv_system_t sys);
 	The length does NOT include the terminating NULL.
 	@ref solverslists*/
 
-extern int32 slv_get_num_solvers_logrels(slv_system_t sys);
+ASC_DLLSPEC int32 slv_get_num_solvers_logrels(slv_system_t sys);
 /**< Returns the length of the solver logical relations list.
 	The length does NOT include the terminating NULL.
 	@ref solverslists*/
@@ -817,7 +818,7 @@ extern int32 slv_get_num_solvers_whens(slv_system_t sys);
 	@ref solverslists
 */
 
-extern int32 slv_get_num_solvers_bnds(slv_system_t sys);
+ASC_DLLSPEC int32 slv_get_num_solvers_bnds(slv_system_t sys);
 /**<
 	Returns the length of the solver boundaries list.
 	The length does NOT include the terminating NULL.
@@ -922,7 +923,7 @@ ASC_DLLSPEC int32 slv_count_solvers_unattached(slv_system_t sys, const var_filte
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_dvars(slv_system_t sys, const dis_filter_t *dfilter);
+ASC_DLLSPEC int32 slv_count_solvers_dvars(slv_system_t sys, const dis_filter_t *dfilter);
 /**< 
 	Returns the number of solver discrete variables matching the specified filter. 
 	@ref solverslists
@@ -952,7 +953,7 @@ extern int32 slv_count_solvers_objs(slv_system_t sys, const rel_filter_t *rfilte
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_logrels(slv_system_t sys, const logrel_filter_t *lrfilter);
+ASC_DLLSPEC int32 slv_count_solvers_logrels(slv_system_t sys, const logrel_filter_t *lrfilter);
 /**<
 	Returns the number of solver logical relations matching the specified filter.
 	@ref solverslists
@@ -970,13 +971,13 @@ extern int32 slv_count_solvers_whens(slv_system_t sys, const when_filter_t *wfil
 	@ref solverslists
 */
 
-extern int32 slv_count_solvers_bnds(slv_system_t sys, const bnd_filter_t *bfilter);
+ASC_DLLSPEC int32 slv_count_solvers_bnds(slv_system_t sys, const bnd_filter_t *bfilter);
 /**<
 	Returns the number of solver boundaries matching the specified filter.
 	@ref solverslists
 */
 
-extern int32 slv_count_master_vars(slv_system_t sys, const var_filter_t *vfilter);
+ASC_DLLSPEC int32 slv_count_master_vars(slv_system_t sys, const var_filter_t *vfilter);
 /**<
 	Returns the number of master variables matching the specified filter.
 	@ref masterlists
@@ -1006,7 +1007,7 @@ extern int32 slv_count_master_disunatt(slv_system_t sys, const dis_filter_t *dfi
 	@ref masterlists
 */
 
-extern int32 slv_count_master_rels(slv_system_t sys, const rel_filter_t *rfilter);
+ASC_DLLSPEC int32 slv_count_master_rels(slv_system_t sys, const rel_filter_t *rfilter);
 /**<
 	Returns the number of master relations matching the specified filter.
 	@ref masterlists

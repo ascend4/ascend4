@@ -19,12 +19,9 @@
 	@file
 	Connection of the CONOPT solver into ASCEND.
 *//*
-	by Ken Tyner
-	Created: 6/97
-	Last in CVS: $Revision: 1.31 $ $Date: 2000/01/25 02:27:50 $ $Author: ballan $
+	originally by Ken Tyner and Vicente Rico-Ramirez, Jun-Aug 1997.
+	updated for CONOPT 3 by John Pye, July 2006.
 */
-
-#include "slv8.h"
 
 #include <math.h>
 
@@ -42,14 +39,26 @@
 #include <system/relman.h>
 #include <system/slv_stdcalls.h>
 #include <system/block.h>
-#include "conopt.h"
+#include <solver/solver.h>
 
-#define slv8_register_conopt_function register_conopt_function
-#define slv8_coicsm coicsm
-#define slv8_coimem coimem
+#include <solver/conopt.h>
+
+typedef struct conopt_system_structure *conopt_system_t;
+
+#ifdef ASC_WITH_CONOPT
+# define HAVE_CONOPT 1
+#else
+# define HAVE_CONOPT 0
+#endif
+
+ASC_DLLSPEC SolverRegisterFn conopt_register;
+
+#define conopt_register_conopt_function register_conopt_function
+#define conopt_coicsm coicsm
+#define conopt_coimem coimem
 
 #ifndef ASC_WITH_CONOPT
-int slv8_register(SlvFunctionsT *f){
+int conopt_register(SlvFunctionsT *f){
   (void)f;  /* stop gcc whine about unused parameter */
 
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT has not been compiled into this copy of ASCEND.");
@@ -74,10 +83,10 @@ int slv8_register(SlvFunctionsT *f){
 */
 #define DEBUG FALSE
 
-#define SLV8(s)        ((slv8_system_t)(s))
-#define MI8F(s)        slv_get_output_file( SLV8(s)->p.output.more_important )
+#define CONOPT(s)        ((conopt_system_t)(s))
+#define MI8F(s)        slv_get_output_file( CONOPT(s)->p.output.more_important )
 #define SERVER         (sys->slv)
-#define slv8_PA_SIZE 56
+#define conopt_PA_SIZE 56
 #define SAFE_CALC_PTR  (sys->parm_array[0])
 #define SAFE_CALC      ((*(int *)SAFE_CALC_PTR))
 #define SCALEOPT_PTR   (sys->parm_array[1])
@@ -152,7 +161,7 @@ struct jacobian_data {
   boolean                old_partition;/* old value of partition flag */
 };
 
-struct slv8_system_structure {
+struct conopt_system_structure {
 
   /*
     Problem definition
@@ -180,8 +189,8 @@ struct slv8_system_structure {
   int32                  rtot;         /* length of rellist */
   double                 clock;        /* CPU time */
 
-  void *parm_array[slv8_PA_SIZE];
-  struct slv_parameter pa[slv8_PA_SIZE];
+  void *parm_array[conopt_PA_SIZE];
+  struct slv_parameter pa[conopt_PA_SIZE];
 
   /*
     CONOPT DATA
@@ -213,9 +222,7 @@ struct slv8_system_structure {
 /**
 	Checks sys for NULL and for integrity.
 */
-static int check_system(slv8_system_t sys){
-
-  CONSOLE_DEBUG("...");
+static int check_system(conopt_system_t sys){
 
   if( sys == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL system handle");
@@ -257,7 +264,7 @@ static void debug_delimiter(){
 /**
 	Output a vector.
 */
-static void debug_out_vector(slv8_system_t sys
+static void debug_out_vector(conopt_system_t sys
 		,struct vec_vector *vec
 ){
   int32 ndx;
@@ -273,7 +280,7 @@ static void debug_out_vector(slv8_system_t sys
 /**
 	Output all variable values in current block.
 */
-static void debug_out_var_values(slv8_system_t sys){
+static void debug_out_var_values(conopt_system_t sys){
   int32 col;
   struct var_variable *var;
 
@@ -293,7 +300,7 @@ static void debug_out_var_values(slv8_system_t sys){
 /**
 	Output all relation residuals in current block.
 */
-static void debug_out_rel_residuals(slv8_system_t sys){
+static void debug_out_rel_residuals(conopt_system_t sys){
   int32 row;
 
   CONSOLE_DEBUG("Rel residuals -->");
@@ -310,7 +317,7 @@ static void debug_out_rel_residuals(slv8_system_t sys){
 	Output permutation and values of the nonzero elements in the
 	the jacobian matrix.
 */
-static void debug_out_jacobian(slv8_system_t sys){
+static void debug_out_jacobian(conopt_system_t sys){
   mtx_coord_t nz;
   real64 value;
 
@@ -335,7 +342,7 @@ static void debug_out_jacobian(slv8_system_t sys){
 	Output permutation and values of the nonzero elements in the
 	reduced hessian matrix.
 */
-static void debug_out_hessian( FILE *fp, slv8_system_t sys){
+static void debug_out_hessian( FILE *fp, conopt_system_t sys){
   mtx_coord_t nz;
 
   for( nz.row = 0; nz.row < sys->ZBZ.order; nz.row++ ) {
@@ -395,7 +402,7 @@ static void debug_out_hessian( FILE *fp, slv8_system_t sys){
 	Count jacobian elements and set max to the number of elements
 	in the densest row
 */
-static int32 num_jacobian_nonzeros(slv8_system_t sys, int32 *max){
+static int32 num_jacobian_nonzeros(conopt_system_t sys, int32 *max){
   int32 row, len, licn,c,count,row_max;
   struct rel_relation *rel;
   rel_filter_t rf;
@@ -451,7 +458,7 @@ static int32 num_jacobian_nonzeros(slv8_system_t sys, int32 *max){
 /**
 	Evaluate the objective function.
 */
-static boolean calc_objective( slv8_system_t sys){
+static boolean calc_objective( conopt_system_t sys){
   calc_ok = TRUE;
   asc_assert(sys->obj!=NULL);
   sys->objective = (sys->obj ? relman_eval(sys->obj,&calc_ok,SAFE_CALC) : 0.0);
@@ -461,7 +468,7 @@ static boolean calc_objective( slv8_system_t sys){
 /**
 	Evaluate all objectives.
 */
-static boolean calc_objectives( slv8_system_t sys){
+static boolean calc_objectives( conopt_system_t sys){
   int32 len,i;
   static rel_filter_t rfilter;
   struct rel_relation **rlist=NULL;
@@ -491,7 +498,7 @@ static boolean calc_objectives( slv8_system_t sys){
 
 	@return true iff calculations preceded without error.
 */
-static boolean calc_residuals( slv8_system_t sys){
+static boolean calc_residuals( conopt_system_t sys){
   int32 row;
   struct rel_relation *rel;
   double time0;
@@ -532,7 +539,7 @@ static boolean calc_residuals( slv8_system_t sys){
 	Calculate the current block of the jacobian.
 	It is initially unscaled.
 */
-static boolean calc_J( slv8_system_t sys){
+static boolean calc_J( conopt_system_t sys){
   int32 row;
   var_filter_t vfilter;
   double time0;
@@ -561,7 +568,7 @@ static boolean calc_J( slv8_system_t sys){
 	Retrieve the nominal values of all of the block variables,
 	and ensure that they are all strictly positive.
 */
-static void calc_nominals( slv8_system_t sys){
+static void calc_nominals( conopt_system_t sys){
   int32 col;
   FILE *fp = MIF(sys);
   if( sys->nominals.accurate ) return;
@@ -621,7 +628,7 @@ static void calc_nominals( slv8_system_t sys){
 	Calculate the weights of all of the block relations
 	to scale the rows of the Jacobian.
 */
-static void calc_weights( slv8_system_t sys)
+static void calc_weights( conopt_system_t sys)
 {
   mtx_coord_t nz;
   real64 sum;
@@ -658,7 +665,7 @@ static void calc_weights( slv8_system_t sys)
 /**
 	Scale the jacobian.
 */
-static void scale_J( slv8_system_t sys){
+static void scale_J( conopt_system_t sys){
   int32 row;
   int32 col;
 
@@ -676,7 +683,7 @@ static void scale_J( slv8_system_t sys){
 /**
 	@TODO document this
 */
-static void jacobian_scaled(slv8_system_t sys){
+static void jacobian_scaled(conopt_system_t sys){
   int32 col;
   if (DUMPCNORM) {
     for( col=sys->J.reg.col.low; col <= sys->J.reg.col.high; col++ ) {
@@ -702,7 +709,7 @@ static void jacobian_scaled(slv8_system_t sys){
 /**
 	@TODO document this
 */
-static void scale_variables( slv8_system_t sys)
+static void scale_variables( conopt_system_t sys)
 {
   int32 col;
 
@@ -725,7 +732,7 @@ static void scale_variables( slv8_system_t sys)
 /*
  *  Scales the previously calculated residuals.
  */
-static void scale_residuals( slv8_system_t sys)
+static void scale_residuals( conopt_system_t sys)
 {
   int32 row;
 
@@ -749,7 +756,7 @@ static void scale_residuals( slv8_system_t sys)
 	Calculate relnoms for all relations in sys
 	using variable nominals.
 */
-static void calc_relnoms(slv8_system_t sys){
+static void calc_relnoms(conopt_system_t sys){
   int32 row, col;
   struct var_variable *var;
   struct rel_relation *rel;
@@ -911,7 +918,7 @@ static real64 calc_fourer_scale(mtx_matrix_t mtx,
 	by another method (during this iteration) then these vectors
 	should contain the scale factors used in that scaling.
 */
-static void scale_J_iterative(slv8_system_t sys){
+static void scale_J_iterative(conopt_system_t sys){
   real64 rho_col_old, rho_col_new;
   real64 rho_row_old, rho_row_new;
   int32 k;
@@ -964,7 +971,7 @@ static void scale_J_iterative(slv8_system_t sys){
 /**
 	Scale system dependent on interface parameters
 */
-static void scale_system( slv8_system_t sys ){
+static void scale_system( conopt_system_t sys ){
   if(strcmp(SCALEOPT,"NONE") == 0){
     if(sys->J.accurate == FALSE){
       calc_nominals(sys);
@@ -1035,7 +1042,7 @@ static void scale_system( slv8_system_t sys ){
 
 	@TODO This is currently a HACK! Not sure if should call when done.
 */
-static void conopt_initialize( slv8_system_t sys){
+static void conopt_initialize( conopt_system_t sys){
 
   sys->s.block.current_block++;
   /*
@@ -1115,7 +1122,7 @@ static void conopt_initialize( slv8_system_t sys){
 	Prepare sys for entering an iteration, increasing the iteration counts
 	and starting the clock.
 */
-static void iteration_begins( slv8_system_t sys){
+static void iteration_begins( conopt_system_t sys){
    sys->clock = tm_cpu_time();
    ++(sys->s.block.iteration);
    ++(sys->s.iteration);
@@ -1130,7 +1137,7 @@ static void iteration_begins( slv8_system_t sys){
 	Prepare sys for exiting an iteration, stopping the clock and recording
 	the cpu time.
 */
-static void iteration_ends( slv8_system_t sys){
+static void iteration_ends( conopt_system_t sys){
    double cpu_elapsed;   /* elapsed this iteration */
 
    cpu_elapsed = (double)(tm_cpu_time() - sys->clock);
@@ -1146,7 +1153,7 @@ static void iteration_ends( slv8_system_t sys){
 /**
 	Update the solver status.
  */
-static void update_status( slv8_system_t sys){
+static void update_status( conopt_system_t sys){
    boolean unsuccessful;
 
    if( !sys->s.converged ) {
@@ -1165,10 +1172,10 @@ static void update_status( slv8_system_t sys){
 
 
 static
-int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
+int32 conopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 		, slv_parameters_t *parameters
 ){
-  slv8_system_t sys;
+  conopt_system_t sys;
   union parm_arg lo,hi,val;
   struct slv_parameter *new_parms = NULL;
   static char *reorder_names[] = {
@@ -1180,7 +1187,7 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
   };
   int32 make_macros = 0;
   if (server != NULL && asys != NULL) {
-    sys = SLV8(asys);
+    sys = CONOPT(asys);
     make_macros = 1;
   }
 
@@ -1190,10 +1197,10 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
 
   if (parameters->parms == NULL) {
     /* an external client wants our parameter list.
-     * an instance of slv8_system_structure has this pointer
-     * already set in slv8_create
+     * an instance of conopt_system_structure has this pointer
+     * already set in conopt_create
      */
-    new_parms = ASC_NEW_ARRAY(struct slv_parameter, slv8_PA_SIZE);
+    new_parms = ASC_NEW_ARRAY(struct slv_parameter, conopt_PA_SIZE);
     if (new_parms == NULL) {
       return -1;
     }
@@ -1473,7 +1480,7 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
       "rvobjl", "RVOBJL","Limit on objective in Quick Mode",
 	       U_p_real(val, 0),U_p_real(lo,0),U_p_real(hi,10e10), 5);
 	
-  asc_assert(parameters->num_parms==slv8_PA_SIZE);
+  asc_assert(parameters->num_parms==conopt_PA_SIZE);
 
   return 1;
 }
@@ -1483,10 +1490,10 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
   EXTERNAL ROUTINES (see slv_client.h)
 */
 
-static SlvClientToken slv8_create(slv_system_t server, int32*statusindex){
-  slv8_system_t sys;
+static SlvClientToken conopt_create(slv_system_t server, int32*statusindex){
+  conopt_system_t sys;
 
-  sys = ASC_NEW_CLEAR(struct slv8_system_structure);
+  sys = ASC_NEW_CLEAR(struct conopt_system_structure);
   if (sys==NULL) {
     *statusindex = 1;
     return sys;
@@ -1494,7 +1501,7 @@ static SlvClientToken slv8_create(slv_system_t server, int32*statusindex){
   SERVER = server;
   sys->p.parms = sys->pa;
   sys->p.dynamic_parms = 0;
-  slv8_get_default_parameters(server,(SlvClientToken)sys,&(sys->p));
+  conopt_get_default_parameters(server,(SlvClientToken)sys,&(sys->p));
   sys->integrity = OK;
   sys->presolved = 0;
   sys->resolve = 0;
@@ -1532,13 +1539,13 @@ static SlvClientToken slv8_create(slv_system_t server, int32*statusindex){
   return((SlvClientToken)sys);
 }
 
-static void destroy_matrices( slv8_system_t sys){
+static void destroy_matrices( conopt_system_t sys){
    if( sys->J.mtx ) {
      mtx_destroy(sys->J.mtx);
    }
 }
 
-static void destroy_vectors( slv8_system_t sys){
+static void destroy_vectors( conopt_system_t sys){
    destroy_array(sys->nominals.vec);
    destroy_array(sys->weights.vec);
    destroy_array(sys->relnoms.vec);
@@ -1547,7 +1554,7 @@ static void destroy_vectors( slv8_system_t sys){
 }
 
 
-static int32 slv8_eligible_solver(slv_system_t server){
+static int32 conopt_eligible_solver(slv_system_t server){
 	struct rel_relation **rp;
 	for( rp=slv_get_solvers_rel_list(server); *rp != NULL ; ++rp ) {
 		if( rel_less(*rp) || rel_greater(*rp) ){
@@ -1559,54 +1566,50 @@ static int32 slv8_eligible_solver(slv_system_t server){
 }
 
 
-static void slv8_get_parameters(slv_system_t server, SlvClientToken asys
+static void conopt_get_parameters(slv_system_t server, SlvClientToken asys
 		, slv_parameters_t *parameters
 ){
-  slv8_system_t sys;
+  conopt_system_t sys;
   (void)server;  /* stop gcc whine about unused parameter */
 
-  sys = SLV8(asys);
-  CONSOLE_DEBUG("...");
+  sys = CONOPT(asys);
   if (check_system(sys)) return;
   mem_copy_cast(&(sys->p),parameters,sizeof(slv_parameters_t));
 }
 
 
-static void slv8_set_parameters(slv_system_t server, SlvClientToken asys
+static void conopt_set_parameters(slv_system_t server, SlvClientToken asys
 		,slv_parameters_t *parameters
 ){
-  slv8_system_t sys;
+  conopt_system_t sys;
   (void)server;  /* stop gcc whine about unused parameter */
 
-  sys = SLV8(asys);
-  CONSOLE_DEBUG("...");
+  sys = CONOPT(asys);
   if (check_system(sys)) return;
   mem_copy_cast(parameters,&(sys->p),sizeof(slv_parameters_t));
 }
 
 
-static int slv8_get_status(slv_system_t server, SlvClientToken asys
+static int conopt_get_status(slv_system_t server, SlvClientToken asys
 		,slv_status_t *status
 ){
-	slv8_system_t sys;
+	conopt_system_t sys;
 	(void)server;  /* stop gcc whine about unused parameter */
 
-	sys = SLV8(asys);
-    CONSOLE_DEBUG("...");
+	sys = CONOPT(asys);
 	if (check_system(sys)) return 1;
 	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
 	return 0;
 }
 
 
-static linsolqr_system_t slv8_get_linsolqr_sys(slv_system_t server
+static linsolqr_system_t conopt_get_linsolqr_sys(slv_system_t server
 		,SlvClientToken asys
 ){
-  slv8_system_t sys;
+  conopt_system_t sys;
   (void)server;  /* stop gcc whine about unused parameter */
 
-  sys = SLV8(asys);
-  CONSOLE_DEBUG("...");
+  sys = CONOPT(asys);
   if (check_system(sys)) return NULL;
   return(sys->J.sys);
 }
@@ -1625,7 +1628,7 @@ static linsolqr_system_t slv8_get_linsolqr_sys(slv_system_t server
 
 	@NOTE this function has been striped of its guts for CONOPT and may go away
 */
-static void structural_analysis(slv_system_t server, slv8_system_t sys){
+static void structural_analysis(slv_system_t server, conopt_system_t sys){
 
   var_filter_t vfilter;
   rel_filter_t rfilter;
@@ -1682,14 +1685,14 @@ static void structural_analysis(slv_system_t server, slv8_system_t sys){
 }
 
 
-static void create_matrices(slv_system_t server, slv8_system_t sys){
+static void create_matrices(slv_system_t server, conopt_system_t sys){
   sys->J.mtx = mtx_create();
   mtx_set_order(sys->J.mtx,sys->cap);
   structural_analysis(server,sys);
 }
 
 
-static void create_vectors(slv8_system_t sys){
+static void create_vectors(conopt_system_t sys){
   sys->nominals.vec = create_array(sys->cap,real64);
   sys->nominals.rng = &(sys->J.reg.col);
   sys->weights.vec = create_array(sys->cap,real64);
@@ -1703,12 +1706,11 @@ static void create_vectors(slv8_system_t sys){
 }
 
 
-static void slv8_dump_internals(slv_system_t server
+static void conopt_dump_internals(slv_system_t server
 		, SlvClientToken sys, int32 level
 ){
   (void)server;  /* stop gcc whine about unused parameter */
 
-  CONSOLE_DEBUG("...");
   check_system(sys);
   if (level > 0) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Can't dump internals with CONOPT");
@@ -1720,7 +1722,7 @@ static void slv8_dump_internals(slv_system_t server
 	Check if any fixed or included flags have
 	changed since the last presolve.
 */
-static int32 slv8_dof_changed(slv8_system_t sys)
+static int32 conopt_dof_changed(conopt_system_t sys)
 {
   int32 ind, result = 0;
   /* Currently we have two copies of the fixed and included flags
@@ -1779,7 +1781,7 @@ static void reset_cost(struct slv_block_cost *cost,int32 costsize)
 	Update the values of the array cost, which is used by the interface
 	to display residual and number of iterations. For use after running CONOPT
 */
-static void update_cost(slv8_system_t sys)
+static void update_cost(conopt_system_t sys)
 {
   int32 ci;
   if (sys->s.cost == NULL) {
@@ -1859,7 +1861,7 @@ static void update_cost(slv8_system_t sys)
 	@param nz      number of jacobian elements
 	@param usrmem  user memory defined by conopt
 */
-static int COI_CALL slv8_conopt_readmatrix(
+static int COI_CALL conopt_readmatrix(
 		double *lower, double *curr, double *upper
 		, int *vsta,  int *type, double *rhs
 		, int *esta,  int *colsta, int *rowno
@@ -1875,14 +1877,14 @@ static int COI_CALL slv8_conopt_readmatrix(
   real64 *derivatives;
   int32 *variables;
   mtx_coord_t coord;
-  slv8_system_t sys;
+  conopt_system_t sys;
 
   /*
     stop gcc whining about unused parameter
   */
   (void)vsta;  (void)rhs;   (void)esta;  (void)n;
 
-  sys = (slv8_system_t)usrmem;
+  sys = (conopt_system_t)usrmem;
   rfilter.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
   rfilter.matchvalue =(REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
 
@@ -2043,7 +2045,7 @@ static int COI_CALL slv8_conopt_readmatrix(
  * nz    - number of jacobian elements
  * usrmem- user memory defined by conopt
  */
-static void slv8_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
+static void conopt_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
 	                int32 *from, int32 *to, real64 *jac, int32 *stcl,
 	                int32 *rnum, int32 *cnum, int32 *nl, int32 *strw,
 	                int32 *llen, int32 *indx, int32 *mode, int32 *errcnt,
@@ -2058,7 +2060,7 @@ static void slv8_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
   int32 *variables;
   real64 *derivatives;
   static var_filter_t vfilter;
-  slv8_system_t sys;
+  conopt_system_t sys;
 
   /*
    * stop gcc whining about unused parameter
@@ -2066,7 +2068,7 @@ static void slv8_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
   (void)nto;  (void)stcl;   (void)rnum;  (void)nl;
   (void)errcnt;  (void)n1;   (void)m1;  (void)nz;
 
-  sys = (slv8_system_t)usrmem;
+  sys = (conopt_system_t)usrmem;
 
   for (offset = col = sys->J.reg.col.low;
        col <= sys->J.reg.col.high; col++) {
@@ -2089,7 +2091,7 @@ static void slv8_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
       if(calc_objective(sys)){
 	g[F2C(*m)] = sys->objective;
       } else {
-	FPRINTF(MIF(sys),"slv8_coifbl: ERROR IN OBJECTIVE CALCULATION\n");
+	FPRINTF(MIF(sys),"conopt_coifbl: ERROR IN OBJECTIVE CALCULATION\n");
       }
     }
   }
@@ -2149,7 +2151,7 @@ static void slv8_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
 	@param n      number of variables
 	@param usrmem user memory
 */
-static int COI_CALL slv8_conopt_fdeval(
+static int COI_CALL conopt_fdeval(
 		double *x, double *g, double *jac
 		, int *rowno, int *jcnm, int *mode, int *ignerr
 		, int *errcnt, int *newpt, int *n, int *nj
@@ -2162,7 +2164,7 @@ static int COI_CALL slv8_conopt_fdeval(
   int32 *variables;
   real64 *derivatives;
   static var_filter_t vfilter;
-  slv8_system_t sys;
+  conopt_system_t sys;
   int status;
 
   /* stop gcc whining about unused parameter */
@@ -2170,7 +2172,7 @@ static int COI_CALL slv8_conopt_fdeval(
 
   CONOPT_CONSOLE_DEBUG("EVALUATION STARTING (row=%d, n=%d, nj=%d)",*rowno,*n,*nj);
 
-  sys = (slv8_system_t)usrmem;
+  sys = (conopt_system_t)usrmem;
   if (*newpt == 1) {
 	/* CONSOLE_DEBUG("NEW POINT"); */
 	/* a new point */
@@ -2274,12 +2276,12 @@ static int COI_CALL slv8_conopt_fdeval(
 	@param objval objective value
 	@param usrmem user memory
 */
-static int COI_CALL slv8_conopt_status(
+static int COI_CALL conopt_status(
 		int32 *modsta, int32 *solsta, int32 *iter
 		, real64 *objval, real64 *usrmem
 ){
-  slv8_system_t sys;
-  sys = (slv8_system_t)usrmem;
+  conopt_system_t sys;
+  sys = (conopt_system_t)usrmem;
 
   /* for later access from elsewhere */
   sys->con.modsta = *modsta;
@@ -2309,7 +2311,7 @@ static int COI_CALL slv8_conopt_status(
 	@param m      - number of constraints
 	@param usrmem - user memory
 */
-static int COI_CALL slv8_conopt_solution(
+static int COI_CALL conopt_solution(
 		double *xval, double *xmar, int *xbas, int *xsta,
 		double *yval, double *ymar, int *ybas, int * ysta,
 		int *n, int *m, double *usrmem
@@ -2317,7 +2319,7 @@ static int COI_CALL slv8_conopt_solution(
   int32 offset, col, c;
   real64 nominal, value;
   struct var_variable *var;
-  slv8_system_t sys;
+  conopt_system_t sys;
 
   struct var_variable **vp;
   char *varname;
@@ -2329,7 +2331,7 @@ static int COI_CALL slv8_conopt_solution(
   (void)xmar;  (void)xsta;  (void)yval;
   (void)ymar;  (void)ysta;  (void)ybas;    (void)m;
 
-  sys = (slv8_system_t)usrmem;
+  sys = (conopt_system_t)usrmem;
   offset = sys->J.reg.col.low;
 
   /* the values returned... */
@@ -2372,7 +2374,7 @@ static int COI_CALL slv8_conopt_solution(
  * rpsz  - array of reals describing problem size and options
  * usrmem- user memory
  */
-static void slv8_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal,
+static void conopt_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal,
 	                real64 *rpsz, real64 *usrmem)
 {
   /*
@@ -2387,7 +2389,7 @@ static void slv8_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal,
   (void)usrmem;
 
 $if 0
-  slv8_system_t sys;
+  conopt_system_t sys;
 
   /*
    * To Ken: This was in the subroutine before. But all the values
@@ -2400,7 +2402,7 @@ $if 0
    */
   (void)nintg;  (void)nreal;
 
-  sys = (slv8_system_t)usrmem;
+  sys = (conopt_system_t)usrmem;
 
   ipsz[F2C(1)] = sys->con.n;
   ipsz[F2C(2)] = sys->con.m;
@@ -2435,20 +2437,20 @@ $endif
 	@param lval   - the value to be assigned to name if the cells contains a log value
 	@param usrmem - user memory
 */
-static int COI_CALL slv8_conopt_option(
+static int COI_CALL conopt_option(
 		int *NCALL, double *rval, int *ival, int *logical
 	    , double *usrmem, char *name, int lenname
 ){
-  slv8_system_t sys;
+  conopt_system_t sys;
 
   /*
    * stop gcc whining about unused parameter
    */
   (void)logical;
 
-  sys = (slv8_system_t)usrmem;
+  sys = (conopt_system_t)usrmem;
   name = memset(name,' ',8);
-  while (sys->con.opt_count < slv8_PA_SIZE) {
+  while (sys->con.opt_count < conopt_PA_SIZE) {
     if (strlen(sys->p.parms[sys->con.opt_count].interface_label) == 6){
       if(0==strncmp(sys->p.parms[sys->con.opt_count].interface_label,"R",1)){
 		/* real-valued (R*) parameter */
@@ -2488,15 +2490,15 @@ static int COI_CALL slv8_conopt_option(
   return 0;
 }
 
-int COI_CALL slv8_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
+int COI_CALL conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 		, double* USRMEM, char* MSG, int LENMSG
 ){
-	slv8_system_t sys;
+	conopt_system_t sys;
 	char *relname=NULL, *varname=NULL;
 	struct var_variable **vp;
 	struct rel_relation **rp;
 
-	sys = (slv8_system_t)USRMEM;
+	sys = (conopt_system_t)USRMEM;
 
 
 	if(*COLNO!=-1){
@@ -2535,7 +2537,7 @@ int COI_CALL slv8_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 	dlopening of the CONOPT DLL/SO, rather than dynamic linking, since CONOPT
 	will not always be available.
 */
-static void slv_conopt_iterate(slv8_system_t sys)
+static void slv_conopt_iterate(conopt_system_t sys)
 {
   int retcode;
   /*
@@ -2544,7 +2546,7 @@ static void slv_conopt_iterate(slv8_system_t sys)
   */
   COIDEF_UsrMem(sys->con.cntvect, (double *)sys);
 
-  sys->con.opt_count = 0; /* reset count on slv8_coiopt calls */
+  sys->con.opt_count = 0; /* reset count on conopt_coiopt calls */
   sys->con.progress_count = 0; /* reset count on coiprg calls */
 
   sys->con.kept = 1;
@@ -2567,7 +2569,7 @@ static void slv_conopt_iterate(slv8_system_t sys)
 	Function created to provide the interface with the correct values
 	for number of iterations, residuals, solved variables, etc
 */
-static void update_block_information(slv8_system_t sys)
+static void update_block_information(conopt_system_t sys)
 {
   int32 row,col;
 
@@ -2594,17 +2596,17 @@ static void update_block_information(slv8_system_t sys)
 }
 
 
-static int slv8_presolve(slv_system_t server, SlvClientToken asys){
+static int conopt_presolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
   int32 cap, ind;
   int32 matrix_creation_needed = 1;
-  slv8_system_t sys;
+  conopt_system_t sys;
   int *cntvect, temp;
 
   CONOPT_CONSOLE_DEBUG("PRESOLVE");
 
-  sys = SLV8(asys);
+  sys = CONOPT(asys);
   iteration_begins(sys);
   check_system(sys);
   if( sys->vlist == NULL ) {
@@ -2624,7 +2626,7 @@ static int slv8_presolve(slv_system_t server, SlvClientToken asys){
   }
 
   if(sys->presolved > 0) { /* system has been presolved before */
-    if(!slv8_dof_changed(sys) /*no changes in fixed or included flags*/
+    if(!conopt_dof_changed(sys) /*no changes in fixed or included flags*/
          && sys->p.partition == sys->J.old_partition
          && sys->obj == sys->old_obj
     ){
@@ -2693,13 +2695,13 @@ static int slv8_presolve(slv_system_t server, SlvClientToken asys){
 	temp = 0;
 	COIDEF_StdOut(cntvect, &temp);
 
-	COIDEF_ReadMatrix(cntvect, &slv8_conopt_readmatrix);
-	COIDEF_FDEval(cntvect, &slv8_conopt_fdeval);
-	COIDEF_Option(cntvect, &slv8_conopt_option);
-	COIDEF_Solution(cntvect, &slv8_conopt_solution);
-	COIDEF_Status(cntvect, &slv8_conopt_status);
+	COIDEF_ReadMatrix(cntvect, &conopt_readmatrix);
+	COIDEF_FDEval(cntvect, &conopt_fdeval);
+	COIDEF_Option(cntvect, &conopt_option);
+	COIDEF_Solution(cntvect, &conopt_solution);
+	COIDEF_Status(cntvect, &conopt_status);
 	COIDEF_Message(cntvect, &asc_conopt_message);
-	COIDEF_ErrMsg(cntvect, &slv8_conopt_errmsg);
+	COIDEF_ErrMsg(cntvect, &conopt_errmsg);
 	COIDEF_Progress(cntvect, &asc_conopt_progress);
 
 	int debugfv = 1;
@@ -2781,15 +2783,14 @@ static int slv8_presolve(slv_system_t server, SlvClientToken asys){
 /**
 	@TODO check this: not sure if 'resolve' is really working or not -- JP
 */
-static int slv8_resolve(slv_system_t server, SlvClientToken asys){
+static int conopt_resolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
-  slv8_system_t sys;
+  conopt_system_t sys;
   (void)server;  /* stop gcc whine about unused parameter */
 
-  sys = SLV8(asys);
+  sys = CONOPT(asys);
 
-  CONSOLE_DEBUG("...");
   check_system(sys);
   for( vp = sys->vlist ; *vp != NULL ; ++vp ) {
     var_set_in_block(*vp,FALSE);
@@ -2821,16 +2822,15 @@ static int slv8_resolve(slv_system_t server, SlvClientToken asys){
 /**
 	@TODO document this
 */
-static int slv8_iterate(slv_system_t server, SlvClientToken asys){
-  slv8_system_t sys;
+static int conopt_iterate(slv_system_t server, SlvClientToken asys){
+  conopt_system_t sys;
   FILE              *mif;
   FILE              *lif;
-  sys = SLV8(asys);
+  sys = CONOPT(asys);
   mif = MIF(sys);
   lif = LIF(sys);
-  CONSOLE_DEBUG("...");
   if (server == NULL || sys==NULL) return -1;
-  if (check_system(SLV8(sys))) return -2;
+  if (check_system(CONOPT(sys))) return -2;
   if( !sys->s.ready_to_solve ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
     return 1;
@@ -2870,40 +2870,37 @@ static int slv8_iterate(slv_system_t server, SlvClientToken asys){
 /**
 	@TODO document this
 */
-static int slv8_solve(slv_system_t server, SlvClientToken asys){
-  slv8_system_t sys;
+static int conopt_solve(slv_system_t server, SlvClientToken asys){
+  conopt_system_t sys;
   int err = 0;
-  sys = SLV8(asys);
-  CONSOLE_DEBUG("...");
+  sys = CONOPT(asys);
   if (server == NULL || sys==NULL) return -1;
   if (check_system(sys)) return -2;
-  while( sys->s.ready_to_solve )err = err | slv8_iterate(server,sys);
+  while( sys->s.ready_to_solve )err = err | conopt_iterate(server,sys);
   return err;
 }
 
 /**
 	@TODO document this
 */
-static mtx_matrix_t slv8_get_jacobian(slv_system_t server, SlvClientToken sys){
-  CONSOLE_DEBUG("...");
+static mtx_matrix_t conopt_get_jacobian(slv_system_t server, SlvClientToken sys){
   if (server == NULL || sys==NULL) return NULL;
-  if (check_system(SLV8(sys))) return NULL;
-  return SLV8(sys)->J.mtx;
+  if (check_system(CONOPT(sys))) return NULL;
+  return CONOPT(sys)->J.mtx;
 }
 
 /**
 	@TODO document this
 */
-static int32 slv8_destroy(slv_system_t server, SlvClientToken asys){
-  slv8_system_t sys;
+static int32 conopt_destroy(slv_system_t server, SlvClientToken asys){
+  conopt_system_t sys;
 
   /*
    * stop gcc whining about unused parameter
    */
   (void)server;
 
-  CONSOLE_DEBUG("...");
-  sys = SLV8(asys);
+  sys = CONOPT(asys);
   if (check_system(sys)) return 1;
   destroy_vectors(sys);
   destroy_matrices(sys);
@@ -2921,33 +2918,33 @@ static int32 slv8_destroy(slv_system_t server, SlvClientToken asys){
   return 0;
 }
 
-static const SlvFunctionsT slv8_internals = {
-	8
+static const SlvFunctionsT conopt_internals = {
+	88
 	,"CONOPT"
-	,slv8_create
-  	,slv8_destroy
-	,slv8_eligible_solver
-	,slv8_get_default_parameters
-	,slv8_get_parameters
-	,slv8_set_parameters
-	,slv8_get_status
-	,slv8_solve
-	,slv8_presolve
-	,slv8_iterate
-	,slv8_resolve
-	,slv8_get_linsolqr_sys
-	,slv8_get_jacobian
-	,slv8_dump_internals
+	,conopt_create
+  	,conopt_destroy
+	,conopt_eligible_solver
+	,conopt_get_default_parameters
+	,conopt_get_parameters
+	,conopt_set_parameters
+	,conopt_get_status
+	,conopt_solve
+	,conopt_presolve
+	,conopt_iterate
+	,conopt_resolve
+	,conopt_get_linsolqr_sys
+	,conopt_get_jacobian
+	,conopt_dump_internals
 };
 
-int slv8_register(void){
+int conopt_register(void){
 #ifndef ASC_LINKED_CONOPT
 	if(asc_conopt_load()){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to load CONOPT");
 		return 1;
 	}
 #endif
-	return solver_register(&slv8_internals);
+	return solver_register(&conopt_internals);
 }
 
-#endif
+#endif /* ASC_WITH_CONOPT */

@@ -107,7 +107,7 @@ extern real64 calc_ln_D0(real64 x);       /**< Compute ln(x). */
 #define calc_lnm_D0      lnm              /**< Compute lnm. */
 extern real64 calc_log10_D0(real64 x);      /**< Compute log(x). */
 #define calc_sqr_D0      sqr              /**< Compute square. */
-extern real64 calc_sqrt_D0(real64 x);     /**< Compute sqrt(x). */
+ASC_DLLSPEC real64 calc_sqrt_D0(real64 x);     /**< Compute sqrt(x). */
 #define calc_cbrt_D0     cbrt             /**< Compute cube root. */
 #define calc_fabs_D0     fabs             /**< Compute abs value. */
 /*

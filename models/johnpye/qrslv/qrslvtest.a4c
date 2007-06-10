@@ -1,0 +1,30 @@
+REQUIRE "atoms.a4l";
+IMPORT "johnpye/qrslv/qrslv";
+
+MODEL qrslvtest;
+
+	x IS_A solver_var;
+	y IS_A solver_var;
+	z IS_A solver_var;
+
+	log_10_expr: y = log10(x);
+	log_e_expr: z = ln(x);
+
+METHODS
+METHOD specify;
+	FIX x;
+END specify;
+METHOD values;
+	x := 10;
+END values;
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
+METHOD self_test;
+	ASSERT abs(y - 1) < 1e-20;
+	ASSERT abs(z - 2.302585093) < 1e-8;
+	ASSERT abs(x - 10) <1e-20;
+END self_test;
+
+END qrslvtest;

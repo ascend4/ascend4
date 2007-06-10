@@ -70,7 +70,6 @@
 #include <packages/sensitivity.h>
 
 #include <linear/densemtx.h>
-#include <solver/slv3.h>
 
 #include "integrator.h"
 
@@ -945,7 +944,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 
 	/* LSODE should be OK to deal with any linsol/linsolqr-based solver. But for
 	the moment we restrict to just QRSlv. */
-	if(SOLVER_QRSLV!=slv_get_selected_solver(blsys->system)) {
+	if(strcmp("QRSlv",slv_solver_name(slv_get_selected_solver(blsys->system)))!=0){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv must be selected before integration.");
 		return 1;
 	}

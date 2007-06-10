@@ -56,7 +56,7 @@ extern int slv_make_incidence_mtx(slv_system_t sys,
 
 /* -- moved block partitioning stuff to block.h -- JP */
 
-extern void slv_sort_rels_and_vars(slv_system_t sys,
+ASC_DLLSPEC void slv_sort_rels_and_vars(slv_system_t sys,
 		int32 *rel_count, int32 *var_count);
 /**<
  *  Reindexes systems rel and var lists such that rel list is in order:
@@ -74,7 +74,7 @@ extern void slv_sort_rels_and_vars(slv_system_t sys,
   BOUNDS CHECKING
 */
 
-extern int slv_ensure_bounds(slv_system_t sys, int32 lo, int32 hi, FILE *fp);
+ASC_DLLSPEC int slv_ensure_bounds(slv_system_t sys, int32 lo, int32 hi, FILE *fp);
 /**<
 	Takes a system and a range of vars (lo,hi) and makes sure all the
 	variables are within bounds and bounds are reasonable. makes
@@ -118,7 +118,7 @@ extern int slv_make_log_incidence_mtx(slv_system_t sys,
 	@return 0 on success
 */
 
-extern int slv_log_block_partition(slv_system_t sys);
+ASC_DLLSPEC int slv_log_block_partition(slv_system_t sys);
 /**<
 	Takes a system and reorders its solvers_dvars and solvers_logrels
 	list so that they fall into a block lower triangular form and
