@@ -13,6 +13,8 @@ pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
 opts = Options(['options.cache', 'config.py'])
 #print "PLATFORM = ",platform.system()
 
+default_tcl_cpppath = "$TCL/include"
+
 if platform.system()=="Windows":
 	default_tcl_lib = "tcl84"
 	default_tk_lib = "tk84"
@@ -55,7 +57,11 @@ else:
 	default_install_assets = "$INSTALL_ASCDATA/glade/"
 	icon_extension = '.svg'
 	default_tcl = '/usr'
-	default_tcl_libpath = "$TCL/lib"	
+	default_tcl_libpath = "$TCL/lib"
+
+	if os.path.exists("/etc/debian_version"):
+		default_tcl_cpppath = "/usr/include/tcl8.4"
+
 	default_rel_distdir = '../share/ascend'
 	default_absolute_paths = True
 	default_ida_prefix="/usr"
@@ -338,7 +344,7 @@ opts.Add(
 opts.Add(
 	'TCL_CPPPATH'
 	,"Where are your Tcl include files?"
-	,"$TCL/include"
+	,default_tcl_cpppath
 )
 
 # Where are the Tcl libs?
