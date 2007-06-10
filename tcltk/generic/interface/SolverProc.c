@@ -70,11 +70,11 @@
 
 #include <linear/mtx.h>
 
-#include <system/slv_client.h>
 #include <system/slv_server.h>   /* KHACK: not sure if this should be here */
 #include <system/system.h>
 #include <system/cond_config.h>
 #include <solver/slv_interface.h>
+#include <solver/solver.h>
 
 #include "old_utils.h"
 #include "HelpProc.h"
@@ -507,7 +507,7 @@ int Asc_SolvGetSlvParmsNew(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
   status=Tcl_GetInt(interp, argv[1], &solver);
-  if ((solver<0) || (solver>=slv_number_of_solvers) || (status==TCL_ERROR)) {
+  if(!solver_engine(solver) || (status==TCL_ERROR)) {
     FPRINTF(ASCERR,  "slv_get_parmsnew: solver unknown!\n");
     Tcl_ResetResult(interp);
     Tcl_SetResult(interp, "slv_get_parmsnew: solver number unknown",
@@ -703,19 +703,19 @@ int Asc_SolvGetSlvParms(ClientData cdata, Tcl_Interp *interp,
   UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
-    FPRINTF(ASCERR,  "call is: slv_get_parms <solver number>\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"call is: slv_get_parms <solver number>\n");
     Tcl_SetResult(interp, "error in call to slv_get_parms", TCL_STATIC);
     return TCL_ERROR;
   }
   if (g_solvsys_cur==NULL) {
-    FPRINTF(ASCERR,  "slv_get_parms called with NULL pointer\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with NULL pointer\n");
     Tcl_SetResult(interp,"slv_get_parms called without slv_system",TCL_STATIC);
     return TCL_ERROR;
   }
   status=Tcl_GetInt(interp, argv[1], &solver);
-  /* following assumes solvers are numbered 0-n with no gaps */
-  if ((solver<0) || (solver>=slv_number_of_solvers) || (status==TCL_ERROR)) {
-    FPRINTF(ASCERR,  "slv_get_parms: solver unknown!\n");
+
+  if(!solver_engine(solver) || status==TCL_ERROR){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"solver '%d' unknown!\n",solver);
     Tcl_ResetResult(interp);
     Tcl_SetResult(interp, "slv_get_parms: solver number unknown", TCL_STATIC);
     return TCL_ERROR;
@@ -1552,7 +1552,7 @@ int Asc_SolvGetVRCounts(ClientData cdata, Tcl_Interp *interp,
                   TCL_STATIC);
     return TCL_ERROR;
   }
-  if ((solver < 0) || (solver >= slv_number_of_solvers)) {
+  if(!solver_engine(solver)){
     FPRINTF(ASCERR, "unknown solver (%d). Not selected!\n",solver);
     Tcl_SetResult(interp, "Solver not available.", TCL_STATIC);
     return TCL_ERROR;
@@ -1948,8 +1948,11 @@ int Asc_SolvAvailSolver(ClientData cdata, Tcl_Interp *interp,
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
 
-  for ( i = 0; i < slv_number_of_solvers; i++ ) {
-    Tcl_AppendElement(interp,(char *)slv_solver_name(i));
+  struct gl_list_t *L = solver_get_engines();
+  SlvFunctionsT *S;
+  for(i = 1; i < gl_length(L); ++i){
+	S = (SlvFunctionsT *)gl_fetch(L,i);
+    Tcl_AppendElement(interp,S->name);
   }
   return TCL_OK;
 }
@@ -1976,6 +1979,8 @@ int Asc_SolvEligSolver(ClientData cdata, Tcl_Interp *interp,
   int status=0;
   int n;
   int tmpi;
+  const SlvFunctionsT *S;
+  struct gl_list_t *L;
 
   UNUSED_PARAMETER(cdata);
 
@@ -1997,14 +2002,15 @@ int Asc_SolvEligSolver(ClientData cdata, Tcl_Interp *interp,
   if (argc==3 && !!sp.output.less_important) {
     FPRINTF(ASCERR,"Solver   Name       ?Eligible\n");
     FPRINTF(ASCERR,"-----------------------------\n");
-    for( n=0 ; n<slv_number_of_solvers ; ++n ) {
+    for(n=1 ; n<gl_length(L); ++n) {
+	  S = (SlvFunctionsT *)gl_fetch(L,n);
       FPRINTF(ASCERR, "%c%3d     %-11s    %s\n", ((n==cur) ? '*' : ' '), n,
-              slv_solver_name(n), YORN(slv_eligible_solver(g_solvsys_cur)));
+              S->name, YORN((S->celigible)(g_solvsys_cur)));
     }
   }
   status=Tcl_GetInt(interp, argv[1], &tmpi);
   Tcl_ResetResult(interp);
-  if ((status==TCL_ERROR) || (tmpi<0) || (tmpi>=slv_number_of_solvers)) {
+  if ((status==TCL_ERROR) || !solver_engine(tmpi<0)){
     Tcl_SetResult(interp,
                   "slv_eligible_solver: called with invalid solver number",
                   TCL_STATIC);
@@ -2041,7 +2047,7 @@ int Asc_SolvSelectSolver(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
   status=Tcl_GetInt(interp, argv[1], &solver);
-  if ((solver<0) || (solver>slv_number_of_solvers) || (status==TCL_ERROR)) {
+  if(!solver_engine(solver) || (status==TCL_ERROR)) {
     FPRINTF(ASCERR, "unknown solver (%d). Not selected!\n",solver);
     Tcl_ResetResult(interp);
     Tcl_SetResult(interp, "Solver not available.", TCL_STATIC);
