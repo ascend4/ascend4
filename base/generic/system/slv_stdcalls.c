@@ -30,15 +30,6 @@
 #include "relman.h"
 #include "logrelman.h"
 
-/* headers of registered clients */
-#include <solver/slv2.h>
-#include <solver/slv3.h>
-#include <solver/slv6.h>
-#include <solver/slv7.h>
-#include <solver/slv8.h>
-#include <solver/slv9.h>
-#include <solver/slv9a.h>
-
 #define MIMDEBUG 0 /* slv_make_incidence_mtx debugging */
 #define SLBPDEBUG 0 /* slv_log_block_partition debugging */
 

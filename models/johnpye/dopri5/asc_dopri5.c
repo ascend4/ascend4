@@ -30,8 +30,8 @@
 #include <utilities/error.h>
 #include <general/ospath.h>
 #include <integrator/integrator.h>
-#include <system/slv_client.h>
 #include <system/slv_stdcalls.h>
+#include <solver/solver.h>
 #include "dopri5.h"
 
 #define INTEG_DOPRI5 5

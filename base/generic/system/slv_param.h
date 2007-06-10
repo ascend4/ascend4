@@ -559,7 +559,7 @@ ASC_DLLSPEC void slv_destroy_parms(slv_parameters_t *p);
  */
 
 /* slv_define_parm() is defined in slv.c */
-extern int32 slv_define_parm(slv_parameters_t *p,
+ASC_DLLSPEC int32 slv_define_parm(slv_parameters_t *p,
                              enum parm_type type,
                              char *interface_name,
                              char *interface_label,
@@ -569,6 +569,8 @@ extern int32 slv_define_parm(slv_parameters_t *p,
                              union parm_arg upper_bound,
                              int32 page);
 /**<
+	@deprecated (use slv_param_bool and similar instead --JP)
+
 	Adds (defines) a new parameter in a parameter structure.
 	Use this function to add & define new parameters for a solver.
 

@@ -1,10 +1,12 @@
 REQUIRE "atoms.a4l";
 
+IMPORT "johnpye/conopt/conopt";
+
 (*
 	This example model comes from the CONOPT documentation, which is
 	distributed with CONOPT.
 *)
-MODEL testconopt;
+MODEL conopttest;
 	Profit, Inp, Out IS_A solver_var;
 	P, L IS_A solver_var;
 
@@ -65,4 +67,4 @@ METHOD self_test;
 	ASSERT abs(P - 1.683990) < 0.000001;	
 END self_test;
 
-END testconopt;
+END conopttest;

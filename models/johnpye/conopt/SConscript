@@ -1,0 +1,12 @@
+Import('env')
+
+# To run the test, type
+#     ascend johnpye/conopt/conopt.a4c
+
+env['extfns'] += [env.SharedLibrary("conopt",["asc_conopt.c"]
+	,LIBS = ['ascend']
+	,LIBPATH = ['#']
+)]
+
+# vim: set syntax=python:
+

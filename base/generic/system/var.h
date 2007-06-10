@@ -307,7 +307,7 @@ ASC_DLLSPEC int32 var_sindexF(const struct var_variable *var);
 	Implementation function for var_sindex().  Do not call this
 	function directly - use var_sindex() instead.
 */
-extern void var_set_sindexF(struct var_variable *var, int32 sindex);
+ASC_DLLSPEC void var_set_sindexF(struct var_variable *var, int32 sindex);
 /**<
 	Implementation function for var_set_sindex().  Do not call this
 	function directly - use var_set_sindex() instead.
@@ -389,7 +389,7 @@ ASC_DLLSPEC struct rel_relation **var_incidence_list_to_modify(
 		struct var_variable *var);
 /**<  Same as var_incidence_list(), except the returned list is modifiable. */
 
-extern const struct rel_relation **var_incidence_list(struct var_variable *var);
+ASC_DLLSPEC const struct rel_relation **var_incidence_list(struct var_variable *var);
 /**<
 	Returns a pointer to an array var_n_incidences(var) long of vars.
 	Each element of the array is a struct rel_relation *.

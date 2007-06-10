@@ -43,13 +43,13 @@ extern int32  bndman_log_eval(struct bnd_boundary *bnd);
  *  Returns the (boolean) residual of the boundary.
  */
 
-extern int32 bndman_calc_satisfied(struct bnd_boundary *bnd);
+ASC_DLLSPEC int32 bndman_calc_satisfied(struct bnd_boundary *bnd);
 /**<
  *  Returns whether the boundary is currently satisfied based on its
  *  calculated residual.
  */
 
-extern int32 bndman_calc_at_zero(struct bnd_boundary *bnd);
+ASC_DLLSPEC int32 bndman_calc_at_zero(struct bnd_boundary *bnd);
 /**<
  *  Returns whether the current point lies at the zero of a boundary
  *  based on the calculation of the residual of the boundary

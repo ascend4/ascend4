@@ -420,7 +420,7 @@ ASC_DLLSPEC void linsolqr_remove_rhs(linsolqr_system_t sys, real64 *rhs);
  *  removed from the system.
  */
 
-extern int32 linsolqr_number_of_rhs(linsolqr_system_t sys);
+ASC_DLLSPEC int32 linsolqr_number_of_rhs(linsolqr_system_t sys);
 /**< 
  *  Returns the number of rhs's currently part of the system.
  */
@@ -446,7 +446,7 @@ ASC_DLLSPEC void linsolqr_rhs_was_changed(linsolqr_system_t sys,
  *  called whenever the rhs is modified.
  */
 
-extern void linsolqr_set_pivot_zero(linsolqr_system_t sys, 
+ASC_DLLSPEC void linsolqr_set_pivot_zero(linsolqr_system_t sys, 
                                     real64 pivot_zero);
 /**<
  *  Sets the pivot zero for the system.  Pivots less than or equal to
@@ -459,15 +459,15 @@ extern real64 linsolqr_pivot_zero(linsolqr_system_t sys);
  *  this value are regarded as zero.
  */
 
-extern void linsolqr_set_pivot_tolerance(linsolqr_system_t sys, real64 ptol);
+ASC_DLLSPEC void linsolqr_set_pivot_tolerance(linsolqr_system_t sys, real64 ptol);
 /**< See discussion under linsolqr_drop_tolerance(). */
 extern real64 linsolqr_pivot_tolerance(linsolqr_system_t sys);
 /**< See discussion under linsolqr_drop_tolerance(). */
-extern void linsolqr_set_condition_tolerance(linsolqr_system_t sys, real64 ctol);
+ASC_DLLSPEC void linsolqr_set_condition_tolerance(linsolqr_system_t sys, real64 ctol);
 /**< See discussion under linsolqr_drop_tolerance(). */
 extern real64 linsolqr_condition_tolerance(linsolqr_system_t sys);
 /**< See discussion under linsolqr_drop_tolerance(). */
-extern void linsolqr_set_drop_tolerance(linsolqr_system_t sys, real64 dtol);
+ASC_DLLSPEC void linsolqr_set_drop_tolerance(linsolqr_system_t sys, real64 dtol);
 /**< See discussion under linsolqr_drop_tolerance(). */
 extern real64 linsolqr_drop_tolerance(linsolqr_system_t sys);
 /**< 
@@ -789,7 +789,7 @@ ASC_DLLSPEC int linsolqr_solve(linsolqr_system_t sys, real64 *rhs);
  *  @return 0 if ok, 1 if not.
  */
 
-extern real64 linsolqr_var_value(linsolqr_system_t sys,
+ASC_DLLSPEC real64 linsolqr_var_value(linsolqr_system_t sys,
                                  real64 *rhs, int32 var);
 /**<
  *  Returns the value of the variable in the solution vector associated

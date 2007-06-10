@@ -95,7 +95,7 @@ typedef int SolverRegisterFn(void);
   REGISTRATION SOLVERS AND QUERYING OF SOLVER LIST
 */
 
-int solver_register(SlvFunctionsT *solver);
+ASC_DLLSPEC int solver_register(const SlvFunctionsT *solver);
 
 ASC_DLLSPEC int SlvRegisterStandardClients(void);
 /**<
@@ -286,7 +286,7 @@ ASC_DLLSPEC int slv_get_selected_solver(slv_system_t sys);
 	Returns the current solver number for a system.
 */
 
-extern int slv_switch_solver(slv_system_t sys, int solver);
+ASC_DLLSPEC int slv_switch_solver(slv_system_t sys, int solver);
 /**<
 	Sets the given solver to be the current solver for the system.
 	Return value is number of solver actually selected.
@@ -321,17 +321,21 @@ ASC_DLLSPEC void slv_set_parameters(slv_system_t sys, slv_parameters_t *paramete
 
 //------------------------------------------------------------------------------
 
-extern SlvClientToken slv_get_client_token(slv_system_t sys);
-/**<  Returns  the client token of the system_t. */
+ASC_DLLSPEC SlvClientToken slv_get_client_token(slv_system_t sys);
+/**<
+	Returns  the client token of the system_t.
+ */
 
-extern void slv_set_client_token(slv_system_t sys, SlvClientToken ct);
+ASC_DLLSPEC void slv_set_client_token(slv_system_t sys, SlvClientToken ct);
 /**<
 	Sets  the client token of the system_t.
+	@deprecated
 */
 
-extern void slv_set_solver_index(slv_system_t sys, int sindex);
+ASC_DLLSPEC void slv_set_solver_index(slv_system_t sys, int sindex);
 /**<
 	Sets the solver index of the slv_system_t.
+	@deprecated
 */
 
 extern void slv_destroy_client(slv_system_t sys);

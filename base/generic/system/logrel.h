@@ -286,13 +286,13 @@ extern void logrel_set_flags(struct logrel_relation *logrel, uint32 flags);
  * Sets the entire flag field to the value of flags given.
  */
 
-extern uint32 logrel_flagbit(struct logrel_relation *logrel, uint32 name);
+ASC_DLLSPEC uint32 logrel_flagbit(struct logrel_relation *logrel, uint32 name);
 /**<
  *  Returns the value of the bit specified from the logrelation flags.
  *  name should be a LOGREL_xx flag defined above)
  */
 
-extern void logrel_set_flagbit(struct logrel_relation *logrel,
+ASC_DLLSPEC void logrel_set_flagbit(struct logrel_relation *logrel,
                                uint32 NAME, uint32 oneorzero);
 /**<
  *  Sets the bit, which should be referred to by its macro name,

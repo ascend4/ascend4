@@ -123,7 +123,7 @@ ASC_DLLSPEC real64 relman_eval(struct rel_relation *rel, int32 *calc_okp, int sa
 	the push/pop should be _outside_ the loop.
 */
 
-extern int32 relman_obj_direction(struct rel_relation *rel);
+ASC_DLLSPEC int32 relman_obj_direction(struct rel_relation *rel);
 /**<
  *  Returns:
  *    - direction = -1 if objective is minimization
@@ -131,7 +131,7 @@ extern int32 relman_obj_direction(struct rel_relation *rel);
  *    - direction =  0 otherwise. (ie. if not an objective)
  */
 
-extern real64 relman_scale(struct rel_relation *rel);
+ASC_DLLSPEC real64 relman_scale(struct rel_relation *rel);
 /**<
  *  Calculates relation nominal scaling factor for
  *  current values stored in the relations variables.
@@ -150,7 +150,7 @@ extern real64 relman_scale(struct rel_relation *rel);
 	@TODO relman_diff() needs to be reimplemented - needs compiler-side work.
 */
 
-extern int relman_diff2(struct rel_relation *rel,
+ASC_DLLSPEC int relman_diff2(struct rel_relation *rel,
                         const var_filter_t *filter,
                         real64 *derivatives,
                         int32 *variables,
@@ -185,7 +185,7 @@ extern int relman_diff3(struct rel_relation *rel,
                         int32 safe);
 /**< as relman_diff2 but fills a var_variable* array intest of an index array. */
 
-extern int relman_diff_grad(struct rel_relation *rel,
+ASC_DLLSPEC int relman_diff_grad(struct rel_relation *rel,
                             const var_filter_t *filter,
                             real64 *derivatives,
                             int32 *variables_master,
@@ -295,7 +295,7 @@ extern boolean relman_calc_satisfied_scaled(struct rel_relation *rel,
  *  of scaling by the relation nominal before comparison.
  *  @see relman_calc_satisfied.
  */
-extern boolean relman_calc_satisfied(struct rel_relation *rel,
+ASC_DLLSPEC boolean relman_calc_satisfied(struct rel_relation *rel,
                                      real64 tolerance);
 /**<
  *  Returns TRUE or FALSE depending on whether the relation whose residual

@@ -347,7 +347,7 @@ extern void mtx_zr_cur_vec_using_col(mtx_matrix_t mtx, int32 col,
  -$-  Does nothing given a bad matrix.
  **/
 
-extern real64 mtx_sum_sqrs_in_row(mtx_matrix_t mtx, int32 row,
+ASC_DLLSPEC real64 mtx_sum_sqrs_in_row(mtx_matrix_t mtx, int32 row,
                                   const mtx_range_t *colrng);
 /**<
  ***  Compute sum of squares of non-zeros in the given row whose column index

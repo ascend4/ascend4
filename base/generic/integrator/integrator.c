@@ -40,7 +40,6 @@
 #include "aww.h"
 #include "ida.h"
 #include "samplelist.h"
-#include <solver/slv3.h>
 
 #define ANALYSE_DEBUG
 /* #define SOLVE_DEBUG */
@@ -557,7 +556,11 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   char *varname1, *varname2;
 
   asc_assert(sys->system!=NULL);
-  asc_assert(SOLVER_QRSLV==slv_get_selected_solver(sys->system));
+  
+  if(strcmp(slv_solver_name(slv_get_selected_solver(sys->system)),"QRSlv")!=0){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System must have solver 'QRSlv' assigned to it before integration");
+	return 2;
+  }
   CONSOLE_DEBUG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
 
   CONSOLE_DEBUG("Starting ODE analysis");

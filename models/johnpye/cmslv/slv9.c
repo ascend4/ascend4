@@ -20,11 +20,9 @@
 	Conditional Modeling Solver (CMSlv) module.
 *//*
 	Conditional Modeling Solver
-	by Vicente Rico-Ramirez
+	by Vicente Rico-Ramirez, 04/1997
 	Last in CVS: $Revision: 1.22 $ $Date: 2000/01/25 02:27:58 $ $Author: ballan $
 */
-
-#include "slv9.h"
 
 #include <math.h>
 
@@ -46,13 +44,18 @@
 #include <system/slv_stdcalls.h>
 #include <system/cond_config.h>
 #include <solver/solver.h>
+#include <solver/slvDOF.h>
 
-#include "slvDOF.h"
+#include <solver/solver.h>
+
+typedef struct slv9_system_structure *slv9_system_t;
 
 #define SOLVER_CMSLV 9
 
+ASC_DLLSPEC SolverRegisterFn cmslv_register;
+
 #ifdef ASC_WITH_CONOPT
-# include "conopt.h"
+# include "../conopt/conopt.h"
 #else
 # define MAX_INT MAXINT
 # define MAX_REAL MAXDOUBLE
@@ -1472,7 +1475,6 @@ void set_param_in_solver(slv_system_t server, int32 solver,
   int32 len,length;
   SlvClientToken origtoken = slv_get_client_token(server);
 
-  CONSOLE_DEBUG("...");
   slv_set_client_token(server,token[solver]);
   slv_set_solver_index(server,solver_index[solver]);
   slv_get_parameters(server,&p);
@@ -5644,7 +5646,7 @@ static const SlvFunctionsT slv9_internals = {
 	,slv9_dump_internals
 };
 
-int slv9_register(void){
+int cmslv_register(void){
 	if(!solver_engine_named("CONOPT")){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT must be registered before CMSlv");
 		return 1;

@@ -30,19 +30,11 @@
 
 #include "solver.h"
 
-/* statically linked solvers... */
-#include "slv2.h"
-#include "slv3.h"
-#include "slv6.h"
-#include "slv7.h"
-#include "slv8.h"
-#include "slv9.h"
-#include "slv9a.h"
-
 #include <system/system_impl.h>
 #include <general/list.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
+#include <compiler/packages.h>
 
 /**
 	Local function that holds the list of available solvers. The value 
@@ -145,7 +137,7 @@ int slv_lookup_client(const char *name){
 (SlvRegistration registerfunc, CONST char *func
 		,CONST char *file, int *new_client_id
 */
-int solver_register(SlvFunctionsT *solver){
+int solver_register(const SlvFunctionsT *solver){
 #if 0
 	int status;
 
@@ -204,9 +196,7 @@ int solver_register(SlvFunctionsT *solver){
 /* rewrote this stuff to get rid of all the #ifdefs -- JP */
 
 struct StaticSolverRegistration{
-	int is_active;
-	const char *name;
-	SolverRegisterFn *regfn;
+	const char *importname;
 };
 
 /*
@@ -215,9 +205,14 @@ struct StaticSolverRegistration{
 	files.
 */
 static const struct StaticSolverRegistration slv_reg[]={
+	{"johnpye/qrslv/qrslv"}
+	,{"johnpye/conopt/conopt"}
+	,{"johnpye/lrslv/lrslv"}
+	,{"johnpye/cmslv/cmslv"}
+	,{NULL}
+#if 0
 /* 	{0,"SLV",&slv0_register} */
 /*	,{0,"MINOS",&slv1_register} */
-	{HAVE_QRSLV,"QRSLV",&slv3_register}
 /*	,{0,"CSLV",&slv4_register} */
 /*	,{0,"LSSLV",&slv5_register} */
 /*	,{0,"MPS",&slv6_register} */
@@ -227,6 +222,7 @@ static const struct StaticSolverRegistration slv_reg[]={
 	,{HAVE_LRSLV,"LRSLV",&slv9a_register}
 	,{HAVE_CMSLV,"CMSLV",&slv9_register}
 	,{0,NULL,NULL}
+#endif
 };
 
 int SlvRegisterStandardClients(void){
@@ -234,25 +230,18 @@ int SlvRegisterStandardClients(void){
 	//int newclient=0;
 	int error;
 	int i;
-	struct gl_list_t *L;
-
-	L = solver_get_list(0);
 
 	/* CONSOLE_DEBUG("REGISTERING STANDARD SOLVER ENGINES"); */
-	for(i=0;slv_reg[i].name!=NULL;++i){
-		if(slv_reg[i].is_active && slv_reg[i].regfn){
-			error = (*(slv_reg[i].regfn))();
-			if(error){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR
-					,"Unable to register solver '%s' (error %d)."
-					,slv_reg[i].name,error
-				);
-			}else{
-				CONSOLE_DEBUG("Solver '%s' registered OK",slv_reg[i].name);
-				nclients++;
-			}
+	for(i=0; slv_reg[i].importname!=NULL;++i){
+		error = LoadArchiveLibrary(slv_reg[i].importname,NULL);
+		if(error){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR
+				,"Unable to register solver '%s' (error %d)."
+				,slv_reg[i].importname,error
+			);
 		}else{
-			CONSOLE_DEBUG("Solver '%s' was not compiled.",slv_reg[i].name);
+			CONSOLE_DEBUG("Solver '%s' registered OK",slv_reg[i].importname);
+			nclients++;
 		}
 	}
   return nclients;

@@ -457,7 +457,7 @@ extern void slv_print_dis_sindex(FILE *outfile, struct dis_discrete *dvar);
  *  @todo Move solver/slv_common:slv_print_dis_name() to solver/discrete.
  */
 
-extern int slv_direct_solve(slv_system_t server,
+ASC_DLLSPEC int slv_direct_solve(slv_system_t server,
                             struct rel_relation *rel,
                             struct var_variable *var,
                             FILE *file,
@@ -494,7 +494,7 @@ extern int slv_direct_solve(slv_system_t server,
  *        or solver/slv3.
  */
 
-extern int slv_direct_log_solve(slv_system_t sys,
+ASC_DLLSPEC int slv_direct_log_solve(slv_system_t sys,
                                 struct logrel_relation *lrel,
                                 struct dis_discrete *dvar,
                                 FILE *file,

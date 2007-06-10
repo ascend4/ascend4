@@ -99,7 +99,7 @@ ASC_DLLSPEC mtx_region_t *mtx_region(mtx_region_t *regionp,
 
 ASC_DLLSPEC void mtx_zero_int32(int32 *data, int len);
 /**< Zeros an int32 vector of specified length. Ignores NULL input vectors. */
-extern void mtx_zero_real64(real64 *data, int len);
+ASC_DLLSPEC void mtx_zero_real64(real64 *data, int len);
 /**< Zeros a real64 vector of specified length. Ignores NULL input vectors. */
 extern void mtx_zero_ptr(void **data, int len);
 /**< Zeros a vector of pointers of specified length. Ignores NULL input vectors. */
@@ -842,7 +842,7 @@ extern void mtx_fill_cur_col_sparse(mtx_matrix_t mtx, int32 col,
  **/
 
 
-extern void mtx_mult_row(mtx_matrix_t mtx, int32 row,
+ASC_DLLSPEC void mtx_mult_row(mtx_matrix_t mtx, int32 row,
                          real64 factor, mtx_range_t *colrng);
 /**< 
  ***  Multiplies the given row by a given factor.  Only those
@@ -850,7 +850,7 @@ extern void mtx_mult_row(mtx_matrix_t mtx, int32 row,
  ***  This function tests for factor=0.0 and blows away the row if true.
  -$-  Does nothing on a bad matrix.
  **/
-extern void mtx_mult_col(mtx_matrix_t mtx, int32 col,
+ASC_DLLSPEC void mtx_mult_col(mtx_matrix_t mtx, int32 col,
                          real64 factor, mtx_range_t *rowrng);
 /**<
  ***  Multiplies the given column by a given factor.  Only those

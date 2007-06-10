@@ -90,7 +90,7 @@ extern void bnd_set_kind(struct bnd_boundary *bnd, enum bnd_enum kind);
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern enum bnd_enum bnd_kind(struct bnd_boundary *bnd);
+ASC_DLLSPEC enum bnd_enum bnd_kind(struct bnd_boundary *bnd);
 /**<
  *  Retrieves the type of the specified boundary.
  *  bnd may not be NULL (checked by asc_assertion).
@@ -203,7 +203,7 @@ extern void bnd_set_model(struct bnd_boundary *bnd, int32 mindex);
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern struct var_variable **bnd_real_incidence(struct bnd_boundary *bnd);
+ASC_DLLSPEC struct var_variable **bnd_real_incidence(struct bnd_boundary *bnd);
 /**<
  *  Returns a pointer to an array of variables incident in the 
  *  relation constituting the boundary.  The returned list is kept 
@@ -211,7 +211,7 @@ extern struct var_variable **bnd_real_incidence(struct bnd_boundary *bnd);
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern int32 bnd_n_real_incidences(struct bnd_boundary *bnd);
+ASC_DLLSPEC int32 bnd_n_real_incidences(struct bnd_boundary *bnd);
 /**<
  *  Gets the number of variables incident in the relation
  *  constituting the boundary.  This will be the length of the
@@ -257,14 +257,14 @@ extern void bnd_set_flags(struct bnd_boundary *bnd, uint32 flags);
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern uint32 bnd_flagbit(struct bnd_boundary *bnd, uint32 name);
+ASC_DLLSPEC uint32 bnd_flagbit(struct bnd_boundary *bnd, uint32 name);
 /**<
  *  Returns the value of the bit specified from the boundary flags.
  *  name should be a BND_xx flag defined below).
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern void bnd_set_flagbit(struct bnd_boundary *bnd,
+ASC_DLLSPEC void bnd_set_flagbit(struct bnd_boundary *bnd,
                             uint32 NAME, uint32 oneorzero);
 /**<
  *  Sets a flag bit for a boundary.
@@ -322,8 +322,8 @@ extern void bnd_set_flagbit(struct bnd_boundary *bnd,
 #define bnd_set_crossed(b,bv)        bnd_set_flagbit((b),BND_CROSSED,(bv))
 #define bnd_set_perturb(b,bv)        bnd_set_flagbit((b),BND_PERTURB,(bv))
 
-extern int32 bnd_status_cur(struct bnd_boundary *bnd);  /**< See bnd_status_pre(). */
-extern int32 bnd_status_pre(struct bnd_boundary *bnd);
+ASC_DLLSPEC int32 bnd_status_cur(struct bnd_boundary *bnd);  /**< See bnd_status_pre(). */
+ASC_DLLSPEC int32 bnd_status_pre(struct bnd_boundary *bnd);
 /**<
  *  Returns an int32 (0 or 1) instead of an arbitrary nonzero or
  *  zero value. It is silly, but it makes easier to deal with comparisons
