@@ -72,7 +72,7 @@ const vector<Solver>
 getSolvers(){
 	const struct gl_list_t *L = solver_get_engines();
 	vector<Solver> v;
-	for(unsigned long i=1; i <gl_length(L); ++i){
+	for(unsigned long i=1; i <= gl_length(L); ++i){
 		v.push_back(Solver( ( (SlvFunctionsT *)(gl_fetch(L,i)))->name) );
 	}
 	return v;
