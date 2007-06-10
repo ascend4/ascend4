@@ -340,7 +340,7 @@ void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
 }
 
 int slv_get_status(slv_system_t sys, slv_status_t *status){
-	asc_assert(sys->internals);
+	if(!sys->internals)return -1;
 	if(sys->internals->getstatus==NULL){printinfo(sys,"get_status");return -1;}
 	return (sys->internals->getstatus)(sys,sys->ct,status);
 }
