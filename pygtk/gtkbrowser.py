@@ -1157,19 +1157,18 @@ class Browser:
 	def on_show_fixed_vars_activate(self,*args):
 		try:
 			v = self.sim.getFixedVariables()
+			text = "Fixed Variables"
+			title = text
+			text += "\n"
+			if len(v):
+				for var in v:
+					text += "\n%s"%var
+			else:
+				text += "\nnone"
+			_dialog = InfoDialog(self,self.window,text,title)
+			_dialog.run()
 		except RuntimeError,e:
 			self.reporter.reportError(str(e))
-		text = "Fixed Variables"
-		title = text
-		text += "\n"
-		if len(v):
-			for var in v:
-				text += "\n%s"%var
-		else:
-			text += "\nnone"
-		_dialog = InfoDialog(self,self.window,text,title)
-		_dialog.run()
-
 
 	def on_show_freeable_variables_activate(self,*args):
 		try:
