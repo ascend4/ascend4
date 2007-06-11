@@ -24,7 +24,7 @@
 	SLV common utilities & structures for ASCEND solvers.
 
 	Routines in this header are applicable to both the system API (as accessed
-	from ASCEND compiler and GUI/CLI) as well as the solver backend (slv3.c, 
+	from ASCEND compiler and GUI/CLI) as well as the solver backend (slv3.c,
 	and other solvers, etc)
 
 	This header therefore includes the following:
@@ -82,9 +82,9 @@
 */
 
 /* #define SLV_STANDALONE */
-/**< 
-	If undefined, we are lying on top of the ASCEND instance hierarchy. 
-	If defined, SLV is running self-contained and must have no compiler 
+/**<
+	If undefined, we are lying on top of the ASCEND instance hierarchy.
+	If defined, SLV is running self-contained and must have no compiler
 	dependencies in any of its code.
 
 	Normally this should not be defined.
@@ -344,7 +344,7 @@ ASC_DLLSPEC FILE *slv_get_output_file(FILE *fp);
 
   The following functions reach into the data structures in the <compiler>
   section of ASCEND. That means that these functions can't be present in a
-  fully split-out and general-purpose SLV engine. 
+  fully split-out and general-purpose SLV engine.
 
   If you're trying to use SLV to solve systems other that ASCEND models
   therefore, these functions need to be re-implemented for your case.
@@ -361,7 +361,8 @@ extern void slv_print_obj_name(FILE *outfile, obj_objective_t obj);
  *  @todo Implement solver/slv_common:slv_print_obj_name() or remove prototype.
  */
 #endif
-extern void slv_print_rel_name(FILE *outfile,
+
+ASC_DLLSPEC void slv_print_rel_name(FILE *outfile,
                                slv_system_t sys,
                                struct rel_relation *rel);
 /**<
@@ -374,7 +375,7 @@ extern void slv_print_rel_name(FILE *outfile,
  *  @todo Move solver/slv_common:slv_print_rel_name() to solver/rel.
  */
 
-extern void slv_print_var_name(FILE *outfile,
+ASC_DLLSPEC void slv_print_var_name(FILE *outfile,
                                slv_system_t sys,
                                struct var_variable *var);
 /**<
@@ -387,7 +388,7 @@ extern void slv_print_var_name(FILE *outfile,
  *  @todo Move solver/slv_common:slv_print_var_name() to solver/var.
  */
 
-extern void slv_print_logrel_name(FILE *outfile,
+ASC_DLLSPEC void slv_print_logrel_name(FILE *outfile,
                                   slv_system_t sys,
                                   struct logrel_relation *lrel);
 /**<
@@ -400,7 +401,7 @@ extern void slv_print_logrel_name(FILE *outfile,
  *  @todo Move solver/slv_common:slv_print_logrel_name() to solver/logrel.
  */
 
-extern void slv_print_dis_name(FILE *outfile,
+ASC_DLLSPEC void slv_print_dis_name(FILE *outfile,
                                slv_system_t sys,
                                struct dis_discrete *dvar);
 /**<

@@ -58,16 +58,16 @@
 ASC_DLLSPEC int slv_block_partition_real(slv_system_t sys, int uppertriangular);
 /**<
 	Takes a system and reorders its solvers_vars and solvers_rels
-	list so that they fall into a BUT/BLT (block upper/lower triangular) form 
+	list so that they fall into a BUT/BLT (block upper/lower triangular) form
 	and	the system's block list is set to match.
 	Only included equality relations and free, incident solver_var
 	are so ordered.
-	
+
 	The blocks derived are put in the slv_system_t block list.
 
 	Produces whine about DOF analysis on file stderr.
 
-	@NOTE doesn't grok inequalities	
+	@NOTE doesn't grok inequalities
 
 	ASSUMPTION: We assume that the variable and relation bit flags
 	are in sync with the flags on the atoms.  The need for this
@@ -79,7 +79,7 @@ ASC_DLLSPEC int slv_block_partition_real(slv_system_t sys, int uppertriangular);
 	@return 0 on success, 2 on out-of-memory, 1 on any other failure
 */
 
-     
+
 ASC_DLLSPEC int slv_block_unify(slv_system_t sys);
 /**<
  *  Takes a system that has been through slv_block_partition and combines
@@ -132,7 +132,7 @@ ASC_DLLSPEC int slv_spk1_reorder_block(slv_system_t sys,
  *  @todo Revisit design of slv_set_up_block() - take user matrix?
  */
 
-extern int slv_tear_drop_reorder_block(slv_system_t sys,
+ASC_DLLSPEC int slv_tear_drop_reorder_block(slv_system_t sys,
                                        int32 blockindex,
                                        int32 cutoff,
                                        int two,
@@ -174,7 +174,7 @@ void system_rel_list_debug(slv_system_t sys);
 
 int system_cut_vars(slv_system_t sys, const int start, const var_filter_t *vfilt, int *nvars);
 /**
-	We start at position 'start' in the solver's var list. Any variable 
+	We start at position 'start' in the solver's var list. Any variable
 	that does not meet the filter 'vfilt' is moved to the back, and any
 	var that does stays. The number nvars of vars meeting the filter is returned.
 

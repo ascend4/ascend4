@@ -60,12 +60,12 @@
 #include <linear/mtx.h>
 #include <linear/linsolqr.h>
 
-#include <system/slv_client.h>
 #include <system/calc.h>
 #include <system/relman.h>
 #include <system/slv_stdcalls.h>
 #include <system/system.h>
 
+#include <solver/solver.h>
 #include <solver/slv_interface.h>
 #include <solver/slvDOF.h>
 

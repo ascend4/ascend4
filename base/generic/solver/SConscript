@@ -20,6 +20,7 @@ objs = []
 
 if solver_env.get('WITH_CONOPT'):
 	solver_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
+	print "CONOPT CPPPATH=%s" % solver_env.get('CPPPATH')
 
 	if solver_env.get('LINKED_CONOPT'):
 		libascend_env.AppendUnique(

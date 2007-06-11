@@ -1,4 +1,4 @@
-/* 
+/*
  *  mtx: Ascend Sparse Matrix Package
  *  by Benjamin Andrew Allan
  *  Derived from mtx by Karl Michael Westerberg
@@ -52,8 +52,8 @@ enum mtx_reorder_method {
   mtx_NATURAL   /**< kinda pointless, don't you think? */
 };
 
-extern int mtx_reorder(mtx_matrix_t mtx,
-                       mtx_region_t *region, 
+ASC_DLLSPEC int mtx_reorder(mtx_matrix_t mtx,
+                       mtx_region_t *region,
                        enum mtx_reorder_method rmeth);
 /**<
  ***  The specified region of the coefficient matrix is reordered.

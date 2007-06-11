@@ -493,7 +493,7 @@ ASC_DLLSPEC int32 var_apply_filter(const struct var_variable *var,
 
 ASC_DLLSPEC uint32 var_fixed(struct var_variable *var);
 /**< Returns the fixed flag of var.  Has side effects in the ascend instance. */
-extern void var_set_fixed(struct var_variable *var, uint32 fixed);
+ASC_DLLSPEC void var_set_fixed(struct var_variable *var, uint32 fixed);
 /**< Sets the fixed flag of var.  Has side effects in the ascend instance. */
 extern uint32 var_relaxed(struct var_variable *var);
 /**< Returns the relaxed flag of var.  Has side effects in the ascend instance. */

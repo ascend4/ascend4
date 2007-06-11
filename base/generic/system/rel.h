@@ -28,7 +28,7 @@
 	well. @see analyze.h
 
 	@TODO Question: shouldn't the 'ExtRel' stuff be in the compiler side of
-	things? Even if it is being cached, it seems that the request for 
+	things? Even if it is being cached, it seems that the request for
 	evaluation is coming from the RelationCalcResidualPostfix call in
 	relation_util.c, so we're going	back and forth...
 
@@ -97,7 +97,7 @@ enum backend_enum {
 struct rel_relation {
 	SlvBackendToken instance;
 		/**< Normally, this is a pointer to an Instance struct */
-	struct rel_extnode *nodeinfo;  
+	struct rel_extnode *nodeinfo;
 		/**< For use by blackbox relations, NULL in other cases */
 	struct var_variable **incidence;
 	                    /**< array of atomic vars and nonvars in rel */
@@ -120,7 +120,7 @@ struct rel_relation {
 /**
 	Cache for external relations. This is a place to stash away information
 	relating to the evaluation of external relations, with the intention of
-	making them work efficiently. 
+	making them work efficiently.
 
 	It is apparently intended to prevent repeated calls to external relations
 	when different outputs values are required for the same set of input
@@ -312,7 +312,7 @@ ASC_DLLSPEC real64 rel_nominal(struct rel_relation *rel);
 	Retrieves the nominal field of the given relation.
 	No slv client has any business being able to set the nominal,
 	so no such operator is provided.
-*/	
+*/
 
 extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
 /**<
@@ -379,7 +379,7 @@ ASC_DLLSPEC const struct var_variable**rel_incidence_list(struct rel_relation *r
 
 	Pointers in this array will be unique.
 	The list belongs to the relation. Do not destroy it. Do not change it.
-	
+
 	The returned array is *not* null-terminated.
 */
 
@@ -608,7 +608,7 @@ extern real64 rel_multiplier(struct rel_relation *rel);
  *  relate the gradient of the relation rel with that of some objective
  *  function.
  */
-extern void rel_set_multiplier(struct rel_relation *rel, real64 multiplier);
+ASC_DLLSPEC void rel_set_multiplier(struct rel_relation *rel, real64 multiplier);
 /**<
  *  (<!--  won a temporary reprieve. this should be a system property, not rel.) -->
  *  Sets the multiplier field of the given relation.

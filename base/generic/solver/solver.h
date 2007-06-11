@@ -87,7 +87,7 @@ typedef struct slv_registration_data {
 typedef int SolverRegisterFn(void);
 /**<
 	Registration function for solvers. Should add solver to the list of
-	available solvers for NLA/LP/NLP/MINLP problems. 
+	available solvers for NLA/LP/NLP/MINLP problems.
 	@return 0 on success
 */
 
@@ -338,7 +338,7 @@ ASC_DLLSPEC void slv_set_solver_index(slv_system_t sys, int sindex);
 	@deprecated
 */
 
-extern void slv_destroy_client(slv_system_t sys);
+ASC_DLLSPEC void slv_destroy_client(slv_system_t sys);
 /**<
 	Destroy the client token of slv_system_t. It does not deallocate
 	the allocated data space of sys
