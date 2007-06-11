@@ -6,6 +6,7 @@ csrcs = Split("""
 	mps.c
 	slv2.c slv6.c slv7.c
 	slvDOF.c 
+	logblock.c
 	solver.c
 """)
 # slv9, slv3 and slv8 moved to external packages (dynamically loaded)

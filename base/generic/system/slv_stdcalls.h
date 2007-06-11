@@ -42,7 +42,7 @@
   MATRIX GENERATION AND REORDERING
 */
 
-extern int slv_make_incidence_mtx(slv_system_t sys, 
+extern int slv_make_incidence_mtx(slv_system_t sys,
 		mtx_matrix_t mtx, var_filter_t *vf, rel_filter_t *rf);
 /**<
 	Populates a matrix according to the sys solvers_vars, solvers_rels
@@ -78,7 +78,7 @@ ASC_DLLSPEC int slv_ensure_bounds(slv_system_t sys, int32 lo, int32 hi, FILE *fp
 /**<
 	Takes a system and a range of vars (lo,hi) and makes sure all the
 	variables are within bounds and bounds are reasonable. makes
-	repairs in all cases where they are not. 
+	repairs in all cases where they are not.
 
 	If fp is not NULL, prints notices to the file given.
 
@@ -90,7 +90,7 @@ ASC_DLLSPEC int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
 );
 /**<
 	Takes a system and a range of vars (lo,hi) from the solver's var list
-	and makes sure all the variables are within bounds and bounds are 
+	and makes sure all the variables are within bounds and bounds are
 	make sense (lower < upper). Reports errors in all cases where they are not.
 	Does not change anything.
 
@@ -104,9 +104,9 @@ ASC_DLLSPEC int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
   OUTPUT ASSIGNMENT AND PARTITIONING IN LOGICAL RELATIONS
 */
 
-extern int slv_make_log_incidence_mtx(slv_system_t sys, 
+extern int slv_make_log_incidence_mtx(slv_system_t sys,
                                           mtx_matrix_t mtx,
-                                          dis_filter_t *dvf, 
+                                          dis_filter_t *dvf,
                                           logrel_filter_t *lrf);
 /**<
 	Populates a matrix according to the sys solvers_dvars, solvers_logrels
@@ -116,18 +116,6 @@ extern int slv_make_log_incidence_mtx(slv_system_t sys,
 	Dvars and logrels on solvers lists should be sindexed 0 -> len-1.
 
 	@return 0 on success
-*/
-
-ASC_DLLSPEC int slv_log_block_partition(slv_system_t sys);
-/**<
-	Takes a system and reorders its solvers_dvars and solvers_logrels
-	list so that they fall into a block lower triangular form and
-	the system's block list is set to match.
-	Only included and active logrelations and free, incident boolean_var
-	are so ordered.
-	The blocks derived are put in the slv_system_t block list.<br><br>
-
-	@return 0 on success, 2 on out-of-memory, 1 on any other failure	
 */
 
 /* @} */
