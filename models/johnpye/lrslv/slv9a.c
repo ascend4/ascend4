@@ -39,6 +39,7 @@
 #include <system/cond_config.h>
 
 #include <solver/solver.h>
+#include <solver/logblock.h>
 
 # define HAVE_LRSLV 1
 
