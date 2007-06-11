@@ -31,9 +31,10 @@
 #include <utilities/ascMalloc.h>
 
 #include <system/slv_common.h>
-#include <system/slv_client.h>
 #include <system/slv_stdcalls.h>
 #include <system/block.h>
+
+#include <solver/solver.h>
 
 #include "integrator.h"
 #include "lsode.h"
@@ -202,7 +203,7 @@ static void IntegInitSymbols(void){
 */
 
 /**
-	Local function that holds the list of available integrators. The value 
+	Local function that holds the list of available integrators. The value
 	returned is NOT owned by the called.
 
 	@param free_space if 0, call as normal. if 1, free the list and maybe do some
@@ -218,10 +219,10 @@ static struct gl_list_t *integrator_get_list(int free_space){
 	}
 	if(!init){
 		L = gl_create(10);
-		gl_append_ptr(L, (IntegratorInternals *)&integrator_ida_internals);
 #ifdef ASC_WITH_IDA
-		gl_append_ptr(L, (IntegratorInternals *)&integrator_lsode_internals);
+		gl_append_ptr(L, (IntegratorInternals *)&integrator_ida_internals);
 #endif
+		gl_append_ptr(L, (IntegratorInternals *)&integrator_lsode_internals);
 		init = 1;
 	}
 	return L;
@@ -282,7 +283,7 @@ int integrator_set_engine(IntegratorSystem *sys, const char *name){
 
 /**
 	@TODO rename this
-*/	
+*/
 const IntegratorInternals *integrator_get_engine(const IntegratorSystem *sys){
 	return sys->internals;
 }
@@ -357,7 +358,7 @@ int integrator_register(const IntegratorInternals *integ){
 	CONSOLE_DEBUG("Adding engine '%s'",integ->name);
 
 	gl_append_ptr(L,(const IntegratorInternals *)integ);
-	
+
 	CONSOLE_DEBUG("There are now %lu registered integrators", gl_length(integrator_get_list(0)));
 	return 0;
 }
@@ -556,7 +557,7 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   char *varname1, *varname2;
 
   asc_assert(sys->system!=NULL);
-  
+
   if(strcmp(slv_solver_name(slv_get_selected_solver(sys->system)),"QRSlv")!=0){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"System must have solver 'QRSlv' assigned to it before integration");
 	return 2;
@@ -1160,7 +1161,7 @@ double *integrator_get_y(IntegratorSystem *sys, double *y) {
 
 /**
 	Take the values of the differential variables from the array that the
-	integrator uses, and use them to update the values of the corresponding 
+	integrator uses, and use them to update the values of the corresponding
 	variables in ASCEND.
 */
 void integrator_set_y(IntegratorSystem *sys, double *y) {
