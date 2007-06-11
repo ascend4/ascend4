@@ -56,7 +56,7 @@ extern boolean check_matrix(mtx_matrix_t mtx, char *file, int line);
  **  @return 1 if given matrix is valid, 0 otherwise.
  **/
 
-extern boolean check_sparse(const mtx_sparse_t * const sp, 
+extern boolean check_sparse(const mtx_sparse_t * const sp,
                             char *file, int line);
 /**<
  *  Implementation function for mtx_check_sparse().
@@ -76,7 +76,7 @@ ASC_DLLSPEC mtx_coord_t *mtx_coord(mtx_coord_t *coordp, int32 row, int32 col);
 /**<
 	Places the values of row and col into coordp and returns
 	the coordp pointer again.
-	
+
 	Typical usage:                                     <pre>
 	  {
 	    mtx_coord_t coord;
@@ -264,7 +264,7 @@ ASC_DLLSPEC int32 mtx_order(mtx_matrix_t matrix);
  **/
 
 ASC_DLLSPEC int32 mtx_capacity(mtx_matrix_t matrix);
-/**< 
+/**<
  ***  Returns the capacity of the matrix, be it master or slave.
  ***  Original row/column numbers must lie in the range 0 <= ndx < cap.
  ***  cap may be larger than the matrix order if the order of the matrix
@@ -273,7 +273,7 @@ ASC_DLLSPEC int32 mtx_capacity(mtx_matrix_t matrix);
  **/
 
 ASC_DLLSPEC void mtx_set_order(mtx_matrix_t matrix, int32 order);
-/**< 
+/**<
  ***  Changes the order of the matrix to the new order, either truncating
  ***  the matrix, or extending it with blank rows and columns if necessary.
  ***  Does not change the incidence pattern if the matrix is being expanded.
@@ -410,10 +410,10 @@ ASC_DLLSPEC void mtx_fill_value(mtx_matrix_t matrix,
                            mtx_coord_t *coord, real64 value);
 /**<
  ***  Sets the value of the given element in the matrix.
- ***  Use this function in place of mtx_set_value() in those instances 
- ***  where the caller knows there currently exists no element at the 
- ***  coordinate whose value is to be set.  mtx_fill_value() can also be 
- ***  used if a  mtx_assemble() call will happen before ANY other numeric 
+ ***  Use this function in place of mtx_set_value() in those instances
+ ***  where the caller knows there currently exists no element at the
+ ***  coordinate whose value is to be set.  mtx_fill_value() can also be
+ ***  used if a  mtx_assemble() call will happen before ANY other numeric
  ***  or structural calls are made.
  ***
  ***  Doesn't matter whether a matrix is slave or master.
@@ -422,7 +422,7 @@ ASC_DLLSPEC void mtx_fill_value(mtx_matrix_t matrix,
  ***  @see mtx_fill_org_value()
  **/
 
-extern void mtx_fill_org_value(mtx_matrix_t matrix,
+ASC_DLLSPEC void mtx_fill_org_value(mtx_matrix_t matrix,
                                const mtx_coord_t *coord,
                                real64 value);
 /**<
@@ -567,7 +567,7 @@ extern void mtx_steal_cur_col_vec(mtx_matrix_t mtx, int32 col,
     that mtx_CREATE_SPARSE is a valid argument.
    \*****************************************************************/
 
-extern boolean mtx_steal_org_row_sparse(mtx_matrix_t mtx, 
+extern boolean mtx_steal_org_row_sparse(mtx_matrix_t mtx,
                                         int32 row,
                                         mtx_sparse_t *sparse,
                                         mtx_range_t *colrng);
@@ -844,7 +844,7 @@ extern void mtx_fill_cur_col_sparse(mtx_matrix_t mtx, int32 col,
 
 ASC_DLLSPEC void mtx_mult_row(mtx_matrix_t mtx, int32 row,
                          real64 factor, mtx_range_t *colrng);
-/**< 
+/**<
  ***  Multiplies the given row by a given factor.  Only those
  ***  elements with column index within the given range are multiplied.
  ***  This function tests for factor=0.0 and blows away the row if true.
@@ -860,7 +860,7 @@ ASC_DLLSPEC void mtx_mult_col(mtx_matrix_t mtx, int32 col,
  **/
 extern void mtx_mult_row_zero(mtx_matrix_t mtx, int32 row,
                               mtx_range_t *colrng);
-/**< 
+/**<
  ***  Zeros the given row.  Only those
  ***  elements with column index within the given range are zeroed.
  ***  This function zeros without disturbing structure.
@@ -868,7 +868,7 @@ extern void mtx_mult_row_zero(mtx_matrix_t mtx, int32 row,
  **/
 extern void mtx_mult_col_zero(mtx_matrix_t mtx, int32 col,
                               mtx_range_t *rowrng);
-/**< 
+/**<
  ***  Zeros the given column.  Only those
  ***  elements with row index within the given range are zeroed.
  ***  This function zeros without disturbing structure.
@@ -899,7 +899,7 @@ extern void mtx_add_row_series(int32 srow, real64 factor,
  ***  Only those elements of s with column index within the
  ***  given range are added to factor.
  ***  When possible, range mtx_ALL_COLS/ROWS is faster for sparse rows.
- ! !  Calling this without a prior call to mtx_add_row_series_init() 
+ ! !  Calling this without a prior call to mtx_add_row_series_init()
  ! !  is an error.<br><br>
  ***
  ! !  Warning: You MUST release any grabbed row/col created on a matrix
@@ -980,45 +980,45 @@ extern void mtx_add_col_series_init(mtx_matrix_t mtx, int32 tcol,
  **/
 /* OLD GROUP COMMENT */
 /*
- -$-  mtx_add_row_series(srow,factor,colrng)                     
- -$-  mtx_add_col_series(scol,factor,rowrng)                     
- -$-  mtx_add_row_series_init(matrix,trow,userow)                
- -$-  mtx_add_col_series_init(matrix,tcol,usecol)                
- ***  mtx_matrix_t matrix;                                       
- ***  int32 srow,trow,scol,tcol;                                 
- ***  real64 factor;                                             
- ***  mtx_range_t *colrng,*rowrng;                               
- ***  boolean userow,usecol;                                     
+ -$-  mtx_add_row_series(srow,factor,colrng)
+ -$-  mtx_add_col_series(scol,factor,rowrng)
+ -$-  mtx_add_row_series_init(matrix,trow,userow)
+ -$-  mtx_add_col_series_init(matrix,tcol,usecol)
+ ***  mtx_matrix_t matrix;
+ ***  int32 srow,trow,scol,tcol;
+ ***  real64 factor;
+ ***  mtx_range_t *colrng,*rowrng;
+ ***  boolean userow,usecol;
  ***
- ***  mtx_add_row/col_series_init(mtx, t>=0, bool):              
- ***    Grab a row/column t of the matrix to have several rows/columns        
- ***    from the same matrix added to it. bool is ignored for t>=0.           
- ***    Only one row/col at a time may be grabbed for all existing            
- ***    matrices. (One row and one col may be grabbed contemporaneously.)     
- ***    You must release the row/col (see below) before you can grab another. 
+ ***  mtx_add_row/col_series_init(mtx, t>=0, bool):
+ ***    Grab a row/column t of the matrix to have several rows/columns
+ ***    from the same matrix added to it. bool is ignored for t>=0.
+ ***    Only one row/col at a time may be grabbed for all existing
+ ***    matrices. (One row and one col may be grabbed contemporaneously.)
+ ***    You must release the row/col (see below) before you can grab another.
  ***
- ***  mtx_add_row/col_series_init(mtx, mtx_NONE, userow/col):                 
- ***    Release the last row/column which was grabbed for multiple adds.      
- ***    If userow/col is TRUE, the current contents of row/col t              
- ***    (from the previous call) will be used to release the row/col.          
- ***    If userow/col is FALSE, a pessimistic release method will be          
- ***    used instead of the row/col previously specified.                     
- ! !    If ANY destructive operations have been done on the row/col, call     
- ! !    this with userow/col==FALSE.                                          
+ ***  mtx_add_row/col_series_init(mtx, mtx_NONE, userow/col):
+ ***    Release the last row/column which was grabbed for multiple adds.
+ ***    If userow/col is TRUE, the current contents of row/col t
+ ***    (from the previous call) will be used to release the row/col.
+ ***    If userow/col is FALSE, a pessimistic release method will be
+ ***    used instead of the row/col previously specified.
+ ! !    If ANY destructive operations have been done on the row/col, call
+ ! !    this with userow/col==FALSE.
  ! !    The mtx given to a release call must match that given in the grabbing
- ! !    or the release is ignored.                                            
- ***    For very dense rows/cols, it may be faster to call with userow/col    
- ***    == FALSE since the release with TRUE requires a row/col traversal.    
+ ! !    or the release is ignored.
+ ***    For very dense rows/cols, it may be faster to call with userow/col
+ ***    == FALSE since the release with TRUE requires a row/col traversal.
  ***
- ***  mtx_add_row/col_series(s,factor,rowrng)                                 
- ***    Adds the given multiple of row/column s to trow/tcol.                 
- ***    Only those elements of s with column/row index within the             
- ***    given range are added to trow/tcol.                                   
- ***    When possible, range mtx_ALL_COLS/ROWS is faster for sparse rows.     
- ! !    Calling these without a prior call to series_init is an error.         
+ ***  mtx_add_row/col_series(s,factor,rowrng)
+ ***    Adds the given multiple of row/column s to trow/tcol.
+ ***    Only those elements of s with column/row index within the
+ ***    given range are added to trow/tcol.
+ ***    When possible, range mtx_ALL_COLS/ROWS is faster for sparse rows.
+ ! !    Calling these without a prior call to series_init is an error.
  ***
- ! !  Warning: You MUST release any grabbed row/col created on a matrix       
- ! !  before destroying that matrix. Failure to do so is fatal.               
+ ! !  Warning: You MUST release any grabbed row/col created on a matrix
+ ! !  before destroying that matrix. Failure to do so is fatal.
  ***
  -$-  Does nothing on a bad matrix.
  **/
@@ -1160,7 +1160,7 @@ extern void mtx_old_add_col_sparse(mtx_matrix_t mtx, int32 col,
  -$-  Does nothing on a bad matrix.
  **/
 
-extern void mtx_add_row_sparse(mtx_matrix_t mtx, int32 row, 
+extern void mtx_add_row_sparse(mtx_matrix_t mtx, int32 row,
                                real64 factor, mtx_sparse_t *sparse);
 /**< @todo mtx_add_row_sparse() NOT IMPLEMENTED. */
 extern void mtx_add_col_sparse(mtx_matrix_t mtx, int32 col,
@@ -1219,37 +1219,37 @@ extern void mtx_write_region_human_f(FILE *file,
 */
 
 #define mtx_write_region_human(f,m,r) mtx_write_region_human_f((f),(m),(r),0,0)
-/**< 
+/**<
 	Grandfather support for the old usages.
 	@see mtx_write_region_human_f().
 */
 #define mtx_write_region_human_rows(f,m,r) \
 mtx_write_region_human_f((f),(m),(r),0,0)
-/**< 
+/**<
 	Writes row oriented human readable output of a mtx region.
 	@see mtx_write_region_human_f().
 */
 #define mtx_write_region_human_cols(f,m,r) \
 mtx_write_region_human_f((f),(m),(r),1,0)
-/**< 
-	Writes column oriented human readable output of a mtx region. 
+/**<
+	Writes column oriented human readable output of a mtx region.
 	@see mtx_write_region_human_f().
 */
 #define mtx_write_region_human_orgrows(f,m,r) \
 mtx_write_region_human_f((f),(m),(r),0,1)
-/**< 
-	Writes row oriented human readable output of a mtx region. 
-	@see mtx_write_region_human_f(). 
+/**<
+	Writes row oriented human readable output of a mtx region.
+	@see mtx_write_region_human_f().
 */
 #define mtx_write_region_human_orgcols(f,m,r) \
 mtx_write_region_human_f((f),(m),(r),1,1)
-/**< 
-	Writes column oriented human readable output of a mtx region.  
-	@see mtx_write_region_human_f(). 
+/**<
+	Writes column oriented human readable output of a mtx region.
+	@see mtx_write_region_human_f().
 */
 
-ASC_DLLSPEC void mtx_write_region(FILE *file, 
-                             mtx_matrix_t mtx, 
+ASC_DLLSPEC void mtx_write_region(FILE *file,
+                             mtx_matrix_t mtx,
                              mtx_region_t *region);
 /**<
 	Outputs permutation and values of the nonzero elements in the
@@ -1267,8 +1267,8 @@ ASC_DLLSPEC void mtx_write_region(FILE *file,
 	and the symbolic rank will go out with the block structure.
 */
 
-extern mtx_matrix_t mtx_read_region(FILE *file, 
-                                    mtx_matrix_t mtx, 
+extern mtx_matrix_t mtx_read_region(FILE *file,
+                                    mtx_matrix_t mtx,
                                     int transposed);
 /**<
  ***  Reads a matrix region.
@@ -1300,8 +1300,8 @@ extern mtx_matrix_t mtx_read_region(FILE *file,
  ***  Doesn't care about master/slave status.
  **/
 
-ASC_DLLSPEC void mtx_write_region_matlab(FILE *file, 
-                                    mtx_matrix_t mtx, 
+ASC_DLLSPEC void mtx_write_region_matlab(FILE *file,
+                                    mtx_matrix_t mtx,
                                     mtx_region_t *region);
 /**<
 	Outputs values of the nonzero elements in the
@@ -1324,7 +1324,7 @@ ASC_DLLSPEC int mtx_write_region_mmio(FILE *file
 	@see ASC_WITH_MMIO
 */
 
-ASC_DLLSPEC void mtx_write_region_plot(FILE *file, 
+ASC_DLLSPEC void mtx_write_region_plot(FILE *file,
 		mtx_matrix_t mtx, mtx_region_t *region);
 /**<
 	Outputs the coordinates of elements to file with format suitable
@@ -1372,11 +1372,11 @@ extern mtx_matrix_t mtx_read_smms(FILE *file,
 extern void mtx_exception_recover(void);
 /**<
 	Cleans up after a floating point exception has
-	occurred during matrix manipulations.  You don't need to know 
+	occurred during matrix manipulations.  You don't need to know
 	what this does, except that you should call it any time this may
 	have occurred.  Several functions use
 	data structures that can cause insanity in the event of exception.<br><br>
-	
+
 	Just for the curious, it resets several internal data structures
 	needed including ones used in the operators:
 	  - mtx_add_row/col()

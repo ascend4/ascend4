@@ -3,7 +3,12 @@ Import('env')
 # To run the test, type
 #     ascend johnpye/conopt/conopt.a4c
 
-env['extfns'] += [env.SharedLibrary("conopt",["asc_conopt.c"]
+solver_env = env.Copy()
+
+if solver_env.get('WITH_CONOPT'):
+	solver_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
+
+env['extfns'] += [solver_env.SharedLibrary("conopt",["asc_conopt.c"]
 	,LIBS = ['ascend']
 	,LIBPATH = ['#']
 )]

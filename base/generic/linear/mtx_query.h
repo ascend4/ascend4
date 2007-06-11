@@ -34,7 +34,7 @@
 	@{
 */
 
-ASC_DLLSPEC real64 mtx_next_in_row(mtx_matrix_t matrix, 
+ASC_DLLSPEC real64 mtx_next_in_row(mtx_matrix_t matrix,
                               mtx_coord_t *coord,
                               mtx_range_t *colrng);
 /**< See mtx_next_in_col(), switching row & column references. */
@@ -93,14 +93,14 @@ extern real64 mtx_next_in_col(mtx_matrix_t matrix,
  ***  </pre>
  **/
 
-extern real64 mtx_row_max(mtx_matrix_t matrix,
+ASC_DLLSPEC real64 mtx_row_max(mtx_matrix_t matrix,
                           mtx_coord_t *coord,
                           mtx_range_t *colrng,
                           real64 *signval);
 /**< See mtx_col_max(), switching row & column references. */
-extern real64 mtx_col_max(mtx_matrix_t matrix, 
+ASC_DLLSPEC real64 mtx_col_max(mtx_matrix_t matrix,
                           mtx_coord_t *coord,
-                          mtx_range_t *rowrng, 
+                          mtx_range_t *rowrng,
                           real64 *signval);
 /**<
  ***  Searches for the element in the given row, with column index in the
@@ -116,13 +116,13 @@ extern real64 mtx_col_max(mtx_matrix_t matrix,
  ***
  -$-  Returns -1.0 from a bad matrix.
  **/
-extern real64 mtx_row_min(mtx_matrix_t matrix,
+ASC_DLLSPEC real64 mtx_row_min(mtx_matrix_t matrix,
                           mtx_coord_t *coord,
                           mtx_range_t *colrng,
                           real64 *signval,
                           real64 minval);
 /**< See mtx_col_min(), switching row & column references. */
-extern real64 mtx_col_min(mtx_matrix_t matrix,
+ASC_DLLSPEC real64 mtx_col_min(mtx_matrix_t matrix,
                           mtx_coord_t *coord,
                           mtx_range_t *rowrng,
                           real64 *signval,
@@ -146,11 +146,11 @@ extern real64 mtx_col_min(mtx_matrix_t matrix,
  -$-  Returns -1.0 from a bad matrix.
  **/
 
-extern real64 mtx_get_pivot_col(mtx_matrix_t matrix, 
+extern real64 mtx_get_pivot_col(mtx_matrix_t matrix,
                                 mtx_coord_t *coord,
-                                mtx_range_t *colrng, 
+                                mtx_range_t *colrng,
                                 real64 *signval,
-                                real64 tol, 
+                                real64 tol,
                                 real64 eps);
 /**< See mtx_get_pivot_row(), switching row & column references. */
 extern real64 mtx_get_pivot_row(mtx_matrix_t matrix,
@@ -337,7 +337,7 @@ extern void mtx_zr_cur_vec_using_row(mtx_matrix_t mtx, int32 row,
 /**< See mtx_zr_cur_vec_using_col(), switching row & column references. */
 extern void mtx_zr_cur_vec_using_col(mtx_matrix_t mtx, int32 col,
                                      real64 *vec, mtx_range_t *rowrng);
-/**< 
+/**<
  ***  Sets the values of vec (indexed by org/cur col) corresponding to
  ***  incidences in rowrng to 0.0.<br><br>
  ***
@@ -355,7 +355,7 @@ ASC_DLLSPEC real64 mtx_sum_sqrs_in_row(mtx_matrix_t mtx, int32 row,
  ***
  -$-  Returns 0.0 from a bad matrix.
  **/
-extern real64 mtx_sum_sqrs_in_col(mtx_matrix_t mtx, int32 col,
+ASC_DLLSPEC real64 mtx_sum_sqrs_in_col(mtx_matrix_t mtx, int32 col,
                                   const mtx_range_t *rowrng);
 /**<
  ***  Compute sum of squares of non-zeros in the given column whose row index
@@ -388,7 +388,7 @@ extern real64 mtx_col_dot_full_org_vec(mtx_matrix_t mtx,
 /**< See mtx_row_dot_full_org_vec(), switching row & column references. */
 extern real64 mtx_row_dot_full_org_vec(mtx_matrix_t mtx,
                                        int32 row,
-                                       real64 *orgvec, 
+                                       real64 *orgvec,
                                        mtx_range_t *colrng,
                                        boolean transpose);
 /**<
@@ -410,9 +410,9 @@ extern real64 mtx_row_dot_full_org_vec(mtx_matrix_t mtx,
  -$-  Returns 0.0 from a bad matrix.
  **/
 
-extern real64 mtx_col_dot_full_cur_vec(mtx_matrix_t mtx, 
+extern real64 mtx_col_dot_full_cur_vec(mtx_matrix_t mtx,
                                        int32 col,
-                                       real64 *curcolvec, 
+                                       real64 *curcolvec,
                                        mtx_range_t *rowrng,
                                        boolean transpose);
 /**< See mtx_row_dot_full_cur_vec(), switching row & column references. */
@@ -437,19 +437,19 @@ extern real64 mtx_row_dot_full_cur_vec(mtx_matrix_t mtx,
  **/
 
 extern real64 mtx_col_dot_full_org_custom_vec(mtx_matrix_t matrix1,
-                                              mtx_matrix_t matrix2, 
+                                              mtx_matrix_t matrix2,
                                               int32 row,
-                                              real64 *orgvec, 
+                                              real64 *orgvec,
                                               mtx_range_t *colrng,
                                               boolean transpose);
 /**< See mtx_row_dot_full_org_custom_vec(), switching row & column references. */
 extern real64 mtx_row_dot_full_org_custom_vec(mtx_matrix_t matrix1,
                                               mtx_matrix_t matrix2,
                                               int32 col,
-                                              real64 *orgvec, 
+                                              real64 *orgvec,
                                               mtx_range_t *rowrng,
                                               boolean transpose);
-/**< 
+/**<
  ***  <pre>
  ***    For transpose==FALSE:
  ***    Compute the dot product of the row given with the org_col indexed
@@ -470,38 +470,38 @@ extern real64 mtx_row_dot_full_org_custom_vec(mtx_matrix_t matrix1,
  -$-  Returns 0.0 from a bad matrix.
  **/
 
-extern void mtx_org_vec_add_col(mtx_matrix_t mtx, 
+extern void mtx_org_vec_add_col(mtx_matrix_t mtx,
                                 real64 *tvec,
-                                int32 scol, 
+                                int32 scol,
                                 real64 factor,
                                 mtx_range_t *rowrng,
                                 boolean transpose);
 /**< See mtx_cur_vec_add_row(), switching row & column references. */
 extern void mtx_org_vec_add_row(mtx_matrix_t mtx,
                                 real64 *tvec,
-                                int32 srow, 
+                                int32 srow,
                                 real64 factor,
                                 mtx_range_t *colrng,
                                 boolean transpose);
 /**< See mtx_cur_vec_add_row(). */
 extern void mtx_cur_vec_add_col(mtx_matrix_t mtx,
                                 real64 *tvec,
-                                int32 scol, 
+                                int32 scol,
                                 real64 factor,
                                 mtx_range_t *rowrng,
                                 boolean transpose);
 /**< See mtx_cur_vec_add_row(), switching row & column references. */
 extern void mtx_cur_vec_add_row(mtx_matrix_t mtx,
                                 real64 *tvec,
-                                int32 srow, 
+                                int32 srow,
                                 real64 factor,
                                 mtx_range_t *colrng,
                                 boolean transpose);
-/**< 
+/**<
  ***  Adds multiple factor of srow to tvec for those columns in colrng.
  ***  tvec is org/cur col indexed if transpose==FALSE.
  ***    i.e. this is just adding rows.
- ***  tvec is org/cur row indexed if transpose==TRUE. 
+ ***  tvec is org/cur row indexed if transpose==TRUE.
  ***    orgvec[mtx_row_to_org(col)]+=factor*element(srow,col)
  ! !    curvec[???]+=factor*element(srow,col)
  ***

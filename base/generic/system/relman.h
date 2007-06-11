@@ -288,7 +288,7 @@ extern int32 relman_jacobian_count(struct rel_relation **rlist,
  *  *rhomax is the largest row count on return.
  */
 
-extern boolean relman_calc_satisfied_scaled(struct rel_relation *rel,
+ASC_DLLSPEC boolean relman_calc_satisfied_scaled(struct rel_relation *rel,
                                             real64 tolerance);
 /**<
  *  This definition of satisfaction includes the notion
@@ -360,7 +360,7 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
 
 	The name of a var is context dependent, so you have to provide the
 	slv_system_t from which you got the relation.
-	
+
 	@see relman_make_string_postfix
 	@see relman_make_string_infix
 */

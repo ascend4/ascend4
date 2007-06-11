@@ -80,7 +80,7 @@ extern struct logrel_relation *logrel_create(SlvBackendToken instance,
  *  handled here.
  */
 
-extern SlvBackendToken logrel_instance(struct logrel_relation *logrel);
+ASC_DLLSPEC SlvBackendToken logrel_instance(struct logrel_relation *logrel);
 /**<
  *  Returns the instance pointer from a logrel.
  */

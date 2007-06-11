@@ -28,7 +28,7 @@
 	Created: 5/3/90
 	Last in CVS: $Revision: 1.10 $ $Date: 1998/05/06 17:28:54 $ $Author: ballan $
 */
- 
+
 #ifndef ASC_MTX_PERMS_H
 #define ASC_MTX_PERMS_H
 
@@ -36,13 +36,13 @@
 	@{
 */
 
-/* the following block_perm functions are not yet implemented: 
+/* the following block_perm functions are not yet implemented:
  *   this is the software spec. 5/3/95 baa. */
 
 extern mtx_block_perm_t mtx_create_block_perm(mtx_matrix_t mtx);
-/**< 
- ***  Returns a token with the permutation/block information of the 
- ***  mtx given. The mtx given must be previously output assigned and, 
+/**<
+ ***  Returns a token with the permutation/block information of the
+ ***  mtx given. The mtx given must be previously output assigned and,
  ***  if it is to be partitioned, should already be partitioned.
  ***  The permutation returned can be used subsequently in various
  ***  ways, but all operations must be on the mtx the data came from.
@@ -57,12 +57,12 @@ extern mtx_block_perm_t mtx_create_block_perm(mtx_matrix_t mtx);
  **/
 
 extern int mtx_update_block_perm(mtx_matrix_t mtx,
-                                 int32 bnum, 
+                                 int32 bnum,
                                  mtx_block_perm_t bperm);
 /**<
  ***  Given an mtx, a block number, and an existing bperm, this
  ***  routine updates the bperm permutation information about the
- ***  block bnum in the mtx. 
+ ***  block bnum in the mtx.
  ***  The bperm updated must come from the mtx the bperm was created
  ***  for. The mtx must be output assigned and, if the mtx was
  ***  partitioned, the partition data must be consistent between the
@@ -84,13 +84,13 @@ extern int mtx_update_block_perm(mtx_matrix_t mtx,
  -$-  excessive checks fail.
  **/
 
-extern int mtx_restore_block_perm(mtx_matrix_t mtx, 
+extern int mtx_restore_block_perm(mtx_matrix_t mtx,
                                   int32 bnum,
                                   mtx_block_perm_t bperm);
 /**<
  ***  Given an mtx, a block number, and an existing bperm, this
  ***  routine updates the mtx permutation information for the
- ***  block bnum using the bperm. 
+ ***  block bnum using the bperm.
  ***  The mtx updated must go with the bperm.
  ***  The mtx must be output assigned and, if the mtx was
  ***  partitioned, the partition data must be consistent between the
@@ -118,7 +118,7 @@ extern int mtx_restore_block_perm(mtx_matrix_t mtx,
  **/
 
 extern int mtx_destroy_block_perm(mtx_block_perm_t bperm);
-/**< 
+/**<
  ***  Deallocates all memory associated with the bperm.
  ***  Has nothing to do with the matrix of bperm's origin.
  ***  Returns 1 if anything untoward happens during the
@@ -126,7 +126,7 @@ extern int mtx_destroy_block_perm(mtx_block_perm_t bperm);
  **/
 
 extern size_t mtx_block_perm_size(mtx_block_perm_t bperm);
-/**< 
+/**<
  ***  One for the bean counters. Returns current memory used by
  ***  the mtx_block_perm_t. Bytes as usual.
  **/
@@ -195,7 +195,7 @@ ASC_DLLSPEC int32  mtx_row_to_org(mtx_matrix_t mtx, int32 row);
 /**<
 	Converts original row number <--> row number.
 	Passes calls on slave matrices up to the master matrix.
-	
+
 	@return original row number, or -1 from a bad matrix.
 */
 
@@ -243,7 +243,7 @@ extern boolean mtx_col_parity(mtx_matrix_t mtx);
   MTX STRUCTURAL MANIPULATION AND INFO ROUTINES
 */
 
-extern int mtx_output_assign_region(mtx_matrix_t mtx, 
+extern int mtx_output_assign_region(mtx_matrix_t mtx,
                                     mtx_region_t *region,
                                     int *orphaned_rows);
 /**<
@@ -262,7 +262,7 @@ extern int mtx_output_assign_region(mtx_matrix_t mtx,
  -$-  Does nothing to a bad matrix.
  **/
 
-extern void	mtx_output_assign(mtx_matrix_t mtx, int32 hirow, int32 hicol);
+ASC_DLLSPEC void mtx_output_assign(mtx_matrix_t mtx, int32 hirow, int32 hicol);
 /**<
  ***  Reorders the matrix to put as many non-zeros on the diagonal as
  ***  possible.  This function does not assume the validity of a previous
@@ -296,7 +296,7 @@ extern void	mtx_output_assign(mtx_matrix_t mtx, int32 hirow, int32 hicol);
  **/
 
 ASC_DLLSPEC boolean mtx_output_assigned(mtx_matrix_t mtx);
-/**< 
+/**<
  ***  Determines if the matrix has been previously output assigned.
  ***  Calls on slaves are passed up to the master matrix.
  ***
@@ -304,24 +304,24 @@ ASC_DLLSPEC boolean mtx_output_assigned(mtx_matrix_t mtx);
  **/
 
 ASC_DLLSPEC int32  mtx_symbolic_rank(mtx_matrix_t mtx);
-/**< 
+/**<
  ***  Returns the symbolic rank determined by a previous call to
  ***  mtx_output_assign().
  ***  Calls on slaves are passed up to the master matrix.
  ***
  -$-  Returns -2 on bad matrix or -1 on unassigned one.
  **/
-     
+
 extern void mtx_set_symbolic_rank(mtx_matrix_t mtx, int32 rank);
-/**< 
+/**<
  ***  Sets symbolic rank of mtx.  This is used in a hack
  ***  and is not intended for general use.
  **/
-     
+
 extern boolean mtx_make_col_independent(mtx_matrix_t mtx,
                                         int32 col,
                                         mtx_range_t *rng);
-/**< 
+/**<
  ***  Removes col from the basis in place of one of the columns in rng.
  ***  I.e. redoes the mtx_output_assign so as to not use col, if
  ***  possible, using one of the cols in rng instead.
@@ -333,7 +333,7 @@ extern boolean mtx_make_col_independent(mtx_matrix_t mtx,
  **/
 
 extern void mtx_org_permute(mtx_matrix_t mtx, mtx_region_t * region);
-/**< 
+/**<
  ***  Given a region, repermutes rows and columns within it to the ordering
  ***  where mtx_row_to_org(mtx,i) < mtx_row_to_org(mtx,i+1) for all i and
  ***  where mtx_col_to_org(mtx,j) < mtx_row_to_org(mtx,j+1) for all j
@@ -345,7 +345,7 @@ extern void mtx_org_permute(mtx_matrix_t mtx, mtx_region_t * region);
  **/
 
 extern int32 mtx_full_diagonal(mtx_matrix_t mtx, mtx_range_t *rng, int noisy);
-/**< 
+/**<
  ***  This function checks the diagonal for holes. If symbolic_rank is
  ***  set, and rng->high < rank, returns immediately.
  ***  Returns number of holes detected in diagonal in rng given.
@@ -357,7 +357,7 @@ extern int32 mtx_full_diagonal(mtx_matrix_t mtx, mtx_range_t *rng, int noisy);
  **/
 
 extern int32 mtx_transpose(mtx_matrix_t mtx);
-/**< 
+/**<
  *** Transposes everything about the matrix. The user is
  *** responsible for keeping track of the change in the semantics
  *** this implies if the matrix is being used in a nonlinear context.<br><br>
@@ -371,7 +371,7 @@ extern int32 mtx_transpose(mtx_matrix_t mtx);
  **/
 
 extern int32 mtx_isa_transpose(mtx_matrix_t mtx);
-/**< 
+/**<
  *** Returns 1 if the matrix is transposed from another and 0 if not.
  *** Calling mtx_transpose twice yields a mtx which responds with 0.
  -$- Returns mtx_NONE on a bad or 0 order matrix.
@@ -384,14 +384,14 @@ extern int32 mtx_isa_transpose(mtx_matrix_t mtx);
 */
 
 extern mtx_block_t *mtx_block_partition(mtx_matrix_t mtx, mtx_region_t *reg);
-/**< 
+/**<
  ***  Partitions the single block of a previously output assigned matrix
  ***  into smaller blocks if possible. This function unlike its sister
  ***  mtx_partition, takes in, and returns information explicitly, rather
  ***  than assuming it to be a property of the matrix. The result will
  ***  be NULL, if there are no blocks. At the moment works only on
  ***  a square matrix. The range reg->row is assumed to represent the
- ***  extreme points of a square region. The caller owns the result and 
+ ***  extreme points of a square region. The caller owns the result and
  ***  must be deallocate it.
  ***  If the matrix given (or its master) is not assigned, this will
  ***  verify (at some expense) that the diagonal is full and whine
@@ -405,9 +405,9 @@ extern mtx_block_t *mtx_block_partition(mtx_matrix_t mtx, mtx_region_t *reg);
   THE ORIGINAL BLOCK MANIPULATION ROUTINES.
 */
 
-extern void mtx_partition(mtx_matrix_t mtx);
-/**< 
- ***  Takes an output assigned matrix and does a permutation to 
+ASC_DLLSPEC void mtx_partition(mtx_matrix_t mtx);
+/**<
+ ***  Takes an output assigned matrix and does a permutation to
  ***  block-lower-triangular form of the square region from
  ***  0,0 to symbolic_rank-1, symbolic_rank-1.<br><br>
  ***
@@ -415,8 +415,8 @@ extern void mtx_partition(mtx_matrix_t mtx);
  **/
 
 extern void mtx_ut_partition(mtx_matrix_t mtx);
-/**< 
- ***  Takes an output assigned matrix and does a permutation to 
+/**<
+ ***  Takes an output assigned matrix and does a permutation to
  ***  block-UPPER-triangular form of the square region from
  ***  0,0 to symbolic_rank-1, symbolic_rank-1.<br><br>
  ***
@@ -424,7 +424,7 @@ extern void mtx_ut_partition(mtx_matrix_t mtx);
  **/
 
 extern boolean mtx_check_blocks(mtx_matrix_t mtx);
-/**< 
+/**<
  ***  Checks whether or not the block data are consistent with the
  ***  non-zero structure of the matrix.  If not, the block data
  ***  are destroyed. Matrix must be previously output assigned,
@@ -433,8 +433,8 @@ extern boolean mtx_check_blocks(mtx_matrix_t mtx);
  ***  Calls on slaves are passed up to the master matrix.
  **/
 
-extern int32 mtx_number_of_blocks(mtx_matrix_t mtx);
-/**< 
+ASC_DLLSPEC int32 mtx_number_of_blocks(mtx_matrix_t mtx);
+/**<
  ***  Returns the number of blocks in the matrix.  Matrix must be
  ***  previously output assigned.
  ***
@@ -444,22 +444,22 @@ extern int32 mtx_number_of_blocks(mtx_matrix_t mtx);
  -$-  dumping if the user is not checking for a bad return.
  **/
 
-extern int32 mtx_block(mtx_matrix_t mtx, 
-                       int32 block_number, 
+ASC_DLLSPEC int32 mtx_block(mtx_matrix_t mtx,
+                       int32 block_number,
                        mtx_region_t *block);
 /**<
  ***  Sets block to the "block_number"-th block (indexed 0 to nblocks-1) in
  ***  the matrix.  Matrix must be previously output assigned.
- ***  Returns mtx_NONE if not previously output assigned 
+ ***  Returns mtx_NONE if not previously output assigned
  ***  or if requested block does not exist, or if no blocks exist,
- ***  otherwise returns 0. 
+ ***  otherwise returns 0.
  ***  If mtx_NONE is returned, block will contain the region
  ***  ((0,order-1),(0,order-1)) where order is the mtx_order.<br><br>
  ***
  ***  Calls on slaves are passed up to the master matrix.
  **/
 
-ASC_DLLSPEC int32 mtx_block_containing_row(mtx_matrix_t mtx, 
+ASC_DLLSPEC int32 mtx_block_containing_row(mtx_matrix_t mtx,
                                       int32 row,
                                       mtx_region_t *block);
 /**<
