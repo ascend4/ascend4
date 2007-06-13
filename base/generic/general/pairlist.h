@@ -37,8 +37,8 @@
 	Dates:        10/2006 - original version
 */
 
-#ifndef __pairlist_h_seen__
-#define __pairlist_h_seen__
+#ifndef ASC_PAIRLIST_H
+#define ASC_PAIRLIST_H
 
 struct pairlist_t;
 
@@ -120,5 +120,5 @@ extern void pairlist_print(FILE *fp, struct pairlist_t * pl);
  *  @param pl     The pairlist store on which to report.
  */
 
-#endif  /* __pairlist_h_seen__ */
+#endif /* ASC_PAIRLIST_H */
 
