@@ -1,0 +1,65 @@
+# This SCons build file allows a shared-library version of the 
+# optimisation package TRON to be built.
+#
+# Sources for TRON are available from 
+# http://www-unix.mcs.anl.gov/~more/tron/index.html
+#
+# John Pye, Jun 2007.
+
+env = Environment(tools=['default','fortran'])
+
+env['FORTRAN'] = "gfortran"
+env['SHFORTRANFLAGS'] = ['-O']
+
+#print "SHFORTRANCOM =",env['SHFORTRANCOM']
+
+tron = "dbreakpt.o   dgpstep.o    dsetsp.o     dtron.o  \
+        dcauchy.o    dmid.o       dspcg.o      dtrpcg.o \
+        dgpnrm2.o    dprsrch.o    dsphesd.o    dtrqsol.o"
+
+icf = "dicf.o      dpcg.o      dssyax.o    ihsort.o    srtdat2.o \
+        dicfs.o     dsel2.o     dstrsol.o   insort.o"
+
+coloring = "degr.o     ido.o      numsrt.o   seq.o      slo.o      srtdat.o \
+        dssm.o     idog.o     sdpt.o     setr.o     slog.o"
+
+# no blas routines -- we'll link to another BLAS, see below.
+
+tprobs = "deptfg.o   dgl1sp.o   dljcfg.o   dmsabc.o   dodchs.o   dpjbsp.o \
+        depths.o   dgl2co.o   dminfg.o   dmsafg.o   dodcps.o   dsscfg.o \
+        deptsp.o   dgl2fg.o   dminhs.o   dmsahs.o   dodcsp.o   dsschs.o \
+        dgl1fg.o   dgl2hs.o   dminsp.o   dmsasp.o   dpjbfg.o   dsscsp.o \
+        dgl1hs.o   dgl2sp.o   dminxb.o   dodcfg.o   dpjbhs.o"
+
+srcs = {"tron":tron,"icf":icf,"coloring":coloring,"tprobs":tprobs}
+
+# note that the 'utils' directory is deal with separately below.
+
+import re
+r1 = re.compile("\.o$")
+
+objs = []
+
+for k,v in srcs.iteritems():
+	for o in v.split():
+		srcname = r1.sub(".f",o)
+		objs += env.SharedObject("src/%s/%s" % (k,srcname))
+
+
+objs += [
+	env.SharedObject("src/utils/wallclock.c")
+	,env.SharedObject("src/utils/cputime.F")
+	,env.SharedObject("src/utils/dpmeps.f")
+]
+
+# build the shared library 'libtron.so' or 'tron.dll'
+
+lib = env.SharedLibrary("tron",objs)
+
+# build the test program and link to our shared library
+
+prog = env.Program("tron",['driver.f']
+	,LIBS=['tron','blas']
+	,LIBPATH=['#']
+	,CC="gfortran"
+)
