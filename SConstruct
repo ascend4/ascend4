@@ -14,6 +14,8 @@ opts = Options(['options.cache', 'config.py'])
 #print "PLATFORM = ",platform.system()
 
 default_tcl_cpppath = "$TCL/include"
+default_tron_envvar="TRON_PATH"
+default_conopt_envvar="CONOPT_PATH"
 
 if platform.system()=="Windows":
 	default_tcl_lib = "tcl84"
@@ -38,7 +40,9 @@ if platform.system()=="Windows":
 	default_conopt_cpppath="$CONOPT_PREFIX"
 	default_conopt_dlpath="$CONOPT_PREFIX"
 	default_conopt_lib="conopt3"
-	default_conopt_envvar="CONOPT_PATH"
+
+	default_conopt_dlpath="c:\\Program Files\\TRON"
+	default_conopt_lib="tron1"
 
 	default_prefix="c:\\MinGW"
 	default_libpath="$DEFAULT_PREFIX\\lib"
@@ -70,7 +74,10 @@ else:
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
 	default_conopt_dlpath= default_conopt_libpath + ":/usr/local/lib"
 	default_conopt_lib="consub3"
-	default_conopt_envvar="CONOPT_PATH"
+
+	default_tron_prefix="/usr"
+	default_tron_dlpath="$TRON_PREFIX/lib"
+	default_tron_lib="tron1"
 
 	default_prefix="/usr"
 	default_libpath="$DEFAULT_PREFIX/lib"
@@ -139,10 +146,10 @@ opts.Add(ListOption(
 	'WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works."
-	,["QRSLV","CMSLV","LSOD","IDA","CONOPT","LRSLV"]
+	,["QRSLV","CMSLV","LSOD","IDA","CONOPT","LRSLV","TRON"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSOD','OPTSQP',"IDA"
+		,'LSOD','OPTSQP',"IDA","TRON"
 	 ]
 ))
 
@@ -310,6 +317,32 @@ opts.Add(
 	'CONOPT_ENVVAR'
 	,"What environment variable should be used at runtime to override the default search location for CONOPT DLL/SO?"
 	,default_conopt_envvar
+)
+
+#------- TRON -------
+
+opts.Add(
+	'TRON_ENVVAR'
+	,"What environment variable should be used at runtime to override the default search location for TRON DLL/SO?"
+	,default_tron_envvar
+)
+
+opts.Add(
+	"TRON_LIB"
+	,"Library linked to for TRON"
+	,"tron"
+)
+
+opts.Add(PackageOption(
+	"TRON_PREFIX"
+	,"Prefix for your TRON install"
+	,default_tron_prefix
+))
+
+opts.Add(
+	'TRON_DLPATH'
+	,"What is the default search path that ASCEND should use when dlopening the TRON library at runtime?"
+	,default_tron_dlpath
 )
 
 #-------- f2c ------
