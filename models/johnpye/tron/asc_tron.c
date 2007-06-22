@@ -21,8 +21,11 @@
 
 	THIS IS STILL VERY MUCH UNDER DEVELOPMENT AND INCOMPLETE. I'VE ACTUALLY
 	ONLY JUST STARTED WRITING IT by starting with asc_conopt.c and modifying.
+
+	The TRON solver is documented in SIAM J Optimiz., vol. 9, no. 4, by
+	Lin and Moré. http://dx.doi.org/10.1137/S1052623498345075
 *//*
-	originally by John Pye, Jun 2007.
+	ASCEND wrapper for TRON originally by John Pye, Jun 2007.
 */
 
 #include <math.h>

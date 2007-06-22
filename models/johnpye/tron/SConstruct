@@ -4,6 +4,10 @@
 # Sources for TRON are available from 
 # http://www-unix.mcs.anl.gov/~more/tron/index.html
 #
+# Extract the tarball, put this file in the extracted 'tron'
+# directory, then type 'scons'. This will build 'libtron.so'
+# which you must then manually put somewhere nice.
+#
 # John Pye, Jun 2007.
 
 env = Environment(tools=['default','fortran'])
