@@ -5,10 +5,15 @@ solver_env = env.Copy()
 if solver_env.get('WITH_CONOPT'):
 	solver_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
 
-env['extfns'] += [solver_env.SharedLibrary("cmslv",["slv9.c"]
+libcmslv = [solver_env.SharedLibrary("cmslv",["slv9.c"]
 	,LIBS = ['ascend']
 	,LIBPATH = ['#']
 )]
+
+env['extfns'] += libcmslv
+
+if env.get('CAN_INSTALL'):
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),libcmslv)
 
 # vim: set syntax=python:
 

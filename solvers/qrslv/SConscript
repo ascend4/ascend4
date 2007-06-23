@@ -1,0 +1,17 @@
+Import('env')
+
+# To run the test, type
+#     ascend johnpye/qrslv/qrslv.a4c
+
+libqrslv = [env.SharedLibrary("qrslv",["qrslv.c"]
+	,LIBS = ['ascend']
+	,LIBPATH = ['#']
+)]
+
+env['extfns'] += libqrslv
+
+if env.get('CAN_INSTALL'):
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),libqrslv)
+
+# vim: set syntax=python:
+

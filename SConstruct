@@ -54,6 +54,7 @@ if platform.system()=="Windows":
 	need_libm = False
 	python_exe = "c:\\Python24\\python.exe"
 	default_with_scrollkeeper=False
+	pathsep = ";"
 else:
 	default_tcl_lib = "tcl8.4"
 	default_tk_lib = "tk8.4"
@@ -88,6 +89,7 @@ else:
 		default_tcl = '/usr'
 	python_exe = distutils.sysconfig.EXEC_PREFIX+"/bin/python"
 	default_with_scrollkeeper=False
+	pathsep = ":"
 
 opts.Add(
 	'CC'
@@ -192,7 +194,7 @@ opts.Add(
 	'DEFAULT_ASCENDLIBRARY'
 	,"Set the default value of the ASCENDLIBRARY -- the location where"
 		+" ASCEND will look for models when running ASCEND"
-	,"$INSTALL_ASCDATA/models"
+	,"$INSTALL_MODELS%s$INSTALL_SOLVERS" % pathsep
 )
 
 # Where is SWIG?
@@ -498,6 +500,18 @@ opts.Add(
 )
 
 opts.Add(
+	'INSTALL_MODELS'
+	,"Location of ASCEND model files (.a4c,.a4l,.a4s)"
+	,"$INSTALL_ASCDATA/models"
+)
+
+opts.Add(
+	'INSTALL_SOLVERS'
+	,"Location of ASCEND solvers"
+	,"$INSTALL_ASCDATA/solvers"
+)
+
+opts.Add(
 	'INSTALL_DOC'
 	,"Location of ASCEND documentation files"
 	,"$INSTALL_SHARE/doc/ascend-"+version
@@ -646,8 +660,7 @@ opts.Add(BoolOption(
 
 opts.Add(BoolOption(
 	'WITH_EXTFNS'
-	,"Set to 0 if you don't want to attempt to build external modules bundled"
-		+ " with ASCEND."
+	,"Set to 0 if you don't want to attempt to build the external modules bundled with ASCEND"
 	,True
 ))
 
@@ -799,7 +812,6 @@ if platform.system()=='Windows':
 	can_install = False
 
 env['CAN_INSTALL']=can_install
-env['INSTALL_MODELS']=env['INSTALL_ASCDATA']+"/models/"
 
 print "TCL=",env['TCL']
 print "TCL_CPPPATH =",env['TCL_CPPPATH']
@@ -810,7 +822,13 @@ print "CXX =",env['CXX']
 print "FORTRAN=",env.get('FORTRAN')
 
 print "ABSOLUTE PATHS =",env['ABSOLUTE_PATHS']
+print "INSTALL_ASCDATA =",env['INSTALL_ASCDATA']
 print "INSTALL_PREFIX =",env['INSTALL_PREFIX']
+print "INSTALL_MODELS =",env['INSTALL_MODELS']
+print "INSTALL_SOLVERS =",env['INSTALL_SOLVERS']
+print "DEFAULT_ASCENDLIBRARY =",env['DEFAULT_ASCENDLIBRARY']
+
+
 #------------------------------------------------------
 # SPECIAL CONFIGURATION TESTS
 
@@ -2025,6 +2043,7 @@ subst_dict = {
 	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
 	, '@INSTALL_LIB@':env['INSTALL_LIB']
 	, '@INSTALL_MODELS@':env['INSTALL_MODELS']
+	, '@INSTALL_SOLVERS@':env['INSTALL_SOLVERS']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
 	, '@RELEASE@':release
@@ -2223,9 +2242,15 @@ else:
 	print "Skipping... CUnit tests aren't being built:",without_cunit_reason
 
 #-------------
-# EXTERNAL FUNCTIONS
+# EXTERNAL SOLVERS
 
 env['extfns']=[]
+
+solverdirs = env.SConscript(['solvers/SConscript'],'env')
+
+#-------------
+# EXTERNAL FUNCTIONS
+
 modeldirs = env.SConscript(['models/SConscript'],'env')
 
 if not with_extfns:
@@ -2245,7 +2270,7 @@ if env.get('CAN_INSTALL'):
 
 	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE','INSTALL_DOC']
 	install_dirs = [Dir(env.subst("$INSTALL_ROOT$"+d)) for d in dirs]
-	install_dirs += modeldirs
+	install_dirs += modeldirs + solverdirs
 
 	# TODO: add install options
 	env.Alias('install',install_dirs)
@@ -2330,7 +2355,7 @@ env.SConscript('base/doc/SConscript',['env'])
 #------------------------------------------------------
 # DEFAULT TARGETS
 
-default_targets =['libascend']
+default_targets =['libascend','solvers']
 if with_tcltk:
 	default_targets.append('tcltk')
 if with_python:
