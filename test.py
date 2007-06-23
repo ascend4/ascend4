@@ -189,7 +189,7 @@ class TestSolver(AscendSelfTester):
 		self._run('distance_calc',filename="distance_calc.a4c")
 
 	def testconopt(self):
-		self._run('conopttest',"CONOPT",filename="johnpye/conopt/conopttest.a4c")				
+		self._run('conopttest',"CONOPT",filename="conopttest.a4c")				
 
 	def testcmslv2(self):
 		self._run('testcmslv2',"CMSlv")	
@@ -1406,8 +1406,10 @@ if __name__=='__main__':
 
 	freesteamdir = os.path.expanduser("~/freesteam/ascend")
 	modeldirs = [os.path.abspath(os.path.join(sys.path[0],"models")),os.path.abspath(freesteamdir)]
+	solverdir = os.path.abspath(os.path.join(sys.path[0],"solvers"))
+	solverdirs = [os.path.join(solverdir,s) for s in "qrslv","cmslv","lrslv","conopt"]
 	if not os.environ.get('ASCENDLIBRARY'):
-		os.environ['ASCENDLIBRARY'] = SEP.join(modeldirs)
+		os.environ['ASCENDLIBRARY'] = SEP.join(modeldirs+solverdirs)
 		restart = 1
 	else:
 		envmodelsdir = [os.path.abspath(i) for i in os.environ['ASCENDLIBRARY'].split(SEP)]

@@ -2246,7 +2246,7 @@ else:
 
 env['extfns']=[]
 
-solverdirs = env.SConscript(['solvers/SConscript'],'env')
+env.SConscript(['solvers/SConscript'],'env')
 
 #-------------
 # EXTERNAL FUNCTIONS
@@ -2270,7 +2270,7 @@ if env.get('CAN_INSTALL'):
 
 	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE','INSTALL_DOC']
 	install_dirs = [Dir(env.subst("$INSTALL_ROOT$"+d)) for d in dirs]
-	install_dirs += modeldirs + solverdirs
+	install_dirs += modeldirs + [Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS"))]
 
 	# TODO: add install options
 	env.Alias('install',install_dirs)

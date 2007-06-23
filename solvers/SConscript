@@ -8,6 +8,4 @@ subdirs = [
 for d in subdirs:
 	extenv.SConscript(d+'/SConscript',['env']);
 
-Return('subdirs')
-
 # vim: set syntax=python:

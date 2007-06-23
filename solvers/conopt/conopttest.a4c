@@ -1,7 +1,5 @@
 REQUIRE "atoms.a4l";
 
-IMPORT "johnpye/conopt/conopt";
-
 (*
 	This example model comes from the CONOPT documentation, which is
 	distributed with CONOPT.
