@@ -205,10 +205,10 @@ struct StaticSolverRegistration{
 	files.
 */
 static const struct StaticSolverRegistration slv_reg[]={
-	{"johnpye/qrslv/qrslv"}
-	,{"johnpye/conopt/conopt"}
-	,{"johnpye/lrslv/lrslv"}
-	,{"johnpye/cmslv/cmslv"}
+	{"qrslv"}
+	,{"conopt"}
+	,{"lrslv"}
+	,{"cmslv"}
 	,{NULL}
 #if 0
 /* 	{0,"SLV",&slv0_register} */

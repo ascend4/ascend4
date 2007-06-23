@@ -2,13 +2,12 @@ Import('env')
 extenv = env.Copy()
 
 subdirs = [
-	'extfn','datareader','brent','dopri5'
+	'qrslv','conopt','cmslv','lrslv','tron'
 ]
- 
+
 for d in subdirs:
 	extenv.SConscript(d+'/SConscript',['env']);
 
-if extenv.get('WITH_PYTHON'):
-	extenv.SConscript('extpy/SConscript',['env']);
+Return('subdirs')
 
 # vim: set syntax=python:

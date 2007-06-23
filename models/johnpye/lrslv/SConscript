@@ -1,9 +1,0 @@
-Import('env')
-
-env['extfns'] += [env.SharedLibrary("lrslv",["slv9a.c"]
-	,LIBS = ['ascend']
-	,LIBPATH = ['#']
-)]
-
-# vim: set syntax=python:
-

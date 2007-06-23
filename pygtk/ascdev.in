@@ -41,7 +41,9 @@ if __name__=='__main__':
 
 	# ensure that we have our 'models' dir in the ASCENDLIBRARY path
 	modeldirs = [os.path.join(sourceroot,"models")]
-	if add_at_start('ASCENDLIBRARY',modeldirs):
+	solverdir = os.path.join(sourceroot,"solvers")
+	solverdirs = [os.path.join(solverdir,d) for d in ['qrslv','conopt','lrslv','cmslv']]
+	if add_at_start('ASCENDLIBRARY',modeldirs+solverdirs):
 		restart.append('ASCENDLIBRARY')
 
 	# ensure that we have our shared libraries in the LD_LIBRARY_PATH
