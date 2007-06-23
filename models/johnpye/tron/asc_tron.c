@@ -133,9 +133,10 @@ typedef struct{
 	double *x;
 	double *xupper; /* upper bounds on each variable */
 	double *xlower; /* lower bounds on each variable */
-	double *f;
-	double *g;
-	TronMatrix A, B, L;
+	double *g; /* gradients of f with respect to each variable */
+	TronMatrix A; /* hessian matrix, passed to TRON? */
+	TronMatrix B; /* some matrix that we get back from TRON */
+	TronMatrix L; /* some other matrix that we get back from TRON */
 
 	double *xc, *s, *dsave, *wa;
 	int *indfree, *isave, *iwa;
@@ -664,7 +665,7 @@ static int tron_iterate(slv_system_t server, SlvClientToken asys){
 	double delta = SLV_PARAM_REAL(&(sys->params),TRON_PARAM_GTOL);
 	/** @TODO fmin should be taken from the model declaration somehow, not a solar parameter. */
 
-	DTRON(&(sys->n),sys->x,sys->xlower,sys->xupper,sys->f,sys->g
+	DTRON(&(sys->n),sys->x,sys->xlower,sys->xupper,&(sys->objective),sys->g
 		,TRON_MATRIX_ARG(sys,A)
 		,&frtol,&fatol,&fmin,&cgtol,&itermax,&delta,sys->task
 		,TRON_MATRIX_ARG(sys,B)
