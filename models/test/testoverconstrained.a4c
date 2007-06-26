@@ -1,0 +1,21 @@
+REQUIRE "atoms.a4l";
+
+(* To test what ASCEND will do when there is a redundant equation (eq1, eq2
+  and eq3 involve only variables x1 and x2 so one of them is redundant.
+  
+  When this model is passed to the solver, the console reports on this
+  problem, telling one the these three equations are in a structurally
+  deficient group and which two variables it involves.
+  *)
+
+
+MODEL overConstrained;
+    
+    x1,x2,x3,x4 IS_A factor;
+    
+    eq1: x1 + x2 = 4;
+    eq2: x1 + 2.0*x2 = 6;
+    eq3: x1 + 3.0*x2 = 8;
+    eq4: x2 + x3 + x4 = 64;
+    
+END overConstrained;
