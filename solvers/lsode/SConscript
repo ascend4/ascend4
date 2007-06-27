@@ -22,7 +22,7 @@ if 'LSODE' in env.get('WITH_SOLVERS'):
 		,LIBPATH=['#']
 	)
 
-	liblsode = solver_env.SharedLibrary('lsode',srcs)
+	liblsode = solver_env.SharedLibrary('lsode',srcs + env['blasobjs'])
 
 	env.Depends(liblsode,env['libascend'])
 

@@ -2,8 +2,9 @@ Import('env')
 extenv = env.Copy()
 
 subdirs = [
-	'qrslv','conopt','cmslv','lrslv','tron','lsode','ida'
+	'qrslv','conopt','cmslv','lrslv','lsode','ida'
 ]
+#'tron',
 
 for d in subdirs:
 	extenv.SConscript(d+'/SConscript',['env']);

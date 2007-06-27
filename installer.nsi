@@ -120,6 +120,14 @@ Section "ASCEND (required)"
 	File /r /x .svn "models\*.tcl"
 	File /r /x .svn "models\*.dll" ; extension modules
 	File /r /x .svn "models\*.py"; python modules
+	
+	SetOutPath $INSTDIR\solvers
+	File "solvers\qrslv\qrslv.dll"
+	File "solvers\conopt\conopt.dll"
+	File "solvers\lrslv\lrslv.dll"
+	File "solvers\cmslv\cmslv.dll"
+	File "solvers\lsode\lsode.dll"
+;	File "solvers\ida\ida.dll"
 
 	SetOutPath $INSTDIR
 	;File "Makefile.bt"
@@ -205,7 +213,7 @@ Section "PyGTK GUI"
 		SetOutPath $INSTDIR
 
 		; Python interface
-		File "pygtk\_ascpy.pyd"
+		File /nonfatal "pygtk\_ascpy.pyd"
 		File "pygtk\*.py"
 		File "pygtk\ascend"
 		File "pygtk\glade\ascend-doc.ico"
@@ -412,6 +420,12 @@ unnostart:
 	Delete $INSTDIR\Makefile.bt
 	Delete $INSTDIR\ascend.syn
 	RMDir /r $INSTDIR\models
+	Delete $INSTDIR\solvers\qrslv.dll
+	Delete $INSTDIR\solvers\conopt.dll
+	Delete $INSTDIR\solvers\lrslv.dll
+	Delete $INSTDIR\solvers\cmslv.dll
+	Delete $INSTDIR\solvers\lsode.dll
+	Delete $INSTDIR\solvers\ida.dll
 
 	; Remove directories used
 

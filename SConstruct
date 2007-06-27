@@ -41,8 +41,9 @@ if platform.system()=="Windows":
 	default_conopt_dlpath="$CONOPT_PREFIX"
 	default_conopt_lib="conopt3"
 
-	default_conopt_dlpath="c:\\Program Files\\TRON"
-	default_conopt_lib="tron1"
+	default_tron_prefix="c:\\Program Files\\TRON"
+	default_tron_dlpath="$TRON_PREFIX"
+	default_tron_lib="tron1"
 
 	default_prefix="c:\\MinGW"
 	default_libpath="$DEFAULT_PREFIX\\lib"
@@ -335,11 +336,11 @@ opts.Add(
 	,"tron"
 )
 
-opts.Add(PackageOption(
+opts.Add(
 	"TRON_PREFIX"
 	,"Prefix for your TRON install"
 	,default_tron_prefix
-))
+)
 
 opts.Add(
 	'TRON_DLPATH'
@@ -2196,8 +2197,9 @@ for d in dirs:
 #	print "Skipping... LSODE won't be built:", without_lsode_reason
 
 if with_local_blas:
-	srcs += env.SConscript(['blas/SConscript'],'env')
+	env['blasobjs'] = env.SConscript(['blas/SConscript'],'env')
 else:
+	env['blasobjs'] = []
 	print "Skipping... BLAS won't be built:", without_local_blas_reason
 
 if not with_ida:
