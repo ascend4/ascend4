@@ -15,4 +15,3 @@ if env.get('CAN_INSTALL'):
 	env.InstallShared(dir,libqrslv)
 
 # vim: set syntax=python:
-

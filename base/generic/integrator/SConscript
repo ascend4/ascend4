@@ -3,47 +3,16 @@ Import('libascend_env')
 objs = []
 
 csrcs = Split("""
-	integrator.c lsode.c samplelist.c aww.c
+	integrator.c samplelist.c
 """)
+# aww.c
 
 solver_env = libascend_env.Copy()
 if solver_env.get('WITH_MMIO'):
 	solver_env.Append(CPPPATH=["#/mmio"])
 
-
 for c in csrcs:
 	objs += solver_env.SharedObject(c)
-
-if solver_env.get('WITH_IDA'):
-	sundials_env = solver_env.Copy()
-
-	if solver_env.get('SUNDIALS_CPPPATH'):
-		sundials_env.Append(CPPPATH=[solver_env.get('SUNDIALS_CPPPATH')])
-
-	if solver_env.get('SUNDIALS_CPPPATH_EXTRA'):
-		sundials_env.AppendUnique(
-			CPPPATH=solver_env.get('SUNDIALS_CPPPATH_EXTRA')
-		)
-
-	sundials_env.Append(CPPDEFINES=[('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR"),('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")])
-
-	libascend_env.Append(
-		LIBPATH=[solver_env.get('SUNDIALS_LIBPATH')]
-		, LIBS=[solver_env.get('SUNDIALS_LIBS')]
-	)
-
-	idasrcs = ['ida.c','idalinear.c', 'idaanalyse.c']
-	for s in idasrcs:
-		objs += sundials_env.SharedObject(s)
-else:
-	pass
-#	print "NO IDA REQUESTED!"
-
-if 'LSOD' in solver_env.get('WITH_SOLVERS'):
-	if solver_env.get('F2C_LIBPATH'):
-		libascend_env.AppendUnique(LIBPATH=[solver_env.get('F2C_LIBPATH')])
-	if solver_env.get('F2C_LIB'):
-		libascend_env.AppendUnique(LIBS=[solver_env.get('F2C_LIB')])
 
 #--------------------
 # INSTALL
