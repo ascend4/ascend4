@@ -465,6 +465,8 @@ static void integrator_dopri5_fex(
 	}
 
 	integrator_get_ydot(blsys, ydot);
+
+	CONSOLE_DEBUG("y[0]=%e,y[1]=%e --> ydot[0]=%e,ydot[1]=%e",y[0],y[1],ydot[0],ydot[1]);
 	//CONSOLE_DEBUG("ydot[0] = %f",ydot[0]);
 	// DONE, OK
 }

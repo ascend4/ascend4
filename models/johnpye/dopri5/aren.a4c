@@ -4,7 +4,7 @@
 
 	We're not really concerned with the details of this problem. We're just	
 	trying to determine that our solver gets the right answer.	FORTRAN and
-	C code are provided that solve tihs problem; we aim to reproduce those
+	C codes are provided that solve this problem; we aim to reproduce those
 	results here using pure ASCEND code.
 
 	Expected output from the FORTRAN version:
@@ -27,6 +27,8 @@ REQUIRE "atoms.a4l";
 
 (* load the DOPRI5 integrator dynamically *)
 IMPORT "johnpye/dopri5/dopri5";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/solvernotes";
 
 MODEL aren;
 	(* constants *)
@@ -70,5 +72,12 @@ METHODS
 			y[i].obs_id := i+1;
 		END FOR;
 		x.ode_type := -1;
+		CALL solvernotes(SELF);
 	END on_load;
 END aren;
+
+ADD NOTES IN aren;
+	'QRSlv' feastol {1e-12}
+END NOTES;
+
+

@@ -1349,7 +1349,7 @@ class TestDOPRI5(Ascend):
 		self.L.load('johnpye/dopri5/aren.a4c')
 		M = self.L.findType('aren').getSimulation('sim')
 		M.setSolver(ascpy.Solver("QRSlv"))
-		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
 		I = ascpy.Integrator(M)
 		I.setEngine('DOPRI5')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
@@ -1358,6 +1358,7 @@ class TestDOPRI5(Ascend):
 		I.setParameter('rtol',1e-7)
 		I.setParameter('atol',1e-7)
 		I.setParameter('tolvect',False)
+		I.setMinSubStep(0);
 		I.setMaxSubStep(0);
 		I.setInitialSubStep(0);
 		I.analyse()
