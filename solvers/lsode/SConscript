@@ -17,7 +17,10 @@ if 'LSODE' in env.get('WITH_SOLVERS'):
 	if solver_env.get('F2C_LIB'):
 		solver_env.AppendUnique(LIBS=[env.get('F2C_LIB')])
 
-	solver_env.AppendUnique(LIBS=['ascend'])
+	solver_env.AppendUnique(
+		LIBS=['ascend']
+		,LIBPATH=['#']
+	)
 
 	liblsode = solver_env.SharedLibrary('lsode',srcs)
 
