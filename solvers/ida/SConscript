@@ -24,7 +24,7 @@ if 'IDA' in env['WITH_SOLVERS']:
 	)
 
 	solver_env.Append(
-		LIBPATH=[env.get('SUNDIALS_LIBPATH')]
+		LIBPATH=[env.get('SUNDIALS_LIBPATH'),"#"]
 		, LIBS=[env.get('SUNDIALS_LIBS'),"ascend"]
 	)
 
