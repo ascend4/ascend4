@@ -1,6 +1,6 @@
 Import('env')
 
-if 'IDA' in env['WITH_SOLVERS']:
+if env.get('WITH_IDA'):
 
 	solver_env = env.Copy()
 
