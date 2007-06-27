@@ -1,42 +1,40 @@
 Import('env')
 
-objs = []
+if 'IDA' in env['WITH_SOLVERS']:
 
-sundials_env = solver_env.Copy()
+	solver_env = env.Copy()
 
-if env.get('WITH_MMIO'):
-	sundials_env.Append(CPPPATH=["#/mmio"])
+	if env.get('WITH_MMIO'):
+		solver_env.Append(CPPPATH=["#/mmio"])
 
-if env.get('SUNDIALS_CPPPATH'):
-	sundials_env.Append(CPPPATH=[env.get('SUNDIALS_CPPPATH')])
+	if env.get('SUNDIALS_CPPPATH'):
+		solver_env.Append(CPPPATH=[env.get('SUNDIALS_CPPPATH')])
 
-if env.get('SUNDIALS_CPPPATH_EXTRA'):
-	sundials_env.AppendUnique(
-		CPPPATH=env.get('SUNDIALS_CPPPATH_EXTRA')
+	if env.get('SUNDIALS_CPPPATH_EXTRA'):
+		solver_env.AppendUnique(
+			CPPPATH=env.get('SUNDIALS_CPPPATH_EXTRA')
+		)
+
+	solver_env.Append(
+		CPPDEFINES=[
+			('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR")
+			,('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")
+			,'ASC_WITH_IDA'
+		]
 	)
 
-sundials_env.Append(
-	CPPDEFINES=[
-		('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR")
-		,('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")
-	]
-)
+	solver_env.Append(
+		LIBPATH=[env.get('SUNDIALS_LIBPATH')]
+		, LIBS=[env.get('SUNDIALS_LIBS'),"ascend"]
+	)
 
-sundials_env.Append(
-	LIBPATH=[solver_env.get('SUNDIALS_LIBPATH')]
-	, LIBS=[solver_env.get('SUNDIALS_LIBS')]
-)
+	srcs = ['ida.c','idalinear.c', 'idaanalyse.c']
+	libida = solver_env.SharedLibrary("ida",srcs)
 
-idasrcs = ['ida.c','idalinear.c', 'idaanalyse.c']
-for s in idasrcs:
-	objs += sundials_env.SharedObject(s)
+	env['extfns'] += libida
 
-libida = sundials_env.SharedLibrary("ida",objs)
-
-env['extfns'] += libda
-
-if env.get('CAN_INSTALL'):
-	dir = Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS"))
-	env.InstallShared(dir,libida)
+	if env.get('CAN_INSTALL'):
+		dir = Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS"))
+		env.InstallShared(dir,libida)
 
 # vim: set syntax=python:

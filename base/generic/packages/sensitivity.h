@@ -46,8 +46,8 @@
 */
 ASC_DLLSPEC int Compute_J(slv_system_t sys);
 ASC_DLLSPEC int NumberFreeVars(slv_system_t sys);
-int NumberIncludedRels(slv_system_t sys);
-int LUFactorJacobian(slv_system_t sys);
+ASC_DLLSPEC int NumberIncludedRels(slv_system_t sys);
+ASC_DLLSPEC int LUFactorJacobian(slv_system_t sys);
 ASC_DLLSPEC int Compute_dy_dx_smart(slv_system_t sys, real64 *rhs, DenseMatrix dy_dx,
 		int *inputs, int ninputs, int *outputs, int noutputs
 );
@@ -67,11 +67,6 @@ ASC_DLLSPEC int LUFactorJacobian1(slv_system_t sys,int rank);
 ASC_DLLSPEC struct Instance *FetchElement(struct gl_list_t *arglist,
 				     unsigned long whichbranch,
 				     unsigned long whichelement);
-
-/* I *think* that we can probably replace these with 'densemtx.h' functions. */
-
-ASC_DLLSPEC real64 **make_matrix(int nrows, int ncols);
-ASC_DLLSPEC void free_matrix(real64 **matrix, int nrows);
 
 #endif  /* ASC_SENSITIVITY_H */
 

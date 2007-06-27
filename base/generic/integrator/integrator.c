@@ -29,6 +29,7 @@
 
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
+#include <compiler/packages.h>
 
 #include <system/slv_common.h>
 #include <system/slv_stdcalls.h>
@@ -37,9 +38,6 @@
 #include <solver/solver.h>
 
 #include "integrator.h"
-#include "lsode.h"
-#include "aww.h"
-#include "ida.h"
 #include "samplelist.h"
 
 #define ANALYSE_DEBUG
@@ -212,6 +210,14 @@ static void IntegInitSymbols(void){
 static struct gl_list_t *integrator_get_list(int free_space){
 	static int init = 0;
 	static struct gl_list_t *L;
+	int i, error;
+	/* standard integrators that we will register */
+	static char *defaultintegrators[] = {
+		"lsode"
+		,"ida"
+		,NULL
+	};
+
 	if(free_space){
 		if(init && L)ASC_FREE(L);
 		init = 0;
@@ -219,11 +225,22 @@ static struct gl_list_t *integrator_get_list(int free_space){
 	}
 	if(!init){
 		L = gl_create(10);
-#ifdef ASC_WITH_IDA
-		gl_append_ptr(L, (IntegratorInternals *)&integrator_ida_internals);
-#endif
-		gl_append_ptr(L, (IntegratorInternals *)&integrator_lsode_internals);
-		init = 1;
+		init = 1; /* set init to 1 here now, since this will be called
+			recursively from the LoadArchiveLibrary call. */
+
+
+		/* CONSOLE_DEBUG("REGISTERING STANDARD SOLVER ENGINES"); */
+		for(i=0; defaultintegrators[i]!=NULL;++i){
+			error = LoadArchiveLibrary(defaultintegrators[i],NULL);
+			if(error){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR
+					,"Unable to register integrator '%s' (error %d)."
+					,defaultintegrators[i],error
+				);
+			}else{
+				CONSOLE_DEBUG("Integrator '%s' registered OK",defaultintegrators[i]);
+			}
+		}
 	}
 	return L;
 }

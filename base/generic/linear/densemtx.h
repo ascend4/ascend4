@@ -75,7 +75,7 @@ ASC_DLLSPEC DenseMatrix densematrix_create(unsigned nrows, unsigned ncols);
 ASC_DLLSPEC void densematrix_destroy(DenseMatrix matrix);
 
 #ifdef ASC_WITH_MMIO
-void densematrix_write_mmio(DenseMatrix matrix, FILE *fp);
+ASC_DLLSPEC void densematrix_write_mmio(DenseMatrix matrix, FILE *fp);
 #endif
 
 /* @} */

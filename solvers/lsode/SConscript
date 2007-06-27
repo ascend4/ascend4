@@ -1,21 +1,26 @@
 Import('env')
 
-solver_env = env.Copy()
+if 'LSODE' in env.get('WITH_SOLVERS'):
 
-srcs = ['lsode.f','lsode.c']
+	solver_env = env.Copy()
 
-lsode = solver_env.SharedObject('lsode')
+	srcs = ['lsode.f','asc_lsode.c']
 
-#if 'LSOD' in solver_env.get('WITH_SOLVERS'):
+	linpack_srcs = ['d1mach.c','dgbfa.f','dgbsl.f','dgefa.f','dgesl.f']
 
-if env.get('F2C_LIBPATH'):
-	solver_env.AppendUnique(LIBPATH=[env.get('F2C_LIBPATH')])
+	for s in linpack_srcs:
+		srcs.append( "linpack/%s" % s )
 
-if solver_env.get('F2C_LIB'):
-	solver_env.AppendUnique(LIBS=[env.get('F2C_LIB')])
+	if env.get('F2C_LIBPATH'):
+		solver_env.AppendUnique(LIBPATH=[env.get('F2C_LIBPATH')])
 
-liblsode = solver_env.SharedLibrary('lsode',srcs)
+	if solver_env.get('F2C_LIB'):
+		solver_env.AppendUnique(LIBS=[env.get('F2C_LIB')])
 
-env['extfns'] += [liblsode]
+	solver_env.AppendUnique(LIBS=['ascend'])
 
-# vim: set syntax=python:
+	liblsode = solver_env.SharedLibrary('lsode',srcs)
+
+	env['extfns'] += [liblsode]
+
+	# vim: set syntax=python:

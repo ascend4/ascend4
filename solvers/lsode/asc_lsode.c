@@ -56,8 +56,6 @@
 # error "Where is CLOCKS_PER_SEC?"
 #endif
 
-#include "lsode.h"
-
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
@@ -71,11 +69,17 @@
 
 #include <linear/densemtx.h>
 
-#include "integrator.h"
+#include <integrator/integrator.h>
 
 /* #define TIMING_DEBUG */
 
-const IntegratorInternals integrator_lsode_internals = {
+static IntegratorCreateFn integrator_lsode_create;
+static IntegratorParamsDefaultFn integrator_lsode_params_default;
+static IntegratorSolveFn integrator_lsode_solve;
+static IntegratorFreeFn integrator_lsode_free;
+static IntegratorWriteMatrixFn integrator_lsode_write_matrix;
+
+static const IntegratorInternals integrator_lsode_internals = {
 	integrator_lsode_create
 	,integrator_lsode_params_default
 	,integrator_analyse_ode /* note, this routine is back in integrator.c */
@@ -86,6 +90,11 @@ const IntegratorInternals integrator_lsode_internals = {
 	,INTEG_LSODE
 	,"LSODE"
 };
+
+extern ASC_EXPORT int lsode_register(void){
+	CONSOLE_DEBUG("Registering LSODE...");
+	return integrator_register(&integrator_lsode_internals);
+}
 
 /*
 #include "Sensitivity.h"
@@ -145,8 +154,7 @@ static symchar *g_symbols[2];
 #define STATERTOL g_symbols[0]
 #define STATEATOL g_symbols[1]
 static
-void InitTolNames(void)
-{
+void InitTolNames(void){
   STATERTOL = AddSymbol("ode_rtol");
   STATEATOL = AddSymbol("ode_atol");
 }
@@ -238,7 +246,7 @@ typedef void LsodeJacobianFn(int *, double *, double *, int *, int *, double *, 
   forward declarations
 */
 
-int integrator_lsode_setup_diffs(IntegratorSystem *blsys);
+static int integrator_lsode_setup_diffs(IntegratorSystem *blsys);
 
 /**
 	void LSODE(&fex, &neq, y, &x, &xend, &itol, reltol, abtol, &itask,
@@ -261,7 +269,7 @@ void LSODE(LsodeEvalFn*,int *neq ,double *y ,double *x
   Memory allocation/free
 */
 
-void integrator_lsode_create(IntegratorSystem *blsys){
+static void integrator_lsode_create(IntegratorSystem *blsys){
 	IntegratorLsodeData *d;
 	d = ASC_NEW_CLEAR(IntegratorLsodeData);
 	d->n_eqns=0;
@@ -279,7 +287,7 @@ void integrator_lsode_create(IntegratorSystem *blsys){
 /**
 	Cleanup the data struct that belongs to LSODE
 */
-void integrator_lsode_free(void *enginedata){
+static void integrator_lsode_free(void *enginedata){
 	IntegratorLsodeData d;
 	d = *((IntegratorLsodeData *)enginedata);
 
@@ -325,7 +333,7 @@ enum ida_parameters{
 
 	@return 0 on success
 */
-int integrator_lsode_params_default(IntegratorSystem *blsys){
+static int integrator_lsode_params_default(IntegratorSystem *blsys){
 
 	asc_assert(blsys!=NULL);
 	asc_assert(blsys->engine==INTEG_LSODE);
@@ -433,7 +441,7 @@ int integrator_lsode_params_default(IntegratorSystem *blsys){
 	an instance and ask the solvers for its global or local index
 	if var and inst are decoupled.
 */
-int integrator_lsode_setup_diffs(IntegratorSystem *blsys) {
+static int integrator_lsode_setup_diffs(IntegratorSystem *blsys) {
 	/* long n_eqns; */
 	unsigned long nch,i;
 
@@ -641,7 +649,7 @@ static void lsode_free_mem(double *y, double *reltol, double *abtol, double *rwo
 
 	@NOTE It is assumed the system has been solved at the current point. @ENDNOTE
 */
-int integrator_lsode_derivatives(IntegratorSystem *blsys
+static int integrator_lsode_derivatives(IntegratorSystem *blsys
 		, int ninputs
 		, int noutputs
 ){
@@ -903,7 +911,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y
 
 	Return 0 on success
 */
-int integrator_lsode_solve(IntegratorSystem *blsys
+static int integrator_lsode_solve(IntegratorSystem *blsys
 		, unsigned long start_index, unsigned long finish_index
 ){
 
@@ -1336,7 +1344,7 @@ void XASCWV( char *msg, /* pointer to start of message */
 	on the state of the *system* rather than the integrator, so that we
 	can work out these matrices even before we start solving the problem.
 */
-int integrator_lsode_write_matrix(const IntegratorSystem *blsys, FILE *fp,const char *type){
+static int integrator_lsode_write_matrix(const IntegratorSystem *blsys, FILE *fp,const char *type){
 	IntegratorLsodeData *enginedata;
 
 	UNUSED_PARAMETER(type);
@@ -1358,8 +1366,4 @@ int integrator_lsode_write_matrix(const IntegratorSystem *blsys, FILE *fp,const 
 	return 1;
 #endif
 }
-
-
-
-
 

@@ -17,9 +17,6 @@ csrcs = Split("""
 
 solver_env = libascend_env.Copy()
 
-for i in libascend_env.get('WITH_SOLVERS'):
-    solver_env.Append(CPPDEFINES=["STATIC_"+i])
-
 defs = []
 objs = []
 

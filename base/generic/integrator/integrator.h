@@ -500,7 +500,7 @@ ASC_DLLSPEC double *integrator_get_ydot(IntegratorSystem *blsys, double *vector)
 	Vector, if given, should be IntegGet_d_neq()+1 long.
 */
 
-extern void integrator_set_ydot(IntegratorSystem *blsys, double *vector);
+ASC_DLLSPEC void integrator_set_ydot(IntegratorSystem *blsys, double *vector);
 /**<
 	Sets d.dydx[] to values in vector.
 */
@@ -523,7 +523,7 @@ ASC_DLLSPEC struct var_variable *integrator_get_independent_var(IntegratorSystem
 	Return a pointer to the variable identified as the independent variable.
 */
 
-extern double *integrator_get_atol(IntegratorSystem *blsys, double *vector);
+ASC_DLLSPEC double *integrator_get_atol(IntegratorSystem *blsys, double *vector);
 /**<
 	Return abolute tolerance values for the 'ode_atol' values in the MODEL.
 */
