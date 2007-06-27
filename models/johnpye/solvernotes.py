@@ -61,7 +61,7 @@ def solvernotes(self):
 		note = notes[i]
 
 		if note.getId()==None:
-			#browser.reporter.reportNote("Empty note ID...")
+			browser.reporter.reportNote("Empty note ID...")
 			continue
 		n = note.getId()
 		param = None
