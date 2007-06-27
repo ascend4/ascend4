@@ -58,9 +58,7 @@ ASC_DLLSPEC SolverRegisterFn conopt_register;
 #define conopt_coimem coimem
 
 #ifndef ASC_WITH_CONOPT
-int conopt_register(SlvFunctionsT *f){
-  (void)f;  /* stop gcc whine about unused parameter */
-
+int conopt_register(void){
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT has not been compiled into this copy of ASCEND.");
   return 1;
 }
