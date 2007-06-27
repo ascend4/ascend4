@@ -35,7 +35,6 @@
 
 #include <utilities/ascConfig.h>
 #include <integrator/integrator.h>
-#include <integrator/lsode.h>
 #include <integrator/samplelist.h>
 
 #include "HelpProc.h"
