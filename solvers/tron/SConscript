@@ -5,9 +5,13 @@ solver_env = env.Copy()
 if solver_env.get('WITH_TRON'):
 	solver_env.AppendUnique(CPPPATH=[solver_env.get('TRON_CPPPATH')])
 
-env['extfns'] += [solver_env.SharedLibrary("tron",["asc_tron.c"]
+libtron = solver_env.SharedLibrary("tron",["asc_tron.c"]
 	,LIBS = ['ascend']
 	,LIBPATH = ['#']
-)]
+)
+
+env.Depends(libtron,env['libascend'])
+
+env['extfns'] += [libtron]
 
 # vim: set syntax=python:

@@ -31,6 +31,8 @@ if 'IDA' in env['WITH_SOLVERS']:
 	srcs = ['ida.c','idalinear.c', 'idaanalyse.c']
 	libida = solver_env.SharedLibrary("ida",srcs)
 
+	env.Depends(libida,env['libascend'])
+
 	env['extfns'] += libida
 
 	if env.get('CAN_INSTALL'):

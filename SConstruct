@@ -2218,6 +2218,9 @@ if with_ufsparse:
 
 libascend = libascend_env.SharedLibrary('ascend',srcs)
 
+# for use in declaring dependent shared libraries in SConscript files (eg solvers/*/SConscript)
+env['libascend'] = libascend
+
 env.Alias('libascend',libascend)
 
 #-------------
