@@ -10,6 +10,8 @@ libcmslv = [solver_env.SharedLibrary("cmslv",["slv9.c"]
 	,LIBPATH = ['#']
 )]
 
+env.Depends(libcmslv,env['libascend'])
+
 env['extfns'] += libcmslv
 
 if env.get('CAN_INSTALL'):

@@ -21,6 +21,8 @@ if 'LSODE' in env.get('WITH_SOLVERS'):
 
 	liblsode = solver_env.SharedLibrary('lsode',srcs)
 
+	env.Depends(liblsode,env['libascend'])
+
 	env['extfns'] += [liblsode]
 
 	# vim: set syntax=python:
