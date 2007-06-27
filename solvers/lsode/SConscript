@@ -1,7 +1,21 @@
 Import('env')
 
-srcs = ['lsode.f']
+solver_env = env.Copy()
 
-lsode = env.SharedObject('lsode',srcs)
+srcs = ['lsode.f','lsode.c']
 
-Return('lsode')
+lsode = solver_env.SharedObject('lsode')
+
+#if 'LSOD' in solver_env.get('WITH_SOLVERS'):
+
+if env.get('F2C_LIBPATH'):
+	solver_env.AppendUnique(LIBPATH=[env.get('F2C_LIBPATH')])
+
+if solver_env.get('F2C_LIB'):
+	solver_env.AppendUnique(LIBS=[env.get('F2C_LIB')])
+
+liblsode = solver_env.SharedLibrary('lsode',srcs)
+
+env['extfns'] += [liblsode]
+
+# vim: set syntax=python:

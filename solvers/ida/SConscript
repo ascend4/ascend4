@@ -1,63 +1,42 @@
-Import('libascend_env')
+Import('env')
 
 objs = []
 
-csrcs = Split("""
-	integrator.c lsode.c samplelist.c aww.c
-""")
+sundials_env = solver_env.Copy()
 
-solver_env = libascend_env.Copy()
-if solver_env.get('WITH_MMIO'):
-	solver_env.Append(CPPPATH=["#/mmio"])
+if env.get('WITH_MMIO'):
+	sundials_env.Append(CPPPATH=["#/mmio"])
 
+if env.get('SUNDIALS_CPPPATH'):
+	sundials_env.Append(CPPPATH=[env.get('SUNDIALS_CPPPATH')])
 
-for c in csrcs:
-	objs += solver_env.SharedObject(c)
-
-if solver_env.get('WITH_IDA'):
-	sundials_env = solver_env.Copy()
-
-	if solver_env.get('SUNDIALS_CPPPATH'):
-		sundials_env.Append(CPPPATH=[solver_env.get('SUNDIALS_CPPPATH')])
-
-	if solver_env.get('SUNDIALS_CPPPATH_EXTRA'):
-		sundials_env.AppendUnique(
-			CPPPATH=solver_env.get('SUNDIALS_CPPPATH_EXTRA')
-		)
-
-	sundials_env.Append(CPPDEFINES=[('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR"),('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")])
-
-	libascend_env.Append(
-		LIBPATH=[solver_env.get('SUNDIALS_LIBPATH')]
-		, LIBS=[solver_env.get('SUNDIALS_LIBS')]
+if env.get('SUNDIALS_CPPPATH_EXTRA'):
+	sundials_env.AppendUnique(
+		CPPPATH=env.get('SUNDIALS_CPPPATH_EXTRA')
 	)
 
-	idasrcs = ['ida.c','idalinear.c', 'idaanalyse.c']
-	for s in idasrcs:
-		objs += sundials_env.SharedObject(s)
-else:
-	pass
-#	print "NO IDA REQUESTED!"
+sundials_env.Append(
+	CPPDEFINES=[
+		('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR")
+		,('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")
+	]
+)
 
-if 'LSOD' in solver_env.get('WITH_SOLVERS'):
-	if solver_env.get('F2C_LIBPATH'):
-		libascend_env.AppendUnique(LIBPATH=[solver_env.get('F2C_LIBPATH')])
-	if solver_env.get('F2C_LIB'):
-		libascend_env.AppendUnique(LIBS=[solver_env.get('F2C_LIB')])
+sundials_env.Append(
+	LIBPATH=[solver_env.get('SUNDIALS_LIBPATH')]
+	, LIBS=[solver_env.get('SUNDIALS_LIBS')]
+)
 
-#--------------------
-# INSTALL
+idasrcs = ['ida.c','idalinear.c', 'idaanalyse.c']
+for s in idasrcs:
+	objs += sundials_env.SharedObject(s)
 
-import glob
+libida = sundials_env.SharedLibrary("ida",objs)
 
-if libascend_env.get('CAN_INSTALL'):
-	installdir = Dir(libascend_env.subst("$INSTALL_ROOT$INSTALL_INCLUDE/integrator"))
+env['extfns'] += libda
 
-	headers = glob.glob("*.h")
-	libascend_env.InstallHeader(installdir,headers)
-
-print "OBJS =",objs
-Return('objs')
+if env.get('CAN_INSTALL'):
+	dir = Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS"))
+	env.InstallShared(dir,libida)
 
 # vim: set syntax=python:
-
