@@ -19,14 +19,6 @@ Vendor:		Carnegie Mellon University
 
 Buildroot: /var/tmp/%{name}-buildroot
 
-%description
-ASCEND IV is both a large-scale object-oriented mathematical
-modeling environment and a strongly typed mathematical modeling
-language. Although ASCEND has primarily been developed by Chemical
-Engineers, great care has been exercised to assure that it is
-domain independent. ASCEND can support modeling activities in
-fields from Architecture to (computational) Zoology.
-
 #----------build dependencies------------
 
 # ...general
