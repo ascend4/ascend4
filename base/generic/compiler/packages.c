@@ -175,7 +175,7 @@ int LoadArchiveLibrary(CONST char *partialpath, CONST char *initfunc){
 	/* note the import handler will deal with all the initfunc execution, etc etc */
 	result = (*(handler->importfn))(fp1,initfunc,partialpath);
 	if(result){
-		CONSOLE_DEBUG("Error %d when importing external library of type '%s'",result,handler->name);
+		//CONSOLE_DEBUG("Error %d when importing external library of type '%s'",result,handler->name);
 		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Error importing external library '%s'",partialpath);
 		ospath_free(fp1);
 		return 1;
