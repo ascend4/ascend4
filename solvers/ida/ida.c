@@ -33,8 +33,6 @@
 
 #define _GNU_SOURCE
 
-#include "ida.h"
-
 #include <signal.h>
 #include <setjmp.h>
 #include <fenv.h>
@@ -85,6 +83,9 @@
 #include <system/jacobian.h>
 #include <system/bndman.h>
 
+#include <utilities/config.h>
+#include <integrator/integrator.h>
+
 #include "idalinear.h"
 #include "idaanalyse.h"
 #include "ida_impl.h"
@@ -102,11 +103,6 @@
 # define SUNDIALS_VERSION_MAJOR 2
 #endif
 
-/* check that we've got what we expect now */
-#ifndef ASC_IDA_H
-# error "Failed to include ASCEND IDA header file"
-#endif
-
 /* #define FEX_DEBUG */
 #define JEX_DEBUG
 /* #define DJEX_DEBUG */
@@ -120,10 +116,17 @@
 /* #define DESTROY_DEBUG */
 /* #define MATRIX_DEBUG */
 
+static IntegratorCreateFn integrator_ida_create;
+static IntegratorParamsDefaultFn integrator_ida_params_default;
+static IntegratorSolveFn integrator_ida_solve;
+static IntegratorFreeFn integrator_ida_free;
+static IntegratorDebugFn integrator_ida_debug;
+static IntegratorWriteMatrixFn integrator_ida_write_matrix;
+
 /**
 	Everthing that the outside world needs to know about IDA
 */
-const IntegratorInternals integrator_ida_internals = {
+static const IntegratorInternals integrator_ida_internals = {
 	integrator_ida_create
 	,integrator_ida_params_default
 	,integrator_ida_analyse
@@ -134,6 +137,11 @@ const IntegratorInternals integrator_ida_internals = {
 	,INTEG_IDA
 	,"IDA"
 };
+
+extern ASC_EXPORT int ida_register(void){
+	CONSOLE_DEBUG("Registering IDA...");
+	return integrator_register(&integrator_ida_internals);
+}
 
 /*-------------------------------------------------------------
   FORWARD DECLS
@@ -190,31 +198,31 @@ typedef struct IntegratorIdaPrecStruct{
 } IntegratorIdaPrec;
 
 /* residual function forward declaration */
-int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data);
+static int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data);
 
-int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
+static int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 		, N_Vector v, N_Vector Jv, realtype c_j
 		, void *jac_data, N_Vector tmp1, N_Vector tmp2
 );
 
 /* error handler forward declaration */
-void integrator_ida_error(int error_code
+static void integrator_ida_error(int error_code
 		, const char *module, const char *function
 		, char *msg, void *eh_data
 );
 
 /* dense jacobian evaluation for IDADense dense direct linear solver */
-int integrator_ida_djex(long int Neq, realtype tt
+static int integrator_ida_djex(long int Neq, realtype tt
 		, N_Vector yy, N_Vector yp, N_Vector rr
 		, realtype c_j, void *jac_data, DenseMat Jac
 		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
 );
 
 /* sparse jacobian evaluation for ASCEND's sparse direct solver */
-IntegratorSparseJacFn integrator_ida_sjex;
+static IntegratorSparseJacFn integrator_ida_sjex;
 
 /* boundary-detection function */
-int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout, void *g_data);
+static int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout, void *g_data);
 
 typedef struct IntegratorIdaStatsStruct{
 	long nsteps;
@@ -232,31 +240,31 @@ typedef void (IntegratorVarVisitorFn)(IntegratorSystem *sys, struct var_variable
 static void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
 static void integrator_dae_show_var(IntegratorSystem *sys, struct var_variable *var, const int *varindx); */
 
-int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
-void integrator_ida_write_stats(IntegratorIdaStats *stats);
-void integrator_ida_write_incidence(IntegratorSystem *sys);
+static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
+static void integrator_ida_write_stats(IntegratorIdaStats *stats);
+static void integrator_ida_write_incidence(IntegratorSystem *sys);
 
 /*------
   Full jacobian preconditioner -- experimental
 */
 
-int integrator_ida_psetup_jacobian(realtype tt,
+static int integrator_ida_psetup_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 realtype c_j, void *prec_data,
 		 N_Vector tmp1, N_Vector tmp2,
 		 N_Vector tmp3
 );
 
-int integrator_ida_psolve_jacobian(realtype tt,
+static int integrator_ida_psolve_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
 		 realtype c_j, realtype delta, void *prec_data,
 		 N_Vector tmp
 );
 
-void integrator_ida_pcreate_jacobian(IntegratorSystem *sys);
+static void integrator_ida_pcreate_jacobian(IntegratorSystem *sys);
 
-void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata);
+static void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata);
 
 static const IntegratorIdaPrec prec_jacobian = {
 	integrator_ida_pcreate_jacobian
@@ -268,23 +276,23 @@ static const IntegratorIdaPrec prec_jacobian = {
   Jacobi preconditioner -- experimental
 */
 
-int integrator_ida_psetup_jacobi(realtype tt,
+static int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 realtype c_j, void *prec_data,
 		 N_Vector tmp1, N_Vector tmp2,
 		 N_Vector tmp3
 );
 
-int integrator_ida_psolve_jacobi(realtype tt,
+static int integrator_ida_psolve_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
 		 realtype c_j, realtype delta, void *prec_data,
 		 N_Vector tmp
 );
 
-void integrator_ida_pcreate_jacobi(IntegratorSystem *sys);
+static void integrator_ida_pcreate_jacobi(IntegratorSystem *sys);
 
-void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata);
+static void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata);
 
 static const IntegratorIdaPrec prec_jacobi = {
 	integrator_ida_pcreate_jacobi
@@ -295,7 +303,7 @@ static const IntegratorIdaPrec prec_jacobi = {
 /*-------------------------------------------------------------
   SETUP/TEARDOWN ROUTINES
 */
-void integrator_ida_create(IntegratorSystem *sys){
+static void integrator_ida_create(IntegratorSystem *sys){
 	CONSOLE_DEBUG("ALLOCATING IDA ENGINE DATA");
 	IntegratorIdaData *enginedata;
 	enginedata = ASC_NEW(IntegratorIdaData);
@@ -314,7 +322,7 @@ void integrator_ida_create(IntegratorSystem *sys){
 	integrator_ida_params_default(sys);
 }
 
-void integrator_ida_free(void *enginedata){
+static void integrator_ida_free(void *enginedata){
 #ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("DESTROYING IDA engine data at %p",enginedata);
 #endif
@@ -337,7 +345,7 @@ void integrator_ida_free(void *enginedata){
 #endif
 }
 
-IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *sys){
+static IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *sys){
 	IntegratorIdaData *d;
 	assert(sys!=NULL);
 	assert(sys->enginedata!=NULL);
@@ -350,7 +358,7 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *sys){
   PARAMETERS FOR IDA
 */
 
-enum ida_parameters{
+static enum ida_parameters{
 	IDA_PARAM_LINSOLVER
 	,IDA_PARAM_MAXL
 	,IDA_PARAM_MAXORD
@@ -376,7 +384,7 @@ enum ida_parameters{
 
 	@return 0 on success
 */
-int integrator_ida_params_default(IntegratorSystem *sys){
+static int integrator_ida_params_default(IntegratorSystem *sys){
 	asc_assert(sys!=NULL);
 	asc_assert(sys->engine==INTEG_IDA);
 	slv_parameters_t *p;
@@ -521,7 +529,7 @@ typedef int IdaFlagFn(void *,int *);
 typedef char *IdaFlagNameFn(int);
 
 /* return 0 on success */
-int integrator_ida_solve(
+static int integrator_ida_solve(
 		IntegratorSystem *sys
 		, unsigned long start_index
 		, unsigned long finish_index
@@ -1080,7 +1088,7 @@ void integrator_ida_sig(int sig){
 	@return 0 on success, positive on recoverable error, and
 		negative on unrecoverable error.
 */
-int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data){
+static int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data){
 	IntegratorSystem *sys;
 	IntegratorIdaData *enginedata;
 	int i, calc_ok, is_error;
@@ -1217,7 +1225,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	Dense Jacobian evaluation. Only suitable for small problems!
 	Has been seen working for problems up to around 2000 vars, FWIW.
 */
-int integrator_ida_djex(long int Neq, realtype tt
+static int integrator_ida_djex(long int Neq, realtype tt
 		, N_Vector yy, N_Vector yp, N_Vector rr
 		, realtype c_j, void *jac_data, DenseMat Jac
 		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
@@ -1415,7 +1423,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	@param tmp2 (as well as tmp1) pointers to memory allocated for variables of type N_Vector for use here as temporary storage or work space.
 	@return 0 on success
 */
-int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
+static int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 		, N_Vector v, N_Vector Jv, realtype c_j
 		, void *jac_data, N_Vector tmp1, N_Vector tmp2
 ){
@@ -1559,7 +1567,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 }
 
 /* sparse jacobian evaluation for IDAASCEND sparse direct linear solver */
-int integrator_ida_sjex(long int Neq, realtype tt
+static int integrator_ida_sjex(long int Neq, realtype tt
 		, N_Vector yy, N_Vector yp, N_Vector rr
 		, realtype c_j, void *jac_data, mtx_matrix_t Jac
 		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
@@ -1622,7 +1630,7 @@ int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout,
   FULL JACOBIAN PRECONDITIONER -- EXPERIMENTAL.
 */
 
-void integrator_ida_pcreate_jacobian(IntegratorSystem *sys){
+static void integrator_ida_pcreate_jacobian(IntegratorSystem *sys){
 	IntegratorIdaData *enginedata =sys->enginedata;
 	IntegratorIdaPrecDataJacobian *precdata;
 	precdata = ASC_NEW(IntegratorIdaPrecDataJacobian);
@@ -1640,7 +1648,7 @@ void integrator_ida_pcreate_jacobian(IntegratorSystem *sys){
 	CONSOLE_DEBUG("Allocated memory for Full Jacobian preconditioner");
 }
 
-void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
+static void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
 	mtx_matrix_t P;
 	IntegratorIdaPrecDataJacobian *precdata;
 
@@ -1662,7 +1670,7 @@ void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
 
 	'setup' function.
 */
-int integrator_ida_psetup_jacobian(realtype tt,
+static int integrator_ida_psetup_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 realtype c_j, void *p_data,
 		 N_Vector tmp1, N_Vector tmp2,
@@ -1744,7 +1752,7 @@ finish:
 
 	'solve' function.
 */
-int integrator_ida_psolve_jacobian(realtype tt,
+static int integrator_ida_psolve_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
 		 realtype c_j, realtype delta, void *p_data,
@@ -1781,7 +1789,7 @@ int integrator_ida_psolve_jacobian(realtype tt,
   JACOBI PRECONDITIONER -- EXPERIMENTAL.
 */
 
-void integrator_ida_pcreate_jacobi(IntegratorSystem *sys){
+static void integrator_ida_pcreate_jacobi(IntegratorSystem *sys){
 	IntegratorIdaData *enginedata =sys->enginedata;
 	IntegratorIdaPrecDataJacobi *precdata;
 	precdata = ASC_NEW(IntegratorIdaPrecDataJacobi);
@@ -1794,7 +1802,7 @@ void integrator_ida_pcreate_jacobi(IntegratorSystem *sys){
 	CONSOLE_DEBUG("Allocated memory for Jacobi preconditioner");
 }
 
-void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
+static void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
 	if(enginedata->precdata){
 		IntegratorIdaPrecDataJacobi *precdata = (IntegratorIdaPrecDataJacobi *)enginedata->precdata;
 		N_VDestroy_Serial(precdata->PIii);
@@ -1811,7 +1819,7 @@ void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
 
 	'setup' function.
 */
-int integrator_ida_psetup_jacobi(realtype tt,
+static int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 realtype c_j, void *p_data,
 		 N_Vector tmp1, N_Vector tmp2,
@@ -1890,7 +1898,7 @@ finish:
 
 	'solve' function.
 */
-int integrator_ida_psolve_jacobi(realtype tt,
+static int integrator_ida_psolve_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
 		 realtype c_j, realtype delta, void *p_data,
@@ -1918,7 +1926,7 @@ int integrator_ida_psolve_jacobi(realtype tt,
 
 	@return IDA_SUCCESS on success.
 */
-int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s){
+static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s){
 
 #if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
 
@@ -1952,7 +1960,7 @@ int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s){
 
 	@TODO provide a GUI way of stats reporting from IDA.
 */
-void integrator_ida_write_stats(IntegratorIdaStats *stats){
+static void integrator_ida_write_stats(IntegratorIdaStats *stats){
 # define SL(N) CONSOLE_DEBUG("%s = %ld",#N,stats->N)
 # define SI(N) CONSOLE_DEBUG("%s = %d",#N,stats->N)
 # define SR(N) CONSOLE_DEBUG("%s = %f",#N,stats->N)
@@ -2016,7 +2024,7 @@ static int integrator_ida_transfer_matrix(const IntegratorSystem *sys, struct Sy
 	each blackbox present in the system (if blackbox caching is working
 	correctly).
 */
-int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char *type){
+static int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char *type){
 	/* IntegratorIdaData *enginedata; */
 	struct SystemJacobianStruct J = {NULL,NULL,NULL,0,0};
 	int status=1;
@@ -2102,7 +2110,7 @@ int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, const char
 	This routine outputs matrix structure in a crude text format, for the sake
 	of debugging.
 */
-void integrator_ida_write_incidence(IntegratorSystem *sys){
+static void integrator_ida_write_incidence(IntegratorSystem *sys){
 	int i, j;
 	struct rel_relation **relptr;
 	IntegratorIdaData *enginedata = sys->enginedata;
@@ -2152,7 +2160,7 @@ void integrator_ida_write_incidence(IntegratorSystem *sys){
 }
 
 /* @return 0 on success */
-int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
+static int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	char *varname, *relname;
 	struct var_variable **vlist, *var;
 	struct rel_relation **rlist, *rel;
@@ -2267,7 +2275,7 @@ int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	appearing on the console (in the case of Tcl/Tk) or in the errors/warnings
 	panel (in the case of PyGTK).
 */
-void integrator_ida_error(int error_code
+static void integrator_ida_error(int error_code
 		, const char *module, const char *function
 		, char *msg, void *eh_data
 ){

@@ -1408,7 +1408,7 @@ if __name__=='__main__':
 	freesteamdir = os.path.expanduser("~/freesteam/ascend")
 	modeldirs = [os.path.abspath(os.path.join(sys.path[0],"models")),os.path.abspath(freesteamdir)]
 	solverdir = os.path.abspath(os.path.join(sys.path[0],"solvers"))
-	solverdirs = [os.path.join(solverdir,s) for s in "qrslv","cmslv","lrslv","conopt"]
+	solverdirs = [os.path.join(solverdir,s) for s in "qrslv","cmslv","lrslv","conopt","ida","lsode"]
 	if not os.environ.get('ASCENDLIBRARY'):
 		os.environ['ASCENDLIBRARY'] = SEP.join(modeldirs+solverdirs)
 		restart = 1

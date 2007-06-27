@@ -619,7 +619,7 @@ ASC_DLLSPEC void rel_set_multiplier(struct rel_relation *rel, real64 multiplier)
 
 /* @} */
 
-int rel_classify_differential(struct rel_relation *rel);
+ASC_DLLSPEC int rel_classify_differential(struct rel_relation *rel);
 /**<
 	Classify a relation as being a differential equation or not. This is done
 	by looking to see if there are any incident variables that are marked

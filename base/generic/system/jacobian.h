@@ -27,14 +27,14 @@
 
 #include <linear/mtx.h>
 
-extern const rel_filter_t system_rfilter_algeb;
-extern const rel_filter_t system_rfilter_diff;
-extern const rel_filter_t system_rfilter_all;
+ASC_DLLSPEC const rel_filter_t system_rfilter_algeb;
+ASC_DLLSPEC const rel_filter_t system_rfilter_diff;
+ASC_DLLSPEC const rel_filter_t system_rfilter_all;
 
-extern const var_filter_t system_vfilter_algeb;
-extern const var_filter_t system_vfilter_diff;
-extern const var_filter_t system_vfilter_deriv;
-extern const var_filter_t system_vfilter_nonderiv;
+ASC_DLLSPEC const var_filter_t system_vfilter_algeb;
+ASC_DLLSPEC const var_filter_t system_vfilter_diff;
+ASC_DLLSPEC const var_filter_t system_vfilter_deriv;
+ASC_DLLSPEC const var_filter_t system_vfilter_nonderiv;
 
 /**
 	This mischevious data structure is a quick dodge to avoid having to
@@ -61,7 +61,7 @@ struct SystemJacobianStruct{
 
 	It's not in any way optimised for fast evaluation / mtx updates etc.
 */
-int system_jacobian(slv_system_t sys
+ASC_DLLSPEC int system_jacobian(slv_system_t sys
 	, const rel_filter_t *rfilter, const var_filter_t *vfilter, const int safe
 	, struct SystemJacobianStruct *sysjac
 );

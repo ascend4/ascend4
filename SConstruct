@@ -148,10 +148,10 @@ opts.Add(ListOption(
 	'WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works."
-	,["QRSLV","CMSLV","LSOD","IDA","CONOPT","LRSLV","TRON"]
+	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","TRON"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSOD','OPTSQP',"IDA","TRON"
+		,'LSODE','OPTSQP',"IDA","TRON"
 	 ]
 ))
 
@@ -783,7 +783,7 @@ else:
 	with_installer=0
 	without_installer_reason = "only possible under Windows"
 
-if 'LSOD' in env['WITH_SOLVERS']:
+if 'LSODE' in env['WITH_SOLVERS']:
 	with_lsode=True
 else:
 	with_lsode=False
@@ -2189,11 +2189,11 @@ for d in dirs:
 #-------------
 # IMPORTED CODE: LSODE, BLAS, etc
 
-if with_lsode:
-	srcs += env.SConscript(['lsod/SConscript'],'env')
-	srcs += env.SConscript(['linpack/SConscript'],'env')
-else:
-	print "Skipping... LSODE won't be built:", without_lsode_reason
+#if with_lsode:
+#	srcs += env.SConscript(['lsod/SConscript'],'env')
+#	srcs += env.SConscript(['linpack/SConscript'],'env')
+#else:
+#	print "Skipping... LSODE won't be built:", without_lsode_reason
 
 if with_local_blas:
 	srcs += env.SConscript(['blas/SConscript'],'env')

@@ -76,7 +76,7 @@ C  NONE
  * this point,``Frankly, my dears, we don't give a damn.''
  */
 
-double d1mach(int *i) {
+double d1mach_(int *i) {
   switch (*i) {
   case 1:
     return DBL_MIN;
@@ -94,12 +94,12 @@ double d1mach(int *i) {
   }
 }
 
-double d1mach_(int *i) {
-  return d1mach(i);
+double d1mach(int *i) {
+  return d1mach_(i);
 }
 
 double D1MACH(int *i) {
-  return d1mach(i);
+  return d1mach_(i);
 }
 
 

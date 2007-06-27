@@ -1,7 +1,7 @@
 #ifndef ASC_IDAANALYSE_H
 #define ASC_IDAANALYSE_H
 
-#include "integrator.h"
+#include <integrator/integrator.h>
 
 IntegratorAnalyseFn integrator_ida_analyse; /* for new approach -- JP Jan 2007 */
 

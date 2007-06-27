@@ -177,7 +177,7 @@ ASC_DLLSPEC int relman_diff2(struct rel_relation *rel,
 */
 
 
-extern int relman_diff3(struct rel_relation *rel,
+ASC_DLLSPEC int relman_diff3(struct rel_relation *rel,
                         const var_filter_t *filter,
                         real64 *derivatives,
                         struct var_variable **variables,

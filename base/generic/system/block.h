@@ -172,7 +172,7 @@ void system_var_list_debug(slv_system_t sys);
 void system_rel_list_debug(slv_system_t sys);
 
 
-int system_cut_vars(slv_system_t sys, const int start, const var_filter_t *vfilt, int *nvars);
+ASC_DLLSPEC int system_cut_vars(slv_system_t sys, const int start, const var_filter_t *vfilt, int *nvars);
 /**
 	We start at position 'start' in the solver's var list. Any variable
 	that does not meet the filter 'vfilt' is moved to the back, and any
@@ -183,7 +183,7 @@ int system_cut_vars(slv_system_t sys, const int start, const var_filter_t *vfilt
 */
 
 
-int system_cut_rels(slv_system_t sys, const int start, const rel_filter_t *rfilt, int *nrels);
+ASC_DLLSPEC int system_cut_rels(slv_system_t sys, const int start, const rel_filter_t *rfilt, int *nrels);
 /**
 	@see system_cut_vars. Same, but for rels.
 */
