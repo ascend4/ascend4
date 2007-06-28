@@ -527,13 +527,13 @@ provide_module:
 import:
     IMPORT_TOK IDENTIFIER_TOK FROM_TOK DQUOTE_TOK ';'
 	{
-	  if(LoadArchiveLibrary($4,SCP($2))){
+	  if(package_load($4,SCP($2))){
 		ErrMsg_Generic("IMPORT failed");
       }
 	}
 	| IMPORT_TOK DQUOTE_TOK ';'
 	{
-	  if(LoadArchiveLibrary(SCP($2),NULL)){
+	  if(package_load(SCP($2),NULL)){
         ErrMsg_Generic("IMPORT failed");
       }
 	}

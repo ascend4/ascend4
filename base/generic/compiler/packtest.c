@@ -27,10 +27,10 @@
 #include <ctype.h>  /* was compiler/actype.h */
 
 #include <utilities/ascConfig.h>
-#include <utilities/config.h> /* NEW */
+#include <utilities/config.h>
 
-#ifndef ASC_DEFAULTPATH
-# error "Where is ASC_DEFAULTPATH???"
+#ifndef ASC_DEFAULT_ASCENDLIBRARY
+# error "Where is ASC_DEFAULT_ASCENDLIBRARY???"
 #endif
 
 #include <general/ospath.h>

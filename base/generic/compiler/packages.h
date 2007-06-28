@@ -181,140 +181,11 @@ struct argItem {
  * or argItemLongPtr items may be changed.
  */
 
-/** Add a user method */
-extern int Asc_AddUserMethod(CONST char *methodname,
-                             Asc_MethodProc proc,
-                             enum inst_t selfKind,
-                             CONST char *parseString,
-                             ascClientData cData,
-                             Asc_MethodDelete deleteProc,
-                             CONST char *description,
-                             CONST char *details);
-/**
-	@param methodname the name to be used in the ASCEND method.
-	@param proc the function pointer that will be called.
-	@param selfKind the kind of instance that this method must be called in the scope of. 
-		If any is acceptable, or proc will check the kind, then selfKind should be DUMMY_INST. 
-		If NULL is an acceptable value of self, ERROR_INST should be used.
-	@param parseString a string of arg type directives separated by semicolons. For example, 
-		"g, ...M" has directives "g" and "...M". Whitespace in the parseString is ignored.
-	@param ascClientData is a void pointer that will be included in every call to proc. It may be NULL.
-	@param deleteProc is called by Asc_DeleteUserMethod with cData, methodname. and proc. 
-		deleteProc may be NULL if no special delete action is wanted.
-	@param description a one-line description of the function. Cannot be NULL.
-	@param details is a longer piece of useful information or directions how and where to 
-		obtain more information. Cannot be NULL.
+/* Asc_AddUserMethod is not used and has been removed from this header. We are
+	using CreateUserFunctionMethod instead. */
 
-We guarantee to not call proc until the arguments supplied in the call satisfy the conditions implied by the parseString. This frees the user method from a vast chunk of condition checking. In no case will the user method be called with the actual UNIVERSAL DummyInstance. Dummys are considered to always be erroneous input. The user method is responsible for handling all possible inputs which conform to the parse string.
-
-Each directive is of the form WXYZ where:
-<pre>
-W is either the string "..." or empty
-X is A,L,p or a positive integer decimal number or empty for Instance Y,
-  or X is O, N, or U for file Y.
-Y is F, s,ss,d,ld,b,f,g,n,N,T,i,R,B,S,SS,I, or M.
-Z is .<identifier> or +<identifier> for Y that are instances
-W:  ...XYZ indicates that any number of additional arguments
-    conforming to the directive remaining XYZ are permitted. If XYZ calls 
-    for scalars and arrays are found, arrays will be expanded into scalar 
-    instances.
-    ... can be used in the any directive, but "...XYZ;...XYZ"
-    is impossible to satisfy because the second slot is always empty
-    as the first slot eats up all XYZ arguments.
-X:  A indicates to expect an array of the kind required by the remaining
-     directive YZ. Applies only to Instance flavors of Y.
-    L indicates to expect a list cooked up from the elements of an array.
-      The elements of the array must conform to YZ.
-    O,N,U apply only when Y = "F"
-      O indicates an old file, N a new one, and U an unknown.
-    p indicates that the pointer to a double or long is desired.
-      callers can read/set values this way without knowing about
-      the details of real/integer instances. These pointers are
-      not stable, and the user should not cache them anywhere.
-      This modifier does not work for constant or other types:
-      anyone wanting to mess with other types must use our detailed headers.
-      All double values are stored in SI units.
-    <decimal number> indicates both the minium & maximum string length
-      allowed for arguments that are normally C strings (s,ss,n,N,Q,T).
-      C strings will be padded to this length with trailing blanks
-      This is for FORTRAN compatibility. Strings too long are invalid
-      and will not be passed. If the number is -1, then the string
-      argument will be expanded into two arguments: an int that specifies
-      the length and the string following.
-Y:  F indicates filename expected.
-    s indicates string value expected.
-    ss indicates string value of a set expected.
-    d indicates int value expected.
-    ld indicates long int value expected.
-    b indicates boolean int value expected.
-    f indicates float value expected.
-    g indicates double value expected.
-    n indicates string form of a name expected.
-    N indicates set expanded, comma separated string form of name.
-    T indicates the name of a known type is expected.
-         --- instance flavours ---
-    i indicates any single instance is acceptable.
-    S indicates a symbol instance is expected.
-    SS indicates a set instance is expected.
-    R indicates a real instance is expected.
-    B indicates a boolean instance is expected.
-    I indicates an integer instance is expected.
-    M indicates a MODEL instance is expected.
-    V indicates an ASCEND Expr is expected.
-    r indicates a relation instance is expected.
-    lr indicates a logical relation instance is expected.
-Z:  -typeidentifier further restricts any instances passing WXY
-      to be of exactly the type 'typeidentifier'.
-    +typeidentifier further restricts any instances passing WXY
-      to be of the type 'typeidentifier' or a refinement of that type.
-    .intdepth restricts array instances to have intdepth subscripts.
-</pre>
-
-@example
-<pre>
-int ClearWrapper(ascClientData cdata, CONST char *calledAs,
-     struct Instance *root, struct gl_list_t *argList
-){
-	unsigned long c,len;
-	len = gl_length(argList);
-	if (len == 0) {
-		Asc_ClearVarsInTree(root);
-	}else{
-		for (c = 1; c <= len; c++) {
-			item = (struct argItem *)gl_fetch(argList,c);
-			Asc_ClearVarsInTree(Asc_argItemInstance(item));
-		} // note that a simpler version with gl_iterate is possible.
-	}
-	return ASC_OK;
-}
-</pre>
-
-NOTES:
- * argList is a gl_list derived from the list of arguments the
- * function caller supplies in the method.
- * argList may be empty. It will never be NULL.
- * argItem = (struct argItem *)gl_fetch(argList,k); returns the kth argument. The argItem is described by the enum above.
-
-@example 
-	AddUserMethod("ClearAllSolverVar",ClearWrapper,DUMMY_INST,"...M",NULL,NULL); 
-	// leaves us able to call a method:
-	CALL ClearAllSolverVar(); (* clears self, we assume *)
-	CALL ClearAllSolverVar(SELF); (* redundant, but legal *)
-	CALL ClearAllSolverVar(foo,bar); (* ClearWrapper can clear several insts*)
-
-ClearWrapper requires no state information saved between calls, so cData and deleteProc are NULL.
-
-*/
-
-/** Find a method and undefine it, remove it from the package library. */
-extern int Asc_DeleteUserMethod(char *mname);
-/**<
-	@return 0 if success, else error code != 0
-	@param mname name of user method to undefine
-
-	Call the Asc_MethodDelete function specifed when adding the method. Redefining user methods requires deleting the old and calling Add with the new. If the same proc is registered under different names, only the named reference is deleted. This does not cause the unloading of dynamically loaded libraries, but it should be done to eliminate references to a library about to be unloaded.
-*/
-
+/* Asc_DeleteUserMethod was not being used and has been removed from this
+	header. Not sure what we are using instead, actually. */
 
 /** Look up the brief help text for a named external method. */
 extern CONST char *Asc_UserMethodDescription(char *mname);
@@ -459,7 +330,7 @@ extern int CallExternalProcs(struct Instance *i);
 */
 #endif
 
-extern int LoadArchiveLibrary(CONST char *partialpath, CONST char *initfunc);
+extern int package_load(CONST char *partialpath, CONST char *initfunc);
 /**< 
 	Generalised loading of external libraries. This allows for the possibility of 
 	libraries being either external shared libraries (DLL or SO files) or external scripts

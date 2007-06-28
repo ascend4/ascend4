@@ -37,18 +37,14 @@
 	Last in CVS: 1.14 ballan 1998/03/06 15:47:14
 */
 
-#if !defined(DYNAMIC_PACKAGES) && !defined(STATIC_PACKAGES) && !defined(NO_PACKAGES)
-# error "Package linking option not set!"
-#endif
-
 #include <math.h>
 #include <ctype.h>  /* was compiler/actype.h */
 
 #include <utilities/ascConfig.h>
 #include <utilities/config.h> /* NEW */
 
-#ifndef ASC_DEFAULTPATH
-# error "Where is ASC_DEFAULTPATH???"
+#ifndef ASC_DEFAULT_ASCENDLIBRARY
+# error "Where is ASC_DEFAULT_ASCENDLIBRARY???"
 #endif
 
 #include <general/ospath.h>
@@ -99,7 +95,7 @@ void Init_BBoxInterp(struct BBoxInterp *interp)
 */
 
 /**
-	Load builtin packages, unless NO_PACKAGES.
+	Load builtin packages (those that are compiled into libascend)
 
 	@return 0 if success, 1 if failure.
 */
@@ -107,9 +103,6 @@ static
 int Builtins_Init(void){
   int result = 0;
 
-#ifdef NO_PACKAGES
-  ERROR_REPORTER_HERE(ASC_USER_WARNING,"Builtins_Init: DISABLED at compile-time");
-#else
   /* ERROR_REPORTER_DEBUG("Loading function asc_free_all_variables\n"); */
   result = CreateUserFunctionMethod("asc_free_all_variables"
 		,Asc_FreeAllVars
@@ -136,42 +129,42 @@ int Builtins_Init(void){
 		,NULL /* user_data */
 		,NULL /* destroy fn */
   );
-#endif
+
   return result;
 }
 
 /* return 0 on success */
-int LoadArchiveLibrary(CONST char *partialpath, CONST char *initfunc){
+int package_load(CONST char *partialpath, CONST char *initfunc){
 
-#ifdef DYNAMIC_PACKAGES
 	struct FilePath *fp1;
 	int result;
 	struct ImportHandler *handler=NULL;
-
-	/** 
-		@TODO
-			* modify SearchArchiveLibraryPath to use the ImportHandler array
-			  in each directory in the path.
-			* when a file is found, return information about which ImportHandler
-			  should be used to open it, then make the call.
-	*/
 
 	/* CONSOLE_DEBUG("Searching for external library '%s'",partialpath); */
 
 	importhandler_createlibrary();
 
+	/* search in the ASCENDSOLVERS directory/ies first */
 	fp1 = importhandler_findinpath(
-		partialpath, ASC_DEFAULTPATH, PATHENVIRONMENTVAR,&handler
+		partialpath, ASC_DEFAULT_ASCENDSOLVERS, ASC_ASCENDSOLVERSVAR,&handler
 	);
+
+	/* next, search in the ASCENDLIBRARY */
 	if(fp1==NULL){
-		CONSOLE_DEBUG("External library '%s' not found",partialpath);
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialpath);
-		return 1; /* failure */
+		fp1 = importhandler_findinpath(
+			partialpath, ASC_DEFAULT_ASCENDLIBRARY, PATHENVIRONMENTVAR,&handler
+		);
+		if(fp1==NULL){
+			CONSOLE_DEBUG("External library '%s' not found",partialpath);
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialpath);
+			return 1; /* failure */
+		}
 	}
 
 	asc_assert(handler!=NULL);
 	
 	/* CONSOLE_DEBUG("About to import external library..."); */
+
 	/* note the import handler will deal with all the initfunc execution, etc etc */
 	result = (*(handler->importfn))(fp1,initfunc,partialpath);
 	if(result){
@@ -183,21 +176,6 @@ int LoadArchiveLibrary(CONST char *partialpath, CONST char *initfunc){
 
 	ospath_free(fp1);
   	return 0;
-#else
-
-	(void)partialname; (void)initfunc;
-
-# if defined(STATIC_PACKAGES)
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"LoadArchiveLibrary disabled: STATIC_PACKAGES, no need to load dynamically.\n");
-	return 0;
-# elif defined(NO_PACKAGES)
-	ERROR_REPORTER_HERE(ASC_PROG_ERROR,"LoadArchiveLibrary disabled: NO_PACKAGES");
-	return 1;
-# else
-#  error "Invalid package linking flags"
-# endif
-
-#endif
 }
 
 /*---------------------------------------------
@@ -205,33 +183,6 @@ int LoadArchiveLibrary(CONST char *partialpath, CONST char *initfunc){
 
   Declare the functions which we are expected to be able to call.
 */
-#ifndef NO_PACKAGES
-# ifdef STATIC_PACKAGES
-
-#include <packages/kvalues.h>
-#include <packages/bboxtest.h>
-#include <packages/bisect.h>
-#include <packages/sensitivity.h>
-
-# endif
-#endif
-
-#ifdef STATIC_PACKAGES
-/**
-	Load all statically-linked packages
-
-	@return 0 on success, >0 if any CreateUserFunction calls failed.
-*/
-static int StaticPackages_Init(void){
-  int result = 0;
-
-  result += sensitivity_register();
-  result += kvalues_register();
-  result += bboxtest_register();
-
-  return result;
-}
-#endif
 
 /**
 	This is a general purpose function that will load whatever user
@@ -243,42 +194,11 @@ static int StaticPackages_Init(void){
 */
 void AddUserFunctions(void){
 
-	CONSOLE_DEBUG("ADDING USER FUNCTIONS");
-
-#ifdef NO_PACKAGES
-# ifdef __GNUC__
-#  warning "NO_PACKAGES was defined so external packages are disabled"
-# endif
-	ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"AddUserFunctions disabled at compile-time.");
-#else
-
-	CONSOLE_DEBUG("ADDING BUILTINS");
 	/* Builtins are always statically linked */
 	if (Builtins_Init()) {
 		ERROR_REPORTER_NOLINE(ASC_PROG_WARNING
 			,"Problem in Builtins_Init: Some user functions not created"
 		);
 	}
-
-# ifdef DYNAMIC_PACKAGES
-
-	CONSOLE_DEBUG("ADDING DYNAMIC PACKAGES...");
-	/* do nothing. WHY? */
-
-# elif defined(STATIC_PACKAGES)
-#  ifdef __GNUC__
-#   warning "STATIC PACKAGES"
-#  endif
- 
-	CONSOLE_DEBUG("ADDING STATIC PACKAGES FUNCTIONS...");
-	/*The following need to be reimplemented but are basically useful as is. */
-	if (StaticPackages_Init()) {
-	    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING
-			,"Problem in StaticPackages_Init(): Some user functions not created"
-		);
-	}
-
-# endif
-#endif
 }
 

@@ -77,8 +77,11 @@
 	under Windows.
 */
 #define PATHENVIRONMENTVAR "ASCENDLIBRARY"
+#define ASC_ASCENDSOLVERSVAR "ASCENDSOLVERS"
 
-#define ASC_DEFAULTPATH "@DEFAULT_ASCENDLIBRARY@"
+#define ASC_DEFAULT_ASCENDLIBRARY "@DEFAULT_ASCENDLIBRARY@"
+
+#define ASC_DEFAULT_ASCENDSOLVERS "@DEFAULT_ASCENDSOLVERS@"
 
 /*
 	This variable determines how ASCEND goes about finding all its stuff at runtime,

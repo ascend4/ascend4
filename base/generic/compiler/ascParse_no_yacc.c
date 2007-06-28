@@ -2334,14 +2334,14 @@ yyreduce:
   case 25:
 #line 516 "base\\generic\\compiler\\ascParse.y"
     {
-	  (void)LoadArchiveLibrary((yyvsp[-1].dquote_ptr),SCP((yyvsp[-3].id_ptr)));
+	  (void)package_load((yyvsp[-1].dquote_ptr),SCP((yyvsp[-3].id_ptr)));
 	;}
     break;
 
   case 26:
 #line 520 "base\\generic\\compiler\\ascParse.y"
     {
-	  (void)LoadArchiveLibrary(SCP((yyvsp[-1].id_ptr)),NULL);
+	  (void)package_load(SCP((yyvsp[-1].id_ptr)),NULL);
 	;}
     break;
 
