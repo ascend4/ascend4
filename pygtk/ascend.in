@@ -22,17 +22,23 @@ if platform.system()=="Windows":
 	print k	
 
 	# for some reason, QueryValue doesn't work on Py 2.4, need to use QueryValueEx.
-	DEFAULT_ASCENDLIBRARY,t = wreg.QueryValueEx(k,"INSTALL_MODELS")
+	INSTALL_SOLVERS,t = wreg.QueryValueEx(k,"INSTALL_SOLVERS")
+	INSTALL_MODELS,t = wreg.QueryValueEx(k,"INSTALL_MODELS")
 	INSTALL_LIB,t = wreg.QueryValueEx(k,"INSTALL_LIB")
 	INSTALL_ASCDATA,t = wreg.QueryValueEx(k,"INSTALL_ASCDATA")
 	GTKLIBS,t = wreg.QueryValueEx(k,"GTKLIBS");
+	DEFAULT_ASCENDLIBRARY="%s;%s" % (INSTALL_SOLVERS,INSTALL_MODELS)
 	
 	PYVERSION = "@PYVERSION@"
 	
-	k = wreg.OpenKey(wreg.HKEY_CURRENT_USER,"SOFTWARE\Python\PythonCore\%s\InstallPath" % PYVERSION)
+	k = wreg.OpenKey(wreg.HKEY_CURRENT_USER
+		,"SOFTWARE\Python\PythonCore\%s\InstallPath" % PYVERSION
+	)
 	pypath,t = wreg.QueryValueEx(k,"")
 	if pypath == '':
-		k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE,"SOFTWARE\Python\PythonCore\%s\InstallPath" % PYVERSION)
+		k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE
+			,"SOFTWARE\Python\PythonCore\%s\InstallPath" % PYVERSION
+		)
 		pypath,t = wreg.QueryValueEx(k,"")
 		if pypath == '':
 			import winsound
@@ -116,6 +122,7 @@ if os.environ.get('ASCENDLIBRARY'):
 	print "USING ASCENDLIBRARY=%s" % ASCENDLIBRARY
 else:
 	ASCENDLIBRARY = DEFAULT_ASCENDLIBRARY
+	print "default ASCENDLIBRARY=%s" % ASCENDLIBRARY
 
 print "sys.path[0] = %s" % sys.path[0]
 

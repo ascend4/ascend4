@@ -1452,9 +1452,10 @@ if __name__=='__main__':
 			restart = 1
 
 	if restart:
-		if platform.system()=="Windows":
-			pass
-		else:
+		#if platform.system()=="Windows":
+		#	pass
+		#else:
+		if 1:
 			script = os.path.join(sys.path[0],"test.py")					
 			sys.stderr.write("Restarting with...\n")
 			sys.stderr.write("  export LD_LIBRARY_PATH=%s\n" % os.environ.get(LD_LIBRARY_PATH))
