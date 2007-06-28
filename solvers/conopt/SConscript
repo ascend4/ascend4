@@ -3,22 +3,23 @@ Import('env')
 # To run the test, type
 #     ascend johnpye/conopt/conopt.a4c
 
-solver_env = env.Copy()
+if env.get('WITH_CONOPT'):
 
-if solver_env.get('WITH_CONOPT'):
+	solver_env = env.Copy()
+
 	solver_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
 
-libconopt = [solver_env.SharedLibrary("conopt",["asc_conopt.c"]
-	,LIBS = ['ascend']
-	,LIBPATH = ['#']
-)]
+	libconopt = [solver_env.SharedLibrary("conopt",["asc_conopt.c"]
+		,LIBS = ['ascend']
+		,LIBPATH = ['#']
+	)]
 
-env.Depends(libconopt,env['libascend'])
+	env.Depends(libconopt,env['libascend'])
 
-env['extfns'] += libconopt
+	env['extfns'] += libconopt
 
-if env.get('CAN_INSTALL'):
-	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),libconopt)
+	if env.get('CAN_INSTALL'):
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),libconopt)
 
 # vim: set syntax=python:
 
