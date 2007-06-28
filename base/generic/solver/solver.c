@@ -233,7 +233,7 @@ int SlvRegisterStandardClients(void){
 
 	/* CONSOLE_DEBUG("REGISTERING STANDARD SOLVER ENGINES"); */
 	for(i=0; slv_reg[i].importname!=NULL;++i){
-		error = LoadArchiveLibrary(slv_reg[i].importname,NULL);
+		error = package_load(slv_reg[i].importname,NULL);
 		if(error){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR
 				,"Unable to register solver '%s' (error %d)."

@@ -158,8 +158,7 @@ scons %{_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
 	WITH_DOC_INSTALL=0 \
 	WITH_SOLVERS=QRSLV,LSODE,CMSLV,IDA,LRSLV,CONOPT \
 	ABSOLUTE_PATHS=1 \
-	CC="%{?ccache} gcc" \
-	CXX="%{?ccache} g++" \
+	%{?__cc:CC="%__cc"} %{?__cxx:CXX="%__cxx"} \
 	pygtk tcltk models
 
 %install

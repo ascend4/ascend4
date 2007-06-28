@@ -110,14 +110,6 @@ opts.Add(BoolOption(
 	, False
 ))
 
-# Package linking option
-opts.Add(EnumOption(
-	'PACKAGE_LINKING'
-	, 'Style of linking for external libraries'
-	, 'DYNAMIC_PACKAGES'
-    , ['DYNAMIC_PACKAGES', 'STATIC_PACKAGES', 'NO_PACKAGES']
-))
-
 opts.Add(BoolOption(
 	'WITH_GCCVISIBILITY'
 	,"Whether to use GCC Visibility features (only applicable if available)"
@@ -195,7 +187,16 @@ opts.Add(
 	'DEFAULT_ASCENDLIBRARY'
 	,"Set the default value of the ASCENDLIBRARY -- the location where"
 		+" ASCEND will look for models when running ASCEND"
-	,"$INSTALL_MODELS%s$INSTALL_SOLVERS" % pathsep
+	,"$INSTALL_MODELS"
+)
+
+# What should the default ASCENDLIBRARY path be?
+# Note: users can change it by editing their ~/.ascend.ini
+opts.Add(
+	'DEFAULT_ASCENDSOLVERS'
+	,"Set the default value of ASCENDSOLVERS -- the location where"
+		+" ASCEND will look for solver shared-library files"
+	,"$INSTALL_SOLVERS"
 )
 
 # Where is SWIG?
@@ -828,6 +829,7 @@ print "INSTALL_PREFIX =",env['INSTALL_PREFIX']
 print "INSTALL_MODELS =",env['INSTALL_MODELS']
 print "INSTALL_SOLVERS =",env['INSTALL_SOLVERS']
 print "DEFAULT_ASCENDLIBRARY =",env['DEFAULT_ASCENDLIBRARY']
+print "DEFAULT_ASCENDSOLVERS =",env['DEFAULT_ASCENDSOLVERS']
 
 
 #------------------------------------------------------
@@ -2021,8 +2023,6 @@ if platform.system()=="Windows" and env.has_key('MSVS'):
 		with_python = 0;
 		without_python_reason = "Header file 'basetsd.h' not found. Install the MS Platform SDK."
 
-conf.env.Append(CPPDEFINES=env['PACKAGE_LINKING'])
-
 conf.Finish()
 
 #---------------------------------------
@@ -2036,6 +2036,7 @@ if release=="0.":
 
 subst_dict = {
 	'@DEFAULT_ASCENDLIBRARY@':env['DEFAULT_ASCENDLIBRARY']
+	,'@DEFAULT_ASCENDSOLVERS@':env['DEFAULT_ASCENDSOLVERS']
 	, '@GLADE_FILE@':'ascend.glade'
 	, '@HELP_ROOT@':''
 	, '@ICON_EXTENSION@':icon_extension

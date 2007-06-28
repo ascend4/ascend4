@@ -125,27 +125,6 @@ ASC_DLLSPEC const SlvFunctionsT *solver_engine_named(const char *name);
 	@return SlvFunctions for this solver, if the name is found, else NULL
 */
 
-#if 0
-typedef int (SlvRegistration)(SlvFunctionsT *our_sft);
-/**<
-	This defines the required form of a function to register a new solver.
-
-	We assume a nonzero return value means you don't register successfully.
-	Your function is probably part of an entire file that bridges
-	between our headers and your solve engine back end.
-
-	You must provide a function in your solver bridge which to this typedef.
-
-	Your function should fill in all the required and as many of the
-	optional slots in the SlvFunctions pointer you are passed as it can.
-	(note: do not fill in number -- that is ours.)
-
-	If you register, but do not fill in a slot we will not accidently
-	call a bogus function. We will instead tell the user that an
-	incompetent solver was registered.
-*/
-#endif
-
 /*------------------------------------------------------------------------------
   HOOKS INTO SOLVER ENGINE, CALLED BY ASCEND
 */
