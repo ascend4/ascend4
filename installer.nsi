@@ -156,6 +156,7 @@ Section "ASCEND (required)"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_INCLUDE" "$INSTDIR\include"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_ASCDATA" "$INSTDIR"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_MODELS" "$INSTDIR\models"
+	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_SOLVERS" "$INSTDIR\solvers"
 	WriteRegStr HKLM SOFTWARE\ASCEND "GTKLIBS" "$GTKPATH"
 
 	; Create 'ascend-config.bat' batch file for launching the python script 'ascend-config'.
