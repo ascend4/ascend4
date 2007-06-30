@@ -25,7 +25,7 @@
 	essential -- the 'built in' packges. They are only packages in the sense
 	that a 'register' function must be called to connect them correctly with
 	the rest of the system.
-	
+
 	Next there are the 'static' packages. These ones are linked into
 	The default state is to have packages. As such it takes an explicit
 	definition of NO_PACKAGES, if packages are not to be handled.
@@ -146,13 +146,13 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 
 	/* search in the ASCENDSOLVERS directory/ies first */
 	fp1 = importhandler_findinpath(
-		partialpath, ASC_DEFAULT_ASCENDSOLVERS, ASC_ASCENDSOLVERSVAR,&handler
+		partialpath, ASC_DEFAULT_ASCENDSOLVERS, ASC_ENV_SOLVERS,&handler
 	);
 
 	/* next, search in the ASCENDLIBRARY */
 	if(fp1==NULL){
 		fp1 = importhandler_findinpath(
-			partialpath, ASC_DEFAULT_ASCENDLIBRARY, PATHENVIRONMENTVAR,&handler
+			partialpath, ASC_DEFAULT_ASCENDLIBRARY, ASC_ENV_LIBRARY,&handler
 		);
 		if(fp1==NULL){
 			CONSOLE_DEBUG("External library '%s' not found",partialpath);
@@ -162,7 +162,7 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 	}
 
 	asc_assert(handler!=NULL);
-	
+
 	/* CONSOLE_DEBUG("About to import external library..."); */
 
 	/* note the import handler will deal with all the initfunc execution, etc etc */

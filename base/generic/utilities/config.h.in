@@ -70,19 +70,6 @@
 */
 #define ASC_SHLIBSUFFIX "@SHLIBSUFFIX@"
 
-/**
-	The name of the environment variable containing a list' of paths
-	to search when trying to open a module.  The list is in the style
-	of the native OS: colon-separated on UNIX and semicolon separated
-	under Windows.
-*/
-#define PATHENVIRONMENTVAR "ASCENDLIBRARY"
-#define ASC_ASCENDSOLVERSVAR "ASCENDSOLVERS"
-
-#define ASC_DEFAULT_ASCENDLIBRARY "@DEFAULT_ASCENDLIBRARY@"
-
-#define ASC_DEFAULT_ASCENDSOLVERS "@DEFAULT_ASCENDSOLVERS@"
-
 /*
 	This variable determines how ASCEND goes about finding all its stuff at runtime,
 	assuming the ASCENDDIST environment variable is *not* present.
@@ -321,4 +308,21 @@
 #define ASC_ENV_TK      "ASCENDTK"
 #define ASC_ENV_BITMAPS "ASCENDBITMAPS"
 #define ASC_ENV_LIBRARY "ASCENDLIBRARY"
+
+/**
+	The name of the environment variable containing a list' of paths
+	to search when trying to open a module.  The list is in the style
+	of the native OS: colon-separated on UNIX and semicolon separated
+	under Windows.
+*/
+#define ASC_ENV_SOLVERS "ASCENDSOLVERS"
+
+/*
+	default values of the ASCENDLIBRARY and ASCENDSOLVERS variables
+	that are used if the vars aren't present in the environment.
+*/
+#define ASC_DEFAULT_ASCENDLIBRARY "@DEFAULT_ASCENDLIBRARY@"
+#define ASC_DEFAULT_ASCENDSOLVERS "@DEFAULT_ASCENDSOLVERS@"
+
+
 #endif

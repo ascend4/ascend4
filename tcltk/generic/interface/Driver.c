@@ -355,13 +355,6 @@ int AscDriver(int argc, CONST char **argv)
     Asc_Panic(2, "Asc_CompilerInit",
               "Insufficient memory to initialize compiler.");
   }
-  SlvRegisterStandardClients();
-  if( Asc_HelpInit() == TCL_ERROR ) {
-    Asc_Panic(2, "Asc_HelpInit",
-              "Insufficient memory to initialize help system.");
-  }
-  Asc_CreateCommands(interp);
-  Asc_RegisterBitmaps(interp);
 
   /*
    *  Set the environment, and set find the
@@ -373,6 +366,16 @@ int AscDriver(int argc, CONST char **argv)
               "Cannot find ~/.ascendrc nor the default AscendRC\n%s",
               Tcl_GetStringResult(interp));
   }
+
+  SlvRegisterStandardClients();
+  if( Asc_HelpInit() == TCL_ERROR ) {
+    Asc_Panic(2, "Asc_HelpInit",
+              "Insufficient memory to initialize help system.");
+  }
+  Asc_CreateCommands(interp);
+  Asc_RegisterBitmaps(interp);
+
+
 
   /*
    *  Evaluate the ~/.ascendrc or $ASCENDTK/AscendRC file
@@ -512,8 +515,8 @@ static void printenv(){
 	the rest follows through as above.
 */
 static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
-	char *distdir, *tkdir, *bitmapsdir, *librarydir;
-	struct FilePath *fp, *fp1, *distfp, *tkfp, *bitmapsfp, *libraryfp;
+	char *distdir, *tkdir, *bitmapsdir, *librarydir, *solversdir;
+	struct FilePath *fp, *fp1, *distfp, *tkfp, *bitmapsfp, *libraryfp, *solversfp;
 	char envcmd[MAX_ENV_VAR_LENGTH];
 	char s1[PATH_MAX];
 	int err;
@@ -530,6 +533,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	env_import(ASC_ENV_TK,getenv,PUTENV);
 	env_import(ASC_ENV_BITMAPS,getenv,PUTENV);
 	env_import(ASC_ENV_LIBRARY,getenv,PUTENV);
+	env_import(ASC_ENV_SOLVERS,getenv,PUTENV);
 
 	/* used for colour console output */
 	env_import("TERM",getenv,PUTENV);
@@ -540,7 +544,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	tkdir = GETENV(ASC_ENV_TK);
 	bitmapsdir = GETENV(ASC_ENV_BITMAPS);
 	librarydir = GETENV(ASC_ENV_LIBRARY);
-
+	solversdir = GETENV(ASC_ENV_SOLVERS);
 
 	/* Create an ASCENDDIST value if it's missing */
 
@@ -619,6 +623,16 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		CONSOLE_DEBUG("CREATED LIBRARY VAL");
 		OSPATH_PUTENV(ASC_ENV_LIBRARY,libraryfp);
 		librarydir = ospath_str(libraryfp);
+		ospath_free(libraryfp);
+	}
+
+	if(solversdir == NULL){
+	    CONSOLE_DEBUG("NO " ASC_ENV_LIBRARY " VAR DEFINED");
+		solversfp = ospath_new_expand_env("$ASCENDDIST/solvers", &GETENV);
+		CONSOLE_DEBUG("CREATED SOLVERS VAL");
+		OSPATH_PUTENV(ASC_ENV_SOLVERS,solversfp);
+		solversdir = ospath_str(solversfp);
+		ospath_free(solversfp);
 	}
 
     CONSOLE_DEBUG("CHECKING FOR AscendRC FILE");

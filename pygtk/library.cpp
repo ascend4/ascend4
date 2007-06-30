@@ -56,23 +56,23 @@ Library::Library(const char *defaultpath){
 #endif
 
 		Asc_CompilerInit(1);
-		env_import(PATHENVIRONMENTVAR,getenv,Asc_PutEnv);
-		env_import(ASC_ASCENDSOLVERSVAR,getenv,Asc_PutEnv);
+		env_import(ASC_ENV_LIBRARY,getenv,Asc_PutEnv);
+		env_import(ASC_ENV_SOLVERS,getenv,Asc_PutEnv);
 
-		char *x = Asc_GetEnv(PATHENVIRONMENTVAR);
+		char *x = Asc_GetEnv(ASC_ENV_LIBRARY);
 		if(x==NULL || strcmp(x,"")==0){
 			if(defaultpath==NULL){
 				ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Using default "
-					PATHENVIRONMENTVAR " = '" DEFAULT_ASCENDLIBRARY "'"
+					ASC_ENV_LIBRARY " = '" DEFAULT_ASCENDLIBRARY "'"
 				);
 				defaultpath = DEFAULT_ASCENDLIBRARY;
 			}
 
-			string s = string(PATHENVIRONMENTVAR "=") + defaultpath;
+			string s = string(ASC_ENV_LIBRARY "=") + defaultpath;
 			//ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Setting %s",s.c_str());;
 			Asc_PutEnv(s.c_str());
 		}
-		Asc_ImportPathList(PATHENVIRONMENTVAR);
+		Asc_ImportPathList(ASC_ENV_LIBRARY);
 		//cerr << PATHENVIRONMENTVAR << " = " << x << endl;
 		//cerr << "Created LIBRARY" << endl;
 		//cerr << "Registering solvers..." << endl;

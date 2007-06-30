@@ -256,7 +256,7 @@ static int color_test(){
 				Asc_FPrintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED\n\n\n");
 			}
 		}else{
-			fprintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED (NO ENV VAR 'TERM')\n\n\n");
+			/*fprintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED (NO ENV VAR 'TERM')\n\n\n");*/
 			use_xterm_color=-1;
 		}
 	}/*else{

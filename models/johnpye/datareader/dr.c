@@ -181,15 +181,15 @@ int datareader_init(DataReader *d){
 	if(ospath_stat(d->fp,&s)){
 		if(errno==ENOENT){
 			/* file doesn't exist: check the search path instead */
-			tmp = Asc_GetEnv(PATHENVIRONMENTVAR);
+			tmp = Asc_GetEnv(ASC_ENV_LIBRARY);
 			if(tmp==NULL){
-				ERROR_REPORTER_HERE(ASC_PROG_ERROR,"No paths to search (is env var '%s' set?)",PATHENVIRONMENTVAR);
+				ERROR_REPORTER_HERE(ASC_PROG_ERROR,"No paths to search (is env var '%s' set?)",ASC_ENV_LIBRARY);
 				return 1;
 			}
 
 			sp1 = ospath_searchpath_new(tmp);
 			if(sp1==NULL){
-				ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to process %s value '%s'",PATHENVIRONMENTVAR,tmp);
+				ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to process %s value '%s'",ASC_ENV_LIBRARY,tmp);
 				/* memory error */
 				ascfree(tmp);
 				return -3;
