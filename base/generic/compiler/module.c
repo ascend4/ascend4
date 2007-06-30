@@ -896,7 +896,7 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	asc_assert(sd->fp!=NULL);
 
 
-#ifdef SEARCH_DEBUG	
+#ifdef SEARCH_DEBUG
 	tmp=ospath_str(sd->fp);
 	CONSOLE_DEBUG("About to concat path '%s'...",tmp);
 	ospath_free_str(tmp);
@@ -947,7 +947,7 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	"name" by sending "name" to the function ModuleStatFile() which
 	will attempt to open "name" as a file.  If that fails, this
 	function then prepends each entry in the search path
-	PATHENVIRONMENTVAR to "name" and attempts to open the resulting
+	ASC_ENV_LIBRARY to "name" and attempts to open the resulting
 	file (by once again calling ModuleStatFile()).
 
 	On success, the argument "filename" will be set to the path to the
@@ -966,7 +966,7 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 
 	@return
 		-4  Invalid partial path in parameter 'filename'.
-	    -3  Memory error occurred when trying to get PATHENVIRONMENTVAR
+	    -3  Memory error occurred when trying to get ASC_ENV_LIBRARY
 	    -1  Error encountered in ModuleStatFile, check `error' argument
 	     0  Success
 	     1  Could not find a file named "name"
@@ -1008,11 +1008,11 @@ int ModuleSearchPath(CONST char *name,
 
 	}else{
 
- 		/* CONSOLE_DEBUG("ENV var name is '%s'",PATHENVIRONMENTVAR); */
+ 		/* CONSOLE_DEBUG("ENV var name is '%s'",ASC_ENV_LIBRARY); */
 
-		tmp = Asc_GetEnv(PATHENVIRONMENTVAR);
+		tmp = Asc_GetEnv(ASC_ENV_LIBRARY);
 		if(tmp==NULL){
-			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"No paths to search (is env var '%s' set?)",PATHENVIRONMENTVAR);
+			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"No paths to search (is env var '%s' set?)",ASC_ENV_LIBRARY);
 			ospath_free(fp1);
 			return 1;
 		}
@@ -1021,7 +1021,7 @@ int ModuleSearchPath(CONST char *name,
 
 		sp1 = ospath_searchpath_new(tmp);
 		if(sp1==NULL){
-			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to process %s value '%s'",PATHENVIRONMENTVAR,tmp);
+			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to process %s value '%s'",ASC_ENV_LIBRARY,tmp);
 			/* memory error */
 			ASC_FREE(tmp);
 			ospath_free(fp1);

@@ -157,7 +157,7 @@ int main(int argc, char **argv)
    *  Import the value of ASCENDLIBRARY into the environment before
    *  trying to read any modules.
    */
-  Asc_ImportPathList(PATHENVIRONMENTVAR);
+  Asc_ImportPathList(ASC_ENV_LIBRARY);
 
   MainOpenModule(filename);
 

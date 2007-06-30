@@ -116,7 +116,7 @@ ASC_DLLSPEC struct module_t*Asc_RequireModule(CONST char *name, int *status);
  *  The following applies to both Asc_OpenModule() and Asc_RequireModule().
  *  `name' can either be a full path name to the file (in the native format)
  *  or a string that will be appended to each of the paths listed in the
- *  PATHENVIRONMENTVAR to try and find the file.<br><br>
+ *  ASC_ENV_LIBRARY to try and find the file.<br><br>
  *
  *  Past versions (pre July-97) of these functions used to append known
  *  extensions to `name' to try and find the file.  That behavior is no
@@ -145,7 +145,7 @@ ASC_DLLSPEC struct module_t*Asc_RequireModule(CONST char *name, int *status);
  *      Asc_ModuleCreateAlias() for details on aliases.<br><br>
  *
  *  If attempting to access `name' directly fails, and searching over
- *  PATHENVIRONMENTVAR produces no valid filenames, `status' is set to
+ *  ASC_ENV_LIBRARY produces no valid filenames, `status' is set to
  *  -1 and NULL is returned.  If a matching filename is found but the
  *  fopen() call fails, `status' is set to -2 and NULL is returned.
  *  Note that fopen() is only attempted one time; once we have a name
