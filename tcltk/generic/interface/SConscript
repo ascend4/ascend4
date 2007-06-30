@@ -11,16 +11,14 @@ srcs = Split("""
 	tkConsole.c old_utils.c Driver.c
 """)
 
-if env['HAVE_LEX']:
-	typelexsource = 'typelex.l'
-else:
-	typelexsource = 'typelex_no_flex.c'
-
 tcl_env = env.Copy()
 
-typelex = tcl_env.SharedObject(typelexsource
-	, LEXFLAGS = '-l -Ptyp_'
-)
+if env.get('HAVE_LEX'):
+	typelexsource = tcl_env.CFile('typelex.l',LEXFLAGS = '-l -Ptyp_')
+	# copy the file for later use when people don't have flex:
+	env.Command('typelex_no_lex.c',typelexsource,Copy('$TARGET','$SOURCE'))
+else:
+	typelexsource = 'typelex_no_lex.c'
 
 if tcl_env.get('TCL_CPPPATH'):
 	tcl_env.AppendUnique(CPPPATH=[tcl_env['TCL_CPPPATH']])
@@ -51,7 +49,7 @@ else:
 	if tcl_env.has_key('TK_LIBPATH'):
 		tcl_env.AppendUnique(LIBPATH=[tcl_env['TK_LIBPATH']])
 
-	ascendtcllib = tcl_env.SharedLibrary('ascendtcl',srcs+typelex)
+	ascendtcllib = tcl_env.SharedLibrary('ascendtcl',srcs+typelexsource)
 
 	#tcl_so = tcl_env.Command(Copy('$SHLIBPREFIX$TCL_LIB$SHLIBSUFFIX','$TCL_LIBPATH/$SHLIBPREFIX$TCL_LIB$SHLIBSUFFIX'))
 	#tk_so = tcl_env.Command(Copy('$SHLIBPREFIX$TK_LIB$SHLIBSUFFIX','$TK_LIBPATH/$SHLIBPREFIX$TK_LIB$SHLIBSUFFIX'))

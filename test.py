@@ -1394,6 +1394,20 @@ class NotToBeTested:
 		print "v = %f" % M.v
 		M.run(T.getMethod('self_test'))
 
+def patchpath(VAR,SEP,addvals):
+	restart = 0
+	envpath = [os.path.abspath(i) for i in os.environ[VAR].split(SEP)]
+	for l in addvals:
+		if l in envpath[len(addvals):]:
+			envpath.remove(l)
+			restart = 1
+	for l in addvals:
+		if l not in envpath:
+			envpath.insert(0,l)
+			restart = 1
+	os.environ[VAR] = SEP.join(envpath)
+	return restart	
+	
 if __name__=='__main__':
 	# a whole bag of tricks to make sure we get the necessary dirs in our ascend, python and ld path vars
 	restart = 0
@@ -1405,24 +1419,25 @@ if __name__=='__main__':
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
 		SEP = ":"
 
-	freesteamdir = os.path.expanduser("~/freesteam/ascend")
-	modeldirs = [os.path.abspath(os.path.join(sys.path[0],"models")),os.path.abspath(freesteamdir)]
 	solverdir = os.path.abspath(os.path.join(sys.path[0],"solvers"))
 	solverdirs = [os.path.join(solverdir,s) for s in "qrslv","cmslv","lrslv","conopt","ida","lsode"]
-	if not os.environ.get('ASCENDLIBRARY'):
-		os.environ['ASCENDLIBRARY'] = SEP.join(modeldirs+solverdirs)
+
+	if not os.environ.get('ASCENDSOLVERS'):
+		os.environ['ASCENDSOLVERS'] = SEP.join(solverdirs)
 		restart = 1
 	else:
-		envmodelsdir = [os.path.abspath(i) for i in os.environ['ASCENDLIBRARY'].split(SEP)]
-		for l in modeldirs:
-			if l in envmodelsdir[len(modeldirs):]:
-				envmodelsdir.remove(l)
-				restart = 1
-		for l in modeldirs:
-			if l not in envmodelsdir:
-				envmodelsdir.insert(0,l)
-				restart = 1
-		os.environ['ASCENDLIBRARY'] = SEP.join(envmodelsdir)	
+		if patchpath('ASCENDSOLVERS',SEP,solverdirs):
+			restart = 1
+	
+	freesteamdir = os.path.expanduser("~/freesteam/ascend")
+	modeldirs = [os.path.abspath(os.path.join(sys.path[0],"models")),os.path.abspath(freesteamdir)]
+	
+	if not os.environ.get('ASCENDLIBRARY'):
+		os.environ['ASCENDLIBRARY'] = SEP.join(modeldirs)
+		restart = 1
+	else:
+		if patchpath('ASCENDLIBRARY',SEP,modeldirs):
+			restart = 1
 
 	libdirs = ["pygtk","."]
 	libdirs = [os.path.normpath(os.path.join(sys.path[0],l)) for l in libdirs]
@@ -1452,17 +1467,22 @@ if __name__=='__main__':
 			restart = 1
 
 	if restart:
-		#if platform.system()=="Windows":
-		#	pass
-		#else:
-		if 1:
-			script = os.path.join(sys.path[0],"test.py")					
-			sys.stderr.write("Restarting with...\n")
-			sys.stderr.write("  export LD_LIBRARY_PATH=%s\n" % os.environ.get(LD_LIBRARY_PATH))
-			sys.stderr.write("  export PYTHONPATH=%s\n" % os.environ.get('PYTHONPATH'))
-			sys.stderr.write("  export ASCENDLIBRARY=%s\n" % os.environ.get('ASCENDLIBRARY'))
-			sys.stderr.flush()
-			os.execvp("python",[script] + sys.argv)
+		script = os.path.join(sys.path[0],"test.py")					
+		sys.stderr.write("Restarting with...\n")
+		sys.stderr.write("  export LD_LIBRARY_PATH=%s\n" % os.environ.get(LD_LIBRARY_PATH))
+		sys.stderr.write("  export PYTHONPATH=%s\n" % os.environ.get('PYTHONPATH'))
+		sys.stderr.write("  export ASCENDLIBRARY=%s\n" % os.environ.get('ASCENDLIBRARY'))
+		sys.stderr.write("  export ASCENDSOLVERS=%s\n" % os.environ.get('ASCENDSOLVERS'))
+		sys.stderr.flush()
+		os.execvp("python",[script] + sys.argv)
+		exit(1)
+	else:
+		sys.stderr.write("Got...\n")
+		sys.stderr.write("  LD_LIBRARY_PATH=%s\n" % os.environ.get(LD_LIBRARY_PATH))
+		sys.stderr.write("  PYTHONPATH=%s\n" % os.environ.get('PYTHONPATH'))
+		sys.stderr.write("  ASCENDLIBRARY=%s\n" % os.environ.get('ASCENDLIBRARY'))
+		sys.stderr.write("  ASCENDSOLVERS=%s\n" % os.environ.get('ASCENDSOLVERS'))
+		sys.stderr.flush()
 
 	import ascpy
 

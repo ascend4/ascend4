@@ -421,7 +421,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 			CONSOLE_DEBUG("Unable to create filename from partialname '%s'",searchdata.partialname);
 			continue;
 		}
-		
+
 		fp = ospath_new(filename); /* eg 'libmyext.so' */
 		ASC_FREE(filename);
 		asc_assert(fp!=NULL);
@@ -467,7 +467,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 	path=Asc_GetEnv(envv);
 	if(path==NULL){
-		CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",defaultpath);
+		CONSOLE_DEBUG("ENV VAR '%s' NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",envv,defaultpath);
 		path=defaultpath;
 	}
 
@@ -516,7 +516,7 @@ int importhandler_setsharedpointer(const char *key, void *ptr){
 #endif
 	asc_assert(importhandler_getsharedpointer(key)==ptr);
 	return 0;
-}		
+}
 
 void *importhandler_getsharedpointer(const char *key){
 	importhandler_createsharedpointertable();

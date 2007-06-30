@@ -438,7 +438,7 @@ ASC_DLLSPEC void mtx_fill_org_value(mtx_matrix_t matrix,
 /** grandfathering old linsol. @todo Remove when linsolqr replaces linsol. */
 #define mtx_add_value(a,b,c) mtx_fill_value((a),(b),(c))
 
-extern int32 mtx_assemble(mtx_matrix_t matrix);
+ASC_DLLSPEC int32 mtx_assemble(mtx_matrix_t matrix);
 /**<
  ***  Takes a matrix, assumed to have redundant and otherwise insane incidences
  ***  created by mtx_fill_value and sums all like entries, eliminating

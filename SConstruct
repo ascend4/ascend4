@@ -140,11 +140,12 @@ opts.Add(BoolOption(
 opts.Add(ListOption(
 	'WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
-		+" works."
+		+" works. The option 'LSOD' is provided for backwards compatibility"
+		+"; the value 'LSODE' is preferred."
 	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","TRON"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','OPTSQP',"IDA","TRON"
+		,'LSODE','LSOD','OPTSQP',"IDA","TRON"
 	 ]
 ))
 
@@ -735,6 +736,12 @@ env = Environment(
 #print "CPPPATH =",env['CPPPATH']
 
 opts.Update(env)
+
+if 'LSOD' in env['WITH_SOLVERS']:
+	if 'LSODE' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('LSODE')
+	env['WITH_SOLVERS'].remove('LSOD')
+
 opts.Save('options.cache',env)
 
 Help(opts.GenerateHelpText(env))
