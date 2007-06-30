@@ -138,6 +138,7 @@ Documentation for ASCEND, in the form of a PDF User's Manual.
 %package devel
 Summary: Developer files ASCEND
 Group: Applications/Engineering
+Requires: %{name}
 %description devel
 Developer files for ASCEND, in the form for C header files for the core
 ASCEND library, 'libascend'.
@@ -192,11 +193,11 @@ rm -rf %{buildroot}
 
 %post
 update-desktop-database
-update-mime-database /usr/share/mime
+update-mime-database /usr/share/mime &> /dev/null || :
 
 %postun
 update-desktop-database
-update-mime-database /usr/share/mime
+update-mime-database /usr/share/mime &> /dev/null || :
 
 %files
 %defattr(-, root, root)
