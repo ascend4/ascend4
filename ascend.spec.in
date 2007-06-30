@@ -138,6 +138,7 @@ Documentation for ASCEND, in the form of a PDF User's Manual.
 %package devel
 Summary: Developer files ASCEND
 Group: Applications/Engineering
+Requires: %{name}
 %description devel
 Developer files for ASCEND, in the form for C header files for the core
 ASCEND library, 'libascend'.
