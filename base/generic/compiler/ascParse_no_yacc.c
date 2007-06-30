@@ -1,7 +1,9 @@
-/* A Bison parser, made by GNU Bison 2.0.  */
+/* A Bison parser, made by GNU Bison 2.3.  */
 
-/* Skeleton parser for Yacc-like parsing with Bison,
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+/* Skeleton implementation for Bison's Yacc-like parsers in C
+
+   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
+   Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,16 +17,24 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   Foundation, Inc., 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.  */
 
-/* As a special exception, when this file is copied by Bison into a
-   Bison output file, you may use that output file without restriction.
-   This special exception was added by the Free Software Foundation
-   in version 1.24 of Bison.  */
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
 
-/* Written by Richard Stallman by simplifying the original so called
-   ``semantic'' parser.  */
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
+/* C LALR(1) parser skeleton written by Richard Stallman, by
+   simplifying the original so-called "semantic" parser.  */
 
 /* All symbols defined below should begin with yy or YY, to avoid
    infringing on user name space.  This should be done even for local
@@ -35,6 +45,9 @@
 
 /* Identify Bison output.  */
 #define YYBISON 1
+
+/* Bison version.  */
+#define YYBISON_VERSION "2.3"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -170,6 +183,7 @@
      UMINUS_TOK = 364
    };
 #endif
+/* Tokens.  */
 #define ADD_TOK 258
 #define ALIASES_TOK 259
 #define AND_TOK 260
@@ -282,7 +296,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 31 "base\\generic\\compiler\\ascParse.y"
+#line 31 "base/generic/compiler/ascParse.y"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -565,9 +579,15 @@ static void CollectNote(struct Note *);
 # define YYERROR_VERBOSE 0
 #endif
 
-#if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 304 "base\\generic\\compiler\\ascParse.y"
-typedef union YYSTYPE {
+/* Enabling the token table.  */
+#ifndef YYTOKEN_TABLE
+# define YYTOKEN_TABLE 0
+#endif
+
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+typedef union YYSTYPE
+#line 304 "base/generic/compiler/ascParse.y"
+{
   double real_value;
   long   int_value;
   struct fraction frac_value;
@@ -593,9 +613,10 @@ typedef union YYSTYPE {
   dim_type dimen;
   enum ForOrder order;
   enum ForKind fkind;
-} YYSTYPE;
-/* Line 190 of yacc.c.  */
-#line 599 "base\\generic\\compiler\\ascParse.c"
+}
+/* Line 187 of yacc.c.  */
+#line 619 "base/generic/compiler/ascParse.c"
+	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
@@ -606,17 +627,94 @@ typedef union YYSTYPE {
 /* Copy the second part of user declarations.  */
 
 
-/* Line 213 of yacc.c.  */
-#line 611 "base\\generic\\compiler\\ascParse.c"
+/* Line 216 of yacc.c.  */
+#line 632 "base/generic/compiler/ascParse.c"
 
-#if ! defined (yyoverflow) || YYERROR_VERBOSE
+#ifdef short
+# undef short
+#endif
 
-# ifndef YYFREE
-#  define YYFREE free
+#ifdef YYTYPE_UINT8
+typedef YYTYPE_UINT8 yytype_uint8;
+#else
+typedef unsigned char yytype_uint8;
+#endif
+
+#ifdef YYTYPE_INT8
+typedef YYTYPE_INT8 yytype_int8;
+#elif (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+typedef signed char yytype_int8;
+#else
+typedef short int yytype_int8;
+#endif
+
+#ifdef YYTYPE_UINT16
+typedef YYTYPE_UINT16 yytype_uint16;
+#else
+typedef unsigned short int yytype_uint16;
+#endif
+
+#ifdef YYTYPE_INT16
+typedef YYTYPE_INT16 yytype_int16;
+#else
+typedef short int yytype_int16;
+#endif
+
+#ifndef YYSIZE_T
+# ifdef __SIZE_TYPE__
+#  define YYSIZE_T __SIZE_TYPE__
+# elif defined size_t
+#  define YYSIZE_T size_t
+# elif ! defined YYSIZE_T && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+#  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
+#  define YYSIZE_T size_t
+# else
+#  define YYSIZE_T unsigned int
 # endif
-# ifndef YYMALLOC
-#  define YYMALLOC malloc
+#endif
+
+#define YYSIZE_MAXIMUM ((YYSIZE_T) -1)
+
+#ifndef YY_
+# if YYENABLE_NLS
+#  if ENABLE_NLS
+#   include <libintl.h> /* INFRINGES ON USER NAME SPACE */
+#   define YY_(msgid) dgettext ("bison-runtime", msgid)
+#  endif
 # endif
+# ifndef YY_
+#  define YY_(msgid) msgid
+# endif
+#endif
+
+/* Suppress unused-variable warnings by "using" E.  */
+#if ! defined lint || defined __GNUC__
+# define YYUSE(e) ((void) (e))
+#else
+# define YYUSE(e) /* empty */
+#endif
+
+/* Identity function, used to suppress warnings about constant conditions.  */
+#ifndef lint
+# define YYID(n) (n)
+#else
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+static int
+YYID (int i)
+#else
+static int
+YYID (i)
+    int i;
+#endif
+{
+  return i;
+}
+#endif
+
+#if ! defined yyoverflow || YYERROR_VERBOSE
 
 /* The parser invokes alloca or malloc; define the necessary symbols.  */
 
@@ -624,34 +722,76 @@ typedef union YYSTYPE {
 #  if YYSTACK_USE_ALLOCA
 #   ifdef __GNUC__
 #    define YYSTACK_ALLOC __builtin_alloca
+#   elif defined __BUILTIN_VA_ARG_INCR
+#    include <alloca.h> /* INFRINGES ON USER NAME SPACE */
+#   elif defined _AIX
+#    define YYSTACK_ALLOC __alloca
+#   elif defined _MSC_VER
+#    include <malloc.h> /* INFRINGES ON USER NAME SPACE */
+#    define alloca _alloca
 #   else
 #    define YYSTACK_ALLOC alloca
+#    if ! defined _ALLOCA_H && ! defined _STDLIB_H && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+#     include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+#     ifndef _STDLIB_H
+#      define _STDLIB_H 1
+#     endif
+#    endif
 #   endif
 #  endif
 # endif
 
 # ifdef YYSTACK_ALLOC
-   /* Pacify GCC's `empty if-body' warning. */
-#  define YYSTACK_FREE(Ptr) do { /* empty */; } while (0)
-# else
-#  if defined (__STDC__) || defined (__cplusplus)
-#   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
-#   define YYSIZE_T size_t
+   /* Pacify GCC's `empty if-body' warning.  */
+#  define YYSTACK_FREE(Ptr) do { /* empty */; } while (YYID (0))
+#  ifndef YYSTACK_ALLOC_MAXIMUM
+    /* The OS might guarantee only one guard page at the bottom of the stack,
+       and a page size can be as small as 4096 bytes.  So we cannot safely
+       invoke alloca (N) if N exceeds 4096.  Use a slightly smaller number
+       to allow for a few compiler-allocated temporary stack slots.  */
+#   define YYSTACK_ALLOC_MAXIMUM 4032 /* reasonable circa 2006 */
 #  endif
+# else
 #  define YYSTACK_ALLOC YYMALLOC
 #  define YYSTACK_FREE YYFREE
+#  ifndef YYSTACK_ALLOC_MAXIMUM
+#   define YYSTACK_ALLOC_MAXIMUM YYSIZE_MAXIMUM
+#  endif
+#  if (defined __cplusplus && ! defined _STDLIB_H \
+       && ! ((defined YYMALLOC || defined malloc) \
+	     && (defined YYFREE || defined free)))
+#   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+#   ifndef _STDLIB_H
+#    define _STDLIB_H 1
+#   endif
+#  endif
+#  ifndef YYMALLOC
+#   define YYMALLOC malloc
+#   if ! defined malloc && ! defined _STDLIB_H && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+void *malloc (YYSIZE_T); /* INFRINGES ON USER NAME SPACE */
+#   endif
+#  endif
+#  ifndef YYFREE
+#   define YYFREE free
+#   if ! defined free && ! defined _STDLIB_H && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+void free (void *); /* INFRINGES ON USER NAME SPACE */
+#   endif
+#  endif
 # endif
-#endif /* ! defined (yyoverflow) || YYERROR_VERBOSE */
+#endif /* ! defined yyoverflow || YYERROR_VERBOSE */
 
 
-#if (! defined (yyoverflow) \
-     && (! defined (__cplusplus) \
-	 || (defined (YYSTYPE_IS_TRIVIAL) && YYSTYPE_IS_TRIVIAL)))
+#if (! defined yyoverflow \
+     && (! defined __cplusplus \
+	 || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
 {
-  short int yyss;
+  yytype_int16 yyss;
   YYSTYPE yyvs;
   };
 
@@ -661,24 +801,24 @@ union yyalloc
 /* The size of an array large to enough to hold all stacks, each with
    N elements.  */
 # define YYSTACK_BYTES(N) \
-     ((N) * (sizeof (short int) + sizeof (YYSTYPE))			\
+     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE)) \
       + YYSTACK_GAP_MAXIMUM)
 
 /* Copy COUNT objects from FROM to TO.  The source and destination do
    not overlap.  */
 # ifndef YYCOPY
-#  if defined (__GNUC__) && 1 < __GNUC__
+#  if defined __GNUC__ && 1 < __GNUC__
 #   define YYCOPY(To, From, Count) \
       __builtin_memcpy (To, From, (Count) * sizeof (*(From)))
 #  else
 #   define YYCOPY(To, From, Count)		\
       do					\
 	{					\
-	  register YYSIZE_T yyi;		\
+	  YYSIZE_T yyi;				\
 	  for (yyi = 0; yyi < (Count); yyi++)	\
 	    (To)[yyi] = (From)[yyi];		\
 	}					\
-      while (0)
+      while (YYID (0))
 #  endif
 # endif
 
@@ -696,39 +836,33 @@ union yyalloc
 	yynewbytes = yystacksize * sizeof (*Stack) + YYSTACK_GAP_MAXIMUM; \
 	yyptr += yynewbytes / sizeof (*yyptr);				\
       }									\
-    while (0)
+    while (YYID (0))
 
 #endif
 
-#if defined (__STDC__) || defined (__cplusplus)
-   typedef signed char yysigned_char;
-#else
-   typedef short int yysigned_char;
-#endif
-
-/* YYFINAL -- State number of the termination state. */
+/* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
 #define YYLAST   1102
 
-/* YYNTOKENS -- Number of terminals. */
+/* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  127
-/* YYNNTS -- Number of nonterminals. */
+/* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  116
-/* YYNRULES -- Number of rules. */
+/* YYNRULES -- Number of rules.  */
 #define YYNRULES  307
-/* YYNRULES -- Number of states. */
+/* YYNRULES -- Number of states.  */
 #define YYNSTATES  616
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
 #define YYMAXUTOK   364
 
-#define YYTRANSLATE(YYX) 						\
+#define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
 
 /* YYTRANSLATE[YYLEX] -- Bison symbol number corresponding to YYLEX.  */
-static const unsigned char yytranslate[] =
+static const yytype_uint8 yytranslate[] =
 {
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -772,7 +906,7 @@ static const unsigned char yytranslate[] =
 #if YYDEBUG
 /* YYPRHS[YYN] -- Index of the first RHS symbol of rule number YYN in
    YYRHS.  */
-static const unsigned short int yyprhs[] =
+static const yytype_uint16 yyprhs[] =
 {
        0,     0,     3,     4,     7,     9,    11,    13,    15,    17,
       19,    21,    23,    25,    27,    29,    31,    33,    35,    41,
@@ -807,8 +941,8 @@ static const unsigned short int yyprhs[] =
     1020,  1022,  1024,  1026,  1028,  1030,  1032,  1034
 };
 
-/* YYRHS -- A `-1'-separated list of the rules' RHS. */
-static const short int yyrhs[] =
+/* YYRHS -- A `-1'-separated list of the rules' RHS.  */
+static const yytype_int16 yyrhs[] =
 {
      128,     0,    -1,    -1,   128,   129,    -1,   131,    -1,   132,
       -1,   133,    -1,   136,    -1,   138,    -1,   134,    -1,   144,
@@ -917,7 +1051,7 @@ static const short int yyrhs[] =
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
-static const unsigned short int yyrline[] =
+static const yytype_uint16 yyrline[] =
 {
        0,   423,   423,   425,   429,   430,   431,   432,   433,   434,
      435,   436,   437,   438,   439,   440,   441,   442,   449,   494,
@@ -953,9 +1087,9 @@ static const unsigned short int yyrline[] =
 };
 #endif
 
-#if YYDEBUG || YYERROR_VERBOSE
-/* YYTNME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
-   First, the terminals, then, starting at YYNTOKENS, nonterminals. */
+#if YYDEBUG || YYERROR_VERBOSE || YYTOKEN_TABLE
+/* YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
+   First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "ADD_TOK", "ALIASES_TOK", "AND_TOK",
@@ -1018,7 +1152,7 @@ static const char *const yytname[] =
 # ifdef YYPRINT
 /* YYTOKNUM[YYLEX-NUM] -- Internal token number corresponding to
    token YYLEX-NUM.  */
-static const unsigned short int yytoknum[] =
+static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
@@ -1037,7 +1171,7 @@ static const unsigned short int yytoknum[] =
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
-static const unsigned char yyr1[] =
+static const yytype_uint8 yyr1[] =
 {
        0,   127,   128,   128,   129,   129,   129,   129,   129,   129,
      129,   129,   129,   129,   129,   129,   129,   129,   130,   131,
@@ -1073,7 +1207,7 @@ static const unsigned char yyr1[] =
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
-static const unsigned char yyr2[] =
+static const yytype_uint8 yyr2[] =
 {
        0,     2,     0,     2,     1,     1,     1,     1,     1,     1,
        1,     1,     1,     1,     1,     1,     1,     1,     5,     3,
@@ -1111,7 +1245,7 @@ static const unsigned char yyr2[] =
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
    STATE-NUM when YYTABLE doesn't specify something else to do.  Zero
    means the default is an error.  */
-static const unsigned short int yydefact[] =
+static const yytype_uint16 yydefact[] =
 {
        2,     0,     1,    17,     0,     0,     0,     0,     0,     0,
        0,     0,    68,    63,     3,    16,     4,     5,     6,     9,
@@ -1177,8 +1311,8 @@ static const unsigned short int yydefact[] =
      255,     0,   116,   231,     0,   118
 };
 
-/* YYDEFGOTO[NTERM-NUM]. */
-static const short int yydefgoto[] =
+/* YYDEFGOTO[NTERM-NUM].  */
+static const yytype_int16 yydefgoto[] =
 {
       -1,     1,    14,    15,    16,    17,    18,    19,    20,    21,
       22,    23,    24,    25,    59,    60,   471,    26,    61,   514,
@@ -1197,7 +1331,7 @@ static const short int yydefgoto[] =
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
 #define YYPACT_NINF -437
-static const short int yypact[] =
+static const yytype_int16 yypact[] =
 {
     -437,  1006,  -437,  -437,    88,   -83,   -54,   -52,    18,    17,
       81,    79,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
@@ -1264,7 +1398,7 @@ static const short int yypact[] =
 };
 
 /* YYPGOTO[NTERM-NUM].  */
-static const short int yypgoto[] =
+static const yytype_int16 yypgoto[] =
 {
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
@@ -1285,7 +1419,7 @@ static const short int yypgoto[] =
    number is the opposite.  If zero, do what YYDEFACT says.
    If YYTABLE_NINF, syntax error.  */
 #define YYTABLE_NINF -206
-static const short int yytable[] =
+static const yytype_int16 yytable[] =
 {
       86,   485,    89,    90,    53,    94,   174,   185,    64,   496,
       79,   272,    56,   173,    68,   186,   197,   349,   519,    79,
@@ -1400,7 +1534,7 @@ static const short int yytable[] =
        0,     0,   211
 };
 
-static const short int yycheck[] =
+static const yytype_int16 yycheck[] =
 {
       49,   427,    50,    51,    24,    53,    55,    64,    32,   445,
       32,   140,    11,    55,    38,    27,    27,    17,    35,    32,
@@ -1517,7 +1651,7 @@ static const short int yycheck[] =
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
-static const unsigned char yystos[] =
+static const yytype_uint8 yystos[] =
 {
        0,   128,     0,     1,     3,    27,    41,    43,    65,    67,
       69,    70,    83,    84,   129,   130,   131,   132,   133,   134,
@@ -1583,22 +1717,6 @@ static const unsigned char yystos[] =
      122,   101,   174,   121,   229,   122
 };
 
-#if ! defined (YYSIZE_T) && defined (__SIZE_TYPE__)
-# define YYSIZE_T __SIZE_TYPE__
-#endif
-#if ! defined (YYSIZE_T) && defined (size_t)
-# define YYSIZE_T size_t
-#endif
-#if ! defined (YYSIZE_T)
-# if defined (__STDC__) || defined (__cplusplus)
-#  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
-#  define YYSIZE_T size_t
-# endif
-#endif
-#if ! defined (YYSIZE_T)
-# define YYSIZE_T unsigned int
-#endif
-
 #define yyerrok		(yyerrstatus = 0)
 #define yyclearin	(yychar = YYEMPTY)
 #define YYEMPTY		(-2)
@@ -1624,15 +1742,15 @@ do								\
       yychar = (Token);						\
       yylval = (Value);						\
       yytoken = YYTRANSLATE (yychar);				\
-      YYPOPSTACK;						\
+      YYPOPSTACK (1);						\
       goto yybackup;						\
     }								\
   else								\
-    { 								\
-      yyerror ("syntax error: cannot back up");\
+    {								\
+      yyerror (YY_("syntax error: cannot back up")); \
       YYERROR;							\
     }								\
-while (0)
+while (YYID (0))
 
 
 #define YYTERROR	1
@@ -1647,7 +1765,7 @@ while (0)
 #ifndef YYLLOC_DEFAULT
 # define YYLLOC_DEFAULT(Current, Rhs, N)				\
     do									\
-      if (N)								\
+      if (YYID (N))                                                    \
 	{								\
 	  (Current).first_line   = YYRHSLOC (Rhs, 1).first_line;	\
 	  (Current).first_column = YYRHSLOC (Rhs, 1).first_column;	\
@@ -1661,7 +1779,7 @@ while (0)
 	  (Current).first_column = (Current).last_column =		\
 	    YYRHSLOC (Rhs, 0).last_column;				\
 	}								\
-    while (0)
+    while (YYID (0))
 #endif
 
 
@@ -1673,8 +1791,8 @@ while (0)
 # if YYLTYPE_IS_TRIVIAL
 #  define YY_LOCATION_PRINT(File, Loc)			\
      fprintf (File, "%d.%d-%d.%d",			\
-              (Loc).first_line, (Loc).first_column,	\
-              (Loc).last_line,  (Loc).last_column)
+	      (Loc).first_line, (Loc).first_column,	\
+	      (Loc).last_line,  (Loc).last_column)
 # else
 #  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
 # endif
@@ -1701,36 +1819,96 @@ while (0)
 do {						\
   if (yydebug)					\
     YYFPRINTF Args;				\
-} while (0)
+} while (YYID (0))
 
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)		\
-do {								\
-  if (yydebug)							\
-    {								\
-      YYFPRINTF (stderr, "%s ", Title);				\
-      yysymprint (stderr, 					\
-                  Type, Value);	\
-      YYFPRINTF (stderr, "\n");					\
-    }								\
-} while (0)
+# define YY_SYMBOL_PRINT(Title, Type, Value, Location)			  \
+do {									  \
+  if (yydebug)								  \
+    {									  \
+      YYFPRINTF (stderr, "%s ", Title);					  \
+      yy_symbol_print (stderr,						  \
+		  Type, Value); \
+      YYFPRINTF (stderr, "\n");						  \
+    }									  \
+} while (YYID (0))
+
+
+/*--------------------------------.
+| Print this symbol on YYOUTPUT.  |
+`--------------------------------*/
+
+/*ARGSUSED*/
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+static void
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+#else
+static void
+yy_symbol_value_print (yyoutput, yytype, yyvaluep)
+    FILE *yyoutput;
+    int yytype;
+    YYSTYPE const * const yyvaluep;
+#endif
+{
+  if (!yyvaluep)
+    return;
+# ifdef YYPRINT
+  if (yytype < YYNTOKENS)
+    YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
+# else
+  YYUSE (yyoutput);
+# endif
+  switch (yytype)
+    {
+      default:
+	break;
+    }
+}
+
+
+/*--------------------------------.
+| Print this symbol on YYOUTPUT.  |
+`--------------------------------*/
+
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+static void
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+#else
+static void
+yy_symbol_print (yyoutput, yytype, yyvaluep)
+    FILE *yyoutput;
+    int yytype;
+    YYSTYPE const * const yyvaluep;
+#endif
+{
+  if (yytype < YYNTOKENS)
+    YYFPRINTF (yyoutput, "token %s (", yytname[yytype]);
+  else
+    YYFPRINTF (yyoutput, "nterm %s (", yytname[yytype]);
+
+  yy_symbol_value_print (yyoutput, yytype, yyvaluep);
+  YYFPRINTF (yyoutput, ")");
+}
 
 /*------------------------------------------------------------------.
 | yy_stack_print -- Print the state stack from its BOTTOM up to its |
 | TOP (included).                                                   |
 `------------------------------------------------------------------*/
 
-#if defined (__STDC__) || defined (__cplusplus)
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
-yy_stack_print (short int *bottom, short int *top)
+yy_stack_print (yytype_int16 *bottom, yytype_int16 *top)
 #else
 static void
 yy_stack_print (bottom, top)
-    short int *bottom;
-    short int *top;
+    yytype_int16 *bottom;
+    yytype_int16 *top;
 #endif
 {
   YYFPRINTF (stderr, "Stack now");
-  for (/* Nothing. */; bottom <= top; ++bottom)
+  for (; bottom <= top; ++bottom)
     YYFPRINTF (stderr, " %d", *bottom);
   YYFPRINTF (stderr, "\n");
 }
@@ -1739,37 +1917,45 @@ yy_stack_print (bottom, top)
 do {								\
   if (yydebug)							\
     yy_stack_print ((Bottom), (Top));				\
-} while (0)
+} while (YYID (0))
 
 
 /*------------------------------------------------.
 | Report that the YYRULE is going to be reduced.  |
 `------------------------------------------------*/
 
-#if defined (__STDC__) || defined (__cplusplus)
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
-yy_reduce_print (int yyrule)
+yy_reduce_print (YYSTYPE *yyvsp, int yyrule)
 #else
 static void
-yy_reduce_print (yyrule)
+yy_reduce_print (yyvsp, yyrule)
+    YYSTYPE *yyvsp;
     int yyrule;
 #endif
 {
+  int yynrhs = yyr2[yyrule];
   int yyi;
-  unsigned int yylno = yyrline[yyrule];
-  YYFPRINTF (stderr, "Reducing stack by rule %d (line %u), ",
-             yyrule - 1, yylno);
-  /* Print the symbols being reduced, and their result.  */
-  for (yyi = yyprhs[yyrule]; 0 <= yyrhs[yyi]; yyi++)
-    YYFPRINTF (stderr, "%s ", yytname [yyrhs[yyi]]);
-  YYFPRINTF (stderr, "-> %s\n", yytname [yyr1[yyrule]]);
+  unsigned long int yylno = yyrline[yyrule];
+  YYFPRINTF (stderr, "Reducing stack by rule %d (line %lu):\n",
+	     yyrule - 1, yylno);
+  /* The symbols being reduced.  */
+  for (yyi = 0; yyi < yynrhs; yyi++)
+    {
+      fprintf (stderr, "   $%d = ", yyi + 1);
+      yy_symbol_print (stderr, yyrhs[yyprhs[yyrule] + yyi],
+		       &(yyvsp[(yyi + 1) - (yynrhs)])
+		       		       );
+      fprintf (stderr, "\n");
+    }
 }
 
 # define YY_REDUCE_PRINT(Rule)		\
 do {					\
   if (yydebug)				\
-    yy_reduce_print (Rule);		\
-} while (0)
+    yy_reduce_print (yyvsp, Rule); \
+} while (YYID (0))
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
    multiple parsers can coexist.  */
@@ -1791,7 +1977,7 @@ int yydebug;
    if the built-in stack extension method is used).
 
    Do not make this value too large; the results are undefined if
-   SIZE_MAX < YYSTACK_BYTES (YYMAXDEPTH)
+   YYSTACK_ALLOC_MAXIMUM < YYSTACK_BYTES (YYMAXDEPTH)
    evaluated with infinite-precision integer arithmetic.  */
 
 #ifndef YYMAXDEPTH
@@ -1803,45 +1989,47 @@ int yydebug;
 #if YYERROR_VERBOSE
 
 # ifndef yystrlen
-#  if defined (__GLIBC__) && defined (_STRING_H)
+#  if defined __GLIBC__ && defined _STRING_H
 #   define yystrlen strlen
 #  else
 /* Return the length of YYSTR.  */
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static YYSIZE_T
-#   if defined (__STDC__) || defined (__cplusplus)
 yystrlen (const char *yystr)
-#   else
+#else
+static YYSIZE_T
 yystrlen (yystr)
-     const char *yystr;
-#   endif
+    const char *yystr;
+#endif
 {
-  register const char *yys = yystr;
-
-  while (*yys++ != '\0')
+  YYSIZE_T yylen;
+  for (yylen = 0; yystr[yylen]; yylen++)
     continue;
-
-  return yys - yystr - 1;
+  return yylen;
 }
 #  endif
 # endif
 
 # ifndef yystpcpy
-#  if defined (__GLIBC__) && defined (_STRING_H) && defined (_GNU_SOURCE)
+#  if defined __GLIBC__ && defined _STRING_H && defined _GNU_SOURCE
 #   define yystpcpy stpcpy
 #  else
 /* Copy YYSRC to YYDEST, returning the address of the terminating '\0' in
    YYDEST.  */
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static char *
-#   if defined (__STDC__) || defined (__cplusplus)
 yystpcpy (char *yydest, const char *yysrc)
-#   else
+#else
+static char *
 yystpcpy (yydest, yysrc)
-     char *yydest;
-     const char *yysrc;
-#   endif
+    char *yydest;
+    const char *yysrc;
+#endif
 {
-  register char *yyd = yydest;
-  register const char *yys = yysrc;
+  char *yyd = yydest;
+  const char *yys = yysrc;
 
   while ((*yyd++ = *yys++) != '\0')
     continue;
@@ -1851,53 +2039,171 @@ yystpcpy (yydest, yysrc)
 #  endif
 # endif
 
-#endif /* !YYERROR_VERBOSE */
+# ifndef yytnamerr
+/* Copy to YYRES the contents of YYSTR after stripping away unnecessary
+   quotes and backslashes, so that it's suitable for yyerror.  The
+   heuristic is that double-quoting is unnecessary unless the string
+   contains an apostrophe, a comma, or backslash (other than
+   backslash-backslash).  YYSTR is taken from yytname.  If YYRES is
+   null, do not copy; instead, return the length of what the result
+   would have been.  */
+static YYSIZE_T
+yytnamerr (char *yyres, const char *yystr)
+{
+  if (*yystr == '"')
+    {
+      YYSIZE_T yyn = 0;
+      char const *yyp = yystr;
 
+      for (;;)
+	switch (*++yyp)
+	  {
+	  case '\'':
+	  case ',':
+	    goto do_not_strip_quotes;
+
+	  case '\\':
+	    if (*++yyp != '\\')
+	      goto do_not_strip_quotes;
+	    /* Fall through.  */
+	  default:
+	    if (yyres)
+	      yyres[yyn] = *yyp;
+	    yyn++;
+	    break;
+
+	  case '"':
+	    if (yyres)
+	      yyres[yyn] = '\0';
+	    return yyn;
+	  }
+    do_not_strip_quotes: ;
+    }
+
+  if (! yyres)
+    return yystrlen (yystr);
+
+  return yystpcpy (yyres, yystr) - yyres;
+}
+# endif
+
+/* Copy into YYRESULT an error message about the unexpected token
+   YYCHAR while in state YYSTATE.  Return the number of bytes copied,
+   including the terminating null byte.  If YYRESULT is null, do not
+   copy anything; just return the number of bytes that would be
+   copied.  As a special case, return 0 if an ordinary "syntax error"
+   message will do.  Return YYSIZE_MAXIMUM if overflow occurs during
+   size calculation.  */
+static YYSIZE_T
+yysyntax_error (char *yyresult, int yystate, int yychar)
+{
+  int yyn = yypact[yystate];
+
+  if (! (YYPACT_NINF < yyn && yyn <= YYLAST))
+    return 0;
+  else
+    {
+      int yytype = YYTRANSLATE (yychar);
+      YYSIZE_T yysize0 = yytnamerr (0, yytname[yytype]);
+      YYSIZE_T yysize = yysize0;
+      YYSIZE_T yysize1;
+      int yysize_overflow = 0;
+      enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
+      char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
+      int yyx;
+
+# if 0
+      /* This is so xgettext sees the translatable formats that are
+	 constructed on the fly.  */
+      YY_("syntax error, unexpected %s");
+      YY_("syntax error, unexpected %s, expecting %s");
+      YY_("syntax error, unexpected %s, expecting %s or %s");
+      YY_("syntax error, unexpected %s, expecting %s or %s or %s");
+      YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s");
+# endif
+      char *yyfmt;
+      char const *yyf;
+      static char const yyunexpected[] = "syntax error, unexpected %s";
+      static char const yyexpecting[] = ", expecting %s";
+      static char const yyor[] = " or %s";
+      char yyformat[sizeof yyunexpected
+		    + sizeof yyexpecting - 1
+		    + ((YYERROR_VERBOSE_ARGS_MAXIMUM - 2)
+		       * (sizeof yyor - 1))];
+      char const *yyprefix = yyexpecting;
+
+      /* Start YYX at -YYN if negative to avoid negative indexes in
+	 YYCHECK.  */
+      int yyxbegin = yyn < 0 ? -yyn : 0;
+
+      /* Stay within bounds of both yycheck and yytname.  */
+      int yychecklim = YYLAST - yyn + 1;
+      int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
+      int yycount = 1;
+
+      yyarg[0] = yytname[yytype];
+      yyfmt = yystpcpy (yyformat, yyunexpected);
+
+      for (yyx = yyxbegin; yyx < yyxend; ++yyx)
+	if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR)
+	  {
+	    if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM)
+	      {
+		yycount = 1;
+		yysize = yysize0;
+		yyformat[sizeof yyunexpected - 1] = '\0';
+		break;
+	      }
+	    yyarg[yycount++] = yytname[yyx];
+	    yysize1 = yysize + yytnamerr (0, yytname[yyx]);
+	    yysize_overflow |= (yysize1 < yysize);
+	    yysize = yysize1;
+	    yyfmt = yystpcpy (yyfmt, yyprefix);
+	    yyprefix = yyor;
+	  }
+
+      yyf = YY_(yyformat);
+      yysize1 = yysize + yystrlen (yyf);
+      yysize_overflow |= (yysize1 < yysize);
+      yysize = yysize1;
+
+      if (yysize_overflow)
+	return YYSIZE_MAXIMUM;
+
+      if (yyresult)
+	{
+	  /* Avoid sprintf, as that infringes on the user's name space.
+	     Don't have undefined behavior even if the translation
+	     produced a string with the wrong number of "%s"s.  */
+	  char *yyp = yyresult;
+	  int yyi = 0;
+	  while ((*yyp = *yyf) != '\0')
+	    {
+	      if (*yyp == '%' && yyf[1] == 's' && yyi < yycount)
+		{
+		  yyp += yytnamerr (yyp, yyarg[yyi++]);
+		  yyf += 2;
+		}
+	      else
+		{
+		  yyp++;
+		  yyf++;
+		}
+	    }
+	}
+      return yysize;
+    }
+}
+#endif /* YYERROR_VERBOSE */
 
 
-#if YYDEBUG
-/*--------------------------------.
-| Print this symbol on YYOUTPUT.  |
-`--------------------------------*/
-
-#if defined (__STDC__) || defined (__cplusplus)
-static void
-yysymprint (FILE *yyoutput, int yytype, YYSTYPE *yyvaluep)
-#else
-static void
-yysymprint (yyoutput, yytype, yyvaluep)
-    FILE *yyoutput;
-    int yytype;
-    YYSTYPE *yyvaluep;
-#endif
-{
-  /* Pacify ``unused variable'' warnings.  */
-  (void) yyvaluep;
-
-  if (yytype < YYNTOKENS)
-    YYFPRINTF (yyoutput, "token %s (", yytname[yytype]);
-  else
-    YYFPRINTF (yyoutput, "nterm %s (", yytname[yytype]);
-
-
-# ifdef YYPRINT
-  if (yytype < YYNTOKENS)
-    YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
-# endif
-  switch (yytype)
-    {
-      default:
-        break;
-    }
-  YYFPRINTF (yyoutput, ")");
-}
-
-#endif /* ! YYDEBUG */
 /*-----------------------------------------------.
 | Release the memory associated to this symbol.  |
 `-----------------------------------------------*/
 
-#if defined (__STDC__) || defined (__cplusplus)
+/*ARGSUSED*/
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
 yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep)
 #else
@@ -1908,8 +2214,7 @@ yydestruct (yymsg, yytype, yyvaluep)
     YYSTYPE *yyvaluep;
 #endif
 {
-  /* Pacify ``unused variable'' warnings.  */
-  (void) yyvaluep;
+  YYUSE (yyvaluep);
 
   if (!yymsg)
     yymsg = "Deleting";
@@ -1919,7 +2224,7 @@ yydestruct (yymsg, yytype, yyvaluep)
     {
 
       default:
-        break;
+	break;
     }
 }
 
@@ -1927,13 +2232,13 @@ yydestruct (yymsg, yytype, yyvaluep)
 /* Prevent warnings from -Wmissing-prototypes.  */
 
 #ifdef YYPARSE_PARAM
-# if defined (__STDC__) || defined (__cplusplus)
+#if defined __STDC__ || defined __cplusplus
 int yyparse (void *YYPARSE_PARAM);
-# else
+#else
 int yyparse ();
-# endif
+#endif
 #else /* ! YYPARSE_PARAM */
-#if defined (__STDC__) || defined (__cplusplus)
+#if defined __STDC__ || defined __cplusplus
 int yyparse (void);
 #else
 int yyparse ();
@@ -1958,14 +2263,18 @@ int yynerrs;
 `----------*/
 
 #ifdef YYPARSE_PARAM
-# if defined (__STDC__) || defined (__cplusplus)
-int yyparse (void *YYPARSE_PARAM)
-# else
-int yyparse (YYPARSE_PARAM)
-  void *YYPARSE_PARAM;
-# endif
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+int
+yyparse (void *YYPARSE_PARAM)
+#else
+int
+yyparse (YYPARSE_PARAM)
+    void *YYPARSE_PARAM;
+#endif
 #else /* ! YYPARSE_PARAM */
-#if defined (__STDC__) || defined (__cplusplus)
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 int
 yyparse (void)
 #else
@@ -1976,13 +2285,19 @@ yyparse ()
 #endif
 {
   
-  register int yystate;
-  register int yyn;
+  int yystate;
+  int yyn;
   int yyresult;
   /* Number of tokens to shift before error messages enabled.  */
   int yyerrstatus;
   /* Look-ahead token as an internal (translated) token number.  */
   int yytoken = 0;
+#if YYERROR_VERBOSE
+  /* Buffer for error messages, and its allocated size.  */
+  char yymsgbuf[128];
+  char *yymsg = yymsgbuf;
+  YYSIZE_T yymsg_alloc = sizeof yymsgbuf;
+#endif
 
   /* Three stacks and their tools:
      `yyss': related to states,
@@ -1993,18 +2308,18 @@ yyparse ()
      to reallocate them elsewhere.  */
 
   /* The state stack.  */
-  short int yyssa[YYINITDEPTH];
-  short int *yyss = yyssa;
-  register short int *yyssp;
+  yytype_int16 yyssa[YYINITDEPTH];
+  yytype_int16 *yyss = yyssa;
+  yytype_int16 *yyssp;
 
   /* The semantic value stack.  */
   YYSTYPE yyvsa[YYINITDEPTH];
   YYSTYPE *yyvs = yyvsa;
-  register YYSTYPE *yyvsp;
+  YYSTYPE *yyvsp;
 
 
 
-#define YYPOPSTACK   (yyvsp--, yyssp--)
+#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
 
   YYSIZE_T yystacksize = YYINITDEPTH;
 
@@ -2013,9 +2328,9 @@ yyparse ()
   YYSTYPE yyval;
 
 
-  /* When reducing, the number of symbols on the RHS of the reduced
-     rule.  */
-  int yylen;
+  /* The number of symbols on the RHS of the reduced rule.
+     Keep to zero when no symbol should be popped.  */
+  int yylen = 0;
 
   YYDPRINTF ((stderr, "Starting parse\n"));
 
@@ -2032,9 +2347,6 @@ yyparse ()
   yyssp = yyss;
   yyvsp = yyvs;
 
-
-  yyvsp[0] = yylval;
-
   goto yysetstate;
 
 /*------------------------------------------------------------.
@@ -2042,8 +2354,7 @@ yyparse ()
 `------------------------------------------------------------*/
  yynewstate:
   /* In all cases, when you get here, the value and location stacks
-     have just been pushed. so pushing a state here evens the stacks.
-     */
+     have just been pushed.  So pushing a state here evens the stacks.  */
   yyssp++;
 
  yysetstate:
@@ -2056,18 +2367,18 @@ yyparse ()
 
 #ifdef yyoverflow
       {
-	/* Give user a chance to reallocate the stack. Use copies of
+	/* Give user a chance to reallocate the stack.  Use copies of
 	   these so that the &'s don't force the real ones into
 	   memory.  */
 	YYSTYPE *yyvs1 = yyvs;
-	short int *yyss1 = yyss;
+	yytype_int16 *yyss1 = yyss;
 
 
 	/* Each stack pointer address is followed by the size of the
 	   data in use in that stack, in bytes.  This used to be a
 	   conditional around just the two extra args, but that might
 	   be undefined if yyoverflow is a macro.  */
-	yyoverflow ("parser stack overflow",
+	yyoverflow (YY_("memory exhausted"),
 		    &yyss1, yysize * sizeof (*yyssp),
 		    &yyvs1, yysize * sizeof (*yyvsp),
 
@@ -2078,21 +2389,21 @@ yyparse ()
       }
 #else /* no yyoverflow */
 # ifndef YYSTACK_RELOCATE
-      goto yyoverflowlab;
+      goto yyexhaustedlab;
 # else
       /* Extend the stack our own way.  */
       if (YYMAXDEPTH <= yystacksize)
-	goto yyoverflowlab;
+	goto yyexhaustedlab;
       yystacksize *= 2;
       if (YYMAXDEPTH < yystacksize)
 	yystacksize = YYMAXDEPTH;
 
       {
-	short int *yyss1 = yyss;
+	yytype_int16 *yyss1 = yyss;
 	union yyalloc *yyptr =
 	  (union yyalloc *) YYSTACK_ALLOC (YYSTACK_BYTES (yystacksize));
 	if (! yyptr)
-	  goto yyoverflowlab;
+	  goto yyexhaustedlab;
 	YYSTACK_RELOCATE (yyss);
 	YYSTACK_RELOCATE (yyvs);
 
@@ -2123,12 +2434,10 @@ yyparse ()
 `-----------*/
 yybackup:
 
-/* Do appropriate processing given the current state.  */
-/* Read a look-ahead token if we need one and don't already have one.  */
-/* yyresume: */
+  /* Do appropriate processing given the current state.  Read a
+     look-ahead token if we need one and don't already have one.  */
 
   /* First try to decide what to do without reference to look-ahead token.  */
-
   yyn = yypact[yystate];
   if (yyn == YYPACT_NINF)
     goto yydefault;
@@ -2170,22 +2479,21 @@ yybackup:
   if (yyn == YYFINAL)
     YYACCEPT;
 
-  /* Shift the look-ahead token.  */
-  YY_SYMBOL_PRINT ("Shifting", yytoken, &yylval, &yylloc);
-
-  /* Discard the token being shifted unless it is eof.  */
-  if (yychar != YYEOF)
-    yychar = YYEMPTY;
-
-  *++yyvsp = yylval;
-
-
   /* Count tokens shifted since error; after three, turn off error
      status.  */
   if (yyerrstatus)
     yyerrstatus--;
 
+  /* Shift the look-ahead token.  */
+  YY_SYMBOL_PRINT ("Shifting", yytoken, &yylval, &yylloc);
+
+  /* Discard the shifted token unless it is eof.  */
+  if (yychar != YYEOF)
+    yychar = YYEMPTY;
+
   yystate = yyn;
+  *++yyvsp = yylval;
+
   goto yynewstate;
 
 
@@ -2221,25 +2529,25 @@ yyreduce:
   switch (yyn)
     {
         case 17:
-#line 443 "base\\generic\\compiler\\ascParse.y"
+#line 443 "base/generic/compiler/ascParse.y"
     {
 	  ErrMsg_Generic("Error in definition.");
 	}
     break;
 
   case 18:
-#line 450 "base\\generic\\compiler\\ascParse.y"
+#line 450 "base/generic/compiler/ascParse.y"
     {
       /* the following steps apply to string buffers only, not files */
       struct gl_list_t *stats;
       int dispose;
-      if ((yyvsp[-2].slptr) != NULL) {
+      if ((yyvsp[(3) - (5)].slptr) != NULL) {
         stats = gl_create(1L);
-        gl_append_ptr(stats,(void *)(yyvsp[-2].slptr));
+        gl_append_ptr(stats,(void *)(yyvsp[(3) - (5)].slptr));
         if (g_untrapped_error) {
           ErrMsg_Generic("Because of a syntax error, the following statements are being ignored:");
-          WriteStatementList(ASCERR,(yyvsp[-2].slptr),4);
-          DestroyStatementList((yyvsp[-2].slptr));
+          WriteStatementList(ASCERR,(yyvsp[(3) - (5)].slptr),4);
+          DestroyStatementList((yyvsp[(3) - (5)].slptr));
         }else{
           dispose = Asc_ModuleAddStatements(Asc_CurrentModule(),stats);
           switch (dispose) {
@@ -2253,7 +2561,7 @@ yyreduce:
             case -1: /* illegal in file */
               ErrMsg_Generic("GLOBAL statements can only be made interactively. Ignoring:");
               if (stats != NULL) {
-                WriteStatementList(ASCERR,(yyvsp[-2].slptr),4);
+                WriteStatementList(ASCERR,(yyvsp[(3) - (5)].slptr),4);
                 gl_iterate(stats,(DestroyFunc)DestroyStatementList);
                 gl_destroy(stats);
               }
@@ -2273,80 +2581,80 @@ yyreduce:
     break;
 
   case 19:
-#line 495 "base\\generic\\compiler\\ascParse.y"
+#line 495 "base/generic/compiler/ascParse.y"
     {
-	  Asc_ScannerPushBuffer((yyvsp[-1].dquote_ptr));
+	  Asc_ScannerPushBuffer((yyvsp[(2) - (3)].dquote_ptr));
 	}
     break;
 
   case 20:
-#line 499 "base\\generic\\compiler\\ascParse.y"
+#line 499 "base/generic/compiler/ascParse.y"
     {
-	  DestroyName((yyvsp[-1].nptr));
+	  DestroyName((yyvsp[(2) - (3)].nptr));
 	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
 	}
     break;
 
   case 21:
-#line 504 "base\\generic\\compiler\\ascParse.y"
+#line 504 "base/generic/compiler/ascParse.y"
     {
-	  DestroyName((yyvsp[0].nptr));
+	  DestroyName((yyvsp[(2) - (2)].nptr));
 	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
 	}
     break;
 
   case 22:
-#line 512 "base\\generic\\compiler\\ascParse.y"
+#line 512 "base/generic/compiler/ascParse.y"
     {
-          Asc_ModuleCreateAlias(Asc_CurrentModule(),(yyvsp[-1].dquote_ptr));
+          Asc_ModuleCreateAlias(Asc_CurrentModule(),(yyvsp[(2) - (3)].dquote_ptr));
         }
     break;
 
   case 23:
-#line 516 "base\\generic\\compiler\\ascParse.y"
+#line 516 "base/generic/compiler/ascParse.y"
     {
-	  DestroyName((yyvsp[-1].nptr));
+	  DestroyName((yyvsp[(2) - (3)].nptr));
 	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
 	}
     break;
 
   case 24:
-#line 521 "base\\generic\\compiler\\ascParse.y"
+#line 521 "base/generic/compiler/ascParse.y"
     {
-	  DestroyName((yyvsp[0].nptr));
+	  DestroyName((yyvsp[(2) - (2)].nptr));
 	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
 	}
     break;
 
   case 25:
-#line 529 "base\\generic\\compiler\\ascParse.y"
+#line 529 "base/generic/compiler/ascParse.y"
     {
-	  if(package_load((yyvsp[-1].dquote_ptr),SCP((yyvsp[-3].id_ptr)))){
+	  if(package_load((yyvsp[(4) - (5)].dquote_ptr),SCP((yyvsp[(2) - (5)].id_ptr)))){
 		ErrMsg_Generic("IMPORT failed");
       }
 	}
     break;
 
   case 26:
-#line 535 "base\\generic\\compiler\\ascParse.y"
+#line 535 "base/generic/compiler/ascParse.y"
     {
-	  if(package_load(SCP((yyvsp[-1].dquote_ptr)),NULL)){
+	  if(package_load(SCP((yyvsp[(2) - (3)].dquote_ptr)),NULL)){
         ErrMsg_Generic("IMPORT failed");
       }
 	}
     break;
 
   case 27:
-#line 544 "base\\generic\\compiler\\ascParse.y"
+#line 544 "base/generic/compiler/ascParse.y"
     {
 	  /*  see comments for notes statement.  */
-	  if( (yyvsp[-1].int_value) != NOTES_TOK ) {
-	    WarnMsg_MismatchEnd("NOTES", NULL, (yyvsp[-1].int_value), NULL);
+	  if( (yyvsp[(3) - (4)].int_value) != NOTES_TOK ) {
+	    WarnMsg_MismatchEnd("NOTES", NULL, (yyvsp[(3) - (4)].int_value), NULL);
 	  }
-	  if ((yyvsp[-2].notesptr) != NULL) {
+	  if ((yyvsp[(2) - (4)].notesptr) != NULL) {
 	    struct NoteTmp *nt;
 	    symchar *lang=NULL; /* dummy */
-	    nt = (yyvsp[-2].notesptr);
+	    nt = (yyvsp[(2) - (4)].notesptr);
 	    while (nt != NULL) {
 	      if (nt->lang != NULL) {
 	        lang = nt->lang;
@@ -2360,7 +2668,7 @@ yyreduce:
 	    }
 	    /* now keep them */
 	    ProcessNotes(1);
-	    DestroyNoteTmpList((yyvsp[-2].notesptr));
+	    DestroyNoteTmpList((yyvsp[(2) - (4)].notesptr));
       }
       g_type_name = g_proc_name = NULL;
 	  g_untrapped_error = 0;
@@ -2368,29 +2676,29 @@ yyreduce:
     break;
 
   case 28:
-#line 575 "base\\generic\\compiler\\ascParse.y"
+#line 575 "base/generic/compiler/ascParse.y"
     {
-	  g_type_name = (yyvsp[-2].id_ptr);
-	  g_proc_name = (yyvsp[-1].id_ptr);
+	  g_type_name = (yyvsp[(4) - (6)].id_ptr);
+	  g_proc_name = (yyvsp[(5) - (6)].id_ptr);
 	}
     break;
 
   case 29:
-#line 583 "base\\generic\\compiler\\ascParse.y"
+#line 583 "base/generic/compiler/ascParse.y"
     {
-	  if ((yyvsp[-3].tptr) == NULL) {
-	    DestroyProcedureList((yyvsp[-2].listp));
+	  if ((yyvsp[(1) - (4)].tptr) == NULL) {
+	    DestroyProcedureList((yyvsp[(2) - (4)].listp));
 	  } else {
-	    if( (yyvsp[-1].int_value) != METHODS_TOK ) {
-	      WarnMsg_MismatchEnd("ADD METHODS", NULL, (yyvsp[-1].int_value), "METHODS");
+	    if( (yyvsp[(3) - (4)].int_value) != METHODS_TOK ) {
+	      WarnMsg_MismatchEnd("ADD METHODS", NULL, (yyvsp[(3) - (4)].int_value), "METHODS");
 	    }
-	    if (AddMethods((yyvsp[-3].tptr),(yyvsp[-2].listp),g_untrapped_error) != 0) {
-	      if ((yyvsp[-3].tptr) != ILLEGAL_DEFINITION) {
+	    if (AddMethods((yyvsp[(1) - (4)].tptr),(yyvsp[(2) - (4)].listp),g_untrapped_error) != 0) {
+	      if ((yyvsp[(1) - (4)].tptr) != ILLEGAL_DEFINITION) {
             error_reporter_current_line(ASC_USER_ERROR
               ,"ADD METHODS failed for type %s"
-              ,SCP(GetName((yyvsp[-3].tptr)))
+              ,SCP(GetName((yyvsp[(1) - (4)].tptr)))
             );
-	        DestroyProcedureList((yyvsp[-2].listp));
+	        DestroyProcedureList((yyvsp[(2) - (4)].listp));
 	      } /* else adding in DEFINITION MODEL may have misgone */
 	    }
 	  }
@@ -2399,23 +2707,23 @@ yyreduce:
     break;
 
   case 30:
-#line 606 "base\\generic\\compiler\\ascParse.y"
+#line 606 "base/generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *tmptype;
-	  tmptype = FindType((yyvsp[-1].id_ptr));
+	  tmptype = FindType((yyvsp[(4) - (5)].id_ptr));
 	  if(tmptype == NULL){
         error_reporter_current_line(ASC_USER_ERROR
           ,"ADD METHODS called with undefined type (%s)"
-          ,SCP((yyvsp[-1].id_ptr))
+          ,SCP((yyvsp[(4) - (5)].id_ptr))
         );
 	  }
 	  (yyval.tptr) = tmptype; /* parent should check for NULL */
-	  g_type_name = (yyvsp[-1].id_ptr); /* scope for notes */
+	  g_type_name = (yyvsp[(4) - (5)].id_ptr); /* scope for notes */
 	}
     break;
 
   case 31:
-#line 619 "base\\generic\\compiler\\ascParse.y"
+#line 619 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.tptr) = ILLEGAL_DEFINITION;
 	  /* need a bit of global state here to tag base methods */
@@ -2423,20 +2731,20 @@ yyreduce:
     break;
 
   case 32:
-#line 627 "base\\generic\\compiler\\ascParse.y"
+#line 627 "base/generic/compiler/ascParse.y"
     {
-	  if ((yyvsp[-3].tptr) == NULL) {
-	    DestroyProcedureList((yyvsp[-2].listp));
+	  if ((yyvsp[(1) - (4)].tptr) == NULL) {
+	    DestroyProcedureList((yyvsp[(2) - (4)].listp));
 	  } else {
-	    if( (yyvsp[-1].int_value) != METHODS_TOK ) {
-	      WarnMsg_MismatchEnd("REPLACE METHODS", NULL, (yyvsp[-1].int_value), "METHODS");
+	    if( (yyvsp[(3) - (4)].int_value) != METHODS_TOK ) {
+	      WarnMsg_MismatchEnd("REPLACE METHODS", NULL, (yyvsp[(3) - (4)].int_value), "METHODS");
 	    }
-	    if (ReplaceMethods((yyvsp[-3].tptr),(yyvsp[-2].listp),g_untrapped_error) != 0) {
+	    if (ReplaceMethods((yyvsp[(1) - (4)].tptr),(yyvsp[(2) - (4)].listp),g_untrapped_error) != 0) {
           error_reporter_current_line(ASC_USER_ERROR
             ,"REPLACE METHODS failed for type %s"
-            ,SCP(GetName((yyvsp[-3].tptr)))
+            ,SCP(GetName((yyvsp[(1) - (4)].tptr)))
           );
-	      DestroyProcedureList((yyvsp[-2].listp));
+	      DestroyProcedureList((yyvsp[(2) - (4)].listp));
 	    }
 	  }
 	  g_untrapped_error = 0;
@@ -2444,14 +2752,14 @@ yyreduce:
     break;
 
   case 33:
-#line 648 "base\\generic\\compiler\\ascParse.y"
+#line 648 "base/generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *tmptype;
-	  tmptype = FindType((yyvsp[-1].id_ptr));
+	  tmptype = FindType((yyvsp[(4) - (5)].id_ptr));
 	  if (tmptype == NULL) {
         error_reporter_current_line(ASC_USER_ERROR
           ,"REPLACE METHODS called with undefined type (%s)"
-          ,SCP((yyvsp[-1].id_ptr))
+          ,SCP((yyvsp[(4) - (5)].id_ptr))
         );
 	  }
 	  (yyval.tptr) = tmptype; /* parent should check for NULL */
@@ -2459,7 +2767,7 @@ yyreduce:
     break;
 
   case 34:
-#line 660 "base\\generic\\compiler\\ascParse.y"
+#line 660 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.tptr) = ILLEGAL_DEFINITION;
 	  /* need a bit of global state here to tag base methods */
@@ -2467,17 +2775,17 @@ yyreduce:
     break;
 
   case 35:
-#line 668 "base\\generic\\compiler\\ascParse.y"
+#line 668 "base/generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
 
-	  if(( (yyvsp[-1].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
+	  if(( (yyvsp[(5) - (6)].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
 	    WarnMsg_MismatchEnd("ATOM", SCP(g_type_name),
-	                        (yyvsp[-1].int_value), SCP(g_type_name));
+	                        (yyvsp[(5) - (6)].int_value), SCP(g_type_name));
 	  }
 	  g_atom_dim_ptr = CheckDimensionsMatch(g_default_dim_ptr,
 	                                        g_atom_dim_ptr);
@@ -2486,9 +2794,9 @@ yyreduce:
 	                                g_refines_name,
 	                                real_type, /* ignored..really */
 	                                Asc_CurrentModule(),
-	                                (yyvsp[-5].int_value),
-	                                (yyvsp[-3].slptr),
-	                                (yyvsp[-2].listp),
+	                                (yyvsp[(1) - (6)].int_value),
+	                                (yyvsp[(3) - (6)].slptr),
+	                                (yyvsp[(4) - (6)].listp),
 	                                g_defaulted,
 	                                g_default_double,
 	                                g_atom_dim_ptr,
@@ -2509,8 +2817,8 @@ yyreduce:
 	      ,"Atom dimensions don't match in ATOM %s"
 	      ,SCP(g_type_name)
 	    );
-	    DestroyStatementList((yyvsp[-3].slptr));
-	    DestroyProcedureList((yyvsp[-2].listp));
+	    DestroyStatementList((yyvsp[(3) - (6)].slptr));
+	    DestroyProcedureList((yyvsp[(4) - (6)].listp));
 	  }
 	  ProcessNotes(keepnotes);
 	  g_type_name = g_refines_name = g_proc_name = NULL;
@@ -2519,26 +2827,26 @@ yyreduce:
     break;
 
   case 36:
-#line 720 "base\\generic\\compiler\\ascParse.y"
+#line 720 "base/generic/compiler/ascParse.y"
     {
 	  /* g_type_name = $1; */
-	  g_refines_name = (yyvsp[-3].id_ptr);
-	  g_atom_dim_ptr = (yyvsp[-2].dimp);
-	  g_default_double = (yyvsp[-1].real_value);
+	  g_refines_name = (yyvsp[(3) - (6)].id_ptr);
+	  g_atom_dim_ptr = (yyvsp[(4) - (6)].dimp);
+	  g_default_double = (yyvsp[(5) - (6)].real_value);
 	  g_header_linenum = LineNum();
 	}
     break;
 
   case 37:
-#line 731 "base\\generic\\compiler\\ascParse.y"
+#line 731 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
-	  g_type_name = (yyvsp[0].id_ptr); /* want this set early so parm lists see it */
+	  (yyval.id_ptr) = (yyvsp[(2) - (2)].id_ptr);
+	  g_type_name = (yyvsp[(2) - (2)].id_ptr); /* want this set early so parm lists see it */
 	}
     break;
 
   case 38:
-#line 739 "base\\generic\\compiler\\ascParse.y"
+#line 739 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = WildDimension();
@@ -2547,15 +2855,15 @@ yyreduce:
     break;
 
   case 39:
-#line 745 "base\\generic\\compiler\\ascParse.y"
+#line 745 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.real_value) = (yyvsp[-1].int_value) ? -(yyvsp[0].real_value) : (yyvsp[0].real_value);
+	  (yyval.real_value) = (yyvsp[(2) - (3)].int_value) ? -(yyvsp[(3) - (3)].real_value) : (yyvsp[(3) - (3)].real_value);
 	  g_defaulted = 1;
 	}
     break;
 
   case 40:
-#line 750 "base\\generic\\compiler\\ascParse.y"
+#line 750 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
@@ -2565,7 +2873,7 @@ yyreduce:
     break;
 
   case 41:
-#line 757 "base\\generic\\compiler\\ascParse.y"
+#line 757 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
@@ -2575,17 +2883,17 @@ yyreduce:
     break;
 
   case 42:
-#line 764 "base\\generic\\compiler\\ascParse.y"
+#line 764 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
-	  g_default_symbol = (yyvsp[0].sym_ptr);
+	  g_default_symbol = (yyvsp[(2) - (2)].sym_ptr);
 	  g_defaulted = 0;
 	}
     break;
 
   case 43:
-#line 774 "base\\generic\\compiler\\ascParse.y"
+#line 774 "base/generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
@@ -2597,7 +2905,7 @@ yyreduce:
 	    def_ptr = CreateConstantTypeDef(g_type_name,
 	                                    g_refines_name,
 	                                    Asc_CurrentModule(),
-	                                    (yyvsp[-1].int_value),
+	                                    (yyvsp[(1) - (2)].int_value),
 	                                    g_defaulted,
 	                                    g_default_double,
 	                                    g_default_long,
@@ -2624,40 +2932,40 @@ yyreduce:
     break;
 
   case 44:
-#line 814 "base\\generic\\compiler\\ascParse.y"
+#line 814 "base/generic/compiler/ascParse.y"
     {
-	  g_type_name = (yyvsp[-6].id_ptr);
-	  g_refines_name = (yyvsp[-4].id_ptr);
-	  g_atom_dim_ptr = (yyvsp[-3].dimp);
+	  g_type_name = (yyvsp[(2) - (8)].id_ptr);
+	  g_refines_name = (yyvsp[(4) - (8)].id_ptr);
+	  g_atom_dim_ptr = (yyvsp[(5) - (8)].dimp);
 	  switch (g_constant_type) {
 	  case DOUBLECONSTANT:
-	    g_default_double = (yyvsp[-2].real_value);
+	    g_default_double = (yyvsp[(6) - (8)].real_value);
 	    break;
 	  case LONGCONSTANT:
-	    g_default_long = (yyvsp[-2].real_value);
+	    g_default_long = (yyvsp[(6) - (8)].real_value);
 	    break;
 	  case BOOLEANCONSTANT:
-	    g_default_long = (yyvsp[-2].int_value);
+	    g_default_long = (yyvsp[(6) - (8)].int_value);
 	    break;
 	  case SYMBOLCONSTANT:
-	    g_default_symbol = (yyvsp[-2].sym_ptr);
+	    g_default_symbol = (yyvsp[(6) - (8)].sym_ptr);
 	    break;
 	  default:
 	    ErrMsg_Generic("Wierd constant type assign encountered.");
 	    break; /* better not be reached. */
 	  }
 	  g_header_linenum = LineNum();
-	  if ((yyvsp[-1].dquote_ptr) != NULL) {
+	  if ((yyvsp[(7) - (8)].dquote_ptr) != NULL) {
 	    CollectNote(CreateNote(g_type_name,InlineNote(),SelfNote(),NULL,
 	                           Asc_ModuleBestName(Asc_CurrentModule()),
-	                           AddBraceChar((yyvsp[-1].dquote_ptr),InlineNote()),
+	                           AddBraceChar((yyvsp[(7) - (8)].dquote_ptr),InlineNote()),
 	                           g_header_linenum,NULL,nd_empty));
 	  }
 	}
     break;
 
   case 45:
-#line 847 "base\\generic\\compiler\\ascParse.y"
+#line 847 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = WildDimension();
@@ -2666,15 +2974,15 @@ yyreduce:
     break;
 
   case 46:
-#line 853 "base\\generic\\compiler\\ascParse.y"
+#line 853 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.real_value) = (yyvsp[-1].int_value) ? -(yyvsp[0].real_value) : (yyvsp[0].real_value);
+	  (yyval.real_value) = (yyvsp[(2) - (3)].int_value) ? -(yyvsp[(3) - (3)].real_value) : (yyvsp[(3) - (3)].real_value);
 	  g_defaulted = 1;
 	}
     break;
 
   case 47:
-#line 858 "base\\generic\\compiler\\ascParse.y"
+#line 858 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.int_value) = 1;
 	  g_defaulted = 1;
@@ -2684,7 +2992,7 @@ yyreduce:
     break;
 
   case 48:
-#line 865 "base\\generic\\compiler\\ascParse.y"
+#line 865 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.int_value) = 0;
 	  g_defaulted = 1;
@@ -2694,9 +3002,9 @@ yyreduce:
     break;
 
   case 49:
-#line 872 "base\\generic\\compiler\\ascParse.y"
+#line 872 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.sym_ptr) = (yyvsp[0].sym_ptr);
+	  (yyval.sym_ptr) = (yyvsp[(2) - (2)].sym_ptr);
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
 	  g_constant_type = SYMBOLCONSTANT;
@@ -2704,23 +3012,23 @@ yyreduce:
     break;
 
   case 50:
-#line 882 "base\\generic\\compiler\\ascParse.y"
+#line 882 "base/generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
-	  if(( (yyvsp[-1].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
+	  if(( (yyvsp[(5) - (6)].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
 	    WarnMsg_MismatchEnd("MODEL", SCP(g_type_name),
-	                        (yyvsp[-1].int_value), SCP(g_type_name));
+	                        (yyvsp[(5) - (6)].int_value), SCP(g_type_name));
 	  }
 	  def_ptr = CreateModelTypeDef(g_type_name,
 	                               g_refines_name,
 	                               Asc_CurrentModule(),
-	                               (yyvsp[-5].int_value),
-	                               (yyvsp[-3].slptr),
-	                               (yyvsp[-2].listp),
+	                               (yyvsp[(1) - (6)].int_value),
+	                               (yyvsp[(3) - (6)].slptr),
+	                               (yyvsp[(4) - (6)].listp),
 	                               g_model_parameters,
 	                               g_parameter_reduction,
 	                               g_parameter_wheres,
@@ -2745,95 +3053,95 @@ yyreduce:
     break;
 
   case 51:
-#line 924 "base\\generic\\compiler\\ascParse.y"
+#line 924 "base/generic/compiler/ascParse.y"
     {
 	  /* g_type_name = $1; */
-	  g_model_parameters = (yyvsp[-2].slptr);
-	  g_parameter_wheres = (yyvsp[-1].slptr);
+	  g_model_parameters = (yyvsp[(2) - (4)].slptr);
+	  g_parameter_wheres = (yyvsp[(3) - (4)].slptr);
 	  g_refines_name = NULL;
 	  g_header_linenum = LineNum();
 	}
     break;
 
   case 52:
-#line 933 "base\\generic\\compiler\\ascParse.y"
+#line 933 "base/generic/compiler/ascParse.y"
     {
 	  /* g_type_name = $1; */
-	  g_model_parameters = (yyvsp[-5].slptr);
-	  g_parameter_wheres = (yyvsp[-4].slptr);
-	  g_refines_name = (yyvsp[-2].id_ptr);
-	  g_parameter_reduction = (yyvsp[-1].slptr);
+	  g_model_parameters = (yyvsp[(2) - (7)].slptr);
+	  g_parameter_wheres = (yyvsp[(3) - (7)].slptr);
+	  g_refines_name = (yyvsp[(5) - (7)].id_ptr);
+	  g_parameter_reduction = (yyvsp[(6) - (7)].slptr);
 	  g_header_linenum = LineNum();
 	}
     break;
 
   case 53:
-#line 945 "base\\generic\\compiler\\ascParse.y"
+#line 945 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
-	  g_type_name = (yyvsp[0].id_ptr); /* want this set early so parm lists see it */
+	  (yyval.id_ptr) = (yyvsp[(2) - (2)].id_ptr);
+	  g_type_name = (yyvsp[(2) - (2)].id_ptr); /* want this set early so parm lists see it */
 	}
     break;
 
   case 54:
-#line 953 "base\\generic\\compiler\\ascParse.y"
+#line 953 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.slptr) = NULL;
 	}
     break;
 
   case 55:
-#line 957 "base\\generic\\compiler\\ascParse.y"
+#line 957 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.slptr) = (yyvsp[-1].slptr); /* this could be much more sophisticated */
+	  (yyval.slptr) = (yyvsp[(2) - (3)].slptr); /* this could be much more sophisticated */
 	}
     break;
 
   case 56:
-#line 964 "base\\generic\\compiler\\ascParse.y"
+#line 964 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.slptr) = NULL;
 	}
     break;
 
   case 57:
-#line 968 "base\\generic\\compiler\\ascParse.y"
+#line 968 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.slptr) = (yyvsp[-1].slptr); /* this could be much more sophisticated */
+	  (yyval.slptr) = (yyvsp[(3) - (4)].slptr); /* this could be much more sophisticated */
 	}
     break;
 
   case 58:
-#line 975 "base\\generic\\compiler\\ascParse.y"
+#line 975 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.slptr) = NULL;
 	}
     break;
 
   case 59:
-#line 979 "base\\generic\\compiler\\ascParse.y"
+#line 979 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.slptr) = (yyvsp[-1].slptr); /* this could be much more sophisticated */
+	  (yyval.slptr) = (yyvsp[(2) - (3)].slptr); /* this could be much more sophisticated */
 	}
     break;
 
   case 60:
-#line 986 "base\\generic\\compiler\\ascParse.y"
+#line 986 "base/generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
-	  if (((yyvsp[-1].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
+	  if (((yyvsp[(4) - (5)].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
 	    WarnMsg_MismatchEnd("PATCH", SCP(g_type_name),
-	                        (yyvsp[-1].int_value), SCP(g_type_name));
+	                        (yyvsp[(4) - (5)].int_value), SCP(g_type_name));
 	  }
 	  def_ptr = CreatePatchTypeDef(g_type_name,
 	                               g_refines_name,
 	                               NULL,
 	                               Asc_CurrentModule(),
-	                               (yyvsp[-3].slptr),
-	                               (yyvsp[-2].listp),
+	                               (yyvsp[(2) - (5)].slptr),
+	                               (yyvsp[(3) - (5)].listp),
 	                               g_untrapped_error);
 	  g_untrapped_error = 0;
 	  if (def_ptr != NULL) {
@@ -2850,46 +3158,46 @@ yyreduce:
     break;
 
   case 61:
-#line 1018 "base\\generic\\compiler\\ascParse.y"
+#line 1018 "base/generic/compiler/ascParse.y"
     {
 	  /*
 	   * A patch definition looks just like a model def.
 	   * with the original name <=> refine name.
 	   */
-	  g_type_name = (yyvsp[-3].id_ptr);
-	  g_refines_name = (yyvsp[-1].id_ptr);
+	  g_type_name = (yyvsp[(2) - (5)].id_ptr);
+	  g_refines_name = (yyvsp[(4) - (5)].id_ptr);
 	  g_header_linenum = LineNum();
 	}
     break;
 
   case 62:
-#line 1031 "base\\generic\\compiler\\ascParse.y"
+#line 1031 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.int_value) = 0;
 	}
     break;
 
   case 63:
-#line 1035 "base\\generic\\compiler\\ascParse.y"
+#line 1035 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.int_value) = 1;
 	}
     break;
 
   case 64:
-#line 1042 "base\\generic\\compiler\\ascParse.y"
+#line 1042 "base/generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
 
-	  if(( (yyvsp[-1].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != (yyvsp[-4].id_ptr) )) {
-	    WarnMsg_MismatchEnd("DEFINITION", SCP((yyvsp[-4].id_ptr)), (yyvsp[-1].int_value), SCP((yyvsp[-4].id_ptr)));
+	  if(( (yyvsp[(4) - (5)].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != (yyvsp[(1) - (5)].id_ptr) )) {
+	    WarnMsg_MismatchEnd("DEFINITION", SCP((yyvsp[(1) - (5)].id_ptr)), (yyvsp[(4) - (5)].int_value), SCP((yyvsp[(1) - (5)].id_ptr)));
 	  }
-	  if( (yyvsp[-4].id_ptr) == GetBaseTypeName(relation_type)) {
-	    def_ptr = CreateRelationTypeDef(Asc_CurrentModule(),(yyvsp[-4].id_ptr),(yyvsp[-3].slptr),(yyvsp[-2].listp));
+	  if( (yyvsp[(1) - (5)].id_ptr) == GetBaseTypeName(relation_type)) {
+	    def_ptr = CreateRelationTypeDef(Asc_CurrentModule(),(yyvsp[(1) - (5)].id_ptr),(yyvsp[(2) - (5)].slptr),(yyvsp[(3) - (5)].listp));
 	  }
-	  else if( (yyvsp[-4].id_ptr) == GetBaseTypeName(logrel_type) ) {
-	    def_ptr = CreateLogRelTypeDef(Asc_CurrentModule(),(yyvsp[-4].id_ptr),(yyvsp[-3].slptr),(yyvsp[-2].listp));
+	  else if( (yyvsp[(1) - (5)].id_ptr) == GetBaseTypeName(logrel_type) ) {
+	    def_ptr = CreateLogRelTypeDef(Asc_CurrentModule(),(yyvsp[(1) - (5)].id_ptr),(yyvsp[(2) - (5)].slptr),(yyvsp[(3) - (5)].listp));
 	  }
 	  else {
 	    ErrMsg_Generic("Bad type passed to DEFINITION statement.");
@@ -2898,7 +3206,7 @@ yyreduce:
 	  if ( def_ptr != NULL ) {
 	    keepnotes = AddType(def_ptr);
 	  } else {
-	    ErrMsg_NullDefPointer(SCP((yyvsp[-4].id_ptr)));
+	    ErrMsg_NullDefPointer(SCP((yyvsp[(1) - (5)].id_ptr)));
 	  }
 	  ProcessNotes(keepnotes);
 	  g_type_name = NULL;
@@ -2907,70 +3215,70 @@ yyreduce:
     break;
 
   case 65:
-#line 1072 "base\\generic\\compiler\\ascParse.y"
+#line 1072 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
-	  g_type_name = (yyvsp[0].id_ptr); /* want this set early so parm lists see it */
+	  (yyval.id_ptr) = (yyvsp[(2) - (2)].id_ptr);
+	  g_type_name = (yyvsp[(2) - (2)].id_ptr); /* want this set early so parm lists see it */
 	}
     break;
 
   case 66:
-#line 1081 "base\\generic\\compiler\\ascParse.y"
+#line 1081 "base/generic/compiler/ascParse.y"
     { /* nothing to do. just cruft to fix ; problem */ }
     break;
 
   case 67:
-#line 1086 "base\\generic\\compiler\\ascParse.y"
+#line 1086 "base/generic/compiler/ascParse.y"
     {
           struct UnitDefinition *ud;
           unsigned long c,len;
 
-	  if( (yyvsp[0].int_value) != UNITS_TOK ) {
-	    WarnMsg_MismatchEnd("UNITS", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(3) - (3)].int_value) != UNITS_TOK ) {
+	    WarnMsg_MismatchEnd("UNITS", NULL, (yyvsp[(3) - (3)].int_value), NULL);
 	  }
-          len = gl_length((yyvsp[-1].listp));
+          len = gl_length((yyvsp[(2) - (3)].listp));
           for (c=1; c <= len; c++) {
-            ud = (struct UnitDefinition *)gl_fetch((yyvsp[-1].listp),c);
+            ud = (struct UnitDefinition *)gl_fetch((yyvsp[(2) - (3)].listp),c);
             ProcessUnitDef(ud);
             DestroyUnitDef(ud);
           }
-          gl_destroy((yyvsp[-1].listp));
+          gl_destroy((yyvsp[(2) - (3)].listp));
           (yyval.statptr) = NULL;
 	}
     break;
 
   case 68:
-#line 1105 "base\\generic\\compiler\\ascParse.y"
+#line 1105 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.listp) = gl_create(100L);
 	}
     break;
 
   case 69:
-#line 1109 "base\\generic\\compiler\\ascParse.y"
+#line 1109 "base/generic/compiler/ascParse.y"
     {
-	  gl_append_ptr((yyvsp[-1].listp),(char *)(yyvsp[0].udefptr));
-	  (yyval.listp) = (yyvsp[-1].listp);
+	  gl_append_ptr((yyvsp[(1) - (2)].listp),(char *)(yyvsp[(2) - (2)].udefptr));
+	  (yyval.listp) = (yyvsp[(1) - (2)].listp);
 	}
     break;
 
   case 70:
-#line 1117 "base\\generic\\compiler\\ascParse.y"
+#line 1117 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.udefptr) = CreateUnitDef((yyvsp[-3].id_ptr),(yyvsp[-1].braced_ptr),Asc_ModuleBestName(Asc_CurrentModule()),
+	  (yyval.udefptr) = CreateUnitDef((yyvsp[(1) - (4)].id_ptr),(yyvsp[(3) - (4)].braced_ptr),Asc_ModuleBestName(Asc_CurrentModule()),
                              LineNum());
 	}
     break;
 
   case 71:
-#line 1126 "base\\generic\\compiler\\ascParse.y"
+#line 1126 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.listp) = NULL;
 	}
     break;
 
   case 72:
-#line 1130 "base\\generic\\compiler\\ascParse.y"
+#line 1130 "base/generic/compiler/ascParse.y"
     { /* To get rid of this, we will need a global proclist
            * that accumulates procs until a MODEL production is
            * completed. If any other sort of production is started,
@@ -2980,118 +3288,118 @@ yyreduce:
     break;
 
   case 73:
-#line 1137 "base\\generic\\compiler\\ascParse.y"
+#line 1137 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.listp) = (yyvsp[0].listp);
+	  (yyval.listp) = (yyvsp[(3) - (3)].listp);
 	}
     break;
 
   case 74:
-#line 1144 "base\\generic\\compiler\\ascParse.y"
+#line 1144 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.listp) = (yyvsp[0].listp);
+	  (yyval.listp) = (yyvsp[(1) - (1)].listp);
 	  gl_sort((yyval.listp),(CmpFunc)CmpProcs);
 	}
     break;
 
   case 75:
-#line 1151 "base\\generic\\compiler\\ascParse.y"
+#line 1151 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.listp) = gl_create(7L);
 	}
     break;
 
   case 76:
-#line 1155 "base\\generic\\compiler\\ascParse.y"
+#line 1155 "base/generic/compiler/ascParse.y"
     {
 	  unsigned long c;
 	  struct InitProcedure *oldproc;
-	  c = gl_length((yyvsp[-1].listp));
+	  c = gl_length((yyvsp[(1) - (2)].listp));
           while (c > 0) {
-            oldproc = (struct InitProcedure *)gl_fetch((yyvsp[-1].listp),c);
-            if (ProcName((yyvsp[0].procptr)) == ProcName(oldproc)) {
+            oldproc = (struct InitProcedure *)gl_fetch((yyvsp[(1) - (2)].listp),c);
+            if (ProcName((yyvsp[(2) - (2)].procptr)) == ProcName(oldproc)) {
               error_reporter_current_line(ASC_USER_WARNING
-                ,"Duplicate METHOD %s rejected", SCP(ProcName((yyvsp[0].procptr)))
+                ,"Duplicate METHOD %s rejected", SCP(ProcName((yyvsp[(2) - (2)].procptr)))
               );
               break;
             }
             c--;
           }
 	  if (c) { /* broke early */
-	    DestroyProcedure((yyvsp[0].procptr));
+	    DestroyProcedure((yyvsp[(2) - (2)].procptr));
 	  } else {
-	    gl_append_ptr((yyvsp[-1].listp),(char *)(yyvsp[0].procptr));
+	    gl_append_ptr((yyvsp[(1) - (2)].listp),(char *)(yyvsp[(2) - (2)].procptr));
 	  }
-	  (yyval.listp) = (yyvsp[-1].listp);
+	  (yyval.listp) = (yyvsp[(1) - (2)].listp);
 	}
     break;
 
   case 77:
-#line 1180 "base\\generic\\compiler\\ascParse.y"
+#line 1180 "base/generic/compiler/ascParse.y"
     {
-	  if (((yyvsp[-1].int_value) != IDENTIFIER_TOK) || ((yyvsp[-4].id_ptr) != g_end_identifier)) {
+	  if (((yyvsp[(4) - (5)].int_value) != IDENTIFIER_TOK) || ((yyvsp[(1) - (5)].id_ptr) != g_end_identifier)) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
-	    WarnMsg_MismatchEnd("METHOD", SCP((yyvsp[-4].id_ptr)), (yyvsp[-1].int_value), SCP((yyvsp[-4].id_ptr)));
+	    WarnMsg_MismatchEnd("METHOD", SCP((yyvsp[(1) - (5)].id_ptr)), (yyvsp[(4) - (5)].int_value), SCP((yyvsp[(1) - (5)].id_ptr)));
 	  }
-	  (yyval.procptr) = CreateProcedure((yyvsp[-4].id_ptr),(yyvsp[-2].slptr));
+	  (yyval.procptr) = CreateProcedure((yyvsp[(1) - (5)].id_ptr),(yyvsp[(3) - (5)].slptr));
 	  g_proc_name = NULL;
 	}
     break;
 
   case 78:
-#line 1194 "base\\generic\\compiler\\ascParse.y"
+#line 1194 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
-	  g_proc_name = (yyvsp[0].id_ptr);
+	  (yyval.id_ptr) = (yyvsp[(2) - (2)].id_ptr);
+	  g_proc_name = (yyvsp[(2) - (2)].id_ptr);
 	}
     break;
 
   case 79:
-#line 1203 "base\\generic\\compiler\\ascParse.y"
+#line 1203 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.slptr) = CreateStatementList((yyvsp[0].listp));
+	  (yyval.slptr) = CreateStatementList((yyvsp[(1) - (1)].listp));
 	}
     break;
 
   case 80:
-#line 1210 "base\\generic\\compiler\\ascParse.y"
+#line 1210 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.listp) = gl_create(7L);
 	}
     break;
 
   case 81:
-#line 1214 "base\\generic\\compiler\\ascParse.y"
+#line 1214 "base/generic/compiler/ascParse.y"
     {
 	  /* this is appending to a gllist of statements, not yet slist. */
-	  if ((yyvsp[-1].statptr) != NULL) {
-	    gl_append_ptr((yyvsp[-2].listp),(char *)(yyvsp[-1].statptr));
+	  if ((yyvsp[(2) - (3)].statptr) != NULL) {
+	    gl_append_ptr((yyvsp[(1) - (3)].listp),(char *)(yyvsp[(2) - (3)].statptr));
 	  }
-	  (yyval.listp) = (yyvsp[-2].listp);
+	  (yyval.listp) = (yyvsp[(1) - (3)].listp);
 	}
     break;
 
   case 82:
-#line 1222 "base\\generic\\compiler\\ascParse.y"
+#line 1222 "base/generic/compiler/ascParse.y"
     {
 	  ErrMsg_Generic("Error in statement input.");
-	  (yyval.listp) = (yyvsp[-2].listp);
+	  (yyval.listp) = (yyvsp[(1) - (3)].listp);
 	}
     break;
 
   case 113:
-#line 1263 "base\\generic\\compiler\\ascParse.y"
+#line 1263 "base/generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *tmptype;
-	  tmptype = FindType((yyvsp[-2].id_ptr));
-	  if ((yyvsp[0].eptr) != NULL) {
+	  tmptype = FindType((yyvsp[(3) - (5)].id_ptr));
+	  if ((yyvsp[(5) - (5)].eptr) != NULL) {
 	    ErrMsg_Generic("WITH VALUE clause not allowed in IS_A.");
 	    g_untrapped_error++;
-	    DestroyVariableList((yyvsp[-4].lptr));
+	    DestroyVariableList((yyvsp[(1) - (5)].lptr));
 	    DestroySetList(g_typeargs);
-	    DestroyExprList((yyvsp[0].eptr));
+	    DestroyExprList((yyvsp[(5) - (5)].eptr));
 	    (yyval.statptr) = NULL;
 	  } else {
 	    if (tmptype != NULL) {
@@ -3099,20 +3407,20 @@ yyreduce:
 	          (g_typeargs != NULL)) {
 	        error_reporter_current_line(ASC_USER_ERROR,
 	                "IS_A has arguments to the nonmodel type %s.\n",
-	                SCP((yyvsp[-2].id_ptr)));
-	        DestroyVariableList((yyvsp[-4].lptr));
+	                SCP((yyvsp[(3) - (5)].id_ptr)));
+	        DestroyVariableList((yyvsp[(1) - (5)].lptr));
 	        DestroySetList(g_typeargs);
-	        DestroyExprList((yyvsp[0].eptr));
+	        DestroyExprList((yyvsp[(5) - (5)].eptr));
 	        g_untrapped_error++;
 	        (yyval.statptr) = NULL;
 	      } else {
-	        (yyval.statptr) = CreateISA((yyvsp[-4].lptr),(yyvsp[-2].id_ptr),g_typeargs,(yyvsp[-1].id_ptr));
+	        (yyval.statptr) = CreateISA((yyvsp[(1) - (5)].lptr),(yyvsp[(3) - (5)].id_ptr),g_typeargs,(yyvsp[(4) - (5)].id_ptr));
 	      }
 	    } else {
-	      error_reporter_current_line(ASC_USER_ERROR,"IS_A uses the undefined type %s.", SCP((yyvsp[-2].id_ptr)));
-	      DestroyVariableList((yyvsp[-4].lptr));
+	      error_reporter_current_line(ASC_USER_ERROR,"IS_A uses the undefined type %s.", SCP((yyvsp[(3) - (5)].id_ptr)));
+	      DestroyVariableList((yyvsp[(1) - (5)].lptr));
 	      DestroySetList(g_typeargs);
-	      DestroyExprList((yyvsp[0].eptr));
+	      DestroyExprList((yyvsp[(5) - (5)].eptr));
 	      g_untrapped_error++;
 	      (yyval.statptr) = NULL;
 	    }
@@ -3123,135 +3431,135 @@ yyreduce:
     break;
 
   case 114:
-#line 1304 "base\\generic\\compiler\\ascParse.y"
+#line 1304 "base/generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *tmptype;
-	  tmptype = FindType((yyvsp[-2].id_ptr));
+	  tmptype = FindType((yyvsp[(3) - (5)].id_ptr));
 	  if (tmptype != NULL) {
 	    if ((GetBaseType(tmptype) != model_type) &&
 	        (g_typeargs != NULL)) {
-	      error_reporter_current_line(ASC_USER_ERROR,"WILL_BE has arguments to the nonmodel type '%s'",SCP((yyvsp[-2].id_ptr)));
-	      DestroyVariableList((yyvsp[-4].lptr));
+	      error_reporter_current_line(ASC_USER_ERROR,"WILL_BE has arguments to the nonmodel type '%s'",SCP((yyvsp[(3) - (5)].id_ptr)));
+	      DestroyVariableList((yyvsp[(1) - (5)].lptr));
 	      DestroySetList(g_typeargs);
-	      DestroyExprList((yyvsp[0].eptr));
+	      DestroyExprList((yyvsp[(5) - (5)].eptr));
 	      g_untrapped_error++;
 	      (yyval.statptr) = NULL;
 	    } else {
-	      (yyval.statptr) = CreateWILLBE((yyvsp[-4].lptr),(yyvsp[-2].id_ptr),g_typeargs,(yyvsp[-1].id_ptr),(yyvsp[0].eptr));
+	      (yyval.statptr) = CreateWILLBE((yyvsp[(1) - (5)].lptr),(yyvsp[(3) - (5)].id_ptr),g_typeargs,(yyvsp[(4) - (5)].id_ptr),(yyvsp[(5) - (5)].eptr));
 	    }
 	  } else {
-	    DestroyVariableList((yyvsp[-4].lptr));
+	    DestroyVariableList((yyvsp[(1) - (5)].lptr));
 	    DestroySetList(g_typeargs);
-	    DestroyExprList((yyvsp[0].eptr));
+	    DestroyExprList((yyvsp[(5) - (5)].eptr));
 	    g_untrapped_error++;
 	    (yyval.statptr) = NULL;
-	    error_reporter_current_line(ASC_USER_ERROR,"WILL_BE uses the undefined type %s.",SCP((yyvsp[-2].id_ptr)));
+	    error_reporter_current_line(ASC_USER_ERROR,"WILL_BE uses the undefined type %s.",SCP((yyvsp[(3) - (5)].id_ptr)));
 	  }
 	  g_typeargs = NULL;
 	}
     break;
 
   case 115:
-#line 1333 "base\\generic\\compiler\\ascParse.y"
+#line 1333 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateALIASES((yyvsp[-2].lptr),(yyvsp[0].nptr));
+	  (yyval.statptr) = CreateALIASES((yyvsp[(1) - (3)].lptr),(yyvsp[(3) - (3)].nptr));
 	}
     break;
 
   case 116:
-#line 1338 "base\\generic\\compiler\\ascParse.y"
+#line 1338 "base/generic/compiler/ascParse.y"
     {
 	  int carray_err;
 	  carray_err = 0;
-	  if (VariableListLength((yyvsp[-11].lptr)) != 1L) {
+	  if (VariableListLength((yyvsp[(1) - (12)].lptr)) != 1L) {
 	    carray_err = 1;
 	    error_reporter_current_line(ASC_USER_ERROR,
 	            "Compound ALIASES allows only 1 LHS name. Found:");
-	    WriteVariableList(ASCERR,(yyvsp[-11].lptr));
+	    WriteVariableList(ASCERR,(yyvsp[(1) - (12)].lptr));
 	  }
-	  if (VariableListLength((yyvsp[-5].lptr)) != 1L) {
+	  if (VariableListLength((yyvsp[(7) - (12)].lptr)) != 1L) {
 	    carray_err = 1;
 	    error_reporter_current_line(ASC_USER_ERROR,
 	            "Compound ALIASES/IS_A allows only one LHS name. Found:");
-	    WriteVariableList(ASCERR,(yyvsp[-5].lptr));
+	    WriteVariableList(ASCERR,(yyvsp[(7) - (12)].lptr));
 	  }
 	  /* verify $9 == "set" */
-	  if (!carray_err && (yyvsp[-3].id_ptr) != GetBaseTypeName(set_type)) {
+	  if (!carray_err && (yyvsp[(9) - (12)].id_ptr) != GetBaseTypeName(set_type)) {
 	    carray_err = 1;
 	    error_reporter_current_line(ASC_USER_ERROR,"Compound ALIASES statement requires IS_A %s. ",SCP(GetBaseTypeName(set_type)));
-	    FPRINTF(ASCERR,"    Found %s.\n",SCP((yyvsp[-3].id_ptr)));
+	    FPRINTF(ASCERR,"    Found %s.\n",SCP((yyvsp[(9) - (12)].id_ptr)));
 	  }
 	  /* verify set type */
 	  if ((!carray_err) &&
-	      ((yyvsp[-1].id_ptr) != GetBaseTypeName(symbol_constant_type)) &&
-	      ((yyvsp[-1].id_ptr) != GetBaseTypeName(integer_constant_type))) {
+	      ((yyvsp[(11) - (12)].id_ptr) != GetBaseTypeName(symbol_constant_type)) &&
+	      ((yyvsp[(11) - (12)].id_ptr) != GetBaseTypeName(integer_constant_type))) {
 	    carray_err = 1;
 	    error_reporter_current_line(ASC_USER_ERROR,
 	            "Compound ALIASES IS_A statement requires %s or %s.\n",
 	            SCP(GetBaseTypeName(integer_constant_type)),
 	            SCP(GetBaseTypeName(symbol_constant_type)));
-	    FPRINTF(ASCERR,"	Found %s.\n",SCP((yyvsp[-1].id_ptr)));
+	    FPRINTF(ASCERR,"	Found %s.\n",SCP((yyvsp[(11) - (12)].id_ptr)));
 	  }
 	  if (carray_err) {
-	    DestroyVariableList((yyvsp[-11].lptr));
-	    DestroyVariableList((yyvsp[-8].lptr));
-	    DestroyVariableList((yyvsp[-5].lptr));
-	    DestroySetList((yyvsp[0].sptr));
+	    DestroyVariableList((yyvsp[(1) - (12)].lptr));
+	    DestroyVariableList((yyvsp[(4) - (12)].lptr));
+	    DestroyVariableList((yyvsp[(7) - (12)].lptr));
+	    DestroySetList((yyvsp[(12) - (12)].sptr));
 	    g_untrapped_error++;
 	    (yyval.statptr) = NULL;
 	  } else {
 	    int intset;
-	    intset = ((yyvsp[-1].id_ptr) == GetBaseTypeName(integer_constant_type));
-	    (yyval.statptr) = CreateARR((yyvsp[-11].lptr),(yyvsp[-8].lptr),(yyvsp[-5].lptr),intset,(yyvsp[0].sptr));
+	    intset = ((yyvsp[(11) - (12)].id_ptr) == GetBaseTypeName(integer_constant_type));
+	    (yyval.statptr) = CreateARR((yyvsp[(1) - (12)].lptr),(yyvsp[(4) - (12)].lptr),(yyvsp[(7) - (12)].lptr),intset,(yyvsp[(12) - (12)].sptr));
 	  }
 	}
     break;
 
   case 117:
-#line 1387 "base\\generic\\compiler\\ascParse.y"
+#line 1387 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.sptr) = NULL;
 	}
     break;
 
   case 118:
-#line 1391 "base\\generic\\compiler\\ascParse.y"
+#line 1391 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.sptr) = (yyvsp[-1].sptr);
+	  (yyval.sptr) = (yyvsp[(3) - (4)].sptr);
 	}
     break;
 
   case 119:
-#line 1398 "base\\generic\\compiler\\ascParse.y"
+#line 1398 "base/generic/compiler/ascParse.y"
     {
-	  if (FindType((yyvsp[-1].id_ptr))) {
-	    (yyval.statptr) = CreateREF((yyvsp[-3].lptr),(yyvsp[-1].id_ptr),(yyvsp[0].id_ptr),1);
+	  if (FindType((yyvsp[(3) - (4)].id_ptr))) {
+	    (yyval.statptr) = CreateREF((yyvsp[(1) - (4)].lptr),(yyvsp[(3) - (4)].id_ptr),(yyvsp[(4) - (4)].id_ptr),1);
 	  } else {
-	    (yyval.statptr) = CreateREF((yyvsp[-3].lptr),(yyvsp[-1].id_ptr),(yyvsp[0].id_ptr),1);
-	    error_reporter_current_line(ASC_USER_WARNING,"_IS_ uses the unbuilt prototype %s.\n",SCP((yyvsp[-1].id_ptr)));
+	    (yyval.statptr) = CreateREF((yyvsp[(1) - (4)].lptr),(yyvsp[(3) - (4)].id_ptr),(yyvsp[(4) - (4)].id_ptr),1);
+	    error_reporter_current_line(ASC_USER_WARNING,"_IS_ uses the unbuilt prototype %s.\n",SCP((yyvsp[(3) - (4)].id_ptr)));
 	  }
 	}
     break;
 
   case 120:
-#line 1410 "base\\generic\\compiler\\ascParse.y"
+#line 1410 "base/generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *tmptype;
-	  tmptype = FindType((yyvsp[0].id_ptr));
+	  tmptype = FindType((yyvsp[(3) - (3)].id_ptr));
 	  if (tmptype != NULL) {
 	    if ((GetBaseType(tmptype) != model_type) && 
                 (g_typeargs != NULL)) {
-	      error_reporter_current_line(ASC_USER_ERROR,"IS_REFINED_TO has arguments to the nonmodel type %s.",SCP((yyvsp[0].id_ptr)));
-	      DestroyVariableList((yyvsp[-2].lptr));
+	      error_reporter_current_line(ASC_USER_ERROR,"IS_REFINED_TO has arguments to the nonmodel type %s.",SCP((yyvsp[(3) - (3)].id_ptr)));
+	      DestroyVariableList((yyvsp[(1) - (3)].lptr));
 	      DestroySetList(g_typeargs);
 	      g_untrapped_error++;
 	      (yyval.statptr) = NULL;
 	    } else {
-	      (yyval.statptr) = CreateIRT((yyvsp[-2].lptr),(yyvsp[0].id_ptr),g_typeargs);
+	      (yyval.statptr) = CreateIRT((yyvsp[(1) - (3)].lptr),(yyvsp[(3) - (3)].id_ptr),g_typeargs);
 	    }
 	  } else {
-	    error_reporter_current_line(ASC_USER_ERROR,"The IS_REFINED_TO uses the undefined type %s.\n",SCP((yyvsp[0].id_ptr)));
-	    DestroyVariableList((yyvsp[-2].lptr));
+	    error_reporter_current_line(ASC_USER_ERROR,"The IS_REFINED_TO uses the undefined type %s.\n",SCP((yyvsp[(3) - (3)].id_ptr)));
+	    DestroyVariableList((yyvsp[(1) - (3)].lptr));
 	    DestroySetList(g_typeargs);
 	    g_untrapped_error++;
 	    (yyval.statptr) = NULL;
@@ -3261,159 +3569,159 @@ yyreduce:
     break;
 
   case 121:
-#line 1437 "base\\generic\\compiler\\ascParse.y"
+#line 1437 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	  (yyval.id_ptr) = (yyvsp[(1) - (1)].id_ptr);
 	  g_callargs = NULL;
 	}
     break;
 
   case 122:
-#line 1442 "base\\generic\\compiler\\ascParse.y"
+#line 1442 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.id_ptr) = (yyvsp[-3].id_ptr);
-	  g_callargs = (yyvsp[-1].sptr);
+	  (yyval.id_ptr) = (yyvsp[(1) - (4)].id_ptr);
+	  g_callargs = (yyvsp[(3) - (4)].sptr);
 	}
     break;
 
   case 123:
-#line 1450 "base\\generic\\compiler\\ascParse.y"
+#line 1450 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	  (yyval.id_ptr) = (yyvsp[(1) - (1)].id_ptr);
 	  g_typeargs = NULL;
 	}
     break;
 
   case 124:
-#line 1455 "base\\generic\\compiler\\ascParse.y"
+#line 1455 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.id_ptr) = (yyvsp[-3].id_ptr);
-	  g_typeargs = (yyvsp[-1].sptr);
+	  (yyval.id_ptr) = (yyvsp[(1) - (4)].id_ptr);
+	  g_typeargs = (yyvsp[(3) - (4)].sptr);
 	}
     break;
 
   case 125:
-#line 1463 "base\\generic\\compiler\\ascParse.y"
+#line 1463 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.id_ptr) = NULL;
 	}
     break;
 
   case 126:
-#line 1467 "base\\generic\\compiler\\ascParse.y"
+#line 1467 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	  (yyval.id_ptr) = (yyvsp[(2) - (2)].id_ptr);
 	}
     break;
 
   case 127:
-#line 1474 "base\\generic\\compiler\\ascParse.y"
+#line 1474 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.id_ptr) = NULL;
 	}
     break;
 
   case 128:
-#line 1478 "base\\generic\\compiler\\ascParse.y"
+#line 1478 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	  (yyval.id_ptr) = (yyvsp[(2) - (2)].id_ptr);
 	}
     break;
 
   case 129:
-#line 1485 "base\\generic\\compiler\\ascParse.y"
+#line 1485 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = NULL;
 	}
     break;
 
   case 130:
-#line 1489 "base\\generic\\compiler\\ascParse.y"
+#line 1489 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = (yyvsp[0].eptr);
+	  (yyval.eptr) = (yyvsp[(2) - (2)].eptr);
 	}
     break;
 
   case 131:
-#line 1496 "base\\generic\\compiler\\ascParse.y"
+#line 1496 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateAA((yyvsp[-1].lptr));
+	  (yyval.statptr) = CreateAA((yyvsp[(1) - (2)].lptr));
 	}
     break;
 
   case 132:
-#line 1503 "base\\generic\\compiler\\ascParse.y"
+#line 1503 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateATS((yyvsp[-1].lptr));
+	  (yyval.statptr) = CreateATS((yyvsp[(1) - (2)].lptr));
 	}
     break;
 
   case 133:
-#line 1510 "base\\generic\\compiler\\ascParse.y"
+#line 1510 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateWBTS((yyvsp[-1].lptr));
+	  (yyval.statptr) = CreateWBTS((yyvsp[(1) - (2)].lptr));
 	}
     break;
 
   case 134:
-#line 1517 "base\\generic\\compiler\\ascParse.y"
+#line 1517 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateWNBTS((yyvsp[-1].lptr));
+	  (yyval.statptr) = CreateWNBTS((yyvsp[(1) - (2)].lptr));
 	}
     break;
 
   case 135:
-#line 1524 "base\\generic\\compiler\\ascParse.y"
+#line 1524 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateASSIGN((yyvsp[-2].nptr),(yyvsp[0].eptr));
+	  (yyval.statptr) = CreateASSIGN((yyvsp[(1) - (3)].nptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 136:
-#line 1528 "base\\generic\\compiler\\ascParse.y"
+#line 1528 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateCASSIGN((yyvsp[-2].nptr),(yyvsp[0].eptr));
+	  (yyval.statptr) = CreateCASSIGN((yyvsp[(1) - (3)].nptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 137:
-#line 1535 "base\\generic\\compiler\\ascParse.y"
+#line 1535 "base/generic/compiler/ascParse.y"
     {
-	  if (IsRelation((yyvsp[0].eptr))) {
+	  if (IsRelation((yyvsp[(1) - (1)].eptr))) {
 	    if (g_parse_relns == 0) {
-	      DestroyExprList((yyvsp[0].eptr));
+	      DestroyExprList((yyvsp[(1) - (1)].eptr));
 	      (yyval.statptr) = NULL;
 	    } else {
-	      (yyval.statptr) = CreateREL(NULL,(yyvsp[0].eptr));
+	      (yyval.statptr) = CreateREL(NULL,(yyvsp[(1) - (1)].eptr));
 	    }
 	  } else {
-	    (yyval.statptr) = CreateLOGREL(NULL,(yyvsp[0].eptr));
+	    (yyval.statptr) = CreateLOGREL(NULL,(yyvsp[(1) - (1)].eptr));
 	  }
 	}
     break;
 
   case 138:
-#line 1548 "base\\generic\\compiler\\ascParse.y"
+#line 1548 "base/generic/compiler/ascParse.y"
     {
-	  if (IsRelation((yyvsp[0].eptr))) {
+	  if (IsRelation((yyvsp[(3) - (3)].eptr))) {
 	    if (g_parse_relns == 0) {
-	      DestroyExprList((yyvsp[0].eptr));
-	      DestroyName((yyvsp[-2].nptr));
+	      DestroyExprList((yyvsp[(3) - (3)].eptr));
+	      DestroyName((yyvsp[(1) - (3)].nptr));
 	      (yyval.statptr) = NULL;
 	    } else {
-	      (yyval.statptr) = CreateREL((yyvsp[-2].nptr),(yyvsp[0].eptr));
+	      (yyval.statptr) = CreateREL((yyvsp[(1) - (3)].nptr),(yyvsp[(3) - (3)].eptr));
 	    }
 	  } else {
-	    (yyval.statptr) = CreateLOGREL((yyvsp[-2].nptr),(yyvsp[0].eptr));
+	    (yyval.statptr) = CreateLOGREL((yyvsp[(1) - (3)].nptr),(yyvsp[(3) - (3)].eptr));
 	  }
 	}
     break;
 
   case 139:
-#line 1565 "base\\generic\\compiler\\ascParse.y"
+#line 1565 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = (yyvsp[0].eptr);
-	  if (NumberOfRelOps((yyvsp[0].eptr)) < 1) {
+	  (yyval.eptr) = (yyvsp[(1) - (1)].eptr);
+	  if (NumberOfRelOps((yyvsp[(1) - (1)].eptr)) < 1) {
 	    /* want at least 1. restriction to exactly 1 is in typelint */
 	    ErrMsg_Generic("Missing punctuation (,;:) or else expression contains the \
 wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
@@ -3423,10 +3731,10 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 140:
-#line 1575 "base\\generic\\compiler\\ascParse.y"
+#line 1575 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_minimize));
-	  if (NumberOfRelOps((yyvsp[0].eptr)) > 0) {
+	  (yyval.eptr) = JoinExprLists((yyvsp[(2) - (2)].eptr),CreateOpExpr(e_minimize));
+	  if (NumberOfRelOps((yyvsp[(2) - (2)].eptr)) > 0) {
 	    ErrMsg_Generic("Objective function contains relation operators (=, ==, <, >, <=, >=, !=).");
 	    g_untrapped_error++;
 	  }
@@ -3434,10 +3742,10 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 141:
-#line 1583 "base\\generic\\compiler\\ascParse.y"
+#line 1583 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_maximize));
-	  if (NumberOfRelOps((yyvsp[0].eptr))>0) {
+	  (yyval.eptr) = JoinExprLists((yyvsp[(2) - (2)].eptr),CreateOpExpr(e_maximize));
+	  if (NumberOfRelOps((yyvsp[(2) - (2)].eptr))>0) {
 	    ErrMsg_Generic("Objective function contains relation operators (=, ==, <, >, <=, >=, !=).");
 	    g_untrapped_error++;
 	  }
@@ -3445,508 +3753,508 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 142:
-#line 1594 "base\\generic\\compiler\\ascParse.y"
+#line 1594 "base/generic/compiler/ascParse.y"
     {
 	  /*
 	   * This is the blackbox declarative external relation.
 	   */
 	  struct VariableList *vl;
-	  vl = JoinVariableLists((yyvsp[-4].lptr),(yyvsp[-2].lptr));
+	  vl = JoinVariableLists((yyvsp[(5) - (9)].lptr),(yyvsp[(7) - (9)].lptr));
 	  /* $$ = CreateEXTERN(2,$1,SCP($3),vl,$8,NULL); */
-	  (yyval.statptr) = CreateEXTERNBlackBox((yyvsp[-8].nptr),SCP((yyvsp[-6].id_ptr)),vl,(yyvsp[-1].nptr));
+	  (yyval.statptr) = CreateEXTERNBlackBox((yyvsp[(1) - (9)].nptr),SCP((yyvsp[(3) - (9)].id_ptr)),vl,(yyvsp[(8) - (9)].nptr));
 	}
     break;
 
   case 143:
-#line 1607 "base\\generic\\compiler\\ascParse.y"
+#line 1607 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.lptr) = (yyvsp[-2].lptr);
+	  (yyval.lptr) = (yyvsp[(1) - (3)].lptr);
 	}
     break;
 
   case 144:
-#line 1614 "base\\generic\\compiler\\ascParse.y"
+#line 1614 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.lptr) = (yyvsp[-2].lptr);
+	  (yyval.lptr) = (yyvsp[(1) - (3)].lptr);
 	}
     break;
 
   case 145:
-#line 1621 "base\\generic\\compiler\\ascParse.y"
+#line 1621 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.nptr) = NULL;
 	}
     break;
 
   case 146:
-#line 1625 "base\\generic\\compiler\\ascParse.y"
+#line 1625 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.nptr) = (yyvsp[-2].nptr);
+	  (yyval.nptr) = (yyvsp[(2) - (4)].nptr);
 	}
     break;
 
   case 147:
-#line 1632 "base\\generic\\compiler\\ascParse.y"
+#line 1632 "base/generic/compiler/ascParse.y"
     {
 	  /*
 	   * This is the glassbox declarative external relation.
 	   * This now allows a scope for placement of the relations
 	   */
-	  struct VariableList *vl = (yyvsp[-4].lptr);
+	  struct VariableList *vl = (yyvsp[(5) - (9)].lptr);
 	  struct Name *nptr;
 	  char tmp[32]; 
 	  symchar *str;
 
-	  sprintf(tmp,"%ld",(yyvsp[-2].int_value));
+	  sprintf(tmp,"%ld",(yyvsp[(7) - (9)].int_value));
 	  str = AddSymbol(tmp);
 	  nptr = CreateIdName(str);
 	/* $$ = CreateEXTERN(1,$1,SCP($3),vl,nptr,$9); */
-	  (yyval.statptr) = CreateEXTERNGlassBox((yyvsp[-8].nptr),SCP((yyvsp[-6].id_ptr)),vl,nptr,(yyvsp[0].nptr));
+	  (yyval.statptr) = CreateEXTERNGlassBox((yyvsp[(1) - (9)].nptr),SCP((yyvsp[(3) - (9)].id_ptr)),vl,nptr,(yyvsp[(9) - (9)].nptr));
 	}
     break;
 
   case 148:
-#line 1652 "base\\generic\\compiler\\ascParse.y"
+#line 1652 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.nptr) = NULL;
 	}
     break;
 
   case 149:
-#line 1656 "base\\generic\\compiler\\ascParse.y"
+#line 1656 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.nptr) = (yyvsp[0].nptr);
+	  (yyval.nptr) = (yyvsp[(2) - (2)].nptr);
 	}
     break;
 
   case 150:
-#line 1664 "base\\generic\\compiler\\ascParse.y"
+#line 1664 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != FOR_TOK ) {
-	    WarnMsg_MismatchEnd("FOR", SCP((yyvsp[-6].id_ptr)), (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(8) - (8)].int_value) != FOR_TOK ) {
+	    WarnMsg_MismatchEnd("FOR", SCP((yyvsp[(2) - (8)].id_ptr)), (yyvsp[(8) - (8)].int_value), NULL);
 	  }
-          if ((yyvsp[-2].fkind) == fk_create && (yyvsp[-3].order) != f_random) {
+          if ((yyvsp[(6) - (8)].fkind) == fk_create && (yyvsp[(5) - (8)].order) != f_random) {
             /* create cannot have an order in declarative FOR */
 	    ErrMsg_Generic("FOR loops only accept DECREASING or INCREASING in the method section.");
 	    g_untrapped_error++;
           }
-          if ((yyvsp[-2].fkind) == fk_do && (yyvsp[-3].order) == f_random) {
+          if ((yyvsp[(6) - (8)].fkind) == fk_do && (yyvsp[(5) - (8)].order) == f_random) {
             /* all FOR/DO default to increasing */
-	    (yyval.statptr) = CreateFOR((yyvsp[-6].id_ptr),(yyvsp[-4].eptr),(yyvsp[-1].slptr),f_increasing,(yyvsp[-2].fkind));
+	    (yyval.statptr) = CreateFOR((yyvsp[(2) - (8)].id_ptr),(yyvsp[(4) - (8)].eptr),(yyvsp[(7) - (8)].slptr),f_increasing,(yyvsp[(6) - (8)].fkind));
           } else {
-	    (yyval.statptr) = CreateFOR((yyvsp[-6].id_ptr),(yyvsp[-4].eptr),(yyvsp[-1].slptr),(yyvsp[-3].order),(yyvsp[-2].fkind));
+	    (yyval.statptr) = CreateFOR((yyvsp[(2) - (8)].id_ptr),(yyvsp[(4) - (8)].eptr),(yyvsp[(7) - (8)].slptr),(yyvsp[(5) - (8)].order),(yyvsp[(6) - (8)].fkind));
           }
 	}
     break;
 
   case 151:
-#line 1684 "base\\generic\\compiler\\ascParse.y"
+#line 1684 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.order) = f_random;
 	}
     break;
 
   case 152:
-#line 1688 "base\\generic\\compiler\\ascParse.y"
+#line 1688 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.order) = f_increasing;
 	}
     break;
 
   case 153:
-#line 1692 "base\\generic\\compiler\\ascParse.y"
+#line 1692 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.order) = f_decreasing;
 	}
     break;
 
   case 154:
-#line 1699 "base\\generic\\compiler\\ascParse.y"
+#line 1699 "base/generic/compiler/ascParse.y"
     {
           (yyval.fkind) = fk_create; /* declarative FOR */
 	}
     break;
 
   case 155:
-#line 1703 "base\\generic\\compiler\\ascParse.y"
+#line 1703 "base/generic/compiler/ascParse.y"
     {
           (yyval.fkind) = fk_expect; /* parameter FOR */
 	}
     break;
 
   case 156:
-#line 1707 "base\\generic\\compiler\\ascParse.y"
+#line 1707 "base/generic/compiler/ascParse.y"
     {
           (yyval.fkind) = fk_check; /* WHERE FOR */
 	}
     break;
 
   case 157:
-#line 1711 "base\\generic\\compiler\\ascParse.y"
+#line 1711 "base/generic/compiler/ascParse.y"
     {
           (yyval.fkind) = fk_do; /* method FOR */
 	}
     break;
 
   case 158:
-#line 1718 "base\\generic\\compiler\\ascParse.y"
+#line 1718 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateRUN((yyvsp[0].nptr),NULL);
+	  (yyval.statptr) = CreateRUN((yyvsp[(2) - (2)].nptr),NULL);
 	}
     break;
 
   case 159:
-#line 1722 "base\\generic\\compiler\\ascParse.y"
+#line 1722 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateRUN((yyvsp[0].nptr),(yyvsp[-2].nptr));	  /* type :: name */
+	  (yyval.statptr) = CreateRUN((yyvsp[(4) - (4)].nptr),(yyvsp[(2) - (4)].nptr));	  /* type :: name */
 	}
     break;
 
   case 160:
-#line 1729 "base\\generic\\compiler\\ascParse.y"
+#line 1729 "base/generic/compiler/ascParse.y"
     {
-		(yyval.statptr) = CreateFIX((yyvsp[0].lptr));
+		(yyval.statptr) = CreateFIX((yyvsp[(2) - (2)].lptr));
 	}
     break;
 
   case 161:
-#line 1736 "base\\generic\\compiler\\ascParse.y"
+#line 1736 "base/generic/compiler/ascParse.y"
     {
-		(yyval.statptr) = CreateFREE((yyvsp[0].lptr));
+		(yyval.statptr) = CreateFREE((yyvsp[(2) - (2)].lptr));
 	}
     break;
 
   case 162:
-#line 1743 "base\\generic\\compiler\\ascParse.y"
+#line 1743 "base/generic/compiler/ascParse.y"
     {
 	  /*
 	   * This is procedural external code. Was:
 	  $$ = CreateEXTERN(0,NULL,SCP($2),$4,NULL,NULL);
 	   */
-	  (yyval.statptr) = CreateEXTERNMethod(SCP((yyvsp[-3].id_ptr)),(yyvsp[-1].lptr));
+	  (yyval.statptr) = CreateEXTERNMethod(SCP((yyvsp[(2) - (5)].id_ptr)),(yyvsp[(4) - (5)].lptr));
 	}
     break;
 
   case 163:
-#line 1754 "base\\generic\\compiler\\ascParse.y"
+#line 1754 "base/generic/compiler/ascParse.y"
     {
 	  /*
 	   * This is proper procedural external method code.
 	   */
-	  (yyval.statptr) = CreateCALL((yyvsp[0].id_ptr),g_callargs);
+	  (yyval.statptr) = CreateCALL((yyvsp[(2) - (2)].id_ptr),g_callargs);
           g_callargs = NULL;
 	}
     break;
 
   case 164:
-#line 1765 "base\\generic\\compiler\\ascParse.y"
+#line 1765 "base/generic/compiler/ascParse.y"
     {
-		(yyval.statptr) = CreateASSERT((yyvsp[0].eptr));
+		(yyval.statptr) = CreateASSERT((yyvsp[(2) - (2)].eptr));
 	}
     break;
 
   case 165:
-#line 1771 "base\\generic\\compiler\\ascParse.y"
+#line 1771 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != IF_TOK ) {
-	    WarnMsg_MismatchEnd("IF", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(6) - (6)].int_value) != IF_TOK ) {
+	    WarnMsg_MismatchEnd("IF", NULL, (yyvsp[(6) - (6)].int_value), NULL);
 	  }
-	  (yyval.statptr) = CreateIF((yyvsp[-4].eptr),(yyvsp[-2].slptr),(yyvsp[-1].slptr));
+	  (yyval.statptr) = CreateIF((yyvsp[(2) - (6)].eptr),(yyvsp[(4) - (6)].slptr),(yyvsp[(5) - (6)].slptr));
 	}
     break;
 
   case 166:
-#line 1781 "base\\generic\\compiler\\ascParse.y"
+#line 1781 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != WHILE_TOK ) {
-	    WarnMsg_MismatchEnd("WHILE", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(5) - (5)].int_value) != WHILE_TOK ) {
+	    WarnMsg_MismatchEnd("WHILE", NULL, (yyvsp[(5) - (5)].int_value), NULL);
 	  }
-	  (yyval.statptr) = CreateWhile((yyvsp[-3].eptr),(yyvsp[-1].slptr));
+	  (yyval.statptr) = CreateWhile((yyvsp[(2) - (5)].eptr),(yyvsp[(4) - (5)].slptr));
 	}
     break;
 
   case 167:
-#line 1790 "base\\generic\\compiler\\ascParse.y"
+#line 1790 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.slptr) = NULL;
 	}
     break;
 
   case 168:
-#line 1794 "base\\generic\\compiler\\ascParse.y"
+#line 1794 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.slptr) = (yyvsp[0].slptr);
+	  (yyval.slptr) = (yyvsp[(2) - (2)].slptr);
 	}
     break;
 
   case 169:
-#line 1801 "base\\generic\\compiler\\ascParse.y"
+#line 1801 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != WHEN_TOK ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(4) - (4)].int_value) != WHEN_TOK ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[(4) - (4)].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in WHEN statement.");
-	  DestroyWhenList((yyvsp[-1].wptr));
-	  DestroyVariableList((yyvsp[-2].lptr));
+	  DestroyWhenList((yyvsp[(3) - (4)].wptr));
+	  DestroyVariableList((yyvsp[(2) - (4)].lptr));
 	  g_untrapped_error++;
 	  (yyval.statptr) = NULL;
 	}
     break;
 
   case 170:
-#line 1812 "base\\generic\\compiler\\ascParse.y"
+#line 1812 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != WHEN_TOK ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(6) - (6)].int_value) != WHEN_TOK ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[(6) - (6)].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in WHEN statement.");
-	  DestroyWhenList((yyvsp[-1].wptr));
-	  DestroyVariableList((yyvsp[-2].lptr));
-	  DestroyName((yyvsp[-5].nptr));
+	  DestroyWhenList((yyvsp[(5) - (6)].wptr));
+	  DestroyVariableList((yyvsp[(4) - (6)].lptr));
+	  DestroyName((yyvsp[(1) - (6)].nptr));
 	  g_untrapped_error++;
 	  (yyval.statptr) = NULL;
 	}
     break;
 
   case 171:
-#line 1824 "base\\generic\\compiler\\ascParse.y"
+#line 1824 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != WHEN_TOK ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(6) - (6)].int_value) != WHEN_TOK ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[(6) - (6)].int_value), NULL);
 	  }
-	  (yyval.statptr) = CreateWHEN(NULL,(yyvsp[-3].lptr),(yyvsp[-1].wptr));
+	  (yyval.statptr) = CreateWHEN(NULL,(yyvsp[(3) - (6)].lptr),(yyvsp[(5) - (6)].wptr));
 	}
     break;
 
   case 172:
-#line 1831 "base\\generic\\compiler\\ascParse.y"
+#line 1831 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != WHEN_TOK ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(8) - (8)].int_value) != WHEN_TOK ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[(8) - (8)].int_value), NULL);
 	  }
-	  (yyval.statptr) = CreateWHEN((yyvsp[-7].nptr),(yyvsp[-3].lptr),(yyvsp[-1].wptr));
+	  (yyval.statptr) = CreateWHEN((yyvsp[(1) - (8)].nptr),(yyvsp[(5) - (8)].lptr),(yyvsp[(7) - (8)].wptr));
 	}
     break;
 
   case 173:
-#line 1841 "base\\generic\\compiler\\ascParse.y"
+#line 1841 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.wptr) = ReverseWhenCases((yyvsp[0].wptr));
+	  (yyval.wptr) = ReverseWhenCases((yyvsp[(1) - (1)].wptr));
 	}
     break;
 
   case 174:
-#line 1848 "base\\generic\\compiler\\ascParse.y"
+#line 1848 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.wptr) = CreateWhen((yyvsp[-2].sptr),(yyvsp[0].slptr));
+	  (yyval.wptr) = CreateWhen((yyvsp[(2) - (4)].sptr),(yyvsp[(4) - (4)].slptr));
 	}
     break;
 
   case 175:
-#line 1852 "base\\generic\\compiler\\ascParse.y"
+#line 1852 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.wptr) = CreateWhen(NULL,(yyvsp[0].slptr));
+	  (yyval.wptr) = CreateWhen(NULL,(yyvsp[(3) - (3)].slptr));
 	}
     break;
 
   case 176:
-#line 1856 "base\\generic\\compiler\\ascParse.y"
+#line 1856 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.wptr) = LinkWhenCases(CreateWhen((yyvsp[-2].sptr),(yyvsp[0].slptr)),(yyvsp[-4].wptr));
+	  (yyval.wptr) = LinkWhenCases(CreateWhen((yyvsp[(3) - (5)].sptr),(yyvsp[(5) - (5)].slptr)),(yyvsp[(1) - (5)].wptr));
 	}
     break;
 
   case 177:
-#line 1860 "base\\generic\\compiler\\ascParse.y"
+#line 1860 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.wptr) = LinkWhenCases(CreateWhen(NULL,(yyvsp[0].slptr)),(yyvsp[-3].wptr));
+	  (yyval.wptr) = LinkWhenCases(CreateWhen(NULL,(yyvsp[(4) - (4)].slptr)),(yyvsp[(1) - (4)].wptr));
 	}
     break;
 
   case 178:
-#line 1867 "base\\generic\\compiler\\ascParse.y"
+#line 1867 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.statptr) = CreateFlow(fc_break,NULL);
 	}
     break;
 
   case 179:
-#line 1871 "base\\generic\\compiler\\ascParse.y"
+#line 1871 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.statptr) = CreateFlow(fc_continue,NULL);
 	}
     break;
 
   case 180:
-#line 1875 "base\\generic\\compiler\\ascParse.y"
+#line 1875 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.statptr) = CreateFlow(fc_fallthru,NULL);
 	}
     break;
 
   case 181:
-#line 1879 "base\\generic\\compiler\\ascParse.y"
+#line 1879 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.statptr) = CreateFlow(fc_return,NULL);
 	}
     break;
 
   case 182:
-#line 1883 "base\\generic\\compiler\\ascParse.y"
+#line 1883 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateFlow(fc_stop,(yyvsp[0].braced_ptr));
+	  (yyval.statptr) = CreateFlow(fc_stop,(yyvsp[(2) - (2)].braced_ptr));
 	}
     break;
 
   case 183:
-#line 1890 "base\\generic\\compiler\\ascParse.y"
+#line 1890 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.statptr) = CreateFNAME((yyvsp[0].nptr));
+	  (yyval.statptr) = CreateFNAME((yyvsp[(2) - (2)].nptr));
 	}
     break;
 
   case 184:
-#line 1897 "base\\generic\\compiler\\ascParse.y"
+#line 1897 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != SELECT_TOK ) {
-	    WarnMsg_MismatchEnd("SELECT", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(4) - (4)].int_value) != SELECT_TOK ) {
+	    WarnMsg_MismatchEnd("SELECT", NULL, (yyvsp[(4) - (4)].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in SELECT statement.");
-	  DestroySelectList((yyvsp[-1].septr));
-	  DestroyVariableList((yyvsp[-2].lptr));
+	  DestroySelectList((yyvsp[(3) - (4)].septr));
+	  DestroyVariableList((yyvsp[(2) - (4)].lptr));
 	  g_untrapped_error++;
 	  (yyval.statptr) = NULL;
 	}
     break;
 
   case 185:
-#line 1908 "base\\generic\\compiler\\ascParse.y"
+#line 1908 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != SELECT_TOK ) {
-	    WarnMsg_MismatchEnd("SELECT", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(6) - (6)].int_value) != SELECT_TOK ) {
+	    WarnMsg_MismatchEnd("SELECT", NULL, (yyvsp[(6) - (6)].int_value), NULL);
 	  }
-	  (yyval.statptr) = CreateSELECT((yyvsp[-3].lptr),(yyvsp[-1].septr));
+	  (yyval.statptr) = CreateSELECT((yyvsp[(3) - (6)].lptr),(yyvsp[(5) - (6)].septr));
 	}
     break;
 
   case 186:
-#line 1918 "base\\generic\\compiler\\ascParse.y"
+#line 1918 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.septr) = ReverseSelectCases((yyvsp[0].septr));
+	  (yyval.septr) = ReverseSelectCases((yyvsp[(1) - (1)].septr));
 	}
     break;
 
   case 187:
-#line 1925 "base\\generic\\compiler\\ascParse.y"
+#line 1925 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.septr) = CreateSelect((yyvsp[-2].sptr),(yyvsp[0].slptr));
+	  (yyval.septr) = CreateSelect((yyvsp[(2) - (4)].sptr),(yyvsp[(4) - (4)].slptr));
 	}
     break;
 
   case 188:
-#line 1929 "base\\generic\\compiler\\ascParse.y"
+#line 1929 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.septr) = CreateSelect(NULL,(yyvsp[0].slptr));
+	  (yyval.septr) = CreateSelect(NULL,(yyvsp[(3) - (3)].slptr));
 	}
     break;
 
   case 189:
-#line 1933 "base\\generic\\compiler\\ascParse.y"
+#line 1933 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.septr) = LinkSelectCases(CreateSelect((yyvsp[-2].sptr),(yyvsp[0].slptr)),(yyvsp[-4].septr));
+	  (yyval.septr) = LinkSelectCases(CreateSelect((yyvsp[(3) - (5)].sptr),(yyvsp[(5) - (5)].slptr)),(yyvsp[(1) - (5)].septr));
 	}
     break;
 
   case 190:
-#line 1937 "base\\generic\\compiler\\ascParse.y"
+#line 1937 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.septr) = LinkSelectCases(CreateSelect(NULL,(yyvsp[0].slptr)),(yyvsp[-3].septr));
+	  (yyval.septr) = LinkSelectCases(CreateSelect(NULL,(yyvsp[(4) - (4)].slptr)),(yyvsp[(1) - (4)].septr));
 	}
     break;
 
   case 191:
-#line 1944 "base\\generic\\compiler\\ascParse.y"
+#line 1944 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != SWITCH_TOK ) {
-	    WarnMsg_MismatchEnd("SWITCH", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(4) - (4)].int_value) != SWITCH_TOK ) {
+	    WarnMsg_MismatchEnd("SWITCH", NULL, (yyvsp[(4) - (4)].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in SWITCH statement.");
-	  DestroySwitchList((yyvsp[-1].swptr));
-	  DestroyVariableList((yyvsp[-2].lptr));
+	  DestroySwitchList((yyvsp[(3) - (4)].swptr));
+	  DestroyVariableList((yyvsp[(2) - (4)].lptr));
 	  g_untrapped_error++;
 	  (yyval.statptr) = NULL;
 	}
     break;
 
   case 192:
-#line 1955 "base\\generic\\compiler\\ascParse.y"
+#line 1955 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != SWITCH_TOK ) {
-	    WarnMsg_MismatchEnd("SWITCH", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(6) - (6)].int_value) != SWITCH_TOK ) {
+	    WarnMsg_MismatchEnd("SWITCH", NULL, (yyvsp[(6) - (6)].int_value), NULL);
 	  }
-	  (yyval.statptr) = CreateSWITCH((yyvsp[-3].lptr),(yyvsp[-1].swptr));
+	  (yyval.statptr) = CreateSWITCH((yyvsp[(3) - (6)].lptr),(yyvsp[(5) - (6)].swptr));
 	}
     break;
 
   case 193:
-#line 1965 "base\\generic\\compiler\\ascParse.y"
+#line 1965 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.swptr) = ReverseSwitchCases((yyvsp[0].swptr));
+	  (yyval.swptr) = ReverseSwitchCases((yyvsp[(1) - (1)].swptr));
 	}
     break;
 
   case 194:
-#line 1972 "base\\generic\\compiler\\ascParse.y"
+#line 1972 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.swptr) = CreateSwitch((yyvsp[-2].sptr),(yyvsp[0].slptr));
+	  (yyval.swptr) = CreateSwitch((yyvsp[(2) - (4)].sptr),(yyvsp[(4) - (4)].slptr));
 	}
     break;
 
   case 195:
-#line 1976 "base\\generic\\compiler\\ascParse.y"
+#line 1976 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.swptr) = CreateSwitch(NULL,(yyvsp[0].slptr));
+	  (yyval.swptr) = CreateSwitch(NULL,(yyvsp[(3) - (3)].slptr));
 	}
     break;
 
   case 196:
-#line 1980 "base\\generic\\compiler\\ascParse.y"
+#line 1980 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.swptr) = LinkSwitchCases(CreateSwitch((yyvsp[-2].sptr),(yyvsp[0].slptr)),(yyvsp[-4].swptr));
+	  (yyval.swptr) = LinkSwitchCases(CreateSwitch((yyvsp[(3) - (5)].sptr),(yyvsp[(5) - (5)].slptr)),(yyvsp[(1) - (5)].swptr));
 	}
     break;
 
   case 197:
-#line 1984 "base\\generic\\compiler\\ascParse.y"
+#line 1984 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.swptr) = LinkSwitchCases(CreateSwitch(NULL,(yyvsp[0].slptr)),(yyvsp[-3].swptr));
+	  (yyval.swptr) = LinkSwitchCases(CreateSwitch(NULL,(yyvsp[(4) - (4)].slptr)),(yyvsp[(1) - (4)].swptr));
 	}
     break;
 
   case 198:
-#line 1991 "base\\generic\\compiler\\ascParse.y"
+#line 1991 "base/generic/compiler/ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != CONDITIONAL_TOK ) {
-	    WarnMsg_MismatchEnd("CONDITIONAL", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(3) - (3)].int_value) != CONDITIONAL_TOK ) {
+	    WarnMsg_MismatchEnd("CONDITIONAL", NULL, (yyvsp[(3) - (3)].int_value), NULL);
 	  }
-	  (yyval.statptr) = CreateCOND((yyvsp[-1].slptr));
+	  (yyval.statptr) = CreateCOND((yyvsp[(2) - (3)].slptr));
 	}
     break;
 
   case 199:
-#line 2001 "base\\generic\\compiler\\ascParse.y"
+#line 2001 "base/generic/compiler/ascParse.y"
     {
 	  /*  All processing of notes takes place on the notes_body here.
 	   *  Notes should NOT be added to the statement list.
 	   *  Here we know the current type and method names.
 	   */
-	  if( (yyvsp[0].int_value) != NOTES_TOK ) {
-	    WarnMsg_MismatchEnd("NOTES", NULL, (yyvsp[0].int_value), NULL);
+	  if( (yyvsp[(3) - (3)].int_value) != NOTES_TOK ) {
+	    WarnMsg_MismatchEnd("NOTES", NULL, (yyvsp[(3) - (3)].int_value), NULL);
 	  }
-	  if ((yyvsp[-1].notesptr) != NULL) {
+	  if ((yyvsp[(2) - (3)].notesptr) != NULL) {
 	    struct NoteTmp *nt;
 	    symchar *lang=NULL; /* dummy */
-	    nt = (yyvsp[-1].notesptr);
+	    nt = (yyvsp[(2) - (3)].notesptr);
 	    while (nt != NULL) {
 	      if (nt->lang != NULL) {
 	        /* this logic works because of the reverse sort that
@@ -3964,88 +4272,88 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	                             nt->line, nt->vardata, nd_vlist));
 	      nt = nt->next;
 	    }
-	    DestroyNoteTmpList((yyvsp[-1].notesptr));
+	    DestroyNoteTmpList((yyvsp[(2) - (3)].notesptr));
           }
 	  (yyval.statptr) = NULL;
 	}
     break;
 
   case 200:
-#line 2038 "base\\generic\\compiler\\ascParse.y"
+#line 2038 "base/generic/compiler/ascParse.y"
     {
 	  /*  At this point we have the "language", the names of the
 	   *  objects we are explaining, and the explanation/notes itself.
 	   */
-	  (yyval.notesptr) = (yyvsp[0].notesptr);
+	  (yyval.notesptr) = (yyvsp[(2) - (2)].notesptr);
 	  assert((yyval.notesptr)->lang == NULL);
-	  (yyval.notesptr)->lang = (yyvsp[-1].sym_ptr);
+	  (yyval.notesptr)->lang = (yyvsp[(1) - (2)].sym_ptr);
 	}
     break;
 
   case 201:
-#line 2047 "base\\generic\\compiler\\ascParse.y"
+#line 2047 "base/generic/compiler/ascParse.y"
     {
 	  struct NoteTmp *nt;
-	  (yyval.notesptr) = (yyvsp[-2].notesptr);
-	  assert((yyvsp[0].notesptr)->lang == NULL);
-	  (yyvsp[0].notesptr)->lang = (yyvsp[-1].sym_ptr);
+	  (yyval.notesptr) = (yyvsp[(1) - (3)].notesptr);
+	  assert((yyvsp[(3) - (3)].notesptr)->lang == NULL);
+	  (yyvsp[(3) - (3)].notesptr)->lang = (yyvsp[(2) - (3)].sym_ptr);
 	  nt = (yyval.notesptr);
 	  while (nt->next != NULL) {
 	    nt = nt->next;
 	  }
-	  LinkNoteTmp(nt,(yyvsp[0].notesptr));
+	  LinkNoteTmp(nt,(yyvsp[(3) - (3)].notesptr));
 	}
     break;
 
   case 202:
-#line 2062 "base\\generic\\compiler\\ascParse.y"
+#line 2062 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.notesptr) = CreateNoteTmp(NULL, AddBraceChar((yyvsp[0].braced_ptr),NULL),
-                             (void *)(yyvsp[-1].lptr), LineNum());
+	  (yyval.notesptr) = CreateNoteTmp(NULL, AddBraceChar((yyvsp[(2) - (2)].braced_ptr),NULL),
+                             (void *)(yyvsp[(1) - (2)].lptr), LineNum());
 	}
     break;
 
   case 203:
-#line 2067 "base\\generic\\compiler\\ascParse.y"
+#line 2067 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.notesptr) = CreateNoteTmp(NULL, AddBraceChar((yyvsp[0].braced_ptr),NULL),
-	                     (void *)(yyvsp[-1].lptr), LineNum());
-	  LinkNoteTmp((yyval.notesptr),(yyvsp[-2].notesptr));
+	  (yyval.notesptr) = CreateNoteTmp(NULL, AddBraceChar((yyvsp[(3) - (3)].braced_ptr),NULL),
+	                     (void *)(yyvsp[(2) - (3)].lptr), LineNum());
+	  LinkNoteTmp((yyval.notesptr),(yyvsp[(1) - (3)].notesptr));
 	}
     break;
 
   case 204:
-#line 2076 "base\\generic\\compiler\\ascParse.y"
+#line 2076 "base/generic/compiler/ascParse.y"
     {
 	  /*
 	   * Reversing the variable list is now essential to deal with
 	   * external procedures and other things where order is important.
 	   */
-	  (yyval.lptr) = ReverseVariableList((yyvsp[0].lptr));
+	  (yyval.lptr) = ReverseVariableList((yyvsp[(1) - (1)].lptr));
 	}
     break;
 
   case 205:
-#line 2087 "base\\generic\\compiler\\ascParse.y"
+#line 2087 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.lptr) = CreateVariableNode((yyvsp[0].nptr));
+	  (yyval.lptr) = CreateVariableNode((yyvsp[(1) - (1)].nptr));
 	}
     break;
 
   case 206:
-#line 2091 "base\\generic\\compiler\\ascParse.y"
+#line 2091 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.lptr) = CreateVariableNode((yyvsp[0].nptr));
-	  LinkVariableNodes((yyval.lptr),(yyvsp[-2].lptr));
+	  (yyval.lptr) = CreateVariableNode((yyvsp[(3) - (3)].nptr));
+	  LinkVariableNodes((yyval.lptr),(yyvsp[(1) - (3)].lptr));
 	}
     break;
 
   case 207:
-#line 2096 "base\\generic\\compiler\\ascParse.y"
+#line 2096 "base/generic/compiler/ascParse.y"
     {
-	  ErrMsg_CommaName("name",(yyvsp[0].nptr));
-	  (yyval.lptr) = CreateVariableNode((yyvsp[0].nptr));
-	  LinkVariableNodes((yyval.lptr),(yyvsp[-1].lptr));
+	  ErrMsg_CommaName("name",(yyvsp[(2) - (2)].nptr));
+	  (yyval.lptr) = CreateVariableNode((yyvsp[(2) - (2)].nptr));
+	  LinkVariableNodes((yyval.lptr),(yyvsp[(1) - (2)].lptr));
 	  /* trash the definition. keep the loose fname around because
 	   * destroying here is inconvenient
 	   */
@@ -4054,57 +4362,57 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 208:
-#line 2109 "base\\generic\\compiler\\ascParse.y"
+#line 2109 "base/generic/compiler/ascParse.y"
     {
 	  symchar *simple;
 	  void *data;
 	  enum NoteData nd;
-	  (yyval.nptr) = ReverseName((yyvsp[-1].nptr));
-	  if ((yyvsp[0].dquote_ptr) != NULL && (yyvsp[-1].nptr) != NULL) {
+	  (yyval.nptr) = ReverseName((yyvsp[(1) - (2)].nptr));
+	  if ((yyvsp[(2) - (2)].dquote_ptr) != NULL && (yyvsp[(1) - (2)].nptr) != NULL) {
             simple = SimpleNameIdPtr((yyval.nptr));
 	    data = (simple == NULL ? (void *)(yyval.nptr) : NULL);
 	    nd = (data == NULL ? nd_empty : nd_name);
 	    CollectNote(CreateNote(g_type_name, InlineNote(), simple,
 	                           g_proc_name,
 	                           Asc_ModuleBestName(Asc_CurrentModule()),
-	                           AddBraceChar((yyvsp[0].dquote_ptr),InlineNote()),
+	                           AddBraceChar((yyvsp[(2) - (2)].dquote_ptr),InlineNote()),
 	                           LineNum(), data, nd));
 	  }
 	}
     break;
 
   case 209:
-#line 2129 "base\\generic\\compiler\\ascParse.y"
+#line 2129 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.nptr) = CreateIdName((yyvsp[0].id_ptr));
+	  (yyval.nptr) = CreateIdName((yyvsp[(1) - (1)].id_ptr));
 	}
     break;
 
   case 210:
-#line 2133 "base\\generic\\compiler\\ascParse.y"
+#line 2133 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.nptr) = CreateIdName((yyvsp[0].id_ptr));
-	  LinkNames((yyval.nptr),(yyvsp[-2].nptr));
+	  (yyval.nptr) = CreateIdName((yyvsp[(3) - (3)].id_ptr));
+	  LinkNames((yyval.nptr),(yyvsp[(1) - (3)].nptr));
 	}
     break;
 
   case 211:
-#line 2138 "base\\generic\\compiler\\ascParse.y"
+#line 2138 "base/generic/compiler/ascParse.y"
     {
-	  if ((yyvsp[-1].sptr) == NULL) {
+	  if ((yyvsp[(3) - (4)].sptr) == NULL) {
 	    error_reporter_current_line(ASC_USER_ERROR,"syntax error: Empty set in name definition, name:");
-	    WriteName(ASCERR,(yyvsp[-3].nptr));
+	    WriteName(ASCERR,(yyvsp[(1) - (4)].nptr));
 	    FPRINTF(ASCERR,"[]\n");
 	    g_untrapped_error++;
 	  } else {
-	    (yyval.nptr) = CreateSetName((yyvsp[-1].sptr));
-	    LinkNames((yyval.nptr),(yyvsp[-3].nptr));
+	    (yyval.nptr) = CreateSetName((yyvsp[(3) - (4)].sptr));
+	    LinkNames((yyval.nptr),(yyvsp[(1) - (4)].nptr));
 	  }
 	}
     break;
 
   case 212:
-#line 2153 "base\\generic\\compiler\\ascParse.y"
+#line 2153 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = CONDITIONAL_TOK;
@@ -4112,7 +4420,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 213:
-#line 2158 "base\\generic\\compiler\\ascParse.y"
+#line 2158 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = FOR_TOK;
@@ -4120,7 +4428,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 214:
-#line 2163 "base\\generic\\compiler\\ascParse.y"
+#line 2163 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = IF_TOK;
@@ -4128,7 +4436,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 215:
-#line 2168 "base\\generic\\compiler\\ascParse.y"
+#line 2168 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = INTERACTIVE_TOK;
@@ -4136,7 +4444,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 216:
-#line 2173 "base\\generic\\compiler\\ascParse.y"
+#line 2173 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = METHODS_TOK;
@@ -4144,7 +4452,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 217:
-#line 2178 "base\\generic\\compiler\\ascParse.y"
+#line 2178 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = NOTES_TOK;
@@ -4152,7 +4460,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 218:
-#line 2183 "base\\generic\\compiler\\ascParse.y"
+#line 2183 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = SELECT_TOK;
@@ -4160,7 +4468,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 219:
-#line 2188 "base\\generic\\compiler\\ascParse.y"
+#line 2188 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = SWITCH_TOK;
@@ -4168,7 +4476,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 220:
-#line 2193 "base\\generic\\compiler\\ascParse.y"
+#line 2193 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = UNITS_TOK;
@@ -4176,7 +4484,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 221:
-#line 2198 "base\\generic\\compiler\\ascParse.y"
+#line 2198 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = GLOBAL_TOK;
@@ -4184,7 +4492,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 222:
-#line 2203 "base\\generic\\compiler\\ascParse.y"
+#line 2203 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = WHEN_TOK;
@@ -4192,7 +4500,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 223:
-#line 2208 "base\\generic\\compiler\\ascParse.y"
+#line 2208 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = WHILE_TOK;
@@ -4200,15 +4508,15 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 224:
-#line 2213 "base\\generic\\compiler\\ascParse.y"
+#line 2213 "base/generic/compiler/ascParse.y"
     {
-          g_end_identifier = (yyvsp[0].id_ptr);
+          g_end_identifier = (yyvsp[(2) - (2)].id_ptr);
           (yyval.int_value) = IDENTIFIER_TOK;
         }
     break;
 
   case 225:
-#line 2218 "base\\generic\\compiler\\ascParse.y"
+#line 2218 "base/generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (yyval.int_value) = END_TOK;
@@ -4216,117 +4524,117 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 226:
-#line 2226 "base\\generic\\compiler\\ascParse.y"
+#line 2226 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.braced_ptr) = NULL;
 	}
     break;
 
   case 227:
-#line 2230 "base\\generic\\compiler\\ascParse.y"
+#line 2230 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.braced_ptr) = (yyvsp[0].braced_ptr);
+	  (yyval.braced_ptr) = (yyvsp[(1) - (1)].braced_ptr);
 	}
     break;
 
   case 228:
-#line 2237 "base\\generic\\compiler\\ascParse.y"
+#line 2237 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.dquote_ptr) = NULL;
 	}
     break;
 
   case 229:
-#line 2241 "base\\generic\\compiler\\ascParse.y"
+#line 2241 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.dquote_ptr) = (yyvsp[0].dquote_ptr);
+	  (yyval.dquote_ptr) = (yyvsp[(1) - (1)].dquote_ptr);
 	}
     break;
 
   case 230:
-#line 2248 "base\\generic\\compiler\\ascParse.y"
+#line 2248 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.sptr) = ReverseSetList((yyvsp[0].sptr));
+	  (yyval.sptr) = ReverseSetList((yyvsp[(1) - (1)].sptr));
 	}
     break;
 
   case 231:
-#line 2252 "base\\generic\\compiler\\ascParse.y"
+#line 2252 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.sptr) = NULL;
 	}
     break;
 
   case 232:
-#line 2259 "base\\generic\\compiler\\ascParse.y"
+#line 2259 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.sptr) = CreateSingleSet((yyvsp[0].eptr));
+	  (yyval.sptr) = CreateSingleSet((yyvsp[(1) - (1)].eptr));
 	}
     break;
 
   case 233:
-#line 2263 "base\\generic\\compiler\\ascParse.y"
+#line 2263 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.sptr) = CreateRangeSet((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyval.sptr) = CreateRangeSet((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 234:
-#line 2267 "base\\generic\\compiler\\ascParse.y"
+#line 2267 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.sptr) = CreateSingleSet((yyvsp[0].eptr));
-	  LinkSets((yyval.sptr),(yyvsp[-2].sptr));
+	  (yyval.sptr) = CreateSingleSet((yyvsp[(3) - (3)].eptr));
+	  LinkSets((yyval.sptr),(yyvsp[(1) - (3)].sptr));
 	}
     break;
 
   case 235:
-#line 2272 "base\\generic\\compiler\\ascParse.y"
+#line 2272 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.sptr) = CreateRangeSet((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	  LinkSets((yyval.sptr),(yyvsp[-4].sptr));
+	  (yyval.sptr) = CreateRangeSet((yyvsp[(3) - (5)].eptr),(yyvsp[(5) - (5)].eptr));
+	  LinkSets((yyval.sptr),(yyvsp[(1) - (5)].sptr));
 	}
     break;
 
   case 236:
-#line 2280 "base\\generic\\compiler\\ascParse.y"
+#line 2280 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.real_value) = (yyvsp[0].int_value);
+	  (yyval.real_value) = (yyvsp[(1) - (1)].int_value);
 	  g_constant_type = LONGCONSTANT;
 	  g_default_dim_ptr = Dimensionless();
 	}
     break;
 
   case 237:
-#line 2286 "base\\generic\\compiler\\ascParse.y"
+#line 2286 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.real_value) = (yyvsp[0].real_value);
+	  (yyval.real_value) = (yyvsp[(1) - (1)].real_value);
 	  g_constant_type = DOUBLECONSTANT;
 	  g_default_dim_ptr = g_dim_ptr;
 	}
     break;
 
   case 238:
-#line 2295 "base\\generic\\compiler\\ascParse.y"
+#line 2295 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.real_value) = (yyvsp[-1].real_value)*(yyvsp[0].real_value);
+	  (yyval.real_value) = (yyvsp[(1) - (2)].real_value)*(yyvsp[(2) - (2)].real_value);
 	}
     break;
 
   case 239:
-#line 2299 "base\\generic\\compiler\\ascParse.y"
+#line 2299 "base/generic/compiler/ascParse.y"
     {
 	  unsigned long pos;
 	  int error_code;
-	  g_units_ptr = FindOrDefineUnits((yyvsp[0].braced_ptr),&pos,&error_code);
+	  g_units_ptr = FindOrDefineUnits((yyvsp[(2) - (2)].braced_ptr),&pos,&error_code);
 	  if (g_units_ptr != NULL) {
-	    (yyval.real_value) = (double)(yyvsp[-1].int_value)*UnitsConvFactor(g_units_ptr);
+	    (yyval.real_value) = (double)(yyvsp[(1) - (2)].int_value)*UnitsConvFactor(g_units_ptr);
 	    g_dim_ptr = UnitsDimensions(g_units_ptr);
 	  } else {
             char **errv;
-	    (yyval.real_value) = (double)(yyvsp[-1].int_value);
+	    (yyval.real_value) = (double)(yyvsp[(1) - (2)].int_value);
 	    g_dim_ptr = WildDimension();
-	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'", (yyvsp[0].braced_ptr));
-            errv = UnitsExplainError((yyvsp[0].braced_ptr),error_code,pos);
+	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'", (yyvsp[(2) - (2)].braced_ptr));
+            errv = UnitsExplainError((yyvsp[(2) - (2)].braced_ptr),error_code,pos);
 	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
 	    g_untrapped_error++;
 	  }
@@ -4334,7 +4642,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 240:
-#line 2320 "base\\generic\\compiler\\ascParse.y"
+#line 2320 "base/generic/compiler/ascParse.y"
     {
 	  g_dim_ptr = Dimensionless();
 	  (yyval.real_value) = 1.0;
@@ -4342,11 +4650,11 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 241:
-#line 2325 "base\\generic\\compiler\\ascParse.y"
+#line 2325 "base/generic/compiler/ascParse.y"
     {
 	  unsigned long pos;
 	  int error_code;
-	  g_units_ptr = FindOrDefineUnits((yyvsp[0].braced_ptr),&pos,&error_code);
+	  g_units_ptr = FindOrDefineUnits((yyvsp[(1) - (1)].braced_ptr),&pos,&error_code);
 	  if (g_units_ptr != NULL) {
 	    (yyval.real_value) = UnitsConvFactor(g_units_ptr);
 	    g_dim_ptr = UnitsDimensions(g_units_ptr);
@@ -4354,8 +4662,8 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
             char **errv;
 	    (yyval.real_value) = 1.0;
 	    g_dim_ptr = WildDimension();
-	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'",(yyvsp[0].braced_ptr));
-            errv = UnitsExplainError((yyvsp[0].braced_ptr),error_code,pos);
+	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'",(yyvsp[(1) - (1)].braced_ptr));
+            errv = UnitsExplainError((yyvsp[(1) - (1)].braced_ptr),error_code,pos);
 	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
 	    g_untrapped_error++;
 	  }
@@ -4363,329 +4671,329 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 242:
-#line 2346 "base\\generic\\compiler\\ascParse.y"
+#line 2346 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.dimp) = (yyvsp[0].dimp);
+	  (yyval.dimp) = (yyvsp[(2) - (2)].dimp);
 	}
     break;
 
   case 243:
-#line 2350 "base\\generic\\compiler\\ascParse.y"
+#line 2350 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.dimp) = Dimensionless();
 	}
     break;
 
   case 244:
-#line 2354 "base\\generic\\compiler\\ascParse.y"
+#line 2354 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.dimp) = WildDimension();
 	}
     break;
 
   case 245:
-#line 2361 "base\\generic\\compiler\\ascParse.y"
+#line 2361 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.dimp) = WildDimension();
 	}
     break;
 
   case 246:
-#line 2365 "base\\generic\\compiler\\ascParse.y"
+#line 2365 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.dimp) = FindOrAddDimen(&((yyvsp[0].dimen)));
+	  (yyval.dimp) = FindOrAddDimen(&((yyvsp[(1) - (1)].dimen)));
 	}
     break;
 
   case 247:
-#line 2372 "base\\generic\\compiler\\ascParse.y"
+#line 2372 "base/generic/compiler/ascParse.y"
     {
-	  ParseDim(&((yyval.dimen)),SCP((yyvsp[0].id_ptr)));
+	  ParseDim(&((yyval.dimen)),SCP((yyvsp[(1) - (1)].id_ptr)));
 	}
     break;
 
   case 248:
-#line 2376 "base\\generic\\compiler\\ascParse.y"
+#line 2376 "base/generic/compiler/ascParse.y"
     {
 	  ClearDimensions(&((yyval.dimen)));
 	}
     break;
 
   case 249:
-#line 2380 "base\\generic\\compiler\\ascParse.y"
+#line 2380 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.dimen) = SubDimensions(&((yyvsp[-2].dimen)),&((yyvsp[0].dimen)));
+	  (yyval.dimen) = SubDimensions(&((yyvsp[(1) - (3)].dimen)),&((yyvsp[(3) - (3)].dimen)));
 	}
     break;
 
   case 250:
-#line 2384 "base\\generic\\compiler\\ascParse.y"
+#line 2384 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.dimen) = AddDimensions(&((yyvsp[-2].dimen)),&((yyvsp[0].dimen)));
+	  (yyval.dimen) = AddDimensions(&((yyvsp[(1) - (3)].dimen)),&((yyvsp[(3) - (3)].dimen)));
 	}
     break;
 
   case 251:
-#line 2388 "base\\generic\\compiler\\ascParse.y"
+#line 2388 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.dimen) = ScaleDimensions(&((yyvsp[-2].dimen)),(yyvsp[0].frac_value));
+	  (yyval.dimen) = ScaleDimensions(&((yyvsp[(1) - (3)].dimen)),(yyvsp[(3) - (3)].frac_value));
 	}
     break;
 
   case 252:
-#line 2392 "base\\generic\\compiler\\ascParse.y"
+#line 2392 "base/generic/compiler/ascParse.y"
     {
-	  CopyDimensions(&((yyvsp[-1].dimen)),&((yyval.dimen)));
+	  CopyDimensions(&((yyvsp[(2) - (3)].dimen)),&((yyval.dimen)));
 	}
     break;
 
   case 253:
-#line 2399 "base\\generic\\compiler\\ascParse.y"
+#line 2399 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.frac_value) = (yyvsp[-1].int_value) ? NegateF((yyvsp[0].frac_value)) : (yyvsp[0].frac_value);
+	  (yyval.frac_value) = (yyvsp[(1) - (2)].int_value) ? NegateF((yyvsp[(2) - (2)].frac_value)) : (yyvsp[(2) - (2)].frac_value);
 	}
     break;
 
   case 254:
-#line 2406 "base\\generic\\compiler\\ascParse.y"
+#line 2406 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.frac_value) = CreateFraction((short)(yyvsp[0].int_value),(short)1);
+	  (yyval.frac_value) = CreateFraction((short)(yyvsp[(1) - (1)].int_value),(short)1);
 	}
     break;
 
   case 255:
-#line 2410 "base\\generic\\compiler\\ascParse.y"
+#line 2410 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.frac_value) = CreateFraction((short)(yyvsp[-3].int_value),(short)(yyvsp[-1].int_value));
+	  (yyval.frac_value) = CreateFraction((short)(yyvsp[(2) - (5)].int_value),(short)(yyvsp[(4) - (5)].int_value));
 	}
     break;
 
   case 256:
-#line 2417 "base\\generic\\compiler\\ascParse.y"
+#line 2417 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.int_value) = 0;
 	}
     break;
 
   case 257:
-#line 2421 "base\\generic\\compiler\\ascParse.y"
+#line 2421 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.int_value) = 0;
 	}
     break;
 
   case 258:
-#line 2425 "base\\generic\\compiler\\ascParse.y"
+#line 2425 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.int_value) = 1;
 	}
     break;
 
   case 259:
-#line 2432 "base\\generic\\compiler\\ascParse.y"
+#line 2432 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateIntExpr((yyvsp[0].int_value));
+	  (yyval.eptr) = CreateIntExpr((yyvsp[(1) - (1)].int_value));
 	}
     break;
 
   case 260:
-#line 2436 "base\\generic\\compiler\\ascParse.y"
+#line 2436 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateIntExpr(LONG_MAX-1);
 	}
     break;
 
   case 261:
-#line 2440 "base\\generic\\compiler\\ascParse.y"
+#line 2440 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateRealExpr((yyvsp[0].real_value),g_dim_ptr);
+	  (yyval.eptr) = CreateRealExpr((yyvsp[(1) - (1)].real_value),g_dim_ptr);
 	}
     break;
 
   case 262:
-#line 2444 "base\\generic\\compiler\\ascParse.y"
+#line 2444 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateRealExpr(DBL_MAX/(1+1e-15),Dimensionless());
 	}
     break;
 
   case 263:
-#line 2448 "base\\generic\\compiler\\ascParse.y"
+#line 2448 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateTrueExpr();
 	}
     break;
 
   case 264:
-#line 2452 "base\\generic\\compiler\\ascParse.y"
+#line 2452 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateFalseExpr();
 	}
     break;
 
   case 265:
-#line 2456 "base\\generic\\compiler\\ascParse.y"
+#line 2456 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateAnyExpr();
 	}
     break;
 
   case 266:
-#line 2460 "base\\generic\\compiler\\ascParse.y"
+#line 2460 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateSymbolExpr((yyvsp[0].sym_ptr));
+	  (yyval.eptr) = CreateSymbolExpr((yyvsp[(1) - (1)].sym_ptr));
 	}
     break;
 
   case 267:
-#line 2464 "base\\generic\\compiler\\ascParse.y"
+#line 2464 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateVarExpr((yyvsp[0].nptr));
+	  (yyval.eptr) = CreateVarExpr((yyvsp[(1) - (1)].nptr));
 	}
     break;
 
   case 268:
-#line 2468 "base\\generic\\compiler\\ascParse.y"
+#line 2468 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateSetExpr((yyvsp[-1].sptr));
+	  (yyval.eptr) = CreateSetExpr((yyvsp[(2) - (3)].sptr));
 	}
     break;
 
   case 269:
-#line 2472 "base\\generic\\compiler\\ascParse.y"
+#line 2472 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_plus));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),CreateOpExpr(e_plus));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 270:
-#line 2477 "base\\generic\\compiler\\ascParse.y"
+#line 2477 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_minus));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),CreateOpExpr(e_minus));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 271:
-#line 2482 "base\\generic\\compiler\\ascParse.y"
+#line 2482 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_times));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),CreateOpExpr(e_times));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 272:
-#line 2487 "base\\generic\\compiler\\ascParse.y"
+#line 2487 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_divide));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),CreateOpExpr(e_divide));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 273:
-#line 2492 "base\\generic\\compiler\\ascParse.y"
+#line 2492 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_power));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),CreateOpExpr(e_power));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 274:
-#line 2497 "base\\generic\\compiler\\ascParse.y"
+#line 2497 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_and));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),CreateOpExpr(e_and));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 275:
-#line 2502 "base\\generic\\compiler\\ascParse.y"
+#line 2502 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_or));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),CreateOpExpr(e_or));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 276:
-#line 2507 "base\\generic\\compiler\\ascParse.y"
+#line 2507 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_not));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(2) - (2)].eptr),CreateOpExpr(e_not));
 	}
     break;
 
   case 277:
-#line 2511 "base\\generic\\compiler\\ascParse.y"
+#line 2511 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),(yyvsp[-1].eptr));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),(yyvsp[(2) - (3)].eptr));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 278:
-#line 2516 "base\\generic\\compiler\\ascParse.y"
+#line 2516 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),(yyvsp[-1].eptr));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),(yyvsp[(2) - (3)].eptr));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 279:
-#line 2521 "base\\generic\\compiler\\ascParse.y"
+#line 2521 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_in));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),CreateOpExpr(e_in));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 280:
-#line 2526 "base\\generic\\compiler\\ascParse.y"
+#line 2526 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_st));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),CreateOpExpr(e_st));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 281:
-#line 2531 "base\\generic\\compiler\\ascParse.y"
+#line 2531 "base/generic/compiler/ascParse.y"
     {
-	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_st));
-	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  (yyvsp[(3) - (3)].eptr) = JoinExprLists((yyvsp[(3) - (3)].eptr),CreateOpExpr(e_st));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(1) - (3)].eptr),(yyvsp[(3) - (3)].eptr));
 	}
     break;
 
   case 282:
-#line 2536 "base\\generic\\compiler\\ascParse.y"
+#line 2536 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = (yyvsp[0].eptr);
+	  (yyval.eptr) = (yyvsp[(2) - (2)].eptr);
 	}
     break;
 
   case 283:
-#line 2540 "base\\generic\\compiler\\ascParse.y"
+#line 2540 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_uminus));
+	  (yyval.eptr) = JoinExprLists((yyvsp[(2) - (2)].eptr),CreateOpExpr(e_uminus));
 	}
     break;
 
   case 284:
-#line 2544 "base\\generic\\compiler\\ascParse.y"
+#line 2544 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateSatisfiedExpr((yyvsp[-3].nptr),(yyvsp[-1].real_value),g_dim_ptr);
+	  (yyval.eptr) = CreateSatisfiedExpr((yyvsp[(3) - (6)].nptr),(yyvsp[(5) - (6)].real_value),g_dim_ptr);
 	}
     break;
 
   case 285:
-#line 2548 "base\\generic\\compiler\\ascParse.y"
+#line 2548 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateSatisfiedExpr((yyvsp[-1].nptr),DBL_MAX,NULL);
+	  (yyval.eptr) = CreateSatisfiedExpr((yyvsp[(3) - (4)].nptr),DBL_MAX,NULL);
 	}
     break;
 
   case 286:
-#line 2552 "base\\generic\\compiler\\ascParse.y"
+#line 2552 "base/generic/compiler/ascParse.y"
     {
-	  DestroySetList((yyvsp[-1].sptr));
+	  DestroySetList((yyvsp[(3) - (4)].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("SUM");
 	  g_untrapped_error++;
@@ -4693,16 +5001,16 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 287:
-#line 2559 "base\\generic\\compiler\\ascParse.y"
+#line 2559 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateBuiltin(e_sum,(yyvsp[-1].sptr));
+	  (yyval.eptr) = CreateBuiltin(e_sum,(yyvsp[(3) - (4)].sptr));
 	}
     break;
 
   case 288:
-#line 2563 "base\\generic\\compiler\\ascParse.y"
+#line 2563 "base/generic/compiler/ascParse.y"
     {
-	  DestroySetList((yyvsp[-1].sptr));
+	  DestroySetList((yyvsp[(3) - (4)].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("PROD");
 	  g_untrapped_error++;
@@ -4710,16 +5018,16 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 289:
-#line 2570 "base\\generic\\compiler\\ascParse.y"
+#line 2570 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateBuiltin(e_prod,(yyvsp[-1].sptr));
+	  (yyval.eptr) = CreateBuiltin(e_prod,(yyvsp[(3) - (4)].sptr));
 	}
     break;
 
   case 290:
-#line 2574 "base\\generic\\compiler\\ascParse.y"
+#line 2574 "base/generic/compiler/ascParse.y"
     {
-	  DestroySetList((yyvsp[-1].sptr));
+	  DestroySetList((yyvsp[(3) - (4)].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("UNION");
 	  g_untrapped_error++;
@@ -4727,16 +5035,16 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 291:
-#line 2581 "base\\generic\\compiler\\ascParse.y"
+#line 2581 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateBuiltin(e_union,(yyvsp[-1].sptr));
+	  (yyval.eptr) = CreateBuiltin(e_union,(yyvsp[(3) - (4)].sptr));
 	}
     break;
 
   case 292:
-#line 2585 "base\\generic\\compiler\\ascParse.y"
+#line 2585 "base/generic/compiler/ascParse.y"
     {
-	  DestroySetList((yyvsp[-1].sptr));
+	  DestroySetList((yyvsp[(3) - (4)].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("INTERSECTION");
 	  g_untrapped_error++;
@@ -4744,16 +5052,16 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 293:
-#line 2592 "base\\generic\\compiler\\ascParse.y"
+#line 2592 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateBuiltin(e_inter,(yyvsp[-1].sptr));
+	  (yyval.eptr) = CreateBuiltin(e_inter,(yyvsp[(3) - (4)].sptr));
 	}
     break;
 
   case 294:
-#line 2596 "base\\generic\\compiler\\ascParse.y"
+#line 2596 "base/generic/compiler/ascParse.y"
     {
-	  DestroySetList((yyvsp[-1].sptr));
+	  DestroySetList((yyvsp[(3) - (4)].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("CARD");
 	  g_untrapped_error++;
@@ -4761,16 +5069,16 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 295:
-#line 2603 "base\\generic\\compiler\\ascParse.y"
+#line 2603 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateBuiltin(e_card,(yyvsp[-1].sptr));
+	  (yyval.eptr) = CreateBuiltin(e_card,(yyvsp[(3) - (4)].sptr));
 	}
     break;
 
   case 296:
-#line 2607 "base\\generic\\compiler\\ascParse.y"
+#line 2607 "base/generic/compiler/ascParse.y"
     {
-	  DestroySetList((yyvsp[-1].sptr));
+	  DestroySetList((yyvsp[(3) - (4)].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("CHOICE");
 	  g_untrapped_error++;
@@ -4778,99 +5086,98 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 297:
-#line 2614 "base\\generic\\compiler\\ascParse.y"
+#line 2614 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = CreateBuiltin(e_choice,(yyvsp[-1].sptr));
+	  (yyval.eptr) = CreateBuiltin(e_choice,(yyvsp[(3) - (4)].sptr));
 	}
     break;
 
   case 298:
-#line 2618 "base\\generic\\compiler\\ascParse.y"
+#line 2618 "base/generic/compiler/ascParse.y"
     {
 	  CONST struct Func *fptr;
-	  if ((fptr = LookupFunc(SCP((yyvsp[-3].id_ptr))))!=NULL) {
-	    (yyval.eptr) = JoinExprLists((yyvsp[-1].eptr),CreateFuncExpr(fptr));
+	  if ((fptr = LookupFunc(SCP((yyvsp[(1) - (4)].id_ptr))))!=NULL) {
+	    (yyval.eptr) = JoinExprLists((yyvsp[(3) - (4)].eptr),CreateFuncExpr(fptr));
 	  } else {
 	    (yyval.eptr) = NULL;
-	    error_reporter_current_line(ASC_USER_ERROR,"Function '%s' is not defined.",SCP((yyvsp[-3].id_ptr)));
+	    error_reporter_current_line(ASC_USER_ERROR,"Function '%s' is not defined.",SCP((yyvsp[(1) - (4)].id_ptr)));
 	    g_untrapped_error++;
 	  }
 	}
     break;
 
   case 299:
-#line 2629 "base\\generic\\compiler\\ascParse.y"
+#line 2629 "base/generic/compiler/ascParse.y"
     {
-	  (yyval.eptr) = (yyvsp[-1].eptr);
+	  (yyval.eptr) = (yyvsp[(2) - (3)].eptr);
 	}
     break;
 
   case 300:
-#line 2636 "base\\generic\\compiler\\ascParse.y"
+#line 2636 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_equal);
 	}
     break;
 
   case 301:
-#line 2640 "base\\generic\\compiler\\ascParse.y"
+#line 2640 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_less);
 	}
     break;
 
   case 302:
-#line 2644 "base\\generic\\compiler\\ascParse.y"
+#line 2644 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_greater);
 	}
     break;
 
   case 303:
-#line 2648 "base\\generic\\compiler\\ascParse.y"
+#line 2648 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_lesseq);
 	}
     break;
 
   case 304:
-#line 2652 "base\\generic\\compiler\\ascParse.y"
+#line 2652 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_greatereq);
 	}
     break;
 
   case 305:
-#line 2656 "base\\generic\\compiler\\ascParse.y"
+#line 2656 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_notequal);
 	}
     break;
 
   case 306:
-#line 2663 "base\\generic\\compiler\\ascParse.y"
+#line 2663 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_boolean_eq);
 	}
     break;
 
   case 307:
-#line 2667 "base\\generic\\compiler\\ascParse.y"
+#line 2667 "base/generic/compiler/ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_boolean_neq);
 	}
     break;
 
 
+/* Line 1267 of yacc.c.  */
+#line 5175 "base/generic/compiler/ascParse.c"
+      default: break;
     }
+  YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
 
-/* Line 1037 of yacc.c.  */
-#line 4869 "base\\generic\\compiler\\ascParse.c"
-
-  yyvsp -= yylen;
-  yyssp -= yylen;
-
-
+  YYPOPSTACK (yylen);
+  yylen = 0;
   YY_STACK_PRINT (yyss, yyssp);
 
   *++yyvsp = yyval;
@@ -4899,66 +5206,41 @@ yyerrlab:
   if (!yyerrstatus)
     {
       ++yynerrs;
-#if YYERROR_VERBOSE
-      yyn = yypact[yystate];
-
-      if (YYPACT_NINF < yyn && yyn < YYLAST)
-	{
-	  YYSIZE_T yysize = 0;
-	  int yytype = YYTRANSLATE (yychar);
-	  const char* yyprefix;
-	  char *yymsg;
-	  int yyx;
-
-	  /* Start YYX at -YYN if negative to avoid negative indexes in
-	     YYCHECK.  */
-	  int yyxbegin = yyn < 0 ? -yyn : 0;
-
-	  /* Stay within bounds of both yycheck and yytname.  */
-	  int yychecklim = YYLAST - yyn;
-	  int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
-	  int yycount = 0;
-
-	  yyprefix = ", expecting ";
-	  for (yyx = yyxbegin; yyx < yyxend; ++yyx)
-	    if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR)
-	      {
-		yysize += yystrlen (yyprefix) + yystrlen (yytname [yyx]);
-		yycount += 1;
-		if (yycount == 5)
-		  {
-		    yysize = 0;
-		    break;
-		  }
-	      }
-	  yysize += (sizeof ("syntax error, unexpected ")
-		     + yystrlen (yytname[yytype]));
-	  yymsg = (char *) YYSTACK_ALLOC (yysize);
-	  if (yymsg != 0)
-	    {
-	      char *yyp = yystpcpy (yymsg, "syntax error, unexpected ");
-	      yyp = yystpcpy (yyp, yytname[yytype]);
-
-	      if (yycount < 5)
-		{
-		  yyprefix = ", expecting ";
-		  for (yyx = yyxbegin; yyx < yyxend; ++yyx)
-		    if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR)
-		      {
-			yyp = yystpcpy (yyp, yyprefix);
-			yyp = yystpcpy (yyp, yytname[yyx]);
-			yyprefix = " or ";
-		      }
-		}
-	      yyerror (yymsg);
+#if ! YYERROR_VERBOSE
+      yyerror (YY_("syntax error"));
+#else
+      {
+	YYSIZE_T yysize = yysyntax_error (0, yystate, yychar);
+	if (yymsg_alloc < yysize && yymsg_alloc < YYSTACK_ALLOC_MAXIMUM)
+	  {
+	    YYSIZE_T yyalloc = 2 * yysize;
+	    if (! (yysize <= yyalloc && yyalloc <= YYSTACK_ALLOC_MAXIMUM))
+	      yyalloc = YYSTACK_ALLOC_MAXIMUM;
+	    if (yymsg != yymsgbuf)
 	      YYSTACK_FREE (yymsg);
-	    }
-	  else
-	    yyerror ("syntax error; also virtual memory exhausted");
-	}
-      else
-#endif /* YYERROR_VERBOSE */
-	yyerror ("syntax error");
+	    yymsg = (char *) YYSTACK_ALLOC (yyalloc);
+	    if (yymsg)
+	      yymsg_alloc = yyalloc;
+	    else
+	      {
+		yymsg = yymsgbuf;
+		yymsg_alloc = sizeof yymsgbuf;
+	      }
+	  }
+
+	if (0 < yysize && yysize <= yymsg_alloc)
+	  {
+	    (void) yysyntax_error (yymsg, yystate, yychar);
+	    yyerror (yymsg);
+	  }
+	else
+	  {
+	    yyerror (YY_("syntax error"));
+	    if (yysize != 0)
+	      goto yyexhaustedlab;
+	  }
+      }
+#endif
     }
 
 
@@ -4969,23 +5251,15 @@ yyerrlab:
 	 error, discard it.  */
 
       if (yychar <= YYEOF)
-        {
-          /* If at end of input, pop the error token,
-	     then the rest of the stack, then return failure.  */
+	{
+	  /* Return failure if at end of input.  */
 	  if (yychar == YYEOF)
-	     for (;;)
-	       {
-
-		 YYPOPSTACK;
-		 if (yyssp == yyss)
-		   YYABORT;
-		 yydestruct ("Error: popping",
-                             yystos[*yyssp], yyvsp);
-	       }
-        }
+	    YYABORT;
+	}
       else
 	{
-	  yydestruct ("Error: discarding", yytoken, &yylval);
+	  yydestruct ("Error: discarding",
+		      yytoken, &yylval);
 	  yychar = YYEMPTY;
 	}
     }
@@ -5000,15 +5274,17 @@ yyerrlab:
 `---------------------------------------------------*/
 yyerrorlab:
 
-#ifdef __GNUC__
-  /* Pacify GCC when the user code never invokes YYERROR and the label
-     yyerrorlab therefore never appears in user code.  */
-  if (0)
+  /* Pacify compilers like GCC when the user code never invokes
+     YYERROR and the label yyerrorlab therefore never appears in user
+     code.  */
+  if (/*CONSTCOND*/ 0)
      goto yyerrorlab;
-#endif
 
-yyvsp -= yylen;
-  yyssp -= yylen;
+  /* Do not reclaim the symbols of the rule which action triggered
+     this YYERROR.  */
+  YYPOPSTACK (yylen);
+  yylen = 0;
+  YY_STACK_PRINT (yyss, yyssp);
   yystate = *yyssp;
   goto yyerrlab1;
 
@@ -5038,8 +5314,9 @@ yyerrlab1:
 	YYABORT;
 
 
-      yydestruct ("Error: popping", yystos[yystate], yyvsp);
-      YYPOPSTACK;
+      yydestruct ("Error: popping",
+		  yystos[yystate], yyvsp);
+      YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
     }
@@ -5050,7 +5327,7 @@ yyerrlab1:
   *++yyvsp = yylval;
 
 
-  /* Shift the error token. */
+  /* Shift the error token.  */
   YY_SYMBOL_PRINT ("Shifting", yystos[yyn], yyvsp, yylsp);
 
   yystate = yyn;
@@ -5068,32 +5345,47 @@ yyacceptlab:
 | yyabortlab -- YYABORT comes here.  |
 `-----------------------------------*/
 yyabortlab:
-  yydestruct ("Error: discarding lookahead",
-              yytoken, &yylval);
-  yychar = YYEMPTY;
   yyresult = 1;
   goto yyreturn;
 
 #ifndef yyoverflow
-/*----------------------------------------------.
-| yyoverflowlab -- parser overflow comes here.  |
-`----------------------------------------------*/
-yyoverflowlab:
-  yyerror ("parser stack overflow");
+/*-------------------------------------------------.
+| yyexhaustedlab -- memory exhaustion comes here.  |
+`-------------------------------------------------*/
+yyexhaustedlab:
+  yyerror (YY_("memory exhausted"));
   yyresult = 2;
   /* Fall through.  */
 #endif
 
 yyreturn:
+  if (yychar != YYEOF && yychar != YYEMPTY)
+     yydestruct ("Cleanup: discarding lookahead",
+		 yytoken, &yylval);
+  /* Do not reclaim the symbols of the rule which action triggered
+     this YYABORT or YYACCEPT.  */
+  YYPOPSTACK (yylen);
+  YY_STACK_PRINT (yyss, yyssp);
+  while (yyssp != yyss)
+    {
+      yydestruct ("Cleanup: popping",
+		  yystos[*yyssp], yyvsp);
+      YYPOPSTACK (1);
+    }
 #ifndef yyoverflow
   if (yyss != yyssa)
     YYSTACK_FREE (yyss);
 #endif
-  return yyresult;
+#if YYERROR_VERBOSE
+  if (yymsg != yymsgbuf)
+    YYSTACK_FREE (yymsg);
+#endif
+  /* Make sure YYID is used.  */
+  return YYID (yyresult);
 }
 
 
-#line 2671 "base\\generic\\compiler\\ascParse.y"
+#line 2671 "base/generic/compiler/ascParse.y"
 
 /* END OF GRAMMAR RULES
    -----------------------------------------------------------------------------

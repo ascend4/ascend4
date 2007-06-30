@@ -1,3 +1,12 @@
+ascend (0.9.5.112-5) unstable; urgency=low
+
+  * Solvers are now separate shared objects
+  * Work on DOPRI5 and TRON (ongoing)
+  * Addition of ASCENDSOLVERS env var
+  * Fixed support for solver loading in Tcl/Tk GUI.
+
+ -- John Pye (roadwork) <john@curioussymbols.com>  Sun, 01 Jul 2007 01:00:00 +1000
+
 ascend (0.9.5.110-4) unstable; urgency=low
 
   * Removed runtime requirement for matplotlib, numpy.

@@ -2,7 +2,12 @@
 # -*- makefile -*-
 
 CFLAGS = -Wall -g
-SCONS_OPTIONS = CC="ccache gcc" CXX="ccache g++" INSTALL_PREFIX=/usr -j2 
+
+SCONS_OPTIONS = CC="ccache gcc" \
+	CXX="ccache g++" \
+	INSTALL_PREFIX=/usr \
+	WITH_DOC_BUILD=0 \
+	WITH_DOC_INSTALL=1
 SCONS= scons $(SCONS_OPTIONS)
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
@@ -25,22 +30,11 @@ build: build-stamp
 build-stamp:
 	dh_testdir
 	cd $(CURDIR) && $(SCONS) libascend tcltk pygtk models
-	cd $(CURDIR) && $(SCONS) doc/book.pdf
 	touch build-stamp
 
 clean:
 	dh_testdir
 	rm -f build-stamp
-	-cd $(CURDIR) && $(SCONS) -c
-	find $(CURDIR) -name ".scon*" | xargs rm -rf
-	find $(CURDIR) -type f -name "*.pyc" | xargs rm -rf
-	find $(CURDIR) -type f -name "*.pyo" | xargs rm -rf
-	find $(CURDIR) -type f -name "*.o" | xargs rm -rf
-	find $(CURDIR) -type f -name "*.os" | xargs rm -rf
-	find $(CURDIR) -type f -name "*.a" | xargs rm -rf
-	-rm $(CURDIR)/doc/*.tex
-	-rm -rf $(CURDIR)/doc/html
-#	dh_testroot
 	dh_clean 
 
 install: build
