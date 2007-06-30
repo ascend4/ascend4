@@ -1,3 +1,24 @@
+30 Jun 2007
+-----------
+
+Version 0.9.5.112
+
+Solver interface
+ - all solvers and integrators are now built as 'external library' DLL/SOs.
+ - placeholder for a future TRON solver (work still to do on that)
+ - new ASCENDSOLVERS environment variable gives additional search path location
+   that is checked when attempting to satisfy IMPORT statements.
+ - Fixed behaviour scons when lex/yacc not available/.
+ - RPM packaging tested with openSUSE build service, RPM divided into 
+   subpackages ascend, ascend-devel, ascend-doc.
+ - BLAS and LINPACK are now embedded in the LSODE DLL/SO. They are not
+   part of libascend, which makes the main DLL about 1 MB smaller.
+ - Many ASC_DLLSPEC qualifiers added as result of the expanded use of external
+   libraries.
+ - Added ASCEND port of the standard GAMS example problem.
+ - Some bugs in the DOPRI5 integrator identified (full testing still not
+   completed).
+ - Equations of state models from Krishnan.
 
 3 Jun 2007
 ----------
