@@ -30,7 +30,7 @@
     OBS:
 	  - y2
 	  - y4'
-	
+
 	This structure will allow efficient construction of integration systems
 	without any need for the integration engine to 'talk to' the compiler.
 	It's important that the integration engine need not talk to the compiler,
@@ -39,7 +39,7 @@
 
 	Note that this stuff is living here in the *solver* and not the *integrator*
 	directory. This is because the integrator views the problem via a slv_system
-	structure; in that sense the integrator deals with the ASCEND API through 
+	structure; in that sense the integrator deals with the ASCEND API through
 	the solver API, although it interfaces back with the user through a different
 	API that includes sample timesteps, different reporter mechanisms, etc.
 */
@@ -83,7 +83,7 @@ void system_diffvars_destroy(slv_system_t sys);
 /**
 	Write contents of diffvars struct to stream fp
 */
-int system_diffvars_debug(slv_system_t sys,FILE *fp);
+ASC_DLLSPEC int system_diffvars_debug(slv_system_t sys,FILE *fp);
 
 
 /**

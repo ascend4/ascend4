@@ -127,7 +127,7 @@ Section "ASCEND (required)"
 	File "solvers\lrslv\lrslv.dll"
 	File "solvers\cmslv\cmslv.dll"
 	File "solvers\lsode\lsode.dll"
-;	File "solvers\ida\ida.dll"
+	File "solvers\ida\ida.dll"
 
 	SetOutPath $INSTDIR
 	;File "Makefile.bt"

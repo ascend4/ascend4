@@ -159,7 +159,7 @@ ASC_DLLSPEC int slv_tear_drop_reorder_block(slv_system_t sys,
 	@return ???
  */
 
-extern int system_block_debug(slv_system_t sys, FILE *fp);
+ASC_DLLSPEC int system_block_debug(slv_system_t sys, FILE *fp);
 /**<
 	Create debug output detailing the current block structure of the system.
 */

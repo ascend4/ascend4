@@ -61,228 +61,228 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     ADD_T = 258,
-     ALIASES_T = 259,
-     AND_T = 260,
-     ANY_T = 261,
-     AREALIKE_T = 262,
-     ARETHESAME_T = 263,
-     ARRAY_T = 264,
-     ASSERT_T = 265,
-     ATOM_T = 266,
-     BEQ_T = 267,
-     BNE_T = 268,
-     BREAK_T = 269,
-     CALL_T = 270,
-     CARD_T = 271,
-     CASE_T = 272,
-     CHOICE_T = 273,
-     CHECK_T = 274,
-     CONDITIONAL_T = 275,
-     CONSTANT_T = 276,
-     CONTINUE_T = 277,
-     CREATE_T = 278,
-     DATA_T = 279,
-     DECREASING_T = 280,
-     DEFAULT_T = 281,
-     DEFINITION_T = 282,
-     DIMENSION_T = 283,
-     DIMENSIONLESS_T = 284,
-     DO_T = 285,
-     ELSE_T = 286,
-     END_T = 287,
-     EXPECT_T = 288,
-     EXTERNAL_T = 289,
-     FALSE_T = 290,
-     FALLTHRU_T = 291,
-     FIX_T = 292,
-     FOR_T = 293,
-     FREE_T = 294,
-     FROM_T = 295,
-     GLOBAL_T = 296,
-     IF_T = 297,
-     IMPORT_T = 298,
-     IN_T = 299,
-     INPUT_T = 300,
-     INCREASING_T = 301,
-     INTERACTIVE_T = 302,
-     INTERSECTION_T = 303,
-     ISA_T = 304,
+     ADD_TOK = 258,
+     ALIASES_TOK = 259,
+     AND_TOK = 260,
+     ANY_TOK = 261,
+     AREALIKE_TOK = 262,
+     ARETHESAME_TOK = 263,
+     ARRAY_TOK = 264,
+     ASSERT_TOK = 265,
+     ATOM_TOK = 266,
+     BEQ_TOK = 267,
+     BNE_TOK = 268,
+     BREAK_TOK = 269,
+     CALL_TOK = 270,
+     CARD_TOK = 271,
+     CASE_TOK = 272,
+     CHOICE_TOK = 273,
+     CHECK_TOK = 274,
+     CONDITIONAL_TOK = 275,
+     CONSTANT_TOK = 276,
+     CONTINUE_TOK = 277,
+     CREATE_TOK = 278,
+     DATA_TOK = 279,
+     DECREASING_TOK = 280,
+     DEFAULT_TOK = 281,
+     DEFINITION_TOK = 282,
+     DIMENSION_TOK = 283,
+     DIMENSIONLESS_TOK = 284,
+     DO_TOK = 285,
+     ELSE_TOK = 286,
+     END_TOK = 287,
+     EXPECT_TOK = 288,
+     EXTERNAL_TOK = 289,
+     FALSE_TOK = 290,
+     FALLTHRU_TOK = 291,
+     FIX_TOK = 292,
+     FOR_TOK = 293,
+     FREE_TOK = 294,
+     FROM_TOK = 295,
+     GLOBAL_TOK = 296,
+     IF_TOK = 297,
+     IMPORT_TOK = 298,
+     IN_TOK = 299,
+     INPUT_TOK = 300,
+     INCREASING_TOK = 301,
+     INTERACTIVE_TOK = 302,
+     INTERSECTION_TOK = 303,
+     ISA_TOK = 304,
      _IS_T = 305,
-     ISREFINEDTO_T = 306,
-     MAXIMIZE_T = 307,
-     MAXINTEGER_T = 308,
-     MAXREAL_T = 309,
-     METHODS_T = 310,
-     METHOD_T = 311,
-     MINIMIZE_T = 312,
-     MODEL_T = 313,
-     NOT_T = 314,
-     NOTES_T = 315,
-     OF_T = 316,
-     OR_T = 317,
-     OTHERWISE_T = 318,
-     OUTPUT_T = 319,
-     PATCH_T = 320,
-     PROD_T = 321,
-     PROVIDE_T = 322,
-     REFINES_T = 323,
-     REPLACE_T = 324,
-     REQUIRE_T = 325,
-     RETURN_T = 326,
-     RUN_T = 327,
-     SATISFIED_T = 328,
-     SELECT_T = 329,
-     SIZE_T = 330,
-     STOP_T = 331,
-     SUCHTHAT_T = 332,
-     SUM_T = 333,
-     SWITCH_T = 334,
-     THEN_T = 335,
-     TRUE_T = 336,
-     UNION_T = 337,
-     UNITS_T = 338,
-     UNIVERSAL_T = 339,
-     WHEN_T = 340,
-     WHERE_T = 341,
-     WHILE_T = 342,
-     WILLBE_T = 343,
-     WILLBETHESAME_T = 344,
-     WILLNOTBETHESAME_T = 345,
-     ASSIGN_T = 346,
-     CASSIGN_T = 347,
-     DBLCOLON_T = 348,
-     USE_T = 349,
-     LEQ_T = 350,
-     GEQ_T = 351,
-     NEQ_T = 352,
-     DOTDOT_T = 353,
-     WITH_T = 354,
-     VALUE_T = 355,
+     ISREFINEDTO_TOK = 306,
+     MAXIMIZE_TOK = 307,
+     MAXINTEGER_TOK = 308,
+     MAXREAL_TOK = 309,
+     METHODS_TOK = 310,
+     METHOD_TOK = 311,
+     MINIMIZE_TOK = 312,
+     MODEL_TOK = 313,
+     NOT_TOK = 314,
+     NOTES_TOK = 315,
+     OF_TOK = 316,
+     OR_TOK = 317,
+     OTHERWISE_TOK = 318,
+     OUTPUT_TOK = 319,
+     PATCH_TOK = 320,
+     PROD_TOK = 321,
+     PROVIDE_TOK = 322,
+     REFINES_TOK = 323,
+     REPLACE_TOK = 324,
+     REQUIRE_TOK = 325,
+     RETURN_TOK = 326,
+     RUN_TOK = 327,
+     SATISFIED_TOK = 328,
+     SELECT_TOK = 329,
+     SIZE_TOK = 330,
+     STOP_TOK = 331,
+     SUCHTHAT_TOK = 332,
+     SUM_TOK = 333,
+     SWITCH_TOK = 334,
+     THEN_TOK = 335,
+     TRUE_TOK = 336,
+     UNION_TOK = 337,
+     UNITS_TOK = 338,
+     UNIVERSAL_TOK = 339,
+     WHEN_TOK = 340,
+     WHERE_TOK = 341,
+     WHILE_TOK = 342,
+     WILLBE_TOK = 343,
+     WILLBETHESAME_TOK = 344,
+     WILLNOTBETHESAME_TOK = 345,
+     ASSIGN_TOK = 346,
+     CASSIGN_TOK = 347,
+     DBLCOLON_TOK = 348,
+     USE_TOK = 349,
+     LEQ_TOK = 350,
+     GEQ_TOK = 351,
+     NEQ_TOK = 352,
+     DOTDOT_TOK = 353,
+     WITH_TOK = 354,
+     VALUE_TOK = 355,
      WITH_VALUE_T = 356,
-     REAL_T = 357,
-     INTEGER_T = 358,
-     IDENTIFIER_T = 359,
-     BRACEDTEXT_T = 360,
-     SYMBOL_T = 361,
-     DQUOTE_T = 362,
-     UPLUS_T = 363,
-     UMINUS_T = 364
+     REAL_TOK = 357,
+     INTEGER_TOK = 358,
+     IDENTIFIER_TOK = 359,
+     BRACEDTEXT_TOK = 360,
+     SYMBOL_TOK = 361,
+     DQUOTE_TOK = 362,
+     UPLUS_TOK = 363,
+     UMINUS_TOK = 364
    };
 #endif
-#define ADD_T 258
-#define ALIASES_T 259
-#define AND_T 260
-#define ANY_T 261
-#define AREALIKE_T 262
-#define ARETHESAME_T 263
-#define ARRAY_T 264
-#define ASSERT_T 265
-#define ATOM_T 266
-#define BEQ_T 267
-#define BNE_T 268
-#define BREAK_T 269
-#define CALL_T 270
-#define CARD_T 271
-#define CASE_T 272
-#define CHOICE_T 273
-#define CHECK_T 274
-#define CONDITIONAL_T 275
-#define CONSTANT_T 276
-#define CONTINUE_T 277
-#define CREATE_T 278
-#define DATA_T 279
-#define DECREASING_T 280
-#define DEFAULT_T 281
-#define DEFINITION_T 282
-#define DIMENSION_T 283
-#define DIMENSIONLESS_T 284
-#define DO_T 285
-#define ELSE_T 286
-#define END_T 287
-#define EXPECT_T 288
-#define EXTERNAL_T 289
-#define FALSE_T 290
-#define FALLTHRU_T 291
-#define FIX_T 292
-#define FOR_T 293
-#define FREE_T 294
-#define FROM_T 295
-#define GLOBAL_T 296
-#define IF_T 297
-#define IMPORT_T 298
-#define IN_T 299
-#define INPUT_T 300
-#define INCREASING_T 301
-#define INTERACTIVE_T 302
-#define INTERSECTION_T 303
-#define ISA_T 304
+#define ADD_TOK 258
+#define ALIASES_TOK 259
+#define AND_TOK 260
+#define ANY_TOK 261
+#define AREALIKE_TOK 262
+#define ARETHESAME_TOK 263
+#define ARRAY_TOK 264
+#define ASSERT_TOK 265
+#define ATOM_TOK 266
+#define BEQ_TOK 267
+#define BNE_TOK 268
+#define BREAK_TOK 269
+#define CALL_TOK 270
+#define CARD_TOK 271
+#define CASE_TOK 272
+#define CHOICE_TOK 273
+#define CHECK_TOK 274
+#define CONDITIONAL_TOK 275
+#define CONSTANT_TOK 276
+#define CONTINUE_TOK 277
+#define CREATE_TOK 278
+#define DATA_TOK 279
+#define DECREASING_TOK 280
+#define DEFAULT_TOK 281
+#define DEFINITION_TOK 282
+#define DIMENSION_TOK 283
+#define DIMENSIONLESS_TOK 284
+#define DO_TOK 285
+#define ELSE_TOK 286
+#define END_TOK 287
+#define EXPECT_TOK 288
+#define EXTERNAL_TOK 289
+#define FALSE_TOK 290
+#define FALLTHRU_TOK 291
+#define FIX_TOK 292
+#define FOR_TOK 293
+#define FREE_TOK 294
+#define FROM_TOK 295
+#define GLOBAL_TOK 296
+#define IF_TOK 297
+#define IMPORT_TOK 298
+#define IN_TOK 299
+#define INPUT_TOK 300
+#define INCREASING_TOK 301
+#define INTERACTIVE_TOK 302
+#define INTERSECTION_TOK 303
+#define ISA_TOK 304
 #define _IS_T 305
-#define ISREFINEDTO_T 306
-#define MAXIMIZE_T 307
-#define MAXINTEGER_T 308
-#define MAXREAL_T 309
-#define METHODS_T 310
-#define METHOD_T 311
-#define MINIMIZE_T 312
-#define MODEL_T 313
-#define NOT_T 314
-#define NOTES_T 315
-#define OF_T 316
-#define OR_T 317
-#define OTHERWISE_T 318
-#define OUTPUT_T 319
-#define PATCH_T 320
-#define PROD_T 321
-#define PROVIDE_T 322
-#define REFINES_T 323
-#define REPLACE_T 324
-#define REQUIRE_T 325
-#define RETURN_T 326
-#define RUN_T 327
-#define SATISFIED_T 328
-#define SELECT_T 329
-#define SIZE_T 330
-#define STOP_T 331
-#define SUCHTHAT_T 332
-#define SUM_T 333
-#define SWITCH_T 334
-#define THEN_T 335
-#define TRUE_T 336
-#define UNION_T 337
-#define UNITS_T 338
-#define UNIVERSAL_T 339
-#define WHEN_T 340
-#define WHERE_T 341
-#define WHILE_T 342
-#define WILLBE_T 343
-#define WILLBETHESAME_T 344
-#define WILLNOTBETHESAME_T 345
-#define ASSIGN_T 346
-#define CASSIGN_T 347
-#define DBLCOLON_T 348
-#define USE_T 349
-#define LEQ_T 350
-#define GEQ_T 351
-#define NEQ_T 352
-#define DOTDOT_T 353
-#define WITH_T 354
-#define VALUE_T 355
+#define ISREFINEDTO_TOK 306
+#define MAXIMIZE_TOK 307
+#define MAXINTEGER_TOK 308
+#define MAXREAL_TOK 309
+#define METHODS_TOK 310
+#define METHOD_TOK 311
+#define MINIMIZE_TOK 312
+#define MODEL_TOK 313
+#define NOT_TOK 314
+#define NOTES_TOK 315
+#define OF_TOK 316
+#define OR_TOK 317
+#define OTHERWISE_TOK 318
+#define OUTPUT_TOK 319
+#define PATCH_TOK 320
+#define PROD_TOK 321
+#define PROVIDE_TOK 322
+#define REFINES_TOK 323
+#define REPLACE_TOK 324
+#define REQUIRE_TOK 325
+#define RETURN_TOK 326
+#define RUN_TOK 327
+#define SATISFIED_TOK 328
+#define SELECT_TOK 329
+#define SIZE_TOK 330
+#define STOP_TOK 331
+#define SUCHTHAT_TOK 332
+#define SUM_TOK 333
+#define SWITCH_TOK 334
+#define THEN_TOK 335
+#define TRUE_TOK 336
+#define UNION_TOK 337
+#define UNITS_TOK 338
+#define UNIVERSAL_TOK 339
+#define WHEN_TOK 340
+#define WHERE_TOK 341
+#define WHILE_TOK 342
+#define WILLBE_TOK 343
+#define WILLBETHESAME_TOK 344
+#define WILLNOTBETHESAME_TOK 345
+#define ASSIGN_TOK 346
+#define CASSIGN_TOK 347
+#define DBLCOLON_TOK 348
+#define USE_TOK 349
+#define LEQ_TOK 350
+#define GEQ_TOK 351
+#define NEQ_TOK 352
+#define DOTDOT_TOK 353
+#define WITH_TOK 354
+#define VALUE_TOK 355
 #define WITH_VALUE_T 356
-#define REAL_T 357
-#define INTEGER_T 358
-#define IDENTIFIER_T 359
-#define BRACEDTEXT_T 360
-#define SYMBOL_T 361
-#define DQUOTE_T 362
-#define UPLUS_T 363
-#define UMINUS_T 364
+#define REAL_TOK 357
+#define INTEGER_TOK 358
+#define IDENTIFIER_TOK 359
+#define BRACEDTEXT_TOK 360
+#define SYMBOL_TOK 361
+#define DQUOTE_TOK 362
+#define UPLUS_TOK 363
+#define UMINUS_TOK 364
 
 
 
 
 /* Copy the first part of user declarations.  */
-#line 30 "base\\generic\\compiler\\ascParse.y"
+#line 31 "base\\generic\\compiler\\ascParse.y"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -294,13 +294,13 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/dstring.h>
-
+#include <compiler/compiler.h>
 #include <compiler/scanner.h>
 #include <compiler/symtab.h>		/* the global string/symbol table */
 #include <compiler/notate.h>		/* notes database wrapper */
 #include <compiler/braced.h>
-
-
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
 #include <compiler/functype.h>
 #include <compiler/func.h>
 #include <compiler/expr_types.h>
@@ -339,15 +339,11 @@
 #include <compiler/exprio.h>
 #endif /* for CommaExpr if working. */
 
-#ifndef lint
-static CONST char ParserID[] = "$Id: ascParse.y,v 1.23 2000/01/25 02:25:59 ballan Exp $";
-#endif
-
 int g_compiler_warnings = 1;		/* level of whine to allow */
 
 #include <compiler/redirectFile.h>
 #ifndef ASCERR
-#error "ASCERR not defined"
+# error "ASCERR not defined"
 #endif
 
 extern int zz_error(char *);
@@ -369,7 +365,7 @@ static symchar *g_proc_name=NULL;
 /* the last seen ATOM/MODEL/constant type and refinement base */
 static symchar *g_type_name=NULL;
 static symchar *g_refines_name=NULL;
-/*********************************************************************\
+/*
  * g_type_name is used by the scanner when closing a module to check if
  * the parser is in the middle of parsing a MODEL or ATOM type
  * definition.
@@ -379,13 +375,13 @@ static symchar *g_refines_name=NULL;
  *      g_type_name != NULL implies that the parser is in the middle
  *                          of a type definition and gives the name
  *                          of that type.
-\*********************************************************************/
+ */
 
 static symchar *g_end_identifier = NULL;
-/*  This variable gets reset every time we see an ``END_T''.  If the
- *  token after END_T is missing (i.e., ``END;'') or if it is recognized
- *  (e.g., FOR_T), set this variable to NULL.  When we see an
- *  ``END_T IDENTIFIER_T'', set this variable to the pointer into the
+/*  This variable gets reset every time we see an ``END_TOK''.  If the
+ *  token after END_TOK is missing (i.e., ``END;'') or if it is recognized
+ *  (e.g., FOR_TOK), set this variable to NULL.  When we see an
+ *  ``END_TOK IDENTIFIER_TOK'', set this variable to the pointer into the
  *  symbol table returned by the scanner.
  */
 
@@ -405,14 +401,14 @@ static struct StatementList *g_parameter_reduction=NULL;
 static struct Set *g_typeargs=NULL;
 /* optional args to a typename in part declaration.
  * it is set in the production type_identifier. in
- * contexts where args are not allowed, use IDENTIFIER_T instead of the
+ * contexts where args are not allowed, use IDENTIFIER_TOK instead of the
  * type_identifier production.
  */
 
 static struct Set *g_callargs=NULL;
 /* optional args to a user defined method.
  * it is set in the production call_identifier. in
- * contexts where args are not allowed, use IDENTIFIER_T instead of the
+ * contexts where args are not allowed, use IDENTIFIER_TOK instead of the
  * type_identifier production.
  */
 
@@ -452,9 +448,6 @@ static void ErrMsg_CommaName(CONST char *, struct Name *);
 static void ErrMsg_CommaExpr(CONST char *, struct Expr *);
 #endif /* COMMAEXPR_NOTBUGGY */
 static void ErrMsg_NullDefPointer(CONST char *);
-static void ErrMsg_ProcTypeMissing(CONST char *, CONST char *);
-static void ErrMsg_ProcsRejected(CONST char *, CONST char *);
-static void ErrMsg_DuplicateProc(struct InitProcedure *);
 static void ErrMsg_ParensBrackets(CONST char *);
 static void WarnMsg_MismatchEnd(CONST char *, CONST char *,
                                 unsigned long, CONST char *);
@@ -477,7 +470,7 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
  *
  *  For the block NOTES statement, the symtax is
  *
- *      NOTES ( SYMBOL_T ( fvarlist BRACEDTEXT_T )+ )+ END NOTES ';'
+ *      NOTES ( SYMBOL_TOK ( fvarlist BRACEDTEXT_TOK )+ )+ END NOTES ';'
  *
  *  Here I am using () as part of the meta-language to describe the syntax
  *  to you, they are not part of the formal grammer.  An example is
@@ -493,7 +486,7 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
  *  eaten in the fvarlist production.  I'm not sure if this is what we
  *  should do (which requires having the notes processing do something
  *  special when it sees SELF in the fvarlist), or if we should create
- *  a SELF_T token.  The latter is certainly easier to implement from
+ *  a SELF_TOK token.  The latter is certainly easier to implement from
  *  the parser's perspective, which is why I did it that way.
  *
  *  The block NOTES statement doesn't do anything with its stuff either,
@@ -527,7 +520,8 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
  *
  * -- Mark Thomas  Thursday, 13 March 1997
  */
-#define DEBUG_NOTES(s) 0
+/* #define DEBUG_NOTES(s) 0 */
+#define DEBUG_NOTES(s) ERROR_REPORTER_NOLINE(ASC_USER_WARNING,"Discarded note: %s", (s))
 
 /*
  * Because the ascend types and notes are not tightly bound to each other,
@@ -545,11 +539,17 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
 static void ProcessNotes(int);
 static void CollectNote(struct Note *);
 
-/* For 'inline' notes, note on DQUOTE_T from scanner.l:
- * Remember that DQUOTE_T is a string value which is local to the
+/* For 'inline' notes, note on DQUOTE_TOK from scanner.l:
+ * Remember that DQUOTE_TOK is a string value which is local to the
  * production that finds it. It must be copied if you want to
  * keep it.
  */
+
+/* MS VC++ won't compiler Bison output unless we switch this */
+#ifdef _MSC_VER
+# define __STDC__
+#endif
+
 
 
 /* Enabling traces.  */
@@ -566,7 +566,7 @@ static void CollectNote(struct Note *);
 #endif
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 299 "base\\generic\\compiler\\ascParse.y"
+#line 304 "base\\generic\\compiler\\ascParse.y"
 typedef union YYSTYPE {
   double real_value;
   long   int_value;
@@ -709,7 +709,7 @@ union yyalloc
 /* YYFINAL -- State number of the termination state. */
 #define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   1180
+#define YYLAST   1102
 
 /* YYNTOKENS -- Number of terminals. */
 #define YYNTOKENS  127
@@ -718,7 +718,7 @@ union yyalloc
 /* YYNRULES -- Number of rules. */
 #define YYNRULES  307
 /* YYNRULES -- Number of states. */
-#define YYNSTATES  615
+#define YYNSTATES  616
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
@@ -817,7 +817,7 @@ static const short int yyrhs[] =
       -1,    70,   107,   120,    -1,    70,   225,   120,    -1,    70,
      225,    -1,    67,   107,   120,    -1,    67,   225,   120,    -1,
       67,   225,    -1,    43,   104,    40,   107,   120,    -1,    43,
-     104,   120,    -1,   135,   220,   226,   120,    -1,     3,    60,
+     107,   120,    -1,   135,   220,   226,   120,    -1,     3,    60,
       44,   104,   179,   120,    -1,   137,   164,   226,   120,    -1,
        3,    55,    44,   104,   120,    -1,     3,    55,    44,    27,
       58,   120,    -1,   139,   164,   226,   120,    -1,    69,    55,
@@ -919,37 +919,37 @@ static const short int yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const unsigned short int yyrline[] =
 {
-       0,   410,   410,   412,   416,   417,   418,   419,   420,   421,
-     422,   423,   424,   425,   426,   427,   428,   429,   436,   481,
-     485,   490,   498,   502,   507,   515,   519,   526,   557,   565,
-     585,   595,   603,   621,   630,   638,   691,   702,   711,   716,
-     721,   728,   735,   745,   784,   819,   824,   829,   836,   843,
-     853,   894,   903,   916,   925,   928,   936,   939,   947,   950,
-     957,   989,  1003,  1006,  1013,  1043,  1052,  1057,  1077,  1080,
-    1088,  1098,  1102,  1101,  1115,  1123,  1126,  1149,  1163,  1172,
-    1180,  1183,  1191,  1199,  1200,  1201,  1202,  1203,  1204,  1205,
-    1206,  1207,  1208,  1209,  1210,  1211,  1212,  1213,  1214,  1215,
-    1216,  1217,  1218,  1219,  1220,  1221,  1222,  1223,  1224,  1225,
-    1226,  1227,  1228,  1232,  1273,  1302,  1306,  1357,  1360,  1367,
-    1379,  1406,  1411,  1419,  1424,  1433,  1436,  1444,  1447,  1455,
-    1458,  1465,  1472,  1479,  1486,  1493,  1497,  1504,  1517,  1534,
-    1544,  1552,  1563,  1576,  1583,  1591,  1594,  1601,  1622,  1625,
-    1632,  1654,  1657,  1661,  1668,  1672,  1676,  1680,  1687,  1691,
-    1698,  1705,  1712,  1723,  1734,  1740,  1750,  1760,  1763,  1770,
-    1781,  1793,  1800,  1810,  1817,  1821,  1825,  1829,  1836,  1840,
-    1844,  1848,  1852,  1859,  1866,  1877,  1887,  1894,  1898,  1902,
-    1906,  1913,  1924,  1934,  1941,  1945,  1949,  1953,  1960,  1970,
-    2007,  2016,  2031,  2036,  2045,  2056,  2060,  2065,  2078,  2098,
-    2102,  2107,  2122,  2127,  2132,  2137,  2142,  2147,  2152,  2157,
-    2162,  2167,  2172,  2177,  2182,  2187,  2196,  2199,  2207,  2210,
-    2217,  2222,  2228,  2232,  2236,  2241,  2249,  2255,  2264,  2268,
-    2290,  2294,  2315,  2319,  2324,  2330,  2334,  2341,  2345,  2349,
-    2353,  2357,  2361,  2368,  2375,  2379,  2387,  2390,  2394,  2401,
-    2405,  2409,  2413,  2417,  2421,  2425,  2429,  2433,  2437,  2441,
-    2446,  2451,  2456,  2461,  2466,  2471,  2476,  2480,  2485,  2490,
-    2495,  2500,  2505,  2509,  2513,  2517,  2521,  2528,  2532,  2539,
-    2543,  2550,  2554,  2561,  2565,  2572,  2576,  2583,  2587,  2598,
-    2605,  2609,  2613,  2617,  2621,  2625,  2632,  2636
+       0,   423,   423,   425,   429,   430,   431,   432,   433,   434,
+     435,   436,   437,   438,   439,   440,   441,   442,   449,   494,
+     498,   503,   511,   515,   520,   528,   534,   543,   574,   582,
+     605,   618,   626,   647,   659,   667,   719,   730,   739,   744,
+     749,   756,   763,   773,   812,   847,   852,   857,   864,   871,
+     881,   922,   931,   944,   953,   956,   964,   967,   975,   978,
+     985,  1017,  1031,  1034,  1041,  1071,  1080,  1085,  1105,  1108,
+    1116,  1126,  1130,  1129,  1143,  1151,  1154,  1179,  1193,  1202,
+    1210,  1213,  1221,  1229,  1230,  1231,  1232,  1233,  1234,  1235,
+    1236,  1237,  1238,  1239,  1240,  1241,  1242,  1243,  1244,  1245,
+    1246,  1247,  1248,  1249,  1250,  1251,  1252,  1253,  1254,  1255,
+    1256,  1257,  1258,  1262,  1303,  1332,  1336,  1387,  1390,  1397,
+    1409,  1436,  1441,  1449,  1454,  1463,  1466,  1474,  1477,  1485,
+    1488,  1495,  1502,  1509,  1516,  1523,  1527,  1534,  1547,  1564,
+    1574,  1582,  1593,  1606,  1613,  1621,  1624,  1631,  1652,  1655,
+    1662,  1684,  1687,  1691,  1698,  1702,  1706,  1710,  1717,  1721,
+    1728,  1735,  1742,  1753,  1764,  1770,  1780,  1790,  1793,  1800,
+    1811,  1823,  1830,  1840,  1847,  1851,  1855,  1859,  1866,  1870,
+    1874,  1878,  1882,  1889,  1896,  1907,  1917,  1924,  1928,  1932,
+    1936,  1943,  1954,  1964,  1971,  1975,  1979,  1983,  1990,  2000,
+    2037,  2046,  2061,  2066,  2075,  2086,  2090,  2095,  2108,  2128,
+    2132,  2137,  2152,  2157,  2162,  2167,  2172,  2177,  2182,  2187,
+    2192,  2197,  2202,  2207,  2212,  2217,  2226,  2229,  2237,  2240,
+    2247,  2252,  2258,  2262,  2266,  2271,  2279,  2285,  2294,  2298,
+    2320,  2324,  2345,  2349,  2354,  2360,  2364,  2371,  2375,  2379,
+    2383,  2387,  2391,  2398,  2405,  2409,  2417,  2420,  2424,  2431,
+    2435,  2439,  2443,  2447,  2451,  2455,  2459,  2463,  2467,  2471,
+    2476,  2481,  2486,  2491,  2496,  2501,  2506,  2510,  2515,  2520,
+    2525,  2530,  2535,  2539,  2543,  2547,  2551,  2558,  2562,  2569,
+    2573,  2580,  2584,  2591,  2595,  2602,  2606,  2613,  2617,  2628,
+    2635,  2639,  2643,  2647,  2651,  2655,  2662,  2666
 };
 #endif
 
@@ -958,27 +958,30 @@ static const unsigned short int yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals. */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "ADD_T", "ALIASES_T", "AND_T", "ANY_T",
-  "AREALIKE_T", "ARETHESAME_T", "ARRAY_T", "ASSERT_T", "ATOM_T", "BEQ_T",
-  "BNE_T", "BREAK_T", "CALL_T", "CARD_T", "CASE_T", "CHOICE_T", "CHECK_T",
-  "CONDITIONAL_T", "CONSTANT_T", "CONTINUE_T", "CREATE_T", "DATA_T",
-  "DECREASING_T", "DEFAULT_T", "DEFINITION_T", "DIMENSION_T",
-  "DIMENSIONLESS_T", "DO_T", "ELSE_T", "END_T", "EXPECT_T", "EXTERNAL_T",
-  "FALSE_T", "FALLTHRU_T", "FIX_T", "FOR_T", "FREE_T", "FROM_T",
-  "GLOBAL_T", "IF_T", "IMPORT_T", "IN_T", "INPUT_T", "INCREASING_T",
-  "INTERACTIVE_T", "INTERSECTION_T", "ISA_T", "_IS_T", "ISREFINEDTO_T",
-  "MAXIMIZE_T", "MAXINTEGER_T", "MAXREAL_T", "METHODS_T", "METHOD_T",
-  "MINIMIZE_T", "MODEL_T", "NOT_T", "NOTES_T", "OF_T", "OR_T",
-  "OTHERWISE_T", "OUTPUT_T", "PATCH_T", "PROD_T", "PROVIDE_T", "REFINES_T",
-  "REPLACE_T", "REQUIRE_T", "RETURN_T", "RUN_T", "SATISFIED_T", "SELECT_T",
-  "SIZE_T", "STOP_T", "SUCHTHAT_T", "SUM_T", "SWITCH_T", "THEN_T",
-  "TRUE_T", "UNION_T", "UNITS_T", "UNIVERSAL_T", "WHEN_T", "WHERE_T",
-  "WHILE_T", "WILLBE_T", "WILLBETHESAME_T", "WILLNOTBETHESAME_T",
-  "ASSIGN_T", "CASSIGN_T", "DBLCOLON_T", "USE_T", "LEQ_T", "GEQ_T",
-  "NEQ_T", "DOTDOT_T", "WITH_T", "VALUE_T", "WITH_VALUE_T", "REAL_T",
-  "INTEGER_T", "IDENTIFIER_T", "BRACEDTEXT_T", "SYMBOL_T", "DQUOTE_T",
-  "','", "'|'", "'<'", "'='", "'>'", "'+'", "'-'", "'/'", "'*'", "UPLUS_T",
-  "UMINUS_T", "'^'", "';'", "'('", "')'", "':'", "'.'", "'['", "']'",
+  "$end", "error", "$undefined", "ADD_TOK", "ALIASES_TOK", "AND_TOK",
+  "ANY_TOK", "AREALIKE_TOK", "ARETHESAME_TOK", "ARRAY_TOK", "ASSERT_TOK",
+  "ATOM_TOK", "BEQ_TOK", "BNE_TOK", "BREAK_TOK", "CALL_TOK", "CARD_TOK",
+  "CASE_TOK", "CHOICE_TOK", "CHECK_TOK", "CONDITIONAL_TOK", "CONSTANT_TOK",
+  "CONTINUE_TOK", "CREATE_TOK", "DATA_TOK", "DECREASING_TOK",
+  "DEFAULT_TOK", "DEFINITION_TOK", "DIMENSION_TOK", "DIMENSIONLESS_TOK",
+  "DO_TOK", "ELSE_TOK", "END_TOK", "EXPECT_TOK", "EXTERNAL_TOK",
+  "FALSE_TOK", "FALLTHRU_TOK", "FIX_TOK", "FOR_TOK", "FREE_TOK",
+  "FROM_TOK", "GLOBAL_TOK", "IF_TOK", "IMPORT_TOK", "IN_TOK", "INPUT_TOK",
+  "INCREASING_TOK", "INTERACTIVE_TOK", "INTERSECTION_TOK", "ISA_TOK",
+  "_IS_T", "ISREFINEDTO_TOK", "MAXIMIZE_TOK", "MAXINTEGER_TOK",
+  "MAXREAL_TOK", "METHODS_TOK", "METHOD_TOK", "MINIMIZE_TOK", "MODEL_TOK",
+  "NOT_TOK", "NOTES_TOK", "OF_TOK", "OR_TOK", "OTHERWISE_TOK",
+  "OUTPUT_TOK", "PATCH_TOK", "PROD_TOK", "PROVIDE_TOK", "REFINES_TOK",
+  "REPLACE_TOK", "REQUIRE_TOK", "RETURN_TOK", "RUN_TOK", "SATISFIED_TOK",
+  "SELECT_TOK", "SIZE_TOK", "STOP_TOK", "SUCHTHAT_TOK", "SUM_TOK",
+  "SWITCH_TOK", "THEN_TOK", "TRUE_TOK", "UNION_TOK", "UNITS_TOK",
+  "UNIVERSAL_TOK", "WHEN_TOK", "WHERE_TOK", "WHILE_TOK", "WILLBE_TOK",
+  "WILLBETHESAME_TOK", "WILLNOTBETHESAME_TOK", "ASSIGN_TOK", "CASSIGN_TOK",
+  "DBLCOLON_TOK", "USE_TOK", "LEQ_TOK", "GEQ_TOK", "NEQ_TOK", "DOTDOT_TOK",
+  "WITH_TOK", "VALUE_TOK", "WITH_VALUE_T", "REAL_TOK", "INTEGER_TOK",
+  "IDENTIFIER_TOK", "BRACEDTEXT_TOK", "SYMBOL_TOK", "DQUOTE_TOK", "','",
+  "'|'", "'<'", "'='", "'>'", "'+'", "'-'", "'/'", "'*'", "UPLUS_TOK",
+  "UMINUS_TOK", "'^'", "';'", "'('", "')'", "':'", "'.'", "'['", "']'",
   "$accept", "definitions", "definition", "global_def", "require_file",
   "provide_module", "import", "add_notes_def", "add_notes_head",
   "add_method_def", "add_method_head", "replace_method_def",
@@ -1114,81 +1117,81 @@ static const unsigned short int yydefact[] =
        0,     0,    68,    63,     3,    16,     4,     5,     6,     9,
        0,     7,    75,     8,    75,    11,    10,    12,    14,    80,
        0,    13,    80,    15,     0,     0,     0,    65,    80,     0,
-       0,   209,     0,    24,     0,     0,    21,     0,     0,     0,
-       0,    74,     0,    71,     0,     0,     0,     0,    80,     0,
-      43,    80,    54,    71,    66,     0,     0,     0,     0,    26,
-       0,    22,    23,     0,   231,     0,    19,    20,   225,     0,
-      69,    67,   200,     0,   204,   205,   228,     0,     0,     0,
-       0,    76,     0,     0,    72,     0,     0,   265,     0,   178,
-       0,     0,     0,    80,   179,     0,   264,   180,     0,     0,
-       0,     0,     0,     0,   260,   262,     0,     0,     0,     0,
-     181,     0,     0,     0,   226,     0,     0,   263,     0,     0,
-       0,     0,   240,   259,   209,   266,     0,     0,     0,   231,
-     112,     0,    83,    84,    85,    86,    87,    88,    89,    90,
-      91,    92,    93,   137,    95,    94,    98,    99,   100,   101,
-      97,    96,   102,   103,   104,   105,   107,   106,   108,   109,
-     110,   111,     0,   267,   261,   139,    37,     0,    53,    71,
-       0,    71,    80,    56,     0,     0,     0,   125,     0,     0,
-       0,   210,   267,     0,   230,   232,     0,     0,   212,   213,
-     221,   214,   215,   216,   217,   218,   219,   220,   222,   223,
-     224,     0,     0,   202,     0,   207,   229,   208,   201,    27,
-      29,    78,    80,    32,    75,     0,    82,   164,   121,   163,
-     231,   231,   231,   231,     0,     0,   160,     0,   161,     0,
-     231,   231,   141,   140,   276,     0,   231,   231,   158,     0,
-       0,     0,   227,   182,   231,   231,     0,     0,   231,   231,
-       0,     0,     0,   183,   241,   238,   239,     0,   282,   283,
-       0,     0,    81,     0,   131,   132,     0,     0,     0,     0,
-     133,   134,     0,     0,     0,     0,   306,   307,     0,     0,
-       0,   303,   304,   305,     0,   301,   300,   302,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,   244,     0,     0,
-       0,     0,     0,     0,    30,     0,     0,    18,    25,    61,
-     211,     0,     0,     0,    33,     0,   203,   206,     0,    73,
-      60,   231,     0,     0,     0,     0,   198,     0,     0,    80,
-       0,     0,   199,     0,     0,     0,     0,     0,   231,     0,
-       0,   186,     0,     0,     0,   231,     0,     0,   193,     0,
-       0,     0,   231,     0,     0,   173,    80,     0,   299,   268,
-       0,   115,   123,   127,   127,   120,   127,   135,   136,     0,
-     209,   138,   274,   279,   275,   281,   280,   269,   270,   272,
-     271,   273,   277,   278,   244,     0,     0,   243,    38,     0,
-      55,    80,     0,    51,    64,    31,   126,    28,   234,   233,
-      34,    70,     0,     0,   294,   295,   296,   297,     0,   151,
-     167,   292,   293,   288,   289,   159,     0,   285,     0,     0,
-      80,   184,   231,     0,   286,   287,     0,     0,    80,   191,
-     231,     0,   290,   291,     0,     0,    80,   169,   231,     0,
-       0,   298,     0,   231,     0,   129,   119,   129,     0,     0,
-       0,    45,    35,   248,   247,   245,     0,   242,   246,   256,
-       0,    50,     0,    58,     0,    77,   122,   162,   153,   152,
-       0,    80,     0,     0,     0,     0,    80,   188,     0,    80,
-       0,    80,   195,     0,    80,     0,    80,   175,     0,    80,
-     166,     0,     0,   128,     0,   113,   114,     0,     0,     0,
-       0,   267,   256,   228,     0,     0,     0,   256,    40,    41,
-      42,   257,   258,     0,    36,    57,    80,     0,   235,   156,
-     154,   157,   155,    80,   168,   165,   284,   185,   187,    80,
-     190,   192,   194,    80,   197,   171,   174,    80,   177,     0,
-     124,   130,     0,   170,     0,     0,     0,    48,    47,    49,
-       0,     0,   252,   249,   250,   251,     0,   236,    39,   237,
-       0,    52,     0,   189,   196,   176,     0,     0,   145,     0,
-       0,   143,    46,    44,   254,     0,   253,    59,   150,     0,
-     172,     0,     0,     0,   148,     0,     0,     0,   142,   144,
-       0,   147,     0,     0,     0,   149,     0,   117,   146,   255,
-       0,   116,   231,     0,   118
+       0,     0,   209,     0,    24,     0,     0,    21,     0,     0,
+       0,     0,    74,     0,    71,     0,     0,     0,     0,    80,
+       0,    43,    80,    54,    71,    66,     0,     0,     0,     0,
+      26,     0,    22,    23,     0,   231,     0,    19,    20,   225,
+       0,    69,    67,   200,     0,   204,   205,   228,     0,     0,
+       0,     0,    76,     0,     0,    72,     0,     0,   265,     0,
+     178,     0,     0,     0,    80,   179,     0,   264,   180,     0,
+       0,     0,     0,     0,     0,   260,   262,     0,     0,     0,
+       0,   181,     0,     0,     0,   226,     0,     0,   263,     0,
+       0,     0,     0,   240,   259,   209,   266,     0,     0,     0,
+     231,   112,     0,    83,    84,    85,    86,    87,    88,    89,
+      90,    91,    92,    93,   137,    95,    94,    98,    99,   100,
+     101,    97,    96,   102,   103,   104,   105,   107,   106,   108,
+     109,   110,   111,     0,   267,   261,   139,    37,     0,    53,
+      71,     0,    71,    80,    56,     0,     0,     0,   125,     0,
+       0,     0,   210,   267,     0,   230,   232,     0,     0,   212,
+     213,   221,   214,   215,   216,   217,   218,   219,   220,   222,
+     223,   224,     0,     0,   202,     0,   207,   229,   208,   201,
+      27,    29,    78,    80,    32,    75,     0,    82,   164,   121,
+     163,   231,   231,   231,   231,     0,     0,   160,     0,   161,
+       0,   231,   231,   141,   140,   276,     0,   231,   231,   158,
+       0,     0,     0,   227,   182,   231,   231,     0,     0,   231,
+     231,     0,     0,     0,   183,   241,   238,   239,     0,   282,
+     283,     0,     0,    81,     0,   131,   132,     0,     0,     0,
+       0,   133,   134,     0,     0,     0,     0,   306,   307,     0,
+       0,     0,   303,   304,   305,     0,   301,   300,   302,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,   244,     0,
+       0,     0,     0,     0,     0,    30,     0,     0,    18,    25,
+      61,   211,     0,     0,     0,    33,     0,   203,   206,     0,
+      73,    60,   231,     0,     0,     0,     0,   198,     0,     0,
+      80,     0,     0,   199,     0,     0,     0,     0,     0,   231,
+       0,     0,   186,     0,     0,     0,   231,     0,     0,   193,
+       0,     0,     0,   231,     0,     0,   173,    80,     0,   299,
+     268,     0,   115,   123,   127,   127,   120,   127,   135,   136,
+       0,   209,   138,   274,   279,   275,   281,   280,   269,   270,
+     272,   271,   273,   277,   278,   244,     0,     0,   243,    38,
+       0,    55,    80,     0,    51,    64,    31,   126,    28,   234,
+     233,    34,    70,     0,     0,   294,   295,   296,   297,     0,
+     151,   167,   292,   293,   288,   289,   159,     0,   285,     0,
+       0,    80,   184,   231,     0,   286,   287,     0,     0,    80,
+     191,   231,     0,   290,   291,     0,     0,    80,   169,   231,
+       0,     0,   298,     0,   231,     0,   129,   119,   129,     0,
+       0,     0,    45,    35,   248,   247,   245,     0,   242,   246,
+     256,     0,    50,     0,    58,     0,    77,   122,   162,   153,
+     152,     0,    80,     0,     0,     0,     0,    80,   188,     0,
+      80,     0,    80,   195,     0,    80,     0,    80,   175,     0,
+      80,   166,     0,     0,   128,     0,   113,   114,     0,     0,
+       0,     0,   267,   256,   228,     0,     0,     0,   256,    40,
+      41,    42,   257,   258,     0,    36,    57,    80,     0,   235,
+     156,   154,   157,   155,    80,   168,   165,   284,   185,   187,
+      80,   190,   192,   194,    80,   197,   171,   174,    80,   177,
+       0,   124,   130,     0,   170,     0,     0,     0,    48,    47,
+      49,     0,     0,   252,   249,   250,   251,     0,   236,    39,
+     237,     0,    52,     0,   189,   196,   176,     0,     0,   145,
+       0,     0,   143,    46,    44,   254,     0,   253,    59,   150,
+       0,   172,     0,     0,     0,   148,     0,     0,     0,   142,
+     144,     0,   147,     0,     0,     0,   149,     0,   117,   146,
+     255,     0,   116,   231,     0,   118
 };
 
 /* YYDEFGOTO[NTERM-NUM]. */
 static const short int yydefgoto[] =
 {
       -1,     1,    14,    15,    16,    17,    18,    19,    20,    21,
-      22,    23,    24,    25,    58,    59,   470,    26,    60,   513,
-      27,    61,    62,   183,   311,   527,    28,    29,    30,    31,
-      32,    33,    34,    47,    80,    95,   224,    50,    51,    91,
-      92,    53,    54,   141,   142,   143,   144,   611,   145,   146,
-     229,   373,   316,   455,   505,   147,   148,   149,   150,   151,
-     152,   153,   154,   509,   578,   592,   155,   601,   156,   480,
-     533,   157,   158,   159,   160,   161,   162,   163,   164,   482,
-     165,   364,   365,   166,   167,   168,   350,   351,   169,   357,
-     358,   170,   171,    49,    82,    83,    84,   192,    86,    81,
-     253,   217,   193,   194,   568,   174,   265,   398,   467,   468,
-     565,   586,   523,   195,   303,   304
+      22,    23,    24,    25,    59,    60,   471,    26,    61,   514,
+      27,    62,    63,   184,   312,   528,    28,    29,    30,    31,
+      32,    33,    34,    48,    81,    96,   225,    51,    52,    92,
+      93,    54,    55,   142,   143,   144,   145,   612,   146,   147,
+     230,   374,   317,   456,   506,   148,   149,   150,   151,   152,
+     153,   154,   155,   510,   579,   593,   156,   602,   157,   481,
+     534,   158,   159,   160,   161,   162,   163,   164,   165,   483,
+     166,   365,   366,   167,   168,   169,   351,   352,   170,   358,
+     359,   171,   172,    50,    83,    84,    85,   193,    87,    82,
+     254,   218,   194,   195,   569,   175,   266,   399,   468,   469,
+     566,   587,   524,   196,   304,   305
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
@@ -1196,68 +1199,68 @@ static const short int yydefgoto[] =
 #define YYPACT_NINF -437
 static const short int yypact[] =
 {
-    -437,  1096,  -437,  -437,    81,   -59,     2,    25,    38,    57,
-       1,    82,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
-      71,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
-      10,  -437,  -437,  -437,    77,   167,   179,  -437,  -437,   -30,
-     202,  -437,   130,    43,   204,   133,    60,   -18,   150,   -19,
-     223,   206,   223,   203,   593,   156,   159,   160,  -437,   197,
-    -437,  -437,   145,   203,  -437,   -11,   166,   223,   168,  -437,
-     169,  -437,  -437,   170,   165,   -10,  -437,  -437,   476,   161,
-    -437,  -437,   150,   171,   -61,  -437,     0,   150,   157,   162,
-     176,  -437,   163,   164,  -437,   223,   172,  -437,   165,  -437,
-     181,    33,    44,  -437,  -437,   183,  -437,  -437,   150,   189,
-     150,   165,    89,   165,  -437,  -437,   165,   165,    71,    96,
-    -437,   150,   173,   -72,   186,   105,   -64,  -437,   108,   -62,
-     165,   150,   190,   191,   177,  -437,   165,   165,   165,   165,
-    -437,   180,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  1006,  -437,  -437,    88,   -83,   -54,   -52,    18,    17,
+      81,    79,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+      43,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+       1,  -437,  -437,  -437,    64,   120,   167,  -437,  -437,   164,
+     106,   195,  -437,   134,    31,   214,   140,    47,   -13,   166,
+     -22,   248,   228,   248,   230,   531,   182,   183,   184,  -437,
+     222,  -437,  -437,   170,   230,  -437,   -12,   188,   248,   186,
+    -437,   190,  -437,  -437,   191,   681,   -11,  -437,  -437,   998,
+     187,  -437,  -437,   166,   194,    77,  -437,     9,   166,   180,
+     181,   198,  -437,   185,   189,  -437,   248,   193,  -437,   681,
+    -437,   202,    92,   103,  -437,  -437,   203,  -437,  -437,   166,
+     204,   166,   681,   125,   681,  -437,  -437,   681,   681,    43,
+     130,  -437,   166,   197,   -81,   206,   131,   -78,  -437,   132,
+     -53,   681,   166,   210,   216,   205,  -437,   681,   681,   681,
+     681,  -437,   208,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
-    -437,  -437,    59,    84,  -437,   960,  -437,   231,  -437,   203,
-     198,   203,  -437,   215,   223,   247,   193,   251,   194,   195,
-     196,  -437,  -437,   185,   210,   801,   261,   207,  -437,  -437,
+    -437,  -437,  -437,    21,    50,  -437,   889,  -437,   255,  -437,
+     230,   220,   230,  -437,   241,   248,   272,   213,   283,   224,
+     225,   229,  -437,  -437,   231,   240,   737,   300,   239,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
-    -437,   218,   219,  -437,   150,  -437,  -437,  -437,   150,  -437,
-    -437,  -437,  -437,  -437,  -437,   212,  -437,   960,   205,  -437,
-     165,   165,   165,   165,   223,   213,  -437,   289,  -437,   844,
-     165,   165,   960,   960,  -437,   -19,   165,   165,   243,   150,
-     150,    -5,  -437,  -437,   165,   165,   150,    -2,   165,   165,
-     150,     7,   874,  -437,  -437,  -437,  -437,   165,   242,   242,
-     244,   211,  -437,    -4,  -437,  -437,   246,   258,   246,   246,
-    -437,  -437,   165,   165,   694,   165,  -437,  -437,   165,   165,
-     165,  -437,  -437,  -437,   165,  -437,  -437,  -437,   165,   165,
-     165,   165,   165,   165,   165,   260,   223,   187,   223,   245,
-     248,   -49,   252,   253,  -437,   264,   254,  -437,  -437,  -437,
-    -437,   165,   165,   255,  -437,   256,  -437,  -437,   223,  -437,
-    -437,   165,   249,   239,   257,   259,  -437,   150,   165,  -437,
-     262,   263,  -437,   268,   265,   150,     6,   270,   165,   271,
-     223,    16,   274,   267,   276,   165,   279,   223,    36,   282,
-     280,   283,   165,   285,   223,    48,  -437,   715,  -437,  -437,
-     150,  -437,   288,   316,   316,  -437,   316,   960,   960,    11,
-     290,  -437,   233,   233,   233,   375,   375,    63,    63,   242,
-     242,   242,    80,   990,   187,   266,   -66,  -437,   352,   293,
-    -437,  -437,   277,  -437,  -437,  -437,  -437,  -437,   917,   960,
-    -437,  -437,   296,   295,  -437,  -437,  -437,  -437,   301,   758,
-     387,  -437,  -437,  -437,  -437,  -437,   -26,  -437,    -5,   302,
-    -437,  -437,   165,   303,  -437,  -437,    -2,   304,  -437,  -437,
-     165,   305,  -437,  -437,     7,   306,  -437,  -437,   165,   308,
-     223,  -437,   311,   165,   320,   333,  -437,   333,   150,     7,
-     165,   291,  -437,  -437,  -437,  -437,   -52,  -437,    90,   -17,
-     319,  -437,   314,   321,   165,  -437,  -437,  -437,  -437,  -437,
-     127,  -437,   223,   191,   318,   223,  -437,  -437,   322,  -437,
-     223,  -437,  -437,   323,  -437,   223,  -437,  -437,   324,  -437,
-    -437,   355,   327,  -437,   165,  -437,  -437,   329,   223,   332,
-     116,   -79,    39,   337,    40,   -52,   -52,   128,  -437,  -437,
-    -437,  -437,  -437,   142,  -437,  -437,  -437,   334,   960,  -437,
+    -437,  -437,   256,   257,  -437,   166,  -437,  -437,  -437,   166,
+    -437,  -437,  -437,  -437,  -437,  -437,   243,  -437,   889,   247,
+    -437,   681,   681,   681,   681,   248,   249,  -437,   316,  -437,
+     748,   681,   681,   889,   889,  -437,   -22,   681,   681,   271,
+     166,   166,     0,  -437,  -437,   681,   681,   166,    13,   681,
+     681,   166,    14,   777,  -437,  -437,  -437,  -437,   681,   250,
+     250,   270,   245,  -437,    25,  -437,  -437,   268,   273,   268,
+     268,  -437,  -437,   681,   681,   611,   681,  -437,  -437,   681,
+     681,   681,  -437,  -437,  -437,   681,  -437,  -437,  -437,   681,
+     681,   681,   681,   681,   681,   681,   287,   248,    86,   248,
+     253,   266,   -41,   274,   277,  -437,   289,   278,  -437,  -437,
+    -437,  -437,   681,   681,   279,  -437,   280,  -437,  -437,   248,
+    -437,  -437,   681,   254,   275,   282,   276,  -437,   166,   681,
+    -437,   284,   285,  -437,   286,   288,   166,   -14,   291,   681,
+     293,   248,    27,   296,   294,   299,   681,   301,   248,    32,
+     303,   302,   304,   681,   306,   248,    44,  -437,   383,  -437,
+    -437,   166,  -437,   309,   344,   344,  -437,   344,   889,   889,
+      58,   310,  -437,   126,   126,   126,   900,   900,    76,    76,
+     250,   250,   250,   116,   152,    86,   312,   -71,  -437,   396,
+     313,  -437,  -437,   305,  -437,  -437,  -437,  -437,  -437,   863,
+     889,  -437,  -437,   314,   315,  -437,  -437,  -437,  -437,   317,
+     661,   405,  -437,  -437,  -437,  -437,  -437,   141,  -437,     0,
+     318,  -437,  -437,   681,   319,  -437,  -437,    13,   321,  -437,
+    -437,   681,   323,  -437,  -437,    14,   324,  -437,  -437,   681,
+     326,   248,  -437,   328,   681,   336,   350,  -437,   350,   166,
+      14,   681,   360,  -437,  -437,  -437,  -437,    57,  -437,    91,
+     -17,   333,  -437,   332,   334,   681,  -437,  -437,  -437,  -437,
+    -437,    23,  -437,   248,   216,   335,   248,  -437,  -437,   339,
+    -437,   248,  -437,  -437,   341,  -437,   248,  -437,  -437,   342,
+    -437,  -437,   370,   337,  -437,   681,  -437,  -437,   345,   248,
+     349,   149,    24,    39,   363,    78,    57,    57,   160,  -437,
+    -437,  -437,  -437,  -437,   174,  -437,  -437,  -437,   352,   889,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
-    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,   150,
-    -437,   960,     7,  -437,   150,   350,   411,  -437,  -437,  -437,
-     142,   339,  -437,   338,   338,  -437,   -75,   191,  -437,  -437,
-     340,  -437,   223,  -437,  -437,  -437,   415,   223,   346,   344,
-     347,  -437,  -437,  -437,  -437,   370,  -437,  -437,  -437,   371,
-    -437,   150,   354,   410,   433,   363,   418,   357,  -437,  -437,
-     150,  -437,   378,   379,   458,  -437,   376,   391,  -437,  -437,
-     372,  -437,   165,   377,  -437
+    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+     166,  -437,   889,    14,  -437,   166,   371,   430,  -437,  -437,
+    -437,   174,   357,  -437,   362,   362,  -437,   -56,   216,  -437,
+    -437,   361,  -437,   248,  -437,  -437,  -437,   433,   248,   365,
+     364,   366,  -437,  -437,  -437,  -437,   386,  -437,  -437,  -437,
+     382,  -437,   166,   368,   427,   456,   389,   446,   388,  -437,
+    -437,   166,  -437,   406,   410,   491,  -437,   395,   417,  -437,
+    -437,   398,  -437,   681,   399,  -437
 };
 
 /* YYPGOTO[NTERM-NUM].  */
@@ -1266,15 +1269,15 @@ static const short int yypgoto[] =
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
-    -437,  -437,   443,  -437,  -437,   -41,  -437,   -20,  -437,  -437,
-    -437,   -31,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
-    -437,   -27,  -437,  -253,    46,  -437,  -437,  -437,  -437,  -437,
-    -437,   216,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  -437,   467,  -437,  -437,   -57,  -437,   -20,  -437,  -437,
+    -437,   -24,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,    -1,  -437,  -201,    65,  -437,  -437,  -437,  -437,  -437,
+    -437,   242,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
-    -437,  -436,  -437,  -437,  -437,  -437,    76,  -437,  -437,    69,
-    -437,  -437,  -437,   389,   422,   -28,  -437,   -48,   226,   -47,
-    -437,    -3,  -128,  -437,   -45,  -417,  -437,   117,  -437,  -431,
-    -437,  -437,  -373,   284,  -437,  -437
+    -437,  -436,  -437,  -437,  -437,  -437,    99,  -437,  -437,    94,
+    -437,  -437,  -437,   414,   441,   -42,  -437,   -49,   207,   -48,
+    -437,    20,  -129,  -437,   -26,  -426,  -437,   143,  -437,  -430,
+    -437,  -437,  -338,    51,  -437,  -437
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -1284,248 +1287,232 @@ static const short int yypgoto[] =
 #define YYTABLE_NINF -206
 static const short int yytable[] =
 {
-      85,    63,    88,    89,    52,    93,   173,    67,   495,   484,
-      68,   271,   348,    78,    78,   355,   185,   196,   518,   402,
-     188,    55,   184,   508,   362,  -205,   172,   179,   584,  -205,
-     181,    56,    41,   432,    85,   514,   215,   463,   464,    85,
-      41,  -205,    41,    41,  -205,    37,   585,   214,   225,   250,
-     465,   463,   464,   440,   212,   466,    44,   256,   349,   260,
-      85,   356,    85,   273,   519,   448,   274,   275,    57,   466,
-     363,   403,   234,   248,   557,    85,   132,   483,    85,   433,
-     236,    85,   238,   263,   563,   564,    79,    87,  -205,   520,
-      69,  -205,  -205,   186,   197,   251,   521,   522,   257,   441,
-      41,   261,   332,   333,   334,   335,   569,   216,   276,   277,
-     278,   449,   340,   341,   426,    41,   577,   370,   343,   344,
-     558,   456,    38,   457,    73,    74,   352,   353,   427,    39,
-     359,   360,   458,  -205,  -205,  -205,    35,   312,   306,   560,
-     308,    36,    40,   569,   566,   559,   529,   279,   280,   281,
-     530,   309,   521,   522,   230,   515,   516,   531,   231,   517,
-     532,    41,   562,    72,    42,   232,   327,    73,    74,   233,
-      85,    97,  -205,  -205,  -205,   282,   283,    48,   300,   301,
-      77,   101,   302,   102,    73,    74,    41,   336,  -205,    45,
-     212,   328,  -205,   298,   299,   300,   301,    64,   342,   302,
-     106,   346,    85,   413,   329,   515,   516,   284,    85,   517,
-     240,    65,    85,   112,   241,   396,   397,   246,   114,   115,
-     429,   247,   347,    66,   117,   371,   254,   437,   354,   258,
-     255,   119,   361,   259,   445,    43,   555,    46,   122,   556,
-      70,   521,   522,   125,   132,   567,   127,   128,    75,   285,
-      71,   375,   376,    76,    41,    78,   286,   287,    94,   395,
-     176,   399,    90,   177,   178,   180,   182,   132,   133,   134,
-     187,   135,   211,   190,   191,   189,   213,   219,   136,   137,
-     221,   412,   220,   222,   223,   228,   138,   235,   288,    85,
-     139,   252,   226,   237,   249,   264,   266,   425,   267,   305,
-     272,   310,   307,   431,   488,   313,   289,   315,   420,   418,
-     439,   320,   493,   314,   317,   318,   319,   447,   321,   323,
-     498,   290,    85,   325,   326,   502,   331,   324,   291,   292,
-     293,    85,   330,   338,   337,   450,   345,   369,   175,   291,
-     292,   293,   452,   295,   296,   297,   298,   299,   300,   301,
-     372,   459,   302,   294,   295,   296,   297,   298,   299,   300,
-     301,   302,   374,   302,   394,   415,   368,   400,   406,   401,
-     472,   414,   404,   405,   407,   410,   411,   454,   469,   416,
-     285,   473,   227,   512,   421,   417,   462,   286,   287,   422,
-     423,   424,   428,   435,   430,   239,   434,   242,   436,   487,
-     243,   244,   438,   500,   442,   444,   443,   492,   446,   453,
-      85,   460,   511,   471,   262,   497,   475,   476,   481,   288,
-     268,   269,   270,   477,   503,   486,   489,   491,   494,   496,
-     507,   499,   510,   501,   504,   535,   525,   289,   537,   524,
-     536,   549,   526,   541,   216,   539,   543,   547,   545,   550,
-     534,   552,   554,   580,   571,   538,   581,   517,   540,   583,
-     542,   553,   587,   544,   589,   546,   591,   593,   548,   594,
-     291,   292,   293,   595,   599,   596,   598,   600,   602,   603,
-     604,   606,   608,   607,   613,   295,   296,   297,   298,   299,
-     300,   301,   610,   612,   302,   570,   198,   140,   609,   614,
-     381,    85,   572,   506,   485,   490,    85,   245,   573,   218,
-     561,   461,   574,     0,   199,   582,   575,   200,   201,     0,
-       0,   576,     0,   202,     0,   588,   579,     0,     0,     0,
-     590,   203,     0,     0,     0,     0,   204,     0,     0,     0,
-       0,     0,     0,   597,     0,     0,     0,     0,     0,     0,
-     205,   367,   605,     0,     0,   206,     0,     0,     0,   207,
-       0,   208,     0,   209,     0,     0,   377,   378,   175,   382,
-       0,     0,   383,   384,   385,     0,     0,     0,   386,     0,
-     210,     0,   387,   388,   389,   390,   391,   392,   393,     0,
-       0,     0,     0,     0,    96,     0,     0,     0,     0,    97,
-       0,     0,     0,    98,     0,   408,   409,    99,   100,   101,
-     -79,   102,     0,   103,     0,   104,     0,     0,     0,     0,
-       0,     0,   419,     0,   -79,   -79,     0,   105,   106,   107,
-     108,   109,   110,     0,     0,   111,     0,     0,     0,     0,
-       0,   112,     0,     0,     0,   113,   114,   115,   -79,     0,
-     116,     0,   117,   118,     0,     0,   -79,     0,     0,   119,
-       0,     0,     0,     0,   120,   121,   122,   123,     0,   124,
-       0,   125,   126,     0,   127,   128,    12,     0,   129,     0,
-     130,     0,     0,     0,     0,     0,     0,   131,     0,     0,
-       0,     0,     0,     0,     0,   132,   133,   134,     0,   135,
-      97,     0,     0,     0,     0,     0,   136,   137,     0,     0,
-     101,     0,   102,     0,   138,   -79,     0,     0,   139,     0,
-     285,     0,     0,     0,     0,     0,     0,   286,   287,   106,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,   112,     0,   367,     0,   113,   114,   115,     0,
-       0,   116,     0,   117,     0,     0,     0,     0,   528,   288,
-     119,     0,     0,   285,     0,     0,     0,   122,     0,     0,
-     286,   287,   125,     0,     0,   127,   128,   289,     0,   379,
-       0,     0,     0,   478,     0,     0,     0,     0,   551,     0,
-       0,     0,   290,     0,     0,     0,   132,   133,   380,     0,
-     135,     0,   288,     0,   479,     0,   285,   136,   137,     0,
-     291,   292,   293,   286,   287,   138,     0,     0,     0,   139,
-     289,     0,     0,     0,   294,   295,   296,   297,   298,   299,
-     300,   301,     0,     0,   302,   290,     0,   451,     0,     0,
-       0,     0,     0,     0,     0,   288,     0,     0,     0,   285,
-       0,     0,     0,   291,   292,   293,   286,   287,     0,     0,
-       0,     0,     0,   289,     0,     0,     0,   294,   295,   296,
-     297,   298,   299,   300,   301,     0,     0,   302,   290,   285,
-       0,     0,     0,     0,     0,     0,   286,   287,   288,     0,
-       0,     0,     0,     0,     0,     0,   291,   292,   293,   322,
-       0,     0,     0,     0,   366,     0,   289,     0,     0,     0,
-     294,   295,   296,   297,   298,   299,   300,   301,   288,     0,
-     302,   290,   285,     0,   339,     0,     0,     0,     0,   286,
-     287,     0,     0,     0,     0,     0,   289,     0,     0,   291,
-     292,   293,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,   290,     0,   294,   295,   296,   297,   298,   299,   300,
-     301,   288,     0,   302,     0,   285,     0,     0,     0,   291,
-     292,   293,   286,   287,     0,     0,     0,     0,     0,   289,
-       0,     0,     0,   294,   295,   296,   297,   298,   299,   300,
-     301,     0,     0,   302,   290,   285,     0,     0,     0,     0,
-       0,     0,     0,     0,   288,     0,     0,     0,     0,     0,
-       0,     0,   291,   292,   293,   474,     0,     0,     0,     0,
-       0,     0,   289,     0,     0,     0,   294,   295,   296,   297,
-     298,   299,   300,   301,   288,     0,   302,   290,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,   289,     0,     0,   291,   292,   293,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,   294,
-     295,   296,   297,   298,   299,   300,   301,     0,     0,   302,
-       0,     0,     0,     0,     0,   291,   292,   293,     0,     0,
-       0,     0,     0,     0,     0,     0,     2,     3,     0,     4,
-     295,   296,   297,   298,   299,   300,   301,   -62,     0,   302,
+      86,   485,    89,    90,    53,    94,   174,   185,    64,   496,
+      79,   272,    56,   173,    68,   186,   197,   349,   519,    79,
+     189,    37,    57,    42,   509,   274,    42,   403,   275,   276,
+     356,   363,   464,   465,    86,   180,   216,   515,   182,    86,
+     251,   213,   530,   257,   433,   466,   531,   585,   226,   441,
+     467,    42,    39,   532,  -205,    40,   533,  -205,  -205,    58,
+      86,   449,    86,   350,   520,   586,    38,   237,   261,   239,
+     277,   278,   279,   249,   558,    86,   357,   364,    86,   404,
+     235,    86,   252,   264,    88,   258,   564,   565,   262,   521,
+     434,    80,   187,   198,   427,   442,   522,   523,   570,  -205,
+    -205,  -205,   333,   334,   335,   336,   176,   450,   428,   280,
+     281,   282,   341,   342,   397,   398,   217,   578,   344,   345,
+     559,    42,    41,   307,    43,   309,   353,   354,  -205,    42,
+     360,   361,  -205,    74,    75,   570,    45,   313,  -205,  -205,
+    -205,   283,   284,    35,  -205,   560,   371,  -205,    36,    49,
+     228,    73,   522,   523,  -205,    74,    75,   286,  -205,   310,
+     464,   465,    42,   240,    66,   243,   328,    78,   244,   245,
+      86,    74,    75,   285,   457,   561,   458,   213,   467,   459,
+     567,    42,   263,    42,    65,   215,    46,   337,   269,   270,
+     271,   301,   302,   516,   517,   303,   289,   518,   343,   329,
+     563,   347,    86,   414,    69,   330,   516,   517,    86,   348,
+     518,    67,    86,   231,   290,   355,    44,   232,    47,   362,
+     430,   292,   293,   294,   233,   372,    70,   438,   234,   299,
+     300,   301,   302,    71,   446,   303,   296,   297,   298,   299,
+     300,   301,   302,   133,   484,   303,   241,   292,   293,   294,
+     242,   247,   255,   259,    72,   248,   256,   260,    76,   396,
+      77,   400,   296,   297,   298,   299,   300,   301,   302,   556,
+      42,   303,   557,   522,   523,   286,   133,   568,   376,   377,
+      79,   413,   287,   288,    91,    95,   177,   178,   179,    86,
+     181,   183,   188,   190,   191,   192,   419,   426,   212,   214,
+     220,   221,   222,   432,   489,   223,   229,   236,   238,   224,
+     440,   253,   494,   227,   289,   265,   421,   448,   250,   368,
+     499,   267,    86,   306,   308,   503,   268,   311,   273,   453,
+     314,    86,   290,   315,   378,   379,   176,   383,   460,   316,
+     384,   385,   386,   451,   318,   319,   387,   291,   322,   320,
+     388,   389,   390,   391,   392,   393,   394,   321,   324,   325,
+     339,   326,   327,   331,   346,   292,   293,   294,   332,   303,
+     338,   370,   373,   409,   410,   401,   415,   375,   473,   295,
+     296,   297,   298,   299,   300,   301,   302,   402,   286,   303,
+     420,   395,   369,   407,   405,   287,   288,   406,   408,   411,
+     412,   416,   418,   501,   417,   455,   422,   488,   424,   474,
+      86,   423,   512,   429,   425,   493,   431,   508,   435,   511,
+     436,   437,   470,   498,   439,   443,   445,   289,   444,   447,
+     454,   461,   463,   472,   476,   536,   482,   477,   538,   478,
+     504,   487,   490,   542,   492,   290,   495,   497,   546,   500,
+     502,   505,   513,   525,   526,   527,   550,   537,   535,   551,
+     291,   554,   540,   539,   544,   548,   541,   553,   543,   555,
+     217,   545,   572,   547,   581,   582,   549,   584,   292,   293,
+     294,   518,   590,   588,   614,   592,   597,   594,   595,   596,
+     599,   600,   295,   296,   297,   298,   299,   300,   301,   302,
+     601,    86,   303,   571,   603,   452,    86,   604,   577,   607,
+     573,   605,   368,   580,   608,   609,   574,   610,   611,   613,
+     575,   615,   141,   507,   576,   589,   529,   382,   486,   219,
+     591,   491,    97,   246,   562,   583,     0,    98,   462,     0,
+       0,    99,     0,   598,     0,   100,   101,   102,   -79,   103,
+       0,   104,   606,   105,     0,     0,   552,     0,     0,     0,
+       0,     0,   -79,   -79,     0,   106,   107,   108,   109,   110,
+     111,     0,     0,   112,     0,     0,     0,     0,     0,   113,
+       0,     0,     0,   114,   115,   116,   -79,     0,   117,     0,
+     118,   119,     0,     0,   -79,     0,     0,   120,     0,     0,
+       0,     0,   121,   122,   123,   124,     0,   125,     0,   126,
+     127,     0,   128,   129,    12,     0,   130,    98,   131,     0,
+       0,     0,     0,     0,     0,   132,     0,   102,     0,   103,
+       0,     0,     0,   133,   134,   135,     0,   136,     0,     0,
+       0,     0,     0,     0,   137,   138,   107,     0,     0,     0,
+       0,     0,   139,   -79,     0,     0,   140,     0,     0,   113,
+       0,     0,     0,   114,   115,   116,   286,     0,   117,     0,
+     118,     0,     0,   287,   288,     0,     0,   120,     0,     0,
+       0,     0,     0,     0,   123,     0,   479,    98,     0,   126,
+       0,     0,   128,   129,     0,     0,   380,   102,     0,   103,
+       0,     0,     0,     0,     0,   289,     0,   480,     0,     0,
+       0,     0,     0,   133,   134,   381,   107,   136,     0,     0,
+       0,     0,     0,   290,   137,   138,     0,     0,     0,   113,
+       0,     0,   139,     0,   115,   116,   140,     0,   291,     0,
+     118,     0,   286,     0,     0,     0,     0,   120,     0,   287,
+     288,     0,     0,   286,   123,     0,   292,   293,   294,   126,
+     287,   288,   128,   129,     0,     0,     0,     0,     0,     0,
+     295,   296,   297,   298,   299,   300,   301,   302,     0,     0,
+     303,   289,   286,   133,   134,   135,     0,   136,     0,   287,
+     288,     0,   289,     0,   137,   138,     0,     0,     0,   290,
+       0,     0,   139,     0,     0,     0,   140,   367,     0,     0,
+     290,     0,     0,     0,   291,     0,     0,     0,     0,     0,
+       0,   289,     0,     0,     0,   291,     0,     0,   340,     0,
+       0,     0,   292,   293,   294,   323,     0,     0,     0,   290,
+       0,     0,     0,   292,   293,   294,   295,   296,   297,   298,
+     299,   300,   301,   302,   291,     0,   303,   295,   296,   297,
+     298,   299,   300,   301,   302,     0,     0,   303,   286,     0,
+       0,     0,   292,   293,   294,   287,   288,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,   295,   296,   297,   298,
+     299,   300,   301,   302,   286,     0,   303,     0,     0,     0,
+       0,   287,   288,     0,     0,   286,     0,   289,     0,     0,
+       0,     0,   287,   288,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,   290,     0,     0,     0,     0,
+       0,     0,     0,   289,     0,     0,     0,     0,     0,     0,
+     291,     0,     0,     0,   289,     0,     0,     0,     0,     0,
+       0,   290,     0,     0,     0,     0,     0,     0,   292,   293,
+     294,   475,   290,     0,     0,     0,   291,     0,     0,     0,
+       0,     0,   295,   296,   297,   298,   299,   300,   301,   302,
+       0,     0,   303,     0,   292,   293,   294,     0,     0,     0,
+       0,     0,     0,     0,     0,   292,   293,   294,   295,   296,
+     297,   298,   299,   300,   301,   302,     2,     3,   303,     4,
+     296,   297,   298,   299,   300,   301,   302,   -62,   199,   303,
        0,     0,     0,     0,     0,     0,     0,   -62,     0,     0,
-       0,     0,     0,     5,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     6,     0,     7,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     5,     0,     0,   200,     0,     0,   201,
+     202,     0,     0,     0,     0,   203,     0,     6,     0,     7,
+       0,     0,     0,   204,     0,     0,     0,     0,   205,     0,
        0,     0,     0,     0,   -62,     0,     0,     0,     0,     0,
-       0,     8,     0,     9,     0,    10,    11,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,    12,
-      13
+       0,     8,   206,     9,     0,    10,    11,   207,     0,     0,
+       0,   208,     0,   209,     0,   210,     0,     0,     0,    12,
+      13,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,   211
 };
 
 static const short int yycheck[] =
 {
-      48,    32,    49,    50,    24,    52,    54,    38,   444,   426,
-      40,   139,    17,    32,    32,    17,    27,    27,    35,    68,
-      67,    11,    63,   459,    17,   104,    54,    58,   103,   108,
-      61,    21,   104,    17,    82,   466,    84,   103,   104,    87,
-     104,   120,   104,   104,   123,   104,   121,   108,    95,   121,
-     116,   103,   104,    17,    82,   121,    55,   121,    63,   121,
-     108,    63,   110,     4,    81,    17,     7,     8,    58,   121,
-      63,   120,   103,   121,    35,   123,   102,   103,   126,    63,
-     108,   129,   110,   131,   515,   516,   104,   106,     4,   106,
-     120,     7,     8,   104,   104,   123,   113,   114,   126,    63,
-     104,   129,   230,   231,   232,   233,   523,   107,    49,    50,
-      51,    63,   240,   241,   108,   104,   552,   121,   246,   247,
-      81,   374,   120,   376,   124,   125,   254,   255,   122,   104,
-     258,   259,   121,    49,    50,    51,    55,   184,   179,   512,
-     181,    60,   104,   560,   517,   106,    19,    88,    89,    90,
-      23,   182,   113,   114,   121,   115,   116,    30,   125,   119,
-      33,   104,   122,   120,   107,   121,   214,   124,   125,   125,
-     218,     6,    88,    89,    90,    91,    92,   106,   115,   116,
-     120,    16,   119,    18,   124,   125,   104,   234,   104,   107,
-     218,   222,   108,   113,   114,   115,   116,   120,   245,   119,
-      35,   249,   250,   331,   224,   115,   116,   123,   256,   119,
-     121,    44,   260,    48,   125,    28,    29,   121,    53,    54,
-     348,   125,   250,    44,    59,   273,   121,   355,   256,   121,
-     125,    66,   260,   125,   362,     9,   120,    11,    73,   123,
-      38,   113,   114,    78,   102,   103,    81,    82,    44,     5,
-     120,   278,   279,   120,   104,    32,    12,    13,    55,   306,
-     104,   308,    56,   104,   104,    68,   121,   102,   103,   104,
-     104,   106,   111,   104,   104,   107,   105,   120,   113,   114,
-     104,   328,   120,   120,   120,   104,   121,   104,    44,   337,
-     125,   105,   120,   104,   121,   105,   105,   345,   121,    68,
-     120,    86,   104,   350,   432,    58,    62,    56,   339,   337,
-     357,   126,   440,   120,   120,   120,   120,   364,   108,    58,
-     448,    77,   370,   105,   105,   453,   121,   120,    95,    96,
-      97,   379,   120,    44,   121,   366,    93,   126,    54,    95,
-      96,    97,   370,   110,   111,   112,   113,   114,   115,   116,
-     104,   379,   119,   109,   110,   111,   112,   113,   114,   115,
-     116,   119,   104,   119,   104,   126,   122,   122,   104,   121,
-     401,   122,   120,   120,   120,   120,   120,    61,    26,   122,
-       5,   104,    98,    92,   122,   126,   120,    12,    13,   126,
-     122,   126,   122,   126,   123,   111,   122,   113,   122,   430,
-     116,   117,   123,   450,   122,   122,   126,   438,   123,   121,
-     458,   121,   460,   120,   130,   446,   120,   122,    31,    44,
-     136,   137,   138,   122,   104,   123,   123,   123,   123,   123,
-     458,   123,   460,   122,   101,   482,   122,    62,   485,   120,
-     122,    86,   121,   490,   107,   123,   123,   123,   495,   122,
-     481,   122,   120,   103,   120,   486,    45,   119,   489,   120,
-     491,   508,   122,   494,    49,   496,   120,   123,   499,   122,
-      95,    96,    97,   103,    64,   104,   122,    44,   115,    61,
-     123,   103,    24,   104,   612,   110,   111,   112,   113,   114,
-     115,   116,   101,   121,   119,   526,    20,    54,   122,   122,
-     284,   549,   533,   457,   428,   436,   554,   118,   539,    87,
-     513,   394,   543,    -1,    38,   560,   547,    41,    42,    -1,
-      -1,   549,    -1,    47,    -1,   572,   554,    -1,    -1,    -1,
-     577,    55,    -1,    -1,    -1,    -1,    60,    -1,    -1,    -1,
-      -1,    -1,    -1,   591,    -1,    -1,    -1,    -1,    -1,    -1,
-      74,   267,   600,    -1,    -1,    79,    -1,    -1,    -1,    83,
-      -1,    85,    -1,    87,    -1,    -1,   282,   283,   284,   285,
-      -1,    -1,   288,   289,   290,    -1,    -1,    -1,   294,    -1,
-     104,    -1,   298,   299,   300,   301,   302,   303,   304,    -1,
-      -1,    -1,    -1,    -1,     1,    -1,    -1,    -1,    -1,     6,
-      -1,    -1,    -1,    10,    -1,   321,   322,    14,    15,    16,
-      17,    18,    -1,    20,    -1,    22,    -1,    -1,    -1,    -1,
-      -1,    -1,   338,    -1,    31,    32,    -1,    34,    35,    36,
-      37,    38,    39,    -1,    -1,    42,    -1,    -1,    -1,    -1,
-      -1,    48,    -1,    -1,    -1,    52,    53,    54,    55,    -1,
-      57,    -1,    59,    60,    -1,    -1,    63,    -1,    -1,    66,
-      -1,    -1,    -1,    -1,    71,    72,    73,    74,    -1,    76,
-      -1,    78,    79,    -1,    81,    82,    83,    -1,    85,    -1,
-      87,    -1,    -1,    -1,    -1,    -1,    -1,    94,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,   102,   103,   104,    -1,   106,
-       6,    -1,    -1,    -1,    -1,    -1,   113,   114,    -1,    -1,
-      16,    -1,    18,    -1,   121,   122,    -1,    -1,   125,    -1,
-       5,    -1,    -1,    -1,    -1,    -1,    -1,    12,    13,    35,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    48,    -1,   460,    -1,    52,    53,    54,    -1,
-      -1,    57,    -1,    59,    -1,    -1,    -1,    -1,   474,    44,
-      66,    -1,    -1,     5,    -1,    -1,    -1,    73,    -1,    -1,
-      12,    13,    78,    -1,    -1,    81,    82,    62,    -1,    85,
-      -1,    -1,    -1,    25,    -1,    -1,    -1,    -1,   504,    -1,
-      -1,    -1,    77,    -1,    -1,    -1,   102,   103,   104,    -1,
-     106,    -1,    44,    -1,    46,    -1,     5,   113,   114,    -1,
-      95,    96,    97,    12,    13,   121,    -1,    -1,    -1,   125,
-      62,    -1,    -1,    -1,   109,   110,   111,   112,   113,   114,
-     115,   116,    -1,    -1,   119,    77,    -1,   122,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    44,    -1,    -1,    -1,     5,
-      -1,    -1,    -1,    95,    96,    97,    12,    13,    -1,    -1,
-      -1,    -1,    -1,    62,    -1,    -1,    -1,   109,   110,   111,
-     112,   113,   114,   115,   116,    -1,    -1,   119,    77,     5,
-      -1,    -1,    -1,    -1,    -1,    -1,    12,    13,    44,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    95,    96,    97,    98,
-      -1,    -1,    -1,    -1,    30,    -1,    62,    -1,    -1,    -1,
-     109,   110,   111,   112,   113,   114,   115,   116,    44,    -1,
-     119,    77,     5,    -1,    80,    -1,    -1,    -1,    -1,    12,
-      13,    -1,    -1,    -1,    -1,    -1,    62,    -1,    -1,    95,
-      96,    97,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    77,    -1,   109,   110,   111,   112,   113,   114,   115,
-     116,    44,    -1,   119,    -1,     5,    -1,    -1,    -1,    95,
-      96,    97,    12,    13,    -1,    -1,    -1,    -1,    -1,    62,
-      -1,    -1,    -1,   109,   110,   111,   112,   113,   114,   115,
-     116,    -1,    -1,   119,    77,     5,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    44,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    95,    96,    97,    98,    -1,    -1,    -1,    -1,
-      -1,    -1,    62,    -1,    -1,    -1,   109,   110,   111,   112,
-     113,   114,   115,   116,    44,    -1,   119,    77,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    62,    -1,    -1,    95,    96,    97,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,   109,
-     110,   111,   112,   113,   114,   115,   116,    -1,    -1,   119,
-      -1,    -1,    -1,    -1,    -1,    95,    96,    97,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,     0,     1,    -1,     3,
-     110,   111,   112,   113,   114,   115,   116,    11,    -1,   119,
+      49,   427,    50,    51,    24,    53,    55,    64,    32,   445,
+      32,   140,    11,    55,    38,    27,    27,    17,    35,    32,
+      68,   104,    21,   104,   460,     4,   104,    68,     7,     8,
+      17,    17,   103,   104,    83,    59,    85,   467,    62,    88,
+     121,    83,    19,   121,    17,   116,    23,   103,    96,    17,
+     121,   104,   104,    30,     4,   107,    33,     7,     8,    58,
+     109,    17,   111,    63,    81,   121,   120,   109,   121,   111,
+      49,    50,    51,   122,    35,   124,    63,    63,   127,   120,
+     104,   130,   124,   132,   106,   127,   516,   517,   130,   106,
+      63,   104,   104,   104,   108,    63,   113,   114,   524,    49,
+      50,    51,   231,   232,   233,   234,    55,    63,   122,    88,
+      89,    90,   241,   242,    28,    29,   107,   553,   247,   248,
+      81,   104,   104,   180,   107,   182,   255,   256,   104,   104,
+     259,   260,   108,   124,   125,   561,    55,   185,    88,    89,
+      90,    91,    92,    55,   120,   106,   121,   123,    60,   106,
+      99,   120,   113,   114,   104,   124,   125,     5,   108,   183,
+     103,   104,   104,   112,    44,   114,   215,   120,   117,   118,
+     219,   124,   125,   123,   375,   513,   377,   219,   121,   121,
+     518,   104,   131,   104,   120,   108,   107,   235,   137,   138,
+     139,   115,   116,   115,   116,   119,    44,   119,   246,   223,
+     122,   250,   251,   332,    40,   225,   115,   116,   257,   251,
+     119,    44,   261,   121,    62,   257,     9,   125,    11,   261,
+     349,    95,    96,    97,   121,   274,   120,   356,   125,   113,
+     114,   115,   116,    38,   363,   119,   110,   111,   112,   113,
+     114,   115,   116,   102,   103,   119,   121,    95,    96,    97,
+     125,   121,   121,   121,   120,   125,   125,   125,    44,   307,
+     120,   309,   110,   111,   112,   113,   114,   115,   116,   120,
+     104,   119,   123,   113,   114,     5,   102,   103,   279,   280,
+      32,   329,    12,    13,    56,    55,   104,   104,   104,   338,
+      68,   121,   104,   107,   104,   104,   338,   346,   111,   105,
+     120,   120,   104,   351,   433,   120,   104,   104,   104,   120,
+     358,   105,   441,   120,    44,   105,   340,   365,   121,   268,
+     449,   105,   371,    68,   104,   454,   121,    86,   120,   371,
+      58,   380,    62,   120,   283,   284,   285,   286,   380,    56,
+     289,   290,   291,   367,   120,   120,   295,    77,   108,   120,
+     299,   300,   301,   302,   303,   304,   305,   126,    58,   120,
+      44,   105,   105,   120,    93,    95,    96,    97,   121,   119,
+     121,   126,   104,   322,   323,   122,   122,   104,   402,   109,
+     110,   111,   112,   113,   114,   115,   116,   121,     5,   119,
+     339,   104,   122,   104,   120,    12,    13,   120,   120,   120,
+     120,   126,   126,   451,   122,    61,   122,   431,   122,   104,
+     459,   126,   461,   122,   126,   439,   123,   459,   122,   461,
+     126,   122,    26,   447,   123,   122,   122,    44,   126,   123,
+     121,   121,   120,   120,   120,   483,    31,   122,   486,   122,
+     104,   123,   123,   491,   123,    62,   123,   123,   496,   123,
+     122,   101,    92,   120,   122,   121,    86,   122,   482,   122,
+      77,   509,   123,   487,   123,   123,   490,   122,   492,   120,
+     107,   495,   120,   497,   103,    45,   500,   120,    95,    96,
+      97,   119,    49,   122,   613,   120,   104,   123,   122,   103,
+     122,    64,   109,   110,   111,   112,   113,   114,   115,   116,
+      44,   550,   119,   527,   115,   122,   555,    61,   550,   103,
+     534,   123,   461,   555,   104,    24,   540,   122,   101,   121,
+     544,   122,    55,   458,   548,   573,   475,   285,   429,    88,
+     578,   437,     1,   119,   514,   561,    -1,     6,   395,    -1,
+      -1,    10,    -1,   592,    -1,    14,    15,    16,    17,    18,
+      -1,    20,   601,    22,    -1,    -1,   505,    -1,    -1,    -1,
+      -1,    -1,    31,    32,    -1,    34,    35,    36,    37,    38,
+      39,    -1,    -1,    42,    -1,    -1,    -1,    -1,    -1,    48,
+      -1,    -1,    -1,    52,    53,    54,    55,    -1,    57,    -1,
+      59,    60,    -1,    -1,    63,    -1,    -1,    66,    -1,    -1,
+      -1,    -1,    71,    72,    73,    74,    -1,    76,    -1,    78,
+      79,    -1,    81,    82,    83,    -1,    85,     6,    87,    -1,
+      -1,    -1,    -1,    -1,    -1,    94,    -1,    16,    -1,    18,
+      -1,    -1,    -1,   102,   103,   104,    -1,   106,    -1,    -1,
+      -1,    -1,    -1,    -1,   113,   114,    35,    -1,    -1,    -1,
+      -1,    -1,   121,   122,    -1,    -1,   125,    -1,    -1,    48,
+      -1,    -1,    -1,    52,    53,    54,     5,    -1,    57,    -1,
+      59,    -1,    -1,    12,    13,    -1,    -1,    66,    -1,    -1,
+      -1,    -1,    -1,    -1,    73,    -1,    25,     6,    -1,    78,
+      -1,    -1,    81,    82,    -1,    -1,    85,    16,    -1,    18,
+      -1,    -1,    -1,    -1,    -1,    44,    -1,    46,    -1,    -1,
+      -1,    -1,    -1,   102,   103,   104,    35,   106,    -1,    -1,
+      -1,    -1,    -1,    62,   113,   114,    -1,    -1,    -1,    48,
+      -1,    -1,   121,    -1,    53,    54,   125,    -1,    77,    -1,
+      59,    -1,     5,    -1,    -1,    -1,    -1,    66,    -1,    12,
+      13,    -1,    -1,     5,    73,    -1,    95,    96,    97,    78,
+      12,    13,    81,    82,    -1,    -1,    -1,    -1,    -1,    -1,
+     109,   110,   111,   112,   113,   114,   115,   116,    -1,    -1,
+     119,    44,     5,   102,   103,   104,    -1,   106,    -1,    12,
+      13,    -1,    44,    -1,   113,   114,    -1,    -1,    -1,    62,
+      -1,    -1,   121,    -1,    -1,    -1,   125,    30,    -1,    -1,
+      62,    -1,    -1,    -1,    77,    -1,    -1,    -1,    -1,    -1,
+      -1,    44,    -1,    -1,    -1,    77,    -1,    -1,    80,    -1,
+      -1,    -1,    95,    96,    97,    98,    -1,    -1,    -1,    62,
+      -1,    -1,    -1,    95,    96,    97,   109,   110,   111,   112,
+     113,   114,   115,   116,    77,    -1,   119,   109,   110,   111,
+     112,   113,   114,   115,   116,    -1,    -1,   119,     5,    -1,
+      -1,    -1,    95,    96,    97,    12,    13,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,   109,   110,   111,   112,
+     113,   114,   115,   116,     5,    -1,   119,    -1,    -1,    -1,
+      -1,    12,    13,    -1,    -1,     5,    -1,    44,    -1,    -1,
+      -1,    -1,    12,    13,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    62,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    44,    -1,    -1,    -1,    -1,    -1,    -1,
+      77,    -1,    -1,    -1,    44,    -1,    -1,    -1,    -1,    -1,
+      -1,    62,    -1,    -1,    -1,    -1,    -1,    -1,    95,    96,
+      97,    98,    62,    -1,    -1,    -1,    77,    -1,    -1,    -1,
+      -1,    -1,   109,   110,   111,   112,   113,   114,   115,   116,
+      -1,    -1,   119,    -1,    95,    96,    97,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    95,    96,    97,   109,   110,
+     111,   112,   113,   114,   115,   116,     0,     1,   119,     3,
+     110,   111,   112,   113,   114,   115,   116,    11,    20,   119,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    21,    -1,    -1,
-      -1,    -1,    -1,    27,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    41,    -1,    43,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    27,    -1,    -1,    38,    -1,    -1,    41,
+      42,    -1,    -1,    -1,    -1,    47,    -1,    41,    -1,    43,
+      -1,    -1,    -1,    55,    -1,    -1,    -1,    -1,    60,    -1,
       -1,    -1,    -1,    -1,    58,    -1,    -1,    -1,    -1,    -1,
-      -1,    65,    -1,    67,    -1,    69,    70,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    83,
-      84
+      -1,    65,    74,    67,    -1,    69,    70,    79,    -1,    -1,
+      -1,    83,    -1,    85,    -1,    87,    -1,    -1,    -1,    83,
+      84,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,   104
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -1536,64 +1523,64 @@ static const unsigned char yystos[] =
       69,    70,    83,    84,   129,   130,   131,   132,   133,   134,
      135,   136,   137,   138,   139,   140,   144,   147,   153,   154,
      155,   156,   157,   158,   159,    55,    60,   104,   120,   104,
-     104,   104,   107,   225,    55,   107,   225,   160,   106,   220,
-     164,   165,   164,   168,   169,    11,    21,    58,   141,   142,
-     145,   148,   149,   168,   120,    44,    44,   168,    40,   120,
-      38,   120,   120,   124,   125,    44,   120,   120,    32,   104,
-     161,   226,   221,   222,   223,   224,   225,   106,   226,   226,
-      56,   166,   167,   226,    55,   162,     1,     6,    10,    14,
-      15,    16,    18,    20,    22,    34,    35,    36,    37,    38,
-      39,    42,    48,    52,    53,    54,    57,    59,    60,    66,
-      71,    72,    73,    74,    76,    78,    79,    81,    82,    85,
-      87,    94,   102,   103,   104,   106,   113,   114,   121,   125,
-     159,   170,   171,   172,   173,   175,   176,   182,   183,   184,
-     185,   186,   187,   188,   189,   193,   195,   198,   199,   200,
-     201,   202,   203,   204,   205,   207,   210,   211,   212,   215,
-     218,   219,   222,   224,   232,   240,   104,   104,   104,   168,
-      68,   168,   121,   150,   162,    27,   104,   104,   226,   107,
-     104,   104,   224,   229,   230,   240,    27,   104,    20,    38,
-      41,    42,    47,    55,    60,    74,    79,    83,    85,    87,
-     104,   111,   222,   105,   108,   224,   107,   228,   221,   120,
-     120,   104,   120,   120,   163,   226,   120,   240,   104,   177,
-     121,   125,   121,   125,   168,   104,   222,   104,   222,   240,
-     121,   125,   240,   240,   240,   220,   121,   125,   224,   121,
-     121,   222,   105,   227,   121,   125,   121,   222,   121,   125,
-     121,   222,   240,   224,   105,   233,   105,   121,   240,   240,
-     240,   229,   120,     4,     7,     8,    49,    50,    51,    88,
-      89,    90,    91,    92,   123,     5,    12,    13,    44,    62,
-      77,    95,    96,    97,   109,   110,   111,   112,   113,   114,
-     115,   116,   119,   241,   242,    68,   162,   104,   162,   168,
-      86,   151,   226,    58,   120,    56,   179,   120,   120,   120,
-     126,   108,    98,    58,   120,   105,   105,   224,   168,   164,
-     120,   121,   229,   229,   229,   229,   226,   121,    44,    80,
-     229,   229,   226,   229,   229,    93,   224,   222,    17,    63,
-     213,   214,   229,   229,   222,    17,    63,   216,   217,   229,
-     229,   222,    17,    63,   208,   209,    30,   240,   122,   126,
-     121,   224,   104,   178,   104,   178,   178,   240,   240,    85,
-     104,   188,   240,   240,   240,   240,   240,   240,   240,   240,
-     240,   240,   240,   240,   104,   226,    28,    29,   234,   226,
-     122,   121,    68,   120,   120,   120,   104,   120,   240,   240,
-     120,   120,   226,   229,   122,   126,   122,   126,   222,   240,
-     168,   122,   126,   122,   126,   224,   108,   122,   122,   229,
-     123,   226,    17,    63,   122,   126,   122,   229,   123,   226,
-      17,    63,   122,   126,   122,   229,   123,   226,    17,    63,
-     168,   122,   222,   121,    61,   180,   180,   180,   121,   222,
-     121,   234,   120,   103,   104,   116,   121,   235,   236,    26,
-     143,   120,   168,   104,    98,   120,   122,   122,    25,    46,
-     196,    31,   206,   103,   232,   213,   123,   168,   229,   123,
-     216,   123,   168,   229,   123,   208,   123,   168,   229,   123,
-     226,   122,   229,   104,   101,   181,   181,   222,   208,   190,
-     222,   224,    92,   146,   236,   115,   116,   119,    35,    81,
-     106,   113,   114,   239,   120,   122,   121,   152,   240,    19,
-      23,    30,    33,   197,   168,   226,   122,   226,   168,   123,
-     168,   226,   168,   123,   168,   226,   168,   123,   168,    86,
-     122,   240,   122,   226,   120,   120,   123,    35,    81,   106,
-     239,   228,   122,   236,   236,   237,   239,   103,   231,   232,
-     168,   120,   168,   168,   168,   168,   222,   208,   191,   222,
-     103,    45,   231,   120,   103,   121,   238,   122,   226,    49,
-     226,   120,   192,   123,   122,   103,   104,   224,   122,    64,
-      44,   194,   115,    61,   123,   224,   103,   104,    24,   122,
-     101,   174,   121,   229,   122
+     107,   104,   104,   107,   225,    55,   107,   225,   160,   106,
+     220,   164,   165,   164,   168,   169,    11,    21,    58,   141,
+     142,   145,   148,   149,   168,   120,    44,    44,   168,    40,
+     120,    38,   120,   120,   124,   125,    44,   120,   120,    32,
+     104,   161,   226,   221,   222,   223,   224,   225,   106,   226,
+     226,    56,   166,   167,   226,    55,   162,     1,     6,    10,
+      14,    15,    16,    18,    20,    22,    34,    35,    36,    37,
+      38,    39,    42,    48,    52,    53,    54,    57,    59,    60,
+      66,    71,    72,    73,    74,    76,    78,    79,    81,    82,
+      85,    87,    94,   102,   103,   104,   106,   113,   114,   121,
+     125,   159,   170,   171,   172,   173,   175,   176,   182,   183,
+     184,   185,   186,   187,   188,   189,   193,   195,   198,   199,
+     200,   201,   202,   203,   204,   205,   207,   210,   211,   212,
+     215,   218,   219,   222,   224,   232,   240,   104,   104,   104,
+     168,    68,   168,   121,   150,   162,    27,   104,   104,   226,
+     107,   104,   104,   224,   229,   230,   240,    27,   104,    20,
+      38,    41,    42,    47,    55,    60,    74,    79,    83,    85,
+      87,   104,   111,   222,   105,   108,   224,   107,   228,   221,
+     120,   120,   104,   120,   120,   163,   226,   120,   240,   104,
+     177,   121,   125,   121,   125,   168,   104,   222,   104,   222,
+     240,   121,   125,   240,   240,   240,   220,   121,   125,   224,
+     121,   121,   222,   105,   227,   121,   125,   121,   222,   121,
+     125,   121,   222,   240,   224,   105,   233,   105,   121,   240,
+     240,   240,   229,   120,     4,     7,     8,    49,    50,    51,
+      88,    89,    90,    91,    92,   123,     5,    12,    13,    44,
+      62,    77,    95,    96,    97,   109,   110,   111,   112,   113,
+     114,   115,   116,   119,   241,   242,    68,   162,   104,   162,
+     168,    86,   151,   226,    58,   120,    56,   179,   120,   120,
+     120,   126,   108,    98,    58,   120,   105,   105,   224,   168,
+     164,   120,   121,   229,   229,   229,   229,   226,   121,    44,
+      80,   229,   229,   226,   229,   229,    93,   224,   222,    17,
+      63,   213,   214,   229,   229,   222,    17,    63,   216,   217,
+     229,   229,   222,    17,    63,   208,   209,    30,   240,   122,
+     126,   121,   224,   104,   178,   104,   178,   178,   240,   240,
+      85,   104,   188,   240,   240,   240,   240,   240,   240,   240,
+     240,   240,   240,   240,   240,   104,   226,    28,    29,   234,
+     226,   122,   121,    68,   120,   120,   120,   104,   120,   240,
+     240,   120,   120,   226,   229,   122,   126,   122,   126,   222,
+     240,   168,   122,   126,   122,   126,   224,   108,   122,   122,
+     229,   123,   226,    17,    63,   122,   126,   122,   229,   123,
+     226,    17,    63,   122,   126,   122,   229,   123,   226,    17,
+      63,   168,   122,   222,   121,    61,   180,   180,   180,   121,
+     222,   121,   234,   120,   103,   104,   116,   121,   235,   236,
+      26,   143,   120,   168,   104,    98,   120,   122,   122,    25,
+      46,   196,    31,   206,   103,   232,   213,   123,   168,   229,
+     123,   216,   123,   168,   229,   123,   208,   123,   168,   229,
+     123,   226,   122,   229,   104,   101,   181,   181,   222,   208,
+     190,   222,   224,    92,   146,   236,   115,   116,   119,    35,
+      81,   106,   113,   114,   239,   120,   122,   121,   152,   240,
+      19,    23,    30,    33,   197,   168,   226,   122,   226,   168,
+     123,   168,   226,   168,   123,   168,   226,   168,   123,   168,
+      86,   122,   240,   122,   226,   120,   120,   123,    35,    81,
+     106,   239,   228,   122,   236,   236,   237,   239,   103,   231,
+     232,   168,   120,   168,   168,   168,   168,   222,   208,   191,
+     222,   103,    45,   231,   120,   103,   121,   238,   122,   226,
+      49,   226,   120,   192,   123,   122,   103,   104,   224,   122,
+      64,    44,   194,   115,    61,   123,   224,   103,   104,    24,
+     122,   101,   174,   121,   229,   122
 };
 
 #if ! defined (YYSIZE_T) && defined (__SIZE_TYPE__)
@@ -2234,122 +2221,126 @@ yyreduce:
   switch (yyn)
     {
         case 17:
-#line 430 "base\\generic\\compiler\\ascParse.y"
+#line 443 "base\\generic\\compiler\\ascParse.y"
     {
 	  ErrMsg_Generic("Error in definition.");
-	;}
+	}
     break;
 
   case 18:
-#line 437 "base\\generic\\compiler\\ascParse.y"
+#line 450 "base\\generic\\compiler\\ascParse.y"
     {
-          /* the following steps apply to string buffers only, not files */
-	  struct gl_list_t *stats;
-          int dispose;
-	  if ((yyvsp[-2].slptr) != NULL) {
-	    stats = gl_create(1L);
-	    gl_append_ptr(stats,(void *)(yyvsp[-2].slptr));
-	    if (g_untrapped_error) {
-	      ErrMsg_Generic("Because of a syntax error, the following statements are being ignored:");
-		WriteStatementList(ASCERR,(yyvsp[-2].slptr),4);
-	      DestroyStatementList((yyvsp[-2].slptr));
-            } else {
-	      dispose = Asc_ModuleAddStatements(Asc_CurrentModule(),stats);
-              switch (dispose) {
-              case 1: /* appended */
-	        if (stats != NULL) {
-	          gl_destroy(stats);
-	        }
-	        break;
-              case 0: /* kept */
-	        break;
-              case -1: /* illegal in file */
-	        ErrMsg_Generic("GLOBAL statements can only be made interactively. Ignoring:");
-	        if (stats != NULL) {
-		  WriteStatementList(ASCERR,(yyvsp[-2].slptr),4);
-	          gl_iterate(stats,(DestroyFunc)DestroyStatementList);
-	          gl_destroy(stats);
-	        }
-	        break;
-              default:
-	        break;
+      /* the following steps apply to string buffers only, not files */
+      struct gl_list_t *stats;
+      int dispose;
+      if ((yyvsp[-2].slptr) != NULL) {
+        stats = gl_create(1L);
+        gl_append_ptr(stats,(void *)(yyvsp[-2].slptr));
+        if (g_untrapped_error) {
+          ErrMsg_Generic("Because of a syntax error, the following statements are being ignored:");
+          WriteStatementList(ASCERR,(yyvsp[-2].slptr),4);
+          DestroyStatementList((yyvsp[-2].slptr));
+        }else{
+          dispose = Asc_ModuleAddStatements(Asc_CurrentModule(),stats);
+          switch (dispose) {
+            case 1: /* appended */
+              if (stats != NULL) {
+                  gl_destroy(stats);
               }
-            }
-	  }
-	  /* don't let any bizarreness in string parsing hang around */
-	  g_type_name = g_refines_name = g_proc_name = NULL;
-	  g_model_parameters =
-	    g_parameter_reduction =
-	    g_parameter_wheres = NULL;
-	  g_untrapped_error = 0;
-	;}
+              break;
+            case 0: /* kept */
+              break;
+            case -1: /* illegal in file */
+              ErrMsg_Generic("GLOBAL statements can only be made interactively. Ignoring:");
+              if (stats != NULL) {
+                WriteStatementList(ASCERR,(yyvsp[-2].slptr),4);
+                gl_iterate(stats,(DestroyFunc)DestroyStatementList);
+                gl_destroy(stats);
+              }
+              break;
+            default:
+              break;
+          }
+        }
+      }
+      /* don't let any bizarreness in string parsing hang around */
+      g_type_name = g_refines_name = g_proc_name = NULL;
+      g_model_parameters =
+      g_parameter_reduction =
+      g_parameter_wheres = NULL;
+      g_untrapped_error = 0;
+    }
     break;
 
   case 19:
-#line 482 "base\\generic\\compiler\\ascParse.y"
+#line 495 "base\\generic\\compiler\\ascParse.y"
     {
 	  Asc_ScannerPushBuffer((yyvsp[-1].dquote_ptr));
-	;}
+	}
     break;
 
   case 20:
-#line 486 "base\\generic\\compiler\\ascParse.y"
+#line 499 "base\\generic\\compiler\\ascParse.y"
     {
 	  DestroyName((yyvsp[-1].nptr));
 	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
-	;}
+	}
     break;
 
   case 21:
-#line 491 "base\\generic\\compiler\\ascParse.y"
+#line 504 "base\\generic\\compiler\\ascParse.y"
     {
 	  DestroyName((yyvsp[0].nptr));
 	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
-	;}
+	}
     break;
 
   case 22:
-#line 499 "base\\generic\\compiler\\ascParse.y"
+#line 512 "base\\generic\\compiler\\ascParse.y"
     {
           Asc_ModuleCreateAlias(Asc_CurrentModule(),(yyvsp[-1].dquote_ptr));
-        ;}
+        }
     break;
 
   case 23:
-#line 503 "base\\generic\\compiler\\ascParse.y"
+#line 516 "base\\generic\\compiler\\ascParse.y"
     {
 	  DestroyName((yyvsp[-1].nptr));
 	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
-	;}
+	}
     break;
 
   case 24:
-#line 508 "base\\generic\\compiler\\ascParse.y"
+#line 521 "base\\generic\\compiler\\ascParse.y"
     {
 	  DestroyName((yyvsp[0].nptr));
 	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
-	;}
+	}
     break;
 
   case 25:
-#line 516 "base\\generic\\compiler\\ascParse.y"
+#line 529 "base\\generic\\compiler\\ascParse.y"
     {
-	  (void)package_load((yyvsp[-1].dquote_ptr),SCP((yyvsp[-3].id_ptr)));
-	;}
+	  if(package_load((yyvsp[-1].dquote_ptr),SCP((yyvsp[-3].id_ptr)))){
+		ErrMsg_Generic("IMPORT failed");
+      }
+	}
     break;
 
   case 26:
-#line 520 "base\\generic\\compiler\\ascParse.y"
+#line 535 "base\\generic\\compiler\\ascParse.y"
     {
-	  (void)package_load(SCP((yyvsp[-1].id_ptr)),NULL);
-	;}
+	  if(package_load(SCP((yyvsp[-1].dquote_ptr)),NULL)){
+        ErrMsg_Generic("IMPORT failed");
+      }
+	}
     break;
 
   case 27:
-#line 527 "base\\generic\\compiler\\ascParse.y"
+#line 544 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*  see comments for notes statement.  */
-	  if( (yyvsp[-1].int_value) != NOTES_T ) {
+	  if( (yyvsp[-1].int_value) != NOTES_TOK ) {
 	    WarnMsg_MismatchEnd("NOTES", NULL, (yyvsp[-1].int_value), NULL);
 	  }
 	  if ((yyvsp[-2].notesptr) != NULL) {
@@ -2370,106 +2361,118 @@ yyreduce:
 	    /* now keep them */
 	    ProcessNotes(1);
 	    DestroyNoteTmpList((yyvsp[-2].notesptr));
-          }
-          g_type_name = g_proc_name = NULL;
+      }
+      g_type_name = g_proc_name = NULL;
 	  g_untrapped_error = 0;
-	;}
+	}
     break;
 
   case 28:
-#line 558 "base\\generic\\compiler\\ascParse.y"
+#line 575 "base\\generic\\compiler\\ascParse.y"
     {
 	  g_type_name = (yyvsp[-2].id_ptr);
 	  g_proc_name = (yyvsp[-1].id_ptr);
-	;}
+	}
     break;
 
   case 29:
-#line 566 "base\\generic\\compiler\\ascParse.y"
+#line 583 "base\\generic\\compiler\\ascParse.y"
     {
 	  if ((yyvsp[-3].tptr) == NULL) {
 	    DestroyProcedureList((yyvsp[-2].listp));
 	  } else {
-	    if( (yyvsp[-1].int_value) != METHODS_T ) {
+	    if( (yyvsp[-1].int_value) != METHODS_TOK ) {
 	      WarnMsg_MismatchEnd("ADD METHODS", NULL, (yyvsp[-1].int_value), "METHODS");
 	    }
 	    if (AddMethods((yyvsp[-3].tptr),(yyvsp[-2].listp),g_untrapped_error) != 0) {
 	      if ((yyvsp[-3].tptr) != ILLEGAL_DEFINITION) {
-                ErrMsg_ProcsRejected("ADD",SCP(GetName((yyvsp[-3].tptr))));
+            error_reporter_current_line(ASC_USER_ERROR
+              ,"ADD METHODS failed for type %s"
+              ,SCP(GetName((yyvsp[-3].tptr)))
+            );
 	        DestroyProcedureList((yyvsp[-2].listp));
 	      } /* else adding in DEFINITION MODEL may have misgone */
 	    }
 	  }
 	  g_untrapped_error = 0;
-	;}
+	}
     break;
 
   case 30:
-#line 586 "base\\generic\\compiler\\ascParse.y"
+#line 606 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType((yyvsp[-1].id_ptr));
-	  if (tmptype == NULL) {
-            ErrMsg_ProcTypeMissing("ADD", SCP((yyvsp[-1].id_ptr)));
+	  if(tmptype == NULL){
+        error_reporter_current_line(ASC_USER_ERROR
+          ,"ADD METHODS called with undefined type (%s)"
+          ,SCP((yyvsp[-1].id_ptr))
+        );
 	  }
 	  (yyval.tptr) = tmptype; /* parent should check for NULL */
 	  g_type_name = (yyvsp[-1].id_ptr); /* scope for notes */
-	;}
+	}
     break;
 
   case 31:
-#line 596 "base\\generic\\compiler\\ascParse.y"
+#line 619 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.tptr) = ILLEGAL_DEFINITION;
 	  /* need a bit of global state here to tag base methods */
-	;}
+	}
     break;
 
   case 32:
-#line 604 "base\\generic\\compiler\\ascParse.y"
+#line 627 "base\\generic\\compiler\\ascParse.y"
     {
 	  if ((yyvsp[-3].tptr) == NULL) {
 	    DestroyProcedureList((yyvsp[-2].listp));
 	  } else {
-	    if( (yyvsp[-1].int_value) != METHODS_T ) {
+	    if( (yyvsp[-1].int_value) != METHODS_TOK ) {
 	      WarnMsg_MismatchEnd("REPLACE METHODS", NULL, (yyvsp[-1].int_value), "METHODS");
 	    }
 	    if (ReplaceMethods((yyvsp[-3].tptr),(yyvsp[-2].listp),g_untrapped_error) != 0) {
-              ErrMsg_ProcsRejected("REPLACE",SCP(GetName((yyvsp[-3].tptr))));
+          error_reporter_current_line(ASC_USER_ERROR
+            ,"REPLACE METHODS failed for type %s"
+            ,SCP(GetName((yyvsp[-3].tptr)))
+          );
 	      DestroyProcedureList((yyvsp[-2].listp));
 	    }
 	  }
 	  g_untrapped_error = 0;
-	;}
+	}
     break;
 
   case 33:
-#line 622 "base\\generic\\compiler\\ascParse.y"
+#line 648 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType((yyvsp[-1].id_ptr));
 	  if (tmptype == NULL) {
-            ErrMsg_ProcTypeMissing("REPLACE", SCP((yyvsp[-1].id_ptr)));
+        error_reporter_current_line(ASC_USER_ERROR
+          ,"REPLACE METHODS called with undefined type (%s)"
+          ,SCP((yyvsp[-1].id_ptr))
+        );
 	  }
 	  (yyval.tptr) = tmptype; /* parent should check for NULL */
-	;}
+	}
     break;
 
   case 34:
-#line 631 "base\\generic\\compiler\\ascParse.y"
+#line 660 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.tptr) = ILLEGAL_DEFINITION;
 	  /* need a bit of global state here to tag base methods */
-	;}
+	}
     break;
 
   case 35:
-#line 639 "base\\generic\\compiler\\ascParse.y"
+#line 668 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
 
-          if(( (yyvsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+	  if(( (yyvsp[-1].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
@@ -2502,88 +2505,87 @@ yyreduce:
 	      ErrMsg_NullDefPointer(SCP(g_type_name));
 	    }
 	  } else {
-	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,NULL,
-	            "Atom dimensions don't match in ATOM %s on line %s:%lu.\n",
-	            SCP(g_type_name),
-	            Asc_ModuleBestName(Asc_CurrentModule()),
-	            g_header_linenum);
+	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,NULL
+	      ,"Atom dimensions don't match in ATOM %s"
+	      ,SCP(g_type_name)
+	    );
 	    DestroyStatementList((yyvsp[-3].slptr));
 	    DestroyProcedureList((yyvsp[-2].listp));
 	  }
 	  ProcessNotes(keepnotes);
 	  g_type_name = g_refines_name = g_proc_name = NULL;
 	  g_untrapped_error = 0;
-	;}
+	}
     break;
 
   case 36:
-#line 692 "base\\generic\\compiler\\ascParse.y"
+#line 720 "base\\generic\\compiler\\ascParse.y"
     {
 	  /* g_type_name = $1; */
 	  g_refines_name = (yyvsp[-3].id_ptr);
 	  g_atom_dim_ptr = (yyvsp[-2].dimp);
 	  g_default_double = (yyvsp[-1].real_value);
 	  g_header_linenum = LineNum();
-	;}
+	}
     break;
 
   case 37:
-#line 703 "base\\generic\\compiler\\ascParse.y"
+#line 731 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
 	  g_type_name = (yyvsp[0].id_ptr); /* want this set early so parm lists see it */
-	;}
+	}
     break;
 
   case 38:
-#line 711 "base\\generic\\compiler\\ascParse.y"
+#line 739 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = WildDimension();
 	  g_defaulted = 0;
-	;}
+	}
     break;
 
   case 39:
-#line 717 "base\\generic\\compiler\\ascParse.y"
+#line 745 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.real_value) = (yyvsp[-1].int_value) ? -(yyvsp[0].real_value) : (yyvsp[0].real_value);
 	  g_defaulted = 1;
-	;}
+	}
     break;
 
   case 40:
-#line 722 "base\\generic\\compiler\\ascParse.y"
+#line 750 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
 	  g_default_long = 0;
 	  g_defaulted = 1;
-	;}
+	}
     break;
 
   case 41:
-#line 729 "base\\generic\\compiler\\ascParse.y"
+#line 757 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
 	  g_default_long = 1;
 	  g_defaulted = 1;
-	;}
+	}
     break;
 
   case 42:
-#line 736 "base\\generic\\compiler\\ascParse.y"
+#line 764 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
 	  g_default_symbol = (yyvsp[0].sym_ptr);
 	  g_defaulted = 0;
-	;}
+	}
     break;
 
   case 43:
-#line 746 "base\\generic\\compiler\\ascParse.y"
+#line 774 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
@@ -2618,11 +2620,11 @@ yyreduce:
 	  ProcessNotes(keepnotes);
 	  g_type_name = g_refines_name = NULL;
 	  g_untrapped_error = 0;
-	;}
+	}
     break;
 
   case 44:
-#line 786 "base\\generic\\compiler\\ascParse.y"
+#line 814 "base\\generic\\compiler\\ascParse.y"
     {
 	  g_type_name = (yyvsp[-6].id_ptr);
 	  g_refines_name = (yyvsp[-4].id_ptr);
@@ -2651,62 +2653,62 @@ yyreduce:
 	                           AddBraceChar((yyvsp[-1].dquote_ptr),InlineNote()),
 	                           g_header_linenum,NULL,nd_empty));
 	  }
-	;}
+	}
     break;
 
   case 45:
-#line 819 "base\\generic\\compiler\\ascParse.y"
+#line 847 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = WildDimension();
 	  g_defaulted = 0;
-	;}
+	}
     break;
 
   case 46:
-#line 825 "base\\generic\\compiler\\ascParse.y"
+#line 853 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.real_value) = (yyvsp[-1].int_value) ? -(yyvsp[0].real_value) : (yyvsp[0].real_value);
 	  g_defaulted = 1;
-	;}
+	}
     break;
 
   case 47:
-#line 830 "base\\generic\\compiler\\ascParse.y"
+#line 858 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.int_value) = 1;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
 	  g_constant_type = BOOLEANCONSTANT;
-	;}
+	}
     break;
 
   case 48:
-#line 837 "base\\generic\\compiler\\ascParse.y"
+#line 865 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.int_value) = 0;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
 	  g_constant_type = BOOLEANCONSTANT;
-	;}
+	}
     break;
 
   case 49:
-#line 844 "base\\generic\\compiler\\ascParse.y"
+#line 872 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.sym_ptr) = (yyvsp[0].sym_ptr);
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
 	  g_constant_type = SYMBOLCONSTANT;
-	;}
+	}
     break;
 
   case 50:
-#line 854 "base\\generic\\compiler\\ascParse.y"
+#line 882 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
-	  if(( (yyvsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+	  if(( (yyvsp[-1].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
@@ -2739,22 +2741,22 @@ yyreduce:
 	    g_parameter_reduction =
 	    g_parameter_wheres = NULL;
 	  g_untrapped_error = 0;
-	;}
+	}
     break;
 
   case 51:
-#line 896 "base\\generic\\compiler\\ascParse.y"
+#line 924 "base\\generic\\compiler\\ascParse.y"
     {
 	  /* g_type_name = $1; */
 	  g_model_parameters = (yyvsp[-2].slptr);
 	  g_parameter_wheres = (yyvsp[-1].slptr);
 	  g_refines_name = NULL;
 	  g_header_linenum = LineNum();
-	;}
+	}
     break;
 
   case 52:
-#line 905 "base\\generic\\compiler\\ascParse.y"
+#line 933 "base\\generic\\compiler\\ascParse.y"
     {
 	  /* g_type_name = $1; */
 	  g_model_parameters = (yyvsp[-5].slptr);
@@ -2762,64 +2764,64 @@ yyreduce:
 	  g_refines_name = (yyvsp[-2].id_ptr);
 	  g_parameter_reduction = (yyvsp[-1].slptr);
 	  g_header_linenum = LineNum();
-	;}
+	}
     break;
 
   case 53:
-#line 917 "base\\generic\\compiler\\ascParse.y"
+#line 945 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
 	  g_type_name = (yyvsp[0].id_ptr); /* want this set early so parm lists see it */
-	;}
+	}
     break;
 
   case 54:
-#line 925 "base\\generic\\compiler\\ascParse.y"
+#line 953 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.slptr) = NULL;
-	;}
+	}
     break;
 
   case 55:
-#line 929 "base\\generic\\compiler\\ascParse.y"
+#line 957 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.slptr) = (yyvsp[-1].slptr); /* this could be much more sophisticated */
-	;}
+	}
     break;
 
   case 56:
-#line 936 "base\\generic\\compiler\\ascParse.y"
+#line 964 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.slptr) = NULL;
-	;}
+	}
     break;
 
   case 57:
-#line 940 "base\\generic\\compiler\\ascParse.y"
+#line 968 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.slptr) = (yyvsp[-1].slptr); /* this could be much more sophisticated */
-	;}
+	}
     break;
 
   case 58:
-#line 947 "base\\generic\\compiler\\ascParse.y"
+#line 975 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.slptr) = NULL;
-	;}
+	}
     break;
 
   case 59:
-#line 951 "base\\generic\\compiler\\ascParse.y"
+#line 979 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.slptr) = (yyvsp[-1].slptr); /* this could be much more sophisticated */
-	;}
+	}
     break;
 
   case 60:
-#line 958 "base\\generic\\compiler\\ascParse.y"
+#line 986 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
-	  if (((yyvsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+	  if (((yyvsp[-1].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
@@ -2844,11 +2846,11 @@ yyreduce:
 	    ErrMsg_NullDefPointer(SCP(g_type_name));
 	  }
 	  g_type_name = g_refines_name = g_proc_name = NULL;
-	;}
+	}
     break;
 
   case 61:
-#line 990 "base\\generic\\compiler\\ascParse.y"
+#line 1018 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * A patch definition looks just like a model def.
@@ -2857,30 +2859,30 @@ yyreduce:
 	  g_type_name = (yyvsp[-3].id_ptr);
 	  g_refines_name = (yyvsp[-1].id_ptr);
 	  g_header_linenum = LineNum();
-	;}
+	}
     break;
 
   case 62:
-#line 1003 "base\\generic\\compiler\\ascParse.y"
+#line 1031 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.int_value) = 0;
-	;}
+	}
     break;
 
   case 63:
-#line 1007 "base\\generic\\compiler\\ascParse.y"
+#line 1035 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.int_value) = 1;
-	;}
+	}
     break;
 
   case 64:
-#line 1014 "base\\generic\\compiler\\ascParse.y"
+#line 1042 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
 
-	  if(( (yyvsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != (yyvsp[-4].id_ptr) )) {
+	  if(( (yyvsp[-1].int_value) != IDENTIFIER_TOK ) || ( g_end_identifier != (yyvsp[-4].id_ptr) )) {
 	    WarnMsg_MismatchEnd("DEFINITION", SCP((yyvsp[-4].id_ptr)), (yyvsp[-1].int_value), SCP((yyvsp[-4].id_ptr)));
 	  }
 	  if( (yyvsp[-4].id_ptr) == GetBaseTypeName(relation_type)) {
@@ -2901,29 +2903,29 @@ yyreduce:
 	  ProcessNotes(keepnotes);
 	  g_type_name = NULL;
 	  g_untrapped_error = 0;
-	;}
+	}
     break;
 
   case 65:
-#line 1044 "base\\generic\\compiler\\ascParse.y"
+#line 1072 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
 	  g_type_name = (yyvsp[0].id_ptr); /* want this set early so parm lists see it */
-	;}
+	}
     break;
 
   case 66:
-#line 1053 "base\\generic\\compiler\\ascParse.y"
-    { /* nothing to do. just cruft to fix ; problem */ ;}
+#line 1081 "base\\generic\\compiler\\ascParse.y"
+    { /* nothing to do. just cruft to fix ; problem */ }
     break;
 
   case 67:
-#line 1058 "base\\generic\\compiler\\ascParse.y"
+#line 1086 "base\\generic\\compiler\\ascParse.y"
     {
           struct UnitDefinition *ud;
           unsigned long c,len;
 
-	  if( (yyvsp[0].int_value) != UNITS_T ) {
+	  if( (yyvsp[0].int_value) != UNITS_TOK ) {
 	    WarnMsg_MismatchEnd("UNITS", NULL, (yyvsp[0].int_value), NULL);
 	  }
           len = gl_length((yyvsp[-1].listp));
@@ -2934,73 +2936,73 @@ yyreduce:
           }
           gl_destroy((yyvsp[-1].listp));
           (yyval.statptr) = NULL;
-	;}
+	}
     break;
 
   case 68:
-#line 1077 "base\\generic\\compiler\\ascParse.y"
+#line 1105 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.listp) = gl_create(100L);
-	;}
+	}
     break;
 
   case 69:
-#line 1081 "base\\generic\\compiler\\ascParse.y"
+#line 1109 "base\\generic\\compiler\\ascParse.y"
     {
 	  gl_append_ptr((yyvsp[-1].listp),(char *)(yyvsp[0].udefptr));
 	  (yyval.listp) = (yyvsp[-1].listp);
-	;}
+	}
     break;
 
   case 70:
-#line 1089 "base\\generic\\compiler\\ascParse.y"
+#line 1117 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.udefptr) = CreateUnitDef((yyvsp[-3].id_ptr),(yyvsp[-1].braced_ptr),Asc_ModuleBestName(Asc_CurrentModule()),
                              LineNum());
-	;}
+	}
     break;
 
   case 71:
-#line 1098 "base\\generic\\compiler\\ascParse.y"
+#line 1126 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.listp) = NULL;
-	;}
+	}
     break;
 
   case 72:
-#line 1102 "base\\generic\\compiler\\ascParse.y"
+#line 1130 "base\\generic\\compiler\\ascParse.y"
     { /* To get rid of this, we will need a global proclist
            * that accumulates procs until a MODEL production is
            * completed. If any other sort of production is started,
            * and proclist is not NULL, it should be discarded.
            */
-	;}
+	}
     break;
 
   case 73:
-#line 1109 "base\\generic\\compiler\\ascParse.y"
+#line 1137 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.listp) = (yyvsp[0].listp);
-	;}
+	}
     break;
 
   case 74:
-#line 1116 "base\\generic\\compiler\\ascParse.y"
+#line 1144 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.listp) = (yyvsp[0].listp);
 	  gl_sort((yyval.listp),(CmpFunc)CmpProcs);
-	;}
+	}
     break;
 
   case 75:
-#line 1123 "base\\generic\\compiler\\ascParse.y"
+#line 1151 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.listp) = gl_create(7L);
-	;}
+	}
     break;
 
   case 76:
-#line 1127 "base\\generic\\compiler\\ascParse.y"
+#line 1155 "base\\generic\\compiler\\ascParse.y"
     {
 	  unsigned long c;
 	  struct InitProcedure *oldproc;
@@ -3008,7 +3010,9 @@ yyreduce:
           while (c > 0) {
             oldproc = (struct InitProcedure *)gl_fetch((yyvsp[-1].listp),c);
             if (ProcName((yyvsp[0].procptr)) == ProcName(oldproc)) {
-	      ErrMsg_DuplicateProc((yyvsp[0].procptr));
+              error_reporter_current_line(ASC_USER_WARNING
+                ,"Duplicate METHOD %s rejected", SCP(ProcName((yyvsp[0].procptr)))
+              );
               break;
             }
             c--;
@@ -3019,13 +3023,13 @@ yyreduce:
 	    gl_append_ptr((yyvsp[-1].listp),(char *)(yyvsp[0].procptr));
 	  }
 	  (yyval.listp) = (yyvsp[-1].listp);
-	;}
+	}
     break;
 
   case 77:
-#line 1150 "base\\generic\\compiler\\ascParse.y"
+#line 1180 "base\\generic\\compiler\\ascParse.y"
     {
-	  if (((yyvsp[-1].int_value) != IDENTIFIER_T) || ((yyvsp[-4].id_ptr) != g_end_identifier)) {
+	  if (((yyvsp[-1].int_value) != IDENTIFIER_TOK) || ((yyvsp[-4].id_ptr) != g_end_identifier)) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
@@ -3033,52 +3037,52 @@ yyreduce:
 	  }
 	  (yyval.procptr) = CreateProcedure((yyvsp[-4].id_ptr),(yyvsp[-2].slptr));
 	  g_proc_name = NULL;
-	;}
+	}
     break;
 
   case 78:
-#line 1164 "base\\generic\\compiler\\ascParse.y"
+#line 1194 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
 	  g_proc_name = (yyvsp[0].id_ptr);
-	;}
+	}
     break;
 
   case 79:
-#line 1173 "base\\generic\\compiler\\ascParse.y"
+#line 1203 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.slptr) = CreateStatementList((yyvsp[0].listp));
-	;}
+	}
     break;
 
   case 80:
-#line 1180 "base\\generic\\compiler\\ascParse.y"
+#line 1210 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.listp) = gl_create(7L);
-	;}
+	}
     break;
 
   case 81:
-#line 1184 "base\\generic\\compiler\\ascParse.y"
+#line 1214 "base\\generic\\compiler\\ascParse.y"
     {
 	  /* this is appending to a gllist of statements, not yet slist. */
 	  if ((yyvsp[-1].statptr) != NULL) {
 	    gl_append_ptr((yyvsp[-2].listp),(char *)(yyvsp[-1].statptr));
 	  }
 	  (yyval.listp) = (yyvsp[-2].listp);
-	;}
+	}
     break;
 
   case 82:
-#line 1192 "base\\generic\\compiler\\ascParse.y"
+#line 1222 "base\\generic\\compiler\\ascParse.y"
     {
 	  ErrMsg_Generic("Error in statement input.");
 	  (yyval.listp) = (yyvsp[-2].listp);
-	;}
+	}
     break;
 
   case 113:
-#line 1233 "base\\generic\\compiler\\ascParse.y"
+#line 1263 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType((yyvsp[-2].id_ptr));
@@ -3115,11 +3119,11 @@ yyreduce:
 	  }
 	  g_typeargs = NULL;
 
-	;}
+	}
     break;
 
   case 114:
-#line 1274 "base\\generic\\compiler\\ascParse.y"
+#line 1304 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType((yyvsp[-2].id_ptr));
@@ -3144,18 +3148,18 @@ yyreduce:
 	    error_reporter_current_line(ASC_USER_ERROR,"WILL_BE uses the undefined type %s.",SCP((yyvsp[-2].id_ptr)));
 	  }
 	  g_typeargs = NULL;
-	;}
+	}
     break;
 
   case 115:
-#line 1303 "base\\generic\\compiler\\ascParse.y"
+#line 1333 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateALIASES((yyvsp[-2].lptr),(yyvsp[0].nptr));
-	;}
+	}
     break;
 
   case 116:
-#line 1308 "base\\generic\\compiler\\ascParse.y"
+#line 1338 "base\\generic\\compiler\\ascParse.y"
     {
 	  int carray_err;
 	  carray_err = 0;
@@ -3200,25 +3204,25 @@ yyreduce:
 	    intset = ((yyvsp[-1].id_ptr) == GetBaseTypeName(integer_constant_type));
 	    (yyval.statptr) = CreateARR((yyvsp[-11].lptr),(yyvsp[-8].lptr),(yyvsp[-5].lptr),intset,(yyvsp[0].sptr));
 	  }
-	;}
+	}
     break;
 
   case 117:
-#line 1357 "base\\generic\\compiler\\ascParse.y"
+#line 1387 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.sptr) = NULL;
-	;}
+	}
     break;
 
   case 118:
-#line 1361 "base\\generic\\compiler\\ascParse.y"
+#line 1391 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.sptr) = (yyvsp[-1].sptr);
-	;}
+	}
     break;
 
   case 119:
-#line 1368 "base\\generic\\compiler\\ascParse.y"
+#line 1398 "base\\generic\\compiler\\ascParse.y"
     {
 	  if (FindType((yyvsp[-1].id_ptr))) {
 	    (yyval.statptr) = CreateREF((yyvsp[-3].lptr),(yyvsp[-1].id_ptr),(yyvsp[0].id_ptr),1);
@@ -3226,11 +3230,11 @@ yyreduce:
 	    (yyval.statptr) = CreateREF((yyvsp[-3].lptr),(yyvsp[-1].id_ptr),(yyvsp[0].id_ptr),1);
 	    error_reporter_current_line(ASC_USER_WARNING,"_IS_ uses the unbuilt prototype %s.\n",SCP((yyvsp[-1].id_ptr)));
 	  }
-	;}
+	}
     break;
 
   case 120:
-#line 1380 "base\\generic\\compiler\\ascParse.y"
+#line 1410 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType((yyvsp[0].id_ptr));
@@ -3253,127 +3257,127 @@ yyreduce:
 	    (yyval.statptr) = NULL;
 	  }
 	  g_typeargs = NULL;
-	;}
+	}
     break;
 
   case 121:
-#line 1407 "base\\generic\\compiler\\ascParse.y"
-    {
-	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
-	  g_callargs = NULL;
-	;}
-    break;
-
-  case 122:
-#line 1412 "base\\generic\\compiler\\ascParse.y"
-    {
-	  (yyval.id_ptr) = (yyvsp[-3].id_ptr);
-	  g_callargs = (yyvsp[-1].sptr);
-	;}
-    break;
-
-  case 123:
-#line 1420 "base\\generic\\compiler\\ascParse.y"
-    {
-	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
-	  g_typeargs = NULL;
-	;}
-    break;
-
-  case 124:
-#line 1425 "base\\generic\\compiler\\ascParse.y"
-    {
-	  (yyval.id_ptr) = (yyvsp[-3].id_ptr);
-	  g_typeargs = (yyvsp[-1].sptr);
-	;}
-    break;
-
-  case 125:
-#line 1433 "base\\generic\\compiler\\ascParse.y"
-    {
-	  (yyval.id_ptr) = NULL;
-	;}
-    break;
-
-  case 126:
 #line 1437 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
-	;}
+	  g_callargs = NULL;
+	}
+    break;
+
+  case 122:
+#line 1442 "base\\generic\\compiler\\ascParse.y"
+    {
+	  (yyval.id_ptr) = (yyvsp[-3].id_ptr);
+	  g_callargs = (yyvsp[-1].sptr);
+	}
+    break;
+
+  case 123:
+#line 1450 "base\\generic\\compiler\\ascParse.y"
+    {
+	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	  g_typeargs = NULL;
+	}
+    break;
+
+  case 124:
+#line 1455 "base\\generic\\compiler\\ascParse.y"
+    {
+	  (yyval.id_ptr) = (yyvsp[-3].id_ptr);
+	  g_typeargs = (yyvsp[-1].sptr);
+	}
+    break;
+
+  case 125:
+#line 1463 "base\\generic\\compiler\\ascParse.y"
+    {
+	  (yyval.id_ptr) = NULL;
+	}
+    break;
+
+  case 126:
+#line 1467 "base\\generic\\compiler\\ascParse.y"
+    {
+	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	}
     break;
 
   case 127:
-#line 1444 "base\\generic\\compiler\\ascParse.y"
+#line 1474 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.id_ptr) = NULL;
-	;}
+	}
     break;
 
   case 128:
-#line 1448 "base\\generic\\compiler\\ascParse.y"
+#line 1478 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
-	;}
+	}
     break;
 
   case 129:
-#line 1455 "base\\generic\\compiler\\ascParse.y"
+#line 1485 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = NULL;
-	;}
+	}
     break;
 
   case 130:
-#line 1459 "base\\generic\\compiler\\ascParse.y"
+#line 1489 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = (yyvsp[0].eptr);
-	;}
+	}
     break;
 
   case 131:
-#line 1466 "base\\generic\\compiler\\ascParse.y"
+#line 1496 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateAA((yyvsp[-1].lptr));
-	;}
+	}
     break;
 
   case 132:
-#line 1473 "base\\generic\\compiler\\ascParse.y"
+#line 1503 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateATS((yyvsp[-1].lptr));
-	;}
+	}
     break;
 
   case 133:
-#line 1480 "base\\generic\\compiler\\ascParse.y"
+#line 1510 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateWBTS((yyvsp[-1].lptr));
-	;}
+	}
     break;
 
   case 134:
-#line 1487 "base\\generic\\compiler\\ascParse.y"
+#line 1517 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateWNBTS((yyvsp[-1].lptr));
-	;}
+	}
     break;
 
   case 135:
-#line 1494 "base\\generic\\compiler\\ascParse.y"
+#line 1524 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateASSIGN((yyvsp[-2].nptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 136:
-#line 1498 "base\\generic\\compiler\\ascParse.y"
+#line 1528 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateCASSIGN((yyvsp[-2].nptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 137:
-#line 1505 "base\\generic\\compiler\\ascParse.y"
+#line 1535 "base\\generic\\compiler\\ascParse.y"
     {
 	  if (IsRelation((yyvsp[0].eptr))) {
 	    if (g_parse_relns == 0) {
@@ -3385,11 +3389,11 @@ yyreduce:
 	  } else {
 	    (yyval.statptr) = CreateLOGREL(NULL,(yyvsp[0].eptr));
 	  }
-	;}
+	}
     break;
 
   case 138:
-#line 1518 "base\\generic\\compiler\\ascParse.y"
+#line 1548 "base\\generic\\compiler\\ascParse.y"
     {
 	  if (IsRelation((yyvsp[0].eptr))) {
 	    if (g_parse_relns == 0) {
@@ -3402,11 +3406,11 @@ yyreduce:
 	  } else {
 	    (yyval.statptr) = CreateLOGREL((yyvsp[-2].nptr),(yyvsp[0].eptr));
 	  }
-	;}
+	}
     break;
 
   case 139:
-#line 1535 "base\\generic\\compiler\\ascParse.y"
+#line 1565 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = (yyvsp[0].eptr);
 	  if (NumberOfRelOps((yyvsp[0].eptr)) < 1) {
@@ -3415,33 +3419,33 @@ yyreduce:
 wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    g_untrapped_error++;
 	  }
-	;}
+	}
     break;
 
   case 140:
-#line 1545 "base\\generic\\compiler\\ascParse.y"
+#line 1575 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_minimize));
 	  if (NumberOfRelOps((yyvsp[0].eptr)) > 0) {
 	    ErrMsg_Generic("Objective function contains relation operators (=, ==, <, >, <=, >=, !=).");
 	    g_untrapped_error++;
 	  }
-	;}
+	}
     break;
 
   case 141:
-#line 1553 "base\\generic\\compiler\\ascParse.y"
+#line 1583 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_maximize));
 	  if (NumberOfRelOps((yyvsp[0].eptr))>0) {
 	    ErrMsg_Generic("Objective function contains relation operators (=, ==, <, >, <=, >=, !=).");
 	    g_untrapped_error++;
 	  }
-	;}
+	}
     break;
 
   case 142:
-#line 1564 "base\\generic\\compiler\\ascParse.y"
+#line 1594 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * This is the blackbox declarative external relation.
@@ -3450,39 +3454,39 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	  vl = JoinVariableLists((yyvsp[-4].lptr),(yyvsp[-2].lptr));
 	  /* $$ = CreateEXTERN(2,$1,SCP($3),vl,$8,NULL); */
 	  (yyval.statptr) = CreateEXTERNBlackBox((yyvsp[-8].nptr),SCP((yyvsp[-6].id_ptr)),vl,(yyvsp[-1].nptr));
-	;}
+	}
     break;
 
   case 143:
-#line 1577 "base\\generic\\compiler\\ascParse.y"
+#line 1607 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.lptr) = (yyvsp[-2].lptr);
-	;}
+	}
     break;
 
   case 144:
-#line 1584 "base\\generic\\compiler\\ascParse.y"
+#line 1614 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.lptr) = (yyvsp[-2].lptr);
-	;}
+	}
     break;
 
   case 145:
-#line 1591 "base\\generic\\compiler\\ascParse.y"
+#line 1621 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.nptr) = NULL;
-	;}
+	}
     break;
 
   case 146:
-#line 1595 "base\\generic\\compiler\\ascParse.y"
+#line 1625 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.nptr) = (yyvsp[-2].nptr);
-	;}
+	}
     break;
 
   case 147:
-#line 1602 "base\\generic\\compiler\\ascParse.y"
+#line 1632 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * This is the glassbox declarative external relation.
@@ -3498,27 +3502,27 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	  nptr = CreateIdName(str);
 	/* $$ = CreateEXTERN(1,$1,SCP($3),vl,nptr,$9); */
 	  (yyval.statptr) = CreateEXTERNGlassBox((yyvsp[-8].nptr),SCP((yyvsp[-6].id_ptr)),vl,nptr,(yyvsp[0].nptr));
-	;}
+	}
     break;
 
   case 148:
-#line 1622 "base\\generic\\compiler\\ascParse.y"
+#line 1652 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.nptr) = NULL;
-	;}
+	}
     break;
 
   case 149:
-#line 1626 "base\\generic\\compiler\\ascParse.y"
+#line 1656 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.nptr) = (yyvsp[0].nptr);
-	;}
+	}
     break;
 
   case 150:
-#line 1634 "base\\generic\\compiler\\ascParse.y"
+#line 1664 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != FOR_T ) {
+	  if( (yyvsp[0].int_value) != FOR_TOK ) {
 	    WarnMsg_MismatchEnd("FOR", SCP((yyvsp[-6].id_ptr)), (yyvsp[0].int_value), NULL);
 	  }
           if ((yyvsp[-2].fkind) == fk_create && (yyvsp[-3].order) != f_random) {
@@ -3532,153 +3536,153 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
           } else {
 	    (yyval.statptr) = CreateFOR((yyvsp[-6].id_ptr),(yyvsp[-4].eptr),(yyvsp[-1].slptr),(yyvsp[-3].order),(yyvsp[-2].fkind));
           }
-	;}
+	}
     break;
 
   case 151:
-#line 1654 "base\\generic\\compiler\\ascParse.y"
+#line 1684 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.order) = f_random;
-	;}
+	}
     break;
 
   case 152:
-#line 1658 "base\\generic\\compiler\\ascParse.y"
+#line 1688 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.order) = f_increasing;
-	;}
+	}
     break;
 
   case 153:
-#line 1662 "base\\generic\\compiler\\ascParse.y"
+#line 1692 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.order) = f_decreasing;
-	;}
+	}
     break;
 
   case 154:
-#line 1669 "base\\generic\\compiler\\ascParse.y"
+#line 1699 "base\\generic\\compiler\\ascParse.y"
     {
           (yyval.fkind) = fk_create; /* declarative FOR */
-	;}
+	}
     break;
 
   case 155:
-#line 1673 "base\\generic\\compiler\\ascParse.y"
+#line 1703 "base\\generic\\compiler\\ascParse.y"
     {
           (yyval.fkind) = fk_expect; /* parameter FOR */
-	;}
+	}
     break;
 
   case 156:
-#line 1677 "base\\generic\\compiler\\ascParse.y"
+#line 1707 "base\\generic\\compiler\\ascParse.y"
     {
           (yyval.fkind) = fk_check; /* WHERE FOR */
-	;}
+	}
     break;
 
   case 157:
-#line 1681 "base\\generic\\compiler\\ascParse.y"
+#line 1711 "base\\generic\\compiler\\ascParse.y"
     {
           (yyval.fkind) = fk_do; /* method FOR */
-	;}
+	}
     break;
 
   case 158:
-#line 1688 "base\\generic\\compiler\\ascParse.y"
+#line 1718 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateRUN((yyvsp[0].nptr),NULL);
-	;}
+	}
     break;
 
   case 159:
-#line 1692 "base\\generic\\compiler\\ascParse.y"
+#line 1722 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateRUN((yyvsp[0].nptr),(yyvsp[-2].nptr));	  /* type :: name */
-	;}
+	}
     break;
 
   case 160:
-#line 1699 "base\\generic\\compiler\\ascParse.y"
+#line 1729 "base\\generic\\compiler\\ascParse.y"
     {
 		(yyval.statptr) = CreateFIX((yyvsp[0].lptr));
-	;}
+	}
     break;
 
   case 161:
-#line 1706 "base\\generic\\compiler\\ascParse.y"
+#line 1736 "base\\generic\\compiler\\ascParse.y"
     {
 		(yyval.statptr) = CreateFREE((yyvsp[0].lptr));
-	;}
+	}
     break;
 
   case 162:
-#line 1713 "base\\generic\\compiler\\ascParse.y"
+#line 1743 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * This is procedural external code. Was:
 	  $$ = CreateEXTERN(0,NULL,SCP($2),$4,NULL,NULL);
 	   */
 	  (yyval.statptr) = CreateEXTERNMethod(SCP((yyvsp[-3].id_ptr)),(yyvsp[-1].lptr));
-	;}
+	}
     break;
 
   case 163:
-#line 1724 "base\\generic\\compiler\\ascParse.y"
+#line 1754 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * This is proper procedural external method code.
 	   */
 	  (yyval.statptr) = CreateCALL((yyvsp[0].id_ptr),g_callargs);
           g_callargs = NULL;
-	;}
+	}
     break;
 
   case 164:
-#line 1735 "base\\generic\\compiler\\ascParse.y"
+#line 1765 "base\\generic\\compiler\\ascParse.y"
     {
 		(yyval.statptr) = CreateASSERT((yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 165:
-#line 1741 "base\\generic\\compiler\\ascParse.y"
+#line 1771 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != IF_T ) {
+	  if( (yyvsp[0].int_value) != IF_TOK ) {
 	    WarnMsg_MismatchEnd("IF", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  (yyval.statptr) = CreateIF((yyvsp[-4].eptr),(yyvsp[-2].slptr),(yyvsp[-1].slptr));
-	;}
+	}
     break;
 
   case 166:
-#line 1751 "base\\generic\\compiler\\ascParse.y"
+#line 1781 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != WHILE_T ) {
+	  if( (yyvsp[0].int_value) != WHILE_TOK ) {
 	    WarnMsg_MismatchEnd("WHILE", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  (yyval.statptr) = CreateWhile((yyvsp[-3].eptr),(yyvsp[-1].slptr));
-	;}
+	}
     break;
 
   case 167:
-#line 1760 "base\\generic\\compiler\\ascParse.y"
+#line 1790 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.slptr) = NULL;
-	;}
+	}
     break;
 
   case 168:
-#line 1764 "base\\generic\\compiler\\ascParse.y"
+#line 1794 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.slptr) = (yyvsp[0].slptr);
-	;}
+	}
     break;
 
   case 169:
-#line 1771 "base\\generic\\compiler\\ascParse.y"
+#line 1801 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != WHEN_T ) {
+	  if( (yyvsp[0].int_value) != WHEN_TOK ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in WHEN statement.");
@@ -3686,13 +3690,13 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	  DestroyVariableList((yyvsp[-2].lptr));
 	  g_untrapped_error++;
 	  (yyval.statptr) = NULL;
-	;}
+	}
     break;
 
   case 170:
-#line 1782 "base\\generic\\compiler\\ascParse.y"
+#line 1812 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != WHEN_T ) {
+	  if( (yyvsp[0].int_value) != WHEN_TOK ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in WHEN statement.");
@@ -3701,110 +3705,110 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	  DestroyName((yyvsp[-5].nptr));
 	  g_untrapped_error++;
 	  (yyval.statptr) = NULL;
-	;}
+	}
     break;
 
   case 171:
-#line 1794 "base\\generic\\compiler\\ascParse.y"
+#line 1824 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != WHEN_T ) {
+	  if( (yyvsp[0].int_value) != WHEN_TOK ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  (yyval.statptr) = CreateWHEN(NULL,(yyvsp[-3].lptr),(yyvsp[-1].wptr));
-	;}
+	}
     break;
 
   case 172:
-#line 1801 "base\\generic\\compiler\\ascParse.y"
+#line 1831 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != WHEN_T ) {
+	  if( (yyvsp[0].int_value) != WHEN_TOK ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  (yyval.statptr) = CreateWHEN((yyvsp[-7].nptr),(yyvsp[-3].lptr),(yyvsp[-1].wptr));
-	;}
+	}
     break;
 
   case 173:
-#line 1811 "base\\generic\\compiler\\ascParse.y"
+#line 1841 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.wptr) = ReverseWhenCases((yyvsp[0].wptr));
-	;}
+	}
     break;
 
   case 174:
-#line 1818 "base\\generic\\compiler\\ascParse.y"
+#line 1848 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.wptr) = CreateWhen((yyvsp[-2].sptr),(yyvsp[0].slptr));
-	;}
+	}
     break;
 
   case 175:
-#line 1822 "base\\generic\\compiler\\ascParse.y"
+#line 1852 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.wptr) = CreateWhen(NULL,(yyvsp[0].slptr));
-	;}
+	}
     break;
 
   case 176:
-#line 1826 "base\\generic\\compiler\\ascParse.y"
+#line 1856 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.wptr) = LinkWhenCases(CreateWhen((yyvsp[-2].sptr),(yyvsp[0].slptr)),(yyvsp[-4].wptr));
-	;}
+	}
     break;
 
   case 177:
-#line 1830 "base\\generic\\compiler\\ascParse.y"
+#line 1860 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.wptr) = LinkWhenCases(CreateWhen(NULL,(yyvsp[0].slptr)),(yyvsp[-3].wptr));
-	;}
+	}
     break;
 
   case 178:
-#line 1837 "base\\generic\\compiler\\ascParse.y"
+#line 1867 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateFlow(fc_break,NULL);
-	;}
+	}
     break;
 
   case 179:
-#line 1841 "base\\generic\\compiler\\ascParse.y"
+#line 1871 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateFlow(fc_continue,NULL);
-	;}
+	}
     break;
 
   case 180:
-#line 1845 "base\\generic\\compiler\\ascParse.y"
+#line 1875 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateFlow(fc_fallthru,NULL);
-	;}
+	}
     break;
 
   case 181:
-#line 1849 "base\\generic\\compiler\\ascParse.y"
+#line 1879 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateFlow(fc_return,NULL);
-	;}
+	}
     break;
 
   case 182:
-#line 1853 "base\\generic\\compiler\\ascParse.y"
+#line 1883 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateFlow(fc_stop,(yyvsp[0].braced_ptr));
-	;}
+	}
     break;
 
   case 183:
-#line 1860 "base\\generic\\compiler\\ascParse.y"
+#line 1890 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.statptr) = CreateFNAME((yyvsp[0].nptr));
-	;}
+	}
     break;
 
   case 184:
-#line 1867 "base\\generic\\compiler\\ascParse.y"
+#line 1897 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != SELECT_T ) {
+	  if( (yyvsp[0].int_value) != SELECT_TOK ) {
 	    WarnMsg_MismatchEnd("SELECT", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in SELECT statement.");
@@ -3812,58 +3816,58 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	  DestroyVariableList((yyvsp[-2].lptr));
 	  g_untrapped_error++;
 	  (yyval.statptr) = NULL;
-	;}
+	}
     break;
 
   case 185:
-#line 1878 "base\\generic\\compiler\\ascParse.y"
+#line 1908 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != SELECT_T ) {
+	  if( (yyvsp[0].int_value) != SELECT_TOK ) {
 	    WarnMsg_MismatchEnd("SELECT", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  (yyval.statptr) = CreateSELECT((yyvsp[-3].lptr),(yyvsp[-1].septr));
-	;}
+	}
     break;
 
   case 186:
-#line 1888 "base\\generic\\compiler\\ascParse.y"
+#line 1918 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.septr) = ReverseSelectCases((yyvsp[0].septr));
-	;}
+	}
     break;
 
   case 187:
-#line 1895 "base\\generic\\compiler\\ascParse.y"
+#line 1925 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.septr) = CreateSelect((yyvsp[-2].sptr),(yyvsp[0].slptr));
-	;}
+	}
     break;
 
   case 188:
-#line 1899 "base\\generic\\compiler\\ascParse.y"
+#line 1929 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.septr) = CreateSelect(NULL,(yyvsp[0].slptr));
-	;}
+	}
     break;
 
   case 189:
-#line 1903 "base\\generic\\compiler\\ascParse.y"
+#line 1933 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.septr) = LinkSelectCases(CreateSelect((yyvsp[-2].sptr),(yyvsp[0].slptr)),(yyvsp[-4].septr));
-	;}
+	}
     break;
 
   case 190:
-#line 1907 "base\\generic\\compiler\\ascParse.y"
+#line 1937 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.septr) = LinkSelectCases(CreateSelect(NULL,(yyvsp[0].slptr)),(yyvsp[-3].septr));
-	;}
+	}
     break;
 
   case 191:
-#line 1914 "base\\generic\\compiler\\ascParse.y"
+#line 1944 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != SWITCH_T ) {
+	  if( (yyvsp[0].int_value) != SWITCH_TOK ) {
 	    WarnMsg_MismatchEnd("SWITCH", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in SWITCH statement.");
@@ -3871,72 +3875,72 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	  DestroyVariableList((yyvsp[-2].lptr));
 	  g_untrapped_error++;
 	  (yyval.statptr) = NULL;
-	;}
+	}
     break;
 
   case 192:
-#line 1925 "base\\generic\\compiler\\ascParse.y"
+#line 1955 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != SWITCH_T ) {
+	  if( (yyvsp[0].int_value) != SWITCH_TOK ) {
 	    WarnMsg_MismatchEnd("SWITCH", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  (yyval.statptr) = CreateSWITCH((yyvsp[-3].lptr),(yyvsp[-1].swptr));
-	;}
+	}
     break;
 
   case 193:
-#line 1935 "base\\generic\\compiler\\ascParse.y"
+#line 1965 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.swptr) = ReverseSwitchCases((yyvsp[0].swptr));
-	;}
+	}
     break;
 
   case 194:
-#line 1942 "base\\generic\\compiler\\ascParse.y"
+#line 1972 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.swptr) = CreateSwitch((yyvsp[-2].sptr),(yyvsp[0].slptr));
-	;}
+	}
     break;
 
   case 195:
-#line 1946 "base\\generic\\compiler\\ascParse.y"
+#line 1976 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.swptr) = CreateSwitch(NULL,(yyvsp[0].slptr));
-	;}
+	}
     break;
 
   case 196:
-#line 1950 "base\\generic\\compiler\\ascParse.y"
+#line 1980 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.swptr) = LinkSwitchCases(CreateSwitch((yyvsp[-2].sptr),(yyvsp[0].slptr)),(yyvsp[-4].swptr));
-	;}
+	}
     break;
 
   case 197:
-#line 1954 "base\\generic\\compiler\\ascParse.y"
+#line 1984 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.swptr) = LinkSwitchCases(CreateSwitch(NULL,(yyvsp[0].slptr)),(yyvsp[-3].swptr));
-	;}
+	}
     break;
 
   case 198:
-#line 1961 "base\\generic\\compiler\\ascParse.y"
+#line 1991 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (yyvsp[0].int_value) != CONDITIONAL_T ) {
+	  if( (yyvsp[0].int_value) != CONDITIONAL_TOK ) {
 	    WarnMsg_MismatchEnd("CONDITIONAL", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  (yyval.statptr) = CreateCOND((yyvsp[-1].slptr));
-	;}
+	}
     break;
 
   case 199:
-#line 1971 "base\\generic\\compiler\\ascParse.y"
+#line 2001 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*  All processing of notes takes place on the notes_body here.
 	   *  Notes should NOT be added to the statement list.
 	   *  Here we know the current type and method names.
 	   */
-	  if( (yyvsp[0].int_value) != NOTES_T ) {
+	  if( (yyvsp[0].int_value) != NOTES_TOK ) {
 	    WarnMsg_MismatchEnd("NOTES", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  if ((yyvsp[-1].notesptr) != NULL) {
@@ -3963,11 +3967,11 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    DestroyNoteTmpList((yyvsp[-1].notesptr));
           }
 	  (yyval.statptr) = NULL;
-	;}
+	}
     break;
 
   case 200:
-#line 2008 "base\\generic\\compiler\\ascParse.y"
+#line 2038 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*  At this point we have the "language", the names of the
 	   *  objects we are explaining, and the explanation/notes itself.
@@ -3975,11 +3979,11 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	  (yyval.notesptr) = (yyvsp[0].notesptr);
 	  assert((yyval.notesptr)->lang == NULL);
 	  (yyval.notesptr)->lang = (yyvsp[-1].sym_ptr);
-	;}
+	}
     break;
 
   case 201:
-#line 2017 "base\\generic\\compiler\\ascParse.y"
+#line 2047 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct NoteTmp *nt;
 	  (yyval.notesptr) = (yyvsp[-2].notesptr);
@@ -3990,54 +3994,54 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    nt = nt->next;
 	  }
 	  LinkNoteTmp(nt,(yyvsp[0].notesptr));
-	;}
+	}
     break;
 
   case 202:
-#line 2032 "base\\generic\\compiler\\ascParse.y"
+#line 2062 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.notesptr) = CreateNoteTmp(NULL, AddBraceChar((yyvsp[0].braced_ptr),NULL),
                              (void *)(yyvsp[-1].lptr), LineNum());
-	;}
+	}
     break;
 
   case 203:
-#line 2037 "base\\generic\\compiler\\ascParse.y"
+#line 2067 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.notesptr) = CreateNoteTmp(NULL, AddBraceChar((yyvsp[0].braced_ptr),NULL),
 	                     (void *)(yyvsp[-1].lptr), LineNum());
 	  LinkNoteTmp((yyval.notesptr),(yyvsp[-2].notesptr));
-	;}
+	}
     break;
 
   case 204:
-#line 2046 "base\\generic\\compiler\\ascParse.y"
+#line 2076 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * Reversing the variable list is now essential to deal with
 	   * external procedures and other things where order is important.
 	   */
 	  (yyval.lptr) = ReverseVariableList((yyvsp[0].lptr));
-	;}
+	}
     break;
 
   case 205:
-#line 2057 "base\\generic\\compiler\\ascParse.y"
+#line 2087 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.lptr) = CreateVariableNode((yyvsp[0].nptr));
-	;}
+	}
     break;
 
   case 206:
-#line 2061 "base\\generic\\compiler\\ascParse.y"
+#line 2091 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.lptr) = CreateVariableNode((yyvsp[0].nptr));
 	  LinkVariableNodes((yyval.lptr),(yyvsp[-2].lptr));
-	;}
+	}
     break;
 
   case 207:
-#line 2066 "base\\generic\\compiler\\ascParse.y"
+#line 2096 "base\\generic\\compiler\\ascParse.y"
     {
 	  ErrMsg_CommaName("name",(yyvsp[0].nptr));
 	  (yyval.lptr) = CreateVariableNode((yyvsp[0].nptr));
@@ -4046,11 +4050,11 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	   * destroying here is inconvenient
 	   */
 	  g_untrapped_error++;
-	;}
+	}
     break;
 
   case 208:
-#line 2079 "base\\generic\\compiler\\ascParse.y"
+#line 2109 "base\\generic\\compiler\\ascParse.y"
     {
 	  symchar *simple;
 	  void *data;
@@ -4066,26 +4070,26 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	                           AddBraceChar((yyvsp[0].dquote_ptr),InlineNote()),
 	                           LineNum(), data, nd));
 	  }
-	;}
+	}
     break;
 
   case 209:
-#line 2099 "base\\generic\\compiler\\ascParse.y"
+#line 2129 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.nptr) = CreateIdName((yyvsp[0].id_ptr));
-	;}
+	}
     break;
 
   case 210:
-#line 2103 "base\\generic\\compiler\\ascParse.y"
+#line 2133 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.nptr) = CreateIdName((yyvsp[0].id_ptr));
 	  LinkNames((yyval.nptr),(yyvsp[-2].nptr));
-	;}
+	}
     break;
 
   case 211:
-#line 2108 "base\\generic\\compiler\\ascParse.y"
+#line 2138 "base\\generic\\compiler\\ascParse.y"
     {
 	  if ((yyvsp[-1].sptr) == NULL) {
 	    error_reporter_current_line(ASC_USER_ERROR,"syntax error: Empty set in name definition, name:");
@@ -4096,220 +4100,220 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    (yyval.nptr) = CreateSetName((yyvsp[-1].sptr));
 	    LinkNames((yyval.nptr),(yyvsp[-3].nptr));
 	  }
-	;}
+	}
     break;
 
   case 212:
-#line 2123 "base\\generic\\compiler\\ascParse.y"
-    {
-          g_end_identifier = NULL;
-          (yyval.int_value) = CONDITIONAL_T;
-        ;}
-    break;
-
-  case 213:
-#line 2128 "base\\generic\\compiler\\ascParse.y"
-    {
-          g_end_identifier = NULL;
-          (yyval.int_value) = FOR_T;
-        ;}
-    break;
-
-  case 214:
-#line 2133 "base\\generic\\compiler\\ascParse.y"
-    {
-          g_end_identifier = NULL;
-          (yyval.int_value) = IF_T;
-        ;}
-    break;
-
-  case 215:
-#line 2138 "base\\generic\\compiler\\ascParse.y"
-    {
-          g_end_identifier = NULL;
-          (yyval.int_value) = INTERACTIVE_T;
-        ;}
-    break;
-
-  case 216:
-#line 2143 "base\\generic\\compiler\\ascParse.y"
-    {
-          g_end_identifier = NULL;
-          (yyval.int_value) = METHODS_T;
-        ;}
-    break;
-
-  case 217:
-#line 2148 "base\\generic\\compiler\\ascParse.y"
-    {
-          g_end_identifier = NULL;
-          (yyval.int_value) = NOTES_T;
-        ;}
-    break;
-
-  case 218:
 #line 2153 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (yyval.int_value) = SELECT_T;
-        ;}
+          (yyval.int_value) = CONDITIONAL_TOK;
+        }
     break;
 
-  case 219:
+  case 213:
 #line 2158 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (yyval.int_value) = SWITCH_T;
-        ;}
+          (yyval.int_value) = FOR_TOK;
+        }
     break;
 
-  case 220:
+  case 214:
 #line 2163 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (yyval.int_value) = UNITS_T;
-        ;}
+          (yyval.int_value) = IF_TOK;
+        }
     break;
 
-  case 221:
+  case 215:
 #line 2168 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (yyval.int_value) = GLOBAL_T;
-        ;}
+          (yyval.int_value) = INTERACTIVE_TOK;
+        }
     break;
 
-  case 222:
+  case 216:
 #line 2173 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (yyval.int_value) = WHEN_T;
-        ;}
+          (yyval.int_value) = METHODS_TOK;
+        }
     break;
 
-  case 223:
+  case 217:
 #line 2178 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (yyval.int_value) = WHILE_T;
-        ;}
+          (yyval.int_value) = NOTES_TOK;
+        }
     break;
 
-  case 224:
+  case 218:
 #line 2183 "base\\generic\\compiler\\ascParse.y"
     {
-          g_end_identifier = (yyvsp[0].id_ptr);
-          (yyval.int_value) = IDENTIFIER_T;
-        ;}
+          g_end_identifier = NULL;
+          (yyval.int_value) = SELECT_TOK;
+        }
     break;
 
-  case 225:
+  case 219:
 #line 2188 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (yyval.int_value) = END_T;
-        ;}
+          (yyval.int_value) = SWITCH_TOK;
+        }
+    break;
+
+  case 220:
+#line 2193 "base\\generic\\compiler\\ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (yyval.int_value) = UNITS_TOK;
+        }
+    break;
+
+  case 221:
+#line 2198 "base\\generic\\compiler\\ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (yyval.int_value) = GLOBAL_TOK;
+        }
+    break;
+
+  case 222:
+#line 2203 "base\\generic\\compiler\\ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (yyval.int_value) = WHEN_TOK;
+        }
+    break;
+
+  case 223:
+#line 2208 "base\\generic\\compiler\\ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (yyval.int_value) = WHILE_TOK;
+        }
+    break;
+
+  case 224:
+#line 2213 "base\\generic\\compiler\\ascParse.y"
+    {
+          g_end_identifier = (yyvsp[0].id_ptr);
+          (yyval.int_value) = IDENTIFIER_TOK;
+        }
+    break;
+
+  case 225:
+#line 2218 "base\\generic\\compiler\\ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (yyval.int_value) = END_TOK;
+        }
     break;
 
   case 226:
-#line 2196 "base\\generic\\compiler\\ascParse.y"
+#line 2226 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.braced_ptr) = NULL;
-	;}
+	}
     break;
 
   case 227:
-#line 2200 "base\\generic\\compiler\\ascParse.y"
+#line 2230 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.braced_ptr) = (yyvsp[0].braced_ptr);
-	;}
+	}
     break;
 
   case 228:
-#line 2207 "base\\generic\\compiler\\ascParse.y"
+#line 2237 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.dquote_ptr) = NULL;
-	;}
+	}
     break;
 
   case 229:
-#line 2211 "base\\generic\\compiler\\ascParse.y"
+#line 2241 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.dquote_ptr) = (yyvsp[0].dquote_ptr);
-	;}
+	}
     break;
 
   case 230:
-#line 2218 "base\\generic\\compiler\\ascParse.y"
+#line 2248 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.sptr) = ReverseSetList((yyvsp[0].sptr));
-	;}
+	}
     break;
 
   case 231:
-#line 2222 "base\\generic\\compiler\\ascParse.y"
+#line 2252 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.sptr) = NULL;
-	;}
+	}
     break;
 
   case 232:
-#line 2229 "base\\generic\\compiler\\ascParse.y"
+#line 2259 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.sptr) = CreateSingleSet((yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 233:
-#line 2233 "base\\generic\\compiler\\ascParse.y"
+#line 2263 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.sptr) = CreateRangeSet((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 234:
-#line 2237 "base\\generic\\compiler\\ascParse.y"
+#line 2267 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.sptr) = CreateSingleSet((yyvsp[0].eptr));
 	  LinkSets((yyval.sptr),(yyvsp[-2].sptr));
-	;}
+	}
     break;
 
   case 235:
-#line 2242 "base\\generic\\compiler\\ascParse.y"
+#line 2272 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.sptr) = CreateRangeSet((yyvsp[-2].eptr),(yyvsp[0].eptr));
 	  LinkSets((yyval.sptr),(yyvsp[-4].sptr));
-	;}
+	}
     break;
 
   case 236:
-#line 2250 "base\\generic\\compiler\\ascParse.y"
+#line 2280 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.real_value) = (yyvsp[0].int_value);
 	  g_constant_type = LONGCONSTANT;
 	  g_default_dim_ptr = Dimensionless();
-	;}
+	}
     break;
 
   case 237:
-#line 2256 "base\\generic\\compiler\\ascParse.y"
+#line 2286 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.real_value) = (yyvsp[0].real_value);
 	  g_constant_type = DOUBLECONSTANT;
 	  g_default_dim_ptr = g_dim_ptr;
-	;}
+	}
     break;
 
   case 238:
-#line 2265 "base\\generic\\compiler\\ascParse.y"
+#line 2295 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.real_value) = (yyvsp[-1].real_value)*(yyvsp[0].real_value);
-	;}
+	}
     break;
 
   case 239:
-#line 2269 "base\\generic\\compiler\\ascParse.y"
+#line 2299 "base\\generic\\compiler\\ascParse.y"
     {
 	  unsigned long pos;
 	  int error_code;
@@ -4326,19 +4330,19 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
 	    g_untrapped_error++;
 	  }
-	;}
+	}
     break;
 
   case 240:
-#line 2290 "base\\generic\\compiler\\ascParse.y"
+#line 2320 "base\\generic\\compiler\\ascParse.y"
     {
 	  g_dim_ptr = Dimensionless();
 	  (yyval.real_value) = 1.0;
-	;}
+	}
     break;
 
   case 241:
-#line 2295 "base\\generic\\compiler\\ascParse.y"
+#line 2325 "base\\generic\\compiler\\ascParse.y"
     {
 	  unsigned long pos;
 	  int error_code;
@@ -4355,433 +4359,433 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
 	    g_untrapped_error++;
 	  }
-	;}
+	}
     break;
 
   case 242:
-#line 2316 "base\\generic\\compiler\\ascParse.y"
+#line 2346 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.dimp) = (yyvsp[0].dimp);
-	;}
+	}
     break;
 
   case 243:
-#line 2320 "base\\generic\\compiler\\ascParse.y"
+#line 2350 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.dimp) = Dimensionless();
-	;}
+	}
     break;
 
   case 244:
-#line 2324 "base\\generic\\compiler\\ascParse.y"
+#line 2354 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.dimp) = WildDimension();
-	;}
+	}
     break;
 
   case 245:
-#line 2331 "base\\generic\\compiler\\ascParse.y"
+#line 2361 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.dimp) = WildDimension();
-	;}
+	}
     break;
 
   case 246:
-#line 2335 "base\\generic\\compiler\\ascParse.y"
+#line 2365 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.dimp) = FindOrAddDimen(&((yyvsp[0].dimen)));
-	;}
+	}
     break;
 
   case 247:
-#line 2342 "base\\generic\\compiler\\ascParse.y"
+#line 2372 "base\\generic\\compiler\\ascParse.y"
     {
 	  ParseDim(&((yyval.dimen)),SCP((yyvsp[0].id_ptr)));
-	;}
+	}
     break;
 
   case 248:
-#line 2346 "base\\generic\\compiler\\ascParse.y"
+#line 2376 "base\\generic\\compiler\\ascParse.y"
     {
 	  ClearDimensions(&((yyval.dimen)));
-	;}
+	}
     break;
 
   case 249:
-#line 2350 "base\\generic\\compiler\\ascParse.y"
+#line 2380 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.dimen) = SubDimensions(&((yyvsp[-2].dimen)),&((yyvsp[0].dimen)));
-	;}
+	}
     break;
 
   case 250:
-#line 2354 "base\\generic\\compiler\\ascParse.y"
+#line 2384 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.dimen) = AddDimensions(&((yyvsp[-2].dimen)),&((yyvsp[0].dimen)));
-	;}
+	}
     break;
 
   case 251:
-#line 2358 "base\\generic\\compiler\\ascParse.y"
+#line 2388 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.dimen) = ScaleDimensions(&((yyvsp[-2].dimen)),(yyvsp[0].frac_value));
-	;}
+	}
     break;
 
   case 252:
-#line 2362 "base\\generic\\compiler\\ascParse.y"
+#line 2392 "base\\generic\\compiler\\ascParse.y"
     {
 	  CopyDimensions(&((yyvsp[-1].dimen)),&((yyval.dimen)));
-	;}
+	}
     break;
 
   case 253:
-#line 2369 "base\\generic\\compiler\\ascParse.y"
+#line 2399 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.frac_value) = (yyvsp[-1].int_value) ? NegateF((yyvsp[0].frac_value)) : (yyvsp[0].frac_value);
-	;}
+	}
     break;
 
   case 254:
-#line 2376 "base\\generic\\compiler\\ascParse.y"
+#line 2406 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.frac_value) = CreateFraction((short)(yyvsp[0].int_value),(short)1);
-	;}
+	}
     break;
 
   case 255:
-#line 2380 "base\\generic\\compiler\\ascParse.y"
+#line 2410 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.frac_value) = CreateFraction((short)(yyvsp[-3].int_value),(short)(yyvsp[-1].int_value));
-	;}
+	}
     break;
 
   case 256:
-#line 2387 "base\\generic\\compiler\\ascParse.y"
+#line 2417 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.int_value) = 0;
-	;}
+	}
     break;
 
   case 257:
-#line 2391 "base\\generic\\compiler\\ascParse.y"
+#line 2421 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.int_value) = 0;
-	;}
+	}
     break;
 
   case 258:
-#line 2395 "base\\generic\\compiler\\ascParse.y"
+#line 2425 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.int_value) = 1;
-	;}
+	}
     break;
 
   case 259:
-#line 2402 "base\\generic\\compiler\\ascParse.y"
+#line 2432 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateIntExpr((yyvsp[0].int_value));
-	;}
+	}
     break;
 
   case 260:
-#line 2406 "base\\generic\\compiler\\ascParse.y"
+#line 2436 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateIntExpr(LONG_MAX-1);
-	;}
+	}
     break;
 
   case 261:
-#line 2410 "base\\generic\\compiler\\ascParse.y"
+#line 2440 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateRealExpr((yyvsp[0].real_value),g_dim_ptr);
-	;}
+	}
     break;
 
   case 262:
-#line 2414 "base\\generic\\compiler\\ascParse.y"
+#line 2444 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateRealExpr(DBL_MAX/(1+1e-15),Dimensionless());
-	;}
+	}
     break;
 
   case 263:
-#line 2418 "base\\generic\\compiler\\ascParse.y"
+#line 2448 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateTrueExpr();
-	;}
+	}
     break;
 
   case 264:
-#line 2422 "base\\generic\\compiler\\ascParse.y"
+#line 2452 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateFalseExpr();
-	;}
+	}
     break;
 
   case 265:
-#line 2426 "base\\generic\\compiler\\ascParse.y"
+#line 2456 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateAnyExpr();
-	;}
+	}
     break;
 
   case 266:
-#line 2430 "base\\generic\\compiler\\ascParse.y"
+#line 2460 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateSymbolExpr((yyvsp[0].sym_ptr));
-	;}
+	}
     break;
 
   case 267:
-#line 2434 "base\\generic\\compiler\\ascParse.y"
+#line 2464 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateVarExpr((yyvsp[0].nptr));
-	;}
+	}
     break;
 
   case 268:
-#line 2438 "base\\generic\\compiler\\ascParse.y"
+#line 2468 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateSetExpr((yyvsp[-1].sptr));
-	;}
+	}
     break;
 
   case 269:
-#line 2442 "base\\generic\\compiler\\ascParse.y"
+#line 2472 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_plus));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 270:
-#line 2447 "base\\generic\\compiler\\ascParse.y"
+#line 2477 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_minus));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 271:
-#line 2452 "base\\generic\\compiler\\ascParse.y"
+#line 2482 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_times));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 272:
-#line 2457 "base\\generic\\compiler\\ascParse.y"
+#line 2487 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_divide));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 273:
-#line 2462 "base\\generic\\compiler\\ascParse.y"
+#line 2492 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_power));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 274:
-#line 2467 "base\\generic\\compiler\\ascParse.y"
+#line 2497 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_and));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 275:
-#line 2472 "base\\generic\\compiler\\ascParse.y"
+#line 2502 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_or));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 276:
-#line 2477 "base\\generic\\compiler\\ascParse.y"
+#line 2507 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_not));
-	;}
+	}
     break;
 
   case 277:
-#line 2481 "base\\generic\\compiler\\ascParse.y"
+#line 2511 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),(yyvsp[-1].eptr));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 278:
-#line 2486 "base\\generic\\compiler\\ascParse.y"
+#line 2516 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),(yyvsp[-1].eptr));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 279:
-#line 2491 "base\\generic\\compiler\\ascParse.y"
+#line 2521 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_in));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 280:
-#line 2496 "base\\generic\\compiler\\ascParse.y"
+#line 2526 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_st));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 281:
-#line 2501 "base\\generic\\compiler\\ascParse.y"
+#line 2531 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_st));
 	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
-	;}
+	}
     break;
 
   case 282:
-#line 2506 "base\\generic\\compiler\\ascParse.y"
+#line 2536 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = (yyvsp[0].eptr);
-	;}
+	}
     break;
 
   case 283:
-#line 2510 "base\\generic\\compiler\\ascParse.y"
+#line 2540 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_uminus));
-	;}
+	}
     break;
 
   case 284:
-#line 2514 "base\\generic\\compiler\\ascParse.y"
+#line 2544 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateSatisfiedExpr((yyvsp[-3].nptr),(yyvsp[-1].real_value),g_dim_ptr);
-	;}
+	}
     break;
 
   case 285:
-#line 2518 "base\\generic\\compiler\\ascParse.y"
+#line 2548 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateSatisfiedExpr((yyvsp[-1].nptr),DBL_MAX,NULL);
-	;}
+	}
     break;
 
   case 286:
-#line 2522 "base\\generic\\compiler\\ascParse.y"
+#line 2552 "base\\generic\\compiler\\ascParse.y"
     {
 	  DestroySetList((yyvsp[-1].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("SUM");
 	  g_untrapped_error++;
-	;}
+	}
     break;
 
   case 287:
-#line 2529 "base\\generic\\compiler\\ascParse.y"
+#line 2559 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateBuiltin(e_sum,(yyvsp[-1].sptr));
-	;}
+	}
     break;
 
   case 288:
-#line 2533 "base\\generic\\compiler\\ascParse.y"
+#line 2563 "base\\generic\\compiler\\ascParse.y"
     {
 	  DestroySetList((yyvsp[-1].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("PROD");
 	  g_untrapped_error++;
-	;}
+	}
     break;
 
   case 289:
-#line 2540 "base\\generic\\compiler\\ascParse.y"
+#line 2570 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateBuiltin(e_prod,(yyvsp[-1].sptr));
-	;}
+	}
     break;
 
   case 290:
-#line 2544 "base\\generic\\compiler\\ascParse.y"
+#line 2574 "base\\generic\\compiler\\ascParse.y"
     {
 	  DestroySetList((yyvsp[-1].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("UNION");
 	  g_untrapped_error++;
-	;}
+	}
     break;
 
   case 291:
-#line 2551 "base\\generic\\compiler\\ascParse.y"
+#line 2581 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateBuiltin(e_union,(yyvsp[-1].sptr));
-	;}
+	}
     break;
 
   case 292:
-#line 2555 "base\\generic\\compiler\\ascParse.y"
+#line 2585 "base\\generic\\compiler\\ascParse.y"
     {
 	  DestroySetList((yyvsp[-1].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("INTERSECTION");
 	  g_untrapped_error++;
-	;}
+	}
     break;
 
   case 293:
-#line 2562 "base\\generic\\compiler\\ascParse.y"
+#line 2592 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateBuiltin(e_inter,(yyvsp[-1].sptr));
-	;}
+	}
     break;
 
   case 294:
-#line 2566 "base\\generic\\compiler\\ascParse.y"
+#line 2596 "base\\generic\\compiler\\ascParse.y"
     {
 	  DestroySetList((yyvsp[-1].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("CARD");
 	  g_untrapped_error++;
-	;}
+	}
     break;
 
   case 295:
-#line 2573 "base\\generic\\compiler\\ascParse.y"
+#line 2603 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateBuiltin(e_card,(yyvsp[-1].sptr));
-	;}
+	}
     break;
 
   case 296:
-#line 2577 "base\\generic\\compiler\\ascParse.y"
+#line 2607 "base\\generic\\compiler\\ascParse.y"
     {
 	  DestroySetList((yyvsp[-1].sptr));
 	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("CHOICE");
 	  g_untrapped_error++;
-	;}
+	}
     break;
 
   case 297:
-#line 2584 "base\\generic\\compiler\\ascParse.y"
+#line 2614 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateBuiltin(e_choice,(yyvsp[-1].sptr));
-	;}
+	}
     break;
 
   case 298:
-#line 2588 "base\\generic\\compiler\\ascParse.y"
+#line 2618 "base\\generic\\compiler\\ascParse.y"
     {
 	  CONST struct Func *fptr;
 	  if ((fptr = LookupFunc(SCP((yyvsp[-3].id_ptr))))!=NULL) {
@@ -4791,77 +4795,77 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    error_reporter_current_line(ASC_USER_ERROR,"Function '%s' is not defined.",SCP((yyvsp[-3].id_ptr)));
 	    g_untrapped_error++;
 	  }
-	;}
+	}
     break;
 
   case 299:
-#line 2599 "base\\generic\\compiler\\ascParse.y"
+#line 2629 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = (yyvsp[-1].eptr);
-	;}
+	}
     break;
 
   case 300:
-#line 2606 "base\\generic\\compiler\\ascParse.y"
+#line 2636 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_equal);
-	;}
+	}
     break;
 
   case 301:
-#line 2610 "base\\generic\\compiler\\ascParse.y"
+#line 2640 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_less);
-	;}
+	}
     break;
 
   case 302:
-#line 2614 "base\\generic\\compiler\\ascParse.y"
+#line 2644 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_greater);
-	;}
+	}
     break;
 
   case 303:
-#line 2618 "base\\generic\\compiler\\ascParse.y"
+#line 2648 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_lesseq);
-	;}
+	}
     break;
 
   case 304:
-#line 2622 "base\\generic\\compiler\\ascParse.y"
+#line 2652 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_greatereq);
-	;}
+	}
     break;
 
   case 305:
-#line 2626 "base\\generic\\compiler\\ascParse.y"
+#line 2656 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_notequal);
-	;}
+	}
     break;
 
   case 306:
-#line 2633 "base\\generic\\compiler\\ascParse.y"
+#line 2663 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_boolean_eq);
-	;}
+	}
     break;
 
   case 307:
-#line 2637 "base\\generic\\compiler\\ascParse.y"
+#line 2667 "base\\generic\\compiler\\ascParse.y"
     {
 	  (yyval.eptr) = CreateOpExpr(e_boolean_neq);
-	;}
+	}
     break;
 
 
     }
 
 /* Line 1037 of yacc.c.  */
-#line 4865 "base\\generic\\compiler\\ascParse.c"
+#line 4869 "base\\generic\\compiler\\ascParse.c"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -5089,7 +5093,12 @@ yyreturn:
 }
 
 
-#line 2641 "base\\generic\\compiler\\ascParse.y"
+#line 2671 "base\\generic\\compiler\\ascParse.y"
+
+/* END OF GRAMMAR RULES
+   -----------------------------------------------------------------------------
+   START OF EPILOGUE
+*/
 
 /*
  * We really need to do something about freeing up the productions
@@ -5097,8 +5106,7 @@ yyreturn:
  * for example  z[i IN [1..2]][j IN [process[i]] IS_A mass; eats a ton.
  */
 int
-yyerror(char *s)
-{
+zz_error(char *s){
   g_untrapped_error++;
   if (Asc_CurrentModule() != NULL) {
     error_reporter_current_line(ASC_USER_ERROR,"%s",s);
@@ -5124,7 +5132,7 @@ Asc_ErrMsgTypeDefnEOF(void)
   }
 }
 
-
+#define ERRCOUNT_PARSERGENERIC 30
 /*
  *  void ErrMsg_*(void)
  *
@@ -5133,18 +5141,26 @@ Asc_ErrMsgTypeDefnEOF(void)
  *  The type of error/warning that will be printed is indicated by the
  *  functions name and the arguments to fprintf.
  */
-static void
-ErrMsg_Generic(CONST char *string)
-{
-  /* the module may have be already closed, Asc_CurrentModule will be null */
-  error_reporter_current_line(ASC_USER_ERROR,"%s",string);
+static void ErrMsg_Generic(CONST char *string){
+	static int errcount=0;
+	if(errcount<30){ 
+		/* the module may have be already closed, Asc_CurrentModule will be null */
+		error_reporter_current_line(ASC_USER_ERROR,"%s",string);
 
-  if (g_type_name != NULL) {
-    error_reporter_current_line(ASC_USER_ERROR,"    type %s\n",SCP(g_type_name));
-  }
-  if (g_proc_name != NULL) {
-    error_reporter_current_line(ASC_USER_ERROR,"    METHOD %s\n",SCP(g_proc_name));
-  }
+		if (g_type_name != NULL) {
+		error_reporter_current_line(ASC_USER_ERROR,"    type %s\n",SCP(g_type_name));
+		}
+		if (g_proc_name != NULL) {
+			error_reporter_current_line(ASC_USER_ERROR,"    METHOD %s\n",SCP(g_proc_name));
+		}
+
+		errcount++;
+		if(errcount==30){
+			ERROR_REPORTER_HERE(ASC_PROG_NOTE
+				,"Further reports of this error will be suppressed.\n"
+			);
+		}
+	}
 }
 
 static void ErrMsg_CommaName(CONST char *what, struct Name *name)
@@ -5154,8 +5170,11 @@ static void ErrMsg_CommaName(CONST char *what, struct Name *name)
   /* the module may have be already closed */
   mod = Asc_CurrentModule();
 
-  error_reporter_current_line(ASC_USER_ERROR, "ASC-Error: Missing comma or operator before %s ",what);
+  ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
+  FPRINTF(ASCERR, "Missing comma or operator before %s '",what);
   WriteName(ASCERR,name);
+  FPRINTF(ASCERR, "'");
+  error_reporter_end_flush();
 }
 
 #if COMMAEXPR_NOTBUGGY
@@ -5176,27 +5195,6 @@ ErrMsg_NullDefPointer(CONST char *object)
 }
 
 static void
-ErrMsg_ProcTypeMissing(CONST char *AorR, CONST char *type)
-{
-  error_reporter_current_line(ASC_USER_ERROR,
-	  "%s METHODS called with undefined type (%s)", AorR, type);
-}
-
-static void
-ErrMsg_ProcsRejected(CONST char *AorR, CONST char *type)
-{
-  error_reporter_current_line(ASC_USER_ERROR,
-	  "%s METHODS failed for type %s", AorR, type);
-}
-
-static void
-ErrMsg_DuplicateProc(struct InitProcedure *p)
-{
-  error_reporter_current_line(ASC_USER_WARNING,
-	  "Duplicate METHOD %s rejected", SCP(ProcName(p)));
-}
-
-static void
 ErrMsg_ParensBrackets(CONST char *operation)
 {
   error_reporter_current_line(ASC_USER_ERROR,
@@ -5206,24 +5204,18 @@ ErrMsg_ParensBrackets(CONST char *operation)
 }
 
 
-/*
- *  WarnMsg_MismatchEnd(statement, opt_name, end_token, expecting);
- *      const char *statement;
- *      const char *opt_name;
- *      unsigned long end_token;
- *      const char *expecting;
- *
- *  Print a warning message that the token after the END keyword did not
- *  match what we were expecting for the current statement.
- *  Arguments:
- *      statement --the current statement, e.g. ATOM, METHOD, FOR, IF, CASE
- *      opt_name  --the name of the thing we were defining for ATOMs, METHODs,
- *                  etc, or NULL anonymous statements (FOR, IF, CASE, etc)
- *      end_token --the TOKEN_T that we were received instead.  We use the
- *                  TokenAsString to produce a string given a TOKEN_T
- *      expecting --the keyword we were expecting to see after the END; if
- *                  NULL, we were expecting the string given in statement
- */
+/**
+	Print a warning message that the token after the END keyword did not
+	match what we were expecting for the current statement.
+
+	@param statement --the current statement, e.g. ATOM, METHOD, FOR, IF, CASE
+	@param opt_name  --the name of the thing we were defining for ATOMs, METHODs,
+		etc, or NULL anonymous statements (FOR, IF, CASE, etc)
+	@param end_token --the TOKEN_TOK that we were received instead.  We use the
+		TokenAsString to produce a string given a TOKEN_TOK
+	@param expecting --the keyword we were expecting to see after the END; if
+	NULL, we were expecting the string given in statement
+*/
 static void
 WarnMsg_MismatchEnd(CONST char *statement, CONST char *opt_name,
 		    unsigned long end_token, CONST char *expecting)
@@ -5238,56 +5230,53 @@ WarnMsg_MismatchEnd(CONST char *statement, CONST char *opt_name,
 
 
 /*
- *  CONST char *TokenAsString(token);
- *      unsigned long token;
- *
- *  Takes a TOKEN_T (e.g., FOR_T, MODEL_T, END_T, IDENTIFIER_T) and returns
- *  a string representation of it:
- *      e.g.:  TokenAsString(FOR_T) ==> "FOR"
- *
- *  Since this function is only used inside WarnMsg_MismatchEnd, we do a
- *  couple of things specific to that function:  If token is END_T, we
- *  return an empty string, and if it is IDENTIFIER_T, we return the
- *  current value of g_end_identifier, or UNKNOWN if g_end_identifier is
- *  NULL.
- */
+	Take a TOKEN_TOK (e.g., FOR_TOK, MODEL_TOK, END_TOK, IDENTIFIER_TOK) and returns
+	a string representation of it:
+	    e.g.:  TokenAsString(FOR_TOK) ==> "FOR"
+	
+	Since this function is only used inside WarnMsg_MismatchEnd, we do a
+	couple of things specific to that function:  If token is END_TOK, we
+	return an empty string, and if it is IDENTIFIER_TOK, we return the
+	current value of g_end_identifier, or UNKNOWN if g_end_identifier is
+	NULL.
+*/
 static CONST char *
 TokenAsString(unsigned long token)
 {
   switch( token ) {
-  case ATOM_T:
+  case ATOM_TOK:
     return "ATOM";
-  case CONDITIONAL_T:
+  case CONDITIONAL_TOK:
     return "CONDITIONAL";
-  case FOR_T:
+  case FOR_TOK:
     return "FOR";
-  case ASSERT_T:
+  case ASSERT_TOK:
 	return "ASSERT";
-  case IF_T:
+  case IF_TOK:
     return "IF";
-  case INTERACTIVE_T:
+  case INTERACTIVE_TOK:
     return "INTERACTIVE";
-  case METHOD_T:
+  case METHOD_TOK:
     return "METHOD";
-  case METHODS_T:
+  case METHODS_TOK:
     return "METHODS";
-  case MODEL_T:
+  case MODEL_TOK:
     return "MODEL";
-  case NOTES_T:
+  case NOTES_TOK:
     return "NOTES";
-  case PATCH_T:
+  case PATCH_TOK:
     return "PATCH";
-  case SELECT_T:
+  case SELECT_TOK:
     return "SELECT";
-  case SWITCH_T:
+  case SWITCH_TOK:
     return "SWITCH";
-  case UNITS_T:
+  case UNITS_TOK:
     return "UNITS";
-  case WHEN_T:
+  case WHEN_TOK:
     return "WHEN";
-  case END_T:
+  case END_TOK:
     return "";
-  case IDENTIFIER_T:
+  case IDENTIFIER_TOK:
   default:
     if( g_end_identifier != NULL ) {
       return SCP(g_end_identifier);

@@ -29,228 +29,228 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     ADD_T = 258,
-     ALIASES_T = 259,
-     AND_T = 260,
-     ANY_T = 261,
-     AREALIKE_T = 262,
-     ARETHESAME_T = 263,
-     ARRAY_T = 264,
-     ASSERT_T = 265,
-     ATOM_T = 266,
-     BEQ_T = 267,
-     BNE_T = 268,
-     BREAK_T = 269,
-     CALL_T = 270,
-     CARD_T = 271,
-     CASE_T = 272,
-     CHOICE_T = 273,
-     CHECK_T = 274,
-     CONDITIONAL_T = 275,
-     CONSTANT_T = 276,
-     CONTINUE_T = 277,
-     CREATE_T = 278,
-     DATA_T = 279,
-     DECREASING_T = 280,
-     DEFAULT_T = 281,
-     DEFINITION_T = 282,
-     DIMENSION_T = 283,
-     DIMENSIONLESS_T = 284,
-     DO_T = 285,
-     ELSE_T = 286,
-     END_T = 287,
-     EXPECT_T = 288,
-     EXTERNAL_T = 289,
-     FALSE_T = 290,
-     FALLTHRU_T = 291,
-     FIX_T = 292,
-     FOR_T = 293,
-     FREE_T = 294,
-     FROM_T = 295,
-     GLOBAL_T = 296,
-     IF_T = 297,
-     IMPORT_T = 298,
-     IN_T = 299,
-     INPUT_T = 300,
-     INCREASING_T = 301,
-     INTERACTIVE_T = 302,
-     INTERSECTION_T = 303,
-     ISA_T = 304,
+     ADD_TOK = 258,
+     ALIASES_TOK = 259,
+     AND_TOK = 260,
+     ANY_TOK = 261,
+     AREALIKE_TOK = 262,
+     ARETHESAME_TOK = 263,
+     ARRAY_TOK = 264,
+     ASSERT_TOK = 265,
+     ATOM_TOK = 266,
+     BEQ_TOK = 267,
+     BNE_TOK = 268,
+     BREAK_TOK = 269,
+     CALL_TOK = 270,
+     CARD_TOK = 271,
+     CASE_TOK = 272,
+     CHOICE_TOK = 273,
+     CHECK_TOK = 274,
+     CONDITIONAL_TOK = 275,
+     CONSTANT_TOK = 276,
+     CONTINUE_TOK = 277,
+     CREATE_TOK = 278,
+     DATA_TOK = 279,
+     DECREASING_TOK = 280,
+     DEFAULT_TOK = 281,
+     DEFINITION_TOK = 282,
+     DIMENSION_TOK = 283,
+     DIMENSIONLESS_TOK = 284,
+     DO_TOK = 285,
+     ELSE_TOK = 286,
+     END_TOK = 287,
+     EXPECT_TOK = 288,
+     EXTERNAL_TOK = 289,
+     FALSE_TOK = 290,
+     FALLTHRU_TOK = 291,
+     FIX_TOK = 292,
+     FOR_TOK = 293,
+     FREE_TOK = 294,
+     FROM_TOK = 295,
+     GLOBAL_TOK = 296,
+     IF_TOK = 297,
+     IMPORT_TOK = 298,
+     IN_TOK = 299,
+     INPUT_TOK = 300,
+     INCREASING_TOK = 301,
+     INTERACTIVE_TOK = 302,
+     INTERSECTION_TOK = 303,
+     ISA_TOK = 304,
      _IS_T = 305,
-     ISREFINEDTO_T = 306,
-     MAXIMIZE_T = 307,
-     MAXINTEGER_T = 308,
-     MAXREAL_T = 309,
-     METHODS_T = 310,
-     METHOD_T = 311,
-     MINIMIZE_T = 312,
-     MODEL_T = 313,
-     NOT_T = 314,
-     NOTES_T = 315,
-     OF_T = 316,
-     OR_T = 317,
-     OTHERWISE_T = 318,
-     OUTPUT_T = 319,
-     PATCH_T = 320,
-     PROD_T = 321,
-     PROVIDE_T = 322,
-     REFINES_T = 323,
-     REPLACE_T = 324,
-     REQUIRE_T = 325,
-     RETURN_T = 326,
-     RUN_T = 327,
-     SATISFIED_T = 328,
-     SELECT_T = 329,
-     SIZE_T = 330,
-     STOP_T = 331,
-     SUCHTHAT_T = 332,
-     SUM_T = 333,
-     SWITCH_T = 334,
-     THEN_T = 335,
-     TRUE_T = 336,
-     UNION_T = 337,
-     UNITS_T = 338,
-     UNIVERSAL_T = 339,
-     WHEN_T = 340,
-     WHERE_T = 341,
-     WHILE_T = 342,
-     WILLBE_T = 343,
-     WILLBETHESAME_T = 344,
-     WILLNOTBETHESAME_T = 345,
-     ASSIGN_T = 346,
-     CASSIGN_T = 347,
-     DBLCOLON_T = 348,
-     USE_T = 349,
-     LEQ_T = 350,
-     GEQ_T = 351,
-     NEQ_T = 352,
-     DOTDOT_T = 353,
-     WITH_T = 354,
-     VALUE_T = 355,
+     ISREFINEDTO_TOK = 306,
+     MAXIMIZE_TOK = 307,
+     MAXINTEGER_TOK = 308,
+     MAXREAL_TOK = 309,
+     METHODS_TOK = 310,
+     METHOD_TOK = 311,
+     MINIMIZE_TOK = 312,
+     MODEL_TOK = 313,
+     NOT_TOK = 314,
+     NOTES_TOK = 315,
+     OF_TOK = 316,
+     OR_TOK = 317,
+     OTHERWISE_TOK = 318,
+     OUTPUT_TOK = 319,
+     PATCH_TOK = 320,
+     PROD_TOK = 321,
+     PROVIDE_TOK = 322,
+     REFINES_TOK = 323,
+     REPLACE_TOK = 324,
+     REQUIRE_TOK = 325,
+     RETURN_TOK = 326,
+     RUN_TOK = 327,
+     SATISFIED_TOK = 328,
+     SELECT_TOK = 329,
+     SIZE_TOK = 330,
+     STOP_TOK = 331,
+     SUCHTHAT_TOK = 332,
+     SUM_TOK = 333,
+     SWITCH_TOK = 334,
+     THEN_TOK = 335,
+     TRUE_TOK = 336,
+     UNION_TOK = 337,
+     UNITS_TOK = 338,
+     UNIVERSAL_TOK = 339,
+     WHEN_TOK = 340,
+     WHERE_TOK = 341,
+     WHILE_TOK = 342,
+     WILLBE_TOK = 343,
+     WILLBETHESAME_TOK = 344,
+     WILLNOTBETHESAME_TOK = 345,
+     ASSIGN_TOK = 346,
+     CASSIGN_TOK = 347,
+     DBLCOLON_TOK = 348,
+     USE_TOK = 349,
+     LEQ_TOK = 350,
+     GEQ_TOK = 351,
+     NEQ_TOK = 352,
+     DOTDOT_TOK = 353,
+     WITH_TOK = 354,
+     VALUE_TOK = 355,
      WITH_VALUE_T = 356,
-     REAL_T = 357,
-     INTEGER_T = 358,
-     IDENTIFIER_T = 359,
-     BRACEDTEXT_T = 360,
-     SYMBOL_T = 361,
-     DQUOTE_T = 362,
-     UPLUS_T = 363,
-     UMINUS_T = 364
+     REAL_TOK = 357,
+     INTEGER_TOK = 358,
+     IDENTIFIER_TOK = 359,
+     BRACEDTEXT_TOK = 360,
+     SYMBOL_TOK = 361,
+     DQUOTE_TOK = 362,
+     UPLUS_TOK = 363,
+     UMINUS_TOK = 364
    };
 #endif
-#define ADD_T 258
-#define ALIASES_T 259
-#define AND_T 260
-#define ANY_T 261
-#define AREALIKE_T 262
-#define ARETHESAME_T 263
-#define ARRAY_T 264
-#define ASSERT_T 265
-#define ATOM_T 266
-#define BEQ_T 267
-#define BNE_T 268
-#define BREAK_T 269
-#define CALL_T 270
-#define CARD_T 271
-#define CASE_T 272
-#define CHOICE_T 273
-#define CHECK_T 274
-#define CONDITIONAL_T 275
-#define CONSTANT_T 276
-#define CONTINUE_T 277
-#define CREATE_T 278
-#define DATA_T 279
-#define DECREASING_T 280
-#define DEFAULT_T 281
-#define DEFINITION_T 282
-#define DIMENSION_T 283
-#define DIMENSIONLESS_T 284
-#define DO_T 285
-#define ELSE_T 286
-#define END_T 287
-#define EXPECT_T 288
-#define EXTERNAL_T 289
-#define FALSE_T 290
-#define FALLTHRU_T 291
-#define FIX_T 292
-#define FOR_T 293
-#define FREE_T 294
-#define FROM_T 295
-#define GLOBAL_T 296
-#define IF_T 297
-#define IMPORT_T 298
-#define IN_T 299
-#define INPUT_T 300
-#define INCREASING_T 301
-#define INTERACTIVE_T 302
-#define INTERSECTION_T 303
-#define ISA_T 304
+#define ADD_TOK 258
+#define ALIASES_TOK 259
+#define AND_TOK 260
+#define ANY_TOK 261
+#define AREALIKE_TOK 262
+#define ARETHESAME_TOK 263
+#define ARRAY_TOK 264
+#define ASSERT_TOK 265
+#define ATOM_TOK 266
+#define BEQ_TOK 267
+#define BNE_TOK 268
+#define BREAK_TOK 269
+#define CALL_TOK 270
+#define CARD_TOK 271
+#define CASE_TOK 272
+#define CHOICE_TOK 273
+#define CHECK_TOK 274
+#define CONDITIONAL_TOK 275
+#define CONSTANT_TOK 276
+#define CONTINUE_TOK 277
+#define CREATE_TOK 278
+#define DATA_TOK 279
+#define DECREASING_TOK 280
+#define DEFAULT_TOK 281
+#define DEFINITION_TOK 282
+#define DIMENSION_TOK 283
+#define DIMENSIONLESS_TOK 284
+#define DO_TOK 285
+#define ELSE_TOK 286
+#define END_TOK 287
+#define EXPECT_TOK 288
+#define EXTERNAL_TOK 289
+#define FALSE_TOK 290
+#define FALLTHRU_TOK 291
+#define FIX_TOK 292
+#define FOR_TOK 293
+#define FREE_TOK 294
+#define FROM_TOK 295
+#define GLOBAL_TOK 296
+#define IF_TOK 297
+#define IMPORT_TOK 298
+#define IN_TOK 299
+#define INPUT_TOK 300
+#define INCREASING_TOK 301
+#define INTERACTIVE_TOK 302
+#define INTERSECTION_TOK 303
+#define ISA_TOK 304
 #define _IS_T 305
-#define ISREFINEDTO_T 306
-#define MAXIMIZE_T 307
-#define MAXINTEGER_T 308
-#define MAXREAL_T 309
-#define METHODS_T 310
-#define METHOD_T 311
-#define MINIMIZE_T 312
-#define MODEL_T 313
-#define NOT_T 314
-#define NOTES_T 315
-#define OF_T 316
-#define OR_T 317
-#define OTHERWISE_T 318
-#define OUTPUT_T 319
-#define PATCH_T 320
-#define PROD_T 321
-#define PROVIDE_T 322
-#define REFINES_T 323
-#define REPLACE_T 324
-#define REQUIRE_T 325
-#define RETURN_T 326
-#define RUN_T 327
-#define SATISFIED_T 328
-#define SELECT_T 329
-#define SIZE_T 330
-#define STOP_T 331
-#define SUCHTHAT_T 332
-#define SUM_T 333
-#define SWITCH_T 334
-#define THEN_T 335
-#define TRUE_T 336
-#define UNION_T 337
-#define UNITS_T 338
-#define UNIVERSAL_T 339
-#define WHEN_T 340
-#define WHERE_T 341
-#define WHILE_T 342
-#define WILLBE_T 343
-#define WILLBETHESAME_T 344
-#define WILLNOTBETHESAME_T 345
-#define ASSIGN_T 346
-#define CASSIGN_T 347
-#define DBLCOLON_T 348
-#define USE_T 349
-#define LEQ_T 350
-#define GEQ_T 351
-#define NEQ_T 352
-#define DOTDOT_T 353
-#define WITH_T 354
-#define VALUE_T 355
+#define ISREFINEDTO_TOK 306
+#define MAXIMIZE_TOK 307
+#define MAXINTEGER_TOK 308
+#define MAXREAL_TOK 309
+#define METHODS_TOK 310
+#define METHOD_TOK 311
+#define MINIMIZE_TOK 312
+#define MODEL_TOK 313
+#define NOT_TOK 314
+#define NOTES_TOK 315
+#define OF_TOK 316
+#define OR_TOK 317
+#define OTHERWISE_TOK 318
+#define OUTPUT_TOK 319
+#define PATCH_TOK 320
+#define PROD_TOK 321
+#define PROVIDE_TOK 322
+#define REFINES_TOK 323
+#define REPLACE_TOK 324
+#define REQUIRE_TOK 325
+#define RETURN_TOK 326
+#define RUN_TOK 327
+#define SATISFIED_TOK 328
+#define SELECT_TOK 329
+#define SIZE_TOK 330
+#define STOP_TOK 331
+#define SUCHTHAT_TOK 332
+#define SUM_TOK 333
+#define SWITCH_TOK 334
+#define THEN_TOK 335
+#define TRUE_TOK 336
+#define UNION_TOK 337
+#define UNITS_TOK 338
+#define UNIVERSAL_TOK 339
+#define WHEN_TOK 340
+#define WHERE_TOK 341
+#define WHILE_TOK 342
+#define WILLBE_TOK 343
+#define WILLBETHESAME_TOK 344
+#define WILLNOTBETHESAME_TOK 345
+#define ASSIGN_TOK 346
+#define CASSIGN_TOK 347
+#define DBLCOLON_TOK 348
+#define USE_TOK 349
+#define LEQ_TOK 350
+#define GEQ_TOK 351
+#define NEQ_TOK 352
+#define DOTDOT_TOK 353
+#define WITH_TOK 354
+#define VALUE_TOK 355
 #define WITH_VALUE_T 356
-#define REAL_T 357
-#define INTEGER_T 358
-#define IDENTIFIER_T 359
-#define BRACEDTEXT_T 360
-#define SYMBOL_T 361
-#define DQUOTE_T 362
-#define UPLUS_T 363
-#define UMINUS_T 364
+#define REAL_TOK 357
+#define INTEGER_TOK 358
+#define IDENTIFIER_TOK 359
+#define BRACEDTEXT_TOK 360
+#define SYMBOL_TOK 361
+#define DQUOTE_TOK 362
+#define UPLUS_TOK 363
+#define UMINUS_TOK 364
 
 
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 299 "base\\generic\\compiler\\ascParse.y"
+#line 304 "base\\generic\\compiler\\ascParse.y"
 typedef union YYSTYPE {
   double real_value;
   long   int_value;

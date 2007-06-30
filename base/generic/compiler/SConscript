@@ -34,30 +34,27 @@ scanparse_env = libascend_env.Copy()
 scanparse_env.Append(CCFLAGS=scanparse_env.get('YACC_CCFLAGS'))
 
 if scanparse_env.has_key('HAVE_YACC'):
-	parsersource = 'ascParse.y'
-	parserheader = 'ascParse.h'
+	parsersource = libascend_env.CFile('ascParse.y',YACCFLAGS=['-y','-d','-pzz_'])
+	#libascend_env.SideEffect('ascParse.h',parsersource)
+	# backup the lex output for use by people without lex:
+	libascend_env.Command('ascParse_no_yacc.c',parsersource[0],Copy('$TARGET','$SOURCE'))
+	libascend_env.Command('ascParse_no_yacc.h',parsersource[1],Copy('$TARGET', '$SOURCE'))
 else:
-	parsersource = 'ascParse_no_yacc.c'
 	parserheader = libascend_env.Command('ascParse.h', 'ascParse_no_yacc.h',Copy('$TARGET', '$SOURCE'))
+	parsersource = ['ascParse_no_yacc.c',parserheader]
 
 if scanparse_env.has_key('HAVE_LEX'):
-	scannersource = 'scanner.l'
+	scannersource = libascend_env.CFile('scanner.l',LEXFLAGS=['-l','-Pzz_'])
+	# backup the lex output for use by people without lex:
+	libascend_env.Command('scanner_no_lex.c',scannersource,Copy('$TARGET','$SOURCE'))
 else:
-	scannersource = 'scanner_no_flex.c'
-
-parser = scanparse_env.SharedObject(target=['ascParse'], source=parsersource
-	, YACCFLAGS=['-y','-d','-pzz_']
-)
-
-scanner = libascend_env.SharedObject(target=['scanner'],source=scannersource
-	, LEXFLAGS=['-l','-Pzz_']
-)
+	scannersource = 'scanner_no_lex.c'
 
 packages_env = libascend_env.Copy()
 packages_env.Append(CPPDEFINES=[('ASC_SHLIBSUFFIX','\\"'+libascend_env['SHLIBSUFFIX']+'\\"'),('ASC_SHLIBPREFIX','\\"'+libascend_env['SHLIBPREFIX']+'\\"')])
 packages = packages_env.SharedObject('packages.c')
 
-objs = [parser,scanner,packages]
+objs = [parsersource[0],scannersource,packages]
 
 # SLOPPY sources. This is a painful hack that should be fixed using 'config.h' style solution.
 
@@ -68,7 +65,7 @@ sloppy_env.Append(CPPDEFINES=['SLOPPY']);
 for s in sloppy_csrcs:
 	objs += sloppy_env.SharedObject(s)	
 
-libascend_env.Depends(scanner,[parserheader])
+#libascend_env.Depends(scanner,[parsersource[1]])
 
 for s in [csrcs]:
 	objs += libascend_env.SharedObject(s)
