@@ -30,14 +30,14 @@ BuildRequires: swig >= 1.3.24
 %if %{defined fedora_version}
 BuildRequires: gcc-gfortran gcc-c++ >= 4
 BuildRequires: blas-devel
-BuildRequires: sundials >= 2.2.0
+BuildRequires: sundials-devel >= 2.2.0
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel >= 8.3, tcl-devel >= 8.3
 BuildRequires: tktable < 2.10, tktable >= 2.8
 %else
 %if %{defined suse_version}
 BuildRequires: gcc-fortran gcc-c++
-BuildRequires: sundials >= 2.2.0
+BuildRequires: sundials-devel >= 2.2.0
 BuildRequires: blas
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel >= 8.3, tcl-devel >= 8.3
@@ -45,7 +45,7 @@ BuildRequires: tktable < 2.10, tktable >= 2.8
 %else
 %if %{defined mandriva_version}
 BuildRequires: gcc-gfortran gcc-c++
-BuildRequires: sundials >= 2.2.0
+BuildRequires: sundials-devel >= 2.2.0
 BuildRequires: blas-devel python-devel tk tcl
 %else
 # xubuntu version is the fallback...
@@ -249,8 +249,10 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %doc doc/book.pdf
 
 %changelog
-* Mon Apr 23 2007 John Pye <john.pye@anu.edu.au> 0.9.5.112
+* Mon Jul 02 2007 John Pye <john.pye@anu.edu.au> 0.9.5.112
 - solvers are now all built as separate shared libraries
+- mime-type icon added
+- build-time dependences allow building on more different distros
 
 * Mon Apr 23 2007 John Pye <john.pye@student.unsw.edu.au> 0.9.5.108
 - File ascend.lang has moved.
