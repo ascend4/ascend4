@@ -6,9 +6,8 @@ Comment=Solve difficult simulation problems
 TryExec=ascend
 Exec=ascend
 StartupNotify=true
-Terminal=true
+Terminal=false
 Type=Application
 Icon=ascend-app.png
 Categories=Application;Engineering;Development;Math
-MimeType=text/x-ascend;
-
+MimeType=text/x-ascend-model;

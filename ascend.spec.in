@@ -173,6 +173,12 @@ install -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/ascend-app.png
 install -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend.png
 install -m 644 -D ascend.xml %{buildroot}/%{_datadir}/mime/packages/ascend.xml
 popd
+
+# file-type icon for ascend models (double click should open in ASCEND)
+pushd pygtk/glade
+install -m 644 -D ascend.svg %{buildroot}/%{_datadir}/icons/text-x-ascend-model.svg
+popd
+
 pushd tools/gedit
 install -m 644 -D ascend.lang %{buildroot}/%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
 popd
@@ -209,6 +215,7 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %{_libdir}/libascend.so
 %{_datadir}/mime/packages/ascend.xml
 %{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
+%{_datadir}/icons/text-x-ascend-model.svg
 
 # %package -n ascend-python
 %{_bindir}/ascend
