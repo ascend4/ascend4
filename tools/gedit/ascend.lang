@@ -9,7 +9,7 @@ John Pye (C) 2005
 <!-- gtksourceview ASCEND IV language specification -->
 
 <!DOCTYPE language SYSTEM "language.dtd">
-<language _name="ASCEND" version="1.0" _section="Sources" mimetypes="text/x-ascend">
+<language _name="ASCEND" version="1.0" _section="Sources" mimetypes="text/x-ascend-model">
 
 	<escape-char>\</escape-char>
 
