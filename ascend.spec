@@ -27,7 +27,7 @@ BuildRequires: bison >= 2.0
 BuildRequires: flex >= 2.5.4
 BuildRequires: swig >= 1.3.24
 
-%if %{defined fedora_version}
+%if 0%{?fedora_version}
 BuildRequires: gcc-gfortran gcc-c++ >= 4
 BuildRequires: blas-devel
 BuildRequires: sundials-devel >= 2.2.0
@@ -35,7 +35,7 @@ BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel >= 8.3, tcl-devel >= 8.3
 BuildRequires: tktable < 2.10, tktable >= 2.8
 %else
-%if %{defined suse_version}
+%if 0%{?suse_version}
 BuildRequires: gcc-fortran gcc-c++
 BuildRequires: sundials-devel >= 2.2.0
 BuildRequires: blas
@@ -43,7 +43,7 @@ BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel >= 8.3, tcl-devel >= 8.3
 BuildRequires: tktable < 2.10, tktable >= 2.8
 %else
-%if %{defined mandriva_version}
+%if 0%{?mandriva_version}
 BuildRequires: gcc-gfortran gcc-c++
 BuildRequires: sundials-devel >= 2.2.0
 BuildRequires: blas-devel python-devel tk tcl
