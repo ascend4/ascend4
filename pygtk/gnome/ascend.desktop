@@ -2,12 +2,12 @@
 Encoding=UTF-8
 Name=ASCEND
 GenericName=ASCEND
-Comment=Solve difficult simulation problems
+Comment=Solve mathematical models in science and engineering
 TryExec=ascend
 Exec=ascend
 StartupNotify=true
 Terminal=false
 Type=Application
 Icon=ascend-app.png
-Categories=Application;Engineering;Development;Math
+Categories=Application;Math;Science;GTK
 MimeType=text/x-ascend-model;
