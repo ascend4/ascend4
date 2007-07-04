@@ -209,6 +209,7 @@ static const struct StaticSolverRegistration slv_reg[]={
 	,{"conopt"}
 	,{"lrslv"}
 	,{"cmslv"}
+	,{"ipopt"}
 	,{NULL}
 #if 0
 /* 	{0,"SLV",&slv0_register} */

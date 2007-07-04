@@ -2,7 +2,7 @@ Import('env')
 extenv = env.Copy()
 
 subdirs = [
-	'qrslv','conopt','cmslv','lrslv','lsode','ida'
+	'qrslv','conopt','cmslv','lrslv','lsode','ida','ipopt'
 ]
 #'tron',
 
