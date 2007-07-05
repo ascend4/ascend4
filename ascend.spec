@@ -23,9 +23,10 @@ Buildroot: /var/tmp/%{name}-buildroot
 
 # ...general
 BuildRequires: scons >= 0.96.92
-BuildRequires: bison >= 2.0
+BuildRequires: bison
 BuildRequires: flex >= 2.5.4
 BuildRequires: swig >= 1.3.24
+# removed version requirement for 2.0 on bison.
 
 %if 0%{?fedora_version}
 BuildRequires: gcc-gfortran gcc-c++ >= 4
@@ -160,7 +161,7 @@ scons %{_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
 	WITH_SOLVERS=QRSLV,LSODE,CMSLV,IDA,LRSLV,CONOPT \
 	ABSOLUTE_PATHS=1 \
 	%{?__cc:CC="%__cc"} %{?__cxx:CXX="%__cxx"} \
-	pygtk tcltk models
+	pygtk tcltk models solvers
 
 %install
 rm -rf %{buildroot}
@@ -176,7 +177,7 @@ popd
 
 # file-type icon for ascend models (double click should open in ASCEND)
 pushd pygtk/glade
-install -m 644 -D ascend.svg %{buildroot}/%{_datadir}/icons/text-x-ascend-model.svg
+install -m 644 -D ascend-doc-48x48.svg %{buildroot}/%{_datadir}/icons/text-x-ascend-model.svg
 popd
 
 pushd tools/gedit
