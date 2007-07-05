@@ -1,0 +1,45 @@
+REQUIRE "atoms.a4l";
+
+MODEL point;
+    x[1..3] IS_A delta_distance;
+END point;
+
+MODEL baseedge;
+END baseedge;
+
+MODEL paredge(
+    pt1 WILL_BE point;
+    pt2 WILL_BE point;
+    )
+    REFINES baseedge;
+END paredge;
+
+MODEL testframe;
+    
+    (* this version of testframe works *)
+
+    pt[1..3] IS_A point;
+    edge[1..3] IS_A baseedge;
+
+    (* create all the edges from generated code *)
+    
+    edge[1] IS_REFINED_TO paredge(pt[1],pt[3]);
+    edge[2] IS_REFINED_TO paredge(pt[3],pt[2]);
+    edge[3] IS_REFINED_TO paredge(pt[1],pt[3]);    
+    
+END testframe;
+
+MODEL testframe2;
+    
+    (* this version of testframe will generate an error.  See console. *)
+    
+    pt[1..3] IS_A point;
+
+    (* create all the edges from generated code *)
+    
+    edge[1] IS_A paredge(pt[1],pt[3]);
+    edge[2] IS_A paredge(pt[3],pt[2]);
+    edge[3] IS_A paredge(pt[1],pt[3]);    
+
+
+END testframe2;
