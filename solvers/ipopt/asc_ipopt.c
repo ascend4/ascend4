@@ -27,6 +27,12 @@
 	ASCEND wrapper for IPOPT originally by John Pye, Jun 2007.
 */
 
+#include <utilities/config.h>
+
+#ifndef WITH_IPOPT
+# error "WITH_IPOPT must be defined in order to build this." 
+#endif
+
 #include <solver/solver.h>
 
 #include <ipopt/IpStdCInterface.h>

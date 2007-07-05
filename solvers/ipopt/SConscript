@@ -1,17 +1,17 @@
 Import('env')
 
-solver_env = env.Copy()
+if env.get('WITH_IPOPT'):
+	solver_env = env.Copy()
 
-if solver_env.get('WITH_IPOPT'):
 	solver_env.AppendUnique(CPPPATH=[solver_env.get('IPOPT_CPPPATH')])
 
-libipopt = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
-	,LIBS = ['ascend','ipopt']
-	,LIBPATH = ['#']
-)
+	libipopt = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
+		,LIBS = ['ascend','ipopt']
+		,LIBPATH = ['#']
+	)
 
-env.Depends(libipopt,env['libascend'])
+	env.Depends(libipopt,env['libascend'])
 
-env['extfns'] += [libipopt]
+	env['extfns'] += [libipopt]
 
 # vim: set syntax=python:

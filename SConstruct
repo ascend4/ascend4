@@ -142,10 +142,10 @@ opts.Add(ListOption(
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","TRON"]
+	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","TRON","IPOPT"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','LSOD','OPTSQP',"IDA","TRON"
+		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT"
 	 ]
 ))
 
@@ -791,7 +791,7 @@ if platform.system()=="Windows":
 else:
 	with_installer=0
 	without_installer_reason = "only possible under Windows"
-
+		
 if 'LSODE' in env['WITH_SOLVERS']:
 	with_lsode=True
 else:
@@ -810,6 +810,12 @@ if 'CONOPT' in env['WITH_SOLVERS']:
 else:
 	with_conopt=False
 	without_conopt_reason = "not requested (WITH_SOLVERS)"
+
+if 'IPOPT' in env['WITH_SOLVERS']:
+	with_ipopt=True
+else:
+	with_ipopt=False
+	without_ipopt_reason = "not requested (WITH_SOLVERS)"
 
 
 #print "SOLVERS:",env['WITH_SOLVERS']
@@ -1434,6 +1440,35 @@ def CheckCONOPT(context):
 	return is_ok
 
 #----------------
+# IPOPT test
+
+ipopt_test_text = """
+#if !defined(_WIN32)
+# define FNAME_LCASE_DECOR
+#endif
+
+#include <ipopt/IpStdCInterface.h>
+int main(){
+	Number n;
+	IpoptProblem nlp = NULL;
+	FreeIpoptProblem(nlp); // probably a crash if you run this
+	return 0;
+}
+"""
+
+def CheckIPOPT(context):
+	context.Message( 'Checking for IPOPT... ' )
+
+	keep = KeepContext(context,"IPOPT")
+	
+	is_ok = context.TryLink(ipopt_test_text,".c")
+	context.Result(is_ok)
+	
+	keep.restore(context)
+		
+	return is_ok
+
+#----------------
 # Tcl test
 
 # TCL and TK required version 8.1, 8.2, 8.3, or 8.4:
@@ -1727,6 +1762,7 @@ conf = Configure(env
 		, 'CheckIDA' : CheckIDA
 		, 'CheckSUNDIALS' : CheckSUNDIALS
 		, 'CheckCONOPT' : CheckCONOPT
+		, 'CheckIPOPT' : CheckIPOPT
 		, 'CheckScrollkeeperConfig' : CheckScrollkeeperConfig
 		, 'CheckFPE' : CheckFPE
 		, 'CheckSIGINT' : CheckSIGINT
@@ -1941,6 +1977,14 @@ elif not conf.CheckCONOPT():
 	with_conopt = False
 	without_conpt_reason = "CONOPT not found"
 
+# IPOPT
+
+if not with_ipopt:
+	without_ipopt_reason = "Not selected (see config option WITH_SOLVERS)"
+elif not conf.CheckIPOPT():
+	with_ipopt = False
+	without_ipopt_reason = "IPOPT not found"
+
 # BLAS
 
 need_blas=False
@@ -2081,6 +2125,7 @@ for k,v in {
 		,'ASC_WITH_MFGRAPH':with_mfgraph
 		,'ASC_WITH_UFSPARSE':with_ufsparse
 		,'ASC_WITH_CONOPT':with_conopt
+		,'ASC_WITH_IPOPT':with_ipopt
 		,'ASC_WITH_LSODE':with_lsode
 		,'ASC_WITH_MMIO':with_mmio
 		,'ASC_SIGNAL_TRAPS':with_signals
@@ -2166,6 +2211,9 @@ if with_ida:
 
 if with_conopt:
 	env.Append(WITH_CONOPT=1)
+
+if with_ipopt:
+	env.Append(WITH_IPOPT=1)
 
 #-------------
 # TCL/TK GUI
