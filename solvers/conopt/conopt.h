@@ -12,7 +12,7 @@
 /*****************************************************************************/
 
 /*
-	Permission has been obtained from Arne Drud, Fri Jul 6, 2006, to include
+	Permission has been obtained from Arne Drud, Fri Jul 6, 2007, to include
 	this file in the ASCEND distribution. He is aware that ASCEND is an
 	open source project license under the GNU General Public License.
 
