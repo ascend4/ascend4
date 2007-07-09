@@ -1211,7 +1211,7 @@ int32 conopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 
   slv_define_parm(parameters, real_parm,
 	       "infinity","RTMAXV","Internal value of infinity",
-	       U_p_real(val,10e20),U_p_real(lo,10),U_p_real(hi,MAX_REAL),2);
+	       U_p_real(val,CONOPT_BOUNDLIMIT),U_p_real(lo,10),U_p_real(hi,MAX_REAL),2);
 
   slv_define_parm(parameters, real_parm,
 	       "maxjac","RTMAXJ","Maximum Jacobian Element",
@@ -1835,7 +1835,7 @@ static void update_cost(conopt_system_t sys)
 
 
 /**
-	This is the 'ReadMatrix' callback. The provides the mechanism for ASCEND
+	This is the 'ReadMatrix' callback. This provides the mechanism for ASCEND
 	to tell CONOPT about the lower and upper bounds on variables, the initial
 	values, the initial basic/non-basis status of variables, the types of
 	equation constraints and the values of the RHSes, and information about the
