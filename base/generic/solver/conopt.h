@@ -49,7 +49,7 @@
 /*
 	Default bound limit for CONOPT
 */
-#define CONOPT_BOUNDLIMIT 3.1e11
+#define CONOPT_BOUNDLIMIT 3.1e9 
 
 /**
  * Parameter required for CONOPT subroutines
