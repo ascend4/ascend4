@@ -41,10 +41,13 @@ if __name__=='__main__':
 
 	# ensure that we have our 'models' dir in the ASCENDLIBRARY path
 	modeldirs = [os.path.join(sourceroot,"models")]
-	solverdir = os.path.join(sourceroot,"solvers")
-	solverdirs = [os.path.join(solverdir,d) for d in ['qrslv','conopt','lrslv','cmslv','lsode','ida']]
-	if add_at_start('ASCENDLIBRARY',modeldirs+solverdirs):
+	if add_at_start('ASCENDLIBRARY',modeldirs):
 		restart.append('ASCENDLIBRARY')
+
+	solverdir = os.path.join(sourceroot,"solvers")
+	solverdirs = [os.path.join(solverdir,d.lower()) for d in "@WITH_SOLVERS@".split(",")]
+	if add_at_start('ASCENDSOLVERS',solverdirs):
+		restart.append('ASCENDSOLVERS')
 
 	# ensure that we have our shared libraries in the LD_LIBRARY_PATH
 	libdirs = [sourceroot,os.path.join(sourceroot,"pygtk")]
