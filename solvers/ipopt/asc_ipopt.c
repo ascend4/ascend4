@@ -120,7 +120,6 @@ struct IpoptSystemStruct{
 	Number* x;                    /* starting point and solution vector */
 	Number* mult_x_L;             /* lower bound multipliers at the solution */
 	Number* mult_x_U;             /* upper bound multipliers at the solution */
-	Number objval;                /* objective value */
 	Index i;                      /* generic counter */
 };
 
@@ -307,27 +306,36 @@ Bool ipopt_eval_f(Index n, Number *x, Bool new_x,  Number *obj_value, void *user
 	int res;
 
 	asc_assert(n==sys->n);
+	asc_assert(sys->obj!=NULL);
 
 	if(new_x){
 		res = ipopt_update_model(sys,x);
 		if(res)return 0; /* fail model update */
 	}
 
+	sys->calc_ok = TRUE;
 
-	double val = 0;
-	/* evaluate f(x) somehow */
+	*obj_value = relman_eval(sys->obj,&(sys->calc_ok),SAFE_CALC);
 
-	*obj_value = val;
-
-	return 0; /* fail: not yet implemented */
+	return sys->calc_ok;
 }
 
+/**
+	@return 1 on success
+*/
 Bool ipopt_eval_grad_f(Index n, Number* x, Bool new_x, Number* grad_f, void *user_data){
 	IpoptSystem *sys;
 	sys = SYS(user_data);
-	int j, res;
+	int j, res, len;
+	double *derivatives;
+	int *variables;
+	static var_filter_t vfilter = {
+		VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR
+		,VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED
+	};
 
 	asc_assert(n==sys->n);
+	asc_assert(sys->obj);
 
 	if(new_x){
 		res = ipopt_update_model(sys,x);
@@ -339,8 +347,24 @@ Bool ipopt_eval_grad_f(Index n, Number* x, Bool new_x, Number* grad_f, void *use
 	for(j=0; j<n; ++j){
 		grad_f[j] = 0;
 	}
+	
+    len = rel_n_incidences(sys->obj);
+    variables = ASC_NEW_ARRAY(int,len);
+    derivatives = ASC_NEW_ARRAY(double,len);
 
-	return 0; /* fail: not yet implemented */
+    relman_diff2(
+        sys->obj,&vfilter,derivatives,variables
+	    , &(obj_count),SAFE_CALC
+    );
+
+	for(j=0; j<len; ++j){
+		grad_f[variables[j]] = derivatives[j];
+	}
+
+	ASC_FREE(variables);
+	ASC_FREE(derivatives);
+
+	return 1; /* success, presumably */
 }
 
 Bool ipopt_eval_g(Index n, Number* x, Bool new_x, Index m, Number *g, void *user_data){
@@ -689,7 +713,5 @@ static const SlvFunctionsT ipopt_internals = {
 };
 
 int ipopt_register(void){
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to load IPOPT");
-	return 1;
-	/* return solver_register(&tron_internals); */
+	return solver_register(&tron_internals);
 }

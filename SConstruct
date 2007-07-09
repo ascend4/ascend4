@@ -2112,6 +2112,7 @@ subst_dict = {
 	, '@ASC_CONOPT_ENVVAR@':env.get('CONOPT_ENVVAR')
 	, '@ASC_CONOPT_DLPATH@':c_escape(env.subst("$CONOPT_DLPATH"))
 	, '@SOURCE_ROOT@':c_escape(os.path.abspath(str(env.Dir("#"))))
+	, '@WITH_SOLVERS@':",".join(env.get('WITH_SOLVERS'))
 }
 
 if env.get('WITH_DOC'):
