@@ -1,0 +1,121 @@
+(*
+	Model of a simple frame that is being optimised to have members as
+	close to the same length as possible. This is a simple geometrical
+	problem; the main point of this model is to demonstrate how three-
+	dimensional visualisation can be added to an ASCEND model.
+	
+	This model is described in the ASCEND wiki.
+
+	Model by John Pye, July 2007.
+*)
+
+REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/framevis";
+
+MODEL vec3;
+	x,y,z IS_A delta_distance;
+METHODS
+	METHOD specify;
+		FIX x,y,z;
+	END specify;
+END vec3;
+
+MODEL edge;
+	A IS_A vec3;
+	B IS_A vec3;
+	d IS_A distance;
+	d^2 = (A.x-B.x)^2 + (A.y-B.y)^2 + (A.z-B.z)^2;
+END edge;
+
+MODEL frame;
+	nodes[0..4] IS_A vec3;
+
+	edges[0..7] IS_A edge;
+
+	(* edge connections and length calculations *)
+	edges[0].A, nodes[0] ARE_THE_SAME; edges[0].B, nodes[1] ARE_THE_SAME;
+	edges[1].A, nodes[1] ARE_THE_SAME; edges[1].B, nodes[3] ARE_THE_SAME;
+	edges[2].A, nodes[3] ARE_THE_SAME; edges[2].B, nodes[2] ARE_THE_SAME;
+	edges[3].A, nodes[2] ARE_THE_SAME; edges[3].B, nodes[0] ARE_THE_SAME;
+
+	edges[4].A, nodes[0] ARE_THE_SAME; edges[4].B, nodes[4] ARE_THE_SAME;
+	edges[5].A, nodes[1] ARE_THE_SAME; edges[5].B, nodes[4] ARE_THE_SAME;
+	edges[6].A, nodes[2] ARE_THE_SAME; edges[6].B, nodes[4] ARE_THE_SAME;
+	edges[7].A, nodes[3] ARE_THE_SAME; edges[7].B, nodes[4] ARE_THE_SAME;
+
+	edgegroup IS_A set OF symbol_constant;
+	edgegroup :== [
+		'0'
+		,'a'
+	];
+
+	d_req[edgegroup] IS_A distance;
+
+	eps[0..7] IS_A delta_distance;
+
+	zz_eps_eq_0: eps[0] = edges[0].d - d_req['0'];
+	zz_eps_eq_3: eps[3] = edges[3].d - d_req['0'];
+	zz_eps_eq_4: eps[4] = edges[4].d - d_req['a'];
+	zz_eps_eq_1: eps[1] = edges[1].d - d_req['0'];
+	zz_eps_eq_5: eps[5] = edges[5].d - d_req['a'];
+	zz_eps_eq_2: eps[2] = edges[2].d - d_req['0'];
+	zz_eps_eq_6: eps[6] = edges[6].d - d_req['a'];
+	zz_eps_eq_7: eps[7] = edges[7].d - d_req['a'];
+
+	edgegroupmembers[edgegroup] IS_A set OF integer_constant;
+	edgegroupmembers['0'] :== [
+		0
+		,1
+		,2
+		,3
+	];
+	edgegroupmembers['a'] :== [
+		4
+		,5
+		,6
+		,7
+	];
+	sse[edgegroup] IS_A area;
+
+	FOR i IN edgegroup CREATE
+		sse[i] = SUM[eps[j]^2 | j IN edgegroupmembers[i]];
+	END FOR;
+	trmse IS_A distance;
+
+	trmse = sqrt( + sse['a']);
+	MINIMIZE trmse (* minimise total RMS error *);
+
+METHODS
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
+
+METHOD specify;
+	RUN nodes[0].specify;
+	RUN nodes[1].specify;
+	RUN nodes[2].specify;
+	RUN nodes[3].specify;
+	FIX d_req['0'];
+	FIX d_req['a'];
+END specify;
+
+METHOD values;
+	nodes[0].x := -1.3 {m}; nodes[0].y := -1.3 {m}; nodes[0].z := 0.2 {m};
+	nodes[1].x := 1.3 {m}; nodes[1].y := -1.3 {m}; nodes[1].z := 0 {m};
+	nodes[2].x := -1.3 {m}; nodes[2].y := 1.3 {m}; nodes[2].z := 0.1 {m};
+	nodes[3].x := 1.3 {m}; nodes[3].y := 1.3 {m}; nodes[3].z := 0 {m};
+	nodes[4].x := 0 {m}; nodes[4].y := 0 {m}; nodes[4].z := -2 {m};
+
+	d_req['0'] := 0 {m};
+	d_req['a'] := 3 {m};
+END values;
+
+METHOD framevis;
+	EXTERNAL framevis(SELF);
+END framevis;
+
+END frame;
+
