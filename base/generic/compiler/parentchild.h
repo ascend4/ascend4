@@ -63,11 +63,6 @@
 	  - DummyInstances have no children.
 
 	based on instance.c
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "instance_enum.h"
-	#include "compiler.h"
 *//*
 	by Tom Epperly 8/16/89, Ben Allan
 	Version: $Revision: 1.11 $

@@ -467,7 +467,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 	path=Asc_GetEnv(envv);
 	if(path==NULL){
-		CONSOLE_DEBUG("ENV VAR '%s' NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",envv,defaultpath);
+		/* CONSOLE_DEBUG("ENV VAR '%s' NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",envv,defaultpath); */
 		path=defaultpath;
 	}
 
