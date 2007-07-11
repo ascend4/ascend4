@@ -129,7 +129,6 @@ try:
 				self.fov = self.fov + ((event.y-self.beginy)/width)*180
 				if self.fov < 5:
 					self.fov = 5;
-				print "FOV =",self.fov
 				self.reorient()
 
 			elif event.state & gtk.gdk.BUTTON3_MASK:
