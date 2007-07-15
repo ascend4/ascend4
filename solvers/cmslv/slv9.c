@@ -55,7 +55,7 @@ typedef struct slv9_system_structure *slv9_system_t;
 ASC_DLLSPEC SolverRegisterFn cmslv_register;
 
 #ifdef ASC_WITH_CONOPT
-# include <solver/conopt.h>
+# include <solver/conopt_dl.h>
 #else
 # define MAX_INT MAXINT
 # define MAX_REAL MAXDOUBLE

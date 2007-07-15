@@ -29,7 +29,7 @@ if solver_env.get('WITH_CONOPT'):
 			, LIBS=[solver_env.get('CONOPT_LIB')]
 		)
 
-	objs += solver_env.SharedObject('conopt.c')
+	objs += solver_env.SharedObject('conopt_dl.c')
 #	print "BUILDING CONOPT.OS"
 
 for c in csrcs:

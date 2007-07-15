@@ -41,7 +41,7 @@
 #include <system/block.h>
 #include <solver/solver.h>
 
-#include <solver/conopt.h>
+#include <solver/conopt_dl.h>
 
 typedef struct conopt_system_structure *conopt_system_t;
 
