@@ -202,6 +202,18 @@
 #endif
 
 /*
+	Whether to dynamically link to CONOPT. If we don't dynamically link to
+	conopt, it is assumed that we are dlopening CONOPT, which means
+	that we don't need it to be present at buildtime.
+
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
+*/
+#ifndef ASC_LINKED_CONOPT
+/* #define ASC_LINKED_CONOPT @ASC_LINKED_CONOPT@ */
+#endif
+
+/*
 	This is the name of the CONOPT .so or DLL. On Windows
 	it's called 'copopt3' but on linux it seems to be called
 	'consub3.so'.

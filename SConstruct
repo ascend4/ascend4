@@ -300,6 +300,12 @@ opts.Add(
 	,default_conopt_lib
 )
 
+opts.Add(BoolOption(
+	"CONOPT_LINKED"
+	,"Do you want to dynamically link to CONOPT (only possible if CONOPT is available at buildtime)"
+	,False
+))
+
 opts.Add(
 	'CONOPT_CPPPATH'
 	,"Where is your conopt.h?"
@@ -1974,8 +1980,11 @@ elif not conf.CheckIDA():
 if not with_conopt:
 	without_conopt_reason = "Not selected (see config option WITH_SOLVERS)"
 elif not conf.CheckCONOPT():
-	with_conopt = False
-	without_conpt_reason = "CONOPT not found"
+	if conf.env.get('CONOPT_LINKED'):
+		conf.env['CONOPT_LINKED'] = False
+	# we no longer require CONOPT at buildtime in order to build support for it
+	#with_conopt = False
+	#without_conpt_reason = "CONOPT not found"
 
 # IPOPT
 
@@ -2126,6 +2135,7 @@ for k,v in {
 		,'ASC_WITH_MFGRAPH':with_mfgraph
 		,'ASC_WITH_UFSPARSE':with_ufsparse
 		,'ASC_WITH_CONOPT':with_conopt
+		,'ASC_LINKED_CONOPT':env.get('CONOPT_LINKED')
 		,'ASC_WITH_IPOPT':with_ipopt
 		,'ASC_WITH_LSODE':with_lsode
 		,'ASC_WITH_MMIO':with_mmio
