@@ -28,7 +28,7 @@
 #include <utilities/error.h>
 #include <utilities/ascEnvVar.h>
 #include <general/env.h>
-#include "conopt.h"
+#include "conopt_dl.h"
 
 #ifndef ASC_WITH_CONOPT
 #ifdef __GNUC__
