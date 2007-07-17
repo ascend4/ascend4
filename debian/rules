@@ -37,6 +37,8 @@ clean:
 	rm -f build-stamp
 	dh_clean 
 	$(SCONS) -c
+	rm -rf .scon*
+	rm scons/*.pyc
 
 install: build
 	dh_testdir
@@ -47,9 +49,9 @@ install: build
 	cd $(CURDIR) && $(SCONS) INSTALL_ROOT=$(INSTALLROOT) install
 #
 	cd $(CURDIR)/pygtk/gnome && \
-	install -m 644 -D ascend.desktop $(INSTALLROOT)$(DATADIR)/applications/ascend.desktop && \
-	install -m 644 -D ascend.png $(INSTALLROOT)$(DATADIR)/icons/ascend-app.png && \
-	install -m 644 -D ascend.png $(INSTALLROOT)$(DATADIR)/icons/hicolor/64x64/ascend.png && \
+	install -m 644 -D ascend.desktop $(DATADIR)/applications/ascend.desktop && \
+	install -m 644 -D ascend.png $(DATADIR)/icons/ascend-app.png && \
+	install -m 644 -D ascend.png $(DATADIR)/icons/hicolor/64x64/ascend.png && \
 	install -m 644 -D ascend.xml $(CURDIR)/debian/ascend.mime
 #
 	dh_install --autodest

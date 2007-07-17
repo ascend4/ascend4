@@ -1902,7 +1902,7 @@ static int COI_CALL conopt_readmatrix(
 
     lower[col-offset] = low > -CONOPT_BOUNDLIMIT ? low : -CONOPT_BOUNDLIMIT;
     upper[col-offset] = up < CONOPT_BOUNDLIMIT ? up : CONOPT_BOUNDLIMIT;
-	CONSOLE_DEBUG("BOUNDS for var %d: [%g,%g]",col-offset,lower[col-offset],upper[col-offset]);
+	/* CONSOLE_DEBUG("BOUNDS for var %d: [%g,%g]",col-offset,lower[col-offset],upper[col-offset]); */
     curr[col-offset] = sys->variables.vec[col]; /* already scaled */
     vsta[col-offset] = !var_nonbasic(var);
   }
