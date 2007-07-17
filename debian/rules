@@ -23,7 +23,7 @@ endif
 # shared library versions, option 1
 major=0
 
-INSTALLROOT=$(CURDIR)/debian/tmp/
+INSTALLROOT=$(CURDIR)/debian/ascend/
 DATADIR=$(INSTALLROOT)/usr/share
 
 build: build-stamp
@@ -36,6 +36,7 @@ clean:
 	dh_testdir
 	rm -f build-stamp
 	dh_clean 
+	$(SCONS) -c
 
 install: build
 	dh_testdir
