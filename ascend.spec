@@ -41,8 +41,12 @@ BuildRequires: gcc-fortran gcc-c++
 BuildRequires: sundials-devel >= 2.2.0
 BuildRequires: blas
 BuildRequires: python-devel >= 2.4
-BuildRequires: tk-devel >= 8.3, tcl-devel >= 8.3
-BuildRequires: tktable < 2.10, tktable >= 2.8
+BuildRequires: tk, tk-devel, tcl, tcl-devel, tktable
+%if 0%{suse_version} == 1000
+BuildRequires: xorg-x11-devel
+%else
+BuildRequires: xorg-x11-libX11-devel
+%endif
 %else
 %if 0%{?mandriva_version}
 BuildRequires: gcc-gfortran gcc-c++
@@ -250,10 +254,10 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %doc doc/book.pdf
 
 %changelog
-* Mon Jul 02 2007 John Pye <john.pye@anu.edu.au> 0.9.5.112
+* Sun Jul 25 2007 John Pye <john.pye@anu.edu.au> 0.9.5.112
 - solvers are now all built as separate shared libraries
 - mime-type icon added
-- build-time dependences allow building on more different distros
+- RPM now builds on Fedora 5,6,7 and SUSE 10.0 and newer. Not Mandriva though.
 
 * Mon Apr 23 2007 John Pye <john.pye@student.unsw.edu.au> 0.9.5.108
 - File ascend.lang has moved.
