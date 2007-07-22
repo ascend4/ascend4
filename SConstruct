@@ -282,7 +282,7 @@ opts.Add(
 
 opts.Add(
 	'SUNDIALS_LIBS'
-	,"Where are your SUNDIALS libraries installed?"
+	,"What libraries are required for SUNDIALS?"
 	,['sundials_nvecserial','sundials_ida','m']
 )
 
@@ -329,6 +329,33 @@ opts.Add(
 	,"What environment variable should be used at runtime to override the default search location for CONOPT DLL/SO?"
 	,default_conopt_envvar
 )
+
+#------- IPOPT -------
+
+opts.Add(PackageOption(
+	"IPOPT_PREFIX"
+	,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
+	,default_conopt_prefix
+))
+
+opts.Add(
+	"IPOPT_LIB"
+	,"Library linked to for IPOPT"
+	,"ipopt"
+)
+
+opts.Add(
+	"IPOPT_LIBPATH"
+	,"Where is your IPOPT library installed"
+	,"$IPOPT_PREFIX/lib"
+)
+
+opts.Add(
+	'IPOPT_CPPPATH'
+	,"Where is your ipopt/IpStdCInterface.h (do not include the 'ipopt' in the path)"
+	,"$IPOPT_PREFIX/include"
+)
+
 
 #------- TRON -------
 
@@ -1456,7 +1483,7 @@ ipopt_test_text = """
 #include <ipopt/IpStdCInterface.h>
 int main(){
 	Number n;
-	IpoptProblem nlp = NULL;
+	IpoptProblem nlp = 0;
 	FreeIpoptProblem(nlp); // probably a crash if you run this
 	return 0;
 }
@@ -1466,7 +1493,6 @@ def CheckIPOPT(context):
 	context.Message( 'Checking for IPOPT... ' )
 
 	keep = KeepContext(context,"IPOPT")
-	
 	is_ok = context.TryLink(ipopt_test_text,".c")
 	context.Result(is_ok)
 	
