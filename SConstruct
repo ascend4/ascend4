@@ -339,10 +339,11 @@ opts.Add(PackageOption(
 ))
 
 opts.Add(
-	"IPOPT_LIB"
+	"IPOPT_LIBS"
 	,"Library linked to for IPOPT"
-	,"ipopt"
+	,["$F2C_LIB","blas","lapack","pthread","ipopt"]
 )
+
 
 opts.Add(
 	"IPOPT_LIBPATH"
@@ -1015,6 +1016,8 @@ class KeepContext:
 			if context.env.has_key(varprefix+'_LIB'):
 				context.env.Append(LIBS=[env[varprefix+'_LIB']])
 				#print "Adding '"+str(env[varprefix+'_LIB'])+"' to libs"	
+			elif context.env.has_key(varprefix+'_LIBS'):
+				context.env.AppendUnique(LIBS=env[varprefix+'_LIBS'])
 
 	def restore(self,context):
 		#print "RESTORING CONTEXT"

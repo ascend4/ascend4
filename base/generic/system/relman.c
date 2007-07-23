@@ -461,7 +461,7 @@ real64 relman_diff(struct rel_relation *rel, struct var_variable *var,
 #endif
 
 
-/* return 0 on success */
+/* return 0 on success (derivatives, variables and count are output vars too) */
 int relman_diff2(struct rel_relation *rel, const var_filter_t *filter
 		,real64 *derivatives, int32 *variables
 		,int32 *count, int32 safe

@@ -29,8 +29,8 @@
 
 #include <utilities/config.h>
 
-#ifndef WITH_IPOPT
-# error "WITH_IPOPT must be defined in order to build this." 
+#ifndef ASC_WITH_IPOPT
+# error "ASC_WITH_IPOPT must be defined in order to build this." 
 #endif
 
 #include <solver/solver.h>
@@ -97,6 +97,8 @@ struct IpoptSystemStruct{
 	int32                  rused;        /* Included relations */
 	int32                  rtot;         /* length of rellist */
 	double                 clock;        /* CPU time */
+
+	int32 calc_ok;
 
 	void *parm_array[IPOPT_PARAMS];
 	struct slv_parameter pa[IPOPT_PARAMS];
@@ -315,7 +317,7 @@ Bool ipopt_eval_f(Index n, Number *x, Bool new_x,  Number *obj_value, void *user
 
 	sys->calc_ok = TRUE;
 
-	*obj_value = relman_eval(sys->obj,&(sys->calc_ok),SAFE_CALC);
+	*obj_value = relman_eval(sys->obj,&(sys->calc_ok),SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_SAFECALC));
 
 	return sys->calc_ok;
 }
@@ -327,6 +329,7 @@ Bool ipopt_eval_grad_f(Index n, Number* x, Bool new_x, Number* grad_f, void *use
 	IpoptSystem *sys;
 	sys = SYS(user_data);
 	int j, res, len;
+	int count;
 	double *derivatives;
 	int *variables;
 	static var_filter_t vfilter = {
@@ -354,7 +357,7 @@ Bool ipopt_eval_grad_f(Index n, Number* x, Bool new_x, Number* grad_f, void *use
 
     relman_diff2(
         sys->obj,&vfilter,derivatives,variables
-	    , &(obj_count),SAFE_CALC
+	    , &count,SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_SAFECALC)
     );
 
 	for(j=0; j<len; ++j){
@@ -713,5 +716,5 @@ static const SlvFunctionsT ipopt_internals = {
 };
 
 int ipopt_register(void){
-	return solver_register(&tron_internals);
+	return solver_register(&ipopt_internals);
 }
