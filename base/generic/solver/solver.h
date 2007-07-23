@@ -238,15 +238,18 @@ ASC_DLLSPEC int slv_solve(slv_system_t sys);
 
 ASC_DLLSPEC int slv_eligible_solver(slv_system_t sys);
 /**<
-	Determines whether or not the current solver.
-	is capable of solving the given system as it is currently set up
-	(e.g. some solvers cannot do optimization, or inequalities, etc.).
+	Determines whether or not the current solver is capable of solving the 
+	given system as it is currently set up (e.g. some solvers cannot do
+	optimization, or inequalities, etc).
+
 	The system must be set up first before calling this function, or the
 	return value may be misleading. @par
 
 	The solver in question will be asked to pass judgement on the
 	data in the slv_system_t wrt the solver being useful.
 	If no solver is registered, this returns FALSE.
+
+	@return 1 if solver is elegible
 */
 
 ASC_DLLSPEC int slv_select_solver(slv_system_t sys, int solver);

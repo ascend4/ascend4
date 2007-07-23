@@ -1,6 +1,8 @@
 #include "solverstatus.h"
 #include "simulation.h"
 
+#include <stdexcept>
+
 extern "C"{
 #include <solver/solver.h>
 }
@@ -15,7 +17,8 @@ SolverStatus::SolverStatus(const SolverStatus &old) : s(old.s){
 
 void
 SolverStatus::getSimulationStatus(Simulation &sim){
-	slv_get_status(sim.getSystem(), &s);
+	int res = slv_get_status(sim.getSystem(), &s);
+	if(res)throw std::runtime_error("Error requesting solver status");
 }
 
 const bool
