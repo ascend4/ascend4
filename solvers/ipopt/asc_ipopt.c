@@ -64,7 +64,7 @@ ASC_DLLSPEC SolverRegisterFn ipopt_register;
 enum{
 	IPOPT_PARAM_TOL
 	,IPOPT_PARAM_MAX_ITER
-	,IPOPT_PARAM_SAFECALC
+	,IPOPT_PARAM_SAFEEVAL
 	,IPOPT_PARAM_MU_STRATEGY
 	,IPOPT_PARAMS
 };
@@ -81,6 +81,7 @@ struct IpoptSystemStruct{
 	struct rel_relation         *old_obj;/* Objective function: NULL = none */
 	struct var_variable         **vlist; /* Variable list (NULL terminated) */
 	struct rel_relation         **rlist; /* Relation list (NULL terminated) */
+	var_filter_t vfilt;
 
 	/*
 		Solver information
@@ -99,6 +100,7 @@ struct IpoptSystemStruct{
 	double                 clock;        /* CPU time */
 
 	int32 calc_ok;
+	double obj_val;
 
 	void *parm_array[IPOPT_PARAMS];
 	struct slv_parameter pa[IPOPT_PARAMS];
@@ -110,6 +112,7 @@ struct IpoptSystemStruct{
 	Index m;                          /* number of constraints */
 
 	int nnzJ; /* number of non zeros in the jacobian of the constraints */
+	int nnzH; /* number of non-zeros in the hessian of the objective */
 
 	Number* x_L;                  /* lower bounds on x */
 	Number* x_U;                  /* upper bounds on x */
@@ -128,6 +131,9 @@ struct IpoptSystemStruct{
 typedef struct IpoptSystemStruct IpoptSystem;
 
 static int ipopt_get_default_parameters(slv_system_t server, SlvClientToken asys, slv_parameters_t *parameters);
+
+static void ipopt_iteration_begins(IpoptSystem *sys);
+static void ipopt_iteration_ends(IpoptSystem *sys);
 
 /*------------------------------------------------------------------------------
   SYSTEM SETUP/DESTROY AND SOLVER ELIGIBILITY
@@ -157,6 +163,20 @@ static SlvClientToken ipopt_create(slv_system_t server, int32*statusindex){
 	sys->s.calc_ok = TRUE;
 	sys->s.costsize = 0;
 	sys->s.cost = NULL; /*redundant, but sanity preserving */
+	sys->s.block.number_of = 1;
+	sys->s.block.current_block = 0;
+	sys->s.block.current_reordered_block = 0;
+	sys->s.block.current_size = 0;
+	sys->s.block.previous_total_size = 0;
+	sys->s.block.iteration = 0;
+	sys->s.block.funcs = 0;
+	sys->s.block.jacs = 0;
+	sys->s.block.cpu_elapsed = 0;
+	sys->s.block.functime = 0;
+	sys->s.block.jactime = 0;
+	sys->s.block.residual = 0;
+
+	/** @TODO set up sys->vfilt */
 
 	sys->vlist = slv_get_solvers_var_list(server);
 	sys->rlist = slv_get_solvers_rel_list(server);
@@ -183,13 +203,19 @@ static SlvClientToken ipopt_create(slv_system_t server, int32*statusindex){
 
 static int32 ipopt_destroy(slv_system_t server, SlvClientToken asys){
 	UNUSED_PARAMETER(server);
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"ipopt_destroy not implemented");
 	return 1;
 }	
 
 static int32 ipopt_eligible_solver(slv_system_t server){
 	UNUSED_PARAMETER(server);
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
+	
+	/// TODO check that there is a MAXIMIZE or MINIMIZE statement
+	/// TODO check that there are no discrete-valued variables
+	/// TODO check that there are no WHENs or CONDITIONALs
+	/// TODO check anything else?
+
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"ipopt_eligible_solver not implemented");
 	return 1;
 }
 
@@ -246,11 +272,19 @@ int32 ipopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 		,(SlvParameterInitChar){{"mu_strategy"
 			,"Update strategy for barrier parameter",6
 			,"Determines which barrier parameter update strategy is to be used."
-			" 'MONOTONE' is the monotone (Fiacco-McCormick) strategy;"
-			" 'ADAPTIVE' is the adaptive update strategy."
-		}, "MONOTONE"}, (char *[]){
-			"MONOTONE","ADAPTIVE",NULL
+			" 'monotone' is the monotone (Fiacco-McCormick) strategy;"
+			" 'adaptive' is the adaptive update strategy."
+		}, "monotone"}, (char *[]){
+			"monotone","adaptive",NULL
 		}
+	);
+
+	slv_param_bool(parameters,IPOPT_PARAM_SAFEEVAL
+		,(SlvParameterInitBool){{"safeeval"
+			,"Use safe evaluation?",1
+			,"Use 'safe' function evaluation routines (TRUE) or allow ASCEND to "
+			"throw SIGFPE errors which will then halt integration (FALSE)."
+		}, FALSE}
 	);
 
 	asc_assert(parameters->num_parms==IPOPT_PARAMS);
@@ -282,7 +316,7 @@ static void ipopt_set_parameters(slv_system_t server, SlvClientToken asys
 }
 
 /*------------------------------------------------------------------------------
-  EVALUATION FUNCTIONS
+  EVALUATION AND RESULT HOOK FUNCTIONS
 */
 
 /**
@@ -317,7 +351,7 @@ Bool ipopt_eval_f(Index n, Number *x, Bool new_x,  Number *obj_value, void *user
 
 	sys->calc_ok = TRUE;
 
-	*obj_value = relman_eval(sys->obj,&(sys->calc_ok),SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_SAFECALC));
+	*obj_value = relman_eval(sys->obj,&(sys->calc_ok),SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_SAFEEVAL));
 
 	return sys->calc_ok;
 }
@@ -357,7 +391,7 @@ Bool ipopt_eval_grad_f(Index n, Number* x, Bool new_x, Number* grad_f, void *use
 
     relman_diff2(
         sys->obj,&vfilter,derivatives,variables
-	    , &count,SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_SAFECALC)
+	    , &count,SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_SAFEEVAL)
     );
 
 	for(j=0; j<len; ++j){
@@ -396,7 +430,7 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 ){
 	IpoptSystem *sys;
 	sys = SYS(user_data);
-	int i,j,res;
+	int i,res;
 
 	asc_assert(n==sys->n);
 	asc_assert(nele_jac==sys->nnzJ);
@@ -420,6 +454,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 		, Number obj_factor, Index m, Number* lambda
 		, Bool new_lambda, Index nele_hess, Index* iRow
 		, Index* jCol, Number* values
+		, void *user_data
 ){
 	/* not sure about this one yet: do all the 2nd deriv things work for this? */
 	return 0; /* fail: not yet implemented */
@@ -432,104 +467,101 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	IpoptSystem *sys;
 	UNUSED_PARAMETER(server);
-	int i;
+	enum ApplicationReturnStatus status;
+	int ret, i, j;
+	struct var_variable *var;
 
 	sys = SYS(asys);
 
+	double *x, *x_L, *x_U, *g_L, *g_U, *mult_x_L, *mult_x_U;
+
 	/* set the number of variables and allocate space for the bounds */
-	sys->x_L = ASC_NEW_ARRAY(Number,sys->n);
-	sys->x_U = ASC_NEW_ARRAY(Number,sys->n);
+	x_L = ASC_NEW_ARRAY(Number,sys->n);
+	x_U = ASC_NEW_ARRAY(Number,sys->n);
 
-	/* set the values for the variable bounds */
+	/* @TODO set the values for the variable bounds */
+	int jj = 0;
+	for(j = 0; j < sys->vtot; j++){
+		var = sys->vlist[j];
+		if(var_apply_filter(var,&(sys->vfilt))){
+			x_L[jj] = var_lower_bound(var);
+			x_U[jj] = var_upper_bound(var);
+			jj++;
+		}
+	}
 
-#if 0
-// sample code for the C interface
+	/** @TODO set bounds on the constraints? */
 
-int main(){
-
-  /* set the number of constraints and allocate space for the bounds */
-  m=2;
-  g_L = (Number*)malloc(sizeof(Number)*m);
-  g_U = (Number*)malloc(sizeof(Number)*m);
-  /* set the values of the constraint bounds */
-  g_L[0] = 25; g_U[0] = 2e19;
-  g_L[1] = 40; g_U[1] = 40;
-
-  /* create the IpoptProblem */
-  nlp = CreateIpoptProblem(n, x_L, x_U, m, g_L, g_U, 8, 10, 0, 
-			   &eval_f, &eval_g, &eval_grad_f, 
-			   &eval_jac_g, &eval_h);
+	/* create the IpoptProblem */
+	sys->nlp = CreateIpoptProblem(sys->n, x_L, x_U, sys->m, g_L, g_U, sys->nnzJ, sys->nnzH, 0/*index style=C*/, 
+		&ipopt_eval_f, &ipopt_eval_g, &ipopt_eval_grad_f, 
+		&ipopt_eval_jac_g, &ipopt_eval_h
+	);
   
-  /* We can free the memory now - the values for the bounds have been
-     copied internally in CreateIpoptProblem */
-  free(x_L);
-  free(x_U);
-  free(g_L);
-  free(g_U);
+	/* We can free the memory now - the values for the bounds have been
+	copied internally in CreateIpoptProblem */
+	ASC_FREE(x_L);
+	ASC_FREE(x_U);
+	ASC_FREE(g_L);
+	ASC_FREE(g_U);
 
-  /* set some options */
-  AddIpoptNumOption(nlp, "tol", 1e-9);
-  AddIpoptStrOption(nlp, "mu_strategy", "adaptive");
+	/* set some options */
+	AddIpoptNumOption(sys->nlp, "tol", SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_TOL));
+	AddIpoptStrOption(sys->nlp, "mu_strategy", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_MU_STRATEGY));
 
-  /* allocate space for the initial point and set the values */
-  x = (Number*)malloc(sizeof(Number)*n);
-  x[0] = 1.0;
-  x[1] = 5.0;
-  x[2] = 5.0;
-  x[3] = 1.0;
+	/* initial values */
+	x = ASC_NEW_ARRAY(Number, sys->n);
 
-  /* allocate space to store the bound multipliers at the solution */
-  mult_x_L = (Number*)malloc(sizeof(Number)*n);
-  mult_x_U = (Number*)malloc(sizeof(Number)*n);
+	/** @TODO get values of 'x' from the model */
 
-  /* solve the problem */
-  status = IpoptSolve(nlp, x, NULL, &obj, NULL, mult_x_L, mult_x_U, NULL);
+	/* allocate space to store the bound multipliers at the solution */
+	mult_x_L = ASC_NEW_ARRAY(Number, sys->n);
+	mult_x_U = ASC_NEW_ARRAY(Number, sys->n);
 
-  if (status == Solve_Succeeded) {
-    printf("\n\nSolution of the primal variables, x\n");
-    for (i=0; i<n; i++) {
-      printf("x[%d] = %e\n", i, x[i]); 
-    }
+	/* solve the problem */
+	status = IpoptSolve(sys->nlp, x, NULL, &sys->obj_val, NULL, mult_x_L, mult_x_U, NULL);
 
-    printf("\n\nSolution of the bound multipliers, z_L and z_U\n");
-    for (i=0; i<n; i++) {
-      printf("z_L[%d] = %e\n", i, mult_x_L[i]); 
-    }
-    for (i=0; i<n; i++) {
-      printf("z_U[%d] = %e\n", i, mult_x_U[i]); 
-    }
+	/** @TODO update the sys->s.xxxxx flags based on value of 'status' */
 
-    printf("\n\nObjective value\n");
-    printf("f(x*) = %e\n", obj); 
-  }
+	if (status == Solve_Succeeded) {
+		CONSOLE_DEBUG("Solution of the primal variables, x");
+		for (i=0; i<sys->n; i++) {
+			CONSOLE_DEBUG("   x[%d] = %e\n", i, x[i]); 
+		}
+
+		CONSOLE_DEBUG("Solution of the bound multipliers, z_L and z_U");
+		for (i=0; i<sys->n; i++) {
+			CONSOLE_DEBUG("   z_L[%d] = %e", i, mult_x_L[i]); 
+		}
+		for (i=0; i<sys->n; i++) {
+			CONSOLE_DEBUG("    z_U[%d] = %e", i, mult_x_U[i]); 
+		}
+
+		CONSOLE_DEBUG("Objective value");
+		CONSOLE_DEBUG("    f(x*) = %e", sys->obj_val); 
+
+		ret = 0; /* success */
+	}else{
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed solve, unknown status");
+		ret = 1; /* failure */
+	}
  
-  /* free allocated memory */
-  FreeIpoptProblem(nlp);
-  free(x);
-  free(mult_x_L);
-  free(mult_x_U);
+	/* free allocated memory */
+	FreeIpoptProblem(sys->nlp);
+	ASC_FREE(x);
+	ASC_FREE(mult_x_L);
+	ASC_FREE(mult_x_U);
 
-  return 0;
-}
-#endif
-
-
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
-	return 1;
+	return ret;
 }
 
 static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 	IpoptSystem *sys;
-	struct var_variable **vp;
-	struct rel_relation **rp;
-	int cap, ind;
-	int matrix_creation_needed = 1;
-	int *cntvect, temp;
 
 	CONSOLE_DEBUG("PRESOLVE");
 
 	sys = SYS(asys);
-	//iteration_begins(sys);
+	ipopt_iteration_begins(sys);
 	//check_system(sys);
 
 	asc_assert(sys->vlist && sys->rlist);
@@ -579,11 +611,11 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 		sys->presolved = 1; /* full presolve recognized here */
 		sys->resolve = 0;   /* initialize resolve flag */
 
-		/* provide nnz for jacobian matrix of constraints */
+		/* @TODO calculate nnz for jacobian matrix of constraints */
 
 		/* provide sparsity structure for jacobian */
 
-		/* provide nnz for hessian matrix */
+		/** @TODO calculate nnz for hessian matrix */
 
 		/* provide sparsity structure for hessian matrix */
 
@@ -646,13 +678,7 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 		sys->s.block.current_reordered_block = -2;
 	}
 
-	/* Reset status */
-	sys->con.optimized = 0;
-	sys->s.iteration = 0;
-	sys->s.cpu_elapsed = 0.0;
-	sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
-	sys->s.block.previous_total_size = 0;
-	sys->s.costsize = 1+sys->s.block.number_of;
+	//...
 
 	if( matrix_creation_needed ) {
 		destroy_array(sys->s.cost);
@@ -664,20 +690,53 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 		reset_cost(sys->s.cost,sys->s.costsize);
 	}
 
+#endif
+
+	/* Reset status */
+	sys->s.iteration = 0;
+	sys->s.cpu_elapsed = 0.0;
+	sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
+	sys->s.block.previous_total_size = 0;
+	sys->s.costsize = 1+sys->s.block.number_of;
+
 	/* set to go to first unconverged block */
 	sys->s.block.current_block = -1;
 	sys->s.block.current_size = 0;
 	sys->s.calc_ok = TRUE;
 	sys->s.block.iteration = 0;
-	sys->objective =  MAXDOUBLE/2000.0;
+	sys->obj_val =  MAXDOUBLE/2000.0;
 
-	update_status(sys);
-	iteration_ends(sys);
+	ipopt_iteration_ends(sys);
 	sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
-#endif
 
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"presolve completed");
 	return 0;
 }
+
+/**
+	Prepare sys for entering an iteration, increasing the iteration counts
+	and starting the clock.
+*/
+static void ipopt_iteration_begins(IpoptSystem *sys){
+	sys->clock = tm_cpu_time();
+	++(sys->s.block.iteration);
+	++(sys->s.iteration);
+}
+
+
+/*
+	Prepare sys for exiting an iteration, stopping the clock and recording
+	the cpu time.
+*/
+static void ipopt_iteration_ends(IpoptSystem *sys){
+	double cpu_elapsed;   /* elapsed this iteration */
+
+	cpu_elapsed = (double)(tm_cpu_time() - sys->clock);
+	sys->s.block.cpu_elapsed += cpu_elapsed;
+	sys->s.cpu_elapsed += cpu_elapsed;
+}
+
+
 
 static int ipopt_iterate(slv_system_t server, SlvClientToken asys){
 	UNUSED_PARAMETER(server);
