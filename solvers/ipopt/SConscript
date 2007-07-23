@@ -5,6 +5,12 @@ if env.get('WITH_IPOPT'):
 
 	solver_env.AppendUnique(CPPPATH=[solver_env.get('IPOPT_CPPPATH')])
 
+	solver_env.Append(
+		CPPDEFINES=[
+			'ASC_WITH_IPOPT'
+		]
+	)
+
 	libipopt = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
 		,LIBS = ['ascend','ipopt']
 		,LIBPATH = ['#']
