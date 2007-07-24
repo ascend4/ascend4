@@ -1366,6 +1366,12 @@ class TestDOPRI5(Ascend):
 		assert abs(float(M.y[0]) - 0.994) < 1e-5
 		assert abs(float(M.y[1]) - 0.0) < 1e-5
 
+class TestIPOPT(Ascend):
+	def test1(self):
+		self.L.load('test/ipopt/test1.a4c')
+		M = self.L.findType('test1').getSimulation('sim')
+		M.solve(ascpy.Solver("IPOPT"),ascpy.SolverReporter())
+
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
 	def nothing(self):
@@ -1420,7 +1426,7 @@ if __name__=='__main__':
 		SEP = ":"
 
 	solverdir = os.path.abspath(os.path.join(sys.path[0],"solvers"))
-	solverdirs = [os.path.join(solverdir,s) for s in "qrslv","cmslv","lrslv","conopt","ida","lsode"]
+	solverdirs = [os.path.join(solverdir,s) for s in "qrslv","cmslv","lrslv","conopt","ida","lsode","ipopt"]
 
 	if not os.environ.get('ASCENDSOLVERS'):
 		os.environ['ASCENDSOLVERS'] = SEP.join(solverdirs)

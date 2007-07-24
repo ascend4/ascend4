@@ -18,7 +18,7 @@ SolverStatus::SolverStatus(const SolverStatus &old) : s(old.s){
 void
 SolverStatus::getSimulationStatus(Simulation &sim){
 	int res = slv_get_status(sim.getSystem(), &s);
-	if(res)throw std::runtime_error("Error requesting solver status");
+	if(res)throw std::runtime_error("Solver returned error when status requested.");
 }
 
 const bool
