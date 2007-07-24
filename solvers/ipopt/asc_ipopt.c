@@ -136,7 +136,7 @@ static void ipopt_iteration_begins(IpoptSystem *sys);
 static void ipopt_iteration_ends(IpoptSystem *sys);
 
 /*------------------------------------------------------------------------------
-  SYSTEM SETUP/DESTROY AND SOLVER ELIGIBILITY
+  SYSTEM SETUP/DESTROY, STATUS AND SOLVER ELIGIBILITY
 */
 
 static SlvClientToken ipopt_create(slv_system_t server, int32*statusindex){
@@ -206,6 +206,19 @@ static int32 ipopt_destroy(slv_system_t server, SlvClientToken asys){
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"ipopt_destroy not implemented");
 	return 1;
 }	
+
+
+static int ipopt_get_status(slv_system_t server, SlvClientToken asys
+		,slv_status_t *status
+){
+	IpoptSystem *sys;
+	(void)server;  /* stop gcc whine about unused parameter */
+
+	sys = SYS(asys);
+	//if (check_system(sys)) return 1;
+	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
+	return 0;
+}
 
 static int32 ipopt_eligible_solver(slv_system_t server){
 	UNUSED_PARAMETER(server);
@@ -475,6 +488,8 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 
 	double *x, *x_L, *x_U, *g_L, *g_U, *mult_x_L, *mult_x_U;
 
+	CONSOLE_DEBUG("SOLVING...");
+
 	/* set the number of variables and allocate space for the bounds */
 	x_L = ASC_NEW_ARRAY(Number,sys->n);
 	x_U = ASC_NEW_ARRAY(Number,sys->n);
@@ -571,6 +586,8 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No objective function was specified");
 		return -3;
 	}
+
+	CONSOLE_DEBUG("got objective rel %p",sys->obj);
 
 #if 0
 	if(sys->presolved > 0) { /* system has been presolved before */
@@ -699,6 +716,7 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 	sys->s.block.previous_total_size = 0;
 	sys->s.costsize = 1+sys->s.block.number_of;
 
+
 	/* set to go to first unconverged block */
 	sys->s.block.current_block = -1;
 	sys->s.block.current_size = 0;
@@ -707,7 +725,10 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 	sys->obj_val =  MAXDOUBLE/2000.0;
 
 	ipopt_iteration_ends(sys);
-	sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
+
+	CONSOLE_DEBUG("Reset status");
+
+	/* sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed; */
 
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"presolve completed");
 	return 0;
@@ -740,6 +761,7 @@ static void ipopt_iteration_ends(IpoptSystem *sys){
 
 static int ipopt_iterate(slv_system_t server, SlvClientToken asys){
 	UNUSED_PARAMETER(server);
+	CONSOLE_DEBUG("ITERATING...");
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
 	return 1;
 }
@@ -764,7 +786,7 @@ static const SlvFunctionsT ipopt_internals = {
 	,ipopt_get_default_parameters
 	,ipopt_get_parameters
 	,ipopt_set_parameters
-	,NULL
+	,ipopt_get_status
 	,ipopt_solve
 	,ipopt_presolve
 	,ipopt_iterate
