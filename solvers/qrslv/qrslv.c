@@ -1,4 +1,3 @@
-/* :ex: set ts=8 */
 /*	ASCEND modelling environment
 	Copyright (C) 2006 Carnegie Mellon University
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
@@ -4215,4 +4214,6 @@ static const SlvFunctionsT qrslv_internals = {
 ASC_EXPORT int qrslv_register(void){
 	return solver_register(&qrslv_internals);
 }
+
+/* :ex: set ts=8 */
 

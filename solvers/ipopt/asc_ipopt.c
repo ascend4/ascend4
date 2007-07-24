@@ -81,7 +81,9 @@ struct IpoptSystemStruct{
 	struct rel_relation         *old_obj;/* Objective function: NULL = none */
 	struct var_variable         **vlist; /* Variable list (NULL terminated) */
 	struct rel_relation         **rlist; /* Relation list (NULL terminated) */
+
 	var_filter_t vfilt;
+	rel_filter_t rfilt;
 
 	/*
 		Solver information
@@ -176,10 +178,17 @@ static SlvClientToken ipopt_create(slv_system_t server, int32*statusindex){
 	sys->s.block.jactime = 0;
 	sys->s.block.residual = 0;
 
-	/** @TODO set up sys->vfilt */
+	sys->rfilt.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
+	sys->rfilt.matchvalue = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
+	sys->vfilt.matchbits =  (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED);
+	sys->vfilt.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
 
 	sys->vlist = slv_get_solvers_var_list(server);
 	sys->rlist = slv_get_solvers_rel_list(server);
+
+	sys->rtot = slv_get_num_solvers_rels(server);
+	sys->vtot = slv_get_num_solvers_vars(server);
+
 	sys->obj = slv_get_obj_relation(server);
 	if(sys->vlist == NULL) {
 		ASC_FREE(sys);
@@ -469,13 +478,197 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 		, Index* jCol, Number* values
 		, void *user_data
 ){
-	/* not sure about this one yet: do all the 2nd deriv things work for this? */
+	if(iRow != NULL){
+		asc_assert(jCol !=NULL);
+		asc_assert(x==NULL); asc_assert(lambda==NULL); asc_assert(values==NULL);
+
+		/* identify the sparsity structure of the Hessian (note: only the lower-
+		left part is required by IPOPT , because the Hessian is symmetric) */
+
+		/*
+		for(i=0; i<nvars; ++i){
+			for(j=i; j<nvars; ++j){
+				if(relman_hess_expr(sys->obj, sys->vlist[i], sys->vlist[j]) != 0){
+					iRow[nele_hess] = i;
+					jCol[nele_hess] = j;
+					nele_hess++
+				}
+			}
+		}
+		*/								
+				
+	}else{
+		asc_assert(jCol==NULL);
+		asc_assert(x!=NULL); asc_assert(lambda!=NULL); asc_assert(values!=NULL);
+
+		/* evaluate the Hessian matrix */
+	}
+	
 	return 0; /* fail: not yet implemented */
 }
 
 /*------------------------------------------------------------------------------
   SOLVE ROUTINES
 */
+
+static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
+	IpoptSystem *sys;
+	int max, i;
+
+	CONSOLE_DEBUG("PRESOLVE");
+
+	sys = SYS(asys);
+	ipopt_iteration_begins(sys);
+	//check_system(sys);
+
+	asc_assert(sys->vlist && sys->rlist);
+
+	/** @TODO work out if matrix creation is not again needed */
+
+	/** @TODO slv_sort_rels_and_vars(server,&(sys->m),&(sys->n)); */
+
+	/* set all relations as being 'unsatisfied' to start with... */
+	for(i=0; i < sys->rtot; ++i){
+		rel_set_satisfied(sys->rlist[i],FALSE);
+	}
+
+	sys->obj = slv_get_obj_relation(server); /*may have changed objective*/
+	if(!sys->obj){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No objective function was specified");
+		return -3;
+	}
+
+	CONSOLE_DEBUG("got objective rel %p",sys->obj);
+
+	/** @TODO calculate nnz for hessian matrix */
+
+	/* need to provide sparsity structure for hessian matrix? */
+
+	max = relman_obj_direction(sys->obj);
+	if(max==-1){
+		CONSOLE_DEBUG("this is a MINIMIZE problem");
+	}else{
+		CONSOLE_DEBUG("this is a MAXIMIZE problem");
+	}
+
+	CONSOLE_DEBUG("got %d relations and %d vars in system", sys->rtot, sys->vtot);
+	/* calculate number of non-zeros in the Jacobian matrix for the constraint equations */
+
+	sys->nnzJ = relman_jacobian_count(sys->rlist, sys->rtot, &(sys->vfilt), &(sys->rfilt), &max);
+
+	CONSOLE_DEBUG("got %d non-zeros in constraint Jacobian", sys->nnzJ);
+	
+	/* need to provide sparsity structure for jacobian? */
+
+
+
+#if 0
+	if(sys->presolved > 0) { /* system has been presolved before */
+		if(!conopt_dof_changed(sys) /*no changes in fixed or included flags*/
+		        && sys->p.partition == sys->J.old_partition
+		        && sys->obj == sys->old_obj
+		){
+		    matrix_creation_needed = 0;
+		    CONOPT_CONSOLE_DEBUG("YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION");
+		}
+	}
+#endif
+
+#if 0
+	// check all this...
+
+		sys->presolved = 1; /* full presolve recognized here */
+		sys->resolve = 0;   /* initialize resolve flag */
+
+		sys->J.old_partition = sys->p.partition;
+		sys->old_obj = sys->obj;
+
+		slv_sort_rels_and_vars(server,&(sys->con.m),&(sys->con.n));
+		CONOPT_CONSOLE_DEBUG("FOUND %d CONSTRAINTS AND %d VARS",sys->con.m,sys->con.n);
+		if (sys->obj != NULL) {
+		    CONOPT_CONSOLE_DEBUG("ADDING OBJECT AS A ROW");
+		    sys->con.m++; /* treat objective as a row */
+		}
+
+		cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
+		COIDEF_Ini(cntvect);
+		sys->con.cntvect = cntvect;
+		CONOPT_CONSOLE_DEBUG("NUMBER OF CONSTRAINTS = %d",sys->con.m);
+		COIDEF_NumVar(cntvect, &(sys->con.n));
+		COIDEF_NumCon(cntvect, &(sys->con.m));
+		sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
+		COIDEF_NumNZ(cntvect, &(sys->con.nz));
+		COIDEF_NumNlNz(cntvect, &(sys->con.nz));
+
+		sys->con.base = 0;
+		COIDEF_Base(cntvect,&(sys->con.base));
+		COIDEF_ErrLim(cntvect, &(DOMLIM));
+		COIDEF_ItLim(cntvect, &(ITER_LIMIT));
+
+		if(sys->obj!=NULL){
+			sys->con.optdir = relman_obj_direction(sys->obj);
+			sys->con.objcon = sys->con.m - 1; /* objective will be last row */
+			CONOPT_CONSOLE_DEBUG("SETTING OBJECTIVE CONSTRAINT TO BE %d",sys->con.objcon);
+		}else{
+			sys->con.optdir = 0;
+			sys->con.objcon = 0;
+		}
+		COIDEF_OptDir(cntvect, &(sys->con.optdir));
+		COIDEF_ObjCon(cntvect, &(sys->con.objcon));
+
+		temp = 0;
+		COIDEF_StdOut(cntvect, &temp);
+
+		int debugfv = 1;
+		COIDEF_DebugFV(cntvect, &debugfv);
+
+		destroy_vectors(sys);
+		destroy_matrices(sys);
+		create_matrices(server,sys);
+		create_vectors(sys);
+
+		sys->s.block.current_reordered_block = -2;
+	}
+
+	//...
+
+	if( matrix_creation_needed ) {
+		destroy_array(sys->s.cost);
+		sys->s.cost = create_zero_array(sys->s.costsize,struct slv_block_cost);
+		for( ind = 0; ind < sys->s.costsize; ++ind ) {
+		    sys->s.cost[ind].reorder_method = -1;
+		}
+	} else {
+		reset_cost(sys->s.cost,sys->s.costsize);
+	}
+
+#endif
+
+	/* Reset status */
+	sys->s.iteration = 0;
+	sys->s.cpu_elapsed = 0.0;
+	sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
+	sys->s.block.previous_total_size = 0;
+	sys->s.costsize = 1+sys->s.block.number_of;
+
+
+	/* set to go to first unconverged block */
+	sys->s.block.current_block = -1;
+	sys->s.block.current_size = 0;
+	sys->s.calc_ok = TRUE;
+	sys->s.block.iteration = 0;
+	sys->obj_val =  MAXDOUBLE/2000.0;
+
+	ipopt_iteration_ends(sys);
+
+	CONSOLE_DEBUG("Reset status");
+
+	/* sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed; */
+
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"presolve completed");
+	return 0;
+}
+
 
 static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	IpoptSystem *sys;
@@ -568,170 +761,6 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	ASC_FREE(mult_x_U);
 
 	return ret;
-}
-
-static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
-	IpoptSystem *sys;
-
-	CONSOLE_DEBUG("PRESOLVE");
-
-	sys = SYS(asys);
-	ipopt_iteration_begins(sys);
-	//check_system(sys);
-
-	asc_assert(sys->vlist && sys->rlist);
-
-	sys->obj = slv_get_obj_relation(server); /*may have changed objective*/
-	if(!sys->obj){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No objective function was specified");
-		return -3;
-	}
-
-	CONSOLE_DEBUG("got objective rel %p",sys->obj);
-
-#if 0
-	if(sys->presolved > 0) { /* system has been presolved before */
-		if(!conopt_dof_changed(sys) /*no changes in fixed or included flags*/
-		        && sys->p.partition == sys->J.old_partition
-		        && sys->obj == sys->old_obj
-		){
-		    matrix_creation_needed = 0;
-		    CONOPT_CONSOLE_DEBUG("YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION");
-		}
-	}
-#endif
-
-#if 0
-	// check all this...
-
-	/* set all relations as being 'unsatisfied' to start with... */
-	rp=sys->rlist;
-	for( ind = 0; ind < sys->rtot; ++ind ) {
-		rel_set_satisfied(rp[ind],FALSE);
-	}
-
-	if( matrix_creation_needed ) {
-
-		cap = slv_get_num_solvers_rels(server);
-		sys->cap = slv_get_num_solvers_vars(server);
-		sys->cap = MAX(sys->cap,cap);
-		vp=sys->vlist;
-		for( ind = 0; ind < sys->vtot; ++ind ) {
-		    var_set_in_block(vp[ind],FALSE);
-		}
-		rp=sys->rlist;
-		for( ind = 0; ind < sys->rtot; ++ind ) {
-		    rel_set_in_block(rp[ind],FALSE);
-		    /* rel_set_satisfied(rp[ind],FALSE); */
-		}
-
-		sys->presolved = 1; /* full presolve recognized here */
-		sys->resolve = 0;   /* initialize resolve flag */
-
-		/* @TODO calculate nnz for jacobian matrix of constraints */
-
-		/* provide sparsity structure for jacobian */
-
-		/** @TODO calculate nnz for hessian matrix */
-
-		/* provide sparsity structure for hessian matrix */
-
-		sys->J.old_partition = sys->p.partition;
-		sys->old_obj = sys->obj;
-
-		slv_sort_rels_and_vars(server,&(sys->con.m),&(sys->con.n));
-		CONOPT_CONSOLE_DEBUG("FOUND %d CONSTRAINTS AND %d VARS",sys->con.m,sys->con.n);
-		if (sys->obj != NULL) {
-		    CONOPT_CONSOLE_DEBUG("ADDING OBJECT AS A ROW");
-		    sys->con.m++; /* treat objective as a row */
-		}
-
-		cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
-		COIDEF_Ini(cntvect);
-		sys->con.cntvect = cntvect;
-		CONOPT_CONSOLE_DEBUG("NUMBER OF CONSTRAINTS = %d",sys->con.m);
-		COIDEF_NumVar(cntvect, &(sys->con.n));
-		COIDEF_NumCon(cntvect, &(sys->con.m));
-		sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
-		COIDEF_NumNZ(cntvect, &(sys->con.nz));
-		COIDEF_NumNlNz(cntvect, &(sys->con.nz));
-
-		sys->con.base = 0;
-		COIDEF_Base(cntvect,&(sys->con.base));
-		COIDEF_ErrLim(cntvect, &(DOMLIM));
-		COIDEF_ItLim(cntvect, &(ITER_LIMIT));
-
-		if(sys->obj!=NULL){
-			sys->con.optdir = relman_obj_direction(sys->obj);
-			sys->con.objcon = sys->con.m - 1; /* objective will be last row */
-			CONOPT_CONSOLE_DEBUG("SETTING OBJECTIVE CONSTRAINT TO BE %d",sys->con.objcon);
-		}else{
-			sys->con.optdir = 0;
-			sys->con.objcon = 0;
-		}
-		COIDEF_OptDir(cntvect, &(sys->con.optdir));
-		COIDEF_ObjCon(cntvect, &(sys->con.objcon));
-
-		temp = 0;
-		COIDEF_StdOut(cntvect, &temp);
-
-		COIDEF_ReadMatrix(cntvect, &conopt_readmatrix);
-		COIDEF_FDEval(cntvect, &conopt_fdeval);
-		COIDEF_Option(cntvect, &conopt_option);
-		COIDEF_Solution(cntvect, &conopt_solution);
-		COIDEF_Status(cntvect, &conopt_status);
-		COIDEF_Message(cntvect, &asc_conopt_message);
-		COIDEF_ErrMsg(cntvect, &conopt_errmsg);
-		COIDEF_Progress(cntvect, &asc_conopt_progress);
-
-		int debugfv = 1;
-		COIDEF_DebugFV(cntvect, &debugfv);
-
-		destroy_vectors(sys);
-		destroy_matrices(sys);
-		create_matrices(server,sys);
-		create_vectors(sys);
-
-		sys->s.block.current_reordered_block = -2;
-	}
-
-	//...
-
-	if( matrix_creation_needed ) {
-		destroy_array(sys->s.cost);
-		sys->s.cost = create_zero_array(sys->s.costsize,struct slv_block_cost);
-		for( ind = 0; ind < sys->s.costsize; ++ind ) {
-		    sys->s.cost[ind].reorder_method = -1;
-		}
-	} else {
-		reset_cost(sys->s.cost,sys->s.costsize);
-	}
-
-#endif
-
-	/* Reset status */
-	sys->s.iteration = 0;
-	sys->s.cpu_elapsed = 0.0;
-	sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
-	sys->s.block.previous_total_size = 0;
-	sys->s.costsize = 1+sys->s.block.number_of;
-
-
-	/* set to go to first unconverged block */
-	sys->s.block.current_block = -1;
-	sys->s.block.current_size = 0;
-	sys->s.calc_ok = TRUE;
-	sys->s.block.iteration = 0;
-	sys->obj_val =  MAXDOUBLE/2000.0;
-
-	ipopt_iteration_ends(sys);
-
-	CONSOLE_DEBUG("Reset status");
-
-	/* sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed; */
-
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"presolve completed");
-	return 0;
 }
 
 /**

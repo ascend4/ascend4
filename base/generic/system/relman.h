@@ -276,7 +276,7 @@ extern int32 relman_diff_harwell(struct rel_relation **rlist,
 	@todo relman_diff_harwell() bias == 1 is not yet implemented.
 */
 
-extern int32 relman_jacobian_count(struct rel_relation **rlist,
+ASC_DLLSPEC int32 relman_jacobian_count(struct rel_relation **rlist,
                                    int32 rlen,
                                    var_filter_t *vfilter,
                                    rel_filter_t *rfilter,
