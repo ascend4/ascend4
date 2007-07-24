@@ -1,4 +1,5 @@
 #!@PYTHON@
+# ^ python path substituted here is not depended upon in Windows
 
 import os.path, sys, platform
 
@@ -19,7 +20,7 @@ restart = 0
 if platform.system()=="Windows":
 	import _winreg as wreg
 	k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, "SOFTWARE\ASCEND")
-	print k	
+	print k
 
 	# for some reason, QueryValue doesn't work on Py 2.4, need to use QueryValueEx.
 	INSTALL_SOLVERS,t = wreg.QueryValueEx(k,"INSTALL_SOLVERS")
@@ -31,24 +32,7 @@ if platform.system()=="Windows":
 	
 	PYVERSION = "@PYVERSION@"
 	
-	k = wreg.OpenKey(wreg.HKEY_CURRENT_USER
-		,"SOFTWARE\Python\PythonCore\%s\InstallPath" % PYVERSION
-	)
-	pypath,t = wreg.QueryValueEx(k,"")
-	if pypath == '':
-		k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE
-			,"SOFTWARE\Python\PythonCore\%s\InstallPath" % PYVERSION
-		)
-		pypath,t = wreg.QueryValueEx(k,"")
-		if pypath == '':
-			import winsound
-			winsound.MessageBeep(MB_ICONEXCLAMATION)
-			print "Unable to locate Python install path"
-			sys.exit(1)
-	
-	print "pypath =",pypath
-	
-	PYTHON=os.path.join(pypath,"pythonw.exe")
+	PYTHON=os.path.join(sys.prefix,"pythonw.exe")
 	
 	print "PYTHON =",PYTHON
 	SEP=";"

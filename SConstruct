@@ -1320,7 +1320,7 @@ def CheckPythonLib(context):
 	python_libpath = []
 	python_linkflags = []
 	if platform.system()=="Windows":
-		python_libpath+=[cfig['prefix']]
+		python_libpath += [os.path.join(sys.prefix,"libs")]
 	else:
 		# checked on Linux and SunOS
 		if cfig['LDLIBRARY']==cfig['LIBRARY']:
@@ -2384,6 +2384,10 @@ if env.get('CAN_INSTALL'):
 # WINDOWS INSTALLER
 # For the windows installer, please see pygtk/SConscript
 
+if not env.get('NSIS'):
+	with_installer = False
+	without_installer_reason = "NSIS not found"
+
 if with_installer:
 	env.Append(NSISDEFINES={
 		'OUTFILE':"#dist/"+env['WIN_INSTALLER_NAME']
@@ -2434,17 +2438,16 @@ env.Depends(tar,'#doc/book.pdf')
 Alias('dist',tar)
 
 #------------------------------------------------------
-# USER'S MANUAL
+# DOCUMENTATION
 
-env.SConscript('doc/SConscript',['env'])
-
-
-#------------------------------------------------------
-# LIBASCEND DOXYGEN DOCUMENTATION
 
 if not with_doc_build:
-	print "Skipping... Windows installer isn't being built:",without_doc_build_reason
+	print "Skipping... Documentation isn't being built:",without_doc_build_reason
 
+#user's manual
+env.SConscript('doc/SConscript',['env'])
+
+# doxygen documentation
 env.SConscript('base/doc/SConscript',['env'])
 
 #------------------------------------------------------
