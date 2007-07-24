@@ -1439,6 +1439,9 @@ def CheckIDA(context):
 	
 	if cppdef:
 		context.env['CPPDEFINES']=cppdef
+	else:
+		del context.env['CPPDEFINES']
+
 	keep.restore(context)
 		
 	return is_ok
@@ -1907,14 +1910,10 @@ if not conf.CheckSigReset():
 
 # YACC
 
-if not conf.CheckYacc():
-	print "YACC NOT FOUND OR NOT WORKING"
-else:
+if conf.CheckYacc():
 	conf.env['HAVE_YACC']=True
 
-if not conf.CheckLex():
-	print "YACC NOT FOUND OR NOT WORKING"
-else:
+if conf.CheckLex():
 	conf.env['HAVE_LEX']=True
 
 # Tcl/Tk

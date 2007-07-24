@@ -24,20 +24,7 @@ class Help:
 				self.goonline = True
 
 	def run(self,topic=None):
-			
-		if platform.system()=='Windows':
-			try:
-				import win32api
-				_b = webbrowser.get('windows-default')
-			except:
-				print "FAILED TO IMPORT 'win32', hoping that firefox is installed..."
-				_b = webbrowser.GenericBrowser('\\Progra~1\\Mozill~1\\firefox %s &');
-			
-			print _b
-		elif platform.system()=='Linux':
-			_b = webbrowser.get()	
-		else:
-			print "PLATFORM IS ".platform.platform(True,True)
+		_b = webbrowser.get()
 
 		if self.goonline:
 			_u = self.webhelproot
@@ -45,8 +32,9 @@ class Help:
 			_p = os.path.join(self.helproot)
 			_u = "file://"+_p
 		
-		#print "OPENING WEB PAGE:",_u
+		print "OPENING WEB PAGE: %s..." % _u
 		_b.open(_u);
+		print "BACK FROM WEB CALL"
 
 if __name__ == "__main__":
 	_h = Help()
