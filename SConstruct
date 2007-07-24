@@ -2237,6 +2237,7 @@ env.AppendUnique(CPPPATH=['#base/generic'])
 
 if env['DEBUG']:
 	env.Append(CCFLAGS=['-g'])
+	env.Append(LINKFLAGS=['-g'])
 
 if env['GCOV']:
 	env.Append(
