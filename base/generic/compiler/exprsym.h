@@ -32,7 +32,7 @@
 	models in any case.
 *//*
  *  by Kirk Abbott
- *  Created: Novermber 21, 1994
+ *  Created: November 21, 1994
  *  Last in CVS: $Revision: 1.5 $ $Date: 1997/07/18 12:29:23 $ $Author: mthomas $
 */
 
@@ -69,9 +69,9 @@ extern Term *Derivative(Term *term, unsigned long wrt,
                         int (*filter)(struct Instance *));
 /**<
  *  The low level routine which actually does the symbolic differentiation
- *  with sub epxression simplification/elimination. In general not a safe
+ *  with sub expression simplification/elimination. In general not a safe
  *  place to start as use is made of a free store which has to be set up
- *  before this funcion may be called.
+ *  before this function may be called.
  */
 
 extern void PrepareDerivatives(int setup, int n_buffers, int buffer_length);
@@ -101,11 +101,11 @@ extern RelationINF *RelDerivative(RelationINF *rel, unsigned long wrt,
                                   int (*filter)(struct Instance *));
 /**<
  *  Given a infix relation, a index into its variable list and a function
- *  filter used to classify REAL_ATOM_INSTANCES as variables,parmaters or
+ *  filter used to classify REAL_ATOM_INSTANCES as variables,parameters or
  *  constants (or for that matter whatever the user pleases), this function
  *  will return a relation which is the symbolic derivative of the relation,
  *  with respect to the given variable. The relation *belongs* to the caller.
- *  The variale list will be updated to represent the new incidence after
+ *  The variable list will be updated to represent the new incidence after
  *  differentiation.
  */
 
@@ -133,7 +133,7 @@ extern RelationINF *RelDeriveSloppy(RelationINF *rel, unsigned long wrt,
                                     int (*filter)(struct Instance *));
 /**<
  *  Given a infix relation, a index into its variable list and a function
- *  filter used to classify REAL_ATOM_INSTANCES as variables,parmaters or
+ *  filter used to classify REAL_ATOM_INSTANCES as variables, parameters or
  *  constants (or for that matter whatever the user pleases), this function
  *  will return a relation which is the symbolic derivative of the relation,
  *  with respect to the given variable.<br><br>
@@ -143,7 +143,7 @@ extern RelationINF *RelDeriveSloppy(RelationINF *rel, unsigned long wrt,
  *  access to symbolic derivatives of a TRANSIENT nature. By this
  *  I mean that the derivative is going to be evaluated, written out etc,
  *  and then discarded. It makes certain shortcuts in the interest of speed
- *  For example, the returned variable list does not relect the fact
+ *  For example, the returned variable list does not reflect the fact
  *  that incidence may have been lost due to the process of doing the
  *  derivatives; but is still a valid list as differentiation can reduce
  *  incidence but not increase it.<br><br>
