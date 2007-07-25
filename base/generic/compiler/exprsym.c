@@ -964,7 +964,7 @@ Term *Derivative(Term *term, unsigned long wrt,
 }
 
 /*
- * This function assumes that the derivative free store exists.
+ * This function assumes that the derivative freestore exists.
  * It will only ReInit the store before starting. For the time
  * In the final implementation this will be a pointer to an Instance,
  * or a index into a table of instances. We allow the reset flag
