@@ -665,6 +665,12 @@ opts.Add(BoolOption(
 
 #-----------------------
 
+opts.Add(BoolOption(
+	'UPDATE_NO_YACC_LEX'
+	,"Update the *_no_yacc* and *_no_lex* files in the source tree? (these files are created so that ASCEND can be compiled in the absence of those tools)"
+	,False
+))
+
 opts.Add(
 	'DISTTAR_NAME'
 	,"Stem name of the tarball created by 'scons dist'. So for 'ascend-aaa.tar.bz2', set this to 'ascend-aaa'."
@@ -706,6 +712,7 @@ opts.Add(BoolOption(
 	,"Set to to 1 if you want to install an OMF file that can be read by scrollkeeper (eg Yelp on GNOME)"
 	,default_with_scrollkeeper
 ))
+
 
 if platform.system()!="Windows":
 	opts.Add(BoolOption(

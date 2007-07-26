@@ -37,8 +37,9 @@ if scanparse_env.has_key('HAVE_YACC'):
 	parsersource = libascend_env.CFile('ascParse.y',YACCFLAGS=['-y','-d','-pzz_'])
 	#libascend_env.SideEffect('ascParse.h',parsersource)
 	# backup the lex output for use by people without lex:
-	libascend_env.Command('ascParse_no_yacc.c',parsersource[0],Copy('$TARGET','$SOURCE'))
-	libascend_env.Command('ascParse_no_yacc.h',parsersource[1],Copy('$TARGET', '$SOURCE'))
+	if libascend_env.get('UPDATE_NO_YACC_LEX'):
+		libascend_env.Command('ascParse_no_yacc.c',parsersource[0],Copy('$TARGET','$SOURCE'))
+		libascend_env.Command('ascParse_no_yacc.h',parsersource[1],Copy('$TARGET', '$SOURCE'))
 else:
 	parserheader = libascend_env.Command('ascParse.h', 'ascParse_no_yacc.h',Copy('$TARGET', '$SOURCE'))
 	parsercode = libascend_env.Command('ascParse.c','ascParse_no_yacc.c',Copy('$TARGET','$SOURCE'))
@@ -47,7 +48,8 @@ else:
 if scanparse_env.has_key('HAVE_LEX'):
 	scannersource = libascend_env.CFile('scanner.l',LEXFLAGS=['-l','-Pzz_'])
 	# backup the lex output for use by people without lex:
-	libascend_env.Command('scanner_no_lex.c',scannersource,Copy('$TARGET','$SOURCE'))
+	if libascend_env.get('UPDATE_NO_YACC_LEX'):
+		libascend_env.Command('scanner_no_lex.c',scannersource,Copy('$TARGET','$SOURCE'))
 else:
 	scannersource = libascend_env.Command('scanner.c','scanner_no_lex.c',Copy('$TARGET', '$SOURCE'))
 

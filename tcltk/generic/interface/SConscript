@@ -16,7 +16,8 @@ tcl_env = env.Copy()
 if env.get('HAVE_LEX'):
 	typelexsource = tcl_env.CFile('typelex.l',LEXFLAGS = '-l -Ptyp_')
 	# copy the file for later use when people don't have flex:
-	env.Command('typelex_no_lex.c',typelexsource,Copy('$TARGET','$SOURCE'))
+	if env.get('UPDATE_NO_YACC_LEX'):
+		env.Command('typelex_no_lex.c',typelexsource,Copy('$TARGET','$SOURCE'))
 else:
 	typelexsource = 'typelex_no_lex.c'
 
