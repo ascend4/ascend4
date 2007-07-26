@@ -60,7 +60,7 @@ if options.cppflags:
 		include=INCLUDE
 	if -1!=include.find(" "):
 		print "-I\""+include+"\""
-	else:
+	elif len(include):
 		print "-I"+include
 	ok = True
 
@@ -71,7 +71,10 @@ if options.libs:
 	if -1!=libs.find(" "):
 		print "-L\""+libs+"\" -lascend"
 	else:
-		print "-L"+libs+" -lascend"
+		Lflag  = ""
+		if len(libs):
+			Lflag = "-L"+libs+" "
+		print Lflag + "-lascend"
 	ok = True
 
 if options.data:

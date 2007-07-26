@@ -488,7 +488,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 		/*
 		for(i=0; i<nvars; ++i){
 			for(j=i; j<nvars; ++j){
-				if(relman_hess_expr(sys->obj, sys->vlist[i], sys->vlist[j]) != 0){
+				if(r2(sys->obj, sys->vlist[i], sys->vlist[j]) != 0){
 					iRow[nele_hess] = i;
 					jCol[nele_hess] = j;
 					nele_hess++
@@ -699,6 +699,9 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	}
 
 	/** @TODO set bounds on the constraints? */
+	/* need to identify equations that share the same non-constant parts? */
+	/* then find the constant parts and make then g_L or g_U accordingly */
+	/* what to do about other bounds? */
 
 	/* create the IpoptProblem */
 	sys->nlp = CreateIpoptProblem(sys->n, x_L, x_U, sys->m, g_L, g_U, sys->nnzJ, sys->nnzH, 0/*index style=C*/, 
