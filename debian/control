@@ -2,7 +2,7 @@ Source: ascend
 Section: contrib/science
 Priority: extra
 Maintainer: John Pye <john@curioussymbols.com>
-Build-Depends: scons, gcc, flex, bison, swig, python-dev, libufsparse-dev, libsundials-serial-dev, gfortran, scrollkeeper, refblas3-dev, lyx, ccache, libtktable-dev, tcl8.4-dev, tk8.4-dev
+Build-Depends: scons, gcc, flex, bison, swig, python-dev, libufsparse-dev, libsundials-serial-dev, gfortran, scrollkeeper, refblas3-dev, lyx, ccache, libtktable-dev, tcl8.4-dev, tk8.4-dev, debhelper
 Standards-Version: 3.7.2
 
 Package: ascend

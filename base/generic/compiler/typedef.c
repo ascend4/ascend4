@@ -4820,15 +4820,15 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
     rdesc=FindType(refines);
     if (rdesc==NULL) {
       ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-      FPRINTF(ASCERR,"Unable to locate type %s for %s's type definition.\n",
-              SCP(refines),SCP(name));
+      FPRINTF(ASCERR,"Model '%s' attempts to refine '%s', which is not a known type.",
+              SCP(name), SCP(refines));
       DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
 	  error_reporter_end_flush();
       return NULL;
     }
     if (GetBaseType(rdesc) != model_type){
       ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-	  FPRINTF(ASCERR,"Model %s attempts to refine non-MODEL type %s.\n",
+	  FPRINTF(ASCERR,"Model '%s' attempts to refine non-MODEL type '%s'.\n",
               SCP(name),SCP(refines));
       DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
 	  error_reporter_end_flush();
