@@ -1,0 +1,181 @@
+REQUIRE "atoms.a4l";
+
+(*
+	Models for calculating moment of area of compound sections
+	for use in beam calculations in solid mechanics.
+
+	Nomenclature follows the conventions of Popov (1990).
+*)
+
+MODEL section;
+	I_y, I_z IS_A second_moment_of_area;
+	A IS_A area;
+	y_max, y_min IS_A delta_distance;
+	z_max, z_min IS_A delta_distance;
+	y_c, z_c IS_A delta_distance;
+END section;
+
+MODEL rectangular_section(
+	b WILL_BE distance;
+	d WILL_BE distance;
+) REFINES section;
+	I_z = b * d^3 / 12.;
+	I_y = d * b^3 / 12.;
+
+	A = b * d;
+	
+	y_max = d / 2; y_min = -d / 2;
+	z_max = b/2; z_min = -b/2;
+
+	y_c = 0;
+	z_c = 0;
+END rectangular_section;
+
+MODEL rectangular_section_test;
+	b, d IS_A distance;
+	S IS_A rectangular_section(b,d);
+METHODS
+	METHOD on_load;
+		FIX b; b:= 40 {mm};
+		FIX d; d:= 60 {mm};
+	END on_load;
+	METHOD self_test;
+		ASSERT abs(I_z - 72e4 {mm^4}) < 1e2 {mm^4};
+	END self_test;
+END rectangular_section_test;	
+
+MODEL circular_section(
+	r WILL_BE distance;
+) REFINES section;
+
+	I_y, I_z ARE_THE_SAME;
+	I_y = 1{PI} * r^4 / 4.;
+	A = 1{PI} * r^2;
+
+	y_min, z_min ARE_THE_SAME;
+	y_min = - r;
+	y_max, z_max ARE_THE_SAME;
+	y_max = + r;
+
+	y_c, z_c ARE_THE_SAME;
+	y_c = 0;
+END circular_section;
+
+MODEL circular_section_test;
+	r IS_A distance;
+	C IS_A circular_section(r);
+METHODS
+	METHOD on_load;
+		FIX r; r := 100 {mm};
+	END on_load;
+	METHOD self_test;
+		ASSERT C.y_max == 100 {mm};
+		ASSERT C.y_min == -100 {mm};
+		ASSERT abs(C.A - 31415 {mm^2}) < 1 {mm^2};
+	END self_test;
+END circular_section_test;
+
+MODEL tubular_section(
+	r WILL_BE distance;
+	t WILL_BE distance;
+) REFINES section;
+
+	I_y, I_z ARE_THE_SAME;
+	I_y = 1{PI} * (r^4 - (r-t)^4) / 4.;
+	A = 1{PI} * (r^2 - (r-t)^2);
+
+	y_min, z_min ARE_THE_SAME;
+	y_min = - r;
+	y_max, z_max ARE_THE_SAME;
+	y_max = + r;
+
+	y_c, z_c ARE_THE_SAME;
+	y_c = 0;
+END tubular_section;
+
+
+MODEL tubular_section_test;
+	r IS_A distance;
+	t IS_A distance;
+	C IS_A tubular_section(r,t);
+METHODS
+	METHOD on_load;
+		FIX r; r := 100 {mm};
+		FIX t; t := 5 {mm};
+	END on_load;
+	METHOD self_test;
+		ASSERT C.y_max == 100 {mm};
+		ASSERT C.y_min == -100 {mm};
+		ASSERT abs(C.A - (31415 {mm^2} - 28352{mm^2})) < 1 {mm^2};
+	END self_test;
+END tubular_section_test;
+
+
+	
+MODEL offset_section(
+	S WILL_BE section;
+	dy WILL_BE delta_distance;
+	dz WILL_BE delta_distance;
+) REFINES section;
+
+	I_y = S.I_y + S.A * dz^2;
+	I_z = S.I_z + S.A * dy^2;
+
+	A = S.A;
+
+	y_max = S.y_max + dy;
+	y_min = S.y_min + dy;
+	z_max = S.z_max + dz;
+	z_min = S.z_min + dz;
+
+	y_c = S.y_c + dy;
+	z_c = S.z_c + dz;
+END offset_section;
+
+MODEL compound_section(
+	S1 WILL_BE section;
+	S2 WILL_BE section;
+) REFINES section;
+
+	I_y = S1.I_y + S2.I_y;
+	I_z = S1.I_z + S2.I_z;
+	
+	A = S1.A + S2.A;
+	
+	CONDITIONAL
+		ymax1: S1.y_max > S2.y_max;
+		ymin1: S1.y_min < S2.y_min;
+		zmax1: S1.z_max > S2.z_max;
+		zmin1: S1.z_min < S2.z_min;
+	END CONDITIONAL;
+
+	ymax1b IS_A boolean_var; ymax1b == SATISFIED(ymax1);
+	ymin1b IS_A boolean_var; ymin1b == SATISFIED(ymin1);
+	zmax1b IS_A boolean_var; zmax1b == SATISFIED(zmax1);
+	zmin1b IS_A boolean_var; zmin1b == SATISFIED(zmin1);
+
+	WHEN(ymax1b)
+	    CASE TRUE:  y_max = S1.y_max;
+	    CASE FALSE: y_max = S2.y_max;
+	END WHEN;
+
+	WHEN(ymin1b)
+	    CASE TRUE:  y_min = S1.y_min;
+	    CASE FALSE: y_min = S2.y_min;
+	END WHEN;
+
+	WHEN(zmax1b)
+	    CASE TRUE:  z_max = S1.z_max;
+	    CASE FALSE: z_max = S2.z_max;
+	END WHEN;
+
+	WHEN(zmin1b)
+	    CASE TRUE:  z_min = S1.z_min;
+	    CASE FALSE: z_min = S2.z_min;
+	END WHEN;
+	
+	y_c = S1.A * S1.y_c + S2.A * S2.y_c;
+	z_c = S1.A * S1.z_c + S2.A * S2.z_c;
+END compound_section;
+
+	
