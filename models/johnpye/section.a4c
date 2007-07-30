@@ -24,11 +24,11 @@ MODEL rectangular_section(
 
 	A = b * d;
 	
-	y_max = d / 2; y_min = -d / 2;
-	z_max = b/2; z_min = -b/2;
+	y_max = d/2.; y_min = -d/2.;
+	z_max = b/2.; z_min = -b/2.;
 
-	y_c = 0;
-	z_c = 0;
+	y_c = 0 {mm};
+	z_c = 0 {mm};
 END rectangular_section;
 
 MODEL rectangular_hollow_section(
@@ -36,16 +36,16 @@ MODEL rectangular_hollow_section(
 	d WILL_BE distance; (* depth *)
 	t WILL_BE distance; (* thickness *)
 ) REFINES section;
-	I_z = b * d^3 / 12. - (b - 2 * t)*(d - 2*t)^3 / 12 ;
-	I_y = d * b^3 / 12. - (d - 2 * t)*(b - 2*t)^3 / 12 ;
+	I_z = b * d^3 / 12. - (b - 2. * t)*(d - 2*t)^3 / 12. ;
+	I_y = d * b^3 / 12. - (d - 2. * t)*(b - 2*t)^3 / 12. ;
 
-	A = b * d - (b - 2*t) * (d - 2*t);
+	A = b * d - (b - 2.*t) * (d - 2.*t);
 	
-	y_max = d / 2; y_min = -d / 2;
-	z_max = b/2; z_min = -b/2;
+	y_max = d/2.; y_min = -d/2.;
+	z_max = b/2.; z_min = -b/2.;
 
-	y_c = 0;
-	z_c = 0;
+	y_c = 0 {mm};
+	z_c = 0 {mm};
 END rectangular_hollow_section;
 	
 MODEL circular_section(
@@ -62,7 +62,7 @@ MODEL circular_section(
 	y_max = + r;
 
 	y_c, z_c ARE_THE_SAME;
-	y_c = 0;
+	y_c = 0 {mm};
 END circular_section;
 
 MODEL tubular_section(
@@ -80,7 +80,7 @@ MODEL tubular_section(
 	y_max = + r;
 
 	y_c, z_c ARE_THE_SAME;
-	y_c = 0;
+	y_c = 0 {mm};
 END tubular_section;
 
 (*
