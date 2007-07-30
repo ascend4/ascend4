@@ -1,0 +1,85 @@
+REQUIRE "johnpye/section.a4c";
+
+(*
+	we will just go ahead and assume that the 'y' direction is the buckling
+	direction. TODO: add conditional statements to check that.
+*)
+MODEL columnbuckling(
+	S WILL_BE section;
+);
+	P, P_design IS_A force;
+	A ALIASES S.A;
+
+	I_y ALIASES S.I_y;
+	I_z ALIASES S.I_z;
+
+	I_min IS_A second_moment_of_area;
+	I_min = I_y;
+
+	y_min ALIASES S.y_min;
+	y_max ALIASES S.y_max;
+
+	c IS_A distance;
+	(* c = MAX(abs(y_min),abs(y_max)) *)
+	c = abs(y_max) + 0.5*(abs(y_min) - abs(y_max) + abs(abs(y_min)-abs(y_max)));
+
+	(* radius of gyration and comes from minimum moment of inertia *)
+	r IS_A distance;
+	r = sqrt(I_min / A);
+
+	(* load eccentricity *)
+	e IS_A distance;
+
+	L IS_A distance;
+
+	sigma_max IS_A stress;
+	sigma_max = P/A * (1 + e * c / r^2 / cos( L_on_r * sqrt( P / 4 / E / A )));
+
+	(* Young's modulus *)
+	E IS_A youngs_modulus;
+
+	(* factor of safety *)
+	n IS_A factor;
+
+	P = n * P_design;
+
+	(* slenderness *)
+	L_on_r IS_A factor;
+	L_on_r = L / r;
+
+END columnbuckling;
+
+(* 
+	Example of a column buckling problem: solving for the design load
+	given a particular column design and factor of safety.
+*)
+MODEL columnbuckling_test;
+
+	r IS_A distance;
+	t IS_A distance;
+	S IS_A tubular_section(r,t);
+	C IS_A columnbuckling(S);
+
+	e ALIASES C.e;
+	P ALIASES C.P;
+	L ALIASES C.L;
+	E ALIASES C.E;
+	A ALIASES C.A;
+	n ALIASES C.n;
+	L_on_r ALIASES C.L_on_r;
+	P_design ALIASES C.P_design;
+	sigma_max ALIASES C.sigma_max;
+
+METHODS
+	METHOD on_load;
+		FIX C.E; C.E := 210 {GPa};
+		FIX e; e := 3 {cm};
+		FIX r; r := 45 {mm};
+		FIX t; t := 4 {mm};
+		FIX P; P := 1 {tonnef};
+		FIX L; L := 4 {m};
+		FIX n; n := 2;
+	END on_load;
+END columnbuckling_test;
+
+	
