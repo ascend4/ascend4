@@ -31,19 +31,23 @@ MODEL rectangular_section(
 	z_c = 0;
 END rectangular_section;
 
-MODEL rectangular_section_test;
-	b, d IS_A distance;
-	S IS_A rectangular_section(b,d);
-METHODS
-	METHOD on_load;
-		FIX b; b:= 40 {mm};
-		FIX d; d:= 60 {mm};
-	END on_load;
-	METHOD self_test;
-		ASSERT abs(I_z - 72e4 {mm^4}) < 1e2 {mm^4};
-	END self_test;
-END rectangular_section_test;	
+MODEL rectangular_hollow_section(
+	b WILL_BE distance;
+	d WILL_BE distance;
+	t WILL_BE distance;
+) REFINES section;
+	I_z = b * d^3 / 12. - (b - 2 * t)*(d - 2*t)^3 / 12 ;
+	I_y = d * b^3 / 12. - (d - 2 * t)*(b - 2*t)^3 / 12 ;
 
+	A = b * d;
+	
+	y_max = d / 2; y_min = -d / 2;
+	z_max = b/2; z_min = -b/2;
+
+	y_c = 0;
+	z_c = 0;
+END rectangular_hollow_section;
+	
 MODEL circular_section(
 	r WILL_BE distance;
 ) REFINES section;
@@ -60,20 +64,6 @@ MODEL circular_section(
 	y_c, z_c ARE_THE_SAME;
 	y_c = 0;
 END circular_section;
-
-MODEL circular_section_test;
-	r IS_A distance;
-	C IS_A circular_section(r);
-METHODS
-	METHOD on_load;
-		FIX r; r := 100 {mm};
-	END on_load;
-	METHOD self_test;
-		ASSERT C.y_max == 100 {mm};
-		ASSERT C.y_min == -100 {mm};
-		ASSERT abs(C.A - 31415 {mm^2}) < 1 {mm^2};
-	END self_test;
-END circular_section_test;
 
 MODEL tubular_section(
 	r WILL_BE distance;
@@ -93,25 +83,10 @@ MODEL tubular_section(
 	y_c = 0;
 END tubular_section;
 
-
-MODEL tubular_section_test;
-	r IS_A distance;
-	t IS_A distance;
-	C IS_A tubular_section(r,t);
-METHODS
-	METHOD on_load;
-		FIX r; r := 100 {mm};
-		FIX t; t := 5 {mm};
-	END on_load;
-	METHOD self_test;
-		ASSERT C.y_max == 100 {mm};
-		ASSERT C.y_min == -100 {mm};
-		ASSERT abs(C.A - (31415 {mm^2} - 28352{mm^2})) < 1 {mm^2};
-	END self_test;
-END tubular_section_test;
-
-
-	
+(*
+	When creating the offset section, the I_y and I_z are about the same axis
+	as the original section, as are the centroid.
+*)	
 MODEL offset_section(
 	S WILL_BE section;
 	dy WILL_BE delta_distance;
@@ -143,39 +118,165 @@ MODEL compound_section(
 	A = S1.A + S2.A;
 	
 	CONDITIONAL
-		ymax1: S1.y_max > S2.y_max;
-		ymin1: S1.y_min < S2.y_min;
-		zmax1: S1.z_max > S2.z_max;
-		zmin1: S1.z_min < S2.z_min;
+		ymax1c: S1.y_max > S2.y_max;
+		ymin1c: S1.y_min < S2.y_min;
+		zmax1c: S1.z_max > S2.z_max;
+		zmin1c: S1.z_min < S2.z_min;
 	END CONDITIONAL;
 
-	ymax1b IS_A boolean_var; ymax1b == SATISFIED(ymax1);
-	ymin1b IS_A boolean_var; ymin1b == SATISFIED(ymin1);
-	zmax1b IS_A boolean_var; zmax1b == SATISFIED(zmax1);
-	zmin1b IS_A boolean_var; zmin1b == SATISFIED(zmin1);
+	ymax1b IS_A boolean_var; ymax1b == SATISFIED(ymax1c);
+	ymin1b IS_A boolean_var; ymin1b == SATISFIED(ymin1c);
+	zmax1b IS_A boolean_var; zmax1b == SATISFIED(zmax1c);
+	zmin1b IS_A boolean_var; zmin1b == SATISFIED(zmin1c);
+
+	ymax1: y_max = S1.y_max;
+	ymax2: y_max = S2.y_max;
 
 	WHEN(ymax1b)
-	    CASE TRUE:  y_max = S1.y_max;
-	    CASE FALSE: y_max = S2.y_max;
+	    CASE TRUE:  USE ymax1;
+	    CASE FALSE: USE ymax2;
 	END WHEN;
 
+	ymin1: y_min = S1.y_min;
+	ymin2: y_min = S2.y_min;
 	WHEN(ymin1b)
-	    CASE TRUE:  y_min = S1.y_min;
-	    CASE FALSE: y_min = S2.y_min;
+	    CASE TRUE:  USE ymin1;
+	    CASE FALSE: USE ymin2;
 	END WHEN;
 
+	zmax1: z_max = S1.z_max;
+	zmax2: z_max = S2.z_max;
 	WHEN(zmax1b)
-	    CASE TRUE:  z_max = S1.z_max;
-	    CASE FALSE: z_max = S2.z_max;
+	    CASE TRUE:  USE zmax1;
+	    CASE FALSE: USE zmax2;
 	END WHEN;
 
+	zmin1: z_min = S1.z_min;
+	zmin2: z_min = S2.z_min;
 	WHEN(zmin1b)
-	    CASE TRUE:  z_min = S1.z_min;
-	    CASE FALSE: z_min = S2.z_min;
+	    CASE TRUE:  USE zmin1;
+	    CASE FALSE: USE zmin2;
 	END WHEN;
 	
 	y_c = S1.A * S1.y_c + S2.A * S2.y_c;
 	z_c = S1.A * S1.z_c + S2.A * S2.z_c;
 END compound_section;
 
+(* test models *)	
+
+MODEL rectangular_section_test;
+	b, d IS_A distance;
+	S IS_A rectangular_section(b,d);
+METHODS
+	METHOD on_load;
+		FIX b; b:= 40 {mm};
+		FIX d; d:= 60 {mm};
+	END on_load;
+	METHOD self_test;
+		ASSERT abs(I_z - 72e4 {mm^4}) < 1e2 {mm^4};
+	END self_test;
+END rectangular_section_test;
+
+MODEL rectangular_hollow_section_test;
+	b, d, t IS_A distance;
+	S IS_A rectangular_hollow_section(b,d,t);
+METHODS
+	METHOD on_load;
+		FIX b; b:= 40 {mm};
+		FIX d; d:= 60 {mm};
+		FIX t; t:= 5 {mm};
+	END on_load;
+	METHOD self_test;
+		(* correct values needed here *)
+		ASSERT S.y_max == 30 {mm};
+		ASSERT S.z_min == -20 {mm};
+		ASSERT 1==0;
+		(* ASSERT abs(I_z - 72e4 {mm^4}) < 1e2 {mm^4}; *)
+	END self_test;
+END rectangular_hollow_section_test;
+
+MODEL circular_section_test;
+	r IS_A distance;
+	C IS_A circular_section(r);
+METHODS
+	METHOD on_load;
+		FIX r; r := 100 {mm};
+	END on_load;
+	METHOD self_test;
+		ASSERT C.y_max == 100 {mm};
+		ASSERT C.y_min == -100 {mm};
+		ASSERT abs(C.A - 31415 {mm^2}) < 1 {mm^2};
+	END self_test;
+END circular_section_test;
+
+MODEL tubular_section_test;
+	r IS_A distance;
+	t IS_A distance;
+	C IS_A tubular_section(r,t);
+METHODS
+	METHOD on_load;
+		FIX r; r := 100 {mm};
+		FIX t; t := 5 {mm};
+	END on_load;
+	METHOD self_test;
+		ASSERT C.y_max == 100 {mm};
+		ASSERT C.y_min == -100 {mm};
+		ASSERT abs(C.A - (31415 {mm^2} - 28352{mm^2})) < 1 {mm^2};
+	END self_test;
+END tubular_section_test;
+
+MODEL offset_section_test;
+	r IS_A distance;
+	dy, dz IS_A delta_distance;
+	C IS_A circular_section(r);
+	O IS_A offset_section(C, dy, dz);
+METHODS
+	METHOD on_load;
+		FIX r; r := 100 {mm};
+		FIX dy; dy := 100 {mm};
+		FIX dz; dz := 50 {mm};
+	END on_load;
+	METHOD self_test;
+		ASSERT O.y_max == 200 {mm};
+		ASSERT O.y_min == 0 {mm};
+		ASSERT O.z_min == -50 {mm};
+		ASSERT abs(O.z_max - 150 {mm}) < 1e-6 {mm};
+		ASSERT O.A == C.A;
+		ASSERT O.y_c == 100 {mm};
+		ASSERT O.z_c == 50 {mm};
+		ASSERT 1==0; (* need values for I *)
+	END self_test;
+END offset_section_test;
+
+MODEL compound_section_test;
+	w, h IS_A distance;
+	R IS_A rectangular_section(w, h);
+	t IS_A distance;
+	h = 2 * t;
+	r IS_A distance;
+	C IS_A tubular_section(r,t);
 	
+	O IS_A compound_section(C,R);
+
+METHODS
+	METHOD on_load;
+		FIX r; r := 50 {mm};
+		FIX t; t := 5 {mm};
+		FIX w; w := 200 {mm};
+	END on_load;
+	METHOD self_test;
+		ASSERT O.A == C.A + R.A;
+		ASSERT O.y_c == 0 {mm};
+		ASSERT O.z_c == 0 {mm};
+		ASSERT O.y_max == 50 {mm};
+		ASSERT O.y_min == -50 {mm};
+		ASSERT O.z_min == -100 {mm};
+		ASSERT O.z_max == 100 {mm};
+	END self_test;
+END compound_section_test;
+
+		
+
+
+	
+
