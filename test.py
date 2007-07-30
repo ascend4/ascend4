@@ -1372,6 +1372,21 @@ class TestIPOPT(Ascend):
 		M = self.L.findType('test1').getSimulation('sim')
 		M.solve(ascpy.Solver("IPOPT"),ascpy.SolverReporter())
 
+# test some stuff for beam calculations
+class TestSection(Ascend):
+	def test_compound3(self):
+		self.L.load('johnpye/section.a4c')
+		T = self.L.findType('compound_section_test3')
+		M = T.getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+		M.run(T.getMethod('self_test'))
+	def test_compound2(self):
+		self.L.load('johnpye/section.a4c')
+		T = self.L.findType('compound_section_test2')
+		M = T.getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+		M.run(T.getMethod('self_test'))
+
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
 	def nothing(self):
