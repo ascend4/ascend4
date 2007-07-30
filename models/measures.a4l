@@ -237,6 +237,8 @@ femtoNewton= {fN};
 attoNewton= {aN};
 
 lbf = {N*4.448221};
+tonnef = {9.8* N/kg * 1 * t};
+kgf = {9.8*N/kg * 1 * kg};
 
 (* pressure *)
 

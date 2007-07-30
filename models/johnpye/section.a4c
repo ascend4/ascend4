@@ -93,8 +93,8 @@ MODEL offset_section(
 	dz WILL_BE delta_distance;
 ) REFINES section;
 
-	I_y = S.I_y + S.A * dz^2;
-	I_z = S.I_z + S.A * dy^2;
+	I_y = S.I_y + S.A * dy^2;
+	I_z = S.I_z + S.A * dz^2;
 
 	A = S.A;
 
@@ -116,47 +116,13 @@ MODEL compound_section(
 	I_z = S1.I_z + S2.I_z;
 	
 	A = S1.A + S2.A;
-	
-	CONDITIONAL
-		ymax1c: S1.y_max > S2.y_max;
-		ymin1c: S1.y_min < S2.y_min;
-		zmax1c: S1.z_max > S2.z_max;
-		zmin1c: S1.z_min < S2.z_min;
-	END CONDITIONAL;
 
-	ymax1b IS_A boolean_var; ymax1b == SATISFIED(ymax1c);
-	ymin1b IS_A boolean_var; ymin1b == SATISFIED(ymin1c);
-	zmax1b IS_A boolean_var; zmax1b == SATISFIED(zmax1c);
-	zmin1b IS_A boolean_var; zmin1b == SATISFIED(zmin1c);
+	(* tricks with 'abs' to avoid needing a conditional solver *)
+	y_max = S1.y_max + 0.5*(S2.y_max - S1.y_max + abs(S2.y_max - S1.y_max));
+	z_max = S1.z_max + 0.5*(S2.z_max - S1.z_max + abs(S2.z_max - S1.z_max));
 
-	ymax1: y_max = S1.y_max;
-	ymax2: y_max = S2.y_max;
-
-	WHEN(ymax1b)
-	    CASE TRUE:  USE ymax1;
-	    CASE FALSE: USE ymax2;
-	END WHEN;
-
-	ymin1: y_min = S1.y_min;
-	ymin2: y_min = S2.y_min;
-	WHEN(ymin1b)
-	    CASE TRUE:  USE ymin1;
-	    CASE FALSE: USE ymin2;
-	END WHEN;
-
-	zmax1: z_max = S1.z_max;
-	zmax2: z_max = S2.z_max;
-	WHEN(zmax1b)
-	    CASE TRUE:  USE zmax1;
-	    CASE FALSE: USE zmax2;
-	END WHEN;
-
-	zmin1: z_min = S1.z_min;
-	zmin2: z_min = S2.z_min;
-	WHEN(zmin1b)
-	    CASE TRUE:  USE zmin1;
-	    CASE FALSE: USE zmin2;
-	END WHEN;
+	y_min = S1.y_min + 0.5*(S2.y_min - S1.y_min - abs(S2.y_min - S1.y_min));
+	z_min = S1.z_min + 0.5*(S2.z_min - S1.z_min - abs(S2.z_min - S1.z_min));
 	
 	y_c = S1.A * S1.y_c + S2.A * S2.y_c;
 	z_c = S1.A * S1.z_c + S2.A * S2.z_c;
@@ -274,9 +240,5 @@ METHODS
 		ASSERT O.z_max == 100 {mm};
 	END self_test;
 END compound_section_test;
-
-		
-
-
 	
 
