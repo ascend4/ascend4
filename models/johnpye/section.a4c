@@ -19,8 +19,8 @@ MODEL rectangular_section(
 	b WILL_BE distance;
 	d WILL_BE distance;
 ) REFINES section;
-	I_y = b * d^3 / 12.;
-	I_z = d * b^3 / 12.;
+	I_z = b * d^3 / 12.;
+	I_y = d * b^3 / 12.;
 
 	A = b * d;
 	
@@ -121,8 +121,8 @@ MODEL compound_section(
 	A * z_c = S1.A * S1.z_c + S2.A * S2.z_c;
 
 	(* combined second moment of area *)
-	I_y = S1.I_y + S1.A * (S1.y_c - y_c)^2 + S2.I_y + S2.A * (S2.y_c - y_c)^2;
-	I_z = S1.I_z + S1.A * (S1.z_c - z_c)^2 + S2.I_z + S2.A * (S2.z_c - z_c)^2;
+	I_z = S1.I_z + S1.A * (S1.y_c - y_c)^2 + S2.I_z + S2.A * (S2.y_c - y_c)^2;
+	I_y = S1.I_y + S1.A * (S1.z_c - z_c)^2 + S2.I_y + S2.A * (S2.z_c - z_c)^2;
 
 	(* tricks with abs() to avoid needing a conditional solver *)
 	y_max = S1.y_max + 0.5*(S2.y_max - S1.y_max + abs(S2.y_max - S1.y_max));
