@@ -1380,6 +1380,12 @@ class TestSection(Ascend):
 		M = T.getSimulation('sim')
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
 		M.run(T.getMethod('self_test'))
+	def test_compound4(self):
+		self.L.load('johnpye/section.a4c')
+		T = self.L.findType('compound_section_test4')
+		M = T.getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+		M.run(T.getMethod('self_test'))
 	def test_compound2(self):
 		self.L.load('johnpye/section.a4c')
 		T = self.L.findType('compound_section_test2')

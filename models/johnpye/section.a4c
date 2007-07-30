@@ -39,7 +39,7 @@ MODEL rectangular_hollow_section(
 	I_z = b * d^3 / 12. - (b - 2 * t)*(d - 2*t)^3 / 12 ;
 	I_y = d * b^3 / 12. - (d - 2 * t)*(b - 2*t)^3 / 12 ;
 
-	A = b * d;
+	A = b * d - (b - 2*t) * (d - 2*t);
 	
 	y_max = d / 2; y_min = -d / 2;
 	z_max = b/2; z_min = -b/2;
@@ -292,11 +292,11 @@ MODEL compound_section_test2;
 	y[1] = -y[2];
 	y[3] = 0;
 	
-	y[1] = (h[3] + t)/2;
+	y[1] = (h[3] - t)/2;
 	z[4] = (w[1] + t)/2;
 
 	w_rhs = 2*t + w[1];
-	h_rhs = 2*t + h[3];
+	h_rhs = h[3];
 
 METHODS
 	METHOD on_load;
@@ -375,5 +375,65 @@ METHODS
 		ASSERT C.y_min = -h[1];
 		ASSERT C.z_max = w[1] / 2;
 		ASSERT C.z_min = -w[1] / 2;
+	END self_test;
+END compound_section_test3;
+
+(*
+	Same as test3 but side-by-side
+*)
+MODEL compound_section_test4;
+	w_tot, h_tot IS_A distance;
+	w[1..2], h[1..2] IS_A distance;
+	y[1..2], z[1..2] IS_A delta_distance;
+
+	R IS_A rectangular_section(w_tot, h_tot);
+
+	S[1..2], O[1..2] IS_A section;
+	FOR i IN [1..2] CREATE
+		S[i] IS_REFINED_TO rectangular_section(w[i], h[i]);
+		O[i] IS_REFINED_TO offset_section(S[i], y[i], z[i]);
+	END FOR;
+
+	C IS_A compound_section(O[1],O[2]);
+
+	(*
+		+---+---+
+	    |   |   |
+	    | 1 | 2 |
+	    |   |   |	
+	    +---|---+
+	*)
+	w[1], w[2] ARE_THE_SAME;	
+	h[1], h[2] ARE_THE_SAME;
+
+	y[1], y[2] ARE_THE_SAME;
+	z[1] = -z[2];
+	
+	z[1] = w_tot / 4;
+	y[1] = 0 {mm};
+
+	w[1] = w_tot / 2;
+	h[1] = h_tot;
+
+METHODS
+	METHOD on_load;
+		FIX w_tot, h_tot;
+		w_tot := 50 {mm};
+		h_tot := 140 {mm};
+	END on_load;
+	METHOD self_test;
+		ASSERT abs(C.I_y   - R.I_y) < 1e-6 {mm};
+		ASSERT abs(C.I_z   - R.I_z) < 1e-6 {mm};
+		ASSERT abs(C.A     - R.A) < 1e-6 {mm};
+		ASSERT abs(C.y_c   - R.y_c) < 1e-6 {mm};
+		ASSERT abs(C.z_c   - R.z_c) < 1e-6 {mm};
+		ASSERT abs(C.y_max - R.y_max) < 1e-6 {mm};
+		ASSERT abs(C.y_min - R.y_min) < 1e-6 {mm};
+		ASSERT abs(C.z_max - R.z_max) < 1e-6 {mm};
+		ASSERT abs(C.z_min - R.z_min) < 1e-6 {mm};
+		ASSERT C.y_max = h_tot / 2;
+		ASSERT C.y_min = -h_tot / 2;
+		ASSERT C.z_max = w_tot / 2;
+		ASSERT C.z_min = -w_tot / 2;
 	END self_test;
 END compound_section_test3;
