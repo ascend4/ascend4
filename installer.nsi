@@ -17,6 +17,10 @@ Name "ASCEND ${VERSION}"
 !define PYVERSION "2.5"
 !endif
 
+!ifndef PYPATCH
+!define PYPATCH ".1"
+!endif
+
 ; The file to write
 !ifdef OUTFILE
 OutFile ${OUTFILE}
@@ -97,7 +101,6 @@ Function .onInit
 	StrCpy $PATH "$DEFAULTPATH;$PYPATH;$GTKPATH"
 
 FunctionEnd
-
 
 ; The stuff to install
 Section "ASCEND (required)"
@@ -189,6 +192,133 @@ ascendconfigerror:
 	
 SectionEnd
 
+!define PYTHON_VERSION "${PYVERSION}${PYPATCH}"
+!define PYTHON_FILENAME "python-${PYTHON_VERSION}.msi"
+!define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FILENAME}"
+
+!define GTK_FILENAME "gtk-2.10.11-win32-1.exe"
+!define GTK_URL "http://downloads.sourceforge.net/gladewin32/${GTK_FILENAME}"
+
+!define PYGOBJECT_FILENAME "pygobject-2.12.3-1.win32-py${PYVERSION}.exe"
+!define PYGOBJECT_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygobject/2.12/${PYGOBJECT_FILENAME}"
+
+!define PYCAIRO_FILENAME "pycairo-1.2.6-1.win32-py${PYVERSION}.exe"
+!define PYCAIRO_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pycairo/1.2/${PYCAIRO_FILENAME}"
+
+!define PYGTK_FILENAME "pygtk-2.10.4-1.win32-py${PYVERSION}.exe"
+!define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.10/${PYGTK_FILENAME}"
+
+
+Section "Download prerequisites if necessary"
+	${If} $PYOK == 'NOK'
+		MessageBox MB_OK "Downloading python..."
+
+		StrCpy $2 "$TEMP\${PYTHON_FILENAME}"
+		nsisdl::download /TIMEOUT=30000 ${PYTHON_URL} $2
+		Pop $R0 ;Get the return value
+		${If} $R0 == "success"
+			MessageBox MB_OK "Installing python..."
+			ExecWait $2
+			Delete $2			
+			Call DetectPython
+			Pop $PYOK
+			Pop $PYPATH
+		${ElseIf} $R0 == "cancel"
+			MessageBox MB_OK "Python download cancelled"
+			Quit
+		${Else}
+			MessageBox MB_OK "Download failed: $R0"
+			Quit
+		${EndIf}
+	${EndIf}
+	
+	${If} $GTKOK == 'NOK'
+		MessageBox MB_OK "Downloading GTK..."
+		StrCpy $2 "$TEMP\${GTK_FILENAME}"
+		nsisdl::download /TIMEOUT=30000 ${GTK_URL} $2
+		Pop $R0 ;Get the return value
+		${If} $R0 == "success"
+			MessageBox MB_OK "Installing GTK..."
+			ExecWait $2
+			Delete $2				
+			Call DetectGTK
+			Pop $GTKOK
+			Pop $GTKPATH
+			Call DetectGlade
+			Pop $GLADEOK
+			Pop $GLADEPATH				
+		${ElseIf} $R0 == "cancel"
+			MessageBox MB_OK "GTK download cancelled"
+			Quit
+		${Else}
+			MessageBox MB_OK "Download failed: $R0"
+			Quit
+		${EndIf}
+	${EndIf}
+	
+	${If} $PYGOBJECTOK == 'NOK'
+		MessageBox MB_OK "Downloading PyGObject..."
+		StrCpy $2 "$TEMP\${PYGOBJECT_FILENAME}"
+		nsisdl::download /TIMEOUT=30000 ${PYGOBJECT_URL} $2
+		Pop $R0 ;Get the return value
+		${If} $R0 == "success"
+			MessageBox MB_OK "Installing PyGObject..."
+			ExecWait $2
+			Delete $2				
+			Call DetectPyGObject
+			Pop $PYGOBJECTOK
+		${ElseIf} $R0 == "cancel"
+			MessageBox MB_OK "PyGObject download cancelled"
+			Quit
+		${Else}
+			MessageBox MB_OK "Download failed: $R0"
+			Quit
+		${EndIf}
+	${EndIf}
+	
+	${If} $PYCAIROOK == 'NOK'
+		MessageBox MB_OK "Downloading PyCairo..."
+		StrCpy $2 "$TEMP\${PYCAIRO_FILENAME}"
+		nsisdl::download /TIMEOUT=30000 ${PYCAIRO_URL} $2
+		Pop $R0 ;Get the return value
+		${If} $R0 == "success"
+			MessageBox MB_OK "Installing PyCairo..."
+			ExecWait $2
+			Delete $2				
+			Call DetectPyCairo
+			Pop $PYCAIROOK
+		${ElseIf} $R0 == "cancel"
+			MessageBox MB_OK "PyCairo download cancelled"
+			Quit
+		${Else}
+			MessageBox MB_OK "Download failed: $R0"
+			Quit
+		${EndIf}
+	${EndIf}
+
+	
+	${If} $PYGTKOK == 'NOK'
+		MessageBox MB_OK "Downloading PyGTK..."
+		StrCpy $2 "$TEMP\${PYGTK_FILENAME}"
+		nsisdl::download /TIMEOUT=30000 ${PYGTK_URL} $2
+		Pop $R0 ;Get the return value
+		${If} $R0 == "success"
+			MessageBox MB_OK "Installing PyGTK..."
+			ExecWait $2
+			Delete $2				
+			Call DetectPyGTK
+			Pop $PYGTKOK
+		${ElseIf} $R0 == "cancel"
+			MessageBox MB_OK "PyGTK download cancelled"
+			Quit
+		${Else}
+			MessageBox MB_OK "Download failed: $R0"
+			Quit
+		${EndIf}
+	${EndIf}	
+	
+SectionEnd	
+
 ;--------------------------------
 
 Section "PyGTK GUI"
@@ -198,7 +328,7 @@ Section "PyGTK GUI"
 	${ElseIf} $GTKOK == 'NOK'
 		MessageBox MB_OK "PyGTK GUI cannot be installed, because GTK+ 2.x was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(GTKPATH=$GTKPATH)"
 	${ElseIf} $GLADEOK == 'NOK'
-		MessageBox MB_OK "PyGTK GUI cannot be installed, because Glade 2.x was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(GTKPATH=$GTKPATH)"
+		MessageBox MB_OK "PyGTK GUI cannot be installed, because Glade 2.x was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(GTKPATH=$GTKPATH).\n\nIf you do have GTK+ runtime installed, make sure\nyou have a version that includes support for Glade."
 	${ElseIf} $PYGTKOK == "NOK"
 		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyGTK was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
 	${ElseIf} $PYCAIROOK == "NOK"
@@ -274,20 +404,20 @@ SectionEnd
 
 Section "Tcl/Tk GUI"
 
-${If} $TCLOK != 'OK'
-	MessageBox MB_OK "Tck/Tk GUI can not be installed, because ActiveTcl was not found on this system. If do you want to use the Tcl/Tk GUI, please check the installation instructions ($TCLPATH)"
-${Else}
-	DetailPrint "--- TCL/TK INTERFACE ---"
-	SetOutPath $INSTDIR\tcltk
-	File /r /x .svn "tcltk\TK\*"
-	SetOutPath $INSTDIR
-	File "tcltk\generic\interface\ascendtcl.dll"
-	File "tcltk\generic\interface\ascend4.exe"
-	
-	StrCpy $TCLINSTALLED "1"
-	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "TclTk" 1
+	${If} $TCLOK != 'OK'
+		MessageBox MB_OK "Tck/Tk GUI can not be installed, because ActiveTcl was not found on this system. If do you want to use the Tcl/Tk GUI, please check the installation instructions ($TCLPATH)"
+	${Else}
+		DetailPrint "--- TCL/TK INTERFACE ---"
+		SetOutPath $INSTDIR\tcltk
+		File /r /x .svn "tcltk\TK\*"
+		SetOutPath $INSTDIR
+		File "tcltk\generic\interface\ascendtcl.dll"
+		File "tcltk\generic\interface\ascend4.exe"
 
-${EndIf}
+		StrCpy $TCLINSTALLED "1"
+		WriteRegDWORD HKLM "SOFTWARE\ASCEND" "TclTk" 1
+
+	${EndIf}
 
 SectionEnd
 
