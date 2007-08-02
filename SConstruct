@@ -56,6 +56,9 @@ if platform.system()=="Windows":
 	python_exe = "c:\\Python24\\python.exe"
 	default_with_scrollkeeper=False
 	pathsep = ";"
+	
+	default_fortran="g77"
+	default_f2c_lib="g2c"
 else:
 	default_tcl_lib = "tcl8.4"
 	default_tk_lib = "tk8.4"
@@ -91,6 +94,9 @@ else:
 	python_exe = distutils.sysconfig.EXEC_PREFIX+"/bin/python"
 	default_with_scrollkeeper=False
 	pathsep = ":"
+	
+	default_fortran="gfortran"
+	default_f2c_lib="gfortran"
 
 opts.Add(
 	'CC'
@@ -389,7 +395,7 @@ opts.Add(
 opts.Add(
 	"F2C_LIB"
 	,"F2C library (eg. g2c, gfortran, f2c)"
-	,"gfortran" # the default is gfortran now
+	,default_f2c_lib # the default is gfortran now
 )
 
 opts.Add(PackageOption(
@@ -401,7 +407,7 @@ opts.Add(PackageOption(
 opts.Add(
 	"FORTRAN"
 	,"Fortran compiler (eg g77, gfortran)"
-	,"gfortran"
+	,default_fortran
 )
 
 #------- tcl/tk --------
