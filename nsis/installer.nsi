@@ -51,6 +51,7 @@ Page components
 Page directory
 Page custom dependenciesCreate dependenciesLeave
 Page instfiles
+Page custom ascendIniCreate ascendIniLeave
 
 UninstPage uninstConfirm
 UninstPage instfiles
@@ -79,9 +80,12 @@ Var /GLOBAL PYGOBJECTDOWNLOAD
 Var /GLOBAL PYCAIRODOWNLOAD
 Var /GLOBAL GTKDOWNLOAD
 
+Var /GLOBAL ASCENDINIFOUND
+
 Function .onInit
 	StrCpy $PYINSTALLED ""
 	StrCpy $TCLINSTALLED ""
+	StrCpy $ASCENDINIFOUND ""
 	
 	ExpandEnvStrings $DEFAULTPATH "%WINDIR%;%WINDIR%\system32"
 
@@ -120,59 +124,64 @@ FunctionEnd
 !define PYTHON_VERSION "${PYVERSION}${PYPATCH}"
 !define PYTHON_FN "python-${PYTHON_VERSION}.msi"
 !define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
-!define PYTHON_CMD "msiexec /i /passive $$DAI_TMPFILE"
+!define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive"
 
 !define GTK_FN "gtk-2.10.11-win32-1.exe"
 !define GTK_URL "http://downloads.sourceforge.net/gladewin32/${GTK_FN}"
-!define GTK_CMD "${GTK_FN}"
+!define GTK_CMD "$DAI_TMPFILE"
 
 !define PYGOBJECT_FN "pygobject-2.12.3-1.win32-py${PYVERSION}.exe"
 !define PYGOBJECT_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygobject/2.12/${PYGOBJECT_FN}"
-!define PYGOBJECT_CMD "${PYGOBJECT_FN}"
+!define PYGOBJECT_CMD "$DAI_TMPFILE"
 
 !define PYCAIRO_FN "pycairo-1.2.6-1.win32-py${PYVERSION}.exe"
 !define PYCAIRO_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pycairo/1.2/${PYCAIRO_FN}"
-!define PYCAIRO_CMD "${PYGOBJECT_FN}"
+!define PYCAIRO_CMD "$DAI_TMPFILE"
 
 !define PYGTK_FN "pygtk-2.10.4-1.win32-py${PYVERSION}.exe"
 !define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.10/${PYGTK_FN}"
-!define PYGTK_CMD "${PYGTK_FN}"
+!define PYGTK_CMD "$DAI_TMPFILE"
 
 !include "download.nsi"
 
 Section "-python"
 	DetailPrint "--- DOWNLOAD PYTHON ---"
         ${If} $PYDOWNLOAD == '1'
-              !insertmacro downloadAndInstall "Python" "${PYTHON_URL}" "${PYTHON_FN}" "${PYTHON_CMD}"
-                Call DetectPython
-                Pop $PYOK
-                Pop $PYPATH
+		!insertmacro downloadAndInstall "Python" "${PYTHON_URL}" "${PYTHON_FN}" "${PYTHON_CMD}"
+		Call DetectPython
+		Pop $PYOK
+		Pop $PYPATH
+		${If} $PYOK == 'NOK'
+			MessageBox MB_OK "Python installation appears to have failed"
+		${EndIf}
         ${EndIf}
 SectionEnd
 Section "-gtk"
 	DetailPrint "--- DOWNLOAD GTK+ ---"
 	${If} $GTKDOWNLOAD == '1'
-              !insertmacro downloadAndInstall "GTK+" ${GTK_URL} ${GTK_FN} ${GTK_CMD}
-                Call DetectGTK
-                Pop $GTKOK
-                Pop $GTKPATH
-                Call DetectGlade
-                Pop $GLADEOK
-                Pop $GLADEPATH
+		!insertmacro downloadAndInstall "GTK+" ${GTK_URL} ${GTK_FN} ${GTK_CMD}
+		Call DetectGTK
+		Pop $GTKOK
+		Pop $GTKPATH
+		Call DetectGlade
+		Pop $GLADEOK
+		Pop $GLADEPATH
         ${EndIf}
 SectionEnd
 Section "-pygobject"
 	DetailPrint "--- DOWNLOAD PYGOBJECT ---"
         ${If} $PYGOBJECTDOWNLOAD == '1'
-              !insertmacro downloadAndInstall "PyGObject" ${PYGOBJECT_URL} ${PYGOBJECT_FN} ${PYGOBJECT_CMD}
-                Call DetectPyGObject
-                Pop $PYGOBJECTOK
+        ${AndIf} $PYOK == 'OK'
+		!insertmacro downloadAndInstall "PyGObject" ${PYGOBJECT_URL} ${PYGOBJECT_FN} ${PYGOBJECT_CMD}
+		Call DetectPyGObject
+		Pop $PYGOBJECTOK
         ${EndIf}
 SectionEnd
 Section "-pycairo"
 	DetailPrint "--- DOWNLOAD PYCAIRO ---"
         ${If} $PYCAIRODOWNLOAD == '1'
-              !insertmacro downloadAndInstall "PyCairo" ${PYCAIRO_URL} ${PYCAIRO_FN} ${PYCAIRO_CMD}
+        ${AndIf} $PYOK == 'OK'
+		!insertmacro downloadAndInstall "PyCairo" ${PYCAIRO_URL} ${PYCAIRO_FN} ${PYCAIRO_CMD}
 		Call DetectPyCairo
 		Pop $PYCAIROOK
         ${EndIf}
@@ -180,7 +189,8 @@ SectionEnd
 Section "-pygtk"
 	DetailPrint "--- DOWNLOAD PYGTK ---"
         ${If} $PYGTKDOWNLOAD == '1'
-              !insertmacro downloadAndInstall "PyGTK" ${PYGTK_URL} ${PYGTK_FN} ${PYGTK_CMD}
+        ${AndIf} $PYOK == 'OK'
+		!insertmacro downloadAndInstall "PyGTK" ${PYGTK_URL} ${PYGTK_FN} ${PYGTK_CMD}
 		Call DetectPyGTK
 		Pop $PYGTKOK
 
@@ -225,7 +235,7 @@ Section "ASCEND (required)"
 	File "..\tools\textpad\ascend.syn"
 
 	${If} ${FileExists} "$APPDATA\.ascend.ini"
-		MessageBox MB_OK "The '$APPDATA\.ascend.ini' is NOT being updated. Manually delete this file if ASCEND doesn't behave as expected."
+		StrCpy $ASCENDINIFOUND "1"
 	${Else}
 		; Set 'librarypath' in .ascend.ini
 		WriteINIstr $APPDATA\.ascend.ini Directories librarypath "$DOCUMENTS\ascdata;$INSTDIR\models"
@@ -529,3 +539,5 @@ SectionEnd
 !include "dependencies.nsi"
 
 !include "detect.nsi"
+
+!include "ascendini.nsi"
