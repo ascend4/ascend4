@@ -11,7 +11,11 @@
 
 Name "ASCEND ${VERSION}"
 
+;SetCompressor /FINAL zlib
+SetCompressor /SOLID lzma
+
 !include LogicLib.nsh
+!include nsDialogs.nsh
 
 !ifndef PYVERSION
 !define PYVERSION "2.5"
@@ -28,8 +32,6 @@ OutFile ${OUTFILE}
 OutFile "ascend-${VERSION}-py${PYVERSION}.exe"
 !endif
 
-;SetCompressor /FINAL zlib
-SetCompressor /SOLID lzma
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\ASCEND
@@ -42,8 +44,12 @@ InstallDirRegKey HKLM "Software\ASCEND" "Install_Dir"
 
 ; Pages
 
+Page license
+LicenseData LICENSE.txt
+
 Page components
 Page directory
+Page custom dependenciesPage
 Page instfiles
 
 UninstPage uninstConfirm
@@ -218,8 +224,9 @@ Section "Download prerequisites if necessary"
 		Pop $R0 ;Get the return value
 		${If} $R0 == "success"
 			MessageBox MB_OK "Installing python..."
-			ExecWait $2
-			Delete $2			
+			ExecWait 'msiexec /q "$2"' $0
+			MessageBox MB_OK "python installer returned $0"
+			Delete $2
 			Call DetectPython
 			Pop $PYOK
 			Pop $PYPATH
@@ -564,6 +571,90 @@ unnostart:
 	RMDir $INSTDIR
 
 SectionEnd
+
+;---------------------------------------------------------------------
+; CUSTOM PAGE to DOWNLOAD REQUIRED DEPENDENCIES
+
+Var CHECKPY
+Var CHECKGTK
+Var CHECKPYGTK
+Var CHECKPYGOBJECT
+Var CHECKPYCAIRO
+
+Function dependenciesPage
+	
+	${If} $PYOK == 'OK'
+	${AndIf} $GTKOK == 'OK'
+	${AndIf} $PYGTKOK == 'OK'
+	${AndIf} $PYGOBJECTOK == 'OK'
+	${AndIf} $PYCAIROOK == 'OK'
+		; do nothing in this page
+	${Else}
+		nsDialogs::Create /NOUNLOAD 1018
+		Pop $0
+
+		${NSD_CreateLabel} 0 40u 75% 40u "For the components selected, you will need the following\nadditional components, which this installer can download\nand install for you:"
+		Pop $0
+
+		${If} $PYOK == 'NOK'
+			${NSD_CreateCheckbox} 0 -50 100% 8u Python
+			Pop $CHECKPY
+			GetFunctionAddress $0 OnClickPython
+			nsDialogs::OnClick /NOUNLOAD $CHECKPY $0
+		${EndIf}
+
+		${If} $GTKOK == 'NOK'
+			${NSD_CreateCheckbox} 0 -40 100% 8u GTK+
+			Pop $CHECKGTK
+			GetFunctionAddress $0 OnClickGTK
+			nsDialogs::OnClick /NOUNLOAD $CHECKGTK $0
+		${EndIf}
+
+		${If} $PYGOBJECTOK == 'NOK'
+			${NSD_CreateCheckbox} 0 -30 100% 8u PyGObject
+			Pop $CHECKPYGOBJECT
+			GetFunctionAddress $0 OnClickPyGObject
+			nsDialogs::OnClick /NOUNLOAD $CHECKPYGOBJECT $0
+		${EndIf}
+
+		${If} $PYCAIROOK == 'NOK'
+			${NSD_CreateCheckbox} 0 -20 100% 8u PyCairo
+			Pop $CHECKPYCAIRO
+			GetFunctionAddress $0 OnClickPyCairo
+			nsDialogs::OnClick /NOUNLOAD $CHECKPYCAIRO $0
+		${EndIf}
+
+		${If} $PYGTKOK == 'NOK'
+			${NSD_CreateCheckbox} 0 -10 100% 8u PyGTK
+			Pop $CHECKPYGTK
+			GetFunctionAddress $0 OnClickPyGTK
+			nsDialogs::OnClick /NOUNLOAD $CHECKPYGTK $0
+		${EndIf}	
+
+		nsDialogs::Show
+	${EndIf}
+	
+FunctionEnd
+
+Function OnClickPython
+	MessageBox MB_OK "python clicked"
+FunctionEnd
+
+Function OnClickGTK
+	MessageBox MB_OK "GTK clicked"
+FunctionEnd
+
+Function OnClickPyGTK
+	MessageBox MB_OK "PyGTK clicked"
+FunctionEnd
+
+Function OnClickPyCairo
+	MessageBox MB_OK "PyCairo clicked"
+FunctionEnd
+
+Function OnClickPyGObject
+	MessageBox MB_OK "PyGObject clicked"
+FunctionEnd
 
 ;---------------------------------------------------------------------
 ; UTILITY ROUTINES
