@@ -2407,7 +2407,7 @@ if with_installer:
 		,"VERSION":version
 		,'PYVERSION':pyversion
 	})
-	installer = env.Installer('installer.nsi')
+	installer = env.Installer('nsis/installer.nsi')
 	Depends(installer,["pygtk","tcltk","ascend.dll","models","ascend-config"])
 	env.Alias('installer',installer)
 else:
