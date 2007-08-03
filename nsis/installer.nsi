@@ -11,15 +11,11 @@
 
 Name "ASCEND ${VERSION}"
 
-;SetCompressor /FINAL zlib
-SetCompressor /SOLID lzma
+SetCompressor /FINAL zlib
+;SetCompressor /SOLID lzma
 
 !include LogicLib.nsh
 !include nsDialogs.nsh
-
-!include dependencies.nsi
-!include detect.nsi
-!include download.nsi
 
 !ifndef PYVERSION
 !define PYVERSION "2.5"
@@ -49,7 +45,7 @@ InstallDirRegKey HKLM "Software\ASCEND" "Install_Dir"
 ; Pages
 
 Page license
-LicenseData LICENSE.txt
+LicenseData "..\LICENSE.txt"
 
 Page components
 Page directory
@@ -118,6 +114,82 @@ Function .onInit
 
 FunctionEnd
 
+;------------------------------------------------------------
+; DOWNLOAD AND INSTALL DEPENDENCIES FIRST
+
+!define PYTHON_VERSION "${PYVERSION}${PYPATCH}"
+!define PYTHON_FN "python-${PYTHON_VERSION}.msi"
+!define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
+!define PYTHON_CMD "msiexec /i /passive $$DAI_TMPFILE"
+
+!define GTK_FN "gtk-2.10.11-win32-1.exe"
+!define GTK_URL "http://downloads.sourceforge.net/gladewin32/${GTK_FN}"
+!define GTK_CMD "${GTK_FN}"
+
+!define PYGOBJECT_FN "pygobject-2.12.3-1.win32-py${PYVERSION}.exe"
+!define PYGOBJECT_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygobject/2.12/${PYGOBJECT_FN}"
+!define PYGOBJECT_CMD "${PYGOBJECT_FN}"
+
+!define PYCAIRO_FN "pycairo-1.2.6-1.win32-py${PYVERSION}.exe"
+!define PYCAIRO_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pycairo/1.2/${PYCAIRO_FN}"
+!define PYCAIRO_CMD "${PYGOBJECT_FN}"
+
+!define PYGTK_FN "pygtk-2.10.4-1.win32-py${PYVERSION}.exe"
+!define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.10/${PYGTK_FN}"
+!define PYGTK_CMD "${PYGTK_FN}"
+
+!include "download.nsi"
+
+Section "-python"
+	DetailPrint "--- DOWNLOAD PYTHON ---"
+        ${If} $PYDOWNLOAD == '1'
+              !insertmacro downloadAndInstall "Python" "${PYTHON_URL}" "${PYTHON_FN}" "${PYTHON_CMD}"
+                Call DetectPython
+                Pop $PYOK
+                Pop $PYPATH
+        ${EndIf}
+SectionEnd
+Section "-gtk"
+	DetailPrint "--- DOWNLOAD GTK+ ---"
+	${If} $GTKDOWNLOAD == '1'
+              !insertmacro downloadAndInstall "GTK+" ${GTK_URL} ${GTK_FN} ${GTK_CMD}
+                Call DetectGTK
+                Pop $GTKOK
+                Pop $GTKPATH
+                Call DetectGlade
+                Pop $GLADEOK
+                Pop $GLADEPATH
+        ${EndIf}
+SectionEnd
+Section "-pygobject"
+	DetailPrint "--- DOWNLOAD PYGOBJECT ---"
+        ${If} $PYGOBJECTDOWNLOAD == '1'
+              !insertmacro downloadAndInstall "PyGObject" ${PYGOBJECT_URL} ${PYGOBJECT_FN} ${PYGOBJECT_CMD}
+                Call DetectPyGObject
+                Pop $PYGOBJECTOK
+        ${EndIf}
+SectionEnd
+Section "-pycairo"
+	DetailPrint "--- DOWNLOAD PYCAIRO ---"
+        ${If} $PYCAIRODOWNLOAD == '1'
+              !insertmacro downloadAndInstall "PyCairo" ${PYCAIRO_URL} ${PYCAIRO_FN} ${PYCAIRO_CMD}
+		Call DetectPyCairo
+		Pop $PYCAIROOK
+        ${EndIf}
+SectionEnd
+Section "-pygtk"
+	DetailPrint "--- DOWNLOAD PYGTK ---"
+        ${If} $PYGTKDOWNLOAD == '1'
+              !insertmacro downloadAndInstall "PyGTK" ${PYGTK_URL} ${PYGTK_FN} ${PYGTK_CMD}
+		Call DetectPyGTK
+		Pop $PYGTKOK
+
+        ${EndIf}
+SectionEnd	
+
+;------------------------------------------------------------------------
+; INSTALL CORE STUFF including model library
+
 ; The stuff to install
 Section "ASCEND (required)"
 	SectionIn RO
@@ -126,31 +198,31 @@ Section "ASCEND (required)"
 
 	; Set output path to the installation directory.
 	SetOutPath $INSTDIR
-	File "ascend.dll"
-	File "ascend-config"
-	File "pygtk\glade\ascend.ico"
-	File "LICENSE.txt"
-	File "CHANGELOG.txt"
-	File "README-windows.txt"
+	File "..\ascend.dll"
+	File "..\ascend-config"
+	File "..\pygtk\glade\ascend.ico"
+	File "..\LICENSE.txt"
+	File "..\CHANGELOG.txt"
+	File "..\README-windows.txt"
 	
 	; Model Library
 	SetOutPath $INSTDIR\models
-	File /r /x .svn "models\*.a4*"
-	File /r /x .svn "models\*.tcl"
-	File /r /x .svn "models\*.dll" ; extension modules
-	File /r /x .svn "models\*.py"; python modules
+	File /r /x .svn "..\models\*.a4*"
+	File /r /x .svn "..\models\*.tcl"
+	File /r /x .svn "..\models\*.dll" ; extension modules
+	File /r /x .svn "..\models\*.py"; python modules
 	
 	SetOutPath $INSTDIR\solvers
-	File "solvers\qrslv\qrslv.dll"
-	File "solvers\conopt\conopt.dll"
-	File "solvers\lrslv\lrslv.dll"
-	File "solvers\cmslv\cmslv.dll"
-	File "solvers\lsode\lsode.dll"
-	File "solvers\ida\ida.dll"
+	File "..\solvers\qrslv\qrslv.dll"
+	File "..\solvers\conopt\conopt.dll"
+	File "..\solvers\lrslv\lrslv.dll"
+	File "..\solvers\cmslv\cmslv.dll"
+	File "..\solvers\lsode\lsode.dll"
+	File "..\solvers\ida\ida.dll"
 
 	SetOutPath $INSTDIR
 	;File "Makefile.bt"
-	File "tools\textpad\ascend.syn"
+	File "..\tools\textpad\ascend.syn"
 
 	${If} ${FileExists} "$APPDATA\.ascend.ini"
 		MessageBox MB_OK "The '$APPDATA\.ascend.ini' is NOT being updated. Manually delete this file if ASCEND doesn't behave as expected."
@@ -208,61 +280,6 @@ ascendconfigerror:
 	
 SectionEnd
 
-!define PYTHON_VERSION "${PYVERSION}${PYPATCH}"
-!define PYTHON_FN "python-${PYTHON_VERSION}.msi"
-!define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
-!define PYTHON_CMD FILE "msiexec /i /passive $DAI_TMPFILE"
-
-!define GTK_FN "gtk-2.10.11-win32-1.exe"
-!define GTK_URL "http://downloads.sourceforge.net/gladewin32/${GTK_FN}"
-!define GTK_CMD "${GTK_FN}"
-
-!define PYGOBJECT_FN "pygobject-2.12.3-1.win32-py${PYVERSION}.exe"
-!define PYGOBJECT_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygobject/2.12/${PYGOBJECT_FN}"
-!define PYGOBJECT_CMD "${PYGOBJECT_FN}"
-
-!define PYCAIRO_FN "pycairo-1.2.6-1.win32-py${PYVERSION}.exe"
-!define PYCAIRO_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pycairo/1.2/${PYCAIRO_FN}"
-!define PYCAIRO_CMD "${PYGOBJECT_FN}"
-
-!define PYGTK_FN "pygtk-2.10.4-1.win32-py${PYVERSION}.exe"
-!define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.10/${PYGTK_FN}"
-!define PYGTK_CMD "${PYGTK_FN}"
-
-Section "-download the selected missing dependencies"
-        ${If} $PYDOWNLOAD == '1'
-              !insertmacro downloadAndInstall "Python" PYTHON_URL PYTHON_FN PYTHON_CMD
-                Call DetectPython
-                Pop $PYOK
-                Pop $PYPATH
-        ${EndIf}
-        ${If} $GTKDOWNLOAD == '1'
-              !insertmacro downloadAndInstall "GTK+" GTK_URL GTK_FN GTK_CMD
-                Call DetectGTK
-                Pop $GTKOK
-                Pop $GTKPATH
-                Call DetectGlade
-                Pop $GLADEOK
-                Pop $GLADEPATH
-        ${EndIf}
-        ${If} $PYGOBJECTDOWNLOAD == '1'
-              !insertmacro downloadAndInstall "PyGObject" PYGOBJECT_URL PYGOBJECT_FN PYGOBJECT_CMD
-                Call DetectPyGObject
-                Pop $PYGOBJECTOK
-        ${EndIf}
-        ${If} $PYCAIRODOWNLOAD == '1'
-              !insertmacro downloadAndInstall "PyCairo" PYCAIRO_URL PYCAIRO_FN PYCAIRO_CMD
-		Call DetectPyCairo
-		Pop $PYCAIROOK
-        ${EndIf}
-        ${If} $PYGTKDOWNLOAD == '1'
-              !insertmacro downloadAndInstall "PyGTK" PYGTK_URL PYGTK_FN PYGTK_CMD
-		Call DetectPyGTK
-		Pop $PYGTKOK
-
-        ${EndIf}
-SectionEnd	
-
 ;--------------------------------
 
 Section "PyGTK GUI"
@@ -288,15 +305,15 @@ Section "PyGTK GUI"
 		SetOutPath $INSTDIR
 
 		; Python interface
-		File /nonfatal "pygtk\_ascpy.pyd"
-		File "pygtk\*.py"
-		File "pygtk\ascend"
-		File "pygtk\glade\ascend-doc.ico"
+		File /nonfatal "..\pygtk\_ascpy.pyd"
+		File "..\pygtk\*.py"
+		File "..\pygtk\ascend"
+		File "..\pygtk\glade\ascend-doc.ico"
 
 		SetOutPath $INSTDIR\glade
-		File "pygtk\glade\*.glade"
-		File "pygtk\glade\*.png"
-		File "pygtk\glade\*.svg"
+		File "..\pygtk\glade\*.glade"
+		File "..\pygtk\glade\*.png"
+		File "..\pygtk\glade\*.svg"
 
 		StrCpy $PYINSTALLED "1"
 		WriteRegDWORD HKLM "SOFTWARE\ASCEND" "Python" 1	
@@ -353,10 +370,10 @@ Section "Tcl/Tk GUI"
 	${Else}
 		DetailPrint "--- TCL/TK INTERFACE ---"
 		SetOutPath $INSTDIR\tcltk
-		File /r /x .svn "tcltk\TK\*"
+		File /r /x .svn "..\tcltk\TK\*"
 		SetOutPath $INSTDIR
-		File "tcltk\generic\interface\ascendtcl.dll"
-		File "tcltk\generic\interface\ascend4.exe"
+		File "..\tcltk\generic\interface\ascendtcl.dll"
+		File "..\tcltk\generic\interface\ascend4.exe"
 
 		StrCpy $TCLINSTALLED "1"
 		WriteRegDWORD HKLM "SOFTWARE\ASCEND" "TclTk" 1
@@ -509,3 +526,6 @@ unnostart:
 
 SectionEnd
 
+!include "dependencies.nsi"
+
+!include "detect.nsi"
