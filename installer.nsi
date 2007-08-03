@@ -17,6 +17,10 @@ SetCompressor /SOLID lzma
 !include LogicLib.nsh
 !include nsDialogs.nsh
 
+!include dependencies.nsi
+!include detect.nsi
+!include download.nsi
+
 !ifndef PYVERSION
 !define PYVERSION "2.5"
 !endif
@@ -49,7 +53,7 @@ LicenseData LICENSE.txt
 
 Page components
 Page directory
-Page custom dependenciesPage
+Page custom dependenciesCreate dependenciesLeave
 Page instfiles
 
 UninstPage uninstConfirm
@@ -72,6 +76,12 @@ Var /GLOBAL TCLOK
 Var /GLOBAL TCLPATH
 Var /GLOBAL TCLINSTALLED
 Var /GLOBAL PATH
+
+Var /GLOBAL PYDOWNLOAD
+Var /GLOBAL PYGTKDOWNLOAD
+Var /GLOBAL PYGOBJECTDOWNLOAD
+Var /GLOBAL PYCAIRODOWNLOAD
+Var /GLOBAL GTKDOWNLOAD
 
 Function .onInit
 	StrCpy $PYINSTALLED ""
@@ -199,131 +209,58 @@ ascendconfigerror:
 SectionEnd
 
 !define PYTHON_VERSION "${PYVERSION}${PYPATCH}"
-!define PYTHON_FILENAME "python-${PYTHON_VERSION}.msi"
-!define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FILENAME}"
+!define PYTHON_FN "python-${PYTHON_VERSION}.msi"
+!define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
+!define PYTHON_CMD FILE "msiexec /i /passive $DAI_TMPFILE"
 
-!define GTK_FILENAME "gtk-2.10.11-win32-1.exe"
-!define GTK_URL "http://downloads.sourceforge.net/gladewin32/${GTK_FILENAME}"
+!define GTK_FN "gtk-2.10.11-win32-1.exe"
+!define GTK_URL "http://downloads.sourceforge.net/gladewin32/${GTK_FN}"
+!define GTK_CMD "${GTK_FN}"
 
-!define PYGOBJECT_FILENAME "pygobject-2.12.3-1.win32-py${PYVERSION}.exe"
-!define PYGOBJECT_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygobject/2.12/${PYGOBJECT_FILENAME}"
+!define PYGOBJECT_FN "pygobject-2.12.3-1.win32-py${PYVERSION}.exe"
+!define PYGOBJECT_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygobject/2.12/${PYGOBJECT_FN}"
+!define PYGOBJECT_CMD "${PYGOBJECT_FN}"
 
-!define PYCAIRO_FILENAME "pycairo-1.2.6-1.win32-py${PYVERSION}.exe"
-!define PYCAIRO_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pycairo/1.2/${PYCAIRO_FILENAME}"
+!define PYCAIRO_FN "pycairo-1.2.6-1.win32-py${PYVERSION}.exe"
+!define PYCAIRO_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pycairo/1.2/${PYCAIRO_FN}"
+!define PYCAIRO_CMD "${PYGOBJECT_FN}"
 
-!define PYGTK_FILENAME "pygtk-2.10.4-1.win32-py${PYVERSION}.exe"
-!define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.10/${PYGTK_FILENAME}"
+!define PYGTK_FN "pygtk-2.10.4-1.win32-py${PYVERSION}.exe"
+!define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.10/${PYGTK_FN}"
+!define PYGTK_CMD "${PYGTK_FN}"
 
+Section "-download the selected missing dependencies"
+        ${If} $PYDOWNLOAD == '1'
+              !insertmacro downloadAndInstall "Python" PYTHON_URL PYTHON_FN PYTHON_CMD
+                Call DetectPython
+                Pop $PYOK
+                Pop $PYPATH
+        ${EndIf}
+        ${If} $GTKDOWNLOAD == '1'
+              !insertmacro downloadAndInstall "GTK+" GTK_URL GTK_FN GTK_CMD
+                Call DetectGTK
+                Pop $GTKOK
+                Pop $GTKPATH
+                Call DetectGlade
+                Pop $GLADEOK
+                Pop $GLADEPATH
+        ${EndIf}
+        ${If} $PYGOBJECTDOWNLOAD == '1'
+              !insertmacro downloadAndInstall "PyGObject" PYGOBJECT_URL PYGOBJECT_FN PYGOBJECT_CMD
+                Call DetectPyGObject
+                Pop $PYGOBJECTOK
+        ${EndIf}
+        ${If} $PYCAIRODOWNLOAD == '1'
+              !insertmacro downloadAndInstall "PyCairo" PYCAIRO_URL PYCAIRO_FN PYCAIRO_CMD
+		Call DetectPyCairo
+		Pop $PYCAIROOK
+        ${EndIf}
+        ${If} $PYGTKDOWNLOAD == '1'
+              !insertmacro downloadAndInstall "PyGTK" PYGTK_URL PYGTK_FN PYGTK_CMD
+		Call DetectPyGTK
+		Pop $PYGTKOK
 
-Section "Download prerequisites if necessary"
-	${If} $PYOK == 'NOK'
-		MessageBox MB_OK "Downloading python..."
-
-		StrCpy $2 "$TEMP\${PYTHON_FILENAME}"
-		nsisdl::download /TIMEOUT=30000 ${PYTHON_URL} $2
-		Pop $R0 ;Get the return value
-		${If} $R0 == "success"
-			MessageBox MB_OK "Installing python..."
-			ExecWait 'msiexec /q "$2"' $0
-			MessageBox MB_OK "python installer returned $0"
-			Delete $2
-			Call DetectPython
-			Pop $PYOK
-			Pop $PYPATH
-		${ElseIf} $R0 == "cancel"
-			MessageBox MB_OK "Python download cancelled"
-			Quit
-		${Else}
-			MessageBox MB_OK "Download failed: $R0"
-			Quit
-		${EndIf}
-	${EndIf}
-	
-	${If} $GTKOK == 'NOK'
-		MessageBox MB_OK "Downloading GTK..."
-		StrCpy $2 "$TEMP\${GTK_FILENAME}"
-		nsisdl::download /TIMEOUT=30000 ${GTK_URL} $2
-		Pop $R0 ;Get the return value
-		${If} $R0 == "success"
-			MessageBox MB_OK "Installing GTK..."
-			ExecWait $2
-			Delete $2				
-			Call DetectGTK
-			Pop $GTKOK
-			Pop $GTKPATH
-			Call DetectGlade
-			Pop $GLADEOK
-			Pop $GLADEPATH				
-		${ElseIf} $R0 == "cancel"
-			MessageBox MB_OK "GTK download cancelled"
-			Quit
-		${Else}
-			MessageBox MB_OK "Download failed: $R0"
-			Quit
-		${EndIf}
-	${EndIf}
-	
-	${If} $PYGOBJECTOK == 'NOK'
-		MessageBox MB_OK "Downloading PyGObject..."
-		StrCpy $2 "$TEMP\${PYGOBJECT_FILENAME}"
-		nsisdl::download /TIMEOUT=30000 ${PYGOBJECT_URL} $2
-		Pop $R0 ;Get the return value
-		${If} $R0 == "success"
-			MessageBox MB_OK "Installing PyGObject..."
-			ExecWait $2
-			Delete $2				
-			Call DetectPyGObject
-			Pop $PYGOBJECTOK
-		${ElseIf} $R0 == "cancel"
-			MessageBox MB_OK "PyGObject download cancelled"
-			Quit
-		${Else}
-			MessageBox MB_OK "Download failed: $R0"
-			Quit
-		${EndIf}
-	${EndIf}
-	
-	${If} $PYCAIROOK == 'NOK'
-		MessageBox MB_OK "Downloading PyCairo..."
-		StrCpy $2 "$TEMP\${PYCAIRO_FILENAME}"
-		nsisdl::download /TIMEOUT=30000 ${PYCAIRO_URL} $2
-		Pop $R0 ;Get the return value
-		${If} $R0 == "success"
-			MessageBox MB_OK "Installing PyCairo..."
-			ExecWait $2
-			Delete $2				
-			Call DetectPyCairo
-			Pop $PYCAIROOK
-		${ElseIf} $R0 == "cancel"
-			MessageBox MB_OK "PyCairo download cancelled"
-			Quit
-		${Else}
-			MessageBox MB_OK "Download failed: $R0"
-			Quit
-		${EndIf}
-	${EndIf}
-
-	
-	${If} $PYGTKOK == 'NOK'
-		MessageBox MB_OK "Downloading PyGTK..."
-		StrCpy $2 "$TEMP\${PYGTK_FILENAME}"
-		nsisdl::download /TIMEOUT=30000 ${PYGTK_URL} $2
-		Pop $R0 ;Get the return value
-		${If} $R0 == "success"
-			MessageBox MB_OK "Installing PyGTK..."
-			ExecWait $2
-			Delete $2				
-			Call DetectPyGTK
-			Pop $PYGTKOK
-		${ElseIf} $R0 == "cancel"
-			MessageBox MB_OK "PyGTK download cancelled"
-			Quit
-		${Else}
-			MessageBox MB_OK "Download failed: $R0"
-			Quit
-		${EndIf}
-	${EndIf}	
-	
+        ${EndIf}
 SectionEnd	
 
 ;--------------------------------
@@ -572,210 +509,3 @@ unnostart:
 
 SectionEnd
 
-;---------------------------------------------------------------------
-; CUSTOM PAGE to DOWNLOAD REQUIRED DEPENDENCIES
-
-Var CHECKPY
-Var CHECKGTK
-Var CHECKPYGTK
-Var CHECKPYGOBJECT
-Var CHECKPYCAIRO
-
-Function dependenciesPage
-	
-	${If} $PYOK == 'OK'
-	${AndIf} $GTKOK == 'OK'
-	${AndIf} $PYGTKOK == 'OK'
-	${AndIf} $PYGOBJECTOK == 'OK'
-	${AndIf} $PYCAIROOK == 'OK'
-		; do nothing in this page
-	${Else}
-		nsDialogs::Create /NOUNLOAD 1018
-		Pop $0
-
-		${NSD_CreateLabel} 0 40u 75% 40u "For the components selected, you will need the following\nadditional components, which this installer can download\nand install for you:"
-		Pop $0
-
-		${If} $PYOK == 'NOK'
-			${NSD_CreateCheckbox} 0 -50 100% 8u Python
-			Pop $CHECKPY
-			GetFunctionAddress $0 OnClickPython
-			nsDialogs::OnClick /NOUNLOAD $CHECKPY $0
-		${EndIf}
-
-		${If} $GTKOK == 'NOK'
-			${NSD_CreateCheckbox} 0 -40 100% 8u GTK+
-			Pop $CHECKGTK
-			GetFunctionAddress $0 OnClickGTK
-			nsDialogs::OnClick /NOUNLOAD $CHECKGTK $0
-		${EndIf}
-
-		${If} $PYGOBJECTOK == 'NOK'
-			${NSD_CreateCheckbox} 0 -30 100% 8u PyGObject
-			Pop $CHECKPYGOBJECT
-			GetFunctionAddress $0 OnClickPyGObject
-			nsDialogs::OnClick /NOUNLOAD $CHECKPYGOBJECT $0
-		${EndIf}
-
-		${If} $PYCAIROOK == 'NOK'
-			${NSD_CreateCheckbox} 0 -20 100% 8u PyCairo
-			Pop $CHECKPYCAIRO
-			GetFunctionAddress $0 OnClickPyCairo
-			nsDialogs::OnClick /NOUNLOAD $CHECKPYCAIRO $0
-		${EndIf}
-
-		${If} $PYGTKOK == 'NOK'
-			${NSD_CreateCheckbox} 0 -10 100% 8u PyGTK
-			Pop $CHECKPYGTK
-			GetFunctionAddress $0 OnClickPyGTK
-			nsDialogs::OnClick /NOUNLOAD $CHECKPYGTK $0
-		${EndIf}	
-
-		nsDialogs::Show
-	${EndIf}
-	
-FunctionEnd
-
-Function OnClickPython
-	MessageBox MB_OK "python clicked"
-FunctionEnd
-
-Function OnClickGTK
-	MessageBox MB_OK "GTK clicked"
-FunctionEnd
-
-Function OnClickPyGTK
-	MessageBox MB_OK "PyGTK clicked"
-FunctionEnd
-
-Function OnClickPyCairo
-	MessageBox MB_OK "PyCairo clicked"
-FunctionEnd
-
-Function OnClickPyGObject
-	MessageBox MB_OK "PyGObject clicked"
-FunctionEnd
-
-;---------------------------------------------------------------------
-; UTILITY ROUTINES
-
-Function DetectPython
-	ReadRegStr $R6 HKCU "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
-	${If} $R6 == ''
-		ReadRegStr $R6 HKLM "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
-		${If} $R6 == ''
-			Push "No registry key found"
-			Push "NOK"
-			Return
-		${EndIf}
-	${EndIf}
-	
-	${If} ${FileExists} "$R6\python.exe"
-		Push "$R6"
-		Push "OK"
-	${Else}
-		Push "No python.exe found"
-		Push "NOK"
-	${EndIf}
-FunctionEnd
-
-;--------------------------------------------------------------------
-; Prefer the current user's installation of GTK, fall back to the local machine
-
-Function DetectGTK
-	ReadRegStr $R6 HKCU "SOFTWARE\GTK\2.0" "DllPath"
-	${If} $R6 == ''
-		ReadRegStr $R6 HKLM "SOFTWARE\GTK\2.0" "DllPath"
-		${If} $R6 == ''
-			Push "No GTK registry key found"
-			Push "NOK"
-			Return
-		${EndIf}
-	${EndIf}
-
-	${If} ${FileExists} "$R6\libgtk-win32-2.0-0.dll"
-		Push "$R6"
-		Push "OK"
-	${Else}
-		Push "No libgtk-win32-2.0-0.dll found in'$R6'"
-		Push "NOK"
-	${EndIf}
-FunctionEnd
-
-;--------------------------------------------------------------------
-; Are necessary PyGTK bits and pieces available?
-
-Function DetectPyGTK
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\gtk\__init__.py"
-		Push "OK"
-	${Else}
-		Push "NOK"
-	${EndIf}
-FunctionEnd
-
-Function DetectPyCairo
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\cairo\__init__.py"
-		Push "OK"
-	${Else}
-		Push "NOK"
-	${EndIf}
-FunctionEnd
-
-Function DetectPyGObject
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\gobject\__init__.py"
-		Push "OK"
-	${Else}
-		Push "NOK"
-	${EndIf}
-FunctionEnd
-
-;--------------------------------------------------------------------
-; Prefer the current user's installation of GTK, fall back to the local machine
-
-Function DetectGlade
-	ReadRegStr $R6 HKCU "SOFTWARE\GTK\2.0" "DllPath"
-	${If} $R6 == ''
-		ReadRegStr $R6 HKLM "SOFTWARE\GTK\2.0" "DllPath"
-		${If} $R6 == ''
-			Push "No GTK registry key found"
-			Push "NOK"
-			Return
-		${EndIf}
-	${EndIf}
-
-	${If} ${FileExists} "$R6\libglade-2.0-0.dll"
-		Push "$R6"
-		Push "OK"
-	${Else}
-		Push "No libglade-2.0-0.dll found in'$R6'"
-		Push "NOK"
-	${EndIf}
-FunctionEnd
-
-;--------------------------------------------------------------------
-
-Function DetectTcl
-	ReadRegStr $R6 HKCU "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
-	${If} $R6 == ''
-		ReadRegStr $R6 HKLM "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
-		${If} $R6 == ''
-			Push "No 'CurrentVersion' registry key"
-			Push "NOK"
-			Return
-		${Else}
-			StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
-			ReadRegStr $R8 HKLM $R7 ""		
-		${EndIf}
-	${Else}
-		StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
-		ReadRegStr $R8 HKCU $R7 ""		
-	${EndIf}
-
-	${If} $R8 == ''
-		Push "No value for $R7"
-		Push "NOK"
-	${Else}
-		Push "$R8\bin"
-		Push "OK"
-	${EndIf}
-FunctionEnd
