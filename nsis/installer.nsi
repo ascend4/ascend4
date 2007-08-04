@@ -82,6 +82,7 @@ Var /GLOBAL PYGTKDOWNLOAD
 Var /GLOBAL PYGOBJECTDOWNLOAD
 Var /GLOBAL PYCAIRODOWNLOAD
 Var /GLOBAL GTKDOWNLOAD
+Var /GLOBAL TCLDOWNLOAD
 
 Var /GLOBAL ASCENDINIFOUND
 
@@ -146,6 +147,11 @@ FunctionEnd
 !define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.10/${PYGTK_FN}"
 !define PYGTK_CMD "$DAI_TMPFILE"
 
+!define TCL_VERSION "8.4.15"
+!define TCL_PATCH ".0.280619"
+!define TCL_FN "ActiveTcl${TCL_VERSION}${TCL_PATCH}-win32-ix86-threaded.exe"
+!define TCL_URL "http://downloads.activestate.com/ActiveTcl/Windows/${TCL_VERSION}/${TCL_FN}"
+!define TCL_CMD "$DAI_TMPFILE"
 !include "download.nsi"
 
 Section "-python"
@@ -199,7 +205,16 @@ Section "-pygtk"
 		Pop $PYGTKOK
 
         ${EndIf}
-SectionEnd	
+SectionEnd
+Section "-tcl"
+	DetailPrint "--- DOWNLOAD TCL/TK ---"
+	${If} $TCLDOWNLOAD == '1'
+		!insertmacro downloadAndInstall "Tcl/Tk" ${TCL_URL} ${TCL_FN} ${TCL_CMD}
+		Call DetectTcl
+		Pop $TCLOK
+		Pop $TCLPATH
+        ${EndIf}
+SectionEnd
 
 ;------------------------------------------------------------------------
 ; INSTALL CORE STUFF including model library
