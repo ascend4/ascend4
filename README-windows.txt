@@ -9,7 +9,10 @@ apply to you.
 For more information about and support for ASCEND, consult our home page:
 http://ascend.cheme.cmu.edu/
 
-ASCEND documentation (such as it is) is available at the above link.
+ASCEND documentation (such as it is) is available at the above link, or
+if you selected to install the Documentation, you should have a link
+called "User's Manual" in your Start Menu under ASCEND. At present the
+documentation is available only as a PDF file.
 
 
 Running ASCEND
@@ -76,7 +79,7 @@ Add/Remove Programs control panel, then attempting to re-install it. At this
 point, the installer should tell you what components you are missing.
 
 
-Configuration settions
+Configuration Settings
 ----------------------
 
 There are configuration settings in the Windows Registry that the ASCEND 
@@ -104,6 +107,32 @@ version of ASCEND. Instead, a number of files are stored in the 'ascdata'
 folder within  your My Documents folder.
 
 
+Removing ASCEND from your System
+--------------------------------
+
+The uninstaller for ASCEND can be found in the Start menu and also in the
+Add/Remove Programs list. In any case, the uninstaller will remove all 
+ASCEND components from your system.
+
+NOTE however that when the uninstaller runs, it does NOT remove the
+dependencies such as Python, PyGTK, GTK+ etc that may have been downloaded
+and installed by the ASCEND installer when you first installed ASCEND.
+These additional components will need to be removed by you manually. The
+reason that they are not automatically removed is that it is not
+possible to determine whether or not you have other programs installed
+that also depend on them.
+
+Syntax Highlighting for TextPad
+-------------------------------
+
+If you would like to be able to edit ASCEND files using a text edit that 
+provides syntax highlighting support, you can use the editor 'TextPad'
+available from http://www.textpad.com. If you use TextPad, you can use
+the syntax file 'ascend.syn' that is installed in c:\Program Files\ASCEND
+by first copying it to your c:\Program Files\TextPad 5\system folder, 
+and then creating a new 'Document Class' for .a4c and .a4l files, and
+selecting the 'ascend.syn' syntax file.
+
 -- 
 John Pye
-2 Jun 2007
+4 Aug 2007.
