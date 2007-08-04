@@ -11,8 +11,8 @@
 
 Name "ASCEND ${VERSION}"
 
-SetCompressor /FINAL zlib
-;SetCompressor /SOLID lzma
+;SetCompressor /FINAL zlib
+SetCompressor /SOLID lzma
 
 !include LogicLib.nsh
 !include nsDialogs.nsh
@@ -72,6 +72,9 @@ Var /GLOBAL PYINSTALLED
 Var /GLOBAL TCLOK
 Var /GLOBAL TCLPATH
 Var /GLOBAL TCLINSTALLED
+
+Var /GLOBAL PDFINSTALLED
+
 Var /GLOBAL PATH
 
 Var /GLOBAL PYDOWNLOAD
@@ -86,6 +89,7 @@ Function .onInit
 	StrCpy $PYINSTALLED ""
 	StrCpy $TCLINSTALLED ""
 	StrCpy $ASCENDINIFOUND ""
+	StrCpy $PDFINSTALLED ""
 	
 	ExpandEnvStrings $DEFAULTPATH "%WINDIR%;%WINDIR%\system32"
 
@@ -394,33 +398,44 @@ SectionEnd
 
 ;---------------------------------
 
+Section "Documentation"
+	SetOutPath $INSTDIR
+	File "..\doc\book.pdf"
+	StrCpy $PDFINSTALLED "1"
+	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "PDF" 1
+SectionEnd
+
 ; Optional section (can be disabled by the user)
 Section "Start Menu Shortcuts"
   
-  WriteRegDWORD HKLM "SOFTWARE\ASCEND" "StartMenu" 1
-  
-  CreateDirectory "$SMPROGRAMS\ASCEND"  
+	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "StartMenu" 1
 
-  ; Link to PyGTK GUI
-  StrCmp $PYINSTALLED "" smdone 0
-  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$PYPATH\pythonw.exe" '"$INSTDIR\ascend"' "$INSTDIR\ascend.ico" 0
-smdone:
+	CreateDirectory "$SMPROGRAMS\ASCEND"  
 
-  ; Model library shortcut
-  CreateShortCut "$SMPROGRAMS\ASCEND\Model Library.lnk" "$INSTDIR\models" "" "$INSTDIR\models" 0
+	; Link to PyGTK GUI
+	${If} $PYINSTALLED == "1"
+		CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$PYPATH\pythonw.exe" '"$INSTDIR\ascend"' "$INSTDIR\ascend.ico" 0
+	${EndIf}
 
- 
-  ; Link to Tcl/Tk GUI  
-  StrCmp $TCLINSTALLED "" smnotcl 0  
-  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
-smnotcl:
+	; Model library shortcut
+	CreateShortCut "$SMPROGRAMS\ASCEND\Model Library.lnk" "$INSTDIR\models" "" "$INSTDIR\models" 0
 
-  ; Information files
-  CreateShortCut "$SMPROGRAMS\ASCEND\LICENSE.lnk" "$INSTDIR\LICENSE.txt" '' "$INSTDIR\LICENSE.txt" 0
-  CreateShortCut "$SMPROGRAMS\ASCEND\CHANGELOG.lnk" "$INSTDIR\CHANGELOG.txt" '' "$INSTDIR\CHANGELOG.txt" 0
-  CreateShortCut "$SMPROGRAMS\ASCEND\README.lnk" "$INSTDIR\README-windows.txt" '' "$INSTDIR\README-windows.txt" 0
+	; Link to Tcl/Tk GUI  
+	${If} $TCLINSTALLED == "1"
+		CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
+	${EndIf}
+	
+	; Documentation
+	${If} $PDFINSTALLED == "1"
+		CreateShortCut "$SMPROGRAMS\ASCEND\User's Manual.lnk" "$INSTDIR\book.pdf" "" "$INSTDIR\book.pdf" 0
+	${EndIf}
 
-  CreateShortCut "$SMPROGRAMS\ASCEND\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+	; Information files
+	CreateShortCut "$SMPROGRAMS\ASCEND\LICENSE.lnk" "$INSTDIR\LICENSE.txt" '' "$INSTDIR\LICENSE.txt" 0
+	CreateShortCut "$SMPROGRAMS\ASCEND\CHANGELOG.lnk" "$INSTDIR\CHANGELOG.txt" '' "$INSTDIR\CHANGELOG.txt" 0
+	CreateShortCut "$SMPROGRAMS\ASCEND\README.lnk" "$INSTDIR\README-windows.txt" '' "$INSTDIR\README-windows.txt" 0
+
+	CreateShortCut "$SMPROGRAMS\ASCEND\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   
 SectionEnd
 
@@ -489,6 +504,14 @@ unnopython:
 		Delete $INSTDIR\ascendtcl.dll
 		Delete $INSTDIR\ascend4.exe
 		RMDir /r $INSTDIR\tcltk
+	${EndIf}
+
+;--- documentation ---
+
+	ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "PDF"
+	${If} $0 != 0
+		DetailPrint "--- REMOVING DOCUMENTATION ---"
+		Delete $INSTDIR\book.pdf
 	${EndIf}
 
 ;--- start menu ---
