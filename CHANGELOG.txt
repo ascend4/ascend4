@@ -1,5 +1,5 @@
-30 Jun 2007
------------
+4 Aug 2007
+----------
 
 Version 0.9.5.112
 
@@ -29,6 +29,17 @@ Solvers
 Model library
  - Equations of state models from Krishnan.
  - Added ASCEND port of the standard GAMS example problem.
+ 
+Windows installer
+ - Added ability to download and install missing dependencies. This
+   makes getting started with ASCEND much simpler for new users.
+ - Added the user's manual (in PDF form) to the installer package.
+
+RPM package
+ - A SUNDIALS RPM package has been submitted for inclusion in Fedora, making
+   installation of ASCEND possible with a single download on that distro.
+ - Other work on building RPMs for a range of Linux platforms using
+   the new OpenSUSE Build Service.
 
 3 Jun 2007
 ----------
