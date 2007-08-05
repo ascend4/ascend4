@@ -1,4 +1,4 @@
-4 Aug 2007
+5 Aug 2007
 ----------
 
 Version 0.9.5.112
@@ -8,8 +8,6 @@ Solver interface
  - new ASCENDSOLVERS environment variable gives additional search path location
    that is checked when attempting to satisfy IMPORT statements.
  - Fixed behaviour scons when lex/yacc not available.
- - RPM packaging tested with openSUSE build service, RPM divided into 
-   subpackages ascend, ascend-devel, ascend-doc.
  - Many ASC_DLLSPEC qualifiers added as result of the expanded use of external
    libraries.
 
@@ -35,6 +33,7 @@ Windows installer
 RPM package
  - A SUNDIALS RPM package has been submitted for inclusion in Fedora, making
    installation of ASCEND possible with a single download on that distro.
+ - RPM divided into subpackages ascend, ascend-devel, ascend-doc.
  - Other work on building RPMs for a range of Linux platforms using
    the new OpenSUSE Build Service.
 
