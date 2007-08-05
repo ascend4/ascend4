@@ -3,9 +3,6 @@
 
 Version 0.9.5.112
 
-DEBIAN BUILD is currently broken. When this has been corrected, this release
-will be made.
-
 Solver interface
  - all solvers and integrators are now built as 'external library' DLL/SOs.
  - new ASCENDSOLVERS environment variable gives additional search path location
@@ -40,6 +37,9 @@ RPM package
    installation of ASCEND possible with a single download on that distro.
  - Other work on building RPMs for a range of Linux platforms using
    the new OpenSUSE Build Service.
+
+DEB package
+ - Fixed.
 
 3 Jun 2007
 ----------
