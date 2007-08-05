@@ -5,24 +5,29 @@ ascend \- A modelling environment for solving equations
 .SH SYNOPSIS
 .B ascend
 
-Usage: ascend [[-m typename] file
+Usage: ascend [[-m typename] FILE]
 
 Options:
-  --version             show program's version number and exit
-  -h, --help            show this help message and exit
+  --version     Show program's version number and exit.
+  -h, --help    Show this help message and exit.
   -m MODEL, --model=MODEL
-                        specify the model to instantiate upon loading modules
+                Specify the model to instantiate upon loading modules
   --pygtk-assets=ASSETS_DIR
-                        override the configuration value for the location of
-                        assets required by PyGTK for the ASCEND GUI, optional
+                Override the configuration value for the location of
+                assets required by PyGTK for the ASCEND GUI, optional
   --library=LIBRARY_PATH
-                        override the configuration value for the library path
-  --no-auto-sim         disable auto-instantiation of MODEL named as the file
-                        stem
+                Override the configuration value for the library path
+  --no-auto-sim
+                Disable auto-instantiation of MODEL named as the file
+                stem.
+  FILE          Path to the .a4c or .a4l file that you want to open
+                (note: if the path is not an absolute path and can
+                not be located relative to the current directory, it
+                will be seached for in the ASCEND model library path.
 
 .SH DESCRIPTION
 
-\fbascend\fR will run the ne PyGTK GUI for ASCEND. It gives console output
+\fBascend\fR will run the new PyGTK GUI for ASCEND. It gives console output
 as well as using a GTK window.
 
 \fBASCEND\fR (or \fBascend\fR) is modelling program that allows you
@@ -30,5 +35,35 @@ to solve systems of equations. You write model files (*.a4c) that describe
 your system of equations, then you load them into the ASCEND GUI and examine
 and solve your equations. For more information see the ASCEND wiki at
 
-http://ascendwiki.cheme.cmu.edu/
+http://ascend.cheme.cmu.edu/
 
+.SH ENVIRONMENT
+
+A number of environment variables are available for \fBascend\fR:
+
+ASCENDLIBRARY          
+  Path to ASCEND model files and external libraries.
+
+ASCENDSOLVERS
+  Path to ASCEND solvers. When searching for solvers, this path
+  variable is used first, then ASCENDLIBRARY is searched next as
+  a fallack, and in order to allow users to use solvers stored in
+  their user-configured model folder.
+
+CONOPT_PATH
+  Path to libconsub3.so, if you have it. Usually defaults to /usr/lib if
+  not defined.
+
+.SH USER SETTINGS
+
+ASCEND's PyGTK GUI uses a file ~/.ascend.ini to set and store user
+preferences. This file includes a setting for the value of ASCENDLIBRARY
+that is used if the variable is not present in the environment.
+
+Also kept in the .ascend.ini file are details about preferred units of
+measurement, and the most recent File..Open path, and the current
+Solver selection. More things will be stored in .ascend.ini over time.
+
+
+
+  
