@@ -33,8 +33,7 @@ BuildRequires: gcc-gfortran gcc-c++ >= 4
 BuildRequires: blas-devel
 BuildRequires: sundials-devel >= 2.2.0
 BuildRequires: python-devel >= 2.4
-BuildRequires: tk-devel >= 8.3, tcl-devel >= 8.3
-BuildRequires: tktable < 2.10, tktable >= 2.8
+BuildRequires: tk-devel, tk, tcl-devel, tcl, tktable
 %else
 %if 0%{?suse_version}
 BuildRequires: gcc-fortran gcc-c++

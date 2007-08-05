@@ -82,12 +82,6 @@
 #include "typelex.h"
 #include "Driver.h"
 
-
-#ifndef lint
-static CONST char CommandsID[] = "$Id: Commands.c,v 1.62 1998/04/25 13:10:16 ballan Exp $";
-#endif
-
-
 void Asc_AddCommand(Tcl_Interp *interp, char *cmdName, Tcl_CmdProc *proc,
                     ClientData cdata, Tcl_CmdDeleteProc *deleteProc,
                     CONST char *group, CONST char *usage,
@@ -1154,6 +1148,22 @@ void Asc_CreateCommands(Tcl_Interp *interp)
   );
 
   ASCADDCOM(interp,"slv_available",Asc_SolvAvailSolver,
+    "solver",
+    NULL,
+    NULL,
+    NULL
+    /* the stuff above should be replaced with header macros. */
+  );
+
+  ASCADDCOM(interp,"slv_number",Asc_SolvSolverNum,
+    "solver",
+    NULL,
+    NULL,
+    NULL
+    /* the stuff above should be replaced with header macros. */
+  );
+
+  ASCADDCOM(interp,"slv_name",Asc_SolvSolverName,
     "solver",
     NULL,
     NULL,

@@ -43,6 +43,12 @@ ASC_EXPORT int AscDriver(int argc, CONST char **argv);
 	Entry point from main.c
 */
 
+void
+Asc_Prompt(Tcl_Interp *interp, int partial);
+/**<
+	Only needed here for use in Ctrl-C handler in SolverProc.c
+*/
+
 extern int Asc_LoadWin(ClientData, Tcl_Interp *, int, CONST84 char**);
 /**<
  *  Tcl callback to determine if Tcl/Tk should build Tk windows.

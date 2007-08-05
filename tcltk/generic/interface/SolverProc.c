@@ -125,8 +125,9 @@ void slv_trap_int(int sigval)
   Tcl_SetVar2(interp,"ascSolvStatVect","menubreak","1",TCL_GLOBAL_ONLY);
   Asc_ScriptInterrupt = 1;
   Asc_SetMethodUserInterrupt(1);
-  FPRINTF(stdout,"Ctrl-D or click Toolbox/exit/Confirm to quit.\n");
+  FPRINTF(stdout,"Type 'exit', or click Toolbox/exit/Confirm to quit.\n");
   Asc_SignalRecover(0);
+  Asc_Prompt(interp,0);
 }
 
 int Asc_SolvTrapFP(ClientData cdata, Tcl_Interp *interp,
@@ -482,7 +483,7 @@ int Asc_SolvGetObjNumCmd(ClientData cdata, Tcl_Interp *interp,
     Tcl_AppendResult(interp,tmps,SNULL);
     break;
   default:
-    FPRINTF(ASCERR,"wierdness in i/o!");
+    FPRINTF(ASCERR,"weirdness in i/o!");
     break;
   }
   return TCL_OK;
@@ -617,6 +618,7 @@ int Asc_SolvSetSlvParmsNew(ClientData cdata, Tcl_Interp *interp,
     /* THIS WHOLE CONTROL STRUCTURE IS SCREWED UP AT BOTH THE
      * C AND THE TCL LEVEL!!!
      */
+	CONSOLE_DEBUG("...");
     slv_select_solver(g_solvsys_cur,solver);
 /*    FPRINTF(ASCERR,"Warning: Solv_Set_Slv_Parms called ");
  *  FPRINTF(ASCERR,"with solver other than current solver\n");
@@ -723,6 +725,7 @@ int Asc_SolvGetSlvParms(ClientData cdata, Tcl_Interp *interp,
 
   /* get parameters for solver*/
   cursolver=slv_get_selected_solver(g_solvsys_cur);
+  CONSOLE_DEBUG("...");
   slv_select_solver(g_solvsys_cur,solver);
   slv_get_parameters(g_solvsys_cur,&p);
   tmps= (char *)ascmalloc((MAXIMUM_NUMERIC_LENGTH+1)*sizeof(char));
@@ -783,6 +786,7 @@ int Asc_SolvGetSlvParms(ClientData cdata, Tcl_Interp *interp,
       Tcl_AppendElement(interp,p.sp.cap[i]);
   }
   ascfree(tmps);
+  CONSOLE_DEBUG("...");
   slv_select_solver(g_solvsys_cur,cursolver);
   return TCL_OK;
 }
@@ -845,6 +849,7 @@ int Asc_SolvSetSlvParms(ClientData cdata, Tcl_Interp *interp,
   if ( solver != i ) {
     /* THIS WHOLE CONTROL STRUCTURE IS SCREWED UP AT BOTH THE
        C AND THE TCL LEVEL!!! */
+	CONSOLE_DEBUG("...");
     slv_select_solver(g_solvsys_cur,solver);
 /*    FPRINTF(ASCERR,"Warning: Solv_Set_Slv_Parms called ");
     FPRINTF(ASCERR,"with solver other than current solver\n");
@@ -1309,190 +1314,6 @@ int Asc_SolvGetPathName(ClientData cdata, Tcl_Interp *interp,
   return TCL_OK;
 }
 
-#if DELETEME
-int Asc_Sims2Solve(ClientData cdata, Tcl_Interp *interp,
-               int argc, CONST84 char *argv[])
-{
-  enum inst_t ikind;
-  unsigned long pc;
-
-  UNUSED_PARAMETER(cdata);
-
-  if ( argc != 2 ) {
-    FPRINTF(ASCERR,  "call is: slv_import_sim <simname>\n");
-    Tcl_SetResult(interp, "slv_import_sim takes a simulation name arg.",
-                  TCL_STATIC);
-    return TCL_ERROR;
-  }
-  g_solvinst_root = Asc_FindSimulationRoot(argv[1]);
-  if (!g_solvinst_root) {
-    FPRINTF(ASCERR, "NULL simulation found by slv_import_sim.\n");
-    Tcl_SetResult(interp, "Simulation specified not found.", TCL_STATIC);
-    return TCL_ERROR;
-  }
-  g_solvinst_cur = g_solvinst_root;
-
-  /* check that instance is model this shouldn't be possible.*/
-  ikind=InstanceKind(g_solvinst_cur);
-  if (ikind!=MODEL_INST) {
-     FPRINTF(ASCERR,  "Instance imported is not a solvable kind.\n");
-     Tcl_SetResult(interp, "Simulation kind not MODEL.", TCL_STATIC);
-    return TCL_ERROR;
-  }
-
-  /* check instance is complete */
-  if ((pc=NumberPendingInstances(g_solvinst_cur))!=0) {
-    FPRINTF(ASCERR,  "Simulation imported is incomplete: %ld pendings.\n",pc);
-    Tcl_SetResult(interp, "Simulation has pendings: Not imported.",TCL_STATIC);
-    return TCL_ERROR;
-  }
-  /* flush old system */
-  if (g_solvsys_cur != NULL) {
-    slv_system_t systmp=g_solvsys_cur;
-    system_destroy(systmp);
-    g_solvsys_cur = NULL;
-  }
-
-  /* create system */
-  if( g_solvsys_cur == NULL ) {
-    g_solvsys_cur = system_build(g_solvinst_cur);
-    if( g_solvsys_cur == NULL ) {
-      FPRINTF(ASCERR,"system_build returned NULL.\n");
-      Tcl_SetResult(interp, "Bad relations found: solve system not created.",
-                    TCL_STATIC);
-      return TCL_ERROR;
-    }
-    FPRINTF(ASCERR,"Presolving . . .\n");
-#ifdef ASC_SIGNAL_TRAPS
-    if (SETJMP(g_fpe_env)==0) {
-#endif /* ASC_SIGNAL_TRAPS */
-      slv_presolve(g_solvsys_cur);
-#ifdef ASC_SIGNAL_TRAPS
-    } else {
-      FPRINTF(ASCERR, "Floating point exception in slv_presolve!!\n");
-      Tcl_SetResult(interp, " Floating point exception in slv_presolve. Help!",
-                    TCL_STATIC);
-      return TCL_ERROR;
-    }
-#endif /* ASC_SIGNAL_TRAPS */
-    FPRINTF(ASCERR,"Presolving done.\n");
-  }
-  if( g_solvsys_cur == NULL ) {
-    FPRINTF(ASCERR,"system_build returned NULL!\n");
-    Tcl_SetResult(interp, "C error Asc_Sims2Solve: solve system not created.",
-                  TCL_STATIC);
-    return TCL_ERROR;
-  }
-  Tcl_SetResult(interp, "Solver instance created.", TCL_STATIC);
-  return TCL_OK;
-}
-
-int Asc_Brow2Solve(ClientData cdata, Tcl_Interp *interp,
-               int argc, CONST84 char *argv[])
-{
-  enum inst_t ikind;
-  slv_system_t systmp;
-  unsigned long pc;
-
-  UNUSED_PARAMETER(cdata);
-  (void)argv;     /* stop gcc whine about unused parameter */
-
-  if ( argc != 1 ) {
-    FPRINTF(ASCERR,  "call is: bexp_s <no args>\n");
-    Tcl_SetResult(interp,"bexp_s takes current browser focus, no args allowed",
-                  TCL_STATIC);
-    return TCL_ERROR;
-  }
-  if (!g_root) {
-    FPRINTF(ASCERR,  "bexp_s:called without simulation in browser.\n");
-    Tcl_SetResult(interp, "focus browser before calling bexp_s", TCL_STATIC);
-    return TCL_ERROR;
-  }
-  /* check that instance is model */
-  ikind=InstanceKind(g_curinst);
-  if (ikind!=MODEL_INST) {
-     FPRINTF(ASCERR,  "Instance exported is not a solvable kind.\n");
-     Tcl_SetResult(interp, "Instance kind not MODEL.", TCL_STATIC);
-    return TCL_ERROR;
-  }
-
-  /* check instance is complete */
-  if ((pc=NumberPendingInstances(g_curinst))!=0) {
-    FPRINTF(ASCERR,  "Instance exported is incomplete: %ld pendings.\n",pc);
-    Tcl_SetResult(interp, "Instance has pendings: Not exported.", TCL_STATIC);
-    return TCL_ERROR;
-  }
-
-  /* flush old system */
-  if (g_solvsys_cur != NULL) {
-    systmp=g_solvsys_cur;
-    system_destroy(systmp);
-    g_solvsys_cur = NULL;
-  }
-
-  /* copy browser instance tree and focus */
-  g_solvinst_root=g_root;
-  g_solvinst_cur=g_curinst;
-  /* create system */
-  if( g_solvsys_cur == NULL ) {
-    g_solvsys_cur = system_build(g_solvinst_cur);
-    if( g_solvsys_cur == NULL ) {
-      FPRINTF(ASCERR,"system_build returned NULL.\n");
-      Tcl_SetResult(interp, "Bad relations found: solve system not created.",
-                    TCL_STATIC);
-      return TCL_ERROR;
-    }
-    FPRINTF(ASCERR,"Presolving . . .\n");
-#ifdef ASC_SIGNAL_TRAPS
-    if (SETJMP(g_fpe_env)==0) {
-#endif /* ASC_SIGNAL_TRAPS */
-      slv_presolve(g_solvsys_cur);
-#ifdef ASC_SIGNAL_TRAPS
-    } else {
-        FPRINTF(ASCERR, "Floating point exception in slv_presolve!!\n");
-        Tcl_SetResult(interp,
-                      " Floating point exception in slv_presolve. Help!",
-                      TCL_STATIC);
-        return TCL_ERROR;
-    }
-#endif /* ASC_SIGNAL_TRAPS */
-    FPRINTF(ASCERR,"Presolving done.\n");
-  }
-  if( g_solvsys_cur == NULL ) {
-    FPRINTF(ASCERR,"system_build returned NULL!\n");
-    Tcl_SetResult(interp, "C error Asc_Brow2Solve: solve system not created.",
-                  TCL_STATIC);
-    return TCL_ERROR;
-  }
-  Tcl_SetResult(interp, "Solver instance created.", TCL_STATIC);
-  return TCL_OK;
-}
-
-int Asc_SolvSimInst(ClientData cdata, Tcl_Interp *interp,
-                  int argc, CONST84 char *argv[])
-{
-  UNUSED_PARAMETER(cdata);
-
-  if ( argc != 2 ) {
-    FPRINTF(ASCERR,  "call is: ssolve <simname> \n");
-    Tcl_SetResult(interp, "solvers available in Solve> 0:SLV, 1:MINOS",
-                  TCL_STATIC);
-    return TCL_ERROR;
-  }
-  g_solvinst_root = Asc_FindSimulationRoot(argv[1]);
-  if (!g_solvinst_root) {
-    FPRINTF(ASCERR, "Solve called with NULL root instance.\n");
-    Tcl_SetResult(interp, "Simulation specified not found.", TCL_STATIC);
-    return TCL_ERROR;
-  }
-  g_solvinst_cur = g_solvinst_root;
-
-  FPRINTF(ASCERR,"Windows will not update until you leave Solve>.\n");
-  Solve(g_solvinst_cur);
-  return TCL_OK;
-}
-
-#endif /* DELETEME */
 
 #if 0 
 /*
@@ -1948,21 +1769,74 @@ int Asc_SolvAvailSolver(ClientData cdata, Tcl_Interp *interp,
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
 
-  struct gl_list_t *L = solver_get_engines();
+  const struct gl_list_t *L = solver_get_engines();
   SlvFunctionsT *S;
-  for(i = 1; i < gl_length(L); ++i){
+  for(i = 1; i <= gl_length(L); ++i){
 	S = (SlvFunctionsT *)gl_fetch(L,i);
     Tcl_AppendElement(interp,S->name);
   }
   return TCL_OK;
 }
 
+/* JP... */
+int Asc_SolvSolverNum(ClientData cdata, Tcl_Interp *interp
+	, int argc, CONST84 char *argv[]
+){
+  char buf[8];
+  const SlvFunctionsT *solver;
+
+  UNUSED_PARAMETER(cdata);
+
+  if ( argc != 2 ) {
+    FPRINTF(ASCERR, "call is: slv_number <name>\n");
+    Tcl_SetResult(interp, "one argument expected for slv_number",TCL_STATIC);
+    return TCL_ERROR;
+  }
+
+  solver = solver_engine_named(argv[1]);
+  if(solver==NULL){
+    FPRINTF(ASCERR, "Unknown solver '%s'!\n",argv[1]);
+    Tcl_ResetResult(interp);
+    Tcl_SetResult(interp, "Unknown solver.", TCL_STATIC);
+    return TCL_ERROR;
+  }else{
+    sprintf(buf,"%d",solver->number);
+    Tcl_AppendElement(interp,&buf[0]);
+    return TCL_OK;
+  }
+  /* not reached */
+}
+/* ... JP */
+
+int Asc_SolvSolverName(ClientData cdata, Tcl_Interp *interp
+	, int argc, CONST84 char *argv[]
+){
+	const SlvFunctionsT *solver;
+	UNUSED_PARAMETER(cdata);
+	if(argc!=2){
+		FPRINTF(ASCERR, "Call is: slv_name <number>\n");
+		Tcl_SetResult(interp, "One argument expected for slv_name",TCL_STATIC);
+		return TCL_ERROR;
+	}
+
+	solver = solver_engine(atoi(argv[1]));
+	if(solver==NULL){
+		FPRINTF(ASCERR, "Unknown solver '%s' (=%d).\n",argv[1],atoi(argv[1]));
+		Tcl_ResetResult(interp);
+		Tcl_SetResult(interp, "Unknown solver.", TCL_STATIC);
+		return TCL_ERROR;
+	}else{
+		Tcl_AppendElement(interp,solver->name);
+		return TCL_OK;
+	}
+}	
+
 int Asc_SolvLinsolNames(ClientData cdata, Tcl_Interp *interp,
                       int argc, CONST84 char *argv[])
 {
   UNUSED_PARAMETER(cdata);
-  (void)argc;     /* stop gcc whine about unused parameter */
-  (void)argv;     /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(argc);
+  UNUSED_PARAMETER(argv);
 
   Tcl_AppendResult(interp,linsolqr_fmethods(),SNULL);
   return TCL_OK;
@@ -2048,14 +1922,16 @@ int Asc_SolvSelectSolver(ClientData cdata, Tcl_Interp *interp,
   }
   status=Tcl_GetInt(interp, argv[1], &solver);
   if(!solver_engine(solver) || (status==TCL_ERROR)) {
-    FPRINTF(ASCERR, "unknown solver (%d). Not selected!\n",solver);
+    FPRINTF(ASCERR, "Unknown solver (%d). Not selected!\n",solver);
     Tcl_ResetResult(interp);
     Tcl_SetResult(interp, "Solver not available.", TCL_STATIC);
     return TCL_ERROR;
   } else {
     char num[8];
+	CONSOLE_DEBUG("...");
     int i = slv_get_selected_solver(g_solvsys_cur);
     if ( solver != i ) {
+	  CONSOLE_DEBUG("...");
       i = slv_select_solver(g_solvsys_cur,solver);
     }
     sprintf(num,"%d",i);
@@ -2231,9 +2107,10 @@ int Asc_SolvMakeIndependent(ClientData cdata, Tcl_Interp *interp,
   return TCL_OK;
 }
 
-int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
-                      int argc, CONST84 char *argv[])
-{
+
+int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp
+	,int argc, CONST84 char *argv[]
+){
   int status, listc,prevs=0;
   char *temp=NULL;
   CONST84 char **listargv=NULL;
@@ -2297,7 +2174,7 @@ int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
     return status;
   }
   /* got something worth having */
-  if (temp) {
+  if(temp){
     ascfree(temp);
   }
   temp=NULL;
@@ -2333,7 +2210,7 @@ int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
     }
   }
 
-  if ( argc == 2 ) { /*not just testing */
+  if(argc == 2){ /*not just testing */
     /* Here we will check to see if we really need to do
         all of this work by:
         1) Checking if the potential and current instance pointers are equal
@@ -2345,6 +2222,7 @@ int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
     if (g_solvinst_cur == solvinst_pot && g_compiler_counter == 0
         && g_solvinst_cur != NULL) {
       prevs = slv_get_selected_solver(g_solvsys_cur);
+      CONSOLE_DEBUG("...");
       slv_select_solver(g_solvsys_cur,prevs);
       Tcl_SetResult(interp, "Solver instance created.", TCL_STATIC);
 #if SP_DEBUG
@@ -2363,7 +2241,6 @@ int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
       g_solvsys_cur = NULL;
     }
 
-
     /* create system */
     if( g_solvsys_cur == NULL ) {
       g_solvsys_cur = system_build(g_solvinst_cur);
@@ -2381,6 +2258,7 @@ int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
                     TCL_STATIC);
       return TCL_ERROR;
     }
+	CONSOLE_DEBUG("...");
     slv_select_solver(g_solvsys_cur,prevs);
     Tcl_SetResult(interp, "Solver instance created.", TCL_STATIC);
     g_compiler_counter = 0;  /* set counter to 0 after full import */
@@ -2390,9 +2268,10 @@ int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
   return TCL_OK;
 }
 
-int Asc_SolvGetLnmEpsilon(ClientData cdata, Tcl_Interp *interp,
-                       int argc, CONST84 char *argv[])
-{
+
+int Asc_SolvGetLnmEpsilon(ClientData cdata, Tcl_Interp *interp
+	,int argc, CONST84 char *argv[]
+){
   char buf[MAXIMUM_NUMERIC_LENGTH];   /* string to hold integer */
   UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
@@ -2524,6 +2403,10 @@ int Asc_SolvHelpList(ClientData cdata, Tcl_Interp *interp,
 
     PRINTF("%-25s%s\n","slv_available",
            LONGHELP(detail,"list names of all known solvers"));
+
+    PRINTF("%-25s%s\n","slv_number",
+           LONGHELP(detail,"lookup the solver number for a named solver"));
+
     PRINTF("%-25s%s\n","slv_linsol_names",
            LONGHELP(detail,"list names of all linear options for Slv class"));
     PRINTF("%-25s%s\n","slv_eligible_solver",
@@ -2541,10 +2424,7 @@ int Asc_SolvHelpList(ClientData cdata, Tcl_Interp *interp,
            LONGHELP(detail,"focus solver on qualified name, or test it."));
     PRINTF("%-25s%s\n","get_model_children",
            LONGHELP(detail,"return the list of MODEL children of a qlfdid"));
-#if DELETEME
-    PRINTF("%-25s%s\n","slv_import_sim",
-           LONGHELP(detail,"focus solver on simname."));
-#endif /* DELETEME */
+
     PRINTF("%-25s%s\n","slv_lnmget",
            LONGHELP(detail,"return lnm epsilon value"));
     PRINTF("%-25s%s\n","slv_lnmset",
@@ -2610,6 +2490,10 @@ int Asc_SolvHelpList(ClientData cdata, Tcl_Interp *interp,
 
     sprintf(tmps,"slv_available");
     Tcl_AppendElement(interp,tmps);
+
+    sprintf(tmps,"slv_number");
+    Tcl_AppendElement(interp,tmps);
+
     sprintf(tmps,"slv_linsol_names");
     Tcl_AppendElement(interp,tmps);
     sprintf(tmps,"slv_eligible_solver");
