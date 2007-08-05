@@ -14,3 +14,20 @@ and solve your equations. For more information see the ASCEND wiki at
 
 http://ascendwiki.cheme.cmu.edu/
 
+.SH ENVIRONMENT
+
+The following environment variables affect the behaviour of \fBascend4\fR:
+
+  ASCENDLIBRARY
+  ASCENDMODELS
+  ASCENDTK
+  ASCENDDIST
+  ASCENDBITMAPS
+  CONOPT_PATH
+
+.SH USER DIRECTORY
+
+The ASCEND Tcl/Tk gui creates a directory 'ascdata' in the user's home
+directory. Settings files are stored in that directory that control the
+appearance and behaviour of ASCEND.
+
