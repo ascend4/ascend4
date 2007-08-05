@@ -70,13 +70,17 @@ const SlvFunctionsT *solver_engine(const int number){
 	const struct gl_list_t *L = solver_get_engines();
 	int i;
 	const SlvFunctionsT *S, *Sfound=NULL;
+	/* CONSOLE_DEBUG("Searching for solver #%d in list of %d solvers",number,gl_length(L)); */
 	for(i=1; i <= gl_length(L); ++i){
 		S = gl_fetch(L,i);
+		/* CONSOLE_DEBUG("Looking at %s (%d)",S->name,S->number); */
 		if(S->number==number){
+			/* CONSOLE_DEBUG("Match!"); */
 			Sfound = S;
 			break;
 		}
 	}
+	/* CONSOLE_DEBUG("Returning %d",Sfound); */
 	return Sfound;
 }
 
@@ -121,7 +125,7 @@ int slv_lookup_client(const char *name){
 		return S->number;
 	}else{
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid engine name '%s'",name);
-		return 1;
+		return -1;
 	}
 }
 
@@ -376,12 +380,12 @@ int slv_select_solver(slv_system_t sys,int solver){
     return -1;
   }
 
-  CONSOLE_DEBUG("CHECKING FOR SOLVER %d", solver);
+  /* CONSOLE_DEBUG("CHECKING FOR SOLVER %d", solver); */
 
   if(solver_engine(solver)){
-	CONSOLE_DEBUG("SOLVER FOUND");
+	/* CONSOLE_DEBUG("SOLVER FOUND"); */
     if(sys->ct != NULL && solver != sys->solver){
-	  CONSOLE_DEBUG("DIFFERENT SOLVER");
+	  /* CONSOLE_DEBUG("DIFFERENT SOLVER"); */
       //CONSOLE_DEBUG("g_SlvNumberOfRegisteredClients = %d, sys->solver = %d", g_SlvNumberOfRegisteredClients, sys->solver);
 	  asc_assert(sys->solver >= -1);
 	  //asc_assert(g_SlvNumberOfRegisteredClients > 0);
@@ -397,7 +401,7 @@ int slv_select_solver(slv_system_t sys,int solver){
       }
     }
 
-	CONSOLE_DEBUG("PREVIOUS SOLVER IS CLEAR");
+	/* CONSOLE_DEBUG("PREVIOUS SOLVER IS CLEAR"); */
 
     if(sys->ct != NULL) {
 	  CONSOLE_DEBUG("CURRENT SOLVER UNCHANGED");
@@ -445,7 +449,7 @@ int slv_switch_solver(slv_system_t sys,int solver)
     return -1;
   }
 
-  CONSOLE_DEBUG("CHECKING FOR SOLVER %d", solver);
+  /* CONSOLE_DEBUG("CHECKING FOR SOLVER %d", solver); */
 
   if(solver_engine(solver)){
     status_index = solver;

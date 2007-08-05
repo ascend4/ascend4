@@ -34,6 +34,7 @@
 #include <general/ospath.h>
 #include <utilities/ascPrint.h>
 #include <utilities/error.h>
+#include <solver/solver.h>
 #ifdef ASC_SIGNAL_TRAPS
 # include <utilities/ascSignal.h>
 #endif
@@ -78,10 +79,6 @@
 #include "SolverProc.h"
 #include "UnitsProc.h"
 
-#ifndef lint
-static CONST char DriverID[] = "$Id: Driver.c,v 1.48 2003/08/23 18:43:06 ballan Exp $";
-#endif
-
 /*
  *  EXPORTED VARIABLES
  */
@@ -112,7 +109,6 @@ static void AscTrap(int);
 static void  AscCheckEnvironVars(Tcl_Interp*,const char *progname);
 static void AscPrintHelpExit(CONST char *);
 static int  AscProcessCommandLine(Tcl_Interp*, int, CONST char **);
-static void Prompt(Tcl_Interp*, int);
 static int  AscSetStartupFile(Tcl_Interp*);
 static void StdinProc(ClientData, int);
 #ifdef DEBUG_MALLOC
@@ -391,7 +387,7 @@ int AscDriver(int argc, CONST char **argv)
                              (ClientData) inChannel);
   }
   if (tty) {
-    Prompt(interp, 0);
+    Asc_Prompt(interp, 0);
   }
   outChannel = Tcl_GetStdChannel(TCL_STDOUT);
   if (outChannel) {
@@ -518,7 +514,9 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	char *distdir, *tkdir, *bitmapsdir, *librarydir, *solversdir;
 	struct FilePath *fp, *fp1, *distfp, *tkfp, *bitmapsfp, *libraryfp, *solversfp;
 	char envcmd[MAX_ENV_VAR_LENGTH];
+# ifndef ASC_ABSOLUTE_PATHS
 	char s1[PATH_MAX];
+#endif
 	int err;
 	int guessedtk=0;
 	FILE *f;
@@ -890,7 +888,7 @@ int Asc_LoadWin(ClientData cdata, Tcl_Interp *interp,
 }
 
 /*---------------------------------------------------------------------
-  The following StdinProc() and Prompt() are from tkMain.c in
+  The following StdinProc() and Asc_Prompt() are from tkMain.c in
   the Tk4.1 distribution (and did not change in Tk8.0).
   ----------------------------------------------------------------------*/
 
@@ -979,7 +977,7 @@ StdinProc(ClientData clientData, int mask)
 
  prompt:
   if (tty) {
-    Prompt(interp, gotPartial);
+    Asc_Prompt(interp, gotPartial);
   }
   Tcl_ResetResult(interp);
 }
@@ -1000,26 +998,29 @@ StdinProc(ClientData clientData, int mask)
 	 partial   Non-zero means there already exists a partial
 	           command, so use the secondary prompt.
 */
-static void
-Prompt(Tcl_Interp *interp, int partial)
+void
+Asc_Prompt(Tcl_Interp *interp, int partial)
 {
   CONST84 char *promptCmd;
   int code;
   Tcl_Channel outChannel, errChannel;
   CONST84 char *subPrompt;
 
+  color_on(stdout,"0;32");
+
   errChannel = Tcl_GetChannel(interp, "stderr", NULL);
 
   subPrompt = (partial ? "tcl_prompt2" : "tcl_prompt1");
   promptCmd = Tcl_GetVar(interp, subPrompt, TCL_GLOBAL_ONLY);
   if (promptCmd == NULL) {
-  defaultPrompt:
+defaultPrompt:
 
     /*
      * We must check that outChannel is a real channel - it
      * is possible that someone has transferred stdout out of
      * this interpreter with "interp transfer".
      */
+
 
     outChannel = Tcl_GetChannel(interp, "stdout", NULL);
     if (outChannel != (Tcl_Channel) NULL) {
@@ -1052,6 +1053,7 @@ Prompt(Tcl_Interp *interp, int partial)
   if (outChannel != (Tcl_Channel) NULL) {
     Tcl_Flush(outChannel);
   }
+  color_off(stdout);
 }
 
 #ifdef DEBUG_MALLOC

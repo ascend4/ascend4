@@ -832,7 +832,7 @@ entertrace
          set ascSolvStatVect(menubreak) 0
          slv_set_haltflag 0
          set ascSolvStatVect(empty) 0
-#         Solve_do_Select $num
+#         Solve_do_Select $numz
          Solve_do_Select $solname
          Solve_Update_Listbox
          Solve_Update_MenuBar

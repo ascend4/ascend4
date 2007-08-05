@@ -44,11 +44,6 @@
 #include "BrowserProc.h"
 #include "ScriptProc.h"
 
-#ifndef lint
-static CONST char ScriptProcID[] = "$Id: ScriptProc.c,v 1.22 2003/08/23 18:43:07 ballan Exp $";
-#endif
-
-
 #define SCRBUF_SIZE 1024
 
 #if defined(sun) || defined(__sun__)

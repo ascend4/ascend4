@@ -143,8 +143,9 @@ entertrace
     #    set_Solv0_Defaults
     #    set_Solv1_Defaults
     #    set_Solv6_Defaults
-    for {set s 0} {$s<$ascSolvVect(numberofsolvers)} {incr s} {
-        set_defaults $s
+
+	foreach s [slv_available] {
+		set_defaults [slv_number $s]
     }
 
     set fpe [string tolower $ascSolvVect(trapFPEdefault)]
@@ -187,9 +188,10 @@ proc set_defaults {number} {
 entertrace
     global ascSolvVect
     # nest call actually gets defaults
+	puts "SOLVER SET_DEFAULTS $number"
     set list [slv_get_parmsnew $number]
     set length [llength $list]
-    set name $ascSolvVect(name.$number)
+    set name [slv_name $number]
     set parm_num 0
     set max_page 0
     set display_list ""
@@ -990,7 +992,7 @@ proc Solve_do_Select {name} {
 entertrace
   global ascSolvVect ascSolvStatVect
   if { $ascSolvVect($name) == -1 } {
-      puts " Solver $name not available"
+      puts "Solver '$name' not available"
       leavetrace
       return
   }
@@ -4923,7 +4925,8 @@ entertrace
     set available [slv_available]
     set registered_number 0
     foreach name $available {
-        set ascSolvVect($name)  $registered_number
+        set ascSolvVect($name)  [slv_number $name]
+		puts "REGISTERED SOLVER $name $ascSolvVect($name)"
         incr registered_number
     }
     set ascSolvVect(General) 32767

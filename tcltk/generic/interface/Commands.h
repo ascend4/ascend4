@@ -66,8 +66,8 @@ extern void Asc_AddCommand(Tcl_Interp *interp,
  * linked packages that want to use the ascend help facility.
  */
 
-#define ASCADDCOM(interp,cmdName,proc,group,usage,shorth,longh) \
-  Asc_AddCommand((interp), (cmdName), (proc), \
+#define ASCADDCOM(INTERP,cmdName,proc,group,usage,shorth,longh) \
+  Asc_AddCommand((INTERP), (cmdName), (proc), \
                  (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL, \
                  (group),(usage),(shorth),(longh))
 /**<
