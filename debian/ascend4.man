@@ -1,18 +1,22 @@
 .TH ASCEND 1 "April 21, 2007" ascend "User's Manual"
 .SH NAME
-ascend \- A modelling environment for solving equations
+ascend4 \- A modelling environment for solving equations
 
 .SH SYNOPSIS
 .B ascend
 [\fIOPTIONS\fR] \fIfilename.a4c\fR
 
 .SH DESCRIPTION
-\fBASCEND\fR (or \fBascend\fR) is modelling program that allows you
+\fBascend4\fR is the Tcl/Tk GUI for the ASCEND mathematical modelling
+environment. As well as the Tcl/Tk GUI, ASCEND provides a newer PyGTK GUI
+that can be accessed via the command \fBascend\fR.
+
+\fBASCEND\fR is a modelling program that allows you
 to solve systems of equations. You write model files (*.a4c) that describe
 your system of equations, then you load them into the ASCEND GUI and examine
 and solve your equations. For more information see the ASCEND wiki at
 
-http://ascendwiki.cheme.cmu.edu/
+http://ascend.cheme.cmu.edu/
 
 .SH ENVIRONMENT
 
