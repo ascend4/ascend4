@@ -14,7 +14,6 @@ ATOM heat_transfer_coefficient REFINES solver_var
 	lower_bound := 0{W/m^2/K};
 	upper_bound := 1e50{W/m^2/K};
 	nominal := 5{W/m^2/K};
-
 END heat_transfer_coefficient;
 
 ATOM specific_enthalpy REFINES solver_var
@@ -126,6 +125,14 @@ ATOM ua_value REFINES solver_var
 	upper_bound := 1e50{W/K};
 	nominal := 1{kW/K}; (* heat up 1kg water by 1deg in 5 s *)
 END ua_value;
+
+ATOM R_value REFINES solver_var
+		DIMENSION TMP*T^3/M
+		DEFAULT 1{K*m^2/W};
+	lower_bound := 0{K*m^2/W};
+	upper_bound := 1e6 {K*m^2/W};
+	nominal := 1 {K*m^2/W};
+END R_value;
 
 ATOM pressure_per_temperature REFINES solver_var
     DIMENSION M/L/T^2/TMP

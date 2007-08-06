@@ -436,4 +436,4 @@ METHODS
 		ASSERT C.z_max = w_tot / 2;
 		ASSERT C.z_min = -w_tot / 2;
 	END self_test;
-END compound_section_test3;
+END compound_section_test4;
