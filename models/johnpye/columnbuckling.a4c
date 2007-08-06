@@ -1,20 +1,31 @@
 REQUIRE "johnpye/section.a4c";
 
 (*
-	we will just go ahead and assume that the I_z is the weaker direction, and
-	we will assume that buckling occurs in that direction.
+	This is a model of column buckling using the secant formula, which makes
+	an allowance for load eccentricity.
+
+	The symbols/nomenclature here is taken from E P Popov, 'Engineering Mechanics
+	of Solids', Prentice Hall, 1990.
+
+	Note that although this model takes a 'section' as a parameter, it just
+	assumes that the buckling will occur in the XY plane (in other words about
+	the Z axis).
 *)
-MODEL columnbuckling(
+MODEL columnbuckling_model(
 	S WILL_BE section;
 );
 	P, P_design IS_A force;
+
+	(* cross-section area *)
 	A ALIASES S.A;
 
+	(* assume buckling is about the Z axis *)
 	I_min ALIASES S.I_z;
 
 	y_min ALIASES S.y_min;
 	y_max ALIASES S.y_max;
 
+	(* work out the extreme fibre distance *)
 	c_max, c_min IS_A distance;
 	c_max = abs(y_max - S.y_c);
 	c_min = abs(y_min - S.y_c);
@@ -37,7 +48,7 @@ MODEL columnbuckling(
 	sigma_max IS_A stress;
 
 	(* secand formula relates elastic limit to the permissible load P *)
-	sigma_max * A  = P * (1 + e * c / r^2 / cos( L_on_r * sqrt( P / 4 / E / A )));
+	sigma_max = P / A * (1 + e*c/r^2 / cos( L_on_r * sqrt( P / 4 / E / A )) );
 
 	(* Young's modulus *)
 	E IS_A youngs_modulus;
@@ -52,18 +63,18 @@ MODEL columnbuckling(
 	L_on_r IS_A factor;
 	L_on_r = L / r;
 
-END columnbuckling;
+END columnbuckling_model;
 
 (* 
 	Example of a column buckling problem: solving for the design load
 	given a particular column design and factor of safety.
 *)
-MODEL columnbuckling_test;
+MODEL columnbuckling;
 
 	r IS_A distance;
 	t IS_A distance;
 	S IS_A tubular_section(r,t);
-	C IS_A columnbuckling(S);
+	C IS_A columnbuckling_model(S);
 
 	e ALIASES C.e;
 	P ALIASES C.P;
@@ -77,14 +88,25 @@ MODEL columnbuckling_test;
 
 METHODS
 	METHOD on_load;
-		FIX C.E; C.E := 210 {GPa};
-		FIX e; e := 3 {cm};
-		FIX r; r := 44.45 {mm};
-		FIX t; t := 2.6 {mm};
-		FIX P; P := 10 {kN};
-		FIX L; L := 4 {m};
-		FIX n; n := 2;
+		RUN default_self;
+		RUN reset; RUN values;
 	END on_load;
-END columnbuckling_test;
+	METHOD specify;
+		FIX C.E, e, r, t, P, L, n;
+	END specify;
+	METHOD values;
+		C.E := 210 {GPa};
+		e := 3 {cm};
+		r := 44.45 {mm};
+		t := 2.6 {mm};
+		P := 10 {kN};
+		L := 4 {m};
+		n := 2;
+	END on_load;
+	METHOD set_stress;
+		FIX sigma_max; sigma_max := 30 {MPa};
+		FREE P;
+	END set_stress;		
+END columnbuckling;
 
 	
