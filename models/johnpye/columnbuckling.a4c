@@ -1,8 +1,8 @@
 REQUIRE "johnpye/section.a4c";
 
 (*
-	we will just go ahead and assume that the 'y' direction is the buckling
-	direction. TODO: add conditional statements to check that.
+	we will just go ahead and assume that the I_z is the weaker direction, and
+	we will assume that buckling occurs in that direction.
 *)
 MODEL columnbuckling(
 	S WILL_BE section;
@@ -10,18 +10,18 @@ MODEL columnbuckling(
 	P, P_design IS_A force;
 	A ALIASES S.A;
 
-	I_y ALIASES S.I_y;
-	I_z ALIASES S.I_z;
-
-	I_min IS_A second_moment_of_area;
-	I_min = I_y;
+	I_min ALIASES S.I_z;
 
 	y_min ALIASES S.y_min;
 	y_max ALIASES S.y_max;
 
+	c_max, c_min IS_A distance;
+	c_max = abs(y_max - S.y_c);
+	c_min = abs(y_min - S.y_c);
+
 	c IS_A distance;
-	(* c = MAX(abs(y_min),abs(y_max)) *)
-	c = abs(y_max) + 0.5*(abs(y_min) - abs(y_max) + abs(abs(y_min)-abs(y_max)));
+	(* c = MAX(c_min, c_max) *)
+	c = c_min + 0.5*(c_max - c_min + abs(c_max - c_min));
 
 	(* radius of gyration and comes from minimum moment of inertia *)
 	r IS_A distance;
@@ -30,20 +30,25 @@ MODEL columnbuckling(
 	(* load eccentricity *)
 	e IS_A distance;
 
+	(* effective length of the column *)
 	L IS_A distance;
 
+	(* elastic limit *)
 	sigma_max IS_A stress;
-	sigma_max = P/A * (1 + e * c / r^2 / cos( L_on_r * sqrt( P / 4 / E / A )));
+
+	(* secand formula relates elastic limit to the permissible load P *)
+	sigma_max * A  = P * (1 + e * c / r^2 / cos( L_on_r * sqrt( P / 4 / E / A )));
 
 	(* Young's modulus *)
 	E IS_A youngs_modulus;
 
-	(* factor of safety *)
+	(* factor of safety > 1*)
 	n IS_A factor;
 
+	(* design load is less than the permissible load from buckling formula *)
 	P = n * P_design;
 
-	(* slenderness *)
+	(* slenderness ratio: for reference *)
 	L_on_r IS_A factor;
 	L_on_r = L / r;
 
@@ -74,9 +79,9 @@ METHODS
 	METHOD on_load;
 		FIX C.E; C.E := 210 {GPa};
 		FIX e; e := 3 {cm};
-		FIX r; r := 45 {mm};
-		FIX t; t := 4 {mm};
-		FIX P; P := 1 {tonnef};
+		FIX r; r := 44.45 {mm};
+		FIX t; t := 2.6 {mm};
+		FIX P; P := 10 {kN};
 		FIX L; L := 4 {m};
 		FIX n; n := 2;
 	END on_load;
