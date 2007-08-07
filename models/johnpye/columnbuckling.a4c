@@ -1,6 +1,13 @@
 REQUIRE "johnpye/section.a4c";
 
 (*
+	We will use the Brent solver to goal-seek on the secant formula, as QRSlv
+	can't quite manage it when we just FIX sigma_max and FREE P.
+*)
+IMPORT "johnpye/brent/brent";
+IMPORT "sensitivity/solve";
+
+(*
 	This is a model of column buckling using the secant formula, which makes
 	an allowance for load eccentricity.
 
@@ -13,6 +20,10 @@ REQUIRE "johnpye/section.a4c";
 *)
 MODEL columnbuckling_model(
 	S WILL_BE section;
+	L WILL_BE distance; (* column effective length *)
+	e WILL_BE distance; (* load eccentricity *)
+	E WILL_BE youngs_modulus;
+	sigma_yp WILL_BE stress; (* yield stress, for secant formula *)
 );
 	P, P_design IS_A force;
 
@@ -38,20 +49,22 @@ MODEL columnbuckling_model(
 	r IS_A distance;
 	r = sqrt(I_min / A);
 
-	(* load eccentricity *)
-	e IS_A distance;
-
-	(* effective length of the column *)
-	L IS_A distance;
-
 	(* elastic limit *)
 	sigma_max IS_A stress;
 
-	(* secand formula relates elastic limit to the permissible load P *)
+	(* secant formula relates elastic limit to the permissible load P *)
 	sigma_max = P / A * (1 + e*c/r^2 / cos( L_on_r * sqrt( P / 4 / E / A )) );
 
-	(* Young's modulus *)
-	E IS_A youngs_modulus;
+	delta_sigma IS_A stress;
+	delta_sigma = sigma_yp - sigma_max;
+
+	(* euler buckling stress, for comparison *)
+	sigma_euler IS_A stress;
+	sigma_euler = 1{PI}^2 * E / L_on_r^2;
+
+	(* for comparison *)
+	P_euler IS_A force;
+	P_euler = sigma_euler * A;
 
 	(* factor of safety > 1*)
 	n IS_A factor;
@@ -73,13 +86,16 @@ MODEL columnbuckling;
 
 	r IS_A distance;
 	t IS_A distance;
-	S IS_A tubular_section(r,t);
-	C IS_A columnbuckling_model(S);
 
-	e ALIASES C.e;
+	S IS_A tubular_section(r,t);
+
+	L IS_A distance;
+	e IS_A distance;
+	E IS_A youngs_modulus;
+	C IS_A columnbuckling_model(S,L,e,E,sigma_yp);
+	sigma_yp IS_A stress;
+
 	P ALIASES C.P;
-	L ALIASES C.L;
-	E ALIASES C.E;
 	A ALIASES C.A;
 	n ALIASES C.n;
 	L_on_r ALIASES C.L_on_r;
@@ -92,21 +108,38 @@ METHODS
 		RUN reset; RUN values;
 	END on_load;
 	METHOD specify;
-		FIX C.E, e, r, t, P, L, n;
+		FIX e, r, t, P, L, n;
+		FIX E, sigma_yp;
 	END specify;
 	METHOD values;
-		C.E := 210 {GPa};
+		E := 210 {GPa};
 		e := 3 {cm};
 		r := 44.45 {mm};
 		t := 2.6 {mm};
 		P := 10 {kN};
-		L := 4 {m};
-		n := 2;
-	END on_load;
+		L := 3.747 {m};
+		n := 1.0;
+		sigma_yp := 350 {MPa};
+	END values;
+	METHOD bound_self;
+		(* bounds to allow the Brent solver to work *)
+		P.upper_bound := 80 {kN};
+		P.lower_bound := 0 {kN};
+	END bound_self;	
 	METHOD set_stress;
 		FIX sigma_max; sigma_max := 30 {MPa};
 		FREE P;
-	END set_stress;		
+	END set_stress;
+	METHOD solve_stress;
+		FIX P;
+		P := 10 {kN};
+		RUN bound_self;
+		FREE sigma_max;
+		EXTERNAL brent(SELF,C.delta_sigma,P);
+	END solve_stress;
+	METHOD solve;
+		EXTERNAL do_solve(SELF);
+	END solve;
 END columnbuckling;
 
 	
