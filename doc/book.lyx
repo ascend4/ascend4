@@ -1,5 +1,5 @@
-#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 1.5.0rc2 created this file. For more info see http://www.lyx.org/
+\lyxformat 276
 \begin_document
 \begin_header
 \textclass book
@@ -49,15 +49,24 @@
   backgroundcolor=\color{lightgrey} 
 }
 \end_preamble
+\options figuresright
 \language english
 \inputencoding auto
-\fontscheme palatino
+\font_roman palatino
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
 \paperfontsize default
 \spacing single
 \papersize custom
 \use_geometry true
 \use_amsmath 1
+\use_esint 0
 \cite_engine basic
 \use_bibtopic false
 \paperorientation portrait
@@ -75,20 +84,45 @@
 \papersides 1
 \paperpagestyle default
 \tracking_changes false
-\output_changes true
+\output_changes false
+\author "John Pye" 
 \end_header
 
 \begin_body
 
 \begin_layout Title
+
+\family sans
+\series bold
+\size giant
 ASCEND
 \end_layout
 
 \begin_layout Author
 The ASCEND Modelling and Simulation Environment
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+vspace*{6.0cm}
+\end_layout
+
+\end_inset
+
+
 \newline
-(c) 2006-2007 Carnegie Mellon
- University
+(c) 2006-2007 Carnegie Mellon University
+\newline
+
+\begin_inset LatexCommand htmlurl
+target "http://ascend.cheme.cmu.edu/"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -105,7 +139,7 @@ frontmatter
 \end_inset
 
 
-\begin_inset LatexCommand \tableofcontents{}
+\begin_inset LatexCommand tableofcontents
 
 \end_inset
 
@@ -293,7 +327,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand \bibtex[bibtotoc,plain]{ascend}
+\begin_inset LatexCommand bibtex
+options "bibtotoc,plain"
+bibfiles "ascend"
 
 \end_inset
 
@@ -301,7 +337,7 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand \printindex{}
+\begin_inset LatexCommand printindex
 
 \end_inset
 
