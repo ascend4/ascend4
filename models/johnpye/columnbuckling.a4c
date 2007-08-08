@@ -1,22 +1,21 @@
 REQUIRE "johnpye/section.a4c";
-
-(*
-	We will use the Brent solver to goal-seek on the secant formula, as QRSlv
-	can't quite manage it when we just FIX sigma_max and FREE P.
-*)
 IMPORT "johnpye/brent/brent";
 IMPORT "sensitivity/solve";
 
 (*
 	This is a model of column buckling using the secant formula, which makes
-	an allowance for load eccentricity.
+	an allowance for load eccentricity. The model also gives the simple Euler
+	buckling result, which you can also use if needed.
 
 	The symbols/nomenclature here is taken from E P Popov, 'Engineering Mechanics
 	of Solids', Prentice Hall, 1990.
 
 	Note that although this model takes a 'section' as a parameter, it just
 	assumes that the buckling will occur in the XY plane (in other words about
-	the Z axis).
+	the Z axis). This will not always be a correct assumption.
+
+	We will use the Brent solver to goal-seek on the secant formula, as QRSlv
+	can't quite manage it when we just FIX sigma_max and FREE P.
 *)
 MODEL columnbuckling_model(
 	S WILL_BE section;
@@ -103,7 +102,11 @@ MODEL columnbuckling;
 	n ALIASES C.n;
 	L_on_r ALIASES C.L_on_r;
 	P_design ALIASES C.P_design;
+	P_euler ALIASES C.P_euler;
 	sigma_max ALIASES C.sigma_max;
+
+	P_short IS_A force;
+	P_short = sigma_yp * S.A;
 
 METHODS
 	METHOD on_load;
@@ -126,8 +129,6 @@ METHODS
 		sigma_yp := 350 {MPa};
 	END values;
 	METHOD bound_self;
-		(* bounds to allow the Brent solver to work *)
-		P.upper_bound := 80 {kN};
 		P.lower_bound := 0 {kN};
 	END bound_self;	
 	METHOD set_stress;
@@ -137,8 +138,21 @@ METHODS
 	METHOD solve_stress;
 		FIX P;
 		P := 10 {kN};
+
+		(* upper bound on P is the Euler stress *)
+		P.upper_bound := 1{PI}^2 * E / L_on_r^2 * S.A;
+
+		(* these stresses go very big during the iterations, but that's OK *)
+		C.sigma_max.lower_bound := -1e50 {MPa};
+		C.sigma_max.upper_bound := 1e50 {MPa};
+		C.delta_sigma.lower_bound := -1e50 {MPa};
+		C.delta_sigma.upper_bound := 1e50 {MPa};
+
 		FREE sigma_max;
 		EXTERNAL brent(SELF,C.delta_sigma,P);
+
+		(* reset the bound *)
+		P.upper_bound := 1e6 {kN};
 	END solve_stress;
 	METHOD solve;
 		EXTERNAL do_solve(SELF);
