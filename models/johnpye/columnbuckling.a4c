@@ -81,6 +81,9 @@ END columnbuckling_model;
 (* 
 	Example of a column buckling problem: solving for the design load
 	given a particular column design and factor of safety.
+
+	Note that for the 'solve_stress' method to work, it is important that
+	a suitable choice for the bounds of 'P' to be chosen.
 *)
 MODEL columnbuckling;
 
@@ -105,6 +108,7 @@ MODEL columnbuckling;
 METHODS
 	METHOD on_load;
 		RUN default_self;
+		RUN bound_self;
 		RUN reset; RUN values;
 	END on_load;
 	METHOD specify;
@@ -133,7 +137,6 @@ METHODS
 	METHOD solve_stress;
 		FIX P;
 		P := 10 {kN};
-		RUN bound_self;
 		FREE sigma_max;
 		EXTERNAL brent(SELF,C.delta_sigma,P);
 	END solve_stress;
