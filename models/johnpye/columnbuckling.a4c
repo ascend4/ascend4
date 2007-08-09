@@ -75,6 +75,32 @@ MODEL columnbuckling_model(
 	L_on_r IS_A factor;
 	L_on_r = L / r;
 
+METHODS
+	METHOD solve_stress;
+		FIX P;
+		P := 10 {kN};
+
+		(* upper bound on P is the Euler stress *)
+		P.upper_bound := 1{PI}^2 * E / L_on_r^2 * S.A;
+
+		(* these stresses go very big during the iterations, but that's OK *)
+		sigma_max.lower_bound := -1e50 {MPa};
+		sigma_max.upper_bound := 1e50 {MPa};
+		delta_sigma.lower_bound := -1e50 {MPa};
+		delta_sigma.upper_bound := 1e50 {MPa};
+
+		FREE sigma_max;
+		EXTERNAL brent(SELF,delta_sigma,P);
+
+		(* reset the bound *)
+		P.upper_bound := 1e6 {kN};
+	END solve_stress;
+
+	(* method required by Brent solver *)
+	METHOD solve;
+		EXTERNAL do_solve(SELF);
+	END solve;
+
 END columnbuckling_model;
 
 (* 
@@ -106,7 +132,7 @@ MODEL columnbuckling;
 	sigma_max ALIASES C.sigma_max;
 
 	P_short IS_A force;
-	P_short = sigma_yp * S.A;
+	z_P_short: P_short = sigma_yp * S.A;
 
 METHODS
 	METHOD on_load;
@@ -136,27 +162,8 @@ METHODS
 		FREE P;
 	END set_stress;
 	METHOD solve_stress;
-		FIX P;
-		P := 10 {kN};
-
-		(* upper bound on P is the Euler stress *)
-		P.upper_bound := 1{PI}^2 * E / L_on_r^2 * S.A;
-
-		(* these stresses go very big during the iterations, but that's OK *)
-		C.sigma_max.lower_bound := -1e50 {MPa};
-		C.sigma_max.upper_bound := 1e50 {MPa};
-		C.delta_sigma.lower_bound := -1e50 {MPa};
-		C.delta_sigma.upper_bound := 1e50 {MPa};
-
-		FREE sigma_max;
-		EXTERNAL brent(SELF,C.delta_sigma,P);
-
-		(* reset the bound *)
-		P.upper_bound := 1e6 {kN};
+		RUN C.solve_stress;
 	END solve_stress;
-	METHOD solve;
-		EXTERNAL do_solve(SELF);
-	END solve;
 END columnbuckling;
 
 	
