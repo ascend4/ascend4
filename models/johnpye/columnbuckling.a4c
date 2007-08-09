@@ -14,8 +14,16 @@ IMPORT "sensitivity/solve";
 	assumes that the buckling will occur in the XY plane (in other words about
 	the Z axis). This will not always be a correct assumption.
 
-	We will use the Brent solver to goal-seek on the secant formula, as QRSlv
-	can't quite manage it when we just FIX sigma_max and FREE P.
+	The Secant formular has been rearanged in terms of a new variable phi,
+	defined here as
+	
+		phi = P / P_euler.
+
+	This gives a simpler form for the Secant formula with improved
+	model convergence properties when reverse-solved for P in terms of
+	sigma_max.
+
+	You may encounter some problems with eccentricity, 'e', set to zero.
 *)
 MODEL columnbuckling_model(
 	S WILL_BE section;
@@ -51,8 +59,11 @@ MODEL columnbuckling_model(
 	(* elastic limit *)
 	sigma_max IS_A stress;
 
+	phi IS_A fraction;
+	phi = P / P_euler;
+
 	(* secant formula relates elastic limit to the permissible load P *)
-	sigma_max = P / A * (1 + e*c/r^2 / cos( L_on_r * sqrt( P / 4 / E / A )) );
+	sigma_max = phi * 1{PI}^2 * E / L^2 * (r^2 + e*c / cos(1{PI}/2. * sqrt(phi)));
 
 	delta_sigma IS_A stress;
 	delta_sigma = sigma_yp - sigma_max;
@@ -74,32 +85,6 @@ MODEL columnbuckling_model(
 	(* slenderness ratio: for reference *)
 	L_on_r IS_A factor;
 	L_on_r = L / r;
-
-METHODS
-	METHOD solve_stress;
-		FIX P;
-		P := 10 {kN};
-
-		(* upper bound on P is the Euler stress *)
-		P.upper_bound := 1{PI}^2 * E / L_on_r^2 * S.A;
-
-		(* these stresses go very big during the iterations, but that's OK *)
-		sigma_max.lower_bound := -1e50 {MPa};
-		sigma_max.upper_bound := 1e50 {MPa};
-		delta_sigma.lower_bound := -1e50 {MPa};
-		delta_sigma.upper_bound := 1e50 {MPa};
-
-		FREE sigma_max;
-		EXTERNAL brent(SELF,delta_sigma,P);
-
-		(* reset the bound *)
-		P.upper_bound := 1e6 {kN};
-	END solve_stress;
-
-	(* method required by Brent solver *)
-	METHOD solve;
-		EXTERNAL do_solve(SELF);
-	END solve;
 
 END columnbuckling_model;
 
@@ -155,7 +140,7 @@ METHODS
 		sigma_yp := 350 {MPa};
 	END values;
 	METHOD bound_self;
-		P.lower_bound := 0 {kN};
+		e.lower_bound := 1e-5 {mm};		
 	END bound_self;	
 	METHOD set_stress;
 		FIX sigma_max; sigma_max := 30 {MPa};
