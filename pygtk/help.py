@@ -24,7 +24,12 @@ class Help:
 				self.goonline = True
 
 	def run(self,topic=None):
-		_b = webbrowser.get()
+
+		if platform.system()=="Windows":
+			_b = webbrowser.get()
+		else:
+			# tested on Fedora 7:
+			_b = webbrowser.get('firefox')
 
 		if self.goonline:
 			_u = self.webhelproot
@@ -33,7 +38,7 @@ class Help:
 			_u = "file://"+_p
 		
 		print "OPENING WEB PAGE: %s..." % _u
-		_b.open(_u);
+		_b.open(_u,autoraise=1);
 		print "BACK FROM WEB CALL"
 
 if __name__ == "__main__":

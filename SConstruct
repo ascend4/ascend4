@@ -2151,7 +2151,7 @@ subst_dict = {
 	, '@VERSION@':version
 	, '@RELEASE@':release
 	, '@DISTTAR_NAME@':env['DISTTAR_NAME']
-	, '@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
+	, '@WEBHELPROOT@':'http://ascendwiki.cheme.cmu.edu/Category:Documentation'
 	, '@SHLIBSUFFIX@':env['SHLIBSUFFIX']
 	, '@SHLIBPREFIX@':env['SHLIBPREFIX']
 	, '@ASC_ENV_TK_DEFAULT@' : '$$ASCENDDIST/tcltk'
