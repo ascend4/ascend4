@@ -53,7 +53,7 @@ if platform.system()=="Windows":
 		default_conopt_prefix = None
 		
 	need_libm = False
-	python_exe = "c:\\Python24\\python.exe"
+	python_exe = sys.executable
 	default_with_scrollkeeper=False
 	pathsep = ";"
 	
