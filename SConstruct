@@ -2395,7 +2395,6 @@ if env.get('CAN_INSTALL'):
 
 #------------------------------------------------------
 # WINDOWS INSTALLER
-# For the windows installer, please see pygtk/SConscript
 
 if not env.get('NSIS'):
 	with_installer = False
