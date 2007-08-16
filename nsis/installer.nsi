@@ -248,7 +248,7 @@ Section "ASCEND (required)"
 	File "..\solvers\cmslv\cmslv.dll"
 	File "..\solvers\lsode\lsode.dll"
 	File "..\solvers\ida\ida.dll"
-
+	
 	SetOutPath $INSTDIR
 	;File "Makefile.bt"
 	File "..\tools\textpad\ascend.syn"
@@ -455,6 +455,18 @@ Section "Start Menu Shortcuts"
 SectionEnd
 
 ;------------------------------------------------------------------
+; HEADER FILES for DEVELOPERS
+
+Section /o "Header files (for developers)"
+	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "HeaderFiles" 1
+
+	SetOutPath $INSTDIR\include
+	File /r /x .svn "..\base\generic\*.h"
+
+	SetOutPath $INSTDIR
+SectionEnd
+
+;------------------------------------------------------------------
 ; UNINSTALLER
 
 Section "Uninstall"
@@ -529,16 +541,22 @@ unnopython:
 		Delete $INSTDIR\book.pdf
 	${EndIf}
 
+;--- header files ---
+
+	ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "HeaderFiles"
+	${If} $0 != 0
+		DetailPrint "--- REMOVING HEADER FILES ---"
+		RMDir /r $INSTDIR\include
+	${EndIf}
+	
 ;--- start menu ---
 
-	ReadRegDWORD $1 HKLM "SOFTWARE\ASCEND" "StartMenu"
-	IntCmp $1 0 unnostart unstart 
-unstart:
-	; Remove shortcuts, if any
-	DetailPrint "--- REMOVING START MENU SHORTCUTS ---"
-	RmDir /r "$SMPROGRAMS\ASCEND"
-
-unnostart:
+	ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "StartMenu"
+	${If} $0 != 0
+		; Remove shortcuts, if any
+		DetailPrint "--- REMOVING START MENU SHORTCUTS ---"
+		RmDir /r "$SMPROGRAMS\ASCEND"
+	${EndIf}
 
 ;--- common components ---
 
@@ -566,6 +584,7 @@ unnostart:
 	Delete $INSTDIR\solvers\cmslv.dll
 	Delete $INSTDIR\solvers\lsode.dll
 	Delete $INSTDIR\solvers\ida.dll
+	RMDir $INSTDIR\solvers
 
 	; Remove directories used
 

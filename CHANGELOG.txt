@@ -1,3 +1,16 @@
+upcoming
+--------
+
+Version 0.9.5.113
+
+ - Fixed launching of help files/web links from PyGTK GUI on Linux.
+ - Added option in Windows installer to install header files for developers.
+ - Fixed value of @PYTHON@ on Windows for use in ascend-config script.
+ - Fixed deletion of $INSTDIR/solvers on Windows during uninstall.
+
+TODO: work on support for users with GIMP's GTK+ runtime installed.
+TODO: translate line-endings for installed files on windows.
+
 5 Aug 2007
 ----------
 
