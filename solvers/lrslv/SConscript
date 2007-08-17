@@ -1,17 +1,19 @@
 Import('env')
 
-liblrslv = [env.SharedLibrary("lrslv",["slv9a.c"]
+lib = env.SharedLibrary("lrslv",["slv9a.c"]
 	,LIBS = ['ascend']
 	,LIBPATH = ['#']
-)]
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
 
-env['extfns'] += liblrslv
+env['extfns'] += [lib]
 
-env.Depends(liblrslv,env['libascend'])
+env.Depends(lib,env['libascend'])
 
 
 if env.get('CAN_INSTALL'):
-	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),liblrslv)
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),lib)
 
 # vim: set syntax=python:
 

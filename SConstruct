@@ -59,6 +59,8 @@ if platform.system()=="Windows":
 	
 	default_fortran="g77"
 	default_f2c_lib="g2c"
+	
+	default_extlib_suffix = "_ascend$SHLIBSUFFIX"
 else:
 	default_tcl_lib = "tcl8.4"
 	default_tk_lib = "tk8.4"
@@ -97,6 +99,8 @@ else:
 	
 	default_fortran="gfortran"
 	default_f2c_lib="gfortran"
+	
+	default_extlibsuffix = "$SHLIBSUFFIX"
 
 opts.Add(
 	'CC'
@@ -571,6 +575,18 @@ opts.Add(
 	'INSTALL_ROOT'
 	,'For use by RPM only: location of %{buildroot} during rpmbuild'
 	,""
+)
+
+opts.Add(
+	'EXTLIB_SUFFIX'
+	,"Filename suffix for ASCEND 'external libraries' (for use with IMPORT"
+	,default_extlib_suffix
+)
+
+opts.Add(
+	'EXTLIB_PREFIX'
+	,"Filename suffix for ASCEND 'external libraries' (for use with IMPORT"
+	,"$SHLIBPREFIX"
 )
 
 #----------------------
@@ -2154,6 +2170,8 @@ subst_dict = {
 	, '@WEBHELPROOT@':'http://ascendwiki.cheme.cmu.edu/Category:Documentation'
 	, '@SHLIBSUFFIX@':env['SHLIBSUFFIX']
 	, '@SHLIBPREFIX@':env['SHLIBPREFIX']
+	, '@EXTLIB_SUFFIX@':env['EXTLIB_SUFFIX']
+	, '@EXTLIB_PREFIX@':env['EXTLIB_PREFIX']
 	, '@ASC_ENV_TK_DEFAULT@' : '$$ASCENDDIST/tcltk'
 	, '@ASC_DISTDIR_REL_BIN@' : default_rel_distdir
 	, '@PYTHON@' : python_exe

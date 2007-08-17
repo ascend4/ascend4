@@ -11,10 +11,13 @@ srcs = Split("""
 
 dr_env.Append(LIBPATH=['#'])
 dr_env.Append(LIBS=['ascend'])
-targets = []
-targets.append( dr_env.SharedLibrary("datareader",srcs) )
 
-env['extfns'] += targets
+lib = dr_env.SharedLibrary("datareader",srcs
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
+
+env['extfns'] += [lib]
 
 # vim: set syntax=python:
 

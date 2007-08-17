@@ -238,16 +238,16 @@ Section "ASCEND (required)"
 	SetOutPath $INSTDIR\models
 	File /r /x .svn "..\models\*.a4*"
 	File /r /x .svn "..\models\*.tcl"
-	File /r /x .svn "..\models\*.dll" ; extension modules
+	File /r /x .svn "..\models\*_ascend.dll" ; extension modules
 	File /r /x .svn "..\models\*.py"; python modules
 	
 	SetOutPath $INSTDIR\solvers
-	File "..\solvers\qrslv\qrslv.dll"
-	File "..\solvers\conopt\conopt.dll"
-	File "..\solvers\lrslv\lrslv.dll"
-	File "..\solvers\cmslv\cmslv.dll"
-	File "..\solvers\lsode\lsode.dll"
-	File "..\solvers\ida\ida.dll"
+	File "..\solvers\qrslv\qrslv_ascend.dll"
+	File "..\solvers\conopt\conopt_ascend.dll"
+	File "..\solvers\lrslv\lrslv_ascend.dll"
+	File "..\solvers\cmslv\cmslv_ascend.dll"
+	File "..\solvers\lsode\lsode_ascend.dll"
+	File "..\solvers\ida\ida_ascend.dll"
 	
 	SetOutPath $INSTDIR
 	;File "Makefile.bt"
@@ -578,12 +578,12 @@ unnopython:
 	Delete $INSTDIR\Makefile.bt
 	Delete $INSTDIR\ascend.syn
 	RMDir /r $INSTDIR\models
-	Delete $INSTDIR\solvers\qrslv.dll
-	Delete $INSTDIR\solvers\conopt.dll
-	Delete $INSTDIR\solvers\lrslv.dll
-	Delete $INSTDIR\solvers\cmslv.dll
-	Delete $INSTDIR\solvers\lsode.dll
-	Delete $INSTDIR\solvers\ida.dll
+	Delete $INSTDIR\solvers\qrslv_ascend.dll
+	Delete $INSTDIR\solvers\conopt_ascend.dll
+	Delete $INSTDIR\solvers\lrslv_ascend.dll
+	Delete $INSTDIR\solvers\cmslv_ascend.dll
+	Delete $INSTDIR\solvers\lsode_ascend.dll
+	Delete $INSTDIR\solvers\ida_ascend.dll
 	RMDir $INSTDIR\solvers
 
 	; Remove directories used

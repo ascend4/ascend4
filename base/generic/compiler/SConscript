@@ -54,7 +54,6 @@ else:
 	scannersource = libascend_env.Command('scanner.c','scanner_no_lex.c',Copy('$TARGET', '$SOURCE'))
 
 packages_env = libascend_env.Copy()
-packages_env.Append(CPPDEFINES=[('ASC_SHLIBSUFFIX','\\"'+libascend_env['SHLIBSUFFIX']+'\\"'),('ASC_SHLIBPREFIX','\\"'+libascend_env['SHLIBPREFIX']+'\\"')])
 packages = packages_env.SharedObject('packages.c')
 
 objs = [parsersource[0],scannersource,packages]

@@ -7,9 +7,12 @@ srcs = Split("""
 
 brent_env.Append(LIBPATH=['#'])
 brent_env.Append(LIBS=['ascend'])
-targets = []
-targets.append( brent_env.SharedLibrary("brent",srcs) )
 
-env['extfns'] += targets
+lib = brent_env.SharedLibrary("brent",srcs
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
+
+env['extfns'] += [lib]
 
 # vim: set syntax=python:

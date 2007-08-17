@@ -11,13 +11,15 @@ if env.get('WITH_IPOPT'):
 		]
 	)
 
-	libipopt = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
+	lib = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
 		,LIBS = ['ascend','ipopt']
 		,LIBPATH = ['#']
+		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
 
-	env.Depends(libipopt,env['libascend'])
+	env.Depends(lib,env['libascend'])
 
-	env['extfns'] += [libipopt]
+	env['extfns'] += [lib]
 
 # vim: set syntax=python:

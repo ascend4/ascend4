@@ -7,6 +7,8 @@ for e in ['sensitivity','solve','finitediff']:
 	env['extfns'] += [env.SharedLibrary(e,["%s.c" % e]
 		,LIBS = ['ascend']
 		,LIBPATH=['#']
+		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)]
 
 # vim: set syntax=python:
