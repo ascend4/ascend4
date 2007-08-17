@@ -1,14 +1,14 @@
 Name:		ascend
 Summary:	ASCEND modelling environment
-Version:	0.9.5.112
+Version:	0.9.5.113
 
 # Use release 0.* so that other users can do patch releases with a higher number
 # and still have the update occur automatically.
 Release:	0%{?dist}
 
-%define disttar_name ascend-0.9.5.112
+%define disttar_name ascend-0.9.5.113
 
-License:	GPL
+License:	GPLv2+
 Group:		Applications/Engineering
 Source:		%{disttar_name}.tar.bz2
 URL:		http://ascend.cheme.cmu.edu/
