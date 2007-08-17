@@ -257,14 +257,19 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    */
   xlib = dlopen(path, 1);
   if (xlib == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"%s",(char *)dlerror());
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s",(char *)dlerror());
+
+#ifdef linux
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"LD_LIBRARY_PATH = \"%s\"",getenv("LD_LIBRARY_PATH"));
+#endif
+
     return 1;
   }
   if (NULL != initFun) {
 	/* https://www.opengroup.org/sophocles/show_mail.tpl?source=L&listname=austin-review-l&id=2252 */
     *(void**)(&install) = dlsym(xlib, initFun);
     if (install == NULL) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"%s",(char *)dlerror());
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s",(char *)dlerror());
       dlclose(xlib);
       return 1;
     }
