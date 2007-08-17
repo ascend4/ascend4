@@ -754,7 +754,7 @@ def c_escape(str):
 
 envadditional={}
 
-tools = ['lex','yacc','fortran','swig','nsis','substinfile','disttar']
+tools = ['lex','yacc','fortran','swig','nsis','substinfile','disttar','tar']
 if platform.system()=="Windows":
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
 		envenv = os.environ;

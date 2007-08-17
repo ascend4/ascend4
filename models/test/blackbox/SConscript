@@ -5,14 +5,18 @@ srcs = Split("""
 	bboxtest.c
 """)
 
-extfn_env.Append(LIBPATH=['#'])
-extfn_env.Append(LIBS=['ascend'])
+extfn_env.Append(
+	LIBPATH=['#']
+	,LIBS=['ascend']
+)
 
-targets = []
-targets.append( extfn_env.SharedLibrary("bboxtest",srcs) )
+lib = extfn_env.SharedLibrary("bboxtest",srcs
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
 
 # Return the targs
-env['extfns'] += targets
+env['extfns'] += [lib]
 
 # vim: set syntax=python:
 
