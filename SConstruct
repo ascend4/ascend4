@@ -60,7 +60,6 @@ if platform.system()=="Windows":
 	default_fortran="g77"
 	default_f2c_lib="g2c"
 	
-	default_extlib_suffix = "_ascend$SHLIBSUFFIX"
 else:
 	default_tcl_lib = "tcl8.4"
 	default_tk_lib = "tk8.4"
@@ -100,8 +99,6 @@ else:
 	default_fortran="gfortran"
 	default_f2c_lib="gfortran"
 	
-	default_extlibsuffix = "$SHLIBSUFFIX"
-
 opts.Add(
 	'CC'
 	,'C Compiler command'
@@ -580,7 +577,7 @@ opts.Add(
 opts.Add(
 	'EXTLIB_SUFFIX'
 	,"Filename suffix for ASCEND 'external libraries' (for use with IMPORT"
-	,default_extlib_suffix
+	,"_ascend$SHLIBSUFFIX"
 )
 
 opts.Add(

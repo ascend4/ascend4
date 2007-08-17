@@ -65,7 +65,7 @@ ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *put
 
 	At present there will be no allowance for lowercase env var names
 	only uppercase and underscores. No escaping of dollar signs is
-	allowed for yet, and not ${BRACKETING}TO_STOP adjected characters
+	allowed for yet, and not ${BRACKETING}TO_STOP adjacent characters
 	from being swallowed up is allowed for, either. These can be added
 	later, 'as an exercise'.
 */
