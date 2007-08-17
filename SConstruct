@@ -2447,7 +2447,19 @@ tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 env.Depends(tar,'ascend.spec')
 env.Depends(tar,'#doc/book.pdf')
 
-Alias('dist',tar)
+#------------------------------------------------------
+# DEBIAN TARBALL for use with Build Service
+
+import glob
+deb_manfiles = glob.glob('debian/*.man')
+
+deb_tar = env.Tar(
+	'dist/debian.tar.gz'
+	,deb_manfiles + ['debian/compat','debian/copyright','debian/dirs']
+	,TARFLAGS = ['cz']
+)
+
+Alias('dist',[tar,deb_tar])
 
 #------------------------------------------------------
 # DOCUMENTATION
