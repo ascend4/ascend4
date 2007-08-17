@@ -106,20 +106,20 @@ char *importhandler_extlib_filename(const char *partialname){
 	char *buffer;
 	buffer = ASC_NEW_ARRAY(char,PATH_MAX);
 
-#if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
+#if defined(ASC_EXTLIBSUFFIX) && defined(ASC_EXTLIBPREFIX)
 	/*
 		this is the preferred operation: SCons reports what the local system
 		uses as its shared library file extension.
 	*/
-	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,partialname,ASC_SHLIBSUFFIX);
+	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_EXTLIBPREFIX,partialname,ASC_EXTLIBSUFFIX);
 #else
 #ifdef __GNUC__
-# warning "You should be using Use ASC_SHLIBPREFIX and ASC_SHLIBSUFFIX!"
+# warning "You should be using Use ASC_EXTLIBPREFIX and ASC_EXTLIBSUFFIX!"
 #endif
 	/**
 		@DEPRECATED
 
-		If we don't have ASC_SHLIB-SUFFIX and -PREFIX then we can do some
+		If we don't have ASC_EXTLIB-SUFFIX and -PREFIX then we can do some
 		system-specific stuff here, but it's not as general.
 	*/
 # ifdef __WIN32__
@@ -133,7 +133,7 @@ char *importhandler_extlib_filename(const char *partialname){
 # elif defined(_SGI_SOURCE)
 	snprintf(buffer,PATH_MAX,"%s.so",partialname);
 # else
-#  error "Unknown system type (please define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX)"
+#  error "Unknown system type (please define ASC_EXTLIBSUFFIX and ASC_EXTLIBPREFIX)"
 # endif
 #endif
 

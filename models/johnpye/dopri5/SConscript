@@ -5,10 +5,13 @@ Import('env')
 
 dopri5obj = env.SharedObject("dopri5.c")
 
-if 1:
-	env['extfns'] += [env.SharedLibrary("dopri5",["asc_dopri5.c",dopri5obj]
-		,LIBS = ['ascend']
-		,LIBPATH = ['#']
-	)]
+lib = env.SharedLibrary("dopri5",["asc_dopri5.c",dopri5obj]
+	,LIBS = ['ascend']
+	,LIBPATH = ['#']
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']		
+)
+
+env['extfns'] += [lib]
 
 # vim: set syntax=python:

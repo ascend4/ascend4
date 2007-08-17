@@ -14,14 +14,16 @@ extfn_env.AppendUnique(
 	,CPPPATH=[env.get('PYTHON_CPPPATH')]
 )
 
-targets = []
-targets.append( extfn_env.SharedLibrary("extpy",srcs) )
+lib = extfn_env.SharedLibrary("extpy",srcs
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
 
 # To run the test, type
 #     ascdev johnpye/extpy/extpytest.py
 
 # Return the targs
-env['extfns'] += targets
+env['extfns'] += [lib]
 
 # vim: set syntax=python:
 

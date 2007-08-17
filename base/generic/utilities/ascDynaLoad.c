@@ -200,8 +200,10 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Required function '%s' not found", initFun);
       (void)FreeLibrary(xlib);
       return 1;
-    }else{
+#if 0
+	}else{
 		FPRINTF(ASCERR,"FOUND INITFCN %s AT %d\n",initFun,install);
+#endif
 	}
   }
   if (0 != AscAddRecord(xlib,path)) {
@@ -499,6 +501,30 @@ DynamicF Asc_DynamicFunction(CONST char *libname, CONST char *symbol)
   SEARCHING FOR LIBRARIES
 */
 
+
+/**
+	Create a library filename according to platform standard naming.
+
+	@param partialname The partial filename (eg 'mylib')
+	@return Complete filename (eg 'libmylib.so' or 'mylib.dlll', etc)
+
+	Basically just adds ASC_SHLIBPREFIX to start and ASC_SHLIBSUFFIX to end.
+
+	No allowance made for 'soname' suffixes eg 'libsomething.so.1' etc. But
+	that's probably OK as those methods aren't really applicable to dlopened
+	libraries (eg the soname symlink mechanism breaks down).
+*/
+char *dynaload_lib_filename(const char *partialname){
+	char *buffer;
+	buffer = ASC_NEW_ARRAY(char,PATH_MAX);
+#if !defined(ASC_SHLIBSUFFIX) || !defined(ASC_SHLIBPREFIX)
+# error "ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX are not defined"
+#endif
+	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,partialname,ASC_SHLIBSUFFIX);
+	return buffer;
+}
+
+
 /**
 	A little structure to help with searching for libraries
 
@@ -585,7 +611,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 		return NULL;
 	}
 
-	buffer = importhandler_extlib_filename(s1);
+	buffer = dynaload_lib_filename(s1);
 
 	fp3 = ospath_new(buffer);
 	ASC_FREE(buffer);

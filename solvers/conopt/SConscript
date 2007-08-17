@@ -9,17 +9,19 @@ if env.get('WITH_CONOPT'):
 
 	solver_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
 
-	libconopt = [solver_env.SharedLibrary("conopt",["asc_conopt.c"]
+	lib = solver_env.SharedLibrary("conopt",["asc_conopt.c"]
 		,LIBS = ['ascend']
 		,LIBPATH = ['#']
-	)]
+		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+		,SHLIBPREFIX = env['EXTLIB_PREFIX']
+	)
 
-	env.Depends(libconopt,env['libascend'])
+	env.Depends(lib,env['libascend'])
 
-	env['extfns'] += libconopt
+	env['extfns'] += [lib]
 
 	if env.get('CAN_INSTALL'):
-		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),libconopt)
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),lib)
 
 # vim: set syntax=python:
 
