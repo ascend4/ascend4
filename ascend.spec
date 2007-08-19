@@ -58,11 +58,6 @@ BuildRequires: g++-4.1 gfortran-4.1 libsundials-serial-dev python-dev tk8.3-dev 
 %endif
 %endif
 
-#BuildRequires: conopt >= 3.14
-
-# ... GNOME
-BuildRequires: desktop-file-utils
-
 %define pyver %(python -c 'import sys ; print sys.version[:3]')
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
@@ -88,8 +83,7 @@ fields from Architecture to (computational) Zoology.
 # ...general
 Requires: gtksourceview
 Requires: blas
-# sundials will be statically linked
-Requires: desktop-file-utils shared-mime-info
+Requires: sundials # is now packaged as a shared library
 
 # ...pygtk
 Requires: python >= 2.4
@@ -104,6 +98,11 @@ Requires: xgraph >= 11
 Requires: tcl >= 8.3
 Requires: tk >= 8.3
 Requires: tktable < 2.10, tktable >= 2.8
+
+# ... file association
+Requires(post): desktop-file-utils shared-mime-info
+Requires(postun): desktop-file-utils shared-mime-info
+
 
 #------------------------------------------
 
