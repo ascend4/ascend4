@@ -484,6 +484,14 @@ class Browser:
 							%(_model, str(e))
 						);		
 
+
+		#--------
+		# report absence of solvers if nec.
+
+		if not len(ascpy.getSolvers()):
+			print "NO SOLVERS LOADED!"
+			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
+
 		#--------
 		# IPython console, if available
 
@@ -613,7 +621,7 @@ class Browser:
 
 			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim",False)
 
-			self.reporter.reportNote("SIMULATION ASSIGNED")
+			#self.reporter.reportNote("SIMULATION ASSIGNED")
 		except RuntimeError, e:
 			self.stop_waiting()
 			self.reporter.reportError(str(e))
@@ -635,7 +643,7 @@ class Browser:
 		# run the 'on_load' method
 		self.start_waiting("Running default method...")
 		try:
-			self.reporter.reportNote("SIMULATION CREATED, RUNNING DEFAULT METHOD NOW...")
+			#self.reporter.reportNote("SIMULATION CREATED, RUNNING DEFAULT METHOD NOW...")
 			self.sim.runDefaultMethod()
 		except RuntimeError, e:
 			self.stop_waiting()
@@ -664,6 +672,10 @@ class Browser:
 			self.sim.build()
 		except RuntimeError,e:
 			self.reporter.reportError("Couldn't build system: %s",str(e));
+			return
+
+		if not hasattr(self,'solver'):
+			self.reporter.reportError("No solver assigned!")
 			return
 
 		self.start_waiting("Solving with %s..." % self.solver.getName())

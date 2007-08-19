@@ -57,7 +57,11 @@ class IntegratorWindow:
 		self.fill_values()
 
 		# set the engine initially
-		self.integrator.setEngine(self.engines[self.engineselect.get_active()])
+		try:
+			self.integrator.setEngine(self.engines[self.engineselect.get_active()])
+		except:
+			# perhaps no integrators are available
+			pass
 
 	def fill_values(self):
 		_enginestore = gtk.ListStore(str)
@@ -244,9 +248,8 @@ class IntegratorWindow:
 
 		self.color_entry(self.engineselect,"white")
 
-		self.prefs.setStringPref("Integrator","engine",self.engines[engine])
-
 		try:
+			self.prefs.setStringPref("Integrator","engine",self.engines[engine])
 			_res = self.integrator.setEngine(self.engines[engine])			
 		except IndexError,e:
-			raise IntegratorERror("Unable to set engine: %s",e) 
+			raise IntegratorError("Unable to set engine: %s" % e) 

@@ -128,7 +128,7 @@ Type::getSimulation(const SymChar &sym
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Starting tree...\n");
 	error_reporter_tree_start();
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Started tree\n");
+	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Started tree\n"); */
 
 	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, NULL);
 	Simulation sim(i,sym);
