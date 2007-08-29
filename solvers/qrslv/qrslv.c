@@ -60,6 +60,8 @@
 #define DEBUG FALSE
 /**< makes lots of extra spew */
 
+/* #define PIVOT_DEBUG */
+
 #define QRSLV(s) ((qrslv_system_t)(s))
 #define SERVER (sys->slv)
 
@@ -1311,15 +1313,16 @@ static int calc_pivots(qrslv_system_t sys){
       ,sys->J.rank
     );
 
-#ifdef ASC_WITH_MMIO
-#define QRSLV_MMIO_FILE "qrslvmmio.mtx"
+#ifdef PIVOT_DEBUG
+# ifdef ASC_WITH_MMIO
+#  define QRSLV_MMIO_FILE "qrslvmmio.mtx"
 /* #define QRSLV_MMIO_WHOLE */
     if((fmtx = fopen(QRSLV_MMIO_FILE,"w"))){
-#ifdef QRSLV_MMIO_WHOLE
+#  ifdef QRSLV_MMIO_WHOLE
       mtx_write_region_mmio(fmtx, sys->J.mtx, mtx_ENTIRE_MATRIX);
-#else
+#  else
       mtx_write_region_mmio(fmtx, sys->J.mtx, &(sys->J.reg));
-#endif
+#  endif
       ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Wrote matrix to '%s' (EXPERIMENTAL!)",QRSLV_MMIO_FILE);
       fclose(fmtx);
     }else{
@@ -1327,7 +1330,9 @@ static int calc_pivots(qrslv_system_t sys){
         "Unable to write matrix to '%s' (couldn't open for writing)",QRSLV_MMIO_FILE
       );
     }
+# endif
 #endif
+
   }
 
   if(sys->J.rank < sys->J.reg.col.high-sys->J.reg.col.low+1 ) {
