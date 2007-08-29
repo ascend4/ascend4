@@ -1,0 +1,83 @@
+(*	Air properties calculator for ASCEND modelling environment
+	Copyright (C) John Pye 2005
+
+ 	This program is free software; you can redistribute it
+	and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later
+	version.
+
+	This program is distributed in the hope that it will be
+	useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+	PURPOSE.  See the GNU General Public License for more
+	details.
+
+	You should have received a copy of the GNU General Public
+	License along with this program; if not, write to the Free
+	Software Foundation, Inc., 59 Temple Place, Suite 330,
+	Boston, MA 02111-1307  USA
+*)
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+(* 
+	The air property correlations here are taken from the paper by
+	George A. Adebiyi, 'Formulations for the Thermodynamic Properties of
+	Pure Substatnce', J Energy Res Tech., 2005. doi:10.1115/1.1794695
+
+	Currently, this model just allows the enthalpy of air to be calculated
+	given the pressure and temperature. Other correlations are implemented
+	in the Adebiyi paper, but they haven't been coded here yet.
+*)
+MODEL airprops;
+	p IS_A pressure;
+	T IS_A temperature;
+
+	p_c IS_A pressure_constant;
+	p_c :== 37.7 {bar};
+	
+	T_c IS_A temperature_constant;
+	T_c :== 132.6 {K};
+
+	p_r IS_A factor;
+	p_r = p / p_c;
+
+	T_r IS_A factor;
+	T_r = T / T_c;
+
+	a[0..6] IS_A real_constant;
+	a[0] :== 1.685175;
+	a[1] :== 2.283617;
+	a[2] :== -0.49965;
+	a[3] :== 0.108826;
+	a[4] :== -0.012765;
+	a[5] :== 7.471154e-4;
+	a[6] :== -1.732085e-5;
+
+	b_1, b_2, b_3 IS_A real_constant;
+	b_1 :== 0.1629;
+	b_2 :== -0.338964;
+	b_3 :== -0.143369;
+
+	h_r0 IS_A real_constant;
+	h_r0 :== -9.08244;
+
+	M IS_A molar_weight_constant;
+	M :== 28.97 {kg/kmol};
+
+	h IS_A specific_enthalpy;
+	h_r IS_A factor;
+	h_r = h * M / 1{GAS_C} / T_c;
+
+	h_r = SUM[ a[k]/(k+0.5)*T_r^(k+0.5) | k IN [0..6]] + h_r0
+		+ ( b_1 + 2.6*b_2 / T_r^1.6 + 1.6 * b_3 / T_r^0.6 ) * p_r;
+
+METHODS
+	METHOD on_load;
+		FIX p, T;
+		p := 1 {bar};
+		T := 300 {K};
+	END on_load;
+END airprops;
+ 
