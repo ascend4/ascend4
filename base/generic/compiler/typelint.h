@@ -1,16 +1,7 @@
-/*
- *  Ascend Type Definition Lint Module
- *  by Benjamin Andrew Allan
- *  Created: 9/16/96
- *  Version: $Revision: 1.27 $
- *  Version control file: $RCSfile: typelint.h,v $
- *  Date last modified: $Date: 1998/04/21 23:50:10 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1996 Benjamin Andrew Allan
- *
+/*	ASCEND modelling environment
+	Copyright (C) 1996 Benjamin Andrew Allan
+	Copyright (C) 2007 Carnegie Mellon University
+
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation; either version 2, or (at your option)
@@ -25,29 +16,29 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
- */
+*//** @file
+	Ascend Type Definition Lint Module.
+	
+	This module provides some lint-like functionality for ascend type
+	definitions.  That is, it checks for the most obvious sorts of blunders
+	but due to the nature of the ascend language, not all can be
+	conveniently checked for.
 
-/** @file
- *  Ascend Type Definition Lint Module.
- *
- *  This module provides some lint-like functionality for ascend type
- *  definitions.  That is, it checks for the most obvious sorts of blunders
- *  but due to the nature of the ascend language, not all can be
- *  conveniently checked for.
- *
- *  This implementation is merely a start. It needs to be much better.
- *  <pre>
- *  When #including typelint.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *         #include "list.h"
- *         #include "stattypes.h"
- *  </pre>
- *  @todo Upgrade type definition lint module.
- */
+	This implementation is merely a start. It needs to be much better.
+
+	@TODO upgrade type definition lint module.
+*//**
+	by Benjamin Andrew Allan, 9/16/96
+	Last in CVS: $Revision: 1.27 $ $Date: 1998/04/21 23:50:10 $ $Author: ballan $
+*/
 
 #ifndef ASC_TYPELINT_H
 #define ASC_TYPELINT_H
+
+#include <general/list.h>
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "stattypes.h"
 
 /**	@addtogroup compiler Compiler
 	@{
@@ -118,11 +109,10 @@ extern void TypeLintError(FILE *file,
                           CONST struct Statement *statement,
                           enum typelinterr error_code);
 /**<
- *  <!--  TypeLintError(file,statement,error_code)                     -->
- *  Writes a message describing the error and giving the statement to
- *  the file given.
- *  file and statement should not be NULL.
- *  Message will be suppressed if g_parse_warnings is high enough.
+	Writes a message describing the error and giving the statement to
+	the file given.
+	file and statement should not be NULL.
+	Message will be suppressed if g_parse_warnings is high enough.
  */
 
 extern void TypeLintErrorAuxillary(FILE *file,
@@ -130,7 +120,6 @@ extern void TypeLintErrorAuxillary(FILE *file,
                                    enum typelinterr error_code,
                                    int uselabel);
 /**<
- *  <!--  TypeLintErrorAuxillary(file,string,error_code,uselabel)      -->
  *  Writes a string describing the error in some context to the
  *  the file given.
  *  file and string should not be NULL.
@@ -143,8 +132,7 @@ extern void TypeLintName(FILE *file,
                          CONST struct Name *name,
                          char *mesg);
 /**<
- *  <!--  TypeLintName(file,name,mesg)                                 -->
- *  Writes a message followed by the name and a return to the file given.
+ *  Writes a message followed by the name and a newline to the file given.
  *  No NULL arguments allowed.
  */
 
@@ -154,8 +142,7 @@ extern void TypeLintNameMsg(FILE *file,
                             char *mesg,
                             int level);
 /**<
- *  <!--  TypeLintNameMsg(file,name,mesg,level)                        -->
- *  Writes a message followed by the name and a return to the file given.
+ *  Writes a message followed by the name and a newline to the file given.
  *  Uses the StatioLabel matching level given here.
  *  No NULL arguments allowed.
  *  Message will be suppressed if level < g_parse_warnings.
@@ -165,20 +152,18 @@ extern void TypeLintNameNode(FILE *file,
                              CONST struct Name *name,
                              char *mesg);
 /**<
- *  <!--  TypeLintNameNode(file,name,mesg)                             -->
- *  Writes a message followed by the first element of name and a return
+ *  Writes a message followed by the first element of name and a newline
  *  to the file given.
  *  No NULL arguments allowed.
  */
 
-#define TLNNM(f,n,m,l) TypeLintNameNodeMsg((f),(n),(m),(l))
+#define TLNNE(f,n,m) TypeLintNameNodeMsg((f),(n),(m))
+
 extern void TypeLintNameNodeMsg(FILE *file,
-                                CONST struct Name *name,
-                                char *mesg,
-                                int level);
+	const struct Name *name, char *mesg
+);
 /**<
- *  <!--  TypeLintNameNodeMsg(file,name,mesg,level)                    -->
- *  Writes a message followed by the first element of name and a return
+ *  Writes a message followed by the first element of name and a newline
  *  to the file given.
  *  Uses the StatioLabel matching level given here.
  *  Message will be suppressed if level < g_parse_warnings.
@@ -198,7 +183,6 @@ TypeLintIllegalBodyStats(FILE *fp,
                          CONST struct StatementList *statements, 
                          unsigned int context);
 /**< 
- *  <!--  error_code = TypeLintIllegalBodyStats(fp,typename,statements,context); -->
  *  Checks all statements for type legality, i.e.
  *  is the statement of a type allowed in body and are any
  *  rhs types referred to at least minimally legal in the body?
@@ -216,7 +200,6 @@ TypeLintIllegalParamStats(FILE *fp,
                           symchar *typename,
                           CONST struct StatementList *statements);
 /**<
- *  <!--  error_code = TypeLintIllegalParamStats(fp,typename,statements); -->
  *  Checks all statements for type legality, i.e.
  *  is the statement of a type allowed in parameter list and are any
  *  rhs types referred to at least minimally legal in the parameter list?
@@ -232,7 +215,6 @@ TypeLintIllegalWhereStats(FILE *fp,
                           symchar *typename,
                           CONST struct StatementList *statements);
 /**< 
- *  <!--  error_code = TypeLintIllegalWhereStats(fp,typename,statements);  -->
  *  Checks all statements for type legality, i.e.
  *  is the statement of a type allowed in WHERE list.
  *  Currently only WILL_BE_THE_SAME allowed.
@@ -246,7 +228,6 @@ TypeLintIllegalReductionStats(FILE *fp,
                               symchar *typename,
                               CONST struct StatementList *statements);
 /**< 
- *  <!--  error_code = TypeLintIllegalReductionStats(fp,typename,statements);  -->
  *  Checks all statements for type legality, i.e.
  *  is the statement of a type allowed in reduction list?
  *  Currently only CASGN allowed.
@@ -261,7 +242,6 @@ TypeLintIllegalMethodStats(FILE *fp,
                            struct gl_list_t *pl,
                            unsigned int context);
 /**<
- *  <!--  error_code = TypeLintIllegalMethodStats(fp,typename,pl,context); -->
  *  Checks all init procedures for type legality, i.e.
  *  is the statement of a type allowed in a method.
  *  Returns DEF_OKAY under normal circumstances,

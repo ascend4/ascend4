@@ -2664,7 +2664,7 @@ enum typelinterr VerifyDefsAsgns(symchar *name,
       }
       if (ParametricOrigin(origin)) {
         error_code = DEF_PARAM_MODIFIED;
-        TLNNM(ASCERR,nptr,"Parameter modified: ",3);
+        TLNNE(ASCERR,nptr,"Parameter modified ");
         TypeLintError(ASCERR,stat, error_code);
         return error_code;
       }
@@ -2781,7 +2781,7 @@ enum typelinterr VerifyRefinementLegal(CONST struct StatementList *stats,
           clep = (struct ChildListEntry *)gl_fetch(lclgl,pos);
           if (ParametricOrigin(clep->origin)) {
             error_code = DEF_PARAM_MODIFIED;
-            TLNNM(ASCERR,nptr,"Parameter modified:",3);
+            TLNNE(ASCERR,nptr,"Parameter modified");
             TypeLintError(ASCERR,stat, error_code);
             return error_code;
           }
@@ -2894,8 +2894,7 @@ enum typelinterr VerifyRefinementLegal(CONST struct StatementList *stats,
                   return DEF_ILLARRAY_AA;
                 case FRC_badname:
                   if (nptr!=NULL) {
-                    TLNNM(ASCERR, nptr,
-                      "Impossible part ",3);
+                    TLNNE(ASCERR, nptr,"Impossible part");
                     TypeLintName(ASCERR, NamePointer(vl),
                       "means you can't ARE_ALIKE ");
                     TypeLintError(ASCERR,stat,DEF_ILLEGAL_AA);
@@ -2907,8 +2906,7 @@ enum typelinterr VerifyRefinementLegal(CONST struct StatementList *stats,
                   }
                 case FRC_fail:
                   if (nptr!=NULL) {
-                    TLNNM(ASCERR, nptr,
-                      "Parametric part ",3);
+                    TLNNE(ASCERR, nptr, "Parametric part");
                     TypeLintName(ASCERR, NamePointer(vl),
                       "means you can't ARE_ALIKE ");
                     TypeLintError(ASCERR,stat,DEF_ILLPARAM_AA);
@@ -2929,7 +2927,7 @@ enum typelinterr VerifyRefinementLegal(CONST struct StatementList *stats,
           }
         } else {
           error_code = DEF_NAME_MISSING;
-          TLNNM(ASCERR,nptr,"Undefined name ",3);
+          TLNNE(ASCERR,nptr,"Undefined name");
           TypeLintError(ASCERR,stat, error_code);
           return error_code;
         }

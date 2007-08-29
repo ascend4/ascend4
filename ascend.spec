@@ -83,7 +83,8 @@ fields from Architecture to (computational) Zoology.
 # ...general
 Requires: gtksourceview
 Requires: blas
-Requires: sundials # is now packaged as a shared library
+Requires: sundials
+# ... is now packaged as a shared library
 
 # ...pygtk
 Requires: python >= 2.4
@@ -252,6 +253,12 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %doc doc/book.pdf
 
 %changelog
+* Sun Aug 19 2007 John Pye <john.pye@anu.edu.au> 0.9.5.113
+- External libraries renamed to 'lib<name>_ascend.so' for clarity
+  and to solve a Windows-based naming problem.
+- Links in Help menu fixed (problem with call to Python webbrowser component).
+- License re-tagged according to Fedora requirements.
+
 * Sun Jul 25 2007 John Pye <john.pye@anu.edu.au> 0.9.5.112
 - solvers are now all built as separate shared libraries
 - mime-type icon added

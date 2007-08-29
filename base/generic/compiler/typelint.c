@@ -206,20 +206,19 @@ void TypeLintNameNode(FILE *f, CONST struct Name *n, char *m)
   FPRINTF(f,"\n");
 }
 
-void TypeLintNameNodeMsg(FILE*f, CONST struct Name *n, char *m,int level)
+void TypeLintNameNodeMsg(FILE*f, CONST struct Name *n, char *m)
 {
   assert(f!=NULL);
   assert(n!=NULL);
   assert(m!=NULL);
-  if (level > 0 && level < g_parser_warnings) {
+  if (3 < g_parser_warnings) {
     return;
   }
-  if (level >0 && level <5) {
-    FPRINTF(f,"%s",StatioLabel(level));
-  }
-  FPRINTF(f,"  %s",m);
+  ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+  FPRINTF(f,"%s '",m);
   WriteNameNode(f,n);
-  FPRINTF(f,"\n");
+  FPRINTF(f,"'");
+  error_reporter_end_flush();
 }
 
 /*
