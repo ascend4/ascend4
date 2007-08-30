@@ -24,7 +24,7 @@ REQUIRE "johnpye/thermo_types.a4c";
 (* 
 	The air property correlations here are taken from the paper by
 	George A. Adebiyi, 'Formulations for the Thermodynamic Properties of
-	Pure Substatnce', J Energy Res Tech., 2005. doi:10.1115/1.1794695
+	Pure Substance', J Energy Res Tech., 2005. doi:10.1115/1.1794695
 
 	Currently, this model just allows the enthalpy of air to be calculated
 	given the pressure and temperature. Other correlations are implemented
