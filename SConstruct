@@ -2470,7 +2470,8 @@ deb_manfiles = glob.glob('debian/*.man')
 
 deb_tar = env.Tar(
 	'dist/debian.tar.gz'
-	,deb_manfiles + ['debian/compat','debian/copyright','debian/dirs']
+	,deb_manfiles + ['debian/compat','debian/copyright','debian/dirs'
+		,'debian/postinst','debian/postrm']
 	,TARFLAGS = ['cz']
 )
 

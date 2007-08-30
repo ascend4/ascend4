@@ -52,10 +52,10 @@ install: build
 	install -m 644 -D ascend.desktop $(DATADIR)/applications/ascend.desktop && \
 	install -m 644 -D ascend.png $(DATADIR)/icons/ascend-app.png && \
 	install -m 644 -D ascend.png $(DATADIR)/icons/hicolor/64x64/ascend.png && \
+	install -m 644 -D ascend.xml $(DATADIR)/mime/packages/ascend.xml
 #
 	dh_install --autodest
 	dh_desktop
-	dh_installmime
 	dh_installman debian/ascend.man 
 	dh_installman debian/ascend4.man 
 	dh_installman debian/ascend-config.man 

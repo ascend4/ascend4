@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# update the file associations (we're not using dh_installmime here)
+if which update-mime-database >/dev/null 2>&1 ; then
+	update-mime-database /usr/share/mime
+fi
+
