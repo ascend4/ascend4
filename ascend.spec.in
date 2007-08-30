@@ -253,6 +253,10 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %doc doc/book.pdf
 
 %changelog
+* Thu Aug 30 2007 John Pye <john.pye@anu.edu.au> 0.9.5.114
+- Minor fixes: error output.
+- New 'air properties' model.
+
 * Sun Aug 19 2007 John Pye <john.pye@anu.edu.au> 0.9.5.113
 - External libraries renamed to 'lib<name>_ascend.so' for clarity
   and to solve a Windows-based naming problem.
