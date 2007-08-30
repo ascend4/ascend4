@@ -17,7 +17,7 @@ alpha, beta, q,Tr, Pr, omega IS_A factor;
 
 PSI, OMEGA, sigma, eps IS_A real_constant; 
 
-PSI :== 0.42748; 
+PSI :== 0.45724; 
 OMEGA :== 0.07780; 
 sigma :== 2.414213562; 
 eps :== 0.414213562; 
