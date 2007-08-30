@@ -3,8 +3,8 @@
 
 CFLAGS = -Wall -g
 
-SCONS_OPTIONS = CC="ccache gcc" \
-	CXX="ccache g++" \
+SCONS_OPTIONS = CC="gcc" \
+	CXX="g++" \
 	INSTALL_PREFIX=/usr \
 	WITH_DOC_BUILD=0 \
 	WITH_DOC_INSTALL=1
@@ -53,6 +53,14 @@ install: build
 	install -m 644 -D ascend.png $(DATADIR)/icons/ascend-app.png && \
 	install -m 644 -D ascend.png $(DATADIR)/icons/hicolor/64x64/ascend.png && \
 	install -m 644 -D ascend.xml $(DATADIR)/mime/packages/ascend.xml
+#
+# file-type icon for ascend models (double click should open in ASCEND)
+	cd $(CURDIR)/pygtk/glade && \
+	install -m 644 -D ascend-doc-48x48.svg $(DATADIR)/icons/text-x-ascend-model.svg
+#
+# syntax highlighting for gedit
+	cd $(CURDIR)/tools/gedit && \
+	install -m 644 -D ascend.lang $(DATADIR)/gtksourceview-1.0/language-specs/ascend.lang
 #
 	dh_install --autodest
 	dh_desktop
