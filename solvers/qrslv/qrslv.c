@@ -1245,7 +1245,9 @@ static void calc_B( qrslv_system_t sys){
 */
 static int calc_pivots(qrslv_system_t sys){
   int row_rank_defect=0, oldtiming;
+#if defined(PIVOT_DEBUG) && defined(ASC_WITH_MMIO)
   FILE *fmtx = NULL;
+#endif
 
   linsolqr_system_t lsys = sys->J.sys;
   FILE *fp = LIF(sys);
