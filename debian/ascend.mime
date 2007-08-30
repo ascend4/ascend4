@@ -1,0 +1,4 @@
+text/x-ascend-model; ascend %s; description="ASCEND model"; test=test -n "$DISPLAY" ; nametemplate=%s.a4c; priority=5
+text/x-ascend-model; ascend %s; description="ASCEND model"; test=test -n "$DISPLAY" ; nametemplate=%s.a4l; priority=4
+text/x-ascend-script; sensible-editor %s; description="ASCEND Tcl/Tk script"; test=test -n "$DISPLAY" ; nametemplate=%s.a4s; priority=5
+
