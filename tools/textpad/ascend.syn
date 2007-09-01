@@ -7,6 +7,8 @@
 ; then add a new document class to TextPad, and select this
 ; file as the syntax definition.
 ;
+; Also works with TextPad 5.
+;
 ; Please inform John Pye about errors or omissions at the address above.
 ;
 
@@ -70,7 +72,9 @@ FIX
 FOR
 FREE
 IF
+IMPORT
 IN
+INPUT
 INTERSECTION
 IS_A
 IS_REFINED_TO
@@ -82,6 +86,7 @@ MIN
 MINIMIZE
 MODEL
 NOTES
+OUTPUT
 OR
 OTHERWISE
 PROVIDE
