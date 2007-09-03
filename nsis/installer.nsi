@@ -278,6 +278,10 @@ Section "ASCEND (required)"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_MODELS" "$INSTDIR\models"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_SOLVERS" "$INSTDIR\solvers"
 	WriteRegStr HKLM SOFTWARE\ASCEND "GTKLIBS" "$GTKPATH"
+	
+	; Write default values of ASCENDLIBRARY and ASCENDSOLVERS (user can override with env vars)
+	WriteRegStr HKLM SOFTWARE\ASCEND "ASCENDLIBRARY" "$INSTDIR\models"
+	WriteRegStr HKLM SOFTWARE\ASCEND "ASCENDSOLVERS" "$INSTDIR\solvers"
 
 	; Create 'ascend.bat' batch file for launching the PyGTK GUI.
 	ClearErrors

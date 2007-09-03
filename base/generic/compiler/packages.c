@@ -77,6 +77,7 @@
 #include <packages/defaultall.h>
 #include "module.h"
 #include "packages.h"
+#include "defaultpaths.h"
 
 /*
 	Initialise the slv data structures used when calling external fns
@@ -139,6 +140,17 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 	struct FilePath *fp1;
 	int result;
 	struct ImportHandler *handler=NULL;
+	static char *default_solvers_path = NULL;
+	static char *default_library_path = NULL;
+	if(!default_solvers_path){
+		default_solvers_path = get_default_solvers_path();
+		CONSOLE_DEBUG("Default ASCENDSOLVERS set to '%s'", default_solvers_path);
+	}
+	if(!default_library_path){
+		default_library_path = get_default_library_path();
+		CONSOLE_DEBUG("Default ASCENDLIBRARY set to '%s'", default_library_path);
+	}
+
 
 	/* CONSOLE_DEBUG("Searching for external library '%s'",partialpath); */
 
@@ -146,13 +158,13 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 
 	/* search in the ASCENDSOLVERS directory/ies first */
 	fp1 = importhandler_findinpath(
-		partialpath, ASC_DEFAULT_ASCENDSOLVERS, ASC_ENV_SOLVERS,&handler
+		partialpath, default_solvers_path, ASC_ENV_SOLVERS,&handler
 	);
 
 	/* next, search in the ASCENDLIBRARY */
 	if(fp1==NULL){
 		fp1 = importhandler_findinpath(
-			partialpath, ASC_DEFAULT_ASCENDLIBRARY, ASC_ENV_LIBRARY,&handler
+			partialpath, default_library_path, ASC_ENV_LIBRARY,&handler
 		);
 		if(fp1==NULL){
 			CONSOLE_DEBUG("External library '%s' not found",partialpath);
