@@ -259,6 +259,20 @@ static int color_test(){
 			/*fprintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED (NO ENV VAR 'TERM')\n\n\n");*/
 			use_xterm_color=-1;
 		}
+
+# ifdef WIN32
+	/** @TODO see http://msdn2.microsoft.com/en-us/library/ms682088.aspx */
+#  if 0
+		term = getenv("CLIENTNAME");
+		if(term!=NULL){
+			if(strcmp(term,"Console")==0){
+				use_xterm_color=1;
+				/* windows command prompt is OK as well */
+			}
+		}
+#  endif
+# endif
+
 	}/*else{
 		Asc_FPrintf(stderr,"color=%d",use_xterm_color);
 	}*/
