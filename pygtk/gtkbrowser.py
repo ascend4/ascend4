@@ -211,7 +211,7 @@ class Browser:
 		#--------
 		# Create the ASCXX 'Library' object
 		
-		loading.print_status("Creating ASCEND 'Library' object","PATH = "+_path+" FROM "+_pathsrc)
+		loading.print_status("Creating ASCEND 'Library' object","ASCENDLIBRARY = "+_path+" FROM "+_pathsrc)
 		self.library = ascpy.Library(str(_path))
 
 		self.sim = None

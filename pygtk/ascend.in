@@ -90,9 +90,12 @@ if not os.environ.get('ASC_GDB'):
 	# don't need to restart process on Windows as env vars update immediately
 	if restart and platform.system()!="Windows":
 		print "Restarting with corrected environment..."
-		print "   %s = %s" % (LDPATHVAR,os.environ.get(LDPATHVAR))
-		print "   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
-		print "   ASCENDSOLVERS = %s" % os.environ.get('ASCENDSOLVERS')
+		if os.environ.get(LDPATHVAR):
+			print "   %s = %s" % (LDPATHVAR,os.environ.get(LDPATHVAR))
+		if os.environ.get('ASCENDLIBRARY'):
+			print "   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
+		if os.environ.get('ASCENDSOLVERS'):
+			print "   ASCENDSOLVERS = %s" % os.environ.get('ASCENDSOLVERS')
 		script = os.path.join(sys.path[0],"ascend")
 		print "PYTHON =",PYTHON
 		print "script =",script
@@ -134,5 +137,8 @@ else:
 	os.chdir(INSTALL_ASCDATA)
 	from gtkbrowser import *
 	os.chdir(olddir)
-	B = Browser(assetspath=os.path.join(INSTALL_ASCDATA,"glade"))
+	B = Browser(
+		librarypath=os.environ.get('ASCENDLIBRARY')
+		,assetspath=os.path.join(INSTALL_ASCDATA,"glade")
+	)
 	B.run()
