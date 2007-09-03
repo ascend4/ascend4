@@ -183,8 +183,25 @@ class Browser:
 				_path = _prefpath
 				_pathsrc = "user preferences"
 			else:
+				# default setting, but override with Windows registry if present
 				_path = config.LIBRARY_PATH
 				_pathsrc = "default (config.py)"
+
+				if platform.system()=="Windows":
+					# use the registry
+					try:
+						import _winreg
+						x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
+						y= _winreg.OpenKey(x,r"SOFTWARE\ASCEND")
+						_regpath,t = _winreg.QueryValueEx(y,"ASCENDLIBRARY")
+						_winreg.CloseKey(y)
+						_winreg.CloseKey(x)
+						_path = _regpath						
+						os.environ['ASCENDLIBRARY'] = _regpath
+						_pathsrc = "Windows registry"
+					except:
+						# otherwise keep using the default
+						pass
 			
 			if _preffileopenpath:
 				self.fileopenpath = _preffileopenpath
