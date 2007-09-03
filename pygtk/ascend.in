@@ -1,5 +1,5 @@
 #!@PYTHON@
-# ^ python path substituted here is not depended upon in Windows
+# ^ python path substituted here is not depended-upon in Windows
 
 import os.path, sys, platform
 
@@ -65,20 +65,21 @@ if not os.environ.get('ASC_GDB'):
 		LDPATH=[INSTALL_LIB,GTKLIBS]+LDPATH
 		os.environ[LDPATHVAR] = SEP.join(LDPATH)
 		restart = 1
-
 	elif INSTALL_LIB != "/usr/lib" and not INSTALL_LIB in LDPATH:
 		# don't worry about GTK location; just ensure that LDPATH includes INSTALL_LIB
 		LDPATH = [INSTALL_LIB] + LDPATH
 		os.environ[LDPATHVAR] = SEP.join(LDPATH)
 		restart = 1
 
+	# if ASCENDLIBRARY has been specified, make sure it's including the Model Library
 	if os.environ.get('ASCENDLIBRARY'):
 		envmodels = [os.path.abspath(i) for i in os.environ['ASCENDLIBRARY'].split(SEP)]
 		if not INSTALL_MODELS in envmodels:
 			envmodels.append(INSTALL_MODELS)
 			os.environ['ASCENDLIBRARY'] = SEP.join(envmodels)
 			restart = 1
-	
+
+	# if ASCENDSOLVERS has been specified, make sure it includes the standard solvers	
 	if os.environ.get('ASCENDSOLVERS'):
 		envsolvers = [os.path.abspath(i) for i in os.environ['ASCENDSOLVERS'].split(SEP)]
 		if not INSTALL_SOLVERS in envsolvers:
@@ -86,7 +87,8 @@ if not os.environ.get('ASC_GDB'):
 			os.environ['ASCENDSOLVERS'] = SEP.join(envsolvers)
 			restart = 1
 
-	if restart:
+	# don't need to restart process on Windows as env vars update immediately
+	if restart and platform.system()!="Windows":
 		print "Restarting with corrected environment..."
 		print "   %s = %s" % (LDPATHVAR,os.environ.get(LDPATHVAR))
 		print "   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
@@ -94,11 +96,7 @@ if not os.environ.get('ASC_GDB'):
 		script = os.path.join(sys.path[0],"ascend")
 		print "PYTHON =",PYTHON
 		print "script =",script
-		if platform.system()=="Windows":
-			print "DROPPING THROUGH"
-		else:
-			os.execve(PYTHON,[script] + sys.argv, os.environ)
-		
+		os.execve(PYTHON,[script] + sys.argv, os.environ)
 
 print "Running with..."
 print "   %s = %s" % (LDPATHVAR, os.environ.get(LDPATHVAR))
@@ -107,10 +105,11 @@ print "   argv = %s" % sys.argv
 
 if os.environ.get('ASCENDLIBRARY'):
 	ASCENDLIBRARY = os.environ.get('ASCENDLIBRARY')
-	print "USING ASCENDLIBRARY=%s" % ASCENDLIBRARY
-else:
-	ASCENDLIBRARY = DEFAULT_ASCENDLIBRARY
-	print "default ASCENDLIBRARY=%s" % ASCENDLIBRARY
+	print "   ASCENDLIBRARY = %s" % ASCENDLIBRARY
+
+if os.environ.get('ASCENDSOLVERS'):
+	ASCENDSOLVERS = os.environ.get('ASCENDSOLVERS')
+	print "   ASCENDSOLVERS = %s" % ASCENDLIBRARY
 
 print "sys.path[0] = %s" % sys.path[0]
 
@@ -135,5 +134,5 @@ else:
 	os.chdir(INSTALL_ASCDATA)
 	from gtkbrowser import *
 	os.chdir(olddir)
-	B = Browser(librarypath=ASCENDLIBRARY,assetspath=os.path.join(INSTALL_ASCDATA,"glade"))
+	B = Browser(assetspath=os.path.join(INSTALL_ASCDATA,"glade"))
 	B.run()
