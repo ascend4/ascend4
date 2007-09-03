@@ -40,6 +40,8 @@ if platform.system()=="Windows":
 else:
 	INSTALL_LIB="@INSTALL_LIB@"
 	INSTALL_ASCDATA="@INSTALL_ASCDATA@"
+	INSTALL_MODELS = os.path.abspath(INSTALL_ASCDATA+"/models")
+	INSTALL_SOLVERS = os.path.abspath(INSTALL_ASCDATA+"/solvers")
 	PYTHON="@PYTHON@"
 	DEFAULT_ASCENDLIBRARY="""@DEFAULT_ASCENDLIBRARY@"""
 	SEP=":"
@@ -72,21 +74,23 @@ if not os.environ.get('ASC_GDB'):
 
 	if os.environ.get('ASCENDLIBRARY'):
 		envmodels = [os.path.abspath(i) for i in os.environ['ASCENDLIBRARY'].split(SEP)]
-		ascmodels = os.path.abspath(INSTALL_ASCDATA+"/models")
-		ascsolvers = os.path.abspath(INSTALL_ASCDATA+"/solvers")
-		if not ascmodels in envmodels:
-			envmodels.append(ascmodels)
+		if not INSTALL_MODELS in envmodels:
+			envmodels.append(INSTALL_MODELS)
 			os.environ['ASCENDLIBRARY'] = SEP.join(envmodels)
 			restart = 1
-		if not ascsolvers in envmodels:
-			envmodels.append(ascsolvers)
-			os.environ['ASCENDLIBRARY'] = SEP.join(envmodels)
+	
+	if os.environ.get('ASCENDSOLVERS'):
+		envsolvers = [os.path.abspath(i) for i in os.environ['ASCENDSOLVERS'].split(SEP)]
+		if not INSTALL_SOLVERS in envsolvers:
+			envsolvers.append(INSTALL_SOLVERS)
+			os.environ['ASCENDSOLVERS'] = SEP.join(envsolvers)
 			restart = 1
 
 	if restart:
 		print "Restarting with corrected environment..."
 		print "   %s = %s" % (LDPATHVAR,os.environ.get(LDPATHVAR))
 		print "   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')
+		print "   ASCENDSOLVERS = %s" % os.environ.get('ASCENDSOLVERS')
 		script = os.path.join(sys.path[0],"ascend")
 		print "PYTHON =",PYTHON
 		print "script =",script

@@ -279,34 +279,59 @@ Section "ASCEND (required)"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_SOLVERS" "$INSTDIR\solvers"
 	WriteRegStr HKLM SOFTWARE\ASCEND "GTKLIBS" "$GTKPATH"
 
+	; Create 'ascend.bat' batch file for launching the PyGTK GUI.
+	ClearErrors
+	FileOpen $0 $INSTDIR\ascend.bat w
+	${If} ${Errors}
+		MessageBox MB_OK "The 'ascend.bat' file was not installed properly; problems writing to that file."	
+	${Else}
+		FileWrite $0 "@echo off"
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileWrite $0 "set PATH=$PATH"
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileWrite $0 "cd "
+		FileWrite $0 $INSTDIR 
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileWrite $0 "$PYPATH\python "
+		FileWriteByte $0 "34" 
+		FileWrite $0 "$INSTDIR\ascend"
+		FileWriteByte $0 "34"
+		FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileClose $0
+	${EndIf}
+	
 	; Create 'ascend-config.bat' batch file for launching the python script 'ascend-config'.
 	ClearErrors
 	FileOpen $0 $INSTDIR\ascend-config.bat w
-	IfErrors ascendconfigerror
-	FileWrite $0 "@echo off"
-	FileWriteByte $0 "13"
-	FileWriteByte $0 "10"
-	FileWrite $0 "set PATH=$PATH"
-	FileWriteByte $0 "13"
-	FileWriteByte $0 "10"
-	FileWrite $0 "cd "
-	FileWrite $0 $INSTDIR 
-	FileWriteByte $0 "13"
-	FileWriteByte $0 "10"
-	FileWrite $0 "$PYPATH\python "
-	FileWriteByte $0 "34" 
-	FileWrite $0 "$INSTDIR\ascend-config"
-	FileWriteByte $0 "34"
-	FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
-	FileWriteByte $0 "13"
-	FileWriteByte $0 "10"
-
-	FileClose $0
-
-	Return
-ascendconfigerror:
-	MessageBox MB_OK "The 'ascend-config.bat' file was not installed properly; problems writing to that file."	
+	${If} ${Errors}
+		MessageBox MB_OK "The 'ascend-config.bat' file was not installed properly; problems writing to that file."	
+	${Else}
+		FileWrite $0 "@echo off"
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileWrite $0 "set PATH=$PATH"
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileWrite $0 "cd "
+		FileWrite $0 $INSTDIR 
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileWrite $0 "$PYPATH\python "
+		FileWriteByte $0 "34" 
+		FileWrite $0 "$INSTDIR\ascend-config"
+		FileWriteByte $0 "34"
+		FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileClose $0
+	${EndIf}
 	
+	Return
 SectionEnd
 
 ;--------------------------------
@@ -570,6 +595,7 @@ unnopython:
 
 	Delete $INSTDIR\ascend-config
 	Delete $INSTDIR\ascend-config.bat
+	Delete $INSTDIR\ascend.bat
 	Delete $INSTDIR\ascend.dll
 	Delete $INSTDIR\LICENSE.txt
 	Delete $INSTDIR\README-windows.txt
