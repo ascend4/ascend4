@@ -453,10 +453,10 @@ int AscDriver(int argc, CONST char **argv)
 	variable.
 */
 #define OSPATH_PUTENV(VAR,FP) \
-	CONSOLE_DEBUG("VAR: %s",VAR); \
+	/*CONSOLE_DEBUG("VAR: %s",VAR);*/ \
 	sprintf(envcmd,"%s=",VAR); \
 	ospath_strcat(FP,envcmd,MAX_ENV_VAR_LENGTH); \
-	CONSOLE_DEBUG("ENVCMD: %s",envcmd); \
+	/*CONSOLE_DEBUG("ENVCMD: %s",envcmd);*/ \
 	PUTENV(envcmd)
 
 /**
@@ -527,7 +527,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 	/* import these into the environment */
 	err = env_import(ASC_ENV_DIST,getenv,PUTENV);
-	if(err)CONSOLE_DEBUG("No %s var imported, error %d",ASC_ENV_DIST,err);
+	if(err)CONSOLE_DEBUG("No %s var imported (error %d)",ASC_ENV_DIST,err);
 	env_import(ASC_ENV_TK,getenv,PUTENV);
 	env_import(ASC_ENV_BITMAPS,getenv,PUTENV);
 	env_import(ASC_ENV_LIBRARY,getenv,PUTENV);
@@ -536,7 +536,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	/* used for colour console output */
 	env_import("TERM",getenv,PUTENV);
 
-	CONSOLE_DEBUG("IMPORTING VARS");
+	/* CONSOLE_DEBUG("IMPORTING VARS"); */
 
 	distdir = GETENV(ASC_ENV_DIST);
 	tkdir = GETENV(ASC_ENV_TK);
@@ -547,7 +547,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	/* Create an ASCENDDIST value if it's missing */
 
 	if(distdir == NULL){
-		CONSOLE_DEBUG("NO " ASC_ENV_DIST " VAR DEFINED");
+		CONSOLE_DEBUG("Note: No '" ASC_ENV_DIST "' var defined");
 
 # ifndef ASC_ABSOLUTE_PATHS
 
@@ -555,14 +555,14 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
         fp = ospath_new(progname);
 
         ospath_strncpy(fp,s1,PATH_MAX);
-        CONSOLE_DEBUG("PROGNAME = %s",s1);
+        /* CONSOLE_DEBUG("PROGNAME = %s",s1); */
 
 		/* get the directory name from the exe path*/
         fp1 = ospath_getdir(fp);
         ospath_free(fp);
 
         ospath_strncpy(fp1,s1,PATH_MAX);
-        CONSOLE_DEBUG("DIR = %s",s1);
+        /* CONSOLE_DEBUG("DIR = %s",s1); */
 
 		/* append the contents of ASC_DISTDIR_REL_BIN to this path*/
         fp = ospath_new_noclean(ASC_DISTDIR_REL_BIN);
@@ -570,7 +570,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		ospath_cleanup(distfp);
 
         ospath_strncpy(fp1,s1,PATH_MAX);
-        CONSOLE_DEBUG("DIST = %s",s1);
+        /* CONSOLE_DEBUG("DIST = %s",s1); */
 
 # else
 		CONSOLE_DEBUG("ASC_ABSOLUTE_PATHS=%d",ASC_ABSOLUTE_PATHS);
@@ -578,21 +578,21 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		(void)progname;
 # endif
 		distdir = ospath_str(distfp);
-		CONSOLE_DEBUG("GUESSING %s = %s",ASC_ENV_DIST,distdir);
+		/* CONSOLE_DEBUG("GUESSING %s = %s",ASC_ENV_DIST,distdir); */
 		OSPATH_PUTENV(ASC_ENV_DIST,distfp);
 		distdir = GETENV(ASC_ENV_DIST);
-		CONSOLE_DEBUG("RETRIEVED %s = %s",ASC_ENV_DIST,distdir);
+		/* CONSOLE_DEBUG("RETRIEVED %s = %s",ASC_ENV_DIST,distdir); */
 		printenv();
 	}
 
 	if(tkdir == NULL){
-		CONSOLE_DEBUG("USING DEFAULT %s = %s",ASC_ENV_TK,ASC_ENV_TK_DEFAULT);
+		/* CONSOLE_DEBUG("USING DEFAULT %s = %s",ASC_ENV_TK,ASC_ENV_TK_DEFAULT); */
 		guessedtk=1;
 		tkfp = ospath_new_expand_env(ASC_ENV_TK_DEFAULT, &GETENV);
 		tkdir = ospath_str(tkfp);
 
 		ospath_strncpy(tkfp,envcmd,MAX_ENV_VAR_LENGTH);
-		CONSOLE_DEBUG("TK = %s",envcmd);
+		/* CONSOLE_DEBUG("TK = %s",envcmd); */
 
 		OSPATH_PUTENV(ASC_ENV_TK,tkfp);
 	}else{
@@ -602,7 +602,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	}
 
 	if(bitmapsdir == NULL){
-	    CONSOLE_DEBUG("NO " ASC_ENV_BITMAPS " VAR DEFINED");
+	    /* CONSOLE_DEBUG("NO " ASC_ENV_BITMAPS " VAR DEFINED"); */
 		/* Create a path $ASCENDTK/bitmaps */
 		bitmapsfp = ospath_new_expand_env("$ASCENDTK/bitmaps", &GETENV);
 		OSPATH_PUTENV(ASC_ENV_BITMAPS,bitmapsfp);
@@ -616,18 +616,18 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		@TODO Also, what about ASCEND_DEFAULTLIBRARY ?
 	*/
 	if(librarydir == NULL){
-	    CONSOLE_DEBUG("NO " ASC_ENV_LIBRARY " VAR DEFINED");
+	    /* CONSOLE_DEBUG("NO " ASC_ENV_LIBRARY " VAR DEFINED"); */
 		libraryfp = ospath_new_expand_env("$ASCENDDIST/models", &GETENV);
-		CONSOLE_DEBUG("CREATED LIBRARY VAL");
+		/* CONSOLE_DEBUG("CREATED LIBRARY VAL"); */
 		OSPATH_PUTENV(ASC_ENV_LIBRARY,libraryfp);
 		librarydir = ospath_str(libraryfp);
 		ospath_free(libraryfp);
 	}
 
 	if(solversdir == NULL){
-	    CONSOLE_DEBUG("NO " ASC_ENV_LIBRARY " VAR DEFINED");
+	    /* CONSOLE_DEBUG("NO " ASC_ENV_LIBRARY " VAR DEFINED"); */
 		solversfp = ospath_new_expand_env("$ASCENDDIST/solvers", &GETENV);
-		CONSOLE_DEBUG("CREATED SOLVERS VAL");
+		/* CONSOLE_DEBUG("CREATED SOLVERS VAL"); */
 		OSPATH_PUTENV(ASC_ENV_SOLVERS,solversfp);
 		solversdir = ospath_str(solversfp);
 		ospath_free(solversfp);
