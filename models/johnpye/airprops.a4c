@@ -33,6 +33,7 @@ REQUIRE "johnpye/thermo_types.a4c";
 MODEL airprops;
 	p IS_A pressure;
 	T IS_A temperature;
+	v IS_A specific_volume;
 
 	p_c IS_A pressure_constant;
 	p_c :== 37.7 {bar};
@@ -46,6 +47,9 @@ MODEL airprops;
 	T_r IS_A factor;
 	T_r = T / T_c;
 
+	v_r IS_A factor;
+	v_r = (v * M) / (1{GAS_C} * T_c / p_c);
+
 	a[0..6] IS_A real_constant;
 	a[0] :== 1.685175;
 	a[1] :== 2.283617;
@@ -55,7 +59,8 @@ MODEL airprops;
 	a[5] :== 7.471154e-4;
 	a[6] :== -1.732085e-5;
 
-	b_1, b_2, b_3 IS_A real_constant;
+	b_0, b_1, b_2, b_3 IS_A real_constant;
+	b_0 :== -8.107e-4;
 	b_1 :== 0.1629;
 	b_2 :== -0.338964;
 	b_3 :== -0.143369;
@@ -73,11 +78,17 @@ MODEL airprops;
 	h_r = SUM[ a[k]/(k+0.5)*T_r^(k+0.5) | k IN [0..6]] + h_r0
 		+ ( b_1 + 2.6*b_2 / T_r^1.6 + 1.6 * b_3 / T_r^0.6 ) * p_r;
 
+	Z IS_A factor;
+	Z * T_r = p_r * v_r;
+
+	Z = 1 + (b_0 + b_1 / T_r + b_2 / T_r^2.6 + b_3 / T_r^1.6) * p_r;
+
 METHODS
 	METHOD on_load;
 		FIX p, T;
 		p := 1 {bar};
 		T := 300 {K};
+		h.lower_bound := -1e5 {kJ/kg};
 	END on_load;
 END airprops;
  
