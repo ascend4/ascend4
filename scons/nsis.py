@@ -24,7 +24,6 @@ to NSIS.
 import SCons.Builder
 import SCons.Util
 import SCons.Scanner
-import SCons.Sig
 import os.path
 import glob
 
