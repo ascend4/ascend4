@@ -1,0 +1,50 @@
+# this file contains a list of the models in the local directory
+# that will be included in source and/or binary distributions of ASCEND. 
+# This approach ensures that only files which have been checked end up
+# on the systems of our (new) users.
+#
+# Lines starting with # are comments, which allows these files to be used as
+# descrptive summaries of the *main* stuff in any given directory.
+#
+# Subdirectories need not be mentioned; if they contain a PACKAGE file, they
+# will be included; if they don't, they will not.
+
+# -- CORE COMPONENTS --
+
+atoms.a4l
+basemodel.a4l
+plot.a4l
+bvp.a4l
+system.a4l
+ivpsystem.a4l
+measure.a4l
+
+# -- FLUID/CHEMICAL PROPERTIES MODELS --
+components.a4l
+thermodynamics.a4l
+phases.a4l
+
+# -- CHEMICAL ENGINEERING --
+column.a4l
+flash.a4l
+dyn_column.a4l
+dyn_flash.a4l
+dyn_tank.a4l
+collocation.a4l
+kinetics.a4l
+mix.a4l
+stream_holdup.a4l
+reactor.a4l
+small_components.a4l
+splitter.a4l
+### ternary_plot.a4l
+### guthriecosts.a4l
+
+# -- BASIC EXAMPLES --
+force1d.a4c
+collapsingcan.a4c
+
+# -- SAMPLE CONDITIONAL MODELS --
+heatex.a4c
+
+
