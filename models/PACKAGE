@@ -1,4 +1,4 @@
-# this file contains a list of the models in the local directory
+# This file contains a list of the models in the local directory
 # that will be included in source and/or binary distributions of ASCEND. 
 # This approach ensures that only files which have been checked end up
 # on the systems of our (new) users.
@@ -8,6 +8,16 @@
 #
 # Subdirectories need not be mentioned; if they contain a PACKAGE file, they
 # will be included; if they don't, they will not.
+#
+# Files commented out with '###' needed testing/reformatting before being
+# released.
+
+# NOTE FOR DEVELOPERS:
+#
+# BEFORE ADDING A NEW FILE HERE, ENSURE THAT YOUR MODEL IS EQUIPPED WITH A
+# 'self_test' METHOD AND IS ADDED TO THE TEST SUITE IN ../test.py. THIS WILL
+# ENSURE THAT MODELS ARE NOT RELEASED WITHOUT BEING KNOWN TO AT LEAST WORK IN
+# OUR TEST ENVIRONMENTS.
 
 # -- CORE COMPONENTS --
 
@@ -17,7 +27,7 @@ plot.a4l
 bvp.a4l
 system.a4l
 ivpsystem.a4l
-measure.a4l
+measures.a4l
 
 # -- FLUID/CHEMICAL PROPERTIES MODELS --
 components.a4l
@@ -29,7 +39,7 @@ column.a4l
 flash.a4l
 dyn_column.a4l
 dyn_flash.a4l
-dyn_tank.a4l
+dyn_tank.a4c
 collocation.a4l
 kinetics.a4l
 mix.a4l
@@ -39,12 +49,55 @@ small_components.a4l
 splitter.a4l
 ### ternary_plot.a4l
 ### guthriecosts.a4l
+### abc_flowsheet.a4l
+### cost_column.a4l
+### guthrie_costs.a4l
+### ratelaws.a4c
+### simpleflowsheet01.a4c
+### simpleflowsheet01cost.a4c
+### simpleflowsheet01mass.a4c
+### simpleflowsheet02.a4c
+### simpleflowsheetrigorous.a4c
+### simpleunits.a4c
+### simpleunitsatoms.a4c
+
+# -- MECHANICAL ENGINEERING --
+twinslabs.a4c
 
 # -- BASIC EXAMPLES --
+roots_of_poly.a4c
+distance_calc.a4c
+vessel.a4c
+vesselMethods.a4c
+vesselNotes.a4c
+vesselParams.a4c
+vesselPlain.a4c
+vesselPlot.a4c
+vesselTabulated.a4c
 force1d.a4c
 collapsingcan.a4c
+collapsingcan2.a4c
+### kvalues.a4c
+### markets.a4c
+### nonstate.a4c
+
+# -- (BASIC) PLOTTING EXAMPLES --
+plotbvp.a4c
+### plotcol.a4c
 
 # -- SAMPLE CONDITIONAL MODELS --
 heatex.a4c
+conopttest.a4c
+linmassbal.a4c
+phaseeq.a4c
+phaseeq_comp.a4c
+pipeline.a4c
+rachford.a4c
+sonic.a4c
+### when_demo.a4c
 
+# -- TEST MODELS (SHOULD BE MOVED) --
+sensitivity_test.a4c
+
+# :vi: syntax=sh :
 

@@ -51,7 +51,6 @@ MODEL vessel;
 	VesselMass:    metal_mass = metal_density * wall_vol;
 
 METHODS
-
     METHOD default;
 		H_to_D_ratio :=	2;
     END default;
@@ -74,8 +73,8 @@ METHODS
 		RUN reset;
 		RUN values;
 	END on_load;
-
 END vessel;
+
 
 MODEL vessel_optimize REFINES vessel;
 
@@ -87,7 +86,6 @@ MODEL vessel_optimize REFINES vessel;
     obj1: MINIMIZE cost;
 
 METHODS
-
     METHOD specify;
 		FIX vessel_vol;
 		FIX wall_thickness;
@@ -109,5 +107,5 @@ METHODS
 		RUN reset;
 		RUN values;
 	END on_load;
-
 END vessel_optimize;
+
