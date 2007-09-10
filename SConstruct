@@ -2463,6 +2463,11 @@ env.Depends(tar,'ascend.spec')
 env.Depends(tar,'#doc/book.pdf')
 
 #------------------------------------------------------
+# DISTRIBUTION TAR FILE (new style with AccumulateBuilder)
+
+# ...
+
+#------------------------------------------------------
 # DEBIAN TARBALL for use with Build Service
 
 import glob
