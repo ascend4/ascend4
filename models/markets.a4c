@@ -3,9 +3,9 @@ REQUIRE "atoms.a4l";
 	Solution of the 'toy' problem given in the GAMS documentation at
 	http://www.gams.com/docs/example.htm
 
-	Here is a standard algebraic description of the problem, which is to 
+	"Here is a standard algebraic description of the problem, which is to 
 	minimize the cost of shipping goods from 2 plants to 3 markets, subject 
-	to supply and demand constraints.
+	to supply and demand constraints."
 
 	This model doesn't currently agree with the GAMS solution when solving using
 	CONOPT. We're still debugging it.
