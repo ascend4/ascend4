@@ -85,6 +85,11 @@ class ASHighlight{
 		    // proc_close in order to avoid a deadlock
 		    $this->error = proc_close($process);
 
+			// Workaround for bug in proc_close. Thanks to Sebastian Krysmanski.
+			if ($this->error === -1 && !$err) {
+			  $this->error = 0;
+			}
+
 			if(!$this->error){
 				if(file_exists($css)){
 					$this->stylesheet = file_get_contents($css);
