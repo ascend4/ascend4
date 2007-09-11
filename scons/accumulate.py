@@ -6,7 +6,7 @@
 
 import os, os.path, shutil
 
-def packagetree(src,dest, symlinks=False):
+def copypackaged(src,dest, symlinks=False):
 	"""Recursive copy of files listed in a local file named PACKAGE
 	
 	Look in the current directory for a file named PACKAGE. If found,
@@ -20,19 +20,50 @@ def packagetree(src,dest, symlinks=False):
 	code examples, documentation fragments, etc.
 	"""
 
+	print "Entering directory '%s'" % src
+
 	files = os.listdir(src)
+
+	pfiles = []
 	if 'PACKAGE' in files:
 		plistfile = os.path.join(src,'PACKAGE')
 		plist = file(plistfile)
-		pfiles = []
 		for line in plist:
 			l = line.strip()
 			if l[0]=="#":
 				continue
 			if l in files:
+				if os.path.isdir(os.path.join(src,l)):
+					print "Package file '%s' ignored (is a directory)" % l
+					continue
 				print "Package '%s'" % l
 				pfiles.append(l)
+			else:
+				print "Not found: '%s'" % l
+
+	# copy any listed files in the current directory first		
+	if pfiles:
+		if not os.path.exists(dest):
+			os.makedirs(dest)
+		for f in pfiles:
+			srcPath = os.path.join(src, f)
+			if os.path.islink(srcPath) and symlinks:
+				linkto = os.readlink(f)
+				os.symlink(linkto, dest)
+			else:
+				shutil.copy2(srcPath, dest)		
 									
+	# now recurse into subdirectories
+	for f in files:
+		srcPath = os.path.join(src, f)
+		if os.path.isdir(srcPath):
+			# a directory must be recursed into, but defer creating the dir
+			srcBasename = os.path.basename(srcPath)
+			destDirPath = os.path.join(dest, srcBasename)
+			copypackaged(srcPath, destDirPath, symlinks)
+
+	print "Leaving directory '%s'" % src
+
 	
 def copytree(src, dest, symlinks=False):
 	"""My own copyTree which does not fail if the directory exists.
@@ -57,16 +88,8 @@ def copytree(src, dest, symlinks=False):
 		"""
 		files = os.listdir(src)
 		if 'PACKAGE' in files:
-			use_package_list = True
-
-		if use_package_list:
-			plistfile = os.path.join(src,'PACKAGE')
-			plist = file(plistfile)
-			for line in plist:
-				if line[0]=="#":
-					continue
-				pfiles
-				...
+			copypackaged(src,dest,symlinks)
+			return
 
 		for item in files:
 			srcPath = os.path.join(src, item)
@@ -83,6 +106,7 @@ def copytree(src, dest, symlinks=False):
 				os.symlink(linkto, dest)
 			else:
 				shutil.copy2(srcPath, dest)
+		
 
 	# case 'cp -R src/ dest/' where dest/ already exists
 	if os.path.exists(dest):
