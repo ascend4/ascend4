@@ -2,5 +2,6 @@
 export ASCENDDIST=@SOURCE_ROOT@
 export ASCENDTK=@SOURCE_ROOT@/tcltk/TK
 export LD_LIBRARY_PATH=$ASCENDDIST:$ASCENDDIST/tcltk/generic/interface
+solvers=$ASCENDDIST/solvers
+export ASCENDSOLVERS=$solvers/qrslv:$solvers/lrslv:$solvers/conopt:$solvers/cmslv:$solvers/ida:$solvers/lsode:$solvers/ipopt
 @SOURCE_ROOT@/tcltk/generic/interface/ascend4 $*
-
