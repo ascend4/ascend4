@@ -1,0 +1,6 @@
+#!/bin/sh
+export ASCENDDIST=@SOURCE_ROOT@
+export ASCENDTK=@SOURCE_ROOT@/tcltk/TK
+export LD_LIBRARY_PATH=$ASCENDDIST:$ASCENDDIST/tcltk/generic/interface
+@SOURCE_ROOT@/tcltk/generic/interface/ascend4 $*
+
