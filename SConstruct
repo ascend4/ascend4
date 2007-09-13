@@ -2392,6 +2392,12 @@ env.Alias('extfns',env['extfns'])
 
 ascendconfig = env.SubstInFile('ascend-config.in')
 
+
+#------------------------------------------------------
+# CREATE asc4dev scriptlet
+
+asc4devcmd = env.SubstInFile('tcltk/asc4dev.in')
+env.AddPostAction(asc4devcmd, 'chmod 755 $TARGET')
 #------------------------------------------------------
 # INSTALLATION
 
