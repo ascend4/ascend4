@@ -35,7 +35,7 @@
 
 #include <string.h>
 
-#define SEARCH_DEBUG
+/* #define SEARCH_DEBUG */
 /* #define IMPORTHANDLER_VERBOSE */
 
 /*
@@ -429,11 +429,22 @@ struct FilePath *importhandler_findinpath(const char *partialname
 		ASC_FREE(filename);
 		asc_assert(fp!=NULL);
 
-#ifdef SEARCH_DEBUG
 		path = ospath_str(searchdata.relativedir);
+		if(strlen(path)==0){
+#ifdef SEARCH_DEBUG
+			CONSOLE_DEBUG("ADDING '.' AT START OF EMPTY RELATIVE PATH");
+#endif
+			ospath_free(searchdata.relativedir);
+			searchdata.relativedir = ospath_new_noclean(".");
+			ASC_FREE(path);
+			path = ospath_str(searchdata.relativedir);
+		}
+#ifdef SEARCH_DEBUG
 		CONSOLE_DEBUG("Relative dir is '%s'",path);
+#endif
 		ASC_FREE(path);
 
+#ifdef SEARCH_DEBUG
 		path = ospath_str(fp);
 		CONSOLE_DEBUG("Filename is '%s'",path);
 		ASC_FREE(path);
