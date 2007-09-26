@@ -35,7 +35,7 @@
 
 #include <string.h>
 
-/* #define SEARCH_DEBUG */
+#define SEARCH_DEBUG
 /* #define IMPORTHANDLER_VERBOSE */
 
 /*
@@ -162,6 +162,9 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"File path is NULL");
 		return 1;
 	}
+#ifdef SEARCH_DEBUG
+	CONSOLE_DEBUG("Importing extlib with path '%s'",path);
+#endif	
 
 	if(initfunc==NULL){
 		fp1 = ospath_new(partialpath);
@@ -447,7 +450,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 #endif
 
 		if(0==ospath_stat(fp1,&buf) && NULL!=(f = ospath_fopen(fp1,"r"))){
-			CONSOLE_DEBUG("FOUND!");
+			CONSOLE_DEBUG("Found in current directory!");
 			fclose(f);
 			ASC_FREE(searchdata.partialname);
 			ospath_free(searchdata.relativedir);

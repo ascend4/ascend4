@@ -142,6 +142,10 @@ ATOM pressure_per_temperature REFINES solver_var
     nominal := 1.0{Pa/K};
 END pressure_per_temperature;
 
+(* for use in heat exchangers: C_c, C_h, C_min, etc. *)
+ATOM capacity_rate REFINES power_per_temperature;
+END capacity_rate;
+
 MODEL thermo_state;
 	T IS_A temperature;
 	rho IS_A mass_density;

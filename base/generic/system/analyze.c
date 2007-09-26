@@ -119,7 +119,7 @@
 #define MAX_VAR_IN_LIST 20
 #endif /* MAX_VAR_IN_LIST  */
 
-#define ANALYSE_DEBUG
+/* #define ANALYSE_DEBUG */
 
 /*------------------------------------------------------------------------------
   GLOBAL VARS
@@ -1874,7 +1874,10 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   AL(bl,nc + p_data->ncl,bnd_boundary);
 #undef AL
 
+#ifdef ANALYSE_DEBUG
   CONSOLE_DEBUG("For relincidence, size will be %d",p_data->nnztot + p_data->nnzobj + p_data->nnzcond); 
+#endif
+
   p_data->relincidence = ALLOC_OR_NULL(struct var_variable*
     ,p_data->nnztot + p_data->nnzobj + p_data->nnzcond
   );

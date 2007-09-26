@@ -2,13 +2,13 @@ Source: ascend
 Section: contrib/science
 Priority: extra
 Maintainer: John Pye <john@curioussymbols.com>
-Build-Depends: scons, gcc, g77, flex, bison, swig, python-dev, libufsparse-dev, libsundials-serial-dev, gfortran, scrollkeeper, refblas3-dev, lyx, ccache, libtktable-dev, tcl8.4-dev, tk8.4-dev, debhelper
+Build-Depends: scons, gcc, g77, flex, bison, swig, python-dev, libufsparse-dev, libsundials-serial-dev, gfortran, scrollkeeper, refblas3-dev, lyx, ccache, libtktable2.9-dev, tcl8.4-dev, tk8.4-dev, debhelper
 Standards-Version: 3.7.2
 
 Package: ascend
 Architecture: any
-Depends: libtktable, libgtksourceview-common, ${shlibs:Depends}
-#, python, libufsparse, libsundials-serial0, refblas3, python-gtk2, python-matplotlib, python-numpy, tcl8.4, tk8.4, libtktable
+Depends: libtktable2.9, libgtksourceview-common, ${shlibs:Depends}
+#, python, libufsparse, libsundials-serial0, refblas3, python-gtk2, python-matplotlib, python-numpy
 Recommends: ipython, xgraph
 Description:Solver for systems of equations and ODEs/DAEs.
 	ASCEND is a modelling and simulation environment for
