@@ -79,6 +79,8 @@
 #include "packages.h"
 #include "defaultpaths.h"
 
+#define PACKAGE_DEBUG
+
 /*
 	Initialise the slv data structures used when calling external fns
 */
@@ -151,8 +153,9 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 		CONSOLE_DEBUG("Default ASCENDLIBRARY set to '%s'", default_library_path);
 	}
 
-
-	/* CONSOLE_DEBUG("Searching for external library '%s'",partialpath); */
+#ifdef PACKAGE_DEBUG
+	CONSOLE_DEBUG("Searching for external library '%s'",partialpath);
+#endif
 
 	importhandler_createlibrary();
 
@@ -171,16 +174,27 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialpath);
 			return 1; /* failure */
 		}
+#ifdef PACKAGE_DEBUG
+		else{
+			CONSOLE_DEBUG("FOUND in $ASCENDLIBRARY");
+		}
+	}else{
+		CONSOLE_DEBUG("Found in pwd or in $ASCENDSOLVERS");
+#endif
 	}
 
 	asc_assert(handler!=NULL);
 
-	/* CONSOLE_DEBUG("About to import external library..."); */
+#ifdef PACKAGE_DEBUG
+	CONSOLE_DEBUG("About to import external library...");
+#endif
 
-	/* note the import handler will deal with all the initfunc execution, etc etc */
+	/* run the import handlers' importfn to do the actual loading, registration etc. */
 	result = (*(handler->importfn))(fp1,initfunc,partialpath);
 	if(result){
-		//CONSOLE_DEBUG("Error %d when importing external library of type '%s'",result,handler->name);
+#ifdef PACKAGE_DEBUG
+		CONSOLE_DEBUG("Error %d when importing external library of type '%s'",result,handler->name);
+#endif
 		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Error importing external library '%s'",partialpath);
 		ospath_free(fp1);
 		return 1;
