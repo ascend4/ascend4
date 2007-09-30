@@ -16,3 +16,8 @@ eos-srk.a4c : Soave Redlich Kwong (Z(Tr, Pr))
 eos-vdw.a4c : Vander Waals (Z(Tr, Pr)) 
 zplot.py : Python script/files for plotting (written by John Pye) 
 
+pg352version[1 through 8] Example problem 10.1, page 352 from
+Van Ness/Smith - Chemical Engineering thermodynamics - 
+look for Simple2Elegant on the wiki for an explanation of why
+so many files!  
+

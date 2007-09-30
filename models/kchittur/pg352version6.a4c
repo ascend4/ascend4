@@ -1,0 +1,72 @@
+REQUIRE "atoms.a4l";
+
+MODEL antoine(nc WILL_BE symbol_constant;);
+
+A, B, C IS_A factor;
+
+SELECT(nc)
+
+CASE 'acetonitrile':A = 14.2724; B = 2945.47; C = 224.070;
+CASE 'nitromethane':A = 14.2043; B = 2972.64; C = 209.000;
+
+END SELECT;
+
+END antoine;
+
+MODEL example101;
+
+A1, B1, C1, A2, B2, C2 IS_A factor;
+P1S, P2S, P IS_A pressure;
+T IS_A temperature; 
+x1, x2, y1, y2 IS_A fraction;
+T_degC IS_A factor;
+
+nc1, nc2 IS_A symbol_constant;
+
+nc1 :== 'acetonitrile';
+nc2 :== 'nitromethane';
+
+mync1 IS_A antoine(nc1);
+mync2 IS_A antoine(nc2);
+
+A1 = mync1.A;
+B1 = mync1.B;
+C1 = mync1.C;
+A2 = mync2.A;
+B2 = mync2.B;
+C2 = mync2.C;
+
+P1S/1000.0{Pa} = exp(A1 - B1/(T/1.0{K} - 273.15 + C1));
+P2S/1000.0{Pa} = exp(A2 - B2/(T/1.0{K} - 273.15 + C2));
+
+x1 + x2 = 1.0;
+y1 + y2 = 1.0;
+
+x1*P1S = y1*P;
+x2*P2S = y2*P;
+
+T_degC = T/1{K} - 273.15;
+
+METHODS
+
+	METHOD parta;
+	FIX T; FIX x1;
+	x1 := 0.6;
+	T := 348.15 {K};
+	END parta;
+	METHOD partb;
+	FIX P; FIX x1;
+	x1 := 0.1;
+	P := 70.0 {kPa};
+	END partb;
+	METHOD doparta;
+        RUN ClearAll;
+	RUN parta;
+	END doparta;
+	METHOD dopartb;
+        RUN ClearAll;
+	RUN partb;
+	END dopartb;
+
+END example101;
+

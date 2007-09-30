@@ -1,0 +1,39 @@
+REQUIRE "atoms.a4l";
+
+MODEL example101;
+
+P1S, P2S, P, T, x1, x2, y1, y2 IS_A factor;
+
+P1S = exp(14.2724 - 2945.47/(T + 224.0));
+P2S = exp(14.2043 - 2972.64/(T + 209.0));
+
+x1 + x2 = 1.0;
+y1 + y2 = 1.0;
+
+x1*P1S = y1*P;
+x2*P2S = y2*P;
+
+METHODS
+	METHOD parta;
+	FIX T; FIX x1;
+	x1 := 0.6;
+	T := 75.0;
+	END parta;
+	METHOD partb;
+	FIX P; FIX x1;
+	x1 := 0.1;
+	P := 70.0;
+        T := 300.0;
+	END partb;
+	METHOD doparta;
+        RUN ClearAll;
+	RUN parta;
+	END doparta;
+	METHOD dopartb;
+        RUN ClearAll;
+	RUN partb;
+	END dopartb;
+
+END example101;
+
+
