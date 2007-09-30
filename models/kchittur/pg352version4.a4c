@@ -1,0 +1,52 @@
+REQUIRE "atoms.a4l";
+
+MODEL example101;
+
+A1, B1, C1, A2, B2, C2 IS_A factor;
+P1S, P2S, P IS_A pressure;
+T IS_A temperature; 
+x1, x2, y1, y2 IS_A fraction;
+
+P1S/100000.0{Pa} = exp(A1 - B1/(T/1.0{K} - 273.15 + C1));
+P2S/100000.0{Pa} = exp(A2 - B2/(T/1.0{K} - 273.15 + C2));
+
+x1 + x2 = 1.0;
+y1 + y2 = 1.0;
+
+x1*P1S = y1*P;
+x2*P2S = y2*P;
+
+METHODS
+	METHOD default_self;
+	END default_self;
+	METHOD values;
+	A1 := 14.2724; B1 := 2945.47; C1 := 224.0;
+	A2 := 14.2043; B2 := 2972.64; C2 := 209.0; 
+	FIX A1; FIX B1; FIX C1; FIX A2; FIX B2; FIX C2; 
+	END values;
+
+	METHOD parta;
+	FIX T; FIX x1;
+	x1 := 0.6;
+	T := 348.15 {K};
+	END parta;
+	METHOD partb;
+	FIX P; FIX x1;
+	x1 := 0.1;
+	P := 70.0 {kPa};
+	END partb;
+	METHOD doparta;
+        RUN ClearAll;
+	RUN values;
+	RUN parta;
+	END doparta;
+	METHOD dopartb;
+        RUN ClearAll;
+	RUN values;
+	RUN partb;
+	END dopartb;
+
+
+END example101;
+
+

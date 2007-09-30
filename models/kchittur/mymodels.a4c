@@ -1,0 +1,16 @@
+REQUIRE "atoms.a4l";
+
+MODEL antoine(nc WILL_BE symbol_constant;);
+
+A, B, C IS_A factor;
+
+SELECT(nc)
+
+CASE 'acetonitrile':A = 14.2724; B = 2945.47; C = 224.070;
+CASE 'nitromethane':A = 14.2043; B = 2972.64; C = 209.000;
+
+END SELECT;
+
+END antoine;
+
+
