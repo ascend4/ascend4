@@ -754,7 +754,10 @@ def c_escape(str):
 
 envadditional={}
 
-tools = ['lex','yacc','fortran','swig','nsis','substinfile','disttar','tar']
+tools = [
+	'lex', 'yacc','fortran', 'swig', 'nsis' ,'substinfile'
+	,'disttar', 'tar'
+]
 if platform.system()=="Windows":
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
 		envenv = os.environ;
@@ -945,7 +948,10 @@ int main(void){
 
 def CheckCXX(context):
 	context.Message("Checking C++ compiler ('%s')... " % context.env.get('CXX'))
-	is_ok = context.TryCompile(cc_test_text,".cpp")
+	if not context.env.get('CXX'):
+		context.Result("not found")
+		return False
+	is_ok = context.TryCompile(cxx_test_text,".cpp")
 	context.Result(is_ok)
 	return is_ok
 
@@ -1872,6 +1878,7 @@ if not conf.CheckCC():
 if not conf.CheckCXX():
 	print "Failed to build simple test file with your C++ compiler."
 	print "Check your compiler is installed and running correctly."
+	print "You can set your C++ compiler using the CXX scons option."
 	Exit(1)
 
 # stdio -- just to check that compiler is behaving
