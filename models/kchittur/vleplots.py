@@ -22,6 +22,9 @@ def txyplot(self):
 		    except:
 		        browser.reporter.reportError('Failed to solve for x1 = %f' % x1)
 		        continue
+		xlabel("Mole Fraction (x or y)")
+		ylabel("Temperature in degrees C")
+		title("Txy plot")
 		plot(XX1,TT1)
 		plot(XX2,TT2)
 		hold(1)
@@ -51,6 +54,9 @@ def pxyplot(self):
 		    except:
 		        browser.reporter.reportError('Failed to solve for x1 = %f' % x1)
 		        continue
+		xlabel("Mole Fraction (x or y)")
+		ylabel("Pressure in pascals")
+		title("Pxy plot")
 		plot(XX1,PP1)
 		plot(XX2,PP2)
 		hold(1)
