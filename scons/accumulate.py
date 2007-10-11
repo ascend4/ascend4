@@ -1,10 +1,34 @@
-# AccumulateBuilder
+# Accumulate
 #
 # Based on code from http://www.scons.org/wiki/AccumulateBuilder
+
+# The goal here was to be able to distribute a source code tarball that
+# contains all the required source code to build our program, plus a LIMITED
+# subset of our test/sample code, because we have many sample files that are
+# not yet ready for distribution. We wanted to manage our list of distributable
+# files using a simple plain text-file system that would be informative to 
+# end users and not tied to a particular build system (SCons).
+
+# This tool faciltates creation of tarballs with some files excluded using
+# a convenient text-file based mechanism. By default, the tool collects copies
+# of the files you list using the syntax below, and places them in your
+# 'destination' directory:
 #
+#   env.Accumulate('dist/temp/src',"src")
+#   env.Accumulate('dist/temp',['prog1.exe','prog2.exe']) 
+#
+# There is a special exception however. If, while recursing into directories
+# listed in the Accumulate source list, a file named 'PACKAGE' is found, then
+# only files listed therein will be copied to the destination directory.
+# The 'PACKAGE' file can contain comment lines; they must begin with a '#'.
+# Once a directory has been found to contain a 'PACKAGE' file, subdirectories
+# of that directory will not be recursed into unless they also contain a 
+# 'PACKAGE' file.
+
 # Converted to SCons 'tool' format by John Pye, 10 Sept 2007.
 
 import os, os.path, shutil
+import SCons.Node.FS
 
 def copypackaged(src,dest, symlinks=False):
 	"""Recursive copy of files listed in a local file named PACKAGE
@@ -30,7 +54,7 @@ def copypackaged(src,dest, symlinks=False):
 		plist = file(plistfile)
 		for line in plist:
 			l = line.strip()
-			if l[0]=="#":
+			if not len(l) or l[0]=="#":
 				continue
 			if l in files:
 				if os.path.isdir(os.path.join(src,l)):
@@ -65,7 +89,7 @@ def copypackaged(src,dest, symlinks=False):
 	print "Leaving directory '%s'" % src
 
 	
-def copytree(src, dest, symlinks=False):
+def my_copytree(src, dest, env, symlinks=False):
 	"""My own copyTree which does not fail if the directory exists.
 
 	Recursively copy a directory tree using copy2().
@@ -94,19 +118,23 @@ def copytree(src, dest, symlinks=False):
 		for item in files:
 			srcPath = os.path.join(src, item)
 			if os.path.isdir(srcPath):
+				print "DIR = %s" % srcPath
 				srcBasename = os.path.basename(srcPath)
 				destDirPath = os.path.join(dest, srcBasename)
 				if not os.path.exists(destDirPath):
+					#print "CREATE DIR %s" % destDirPath
 					os.makedirs(destDirPath)
+				#print "RECURSE INTO %s" % srcPath
 				copyItems(srcPath, destDirPath
-					, use_package_list=use_package_list
+					, symlinks
 				)
 			elif os.path.islink(item) and symlinks:
+				print "LINK = %s" % srcPath
 				linkto = os.readlink(item)
 				os.symlink(linkto, dest)
 			else:
-				shutil.copy2(srcPath, dest)
-		
+				print "FILE = %s" % srcPath
+				shutil.copy2(srcPath, dest)		
 
 	# case 'cp -R src/ dest/' where dest/ already exists
 	if os.path.exists(dest):
@@ -126,29 +154,21 @@ def copytree(src, dest, symlinks=False):
 ##
 
 def accumulatorFunction(target, source, env):
-  """Function called when builder is called"""
-  destDir = str(target[0])
-  if not os.path.exists(destDir):
-      os.makedirs(destDir)
-  for s in source:
-      s = str(s)
-      if os.path.isdir(s):
-          myShutil.copytree(s, destDir, symlinks = False)
-      else:
-          shutil.copy2(s, destDir)
-
-
-##
-## Zipper.py
-##
-import distutils.archive_util
-
-def zipperFunction(target, source, env):
-        """Function to use as an action which creates a ZIP file from the arguments"""
-        targetName = str(target[0])
-        sourceDir = str(source[0])
-        distutils.archive_util.make_archive(targetName, 'zip', sourceDir)
-
+	"""Function called when builder is called"""
+	destDir = str(target[0])
+	#print "DEST DIR = %s" % destDir
+	if not os.path.exists(destDir):
+		#print "CREATE DIR %s" % destDir
+		os.makedirs(destDir)
+	#print "SOURCES: %s" % source
+	for s in source:
+		s = str(s)
+		if os.path.isdir(s):
+			#print "COPYTREE from source %s" % s
+			my_copytree(s, destDir, env, symlinks = False)
+		else:
+			#print "COPY FILE from source %s" % s
+			shutil.copy2(s, destDir)
 
 ##
 ## register the above builders...
@@ -157,18 +177,11 @@ def zipperFunction(target, source, env):
 def generate(env):
 
 	# add builder to accumulate files
-	accuBuilder = env.Builder(action=AccumulatorAction.accumulatorFunction,
+	accuBuilder = env.Builder(action=accumulatorFunction,
 	    source_factory=SCons.Node.FS.default_fs.Entry,
 	    target_factory=SCons.Node.FS.default_fs.Entry,
 	    multi=1)
 	env['BUILDERS']['Accumulate'] = accuBuilder
-
-	# add builder to zip files
-	zipBuilder = env.Builder(action=Zipper.zipperFunction,
-	   source_factory=SCons.Node.FS.default_fs.Entry,
-	   target_factory=SCons.Node.FS.default_fs.Entry,
-	   multi=0)
-	env['BUILDERS']['Zipper'] = zipBuilder
 
 def exists(env):
 	"""
