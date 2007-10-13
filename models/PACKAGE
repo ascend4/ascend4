@@ -89,8 +89,8 @@ plotbvp.a4c
 heatex.a4c
 conopttest.a4c
 linmassbal.a4c
-phaseeq.a4c
-phaseeq_comp.a4c
+phaseq.a4c
+phaseq_comp.a4c
 pipeline.a4c
 rachford.a4c
 sonic.a4c

@@ -22,10 +22,20 @@ for root,dirs,files in os.walk("."):
 	for d in dirs:
 		if d in excludedirs:
 			dirs.remove(d)
+	if "PACKAGE" in files:
+		print "FOUND 'PACKAGE' file in %s..." % root
+		p = file(os.path.join(root,"PACKAGE"))
+		f1 = []
+		for l in p:
+			l1 = l.strip()
+			if not len(l1) or l1[0]=="#":
+				continue
+			f1.append(l1)
+		files = f1
+
 	for f in files:
 		if f in excludefiles:
 			continue
-
 		#print "ADDING",os.path.normpath(os.path.join(root,f))
 		modelfiles.append( os.path.normpath(os.path.join(root,f)) )
 os.chdir(cwd)
