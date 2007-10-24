@@ -726,6 +726,14 @@ int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen
   return result;
 }
 
+int32 relman_hessian_count(struct rel_relation **rlist, int32 rlen
+		, var_filter_t *vfilter
+		, rel_filter_t *rfilter, int32 *max
+){
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"not implemented");
+	return 0;
+}
+
 
 int relman_diffs(struct rel_relation *rel
 		, const var_filter_t *filter
