@@ -288,6 +288,18 @@ ASC_DLLSPEC int32 relman_jacobian_count(struct rel_relation **rlist,
  *  *rhomax is the largest row count on return.
  */
 
+ASC_DLLSPEC int32 relman_hessian_count(
+	struct rel_relation **rlist, int32 rlen
+	, var_filter_t *vfilter, rel_filter_t *rfilter
+	, int32 *rhomax
+);
+/**<
+ *  Return the number of nonzero gradient entries in the equations
+ *  given. Only equations passing rfilter and entries passing vfilter
+ *  are counted. rlen is the length of the relation list.
+ *  *rhomax is the largest row count on return.
+ */
+
 ASC_DLLSPEC boolean relman_calc_satisfied_scaled(struct rel_relation *rel,
                                             real64 tolerance);
 /**<

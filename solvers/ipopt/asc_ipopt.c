@@ -484,6 +484,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 
 		/* identify the sparsity structure of the Hessian (note: only the lower-
 		left part is required by IPOPT , because the Hessian is symmetric) */
+		CONSOLE_DEBUG("Analysing of Hessian matrix sparsity structure not implemented");
 
 		/*
 		for(i=0; i<nvars; ++i){
@@ -502,6 +503,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 		asc_assert(x!=NULL); asc_assert(lambda!=NULL); asc_assert(values!=NULL);
 
 		/* evaluate the Hessian matrix */
+		CONSOLE_DEBUG("Evaluation of Hessian matrix not implemented");
 	}
 	
 	return 0; /* fail: not yet implemented */
@@ -540,9 +542,22 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 
 	CONSOLE_DEBUG("got objective rel %p",sys->obj);
 
-	/** @TODO calculate nnz for hessian matrix */
+	/* calculate nnz for hessian matrix @TODO FIXME */
+
+	sys->nnzH = relman_hessian_count(sys->rlist, sys->rtot, &(sys->vfilt), &(sys->rfilt), &max);
 
 	/* need to provide sparsity structure for hessian matrix? */
+
+#if 0
+	/** @SEE http://www.coin-or.org/Ipopt/documentation/node37.html */
+	ipopt_eval_h(number_of_variables, NULL/*x at which to evaluate*/, TRUE /* new x */
+			, 1.0/*obj_factor*/, number_of_constraints, lambda/* values of the constraint multipliers */
+			, TRUE /* new lambda */, 0 /* number of nonzero elements in the Hessian */, Index* iRow
+			, Index* jCol, Number* values
+			, void *user_data
+	);
+#endif
+
 
 	max = relman_obj_direction(sys->obj);
 	if(max==-1){
