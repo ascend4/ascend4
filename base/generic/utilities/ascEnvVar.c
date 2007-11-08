@@ -40,11 +40,6 @@
 #include "ascEnvVar.h"
 #include <general/list.h>
 
-#ifndef lint
-static CONST char ascEnvVarid[] = "$Id: ascEnvVar.c,v 1.5 1997/07/18 12:04:07 mthomas Exp $";
-#endif /* RCS ID keyword */
-
-
 #ifdef __WIN32__
 #define SLASH '\\'
 #define PATHDIV ';'
