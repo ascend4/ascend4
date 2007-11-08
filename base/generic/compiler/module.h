@@ -42,6 +42,8 @@
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 
+#include <general/list.h>
+
 #define  MOD_FILE_EXTS   6
 #define  MOD_OLD_CODE    ".asc"
 /**< Extension for old code files. */

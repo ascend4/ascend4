@@ -10,7 +10,7 @@ testsrcs = ['#test/'+i for i in Split("""
 basesrcs = ['test_ascend_base.c']
 
 srcs = []
-for dir in ['general','utilities','solver','linear']:
+for dir in ['general','utilities','solver','linear','compiler']:
 	srcs += env['TESTSRCS_'+dir.upper()]
 
 cpppath = ['#test','#base/generic']
@@ -48,7 +48,7 @@ objs += env.SharedObject('test_ascend_base.c'
 #for o in objs:
 #	print o
 
-env.SharedLibrary('asctestsuite',objs
+env.SharedLibrary('#/asctestsuite',objs
 	, CPPPATH = cpppath
 	, LIBS = libs
 	, LIBPATH = libpath
