@@ -22,10 +22,15 @@
 #include <string.h>
 #include <CUnit/CUnit.h>
 
+#include <general/env.h>
 #include <utilities/ascConfig.h>
+#include <utilities/ascEnvVar.h>
+#include <utilities/error.h>
 
 #include <compiler/ascCompiler.h>
 #include <compiler/module.h>
+#include <compiler/parser.h>
+#include <compiler/library.h>
 
 #include <assertimpl.h>
 
@@ -39,8 +44,14 @@ static void test_init(void){
 static void test_parse_string_module(void){
 	
 	const char *model = "\n\
+		DEFINITION relation\
+		    included IS_A boolean;\
+		    message	IS_A symbol;\
+		    included := TRUE;\
+		    message := 'none';\
+		END relation;\
 		MODEL test1;\n\
-			x IS_A solver_var;\n\
+			x IS_A real;\n\
 			x - 1 = 0;\n\
 		END test1;";
 
@@ -60,7 +71,11 @@ static void test_parse_string_module(void){
 	CONSOLE_DEBUG("zz_parse returns status=%d",status);
 
 	CU_ASSERT(status==0);
-		
+
+	struct gl_list_t *l = Asc_TypeByModule(m);
+	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
+
+	CU_ASSERT(gl_length(l)==2);
 }
 
 
