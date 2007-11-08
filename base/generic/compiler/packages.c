@@ -79,7 +79,7 @@
 #include "packages.h"
 #include "defaultpaths.h"
 
-#define PACKAGE_DEBUG
+/* #define PACKAGE_DEBUG */
 
 /*
 	Initialise the slv data structures used when calling external fns

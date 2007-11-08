@@ -1,0 +1,5 @@
+Import('env')
+
+import glob
+
+env['TESTSRCS_COMPILER'] = [env.File(i) for i in glob.glob("*.c")]

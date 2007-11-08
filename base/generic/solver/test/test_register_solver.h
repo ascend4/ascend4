@@ -41,4 +41,8 @@ CU_ErrorCode test_register_solver(void);
  *  Returns a CUnit error code (CUE_SUCCESS if no errors).
  */
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif  /* TEST_REGISTER_SOLVER_H_SEEN */

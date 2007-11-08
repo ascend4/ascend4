@@ -2360,7 +2360,7 @@ env.Alias('libascend',libascend)
 # UNIT TESTS (C CODE)
 
 if with_cunit:
-	testdirs = ['general','solver','utilities','linear']
+	testdirs = ['general','solver','utilities','linear','compiler']
 	testsrcs = []
 	for testdir in testdirs:
 		path = 'base/generic/'+testdir+'/test/'

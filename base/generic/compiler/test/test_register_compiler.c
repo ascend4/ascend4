@@ -1,6 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2005 Jerry St.Clair
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -16,25 +15,27 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//**
-	Central registration 'base/generic' test routines in ASCEND
-*/
-#include <stdio.h>
+*/
 
-#include <utilities/config.h>
+#include "CUnit/CUnit.h"
 #include <utilities/ascConfig.h>
-#include <CUnit/CUnit.h>
-#include <general/test/test_register_general.h>
-#include <utilities/test/test_register_utilities.h>
-#include <solver/test/test_register_solver.h>
-#include <compiler/test/test_register_compiler.h>
+#include "test_register_compiler.h"
 
-ASC_EXPORT int register_cunit_tests(){
-	test_register_general();
-	test_register_utilities();
-	test_register_solver();
- 	test_register_linear();
-	test_register_compiler();
-	fprintf(stderr,"Registered ASCEND test suites\n");
-	return 0;
-}
+#define PROTO_TEST(NAME) PROTO(compiler,NAME)
+TESTS(PROTO_TEST)
+#undef PROTO_TEST
+
+#define REGISTER_TEST(NAME) \
+	result = test_register_compiler_##NAME(); \
+	if(CUE_SUCCESS!=result){ \
+		return result; \
+	}
+
+#define REGISTER_SUITE(SUITENAME,TESTS) \
+	CU_ErrorCode test_register_##SUITENAME(void){ \
+		CU_ErrorCode result = CUE_SUCCESS; \
+		TESTS(REGISTER_TEST) \
+		return result; \
+	}	
+
+REGISTER_SUITE(compiler,TESTS)

@@ -48,6 +48,7 @@
 #include <compiler/relation.h>
 #include <compiler/relation_util.h>
 #include <compiler/relation_io.h>
+#include <compiler/exprsym.h>
 
 #include "slv_server.h"
 
@@ -726,11 +727,25 @@ int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen
   return result;
 }
 
+
+static int AllVariables(struct Instance *i){
+	return TRUE;
+}
+
 int32 relman_hessian_count(struct rel_relation **rlist, int32 rlen
 		, var_filter_t *vfilter
 		, rel_filter_t *rfilter, int32 *max
 ){
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"not implemented");
+
+	struct relation *r1, *r2;
+
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"not implemented...");
+
+	r1 = rel_instance(rlist[0]);
+
+	CONSOLE_DEBUG("r1 = %p",r1);
+	r2 = RelDerivative(r1,0,&AllVariables);
+		
 	return 0;
 }
 

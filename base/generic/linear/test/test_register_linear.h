@@ -42,3 +42,7 @@ PROTO_SUITE(SUITE);
  *  Returns a CUnit error code (CUE_SUCCESS if no errors).
  */
 
+#ifdef __cplusplus
+}
+#endif
+
