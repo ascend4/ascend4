@@ -76,6 +76,8 @@ static void test_parse_string_module(void){
 	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
 
 	CU_ASSERT(gl_length(l)==2);
+
+	Asc_CompilerDestroy();
 }
 
 

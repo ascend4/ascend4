@@ -24,7 +24,7 @@
 #define SUITE compiler
 
 #define TESTS(T) \
-	T(hello)
+	T(basics)
 
 #define PROTO(SUITE,NAME) CU_ErrorCode test_register_##SUITE##_##NAME(void);
 
