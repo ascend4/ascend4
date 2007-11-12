@@ -10,6 +10,8 @@ SCONS_OPTIONS = CC="gcc" \
 	WITH_DOC_INSTALL=1
 SCONS= scons $(SCONS_OPTIONS)
 
+export DH_VERBOSE=1
+
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
 else
