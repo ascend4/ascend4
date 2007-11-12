@@ -912,6 +912,7 @@ print "DEFAULT_ASCENDSOLVERS =",env['DEFAULT_ASCENDSOLVERS']
 # SPECIAL CONFIGURATION TESTS
 
 need_fortran = False
+need_fortran_reasons = []
 
 #----------------
 # CC
@@ -955,8 +956,25 @@ def CheckCXX(context):
 	context.Result(is_ok)
 	return is_ok
 
-	
+#----------------
 
+f77_test_text = """
+C     Hello World in Fortran 77
+
+      PROGRAM HELLO
+      PRINT*, 'Hello World!'
+      END	
+""";
+
+def CheckF77(context):
+	context.Message("Checking Fortran 77 compiler ('%s')..." % context.env.get('FORTRAN'))
+	if not context.env.get('FORTRAN'):
+		context.Result('not found')
+		return False
+	is_ok = context.TryCompile(f77_test_text,".f")
+	context.Result(is_ok)
+	return is_ok
+	
 #----------------
 # SWIG
 
@@ -1810,6 +1828,7 @@ conf = Configure(env
 	, custom_tests = { 
 		'CheckCC' : CheckCC
 		, 'CheckCXX' : CheckCXX
+		, 'CheckF77' : CheckF77
 		, 'CheckMath' : CheckMath
 		, 'CheckSwigVersion' : CheckSwigVersion
 		, 'CheckPythonLib' : CheckPythonLib
@@ -2061,6 +2080,7 @@ need_blas=False
 
 if with_lsode:
 	need_fortran = True
+	need_fortran_reasons.append("LSODE")
 	need_blas=True
 
 if need_blas:
@@ -2070,6 +2090,7 @@ if need_blas:
 	else:
 		with_local_blas = True
 		need_fortran = True
+		need_fortran_reasons.append("BLAS")
 else:
 	with_local_blas= False;
 	without_local_blas_reason = "BLAS not required"
@@ -2100,6 +2121,14 @@ if need_fortran:
 	else:
 		with_lsode=False;
 		without_lsode_reason="FORTRAN-77 required but not found"
+
+if need_fortran and not conf.CheckF77():
+	print "Failed to build simple test file with your Fortran compiler."
+	print "Check your compiler is installed and running correctly."
+	print "You can set your Fortran compiler using the FORTRAN scons option."
+	print "The fortran compiler is REQUIRED to build:",", ".join(need_fortran_reasons)
+	print "Perhaps try examining the value of your WITH_SOLVERS option (remove LSODE, etc)."
+	Exit(1)
 
 #else:
 #	print "FORTRAN not required"
