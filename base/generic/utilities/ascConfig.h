@@ -25,12 +25,7 @@
 	There is not corresponding compiler.c. The variables
 	declared in this header are defined in ascParse.y.
 
-	This header and tcl/tk headers are known to conflict. This header
-	should be included AFTER tcl.h or tk.h, not before.
-
 	If including the file, you should also include utilities/error.h
-
-	@NOTE you must include <tcl.h> BEFORE this file for it to work properly.
 *//*
 	by Mark Thomas
 	Version: $Revision: 1.12 $
@@ -153,28 +148,6 @@
 # define NORETURN __declspec(noreturn)
 #else
 # define NORETURN /* nothing */
-#endif
-
-/**
-	@TODO move the 'CONST84' stuff to a file in the TCL/TK section.
-*/
-/*
- * If we are in a tcl-infested file, define
- * CONST84 to be empty for back-compatibility with
- * tcl8.3
- */
-#ifdef TCL_VERSION
-# ifndef CONST84
-#  define CONST84
-#  define QUIET(x) x
-#  define QUIET2(x) x
-# else
-/** use this macro to shut up const when const
-    from tcl-land would be going into non-tcl C.
- */
-#  define QUIET(x) ((char *)x)
-#  define QUIET2(v) ((char **)v)
-# endif
 #endif
 
 /*

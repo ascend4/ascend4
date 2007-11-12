@@ -35,7 +35,7 @@
 #define ASC_BUILDING_INTERFACE
 
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/dstring.h>

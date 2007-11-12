@@ -31,7 +31,7 @@
 
 #include <ctype.h>
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascMalloc.h>
 #include <general/tm_time.h>
 #include <general/list.h>

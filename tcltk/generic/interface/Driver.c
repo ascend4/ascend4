@@ -30,7 +30,7 @@
 #include <tcl.h>
 #include <tk.h>
 #include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <general/ospath.h>
 #include <utilities/ascPrint.h>
 #include <utilities/error.h>

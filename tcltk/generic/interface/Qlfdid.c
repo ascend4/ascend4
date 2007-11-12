@@ -31,6 +31,7 @@
 
 #include <tcl.h>
 #include <tk.h>
+#include "config.h"
 #include <general/list.h>
 #include <compiler/instance_enum.h>
 #include <compiler/qlfdid.h>

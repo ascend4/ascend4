@@ -28,7 +28,7 @@
  */
 
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 

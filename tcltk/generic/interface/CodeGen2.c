@@ -27,11 +27,6 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-#ifndef lint
-static CONST char CodeGen2ID[] = "$Id: CodeGen2.c,v 1.22 2003/08/23 18:43:05 ballan Exp $";
-#endif
-
-
 /*
  *                         CodeGeneration 2 Routines
  *                         by Kirk Andre Abbott.
@@ -43,7 +38,7 @@ static CONST char CodeGen2ID[] = "$Id: CodeGen2.c,v 1.22 2003/08/23 18:43:05 bal
 #include <math.h>
 #include <tcl.h>
 #include <tk.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascMalloc.h>
 #include <general/table.h>
 #include <general/dstring.h>

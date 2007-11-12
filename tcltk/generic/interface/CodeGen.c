@@ -38,7 +38,7 @@
 #include <math.h>
 #include <tcl.h>
 #include <tk.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascMalloc.h>
 #include <general/dstring.h>
 #include <compiler/instance_io.h>
@@ -51,10 +51,6 @@
 #include <system/system.h>
 #include "Qlfdid.h"
 #include "CodeGen.h"
-
-#ifndef lint
-static CONST char CodeGenID[] = "$Id: CodeGen.c,v 1.24 2003/08/23 18:43:05 ballan Exp $";
-#endif
 
 #define REIMPLEMENT 0
 

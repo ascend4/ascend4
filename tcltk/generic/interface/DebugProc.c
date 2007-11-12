@@ -35,7 +35,7 @@
 #endif /* ASC_SIGNAL_TRAPS */
 
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 
@@ -81,11 +81,6 @@
 #include "SolverGlobals.h"
 #include "BrowserProc.h"
 /* #include "slv5.h" *//* this is a sloppy mess due to slv5_calc_J */
-
-#ifndef lint
-static CONST char DebugProcID[] = "$Id: DebugProc.c,v 1.64 2003/08/23 18:43:05 ballan Exp $";
-#endif
-
 
 #define SAFE_FIX_ME 0
 #define REIMPLEMENT 0

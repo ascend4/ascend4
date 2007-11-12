@@ -30,7 +30,7 @@
 #define ASC_BUILDING_INTERFACE
 #include <stdarg.h>
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <general/list.h>
