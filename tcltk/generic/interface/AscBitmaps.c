@@ -30,7 +30,7 @@
 
 #include <tcl.h>
 #include <tk.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include "AscBitmaps.h"
 
 

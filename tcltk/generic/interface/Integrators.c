@@ -30,10 +30,10 @@
 #include <tcl.h>
 #include <time.h>
 
+#include "config.h"
+
 #include <compiler/instance_io.h>
 #include <compiler/units.h>
-
-#include <utilities/ascConfig.h>
 #include <integrator/integrator.h>
 #include <integrator/samplelist.h>
 

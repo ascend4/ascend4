@@ -34,7 +34,7 @@
 #include <tk.h>
 
 #include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <general/list.h>
 
 #include <compiler/instance_enum.h>

@@ -35,7 +35,7 @@
 
 #include <ctype.h>
 #include <math.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/dstring.h>

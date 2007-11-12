@@ -32,7 +32,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
 #include <general/tm_time.h>

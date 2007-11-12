@@ -40,7 +40,7 @@
 #define ASCTK_HELPPROC_H
 
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 
 /**
  * The largest number of strings that will be used in building a long

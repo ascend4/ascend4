@@ -27,7 +27,7 @@
 #include <tk.h>
 
 #include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/mem.h>

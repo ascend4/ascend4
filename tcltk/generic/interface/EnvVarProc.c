@@ -35,15 +35,11 @@
  */
 
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <utilities/ascMalloc.h>
 #include <utilities/ascEnvVar.h>
 #include "HelpProc.h"
 #include "EnvVarProc.h"
-
-#ifndef lint
-CONST char *EnvVarProcID = "$Id: EnvVarProc.c,v 1.7 2003/08/23 18:43:06 ballan Exp $";
-#endif
 
 STDHLF(Asc_EnvVarCmd,(Asc_EnvVarCmdHL1, Asc_EnvVarCmdHL2,
   Asc_EnvVarCmdHL3, Asc_EnvVarCmdHL4, Asc_EnvVarCmdHL5, Asc_EnvVarCmdHL6,

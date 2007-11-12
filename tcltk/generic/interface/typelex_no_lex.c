@@ -734,7 +734,7 @@ char *yytext_ptr;
 #define MY_YYMORE() yymore()
 
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include <general/list.h>
 #ifndef TYPER_TEST
 /* for handling string modules and results in interp */
@@ -750,11 +750,6 @@ char *yytext_ptr;
 #endif /*!typertest*/
 
 #include "typelex.h"
-
-
-#ifndef lint
-static const char TyperID[] = "$Id: typelex.l,v 1.20 2003/08/23 18:43:09 ballan Exp $";
-#endif
 
 #define YY_BREAK
 /*

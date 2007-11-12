@@ -14,7 +14,7 @@
  */
 
 #include <tcl.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 #include "tkConsole.h"
 
 #ifdef ASC_USE_TK_CONSOLE

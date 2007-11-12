@@ -33,7 +33,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <time.h>
-#include <utilities/ascConfig.h>
+#include "config.h"
 
 #ifndef __WIN32__
 # include <unistd.h>
