@@ -107,6 +107,6 @@ static CU_SuiteInfo suites[] = {
 };
 
 /*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_compiler_hello(void){
+CU_ErrorCode test_register_compiler_basics(void){
 	return CU_register_suites(suites);
 }
