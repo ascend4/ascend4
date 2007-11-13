@@ -23,7 +23,7 @@
 
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
-#include <CUnit/CUnit.h>
+
 #include <general/test/test_register_general.h>
 #include <utilities/test/test_register_utilities.h>
 #include <solver/test/test_register_solver.h>

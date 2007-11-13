@@ -372,12 +372,12 @@ static void test_readln(void)
 /* Registration information */
 
 static CU_TestInfo readln_test_list[] = {
-  {"test_readln", test_readln},
+  {"readln", test_readln},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_utilities_readln", NULL, NULL, readln_test_list},
+  {"utilities_readln", NULL, NULL, readln_test_list},
   CU_SUITE_INFO_NULL
 };
 

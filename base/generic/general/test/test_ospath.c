@@ -639,7 +639,7 @@ static CU_TestInfo ospath_test_list[] = {
 #undef T
 
 static CU_SuiteInfo suites[] = {
-  {"test_general_ospath", NULL, NULL, ospath_test_list},
+  {"general_ospath", NULL, NULL, ospath_test_list},
   CU_SUITE_INFO_NULL
 };
 

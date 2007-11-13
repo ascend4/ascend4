@@ -28,21 +28,15 @@
  *  </pre>
  */
 
-#ifndef TEST_REGISTER_SOLVER_H_SEEN
-#define TEST_REGISTER_SOLVER_H_SEEN
+#include <test/common.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-CU_ErrorCode test_register_solver(void);
-/**< 
- *  Registers all tests for the ASCEND solver component.
- *  Returns a CUnit error code (CUE_SUCCESS if no errors).
- */
+PROTO_SUITE(solver)
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* TEST_REGISTER_SOLVER_H_SEEN */

@@ -453,12 +453,12 @@ static void test_table(void)
 /* Registration information */
 
 static CU_TestInfo table_test_list[] = {
-  {"test_table", test_table},
+  {"table", test_table},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_general_table", NULL, NULL, table_test_list},
+  {"general_table", NULL, NULL, table_test_list},
   CU_SUITE_INFO_NULL
 };
 

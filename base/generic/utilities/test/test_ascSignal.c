@@ -502,12 +502,12 @@ Asc_SignalRecover(TRUE);
 /* Registration information */
 
 static CU_TestInfo ascSignal_test_list[] = {
-  {"test_ascSignal", test_ascSignal},
+  {"ascSignal", test_ascSignal},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_utilities_ascSignal", NULL, NULL, ascSignal_test_list},
+  {"utilities_ascSignal", NULL, NULL, ascSignal_test_list},
   CU_SUITE_INFO_NULL
 };
 

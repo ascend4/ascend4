@@ -163,12 +163,12 @@ static void test_ascDynaLoad(void)
 /* Registration information */
 
 static CU_TestInfo ascDynaLoad_test_list[] = {
-  {"test_ascDynaLoad", test_ascDynaLoad},
+  {"dyna;oad", test_ascDynaLoad},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_utilities_ascDynaLoad", NULL, NULL, ascDynaLoad_test_list},
+  {"utilities_ascDynaLoad", NULL, NULL, ascDynaLoad_test_list},
   CU_SUITE_INFO_NULL
 };
 

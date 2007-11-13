@@ -111,12 +111,12 @@ static void test_tm_time(void)
 /* Registration information */
 
 static CU_TestInfo tm_time_test_list[] = {
-  {"test_tm_time", test_tm_time},
+  {"tm_time", test_tm_time},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_general_tm_time", NULL, NULL, tm_time_test_list},
+  {"general_tm_time", NULL, NULL, tm_time_test_list},
   CU_SUITE_INFO_NULL
 };
 

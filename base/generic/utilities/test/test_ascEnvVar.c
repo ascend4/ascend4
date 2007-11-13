@@ -757,12 +757,12 @@ static void test_ascEnvVar(void)
 /* Registration information */
 
 static CU_TestInfo ascEnvVar_test_list[] = {
-  {"test_ascEnvVar", test_ascEnvVar},
+  {"ascEnvVar", test_ascEnvVar},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_utilities_ascEnvVar", NULL, NULL, ascEnvVar_test_list},
+  {"utilities_ascEnvVar", NULL, NULL, ascEnvVar_test_list},
   CU_SUITE_INFO_NULL
 };
 

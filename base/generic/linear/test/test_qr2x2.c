@@ -153,14 +153,14 @@ static void test_qr3x3(void){
 /* Registration information */
 
 static CU_TestInfo qr_test_list[] = {
-	{"test_qr1x1", test_qr1x1},
-	{"test_qr2x2", test_qr2x2},
-	{"test_qr3x3", test_qr3x3},
+	{"qr1x1", test_qr1x1},
+	{"qr2x2", test_qr2x2},
+	{"qr3x3", test_qr3x3},
 	CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-	{"test_linear_qr", NULL, NULL, qr_test_list},
+	{"linear_qr", NULL, NULL, qr_test_list},
 	CU_SUITE_INFO_NULL
 };
 

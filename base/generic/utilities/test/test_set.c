@@ -227,12 +227,12 @@ static void test_set(void)
 /* Registration information */
 
 static CU_TestInfo set_test_list[] = {
-  {"test_set", test_set},
+  {"set", test_set},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_utilities_set", NULL, NULL, set_test_list},
+  {"utilities_set", NULL, NULL, set_test_list},
   CU_SUITE_INFO_NULL
 };
 

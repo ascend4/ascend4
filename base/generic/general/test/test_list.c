@@ -1704,12 +1704,12 @@ static void test_list(void)
 /* Registration information */
 
 static CU_TestInfo list_test_list[] = {
-  {"test_list", test_list},
+  {"list", test_list},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_general_list", NULL, NULL, list_test_list},
+  {"general_list", NULL, NULL, list_test_list},
   CU_SUITE_INFO_NULL
 };
 
