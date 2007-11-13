@@ -20,27 +20,13 @@
 	Test registration function for the 'linear' component.
 */
 
-#include "CUnit/CUnit.h"
-
-#define SUITE general
-
-#define TESTS(T) \
-	T(qr2x2) \
-	T(mtx)
-
-#define PROTO(SUITE,NAME) CU_ErrorCode test_register_##SUITE##_##NAME(void);
-
-#define PROTO_SUITE(SUITE) CU_ErrorCode test_register_##SUITE(void)
+#include <test/common.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-PROTO_SUITE(SUITE);
-/**< 
- *  Registers all tests for the ASCEND general component.
- *  Returns a CUnit error code (CUE_SUCCESS if no errors).
- */
+PROTO_SUITE(linear);
 
 #ifdef __cplusplus
 }

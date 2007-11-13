@@ -83,12 +83,12 @@ static void test_csparse(void){
 /* Registration information */
 
 static CU_TestInfo mtx_test_list[] = {
-	{"test_csparse", test_csparse},
+	{"csparse", test_csparse},
 	CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-	{"test_linear_mtx", NULL, NULL, mtx_test_list},
+	{"linear_mtx", NULL, NULL, mtx_test_list},
 	CU_SUITE_INFO_NULL
 };
 

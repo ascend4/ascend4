@@ -18,9 +18,14 @@
 	Boston, MA 02111-1307, USA.
 */
 
-#include "CUnit/CUnit.h"
 #include <utilities/ascConfig.h>
 #include "test_register_linear.h"
+
+#define SUITE general
+
+#define TESTS(T) \
+	T(qr2x2) \
+	T(mtx)
 
 #define PROTO_TEST(NAME) PROTO(linear,NAME)
 TESTS(PROTO_TEST)

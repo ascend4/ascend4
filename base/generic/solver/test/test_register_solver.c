@@ -53,10 +53,6 @@ CU_ErrorCode test_register_solver(void)
     return result;
 */
 
-
-
-
-
   return result;
 }
 

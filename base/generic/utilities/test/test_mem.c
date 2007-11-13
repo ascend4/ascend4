@@ -830,12 +830,12 @@ static void test_mem(void)
 /* Registration information */
 
 static CU_TestInfo mem_test_list[] = {
-  {"test_mem", test_mem},
+  {"mem", test_mem},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_utilities_mem", NULL, NULL, mem_test_list},
+  {"utilities_mem", NULL, NULL, mem_test_list},
   CU_SUITE_INFO_NULL
 };
 

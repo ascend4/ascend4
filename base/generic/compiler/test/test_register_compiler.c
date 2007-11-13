@@ -17,9 +17,13 @@
 	Boston, MA 02111-1307, USA.
 */
 
-#include "CUnit/CUnit.h"
 #include <utilities/ascConfig.h>
 #include "test_register_compiler.h"
+
+#define SUITE compiler
+
+#define TESTS(T) \
+	T(basics)
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)
 TESTS(PROTO_TEST)

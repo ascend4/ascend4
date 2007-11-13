@@ -391,12 +391,12 @@ static void test_dstring(void)
 /* Registration information */
 
 static CU_TestInfo dstring_test_list[] = {
-  {"test_dstring", test_dstring},
+  {"dstring", test_dstring},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_general_dstring", NULL, NULL, dstring_test_list},
+  {"general_dstring", NULL, NULL, dstring_test_list},
   CU_SUITE_INFO_NULL
 };
 

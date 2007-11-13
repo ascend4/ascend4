@@ -1738,12 +1738,12 @@ extern int slv_direct_log_solve(slv_system_t sys,
 /* Registration information */
 
 static CU_TestInfo slv_common_test_list[] = {
-  {"test_slv_common", test_slv_common},
+  {"slv_common", test_slv_common},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_solver_slv_common", NULL, NULL, slv_common_test_list},
+  {"solver_slv_common", NULL, NULL, slv_common_test_list},
   CU_SUITE_INFO_NULL
 };
 

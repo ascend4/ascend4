@@ -535,12 +535,12 @@ static void test_ascPrint(void)
 /* Registration information */
 
 static CU_TestInfo ascPrint_test_list[] = {
-  {"test_ascPrint", test_ascPrint},
+  {"ascPrint", test_ascPrint},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_utilities_ascPrint", NULL, NULL, ascPrint_test_list},
+  {"utilities_ascPrint", NULL, NULL, ascPrint_test_list},
   CU_SUITE_INFO_NULL
 };
 

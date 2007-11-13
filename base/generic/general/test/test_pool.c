@@ -407,12 +407,12 @@ static void test_pool(void)
 /* Registration information */
 
 static CU_TestInfo list_test_pool[] = {
-  {"test_pool", test_pool},
+  {"pool", test_pool},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_general_pool", NULL, NULL, list_test_pool},
+  {"general_pool", NULL, NULL, list_test_pool},
   CU_SUITE_INFO_NULL
 };
 

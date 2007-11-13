@@ -28,17 +28,15 @@
  *  </pre>
  */
 
-#ifndef TEST_REGISTER_UTILITES_H_SEEN
-#define TEST_REGISTER_UTILITES_H_SEEN
+#include <test/common.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-CU_ErrorCode test_register_utilities(void);
-/**< 
- *  Registers all tests for the ASCEND utilities component.
- *  Returns a CUnit error code (CUE_SUCCESS if no errors).
- */
+PROTO_SUITE(utilities)
 
-#endif  /* TEST_REGISTER_UTILITES_H_SEEN */
+#ifdef __cplusplus
+}
+#endif
+

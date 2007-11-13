@@ -190,12 +190,12 @@ static void test_ascPanic(void)
 /* Registration information */
 
 static CU_TestInfo ascPanic_test_list[] = {
-  {"test_ascPanic", test_ascPanic},
+  {"ascPanic", test_ascPanic},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_utilities_ascPanic", NULL, NULL, ascPanic_test_list},
+  {"utilities_ascPanic", NULL, NULL, ascPanic_test_list},
   CU_SUITE_INFO_NULL
 };
 

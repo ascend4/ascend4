@@ -128,12 +128,12 @@ static void test_hashpjw(void)
 /* Registration information */
 
 static CU_TestInfo hashpjw_test_list[] = {
-  {"test_hashpjw", test_hashpjw},
+  {"hashpjw", test_hashpjw},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_general_hashpjw", NULL, NULL, hashpjw_test_list},
+  {"general_hashpjw", NULL, NULL, hashpjw_test_list},
   CU_SUITE_INFO_NULL
 };
 

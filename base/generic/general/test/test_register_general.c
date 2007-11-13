@@ -21,10 +21,21 @@
  *  COPYING.
  */
 
-#include "CUnit/CUnit.h"
 #include <utilities/ascConfig.h>
 #include "test_register_general.h"
 
+#define TESTS(T) \
+	T(dstring) \
+	T(hashpjw) \
+	T(list) \
+	T(listio) \
+	T(pool) \
+	T(pretty) \
+	T(stack) \
+	T(table) \
+	T(tm_time) \
+	T(ospath)
+/* 	T(qsort1) */
 
 #define PROTO_GENERAL(NAME) PROTO(general,NAME)
 TESTS(PROTO_GENERAL)
@@ -36,11 +47,5 @@ TESTS(PROTO_GENERAL)
 		return result; \
 	}
 
-#define REGISTER_SUITE(SUITENAME,TESTS) \
-	CU_ErrorCode test_register_##SUITENAME(void){ \
-		CU_ErrorCode result = CUE_SUCCESS; \
-		TESTS(REGISTER_TEST) \
-		return result; \
-	}	
-
 REGISTER_SUITE(general,TESTS)
+

@@ -318,12 +318,12 @@ static void test_stack(void)
 /* Registration information */
 
 static CU_TestInfo stack_test_list[] = {
-  {"test_stack", test_stack},
+  {"stack", test_stack},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_general_stack", NULL, NULL, stack_test_list},
+  {"general_stack", NULL, NULL, stack_test_list},
   CU_SUITE_INFO_NULL
 };
 

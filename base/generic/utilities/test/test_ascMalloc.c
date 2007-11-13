@@ -1194,12 +1194,12 @@ static void test_ascMalloc(void)
 /* Registration information */
 
 static CU_TestInfo ascMalloc_test_list[] = {
-  {"test_ascMalloc", test_ascMalloc},
+  {"ascMalloc", test_ascMalloc},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_utilities_ascMalloc", NULL, NULL, ascMalloc_test_list},
+  {"utilities_ascMalloc", NULL, NULL, ascMalloc_test_list},
   CU_SUITE_INFO_NULL
 };
 

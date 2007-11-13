@@ -264,12 +264,12 @@ static void test_pretty(void)
 /* Registration information */
 
 static CU_TestInfo list_test_pretty[] = {
-  {"test_pretty", test_pretty},
+  {"pretty", test_pretty},
   CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-  {"test_general_pretty", NULL, NULL, list_test_pretty},
+  {"general_pretty", NULL, NULL, list_test_pretty},
   CU_SUITE_INFO_NULL
 };
 
