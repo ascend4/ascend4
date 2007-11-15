@@ -6,8 +6,10 @@ CFLAGS = -Wall -g
 SCONS_OPTIONS = CC="gcc" \
 	CXX="g++" \
 	INSTALL_PREFIX=/usr \
-	WITH_DOC_BUILD=0 \
-	WITH_DOC_INSTALL=1
+	WITH_DOC=1 \
+	F2C_LIB=gfortran \
+	F2C_LIBPATH=/usr/lib/gcc/i486-linux-gnu/4.2/
+
 SCONS= scons $(SCONS_OPTIONS)
 
 export DH_VERBOSE=1
@@ -31,7 +33,7 @@ DATADIR=$(INSTALLROOT)/usr/share
 build: build-stamp
 build-stamp:
 	dh_testdir
-	cd $(CURDIR) && $(SCONS) libascend tcltk pygtk models
+	cd $(CURDIR) && $(SCONS)
 	touch build-stamp
 
 clean:
@@ -74,7 +76,7 @@ install: build
 binary-indep:
 	dh_testdir
 	dh_testroot
-	-cd $(CUR_DIR) && $(SCONS) doc	
+	cd $(CURDIR) && $(SCONS) doc
 
 # Build architecture-dependent files here.
 binary-arch: build install
