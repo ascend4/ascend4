@@ -1,5 +1,7 @@
 REQUIRE "atoms.a4l";
 
+IMPORT "ipopt";
+
 MODEL test1;
 	x,y IS_A factor;
 	
