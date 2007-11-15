@@ -24,7 +24,7 @@ if platform.system()=="Windows":
 	default_install_assets = "glade/"
 	icon_extension = '.png'
 	default_tcl = "c:\\Tcl"
-	if os.environ.get('MSYSTEM')=="MINGW32":
+	if os.environ.get('MSYSTEM'):
 		default_tcl_libpath="$TCL\\bin"
 	else:
 		default_tcl_libpath="$TCL\\lib"
@@ -755,7 +755,7 @@ def c_escape(str):
 envadditional={}
 
 tools = [
-	'lex', 'yacc','fortran', 'swig', 'nsis' ,'substinfile'
+	'lex', 'yacc', 'fortran', 'swig', 'nsis', 'substinfile'
 	,'disttar', 'tar'
 ]
 if platform.system()=="Windows":

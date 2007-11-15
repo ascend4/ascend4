@@ -1493,7 +1493,7 @@ if __name__=='__main__':
 			os.environ['PYTHONPATH']=SEP.join(envpypath)
 			restart = 1
 
-	if restart:
+	if restart and platform.system()!="Windows":
 		script = os.path.join(sys.path[0],"test.py")					
 		sys.stderr.write("Restarting with...\n")
 		sys.stderr.write("  export LD_LIBRARY_PATH=%s\n" % os.environ.get(LD_LIBRARY_PATH))
