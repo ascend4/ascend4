@@ -1,449 +1,321 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- - - - - - - - - - - - - -  - - - - - - - - - -  - - - - - - - - -
-Syntax definition file for ASCEND modelling language.
-Put this file into /usr/share/gtksourceview-[VERSION]/language-specs/ascend.lang
+<!--
 
-John Pye (C) 2007
-- - - - - - - - - - - - -  - - - - - - - - - -  - - - - - - - - - - -->
+ Authors: Marco Barisione, Emanuele Aina
+ Copyright (C) 2005-2007 Marco Barisione <barisione@gmail.com>
+ Copyright (C) 2005-2007 Emanuele Aina
 
-<!-- gtksourceview ASCEND IV language specification -->
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Library General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
 
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Library General Public License for more details.
+
+ You should have received a copy of the GNU Library General Public
+ License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ Boston, MA 02111-1307, USA.
+
+-->
 <language id="ascend" _name="ASCEND" version="2.0" _section="Scientific">
     <metadata>
-        <property name="mimetypes">text/x-ascend-model</property>
-        <property name="globs">*.a4c;*.a4l</property>
-        <property name="block-comment-start">(*</property>
-        <property name="block-comment-end">*)</property>
+      <property name="mimetypes">text/x-ascend-model</property>
+      <property name="globs">*.a4c;*.a4l</property>
+      <property name="line-comment-start">//</property>
+      <property name="block-comment-start">(*</property>
+      <property name="block-comment-end">*)</property>
     </metadata>
 
     <styles>
         <style id="comment"           _name="Comment"             map-to="def:comment"/>
         <style id="error"             _name="Error"               map-to="def:error"/>
         <style id="string"            _name="String"              map-to="def:string"/>
-        <style id="common-defines"    _name="Common Defines"      map-to="def:special-constant"/>
         <style id="preprocessor"      _name="Preprocessor"        map-to="def:preprocessor"/>
+        <style id="common-defines"    _name="Common Defines"      map-to="def:special-constant"/>
         <style id="included-file"     _name="Included File"       map-to="def:string"/>
+        <style id="char"              _name="Character"           map-to="def:character"/>
         <style id="keyword"           _name="Keyword"             map-to="def:keyword"/>
         <style id="type"              _name="Data Type"           map-to="def:type"/>
         <style id="storage-class"     _name="Storage Class"       map-to="def:type"/>
+        <style id="printf"            _name="printf Conversion"   map-to="def:character"/>
         <style id="escaped-character" _name="Escaped Character"   map-to="def:special-char"/>
         <style id="floating-point"    _name="Floating point number" map-to="def:floating-point"/>
         <style id="decimal"           _name="Decimal number"      map-to="def:decimal"/>
+        <style id="octal"             _name="Octal number"        map-to="def:base-n-integer"/>
+        <style id="hexadecimal"       _name="Hexadecimal number"  map-to="def:base-n-integer"/>
         <style id="boolean"           _name="Boolean value"       map-to="def:boolean"/>
-    	<style id="builtin-function"  _name="Builtin Function"    map-to="def:builtin"/>
-    	<style id="builtin-method"    _name="Builtin Method"      map-to="def:builtin"/>
     </styles>
 
-	<definitions>
-		<context id="ascend">
+    <definitions>
+        <!-- TODO: what about scanf ? -->
+        <!-- man 3 printf -->
+        <context id="printf" style-ref="printf" extend-parent="false">
+            <match extended="true">
+                \%\%|
+                \%([1-9][0-9]*\$)?
+                [#0\-\ \+\'I]*
+                (\-?[1-9][0-9]*)?
+                (\.\-?[1-9][0-9]*)?
+                (hh|ll|[hlLqjzt])?
+                [diouxXeEfFgGaAcsCSpnm]
+            </match>
+        </context>
 
-<!-- Comments -->
+        <!-- http://en.wikipedia.org/wiki/C_syntax#Strings -->
+        <define-regex id="escaped-character" extended="true">
+            \\(                   # leading backslash
+            [\\\"\'nrtfav\?e] |   # escaped character
+            [0-7]{1,3} |          # one, two, or three octal digits
+            x[0-9A-Fa-f]{0,2}     # 'x' followed by zero, one, or two hex digits
+            )
+        </define-regex>
 
-			<context id="comment-multiline" style-ref="comment">
-				<start>\(\*</start>
-				<end>\*\)</end>
-				<include>
-					<context ref="def:in-comment"/>
-				</include>
-			</context>
+        <context id="ascend">
+            <include>
 
-			<context id="close-comment-outside-comment" style-ref="error">
-				<match>\*\)</match>
-			</context>
+                <!-- gtk-doc -->
+                <context ref="gtk-doc:inline-docs-section"/>
 
-<!-- REQUIRE and IMPORT -->
+                <!-- Comments -->
+                <context id="comment" style-ref="comment" end-at-line-end="true">
+                    <start>//</start>
+                    <include>
+                      <context ref="def:in-line-comment"/>
+                    </include>
+                </context>
 
-            <context id="include" style-ref="preprocessor">
-                <match extended="true">
-					^\s*
-					(REQUIRE|IMPORT)\s*
-					(".*?"|&lt;.*&gt;)
-                </match>
-                <include>
-                    <context id="included-file" sub-pattern="2" style-ref="included-file"/>
-                </include>
-            </context>
+                <context id="comment-multiline" style-ref="comment">
+                    <start>\(\*</start>
+                    <end>\*\)</end>
+                    <include>
+                        <context ref="def:in-comment"/>
+                    </include>
+                </context>
 
-			<context id="string" style-ref="string" end-at-line-end="true">
-				<start>"</start>
-				<end>"</end>
-			</context>
+                <context id="close-comment-outside-comment" style-ref="error">
+                    <match>\*\)(?!\(*)</match>
+                </context>
 
-		<!-- Keywords -->
+                <!-- Preprocessor -->
+                <define-regex id="preproc-start">^\s*#\s*</define-regex>
 
-			<context id="keywords" style-ref="keyword">
-				<keyword>ADD</keyword>
-				<keyword>AND</keyword>
-				<keyword>ALIASES</keyword>
-				<keyword>ARE_ALIKE</keyword>
-				<keyword>ARE_THE_SAME</keyword>
-				<keyword>ARE_NOT_THE_SAME</keyword>
-				<keyword>ASSERT</keyword>
-				<keyword>ATOM</keyword>
-				<keyword>CALL</keyword>	
-				<keyword>CASE</keyword>	
-				<keyword>CARD</keyword>
-				<keyword>CHECK</keyword>
-				<keyword>CHOICE</keyword>
-				<keyword>CONSTANT</keyword>
-				<keyword>CONDITIONAL</keyword>
-				<keyword>CREATE</keyword>
-				<keyword>DATA</keyword>
-				<keyword>DEFAULT</keyword>
-				<keyword>DEFINITION</keyword>
-				<keyword>DO</keyword>
-				<keyword>ELSE</keyword>
-				<keyword>END</keyword>
-				<keyword>FIX</keyword>
-				<keyword>FOR</keyword>
-				<keyword>FREE</keyword>
-				<keyword>IF</keyword>
-				<keyword>IMPORT</keyword>
-				<keyword>IN</keyword>
-				<keyword>INPUT</keyword>
-				<keyword>INTERSECTION</keyword>
-				<keyword>IS_A</keyword>
-				<keyword>IS_REFINED_TO</keyword>
-				<keyword>MAX</keyword>
-				<keyword>MAXIMIZE</keyword>
-				<keyword>METHOD</keyword>
-				<keyword>METHODS</keyword>
-				<keyword>MIN</keyword>
-				<keyword>MINIMIZE</keyword>
-				<keyword>MODEL</keyword>
-				<keyword>NOTES</keyword>
-				<keyword>OF</keyword>
-				<keyword>OR</keyword>
-				<keyword>OTHERWISE</keyword>
-				<keyword>OUTPUT</keyword>
-				<keyword>PROVIDE</keyword>
-				<keyword>PROD</keyword>
-				<keyword>REPLACE</keyword>
-				<keyword>REQUIRE</keyword>
-				<keyword>REFINES</keyword>
-				<keyword>RUN</keyword>
-				<keyword>SATISFIED</keyword>
-				<keyword>SELECT</keyword>
-				<keyword>SELF</keyword>
-				<keyword>STUDY</keyword>
-				<keyword>SUCH_THAT</keyword>
-				<keyword>SUM</keyword>
-				<keyword>SWITCH</keyword>
-				<keyword>THEN</keyword>
-				<keyword>UNIVERSAL</keyword>
-				<keyword>UNION</keyword>
-				<keyword>UNITS</keyword>
-				<keyword>USE</keyword>
-				<keyword>WHEN</keyword>
-				<keyword>WHERE</keyword>
-				<keyword>WITH_VALUE</keyword>
-				<keyword>WILL_BE</keyword>
-				<keyword>WILL_BE_THE_SAME</keyword>
-				<keyword>WILL_NOT_BE_THE_SAME</keyword>
-			</context>
+                <context id="if0-comment" style-ref="comment">
+                    <start>\%{preproc-start}if\b\s*0\b</start>
+                    <end>\%{preproc-start}(endif|else|elif)\b</end>
+                    <include>
+                        <context id="if-in-if0">
+                            <start>\%{preproc-start}if(n?def)?\b</start>
+                            <end>\%{preproc-start}endif\b</end>
+                            <include>
+                                <context ref="if-in-if0"/>
+                                <context ref="def:in-comment"/>
+                            </include>
+                        </context>
+                        <context ref="def:in-comment"/>
+                    </include>
+                </context>
 
-			<context id="types" style-ref="type">
-				<keyword>constant</keyword>
-				<keyword>critical_compressibility</keyword>
-				<keyword>acentric_factor</keyword>
-				<keyword>UNIFAC_size</keyword>
-				<keyword>Wilson_constant</keyword>
-				<keyword>vapor_pressure_constant</keyword>
-				<keyword>factor_constant</keyword>
-				<keyword>molar_weight_constant</keyword>
-				<keyword>atomic_mass_constant</keyword>
-				<keyword>temperature_constant</keyword>
-				<keyword>boiling_temperature</keyword>
-				<keyword>critical_temperature</keyword>
-				<keyword>reference_temperature</keyword>
-				<keyword>UNIFAC_a</keyword>
-				<keyword>length_constant</keyword>		
-				<keyword>pressure_constant</keyword>
-				<keyword>critical_pressure</keyword>
-				<keyword>reference_pressure</keyword>
-				<keyword>molar_volume_constant</keyword>
-				<keyword>critical_volume</keyword>
-				<keyword>reference_molar_volume</keyword>
-				<keyword>reference_mass_density</keyword>
-				<keyword>molar_energy_constant</keyword>
-				<keyword>reference_molar_energy</keyword>
-				<keyword>enthalpy_of_formation_constant</keyword>
-				<keyword>enthalpy_of_formation_constant</keyword>
-				<keyword>heat_of_vaporization_constant</keyword>
-				<keyword>Wilson_energy_constant</keyword>
-				<keyword>molar_entropy_constant</keyword>
-				<keyword>reference_molar_entropy</keyword>
-				<keyword>heat_capacity_constant</keyword>
-				<keyword>heat_capacity_a_constant</keyword>
-				<keyword>heat_capacity_b_constant</keyword>
-				<keyword>heat_capacity_c_constant</keyword>
-				<keyword>heat_capacity_d_constant</keyword>
-				<keyword>gas_constant</keyword>
-				<keyword>gravity_constant</keyword>
-				<keyword>circle_constant</keyword>
-				<keyword>speed_of_light</keyword>
-				<keyword>planck_constant</keyword>
-				<keyword>avogadro_constant</keyword>
-				<keyword>permittivity_constant</keyword>
-				<keyword>permeability_constant</keyword>
-				<keyword>electron_charge</keyword>
-				<keyword>electron_mass</keyword>
-				<keyword>proton_mass</keyword>
-				<keyword>boolean_start_true</keyword>
-				<keyword>boolean_start_false</keyword>
-				<keyword>start_true</keyword>
-				<keyword>start_false</keyword>
-				<keyword>free_energy_of_formation_constant</keyword>
-				<keyword>permeability_constant</keyword>
+                <context id="include" style-ref="preprocessor">
+                    <match extended="true">
+                            \%{preproc-start}
+                            (include|import)\s*
+                            (".*?"|&lt;.*&gt;)
+                    </match>
+                    <include>
+                        <context id="included-file" sub-pattern="2" style-ref="included-file"/>
+                    </include>
+                </context>
 
-				<keyword>bound_width</keyword>
-				<keyword>scaling_constant</keyword>
-				<keyword>ode_counter</keyword>
-				<keyword>obs_counter</keyword>
-				<keyword>real_parameter</keyword>
-				<keyword>length_parameter</keyword>
-				<keyword>positive_variable</keyword>
-				<keyword>variable</keyword>
-				<keyword>fraction</keyword>
-				<keyword>positive_factor</keyword>
-				<keyword>small_factor</keyword>
-				<keyword>small_positive_factor</keyword>
-				<keyword>reduced_pressure</keyword>
-				<keyword>exp_sub</keyword>
-				<keyword>power_sub</keyword>
-				<keyword>inverse_temperature</keyword>
-				<keyword>force</keyword>
-				<keyword>force_per_length</keyword>
-				<keyword>surface_tension</keyword>
-				<keyword>vapor_pressure</keyword>
-				<keyword>k_constant</keyword>
-				<keyword>molar_mass</keyword>
-				<keyword>molar_rate</keyword>
-				<keyword>mass</keyword>
-				<keyword>mole_scale</keyword>
-				<keyword>mole</keyword>
-				<keyword>mass_rate</keyword>
-				<keyword>mass_rate_rate</keyword>
-				<keyword>mass_flux</keyword>
-				<keyword>molar_rate_scale</keyword>
-				<keyword>conc_rate</keyword>
-				<keyword>mole_fraction</keyword>
-				<keyword>mass_fraction</keyword>
-				<keyword>molar_volume</keyword>
-				<keyword>volume_scale</keyword>
-				<keyword>volume_rate_scale</keyword>
-				<keyword>volume_rate_square</keyword>
-				<keyword>volume_expansivity</keyword>
-				<keyword>molar_density</keyword>
-				<keyword>mass_density</keyword>
-				<keyword>density_rate</keyword>
-				<keyword>molar_energy</keyword>
-				<keyword>energy_scale</keyword>
-				<keyword>energy_rate_scale</keyword>
-				<keyword>energy_rate</keyword>
-				<keyword>heat_capacity</keyword>
-				<keyword>heat_transfer_coefficient</keyword>
-				<keyword>molar_energy_rate</keyword>
-				<keyword>molar_heat_capacity</keyword>
-				<keyword>molar_entropy</keyword>
-				<keyword>relative_volatility</keyword>
-				<keyword>power_per_length</keyword>
-				<keyword>power_per_volume</keyword>
-				<keyword>pressure_per_temperature</keyword>
-				<keyword>irradiance</keyword>
-				<keyword>irradiation</keyword>
-				<keyword>specific_energy</keyword>
-				<keyword>specific_enthalpy</keyword>
-				<keyword>specific_entropy</keyword>
-				<keyword>specific_heat_capacity</keyword>
-				<keyword>specific_volume</keyword>
-				<keyword>specific_power</keyword>
-				<keyword>specific_energy_rate</keyword>
-				<keyword>entropy</keyword>
-				<keyword>entropy_rate</keyword>
-				<keyword>conc_rate</keyword>
-				<keyword>partition_coefficient</keyword>
-				<keyword>monetary_unit</keyword>
-				<keyword>cost_per_volume</keyword>
-				<keyword>cost_per_mass</keyword>
-				<keyword>cost_per_time</keyword>
-				<keyword>cost_per_energy</keyword>
-				<keyword>inverse_area</keyword>
-				<keyword>angle</keyword>
-				<keyword>solid_angle</keyword>
-				<keyword>time</keyword>
-				<keyword>speed</keyword>
-				<keyword>acceleration</keyword>
-				<keyword>stiffness</keyword>
-				<keyword>viscosity</keyword>
-				<keyword>thermal_conductivity</keyword>
-				<keyword>diffusivity</keyword>
-				<keyword>voltage</keyword>
-				<keyword>resistance</keyword>
-				<keyword>current</keyword>
-				<keyword>capacitance</keyword>
-				<keyword>inductance</keyword>
-				<keyword>magnetic_field</keyword>
-				<keyword>electric_field</keyword>
-				<keyword>delta_distance</keyword>
-				<keyword>delta_temperature</keyword>
-				<keyword>temperature_rate</keyword>
-				<keyword>delta_pressure</keyword>
-				<keyword>delta_mass</keyword>
-				<keyword>delta_mole</keyword>
-				<keyword>delta_mass_rate</keyword>
-				<keyword>delta_molar_rate</keyword>
-				<keyword>delta_volume_rate</keyword>
-				<keyword>delta_energy_rate</keyword>
-				<keyword>delta_molar_energy_rate</keyword>
-				<keyword>delta_entropy_rate</keyword>
-				<keyword>mass_sec</keyword>
-				<keyword>mole_sec</keyword>
-				<keywork>rate</keywork>
+                <context id="preprocessor" style-ref="preprocessor" end-at-line-end="true">
+                    <start extended="true">
+                            \%{preproc-start}
+                            (define|undef|error|pragma|ident|if(n?def)?|else|elif|endif|line|warning)
+                            \b
+                    </start>
+                    <include>
+                        <context ref="def:line-continue" ignore-style="true"/>
+                        <context ref="string" ignore-style="true"/>
+                        <context ref="comment"/>
+                        <context ref="comment-multiline"/>
+                    </include>
+                </context>
 
-				<keyword>factor</keyword>
-				<keyword>distance</keyword>
-				<keyword>pressure</keyword>
-				<keyword>stress</keyword>
-				<keyword>moment</keyword>
-				<keyword>area</keyword>
-				<keyword>volume</keyword>
-				<keyword>temperature</keyword>
-				<keyword>energy</keyword>
-				<keyword>volume_rate</keyword>
-				<keyword>frequency</keyword>
-				<keyword>factor</keyword>
-			</context>
+                <context id="string" style-ref="string" end-at-line-end="true">
+                    <start>"</start>
+                    <end>"</end>
+                    <include>
+                        <context ref="printf"/>
+                        <context id="escaped-character" style-ref="escaped-character">
+                            <match>\%{escaped-character}</match>
+                        </context>
+                        <context ref="def:line-continue"/>
+                    </include>
+                </context>
 
-			<context id="storage-class" style-ref="storage-class">
-				<keyword>relation</keyword>
-				<keyword>logic_relation</keyword>
-				<keyword>solver_var</keyword>
-				<keyword>lower_bound</keyword>
-				<keyword>upper_bound</keyword>
-				<keyword>nominal</keyword>
-				<keyword>included</keyword>
-				<keyword>message</keyword>
-				<keyword>fixed</keyword>
-				<keyword>boolean_var</keyword>
-				<keyword>generic_real</keyword>
-				<keyword>solver_int</keyword>
-				<keyword>relaxed</keyword>
-				<keyword>is_zero</keyword>
-				<keyword>solver_binary</keyword>
-				<keyword>solver_semi</keyword>
-			</context>
+                <context id="char" style-ref="char">
+                    <match>'(\%{escaped-character}|.)'</match>
+                </context>
 
-			<context id="common-defines" style-ref="common-defines">
-				<keyword>real_constant</keyword>
-				<keyword>integer_constant</keyword>
-				<keyword>symbol_constant</keyword>
-				<keyword>boolean_constant</keyword>
+                <!-- http://www.lysator.liu.se/c/ANSI-C-grammar-l.html -->
+                <context id="float" style-ref="floating-point">
+                    <match extended="true">
+                        (?&lt;![\w\.])
+                        ((\.[0-9]+ | [0-9]+\.[0-9]*) ([Ee][+-]?[0-9]*)? |
+                         ([0-9]+[Ee][+-]?[0-9]*))
+                        [fFlL]?
+                        (?![\w\.])
+                    </match>
+                </context>
 
-				<keyword>real</keyword>
-				<keyword>integer</keyword>
-				<keyword>symbol</keyword>
-				<keyword>boolean</keyword>
-				<keyword>set</keyword>
-			</context>
-				      
-			<context id="boolean" style-ref="boolean">
-				<keyword>FALSE</keyword>
-				<keyword>TRUE</keyword>
-			</context>
+                <context id="hexadecimal" style-ref="hexadecimal">
+                    <match extended="true">
+                        (?&lt;![\w\.])
+                        0[xX][a-fA-F0-9]+[uUlL]*
+                        (?![\w\.])
+                    </match>
+                </context>
 
-			<context id="builtin-function" style-ref="builtin-function">
-				<prefix>(?&lt;![\w\.])</prefix>
-				<keyword>abs</keyword>
-				<keyword>(arc)?(cos|sin|tan)h?</keyword>
-				<keyword>erf</keyword>
-				<keyword>exp</keyword>
-				<keyword>lnm?</keyword>
-				<keyword>log10</keyword>
-			</context>
+                <context id="octal" style-ref="octal">
+                    <match extended="true">
+                        (?&lt;![\w\.])
+                        0[0-7]+[uUlL]*
+                        (?![\w\.])
+                    </match>
+                </context>
 
-			<context id="builtin-method" style-ref="builtin-method">
-				<keyword>default_self</keyword>
-				<keyword>on_load</keyword>
-				<keyword>ode_init</keyword>
-				<keyword>specify</keyword>
-				<keyword>values</keyword>
-				<keyword>self_test</keyword>
-				<keyword>ClearAll</keyword>
-				<keyword>bound_self</keyword>
-				<keyword>scale_self</keyword>
-				<keyword>reset</keyword>
-			</keyword-list>
+                <context id="decimal" style-ref="decimal">
+                    <match extended="true">
+                        (?&lt;![\w\.])
+                        [0-9]+[uUlL]*
+                        (?![\w\.])
+                    </match>
+                </context>
 
-			<!-- http://www.lysator.liu.se/c/ANSI-C-grammar-l.html -->
-			<context id="float" style-ref="floating-point">
-				<match extended="true">
-				    (?&lt;![\w\.])
-				    ((\.[0-9]+ | [0-9]+\.[0-9]*) ([Ee][+-]?[0-9]*)? |
-				     ([0-9]+[Ee][+-]?[0-9]*))
-				    [fFlL]?
-				    (?![\w\.])
-				</match>
-			</context>
+                <!-- Keywords -->
+                <context id="keywords" style-ref="keyword">
+		<keyword>ADD</keyword>
+		<keyword>AND</keyword>
+		<keyword>ALIASES</keyword>
+		<keyword>ARE_ALIKE</keyword>
+		<keyword>ARE_THE_SAME</keyword>
+		<keyword>ARE_NOT_THE_SAME</keyword>
+		<keyword>ASSERT</keyword>
+		<keyword>ATOM</keyword>
+		<keyword>CALL</keyword>	
+		<keyword>CASE</keyword>	
+		<keyword>CARD</keyword>
+		<keyword>CHECK</keyword>
+		<keyword>CHOICE</keyword>
+		<keyword>CONSTANT</keyword>
+		<keyword>CONDITIONAL</keyword>
+		<keyword>CREATE</keyword>
+		<keyword>DATA</keyword>
+		<keyword>DEFAULT</keyword>
+		<keyword>DEFINITION</keyword>
+		<keyword>DO</keyword>
+		<keyword>ELSE</keyword>
+		<keyword>END</keyword>
+		<keyword>FIX</keyword>
+		<keyword>FOR</keyword>
+		<keyword>FREE</keyword>
+		<keyword>IF</keyword>
+		<keyword>IMPORT</keyword>
+		<keyword>IN</keyword>
+		<keyword>INPUT</keyword>
+		<keyword>INTERSECTION</keyword>
+		<keyword>IS_A</keyword>
+		<keyword>IS_REFINED_TO</keyword>
+		<keyword>MAX</keyword>
+		<keyword>MAXIMIZE</keyword>
+		<keyword>METHOD</keyword>
+		<keyword>METHODS</keyword>
+		<keyword>MIN</keyword>
+		<keyword>MINIMIZE</keyword>
+		<keyword>MODEL</keyword>
+		<keyword>NOTES</keyword>
+		<keyword>OF</keyword>
+		<keyword>OR</keyword>
+		<keyword>OTHERWISE</keyword>
+		<keyword>OUTPUT</keyword>
+		<keyword>PROVIDE</keyword>
+		<keyword>PROD</keyword>
+		<keyword>REPLACE</keyword>
+		<keyword>REQUIRE</keyword>
+		<keyword>REFINES</keyword>
+		<keyword>RUN</keyword>
+		<keyword>SATISFIED</keyword>
+		<keyword>SELECT</keyword>
+		<keyword>SELF</keyword>
+		<keyword>STUDY</keyword>
+		<keyword>SUCH_THAT</keyword>
+		<keyword>SUM</keyword>
+		<keyword>SWITCH</keyword>
+		<keyword>THEN</keyword>
+		<keyword>UNIVERSAL</keyword>
+		<keyword>UNION</keyword>
+		<keyword>UNITS</keyword>
+		<keyword>USE</keyword>
+		<keyword>WHEN</keyword>
+		<keyword>WHERE</keyword>
+		<keyword>WITH_VALUE</keyword>
+		<keyword>WILL_BE</keyword>
+		<keyword>WILL_BE_THE_SAME</keyword>
+		<keyword>WILL_NOT_BE_THE_SAME</keyword>
+                </context>
 
-			<context id="decimal" style-ref="decimal">
-				<match extended="true">
-					(?&lt;![\w\.])
-					[0-9]+[uUlL]*
-					(?![\w\.])
-				</match>
-			</context>
+                <context id="types" style-ref="type">
+                    <keyword>_Bool</keyword>
+                    <keyword>_Complex</keyword>
+                    <keyword>_Imaginary</keyword>
+                    <keyword>bool</keyword>
+                    <keyword>char</keyword>
+                    <keyword>double</keyword>
+                    <keyword>float</keyword>
+                    <keyword>int</keyword>
+                    <keyword>long</keyword>
+                    <keyword>short</keyword>
+                    <keyword>signed</keyword>
+                    <keyword>size_t</keyword>
+                    <keyword>unsigned</keyword>
+                    <keyword>void</keyword>
+                </context>
 
-			<!-- dimensions -->
+                <context id="storage-class" style-ref="storage-class">
+                    <keyword>auto</keyword>
+                    <keyword>const</keyword>
+                    <keyword>extern</keyword>
+                    <keyword>inline</keyword>
+                    <keyword>register</keyword>
+                    <keyword>restrict</keyword>
+                    <keyword>static</keyword>
+                    <keyword>volatile</keyword>
+                </context>
 
-			<context id="dimension" style-ref="storage-class">
-				<match extended="true">
-					\bDIMENSIONLESS|DIMENSION (1/)?(([MQTLCEPS]|TMP|LUM)(\^[0-9]+)?)([\*\/]([MQTLCEPS]|TMP|LUM)(\^[0-9]+)?)*\b
-				</match>
-			</context>
+                <context id="common-defines" style-ref="common-defines">
+                    <keyword>NULL</keyword>
+                    <keyword>MAX</keyword>
+                    <keyword>MIN</keyword>
+                    <keyword>TRUE</keyword>
+                    <keyword>FALSE</keyword>
+                    <keyword>__LINE__</keyword>
+                    <keyword>__DATA__</keyword>
+                    <keyword>__FILE__</keyword>
+                    <keyword>__func__</keyword>
+                    <keyword>__TIME__</keyword>
+                    <keyword>__STDC__</keyword>
+                </context>
 
-			<!-- units -->
+                <!-- C99 booleans -->                
+                <context id="boolean" style-ref="boolean">
+                    <keyword>true</keyword>
+                    <keyword>false</keyword>
+                </context>
 
-			<context id="units" style-ref="storage-class">
-				<match extended="true">\{[A-Za-z^0-9_/\*\?]+\}</regex>
-			</context>
-
-			<!-- equation labels -->
-
-			<context id="equation-label" style="string">
-				<match extended="true">^\s*[a-zA-Z][a-zA-Z0-9_]*(\[[a-zA-Z][a-zA-Z0-9_]*\]|\[0-9]+\])?\:</match>
-			</context>
-
-		</context>
-	</definitions>
-<!--
-
-	<block-comment _name = "Note" style= "Others 2" end-at-line-end = "FALSE">
-		<start-regex>^\s*NOTES</start-regex>
-		<end-regex>END\s+NOTES</end-regex>
-	</block-comment>
-
-	<block-comment _name = "Stop" style= "Comment" end-at-line-end = "FALSE">
-		<start-regex>STOP\s+\{</start-regex>
-		<end-regex>\}</end-regex>
-	</block-comment>
-
-	<string _name="Text" style="String" end-at-line-end="FALSE">
-		<start-regex>&quot;</start-regex>
-		<end-regex>&quot;</end-regex>
-	</string>
-
-	<string _name="String Constant" style="String" end-at-line-end="FALSE">
-		<start-regex>&apos;</start-regex>
-		<end-regex>&apos;</end-regex>
-	</string>
-
-	<pattern-item _name="Integer Literals" style="Decimal">
-		<regex>\b[0-9]+\b</regex>
-	</pattern-item>
-
-	<pattern-item _name="Punctuation" style="Keyword">
-		<regex>(:=|[\+\*\/\-\|\^\(\)=;-])</regex>
-	</pattern-item>
--->               
+            </include>
+        </context>
+    </definitions>
 </language>

@@ -56,6 +56,8 @@ typedef struct relation_term Term;
 
 typedef struct relation RelationINF;	/**< infix relation */
 
+typedef int ExprSymFilterFn(struct Instance *);
+
 #define K_TERM(i) ((Term *)(i))
 /**< Cast the i back to Term */
 
@@ -66,7 +68,7 @@ extern Term *TermSimplify(Term *term);
  */
 
 extern Term *Derivative(Term *term, unsigned long wrt,
-                        int (*filter)(struct Instance *));
+                        ExprSymFilterFn *filter);
 /**<
  *  The low level routine which actually does the symbolic differentiation
  *  with sub expression simplification/elimination. In general not a safe
@@ -90,7 +92,7 @@ extern void PrepareDerivatives(int setup, int n_buffers, int buffer_length);
  */
 
 extern Term *TermDerivative(Term *term, unsigned long wrt,
-                            int (*filter)(struct Instance *) );
+                            ExprSymFilterFn *filter);
 /**<
  *  TermDerivative is the function that is used by RelationDerivative
  *  to generate the derivatives. Again it is perhaps more efficient
@@ -98,7 +100,7 @@ extern Term *TermDerivative(Term *term, unsigned long wrt,
  */
 
 extern RelationINF *RelDerivative(RelationINF *rel, unsigned long wrt,
-                                  int (*filter)(struct Instance *));
+                                  ExprSymFilterFn *filter);
 /**<
  *  Given a infix relation, a index into its variable list and a function
  *  filter used to classify REAL_ATOM_INSTANCES as variables,parameters or
@@ -130,7 +132,7 @@ extern void RelDestroySloppy(RelationINF *rel);
  */
 
 extern RelationINF *RelDeriveSloppy(RelationINF *rel, unsigned long wrt,
-                                    int (*filter)(struct Instance *));
+                                    ExprSymFilterFn *filter);
 /**<
  *  Given a infix relation, a index into its variable list and a function
  *  filter used to classify REAL_ATOM_INSTANCES as variables, parameters or
