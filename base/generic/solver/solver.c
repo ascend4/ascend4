@@ -223,10 +223,6 @@ static const struct StaticSolverRegistration slv_reg[]={
 /*	,{0,"MPS",&slv6_register} */
 /*	,{0,"NGSLV",&slv7_register} */
 /* 	,{0,"OPTSQP",&slv2_register} */
-	,{HAVE_CONOPT,"CONOPT",&slv8_register}
-	,{HAVE_LRSLV,"LRSLV",&slv9a_register}
-	,{HAVE_CMSLV,"CMSLV",&slv9_register}
-	,{0,NULL,NULL}
 #endif
 };
 
