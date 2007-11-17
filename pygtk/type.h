@@ -6,15 +6,6 @@
 #include <vector>
 
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <compiler/fractions.h>
-#include <compiler/compiler.h>
-#include <compiler/dimen.h>
-#include <compiler/child.h>
-#include <general/list.h>
-#include <compiler/module.h>
-#include <compiler/childinfo.h>
-#include <compiler/slist.h>
 #include <compiler/type_desc.h>
 }
 

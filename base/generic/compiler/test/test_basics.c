@@ -31,6 +31,8 @@
 #include <compiler/module.h>
 #include <compiler/parser.h>
 #include <compiler/library.h>
+#include <compiler/symtab.h>
+#include <compiler/simlist.h>
 
 #include <assertimpl.h>
 
@@ -80,6 +82,41 @@ static void test_parse_string_module(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_instantiate_string_module(void){
+	
+	const char *model = "\n\
+		DEFINITION relation\
+		    included IS_A boolean;\
+		    message	IS_A symbol;\
+		    included := TRUE;\
+		    message := 'none';\
+		END relation;\
+		MODEL test1;\n\
+			x IS_A real;\n\
+			x - 1 = 0;\n\
+		END test1;";
+
+	Asc_CompilerInit(1);
+
+	struct module_t *m;
+	int status;
+	
+	m = Asc_OpenStringModule(model, &status, ""/* name prefix*/);
+	CU_ASSERT(status==0); /* if successfully created */
+
+	status = zz_parse();
+	CU_ASSERT(status==0);
+
+	struct TypeDescription *t;
+	t = FindType(AddSymbol("test1"));
+	CU_ASSERT(t!=NULL);
+
+	struct Instance *inst = SimsCreateInstance(t->name, AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT(inst!=NULL);
+
+	Asc_CompilerDestroy();
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -88,7 +125,8 @@ static void test_parse_string_module(void){
 
 #define TESTS(T,X) \
 	T(init) \
-	X T(parse_string_module)
+	X T(parse_string_module) \
+	X T(instantiate_string_module)
 
 /* you shouldn't need to change the following */
 
@@ -96,13 +134,13 @@ static void test_parse_string_module(void){
 
 #define X ,
 
-static CU_TestInfo hello_test_list[] = {
+static CU_TestInfo basics_test_list[] = {
 	TESTS(TESTDECL,X)
 	X CU_TEST_INFO_NULL
 };
 
 static CU_SuiteInfo suites[] = {
-	{"test_compiler_hello", NULL, NULL, hello_test_list},
+	{"compiler_basics", NULL, NULL, basics_test_list},
 	CU_SUITE_INFO_NULL
 };
 

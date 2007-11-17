@@ -67,7 +67,7 @@ ASC_DLLSPEC void DestroyLibrary(void);
  *  using this function until InitializeLibrary() is called.
  */
 
-ASC_DLLSPEC struct TypeDescription*FindType(symchar *name);
+ASC_DLLSPEC struct TypeDescription *FindType(symchar *name);
 /**<
  *  Finds the type description associated with name.
  *  Returns NULL if unable to locate the type.
