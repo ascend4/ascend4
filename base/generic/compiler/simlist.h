@@ -27,12 +27,6 @@
 	@TODO Simulations need much better management than they currently get,
 	once we start building simulations out of other simulations.
 	For now this file is largely empty.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "instance_enum.h"
-	#include "compiler/compiler.h"
-	#include "general/list.h"
 *//*
 	by Ben Allan
 	Version: $Revision: 1.2 $
@@ -45,12 +39,12 @@
 #define ASC_SIMLIST_H
 
 #include "compiler.h"
+#include "instance_enum.h"
+#include <general/list.h>
 
 /**	@addtogroup compiler Compiler
 	@{
 */
-
-#include <utilities/ascConfig.h>
 
 ASC_DLLSPEC int g_compiler_timing;
 /**<  Global flag for whether to perform timing of compiler operations. */

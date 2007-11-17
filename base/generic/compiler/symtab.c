@@ -34,10 +34,6 @@
 #include "symtab.h"
 #include <general/hashpjw.h>
 
-#ifndef lint
-static CONST char SymbolTableID[] = "$Id: symtab.c,v 1.10 1998/03/17 12:36:52 ballan Exp $";
-#endif
-
 /*
  *  For various reasons which are still unclear to me, it is best to chose
  *  a symbol table size which is a prime number.
