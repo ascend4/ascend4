@@ -4675,8 +4675,10 @@ ChildListPtr FinishChildList(symchar *type, struct StatementList *stats)
   gl_destroy(childlist);
   ClearLCL();
   if (result == NULL) {
-    FPRINTF(ASCERR,"Unable to determine a child type in \"%s.\"\n",
-            SCP(type));
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+		,"Unable to determine a child type in '%s'."
+		,SCP(type)
+	);
   }
   return result;
 }
@@ -4770,7 +4772,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
 
   if(err!=0){
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR
-      ,"Model definition \"%s\" abandoned due to syntax errors."
+      ,"Model definition '%s' abandoned due to syntax errors."
       ,SCP(name)
     );
     DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);

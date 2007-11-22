@@ -23,11 +23,6 @@
 	Given the amount of time we spend looking for prototypes, we need
 	to be running distinct prototype libraries for models, atoms, and
 	possibly constants.
-
-	Require:
-	#include "utilities/ascConfig.h"
-	#include"instance_enum.h"
-	#include "compiler.h"
 *//*
 	by Tom Epperly
 	Version: $Revision: 1.7 $

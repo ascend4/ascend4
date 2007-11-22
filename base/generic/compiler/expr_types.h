@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006, 2007 Carnegie Mellon University
 	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
 
 	This program is free software; you can redistribute it and/or modify
