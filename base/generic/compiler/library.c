@@ -30,27 +30,23 @@
  * 
  */
 
-#include <utilities/ascConfig.h>
+#include "library.h"
+
 #include <utilities/ascMalloc.h>
+#include <utilities/error.h>
 
 #include "instance_enum.h"
 #include "cmpfunc.h"
-#include <general/list.h>
 
 #include "symtab.h"
 #include "notate.h"
 
-
 #include "functype.h"
 #include "expr_types.h"
-#include "child.h"
-#include "type_desc.h"
 #include "type_descio.h"
 #include "prototype.h"
 #include "dump.h"
 #include "typedef.h"
-#include "module.h"
-#include "library.h"
 
 /*
  * hashing on heap symbol pointer. SIZE must be 2^n (n even)
@@ -127,68 +123,66 @@ void InitializeLibrary(void)
   G__EXT_NAME 	= GetBaseTypeName(model_type & patch_type);
 }
 
-struct TypeDescription *FindRelationType(void)
-{
+struct TypeDescription *FindRelationType(void){
   if (g_relation_type==NULL) {
-    FPRINTF(ASCERR,
-            "FindRelationType called before RELATION_DEFINITION set.\n");
-    FPRINTF(ASCERR,"You need a system.a4l or equivalent loaded.\n");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+		,"FindRelationType called before RELATION_DEFINITION set."
+		" You need a system.a4l or equivalent loaded."
+	);
   }
   return g_relation_type;
 }
 
-struct TypeDescription *FindLogRelType(void)
-{
+struct TypeDescription *FindLogRelType(void){
   /* probably should be an assert instead of this if */
   if (g_logrel_type==NULL) {
-    FPRINTF(ASCERR,"FindLogRelType called before logrel defined.\n");
-    FPRINTF(ASCERR,"You need a system.a4l or equivalent loaded.\n");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+		,"FindLogRelType called before logrel defined. "
+		"You need a system.a4l or equivalent loaded."
+	);
   }
   return g_logrel_type;
 }
 
-struct TypeDescription *FindSetType(void)
-{
+struct TypeDescription *FindSetType(void){
   /* probably should be an assert instead of this if */
   if (g_set_type==NULL) {
-    FPRINTF(ASCERR,"FindSetType called before set defined.\n");
-    FPRINTF(ASCERR,"This is extremely odd!.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR
+		,"FindSetType called before set defined. This is extremely odd."
+	);
   }
   return g_set_type;
 }
 
-struct TypeDescription *FindWhenType(void)
-{
+struct TypeDescription *FindWhenType(void){
   /* probably should be an assert instead of this if */
   if (g_when_type==NULL) {
-    FPRINTF(ASCERR,"FindWhenType called before when defined.\n");
-    FPRINTF(ASCERR,"This is extremely odd!.\n");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+		,"FindWhenType called before when defined. This is extremely odd!"
+	);
   }
   return g_when_type;
 }
 
-struct TypeDescription *FindDummyType(void)
-{
+struct TypeDescription *FindDummyType(void){
   /* probably should be an assert instead of this if */
   if (g_dummy_type==NULL) {
-    FPRINTF(ASCERR,"FinddummyType called before when defined.\n");
-    FPRINTF(ASCERR,"This is extremely odd!.\n");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+		,"FindDummyType called before when defined. This is extremely odd!"
+	);
   }
   return g_dummy_type;
 }
 
-struct TypeDescription *FindExternalType(void)
-{
+struct TypeDescription *FindExternalType(void){
   /* probably should be an assert instead of this if */
   if (g_externalmodel_type==NULL) {
-    FPRINTF(ASCERR,"FindExternalType called before external defined.\n");
-    FPRINTF(ASCERR,"This is extremely odd!.\n");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"FindExternalType called before external defined. This is extremely odd!");
   }
   return g_externalmodel_type;
 }
 
-struct TypeDescription *FindType(symchar *name)
-{
+struct TypeDescription *FindType(symchar *name){
   struct LibraryStructure *ptr;
 
   if (name==NULL) return NULL;
@@ -209,8 +203,7 @@ struct TypeDescription *FindType(symchar *name)
   return NULL;
 }
 
-void DestroyLibrary(void)
-{
+void DestroyLibrary(void){
   register unsigned c;
   register struct LibraryStructure *ptr,*next;
   for(c=0;c<LIBRARYHASHSIZE;c++) {
@@ -235,8 +228,7 @@ void DestroyLibrary(void)
 }
 
 
-struct gl_list_t *FindFundamentalTypes(void)
-{
+struct gl_list_t *FindFundamentalTypes(void){
   register unsigned c;
   register struct LibraryStructure *ptr,*next;
   struct TypeDescription *d;
@@ -260,31 +252,38 @@ struct gl_list_t *FindFundamentalTypes(void)
   return fundies;
 }
 
-static int CmpDescNames(struct TypeDescription *desc1,
-                        struct TypeDescription *desc2)
-{
+
+static int CmpDescNames(
+		struct TypeDescription *desc1
+		,struct TypeDescription *desc2
+){
   assert(desc1&&desc2);
   return CmpSymchar(GetName(desc1),GetName(desc2));
 }
 
-static int CmpDescModNames(struct TypeDescription *desc1,
-                           struct TypeDescription *desc2)
-{
+
+static int CmpDescModNames(
+		struct TypeDescription *desc1
+		,struct TypeDescription *desc2
+){
   assert(desc1&&desc2);
   return strcmp(Asc_ModuleName(GetModule(desc1)),
                 Asc_ModuleName(GetModule(desc2)));
 }
 
-static int CmpDescModPtrs(struct TypeDescription *desc1,
-                          struct TypeDescription *desc2)
-{
+
+static int CmpDescModPtrs(
+		struct TypeDescription *desc1
+		,struct TypeDescription *desc2
+){
   assert(desc1&&desc2);
   return Asc_ModulesEqual(GetModule(desc1),GetModule(desc2));
 }
 
+
 static void ReplaceType(struct TypeDescription *desc,
-			struct LibraryStructure *ptr)
-{
+		struct LibraryStructure *ptr
+){
   DeletePrototype(GetName(desc));
   TrashType(GetName(desc));
   DestroyNotesOnType(LibraryNote(),GetName(desc));
@@ -292,9 +291,8 @@ static void ReplaceType(struct TypeDescription *desc,
   ptr->type = desc;
 }
 
-static
-struct TypeDescription *EquivalentExists(struct TypeDescription *desc)
-{
+
+static struct TypeDescription *EquivalentExists(struct TypeDescription *desc){
   struct TypeDescription *old;
   if (desc == NULL) {
     return NULL;
@@ -310,8 +308,8 @@ struct TypeDescription *EquivalentExists(struct TypeDescription *desc)
   return NULL;
 }
 
-int AddType(struct TypeDescription *desc)
-{
+
+int AddType(struct TypeDescription *desc){
   unsigned long bucket;
   struct TypeDescription *equiv;
   struct LibraryStructure *ptr;
@@ -451,8 +449,8 @@ int AddType(struct TypeDescription *desc)
   return 1;
 }
 
-struct  gl_list_t *DefinitionList(void)
-{
+
+struct  gl_list_t *DefinitionList(void){
   struct gl_list_t *result;
   register unsigned c;
   register struct LibraryStructure *ptr;
@@ -469,12 +467,12 @@ struct  gl_list_t *DefinitionList(void)
   return result;
 }
 
+
 /*
  * The following is so as not to export the library
  * hashfunctions internals.
  */
-unsigned int CheckFundamental(symchar *f)
-{
+unsigned int CheckFundamental(symchar *f){
   if (
       (f==G__INTEGER_NAME) ||
       (f==G__REAL_NAME) ||
@@ -493,8 +491,7 @@ unsigned int CheckFundamental(symchar *f)
 }
 
 
-struct gl_list_t *Asc_TypeByModule(CONST struct module_t *m)
-{
+struct gl_list_t *Asc_TypeByModule(CONST struct module_t *m){
   struct gl_list_t *result;
   register unsigned c;
   register struct LibraryStructure *ptr;
@@ -517,10 +514,10 @@ struct gl_list_t *Asc_TypeByModule(CONST struct module_t *m)
   return result;
 }
 
+
 /* sometimes there is too much confusion about parents and children !! */
 
-struct gl_list_t *TypesThatRefineMe(symchar *name)
-{
+struct gl_list_t *TypesThatRefineMe(symchar *name){
   struct gl_list_t *result;
   register unsigned c;
   register struct LibraryStructure *ptr;
@@ -550,11 +547,11 @@ struct gl_list_t *TypesThatRefineMe(symchar *name)
   return result;
 }
 
+
 /*
  * returns a flat list of typenames that refine the type given
  */
-struct gl_list_t *AllTypesThatRefineMe_Flat(symchar *name)
-{
+struct gl_list_t *AllTypesThatRefineMe_Flat(symchar *name){
   struct gl_list_t *result;
   register unsigned c;
   register struct LibraryStructure *ptr;
@@ -590,9 +587,9 @@ struct gl_list_t *AllTypesThatRefineMe_Flat(symchar *name)
   return result;
 }
 
+
 static
-struct gl_list_t *AllTypesThatRefineMe_FlatType(struct TypeDescription *desc)
-{
+struct gl_list_t *AllTypesThatRefineMe_FlatType(struct TypeDescription *desc){
   struct gl_list_t *result;
   register unsigned c;
   register struct LibraryStructure *ptr;
@@ -631,8 +628,7 @@ struct gl_list_t *AllTypesThatRefineMe_FlatType(struct TypeDescription *desc)
  * This is horrendously inefficient for doing long (>20) lists.
  * Breadth first searching.
  */
-static void EstablishPaternity(struct HierarchyNode *hd, struct gl_list_t *fl)
-{
+static void EstablishPaternity(struct HierarchyNode *hd, struct gl_list_t *fl){
   struct TypeDescription *desc=NULL;
   unsigned long c,size,end;
   struct HierarchyNode head, *child;
@@ -664,11 +660,11 @@ static void EstablishPaternity(struct HierarchyNode *hd, struct gl_list_t *fl)
   }
 }
 
+
 /*
  * returns a HierarchyNode tree of types that refine the type given
  */
-struct HierarchyNode *AllTypesThatRefineMe_Tree(symchar *name)
-{
+struct HierarchyNode *AllTypesThatRefineMe_Tree(symchar *name){
   struct gl_list_t *flatlist;
   register unsigned c,end;
   struct TypeDescription *refdesc,*desc;
@@ -709,8 +705,8 @@ struct HierarchyNode *AllTypesThatRefineMe_Tree(symchar *name)
   return head;
 }
 
-void DestroyHierarchyNode(struct HierarchyNode *head)
-{
+
+void DestroyHierarchyNode(struct HierarchyNode *head){
   if (head) {
     head->desc=NULL;
     if (head->descendents) {
@@ -721,8 +717,8 @@ void DestroyHierarchyNode(struct HierarchyNode *head)
   }
 }
 
-int IsTypeRefined(CONST struct TypeDescription *desc)
-{
+
+int IsTypeRefined(CONST struct TypeDescription *desc){
   register unsigned c;
   register struct LibraryStructure *ptr;
   CONST struct TypeDescription *refdesc;

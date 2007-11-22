@@ -25,11 +25,6 @@
 	be stored in the dump, and the dumping procedure is responsible for
 	making sure that the instance it "pure", and unconnected to anything
 	else.  Typically, these restrictions are only met by atoms.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "instance_enum.h"
-	#include "compiler.h"
 *//*
 	by Tom Epperly
 	10/24/89
@@ -47,6 +42,8 @@
 */
 
 #include <utilities/ascConfig.h>
+#include "instance_enum.h"
+#include "compiler.h"
 
 #define MESSYTHRESH 10
 

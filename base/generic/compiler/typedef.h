@@ -1,6 +1,6 @@
 /*	ASCEND modelling environment
 	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006, 2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -21,18 +21,6 @@
 	Ascend Type Definition Module.
 
 	This module provides functions for creating new types.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "compiler/fractions.h"
-	#include "compiler/instance_enum.h"
-	#include "compiler/compiler.h"
-	#include "compiler/module.h"
-	#include "compiler/list.h"
-	#include "compiler/slist.h"
-	#include "compiler/dimen.h"
-	#include "compiler/child.h"
-	#include "compiler/type_desc.h"
 *//*
 	by Tom Epperly
 	Created: 1/11/90
@@ -50,6 +38,9 @@
 */
 
 #include <utilities/ascConfig.h>
+#include "type_desc.h"
+#include "instance_enum.h"
+#include "module.h"
 
 extern void DestroyTypedefRecycle(void);
 /**<
