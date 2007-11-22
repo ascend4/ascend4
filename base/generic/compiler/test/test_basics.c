@@ -82,21 +82,54 @@ static void test_parse_string_module(void){
 	Asc_CompilerDestroy();
 }
 
-static void test_instantiate_string_module(void){
+static void test_parse_string_module2(void){
 	
 	const char *model = "\n\
-		DEFINITION relation\
-		    included IS_A boolean;\
-		    message	IS_A symbol;\
-		    included := TRUE;\
-		    message := 'none';\
-		END relation;\
+		REQUIRE \"system.a4l\";\n\
 		MODEL test1;\n\
 			x IS_A real;\n\
 			x - 1 = 0;\n\
 		END test1;";
 
 	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=/home/john/ascend/models");
+
+	struct module_t *m;
+	int status;
+	
+	m = Asc_OpenStringModule(model, &status, ""/* name prefix*/);
+
+	CONSOLE_DEBUG("Asc_OpenStringModule returns status=%d",status);
+	CU_ASSERT(status==0); /* if successfully created */
+
+	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
+	status = zz_parse();
+
+	CONSOLE_DEBUG("zz_parse returns status=%d",status);
+
+	CU_ASSERT(status==0);
+
+	struct gl_list_t *l = Asc_TypeByModule(m);
+	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
+
+	CU_ASSERT(gl_length(l)==2);
+
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_string_module(void){
+	
+	const char *model = "(* silly little model *)\n\
+		REQUIRE \"system.a4l\";\n\
+		MODEL test1;\n\
+			x IS_A real;\n\
+			x - 1 = 0;\n\
+		END test1;\n";
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	CONSOLE_DEBUG("MODEL TEXT:\n%s",model);
 
 	struct module_t *m;
 	int status;
@@ -126,6 +159,7 @@ static void test_instantiate_string_module(void){
 #define TESTS(T,X) \
 	T(init) \
 	X T(parse_string_module) \
+	X T(parse_string_module2) \
 	X T(instantiate_string_module)
 
 /* you shouldn't need to change the following */
