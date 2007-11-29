@@ -1339,6 +1339,56 @@ def CheckMath(context):
 	return is_ok
 
 #----------------
+# malloc.h test
+
+malloc_test_text = """
+#include <malloc.h>
+int main(){
+	double *x;
+	x = malloc(sizeof(double)*5);
+	x[4] = 3.3;
+	free(x);
+}
+"""
+
+def CheckMalloc(context):
+	context.Message("Checking for malloc...")
+	is_ok = context.TryLink(malloc_test_text,".c")
+	context.Result(is_ok)
+	return is_ok
+
+#----------------
+# dlopen test
+
+dlopen_test_text = """
+#ifdef __WIN32__
+# include <windows.h>
+#else
+# include <dlfcn.h>
+#endif
+int main(){
+#ifdef __WIN32__
+	HINSTANCE d;
+	LoadLibrary("imaginary_and_nonexistent.dll");
+#else
+	void *d;
+  	d = dlopen("imaginary_and_nonexistent.so", 1);
+#endif
+	return 0;
+}
+"""
+
+def CheckDLOpen(context):
+	context.Message("Checking for ability to load shared libraries at runtime...")
+	libsave=context.env.get('LIBS');
+	if platform.system()!="Windows":
+		context.env.Append(LIBS=['dl'])
+	is_ok = context.TryLink(dlopen_test_text,".c")
+	context.Result(is_ok)
+	context.env['LIBS'] = libsave
+	return is_ok
+
+#----------------
 # libpython test
 
 libpython_test_text = """
@@ -1830,6 +1880,8 @@ conf = Configure(env
 		, 'CheckCXX' : CheckCXX
 		, 'CheckF77' : CheckF77
 		, 'CheckMath' : CheckMath
+		, 'CheckMalloc' : CheckMalloc
+		, 'CheckDLOpen' : CheckDLOpen
 		, 'CheckSwigVersion' : CheckSwigVersion
 		, 'CheckPythonLib' : CheckPythonLib
 		, 'CheckCUnit' : CheckCUnit
@@ -1924,6 +1976,19 @@ if need_libm and (conf.CheckMath() is False):
 	print 'Did not find math library, exiting!'
 	Exit(1)
 
+# Malloc
+
+if conf.CheckMalloc() is False:
+	conf.env['HAVE_MALLOC']=False
+	print "Did not find functioning 'malloc', exiting!"
+	Exit(1)
+
+# dlopen/LoadLibrary
+
+if conf.CheckDLOpen() is False:
+	print "Did not find functioning dlopen/LoadLibrary, exiting!"
+	Exit(1)
+
 # Where is 'isnan'?
 
 if conf.CheckFunc('isnan') is False and conf.CheckFunc('_isnan') is False:
@@ -2008,7 +2073,7 @@ if not conf.CheckPythonLib():
 
 # SWIG version
 
-if with_python and not conf.CheckSwigVersion():
+if with_python and conf.CheckSwigVersion() is False:
 	without_python_reason = 'SWIG >= 1.3.24 is required'
 	with_python = False
 	env['WITH_PYTHON']=False
