@@ -1838,7 +1838,7 @@ def CheckSigReset(context):
 	else:
 		context.Result("not required");
 		context.env['ASC_RESETNEEDED'] = False
-	return is_ok
+	return True
 
 #----------------
 # LyX on this system?
