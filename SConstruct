@@ -2135,7 +2135,7 @@ elif conf.CheckCONOPT() is False:
 
 if not with_ipopt:
 	without_ipopt_reason = "Not selected (see config option WITH_SOLVERS)"
-elif conf.CheckIPOPT() is False:
+elif not conf.CheckIPOPT():
 	with_ipopt = False
 	without_ipopt_reason = "IPOPT not found"
 
