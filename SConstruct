@@ -1943,7 +1943,7 @@ if conf.CheckGcc():
 # Catching SIGINT
 
 if env['WITH_SIGNALS']:
-	if conf.CheckSIGINT() is False:
+	if not conf.CheckSIGINT():
 		with_signals = False
 		without_signals_reason = "SIGINT uncatchable"
 
@@ -2001,7 +2001,7 @@ if env['STATIC_TCLTK']:
 # Python... obviously we're already running python, so we just need to
 # check that we can link to the python library OK:
 
-if conf.CheckPythonLib() is False:
+if not conf.CheckPythonLib():
 	without_python_reason = 'libpython2.x not found or not linkable'
 	with_python = False
 	env['WITH_PYTHON']=False
@@ -2016,7 +2016,7 @@ if with_python and not conf.CheckSwigVersion():
 # CUnit
 
 if with_cunit:
-	if conf.CheckCUnit() is False:
+	if not conf.CheckCUnit():
 		without_cunit_reason = 'CUnit not found'
 		with_cunit = False
 		#print "CUNIT NOT FOUND, LIBS=",conf.env.get('LIBS')
@@ -2024,14 +2024,14 @@ if with_cunit:
 # DMALLOC
 
 if with_dmalloc:
-	if conf.CheckDMalloc() is False:
+	if not conf.CheckDMalloc():
 		without_dmalloc_reason = 'dmalloc not found'
 		with_dmalloc = False
 
 # MFGRAPH
 
 if with_mfgraph:
-	if conf.CheckMFGraph() is False:
+	if not conf.CheckMFGraph():
 		without_mfgraph_reason = 'mfgraph not found'
 		with_mfgraph = False
 		env['WITH_MFGRAPH'] = False
@@ -2039,7 +2039,7 @@ if with_mfgraph:
 # UFSPARSE
 
 if with_ufsparse:
-	if conf.CheckUFSparse() is False:
+	if not conf.CheckUFSparse():
 		without_ufsparse_reason = 'mfgraph not found'
 		with_ufsparse = False
 		env['WITH_UFSPARSE'] = False
@@ -2048,10 +2048,10 @@ if with_ufsparse:
 
 if not with_ida:
 	without_ida_reason = "Not selected (see config option WITH_SOLVERS)"
-elif conf.CheckSUNDIALS() is False:
+elif not conf.CheckSUNDIALS():
 	with_ida = False
 	without_ida_reason = "SUNDIALS not found, or bad version"
-elif conf.CheckIDA() is False:
+elif not conf.CheckIDA():
 	with_ida = False
 	without_ida_reason = "Unable to compile/link against SUNDIALS/IDA"
 
