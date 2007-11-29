@@ -232,7 +232,8 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
 	From a quick Google, it appears that AIX 5.1 now provides dlfcn.h,
 	so I'll remove the code that was emulating it here. -- johnpye
 */
-#if (defined(sun) || defined(linux) || defined(__unix__) || defined(solaris) || defined(_AIX) || defined(_SGI_SOURCE))
+#if (defined(sun) || defined(linux) || defined(__unix__) || defined(solaris) \
+    || defined(_AIX) || defined(_SGI_SOURCE) || defined(__APPLE__))
 # ifndef MACH
 #  include <dlfcn.h>
 # else
