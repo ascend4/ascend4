@@ -141,7 +141,7 @@ ASC_DLLSPEC char *ascstrdupf(CONST char *str);
 
 #ifdef ASC_WITH_DMALLOC
 
-#include <malloc.h>
+#include <stdlib.h>
 #include <dmalloc.h>
 
 #define ascstrdup(str) ascstrdupf(str)
