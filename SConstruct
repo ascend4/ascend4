@@ -1889,12 +1889,12 @@ if not sconsversioncheck():
 
 # check C compiler
 
-if not conf.CheckCC():
+if conf.CheckCC() is False:
 	print "Failed to build simple test file with your C compiler."
 	print "Check your compiler is installed and running correctly."
 	Exit(1)
 
-if not conf.CheckCXX():
+if conf.CheckCXX() is False:
 	print "Failed to build simple test file with your C++ compiler."
 	print "Check your compiler is installed and running correctly."
 	print "You can set your C++ compiler using the CXX scons option."
@@ -1902,7 +1902,7 @@ if not conf.CheckCXX():
 
 # stdio -- just to check that compiler is behaving
 
-if not conf.CheckHeader('stdio.h'):
+if conf.CheckHeader('stdio.h') is False:
 	print "CPPPATH =",env.get('CPPPATH')
 	print "Did not find 'stdio.h'! Check your compiler configuration."
 	print ""
@@ -1911,7 +1911,7 @@ if not conf.CheckHeader('stdio.h'):
 		print "%-30s%s" % ("%s :" % k, v)
 	Exit(1)
 
-if not conf.CheckFunc('snprintf'):
+if conf.CheckFunc('snprintf') is False:
 	print "Didn't find snprintf";
 	exit(1)
 
@@ -1919,14 +1919,14 @@ if not conf.CheckFunc('snprintf'):
 
 conf.env['HAVE_IEEE']=True
 
-if need_libm and not conf.CheckMath():
+if need_libm and (conf.CheckMath() is False):
 	conf.env['HAVE_IEEE']=False
 	print 'Did not find math library, exiting!'
 	Exit(1)
 
 # Where is 'isnan'?
 
-if not conf.CheckFunc('isnan') and not conf.CheckFunc('_isnan'):
+if conf.CheckFunc('isnan') is False and conf.CheckFunc('_isnan') is False:
 	print "Didn't find isnan"
 #	Exit(1)
 
@@ -1943,7 +1943,7 @@ if conf.CheckGcc():
 # Catching SIGINT
 
 if env['WITH_SIGNALS']:
-	if not conf.CheckSIGINT():
+	if conf.CheckSIGINT() is False:
 		with_signals = False
 		without_signals_reason = "SIGINT uncatchable"
 
@@ -1956,7 +1956,7 @@ else:
 
 # Checking for signal reset requirement
 
-if not conf.CheckSigReset():
+if conf.CheckSigReset() is False:
 	print "Unable to determine if signal reset is required"
 	Exit(1)
 
@@ -2001,7 +2001,7 @@ if env['STATIC_TCLTK']:
 # Python... obviously we're already running python, so we just need to
 # check that we can link to the python library OK:
 
-if not conf.CheckPythonLib():
+if conf.CheckPythonLib() is False:
 	without_python_reason = 'libpython2.x not found or not linkable'
 	with_python = False
 	env['WITH_PYTHON']=False
@@ -2016,7 +2016,7 @@ if with_python and not conf.CheckSwigVersion():
 # CUnit
 
 if with_cunit:
-	if not conf.CheckCUnit():
+	if conf.CheckCUnit() is False:
 		without_cunit_reason = 'CUnit not found'
 		with_cunit = False
 		#print "CUNIT NOT FOUND, LIBS=",conf.env.get('LIBS')
@@ -2024,14 +2024,14 @@ if with_cunit:
 # DMALLOC
 
 if with_dmalloc:
-	if not conf.CheckDMalloc():
+	if conf.CheckDMalloc() is False:
 		without_dmalloc_reason = 'dmalloc not found'
 		with_dmalloc = False
 
 # MFGRAPH
 
 if with_mfgraph:
-	if not conf.CheckMFGraph():
+	if conf.CheckMFGraph() is False:
 		without_mfgraph_reason = 'mfgraph not found'
 		with_mfgraph = False
 		env['WITH_MFGRAPH'] = False
@@ -2039,7 +2039,7 @@ if with_mfgraph:
 # UFSPARSE
 
 if with_ufsparse:
-	if not conf.CheckUFSparse():
+	if conf.CheckUFSparse() is False:
 		without_ufsparse_reason = 'mfgraph not found'
 		with_ufsparse = False
 		env['WITH_UFSPARSE'] = False
@@ -2048,10 +2048,10 @@ if with_ufsparse:
 
 if not with_ida:
 	without_ida_reason = "Not selected (see config option WITH_SOLVERS)"
-elif not conf.CheckSUNDIALS():
+elif conf.CheckSUNDIALS() is False:
 	with_ida = False
 	without_ida_reason = "SUNDIALS not found, or bad version"
-elif not conf.CheckIDA():
+elif conf.CheckIDA() is False:
 	with_ida = False
 	without_ida_reason = "Unable to compile/link against SUNDIALS/IDA"
 
@@ -2059,7 +2059,7 @@ elif not conf.CheckIDA():
 
 if not with_conopt:
 	without_conopt_reason = "Not selected (see config option WITH_SOLVERS)"
-elif not conf.CheckCONOPT():
+elif conf.CheckCONOPT() is False:
 	if conf.env.get('CONOPT_LINKED'):
 		conf.env['CONOPT_LINKED'] = False
 	# we no longer require CONOPT at buildtime in order to build support for it
@@ -2070,7 +2070,7 @@ elif not conf.CheckCONOPT():
 
 if not with_ipopt:
 	without_ipopt_reason = "Not selected (see config option WITH_SOLVERS)"
-elif not conf.CheckIPOPT():
+elif conf.CheckIPOPT() is False:
 	with_ipopt = False
 	without_ipopt_reason = "IPOPT not found"
 
@@ -2122,7 +2122,7 @@ if need_fortran:
 		with_lsode=False;
 		without_lsode_reason="FORTRAN-77 required but not found"
 
-if need_fortran and not conf.CheckF77():
+if need_fortran and conf.CheckF77() is False:
 	print "Failed to build simple test file with your Fortran compiler."
 	print "Check your compiler is installed and running correctly."
 	print "You can set your Fortran compiler using the FORTRAN scons option."
@@ -2143,14 +2143,14 @@ if need_fortran:
 # scrollkeeper
 
 if with_scrollkeeper:
-	if not conf.CheckScrollkeeperConfig():
+	if conf.CheckScrollkeeperConfig() is False:
 		with_scrollkeeper=False
 		without_scrollkeeper_reason="unable to detect scrollkeeper-config"
 
 # lyx
 
 if with_doc_build:
-	if not conf.CheckLyx():
+	if conf.CheckLyx() is False:
 		with_doc_build = False
 		without_doc_build_reason="unable to locate lyx"
 
@@ -2169,7 +2169,7 @@ if platform.system()=="Windows" and env.has_key('MSVS'):
 		print "Could not locate 'Windows.h' in CPPPATH. Check your configuration."
 		Exit(1)
 
-	if with_python and not conf.CheckHeader(['basetsd.h','BaseTsd.h']):
+	if with_python and conf.CheckHeader(['basetsd.h','BaseTsd.h']) is False:
 		with_python = 0;
 		without_python_reason = "Header file 'basetsd.h' not found. Install the MS Platform SDK."
 
