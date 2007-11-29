@@ -25,6 +25,7 @@ if 'LSODE' in env.get('WITH_SOLVERS'):
 	lib = solver_env.SharedLibrary('lsode',srcs + env['blasobjs']
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
+		,SHFORTRANFLAGS = ['-w']
 	)
 
 	env.Depends(lib,env['libascend'])
