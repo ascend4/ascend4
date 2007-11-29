@@ -1985,9 +1985,10 @@ if conf.CheckMalloc() is False:
 
 # dlopen/LoadLibrary
 
-if conf.CheckDLOpen() is False:
-	print "Did not find functioning dlopen/LoadLibrary, exiting!"
-	Exit(1)
+# CURRENTLY BREAKS LATER TEST (libsave?)
+#if conf.CheckDLOpen() is False:
+#	print "Did not find functioning dlopen/LoadLibrary, exiting!"
+#	Exit(1)
 
 # Where is 'isnan'?
 
