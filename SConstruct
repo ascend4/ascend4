@@ -1342,7 +1342,7 @@ def CheckMath(context):
 # malloc.h test
 
 malloc_test_text = """
-#include <malloc.h>
+#include <stdlib.h>
 int main(){
 	double *x;
 	x = malloc(sizeof(double)*5);
