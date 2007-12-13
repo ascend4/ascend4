@@ -1,0 +1,281 @@
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+IMPORT "freesteam";
+
+(* Model of simple Rankine cycle with boiler, turbine, condenser, pump *)
+
+(*------------------------------------------------------------------------------
+  BACKGROUND STUFF
+*)
+
+(*
+	Thermo properties -- IAPWS-IF97
+*)
+MODEL steam_state;
+	p IS_A pressure;
+	h IS_A specific_enthalpy;
+	u IS_A specific_energy;
+	v IS_A specific_volume;
+	T IS_A temperature;
+	x IS_A fraction;
+	s IS_A specific_entropy;
+	mu IS_A viscosity;
+
+	thermo: iapws97_uvTxsmu_ph(
+		p,h : INPUT;
+		u,v,T,x,s,mu : OUTPUT
+	);
+METHODS
+	METHOD default;
+		p := 10{bar};
+		p.nominal := 42 {bar};
+		v.nominal := 10 {L/kg};
+		u := 2000 {kJ/kg};
+		T := 400 {K};
+		x := 0.8;
+	END default;
+	METHOD solve;
+		EXTERNAL do_solve(SELF);
+	END solve;
+	METHOD on_load;
+		RUN default_all;
+		FIX p, h;
+	END on_load;
+END steam_state;
+
+(* a simple connector that includes calculation of steam properties *)
+MODEL steam_node;
+	state IS_A steam_state;
+	p ALIASES state.p;
+	h ALIASES state.h;
+	u ALIASES state.u;
+	v ALIASES state.v;
+	T ALIASES state.T;
+	x ALIASES state.x;
+	s ALIASES state.s;
+	mu ALIASES state.mu;
+	mdot IS_A mass_rate;
+METHODS
+	METHOD default;
+		mdot.nominal := 2 {kg/s};
+	END default;
+	METHOD solve;
+		EXTERNAL do_solve(SELF);
+	END solve;
+	METHOD on_load;
+		RUN default_all; RUN reset; RUN values;
+		FIX p,h;
+	END on_load;
+END steam_node;
+
+MODEL steam_equipment;
+	inlet IS_A steam_node;
+	outlet IS_A steam_node;
+
+	inlet.mdot, outlet.mdot ARE_THE_SAME;
+	mdot ALIASES inlet.mdot;
+END steam_equipment;
+
+(*------------------------------------------------------------------------------
+  PUMP COMPONENT
+*)
+
+MODEL pump_simple REFINES steam_equipment;
+
+	dp IS_A delta_pressure;
+	inlet.p + dp = outlet.p;
+
+	outlet_is IS_A steam_state;
+	outlet_is.p, outlet.p ARE_THE_SAME;
+
+	outlet_is.s, inlet.s ARE_THE_SAME;
+	eta IS_A fraction;
+	
+	eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
+
+	(* work done on the environment, will be negative *)
+	Wdot IS_A energy_rate;
+	Wdot = eta * mdot * (inlet.h - outlet.h);
+
+END pump_simple;
+
+MODEL pump_simple_test REFINES pump_simple;
+	(* no equations here *)
+METHODS
+METHOD on_load;
+	FIX inlet.p;
+	FIX inlet.h;
+	FIX outlet.p;
+	FIX eta;
+	FIX mdot;
+
+	inlet.p := 5 {bar};
+	inlet.h := 400 {kJ/kg};
+	outlet.p := 100 {bar};
+	eta := 0.65;
+	mdot := 900 {t/d};
+END on_load;
+END pump_simple_test;
+
+(*------------------------------------------------------------------------------
+  TURBINE COMPONENT
+*)
+
+MODEL turbine_simple REFINES steam_equipment;
+
+	dp IS_A delta_pressure;
+	inlet.p + dp = outlet.p;
+	
+	outlet_is IS_A steam_state;
+	outlet_is.p, outlet.p ARE_THE_SAME;
+	outlet_is.s, inlet.s ARE_THE_SAME;
+
+	eta IS_A fraction;
+	eta * (inlet.h - outlet_is.h) = (inlet.h - outlet.h);
+	
+	(* work done on the environment, will be positive *)
+	Wdot IS_A energy_rate;
+	Wdot = eta * mdot * (inlet.h - outlet.h);
+
+END turbine_simple;
+
+MODEL turbine_simple_test REFINES turbine_simple;
+	(* no equations here *)
+METHODS
+METHOD on_load;
+	FIX inlet.p;
+	FIX inlet.h;
+	FIX outlet.p;
+	FIX eta;
+	FIX mdot;
+
+	inlet.p := 100 {bar};
+	inlet.h := 3000 {kJ/kg};
+	outlet.p := 5 {bar};
+	eta := 0.85;
+	mdot := 900 {t/d};
+END on_load;
+END turbine_simple_test;
+
+(*------------------------------------------------------------------------------
+  BOILER COMPONENT
+*)
+
+(*
+	simple model assumes no pressure drop, but heating losses due to
+	flue gas temperature
+*)
+MODEL boiler_simple REFINES steam_equipment;
+
+	inlet.p, outlet.p ARE_THE_SAME;
+	Qdot_fuel IS_A energy_rate;
+	Qdot IS_A energy_rate;
+
+	Qdot = mdot * (outlet.h - inlet.h);
+
+	eta IS_A fraction;
+	Qdot = eta * Qdot_fuel;
+END boiler_simple;
+
+MODEL boiler_simple_test REFINES boiler_simple;
+	(* nothing here *)
+METHODS
+METHOD on_load;
+	FIX inlet.p;
+	FIX inlet.h;
+	FIX eta;
+	FIX outlet.h;
+	FIX mdot;
+
+	inlet.p := 100 {bar};
+	inlet.h := 500 {kJ/kg};
+
+	eta := 0.8;
+	outlet.h := 3000 {kJ/kg};
+	mdot := 900 {t/d};
+END on_load;
+END boiler_simple_test;
+
+(*------------------------------------------------------------------------------
+  CONDENSER COMPONENT
+*)
+
+(*
+	this is really simple (fluid props permitting): just work out the heat
+	that must be expelled to get the water down to a certain state
+*)
+MODEL condenser_simple REFINES steam_equipment;
+
+	inlet.p, outlet.p ARE_THE_SAME;
+	Qdot IS_A energy_rate;
+
+	Qdot = mdot * (outlet.h - inlet.h);
+	
+END condenser_simple;
+
+MODEL condenser_simple_test REFINES condenser_simple;
+	(* nothing here *)
+METHODS
+METHOD on_load;
+	FIX inlet.p, inlet.x;
+	FIX outlet.h;
+	FIX mdot;
+
+	inlet.p := 5 {bar};
+	inlet.x := 0.95;
+	outlet.h := 500 {kJ/kg};
+	mdot := 900 {t/d};
+END on_load;
+END condenser_simple_test;
+
+(*------------------------------------------------------------------------------
+  OVERALL CYCLE
+*)
+
+MODEL rankine;
+
+	BO IS_A boiler_simple;
+	TU IS_A turbine_simple;
+	CO IS_A condenser_simple;
+	PU IS_A pump_simple;
+
+	BO.outlet, TU.inlet ARE_THE_SAME;
+	TU.outlet, CO.inlet ARE_THE_SAME;
+	CO.outlet, PU.inlet ARE_THE_SAME;
+	PU.outlet, BO.inlet ARE_THE_SAME;
+
+	eta IS_A fraction;
+	eta = TU.Wdot / (BO.Qdot_fuel - PU.Wdot);
+
+	mdot ALIASES TU.mdot;
+METHODS
+METHOD on_load;
+	FIX PU.inlet.p;
+	PU.inlet.p := 5 {bar};
+	FIX PU.inlet.h;
+	PU.inlet.h := 500 {kJ/kg};
+
+	FIX PU.outlet.p;
+	PU.outlet.p := 100 {bar};
+
+	FIX BO.outlet.h;
+	BO.outlet.h := 3000 {kJ/kg};
+	FIX TU.eta;
+	FIX PU.eta;
+	FIX BO.eta;
+
+	TU.eta := 0.85;
+	PU.eta := 0.65;
+	BO.eta := 0.8;
+
+	FIX mdot;
+	mdot := 900 {t/d};	
+END on_load;
+END rankine;
+
+	
+
+
+
+	
