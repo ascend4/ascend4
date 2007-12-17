@@ -430,6 +430,10 @@ MODEL rankine_reheat;
 	eta_carnot = 1 - T_C / T_H;
 
 METHODS
+(*
+	The on_load scenario reproduces the same calculation from 
+	K Weston, op. cit., Example 2.5, p. 51.
+*)
 METHOD on_load;
 	FIX BO1.eta;
 	BO1.eta := 1.0;
@@ -445,19 +449,22 @@ METHOD on_load;
 	FIX BO1.outlet.T;
 	BO1.outlet.T := 1460 {R};
 	BO1.outlet.h := 3000 {kJ/kg}; (* guess *)
+	TU1.outlet.h := 3000 {kJ/kg}; (* guess *)
 	FIX PU.outlet.p;
 	PU.outlet.p := 2000 {psi};
 	FIX mdot;
 	mdot := 900 {t/d};
 
 	(* this value here is what defines the intermediate pressure *)
-	FIX TU1.outlet.h;
-	TU1.outlet.h := 1210 {btu/lbm};
+	FIX TU1.outlet.T;
+	TU1.outlet.T := 860 {R};
 
 	TU2.inlet.h := 3000 {kJ/kg}; (* guess *)
 END on_load;
 METHOD self_test;
 	ASSERT abs(eta - 0.443) < 0.0005;
+	ASSERT abs(TU2.outlet.x - 0.926) < 0.0015;
+	ASSERT abs(TU1.w + TU2.w) - 763.1 {btu/lbm} < 1 {btu/lbm};
 END self_test;
 END rankine_reheat;
 
