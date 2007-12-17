@@ -4,10 +4,11 @@ import pango
 import ascpy
 
 class ModuleView:
-	def __init__(self,browser,glade):
+	def __init__(self,browser,glade, library):
 		"""Set up the 'modules' tab, set up column types."""
 
 		self.browser = browser
+		self.library = library
 		self.moduleview = glade.get_widget('moduleview')
 
 		modulestorecoltypes = [str, str, int] # bool=can-be-instantiated
@@ -32,6 +33,7 @@ class ModuleView:
 
 		self.modtank = {}
 		self.modulestore.clear()
+		self.library = library
 		modules = library.getModules()
 		try:
 			_lll=len(modules)
@@ -74,7 +76,7 @@ class ModuleView:
 			if(self.modtank.has_key(path)):
 				_type = self.modtank[path];
 				self.browser.reporter.reportNote("Creating simulation for type %s" % str(_type.getName()) )
-				self.do_sim(_type)
+				self.browser.do_sim(_type)
 			else:
 				self.browser.reporter.reportError("Didn't find type corresponding to row")
 

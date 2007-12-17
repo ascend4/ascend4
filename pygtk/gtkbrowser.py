@@ -415,7 +415,7 @@ class Browser:
 		# set up the module view
 
 		self.modtank = {}
-		self.moduleview = ModuleView(self,glade)
+		self.moduleview = ModuleView(self,glade, self.library)
 	
 		#--------------------
 		# set up the methods combobox
