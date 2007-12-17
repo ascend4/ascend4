@@ -508,46 +508,60 @@ MODEL rankine_regen;
 	eta IS_A fraction;
 	eta * (BO.Qdot_fuel + abs(PU1.Wdot) + abs(PU2.Wdot)) = TU1.Wdot + TU2.Wdot;
 
+	Wdot_TU1 ALIASES TU1.Wdot;
+	Wdot_TU2 ALIASES TU2.Wdot;
+
 	eta_carnot IS_A fraction;
 	eta_carnot = 1 - T_C / T_H;
 
 METHODS
+(*
+	The on_load scenario here is example 2.6 from K Weston (op. cit.), p. 55.
+*)
 METHOD on_load;
 	RUN ClearAll;
 
-	FIX BO.eta;
-	BO.eta := 1.0;
-
-	FIX TU1.eta;
-	TU1.eta := 1.0;
-	FIX TU2.eta;
-	TU2.eta := 1.0;
-
+	(* all ideal components *)
+	FIX BO.eta;  BO.eta := 1.0;
+	FIX TU1.eta; TU1.eta := 1.0;
+	FIX TU2.eta; TU2.eta := 1.0;
 	FIX PU1.eta; PU1.eta := 1.0;
 	FIX PU2.eta; PU2.eta := 1.0;
 
+	(* mass flow rate is arbitrary *)
 	FIX mdot;
 	mdot := 900 {t/d};
-		
-	FIX PU2.outlet.p;
-	PU2.outlet.p := 250 {bar};
-
-	FIX BO.inlet.T;
-	BO.inlet.T := 200 {K} + 273.15 {K};
 	
-	FIX TU1.outlet.p;
-	TU1.outlet.p := 80 {bar};
+	(* max pressure constraint *)
+	FIX PU2.outlet.p;
+	PU2.outlet.p := 2000 {psi};
+	PU2.outlet.h := 1400 {btu/lbm}; (* guess *)
 
-	FIX TU2.outlet.p;
-	TU2.outlet.p := 1 {bar};
+	(* boiler max temp *)
+	FIX BO.outlet.T;
+	BO.outlet.T := 1460 {R};
+	BO.outlet.h := 1400 {btu/lbm}; (* guess *)
 
-	FIX BO.outlet.h;
-	BO.outlet.h := 3772 {kJ/kg};
+	(* intermediate temperature setting *)
+	FIX TU1.outlet.T;
+	TU1.outlet.T := 860 {R}; (* 400 °F *)
+	TU1.outlet.h := 3000 {kJ/kg}; (* guess *)
 
+	(* minimum pressure constraint *)
+	FIX CO.outlet.p;
+	CO.outlet.p := 1 {psi};
+
+	(* condenser outlet is saturated liquid *)
 	FIX CO.outlet.h;
-	CO.outlet.h := 104.9 {kJ/kg};
+	CO.outlet.h := 69.73 {btu/lbm};
 
+	(* remove the redundant balance equations *)
 	HE.cons_mass.included := FALSE;
+	HE.cons_en.included := FALSE;
+
+	(* fix the bleed ratio *)
+	FIX BL.phi;
+	BL.phi := 0.1;
 	
 END on_load;
 END rankine_regen;
