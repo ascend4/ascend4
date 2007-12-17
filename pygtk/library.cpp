@@ -13,21 +13,15 @@ extern "C"{
 #include <utilities/ascConfig.h>
 
 #include <general/list.h>
-#include <compiler/slist.h>
 #include <compiler/ascCompiler.h>
-#include <compiler/fractions.h>
 
 /* #include <compiler/redirectFile.h> */
-#include <compiler/module.h>
 #include <compiler/prototype.h>
 #include <compiler/dump.h>
-#include <compiler/dimen.h>
-#include <compiler/child.h>
 #include <compiler/childio.h>
 #include <compiler/type_desc.h>
 #include <compiler/typedef.h>
 #include <compiler/library.h>
-#include <compiler/childinfo.h>
 #include <system/slv_types.h>
 #include <system/system.h>
 #include <utilities/ascEnvVar.h>
@@ -248,6 +242,10 @@ Library::findType(const SymChar &sym){
 	return *t2;
 }
 
+static int module_sort_cmp(const void *a, const void *b){
+	return strcmp((char *)a, (char *)b);
+}
+
 /**
 	This could be quite a bit more efficient if we could get a gl_list_t of TypeDescription rather than names
 */
@@ -256,6 +254,9 @@ Library::getModuleTypes(const Module &m){
 	//cerr << "GET MODULE TYPES\n" << endl;
 	vector<Type> v;
 	struct gl_list_t *l =  Asc_TypeByModule(m.getInternalType());
+
+	gl_sort(l, &module_sort_cmp);
+
 	for(int i=0,end=gl_length(l); i<end; ++i){
 		char *name = (char *)gl_fetch(l,i+1);
 		//CONSOLE_DEBUG("Found type %s",name);

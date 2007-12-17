@@ -39,11 +39,11 @@ void
 IncidenceMatrix::buildPlotData(){
 	int c=-1;
 
-	cerr << "BUILDPLOTDATA" << endl;
+	//cerr << "BUILDPLOTDATA" << endl;
 
 	slv_system_t sys = sim.getSystem();
 
-	cerr << "GOT SYSTEM DATA" << endl;
+	//cerr << "GOT SYSTEM DATA" << endl;
 
 	if(build_incidence_data(sys,&i)) {
 		cerr << "FAILED TO BUILD INCIDENCE DATA" << endl;

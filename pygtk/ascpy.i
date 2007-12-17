@@ -191,6 +191,7 @@ public:
 %extend UnitsM{
 	%pythoncode{
 		def getConvertedValue(self,si_value):
+			"""Return an SI value converted to self's units of measurement."""
 			_u_value = si_value / self.getConversion()
 			return str(_u_value) + " " + self.getName().toString();
 	}
@@ -205,6 +206,7 @@ public:
 	%pythoncode {
 
 		def getDefaultUnits(self):
+			"""Return the default (SI) units for a specific set of dimensions."""
 			if self.isDimensionless():
 				return Units("");
 
@@ -310,6 +312,7 @@ public:
 
 	%pythoncode{
 		def getPreferredUnits(self):
+			"""Return preferred units for an instance, which is done by lookup per atom type."""
 			if not self.isRefinedReal():
 				return None
 
@@ -427,6 +430,7 @@ public:
 		
 	%pythoncode {
 		def getSetValue(self):
+			"""Return the value of a set, as a integer or string Python sequence."""
 			if self.isSetInt():
 				return self.getSetIntValue()
 			elif self.isSetString():
@@ -437,6 +441,7 @@ public:
 				raise RuntimeError("getSetValue: unknown set type");
 
 		def getValue(self):
+			"""Returns an instance value, including units if applicable."""
 			#print "GETTING VALUE OF %s" % self.getName()
 			if self.isCompound():
 				return ""
@@ -465,6 +470,7 @@ public:
 				#raise RuntimeError("Unknown value model type="+self.getType().getName().toString()+", instance kind=".getKindStr())
 
 		def getRealValueAndUnits(self):
+			"""Return real-valued instance value as a string, converted to, and including, its preferred units."""
 			if not self.isReal():
 				raise TypeError
 			if self.isDimensionless() or self.isFund():
@@ -475,6 +481,7 @@ public:
 			return _u.getConvertedValue(self.getRealValue())
 
 		def as(self,units):
+			"""Returns an instance value converted to specified units."""
 			if not self.isReal():
 				raise TypeError
 			if units.__class__==str:
@@ -484,6 +491,7 @@ public:
 			return self.getRealValue() / units.getConversion()
 
 		def setFixedValue(self,val):
+			"""Set a value to 'fixed', and specify its value, at the same time."""
 			if not self.isFixed():
 				self.setFixed();
 			# getReporter().reportError("Setting value of %s to %s" % (self.getName().toString(),val))
