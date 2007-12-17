@@ -18,18 +18,9 @@
 	Boston, MA 02111-1307, USA.
 *//** @file
 	This is a package of routines to process child list I/O.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "compiler.h"
-	#include "list.h"
-	#include "child.h"
 *//*
 	by Ben Allan
-	Version: $Revision: 1.3 $
-	Version control file: $RCSfile: childio.h,v $
-	Date last modified: $Date: 1998/06/11 17:36:23 $
-	Last modified by: $Author: ballan $
+	Last in CVS: $Revision: 1.3 $, $Date: 1998/06/11 17:36:23 $, $Author: ballan $
 */
 
 #ifndef ASC_CHILDIO_H
@@ -40,6 +31,7 @@
 */
 
 #include <utilities/ascConfig.h>
+#include "child.h"
 
 /*
  *  WriteChildList(fp,cl)

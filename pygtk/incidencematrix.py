@@ -59,11 +59,13 @@ class IncidenceMatrixWindow:
 
 	def incidence_get_coord_str(self,x,y):
 		
-			_col = int(x)
-			_row = (self.im.getNumRows()-1) - int(y)
+			_col = int(x+0.5)
+			_row = int(y+0.5)
+
 
 			try:
 				if self.data[_row, _col] == 0:
+					#print "nothing here"
 					return ""
 	
 				if self.lastrow != None and self.lastcol != None:
@@ -74,10 +76,13 @@ class IncidenceMatrixWindow:
 				_rel = self.im.getRelation(_row);
 				_blk = self.im.getBlockRow(_row);
 			except IndexError:
-				return
+				return "[out of range]"
+
+			print "row = %d, col = %d" % (_row,_col)
 
 			self.lastrow = _row;
 			self.lastcol = _col; 
 			self.lastmsg = "rel '%s', var '%s': block %d" %(_rel,_var,_blk)
+			print self.lastmsg
 			return self.lastmsg
 

@@ -57,6 +57,7 @@ try:
 	from varentry import *         # for inputting of variables with units
 	from diagnose import * 	       # for diagnosing block non-convergence
 	from solverreporter import *   # solver status reporting
+	from moduleview import *       # module browser
 	from modelview import *        # model browser
 	from integrator import *       # integrator dialog	
 	from infodialog import *       # general-purpose textual information dialog
@@ -414,22 +415,7 @@ class Browser:
 		# set up the module view
 
 		self.modtank = {}
-		self.moduleview = glade.get_widget("moduleview")
-		modulestorecoltypes = [str, str, int] # bool=can-be-instantiated
-		self.modulestore = gtk.TreeStore(*modulestorecoltypes)
-		moduleviewtitles = ["Module name", "Filename"]
-		self.moduleview.set_model(self.modulestore)
-		self.modcols = [ gtk.TreeViewColumn() for _type in modulestorecoltypes]
-		i = 0
-		for modcol in self.modcols[:len(moduleviewtitles)]:
-			modcol.set_title(moduleviewtitles[i])
-			self.moduleview.append_column(modcol)
-			_renderer = gtk.CellRendererText()
-			modcol.pack_start(_renderer, True)
-			modcol.add_attribute(_renderer, 'text', i)
-			modcol.add_attribute(_renderer,'weight',2)
-			i = i + 1
-		self.moduleview.connect("row-activated", self.module_activated )
+		self.moduleview = ModuleView(self,glade)
 	
 		#--------------------
 		# set up the methods combobox
@@ -557,6 +543,7 @@ class Browser:
 		self.statusbar.push(_context,"Loading '"+filename+"'")
 		try:
 			self.filename = filename
+			# call the low-level 'load' command...
 			self.library.load(filename)
 		except RuntimeError,e:
 			self.statusbar.pop(_context)
@@ -569,38 +556,7 @@ class Browser:
 			print "For some reason, a type error (context=%s,filename=%s): %s" % (_context,filename,e)
 
 		# Load the current list of modules into self.modules
-		self.modtank = {}
-		self.modulestore.clear()
-		modules = self.library.getModules()
-		#self.library.listModules()
-		try:
-			_lll=len(modules)
-		except:
-			_msg = "UNABLE TO ACCESS MODULES LIST. This is bad.\n"+\
-			"Check your SWIG configuration (check for warnings during build)."
-			
-			self.reporter.reportError(_msg)
-			raise RuntimeError(_msg)
-			
-		for m in reversed(modules):
-			_n = str( m.getName() )
-			_f = str( m.getFilename() )
-			#print "ADDING ROW name %s, file = %s" % (_n, _f)
-			_r = self.modulestore.append(None,  [ _n, _f, pango.WEIGHT_NORMAL ])
-			for t in self.library.getModuleTypes(m):
-				_n = t.getName()
-				_hasparams = t.hasParameters()
-				if _hasparams:
-					_w = pango.WEIGHT_NORMAL
-				else:
-					_w = pango.WEIGHT_BOLD
-				
-				#print "ADDING TYPE %s" % _n
-				_piter = self.modulestore.append(_r , [ _n, "", _w ])
-				_path = self.modulestore.get_path(_piter)
-				self.modtank[_path]=t
-
-		#print "DONE ADDING MODULES"
+		self.moduleview.refresh(self.library)
 
 		self.sim = None;
 		self.maintabs.set_current_page(0);
@@ -924,22 +880,6 @@ class Browser:
 		text+="\nModify this value in .ascend.ini, section '[Browser]', key 'far_from_nominals'."
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
-
-#   --------------------------------------------
-#   MODULE LIST
-
-	def module_activated(self, treeview, path, column, *args):
-		modules = self.library.getModules()
-		print "PATH",path
-		if len(path)==1:
-			self.reporter.reportNote("Launching of external editor not yet implemented")
-		elif len(path)==2:
-			if(self.modtank.has_key(path)):
-				_type = self.modtank[path];
-				self.reporter.reportNote("Creating simulation for type %s" % str(_type.getName()) )
-				self.do_sim(_type)
-			else:
-				self.reporter.reportError("Didn't find type corresponding to row")
 
 #   ----------------------------------
 #   ERROR PANEL
