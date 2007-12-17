@@ -275,6 +275,7 @@ nanoJoule= {nJ};
 erg = {J*1.0e-7};
 
 BTU = {1055.056*J};
+btu = {BTU}; (* this is the way it's written in most textbooks *)
 pCu = {BTU * 1.8};
 cal = {J*4.18393};
 calorie = {cal};

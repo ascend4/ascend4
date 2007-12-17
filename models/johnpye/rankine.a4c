@@ -98,6 +98,9 @@ MODEL pump_simple REFINES steam_equipment;
 	Wdot IS_A energy_rate;
 	Wdot = eta * mdot * (inlet.h - outlet.h);
 
+	w IS_A specific_energy;
+	w = eta * (outlet.h - inlet.h);
+
 END pump_simple;
 
 MODEL pump_simple_test REFINES pump_simple;
@@ -137,6 +140,9 @@ MODEL turbine_simple REFINES steam_equipment;
 	(* work done on the environment, will be positive *)
 	Wdot IS_A energy_rate;
 	Wdot = eta * mdot * (inlet.h - outlet.h);
+
+	w IS_A specific_energy;
+	w = inlet.h - outlet.h;
 
 END turbine_simple;
 
@@ -326,31 +332,135 @@ MODEL rankine;
 	eta_carnot = 1 - T_C / T_H;
 
 	mdot ALIASES TU.mdot;
+	x_turb_out ALIASES TU.outlet.x;
 METHODS
-METHOD on_load;
+(* first test case: just some plausible values *)
+METHOD specify_1;
+	RUN ClearAll;
 	FIX PU.inlet.p;
-	PU.inlet.p := 1 {bar};
 	FIX PU.inlet.h;
-	PU.inlet.h := 104.9 {kJ/kg};
-
 	FIX PU.outlet.p;
-	PU.outlet.p := 250 {bar};
-
 	FIX BO.outlet.h;
-	BO.outlet.h := 3772 {kJ/kg};
 	FIX TU.eta;
 	FIX PU.eta;
 	FIX BO.eta;
-
+	FIX mdot;
+END specify_1;
+METHOD values_1;
+	PU.inlet.p := 1 {bar};
+	PU.inlet.h := 104.9 {kJ/kg};
+	PU.outlet.p := 250 {bar};
+	BO.outlet.h := 3772 {kJ/kg};
 	TU.eta := 0.85;
 	PU.eta := 0.65;
 	BO.eta := 0.9;
-
-	FIX mdot;
 	mdot := 900 {t/d};	
+END values_1;
+(*
+	second test case: numbers from Example 2.1, K Weston, 'Energy Conversion',
+	1992, http://www.personal.utulsa.edu/~kenneth-weston/
+*)
+METHOD specify;
+	RUN ClearAll;
+	FIX PU.outlet.p;
+	FIX BO.outlet.T;
+	FIX PU.inlet.p;
+	FIX PU.inlet.h;
+	FIX TU.eta;
+	FIX PU.eta;
+	FIX BO.eta;
+	FIX mdot;
+END specify;
+METHOD values;
+	PU.outlet.p := 2000 {psi};
+	BO.outlet.T := 1460 {R}; BO.outlet.h := 3400 {kJ/kg};
+	PU.inlet.p := 1 {psi};
+	PU.inlet.h := 69.73 {btu/lbm};
+	TU.eta := 1.0;
+	PU.eta := 1.0;
+	BO.eta := 1.0;
+	mdot := 900 {t/d};
+END values;
+METHOD on_load;
+	RUN specify;
+	RUN values;
 END on_load;
+METHOD self_test;
+	(* check the results against those from K Weston's book *)
+	(* note that we have NOT neglected pump work in this case! *)
+	ASSERT abs(eta - 0.4294) < 0.0005;
+	ASSERT abs(eta_carnot - 0.6152) < 0.0005;
+	ASSERT abs(TU.outlet.x - 0.7736) < 0.0005;
+END self_test;
 END rankine;
 
+(*------------------------------------------------------------------------------
+  REHEAT RANKINE CYCLE
+*)
+MODEL rankine_reheat;
+
+	BO1 IS_A boiler_simple;
+	BO2 IS_A boiler_simple;
+	TU1 IS_A turbine_simple;
+	TU2 IS_A turbine_simple;
+	CO IS_A condenser_simple;
+	PU IS_A pump_simple;
+
+	BO1.outlet, TU1.inlet ARE_THE_SAME;
+	TU1.outlet, BO2.inlet ARE_THE_SAME;
+	BO2.outlet, TU2.inlet ARE_THE_SAME;
+	TU2.outlet, CO.inlet ARE_THE_SAME;
+	CO.outlet, PU.inlet ARE_THE_SAME;
+	PU.outlet, BO1.inlet ARE_THE_SAME;
+
+	BO1.eta, BO2.eta ARE_THE_SAME;
+
+	(* boiler peak temperature is reached for both main and reheat... *)
+	BO1.outlet.T, BO2.outlet.T ARE_THE_SAME;
+
+	mdot ALIASES PU.mdot;
+
+	T_H ALIASES BO1.outlet.T;
+	T_C ALIASES CO.outlet.T;
+
+	eta IS_A fraction;
+	eta * (BO1.Qdot_fuel + BO2.Qdot_fuel - PU.Wdot) = TU1.Wdot + TU2.Wdot;
+
+	eta_carnot IS_A fraction;
+	eta_carnot = 1 - T_C / T_H;
+
+METHODS
+METHOD on_load;
+	FIX BO1.eta;
+	BO1.eta := 1.0;
+	FIX TU1.eta, TU2.eta;
+	TU1.eta := 1.0;
+	TU2.eta := 1.0;
+	FIX PU.eta;
+	PU.eta := 1.0;
+	FIX PU.inlet.p;
+	PU.inlet.p := 1 {psi};
+	FIX PU.inlet.h;
+	PU.inlet.h := 69.73 {btu/lbm};
+	FIX BO1.outlet.T;
+	BO1.outlet.T := 1460 {R};
+	BO1.outlet.h := 3000 {kJ/kg}; (* guess *)
+	FIX PU.outlet.p;
+	PU.outlet.p := 2000 {psi};
+	FIX mdot;
+	mdot := 900 {t/d};
+
+	(* this value here is what defines the intermediate pressure *)
+	FIX TU1.outlet.h;
+	TU1.outlet.h := 2800 {kJ/kg};
+
+	TU2.inlet.h := 3000 {kJ/kg}; (* guess *)
+END on_load;
+END rankine_reheat;
+
+(*------------------------------------------------------------------------------
+  REGENERATIVE RANKINE CYCLE
+*)
 (*
 	Add a boiler feedwater heater and two-stage turbine
 *)
@@ -386,13 +496,14 @@ MODEL rankine_regen;
 	T_C ALIASES CO.outlet.T;
 
 	eta IS_A fraction;
-	eta * (BO.Qdot_fuel - PU1.Wdot - PU2.Wdot) = TU1.Wdot + TU2.Wdot;
+	eta * (BO.Qdot_fuel + abs(PU1.Wdot) + abs(PU2.Wdot)) = TU1.Wdot + TU2.Wdot;
 
 	eta_carnot IS_A fraction;
 	eta_carnot = 1 - T_C / T_H;
 
 METHODS
 METHOD on_load;
+	RUN ClearAll;
 
 	FIX BO.eta;
 	BO.eta := 1.0;
@@ -429,7 +540,26 @@ METHOD on_load;
 	HE.cons_mass.included := FALSE;
 	
 END on_load;
-END rankine_regen;	
+END rankine_regen;
+
+MODEL rankine_compare;
+	simple IS_A rankine;
+	regen IS_A rankine_regen;
+	simple.BO.inlet.p, regen.BO.inlet.p ARE_THE_SAME;
+	simple.BO.inlet.h, regen.BO.inlet.h ARE_THE_SAME;
+	simple.BO.Qdot_fuel, regen.BO.Qdot_fuel ARE_THE_SAME;
+	simple.CO.outlet.T, regen.CO.outlet.T ARE_THE_SAME;
+	simple.BO.eta, regen.BO.eta ARE_THE_SAME;
+	simple.TU.eta, regen.TU1.eta, regen.TU2.eta ARE_THE_SAME;
+	simple.PU.eta, regen.PU1.eta, regen.PU2.eta ARE_THE_SAME;
+	simple.mdot, regen.mdot ARE_THE_SAME;
+METHODS
+METHOD on_load;
+	RUN ClearAll;
+	RUN regen.on_load;
+END on_load;
+END rankine_compare;
+
 
 
 
