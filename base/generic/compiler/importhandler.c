@@ -35,7 +35,7 @@
 
 #include <string.h>
 
-#define SEARCH_DEBUG
+/* #define SEARCH_DEBUG */
 /* #define IMPORTHANDLER_VERBOSE */
 
 /*
