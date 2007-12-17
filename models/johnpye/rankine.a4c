@@ -452,10 +452,13 @@ METHOD on_load;
 
 	(* this value here is what defines the intermediate pressure *)
 	FIX TU1.outlet.h;
-	TU1.outlet.h := 2800 {kJ/kg};
+	TU1.outlet.h := 1210 {btu/lbm};
 
 	TU2.inlet.h := 3000 {kJ/kg}; (* guess *)
 END on_load;
+METHOD self_test;
+	ASSERT abs(eta - 0.443) < 0.0005;
+END self_test;
 END rankine_reheat;
 
 (*------------------------------------------------------------------------------
