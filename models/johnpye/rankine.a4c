@@ -506,14 +506,27 @@ MODEL rankine_regen;
 	T_C ALIASES CO.outlet.T;
 
 	eta IS_A fraction;
-	eta * (BO.Qdot_fuel + abs(PU1.Wdot) + abs(PU2.Wdot)) = TU1.Wdot + TU2.Wdot;
+	eta * (BO.Qdot_fuel) = TU1.Wdot + TU2.Wdot + PU1.Wdot + PU2.Wdot;
 
 	Wdot_TU1 ALIASES TU1.Wdot;
 	Wdot_TU2 ALIASES TU2.Wdot;
+	Wdot_PU1 ALIASES PU1.Wdot;
+	Wdot_PU2 ALIASES PU2.Wdot;
+	Qdot_fuel ALIASES BO.Qdot_fuel;
 
 	eta_carnot IS_A fraction;
 	eta_carnot = 1 - T_C / T_H;
 
+	(* some checking output... *)
+
+	phi_weston IS_A fraction;
+	phi_weston = (PU2.inlet.h - PU1.outlet.h) / (TU1.outlet.h - PU1.outlet.h);
+
+	w_net IS_A specific_energy;
+	TU1.mdot * w_net = TU1.mdot * (TU1.inlet.h - TU1.outlet.h) + TU2.mdot * (TU2.inlet.h - TU2.outlet.h);
+
+	q_a IS_A specific_energy;
+	q_a = TU1.inlet.h - PU2.outlet.h;
 METHODS
 (*
 	The on_load scenario here is example 2.6 from K Weston (op. cit.), p. 55.
@@ -530,7 +543,7 @@ METHOD on_load;
 
 	(* mass flow rate is arbitrary *)
 	FIX mdot;
-	mdot := 900 {t/d};
+	mdot := 10 {kg/s};
 	
 	(* max pressure constraint *)
 	FIX PU2.outlet.p;
@@ -543,9 +556,11 @@ METHOD on_load;
 	BO.outlet.h := 1400 {btu/lbm}; (* guess *)
 
 	(* intermediate temperature setting *)
-	FIX TU1.outlet.T;
+	FIX TU1.outlet.p;
+	TU1.outlet.p := 200 {psi};
+	(* FIX TU1.outlet.T;
 	TU1.outlet.T := 860 {R}; (* 400 °F *)
-	TU1.outlet.h := 3000 {kJ/kg}; (* guess *)
+	TU1.outlet.h := 3000 {kJ/kg}; (* guess *) *)
 
 	(* minimum pressure constraint *)
 	FIX CO.outlet.p;
@@ -557,13 +572,41 @@ METHOD on_load;
 
 	(* remove the redundant balance equations *)
 	HE.cons_mass.included := FALSE;
-	HE.cons_en.included := FALSE;
+	(* HE.cons_en.included := FALSE; *)
 
 	(* fix the bleed ratio *)
 	FIX BL.phi;
-	BL.phi := 0.1;
+	BL.phi := 0.251;
+
+	(* FIX BL.outlet.h;
+	BL.outlet.h := 355.5 {btu/lbm}; *)
 	
 END on_load;
+METHOD self_test;
+	ASSERT abs(TU1.inlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
+	ASSERT abs(TU1.outlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
+	ASSERT abs(TU2.outlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
+	ASSERT abs(PU1.inlet.s - 0.1326 {btu/lbm/R}) < 0.001 {btu/lbm/R};
+	ASSERT abs(PU1.outlet.s - 0.1326 {btu/lbm/R}) < 0.002 {btu/lbm/R};
+	ASSERT abs(PU2.inlet.s - 0.5438 {btu/lbm/R}) < 0.002 {btu/lbm/R};
+	ASSERT abs(PU2.outlet.s - 0.5438 {btu/lbm/R}) < 0.002 {btu/lbm/R};
+
+	ASSERT abs(TU1.inlet.h - 1474.1 {btu/lbm}) < 1.5 {btu/lbm};
+	ASSERT abs(TU1.outlet.h - 1210.0 {btu/lbm}) < 1.5 {btu/lbm};
+	ASSERT abs(TU2.outlet.h - 871.0 {btu/lbm}) < 1.5 {btu/lbm};
+	ASSERT abs(PU1.inlet.h - 69.73 {btu/lbm}) < 0.001 {btu/lbm};
+	ASSERT abs(PU1.outlet.h - 69.73 {btu/lbm}) < 1.0 {btu/lbm};
+	ASSERT abs(PU2.inlet.h - 355.5 {btu/lbm}) < 1.5 {btu/lbm};
+	ASSERT abs(PU2.outlet.h - 355.5 {btu/lbm}) < 8 {btu/lbm};
+
+	ASSERT abs(w_net - 518.1 {btu/lbm}) < 0.3 {btu/lbm};
+
+	ASSERT abs(w_net * mdot - (TU1.Wdot + TU2.Wdot)) < 1 {W};
+
+	ASSERT abs(q_a - 1118.6 {btu/lbm}) < 7 {btu/lbm};
+
+	ASSERT abs(eta - 0.463) < 0.003;
+END self_test;
 END rankine_regen;
 
 MODEL rankine_compare;
@@ -585,6 +628,3 @@ END on_load;
 END rankine_compare;
 
 
-
-
-	
