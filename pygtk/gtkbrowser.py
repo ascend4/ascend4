@@ -154,6 +154,7 @@ class Browser:
 		#print "OPTIONS_______________:",self.options
 
 		self.assets_dir = self.options.assets_dir
+		loading.create_window(self.assets_dir)
 		
 		self.observers = []
 		self.clip = None
@@ -504,6 +505,7 @@ class Browser:
 	def run(self):
 		self.window.show()
 		loading.print_status("ASCEND is now running")
+		loading.complete()
 		gtk.main()
 
 #   ------------------
