@@ -47,14 +47,6 @@ class IncidenceMatrixWindow:
 
 		cmapdata = {'red':tuple(red), 'green':tuple(green), 'blue':tuple(blue)}
 
-		# prepare colour map
-#		cmapdata = {
-#			          # IM_NULL      IM_ACTIVE_FIXED IM_DORMANT_FREE IM_DORMANT_FIXED IM_ACTIVE_FREE
-#			'red'  :  ((0., 1., 1.), (1., 0., 0.), (xx,                            (0.5, 0., 0.)),
-#			'green':  ((0., 1., 1.), (1., 0., 0.)                                   , (0.5, 1., 1.)),
-#			'blue' :  ((0., 1., 1.), (1., 0.3, 0.3)                                 , (0.5, 0., 0.))
-#		}
-
 		_im_cmap =  LinearSegmentedColormap('im_cmap',  cmapdata, n+1)
 
 		pylab.ioff()
