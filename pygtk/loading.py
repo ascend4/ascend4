@@ -105,7 +105,6 @@ class LoadingWindow:
 			sys.exit(1)
 	
 	def print_status(self,status,msg=None):
-		print "STATUS = ",status
 		if self.is_loading:
 			print status
 			self.label.set_text(status)
