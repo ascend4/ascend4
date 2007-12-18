@@ -22,7 +22,7 @@ MODEL steam_state;
 	s IS_A specific_entropy;
 	mu IS_A viscosity;
 
-	thermo: iapws97_uvTxsmu_ph(
+	props: iapws97_uvTxsmu_ph(
 		p,h : INPUT;
 		u,v,T,x,s,mu : OUTPUT
 	);
@@ -92,14 +92,14 @@ MODEL pump_simple REFINES steam_equipment;
 	outlet_is.s, inlet.s ARE_THE_SAME;
 	eta IS_A fraction;
 	
-	eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
+	eta_eq:eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
 
 	(* work done on the environment, will be negative *)
 	Wdot IS_A energy_rate;
-	Wdot = eta * mdot * (inlet.h - outlet.h);
+	Wdot_eq:Wdot = eta * mdot * (inlet.h - outlet.h);
 
 	w IS_A specific_energy;
-	w = eta * (outlet.h - inlet.h);
+	w_eq:w = eta * (outlet.h - inlet.h);
 
 END pump_simple;
 
@@ -135,14 +135,14 @@ MODEL turbine_simple REFINES steam_equipment;
 	outlet_is.s, inlet.s ARE_THE_SAME;
 
 	eta IS_A fraction;
-	eta * (inlet.h - outlet_is.h) = (inlet.h - outlet.h);
+	eta_eq:eta * (inlet.h - outlet_is.h) = (inlet.h - outlet.h);
 	
 	(* work done on the environment, will be positive *)
 	Wdot IS_A energy_rate;
-	Wdot = eta * mdot * (inlet.h - outlet.h);
+	Wedot_eq:Wdot = eta * mdot * (inlet.h - outlet.h);
 
 	w IS_A specific_energy;
-	w = inlet.h - outlet.h;
+	w_eq:w = inlet.h - outlet.h;
 
 END turbine_simple;
 
@@ -297,7 +297,7 @@ MODEL tee;
 	cons_mass: inlet.mdot = outlet.mdot + outlet_branch.mdot;
 
 	phi IS_A fraction;
-	phi * inlet.mdot = outlet_branch.mdot;
+	phi_eq: phi * inlet.mdot = outlet_branch.mdot;
 
 END tee;	
 
@@ -506,7 +506,7 @@ MODEL rankine_regen;
 	T_C ALIASES CO.outlet.T;
 
 	eta IS_A fraction;
-	eta * (BO.Qdot_fuel) = TU1.Wdot + TU2.Wdot + PU1.Wdot + PU2.Wdot;
+	eta_eq:eta * (BO.Qdot_fuel) = TU1.Wdot + TU2.Wdot + PU1.Wdot + PU2.Wdot;
 
 	Wdot_TU1 ALIASES TU1.Wdot;
 	Wdot_TU2 ALIASES TU2.Wdot;
@@ -520,13 +520,17 @@ MODEL rankine_regen;
 	(* some checking output... *)
 
 	phi_weston IS_A fraction;
-	phi_weston = (PU2.inlet.h - PU1.outlet.h) / (TU1.outlet.h - PU1.outlet.h);
+	phi_weston_eq:phi_weston * (TU1.outlet.h - PU1.outlet.h) = (PU2.inlet.h - PU1.outlet.h);
+	phi_eq:phi_weston = phi;
 
 	w_net IS_A specific_energy;
-	TU1.mdot * w_net = TU1.mdot * (TU1.inlet.h - TU1.outlet.h) + TU2.mdot * (TU2.inlet.h - TU2.outlet.h);
+	w_net_eq: TU1.mdot * w_net = TU1.mdot * (TU1.inlet.h - TU1.outlet.h) + TU2.mdot * (TU2.inlet.h - TU2.outlet.h);
 
 	q_a IS_A specific_energy;
 	q_a = TU1.inlet.h - PU2.outlet.h;
+
+	cons_en: HE.inlet.mdot * HE.inlet.h + HE.inlet_heat.mdot * HE.inlet_heat.h = HE.outlet.mdot * HE.outlet.h;
+
 METHODS
 (*
 	The on_load scenario here is example 2.6 from K Weston (op. cit.), p. 55.
@@ -571,8 +575,12 @@ METHOD on_load;
 	CO.outlet.h := 69.73 {btu/lbm};
 
 	(* remove the redundant balance equations *)
-	HE.cons_mass.included := FALSE;
-	(* HE.cons_en.included := FALSE; *)
+	HE.cons_mass.included := TRUE;
+	HE.cons_en.included := TRUE;
+	BL.cons_mass.included := FALSE;
+	phi_weston_eq.included := TRUE;
+	phi_eq.included := FALSE;
+	cons_en.included := FALSE;
 
 	(* fix the bleed ratio *)
 	FIX BL.phi;
@@ -606,6 +614,8 @@ METHOD self_test;
 	ASSERT abs(q_a - 1118.6 {btu/lbm}) < 7 {btu/lbm};
 
 	ASSERT abs(eta - 0.463) < 0.003;
+
+	ASSERT abs(phi - 0.251) < 0.001;
 END self_test;
 END rankine_regen;
 
