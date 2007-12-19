@@ -44,7 +44,7 @@
 #include <compiler/extcall.h>
 #include <compiler/relation_type.h>
 
-#include <solver/incidence.h>
+#include <system/incidence.h>
 
 #include "old_utils.h"
 #include "HelpProc.h"

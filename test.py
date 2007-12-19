@@ -174,6 +174,18 @@ class TestCompiler(Ascend):
 	#def testdefault20fail(self):
 	#	self.defaultmethodstest('testdefault20fail')
 
+class TestSystem(AscendSelfTester):
+
+	def testwritegraph(self):
+		M = self._run('testlog10')
+		M.run(self.L.findType('testlog10').getMethod('on_load'))
+		if platform.system!="Windows":
+			f = file('temp.png','wb')
+			M.write(f,"dot")
+			f.close()
+		else:
+			self.fail("not implemented on windows")
+
 class TestSolver(AscendSelfTester):
 	
 	def testlog10(self):
@@ -216,13 +228,6 @@ class TestSolver(AscendSelfTester):
 		M = self._run('example_1_6_1',"QRSlv","johnpye/sunpos.a4c")
 		self.assertAlmostEqual( float(M.t_solar), M.t_solar.as("s"))
 		self.assertAlmostEqual( float(M.t_solar)/3600, M.t_solar.as("h"))
-
-	def testwritegraph(self):
-		M = self._run('testlog10')
-		if platform.system!="Windows":
-			M.write(sys.stderr,"dot")		
-		else:
-			self.fail("not implemented on windows")
 
 	def testrelinclude(self):
 		self.L.load('test/relinclude.a4c')

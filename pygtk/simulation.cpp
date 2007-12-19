@@ -162,10 +162,9 @@ Simulation::write(FILE *fp, const char *type) const{
 		if(!sys)throw runtime_error("Can't write DOT file: simulation not built");
 		CONSOLE_DEBUG("Writing graph...");
 		if(!fp){
-			CONSOLE_DEBUG("... to stdout");
-			fp=stdout;
+			throw runtime_error("Need a file to write to in Simulation::write");
 		}
-		res = system_write_graph(sys, fp, &rfilter, &vfilter);
+		res = system_write_graph(sys, fp, "png");
 		if(res){
 			stringstream ss;
 			ss << "Error running system_write_graph (err " << res << ")";

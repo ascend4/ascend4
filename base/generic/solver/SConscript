@@ -1,7 +1,6 @@
 Import('libascend_env')
 
 csrcs = Split("""
-	incidence.c
 	slv_interface.c
 	mps.c
 	slv2.c slv6.c slv7.c
