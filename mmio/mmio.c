@@ -439,7 +439,7 @@ int mm_write_mtx_crd(char fname[], int M, int N, int nz, int I[], int J[],
     return 0;
 }
   
-
+#ifndef HAVE_STRDUP
 /**
 *  Create a new copy of a string s.  strdup() is a common routine, but
 *  not part of ANSI C, so it is included here.  Used by mm_typecode_to_str().
@@ -451,6 +451,7 @@ char *strdup(const char *s)
 	char *s2 = (char *) malloc((len+1)*sizeof(char));
 	return strcpy(s2, s);
 }
+#endif
 
 char  *mm_typecode_to_str(MM_typecode matcode)
 {

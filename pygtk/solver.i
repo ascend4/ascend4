@@ -18,11 +18,6 @@
 #include "solverreporter.h"
 #include "curve.h"
 #include "matrix.h"
-
-#ifdef ASC_WITH_MFGRAPH
-# include <fstream>
-# include <mfgraph/mfg_draw_graph.h>
-#endif
 %}
 
 %pythoncode{
@@ -209,16 +204,6 @@ public:
 		def __repr__(self):
 			return str([ self.row, self.col, int(self.type) ]);
 	}
-}
-
-%extend IncidenceMatrix{
-#ifdef ASC_WITH_MFGRAPH
-	void writeBlockGraph(const char *filen,const int block){
-		mfg::DrawGraph G = self->getBlockGraph(block);
-		std::ofstream f(filen);
-		G.PrintAsDot(f);
-	}
-#endif
 }
 
 /* Variables and relations belong to solvers, so they're here: */
