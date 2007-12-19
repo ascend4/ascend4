@@ -460,9 +460,9 @@ class TestLSODE(Ascend):
 	def testwritegraph(self):
 		self.L.load('johnpye/lotka.a4c')
 		M = self.L.findType('lotka').getSimulation('sim')
-		F = file('lotka.dot','w')
+		F = file('lotka.png','w')
 		M.build()
-		M.write(F,"dot")		
+		M.write(F,"dot")
 
 
 #-------------------------------------------------------------------------------

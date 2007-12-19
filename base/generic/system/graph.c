@@ -96,13 +96,11 @@ int system_write_graph(slv_system_t sys
 	/* now create edges */
 	const struct var_variable **ivars;
 	unsigned niv;
-	unsigned r,c;
 	char reltemp[200];
 	struct Agedge_t *e;
 	for(i=0; i < id.nprow; ++i){
 		ivars = rel_incidence_list(id.rlist[i]);
 		niv = rel_n_incidences(id.rlist[i]);
-		r = id.e2pr[i];
 		sprintf(reltemp,"r%d",rel_sindex(id.rlist[i]));
 		char *relname;
 		relname = rel_make_name(sys,id.rlist[i]);
@@ -125,7 +123,7 @@ int system_write_graph(slv_system_t sys
 	}
 
 	if(nodecount > 300 || edgecount > 300){
-		ERROR_REPORTER_HERE(ASC_USER_ERR,"Graph is too complex, will not launch GraphViz (%d nodes, %d edges)", nodecount, edgecount);
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Graph is too complex, will not launch GraphViz (%d nodes, %d edges)", nodecount, edgecount);
 		return 1;
 	}
 
