@@ -52,6 +52,7 @@ try:
 	from solverparameters import * # 'solver parameters' window
 	from help import *             # viewing help files
 	from incidencematrix import *  # incidence/sparsity matrix matplotlib window
+	from imagedialog import *      # image viewer window
 	from observer import *         # observer tab support
 	from properties import *       # solver_var properties dialog
 	from varentry import *         # for inputting of variables with units
@@ -795,6 +796,22 @@ class Browser:
 
 		_sp = IncidenceMatrixWindow(_im);
 		_sp.run();
+
+	def on_tools_incidencegraph_click(self,*args):
+		self.reporter.reportNote("Preparing incidence graph...")
+		import tempfile
+		f,fname = tempfile.mkstemp(suffix=".png")
+		f = file(fname,'wb')
+		self.reporter.reportNote("temp file name = %s" % fname)
+		self.reporter.reportNote("file = %s" % f)
+		try:
+			self.sim.write(f,'dot') # create a PNG file in f
+		except Exception,e:
+			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
+		f.close()
+		_ig = ImageDialog(self, self.window, fname, "Incidence Graph")
+		_ig.run()
+		os.unlink(fname)
 
 	def on_tools_repaint_tree_activate(self,*args):
 		self.reporter.reportNote("Repainting model view...")

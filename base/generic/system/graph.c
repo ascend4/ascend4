@@ -49,6 +49,10 @@ int system_write_graph(slv_system_t sys
 #ifdef WITH_GRAPHVIZ
 	Agraph_t *g;
 	GVC_t *gvc;
+
+	unsigned edgecount = 0;
+	unsigned nodecount = 0;
+
 	gvc = gvContext();
 	g = agopen("g",AGDIGRAPH);
 	agnodeattr(g,"shape","ellipse");
@@ -68,6 +72,7 @@ int system_write_graph(slv_system_t sys
 		n = agnode(g,temp);
 		agset(n,"label",relname);
 		ASC_FREE(relname);
+		nodecount++;
 	}
 
 	/* now create nodes for the variables */
@@ -85,6 +90,7 @@ int system_write_graph(slv_system_t sys
 			agset(n,"color","green");
 		}
 		ASC_FREE(varname);
+		nodecount++;
 	}
 
 	/* now create edges */
@@ -114,8 +120,14 @@ int system_write_graph(slv_system_t sys
 			}else{
 				e = agedge(g,m,n); /* from var to rel */
 			}
+			edgecount++;
 		}
-	}		
+	}
+
+	if(nodecount > 300 || edgecount > 300){
+		ERROR_REPORTER_HERE(ASC_USER_ERR,"Graph is too complex, will not launch GraphViz (%d nodes, %d edges)", nodecount, edgecount);
+		return 1;
+	}
 
 	gvLayout(gvc, g, "dot");
 	gvRender(gvc, g, (char*)format, fp);

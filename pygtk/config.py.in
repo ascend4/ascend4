@@ -11,3 +11,7 @@ PYGTK_ASSETS = "@PYGTK_ASSETS@"
 
 # The SVG icons that are OK on GNOME are not OK on Windows
 ICON_EXTENSION = "@ICON_EXTENSION@"
+
+# Do we have graphviz available? Will activate the 'Show incidence graph' menu.
+WITH_GRAPHVIZ = "@ASC_WITH_GRAPHVIZ@"
+

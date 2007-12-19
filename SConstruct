@@ -2291,6 +2291,7 @@ subst_dict = {
 	, '@ASC_CONOPT_DLPATH@':c_escape(env.subst("$CONOPT_DLPATH"))
 	, '@SOURCE_ROOT@':c_escape(os.path.abspath(str(env.Dir("#"))))
 	, '@WITH_SOLVERS@':",".join(env.get('WITH_SOLVERS'))
+	, '@WITH_GRAPHVIZ@': str(int(env.get('WITH_GRAPHVIZ')))
 }
 
 if env.get('WITH_DOC'):
@@ -2301,7 +2302,6 @@ if env.get('WITH_DOC'):
 for k,v in {
 		'ASC_WITH_IDA':with_ida
 		,'ASC_WITH_DMALLOC':with_dmalloc
-		,'ASC_WITH_GRAPHVIZ':with_graphviz
 		,'ASC_WITH_UFSPARSE':with_ufsparse
 		,'ASC_WITH_CONOPT':with_conopt
 		,'ASC_LINKED_CONOPT':env.get('CONOPT_LINKED')
