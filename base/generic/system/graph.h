@@ -37,10 +37,12 @@
 	Write graphviz output for the graph connecting the filter-selected relations
 	and variables. The idea is that this graph should be creatable even before
 	a solver has been selected, which is why it's prefixed with 'system_'.
+
+	@return 0 on success, non-zero on error.
 */
 ASC_DLLSPEC int system_write_graph(slv_system_t sys
 	, FILE *fp
-	, const rel_filter_t *rfilter, const var_filter_t *vfilter
+	, const char *format
 );
 
 #endif

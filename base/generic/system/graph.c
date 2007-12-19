@@ -26,6 +26,8 @@
 */
 #include "graph.h"
 #include "slv_client.h"
+#include "incidence.h"
+
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 
@@ -33,10 +35,97 @@
 #include <graphviz/gvc.h>
 #endif
 
+#ifndef WITH_GRAPHVIZ
+# error where is graphviz?
+#endif
+
 int system_write_graph(slv_system_t sys
 	, FILE *fp
-	, const rel_filter_t *rfilter, const var_filter_t *vfilter
+	, const char *format
 ){
+	incidence_vars_t id;
+	build_incidence_data(sys, &id);
+
+#ifdef WITH_GRAPHVIZ
+	Agraph_t *g;
+	GVC_t *gvc;
+	gvc = gvContext();
+	g = agopen("g",AGDIGRAPH);
+	agnodeattr(g,"shape","ellipse");
+	agnodeattr(g,"label","");
+	agnodeattr(g,"color","");
+	agnodeattr(g,"style","");
+
+	char temp[200];
+
+	/* first create nodes for the relations */
+	unsigned i;
+	Agnode_t *n, *m;
+	for(i=0; i < id.neqn; ++i){
+		char *relname;
+		relname = rel_make_name(sys,id.rlist[i]);
+		sprintf(temp,"r%d",rel_sindex(id.rlist[i]));
+		n = agnode(g,temp);
+		agset(n,"label",relname);
+		ASC_FREE(relname);
+	}
+
+	/* now create nodes for the variables */
+	unsigned j;
+	for(j=0; j < id.nvar; ++j){
+		char *varname;
+		varname = var_make_name(sys,id.vlist[j]);
+		sprintf(temp,"v%d",var_sindex(id.vlist[j]));
+		n = agnode(g,temp);
+		agset(n,"label",varname);
+		agset(n, "shape", "box");
+		if(var_fixed(id.vlist[j])){
+			CONSOLE_DEBUG("VAR '%s' IS FIXED",varname);
+			agset(n,"style","filled");
+			agset(n,"color","green");
+		}
+		ASC_FREE(varname);
+	}
+
+	/* now create edges */
+	const struct var_variable **ivars;
+	unsigned niv;
+	unsigned r,c;
+	char reltemp[200];
+	struct Agedge_t *e;
+	for(i=0; i < id.nprow; ++i){
+		ivars = rel_incidence_list(id.rlist[i]);
+		niv = rel_n_incidences(id.rlist[i]);
+		r = id.e2pr[i];
+		sprintf(reltemp,"r%d",rel_sindex(id.rlist[i]));
+		char *relname;
+		relname = rel_make_name(sys,id.rlist[i]);
+		CONSOLE_DEBUG("rel = '%s'",relname);
+		ASC_FREE(relname);
+		for(j=0; j < niv; ++j){
+			const struct var_variable *v;
+			v = ivars[j];
+			sprintf(temp,"v%d",var_sindex(v));
+			n = agnode(g, reltemp);
+			m = agnode(g, temp);
+
+			if(id.v2pc[var_sindex(v)]==id.e2pr[rel_sindex(id.rlist[i])]){
+				e = agedge(g,n,m); /* from rel to var */
+			}else{
+				e = agedge(g,m,n); /* from var to rel */
+			}
+		}
+	}		
+
+	gvLayout(gvc, g, "dot");
+	gvRender(gvc, g, (char*)format, fp);
+
+#else
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Function system_write_graph not available (GraphiViz not present at build-time)");
+	return 1; /* error */
+#endif
+
+#if 0
 	int nr,nsr,nv,nsv,niv;
 	int i,j;
 	struct rel_relation **srels;
@@ -70,7 +159,11 @@ int system_write_graph(slv_system_t sys
 	for(j=0; j<nsv; ++j){
 		if(var_apply_filter(svars[j],vfilter)){
 			varname = var_make_name(sys,svars[j]);
-			fprintf(fp,"\tv%d[label=\"%s\"]\n",j,varname);
+			if(var_fixed(svars[j])){
+				fprintf(fp,"s\tv%d[label=\"%s\",style=filled,color=green]\n",j,varname);
+			}else{
+				fprintf(fp,"\tv%d[label=\"%s\"]\n",j,varname);
+			}
 			ASC_FREE(varname);
 		}
 	}
@@ -85,13 +178,16 @@ int system_write_graph(slv_system_t sys
 
 		for(j=0; j<niv; ++j){
 			if(!var_apply_filter(ivars[j],vfilter))continue;
-
-			fprintf(fp,"\tv%d->r%d\n",var_sindex(ivars[j]),i);
+			if(j==i){
+				fprintf(fp,"\tr%d->v%d\n",i,var_sindex(ivars[j]));
+			}else{
+				fprintf(fp,"\tv%d->r%d\n",var_sindex(ivars[j]),i);
+			}
 		}
 	}
 
 	fprintf(fp,"}\n");
-
+#endif
 	CONSOLE_DEBUG("Completed graph output");
 	return 0;
 }

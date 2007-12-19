@@ -10,7 +10,7 @@
 #include "config.h"
 
 extern "C"{
-#include <solver/incidence.h>
+#include <system/incidence.h>
 }
 
 typedef enum{

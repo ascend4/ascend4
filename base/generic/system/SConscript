@@ -6,13 +6,13 @@ csrcs = Split("""
 	conditional.c discrete.c
 	diffvars.c
 	jacobian.c
-	graph.c
 	logrel.c logrelman.c model_reorder.c
 	rel.c relman.c
 	slv.c
 	slv_common.c
 	slv_param.c
 	slv_stdcalls.c system.c var.c
+	incidence.c
 """)
 
 solver_env = libascend_env.Copy()
@@ -22,6 +22,17 @@ objs = []
 
 for c in csrcs:
 	objs += solver_env.SharedObject(c)
+
+incid_env = solver_env.Copy()
+if libascend_env.get('WITH_GRAPHVIZ'):
+	incid_env.Append(CPPDEFINES=['WITH_GRAPHVIZ'])
+else:
+	print "NO GRAPHVIZ----"
+
+objs += incid_env.SharedObject('graph.c')
+
+if libascend_env.get('WITH_GRAPHVIZ'):
+	libascend_env.Append(LIBS=libascend_env['GRAPHVIZ_LIBS'])
 
 #--------------------
 # INSTALL
