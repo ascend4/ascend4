@@ -633,26 +633,32 @@ opts.Add(BoolOption(
 
 #------ f --------
 opts.Add(PackageOption(
-	'MFGRAPH_PREFIX'
-	,"Where are your MFGRAPH files?"
+	'GRAPHVIZ_PREFIX'
+	,"Where are your GRAPHVIZ files?"
 	,default_prefix
 ))
 
 opts.Add(PackageOption(
-	'MFGRAPH_CPPPATH'
-	,"Where are your MFGRAPH include files?"
+	'GRAPHVIZ_CPPPATH'
+	,"Where are your GRAPHVIZ include files?"
 	,default_cpppath
 ))
 
 opts.Add(PackageOption(
-	'MFGRAPH_LIBPATH'
-	,"Where are your MFGRAPH libraries?"
+	'GRAPHVIZ_LIBPATH'
+	,"Where are your GRAPHVIZ libraries?"
 	,default_libpath
 ))
 
+opts.Add(
+	'GRAPHVIZ_LIBS'
+	,"What are your GRAPHVIZ libraries named?"
+	,['gvc','graph','cdt']
+)
+
 opts.Add(BoolOption(
-	'WITH_MFGRAPH'
-	,"Link to the MFGRAPH library (if available, for generating incidence graphs)"
+	'WITH_GRAPHVIZ'
+	,"Link to the GRAPHVIZ library (if available, for generating incidence graphs)"
 	,True
 ))
 
@@ -827,8 +833,8 @@ without_scrollkeeper_reason = "disabled by options/config.py"
 with_dmalloc = env.get('WITH_DMALLOC')
 without_dmalloc_reason = "disabled by options/config.py"
 
-with_mfgraph = env.get('WITH_MFGRAPH')
-without_mfgraph_reason = "disabled by options/config.py"
+with_graphviz = env.get('WITH_GRAPHVIZ')
+without_graphiviz_reason = "disabled by options/config.py"
 
 with_ufsparse = env.get('WITH_UFSPARSE')
 without_ufsparse_reason = "disabled by options/config.py"
@@ -1099,7 +1105,7 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False):
 	#print "LIBS is currently:",context.env.get('LIBS')
 	keep = KeepContext(context,varprefix,static)
 
-	if not context.env.has_key(varprefix+'_LIB'):
+	if not context.env.has_key(varprefix+'_LIB') and not context.env.has_key(varprefix+'_LIBS'):
 		# if varprefix_LIB were in env, KeepContext would 
 		# have appended it already
 		context.env.Append(LIBS=[libname])
@@ -1262,19 +1268,21 @@ def CheckDMalloc(context):
 	return CheckExtLib(context,'dmalloc',dmalloc_test_text)
 
 #----------------
-# mfgraph test
+# graphviz test
 
-mfgraph_test_text = """
-#include <mfgraph/mfg_draw_graph.h>
+graphviz_test_text = """
+#include <graphviz/gvc.h>
 int main(void){
-	using namespace mfg;
-	DrawGraph g;
+	Agraph_t *g;
+	GVC_t *gvc;
+	gvc = gvContext();
+	g = agopen("g", AGDIGRAPH);
 	return 0;
 }
 """
 
-def CheckMFGraph(context):
-	return CheckExtLib(context,'mfgraph',mfgraph_test_text,ext=".cpp")
+def CheckGraphViz(context):
+	return CheckExtLib(context,'graphviz',graphviz_test_text,ext=".c")
 
 #----------------
 # ufsparse test
@@ -1888,7 +1896,7 @@ conf = Configure(env
 		, 'CheckDMalloc' : CheckDMalloc
 		, 'CheckLyx' : CheckLyx
 		, 'CheckLatex2HTML' : CheckLatex2HTML
-		, 'CheckMFGraph' : CheckMFGraph
+		, 'CheckGraphViz' : CheckGraphViz
 		, 'CheckUFSparse' : CheckUFSparse
 		, 'CheckTcl' : CheckTcl
 		, 'CheckTclVersion' : CheckTclVersion
@@ -1966,6 +1974,9 @@ if conf.CheckHeader('stdio.h') is False:
 if conf.CheckFunc('snprintf') is False:
 	print "Didn't find snprintf";
 	exit(1)
+
+if conf.CheckFunc('strdup'):
+	conf.env['HAVE_STRDUP'] = True
 
 # Math library
 
@@ -2094,19 +2105,19 @@ if with_dmalloc:
 		without_dmalloc_reason = 'dmalloc not found'
 		with_dmalloc = False
 
-# MFGRAPH
+# GRAPHVIZ
 
-if with_mfgraph:
-	if not conf.CheckMFGraph():
-		without_mfgraph_reason = 'mfgraph not found'
-		with_mfgraph = False
-		env['WITH_MFGRAPH'] = False
+if with_graphviz:
+	if not conf.CheckGraphViz():
+		without_graphviz_reason = 'graphviz not found'
+		with_graphviz = False
+		env['WITH_GRAPHVIZ'] = False
 
 # UFSPARSE
 
 if with_ufsparse:
 	if not conf.CheckUFSparse():
-		without_ufsparse_reason = 'mfgraph not found'
+		without_ufsparse_reason = 'ufsparse not found'
 		with_ufsparse = False
 		env['WITH_UFSPARSE'] = False
 
@@ -2290,7 +2301,7 @@ if env.get('WITH_DOC'):
 for k,v in {
 		'ASC_WITH_IDA':with_ida
 		,'ASC_WITH_DMALLOC':with_dmalloc
-		,'ASC_WITH_MFGRAPH':with_mfgraph
+		,'ASC_WITH_GRAPHVIZ':with_graphviz
 		,'ASC_WITH_UFSPARSE':with_ufsparse
 		,'ASC_WITH_CONOPT':with_conopt
 		,'ASC_LINKED_CONOPT':env.get('CONOPT_LINKED')

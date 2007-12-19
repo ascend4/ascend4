@@ -29,6 +29,10 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 
+#ifdef WITH_GRAPHVIZ
+#include <graphviz/gvc.h>
+#endif
+
 int system_write_graph(slv_system_t sys
 	, FILE *fp
 	, const rel_filter_t *rfilter, const var_filter_t *vfilter
