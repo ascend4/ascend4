@@ -804,10 +804,13 @@ class Browser:
 		f = file(fname,'wb')
 		self.reporter.reportNote("temp file name = %s" % fname)
 		self.reporter.reportNote("file = %s" % f)
+		self.start_waiting("Creating incidence graph...")
 		try:
 			self.sim.write(f,'dot') # create a PNG file in f
 		except Exception,e:
+			self.stop_waiting()
 			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
+		self.stop_waiting()
 		f.close()
 		_ig = ImageDialog(self, self.window, fname, "Incidence Graph")
 		_ig.run()

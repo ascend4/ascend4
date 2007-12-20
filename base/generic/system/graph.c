@@ -35,10 +35,6 @@
 #include <graphviz/gvc.h>
 #endif
 
-#ifndef WITH_GRAPHVIZ
-# error where is graphviz?
-#endif
-
 int system_write_graph(slv_system_t sys
 	, FILE *fp
 	, const char *format

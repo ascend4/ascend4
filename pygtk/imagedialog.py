@@ -11,6 +11,8 @@ class ImageDialog:
 		# GUI config
 		_xml = gtk.glade.XML(browser.glade_file,"imagedialog")
 		self.window = _xml.get_widget("imagedialog")
+		self.vbox = _xml.get_widget("vbox")
+		self.closebutton = _xml.get_widget("closebutton")
 		self.window.set_title(title)
 
 		if self.browser.icon:
@@ -20,11 +22,14 @@ class ImageDialog:
 		if parent:
 			self.parent = parent
 			self.window.set_transient_for(self.parent)
-
-		self.imageview = _xml.get_widget("imageview")
-		self.closebutton = _xml.get_widget("closebutton")
-
+		
+		s = gtk.ScrolledWindow()
+		self.imageview = gtk.Image()
 		self.imageview.set_from_file(imagefilename)
+		s.add_with_viewport(self.imageview)
+		self.imageview.show()
+		s.show()
+		self.vbox.add(s)
 
 		_xml.signal_autoconnect(self)
 
