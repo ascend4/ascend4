@@ -27,6 +27,10 @@
 	@TODO Simulations need much better management than they currently get,
 	once we start building simulations out of other simulations.
 	For now this file is largely empty.
+
+	FIXME the PyGTK doesn't use the g_simulation_list because it only has a
+	single simulation at a time. So beware of using Asc_DestroySimulations if
+	you haven't recorded your simulation.
 *//*
 	by Ben Allan
 	Version: $Revision: 1.2 $
@@ -52,7 +56,7 @@ ASC_DLLSPEC int g_compiler_timing;
 ASC_DLLSPEC struct gl_list_t *g_simulation_list;
 /**<  Global simulation list.*/
 
-ASC_DLLSPEC void Asc_DeAllocSim(struct Instance *inst);
+ASC_DLLSPEC void sim_destroy(struct Instance *inst);
 /**<
  *  Destroys the instance given.
  *  inst should be a simulation instance, and may be NULL.
@@ -81,13 +85,16 @@ ASC_DLLSPEC struct Instance *SimsCreateInstance(
 	returned if either type or name is NULL.
 
 	The returned instance should be destroyed by the caller using
-	Asc_DeAllocSim() or Asc_DestroySimulations().
+	sim_destroy() or Asc_DestroySimulations().
 
 	@param type      Name of the model type to create.
 	@param name      Name to give the new simulation.
 	@param format    Type of compilation to perform.
 	@param defmethod The method to call after instantiation, if present.
 	@return A pointer to the newly-created simulation instance.
+
+	@TODO is there a good reason why we don't pass a TypeDescription* instead
+	of a symchar for the name?
 */
 
 ASC_DLLSPEC void Asc_DestroySimulations(void);
@@ -131,7 +138,7 @@ ASC_DLLSPEC int Asc_SimsCmpSim(struct Instance *sim1, struct Instance *sim2);
  *  Returns 0 if they are the same, non-zero if different.
  */
 
-ASC_DLLSPEC void Asc_DeAllocSim(struct Instance *sim);
+ASC_DLLSPEC void sim_destroy(struct Instance *sim);
 /**<
  *  Deallocates a simulation instance.
  *  The instance and its associated root instance are destroyed using

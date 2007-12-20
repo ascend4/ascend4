@@ -335,7 +335,7 @@ int logrel_apply_filter( struct logrel_relation *logrel,
  */
 static void check_included_flag(void){
   if (INCLUDED_R == NULL || AscFindSymbol(INCLUDED_R) == NULL) {
-    INCLUDED_R = AddSymbolL("included",8);
+    INCLUDED_R = AddSymbol("included");
   }
 }
 

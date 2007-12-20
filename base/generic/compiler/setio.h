@@ -40,39 +40,31 @@
 #ifndef ASC_SETIO_H
 #define ASC_SETIO_H
 
+#include "expr_types.h"
+#include <general/dstring.h>
+#include <stdio.h>
+
 /**	@addtogroup compiler Compiler
 	@{
 */
 
 extern void WriteSetNode(FILE *f, CONST struct Set *s);
 /**< 
- *  <!--  void WriteSetNode(f,s)                                       -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  const struct Set *s;                                         -->
  *  Write this set node without any leading or trailing white space.
  */
 
 extern void WriteSet(FILE *f, CONST struct Set *s);
 /**< 
- *  <!--  void WriteSet(f,s)                                           -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  const struct Set *s;                                         -->
  *  Output the set with no leading or trailing white space.
  */
 
 extern void WriteSetNode2Str(Asc_DString *dstring, CONST struct Set *s);
 /**<
- *  <!--  void WriteSetNode2Str(dstring,s)                             -->
- *  <!--  Asc_DString *dstring;                                        -->
- *  <!--  const struct Set *s;                                         -->
  *  Write this set node without any leading or trailing white space.
  */
 
 extern void WriteSet2Str(Asc_DString *dstring, CONST struct Set *s);
 /**< 
- *  <!--  void WriteSet2Str(dsring,s)                                  -->
- *  <!--  Asc_DString *dstring;                                        -->
- *  <!--  const struct Set *s;                                         -->
  *  Output the set with no leading or trailing white space.
  */
 

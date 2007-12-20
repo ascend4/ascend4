@@ -25,6 +25,8 @@
  *  Last in CVS: $Revision: 1.23 $ $Date: 1998/03/17 22:08:30 $ $Author: ballan $
 */
 
+#include "evaluate.h"
+
 #include <stdio.h>
 #include <assert.h>
 #include <stdarg.h>
@@ -46,11 +48,6 @@
 #include "exprs.h"
 #include "find.h"
 #include "exprio.h"
-#include "evaluate.h"
-
-#ifndef lint
-static CONST char EvaluationRoutineRCSid[] = "$Id: evaluate.c,v 1.23 1998/03/17 22:08:30 ballan Exp $";
-#endif
 
 static struct gl_list_t *g_names_needed = NULL;
 /* global var so we are not passing nlist everywhere

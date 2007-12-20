@@ -826,7 +826,7 @@ int LibrGetNotes(Tcl_Interp *interp,symchar *type, symchar *lang,
     return TCL_ERROR;
   }
   len = gl_length(notes);
-  empty = AddSymbolL("",0);
+  empty = AddSymbol("");
   while (len > 0) {
     n = (struct Note *)gl_fetch(notes,len);
     len--;
@@ -976,7 +976,7 @@ int LibrDumpNotes(Tcl_Interp *interp, int tmax, long heldlist, symchar *dbid)
       return TCL_OK; /* empty database */
     }
   }
-  empty = AddSymbolL("~",1);
+  empty = AddSymbol("~");
 
   /* process type names */
   row = 0;

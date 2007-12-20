@@ -31,6 +31,8 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
  * much of this goes in bintoken.h.
  */
 
+#include "bintoken.h"
+
 #include <unistd.h> /* for getpid() */
 
 #include <utilities/config.h>
@@ -44,13 +46,10 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include <general/dstring.h>
 #include <general/pretty.h>
 
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "stattypes.h"
 #include "statio.h"
-#include "instance_enum.h"
 #include "instquery.h"
 #include "instance_io.h"
 #include "relation_io.h"
@@ -60,7 +59,7 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include "relation_util.h"
 #include "mathinst.h"
 /* last */
-#include "bintoken.h"
+
 #include "btprolog.h"
 
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))

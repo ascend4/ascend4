@@ -12,10 +12,6 @@ csrcs = Split("""
 
 solver_env = libascend_env.Copy()
 
-defs = []
-for i in libascend_env.get('WITH_SOLVERS'):
-	solver_env.Append(CPPDEFINES=["STATIC_"+i])
-
 objs = []
 
 if solver_env.get('WITH_CONOPT'):
@@ -29,7 +25,6 @@ if solver_env.get('WITH_CONOPT'):
 		)
 
 	objs += solver_env.SharedObject('conopt_dl.c')
-#	print "BUILDING CONOPT.OS"
 
 for c in csrcs:
 	objs += solver_env.SharedObject(c)

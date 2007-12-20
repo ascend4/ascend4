@@ -29,57 +29,43 @@
 
 #define ASC_BUILDING_INTERFACE
 
-#include <ctype.h>
 #include <tcl.h>
 #include "config.h"
+
+#include <compiler/bit.h>
+#include <compiler/pending.h>
+#include <compiler/simlist.h>
+#include <compiler/library.h>
+#include <compiler/instquery.h>
+#include <compiler/symtab.h>
+#include <compiler/createinst.h>
+#include <compiler/instantiate.h>
+#include <compiler/check.h>
+#include <compiler/copyinst.h>
+#include <compiler/destroyinst.h>
+#include <compiler/prototype.h>
+#include <compiler/instance_io.h>
+#include <compiler/statio.h>
+#include <compiler/statement.h>
+#include <compiler/bintoken.h>
+
 #include <utilities/ascMalloc.h>
 #include <general/tm_time.h>
 #include <general/list.h>
 #include <general/dstring.h>
+#include <general/tm_time.h>
 
-#include <compiler/instance_enum.h>
-#include <compiler/cmpfunc.h>
-#include <compiler/expr_types.h>
-#include <compiler/stattypes.h>
-#include <compiler/statement.h>
-#include <compiler/slist.h>
-#include <compiler/syntax.h>
-#include <compiler/prototype.h>
-#include <compiler/symtab.h>
-#include <compiler/instance_io.h>
-#include <compiler/instance_name.h>
-#include <compiler/parentchild.h>
-#include <compiler/instquery.h>
-#include <compiler/extinst.h>
-#include <compiler/child.h>
-#include <compiler/type_desc.h>
-#include <compiler/copyinst.h>
-#include <compiler/destroyinst.h>
-#include <compiler/module.h>
-#include <compiler/library.h>
-#include <compiler/name.h>
-#include <compiler/pending.h>
-#include <compiler/check.h>
-#include <compiler/stattypes.h>
-#include <compiler/relation_type.h>
-#include <compiler/bintoken.h>
-#include <compiler/instantiate.h>
-#include <compiler/value_type.h>
-#include <compiler/statio.h>
-#include <compiler/bit.h>
-#include <compiler/simlist.h>
 #include <compiler/qlfdid.h>
 #include <system/slv_types.h>
+
+#include <ctype.h>
+
 #include "HelpProc.h"
 #include "Qlfdid.h"
 #include "Driver.h"
 #include "BrowserProc.h"
 #include "HelpProc.h"
 #include "SimsProc.h"
-
-#ifndef lint
-static CONST char SimsProcID[] = "$Id: SimsProc.c,v 1.31 2003/08/23 18:43:08 ballan Exp $";
-#endif
 
 int Asc_SimsQueryCmd(ClientData cdata, Tcl_Interp *interp,
                  int argc, CONST84 char *argv[])
@@ -473,14 +459,14 @@ int Asc_SimsDestroySimulationCmd(ClientData cdata, Tcl_Interp *interp,
     if (current) {
       if (Asc_SimsCmpSim(xisting,current)==0) {
         Asc_SetCurrentSim(NULL);
-        Asc_DeAllocSim(xisting);
+        sim_destroy(xisting);
         gl_delete(g_simulation_list,ndx,0);
         Tcl_AppendResult(interp,"Simulation ",argv[1], " deleted",
                          (char *)NULL);
         return TCL_OK;
       }
     }
-    Asc_DeAllocSim(xisting);		/* prepares for cleanup */
+    sim_destroy(xisting);		/* prepares for cleanup */
     gl_delete(g_simulation_list,ndx,0);
     Tcl_AppendResult(interp,"Simulation ",argv[1], " deleted", (char *)NULL);
     return TCL_OK;

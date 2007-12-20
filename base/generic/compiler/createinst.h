@@ -19,10 +19,6 @@
 *//** 
 	@file
 	Ascend Instance Allocation Functions.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "instance_enum.h"
 *//*
 	Ascend Instance Allocation Functions
 	based on instance.c by Tom Epperly, 8/16/89
@@ -32,6 +28,9 @@
 
 #ifndef ASC_CREATEINST_H
 #define ASC_CREATEINST_H
+
+#include "instance_enum.h"
+#include "expr_types.h"
 
 /**	@addtogroup compiler Compiler
 	@{

@@ -55,6 +55,8 @@
 #ifndef ASC_INSTANTIATE_H
 #define ASC_INSTANTIATE_H
 
+#include "stattypes.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */

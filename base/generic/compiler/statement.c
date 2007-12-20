@@ -441,7 +441,7 @@ struct Statement *CreateFlow(enum FlowControl fc, CONST char *mt)
   result=create_statement_here(FLOW);
   result->v.flow.fc = fc;
   if (mt != NULL) {
-    result->v.flow.message = AddBraceChar(mt,AddSymbolL("stop",4));
+    result->v.flow.message = AddBraceChar(mt,AddSymbol("stop"));
   } else {
     result->v.flow.message = NULL;
   }
@@ -520,7 +520,7 @@ struct Statement *CreateEXTERNBlackBox(
 	internal compiler usage pops up (likely) we like the informative name.
    */
   /* name of the bbox implicit int set */
-  bsuf = AddSymbolL(BBOX_RESERVED_INDEX,BBOX_RESERVED_INDEX_LEN); 
+  bsuf = AddSymbol(BBOX_RESERVED_INDEX); 
   bbsuffix = CreateReservedIndexName(bsuf); /* add a [?BBOX_OUTPUT] index */
   n = JoinNames(n, bbsuffix);
   result->v.ext.u.black.nptr = n;

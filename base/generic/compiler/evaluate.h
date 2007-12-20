@@ -36,6 +36,9 @@
 #ifndef ASC_EVALUATE_H
 #define ASC_EVALUATE_H
 
+#include "expr_types.h"
+#include "compiler.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */
