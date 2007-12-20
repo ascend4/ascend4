@@ -30,6 +30,14 @@
  *  COPYING.
  *
  */
+
+#include "arrayinst.h"
+
+#include "instantiate.h"
+#include "name.h"
+#include "value_type.h"
+#include "evaluate.h"
+
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
@@ -63,11 +71,8 @@
 #include "case.h"
 #include "when_util.h"
 #include "universal.h"
-#include <general/pool.h>
 #include "instance_types.h"
-#include "instantiate.h"
 /* new */
-#include "arrayinst.h"
 #include "atomvalue.h"
 #include "atomsize.h"
 #include "cmpfunc.h"
@@ -88,14 +93,7 @@
 #include "statement.h"
 #include "module.h"
 #include "library.h"
-#include "evaluate.h"
-#include "statio.h"
-#include "name.h"
-#include "value_type.h"
 
-#ifndef lint
-static CONST char ArrayInstModuleID[] = "$Id: arrayinst.c,v 1.23 1998/04/07 19:52:39 ballan Exp $";
-#endif
 
 pool_store_t g_array_child_pool=NULL;
 /*

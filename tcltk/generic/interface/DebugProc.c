@@ -1915,9 +1915,9 @@ int Asc_DebuFindEligible(ClientData cdata, Tcl_Interp *interp,
     FPRINTF(ASCERR,"dbg_find_eligible called with strange i/o option\n");
     return TCL_ERROR;
   }
-  eligible = AddSymbolL("eligible",8);
-  message = AddSymbolL("message",7);
-  none = AddSymbolL("none",4);
+  eligible = AddSymbol("eligible");
+  message = AddSymbol("message");
+  none = AddSymbol("none");
   len = slv_get_num_solvers_vars(g_solvsys_cur);
   vp = slv_get_solvers_var_list(g_solvsys_cur);
     for (i=0; i < len; i++) {
@@ -2138,9 +2138,9 @@ int Asc_DebuConsistencyAnalysis(ClientData cdata, Tcl_Interp *interp,
 	    "dbg_consistency_analysis called with strange i/o option\n");
     return TCL_ERROR;
   }
-  consistent = AddSymbolL("consistent",10);
-  message = AddSymbolL("message",7);
-  none = AddSymbolL("none",4);
+  consistent = AddSymbol("consistent");
+  message = AddSymbol("message");
+  none = AddSymbol("none");
   len = slv_get_num_master_vars(g_solvsys_cur);
   vp = slv_get_master_var_list(g_solvsys_cur);
   for (i=0; i < len; i++) {
@@ -2236,9 +2236,9 @@ int Asc_DebuFindGlobalEligible(ClientData cdata, Tcl_Interp *interp,
 	    "dbg_global_eligible called with strange i/o option\n");
     return TCL_ERROR;
   }
-  eligible = AddSymbolL("g_eligible",10);
-  message = AddSymbolL("message",7);
-  none = AddSymbolL("none",4);
+  eligible = AddSymbol("g_eligible");
+  message = AddSymbol("message");
+  none = AddSymbol("none");
   len = slv_get_num_master_vars(g_solvsys_cur);
   vp = slv_get_master_var_list(g_solvsys_cur);
   for (i=0; i < len; i++) {
@@ -2338,9 +2338,9 @@ int Asc_DebuFindActive(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  active = AddSymbolL("active",6);
-  message = AddSymbolL("message",7);
-  none = AddSymbolL("none",4);
+  active = AddSymbol("active");
+  message = AddSymbol("message");
+  none = AddSymbol("none");
 
   rfilter.matchbits = (REL_ACTIVE);
   rfilter.matchvalue = (REL_ACTIVE);

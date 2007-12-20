@@ -33,6 +33,10 @@
 #ifndef ASC_ANONCOPY_H
 #define ASC_ANONCOPY_H
 
+#include "bit.h"
+#include "instance_enum.h"
+#include <general/list.h>
+
 /**	@addtogroup compiler Compiler
 	@{
 */

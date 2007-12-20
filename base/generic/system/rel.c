@@ -331,7 +331,7 @@ void rel_set_nominal( struct rel_relation *rel, real64 nominal){
 */
 static void check_included_flag(void){
   if (INCLUDED_R == NULL || AscFindSymbol(INCLUDED_R) == NULL) {
-    INCLUDED_R = AddSymbolL("included",8);
+    INCLUDED_R = AddSymbol("included");
   }
 }
 uint32 rel_included( struct rel_relation *rel){

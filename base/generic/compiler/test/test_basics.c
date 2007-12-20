@@ -33,6 +33,9 @@
 #include <compiler/library.h>
 #include <compiler/symtab.h>
 #include <compiler/simlist.h>
+#include <compiler/instquery.h>
+#include <compiler/parentchild.h>
+#include <compiler/atomvalue.h>
 
 #include <assertimpl.h>
 
@@ -40,6 +43,21 @@ static void test_init(void){
 
 	CU_ASSERT(0 == Asc_CompilerInit(0));
 
+	Asc_CompilerDestroy();
+}
+
+
+static void test_fund_types(void){
+	Asc_CompilerInit(1);
+	CU_ASSERT(FindType(AddSymbol("boolean"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("boolean_constant"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("integer"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("integer_constant"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("real"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("real_constant"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("set"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("symbol"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("symbol_constant"))!=NULL);
 	Asc_CompilerDestroy();
 }
 
@@ -78,78 +96,184 @@ static void test_parse_string_module(void){
 	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
 
 	CU_ASSERT(gl_length(l)==2);
+	gl_destroy(l);
 
+/* CONSOLE_DEBUG("Asc_OpenStringModule returns status=%d",status); */
 	Asc_CompilerDestroy();
 }
 
-static void test_parse_string_module2(void){
+static void test_instantiate_string(void){
 	
-	const char *model = "\n\
-		REQUIRE \"system.a4l\";\n\
+	const char *model = "(* silly little model *)\n\
+		DEFINITION relation\n\
+		    included IS_A boolean;\n\
+		    message	IS_A symbol;\n\
+		    included := TRUE;\n\
+		    message := 'none';\n\
+		END relation;\n\
 		MODEL test1;\n\
 			x IS_A real;\n\
-			x - 1 = 0;\n\
-		END test1;";
+			x_rel: x - 1 = 0;\n\
+		METHODS \n\
+		METHOD on_load;\n\
+		END on_load;\n\
+		END test1;\n";
 
 	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=/home/john/ascend/models");
+
+	/* CONSOLE_DEBUG("MODEL TEXT:\n%s",model); */
 
 	struct module_t *m;
 	int status;
 	
 	m = Asc_OpenStringModule(model, &status, ""/* name prefix*/);
+	CU_ASSERT_FATAL(status==0); /* if successfully created */
 
-	CONSOLE_DEBUG("Asc_OpenStringModule returns status=%d",status);
-	CU_ASSERT(status==0); /* if successfully created */
+	status = zz_parse();
+	CU_ASSERT_FATAL(status==0);
+
+	CU_ASSERT(FindType(AddSymbol("test1"))!=NULL);
+
+	struct Instance *sim = SimsCreateInstance(AddSymbol("test1"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+
+	/* check the simulation name */
+	CONSOLE_DEBUG("Got simulation, name = %s",SCP(GetSimulationName(sim)));
+	CU_ASSERT_FATAL(GetSimulationName(sim)==AddSymbol("sim1"));
+
+	/* check for the expected instances */
+	struct Instance *root = GetSimulationRoot(sim);
+
+	CU_ASSERT(ChildByChar(root, AddSymbol("non_existent_var_name")) == NULL);
+	CU_ASSERT(ChildByChar(root, AddSymbol("x")) != NULL);
+	CU_ASSERT_FATAL(ChildByChar(root, AddSymbol("x_rel")) != NULL);
+	CU_ASSERT(NumberChildren(root)==2);
+
+	/* check instances are of expected types */
+	CU_ASSERT(InstanceKind(ChildByChar(root,AddSymbol("x_rel")))==REL_INST);
+	CU_ASSERT(InstanceKind(ChildByChar(root,AddSymbol("x")))==REAL_ATOM_INST); 
+	CU_ASSERT(InstanceKind(ChildByChar(root,AddSymbol("x")))!=REAL_INST); 
+
+	/* check attributes on relation */
+	struct Instance *xrel;
+	xrel = ChildByChar(root,AddSymbol("x_rel"));
+	CU_ASSERT_FATAL(xrel!=NULL);
+	CU_ASSERT(InstanceKind(ChildByChar(xrel,AddSymbol("included")))==BOOLEAN_INST);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(xrel,AddSymbol("included")))==TRUE);
+	CU_ASSERT_FATAL(ChildByChar(xrel,AddSymbol("message"))!=NULL);
+	CU_ASSERT(InstanceKind(ChildByChar(xrel,AddSymbol("message")))==SYMBOL_INST);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_parse_basemodel(void){
+
+	struct module_t *m;
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	
+	m = Asc_OpenModule("basemodel.a4l",&status);
+	CU_ASSERT(status==0);
 
 	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
 	status = zz_parse();
 
 	CONSOLE_DEBUG("zz_parse returns status=%d",status);
-
 	CU_ASSERT(status==0);
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
 	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
+	gl_destroy(l);
 
-	CU_ASSERT(gl_length(l)==2);
+	/* there are only 8 things declared in system.a4l: */
+	CU_ASSERT(gl_length(l)==4)
+
+	/* but system.a4l also includes basemodel.a4l, which includes... */
+	CU_ASSERT(FindType(AddSymbol("cmumodel"))!=NULL);
 
 	Asc_CompilerDestroy();
 }
 
-static void test_instantiate_string_module(void){
-	
-	const char *model = "(* silly little model *)\n\
-		REQUIRE \"system.a4l\";\n\
-		MODEL test1;\n\
-			x IS_A real;\n\
-			x - 1 = 0;\n\
-		END test1;\n";
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
-	CONSOLE_DEBUG("MODEL TEXT:\n%s",model);
+static void test_parse_file(void){
 
 	struct module_t *m;
 	int status;
-	
-	m = Asc_OpenStringModule(model, &status, ""/* name prefix*/);
-	CU_ASSERT(status==0); /* if successfully created */
 
-	status = zz_parse();
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	
+	m = Asc_OpenModule("system.a4l",&status);
 	CU_ASSERT(status==0);
 
-	struct TypeDescription *t;
-	t = FindType(AddSymbol("test1"));
-	CU_ASSERT(t!=NULL);
+	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
+	status = zz_parse();
 
-	struct Instance *inst = SimsCreateInstance(t->name, AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT(inst!=NULL);
+	CONSOLE_DEBUG("zz_parse returns status=%d",status);
+	CU_ASSERT(status==0);
+
+	struct gl_list_t *l = Asc_TypeByModule(m);
+	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
+	gl_destroy(l);
+
+	/* there are only 8 things declared in system.a4l: */
+	CU_ASSERT(gl_length(l)==8)
+
+	/* here they are... */
+	CU_ASSERT(FindType(AddSymbol("relation"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("solver_var"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("logic_relation"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("solver_int"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("generic_real"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("boolean_var"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("solver_binary"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("solver_semi"))!=NULL);
+
+	/* but system.a4l also includes basemodel.a4l, which includes... */
+	CU_ASSERT(FindType(AddSymbol("cmumodel"))!=NULL);
 
 	Asc_CompilerDestroy();
 }
 
+static void test_instantiate_file(void){
+
+	struct module_t *m;
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	
+	/* load the file */
+	m = Asc_OpenModule("johnpye/testlog10.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	/* parse it */
+	CU_ASSERT(0 == zz_parse());
+
+	/* find the model */	
+	CU_ASSERT(FindType(AddSymbol("testlog10"))!=NULL);
+
+	/* instantiate it */
+	struct Instance *sim = SimsCreateInstance(AddSymbol("testlog10"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+
+	/* check for vars and rels */
+	struct Instance *root = GetSimulationRoot(sim);
+	struct Instance *inst;
+
+	CU_ASSERT(NumberChildren(root)==5);
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST); 
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("y"))) && InstanceKind(inst)==REAL_ATOM_INST); 
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("z"))) && InstanceKind(inst)==REAL_ATOM_INST);
+
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("log_10_expr"))) && InstanceKind(inst)==REL_INST);
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("log_e_expr"))) && InstanceKind(inst)==REL_INST);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
 
 /*===========================================================================*/
 /* Registration information */
@@ -158,9 +282,12 @@ static void test_instantiate_string_module(void){
 
 #define TESTS(T,X) \
 	T(init) \
+	X T(fund_types) \
 	X T(parse_string_module) \
-	X T(parse_string_module2) \
-	X T(instantiate_string_module)
+	X T(instantiate_string) \
+	X T(parse_basemodel) \
+	X T(parse_file) \
+	X T(instantiate_file)
 
 /* you shouldn't need to change the following */
 

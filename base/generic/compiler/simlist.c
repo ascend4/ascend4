@@ -1,53 +1,49 @@
-/*
- *  Simulation Management for Ascend
- *  by Ben Allan
- *  Version: $Revision: 1.3 $
- *  Version control file: $RCSfile: simlist.c,v $
- *  Date last modified: $Date: 1997/07/18 12:34:53 $
- *  Last modified by: $Author: mthomas $
- *  Part of Ascend
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1997 Benjamin Andrew Allan
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- *  This module initializes manages a global list simulations,
- *  which may be interrelated in very twisty ways due to UNIVERSAL and
- *  parameter passing.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1997 Benjamin Andrew Allan
+	Copyright 1997, Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	This module initializes manages a global list simulations,
+	which may be interrelated in very twisty ways due to UNIVERSAL and
+	parameter passing.
+*//*
+	by Ben Allan
+	by Kirk Abbott and Ben Allan
+	Last in CVS: $Revision: 1.3 $ $Date: 1997/07/18 12:34:53 $ $Author: mthomas $
+*/
 
 #include <utilities/ascConfig.h>
 
-#include <general/list.h>
-#include "instance_enum.h"
 #include "destroyinst.h"
 #include "simlist.h"
 #include "instquery.h"
+#include "expr_types.h"
+#include "symtab.h"
+#include "extinst.h"
+#include "cmpfunc.h"
+#include "instantiate.h"
+
+#include <general/list.h>
+#include <general/tm_time.h>
  
-#ifndef lint
-static CONST char simlistID[] = "$Id: simlist.c,v 1.3 1997/07/18 12:34:53 mthomas Exp $";
-#endif
-
-
 struct gl_list_t *g_simulation_list = NULL;
 
-void Asc_DeAllocSim(struct Instance *sim)
-{
+void sim_destroy(struct Instance *sim){
   if (sim) {
 	CONSOLE_DEBUG("Destroying instance %s", SCP(GetSimulationName(sim)) );
     DestroyInstance(sim,NULL);
@@ -55,11 +51,10 @@ void Asc_DeAllocSim(struct Instance *sim)
 }
 
 
-void Asc_DestroySimulations(void)
-{
+void Asc_DestroySimulations(void){
   if (g_simulation_list) {
-    gl_iterate(g_simulation_list,(void (*)(VOIDPTR))Asc_DeAllocSim);
-    gl_destroy(g_simulation_list);      /* Asc_DeAllocSim takes care of the
+    gl_iterate(g_simulation_list,(void (*)(VOIDPTR))sim_destroy);
+    gl_destroy(g_simulation_list);      /* sim_destroy takes care of the
                                          * memory -- see SimsProc.c */
     g_simulation_list = NULL;
   }else{
@@ -67,82 +62,7 @@ void Asc_DestroySimulations(void)
   }
 }
 
-/*
- *  SimsProc.c
- *  by Kirk Abbott and Ben Allan
- *  Created: 1/94
- *  Version: $Revision: 1.31 $
- *  Version control file: $RCSfile: SimsProc.c,v $
- *  Date last modified: $Date: 2003/08/23 18:43:08 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the ASCEND Tcl/Tk interface
- *
- *  Copyright 1997, Carnegie Mellon University
- *
- *  The ASCEND Tcl/Tk interface is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The ASCEND Tcl/Tk interface is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
-
-
-#include <ctype.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <general/tm_time.h>
-#include <general/list.h>
-#include <general/dstring.h>
-
-#include "instance_enum.h"
-#include "cmpfunc.h"
-
-
-#include "expr_types.h"
-#include "stattypes.h"
-#include "statement.h"
-#include "slist.h"
-#include "syntax.h"
-#include "prototype.h"
-#include "symtab.h"
-#include "instance_io.h"
-#include "instance_name.h"
-#include "parentchild.h"
-#include "extinst.h"
-#include "child.h"
-#include "type_desc.h"
-#include "copyinst.h"
-#include "destroyinst.h"
-#include "module.h"
-#include "library.h"
-#include "name.h"
-#include "pending.h"
-#include "check.h"
-#include "stattypes.h"
-#include "relation_type.h"
-#include "bintoken.h"
-#include "instantiate.h"
-#include "value_type.h"
-#include "statio.h"
-#include "bit.h"
-#include "simlist.h"
-
 int g_compiler_timing=0;
-
-#ifndef lint
-static CONST char SimsProcID[] = "$Id: SimsProc.c,v 1.31 2003/08/23 18:43:08 ballan Exp $";
-#endif
-
 
 #define MAXIMUM_INST_NAME 256
 
@@ -291,33 +211,3 @@ symchar *Asc_SimsFindSimulationName(CONST struct Instance *root)
   return NULL;
 }
 
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
-/*@unused@*/
-static
-void BrowWritePendingStatements(FILE *f, CONST struct Instance *i)
-{
-  CONST struct BitList *blist;
-  CONST struct TypeDescription *desc;
-  CONST struct StatementList *slist;
-  CONST struct Statement *stat;
-  CONST struct gl_list_t *list;
-  unsigned long c,len;
-  blist = InstanceBitList(i);
-  if ((blist!=NULL)&&(!BitListEmpty(blist))) {
-    FPRINTF(stderr,"PENDING STATEMENTS\n");
-    desc = InstanceTypeDesc(i);
-    slist = GetStatementList(desc);
-    list = GetList(slist);
-    len = gl_length(list);
-    for(c=1;c<=len;c++) {
-      if (ReadBit(blist,c-1)) {
-        stat = (struct Statement *)gl_fetch(list,c);
-        WriteStatement(f,stat,4);
-        if (StatementType(stat)== SELECT) {
-          c = c + SelectStatNumberStats(stat);
-        }
-      }
-    }
-  }
-}
-#endif  /* THIS_IS_AN_UNUSED_FUNCTION */

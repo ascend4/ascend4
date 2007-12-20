@@ -82,20 +82,20 @@ static void init_gstrings(void)
 {
   PLOT_POINT_SYM = AddSymbol("plt_plot_symbol");
   PLOT_POINT_INT = AddSymbol("plt_plot_integer");
-  PLOT_TITLE     = AddSymbolL("title",5);
-  PLOT_XLABEL    = AddSymbolL("XLabel",6);
-  PLOT_YLABEL    = AddSymbolL("YLabel",6);
-  PLOT_XLOG      = AddSymbolL("Xlog",4);
-  PLOT_YLOG      = AddSymbolL("Ylog",4);
-  PLOT_XLO       = AddSymbolL("Xlow",4);
-  PLOT_YLO       = AddSymbolL("Ylow",4);
-  PLOT_XHI       = AddSymbolL("Xhigh",5);
-  PLOT_YHI       = AddSymbolL("Yhigh",5);
-  PLOT_CURVE     = AddSymbolL("curve",5);
-  PLOT_LEGEND    = AddSymbolL("legend",6);
-  PLOT_POINT     = AddSymbolL("pnt",3);
-  PLOT_XPOINT    = AddSymbolL("x",1);
-  PLOT_YPOINT    = AddSymbolL("y",1);
+  PLOT_TITLE     = AddSymbol("title");
+  PLOT_XLABEL    = AddSymbol("XLabel");
+  PLOT_YLABEL    = AddSymbol("YLabel");
+  PLOT_XLOG      = AddSymbol("Xlog");
+  PLOT_YLOG      = AddSymbol("Ylog");
+  PLOT_XLO       = AddSymbol("Xlow");
+  PLOT_YLO       = AddSymbol("Ylow");
+  PLOT_XHI       = AddSymbol("Xhigh");
+  PLOT_YHI       = AddSymbol("Yhigh");
+  PLOT_CURVE     = AddSymbol("curve");
+  PLOT_LEGEND    = AddSymbol("legend");
+  PLOT_POINT     = AddSymbol("pnt");
+  PLOT_XPOINT    = AddSymbol("x");
+  PLOT_YPOINT    = AddSymbol("y");
 }
 
 /*

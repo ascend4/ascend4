@@ -90,6 +90,12 @@
 #ifndef ASC_ARRAYINST_H
 #define ASC_ARRAYINST_H
 
+#include "setinstval.h"
+#include "expr_types.h"
+#include "instance_enum.h"
+#include "compiler.h"
+#include <general/pool.h>
+
 /**	@addtogroup compiler Compiler
 	@{
 */

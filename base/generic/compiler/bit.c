@@ -24,13 +24,15 @@
  *  the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
-#include<stdio.h>
-#include<assert.h>
+
+#include "bit.h"
+
+#include <stdio.h>
+#include <assert.h>
 #include <utilities/ascConfig.h>
 
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
-#include "bit.h"
 
 #define BLENGTH(bl) ((bl)->length)
 

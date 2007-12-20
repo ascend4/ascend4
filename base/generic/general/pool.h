@@ -105,8 +105,10 @@
  *  </pre>
  */
 
-#ifndef __pool_h_seen__
-#define __pool_h_seen__
+#ifndef ASC_POOL_H
+#define ASC_POOL_H
+
+#include <utilities/ascConfig.h>
 
 typedef struct pool_store_header *pool_store_t;
 /**<
@@ -384,5 +386,5 @@ extern size_t pool_sizeof_store(pool_store_t ps);
  *  @return The total bytes currently used by the pool store.
  */
 
-#endif  /* __pool_h_seen__ */
+#endif  /* ASC_POOL_H */
 

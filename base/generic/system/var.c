@@ -569,12 +569,12 @@ boolean set_solver_types(void) {
     nerr++;
   }
 
-  LOWER_V = AddSymbolL("lower_bound",11);
-  UPPER_V = AddSymbolL("upper_bound",11);
-  RELAXED_V = AddSymbolL("relaxed",7);
-  NOMINAL_V = AddSymbolL("nominal",7);
-  FIXED_V = AddSymbolL("fixed",5);
-  INTERFACE_V = AddSymbolL("interface",9);
+  LOWER_V = AddSymbol("lower_bound");
+  UPPER_V = AddSymbol("upper_bound");
+  RELAXED_V = AddSymbol("relaxed");
+  NOMINAL_V = AddSymbol("nominal");
+  FIXED_V = AddSymbol("fixed");
+  INTERFACE_V = AddSymbol("interface");
   ODEATOL_V = AddSymbol("ode_atol"); 
   return nerr;
 }

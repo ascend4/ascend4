@@ -28,35 +28,15 @@
 	Last in CVS: $Revision: 1.84 $ $Date: 2003/02/06 04:08:30 $ $Author: ballan $
 */
 
-#include <stdarg.h>
-#include <errno.h>
+#include "instantiate.h"
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
-
-#ifdef ASC_SIGNAL_TRAPS
-# include <utilities/ascSignal.h>
-#endif
-
-/*#include <stdlib.h>*/
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <utilities/error.h>
-#include <general/pool.h>
-#include <general/list.h>
-#include <general/dstring.h>
-
-#if TIMECOMPILER
-#include <time.h>
-#include <general/tm_time.h>
-#endif
 #include "bit.h"
-#include "symtab.h"
-#include "functype.h"
-#include "expr_types.h"
+#include "vlist.h"
+#include "initialize.h"
+#include "watchpt.h"
+
 #include "stattypes.h"
 #include "statement.h"
-#include "child.h"
 #include "type_desc.h"
 #include "type_descio.h"
 #include "module.h"
@@ -67,10 +47,7 @@
 #include "extcall.h"
 #include "forvars.h"
 #include "exprs.h"
-#include "name.h"
 #include "nameio.h"
-#include "vlist.h"
-#include "slist.h"
 #include "evaluate.h"
 #include "value_type.h"
 #include "statio.h"
@@ -110,9 +87,30 @@
 #include "parpend.h"
 #include "parpend.h"
 #include "bintoken.h"
-#include "watchpt.h"
-#include "initialize.h"
-#include "instantiate.h"
+
+
+#include <stdarg.h>
+#include <errno.h>
+
+#include <utilities/config.h>
+#include <utilities/ascConfig.h>
+
+#ifdef ASC_SIGNAL_TRAPS
+# include <utilities/ascSignal.h>
+#endif
+
+/*#include <stdlib.h>*/
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <utilities/error.h>
+#include <general/pool.h>
+#include <general/list.h>
+#include <general/dstring.h>
+
+#if TIMECOMPILER
+#include <time.h>
+#include <general/tm_time.h>
+#endif
 
 /* don't even THINK ABOUT adding instmacro.h to this list -- ...what the? */
 
@@ -5461,7 +5459,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   context = WriteInstanceNameString(inst, NULL);
 
   /* now set up the for loop index --------------------------------*/
-  name = AddSymbolL(BBOX_RESERVED_INDEX, BBOX_RESERVED_INDEX_LEN);
+  name = AddSymbol(BBOX_RESERVED_INDEX);
   /* using a reserved character not legal in user level modeling. */
   asc_assert(FindForVar(GetEvaluationForTable(),name) == NULL);
   /* cannot happen as bbox definitions don't nest as statements and	user identifiers cannot contain ?. */

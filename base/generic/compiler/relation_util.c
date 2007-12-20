@@ -2015,7 +2015,7 @@ double CalcRelationNominal(struct Instance *i){
   }
   if (reltype == e_blackbox){
     p = BlackBoxGetOutputVar(glob_rel);
-    nomname = AddSymbolL("nominal",7);
+    nomname = AddSymbol("nominal");
     glob_rel = NULL;
     c = ChildByChar(p,nomname);
     if (c == NULL) {
@@ -2027,7 +2027,7 @@ double CalcRelationNominal(struct Instance *i){
   }
   if (reltype == e_glassbox){
     p = BlackBoxGetOutputVar(glob_rel);
-    nomname = AddSymbolL("nominal",7);
+    nomname = AddSymbol("nominal");
     glob_rel = NULL;
     c = ChildByChar(p,nomname);
     if (c == NULL) {

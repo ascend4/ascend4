@@ -218,10 +218,10 @@ static void ClearDeadDB(void){
 int InitNotesDatabase(symchar *dbid){
   int c;
   struct data_base *db;
-  NDB.librarynote = AddSymbolL("Loaded Libraries",16);
-  NDB.globalnote = AddSymbolL("All Known Files",15);
-  NDB.inlinenote = AddSymbolL("inline",6);
-  NDB.selfnote = AddSymbolL("SELF",4);
+  NDB.librarynote = AddSymbol("Loaded Libraries");
+  NDB.globalnote = AddSymbol("All Known Files");
+  NDB.inlinenote = AddSymbol("inline");
+  NDB.selfnote = AddSymbol("SELF");
   if (dbid==NULL) {
     return 1;
   }

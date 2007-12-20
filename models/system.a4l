@@ -1,5 +1,4 @@
 REQUIRE "basemodel.a4l";
-(* => basemodel.a4l *)
 PROVIDE "system.a4l";
 
 (*

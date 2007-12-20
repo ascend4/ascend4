@@ -35,6 +35,7 @@
 #define ASC_BINTOKEN_H
 
 #include <utilities/ascConfig.h>
+#include "instance_enum.h"
 #include "compiler.h"
 
 /**	@addtogroup compiler Compiler

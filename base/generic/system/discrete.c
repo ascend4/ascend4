@@ -344,8 +344,8 @@ boolean set_boolean_types(void)
     FPRINTF(stderr,"        Type boolean_var not defined.\n");
     nerr++;
   }
-  NOMINAL_V = AddSymbolL("nominal",7);
-  FIXED_V = AddSymbolL("fixed",5);
+  NOMINAL_V = AddSymbol("nominal");
+  FIXED_V = AddSymbol("fixed");
   return nerr;
 }
 

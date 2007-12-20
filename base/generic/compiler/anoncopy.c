@@ -25,22 +25,18 @@
 	Last in CVS $Revision: 1.3 $ $Date: 1998/06/16 16:38:34 $ $Author: mthomas $
 */
 
+#include "anoncopy.h"
+#include "instantiate.h"
+
 /*
  * we really need to ditch some of this crap.
  */
 #include <time.h>
 #include <stdarg.h>
 
-
-#include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
-#include <general/pool.h>
-#include <general/list.h>
 #include <general/pairlist.h>
-#include <general/dstring.h>
-#include "bit.h"
 #include "symtab.h"
-
 
 #include "functype.h"
 #include "expr_types.h"
@@ -73,31 +69,16 @@
 #include "relation_util.h"
 #include "logrel_util.h"
 #include "instance_types.h"
-#include "cmpfunc.h"
-#include "instance_io.h"
-#include "when.h"
-#include "case.h"
-#include "when_util.h"
-#include "select.h"
-#include "atomvalue.h"
+
 #include "arrayinst.h"
 #include "copyinst.h"
 #include "createinst.h"
-#include "destroyinst.h"
-#include "extinst.h"
 #include "visitinst.h"
 #include "instquery.h"
 #include "mathinst.h"
-#include "mergeinst.h"
 #include "parentchild.h"
-#include "refineinst.h"
-#include "check.h"
-#include "instance_name.h"
-#include "setinstval.h"
 #include "tmpnum.h"
-#include "anontype.h"
 #include "instmacro.h" /* some of this should move to relation.c */
-#include "instantiate.h"
 
 #if ATDEBUG
 #include "relation_io.h"
