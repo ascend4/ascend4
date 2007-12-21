@@ -52,7 +52,7 @@ try:
 	from solverparameters import * # 'solver parameters' window
 	from help import *             # viewing help files
 	from incidencematrix import *  # incidence/sparsity matrix matplotlib window
-	from imagedialog import *      # image viewer window
+	from imagewindow import *      # image viewer window
 	from observer import *         # observer tab support
 	from properties import *       # solver_var properties dialog
 	from varentry import *         # for inputting of variables with units
@@ -812,7 +812,7 @@ class Browser:
 			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
 		self.stop_waiting()
 		f.close()
-		_ig = ImageDialog(self, self.window, fname, "Incidence Graph")
+		_ig = ImageWindow(self, self.window, fname, "Incidence Graph")
 		_ig.run()
 		os.unlink(fname)
 
