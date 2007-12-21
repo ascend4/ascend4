@@ -29,6 +29,7 @@ class ImageWindow:
 		self.h_orig = self.pixbuf.get_height()
 
 		self.scrollwin = gtk.ScrolledWindow()
+		self.scrollwin.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
 		self.imageview = gtk.Image()
 		
 		self.scrollwin.add_with_viewport(self.imageview)
@@ -93,8 +94,8 @@ class ImageWindow:
 		if ratio < ratio_fit:
 			ratio = ratio_fit
 	
-		w = self.w_orig * ratio
-		h = self.h_orig * ratio
+		w = int(self.w_orig * ratio)
+		h = int(self.h_orig * ratio)
 		if ratio==1:		
 			self.imageview.set_from_pixbuf(self.pixbuf)
 		else:
