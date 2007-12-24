@@ -1,0 +1,204 @@
+(*
+	View factor calculation from a bank of tubes
+	(one touching the next) to an opposing flat surface
+*)
+
+REQUIRE "atoms.a4l";
+
+MODEL wrapping_angle(
+	x WILL_BE delta_distance;
+	h WILL_BE distance;
+	r WILL_BE distance;
+	theta WILL_BE angle;
+);
+	costheta IS_A factor;
+	costheta = (x*sqrt(h^2 + x^2 - r^2) - h*r) / (x^2 + h^2);
+	theta = arccos(costheta);
+END wrapping_angle;
+
+(*
+	Calculate the length of a piece of string from the top
+	of a circle stretched around the circle to a point
+	located below the circle and to one side.
+
+	This will be used in the Hottel 'crossed string' method to
+	calculate view factors from a tube bank to a plane wall.
+*)
+MODEL wrapping_length(
+	x WILL_BE delta_distance;
+	h WILL_BE distance;
+	r WILL_BE distance;
+	L WILL_BE distance; (* resulting length (output) *)
+);
+	theta IS_A angle;
+	wrap_ang IS_A wrapping_angle(x,h,r,theta);
+	
+	L_tan, L_arc IS_A distance;
+	L_tan = sqrt(h^2 + x^2 - r^2);
+	L_arc = r*theta;
+	L = L_tan + L_arc;
+END wrapping_length;
+
+MODEL wrapping_length_obstructed(
+	x WILL_BE delta_distance;
+	h WILL_BE distance;
+	r WILL_BE distance;
+	s WILL_BE distance;
+	L WILL_BE distance; (* resulting length (output) *)
+);
+	phi IS_A angle;
+	phi = arcsin(r/s);
+
+	L_arc, L_span, L_tan IS_A distance;
+	L_arc = r*phi;
+	L_span = 2*sqrt(s^2-r^2);
+	
+	x1 IS_A delta_distance;
+	-x1 = (x - 2*s);
+	psi IS_A angle;
+	wrap IS_A wrapping_angle(x1,h,r,psi);
+
+	L_hug IS_A delta_distance;
+	L_hug = r*(psi - (1{PI} - phi));
+	
+	L_tan = sqrt(h^2 + x1^2 - r^2);
+
+	L = L_arc + L_span + L_hug + L_tan;
+
+END wrapping_length_obstructed;
+
+MODEL wrapping_length_ambi(
+	x WILL_BE delta_distance;
+	h WILL_BE distance;
+	r WILL_BE distance;
+	s WILL_BE distance;
+	L WILL_BE distance; (* resulting length (output) *)
+);
+	phi IS_A angle;
+	phi = arcsin(r/s);
+
+	L_arc, L_span, L_tan IS_A distance;
+	L_span = 2*sqrt(s^2-r^2);
+	
+	x1 IS_A delta_distance;
+	-x1 = (x - 2*s);
+	psi IS_A angle;
+	wrap IS_A wrapping_angle(x1,h,r,psi);
+
+	L_hug IS_A delta_distance;
+	L_hug = r*(psi - (1{PI} - phi));
+
+	L_tan_obstructed: L_tan = sqrt(h^2 + x1^2 - r^2);
+	L_tan_clear: L_tan = sqrt(h^2 + x^2 - r^2);
+
+	theta IS_A angle;
+	wrap_clear IS_A wrapping_angle(x,h,r,theta);
+	L_arc_obstructed: L_arc = r*phi;
+	L_arc_clear: L_arc = r*theta;
+
+	L_obstructed_expr: L = L_arc + L_span + L_hug + L_tan;
+	L_clear_expr: L = L_arc + L_tan;
+	
+	CONDITIONAL
+		hug_expr: L_hug > 0 {mm};
+	END CONDITIONAL;
+	is_hug IS_A boolean_var;
+	is_hug == SATISFIED(hug_expr, 1e-3{m});
+	WHEN(is_hug)
+		CASE TRUE:
+			USE L_obstructed_expr;
+			USE L_arc_obstructed;
+			USE L_tan_obstructed;
+		CASE FALSE:
+			USE L_clear_expr;
+			USE L_arc_clear;
+			USE L_tan_clear;
+	END WHEN;
+
+END wrapping_length_ambi;	
+
+MODEL vfac_circle_plane(
+	x WILL_BE delta_distance;
+	h WILL_BE distance;
+	r WILL_BE distance;
+	F WILL_BE fraction; (* output *)
+);
+	xzero IS_A delta_distance;
+	xzero = 0;
+	OBF, OECF, ADBF, ACF IS_A distance;
+	OBF_wrap IS_A wrapping_length(xzero,h,r,OBF);
+	OECF,OBF ARE_THE_SAME;
+	xneg IS_A delta_distance;
+	xneg = -x;
+	ADBF_wrap IS_A wrapping_length(xneg,h,r,ADBF);
+	ACF_wrap IS_A wrapping_length(x,h,r,ACF);
+
+	F = ((ADBF + OECF) - (OBF + ACF)) / (4{PI}*r);
+END vfac_circle_plane;
+
+MODEL vfac_circle_plane_obstructed(
+	x WILL_BE delta_distance;
+	h WILL_BE distance;
+	r WILL_BE distance;
+	s WILL_BE distance;
+	F WILL_BE fraction; (* output *)
+);
+	xzero IS_A delta_distance;
+	xzero = 0;
+	OBF, OEGF, JKBF, JIHGF IS_A distance;
+	OBF_wrap IS_A wrapping_length(xzero,h,r,OBF);
+	OEGF,OBF ARE_THE_SAME;
+	xneg IS_A delta_distance;
+	xneg = -x;
+	JKBF_wrap IS_A wrapping_length(xneg,h,r,JKBF);
+	JIHGF_wrap IS_A wrapping_length_obstructed(x,h,r,s,JIHGF);
+
+	F = ((JKBF + OEGF) - (OBF + JIHGF)) / (4{PI}*r);
+END vfac_circle_plane_obstructed;
+
+MODEL vfac_circle_plane_ambi(
+	x WILL_BE delta_distance;
+	h WILL_BE distance;
+	r WILL_BE distance;
+	s WILL_BE distance;
+	F WILL_BE fraction; (* output *)
+);
+	xzero IS_A delta_distance;
+	xzero = 0;
+	OBF, OEGF, JKBF, JIHGF IS_A distance;
+	OBF_wrap IS_A wrapping_length(xzero,h,r,OBF);
+	OEGF,OBF ARE_THE_SAME;
+	xneg IS_A delta_distance;
+	xneg = -x;
+	JKBF_wrap IS_A wrapping_length(xneg,h,r,JKBF);
+	JIHGF_wrap IS_A wrapping_length_ambi(x,h,r,s,JIHGF);
+
+	F = ((JKBF + OEGF) - (OBF + JIHGF)) / (4{PI}*r);
+END vfac_circle_plane_ambi;
+
+MODEL tubebank;
+	x1, x2 IS_A delta_distance;
+	h IS_A distance;
+	r IS_A distance;
+	L IS_A distance;
+	s IS_A distance;
+
+	F1, F2, F IS_A fraction;
+	F1_wrap IS_A vfac_circle_plane_ambi(x1,h,r,s,F1);
+	F2_wrap IS_A vfac_circle_plane_ambi(x2,h,r,s,F2);
+	F = F2 - F1;
+METHODS
+METHOD on_load;
+	FIX x1; x1:= 102 {mm};
+	FIX x2; x2:= 208 {mm};
+	FIX h; h:= 117 {mm};
+	FIX r; r:= 38 {mm};
+
+	FIX s; s:= 41 {mm};
+END on_load;
+METHOD self_test;
+	ASSERT abs(wrap.L_tan - 150 {mm}) < 1 {mm};
+	ASSERT abs(wrap.theta - 62 {deg}) < 1.5 {deg};
+END self_test;
+
+END tubebank;
