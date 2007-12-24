@@ -1,6 +1,36 @@
 (*
 	View factor calculation from a bank of tubes
 	(one touching the next) to an opposing flat surface
+
+	    ___	         _:_          ___
+	 .˙˙   ˙˙.    .˙˙ : ˙˙.    .˙˙   ˙˙.
+	:     E   :  :    :    :. :     D   :
+	|    ´    |  |  C ^    | .|    ´    |
+	'.       .'  '.   :   .'; '.       .'
+	  '-----'      '--:--'  .   '-----'
+                      :     `     ˙ .
+	                  :     ˙         .
+	                  :      .            .
+	------------------+------+----------+----+---
+                       O      A        X      J
+                             (x1)             (x2)
+
+	The view factor from the entire surface of cylinder
+	'C' to the plane slice from A to J is calculated and
+	returned as 'F' by this model.
+
+	The distance OC is given by the variable 'h'.
+	The distance OA is given by the variable 'x1'.
+	The distance OJ is given by the variable 'x2'.
+	The radius of the cylinders is given by 'r'.
+	The spacing of the cylinders (centre-to-centre) is 2*s.
+
+	At the point X there is a region boundary. To the
+	right of X, some beams from the cylinder C are 
+	occluded by the cylinder D. For this reason, the model
+	currently requires the conditional solver CMSlv. It
+	sometimes has some problems solving though. Try hitting
+	'Solve' several times, it usually gets there eventually.	
 *)
 
 REQUIRE "atoms.a4l";
