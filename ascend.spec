@@ -183,10 +183,6 @@ pushd pygtk/glade
 install -m 644 -D ascend-doc-48x48.svg %{buildroot}/%{_datadir}/icons/text-x-ascend-model.svg
 popd
 
-pushd tools/gedit
-install -m 644 -D ascend.lang %{buildroot}/%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
-popd
-
 # TODO...
 #%__python -c 'from compileall import *; compile_dir("'$RPM_BUILD_ROOT'/%{python_sitelib}",10,"%{python_sitelib}")'
 #%__python -O -c 'from compileall import *; compile_dir("'$RPM_BUILD_ROOT'/%{python_sitelib}",10,"%{python_sitelib}")'

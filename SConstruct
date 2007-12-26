@@ -1,4 +1,4 @@
-import sys, os, commands, platform, distutils.sysconfig, os.path, re
+import sys, os, commands, platform, distutils.sysconfig, os.path, re, glob
 
 version = "0.9.5.114"
 
@@ -1879,6 +1879,29 @@ def CheckLatex2HTML(context):
 
 gcc_version4 = False
 
+#----------------
+# GtkSourceView
+
+def CheckGtkSourceView(context):
+	context.Message("Checking for GtkSourceView...")
+	if platform.system()=="Windows":
+		r = False
+	else:
+		r = True
+		_f = glob.glob("/usr/lib/libgtksourceview-*.so.?")
+		_n = sorted(_f).pop()
+		try:
+			v = re.compile(r"libgtksourceview-([.0-9]+).so").search(_n).group(1)
+		except Exception,e:
+			r = False
+	if r:
+		context.Result("yes (version %s)" % v)
+		context.env['GTKSOURCEVIEW_VERSION']=v
+		context.env['GTKSOURCEVIEW_LANGS']="/usr/share/gtksourceview-%s/language-specs" % v
+	else:
+		context.Result(False)
+	return r		
+
 #------------------------------------------------------
 # CONFIGURATION
 
@@ -1918,7 +1941,8 @@ conf = Configure(env
 		, 'CheckSigReset' : CheckSigReset
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
-	} 
+		, 'CheckGtkSourceView': CheckGtkSourceView
+	}
 #	, config_h = "config.h"
 )
 
@@ -2216,6 +2240,12 @@ if need_fortran:
 	if platform.system()=="Windows":
 		pass
 		#conf.env.Append(LIBPATH='c:\mingw\lib')
+
+# GtkSourceView
+
+with_gtksourceview = True
+if conf.CheckGtkSourceView() is False:
+	with_gtksourceview = False
 
 # scrollkeeper
 
@@ -2526,6 +2556,12 @@ if env.get('CAN_INSTALL'):
 	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_LIB")),libascend)
 
 	env.InstallProgram(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),ascendconfig)
+
+	if with_gtksourceview:
+		_f = "tools/gtksourceview-%s/ascend.lang" % env['GTKSOURCEVIEW_VERSION']
+		if env['GTKSOURCEVIEW_VERSION']=='1.0':
+			_f = "tools/gedit/ascend.lang"
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$GTKSOURCEVIEW_LANGS")),_f)
 
 #------------------------------------------------------
 # WINDOWS INSTALLER
