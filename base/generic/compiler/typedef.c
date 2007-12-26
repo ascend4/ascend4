@@ -72,11 +72,6 @@
 #include "typedef.h"
 #include <general/mathmacros.h>
 
-#ifndef lint
-static CONST char TypeDefinitionRCSid[] ="$Id: typedef.c,v 1.60 1998/04/21 23:50:02 ballan Exp $";
-#endif
-
-
 /*
  *  To generate a name for a relation, logrelation or when using
  *  the number of the relation, logrelation or when in the model,
@@ -3106,12 +3101,13 @@ enum typelinterr VerifyTypeArgs(CONST struct Set *alist,
          * the type might be <= and refined elsewhere to the correct sort.
          */
         if (ptype!=atype && MoreRefined(ptype,atype)==NULL) {
-          FPRINTF(ASCERR,
-            "%sType incompatible %s instance passed where %s expected\n",
-            StatioLabel(3),SCP(GetName(ptype)),SCP(GetName(atype)));
-          FPRINTF(ASCERR,"  Argument %d: ",argc);
+          ERROR_REPORTER_START_HERE(ASC_USER_ERROR);		  
+          FPRINTF(ASCERR,"Instance '");
           WriteSetNode(ASCERR,sn);
-          FPRINTF(ASCERR,"\n");
+		  FPRINTF(ASCERR,"' is of incompatible type '%s' (expected '%s') at argument %d."
+              , SCP(GetName(ptype)),SCP(GetName(atype)),argc
+          );
+          error_reporter_end_flush();
           return DEF_ARGS_INCORRECT;
         }
         /* check the set madness */
