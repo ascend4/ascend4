@@ -309,7 +309,7 @@ MODEL tubebank;
 		In both cases, j=[1..nb].
 	*)
 	F_cum[1..n][-nb..nb] IS_A fraction;
-	F[1..n][-nb..-1,1..nb] IS_A fraction;
+	F[1..n][-nb..nb] IS_A fraction;
 
 	x_base[-nb..nb] IS_A delta_distance;
 	FOR j IN [-nb..nb] CREATE
@@ -325,13 +325,13 @@ MODEL tubebank;
 
 	vfac[1..n][-nb..nb] IS_A vfac_empty;
 	FOR i IN [1..n] CREATE
-		x[i][0] = x_base[j] - x_tube[i];
-		vfac[i][0] IS_REFINED_TO vfac_circle_plane_ambi(x[i][0],h,r,s,F[i][0]);
+		x[i][0] = x_base[0] - x_tube[i];
+		vfac[i][0] IS_REFINED_TO vfac_circle_plane_ambi(x[i][0],h,r,s,F_cum[i][0]);
 		FOR j IN [1..nb] CREATE
 			x[i][j] = x_base[j] - x_tube[i];
 			x[i][-j] = x_base[j] + x_tube[i];
-			vfac[i][j] IS_REFINED_TO vfac_circle_plane_ambi(x[i][j],h,r,s,F[i][j]);
-			vfac[i][-j] IS_REFINED_TO vfac_circle_plane_ambi(x[i][-j],h,r,s,F[i][-j]);
+			vfac[i][j] IS_REFINED_TO vfac_circle_plane_ambi(x[i][j],h,r,s,F_cum[i][j]);
+			vfac[i][-j] IS_REFINED_TO vfac_circle_plane_ambi(x[i][-j],h,r,s,F_cum[i][-j]);
 		END FOR;
 	END FOR;
 	FOR i IN [1..n] CREATE
