@@ -43,7 +43,7 @@
 
 #define USEDCODE 0
 
-#define PREANALYSIS_DEBUG
+/* #define PREANALYSIS_DEBUG */
 /* #define WHEN_DEBUG */
 
 #ifdef WHEN_DEBUG
