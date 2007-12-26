@@ -81,16 +81,14 @@ void (*InterfaceNotify)() = NULL;
 
 /**** END GLOBAL VARIABLE SECTION ****/
 
-enum inst_t InstanceKindF(CONST struct Instance *i)
-{
+enum inst_t InstanceKindF(CONST struct Instance *i){
   if (i==NULL || (i->t & IERRINST))
     return (ERROR_INST);
   return i->t;
 }
 
 
-unsigned long InstanceDepth(CONST struct Instance *i)
-{
+unsigned long InstanceDepth(CONST struct Instance *i){
   register unsigned long c,result=0,d;
   register CONST struct Instance *parent;
   if (i==NULL) return 0;
@@ -103,8 +101,7 @@ unsigned long InstanceDepth(CONST struct Instance *i)
   return result+1;
 }
 
-unsigned long InstanceShortDepth(CONST struct Instance *i)
-{
+unsigned long InstanceShortDepth(CONST struct Instance *i){
   register unsigned long c,result=UINT_MAX,d;
   register CONST struct Instance *parent;
   if (i==NULL) return 0;
@@ -125,8 +122,7 @@ unsigned long InstanceShortDepth(CONST struct Instance *i)
  Instantiator use only!
 \*********************************************************************/
 
-void SetNextCliqueMember(struct Instance *i, struct Instance *next)
-{
+void SetNextCliqueMember(struct Instance *i, struct Instance *next){
   AssertMemory(i);
   switch(i->t) {
   case MODEL_INST:
@@ -167,28 +163,28 @@ void SetNextCliqueMember(struct Instance *i, struct Instance *next)
     SYMA_INST(i)->alike_ptr = next;
     break;
   case REL_INST:
-    ASC_PANIC("Relations can only be ALIKE with themselves.\n");
+    ASC_PANIC("Relations can only be ALIKE with themselves.");
   case LREL_INST:
     Asc_Panic(2, NULL,
-              "Logical Relations can only be ALIKE with themselves.\n");
+              "Logical Relations can only be ALIKE with themselves.");
   case WHEN_INST:
-    ASC_PANIC("WHEN's can only be ALIKE with themselves.\n");
+    ASC_PANIC("WHEN's can only be ALIKE with themselves.");
   case SIM_INST:
-    ASC_PANIC("Simulations can only be ALIKE with themselves.\n");
+    ASC_PANIC("Simulations can only be ALIKE with themselves.");
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
-    ASC_PANIC("Arrays can only be ALIKE with themselves.\n");
+    ASC_PANIC("Arrays can only be ALIKE with themselves.");
   /* fundamentals */
   case REAL_INST:
   case INTEGER_INST:
   case BOOLEAN_INST:
   case SET_INST:
   case SYMBOL_INST:
-    ASC_PANIC("Fundamental reals cannot be made ARE_ALIKE.\n");
+    ASC_PANIC("Fundamental reals cannot be made ARE_ALIKE.");
   case DUMMY_INST:
-    ASC_PANIC("UNSELECTED instances cannot be made ARE_ALIKE.\n");
+    ASC_PANIC("UNSELECTED instances cannot be made ARE_ALIKE.");
   default:
-    ASC_PANIC("Illegal atom passed to SetNextCliqueMember.\n");
+    ASC_PANIC("Illegal atom passed to SetNextCliqueMember.");
   }
 }
 
@@ -236,15 +232,14 @@ struct Instance *NextCliqueMember(CONST struct Instance *i){
   case DUMMY_INST:
     return (struct Instance *)i;
   default:
-    ASC_PANIC("Invalid arguments to NextCliqueMember.\n");
+    ASC_PANIC("Invalid arguments to NextCliqueMember.");
     
   }
 }
 
-VOIDPTR GetInterfacePtr(CONST struct Instance *i)
-{
+VOIDPTR GetInterfacePtr(CONST struct Instance *i){
   if (i == NULL) {
-    ASC_PANIC("NULL instance passed to GetInterfacePtr.\n");
+    ASC_PANIC("NULL instance passed to GetInterfacePtr.");
   }
   AssertMemory(i);
   switch(i->t) {
@@ -281,8 +276,7 @@ VOIDPTR GetInterfacePtr(CONST struct Instance *i)
   return NULL;
 }
 
-void SetInterfacePtr(struct Instance *i, VOIDPTR c)
-{
+void SetInterfacePtr(struct Instance *i, VOIDPTR c){
   AssertMemory(i);
   switch(i->t) {
   case DUMMY_INST:
@@ -337,12 +331,11 @@ void SetInterfacePtr(struct Instance *i, VOIDPTR c)
     FPRINTF(ASCERR,"Instance type does not possess an InterfacePtr.");
 	return;
   default:
-    ASC_PANIC("Undefined instance type passed to InterfacePtr.\n");
+    ASC_PANIC("Undefined instance type passed to InterfacePtr.");
   }
 }
 
-unsigned int GetAnonFlags(CONST struct Instance *i)
-{
+unsigned int GetAnonFlags(CONST struct Instance *i){
   AssertMemory(i);
   switch(i->t) {
   case SIM_INST:
@@ -380,13 +373,12 @@ unsigned int GetAnonFlags(CONST struct Instance *i)
   case SYMBOL_INST:		/* fall through */
     return 0;
   default:
-    ASC_PANIC("Incorrect type in GetAnonFlags\n"); /*NOTREACHED*/
+    ASC_PANIC("Incorrect type in GetAnonFlags"); /*NOTREACHED*/
     
   }
 }
 
-void SetAnonFlags(struct Instance *i,unsigned int flags)
-{
+void SetAnonFlags(struct Instance *i,unsigned int flags){
   AssertMemory(i);
   switch (i->t) {
   case SIM_INST:
@@ -431,22 +423,20 @@ void SetAnonFlags(struct Instance *i,unsigned int flags)
   case SYMBOL_INST:		/* fall through */
     break;
   default:
-    ASC_PANIC("Incorrect atom type in SetAnonFlags.\n");
+    ASC_PANIC("Incorrect atom type in SetAnonFlags.");
   }
 }
 
-symchar *GetSimulationName(struct Instance *i)
-{
+symchar *GetSimulationName(struct Instance *i){
   assert(i&&InstanceKind(i)==SIM_INST);
   if (!(i&&InstanceKind(i)==SIM_INST)) {
-    FPRINTF(ASCERR,"GetSimulationName called on non-simulation.\n");
+    FPRINTF(ASCERR,"GetSimulationName called on non-simulation.");
   }
   return SIM_INST(i)->name;
 }
 
 static
-void CollectSimulationInstances(struct Instance *i,struct gl_list_t *sims)
-{
+void CollectSimulationInstances(struct Instance *i,struct gl_list_t *sims){
   unsigned len;
   assert(i!=NULL && sims != NULL);
   if (InstanceKind(i) == MODEL_INST) {
@@ -458,8 +448,7 @@ void CollectSimulationInstances(struct Instance *i,struct gl_list_t *sims)
   }
 }
 
-struct gl_list_t *FindSimulationAncestors(struct Instance *i)
-{
+struct gl_list_t *FindSimulationAncestors(struct Instance *i){
   struct gl_list_t *sims;
   if (i==NULL) {
     return NULL;
@@ -470,8 +459,7 @@ struct gl_list_t *FindSimulationAncestors(struct Instance *i)
   return sims;
 }
 
-struct Instance *GetSimulationRoot(struct Instance *i)
-{
+struct Instance *GetSimulationRoot(struct Instance *i){
   struct Instance **child_adr;
   assert(i&&InstanceKind(i)==SIM_INST);
   child_adr = SIM_CHILD(i,0);
@@ -483,8 +471,7 @@ struct Instance *GetSimulationRoot(struct Instance *i)
  * Does not count relation guts, dimens, strings, or set_t *
  * as these are all potentially shared.
  */
-unsigned long InstanceSize(CONST struct Instance *i)
-{
+unsigned long InstanceSize(CONST struct Instance *i){
   unsigned long len;
 
   assert(i!=NULL);
@@ -596,13 +583,12 @@ unsigned long InstanceSize(CONST struct Instance *i)
     }
     return len;
   default:
-    ASC_PANIC("Invalid argument to InstanceSize.\n");
+    ASC_PANIC("Invalid argument to InstanceSize.");
     
   }
 }
 
-int IntegerSetInstance(CONST struct Instance *i)
-{
+int IntegerSetInstance(CONST struct Instance *i){
   AssertMemory(i);
   switch(i->t) {
   case SET_ATOM_INST:
@@ -610,14 +596,13 @@ int IntegerSetInstance(CONST struct Instance *i)
   case SET_INST:
     return S_INST(i)->int_set;
   default:
-    ASC_PANIC("IntegerSetInstance called with non-set argument.\n");
+    ASC_PANIC("IntegerSetInstance called with non-set argument.");
     
   }
 }
 
 
-struct TypeDescription *InstanceTypeDesc(CONST struct Instance *i)
-{
+struct TypeDescription *InstanceTypeDesc(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t) {
@@ -661,13 +646,12 @@ struct TypeDescription *InstanceTypeDesc(CONST struct Instance *i)
   case SYMBOL_INST:
     return NULL;
   default:
-    ASC_PANIC("Unknown instance type passed to InstanceTypeDesc.\n");
+    ASC_PANIC("Unknown instance type (i->t=%d)!",i->t);
     
   }
 }
 
-unsigned long InstanceIndirected(CONST struct Instance *i)
-{
+unsigned long InstanceIndirected(CONST struct Instance *i){
   assert(i!=NULL);
   if (InstanceKind(i) & IARR) {
     return ARY_INST(i)->indirected;
@@ -675,8 +659,7 @@ unsigned long InstanceIndirected(CONST struct Instance *i)
   return LONG_MAX;
 }
 
-symchar *InstanceType(register CONST struct Instance *i)
-{
+symchar *InstanceType(register CONST struct Instance *i){
   AssertMemory(i);
   switch(i->t) {
   case SIM_INST:	/* Not sure -- return the type of root */
@@ -723,14 +706,13 @@ symchar *InstanceType(register CONST struct Instance *i)
   case SYMBOL_INST:
     return GetBaseTypeName(symbol_type);
   default:
-    ASC_PANIC("InstanceType called on invalid instance.\n");
+    ASC_PANIC("InstanceType called on invalid instance.");
     
   }
 }
 
 
-struct BitList *InstanceBitList(CONST struct Instance *i)
-{
+struct BitList *InstanceBitList(CONST struct Instance *i){
   AssertMemory(i);
   switch(i->t) {
   case MODEL_INST:
@@ -757,7 +739,7 @@ struct BitList *InstanceBitList(CONST struct Instance *i)
   case DUMMY_INST:
     return NULL;
   default:
-    ASC_PANIC("Unknown instance type passed to InstanceBitList.\n");
+    ASC_PANIC("Unknown instance type passed to InstanceBitList.");
     
   }
 }

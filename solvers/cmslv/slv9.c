@@ -4900,7 +4900,7 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 	solver_index[OPTIMIZATION_SOLVER] = slv_get_selected_solver(server);
 
 	/*
-		Disabling the partition mode flag in the non linear solver.
+		Disabling the partition mode flag in the nonlinear solver.
 		PARTITION is a boolean parameter of the nonlinear solver
 		QRSlv. This parameter tells the solver whether it should block
 		partition or not.
@@ -5462,7 +5462,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       store_real_pre_values(server,&(rvalues));
       (sys->nliter)++;
       if(sys->nliter == 1  || system_was_reanalyzed ==1) {
-        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Iterating with Non Linear solver...\n");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Iterating with nonlinear solver...\n");
         slv_presolve(server);
         slv_get_status(server,&status);
         update_struct_info(sys,&status);
@@ -5475,7 +5475,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         reset_cost(sys->s.cost,sys->s.costsize);
 #if TEST_CONSISTENCY
         ID_and_storage_subregion_information(server,asys);
-        CONSOLE_DEBUG("New region, Iteration = %d\n",sys->s.block.iteration);
+        CONSOLE_DEBUG("New region, iteration = %d\n",sys->s.block.iteration);
 #endif /* TEST_CONSISTENCY  */
       }
       slv_get_status(server,&status);
@@ -5590,8 +5590,8 @@ static
 mtx_matrix_t slv9_get_matrix(slv_system_t server, SlvClientToken sys){
   if(server == NULL || sys==NULL) return NULL;
   if(check_system(SLV9(sys))) return NULL;
-  ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv9 does not get matrix.");
-  return( NULL );
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"CMSlv solver does not support 'get_matrix'.");
+  return NULL;
 }
 
 /*

@@ -1,4 +1,26 @@
 (*
+	ASCEND model library: tube-bank view factor model
+	Copyright (C) John Pye 2007
+	http://pye.dyndns.org/
+
+	This program is free software; you can redistribute it
+	and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later
+	version.
+
+	This program is distributed in the hope that it will be
+	useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+	PURPOSE.  See the GNU General Public License for more
+	details.
+
+	You should have received a copy of the GNU General Public
+	License along with this program; if not, write to the Free
+	Software Foundation, Inc., 59 Temple Place, Suite 330,
+	Boston, MA 02111-1307  USA
+	-------------------------------------------------------------------
+
 	View factor calculation from a bank of tubes
 	to an opposing flat surface. This case is of
 	interest in solar collector design.
@@ -171,6 +193,10 @@ MODEL wrapping_length_ambi(
 
 END wrapping_length_ambi;	
 
+MODEL vfac_empty;
+	(* nothing here, just a placeholder for refinement *)
+END vfac_empty;
+
 (*
 	View factor from a circle C to a flat strip OA
 	placed below it (see diagram at top of file)
@@ -180,7 +206,7 @@ MODEL vfac_circle_plane(
 	h WILL_BE distance;
 	r WILL_BE distance;
 	F WILL_BE fraction; (* output *)
-);
+) REFINES vfac_empty;
 	xzero IS_A delta_distance;
 	xzero = 0;
 	OBF, OECF, ADBF, ACF IS_A distance;
@@ -206,7 +232,7 @@ MODEL vfac_circle_plane_obstructed(
 	r WILL_BE distance;
 	s WILL_BE distance;
 	F WILL_BE fraction; (* output *)
-);
+) REFINES vfac_empty;
 	xzero IS_A delta_distance;
 	xzero = 0;
 	OBF, OEGF, JKBF, JIHGF IS_A distance;
@@ -232,7 +258,7 @@ MODEL vfac_circle_plane_ambi(
 	r WILL_BE distance;
 	s WILL_BE distance;
 	F WILL_BE fraction; (* output *)
-);
+) REFINES vfac_empty;
 	xzero IS_A delta_distance;
 	xzero = 0;
 	OBF, OEGF, JKBF, JIHGF IS_A distance;
@@ -252,27 +278,76 @@ END vfac_circle_plane_ambi;
 	factors, which will then be used elsewhere.
 *)
 MODEL tubebank;
-	x1, x2 IS_A delta_distance;
+	W IS_A distance;
+	D IS_A distance;
+	theta IS_A angle;
+
+	B, N IS_A distance;
+	N*sin(theta)=D;
+	N*cos(theta)*2 = B - W;
+
 	h IS_A distance;
 	r IS_A distance;
 	L IS_A distance;
 	s IS_A distance;
+	
+	h = D - s; (* assume that tubes are spaced down from the top wall slightly *)
 
-	F1, F2, F IS_A fraction;
-	F1_wrap IS_A vfac_circle_plane_ambi(x1,h,r,s,F1);
-	F2_wrap IS_A vfac_circle_plane_ambi(x2,h,r,s,F2);
-	F = F2 - F1;
+	n IS_A integer_constant;
+	n :== 2; (* in the half-cavity *)
+
+	2*s = (W/2) / n;
+
+	nb IS_A integer_constant;
+	nb :== 2; (* in the half-cavity *)
+
+	(* 
+		Calculate view factors:
+
+		F_cum is from a tube to a plate from 0 to x[j].
+		F is from x[j-1] to x[j]
+		In both cases, j=[1..nb].
+	*)
+	F_cum[1..n][-nb..nb] IS_A fraction;
+	F[1..n][-nb..-1,1..nb] IS_A fraction;
+
+	x_base[-nb..nb] IS_A delta_distance;
+	FOR j IN [-nb..nb] CREATE
+		x_base[j] = j/nb * (B/2);
+	END FOR;
+
+	x_tube[1..n] IS_A delta_distance;
+	FOR i IN [1..n] CREATE
+		x_tube[i] = (2*i-1)*s;
+	END FOR;
+
+	x[1..n][-nb..nb] IS_A delta_distance;
+
+	vfac[1..n][-nb..nb] IS_A vfac_empty;
+	FOR i IN [1..n] CREATE
+		x[i][0] = x_base[j] - x_tube[i];
+		vfac[i][0] IS_REFINED_TO vfac_circle_plane_ambi(x[i][0],h,r,s,F[i][0]);
+		FOR j IN [1..nb] CREATE
+			x[i][j] = x_base[j] - x_tube[i];
+			x[i][-j] = x_base[j] + x_tube[i];
+			vfac[i][j] IS_REFINED_TO vfac_circle_plane_ambi(x[i][j],h,r,s,F[i][j]);
+			vfac[i][-j] IS_REFINED_TO vfac_circle_plane_ambi(x[i][-j],h,r,s,F[i][-j]);
+		END FOR;
+	END FOR;
+	FOR i IN [1..n] CREATE
+		FOR j IN [1..nb] CREATE
+			F[i][j] = F_cum[i][j] - F_cum[i][j-1];
+			F[i][-j] = F_cum[i][-j] - F_cum[i][-j+1];
+		END FOR;
+	END FOR;
 METHODS
 METHOD on_load;
-	FIX x1; x1:= 102 {mm};
-	FIX x2; x2:= 208 {mm};
-	FIX h; h:= 117 {mm};
-	FIX r; r:= 42.164 {mm} / 2.;
-	FIX s; s:= 575. {mm} / 12 / 2;
-END on_load;
-METHOD self_test;
-	ASSERT abs(wrap.L_tan - 150 {mm}) < 1 {mm};
-	ASSERT abs(wrap.theta - 62 {deg}) < 1.5 {deg};
-END self_test;
+	FIX D,W,theta;
+	D := 200 {mm};
+	W := 575 {mm};
+	theta := 32 {deg};
 
+	FIX r;
+	r:= 42.164 {mm} / 2.;
+END on_load;
 END tubebank;

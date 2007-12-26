@@ -33,14 +33,14 @@
 
 #include "solver.h"
 
-#define SLBPDEBUG 0 /* slv_log_block_partition debugging */
+/* #define SLBPDEBUG *//* slv_log_block_partition debugging */
 
 /*
  * returns 0 if ok, OTHERWISE if madness detected.
  */
 int slv_log_block_partition(slv_system_t sys)
 {
-#if SLBPDEBUG
+#ifdef SLBPDEBUG
   FILE *fp;
 #endif
   struct logrel_relation **lrp;
@@ -90,7 +90,7 @@ int slv_log_block_partition(slv_system_t sys)
   mtx_set_order(mtx,order);
 
   if (slv_make_log_incidence_mtx(sys,mtx,&dvf,&lrf)) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"failure in creating incidence matrix.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failure in creating incidence matrix.");
     mtx_destroy(mtx);
     return 1;
   }
@@ -110,7 +110,7 @@ int slv_log_block_partition(slv_system_t sys)
   }
   if (ncol == nrow) {
     if (ncol == rank) {
-      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"System of logical relations does not need Logic Inference.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"System of logical relations does not require inference.\n");
     }
     if (ncol != rank) {
       ERROR_REPORTER_HERE(ASC_PROG_WARNING,"but ncol!=rank. Rank deficient?");
@@ -138,7 +138,7 @@ int slv_log_block_partition(slv_system_t sys)
   d->reorder.basis_selection = 0;	/* none yet */
   d->reorder.block_reordering = 0;	/* none */
 
-#if SLBPDEBUG
+#ifdef SLBPDEBUG
   fp = fopen("/tmp/sbp1.plot","w+");
   if (fp !=NULL) {
     mtx_write_region_plot(fp,mtx,mtx_ENTIRE_MATRIX);
@@ -199,7 +199,7 @@ int slv_log_block_partition(slv_system_t sys)
     }
   }
 
-#if SLBPDEBUG
+#ifdef SLBPDEBUG
   fp = fopen("/tmp/sbp2.plot","w+");
   if(fp !=NULL){
     mtx_write_region_plot(fp,mtx,mtx_ENTIRE_MATRIX);
