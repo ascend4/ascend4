@@ -65,6 +65,8 @@ install: build
 # syntax highlighting for gedit
 	cd $(CURDIR)/tools/gedit && \
 	install -m 644 -D ascend.lang $(DATADIR)/gtksourceview-1.0/language-specs/ascend.lang
+	cd $(CURDIR)/tools/gtksourceview-2.0 && \
+	install -m 644 -D ascend.lang $(DATADIR)/gtksourceview-2.0/language-specs/ascend.lang
 #
 	dh_install --autodest
 	dh_desktop
