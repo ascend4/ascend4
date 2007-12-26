@@ -62,6 +62,14 @@ BuildRequires: g++-4.1 gfortran-4.1 libsundials-serial-dev python-dev tk8.3-dev 
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
+%{!?gtksourceview2: %define gtksourceview2 %(%{__python} -c 'from glob import glob; print len(glob("/usr/lib/libgtksourceview-2.0*"))')}
+
+%if 0%{?gtksourceview2}
+%define gtksourceview_lang_file %{_datadir}/gtksourceview-2.0/language-specs/ascend.lang
+%else
+%define gtksourceview_lang_file %{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
+%endif
+
 Buildroot: /var/tmp/%{name}-buildroot
 
 %description
@@ -183,6 +191,17 @@ pushd pygtk/glade
 install -m 644 -D ascend-doc-48x48.svg %{buildroot}/%{_datadir}/icons/text-x-ascend-model.svg
 popd
 
+# language file for use with gedit
+%if 0%{?gtksourceview2}
+pushd tools/gtksourceview-2.0
+install -m 644 -D ascend.lang %{gtksourceview_lang_file}
+popd
+%else
+pushd tools/gedit
+install -m 644 -D ascend.lang %{gtksourceview_lang_file}
+popd
+%endif
+
 # TODO...
 #%__python -c 'from compileall import *; compile_dir("'$RPM_BUILD_ROOT'/%{python_sitelib}",10,"%{python_sitelib}")'
 #%__python -O -c 'from compileall import *; compile_dir("'$RPM_BUILD_ROOT'/%{python_sitelib}",10,"%{python_sitelib}")'
@@ -214,7 +233,7 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %{_datadir}/ascend/solvers
 %{_libdir}/libascend.so
 %{_datadir}/mime/packages/ascend.xml
-%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
+%{gtksourceview_lang_file}
 %{_datadir}/icons/text-x-ascend-model.svg
 
 # %package -n ascend-python
@@ -249,9 +268,11 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %doc doc/book.pdf
 
 %changelog
-* Thu Aug 30 2007 John Pye <john.pye@anu.edu.au> 0.9.5.114
+* Wed Dec 26 2007 John Pye <john.pye@anu.edu.au> 0.9.5.114
 - Minor fixes: error output.
 - New 'air properties' model.
+- GtkSourceView installed by Scons now.
+- Added 'Incidence Graph' feature.
 
 * Sun Aug 19 2007 John Pye <john.pye@anu.edu.au> 0.9.5.113
 - External libraries renamed to 'lib<name>_ascend.so' for clarity
