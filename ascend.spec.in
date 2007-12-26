@@ -194,11 +194,11 @@ popd
 # language file for use with gedit
 %if 0%{?gtksourceview2}
 pushd tools/gtksourceview-2.0
-install -m 644 -D ascend.lang %{gtksourceview_lang_file}
+install -m 644 -D ascend.lang %{buildroot}/%{gtksourceview_lang_file}
 popd
 %else
 pushd tools/gedit
-install -m 644 -D ascend.lang %{gtksourceview_lang_file}
+install -m 644 -D ascend.lang %{buildroot}/%{gtksourceview_lang_file}
 popd
 %endif
 
