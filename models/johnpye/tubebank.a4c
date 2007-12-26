@@ -1,19 +1,23 @@
 (*
 	View factor calculation from a bank of tubes
-	(one touching the next) to an opposing flat surface
+	to an opposing flat surface. This case is of
+	interest in solar collector design.
 
-	    ___	         _:_          ___
-	 .˙˙   ˙˙.    .˙˙ : ˙˙.    .˙˙   ˙˙.
-	:     E   :  :    :    :. :     D   :
-	|    ´    |  |  C ^    | .|    ´    |
-	'.       .'  '.   :   .'; '.       .'
-	  '-----'      '--:--'  .   '-----'
-                      :     `     ˙ .
-	                  :     ˙         .
-	                  :      .            .
-	------------------+------+----------+----+---
-                       O      A        X      J
-                             (x1)             (x2)
+                      F
+	    ___	         _._          ___
+	 .˙˙   ˙˙.    .˙˙ : ˙˙.G   .˙˙   ˙˙.
+	:     E   :  :    :   C:. :     D   :
+	|    ´    |  |  C ^   E| .|    ´    |·········
+	'.       .' B'.   :   .'; '.H      .'      ^
+	  '-----'     .'--:--'. .   '-----'        :
+	               .  :  .  `    I˙ .          : h
+	                . : .   ˙        ˙ .       :
+	                 .:.     .           ˙ .   :
+	------------------+------+----------+----+-+->
+                       O      A        X      J   x
+                             (x1)            (x2)
+
+	(ASCII art above uses UTF-8 encoding)
 
 	The view factor from the entire surface of cylinder
 	'C' to the plane slice from A to J is calculated and
@@ -28,13 +32,19 @@
 	At the point X there is a region boundary. To the
 	right of X, some beams from the cylinder C are 
 	occluded by the cylinder D. For this reason, the model
-	currently requires the conditional solver CMSlv. It
-	sometimes has some problems solving though. Try hitting
-	'Solve' several times, it usually gets there eventually.	
+	currently requires the conditional solver CMSlv.
+
+	The calculation method uses Hottel's crossed string rule
+	to determine the view factor.
 *)
 
 REQUIRE "atoms.a4l";
 
+(*
+	Calculates the angle (relative to the top of the
+	circle) at which a tangent strikes a circle, given the position
+	of the point (x,-h) and the radius of the circle (r).
+*)
 MODEL wrapping_angle(
 	x WILL_BE delta_distance;
 	h WILL_BE distance;
@@ -45,9 +55,9 @@ MODEL wrapping_angle(
 END wrapping_angle;
 
 (*
-	Calculate the length of a piece of string from the top
-	of a circle stretched around the circle to a point
-	located below the circle and to one side.
+	Calculate the length L of a piece of string from the top
+	of a circle, of radius r, stretched around the circle to a
+	point (x,-h) located below the circle and to one side.
 
 	This will be used in the Hottel 'crossed string' method to
 	calculate view factors from a tube bank to a plane wall.
@@ -67,6 +77,14 @@ MODEL wrapping_length(
 	L = L_tan + L_arc;
 END wrapping_length;
 
+(*
+	Calculate the length L of a piece of string from the
+	top of a circle (at 0,0, with radius r) stretched to a
+	remote point (x,-h)	for the case where the string is
+	partly obstructed by another circle adjacent to the first
+	one. The obstructing circle is located at (2s,0) and has
+	the same radius r.
+*)
 MODEL wrapping_length_obstructed(
 	x WILL_BE delta_distance;
 	h WILL_BE distance;
@@ -95,6 +113,17 @@ MODEL wrapping_length_obstructed(
 
 END wrapping_length_obstructed;
 
+(*
+	Conditional model, to calculate the length of a string
+	as for wrapping_length_obstructed and wrapping_length
+	for remote points (x,-h) where it is not yet known
+	whether or not the string is obstructed by an adjacent
+	circle. The distance x_crit is calculated, then depending
+	on its value, the appropriate wrapping length formula
+	is used. The equations are condensed from the above
+	models into fewer (but more complex) equations, to help
+	with model convergence.
+*)
 MODEL wrapping_length_ambi(
 	x WILL_BE delta_distance;
 	h WILL_BE distance;
@@ -142,6 +171,10 @@ MODEL wrapping_length_ambi(
 
 END wrapping_length_ambi;	
 
+(*
+	View factor from a circle C to a flat strip OA
+	placed below it (see diagram at top of file)
+*)
 MODEL vfac_circle_plane(
 	x WILL_BE delta_distance;
 	h WILL_BE distance;
@@ -161,6 +194,12 @@ MODEL vfac_circle_plane(
 	F = ((ADBF + OECF) - (OBF + ACF)) / (4{PI}*r);
 END vfac_circle_plane;
 
+(*
+	View factor from a circle C to a flat strip OA
+	placed below it, for the case where the view is
+	obstructed by adjacent circle D (see diagram at top
+	of file).
+*)
 MODEL vfac_circle_plane_obstructed(
 	x WILL_BE delta_distance;
 	h WILL_BE distance;
@@ -181,6 +220,12 @@ MODEL vfac_circle_plane_obstructed(
 	F = ((JKBF + OEGF) - (OBF + JIHGF)) / (4{PI}*r);
 END vfac_circle_plane_obstructed;
 
+(*
+	Conditional model that calculates the view factor
+	from a circle C to a flat string OA placed below it,
+	for the case where it may or may not be obstructed by
+	a neighbouring circle D.
+*)
 MODEL vfac_circle_plane_ambi(
 	x WILL_BE delta_distance;
 	h WILL_BE distance;
@@ -201,6 +246,11 @@ MODEL vfac_circle_plane_ambi(
 	F = ((JKBF + OEGF) - (OBF + JIHGF)) / (4{PI}*r);
 END vfac_circle_plane_ambi;
 
+(*
+	Model of a tube bank (many tubes) facing opposite a
+	flat surface. Model serves only to calculate the view
+	factors, which will then be used elsewhere.
+*)
 MODEL tubebank;
 	x1, x2 IS_A delta_distance;
 	h IS_A distance;
@@ -217,9 +267,8 @@ METHOD on_load;
 	FIX x1; x1:= 102 {mm};
 	FIX x2; x2:= 208 {mm};
 	FIX h; h:= 117 {mm};
-	FIX r; r:= 38 {mm};
-
-	FIX s; s:= 41 {mm};
+	FIX r; r:= 42.164 {mm} / 2.;
+	FIX s; s:= 575. {mm} / 12 / 2;
 END on_load;
 METHOD self_test;
 	ASSERT abs(wrap.L_tan - 150 {mm}) < 1 {mm};
