@@ -41,9 +41,7 @@ MODEL wrapping_angle(
 	r WILL_BE distance;
 	theta WILL_BE angle;
 );
-	costheta IS_A factor;
-	costheta = (x*sqrt(h^2 + x^2 - r^2) - h*r) / (x^2 + h^2);
-	theta = arccos(costheta);
+	theta = arccos((x*sqrt(h^2 + x^2 - r^2) - h*r) / (x^2 + h^2));
 END wrapping_angle;
 
 (*
@@ -104,45 +102,42 @@ MODEL wrapping_length_ambi(
 	s WILL_BE distance;
 	L WILL_BE distance; (* resulting length (output) *)
 );
+	x_crit IS_A distance;
+	x_crit = s + h*sqrt(s^2-r^2)/r;
+
+	(* obstructed case *)	
 	phi IS_A angle;
 	phi = arcsin(r/s);
 
-	L_arc, L_span, L_tan IS_A distance;
-	L_span = 2*sqrt(s^2-r^2);
-	
 	x1 IS_A delta_distance;
 	-x1 = (x - 2*s);
+
 	psi IS_A angle;
 	wrap IS_A wrapping_angle(x1,h,r,psi);
 
+	L_span IS_A distance;
+	L_span = 2*sqrt(s^2-r^2);
 	L_hug IS_A delta_distance;
 	L_hug = r*(psi - (1{PI} - phi));
 
-	L_tan_obstructed: L_tan = sqrt(h^2 + x1^2 - r^2);
-	L_tan_clear: L_tan = sqrt(h^2 + x^2 - r^2);
+	L_expr_obstructed: L = r*phi + L_span + L_hug + sqrt(h^2 + x1^2 - r^2);
 
+	(* unobstructed case *)
 	theta IS_A angle;
 	wrap_clear IS_A wrapping_angle(x,h,r,theta);
-	L_arc_obstructed: L_arc = r*phi;
-	L_arc_clear: L_arc = r*theta;
 
-	L_obstructed_expr: L = L_arc + L_span + L_hug + L_tan;
-	L_clear_expr: L = L_arc + L_tan;
+	L_expr_clear: L = r*theta + sqrt(h^2 + x^2 - r^2);
 	
 	CONDITIONAL
-		hug_expr: L_hug > 0 {mm};
+		obstructed_expr: abs(x) > x_crit;
 	END CONDITIONAL;
-	is_hug IS_A boolean_var;
-	is_hug == SATISFIED(hug_expr, 1e-3{m});
-	WHEN(is_hug)
+	is_obstructed IS_A boolean_var;
+	is_obstructed == SATISFIED(obstructed_expr, 1e-3{m});
+	WHEN(is_obstructed)
 		CASE TRUE:
-			USE L_obstructed_expr;
-			USE L_arc_obstructed;
-			USE L_tan_obstructed;
+			USE L_expr_obstructed;
 		CASE FALSE:
-			USE L_clear_expr;
-			USE L_arc_clear;
-			USE L_tan_clear;
+			USE L_expr_clear;
 	END WHEN;
 
 END wrapping_length_ambi;	
