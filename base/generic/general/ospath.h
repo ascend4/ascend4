@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006-2007 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@
 	Heavily modified version of C++ code from codeproject.com
 	originally written by Simon Parkinson-Bates.
 
-	@TODO add environment variable expansion here for use in case like
-	"$ASCENDTK/bitmaps" or "ascend-$VERSION$EXESUFFIX"
+	Includes (fairly basic) support for environment variable expansion here for 
+	use in cases like "$ASCENDTK/bitmaps" or "ascend-$VERSION$EXESUFFIX".
 
 	@NOTE this library makes no allowance for fancy escape characters.
 	You better not try to put escaped slashes into your paths, and
