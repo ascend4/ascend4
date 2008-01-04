@@ -63,6 +63,7 @@ try:
 	from integrator import *       # integrator dialog	
 	from infodialog import *       # general-purpose textual information dialog
 	from versioncheck import *     # version check (contacts ascend.cruncher2.dyndns.org)
+	from unitsdialog import *      # general-purpose textual information dialog
 	import config
 
 	loading.complete();
@@ -790,12 +791,18 @@ class Browser:
 	def on_tools_sparsity_click(self,*args):
 
 		self.reporter.reportNote("Preparing incidence matrix...")
-		_im = self.sim.getIncidenceMatrix();
+		_im = self.sim.getIncidenceMatrix()
 
 		self.reporter.reportNote("Plotting incidence matrix...")
 
-		_sp = IncidenceMatrixWindow(_im);
-		_sp.run();
+		_sp = IncidenceMatrixWindow(_im)
+		_sp.run()
+
+	def on_units_click(self,*args):
+		self.reporter.reportNote("Launching units dialog...")
+		_un = UnitsDialog(self,self.window)
+		_un.run()
+		self.reporter.reportNote("Done with units dialog.")
 
 	def on_tools_incidencegraph_click(self,*args):
 		self.reporter.reportNote("Preparing incidence graph...")
