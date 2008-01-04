@@ -1,7 +1,7 @@
 (*  ASCEND modelling environment
-	Copyright(C) 1990 Thomas Guthrie Epperly
-	Copyright(C) 1994-1997 Carnegie Mellon University
-	Copyright (C) 2007 Carnegie Mellon University
+	Copyright (C) 2007-2008 Carnegie Mellon University
+	Copyright (C) 1994-1997 Carnegie Mellon University
+	Copyright (C) 1990 Thomas Guthrie Epperly
 
 	The ASCEND Modeling Library is free software; you can redistribute
 	it and/or modify it under the terms of the GNU General Public
@@ -19,35 +19,36 @@
  *)
 PROVIDE "measures.a4l";
 (*
-	Original author: Tom Epperly, 1990.
-	Contributors: Ben Allan, John Pye.
-
-	
 	This provides common unit definitions. The user may write additional
 	files of unit definitions particular to their problem or site.
 
-	* This is a file defining the conversion factors ASCEND will recognize when
-	* it sees them as {units). Note that the assignment x:= 0.5 {100};; yields
-	*   x == 50, and that there are no 'offset conversions,' e.g. F=9/5C+32;
-	* Added money which isn't really time 3-94 BAA
-	* Expanded, including some of Karl's units, constants. 4-94 BAA
-	* Updated with supplementary SI dimensions and less ambiguous mole dim. jz/baa
-	*
-	* Please keep unit names to 20 characters or less as this makes life pretty.
-	* This is not a hard limit however.
-	*
-	* The root system units in SI MKS system are set in the C code to:
-	* unitname  DIMENSION
-	* define kilogram   M;        internal mass unit SI
-	* define mole       Q;        internal quantity unit SI
-	* define second     T;        internal time unit SI
-	* define meter      L;        internal length unit SI
-	* define Kelvin     TMP;      internal temperature unit SI
-	* define currency   C;        internal currency unit
-	* define ampere     E;        internal electric current unit SI suggested
-	* define candela    LUM;      internal luminous intensity unit SI
-	* define radian     P;        internal plane angle unit SI suggested
-	* define steradian  S;        internal solid angle unit SI suggested
+	This is a file defining the conversion factors ASCEND will recognize when
+	it sees them as {units}. Note that the assignment "x := 0.5 {100}" yields
+	x == 50, and that there are no 'offset conversions', e.g. "F=9/5C+32".
+
+	Please keep unit names to 20 characters or less as this makes life pretty.
+	This is not a hard limit however.
+	
+	The root system units in SI MKS system are set in the C code to:
+	unitname  DIMENSION
+	define kilogram   M;        internal mass unit SI
+	define mole       Q;        internal quantity unit SI
+	define second     T;        internal time unit SI
+	define meter      L;        internal length unit SI
+	define Kelvin     TMP;      internal temperature unit SI
+	define currency   C;        internal currency unit
+	define ampere     E;        internal electric current unit SI suggested
+	define candela    LUM;      internal luminous intensity unit SI
+	define radian     P;        internal plane angle unit SI suggested
+	define steradian  S;        internal solid angle unit SI suggested
+
+	CHANGES:
+	Added money which isn't really time 3-94 BAA
+	Expanded, including some of Karl's units, constants. 4-94 BAA
+	Updated with supplementary SI dimensions and less ambiguous mole dim. jz/baa	
+
+	Original author: Tom Epperly, 1990.
+	Contributors: Ben Allan, John Pye.
 *)
 
 UNITS

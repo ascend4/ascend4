@@ -56,6 +56,9 @@ public:
 
 	AnnotationDatabase getAnnotationDatabase();
 
+	/// get a listing of all units available in the library
+	//std::map<Dimension,std::vector<Units> > getUnits(void);
+
 private:
 	std::vector<ExtMethod> extmethod_vector;
 

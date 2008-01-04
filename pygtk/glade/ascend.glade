@@ -148,93 +148,60 @@
               </widget>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="tools">
+              <widget class="GtkMenuItem" id="viewmenu">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">_Tools</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="label" translatable="yes">_View</property>
                 <property name="use_underline">True</property>
                 <child>
-                  <widget class="GtkMenu" id="tools_menu">
+                  <widget class="GtkMenu" id="menu1">
+                    <property name="visible">True</property>
+                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <child>
-                      <widget class="GtkImageMenuItem" id="check1">
+                      <widget class="GtkImageMenuItem" id="sparsity">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">C_heck</property>
+                        <property name="tooltip" translatable="yes">View the incidence matrix from the solver</property>
+                        <property name="label" translatable="yes">_Incidence matrix...</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="check_click"/>
-                        <accelerator key="F7" modifiers="" signal="activate"/>
+                        <signal name="activate" handler="on_tools_sparsity_click"/>
+                        <accelerator key="I" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
                         <child internal-child="image">
-                          <widget class="GtkImage" id="image929">
+                          <widget class="GtkImage" id="image934">
                             <property name="visible">True</property>
-                            <property name="stock">gtk-spell-check</property>
-                            <property name="icon_size">1</property>
+                            <property name="pixbuf">incidence.png</property>
                           </widget>
                         </child>
                       </widget>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="solve1">
+                      <widget class="GtkImageMenuItem" id="incidencegraph">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Sol_ve</property>
+                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                        <property name="tooltip" translatable="yes">View incidence graph for the system</property>
+                        <property name="label" translatable="yes">Incidence _graph...</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="solve_click"/>
-                        <accelerator key="F9" modifiers="" signal="activate"/>
+                        <signal name="activate" handler="on_tools_incidencegraph_click"/>
+                        <accelerator key="G" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
                         <child internal-child="image">
-                          <widget class="GtkImage" id="image930">
+                          <widget class="GtkImage" id="menu-item-image22">
                             <property name="visible">True</property>
-                            <property name="stock">gtk-media-forward</property>
-                            <property name="icon_size">1</property>
+                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                            <property name="pixbuf">graphviz.png</property>
                           </widget>
                         </child>
                       </widget>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="integrate1">
+                      <widget class="GtkImageMenuItem" id="diagnose_blocks">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Integrate...</property>
+                        <property name="label" translatable="yes">_Diagnose blocks...</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="integrate_click"/>
-                        <accelerator key="F9" modifiers="GDK_CONTROL_MASK" signal="activate"/>
+                        <signal name="activate" handler="on_diagnose_blocks_click"/>
+                        <accelerator key="D" modifiers="GDK_CONTROL_MASK" signal="activate"/>
                         <child internal-child="image">
-                          <widget class="GtkImage" id="image931">
+                          <widget class="GtkImage" id="image935">
                             <property name="visible">True</property>
-                            <property name="pixbuf">integrator-sm.png</property>
-                          </widget>
-                        </child>
-                      </widget>
-                    </child>
-                    <child>
-                      <widget class="GtkSeparatorMenuItem" id="separator8">
-                        <property name="visible">True</property>
-                      </widget>
-                    </child>
-                    <child>
-                      <widget class="GtkImageMenuItem" id="console1">
-                        <property name="visible">True</property>
-                        <property name="tooltip" translatable="yes">Program ASCEND with Python</property>
-                        <property name="label" translatable="yes">_Console</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="console_click"/>
-                        <accelerator key="F12" modifiers="" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image932">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-connect</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
-                      </widget>
-                    </child>
-                    <child>
-                      <widget class="GtkImageMenuItem" id="repaint_tree">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Re-_paint</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_tools_repaint_tree_activate"/>
-                        <accelerator key="F5" modifiers="" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image933">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-refresh</property>
-                            <property name="icon_size">1</property>
+                            <property name="pixbuf">diagnose.png</property>
                           </widget>
                         </child>
                       </widget>
@@ -297,50 +264,120 @@
                       </widget>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="sparsity">
-                        <property name="visible">True</property>
-                        <property name="tooltip" translatable="yes">View the incidence matrix from the solver</property>
-                        <property name="label" translatable="yes">_Incidence matrix...</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_tools_sparsity_click"/>
-                        <accelerator key="I" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image934">
-                            <property name="visible">True</property>
-                            <property name="pixbuf">incidence.png</property>
-                          </widget>
-                        </child>
-                      </widget>
-                    </child>
-                    <child>
-                      <widget class="GtkImageMenuItem" id="incidencegraph">
+                      <widget class="GtkSeparatorMenuItem" id="separatormenuitem1">
                         <property name="visible">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                        <property name="tooltip" translatable="yes">View incidence graph for the system</property>
-                        <property name="label" translatable="yes">Incidence _graph...</property>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkImageMenuItem" id="repaint_tree">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Re-_paint</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_tools_incidencegraph_click"/>
-                        <accelerator key="G" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
+                        <signal name="activate" handler="on_tools_repaint_tree_activate"/>
+                        <accelerator key="F5" modifiers="" signal="activate"/>
                         <child internal-child="image">
-                          <widget class="GtkImage" id="menu-item-image22">
+                          <widget class="GtkImage" id="image933">
                             <property name="visible">True</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="pixbuf">graphviz.png</property>
+                            <property name="stock">gtk-refresh</property>
+                            <property name="icon_size">1</property>
+                          </widget>
+                        </child>
+                      </widget>
+                    </child>
+                  </widget>
+                </child>
+              </widget>
+            </child>
+            <child>
+              <widget class="GtkMenuItem" id="tools">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">_Tools</property>
+                <property name="use_underline">True</property>
+                <child>
+                  <widget class="GtkMenu" id="tools_menu">
+                    <child>
+                      <widget class="GtkImageMenuItem" id="check1">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">C_heck</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="check_click"/>
+                        <accelerator key="F7" modifiers="" signal="activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image929">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-spell-check</property>
+                            <property name="icon_size">1</property>
                           </widget>
                         </child>
                       </widget>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="diagnose_blocks">
+                      <widget class="GtkImageMenuItem" id="solve1">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Diagnose blocks...</property>
+                        <property name="label" translatable="yes">Sol_ve</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_diagnose_blocks_click"/>
-                        <accelerator key="D" modifiers="GDK_CONTROL_MASK" signal="activate"/>
+                        <signal name="activate" handler="solve_click"/>
+                        <accelerator key="F9" modifiers="" signal="activate"/>
                         <child internal-child="image">
-                          <widget class="GtkImage" id="image935">
+                          <widget class="GtkImage" id="image930">
                             <property name="visible">True</property>
-                            <property name="pixbuf">diagnose.png</property>
+                            <property name="stock">gtk-media-forward</property>
+                            <property name="icon_size">1</property>
+                          </widget>
+                        </child>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkImageMenuItem" id="integrate1">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Integrate...</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="integrate_click"/>
+                        <accelerator key="F9" modifiers="GDK_CONTROL_MASK" signal="activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image931">
+                            <property name="visible">True</property>
+                            <property name="pixbuf">integrator-sm.png</property>
+                          </widget>
+                        </child>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkSeparatorMenuItem" id="separator8">
+                        <property name="visible">True</property>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkImageMenuItem" id="units">
+                        <property name="visible">True</property>
+                        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                        <property name="tooltip" translatable="yes">Select preferred units of measurement for different atom types</property>
+                        <property name="label" translatable="yes">_Units...</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_units_click"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="menu-item-image24">
+                            <property name="visible">True</property>
+                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                            <property name="pixbuf">ruler.png</property>
+                          </widget>
+                        </child>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkImageMenuItem" id="console1">
+                        <property name="visible">True</property>
+                        <property name="tooltip" translatable="yes">Program ASCEND with Python</property>
+                        <property name="label" translatable="yes">_Console</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="console_click"/>
+                        <accelerator key="F12" modifiers="" signal="activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image932">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-connect</property>
+                            <property name="icon_size">1</property>
                           </widget>
                         </child>
                       </widget>
@@ -4395,6 +4432,176 @@ AWW</property>
           <packing>
             <property name="expand">False</property>
             <property name="position">2</property>
+          </packing>
+        </child>
+      </widget>
+    </child>
+  </widget>
+  <widget class="GtkDialog" id="unitsdialog">
+    <property name="width_request">550</property>
+    <property name="height_request">400</property>
+    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+    <property name="border_width">5</property>
+    <property name="title" translatable="yes">Choose preferred units of measurement</property>
+    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="has_separator">False</property>
+    <child internal-child="vbox">
+      <widget class="GtkVBox" id="dialog-vbox14">
+        <property name="visible">True</property>
+        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+        <property name="spacing">2</property>
+        <child>
+          <widget class="GtkTable" id="table8">
+            <property name="visible">True</property>
+            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+            <property name="n_rows">3</property>
+            <property name="n_columns">2</property>
+            <child>
+              <widget class="GtkComboBoxEntry" id="typeentry">
+                <property name="width_request">400</property>
+                <property name="visible">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <child internal-child="entry">
+                  <widget class="GtkEntry" id="comboboxentry-entry2">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                    <property name="activates_default">True</property>
+                  </widget>
+                </child>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="y_options"></property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkLabel" id="label1">
+                <property name="visible">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">Atom type:</property>
+              </widget>
+              <packing>
+                <property name="y_options"></property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkLabel" id="label2">
+                <property name="visible">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="xalign">0</property>
+                <property name="ypad">5</property>
+                <property name="label" translatable="yes">Dimension:</property>
+              </widget>
+              <packing>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+                <property name="y_options"></property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkLabel" id="dimensionlabel">
+                <property name="visible">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="xalign">0</property>
+                <property name="ypad">5</property>
+                <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+                <property name="y_options"></property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkLabel" id="label4">
+                <property name="visible">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="xalign">0</property>
+                <property name="yalign">0</property>
+                <property name="label" translatable="yes">Preferred units:</property>
+                <property name="width_chars">1</property>
+              </widget>
+              <packing>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+                <property name="y_options">GTK_FILL</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkTreeView" id="unitsview">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="headers_clickable">True</property>
+                <property name="level_indentation">3</property>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <widget class="GtkHButtonBox" id="dialog-action_area15">
+            <property name="visible">True</property>
+            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <child>
+              <widget class="GtkButton" id="cancelbutton">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="label" translatable="yes">gtk-cancel</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">0</property>
+              </widget>
+            </child>
+            <child>
+              <widget class="GtkButton" id="applybutton">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="label" translatable="yes">gtk-apply</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">0</property>
+              </widget>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkButton" id="closebutton">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="label" translatable="yes">gtk-close</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">3</property>
+              </widget>
+              <packing>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">GTK_PACK_END</property>
           </packing>
         </child>
       </widget>
