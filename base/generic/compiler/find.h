@@ -18,14 +18,6 @@
 	Boston, MA 02111-1307, USA.
 *//** @file
 	Ascend Instance Tree Search Routines.
-	
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "fractions.h"
-	#include "compiler.h"
-	#include "instance_enum.h"
-	#include "dimen.h"
-	#include "expr_types.h"
 *//*
 	by Tom Epperly
 	Created: 1/24/90
@@ -35,17 +27,21 @@
 #ifndef ASC_FIND_H
 #define ASC_FIND_H
 
+#include "utilities/ascConfig.h"
+#include "instance_enum.h"
+#include "expr_types.h"
+
 /**	@addtogroup compiler Compiler
 	@{
 */
 
 /**
- * Search error codes.
- * At present, there is a GREAT DEAL of insanity between find_errors and
- * evaluation_error (value_type.h). In particular there is a lot of idiocy
- * mapping undefined_instance <--> undefined_value which is just plain wrong
- * in most cases.
- */
+	Search error codes.
+	At present, there is a GREAT DEAL of insanity between find_errors and
+	evaluation_error (value_type.h). In particular there is a lot of idiocy
+	mapping undefined_instance <--> undefined_value which is just plain wrong
+	in most cases.
+*/
 enum find_errors {
   unmade_instance,      /**< Found an unmade instance (NULL child). */
   undefined_instance,   /**< Instance in an expression is unknown child. */
@@ -53,25 +49,27 @@ enum find_errors {
   correct_instance      /**< Return value when everything went okay. */
 };
 
+/* mmm, nasty global variables... */
+
 extern int ListMode;
 /**<
- *  Tells whether to evaluate a set strictly as a set i.e no order,
- *  or as a list, i.e., with order important.
- */
+	Tells whether to evaluate a set strictly as a set i.e no order,
+	or as a list, i.e., with order important.
+*/
 
 extern int EvaluatingSets;
 /**<
- *  Tells whether the evaluation of a set is in place. Used for marking
- *  atoms as mutable or not.
- */
+	Tells whether the evaluation of a set is in place. Used for marking
+	atoms as mutable or not.
+*/
 
 extern int g_DeclarativeContext;
 /**<
- *  Tells whether declarative processing, the default = 0 , is in effect,
- *  or procedural processing as when doing initializations.
- *  Access this varible only by GetDeclarativeContext() and
- *  SetDeclarativeContext() below.
- */
+	Tells whether declarative processing, the default = 0 , is in effect,
+	or procedural processing as when doing initializations.
+	Access this varible only by GetDeclarativeContext() and
+	SetDeclarativeContext() below.
+*/
 
 #define FINDEBUG 0
 #if (FINDEBUG==0)
@@ -133,86 +131,88 @@ extern struct for_table_t *g_EvaluationForTable;
 #endif
 
 /*
- * Wrappers mainly for break point purposes of g_EvaluationContext
- * and g_EvaluationForTable.
- */
+	Wrappers mainly for break point purposes of g_EvaluationContext
+	and g_EvaluationForTable.
+*/
 extern struct Instance *GetEvaluationContextF(void);
 /**< retrieve the evaluation context (mainly for debugging) */
 
 extern struct for_table_t *GetEvaluationForTableF(void);
-/**< retrieve the evaluation for table (mainly for debugging) */
+/**< retrieve the evaluation for table (mainly for debugging) */#include "expr_types.h"
 
 #if EVALDEBUG /* version printing file/line when setting globals */
-extern void SetEvaluationContextF(CONST struct Instance *i
-#if (EVALDEBUG == 1 || EVALDEBUG == 3)
-                                  ,char *file, int line
-#endif /* evaldebug 13 */
-                                 );
+extern void SetEvaluationContextF(
+		CONST struct Instance *i
+# if (EVALDEBUG == 1 || EVALDEBUG == 3)
+		,char *file, int line
+# endif
+);
 /**< set the evaluation context (mainly for debugging) */
 
-extern void SetEvaluationForTableF(struct for_table_t *ft
-#if (EVALDEBUG == 2 || EVALDEBUG == 3)
-                                  ,char *file, int line
-#endif /* evaldebug 23 */
-                                  );
+extern void SetEvaluationForTableF(
+		struct for_table_t *ft
+# if (EVALDEBUG == 2 || EVALDEBUG == 3)
+		,char *file, int line
+# endif
+);
 /**< set the evaluation for table (mainly for debugging) */
 
-#else /* evaldebug */
+#else /* EVALDEBUG */
+
 extern void SetEvaluationContextF(CONST struct Instance *i);
 /**< set the evaluation context (mainly for debugging) */
 extern void SetEvaluationForTableF(struct for_table_t *ft);
 /**< set the evaluation for table (mainly for debugging) */
-#endif /* evaldebug*/
+
+#endif /* EVALDEBUG*/
 
 extern struct value_t InstanceEvaluateName(CONST struct Name *nptr);
 /**<
- *  This evaluates the name in the context given by EvaluationContext.
- *  This must be set before the InstanceEvaluateName call.  Note since
- *  this is a global variable you cannot evaluate names in more than
- *  one context simultaneously.
- *
- *  If EvaluationForTable is non-NULL, the for table will be checked before
- *  the instance tree.
- */
+	This evaluates the name in the context given by EvaluationContext.
+	This must be set before the InstanceEvaluateName call.  Note since
+	this is a global variable you cannot evaluate names in more than
+	one context simultaneously.
+	
+	If EvaluationForTable is non-NULL, the for table will be checked before
+	the instance tree.
+*/
 
-extern struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
-                                                    double tol);
+extern struct value_t InstanceEvaluateSatisfiedName(
+		CONST struct Name *nptr, double tol
+);
 /**<
- *  This function is specially to evaluate name of relations or logical
- *  relations included in SATISFIED expressions.
- *  This evaluates the name in the context given by EvaluationContext.
- *  This must be set before the InstanceEvaluateName call.  Note since
- *  this is a global variable you cannot evaluate names in more than
- *  one context simultaneously.
- *  If EvaluationForTable is non-NULL, the for table will be checked before
- *  the instance tree.
- */
+	This function is specially to evaluate name of relations or logical
+	relations included in SATISFIED expressions.
+	This evaluates the name in the context given by EvaluationContext.
+	This must be set before the InstanceEvaluateName call.  Note since
+	this is a global variable you cannot evaluate names in more than
+	one context simultaneously.
+	If EvaluationForTable is non-NULL, the for table will be checked before
+	the instance tree.
+*/
 
-extern struct gl_list_t *FindInstances(CONST struct Instance *i,
-                                       CONST struct Name *n,
-                                       enum find_errors *err);
+extern struct gl_list_t *FindInstances(
+		CONST struct Instance *i,
+		CONST struct Name *n, enum find_errors *err
+);
 /**<
- *  Return the list of instances specified by n.  If this returns NULL,
- *  it indicates that it couldn't find the name.  Check err to discover why.
- */
+	Return the list of instances specified by n.  If this returns NULL,
+	it indicates that it couldn't find the name.  Check err to discover why.
+*/
 
 
-extern struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i,
-                                                CONST struct gl_list_t *names,
-                                                enum find_errors *err,
-                                                unsigned long *errpos);
+extern struct gl_list_t *FindInstancesFromNames(
+		CONST struct Instance *i,
+        CONST struct gl_list_t *names,
+        enum find_errors *err, unsigned long *errpos
+);
 /**<
- *  <!--  struct gl_list_t *FindInstancesFromNames(i,names,err,errpos) -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  CONST struct gl_list_t *names;                               -->
- *  <!--  enum find_errors *err;                                       -->
- *  <!--  unsigned long *errpos;                                       -->
- *  Return the list of instances specified by names.  If this returns NULL,
- *  it indicates that it couldn't find a name.  Check err to discover why
- *  and errpos to discover which list element had the problem.
- *  Each listed name on input must resolve to a single instance, or
- *  the err will be impossible_instance.
- */
+	Return the list of instances specified by names.  If this returns NULL,
+	it indicates that it couldn't find a name.  Check err to discover why
+	and errpos to discover which list element had the problem.
+	Each listed name on input must resolve to a single instance, or
+	the err will be impossible_instance.
+*/
 /* @} */
 
 #endif /* ASC_FIND_H */
