@@ -1,6 +1,10 @@
 #include <stdexcept>
 using namespace std;
 
+extern "C"{
+#include <compiler/cmpfunc.h>
+}
+
 #include "symchar.h"
 
 /*
@@ -53,6 +57,11 @@ bool
 SymChar::operator==(const SymChar &other) const{
 	if(sc == other.sc)return true;
 	return false;
+}
+
+bool
+SymChar::operator<(const SymChar &other) const{
+	return CmpSymchar(sc,other.sc) == -1;
 }
 
 const symchar *

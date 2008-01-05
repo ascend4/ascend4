@@ -790,6 +790,9 @@
                               </widget>
                             </child>
                           </widget>
+                          <packing>
+                            <property name="tab_expand">False</property>
+                          </packing>
                         </child>
                         <child>
                           <widget class="GtkLabel" id="moduletab">
@@ -799,6 +802,7 @@
                           </widget>
                           <packing>
                             <property name="type">tab</property>
+                            <property name="tab_expand">False</property>
                             <property name="tab_fill">False</property>
                           </packing>
                         </child>
@@ -819,6 +823,7 @@
                           </widget>
                           <packing>
                             <property name="position">1</property>
+                            <property name="tab_expand">False</property>
                           </packing>
                         </child>
                         <child>
@@ -829,6 +834,7 @@
                           <packing>
                             <property name="type">tab</property>
                             <property name="position">1</property>
+                            <property name="tab_expand">False</property>
                             <property name="tab_fill">False</property>
                           </packing>
                         </child>
@@ -861,6 +867,9 @@
                       </widget>
                     </child>
                   </widget>
+                  <packing>
+                    <property name="tab_expand">False</property>
+                  </packing>
                 </child>
                 <child>
                   <widget class="GtkLabel" id="errortab">
@@ -869,6 +878,7 @@
                   </widget>
                   <packing>
                     <property name="type">tab</property>
+                    <property name="tab_expand">False</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
@@ -884,6 +894,7 @@
                   </widget>
                   <packing>
                     <property name="position">1</property>
+                    <property name="tab_expand">False</property>
                   </packing>
                 </child>
                 <child>
@@ -916,6 +927,7 @@
                   <packing>
                     <property name="type">tab</property>
                     <property name="position">1</property>
+                    <property name="tab_expand">False</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
@@ -3464,7 +3476,7 @@ Conversion to LyX and other formats:
                 <property name="label">gtk-stop</property>
                 <property name="use_stock">True</property>
                 <property name="response_id">0</property>
-                <signal name="clicked" handler="on_stopbutton_clicked"/>
+                <signal name="activate" handler="on_stopbutton_activate"/>
               </widget>
             </child>
             <child>
@@ -3475,7 +3487,8 @@ Conversion to LyX and other formats:
                 <property name="can_default">True</property>
                 <property name="label">gtk-close</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
+                <property name="response_id">0</property>
+                <signal name="activate" handler="on_closebutton_activate"/>
               </widget>
               <packing>
                 <property name="position">1</property>
@@ -4458,12 +4471,13 @@ AWW</property>
             <property name="n_rows">3</property>
             <property name="n_columns">2</property>
             <child>
-              <widget class="GtkComboBoxEntry" id="typeentry">
+              <widget class="GtkComboBoxEntry" id="typecombo">
                 <property name="width_request">400</property>
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <signal name="changed" handler="on_typecombo_changed"/>
                 <child internal-child="entry">
-                  <widget class="GtkEntry" id="comboboxentry-entry2">
+                  <widget class="GtkEntry" id="typeentry">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>

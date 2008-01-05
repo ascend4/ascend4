@@ -9,6 +9,7 @@
 %include <python/std_except.i>
 %include <python/std_vector.i>
 %include <python/std_map.i>
+%include <python/std_set.i>
 
 %{
 #include "library.h"
@@ -118,6 +119,8 @@ public:
 %template(StringVector) std::vector<std::string>;
 %template(IntStringMap) std::map<int,std::string>;
 %template(AnnotationVector) std::vector<Annotation>;
+%template(UnitsVector) std::vector<UnitsM>;
+%template(TypeSet) std::set<Type>;
 
 %rename(Instance) Instanc;
 %rename(Name) Nam;
@@ -171,21 +174,7 @@ Reporter *getReporter();
 
 class UnitsM;
 
-class Dimensions{
-public:
-	static const unsigned MAX_DIMS;
-	static const std::string getBaseUnit(const unsigned &);
-
-	const bool operator==(const Dimensions &) const;
-	const bool operator!=(const Dimensions &) const;
-	const bool operator<(const Dimensions &) const;
-	Dimensions(const Dimensions &);
-	const bool isWild() const;
-	const bool isDimensionless() const;
-	const short getFractionNumerator(const unsigned &) const;
-	const short getFractionDenominator(const unsigned &) const;
-};
-
+%include "dimensions.h"
 %include "units.h"
 
 %extend UnitsM{
@@ -202,8 +191,14 @@ public:
 	of the time you will want to use custom units in place of these, eg
 	'N' instead of 'kg*m/s^2'.
 */
+
+%rename(__str__) Dimensions::toString;
+
 %extend Dimensions{
 	%pythoncode {
+		
+		def __str__(self):
+			return self.toString()
 
 		def getDefaultUnits(self):
 			"""Return the default (SI) units for a specific set of dimensions."""

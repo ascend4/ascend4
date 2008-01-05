@@ -342,3 +342,38 @@ AnnotationDatabase
 Library::getAnnotationDatabase(){
 	return AnnotationDatabase(SCP(LibraryNote()));
 }
+
+vector<UnitsM>
+Library::getUnits() const{
+	vector<UnitsM> v;
+    register unsigned long c;
+    const struct Units *p;
+    for(c = 0;c<UNITS_HASH_SIZE;c++) {
+		for(p = g_units_hash_table[c];p!=NULL;p = p->next){
+			v.push_back(UnitsM(p));
+		}
+	}
+	return v;
+}
+
+set<Type>
+Library::getRealAtomTypes() const{
+	set<Type> s;
+	struct gl_list_t *l = DefinitionList();
+	if(!l){
+		throw runtime_error("No types found in library (perhaps no files have been loaded?)");
+	}
+
+	for(unsigned i = 1; i<=gl_length(l); ++i) {
+		Type t((const struct TypeDescription *)gl_fetch(l,i));
+		if(t.isRefinedReal()){
+			Dimensions d = t.getDimensions();
+			if(d.isWild() || d.isDimensionless())continue; // skip this one
+			// it's got some dimensions, add it to the list			
+			s.insert(t);
+		}
+	}
+	gl_destroy(l);
+	return s;
+}
+

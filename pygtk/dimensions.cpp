@@ -5,6 +5,10 @@ using namespace std;
 #include "units.h"
 #include "dimensions.h"
 
+extern "C"{
+#include <compiler/dimen_io.h>
+}
+
 #ifdef ASCXX_WORDY_BASE_DIMENSIONS
 const string Dimensions::BASEUNITS[Dimensions::MAX_DIMS] = {
 	UNIT_BASE_MASS,UNIT_BASE_QUANTITY,UNIT_BASE_LENGTH, UNIT_BASE_TIME, 
@@ -24,9 +28,8 @@ Dimensions::getBaseUnit(const unsigned &i){
 	return BASEUNITS[i];
 }
 
-Dimensions::Dimensions(){
-	// This ctor needs to exist for SWIG to be happy. *shrug*.
-	throw runtime_error("Can't create Dimensions like this");
+Dimensions::Dimensions() : d(WildDimension()){
+	// nothing else
 }
 
 Dimensions::Dimensions(const Dimensions &old) : d(old.d){
@@ -90,3 +93,11 @@ const FRACPART
 Dimensions::getFractionDenominator(const unsigned &i) const{
 	return Denominator( GetDimFraction(*d,i) );
 }
+
+const std::string 
+Dimensions::toString() const{
+	const char *s = WriteDimensionString(getInternalType());
+	return string(s);
+}
+
+

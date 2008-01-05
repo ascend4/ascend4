@@ -86,18 +86,15 @@ class PopupSolverReporter(PythonSolverReporter):
 			gtk.main_iteration()
 
 	def run(self):
-		self.window.run()
+		_res = self.window.run()
+		self.window.destroy()
 
-	def on_stopbutton_clicked(self,*args):
+	def on_stopbutton_activate(self,*args):
 		print "STOPPING..."
 		self.guiinterrupt = True;
 
-	def on_solverstatusdialog_close(self,*args):
-		self.window.response(gtk.RESPONSE_CLOSE)
-
-	def on_solverstatusdialog_response(self,response,*args):
-		self.window.hide()
-		del(self.window)
+	def on_closebutton_activate(self,*args):
+		self.window.destroy()
 		
 	def fill_values(self,status):
 		self.numblocks.set_text("%d of %d" % (status.getCurrentBlockNum(),status.getNumBlocks()))

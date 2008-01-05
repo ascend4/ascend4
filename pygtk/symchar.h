@@ -32,6 +32,7 @@ public:
 	SymChar(const SymChar &);
 	SymChar(const struct InstanceName &);
 	bool operator==(const SymChar &) const;
+	bool operator<(const SymChar &) const;
 
 	const char *toString() const;
 	const symchar *getInternalType() const;

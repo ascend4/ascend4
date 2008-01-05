@@ -25,9 +25,11 @@
 #include "module.h"
 #include "symchar.h"
 #include "annotation.h"
+#include "units.h"
 
 #include <vector>
 #include <string>
+#include <set>
 
 /**
 	Handles the loading of ASCEND a4c files into memory, then the
@@ -57,7 +59,8 @@ public:
 	AnnotationDatabase getAnnotationDatabase();
 
 	/// get a listing of all units available in the library
-	//std::map<Dimension,std::vector<Units> > getUnits(void);
+	std::vector<UnitsM> getUnits() const;
+	std::set<Type> getRealAtomTypes() const;
 
 private:
 	std::vector<ExtMethod> extmethod_vector;

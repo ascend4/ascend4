@@ -18,6 +18,7 @@ extern "C"{
 #include <compiler/instance_io.h>
 #include <compiler/type_desc.h>
 #include <compiler/bintoken.h>
+#include <compiler/library.h>
 #include <linear/mtx.h>
 #include <system/calc.h>
 #include <system/relman.h>
@@ -208,8 +209,23 @@ Type::isRefinedSolverVar() const{
 	return false;
 }
 
+const bool
+Type::isFundamental() const{
+	return CheckFundamental(getName().getInternalType());
+}
 
 const bool
 Type::hasParameters() const{
 	return TypeHasParameterizedInsts(t);
 }
+
+bool
+Type::operator<(const Type &other) const{
+	// modelled on the Unit_CmpAtomName function from UnitsProc.c in Tcl code...
+	if(!getInternalType() || !other.getInternalType() || this->isFundamental()){
+		return false;
+	}
+	return (this->getName() < other.getName());
+}
+
+
