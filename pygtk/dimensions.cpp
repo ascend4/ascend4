@@ -9,19 +9,11 @@ extern "C"{
 #include <compiler/dimen_io.h>
 }
 
-#ifdef ASCXX_WORDY_BASE_DIMENSIONS
 const string Dimensions::BASEUNITS[Dimensions::MAX_DIMS] = {
 	UNIT_BASE_MASS,UNIT_BASE_QUANTITY,UNIT_BASE_LENGTH, UNIT_BASE_TIME, 
 	UNIT_BASE_TEMPERATURE, UNIT_BASE_CURRENCY, 	UNIT_BASE_ELECTRIC_CURRENT, 
 	UNIT_BASE_LUMINOUS_INTENSITY, UNIT_BASE_PLANE_ANGLE, UNIT_BASE_SOLID_ANGLE 
 };
-#else
-// Preferred SI abbreviated dimension names
-const string Dimensions::BASEUNITS[Dimensions::MAX_DIMS] = {
-	"kg","mol","m","s","K","USD","A", 
-	"cd", "rad", "sr"
-};
-#endif
 
 const string
 Dimensions::getBaseUnit(const unsigned &i){
