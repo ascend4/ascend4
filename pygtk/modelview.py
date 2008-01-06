@@ -5,6 +5,7 @@ import ascpy
 
 from varentry import *
 from properties import *
+from unitsdialog import *
 
 BROWSER_FIXED_COLOR = "#008800"
 BROWSER_FREE_COLOR = "#000088"
@@ -82,9 +83,16 @@ class ModelView:
 		_img.set_from_file(self.browser.options.assets_dir+'/observe.png')
 		self.observemenuitem.set_image(_img)
 
+		self.unitsmenuitem = gtk.ImageMenuItem("Select _Units",True);
+		_img = gtk.Image()
+		_img.set_from_file(self.browser.options.assets_dir+'/ruler.png')
+		self.unitsmenuitem.set_image(_img)
+
 		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
 		self.freemenuitem.show(); self.freemenuitem.set_sensitive(False)
 		self.observemenuitem.show(); self.observemenuitem.set_sensitive(False)
+		self.unitsmenuitem.show(); self.unitsmenuitem.set_sensitive(False)
+
 		self.propsmenuitem.show()
 		self.treecontext.append(self.fixmenuitem)
 		self.treecontext.append(self.freemenuitem)
@@ -94,10 +102,12 @@ class ModelView:
 		_sep = gtk.SeparatorMenuItem(); _sep.show()
 		self.treecontext.append(_sep)
 		self.treecontext.append(self.propsmenuitem)
+		self.treecontext.append(self.unitsmenuitem)
 		self.fixmenuitem.connect("activate",self.fix_activate)
 		self.freemenuitem.connect("activate",self.free_activate)
 		self.propsmenuitem.connect("activate",self.props_activate)
 		self.observemenuitem.connect("activate",self.observe_activate)
+		self.unitsmenuitem.connect("activate",self.units_activate)
 
 		if not self.treecontext:
 			raise RuntimeError("Couldn't create browsercontext")
@@ -321,6 +331,12 @@ class ModelView:
 		_canpop = False;
 		# self.browser.reporter.reportError("Right click on %s" % self.otank[_path][0])
 		_instance = self.otank[_path][1]
+
+		if _instance.isReal() and _instance.isAtom():
+			self.unitsmenuitem.set_sensitive(True)
+		else:
+			self.unitsmenuitem.set_sensitive(False)
+
 		if _instance.getType().isRefinedSolverVar():
 			_canpop = True
 			self.observemenuitem.set_sensitive(True)
@@ -465,3 +481,12 @@ class ModelView:
 			if (f and not val) or (not f and val):
 				instance.setFixed(val)
 				self.browser.do_solve_if_auto()
+
+	def units_activate(self,*args):
+		model,iter = self.modelview.get_selection().get_selected()
+		typename = None
+		if iter is not None:
+			typename = model.get_value(iter,1)
+		_un = UnitsDialog(self.browser,self.browser.window,typename)
+		_un.run()
+

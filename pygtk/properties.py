@@ -103,7 +103,7 @@ class VarPropsWin:
 		# all the values here use the same preferred units for this instance type
 
 		_u = self.instance.getType().getPreferredUnits();
-		if _u == None:
+		if _u is None:
 			_conversion = 1
 			_u = self.instance.getDimensions().getDefaultUnits().getName().toString()
 		else:
