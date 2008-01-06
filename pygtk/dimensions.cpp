@@ -54,6 +54,7 @@ Dimensions::operator<(const Dimensions &d1) const{
 
 const bool 
 Dimensions::operator==(const Dimensions &d1) const{
+	/*
 	ERROR_REPORTER_START_HERE(ASC_USER_NOTE);
 	FPRINTF(stderr,"Comparing dimensions; this=");
 	PrintDimen(stderr,d);
@@ -61,6 +62,7 @@ Dimensions::operator==(const Dimensions &d1) const{
 	PrintDimen(stderr,d1.getInternalType());
 	FPRINTF(stderr,": comparison result=%d",CmpDimen(d,d1.getInternalType()));
 	error_reporter_end_flush();
+	*/
 	if(CmpDimen(d, d1.getInternalType()) == 0)return true;
 	return false;
 }

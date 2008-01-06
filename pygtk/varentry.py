@@ -50,7 +50,7 @@ class RealAtomEntry:
 		if self.units.strip() == "":
 			# if no units entered, assume the 'preferred' units
 			_u = _insttype.getPreferredUnits()
-			if _u == None:
+			if _u is None:
 				# no preferred units for this type, so assume default units
 				_u = _instdim.getDefaultUnits()
 			print "Assuming units '%s'" % _u.getName().toString()

@@ -45,12 +45,12 @@ int CmpSymchar(symchar *s1, symchar *s2)
   return strcmp(SCP(s1),SCP(s2));
 }
 
-int CmpPtrs(void *p1, void *p2) {
+int CmpPtrs(const void *p1, const void *p2) {
   if (p1<p2) return -1;
   else return (p1 > p2);
 }
 
-int CmpRealPtrs(void *p1, void *p2) {
+int CmpRealPtrs(const void *p1, const void *p2) {
   assert(p1!=NULL);
   assert(p2!=NULL);
   if (p1<p2) return -1;

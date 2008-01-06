@@ -65,13 +65,11 @@ public:
 	/// Test for a wildcard ('don't care') Dimension object
 	const bool isWild() const;
 
-#ifndef SWIG
 	/// Get the numerator part of the index in the i-th dimension (eg for Area, with i={length}, return 2)
-	const FRACPART getFractionNumerator(const unsigned &i) const;
+	const short getFractionNumerator(const unsigned &i) const;
 
 	/// Get the denominator part of the index in the i-th dimension
-	const FRACPART getFractionDenominator(const unsigned &i) const;
-#endif
+	const short getFractionDenominator(const unsigned &i) const;
 };
 
 #endif
