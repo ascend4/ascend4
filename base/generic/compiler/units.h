@@ -75,25 +75,25 @@ struct UnitDefinition {
  * If you have better names for them, fix that here.
  */
 #define UNIT_BASE_MASS               "kg"
-/**< Name of basic SI unit for mass. */
+/**< SI base unit symbol for mass. */
 #define UNIT_BASE_QUANTITY           "mol"
-/**< Name of basic SI unit for quantity. */
+/**< SI base unit symbol for quantity. */
 #define UNIT_BASE_LENGTH             "m"
-/**< Name of basic SI unit for length. */
+/**< SI base unit symbol for length. */
 #define UNIT_BASE_TIME               "s"
-/**< Name of basic SI unit for time. */
+/**< SI base unit symbol for time. */
 #define UNIT_BASE_TEMPERATURE        "K"
-/**< Name of basic SI unit for temperature. */
-#define UNIT_BASE_CURRENCY           "currency"
-/**< Name of base unit for currency (what should it be?). */
+/**< SI base unit symbol for temperature. */
+#define UNIT_BASE_CURRENCY           "USD"
+/**< Base unit (non SI) for currency (US dollar) */
 #define UNIT_BASE_ELECTRIC_CURRENT   "A"
-/**< Name of basic SI unit for current. */
+/**< SI base unit symbol for current. */
 #define UNIT_BASE_LUMINOUS_INTENSITY "cd"
-/**< Name of basic SI unit for luminosity. */
+/**< SI base unit symbol for luminosity. */
 #define UNIT_BASE_PLANE_ANGLE        "rad"
-/**< Name of basic SI unit for plane angle. */
+/**< Base unit (non SI) for plane angle (radian). */
 #define UNIT_BASE_SOLID_ANGLE        "sr"
-/**< Name of basic SI unit for solid angle. */
+/**< Base unit (non SI) for solid angle (steradian). */
 
 ASC_DLLSPEC struct Units *g_units_hash_table[];
 /**<
