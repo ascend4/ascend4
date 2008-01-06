@@ -106,6 +106,8 @@ class UnitsDialog:
 				if selected:
 					weight = pango.WEIGHT_BOLD
 				du = u.getDimensions().getDefaultUnits().getName()
+				if str(du) == "1":
+					du = ""
 				m.append([selected,u.getName(),"%g %s" %(u.getConversion(),du),weight])
 		self.unitsview.set_model(m)
 
