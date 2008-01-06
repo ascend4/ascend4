@@ -85,15 +85,11 @@ class PopupSolverReporter(PythonSolverReporter):
 		while gtk.events_pending():
 			gtk.main_iteration()
 
-	def run(self):
-		_res = self.window.run()
-		self.window.destroy()
-
 	def on_stopbutton_activate(self,*args):
 		print "STOPPING..."
 		self.guiinterrupt = True;
 
-	def on_closebutton_activate(self,*args):
+	def on_solverstatusdialog_response(self,widget,response):
 		self.window.destroy()
 		
 	def fill_values(self,status):
@@ -146,6 +142,7 @@ class PopupSolverReporter(PythonSolverReporter):
 
 			if status.isConverged() and _close_on_converged:
 				self.report_to_browser(status)
+				print "CLOSING ON CONVERGED"
 				self.window.response(gtk.RESPONSE_CLOSE)
 				return
 			

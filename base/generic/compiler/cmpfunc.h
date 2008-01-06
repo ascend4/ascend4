@@ -55,7 +55,8 @@
 	@{
 */
 
-/* reminder strcmp("abc","fcd") --> -1 */
+/* REMINDER: strcmp("abc","fcd") --> -1 */
+
 /*
  *  When used with a sort function, these yield a list ordered in
  *  increasing value.
@@ -78,13 +79,8 @@ ASC_DLLSPEC int CmpSymchar(symchar *s1, symchar *s2);
  *                 <tr align="center"><td>    1   </td><td>   s1 >  s2  </td></tr></table>
  */
 
-extern int CmpPtrs(void *p1, void *p2);
+extern int CmpPtrs(const void *p1, const void *p2);
 /**<
- *  <!--  CmpPtrs(p1,p2);                                              -->
- *  <!--  returns:        if:                                          -->
- *  <!--  -1              p1<p2                                        -->
- *  <!--   0              p1==p2                                       -->
- *  <!--   1              p1>p2                                        -->
  *  General pointer comparison function.
  *  The comparison is for the pointers themselves, not what they point at.
  *  Either pointer may be NULL.
@@ -95,14 +91,8 @@ extern int CmpPtrs(void *p1, void *p2);
  *  @see CmpPtrsReverse()
  */
 
-extern int CmpRealPtrs(void *p1, void *p2);
+ASC_DLLSPEC int CmpRealPtrs(const void *p1, const void *p2);
 /**<
- *  <!--  CmpRealPtrs(p1,p2);                                          -->
- *  <!--  First asserts p1, p2 != NULL, then:                          -->
- *  <!--  returns:        if:                                          -->
- *  <!--  -1              p1<p2                                        -->
- *  <!--   0              p1==p2                                       -->
- *  <!--   1              p1>p2                                        -->
  *  Real pointer comparison function.
  *  The comparison is for the pointers themselves, not what they point at.
  *  Neither pointer may be NULL (checked by assertion).
@@ -129,7 +119,6 @@ extern int CmpRealPtrs(void *p1, void *p2);
  */
 extern int CmpParentsF(CONST struct Instance *i1, CONST struct Instance *i2);
 /**<
- *  <!--  Comparison functions for parent instance pointers.           -->
  *  Parent instance pointer comparison function.
  *  The comparison is for the pointers themselves, not what they point at.
  *  Neither pointer may be NULL (checked by assertion).
@@ -150,7 +139,6 @@ extern int CmpParentsF(CONST struct Instance *i1, CONST struct Instance *i2);
  */
 extern int CmpRelationsF(CONST struct Instance *i1, CONST struct Instance *i2);
 /**<
- *  <!--  Comparison functions for relation instance pointers.         -->
  *  Relation instance pointer comparison function.
  *  The comparison is for the pointers themselves, not what they point at.
  *  Neither pointer may be NULL (checked by assertion).
@@ -171,7 +159,6 @@ extern int CmpRelationsF(CONST struct Instance *i1, CONST struct Instance *i2);
  */
 extern int CmpLogRelationsF(CONST struct Instance *i1, CONST struct Instance *i2);
 /**<
- *  <!--  Comparison functions for logrelation instance pointers.      -->
  *  Log relation instance pointer comparison function.
  *  The comparison is for the pointers themselves, not what they point at.
  *  Neither pointer may be NULL (checked by assertion).
@@ -192,7 +179,6 @@ extern int CmpLogRelationsF(CONST struct Instance *i1, CONST struct Instance *i2
  */
 extern int CmpWhensF(CONST struct Instance *i1, CONST struct Instance *i2);
 /**<
- *  <!--  Comparison functions for when instance pointers.             -->
  *  When instance pointer comparison function.
  *  The comparison is for the pointers themselves, not what they point at.
  *  Neither pointer may be NULL (checked by assertion).
@@ -219,13 +205,6 @@ extern int CmpIntIndex(CONST struct ArrayChild *a, CONST struct ArrayChild *b);
  */
 extern int CmpStrIndex(CONST struct ArrayChild *a, CONST struct ArrayChild *b);
 /**<
- *  <!--  CmpStrIndex(a,b),CmpIntIndex(a,b)                            -->
- *  <!--  Comparison functions for ArrayChildren.                      -->
- *  <!--  Both a and b must be nonNULL and are then ASSUMED to be an ar-->raychild
- *  <!--  of the type appropriate for the function name.               -->
- *  <!--                                                               -->
- *  <!--  This function requires instance_types.h be seen first or it is -->
- *  <!--  invisible.                                                   -->
  *  Compare string indexes of ArrayChildren a and b.
  *  Both a and b must be non-NULL and are then ASSUMED to be
  *  indexed by string.
@@ -247,11 +226,6 @@ extern int CmpStrIndex(CONST struct ArrayChild *a, CONST struct ArrayChild *b);
 
 extern int CmpPtrsReverse(void *p1, void *p2);
 /**<
- *  <!--  CmpPtrsReverse(p1,p2);                                       -->
- *  <!--  returns:        if:                                          -->
- *  <!--  -1              p1>p2                                        -->
- *  <!--   0              p1==p2                                       -->
- *  <!--   1              p1<p2                                        -->
  *  General pointer comparison function with reverse ordering.
  *  The comparison is for the pointers themselves, not what they point at.
  *  Either pointer may be NULL.

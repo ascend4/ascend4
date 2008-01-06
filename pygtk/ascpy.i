@@ -314,7 +314,7 @@ public:
 			_pref = preferences.Preferences()
 			#print "Checking for preferred units for %s" % self.getName()
 			_u = _pref.getPreferredUnits(self.getName().toString())
-			if _u == None:
+			if _u is None:
 				# no preferred units set
 				return None
 			_units = Units(_u);
@@ -471,7 +471,7 @@ public:
 			if self.isDimensionless() or self.isFund():
 				return self.getRealValue();
 			_u = self.getType().getPreferredUnits();
-			if _u == None:
+			if _u is None:
 				return str(self.getRealValue()) + ' ' + self.getDimensions().getDefaultUnits().getName().toString()
 			return _u.getConvertedValue(self.getRealValue())
 

@@ -6,6 +6,10 @@ using namespace std;
 #include "units.h"
 #include "dimensions.h"
 
+extern "C"{
+#include <compiler/cmpfunc.h>
+}
+
 UnitsM::UnitsM(){
 	int errcode;
 	long unsigned pos;
@@ -96,3 +100,10 @@ const double
 UnitsM::getConversion() const{
 	return UnitsConvFactor(u);
 }
+
+const bool
+UnitsM::operator==(const UnitsM &other) const{
+	// because of the FindOrDefineUnits thing, equivalent units will always have the same pointer
+	return 0==CmpRealPtrs(getInternalType(),other.getInternalType());
+}
+

@@ -31,6 +31,7 @@ public:
 	const SymChar getName() const;
 	const Dimensions getDimensions() const;
 	const double getConversion() const;
+	const bool operator==(const UnitsM &other) const;
 };
 
 #endif
