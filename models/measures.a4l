@@ -29,24 +29,25 @@ PROVIDE "measures.a4l";
 	Please keep unit names to 20 characters or less as this makes life pretty.
 	This is not a hard limit however.
 	
-	The root system units in SI MKS system are set in the C code to:
-	unitname  DIMENSION
-	define kilogram   M;        internal mass unit SI
-	define mole       Q;        internal quantity unit SI
-	define second     T;        internal time unit SI
-	define meter      L;        internal length unit SI
-	define Kelvin     TMP;      internal temperature unit SI
-	define currency   C;        internal currency unit
-	define ampere     E;        internal electric current unit SI suggested
-	define candela    LUM;      internal luminous intensity unit SI
-	define radian     P;        internal plane angle unit SI suggested
-	define steradian  S;        internal solid angle unit SI suggested
+	All ASCEND units are built up from base units for each dimension of
+	measurement. The base units are mostly the Systeme Internationale base
+	units, with a few additional ones to aid with legibility/checkability.
 
-	CHANGES:
-	Added money which isn't really time 3-94 BAA
-	Expanded, including some of Karl's units, constants. 4-94 BAA
-	Updated with supplementary SI dimensions and less ambiguous mole dim. jz/baa	
+	Unit      Dim code   Dimension              Source
+	kg        M          mass                   SI
+	mol       Q          amount of substance    SI
+	s         T          time                   SI
+	m         L          length                 SI
+	K         TMP        temperature            SI
+	USD       C          currency               non SI
+	A         E          electric current       SI
+	cd        LUM        luminous intensity     SI
+	rad       P          plane angle            SI suggested
+	sr        S          solid angle            SI suggested
 
+	Units for currency are selected arbitrarily to be USD, for US dollars,
+	being the dominant international currency at this time.
+	
 	Original author: Tom Epperly, 1990.
 	Contributors: Ben Allan, John Pye.
 *)
@@ -161,12 +162,12 @@ Rankine = {R};
 (*  money *)
 
 (* PLEASE USE ISO 4127 CURRENCY CODES FOR ALL MONEY UNITS *)
-USD = {currency};
-CR = {currency};
-credits= {currency};
+currency = {USD};
+CR = {USD};
+credits= {USD};
 (* the following two are historic and should not be used in future *)
-USdollar = {currency};
-US = {currency};
+USdollar = {USD};
+US = {USD};
 
 (* currencies according to yahoo.com, as at 11 Sep 2006 *)
 AUD = {0.752400*USD};
@@ -316,7 +317,6 @@ aWW= {1*EW}; (* <geekjok>we could say art has a lot of power</geekjoke> *)
 Wh = {W*h};
 kWh = {kW*h};
 
-
 hp= {7.456998e+2*W};
 
 (* absolute viscosity *)
@@ -382,15 +382,15 @@ molecule = {1.0};
 PI= {3.1415926535897932385};              (* Circumference/Diameter ratio *)
 EULER_C = {0.57721566490153286};          (* euler gamma *)
 GOLDEN_C = {1.618033988749894};           (* golden ratio *)
-HBAR = {1.055e-34*J*second};              (* Reduced planck's constant *)
+HBAR = {1.055e-34*J*s};              (* Reduced planck's constant *)
 PLANCK_C = {2*PI*HBAR};                   (* Planck's constant *)
-LIGHT_C = {2.99793e8 * meter/second};     (* Speed of light in vacuum *)
+LIGHT_C = {2.99793e8 * m/s};     (* Speed of light in vacuum *)
 MU0 = {4e-7*PI*kg*m/C/C};                 (* Permeability of free space *)
 EPSILON0 = {1/LIGHT_C/LIGHT_C/MU0};       (* Permittivity of free space *)
 BOLTZMAN_C = {1.3805e-23 * J/K};          (* Boltzman's constant *)
 SIGMA_C = {5.670e-8 * W/m^2/K^4 };        (* Stefan-Boltzmann constant
 											 - blackbody radiation *)
-AVOGADRO_C = {6.022045e23 *molecule/mole};(* Avogadro's number of molecules *)
+AVOGADRO_C = {6.022045e23 *molecule/mol};(* Avogadro's number of molecules *)
 GRAVITY_C = {6.673e-11 * N*m*m/kg/kg};    (* Newtons gravitational constant *)
 GAS_C = {BOLTZMAN_C*AVOGADRO_C};          (* Gas constant *)
 INFINITY= {1.0e38};                       (* damn big number *)
@@ -415,8 +415,8 @@ M_SQRT1_2=   {7.0710678118654752440E-1};  (*  1/sqrt(2) *)
 
 eCHARGE = {1.602e-19*C};         (* Charge of an electron *)
 EARTH_G = {9.80665 * m/s/s};   (* Earth's gravitational field, somewhere *)
-eMASS = {9.1095e-31*kilogram};   (* Electron rest mass, I suppose *)
-pMASS = {1.67265e-27*kilogram};  (* Proton mass *)
+eMASS = {9.1095e-31*kg};   (* Electron rest mass, I suppose *)
+pMASS = {1.67265e-27*kg};  (* Proton mass *)
 
 (* constant based conversions *)
 
@@ -454,7 +454,7 @@ lux= {lx};
 
 (* misc rates *)
 
-gpm = {gallon/minute};
+gpm = {gallon/min};
 
 (* time variant conversions *)
 
