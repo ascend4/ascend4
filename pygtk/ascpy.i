@@ -202,9 +202,6 @@ class UnitsM;
 
 		def getDefaultUnits(self):
 			"""Return the default (SI) units for a specific set of dimensions."""
-			if self.isDimensionless():
-				return Units("");
-
 			if self.isWild():
 				return Units("?");
 
@@ -468,7 +465,7 @@ public:
 			"""Return real-valued instance value as a string, converted to, and including, its preferred units."""
 			if not self.isReal():
 				raise TypeError
-			if self.isDimensionless() or self.isFund():
+			if self.isFund():
 				return self.getRealValue();
 			_u = self.getType().getPreferredUnits();
 			if _u is None:
