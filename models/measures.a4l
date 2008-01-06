@@ -55,17 +55,18 @@ UNITS
 
 (* distance *)
 
-pc = {3.08374e+16*meter};
+meter = {m};
+pc = {3.08374e+16*m};
 parsec = {pc};
 kpc = {1000*pc};
 Mpc = {1e6*pc};
-km = {meter*1000};
-m = {meter};
-dm = {meter/10};
-cm = {meter/100};
-mm = {meter/1000};
-um = {meter/1000000};
-nm = {1.e-9*meter};
+km = {m*1000};
+m = {m};
+dm = {m/10};
+cm = {m/100};
+mm = {m/1000};
+um = {m/1000000};
+nm = {1.e-9*m};
 kilometer = {km};
 centimeter = {cm};
 millimeter = {mm};
@@ -74,10 +75,10 @@ nanometer = {nm};
 angstrom = {m/1e10};
 fermi = {m/1e15};
 
-mi = {1609.344*meter};
-yd = {0.914412*meter};
-ft = {0.304804*meter};
-inch = {0.0254*meter};
+mi = {1609.344*m};
+yd = {0.914412*m};
+ft = {0.304804*m};
+inch = {0.0254*m};
 mile = {mi};
 yard = {yd};
 feet = {ft};
@@ -86,8 +87,8 @@ in = {inch};
 
 (* mass *)
 
-kg = {kilogram};
-g = {kilogram/1000};
+kilogram = {kg};
+g = {kg/1000};
 gram = {g};
 mg = {g/1000};
 milligram = {mg};
@@ -115,17 +116,17 @@ slug = {14.5939*kilogram};
 
 (*  time *)
 
-yr = {31557600*second};
-wk = {604800*second};
-d = {86400*second};
-h = {3600*second};
-min = {60*second};
-sec = {second};
-s = {second};
-ms = {second/1000};
-us = {second/1e6};
-ns = {second/1e9};
-ps = {second/1e12};
+second = {s};
+yr = {31557600*s};
+wk = {604800*s};
+d = {86400*s};
+h = {3600*s};
+min = {60*s};
+sec = {s};
+ms = {s/1000};
+us = {s/1e6};
+ns = {s/1e9};
+ps = {s/1e12};
 year = {yr};
 week = {wk};
 day = {d};
@@ -139,21 +140,22 @@ picosecond = {ps};
 
 (*  molecular quantities *)
 
-kg_mole= {1000*mole};
-g_mole = {mole};
-gm_mole = {mole};
-kmol = {1000*mole};
-mol = {mole};
-mmol = {mole/1000};
+mole = {mol};
+kg_mole= {1000*mol};
+g_mole = {mol};
+gm_mole = {mol};
+kmol = {1000*mol};
+mol = {mol};
+mmol = {mol/1000};
 millimole= {mmol};
-umol = {mole/1e6};
+umol = {mol/1e6};
 micromole= {umol};
-lb_mole = {4.535924e+2*mole};
+lb_mole = {4.535924e+2*mol};
 
  (* temperature *)
 
-K = {Kelvin};
-R = {5*Kelvin/9};
+Kelvin = {K};
+R = {5*K/9};
 Rankine = {R};
 
 (*  money *)
@@ -183,13 +185,13 @@ Hz = {hertz};
 
 (*  area *)
 
-ha = {meter^2*10000};
+ha = {m^2*10000};
 hectare= {ha};
-acre= {meter^2*4046.856};
+acre= {m^2*4046.856};
 
 (*  volume *)
 
-L = {meter^3/1000};
+L = {m^3/1000};
 l = {L};
 litre = {L};
 liter = {L};
@@ -202,10 +204,10 @@ millilitre = {mL};
 microliter = {ul};
 microlitre = {uL};
 
-hogshead= {2.384809e-1*meter^3};
-cuft = {0.02831698*meter^3};
-impgal = {4.52837e-3*meter^3};
-gal = {3.785412e-3*meter^3};
+hogshead= {2.384809e-1*m^3};
+cuft = {0.02831698*m^3};
+impgal = {4.52837e-3*m^3};
+gal = {3.785412e-3*m^3};
 barrel = {42.0*gal};
 gallon = {gal};
 quart = {gal/4};
@@ -215,7 +217,7 @@ floz = {gal/128};
 
 (*  force *)
 
-N = {kilogram*meter/second^2};
+N = {kg*m/s^2};
 newton = {N};
 dyne = {N*1.0e-5};
 EN = {1e18*N};
@@ -243,7 +245,7 @@ kgf = {9.8*N/kg * 1 * kg};
 
 (* pressure *)
 
-Pa = {kilogram/meter/second^2};
+Pa = {kg/m/s^2};
 pascal = {Pa};
 kPa = {1e3*Pa};
 bar = {1e5*Pa};
@@ -260,7 +262,7 @@ ftH2O = {2989*Pa};
 
 (* energy *)
 
-J = {kilogram*meter^2/second^2};
+J = {kg*m^2/s^2};
 joule = {J};
 nJ= {J*1.0e-9};
 uJ= {J*1.0e-6};
@@ -280,12 +282,12 @@ btu = {BTU}; (* this is the way it's written in most textbooks *)
 pCu = {BTU * 1.8};
 cal = {J*4.18393};
 calorie = {cal};
-kcal= {1000*calorie};
-Cal= {1000*calorie};
+kcal= {1000*cal};
+Cal= {1000*cal};
 
 (* power *)
 
-W = {J/second};
+W = {J/s};
 EW = {1.0e+18*W};
 PW = {1.0e+15*W};
 TW = {1.0e+12*W};
@@ -324,9 +326,9 @@ cP = {poise/100};
 
 (* electric charge *)
 
-coulomb= {ampere*second};
-C = {coulomb};
-coul = {coulomb};
+C = {A*s};
+coulomb = {C};
+coul = {C};
 mC = {0.001*C};
 uC = {1e-6*C};
 nC = {1e-9*C};
@@ -334,14 +336,14 @@ pC = {1e-12*C};
 
 (* misc electro-magnetic fun *)
 
-V = {kilogram*meter^2/second^3/ampere};
-F = {ampere^2*second^4/kilogram/meter^2};
-ohm = {kilogram*meter^2/second^3/ampere^2};
-mho = {ampere^2*second^3/kilogram/meter^2};
+V = {kg*m^2/s^3/A};
+F = {A^2*s^4/kg/m^2};
+ohm = {kg*m^2/s^3/A^2};
+mho = {A^2*s^3/kg/m^2};
 S = {mho};
 siemens = {S};
-A= {ampere};
-amp = {ampere};
+ampere = {A};
+amp = {A};
 volt = {V};
 farad= {F};
 mA= {A/1000};
@@ -432,20 +434,22 @@ oersted = {gauss/MU0};
 
 (* subtly dimensionless measures *)
 
-rad = {radian};
-srad = {steradian};
-deg = {radian*1.74532925199433e-2};
+radian = {rad};
+
+steradian = {sr};
+srad = {sr};
+deg = {rad*1.74532925199433e-2};
 degrees = {deg};
 grad = {0.9*deg};
-arcmin = {degrees/60.0};
+arcmin = {deg/60.0};
 arcsec = {arcmin/60.0};
 
 (* light quantities *)
 
-cd = {candela};
-lm = {candela*steradian};
+candela = {cd};
+lm = {cd*sr};
 lumen = {lm};
-lx = {lm/meter^2};
+lx = {lm/m^2};
 lux= {lx};
 
 (* misc rates *)

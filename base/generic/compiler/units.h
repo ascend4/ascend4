@@ -74,25 +74,25 @@ struct UnitDefinition {
  * Name of the basic SI units for the 10 dimensions.
  * If you have better names for them, fix that here.
  */
-#define UNIT_BASE_MASS               "kilogram"
+#define UNIT_BASE_MASS               "kg"
 /**< Name of basic SI unit for mass. */
-#define UNIT_BASE_QUANTITY           "mole"
+#define UNIT_BASE_QUANTITY           "mol"
 /**< Name of basic SI unit for quantity. */
-#define UNIT_BASE_LENGTH             "meter"
+#define UNIT_BASE_LENGTH             "m"
 /**< Name of basic SI unit for length. */
-#define UNIT_BASE_TIME               "second"
+#define UNIT_BASE_TIME               "s"
 /**< Name of basic SI unit for time. */
-#define UNIT_BASE_TEMPERATURE        "Kelvin"
+#define UNIT_BASE_TEMPERATURE        "K"
 /**< Name of basic SI unit for temperature. */
 #define UNIT_BASE_CURRENCY           "currency"
-/**< Name of basic SI unit for currency. */
-#define UNIT_BASE_ELECTRIC_CURRENT   "ampere"
+/**< Name of base unit for currency (what should it be?). */
+#define UNIT_BASE_ELECTRIC_CURRENT   "A"
 /**< Name of basic SI unit for current. */
-#define UNIT_BASE_LUMINOUS_INTENSITY "candela"
+#define UNIT_BASE_LUMINOUS_INTENSITY "cd"
 /**< Name of basic SI unit for luminosity. */
-#define UNIT_BASE_PLANE_ANGLE        "radian"
+#define UNIT_BASE_PLANE_ANGLE        "rad"
 /**< Name of basic SI unit for plane angle. */
-#define UNIT_BASE_SOLID_ANGLE        "steradian"
+#define UNIT_BASE_SOLID_ANGLE        "sr"
 /**< Name of basic SI unit for solid angle. */
 
 ASC_DLLSPEC struct Units *g_units_hash_table[];

@@ -66,6 +66,8 @@ enum{
 	,IPOPT_PARAM_MAX_ITER
 	,IPOPT_PARAM_SAFEEVAL
 	,IPOPT_PARAM_MU_STRATEGY
+	,IPOPT_PARAM_DERIVATIVE_TEST
+	,IPOPT_PARAM_HESS_APPROX
 	,IPOPT_PARAMS
 };
 
@@ -308,6 +310,31 @@ int32 ipopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 			"throw SIGFPE errors which will then halt integration (FALSE)."
 		}, FALSE}
 	);
+
+	slv_param_char(parameters,IPOPT_PARAM_DERIVATIVE_TEST
+		,(SlvParameterInitChar){{"derivative_test"
+			,"Use Derivative Checker?",1
+			,"A finite-difference derivative checker is provided by IPOPT, which"
+			" will check Jacobian and gradient functions ('first-order') or"
+			" all first-order derivatives as well as the Hessian matrix"
+			" ('second-order'). The default is to perform no checks ('none')."
+		}, "none"}, (char *[]){
+			"none","first-order","second-order",NULL
+		}
+	);
+
+	slv_param_char(parameters,IPOPT_PARAM_HESS_APPROX
+		,(SlvParameterInitChar){{"hessian_approximation"
+			,"Hessian calculation method",1
+			,"Use either an exact Hessian matrix based on symbolic derivatives"
+			" computed from the equations in the model ('exact'), or else use"
+			" a limited-memory quasi-Newton approximation ('limited-memory')."
+			" The default is 'exact'."
+		}, "exact"}, (char *[]){
+			"exact","limited-memory",NULL
+		}
+	);
+	
 
 	asc_assert(parameters->num_parms==IPOPT_PARAMS);
 
@@ -734,6 +761,8 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	/* set some options */
 	AddIpoptNumOption(sys->nlp, "tol", SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_TOL));
 	AddIpoptStrOption(sys->nlp, "mu_strategy", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_MU_STRATEGY));
+	AddIpoptStrOption(sys->nlp, "derivative_test", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_DERIVATIVE_TEST));
+	AddIpoptStrOption(sys->nlp, "hessian_approximation", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_HESS_APPROX));
 
 	/* initial values */
 	x = ASC_NEW_ARRAY(Number, sys->n);
