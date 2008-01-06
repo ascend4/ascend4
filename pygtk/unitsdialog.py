@@ -44,7 +44,6 @@ class UnitsDialog:
 		_col2 = gtk.TreeViewColumn("Conversion", _renderer2, text=2)
 		self.unitsview.append_column(_col2)
 
-		print "ACTIVE TYPENAME =",typename
 		if typename is not None:
 			self.typecombo.child.set_text(typename)
 		else:
@@ -68,14 +67,14 @@ class UnitsDialog:
 		#print "changed = ",self.changed
 		for k,v in self.changed.iteritems():
 			T = self.browser.library.findType(k)
-			if str(T.getPreferredUnits().getName()) != v:
+			u = T.getPreferredUnits()
+			if u is None or str(T.getPreferredUnits().getName()) != v:
 				#print "CAN APPLY: for type '%s', pref units currently '%s', now selected '%s'" % (T.getName(),T.getPreferredUnits().getName(), v)
 				can_apply = True
 				break
 		self.applybutton.set_sensitive(can_apply)
 
 	def update_typecombo(self,text = None):
-		print "TEXT =",text
 		m = gtk.ListStore(str)
 		for t in self.realtypes:
 			if not text or re.compile("^%s"%re.escape(text)).match(str(t.getName())):
