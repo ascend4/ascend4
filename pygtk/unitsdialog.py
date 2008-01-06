@@ -2,7 +2,7 @@ import gtk, gtk.glade, pango, gobject, re
 
 class UnitsDialog:
 
-	def __init__(self,browser,parent=None):
+	def __init__(self,browser,parent=None,typename=None):
 		self.browser = browser;
 
 		# GUI config
@@ -23,7 +23,10 @@ class UnitsDialog:
 
 		self.units = self.browser.library.getUnits()
 		self.realtypes = self.browser.library.getRealAtomTypes()
-		self.update_typecombo()
+
+		if not len(self.realtypes):
+			self.browser.reporter.reportError("No dimensioned atom types available yet (have you loaded a model yet?)")
+			raise RuntimeError("no units available")
 
 		# set up columns in the units view:
 		_renderer0 = gtk.CellRendererToggle()
@@ -41,6 +44,11 @@ class UnitsDialog:
 		_col2 = gtk.TreeViewColumn("Conversion", _renderer2, text=2)
 		self.unitsview.append_column(_col2)
 
+		print "ACTIVE TYPENAME =",typename
+		if typename is not None:
+			self.typecombo.child.set_text(typename)
+		else:
+			self.update_typecombo()
 		self.changed = {}
 
 	def unitsview_row_toggled(self,widget,path,*args):
@@ -67,6 +75,7 @@ class UnitsDialog:
 		self.applybutton.set_sensitive(can_apply)
 
 	def update_typecombo(self,text = None):
+		print "TEXT =",text
 		m = gtk.ListStore(str)
 		for t in self.realtypes:
 			if not text or re.compile("^%s"%re.escape(text)).match(str(t.getName())):
@@ -79,14 +88,17 @@ class UnitsDialog:
 
 	def update_unitsview(self,T):
 		m = gtk.ListStore(bool,str,str,int)
-		d = T.getDimensions()
-		up = T.getPreferredUnits()
-		if up is None:
-			print "no preferred units"
+		if T is not None:
+			d = T.getDimensions()
+			up = T.getPreferredUnits()
+			if up is None:
+				print "no preferred units"
+			else:
+				print "preferred units =",up.getName()
 		else:
-			print "preferred units =",up.getName()
+			up = None
 		for u in self.units:
-			if u.getDimensions()==d:
+			if T is None or u.getDimensions()==d:
 				if up is None:
 					selected = False
 				else:
@@ -94,18 +106,22 @@ class UnitsDialog:
 				weight = pango.WEIGHT_NORMAL
 				if selected:
 					weight = pango.WEIGHT_BOLD
-				m.append([selected,u.getName(),"%g %s" %(u.getConversion(),d.getDefaultUnits().getName()),weight])
+				du = u.getDimensions().getDefaultUnits().getName()
+				m.append([selected,u.getName(),"%g %s" %(u.getConversion(),du),weight])
 		self.unitsview.set_model(m)
 
 	def on_typecombo_changed(self,widget,*args):
 		s = widget.get_active_text()
 		self.update_typecombo(s)
 		#self.browser.reporter.reportNote("value changed to '%s'" % s)
-		T = self.browser.library.findType(widget.get_active_text())
-		self.dimensionlabel.set_text(str(T.getDimensions()))
+		try:
+			T = self.browser.library.findType(widget.get_active_text())
+			self.dimensionlabel.set_text(str(T.getDimensions()))
+		except:
+			T = None
+			self.dimensionlabel.set_text("")
 
 		self.update_unitsview(T)
-		self.update_applybutton()
 		
 	def run(self):
 		_res = gtk.RESPONSE_APPLY
@@ -116,5 +132,6 @@ class UnitsDialog:
 					self.browser.prefs.setPreferredUnits(k,v)
 				self.changed = {}
 				self.update_unitsview(self.browser.library.findType(self.typecombo.get_active_text()))		
+				self.browser.modelview.refreshtree()
 		self.window.hide()
 

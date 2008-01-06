@@ -1375,6 +1375,7 @@ class TestIPOPT(Ascend):
 	def test1(self):
 		self.L.load('test/ipopt/test1.a4c')
 		M = self.L.findType('test1').getSimulation('sim')
+		M.setParameter('hessian_approximation','limited-memory')
 		M.solve(ascpy.Solver("IPOPT"),ascpy.SolverReporter())
 
 # test some stuff for beam calculations

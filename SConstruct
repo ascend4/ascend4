@@ -1873,6 +1873,29 @@ def CheckLatex2HTML(context):
 	return r
 
 #----------------
+# 'lmodern' package for LaTeX available?
+
+lmodern_test_text = """
+\documentclass{article}
+\title{Cartesian closed categories and the price of eggs}
+\author{Jane Doe}
+\date{September 1994}
+\begin{document}
+   \maketitle
+   Hello world!
+\end{document}
+""";
+
+def CheckLModern(context):
+	context.Message("Checking for lmodern...")
+	print env['BUILDERS']
+	b = env['BUILDERS']["DVI"]
+	print "Builder:",b
+	is_ok,res = context.TryBuild(builder=b,text=lmodern_test_text,extension=".latex")
+	context.Result(is_ok)
+	return is_ok
+
+#----------------
 # GCC Version sniffing
 
 # TODO FIXME
@@ -1896,6 +1919,7 @@ conf = Configure(env
 		, 'CheckDMalloc' : CheckDMalloc
 		, 'CheckLyx' : CheckLyx
 		, 'CheckLatex2HTML' : CheckLatex2HTML
+		, 'CheckLModern' : CheckLModern
 		, 'CheckGraphViz' : CheckGraphViz
 		, 'CheckUFSparse' : CheckUFSparse
 		, 'CheckTcl' : CheckTcl
@@ -2232,6 +2256,10 @@ if with_doc_build:
 		without_doc_build_reason="unable to locate lyx"
 
 	with_latext2html = conf.CheckLatex2HTML()
+
+	#if conf.CheckLModern() is False:
+	#	with_doc_build = False
+	#	without_doc_build_reason="'lmodern' is not available"
 
 # TODO: -D_HPUX_SOURCE is needed
 
