@@ -181,8 +181,15 @@ class UnitsM;
 	%pythoncode{
 		def getConvertedValue(self,si_value):
 			"""Return an SI value converted to self's units of measurement."""
-			_u_value = si_value / self.getConversion()
-			return str(_u_value) + " " + self.getName().toString();
+			_v = si_value / self.getConversion()
+			_s = str(_v)
+			_n = self.getName().toString()
+			if _n=="1":
+				return _s
+			elif _n=="?":
+				return _s
+			else:
+				return _s + " " + _n;
 	}
 }
 
@@ -469,7 +476,7 @@ public:
 				return self.getRealValue();
 			_u = self.getType().getPreferredUnits();
 			if _u is None:
-				return str(self.getRealValue()) + ' ' + self.getDimensions().getDefaultUnits().getName().toString()
+				_u = self.getDimensions().getDefaultUnits()
 			return _u.getConvertedValue(self.getRealValue())
 
 		def as(self,units):
