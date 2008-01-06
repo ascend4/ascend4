@@ -44,11 +44,12 @@ class UnitsDialog:
 		_col2 = gtk.TreeViewColumn("Conversion", _renderer2, text=2)
 		self.unitsview.append_column(_col2)
 
-		if typename is not None:
-			self.typecombo.child.set_text(typename)
-		else:
-			self.update_typecombo()
 		self.changed = {}
+		if typename is not None:
+			T = self.browser.library.findType(typename)
+			if T.isRefinedReal():
+				self.typecombo.child.set_text(typename)
+		self.update_typecombo()
 
 	def unitsview_row_toggled(self,widget,path,*args):
 		i = self.unitsview.get_model().get_iter_from_string(path)
@@ -133,7 +134,11 @@ class UnitsDialog:
 				for k,v in self.changed.iteritems():
 					self.browser.prefs.setPreferredUnits(k,v)
 				self.changed = {}
-				self.update_unitsview(self.browser.library.findType(self.typecombo.get_active_text()))		
+				typename = self.typecombo.get_active_text()
+				if typename:
+					self.update_unitsview(self.browser.library.findType(typename))
+				else:
+					self.update_unitsview(None)
 				self.browser.modelview.refreshtree()
 		self.window.hide()
 
