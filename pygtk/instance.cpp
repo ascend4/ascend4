@@ -341,11 +341,9 @@ Instanc::isDefined() const{
 
 const bool
 Instanc::isModel() const{
-	cerr << "TESTING FOR MODEL TYPE" << endl;
 	if(getKind()==MODEL_INST){
 		return true;
 	}
-	cerr << "RETURNOING FALSE" << endl;
 	return false;
 }
 

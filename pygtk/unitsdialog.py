@@ -117,7 +117,8 @@ class UnitsDialog:
 		#self.browser.reporter.reportNote("value changed to '%s'" % s)
 		try:
 			T = self.browser.library.findType(widget.get_active_text())
-			self.dimensionlabel.set_text(str(T.getDimensions()))
+			dt = str(T.getDimensions())
+			self.dimensionlabel.set_text(dt)
 		except:
 			T = None
 			self.dimensionlabel.set_text("")

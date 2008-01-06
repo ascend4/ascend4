@@ -332,20 +332,25 @@ class ModelView:
 		# self.browser.reporter.reportError("Right click on %s" % self.otank[_path][0])
 		_instance = self.otank[_path][1]
 
-		if _instance.isReal() and _instance.isAtom():
+		self.unitsmenuitem.set_sensitive(False)
+		self.fixmenuitem.set_sensitive(False)
+		self.freemenuitem.set_sensitive(False)
+		self.observemenuitem.set_sensitive(False)
+		self.propsmenuitem.set_sensitive(False)					
+
+		if _instance.isReal():
+			print "CAN POP: real atom"
+			_canpop = True
 			self.unitsmenuitem.set_sensitive(True)
-		else:
-			self.unitsmenuitem.set_sensitive(False)
 
 		if _instance.getType().isRefinedSolverVar():
 			_canpop = True
+			self.propsmenuitem.set_sensitive(True)
 			self.observemenuitem.set_sensitive(True)
 			if _instance.isFixed():
-				self.fixmenuitem.set_sensitive(False)
 				self.freemenuitem.set_sensitive(True)
 			else:
 				self.fixmenuitem.set_sensitive(True)
-				self.freemenuitem.set_sensitive(False)
 		elif _instance.isRelation():
 			_canpop = True
 			self.propsmenuitem.set_sensitive(True)					
