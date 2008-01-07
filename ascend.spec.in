@@ -34,6 +34,7 @@ BuildRequires: blas-devel
 BuildRequires: sundials-devel >= 2.2.0
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel, tk, tcl-devel, tcl, tktable
+BuildRequires: graphviz-devel
 %else
 %if 0%{?suse_version}
 BuildRequires: gcc-fortran gcc-c++
@@ -41,6 +42,7 @@ BuildRequires: sundials-devel >= 2.2.0
 BuildRequires: blas
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk, tk-devel, tcl, tcl-devel, tktable
+BuildRequires: graphviz-devel
 %if 0%{suse_version} == 1000
 BuildRequires: xorg-x11-devel
 %else

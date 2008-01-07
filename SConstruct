@@ -1,5 +1,4 @@
-import sys, os, commands, platform, distutils.sysconfig, os.path, re
-
+import sys, os, commands, platform, distutils.sysconfig, os.path, re, types
 version = "0.9.5.114"
 
 pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
@@ -805,6 +804,11 @@ env = Environment(
 #print "CPPPATH =",env['CPPPATH']
 
 opts.Update(env)
+
+for l in ['GRAPHVIZ','SUNDIALS','IPOPT']:
+	var = "%s_LIBS" % l
+	if not isinstance(env[var],types.ListType):
+		env[var] = env[var].split(",")
 
 if 'LSOD' in env['WITH_SOLVERS']:
 	if 'LSODE' not in env['WITH_SOLVERS']:
