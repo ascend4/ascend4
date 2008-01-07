@@ -639,7 +639,7 @@ opts.Add(PackageOption(
 
 opts.Add(PackageOption(
 	'GRAPHVIZ_CPPPATH'
-	,"Where are your GRAPHVIZ include files?"
+	,"Where are your GRAPHVIZ include files? (don't need the final '/graphviz')"
 	,default_cpppath
 ))
 
