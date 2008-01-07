@@ -799,12 +799,8 @@ class Browser:
 		_sp.run()
 
 	def on_units_click(self,*args):
-		model,iter = self.modelview.modelview.get_selection().get_selected()
-		typename = None
-		if iter is not None:
-			typename = model.get_value(iter,1)
-			print "TYPENAME =",typename
-		_un = UnitsDialog(self,self.window,typename)
+		T = self.modelview.get_selected_type()
+		_un = UnitsDialog(self,T)
 		_un.run()
 
 	def on_tools_incidencegraph_click(self,*args):

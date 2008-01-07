@@ -2,7 +2,8 @@ import gtk, gtk.glade, pango, gobject, re
 
 class UnitsDialog:
 
-	def __init__(self,browser,parent=None,typename=None):
+	def __init__(self,browser,T=None):
+		"""create units browser for a atom type T, or None"""
 		self.browser = browser;
 
 		# GUI config
@@ -15,9 +16,7 @@ class UnitsDialog:
 
 		self.applybutton.set_sensitive(False)
 
-		self.parent = parent
-		if parent:
-			self.window.set_transient_for(self.parent)
+		self.window.set_transient_for(self.browser.window)
 
 		_xml.signal_autoconnect(self)
 
@@ -45,10 +44,9 @@ class UnitsDialog:
 		self.unitsview.append_column(_col2)
 
 		self.changed = {}
-		if typename is not None:
-			T = self.browser.library.findType(typename)
+		if T is not None:
 			if T.isRefinedReal():
-				self.typecombo.child.set_text(typename)
+				self.typecombo.child.set_text(str(T.getName()))
 		self.update_typecombo()
 
 	def unitsview_row_toggled(self,widget,path,*args):
