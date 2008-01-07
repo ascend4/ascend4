@@ -192,6 +192,14 @@ class ModelView:
 				else:
 					self.modelstore.set_value(_iter,3,BROWSER_UNINCLUDED_COLOR)
 
+	def get_selected_type(self):
+		model,iter = self.modelview.get_selection().get_selected()
+		if iter is None:
+			return None
+		path = model.get_path(iter)
+		name,instance = self.otank[path]
+		return instance.getType()	
+	
 	def cell_edited_callback(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
 		path = tuple( map(int,path.split(":")) )
@@ -488,10 +496,7 @@ class ModelView:
 				self.browser.do_solve_if_auto()
 
 	def units_activate(self,*args):
-		model,iter = self.modelview.get_selection().get_selected()
-		typename = None
-		if iter is not None:
-			typename = model.get_value(iter,1)
-		_un = UnitsDialog(self.browser,self.browser.window,typename)
+		T = self.get_selected_type()
+		_un = UnitsDialog(self.browser,T)
 		_un.run()
 
