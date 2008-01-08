@@ -28,11 +28,16 @@
 #include "slv_client.h"
 #include "incidence.h"
 
+#include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 
 #ifdef WITH_GRAPHVIZ
-#include <graphviz/gvc.h>
+# ifdef __WIN32__
+#  include <gvc.h>
+# else
+#  include <graphviz/gvc.h>
+# endif
 #endif
 
 int system_write_graph(slv_system_t sys
