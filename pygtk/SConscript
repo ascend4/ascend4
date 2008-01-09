@@ -55,6 +55,10 @@ def get_new_swig_flags(env):
 	print "FLAGS=%s" % env.get('GRAPHVIZ_CPPPATH')
 	if env.get('WITH_GRAPHVIZ') and env.get('GRAPHVIZ_CPPPATH'):
 		flags += ['-I%s' % i for i in env.get('GRAPHVIZ_CPPPATH').split(sep)]
+		
+	if 'msvcr71' in env['LIBS']:
+		flags += ['-DHAVE_MSVCR71']
+		
 	return flags
 
 swig_env = python_env.Copy()
@@ -63,6 +67,8 @@ if '-Wall' in swig_env.get('CCFLAGS'):
 
 if platform.system()=="Windows":
 	swig_env['SHLIBSUFFIX']='.pyd'
+	if 'msvcr71' in env['LIBS']:
+		swig_env.Append(CPPDEFINES=['HAVE_MSVCR71'])
 
 swigobjs = []
 
@@ -80,8 +86,8 @@ for swigf in Split("""
 
 	swigobjs.append(swigobj)
 
-swig_env['LIBS'] = ['ascend']+env['PYTHON_LIB']
-swig_env['LIBPATH'] = ['#'] + env['PYTHON_LIBPATH']
+swig_env.Append(LIBS = ['ascend']+env['PYTHON_LIB'])
+swig_env.Append(LIBPATH = ['#'] + env['PYTHON_LIBPATH'])
 swig_env.Append(LINKFLAGS=env['PYTHON_LINKFLAGS'])
 
 if not env.get('MSVS'):
