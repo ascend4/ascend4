@@ -277,8 +277,11 @@ ASC_DLLSPEC FILE*g_ascend_information;    /**< File stream to receive general me
 #endif
 typedef	char       *POINTER;       /**< Generic pointer. */
 
+#ifndef HAVE_BOOLEAN
 typedef	unsigned char boolean;        /**< Boolean type. */
 /* changed from 'char' to 'unsigned char' for compatibility with standard headers with MinGW GCC 3.4.2 */
+/* don't need to define this if using GraphViz types.h (it's already defined identically there) */
+#endif
 
 typedef	int        ALIGN;          /**< Data alignment. */
 /**

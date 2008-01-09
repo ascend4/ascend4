@@ -26,7 +26,7 @@ for c in csrcs:
 graph_env = solver_env.Copy()
 if libascend_env.get('WITH_GRAPHVIZ'):
 	graph_env.Append(CPPDEFINES=['WITH_GRAPHVIZ'])
-	graph_env.Append(CPPPATH=['GRAPHVIZ_CPPPATH'])
+	graph_env.Append(CPPPATH=libascend_env['GRAPHVIZ_CPPPATH'])
 else:
 	print "NO GRAPHVIZ----"
 

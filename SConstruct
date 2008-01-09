@@ -59,6 +59,8 @@ if platform.system()=="Windows":
 	default_fortran="g77"
 	default_f2c_lib="g2c"
 	
+	default_graphviz_libs=['graph', 'gvc', 'pathplan', 'cdt', 'expat', 'zlib1', 'ltdl', 'msvcr80']
+	
 else:
 	default_tcl_lib = "tcl8.4"
 	default_tk_lib = "tk8.4"
@@ -97,6 +99,8 @@ else:
 	
 	default_fortran="gfortran"
 	default_f2c_lib="gfortran"
+
+	default_graphviz_libs=["cdt","graph","gvc"]
 	
 opts.Add(
 	'CC'
@@ -652,7 +656,7 @@ opts.Add(PackageOption(
 opts.Add(
 	'GRAPHVIZ_LIBS'
 	,"What are your GRAPHVIZ libraries named?"
-	,['gvc','graph','cdt']
+	,default_graphviz_libs
 )
 
 opts.Add(PackageOption(
@@ -743,6 +747,11 @@ opts.Add(BoolOption(
 	,default_with_scrollkeeper
 ))
 
+opts.Add(BoolOption(
+	'WITH_MSVCR71'
+	,"Attempt to link against MSVCR71.DLL, to enable passing of FILE* objects to/from python"
+	,False
+))
 
 if platform.system()!="Windows":
 	opts.Add(BoolOption(
@@ -2016,6 +2025,9 @@ if conf.CheckFunc('snprintf') is False:
 if conf.CheckFunc('strdup'):
 	conf.env['HAVE_STRDUP'] = True
 
+if platform.system()=="Windows" and env.get('WITH_MSVCR71'):
+	conf.env.Append(LIBS='msvcr71')
+	
 # Math library
 
 conf.env['HAVE_IEEE']=True

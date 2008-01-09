@@ -24,13 +24,6 @@
 
 	by John Pye, March 2007
 */
-#include "graph.h"
-#include "slv_client.h"
-#include "incidence.h"
-
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
 
 #ifdef WITH_GRAPHVIZ
 # ifdef __WIN32__
@@ -39,6 +32,13 @@
 #  include <graphviz/gvc.h>
 # endif
 #endif
+
+#define HAVE_BOOLEAN
+#include "graph.h"
+#include "slv_client.h"
+#include "incidence.h"
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
 
 int system_write_graph(slv_system_t sys
 	, FILE *fp

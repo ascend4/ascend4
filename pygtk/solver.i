@@ -25,7 +25,7 @@
 }
 
 %typemap(in) FILE * {
-%#ifdef __MINGW32__
+%#if defined(__MINGW32__) && !defined(HAVE_MSVCR71)
 	PyErr_SetString(PyExc_TypeError,"File passing from python to ASCEND not yet implemented on Windows");
 	return NULL;
 %#else
