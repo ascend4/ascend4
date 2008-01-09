@@ -2494,8 +2494,8 @@ if with_ufsparse:
 if with_graphviz:
 	if len(env['GRAPHVIZ_LIBPATH']) and \
 			platform.system()=="Linux" and \
-			env.subst(env['GRAPHVIZ_LIBPATH'][0])!="/usr/lib":
-		libascend_env.Append(RPATH=env['GRAPHVIZ_LIBPATH'])
+			env.subst(env['GRAPHVIZ_LIBPATH'][0])=="/usr/lib/graphviz":
+		env.Append(RPATH=env['GRAPHVIZ_LIBPATH'])
 
 libascend = libascend_env.SharedLibrary('ascend',srcs)
 
