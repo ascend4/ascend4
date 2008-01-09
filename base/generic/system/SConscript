@@ -23,16 +23,19 @@ objs = []
 for c in csrcs:
 	objs += solver_env.SharedObject(c)
 
-incid_env = solver_env.Copy()
+graph_env = solver_env.Copy()
 if libascend_env.get('WITH_GRAPHVIZ'):
-	incid_env.Append(CPPDEFINES=['WITH_GRAPHVIZ'])
+	graph_env.Append(CPPDEFINES=['WITH_GRAPHVIZ'])
+	graph_env.Append(CPPPATH=['GRAPHVIZ_CPPPATH'])
 else:
 	print "NO GRAPHVIZ----"
 
-objs += incid_env.SharedObject('graph.c')
+objs += graph_env.SharedObject('graph.c')
 
 if libascend_env.get('WITH_GRAPHVIZ'):
 	libascend_env.Append(LIBS=libascend_env['GRAPHVIZ_LIBS'])
+	libascend_env.Append(LIBPATH=libascend_env['GRAPHVIZ_LIBPATH'])
+	
 
 #--------------------
 # INSTALL
