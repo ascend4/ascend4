@@ -658,7 +658,7 @@ opts.Add(
 opts.Add(PackageOption(
 	'GRAPHVIZ_RPATH'
 	,"What is your GRAPHVIZ rpath for locating libraries at runtime?"
-	,default_libpath
+	,None
 ))
 
 opts.Add(BoolOption(
@@ -2438,7 +2438,7 @@ if with_conopt:
 if with_ipopt:
 	env.Append(WITH_IPOPT=1)
 
-if with_graphviz:
+if with_graphviz and env.get('GRAPHVIZ_RPATH'):
 	env.Append(RPATH=env['GRAPHVIZ_RPATH'])
 
 #-------------
