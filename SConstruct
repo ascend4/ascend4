@@ -2491,6 +2491,12 @@ if with_dmalloc:
 if with_ufsparse:
 	libascend_env.Append(LIBS=['cxsparse'])
 
+if with_graphviz:
+	if len(env['GRAPHVIZ_LIBPATH']) and \
+			platform.system()=="Linux" and \
+			env.subst(env['GRAPHVIZ_LIBPATH'][0])!="/usr/lib":
+		libascend_env.Append(RPATH=env['GRAPHVIZ_LIBPATH'])
+
 libascend = libascend_env.SharedLibrary('ascend',srcs)
 
 # for use in declaring dependent shared libraries in SConscript files (eg solvers/*/SConscript)
