@@ -655,6 +655,12 @@ opts.Add(
 	,['gvc','graph','cdt']
 )
 
+opts.Add(PackageOption(
+	'GRAPHVIZ_RPATH'
+	,"What is your GRAPHVIZ rpath for locating libraries at runtime?"
+	,default_libpath
+))
+
 opts.Add(BoolOption(
 	'WITH_GRAPHVIZ'
 	,"Link to the GRAPHVIZ library (if available, for generating incidence graphs)"
@@ -2432,6 +2438,9 @@ if with_conopt:
 if with_ipopt:
 	env.Append(WITH_IPOPT=1)
 
+if with_graphviz:
+	env.Append(RPATH=env['GRAPHVIZ_RPATH'])
+
 #-------------
 # TCL/TK GUI
 
@@ -2490,12 +2499,6 @@ if with_dmalloc:
 
 if with_ufsparse:
 	libascend_env.Append(LIBS=['cxsparse'])
-
-if with_graphviz:
-	if len(env['GRAPHVIZ_LIBPATH']) and \
-			platform.system()=="Linux" and \
-			env.subst(env['GRAPHVIZ_LIBPATH'][0])=="/usr/lib/graphviz":
-		env.Append(RPATH=env['GRAPHVIZ_LIBPATH'])
 
 libascend = libascend_env.SharedLibrary('ascend',srcs)
 
