@@ -27,6 +27,8 @@ graph_env = solver_env.Copy()
 if libascend_env.get('WITH_GRAPHVIZ'):
 	graph_env.Append(CPPDEFINES=['WITH_GRAPHVIZ'])
 	graph_env.Append(CPPPATH=libascend_env['GRAPHVIZ_CPPPATH'])
+	if graph_env.get('HAVE_GRAPHVIZ_BOOLEAN'):
+		graphviz_env.Append(CPPDEFINES=['HAVE_GRAPHVIZ_BOOLEAN'])
 else:
 	print "NO GRAPHVIZ----"
 
