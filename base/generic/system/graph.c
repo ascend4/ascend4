@@ -25,15 +25,22 @@
 	by John Pye, March 2007
 */
 
+#ifdef HAVE_GRAPHVIZ_BOOLEAN
+# define HAVE_BOOLEAN
+#endif
+#include <utilities/ascConfig.h>
+
 #ifdef WITH_GRAPHVIZ
 # ifdef __WIN32__
 #  include <gvc.h>
 # else
 #  include <graphviz/gvc.h>
 # endif
+# define HAVE_BOOLEAN
 #endif
 
-#define HAVE_BOOLEAN
+boolean X;
+
 #include "graph.h"
 #include "slv_client.h"
 #include "incidence.h"

@@ -1107,16 +1107,19 @@ class KeepContext:
 				#print "Restoring %s to '%s'" %(k,self.keep.get(k))
 				context.env[k]=self.keep[k];
 
-def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False):
+def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False,testname=None):
 	"""This method will check for variables LIBNAME_LIBPATH
 	and LIBNAME_CPPPATH and try to compile and link the 
 	file with the provided text, linking with the 
 	library libname."""
 
+	if testname is None:
+		testname = libname
+
 	if static:
-		context.Message( 'Checking for static '+libname+'... ' )
+		context.Message( 'Checking for static '+testname+'... ' )
 	else:
-		context.Message( 'Checking for '+libname+'... ' )
+		context.Message( 'Checking for '+testname+'... ' )
 		
 	if varprefix==None:
 		varprefix = libname.upper()
@@ -1306,6 +1309,24 @@ int main(void){
 
 def CheckGraphViz(context):
 	return CheckExtLib(context,'graphviz',graphviz_test_text,ext=".c")
+
+graphviz_boolean_test = """
+#ifdef __WIN32__
+# include <gvc.h>
+#else
+# include <graphviz/gvc.h>
+#endif
+int main void(){
+	boolean x;
+	x = TRUE;
+	return 0;
+}
+"""
+
+def CheckGraphVizBoolean(context):
+	return CheckExtLib(context,'graphviz',graphviz_boolean_test,ext=".c" \
+		,testname="graphviz 'boolean' definition"
+	)
 
 #----------------
 # ufsparse test
@@ -1944,6 +1965,7 @@ conf = Configure(env
 		, 'CheckLatex2HTML' : CheckLatex2HTML
 		, 'CheckLModern' : CheckLModern
 		, 'CheckGraphViz' : CheckGraphViz
+		, 'CheckGraphVizBoolean' : CheckGraphVizBoolean
 		, 'CheckUFSparse' : CheckUFSparse
 		, 'CheckTcl' : CheckTcl
 		, 'CheckTclVersion' : CheckTclVersion
@@ -2162,6 +2184,7 @@ if with_graphviz:
 		without_graphviz_reason = 'graphviz not found'
 		with_graphviz = False
 		env['WITH_GRAPHVIZ'] = False
+	env['HAVE_GRAPHVIZ_BOOLEAN'] = conf.CheckGraphVizBoolean()		
 
 # UFSPARSE
 
