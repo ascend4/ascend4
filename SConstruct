@@ -1312,11 +1312,14 @@ def CheckGraphViz(context):
 
 graphviz_boolean_test = """
 #ifdef __WIN32__
-# include <gvc.h>
+# include <types.h>
 #else
-# include <graphviz/gvc.h>
+# include <graphviz/types.h>
 #endif
-int main void(){
+#ifndef GV_TYPES_H
+# error WHERE IS GV_TYPES_H?
+#endif
+int main(void){
 	boolean x;
 	x = TRUE;
 	return 0;
