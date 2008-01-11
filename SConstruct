@@ -1922,8 +1922,9 @@ def CheckLatex2HTML(context):
 #----------------
 # 'lmodern' package for LaTeX available?
 
-lmodern_test_text = """
+lmodern_test_text = r"""
 \documentclass{article}
+\usepackage{lmodern}
 \title{Cartesian closed categories and the price of eggs}
 \author{Jane Doe}
 \date{September 1994}
@@ -1935,10 +1936,8 @@ lmodern_test_text = """
 
 def CheckLModern(context):
 	context.Message("Checking for lmodern...")
-	print env['BUILDERS']
-	b = env['BUILDERS']["DVI"]
-	print "Builder:",b
-	is_ok,res = context.TryBuild(builder=b,text=lmodern_test_text,extension=".latex")
+	b = context.env.DVI
+	is_ok = context.TryBuild(builder=b,text=lmodern_test_text,extension=".tex")
 	context.Result(is_ok)
 	return is_ok
 
@@ -2309,9 +2308,9 @@ if with_doc_build:
 
 	with_latext2html = conf.CheckLatex2HTML()
 
-	#if conf.CheckLModern() is False:
-	#	with_doc_build = False
-	#	without_doc_build_reason="'lmodern' is not available"
+	if conf.CheckLModern() is False:
+		with_doc_build = False
+		without_doc_build_reason="'lmodern' is not available"
 
 # TODO: -D_HPUX_SOURCE is needed
 
