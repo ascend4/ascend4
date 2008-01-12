@@ -55,12 +55,13 @@ function ashighlightSetup() {
 function ashighlightLoadMessages() {
 	static $loaded = false;
 	if ( $loaded ) {
-		return;
+		return TRUE;
 	}
 	global $wgMessageCache;
 	require_once( dirname( __FILE__ ) . '/ashighlight.i18n.php' );
 	foreach( efashighlightMessages() as $lang => $messages )
 		$wgMessageCache->addMessages( $messages, $lang );
+	return TRUE;
 }
 
 // called anytime a 'source' tag is seen in the wikitext...
