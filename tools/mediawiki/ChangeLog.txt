@@ -1,3 +1,9 @@
+Sun 13 Jan 2008
+---------------
+
+Added 'return TRUE' in ashighlightLoadMessages following suggestions from
+an anonymous Mediawiki user.
+
 Mon 16 Apr 2007
 ---------------
 
