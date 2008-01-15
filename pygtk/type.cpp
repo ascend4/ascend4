@@ -215,8 +215,13 @@ Type::isFundamental() const{
 }
 
 const bool
+Type::isModel() const{
+	return GetBaseType(t) == model_type;
+}
+
+const bool
 Type::hasParameters() const{
-	return TypeHasParameterizedInsts(t);
+	return GetModelParameterCount(t) > 0;
 }
 
 bool

@@ -16,7 +16,9 @@ BROWSER_UNINCLUDED_COLOR = "#888888"
 
 class ModelView:
 	def __init__(self,browser,glade):
-		self.browser = browser # the parent object: the entire ASCEND browser		
+		self.browser = browser # the parent object: the entire ASCEND browser
+
+		self.notes = browser.library.getAnnotationDatabase()	
 
 		self.modelview = glade.get_widget("browserview")
 		
@@ -309,28 +311,36 @@ class ModelView:
 #   CONTEXT MENU
 
 	def on_treeview_event(self,widget,event):
-		_contextmenu = False;
+	
+		_path = None
+		_contextmenu = False
 		if event.type==gtk.gdk.KEY_PRESS:
 			_keyval = gtk.gdk.keyval_name(event.keyval)
 			_path, _col = self.modelview.get_cursor()
 			if _keyval=='Menu':
 				_contextmenu = True
-				_button = 3;
+				_button = 3
 			elif _keyval == 'F2':
 				print "F2 pressed"
 				self.modelview.set_cursor(_path,self.tvcolumns[2],1)
 												
 				return
 		elif event.type==gtk.gdk.BUTTON_PRESS:
-			if event.button == 3:
-				_contextmenu = True
-				_x = int(event.x)
-				_y = int(event.y)
-				_button = event.button
-				_pthinfo = self.modelview.get_path_at_pos(_x, _y)
-				if _pthinfo == None:
-					return
+			_x = int(event.x)
+			_y = int(event.y)
+			_button = event.button
+			_pthinfo = self.modelview.get_path_at_pos(_x, _y)
+			if _pthinfo is not None:
 				_path, _col, _cellx, _celly = _pthinfo
+				if event.button == 3:
+					_contextmenu = True
+
+		if _path:
+			_name,_instance = self.otank[_path]
+			# set the statusbar
+			nn = self.notes.getNotes(self.sim.getModel().getType(),ascpy.SymChar("inline"),_name)
+			for n in nn:
+				print "%s: (%s) %s" % (n.getId(),str(n.getLanguage()),n.getText())
 
 		if not _contextmenu:
 			#print "NOT DOING ANYTHING ABOUT %s" % gtk.gdk.keyval_name(event.keyval)
@@ -338,7 +348,6 @@ class ModelView:
 
 		_canpop = False;
 		# self.browser.reporter.reportError("Right click on %s" % self.otank[_path][0])
-		_instance = self.otank[_path][1]
 
 		self.unitsmenuitem.set_sensitive(False)
 		self.fixmenuitem.set_sensitive(False)
