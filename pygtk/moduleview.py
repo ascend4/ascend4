@@ -43,25 +43,34 @@ class ModuleView:
 			
 			self.browser.reporter.reportError(_msg)
 			raise RuntimeError(_msg)
-			
+
+		firstpath = None
 		for m in reversed(modules):
 			_n = str( m.getName() )
 			_f = str( m.getFilename() )
 			#print "ADDING ROW name %s, file = %s" % (_n, _f)
 			_r = self.modulestore.append(None,  [ _n, _f, pango.WEIGHT_NORMAL ])
+
+			if firstpath is None:
+					firstpath = self.modulestore.get_path(_r)
+
 			for t in library.getModuleTypes(m):
 				_n = t.getName()
-				_hasparams = t.hasParameters()
-				if _hasparams:
-					_w = pango.WEIGHT_NORMAL
-				else:
+				if t.isModel() and not t.hasParameters():
 					_w = pango.WEIGHT_BOLD
+				else:
+					_w = pango.WEIGHT_NORMAL
 				
 				#print "ADDING TYPE %s" % _n
 				_piter = self.modulestore.append(_r , [ _n, "", _w ])
 				_path = self.modulestore.get_path(_piter)
 				self.modtank[_path]=t
-
+	
+		# open up the top-level module (ie the one we just openened)
+		if firstpath is not None:
+			print "EXPANDING PATH",firstpath
+			self.moduleview.expand_row(firstpath,False)
+		
 		#print "DONE ADDING MODULES"
 
 	def module_activated(self, treeview, path, column, *args):
@@ -71,11 +80,21 @@ class ModuleView:
 		modules = self.library.getModules()
 		print "PATH",path
 		if len(path)==1:
-			self.browser.reporter.reportNote("Launching of external editor not yet implemented")
+			if self.moduleview.row_expanded(path):
+				self.moduleview.collapse_row(path)
+			else:
+				self.moduleview.expand_row(path,False)
+			#self.browser.reporter.reportNote("Launching of external editor not yet implemented")
 		elif len(path)==2:
-			if(self.modtank.has_key(path)):
+			if self.modtank.has_key(path):
 				_type = self.modtank[path];
-				self.browser.reporter.reportNote("Creating simulation for type %s" % str(_type.getName()) )
+				if not _type.isModel():
+					self.browser.reporter.reportError("Can't create simulation for type '%s': not a MODEL type" % str(_type.getName()))
+					return
+				if _type.hasParameters():
+					self.browser.reporter.reportError("Can't create simulation for MODEL '%s': requires parameters" % str(_type.getName()))
+					return				
+				self.browser.reporter.reportNote("Creating simulation for type '%s'" % str(_type.getName()) )
 				self.browser.do_sim(_type)
 			else:
 				self.browser.reporter.reportError("Didn't find type corresponding to row")

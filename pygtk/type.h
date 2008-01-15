@@ -40,6 +40,7 @@ public:
 	const bool isRefinedReal() const;
 	const bool isRefinedConstant() const;
 	const bool isFundamental() const;
+	const bool isModel() const;
 	const bool hasParameters() const;
 
 	bool operator<(const Type &other) const;

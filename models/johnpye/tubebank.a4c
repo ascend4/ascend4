@@ -1,6 +1,6 @@
 (*
 	ASCEND model library: tube-bank view factor model
-	Copyright (C) John Pye 2007
+	Copyright (C) John Pye 2007-2008
 	http://pye.dyndns.org/
 
 	This program is free software; you can redistribute it
@@ -271,6 +271,66 @@ MODEL vfac_circle_plane_ambi(
 
 	F = ((JKBF + OEGF) - (OBF + JIHGF)) / (4{PI}*r);
 END vfac_circle_plane_ambi;
+
+(*
+	Model for the view factor from a single tube to a surface beneath it.
+*)
+MODEL singletube;
+	x "x coordinate of tube centreline" IS_A delta_distance;
+	x1 "left end of flat surface" IS_A delta_distance;
+	x2 "right end of flat surface" IS_A delta_distance;
+	h "height from cylinder axis to surface" IS_A distance;
+	r "cylinder radius" IS_A distance;
+	s "cylinder half-spacing" IS_A distance;
+	
+	F1, F2 IS_A fraction;
+	vfac1 IS_A vfac_circle_plane_ambi(x1a,h,r,s,F1);
+	vfac2 IS_A vfac_circle_plane_ambi(x2a,h,r,s,F2);
+
+	x1a, x2a IS_A delta_distance;
+	x1a = abs(x1 - x);
+	x2a = abs(x2 - x);
+
+	CONDITIONAL
+		c1: (x1 - x) * (x2 - x) >= 0;
+		c3: x1a > x2a;
+	END CONDITIONAL; 
+
+	sameside IS_A boolean_var;
+	greater1 IS_A boolean_var;
+	sameside == SATISFIED(c1);
+	greater1 == SATISFIED(c3);
+
+	expr1: F = F1 - F2;
+	expr2: F = F2 - F1;
+	exprS: F = F1 + F2;
+
+	F "view factor from tube to surface x1--x2" IS_A fraction;
+	WHEN(sameside,greater1)
+		CASE TRUE,TRUE:
+			USE expr1;
+		CASE TRUE,FALSE:
+			USE expr2;
+		CASE FALSE,TRUE:
+			USE exprS;
+		CASE FALSE,FALSE:
+			USE exprS;
+	END WHEN;
+
+	twoF IS_A fraction;
+	twoF = 2 * F;
+METHODS
+METHOD on_load;
+	FIX x; x:= 610 {mm};
+	FIX x1; x1 := -607.5 {mm};
+	FIX x2; x2 := +607.5 {mm};
+	FIX h; h := 200 {mm} - 23 {mm};
+	FIX r; r:= 20 {mm};
+	FIX s; s:= 22.5 {mm};
+	sameside := FALSE;
+	greater1 := TRUE;
+END on_load;
+END singletube;
 
 (*
 	Model of a tube bank (many tubes) facing opposite a
