@@ -3,6 +3,7 @@ IMPORT "johnpye/extpy/extpy";
 IMPORT "kchittur/zplot";
 
 (* vanderwaals EOS as usually written *)
+(* methods written to create a PV plot at different T's *)  
 
 ATOM vdwa REFINES solver_var
 DIMENSION M*L^5/Q^2/T^2
@@ -54,7 +55,7 @@ END vanderwaals;
 MODEL testvanderwaals;
 
 c1 IS_A symbol_constant;
-c1 :== 'ethylene';
+c1 :== 'helium_4';
 cd IS_A components_data([c1],c1);
 Tr, Pr IS_A factor;
 P IS_A pressure;
@@ -93,6 +94,10 @@ METHODS
     METHOD fancyplot;
     EXTERNAL zplot(SELF);
     END fancyplot;
+
+    METHOD pvtplot;
+    EXTERNAL pvplot(SELF);
+    END pvtplot;
 
 END testvanderwaals; 
 
