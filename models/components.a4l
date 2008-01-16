@@ -1,189 +1,189 @@
-REQUIRE "atoms.a4l";
-(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "components.a4l";
-(*
- *
- * WARNINGS:
- * - The contents of this file represent a physical
- * properties database of minimal functionality. Such a
- * database is just messy conceptually in a declarative language,
- * so we do not apologize for the modeling style found in this
- * file.
- *
- * - We, of course, would like to replace it with a small wrapper to a
- * thermodynamic information database with a much wider range
- * of chemical species.  We are aware of no such database of
- * significant size being placed in the public domain
- * in source form which we can distribute to all our users.
- * Nor has any commercial database made available to us without charge the
- * C level API information required to wrap it from ASCEND.
- *
- * 1:
- * Add species or new correlation coefficients as you need them.
- * Models you create in the ASCEND IV language are Not subject to
- * the GNU Public License (GPL) UNLESS you base those models on GNU Public
- * Licensed ASCEND Libraries. All ASCEND libraries distributed from
- * Carnegie Mellon are distributed under the GPL unless explicitly noted
- * as being in the public domain in the distributed source code.
- *
- * In the interest of promoting research, we make an EXCEPTION to the
- * above condition for proprietary physical property data integrated
- * with ASCEND library models for non-commercial research purposes only.
- *
- * If you base a commercial application on GNU Public Licensed ASCEND IV
- * libraries or modifications or extensions of those libraries, then the
- * models you create must be released in source code form per the GPL.
- *
- * 2: If you have such a properties database to donate, please let us know.
- * 3:
- * If you create a wrapper to a proprietary database for use with
- * ASCEND in a way that entangles your code with our sources, you
- * are required under the terms of the ASCEND GPL
- * to _give_ the wrapper code back to us and to make it otherwise
- * available for public use. This does not require making the
- * proprietary database public, just the interface. If releasing
- * such an interface violates the proprietary licensing, then do not
- * create it in an entangled fashion.
- * 4:
- * This components library contains the data of Reid 4th, Appendix A
- * pages 656-732.
-
-CMU DISCLAIMER: CMU DISCLAIMER: CMU DISCLAIMER: CMU DISCLAIMER:
-The authors of ASCEND and Carnegie Mellon University make
-absolutely NO WARRANTY about the accuracy of this transcription
-of the RPP data or of the original data itself, nor do they
-provide any guarantee that the data here represented is
-suitable for any purpose academic or commercial.
-CMU DISCLAIMER: CMU DISCLAIMER: CMU DISCLAIMER: CMU DISCLAIMER
-			M C G R A W - H I L L
-LICENSE       LICENSE       LICENSE       LICENSE       LICENSE       
-Data in this file, except as OTHERWISE noted in the code given, are taken
-from THE BOOK:
-The Properties of Gases and Liquids, 4th Edition
-by Reid, Prausnitz, and Poling, Copyright 1987 McGraw-Hill Companies,
-with the publisher's permission dated July 20, 1998.
-This file must not be modified, distributed, or otherwise used
-without this License notice attached. The conditions of this license
-and the GNU Public license below both apply.
-
-Terms from McGraw-Hill:
-M1 - The data may not be used outside of ASCEND and derivative works.
-M2 - McGraw-Hill makes no representations or warranties as to the
-    accuracy of any information contained in THE BOOK, or in this
-    transcription of it, including any warranties of merchantability
-    or fitness for a particular purpose. In no event shall McGraw-Hill
-    have any liability to any party for special, incidental, tort, or
-    consequential damages arising out of or in connection with THE
-    BOOK or this transcription of it, even if McGraw-Hill has been
-    advised of the possibility of such damages. All users of ASCEND
-    (or any derivative work) must be provided with written notice of
-    this disclaimer and limitation on liability in the end-user license
-    of ASCEND or any derivative work.
-M3 - Credit to McGraw-Hill and the authors of THE BOOK shall be visible
-    each time ASCEND is accessed, and at all other reasonable points.
-    Such credit shall include the copyright notice of the McGraw-Hill
-    Companies.
-M4 - Any work incorporating this information in any way on the WWW
-    (Internet) shall include a hypertext reference to:
-    http://www.bookstore.mcgraw-hill.com
-
-LICENSE       LICENSE       LICENSE       LICENSE       LICENSE       
-			M C G R A W - H I L L
-                               END
-
- * 5:
- * If you have questions about any of the above, please contact us
- * ascend+developers@cs.cmu.edu and aw0a@cs.cmu.edu. We will consider
- * alternative licensing arrangements on a case-by-case basis subject
- * to keeping the lawyers and accountants on all sides happy.
- *)
-
-(*
- *  components.a4l
- *  by Joseph J. Zaher and Ben Allan
- *  Part of the ASCEND Library
- *  $Date: 1998/08/17 13:07:19 $
- *  $Revision: 1.10 $
- *  $Author: ballan $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/components.a4l,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
+(*  ASCEND modelling environment
  *  Copyright (C) 1994 Joseph J Zaher
  *  Copyright (C) 1997 Benjamin Andrew Allan
  *  Copyright (C) 1998 Carnegie Mellon University
- *
+ *  
  *  The ASCEND Modeling Library is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public
  *  License as published by the Free Software Foundation; either
  *  version 2 of the License, or (at your option) any later version.
- *
+ *  
  *  The ASCEND Modeling Library is distributed in hope that it
  *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
- *
+ *  
  *  You should have received a copy of the GNU General Public License
  *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
  *)
+REQUIRE "atoms.a4l";
+PROVIDE "components.a4l";
+(*
+	ASCEND structure for component physical property constants.
+	All anticipated constants which may be used by the models
+	of "thermodynamics.a4l" are created in a general model where
+	a consistent reference state (298.15{K} and 1.0{atm}) is
+	chosen.  Specific refinements to actual chemical species are
+	made UNIVERSAL to ensure only one instantiation of the
+	constants for each component is maintained throughout a
+	user's simulation.  A reference enthalpy and entropy is
+	chosen by default to be those of formation of the component
+	from its elements at the reference state.
 
-(**
- **
- **  C  O  M  P  O  N  E  N  T  S  .  A 4 L
- **  ----------------------------------------
- **
- **  AUTHOR:	  Joseph J. Zaher
- **
- **  DATES:	   07/91 - Original code.
- **		   02/92 - Made compatible with new set version of ASCEND.
- **			   Expanded data base, revised vapor pressure data,
- **			   and added UNIFAC group and subgroup sets with help
- **			   of Bob Huss.
- **		   07/92 - Expanded data base with help of Kay C. Dee.
- **		   08/92 - Replaced name attribute of each component with a
- **		   	   formula attribute.  Component names are free to be
- **			   specified by the user.
- **		   03/94 - Made compatible with gnu-ascend.
- **		   08/94 - Made compatible with H,G or H,S thermo library,
- **			   and with Wilson models written by Boyd Safrit.
- **		  02/96 - Made compatible with ASCEND IV. Ben Allan.
- **		  01/97 - Addition OF td_component_constants by _____
- **		  01/97 - All constants checked by Jennifer Perry
- **               03/97 - Added container models for data groups. BAA.
- **		  03/98 - 99% of the code in this file should be reduced
- **		 		to a call on a database.
- **		  07/98 - Add Reid et al. data. Duncan Coffey.
- **                       UNIFAC needs more work.
- **
- **
- **  CONTENTS:	ASCEND structure for component physical property constants.
- **		   All anticipated constants which may be used by the models
- **		   of "thermodynamics.a4l" are created in a general model where
- **		   a consistent reference state (298.15{K} and 1.0{atm}) is
- **		   chosen.  Specific refinements to actual chemical species are
- **		   made UNIVERSAL to ensure only one instantiation of the
- **		   constants for each component is maintained throughout a
- **		   user's simulation.  A reference enthalpy and entropy is
- **		   chosen by default to be those of formation of the component
- **		   from its elements at the reference state.
- **
- **
- **)
+	... MCGRAW-HILL LICENSE ...
 
-(* Wilson pairs checked by Boyd
-i_propanol-water
-i_propanol-ethylene_glycol
-ethylene_glycol-water
-acetone-chloroform
-acetone-benzene
-acetone-methanol
-methanol-water
-benzene-chloroform
-propadiene-propylene	provided by Vince Verneulli OF Sim Sci
-propadiene-propane	provided by Vince Verneulli OF Sim Sci
-propylene-propane	provided by Vince Verneulli OF Sim Sci
+		Data in this file, except as OTHERWISE noted in the code given, are taken
+		from THE BOOK:
+
+			The Properties of Gases and Liquids, 4th Edition
+			by Reid, Prausnitz, and Poling, Copyright 1987 McGraw-Hill Companies,
+
+		with the publisher's permission dated July 20, 1998.
+		This file must not be modified, distributed, or otherwise used
+		without this License notice attached. The conditions of this license,
+		and the GNU Public License, both apply.
+
+		Terms from McGraw-Hill:
+		M1. The data may not be used outside of ASCEND and derivative works.
+		M2. McGraw-Hill makes no representations or warranties as to the
+			accuracy of any information contained in THE BOOK, or in this
+			transcription of it, including any warranties of merchantability
+			or fitness for a particular purpose. In no event shall McGraw-Hill
+			have any liability to any party for special, incidental, tort, or
+			consequential damages arising out of or in connection with THE
+			BOOK or this transcription of it, even if McGraw-Hill has been
+			advised of the possibility of such damages. All users of ASCEND
+			(or any derivative work) must be provided with written notice of
+			this disclaimer and limitation on liability in the end-user license
+			of ASCEND or any derivative work.
+		M3. Credit to McGraw-Hill and the authors of THE BOOK shall be visible
+			each time ASCEND is accessed, and at all other reasonable points.
+			Such credit shall include the copyright notice of the McGraw-Hill
+			Companies.
+		M4. Any work incorporating this information in any way on the WWW
+			(Internet) shall include a hypertext reference to:
+			http://www.bookstore.mcgraw-hill.com
+
+	... end of McGraw-Hill License ...
+
+	...	CMU DISCLAIMER ...
+
+		The authors of ASCEND and Carnegie Mellon University make
+		absolutely NO WARRANTY about the accuracy of this transcription
+		of the RPP data or of the original data itself, nor do they
+		provide any guarantee that the data here represented is
+		suitable for any purpose academic or commercial.
+
+	... end of CMU disclaimer ...
+
+	WARNINGS:
+	- The contents of this file represent a physical
+	properties database of minimal functionality. Such a
+	database is just messy conceptually in a declarative language,
+	so we do not apologize for the modeling style found in this
+	file.
+
+	- We, of course, would like to replace it with a small wrapper to a
+	thermodynamic information database with a much wider range
+	of chemical species.  We are aware of no such database of
+	significant size being placed in the public domain
+	in source form which we can distribute to all our users.
+	Nor has any commercial database made available to us without charge the
+	C level API information required to wrap it from ASCEND.
+
+	1.
+	Add species or new correlation coefficients as you need them.
+	Models you create in the ASCEND IV language are Not subject to
+	the GNU Public License (GPL) UNLESS you base those models on GNU Public
+	Licensed ASCEND Libraries. All ASCEND libraries distributed from
+	Carnegie Mellon are distributed under the GPL unless explicitly noted
+	as being in the public domain in the distributed source code.
+
+	In the interest of promoting research, we make an EXCEPTION to the
+	above condition for proprietary physical property data integrated
+	with ASCEND library models for non-commercial research purposes only.
+
+	If you base a commercial application on GNU Public Licensed ASCEND IV
+	libraries or modifications or extensions of those libraries, then the
+	models you create must be released in source code form per the GPL.
+
+	2.
+	If you have such a properties database to donate, please let us know.
+
+	3.
+	If you create a wrapper to a proprietary database for use with
+	ASCEND in a way that entangles your code with our sources, you
+	are required under the terms of the ASCEND GPL
+	to _give_ the wrapper code back to us and to make it otherwise
+	available for public use. This does not require making the
+	proprietary database public, just the interface. If releasing
+	such an interface violates the proprietary licensing, then do not
+	create it in an entangled fashion.
+
+	4.
+	This components library contains the data of Reid 4th Ed, Appendix A
+	pages 656-732.
+
+	5.
+	If you have questions about any of the above, please contact us
+	ascend+developers@cs.cmu.edu and aw0a@cs.cmu.edu. We will consider
+	alternative licensing arrangements on a case-by-case basis subject
+	to keeping the lawyers and accountants on all sides happy.
+
+	6.
+	The frontiers of group contribution methods have moved on
+	well past the data presented here and the correlations
+	it is used with. Users with a penchant for thermodynamic
+	detail are advised to MODEL their own favorite correlations.
+
+	7.
+	The local name of every instance of this MODEL
+	(since it is UNIVERSAL) should always be uc.
+	In the comments that follow, we will use uc where applicable.
+*)
+
+(*
+	components.a4l originally by Joseph J. Zaher
+
+	CHANGELOG
+	
+	07/91 - Original code.
+	02/92 - Made compatible with new set version of ASCEND.
+	   Expanded data base, revised vapor pressure data,
+	   and added UNIFAC group and subgroup sets with help
+	   of Bob Huss.
+	07/92 - Expanded data base with help of Kay C. Dee.
+	08/92 - Replaced name attribute of each component with a
+	   formula attribute.  Component names are free to be
+	   specified by the user.
+	03/94 - Made compatible with gnu-ascend.
+	08/94 - Made compatible with H,G or H,S thermo library,
+	   and with Wilson models written by Boyd Safrit.
+	02/96 - Made compatible with ASCEND IV. Ben Allan.
+	01/97 - Addition OF td_component_constants by _____
+	01/97 - All constants checked by Jennifer Perry
+		 03/97 - Added container models for data groups. BAA.
+	03/98 - 99% of the code in this file should be reduced
+		to a call on a database.
+	07/98 - Add Reid et al. data. Duncan Coffey.
+		          UNIFAC needs more work.
+*)
+
+(*
+	Wilson pairs checked by Boyd
+
+	i_propanol-water
+	i_propanol-ethylene_glycol
+	ethylene_glycol-water
+	acetone-chloroform
+	acetone-benzene
+	acetone-methanol
+	methanol-water
+	benzene-chloroform
+	propadiene-propylene	provided by Vince Verneulli OF Sim Sci
+	propadiene-propane	provided by Vince Verneulli OF Sim Sci
+	propylene-propane	provided by Vince Verneulli OF Sim Sci
 *)
 
 MODEL compmodel() REFINES cmumodel();
@@ -215,22 +215,6 @@ REFERENCE:
 The reference for the bulk of this MODEL is
 Reid, Prausnitz & Poling, Properties of Gases and Liquids,
 1986, Chapter 8.
-DISCLAIMER: DISCLAIMER: DISCLAIMER: DISCLAIMER: DISCLAIMER: DISCLAIMER:
-The authors of ASCEND and Carnegie Mellon University make
-absolutely NO WARRANTY about the accuracy of this transcription
-of the RPP data or of the original data itself, nor do they
-provide any guarantee that the data here represented is
-suitable for any purpose academic or commercial.
-DISCLAIMER: DISCLAIMER: DISCLAIMER: DISCLAIMER: DISCLAIMER: DISCLAIMER:
-NOTES:
-The frontiers of group contribution methods have moved on
-well past the data presented here and the correlations
-it is used with. Users with a penchant for thermodynamic
-detail are advised to MODEL their own favorite correlations.
-COMMON USAGE:
-The local name of every instance of this MODEL
-(since it is UNIVERSAL) should always be uc.
-In the comments that follow, we will use uc where applicable.
 ANNOTATED:
 10/96 Ben Allan
 *)
