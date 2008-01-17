@@ -1,0 +1,111 @@
+# This script file can be used with the Tcl/TK GUI to drive the
+# ASCEND model 'thermodynamics_example.a4c'.
+
+DELETE TYPES;
+READ FILE "howto_thermo.a4c";
+
+# Example 1
+
+COMPILE ex of chittur;
+BROWSE {ex};
+RUN {ex.values};
+SOLVE {ex} WITH QRSlv;
+BROWSE {ex};
+
+COMPILE ex OF howto_thermo_ex1;
+BROWSE {ex};
+RUN {ex.values};
+RUN {ex.reset};
+SOLVE {ex} WITH QRSlv;
+
+ASSIGN {ex.T} 500 {K};
+SOLVE {ex} WITH QRSlv;
+
+# Example 2
+
+COMPILE ex2 OF howto_thermo_ex2;
+BROWSE {ex2};
+RUN {ex2.values};
+RUN {ex2.reset};
+SOLVE {ex2} WITH QRSlv;
+
+RUN {ex2.reset_VP_problem};
+SOLVE {ex2} WITH QRSlv;
+
+# Example 3
+
+COMPILE ex3 OF howto_thermo_ex3;
+BROWSE {ex3};
+RUN {ex3.values};
+RUN {ex3.reset};
+SOLVE {ex3} WITH QRSlv;
+
+ASSIGN {ex3.ivm.T} 500 {K};
+SOLVE {ex3} WITH QRSlv;
+
+# Example 4
+
+COMPILE ex4 OF howto_thermo_ex4;
+BROWSE {ex4};
+RUN {ex4.values};
+RUN {ex4.reset};
+SOLVE {ex4} WITH QRSlv;
+
+ASSIGN {ex4.ivm.T} 500 {K};
+SOLVE {ex4} WITH QRSlv;
+
+# Example 4b
+
+COMPILE ex4b OF howto_thermo_ex4b;
+BROWSE {ex4b};
+RUN {ex4b.values};
+RUN {ex4b.reset};
+SOLVE {ex4b} WITH QRSlv;
+
+# Example 5
+
+COMPILE ex5 OF howto_thermo_ex5;
+BROWSE {ex5};
+RUN {ex5.values};
+RUN {ex5.reset};
+SOLVE {ex5} WITH QRSlv;
+
+ASSIGN {ex5.ivm.T} 500 {K};
+SOLVE {ex5} WITH QRSlv;
+
+# Example 6
+
+COMPILE ex6 OF howto_thermo_ex6;
+BROWSE {ex6};
+RUN {ex6.values};
+RUN {ex6.reset};
+SOLVE {ex6} WITH QRSlv;
+
+# Example 7
+
+COMPILE ex7 OF howto_thermo_ex7;
+BROWSE {ex7};
+RUN {ex7.values};
+RUN {ex7.reset};
+SOLVE {ex7} WITH QRSlv;
+
+# Example 8
+
+COMPILE ex8 OF howto_thermo_ex8;
+BROWSE {ex8};
+RUN {ex8.values};
+RUN {ex8.reset};
+SOLVE {ex8} WITH QRSlv;
+
+ASSIGN {ex8.state.T} 400 {K};
+SOLVE {ex8} WITH QRSlv;
+
+# Example 9 - Equilibrium chart
+
+COMPILE ex9 OF howto_thermo_ex9;
+BROWSE {ex9};
+RUN {ex9.reset_Px};
+SOLVE {ex9} WITH QRSlv;
+
+ASSIGN {ex9.state.y['ethanol']} 0.5;
+ASSIGN {ex9.state.phase['liquid1'].y['water']} 0.6;
