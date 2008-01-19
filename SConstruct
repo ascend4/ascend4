@@ -15,6 +15,7 @@ opts = Options(['options.cache', 'config.py'])
 default_tcl_cpppath = "$TCL/include"
 default_tron_envvar="TRON_PATH"
 default_conopt_envvar="CONOPT_PATH"
+default_graphviz_rpath = None
 
 if platform.system()=="Windows":
 	default_tcl_lib = "tcl84"
@@ -60,6 +61,7 @@ if platform.system()=="Windows":
 	default_f2c_lib="g2c"
 	
 	default_graphviz_libs=['graph', 'gvc', 'pathplan', 'cdt', 'expat', 'zlib1', 'ltdl', 'msvcr80']
+	default_graphviz_libpath = default_libpath
 	
 else:
 	default_tcl_lib = "tcl8.4"
@@ -100,7 +102,13 @@ else:
 	default_fortran="gfortran"
 	default_f2c_lib="gfortran"
 
+	
 	default_graphviz_libs=["cdt","graph","gvc"]
+	default_graphviz_libpath = default_libpath
+	if os.path.exists("/usr/lib/graphviz/libgraph.so"):
+		# for Ubuntu 7.04
+		default_graphviz_libpath="/usr/lib/graphviz"
+		default_graphviz_rpath="$GRAPHVIZ_LIBPATH"
 	
 opts.Add(
 	'CC'
@@ -650,7 +658,7 @@ opts.Add(PackageOption(
 opts.Add(PackageOption(
 	'GRAPHVIZ_LIBPATH'
 	,"Where are your GRAPHVIZ libraries?"
-	,default_libpath
+	,default_graphviz_libpath
 ))
 
 opts.Add(
@@ -661,8 +669,8 @@ opts.Add(
 
 opts.Add(PackageOption(
 	'GRAPHVIZ_RPATH'
-	,"What is your GRAPHVIZ rpath for locating libraries at runtime?"
-	,None
+	,"What is your GRAPHVIZ rpath for locating libraries at runtime? (only required for old Ubuntu)"
+	,default_graphviz_rpath
 ))
 
 opts.Add(BoolOption(
