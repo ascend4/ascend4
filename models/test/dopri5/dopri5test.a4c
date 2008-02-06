@@ -1,4 +1,4 @@
-IMPORT "johnpye/dopri5/dopri5";
+IMPORT "dopri5";
 REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 

@@ -26,7 +26,7 @@ REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 
 (* load the DOPRI5 integrator dynamically *)
-IMPORT "johnpye/dopri5/dopri5";
+IMPORT "dopri5";
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/solvernotes";
 
