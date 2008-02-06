@@ -1288,7 +1288,7 @@ dmalloc_test_text = """
 
 int main(void){
 	char *c;
-	c = malloc(100*sizeof(char));
+	c = (char *)malloc(100*sizeof(char));
 	free(c);
 	return 0;
 }
