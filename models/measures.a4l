@@ -54,20 +54,42 @@ PROVIDE "measures.a4l";
 
 UNITS
 
+(* SI multipliers *)
+
+yocto = {10^-24};
+zepto = {10^-21};
+atto = {10^-18};
+femto = {10^-15};
+pico = {10^-12};
+nano = {10^-9};
+micro = {10^-6};
+milli = {10^-3};
+centi = {10^-2};
+deci = {10^-1};
+deka = {10.0};
+hecta = {100.0};
+kilo = {10^3};
+mega = {10^6};
+giga = {10^9};
+tera = {10^12};
+peta = {10^15};
+exa = {10^18};
+zetta = {10^21};
+yotta = {10^24};
+
 (* distance *)
 
 meter = {m};
 pc = {3.08374e+16*m};
 parsec = {pc};
-kpc = {1000*pc};
-Mpc = {1e6*pc};
-km = {m*1000};
-m = {m};
+kpc = {kilo*pc};
+Mpc = {mega*pc};
+km = {kilo*m};
 dm = {m/10};
 cm = {m/100};
-mm = {m/1000};
-um = {m/1000000};
-nm = {1.e-9*m};
+mm = {milli*m};
+um = {micro*m};
+nm = {nano*m};
 kilometer = {km};
 centimeter = {cm};
 millimeter = {mm};
@@ -100,13 +122,13 @@ nanogram= {ng};
 pg= {kilogram*1e-15};
 picogram= {pg};
 
-tonne = {kilogram *1000}; (* reference on tonne: http://physics.nist.gov/Pubs/SP811/appenB8.html *)
+tonne = {1000*kilogram}; (* reference on tonne: http://physics.nist.gov/Pubs/SP811/appenB8.html *)
 t = {tonne};
-kilotonne = {tonne*1000};
+kilotonne = {kilo*tonne};
 kt = {kilotonne};
-megatonne = {tonne*1e6};
+megatonne = {mega*tonne};
 Mt = {megatonne};
-gigatonne = {tonne*1e9};
+gigatonne = {giga*tonne};
 Gt = {gigatonne};
 
 amu = {1.661e-27*kilogram};
@@ -145,11 +167,11 @@ mole = {mol};
 kg_mole= {1000*mol};
 g_mole = {mol};
 gm_mole = {mol};
-kmol = {1000*mol};
+kmol = {kilo*mol};
 mol = {mol};
-mmol = {mol/1000};
+mmol = {milli*mol};
 millimole= {mmol};
-umol = {mol/1e6};
+umol = {micro*mol};
 micromole= {umol};
 lb_mole = {4.535924e+2*mol};
 
@@ -289,18 +311,18 @@ Cal= {1000*cal};
 (* power *)
 
 W = {J/s};
-EW = {1.0e+18*W};
-PW = {1.0e+15*W};
-TW = {1.0e+12*W};
-GW = {1.0e+9*W};
-MW = {1.0e+6*W};
-kW = {1000*W};
-mW = {W/1e3};
-uW = {W/1e6};
-nW = {W/1e9};
-pW = {W/1e12};
-fW = {W/1e15};
-aW = {W/1e18};
+EW = {exa*W};
+PW = {peta*W};
+TW = {tera*W};
+GW = {giga*W};
+MW = {mega*W};
+kW = {kilo*W};
+mW = {milli*w};
+uW = {micro*W};
+nW = {nano*W};
+pW = {pico*W};
+fW = {femto*W};
+aW = {atto*W};
 terawatt = {TW};
 gigawatt = {GW};
 megawatt = {MW};
@@ -312,7 +334,7 @@ nanowatt = {nW};
 picowatt = {pW};
 femtowatt = {fW};
 attowatt = {aW};
-aWW= {1*EW}; (* <geekjok>we could say art has a lot of power</geekjoke> *)
+aWW= {1*EW}; (* <geekjoke>we could say Art has a lot of power</geekjoke> *)
 
 Wh = {W*h};
 kWh = {kW*h};
@@ -366,7 +388,7 @@ tesla = {Wb/m^2};
 gauss = {1e-4*tesla};
 H = {Wb/A};
 henry = {H};
-mH = {0.001*H};
+mH = {milli*H};
 uH = {1e-6*H};
 
 (*

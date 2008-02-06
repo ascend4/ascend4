@@ -49,9 +49,9 @@ class ObserverColumn:
 			else:
 				name = browser.sim.getInstanceName(instance)
 
-		if units == None:
+		if units is None:
 			units = instance.getType().getPreferredUnits()
-		if units == None:
+		if units is None:
 			units = instance.getType().getDimensions().getDefaultUnits()
 		
 		uname = str(units.getName())

@@ -104,7 +104,8 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			for _time,_vals in self.data:
 				_obs.do_add_row([_time]+[_v for _v in _vals])
 		except Exception,e:
-			sys.stderr.write("\n\n\nCAUGHT EXCEPTION: %s\n\n\n" % str(e))
+			sys.stderr.write("\n\n\nIntegratorReporter::closeOutput: error: %s\n\n\n" % str(e))
+			return 1
 		return 0
 
 	def closeOutput1(self):

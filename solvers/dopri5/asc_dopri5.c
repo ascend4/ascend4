@@ -36,7 +36,8 @@
 
 #define INTEG_DOPRI5 5
 
-#define STATS_DEBUG
+/* #define STATS_DEBUG */
+/* #define DOPRI5_DEBUG */
 
 IntegratorCreateFn integrator_dopri5_create;
 IntegratorParamsDefaultFn integrator_dopri5_params_default;
@@ -466,7 +467,9 @@ static void integrator_dopri5_fex(
 
 	integrator_get_ydot(blsys, ydot);
 
+#ifdef DOPRI5_DEBUG
 	CONSOLE_DEBUG("y[0]=%e,y[1]=%e --> ydot[0]=%e,ydot[1]=%e",y[0],y[1],ydot[0],ydot[1]);
+#endif
 	//CONSOLE_DEBUG("ydot[0] = %f",ydot[0]);
 	// DONE, OK
 }
@@ -532,9 +535,12 @@ static void integrator_dopri5_reporter(
 	if(t>ts){
 		//CONSOLE_DEBUG("t=%f > ts=%f (currentsample = %ld",t,ts,d->currentsample);
 		integrator_output_write_obs(blsys);
+#ifdef DOPRI5_DEBUG
 		CONSOLE_DEBUG("step = %ld", nr-1);	
+#endif
 		while(t>ts){
 			d->currentsample++;
+			blsys->currentstep++;
 			ts = integrator_getsample(blsys,d->currentsample);
 		}
 	}
