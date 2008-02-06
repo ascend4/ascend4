@@ -2,7 +2,7 @@ Import('env')
 extenv = env.Copy()
 
 subdirs = [
-	'extfn','datareader','brent','dopri5'
+	'extfn','datareader','brent'
 ]
  
 for d in subdirs:

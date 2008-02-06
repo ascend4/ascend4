@@ -160,10 +160,10 @@ opts.Add(ListOption(
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","TRON","IPOPT"]
+	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","TRON","IPOPT","DOPRI5"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT"
+		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5"
 	 ]
 ))
 
@@ -887,31 +887,21 @@ if platform.system()=="Windows":
 else:
 	with_installer=0
 	without_installer_reason = "only possible under Windows"
-		
-if 'LSODE' in env['WITH_SOLVERS']:
-	with_lsode=True
-else:
-	with_lsode=False
-	without_lsode_reason = "not requested (WITH_SOLVERS)"
-	
-if 'IDA' in env['WITH_SOLVERS']:
-	with_ida=True
-else:
-	with_ida=False
-	without_ida_reason = "not requested (WITH_SOLVERS)"
 
+with_lsode = 'LSODE' in env['WITH_SOLVERS']
+without_lsode_reason = "Not selected (see config option WITH_SOLVERS)"
 
-if 'CONOPT' in env['WITH_SOLVERS']:
-	with_conopt=True
-else:
-	with_conopt=False
-	without_conopt_reason = "not requested (WITH_SOLVERS)"
+with_ida = 'IDA' in env['WITH_SOLVERS']
+without_ida_reason = "Not selected (see config option WITH_SOLVERS)"
 
-if 'IPOPT' in env['WITH_SOLVERS']:
-	with_ipopt=True
-else:
-	with_ipopt=False
-	without_ipopt_reason = "not requested (WITH_SOLVERS)"
+with_dopri5 = 'DOPRI5' in env['WITH_SOLVERS']
+without_dopri5_reason = "Not selected (see config option WITH_SOLVERS)"
+
+with_conopt = 'CONOPT' in env['WITH_SOLVERS']
+without_conopt_reason = "Not selected (see config option WITH_SOLVERS)"
+
+with_ipopt = 'IPOPT' in env['WITH_SOLVERS']
+without_ipopt_reason = "Not selected (see config option WITH_SOLVERS)"
 
 
 #print "SOLVERS:",env['WITH_SOLVERS']
@@ -2206,14 +2196,13 @@ if with_ufsparse:
 
 # IDA
 
-if not with_ida:
-	without_ida_reason = "Not selected (see config option WITH_SOLVERS)"
-elif not conf.CheckSUNDIALS():
-	with_ida = False
-	without_ida_reason = "SUNDIALS not found, or bad version"
-elif not conf.CheckIDA():
-	with_ida = False
-	without_ida_reason = "Unable to compile/link against SUNDIALS/IDA"
+if with_ida:
+	if not conf.CheckSUNDIALS():
+		with_ida = False
+		without_ida_reason = "SUNDIALS not found, or bad version"
+	elif not conf.CheckIDA():
+		with_ida = False
+		without_ida_reason = "Unable to compile/link against SUNDIALS/IDA"
 
 # CONOPT
 
@@ -2483,6 +2472,9 @@ if with_conopt:
 if with_ipopt:
 	env.Append(WITH_IPOPT=1)
 
+if with_dopri5:
+	env.Append(WITH_DOPRI5=1)
+
 if with_graphviz and env.get('GRAPHVIZ_RPATH'):
 	env.Append(RPATH=env['GRAPHVIZ_RPATH'])
 
@@ -2531,6 +2523,9 @@ else:
 
 if not with_ida:
 	print "Skipping... IDA won't be built:", without_ida_reason
+
+if not with_dopri5:
+	print "Skipping... DOPRI5 won't be built:", without_dopri5_reason
 
 if with_mmio:
 	srcs += env.SConscript(['mmio/SConscript'],'env')

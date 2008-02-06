@@ -228,7 +228,6 @@ static struct gl_list_t *integrator_get_list(int free_space){
 		init = 1; /* set init to 1 here now, since this will be called
 			recursively from the LoadArchiveLibrary call. */
 
-
 		/* CONSOLE_DEBUG("REGISTERING STANDARD SOLVER ENGINES"); */
 		for(i=0; defaultintegrators[i]!=NULL;++i){
 			error = package_load(defaultintegrators[i],NULL);
@@ -360,7 +359,7 @@ int integrator_register(const IntegratorInternals *integ){
 
 	int i;
 	const IntegratorInternals *I;
-	for(i=1; i < gl_length(L); ++i){
+	for(i=1; i <= gl_length(L); ++i){
 		I = (const IntegratorInternals *)gl_fetch(L,i);
 		if(strcmp(integ->name,I->name)==0){
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Integrator with name '%s' is already registered",integ->name);
