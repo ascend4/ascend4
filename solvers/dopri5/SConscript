@@ -1,7 +1,9 @@
 Import('env')
 
+if env.get('WITH_DOPRI5'):
+
 # To run the test, type
-#     ascdev johnpye/dopri5/dopri5.a4c
+#     ascdev test/dopri5/dopri5.a4c
 
 dopri5obj = env.SharedObject("dopri5.c")
 

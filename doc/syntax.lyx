@@ -1,5 +1,5 @@
-#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 1.5.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 276
 \begin_document
 \begin_header
 \textclass book
@@ -9,13 +9,21 @@
 \end_preamble
 \language english
 \inputencoding auto
-\fontscheme default
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
 \paperfontsize default
 \spacing single
 \papersize default
 \use_geometry false
 \use_amsmath 1
+\use_esint 0
 \cite_engine basic
 \use_bibtopic false
 \paperorientation portrait
@@ -29,13 +37,15 @@
 \paperpagestyle default
 \tracking_changes false
 \output_changes false
+\author "" 
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Syntax reference
-\begin_inset LatexCommand \label{cha:ASCENDSyntax}
+\begin_inset LatexCommand label
+name "cha:ASCENDSyntax"
 
 \end_inset
 
@@ -55,14 +65,16 @@ We shall present an informal description of the ASCEND IV language.
 
 \begin_layout Standard
 Syntax
-\begin_inset LatexCommand \index{syntax}
+\begin_inset LatexCommand index
+name "syntax"
 
 \end_inset
 
  is the form or structure for the statements in ASCEND, where one worries
  about the exact words one uses, their ordering, the punctuation, etc.
  Semantics
-\begin_inset LatexCommand \index{semantics}
+\begin_inset LatexCommand index
+name "semantics"
 
 \end_inset
 
@@ -90,23 +102,27 @@ Rules on the syntax for this statement tell us we need a user supplied instance
 
 \begin_layout Standard
 The syntax for a computer language is often defined by using a Bachus-Naur
-\begin_inset LatexCommand \index{Bachus-Naur}
+\begin_inset LatexCommand index
+name "Bachus-Naur"
 
 \end_inset
 
  formal (BNF
-\begin_inset LatexCommand \index{BNF}
+\begin_inset LatexCommand index
+name "BNF"
 
 \end_inset
 
 ) description.
  The complete YACC
-\begin_inset LatexCommand \index{YACC}
+\begin_inset LatexCommand index
+name "YACC"
 
 \end_inset
 
  and FLEX
-\begin_inset LatexCommand \index{FLEX}
+\begin_inset LatexCommand index
+name "FLEX"
 
 \end_inset
 
@@ -177,7 +193,8 @@ The syntax and semantics of ASCEND may seem at first a bit unusual.
 
 \begin_layout Standard
 We will describe, starting in Section 
-\begin_inset LatexCommand \vref{sub:x.1.2Basic-Elements}
+\begin_inset LatexCommand vref
+reference "sub:x.1.2Basic-Elements"
 
 \end_inset
 
@@ -192,7 +209,8 @@ ASCEND\InsetSpace ~
 is\InsetSpace ~
 cAsE\InsetSpace ~
 sensitive
-\begin_inset LatexCommand \index{case sensitive}
+\begin_inset LatexCommand index
+name "case sensitive"
 
 \end_inset
 
@@ -217,12 +235,14 @@ This case restriction makes our code very readable, but hard to type without
  find ourselves running out of good variable names if we are restricted
  to a 26 letter alphabet.
  We have developed smart add-ins for two UNIX editors, EMACS
-\begin_inset LatexCommand \index{EMACS}
+\begin_inset LatexCommand index
+name "EMACS"
 
 \end_inset
 
  and vi
-\begin_inset LatexCommand \index{vi}
+\begin_inset LatexCommand index
+name "vi"
 
 \end_inset
 
@@ -240,7 +260,8 @@ The ASCEND IV parser is very picky and pedantic.
 
 \begin_layout Section
 Punctuation
-\begin_inset LatexCommand \index{punctuation}
+\begin_inset LatexCommand index
+name "punctuation"
 
 \end_inset
 
@@ -256,7 +277,8 @@ This section covers both the punctuation that must be understood to read
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 keywords
-\begin_inset LatexCommand \index{keywords}
+\begin_inset LatexCommand index
+name "keywords"
 
 \end_inset
 
@@ -286,7 +308,8 @@ Tips: Special notes and hints are sometimes placed on the left.
 
 \bar under
 LHS
-\begin_inset LatexCommand \index{LHS}
+\begin_inset LatexCommand index
+name "LHS"
 
 \end_inset
 
@@ -301,7 +324,8 @@ LHS
 
 \bar under
 RHS
-\begin_inset LatexCommand \index{RHS}
+\begin_inset LatexCommand index
+name "RHS"
 
 \end_inset
 
@@ -317,7 +341,8 @@ RHS
 \bar under
 Simple\InsetSpace ~
 names
-\begin_inset LatexCommand \index{simple names}
+\begin_inset LatexCommand index
+name "simple names"
 
 \end_inset
 
@@ -328,14 +353,16 @@ names
  The underscore is used as a letter, but it cannot be the first letter in
  a name.
  The $
-\begin_inset LatexCommand \index{\$}
+\begin_inset LatexCommand index
+name "\\$"
 
 \end_inset
 
  character is used exclusively as the first character in the name of system
  defined built-in parts.
  "$" is explained in more detail in Section 
-\begin_inset LatexCommand \vref{sub:x.6.2Supported-attributes}
+\begin_inset LatexCommand vref
+reference "sub:x.6.2Supported-attributes"
 
 \end_inset
 
@@ -350,7 +377,8 @@ names
 \bar under
 Compound\InsetSpace ~
 names
-\begin_inset LatexCommand \index{compound names}
+\begin_inset LatexCommand index
+name "compound names"
 
 \end_inset
 
@@ -371,15 +399,16 @@ Groupings:
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-«\InsetSpace ~
-»
+Â«\InsetSpace ~
+Â»
 \bar default
  In documentation 
 \series bold
 optional fields
 \series default
 
-\begin_inset LatexCommand \index{optional fields}
+\begin_inset LatexCommand index
+name "optional fields"
 
 \end_inset
 
@@ -394,14 +423,16 @@ optional fields
 *)
 \family default
 
-\begin_inset LatexCommand \index{(* *)}
+\begin_inset LatexCommand index
+name "(* *)"
 
 \end_inset
 
  Comment.
  Anything inside these is a comment.
  Comments can nest
-\begin_inset LatexCommand \index{nest}
+\begin_inset LatexCommand index
+name "nest"
 
 \end_inset
 
@@ -416,17 +447,20 @@ optional fields
 )
 \family default
 
-\begin_inset LatexCommand \index{( )}
+\begin_inset LatexCommand index
+name "( )"
 
 \end_inset
 
  Rounded parentheses
-\begin_inset LatexCommand \index{parentheses}
+\begin_inset LatexCommand index
+name "parentheses"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{rounded parentheses}
+\begin_inset LatexCommand index
+name "rounded parentheses"
 
 \end_inset
 
@@ -453,12 +487,14 @@ tip: The compiler can simplify relation definitions in a particularly
 }
 \family default
 
-\begin_inset LatexCommand \index{{ }}
+\begin_inset LatexCommand index
+name "{ }"
 
 \end_inset
 
  Curly braces
-\begin_inset LatexCommand \index{Curly braces}
+\begin_inset LatexCommand index
+name "Curly braces"
 
 \end_inset
 
@@ -478,12 +514,14 @@ tip: The compiler can simplify relation definitions in a particularly
 ]
 \family default
 
-\begin_inset LatexCommand \index{[ ]}
+\begin_inset LatexCommand index
+name "[ ]"
 
 \end_inset
 
  Square brackets
-\begin_inset LatexCommand \index{square brackets}
+\begin_inset LatexCommand index
+name "square brackets"
 
 \end_inset
 
@@ -502,12 +540,14 @@ tip: The compiler can simplify relation definitions in a particularly
 .
 \family default
 
-\begin_inset LatexCommand \index{.}
+\begin_inset LatexCommand index
+name "."
 
 \end_inset
 
  Dot
-\begin_inset LatexCommand \index{dot}
+\begin_inset LatexCommand index
+name "dot"
 
 \end_inset
 
@@ -525,12 +565,14 @@ tip: The compiler can simplify relation definitions in a particularly
 ..
 \family default
 
-\begin_inset LatexCommand \index{..}
+\begin_inset LatexCommand index
+name ".."
 
 \end_inset
 
  Dot-dot or double dot
-\begin_inset LatexCommand \index{double dot}
+\begin_inset LatexCommand index
+name "double dot"
 
 \end_inset
 
@@ -550,12 +592,14 @@ tip: The compiler can simplify relation definitions in a particularly
 :
 \family default
 
-\begin_inset LatexCommand \index{:}
+\begin_inset LatexCommand index
+name ":"
 
 \end_inset
 
  Colon
-\begin_inset LatexCommand \index{colon}
+\begin_inset LatexCommand index
+name "colon"
 
 \end_inset
 
@@ -571,12 +615,14 @@ tip: The compiler can simplify relation definitions in a particularly
 ::
 \family default
 
-\begin_inset LatexCommand \index{::}
+\begin_inset LatexCommand index
+name "::"
 
 \end_inset
 
  Double colon
-\begin_inset LatexCommand \index{double colon}
+\begin_inset LatexCommand index
+name "double colon"
 
 \end_inset
 
@@ -584,7 +630,8 @@ tip: The compiler can simplify relation definitions in a particularly
  A separator used in the methods section for accessing methods defined on
  types other than the type the method is part of.
  Explained in Section 
-\begin_inset LatexCommand \vref{sec:x.4Procedural-statements}
+\begin_inset LatexCommand vref
+reference "sec:x.4Procedural-statements"
 
 \end_inset
 
@@ -598,12 +645,14 @@ tip: The compiler can simplify relation definitions in a particularly
 ;
 \family default
 
-\begin_inset LatexCommand \index{;}
+\begin_inset LatexCommand index
+name ";"
 
 \end_inset
 
  Semicolon
-\begin_inset LatexCommand \index{semicolon}
+\begin_inset LatexCommand index
+name "semicolon"
 
 \end_inset
 
@@ -614,12 +663,14 @@ tip: The compiler can simplify relation definitions in a particularly
 \begin_deeper
 \begin_layout Section
 Basic Elements
-\begin_inset LatexCommand \index{basic elements}
+\begin_inset LatexCommand index
+name "basic elements"
 
 \end_inset
 
 
-\begin_inset LatexCommand \label{sub:x.1.2Basic-Elements}
+\begin_inset LatexCommand label
+name "sub:x.1.2Basic-Elements"
 
 \end_inset
 
@@ -635,12 +686,14 @@ Boolean\InsetSpace ~
 value
 \bar default
 
-\begin_inset LatexCommand \index{value, Boolean}
+\begin_inset LatexCommand index
+name "value, Boolean"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{Boolean value}
+\begin_inset LatexCommand index
+name "Boolean value"
 
 \end_inset
 
@@ -649,7 +702,8 @@ value
 TRUE
 \family default
 
-\begin_inset LatexCommand \index{TRUE}
+\begin_inset LatexCommand index
+name "TRUE"
 
 \end_inset
 
@@ -658,7 +712,8 @@ TRUE
 FALSE
 \family default
 
-\begin_inset LatexCommand \index{FALSE}
+\begin_inset LatexCommand index
+name "FALSE"
 
 \end_inset
 
@@ -693,12 +748,14 @@ Integer\InsetSpace ~
 value
 \bar default
 
-\begin_inset LatexCommand \index{value, integer}
+\begin_inset LatexCommand index
+name "value, integer"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{integer value}
+\begin_inset LatexCommand index
+name "integer value"
 
 \end_inset
 
@@ -709,7 +766,8 @@ value
 MAX_INTEGER
 \family default
 
-\begin_inset LatexCommand \index{MAX\_INTEGER}
+\begin_inset LatexCommand index
+name "MAX\\_INTEGER"
 
 \end_inset
 
@@ -742,19 +800,22 @@ Real\InsetSpace ~
 value
 \bar default
 
-\begin_inset LatexCommand \index{value. real}
+\begin_inset LatexCommand index
+name "value. real"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{real value}
+\begin_inset LatexCommand index
+name "real value"
 
 \end_inset
 
  ASCEND represents reals almost exactly as any other mathematically oriented
  programming language does.
  The mantissa
-\begin_inset LatexCommand \index{mantissa}
+\begin_inset LatexCommand index
+name "mantissa"
 
 \end_inset
 
@@ -776,7 +837,8 @@ E
 MAX_REAL
 \family default
 
-\begin_inset LatexCommand \index{MAX\_REAL}
+\begin_inset LatexCommand index
+name "MAX\\_REAL"
 
 \end_inset
 
@@ -846,7 +908,8 @@ Reals\InsetSpace ~
 stored\InsetSpace ~
 in\InsetSpace ~
 SI
-\begin_inset LatexCommand \index{SI}
+\begin_inset LatexCommand index
+name "SI"
 
 \end_inset
 
@@ -859,12 +922,14 @@ units
 \begin_deeper
 \begin_layout Standard
 We store all real values as double precision
-\begin_inset LatexCommand \index{double precision}
+\begin_inset LatexCommand index
+name "double precision"
 
 \end_inset
 
  numbers in the metre-kilogram-second (MKS)
-\begin_inset LatexCommand \index{MKS}
+\begin_inset LatexCommand index
+name "MKS"
 
 \end_inset
 
@@ -881,7 +946,8 @@ We store all real values as double precision
 
 \bar under
 Dimensionality
-\begin_inset LatexCommand \index{dimensionality}
+\begin_inset LatexCommand index
+name "dimensionality"
 
 \end_inset
 
@@ -898,14 +964,16 @@ units
 \series default
  such as ft/s.
  ASCEND takes care of mapping between units
-\begin_inset LatexCommand \index{units}
+\begin_inset LatexCommand index
+name "units"
 
 \end_inset
 
  and dimensions.
  A value without units (this includes integer values) is taken to be dimensionle
 ss
-\begin_inset LatexCommand \index{dimensionless}
+\begin_inset LatexCommand index
+name "dimensionless"
 
 \end_inset
 
@@ -923,12 +991,14 @@ definition; typical units
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 L
-\begin_inset LatexCommand \index{L, length dimension}
+\begin_inset LatexCommand index
+name "L, length dimension"
 
 \end_inset
 
  length
-\begin_inset LatexCommand \index{length}
+\begin_inset LatexCommand index
+name "length"
 
 \end_inset
 
@@ -938,12 +1008,14 @@ L
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 M
-\begin_inset LatexCommand \index{M, mass dimension}
+\begin_inset LatexCommand index
+name "M, mass dimension"
 
 \end_inset
 
  mass
-\begin_inset LatexCommand \index{mass}
+\begin_inset LatexCommand index
+name "mass"
 
 \end_inset
 
@@ -953,12 +1025,14 @@ M
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 T
-\begin_inset LatexCommand \index{T, time dimension}
+\begin_inset LatexCommand index
+name "T, time dimension"
 
 \end_inset
 
  time
-\begin_inset LatexCommand \index{time}
+\begin_inset LatexCommand index
+name "time"
 
 \end_inset
 
@@ -968,12 +1042,14 @@ T
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 E
-\begin_inset LatexCommand \index{E, electric current dimension}
+\begin_inset LatexCommand index
+name "E, electric current dimension"
 
 \end_inset
 
  electric current
-\begin_inset LatexCommand \index{electric current}
+\begin_inset LatexCommand index
+name "electric current"
 
 \end_inset
 
@@ -983,12 +1059,14 @@ E
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 Q
-\begin_inset LatexCommand \index{Q, quantity dimension}
+\begin_inset LatexCommand index
+name "Q, quantity dimension"
 
 \end_inset
 
  quantity
-\begin_inset LatexCommand \index{quantity}
+\begin_inset LatexCommand index
+name "quantity"
 
 \end_inset
 
@@ -998,12 +1076,14 @@ Q
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 TMP
-\begin_inset LatexCommand \index{TMP, temperature dimension}
+\begin_inset LatexCommand index
+name "TMP, temperature dimension"
 
 \end_inset
 
  temperature
-\begin_inset LatexCommand \index{temperature}
+\begin_inset LatexCommand index
+name "temperature"
 
 \end_inset
 
@@ -1013,12 +1093,14 @@ TMP
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 LUM
-\begin_inset LatexCommand \index{LUM, luminous intensity dimension}
+\begin_inset LatexCommand index
+name "LUM, luminous intensity dimension"
 
 \end_inset
 
  luminous intensity
-\begin_inset LatexCommand \index{luminous intensity}
+\begin_inset LatexCommand index
+name "luminous intensity"
 
 \end_inset
 
@@ -1028,12 +1110,14 @@ LUM
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 P
-\begin_inset LatexCommand \index{P, phase angle dimension}
+\begin_inset LatexCommand index
+name "P, phase angle dimension"
 
 \end_inset
 
  plane angle
-\begin_inset LatexCommand \index{plane angle}
+\begin_inset LatexCommand index
+name "plane angle"
 
 \end_inset
 
@@ -1043,12 +1127,14 @@ P
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 S
-\begin_inset LatexCommand \index{S, solid angle dimension}
+\begin_inset LatexCommand index
+name "S, solid angle dimension"
 
 \end_inset
 
  solid angle
-\begin_inset LatexCommand \index{solid angle}
+\begin_inset LatexCommand index
+name "solid angle"
 
 \end_inset
 
@@ -1058,12 +1144,14 @@ S
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 C
-\begin_inset LatexCommand \index{C, currency dimension}
+\begin_inset LatexCommand index
+name "C, currency dimension"
 
 \end_inset
 
  currency
-\begin_inset LatexCommand \index{currency}
+\begin_inset LatexCommand index
+name "currency"
 
 \end_inset
 
@@ -1121,7 +1209,8 @@ although we do seem them occasionally...
 \begin_layout Standard
 If the dimensionality for a real value is undefined, then ASCEND gives it
  a wildcard dimensionality
-\begin_inset LatexCommand \index{wild card dimensionality}
+\begin_inset LatexCommand index
+name "wild card dimensionality"
 
 \end_inset
 
@@ -1156,7 +1245,8 @@ of\InsetSpace ~
 a\InsetSpace ~
 dimensionally\InsetSpace ~
 consistent
-\begin_inset LatexCommand \index{dimensionally consistent}
+\begin_inset LatexCommand index
+name "dimensionally consistent"
 
 \end_inset
 
@@ -1201,7 +1291,8 @@ Unit\InsetSpace ~
 expression
 \bar default
  A unit expression
-\begin_inset LatexCommand \index{unit expression}
+\begin_inset LatexCommand index
+name "unit expression"
 
 \end_inset
 
@@ -1270,7 +1361,8 @@ R :== 1{GAS_C}
 Units
 \bar default
 
-\begin_inset LatexCommand \index{units}
+\begin_inset LatexCommand index
+name "units"
 
 \end_inset
 
@@ -1352,24 +1444,28 @@ Symbol\InsetSpace ~
 Value
 \bar default
 
-\begin_inset LatexCommand \index{value, symbol}
+\begin_inset LatexCommand index
+name "value, symbol"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{symbol value}
+\begin_inset LatexCommand index
+name "symbol value"
 
 \end_inset
 
  The format for a symbol is that of an arbitrary character string enclosed
  between two single quotes.
  There is no way to embed a single quote
-\begin_inset LatexCommand \index{'}
+\begin_inset LatexCommand index
+name "'"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{single quote}
+\begin_inset LatexCommand index
+name "single quote"
 
 \end_inset
 
@@ -1403,7 +1499,7 @@ water (no single quotes given)
 \end_layout
 
 \begin_layout LyX-Code
-i cant do this (no embedded quotes)
+'i can't do this' (no embedded quotes)
 \end_layout
 
 \begin_layout Standard
@@ -1417,12 +1513,14 @@ There is an arbitrary upper limit to the number of characters in a symbol
 \labelwidthstring 00000.00000.00000.000
 Sets\InsetSpace ~
 values
-\begin_inset LatexCommand \index{values, set}
+\begin_inset LatexCommand index
+name "values, set"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{set values}
+\begin_inset LatexCommand index
+name "set values"
 
 \end_inset
 
@@ -1474,7 +1572,8 @@ symbol_constant
 More\InsetSpace ~
 about\InsetSpace ~
 sets
-\begin_inset LatexCommand \index{sets}
+\begin_inset LatexCommand index
+name "sets"
 
 \end_inset
 
@@ -1482,7 +1581,8 @@ sets
 in\InsetSpace ~
 Section\InsetSpace ~
 
-\begin_inset LatexCommand \vref{sub:x.2.2Sets}
+\begin_inset LatexCommand vref
+reference "sub:x.2.2Sets"
 
 \end_inset
 
@@ -1524,12 +1624,14 @@ n_stages
 \family default
  in the fourth set is ignored.
  The fifth set is the empty set
-\begin_inset LatexCommand \index{empty set}
+\begin_inset LatexCommand index
+name "empty set"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{set, empty}
+\begin_inset LatexCommand index
+name "set, empty"
 
 \end_inset
 
@@ -1541,7 +1643,8 @@ We use the term set in an almost pure mathematical sense.
  The elements have no order.
  One can only ask two things of a set: (1) if an element is a member of
  it and (2) its cardinality
-\begin_inset LatexCommand \index{cardinality}
+\begin_inset LatexCommand index
+name "cardinality"
 
 \end_inset
 
@@ -1550,7 +1653,8 @@ We use the term set in an almost pure mathematical sense.
 CARD
 \family default
 
-\begin_inset LatexCommand \index{CARD}
+\begin_inset LatexCommand index
+name "CARD"
 
 \end_inset
 
@@ -1585,7 +1689,8 @@ unordered.
 Arrays
 \bar default
 
-\begin_inset LatexCommand \index{arrays}
+\begin_inset LatexCommand index
+name "arrays"
 
 \end_inset
 
@@ -1665,7 +1770,8 @@ n_stages
 
 \begin_layout Standard
 There can be any number of subscripts
-\begin_inset LatexCommand \index{subscripts}
+\begin_inset LatexCommand index
+name "subscripts"
 
 \end_inset
 
@@ -1673,12 +1779,14 @@ There can be any number of subscripts
  We point out, however, that in virtually every application of arrays requiring
  more than two subscripts, there is usually a some underlying concept that
  is much better modeled as an object than as part of a deeply subscripted
-\begin_inset LatexCommand \index{subscripted, deeply}
+\begin_inset LatexCommand index
+name "subscripted, deeply"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{deeply subscripted}
+\begin_inset LatexCommand index
+name "deeply subscripted"
 
 \end_inset
 
@@ -1698,17 +1806,20 @@ be\InsetSpace ~
 jagged
 \bar default
 
-\begin_inset LatexCommand \label{lyx:Arrays-can-be}
+\begin_inset LatexCommand label
+name "lyx:Arrays-can-be"
 
 \end_inset
 
  Arrays can be sparse
-\begin_inset LatexCommand \index{sparse}
+\begin_inset LatexCommand index
+name "sparse"
 
 \end_inset
 
  or jagged
-\begin_inset LatexCommand \index{jagged}
+\begin_inset LatexCommand index
+name "jagged"
 
 \end_inset
 
@@ -1831,7 +1942,8 @@ a[1..2]
 No\InsetSpace ~
 contiguous\InsetSpace ~
 storage
-\begin_inset LatexCommand \index{contiguous storage, no}
+\begin_inset LatexCommand index
+name "contiguous storage, no"
 
 \end_inset
 
@@ -1842,33 +1954,39 @@ storage
 \begin_layout Standard
 Just in case you still have not caught on, ASCEND arrays are not blocks
  of memory such as are seen in low-level languages like C
-\begin_inset LatexCommand \index{C, computer language}
+\begin_inset LatexCommand index
+name "C, computer language"
 
 \end_inset
 
 , FORTRAN
-\begin_inset LatexCommand \index{FORTRAN}
+\begin_inset LatexCommand index
+name "FORTRAN"
 
 \end_inset
 
 , and Matlab
-\begin_inset LatexCommand \index{Matlab}
+\begin_inset LatexCommand index
+name "Matlab"
 
 \end_inset
 
 .
  The modeling language does not provide things like MatMult
-\begin_inset LatexCommand \index{MatMult}
+\begin_inset LatexCommand index
+name "MatMult"
 
 \end_inset
 
 , Transpose
-\begin_inset LatexCommand \index{Transpose}
+\begin_inset LatexCommand index
+name "Transpose"
 
 \end_inset
 
 , and Inverse
-\begin_inset LatexCommand \index{Inverse}
+\begin_inset LatexCommand index
+name "Inverse"
 
 \end_inset
 
@@ -1884,7 +2002,8 @@ Just in case you still have not caught on, ASCEND arrays are not blocks
 \labelwidthstring 00000.00000.00000.000
 Index\InsetSpace ~
 variable
-\begin_inset LatexCommand \index{index variable}
+\begin_inset LatexCommand index
+name "index variable"
 
 \end_inset
 
@@ -1919,7 +2038,8 @@ In this example i implicitly is of the same type as the values in the set
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 Label
-\begin_inset LatexCommand \index{label}
+\begin_inset LatexCommand index
+name "label"
 
 \end_inset
 
@@ -2004,7 +2124,8 @@ for the unlabeled 14th relation in the mixture definition.
 Lists
 \bar default
 
-\begin_inset LatexCommand \index{lists}
+\begin_inset LatexCommand index
+name "lists"
 
 \end_inset
 
@@ -2037,12 +2158,14 @@ stage[1..n_stages]
 \bar under
 Ordered\InsetSpace ~
 lists
-\begin_inset LatexCommand \index{lists, ordered}
+\begin_inset LatexCommand index
+name "lists, ordered"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{ordered lists}
+\begin_inset LatexCommand index
+name "ordered lists"
 
 \end_inset
 
@@ -2066,7 +2189,8 @@ Basic Concepts
 
 \bar under
 Instances
-\begin_inset LatexCommand \index{instances}
+\begin_inset LatexCommand index
+name "instances"
 
 \end_inset
 
@@ -2075,7 +2199,8 @@ and\InsetSpace ~
 types
 \bar default
 
-\begin_inset LatexCommand \index{types}
+\begin_inset LatexCommand index
+name "types"
 
 \end_inset
 
@@ -2122,12 +2247,14 @@ Implicit\InsetSpace ~
 types
 \bar default
 
-\begin_inset LatexCommand \index{types, implicit}
+\begin_inset LatexCommand index
+name "types, implicit"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{types, implicit}
+\begin_inset LatexCommand index
+name "types, implicit"
 
 \end_inset
 
@@ -2147,12 +2274,14 @@ status collapsed
 anonymous
 \emph default
 
-\begin_inset LatexCommand \index{type, anonymous}
+\begin_inset LatexCommand index
+name "type, anonymous"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{anonymous type}
+\begin_inset LatexCommand index
+name "anonymous type"
 
 \end_inset
 
@@ -2203,7 +2332,8 @@ j
 Instances which are either formally or implicitly type incompatible cannot
  be merged.
  This will be discussed further in Section 
-\begin_inset LatexCommand \vref{sec:x.3Declarative-statements}
+\begin_inset LatexCommand vref
+reference "sec:x.3Declarative-statements"
 
 \end_inset
 
@@ -2214,7 +2344,8 @@ Instances which are either formally or implicitly type incompatible cannot
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 Parsing
-\begin_inset LatexCommand \index{parsing}
+\begin_inset LatexCommand index
+name "parsing"
 
 \end_inset
 
@@ -2309,17 +2440,20 @@ input[2].H
 Instantiation
 \bar default
 
-\begin_inset LatexCommand \index{instantiation}
+\begin_inset LatexCommand index
+name "instantiation"
 
 \end_inset
 
  Creating an simulation based on a type definition is a multi-phase
-\begin_inset LatexCommand \index{multi-phase}
+\begin_inset LatexCommand index
+name "multi-phase"
 
 \end_inset
 
  process called compiling
-\begin_inset LatexCommand \index{compiling}
+\begin_inset LatexCommand index
+name "compiling"
 
 \end_inset
 
@@ -2327,7 +2461,8 @@ Instantiation
  When an instantiation cannot be completed because some structural parameter
  (a symbol_constant, real_constant, boolean_constant, integer_constant,
  or set) does not have a value there will be PENDING
-\begin_inset LatexCommand \index{PENDING}
+\begin_inset LatexCommand index
+name "PENDING"
 
 \end_inset
 
@@ -2338,7 +2473,8 @@ Instantiation
 \begin_deeper
 \begin_layout Standard
 In phase
-\begin_inset LatexCommand \index{phases, compiler}
+\begin_inset LatexCommand index
+name "phases, compiler"
 
 \end_inset
 
@@ -2398,7 +2534,8 @@ if and only if
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 default_self
-\begin_inset LatexCommand \index{default\_self}
+\begin_inset LatexCommand index
+name "default\\_self"
 
 \end_inset
 
@@ -2430,7 +2567,8 @@ Structure building or modifying statements that refer to model parts which
 
 \begin_layout Chapter
 Data Type Declarations
-\begin_inset LatexCommand \index{data type declarations}
+\begin_inset LatexCommand index
+name "data type declarations"
 
 \end_inset
 
@@ -2439,7 +2577,8 @@ Data Type Declarations
 
 \begin_layout Standard
 In the spectrum of OO languages, ASCEND is best considered as being class-based
-\begin_inset LatexCommand \index{class-based}
+\begin_inset LatexCommand index
+name "class-based"
 
 \end_inset
 
@@ -2463,7 +2602,8 @@ instances
 \bar under
 Type\InsetSpace ~
 qualifiers
-\begin_inset LatexCommand \index{type qualifiers}
+\begin_inset LatexCommand index
+name "type qualifiers"
 
 \end_inset
 
@@ -2477,7 +2617,8 @@ qualifiers
 UNIVERSAL
 \family default
 
-\begin_inset LatexCommand \index{UNIVERSAL}
+\begin_inset LatexCommand index
+name "UNIVERSAL"
 
 \end_inset
 
@@ -2591,7 +2732,8 @@ Models
 MODEL
 \family default
 
-\begin_inset LatexCommand \index{MODEL}
+\begin_inset LatexCommand index
+name "MODEL"
 
 \end_inset
 
@@ -2600,12 +2742,14 @@ MODEL
  Models are essentially containers for variables and relations.
  We will explain the various statements that can be made within models in
  Section 
-\begin_inset LatexCommand \vref{sec:x.3Declarative-statements}
+\begin_inset LatexCommand vref
+reference "sec:x.3Declarative-statements"
 
 \end_inset
 
  and Section 
-\begin_inset LatexCommand \vref{sec:x.4Procedural-statements}
+\begin_inset LatexCommand vref
+reference "sec:x.4Procedural-statements"
 
 \end_inset
 
@@ -2615,7 +2759,8 @@ MODEL
 \begin_layout Standard
 Simple\InsetSpace ~
 models
-\begin_inset LatexCommand \index{models, simple}
+\begin_inset LatexCommand index
+name "models, simple"
 
 \end_inset
 
@@ -2688,7 +2833,8 @@ Parameterized\InsetSpace ~
 Models
 \bar default
 
-\begin_inset LatexCommand \index{models, parameterized}
+\begin_inset LatexCommand index
+name "models, parameterized"
 
 \end_inset
 
@@ -2782,9 +2928,9 @@ END flowsheet;
 
 \begin_layout Standard
 In this example, the column model takes the first argument, ntrays, by reference.
- That is,
+ That is, 
 \family typewriter
- ct.ntrays
+ct.ntrays
 \family default
  is an alias for the flowsheet instance 
 \family typewriter
@@ -2830,7 +2976,8 @@ symbol_constant
 \begin_layout Standard
 The use of parameters in ASCEND modeling requires some thought, and we will
  present that set of thoughts in Section 
-\begin_inset LatexCommand \vref{sec:x.5Parameterized-models}
+\begin_inset LatexCommand vref
+reference "sec:x.5Parameterized-models"
 
 \end_inset
 
@@ -2843,12 +2990,14 @@ The use of parameters in ASCEND modeling requires some thought, and we will
 
 \begin_layout Section
 Sets
-\begin_inset LatexCommand \index{sets}
+\begin_inset LatexCommand index
+name "sets"
 
 \end_inset
 
 
-\begin_inset LatexCommand \label{sub:x.2.2Sets}
+\begin_inset LatexCommand label
+name "sub:x.2.2Sets"
 
 \end_inset
 
@@ -2857,7 +3006,8 @@ Sets
 
 \begin_layout Standard
 Arrays in ASCEND, as already discussed in Section 
-\begin_inset LatexCommand \vref{sub:x.1.2Basic-Elements}
+\begin_inset LatexCommand vref
+reference "sub:x.1.2Basic-Elements"
 
 \end_inset
 
@@ -2903,7 +3053,8 @@ my_symbol_set IS_A set OF symbol_constant;
 :==
 \family default
 
-\begin_inset LatexCommand \index{:==}
+\begin_inset LatexCommand index
+name ":=="
 
 \end_inset
 
@@ -2935,7 +3086,8 @@ Operations
 UNION
 \family default
 
-\begin_inset LatexCommand \index{UNION}
+\begin_inset LatexCommand index
+name "UNION"
 
 \end_inset
 
@@ -2962,7 +3114,8 @@ UNION
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 +
-\begin_inset LatexCommand \index{+, sets}
+\begin_inset LatexCommand index
+name "+, sets"
 
 \end_inset
 
@@ -3026,7 +3179,8 @@ UNION[A, B]
 INTERSECTION
 \family default
 
-\begin_inset LatexCommand \index{INTERSECTION}
+\begin_inset LatexCommand index
+name "INTERSECTION"
 
 \end_inset
 
@@ -3038,7 +3192,8 @@ INTERSECTION
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 *
-\begin_inset LatexCommand \index{*, sets}
+\begin_inset LatexCommand index
+name "*, sets"
 
 \end_inset
 
@@ -3093,7 +3248,8 @@ not
 \labelwidthstring 00000.00000.00000.000
 Set\InsetSpace ~
 difference
-\begin_inset LatexCommand \index{set difference}
+\begin_inset LatexCommand index
+name "set difference"
 
 \end_inset
 
@@ -3107,16 +3263,17 @@ difference
 \begin_layout LyX-Code
 
 \family typewriter
-first_set 
+first_set
 \family default
--
-\begin_inset LatexCommand \index{-, sets}
+ -
+\begin_inset LatexCommand index
+name "-, sets"
 
 \end_inset
 
-
+ 
 \family typewriter
- second_set
+second_set
 \end_layout
 
 \begin_layout Standard
@@ -3155,12 +3312,14 @@ B - A
 CARD
 \family default
 
-\begin_inset LatexCommand \index{CARD}
+\begin_inset LatexCommand index
+name "CARD"
 
 \end_inset
 
 [set] Cardinality
-\begin_inset LatexCommand \index{cardinality}
+\begin_inset LatexCommand index
+name "cardinality"
 
 \end_inset
 
@@ -3175,7 +3334,8 @@ CARD
 CHOICE
 \family default
 
-\begin_inset LatexCommand \index{CHOICE}
+\begin_inset LatexCommand index
+name "CHOICE"
 
 \end_inset
 
@@ -3232,7 +3392,8 @@ A_less_one :== A - [CHOICE[A]];
 IN
 \family default
 
-\begin_inset LatexCommand \index{IN}
+\begin_inset LatexCommand index
+name "IN"
 
 \end_inset
 
@@ -3289,7 +3450,8 @@ fix this reference
 SUCH_THAT
 \family default
 
-\begin_inset LatexCommand \index{SUCH\_THAT}
+\begin_inset LatexCommand index
+name "SUCH\\_THAT"
 
 \end_inset
 
@@ -3437,7 +3599,8 @@ END set_example;
 |
 \family default
 
-\begin_inset LatexCommand \index{|}
+\begin_inset LatexCommand index
+name "|"
 
 \end_inset
 
@@ -3509,7 +3672,8 @@ gen_eqn[i]
 
 \begin_layout Section
 Constants
-\begin_inset LatexCommand \index{constants}
+\begin_inset LatexCommand index
+name "constants"
 
 \end_inset
 
@@ -3552,7 +3716,8 @@ Sets could be considered constant because they are assigned only once, however
 real_constant
 \family default
 
-\begin_inset LatexCommand \index{real\_constant}
+\begin_inset LatexCommand index
+name "real\\_constant"
 
 \end_inset
 
@@ -3596,7 +3761,8 @@ CONSTANT hydrogen_weight
 integer_constant
 \family default
 
-\begin_inset LatexCommand \index{integer\_constant}
+\begin_inset LatexCommand index
+name "integer\\_constant"
 
 \end_inset
 
@@ -3631,7 +3797,8 @@ tray[1..n_trays] IS_A vl_equilibrium_tray;
 symbol_constant
 \family default
 
-\begin_inset LatexCommand \index{symbol\_constant}
+\begin_inset LatexCommand index
+name "symbol\\_constant"
 
 \end_inset
 
@@ -3646,7 +3813,8 @@ symbol_constant
 boolean_constant
 \family default
 
-\begin_inset LatexCommand \index{boolean\_constant}
+\begin_inset LatexCommand index
+name "boolean\\_constant"
 
 \end_inset
 
@@ -3662,7 +3830,8 @@ Setting\InsetSpace ~
 constants
 \bar default
 
-\begin_inset LatexCommand \index{constants, setting}
+\begin_inset LatexCommand index
+name "constants, setting"
 
 \end_inset
 
@@ -3672,7 +3841,8 @@ constants
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 :==
-\begin_inset LatexCommand \index{:==}
+\begin_inset LatexCommand index
+name ":=="
 
 \end_inset
 
@@ -3705,7 +3875,8 @@ Here it is required that the one or more items in the LHS be of the same
 
 \begin_layout Section
 Variables
-\begin_inset LatexCommand \index{variables}
+\begin_inset LatexCommand index
+name "variables"
 
 \end_inset
 
@@ -3743,7 +3914,8 @@ d).
 ATOM
 \family default
 
-\begin_inset LatexCommand \index{ATOM}
+\begin_inset LatexCommand index
+name "ATOM"
 
 \end_inset
 
@@ -3762,27 +3934,27 @@ variable_type
 \end_layout
 
 \begin_layout LyX-Code
-   «DIMENSION 
+   Â«DIMENSION 
 \emph on
 dimension_expression
 \emph default
-»
+Â»
 \end_layout
 
 \begin_layout LyX-Code
-   «DEFAULT 
+   Â«DEFAULT 
 \emph on
 value
 \emph default
-»; (* note the ; *)
+Â»; (* note the ; *)
 \end_layout
 
 \begin_layout LyX-Code
-   «
+   Â«
 \emph on
 initial attribute assignment
 \emph default
-;»
+;Â»
 \end_layout
 
 \begin_layout LyX-Code
@@ -3801,7 +3973,8 @@ atom_type_name
 DEFAULT
 \family default
 
-\begin_inset LatexCommand \index{DEFAULT}
+\begin_inset LatexCommand index
+name "DEFAULT"
 
 \end_inset
 
@@ -3811,7 +3984,8 @@ DEFAULT
 DIMENSION
 \family default
 
-\begin_inset LatexCommand \index{DIMENSION}
+\begin_inset LatexCommand index
+name "DIMENSION"
 
 \end_inset
 
@@ -3822,7 +3996,8 @@ and\InsetSpace ~
 DIMENSIONLESS
 \family default
 
-\begin_inset LatexCommand \index{DIMENSIONLESS}
+\begin_inset LatexCommand index
+name "DIMENSIONLESS"
 
 \end_inset
 
@@ -3854,7 +4029,8 @@ DIMENSION
 solver_var
 \family default
 
-\begin_inset LatexCommand \index{solver\_var}
+\begin_inset LatexCommand index
+name "solver\\_var"
 
 \end_inset
 
@@ -3863,7 +4039,8 @@ solver_var
 ATOM
 \family default
  and we will say much more about it in Section 
-\begin_inset LatexCommand \vref{sub:x.6.1Variables-for-solvers}
+\begin_inset LatexCommand vref
+reference "sub:x.6.1Variables-for-solvers"
 
 \end_inset
 
@@ -3873,7 +4050,8 @@ ATOM
 \begin_deeper
 \begin_layout LyX-Code
 ATOM solver_var REFINES real DEFAULT 0.5 {?
-\begin_inset LatexCommand \index{?}
+\begin_inset LatexCommand index
+name "?"
 
 \end_inset
 
@@ -3922,22 +4100,25 @@ The default field is also optional.
  with units which are compatible with this dimensionality.
  In the solver_var example, we see a DEFAULT value of 0.5 with the unspecified
  unit
-\begin_inset LatexCommand \index{unit, unspecified}
+\begin_inset LatexCommand index
+name "unit, unspecified"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{unspecified unit}
+\begin_inset LatexCommand index
+name "unspecified unit"
 
 \end_inset
 
  {?
-\begin_inset LatexCommand \index{}
+\begin_inset LatexCommand index
 
 \end_inset
 
 } which leaves the dimensionality wild
-\begin_inset LatexCommand \index{wild dimensionality}
+\begin_inset LatexCommand index
+name "wild dimensionality"
 
 \end_inset
 
@@ -3948,7 +4129,8 @@ The default field is also optional.
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 real
-\begin_inset LatexCommand \index{real}
+\begin_inset LatexCommand index
+name "real"
 
 \end_inset
 
@@ -3966,7 +4148,8 @@ real
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 integer
-\begin_inset LatexCommand \index{integer}
+\begin_inset LatexCommand index
+name "integer"
 
 \end_inset
 
@@ -3978,7 +4161,8 @@ integer
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 boolean
-\begin_inset LatexCommand \index{boolean}
+\begin_inset LatexCommand index
+name "boolean"
 
 \end_inset
 
@@ -3987,7 +4171,8 @@ boolean
  They can also be used procedurally and as variables in logical programming
  models, subject to the logical solver tools semantics.
  (Compare solver_boolean and boolean_var in Section 
-\begin_inset LatexCommand \vref{sec:x.6Miscellany}
+\begin_inset LatexCommand vref
+reference "sec:x.6Miscellany"
 
 \end_inset
 
@@ -3997,7 +4182,8 @@ boolean
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 symbol
-\begin_inset LatexCommand \index{symbol}
+\begin_inset LatexCommand index
+name "symbol"
 
 \end_inset
 
@@ -4013,7 +4199,8 @@ Setting\InsetSpace ~
 variables
 \bar default
 
-\begin_inset LatexCommand \index{variables, setting}
+\begin_inset LatexCommand index
+name "variables, setting"
 
 \end_inset
 
@@ -4023,12 +4210,14 @@ variables
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 :=
-\begin_inset LatexCommand \index{:=}
+\begin_inset LatexCommand index
+name ":="
 
 \end_inset
 
  Procedural equals
-\begin_inset LatexCommand \index{equals, procedural}
+\begin_inset LatexCommand index
+name "equals, procedural"
 
 \end_inset
 
@@ -4086,7 +4275,8 @@ Tabular\InsetSpace ~
 assignments
 \bar default
 
-\begin_inset LatexCommand \index{assignments, tabular}
+\begin_inset LatexCommand index
+name "assignments, tabular"
 
 \end_inset
 
@@ -4246,7 +4436,8 @@ For sparse arrays of variables or constants, the COLUMNS and (possibly)
 
 \begin_layout Section
 Relations
-\begin_inset LatexCommand \index{relations}
+\begin_inset LatexCommand index
+name "relations"
 
 \end_inset
 
@@ -4260,12 +4451,14 @@ Relations
 \bar under
 Mathematical\InsetSpace ~
 expression
-\begin_inset LatexCommand \index{mathematical expression}
+\begin_inset LatexCommand index
+name "mathematical expression"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{expression, math}
+\begin_inset LatexCommand index
+name "expression, math"
 
 \end_inset
 
@@ -4299,9 +4492,9 @@ FOR/CREATE
 \family default
  and 
 \family sans
-FOR/DO 
+FOR/DO
 \family default
-statements below.) An example is:
+ statements below.) An example is:
 \end_layout
 
 \begin_layout LyX-Code
@@ -4317,12 +4510,14 @@ Numerical\InsetSpace ~
 relations
 \bar default
 
-\begin_inset LatexCommand \index{relations, numerical}
+\begin_inset LatexCommand index
+name "relations, numerical"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{numerical relations}
+\begin_inset LatexCommand index
+name "numerical relations"
 
 \end_inset
 
@@ -4375,7 +4570,8 @@ MINIMIZE
  RHS and LHS must be one or more variables, constants, and operators in
  a normal algebraic expression.
  The operators allowed are defined below and in Section 
-\begin_inset LatexCommand \vref{sub:x.6.3Single-operand-real}
+\begin_inset LatexCommand vref
+reference "sub:x.6.3Single-operand-real"
 
 \end_inset
 
@@ -4396,12 +4592,14 @@ FOR/CREATE
 \bar under
 Relational\InsetSpace ~
 operators
-\begin_inset LatexCommand \index{operators, relational}
+\begin_inset LatexCommand index
+name "operators, relational"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{relational operators}
+\begin_inset LatexCommand index
+name "relational operators"
 
 \end_inset
 
@@ -4411,37 +4609,43 @@ operators
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 =
-\begin_inset LatexCommand \index{=}
+\begin_inset LatexCommand index
+name "="
 
 \end_inset
 
 ,\InsetSpace ~
 >=
-\begin_inset LatexCommand \index{ >=}
+\begin_inset LatexCommand index
+name " >="
 
 \end_inset
 
 ,\InsetSpace ~
 <=
-\begin_inset LatexCommand \index{<=}
+\begin_inset LatexCommand index
+name "<="
 
 \end_inset
 
 ,\InsetSpace ~
 <
-\begin_inset LatexCommand \index{<}
+\begin_inset LatexCommand index
+name "<"
 
 \end_inset
 
 ,\InsetSpace ~
 >
-\begin_inset LatexCommand \index{>}
+\begin_inset LatexCommand index
+name ">"
 
 \end_inset
 
 ,\InsetSpace ~
 <>
-\begin_inset LatexCommand \index{<>}
+\begin_inset LatexCommand index
+name "<>"
 
 \end_inset
 
@@ -4469,7 +4673,8 @@ Equations must be dimensionally correct.
 MAXIMIZE
 \family default
 
-\begin_inset LatexCommand \index{MAXIMIZE}
+\begin_inset LatexCommand index
+name "MAXIMIZE"
 
 \end_inset
 
@@ -4479,7 +4684,8 @@ MAXIMIZE
 MINIMIZE
 \family default
 
-\begin_inset LatexCommand \index{MINIMIZE}
+\begin_inset LatexCommand index
+name "MINIMIZE"
 
 \end_inset
 
@@ -4499,12 +4705,14 @@ Objective function indicators.
 \bar under
 Binary\InsetSpace ~
 Operators
-\begin_inset LatexCommand \index{operators, binary}
+\begin_inset LatexCommand index
+name "operators, binary"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{binary operators}
+\begin_inset LatexCommand index
+name "binary operators"
 
 \end_inset
 
@@ -4517,7 +4725,8 @@ Operators
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 +
-\begin_inset LatexCommand \index{+, binary math}
+\begin_inset LatexCommand index
+name "+, binary math"
 
 \end_inset
 
@@ -4528,7 +4737,8 @@ Operators
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 -
-\begin_inset LatexCommand \index{-, binary math}
+\begin_inset LatexCommand index
+name "-, binary math"
 
 \end_inset
 
@@ -4539,7 +4749,8 @@ Operators
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 *
-\begin_inset LatexCommand \index{*, binary math}
+\begin_inset LatexCommand index
+name "*, binary math"
 
 \end_inset
 
@@ -4550,7 +4761,8 @@ Operators
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 /
-\begin_inset LatexCommand \index{/}
+\begin_inset LatexCommand index
+name "/"
 
 \end_inset
 
@@ -4562,7 +4774,8 @@ Operators
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ^ Power
-\begin_inset LatexCommand \index{power}
+\begin_inset LatexCommand index
+name "power"
 
 \end_inset
 
@@ -4578,19 +4791,22 @@ Operators
 \bar under
 Unary\InsetSpace ~
 Operators
-\begin_inset LatexCommand \index{operators, unary}
+\begin_inset LatexCommand index
+name "operators, unary"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{unary operators}
+\begin_inset LatexCommand index
+name "unary operators"
 
 \end_inset
 
 :
 \bar default
  -
-\begin_inset LatexCommand \index{-, unary}
+\begin_inset LatexCommand index
+name "-, unary"
 
 \end_inset
 
@@ -4602,7 +4818,8 @@ Operators
 - Unary minus.
  Numeric negation.
  There is no unary +
-\begin_inset LatexCommand \index{+, math unary}
+\begin_inset LatexCommand index
+name "+, math unary"
 
 \end_inset
 
@@ -4614,7 +4831,8 @@ Operators
 
 \family typewriter
 ordered_function
-\begin_inset LatexCommand \index{ordered\_function}
+\begin_inset LatexCommand index
+name "ordered\\_function"
 
 \end_inset
 
@@ -4622,7 +4840,8 @@ ordered_function
 \family default
  unary real valued functions.
  The unary real functions we support are given in section Section 
-\begin_inset LatexCommand \vref{sub:x.6.3Single-operand-real}
+\begin_inset LatexCommand vref
+reference "sub:x.6.3Single-operand-real"
 
 \end_inset
 
@@ -4647,7 +4866,8 @@ terms:
 SUM
 \family default
 
-\begin_inset LatexCommand \index{SUM}
+\begin_inset LatexCommand index
+name "SUM"
 
 \end_inset
 
@@ -4757,7 +4977,8 @@ not
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 PROD
-\begin_inset LatexCommand \index{PROD}
+\begin_inset LatexCommand index
+name "PROD"
 
 \end_inset
 
@@ -4796,7 +5017,8 @@ Clarification required
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 MAX
-\begin_inset LatexCommand \index{MAX}
+\begin_inset LatexCommand index
+name "MAX"
 
 \end_inset
 
@@ -4807,7 +5029,8 @@ set] (* 4+ *) maximum value on list of arguments
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 MIN
-\begin_inset LatexCommand \index{MIN}
+\begin_inset LatexCommand index
+name "MIN"
 
 \end_inset
 
@@ -4822,7 +5045,8 @@ status open
 
 \begin_layout Section
 Derivatives
-\begin_inset LatexCommand \index{derivatives}
+\begin_inset LatexCommand index
+name "derivatives"
 
 \end_inset
 
@@ -4846,12 +5070,14 @@ Simply put, we would like to have general partial and full derivatives usable
 
 \begin_layout Section
 External relations
-\begin_inset LatexCommand \index{relations, external}
+\begin_inset LatexCommand index
+name "relations, external"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{external relations}
+\begin_inset LatexCommand index
+name "external relations"
 
 \end_inset
 
@@ -4861,7 +5087,8 @@ External relations
 \begin_layout Standard
 We cannot document these at the present time.
  Some details are available in Kirk Abbott's thesis 
-\begin_inset LatexCommand \cite{Abbott1996a}
+\begin_inset LatexCommand cite
+key "Abbott1996a"
 
 \end_inset
 
@@ -4872,12 +5099,14 @@ http://ascendwiki.cheme.cmu.edu/
 
 \begin_layout Section
 Conditional modelling
-\begin_inset LatexCommand \index{relations, conditional}
+\begin_inset LatexCommand index
+name "relations, conditional"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{conditional relations}
+\begin_inset LatexCommand index
+name "conditional relations"
 
 \end_inset
 
@@ -4897,9 +5126,9 @@ CONDITIONAL
 \end_layout
 
 \begin_layout LyX-Code
-
+ 
 \emph on
-   list_of_relation_statements
+  list_of_relation_statements
 \end_layout
 
 \begin_layout LyX-Code
@@ -4934,12 +5163,14 @@ Logical\InsetSpace ~
 expression
 \bar default
 
-\begin_inset LatexCommand \index{expression, logical}
+\begin_inset LatexCommand index
+name "expression, logical"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{logical expression}
+\begin_inset LatexCommand index
+name "logical expression"
 
 \end_inset
 
@@ -5033,7 +5264,8 @@ Logical relations are then made by putting together logical expressions
 NOTES
 \family default
 
-\begin_inset LatexCommand \index{NOTES}
+\begin_inset LatexCommand index
+name "NOTES"
 
 \end_inset
 
@@ -5352,17 +5584,20 @@ Experience has shown that even documentation embedded directly in models
 
 \begin_layout Chapter
 Declarative statements
-\begin_inset LatexCommand \index{statements, declarative}
+\begin_inset LatexCommand index
+name "statements, declarative"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{declarative statements}
+\begin_inset LatexCommand index
+name "declarative statements"
 
 \end_inset
 
 
-\begin_inset LatexCommand \label{sec:x.3Declarative-statements}
+\begin_inset LatexCommand label
+name "sec:x.3Declarative-statements"
 
 \end_inset
 
@@ -5397,7 +5632,8 @@ METHODS
 Statements
 \bar default
 
-\begin_inset LatexCommand \index{statements}
+\begin_inset LatexCommand index
+name "statements"
 
 \end_inset
 
@@ -5420,12 +5656,14 @@ Compound\InsetSpace ~
 statements
 \bar default
 
-\begin_inset LatexCommand \index{statements, compound}
+\begin_inset LatexCommand index
+name "statements, compound"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{compound statements}
+\begin_inset LatexCommand index
+name "compound statements"
 
 \end_inset
 
@@ -5500,12 +5738,14 @@ CASE
 statements
 \bar default
 
-\begin_inset LatexCommand \index{statements, CASE}
+\begin_inset LatexCommand index
+name "statements, CASE"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{CASE statements}
+\begin_inset LatexCommand index
+name "CASE statements"
 
 \end_inset
 
@@ -5540,12 +5780,14 @@ s which statements to compile based on discrete constants.
 \labelwidthstring 00000.00000.00000.000
 Type\InsetSpace ~
 declarations
-\begin_inset LatexCommand \index{declarations, type}
+\begin_inset LatexCommand index
+name "declarations, type"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{yype declarations}
+\begin_inset LatexCommand index
+name "yype declarations"
 
 \end_inset
 
@@ -5599,7 +5841,8 @@ Well start with an extremely brief synopsis of what each does and then give
 IS_A
 \family default
 
-\begin_inset LatexCommand \index{IS\_A}
+\begin_inset LatexCommand index
+name "IS\\_A"
 
 \end_inset
 
@@ -5620,7 +5863,8 @@ IS_A
 IS_REFINED_TO
 \family default
 
-\begin_inset LatexCommand \index{IS\_REFINED\_TO}
+\begin_inset LatexCommand index
+name "IS\\_REFINED\\_TO"
 
 \end_inset
 
@@ -5651,7 +5895,8 @@ IS_A
 ALIASES
 \family default
 
-\begin_inset LatexCommand \index{ALIASES}
+\begin_inset LatexCommand index
+name "ALIASES"
 
 \end_inset
 
@@ -5686,7 +5931,8 @@ ARE_THE_SAME
 ALIASES/IS_A
 \family default
 
-\begin_inset LatexCommand \index{ALIASES/IS\_A}
+\begin_inset LatexCommand index
+name "ALIASES/IS\\_A"
 
 \end_inset
 
@@ -5711,7 +5957,8 @@ Creates an array of alternate names for a list of existing instances with
 WILL_BE
 \family default
 
-\begin_inset LatexCommand \index{WILL\_BE}
+\begin_inset LatexCommand index
+name "WILL\\_BE"
 
 \end_inset
 
@@ -5733,7 +5980,8 @@ WILL_BE
 ARE_THE_SAME
 \family default
 
-\begin_inset LatexCommand \index{ARE\_THE\_SAME}
+\begin_inset LatexCommand index
+name "ARE\\_THE\\_SAME"
 
 \end_inset
 
@@ -5753,7 +6001,8 @@ ARE_THE_SAME
 WILL_BE_THE_SAME
 \family default
 
-\begin_inset LatexCommand \index{WILL\_BE\_THE\_SAME}
+\begin_inset LatexCommand index
+name "WILL\\_BE\\_THE\\_SAME"
 
 \end_inset
 
@@ -5776,7 +6025,8 @@ d.
 WILL_NOT_BE_THE_SAME
 \family default
 
-\begin_inset LatexCommand \index{WILL\_NOT\_BE\_THE\_SAME}
+\begin_inset LatexCommand index
+name "WILL\\_NOT\\_BE\\_THE\\_SAME"
 
 \end_inset
 
@@ -5807,7 +6057,8 @@ status open
 ARE_NOT_THE_SAME
 \family default
 
-\begin_inset LatexCommand \index{ARE\_NOT\_THE\_SAME}
+\begin_inset LatexCommand index
+name "ARE\\_NOT\\_THE\\_SAME"
 
 \end_inset
 
@@ -5834,12 +6085,14 @@ Cannot be merged.
 ARE_ALIKE
 \family default
 
-\begin_inset LatexCommand \index{ARE\_ALIKE}
+\begin_inset LatexCommand index
+name "ARE\\_ALIKE"
 
 \end_inset
 
  Refinement clique
-\begin_inset LatexCommand \index{clique}
+\begin_inset LatexCommand index
+name "clique"
 
 \end_inset
 
@@ -5858,7 +6111,8 @@ ARE_ALIKE
 FOR/CREATE
 \family default
 
-\begin_inset LatexCommand \index{FOR/CREATE}
+\begin_inset LatexCommand index
+name "FOR/CREATE"
 
 \end_inset
 
@@ -5873,12 +6127,14 @@ FOR/CREATE
 FOR/CHECK
 \family default
 
-\begin_inset LatexCommand \index{FOR/CHECK}
+\begin_inset LatexCommand index
+name "FOR/CHECK"
 
 \end_inset
 
  Indexed checking of the conditions (WHERE
-\begin_inset LatexCommand \index{WHERE}
+\begin_inset LatexCommand index
+name "WHERE"
 
 \end_inset
 
@@ -5892,7 +6148,8 @@ FOR/CHECK
 SELECT/CASE
 \family default
 
-\begin_inset LatexCommand \index{SELECT/CASE}
+\begin_inset LatexCommand index
+name "SELECT/CASE"
 
 \end_inset
 
@@ -5923,7 +6180,8 @@ SELECT
 CONDITIONAL
 \family default
 
-\begin_inset LatexCommand \index{CONDITIONAL}
+\begin_inset LatexCommand index
+name "CONDITIONAL"
 
 \end_inset
 
@@ -5954,7 +6212,8 @@ WHEN
 WHEN/CASE
 \family default
 
-\begin_inset LatexCommand \index{WHEN/CASE}
+\begin_inset LatexCommand index
+name "WHEN/CASE"
 
 \end_inset
 
@@ -5972,7 +6231,7 @@ Reminder: In the following detailed statement descriptions, we show keywords
  in capital letters.
  These words must appear in capital letters as shown in ASCEND statements.
  We show optional parts to a statement enclosed in double angle brackets
- (« ») and user supplied names in lower-case italic letters.
+ (Â« Â») and user supplied names in lower-case italic letters.
  (Remember that ASCEND treats the underscore (_) as a letter).
  The user may substitute any name desired for these names.
  We use names that describe the kind of name the user should use.
@@ -5990,7 +6249,8 @@ detail:
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 IS_A
-\begin_inset LatexCommand \index{IS\_A}
+\begin_inset LatexCommand index
+name "IS\\_A"
 
 \end_inset
 
@@ -6009,7 +6269,7 @@ model_name
 \end_layout
 
 \begin_layout LyX-Code
-   «(arguments_if_needed)»;
+   Â«(arguments_if_needed)Â»;
 \end_layout
 
 \begin_layout Standard
@@ -6036,7 +6296,8 @@ If a name is used twice in WILL_BE/IS_A/ALIASES statements of the same model,
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 IS_REFINED_TO
-\begin_inset LatexCommand \index{IS\_REFINED\_TO}
+\begin_inset LatexCommand index
+name "IS\\_REFINED\\_TO"
 
 \end_inset
 
@@ -6051,7 +6312,7 @@ type_name
 \end_layout
 
 \begin_layout LyX-Code
-   «(arguments_if_needed)»;
+   Â«(arguments_if_needed)Â»;
 \end_layout
 
 \begin_layout Standard
@@ -6090,7 +6351,8 @@ This reconstruction does not occur until the arguments to the type satisfy
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ALIASES
-\begin_inset LatexCommand \index{ALIASES}
+\begin_inset LatexCommand index
+name "ALIASES"
 
 \end_inset
 
@@ -6187,7 +6449,8 @@ The ALIASES RHS can be an element or portion of a larger array with the
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ALIASES/IS_A
-\begin_inset LatexCommand \index{ALIASES/IS\_A}
+\begin_inset LatexCommand index
+name "ALIASES/IS\\_A"
 
 \end_inset
 
@@ -6343,7 +6606,8 @@ If this explanation is unclear, just try it out.
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 WILL_BE
-\begin_inset LatexCommand \index{WILL\_BE}
+\begin_inset LatexCommand index
+name "WILL\\_BE"
 
 \end_inset
 
@@ -6385,7 +6649,8 @@ s.
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ARE_THE_SAME
-\begin_inset LatexCommand \index{ARE\_THE\_SAME}
+\begin_inset LatexCommand index
+name "ARE\\_THE\\_SAME"
 
 \end_inset
 
@@ -6416,9 +6681,18 @@ status open
 
 \end_layout
 
-\begin_layout Caption
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
 Diagram of the Model Type Hierarchy for A, B, C, D, and E Example
-\begin_inset LatexCommand \label{fig:HierarchyDiagram}
+\begin_inset LatexCommand label
+name "fig:HierarchyDiagram"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -6433,7 +6707,8 @@ Diagram of the Model Type Hierarchy for A, B, C, D, and E Example
 \begin_layout Standard
 All items on the list must have compatible types.
  For the example in Figure 
-\begin_inset LatexCommand \ref{fig:HierarchyDiagram}
+\begin_inset LatexCommand ref
+reference "fig:HierarchyDiagram"
 
 \end_inset
 
@@ -6575,7 +6850,8 @@ ARE_NOT_THE_SAME will be documented further when it is implemented.
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ARE_ALIKE
-\begin_inset LatexCommand \index{ARE\_ALIKE}
+\begin_inset LatexCommand index
+name "ARE\\_ALIKE"
 
 \end_inset
 
@@ -6667,7 +6943,8 @@ Finally, because ARE_ALIKE does not recursively put the parts of ARE_ALIKEd
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 FOR/CREATE
-\begin_inset LatexCommand \index{FOR/CREATE}
+\begin_inset LatexCommand index
+name "FOR/CREATE"
 
 \end_inset
 
@@ -6691,9 +6968,9 @@ set
 \end_layout
 
 \begin_layout LyX-Code
-
+ 
 \emph on
-   list_of_statements;
+  list_of_statements;
 \end_layout
 
 \begin_layout LyX-Code
@@ -6731,7 +7008,8 @@ FOR
 \family default
  loops can be nested to produce sparse arrays as illustrated in Arrays can
  be jagged(
-\begin_inset LatexCommand \vpageref{lyx:Arrays-can-be}
+\begin_inset LatexCommand vpageref
+reference "lyx:Arrays-can-be"
 
 \end_inset
 
@@ -6748,7 +7026,8 @@ FOR
 SELECT/CASE
 \family default
 
-\begin_inset LatexCommand \index{SELECT/CASE}
+\begin_inset LatexCommand index
+name "SELECT/CASE"
 
 \end_inset
 
@@ -6765,7 +7044,8 @@ Declarative.
 OTHERWISE
 \family default
 
-\begin_inset LatexCommand \index{OTHERWISE}
+\begin_inset LatexCommand index
+name "OTHERWISE"
 
 \end_inset
 
@@ -6802,7 +7082,8 @@ SELECT
 CONDITIONAL
 \family default
 
-\begin_inset LatexCommand \index{CONDITIONAL}
+\begin_inset LatexCommand index
+name "CONDITIONAL"
 
 \end_inset
 
@@ -6849,7 +7130,8 @@ $boundary
 WHEN/CASE
 \family default
 
-\begin_inset LatexCommand \index{WHEN/CASE}
+\begin_inset LatexCommand index
+name "WHEN/CASE"
 
 \end_inset
 
@@ -6876,17 +7158,20 @@ s are included in the problem to be solved.
 \begin_deeper
 \begin_layout Chapter
 Procedural statements
-\begin_inset LatexCommand \index{statements, procedural}
+\begin_inset LatexCommand index
+name "statements, procedural"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{procedural statements}
+\begin_inset LatexCommand index
+name "procedural statements"
 
 \end_inset
 
 
-\begin_inset LatexCommand \label{sec:x.4Procedural-statements}
+\begin_inset LatexCommand label
+name "sec:x.4Procedural-statements"
 
 \end_inset
 
@@ -6901,7 +7186,8 @@ Procedural statements
 METHODS
 \family default
 
-\begin_inset LatexCommand \index{METHODS}
+\begin_inset LatexCommand index
+name "METHODS"
 
 \end_inset
 
@@ -6960,7 +7246,8 @@ METHODS\InsetSpace ~
 IN
 \family default
 
-\begin_inset LatexCommand \index{ADD METHODS IN}
+\begin_inset LatexCommand index
+name "ADD METHODS IN"
 
 \end_inset
 
@@ -6995,7 +7282,8 @@ METHODS\InsetSpace ~
 IN
 \family default
 
-\begin_inset LatexCommand \index{REPLACE METHODS IN}
+\begin_inset LatexCommand index
+name "REPLACE METHODS IN"
 
 \end_inset
 
@@ -7068,12 +7356,14 @@ basemodel.a4l
 \bar under
 Initialization\InsetSpace ~
 routines
-\begin_inset LatexCommand \index{routines, initialization}
+\begin_inset LatexCommand index
+name "routines, initialization"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{initialization routines}
+\begin_inset LatexCommand index
+name "initialization routines"
 
 \end_inset
 
@@ -7083,7 +7373,8 @@ routines
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 METHOD
-\begin_inset LatexCommand \index{METHOD}
+\begin_inset LatexCommand index
+name "METHOD"
 
 \end_inset
 
@@ -7183,7 +7474,7 @@ method_name
 \end_layout
 
 \begin_layout LyX-Code
-«procedural statement;» (*one or more*)
+Â«procedural statement;Â» (*one or more*)
 \end_layout
 
 \begin_layout LyX-Code
@@ -7203,12 +7494,14 @@ Procedural\InsetSpace ~
 assignment
 \bar default
 
-\begin_inset LatexCommand \index{assignment, procedural}
+\begin_inset LatexCommand index
+name "assignment, procedural"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{procedural assignment}
+\begin_inset LatexCommand index
+name "procedural assignment"
 
 \end_inset
 
@@ -7279,7 +7572,8 @@ DATA
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 FOR/DO
-\begin_inset LatexCommand \index{FOR/DO}
+\begin_inset LatexCommand index
+name "FOR/DO"
 
 \end_inset
 
@@ -7355,7 +7649,8 @@ is a backward loop.
 IF
 \family default
 
-\begin_inset LatexCommand \index{IF}
+\begin_inset LatexCommand index
+name "IF"
 
 \end_inset
 
@@ -7366,9 +7661,9 @@ IF
 \begin_layout Standard
 The 
 \family sans
-IF 
+IF
 \family default
-statement can only appear in a method definition.
+ statement can only appear in a method definition.
  Its syntax is
 \end_layout
 
@@ -7476,7 +7771,8 @@ NOT
 SWITCH
 \family default
 
-\begin_inset LatexCommand \index{SWITCH}
+\begin_inset LatexCommand index
+name "SWITCH"
 
 \end_inset
 
@@ -7520,7 +7816,8 @@ EXAMPLE of SWITCH required here
 CALL
 \family default
 
-\begin_inset LatexCommand \index{CALL}
+\begin_inset LatexCommand index
+name "CALL"
 
 \end_inset
 
@@ -7530,7 +7827,8 @@ CALL
 EXTERNAL
 \family default
 
-\begin_inset LatexCommand \index{EXTERNAL}
+\begin_inset LatexCommand index
+name "EXTERNAL"
 
 \end_inset
 
@@ -7544,7 +7842,8 @@ EXTERNAL
 RUN
 \family default
 
-\begin_inset LatexCommand \index{RUN}
+\begin_inset LatexCommand index
+name "RUN"
 
 \end_inset
 
@@ -7612,7 +7911,8 @@ When
 model_type::
 \family default
 
-\begin_inset LatexCommand \index{::}
+\begin_inset LatexCommand index
+name "::"
 
 \end_inset
 
@@ -7684,17 +7984,20 @@ END bar;
 
 \begin_layout Chapter
 Parameterized models
-\begin_inset LatexCommand \index{models, parameterized}
+\begin_inset LatexCommand index
+name "models, parameterized"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{parameterized models}
+\begin_inset LatexCommand index
+name "parameterized models"
 
 \end_inset
 
 
-\begin_inset LatexCommand \label{sec:x.5Parameterized-models}
+\begin_inset LatexCommand label
+name "sec:x.5Parameterized-models"
 
 \end_inset
 
@@ -7707,7 +8010,7 @@ Parameterized model definitions have the following general form
 status collapsed
 
 \begin_layout Standard
-«» signify optional parts
+Â«Â» signify optional parts
 \end_layout
 
 \end_inset
@@ -7728,28 +8031,29 @@ parameter_list
 \end_layout
 
 \begin_layout LyX-Code
-«WHERE (
+Â«WHERE (
 \emph on
 where_list
 \emph default
-;)»
+;)Â»
 \end_layout
 
 \begin_layout LyX-Code
-«REFINES 
+Â«REFINES 
 \emph on
 existing_type
 \emph default
-«(
+Â«(
 \emph on
 assignment_list
 \emph default
-;)»»;
+;)Â»Â»;
 \end_layout
 
 \begin_layout Section
 The parameter list
-\begin_inset LatexCommand \label{sub:x.5.1The-parameter-list}
+\begin_inset LatexCommand label
+name "sub:x.5.1The-parameter-list"
 
 \end_inset
 
@@ -7893,12 +8197,14 @@ The
 WHERE
 \family default
  list
-\begin_inset LatexCommand \index{list, WHERE}
+\begin_inset LatexCommand index
+name "list, WHERE"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{WHERE list}
+\begin_inset LatexCommand index
+name "WHERE list"
 
 \end_inset
 
@@ -7963,12 +8269,14 @@ l guarantee of object compatibility.
 
 \begin_layout Section
 The assignment list
-\begin_inset LatexCommand \index{list, assignment}
+\begin_inset LatexCommand index
+name "list, assignment"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{assignment list}
+\begin_inset LatexCommand index
+name "assignment list"
 
 \end_inset
 
@@ -7994,7 +8302,8 @@ IS_A
 
 \begin_layout Section
 Refining
-\begin_inset LatexCommand \index{refining, parameterized types}
+\begin_inset LatexCommand index
+name "refining, parameterized types"
 
 \end_inset
 
@@ -8018,7 +8327,8 @@ S_A
  and then assigned in the assignment list are not repeated because the user
  no longer needs to supply these values.
  A refinement of the model test given in Section 
-\begin_inset LatexCommand \vref{sub:x.5.1The-parameter-list}
+\begin_inset LatexCommand vref
+reference "sub:x.5.1The-parameter-list"
 
 \end_inset
 
@@ -8086,7 +8396,8 @@ In expanded_test, we see that the type of the array q is more refined than
 
 \begin_layout Chapter
 Miscellany
-\begin_inset LatexCommand \label{sec:x.6Miscellany}
+\begin_inset LatexCommand label
+name "sec:x.6Miscellany"
 
 \end_inset
 
@@ -8095,7 +8406,8 @@ Miscellany
 
 \begin_layout Section
 Variables for solvers
-\begin_inset LatexCommand \label{sub:x.6.1Variables-for-solvers}
+\begin_inset LatexCommand label
+name "sub:x.6.1Variables-for-solvers"
 
 \end_inset
 
@@ -8110,7 +8422,8 @@ Variables for solvers
 solver_var
 \family default
 
-\begin_inset LatexCommand \index{solver\_var}
+\begin_inset LatexCommand index
+name "solver\\_var"
 
 \end_inset
 
@@ -8163,7 +8476,8 @@ type, default
 lower_bound
 \family default
 
-\begin_inset LatexCommand \index{lower\_bound}
+\begin_inset LatexCommand index
+name "lower\\_bound"
 
 \end_inset
 
@@ -8177,7 +8491,8 @@ lower_bound
 upper_bound
 \family default
 
-\begin_inset LatexCommand \index{upper\_bound}
+\begin_inset LatexCommand index
+name "upper\\_bound"
 
 \end_inset
 
@@ -8191,7 +8506,8 @@ upper_bound
 nominal
 \family default
 
-\begin_inset LatexCommand \index{nominal}
+\begin_inset LatexCommand index
+name "nominal"
 
 \end_inset
 
@@ -8205,7 +8521,8 @@ nominal
 fixed
 \family default
 
-\begin_inset LatexCommand \index{fixed}
+\begin_inset LatexCommand index
+name "fixed"
 
 \end_inset
 
@@ -8261,7 +8578,8 @@ system.a4l
 generic_real
 \family default
 
-\begin_inset LatexCommand \index{generic\_real}
+\begin_inset LatexCommand index
+name "generic\\_real"
 
 \end_inset
 
@@ -8311,7 +8629,8 @@ for\InsetSpace ~
 MILPs
 \bar default
 
-\begin_inset LatexCommand \index{MILPs}
+\begin_inset LatexCommand index
+name "MILPs"
 
 \end_inset
 
@@ -8320,7 +8639,8 @@ MILPs
 system.a4l
 \family default
  are the types for integer, binary, and semi-continuous variables
-\begin_inset LatexCommand \index{variables, semi-continuous}
+\begin_inset LatexCommand index
+name "variables, semi-continuous"
 
 \end_inset
 
@@ -8334,7 +8654,8 @@ system.a4l
 solver_semi
 \family default
 
-\begin_inset LatexCommand \index{solver\_semi}
+\begin_inset LatexCommand index
+name "solver\\_semi"
 
 \end_inset
 
@@ -8344,7 +8665,8 @@ solver_semi
 solver_integer
 \family default
 
-\begin_inset LatexCommand \index{solver\_integer}
+\begin_inset LatexCommand index
+name "solver\\_integer"
 
 \end_inset
 
@@ -8354,7 +8676,8 @@ solver_integer
 solver_binary
 \family default
 
-\begin_inset LatexCommand \index{solver\_binary}
+\begin_inset LatexCommand index
+name "solver\\_binary"
 
 \end_inset
 
@@ -8390,12 +8713,14 @@ solver_binary
 Integers\InsetSpace ~
 are\InsetSpace ~
 relaxable
-\begin_inset LatexCommand \index{relaxable integers}
+\begin_inset LatexCommand index
+name "relaxable integers"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{integers, relaxable}
+\begin_inset LatexCommand index
+name "integers, relaxable"
 
 \end_inset
 
@@ -8412,7 +8737,8 @@ relaxable
 Kluges\InsetSpace ~
 for\InsetSpace ~
 ODEs
-\begin_inset LatexCommand \index{ODEs}
+\begin_inset LatexCommand index
+name "ODEs"
 
 \end_inset
 
@@ -8431,12 +8757,14 @@ ivpsystem.a4l
 solver_var
 \family default
  in order to support initial value problem (IVP
-\begin_inset LatexCommand \index{IVP}
+\begin_inset LatexCommand index
+name "IVP"
 
 \end_inset
 
 ) solvers (integrators
-\begin_inset LatexCommand \index{integrators}
+\begin_inset LatexCommand index
+name "integrators"
 
 \end_inset
 
@@ -8447,7 +8775,8 @@ solver_var
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ivpsystem.a4l
-\begin_inset LatexCommand \index{ivpsystem.a4l}
+\begin_inset LatexCommand index
+name "ivpsystem.a4l"
 
 \end_inset
 
@@ -8491,7 +8820,8 @@ the first step towards this is the proposed LINK syntax currently in the
 \begin_deeper
 \begin_layout Section
 Supported attributes
-\begin_inset LatexCommand \label{sub:x.6.2Supported-attributes}
+\begin_inset LatexCommand label
+name "sub:x.6.2Supported-attributes"
 
 \end_inset
 
@@ -8543,12 +8873,14 @@ what's he talking about here? 'derivative syntax'???
 \end_deeper
 \begin_layout Section
 Single operand real functions
-\begin_inset LatexCommand \index{functions, real}
+\begin_inset LatexCommand index
+name "functions, real"
 
 \end_inset
 
 
-\begin_inset LatexCommand \label{sub:x.6.3Single-operand-real}
+\begin_inset LatexCommand label
+name "sub:x.6.3Single-operand-real"
 
 \end_inset
 
@@ -8562,7 +8894,8 @@ Single operand real functions
 exp
 \family default
 
-\begin_inset LatexCommand \index{exp}
+\begin_inset LatexCommand index
+name "exp"
 
 \end_inset
 
@@ -8588,7 +8921,8 @@ exp
 ln
 \family default
 
-\begin_inset LatexCommand \index{ln}
+\begin_inset LatexCommand index
+name "ln"
 
 \end_inset
 
@@ -8606,7 +8940,8 @@ ln
 sin
 \family default
 
-\begin_inset LatexCommand \index{sin}
+\begin_inset LatexCommand index
+name "sin"
 
 \end_inset
 
@@ -8622,7 +8957,8 @@ ally)
 cos
 \family default
 
-\begin_inset LatexCommand \index{cos}
+\begin_inset LatexCommand index
+name "cos"
 
 \end_inset
 
@@ -8637,7 +8973,8 @@ cos
 tan
 \family default
 
-\begin_inset LatexCommand \index{tan}
+\begin_inset LatexCommand index
+name "tan"
 
 \end_inset
 
@@ -8652,7 +8989,8 @@ tan
 arcsin
 \family default
 
-\begin_inset LatexCommand \index{arcsin}
+\begin_inset LatexCommand index
+name "arcsin"
 
 \end_inset
 
@@ -8675,7 +9013,8 @@ arcsin
 arccos
 \family default
 
-\begin_inset LatexCommand \index{arccos}
+\begin_inset LatexCommand index
+name "arccos"
 
 \end_inset
 
@@ -8698,7 +9037,8 @@ arccos
 arctan
 \family default
 
-\begin_inset LatexCommand \index{arctan}
+\begin_inset LatexCommand index
+name "arctan"
 
 \end_inset
 
@@ -8721,7 +9061,8 @@ arctan
 erf
 \family default
 
-\begin_inset LatexCommand \index{erf}
+\begin_inset LatexCommand index
+name "erf"
 
 \end_inset
 
@@ -8735,7 +9076,8 @@ erf
 sinh
 \family default
 
-\begin_inset LatexCommand \index{sinh}
+\begin_inset LatexCommand index
+name "sinh"
 
 \end_inset
 
@@ -8749,7 +9091,8 @@ sinh
 cosh
 \family default
 
-\begin_inset LatexCommand \index{cosh}
+\begin_inset LatexCommand index
+name "cosh"
 
 \end_inset
 
@@ -8763,7 +9106,8 @@ cosh
 tanh
 \family default
 
-\begin_inset LatexCommand \index{tanh}
+\begin_inset LatexCommand index
+name "tanh"
 
 \end_inset
 
@@ -8777,7 +9121,8 @@ tanh
 arcsinh
 \family default
 
-\begin_inset LatexCommand \index{arcsinh}
+\begin_inset LatexCommand index
+name "arcsinh"
 
 \end_inset
 
@@ -8791,7 +9136,8 @@ arcsinh
 arccosh
 \family default
 
-\begin_inset LatexCommand \index{arccosh}
+\begin_inset LatexCommand index
+name "arccosh"
 
 \end_inset
 
@@ -8805,7 +9151,8 @@ arccosh
 arctanh
 \family default
 
-\begin_inset LatexCommand \index{arctanh}
+\begin_inset LatexCommand index
+name "arctanh"
 
 \end_inset
 
@@ -8819,12 +9166,14 @@ arctanh
 lnm
 \family default
 
-\begin_inset LatexCommand \index{lnm}
+\begin_inset LatexCommand index
+name "lnm"
 
 \end_inset
 
 () modified natural logarithm
-\begin_inset LatexCommand \index{ln, modified}
+\begin_inset LatexCommand index
+name "ln, modified"
 
 \end_inset
 
@@ -8972,7 +9321,8 @@ y = A*exp(-B/T);
 \bar under
 Discontinuous\InsetSpace ~
 functions
-\begin_inset LatexCommand \index{functions, discontinuous}
+\begin_inset LatexCommand index
+name "functions, discontinuous"
 
 \end_inset
 
@@ -8982,7 +9332,8 @@ functions
 \begin_deeper
 \begin_layout Standard
 Discontinuous functions may destroy a Newton
-\begin_inset LatexCommand \index{Newton}
+\begin_inset LatexCommand index
+name "Newton"
 
 \end_inset
 
@@ -8998,7 +9349,8 @@ Discontinuous functions may destroy a Newton
 abs
 \family default
 
-\begin_inset LatexCommand \index{abs}
+\begin_inset LatexCommand index
+name "abs"
 
 \end_inset
 
@@ -9013,7 +9365,8 @@ bs
 \begin_deeper
 \begin_layout Section
 Logical functions
-\begin_inset LatexCommand \index{functions, logical}
+\begin_inset LatexCommand index
+name "functions, logical"
 
 \end_inset
 
@@ -9024,7 +9377,8 @@ Logical functions
 \begin_layout List
 \labelwidthstring 00000.00000.00000.000
 SATISFIED
-\begin_inset LatexCommand \index{SATISFIED}
+\begin_inset LatexCommand index
+name "SATISFIED"
 
 \end_inset
 
@@ -9041,7 +9395,8 @@ SATISFIED
 UNITS
 \family default
 
-\begin_inset LatexCommand \index{UNITS}
+\begin_inset LatexCommand index
+name "UNITS"
 
 \end_inset
 
@@ -9050,12 +9405,14 @@ UNITS
 
 \begin_layout Standard
 As noted in Section 
-\begin_inset LatexCommand \vref{sub:x.1.2Basic-Elements}
+\begin_inset LatexCommand vref
+reference "sub:x.1.2Basic-Elements"
 
 \end_inset
 
 , ASCEND will recognize conversion factors
-\begin_inset LatexCommand \index{conversion factors}
+\begin_inset LatexCommand index
+name "conversion factors"
 
 \end_inset
 
@@ -9075,12 +9432,14 @@ x:= 0.5 {100};
 x == 50
 \family default
 , and that there are no `offset conversions
-\begin_inset LatexCommand \index{conversion, offset}
+\begin_inset LatexCommand index
+name "conversion, offset"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{offset conversions}
+\begin_inset LatexCommand index
+name "offset conversions"
 
 \end_inset
 
@@ -9163,12 +9522,14 @@ The standard units library,
 measures.a4l
 \family default
 , is documented in the ASCEND manual, Section 
-\begin_inset LatexCommand \ref{cha:physprops}
+\begin_inset LatexCommand ref
+reference "cha:physprops"
 
 \end_inset
 
  
-\begin_inset LatexCommand \cite{ASCEND2006}
+\begin_inset LatexCommand cite
+key "ASCEND2006"
 
 \end_inset
 

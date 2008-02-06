@@ -476,14 +476,21 @@ class Browser:
 			if _model:
 				try:
 					_t=self.library.findType(_model)
-					try:
-						self.do_sim(_t)
-						if not self.options.model:
-							self.reporter.reportNote("Instantiated self-titled model '%s'" %_model)
-					except RuntimeError, e:
-						self.reporter.reportError("Failed to create instance of '%s': %s" 
-							%(_model, str(e))
-						);
+					if not _t.isModel():
+						if self.options.auto_sim:
+							self.reporter.reportError("Won't auto-instantiate with type '%s': not a MODEL." % _model)
+					elif _t.hasParameters():
+						if self.options.auto_sim:
+							self.reporter.reportError("Won't auto-instantiate MODEL %s: model requires parameters." % _model)
+					else:
+						try:
+							self.do_sim(_t)
+							if not self.options.model:
+								self.reporter.reportNote("Instantiated self-titled model '%s'" %_model)
+						except RuntimeError, e:
+							self.reporter.reportError("Failed to create instance of '%s': %s" 
+								%(_model, str(e))
+							);
 				except RuntimeError, e:
 					if self.options.model:
 						self.reporter.reportError("Unknown model type '%s': %s" 
