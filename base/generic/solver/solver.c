@@ -180,13 +180,13 @@ int solver_register(const SlvFunctionsT *solver){
 		}
 	}
 
-#if 0
+#if 1
 	CONSOLE_DEBUG("Adding engine '%s'",solver->name);
 #endif
 
 	gl_append_ptr(L,(SlvFunctionsT *)solver);
 	
-#if 0
+#if 1
 	CONSOLE_DEBUG("There are now %lu registered solvers", gl_length(solver_get_list(0)));
 #endif
 	return 0;
