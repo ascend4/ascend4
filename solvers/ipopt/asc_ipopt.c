@@ -115,8 +115,8 @@ struct IpoptSystemStruct{
 	Index n;                          /* number of variables */
 	Index m;                          /* number of constraints */
 
-	int nnzJ; /* number of non zeros in the jacobian of the constraints */
-	int nnzH; /* number of non-zeros in the hessian of the objective */
+	Index nnzJ; /* number of non zeros in the jacobian of the constraints */
+	Index nnzH; /* number of non-zeros in the hessian of the objective */
 
 	Number* x_L;                  /* lower bounds on x */
 	Number* x_U;                  /* upper bounds on x */
@@ -231,6 +231,23 @@ static int ipopt_get_status(slv_system_t server, SlvClientToken asys
 	return 0;
 }
 
+/**
+	Update the solver status. FIXME can't we get rid of this silly function
+	somehot?
+ */
+static void update_status(IpoptSystem *sys){
+   boolean unsuccessful;
+
+   sys->s.time_limit_exceeded = FALSE; /* can't do this one with IPOPT */
+   sys->s.iteration_limit_exceeded = FALSE; /* IPOPT handles this one internally */
+
+   unsuccessful = sys->s.diverged || sys->s.inconsistent ||
+      sys->s.iteration_limit_exceeded || sys->s.time_limit_exceeded;
+
+   sys->s.ready_to_solve = !unsuccessful && !sys->s.converged;
+   sys->s.ok = !unsuccessful && sys->s.calc_ok && !sys->s.struct_singular;
+}
+
 static int32 ipopt_eligible_solver(slv_system_t server){
 	UNUSED_PARAMETER(server);
 	
@@ -289,7 +306,7 @@ int32 ipopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 			" 'acceptable_tol' as a second termination criterion. Note, some other"
 			" algorithmic features also use this quantity to determine thresholds"
 			" etc."
-		}, 1e-8, 0, 1e20}
+		}, 1.e-8, 0, 1.e20}
 	);
 
 	slv_param_char(parameters,IPOPT_PARAM_MU_STRATEGY
@@ -373,8 +390,17 @@ static void ipopt_set_parameters(slv_system_t server, SlvClientToken asys
 	@return 0 on success.
 */
 int ipopt_update_model(IpoptSystem *sys, const double *x){
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
-	return 1; /* error */
+	unsigned j;
+
+	asc_assert(sys);
+	asc_assert(sys->vlist);
+
+	/* FIXME do we need to update any other stuff? */
+	for(j = 0; j < sys->n; ++j){
+	    var_set_value(sys->vlist[j], x[j]);
+	}
+
+	return 0;
 }
 
 /** Function to evaluate the objective function f(x).
@@ -389,6 +415,8 @@ Bool ipopt_eval_f(Index n, Number *x, Bool new_x,  Number *obj_value, void *user
 	IpoptSystem *sys;
 	sys = SYS(user_data);
 	int res;
+
+	CONSOLE_DEBUG("ipopt_eval_f");
 
 	asc_assert(n==sys->n);
 	asc_assert(sys->obj!=NULL);
@@ -419,6 +447,8 @@ Bool ipopt_eval_grad_f(Index n, Number* x, Bool new_x, Number* grad_f, void *use
 		VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR
 		,VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED
 	};
+
+	CONSOLE_DEBUG("ipopt_eval_grad_f");
 
 	asc_assert(n==sys->n);
 	asc_assert(sys->obj);
@@ -458,6 +488,8 @@ Bool ipopt_eval_g(Index n, Number* x, Bool new_x, Index m, Number *g, void *user
 	sys = SYS(user_data);
 	int i, res;
 
+	CONSOLE_DEBUG("ipopt_eval_g");
+
 	asc_assert(n==sys->n);
 	asc_assert(m==sys->m);
 
@@ -481,6 +513,7 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 	sys = SYS(user_data);
 	int i,res;
 
+	asc_assert(sys!=NULL);
 	asc_assert(n==sys->n);
 	asc_assert(nele_jac==sys->nnzJ);
 	asc_assert(m==sys->m);
@@ -505,6 +538,9 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 		, Index* jCol, Number* values
 		, void *user_data
 ){
+
+	CONSOLE_DEBUG("ipopt_eval_h");
+
 	if(iRow != NULL){
 		asc_assert(jCol !=NULL);
 		asc_assert(x==NULL); asc_assert(lambda==NULL); asc_assert(values==NULL);
@@ -556,6 +592,10 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 
 	/** @TODO slv_sort_rels_and_vars(server,&(sys->m),&(sys->n)); */
 
+	/* TODO are there cases where these should be different? */
+	sys->n = sys->rtot;
+	sys->m = sys->vtot;
+
 	/* set all relations as being 'unsatisfied' to start with... */
 	for(i=0; i < sys->rtot; ++i){
 		rel_set_satisfied(sys->rlist[i],FALSE);
@@ -571,7 +611,12 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 
 	/* calculate nnz for hessian matrix @TODO FIXME */
 
-	sys->nnzH = relman_hessian_count(sys->rlist, sys->rtot, &(sys->vfilt), &(sys->rfilt), &max);
+	if(strcmp(SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_HESS_APPROX),"exact")==0){
+		sys->nnzH = relman_hessian_count(sys->rlist, sys->rtot, &(sys->vfilt), &(sys->rfilt), &max);
+	}else{
+		CONSOLE_DEBUG("Skipping relman_hessian_count as hessian method is not exact.");
+		sys->nnzH = sys->n * sys->m;
+	}
 
 	/* need to provide sparsity structure for hessian matrix? */
 
@@ -701,13 +746,15 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 	sys->s.block.iteration = 0;
 	sys->obj_val =  MAXDOUBLE/2000.0;
 
+	update_status(sys);
+
 	ipopt_iteration_ends(sys);
 
 	CONSOLE_DEBUG("Reset status");
 
 	/* sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed; */
 
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"presolve completed");
+	ERROR_REPORTER_HERE(ASC_USER_SUCCESS,"presolve completed");
 	return 0;
 }
 
@@ -723,17 +770,22 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 
 	double *x, *x_L, *x_U, *g_L, *g_U, *mult_x_L, *mult_x_U;
 
-	CONSOLE_DEBUG("SOLVING...");
+	CONSOLE_DEBUG("SOLVING, sys->n = %d...",sys->n);
+	asc_assert(sys->n!=-1);
 
 	/* set the number of variables and allocate space for the bounds */
 	x_L = ASC_NEW_ARRAY(Number,sys->n);
 	x_U = ASC_NEW_ARRAY(Number,sys->n);
 
+	CONSOLE_DEBUG("SETTING BOUNDS...");
+
 	/* @TODO set the values for the variable bounds */
 	int jj = 0;
 	for(j = 0; j < sys->vtot; j++){
+		CONSOLE_DEBUG("j = %d, vtot = %d, vlist = %p",j,sys->vtot,sys->vlist);
 		var = sys->vlist[j];
 		if(var_apply_filter(var,&(sys->vfilt))){
+			CONSOLE_DEBUG("setting x_L[%d]",jj);
 			x_L[jj] = var_lower_bound(var);
 			x_U[jj] = var_upper_bound(var);
 			jj++;
@@ -744,25 +796,43 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	/* need to identify equations that share the same non-constant parts? */
 	/* then find the constant parts and make then g_L or g_U accordingly */
 	/* what to do about other bounds? */
+	/* set the number of variables and allocate space for the bounds */
+	g_L = ASC_NEW_ARRAY(Number,sys->m);
+	g_U = ASC_NEW_ARRAY(Number,sys->m);
+	for(j = 0; j < sys->m; j++){
+		g_L[j] = 0;
+		g_U[j] = 0;
+	}
+
+	CONSOLE_DEBUG("CREATING PROBLEM...");
 
 	/* create the IpoptProblem */
+	CONSOLE_DEBUG("n = %d, m = %d, nnzJ = %d, nnzH = %d",sys->n, sys->m, sys->nnzJ, sys->nnzH);
 	sys->nlp = CreateIpoptProblem(sys->n, x_L, x_U, sys->m, g_L, g_U, sys->nnzJ, sys->nnzH, 0/*index style=C*/, 
 		&ipopt_eval_f, &ipopt_eval_g, &ipopt_eval_grad_f, 
 		&ipopt_eval_jac_g, &ipopt_eval_h
 	);
+
+	CONSOLE_DEBUG("FREEING INTERNAL STUFF");
   
 	/* We can free the memory now - the values for the bounds have been
 	copied internally in CreateIpoptProblem */
+#if 0
+	/* freeing this stuff seems to cause a crash...?!?!? */
 	ASC_FREE(x_L);
 	ASC_FREE(x_U);
 	ASC_FREE(g_L);
 	ASC_FREE(g_U);
+#endif
 
+	CONSOLE_DEBUG("SETTING OPTIONS...");
 	/* set some options */
-	AddIpoptNumOption(sys->nlp, "tol", SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_TOL));
+	AddIpoptNumOption(sys->nlp, "tol", SLV_PARAM_REAL(&(sys->p),IPOPT_PARAM_TOL));
 	AddIpoptStrOption(sys->nlp, "mu_strategy", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_MU_STRATEGY));
 	AddIpoptStrOption(sys->nlp, "derivative_test", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_DERIVATIVE_TEST));
 	AddIpoptStrOption(sys->nlp, "hessian_approximation", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_HESS_APPROX));
+
+	CONSOLE_DEBUG("Hessian method: %s",SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_HESS_APPROX));
 
 	/* initial values */
 	x = ASC_NEW_ARRAY(Number, sys->n);
@@ -773,8 +843,12 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	mult_x_L = ASC_NEW_ARRAY(Number, sys->n);
 	mult_x_U = ASC_NEW_ARRAY(Number, sys->n);
 
+	CONSOLE_DEBUG("Calling IpoptSolve...");
+
 	/* solve the problem */
-	status = IpoptSolve(sys->nlp, x, NULL, &sys->obj_val, NULL, mult_x_L, mult_x_U, NULL);
+	status = IpoptSolve(sys->nlp, x, NULL, &sys->obj_val, NULL, mult_x_L, mult_x_U, (void*)sys);
+
+	CONSOLE_DEBUG("Done IpoptSolve...");
 
 	/** @TODO update the sys->s.xxxxx flags based on value of 'status' */
 
@@ -836,10 +910,8 @@ static void ipopt_iteration_ends(IpoptSystem *sys){
 
 
 static int ipopt_iterate(slv_system_t server, SlvClientToken asys){
-	UNUSED_PARAMETER(server);
-	CONSOLE_DEBUG("ITERATING...");
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
-	return 1;
+	CONSOLE_DEBUG("ipopt_iterate about to call ipopt_solve...");
+	return ipopt_solve(server,asys);
 }
 
 static int ipopt_resolve(slv_system_t server, SlvClientToken asys){

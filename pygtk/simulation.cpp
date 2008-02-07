@@ -780,11 +780,14 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	status.getSimulationStatus(*this);
 	reporter.report(&status);
 
+	CONSOLE_DEBUG("About to start %d iterations...", niter);
 	for(unsigned iter = 1; iter <= niter && !stop; ++iter){
 
 		if(status.isReadyToSolve()){
-			/* CONSOLE_DEBUG("Calling slv_iterate..."); */
+			CONSOLE_DEBUG("Calling slv_iterate...");
 			res = slv_iterate(sys);
+		}else{
+			CONSOLE_DEBUG("not ready to solve!");
 		}
 
 		if(res)CONSOLE_DEBUG("slv_iterate returns %d",res);
@@ -798,7 +801,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	}
 
 	double elapsed = tm_cpu_time() - starttime;
-	CONSOLE_DEBUG("Elapsed time: %0.3f", elapsed);
+	CONSOLE_DEBUG("Elapsed time: %0.3f (solver completed)", elapsed);
 
 	activeblock = status.getCurrentBlockNum();
 
@@ -847,8 +850,9 @@ Simulation::getIncidenceMatrix(){
 }
 
 /**
-	This function looks at all the variables in the solve's list and updates
-	the variable status for the corresponding instances.
+	This function looks at all the variables in the solver list, and updates
+	the variable status for the corresponding instances so that feedback can 
+	be given to the user via the GUI.
 
 	It does this by using the 'interface pointer' in the Instance, see
 	the C-API function GetInterfacePtr.
@@ -881,6 +885,8 @@ Simulation::processVarStatus(){
 	if(status.block.number_of == 0){
 		cerr << "Variable statuses can't be set: block structure not yet determined." << endl;
 		return;
+	}else{
+		CONSOLE_DEBUG("There are %d blocks", status.block.number_of);
 	}
 
 	if(!bb->block){
