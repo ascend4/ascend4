@@ -109,17 +109,23 @@ class LoadingWindow:
 			print status
 			self.label.set_text(status)
 			if msg is not None:
-				sys.stderr.write(msg+"\n")
+				try:
+					sys.stderr.write(msg+"\n")
+				except IOError:
+					pass
 				_messages.append(msg)
 			while gtk.events_pending():
 				gtk.main_iteration(False)
 		else:
-			sys.stderr.write("\r                                                 \r")
-			if msg!=None:
-				sys.stderr.write(msg+"\n")
-				_messages.append(msg)
-			sys.stderr.write(status+"...\r")
-			sys.stderr.flush()
+			try:
+				sys.stderr.write("\r                                                 \r")
+				if msg!=None:
+					sys.stderr.write(msg+"\n")
+					_messages.append(msg)
+				sys.stderr.write(status+"...\r")
+				sys.stderr.flush()
+			except IOError:
+				pass
 
 	def complete(self):
 		if self.is_loading:
