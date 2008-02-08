@@ -14,6 +14,8 @@ try:
 	import pygtk 
 	pygtk.require('2.0') 
 	import gtk
+		
+	import gtkexcepthook
 
 	import re
 	import urlparse
