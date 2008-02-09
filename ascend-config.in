@@ -21,6 +21,9 @@ import sys, platform
 # Type ascend-config --help for usage.
 #---------------------
 
+# platform specific name munging for '-L' and '-I' file paths...
+munge = lambda s: s
+
 if platform.system()=="Windows":
 	import _winreg
 	x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
@@ -33,6 +36,22 @@ if platform.system()=="Windows":
 
 	_winreg.CloseKey(y)
 	_winreg.CloseKey(x)
+	
+	try:
+		# if we have access to GetShortPathName, we'll use it...
+		import win32api
+		def munge1(s):
+			s1 = s
+			try:
+				# we can only munge the path if it actually exists
+				s1 = win32api.GetShortPathName(s)
+			except:
+				# if it doesn't exist, we just return the un-munged path
+				pass
+			return s1
+		munge = munge1 
+	except:
+		pass
 else:
 	# If we're not in Windows, use the original values passed to us from SCons:
 	LIB="@INSTALL_LIB@"
@@ -59,7 +78,7 @@ if options.cppflags:
 	if INCLUDE!="/usr/include":
 		include=INCLUDE
 	if -1!=include.find(" "):
-		print "-I\""+include+"\""
+		print "-I\""+munge(include)+"\""
 	elif len(include):
 		print "-I"+include
 	ok = True
@@ -69,7 +88,7 @@ if options.libs:
 	if LIB!="/usr/lib":
 		libs = LIB
 	if -1!=libs.find(" "):
-		print "-L\""+libs+"\" -lascend"
+		print "-L\""+munge(libs)+"\" -lascend"
 	else:
 		Lflag  = ""
 		if len(libs):
