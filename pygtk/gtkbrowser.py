@@ -68,7 +68,7 @@ try:
 	from unitsdialog import *      # general-purpose textual information dialog
 	import config
 
-	loading.complete();
+	#loading.complete();
 
 except RuntimeError, e:
 	print "ASCEND had problems starting up. Please report the following"
@@ -158,7 +158,7 @@ class Browser:
 		#print "OPTIONS_______________:",self.options
 
 		self.assets_dir = self.options.assets_dir
-		loading.create_window(self.assets_dir)
+		#loading.create_window(self.assets_dir)
 		
 		self.observers = []
 		self.clip = None
