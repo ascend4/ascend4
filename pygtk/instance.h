@@ -155,6 +155,7 @@ public:
 	const std::vector<Instanc> getClique() const;
 
 	const double getResidual() const;
+	const bool getLogicalResidual() const;
 };
 
 #endif

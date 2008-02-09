@@ -382,6 +382,7 @@ public:
 
 	const std::string getRelationAsString(const Instanc &relative_to) const;
 	const double getResidual() const;
+	const bool getLogicalResidual() const;
 
 	Plot getPlot() const;
 
@@ -464,6 +465,8 @@ public:
 				return self.getIntValue()
 			elif self.isSymbol():
 				return self.getSymbolValue()
+			elif self.isLogicalRelation():
+				return self.getLogicalResidual()
 			else:
 				return "UNKNOWN TYPE" 
 				#raise RuntimeError("Unknown value model type="+self.getType().getName().toString()+", instance kind=".getKindStr())

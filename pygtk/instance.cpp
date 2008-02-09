@@ -35,6 +35,8 @@ extern "C"{
 #include <compiler/relation_io.h>
 #include <compiler/functype.h>
 #include <compiler/relation_util.h>
+#include <compiler/logrel_util.h>
+#include <compiler/mathinst.h>
 }
 
 #include <iostream>
@@ -476,6 +478,16 @@ Instanc::getResidual() const{
 	}
 	return RelationResidual( ri->ptr );
 }
+
+const bool
+Instanc::getLogicalResidual() const{
+	if(!isLogicalRelation()){
+		throw runtime_error("getResidual: not a relation");
+	}
+
+	return 0!=LogRelResidual(GetInstanceLogRelOnly(i));
+}
+
 
 /**
 	Return the numerical value of an instance if it is an assigned atom.

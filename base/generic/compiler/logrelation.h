@@ -79,7 +79,6 @@ extern int g_simplify_logrelations;
 
 extern void InitLogRelInstantiator(void);
 /**<
- *  <!--  InitLogRelInstantiator();                                    -->
  *  Sets up logical relation instantiation gizmos. This must be called once
  *  before any logical relations can be built, ideally at startup time.
  *  Do not call it again unless DestroyLogRelInstantiator is called first.
@@ -88,7 +87,6 @@ extern void InitLogRelInstantiator(void);
 
 extern void DestroyLogRelInstantiator(void);
 /**<
- *  <!--  DestroyLogRelInstantiator();                                 -->
  *  Destroy logical relation instantiation gizmos. This must be called to
  *  clean up before shutting down ASCEND.
  *  Do attempt to instantiate anything after you call this unless you
@@ -97,8 +95,6 @@ extern void DestroyLogRelInstantiator(void);
 
 extern void ReportLogRelInstantiator(FILE*);
 /**<
- *  <!--  ReportLogRelInstantiator(f);                                 -->
- *  <!--  FILE *f;                                                     -->
  *  Reports on the logical relation instantiator to f.
  */
 
@@ -113,16 +109,11 @@ extern void ReportLogRelInstantiator(FILE*);
 
 extern int CheckLogRel(CONST struct Instance *reference,CONST struct Expr *ex);
 /**<
- *  <!--  int CheckLogRel(reference,ex)                                -->
- *  <!--  const struct Instance *reference;                            -->
- *  <!--  const struct Expr *ex;                                       -->
  *  Return TRUE iff the expression can be created.
  */
 
 extern struct logrelation *CreateLogRelStructure(enum Expr_enum t);
 /**<
- *  <!--  struct logrelation *CreateLogRelStructure(t);                -->
- *  <!--  enum Epxr_enum t;                                            -->
  *  Create and return a new logrelation node of type t.
  *  The node will be initialized to its defaults. It will have a reference
  *  count of 0.
@@ -134,12 +125,6 @@ extern struct logrelation *CreateLogicalRelation(struct Instance *reference,
                                                  enum logrelation_errors *err,
                                                  enum find_errors *ferr);
 /**<
- *  <!--  struct logrelation *CreateLogicalRelation(reference,lrelinst,ex,err,ferr) -->
- *  <!--  struct Instance *reference,*relinst;                         -->
- *  <!--  const struct Expr *ex;                                       -->
- *  <!--  enum logrelation_errors *err;                                -->
- *  <!--  enum find_errors *ferr;                                      -->
- *
  *  Create a logical relation from an expression, a reference instance and a
  *  relation instance.  This modifies the instance tree. The type of relinst
  *  will be set to e_bol_token.<br><br>
@@ -157,9 +142,6 @@ extern struct logrelation *CreateLogicalRelation(struct Instance *reference,
 
 extern void DestroyLogRelation(struct logrelation *lrel, struct Instance *lrelinst);
 /**<
- *  <!--  void DestroyLogRelation(lrel,lrelinst)                       -->
- *  <!--  struct logrelation *lrel;                                    -->
- *  <!--  struct Instance *lrelinst;                                   -->
  *  Deallocate a logical relation.  This will notify all the boolean instances
  *  in the logical relation that it will no longer be pointing to them.
  *  Also, it will notify all the relations included in satisfied terms
@@ -170,13 +152,9 @@ extern void DestroyLogRelation(struct logrelation *lrel, struct Instance *lrelin
 extern void ModifyLogRelPointers(struct gl_list_t *relorvar,
                                  struct logrelation *lrel,
                                  CONST struct Instance *old,
-                                 CONST struct Instance *new);
+                                 CONST struct Instance *_new);
 
 /**<
- *  <!--  void ModifyLogRelPointers(relorvar,lrel,old,new);            -->
- *  <!--  struct gl_list_t *relorvar;                                  -->
- *  <!--  struct logrelation *lrel;                                    -->
- *  <!--  const struct Instance *old, *new;                            -->
  *  Change all references from old to new.  This doesn't do anything
  *  to the instances old and new. The gl_list can be the list of variables
  *  or the list of relations included in satisfied terms.
@@ -187,9 +165,6 @@ extern void DoInOrderLogRelVisit(struct logrel_term *term,
                                  void (*func)(struct logrel_term *,
                                               struct logrelation *));
 /**<
- *  <!--  void DoInOrderLogRelVisit(term,r,func);                      -->
- *  <!--  struct logrel_term *term;                                    -->
- *  <!--  void (*func)(struct logrel_term *,struct logrelation *r);    -->
  *  Will visit an infix tree and apply function func to each term.
  *  It takes the logical relation corresponding to the tree as an argument,
  *  as some of the operations on terms are dependent upon the logical
@@ -215,12 +190,6 @@ extern struct logrelation
                     struct gl_list_t *varlist,
                     struct gl_list_t *rellist);
 /**<
- *  <!--  struct logrelation *CopyLogRelation(src_inst,dest_inst,varlist,rellist) --> 
- *  <!--  const struct Instance *src_inst;                             -->
- *  <!--  struct Instance *dest_inst;                                  -->
- *  <!--  struct gl_list_t *varlist;                                   -->
- *  <!--  struct gl_list_t *rellist;                                   -->
- *
  *  Given a source and a destination logical relation instance, will copy the
  *  logrelation structure from the source instance and return it. A unique
  *  variable list is required. This variable list represents the new
