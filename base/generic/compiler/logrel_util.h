@@ -1,48 +1,31 @@
-/*
- *  Logical Relation utility functions for Ascend
- *  by Vicente Rico-Ramirez
- *  Version: $Revision: 1.9 $
- *  Version control file: $RCSfile: logrel_util.h,v $
- *  Date last modified: $Date: 1997/07/29 15:52:48 $
- *  Last modified by: $Author: rv2a $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1997 Carnegie Mellon University
- *
- *  This file is part of the Ascend Interpreter.
- *  The Ascend Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  Ascend is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1997-2008 Carnegie Mellon University
 
-/** @file
- *  Logical Relation utility functions for Ascend.
- *  <pre>
- *  When #including logrel_util.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *         #include "logrelation.h"
- *         #include "instance_enum.h"
- *         #include "fractions.h"
- *         #include "dimen.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*//** @file
+	Logical Relation utility functions for Ascend
+	by Vicente Rico-Ramirez
+*/
 
 #ifndef ASC_LOGRELATION_UTIL_H
 #define ASC_LOGRELATION_UTIL_H
+
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "logrelation.h"
+#include "instance_enum.h"
 
 /**	@addtogroup compiler Compiler
 	@{
@@ -50,8 +33,6 @@
 
 extern enum Expr_enum LogRelRelop(CONST struct logrelation *lrel);
 /**<
- *  <!--  enum Expr_enum LogRelRelop(lrel)                             -->
- *  <!--  CONST struct logrelation *lrel;                              -->
  *  Return the type of the logical relation operator of the relation:
  *  - e_boolean_eq	equality constraint
  *  - e_boolean_neq	non-equality contraint
@@ -59,8 +40,6 @@ extern enum Expr_enum LogRelRelop(CONST struct logrelation *lrel);
 
 extern unsigned long NumberBoolVars(CONST struct logrelation *lrel);
 /**<
- *  <!--  unsigned long NumberBoolVars(lrel)                           -->
- *  <!--  struct logrelation *lrel;                                    -->
  *  This will indicate the number of distinct boolean atoms to which this
  *  logical relation points.  This number contains both fixed and non-fixed
  *  atoms.
@@ -69,16 +48,11 @@ extern unsigned long NumberBoolVars(CONST struct logrelation *lrel);
 extern struct Instance *LogRelBoolVar(CONST struct logrelation *lrel,
                                       unsigned long varnum);
 /**<
- *  <!--  struct Instance *LogRelBoolVar(lrel,varnum)                  -->
- *  <!--  struct logrelation *lrel;                                    -->
- *  <!--  unsigned long varnum;                                        -->
  *  This will return the varnum'th boolean variable.
  */
 
 extern unsigned long NumberRelations(CONST struct logrelation *lrel);
 /**<
- *  <!--  unsigned long NumberRelations(lrel)                          -->
- *  <!--  struct logrelation *lrel;                                    -->
  *  This will indicate the number of distinct relations to which this
  *  logical relation points.  This number contains both conditional
  *  relations and conditional logrelations.
@@ -87,9 +61,6 @@ extern unsigned long NumberRelations(CONST struct logrelation *lrel);
 extern struct Instance *LogRelRelation(CONST struct logrelation *lrel,
                                        unsigned long relnum);
 /**<
- *  <!--  struct Instance *LogRelRelation(lrel,relnum)                 -->
- *  <!--  struct logrelation *lrel;                                    -->
- *  <!--  unsigned long relnum;                                        -->
  *  This will return the relnum'th relation in the satisfied rel list.
  */
 
@@ -101,9 +72,6 @@ extern struct Instance *LogRelRelation(CONST struct logrelation *lrel,
 
 extern unsigned long LogRelLength(CONST struct logrelation *lrel, int lhs);
 /**<
- *  <!--  unsigned long LogRelLength(lrel,lhs)                         -->
- *  <!--  const struct logrelation *lrel;                              -->
- *  <!--  int lhs;                                                     -->
  *  If lhs is true, return the number of terms on the left hand side of the
  *  logical relation; otherwise, return the number of terms on the right
  *  hand side of the logical relation.
@@ -114,10 +82,6 @@ extern CONST struct logrel_term
             unsigned long pos,
             int lhs);
 /**<
- *  <!--  const struct logrel_term *LogRelTerm(lrel,pos,lhs)           -->
- *  <!--  const struct logrelation *lrel;                              -->
- *  <!--  unsigned long pos;                                           -->
- *  <!--  int lhs;                                                     -->
  *  If lhs is true, return the term in position pos of the left hand side;
  *  otherwise, return the term in position pos of the right hand side.
  *  A bizarre thing about this operator: 1<=pos<=LogRelLength(lrel,lhs).
@@ -145,15 +109,6 @@ LOGA_TERM( (l)!=0 ? (&((r)->token.lhs[(p)])) : (&((r)->token.rhs[(p)])) )
 extern CONST struct logrel_term
 *NewLogRelTermF(CONST struct logrelation *lrel, unsigned long apos, int lhs);
 /**<
- *  <!--  const struct logrel_term *NewLogRelTerm(lrel,apos,lhs)       -->
- *  <!--  const struct logrelation *lrel;                              -->
- *  <!--  unsigned long apos;                                          -->
- *  <!--  int lhs;                                                     -->
- *  <!--  If lhs is true, return the term in position apos of the left hand side; -->
- *  <!--  otherwise, return the term in position pos of the right hand side.      -->
- *  <!--  For this operator: 0 <= apos < LogRelLength(lrel,lhs) as a C array.     -->
- *  <!--  Once Everybody gets their damn hands off LogRelTerm, switch its         -->
- *  <!--  semantics and eliminate one of this pair.                               -->
  *  Implementation function for NewLogRelTerm().  Do not use this
  *  function directly - use NewLogRelTerm() instead.
  */
@@ -174,11 +129,6 @@ extern CONST struct logrel_term
 extern CONST struct logrel_term
 *LogRelSideTermF(CONST union LogRelTermUnion *lrelside, unsigned long apos);
 /**<
- *  <!--  CONST struct logrel_term *LogRelSideTerm(lrelside,apos)      -->
- *  <!--  CONST union LogRelTermUnion *lrelside                        -->
- *  <!--  unsigned long apos;                                          -->
- *  <!--  Return the term in position apos of the side.                -->
- *  <!--  For this operator: 0 <= apos < length of the side.           -->
  *  Implementation function for LogRelSideTerm().  Do not use this
  *  function directly - use LogRelSideTerm() instead.
  */
@@ -198,49 +148,33 @@ extern CONST struct logrel_term
  */
 extern enum Expr_enum LogRelTermTypeF(CONST struct logrel_term *term);
 /**<
- *  <!--  enum Expr_enum LogRelTermType(term)                          -->
- *  <!--  const struct logrel_term *term;                              -->
- *  <!--  return the type of the logical relation term.                -->
- *  <!--  WARNING: if ALLOCATED_TESTS is active, term must be an allocated term; -->
- *  <!--  automatic variables will cause an assert() to fail.          -->
  *  Implementation function for LogRelTermType().  Do not use this
  *  function directly - use LogRelTermType() instead.
  */
 
 extern unsigned long LogTermBoolVarNumber(CONST struct logrel_term *term);
 /**<
- *  <!--  unsigned long LogTermBoolVarNumber(term)                     -->
- *  <!--  const struct logrel_term *term;                              -->
  *  Return the index into the logical relation variable list.
  */
 
 extern int LogTermBoolean(CONST struct logrel_term *term);
 /**<
- *  <!--  int LogTermBoolean(term)                                     -->
- *  <!--  const struct logrel_term *term;                              -->
  *  Return the boolean value from an e_boolean type logical relation term.
  */
 
 extern int LogTermInteger(CONST struct logrel_term *term);
 /**<
- *  <!--  int LogTermInteger(term);                                    -->
- *  <!--  CONST struct logrel_term *term;                              -->
  *  Return the integer value from an e_int type logical relation term.
  */
 
 extern int LogTermIntegerBoolValue(CONST struct logrel_term *term);
 /**<
- *  <!--  int LogTermInteger(term);                                    -->
- *  <!--  CONST struct logrel_term *term;                              -->
  *  Return a 0-1 value from an e_int type logical relation term.
  */
 
 extern int LogTermBoolVar(CONST struct logrelation *lrel,
                           CONST struct logrel_term *term);
 /**<
- *  <!--  int LogTermBoolVar(lrel,term)                                -->
- *  <!--  const struct logrelation *lrel;                              -->
- *  <!--  const struct logrel_term *term;                              -->
  *  Return the integar value from a e_var type logical relation term.
  */
 
@@ -249,11 +183,6 @@ extern int LogTermSatisfied(CONST struct logrelation *lrel,
                             int perturb,
                             struct gl_list_t *instances);
 /**<
- *  <!--  int LogTermSatisfied(lrel,term);                             -->
- *  <!--  CONST struct logrelation *lrel;                              -->
- *  <!--  CONST struct logrel_term *term;                              -->
- *  <!--  int perturb;                                                 -->
- *  <!--  struct gl_list_t *instances;                                 -->
  *  Return the truth value of a SATISFIED logical relation term.
  *  If perturb, and the instances pointed by the SATISFIED term is included
  *  in the list instances, the truth value of the SATISFIED term is
@@ -262,38 +191,28 @@ extern int LogTermSatisfied(CONST struct logrelation *lrel,
 
 extern CONST struct Name *LogTermSatName(CONST struct logrel_term *term);
 /**<
- *  <!--  struct Name *LogTermSatName(term)                            -->
- *  <!--  const struct logrel_term *term;                              -->
  *  Return the name of the conditional equation specified in an
  *  e_satisfied term
  */
 
 extern unsigned long LogTermSatRelNumber(CONST struct logrel_term *term);
 /**<
- *  <!--  unsigned long LogTermSatRelNumber(term)                      -->
- *  <!--  const struct logrel_term *term;                              -->
  *  Return the index into the logical relation relations list.
  */
 
 extern double LogTermSatTolerance(CONST struct logrel_term *term);
 /**< 
- *  <!--  double *LogTermSatTolerance(term)                            -->
- *  <!--  const struct logrel_term *term;                              -->
  *  Return the real value specified as the tolerance of an e_satisfied term
  */
 
 extern CONST dim_type *LogTermSatDimensions(CONST struct logrel_term *term);
 /**< 
- *  <!--  const dim_type *LogTermSatDimensions(term)                   -->
- *  <!--  const struct logrel_term *term;                              -->
  *  Return the dimensions of the real value specified in the tolerance of
  *  an e_satisfied term
  */
 
 extern unsigned long LogRelDepth(CONST struct logrelation *lrel);
 /**< 
- *  <!--  unsigned long LogRelDepth(lrel)                              -->
- *  <!--  struct logrelation *lrel;                                    -->
  *  Return the depth of stack required to evaluate this logical relation.
  */
 
@@ -339,8 +258,6 @@ extern struct logrel_term *LogRelINF_Rhs(CONST struct logrelation *lrel);
 
 extern CONST struct gl_list_t *LogRelBoolVarList(CONST struct logrelation *lrel);
 /**<
- *  <!--  const struct gl_list_t *LogRelBoolVarList(lr);               -->
- *  <!--  const struct logrelation *lr;                                -->
  *  Returns the unique incident variable list which is owned by the
  *  logical relation. *DO NOT MODIFY*. It is for the convenience of those
  *  desirous of a READ_ONLY look. It is a list of instance pointers,
@@ -349,8 +266,6 @@ extern CONST struct gl_list_t *LogRelBoolVarList(CONST struct logrelation *lrel)
 
 extern CONST struct gl_list_t *LogRelSatRelList(CONST struct logrelation *lrel);
 /**< 
- *  <!--  const struct gl_list_t *LogRelSatRelList(lr);                -->
- *  <!--  const struct logrelation *lr;                                -->
  *  Returns the unique relation list which is owned by the
  *  logical relation. *DO NOT MODIFY*. It is for the convenience of those
  *  desirous of a READ_ONLY look. It is a list of instance pointers,
@@ -359,45 +274,31 @@ extern CONST struct gl_list_t *LogRelSatRelList(CONST struct logrelation *lrel);
 
 ASC_DLLSPEC int LogRelResidual(CONST struct logrelation *lrel);
 /**< 
- *  <!--  int LogRelResidual(lrel)                                     -->
- *  <!--  const struct logrelation *lrel;                              -->
  *  Return the boolean residual of the logical relation.
  */
 
 extern void SetLogRelResidual(struct logrelation *lrel, int value);
 /**< 
- *  <!--  void SetLogRelResidual(lrel,value)                           -->
- *  <!--  struct logrelation *lrel;                                    -->
- *  <!--  int value;                                                   -->
  *  Set the value of the logical relation residual.
  */
 
 ASC_DLLSPEC int LogRelIsCond(CONST struct logrelation *lrel);
 /**< 
- *  <!--  int LogRelIsCond(lrel)                                       -->
- *  <!--  const struct logrelation *lrel;                              -->
  *  Return the value of the logiscond flag of the logicalrelation.
  */
 
 extern void SetLogRelIsCond(struct logrelation *lrel);
 /**< 
- *  <!--  void SetLogRelIsCond(lrel)                                   -->
- *  <!--  struct logrelation *lrel;                                    -->
  *  Sets the value of the logiscond field of the logical relation to 1
  */
 
 extern int LogRelNominal(CONST struct logrelation *lrel);
 /**<
- *  <!--  int LogRelNominal(lrel)                                      -->
- *  <!--  const struct logrelation *lrel;                              -->
  *  Return the nominal of the logical relation.
  */
 
 extern void SetLogRelNominal(struct logrelation *lrel, int i);
 /**<
- *  <!--  void SetLogRelNominal(lrel,i)                                -->
- *  <!--  struct logrelation *lrel;                                    -->
- *  <!--  int i;                                                       -->
  *  Sets the value of the nominal field of the logical relation to the
  *  value of i
  */
@@ -406,11 +307,6 @@ extern int FindTolInSatTermOfLogRel(struct Instance *lrelinst,
                                     struct Instance *condinst,
                                     double *tolerance);
 /**<
- *  <!--  status = FindTolInSatTermOfLogRel(lrelinst,condinst);        -->
- *  <!--  struct Instance *lrelinst;                                   -->
- *  <!--  struct Instance *condinst;                                   -->
- *  <!--  int status;                                                  -->
- *  <!--  double *tolerance;                                           -->
  *  Look in the logrelation instance lrelinst for a SATISFIED term involving
  *  the instance condinst. When found, it will find the obtain tolerance
  *  specified in the SATISFIED term (if such a value is given) and it will
@@ -490,12 +386,6 @@ extern int LogRelCalcResidualPostfix(struct Instance *i,
                                      int perturb,
                                      struct gl_list_t *instances);
 /**<
- *  <!--  status = int LogRelCalcResidualPostfix(i,res,perturb,instances); -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  int *res;                                                    -->
- *  <!--  int perturb;                                                 -->
- *  <!--  struct gl_list_t *instances;                                 -->
- *  <!--  int status;                                                  -->
  *  Sets *res to the logical residual of the logical relation. The logical
  *  residual is evaluating by comparing the truth values of the two terms
  *  of the logical relation. If the logical relation is an equality, a
@@ -514,12 +404,6 @@ extern int LogRelCalcResidualInfix(struct Instance *i,
                                    int perturb,
                                    struct gl_list_t *instances);
 /**<
- *  <!--  status = LogRelCalcResidualInfix(i,res,perturb,instances);   -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  int *res;                                                    -->
- *  <!--  int perturb;                                                 -->
- *  <!--  struct gl_list_t *instances;                                 -->
- *  <!--  int status;                                                  -->
  *  Sets *res to the logical residual of the logical relation. The logical
  *  residual is evaluating by comparing the truth values of the two terms
  *  of the logical relation. If the logical relation is an equality, a
@@ -540,15 +424,6 @@ extern int *LogRelFindBoolValues(struct Instance *i,
                                  int perturb,
                                  struct gl_list_t *instances);
 /**<
- *  <!--  soln_list = LogRelFindBoolValues(i,dvarnum,able,nsolns,perturb,instances); -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  long *dvarnum;                                               -->
- *  <!--  int *able;                                                   -->
- *  <!--  int *nsolns;                                                 -->
- *  <!--  int perturb;                                                 -->
- *  <!--  struct gl_list_t *instances;                                 -->
- *  <!--  int *soln_list;                                              -->
- *
  *  LogRelFindBoolValues WILL find a booolean solution if there is one.
  *  The user must pass in a pointer to a
  *  struct logrelation.  The calling function should check able and/or

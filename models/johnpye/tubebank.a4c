@@ -362,7 +362,8 @@ MODEL tubebank;
 	nb :== 2; (* in the half-cavity *)
 
 	(* 
-		Calculate view factors:
+		Calculate view factors from every tube to every
+		slice of the plane opposite.
 
 		F_cum is from a tube to a plate from 0 to x[j].
 		F is from x[j-1] to x[j]
