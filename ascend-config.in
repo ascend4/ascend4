@@ -78,7 +78,7 @@ if options.cppflags:
 	if INCLUDE!="/usr/include":
 		include=INCLUDE
 	if -1!=include.find(" "):
-		print "-I\""+munge(include)+"\""
+		print "-I"+munge(include)+""
 	elif len(include):
 		print "-I"+include
 	ok = True
@@ -88,7 +88,7 @@ if options.libs:
 	if LIB!="/usr/lib":
 		libs = LIB
 	if -1!=libs.find(" "):
-		print "-L\""+munge(libs)+"\" -lascend"
+		print "-L"+munge(libs)+" -lascend"
 	else:
 		Lflag  = ""
 		if len(libs):
