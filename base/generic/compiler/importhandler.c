@@ -184,9 +184,9 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 		CONSOLE_DEBUG("FAILED TO IMPORT '%s' (error %d)",partialpath,result);
 	}else{
 		if(initfunc==NULL){
-	  		CONSOLE_DEBUG("Successfully ran '%s' (automatically named) from dynamic package '%s'",auto_initfunc,path);
+	  		CONSOLE_DEBUG("'%s' OK (%s)",auto_initfunc,path);
 		}else{
-			CONSOLE_DEBUG("Successfully ran '%s' from dynamic package '%s'",initfunc,path);
+			CONSOLE_DEBUG("'%s' OK (explicitly named, got file '%s')",initfunc,path);
 		}
 	}
 

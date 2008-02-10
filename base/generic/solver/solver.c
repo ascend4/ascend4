@@ -180,13 +180,13 @@ int solver_register(const SlvFunctionsT *solver){
 		}
 	}
 
-#if 1
+#if 0
 	CONSOLE_DEBUG("Adding engine '%s'",solver->name);
 #endif
 
 	gl_append_ptr(L,(SlvFunctionsT *)solver);
 	
-#if 1
+#if 0
 	CONSOLE_DEBUG("There are now %lu registered solvers", gl_length(solver_get_list(0)));
 #endif
 	return 0;
@@ -241,7 +241,7 @@ int SlvRegisterStandardClients(void){
 				,slv_reg[i].importname,error
 			);
 		}else{
-			CONSOLE_DEBUG("Solver '%s' registered OK",slv_reg[i].importname);
+			/* CONSOLE_DEBUG("Solver '%s' registered OK",slv_reg[i].importname); */
 			nclients++;
 		}
 	}

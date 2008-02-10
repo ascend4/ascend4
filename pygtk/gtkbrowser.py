@@ -451,7 +451,7 @@ class Browser:
 		#--------
 		# tell libascend about this 'browser' object
 
-		print dir(ascpy.Registry())
+		#print dir(ascpy.Registry())
 		ascpy.Registry().set("browser",self)
 
 		#--------
@@ -464,7 +464,7 @@ class Browser:
 				self.reporter.reportError(str(e))
 				return
 
-			print "Options: ",self.options
+			#print "Options: ",self.options
 
 			_model = None
 			if self.options.model:
@@ -552,7 +552,7 @@ class Browser:
 	
 		# self.library.clear()
 
-		print "Filename =",filename
+		#print "Filename =",filename
 		self.statusbar.push(_context,"Loading '"+filename+"'")
 		try:
 			self.filename = filename
@@ -562,7 +562,6 @@ class Browser:
 			self.statusbar.pop(_context)
 			raise
 
-		print "Statusbar =",self.statusbar
 		try:
 			self.statusbar.pop(_context)
 		except TypeError,e:
@@ -595,7 +594,7 @@ class Browser:
 		self.sim = None;
 		# TODO: clear out old simulation first!
 
-		print "DO_SIM(%s)" % str(type_object.getName())		
+		#print "DO_SIM(%s)" % str(type_object.getName())		
 		self.start_waiting("Compiling...")
 
 		try:
@@ -1211,7 +1210,7 @@ class Browser:
 		_dialog.run()
 
 	def on_maintabs_switch_page(self,notebook,page,pagenum):
-		print("Page switched to %d" % pagenum)
+		#print("Page switched to %d" % pagenum)
 		if pagenum in self.tabs.keys():
 			self.currentobservertab = pagenum
 
