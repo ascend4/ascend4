@@ -39,42 +39,41 @@
 *)
 
 REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
 
-ATOM energy_rate_per_length REFINES solver_var
-	DIMENSION M*L/T^3
-	DEFAULT 1000{W/m};
-	lower_bound := -1e50{W/m};
-	upper_bound := 1e50{W/m};
-	nominal := 1000{W/m};
-END energy_rate_per_length;
+MODEL cavity_base;
+(*
+	This model implements the grey body equilibrium equations
+ 	but no specific geometry or boundary conditions
+*)	
+	n    "surfaces in the cavity"         IS_A set OF symbol_constant;
+	A[n] "length of the surfaces (in 2D)" IS_A distance;
 
-ATOM energy_flux REFINES solver_var
-	DIMENSION M/T^3
-	DEFAULT 1000{W/m^2};
-	lower_bound := -1e50{W/m^2};
-	upper_bound := 1e50{W/m^2};
-	nominal := 1000{W/m^2};
-END energy_flux;
+	F[n][n] IS_A factor;
 
-ATOM heat_transfer_coefficient REFINES solver_var
-		DIMENSION M/T^3/TMP
-		DEFAULT 5{W/m^2/K};
-
-	lower_bound := 0{W/m^2/K};
-	upper_bound := 1e50{W/m^2/K};
-	nominal := 5{W/m^2/K};
-END heat_transfer_coefficient;
-
-ATOM specific_heat_capacity REFINES solver_var
-		DIMENSION L^2/T^2/TMP
-		DEFAULT 4.0{kJ/kg/K};
+	(* Radiation equations *)
+	q[n] "net heat transfer from each surface" IS_A energy_rate_per_length;
 	
-	lower_bound := 0{kJ/kg/K};
-	upper_bound := 1e50{kJ/kg/K};
-	nominal := 4.2{kJ/kg/K};
-END specific_heat_capacity;
+	E_b[n] IS_A energy_flux;
+	J[n] IS_A energy_flux;	
+	T[n] IS_A temperature;
+	eps[n] IS_A factor; (* emissivity *)
+	
+	FOR i IN n CREATE
+		z_q[i]: q[i] =  SUM[ (J[i]-J[j])*(A[i]*F[i][j]) | j IN n];
+	END FOR;
+	
+	FOR i IN n CREATE
+		z_E_b[i]: E_b[i] = 1{SIGMA_C} * T[i]^4;
+	END FOR;
 
-MODEL cavity;
+	FOR i IN n CREATE
+		z_J[i]: q[i] * (1-eps[i]) = (E_b[i] - J[i]) * (eps[i]*A[i]);
+	END FOR;
+END cavity_base;
+	
+MODEL cavity REFINES cavity_base;
+	(* specific test case for the CLFR cavity receiver *)
 	W,B,S,N,C,E,D IS_A distance;
 	theta, phi, psi IS_A angle;
 	
@@ -101,20 +100,16 @@ MODEL cavity;
 	z_F_NN: F_NN = 1 - F_NW - F_NB;
 	z_F_BW: F_BW = F_WB*W/B;
 		
-	n IS_A set OF symbol_constant;
 	n :== ['W','B','L','R'];
 
 	(* Put lengths into a vector *)
-	
-	A[n] IS_A distance;
+
 	A['W'], W ARE_THE_SAME;
 	A['B'], B ARE_THE_SAME;
 	A['L'], N ARE_THE_SAME;
 	A['R'], N ARE_THE_SAME;
 	
 	(* View factor matrix *)
-
-	F[n][n] IS_A factor;
 	
 	F['W']['L'], F['W']['R'], F_WN ARE_THE_SAME;
 	F['W']['B'], F_WB ARE_THE_SAME;
@@ -130,29 +125,16 @@ MODEL cavity;
 	z_F_LL: F['L']['L'] = 0;
 	z_F_RR: F['R']['R'] = 0;
 
-	(* Radiation equations *)
-	q[n] IS_A energy_rate_per_length;
-	
-	E_b[n] IS_A energy_flux;
-	J[n] IS_A energy_flux;	
-	T[n] IS_A temperature;
-	eps[n] IS_A factor; (* emissivity *)
-	
-	FOR i IN n CREATE
-		z_q[i]: q[i] =  SUM[ (J[i]-J[j])*(A[i]*F[i][j]) | j IN n];
-	END FOR;
-	
-	FOR i IN n CREATE
-		z_E_b[i]: E_b[i] = 1{SIGMA_C} * T[i]^4;
-	END FOR;
-
-	FOR i IN n CREATE
-		z_J[i]: q[i] * (1-eps[i]) = (E_b[i] - J[i]) * (eps[i]*A[i]);
-	END FOR;
-		
 METHODS
+METHOD on_load;
+	RUN default_self;
+	RUN reset;
+	RUN values;
+	RUN bound_self;
+END on_load;
+
 METHOD default_self;
-	RUN reset; RUN values; RUN bound_self;
+	psi := 120 {deg};
 END default_self;
 
 METHOD bound_self;
@@ -163,6 +145,7 @@ METHOD bound_self;
 END bound_self;
 
 METHOD specify;
+	RUN cavity::specify;
 	FIX T['W', 'B'];
 	FIX q['L','R'];
 	FIX W,D,theta;
@@ -181,7 +164,6 @@ METHOD values;
 	eps['W'] := 0.49;
 	eps['B'] := 0.9;
 	eps['L','R'] := 0.1;
-	
 END values;
 
 END cavity;
