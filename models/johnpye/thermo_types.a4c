@@ -142,6 +142,22 @@ ATOM pressure_per_temperature REFINES solver_var
     nominal := 1.0{Pa/K};
 END pressure_per_temperature;
 
+ATOM energy_rate_per_length REFINES solver_var
+	DIMENSION M*L/T^3
+	DEFAULT 1000{W/m};
+	lower_bound := -1e50{W/m};
+	upper_bound := 1e50{W/m};
+	nominal := 1000{W/m};
+END energy_rate_per_length;
+
+ATOM energy_flux REFINES solver_var
+	DIMENSION M/T^3
+	DEFAULT 1000{W/m^2};
+	lower_bound := -1e50{W/m^2};
+	upper_bound := 1e50{W/m^2};
+	nominal := 1000{W/m^2};
+END energy_flux;
+
 (* for use in heat exchangers: C_c, C_h, C_min, etc. *)
 ATOM capacity_rate REFINES power_per_temperature;
 END capacity_rate;
