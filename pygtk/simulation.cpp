@@ -786,9 +786,9 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		if(status.isReadyToSolve()){
 			CONSOLE_DEBUG("Calling slv_iterate...");
 			res = slv_iterate(sys);
-		}else{
+		}/*else{
 			CONSOLE_DEBUG("not ready to solve!");
-		}
+		}*/
 
 		if(res)CONSOLE_DEBUG("slv_iterate returns %d",res);
 

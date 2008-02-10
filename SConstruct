@@ -314,7 +314,7 @@ opts.Add(PackageOption(
 
 opts.Add(
 	"CONOPT_LIB"
-	,"Library linked to for CONOPT"
+	,"Library linked to for CONOPT. This is the name of the CONOPT .so or DLL. On Windows it seems to be called 'copopt3' but on linux it seems to be called 'consub3'."
 	,default_conopt_lib
 )
 
@@ -338,13 +338,13 @@ opts.Add(
 
 opts.Add(
 	'CONOPT_DLPATH'
-	,"What is the default search path that ASCEND should use when dlopening the CONOPT library at runtime?"
+	,"Default (fallback) search path that ASCEND should use when dlopening the CONOPT library at runtime? This is only used if the conopt environment variable doesn't exist and doesn't point to a location where the DLL/SO is found.  This is in platform-specific form (paths with ';' separator in Windows, ':' separator on Linux)."
 	,default_conopt_dlpath
 )
 
 opts.Add(
 	'CONOPT_ENVVAR'
-	,"What environment variable should be used at runtime to override the default search location for CONOPT DLL/SO?"
+	,"Name of the optional environment variable which will be used for the value of the searchpath for the CONOPT DLL/SO."
 	,default_conopt_envvar
 )
 
@@ -2362,11 +2362,7 @@ subst_dict = {
 	, '@ASC_DISTDIR_REL_BIN@' : default_rel_distdir
 	, '@PYTHON@' : python_exe
 	, '@PYVERSION@' : pyversion
-	, '@ASC_CONOPT_LIB@':env.get('CONOPT_LIB')
-	, '@ASC_CONOPT_ENVVAR@':env.get('CONOPT_ENVVAR')
-	, '@ASC_CONOPT_DLPATH@':c_escape(env.subst("$CONOPT_DLPATH"))
 	, '@SOURCE_ROOT@':c_escape(os.path.abspath(str(env.Dir("#"))))
-	, '@WITH_SOLVERS@':",".join(env.get('WITH_SOLVERS'))
 	, '@WITH_GRAPHVIZ@': str(int(env.get('WITH_GRAPHVIZ')))
 }
 
@@ -2376,13 +2372,8 @@ if env.get('WITH_DOC'):
 
 # bool options...
 for k,v in {
-		'ASC_WITH_IDA':with_ida
-		,'ASC_WITH_DMALLOC':with_dmalloc
+		'ASC_WITH_DMALLOC':with_dmalloc
 		,'ASC_WITH_UFSPARSE':with_ufsparse
-		,'ASC_WITH_CONOPT':with_conopt
-		,'ASC_LINKED_CONOPT':env.get('CONOPT_LINKED')
-		,'ASC_WITH_IPOPT':with_ipopt
-		,'ASC_WITH_LSODE':with_lsode
 		,'ASC_WITH_MMIO':with_mmio
 		,'ASC_SIGNAL_TRAPS':with_signals
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')

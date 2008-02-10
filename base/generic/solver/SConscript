@@ -14,17 +14,38 @@ solver_env = libascend_env.Copy()
 
 objs = []
 
-if solver_env.get('WITH_CONOPT'):
-	solver_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
+import re
+def c_escape(str):
+        return re.sub("\\\\","/",str)
+
+if libascend_env.get('WITH_CONOPT'):
+	conopt_env = solver_env.Copy()
+
+	conopt_env.AppendUnique(
+		CPPDEFINES=['ASC_WITH_CONOPT']
+		,CPPPATH=[solver_env.get('CONOPT_CPPPATH')]
+	)
 	print "CONOPT CPPPATH=%s" % solver_env.get('CPPPATH')
 
-	if solver_env.get('LINKED_CONOPT'):
+	if libascend_env.get('CONOPT_LINKED'):
+		# and then we must give the ldflags back to libascend for linking.
 		libascend_env.AppendUnique(
 			LIBPATH=[solver_env.get('CONOPT_LIBPATH')]
 			, LIBS=[solver_env.get('CONOPT_LIB')]
 		)
+		conopt_env.AppendUnique(
+			CPPDEFINES=['ASC_LINKED_CONOPT']
+		)
+	else:
+		conopt_env.AppendUnique(
+			CPPDEFINES=[
+				'ASC_CONOPT_LIB=\\"%s\\"' % libascend_env.get('CONOPT_LIB')
+				,'ASC_CONOPT_ENVVAR=\\"%s\\"' % libascend_env.get('CONOPT_ENVVAR')
+				,'ASC_CONOPT_DLPATH=\\"%s\\"' % c_escape(libascend_env.subst("$CONOPT_DLPATH"))
+			]
+		)
 
-	objs += solver_env.SharedObject('conopt_dl.c')
+	objs += conopt_env.SharedObject('conopt_dl.c')
 
 for c in csrcs:
 	objs += solver_env.SharedObject(c)

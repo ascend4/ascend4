@@ -37,8 +37,6 @@
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 
-#ifdef ASC_WITH_CONOPT  /* code used if CONOPT is available */
-
 /**
  * Macros defined because of the different convention of Fortran from C about
  * the use of an index in arrays (starting from zero or from one).
@@ -243,8 +241,6 @@ ASC_DLLSPEC int COI_CALL asc_conopt_solution( double* XVAL, double* XMAR, int* X
 ASC_DLLSPEC int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT, int* LEN_RL
 		, double* RL, double* X, double* USRMEM
 );
-
-#endif /* if ASC_WITH_CONOPT */
 
 /* @} */
 

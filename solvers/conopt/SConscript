@@ -16,6 +16,11 @@ if env.get('WITH_CONOPT'):
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
 
+	if env.get('CONOPT_LINKED'):
+		solver_env.AppendUnique(
+			CPPDEFINES=['ASC_LINKED_CONOPT']
+		)
+
 	env.Depends(lib,env['libascend'])
 
 	env['extfns'] += [lib]
