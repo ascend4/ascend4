@@ -57,13 +57,6 @@ ASC_DLLSPEC SolverRegisterFn conopt_register;
 #define conopt_coicsm coicsm
 #define conopt_coimem coimem
 
-#ifndef ASC_WITH_CONOPT
-int conopt_register(void){
-  ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT has not been compiled into this copy of ASCEND.");
-  return 1;
-}
-#else
-
 /*
   Output in user defined CONOPT subroutines
 */
@@ -2945,4 +2938,3 @@ int conopt_register(void){
 	return solver_register(&conopt_internals);
 }
 
-#endif /* ASC_WITH_CONOPT */

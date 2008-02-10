@@ -191,57 +191,6 @@
 #endif
 
 /*-----------------------------------------------------------------------
-  CONOPT
-*/
-
-/*
-	Whether to compile with support for the CONOPT solver.
-
-	Note that this option is automatically configured based on the value of
-	WITH_SOLVERS in the SCons options.
-
-	SCons will uncomment the #define line if required.
-	Doing it this (hacky) way so as not to mess up autoconf.
-*/
-#ifndef ASC_WITH_CONOPT
-/* #define ASC_WITH_CONOPT @ASC_WITH_CONOPT@ */
-#endif
-
-/*
-	Whether to dynamically link to CONOPT. If we don't dynamically link to
-	conopt, it is assumed that we are dlopening CONOPT, which means
-	that we don't need it to be present at buildtime.
-
-	SCons will uncomment the #define line if required.
-	Doing it this (hacky) way so as not to mess up autoconf.
-*/
-#ifndef ASC_LINKED_CONOPT
-/* #define ASC_LINKED_CONOPT @ASC_LINKED_CONOPT@ */
-#endif
-
-/*
-	This is the name of the CONOPT .so or DLL. On Windows
-	it's called 'copopt3' but on linux it seems to be called
-	'consub3.so'.
-*/
-#define ASC_CONOPT_LIB "@ASC_CONOPT_LIB@"
-
-/*
-	This is the name of the optional environment variable which will
-	be used for the value of the searchpath for the CONOPT DLL/SO.
-*/
-#define ASC_CONOPT_ENVVAR "@ASC_CONOPT_ENVVAR@"
-
-/*
-	This is the default *fallback* searchpath that will be used when hunting
-	for CONOPT at runtime
-
-	Searchpath for CONOPT DLL/SO. This is in platform-specific
-	form (paths with ';' separator in Windows, ':' separator on Linux).
-*/
-#define ASC_CONOPT_DLPATH "@ASC_CONOPT_DLPATH@"
-
-/*-----------------------------------------------------------------------
   TRON
 */
 

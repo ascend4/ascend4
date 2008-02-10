@@ -95,6 +95,9 @@ CONOPT_FNS(FN_PTR_EXEC,SPACE)
 	This funciton will load the DLL and resolve all the required symbols
 */
 int asc_conopt_load(){
+# ifdef ASC_LINKED_CONOPT
+#  error "We don't use this if we've got linked CONOPT!"
+# endif
 	static int loaded=0;
 	char *libpath;
 	int status;
