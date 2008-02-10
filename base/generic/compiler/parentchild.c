@@ -1096,7 +1096,7 @@ struct Instance *ChildByChar(CONST struct Instance *inst,symchar *name)
   if( ndx )  {
     return InstanceChild(inst,ndx);
   } else {
-    WriteChildMissing(ASCERR,"ChildByChar",name);
+    /* WriteChildMissing(ASCERR,"ChildByChar",name); */
     return NULL;
   }
 }

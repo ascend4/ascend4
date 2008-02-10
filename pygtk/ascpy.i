@@ -538,7 +538,7 @@ public:
 %include "registry.h"
 %extend Registry{
 	void set(const char *key, PyObject *obj){
-		CONSOLE_DEBUG("Registry::set(PyObject *obj=%p)",obj);
+		/* CONSOLE_DEBUG("Registry::set(PyObject *obj=%p)",obj); */
 		self->setPyObject(key,obj);
 	}
 }

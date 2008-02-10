@@ -68,7 +68,7 @@ class ModuleView:
 	
 		# open up the top-level module (ie the one we just openened)
 		if firstpath is not None:
-			print "EXPANDING PATH",firstpath
+			#print "EXPANDING PATH",firstpath
 			self.moduleview.expand_row(firstpath,False)
 		
 		#print "DONE ADDING MODULES"

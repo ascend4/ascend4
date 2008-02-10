@@ -80,7 +80,7 @@ Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), sim
 
 Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroot){
 	//is_built = old.is_built;
-	CONSOLE_DEBUG("Copying Simulation...");
+	//CONSOLE_DEBUG("Copying Simulation...");
 	sys = old.sys;
 	sing = NULL;
 }
@@ -90,7 +90,7 @@ Instanc Simulation::getRoot(){
 }
 
 Simulation::~Simulation(){
-	CONSOLE_DEBUG("Destroying Simulation...");
+	//CONSOLE_DEBUG("Destroying Simulation...");
 	/*
 	// FIXME removing this here, because Python overzealously seems to delete simulations
 
@@ -204,7 +204,7 @@ void
 Simulation::run(const Method &method, Instanc &model){
 
 	// set the 'sim' pointer to our local variable...
-	CONSOLE_DEBUG("Setting shared pointer 'sim' = %p",this);
+	//CONSOLE_DEBUG("Setting shared pointer 'sim' = %p",this);
 	importhandler_setsharedpointer("sim",this);
 
 	/*if(not is_built){
@@ -218,8 +218,8 @@ Simulation::run(const Method &method, Instanc &model){
 
 	error_reporter_tree_start();
 
-	CONSOLE_DEBUG("sys = %p",sys);
-	CONSOLE_DEBUG("simroot = %p",simroot.getInternalType());
+	//CONSOLE_DEBUG("sys = %p",sys);
+	//CONSOLE_DEBUG("simroot = %p",simroot.getInternalType());
 
 	Proc_enum pe;
 	pe = Initialize(
@@ -236,7 +236,7 @@ Simulation::run(const Method &method, Instanc &model){
 
 	// clear out the 'sim' pointer (soon it will be invalid)
 	importhandler_setsharedpointer("sim",NULL);
-	CONSOLE_DEBUG("Cleared shared pointer 'sim'");
+	//CONSOLE_DEBUG("Cleared shared pointer 'sim'");
 
 	if(pe == Proc_all_ok){
 		if(haserror){
@@ -749,16 +749,16 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	int res;
 
 	cerr << "-----------------set solver----------------" << endl;
-	CONSOLE_DEBUG("Setting solver to '%s'",solver.getName().c_str());
+	//CONSOLE_DEBUG("Setting solver to '%s'",solver.getName().c_str());
 	setSolver(solver);
 
 	cerr << "-----------------presolve----------------" << endl;
 
 	//cerr << "PRESOLVING SYSTEM...";
-	CONSOLE_DEBUG("Calling slv_presolve...");
+	//CONSOLE_DEBUG("Calling slv_presolve...");
 
 	res = slv_presolve(sys);
-	CONSOLE_DEBUG("slv_presolve returns %d",res);
+	//CONSOLE_DEBUG("slv_presolve returns %d",res);
 	if(res!=0){
 		throw runtime_error("Error in slv_presolve");
 	}
@@ -780,11 +780,11 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	status.getSimulationStatus(*this);
 	reporter.report(&status);
 
-	CONSOLE_DEBUG("About to start %d iterations...", niter);
+	//CONSOLE_DEBUG("About to start %d iterations...", niter);
 	for(unsigned iter = 1; iter <= niter && !stop; ++iter){
 
 		if(status.isReadyToSolve()){
-			CONSOLE_DEBUG("Calling slv_iterate...");
+			//CONSOLE_DEBUG("Calling slv_iterate...");
 			res = slv_iterate(sys);
 		}/*else{
 			CONSOLE_DEBUG("not ready to solve!");
@@ -795,7 +795,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		status.getSimulationStatus(*this);
 
 		if(res || reporter.report(&status)){
-			CONSOLE_DEBUG("STOPPING!");
+			//CONSOLE_DEBUG("STOPPING!");
 			stop = true;
 		}
 	}
