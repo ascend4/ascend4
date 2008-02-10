@@ -3,7 +3,11 @@ Import('env')
 solver_env = env.Copy()
 
 if solver_env.get('WITH_CONOPT'):
-	solver_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
+	solver_env.AppendUnique(
+		CPPPATH=[solver_env.get('CONOPT_CPPPATH')]
+		,CPPDEFINES=['ASC_WITH_CONOPT']
+	)
+
 
 lib = solver_env.SharedLibrary("cmslv",["slv9.c"]
 	,LIBS = ['ascend']
