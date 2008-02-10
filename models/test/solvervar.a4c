@@ -1,0 +1,12 @@
+(* model to investigate bug #362 with PyGTK GUI *)
+REQUIRE "system.a4l";
+
+MODEL solvervar;
+	x, y IS_A solver_var;
+	y = x + 1;
+METHODS
+	METHOD on_load;
+		FIX x; x:= 1;
+	END on_load;
+END solvervar;
+
