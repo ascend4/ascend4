@@ -44,6 +44,8 @@ def load_matplotlib(throw=False,alert=False):
 					print_status("","Using python module Numeric")
 				except ImportError:
 					print_status("","FAILED TO LOAD A NUMERIC MODULE FOR PYTHON")
+		import pylab
+
 
 	except ImportError,e:
 		print_status("","FAILED TO LOAD MATPLOTLIB")
