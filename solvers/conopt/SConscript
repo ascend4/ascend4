@@ -7,19 +7,21 @@ if env.get('WITH_CONOPT'):
 
 	solver_env = env.Copy()
 
-	solver_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
-
-	lib = solver_env.SharedLibrary("conopt",["asc_conopt.c"]
-		,LIBS = ['ascend']
-		,LIBPATH = ['#']
-		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
-		,SHLIBPREFIX = env['EXTLIB_PREFIX']
+	solver_env.AppendUnique(
+		LIBS = ['ascend']
+		, LIBPATH = ['#']
 	)
 
 	if env.get('CONOPT_LINKED'):
 		solver_env.AppendUnique(
-			CPPDEFINES=['ASC_LINKED_CONOPT']
+			LIBS = env['CONOPT_LIB']
+			, LIBPATH = env['CONOPT_LIBPATH']
 		)
+
+	lib = solver_env.SharedLibrary("conopt",["asc_conopt.c"]
+		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+		,SHLIBPREFIX = env['EXTLIB_PREFIX']
+	)
 
 	env.Depends(lib,env['libascend'])
 

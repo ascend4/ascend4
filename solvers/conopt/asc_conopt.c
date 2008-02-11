@@ -41,15 +41,10 @@
 #include <system/block.h>
 #include <solver/solver.h>
 
+#include <solver/conoptconfig.h>
 #include <solver/conopt_dl.h>
 
 typedef struct conopt_system_structure *conopt_system_t;
-
-#ifdef ASC_WITH_CONOPT
-# define HAVE_CONOPT 1
-#else
-# define HAVE_CONOPT 0
-#endif
 
 ASC_DLLSPEC SolverRegisterFn conopt_register;
 
@@ -1287,7 +1282,7 @@ int32 conopt_get_default_parameters(slv_system_t server, SlvClientToken asys
   slv_define_parm(parameters, int_parm,
 	       "lkdebg","LKDEBG","How often (in iterations) to write debugging info for derivatives",
 	       U_p_int(val,0),U_p_int(lo,-1),U_p_int(hi,MAX_INT),1);
-  
+
   slv_define_parm(parameters, int_parm,
 	       "lkdeb2","LKDEB2","How often (in iterations) to write debugging info for second derivs",
 	       U_p_int(val,0),U_p_int(lo,-1),U_p_int(hi,MAX_INT),1);
@@ -1470,7 +1465,7 @@ int32 conopt_get_default_parameters(slv_system_t server, SlvClientToken asys
   slv_define_parm(parameters, real_parm,
       "rvobjl", "RVOBJL","Limit on objective in Quick Mode",
 	       U_p_real(val, 0),U_p_real(lo,0),U_p_real(hi,10e10), 5);
-	
+
   asc_assert(parameters->num_parms==conopt_PA_SIZE);
 
   return 1;
@@ -2236,7 +2231,7 @@ static int COI_CALL conopt_fdeval(
 		CONOPT_CONSOLE_DEBUG("Jacobian for row %d, var %d = %f",mtx_row_to_org(sys->J.mtx,row),variables[c],jac[variables[c]]);
       }
       if(status){
-		CONOPT_CONSOLE_DEBUG("ERROR IN JACOBIAN EVALUATION (%d)",status);		
+		CONOPT_CONSOLE_DEBUG("ERROR IN JACOBIAN EVALUATION (%d)",status);
 		(*errcnt)++;
       }
     }

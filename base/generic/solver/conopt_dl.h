@@ -37,6 +37,8 @@
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 
+#include "conoptconfig.h"
+
 /**
  * Macros defined because of the different convention of Fortran from C about
  * the use of an index in arrays (starting from zero or from one).
@@ -47,7 +49,7 @@
 /*
 	Default bound limit for CONOPT
 */
-#define CONOPT_BOUNDLIMIT 3.1e9 
+#define CONOPT_BOUNDLIMIT 3.1e9
 
 /**
  * Parameter required for CONOPT subroutines
@@ -66,7 +68,7 @@
 /*----------------------------------------
   LINKED CONOPT
 */
-# include <conopt.h>
+# include "conopt.h"
 #else
 /*----------------------------------------
   DLOPENED CONOPT
