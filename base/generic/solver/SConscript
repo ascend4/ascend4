@@ -20,7 +20,7 @@ def c_escape(str):
 solver_env = libascend_env.Copy()
 
 solver_env['SUBST_DICT'] = {
-	'@ASC_WITH_CONOPT@':str(int(libascend_env['WITH_CONOPT']))
+	'@ASC_WITH_CONOPT@':str(int('CONOPT' in libascend_env['WITH_SOLVERS']))
 	,'@ASC_LINKED_CONOPT@':str(int(libascend_env['CONOPT_LINKED']))
 	,'@ASC_CONOPT_LIB@': '"%s"' % libascend_env.get('CONOPT_LIB')
 	,'@ASC_CONOPT_ENVVAR@': '"%s"' % libascend_env.get('CONOPT_ENVVAR')
@@ -29,7 +29,7 @@ solver_env['SUBST_DICT'] = {
 
 solverconfig = solver_env.SubstInFile('conoptconfig.h.in')
 
-if libascend_env.get('WITH_CONOPT'):
+if 'CONOPT' in libascend_env['WITH_SOLVERS']:
 	conopt_env = solver_env.Copy()
 
 	if libascend_env.get('CONOPT_LINKED'):
