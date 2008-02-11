@@ -18,7 +18,7 @@ if solver_env.get('WITH_CONOPT'):
 	
 print "LIBS FOR CMSLV =",solver_env['LIBS']
 
-lib = solver_env.SharedLibrary("cmslv",["slv9.c"]
+lib = solver_env.SharedLibrary("cmslv",["cmslv.c"]
 	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 	,SHLIBPREFIX = env['EXTLIB_PREFIX']
 )
