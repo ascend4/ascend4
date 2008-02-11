@@ -3,7 +3,7 @@ Import('env')
 # To run the test, type
 #     ascend johnpye/conopt/conopt.a4c
 
-if env.get('WITH_CONOPT'):
+if 'CONOPT' in env['WITH_SOLVERS']:
 
 	solver_env = env.Copy()
 

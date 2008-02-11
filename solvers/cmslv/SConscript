@@ -1,34 +1,31 @@
 Import('env')
 
-solver_env = env.Copy()
+if 'CMSLV' in env['WITH_SOLVERS'] and 'CONOPT' in env['WITH_SOLVERS']:
+	solver_env = env.Copy()
 
-solver_env.AppendUnique(
-	LIBS = ['ascend']
-	, LIBPATH = ['#']
-)
+	solver_env.AppendUnique(
+		LIBS = ['ascend']
+		, LIBPATH = ['#']
+	)
 
-if solver_env.get('WITH_CONOPT'):
 	if solver_env.get('CONOPT_LINKED'):
-		print "LINKED CONOPT"
 		solver_env.AppendUnique(
 			CPPPATH=env['CONOPT_CPPPATH']
 			, LIBS=env['CONOPT_LIB']
 			, LIBPATH=env['CONOPT_LIBPATH']
 		)
-	
-print "LIBS FOR CMSLV =",solver_env['LIBS']
 
-lib = solver_env.SharedLibrary("cmslv",["cmslv.c"]
-	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
-	,SHLIBPREFIX = env['EXTLIB_PREFIX']
-)
+	lib = solver_env.SharedLibrary("cmslv",["cmslv.c"]
+		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+		,SHLIBPREFIX = env['EXTLIB_PREFIX']
+	)
 
-env.Depends(lib,env['libascend'])
+	env.Depends(lib,env['libascend'])
 
-env['extfns'] += [lib]
+	env['extfns'] += [lib]
 
-if env.get('CAN_INSTALL'):
-	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),lib)
+	if env.get('CAN_INSTALL'):
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),lib)
 
 # vim: set syntax=python:
 
