@@ -145,7 +145,6 @@ METHOD bound_self;
 END bound_self;
 
 METHOD specify;
-	RUN cavity::specify;
 	FIX T['W', 'B'];
 	FIX q['L','R'];
 	FIX W,D,theta;
