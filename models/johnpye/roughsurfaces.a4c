@@ -1,0 +1,30 @@
+REQUIRE "johnpye/cavity.a4c";
+(*
+	Consider the case of a rough surface in a grey body radiation equilibrium
+	problem. What is the change in effective emissivity cause by a smooth
+	surface being replaced by a rough one?
+*)
+
+MODEL roughsurfaces REFINES cavity_base;
+	n :== ['A','B'];
+	(* reciprocity *)
+	A['A']*F['A']['B'] = A['B'] * F['B']['A'];
+	(* summation *)
+	F['A']['B'] + F['A']['A'] = 1;
+	F['B']['A'] + F['B']['B'] = 1;
+METHODS
+METHOD on_load;
+	FIX eps[n];
+	FIX A[n];
+	FIX F['B']['B'];
+	eps['A'] := 0.5;
+	eps['B'] := 0.5;
+	A['A'] := 1 {m};
+	A['B'] := 1 {m};
+	F['B']['B'] := 0;
+	FIX T[n];
+	T['A'] := 400 {K};
+	T['B'] := 300 {K};
+END on_load;
+END roughsurfaces;
+
