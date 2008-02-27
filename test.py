@@ -1338,7 +1338,7 @@ class TestIDASPGMR:#(Ascend):
 
 class TestDOPRI5(Ascend):
 	def testlotka(self):
-		self.L.load('johnpye/dopri5/dopri5test.a4c')
+		self.L.load('test/dopri5/dopri5test.a4c')
 		M = self.L.findType('dopri5test').getSimulation('sim')
 		M.setSolver(ascpy.Solver("QRSlv"))
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
@@ -1351,7 +1351,7 @@ class TestDOPRI5(Ascend):
 		assert I.getNumVars()==1
 		I.solve()
 	def testaren(self):
-		self.L.load('johnpye/dopri5/aren.a4c')
+		self.L.load('test/dopri5/aren.a4c')
 		M = self.L.findType('aren').getSimulation('sim')
 		M.setSolver(ascpy.Solver("QRSlv"))
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
@@ -1368,6 +1368,7 @@ class TestDOPRI5(Ascend):
 		I.setInitialSubStep(0);
 		I.analyse()
 		I.solve()
+		print "y[0] = %f" % float(M.y[0])
 		assert abs(float(M.y[0]) - 0.994) < 1e-5
 		assert abs(float(M.y[1]) - 0.0) < 1e-5
 
@@ -1454,7 +1455,7 @@ if __name__=='__main__':
 		SEP = ":"
 
 	solverdir = os.path.abspath(os.path.join(sys.path[0],"solvers"))
-	solverdirs = [os.path.join(solverdir,s) for s in "qrslv","cmslv","lrslv","conopt","ida","lsode","ipopt"]
+	solverdirs = [os.path.join(solverdir,s) for s in "qrslv","cmslv","lrslv","conopt","ida","lsode","ipopt","dopri5"]
 
 	if not os.environ.get('ASCENDSOLVERS'):
 		os.environ['ASCENDSOLVERS'] = SEP.join(solverdirs)

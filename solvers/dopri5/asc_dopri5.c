@@ -1,24 +1,24 @@
 /*	ASCEND modelling environment
 	Copyright (C) 2007 Carnegie Mellon University
- 
+
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation; either version 2, or (at your option)
 	any later version.
- 
+
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
- 
+
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//** @file
 	DOPRI5 Runge-Kutta integrator
- 
-	Based on the implementation of LSODE integrator, but adapted to 
+
+	Based on the implementation of LSODE integrator, but adapted to
 	an explicit one-step method.
 *//*
 	by John Pye, May 2007.
@@ -291,7 +291,7 @@ static double *dopri5_get_artol(IntegratorSystem *blsys, int is_r, int tolvect) 
 
 	// single tol for all vars
 	tolval = SLV_PARAM_REAL(&(blsys->params),DOPRI5_PARAM_RTOL);
-	CONSOLE_DEBUG("Using RTOL = %f for all vars", tolval);
+	CONSOLE_DEBUG("Using RTOL = %g for all vars", tolval);
 
 	tol = ASC_NEW(double);
 	if(tol == NULL){
@@ -336,15 +336,15 @@ static double *dopri5_get_artol(IntegratorSystem *blsys, int is_r, int tolvect) 
   STATS
 */
 
-/* 
+/*
 	Several functions provide access to different values :
- 
+
 	xRead   x value for which the solution has been computed (x=xend after
 		successful return).
- 
+
 	hRead   Predicted step size of the last accepted step (useful for a
 		subsequent call to dopri5).
- 
+
 	nstepRead   Number of used steps.
 	naccptRead  Number of accepted steps.
 	nrejctRead  Number of rejected steps.
@@ -408,7 +408,7 @@ static FcnEqDiff integrator_dopri5_fex;
 	@param t indep var value
 	@param y input vector of variable values
 	@param ydot return vector of calculated derivatives
-	@param user_data point to whatever we want, in this case the IntegratorSystem	
+	@param user_data point to whatever we want, in this case the IntegratorSystem
 */
 static void integrator_dopri5_fex(
 		unsigned n_eq, double t, double *y, double *ydot
@@ -454,7 +454,7 @@ static void integrator_dopri5_fex(
 		ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
 		FPRINTF(ASCERR,"Unable to compute the vector of derivatives with the following values for the state variables:\n");
 		for (i = 0; i< n_eq; i++) {
-			FPRINTF(ASCERR,"y[%4d] = %f\n",i, y[i]);
+			FPRINTF(ASCERR,"y[%4d] = %g\n",i, y[i]);
 		}
 		error_reporter_end_flush();
 #endif
@@ -536,7 +536,7 @@ static void integrator_dopri5_reporter(
 		//CONSOLE_DEBUG("t=%f > ts=%f (currentsample = %ld",t,ts,d->currentsample);
 		integrator_output_write_obs(blsys);
 #ifdef DOPRI5_DEBUG
-		CONSOLE_DEBUG("step = %ld", nr-1);	
+		CONSOLE_DEBUG("step = %ld", nr-1);
 #endif
 		while(t>ts){
 			d->currentsample++;
@@ -596,12 +596,12 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 
 	d->y_vars = ASC_NEW_ARRAY(struct var_variable *,d->n_eqns+1);
 	d->ydot_vars = ASC_NEW_ARRAY(struct var_variable *, d->n_eqns+1);
-	
+
 	d->yinter = ASC_NEW_ARRAY(double,d->n_eqns);
 
 	/* set up the NLA solver here */
 
-	/* 
+	/*
 		DOPRI5 should be OK to deal with any linsol/linsolqr-based solver.
 		But for the moment we restrict to just QRSlv :-(
 	*/
@@ -615,7 +615,7 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	slv_get_status(blsys->system, &status);
 
 	if(status.struct_singular){
-		ERROR_REPORTER_HERE(ASC_USER_WARNING	
+		ERROR_REPORTER_HERE(ASC_USER_WARNING
 			,"The system (according to QRSlv) is structurally singular."
 			" The ODE system may also be singular, but not necessarily."
 		);
@@ -653,7 +653,7 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	d->currentsample = 1;
 
 	y = integrator_get_y(blsys, NULL);
-	
+
 	rtoler = dopri5_get_artol(blsys,1,tolvect);
 	atoler = dopri5_get_artol(blsys,0,tolvect);
 
