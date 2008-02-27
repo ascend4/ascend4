@@ -248,6 +248,7 @@ Section "ASCEND (required)"
 	File "..\solvers\cmslv\cmslv_ascend.dll"
 	File "..\solvers\lsode\lsode_ascend.dll"
 	File "..\solvers\ida\ida_ascend.dll"
+	File "..\solvers\dopri5\dopri5_ascend.dll"
 	
 	SetOutPath $INSTDIR
 	;File "Makefile.bt"
@@ -614,6 +615,7 @@ unnopython:
 	Delete $INSTDIR\solvers\cmslv_ascend.dll
 	Delete $INSTDIR\solvers\lsode_ascend.dll
 	Delete $INSTDIR\solvers\ida_ascend.dll
+	Delete $INSTDIR\solvers\dopri5_ascend.dll
 	RMDir $INSTDIR\solvers
 
 	; Remove directories used

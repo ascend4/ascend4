@@ -15,7 +15,16 @@ class Help:
 			self.webhelproot = config.WEBHELPROOT
 			
 			if helproot==None:
-				self.helproot = os.path.expanduser(config.HELPROOT)
+				if platform.system()=="Windows":
+					import _winreg
+					x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
+					y= _winreg.OpenKey(x,r"SOFTWARE\ASCEND")
+					_regpath,t = _winreg.QueryValueEx(y,"Install_Dir")
+					_winreg.CloseKey(y)
+					_winreg.CloseKey(x)
+					self.helproot = os.path.join(_regpath,"book.pdf")		
+				else:
+					self.helproot = os.path.expanduser(config.HELPROOT)
 			else:
 				self.helproot = helproot
 			
