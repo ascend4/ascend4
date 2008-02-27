@@ -1,5 +1,37 @@
-upcoming
---------
+27 Feb 2008
+-----------
+
+Version 0.9.5.114
+
+ - Fixed launching problems on Windows
+ - Added Units of Measurement dialog to PyGTK GUI.
+ - Updated version check to use the CMU server instead of old UNSW server.
+ - Fixed ascend-config script for Windows paths containing spaces.
+ - Fixed display of logrels in PyGTK GUI.
+ - PyGTK GUI correctly opens PDF docs if available on local machine.
+ - Added a PyGTK crash dialog to give information about failures in ASCEND. 
+ - DOPRI5 converted to full 'solver' status (lives in solvers/dopri5 now).
+ - Added (experimental) DOPRI5 integrator to the Windows binary installer.
+ - Fixed some problems with linking to CONOPT optimiser
+ - Streamlined some internal build-time dependencies.
+ - Improved gtksourceview-2.0 highlighting for use with Gedit on Linux.
+ - Added Graphviz bindings to allow dependency graph view.
+ - Some code renaming/refactoring in 'compiler' and 'system' sections.
+ - Fixed splash-screen behaviour
+ - Refactored 'moduleview' out of 'gtkbrowser'.
+ - Some preliminary fixes to attempt support for Mac platform.
+ - Added some CUnit test cases for 'compiler' section, renamed all CUnit tests.
+ - Fixed dlopen bug on Linux.
+ - Changes to measures.a4l to add SI prefixes and modified the base units to
+   their abbreviation instead of full names.
+
+TODO: more work to get IPOPT solver working.
+TODO: still some problems with DOPRI5 solver.
+TODO: fix GraphViz dependency so that it can be dlopened rather than linked.
+
+
+19 Aug 2007
+-----------
 
 Version 0.9.5.113
 
