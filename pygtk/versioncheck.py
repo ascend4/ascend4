@@ -3,7 +3,7 @@ import socket
 
 class VersionCheck:
 	def __init__(self):
-		self.url = "http://ascend.cruncher2.dyndns.org/version.ini"
+		self.url = "http://ascend.cheme.cmu.edu/versioncheck/version.ini"
 		self.download = None
 		self.latest = None
 		self.info = None
