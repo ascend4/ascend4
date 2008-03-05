@@ -81,7 +81,7 @@ except RuntimeError, e:
 
 except ImportError, e:
 	print "\n\n------------------  ERROR  ---------------------"
-	print     "ASCEND had problems importing required modules."
+	print     "ASCEND had problems importing required Python modules."
 	print "\nPlease ensure you have all the runtime prerequisites installed."
 	print "Please then report a bug if you continue to have problems."
 	print "\nFull error message:",str(e)
