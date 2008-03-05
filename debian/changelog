@@ -1,3 +1,9 @@
+ascend (0.9.5.114-13) unstable; urgency=low
+
+  * Added ASCEND Tcl/Tk to Applications menu
+
+ -- John Pye (roadwork) <john@curioussymbols.com>  Thu, 06 Mar 2008 10:09:00 +1000
+
 ascend (0.9.5.114-12) unstable; urgency=low
 
   * Uploaded final release code for 0.9.5.114

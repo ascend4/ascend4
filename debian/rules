@@ -69,6 +69,10 @@ install: build
 	cd $(CURDIR)/tools/$(GTKSOURCEVIEW) && \
 	install -m 644 -D ascend.lang $(GTKSOURCEVIEWLANGS)/ascend.lang
 #
+# DESKTOP file for ASCEND Tcl/Tk
+	cd $(CURDIR)/tcltk/gnome && \
+	install -m 644 -D ascend4.desktop $(DATADIR)/applications/ascend4.desktop
+#
 	dh_install --autodest
 	dh_desktop
 	dh_installman debian/ascend.man 
@@ -79,7 +83,7 @@ install: build
 binary-indep:
 	dh_testdir
 	dh_testroot
-	-cd $(CUR_DIR) && $(SCONS) doc	
+	-cd $(CUR_DIR) && $(SCONS) doc
 
 # Build architecture-dependent files here.
 binary-arch: build install
