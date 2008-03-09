@@ -2711,12 +2711,14 @@ int ConvertSuchThat(CONST struct Expr *ex,
   if (CorrectSuchThat(ex,&depth_one,&node)){
     if (DoNameAndSet(NextExpr(depth_one),node,ref,&tmp_name,&iteration_set)){
       *err = incorrect_structure;
+	  ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
       FPRINTF(ASCERR,"incorrect_structure in ConvertSuchThat 1\n");
       if (depth_one!=NULL && NextExpr(depth_one)!=NULL) {
         FPRINTF(ASCERR,"such that expression (RPN):\n\t");
         WriteExpr(ASCERR,NextExpr(depth_one));
         FPRINTF(ASCERR,"\n");
       }
+	  error_reporter_end_flush();
       return 1;
     }
     node = NextExpr(depth_one);
