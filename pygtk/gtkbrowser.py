@@ -824,6 +824,7 @@ class Browser:
 		except Exception,e:
 			self.stop_waiting()
 			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
+			return
 		self.stop_waiting()
 		f.close()
 		_ig = ImageWindow(self, self.window, fname, "Incidence Graph")
