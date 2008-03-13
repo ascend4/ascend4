@@ -274,39 +274,38 @@
                 </context>
 
                 <context id="types" style-ref="type">
-                    <keyword>_Bool</keyword>
-                    <keyword>_Complex</keyword>
-                    <keyword>_Imaginary</keyword>
-                    <keyword>bool</keyword>
-                    <keyword>char</keyword>
-                    <keyword>double</keyword>
-                    <keyword>float</keyword>
-                    <keyword>int</keyword>
-                    <keyword>long</keyword>
-                    <keyword>short</keyword>
-                    <keyword>signed</keyword>
-                    <keyword>size_t</keyword>
-                    <keyword>unsigned</keyword>
-                    <keyword>void</keyword>
+					<keyword>real_constant</keyword>
+					<keyword>integer_constant</keyword>
+					<keyword>symbol_constant</keyword>
+					<keyword>boolean_constant</keyword>
+
+					<keyword>real</keyword>
+					<keyword>integer</keyword>
+					<keyword>symbol</keyword>
+					<keyword>boolean</keyword>
+					<keyword>set</keyword>
+
+					<keyword>solver_var</keyword>
+					<keyword>factor</keyword>
+					<keyword>fraction</keyword>
                 </context>
 
                 <context id="storage-class" style-ref="storage-class">
-                    <keyword>auto</keyword>
-                    <keyword>const</keyword>
-                    <keyword>extern</keyword>
-                    <keyword>inline</keyword>
-                    <keyword>register</keyword>
-                    <keyword>restrict</keyword>
-                    <keyword>static</keyword>
-                    <keyword>volatile</keyword>
+                    <keyword>on_load</keyword>
+                    <keyword>default_self</keyword>
+                    <keyword>specify</keyword>
+                    <keyword>reset</keyword>
+                    <keyword>ClearAll</keyword>
+                    <keyword>bound_self</keyword>
+                    <keyword>default_all</keyword>
+                    <keyword>bound_all</keyword>
+                    <keyword>self_test</keyword>
                 </context>
 
                 <context id="common-defines" style-ref="common-defines">
                     <keyword>NULL</keyword>
                     <keyword>MAX</keyword>
                     <keyword>MIN</keyword>
-                    <keyword>TRUE</keyword>
-                    <keyword>FALSE</keyword>
                     <keyword>__LINE__</keyword>
                     <keyword>__DATA__</keyword>
                     <keyword>__FILE__</keyword>
@@ -315,10 +314,9 @@
                     <keyword>__STDC__</keyword>
                 </context>
 
-                <!-- C99 booleans -->                
                 <context id="boolean" style-ref="boolean">
-                    <keyword>true</keyword>
-                    <keyword>false</keyword>
+                    <keyword>TRUE</keyword>
+                    <keyword>FALSE</keyword>
                 </context>
 
             </include>
