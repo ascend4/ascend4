@@ -247,6 +247,7 @@ int system_diffvars_debug(slv_system_t sys,FILE *fp){
 		fprintf(fp,"NO DIFFVARS (NULL)");
 		return 0;
 	}
+	fprintf(fp,"Derivative chains in slv_system...\n");
 	for(i=0; i<diffvars->nseqs;++i){
 		seq = diffvars->seqs[i];
 		fprintf(fp,"%d: ",i);

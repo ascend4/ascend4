@@ -1,5 +1,5 @@
-#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 1.5.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 276
 \begin_document
 \begin_header
 \textclass book
@@ -8,12 +8,13 @@
 \usepackage{lmodern}
 \usepackage{color}
 \definecolor{darkred}{rgb}{0.55,0,0}
+\definecolor{darkgreen}{rgb}{0,0.55,0}
 
 \usepackage{listings}
 
 \lstdefinelanguage{ascend}{
   morekeywords=[1]{
-     REQUIRE,IMPORT,
+     REQUIRE,IMPORT,NOTES,
      ATOM,MODEL,METHOD,METHODS,
      UNIVERSAL,CONSTANT,DIMENSION,DEFAULT,
      END,FOR,CREATE,DO,EXTERNAL,  
@@ -28,26 +29,43 @@
      solver_var,integer_constant
   },
   sensitive=true,
-  morecomment=[s]{(*}{*)},
-  morestring=[b]',
-  morestring=[b]",
+  morecomment=[s][\color{blue}]{(*}{*)},
+  morestring=[b][\color{darkgreen}]',
+  morestring=[b][\color{darkgreen}]",
+  morecomment=[s][\color{darkgreen}]{\{}{\}},
 }
 
-\lstset{
-  basicstyle=\ttfamily,
-  commentstyle=\color{blue},
-  keywordstyle=\color{darkred},
+\lstnewenvironment{ascend}
+  {\lstset{basicstyle=\ttfamily\small, keywordstyle=\color{darkred}}}
+  {}
+
+\lstdefinestyle{ascendlisting}{
+  style=ascendlisting,
+  basicstyle=\small\ttfamily, 
+  numbers=left, 
+  numbersep=5pt, 
+  numberstyle=\tiny, 
+  escapeinside={(*@}{@*)}
+  backgroundcolor=\color{lightgrey} 
 }
 \end_preamble
 \language english
 \inputencoding auto
-\fontscheme default
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
 \paperfontsize default
 \spacing single
 \papersize a4paper
 \use_geometry false
 \use_amsmath 2
+\use_esint 0
 \cite_engine basic
 \use_bibtopic false
 \paperorientation portrait
@@ -60,14 +78,16 @@
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
-\output_changes true
+\output_changes false
+\author "" 
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Vessel Model for Beginners
-\begin_inset LatexCommand \label{cha:model1}
+\begin_inset LatexCommand label
+name "cha:model1"
 
 \end_inset
 
@@ -115,7 +135,8 @@ and the next two chapters (
 Chapter 
 \noun off
 
-\begin_inset LatexCommand \ref{cha:model2}
+\begin_inset LatexCommand ref
+reference "cha:model2"
 
 \end_inset
 
@@ -124,7 +145,8 @@ Chapter
 Chapter 
 \noun off
 
-\begin_inset LatexCommand \ref{cha:model3}
+\begin_inset LatexCommand ref
+reference "cha:model3"
 
 \end_inset
 
@@ -173,14 +195,16 @@ We are going to create and test an ASCEND model to compute, the mass of
  the metal in the sides and ends of the thin-walled cylindrical vessel
 \emph default
 
-\begin_inset LatexCommand \index{vessel}
+\begin_inset LatexCommand index
+name "vessel"
 
 \end_inset
 
-
+ 
 \emph on
- shown in Figure 
-\begin_inset LatexCommand \ref{fig:model1.thinWalledVessel}
+shown in Figure 
+\begin_inset LatexCommand ref
+reference "fig:model1.thinWalledVessel"
 
 \end_inset
 
@@ -239,9 +263,18 @@ status open
 
 \end_layout
 
-\begin_layout Caption
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
 A thin-walled cylindrical vessel with flat ends
-\begin_inset LatexCommand \label{fig:model1.thinWalledVessel}
+\begin_inset LatexCommand label
+name "fig:model1.thinWalledVessel"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -324,7 +357,8 @@ status collapsed
 \begin_layout Standard
 Chapter\InsetSpace ~
 
-\begin_inset LatexCommand \vref{cha:model2}
+\begin_inset LatexCommand vref
+reference "cha:model2"
 
 \end_inset
 
@@ -348,7 +382,8 @@ status collapsed
 \begin_layout Standard
 Chapter\InsetSpace ~
 
-\begin_inset LatexCommand \vref{cha:model3}
+\begin_inset LatexCommand vref
+reference "cha:model3"
 
 \end_inset
 
@@ -377,7 +412,8 @@ We shall introduce many of the features of the modeling language as well
 
 \begin_layout Section
 Converting the word description into an ASCEND model
-\begin_inset LatexCommand \label{sec:model1.converting-the-word}
+\begin_inset LatexCommand label
+name "sec:model1.converting-the-word"
 
 \end_inset
 
@@ -390,7 +426,8 @@ status collapsed
 
 \begin_layout Standard
 an ASCEND model is a type
-\begin_inset LatexCommand \index{type}
+\begin_inset LatexCommand index
+name "type"
 
 \end_inset
 
@@ -401,7 +438,8 @@ an ASCEND model is a type
 
 Every ASCEND model is, in fact, a type definition.
  To "solve a model," we make an instance
-\begin_inset LatexCommand \index{instance}
+\begin_inset LatexCommand index
+name "instance"
 
 \end_inset
 
@@ -410,7 +448,8 @@ Every ASCEND model is, in fact, a type definition.
  We will have to create our type definition as a text file using a text
  editor.
  (Some simple text editors
-\begin_inset LatexCommand \index{text editors}
+\begin_inset LatexCommand index
+name "text editors"
 
 \end_inset
 
@@ -419,26 +458,30 @@ Every ASCEND model is, in fact, a type definition.
 emacs
 \family default
 
-\begin_inset LatexCommand \index{emacs}
+\begin_inset LatexCommand index
+name "emacs"
 
 \end_inset
 
  and 
 \family typewriter
 gedit
-\begin_inset LatexCommand \index{gedit}
+\begin_inset LatexCommand index
+name "gedit"
 
 \end_inset
 
 
 \family default
  on Linux, and Notepad
-\begin_inset LatexCommand \index{Notepad}
+\begin_inset LatexCommand index
+name "Notepad"
 
 \end_inset
 
  and TextPad
-\begin_inset LatexCommand \index{TextPad}
+\begin_inset LatexCommand index
+name "TextPad"
 
 \end_inset
 
@@ -449,12 +492,14 @@ gedit
 \begin_layout Standard
 We need first to decide the parts to our model.
  In this case we know that we need the variables
-\begin_inset LatexCommand \index{variables, vessel}
+\begin_inset LatexCommand index
+name "variables, vessel"
 
 \end_inset
 
  listed in Table 
-\begin_inset LatexCommand \ref{tab:model1.variablesVesselModel}
+\begin_inset LatexCommand ref
+reference "tab:model1.variablesVesselModel"
 
 \end_inset
 
@@ -471,9 +516,18 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
 Variables required for model
-\begin_inset LatexCommand \label{tab:model1.variablesVesselModel}
+\begin_inset LatexCommand label
+name "tab:model1.variablesVesselModel"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -755,7 +809,8 @@ We should be interested in the volume of the vessel, which we compute as:
 
 \begin_layout Standard
 We add the variables in Table 
-\begin_inset LatexCommand \ref{tab:model1.moreVariablesVessel}
+\begin_inset LatexCommand ref
+reference "tab:model1.moreVariablesVessel"
 
 \end_inset
 
@@ -770,14 +825,24 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
 Some more variables
-\begin_inset LatexCommand \index{variables,  vessel}
+\begin_inset LatexCommand index
+name "variables,  vessel"
 
 \end_inset
 
  required for vessel model
-\begin_inset LatexCommand \label{tab:model1.moreVariablesVessel}
+\begin_inset LatexCommand label
+name "tab:model1.moreVariablesVessel"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -1092,7 +1157,8 @@ We believe that no one should create a model of any consequence without
  Grant us our beliefs.
  We have created in the ASCEND system a library of variable and constant
  types called atoms.a4l
-\begin_inset LatexCommand \index{atoms.a4l}
+\begin_inset LatexCommand index
+name "atoms.a4l"
 
 \end_inset
 
@@ -1103,21 +1169,24 @@ We believe that no one should create a model of any consequence without
 The file type "
 \family typewriter
 .a4l
-\begin_inset LatexCommand \index{a4l}
+\begin_inset LatexCommand index
+name "a4l"
 
 \end_inset
 
 
 \family default
 " designates it to be an ASCEND IV library file
-\begin_inset LatexCommand \index{library file}
+\begin_inset LatexCommand index
+name "library file"
 
 \end_inset
 
 .
  Double-click on this link to see the approximately 150 different types
  ranging from universal constants
-\begin_inset LatexCommand \index{universal constants}
+\begin_inset LatexCommand index
+name "universal constants"
 
 \end_inset
 
@@ -1148,7 +1217,8 @@ angle
  You will find detailed instructions for how to make your own variable type
  library in Chapter\InsetSpace ~
 
-\begin_inset LatexCommand \vref{cha:atoms}
+\begin_inset LatexCommand vref
+reference "cha:atoms"
 
 \end_inset
 
@@ -1171,7 +1241,8 @@ ASCEND considers variable and constant types to be elementary or "atomic"
  They cannot contain equations, for example.
  Thus ASCEND calls such a type definition an atom rather than a model.
  Figure 
-\begin_inset LatexCommand \ref{fig:model1.atomVolume}
+\begin_inset LatexCommand ref
+reference "fig:model1.atomVolume"
 
 \end_inset
 
@@ -1188,7 +1259,8 @@ sideways false
 status open
 
 \begin_layout Standard
-\begin_inset LatexCommand \index{ATOM}
+\begin_inset LatexCommand index
+name "ATOM"
 
 \end_inset
 
@@ -1261,10 +1333,19 @@ end{lstlisting}
 
 \end_layout
 
-\begin_layout Caption
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
 A typical type definition, called an atom, used to define variable and constant
  types
-\begin_inset LatexCommand \label{fig:model1.atomVolume}
+\begin_inset LatexCommand label
+name "fig:model1.atomVolume"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -1278,7 +1359,8 @@ A typical type definition, called an atom, used to define variable and constant
 
 \begin_layout Standard
 The definition starts by stating that volume is a specialization of 
-\begin_inset LatexCommand \index{solver\_var}
+\begin_inset LatexCommand index
+name "solver\\_var"
 
 \end_inset
 
@@ -1296,7 +1378,8 @@ solver_var
 real
 \family default
 
-\begin_inset LatexCommand \index{real}
+\begin_inset LatexCommand index
+name "real"
 
 \end_inset
 
@@ -1311,12 +1394,14 @@ status collapsed
 
 \begin_layout Standard
 dimensions
-\begin_inset LatexCommand \index{dimensions}
+\begin_inset LatexCommand index
+name "dimensions"
 
 \end_inset
 
  and units
-\begin_inset LatexCommand \index{units}
+\begin_inset LatexCommand index
+name "units"
 
 \end_inset
 
@@ -1380,7 +1465,8 @@ One may change the values for the bounds, default and nominal values at
 
 \begin_layout Standard
 We now can understand the last column in Table 
-\begin_inset LatexCommand \ref{tab:model1.variablesVesselModel}
+\begin_inset LatexCommand ref
+reference "tab:model1.variablesVesselModel"
 
 \end_inset
 
@@ -1391,7 +1477,8 @@ We now can understand the last column in Table
  Table
 \noun off
  
-\begin_inset LatexCommand \ref{tab:model1.moreVariablesVessel}
+\begin_inset LatexCommand ref
+reference "tab:model1.moreVariablesVessel"
 
 \end_inset
 
@@ -1419,7 +1506,8 @@ ft^3
 
 \begin_layout Standard
 In Figure 
-\begin_inset LatexCommand \ref{fig:model1.universalConstant}
+\begin_inset LatexCommand ref
+reference "fig:model1.universalConstant"
 
 \end_inset
 
@@ -1439,7 +1527,8 @@ circle_constant
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{circle\_constant}
+\begin_inset LatexCommand index
+name "circle\\_constant"
 
 \end_inset
 
@@ -1450,7 +1539,8 @@ real_constant
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{real\_constant}
+\begin_inset LatexCommand index
+name "real\\_constant"
 
 \end_inset
 
@@ -1458,7 +1548,8 @@ real_constant
 \family typewriter
 \noun default
 1 {PI
-\begin_inset LatexCommand \index{PI}
+\begin_inset LatexCommand index
+name "PI"
 
 \end_inset
 
@@ -1466,7 +1557,8 @@ real_constant
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{\{PI\}}
+\begin_inset LatexCommand index
+name "\\{PI\\}"
 
 \end_inset
 
@@ -1483,7 +1575,8 @@ real_constant
 Chapter 
 \noun off
 
-\begin_inset LatexCommand \vref{cha:units}
+\begin_inset LatexCommand vref
+reference "cha:units"
 
 \end_inset
 
@@ -1500,7 +1593,8 @@ status collapsed
 
 \begin_layout Standard
 universal constant
-\begin_inset LatexCommand \index{universal constant}
+\begin_inset LatexCommand index
+name "universal constant"
 
 \end_inset
 
@@ -1548,8 +1642,12 @@ end{ascend}
 
 \end_layout
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{fig:model1.universalConstant}
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
+\begin_inset LatexCommand label
+name "fig:model1.universalConstant"
 
 \end_inset
 
@@ -1562,6 +1660,11 @@ circle_constant;
 1 {PI}
 \family default
  or 3.1415927
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -1582,7 +1685,8 @@ We shall in fact find this constant useful in our program, and we can either
 \begin_layout Standard
 It is time to write our first version for the model, which we do in Figure
  
-\begin_inset LatexCommand \ref{fig:model1.modelVessel}
+\begin_inset LatexCommand ref
+reference "fig:model1.modelVessel"
 
 \end_inset
 
@@ -1591,7 +1695,8 @@ It is time to write our first version for the model, which we do in Figure
  (
 \noun default
 available as 
-\begin_inset LatexCommand \index{vesselPlain.a4c}
+\begin_inset LatexCommand index
+name "vesselPlain.a4c"
 
 \end_inset
 
@@ -1616,7 +1721,8 @@ REQUIRE
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{REQUIRE}
+\begin_inset LatexCommand index
+name "REQUIRE"
 
 \end_inset
 
@@ -1796,8 +1902,12 @@ end{ascend}
 
 \end_layout
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{fig:model1.modelVessel}
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
+\begin_inset LatexCommand label
+name "fig:model1.modelVessel"
 
 \end_inset
 
@@ -1807,6 +1917,11 @@ vessel
 \family default
 .
  
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -1824,7 +1939,8 @@ Our model definition has the following structure for it so far:
 MODEL
 \family default
 
-\begin_inset LatexCommand \index{MODEL}
+\begin_inset LatexCommand index
+name "MODEL"
 
 \end_inset
 
@@ -1845,7 +1961,8 @@ equations
 END
 \family default
 
-\begin_inset LatexCommand \index{END}
+\begin_inset LatexCommand index
+name "END"
 
 \end_inset
 
@@ -1908,7 +2025,8 @@ When we compile new models, we need a place to store them.
 models
 \family default
 
-\begin_inset LatexCommand \index{models}
+\begin_inset LatexCommand index
+name "models"
 
 \end_inset
 
@@ -1956,7 +2074,8 @@ status open
 
 \begin_layout Standard
 rather put your things into the ascdata
-\begin_inset LatexCommand \index{ascdata}
+\begin_inset LatexCommand index
+name "ascdata"
 
 \end_inset
 
@@ -1977,7 +2096,8 @@ ascdata
 ascdata
 \family default
  into your home directory
-\begin_inset LatexCommand \ref{id:#id(pgfId-1007944)}
+\begin_inset LatexCommand ref
+reference "id:#id(pgfId-1007944)"
 
 \end_inset
 
@@ -2039,7 +2159,8 @@ create a text file containing the model definition
 \end_inset
 
 Next open an editor
-\begin_inset LatexCommand \index{text editors}
+\begin_inset LatexCommand index
+name "text editors"
 
 \end_inset
 
@@ -2048,7 +2169,8 @@ Next open an editor
 emacs
 \family default
 
-\begin_inset LatexCommand \index{emacs}
+\begin_inset LatexCommand index
+name "emacs"
 
 \end_inset
 
@@ -2057,7 +2179,8 @@ emacs
 gedit
 \family default
 
-\begin_inset LatexCommand \index{gedit}
+\begin_inset LatexCommand index
+name "gedit"
 
 \end_inset
 
@@ -2066,7 +2189,8 @@ gedit
 vi
 \family default
 
-\begin_inset LatexCommand \index{vi}
+\begin_inset LatexCommand index
+name "vi"
 
 \end_inset
 
@@ -2075,23 +2199,27 @@ vi
 vim
 \family default
 
-\begin_inset LatexCommand \index{vim}
+\begin_inset LatexCommand index
+name "vim"
 
 \end_inset
 
 , Notepad
-\begin_inset LatexCommand \index{Notepad}
+\begin_inset LatexCommand index
+name "Notepad"
 
 \end_inset
 
  or TextPad
-\begin_inset LatexCommand \index{TextPad}
+\begin_inset LatexCommand index
+name "TextPad"
 
 \end_inset
 
 .
  Now type in or, better yet, cut-and-paste the statements in Figure 
-\begin_inset LatexCommand \ref{fig:model1.modelVessel}
+\begin_inset LatexCommand ref
+reference "fig:model1.modelVessel"
 
 \end_inset
 
@@ -2147,7 +2275,8 @@ vesselPlain.a4c
  you should not -- and change it to "
 \family typewriter
 .a4c
-\begin_inset LatexCommand \index{a4c}
+\begin_inset LatexCommand index
+name "a4c"
 
 \end_inset
 
@@ -2175,7 +2304,8 @@ vesselPlain.a4c
 \family default
  stored in your ASCEND/models/vessel subdirectory.
  It should contain precisely the statements in Figure 
-\begin_inset LatexCommand \ref{fig:model1.modelVessel}
+\begin_inset LatexCommand ref
+reference "fig:model1.modelVessel"
 
 \end_inset
 
@@ -2223,17 +2353,20 @@ ascend4
  or so they overlap very little.
  Resize them if you want to.
  You might start by putting the one called Script
-\begin_inset LatexCommand \index{Script window}
+\begin_inset LatexCommand index
+name "Script window"
 
 \end_inset
 
  in the upper left, the one called Library
-\begin_inset LatexCommand \index{Library window}
+\begin_inset LatexCommand index
+name "Library window"
 
 \end_inset
 
  in the upper right and the one called Console
-\begin_inset LatexCommand \index{Console}
+\begin_inset LatexCommand index
+name "Console"
 
 \end_inset
 
@@ -2285,7 +2418,8 @@ hey, where did that window go? I want it back NOW!
 \end_inset
 
 If you ever lose a window, open the Script window and under the Tools
-\begin_inset LatexCommand \index{Tools}
+\begin_inset LatexCommand index
+name "Tools"
 
 \end_inset
 
@@ -2302,7 +2436,8 @@ status collapsed
 
 \begin_layout Standard
 How do I quit
-\begin_inset LatexCommand \index{quit ASCEND}
+\begin_inset LatexCommand index
+name "quit ASCEND"
 
 \end_inset
 
@@ -2312,7 +2447,8 @@ How do I quit
 \end_inset
 
 To exit
-\begin_inset LatexCommand \index{exit ASCEND}
+\begin_inset LatexCommand index
+name "exit ASCEND"
 
 \end_inset
 
@@ -2327,12 +2463,14 @@ status collapsed
 
 \begin_layout Standard
 saving
-\begin_inset LatexCommand \index{saving window position}
+\begin_inset LatexCommand index
+name "saving window position"
 
 \end_inset
 
  window positions
-\begin_inset LatexCommand \index{window position}
+\begin_inset LatexCommand index
+name "window position"
 
 \end_inset
 
@@ -2344,17 +2482,20 @@ saving
 ASCEND will not remember your window locations automatically.
  If you like where you have placed the windows for ASCEND on your display,
  go to the Script window and select 'Save all appearances
-\begin_inset LatexCommand \index{window locations, save}
+\begin_inset LatexCommand index
+name "window locations, save"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{appearances, save all}
+\begin_inset LatexCommand index
+name "appearances, save all"
 
 \end_inset
 
 ' under the View
-\begin_inset LatexCommand \index{View}
+\begin_inset LatexCommand index
+name "View"
 
 \end_inset
 
@@ -2376,7 +2517,8 @@ We shall start with the Library window in the upper right.
  This window provides you with the tools to load and compile files containing
  type definitions.
  You can also display
-\begin_inset LatexCommand \index{display}
+\begin_inset LatexCommand index
+name "display"
 
 \end_inset
 
@@ -2396,7 +2538,8 @@ use the left mouse button unless we tell you otherwise (however, on you
 
 Let's load your file.
  Under the File button select the 'Read types from File
-\begin_inset LatexCommand \index{Read Types from File}
+\begin_inset LatexCommand index
+name "Read Types from File"
 
 \end_inset
 
@@ -2452,7 +2595,8 @@ status open
 
 \begin_layout Standard
 Do not ignore the diagnostics
-\begin_inset LatexCommand \index{diagnostics}
+\begin_inset LatexCommand index
+name "diagnostics"
 
 \end_inset
 
@@ -2467,7 +2611,8 @@ If the Console window in the lower right starts filling with several tens
 REQUIRE
 \family default
 
-\begin_inset LatexCommand \index{REQUIRE}
+\begin_inset LatexCommand index
+name "REQUIRE"
 
 \end_inset
 
@@ -2492,7 +2637,8 @@ While loading the files containing these types, ASCEND will look very closely
  at the syntax and will give you all kinds of diagnostic messages in the
  Console window (lower right) if you have done something wrong.
  It will also at times spew out some warning messages
-\begin_inset LatexCommand \index{warning messages}
+\begin_inset LatexCommand index
+name "warning messages"
 
 \end_inset
 
@@ -2509,7 +2655,8 @@ You should consider heeding the warnings if you get any.
  However, there are times when we issue a warning but everything will work,
  and you will think we were not too clever.
  Our response: better modeling style
-\begin_inset LatexCommand \index{modeling style}
+\begin_inset LatexCommand index
+name "modeling style"
 
 \end_inset
 
@@ -2523,12 +2670,14 @@ status collapsed
 
 \begin_layout Standard
 how do I jump
-\begin_inset LatexCommand \index{jump to line}
+\begin_inset LatexCommand index
+name "jump to line"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{line numbers}
+\begin_inset LatexCommand index
+name "line numbers"
 
 \end_inset
 
@@ -2562,12 +2711,14 @@ status collapsed
 
 \begin_layout Standard
 reloading a file
-\begin_inset LatexCommand \index{reloading a file}
+\begin_inset LatexCommand index
+name "reloading a file"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{file, reloading}
+\begin_inset LatexCommand index
+name "file, reloading"
 
 \end_inset
 
@@ -2596,7 +2747,8 @@ displaying the code
 You can display the code you have written.
  Select the model vessel in the right window of the Library.
  Then under the Display
-\begin_inset LatexCommand \index{Display  window}
+\begin_inset LatexCommand index
+name "Display  window"
 
 \end_inset
 
@@ -2620,7 +2772,8 @@ v
 
 Okay, you have your file loaded without getting any diagnostics.
  You are ready to compile
-\begin_inset LatexCommand \index{compile}
+\begin_inset LatexCommand index
+name "compile"
 
 \end_inset
 
@@ -2657,12 +2810,14 @@ status collapsed
 
 \begin_layout Standard
 and pass the instance
-\begin_inset LatexCommand \index{instance}
+\begin_inset LatexCommand index
+name "instance"
 
 \end_inset
 
  to the Browser
-\begin_inset LatexCommand \index{Browser}
+\begin_inset LatexCommand index
+name "Browser"
 
 \end_inset
 
@@ -2677,12 +2832,14 @@ v IS A vessel
 \family default
  in the bottom of the Library window.
  Then under the Export
-\begin_inset LatexCommand \index{Export}
+\begin_inset LatexCommand index
+name "Export"
 
 \end_inset
 
  button, select 'Simulation to Browser
-\begin_inset LatexCommand \index{Export Simulation to Browser}
+\begin_inset LatexCommand index
+name "Export Simulation to Browser"
 
 \end_inset
 
@@ -2751,12 +2908,14 @@ status collapsed
 
 \begin_layout Standard
 included flags
-\begin_inset LatexCommand \index{included flags}
+\begin_inset LatexCommand index
+name "included flags"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{flag, included}
+\begin_inset LatexCommand index
+name "flag, included"
 
 \end_inset
 
@@ -2783,7 +2942,8 @@ FALSE
 \begin_layout Standard
 If you wish to display the current value for this flag, pick 'Display Atom
  Values
-\begin_inset LatexCommand \index{Display Atom Values}
+\begin_inset LatexCommand index
+name "Display Atom Values"
 
 \end_inset
 
@@ -2819,7 +2979,8 @@ DV
 
 \begin_layout Section
 Solving
-\begin_inset LatexCommand \index{Solving}
+\begin_inset LatexCommand index
+name "Solving"
 
 \end_inset
 
@@ -2837,18 +2998,21 @@ v
 , make it the current object (it alone should be listed in the upper left
  window of the Browser).
  Then, under the Export
-\begin_inset LatexCommand \index{Export to Solver}
+\begin_inset LatexCommand index
+name "Export to Solver"
 
 \end_inset
 
  menu, select 'to Solver'.
  The Solver window will open, along with a smaller window labeled Eligible
-\begin_inset LatexCommand \index{window, Eligible}
+\begin_inset LatexCommand index
+name "window, Eligible"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{Eligible window}
+\begin_inset LatexCommand index
+name "Eligible window"
 
 \end_inset
 
@@ -2866,12 +3030,14 @@ status collapsed
 
 \begin_layout Standard
 if ASCEND stops responding
-\begin_inset LatexCommand \index{responding, ASCEND stops}
+\begin_inset LatexCommand index
+name "responding, ASCEND stops"
 
 \end_inset
 
 , hunt down one of those "nasty" windows with a "yellow lock
-\begin_inset LatexCommand \index{yellow lock}
+\begin_inset LatexCommand index
+name "yellow lock"
 
 \end_inset
 
@@ -2909,7 +3075,8 @@ status open
 
 \begin_layout Standard
 is our problem well-posed
-\begin_inset LatexCommand \index{well-posed}
+\begin_inset LatexCommand index
+name "well-posed"
 
 \end_inset
 
@@ -2928,7 +3095,8 @@ v
  has 6 relations defining it and that all are equalities and included.
  It has no inequalities.
  On the right side we see there are 10 variables and all are 'free
-\begin_inset LatexCommand \index{free variables}
+\begin_inset LatexCommand index
+name "free variables"
 
 \end_inset
 
@@ -2936,20 +3104,23 @@ v
  Hmm, 6 equations in 10 variables.
  Something is wrong here.
  For a well-posed problem, you want 6 equations in 6 variables (i.e., square
-\begin_inset LatexCommand \index{square}
+\begin_inset LatexCommand index
+name "square"
 
 \end_inset
 
 ).
  ASCEND reports that the system is underspecified
-\begin_inset LatexCommand \index{underspecified}
+\begin_inset LatexCommand index
+name "underspecified"
 
 \end_inset
 
  by 4.
  This means you need to pick four of the variables and declare them to be
  fixed
-\begin_inset LatexCommand \index{fixed}
+\begin_inset LatexCommand index
+name "fixed"
 
 \end_inset
 
@@ -2983,9 +3154,9 @@ Okay, the small help such as needed here is why the Eligible window opened.
  structure of the equations.
  The variables it lists are those that can be fixed 
 \emph on
-without 
+without
 \emph default
-the system becoming numerically singular.
+ the system becoming numerically singular.
  So any variables that are not shown 
 \emph on
 cannot possibly
@@ -3074,7 +3245,8 @@ wall_thickness
  The Solver window now says this problem is square (i.e., it has 6 equations
  in the same number of unknowns).
  Table 
-\begin_inset LatexCommand \ref{tab:model1.variableFixed}
+\begin_inset LatexCommand ref
+reference "tab:model1.variableFixed"
 
 \end_inset
 
@@ -3089,13 +3261,23 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{tab:model1.variableFixed}
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
+\begin_inset LatexCommand label
+name "tab:model1.variableFixed"
 
 \end_inset
 
 Variables we have fixed
-\begin_inset LatexCommand \index{fixed variables}
+\begin_inset LatexCommand index
+name "fixed variables"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -3197,7 +3379,8 @@ Toward the bottom right of the
 Solver
 \series default
  window, we see there are 6 "blocks
-\begin_inset LatexCommand \index{blocks}
+\begin_inset LatexCommand index
+name "blocks"
 
 \end_inset
 
@@ -3226,7 +3409,8 @@ status open
 
 \begin_layout Standard
 displaying the incidence matrix
-\begin_inset LatexCommand \index{incidence matrix}
+\begin_inset LatexCommand index
+name "incidence matrix"
 
 \end_inset
 
@@ -3238,7 +3422,8 @@ displaying the incidence matrix
 Can we see what ASCEND has just discovered? It turns out we can (we would
  not have asked if we could not).
  Under the Display menu on the Solver, select the 'Incidence matrix tool
-\begin_inset LatexCommand \index{incidence matrix tool}
+\begin_inset LatexCommand index
+name "incidence matrix tool"
 
 \end_inset
 
@@ -3246,12 +3431,14 @@ Can we see what ASCEND has just discovered? It turns out we can (we would
  A window pops open showing us the incidence of variables in the equations
  and display them in the order that ASCEND has found to solve them, also
  known as a sparsity matrix
-\begin_inset LatexCommand \index{sparsity matrix}
+\begin_inset LatexCommand index
+name "sparsity matrix"
 
 \end_inset
 
  or sparsity pattern
-\begin_inset LatexCommand \index{sparsity pattern}
+\begin_inset LatexCommand index
+name "sparsity pattern"
 
 \end_inset
 
@@ -3325,7 +3512,8 @@ v
 \family default
  remains the current object (it alone is in the upper left window).
  Under the Find menu select 'by Type
-\begin_inset LatexCommand \index{Find by Type}
+\begin_inset LatexCommand index
+name "Find by Type"
 
 \end_inset
 
@@ -3381,7 +3569,8 @@ D
  Put in the value 4 in the left window and ft in the right.
  Continue by putting in the values for the variables as listed in Table
  
-\begin_inset LatexCommand \ref{tab:model1.valuesFixedVars}
+\begin_inset LatexCommand ref
+reference "tab:model1.valuesFixedVars"
 
 \end_inset
 
@@ -3407,12 +3596,21 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{tab:model1.valuesFixedVars}
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
+\begin_inset LatexCommand label
+name "tab:model1.valuesFixedVars"
 
 \end_inset
 
 Values to use for fixed variables
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3722,12 +3920,14 @@ Measuring units'.
 Units
 \series default
  window
-\begin_inset LatexCommand \index{Units window}
+\begin_inset LatexCommand index
+name "Units window"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{window, Units}
+\begin_inset LatexCommand index
+name "window, Units"
 
 \end_inset
 
@@ -3799,7 +3999,8 @@ returning to a consistent set of units
 \end_inset
 
 When you are done, you may wish to return to a consistent set, such as SI
-\begin_inset LatexCommand \index{SI}
+\begin_inset LatexCommand index
+name "SI"
 
 \end_inset
 
@@ -3840,7 +4041,8 @@ vessel_volume
 D
 \emph default
 , one of which we will have to "unfix
-\begin_inset LatexCommand \index{unfix}
+\begin_inset LatexCommand index
+name "unfix"
 
 \end_inset
 
@@ -3919,7 +4121,8 @@ Browser
 \begin_layout Itemize
 Export v to the Solver again by selecting to Solver under the Export button.
  A window entitled Overspecified
-\begin_inset LatexCommand \index{Overspecified}
+\begin_inset LatexCommand index
+name "Overspecified"
 
 \end_inset
 

@@ -168,8 +168,8 @@ ASC_DLLSPEC int system_block_debug(slv_system_t sys, FILE *fp);
   PARTITIONING FOR DAE SYSTEMS
 */
 
-void system_var_list_debug(slv_system_t sys);
-void system_rel_list_debug(slv_system_t sys);
+ASC_DLLSPEC void system_var_list_debug(slv_system_t sys);
+ASC_DLLSPEC void system_rel_list_debug(slv_system_t sys);
 
 
 ASC_DLLSPEC int system_cut_vars(slv_system_t sys, const int start, const var_filter_t *vfilt, int *nvars);
@@ -178,8 +178,10 @@ ASC_DLLSPEC int system_cut_vars(slv_system_t sys, const int start, const var_fil
 	that does not meet the filter 'vfilt' is moved to the back, and any
 	var that does stays. The number nvars of vars meeting the filter is returned.
 
-	Afterwards, we have start vars left as-is, followed by the nvars vars that
-	meed vfilt, followed by all remaining vars in the solvers var list.
+	Afterwards, we have 'start' vars left as-is, followed by the 'nvars' vars that
+	meet 'vfilt', followed by all remaining vars in the solvers var list.
+
+	@return 0 on success
 */
 
 

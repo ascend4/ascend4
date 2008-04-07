@@ -1,17 +1,25 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 1.5.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 276
 \begin_document
 \begin_header
 \textclass book
 \language english
 \inputencoding auto
-\fontscheme default
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
 \paperfontsize default
 \spacing single
 \papersize a4paper
 \use_geometry false
 \use_amsmath 2
+\use_esint 0
 \cite_engine basic
 \use_bibtopic false
 \paperorientation portrait
@@ -24,14 +32,16 @@
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
-\output_changes true
+\output_changes false
+\author "" 
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Defining Variables and Scaling Values
-\begin_inset LatexCommand \label{cha:atoms}
+\begin_inset LatexCommand label
+name "cha:atoms"
 
 \end_inset
 
@@ -50,7 +60,8 @@ the purpose of this chapter
 
 By now you have probably read Chapter\InsetSpace ~
 
-\begin_inset LatexCommand \vref{cha:model1}
+\begin_inset LatexCommand vref
+reference "cha:model1"
 
 \end_inset
 
@@ -80,7 +91,8 @@ The "Big Picture" of how variables, constants, and scaling values relate
  You do not need to read about the "Big Picture" in order to read and use
  the other parts of this chapter, but you may find it helpful if you are
  having trouble writing an equation
-\begin_inset LatexCommand \index{equation, writing}
+\begin_inset LatexCommand index
+name "equation, writing"
 
 \end_inset
 
@@ -130,7 +142,8 @@ How to define a scaling variable to make your equations much easier to solve.
 
 \begin_layout Section
 The Big Picture: a taxonomy
-\begin_inset LatexCommand \index{taxonomy}
+\begin_inset LatexCommand index
+name "taxonomy"
 
 \end_inset
 
@@ -140,7 +153,8 @@ The Big Picture: a taxonomy
 \begin_layout Standard
 As you read in Chapter\InsetSpace ~
 
-\begin_inset LatexCommand \ref{cha:model1}
+\begin_inset LatexCommand ref
+reference "cha:model1"
 
 \end_inset
 
@@ -148,7 +162,8 @@ As you read in Chapter\InsetSpace ~
  definitions are defined by creating types in an ASCEND language text file
  that you load into the ASCEND system.
  Figure 
-\begin_inset LatexCommand \ref{fig:atoms.taxonomy}
+\begin_inset LatexCommand ref
+reference "fig:atoms.taxonomy"
 
 \end_inset
 
@@ -174,21 +189,24 @@ sideways false
 status open
 
 \begin_layout Standard
+\align center
 
 \noun off
 \begin_inset Graphics
 	filename howto-atomsFig1.eps
 	scale 90
-	BoundingBox 20bp 0bp 600bp 320bp
-	clip
 
 \end_inset
 
 
 \end_layout
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{fig:atoms.taxonomy}
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
+\begin_inset LatexCommand label
+name "fig:atoms.taxonomy"
 
 \end_inset
 
@@ -200,10 +218,16 @@ The big picture: how to think about variables
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Paragraph
 
 \noun off
-\begin_inset LatexCommand \index{atom}
+\begin_inset LatexCommand index
+name "atom"
 
 \end_inset
 
@@ -241,7 +265,8 @@ Each subatomic particle instance belongs to exactly one atom instance (one
 \end_layout
 
 \begin_layout Paragraph
-\begin_inset LatexCommand \index{constant}
+\begin_inset LatexCommand index
+name "constant"
 
 \end_inset
 
@@ -268,7 +293,8 @@ Integer and symbol constants can appear as members of sets or as subscripts
 \end_layout
 
 \begin_layout Paragraph
-\begin_inset LatexCommand \index{set}
+\begin_inset LatexCommand index
+name "set"
 
 \end_inset
 
@@ -285,7 +311,8 @@ Sets are unordered lists of either integer or symbol constants.
 \end_layout
 
 \begin_layout Paragraph
-\begin_inset LatexCommand \index{relationship}
+\begin_inset LatexCommand index
+name "relationship"
 
 \end_inset
 
@@ -294,12 +321,14 @@ relationships
 
 \begin_layout Itemize
 Relations and logical relations allow you to state 
-\begin_inset LatexCommand \index{equalities}
+\begin_inset LatexCommand index
+name "equalities"
 
 \end_inset
 
 equalities and 
-\begin_inset LatexCommand \index{inequalitites}
+\begin_inset LatexCommand index
+name "inequalitites"
 
 \end_inset
 
@@ -312,12 +341,14 @@ inequalities among the variables and constants in you models.
 
 \begin_layout Standard
 Real
-\begin_inset LatexCommand \index{real}
+\begin_inset LatexCommand index
+name "real"
 
 \end_inset
 
  
-\begin_inset LatexCommand \index{relation, real}
+\begin_inset LatexCommand index
+name "relation, real"
 
 \end_inset
 
@@ -329,12 +360,14 @@ relations relate the values of real atoms, real constants, and integer constants
 
 \begin_layout Standard
 Logical
-\begin_inset LatexCommand \index{logical}
+\begin_inset LatexCommand index
+name "logical"
 
 \end_inset
 
  relations
-\begin_inset LatexCommand \index{logical relation}
+\begin_inset LatexCommand index
+name "logical relation"
 
 \end_inset
 
@@ -344,7 +377,8 @@ Logical
 SATISFIED
 \family default
 
-\begin_inset LatexCommand \index{SATISFIED}
+\begin_inset LatexCommand index
+name "SATISFIED"
 
 \end_inset
 
@@ -377,7 +411,8 @@ WHEN statements are outside the scope of this chapter; please see **conditional
 \end_layout
 
 \begin_layout Paragraph
-\begin_inset LatexCommand \index{model}
+\begin_inset LatexCommand index
+name "model"
 
 \end_inset
 
@@ -392,7 +427,8 @@ A model is simply a container for a collection of atoms, constants, sets,
  The container also specifies some of the methods that can be used to manipulate
  its contents.
  Compiling a model creates an instance of it-- a simulation
-\begin_inset LatexCommand \index{simulation}
+\begin_inset LatexCommand index
+name "simulation"
 
 \end_inset
 
@@ -440,7 +476,8 @@ lower_bound
 
 \begin_layout Paragraph
 Scaling
-\begin_inset LatexCommand \index{scaling}
+\begin_inset LatexCommand index
+name "scaling"
 
 \end_inset
 
@@ -467,7 +504,8 @@ solver_var
 \begin_layout Standard
 This is one of the many reasons that scientists and engineers work with
  dimensionless models
-\begin_inset LatexCommand \index{dimensionless models}
+\begin_inset LatexCommand index
+name "dimensionless models"
 
 \end_inset
 
@@ -483,7 +521,8 @@ This is one of the many reasons that scientists and engineers work with
 
 \begin_layout Section
 How to find the right variable type
-\begin_inset LatexCommand \index{type, variable}
+\begin_inset LatexCommand index
+name "type, variable"
 
 \end_inset
 
@@ -585,12 +624,14 @@ You now know the name of the variable type you need, or you know that you
 
 \begin_layout Section
 How to define a new type of variable
-\begin_inset LatexCommand \index{type, variable}
+\begin_inset LatexCommand index
+name "type, variable"
 
 \end_inset
 
 
-\begin_inset LatexCommand \label{ssec:atoms.newVarType}
+\begin_inset LatexCommand label
+name "ssec:atoms.newVarType"
 
 \end_inset
 
@@ -629,7 +670,8 @@ ascdata
 myatoms.a4l
 \family default
  is  the normal location for a personal
-\begin_inset LatexCommand \index{library, personal}
+\begin_inset LatexCommand index
+name "library, personal"
 
 \end_inset
 
@@ -668,7 +710,8 @@ If you develop an interesting set of atoms for some problem domain outside
 The user data directory 
 \family typewriter
 ~/
-\begin_inset LatexCommand \index{ascdata}
+\begin_inset LatexCommand index
+name "ascdata"
 
 \end_inset
 
@@ -676,7 +719,8 @@ ascdata
 \family default
  may have a different name if you are running under Windows and do not have
  the environment variable HOME
-\begin_inset LatexCommand \index{HOME}
+\begin_inset LatexCommand index
+name "HOME"
 
 \end_inset
 
@@ -780,7 +824,8 @@ In picking the name of your atom, remember that names should be as self-explanat
 ory as possible.
  Also avoid choosing a name that ends in _constant (as this is conventionally
  applied only to CONSTANT
-\begin_inset LatexCommand \index{CONSTANT}
+\begin_inset LatexCommand index
+name "CONSTANT"
 
 \end_inset
 
@@ -853,12 +898,14 @@ For example, negative temperature just is not sensible for most physical
 
 \begin_layout Subsection
 A new real constant
-\begin_inset LatexCommand \index{real constant}
+\begin_inset LatexCommand index
+name "real constant"
 
 \end_inset
 
  
-\begin_inset LatexCommand \index{constant, real}
+\begin_inset LatexCommand index
+name "constant, real"
 
 \end_inset
 
@@ -910,12 +957,14 @@ It is wasteful to define a
 CONSTANT
 \family default
  type and a compiled object to represent a universal
-\begin_inset LatexCommand \index{universal constant}
+\begin_inset LatexCommand index
+name "universal constant"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{constant, universal}
+\begin_inset LatexCommand index
+name "constant, universal"
 
 \end_inset
 
@@ -924,7 +973,8 @@ CONSTANT
  {J/mole/K}, is frequently needed in modeling chemical systems.
  The SI value of R does not vary with its application.
  Neither does the value of 
-\begin_inset LatexCommand \index{pi}
+\begin_inset LatexCommand index
+name "pi"
 
 \end_inset
 
@@ -936,7 +986,8 @@ CONSTANT
  Numeric constants of this sort are better represented as a numeric coefficient
  and an appropriately defined unit conversion.
  Consider the 
-\begin_inset LatexCommand \index{ideal gas law}
+\begin_inset LatexCommand index
+name "ideal gas law"
 
 \end_inset
 
@@ -1013,7 +1064,8 @@ CONSTANT
 
 \begin_layout Section
 How to define a 
-\begin_inset LatexCommand \index{scaling}
+\begin_inset LatexCommand index
+name "scaling"
 
 \end_inset
 
@@ -1060,7 +1112,8 @@ ASCEND uses a combination of symbolic and numerical techniques to create
  and solve mathematical problems.
  Once you get the problem close to the solution, ASCEND can internally compute
  its own scaling values for relations, known elsewhere as "relation nominals
-\begin_inset LatexCommand \index{nominals}
+\begin_inset LatexCommand index
+name "nominals"
 
 \end_inset
 
@@ -1083,13 +1136,15 @@ This internal scaling works quite well, but not when the problem is very
 scale_self
 \family default
 
-\begin_inset LatexCommand \index{scale\_self}
+\begin_inset LatexCommand index
+name "scale\\_self"
 
 \end_inset
 
  method, which should be written for every model as described in Section\InsetSpace ~
 
-\begin_inset LatexCommand \ref{sssec:methods.scaleself}
+\begin_inset LatexCommand ref
+reference "sssec:methods.scaleself"
 
 \end_inset
 
@@ -1097,7 +1152,8 @@ scale_self
 \noun off
 \InsetSpace ~
 
-\begin_inset LatexCommand \vref{cha:methods}
+\begin_inset LatexCommand vref
+reference "cha:methods"
 
 \end_inset
 
@@ -1125,7 +1181,8 @@ Scaling atom default value
 \end_inset
 
 The 
-\begin_inset LatexCommand \index{default value}
+\begin_inset LatexCommand index
+name "default value"
 
 \end_inset
 

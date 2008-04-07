@@ -39,8 +39,11 @@ MODEL testtmy;
 		tmydata : DATA
 	);
 
-	Gb = G - Gd;
+	Gb_expr:Gb = G - Gd;
 
+	E1 IS_A solver_var;
+	E1_expr:E1 = E + 1;
+	
 METHODS
 
 METHOD default_self;
