@@ -16,13 +16,13 @@
 
 #include "ida_impl.h"
 
-/* #define ANALYSE_DEBUG */
+#define ANALYSE_DEBUG
 
 /*
 	define DERIV_WITHOUT_DIFF to enable experimental handling of derivatives
 	for which corresponding differential vars were not found to be incident.
 */
-/* #define DERIV_WITHOUT_DIFF */
+#define DERIV_WITHOUT_DIFF
 
 #define VARMSG(MSG) \
 	varname = var_make_name(sys->system,v); \
@@ -102,9 +102,10 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 				var_set_active(v,0);
 				vok = 0;
 			}else{
-				/* VARMSG("'%s' has a derivative that's OK"); */
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Non-incident var with an incident derivative. ASCEND can't handle this case at the moment, but we hope to fix it.");
 #ifdef DERIV_WITHOUT_DIFF
+				VARMSG("'%s' has a derivative present, so needs to be included in the system");
+				CONSOLE_DEBUG("That var %s active",(var_active(v) ? "is" : "is NOT"));
 				var_set_incident(v,1);
 #else				
 				return 1;
@@ -155,7 +156,12 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 		n_y++;
 	}
 
-	/* we assert that all vars in y meet the integrator_ida_nonderiv filter */
+#ifdef ANALYSE_DEBUG
+	system_var_list_debug(sys->system);
+#endif
+
+	/* we assert that all vars in y meet the integrator_ida_nonde6: v_wind
+riv filter */
 	/* we assert that all vars in ydot meet the integrator_ida_deriv filter */
 
 #ifdef ANALYSE_DEBUG
@@ -168,6 +174,8 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 
 /**
 	Flag relations that contain derivatives as 'REL_DIFFERENTIAL'
+
+	@TODO what to do about relations that make reference to 't'?
 */
 static int integrator_ida_flag_rels(IntegratorSystem *sys){
 	int i, n, c, nd=0;
@@ -211,7 +219,7 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *sys){
 	}
 
 #ifdef ANALYSE_DEBUG
-	CONSOLE_DEBUG("cut_vars: ny1 = %d, sys->n_y = %d",ny1,sys->n_y);
+	CONSOLE_DEBUG("Cut %d non-derivative vars to start of list. cf sys->n_y = %d",ny1,sys->n_y);
 #endif
 	asc_assert(ny1 == sys->n_y);
 
@@ -483,7 +491,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 	asc_assert(sys->engine==INTEG_IDA);
 
-	CONSOLE_DEBUG("System contains a total of %d bnds and %d reals"
+	CONSOLE_DEBUG("System contains a total of %d bnds and %d rels"
 		,slv_get_num_solvers_bnds(sys->system)
 		,slv_get_num_solvers_rels(sys->system)
 	);

@@ -1,5 +1,5 @@
-#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 1.5.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 276
 \begin_document
 \begin_header
 \textclass book
@@ -51,13 +51,21 @@
 \end_preamble
 \language english
 \inputencoding auto
-\fontscheme default
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
 \paperfontsize default
 \spacing single
 \papersize a4paper
 \use_geometry false
 \use_amsmath 2
+\use_esint 0
 \cite_engine basic
 \use_bibtopic false
 \paperorientation portrait
@@ -70,19 +78,22 @@
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
-\output_changes true
+\output_changes false
+\author "" 
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Preparing a model for reuse
-\begin_inset LatexCommand \index{reuse}
+\begin_inset LatexCommand index
+name "reuse"
 
 \end_inset
 
  
-\begin_inset LatexCommand \label{cha:model2}
+\begin_inset LatexCommand label
+name "cha:model2"
 
 \end_inset
 
@@ -106,27 +117,32 @@ status open
 \begin_layout Standard
 More detail on these is available in papers and reports by Allan, Zaher,
  Chittur et al 
-\begin_inset LatexCommand \cite{Allan1997d}
+\begin_inset LatexCommand cite
+key "Allan1997d"
 
 \end_inset
 
 ,
-\begin_inset LatexCommand \cite{Allan1997b}
+\begin_inset LatexCommand cite
+key "Allan1997b"
 
 \end_inset
 
 ,
-\begin_inset LatexCommand \cite{Allan1997}
+\begin_inset LatexCommand cite
+key "Allan1997"
 
 \end_inset
 
 ,
-\begin_inset LatexCommand \cite{Krishnan1993}
+\begin_inset LatexCommand cite
+key "Krishnan1993"
 
 \end_inset
 
 ,
-\begin_inset LatexCommand \cite{Zaher1991}
+\begin_inset LatexCommand cite
+key "Zaher1991"
 
 \end_inset
 
@@ -140,12 +156,14 @@ More detail on these is available in papers and reports by Allan, Zaher,
 
 \begin_layout Section
 Adding comments
-\begin_inset LatexCommand \index{comments}
+\begin_inset LatexCommand index
+name "comments"
 
 \end_inset
 
  and notes
-\begin_inset LatexCommand \index{notes}
+\begin_inset LatexCommand index
+name "notes"
 
 \end_inset
 
@@ -161,16 +179,18 @@ In ASCEND we can create traditional comments for a model -- i.e., add text
 (*
 \family default
 
-\begin_inset LatexCommand \index{(*}
+\begin_inset LatexCommand index
+name "(*"
 
 \end_inset
 
- and
+ and 
 \family typewriter
- *)
+*)
 \family default
 
-\begin_inset LatexCommand \index{*)}
+\begin_inset LatexCommand index
+name "*)"
 
 \end_inset
 
@@ -210,12 +230,14 @@ end{ascend}
 is a comment in ASCEND.
  Traditional comments are only visible when we display the code using the
  Display code tool
-\begin_inset LatexCommand \index{Display code tool}
+\begin_inset LatexCommand index
+name "Display code tool"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{tool, Display code}
+\begin_inset LatexCommand index
+name "tool, Display code"
 
 \end_inset
 
@@ -231,12 +253,14 @@ We suggest we can do more for the modeler with the concept of Notes, a form
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand \index{comments, active}
+\begin_inset LatexCommand index
+name "comments, active"
 
 \end_inset
 
 In Figure 
-\begin_inset LatexCommand \ref{fig:model2.vesselWithNotes}
+\begin_inset LatexCommand ref
+reference "fig:model2.vesselWithNotes"
 
 \end_inset
 
@@ -287,12 +311,14 @@ NOTES
 vesselNotes.a4c
 \family default
 
-\begin_inset LatexCommand \index{vesselNotes.a4c}
+\begin_inset LatexCommand index
+name "vesselNotes.a4c"
 
 \end_inset
 
 )
-\begin_inset LatexCommand \label{fig:model2.vesselWithNotes}
+\begin_inset LatexCommand label
+name "fig:model2.vesselWithNotes"
 
 \end_inset
 
@@ -341,12 +367,14 @@ short notes
 \series default
  we can attach to every variable in the model.
  A "one liner
-\begin_inset LatexCommand \index{notes, one liner}
+\begin_inset LatexCommand index
+name "notes, one liner"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{one liner}
+\begin_inset LatexCommand index
+name "one liner"
 
 \end_inset
 
@@ -356,7 +384,8 @@ short notes
 
 \begin_layout Standard
 The last few lines of Figure 
-\begin_inset LatexCommand \ref{fig:model2.vesselWithNotes}
+\begin_inset LatexCommand ref
+reference "fig:model2.vesselWithNotes"
 
 \end_inset
 
@@ -375,7 +404,8 @@ ADD NOTES IN
 \family default
 \noun off
  syntax
-\begin_inset LatexCommand \index{ADD NOTES IN object}
+\begin_inset LatexCommand index
+name "ADD NOTES IN object"
 
 \end_inset
 
@@ -393,12 +423,14 @@ ADD NOTES IN
 
 \begin_layout Section
 Adding methods
-\begin_inset LatexCommand \index{methods, adding}
+\begin_inset LatexCommand index
+name "methods, adding"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{adding methods}
+\begin_inset LatexCommand index
+name "adding methods"
 
 \end_inset
 
@@ -415,7 +447,8 @@ We would next like to pass along our experiences in getting this model to
  Methods are procedural code that we can request be run through the interface
  while browsing a model instance.
  We shall include methods as described in Table 
-\begin_inset LatexCommand \ref{tab:model2.reqdMethods}
+\begin_inset LatexCommand ref
+reference "tab:model2.reqdMethods"
 
 \end_inset
 
@@ -446,7 +479,8 @@ Running method specify in v
 
 \begin_layout LyX-Code
 Found STOP
-\begin_inset LatexCommand \index{STOP}
+\begin_inset LatexCommand index
+name "STOP"
 
 \end_inset
 
@@ -469,7 +503,8 @@ basemodel.a4l:307
 
 \begin_layout LyX-Code
   STOP {Error
-\begin_inset LatexCommand \index{error}
+\begin_inset LatexCommand index
+name "error"
 
 \end_inset
 
@@ -482,7 +517,8 @@ basemodel.a4l:307
 
 \begin_layout Standard
 This message is telling you that you have just run the default specify method
-\begin_inset LatexCommand \index{specify method, default}
+\begin_inset LatexCommand index
+name "specify method, default"
 
 \end_inset
 
@@ -495,7 +531,8 @@ This message is telling you that you have just run the default specify method
 
 \begin_layout Standard
 Try running the ClearAll
-\begin_inset LatexCommand \index{ClearAll}
+\begin_inset LatexCommand index
+name "ClearAll"
 
 \end_inset
 
@@ -511,17 +548,27 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{tab:model2.reqdMethods}
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
+\begin_inset LatexCommand label
+name "tab:model2.reqdMethods"
 
 \end_inset
 
  Some of the methods
-\begin_inset LatexCommand \index{methods, required}
+\begin_inset LatexCommand index
+name "methods, required"
 
 \end_inset
 
  we require for putting a model into an ASCEND library
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -560,7 +607,8 @@ status open
 ClearAll
 \family default
 
-\begin_inset LatexCommand \index{ClearAll}
+\begin_inset LatexCommand index
+name "ClearAll"
 
 \end_inset
 
@@ -592,7 +640,8 @@ a method to set all the .fixed flags for variables in the type to FALSE.
 specify
 \family default
 
-\begin_inset LatexCommand \index{specify}
+\begin_inset LatexCommand index
+name "specify"
 
 \end_inset
 
@@ -634,7 +683,8 @@ a method which assumes all the fixed flags are currently FALSE and which
 reset
 \family default
 
-\begin_inset LatexCommand \index{reset}
+\begin_inset LatexCommand index
+name "reset"
 
 \end_inset
 
@@ -677,7 +727,8 @@ a method which first runs the ClearAll method and then the specify method.
 values
 \family default
 
-\begin_inset LatexCommand \index{values}
+\begin_inset LatexCommand index
+name "values"
 
 \end_inset
 
@@ -816,7 +867,8 @@ specify
 
 \begin_layout Standard
 Figure 
-\begin_inset LatexCommand \ref{fig:model2.vesselWithMethods}
+\begin_inset LatexCommand ref
+reference "fig:model2.vesselWithMethods"
 
 \end_inset
 
@@ -850,12 +902,14 @@ METHODS
 vesselMethods.a4c
 \family default
 
-\begin_inset LatexCommand \index{vesselMethods.a4c}
+\begin_inset LatexCommand index
+name "vesselMethods.a4c"
 
 \end_inset
 
 )
-\begin_inset LatexCommand \label{fig:model2.vesselWithMethods}
+\begin_inset LatexCommand label
+name "fig:model2.vesselWithMethods"
 
 \end_inset
 
@@ -887,7 +941,8 @@ lstinputlisting[firstline=23]{../models/vesselMethods.a4c}
 
 \begin_layout Standard
 In Table 
-\begin_inset LatexCommand \ref{tab:model2.addedReqdMethods}
+\begin_inset LatexCommand ref
+reference "tab:model2.addedReqdMethods"
 
 \end_inset
 
@@ -903,7 +958,8 @@ _self
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{\_self}
+\begin_inset LatexCommand index
+name "\\_self"
 
 \end_inset
 
@@ -916,14 +972,16 @@ _all
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{\_all}
+\begin_inset LatexCommand index
+name "\\_all"
 
 \end_inset
 
  is for a method to do something for parts that are defined within an `outer'
  model that has an instance of this model as a part.
  The `outer' model is at a higher scope
-\begin_inset LatexCommand \index{scope}
+\begin_inset LatexCommand index
+name "scope"
 
 \end_inset
 
@@ -934,7 +992,8 @@ _all
 Section 
 \noun off
 
-\begin_inset LatexCommand \ref{sec:model2.parameterizingVessel}
+\begin_inset LatexCommand ref
+reference "sec:model2.parameterizingVessel"
 
 \end_inset
 
@@ -954,7 +1013,8 @@ _self
 Figure 
 \noun off
 
-\begin_inset LatexCommand \ref{fig:model2.vesselWithMethods}
+\begin_inset LatexCommand ref
+reference "fig:model2.vesselWithMethods"
 
 \end_inset
 
@@ -967,14 +1027,24 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
 Additional methods
-\begin_inset LatexCommand \index{methods. required}
+\begin_inset LatexCommand index
+name "methods. required"
 
 \end_inset
 
  required for model in ASCEND libraries
-\begin_inset LatexCommand \label{tab:model2.addedReqdMethods}
+\begin_inset LatexCommand label
+name "tab:model2.addedReqdMethods"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -1015,14 +1085,16 @@ description
 
 \family typewriter
 default_self
-\begin_inset LatexCommand \index{default\_self}
+\begin_inset LatexCommand index
+name "default\\_self"
 
 \end_inset
 
 , default_all
 \family default
 
-\begin_inset LatexCommand \index{default\_all}
+\begin_inset LatexCommand index
+name "default\\_all"
 
 \end_inset
 
@@ -1062,14 +1134,16 @@ d if given poor initial guesses or bounds (e.g., zero).
 
 \family typewriter
 bound_self
-\begin_inset LatexCommand \index{bound\_self}
+\begin_inset LatexCommand index
+name "bound\\_self"
 
 \end_inset
 
 , bound_all
 \family default
 
-\begin_inset LatexCommand \index{bound\_all}
+\begin_inset LatexCommand index
+name "bound\\_all"
 
 \end_inset
 
@@ -1108,14 +1182,16 @@ a method to update the .
 
 \family typewriter
 scale_self
-\begin_inset LatexCommand \index{scale\_self}
+\begin_inset LatexCommand index
+name "scale\\_self"
 
 \end_inset
 
 , scale_all
 \family default
 
-\begin_inset LatexCommand \index{scale\_all}
+\begin_inset LatexCommand index
+name "scale\\_all"
 
 \end_inset
 
@@ -1154,14 +1230,16 @@ a method to update the .
 
 \family typewriter
 check_self
-\begin_inset LatexCommand \index{check\_self}
+\begin_inset LatexCommand index
+name "check\\_self"
 
 \end_inset
 
 , check_all
 \family default
 
-\begin_inset LatexCommand \index{check\_all}
+\begin_inset LatexCommand index
+name "check\\_all"
 
 \end_inset
 
@@ -1275,7 +1353,8 @@ Repeat the last step but this time select the method reset.
 \begin_layout Standard
 In the Browser, examine the values for the variables listed in the method
  values in Figure 
-\begin_inset LatexCommand \ref{fig:model2.vesselWithMethods}
+\begin_inset LatexCommand ref
+reference "fig:model2.vesselWithMethods"
 
 \end_inset
 
@@ -1317,7 +1396,8 @@ The inclusion of methods has made the process of making this model much
 
 \begin_layout Section
 Parameterizing the vessel model
-\begin_inset LatexCommand \label{sec:model2.parameterizingVessel}
+\begin_inset LatexCommand label
+name "sec:model2.parameterizingVessel"
 
 \end_inset
 
@@ -1394,7 +1474,8 @@ wall_thickness
 
 \begin_layout Standard
 The code in Figure 
-\begin_inset LatexCommand \ref{fig:model2.parameterizedVessel}
+\begin_inset LatexCommand ref
+reference "fig:model2.parameterizedVessel"
 
 \end_inset
 
@@ -1405,12 +1486,14 @@ The code in Figure
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand \label{fig:model2.parameterizedVessel}
+\begin_inset LatexCommand label
+name "fig:model2.parameterizedVessel"
 
 \end_inset
 
 The parameterized version of vessel model (
-\begin_inset LatexCommand \index{1014608}
+\begin_inset LatexCommand index
+name "1014608"
 
 \end_inset
 
@@ -1442,7 +1525,8 @@ lstinputlisting[firstline=24]{../models/vesselParams.a4c}
 
 \begin_layout Standard
 Substitute the statements in Figure 
-\begin_inset LatexCommand \ref{fig:model2.parameterizedVessel}
+\begin_inset LatexCommand ref
+reference "fig:model2.parameterizedVessel"
 
 \end_inset
 
@@ -1453,7 +1537,8 @@ Substitute the statements in Figure
 Figure 
 \noun off
 
-\begin_inset LatexCommand \ref{fig:model2.vesselWithMethods}
+\begin_inset LatexCommand ref
+reference "fig:model2.vesselWithMethods"
 
 \end_inset
 
@@ -1463,12 +1548,14 @@ Figure
 
 \begin_layout Standard
 Note the use of the 
-\begin_inset LatexCommand \index{1014610}
+\begin_inset LatexCommand index
+name "1014610"
 
 \end_inset
 
 
-\begin_inset LatexCommand \index{1014609}
+\begin_inset LatexCommand index
+name "1014609"
 
 \end_inset
 
@@ -1488,7 +1575,8 @@ Using the parameterized vessel model
 
 \begin_layout Standard
 A type definition  will set up our 
-\begin_inset LatexCommand \index{1014611}
+\begin_inset LatexCommand index
+name "1014611"
 
 \end_inset
 
@@ -1497,7 +1585,8 @@ table of H_to_D_ratio values vs.
  ASCEND allows us to create arrays of instances of any type.
  Here we shall create an array of vessels.
  The type definition is shown in Figure 
-\begin_inset LatexCommand \ref{fig:model2.tabulatedVessel}
+\begin_inset LatexCommand ref
+reference "fig:model2.tabulatedVessel"
 
 \end_inset
 
@@ -1510,7 +1599,8 @@ table of H_to_D_ratio values vs.
 
 \begin_layout Standard
 tabulated_vessel_values model
-\begin_inset LatexCommand \label{fig:model2.tabulatedVessel}
+\begin_inset LatexCommand label
+name "fig:model2.tabulatedVessel"
 
 \end_inset
 
@@ -1546,7 +1636,8 @@ Add this model to the end of the file
 vesselParam.a4c
 \family default
 
-\begin_inset LatexCommand \index{vesselTabulated.a4c}
+\begin_inset LatexCommand index
+name "vesselTabulated.a4c"
 
 \end_inset
 
@@ -1577,12 +1668,14 @@ H_to_D_ratio
 
 \begin_layout Section
 Creating a script
-\begin_inset LatexCommand \index{script, creating}
+\begin_inset LatexCommand index
+name "script, creating"
 
 \end_inset
 
  to demonstrate this model
-\begin_inset LatexCommand \label{sec:model2.creatingScript}
+\begin_inset LatexCommand label
+name "sec:model2.creatingScript"
 
 \end_inset
 
@@ -1630,7 +1723,8 @@ Script
 \series default
  window you will see the license agreement information for ASCEND.
  First clear the license agreement
-\begin_inset LatexCommand \index{license agreement}
+\begin_inset LatexCommand index
+name "license agreement"
 
 \end_inset
 
@@ -1660,11 +1754,7 @@ With the
 \series bold
 Script
 \series default
- window
-\series bold
- 
-\series default
-now cleared of text, select 
+ window now cleared of text, select 
 \series bold
 Record actions
 \series default
@@ -1854,7 +1944,8 @@ Script
 Script
 \series default
  window at this point will be similar to that in Figure 
-\begin_inset LatexCommand \ref{fig:model2.scriptVesselTabulated}
+\begin_inset LatexCommand ref
+reference "fig:model2.scriptVesselTabulated"
 
 \end_inset
 
@@ -1906,7 +1997,8 @@ You will run the same sequence of instructions you ran to create the script.
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand \label{fig:model2.scriptVesselTabulated}
+\begin_inset LatexCommand label
+name "fig:model2.scriptVesselTabulated"
 
 \end_inset
 
@@ -1919,7 +2011,8 @@ vesselTabulated.a4c
 vesselTabulated.a4s
 \family default
 
-\begin_inset LatexCommand \index{vesselTabultated.a4s}
+\begin_inset LatexCommand index
+name "vesselTabultated.a4s"
 
 \end_inset
 

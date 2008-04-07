@@ -76,7 +76,7 @@ ASC_EXPORT int datareader_register(){
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising data reader...\n");
 
-	(void)CONSOLE_DEBUG("EVALUATION FUNCTION AT %p",asc_datareader_calc);
+	/* (void)CONSOLE_DEBUG("EVALUATION FUNCTION AT %p",asc_datareader_calc); */
 
 	result += CreateUserFunctionBlackBox("datareader"
 		, asc_datareader_prepare

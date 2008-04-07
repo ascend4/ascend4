@@ -628,6 +628,9 @@ ASC_DLLSPEC int rel_classify_differential(struct rel_relation *rel);
 
 	Make sure you run this AFTER the analyser has determined which variables
 	are derivatives and which are not (eg integrator_ida_analyse).
+
+	@TODO FIXME what if the variable makes reference to the independent variable 't'
+	(or whatever it's called)?
 */
 
 #endif /* ASC_REL_H  */

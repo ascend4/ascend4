@@ -189,11 +189,13 @@ int datareader_tmy2_data(DataReader *d){
 	tmy->T = 0.1*T + 273.15; /* temperature */
 	tmy->v_wind = wvel;
 
+#if 0
 	if(d->i < 20){
 		CONSOLE_DEBUG("ROW %d: year %d, month %d, day %d, hour %d (t = %.0f), Iegh %d, Iedn %d, Igh (%c) = %d --> I = %f"
 			, d->i, year, month, day, hour, tmy->t, Iegh, Iedn, Igh_source, Igh, tmy->I
 		);
 	}
+#endif
 
 	d->i++;
 	return 0;

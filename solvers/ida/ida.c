@@ -120,7 +120,7 @@ static IntegratorCreateFn integrator_ida_create;
 static IntegratorParamsDefaultFn integrator_ida_params_default;
 static IntegratorSolveFn integrator_ida_solve;
 static IntegratorFreeFn integrator_ida_free;
-static IntegratorDebugFn integrator_ida_debug;
+IntegratorDebugFn integrator_ida_debug;
 static IntegratorWriteMatrixFn integrator_ida_write_matrix;
 
 /**
@@ -2160,7 +2160,7 @@ static void integrator_ida_write_incidence(IntegratorSystem *sys){
 }
 
 /* @return 0 on success */
-static int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
+int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp){
 	char *varname, *relname;
 	struct var_variable **vlist, *var;
 	struct rel_relation **rlist, *rel;
