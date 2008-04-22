@@ -1,6 +1,6 @@
 <?php
 
-define(ASHIGHLIGHT_LANG_ROOT,"/usr/share/highlight/langDefs");
+define('ASHIGHLIGHT_LANG_ROOT',"/usr/share/highlight/langDefs");
 
 class ASHighlight{
 
