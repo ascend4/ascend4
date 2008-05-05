@@ -2299,11 +2299,11 @@ if with_scrollkeeper:
 # lyx
 
 if with_doc_build:
-	if conf.CheckLyx() is False:
+	if not conf.CheckLyx():
 		with_doc_build = False
-		without_doc_build_reason="unable to locate lyx"
+		without_doc_build_reason="unable to locate LyX"
 
-	with_latext2html = conf.CheckLatex2HTML()
+	with_latex2html = conf.CheckLatex2HTML()
 
 	if conf.CheckLModern() is False:
 		with_doc_build = False
@@ -2680,6 +2680,7 @@ Alias('dist',[tar,deb_tar])
 #------------------------------------------------------
 # DOCUMENTATION
 
+#print "WITH_DOC_BUILD = ",with_doc_build
 
 if not with_doc_build:
 	print "Skipping... Documentation isn't being built:",without_doc_build_reason
