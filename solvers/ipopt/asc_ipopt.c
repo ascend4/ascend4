@@ -49,7 +49,7 @@
 #include <general/tm_time.h>
 #include <general/env.h>
 
-#include <ipopt/IpStdCInterface.h>
+#include <coin/IpStdCInterface.h>
 
 ASC_DLLSPEC SolverRegisterFn ipopt_register;
 

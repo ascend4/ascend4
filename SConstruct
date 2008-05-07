@@ -371,7 +371,7 @@ opts.Add(
 
 opts.Add(
 	'IPOPT_CPPPATH'
-	,"Where is your ipopt/IpStdCInterface.h (do not include the 'ipopt' in the path)"
+	,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
 	,"$IPOPT_PREFIX/include"
 )
 
@@ -1639,7 +1639,7 @@ ipopt_test_text = """
 # define FNAME_LCASE_DECOR
 #endif
 
-#include <ipopt/IpStdCInterface.h>
+#include <coin/IpStdCInterface.h>
 int main(){
 	Number n;
 	IpoptProblem nlp = 0;
@@ -1934,7 +1934,10 @@ lmodern_test_text = r"""
 
 def CheckLModern(context):
 	context.Message("Checking for lmodern...")
-	b = context.env.DVI
+	b = context.env.get("DVI")
+	if not b:
+		context.Result(False)
+		return False
 	is_ok = context.TryBuild(builder=b,text=lmodern_test_text,extension=".tex")
 	context.Result(is_ok)
 	return is_ok
