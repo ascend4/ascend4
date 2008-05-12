@@ -468,6 +468,8 @@ Bool ipopt_eval_grad_f(Index n, Number* x, Bool new_x, Number* grad_f, void *use
     variables = ASC_NEW_ARRAY(int,len);
     derivatives = ASC_NEW_ARRAY(double,len);
 
+	CONSOLE_DEBUG("allocated variables,derivatives");
+
     relman_diff2(
         sys->obj,&vfilter,derivatives,variables
 	    , &count,SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_SAFEEVAL)
@@ -477,9 +479,10 @@ Bool ipopt_eval_grad_f(Index n, Number* x, Bool new_x, Number* grad_f, void *use
 		grad_f[variables[j]] = derivatives[j];
 	}
 
-	ASC_FREE(variables);
-	ASC_FREE(derivatives);
+	if(variables)ASC_FREE(variables);
+	if(derivatives)ASC_FREE(derivatives);
 
+	CONSOLE_DEBUG("done ipopt_eval_grad_f");
 	return 1; /* success, presumably */
 }
 
@@ -513,6 +516,12 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 	sys = SYS(user_data);
 	int i,res;
 
+	CONSOLE_DEBUG("ipopt_eval_jac_g");
+
+	if(!iRow || !jCol){
+		CONSOLE_DEBUG("sparsity structure requested");
+	}
+
 	asc_assert(sys!=NULL);
 	asc_assert(n==sys->n);
 	asc_assert(nele_jac==sys->nnzJ);
@@ -527,7 +536,9 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 	for(i=0; i<m; ++i){
 		/* get derivatives for constraint i */
 		/* insert the derivatives into the matrix in row i, columns j */
-	}
+	}	
+
+	CONSOLE_DEBUG("done ipopt_eval_jac_g");
 
 	return 0; /* fail: not yet implemented */
 }
