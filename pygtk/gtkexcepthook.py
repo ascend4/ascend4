@@ -90,6 +90,10 @@ def analyse (exctyp, value, tb):
 	return trace
 
 def _info (exctyp, value, tb):
+	if exctyp.__name__=='KeyboardInterrupt':
+		sys.stderr.write ('%s: %s\n' % (exctyp.__name__, value))
+		sys.exit(1)
+
 	trace = None
 	dialog = gtk.MessageDialog (parent=None, flags=0, type=gtk.MESSAGE_WARNING, buttons=gtk.BUTTONS_NONE)
 	dialog.set_title (_("Bug Detected"))
@@ -192,8 +196,13 @@ if __name__ == '__main__':
 	x.y = 'Test'
 	x.z = x
 	w = ' e'
+
 	#feedback = 'developer@bigcorp.comp'
 	#smtphost = 'mx.bigcorp.comp'
 	1, x.z.y, f, w
+
+	while 1:
+		pass
+
 	raise Exception (x.z.y + w)
 
