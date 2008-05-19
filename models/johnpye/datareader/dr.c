@@ -21,6 +21,7 @@
 
 #include "dr.h"
 #include "tmy.h"
+#include "acdb.h"
 
 #include <utilities/config.h>
 #include <general/ospath.h>
@@ -38,7 +39,7 @@
 	DATA instance of the external relation
 */
 
-#define FMTS(D,X) D(TMY2) X D(CSV) X D(TDV)
+#define FMTS(D,X) D(TMY2) X D(ACDB) X D(CSV) X D(TDV)
 
 #define ENUM(F_) DATAREADER_FORMAT_##F_
 #define COMMA ,
@@ -108,6 +109,13 @@ int datareader_set_format(DataReader *d, const char *format){
 			d->eoffn=&datareader_tmy2_eof;
 			d->indepfn=&datareader_tmy2_time;
 			d->valfn=&datareader_tmy2_vals;
+			break;
+		case DATAREADER_FORMAT_ACDB:
+			d->headerfn=&datareader_acdb_header;
+			d->datafn=&datareader_acdb_data;
+			d->eoffn=&datareader_acdb_eof;
+			d->indepfn=&datareader_acdb_time;
+			d->valfn=&datareader_acdb_vals;
 			break;
 		case DATAREADER_FORMAT_TDV:
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Tab delimited values (TDV) format not yet implemenented.");
