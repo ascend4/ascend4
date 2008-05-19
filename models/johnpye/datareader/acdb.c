@@ -370,10 +370,13 @@ int datareader_acdb_data(DataReader *d){
 
 	fscanf(d->f," ");
 
+#if 0
 	CONSOLE_DEBUG("Time: %d/%d/%d %2d:00",data[ACDB_DAY],data[ACDB_MONTH],data[ACDB_YEAR],data[ACDB_HOUR]);
 	CONSOLE_DEBUG("code = %s, dry_bulb_temp = %f, w = %f, p_atm = %f, v_wind = %f, dir_wind = %d"
 		,code, data[ACDB_DRY_BULB_TEMP]/10., data[ACDB_W]/10., data[ACDB_P_ATM]/10., data[ACDB_V_WIND]/10., data[ACDB_DIR_WIND]
 	);
+#endif
+
 	assert(strcmp(code,"CA")==0);
 	assert(data[ACDB_DRY_BULB_TEMP]/10. <= 70.);
 	assert(data[ACDB_DIR_WIND] >= 0 && data[ACDB_DIR_WIND] <= 16);
@@ -393,9 +396,9 @@ int datareader_acdb_data(DataReader *d){
 
 	dat = &DATA(d);
 	dat->t = ((day_of_year_specific(data[ACDB_DAY],data[ACDB_MONTH],data[ACDB_YEAR]) - 1)*24.0 + data[ACDB_HOUR])*3600.0;
-	dat->I = data[ACDB_GHI] * 0.1; /* average W/m2 for the hour in question */
-	dat->Ibn = data[ACDB_DNI] * 0.1; /* normal beam radiation, W/m2 */
-	dat->Id = data[ACDB_IHI] * 0.1;
+	dat->I = data[ACDB_GHI]; /* average W/m2 for the hour in question */
+	dat->Ibn = data[ACDB_DNI]; /* normal beam radiation, W/m2 */
+	dat->Id = data[ACDB_IHI];
 	dat->T = 0.1*data[ACDB_DRY_BULB_TEMP] + 273.15; /* temperature */
 	dat->v_wind = data[ACDB_V_WIND] * 0.1;
 

@@ -2,6 +2,8 @@ REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 
 IMPORT "johnpye/datareader/datareader";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/datareader/timestudy";
 
 MODEL drconf;
 	filename IS_A symbol_constant;
@@ -60,8 +62,13 @@ METHOD specify;
 END specify;
 
 METHOD values;
-	t := 9 * 3600 {s};
+	t := 0 {s};
 	E := 0;
 END values;
+
+METHOD timestudy;
+	EXTERNAL timestudy(SELF);
+END timestudy;
+
 
 END testacdb;
