@@ -1,5 +1,5 @@
-#ifndef DATAREADER_TMY_H
-#define DATAREADER_TMY_H
+#ifndef DATAREADER_ACDB_H
+#define DATAREADER_ACDB_H
 
 #include "dr.h"
 

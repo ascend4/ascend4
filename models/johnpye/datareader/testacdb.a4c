@@ -1,0 +1,67 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/datareader/datareader";
+
+MODEL drconf;
+	filename IS_A symbol_constant;
+	format IS_A symbol_constant;
+	format :== 'ACDB';
+END drconf;
+
+MODEL testacdb;
+	t IS_A time;
+	G IS_A power_per_area;
+	Gbn IS_A power_per_area;
+	Gd IS_A power_per_area;
+	T IS_A temperature;
+	v_wind IS_A speed;
+	E IS_A solver_var; (* total radiation *)
+	Gb IS_A solver_var;
+
+	(*
+		You'll need a file from the Australian Climate Data Bank in order to
+		use this test model. These can be obtained from the Bureau of
+		Meteorology.
+		http://www.bom.gov.au/climate/averages/tables/supply.shtml
+
+		The file format for this file is described in the ASCEND source code 
+		file 'models/johnpye/datareader/acdb.c'.
+	*)
+	acdbdata IS_A drconf;
+	acdbdata.filename :== 'johnpye/datareader/CAN87.DAT';
+
+	filereader:datareader(
+		t : INPUT;
+		G, Gbn, Gd, T, v_wind : OUTPUT;
+		acdbdata : DATA
+	);
+
+	Gb_expr:Gb = G - Gd;
+
+	E1 IS_A solver_var;
+	E1_expr:E1 = E + 1;
+	
+METHODS
+
+METHOD default_self;
+END default_self;
+
+METHOD on_load;
+	RUN default_self; RUN specify; RUN values; 
+END on_load;
+
+METHOD specify;
+	E.ode_id := 1; E.ode_type := 1;
+	G.ode_id := 1; G.ode_type := 2;
+
+	t.ode_type :=-1;	
+	FIX t;
+END specify;
+
+METHOD values;
+	t := 9 * 3600 {s};
+	E := 0;
+END values;
+
+END testacdb;

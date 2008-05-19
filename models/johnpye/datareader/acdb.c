@@ -103,7 +103,7 @@ typedef struct AcdbPoint_struct{
 #define DATA(D) ((AcdbPoint *)(D->data))[D->i]
 
 struct AcdbCity{
-	char code[2];
+	char code[3];
 	char name[40];
 	char state[40];
 	char dir[9];
@@ -204,6 +204,7 @@ int datareader_acdb_header(DataReader *d){
 	const struct AcdbCity *i;
 	unsigned found=0;
 	for(i=acdb_city_info; i->code[0] != '\0'; ++i){
+		CONSOLE_DEBUG("Comparing code with '%s'",i->code);
 		if(strcmp(i->code,code)==0){
 			found=1;
 			break;
@@ -225,7 +226,9 @@ int datareader_acdb_header(DataReader *d){
 	}else{
 		data_rows = 365 * 24;
 	}
-	CONSOLE_DEBUG("ACDB data file is for year %ud, expect %ud data rows.",yr,data_rows);
+	CONSOLE_DEBUG("ACDB data file is for year %u, expect %u data rows.",yr,data_rows);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ACDB data file is for year %u, expect %u data rows.",yr,data_rows);
+
 	d->ndata = data_rows;
 	d->i = 0;
 	d->ndata=8760;
@@ -240,6 +243,9 @@ int datareader_acdb_header(DataReader *d){
 int datareader_acdb_eof(DataReader *d){
 	if(feof(d->f)){
 		CONSOLE_DEBUG("REACHED END OF FILE");
+		if(d->i < d->ndata){
+			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Incomplete data set found (%d rows < %d expected",d->i, d->ndata);
+		}
 		d->ndata=d->i;
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read %d rows",d->ndata);
 		return 1;
@@ -261,32 +267,8 @@ int datareader_acdb_eof(DataReader *d){
 int datareader_acdb_data(DataReader *d){
 	/* static int lastmonth=-1;
 	static int lastday=-1; */
-	int res = 0;
 
 	AcdbPoint *dat;
-	char code[3];
-	unsigned year,month,day,hour;
-
-	int dry_bulb_temp; /* [0.1°C] */
-	int w; /* absolute moisture content [0.1 g/kg] */
-	int p_atm; /* atmospheric pressure [0.1 kPa] */
-	int v_wind; /* wind speed [0.1 m/s] */
-	int dir_wind; /* dir of wind: 0-16; 0 = CALM.  1 = NNE ,...,16 = N */
-	int cloud; /* total cloud cover (oktas, 0 - 8) */
-
-	int dry_bulb_temp_flag;
-	int w_flag;
-	int p_atm_flag;
-	int wind_flag;
-	int cloud_flag;
-
-	int GHI;
-	int IHI;
-	int DNI;
-	int altitude_deg;
-	int azimuth_deg;
-
-	int solar_flag;
 
 /* still need to implement...
 
@@ -295,32 +277,106 @@ int datareader_acdb_data(DataReader *d){
   57 - 61 wet bulb temperature (10-1 °C)       }
   62 - 81 Station name (first line only)       }
 
+
+
+   1 - 2  location identification (e.g.ME represents Melbourne)
+   3 - 4  year (e.g. 67)
+   5 - 6  month (i.e. 1 - 12)
+   7 - 8  day (i.e. 1 - 31)
+   9 - 10 hour standard (i.e. 0-23, 0 = midnight)
+
+  11 - 14 dry bulb temperature (10-1 °C)
+  15 - 17 absolute moisture content (10-1 g/kg)
+  18 - 21 atmospheric pressure (10-1 kPa)
+  22 - 24 wind speed (10-1 m/s)
+  25 - 26 wind direction (0-16; 0 = CALM.  1 = NNE ,...,16 = N
+  27      total cloud cover  (oktas, 0 - 8)
+  28      flag relating to dry bulb temperature
+  29      flag relating to absolute moisture content
+  30      flag relating to atmospheric pressure
+  31      flag relating to wind speed and direction
+  32      flag relating to total cloud cover
+  33      blank
+  34 - 37 global solar irradiance on a horizontal plane (W/m2)
+  38 - 40 diffuse solar irradiance on a horizontal plane (W/m2)
+  41 - 44 direct solar irradiance on a plane normal to the beam ((W/m2)
+  45 - 46 solar altitude (degrees, 0-90)
+  47 - 49 solar azimuth (degrees, 0-360)
+  50      flag relating to global and diffuse solar irradiance
+  51      flag                                 }
+  52 - 56 Australian Met Station Number        } Some locations only
+  57 - 61 wet bulb temperature (10-1 °C)       }
+  62 - 81 Station name (first line only)       }
+
 */
 
-	code[2]='\0';
+#define N_FIELDS 22
+	const unsigned fieldsize[N_FIELDS] = {
+		2,2,2,2, 4,3,4,3,2,1, 1,1,1,1,1, 1, 4,3,4,3,3,1
+	};
+	
+	int data[N_FIELDS];
 
-	/* brace yourself for this one... */
+	enum {
+		ACDB_YEAR
+		,ACDB_MONTH
+		,ACDB_DAY
+		,ACDB_HOUR
+		,ACDB_DRY_BULB_TEMP/* [0.1°C] */
+		,ACDB_W /* ABSOLUTE MOISTURE CONTENT [0.1 G/KG] */
+		,ACDB_P_ATM /* ATMOSPHERIC PRESSURE [0.1 KPA] */
+		,ACDB_V_WIND /* WIND SPEED [0.1 M/S] */
+		,ACDB_DIR_WIND /* DIR OF WIND: 0-16; 0 = CALM.  1 = NNE ,...,16 = N */
+		,ACDB_CLOUD /* TOTAL CLOUD COVER (OKTAS, 0 - 8) */
+		,ACDB_DRY_BULB_TEMP_FLAG
+		,ACDB_W_FLAG
+		,ACDB_P_ATM_FLAG
+		,ACDB_WIND_FLAG
+		,ACDB_CLOUD_FLAG
+		,ACDB_WHITESPACE1
+		,ACDB_GHI
+		,ACDB_IHI /* indirect (diffuse) horizontal radiation */
+		,ACDB_DNI
+		,ACDB_ALTITUDE_DEG
+		,ACDB_AZIMUTH_DEG
+		,ACDB_SOLAR_FLAG
+	};
 
-	res = fscanf(d->f, 
-		/* 1 */ "%2s%2d%2d%2d%2d" "%3d%3d%4d%3d%2d" "%1d" /*  =11 */
-		/* 2 */ "%1d%1d%1d%1d%1d" /* +5=16 */
-		/* 3 */ "%*1c" /* (ignore one space) */
-		/* 4 */ "%4d%3d%4d%2d%3d%1d" /* +6=21 */
-		/* 5 */ /* other optional stuff here... how to do that? */
+	char field[10];
+	char code[3];
+	
+	unsigned i;
+	assert(N_FIELDS == sizeof(fieldsize) / sizeof(unsigned));
 
-		" " /* to ensure that we move to the start of the next line, else end of file */
+	fgets(code, 3, d->f);
+	//CONSOLE_DEBUG("code = '%s'",code);
+	//assert(strcmp(code,"CA")==0);
 
-		/* 1 */,code, &year, &month, &day, &hour, &dry_bulb_temp, &w, &p_atm, &v_wind, &dir_wind, &cloud
-		/* 2 */,&dry_bulb_temp_flag, &w_flag, &p_atm_flag, &wind_flag, &cloud_flag
-		/* 3 */
-		/* 4 */,&GHI,&IHI,&DNI,&altitude_deg,&azimuth_deg,&solar_flag
-		/* 5 */
-	);
+	/*
+		this format includes spaces in the data file, so we can't use fscanf
+		because of the way it soaks up leading spaces without counting them
+		in the field width.
+	*/
+	for(i=0; i < N_FIELDS; ++i){
+		fgets(field, fieldsize[i] + 1, d->f);
+		//CONSOLE_DEBUG("field %d: size = %d, str = '%s'", i, fieldsize[i], field);
+		if(i==ACDB_WHITESPACE1)continue;
 
-	if(res!=79){
-		CONSOLE_DEBUG("Bad input data in data row %d (read %d items OK) (%d/%d/%d %2d:00",d->i,res,day,month,year,hour);
-		return 1;
+		assert(field!=NULL);
+		assert(strlen(field)!=0);
+
+		data[i] = atoi(field);
 	}
+
+	fscanf(d->f," ");
+
+	CONSOLE_DEBUG("Time: %d/%d/%d %2d:00",data[ACDB_DAY],data[ACDB_MONTH],data[ACDB_YEAR],data[ACDB_HOUR]);
+	CONSOLE_DEBUG("code = %s, dry_bulb_temp = %f, w = %f, p_atm = %f, v_wind = %f, dir_wind = %d"
+		,code, data[ACDB_DRY_BULB_TEMP]/10., data[ACDB_W]/10., data[ACDB_P_ATM]/10., data[ACDB_V_WIND]/10., data[ACDB_DIR_WIND]
+	);
+	assert(strcmp(code,"CA")==0);
+	assert(data[ACDB_DRY_BULB_TEMP]/10. <= 70.);
+	assert(data[ACDB_DIR_WIND] >= 0 && data[ACDB_DIR_WIND] <= 16);
 
 	/*
 	if(month!=lastmonth || day!=lastday){
@@ -336,12 +392,12 @@ int datareader_acdb_data(DataReader *d){
 	*/
 
 	dat = &DATA(d);
-	dat->t = ((day_of_year_specific(day,month,year) - 1)*24.0 + hour)*3600.0;
-	dat->I = GHI * 0.1; /* average W/m2 for the hour in question */
-	dat->Ibn = DNI * 0.1; /* normal beam radiation, W/m2 */
-	dat->Id = IHI * 0.1;
-	dat->T = 0.1*dry_bulb_temp + 273.15; /* temperature */
-	dat->v_wind = v_wind * 0.1;
+	dat->t = ((day_of_year_specific(data[ACDB_DAY],data[ACDB_MONTH],data[ACDB_YEAR]) - 1)*24.0 + data[ACDB_HOUR])*3600.0;
+	dat->I = data[ACDB_GHI] * 0.1; /* average W/m2 for the hour in question */
+	dat->Ibn = data[ACDB_DNI] * 0.1; /* normal beam radiation, W/m2 */
+	dat->Id = data[ACDB_IHI] * 0.1;
+	dat->T = 0.1*data[ACDB_DRY_BULB_TEMP] + 273.15; /* temperature */
+	dat->v_wind = data[ACDB_V_WIND] * 0.1;
 
 #if 0
 	if(d->i < 20){
