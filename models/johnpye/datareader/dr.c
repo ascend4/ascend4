@@ -30,6 +30,8 @@
 #include <utilities/ascPanic.h>
 #include <utilities/ascEnvVar.h>
 
+#define DR_DEBUG 0
+
 /*------------------------------------------------------------------------------
   FORWARD DECLARATIONS
 */
@@ -319,7 +321,9 @@ int datareader_locate(DataReader *d, double t, double *t1, double *t2){
 			(*d->indepfn)(d,t2);
 		}while(*t2 < t && d->i < d->ndata);
 	}
+#if DR_DEBUG
 	CONSOLE_DEBUG("d->i==%d, t1[0] = %lf, t2[0] = %lf",d->i,t1[0],t2[0]);
+#endif
 
 	if(d->i == d->ndata || d->i == 0){
 		return 1;
@@ -348,7 +352,9 @@ int datareader_func(DataReader *d, double *inputs, double *outputs){
 	double t,g,dt;
 	t = inputs[0];
 
+#if DR_DEBUG
 	CONSOLE_DEBUG("EVALUATING AT t = %lf",inputs[0]);
+#endif
 
 	asc_assert(d->indepfn);
 
@@ -357,19 +363,26 @@ int datareader_func(DataReader *d, double *inputs, double *outputs){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Time value t=%f is out of range",t);
 		return 1;
 	}
+
+#if DR_DEBUG
 	CONSOLE_DEBUG("LOCATED AT t1 = %lf, t2 = %lf",t1[0], t2[0]);
+#endif
 
 	(*d->valfn)(d,v2);
 	--d->i;
 	(*d->valfn)(d,v1);
 
+#if DR_DEBUG
 	CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0],v1[0],v2[0]);
+#endif
 
 	for(i=0;i<d->noutputs;++i){
 		dt = t2[0] - t1[0];
 		g = (v2[i]-v1[i])/dt;
 		outputs[i]=v1[i]+g*(t-(*t1));
+#if DR_DEBUG
 		CONSOLE_DEBUG("[%d]: DT = %lf, START = %lf, GRADIENT = %lf, VALUE=%lf",i,dt, v1[i],g,outputs[i]);
+#endif
 	}
 
 	return 0;

@@ -41,6 +41,8 @@
 
 #include "dr.h"
 
+#define DATAREADER_DEBUG 0
+
 /*------------------------------------------------------------------------------
   GLOBALS
 */
@@ -209,25 +211,31 @@ int asc_datareader_calc(struct BBoxInterp *slv_interp,
 		return 1;
 	}
 
-
+#if DATAREADER_DEBUG
 	for(i=0; i< ninputs; ++i){
 		CONSOLE_DEBUG("inputs[%d] = %f", i, inputs[i]);
 	}
-
+#endif
 
 	switch(slv_interp->task){
 		case bb_func_eval:
+#if DATAREADER_DEBUG
 			CONSOLE_DEBUG("DATA READER EVALUATION");
+#endif
 			if(datareader_func(d,inputs,outputs)){
 				CONSOLE_DEBUG("Datareader evaluation error");
 				return 1;
 			}
+#if DATAREADER_DEBUG
 			for(i=0; i< noutputs; ++i){
 				CONSOLE_DEBUG("outputs[%d] = %f", i, outputs[i]);
 			}
+#endif
 			return 0; /* success */
 		case bb_deriv_eval:
+#if DATAREADER_DEBUG
 			CONSOLE_DEBUG("DATA READER DERIVATIVE");
+#endif
 			if(datareader_deriv(d,inputs,outputs)){
 				CONSOLE_DEBUG("Datareader derivative evaluation error");
 				return 1;

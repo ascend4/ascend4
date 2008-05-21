@@ -63,6 +63,8 @@ extern "C"{
 #include "solverreporter.h"
 #include "matrix.h"
 
+#define SIMULATION_DEBUG 0
+
 /**
 	Create an instance of a type (call compiler etc)
 
@@ -496,9 +498,14 @@ Simulation::setSolver(Solver &solver){
 		throw runtime_error(ss.str());
 	}
 
+#if SIMULATION_DEBUG
 	CONSOLE_DEBUG("Selecting solver '%s'",solver.getName().c_str());
+#endif
+
 	int selected = slv_select_solver(sys, solver.getIndex());
+#if SIMULATION_DEBUB
 	cerr << "Simulation::setSolver: slv_select_solver returned " << selected << endl;
+#endif
 
 	if(selected<0){
 		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Failed to select solver");
@@ -748,11 +755,16 @@ void
 Simulation::solve(Solver solver, SolverReporter &reporter){
 	int res;
 
+#if SIMULATION_DEBUG
 	cerr << "-----------------set solver----------------" << endl;
+#endif
+
 	//CONSOLE_DEBUG("Setting solver to '%s'",solver.getName().c_str());
 	setSolver(solver);
 
+#if SIMULATION_DEBUG
 	cerr << "-----------------presolve----------------" << endl;
+#endif
 
 	//cerr << "PRESOLVING SYSTEM...";
 	//CONSOLE_DEBUG("Calling slv_presolve...");
@@ -763,7 +775,9 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		throw runtime_error("Error in slv_presolve");
 	}
 
+#if SIMULATION_DEBUG
 	cerr << "-----------------solve----------------" << endl;
+#endif
 	//cerr << "DONE" << endl;
 
 	//cerr << "SOLVING SYSTEM..." << endl;
@@ -801,7 +815,10 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	}
 
 	double elapsed = tm_cpu_time() - starttime;
+
+#if SIMULATION_DEBUG
 	CONSOLE_DEBUG("Elapsed time: %0.3f (solver completed)", elapsed);
+#endif
 
 	activeblock = status.getCurrentBlockNum();
 
@@ -886,7 +903,9 @@ Simulation::processVarStatus(){
 		cerr << "Variable statuses can't be set: block structure not yet determined." << endl;
 		return;
 	}else{
+#if SIMULATION_DEBUG
 		CONSOLE_DEBUG("There are %d blocks", status.block.number_of);
+#endif
 	}
 
 	if(!bb->block){
