@@ -89,6 +89,7 @@
 
 #include "tmy.h"
 
+#define ACDB_DEBUG 0
 
 typedef struct AcdbPoint_struct{
 	double t;
@@ -204,7 +205,9 @@ int datareader_acdb_header(DataReader *d){
 	const struct AcdbCity *i;
 	unsigned found=0;
 	for(i=acdb_city_info; i->code[0] != '\0'; ++i){
+#if 0
 		CONSOLE_DEBUG("Comparing code with '%s'",i->code);
+#endif
 		if(strcmp(i->code,code)==0){
 			found=1;
 			break;
@@ -420,9 +423,11 @@ int datareader_acdb_time(DataReader *d, double *t){
 }
 
 int datareader_acdb_vals(DataReader *d, double *v){
+#if ACDB_DEBUG
 	CONSOLE_DEBUG("At t=%f h, T = %lf, I = %f J/m2"
 		,(DATA(d).t/3600.0),DATA(d).T, DATA(d).I
 	);
+#endif
 	v[0]=DATA(d).I;
 	v[1]=DATA(d).Ibn;
 	v[2]=DATA(d).Id;

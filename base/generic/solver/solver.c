@@ -36,6 +36,8 @@
 #include <utilities/ascPanic.h>
 #include <compiler/packages.h>
 
+#define SOLVER_DEBUG 0
+
 /**
 	Local function that holds the list of available solvers. The value 
 	returned is NOT owned by the called.
@@ -400,7 +402,9 @@ int slv_select_solver(slv_system_t sys,int solver){
 	/* CONSOLE_DEBUG("PREVIOUS SOLVER IS CLEAR"); */
 
     if(sys->ct != NULL) {
+#if SOLVER_DEBUG
 	  CONSOLE_DEBUG("CURRENT SOLVER UNCHANGED");
+#endif
       return sys->solver;
     }
 

@@ -529,13 +529,38 @@ MODEL rankine_regen;
 	q_a IS_A specific_energy;
 	q_a = TU1.inlet.h - PU2.outlet.h;
 
+	Wdot IS_A energy_rate;
+	Wdot = TU1.Wdot + TU2.Wdot + PU1.Wdot + PU2.Wdot;
+
 	cons_en: HE.inlet.mdot * HE.inlet.h + HE.inlet_heat.mdot * HE.inlet_heat.h = HE.outlet.mdot * HE.outlet.h;
 
 METHODS
-(*
-	The on_load scenario here is example 2.6 from K Weston (op. cit.), p. 55.
-*)
-METHOD on_load;
+METHOD moran_ex_8_5;
+	(*
+		This is Example 8.5 from Moran and Shapiro, 'Fundamentals of
+		Engineering Thermodynamics', 4th Ed.
+	*)
+	RUN ClearAll;
+	(* component efficiencies *)
+	FIX BO.eta;  BO.eta := 1.0;
+	FIX TU1.eta; TU1.eta := 0.85;
+	FIX TU2.eta; TU2.eta := 0.85;
+	FIX PU1.eta; PU1.eta := 1.0;
+	FIX PU2.eta; PU2.eta := 1.0;
+	(* turbine conditions *)
+	FIX TU1.inlet.p; TU1.inlet.p := 8. {MPa};
+	FIX TU1.inlet.T; TU1.inlet.T := 480 {K} + 273.15 {K};
+	FIX TU1.outlet.p; TU1.outlet.p := 0.7 {MPa};
+	FIX TU2.outlet.p; TU2.outlet.p := 0.008 {MPa};
+	(* heater conditions *)
+	FIX HE.outlet.p; HE.outlet.p := 0.7 {MPa};
+	FIX HE.outlet.x; HE.outlet.x := 0.001;
+	FIX Wdot; Wdot := 100 {MW};
+END moran_ex_8_5;	
+METHOD weston_ex_2_6;
+	(*
+		The scenario here is example 2.6 from K Weston (op. cit.), p. 55.
+	*)
 	RUN ClearAll;
 
 	(* all ideal components *)
@@ -589,7 +614,7 @@ METHOD on_load;
 	(* FIX BL.outlet.h;
 	BL.outlet.h := 355.5 {btu/lbm}; *)
 	
-END on_load;
+END weston_ex_2_6;
 METHOD self_test;
 	ASSERT abs(TU1.inlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
 	ASSERT abs(TU1.outlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
