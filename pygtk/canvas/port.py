@@ -1,6 +1,30 @@
+import pygtk
+pygtk.require('2.0') 
+
+import math
+import gtk
+import cairo
+
 from gaphas.item import Item
 from gaphas.state import observed, reversible_property
 from gaphas.tool import HandleTool
+
+from gaphas import Canvas, GtkView, View
+from gaphas.item import Line, SW, NE, NW, SE, Element, Handle
+from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
+from gaphas.tool import ItemTool, RubberbandTool
+from gaphas.geometry import point_on_rectangle, distance_rectangle_point
+from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint
+from gaphas.canvas import CanvasProjection
+
+from gaphas.painter import ItemPainter
+from gaphas import state
+from gaphas.util import text_extents
+
+from gaphas import painter
+#painter.DEBUG_DRAW_BOUNDING_BOX = True
+
+#------------------------------------------------------------------------------
 
 class Port(object):
     """
@@ -38,8 +62,8 @@ class Port(object):
     def __init__(self, block, x, y):
         self.block = block
         self._connectable = True
-        self._x = x
-        self._y = y
+        self.x = x
+        self.y = y
 
     @observed
     def _set_connectable(self, connectable):
@@ -72,30 +96,90 @@ class Port(object):
         """
         return math.sqrt((x-self.x)**2 + (y-self.y)**2)
 
-class Block(Item):
+class Block(Element):
     """
-    A block is an Item with a list of Ports, plus some special connection logic
-    for when Handles are brought into the area.
+    This is an ASCEND 'block' in the canvas-based modeller. The block will have
+    sets of input and output ports to which connector lines can be 'glued'.
+    The block will also have a corresponding ASCEND MODEL type, and a name
+    which will be used in ASCEND to refer to this block. Each of the ports will
+    be special visual elements, but note that these are not 'handles', because
+    they can not be used to resize/modify the element.
     """
 
-    def __init__(self):
-        super(Block, self).__init__()
-        self._ports = []
+    def __init__(self, label="unnamed", width=10, height=10, ports=None):
 
-    def glue(self, item, handle, x, y):
-        """
-        Special glue method used by the PortConnectingHandleTool to find
-        a connection point. This method looks at all the Ports on this Block
-        and returns the distance to, and a reference to, the closest Port.
-        """
-        pmin = None
-        for p in self._ports:
-            d = p.point(x,y);
-            if pmin is None or d < dmin:
-                dmin = d
-                pmin = p
-        return dmin, p
+        if ports is None:
+            ports = []
 
+        self.ports = ports
+        self.label = label        
+        super(Block, self).__init__(width, height)
+
+    def draw(self, context):
+        #print 'Box.draw', self
+        c = context.cairo
+        nw = self._handles[NW]
+        c.rectangle(nw.x, nw.y, self.width, self.height)
+        if context.hovered:
+            c.set_source_rgba(.8,.8,1, .8)
+        else:
+            c.set_source_rgba(1,1,1, .8)
+        c.fill_preserve()
+        c.set_source_rgb(0,0,0.8)
+        c.stroke()
+    
+        phalfsize = 3
+        for p in self.ports:
+            c.rectangle(p.x - phalfsize, p.y - phalfsize, 2*phalfsize, 2*phalfsize)
+            c.set_source_rgba(0.8,0.8,1, 0.8)
+            c.fill_preserve()
+            c.set_source_rgb(0.8,0.8,0)
+            c.stroke()
+
+    def glue(self,item, handle, ix, iy):
+        gluerange = 10
+        mindist = -1;
+        minport = None
+        for p in self.ports:
+            dist = math.sqrt((ix-p.x)**2 + (iy-p.y)**2)
+            if dist < gluerange:
+                if not minport or dist<mindist:
+                    mindist = dist
+                    minport = p
+        return mindist, minport
+
+class DefaultBlock(Block):
+    """
+    This is a 'default block' with a certain number of input and output ports
+    shown depending on the values sent to __init__. It is drawn as a simple
+    box with the input ports on the left and the output ports on the right.
+    """
+
+    def __init__(self, label="unnamed", width=10, height=10, inputs=2, outputs=2):
+
+        ports = []
+        for i in range(inputs):
+            ports.append(Port(self,0,(0.5 + i) * (height/inputs)))
+        for i in range(outputs):
+            ports.append(Port(self,width,(0.5 + i) * (height/outputs)))
+            
+        super(DefaultBlock, self).__init__(label,width, height, ports)
+
+    def draw(self, context):
+        # draw the box itself
+        c = context.cairo
+        nw = self._handles[NW]
+        c.rectangle(nw.x, nw.y, self.width, self.height)
+        if context.hovered:
+            c.set_source_rgba(.8,.8,1, .8)
+        else:
+            c.set_source_rgba(1,1,1, .8)
+        c.fill_preserve()
+        c.set_source_rgb(0,0,0.8)
+        c.stroke()
+
+        # now the draw the ports using the base class
+        super(DefaultBlock, self).draw(context)
 
 class PortConnectingHandleTool(HandleTool):
     """
@@ -115,12 +199,12 @@ class PortConnectingHandleTool(HandleTool):
             return
 
         # Make glue distance depend on the zoom ratio (should be about 10 pixels)
-        inverse = Matrix(*view.matrix)
+        inverse = cairo.Matrix(*view.matrix)
         inverse.invert()
         #glue_distance, dummy = inverse.transform_distance(10, 0)
         glue_distance = 10
         glue_port = None
-        glue_item = None
+        glue_point = None
         for i in view.canvas.get_all_items():
             if not i is item:
                 v2i = view.get_matrix_v2i(i).transform_point
@@ -139,6 +223,7 @@ class PortConnectingHandleTool(HandleTool):
         if glue_point:
             v2i = view.get_matrix_v2i(item).transform_point
             handle.x, handle.y = v2i(*glue_point)
+            print "Found glue point ",handle.x,handle.y 
         return glue_port
 
     def connect(self, view, item, handle, wx, wy):
@@ -197,7 +282,7 @@ class PortConnectingHandleTool(HandleTool):
             handle.disconnect()
 
         if glue_item:
-            if isinstance(glue_item, Box):
+            if isinstance(glue_item, Block):
                 h1, h2 = side(handle, glue_item)
 
                 # Make a constraint that keeps into account item coordinates.
@@ -214,6 +299,19 @@ class PortConnectingHandleTool(HandleTool):
         if handle.connected_to:
             #print 'Handle.disconnect', view, item, handle
             view.canvas.solver.remove_constraint(handle._connect_constraint)
+
+
+def DefaultExampleTool():
+    """
+    The default tool chain build from HoverTool, ItemTool and HandleTool.
+    """
+    chain = ToolChain()
+    chain.append(HoverTool())
+    chain.append(PortConnectingHandleTool())
+    chain.append(ItemTool())
+    chain.append(RubberbandTool())
+    return chain
+
 
 
 
