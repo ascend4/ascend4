@@ -14,8 +14,9 @@ from gaphas.item import Line, SW, NE, NW, SE, Element, Handle
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
 from gaphas.tool import ItemTool, RubberbandTool
 from gaphas.geometry import point_on_rectangle, distance_rectangle_point
-from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint
+from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint, Constraint
 from gaphas.canvas import CanvasProjection
+from gaphas.solver import Variable
 
 from gaphas.painter import ItemPainter
 from gaphas import state
@@ -95,6 +96,46 @@ class Port(object):
         Defined here because a port is just a 'point' at this stage.
         """
         return math.sqrt((x-self.x)**2 + (y-self.y)**2)
+
+    @observed
+    def _set_pos(self, pos):
+        """
+        Set handle position (Item coordinates).
+        """
+        self.x, self.y = pos
+
+    pos = property(lambda s: (s.x, s.y), _set_pos)
+
+class PointConstraint(Constraint):
+    """
+    Ensure two points are kept together
+
+    Attributes:
+    _p1: first point, defined by (x,y)
+    _p2: second point, defined by (x,y)
+    """
+
+    def __init__(self, p1, p2):
+        print "p1 =",p1
+        print "p1[0] =",p1[0].variable()
+#        assert isinstance(p1[0],Variable)
+#        assert isinstance(p1[1],Variable)
+#        assert isinstance(p2[0],Variable)
+#        assert isinstance(p2[1],Variable)
+
+        super(PointConstraint, self).__init__(p1[0].variable(),p1[1].variable(),p2[0].variable(),p2[1].variable())
+        self.p1 = p1
+        self.p2 = p2
+
+    def solve_for(self, var):
+        assert var in (self.p1, self.p2)
+
+        if var is self.p1:
+            _update(self.p1[0], self.p2[0].value)
+            _update(self.p1[1], self.p2[1].value)
+        else:
+            _update(self.p2[0], self.p1[0].value)
+            _update(self.p2[1], self.p1[1].value)    
 
 class Block(Element):
     """
@@ -236,17 +277,6 @@ class PortConnectingHandleTool(HandleTool):
          
         """
 
-        """
-
-
-            NOW I'M STUCK!
-
-
-        """
-
-
-
-
         def handle_disconnect():
             try:
                 view.canvas.solver.remove_constraint(handle._connect_constraint)
@@ -261,38 +291,38 @@ class PortConnectingHandleTool(HandleTool):
             handle.disconnect = lambda: 0
 
         #print 'Handle.connect', view, item, handle, wx, wy
-        glue_item = self.glue(view, item, handle, wx, wy)
-        if glue_item and glue_item is handle.connected_to:
+        glue_port = self.glue(view, item, handle, wx, wy)
+
+        if glue_port and glue_port is handle.connected_to:
             try:
                 view.canvas.solver.remove_constraint(handle._connect_constraint)
             except KeyError:
                 pass # constraint was already removed
 
-            h1, h2 = side(handle, glue_item)
-            handle._connect_constraint = LineConstraint(line=(CanvasProjection(h1.pos, glue_item),
-                                      CanvasProjection(h2.pos, glue_item)),
-                                point=CanvasProjection(handle.pos, item))
-            view.canvas.solver.add_constraint(handle._connect_constraint)
+                handle._connect_constraint = PointConstraint(
+                    p1=CanvasProjection(handle.pos,item)
+                    ,p2=CanvasProjection(glue_port.pos, glue_port.block)
+                )                
+                view.canvas.solver.add_constraint(handle._connect_constraint)
+                handle.connected_to = glue_port
+                handle.disconnect = handle_disconnect
 
             handle.disconnect = handle_disconnect
             return
 
-        # drop old connetion
+        # drop old connection
         if handle.connected_to:
             handle.disconnect()
 
-        if glue_item:
-            if isinstance(glue_item, Block):
-                h1, h2 = side(handle, glue_item)
-
-                # Make a constraint that keeps into account item coordinates.
-                handle._connect_constraint = \
-                        LineConstraint(line=(CanvasProjection(h1.pos, glue_item),
-                            CanvasProjection(h2.pos, glue_item)),
-                            point=CanvasProjection(handle.pos, item))
+        if glue_port:
+            if isinstance(glue_port, Port):
+                print "Gluing to port",glue_port
+                handle._connect_constraint = PointConstraint(
+                    p1=CanvasProjection(handle.pos,item)
+                    ,p2=CanvasProjection(glue_port.pos, glue_port.block)
+                )
                 view.canvas.solver.add_constraint(handle._connect_constraint)
-
-                handle.connected_to = glue_item
+                handle.connected_to = glue_port
                 handle.disconnect = handle_disconnect
 
     def disconnect(self, view, item, handle):
