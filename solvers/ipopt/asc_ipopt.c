@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2007 Carnegie Mellon University
+	Copyright (C) 2007-2008 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -19,12 +19,11 @@
 	@file
 	Connection of the IPOPT optimisation solver into ASCEND.
 
-	THIS IS STILL VERY MUCH UNDER DEVELOPMENT AND INCOMPLETE. I'VE ACTUALLY
-	ONLY JUST STARTED WRITING IT by starting with asc_tron.c and modifying.
+	THIS IS STILL VERY MUCH UNDER DEVELOPMENT AND INCOMPLETE.
 
 	The IPOPT solver is documented at http://projects.coin-or.org/Ipopt/
 *//*
-	ASCEND wrapper for IPOPT originally by John Pye, Jun 2007.
+	ASCEND wrapper for IPOPT originally by John Pye, Jun 2007 onwards.
 */
 
 #include <utilities/config.h>
@@ -63,6 +62,7 @@ ASC_DLLSPEC SolverRegisterFn ipopt_register;
 */
 enum{
 	IPOPT_PARAM_TOL
+	,IPOPT_PARAM_LINEAR_SOLVER
 	,IPOPT_PARAM_MAX_ITER
 	,IPOPT_PARAM_SAFEEVAL
 	,IPOPT_PARAM_MU_STRATEGY
@@ -294,6 +294,21 @@ int32 ipopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 			,"The algorithm terminates with an error message if the number of iterations exceeded this number."
 		}, 3000, 0, 100000000}
 	);
+
+	/* see http://www.coin-or.org/Ipopt/documentation/node139.html */
+	slv_param_char(parameters,IPOPT_PARAM_LINEAR_SOLVER
+		,(SlvParameterInitChar){{"linear_solver"
+			,"Linear solver used for step computations.",2
+			,"Determines which linear algebra package is to be used for the"
+			" solution of the augmented linear system (for obtaining the search"
+			" directions). Note, the code must have been compiled with the"
+			" linear solver you want to choose. Depending on your Ipopt"
+			" installation, not all options are available. The default value"
+			" for this string option is 'ma27'."
+		}, "ma27"}, (char *[]){
+			"ma27","ma57","pardiso","wsmp","mumps","custom",NULL
+		}
+	); 
 
 	slv_param_real(parameters,IPOPT_PARAM_TOL
 		,(SlvParameterInitReal){{"tol"
@@ -590,6 +605,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 	IpoptSystem *sys;
 	int max, i;
+	struct var_variable *var;
 
 	CONSOLE_DEBUG("PRESOLVE");
 
@@ -603,8 +619,17 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 
 	/** @TODO slv_sort_rels_and_vars(server,&(sys->m),&(sys->n)); */
 
+
+	/* count the number of optimisation variables */
+	sys->n = 0;
+	for(i = 0; i < sys->vtot; i++){
+		var = sys->vlist[i];
+		if(var_apply_filter(var,&(sys->vfilt))){
+			sys->n++;
+		}
+	}
+
 	/* TODO are there cases where these should be different? */
-	sys->n = sys->rtot;
 	sys->m = sys->vtot;
 
 	/* set all relations as being 'unsatisfied' to start with... */
@@ -781,12 +806,12 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 
 	double *x, *x_L, *x_U, *g_L, *g_U, *mult_x_L, *mult_x_U;
 
-	CONSOLE_DEBUG("SOLVING, sys->n = %d...",sys->n);
+	CONSOLE_DEBUG("SOLVING: sys->n = %d, sys->m = %d...",sys->n,sys->m);
 	asc_assert(sys->n!=-1);
 
 	/* set the number of variables and allocate space for the bounds */
-	x_L = ASC_NEW_ARRAY(Number,sys->n);
-	x_U = ASC_NEW_ARRAY(Number,sys->n);
+	x_L = ASC_NEW_ARRAY(Number,sys->n+10);
+	x_U = ASC_NEW_ARRAY(Number,sys->n+10);
 
 	CONSOLE_DEBUG("SETTING BOUNDS...");
 
@@ -803,13 +828,16 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 		}
 	}
 
+	CONSOLE_DEBUG("jj = %d, sys->n = %d", jj, sys->n);
+	assert(jj==sys->n);
+
 	/** @TODO set bounds on the constraints? */
 	/* need to identify equations that share the same non-constant parts? */
 	/* then find the constant parts and make then g_L or g_U accordingly */
 	/* what to do about other bounds? */
 	/* set the number of variables and allocate space for the bounds */
-	g_L = ASC_NEW_ARRAY(Number,sys->m);
-	g_U = ASC_NEW_ARRAY(Number,sys->m);
+	g_L = ASC_NEW_ARRAY(Number,sys->m+10);
+	g_U = ASC_NEW_ARRAY(Number,sys->m+10);
 	for(j = 0; j < sys->m; j++){
 		g_L[j] = 0;
 		g_U[j] = 0;
@@ -842,6 +870,7 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	AddIpoptStrOption(sys->nlp, "mu_strategy", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_MU_STRATEGY));
 	AddIpoptStrOption(sys->nlp, "derivative_test", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_DERIVATIVE_TEST));
 	AddIpoptStrOption(sys->nlp, "hessian_approximation", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_HESS_APPROX));
+	AddIpoptStrOption(sys->nlp, "linear_solver", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_LINEAR_SOLVER));
 
 	CONSOLE_DEBUG("Hessian method: %s",SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_HESS_APPROX));
 
