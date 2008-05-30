@@ -643,6 +643,8 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 		return -3;
 	}
 
+	/** @TODO we need to move the objective relation to the end of the list */
+
 	CONSOLE_DEBUG("got objective rel %p",sys->obj);
 
 	/* calculate nnz for hessian matrix @TODO FIXME */
@@ -810,8 +812,8 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	asc_assert(sys->n!=-1);
 
 	/* set the number of variables and allocate space for the bounds */
-	x_L = ASC_NEW_ARRAY(Number,sys->n+10);
-	x_U = ASC_NEW_ARRAY(Number,sys->n+10);
+	x_L = ASC_NEW_ARRAY(Number,sys->n);
+	x_U = ASC_NEW_ARRAY(Number,sys->n);
 
 	CONSOLE_DEBUG("SETTING BOUNDS...");
 
@@ -821,6 +823,7 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 		CONSOLE_DEBUG("j = %d, vtot = %d, vlist = %p",j,sys->vtot,sys->vlist);
 		var = sys->vlist[j];
 		if(var_apply_filter(var,&(sys->vfilt))){
+			assert(jj<sys->n);
 			CONSOLE_DEBUG("setting x_L[%d]",jj);
 			x_L[jj] = var_lower_bound(var);
 			x_U[jj] = var_upper_bound(var);
@@ -832,7 +835,7 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	assert(jj==sys->n);
 
 	/** @TODO set bounds on the constraints? */
-	/* need to identify equations that share the same non-constant parts? */
+	/* is it possible to identify f(x)<a; f(x) >b and fold them into one? */
 	/* then find the constant parts and make then g_L or g_U accordingly */
 	/* what to do about other bounds? */
 	/* set the number of variables and allocate space for the bounds */
