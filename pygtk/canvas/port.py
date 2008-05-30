@@ -14,9 +14,9 @@ from gaphas.item import Line, SW, NE, NW, SE, Element, Handle
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
 from gaphas.tool import ItemTool, RubberbandTool
 from gaphas.geometry import point_on_rectangle, distance_rectangle_point
-from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint, Constraint
+from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint, Constraint, _update
 from gaphas.canvas import CanvasProjection
-from gaphas.solver import Variable
+from gaphas.solver import Variable, solvable, WEAK, NORMAL, STRONG, VERY_STRONG
 
 from gaphas.painter import ItemPainter
 from gaphas import state
@@ -59,6 +59,9 @@ class Port(object):
     - _connectable
     
     """
+
+    x = solvable()
+    y = solvable()
 
     def __init__(self, block, x, y):
         self.block = block
@@ -118,6 +121,12 @@ class PointConstraint(Constraint):
     def __init__(self, p1, p2):
         print "p1 =",p1
         print "p1[0] =",p1[0].variable()
+        print "p1[0].strength =",p1[0].variable().strength
+
+        print "p2 =",p2
+        print "p2[0] =",p2[0].variable()
+        print "p2[0].strength =",p2[0].variable().strength
+
 #        assert isinstance(p1[0],Variable)
 #        assert isinstance(p1[1],Variable)
 #        assert isinstance(p2[0],Variable)
@@ -128,14 +137,12 @@ class PointConstraint(Constraint):
         self.p2 = p2
 
     def solve_for(self, var):
-        assert var in (self.p1, self.p2)
-
-        if var is self.p1:
-            _update(self.p1[0], self.p2[0].value)
-            _update(self.p1[1], self.p2[1].value)
-        else:
-            _update(self.p2[0], self.p1[0].value)
-            _update(self.p2[1], self.p1[1].value)    
+        match = {0:2,1:3,2:0,3:2}
+        for k in match:
+            if var is self._variables[k]:
+                _update(self._variables[k], self._variables[match[k]])
+                return
+        raise AssertionError("wrong variable in solve_for")
 
 class Block(Element):
     """
@@ -299,9 +306,18 @@ class PortConnectingHandleTool(HandleTool):
             except KeyError:
                 pass # constraint was already removed
 
+                print "handle.pos =",handle.pos
+                print "glue_port =",glue_port
+                print "glue_port.pos = ",glue_port.pos
+                print "glue_port.block =",glue_port.block
+                p2 = CanvasProjection(glue_port.pos, glue_port.block)     
+                print "connect: p2 =",p2
+                print "connect: p2[0] =",p2[0].variable()
+                print "connect: p2[0].strength =",p2[0].variable().strength
+
                 handle._connect_constraint = PointConstraint(
                     p1=CanvasProjection(handle.pos,item)
-                    ,p2=CanvasProjection(glue_port.pos, glue_port.block)
+                    ,p2=p2
                 )                
                 view.canvas.solver.add_constraint(handle._connect_constraint)
                 handle.connected_to = glue_port
@@ -317,9 +333,19 @@ class PortConnectingHandleTool(HandleTool):
         if glue_port:
             if isinstance(glue_port, Port):
                 print "Gluing to port",glue_port
+
+                print "handle.pos =",handle.pos
+                print "glue_port =",glue_port
+                print "glue_port.pos = ",glue_port.pos
+                print "glue_port.block =",glue_port.block
+                p2 = CanvasProjection(glue_port.pos, glue_port.block)     
+                print "connect: p2 =",p2
+                print "connect: p2[0] =",p2[0].variable()
+                print "connect: p2[0].strength =",p2[0].variable().strength
+
                 handle._connect_constraint = PointConstraint(
                     p1=CanvasProjection(handle.pos,item)
-                    ,p2=CanvasProjection(glue_port.pos, glue_port.block)
+                    ,p2=p2
                 )
                 view.canvas.solver.add_constraint(handle._connect_constraint)
                 handle.connected_to = glue_port
