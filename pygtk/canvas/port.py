@@ -284,7 +284,7 @@ class PortConnectingHandleTool(HandleTool):
         glue_distance = 10
         glue_port = None
         glue_point = None
-        print "Gluing..."
+        print "Gluing..."   
         for i in view.canvas.get_all_items():
             if not hasattr(i,'ports'):
                 continue
@@ -292,17 +292,16 @@ class PortConnectingHandleTool(HandleTool):
                 print "Trying glue to",i
                 v2i = view.get_matrix_v2i(i).transform_point
                 ix, iy = v2i(wx, wy)
-                try:
-                    distance, port = i.glue(item, handle, ix, iy)
-                    # Transform distance to world coordinates
-                    #distance, dumy = matrix_i2w(i).transform_distance(distance, 0)
-                    if distance <= glue_distance:
-                        glue_distance = distance
-                        i2v = view.get_matrix_i2v(i).transform_point
-                        glue_point = i2v(port.x, port.y)
-                        glue_port = port
-                except AttributeError:
-                    pass
+                distance, port = i.glue(item, handle, ix, iy)
+                # Transform distance to world coordinates
+                #distance, dumy = matrix_i2w(i).transform_distance(distance, 0)
+                if not port is None and distance <= glue_distance:
+                    glue_distance = distance
+                    i2v = view.get_matrix_i2v(i).transform_point
+                    glue_point = i2v(port.x, port.y)
+                    glue_port = port
+            else:
+                print "i is item"
         if glue_point:
             v2i = view.get_matrix_v2i(item).transform_point
             handle.x, handle.y = v2i(*glue_point)
