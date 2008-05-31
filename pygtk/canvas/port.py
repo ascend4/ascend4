@@ -14,7 +14,7 @@ from gaphas.item import Line, SW, NE, NW, SE, Element, Handle
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
 from gaphas.tool import ItemTool, RubberbandTool
 from gaphas.geometry import point_on_rectangle, distance_rectangle_point
-from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint, Constraint, _update
+from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint, Constraint, _update, BalanceConstraint
 from gaphas.canvas import CanvasProjection
 from gaphas.solver import Variable, solvable, WEAK, NORMAL, STRONG, VERY_STRONG
 
@@ -63,11 +63,9 @@ class Port(object):
     x = solvable()
     y = solvable()
 
-    def __init__(self, block, x, y):
+    def __init__(self, block):
         self.block = block
         self._connectable = True
-        self.x = x
-        self.y = y
 
     @observed
     def _set_connectable(self, connectable):
@@ -205,13 +203,27 @@ class DefaultBlock(Block):
 
     def __init__(self, label="unnamed", width=10, height=10, inputs=2, outputs=2):
 
-        ports = []
+        super(DefaultBlock, self).__init__(label, width, height)
+
+        eq = EqualsConstraint
+        bal = BalanceConstraint
+        handles = self._handles
+        h_nw = handles[NW]
+        h_ne = handles[NE]
+        h_sw = handles[SW]
+        h_se = handles[SE]
+
         for i in range(inputs):
-            ports.append(Port(self,0,(0.5 + i) * (height/inputs)))
+            p = Port(self)
+            self.ports.append(p)
+            self._constraints.append(eq(p.x, h_nw.x))
+            self._constraints.append(bal(band=(h_nw.y, h_sw.y),v=p.y, balance=(0.5 + i)/inputs))
+
         for i in range(outputs):
-            ports.append(Port(self,width,(0.5 + i) * (height/outputs)))
-            
-        super(DefaultBlock, self).__init__(label,width, height, ports)
+            p = Port(self)
+            self.ports.append(p)
+            self._constraints.append(eq(p.x, h_ne.x))
+            self._constraints.append(bal(band=(h_ne.y,h_se.y),v=p.y, balance=(0.5 + i)/outputs))
 
     def draw(self, context):
         # draw the box itself
