@@ -130,15 +130,17 @@ class PointConstraint(Constraint):
 #        assert isinstance(p2[0],Variable)
 #        assert isinstance(p2[1],Variable)
 
-        super(PointConstraint, self).__init__(p1[0].variable(),p1[1].variable(),p2[0].variable(),p2[1].variable())
+        super(PointConstraint, self).__init__(p1[0],p1[1],p2[0],p2[1])
         self.p1 = p1
         self.p2 = p2
 
     def solve_for(self, var):
-        match = {0:2,1:3,2:0,3:2}
+        print "Solving PointConstraint..."
+        match = {0:2,1:3,2:0,3:1}
         for k in match:
             if var is self._variables[k]:
-                _update(self._variables[k], self._variables[match[k]])
+                print "Updating variable %d to equal value of variable %d" % (k,match[k])
+                _update(self._variables[k], self._variables[match[k]].value)
                 return
         raise AssertionError("wrong variable in solve_for")
 
@@ -152,12 +154,9 @@ class Block(Element):
     they can not be used to resize/modify the element.
     """
 
-    def __init__(self, label="unnamed", width=10, height=10, ports=None):
+    def __init__(self, label="unnamed", width=10, height=10):
 
-        if ports is None:
-            ports = []
-
-        self.ports = ports
+        self.ports = []
         self.label = label        
         super(Block, self).__init__(width, height)
 
@@ -243,8 +242,9 @@ class DefaultBlock(Block):
 
 class PortConnectingHandleTool(HandleTool):
     """
-    This is a HandleTool which supports a simple connection algorithm,
-    using LineConstraint.
+    This is a HandleTool which supports the connection of lines to the Ports
+    of Blocks, for the purpose of building up process flow diagrams, control
+    diagrams, etc, for the proposed canvas-based modeller of ASCEND. 
     """
 
     def glue(self, view, item, handle, wx, wy):
@@ -296,6 +296,7 @@ class PortConnectingHandleTool(HandleTool):
          
         """
 
+        # create a special local handle_disconnect function 
         def handle_disconnect():
             try:
                 view.canvas.solver.remove_constraint(handle._connect_constraint)
