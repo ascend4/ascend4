@@ -11,7 +11,6 @@ from gaphas.tool import ItemTool, RubberbandTool
 from gaphas.geometry import point_on_rectangle, distance_rectangle_point
 from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint
 from gaphas.canvas import CanvasProjection
-from gaphas.examples import Box
 
 from gaphas.painter import ItemPainter
 from gaphas import state
@@ -112,37 +111,12 @@ def main():
 
     # Add stuff to the canvas:
 
-    b=Box()
-    b.min_width = 20
-    b.min_height = 30
-    print 'box', b
-    b.matrix=(1.0, 0.0, 0.0, 1, 20,20)
-    b.width = b.height = 40
-    c.add(b)
-
-    bb=Box()
-    print 'box', bb
-    bb.matrix=(1.0, 0.0, 0.0, 1, 10,10)
-    c.add(bb, parent=b)
-
-    # AJM: extra boxes:
-    bb=Box()
-    print 'box', bb
-    bb.matrix.rotate(math.pi/4.)
-    c.add(bb, parent=b)
-
-    l=Line()
-    l.handles()[1].pos = (30, 30)
-    l.split_segment(0, 3)
-    l.matrix.translate(30, 60)
-    c.add(l)
-    l.orthogonal = True
-
     b=DefaultBlock(inputs=1,outputs=1)
     b.width = 100
     b.height = 100
     c.add(b)
-
+    
+    # run
     gtk.main()
 
 if __name__ == '__main__':

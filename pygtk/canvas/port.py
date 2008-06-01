@@ -125,40 +125,36 @@ class Port(object):
 
 class PointConstraint(Constraint):
     """
-    Ensure two points are kept together
+    Ensure that point B is always kept on top of point A
 
     Attributes:
-    _p1: first point, defined by (x,y)
-    _p2: second point, defined by (x,y)
+    _A: first point, defined by (x,y)
+    _B: second point, defined by (x,y)
     """
 
-    def __init__(self, p1, p2):
-        print "p1 =",p1
-        print "p1[0] =",p1[0].variable()
-        print "p1[0].strength =",p1[0].variable().strength
+    def __init__(self, A, B):
+        print "A =",A
+        print "A[0] =",A[0].variable()
+        print "A[0].strength =",A[0].variable().strength
 
-        print "p2 =",p2
-        print "p2[0] =",p2[0].variable()
-        print "p2[0].strength =",p2[0].variable().strength
+        print "B =",B
+        print "B[0] =",B[0].variable()
+        print "B[0].strength =",B[0].variable().strength
 
 #        assert isinstance(p1[0],Variable)
 #        assert isinstance(p1[1],Variable)
 #        assert isinstance(p2[0],Variable)
 #        assert isinstance(p2[1],Variable)
 
-        super(PointConstraint, self).__init__(p1[0],p1[1],p2[0],p2[1])
-        self.p1 = p1
-        self.p2 = p2
+        super(PointConstraint, self).__init__(A[0],A[1],B[0],B[1])
+        self._A = A
+        self._B = B
 
-    def solve_for(self, var):
-        print "Solving PointConstraint..."
-        match = {0:2,1:3,2:0,3:1}
-        for k in match:
-            if var is self._variables[k]:
-                print "Updating variable %d to equal value of variable %d" % (k,match[k])
-                _update(self._variables[match[k]], self._variables[k].value)
-                return
-        raise AssertionError("wrong variable in solve_for")
+    def solve_for(self, var=None):
+        print "Solving PointConstraint",self,"for var",var
+
+        _update(self._B[0], self._A[0].value)
+        _update(self._B[1], self._A[1].value)
 
 class Block(Element):
     """
@@ -284,12 +280,12 @@ class PortConnectingHandleTool(HandleTool):
         glue_distance = 10
         glue_port = None
         glue_point = None
-        print "Gluing..."   
+        #print "Gluing..."   
         for i in view.canvas.get_all_items():
             if not hasattr(i,'ports'):
                 continue
             if not i is item:
-                print "Trying glue to",i
+                #print "Trying glue to",i
                 v2i = view.get_matrix_v2i(i).transform_point
                 ix, iy = v2i(wx, wy)
                 distance, port = i.glue(item, handle, ix, iy)
@@ -305,15 +301,19 @@ class PortConnectingHandleTool(HandleTool):
         if glue_point:
             v2i = view.get_matrix_v2i(item).transform_point
             handle.x, handle.y = v2i(*glue_point)
-            print "Found glue point ",handle.x,handle.y 
+            #print "Found glue point ",handle.x,handle.y 
         return glue_port
 
     def connect(self, view, item, handle, wx, wy):
         """
-        Connect a handle to another item.
+        Connect a handle to a port. 'item' is the line to which the handle
+        belongs; wx and wy are the location of the cursor, so we run the 'glue'
+        routine to find the desired gluing point, then make the connection to
+        the object which 'glue' returns, which will be a Port object (in the
+        context of this tool).
 
         In this "method" the following assumptios are made:
-         1. The only item that accepts handle connections are the Box instances
+         1. Only ``Port``s of ``Block``s will accept connections from handles.
          2. The only items with connectable handles are ``Line``s
          
         """
@@ -359,16 +359,14 @@ class PortConnectingHandleTool(HandleTool):
                 print "glue_port =",glue_port
                 print "glue_port.pos = ",glue_port.pos
                 print "glue_port.block =",glue_port.block
-                p2 = CanvasProjection(glue_port.pos, glue_port.block)     
-                print "connect: p2 =",p2
-                print "connect: p2[0] =",p2[0].variable()
-                print "connect: p2[0].strength =",p2[0].variable().strength
 
                 handle.connection_data = PointConstraint(
-                    p1=CanvasProjection(handle.pos,item)
-                    ,p2=p2
+                    B=CanvasProjection(handle.pos,item)
+                    ,A=CanvasProjection(glue_port.pos, glue_port.block)
                 )
                 view.canvas.solver.add_constraint(handle.connection_data)
+                #glue_port.block._constraints.append(handle.connection_data)
+
                 handle.connected_to = glue_port
                 handle.disconnect = handle_disconnect
                 glue_port.connectable = False
