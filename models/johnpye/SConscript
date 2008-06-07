@@ -1,5 +1,5 @@
 Import('env')
-extenv = env.Copy()
+extenv = env.Clone()
 
 subdirs = [
 	'extfn','datareader','brent'

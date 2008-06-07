@@ -2,7 +2,7 @@ Import('env')
 
 if 'LSODE' in env.get('WITH_SOLVERS'):
 
-	solver_env = env.Copy()
+	solver_env = env.Clone()
 
 	srcs = ['lsode.f','asc_lsode.c']
 

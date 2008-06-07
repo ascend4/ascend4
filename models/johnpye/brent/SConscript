@@ -1,5 +1,5 @@
 Import('env')
-brent_env = env.Copy()
+brent_env = env.Clone()
 
 srcs = Split("""
 	brent.c
