@@ -19,7 +19,7 @@ srcs = Split("""
 
 # Build a static library with all the sources
 
-python_env = env.Copy()
+python_env = env.Clone()
 
 if platform.system()=='Windows' and env.get('MSVS'):
 	python_env.Append(CCFLAGS=['/EHsc']) # for exceptions (as suggested by a MSVC error msg, dunno if it's right or not -- JP)
@@ -61,7 +61,7 @@ def get_new_swig_flags(env):
 		
 	return flags
 
-swig_env = python_env.Copy()
+swig_env = python_env.Clone()
 if '-Wall' in swig_env.get('CCFLAGS'):
 	swig_env['CCFLAGS'] = swig_env['CCFLAGS'].remove('-Wall')
 
@@ -78,7 +78,7 @@ for swigf in Split("""
 	swigobj = swig_env.SharedObject(swigf
 		, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
 	)
-	swig_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
+	#swig_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
 	swig_env.Depends('ascpy$SWIGCXXFILESUFFIX',['ascpy.i','solver.i','plot.i'])
 	swig_env.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
 	swig_env.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
@@ -115,7 +115,7 @@ if platform.system() != "Windows" or env.has_key('IS_MINGW'):
 	ascendcmd = env.SubstInFile(source='ascend.in')
 	env.AddPostAction(ascendcmd, 'chmod 755 $TARGET')
 
-	envdev = env.Copy()
+	envdev = env.Clone()
 	# add 'WITH_SOLVERS' to the SUBST_DICT used by ascdev...
 	envdev['SUBST_DICT']['@WITH_SOLVERS@'] = ",".join(env.get('WITH_SOLVERS'))
 	ascdevcmd = envdev.SubstInFile(source='ascdev.in')

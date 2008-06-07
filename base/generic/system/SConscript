@@ -15,7 +15,7 @@ csrcs = Split("""
 	incidence.c
 """)
 
-solver_env = libascend_env.Copy()
+solver_env = libascend_env.Clone()
 
 defs = []
 objs = []
@@ -23,7 +23,7 @@ objs = []
 for c in csrcs:
 	objs += solver_env.SharedObject(c)
 
-graph_env = solver_env.Copy()
+graph_env = solver_env.Clone()
 if libascend_env.get('WITH_GRAPHVIZ'):
 	graph_env.Append(CPPDEFINES=['WITH_GRAPHVIZ'])
 	graph_env.Append(CPPPATH=libascend_env['GRAPHVIZ_CPPPATH'])

@@ -29,7 +29,7 @@ csrcs = Split("""
 
 import platform, glob
 
-scanparse_env = libascend_env.Copy()
+scanparse_env = libascend_env.Clone()
 
 scanparse_env.Append(CCFLAGS=scanparse_env.get('YACC_CCFLAGS'))
 
@@ -53,7 +53,7 @@ if scanparse_env.has_key('HAVE_LEX'):
 else:
 	scannersource = libascend_env.Command('scanner.c','scanner_no_lex.c',Copy('$TARGET', '$SOURCE'))
 
-packages_env = libascend_env.Copy()
+packages_env = libascend_env.Clone()
 packages = packages_env.SharedObject('packages.c')
 
 objs = [parsersource[0],scannersource,packages]
@@ -62,7 +62,7 @@ objs = [parsersource[0],scannersource,packages]
 
 sloppy_csrcs = ['rounded.c','interval.c']
 
-sloppy_env = libascend_env.Copy()
+sloppy_env = libascend_env.Clone()
 sloppy_env.Append(CPPDEFINES=['SLOPPY']);
 for s in sloppy_csrcs:
 	objs += sloppy_env.SharedObject(s)	

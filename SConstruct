@@ -1460,10 +1460,14 @@ def CheckPythonLib(context):
 		python_lib='python%d%d'
 	else:
 		python_lib='python%d.%d'
-	python_libs = [python_lib % (sys.version_info[0],sys.version_info[1])]
 
-	python_cpppath = [distutils.sysconfig.get_python_inc()]
-	cfig = distutils.sysconfig.get_config_vars()	
+	try:
+		python_libs = [python_lib % (sys.version_info[0],sys.version_info[1])]
+		python_cpppath = [distutils.sysconfig.get_python_inc()]
+		cfig = distutils.sysconfig.get_config_vars()	
+	except:
+		context.Result("not found")
+		return 0		
 	
 	lastLIBS = context.env.get('LIBS')
 	lastLIBPATH = context.env.get('LIBPATH')
@@ -2491,7 +2495,7 @@ else:
 #------------
 # BASE/GENERIC SUBDIRECTORIES
 
-libascend_env = env.Copy()
+libascend_env = env.Clone()
 
 dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear']
 
