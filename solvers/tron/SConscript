@@ -1,6 +1,6 @@
 Import('env')
 
-solver_env = env.Copy()
+solver_env = env.Clone()
 
 if solver_env.get('WITH_TRON'):
 	solver_env.AppendUnique(CPPPATH=[solver_env.get('TRON_CPPPATH')])

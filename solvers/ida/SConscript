@@ -2,7 +2,7 @@ Import('env')
 
 if env.get('WITH_IDA'):
 
-	solver_env = env.Copy()
+	solver_env = env.Clone()
 
 	if env.get('WITH_MMIO'):
 		solver_env.Append(CPPPATH=["#/mmio"])

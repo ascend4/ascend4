@@ -5,7 +5,7 @@ Import('env')
 
 if 'CONOPT' in env['WITH_SOLVERS']:
 
-	solver_env = env.Copy()
+	solver_env = env.Clone()
 
 	solver_env.AppendUnique(
 		LIBS = ['ascend']

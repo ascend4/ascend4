@@ -1,5 +1,5 @@
 Import('env')
-dr_env = env.Copy()
+dr_env = env.Clone()
 
 srcs = Split("""
 	datareader.c

@@ -64,9 +64,9 @@ if platform.system()=="Windows":
 	default_graphviz_libpath = default_libpath
 	
 else:
-	default_tcl_lib = "tcl8.4"
-	default_tk_lib = "tk8.4"
-	default_tktable_lib = "Tktable2.8"
+	default_tcl_lib = "tcl8.5"
+	default_tk_lib = "tk8.5"
+	default_tktable_lib = "Tktable2.9"
 	default_install_assets = "$INSTALL_ASCDATA/glade/"
 	icon_extension = '.svg'
 	default_tcl = '/usr'
@@ -74,6 +74,9 @@ else:
 
 	if os.path.exists("/etc/debian_version"):
 		default_tcl_cpppath = "/usr/include/tcl8.4"
+		default_tcl_lib = "tcl8.4"
+		default_tk_lib = "tk8.4"
+		default_tktable_lib = "Tktable2.8"
 
 	default_rel_distdir = '../share/ascend'
 	default_absolute_paths = True
@@ -1666,8 +1669,8 @@ def CheckIPOPT(context):
 #----------------
 # Tcl test
 
-# TCL and TK required version 8.1, 8.2, 8.3, or 8.4:
-tcltk_minor_newest_acceptable = 4
+# TCL and TK required version 8.1 through 8.5:
+tcltk_minor_newest_acceptable = 5
 tcltk_major_required = 8
 
 tcl_check_text = r"""

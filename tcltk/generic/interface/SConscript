@@ -11,7 +11,7 @@ srcs = Split("""
 	tkConsole.c old_utils.c Driver.c
 """)
 
-tcl_env = env.Copy()
+tcl_env = env.Clone()
 
 if env.get('HAVE_LEX'):
 	typelexsource = tcl_env.CFile('typelex.l',LEXFLAGS = '-l -Ptyp_')

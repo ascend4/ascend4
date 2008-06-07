@@ -1,5 +1,5 @@
 Import('env')
-extfn_env = env.Copy()
+extfn_env = env.Clone()
 
 if extfn_env.get('WITH_PYTHON'):
 	extfn_env.Append(CPPDEFINES=['-DWITH_PYTHON'])

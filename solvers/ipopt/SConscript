@@ -1,7 +1,7 @@
 Import('env')
 
 if env.get('WITH_IPOPT'):
-	solver_env = env.Copy()
+	solver_env = env.Clone()
 
 	solver_env.AppendUnique(CPPPATH=[solver_env.get('IPOPT_CPPPATH')])
 
