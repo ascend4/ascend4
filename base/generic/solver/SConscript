@@ -17,7 +17,7 @@ def c_escape(str):
         return re.sub("\\\\","/",str)
 
 
-solver_env = libascend_env.Copy()
+solver_env = libascend_env.Clone()
 
 solver_env['SUBST_DICT'] = {
 	'@ASC_WITH_CONOPT@':str(int('CONOPT' in libascend_env['WITH_SOLVERS']))
@@ -30,7 +30,7 @@ solver_env['SUBST_DICT'] = {
 solverconfig = solver_env.SubstInFile('conoptconfig.h.in')
 
 if 'CONOPT' in libascend_env['WITH_SOLVERS']:
-	conopt_env = solver_env.Copy()
+	conopt_env = solver_env.Clone()
 
 	if libascend_env.get('CONOPT_LINKED'):
 		# and then we must give the ldflags back to libascend for linking.
