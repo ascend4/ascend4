@@ -4,17 +4,9 @@ pygtk.require('2.0')
 import math
 import gtk
 import cairo
-from gaphas import Canvas, GtkView, View
-from gaphas.item import Line, SW, NE, NW, SE, Element, Handle
+from gaphas import GtkView, View
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
 from gaphas.tool import ItemTool, RubberbandTool
-from gaphas.geometry import point_on_rectangle, distance_rectangle_point
-from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint
-from gaphas.canvas import CanvasProjection
-
-from gaphas.painter import ItemPainter
-from gaphas import state
-from gaphas.util import text_extents
 
 from gaphas import painter
 #painter.DEBUG_DRAW_BOUNDING_BOX = True
@@ -105,7 +97,7 @@ def create_window(canvas, title, zoom=1.0):
     view.connect('selection-changed', handle_changed, 'selection')
 
 def main():
-    c=Canvas()
+    c=BlockCanvas()
 
     create_window(c, 'ASCEND model canvas')
 

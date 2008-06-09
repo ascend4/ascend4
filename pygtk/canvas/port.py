@@ -46,18 +46,16 @@ class Port(object):
     finer control over whether or not a certain handle can be permitted to
     connect to any given port.
 
-    We don't include a 'connected_to' attribute in this class because the
-    Handle objects belonging to the Line can keep track of those connections.
-
     Attributes:
     - block: Block to which Port belongs
-    - connectable: whether or not handles can currently be connected to this port
+    - connected_to: Handle to which port is connected, if any
+    - x: port x-location in item's local coordinate system
+    - y: port y-location in item's local coordinate system
 
     Private:
     - _x: port x-location in item's local coordinate system
     - _y: port y-location in item's local coordinate system
-    - _connectable
-    
+    - _connected_to: Handle to which port is connected, if any
     """
 
     _x = solvable()
@@ -67,7 +65,7 @@ class Port(object):
         self.block = block
         self._x.strength = strength
         self._y.strength = strength
-        self._connectable = True
+        self._connected_to = None
 
     @observed
     def _set_x(self, x):
@@ -84,14 +82,11 @@ class Port(object):
     disable_dispatching(_set_y)
 
     @observed
-    def _set_connectable(self, connectable):
-        """
-            A port must be set to be unconnectable if it already has
-            something connected to it.
-        """
-        self._connectable = connectable
+    def _set_connected_to(self, connected_to):
+        self._connected_to = connected_to
 
-    connectable = reversible_property(lambda s: s._connectable, _set_connectable)
+    connected_to = reversible_property(lambda s: s._connected_to,
+                                       _set_connected_to)
 
     def draw(self, context):
         """
@@ -188,7 +183,7 @@ class Block(Element):
         phalfsize = 3
         for p in self.ports:
             c.rectangle(p.x - phalfsize, p.y - phalfsize, 2*phalfsize, 2*phalfsize)
-            if p.connectable:
+            if p.connected_to is None:
                 c.set_source_rgba(0.8,0.8,1, 0.8)
             else:
                 c.set_source_rgba(1,0,0,1)
@@ -207,6 +202,9 @@ class Block(Element):
                     mindist = dist
                     minport = p
         return mindist, minport
+
+    def pre_update(self,context):
+        print "PRE-UPDATE BLOCK"
 
 class DefaultBlock(Block):
     """
@@ -327,8 +325,9 @@ class PortConnectingHandleTool(HandleTool):
                 pass # constraint was alreasy removed
             else:
                 print 'constraint removed for', item, handle
-            handle.connected_to.connectable = True
+            handle.connected_port.connected_to = None
             handle.connection_data = None
+            handle.connection_port = None
             handle.connected_to = None
             
             # Remove disconnect handler:
@@ -337,11 +336,7 @@ class PortConnectingHandleTool(HandleTool):
         #print 'Handle.connect', view, item, handle, wx, wy
         glue_port = self.glue(view, item, handle, wx, wy)
 
-        if glue_port:
-            if glue_port is handle.connected_to:    
-                hand
-
-        if glue_port and glue_port is handle.connected_to:
+        if glue_port and hasattr(handle,'connected_port') and handle.connected_port is glue_port:
             try:
                 view.canvas.solver.remove_constraint(handle.connection_data)
             except KeyError:
@@ -367,9 +362,10 @@ class PortConnectingHandleTool(HandleTool):
                 view.canvas.solver.add_constraint(handle.connection_data)
                 #glue_port.block._constraints.append(handle.connection_data)
 
-                handle.connected_to = glue_port
+                handle.connected_to = glue_port.block
+                handle.connected_port = glue_port
                 handle.disconnect = handle_disconnect
-                glue_port.connectable = False
+                glue_port.connected_to = handle
 
     def disconnect(self, view, item, handle):
         if handle.connected_to:
@@ -387,5 +383,25 @@ def DefaultExampleTool():
     chain.append(ItemTool())
     chain.append(RubberbandTool())
     return chain
+
+class BlockCanvas(Canvas):
+    def update_constraints(self, items):
+        """
+        Update constraints. Also variables may be marked as dirty before the
+        constraint solver kicks in.
+        """
+        # request solving of external constraints associated with dirty items
+        request_resolve = self._solver.request_resolve
+        for item in items:
+            if hasattr(item,'ports'):
+                for p in item.ports:
+                    request_resolve(p.x)
+                    request_resolve(p.y)
+
+        super(BlockCanvas,self).update_constraints(items)
+
+
+    
+
 
 # vim: sw=4:et:ai
