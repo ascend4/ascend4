@@ -305,6 +305,8 @@ int32 ipopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 			" linear solver you want to choose. Depending on your Ipopt"
 			" installation, not all options are available. The default value"
 			" for this string option is 'ma27'."
+			" Available options *may* include: ma27, ma57, pardiso, wsmp,"
+			" mumps, custom."
 		}, "ma27"}, (char *[]){
 			"ma27","ma57","pardiso","wsmp","mumps","custom",NULL
 		}
@@ -361,8 +363,8 @@ int32 ipopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 			,"Use either an exact Hessian matrix based on symbolic derivatives"
 			" computed from the equations in the model ('exact'), or else use"
 			" a limited-memory quasi-Newton approximation ('limited-memory')."
-			" The default is 'exact'."
-		}, "exact"}, (char *[]){
+			" The default is 'limited-memory'."
+		}, "limited-memory"}, (char *[]){
 			"exact","limited-memory",NULL
 		}
 	);
@@ -823,9 +825,10 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 		CONSOLE_DEBUG("j = %d, vtot = %d, vlist = %p",j,sys->vtot,sys->vlist);
 		var = sys->vlist[j];
 		if(var_apply_filter(var,&(sys->vfilt))){
+			CONSOLE_DEBUG("setting x_L[%d] = %e",jj,var_lower_bound(var));
 			assert(jj<sys->n);
-			CONSOLE_DEBUG("setting x_L[%d]",jj);
 			x_L[jj] = var_lower_bound(var);
+			CONSOLE_DEBUG("setting x_U[%d] = %e",jj,var_upper_bound(var));
 			x_U[jj] = var_upper_bound(var);
 			jj++;
 		}
@@ -844,6 +847,8 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	for(j = 0; j < sys->m; j++){
 		g_L[j] = 0;
 		g_U[j] = 0;
+		CONSOLE_DEBUG("set g_L[%d] = %e",j,g_L[j]);
+		CONSOLE_DEBUG("set g_U[%d] = %e",j,g_U[j]);
 	}
 
 	CONSOLE_DEBUG("CREATING PROBLEM...");
