@@ -371,7 +371,8 @@ real64 relman_glassbox_diffs( struct rel_relation *rel,
 
 real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
 	real64 res;
-	asc_assert(calc_ok!=NULL && rel!=NULL);
+	asc_assert(calc_ok!=NULL);
+	asc_assert(rel!=NULL);
 	if(rel->type == e_rel_token){
 		if(!RelationCalcResidualBinary(
 		        GetInstanceRelationOnly(IPTR(rel->instance)),&res)
