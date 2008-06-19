@@ -507,6 +507,8 @@ Bool ipopt_eval_g(Index n, Number* x, Bool new_x, Index m, Number *g, void *user
 	IpoptSystem *sys;
 	sys = SYS(user_data);
 	int i, res;
+	struct rel_relation *rel;
+	int calc_ok = 1;
 
 	CONSOLE_DEBUG("ipopt_eval_g");
 
@@ -518,11 +520,15 @@ Bool ipopt_eval_g(Index n, Number* x, Bool new_x, Index m, Number *g, void *user
 		if(res)return 0; /* fail model update */
 	}
 
+	/** @todo constraint rels are all relations except the objective rel. do we need to sort the objective to the end? */
 	for(i=0; i<m; ++i){
-		g[i] = 0;
+		rel = sys->rlist[i];
+		asc_assert(rel!=NULL);
+		g[i] = relman_eval(rel, &calc_ok,SLV_PARAM_BOOL(&(sys->p),IPOPT_PARAM_SAFEEVAL));
+		CONSOLE_DEBUG("g[%d] = %f",i,g[i]);
 	}
 
-	return 0; /* fail: not yet implemented */
+	return calc_ok; /* fail: not yet implemented */
 }
 
 Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
