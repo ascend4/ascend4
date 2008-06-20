@@ -106,7 +106,7 @@ else:
 	default_f2c_lib="gfortran"
 
 	
-	default_graphviz_libs=["cdt","graph","gvc"]
+	default_graphviz_libs=["graph","cdt","gvc"]
 	default_graphviz_libpath = default_libpath
 	if os.path.exists("/usr/lib/graphviz/libgraph.so"):
 		# for Ubuntu 7.04
