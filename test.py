@@ -1377,6 +1377,7 @@ class TestIPOPT(Ascend):
 		self.L.load('test/ipopt/test1.a4c')
 		M = self.L.findType('test1').getSimulation('sim')
 		M.setSolver(ascpy.Solver("IPOPT"))
+		M.setParameter('linear_solver','mumps')
 		M.setParameter('hessian_approximation','limited-memory')
 		M.solve(ascpy.Solver("IPOPT"),ascpy.SolverReporter())
 
