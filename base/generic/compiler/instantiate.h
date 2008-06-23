@@ -43,13 +43,13 @@
 	of general and utilities files, as well as some 'internal' packages.
 
 	For further information about ASCEND, see the Developers' Wiki at
-	https://pse.cheme.cmu.edu/wiki/view/Ascend/WebHome
+	http://ascendwiki.cheme.cmu.edu/
 
 	@section license License
 
 	ASCEND is licensed under the GNU General Public License. See the the file
 	'LICENSE.txt' for more information, which is available at:
-	https://pse.cheme.cmu.edu/svn-view/ascend/code/trunk/LICENSE.txt?view=markup
+	http://ascendcode.cheme.cmu.edu/viewvc.cgi/code/branches/extfn/LICENSE.txt?view=markup
 */
 
 #ifndef ASC_INSTANTIATE_H
