@@ -12,7 +12,7 @@ if env.get('WITH_IPOPT'):
 	)
 
 	lib = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
-		,LIBS = ['ascend','ipopt']
+		,LIBS = ['ascend'] + solver_env.get('IPOPT_LIBS')
 		,LIBPATH = ['#']
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
