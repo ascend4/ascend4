@@ -230,7 +230,6 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %defattr(-, root, root)
 %doc INSTALL.txt LICENSE.txt
 
-%{_bindir}/ascend-config
 %{_datadir}/ascend/models
 %{_datadir}/ascend/solvers
 %{_libdir}/libascend.so
@@ -258,6 +257,7 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %{_datadir}/icons/hicolor/64x64/ascend4.png
 
 %files devel
+%{_bindir}/ascend-config
 %{_includedir}/compiler
 %{_includedir}/general
 %{_includedir}/utilities
