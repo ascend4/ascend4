@@ -656,7 +656,7 @@ class Browser:
 		try:
 			self.sim.build()
 		except RuntimeError,e:
-			self.reporter.reportError("Couldn't build system: %s",str(e));
+			self.reporter.reportError("Couldn't build system: %s" % str(e));
 			return
 
 		if not hasattr(self,'solver'):
