@@ -139,7 +139,7 @@ MODEL turbine_simple REFINES steam_equipment;
 	
 	(* work done on the environment, will be positive *)
 	Wdot IS_A energy_rate;
-	Wedot_eq:Wdot = eta * mdot * (inlet.h - outlet.h);
+	Wedot_eq:Wdot = mdot * (inlet.h - outlet.h);
 
 	w IS_A specific_energy;
 	w_eq:w = inlet.h - outlet.h;
