@@ -2,6 +2,7 @@
 
 extern "C"{
 #include <compiler/notate.h>
+#include <compiler/notequery.h>
 #include <utilities/error.h>
 #include <utilities/ascPanic.h>
 }
@@ -48,6 +49,22 @@ AnnotationDatabase::getNotes(const Type &type, const SymChar *lang
 	
 	return v;
 }
+
+/**
+	Return the note corresponding to a variable within a type. This function
+	is cogniscent of the type hierarchy; it will locate the note on this
+	variable in the most refined parent type of 'type' for which it is present.
+	This makes it possible to define a note in a base-type and then access it
+	from a more refined type.
+*/
+const char *
+AnnotationDatabase::getNoteForVariable(const Type &type
+		, const SymChar *varname
+		, const SymChar *lang
+){
+	return notes_get_for_variable(this->dbid, type.getInternalType(), varname->getInternalType(), lang->getInternalType());
+}
+
 
 Annotation::Annotation(){
 	n = NULL;

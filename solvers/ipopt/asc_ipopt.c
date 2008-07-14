@@ -251,10 +251,10 @@ static void update_status(IpoptSystem *sys){
 static int32 ipopt_eligible_solver(slv_system_t server){
 	UNUSED_PARAMETER(server);
 	
-	/// TODO check that there is a MAXIMIZE or MINIMIZE statement
-	/// TODO check that there are no discrete-valued variables
-	/// TODO check that there are no WHENs or CONDITIONALs
-	/// TODO check anything else?
+	/// @todo check that there is a MAXIMIZE or MINIMIZE statement
+	/// @todo check that there are no discrete-valued variables
+	/// @todo check that there are no WHENs or CONDITIONALs
+	/// @todo check anything else?
 
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"ipopt_eligible_solver not implemented");
 	return 1;
@@ -510,7 +510,7 @@ Bool ipopt_eval_g(Index n, Number* x, Bool new_x, Index m, Number *g, void *user
 	struct rel_relation *rel;
 	int calc_ok = 1;
 
-	CONSOLE_DEBUG("ipopt_eval_g");
+	CONSOLE_DEBUG("ipopt_eval_g (n=%d, m=%d)",sys->n, sys->m);
 
 	asc_assert(n==sys->n);
 	asc_assert(m==sys->m);
@@ -623,9 +623,9 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 
 	asc_assert(sys->vlist && sys->rlist);
 
-	/** @TODO work out if matrix creation is not again needed */
+	/** @todo work out if matrix creation is not again needed */
 
-	/** @TODO slv_sort_rels_and_vars(server,&(sys->m),&(sys->n)); */
+	/** @todo slv_sort_rels_and_vars(server,&(sys->m),&(sys->n)); */
 
 
 	/* count the number of optimisation variables */
@@ -636,9 +636,6 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 			sys->n++;
 		}
 	}
-
-	/* TODO are there cases where these should be different? */
-	sys->m = sys->vtot;
 
 	/* set all relations as being 'unsatisfied' to start with... */
 	for(i=0; i < sys->rtot; ++i){
@@ -651,11 +648,15 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 		return -3;
 	}
 
-	/** @TODO we need to move the objective relation to the end of the list */
+	/* number of constraints = number of relations minus the objective rel */
+	/* todo are there cases where these should be different? */
+	sys->m = sys->vtot - 1;
+
+	/** @todo we need to move the objective relation to the end of the list */
 
 	CONSOLE_DEBUG("got objective rel %p",sys->obj);
 
-	/* calculate nnz for hessian matrix @TODO FIXME */
+	/* calculate nnz for hessian matrix @todo FIXME */
 
 	if(strcmp(SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_HESS_APPROX),"exact")==0){
 		sys->nnzH = relman_hessian_count(sys->rlist, sys->rtot, &(sys->vfilt), &(sys->rfilt), &max);
@@ -825,7 +826,7 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 
 	CONSOLE_DEBUG("SETTING BOUNDS...");
 
-	/* @TODO set the values for the variable bounds */
+	/* @todo set the values for the variable bounds */
 	int jj = 0;
 	for(j = 0; j < sys->vtot; j++){
 		CONSOLE_DEBUG("j = %d, vtot = %d, vlist = %p",j,sys->vtot,sys->vlist);
@@ -843,7 +844,7 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	CONSOLE_DEBUG("jj = %d, sys->n = %d", jj, sys->n);
 	assert(jj==sys->n);
 
-	/** @TODO set bounds on the constraints? */
+	/** @todo set bounds on the constraints? */
 	/* is it possible to identify f(x)<a; f(x) >b and fold them into one? */
 	/* then find the constant parts and make then g_L or g_U accordingly */
 	/* what to do about other bounds? */
@@ -891,7 +892,7 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	/* initial values */
 	x = ASC_NEW_ARRAY(Number, sys->n);
 
-	/** @TODO get values of 'x' from the model */
+	/** @todo get values of 'x' from the model */
 
 	/* allocate space to store the bound multipliers at the solution */
 	mult_x_L = ASC_NEW_ARRAY(Number, sys->n);
@@ -904,7 +905,7 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 
 	CONSOLE_DEBUG("Done IpoptSolve...");
 
-	/** @TODO update the sys->s.xxxxx flags based on value of 'status' */
+	/** @todo update the sys->s.xxxxx flags based on value of 'status' */
 
 	if (status == Solve_Succeeded) {
 		CONSOLE_DEBUG("Solution of the primal variables, x");
