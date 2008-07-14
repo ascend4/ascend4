@@ -13,7 +13,7 @@ csrcs = Split("""
 	instantiate.c instmacro.c instquery.c
 	library.c linkinst.c logrel_io.c logrel_util.c
 	logrelation.c mathinst.c mergeinst.c module.c name.c
-	nameio.c notate.c numlist.c parentchild.c
+	nameio.c notate.c notequery.c numlist.c parentchild.c
 	parpend.c pending.c plot.c proc.c procframe.c
 	procio.c prototype.c qlfdid.c refineinst.c rel_common.c relation.c
 	rel_blackbox.c
