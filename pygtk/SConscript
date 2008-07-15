@@ -129,9 +129,9 @@ if platform.system() != "Windows" or env.has_key('IS_MINGW'):
 #	, LIBS = ['ascend'] + env['PYTHON_LIB']
 #	, LIBPATH = ['.'] + ['#'] + env['PYTHON_LIBPATH']
 #)
-#
-idatest = swig_env.Program('idatest',['idatest.cpp'] + objs)
-#
+
+ipopttest = swig_env.Program('testipopt',['testipopt.cpp'] + objs)
+
 #env.Alias('ascxx',ascxxtest)
 
 #---------------------------------------------
