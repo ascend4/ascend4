@@ -8,6 +8,7 @@ http://ascendwiki.cheme.cmu.edu/DOPRI5
 
 DOPRI5 was written by Ernst Hairer (c) 2004. Details are available from
 http://www.unige.ch/~hairer/software.html.
+See also LICENSE.txt in the same directory as this file.
 
 The situations where the DOPRI5 integrator is appropriate are discuessed in the
 excellent book by Ascher and Petzold, 'Computer Methods for Ordinary 

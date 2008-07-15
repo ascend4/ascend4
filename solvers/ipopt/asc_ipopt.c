@@ -113,7 +113,7 @@ struct IpoptSystemStruct{
 		IPOPT DATA
 	*/
 	Index n;                          /* number of variables */
-	Index m;                          /* number of constraints */
+	Index m;                          /* number of constraints (excl the 'objective relation')*/
 
 	Index nnzJ; /* number of non zeros in the jacobian of the constraints */
 	Index nnzH; /* number of non-zeros in the hessian of the objective */
@@ -409,6 +409,8 @@ static void ipopt_set_parameters(slv_system_t server, SlvClientToken asys
 int ipopt_update_model(IpoptSystem *sys, const double *x){
 	unsigned j;
 
+	CONSOLE_DEBUG("...");
+
 	asc_assert(sys);
 	asc_assert(sys->vlist);
 
@@ -518,6 +520,10 @@ Bool ipopt_eval_g(Index n, Number* x, Bool new_x, Index m, Number *g, void *user
 	if(new_x){
 		res = ipopt_update_model(sys,x);
 		if(res)return 0; /* fail model update */
+	}
+
+	for(i=0;i<m;++i){
+		CONSOLE_DEBUG("rel %d: %s.",i,(sys->rlist[0] == sys->obj ? "OBJECTIVE" : "constraint"));
 	}
 
 	/** @todo constraint rels are all relations except the objective rel. do we need to sort the objective to the end? */
@@ -647,10 +653,12 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No objective function was specified");
 		return -3;
 	}
+	CONSOLE_DEBUG("got objective rel %p",sys->obj);
+	/* @todo check if old_obj == obj ? */
 
-	/* number of constraints = number of relations minus the objective rel */
-	/* todo are there cases where these should be different? */
-	sys->m = sys->vtot - 1;
+	/* TODO are there cases where these should be different? */
+	sys->m = sys->vtot - 1; /* minus the objective relation */
+	CONSOLE_DEBUG("Numbers of constraints = %d",sys->m);
 
 	/** @todo we need to move the objective relation to the end of the list */
 
@@ -659,6 +667,7 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 	/* calculate nnz for hessian matrix @todo FIXME */
 
 	if(strcmp(SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_HESS_APPROX),"exact")==0){
+		/** @todo fix rtot to be 'm' instead */
 		sys->nnzH = relman_hessian_count(sys->rlist, sys->rtot, &(sys->vfilt), &(sys->rfilt), &max);
 	}else{
 		CONSOLE_DEBUG("Skipping relman_hessian_count as hessian method is not exact.");
@@ -685,10 +694,11 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 		CONSOLE_DEBUG("this is a MAXIMIZE problem");
 	}
 
-	CONSOLE_DEBUG("got %d relations and %d vars in system", sys->rtot, sys->vtot);
+	CONSOLE_DEBUG("got %d constraints and %d vars in system", sys->m, sys->n);
 	/* calculate number of non-zeros in the Jacobian matrix for the constraint equations */
 
-	sys->nnzJ = relman_jacobian_count(sys->rlist, sys->rtot, &(sys->vfilt), &(sys->rfilt), &max);
+	/* @todo make sure objective rel moved to end */
+	sys->nnzJ = relman_jacobian_count(sys->rlist, sys->m, &(sys->vfilt), &(sys->rfilt), &max);
 
 	CONSOLE_DEBUG("got %d non-zeros in constraint Jacobian", sys->nnzJ);
 	
@@ -849,8 +859,8 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	/* then find the constant parts and make then g_L or g_U accordingly */
 	/* what to do about other bounds? */
 	/* set the number of variables and allocate space for the bounds */
-	g_L = ASC_NEW_ARRAY(Number,sys->m+10);
-	g_U = ASC_NEW_ARRAY(Number,sys->m+10);
+	g_L = ASC_NEW_ARRAY(Number,sys->m);
+	g_U = ASC_NEW_ARRAY(Number,sys->m);
 	for(j = 0; j < sys->m; j++){
 		g_L[j] = 0;
 		g_U[j] = 0;
