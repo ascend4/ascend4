@@ -1,60 +1,61 @@
+(*	ASCEND modelling environment
+	Copyright (C) 1998, 2006, 2007 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
 REQUIRE "atoms.a4l";
-(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
 PROVIDE "when_demo.a4c";
 (*
- * This file is part of the ASCEND Modeling Library and is released
- * under the GNU Public License as described at the end of this file.
- *
- * Use of this module is demonstrated by the associated script file
- * when_demo.a4s.
- *)
+	Example of use of WHEN statement, by Vicente Rico-Ramirez.
+	Presented in the 'HOWTO' document 'when_model.pdf' & also in ASCEND Wiki.
 
-(*
-This model is intended to demonstrate the degree of flexibility
-that the use of conditional statements -when statement- provides
-to the representation of superstructures. We hope that this
-application will become clear by looking at the MODEL flowsheet,
-in which the existence/nonexistence of some of the unit operations
-is represented by when statements. A particular combination of
-user defined boolean variables -see method values, configuration2,
-configuration3- will a define a particular configuration of the
-problem.
-
-This model requires:
-			"system.a4l"
-		    	"atoms.a4l"
+	This model is intended to demonstrate the degree of flexibility
+	that the use of conditional statements -when statement- provides
+	to the representation of superstructures. We hope that this
+	application will become clear by looking at the MODEL flowsheet,
+	in which the existence/nonexistence of some of the unit operations
+	is represented by when statements. A particular combination of
+	user defined boolean variables -see method values, configuration2,
+	configuration3- will a define a particular configuration of the
+	problem.
 *)
-
-
-
-(* ************************************************* *)
 
 MODEL mixture;
 
-	components                      IS_A set OF symbol_constant;
-	Cpi[components]			IS_A molar_heat_capacity;
-        y[components]                   IS_A fraction;
-	P				IS_A pressure;
-	T				IS_A temperature;
-	Cp				IS_A molar_heat_capacity;
+	components         IS_A set OF symbol_constant;
+	Cpi[components]    IS_A molar_heat_capacity;
+	y[components]      IS_A fraction;
+	P                  IS_A pressure;
+	T                  IS_A temperature;
+	Cp                 IS_A molar_heat_capacity;
 
-
-        SUM[y[i] | i IN components] = 1.0;
+	SUM[y[i] | i IN components] = 1.0;
 	Cp = SUM[Cpi[i] * y[i] | i IN components];
 
-  METHODS
+METHODS
+	METHOD default_self;
+	END default_self;
 
-    METHOD default_self;
-    END default_self;
-
-    METHOD specify;
-        FIX Cpi[components];
-        FIX P;
-        FIX T;
-        FIX y[components];
-        FREE y[CHOICE[components]];
-    END specify;
-
+	METHOD specify;
+		FIX Cpi[components];
+		FIX P;
+		FIX T;
+		FIX y[components];
+		FREE y[CHOICE[components]];
+	END specify;
 END mixture;
 
 
@@ -62,20 +63,20 @@ END mixture;
 
 
 MODEL molar_stream;
-	state				IS_A mixture;
-        Ftot,f[components]		IS_A molar_rate;
-	components			IS_A set OF symbol_constant;
-	P				IS_A pressure;
-	T				IS_A temperature;
-	Cp				IS_A molar_heat_capacity;
+	state               IS_A mixture;
+	Ftot,f[components]  IS_A molar_rate;
+	components          IS_A set OF symbol_constant;
+	P                   IS_A pressure;
+	T                   IS_A temperature;
+	Cp                  IS_A molar_heat_capacity;
 
-	components, state.components	ARE_THE_SAME;
-	P, state.P                      ARE_THE_SAME;
-	T, state.T                      ARE_THE_SAME;
-	Cp, state.Cp                    ARE_THE_SAME;
+	components, state.components  ARE_THE_SAME;
+	P, state.P                    ARE_THE_SAME;
+	T, state.T                    ARE_THE_SAME;
+	Cp, state.Cp                  ARE_THE_SAME;
 
 	FOR i IN components CREATE
-	    f_def[i]: f[i] = Ftot*state.y[i];
+		f_def[i]: f[i] = Ftot*state.y[i];
 	END FOR;
 
   METHODS
@@ -84,10 +85,10 @@ MODEL molar_stream;
     END default_self;
 
     METHOD specify;
-	RUN state.specify;
-	FREE state.y[components];
-	FIX f[components];
-   END specify;
+		RUN state.specify;
+		FREE state.y[components];
+		FIX f[components];
+	END specify;
 
 END molar_stream;
 
@@ -97,9 +98,9 @@ END molar_stream;
 
 
 MODEL cheap_feed;
-	stream			IS_A molar_stream;
-        cost_factor		IS_A cost_per_mole;
-	cost			IS_A cost_per_time;
+	stream        IS_A molar_stream;
+	cost_factor	  IS_A cost_per_mole;
+	cost          IS_A cost_per_time;
 
 	stream.f['A'] = 0.060 {kg_mole/s};
 	stream.f['B'] = 0.025 {kg_mole/s};
@@ -115,22 +116,20 @@ METHODS
     END default_self;
 
     METHOD specify;
-	RUN stream.specify;
-	FREE stream.f[stream.components];
-	FIX cost_factor;
-	FREE stream.T;
-	FREE stream.P;
+		RUN stream.specify;
+		FREE stream.f[stream.components];
+		FIX cost_factor;
+		FREE stream.T;
+		FREE stream.P;
     END specify;
 
 END cheap_feed;
 
-
 (* ************************************************* *)
-
 
 MODEL expensive_feed;
 	stream			IS_A molar_stream;
-        cost_factor		IS_A cost_per_mole;
+	cost_factor		IS_A cost_per_mole;
 	cost			IS_A cost_per_time;
 
 	stream.f['A'] = 0.065 {kg_mole/s};
@@ -148,33 +147,31 @@ METHODS
     END default_self;
 
     METHOD specify;
-	RUN stream.specify;
-	FREE stream.f[stream.components];
-	FIX cost_factor;
-	FREE stream.T;
-	FREE stream.P;
+		RUN stream.specify;
+		FREE stream.f[stream.components];
+		FIX cost_factor;
+		FREE stream.T;
+		FREE stream.P;
     END specify;
 
 END expensive_feed;
 
-
 (* ************************************************* *)
 
-
 MODEL heater;
-	input,output		IS_A molar_stream;
-	heat_supplied		IS_A energy_rate;
-	components		IS_A set OF symbol_constant;
-	cost			IS_A cost_per_time;
-	cost_factor		IS_A cost_per_energy;
+	input,output    IS_A molar_stream;
+	heat_supplied   IS_A energy_rate;
+	components      IS_A set OF symbol_constant;
+	cost            IS_A cost_per_time;
+	cost_factor     IS_A cost_per_energy;
 
 	components,input.components,output.components	ARE_THE_SAME;
 	FOR i IN components CREATE
-	  input.state.Cpi[i], output.state.Cpi[i]	ARE_THE_SAME;
+		input.state.Cpi[i], output.state.Cpi[i]	ARE_THE_SAME;
 	END FOR;
 
 	FOR i IN components CREATE
-	   input.f[i] = output.f[i];
+		input.f[i] = output.f[i];
 	END FOR;
 
 	input.P = output.P;
@@ -185,26 +182,23 @@ MODEL heater;
 
 METHODS
 
-    METHOD default_self;
-    END default_self;
+	METHOD default_self;
+	END default_self;
 
-   METHOD specify;
-	RUN input.specify;
-	FIX cost_factor;
-	FIX heat_supplied;
-   END specify;
+	METHOD specify;
+		RUN input.specify;
+		FIX cost_factor;
+		FIX heat_supplied;
+	END specify;
 
-   METHOD seqmod;
-	FIX cost_factor;
-	FIX heat_supplied;
-   END seqmod;
+	METHOD seqmod;
+		FIX cost_factor;
+		FIX heat_supplied;
+	END seqmod;
 
 END heater;
 
-
-
 (* ************************************************* *)
-
 
 MODEL cooler;
 
@@ -216,7 +210,7 @@ MODEL cooler;
 
 	components,input.components,output.components	ARE_THE_SAME;
 	FOR i IN components CREATE
-	  input.state.Cpi[i],output.state.Cpi[i]	ARE_THE_SAME;
+		input.state.Cpi[i],output.state.Cpi[i]	ARE_THE_SAME;
 	END FOR;
 
 	FOR i IN components CREATE
@@ -229,25 +223,23 @@ MODEL cooler;
 
 METHODS
 
-    METHOD default_self;
-    END default_self;
+	METHOD default_self;
+	END default_self;
 
-   METHOD specify;
-	RUN input.specify;
-	FIX cost_factor;
-	FIX heat_removed;
-   END specify;
+	METHOD specify;
+		RUN input.specify;
+		FIX cost_factor;
+		FIX heat_removed;
+	END specify;
 
-   METHOD seqmod;
-	FIX cost_factor;
-	FIX heat_removed;
-   END seqmod;
+	METHOD seqmod;
+		FIX cost_factor;
+		FIX heat_removed;
+	END seqmod;
 
 END cooler;
 
-
 (* ************************************************* *)
-
 
 MODEL single_compressor; (* Adiabatic Compression *)
 
@@ -261,11 +253,11 @@ MODEL single_compressor; (* Adiabatic Compression *)
 
 	components,input.components,output.components	ARE_THE_SAME;
 	FOR i IN components CREATE
-	  input.state.Cpi[i],output.state.Cpi[i]	ARE_THE_SAME;
+		input.state.Cpi[i],output.state.Cpi[i]	ARE_THE_SAME;
 	END FOR;
 
 	FOR i IN components CREATE
-	   input.f[i] = output.f[i];
+		input.f[i] = output.f[i];
 	END FOR;
 
 	pressure_rate = output.P / input.P;
@@ -277,20 +269,19 @@ MODEL single_compressor; (* Adiabatic Compression *)
 	cost = cost_factor * work_supplied;
 
 METHODS
+	METHOD default_self;
+	END default_self;
 
-    METHOD default_self;
-    END default_self;
+	METHOD specify;
+		RUN input.specify;
+		FIX cost_factor;
+		FIX pressure_rate;
+	END specify;
 
-   METHOD specify;
-	RUN input.specify;
-	FIX cost_factor;
-	FIX pressure_rate;
-   END specify;
-
-   METHOD seqmod;
-	FIX cost_factor;
-	FIX pressure_rate;
-   END seqmod;
+	METHOD seqmod;
+		FIX cost_factor;
+		FIX pressure_rate;
+	END seqmod;
 
 END single_compressor;
 
@@ -340,24 +331,23 @@ MODEL staged_compressor;
                cost_factor_heat * heat_removed;
 
 METHODS
+	METHOD default_self;
+	END default_self;
 
-    METHOD default_self;
-    END default_self;
+	METHOD specify;
+		RUN input.specify;
+		FIX n_stages;
+		FIX cost_factor_heat;
+		FIX cost_factor_work;
+		FIX pressure_rate;
+	END specify;
 
-   METHOD specify;
-	RUN input.specify;
-	FIX n_stages;
-	FIX cost_factor_heat;
-	FIX cost_factor_work;
-	FIX pressure_rate;
-   END specify;
-
-   METHOD seqmod;
-	FIX n_stages;
-	FIX cost_factor_heat;
-	FIX cost_factor_work;
-	FIX pressure_rate;
-   END seqmod;
+	METHOD seqmod;
+		FIX n_stages;
+		FIX cost_factor_heat;
+		FIX cost_factor_work;
+		FIX pressure_rate;
+	END seqmod;
 
 END staged_compressor;
 
@@ -382,25 +372,24 @@ MODEL mixer;
 	  cmb[i]: out.f[i] = SUM[feed[1..n_inputs].f[i]];
 	END FOR;
 
-       SUM[(feed[i].Cp *feed[i].Ftot * (feed[i].T - To))|i IN [1..n_inputs]]=
-                                 out.Cp *out.Ftot * (out.T - To);
+	SUM[(feed[i].Cp *feed[i].Ftot * (feed[i].T - To))|i IN [1..n_inputs]]=
+		                         out.Cp *out.Ftot * (out.T - To);
 
-       SUM[( feed[i].Ftot * feed[i].T / feed[i].P  )|i IN [1..n_inputs]] =
-                                 out.Ftot * out.T / out.P;
+	SUM[( feed[i].Ftot * feed[i].T / feed[i].P  )|i IN [1..n_inputs]] =
+		                         out.Ftot * out.T / out.P;
 
-  METHODS
+METHODS
+	METHOD default_self;
+	END default_self;
 
-    METHOD default_self;
-    END default_self;
+	METHOD specify;
+		FIX To;
+		RUN feed[1..n_inputs].specify;
+	END specify;
 
-    METHOD specify;
-	FIX To;
-	RUN feed[1..n_inputs].specify;
-    END specify;
-
-    METHOD seqmod;
-	FIX To;
-    END seqmod;
+	METHOD seqmod;
+		FIX To;
+	END seqmod;
 
 END mixer;
 
@@ -426,19 +415,19 @@ MODEL splitter;
 
 	SUM[split[1..n_outputs]] = 1.0;
 
-  METHODS
+METHODS
 
-    METHOD default_self;
-    END default_self;
+	METHOD default_self;
+	END default_self;
 
-    METHOD specify;
-	RUN feed.specify;
-	FIX split[1..n_outputs-1];
-    END specify;
+	METHOD specify;
+		RUN feed.specify;
+		FIX split[1..n_outputs-1];
+	END specify;
 
-    METHOD seqmod;
-	FIX split[1..n_outputs-1];
-    END seqmod;
+	METHOD seqmod;
+		FIX split[1..n_outputs-1];
+	END seqmod;
 
 END splitter;
 
@@ -469,23 +458,23 @@ MODEL cheap_reactor;
 
 	cost = cost_factor * low_turnover;
 
-  METHODS
+METHODS
 
-    METHOD default_self;
-    END default_self;
+	METHOD default_self;
+	END default_self;
 
-    METHOD specify;
-	RUN input.specify;
-	FIX low_turnover;
-	FIX stoich_coef[input.components];
-	FIX cost_factor;
-    END specify;
+	METHOD specify;
+		RUN input.specify;
+		FIX low_turnover;
+		FIX stoich_coef[input.components];
+		FIX cost_factor;
+	END specify;
 
-    METHOD seqmod;
-	FIX low_turnover;
-	FIX stoich_coef[input.components];
-	FIX cost_factor;
-    END seqmod;
+	METHOD seqmod;
+		FIX low_turnover;
+		FIX stoich_coef[input.components];
+		FIX cost_factor;
+	END seqmod;
 
 END cheap_reactor;
 
@@ -517,23 +506,23 @@ MODEL expensive_reactor;
 
 	cost = cost_factor * high_turnover;
 
-  METHODS
+METHODS
 
-    METHOD default_self;
-    END default_self;
+	METHOD default_self;
+	END default_self;
 
-    METHOD specify;
-	RUN input.specify;
-	FIX high_turnover;
-	FIX stoich_coef[input.components];
-	FIX cost_factor;
-    END specify;
+	METHOD specify;
+		RUN input.specify;
+		FIX high_turnover;
+		FIX stoich_coef[input.components];
+		FIX cost_factor;
+	END specify;
 
-    METHOD seqmod;
-	FIX high_turnover;
-	FIX stoich_coef[input.components];
-	FIX cost_factor;
-    END seqmod;
+	METHOD seqmod;
+		FIX high_turnover;
+		FIX stoich_coef[input.components];
+		FIX cost_factor;
+	END seqmod;
 
 END expensive_reactor;
 
@@ -570,20 +559,20 @@ MODEL flash;
 	feed.P = vap.P;
 	feed.P = liq.P;
 
-  METHODS
+METHODS
 
     METHOD default_self;
     END default_self;
 
     METHOD specify;
-	RUN feed.specify;
-	FIX alpha[feed.components];
-	FIX vap_to_feed_ratio;
+		RUN feed.specify;
+		FIX alpha[feed.components];
+		FIX vap_to_feed_ratio;
     END specify;
 
     METHOD seqmod;
-	FIX alpha[feed.components];
-	FIX vap_to_feed_ratio;
+		FIX alpha[feed.components];
+		FIX vap_to_feed_ratio;
     END seqmod;
 
 END flash;
@@ -698,32 +687,32 @@ MODEL flowsheet;
 	END WHEN;
 
 
-  METHODS
+METHODS
 
     METHOD default_self;
     END default_self;
 
     METHOD seqmod;
-	RUN c1.seqmod;
-	RUN c2.seqmod;
-	RUN s1.seqmod;
-	RUN s2.seqmod;
-	RUN co1.seqmod;
-	RUN co2.seqmod;
-	RUN h1.seqmod;
-	RUN h2.seqmod;
-	RUN h3.seqmod;
-	RUN r1.seqmod;
-	RUN r2.seqmod;
-	RUN fl1.seqmod;
-	RUN sp1.seqmod;
-	RUN m1.seqmod;
+		RUN c1.seqmod;
+		RUN c2.seqmod;
+		RUN s1.seqmod;
+		RUN s2.seqmod;
+		RUN co1.seqmod;
+		RUN co2.seqmod;
+		RUN h1.seqmod;
+		RUN h2.seqmod;
+		RUN h3.seqmod;
+		RUN r1.seqmod;
+		RUN r2.seqmod;
+		RUN fl1.seqmod;
+		RUN sp1.seqmod;
+		RUN m1.seqmod;
     END seqmod;
 
     METHOD specify;
-	RUN seqmod;
-	RUN f1.specify;
-	RUN f2.specify;
+		RUN seqmod;
+		RUN f1.specify;
+		RUN f2.specify;
     END specify;
 
 END flowsheet;
@@ -736,154 +725,125 @@ MODEL test_flowsheet REFINES flowsheet;
 
 	f1.stream.components :== ['A','B','C','D'];
 
-  METHODS
+METHODS
 
-    METHOD default_self;
+	METHOD default_self;
 		RUN reset;
 		RUN values;
-    END default_self;
+	END default_self;
 
-    METHOD values;
+	METHOD values;
 
-        (* Initial Configuration *)
-	select_feed1 := TRUE;
-	select_single1 := TRUE;
-	select_cheapr1 := TRUE;
-	select_single2 := TRUE;
+		(* Initial Configuration *)
+		select_feed1 := TRUE;
+		select_single1 := TRUE;
+		select_cheapr1 := TRUE;
+		select_single2 := TRUE;
 
-        (* Fixed Values *)
+		(* Fixed Values *)
 
-(* Physical Properties of Components *)
+		(* Physical Properties of Components *)
 
-	f1.stream.state.Cpi['A'] := 0.04 {BTU/mole/K};
-	f1.stream.state.Cpi['B'] := 0.05 {BTU/mole/K};
-	f1.stream.state.Cpi['C'] := 0.06 {BTU/mole/K};
-	f1.stream.state.Cpi['D'] := 0.055 {BTU/mole/K};
+		f1.stream.state.Cpi['A'] := 0.04 {BTU/mole/K};
+		f1.stream.state.Cpi['B'] := 0.05 {BTU/mole/K};
+		f1.stream.state.Cpi['C'] := 0.06 {BTU/mole/K};
+		f1.stream.state.Cpi['D'] := 0.055 {BTU/mole/K};
 
-(* Feed 1 *)
-	f1.cost_factor := 0.026 {USD/kg_mole};
+		(* Feed 1 *)
+		f1.cost_factor := 0.026 {USD/kg_mole};
 
-(* Feed 2 *)
-	f2.cost_factor := 0.033 {USD/kg_mole};
+		(* Feed 2 *)
+		f2.cost_factor := 0.033 {USD/kg_mole};
 
-(* Cooler 1 *)
-	co1.cost_factor  := 0.7e-06 {USD/kJ};
-	co1.heat_removed := 100 {BTU/s};
+		(* Cooler 1 *)
+		co1.cost_factor  := 0.7e-06 {USD/kJ};
+		co1.heat_removed := 100 {BTU/s};
 
-(* Cooler 2 *)
-	co2.heat_removed := 150 {BTU/s};
-	co2.cost_factor  := 0.7e-06 {USD/kJ};
+		(* Cooler 2 *)
+		co2.heat_removed := 150 {BTU/s};
+		co2.cost_factor  := 0.7e-06 {USD/kJ};
 
-(* Heater 1 *)
-	h1.heat_supplied := 200 {BTU/s};
-	h1.cost_factor  := 8e-06 {USD/kJ};
+		(* Heater 1 *)
+		h1.heat_supplied := 200 {BTU/s};
+		h1.cost_factor  := 8e-06 {USD/kJ};
 
-(* Heater 2 *)
-	h2.heat_supplied := 180 {BTU/s};
-	h2.cost_factor  := 8e-06 {USD/kJ};
+		(* Heater 2 *)
+		h2.heat_supplied := 180 {BTU/s};
+		h2.cost_factor  := 8e-06 {USD/kJ};
 
-(* Heater 3 *)
-	h3.heat_supplied := 190 {BTU/s};
-	h3.cost_factor  := 8e-06 {USD/kJ};
+		(* Heater 3 *)
+		h3.heat_supplied := 190 {BTU/s};
+		h3.cost_factor  := 8e-06 {USD/kJ};
 
-(* Flash *)
-	fl1.alpha['A'] := 12.0;
-	fl1.alpha['B'] := 10.0;
-	fl1.alpha['C'] := 1.0;
-	fl1.alpha['D'] := 6.0;
-	fl1.vap_to_feed_ratio :=0.9;
+		(* Flash *)
+		fl1.alpha['A'] := 12.0;
+		fl1.alpha['B'] := 10.0;
+		fl1.alpha['C'] := 1.0;
+		fl1.alpha['D'] := 6.0;
+		fl1.vap_to_feed_ratio :=0.9;
 
-(* Splitter *)
-	sp1.split[1] :=	0.05;
+		(* Splitter *)
+		sp1.split[1] :=	0.05;
 
-(* Mixer *)
-	m1.To := 298 {K};
+		(* Mixer *)
+		m1.To := 298 {K};
 
-(* Single Compressor 1 *)
-	c1.cost_factor := 8.33333e-06 {USD/kJ};
-	c1.pressure_rate := 2.5;
+		(* Single Compressor 1 *)
+		c1.cost_factor := 8.33333e-06 {USD/kJ};
+		c1.pressure_rate := 2.5;
 
-(* Single Compressor 2 *)
-	c2.cost_factor := 8.33333e-06 {USD/kJ};
-	c2.pressure_rate := 1.5;
+		(* Single Compressor 2 *)
+		c2.cost_factor := 8.33333e-06 {USD/kJ};
+		c2.pressure_rate := 1.5;
 
-(* Staged Compressor 1 *)
-	s1.cost_factor_work := 8.33333e-06 {USD/kJ};
-	s1.cost_factor_heat := 0.7e-06 {USD/kJ};
-	s1.pressure_rate := 2.5;
-        s1.n_stages := 2.0;
+		(* Staged Compressor 1 *)
+		s1.cost_factor_work := 8.33333e-06 {USD/kJ};
+		s1.cost_factor_heat := 0.7e-06 {USD/kJ};
+		s1.pressure_rate := 2.5;
+		s1.n_stages := 2.0;
 
-(* Staged Compressor 2 *)
-	s2.cost_factor_work := 8.33333e-06 {USD/kJ};
-	s2.cost_factor_heat := 0.7e-06 {USD/kJ};
-	s2.pressure_rate := 1.5;
-        s2.n_stages := 2.0;
+		(* Staged Compressor 2 *)
+		s2.cost_factor_work := 8.33333e-06 {USD/kJ};
+		s2.cost_factor_heat := 0.7e-06 {USD/kJ};
+		s2.pressure_rate := 1.5;
+		s2.n_stages := 2.0;
 
-(* Reactor 1 *)
-	r1.stoich_coef['A']:=	-1;
-	r1.stoich_coef['B']:=	-1;
-	r1.stoich_coef['C']:=	1;
-	r1.stoich_coef['D']:=	0;
-	r1.low_turnover := 0.0069 {kg_mole/s};
+		(* Reactor 1 *)
+		r1.stoich_coef['A']:=	-1;
+		r1.stoich_coef['B']:=	-1;
+		r1.stoich_coef['C']:=	1;
+		r1.stoich_coef['D']:=	0;
+		r1.low_turnover := 0.0069 {kg_mole/s};
 
-(* Reactor 2 *)
-	r2.stoich_coef['A']:=	-1;
-	r2.stoich_coef['B']:=	-1;
-	r2.stoich_coef['C']:=	1;
-	r2.stoich_coef['D']:=	0;
-	r2.high_turnover := 0.00828 {kg_mole/s};
+		(* Reactor 2 *)
+		r2.stoich_coef['A']:=	-1;
+		r2.stoich_coef['B']:=	-1;
+		r2.stoich_coef['C']:=	1;
+		r2.stoich_coef['D']:=	0;
+		r2.high_turnover := 0.00828 {kg_mole/s};
 
-        (* Initial Guess *)
+		(* Initial Guess *)
 
-(* Flash *)
-	fl1.ave_alpha	:= 5.0;
+		(* Flash *)
+		fl1.ave_alpha	:= 5.0;
 
-    END values;
+	END values;
 
-    METHOD configuration2;
-	(* alternative configuration *)
-	select_feed1 := FALSE;
-	select_single1 := FALSE;
-	select_cheapr1 := FALSE;
-	select_single2 := FALSE;
-    END configuration2;
+	METHOD configuration2;
+		(* alternative configuration *)
+		select_feed1 := FALSE;
+		select_single1 := FALSE;
+		select_cheapr1 := FALSE;
+		select_single2 := FALSE;
+	END configuration2;
 
-    METHOD configuration3;
-	(* alternative configuration *)
-	select_feed1 := FALSE;
-	select_single1 := TRUE;
-	select_cheapr1 := TRUE;
-	select_single2 := FALSE;
-    END configuration3;
+	METHOD configuration3;
+		(* alternative configuration *)
+		select_feed1 := FALSE;
+		select_single1 := TRUE;
+		select_cheapr1 := TRUE;
+		select_single2 := FALSE;
+	END configuration3;
 
 END test_flowsheet;
 
-
-(*
- *  when_demo.a4c
- *  by Vicente Rico-Ramirez
- *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:15:07 $
- *  $Revision: 1.6 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/when_demo.a4c,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
