@@ -396,6 +396,7 @@ METHOD self_test;
 	ASSERT abs(eta - 0.4294) < 0.0005;
 	ASSERT abs(eta_carnot - 0.6152) < 0.0005;
 	ASSERT abs(TU.outlet.x - 0.7736) < 0.0005;
+	ASSERT abs(TU.w - 603.1 {btu/lbm}) < 0.7 {btu/lbm};
 END self_test;
 END rankine;
 
