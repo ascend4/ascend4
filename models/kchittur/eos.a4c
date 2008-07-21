@@ -55,7 +55,8 @@ MODEL vanderwaals(P WILL_BE pressure;
 	T WILL_BE temperature;
 	V WILL_BE molar_volume;
 	Z WILL_BE factor;
-	data WILL_BE td_component_constants;);
+	data WILL_BE td_component_constants;
+);
 
 	R IS_A gas_constant;
 	b IS_A molar_volume;
@@ -144,7 +145,8 @@ MODEL rk(P WILL_BE pressure;
 	T WILL_BE temperature;
 	V WILL_BE molar_volume; 
 	Z WILL_BE factor; 
-	data WILL_BE td_component_constants;); 
+	data WILL_BE td_component_constants;
+); 
 
 	R IS_A gas_constant;
 	Pc IS_A pressure;
@@ -288,17 +290,18 @@ METHODS
     END default_self;
 
     METHOD specify;
-		P.fixed := TRUE;
-		T.fixed := TRUE;
-		T_degC.fixed := FALSE;
-	END specify;
+        P.fixed := TRUE;
+        T.fixed := TRUE;
+        T_degC.fixed := FALSE;
+    END specify;
     METHOD values;
-		P := 12.0 {bar};
-		T := 298.15 {K};
-		Z.lower_bound := 0.0;
-		Z.upper_bound := 10.0;
-		Z.nominal := 0.1;
+        P := 12.0 {bar};
+        T := 298.15 {K};
+        Z.lower_bound := 0.0;
+        Z.upper_bound := 10.0;
+        Z.nominal := 0.1;
     END values;
+
 END pengrobinson;
 
 MODEL vdw(P WILL_BE pressure;
@@ -341,17 +344,18 @@ METHODS
 		RUN values;
     END default_self;
     METHOD specify;
-		P.fixed := TRUE;
-		T.fixed := TRUE;
-		T_degC.fixed := FALSE;
+	    P.fixed := TRUE;
+	    T.fixed := TRUE;
+	    T_degC.fixed := FALSE;
     END specify;
     METHOD values;
-		P := 12.0 {bar};
-		T := 298.15 {K};
-		Z.lower_bound := 0.0;
-		Z.upper_bound := 10.0;
-		Z.nominal := 0.1;
+	    P := 12.0 {bar};
+	    T := 298.15 {K};
+	    Z.lower_bound := 0.0;
+	    Z.upper_bound := 10.0;
+	    Z.nominal := 0.1;
     END values;
+
 END vdw;
 
 MODEL testidealgas;
@@ -380,7 +384,8 @@ METHODS
     END values;
 END testidealgas;
 
-MODEL testvanderwaals;
+MODEL testvanderwaals;
+
 	c1 IS_A symbol_constant;
 	vd IS_A vanderwaals(P,T,V,Z,cd.data[c1]);
 	Tr, Pr IS_A factor;
