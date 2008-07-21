@@ -225,6 +225,7 @@
 		<keyword>DO</keyword>
 		<keyword>ELSE</keyword>
 		<keyword>END</keyword>
+		<keyword>EXTERNAL</keyword>
 		<keyword>FIX</keyword>
 		<keyword>FOR</keyword>
 		<keyword>FREE</keyword>
