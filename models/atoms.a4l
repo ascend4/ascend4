@@ -919,6 +919,14 @@ END length_parameter;
         nominal := 1.0{cP};
     END viscosity;
 
+	ATOM kinematic_viscosity REFINES solver_var 
+		DIMENSION L^2/T
+		DEFAULT 1e-6 {m^2/s};
+		lower_bound := 0.0 {m^2/s};
+		upper_bound := 1e50 {m^2/s};
+		nominal := 1.3 {g/s/m} * 0.001 {m^3/kg};
+	END kinematic_viscosity;
+
     ATOM thermal_conductivity REFINES solver_var
         DIMENSION M*L/T^3/TMP
         DEFAULT 0.1{BTU/hour/ft/R};
