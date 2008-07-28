@@ -1,0 +1,102 @@
+(* Simple example for vapour properties of water from ideal gas equation *)
+
+REQUIRE "thermodynamics.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+MODEL my_props;
+    p IS_A pressure;
+    T IS_A temperature;
+    cd IS_A components_data(['water'],'water');
+    props IS_A ideal_vapor_component(p,T,cd.data['water']);
+	v_m ALIASES props.v;
+	v IS_A specific_volume;
+	v = v_m / props.data.mw;
+	rho IS_A mass_density;
+	rho = 1./v;
+	h_m ALIASES props.h;
+METHODS
+METHOD on_load;
+    RUN props.default_all;
+	RUN props.specify;
+    p := 1 {atm};
+    T := 400 {K};
+END on_load;
+END my_props;
+
+(* model to calculate change in enthalpy from 125°C to 225 °C at 1 bar. *)
+MODEL example_1;
+	A, B IS_A my_props;
+	A.p, B.p ARE_THE_SAME;
+	dh_m IS_A molar_energy;
+	dh_m = B.h_m - A.h_m;
+	dh IS_A specific_enthalpy;
+	dh = dh_m / A.props.data.mw;
+METHODS
+METHOD on_load;
+	RUN A.on_load;
+	RUN B.on_load;
+	A.T := 273.15 {K} + 125 {K};
+	B.T := 273.15 {K} + 225 {K};
+END on_load;
+END example_1;
+
+(* model to calculate temperature at which vapour pressure of water is 1 atm *)
+MODEL example_2;
+    p IS_A pressure;
+    T IS_A temperature;
+    cd IS_A components_data(['water'],'water');
+    props IS_A Rackett_liquid_component(p,T,cd.data['water']);
+
+	v_m ALIASES props.v;
+	v IS_A specific_volume;
+	v = v_m / props.data.mw;
+	rho IS_A mass_density;
+	rho = 1./v;
+
+	p_vap ALIASES props.VP;
+METHODS
+METHOD on_load;
+    RUN props.default_all;
+	RUN props.specify;
+    p := 1 {atm};
+
+	(* reconfigure the program to solve with fixed VP and free T... *)
+	FREE T;
+	FIX p_vap;
+	p_vap := 1 {atm};
+
+END on_load;
+END example_2;
+
+MODEL water_and_ethanol;
+	cd IS_A components_data(['water','ethanol'], 'water');
+	props IS_A Pitzer_vapor_mixture(cd);
+	p ALIASES props.P;
+	T ALIASES props.T;
+	h_m ALIASES props.h_y;
+METHODS
+METHOD on_load;
+	RUN props.default_self;
+	RUN props.specify;
+	RUN props.values;
+	p := 1 {atm};
+	T := 400 {K};
+	props.y['ethanol'] := 0.4;
+END on_load;
+END water_and_ethanol;
+
+MODEL example_3;
+	A, B IS_A water_and_ethanol;
+	dh_m IS_A molar_energy;
+	dh_m = B.h_m - A.h_m;
+
+METHODS
+METHOD on_load;
+	RUN A.on_load;
+	RUN B.on_load;
+	A.T := 400 {K};
+	B.T := 500 {K};
+END on_load;
+END example_3;
+
+
