@@ -1,0 +1,26 @@
+(* test of the fluid properties routines currently implemented in asc_mbwr.c *)
+
+REQUIRE "atoms.a4l";
+IMPORT "johnpye/fprops/mbwr";
+
+MODEL mbwrconf;
+	component IS_A symbol_constant;
+	component :== 'R123';
+END mbwrconf;
+
+MODEL fprops_test;
+
+	p IS_A pressure;
+	T IS_A temperature;
+	rhob IS_A molar_density;
+
+	propsdata IS_A mbwrconf;
+
+	props: mbwr_p(
+		T, rhob : INPUT;
+		p : OUTPUT;
+		propsdata : DATA
+	);
+
+END fprops_test;
+
