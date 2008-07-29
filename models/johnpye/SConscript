@@ -2,7 +2,7 @@ Import('env')
 extenv = env.Clone()
 
 subdirs = [
-	'extfn','datareader','brent'
+	'extfn','datareader','brent', 'fprops'
 ]
  
 for d in subdirs:

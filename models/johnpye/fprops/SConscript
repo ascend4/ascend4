@@ -1,0 +1,20 @@
+Import('env')
+fprops_env = env.Clone()
+
+srcs = Split("""
+	mbwr.c
+	asc_mbwr.c
+""")
+
+fprops_env.Append(LIBPATH=['#'])
+fprops_env.Append(LIBS=['ascend'])
+
+lib = fprops_env.SharedLibrary("mbwr",srcs
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
+
+env['extfns'] += [lib]
+
+# vim: set syntax=python:
+

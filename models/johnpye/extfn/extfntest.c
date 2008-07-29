@@ -33,17 +33,6 @@
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
 
-/*
-
-
-
-#include <compiler/child.h>
-#include <general/list.h>
-#include <compiler/module.h>
-#include <compiler/childinfo.h>
-#include <compiler/slist.h>
-#include <compiler/type_desc.h>
-#include <compiler/packages.h>*/
 #include <compiler/extfunc.h>
 
 ExtBBoxInitFunc addone_prepare;
