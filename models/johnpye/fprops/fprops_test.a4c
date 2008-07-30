@@ -22,5 +22,11 @@ MODEL fprops_test;
 		propsdata : DATA
 	);
 
+METHODS
+METHOD on_load;
+	FIX rhob, T;
+	rhob := 1 {mol/m^3};
+	T := 400 {K};
+END on_load;
 END fprops_test;
 

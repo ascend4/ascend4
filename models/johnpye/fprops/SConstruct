@@ -1,0 +1,12 @@
+# Standalone 'SConstruct' to demonstrate how you can build
+# this ASCEND external library against an existing copy of
+# ASCEND installed on your system.
+
+env = Environment()
+
+env.ParseConfig(['ascend-config','--libs','--cppflags'])
+
+srcs = ['mbwr.c','asc_mbwr.c']
+
+env.SharedLibrary('mbwr_ascend',srcs)
+
