@@ -38,6 +38,9 @@ blocktypes = set()
 for m in M:
 	T = L.getModuleTypes(m)
 	for t in T:
+		# 'block' types are only those which are parametric.
+		if not t.hasParameters():
+			continue
 		x = str(D.getNoteForVariable(t,ascpy.SymChar("inlet"),ascpy.SymChar("inline")))
 		if x[0:max(3,len(x))] == "in:" or x[0:max(4,len(x))] == "out:":
 			blocktypes.add(t)
