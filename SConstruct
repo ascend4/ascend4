@@ -1,5 +1,5 @@
 import sys, os, commands, platform, distutils.sysconfig, os.path, re, types
-version = "0.9.5.115"
+version = "0.9.5.116"
 
 pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
 
@@ -2657,7 +2657,7 @@ if platform.system()=="Linux":
 env['DISTTAR_FORMAT']='bz2'
 env.Append(
 	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.lib','.cc','.cache','.pyc','.cvsignore','.dblite','.log','.pl','.out','.exe','.aux','.idx','.toc','.lof','.lot','.mm','.warnings','.tm2','.swp',',tmp','.gz','.bz2','.7z']
-	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist']
+	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian']
 )
 
 tar = env.DistTar("dist/"+env['DISTTAR_NAME']
@@ -2680,7 +2680,7 @@ deb_manfiles = glob.glob('debian/*.man')
 
 deb_tar = env.Tar(
 	'dist/debian.tar.gz'
-	,deb_manfiles + ['debian/compat','debian/copyright','debian/dirs'
+	,deb_manfiles + ['debian/rules','debian/control','debian/changelog','debian/compat','debian/copyright','debian/dirs'
 		,'debian/postinst','debian/postrm']
 	,TARFLAGS = ['cz']
 )
