@@ -270,6 +270,10 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %doc doc/book.pdf
 
 %changelog
+* Wed Jun 25 2008 John Pye <john.pye@anu.edu.au> 0.9.5.115
+- New version
+- Moved ascend-config to -devel pkg.
+
 * Wed Dec 26 2007 John Pye <john.pye@anu.edu.au> 0.9.5.114
 - Minor fixes: error output.
 - New 'air properties' model.

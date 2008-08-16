@@ -1,0 +1,152 @@
+#!/usr/bin/env python
+#	dtar - Tool to produce .deb package from source tarball
+#	Copyright (C) 2008 John Pye <john@curioussymbols.com>
+#
+#	This program is free software; you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation; either version 2, or (at your option)
+#	any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program; if not, write to the Free Software
+#	Foundation, Inc., 59 Temple Place - Suite 330,
+#	Boston, MA 02111-1307, USA.
+
+import sys, re, tarfile, os.path, subprocess
+import apt
+from debian_bundle import deb822, changelog
+
+# the tarball is the argument to this script
+f = sys.argv[1]
+
+# get the first filename in the tarball
+t = tarfile.open(f)
+M = t.getmembers()
+print M[0].name
+
+# split the top-level directory name from that path
+
+h,path = os.path.split(M[0].name)
+if not h:
+	raise RuntimeError("Tarball appears not contain a top-level directory")
+
+while h:
+	head = h
+	h,path = os.path.split(path)
+
+print "Head directory = ",head
+
+r = re.compile(r"^%s/debian/(.*)$" % re.escape(head))
+
+# search for 'debian/changelog' inside the tarfile
+
+debfiles = {}
+for m in M:
+	if r.match(m.name):
+		h,p = os.path.split(m.name)
+		debfiles[p] = m
+
+
+fc = t.extractfile(debfiles['control'])
+
+# display mandatory fields from 'debian/control'
+
+controlmandatory = ['Source','Maintainer']
+
+control = deb822.Deb822(fc.read())
+for _c in controlmandatory:
+	print "%s: %s" % (_c, control[_c])
+
+# check that debian/changelog is current
+
+fchange = t.extractfile(debfiles['changelog'])
+
+changes = changelog.Changelog(file=fchange.read())
+
+debianname = "%s-%s" % (control['Source'],changes.upstream_version)
+
+if debianname != head:
+	raise RuntimeError("Debian files not up to date: debian/changelog refers to version '%s' but tarball head directory is '%s'"
+		% (debianname,head));
+
+# check for build-time dependencies
+
+dependencies = ['build-essential']
+
+if 'Build-Depends' in control:
+	#print "Build-Depends:",control['Build-Depends']
+	c = apt.Cache()
+	dependencies += control['Build-Depends'].split(', ')
+
+print "Checking build dependencies..."
+depsmissing = []
+for d in dependencies:
+	p = c[d]
+	if not p.isInstalled:
+		depsmissing.append(d)
+
+if depsmissing:
+	raise RuntimeError("Unable to proceed. Missing buildtime dependencies: %s" % (depsmissing))
+
+# original tarball (recompressing to .gz if required)
+
+if f[-3:] == ".gz":
+	print "Original tarball is in gzip format"
+elif f[-4:] == ".bz2":
+	print "Original tarball is in bzip2 format"
+else:
+	raise RuntimeError("Unrecognized tarball compression style")
+
+# extract tarball to tmp dir
+
+maindir = "/tmp/dtar-%s" % os.getpid()
+
+print "Extracting tarball to '%s'..." % maindir
+
+if os.path.exists(maindir):
+	raise RuntimeError("Temp path '%s' already exists!"%maindir)
+
+os.mkdir(maindir)
+
+try:
+	os.chdir(maindir)
+	t.extractall()
+	assert(os.path.exists(head))
+	print "Files extracted to '%s'" % os.getcwd()
+
+	# build the source package
+	print "Building source package..."
+	res = subprocess.call(["dpkg-source","-b",head,f],executable="/usr/bin/dpkg-source")
+
+	if res:
+		raise RuntimeError("dpkg-source returned error code %d",res)
+
+	# build the binary package
+	print "Building binary package..."
+	os.chdir(head)
+	res = subprocess.call(["dpkg-buildpackage","-b","-rfakeroot"])
+
+except Exception, e:
+	print "ERROR: %s", str(e)
+
+#clean up files
+
+print "EXITING now"
+sys.exit(1)
+
+print "Cleaning up files..."
+assert maindir[:10]=="/tmp/dtar-"
+for _root,_dirs,_files in os.walk(maindir,topdown=False):
+	for _f in _files:
+		os.remove(os.path.join(_root,_f))
+	for _d in _dirs:
+		os.rmdir(os.path.join(_root,_d))
+print "All done, exiting"
+
+os.rmdir(maindir)
+
