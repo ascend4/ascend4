@@ -51,6 +51,15 @@ for m in M:
 		h,p = os.path.split(m.name)
 		debfiles[p] = m
 
+mandatorydebfiles = ['control','changelog','rules']
+
+missingdebfiles = []
+for _f in mandatorydebfiles:
+	if _f not in debfiles:
+		missingdebfiles.append(_f)
+if missingdebfiles:
+	s = "Tarball is missing required debian/* files: %s" %missingdebfiles
+	raise RuntimeError(s)
 
 fc = t.extractfile(debfiles['control'])
 
