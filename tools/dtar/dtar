@@ -17,15 +17,78 @@
 #	Foundation, Inc., 59 Temple Place - Suite 330,
 #	Boston, MA 02111-1307, USA.
 
-import sys, re, tarfile, os.path, subprocess
+import sys, re, tarfile, os.path, subprocess, shutil, getopt, glob
 import apt
 from debian_bundle import deb822, changelog
 
+def usage():
+	print """%s: create debian package directly from source code tarball
+%s [-s] originaltarball.tar.* [debian.tar.bz2|debian.tar.gz]
+
+    originaltarball.tar.*
+                The tarball containing the source code for the package
+                or packages you are going to create
+    debian.tar.*
+                OPTIONAL tarball containing the debian files
+                for your package. Only use this file if you have excluded
+                the debian/* files from your original source code tarball.
+                It is probably best to use a separate debian* tarball
+                for these files if you are likely to run into build
+                problems, eg when uploading packages to a build farm such
+                as Ubuntu PPA or openSUSE Build Service.
+
+    -s         
+    --source    Create source package only, no binary
+
+    -h
+    -help       Print this message.
+
+	-o
+    --overwrite
+                Copy files into current directory *with overwrite* at the
+                end of the build.
+"""
+
+opts,args = getopt.getopt(sys.argv[1:],"nhs",["help","source","nooverwrite"])
+
+# do we just want a source package?
+buildsource = False
+overwrite = True
+
+
+for _o,_a in opts:
+	if _o in ['-h','--help']:
+		usage()
+		sys.exit()
+	elif _o in ['-s','--source']:
+		buildsource = True
+	elif _o in ['-n','--nooverwrite']:
+		overwrite = False
+	else:
+		assert False,"unhandled option"
+
+if len(args)<1 or len(args)>2:
+	raise RuntimeError("One or two tarballs must be supplied to dtar! (see dtar --help)")
+
 # the tarball is the argument to this script
-f = sys.argv[1]
+
+startingcwd = os.getcwd()
+
+f = args[0]
+
+fmeta = None
+if len(args)==2:
+	# debian.tar.* meta-file tarball, optional
+	fmeta = args[1]
+	fmetafull = os.path.abspath(fmeta)
+
+	if not os.path.exists(fmeta):
+		raise RuntimeError("Debian metadata tarball '%s' was not found" % fmeta)
+
+ffull = os.path.abspath(f)
 
 # get the first filename in the tarball
-t = tarfile.open(f)
+t = tarfile.open(ffull)
 M = t.getmembers()
 print M[0].name
 
@@ -41,16 +104,36 @@ while h:
 
 print "Head directory = ",head
 
-r = re.compile(r"^%s/debian/(.*)$" % re.escape(head))
-
-# search for 'debian/changelog' inside the tarfile
+r = re.compile(r"^%s/debian/([^/]*)$" % re.escape(head))
+r2 = re.compile(r"^debian/([^/]*)$")
 
 debfiles = {}
+# this is a dictionary of sequences, first element 'm' or 's' depending
+# on whether the debian file comes from the 'meta' tarball (if given), or the
+# source tarball.
+
+# search for debian/* files inside the original tarball
+
 for m in M:
 	if r.match(m.name):
 		h,p = os.path.split(m.name)
-		debfiles[p] = m
+		debfiles[p] = [t,m]
 
+# search for debian/* files inside the meta tarball
+tmeta = None
+if fmeta:
+	tmeta = tarfile.open(fmetafull)
+	Mmeta = tmeta.getmembers()
+	for m in Mmeta:
+		print "meta file contains '%s'" % m.name
+		if r2.match(m.name):
+			h,p = os.path.split(m.name)		
+			debfiles[p] = [tmeta,m]
+
+def getdebfile(name):
+	_t,_f = debfiles[name]
+	return _t.extractfile(_f)
+	
 mandatorydebfiles = ['control','changelog','rules']
 
 missingdebfiles = []
@@ -58,10 +141,10 @@ for _f in mandatorydebfiles:
 	if _f not in debfiles:
 		missingdebfiles.append(_f)
 if missingdebfiles:
-	s = "Tarball is missing required debian/* files: %s" %missingdebfiles
+	s = "Tarball(s) missing required debian/* files: %s" %missingdebfiles
 	raise RuntimeError(s)
 
-fc = t.extractfile(debfiles['control'])
+fc = getdebfile('control')
 
 # display mandatory fields from 'debian/control'
 
@@ -73,7 +156,7 @@ for _c in controlmandatory:
 
 # check that debian/changelog is current
 
-fchange = t.extractfile(debfiles['changelog'])
+fchange = getdebfile('changelog')
 
 changes = changelog.Changelog(file=fchange.read())
 
@@ -102,20 +185,9 @@ for d in dependencies:
 if depsmissing:
 	raise RuntimeError("Unable to proceed. Missing buildtime dependencies: %s" % (depsmissing))
 
-# original tarball (recompressing to .gz if required)
-
-if f[-3:] == ".gz":
-	print "Original tarball is in gzip format"
-elif f[-4:] == ".bz2":
-	print "Original tarball is in bzip2 format"
-else:
-	raise RuntimeError("Unrecognized tarball compression style")
-
 # extract tarball to tmp dir
 
 maindir = "/tmp/dtar-%s" % os.getpid()
-
-print "Extracting tarball to '%s'..." % maindir
 
 if os.path.exists(maindir):
 	raise RuntimeError("Temp path '%s' already exists!"%maindir)
@@ -123,32 +195,94 @@ if os.path.exists(maindir):
 os.mkdir(maindir)
 
 try:
+	# extract source code tarball
+
+	print "Extracting tarball to '%s'..." % maindir
 	os.chdir(maindir)
 	t.extractall()
 	assert(os.path.exists(head))
 	print "Files extracted to '%s'" % os.getcwd()
 
-	# build the source package
-	print "Building source package..."
-	res = subprocess.call(["dpkg-source","-b",head,f],executable="/usr/bin/dpkg-source")
+	# extract meta-file tarball if provided
 
-	if res:
-		raise RuntimeError("dpkg-source returned error code %d",res)
+	if tmeta:
+		print "Extracting meta tarball to '%s'..." % maindir
+		os.chdir(os.path.join(maindir,debianname))
+		tmeta.extractall()
+		os.chdir(maindir)
+	
+	assert(os.path.exists(os.path.join(head,"debian/control")))
+
+	# copy original tarball (recompressing to .gz if required?)
+
+	ext = ""
+	origname = "%s_%s.orig.tar.gz" % (control['Source'],changes.upstream_version)
+	t1 = t
+	if f[-7:] == ".tar.gz":
+		ext = ".tar.bz"
+		print "Original tarball is in gzip format"
+		shutil.copyfile(ffull, origname)
+	elif f[-8:] == ".tar.bz2":
+		ext = ".tar.bz2"
+		print "Original tarball is in bzip2 format"
+		temptar = "%s_%s.orig.tar" % (control['Source'],changes.upstream_version)
+		tempbz2 = "%s.bz2"%temptar
+		print "Copying '%s.bz2'" % temptar
+		print "ffull = ",ffull
+		shutil.copyfile(ffull,tempbz2)
+		assert(os.path.exists(tempbz2))
+		print "Unbzipping '%s'..." % tempbz2
+		subprocess.call(["bzip2","-d",tempbz2],executable="/bin/bzip2")
+		assert(os.path.exists(temptar))
+		print "Gzipping '%s'..." % temptar
+		subprocess.call(["gzip",temptar],executable="/bin/gzip")
+		print "Checking final path..."
+		assert(os.path.exists(origname))
+	else:
+		raise RuntimeError("Unrecognized tarball compression style")
+
+	# build the source package
+	#print "Building source package..."
+	#res = subprocess.call(["dpkg-source","-b",head,ffull],executable="/usr/bin/dpkg-source")
+
+	#if res:
+	#	raise RuntimeError("dpkg-source returned error code %d" % res)
 
 	# build the binary package
-	print "Building binary package..."
 	os.chdir(head)
-	res = subprocess.call(["dpkg-buildpackage","-b","-rfakeroot"])
+	if buildsource:
+		print "Building source package..."
+		res = subprocess.call(["debuild","-rfakeroot","-S","-sa"])
+	else:
+		print "Building binary package..."
+		res = subprocess.call(["dpkg-buildpackage","-rfakeroot","-sa"])
+
+	if res:
+		raise RuntimeError("dpkg-buildpackage returned error code %s" % res)
 
 except Exception, e:
-	print "ERROR: %s", str(e)
+	print "ERROR: %s"% str(e)
+
+print "Found files:"
+os.chdir(maindir)
+resultfiles = glob.glob("*.dsc") + glob.glob("*.deb") + glob.glob("*.gz") + glob.glob("*.changes")
+print resultfiles
+
+# move found files to current directory
+failedtomovefiles = []
+for _f in resultfiles:
+	_p2 = os.path.join(startingcwd,_f)
+
+	if not overwrite and os.path.exists(_p2):
+		failedtomovefiles.append(_f)
+	os.rename(_f, _p2)
+
+if failedtomovefiles:
+	raise RuntimeError("Failed to move the following files (check --nooverwrite): %s",failedtomovefiles)
 
 #clean up files
 
-print "EXITING now"
-sys.exit(1)
-
-print "Cleaning up files..."
+print "Cleaning up files from '%s'..." % maindir
 assert maindir[:10]=="/tmp/dtar-"
 for _root,_dirs,_files in os.walk(maindir,topdown=False):
 	for _f in _files:

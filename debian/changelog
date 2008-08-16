@@ -1,8 +1,14 @@
-ascend (0.9.5.115-14) unstable; urgency=low
+ascend (0.9.5.116-15) hardy; urgency=low
+
+  * Changed packaging of source code tarball (removed debian files again)
+
+ -- John Pye (Aug 08) <john@curioussymbols.com>  Sat, 16 Aug 2008 23:52:00 +1000
+
+ascend (0.9.5.115-14) hardy; urgency=low
 
   * Updated to version 0.9.5.115
 
- -- John Pye (roadwork) <john@curioussymbols.com>  Sat, 16 Aug 2008 16:52:00 +1000
+ -- John Pye (Aug 08) <john@curioussymbols.com>  Sat, 16 Aug 2008 16:52:00 +1000
 
 ascend (0.9.5.114-13) unstable; urgency=low
 

@@ -8,10 +8,11 @@ SCONS_OPTIONS = CC="ccache gcc" \
 	INSTALL_PREFIX=/usr \
 	WITH_DOC_BUILD=0 \
 	WITH_DOC_INSTALL=1 \
-	F2C_LIBPATH=/usr/lib/gcc/i486-linux-gnu/4.2.1/ \
 	F2C_LIB=gfortran \
 	FORTRAN=gfortran \
 	WITH_SOLVERS=CMSLV,CONOPT,DOPRI5,IDA,LRSLV,LSODE,QRSLV
+
+# 	F2C_LIBPATH=/usr/lib/gcc/i486-linux-gnu/4.2.1/ \
 
 SCONS= scons $(SCONS_OPTIONS)
 
