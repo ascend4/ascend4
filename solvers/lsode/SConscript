@@ -20,6 +20,7 @@ if 'LSODE' in env.get('WITH_SOLVERS'):
 	solver_env.AppendUnique(
 		LIBS=['ascend']
 		,LIBPATH=['#']
+		,LINKFLAGS=['-fPIC']
 	)
 
 	lib = solver_env.SharedLibrary('lsode',srcs + env['blasobjs']
