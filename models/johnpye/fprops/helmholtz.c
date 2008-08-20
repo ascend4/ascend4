@@ -18,17 +18,20 @@
 *//** @file
 	Implementation of the reduced molar Helmholtz free energy equation of state.
 
+	For nomenclature see Tillner-Roth, Harms-Watzenberg and Baehr, Eine neue
+	Fundamentalgleichung für Ammoniak.
+
 	John Pye, 29 Jul 2008.
 */
 
-/**
-	Data structure for fluid-specific data for the Helmholtz free energy EOS.
-*/
-typedef struct HelmholtzData_struct{
-	double R /**< ??? */
-	double rho_c; /**< critical molar density in mol/L */
-	double beta[32]; /**< constants in MBWR for the fluid in question */
-} HelmholtzData;
+#include <math.h>
+
+#include "helmholtz.h"
+
+/* forward decls */
+
+static double helm_resid(double tau, double delta, HelmholtzData *data);
+static double helm_resid_del(double tau, double delta, HelmholtzData *data);
 
 /**
 	Function to calculate pressure from Helmholtz free energy EOS, given temperature
@@ -38,61 +41,111 @@ typedef struct HelmholtzData_struct{
 	@param rhob molar density in mol/L
 	@return pressure in Pa
 */
-double mbwr_p(double T, double rhob, MbwrData *data){
-	int i;
-	double p = 0;
-	double Ti, Ti2, Ti3, Ti4;
-	double rhob2, rhobpow, sum10, rhob_r;
+double helmholtz_p(double T, double rho, HelmholtzData *data){
+	
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
 
-	/* precalculate powers of T^-1 for faster evaluation */
-	Ti =1. / T;
-	Ti2 = Ti*Ti;
-	Ti3 = Ti2*Ti;
-	Ti4 = Ti3*Ti;
-
-	/* values of alpha in MBWR are functions of temperature */
-	double *B = data->beta;
-#define R data->R
-	alpha[0] = R * T;
-	alpha[1] = B[0]*T + B[1]*sqrt(T] + B[2] + B[3]*Ti + B[4]*Ti2;
-	alpha[2] = B[5]*T + B[6] + B[7]*Ti + B[8]*Ti2;
-	alpha[3] = B[9]*T + B[10] + B[11]*Ti;
-	alpha[4] = B[12];
-	alpha[5] = B[13]*Ti + B[14]*Ti2;
-	alpha[6] = B[15]*Ti;
-	alpha[7] = B[16]*Ti + B[17]*Ti2;
-	alpha[8] = B[18]*Ti2;
-	alpha[9] = B[19]*Ti2 + B[20]*Ti3;
-	alpha[10] = B[21]*Ti2 + B[22]*Ti4;
-	alpha[11] = B[23]*Ti2 + B[24]*Ti3;
-	alpha[12] = B[25]*Ti2 + B[26]*Ti4;
-	alpha[13] = B[27]*Ti2 + B[28]*Ti3;
-	alpha[14] = B[29]*Ti2 + B[30]*Ti3 + B[31]*Ti4;
-#undef R
-
-	/* add up the first sum in the MBWR correlation */
-	rhobpow = 1;	
-	for(i=0;i<9;++i){
-		rhobpow *= rhob;
-		p += alpha[i]* rhobpow;
-	}
-
-	/* work out the second sum in the MBWR correlation */
-	sum10 = 0;
-	rhobpow = rhob;
-	rhob2 = rhob*rhob;
-	for(i=9; i<15; ++i){
-		rhobpow *= rhob2;
-		sum10 += alpha[i] * rhobpow;
-	}
-
-	/* calculate the exponential term and add it to 'p' */
-#define RHO_C data->rhob_c
-	double rhob_r = rhob/RHO_C;
-	p += exp(rhob_r*rhob_r) * sum10;
-#undef RHO_C
-
-	return p * 1e-5; /* convert bar to Pa on return */
+	return data->R * T * rho * (1. + delta * helm_resid_del(tau,delta,data));
 }
+
+double helm_ideal(double tau, double delta, HelmholtzData *data){
+	double *a0;
+
+	double tau13 = pow(tau,1./3.);
+	double taum32 = pow(tau,-3./2.);
+	double taum74 = pow(tau,-7./4.);
+
+	a0 = &(data->a0[0]);
+	return log(delta) + a0[1] + a0[2] * tau - log(tau) + a0[3] * tau13 + a0[4] * taum32 + a0[5] * taum74;
+}
+
+/**
+	Residual part of helmholtz function. Note: we have NOT prematurely
+	optimised here ;-)
+*/
+double helm_resid(double tau, double delta, HelmholtzData *data){
+	
+	double sum;
+	double phir = 0;
+	unsigned i;
+
+	HelmholtzATD *atd = &(data->atd[0]);
+	
+	for(i=0; i<5; ++i){
+		phir += atd->a * pow(tau, atd->t) * pow(delta, atd->d);
+		++atd;
+	}
+
+	sum = 0;
+	for(i=5; i<10; ++i){
+		sum += atd->a * pow(tau, atd->t) * pow(delta, atd->d);
+		++atd;
+	}
+	phir += exp(-delta) * sum;
+
+	sum = 0; 
+	for(i=10; i<17; ++i){
+		sum += atd->a * pow(tau, atd->t) * pow(delta, atd->d);
+		++atd;
+	}
+	phir += exp(-delta*delta) * sum;
+
+	sum = 0;
+	for(i=17; i<21; ++i){
+		sum += atd->a * pow(tau, atd->t) * pow(delta, atd->d);
+		++atd;
+	}
+	phir += exp(-delta*delta*delta) * sum;
+
+	return phir;
+}
+
+/**
+	Derivative of the helmholtz residual function with respect to
+	delta.
+*/	
+double helm_resid_del(double tau,double delta,HelmholtzData *data){
+	
+	double sum;
+	double phir = 0;
+	unsigned i;
+	double XdelX;
+
+	HelmholtzATD *atd = &(data->atd[0]);
+	
+	for(i=0; i<5; ++i){
+		phir += atd->a * pow(tau, atd->t) * pow(delta, atd->d - 1) * atd->d;
+		++atd;
+	}
+
+	sum = 0;
+	XdelX = delta;
+	for(i=5; i<10; ++i){
+		sum += atd->a * pow(tau, atd->t) * pow(delta, atd->d) * (atd->d - XdelX);
+	}
+	phir += exp(-delta) * sum;
+
+	sum = 0; 
+	XdelX = 2*delta*delta;
+	for(i=10; i<17; ++i){
+		sum += atd->a * pow(tau, atd->t) * pow(delta, atd->d) * (atd->d - XdelX);
+	}
+	phir += exp(-delta*delta) * sum;
+
+	sum = 0;
+	XdelX = 3*delta*delta*delta;
+	for(i=17; i<21; ++i){
+		sum += atd->a * pow(tau, atd->t) * pow(delta, atd->d) * (atd->d - XdelX);
+	}
+	phir += exp(-delta*delta*delta) * sum;
+
+	return phir;
+}
+		
+
+
+
+
 
 

@@ -1,7 +1,7 @@
 (* test of the fluid properties routines currently implemented in asc_mbwr.c *)
 
 REQUIRE "atoms.a4l";
-IMPORT "johnpye/fprops/mbwr";
+IMPORT "johnpye/fprops/helmholtz";
 
 MODEL mbwrconf;
 	component IS_A symbol_constant;
