@@ -68,7 +68,7 @@ const HelmholtzData helmholtz_data_ammonia = {
 	, /* rho_star */225. /* kg/m³ */
 	, /* T_star */ 405.40 /* K */
 
-	, (double[5]){
+	, {
 		/* a0_1 */ -15.815020
 		,/* a0_2 */ 4.255726
 		,/* a0_3 */ 11.474340
@@ -167,8 +167,8 @@ int helmholtz_p_prepare(struct BBoxInterp *bbox,
 		return 1;
 	}
 
-	if(strcmp(comp,"R123")!=0){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component must be 'R123' at this stage (only one component supported)");
+	if(strcmp(comp,"ammonia")!=0){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component must be 'ammonia' at this stage (only one component supported)");
 	}
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"PREPARING HELMHOLTZ_P...\n");

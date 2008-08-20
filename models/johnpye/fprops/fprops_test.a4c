@@ -5,27 +5,27 @@ IMPORT "johnpye/fprops/helmholtz";
 
 MODEL mbwrconf;
 	component IS_A symbol_constant;
-	component :== 'R123';
+	component :== 'ammonia';
 END mbwrconf;
 
 MODEL fprops_test;
 
 	p IS_A pressure;
 	T IS_A temperature;
-	rhob IS_A molar_density;
+	rho IS_A mass_density;
 
 	propsdata IS_A mbwrconf;
 
-	props: mbwr_p(
-		T, rhob : INPUT;
+	props: helmholtz_p(
+		T, rho : INPUT;
 		p : OUTPUT;
 		propsdata : DATA
 	);
 
 METHODS
 METHOD on_load;
-	FIX rhob, T;
-	rhob := 1 {mol/m^3};
+	FIX rho, T;
+	rho := 1 {kg/m^3};
 	T := 400 {K};
 END on_load;
 END fprops_test;
