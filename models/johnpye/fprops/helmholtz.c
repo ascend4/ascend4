@@ -116,7 +116,12 @@ double helmholtz_u(double T, double rho, const HelmholtzData *data){
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
 
-	return data->R * T * tau * (helm_ideal_tau(tau,delta,data) + helm_resid_tau(tau,delta,data));
+	fprintf(stderr,"ideal_tau = %f\n",helm_ideal_tau(tau,delta,data));
+	fprintf(stderr,"resid_tau = %f\n",helm_resid_tau(tau,delta,data));
+
+	fprintf(stderr,"R T = %f\n",data->R * data->T_star);
+
+	return data->R * data->T_star * (helm_ideal_tau(tau,delta,data) + helm_resid_tau(tau,delta,data));
 }
 
 /**
@@ -177,6 +182,7 @@ double helm_ideal(double tau, double delta, const HelmholtzData *data){
 	double taum74 = pow(tau,-7./4.);
 
 	a0 = &(data->a0[0]);
+
 	return log(delta) + a0[0] + a0[1] * tau - log(tau) + a0[2] * tau13 + a0[3] * taum32 + a0[4] * taum74;
 }
 
@@ -188,12 +194,23 @@ double helm_ideal_tau(double tau, double delta, const HelmholtzData *data){
 	const double *a0;
 
 	double taum114 = pow(tau,-11./4.);
-	double taum74 = tau * taum114;
+	double taum52 = pow(tau,-5./2.);
 	double taum23 = pow(tau,-2./3.);
+
+	fprintf(stderr,"tau = %f, taum23 = %f\n",tau,taum23);
+	fprintf(stderr,"tau = %f, taum52 = %f\n",tau,taum52);
+	fprintf(stderr,"tau = %f, taum114 = %f\n",tau,taum114);
 
 	a0 = &(data->a0[0]);
 
-	return a0[1] - 1./tau + a0[2]/3.* taum23 - a0[3] * 3./4. * taum74 - a0[4] * 7./4. * taum114;
+	//unsigned i;	for(i=0;i<5;++i)fprintf(stderr,"a0[%u] = %f\n",i,a0[i]);
+
+	fprintf(stderr,"3 = %f\n", a0[2]/3.*taum23);
+
+	double res;
+	res = a0[2]/3.*taum23 - 1./tau - 3./2.*a0[3]*taum52 - 7./4.*a0[4]*taum114 + a0[1];
+	fprintf(stderr,"res = %f\n",res);
+	return res;
 }	
 
 /**
@@ -291,46 +308,50 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 	
 	double sum;
-	double phir = 0;
+	double res = 0;
 	unsigned i;
 
 	const HelmholtzATD *atd = &(data->atd[0]);
 	
 	for(i=0; i<5; ++i){
-		if(atd->t != 0){
-			phir += atd->a * pow(tau, atd->t - 1) * ipow(delta, atd->d) * atd->t;
+		if(atd->t){
+			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atd->a, atd->t, atd->d);
+			res += atd->a * pow(tau, atd->t - 1) * ipow(delta, atd->d) * atd->t;
 		}
 		++atd;
 	}
 
 	sum = 0;
 	for(i=5; i<10; ++i){
-		if(atd->t != 0){
+		if(atd->t){
+			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atd->a, atd->t, atd->d);
 			sum += atd->a * pow(tau, atd->t - 1) * ipow(delta, atd->d) * atd->t;
 		}
 		++atd;
 	}
-	phir += exp(-delta) * sum;
+	res += exp(-delta) * sum;
 
 	sum = 0; 
 	for(i=10; i<17; ++i){
-		if(atd->t != 0){
+		if(atd->t){
+			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atd->a, atd->t, atd->d);
 			sum += atd->a * pow(tau, atd->t - 1) * ipow(delta, atd->d) * atd->t;
 		}
 		++atd;
 	}
-	phir += exp(-delta*delta) * sum;
+	res += exp(-delta*delta) * sum;
 
 	sum = 0;
 	for(i=17; i<21; ++i){
-		if(atd->t != 0){
+		if(atd->t){
+			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atd->a, atd->t, atd->d);
 			sum += atd->a * pow(tau, atd->t - 1) * ipow(delta, atd->d) * atd->t;
 		}
 		++atd;
 	}
-	phir += exp(-delta*delta*delta) * sum;
+	res += exp(-delta*delta*delta) * sum;
 
-	return phir;
+	return res;
 }	
 
 
@@ -441,7 +462,14 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	gcc helmholtz.c -DTEST -o helmholtz -lm && ./helmholtz
 */
 #ifdef TEST
-#define ASSERT_TOL(EXPR,VAL,TOL) if(abs((EXPR)-(VAL))>TOL){fprintf(stderr,"ERROR: value of '%s' = %f, should be %f!\n", #EXPR, EXPR, VAL);exit(1);}else{fprintf(stderr,"    OK, %s = %8.2e with %.2f%% err\n",#EXPR,VAL,((EXPR)-(VAL))/(VAL)*100);}
+
+/* a simple macro to actually do the testing */
+#define ASSERT_TOL(EXPR,VAL,TOL) if(abs((EXPR)-(VAL))>TOL){\
+		fprintf(stderr,"ERROR: value of '%s' = %f, should be %f, error is %f!\n", #EXPR, EXPR, VAL,(EXPR)-(VAL));exit(1);\
+	}else{\
+		fprintf(stderr,"    OK, %s = %8.2e within %.2f%% err\n",#EXPR,VAL,((EXPR)-(VAL))/(VAL)*100);\
+	}
+
 int main(void){
 	double rho, T, p, h, u;
 	const HelmholtzData *d;
@@ -452,6 +480,8 @@ int main(void){
 	//ASSERT_TOL(helmholtz_p(273.15+-20.,670.55,d), 10E6, 1E3);
 	//ASSERT_TOL(helmholtz_p(273.15+50,573.07,d), 10E6, 1E3);
 	//ASSERT_TOL(helmholtz_p(273.15+110,441.77,d), 10E6, 1E3);
+
+	fprintf(stderr,"PRESSURE TESTS\n");
 
 	fprintf(stderr,"p(T,rho) = 1 MPa\n");
 	ASSERT_TOL(helmholtz_p(273.15+150,4.9817,d), 1E6, 1E3);
@@ -471,7 +501,36 @@ int main(void){
 	ASSERT_TOL(helmholtz_p(273.15+350,74.590,d), 20E6, 1E4);
 	ASSERT_TOL(helmholtz_p(273.15+420,63.602,d), 20E6, 1E4);
 
-	fprintf(stderr,"WARNING: tolerances have been relaxed!\n");
+	//fprintf(stderr,"IDEAL HELMHOLTZ COMPONENT\n");
+	//ASSERT_TOL(helm_ideal(273.15, 0) 
+
+	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
+	fprintf(stderr,"u(T,rho) at p = 1 MPa\n");
+	ASSERT_TOL(helmholtz_u(273.15+  0,0.76124,d), 1635.7e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+ 50,0.63869,d), 1744.0e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+200,0.43370,d), 2087.0e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+300,0.35769,d), 2340.0e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+420,0.29562,d), 2674.3e3, 0.1e3);
+
+	fprintf(stderr,"u(T,rho) at p = 20 MPa\n");
+	ASSERT_TOL(helmholtz_u(273.15+150,359.41,d), 1162.5e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+200,152.83,d), 1662.9e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+350,74.590,d), 2393.4e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+420,63.602,d), 2611.8e3, 0.1e3);
+
+	fprintf(stderr,"u(T,rho) at p = 1 MPa\n");
+	ASSERT_TOL(helmholtz_u(273.15+150,4.9817,d), 1949.1e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+200,4.4115,d), 2072.7e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+350,3.3082,d), 2468.2e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+420,2.9670,d), 2668.6e3, 0.1e3);
+
+	fprintf(stderr,"u(T,rho) at p = 10 MPa\n");
+	ASSERT_TOL(helmholtz_u(273.15+150,74.732,d), 1688.5e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+200,54.389,d), 1908.0e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+350,35.072,d), 2393.4e3, 0.1e3);
+	ASSERT_TOL(helmholtz_u(273.15+420,30.731,d), 2611.8e3, 0.1e3);
+	
+
 	fprintf(stderr,"Tests completed OK\n");
 	exit(0);
 }
