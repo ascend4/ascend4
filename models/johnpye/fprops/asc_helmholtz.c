@@ -51,8 +51,10 @@
   FORWARD DECLARATIONS
 */
 
-ExtBBoxInitFunc helmholtz_p_prepare;
+ExtBBoxInitFunc helmholtz_prepare;
 ExtBBoxFunc helmholtz_p_calc;
+ExtBBoxFunc helmholtz_u_calc;
+ExtBBoxFunc helmholtz_h_calc;
 
 /*------------------------------------------------------------------------------
   GLOBALS
@@ -102,6 +104,10 @@ const HelmholtzData helmholtz_data_ammonia = {
 	}
 };
 
+static const char *helmholtz_p_help = "Calculate pressure from temperature and density, using Helmholtz fundamental correlation";
+static const char *helmholtz_u_help = "Calculate specific internal energy from temperature and density, using Helmholtz fundamental correlation";
+static const char *helmholtz_h_help = "Calculate specific enthalpy from temperature and density, using Helmholtz fundamental correlation";
+
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
 */
@@ -113,21 +119,27 @@ const HelmholtzData helmholtz_data_ammonia = {
 */
 extern
 ASC_EXPORT int helmholtz_register(){
-	const char *helmholtz_help = "Modified Benedict-Webb-Rubin correlation for thermodynamic properties";
 	int result = 0;
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising HELMHOLTZ...\n");
 
-	result += CreateUserFunctionBlackBox("helmholtz_p"
-		, helmholtz_p_prepare
-		, helmholtz_p_calc /* value */
-		, (ExtBBoxFunc*)NULL /* derivatives not provided yet*/
-		, (ExtBBoxFunc*)NULL /* hessian not provided yet */
-		, (ExtBBoxFinalFunc*)NULL /* finalisation not implemented */
-		, 2,1 /* inputs, outputs */
-		, helmholtz_help
-		, 0.0
-	); /* returns 0 on success */
+#define CALCFN(NAME,INPUTS,OUTPUTS) \
+	result += CreateUserFunctionBlackBox(#NAME \
+		, helmholtz_prepare \
+		, NAME##_calc /* value */ \
+		, (ExtBBoxFunc*)NULL /* derivatives not provided yet*/ \
+		, (ExtBBoxFunc*)NULL /* hessian not provided yet */ \
+		, (ExtBBoxFinalFunc*)NULL /* finalisation not implemented */ \
+		, INPUTS,OUTPUTS /* inputs, outputs */ \
+		, NAME##_help /* help text */ \
+		, 0.0 \
+	) /* returns 0 on success */
+
+	CALCFN(helmholtz_p,2,1);
+	CALCFN(helmholtz_u,2,1);
+	CALCFN(helmholtz_h,2,1);
+
+#undef CALCFN
 
 	if(result){
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"CreateUserFunction result = %d\n",result);
@@ -135,11 +147,11 @@ ASC_EXPORT int helmholtz_register(){
 	return result;
 }
 
-/*------------------------------------------------------------------------------
-  WRAPPING FOR 'helmholtz_p'...
+/**
+   'helmholtz_prepare' just gets the data member and checks that it's
+	valid, and stores it in the blackbox data field.
 */
-
-int helmholtz_p_prepare(struct BBoxInterp *bbox,
+int helmholtz_prepare(struct BBoxInterp *bbox,
 	   struct Instance *data,
 	   struct gl_list_t *arglist
 ){
@@ -171,16 +183,31 @@ int helmholtz_p_prepare(struct BBoxInterp *bbox,
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component must be 'ammonia' at this stage (only one component supported)");
 	}
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"PREPARING HELMHOLTZ_P...\n");
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"PREPARING HELMHOLTZ...\n");
 
 	bbox->user_data = (void*)&helmholtz_data_ammonia;
 
 	return 0;
 }
 
+/*------------------------------------------------------------------------------
+  EVALULATION ROUTINES
+*/
+
+#define CALCPREPARE \
+	/* a few checks about the input requirements */ \
+	if(ninputs != 2)return -1; \
+	if(noutputs != 1)return -2; \
+	if(inputs==NULL)return -3; \
+	if(outputs==NULL)return -4; \
+	if(bbox==NULL)return -5; \
+	\
+	/* the 'user_data' in the black box object will contain the */\
+	/* coefficients required for this fluid; cast it to the required form: */\
+	HelmholtzData *helmholtz_data = (HelmholtzData *)bbox->user_data
+
 /**
-	Evaluation function. This one does the actual calling to the
-	'helmholtz_p' routine.
+	Evaluation function for 'helmholtz_p'.
 	@param jacobian ignored
 	@return 0 on success
 */
@@ -189,21 +216,55 @@ int helmholtz_p_calc(struct BBoxInterp *bbox,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	/* a few checks about the input requirements */
-	if(ninputs != 2)return -1;
-	if(noutputs != 1)return -2;
-	if(inputs==NULL)return -3;
-	if(outputs==NULL)return -4;
-	if(bbox==NULL)return -5;
-
-	/* the 'user_data' in the black box object will contain the coefficients
-	required for this fluid; cast it to the required form: */
-	HelmholtzData *helmholtz_data = (HelmholtzData *)bbox->user_data;
+	CALCPREPARE;
 
 	/* first input is temperature, second is molar density */
 	outputs[0] = helmholtz_p(inputs[0], inputs[1], helmholtz_data);
 
 	/* no need to worry about error states etc. */
-
 	return 0;
 }
+
+
+/**
+	Evaluation function for 'helmholtz_u'
+	@param jacobian ignored
+	@return 0 on success
+*/
+int helmholtz_u_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE;
+
+	/* first input is temperature, second is molar density */
+	outputs[0] = helmholtz_u(inputs[0], inputs[1], helmholtz_data);
+
+	/* no need to worry about error states etc. */
+	return 0;
+}
+
+
+/**
+	Evaluation function for 'helmholtz_h'
+	@param jacobian ignored
+	@return 0 on success
+*/
+int helmholtz_h_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE;
+
+	/* first input is temperature, second is molar density */
+	outputs[0] = helmholtz_h(inputs[0], inputs[1], helmholtz_data);
+
+	/* no need to worry about error states etc. */
+	return 0;
+}
+
+
+
+
