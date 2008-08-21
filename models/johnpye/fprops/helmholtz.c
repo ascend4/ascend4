@@ -30,16 +30,19 @@
 
 /* forward decls */
 
+static double helm_ideal(double tau, double delta, HelmholtzData *data);
+static double helm_ideal_tau(double tau, double delta, HelmholtzData *data);
 static double helm_resid(double tau, double delta, HelmholtzData *data);
 static double helm_resid_del(double tau, double delta, HelmholtzData *data);
+static double helm_resid_tau(double tau, double delta, HelmholtzData *data);
 
 /**
 	Function to calculate pressure from Helmholtz free energy EOS, given temperature
-	and molar density.
+	and mass density.
 
 	@param T temperature in K
-	@param rhob molar density in mol/L
-	@return pressure in Pa
+	@param rho mass density in kg/m³
+	@return pressure in Pa???
 */
 double helmholtz_p(double T, double rho, HelmholtzData *data){
 	
@@ -49,6 +52,45 @@ double helmholtz_p(double T, double rho, HelmholtzData *data){
 	return data->R * T * rho * (1. + delta * helm_resid_del(tau,delta,data));
 }
 
+/**
+	Function to calculate internal energy from Helmholtz free energy EOS, given
+	temperature	and mass density.
+
+	@param T temperature in K
+	@param rho mass density in kg/m³
+	@return internal energy in ???
+*/
+double helmholtz_u(double T, double rho, HelmholtzData *data){
+	
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+
+	return data->R * T * tau * (helm_ideal_tau(tau,delta,data) + helm_resid_tau(tau,delta,data));
+}
+
+/**
+	Function to calculate enthalpy from Helmholtz free energy EOS, given
+	temperature	and mass density.
+
+	@param T temperature in K
+	@param rho mass density in kg/m³
+	@return enthalpy in ????
+*/
+double helmholtz_h(double T, double rho, HelmholtzData *data){
+	
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+
+	return data->R * T * (1 + tau * (helm_ideal_tau(tau,delta,data) + helm_resid_tau(tau,delta,data)) + delta*helm_resid_del(tau,delta,data));
+}
+
+/*---------------------------------------------
+  IDEAL COMPONENT RELATIONS
+*/
+
+/**
+	Ideal component of helmholtz function
+*/	
 double helm_ideal(double tau, double delta, HelmholtzData *data){
 	double *a0;
 
@@ -57,8 +99,24 @@ double helm_ideal(double tau, double delta, HelmholtzData *data){
 	double taum74 = pow(tau,-7./4.);
 
 	a0 = &(data->a0[0]);
-	return log(delta) + a0[1] + a0[2] * tau - log(tau) + a0[3] * tau13 + a0[4] * taum32 + a0[5] * taum74;
+	return log(delta) + a0[0] + a0[1] * tau - log(tau) + a0[2] * tau13 + a0[3] * taum32 + a0[4] * taum74;
 }
+
+/**
+	Partial dervivative of ideal component of helmholtz residual function with 
+	respect to tau.
+*/	
+double helm_ideal_tau(double tau, double delta, HelmholtzData *data){
+	double *a0;
+
+	double taum114 = pow(tau,-11./4.);
+	double taum74 = tau * taum114;
+	double taum23 = pow(tau,-2./3.);
+
+	a0 = &(data->a0[0]);
+
+	return a0[1] - 1./tau + a0[2]/3.* taum23 - a0[3] * 3./4. * taum74 - a0[4] * 7./4. * taum114;
+}	
 
 /**
 	Residual part of helmholtz function. Note: we have NOT prematurely
@@ -142,8 +200,55 @@ double helm_resid_del(double tau,double delta,HelmholtzData *data){
 
 	return phir;
 }
-		
 
+/**
+	Derivative of the helmholtz residual function with respect to
+	tau.
+*/			
+double helm_resid_tau(double tau,double delta,HelmholtzData *data){
+	
+	double sum;
+	double phir = 0;
+	unsigned i;
+
+	HelmholtzATD *atd = &(data->atd[0]);
+	
+	for(i=0; i<5; ++i){
+		if(atd->t != 0){
+			phir += atd->a * pow(tau, atd->t - 1) * pow(delta, atd->d) * atd->t;
+		}
+		++atd;
+	}
+
+	sum = 0;
+	for(i=5; i<10; ++i){
+		if(atd->t != 0){
+			sum += atd->a * pow(tau, atd->t - 1) * pow(delta, atd->d) * atd->t;
+		}
+		++atd;
+	}
+	phir += exp(-delta) * sum;
+
+	sum = 0; 
+	for(i=10; i<17; ++i){
+		if(atd->t != 0){
+			sum += atd->a * pow(tau, atd->t - 1) * pow(delta, atd->d) * atd->t;
+		}
+		++atd;
+	}
+	phir += exp(-delta*delta) * sum;
+
+	sum = 0;
+	for(i=17; i<21; ++i){
+		if(atd->t != 0){
+			sum += atd->a * pow(tau, atd->t - 1) * pow(delta, atd->d) * atd->t;
+		}
+		++atd;
+	}
+	phir += exp(-delta*delta*delta) * sum;
+
+	return phir;
+}	
 
 
 
