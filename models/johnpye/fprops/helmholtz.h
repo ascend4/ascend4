@@ -24,3 +24,6 @@ typedef struct HelmholtzData_struct{
 } HelmholtzData;
 
 double helmholtz_p(double T, double rho, HelmholtzData *data);
+double helmholtz_u(double T, double rho, HelmholtzData *data);
+double helmholtz_h(double T, double rho, HelmholtzData *data);
+

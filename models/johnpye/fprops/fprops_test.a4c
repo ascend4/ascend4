@@ -1,6 +1,7 @@
 (* test of the fluid properties routines currently implemented in asc_mbwr.c *)
 
 REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "johnpye/fprops/helmholtz";
 
 MODEL mbwrconf;
@@ -13,12 +14,19 @@ MODEL fprops_test;
 	p IS_A pressure;
 	T IS_A temperature;
 	rho IS_A mass_density;
+	h IS_A specific_enthalpy;
 
 	propsdata IS_A mbwrconf;
 
-	props: helmholtz_p(
+	props1: helmholtz_p(
 		T, rho : INPUT;
 		p : OUTPUT;
+		propsdata : DATA
+	);
+
+	props2: helmholtz_h(
+		T, rho : INPUT;
+		h : OUTPUT;
 		propsdata : DATA
 	);
 
