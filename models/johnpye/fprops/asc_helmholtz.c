@@ -64,49 +64,6 @@ ExtBBoxFunc helmholtz_h_calc;
 static symchar *helmholtz_symbols[1];
 #define COMPONENT_SYM helmholtz_symbols[0]
 
-/* Property data for Ammonia, from Tillner-Roth, Harms-Watzenberg and
-Baehr, Eine neue Fundamentalgleichung für Ammoniak, DKV-Tagungsbericht,
-20:167-181, 1993. This is the ammmonia property correlation recommended
-by NIST in its program REFPROP 7.0. */
-const HelmholtzData helmholtz_data_ammonia = {
-	/* R */ 488.189 /* J/kg/K */
-	, /* rho_star */225. /* kg/m³ */
-	, /* T_star */ 405.40 /* K */
-
-	, {
-		/* a0_1 */ -15.815020
-		,/* a0_2 */ 4.255726
-		,/* a0_3 */ 11.474340
-		,/* a0_4 */ -1.296211
-		,/* a0_5 */ 0.5706757
-	}
-
-	, {
-		/* a_i, t_i, d_i */
-		/* 1 */{0.4554431E-1,  -0.5  ,  2}
-		,{0.7238548E+0,   0.5 ,   1 }
-		,{0.1229470E-1,     1 ,   4 }
-		,{-0.1858814E+1,  1.5 ,   1 }
-		/* 5 */,{0.2141882E-10,    3 ,  15 }
-		,{-0.1430020E-1,    0 ,   3 }
-		,{0.3441324E+0,     3 ,   3 } 
-		,{-0.2873571E+0,    4 ,   1 }
-		,{0.2352589E-4,     4 ,   8 }
-		/* 10 */,{-0.3497111E-1,   5  ,  2}
-		,{0.2397852E-1,    3  ,  1}
-		,{0.1831117E-2,    5 ,   8}
-		,{-0.4085375E-1,   6 ,   1}
-		,{0.2379275E+0,    8 ,   2}
-		/* 15 */,{-0.3548972E-1,   8 ,   3}
-		,{-0.1823729E+0,   10,   2}
-		,{0.2281556E-1,   10 ,   4}
-		,{-0.6663444E-2,   5 ,   3}
-		,{-0.8847486E-2,  7.5,   1}
-		/* 20 */,{0.2272635E-2 ,  15 ,   2}
-		,{-0.5588655E-3,  30,    4}
-	}
-};
-
 static const char *helmholtz_p_help = "Calculate pressure from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_u_help = "Calculate specific internal energy from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_h_help = "Calculate specific enthalpy from temperature and density, using Helmholtz fundamental correlation";
