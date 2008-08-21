@@ -64,7 +64,10 @@ ExtBBoxFunc helmholtz_h_calc;
 static symchar *helmholtz_symbols[1];
 #define COMPONENT_SYM helmholtz_symbols[0]
 
-/* property data for R123, from J. Phys. Chem. Ref. Data, 23:731-779, 1994. */
+/* Property data for Ammonia, from Tillner-Roth, Harms-Watzenberg and
+Baehr, Eine neue Fundamentalgleichung für Ammoniak, DKV-Tagungsbericht,
+20:167-181, 1993. This is the ammmonia property correlation recommended
+by NIST in its program REFPROP 7.0. */
 const HelmholtzData helmholtz_data_ammonia = {
 	/* R */ 488.189 /* J/kg/K */
 	, /* rho_star */225. /* kg/m³ */
