@@ -7,7 +7,7 @@
 typedef struct HelmholtzATD_struct{
 	double a; /* coefficient */
 	double t; /* exponent of tau */
-	double d; /* exponent of delta */
+	int d; /* exponent of delta */
 } HelmholtzATD;
 
 /**
@@ -23,7 +23,8 @@ typedef struct HelmholtzData_struct{
 	HelmholtzATD atd[21];
 } HelmholtzData;
 
-double helmholtz_p(double T, double rho, HelmholtzData *data);
-double helmholtz_u(double T, double rho, HelmholtzData *data);
-double helmholtz_h(double T, double rho, HelmholtzData *data);
+double helmholtz_p(double T, double rho, const HelmholtzData *data);
+double helmholtz_u(double T, double rho, const HelmholtzData *data);
+double helmholtz_h(double T, double rho, const HelmholtzData *data);
 
+const HelmholtzData helmholtz_data_ammonia;

@@ -32,9 +32,24 @@ MODEL fprops_test;
 
 METHODS
 METHOD on_load;
+	RUN ClearAll;
 	FIX rho, T;
-	rho := 1 {kg/m^3};
-	T := 400 {K};
+	rho := 39.278 {kg/m^3};
+	T := 300 {K} + 273.15 {K};
 END on_load;
+METHOD self_test;
+	ASSERT abs(p - 10 {MPa}) < 0.001 {MPa};
+	ASSERT abs(h - 2238.2 {kJ/kg}) < 0.1 {kJ/kg};
+END self_test;
+
+METHOD values_2;
+	RUN on_load;
+	rho := 74.732 {kg/m^3};
+	T := 150 {K} + 273.15 {K};
+END values_2;
+METHOD self_test_2;
+	ASSERT abs(p - 10 {MPa}) < 0.001 {MPa};
+	ASSERT abs(h - 1688.5 {kJ/kg}) < 0.1 {kJ/kg};
+END self_test_2;
 END fprops_test;
 
