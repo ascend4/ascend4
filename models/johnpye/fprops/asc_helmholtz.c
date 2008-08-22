@@ -42,6 +42,10 @@
 /* the code that we're wrapping... */
 #include "helmholtz.h"
 
+/* for the moment, species data are defined in C code, we'll implement something
+better later on, hopefully. */
+#include "ammonia.h"
+
 #ifndef ASC_EXPORT
 # error "Where is ASC_EXPORT?"
 #endif
