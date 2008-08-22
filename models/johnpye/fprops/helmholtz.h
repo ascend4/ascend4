@@ -26,5 +26,6 @@ typedef struct HelmholtzData_struct{
 double helmholtz_p(double T, double rho, const HelmholtzData *data);
 double helmholtz_u(double T, double rho, const HelmholtzData *data);
 double helmholtz_h(double T, double rho, const HelmholtzData *data);
+double helmholtz_s(double T, double rho, const HelmholtzData *data);
 
 const HelmholtzData helmholtz_data_ammonia;
