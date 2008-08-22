@@ -197,19 +197,17 @@ double helm_ideal_tau(double tau, double delta, const HelmholtzData *data){
 	double taum52 = pow(tau,-5./2.);
 	double taum23 = pow(tau,-2./3.);
 
-	fprintf(stderr,"tau = %f, taum23 = %f\n",tau,taum23);
-	fprintf(stderr,"tau = %f, taum52 = %f\n",tau,taum52);
-	fprintf(stderr,"tau = %f, taum114 = %f\n",tau,taum114);
+	//fprintf(stderr,"tau = %f, taum23 = %f\n",tau,taum23);
+	//fprintf(stderr,"tau = %f, taum52 = %f\n",tau,taum52);
+	//fprintf(stderr,"tau = %f, taum114 = %f\n",tau,taum114);
 
 	a0 = &(data->a0[0]);
 
 	//unsigned i;	for(i=0;i<5;++i)fprintf(stderr,"a0[%u] = %f\n",i,a0[i]);
 
-	fprintf(stderr,"3 = %f\n", a0[2]/3.*taum23);
-
 	double res;
 	res = a0[2]/3.*taum23 - 1./tau - 3./2.*a0[3]*taum52 - 7./4.*a0[4]*taum114 + a0[1];
-	fprintf(stderr,"res = %f\n",res);
+	//fprintf(stderr,"res = %f\n",res);
 	return res;
 }	
 
@@ -465,7 +463,7 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 
 /* a simple macro to actually do the testing */
 #define ASSERT_TOL(EXPR,VAL,TOL) if(abs((EXPR)-(VAL))>TOL){\
-		fprintf(stderr,"ERROR: value of '%s' = %f, should be %f, error is %f!\n", #EXPR, EXPR, VAL,(EXPR)-(VAL));exit(1);\
+		fprintf(stderr,"ERROR: value of '%s' = %f, should be %f, error is %f (%.2f%%)!\n", #EXPR, EXPR, VAL,(EXPR)-(VAL),((EXPR)-(VAL))/(VAL)*100);exit(1);\
 	}else{\
 		fprintf(stderr,"    OK, %s = %8.2e within %.2f%% err\n",#EXPR,VAL,((EXPR)-(VAL))/(VAL)*100);\
 	}
@@ -504,32 +502,46 @@ int main(void){
 	//fprintf(stderr,"IDEAL HELMHOLTZ COMPONENT\n");
 	//ASSERT_TOL(helm_ideal(273.15, 0) 
 
-	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
-	fprintf(stderr,"u(T,rho) at p = 1 MPa\n");
-	ASSERT_TOL(helmholtz_u(273.15+  0,0.76124,d), 1635.7e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+ 50,0.63869,d), 1744.0e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+200,0.43370,d), 2087.0e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+300,0.35769,d), 2340.0e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+420,0.29562,d), 2674.3e3, 0.1e3);
+	double Z = -1635.7e3 + 1492.411e3;
 
-	fprintf(stderr,"u(T,rho) at p = 20 MPa\n");
-	ASSERT_TOL(helmholtz_u(273.15+150,359.41,d), 1162.5e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+200,152.83,d), 1662.9e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+350,74.590,d), 2393.4e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+420,63.602,d), 2611.8e3, 0.1e3);
+	fprintf(stderr,"ENTHALPY TESTS\n");
+	fprintf(stderr,"h(T,rho) at p = 0.1 MPa\n");
+	ASSERT_TOL(helmholtz_h(273.15+-60, 713.65,d), Z+75.166e3, 0.2e3);
+	ASSERT_TOL(helmholtz_h(273.15+  0,0.76124,d), Z+1635.7e3, 0.2e3);
+	ASSERT_TOL(helmholtz_h(273.15+ 50,0.63869,d), Z+1744.0e3, 0.2e3);
+	ASSERT_TOL(helmholtz_h(273.15+200,0.43370,d), Z+2087.0e3, 0.2e3);
+	ASSERT_TOL(helmholtz_h(273.15+300,0.35769,d), Z+2340.0e3, 1e3);
+	ASSERT_TOL(helmholtz_h(273.15+420,0.29562,d), Z+2674.3e3, 1e3);
 
-	fprintf(stderr,"u(T,rho) at p = 1 MPa\n");
-	ASSERT_TOL(helmholtz_u(273.15+150,4.9817,d), 1949.1e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+200,4.4115,d), 2072.7e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+350,3.3082,d), 2468.2e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+420,2.9670,d), 2668.6e3, 0.1e3);
+	fprintf(stderr,"h(T,rho) at p = 1 MPa\n");
+	ASSERT_TOL(helmholtz_h(273.15+150,4.9817,d), Z+1949.1e3, 1e3);
+	ASSERT_TOL(helmholtz_h(273.15+200,4.4115,d), Z+2072.7e3, 1e3);
+	ASSERT_TOL(helmholtz_h(273.15+350,3.3082,d), Z+2468.2e3, 1e3);
+	ASSERT_TOL(helmholtz_h(273.15+420,2.9670,d), Z+2668.6e3, 1e3);
 
-	fprintf(stderr,"u(T,rho) at p = 10 MPa\n");
-	ASSERT_TOL(helmholtz_u(273.15+150,74.732,d), 1688.5e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+200,54.389,d), 1908.0e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+350,35.072,d), 2393.4e3, 0.1e3);
-	ASSERT_TOL(helmholtz_u(273.15+420,30.731,d), 2611.8e3, 0.1e3);
+	fprintf(stderr,"h(T,rho) at p = 10 MPa\n");
+	ASSERT_TOL(helmholtz_h(273.15+-50,706.21,d), Z+127.39e3, 2e3);
+	ASSERT_TOL(helmholtz_h(273.15+-0,645.04,d), Z+349.53e3, 2e3);
 	
+	ASSERT_TOL(helmholtz_h(273.15+150,74.732,d), Z+1688.5e3, 1e3);
+	ASSERT_TOL(helmholtz_h(273.15+200,54.389,d), Z+1908.0e3, 1e3);
+	ASSERT_TOL(helmholtz_h(273.15+350,35.072,d), Z+2393.4e3, 1e3);
+	ASSERT_TOL(helmholtz_h(273.15+420,30.731,d), Z+2611.8e3, 1e3);
+
+	fprintf(stderr,"h(T,rho) at p = 20 MPa\n");
+	ASSERT_TOL(helmholtz_h(273.15+-50,710.19,d), Z+136.54e3, 0.1e3);
+	ASSERT_TOL(helmholtz_h(273.15+ 30,612.22,d), Z+493.28e3, 0.1e3);
+	ASSERT_TOL(helmholtz_h(273.15+150,359.41,d), Z+1162.5e3, 0.1e3);
+	ASSERT_TOL(helmholtz_h(273.15+200,152.83,d), Z+1662.9e3, 0.1e3);
+	ASSERT_TOL(helmholtz_h(273.15+350,74.590,d), Z+2393.4e3, 1e3);
+	ASSERT_TOL(helmholtz_h(273.15+420,63.602,d), Z+2611.8e3, 1e3);
+
+	fprintf(stderr,"h(T,rho) at p = 100 MPa\n");
+	ASSERT_TOL(helmholtz_h(273.15+  0,690.41,d), Z+422.69e3, 0.5e3);
+	ASSERT_TOL(helmholtz_h(273.15+100,591.07,d), Z+850.44e3, 0.1e3);
+	ASSERT_TOL(helmholtz_h(273.15+250,437.69,d), Z+1506.6e3, 1e3);
+	ASSERT_TOL(helmholtz_h(273.15+420,298.79,d), Z+2252.3e3, 1e3);
+
 
 	fprintf(stderr,"Tests completed OK\n");
 	exit(0);
