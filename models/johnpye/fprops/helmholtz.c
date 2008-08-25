@@ -209,102 +209,95 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 	optimised here ;-)
 */
 double helm_resid(double tau, double delta, const HelmholtzData *data){
-	
 	double sum;
-	double phir = 0;
-	unsigned i;
+	double res = 0;
+	double delX;
+	unsigned l;
+	unsigned nr, i;
+	const HelmholtzATDL *atdl;
 
-	const HelmholtzATDL *atdl = &(data->atdl[0]);
-	
-	for(i=0; i<5; ++i){
-		phir += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d);
-		++atdl;
-	}
+	nr = data->nr;
+	atdl = &(data->atdl[0]);
 
+	delX = 1;
+
+	l = 0;
 	sum = 0;
-	for(i=5; i<10; ++i){
+	for(i=0; i<nr; ++i){
+		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, atdl->a, atdl->t, atdl->d, atdl->l);
 		sum += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d);
 		++atdl;
+		//fprintf(stderr,"l = %d\n",l);
+		if(i+1==nr || l != atdl->l){
+			if(l==0){
+				//fprintf(stderr,"Adding non-exp term\n");
+				res += sum;
+			}else{
+				//fprintf(stderr,"Adding exp term with l = %d, delX = %e\n",l,delX);
+				res += sum * exp(-delX);
+			}
+			/* set l to new value */
+			if(i+1!=nr){
+				l = atdl->l;
+				//fprintf(stderr,"New l = %d\n",l);
+				delX = ipow(delta,l);
+				sum = 0;
+			}
+		}
 	}
-	phir += exp(-delta) * sum;
 
-	sum = 0; 
-	for(i=10; i<17; ++i){
-		sum += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d);
-		++atdl;
-	}
-	phir += exp(-delta*delta) * sum;
-
-	sum = 0;
-	for(i=17; i<21; ++i){
-		sum += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d);
-		++atdl;
-	}
-	phir += exp(-delta*delta*delta) * sum;
-
-	return phir;
+	return res;
 }
 
 /**
 	Derivative of the helmholtz residual function with respect to
 	delta.
 
-	THERE IS AN ERROR IN THIS FUNCTION.
+	THERE APPEARS TO BE AN ERROR IN THIS FUNCTION.
 */	
 double helm_resid_del(double tau,double delta, const HelmholtzData *data){
-	
 	double sum;
-	double phir = 0;
-	unsigned i;
-	double X;
-	double delX;
-	double XdelX;
+	double res = 0;
+	double delX, XdelX;
+	unsigned l;
+	unsigned nr, i;
+	const HelmholtzATDL *atdl;
 
-	const HelmholtzATDL *atdl = &(data->atdl[0]);
-	
-	for(i=0; i<5; ++i){
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atdl->a, atdl->t, atdl->d);
-		phir += atdl->a * pow(tau, atdl->t) * pow(delta, atdl->d - 1) * atdl->d;
-		++atdl;
-	}
+	nr = data->nr;
+	atdl = &(data->atdl[0]);
 
+	delX = 1;
+
+	l = 0;
 	sum = 0;
-	X = 1;
-	delX = ipow(delta,X);
-	XdelX = X*delX;
-	for(i=5; i<10; ++i){
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atdl->a, atdl->t, atdl->d);
-		sum -= atdl->a * pow(tau, atdl->t) * pow(delta, atdl->d - 1) * (XdelX - atdl->d);
+	XdelX = 0;
+	for(i=0; i<nr; ++i){
+		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, atdl->a, atdl->t, atdl->d, atdl->l);
+		sum += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d - 1) * (atdl->d - XdelX);
 		++atdl;
+		//fprintf(stderr,"l = %d\n",l);
+		if(i+1==nr || l != atdl->l){
+			if(l==0){
+				//fprintf(stderr,"Adding non-exp term\n");
+				//fprintf(stderr,"sum = %f\n",sum);
+				res += sum;
+			}else{
+				//fprintf(stderr,"Adding exp term with l = %d, delX = %e\n",l,delX);
+				//fprintf(stderr,"sum = %f\n",sum);
+				res += sum * exp(-delX);
+			}
+			/* set l to new value */
+			if(i+1!=nr){
+				l = atdl->l;
+				delX = ipow(delta,l);
+				XdelX = l * delX;
+				//fprintf(stderr,"New l = %d, XdelX = %f\n",l,XdelX);
+				sum = 0;
+			}
+		}
 	}
-	//fprintf(stderr,"sum = %f\n",sum);
-	phir += exp(-delX) * sum;
 
-	sum = 0; 
-	X = 2;
-	delX = ipow(delta,X);
-	XdelX = X*delX;
-	for(i=10; i<17; ++i){
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atdl->a, atdl->t, atdl->d);
-		sum -= atdl->a * pow(tau, atdl->t) * pow(delta, atdl->d - 1) * (XdelX - atdl->d);
-		++atdl;
-	}
-	//fprintf(stderr,"sum = %f\n",sum);
-	phir += exp(-delX) * sum;
-
-	sum = 0;
-	X = 3;
-	delX = ipow(delta,X);
-	XdelX = X*delX;
-	for(i=17; i<21; ++i){
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atdl->a, atdl->t, atdl->d);
-		sum -= atdl->a * pow(tau, atdl->t) * pow(delta, atdl->d - 1) * (XdelX - atdl->d);
-		++atdl;
-	}
-	//fprintf(stderr,"sum = %f\n",sum);
-	phir += exp(-delX) * sum;
-
-	return phir;
+	return res;
 }
 
 /**
