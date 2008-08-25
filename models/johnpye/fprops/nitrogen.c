@@ -9,15 +9,28 @@ Int J Thermophysics, Vol 18, No 4, 1998.
 This is the nitrogren property correlation recommended
 by NIST in its program REFPROP 7.0. */
 
+const IdealData ideal_data_nitrogen = {
+	-12.76953 /* constant */
+	,-0.007841630 /* linear */
+	, 3 /* power terms */
+	, (const IdealPowTerm[]){
+		{1.934819,     -1.}
+		,{-1.247742e-5, -2.}
+		,{6.678326e-8,  -3.}
+	}
+	, 1
+	, (const IdealExpTerm[]){
+		{1.012941, 26.65788}
+	}
+};
+
 const HelmholtzData helmholtz_data_ammonia = {
 	/* R */ 8.31451 / 28.01348e-3 /* J/molK * kg/mol = J/kg/K */
 	, /* M */ 28.01348 /* kg/kmol */
 	, /* rho_star */ 11.1839 * 28.01348 /* mol/L * kg/kmol = kg/kL = kg/m³ = rho_c for this model*/
 	, /* T_star */ 126.192 /* K = T_c for this model */
-	, 5 /* ni */
-	, (const double[]){ /* a0 values 1..5 */
-		 /* need to work out how to implement these still */
-	}, 21 /* nr */
+	, &ideal_data_nitrogen
+	, 21 /* nr */
 	, (const HelmholtzATDL[]){
 		/* a_i, t_i, d_i, l_i */
 		{ 0.924803575275,      0.25,    1,  0}
@@ -63,7 +76,7 @@ const HelmholtzData helmholtz_data_ammonia = {
 
 	To run the test, compile and run as follows:
 
-	gcc helmholtz.c ammonia.c -DTEST -o ammonia -lm && ./ammonia 
+	gcc helmholtz.c nitrogen.c -DTEST -o nitrogen -lm && ./nitrogen
 
 	These tests all currently pass with a maximum error of 2%. The error
 	seems to arise in the enthalpy data for low temperatures. Haven't been

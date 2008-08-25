@@ -1,23 +1,38 @@
 #include "ammonia.h"
 
-/* Property data for Ammonia, from Tillner-Roth, Harms-Watzenberg and
+
+/**
+Ideal gas data for Ammonia, from Tillner-Roth, Harms-Watzenberg and
 Baehr, 'Eine neue Fundamentalgleichung für Ammoniak', DKV-Tagungsbericht,
 20:167-181, 1993. This is the ammmonia property correlation recommended
-by NIST in its program REFPROP 7.0. */
+by NIST in its program REFPROP 7.0.
+*/
+const IdealData ideal_data_ammonia = {
+	-15.815020 /* const */
+	, 4.255726 /* linear */
+	, 3 /* power terms */
+	, (const IdealPowTerm[]){
+		{11.474340,   1./3 }
+		,{-1.296211,  -3./2.}
+		,{0.5706757,  -7./4.}
+	}
+	, 0, (const IdealExpTerm *)0 /* no exponential terms */
+};
+			 
 
+/**
+Residual (non-ideal) property data for Ammonia, from Tillner-Roth, 
+Harms-Watzenberg and Baehr, 'Eine neue Fundamentalgleichung für Ammoniak',
+DKV-Tagungsbericht, 20:167-181, 1993. This is the ammmonia property correlation
+recommended by NIST in its program REFPROP 7.0.
+*/
 const HelmholtzData helmholtz_data_ammonia = {
 	/* R */ 488.189 /* J/kg/K */
 	, /* M */ 17.03026 /* kg/kmol */
 	, /* rho_star */225. /* kg/m³ */
 	, /* T_star */ 405.40 /* K */
-	, 5 /* ni */
-	, (const double[]){ /* a0 values 1..5 */
-		 -15.815020
-		,  4.255726
-		, 11.474340
-		, -1.296211
-		,  0.5706757
-	}, 21 /* nr */
+	, &ideal_data_ammonia
+	, 21 /* nr */
 	, (const HelmholtzATDL[]){
 		/* a_i, t_i, d_i, l_i */
 		{0.4554431E-1,  -0.5  ,  2,  0}/* 1 */
@@ -86,54 +101,6 @@ int main(void){
 
 	d = &helmholtz_data_ammonia;
 	double maxerr = 0;
-
-	fprintf(stderr,"ENTROPY TESTS\n");
-
-	/* offset required to attain agreement with REFPROP */
-	double Y = -471.596704;
-
-	fprintf(stderr,"s(T,rho) at p = 0.1 MPa\n");
-	ASSERT_TOL(helmholtz_s(273.15+-60, 713.65,d), Y+0.36737e3, 0.5);
-	ASSERT_TOL(helmholtz_s(273.15+  0,0.76124,d), Y+6.8900e3, 0.5);
-	ASSERT_TOL(helmholtz_s(273.15+ 50,0.63869,d), Y+7.2544e3, 0.5);
-	ASSERT_TOL(helmholtz_s(273.15+200,0.43370,d), Y+8.1232e3, 0.5);
-	ASSERT_TOL(helmholtz_s(273.15+300,0.35769,d), Y+8.6084e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+420,0.29562,d), Y+9.1365e3, 1);
-
-	fprintf(stderr,"s(T,rho) at p = 1 MPa\n");
-	ASSERT_TOL(helmholtz_s(273.15+-50,702.49,d), Y+0.56381e3, 0.5);
-	ASSERT_TOL(helmholtz_s(273.15+150,4.9817,d), Y+6.7008e3, 0.5);
-	ASSERT_TOL(helmholtz_s(273.15+200,4.4115,d), Y+6.9770e3, 0.5);
-	ASSERT_TOL(helmholtz_s(273.15+350,3.3082,d), Y+7.7012e3, 0.5);
-	ASSERT_TOL(helmholtz_s(273.15+420,2.9670,d), Y+8.0059e3, 0.5);
-
-	fprintf(stderr,"s(T,rho) at p = 10 MPa\n");
-	ASSERT_TOL(helmholtz_s(273.15+-70,728.11,d), Y+0.14196e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+-50,706.21,d), Y+0.54289e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+-20,670.55,d), Y+1.0975e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+  0,645.04,d), Y+1.4403e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+125.17,356.70,d), Y+3.5463e3, 1);
-
-	ASSERT_TOL(helmholtz_s(273.15+125.17,121.58,d), Y+4.5150e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+200,54.389,d), Y+5.5906e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+350,35.072,d), Y+6.4850e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+420,30.731,d), Y+6.8171e3, 1);
-
-	fprintf(stderr,"s(T,rho) at p = 20 MPa\n");
-	ASSERT_TOL(helmholtz_s(273.15+-50,710.19,d), Y+0.52061e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+ 30,612.22,d), Y+1.8844e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+150,359.41,d), Y+3.7164e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+200,152.83,d), Y+4.8376e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+350,74.590,d), Y+6.0407e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+420,63.602,d), Y+6.4066e3, 1);
-
-	fprintf(stderr,"s(T,rho) at p = 100 MPa\n");
-	ASSERT_TOL(helmholtz_s(273.15+  0,690.41,d), Y+1.2158e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+100,591.07,d), Y+2.5499e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+250,437.69,d), Y+4.0264e3, 1);
-	ASSERT_TOL(helmholtz_s(273.15+420,298.79,d), Y+5.2620e3, 1);
-
-	/* successful entropy tests means that helm_ideal_tau, helm_real_tau, helm_ideal and helm_resid are all OK */
 
 	fprintf(stderr,"PRESSURE TESTS\n");
 
@@ -224,6 +191,56 @@ int main(void){
 	ASSERT_TOL(helmholtz_h(273.15+100,591.07,d), Z+850.44e3, 0.1e3);
 	ASSERT_TOL(helmholtz_h(273.15+250,437.69,d), Z+1506.6e3, 1e3);
 	ASSERT_TOL(helmholtz_h(273.15+420,298.79,d), Z+2252.3e3, 1e3);
+
+
+
+	fprintf(stderr,"ENTROPY TESTS\n");
+
+	/* offset required to attain agreement with REFPROP */
+	double Y = -471.596704;
+
+	fprintf(stderr,"s(T,rho) at p = 0.1 MPa\n");
+	ASSERT_TOL(helmholtz_s(273.15+-60, 713.65,d), Y+0.36737e3, 0.5);
+	ASSERT_TOL(helmholtz_s(273.15+  0,0.76124,d), Y+6.8900e3, 0.5);
+	ASSERT_TOL(helmholtz_s(273.15+ 50,0.63869,d), Y+7.2544e3, 0.5);
+	ASSERT_TOL(helmholtz_s(273.15+200,0.43370,d), Y+8.1232e3, 0.5);
+	ASSERT_TOL(helmholtz_s(273.15+300,0.35769,d), Y+8.6084e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+420,0.29562,d), Y+9.1365e3, 1);
+
+	fprintf(stderr,"s(T,rho) at p = 1 MPa\n");
+	ASSERT_TOL(helmholtz_s(273.15+-50,702.49,d), Y+0.56381e3, 0.5);
+	ASSERT_TOL(helmholtz_s(273.15+150,4.9817,d), Y+6.7008e3, 0.5);
+	ASSERT_TOL(helmholtz_s(273.15+200,4.4115,d), Y+6.9770e3, 0.5);
+	ASSERT_TOL(helmholtz_s(273.15+350,3.3082,d), Y+7.7012e3, 0.5);
+	ASSERT_TOL(helmholtz_s(273.15+420,2.9670,d), Y+8.0059e3, 0.5);
+
+	fprintf(stderr,"s(T,rho) at p = 10 MPa\n");
+	ASSERT_TOL(helmholtz_s(273.15+-70,728.11,d), Y+0.14196e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+-50,706.21,d), Y+0.54289e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+-20,670.55,d), Y+1.0975e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+  0,645.04,d), Y+1.4403e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+125.17,356.70,d), Y+3.5463e3, 1);
+
+	ASSERT_TOL(helmholtz_s(273.15+125.17,121.58,d), Y+4.5150e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+200,54.389,d), Y+5.5906e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+350,35.072,d), Y+6.4850e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+420,30.731,d), Y+6.8171e3, 1);
+
+	fprintf(stderr,"s(T,rho) at p = 20 MPa\n");
+	ASSERT_TOL(helmholtz_s(273.15+-50,710.19,d), Y+0.52061e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+ 30,612.22,d), Y+1.8844e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+150,359.41,d), Y+3.7164e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+200,152.83,d), Y+4.8376e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+350,74.590,d), Y+6.0407e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+420,63.602,d), Y+6.4066e3, 1);
+
+	fprintf(stderr,"s(T,rho) at p = 100 MPa\n");
+	ASSERT_TOL(helmholtz_s(273.15+  0,690.41,d), Y+1.2158e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+100,591.07,d), Y+2.5499e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+250,437.69,d), Y+4.0264e3, 1);
+	ASSERT_TOL(helmholtz_s(273.15+420,298.79,d), Y+5.2620e3, 1);
+
+	/* successful entropy tests means that helm_ideal_tau, helm_real_tau, helm_ideal and helm_resid are all OK */
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
 	exit(0);
