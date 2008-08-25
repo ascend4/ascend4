@@ -1,6 +1,41 @@
 #ifndef FPROPS_HELMHOLTZ_H
 #define FPROPS_HELMHOLTZ_H
 
+/*
+	Terms containing powers of 'tau'
+*/
+typedef struct IdealPowTerm_struct{
+	double a0;
+	double t0;
+} IdealPowTerm;
+
+/*
+	See J R Cooper 'Representation of the Ideal-Gas Thermaldynamic
+	Properties of Water', Int J Thermophys v 3 no 1, 1982 and also
+	Span, Lemmon, Jacobsen & Wagner 'A Reference Quality Equation of State 
+	for Nitrogen' 1998.
+
+	The form of exponential terms appearing in the reduced
+	Helmholtz function equation is
+
+		b ln [ 1 - exp( -B tau ) ]
+
+	where B is defined as beta / tau in the nomenclature of Cooper.
+*/
+typedef struct IdealExpTerm_struct{
+	double b;
+	double B;
+} IdealExpTerm;
+
+typedef struct 	IdealData_struct{
+	double c; /* constant value in phi_0 expression */
+	double m; /* linear coefficient in phi_0 expression */
+	unsigned np; /* number of power terms */
+	const IdealPowTerm *pt; /* power term data, may be NULL if np == 0 */
+	unsigned ne; /* number of 'exponential' terms */
+	const IdealExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
+} IdealData;
+
 /**
 	Data structure for rows of the coefficient and exponent table (allows
 	the data to be represented more concisely when declaring a fluid from
@@ -23,8 +58,7 @@ typedef struct HelmholtzData_struct{
 	double rho_star; /**< normalisation density, kg/m³ */
 	double T_star; /* normalisation temperature, K */
 	
-	unsigned ni; /* number of coefficients in ideal equation */
-	const double *a0; /* coefficients for the ideal component of the fund eqn */
+	const IdealData *ideal; /* data for ideal component of Helmholtz energy */
 
 	unsigned nr; /* number of coefficients in residual equation */
 	const HelmholtzATDL *atdl; /* coefficients and exponents for residual component of fund eqn */

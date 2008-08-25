@@ -36,8 +36,8 @@
 
 /* forward decls */
 
-static double helm_ideal(double tau, double delta, const HelmholtzData *data);
-static double helm_ideal_tau(double tau, double delta, const HelmholtzData *data);
+static double helm_ideal(double tau, double delta, const IdealData *data);
+static double helm_ideal_tau(double tau, double delta, const IdealData *data);
 static double helm_resid(double tau, double delta, const HelmholtzData *data);
 static double helm_resid_del(double tau, double delta, const HelmholtzData *data);
 static double helm_resid_tau(double tau, double delta, const HelmholtzData *data);
@@ -74,12 +74,12 @@ double helmholtz_u(double T, double rho, const HelmholtzData *data){
 	double delta = rho / data->rho_star;
 
 #ifdef TEST
-	fprintf(stderr,"ideal_tau = %f\n",helm_ideal_tau(tau,delta,data));
+	fprintf(stderr,"ideal_tau = %f\n",helm_ideal_tau(tau,delta,data->ideal));
 	fprintf(stderr,"resid_tau = %f\n",helm_resid_tau(tau,delta,data));
 	fprintf(stderr,"R T = %f\n",data->R * data->T_star);
 #endif
 
-	return data->R * data->T_star * (helm_ideal_tau(tau,delta,data) + helm_resid_tau(tau,delta,data));
+	return data->R * data->T_star * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data));
 }
 
 /**
@@ -95,7 +95,7 @@ double helmholtz_h(double T, double rho, const HelmholtzData *data){
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
 
-	return data->R * T * (1 + tau * (helm_ideal_tau(tau,delta,data) + helm_resid_tau(tau,delta,data)) + delta*helm_resid_del(tau,delta,data));
+	return data->R * T * (1 + tau * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data)) + delta*helm_resid_del(tau,delta,data));
 }
 
 /**
@@ -112,8 +112,8 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data){
 	double delta = rho / data->rho_star;
 
 	return data->R * (
-		tau * (helm_ideal_tau(tau,delta,data) + helm_resid_tau(tau,delta,data))
-		- helm_ideal(tau,delta,data) - helm_resid(tau,delta,data)
+		tau * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data))
+		- helm_ideal(tau,delta,data->ideal) - helm_resid(tau,delta,data)
 	);
 }
 
@@ -151,41 +151,57 @@ static double ipow(double x, int n){
 /**
 	Ideal component of helmholtz function
 */	
-double helm_ideal(double tau, double delta, const HelmholtzData *data){
-	const double *a0;
+double helm_ideal(double tau, double delta, const IdealData *data){
 
-	double tau13 = pow(tau,1./3.);
-	double taum32 = pow(tau,-3./2.);
-	double taum74 = pow(tau,-7./4.);
+	const IdealPowTerm *pt;
+	const IdealExpTerm *et;
 
-	a0 = &(data->a0[0]);
+	unsigned i;
+	double sum = log(delta) + data->c + data->m * tau - log(tau);
+	double term;
 
-	return log(delta) + a0[0] + a0[1] * tau - log(tau) + a0[2] * tau13 + a0[3] * taum32 + a0[4] * taum74;
+	//fprintf(stderr,"constant = %f, linear = %f", data->c, data->m);
+	//fprintf(stderr,"initial terms = %f\n",sum);
+	pt = &(data->pt[0]);
+	for(i = 0; i<data->np; ++i, ++pt){
+		term = pt->a0 * pow(tau, pt->t0);
+		//fprintf(stderr,"i = %d: a0 = %f, t0 = %f, term = %f\n",i,pt->a0, pt->t0, term);
+		sum += pt->a0 * pow(tau, pt->t0);
+	}
+
+#if 0
+	et = &(data->et[0]);
+	for(i=0; i<data->ne; ++i, ++et){
+		sum += et->b * log( 1 - exp(- et->B * tau));
+	}
+#endif
+
+	return sum;
 }
 
 /**
 	Partial dervivative of ideal component of helmholtz residual function with 
 	respect to tau.
 */	
-double helm_ideal_tau(double tau, double delta, const HelmholtzData *data){
-	const double *a0;
+double helm_ideal_tau(double tau, double delta, const IdealData *data){
+	const IdealPowTerm *pt;
+	const IdealExpTerm *et;
 
-	double taum114 = pow(tau,-11./4.);
-	double taum52 = pow(tau,-5./2.);
-	double taum23 = pow(tau,-2./3.);
+	unsigned i;
+	double sum = -1./tau + data->m;
 
-	//fprintf(stderr,"tau = %f, taum23 = %f\n",tau,taum23);
-	//fprintf(stderr,"tau = %f, taum52 = %f\n",tau,taum52);
-	//fprintf(stderr,"tau = %f, taum114 = %f\n",tau,taum114);
+	pt = &(data->pt[0]);
+	for(i = 0; i<data->np; ++i, ++pt){
+		sum += pt->a0 * pt->t0 * pow(tau, pt->t0 - 1);
+	}
 
-	a0 = &(data->a0[0]);
-
-	//unsigned i;	for(i=0;i<5;++i)fprintf(stderr,"a0[%u] = %f\n",i,a0[i]);
-
-	double res;
-	res = a0[2]/3.*taum23 - 1./tau - 3./2.*a0[3]*taum52 - 7./4.*a0[4]*taum114 + a0[1];
-	//fprintf(stderr,"res = %f\n",res);
-	return res;
+#if 0
+	et = &(data->et[0]);
+	for(i=0; i<data->ne; ++i, ++et){
+		sum += et->b * log( 1 - exp(- et->B * tau));
+	}
+#endif
+	return sum;
 }	
 
 /**
@@ -309,7 +325,6 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 
 	delX = 1;
 
-#if 1
 	l = 0;
 	sum = 0;
 	for(i=0; i<nr; ++i){
@@ -336,50 +351,6 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 			}
 		}
 	}
-
-#else
-	/* old code, not so flexible */
-
-	delX = 1;
-
-	for(i=0; i<5; ++i){
-		if(atdl->t){
-			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atdl->a, atdl->t, atdl->d);
-			res += atdl->a * pow(tau, atdl->t - 1) * ipow(delta, atdl->d) * atdl->t;
-		}
-		++atdl;
-	}
-
-	sum = 0;
-	for(i=5; i<10; ++i){
-		if(atdl->t){
-			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atdl->a, atdl->t, atdl->d);
-			sum += atdl->a * pow(tau, atdl->t - 1) * ipow(delta, atdl->d) * atdl->t;
-		}
-		++atdl;
-	}
-	res += exp(-delta) * sum;
-
-	sum = 0; 
-	for(i=10; i<17; ++i){
-		if(atdl->t){
-			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atdl->a, atdl->t, atdl->d);
-			sum += atdl->a * pow(tau, atdl->t - 1) * ipow(delta, atdl->d) * atdl->t;
-		}
-		++atdl;
-	}
-	res += exp(-delta*delta) * sum;
-
-	sum = 0;
-	for(i=17; i<21; ++i){
-		if(atdl->t){
-			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d\n",i+1, atdl->a, atdl->t, atdl->d);
-			sum += atdl->a * pow(tau, atdl->t - 1) * ipow(delta, atdl->d) * atdl->t;
-		}
-		++atdl;
-	}
-	res += exp(-delta*delta*delta) * sum;
-#endif
 
 	return res;
 }	
