@@ -57,6 +57,14 @@ double helmholtz_p(double T, double rho, const HelmholtzData *data){
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
 
+#ifdef TEST
+	assert(data->rho_star!=0);
+	assert(T!=0);
+	assert(!isnan(tau));
+	assert(!isnan(delta));
+	assert(!isnan(data->R));
+#endif
+
 	return data->R * T * rho * (1. + delta * helm_resid_del(tau,delta,data));
 }
 
@@ -72,6 +80,14 @@ double helmholtz_u(double T, double rho, const HelmholtzData *data){
 	
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
+
+#ifdef TEST
+	assert(data->rho_star!=0);
+	assert(T!=0);
+	assert(!isnan(tau));
+	assert(!isnan(delta));
+	assert(!isnan(data->R));
+#endif
 
 #ifdef TEST
 	fprintf(stderr,"ideal_tau = %f\n",helm_ideal_tau(tau,delta,data->ideal));
@@ -95,6 +111,14 @@ double helmholtz_h(double T, double rho, const HelmholtzData *data){
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
 
+#ifdef TEST
+	assert(data->rho_star!=0);
+	assert(T!=0);
+	assert(!isnan(tau));
+	assert(!isnan(delta));
+	assert(!isnan(data->R));
+#endif
+
 	return data->R * T * (1 + tau * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data)) + delta*helm_resid_del(tau,delta,data));
 }
 
@@ -110,6 +134,14 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data){
 	
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
+
+#ifdef TEST
+	assert(data->rho_star!=0);
+	assert(T!=0);
+	assert(!isnan(tau));
+	assert(!isnan(delta));
+	assert(!isnan(data->R));
+#endif
 
 	return data->R * (
 		tau * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data))
@@ -213,22 +245,22 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	double res = 0;
 	double delX;
 	unsigned l;
-	unsigned nr, i;
-	const HelmholtzATDL *atdl;
+	unsigned np, i;
+	const HelmholtzPowTerm *pt;
 
-	nr = data->nr;
-	atdl = &(data->atdl[0]);
+	np = data->np;
+	pt = &(data->pt[0]);
 
 	delX = 1;
 
 	l = 0;
 	sum = 0;
-	for(i=0; i<nr; ++i){
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, atdl->a, atdl->t, atdl->d, atdl->l);
-		sum += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d);
-		++atdl;
+	for(i=0; i<np; ++i){
+		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, pt->a, pt->t, pt->d, pt->l);
+		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d);
+		++pt;
 		//fprintf(stderr,"l = %d\n",l);
-		if(i+1==nr || l != atdl->l){
+		if(i+1==np || l != pt->l){
 			if(l==0){
 				//fprintf(stderr,"Adding non-exp term\n");
 				res += sum;
@@ -237,8 +269,8 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 				res += sum * exp(-delX);
 			}
 			/* set l to new value */
-			if(i+1!=nr){
-				l = atdl->l;
+			if(i+1!=np){
+				l = pt->l;
 				//fprintf(stderr,"New l = %d\n",l);
 				delX = ipow(delta,l);
 				sum = 0;
@@ -253,30 +285,31 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	Derivative of the helmholtz residual function with respect to
 	delta.
 
-	THERE APPEARS TO BE AN ERROR IN THIS FUNCTION.
+	NOTE: POSSIBLY STILL AN ERROR IN THIS FUNCTION.
 */	
 double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 	double sum;
 	double res = 0;
 	double delX, XdelX;
 	unsigned l;
-	unsigned nr, i;
-	const HelmholtzATDL *atdl;
+	unsigned n, i;
+	const HelmholtzPowTerm *pt;
+	const HelmholtzExpTerm *et;
 
-	nr = data->nr;
-	atdl = &(data->atdl[0]);
+	n = data->np;
+	pt = &(data->pt[0]);
 
 	delX = 1;
 
 	l = 0;
 	sum = 0;
 	XdelX = 0;
-	for(i=0; i<nr; ++i){
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, atdl->a, atdl->t, atdl->d, atdl->l);
-		sum += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d - 1) * (atdl->d - XdelX);
-		++atdl;
+	for(i=0; i<n; ++i){
+		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, pt->a, pt->t, pt->d, pt->l);
+		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - XdelX);
+		++pt;
 		//fprintf(stderr,"l = %d\n",l);
-		if(i+1==nr || l != atdl->l){
+		if(i+1==n || l != pt->l){
 			if(l==0){
 				//fprintf(stderr,"Adding non-exp term\n");
 				//fprintf(stderr,"sum = %f\n",sum);
@@ -287,8 +320,8 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 				res += sum * exp(-delX);
 			}
 			/* set l to new value */
-			if(i+1!=nr){
-				l = atdl->l;
+			if(i+1!=n){
+				l = pt->l;
 				delX = ipow(delta,l);
 				XdelX = l * delX;
 				//fprintf(stderr,"New l = %d, XdelX = %f\n",l,XdelX);
@@ -296,6 +329,29 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 			}
 		}
 	}
+
+#if 1
+	/* now the exponential terms */
+	n = data->ne;
+	et = &(data->et[0]);
+	for(i=0; i< n; ++i){
+		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
+		
+		double del2 = delta*delta;
+		double tau2 = tau*tau;
+		double gam2 = et->gamma * et->gamma;
+		sum += -et->a * pow(tau,et->t) * ipow(delta,et->d-1)
+			* (2 * et->phi * del2 - 2 * et->phi * delta - et->d)
+			* exp(-et->phi * del2
+					 + 2 * et->phi * delta
+					 - et->beta * tau2
+					 + 2 * et->beta * et->gamma * tau
+					 - et->phi 
+					 - et->beta * gam2
+			   );
+		++et;
+	}
+#endif
 
 	return res;
 }
@@ -310,24 +366,24 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 	double res = 0;
 	double delX;
 	unsigned l;
-	unsigned nr, i;
-	const HelmholtzATDL *atdl;
+	unsigned np, i;
+	const HelmholtzPowTerm *pt;
 
-	nr = data->nr;
-	atdl = &(data->atdl[0]);
+	np = data->np;
+	pt = &(data->pt[0]);
 
 	delX = 1;
 
 	l = 0;
 	sum = 0;
-	for(i=0; i<nr; ++i){
-		if(atdl->t){
-			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, atdl->a, atdl->t, atdl->d, atdl->l);
-			sum += atdl->a * pow(tau, atdl->t - 1) * ipow(delta, atdl->d) * atdl->t;
+	for(i=0; i<np; ++i){
+		if(pt->t){
+			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, pt->a, pt->t, pt->d, pt->l);
+			sum += pt->a * pow(tau, pt->t - 1) * ipow(delta, pt->d) * pt->t;
 		}
-		++atdl;
+		++pt;
 		//fprintf(stderr,"l = %d\n",l);
-		if(i+1==nr || l != atdl->l){
+		if(i+1==np || l != pt->l){
 			if(l==0){
 				//fprintf(stderr,"Adding non-exp term\n");
 				res += sum;
@@ -336,8 +392,8 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 				res += sum * exp(-delX);
 			}
 			/* set l to new value */
-			if(i+1!=nr){
-				l = atdl->l;
+			if(i+1!=np){
+				l = pt->l;
 				//fprintf(stderr,"New l = %d\n",l);
 				delX = ipow(delta,l);
 				sum = 0;
@@ -361,34 +417,34 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 	unsigned i;
 	double XdelX;
 
-	const HelmholtzATDL *atdl = &(data->atdl[0]);
+	const HelmholtzPowTerm *pt = &(data->pt[0]);
 	
 	for(i=0; i<5; ++i){
-		phir += atdl->a * pow(tau, atdl->t - 1) * ipow(delta, atdl->d - 1) * atdl->d * atdl->t;
-		++atdl;
+		phir += pt->a * pow(tau, pt->t - 1) * ipow(delta, pt->d - 1) * pt->d * pt->t;
+		++pt;
 	}
 
 	sum = 0;
 	XdelX = delta;
 	for(i=5; i<10; ++i){
-		sum += atdl->a * pow(tau, atdl->t - 1) * ipow(delta, atdl->d - 1) * atdl->t *(atdl->d - XdelX);
-		++atdl;
+		sum += pt->a * pow(tau, pt->t - 1) * ipow(delta, pt->d - 1) * pt->t *(pt->d - XdelX);
+		++pt;
 	}
 	phir += exp(-delta) * sum;
 
 	sum = 0; 
 	XdelX = 2*delta*delta;
 	for(i=10; i<17; ++i){
-		sum += atdl->a * pow(tau, atdl->t - 1) * ipow(delta, atdl->d - 1) * atdl->t *(atdl->d - XdelX);
-		++atdl;
+		sum += pt->a * pow(tau, pt->t - 1) * ipow(delta, pt->d - 1) * pt->t *(pt->d - XdelX);
+		++pt;
 	}
 	phir += exp(-delta*delta) * sum;
 
 	sum = 0;
 	XdelX = 3*delta*delta*delta;
 	for(i=17; i<21; ++i){
-		sum += atdl->a * pow(tau, atdl->t - 1) * ipow(delta, atdl->d - 1) * atdl->t *(atdl->d - XdelX);
-		++atdl;
+		sum += pt->a * pow(tau, pt->t - 1) * ipow(delta, pt->d - 1) * pt->t *(pt->d - XdelX);
+		++pt;
 	}
 	phir += exp(-delta*delta*delta) * sum;
 
@@ -409,19 +465,19 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	unsigned X;
 	double XdelX;
 
-	const HelmholtzATDL *atdl = &(data->atdl[0]);
+	const HelmholtzPowTerm *pt = &(data->pt[0]);
 	
 	for(i=0; i<5; ++i){
-		phir += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d - 2) * (SQ(atdl->d) - X);
-		++atdl;
+		phir += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (SQ(pt->d) - X);
+		++pt;
 	}
 
 	sum = 0;
 	X = 1;
 	XdelX = delta;
 	for(i=5; i<10; ++i){
-		sum += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d - 2) * (SQ(XdelX) - X*XdelX - 2*atdl->d*XdelX + XdelX + SQ(atdl->d) - atdl->d);
-		++atdl;
+		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (SQ(XdelX) - X*XdelX - 2*pt->d*XdelX + XdelX + SQ(pt->d) - pt->d);
+		++pt;
 	}
 	phir += exp(-delta) * sum;
 
@@ -429,8 +485,8 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	X = 2;
 	XdelX = 2*delta*delta;
 	for(i=10; i<17; ++i){
-		sum += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d - 2) * (SQ(XdelX) - X*XdelX - 2*atdl->d*XdelX + XdelX + SQ(atdl->d) - atdl->d);
-		++atdl;
+		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (SQ(XdelX) - X*XdelX - 2*pt->d*XdelX + XdelX + SQ(pt->d) - pt->d);
+		++pt;
 	}
 	phir += exp(-delta*delta) * sum;
 
@@ -438,8 +494,8 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	X = 3;
 	XdelX = 3*delta*delta*delta;
 	for(i=17; i<21; ++i){
-		sum += atdl->a * pow(tau, atdl->t) * ipow(delta, atdl->d - 2) * (SQ(XdelX) - X*XdelX - 2*atdl->d*XdelX + XdelX + SQ(atdl->d) - atdl->d);
-		++atdl;
+		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (SQ(XdelX) - X*XdelX - 2*pt->d*XdelX + XdelX + SQ(pt->d) - pt->d);
+		++pt;
 	}
 	phir += exp(-delta*delta*delta) * sum;
 

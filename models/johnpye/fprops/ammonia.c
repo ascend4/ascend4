@@ -32,8 +32,8 @@ const HelmholtzData helmholtz_data_ammonia = {
 	, /* rho_star */225. /* kg/m³ */
 	, /* T_star */ 405.40 /* K */
 	, &ideal_data_ammonia
-	, 21 /* nr */
-	, (const HelmholtzATDL[]){
+	, 21 /* np */
+	, (const HelmholtzPowTerm[]){
 		/* a_i, t_i, d_i, l_i */
 		{0.4554431E-1,  -0.5  ,  2,  0}/* 1 */
 		,{0.7238548E+0,   0.5 ,   1, 0 }
@@ -57,6 +57,7 @@ const HelmholtzData helmholtz_data_ammonia = {
 		,{0.2272635E-2 ,  15 ,   2,  3}/* 20 */
 		,{-0.5588655E-3,  30,    4,  3}
 	}
+	, 0, 0 /* no exponential terms */
 };
 
 

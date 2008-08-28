@@ -41,12 +41,26 @@ typedef struct 	IdealData_struct{
 	the data to be represented more concisely when declaring a fluid from
 	C code.
 */
-typedef struct HelmholtzATDL_struct{
+typedef struct HelmholtzPowTerm_struct{
 	double a; /* coefficient */
 	double t; /* exponent of tau */
 	int d; /* exponent of delta */
 	unsigned l; /* exponent X in exp(-del^X) */
-} HelmholtzATDL;
+} HelmholtzPowTerm;
+
+/**
+	Data structure for 'exponential terms' in the residual expression.
+	These terms are of the form used in Span et al, 1998, as cited in
+	the file 'nitrogen.c'.
+*/
+typedef struct HelmholtzExpTerm_struct{
+	double a; /* coefficient */
+	double t; /* exponent of tau */
+	int d; /* exponent of delta */
+	int phi;
+	int beta;
+	double gamma;
+} HelmholtzExpTerm;
 
 /**
 	Data structure for fluid-specific data for the Helmholtz free energy EOS.
@@ -60,8 +74,10 @@ typedef struct HelmholtzData_struct{
 	
 	const IdealData *ideal; /* data for ideal component of Helmholtz energy */
 
-	unsigned nr; /* number of coefficients in residual equation */
-	const HelmholtzATDL *atdl; /* coefficients and exponents for residual component of fund eqn */
+	unsigned np; /* number of power terms in residual equation */
+	const HelmholtzPowTerm *pt; /* power term data for residual eqn, maybe NULL if np == 0 */
+	unsigned ne; /* number of exponential terms (a la Span et al 1998) for residual eqn */
+	const HelmholtzExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
 } HelmholtzData;
 
 double helmholtz_p(double T, double rho, const HelmholtzData *data);
