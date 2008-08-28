@@ -25,10 +25,10 @@ const IdealData ideal_data_nitrogen = {
 };
 
 const HelmholtzData helmholtz_data_nitrogen = {
-	/* R */ 8.31451 / 28.01348e-3 /* J/molK * kg/mol = J/kg/K */
+	/* R */ 8.31451e3 / 28.01348 /* kJ/kmolK / kg/kmol = kJ/kgK */
 	, /* M */ 28.01348 /* kg/kmol */
-	, /* rho_star */ 11.1839 * 28.01348 /* mol/L * kg/kmol = kg/kL = kg/m³ = rho_c for this model*/
-	, /* T_star */ 126.192 /* K = T_c for this model */
+	, /* rho_star */ 11.1839 * 28.01348 /* kmol/m3 * kg/kmol = kg/m³ (= rho_c for this model) */
+	, /* T_star */ 126.192 /* K (= T_c for this model) */
 	, &ideal_data_nitrogen
 	, 21 /* np */
 	, (const HelmholtzPowTerm[]){
@@ -103,23 +103,78 @@ const HelmholtzData helmholtz_data_nitrogen = {
 		double relerrpc = (cval-(VAL))/(VAL)*100;\
 		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
 		if(fabs(err)>TOL){\
-			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %f, should be %f, error is %f (%.2f%%)!\n"\
-				, __LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL),relerrpc);\
+			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %f,"\
+				" should be %f, error is %f (%.2f%%)!\n"\
+				, __LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
+				,relerrpc\
+			);\
 			exit(1);\
 		}else{\
-			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.2f%% err.\n",#FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc);\
-			/*fprintf(stderr,"        (err = %8.2e, tol = %8.2e, calc = %8.2e)\n",fabs(err),TOL,cval);*/\
+			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.2f%% err.\n"\
+				,#FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
+			);\
 		}\
 	}
 
 typedef struct{double T,p,rho,h,s;} TestData;
+const TestData td[]; const unsigned ntd;
+
+int main(void){
+
+	double rho, T, p, h, u;
+	const HelmholtzData *d;
+
+	d = &helmholtz_data_nitrogen;
+	double maxerr = 0;
+
+	unsigned i;
+	const unsigned n = ntd;
+
+	fprintf(stderr,"Testing sample values from the Span paper...\n");
+
+	rho = 11.0 * d->M; T = 270;
+	p = helmholtz_p(T, rho, d);
+	fprintf(stderr,"p = %f\n", p);
+	assert(fabs(p - 27.0621e6) < 50e3);
+
+	rho = 11.2 * d->M; T = 126.2;
+	p = helmholtz_p(T, rho, d);
+	fprintf(stderr,"p = %f\n", p);
+	assert(fabs(p - 3.39712e6) < 50e3);
+
+	fprintf(stderr,"Running through %d test points...\n",n);
+
+	fprintf(stderr,"PRESSURE TESTS\n");
+	for(i=0; i<n;++i){
+	 	ASSERT_TOL(helmholtz_p, td[i].T+273.15, td[i].rho, d, td[i].p*1e6, 1E3);
+	}
+
+	/* offset required to attain agreement with REFPROP */
+	double Y = -471.596704;
+
+	fprintf(stderr,"ENTROPY TESTS\n");
+	for(i=0; i<n;++i){
+	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, td[i].s*1e3 + Y, 1E3);
+	}
+
+	/* this offset is required to attain agreement with values from REFPROP */
+	double Z = -1635.7e3 + 1492.411e3;
+
+	fprintf(stderr,"ENTHALPY TESTS\n");
+	for(i=0; i<n;++i){
+	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, td[i].h*1e3 + Z, 1E3);
+	}
+
+	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
+	exit(0);
+}
 
 
+
+const TestData td[] = {
 /*
 	A small set of data points calculated using REFPROP 7.0, for validation
 */
-const TestData td[] = {
-/* {T / K    , p / MPa    , rho / kg/m3, h / kJ/kg, s / kJ/kgK} */
 	{-200.00000, 0.10000000, 824.94146, -130.56454, 2.7206049}
 	, {-195.90650, 0.10000000, 806.59036, -122.24684, 2.8312405}
 	, {-195.90650, 0.10000000, 4.5564811, 77.072848, 5.4116477}
@@ -225,43 +280,7 @@ const TestData td[] = {
 	, {1000.0000, 100.00000, 205.45406, 1497.7339, 6.3723982}
 };
 
+const unsigned ntd = sizeof(td)/sizeof(TestData);
 
-int main(void){
-
-	double rho, T, p, h, u;
-	const HelmholtzData *d;
-
-	d = &helmholtz_data_nitrogen;
-	double maxerr = 0;
-
-	unsigned i;
-	const unsigned n = sizeof(td)/sizeof(TestData);
-
-	fprintf(stderr,"Running through %d test points...\n",n);
-
-	fprintf(stderr,"PRESSURE TESTS\n");
-	for(i=0; i<n;++i){
-	 	ASSERT_TOL(helmholtz_p, td[i].T+273.15, td[i].rho, d, td[i].p*1e6, 1E3);
-	}
-
-	/* offset required to attain agreement with REFPROP */
-	double Y = -471.596704;
-
-	fprintf(stderr,"ENTROPY TESTS\n");
-	for(i=0; i<n;++i){
-	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, td[i].s*1e3 + Y, 1E3);
-	}
-
-	/* this offset is required to attain agreement with values from REFPROP */
-	double Z = -1635.7e3 + 1492.411e3;
-
-	fprintf(stderr,"ENTHALPY TESTS\n");
-	for(i=0; i<n;++i){
-	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, td[i].h*1e3 + Z, 1E3);
-	}
-
-	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
-	exit(0);
-}
 #endif
 
