@@ -482,7 +482,7 @@ public:
 				_u = self.getDimensions().getDefaultUnits()
 			return _u.getConvertedValue(self.getRealValue())
 
-		def as(self,units):
+		def to(self,units):
 			"""Returns an instance value converted to specified units."""
 			if not self.isReal():
 				raise TypeError
