@@ -226,8 +226,8 @@ class TestSolver(AscendSelfTester):
 
 	def testinstanceas(self):
 		M = self._run('example_1_6_1',"QRSlv","johnpye/sunpos.a4c")
-		self.assertAlmostEqual( float(M.t_solar), M.t_solar.as("s"))
-		self.assertAlmostEqual( float(M.t_solar)/3600, M.t_solar.as("h"))
+		self.assertAlmostEqual( float(M.t_solar), M.t_solar.to("s"))
+		self.assertAlmostEqual( float(M.t_solar)/3600, M.t_solar.to("h"))
 
 	def testrelinclude(self):
 		self.L.load('test/relinclude.a4c')
@@ -701,16 +701,16 @@ class TestSteam(AscendSelfTester):
 		M = T.getSimulation('sim',False)
 		M.run(T.getMethod('on_load'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		print "p = %f bar" % M.p.as('bar');
-		print "T = %f C" % (M.T.as('K') - 273.15);
+		print "p = %f bar" % M.p.to('bar');
+		print "T = %f C" % (M.T.to('K') - 273.15);
 		print "x = %f" % M.x;
 		M.run(T.getMethod('self_test'))
 		M.run(T.getMethod('values2'))
 #		M.v.setRealValueWithUnits(1.0/450,"m^3/kg");
 #		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		print "p = %f bar" % M.p.as('bar');
-		print "T = %f C" % (M.T.as('K') - 273.15);
+		print "p = %f bar" % M.p.to('bar');
+		print "T = %f C" % (M.T.to('K') - 273.15);
 		print "x = %f" % M.x;
 		M.run(T.getMethod('self_test2'))
 		
@@ -801,7 +801,7 @@ class TestSteam(AscendSelfTester):
 		I.solve()
 		self.assertAlmostEqual(float(M.T_w[2]),Tw1)
 		M.qdot_s.setRealValueWithUnits(1000,"W/m")
-		self.assertAlmostEqual(M.qdot_s.as("W/m"),1000)
+		self.assertAlmostEqual(M.qdot_s.to("W/m"),1000)
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		print "dTw/dt = %f" % M.dTw_dt[2]
 		self.assertNotAlmostEqual(M.dTw_dt[2],0.0)
