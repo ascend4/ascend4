@@ -64,11 +64,11 @@ double helmholtz_p(double T, double rho, const HelmholtzData *data){
 	assert(!isnan(delta));
 	assert(!isnan(data->R));
 
-	fprintf(stderr,"p calc: T = %f\n",T);
-	fprintf(stderr,"p calc: tau = %f\n",tau);
-	fprintf(stderr,"p calc: rho = %f\n",rho);
-	fprintf(stderr,"p calc: delta = %f\n",delta);
-	fprintf(stderr,"p calc: R*T*rho = %f\n",data->R * T * rho);
+	//fprintf(stderr,"p calc: T = %f\n",T);
+	//fprintf(stderr,"p calc: tau = %f\n",tau);
+	//fprintf(stderr,"p calc: rho = %f\n",rho);
+	//fprintf(stderr,"p calc: delta = %f\n",delta);
+	//fprintf(stderr,"p calc: R*T*rho = %f\n",data->R * T * rho);
 #endif
 	
 	return data->R * T * rho * (1. + delta * helm_resid_del(tau,delta,data));
@@ -311,18 +311,18 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 	sum = 0;
 	XdelX = 0;
 	for(i=0; i<n; ++i){
-		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, pt->a, pt->t, pt->d, pt->l);
-		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - XdelX);
+		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, pt->a, pt->t, pt->d, pt->l);
+		sum += pt->a * pow(tau, pt->t) * pow(delta, pt->d - 1) * (pt->d - XdelX);
 		++pt;
 		//fprintf(stderr,"l = %d\n",l);
 		if(i+1==n || l != pt->l){
 			if(l==0){
 				//fprintf(stderr,"Adding non-exp term\n");
-				fprintf(stderr,"sum = %f\n",sum);
+				//fprintf(stderr,"sum = %f\n",sum);
 				res += sum;
 			}else{
 				//fprintf(stderr,"Adding exp term with l = %d, delX = %e\n",l,delX);
-				fprintf(stderr,"sum = %f\n",sum);
+				//fprintf(stderr,"sum = %f\n",sum);
 				res += sum * exp(-delX);
 			}
 			/* set l to new value */
@@ -336,6 +336,7 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		}
 	}
 
+#if 0
 	/* now the exponential terms */
 	n = data->ne;
 	et = &(data->et[0]);
@@ -358,6 +359,7 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		res += sum;
 		++et;
 	}
+#endif
 
 	return res;
 }
