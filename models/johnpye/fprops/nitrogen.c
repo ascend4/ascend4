@@ -157,7 +157,7 @@ int main(void){
 		T = td[i].T+273.15;
 		p = td[i].p*1e6;
 		rho = td[i].rho;
-	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*0.001);
+	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-6);
 	}
 
 	/* offset required to attain agreement with REFPROP */
