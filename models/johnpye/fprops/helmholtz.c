@@ -69,9 +69,12 @@ double helmholtz_p(double T, double rho, const HelmholtzData *data){
 	//fprintf(stderr,"p calc: rho = %f\n",rho);
 	//fprintf(stderr,"p calc: delta = %f\n",delta);
 	//fprintf(stderr,"p calc: R*T*rho = %f\n",data->R * T * rho);
+
+	//fprintf(stderr,"T = %f\n", T);
+	//fprintf(stderr,"rhob = %f, rhob* = %f, delta = %f\n", rho/data->M, data->rho_star/data->M, delta);
 #endif
 	
-	return data->R * T * rho * (1. + delta * helm_resid_del(tau,delta,data));
+	return data->R * T * rho * (1 + delta * helm_resid_del(tau,delta,data));
 }
 
 /**
@@ -294,7 +297,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	NOTE: POSSIBLY STILL AN ERROR IN THIS FUNCTION.
 */	
 double helm_resid_del(double tau,double delta, const HelmholtzData *data){
-	double sum;
+	double term, x, sum;
 	double res = 0;
 	double delX, XdelX;
 	unsigned l;
@@ -305,26 +308,40 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 	n = data->np;
 	pt = &(data->pt[0]);
 
-	delX = 1;
 
-	l = 0;
 	sum = 0;
+
+
+	for(i=0; i<n; ++i){
+		term = pt->a * pow(tau, pt->t) * pow(delta, pt->d - 1) * (pt->d - pt->l*pow(delta,pt->l));
+		if(pt->l==0){	
+			x = 1;
+		}else{
+			x = exp(-pow(delta,pt->l));
+		}
+		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d --> pow = %f, exp = %f, term = %f\n",i+1, pt->a, pt->t, pt->d, pt->l, term, x, term*x);
+		res += term * x;
+		++pt;
+	}
+#if 0
+	delX = 1;
+	l = 0;
 	XdelX = 0;
 	for(i=0; i<n; ++i){
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, pt->a, pt->t, pt->d, pt->l);
-		sum += pt->a * pow(tau, pt->t) * pow(delta, pt->d - 1) * (pt->d - XdelX);
+		term = pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - XdelX);
+		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d --> term = %f\n",i+1, pt->a, pt->t, pt->d, pt->l, term);
+		sum += term;
 		++pt;
 		//fprintf(stderr,"l = %d\n",l);
 		if(i+1==n || l != pt->l){
 			if(l==0){
 				//fprintf(stderr,"Adding non-exp term\n");
-				//fprintf(stderr,"sum = %f\n",sum);
 				res += sum;
 			}else{
 				//fprintf(stderr,"Adding exp term with l = %d, delX = %e\n",l,delX);
-				//fprintf(stderr,"sum = %f\n",sum);
 				res += sum * exp(-delX);
 			}
+			fprintf(stderr,"sum = %f, mult = %f, res = %f\n",sum,exp(-delX),res);
 			/* set l to new value */
 			if(i+1!=n){
 				l = pt->l;
@@ -332,16 +349,18 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 				XdelX = l * delX;
 				//fprintf(stderr,"New l = %d, XdelX = %f\n",l,XdelX);
 				sum = 0;
+				fprintf(stderr,"sum zero\n");
 			}
 		}
 	}
+#endif
 
-#if 0
+#if 1
 	/* now the exponential terms */
 	n = data->ne;
 	et = &(data->et[0]);
 	for(i=0; i< n; ++i){
-		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
+		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
 		
 		double del2 = delta*delta;
 		double tau2 = tau*tau;
@@ -355,7 +374,7 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 					 - et->phi 
 					 - et->beta * gam2
 			   );
-		fprintf(stderr,"sum = %f\n",sum);
+		//fprintf(stderr,"sum = %f\n",sum);
 		res += sum;
 		++et;
 	}
