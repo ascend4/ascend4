@@ -152,6 +152,10 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data){
 	assert(!isnan(data->R));
 #endif
 
+	fprintf(stderr,"helm_ideal_tau = %f\n",helm_ideal_tau(tau,delta,data->ideal));
+	fprintf(stderr,"helm_resid_tau = %f\n",helm_resid_tau(tau,delta,data));
+	fprintf(stderr,"helm_ideal = %f\n",helm_ideal(tau,delta,data->ideal));
+	fprintf(stderr,"helm_resid = %f\n",helm_resid(tau,delta,data));
 	return data->R * (
 		tau * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data))
 		- helm_ideal(tau,delta,data->ideal) - helm_resid(tau,delta,data)
@@ -210,7 +214,7 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 		sum += pt->a0 * pow(tau, pt->t0);
 	}
 
-#if 0
+#if 1
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
 		sum += et->b * log( 1 - exp(- et->B * tau));
@@ -236,7 +240,8 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 		sum += pt->a0 * pt->t0 * pow(tau, pt->t0 - 1);
 	}
 
-#if 0
+#if 1
+	/* FIXME we're missing the '2.5' in the alpha0 expression for Nitrogen... */
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
 		sum += et->b * log( 1 - exp(- et->B * tau));
@@ -246,30 +251,78 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 }	
 
 /**
-	Residual part of helmholtz function. Note: we have NOT prematurely
-	optimised here ;-)
+	Residual part of helmholtz function.
 */
 double helm_resid(double tau, double delta, const HelmholtzData *data){
+#if 0
+	double sum, res = 0;
+	unsigned n, i;
+	const HelmholtzPowTerm *pt;
+	const HelmholtzExpTerm *et;
+
+	n = data->np;
+	pt = &(data->pt[0]);
+
+	/* power terms */
+	sum = 0;
+	unsigned oldl;
+	for(i=0; i<n; ++i){
+		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d);
+		oldl = pt->l;
+		++pt;
+		if(i+1==n || oldl != pt->l){
+			if(oldl == 0){
+				res += sum;
+			}else{
+				res += sum * exp(-ipow(delta,pt->l));
+			}
+			sum = 0;
+		}
+	}
+
+	/* now the exponential terms */
+	n = data->ne;
+	et = &(data->et[0]);
+	for(i=0; i< n; ++i){
+		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
+		
+		double e1 = -et->phi * delta*delta
+					 + 2 * et->phi * delta
+					 - et->beta * tau * tau
+					 + 2 * et->beta * et->gamma * tau
+					 - et->phi 
+					 - et->beta * et->gamma * et->gamma;
+		sum = et->a * pow(tau,et->t) * ipow(delta,et->d) * exp(e1);
+		//fprintf(stderr,"sum = %f\n",sum);
+		res += sum;
+		++et;
+	}
+
+	return res;
+}
+
+#else
 	double sum;
 	double res = 0;
 	double delX;
 	unsigned l;
-	unsigned np, i;
+	unsigned n, i;
 	const HelmholtzPowTerm *pt;
+	const HelmholtzExpTerm *et;
 
-	np = data->np;
+	n = data->np;
 	pt = &(data->pt[0]);
 
 	delX = 1;
 
 	l = 0;
 	sum = 0;
-	for(i=0; i<np; ++i){
+	for(i=0; i<n; ++i){
 		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, pt->a, pt->t, pt->d, pt->l);
 		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d);
 		++pt;
 		//fprintf(stderr,"l = %d\n",l);
-		if(i+1==np || l != pt->l){
+		if(i+1==n || l != pt->l){
 			if(l==0){
 				//fprintf(stderr,"Adding non-exp term\n");
 				res += sum;
@@ -278,7 +331,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 				res += sum * exp(-delX);
 			}
 			/* set l to new value */
-			if(i+1!=np){
+			if(i+1!=n){
 				l = pt->l;
 				//fprintf(stderr,"New l = %d\n",l);
 				delX = ipow(delta,l);
@@ -287,8 +340,27 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		}
 	}
 
+	/* now the exponential terms */
+	n = data->ne;
+	et = &(data->et[0]);
+	for(i=0; i< n; ++i){
+		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
+		
+		double e1 = -et->phi * delta*delta
+					 + 2 * et->phi * delta
+					 - et->beta * tau * tau
+					 + 2 * et->beta * et->gamma * tau
+					 - et->phi 
+					 - et->beta * et->gamma * et->gamma;
+		sum = et->a * pow(tau,et->t) * ipow(delta,et->d) * exp(e1);
+		//fprintf(stderr,"sum = %f\n",sum);
+		res += sum;
+		++et;
+	}
+
 	return res;
 }
+#endif
 
 /**
 	Derivative of the helmholtz residual function with respect to
@@ -335,15 +407,15 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		double del2 = delta*delta;
 		double tau2 = tau*tau;
 		double gam2 = et->gamma * et->gamma;
-		sum = -et->a * pow(tau,et->t) * ipow(delta,et->d-1)
-			* (2 * et->phi * del2 - 2 * et->phi * delta - et->d)
-			* exp(-et->phi * del2
+		double e1 = -et->phi * del2
 					 + 2 * et->phi * delta
 					 - et->beta * tau2
 					 + 2 * et->beta * et->gamma * tau
 					 - et->phi 
-					 - et->beta * gam2
-			   );
+					 - et->beta * gam2;
+		sum = -et->a * pow(tau,et->t) * ipow(delta,et->d-1)
+			* (2 * et->phi * del2 - 2 * et->phi * delta - et->d)
+			* exp(e1);
 		//fprintf(stderr,"sum = %f\n",sum);
 		res += sum;
 		++et;
@@ -363,24 +435,25 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 	double res = 0;
 	double delX;
 	unsigned l;
-	unsigned np, i;
+	unsigned n, i;
 	const HelmholtzPowTerm *pt;
+	const HelmholtzExpTerm *et;
 
-	np = data->np;
+	n = data->np;
 	pt = &(data->pt[0]);
 
 	delX = 1;
 
 	l = 0;
 	sum = 0;
-	for(i=0; i<np; ++i){
+	for(i=0; i<n; ++i){
 		if(pt->t){
 			//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, pt->a, pt->t, pt->d, pt->l);
 			sum += pt->a * pow(tau, pt->t - 1) * ipow(delta, pt->d) * pt->t;
 		}
 		++pt;
 		//fprintf(stderr,"l = %d\n",l);
-		if(i+1==np || l != pt->l){
+		if(i+1==n || l != pt->l){
 			if(l==0){
 				//fprintf(stderr,"Adding non-exp term\n");
 				res += sum;
@@ -389,7 +462,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 				res += sum * exp(-delX);
 			}
 			/* set l to new value */
-			if(i+1!=np){
+			if(i+1!=n){
 				l = pt->l;
 				//fprintf(stderr,"New l = %d\n",l);
 				delX = ipow(delta,l);
@@ -397,6 +470,33 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 			}
 		}
 	}
+
+#if 1
+	/* now the exponential terms */
+	n = data->ne;
+	et = &(data->et[0]);
+	for(i=0; i< n; ++i){
+		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
+		
+		double tau2 = tau*tau;
+		double del2 = delta*delta;
+		double gam2 = et->gamma * et->gamma;
+		double e1 = -et->phi * del2
+					 + 2 * et->phi * delta
+					 - et->beta * tau2
+					 + 2 * et->beta * et->gamma * tau
+					 - et->phi 
+					 - et->beta * gam2;
+		sum = -et->a * pow(tau,et->t - 1) * ipow(delta,et->d)
+			* (2 * et->beta * tau2 - 2 * et->beta * et->gamma * tau - et->t)
+			* exp(e1);
+		//fprintf(stderr,"sum = %f\n",sum);
+		res += sum;
+		++et;
+	}
+#endif
+
+	return res;
 
 	return res;
 }	
