@@ -69,9 +69,7 @@ const HelmholtzData helmholtz_data_ammonia = {
 
 	gcc helmholtz.c ammonia.c -DTEST -o ammonia -lm && ./ammonia 
 
-	These tests all currently pass with a maximum error of 2%. The error
-	seems to arise in the enthalpy data for low temperatures. Haven't been
-	able to determine where the problem comes from.
+	These tests all currently pass with a maximum error of 0.09%.
 */
 #ifdef TEST
 
