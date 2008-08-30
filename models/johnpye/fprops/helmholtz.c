@@ -293,13 +293,10 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 /**
 	Derivative of the helmholtz residual function with respect to
 	delta.
-
-	NOTE: POSSIBLY STILL AN ERROR IN THIS FUNCTION.
 */	
 double helm_resid_del(double tau,double delta, const HelmholtzData *data){
-	double term, x, sum;
-	double res = 0;
-	double delX, XdelX;
+	double sum, res = 0;
+	double dell, ldell;
 	unsigned l;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
@@ -308,52 +305,25 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 	n = data->np;
 	pt = &(data->pt[0]);
 
-
 	sum = 0;
-
-
+	dell = ipow(delta,pt->l);
+	ldell = pt->l * dell;
+	unsigned oldl;
 	for(i=0; i<n; ++i){
-		term = pt->a * pow(tau, pt->t) * pow(delta, pt->d - 1) * (pt->d - pt->l*pow(delta,pt->l));
-		if(pt->l==0){	
-			x = 1;
-		}else{
-			x = exp(-pow(delta,pt->l));
-		}
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d --> pow = %f, exp = %f, term = %f\n",i+1, pt->a, pt->t, pt->d, pt->l, term, x, term*x);
-		res += term * x;
+		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - ldell);
+		oldl = pt->l;
 		++pt;
-	}
-#if 0
-	delX = 1;
-	l = 0;
-	XdelX = 0;
-	for(i=0; i<n; ++i){
-		term = pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - XdelX);
-		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d --> term = %f\n",i+1, pt->a, pt->t, pt->d, pt->l, term);
-		sum += term;
-		++pt;
-		//fprintf(stderr,"l = %d\n",l);
-		if(i+1==n || l != pt->l){
-			if(l==0){
-				//fprintf(stderr,"Adding non-exp term\n");
+		if(i+1==n || oldl != pt->l){
+			if(oldl == 0){
 				res += sum;
 			}else{
-				//fprintf(stderr,"Adding exp term with l = %d, delX = %e\n",l,delX);
-				res += sum * exp(-delX);
+				res += sum * exp(-dell);
 			}
-			fprintf(stderr,"sum = %f, mult = %f, res = %f\n",sum,exp(-delX),res);
-			/* set l to new value */
-			if(i+1!=n){
-				l = pt->l;
-				delX = ipow(delta,l);
-				XdelX = l * delX;
-				//fprintf(stderr,"New l = %d, XdelX = %f\n",l,XdelX);
-				sum = 0;
-				fprintf(stderr,"sum zero\n");
-			}
+			sum = 0;
+			dell = ipow(delta,pt->l);
+			ldell = pt->l*dell;
 		}
 	}
-#endif
 
 #if 1
 	/* now the exponential terms */
