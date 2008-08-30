@@ -125,7 +125,7 @@ const TestData td[]; const unsigned ntd;
 
 int main(void){
 
-	double rho, T, p, h, u;
+	double rho, T, p, h, s;
 	const HelmholtzData *d;
 
 	d = &helmholtz_data_nitrogen;
@@ -160,20 +160,24 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-6);
 	}
 
-	/* offset required to attain agreement with REFPROP */
-	double Y = -471.596704;
-
-	fprintf(stderr,"ENTROPY TESTS\n");
-	for(i=0; i<n;++i){
-	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, td[i].s*1e3 + Y, 1E3);
-	}
-
-	/* this offset is required to attain agreement with values from REFPROP */
-	double Z = -1635.7e3 + 1492.411e3;
+	/* enthalpy offset is required to attain agreement with values from REFPROP */
+	double Z =  -5.2444122479e+05;
 
 	fprintf(stderr,"ENTHALPY TESTS\n");
 	for(i=0; i<n;++i){
-	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, td[i].h*1e3 + Z, 1E3);
+		fprintf(stderr,"h = %f kJ/kg = %f kJ/kmol\n",td[i].h,td[i].h*d->M);
+		fprintf(stderr,"hbar corr = %.10e\n",td[i].h*1e3 - helmholtz_h(td[i].T+273.15, td[i].rho, d));
+		h = td[i].h*1e3 + Z;
+	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
+	}
+
+	/* entropy offset required to attain agreement with REFPROP */
+	double Y = 0;
+
+	fprintf(stderr,"ENTROPY TESTS\n");
+	for(i=0; i<n;++i){
+		s = td[i].s*1e3 + Y;
+	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, fabs(s*1e-3));
 	}
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
