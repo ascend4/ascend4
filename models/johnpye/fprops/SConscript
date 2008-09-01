@@ -12,7 +12,7 @@ lib = fprops_env.SharedLibrary("mbwr"
 
 
 lib = fprops_env.SharedLibrary("helmholtz"
-	,['helmholtz.c','asc_helmholtz.c','ammonia.c']
+	,['ideal.c','helmholtz.c','asc_helmholtz.c','ammonia.c']
 	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 	,SHLIBPREFIX = env['EXTLIB_PREFIX']
 )

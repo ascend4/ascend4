@@ -10,7 +10,7 @@ srcs = ['mbwr.c','asc_mbwr.c']
 
 env.SharedLibrary('mbwr_ascend',srcs)
 
-srcs = ['helmholtz.c','ammonia.c','asc_helmholtz.c']
+srcs = ['ideal.c', 'helmholtz.c', 'ammonia.c', 'asc_helmholtz.c']
 
 env.SharedLibrary('helmholtz_ascend',srcs)
 
