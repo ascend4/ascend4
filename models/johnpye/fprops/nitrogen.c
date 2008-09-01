@@ -157,7 +157,7 @@ int main(void){
 	}
 
 	/* enthalpy offset is required to attain agreement with values from REFPROP */
-	double Z = 0;// -5.2444122479e+05;
+	double Z = 984543.871213;// -5.2444122479e+05;
 
 	fprintf(stderr,"ENTHALPY TESTS\n");
 	for(i=0; i<n;++i){
