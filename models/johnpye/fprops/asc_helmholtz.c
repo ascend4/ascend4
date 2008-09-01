@@ -45,6 +45,7 @@
 /* for the moment, species data are defined in C code, we'll implement something
 better later on, hopefully. */
 #include "ammonia.h"
+#include "nitrogen.h"
 
 #ifndef ASC_EXPORT
 # error "Where is ASC_EXPORT?"
@@ -143,14 +144,15 @@ int helmholtz_prepare(struct BBoxInterp *bbox,
 		return 1;
 	}
 
-	if(strcmp(comp,"ammonia")!=0){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component must be 'ammonia' at this stage (only one component supported)");
+	if(strcmp(comp,"ammonia")==0){
+		bbox->user_data = (void*)&helmholtz_data_ammonia;
+	}else if(strcmp(comp,"nitrogen")==0){
+		bbox->user_data = (void*)&helmholtz_data_nitrogen;
+	}else{
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component must be 'ammonia' or 'nitrogen' at this stage (only two components supported)");
 	}
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"PREPARING HELMHOLTZ...\n");
-
-	bbox->user_data = (void*)&helmholtz_data_ammonia;
-
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Prepared component '%s' OK.\n",comp);
 	return 0;
 }
 
