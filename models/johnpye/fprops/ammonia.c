@@ -67,7 +67,7 @@ const HelmholtzData helmholtz_data_ammonia = {
 
 	To run the test, compile and run as follows:
 
-	gcc helmholtz.c ammonia.c -DTEST -o ammonia -lm && ./ammonia 
+	gcc ideal.c helmholtz.c ammonia.c -DTEST -o ammonia -lm && ./ammonia 
 
 	These tests all currently pass with a maximum error of 0.09%.
 */

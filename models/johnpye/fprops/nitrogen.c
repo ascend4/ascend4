@@ -67,7 +67,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 		,{ 0.368825891208E-1, 15.,      5,  3}
 		,{-0.255856846220E-2, 12.,      8,  3}
 		,{ 0.896915264558E-2, 12.,      3,  4}
-		,{-0.441513370350E-2,  7.,      5,  4}
+		,{-0.441513370350E-2,  7.,      5,  4}/* 30 */
 		,{ 0.133722924858E-2,  4.,      6,  4}
 		,{ 0.264832491957E-3, 16.,      9,  4}
 	}
@@ -87,11 +87,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 
 	To run the test, compile and run as follows:
 
-	gcc helmholtz.c nitrogen.c -DTEST -o nitrogen -lm && ./nitrogen
-
-	These tests all currently pass with a maximum error of 2%. The error
-	seems to arise in the enthalpy data for low temperatures. Haven't been
-	able to determine where the problem comes from.
+	gcc ideal.c helmholtz.c nitrogen.c -DTEST -o nitrogen -lm && ./nitrogen
 */
 #ifdef TEST
 
@@ -161,7 +157,7 @@ int main(void){
 	}
 
 	/* enthalpy offset is required to attain agreement with values from REFPROP */
-	double Z =  -5.2444122479e+05;
+	double Z = 0;// -5.2444122479e+05;
 
 	fprintf(stderr,"ENTHALPY TESTS\n");
 	for(i=0; i<n;++i){
