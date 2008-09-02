@@ -31,6 +31,45 @@
   IDEAL COMPONENT RELATIONS
 */
 
+/**
+	Zero-pressure specific heat function (ideal gas limit)
+
+	This is returned in the units of data->cp0star.
+*/
+double helm_cp0(double T, const IdealData *data){
+	const IdealPowTerm *pt;
+	const IdealExpTerm *et;
+
+	unsigned i;
+	double sum = 0;
+	double term;
+
+	/* power terms */
+	pt = &(data->pt[0]);
+	fprintf(stderr,"np = %d\n",data->np);
+	for(i = 0; i<data->np; ++i, ++pt){
+		fprintf(stderr,"i = %d: ",i);
+		term = pt->a0 * pow(T, pt->t0);
+		fprintf(stderr,"power term, a = %f, t = %f, val = %f\n",pt->a0, pt->t0, term);
+		sum += term;
+	}
+
+	/* 'exponential' terms */
+	et = &(data->et[0]);
+	for(i=0; i<data->ne; ++i, ++et){
+		fprintf(stderr,"exp term\n");
+		double x = et->beta / T;
+		double e = exp(-x);
+		double d = (1-e)*(1-e);
+		term = et->b * x*x * e / d;
+		fprintf(stderr,"exp term, b = %f, beta = %f, val = %f\n",et->b, et->beta, term);
+		sum += term;
+	}
+
+	fprintf(stderr,"Mult by cp0* = %f\n",data->cp0star);
+	return data->cp0star * sum;
+}
+
 /*
 	Hypothesis:
 	in calculating the ideal component relations, we have some integration
@@ -51,28 +90,28 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 	unsigned i;
 	double sum = log(delta) - log(tau) + data->c + data->m * tau;
 	double term;
+	double Tstar_on_tau = data->Tstar / tau;
 
-	//fprintf(stderr,"constant = %f, linear = %f", data->c, data->m);
-	//fprintf(stderr,"initial terms = %f\n",sum);
+	/* power terms */
 	pt = &(data->pt[0]);
 	for(i = 0; i<data->np; ++i, ++pt){
 		double a = pt->a0;
 		double t = pt->t0;
 		if(t == 0){
-			term = a*log(tau) /* + a */; /* term ignored, see above */
-		}else if(t == 1){
-			term = /* a * tau */ - a * tau * log(tau); /* term ignored, see above */
+			term = a*log(tau);
 		}else{
-			term = a * pow(tau,t) / ((t - 1) * t);
+#ifdef TEST
+			assert(t!=-1);
+#endif
+			term = -a / (t*(t+1)) * pow(Tstar_on_tau,t);
 		}
-		//fprintf(stderr,"i = %d: a0 = %f, t0 = %f, term = %f\n",i,pt->a0, pt->t0, term);
 		sum += pt->a0 * pow(tau, pt->t0);
 	}
 
 	/* 'exponential' terms */
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
-		sum += et->b * log( 1 - exp(-et->B * tau));
+		sum += et->b * log(1 - exp(-et->beta / Tstar_on_tau));
 	}
 
 	return sum;
@@ -89,17 +128,16 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 	unsigned i;
 	double term;
 	double sum = -1./tau + data->m;
+	double Tstar_on_tau = data->Tstar / tau;
 
 	pt = &(data->pt[0]);
 	for(i = 0; i<data->np; ++i, ++pt){
 		double a = pt->a0;
 		double t = pt->t0;
 		if(t==0){
-			term = a / tau - a*t*pow(tau,t-1)/(t-1);
-		}else if(t==1){
-			term = -a*log(tau);
+			term = a / tau;
 		}else{
-			term = a*t*pow(tau,t-1)/(t-1);
+			term = a*pow(Tstar_on_tau,t)/tau/(t-1);
 		}
 		sum += term;
 	}
@@ -107,7 +145,11 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 	/* 'exponential' terms */
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
-		sum += et->b * et->B  / (1 - exp(-tau*et->B));
+		term = et->b * et->beta / data->Tstar / (1 - exp(-et->beta/Tstar_on_tau));
+		assert(!isinf(term));
+		sum += term;
 	}
+
+	assert(!isinf(sum));
 	return sum;
 }
