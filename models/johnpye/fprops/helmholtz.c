@@ -161,6 +161,15 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data){
 	);
 }
 
+/**
+	Calculation zero-pressure specific heat capacity
+*/
+double helmholtz_cp0(double T, const HelmholtzData *data){
+	double val = helm_cp0(T,data->ideal);
+	fprintf(stderr,"val = %f\n",val);
+	return val;
+}
+
 /*---------------------------------------------
   UTILITY FUNCTION(S)
 */
@@ -435,8 +444,6 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 		++et;
 	}
 #endif
-
-	return res;
 
 	return res;
 }	
