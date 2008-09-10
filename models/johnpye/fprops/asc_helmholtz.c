@@ -86,7 +86,7 @@ extern
 ASC_EXPORT int helmholtz_register(){
 	int result = 0;
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising HELMHOLTZ...\n");
+	ERROR_REPORTER_HERE(ASC_USER_WARNING,"HELMHOLTZ external relations are still EXPERIMENTAL and BUGGY...\n");
 
 #define CALCFN(NAME,INPUTS,OUTPUTS) \
 	result += CreateUserFunctionBlackBox(#NAME \
