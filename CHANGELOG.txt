@@ -1,3 +1,38 @@
+10 Sep 2008?????
+-----------
+
+Version 0.9.5.116
+ - Instance::as renamed to Instance::in (for expressing a value in the
+   desired units) because 'as' is a reserved word in Python.
+ - Some efforts underway to implement new rigorous thermodynamic property
+   calculator using MBWR and Helmholtz correlations.
+ - Fixed linking of LSODE with '-fPIC' required for amd64 platform.
+ - Added 'dtar' utility to facility quick building of DEB packages from
+   source code tarball plus debian.tar.gz file.
+ - Some efforts on creating a graphical 'block' editor including partial
+   implementation of a canvas widget plus scanning the library for suitable
+   'block' type models according to certain criteria.
+ - 'kinematic_viscosity' now available in atoms.a4l.
+ - Added legend to Krishnan's 'zplot' utility.
+ - Some further efforts to complete the tie-in to the IPOPT solver (now ver 3.4.0)
+ - Added 'notequery.c' to seek out most applicable NOTES on a given instance.
+ - Fixed bug with 'apply' button in Units of Measurement dialog.
+ - Fixed silly mistake in 'turbine' model in johnpye/rankine.a4c.
+ - Fix python handling of 'unable to build system' error.
+ - Moved 'ascend-config' package to 'ascend-devel' RPM.
+ - Fixed linking against Tcl/Tk for Fedora 9.
+ - Some updates to build scripts for new SCons API.
+ - Silenced some debug output from various places.
+ - Added code for reading climate data in ACDB (Australian Climate Databank) format. - Update to support IPOPT 3.4.0
+ - Some work on fixing bug with IDA when derivs without vars present.
+ - Fixed section numbering in 'book.pdf'.
+ - Fixed Graphviz behaviour when model too large.
+ - Expanded GtkSourceView2 highlighting.
+ - Fixed installation in GNOME Applications menu.
+
+Version 0.9.5.115
+ - Was not released (due to probs with version numbering on the Ubuntu PPA)
+
 27 Feb 2008
 -----------
 
