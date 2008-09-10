@@ -166,7 +166,9 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data){
 */
 double helmholtz_cp0(double T, const HelmholtzData *data){
 	double val = helm_cp0(T,data->ideal);
+#ifdef TEST
 	fprintf(stderr,"val = %f\n",val);
+#endif
 	return val;
 }
 
@@ -318,7 +320,6 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 	double sum, res = 0;
 	double dell, ldell;
-	unsigned l;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzExpTerm *et;

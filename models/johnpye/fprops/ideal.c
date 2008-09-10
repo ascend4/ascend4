@@ -46,27 +46,37 @@ double helm_cp0(double T, const IdealData *data){
 
 	/* power terms */
 	pt = &(data->pt[0]);
+#ifdef TEST
 	fprintf(stderr,"np = %d\n",data->np);
+#endif
 	for(i = 0; i<data->np; ++i, ++pt){
-		fprintf(stderr,"i = %d: ",i);
 		term = pt->a0 * pow(T, pt->t0);
+#ifdef TEST
+		fprintf(stderr,"i = %d: ",i);
 		fprintf(stderr,"power term, a = %f, t = %f, val = %f\n",pt->a0, pt->t0, term);
+#endif
 		sum += term;
 	}
 
 	/* 'exponential' terms */
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
+#ifdef TEST
 		fprintf(stderr,"exp term\n");
+#endif
 		double x = et->beta / T;
 		double e = exp(-x);
 		double d = (1-e)*(1-e);
 		term = et->b * x*x * e / d;
+#ifdef TEST
 		fprintf(stderr,"exp term, b = %f, beta = %f, val = %f\n",et->b, et->beta, term);
+#endif
 		sum += term;
 	}
 
+#ifdef TEST
 	fprintf(stderr,"Mult by cp0* = %f\n",data->cp0star);
+#endif
 	return data->cp0star * sum;
 }
 
@@ -146,10 +156,14 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
 		term = et->b * et->beta / data->Tstar / (1 - exp(-et->beta/Tstar_on_tau));
+#ifdef TEST
 		assert(!isinf(term));
+#endif
 		sum += term;
 	}
 
+#ifdef TEST
 	assert(!isinf(sum));
+#endif
 	return sum;
 }
