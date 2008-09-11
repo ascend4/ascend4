@@ -139,7 +139,7 @@ int system_write_graph(slv_system_t sys
 	gvRender(gvc, g, (char*)format, fp);
 
 #else
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Function system_write_graph not available (GraphiViz not present at build-time)");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Function system_write_graph not available (GraphViz not present at build-time)");
 	return 1; /* error */
 #endif
 

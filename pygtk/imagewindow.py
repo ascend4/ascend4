@@ -1,4 +1,4 @@
-# General-purpose popup window for reporting texty stuff
+# General-purpose popup window for reporting graphical stuff
 
 import gtk, gtk.glade, pango
 import ascpy
@@ -12,7 +12,7 @@ class ImageWindow:
 		# GUI config
 		_xml = gtk.glade.XML(browser.glade_file,"imagewindow")
 		self.window = _xml.get_widget("imagewindow")
-		self.vbox = _xml.get_widget("vbox")
+		self.vbox = _xml.get_widget("vbox1")
 		self.closebutton = _xml.get_widget("closebutton")
 		self.window.set_title(title)
 

@@ -15,7 +15,7 @@ opts = Options(['options.cache', 'config.py'])
 default_tcl_cpppath = "$TCL/include"
 default_tron_envvar="TRON_PATH"
 default_conopt_envvar="CONOPT_PATH"
-default_graphviz_rpath = None
+#default_graphviz_rpath = None
 
 if platform.system()=="Windows":
 	default_tcl_lib = "tcl84"
@@ -60,8 +60,8 @@ if platform.system()=="Windows":
 	default_fortran="g77"
 	default_f2c_lib="g2c"
 	
-	default_graphviz_libs=['graph', 'gvc', 'pathplan', 'cdt', 'expat', 'zlib1', 'ltdl', 'msvcr80']
-	default_graphviz_libpath = default_libpath
+	#default_graphviz_libs=['graph', 'gvc', 'pathplan', 'cdt', 'expat', 'zlib1', 'ltdl', 'msvcr80']
+	#default_graphviz_libpath = default_libpath
 	
 else:
 	default_tcl_lib = "tcl8.5"
@@ -106,12 +106,12 @@ else:
 	default_f2c_lib="gfortran"
 
 	
-	default_graphviz_libs=["graph","cdt","gvc"]
-	default_graphviz_libpath = default_libpath
-	if os.path.exists("/usr/lib/graphviz/libgraph.so"):
-		# for Ubuntu 7.04
-		default_graphviz_libpath="/usr/lib/graphviz"
-		default_graphviz_rpath="$GRAPHVIZ_LIBPATH"
+	#default_graphviz_libs=["graph","cdt","gvc"]
+	#default_graphviz_libpath = default_libpath
+	#if os.path.exists("/usr/lib/graphviz/libgraph.so"):
+	#	# for Ubuntu 7.04
+	#	default_graphviz_libpath="/usr/lib/graphviz"
+	#	default_graphviz_rpath="$GRAPHVIZ_LIBPATH"
 	
 opts.Add(
 	'CC'
@@ -645,36 +645,36 @@ opts.Add(BoolOption(
 	,False
 ))
 
-#------ f --------
-opts.Add(PackageOption(
-	'GRAPHVIZ_PREFIX'
-	,"Where are your GRAPHVIZ files?"
-	,default_prefix
-))
-
-opts.Add(PackageOption(
-	'GRAPHVIZ_CPPPATH'
-	,"Where are your GRAPHVIZ include files? (don't need the final '/graphviz')"
-	,default_cpppath
-))
-
-opts.Add(PackageOption(
-	'GRAPHVIZ_LIBPATH'
-	,"Where are your GRAPHVIZ libraries?"
-	,default_graphviz_libpath
-))
-
-opts.Add(
-	'GRAPHVIZ_LIBS'
-	,"What are your GRAPHVIZ libraries named?"
-	,default_graphviz_libs
-)
-
-opts.Add(PackageOption(
-	'GRAPHVIZ_RPATH'
-	,"What is your GRAPHVIZ rpath for locating libraries at runtime? (only required for old Ubuntu)"
-	,default_graphviz_rpath
-))
+#------ Graphviz --------
+#	opts.Add(PackageOption(
+#		'GRAPHVIZ_PREFIX'
+#		,"Where are your GRAPHVIZ files?"
+#		,default_prefix
+#	))
+#
+#	opts.Add(PackageOption(
+#		'GRAPHVIZ_CPPPATH'
+#		,"Where are your GRAPHVIZ include files? (don't need the final '/graphviz')"
+#		,default_cpppath
+#	))
+#
+#	opts.Add(PackageOption(
+#		'GRAPHVIZ_LIBPATH'
+#		,"Where are your GRAPHVIZ libraries?"
+#		,default_graphviz_libpath
+#	))
+#
+#	opts.Add(
+#		'GRAPHVIZ_LIBS'
+#		,"What are your GRAPHVIZ libraries named?"
+#		,default_graphviz_libs
+#	)
+#
+#	opts.Add(PackageOption(
+#		'GRAPHVIZ_RPATH'
+#		,"What is your GRAPHVIZ rpath for locating libraries at runtime? (only required for old Ubuntu)"
+#		,default_graphviz_rpath
+#	))
 
 opts.Add(BoolOption(
 	'WITH_GRAPHVIZ'
@@ -787,7 +787,7 @@ envadditional={}
 
 tools = [
 	'lex', 'yacc', 'fortran', 'swig', 'nsis', 'substinfile'
-	,'disttar', 'tar'
+	,'disttar', 'tar', 'graphviz'
 ]
 if platform.system()=="Windows":
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
@@ -831,7 +831,7 @@ env = Environment(
 
 opts.Update(env)
 
-for l in ['GRAPHVIZ','SUNDIALS','IPOPT']:
+for l in ['SUNDIALS','IPOPT']:
 	var = "%s_LIBS" % l
 	if not isinstance(env[var],types.ListType):
 		env[var] = env[var].split(",")
