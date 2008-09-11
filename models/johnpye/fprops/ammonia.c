@@ -92,7 +92,7 @@ const TestData td[]; const unsigned ntd;
 
 int main(void){
 	unsigned n, i;
-	double rho, T, cp0, p, h, s;
+	double rho, T, cp0, p, u, h, s;
 	const HelmholtzData *d;
 
 	d = &helmholtz_data_ammonia;
@@ -143,10 +143,18 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_p, td[i].T+273.15, td[i].rho, d, p, p*2e-4);
 	}
 
+	double CORRECTION_u = 0;
+	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
+	for(i=0; i<n;++i){
+		fprintf(stderr,"u = %f kJ/kg\n",td[i].u);
+		u = td[i].u*1e3 + CORRECTION_u;
+	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
+	}
+
 	fprintf(stderr,"ENTROPY TESTS\n");
 	for(i=0; i<n;++i){
 		s = td[i].s*1e3 + Y;
-	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 100*s);
+	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e-3*s);
 	}
 
 	fprintf(stderr,"ENTHALPY TESTS\n");

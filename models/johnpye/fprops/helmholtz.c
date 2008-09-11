@@ -97,7 +97,7 @@ double helmholtz_u(double T, double rho, const HelmholtzData *data){
 	assert(!isnan(data->R));
 #endif
 
-#ifdef TEST
+#if 0
 	fprintf(stderr,"ideal_tau = %f\n",helm_ideal_tau(tau,delta,data->ideal));
 	fprintf(stderr,"resid_tau = %f\n",helm_resid_tau(tau,delta,data));
 	fprintf(stderr,"R T = %f\n",data->R * data->T_star);

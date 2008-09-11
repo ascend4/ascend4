@@ -147,8 +147,15 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 		if(t==0){
 			term = a / tau;
 		}else{
-			term = a*pow(Tstar_on_tau,t)/tau/(t-1);
+			// term = -a / (t*(t+1)) * pow(Tstar_on_tau,t);
+			term = a*pow(Tstar_on_tau,t)*tau/(t+1);
 		}
+#ifdef TEST
+		if(isinf(term)){
+			fprintf(stderr,"Error with infinite-valued term with i = %d, a = %f, t = %f\n", i,a ,t);
+			abort();
+		}
+#endif
 		sum += term;
 	}
 
