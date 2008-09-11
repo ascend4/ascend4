@@ -54,7 +54,7 @@ def get_new_swig_flags(env):
 
 	print "FLAGS=%s" % env.get('GRAPHVIZ_CPPPATH')
 	if env.get('WITH_GRAPHVIZ') and env.get('GRAPHVIZ_CPPPATH'):
-		flags += ['-I%s' % i for i in env.get('GRAPHVIZ_CPPPATH').split(sep)]
+		flags += ['-I%s' % i for i in env.get('GRAPHVIZ_CPPPATH')]
 		
 	if 'msvcr71' in env['LIBS']:
 		flags += ['-DHAVE_MSVCR71']
