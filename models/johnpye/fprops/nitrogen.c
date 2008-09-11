@@ -106,7 +106,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 		double err; err = cval - (double)(VAL);\
 		double relerrpc = (cval-(VAL))/(VAL)*100;\
 		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
-		if(fabs(err)>TOL){\
+		if(fabs(err)>fabs(TOL)){\
 			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %f,"\
 				" should be %f, error is %f (%.2f%%)!\n"\
 				, __LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
@@ -125,7 +125,7 @@ const TestData td[]; const unsigned ntd;
 
 int main(void){
 
-	double rho, T, p, h, s, cp0;
+	double rho, T, p, u, h, s, cp0;
 	const HelmholtzData *d;
 
 	d = &helmholtz_data_nitrogen;
@@ -170,13 +170,18 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-6);
 	}
 
+	double CORRECTION_u = 1011377.701938;
+	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
+	for(i=0; i<n;++i){
+		u = td[i].u*1e3 + CORRECTION_u;
+	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
+	}
+
 	/* enthalpy offset is required to attain agreement with values from REFPROP */
-	double Z = 1099152.113927;
+	double Z =  1011377.701964;
 
 	fprintf(stderr,"ENTHALPY TESTS\n");
 	for(i=0; i<n;++i){
-		fprintf(stderr,"h = %f kJ/kg = %f kJ/kmol\n",td[i].h,td[i].h*d->M);
-		fprintf(stderr,"hbar corr = %.10e\n",td[i].h*1e3 - helmholtz_h(td[i].T+273.15, td[i].rho, d));
 		h = td[i].h*1e3 + Z;
 	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
 	}
@@ -187,7 +192,7 @@ int main(void){
 	fprintf(stderr,"ENTROPY TESTS\n");
 	for(i=0; i<n;++i){
 		s = td[i].s*1e3 + Y;
-	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, fabs(s*1e-3));
+	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e-3*s);
 	}
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);

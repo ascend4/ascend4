@@ -33,6 +33,7 @@ assume(
 	,tau0 < tau
 	,notequal(t, 0)
 	,notequal(t, -1)
+	,notequal(t, -2)
 	,beta>0
 	,Tc>0
 	,T>0
