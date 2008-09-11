@@ -114,7 +114,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 			);\
 			exit(1);\
 		}else{\
-			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.2f%% err.\n"\
+			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
 				,#FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
 			);\
 		}\
@@ -157,7 +157,7 @@ int main(void){
 	fprintf(stderr,"CP0 TESTS\n");
 	for(i=0; i<n;++i){
 		cp0 = td[i].cp0*1e3;
-	 	ASSERT_TOL(CP0_TEMP, td[i].T+273.15, td[i].rho, d, cp0, cp0*1e-4);
+	 	ASSERT_TOL(CP0_TEMP, td[i].T+273.15, td[i].rho, d, cp0, cp0*1e-6);
 	}
 
 #undef CP0_TEMP
