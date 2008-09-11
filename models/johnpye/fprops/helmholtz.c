@@ -166,7 +166,7 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data){
 */
 double helmholtz_cp0(double T, const HelmholtzData *data){
 	double val = helm_cp0(T,data->ideal);
-#ifdef TEST
+#if 0
 	fprintf(stderr,"val = %f\n",val);
 #endif
 	return val;

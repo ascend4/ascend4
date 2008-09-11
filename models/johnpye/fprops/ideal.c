@@ -46,12 +46,12 @@ double helm_cp0(double T, const IdealData *data){
 
 	/* power terms */
 	pt = &(data->pt[0]);
-#ifdef TEST
+#if 0
 	fprintf(stderr,"np = %d\n",data->np);
 #endif
 	for(i = 0; i<data->np; ++i, ++pt){
 		term = pt->a0 * pow(T, pt->t0);
-#ifdef TEST
+#if 0
 		fprintf(stderr,"i = %d: ",i);
 		fprintf(stderr,"power term, a = %f, t = %f, val = %f\n",pt->a0, pt->t0, term);
 #endif
@@ -61,20 +61,20 @@ double helm_cp0(double T, const IdealData *data){
 	/* 'exponential' terms */
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
-#ifdef TEST
+#if 0
 		fprintf(stderr,"exp term\n");
 #endif
 		double x = et->beta / T;
 		double e = exp(-x);
 		double d = (1-e)*(1-e);
 		term = et->b * x*x * e / d;
-#ifdef TEST
+#if 0
 		fprintf(stderr,"exp term, b = %f, beta = %f, val = %f\n",et->b, et->beta, term);
 #endif
 		sum += term;
 	}
 
-#ifdef TEST
+#if 0
 	fprintf(stderr,"Mult by cp0* = %f\n",data->cp0star);
 #endif
 	return data->cp0star * sum;

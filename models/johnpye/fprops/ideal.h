@@ -45,8 +45,20 @@ typedef struct IdealPowTerm_struct{
 	of the form
 
 		A0_I * tau^P
+
+	and this converts to terms of the form
+
+		C_I * tau^P
+
+	however, we need terms of the form
+
+		c_i * T^P
+	
+	so we need to convert
+
+		c_i = C_i * Tstar^P
 */
-#define IDEALPOWTERM_FROM_HELM0(A0_I, P) {-(A0_I)*(-(P))*(-(P)+1), -(P)}
+#define IDEALPOWTERM_FROM_HELM0(A0_I, P) {(A0_I)*(P)*(1-(P)), -(P)}
 
 
 /*

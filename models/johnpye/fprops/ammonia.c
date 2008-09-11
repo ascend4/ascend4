@@ -1,12 +1,13 @@
 #include "ammonia.h"
 
-
 /**
 Ideal gas data for Ammonia, from Tillner-Roth, Harms-Watzenberg and
 Baehr, 'Eine neue Fundamentalgleichung für Ammoniak', DKV-Tagungsbericht,
 20:167-181, 1993. This is the ammmonia property correlation recommended
 by NIST in its program REFPROP 7.0.
 */
+#define TSTAR_TO_0.33
+
 const IdealData ideal_data_ammonia = {
 	-15.815020 /* const */
 	, 4.255726 /* linear */
@@ -14,9 +15,15 @@ const IdealData ideal_data_ammonia = {
 	, 488.189 /* cpstar J/kgK */
 	, 3 /* power terms */	
 	, (const IdealPowTerm[]){
-		IDEALPOWTERM_FROM_HELM0(11.474340, 1./3.)
-		,IDEALPOWTERM_FROM_HELM0(-1.296211, -3./2.)
-		,IDEALPOWTERM_FROM_HELM0(0.5706757, -7./4.)
+		{1.8871646035249E+01, -1./3}
+		,{5.9549943513550E-04, 3./2}
+		,{-7.4983130863099E-05, 7./4}
+
+#if 0
+		IDEALPOWTERM_FROM_HELM0(11.474340, 1./3., 405.40)
+		,IDEALPOWTERM_FROM_HELM0(-1.296211, -3./2., 405.40)
+		,IDEALPOWTERM_FROM_HELM0(0.5706757, -7./4., 405.40)
+#endif
 	}
 	, 0, (const IdealExpTerm *)0 /* no exponential terms */
 };
