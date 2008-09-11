@@ -1,0 +1,59 @@
+# You can copy lines from this file into wxMaxima 
+#  http://wxmaxima.sourceforge.net/wiki/index.php/Main_Page
+#  http://maxima.sourceforge.net/
+#
+# These equations give the results that determine the terms in the
+# ideal part of the residual function corresponding to terms of different
+# types in the cp0(T) function.
+#
+# We treat terms of these types:
+#
+#    constant     a
+#    power        a*T^t,  t!=0, t!=-1
+#    exponential  b*x^2*exp(-x) / (1-exp(-x))^2,  x=beta/T
+#
+# We then assume our nondimensionalised ideal helmholtz component
+# is of the form
+#
+#    alpha(delta,tau)
+#
+# where tau = Tc/T (although tau can be normalised with any temperature, in fact)
+#
+# See Tillner-Roth et al, or Span et al, or Cooper 1982 for more details
+# (these are cited in the ideal.c, nitrogen.c and ammonia.c code)
+
+#------------------------------------------------
+# STEP 1: paste the following lines into wxMaxima
+ 
+assume(
+	R>0
+	,tau>0
+	,tau+tau>0
+	,tau0>0
+	,tau0 < tau
+	,notequal(t, 0)
+	,notequal(t, -1)
+	,beta>0
+	,Tc>0
+	,T>0
+);
+
+cp0_const(tau) := R * a;
+cp0_recip(tau) := R * subst(Tc/tau, T, a / T);
+cp0_pow(tau) := R * subst(Tc/tau, T, a * T^t);
+cp0_exp(tau) := R * subst(beta*tau/Tc,x, b*x^2*exp(-x)/(1-exp(-x))^2);
+
+term(tau,cp0) := -tau/R*integrate(cp0(tau)/tau^2,tau,tau0,tau) + 1/R*integrate(cp0(tau)/tau,tau,tau0,tau);
+
+#------------------------------------------------
+# STEP 2: paste one of the following lines, and answer the prompts about
+# positive/negative terms:
+
+isolate( term(tau,cp0_const), tau);
+
+isolate( term(tau,cp0_pow), tau);
+
+isolate( term(tau,cp0_recip), tau);
+
+isolate( term(tau,cp0_exp), tau);
+
