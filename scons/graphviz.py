@@ -1,5 +1,23 @@
-import os, platform, subprocess
+import os, os.path, platform, subprocess
 from SCons.Script import *
+
+munge = lambda s: s
+
+try:
+	# if we have access to GetShortPathName, we'll use it...
+	import win32api
+	def munge1(s):
+		s1 = s
+		try:
+			# we can only munge the path if it actually exists
+			s1 = win32api.GetShortPathName(s)
+		except:
+			# if it doesn't exist, we just return the un-munged path
+			pass
+		return s1
+	munge = munge1 
+except:
+	pass
 
 def generate(env):
 	"""
@@ -9,14 +27,15 @@ def generate(env):
 		if platform.system()=="Windows":
 			import _winreg
 			x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-			y= _winreg.OpenKey(x,r"SOFTWARE\graphviz")
-			LIB,t = _winreg.QueryValueEx(y,"INSTALL_LIB")
-			BIN,t = _winreg.QueryValueEx(y,"INSTALL_BIN")
-			INCLUDE,t = _winreg.QueryValueEx(y,"INSTALL_INCLUDE")
+			y= _winreg.OpenKey(x,r"SOFTWARE\ATT\GraphViz")
+			PATH,t = _winreg.QueryValueEx(y,"InstallPath")
+			LIB = os.path.join(PATH,"lib")
+			BIN = os.path.join(PATH,"bin")
+			INCLUDE = os.path.join(PATH,"include")
 
-			env['GRAPHVIZ_CPPPATH'] = [INCLUDE]
-			env['GRAPHVIZ_LIBPATH'] = [LIB]
-			env['GRAPHVIZ_LIBS'] = ['graph']
+			env['GRAPHVIZ_CPPPATH'] = [munge(INCLUDE)]
+			env['GRAPHVIZ_LIBPATH'] = [munge(BIN)]
+			env['GRAPHVIZ_LIBS'] = ['gvc','graph']
 			env['HAVE_GRAPHVIZ'] = True
 									
 		else:

@@ -15,7 +15,7 @@ opts = Options(['options.cache', 'config.py'])
 default_tcl_cpppath = "$TCL/include"
 default_tron_envvar="TRON_PATH"
 default_conopt_envvar="CONOPT_PATH"
-#default_graphviz_rpath = None
+default_with_graphviz = True
 
 if platform.system()=="Windows":
 	default_tcl_lib = "tcl84"
@@ -60,8 +60,7 @@ if platform.system()=="Windows":
 	default_fortran="g77"
 	default_f2c_lib="g2c"
 	
-	#default_graphviz_libs=['graph', 'gvc', 'pathplan', 'cdt', 'expat', 'zlib1', 'ltdl', 'msvcr80']
-	#default_graphviz_libpath = default_libpath
+	# still problems with Graphviz on Windows, leave it off now by default.
 	
 else:
 	default_tcl_lib = "tcl8.5"
@@ -679,7 +678,7 @@ opts.Add(BoolOption(
 opts.Add(BoolOption(
 	'WITH_GRAPHVIZ'
 	,"Link to the GRAPHVIZ library (if available, for generating incidence graphs)"
-	,True
+	,default_with_graphviz
 ))
 
 
