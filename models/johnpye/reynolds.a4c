@@ -1,0 +1,38 @@
+REQUIRE "atoms.a4l";
+
+(*
+	Simple model for working out flow rates that achieve a certain
+	flow rate and vice versa.
+*)
+MODEL reynolds;
+	Vdot IS_A volume_rate;
+	mdot IS_A mass_rate;
+	rho IS_A mass_density;
+	mu IS_A viscosity;
+	Vel IS_A speed;
+	A IS_A area;
+
+	circ_area: A = 1{PI} * D^2 / 4.;
+
+	vel_expr: Vel = Vdot / A;
+	D IS_A distance;
+	
+	Re_D IS_A factor;
+
+	re_expr: Re_D = rho*Vel*D / mu;
+
+	mdot_expr: mdot = rho * Vdot;
+
+METHODS
+METHOD on_load;
+	FIX D;
+	D := 10 {mm};
+	FIX rho;
+	rho := 1000 {kg/m^3};
+	FIX mu;
+	mu := 1.12e-3 {Pa*s};
+	FIX Re_D;
+	Re_D := 1000;
+END on_load;
+
+END reynolds;
