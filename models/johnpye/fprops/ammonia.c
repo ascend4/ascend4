@@ -5,17 +5,6 @@ Ideal gas data for Ammonia, from Tillner-Roth, Harms-Watzenberg and
 Baehr, 'Eine neue Fundamentalgleichung für Ammoniak', DKV-Tagungsbericht,
 20:167-181, 1993. This is the ammmonia property correlation recommended
 by NIST in its program REFPROP 7.0.
-
-WARNING NOTE:
-These parameters are currently created by a curve fit to the REFPROP output
-using Fityk. FIXME use the published parameters for these values, and work
-out why they weren't correct earlier (for some reason, 'correct' values gave
-a cons
-
-
-
-
-istent 0.01% error relative to REFPROP output).
 */
 const IdealData ideal_data_ammonia = {
 	-15.815020 /* const */
@@ -24,9 +13,28 @@ const IdealData ideal_data_ammonia = {
 	, 488.189 /* cpstar J/kgK */
 	, 3 /* power terms */	
 	, (const IdealPowTerm[]){
+#if 0
+		{1.8871646035249E+01, -1./3}
+		,{5.9549943513550E-04, 3./2}
+		,{-7.4983130863099E-05, 7./4}
+#else
+/*
+WARNING NOTE:
+These parameters are currently created by a curve fit to the REFPROP output
+using Fityk. FIXME use the published parameters for these values, and work
+out why they weren't correct earlier (for some reason, 'correct' values gave
+a consistent 0.01% error relative to REFPROP output).
+
+The following parameters are ALL larger than the 'official' values above by a
+factor of about 1.000056. It would appear that REFPROP is using a different 
+value of cpstar in its calculations (The value 488.189 is clearly stated by
+Tillner-Roth, but perhaps REFPROP chooses to use the molecular mass instead
+of this value, or do some other kind of scaling...)
+*/
 		{9213.45/488.189, -1./3.}
 		,{0.290733/488.189, 3./2.}
 		,{-0.036608/488.189, 7./4.}
+#endif
 	}
 	, 0, (const IdealExpTerm *)0 /* no exponential terms */
 };
