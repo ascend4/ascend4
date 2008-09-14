@@ -15,7 +15,7 @@ by NIST in its program REFPROP 7.0. */
 
 const IdealData ideal_data_nitrogen = {
 	-12.76953 /* constant */
-	,-0.007841630 + -1011377.701938/NITROGEN_R/NITROGEN_TSTAR/* linear */
+	,-0.007841630 + -1011377.701938/NITROGEN_R/NITROGEN_TSTAR /* linear */
 	, NITROGEN_TSTAR /* Tstar */
 	, NITROGEN_R /* cp0star */
 	, 4 /* power terms */
