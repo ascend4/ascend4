@@ -61,7 +61,7 @@ double helm_cp0(double T, const IdealData *data){
 	/* 'exponential' terms */
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
-#if 0
+#if 1
 		fprintf(stderr,"exp term\n");
 #endif
 		double x = et->beta / T;
@@ -148,7 +148,7 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 			term = a / tau;
 		}else{
 			// term = -a / (t*(t+1)) * pow(Tstar_on_tau,t);
-			term = a*pow(Tstar_on_tau,t)*tau/(t+1);
+			term = a/(t+1)*pow(Tstar_on_tau,t)/tau;
 		}
 #ifdef TEST
 		if(isinf(term)){

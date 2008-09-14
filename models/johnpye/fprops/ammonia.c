@@ -5,9 +5,18 @@ Ideal gas data for Ammonia, from Tillner-Roth, Harms-Watzenberg and
 Baehr, 'Eine neue Fundamentalgleichung für Ammoniak', DKV-Tagungsbericht,
 20:167-181, 1993. This is the ammmonia property correlation recommended
 by NIST in its program REFPROP 7.0.
-*/
-#define TSTAR_TO_0.33
 
+WARNING NOTE:
+These parameters are currently created by a curve fit to the REFPROP output
+using Fityk. FIXME use the published parameters for these values, and work
+out why they weren't correct earlier (for some reason, 'correct' values gave
+a cons
+
+
+
+
+istent 0.01% error relative to REFPROP output).
+*/
 const IdealData ideal_data_ammonia = {
 	-15.815020 /* const */
 	, 4.255726 /* linear */
@@ -15,15 +24,9 @@ const IdealData ideal_data_ammonia = {
 	, 488.189 /* cpstar J/kgK */
 	, 3 /* power terms */	
 	, (const IdealPowTerm[]){
-		{1.8871646035249E+01, -1./3}
-		,{5.9549943513550E-04, 3./2}
-		,{-7.4983130863099E-05, 7./4}
-
-#if 0
-		IDEALPOWTERM_FROM_HELM0(11.474340, 1./3., 405.40)
-		,IDEALPOWTERM_FROM_HELM0(-1.296211, -3./2., 405.40)
-		,IDEALPOWTERM_FROM_HELM0(0.5706757, -7./4., 405.40)
-#endif
+		{9213.45/488.189, -1./3.}
+		,{0.290733/488.189, 3./2.}
+		,{-0.036608/488.189, 7./4.}
 	}
 	, 0, (const IdealExpTerm *)0 /* no exponential terms */
 };
@@ -102,7 +105,7 @@ int main(void){
 	fprintf(stderr,"Running through %d test points...\n",n);
 
 	/* enthalpy offset is required to attain agreement with values from REFPROP */
-	double Z = 0;
+	double Z =  -1.4311891570e+05;
 
 	/* entropy offset required to attain agreement with REFPROP */
 	double Y = -5.7993194647e+06;
@@ -114,52 +117,51 @@ int main(void){
 		double relerrpc = (cval-(VAL))/(VAL)*100;\
 		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
 		if(fabs(err)>fabs(TOL)){\
-			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %f,"\
+			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %0.8f,"\
 				" should be %f, error is %.10e (%.2f%%)!\n"\
 				, __LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
 				,relerrpc\
 			);\
 			exit(1);\
 		}else{\
-			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.2f%% err.\n"\
+			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
 				,#FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
 			);\
 		}\
 	}
 
-#define CP0_TEMP(T,RHO,DATA) helmholtz_cp0(T,DATA)
+#define CP0(T,RHO,DATA) helmholtz_cp0(T,DATA)
 
 	fprintf(stderr,"CP0 TESTS\n");
 	for(i=0; i<n;++i){
 		cp0 = td[i].cp0*1e3;
-	 	ASSERT_TOL(CP0_TEMP, td[i].T+273.15, td[i].rho, d, cp0, cp0*1e-4);
+	 	ASSERT_TOL(CP0, td[i].T+273.15, 0., d, cp0, cp0*1e-5);
 	}
-
-#undef CP0_TEMP
+#undef CP0
 
 	fprintf(stderr,"PRESSURE TESTS\n");
 	for(i=0; i<n;++i){
 		p = td[i].p*1e6;
-	 	ASSERT_TOL(helmholtz_p, td[i].T+273.15, td[i].rho, d, p, p*2e-4);
+	 	ASSERT_TOL(helmholtz_p, td[i].T+273.15, td[i].rho, d, p, p*1e-3);
 	}
 
-	double CORRECTION_u = 0;
+	double CORRECTION_u =-1.4311890755e+05;
 	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
 	for(i=0; i<n;++i){
-		fprintf(stderr,"u = %f kJ/kg\n",td[i].u);
 		u = td[i].u*1e3 + CORRECTION_u;
 	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
+	}
+
+	fprintf(stderr,"ENTHALPY TESTS\n");
+	for(i=0; i<n;++i){
+		h = td[i].h*1e3 + Z;
+	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, h*1e-3);
 	}
 
 	fprintf(stderr,"ENTROPY TESTS\n");
 	for(i=0; i<n;++i){
 		s = td[i].s*1e3 + Y;
 	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e-3*s);
-	}
-
-	fprintf(stderr,"ENTHALPY TESTS\n");
-	for(i=0; i<n;++i){
-	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, td[i].h*1e3 + Z, 1E3);
 	}
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
