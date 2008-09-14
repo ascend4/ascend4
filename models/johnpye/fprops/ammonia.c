@@ -1,5 +1,8 @@
 #include "ammonia.h"
 
+#define AMMONIA_OFFSET_H -1.4311891570e+05
+#define AMMONIA_R 488.189
+#define AMMONIA_TSTAR 405.40
 /**
 Ideal gas data for Ammonia, from Tillner-Roth, Harms-Watzenberg and
 Baehr, 'Eine neue Fundamentalgleichung für Ammoniak', DKV-Tagungsbericht,
@@ -7,10 +10,10 @@ Baehr, 'Eine neue Fundamentalgleichung für Ammoniak', DKV-Tagungsbericht,
 by NIST in its program REFPROP 7.0.
 */
 const IdealData ideal_data_ammonia = {
-	-15.815020 /* const */
-	, 4.255726 /* linear */
-	, 405.40 /* Tstar */
-	, 488.189 /* cpstar J/kgK */
+	-15.815020 + 8.7915707880e+02/AMMONIA_R/* const */
+	, 4.255726 + 1.4311891570e+05/AMMONIA_R/AMMONIA_TSTAR /* linear */
+	, AMMONIA_TSTAR /* Tstar */
+	, AMMONIA_R /* cpstar J/kgK */
 	, 3 /* power terms */	
 	, (const IdealPowTerm[]){
 #if 0
@@ -31,9 +34,9 @@ value of cpstar in its calculations (The value 488.189 is clearly stated by
 Tillner-Roth, but perhaps REFPROP chooses to use the molecular mass instead
 of this value, or do some other kind of scaling...)
 */
-		{9213.45/488.189, -1./3.}
-		,{0.290733/488.189, 3./2.}
-		,{-0.036608/488.189, 7./4.}
+		{9213.45/AMMONIA_R, -1./3.}
+		,{0.290733/AMMONIA_R, 3./2.}
+		,{-0.036608/AMMONIA_R, 7./4.}
 #endif
 	}
 	, 0, (const IdealExpTerm *)0 /* no exponential terms */
@@ -47,10 +50,10 @@ DKV-Tagungsbericht, 20:167-181, 1993. This is the ammmonia property correlation
 recommended by NIST in its program REFPROP 7.0.
 */
 const HelmholtzData helmholtz_data_ammonia = {
-	/* R */ 488.189 /* J/kg/K */
+	/* R */ AMMONIA_R /* J/kg/K */
 	, /* M */ 17.03026 /* kg/kmol */
 	, /* rho_star */225. /* kg/m³ */
-	, /* T_star */ 405.40 /* K */
+	, /* T_star */ AMMONIA_TSTAR /* K */
 	, &ideal_data_ammonia
 	, 21 /* np */
 	, (const HelmholtzPowTerm[]){
@@ -112,12 +115,6 @@ int main(void){
 	n = ntd;
 	fprintf(stderr,"Running through %d test points...\n",n);
 
-	/* enthalpy offset is required to attain agreement with values from REFPROP */
-	double Z =  -1.4311891570e+05;
-
-	/* entropy offset required to attain agreement with REFPROP */
-	double Y = -5.7993194647e+06;
-
 /* a simple macro to actually do the testing */
 #define ASSERT_TOL(FN,PARAM1,PARAM2,PARAM3,VAL,TOL) {\
 		double cval; cval = FN(PARAM1,PARAM2,PARAM3);\
@@ -153,19 +150,19 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_p, td[i].T+273.15, td[i].rho, d, p, p*1e-3);
 	}
 
-	double CORRECTION_u =-1.4311890755e+05;
 	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
 	for(i=0; i<n;++i){
-		u = td[i].u*1e3 + CORRECTION_u;
+		u = td[i].u*1e3;
 	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
 	}
-
 	fprintf(stderr,"ENTHALPY TESTS\n");
 	for(i=0; i<n;++i){
-		h = td[i].h*1e3 + Z;
+		h = td[i].h*1e3;
 	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, h*1e-3);
 	}
 
+	/* entropy offset required to attain agreement with REFPROP */
+	double Y = 0;
 	fprintf(stderr,"ENTROPY TESTS\n");
 	for(i=0; i<n;++i){
 		s = td[i].s*1e3 + Y;
