@@ -293,7 +293,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	n = data->ne;
 	et = &(data->et[0]);
 	for(i=0; i< n; ++i){
-#ifdef TEST
+#if 0
 		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
 #endif
 		
