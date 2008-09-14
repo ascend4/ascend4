@@ -61,7 +61,7 @@ double helm_cp0(double T, const IdealData *data){
 	/* 'exponential' terms */
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
-#if 1
+#if 0
 		fprintf(stderr,"exp term\n");
 #endif
 		double x = et->beta / T;
