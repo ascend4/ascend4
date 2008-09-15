@@ -50,10 +50,10 @@ double helm_cp0(double T, const IdealData *data){
 	fprintf(stderr,"np = %d\n",data->np);
 #endif
 	for(i = 0; i<data->np; ++i, ++pt){
-		term = pt->a0 * pow(T, pt->t0);
+		term = pt->c * pow(T, pt->t);
 #if 0
 		fprintf(stderr,"i = %d: ",i);
-		fprintf(stderr,"power term, a = %f, t = %f, val = %f\n",pt->a0, pt->t0, term);
+		fprintf(stderr,"power term, c = %f, t = %f, val = %f\n",pt->c, pt->t, term);
 #endif
 		sum += term;
 	}
@@ -105,24 +105,31 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 	/* power terms */
 	pt = &(data->pt[0]);
 	for(i = 0; i<data->np; ++i, ++pt){
-		double a = pt->a0;
-		double t = pt->t0;
+		double c = pt->c;
+		double t = pt->t;
 		if(t == 0){
-			term = a*log(tau);
+			term = c*log(tau);
 		}else{
 #ifdef TEST
 			assert(t!=-1);
 #endif
-			term = -a / (t*(t+1)) * pow(Tstar_on_tau,t);
+			term = -c / (t*(t+1)) * pow(Tstar_on_tau,t);
+			fprintf(stderr,"i = %d, c = %f, t = %f, term = %f\n",i,c,t,term);
 		}
-		sum += pt->a0 * pow(tau, pt->t0);
+		sum += term;
 	}
 
 	/* 'exponential' terms */
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
-		sum += et->b * log(1 - exp(-et->beta / Tstar_on_tau));
+		term = et->b * log(1 - exp(-et->beta / Tstar_on_tau));
+		fprintf(stderr,"exp i=%d, b=%f, beta=%f, term = %f\n",i,et->b, et->beta, term);
+		sum += term;
 	}
+
+#ifdef TEST
+	fprintf(stderr,"phi0 = %f\n",sum);
+#endif
 
 	return sum;
 }
@@ -142,17 +149,17 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 
 	pt = &(data->pt[0]);
 	for(i = 0; i<data->np; ++i, ++pt){
-		double a = pt->a0;
-		double t = pt->t0;
+		double c = pt->c;
+		double t = pt->t;
 		if(t==0){
-			term = a / tau;
+			term = c / tau;
 		}else{
-			// term = -a / (t*(t+1)) * pow(Tstar_on_tau,t);
-			term = a/(t+1)*pow(Tstar_on_tau,t)/tau;
+			// term = -c / (t*(t+1)) * pow(Tstar_on_tau,t);
+			term = c/(t+1)*pow(Tstar_on_tau,t)/tau;
 		}
 #ifdef TEST
 		if(isinf(term)){
-			fprintf(stderr,"Error with infinite-valued term with i = %d, a = %f, t = %f\n", i,a ,t);
+			fprintf(stderr,"Error with infinite-valued term with i = %d, c = %f, t = %f\n", i,c ,t);
 			abort();
 		}
 #endif

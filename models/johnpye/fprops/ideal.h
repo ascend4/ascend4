@@ -28,13 +28,13 @@
 */
 
 /*
-	Terms containing powers of 'tau', like
+	Terms in the expression for cp0 that are power terms, of the form:
 	
-	a0 * tau^t0
+		c * tau^t
 */
 typedef struct IdealPowTerm_struct{
-	double a0;
-	double t0;
+	double c;
+	double t;
 } IdealPowTerm;
 
 /*
