@@ -114,7 +114,9 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 			assert(t!=-1);
 #endif
 			term = -c / (t*(t+1)) * pow(Tstar_on_tau,t);
+#ifdef TEST
 			fprintf(stderr,"i = %d, c = %f, t = %f, term = %f\n",i,c,t,term);
+#endif
 		}
 		sum += term;
 	}
@@ -123,7 +125,9 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
 		term = et->b * log(1 - exp(-et->beta / Tstar_on_tau));
+#ifdef TEST
 		fprintf(stderr,"exp i=%d, b=%f, beta=%f, term = %f\n",i,et->b, et->beta, term);
+#endif
 		sum += term;
 	}
 
