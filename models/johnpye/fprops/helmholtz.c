@@ -232,7 +232,7 @@ static double ipow(double x, int n){
 	Residual part of helmholtz function.
 */
 double helm_resid(double tau, double delta, const HelmholtzData *data){
-#if 0
+#if 1
 	double sum, res = 0;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
@@ -276,6 +276,9 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		++et;
 	}
 
+#ifdef TEST
+	fprintf(stderr,"phir = %f\n",res);
+#endif
 	return res;
 }
 
