@@ -184,6 +184,7 @@ double helmholtz_a(double T, double rho, const HelmholtzData *data){
 
 #ifdef TEST
 	fprintf(stderr,"helmholtz_a: T = %f, rho = %f\n",T,rho);
+	fprintf(stderr,"multiplying by RT = %f\n",data->R*T);
 #endif
 
 	return data->R * T * (helm_ideal(tau,delta,data->ideal) - helm_resid(tau,delta,data));
@@ -232,8 +233,7 @@ static double ipow(double x, int n){
 	Residual part of helmholtz function.
 */
 double helm_resid(double tau, double delta, const HelmholtzData *data){
-#if 1
-	double sum, res = 0;
+	double dell,ldell, sum, res = 0;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzExpTerm *et;
@@ -243,21 +243,30 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 
 	/* power terms */
 	sum = 0;
+	dell = ipow(delta,pt->l);
+	ldell = pt->l * dell;
 	unsigned oldl;
 	for(i=0; i<n; ++i){
 		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d);
+		fprintf(stderr,"i = %d,               sum = %f\n",i,sum);
 		oldl = pt->l;
 		++pt;
 		if(i+1==n || oldl != pt->l){
 			if(oldl == 0){
+				fprintf(stderr,"linear ");
 				res += sum;
 			}else{
-				res += sum * exp(-ipow(delta,pt->l));
+				fprintf(stderr,"exp dell=%f, exp(-dell)=%f sum=%f: ",dell,exp(-dell),sum);
+				res += sum * exp(-dell);
 			}
+			fprintf(stderr,"i = %d, res = %f\n",i,res);
 			sum = 0;
+			dell = ipow(delta,pt->l);
+			ldell = pt->l*dell;
 		}
 	}
 
+#if 0
 	/* now the exponential terms */
 	n = data->ne;
 	et = &(data->et[0]);
@@ -275,75 +284,13 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		res += sum;
 		++et;
 	}
+#endif
 
 #ifdef TEST
 	fprintf(stderr,"phir = %f\n",res);
 #endif
 	return res;
 }
-
-#else
-	double sum;
-	double res = 0;
-	double delX;
-	unsigned l;
-	unsigned n, i;
-	const HelmholtzPowTerm *pt;
-	const HelmholtzExpTerm *et;
-
-	n = data->np;
-	pt = &(data->pt[0]);
-
-	delX = 1;
-
-	l = 0;
-	sum = 0;
-	for(i=0; i<n; ++i){
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, l = %d\n",i+1, pt->a, pt->t, pt->d, pt->l);
-		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d);
-		++pt;
-		//fprintf(stderr,"l = %d\n",l);
-		if(i+1==n || l != pt->l){
-			if(l==0){
-				//fprintf(stderr,"Adding non-exp term\n");
-				res += sum;
-			}else{
-				//fprintf(stderr,"Adding exp term with l = %d, delX = %e\n",l,delX);
-				res += sum * exp(-delX);
-			}
-			/* set l to new value */
-			if(i+1!=n){
-				l = pt->l;
-				//fprintf(stderr,"New l = %d\n",l);
-				delX = ipow(delta,l);
-				sum = 0;
-			}
-		}
-	}
-
-	/* now the exponential terms */
-	n = data->ne;
-	et = &(data->et[0]);
-	for(i=0; i< n; ++i){
-#if 0
-		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
-#endif
-		
-		double e1 = -et->phi * delta*delta
-					 + 2 * et->phi * delta
-					 - et->beta * tau * tau
-					 + 2 * et->beta * et->gamma * tau
-					 - et->phi 
-					 - et->beta * et->gamma * et->gamma;
-		sum = et->a * pow(tau,et->t) * ipow(delta,et->d) * exp(e1);
-		//fprintf(stderr,"sum = %f\n",sum);
-		res += sum;
-		++et;
-	}
-
-	return res;
-}
-#endif
 
 /**
 	Derivative of the helmholtz residual function with respect to

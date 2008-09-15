@@ -161,9 +161,11 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, h*1e-3);
 	}
 
+
+	double CORRECTION_a = 0;// 1.8209310576e+06;
 	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
 	for(i=0; i<n;++i){
-		a = td[i].a*1e3;
+		a = td[i].a*1e3 + CORRECTION_a;
 	 	ASSERT_TOL(helmholtz_a, td[i].T+273.15, td[i].rho, d, a, a*1e-3);
 	}
 	
