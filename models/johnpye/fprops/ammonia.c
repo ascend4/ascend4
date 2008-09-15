@@ -106,7 +106,7 @@ const TestData td[]; const unsigned ntd;
 
 int main(void){
 	unsigned n, i;
-	double rho, T, cp0, p, u, h, s;
+	double rho, T, cp0, p, u, h, a, s;
 	const HelmholtzData *d;
 
 	d = &helmholtz_data_ammonia;
@@ -161,6 +161,12 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, h*1e-3);
 	}
 
+	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
+	for(i=0; i<n;++i){
+		a = td[i].a*1e3;
+	 	ASSERT_TOL(helmholtz_a, td[i].T+273.15, td[i].rho, d, a, a*1e-3);
+	}
+	
 	/* entropy offset required to attain agreement with REFPROP */
 	double Y = 0;
 	fprintf(stderr,"ENTROPY TESTS\n");

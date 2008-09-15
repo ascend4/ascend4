@@ -127,7 +127,7 @@ const TestData td[]; const unsigned ntd;
 
 int main(void){
 
-	double rho, T, p, u, h, s, cp0;
+	double rho, T, p, u, h, a, s, cp0;
 	const HelmholtzData *d;
 
 	d = &helmholtz_data_nitrogen;
@@ -182,6 +182,12 @@ int main(void){
 	for(i=0; i<n;++i){
 		h = td[i].h*1e3;
 	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
+	}
+
+	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
+	for(i=0; i<n;++i){
+		a = td[i].a*1e3;
+	 	ASSERT_TOL(helmholtz_a, td[i].T+273.15, td[i].rho, d, a, a*1e-3);
 	}
 
 	/* entropy offset required to attain agreement with REFPROP */
