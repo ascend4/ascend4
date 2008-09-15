@@ -162,6 +162,35 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data){
 }
 
 /**
+	Function to calculate Helmholtz energy from the Helmholtz free energy EOS,
+	given temperature and mass density.
+
+	@param T temperature in K
+	@param rho mass density in kg/m³
+	@return Helmholtz energy 'a', in J/kg
+*/
+double helmholtz_a(double T, double rho, const HelmholtzData *data){
+
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+
+#ifdef TEST
+	assert(data->rho_star!=0);
+	assert(T!=0);
+	assert(!isnan(tau));
+	assert(!isnan(delta));
+	assert(!isnan(data->R));
+#endif
+
+#ifdef TEST
+	fprintf(stderr,"helmholtz_a: T = %f, rho = %f\n",T,rho);
+#endif
+
+	return data->R * T * (helm_ideal(tau,delta,data->ideal) - helm_resid(tau,delta,data));
+}
+
+
+/**
 	Calculation zero-pressure specific heat capacity
 */
 double helmholtz_cp0(double T, const HelmholtzData *data){
