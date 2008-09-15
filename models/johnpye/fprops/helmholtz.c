@@ -233,7 +233,7 @@ static double ipow(double x, int n){
 	Residual part of helmholtz function.
 */
 double helm_resid(double tau, double delta, const HelmholtzData *data){
-	double dell,ldell, sum, res = 0;
+	double dell,ldell, term, sum, res = 0;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzExpTerm *et;
@@ -241,38 +241,57 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	n = data->np;
 	pt = &(data->pt[0]);
 
+#ifdef TEST
+		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
+#endif
+
 	/* power terms */
 	sum = 0;
 	dell = ipow(delta,pt->l);
 	ldell = pt->l * dell;
 	unsigned oldl;
 	for(i=0; i<n; ++i){
-		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d);
-		fprintf(stderr,"i = %d,               sum = %f\n",i,sum);
+		term = pt->a * pow(tau, pt->t) * ipow(delta, pt->d);
+		sum += term;
+#ifdef TEST
+		fprintf(stderr,"i = %d,               a=%e, t=%f, d=%d, term = %f, sum = %f",i,pt->a,pt->t,pt->d,term,sum);
+		if(pt->l==0){
+			fprintf(stderr,",row=%e\n",term);
+		}else{
+			fprintf(stderr,",row=%e\n,",term*exp(-dell));
+		}
+#endif
 		oldl = pt->l;
 		++pt;
 		if(i+1==n || oldl != pt->l){
 			if(oldl == 0){
+#ifdef TEST
 				fprintf(stderr,"linear ");
+#endif
 				res += sum;
 			}else{
+#ifdef TEST
 				fprintf(stderr,"exp dell=%f, exp(-dell)=%f sum=%f: ",dell,exp(-dell),sum);
+#endif
 				res += sum * exp(-dell);
 			}
+#ifdef TEST
 			fprintf(stderr,"i = %d, res = %f\n",i,res);
+#endif
 			sum = 0;
 			dell = ipow(delta,pt->l);
 			ldell = pt->l*dell;
 		}
 	}
 
-#if 0
+#if 1
 	/* now the exponential terms */
 	n = data->ne;
 	et = &(data->et[0]);
 	for(i=0; i< n; ++i){
+#ifdef TEST
 		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
-		
+#endif		
 		double e1 = -et->phi * delta*delta
 					 + 2 * et->phi * delta
 					 - et->beta * tau * tau
