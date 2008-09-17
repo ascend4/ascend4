@@ -229,6 +229,8 @@ static double ipow(double x, int n){
 	return t; 
 }
 
+//#define RESID_DEBUG
+
 /**
 	Residual part of helmholtz function.
 */

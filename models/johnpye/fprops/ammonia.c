@@ -9,9 +9,11 @@ Baehr, 'Eine neue Fundamentalgleichung für Ammoniak', DKV-Tagungsbericht,
 20:167-181, 1993. This is the ammmonia property correlation recommended
 by NIST in its program REFPROP 7.0.
 */
+
+
 const IdealData ideal_data_ammonia = {
-	-15.815020 + 8.7915707880e+02/AMMONIA_R/* const */
-	, 4.255726 + 1.4311891570e+05/AMMONIA_R/AMMONIA_TSTAR /* linear */
+	0/* -8192.7645970/AMMONIA_R*/
+	, 2.943043677/AMMONIA_R/AMMONIA_TSTAR /* linear */
 	, AMMONIA_TSTAR /* Tstar */
 	, AMMONIA_R /* cpstar J/kgK */
 	, 3 /* power terms */	
@@ -150,32 +152,42 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_p, td[i].T+273.15, td[i].rho, d, p, p*1e-3);
 	}
 
+	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
+	for(i=0; i<n;++i){
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		a = td[i].a*1e3;
+		//fprintf(stderr,"%.10e\t%.10e\t%.20e\n",T,rho,(a - helmholtz_a(T,rho,d)) );
+	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3);
+	}
+	exit(1);
+
+	/* entropy offset required to attain agreement with REFPROP */
+	fprintf(stderr,"ENTROPY TESTS\n");
+	for(i=0; i<n;++i){
+		s = td[i].s*1e3;
+	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e-3*s);
+	}
+
+	fprintf(stderr,"ENTHALPY TESTS\n");
+	for(i=0; i<n;++i){
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		h = td[i].h*1e3;
+		//fprintf(stderr,"%.20e\n",(h - helmholtz_h(T,rho,d)) );
+	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
+	}
+	//exit(1);
+
 	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
 	for(i=0; i<n;++i){
 		u = td[i].u*1e3;
-	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
-	}
-	fprintf(stderr,"ENTHALPY TESTS\n");
-	for(i=0; i<n;++i){
-		h = td[i].h*1e3;
-	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, h*1e-3);
+	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-2);
 	}
 
 
-	double CORRECTION_a = 0;// 1.8209310576e+06;
-	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
-	for(i=0; i<n;++i){
-		a = td[i].a*1e3 + CORRECTION_a;
-	 	ASSERT_TOL(helmholtz_a, td[i].T+273.15, td[i].rho, d, a, a*1e-3);
-	}
 	
-	/* entropy offset required to attain agreement with REFPROP */
-	double Y = 0;
-	fprintf(stderr,"ENTROPY TESTS\n");
-	for(i=0; i<n;++i){
-		s = td[i].s*1e3 + Y;
-	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e-3*s);
-	}
+
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
 	exit(0);
