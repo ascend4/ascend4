@@ -182,7 +182,7 @@ double helmholtz_a(double T, double rho, const HelmholtzData *data){
 	assert(!isnan(data->R));
 #endif
 
-#ifdef TEST
+#ifdef HELMHOLTZ_DEBUG
 	fprintf(stderr,"helmholtz_a: T = %f, rho = %f\n",T,rho);
 	fprintf(stderr,"multiplying by RT = %f\n",data->R*T);
 #endif
@@ -241,7 +241,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	n = data->np;
 	pt = &(data->pt[0]);
 
-#ifdef TEST
+#ifdef RESID_DEBUG
 		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
 #endif
 
@@ -253,7 +253,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	for(i=0; i<n; ++i){
 		term = pt->a * pow(tau, pt->t) * ipow(delta, pt->d);
 		sum += term;
-#ifdef TEST
+#ifdef RESID_DEBUG
 		fprintf(stderr,"i = %d,               a=%e, t=%f, d=%d, term = %f, sum = %f",i,pt->a,pt->t,pt->d,term,sum);
 		if(pt->l==0){
 			fprintf(stderr,",row=%e\n",term);
@@ -265,17 +265,17 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		++pt;
 		if(i+1==n || oldl != pt->l){
 			if(oldl == 0){
-#ifdef TEST
+#ifdef RESID_DEBUG
 				fprintf(stderr,"linear ");
 #endif
 				res += sum;
 			}else{
-#ifdef TEST
+#ifdef RESID_DEBUG
 				fprintf(stderr,"exp dell=%f, exp(-dell)=%f sum=%f: ",dell,exp(-dell),sum);
 #endif
 				res += sum * exp(-dell);
 			}
-#ifdef TEST
+#ifdef RESID_DEBUG
 			fprintf(stderr,"i = %d, res = %f\n",i,res);
 #endif
 			sum = 0;
@@ -289,7 +289,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	n = data->ne;
 	et = &(data->et[0]);
 	for(i=0; i< n; ++i){
-#ifdef TEST
+#ifdef RESID_DEBUG
 		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
 #endif		
 		double e1 = -et->phi * delta*delta
@@ -305,7 +305,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	}
 #endif
 
-#ifdef TEST
+#ifdef RESID_DEBUG
 	fprintf(stderr,"phir = %f\n",res);
 #endif
 	return res;
@@ -452,7 +452,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 /**
 	Mixed derivative of the helmholtz residual function with respect to
 	delta and tau
-*/	
+*/
 double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 	
 	double sum;
