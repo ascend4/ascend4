@@ -102,36 +102,46 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 	double term;
 	double Tstar_on_tau = data->Tstar / tau;
 
+#ifdef IDEAL_DEBUG
+	fprintf(stderr,"sum = %f\n",sum);
+#endif
+
 	/* power terms */
 	pt = &(data->pt[0]);
 	for(i = 0; i<data->np; ++i, ++pt){
 		double c = pt->c;
 		double t = pt->t;
 		if(t == 0){
+#ifdef IDEAL_DEBUG
+			fprintf(stderr,"i = %d, c = %f, t=%f **, term=%f\n",i,c,t,term);
+#endif
 			term = c*log(tau);
 		}else{
-#ifdef TEST
+#ifdef IDEAL_DEBUG
 			assert(t!=-1);
 #endif
 			term = -c / (t*(t+1)) * pow(Tstar_on_tau,t);
-#ifdef TEST
+#ifdef IDEAL_DEBUG
 			fprintf(stderr,"i = %d, c = %f, t = %f, term = %f\n",i,c,t,term);
 #endif
 		}
 		sum += term;
+#ifdef IDEAL_DEBUG
+		fprintf(stderr,"sum = %f\n",sum);
+#endif
 	}
 
 	/* 'exponential' terms */
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
 		term = et->b * log(1 - exp(-et->beta / Tstar_on_tau));
-#ifdef TEST
+#ifdef IDEAL_DEBUG
 		fprintf(stderr,"exp i=%d, b=%f, beta=%f, term = %f\n",i,et->b, et->beta, term);
 #endif
 		sum += term;
 	}
 
-#ifdef TEST
+#ifdef IDEAL_DEBUG
 	fprintf(stderr,"phi0 = %f\n",sum);
 #endif
 
