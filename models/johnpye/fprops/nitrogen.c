@@ -204,6 +204,7 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
 	}
 
+#if 0
 	fprintf(stderr,"CONSISTENCY TESTS (of calculated values): u, T, s, a\n");
 	for(i=0; i<n; ++i){
 		T = td[i].T+273.15;
@@ -214,6 +215,7 @@ int main(void){
 		ASSERT_TOL(helmholtz_a, T, rho, d, u-T*s, (u-T*s)*1e-3);
 	}
 	fprintf(stderr,"done\n");
+#endif
 
 	fprintf(stderr,"PRESSURE TESTS\n");
 	for(i=0; i<n;++i){
@@ -228,8 +230,8 @@ int main(void){
 		T = td[i].T+273.15;
 		rho = td[i].rho;
 		a = td[i].a*1e3;
-		fprintf(stderr,"%.20e\n",(a - helmholtz_a(T,rho,d)));
-	 	//ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3);
+		//fprintf(stderr,"%.20e\n",(a - helmholtz_a(T,rho,d)));
+	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3);
 	}
 	exit(1);
 
