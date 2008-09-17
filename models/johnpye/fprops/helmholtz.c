@@ -143,7 +143,7 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data){
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
 
-#ifdef TEST
+#ifdef ENTROPY_DEBUG
 	assert(data->rho_star!=0);
 	assert(T!=0);
 	assert(!isnan(tau));
@@ -187,7 +187,7 @@ double helmholtz_a(double T, double rho, const HelmholtzData *data){
 	fprintf(stderr,"multiplying by RT = %f\n",data->R*T);
 #endif
 
-	return data->R * T * (helm_ideal(tau,delta,data->ideal) - helm_resid(tau,delta,data));
+	return data->R * T * (helm_ideal(tau,delta,data->ideal) + helm_resid(tau,delta,data));
 }
 
 

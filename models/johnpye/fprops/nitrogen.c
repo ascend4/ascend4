@@ -161,15 +161,50 @@ int main(void){
 		cp0 = td[i].cp0*1e3;
 	 	ASSERT_TOL(CP0_TEMP, td[i].T+273.15, td[i].rho, d, cp0, cp0*1e-6);
 	}
+
 #undef CP0_TEMP
 
-	/* FIXME entropy correction requires the LINEAR term from above to be incorporated into the model! */
 
-	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
-	for(i=0; i<n;++i){
+	fprintf(stderr,"CONSISTENCY TESTS (of test data): u, T, s, a...");
+	for(i=0; i<n; ++i){
+		u = td[i].u*1e3;
+		T = td[i].T+273.15;
+		s = td[i].s*1e3;
 		a = td[i].a*1e3;
-	 	ASSERT_TOL(helmholtz_a, td[i].T+273.15, td[i].rho, d, a, a*1e-3);
+		//fprintf(stderr,"u - T s = %f, a = %f\n", u-T*s, a);
+		double resid = (u - T*s) - a;
+		assert(fabs(resid) < fabs(a)*1e-6);
 	}
+	fprintf(stderr,"done\n");
+
+	fprintf(stderr,"CONSISTENCY TESTS (of test data): p, rho, h, u...");
+	for(i=0; i<n; ++i){
+		h = td[i].h*1e3;
+		p = td[i].p*1e6;
+		rho = td[i].rho;
+		u = td[i].u*1e3;
+		//fprintf(stderr,"h - p/rho - T s = %f, a = %f\n", h - p/rho-T*s, a);
+		double resid = (u + p/rho) - h;
+		assert(fabs(resid) < fabs(h)*1e-6);
+	}
+	fprintf(stderr,"done\n");
+
+	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
+	for(i=0; i<n;++i){
+		u = td[i].u*1e3;
+	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
+	}
+
+	fprintf(stderr,"CONSISTENCY TESTS (of calculated values): u, T, s, a\n");
+	for(i=0; i<n; ++i){
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		a = helmholtz_a(T,rho,d);
+		s = helmholtz_s(T,rho,d);
+		u = helmholtz_u(T,rho,d);
+		ASSERT_TOL(helmholtz_a, T, rho, d, u-T*s, (u-T*s)*1e-3);
+	}
+	fprintf(stderr,"done\n");
 
 	fprintf(stderr,"PRESSURE TESTS\n");
 	for(i=0; i<n;++i){
@@ -179,22 +214,28 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-6);
 	}
 
-	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
-	for(i=0; i<n;++i){
-		u = td[i].u*1e3;
-	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
-	}
-
 	fprintf(stderr,"ENTHALPY TESTS\n");
 	for(i=0; i<n;++i){
 		h = td[i].h*1e3;
 	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
 	}
 
+	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
+	for(i=0; i<n;++i){
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		a = td[i].a*1e3;
+	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3);
+	}
+
+	/* entropy offset required to attain agreement with REFPROP */
+	double Y =  0;
+	/* FIXME entropy correction requires the LINEAR term from above to be incorporated into the model! */
+
 	fprintf(stderr,"ENTROPY TESTS\n");
 	for(i=0; i<n;++i){
-		s = td[i].s*1e3;
-	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e-3*s);
+		s = td[i].s*1e3 + Y;
+	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e3*s);
 	}
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
