@@ -14,8 +14,8 @@ by NIST in its program REFPROP 7.0. */
 #define NITROGEN_TSTAR 126.192
 
 const IdealData ideal_data_nitrogen = {
-	-12.76953 /* constant */
-	,-0.007841630 + -1011377.701938/NITROGEN_R/NITROGEN_TSTAR /* linear */
+	0
+	,-1.011666234784E+006/NITROGEN_R/NITROGEN_TSTAR/* linear */
 	, NITROGEN_TSTAR /* Tstar */
 	, NITROGEN_R /* cp0star */
 	, 4 /* power terms */
@@ -189,6 +189,15 @@ int main(void){
 	}
 	fprintf(stderr,"done\n");
 
+	fprintf(stderr,"ENTHALPY TESTS\n");
+	for(i=0; i<n;++i){
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		h = td[i].h*1e3;
+		//fprintf(stderr,"%.20e\n",(h - helmholtz_h(T,rho,d)) );
+	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
+	}
+
 	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
 	for(i=0; i<n;++i){
 		u = td[i].u*1e3;
@@ -209,15 +218,9 @@ int main(void){
 	fprintf(stderr,"PRESSURE TESTS\n");
 	for(i=0; i<n;++i){
 		T = td[i].T+273.15;
-		p = td[i].p*1e6;
 		rho = td[i].rho;
+		p = td[i].p*1e6;
 	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-6);
-	}
-
-	fprintf(stderr,"ENTHALPY TESTS\n");
-	for(i=0; i<n;++i){
-		h = td[i].h*1e3;
-	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
 	}
 
 	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
@@ -225,18 +228,20 @@ int main(void){
 		T = td[i].T+273.15;
 		rho = td[i].rho;
 		a = td[i].a*1e3;
-	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3);
+		fprintf(stderr,"%.20e\n",(a - helmholtz_a(T,rho,d)));
+	 	//ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3);
 	}
-
-	/* entropy offset required to attain agreement with REFPROP */
-	double Y =  0;
-	/* FIXME entropy correction requires the LINEAR term from above to be incorporated into the model! */
+	exit(1);
 
 	fprintf(stderr,"ENTROPY TESTS\n");
 	for(i=0; i<n;++i){
-		s = td[i].s*1e3 + Y;
-	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e3*s);
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		s = td[i].s*1e3;
+		fprintf(stderr,"%.20e\n",(s - helmholtz_s(T,rho,d)));
+	 	//ASSERT_TOL(helmholtz_s, T, rho, d, s, 1e-3*s);
 	}
+	exit(1);
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
 	exit(0);
