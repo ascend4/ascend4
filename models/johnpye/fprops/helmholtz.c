@@ -157,7 +157,7 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data){
 #endif
 	return data->R * (
 		tau * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data))
-		- helm_ideal(tau,delta,data->ideal) - helm_resid(tau,delta,data)
+		- (helm_ideal(tau,delta,data->ideal) + helm_resid(tau,delta,data))
 	);
 }
 
