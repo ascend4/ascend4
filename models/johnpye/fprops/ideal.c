@@ -89,6 +89,7 @@ double helm_cp0(double T, const IdealData *data){
 	stick in the values of data->c and data->m.
 */
 
+#define IDEAL_DEBUG
 /**
 	Ideal component of helmholtz function
 */	
@@ -103,6 +104,7 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 	double Tstar_on_tau = data->Tstar / tau;
 
 #ifdef IDEAL_DEBUG
+	fprintf(stderr,"\tlog(delta) - log(tau) + c + m tau = %f (c=%f,m=%f)\n",sum,data->c, data->m);
 	fprintf(stderr,"sum = %f\n",sum);
 #endif
 
@@ -112,17 +114,17 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 		double c = pt->c;
 		double t = pt->t;
 		if(t == 0){
-#ifdef IDEAL_DEBUG
-			fprintf(stderr,"i = %d, c = %f, t=%f **, term=%f\n",i,c,t,term);
-#endif
 			term = c*log(tau);
+#ifdef IDEAL_DEBUG
+			fprintf(stderr,"\tc log(tau) = %f (c=%f)\n",term,c);
+#endif
 		}else{
 #ifdef IDEAL_DEBUG
 			assert(t!=-1);
 #endif
 			term = -c / (t*(t+1)) * pow(Tstar_on_tau,t);
 #ifdef IDEAL_DEBUG
-			fprintf(stderr,"i = %d, c = %f, t = %f, term = %f\n",i,c,t,term);
+			fprintf(stderr,"\t-c/t/(t+1)*pow(T*/tau) = %f (c=%f, t=%f)\n",term,c,t);
 #endif
 		}
 		sum += term;
@@ -136,7 +138,7 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 	for(i=0; i<data->ne; ++i, ++et){
 		term = et->b * log(1 - exp(-et->beta / Tstar_on_tau));
 #ifdef IDEAL_DEBUG
-		fprintf(stderr,"exp i=%d, b=%f, beta=%f, term = %f\n",i,et->b, et->beta, term);
+		fprintf(stderr,"\tb log(1-exp(-beta tau/Tstar)) = %f, (b=%f, beta=%f)\n",term,et->b,et->beta);
 #endif
 		sum += term;
 	}
@@ -149,8 +151,8 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 }
 
 /**
-	Partial dervivative of ideal component of helmholtz residual function with 
-	respect to tau.
+	Partial dervivative of ideal component (phi0) of normalised helmholtz 
+	residual function (phi), with respect to tau.
 */	
 double helm_ideal_tau(double tau, double delta, const IdealData *data){
 	const IdealPowTerm *pt;

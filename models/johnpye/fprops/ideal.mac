@@ -46,6 +46,9 @@ cp0_exp(tau) := R * subst(beta*tau/Tc,x, b*x^2*exp(-x)/(1-exp(-x))^2);
 
 term(tau,cp0) := -tau/R*integrate(cp0(tau)/tau^2,tau,tau0,tau) + 1/R*integrate(cp0(tau)/tau,tau,tau0,tau);
 
+phi0(tau,del) := log(del) + 2.5*log(tau) - 12.76953 - 0.007841630*tau - 1.934819e-4/tau - 1.247742e-5/tau^2 + 6.678326e-8/tau^3
+
+
 #------------------------------------------------
 # STEP 2: paste one of the following lines, and answer the prompts about
 # positive/negative terms:
