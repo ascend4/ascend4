@@ -8,6 +8,10 @@ authors for high-accuracy thermodynamic property correlations.
 This is currently experimental software, with many bugs. You should carefully
 test the results from this library before you rely on any of its values.
 
+Integration is provided to allow these routines to be called from ASCEND, but
+the support is still partial, and still lacks the derivative expressions that
+allow the most efficient possible convergence during iteration.
+
 
 Ideal gas properties
 --------------------
