@@ -33,8 +33,8 @@ by NIST in its program REFPROP 7.0. */
 #define NITROGEN_TSTAR 126.192
 
 const IdealData ideal_data_nitrogen = {
-	-12.76953
-	, -0.007841630 /* -1011666.23/NITROGEN_R/NITROGEN_TSTAR */
+	-12.76953 +(8.66460942220E-4)/NITROGEN_R
+	, -0.007841630
 	, NITROGEN_TSTAR /* Tstar */
 	, NITROGEN_R /* cp0star */
 	, 4 /* power terms */
@@ -263,7 +263,7 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-6);
 	}
 
-#if 1
+#if 0
 	/* can only use this check if c,m haven't been offset from original */
 	fprintf(stderr,"CONSISTENCY TESTS (with handwritten phi0 expr)\n");
 	for(i=10;i<n;++i){
@@ -282,7 +282,6 @@ int main(void){
 		ASSERT_TOL(helm_ideal_tau,tau,del, d->ideal, p0t, p0t*1e-3);
 
 	}
-	exit(0);
 #endif
 
 
@@ -292,29 +291,34 @@ int main(void){
 		rho = td[i].rho;
 		u = td[i].u*1e3;
 		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(u - helmholtz_u(T,rho,d)));
-	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
+	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-6);
 	}
-	//exit(1);
 
 	fprintf(stderr,"ENTROPY TESTS\n");
+	double se = 0, sse = 0;
 	for(i=0; i<n;++i){
 		T = td[i].T+273.15;
 		rho = td[i].rho;
 		s = td[i].s*1e3;
-		fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(s - helmholtz_s(T,rho,d)));
-	 	//ASSERT_TOL(helmholtz_s, T, rho, d, s, 1e-3*s);
+		double err = s - helmholtz_s(T,rho,d);
+		se += err;
+		sse += err*err;
+		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(s - helmholtz_s(T,rho,d)));
+	 	ASSERT_TOL(helmholtz_s, T, rho, d, s, 1e-6*s);
 	}
-	exit(1);
+	//fprintf(stderr,"average error = %.10e\n",se/n);
+	//fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);
+	//exit(1);
 
 	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
 	for(i=0; i<n;++i){
 		T = td[i].T+273.15;
 		rho = td[i].rho;
 		a = td[i].a*1e3;
-		fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(a - helmholtz_a(T,rho,d)));
-	 	//ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3);
+		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(a - helmholtz_a(T,rho,d)));
+	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-6);
 	}
-	exit(1);
+	//exit(1);
 
 	fprintf(stderr,"ENTHALPY TESTS\n");
 	for(i=0; i<n;++i){
