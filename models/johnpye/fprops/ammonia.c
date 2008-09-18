@@ -42,8 +42,8 @@ const IdealPhi0Data precalc_data = {
 };
 #else
 const IdealData ideal_data_ammonia = {
-	0/* -8192.7645970/AMMONIA_R*/
-	, 2.943043677/AMMONIA_R/AMMONIA_TSTAR /* linear */
+	-15.815020 - 4.715240698841839e+02/AMMONIA_R /* constant */
+	, 4.255726 + (1.432837032793666e+05)/AMMONIA_R/AMMONIA_TSTAR /* linear */
 	, AMMONIA_TSTAR /* Tstar */
 	, AMMONIA_R /* cpstar J/kgK */
 
@@ -166,22 +166,20 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_p, td[i].T+273.15, td[i].rho, d, p, p*1e-3);
 	}
 
-	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
+	double se=0, ss=0;
+	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
 	for(i=0; i<n;++i){
 		T = td[i].T+273.15;
 		rho = td[i].rho;
-		a = td[i].a*1e3;
-		//fprintf(stderr,"%.10e\t%.10e\t%.20e\n",T,rho,(a - helmholtz_a(T,rho,d)) );
-	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3);
+		u = td[i].u*1e3;
+		//double err = u - helmholtz_u(T,rho,d);
+		//se += err; ss += err*err;
+	 	ASSERT_TOL(helmholtz_u, T, rho, d, u, u*1e-2);
+		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,err);
 	}
-	exit(1);
-
-	/* entropy offset required to attain agreement with REFPROP */
-	fprintf(stderr,"ENTROPY TESTS\n");
-	for(i=0; i<n;++i){
-		s = td[i].s*1e3;
-	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e-3*s);
-	}
+	//fprintf(stderr,"average u error = %.15e\n",se/n);
+	//fprintf(stderr,"sse = %.3e\n",ss - n*se*se);
+	//exit(1);
 
 	fprintf(stderr,"ENTHALPY TESTS\n");
 	for(i=0; i<n;++i){
@@ -193,15 +191,29 @@ int main(void){
 	}
 	//exit(1);
 
-	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
+	/* entropy offset required to attain agreement with REFPROP */
+	fprintf(stderr,"ENTROPY TESTS\n");
 	for(i=0; i<n;++i){
-		u = td[i].u*1e3;
-	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-2);
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		s = td[i].s*1e3;
+		//double err = s - helmholtz_s(T,rho,d);
+		//se += err; ss += err*err;
+	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e-1*s);
+		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,err);
 	}
+	//fprintf(stderr,"average s error = %.15e\n",se/n);
+	//fprintf(stderr,"sse = %.3e\n",ss - n*se*se);
+	//exit(1);
 
-
-	
-
+	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
+	for(i=0; i<n;++i){
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		a = td[i].a*1e3;
+		//fprintf(stderr,"%.10e\t%.10e\t%.20e\n",T,rho,(a - helmholtz_a(T,rho,d)) );
+	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1);
+	}
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
 	exit(0);
