@@ -146,15 +146,36 @@ typedef struct{double T,p,rho,u,h,s,cv,cp,cp0,a;} TestData;
 const TestData td[]; const unsigned ntd;
 
 double phi0(double tau, double del){
-	double phi0 = 0;
-	double term;
+	return log(del) - log(tau) - 12.76953 - 0.007841630*tau + 3.5*log(tau) - 1.934819e-4/tau - 1.247742e-5/(tau*tau) + 6.678326e-8/(tau*tau*tau) + 1.012941*log(1 - exp(-26.65788*tau));
+}
 
-	term = log(del) - log(tau) - 12.76953 - 0.007841630*tau;
-	fprintf(stderr,"\t\t\tlog(del) - log(tau) - 12.76953 - 0.007841630*tau = %f\n",term);
-	phi0 += term;
-	phi0 += + 3.5*log(tau) - 1.934819e-4/tau - 1.247742e-5/(tau*tau) + 6.678326e-8/(tau*tau*tau) + 1.012941*log(1 - exp(-26.65788*tau));
+double phi0tau(double tau, double del){
 
-	return phi0;
+	double term = -1/tau-0.00784163;
+	fprintf(stderr,"\t\t-1/tau-0.00784163 = %f\n",term);
+	double res = term;
+
+	term = 3.5/tau;
+	fprintf(stderr,"\t\t3.5/tau = %f\n",term);
+	res +=term;
+
+	term = +(1.9348189999999999e-4)/(tau*tau);
+	fprintf(stderr,"\t\t+(1.9348189999999999e-4)/(tau*tau) = %f\n",term);
+	res +=term;
+
+	term += +(2.495484e-5)/(tau*tau*tau);
+	fprintf(stderr,"\t\t+(2.495484*10^-5)/tau^3 = %f\n",term);
+	res+=term;
+
+	term += -(2.0034978000000001e-7)/(tau*tau*tau*tau);
+	fprintf(stderr,"\t\t-(2.0034978000000001*10^-7)/tau^4 = %f\n",term);
+	res+=term;
+
+	term = (27.00285962508*exp(-26.65788*tau))/(1-exp(-26.65788*tau));
+	fprintf(stderr,"\t\t(27.00285962508*%e^(-26.65788*tau))/(1-%e^(-26.65788*tau)) = %f\n",term);
+	res += term;
+	
+	return res;
 }
 
 int main(void){
@@ -243,26 +264,23 @@ int main(void){
 	}
 
 #if 1
+	/* can only use this check if c,m haven't been offset from original */
 	fprintf(stderr,"CONSISTENCY TESTS (with handwritten phi0 expr)\n");
 	for(i=10;i<n;++i){
 		T = td[i].T+273.15;
 		rho = td[i].rho;
-		fprintf(stderr,"Testing with i=%d\n",i);
 
 		double tau = d->T_star / T;
 		double del = rho / d->rho_star;
 
-		double p0;
+		double p0, p0t;
 		p0 = phi0(tau, del);
-		fprintf(stderr,"T = %f, rho = %f --> phi0 = %f\n",T,rho,p0);
 
-		fprintf(stderr,"tau = %f, del = %f\n",tau,del);
-		double phi = helm_ideal(tau,del,d->ideal);
-		fprintf(stderr,"fprops calculates phi = %f\n",phi);
-		fprintf(stderr,"simple function gives phi = %f\n",p0);
-		assert(fabs(phi - p0) < 1e-6*fabs(p0));
-		//ASSERT_TOL(helm_ideal,tau,del, d->ideal, p0, p0*1e-3);
-		//fprintf(stderr,"\tOK: helm_ideal(T,rho) = phi0(T,rho) for T = %f, rho = %f.\n",T,rho);
+		ASSERT_TOL(helm_ideal,tau,del, d->ideal, p0, p0*1e-3);
+
+		p0t = phi0tau(tau,del);
+		ASSERT_TOL(helm_ideal_tau,tau,del, d->ideal, p0t, p0t*1e-3);
+
 	}
 	exit(0);
 #endif
