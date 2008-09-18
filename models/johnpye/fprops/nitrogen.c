@@ -152,27 +152,27 @@ double phi0(double tau, double del){
 double phi0tau(double tau, double del){
 
 	double term = -1/tau-0.00784163;
-	fprintf(stderr,"\t\t-1/tau-0.00784163 = %f\n",term);
+	//fprintf(stderr,"\t\t-1/tau-0.00784163 = %f\n",term);
 	double res = term;
 
 	term = 3.5/tau;
-	fprintf(stderr,"\t\t3.5/tau = %f\n",term);
+	//fprintf(stderr,"\t\t3.5/tau = %f\n",term);
 	res +=term;
 
 	term = +(1.9348189999999999e-4)/(tau*tau);
-	fprintf(stderr,"\t\t+(1.9348189999999999e-4)/(tau*tau) = %f\n",term);
+	//fprintf(stderr,"\t\t+(1.9348189999999999e-4)/(tau*tau) = %f\n",term);
 	res +=term;
 
-	term += +(2.495484e-5)/(tau*tau*tau);
-	fprintf(stderr,"\t\t+(2.495484*10^-5)/tau^3 = %f\n",term);
+	term = +(2.495484e-5)/(tau*tau*tau);
+	//fprintf(stderr,"\t\t+(2.495484*10^-5)/tau^3 = %f\n",term);
 	res+=term;
 
-	term += -(2.0034978000000001e-7)/(tau*tau*tau*tau);
-	fprintf(stderr,"\t\t-(2.0034978000000001*10^-7)/tau^4 = %f\n",term);
+	term = -(2.0034978000000001e-7)/(tau*tau*tau*tau);
+	//fprintf(stderr,"\t\t-(2.0034978000000001*10^-7)/tau^4 = %f\n",term);
 	res+=term;
 
 	term = (27.00285962508*exp(-26.65788*tau))/(1-exp(-26.65788*tau));
-	fprintf(stderr,"\t\t(27.00285962508*%e^(-26.65788*tau))/(1-%e^(-26.65788*tau)) = %f\n",term);
+	//fprintf(stderr,"\t\t(27.00285962508*exp(-26.65788*tau))/(1-exp(-26.65788*tau)) = %f\n",term);
 	res += term;
 	
 	return res;
