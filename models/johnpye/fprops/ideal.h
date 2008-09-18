@@ -105,5 +105,30 @@ typedef struct 	IdealData_struct{
 	const IdealExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
 } IdealData;
 
+/*-----------------------------------*/
+typedef struct IdealPhi0PowTerm_struct{
+	double a0; /* coefficient */
+	double t0; /* power of tau */
+} IdealPhi0PowTerm;
+
+typedef struct IdealPhi0ExpTerm_struct{
+	/* yet to be implemented */
+} IdealPhi0ExpTerm;
+
+
+/*
+	This data structure is used for the 'precalc' mechanism, which precalculates
+	cp0 data for those correlations where parameters are given in the form
+	of phi0 values.
+*/
+typedef struct IdealPhi0Data_struct{
+	double T_star;
+	unsigned np;
+	const IdealPhi0PowTerm *pt;
+	unsigned ne;
+	const IdealPhi0ExpTerm *et;
+} IdealPhi0Data;
+
+
 #endif
 
