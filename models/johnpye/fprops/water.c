@@ -33,7 +33,7 @@ const IdealData ideal_data_water = {
 	, WATER_R /* cpstar J/kgK */
 	, 1 /* power terms */	
 	, (const IdealPowTerm[]){
-		{1. + 3.00632,  1}
+		{1. + 3.00632,  0}
 	}
 	, 5 /* exponential terms */
 	, (const IdealExpTerm []){
