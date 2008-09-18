@@ -89,7 +89,7 @@ double helm_cp0(double T, const IdealData *data){
 	stick in the values of data->c and data->m.
 */
 
-#define IDEAL_DEBUG
+//#define IDEAL_DEBUG
 /**
 	Ideal component of helmholtz function
 */	
@@ -161,6 +161,7 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 	unsigned i;
 	double term;
 	double sum = -1./tau + data->m;
+	fprintf(stderr,"\t-1./tau + data->m = %f\n",sum);
 	double Tstar_on_tau = data->Tstar / tau;
 
 	pt = &(data->pt[0]);
@@ -169,9 +170,11 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 		double t = pt->t;
 		if(t==0){
 			term = c / tau;
+			fprintf(stderr,"\tc/tau = %f\n",term);
 		}else{
 			// term = -c / (t*(t+1)) * pow(Tstar_on_tau,t);
 			term = c/(t+1)*pow(Tstar_on_tau,t)/tau;
+			fprintf(stderr,"\tc/(t+1)*pow(Tstar_on_tau,t)/tau = %f\n",term);
 		}
 #ifdef TEST
 		if(isinf(term)){
@@ -186,6 +189,7 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
 		term = et->b * et->beta / data->Tstar / (1 - exp(-et->beta/Tstar_on_tau));
+		fprintf(stderr,"\tet->b * et->beta / data->Tstar / (1 - exp(-et->beta/Tstar_on_tau)) = %f\n",term);
 #ifdef TEST
 		assert(!isinf(term));
 #endif
