@@ -1,3 +1,22 @@
+/*	ASCEND modelling environment
+	Copyright (C) 2008 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*/
+
 #include "ammonia.h"
 
 /* Property data for Nitrogen
@@ -14,8 +33,8 @@ by NIST in its program REFPROP 7.0. */
 #define NITROGEN_TSTAR 126.192
 
 const IdealData ideal_data_nitrogen = {
-	0
-	,-1.011666234784E+006/NITROGEN_R/NITROGEN_TSTAR/* linear */
+	-12.76953
+	, -0.007841630 /* -1011666.23/NITROGEN_R/NITROGEN_TSTAR */
 	, NITROGEN_TSTAR /* Tstar */
 	, NITROGEN_R /* cp0star */
 	, 4 /* power terms */
@@ -97,6 +116,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 */
 #ifdef TEST
 
+#include "ideal_impl.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -124,6 +144,18 @@ const HelmholtzData helmholtz_data_nitrogen = {
 
 typedef struct{double T,p,rho,u,h,s,cv,cp,cp0,a;} TestData;
 const TestData td[]; const unsigned ntd;
+
+double phi0(double tau, double del){
+	double phi0 = 0;
+	double term;
+
+	term = log(del) - log(tau) - 12.76953 - 0.007841630*tau;
+	fprintf(stderr,"\t\t\tlog(del) - log(tau) - 12.76953 - 0.007841630*tau = %f\n",term);
+	phi0 += term;
+	phi0 += + 3.5*log(tau) - 1.934819e-4/tau - 1.247742e-5/(tau*tau) + 6.678326e-8/(tau*tau*tau) + 1.012941*log(1 - exp(-26.65788*tau));
+
+	return phi0;
+}
 
 int main(void){
 
@@ -154,14 +186,13 @@ int main(void){
 
 	fprintf(stderr,"Running through %d test points...\n",n);
 
-#define CP0_TEMP(T,RHO,DATA) helmholtz_cp0(T,DATA)
 
+#define CP0_TEMP(T,RHO,DATA) helmholtz_cp0(T,DATA)
 	fprintf(stderr,"CP0 TESTS\n");
 	for(i=0; i<n;++i){
 		cp0 = td[i].cp0*1e3;
 	 	ASSERT_TOL(CP0_TEMP, td[i].T+273.15, td[i].rho, d, cp0, cp0*1e-6);
 	}
-
 #undef CP0_TEMP
 
 
@@ -189,30 +220,16 @@ int main(void){
 	}
 	fprintf(stderr,"done\n");
 
-	fprintf(stderr,"ENTHALPY TESTS\n");
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		h = td[i].h*1e3;
-		//fprintf(stderr,"%.20e\n",(h - helmholtz_h(T,rho,d)) );
-	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
-	}
-
-	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
-	for(i=0; i<n;++i){
-		u = td[i].u*1e3;
-	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
-	}
-
-#if 0
-	fprintf(stderr,"CONSISTENCY TESTS (of calculated values): u, T, s, a\n");
+#if 1
+	fprintf(stderr,"CONSISTENCY TESTS (of calculated values): a=u+Ts, h=u+p/rho\n");
 	for(i=0; i<n; ++i){
 		T = td[i].T+273.15;
 		rho = td[i].rho;
-		a = helmholtz_a(T,rho,d);
 		s = helmholtz_s(T,rho,d);
 		u = helmholtz_u(T,rho,d);
-		ASSERT_TOL(helmholtz_a, T, rho, d, u-T*s, (u-T*s)*1e-3);
+		p = helmholtz_p(T,rho,d);
+		ASSERT_TOL(helmholtz_a, T, rho, d, u-T*s, (u-T*s)*1e-6);
+		ASSERT_TOL(helmholtz_h, T, rho, d, u+p/rho, (u+p/rho)*1e-6);
 	}
 	fprintf(stderr,"done\n");
 #endif
@@ -225,25 +242,70 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-6);
 	}
 
-	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
+#if 1
+	fprintf(stderr,"CONSISTENCY TESTS (with handwritten phi0 expr)\n");
+	for(i=10;i<n;++i){
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		fprintf(stderr,"Testing with i=%d\n",i);
+
+		double tau = d->T_star / T;
+		double del = rho / d->rho_star;
+
+		double p0;
+		p0 = phi0(tau, del);
+		fprintf(stderr,"T = %f, rho = %f --> phi0 = %f\n",T,rho,p0);
+
+		fprintf(stderr,"tau = %f, del = %f\n",tau,del);
+		double phi = helm_ideal(tau,del,d->ideal);
+		fprintf(stderr,"fprops calculates phi = %f\n",phi);
+		fprintf(stderr,"simple function gives phi = %f\n",p0);
+		assert(fabs(phi - p0) < 1e-6*fabs(p0));
+		//ASSERT_TOL(helm_ideal,tau,del, d->ideal, p0, p0*1e-3);
+		//fprintf(stderr,"\tOK: helm_ideal(T,rho) = phi0(T,rho) for T = %f, rho = %f.\n",T,rho);
+	}
+	exit(0);
+#endif
+
+
+	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
 	for(i=0; i<n;++i){
 		T = td[i].T+273.15;
 		rho = td[i].rho;
-		a = td[i].a*1e3;
-		//fprintf(stderr,"%.20e\n",(a - helmholtz_a(T,rho,d)));
-	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3);
+		u = td[i].u*1e3;
+		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(u - helmholtz_u(T,rho,d)));
+	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-3);
 	}
-	exit(1);
+	//exit(1);
 
 	fprintf(stderr,"ENTROPY TESTS\n");
 	for(i=0; i<n;++i){
 		T = td[i].T+273.15;
 		rho = td[i].rho;
 		s = td[i].s*1e3;
-		fprintf(stderr,"%.20e\n",(s - helmholtz_s(T,rho,d)));
+		fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(s - helmholtz_s(T,rho,d)));
 	 	//ASSERT_TOL(helmholtz_s, T, rho, d, s, 1e-3*s);
 	}
 	exit(1);
+
+	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
+	for(i=0; i<n;++i){
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		a = td[i].a*1e3;
+		fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(a - helmholtz_a(T,rho,d)));
+	 	//ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3);
+	}
+	exit(1);
+
+	fprintf(stderr,"ENTHALPY TESTS\n");
+	for(i=0; i<n;++i){
+		T = td[i].T+273.15;
+		rho = td[i].rho;
+		h = td[i].h*1e3;
+		//fprintf(stderr,"%.20e\n",(h - helmholtz_h(T,rho,d)) );
+	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
+	}
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
 	exit(0);
