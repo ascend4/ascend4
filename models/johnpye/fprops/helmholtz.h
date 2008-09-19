@@ -48,6 +48,32 @@ typedef struct HelmholtzExpTerm_struct{
 	double gamma;
 } HelmholtzExpTerm;
 
+/*
+	Data structure for 'critical terms' in the residual expression. These
+	terms are of the form described in the IAPWS-95 document, as cited in 
+	the file 'water.c'.
+
+	This structure is for the first kind, with alpha, beta, gamma, epsilon.
+*/
+typedef struct HelmholtzCritTerm1_struct{
+	double n; /**< coefficient */
+	double t; /**< power of tau */
+	double d; /**< power of delta */
+	double alpha,beta,gamma,epsilon;
+} HelmholtzCritTerm1;
+
+/*
+	Data structure for 'critical terms' in the residual expression. These
+	terms are of the form described in the IAPWS-95 document, as cited in 
+	the file 'water.c'.
+
+	This structure is for the second kind, with A, B, C, D.
+*/
+typedef struct HelmholtzCritTerm2_struct{
+	double n; /**< coefficient */
+	double a,b,beta,A,B,C,D;
+} HelmholtzCritTerm2;
+
 /**
 	Data structure for fluid-specific data for the Helmholtz free energy EOS.
 	See Tillner-Roth 1993 for information about 'atd' and 'a0' data.
@@ -64,6 +90,11 @@ typedef struct HelmholtzData_struct{
 	const HelmholtzPowTerm *pt; /* power term data for residual eqn, maybe NULL if np == 0 */
 	unsigned ne; /* number of exponential terms (a la Span et al 1998) for residual eqn */
 	const HelmholtzExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
+
+	unsigned nc1; /* number of critical terms of the first kind */
+	const HelmholtzCritTerm1 *c1t; /* critical terms of the first kind */
+	unsigned nc2; /* number of critical terms of the second kind */
+	const HelmholtzCritTerm1 *c2t; /* critical terms of the second kind */
 } HelmholtzData;
 
 double helmholtz_p(double T, double rho, const HelmholtzData *data);
