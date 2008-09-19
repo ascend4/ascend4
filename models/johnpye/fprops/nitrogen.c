@@ -117,33 +117,11 @@ const HelmholtzData helmholtz_data_nitrogen = {
 #ifdef TEST
 
 #include "ideal_impl.h"
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
+
+#include "test.h"
 #include <math.h>
-
-/* a simple macro to actually do the testing */
-#define ASSERT_TOL(FN,PARAM1,PARAM2,PARAM3,VAL,TOL) {\
-		double cval; cval = FN(PARAM1,PARAM2,PARAM3);\
-		double err; err = cval - (double)(VAL);\
-		double relerrpc = (cval-(VAL))/(VAL)*100;\
-		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
-		if(fabs(err)>fabs(TOL)){\
-			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %f,"\
-				" should be %f, error is %f (%.2f%%)!\n"\
-				, __LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
-				,relerrpc\
-			);\
-			exit(1);\
-		}else{\
-			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
-				,#FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
-			);\
-		}\
-	}
-
-typedef struct{double T,p,rho,u,h,s,cv,cp,cp0,a;} TestData;
-const TestData td[]; const unsigned ntd;
+#include <stdio.h>
+#include <assert.h>
 
 double phi0(double tau, double del){
 	return log(del) - log(tau) - 12.76953 - 0.007841630*tau + 3.5*log(tau) - 1.934819e-4/tau - 1.247742e-5/(tau*tau) + 6.678326e-8/(tau*tau*tau) + 1.012941*log(1 - exp(-26.65788*tau));
@@ -178,6 +156,8 @@ double phi0tau(double tau, double del){
 	return res;
 }
 
+const TestData td[]; const unsigned ntd;
+
 int main(void){
 
 	double rho, T, p, u, h, a, s, cp0;
@@ -207,16 +187,6 @@ int main(void){
 
 	fprintf(stderr,"Running through %d test points...\n",n);
 
-
-#define CP0_TEMP(T,RHO,DATA) helmholtz_cp0(T,DATA)
-	fprintf(stderr,"CP0 TESTS\n");
-	for(i=0; i<n;++i){
-		cp0 = td[i].cp0*1e3;
-	 	ASSERT_TOL(CP0_TEMP, td[i].T+273.15, td[i].rho, d, cp0, cp0*1e-6);
-	}
-#undef CP0_TEMP
-
-
 	fprintf(stderr,"CONSISTENCY TESTS (of test data): u, T, s, a...");
 	for(i=0; i<n; ++i){
 		u = td[i].u*1e3;
@@ -241,28 +211,6 @@ int main(void){
 	}
 	fprintf(stderr,"done\n");
 
-#if 1
-	fprintf(stderr,"CONSISTENCY TESTS (of calculated values): a=u+Ts, h=u+p/rho\n");
-	for(i=0; i<n; ++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		s = helmholtz_s(T,rho,d);
-		u = helmholtz_u(T,rho,d);
-		p = helmholtz_p(T,rho,d);
-		ASSERT_TOL(helmholtz_a, T, rho, d, u-T*s, (u-T*s)*1e-6);
-		ASSERT_TOL(helmholtz_h, T, rho, d, u+p/rho, (u+p/rho)*1e-6);
-	}
-	fprintf(stderr,"done\n");
-#endif
-
-	fprintf(stderr,"PRESSURE TESTS\n");
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		p = td[i].p*1e6;
-	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-6);
-	}
-
 #if 0
 	/* can only use this check if c,m haven't been offset from original */
 	fprintf(stderr,"CONSISTENCY TESTS (with handwritten phi0 expr)\n");
@@ -284,53 +232,8 @@ int main(void){
 	}
 #endif
 
-
-	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		u = td[i].u*1e3;
-		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(u - helmholtz_u(T,rho,d)));
-	 	ASSERT_TOL(helmholtz_u, td[i].T+273.15, td[i].rho, d, u, u*1e-6);
-	}
-
-	fprintf(stderr,"ENTROPY TESTS\n");
-	double se = 0, sse = 0;
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		s = td[i].s*1e3;
-		double err = s - helmholtz_s(T,rho,d);
-		se += err;
-		sse += err*err;
-		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(s - helmholtz_s(T,rho,d)));
-	 	ASSERT_TOL(helmholtz_s, T, rho, d, s, 1e-6*s);
-	}
-	//fprintf(stderr,"average error = %.10e\n",se/n);
-	//fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);
-	//exit(1);
-
-	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		a = td[i].a*1e3;
-		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(a - helmholtz_a(T,rho,d)));
-	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-6);
-	}
-	//exit(1);
-
-	fprintf(stderr,"ENTHALPY TESTS\n");
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		h = td[i].h*1e3;
-		//fprintf(stderr,"%.20e\n",(h - helmholtz_h(T,rho,d)) );
-	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
-	}
-
-	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
-	exit(0);
+	/* check evaluation against the test dataset */
+	return helm_run_test_cases(d, ntd, td);
 }
 
 const TestData td[] = {
