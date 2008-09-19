@@ -286,7 +286,6 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		}
 	}
 
-#if 1
 	/* now the exponential terms */
 	n = data->ne;
 	et = &(data->et[0]);
@@ -305,7 +304,6 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		res += sum;
 		++et;
 	}
-#endif
 
 #ifdef RESID_DEBUG
 	fprintf(stderr,"phir = %f\n",res);
