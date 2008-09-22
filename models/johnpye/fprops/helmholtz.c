@@ -229,7 +229,7 @@ static double ipow(double x, int n){
 	return t; 
 }
 
-#define RESID_DEBUG
+//#define RESID_DEBUG
 
 /**
 	Residual part of helmholtz function.
@@ -289,7 +289,8 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 
 	/* now the exponential terms */
 	n = data->ne;
-	gt = &(data->et[0]);
+	//fprintf(stderr,"THERE ARE %d EXPONENTIAL TERMS at %p\n",n, data->et);
+	et = &(data->et[0]);
 	for(i=0; i< n; ++i){
 #ifdef RESID_DEBUG
 		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
@@ -308,6 +309,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 
 	/* gaussian terms */
 	n = data->ng;
+	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
 	gt = &(data->gt[0]);
 	for(i=0; i<n; ++i){
 #ifdef RESID_DEBUG
@@ -388,6 +390,7 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 
 	/* gaussian terms */
 	n = data->ng;
+	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
 	gt = &(data->gt[0]);
 	for(i=0; i<n; ++i){
 #ifdef RESID_DEBUG
