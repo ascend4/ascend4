@@ -103,6 +103,8 @@ const HelmholtzData helmholtz_data_nitrogen = {
 		, {0.167788306989e-1, 2., 3, 15, 300, 1.13}
 		, {0.262767566274e4, 3., 2, 25, 275, 1.25}
 	}
+	, 0 /* gaussian terms */, 0
+	, 0 /* critical terms */, 0
 };
 
 

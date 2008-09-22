@@ -97,6 +97,8 @@ const HelmholtzData helmholtz_data_ammonia = {
 		,{-0.5588655E-3,  30,    4,  3}
 	}
 	, 0, 0 /* no exponential terms */
+	, 0, 0 /* no gaussian terms */
+	, 0, 0 /* no critical terms */
 };
 #endif
 

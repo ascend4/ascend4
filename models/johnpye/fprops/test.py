@@ -12,7 +12,7 @@ if not os.path.exists(src):
 	print "No file named '%s' found in current directory" % src
 	exit(1)
 
-s = 'gcc ideal.c helmholtz.c test.c %s.c -DTEST -o %s -lm' % (species,species)
+s = 'gcc -g ideal.c helmholtz.c test.c %s.c -DTEST -o %s -lm' % (species,species)
 
 print s
 p = subprocess.Popen(s.split(' '))
