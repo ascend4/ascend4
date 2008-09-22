@@ -493,6 +493,8 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 /**
 	Mixed derivative of the helmholtz residual function with respect to
 	delta and tau
+
+	FIXME this function is WRONG.
 */
 double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 	
@@ -540,6 +542,8 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 /**
 	Second derivative of helmholtz residual function with respect to
 	delta (twice).
+
+	FIXME this function is WRONG.
 */
 double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	
