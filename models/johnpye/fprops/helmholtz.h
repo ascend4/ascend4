@@ -49,18 +49,27 @@ typedef struct HelmholtzExpTerm_struct{
 } HelmholtzExpTerm;
 
 /*
-	Data structure for 'critical terms' in the residual expression. These
-	terms are of the form described in the IAPWS-95 document, as cited in 
-	the file 'water.c'.
+	Data structure for Gaussian terms in the residual expression, for
+	improvement of correlation in the critical region. These terms are of the
+	form as utilised in the correlations for water (see water.c) and hydrogen
+	(see hydrogen.c). According to Leachman, these terms are due to Setzmann
+	and Wagner (J Phys Chem Ref Data, 1966).
 
-	This structure is for the first kind, with alpha, beta, gamma, epsilon.
+	Using the nomenclature of IAPWS-95 (see water.c), terms here for the reduced
+	helmholtz energy are:
+
+		n * del^d * tau^t * exp[-alpha*(delta-epsilon)^2 - beta*(tau-gamma)^2]
+
+	NOTE the minus signs preceeding 'alpha' and 'beta' and note that this is
+	in conflict with the sign convention of Leachman, who assumes a plus sign
+	in front of the corresponding parameters in his equation.
 */
-typedef struct HelmholtzCritTerm1_struct{
+typedef struct HelmholtzGausTerm_struct{
 	double n; /**< coefficient */
 	double t; /**< power of tau */
 	double d; /**< power of delta */
 	double alpha,beta,gamma,epsilon;
-} HelmholtzCritTerm1;
+} HelmholtzGausTerm;
 
 /*
 	Data structure for 'critical terms' in the residual expression. These
@@ -69,10 +78,10 @@ typedef struct HelmholtzCritTerm1_struct{
 
 	This structure is for the second kind, with A, B, C, D.
 */
-typedef struct HelmholtzCritTerm2_struct{
+typedef struct HelmholtzCritTerm_struct{
 	double n; /**< coefficient */
 	double a,b,beta,A,B,C,D;
-} HelmholtzCritTerm2;
+} HelmholtzCritTerm;
 
 /**
 	Data structure for fluid-specific data for the Helmholtz free energy EOS.
@@ -91,10 +100,10 @@ typedef struct HelmholtzData_struct{
 	unsigned ne; /* number of exponential terms (a la Span et al 1998) for residual eqn */
 	const HelmholtzExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
 
-	unsigned nc1; /* number of critical terms of the first kind */
-	const HelmholtzCritTerm1 *c1t; /* critical terms of the first kind */
-	unsigned nc2; /* number of critical terms of the second kind */
-	const HelmholtzCritTerm1 *c2t; /* critical terms of the second kind */
+	unsigned ng; /* number of critical terms of the first kind */
+	const HelmholtzGausTerm *gt; /* critical terms of the first kind */
+	unsigned nc; /* number of critical terms of the second kind */
+	const HelmholtzCritTerm *ct; /* critical terms of the second kind */
 } HelmholtzData;
 
 double helmholtz_p(double T, double rho, const HelmholtzData *data);

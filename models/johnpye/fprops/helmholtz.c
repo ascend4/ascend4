@@ -229,7 +229,7 @@ static double ipow(double x, int n){
 	return t; 
 }
 
-//#define RESID_DEBUG
+#define RESID_DEBUG
 
 /**
 	Residual part of helmholtz function.
@@ -239,6 +239,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzExpTerm *et;
+	const HelmholtzGausTerm *gt;
 
 	n = data->np;
 	pt = &(data->pt[0]);
@@ -288,7 +289,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 
 	/* now the exponential terms */
 	n = data->ne;
-	et = &(data->et[0]);
+	gt = &(data->et[0]);
 	for(i=0; i< n; ++i){
 #ifdef RESID_DEBUG
 		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
@@ -303,6 +304,22 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		//fprintf(stderr,"sum = %f\n",sum);
 		res += sum;
 		++et;
+	}
+
+	/* gaussian terms */
+	n = data->ng;
+	gt = &(data->gt[0]);
+	for(i=0; i<n; ++i){
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d, GAUSSIAN, n = %e, t = %f, d = %f, alpha = %f, beta = %f, gamma = %f, epsilon = %f\n",i+1, gt->n, gt->t, gt->d, gt->alpha, gt->beta, gt->gamma, gt->epsilon);
+#endif
+		double d1 = delta - gt->epsilon;
+		double t1 = tau - gt->gamma;
+		double e1 = -gt->alpha*d1*d1 - gt->beta*t1*t1;
+		sum = gt->n * pow(tau,gt->t) * pow(delta,gt->d) * exp(e1);
+		//fprintf(stderr,"sum = %f\n",sum);
+		res += sum;
+		++gt;
 	}
 
 #ifdef RESID_DEBUG
@@ -321,6 +338,7 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzExpTerm *et;
+	const HelmholtzGausTerm *gt;
 
 	n = data->np;
 	pt = &(data->pt[0]);
@@ -345,8 +363,7 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		}
 	}
 
-#if 1
-	/* now the exponential terms */
+	/* exponential terms */
 	n = data->ne;
 	et = &(data->et[0]);
 	for(i=0; i< n; ++i){
@@ -368,7 +385,28 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		res += sum;
 		++et;
 	}
+
+	/* gaussian terms */
+	n = data->ng;
+	gt = &(data->gt[0]);
+	for(i=0; i<n; ++i){
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d, n = %e, t = %f, d = %f, alpha = %f, beta = %f, gamma = %f, epsilon = %f\n",i+1, gt->n, gt->t, gt->d, gt->alpha, gt->beta, gt->gamma, gt->epsilon);
 #endif
+		double d1 = delta - gt->epsilon;
+		fprintf(stderr,"d1 = %f\n",d1);
+		double t1 = tau - gt->gamma;
+		fprintf(stderr,"t1 = %f\n",t1);
+		double e1 = -gt->alpha*d1*d1 - gt->beta*t1*t1;
+		double m1 = n * pow(tau,gt->t) * pow(delta,gt->d - 1);
+		double f1 = -(2.*gt->alpha*delta*delta - 2.*gt->alpha*gt->epsilon*delta - gt->d);
+		sum = m1 * f1 * exp(e1);
+#ifdef RESID_DEBUG
+		fprintf(stderr,"sum = %f\n",sum);
+#endif
+		res += sum;
+		++gt;
+	}
 
 	return res;
 }
