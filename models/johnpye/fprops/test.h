@@ -15,6 +15,11 @@ typedef struct{double T,p,rho,u,h,s,cv,cp,cp0,a;} TestData;
 */
 int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td);
 
+/**
+	Check 'u' values and output discrepancy for plotting.
+*/
+int helm_check_u(const HelmholtzData *d, unsigned ntd, const TestData *td);
+
 /* a simple macro to actually do the testing */
 #define ASSERT_TOL(FN,PARAM1,PARAM2,PARAM3,VAL,TOL) {\
 		double cval; cval = FN(PARAM1,PARAM2,PARAM3);\
@@ -22,8 +27,8 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 		double relerrpc = (cval-(VAL))/(VAL)*100;\
 		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
 		if(fabs(err)>fabs(TOL)){\
-			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %f,"\
-				" should be %f, error is %f (%.2f%%)!\n"\
+			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %.5e,"\
+				" should be %.5e, error is %.10e (%.2f%%)!\n"\
 				, __LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
 				,relerrpc\
 			);\

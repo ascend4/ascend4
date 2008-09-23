@@ -33,8 +33,8 @@
 	version 8.0.
 */
 const IdealData ideal_data_hydrogen = {
-	0 /* const */
-	, 0 /* linear */
+	(-6.01e3) /HYDROGEN_R /* const */
+	, 2.581040351759e+05/HYDROGEN_R/HYDROGEN_TSTAR /* linear */
 	, HYDROGEN_TSTAR /* Tstar */
 	, HYDROGEN_R /* cp0star */
 	, 1 /* power terms */
@@ -107,7 +107,8 @@ const HelmholtzData helmholtz_data_hydrogen = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-	return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td);
+	return helm_check_u(&helmholtz_data_hydrogen,ntd,td);
+	//return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td);
 }
 
 /*
@@ -115,7 +116,7 @@ int main(void){
 */
 const TestData td[] = {
 	/* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
-	/* (K), (MPa), (kg/m³), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
+	/* (C), (MPa), (kg/m³), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
 	{-2.50E+2, 1.E-1, 1.12119687314E+0, 3.92130160933E+2, 4.81320563079E+2, 2.35808248576E+1, 6.29359688434E+0, 1.13471316035E+1, 1.03109124142E+1, -1.53765934519E+2}
 	, {-2.00E+2, 1.E-1, 3.32141763015E-1, 7.11029863688E+2, 1.0121061243E+3, 3.58592769541E+1, 6.43467663919E+0, 1.06158457937E+1, 1.05522028485E+1, -1.9120762455E+3}
 	, {-1.50E+2, 1.E-1, 1.96817196167E-1, 1.06413088038E+3, 1.57221656571E+3, 4.16649978447E+1, 7.75342108402E+0, 1.18952575073E+1, 1.18753688873E+1, -4.06691360419E+3}

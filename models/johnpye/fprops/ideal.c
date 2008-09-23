@@ -31,6 +31,8 @@
   IDEAL COMPONENT RELATIONS
 */
 
+//#define CP0_DEBUG
+
 /**
 	Zero-pressure specific heat function (ideal gas limit)
 
@@ -46,12 +48,12 @@ double helm_cp0(double T, const IdealData *data){
 
 	/* power terms */
 	pt = &(data->pt[0]);
-#if 0
+#ifdef CP0_DEBUG
 	fprintf(stderr,"np = %d\n",data->np);
 #endif
 	for(i = 0; i<data->np; ++i, ++pt){
 		term = pt->c * pow(T, pt->t);
-#if 0
+#ifdef CP0_DEBUG
 		fprintf(stderr,"i = %d: ",i);
 		fprintf(stderr,"power term, c = %f, t = %f, val = %f\n",pt->c, pt->t, term);
 #endif
@@ -61,20 +63,20 @@ double helm_cp0(double T, const IdealData *data){
 	/* 'exponential' terms */
 	et = &(data->et[0]);
 	for(i=0; i<data->ne; ++i, ++et){
-#if 0
+#ifdef CP0_DEBUG
 		fprintf(stderr,"exp term\n");
 #endif
 		double x = et->beta / T;
 		double e = exp(-x);
 		double d = (1-e)*(1-e);
 		term = et->b * x*x * e / d;
-#if 0
+#ifdef CP0_DEBUG
 		fprintf(stderr,"exp term, b = %f, beta = %f, val = %f\n",et->b, et->beta, term);
 #endif
 		sum += term;
 	}
 
-#if 0
+#ifdef CP0_DEBUG
 	fprintf(stderr,"Mult by cp0* = %f\n",data->cp0star);
 #endif
 	return data->cp0star * sum;
