@@ -24,15 +24,15 @@ class SolverParametersWindow:
 		self.window = _xml.get_widget("paramswin")
 		self.window.set_transient_for(self.parent.window)
 
-		self.paramdescription = _xml.get_widget("paramdescription")
+		self.paramdescription = _xml.get_widget("paramdescription1")
 		self.paramname = _xml.get_widget("paramname")
-		self.solvername = _xml.get_widget("solvername")
+		self.solvername = _xml.get_widget("solvername1")
 
 		_xml.signal_autoconnect(self)
 
 		self.solvername.set_text(name)
 		
-		self.paramsview = _xml.get_widget("paramsview")	
+		self.paramsview = _xml.get_widget("paramsview1")	
 		self.otank = {}
 		self.paramstore = gtk.TreeStore(str,str,str,bool,str,int)
 		self.paramsview.set_model(self.paramstore)
