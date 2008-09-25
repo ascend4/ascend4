@@ -503,8 +503,8 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 
 #define SQ(X) ((X)*(X))
 		double val2;
-		val2 = gt->n * pow(tau,gt->t - 1.) * pow(delta, gt->d)
-			* (2. * gt->beta * SQ(tau) - 2. * gt->beta * gt->gamma * tau + gt->t)
+		val2 = -gt->n * pow(tau,gt->t - 1.) * pow(delta, gt->d)
+			* (2. * gt->beta * tau * (tau - gt->gamma) - gt->t)
 			* exp(-(gt->alpha * SQ(delta-gt->epsilon) + gt->beta*SQ(tau-gt->gamma)));
 		res += val2;
 #ifdef RESID_DEBUG
