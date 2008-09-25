@@ -2,13 +2,16 @@
 	This file gives a solution to problem 3.5 from Holman, Heat Transfer, 
 	9th Ed., McGraw-Hill.
 
-	The problem a 2-D solid with its left face maintained at 100°C and its top
-	face maintained at 500°C, and the other two faces exposed to convection
-	with h = 10 W/m²K and an ambient temperature of 100°C. The solid has a
-	conductivity of k = 10 W/m·K, and is 1 m in size. Compute the steady-state
-	temperatures over a 4 × 4 grid of nodes (of which 3 x 3 of the nodes have
-	temperatures that are as yet unknown), and compute the heat flows at the 
-	boundaries.
+	The problem, paraphrased: a 2-D solid with its left face maintained at 100°C
+	and its top face maintained at 500°C, and the other two faces exposed to
+	convection with h = 10 W/m²K and an ambient temperature of 100°C. The solid
+	has a conductivity of k = 10 W/m·K, and is 1 m in size.
+
+	Compute the steady-state temperatures over a 4 × 4 grid of nodes (of which
+	3 x 3 of the nodes have temperatures that are as yet unknown), and compute
+	the heat flows at the boundaries.
+
+	Model by John Pye, Sep 2008.
 *)
 
 REQUIRE "atoms.a4l";
@@ -16,8 +19,10 @@ REQUIRE "johnpye/thermo_types.a4c";
 
 MODEL holman_ex_3_5;
 
+	(* declare the grid of temperature nodes *)
 	T[0..3][0..3] IS_A temperature;
 
+	(* set up the equations for the internal nodes *)
 	FOR m IN [1,2] CREATE
 		FOR n IN [1,2] CREATE
 			T[m+1][n] + T[m-1][n] + T[m][n-1] + T[m][n+1] - 4*T[m][n] = 0;
@@ -25,7 +30,7 @@ MODEL holman_ex_3_5;
 	END FOR;
 
 
-	(* boundary conditions *)
+	(* declare variables for the boundary conditions *)
 	T_amb IS_A temperature;
 	h IS_A heat_transfer_coefficient;
 	k IS_A thermal_conductivity;
@@ -63,28 +68,35 @@ MODEL holman_ex_3_5;
 	q['right'] = SUM[h*dx*(T_amb - T[3][n]) | n IN [1..2]] + h*0.5*dx*(T_amb - T[3][3]);
 	q['bottom'] = SUM[h*dx*(T_amb - T[m][3]) | m IN [1..2]] + h*0.5*dx*(T_amb - T[3][3]);
 
+	(* heat balance: should sum to zero (no generation) *)
 	q_bal = SUM[q[i] | i IN ['top','left','right','bottom']];
 METHODS
 	METHOD on_load;
+		(* fix the temperatures along the top surface *)
 		FOR m IN [0..3] DO
 			FIX T[m][0];
 			T[m][0] := 500 {K};
 		END FOR;
 
+		(* fix the temperatures along the left surface *)
 		FOR n IN [0..3] DO
 			FIX T[0][n];
 			T[0][n] := 100 {K};
 		END FOR;
 
+		(* fix the convection coefficient *)
 		FIX h;
 		h := 10 {W/m^2/K};
 
+		(* fix the thermal conductivity *)
 		FIX k;
 		k := 10 {W/m/K};
 
+		(* fix the ambient temperature *)
 		FIX T_amb;
 		T_amb := 100 {K};
 
+		(* fix the grid size *)
 		FIX dx;
 		dx := 1.0 {m} / 3;
 	END on_load;
