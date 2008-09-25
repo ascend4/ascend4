@@ -65,7 +65,7 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.blockelapsedtime = _xml.get_widget("blockelapsedtimeentry")
 	
 		self.progressbar = _xml.get_widget("progressbar")
-		self.closebutton = _xml.get_widget("closebutton")
+		self.closebutton = _xml.get_widget("closebutton1")
 		self.stopbutton = _xml.get_widget("stopbutton")
 			
 		#print "SOLVER REPORTER ---- PYTHON"
