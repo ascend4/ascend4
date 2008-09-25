@@ -332,6 +332,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	return res;
 }
 
+#define RESID_DEBUG
 /**
 	Derivative of the helmholtz residual function with respect to
 	delta.
@@ -346,6 +347,10 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 
 	n = data->np;
 	pt = &(data->pt[0]);
+
+#ifdef RESID_DEBUG
+		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
+#endif
 
 	sum = 0;
 	dell = ipow(delta,pt->l);
@@ -399,23 +404,16 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 #ifdef RESID_DEBUG
 		fprintf(stderr,"i = %d, GAUSSIAN, n = %e, t = %f, d = %f, alpha = %f, beta = %f, gamma = %f, epsilon = %f\n",i+1, gt->n, gt->t, gt->d, gt->alpha, gt->beta, gt->gamma, gt->epsilon);
 #endif
-		double d1 = delta - gt->epsilon;
-		double t1 = tau - gt->gamma;
-		double e1 = -gt->alpha*d1*d1 - gt->beta*t1*t1;
-		double m1 = gt->n * pow(tau,gt->t) * pow(delta,gt->d - 1);
-		double f1 = -(2.*gt->alpha*delta*delta - 2.*gt->alpha*gt->epsilon*delta - gt->d);
+#define SQ(X) ((X)*(X))
+		double val2;
+		val2 = - gt->n * pow(tau,gt->t) * pow(delta, -1. + gt->d)
+			* (2. * gt->alpha * delta * (delta - gt->epsilon) - gt->d)
+			* exp(-(gt->alpha * SQ(delta-gt->epsilon) + gt->beta*SQ(tau-gt->gamma)));
+		res += val2;
 #ifdef RESID_DEBUG
-		fprintf(stderr,"t1 = %f\n",t1);
-		fprintf(stderr,"d1 = %f\n",d1);
-		fprintf(stderr,"e1 = %f\n",e1);
-		fprintf(stderr,"n = %f, m1 = %f\n", gt->n, m1);
-		fprintf(stderr,"f1 = %f\n",f1);
+		fprintf(stderr,"val2 = %f --> res = %f\n",val2,res);
 #endif
-		sum = m1 * f1 * exp(e1);
-		res += sum;
-#ifdef RESID_DEBUG
-		fprintf(stderr,"sum = %f, res = %f\n",sum,res);
-#endif
+#undef SQ
 		++gt;
 	}
 #endif
@@ -506,10 +504,10 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 
 #define SQ(X) ((X)*(X))
 		double val2;
-		val2 = -gt->n * pow(tau,gt->t - 1.) * pow(delta, gt->d)
-			* (2. * gt->beta * SQ(tau) - 2. * gt->beta * gt->gamma * tau - gt->t)
-			* exp(-gt->alpha * SQ(delta-gt->epsilon) + -gt->beta*SQ(tau-gt->gamma));
-
+		val2 = gt->n * pow(tau,gt->t - 1.) * pow(delta, gt->d)
+			* (2. * gt->beta * SQ(tau) - 2. * gt->beta * gt->gamma * tau + gt->t)
+			* exp(-(gt->alpha * SQ(delta-gt->epsilon) + gt->beta*SQ(tau-gt->gamma)));
+		res += val2;
 #ifdef RESID_DEBUG
 		fprintf(stderr,"res = %f\n",res);
 #endif
