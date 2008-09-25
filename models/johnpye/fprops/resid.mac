@@ -3,5 +3,11 @@
 # residual expression, particularly for the gaussian terms (see hydrogen.c)
 #
 
-term(tau,del) := n*del^d*tau^t*exp(-alp*(del-eps)^2 - bet*(tau-gam)^2)
+term(tau,del) := n*del^d*tau^t*exp(-(alp*(del-eps)^2 + bet*(tau-gam)^2))
+
+term(tau,del) := n*del^d*tau^t*exp(-del^l)
+
+
+
+
 

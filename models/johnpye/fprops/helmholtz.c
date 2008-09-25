@@ -332,7 +332,6 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	return res;
 }
 
-#define RESID_DEBUG
 /**
 	Derivative of the helmholtz residual function with respect to
 	delta.
