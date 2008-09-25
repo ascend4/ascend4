@@ -107,8 +107,8 @@ const HelmholtzData helmholtz_data_hydrogen = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-	return helm_check_u(&helmholtz_data_hydrogen,ntd,td);
-	//return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td);
+	//return helm_check_u(&helmholtz_data_hydrogen,ntd,td);
+	return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td);
 }
 
 /*
