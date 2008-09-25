@@ -1,0 +1,7 @@
+#
+# Some code for use with wxMaxima for calculation of terms in the
+# residual expression, particularly for the gaussian terms (see hydrogen.c)
+#
+
+term(tau,del) := n*del^d*tau^t*exp(-alp*(del-eps)^2 - bet*(tau-gam)^2)
+
