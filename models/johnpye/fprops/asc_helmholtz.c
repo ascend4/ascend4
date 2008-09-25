@@ -59,7 +59,9 @@ better later on, hopefully. */
 ExtBBoxInitFunc helmholtz_prepare;
 ExtBBoxFunc helmholtz_p_calc;
 ExtBBoxFunc helmholtz_u_calc;
+ExtBBoxFunc helmholtz_s_calc;
 ExtBBoxFunc helmholtz_h_calc;
+ExtBBoxFunc helmholtz_a_calc;
 
 /*------------------------------------------------------------------------------
   GLOBALS
@@ -71,7 +73,9 @@ static symchar *helmholtz_symbols[1];
 
 static const char *helmholtz_p_help = "Calculate pressure from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_u_help = "Calculate specific internal energy from temperature and density, using Helmholtz fundamental correlation";
+static const char *helmholtz_s_help = "Calculate specific entropy from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_h_help = "Calculate specific enthalpy from temperature and density, using Helmholtz fundamental correlation";
+static const char *helmholtz_a_help = "Calculate specific Helmholtz energy from temperature and density, using Helmholtz fundamental correlation";
 
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
@@ -102,7 +106,9 @@ ASC_EXPORT int helmholtz_register(){
 
 	CALCFN(helmholtz_p,2,1);
 	CALCFN(helmholtz_u,2,1);
+	CALCFN(helmholtz_s,2,1);
 	CALCFN(helmholtz_h,2,1);
+	CALCFN(helmholtz_a,2,1);
 
 #undef CALCFN
 
@@ -217,6 +223,26 @@ int helmholtz_u_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
+int helmholtz_s_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE;
+
+	/* first input is temperature, second is molar density */
+	outputs[0] = helmholtz_s(inputs[0], inputs[1], helmholtz_data);
+
+	/* no need to worry about error states etc. */
+	return 0;
+}
+
+
+/**
+	Evaluation function for 'helmholtz_h'
+	@param jacobian ignored
+	@return 0 on success
+*/
 int helmholtz_h_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
@@ -231,6 +257,25 @@ int helmholtz_h_calc(struct BBoxInterp *bbox,
 	return 0;
 }
 
+
+/**
+	Evaluation function for 'helmholtz_h'
+	@param jacobian ignored
+	@return 0 on success
+*/
+int helmholtz_a_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE;
+
+	/* first input is temperature, second is molar density */
+	outputs[0] = helmholtz_a(inputs[0], inputs[1], helmholtz_data);
+
+	/* no need to worry about error states etc. */
+	return 0;
+}
 
 
 
