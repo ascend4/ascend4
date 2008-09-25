@@ -33,8 +33,8 @@
 	version 8.0.
 */
 const IdealData ideal_data_hydrogen = {
-	(-6.01e3) /HYDROGEN_R /* const */
-	, 2.581040351759e+05/HYDROGEN_R/HYDROGEN_TSTAR /* linear */
+	-6.0132647014e+03 / HYDROGEN_R /* const */
+	, 2.5810400764e+05/HYDROGEN_R/HYDROGEN_TSTAR /* linear */
 	, HYDROGEN_TSTAR /* Tstar */
 	, HYDROGEN_R /* cp0star */
 	, 1 /* power terms */

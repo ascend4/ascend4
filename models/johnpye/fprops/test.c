@@ -97,15 +97,13 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 
 int helm_check_u(const HelmholtzData *d, unsigned ntd, const TestData *td){
 	unsigned i;
-	double T,rho,u,err,se,sse;
+	double T,rho,u,err,se = 0,sse = 0;
 	unsigned n = ntd;
 	double tol = 1e-1;
 
 	fprintf(stderr,"INTERNAL ENERGY VALUES\n\n");
 	fprintf(stderr,"%-18s\t%-18s\t%-18s\t%-18s\t%-18s\n","T","rho","u","du","%err");
 	for(i=0; i<n;++i){
-		if(td[i].p < 1.0) continue;
-		if(td[i].p > 1.0) break;
 		T = td[i].T+273.15;
 		rho = td[i].rho;
 		u = td[i].u*1e3;
@@ -113,11 +111,27 @@ int helm_check_u(const HelmholtzData *d, unsigned ntd, const TestData *td){
 		se += err;
 		sse += err*err;
 		fprintf(stderr,"%.12e\t%.12e\t%.12e\t%.12e\t%.6f\n",T,rho,u,err,err/u*100.);
+	}
+	fprintf(stderr,"average error = %.10e\n",se/n);
+	fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);
+}
 
-		if(fabs(err)>fabs(u*tol)){
-			fprintf(stderr,"ERROR, exceeded error tol %f%%\n",tol*100);
-			exit(1);
-		}
+int helm_check_s(const HelmholtzData *d, unsigned ntd, const TestData *td){
+	unsigned i;
+	double T,rho,s,err,se = 0,sse = 0;
+	unsigned n = ntd;
+	double tol = 1e-1;
+
+	fprintf(stderr,"ENTROPY VALUES\n\n");
+	fprintf(stderr,"%-18s\t%-18s\t%-18s\t%-18s\t%-18s\n","T","rho","s","ds","%err");
+	for(i=0; i<n;++i){
+		T = td[i].T + 273.15;
+		rho = td[i].rho;
+		s = td[i].s*1e3;
+		err = s - helmholtz_s(T,rho,d);
+		se += err;
+		sse += err*err;
+		fprintf(stderr,"%.12e\t%.12e\t%.12e\t%.12e\t%.6f\n",T,rho,s,err,err/s*100.);
 	}
 	fprintf(stderr,"average error = %.10e\n",se/n);
 	fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);
