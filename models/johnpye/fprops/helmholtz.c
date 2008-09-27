@@ -238,7 +238,6 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	double dell,ldell, term, sum, res = 0;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
-	const HelmholtzExpTerm *et;
 	const HelmholtzGausTerm *gt;
 
 	n = data->np;
@@ -287,26 +286,6 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		}
 	}
 
-	/* now the exponential terms */
-	n = data->ne;
-	//fprintf(stderr,"THERE ARE %d EXPONENTIAL TERMS at %p\n",n, data->et);
-	et = &(data->et[0]);
-	for(i=0; i< n; ++i){
-#ifdef RESID_DEBUG
-		fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
-#endif		
-		double e1 = -et->phi * delta*delta
-					 + 2 * et->phi * delta
-					 - et->beta * tau * tau
-					 + 2 * et->beta * et->gamma * tau
-					 - et->phi 
-					 - et->beta * et->gamma * et->gamma;
-		sum = et->a * pow(tau,et->t) * ipow(delta,et->d) * exp(e1);
-		//fprintf(stderr,"sum = %f\n",sum);
-		res += sum;
-		++et;
-	}
-
 #if 1
 	/* gaussian terms */
 	n = data->ng;
@@ -341,7 +320,6 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 	double dell, ldell;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
-	const HelmholtzExpTerm *et;
 	const HelmholtzGausTerm *gt;
 
 	n = data->np;
@@ -369,29 +347,6 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 			dell = ipow(delta,pt->l);
 			ldell = pt->l*dell;
 		}
-	}
-
-	/* exponential terms */
-	n = data->ne;
-	et = &(data->et[0]);
-	for(i=0; i< n; ++i){
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
-		
-		double del2 = delta*delta;
-		double tau2 = tau*tau;
-		double gam2 = et->gamma * et->gamma;
-		double e1 = -et->phi * del2
-					 + 2 * et->phi * delta
-					 - et->beta * tau2
-					 + 2 * et->beta * et->gamma * tau
-					 - et->phi 
-					 - et->beta * gam2;
-		sum = -et->a * pow(tau,et->t) * ipow(delta,et->d-1)
-			* (2 * et->phi * del2 - 2 * et->phi * delta - et->d)
-			* exp(e1);
-		//fprintf(stderr,"sum = %f\n",sum);
-		res += sum;
-		++et;
 	}
 
 #if 1
@@ -432,7 +387,6 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 	unsigned l;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
-	const HelmholtzExpTerm *et;
 	const HelmholtzGausTerm *gt;
 
 	n = data->np;
@@ -466,31 +420,6 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 			}
 		}
 	}
-
-#if 1
-	/* now the exponential terms */
-	n = data->ne;
-	et = &(data->et[0]);
-	for(i=0; i< n; ++i){
-		//fprintf(stderr,"i = %d, a = %e, t = %f, d = %d, phi = %d, beta = %d, gamma = %f\n",i+1, et->a, et->t, et->d, et->phi, et->beta, et->gamma);
-		
-		double tau2 = tau*tau;
-		double del2 = delta*delta;
-		double gam2 = et->gamma * et->gamma;
-		double e1 = -et->phi * del2
-					 + 2 * et->phi * delta
-					 - et->beta * tau2
-					 + 2 * et->beta * et->gamma * tau
-					 - et->phi 
-					 - et->beta * gam2;
-		sum = -et->a * pow(tau,et->t - 1) * ipow(delta,et->d)
-			* (2 * et->beta * tau2 - 2 * et->beta * et->gamma * tau - et->t)
-			* exp(e1);
-		//fprintf(stderr,"sum = %f\n",sum);
-		res += sum;
-		++et;
-	}
-#endif
 
 //#define RESID_DEBUG
 	/* gaussian terms */

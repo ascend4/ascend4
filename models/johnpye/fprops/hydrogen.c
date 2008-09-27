@@ -78,7 +78,6 @@ const HelmholtzData helmholtz_data_hydrogen = {
 		, {-0.777414,  1.754,    1.0,  1.0}
 		, {0.351944,  1.311,    3.0 , 1.0}
 	}
-	, 0 /* exponential terms */, 0
 	, 5 /* critical (gaussian) terms */
  	, (const HelmholtzGausTerm[]){
 		/* a, t, d, alpha, beta, gamma, epsilon */

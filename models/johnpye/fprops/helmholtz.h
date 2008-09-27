@@ -34,20 +34,6 @@ typedef struct HelmholtzPowTerm_struct{
 	unsigned l; /* exponent X in exp(-del^X) */
 } HelmholtzPowTerm;
 
-/**
-	Data structure for 'exponential terms' in the residual expression.
-	These terms are of the form used in Span et al, 1998, as cited in
-	the file 'nitrogen.c'.
-*/
-typedef struct HelmholtzExpTerm_struct{
-	double a; /* coefficient */
-	double t; /* exponent of tau */
-	int d; /* exponent of delta */
-	int phi;
-	int beta;
-	double gamma;
-} HelmholtzExpTerm;
-
 /*
 	Data structure for Gaussian terms in the residual expression, for
 	improvement of correlation in the critical region. These terms are of the
@@ -63,6 +49,9 @@ typedef struct HelmholtzExpTerm_struct{
 	NOTE the minus signs preceeding 'alpha' and 'beta' and note that this is
 	in conflict with the sign convention of Leachman, who assumes a plus sign
 	in front of the corresponding parameters in his equation.
+
+	NOTE these terms are also used in Span et al, 1998, as cited in the file
+	'nitrogen.c', but in that case, epsilon == 1 for all terms.
 */
 typedef struct HelmholtzGausTerm_struct{
 	double n; /**< coefficient */
@@ -97,9 +86,6 @@ typedef struct HelmholtzData_struct{
 
 	unsigned np; /* number of power terms in residual equation */
 	const HelmholtzPowTerm *pt; /* power term data for residual eqn, maybe NULL if np == 0 */
-	unsigned ne; /* number of exponential terms (a la Span et al 1998) for residual eqn */
-	const HelmholtzExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
-
 	unsigned ng; /* number of critical terms of the first kind */
 	const HelmholtzGausTerm *gt; /* critical terms of the first kind */
 	unsigned nc; /* number of critical terms of the second kind */

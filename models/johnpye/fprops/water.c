@@ -112,7 +112,8 @@ const HelmholtzData helmholtz_data_water = {
 		,{0.31777497330738, 46, 6, 6}
 		,{-0.11841182425981, 50, 6, 6}
 	}
-	, 0, 0 /* no exponential terms */
+	, 0, 0 /* no gaussian terms (YET -- NEED TO BE ADDED */
+	, 0, 0 /* no critical terms (YET -- NEED TO BE ADDED */
 };
 
 
