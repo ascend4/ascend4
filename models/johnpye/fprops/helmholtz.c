@@ -210,8 +210,22 @@ double helmholtz_cp0(double T, const HelmholtzData *data){
 double helmholtz_dpdT_rho(double T, double rho, const HelmholtzData *data){
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
-	
-	return data->R * rho * (1 + delta*helm_resid_del(tau,delta,data) - delta*tau*helm_resid_deltau(tau,delta,data));
+
+	double phir_del = helm_resid_del(tau,delta,data);
+	double phir_deltau = helm_resid_deltau(tau,delta,data);
+	assert(!isinf(phir_del));
+	assert(!isinf(phir_deltau));
+	assert(!isnan(phir_del));
+	assert(!isnan(phir_deltau));
+	assert(!isnan(data->R));
+	assert(!isnan(rho));
+	assert(!isnan(tau));
+
+	double res =  data->R * rho * (1 + delta*phir_del - delta*tau*phir_deltau);
+
+	assert(!isnan(res));
+	assert(!isinf(res));
+	return res;
 }
 
 /**
@@ -220,8 +234,13 @@ double helmholtz_dpdT_rho(double T, double rho, const HelmholtzData *data){
 double helmholtz_dpdrho_T(double T, double rho, const HelmholtzData *data){
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
+
+	double phir_del = helm_resid_del(tau,delta,data);
+	double phir_deldel = helm_resid_deldel(tau,delta,data);
+	assert(!isinf(phir_del));
+	assert(!isinf(phir_deldel));
 	
-	return data->R * T * (1 + 2*delta*helm_resid_del(tau,delta,data) + delta*delta*helm_resid_deldel(tau,delta,data));
+	return data->R * T * (1 + 2*delta*phir_del + delta*delta* phir_deldel);
 }
 
 /*---------------------------------------------
@@ -470,7 +489,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 	FIXME this function is WRONG.
 */
 double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
-	double dell,ldell, term, sum, res = 0;
+	double dell,ldell, term, sum = 0, res = 0;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
@@ -497,6 +516,8 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 		}
 	}
 
+	assert(!isinf(res));
+
 	/* gaussian terms */
 	n = data->ng;
 	gt = &(data->gt[0]);
@@ -512,14 +533,20 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 		double g1 = gt->d - 2*gt->alpha*delta*(delta - gt->epsilon);
 
 		sum = gt->n * f1 * pow(tau,gt->t-1) * g1 * pow(delta,gt->d-1) * exp(e1);
+
 		//fprintf(stderr,"sum = %f\n",sum);
 		res += sum;
+		assert(!isinf(res));
+
 		++gt;
 	}
 
 #ifdef RESID_DEBUG
 	fprintf(stderr,"phir = %f\n",res);
 #endif
+
+	assert(!isnan(res));
+	assert(!isinf(res));
 	return res;
 }
 
