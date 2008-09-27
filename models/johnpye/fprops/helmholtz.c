@@ -484,9 +484,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 
 /**
 	Mixed derivative of the helmholtz residual function with respect to
-	delta and tau
-
-	FIXME this function is WRONG.
+	delta and tau.
 */
 double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 	double dell,ldell, term, sum = 0, res = 0;
@@ -557,47 +555,54 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 	FIXME this function is WRONG.
 */
 double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
-	
-	double sum;
-	double phir = 0;
-	unsigned i;
-	unsigned X;
-	double XdelX;
+	double sum = 0, res = 0;
+	double dell, ldell;
+	unsigned n, i;
+	const HelmholtzPowTerm *pt;
+	const HelmholtzGausTerm *gt;
 
-	const HelmholtzPowTerm *pt = &(data->pt[0]);
-	
-	for(i=0; i<5; ++i){
-		phir += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (SQ(pt->d) - X);
+
+#ifdef RESID_DEBUG
+		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
+#endif
+
+	/* power terms */
+	n = data->np;
+	pt = &(data->pt[0]);
+	dell = ipow(delta,pt->l);
+	ldell = pt->l * dell;
+	unsigned oldl;
+	for(i=0; i<n; ++i){
+		double lpart = pt->l ? SQ(ldell) + ldell*(1. - 2*pt->d - pt->l) : 0;
+		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (pt->d*(pt->d - 1) + lpart);
+		oldl = pt->l;
 		++pt;
+		if(i+1==n || oldl != pt->l){
+			if(oldl == 0){
+				res += sum;
+			}else{
+				res += sum * exp(-dell);
+			}
+			sum = 0;
+			dell = ipow(delta,pt->l);
+			ldell = pt->l*dell;
+		}
 	}
 
-	sum = 0;
-	X = 1;
-	XdelX = delta;
-	for(i=5; i<10; ++i){
-		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (SQ(XdelX) - X*XdelX - 2*pt->d*XdelX + XdelX + SQ(pt->d) - pt->d);
-		++pt;
+	/* gaussian terms */
+	n = data->ng;
+	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
+	gt = &(data->gt[0]);
+	for(i=0; i<n; ++i){
+		double s1 = SQ(delta - gt->epsilon);
+		double f1 = 2*delta*gt->alpha *(2*gt->d*gt->epsilon
+			- delta * (2*gt->d + 1 - 2 * gt->alpha * s1));
+		res += - gt->n * pow(tau,gt->t) * pow(delta, -1. + gt->d)
+			* f1
+			* exp(-(gt->alpha * s1 + gt->beta*SQ(tau-gt->gamma)));
+		++gt;
 	}
-	phir += exp(-delta) * sum;
 
-	sum = 0; 
-	X = 2;
-	XdelX = 2*delta*delta;
-	for(i=10; i<17; ++i){
-		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (SQ(XdelX) - X*XdelX - 2*pt->d*XdelX + XdelX + SQ(pt->d) - pt->d);
-		++pt;
-	}
-	phir += exp(-delta*delta) * sum;
-
-	sum = 0;
-	X = 3;
-	XdelX = 3*delta*delta*delta;
-	for(i=17; i<21; ++i){
-		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (SQ(XdelX) - X*XdelX - 2*pt->d*XdelX + XdelX + SQ(pt->d) - pt->d);
-		++pt;
-	}
-	phir += exp(-delta*delta*delta) * sum;
-
-	return phir;
+	return res;
 }
 

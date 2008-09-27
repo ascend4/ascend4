@@ -71,7 +71,7 @@ const HelmholtzData helmholtz_data_hydrogen = {
 		{-0.693643e1,  0.6844,   1.0,  0.0}
 		, {0.01,         1.,    4.0,  0.0}
 		, {2.1101,      0.989,    1.0,  0.0}
-		, {4.52059,  0.489,    1.0,  0.0}
+			, {4.52059,  0.489,    1.0,  0.0}
 		, {0.732564,  0.803,    2.0,  0.0}
 		, {-1.34086,  1.1444,   2.0,  0.0}
 		, {0.130985,  1.409,    3.0,  0.0}
@@ -107,7 +107,8 @@ const TestData td[]; const unsigned ntd;
 
 int main(void){
 	//return helm_check_u(&helmholtz_data_hydrogen,ntd,td);
-	return helm_check_p_T(&helmholtz_data_hydrogen, ntd, td);
+	//return helm_check_dpdT_rho(&helmholtz_data_hydrogen, ntd, td);
+	return helm_check_dpdrho_T(&helmholtz_data_hydrogen, ntd, td);
 	//return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td);
 }
 

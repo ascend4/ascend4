@@ -5,8 +5,10 @@
 
 term(tau,del) := n*del^d*tau^t*exp(-(alp*(del-eps)^2 + bet*(tau-gam)^2))
 
+# l != 0
 term(tau,del) := n*del^d*tau^t*exp(-del^l)
 
+# l = 0
 term(tau,del) := n*del^d*tau^t
 
 
