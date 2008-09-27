@@ -30,7 +30,7 @@
 /*
 	Terms in the expression for cp0 that are power terms, of the form:
 	
-		c * tau^t
+		c * T^t
 */
 typedef struct IdealPowTerm_struct{
 	double c;
