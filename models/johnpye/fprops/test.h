@@ -20,6 +20,12 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 */
 int helm_check_u(const HelmholtzData *d, unsigned ntd, const TestData *td);
 
+/**
+	Check dp/dT values (rho constant) by comparison with finite
+	difference estimates (check that helmholtz_p is working first!)
+*/
+int helm_check_p_T(const HelmholtzData *d, unsigned ntd, const TestData *td);
+
 /* a simple macro to actually do the testing */
 #define ASSERT_TOL(FN,PARAM1,PARAM2,PARAM3,VAL,TOL) {\
 		double cval; cval = FN(PARAM1,PARAM2,PARAM3);\

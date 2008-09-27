@@ -99,5 +99,8 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data);
 double helmholtz_a(double T, double rho, const HelmholtzData *data);
 double helmholtz_cp0(double T, const HelmholtzData *data);
 
+double helmholtz_dpdT_rho(double T, double rho, const HelmholtzData *data);
+double helmholtz_dpdrho_T(double T, double rho, const HelmholtzData *data);
+
 #endif
 
