@@ -595,9 +595,12 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	gt = &(data->gt[0]);
 	for(i=0; i<n; ++i){
 		double s1 = SQ(delta - gt->epsilon);
-		double f1 = 2*delta*gt->alpha *(2*gt->d*gt->epsilon
-			- delta * (2*gt->d + 1 - 2 * gt->alpha * s1));
-		res += - gt->n * pow(tau,gt->t) * pow(delta, -1. + gt->d)
+		double f1 = gt->d*(gt->d - 1) 
+			+ 2.*gt->alpha*delta * (
+				delta * (2. * gt->alpha * s1 - 1) 
+				- 2. * gt->d * (delta - gt->epsilon)
+			);
+		res += gt->n * pow(tau,gt->t) * pow(delta, gt->d - 2.)
 			* f1
 			* exp(-(gt->alpha * s1 + gt->beta*SQ(tau-gt->gamma)));
 		++gt;
