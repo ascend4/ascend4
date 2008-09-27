@@ -35,6 +35,8 @@
 #include <stdio.h>
 #endif
 
+#define SQ(X) ((X)*(X))
+
 /* forward decls */
 
 static double helm_resid(double tau, double delta, const HelmholtzData *data);
@@ -202,6 +204,26 @@ double helmholtz_cp0(double T, const HelmholtzData *data){
 	return val;
 }
 
+/**
+	Calculate partial derivative of p with respect to T, with rho constant
+*/
+double helmholtz_dpdT_rho(double T, double rho, const HelmholtzData *data){
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+	
+	return data->R * rho * (1 + delta*helm_resid_del(tau,delta,data) - delta*tau*helm_resid_deltau(tau,delta,data));
+}
+
+/**
+	Calculate partial derivative of p with respect to rho, with T constant
+*/
+double helmholtz_dpdrho_T(double T, double rho, const HelmholtzData *data){
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+	
+	return data->R * T * (1 + 2*delta*helm_resid_del(tau,delta,data) + delta*delta*helm_resid_deldel(tau,delta,data));
+}
+
 /*---------------------------------------------
   UTILITY FUNCTION(S)
 */
@@ -286,7 +308,6 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		}
 	}
 
-#if 1
 	/* gaussian terms */
 	n = data->ng;
 	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
@@ -303,7 +324,6 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		res += sum;
 		++gt;
 	}
-#endif
 
 #ifdef RESID_DEBUG
 	fprintf(stderr,"phir = %f\n",res);
@@ -316,20 +336,20 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	delta.
 */	
 double helm_resid_del(double tau,double delta, const HelmholtzData *data){
-	double sum, res = 0;
+	double sum = 0, res = 0;
 	double dell, ldell;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
 
-	n = data->np;
-	pt = &(data->pt[0]);
 
 #ifdef RESID_DEBUG
 		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
 #endif
 
-	sum = 0;
+	/* power terms */
+	n = data->np;
+	pt = &(data->pt[0]);
 	dell = ipow(delta,pt->l);
 	ldell = pt->l * dell;
 	unsigned oldl;
@@ -349,7 +369,6 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		}
 	}
 
-#if 1
 	/* gaussian terms */
 	n = data->ng;
 	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
@@ -358,7 +377,6 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 #ifdef RESID_DEBUG
 		fprintf(stderr,"i = %d, GAUSSIAN, n = %e, t = %f, d = %f, alpha = %f, beta = %f, gamma = %f, epsilon = %f\n",i+1, gt->n, gt->t, gt->d, gt->alpha, gt->beta, gt->gamma, gt->epsilon);
 #endif
-#define SQ(X) ((X)*(X))
 		double val2;
 		val2 = - gt->n * pow(tau,gt->t) * pow(delta, -1. + gt->d)
 			* (2. * gt->alpha * delta * (delta - gt->epsilon) - gt->d)
@@ -367,10 +385,8 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 #ifdef RESID_DEBUG
 		fprintf(stderr,"val2 = %f --> res = %f\n",val2,res);
 #endif
-#undef SQ
 		++gt;
 	}
-#endif
 
 	return res;
 }
@@ -430,7 +446,6 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 		fprintf(stderr,"i = %d, GAUSSIAN, n = %e, t = %f, d = %f, alpha = %f, beta = %f, gamma = %f, epsilon = %f\n",i+1, gt->n, gt->t, gt->d, gt->alpha, gt->beta, gt->gamma, gt->epsilon);
 #endif
 
-#define SQ(X) ((X)*(X))
 		double val2;
 		val2 = -gt->n * pow(tau,gt->t - 1.) * pow(delta, gt->d)
 			* (2. * gt->beta * tau * (tau - gt->gamma) - gt->t)
@@ -439,7 +454,6 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 #ifdef RESID_DEBUG
 		fprintf(stderr,"res = %f\n",res);
 #endif
-#undef SQ
 			
 		++gt;
 	}
@@ -456,47 +470,58 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 	FIXME this function is WRONG.
 */
 double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
-	
-	double sum;
-	double phir = 0;
-	unsigned i;
-	double XdelX;
+	double dell,ldell, term, sum, res = 0;
+	unsigned n, i;
+	const HelmholtzPowTerm *pt;
+	const HelmholtzGausTerm *gt;
 
-	const HelmholtzPowTerm *pt = &(data->pt[0]);
-	
-	for(i=0; i<5; ++i){
-		phir += pt->a * pow(tau, pt->t - 1) * ipow(delta, pt->d - 1) * pt->d * pt->t;
+	/* power terms */
+	n = data->np;
+	pt = &(data->pt[0]);
+	dell = ipow(delta,pt->l);
+	ldell = pt->l * dell;
+	unsigned oldl;
+	for(i=0; i<n; ++i){
+		sum += pt->a * pt->t * pow(tau, pt->t - 1) * ipow(delta, pt->d - 1) * (pt->d - ldell);
+		oldl = pt->l;
 		++pt;
+		if(i+1==n || oldl != pt->l){
+			if(oldl == 0){
+				res += sum;
+			}else{
+				res += sum * exp(-dell);
+			}
+			sum = 0;
+			dell = ipow(delta,pt->l);
+			ldell = pt->l*dell;
+		}
 	}
 
-	sum = 0;
-	XdelX = delta;
-	for(i=5; i<10; ++i){
-		sum += pt->a * pow(tau, pt->t - 1) * ipow(delta, pt->d - 1) * pt->t *(pt->d - XdelX);
-		++pt;
-	}
-	phir += exp(-delta) * sum;
+	/* gaussian terms */
+	n = data->ng;
+	gt = &(data->gt[0]);
+	for(i=0; i<n; ++i){
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d, GAUSSIAN, n = %e, t = %f, d = %f, alpha = %f, beta = %f, gamma = %f, epsilon = %f\n",i+1, gt->n, gt->t, gt->d, gt->alpha, gt->beta, gt->gamma, gt->epsilon);
+#endif
+		double d1 = delta - gt->epsilon;
+		double t1 = tau - gt->gamma;
+		double e1 = -gt->alpha*SQ(d1) - gt->beta*SQ(t1);
 
-	sum = 0; 
-	XdelX = 2*delta*delta;
-	for(i=10; i<17; ++i){
-		sum += pt->a * pow(tau, pt->t - 1) * ipow(delta, pt->d - 1) * pt->t *(pt->d - XdelX);
-		++pt;
-	}
-	phir += exp(-delta*delta) * sum;
+		double f1 = gt->t - 2*gt->beta*tau*(tau - gt->gamma);
+		double g1 = gt->d - 2*gt->alpha*delta*(delta - gt->epsilon);
 
-	sum = 0;
-	XdelX = 3*delta*delta*delta;
-	for(i=17; i<21; ++i){
-		sum += pt->a * pow(tau, pt->t - 1) * ipow(delta, pt->d - 1) * pt->t *(pt->d - XdelX);
-		++pt;
+		sum = gt->n * f1 * pow(tau,gt->t-1) * g1 * pow(delta,gt->d-1) * exp(e1);
+		//fprintf(stderr,"sum = %f\n",sum);
+		res += sum;
+		++gt;
 	}
-	phir += exp(-delta*delta*delta) * sum;
 
-	return phir;
+#ifdef RESID_DEBUG
+	fprintf(stderr,"phir = %f\n",res);
+#endif
+	return res;
 }
-
-#define SQ(X) ((X)*(X))
 
 /**
 	Second derivative of helmholtz residual function with respect to
