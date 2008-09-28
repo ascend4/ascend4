@@ -104,7 +104,19 @@ ASC_EXPORT int helmholtz_register(){
 		, 0.0 \
 	) /* returns 0 on success */
 
-	CALCFN(helmholtz_p,2,1);
+#define CALCFNDERIV(NAME,INPUTS,OUTPUTS) \
+	result += CreateUserFunctionBlackBox(#NAME \
+		, helmholtz_prepare \
+		, NAME##_calc /* value */ \
+		, NAME##_calc /* derivatives */ \
+		, (ExtBBoxFunc*)NULL /* hessian not provided yet */ \
+		, (ExtBBoxFinalFunc*)NULL /* finalisation not implemented */ \
+		, INPUTS,OUTPUTS /* inputs, outputs */ \
+		, NAME##_help /* help text */ \
+		, 0.0 \
+	) /* returns 0 on success */
+
+	CALCFNDERIV(helmholtz_p,2,1);
 	CALCFN(helmholtz_u,2,1);
 	CALCFN(helmholtz_s,2,1);
 	CALCFN(helmholtz_h,2,1);
@@ -180,7 +192,12 @@ int helmholtz_prepare(struct BBoxInterp *bbox,
 
 /**
 	Evaluation function for 'helmholtz_p'.
-	@param jacobian ignored
+	@param inputs array with values of inputs T and rho.
+	@param outputs array with just value of p
+	@param jacobian, the partial derivative df/dx, where
+		each row is df[i]/dx[j] over each j for the y_out[i] of
+		matching index. The jacobian array is 1-D, row major, i.e.
+		df[i]/dx[j] -> jacobian[i*ninputs+j].
 	@return 0 on success
 */
 int helmholtz_p_calc(struct BBoxInterp *bbox,
@@ -191,7 +208,13 @@ int helmholtz_p_calc(struct BBoxInterp *bbox,
 	CALCPREPARE;
 
 	/* first input is temperature, second is molar density */
-	outputs[0] = helmholtz_p(inputs[0], inputs[1], helmholtz_data);
+	if(bbox->task == bb_func_eval){
+		outputs[0] = helmholtz_p(inputs[0], inputs[1], helmholtz_data);
+	}else{
+		//ERROR_REPORTER_HERE(ASC_USER_NOTE,"JACOBIAN CALCULATION FOR P!\n");
+		jacobian[0*1+0] = helmholtz_dpdT_rho(inputs[0], inputs[1], helmholtz_data);
+		jacobian[0*1+1] = helmholtz_dpdrho_T(inputs[0], inputs[1], helmholtz_data);
+	}
 
 	/* no need to worry about error states etc. */
 	return 0;
