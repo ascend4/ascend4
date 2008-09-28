@@ -213,6 +213,7 @@ double helmholtz_dpdT_rho(double T, double rho, const HelmholtzData *data){
 
 	double phir_del = helm_resid_del(tau,delta,data);
 	double phir_deltau = helm_resid_deltau(tau,delta,data);
+#ifdef TEST
 	assert(!isinf(phir_del));
 	assert(!isinf(phir_deltau));
 	assert(!isnan(phir_del));
@@ -220,11 +221,14 @@ double helmholtz_dpdT_rho(double T, double rho, const HelmholtzData *data){
 	assert(!isnan(data->R));
 	assert(!isnan(rho));
 	assert(!isnan(tau));
+#endif
 
 	double res =  data->R * rho * (1 + delta*phir_del - delta*tau*phir_deltau);
 
+#ifdef TEST
 	assert(!isnan(res));
 	assert(!isinf(res));
+#endif
 	return res;
 }
 
@@ -237,9 +241,10 @@ double helmholtz_dpdrho_T(double T, double rho, const HelmholtzData *data){
 
 	double phir_del = helm_resid_del(tau,delta,data);
 	double phir_deldel = helm_resid_deldel(tau,delta,data);
+#ifdef TEST
 	assert(!isinf(phir_del));
 	assert(!isinf(phir_deldel));
-	
+#endif	
 	return data->R * T * (1 + 2*delta*phir_del + delta*delta* phir_deldel);
 }
 
@@ -514,7 +519,9 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 		}
 	}
 
+#ifdef TEST
 	assert(!isinf(res));
+#endif
 
 	/* gaussian terms */
 	n = data->ng;
@@ -534,8 +541,9 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 
 		//fprintf(stderr,"sum = %f\n",sum);
 		res += sum;
+#ifdef TEST
 		assert(!isinf(res));
-
+#endif
 		++gt;
 	}
 
@@ -543,8 +551,10 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 	fprintf(stderr,"phir = %f\n",res);
 #endif
 
+#ifdef TEST
 	assert(!isnan(res));
 	assert(!isinf(res));
+#endif
 	return res;
 }
 

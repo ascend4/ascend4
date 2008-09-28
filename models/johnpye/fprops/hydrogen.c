@@ -108,8 +108,8 @@ const TestData td[]; const unsigned ntd;
 int main(void){
 	//return helm_check_u(&helmholtz_data_hydrogen,ntd,td);
 	//return helm_check_dpdT_rho(&helmholtz_data_hydrogen, ntd, td);
-	return helm_check_dpdrho_T(&helmholtz_data_hydrogen, ntd, td);
-	//return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td);
+	//return helm_check_dpdrho_T(&helmholtz_data_hydrogen, ntd, td);
+	return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td);
 }
 
 /*
