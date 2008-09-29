@@ -2655,7 +2655,10 @@ if platform.system()=="Linux":
 
 env['DISTTAR_FORMAT']='bz2'
 env.Append(
-	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.lib','.cc','.cache','.pyc','.cvsignore','.dblite','.log','.pl','.out','.exe','.aux','.idx','.toc','.lof','.lot','.mm','.warnings','.tm2','.swp',',tmp','.gz','.bz2','.7z']
+	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.lib','.cc','.cache',
+		'.pyc','.cvsignore','.dblite','.log','.pl','.out','.exe','.aux','.idx',
+		'.toc','.lof','.lot','.mm','.warnings','.tm2','.swp',',tmp','.gz',
+		'.bz2','.7z','.deb','.dsc','.changes']
 	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian']
 )
 

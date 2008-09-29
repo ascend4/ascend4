@@ -86,6 +86,7 @@
 \tracking_changes false
 \output_changes false
 \author "" 
+\author "" 
 \end_header
 
 \begin_body
@@ -114,7 +115,7 @@ vspace*{6.0cm}
 
 
 \newline
-(c) 2006-2007 Carnegie Mellon University
+(c) 2006-2008 Carnegie Mellon University
 \newline
 
 \begin_inset LatexCommand htmlurl
