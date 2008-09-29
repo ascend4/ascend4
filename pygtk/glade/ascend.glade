@@ -1445,7 +1445,7 @@ upper and lower bounds displayed.</property>
               <packing>
                 <property name="top_attach">2</property>
                 <property name="bottom_attach">3</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -1453,7 +1453,7 @@ upper and lower bounds displayed.</property>
               <widget class="GtkHBox" id="hbox11">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkImage" id="statusimg">
+                  <widget class="GtkImage" id="var_statusimg">
                     <property name="visible">True</property>
                     <property name="stock">gtk-missing-image</property>
                   </widget>
@@ -1462,7 +1462,7 @@ upper and lower bounds displayed.</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkLabel" id="statusmessage">
+                  <widget class="GtkLabel" id="var_statusmessage">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">status message</property>
                   </widget>
@@ -1479,7 +1479,7 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">2</property>
                 <property name="bottom_attach">3</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
               </packing>
             </child>
             <child>
@@ -1506,7 +1506,7 @@ upper and lower bounds displayed.</property>
                 <property name="label" translatable="yes">Name	</property>
               </widget>
               <packing>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
               </packing>
             </child>
             <child>
@@ -1563,7 +1563,7 @@ upper and lower bounds displayed.</property>
               <packing>
                 <property name="top_attach">7</property>
                 <property name="bottom_attach">8</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -1721,7 +1721,7 @@ upper and lower bounds displayed.</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -1734,7 +1734,7 @@ upper and lower bounds displayed.</property>
               <packing>
                 <property name="top_attach">9</property>
                 <property name="bottom_attach">10</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -1747,7 +1747,7 @@ upper and lower bounds displayed.</property>
               <packing>
                 <property name="top_attach">6</property>
                 <property name="bottom_attach">7</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -1760,7 +1760,7 @@ upper and lower bounds displayed.</property>
               <packing>
                 <property name="top_attach">5</property>
                 <property name="bottom_attach">6</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -1773,7 +1773,7 @@ upper and lower bounds displayed.</property>
               <packing>
                 <property name="top_attach">4</property>
                 <property name="bottom_attach">5</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -1857,7 +1857,7 @@ upper and lower bounds displayed.</property>
               <packing>
                 <property name="top_attach">1</property>
                 <property name="bottom_attach">2</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -1865,7 +1865,7 @@ upper and lower bounds displayed.</property>
               <widget class="GtkHBox" id="hbox20">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkImage" id="statusimg1">
+                  <widget class="GtkImage" id="rel_statusimg">
                     <property name="visible">True</property>
                     <property name="stock">gtk-missing-image</property>
                   </widget>
@@ -1874,7 +1874,7 @@ upper and lower bounds displayed.</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkLabel" id="statusmessage1">
+                  <widget class="GtkLabel" id="rel_statusmessage">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">status message</property>
                   </widget>
@@ -1891,7 +1891,7 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">1</property>
                 <property name="bottom_attach">2</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
               </packing>
             </child>
             <child>
@@ -1908,7 +1908,7 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">5</property>
                 <property name="bottom_attach">6</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -1951,7 +1951,7 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">4</property>
                 <property name="bottom_attach">5</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -2023,7 +2023,7 @@ upper and lower bounds displayed.</property>
               <packing>
                 <property name="top_attach">2</property>
                 <property name="bottom_attach">3</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -2036,7 +2036,7 @@ upper and lower bounds displayed.</property>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -2810,6 +2810,7 @@ upper and lower bounds displayed.</property>
     <property name="visible">True</property>
     <property name="border_width">5</property>
     <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
+    <property name="program_name">ASCEND</property>
     <property name="copyright" translatable="yes">Copyright (C) 2006-2008 Carnegie Mellon University</property>
     <property name="comments" translatable="yes">A flexible modelling environment for hard engineering and science problems.</property>
     <property name="website">http://ascend.cheme.cmu.edu/</property>
@@ -3181,7 +3182,7 @@ Conversion to LyX and other formats:
                             <property name="right_attach">2</property>
                             <property name="top_attach">2</property>
                             <property name="bottom_attach">3</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3194,7 +3195,7 @@ Conversion to LyX and other formats:
                           <packing>
                             <property name="top_attach">2</property>
                             <property name="bottom_attach">3</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3208,7 +3209,7 @@ Conversion to LyX and other formats:
                             <property name="right_attach">2</property>
                             <property name="top_attach">3</property>
                             <property name="bottom_attach">4</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3222,7 +3223,7 @@ Conversion to LyX and other formats:
                             <property name="right_attach">2</property>
                             <property name="top_attach">1</property>
                             <property name="bottom_attach">2</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3235,7 +3236,6 @@ Conversion to LyX and other formats:
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="x_options"></property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3248,7 +3248,7 @@ Conversion to LyX and other formats:
                           <packing>
                             <property name="top_attach">3</property>
                             <property name="bottom_attach">4</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3261,7 +3261,7 @@ Conversion to LyX and other formats:
                           <packing>
                             <property name="top_attach">1</property>
                             <property name="bottom_attach">2</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3272,7 +3272,7 @@ Conversion to LyX and other formats:
                             <property name="label" translatable="yes">Variables  </property>
                           </widget>
                           <packing>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3316,7 +3316,7 @@ Conversion to LyX and other formats:
                             <property name="right_attach">2</property>
                             <property name="top_attach">3</property>
                             <property name="bottom_attach">4</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3330,7 +3330,7 @@ Conversion to LyX and other formats:
                             <property name="right_attach">2</property>
                             <property name="top_attach">2</property>
                             <property name="bottom_attach">3</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3344,7 +3344,7 @@ Conversion to LyX and other formats:
                             <property name="right_attach">2</property>
                             <property name="top_attach">1</property>
                             <property name="bottom_attach">2</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3356,7 +3356,7 @@ Conversion to LyX and other formats:
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3369,7 +3369,7 @@ Conversion to LyX and other formats:
                           <packing>
                             <property name="top_attach">3</property>
                             <property name="bottom_attach">4</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3382,7 +3382,7 @@ Conversion to LyX and other formats:
                           <packing>
                             <property name="top_attach">2</property>
                             <property name="bottom_attach">3</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3395,7 +3395,7 @@ Conversion to LyX and other formats:
                           <packing>
                             <property name="top_attach">1</property>
                             <property name="bottom_attach">2</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3406,7 +3406,7 @@ Conversion to LyX and other formats:
                             <property name="label" translatable="yes">Variables  </property>
                           </widget>
                           <packing>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3825,7 +3825,7 @@ AWW</property>
                           <packing>
                             <property name="top_attach">3</property>
                             <property name="bottom_attach">4</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3839,7 +3839,7 @@ AWW</property>
                           <packing>
                             <property name="top_attach">2</property>
                             <property name="bottom_attach">3</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3853,7 +3853,7 @@ AWW</property>
                           <packing>
                             <property name="top_attach">1</property>
                             <property name="bottom_attach">2</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3865,7 +3865,7 @@ AWW</property>
                             <property name="label" translatable="yes">Start</property>
                           </widget>
                           <packing>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -3913,7 +3913,7 @@ AWW</property>
                             <property name="right_attach">2</property>
                             <property name="top_attach">4</property>
                             <property name="bottom_attach">5</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                             <property name="y_padding">4</property>
                           </packing>
@@ -3996,7 +3996,7 @@ AWW</property>
                           <packing>
                             <property name="top_attach">3</property>
                             <property name="bottom_attach">4</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -4010,7 +4010,7 @@ AWW</property>
                           <packing>
                             <property name="top_attach">2</property>
                             <property name="bottom_attach">3</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -4024,7 +4024,7 @@ AWW</property>
                           <packing>
                             <property name="top_attach">1</property>
                             <property name="bottom_attach">2</property>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -4036,7 +4036,7 @@ AWW</property>
                             <property name="label" translatable="yes">Initial substep</property>
                           </widget>
                           <packing>
-                            <property name="x_options"></property>
+                            <property name="x_options">GTK_FILL</property>
                             <property name="y_options"></property>
                           </packing>
                         </child>
@@ -4552,7 +4552,7 @@ AWW</property>
               </widget>
             </child>
             <child>
-              <widget class="GtkButton" id="applybutton1">
+              <widget class="GtkButton" id="units_applybutton">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="label">gtk-apply</property>

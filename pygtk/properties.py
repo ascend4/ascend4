@@ -24,8 +24,8 @@ class RelPropsWin:
 		self.expr.set_buffer(self.exprbuff)
 		self.morepropsbutton = _xml.get_widget("morepropsbutton");
 
-		self.statusimg = _xml.get_widget("statusimg");
-		self.statusmessage = _xml.get_widget("statusmessage");
+		self.statusimg = _xml.get_widget("rel_statusimg");
+		self.statusmessage = _xml.get_widget("rel_statusmessage");
 
 		self.fill_values()
 		_xml.signal_autoconnect(self)
@@ -89,8 +89,9 @@ class VarPropsWin:
 		self.fixed = _xml.get_widget("fixed");
 		self.free = _xml.get_widget("free");
 
-		self.statusimg = _xml.get_widget("statusimg");
-		self.statusmessage = _xml.get_widget("statusmessage");
+		self.statusimg = _xml.get_widget("var_statusimg");
+		assert self.statusimg
+		self.statusmessage = _xml.get_widget("var_statusmessage");
 
 		self.cliquebutton = _xml.get_widget("cliquebutton"); 
 		self.morepropsbutton = _xml.get_widget("morepropsbutton");

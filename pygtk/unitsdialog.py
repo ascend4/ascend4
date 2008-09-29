@@ -12,7 +12,7 @@ class UnitsDialog:
 		self.typecombo = _xml.get_widget("typecombo")
 		self.dimensionlabel = _xml.get_widget("dimensionlabel")
 		self.unitsview = _xml.get_widget("unitsview")
-		self.applybutton = _xml.get_widget("applybutton")
+		self.applybutton = _xml.get_widget("units_applybutton")
 
 		self.applybutton.set_sensitive(False)
 
