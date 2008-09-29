@@ -799,12 +799,13 @@ class Browser:
 	def on_tools_sparsity_click(self,*args):
 
 		self.reporter.reportNote("Preparing incidence matrix...")
-		_im = self.sim.getIncidenceMatrix()
-
-		self.reporter.reportNote("Plotting incidence matrix...")
-
-		_sp = IncidenceMatrixWindow(_im)
-		_sp.run()
+		try:
+			_im = self.sim.getIncidenceMatrix()
+			self.reporter.reportNote("Plotting incidence matrix...")
+			_sp = IncidenceMatrixWindow(_im)
+			_sp.run()
+		except RuntimeError,e:
+			self.reporter.reportError(str(e))
 
 	def on_units_click(self,*args):
 		T = self.modelview.get_selected_type()
@@ -838,11 +839,11 @@ class Browser:
 	def on_diagnose_blocks_click(self,*args):
 		try:
 			_bl = self.sim.getActiveBlock()
+			_db = DiagnoseWindow(self,_bl)
+			_db.run();
 		except RuntimeError, e:
 			self.reporter.reportError(str(e))
 			return
-		_db = DiagnoseWindow(self,_bl)
-		_db.run();
 
 	def on_add_observer_click(self,*args):
 		self.create_observer()
@@ -889,10 +890,14 @@ class Browser:
 
 	def on_show_variables_near_bounds_activate(self,*args):
 		_epsilon = 1e-4;
+		try:
+			_vars = self.sim.getVariablesNearBounds(_epsilon)
+		except RuntimeError,e:
+			self.reporter.reportError("Unable to show variables near bounds:\n%s"%str(e))
+			return
 		text = "Variables Near Bounds"
 		title=text;
 		text += "\n"
-		_vars = self.sim.getVariablesNearBounds(_epsilon)
 		if len(_vars):
 			for _v in _vars:
 				text += "\n%s"%_v.getName()
@@ -903,10 +908,14 @@ class Browser:
 
 	def on_show_vars_far_from_nominals_activate(self,*args):
 		_bignum = self.prefs.getRealPref("Browser","far_from_nominals",10);
+		try:
+			_vars = self.sim.getVariablesFarFromNominals(_bignum)
+		except RuntimeError,e:
+			self.reporter.reportError("Unable to show variables far from nominals:\n%s"%str(e))
+			return
 		text = "Variables Far from Nominals"
 		title=text;
 		text += "\n"
-		_vars = self.sim.getVariablesFarFromNominals(_bignum)
 		if len(_vars):
 			for _v in _vars:
 				text += "\n%s"%_v.getName()
@@ -1011,7 +1020,10 @@ class Browser:
 		if response == gtk.RESPONSE_OK:
 			self.reporter.reportNote("File %s selected." % dialog.get_filename() )
 			self.library.clear()
-			self.do_open( _filename)		   
+			try:
+				self.do_open( _filename)
+			except RuntimeError,e:
+				self.reporter.reportError(str(e))
 
 	def reload_click(self,*args):
 		_type = None
@@ -1147,8 +1159,9 @@ class Browser:
 	def on_show_fixable_variables_activate(self,*args):
 		try:
 			v = self.sim.getFixableVariables()
-		except RuntimeError,e:
-			self.reporter.reportError(str(e))
+		except Exception,e:
+			self.reporter.reportError("Unable to show fixable variables: %s"%str(e))
+			return
 		text = "Fixable Variables"
 		title = text
 		text += "\n"
@@ -1163,25 +1176,26 @@ class Browser:
 	def on_show_fixed_vars_activate(self,*args):
 		try:
 			v = self.sim.getFixedVariables()
-			text = "Fixed Variables"
-			title = text
-			text += "\n"
-			if len(v):
-				for var in v:
-					text += "\n%s"%var
-			else:
-				text += "\nnone"
-			_dialog = InfoDialog(self,self.window,text,title)
-			_dialog.run()
 		except RuntimeError,e:
-			self.reporter.reportError(str(e))
+			self.reporter.reportError("Unable to show fixed variables: %s"%str(e))
+			return
+		text = "Fixed Variables"
+		title = text
+		text += "\n"
+		if len(v):
+			for var in v:
+				text += "\n%s"%var
+		else:
+			text += "\nnone"
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
 
 	def on_show_freeable_variables_activate(self,*args):
 		try:
 			v = self.sim.getFreeableVariables()
 		except RuntimeError,e:
-			self.reporter.reportError(str(e))
-
+			self.reporter.reportError("Unable to show freeable variables: %s"%str(e))
+			return
 		text = "Freeable Variables"
 		title = text
 		text += "\n"
