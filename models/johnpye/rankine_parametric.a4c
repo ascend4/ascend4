@@ -72,9 +72,8 @@ END steam_node;
 MODEL steam_equipment(
 	inlet "in:" WILL_BE steam_node;
 	outlet "out:" WILL_BE steam_node;
-) WHERE(
-	inlet.mdot, outlet.mdot WILL_BE_THE_SAME;
 );
+	inlet.mdot = outlet.mdot;
 	mdot ALIASES inlet.mdot;
 END steam_equipment;
 
@@ -87,14 +86,13 @@ MODEL pump_simple(
 	outlet "out:" WILL_BE steam_node;
 ) REFINES steam_equipment;
 
-
 	dp IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
 
 	outlet_is IS_A steam_state;
-	outlet_is.p, outlet.p ARE_THE_SAME;
+	outlet_is.p = outlet.p;
 
-	outlet_is.s, inlet.s ARE_THE_SAME;
+	outlet_is.s = inlet.s;
 	eta IS_A fraction;
 	
 	eta_eq:eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
@@ -113,21 +111,25 @@ MODEL pump_simple(
 	END NOTES;
 *)
 END pump_simple;
-MODEL pump_simple_test REFINES pump_simple;
+
+MODEL pump_simple_test;
 	(* no equations here *)
+	inlet IS_A steam_node;
+	outlet IS_A steam_node;
+	PU IS_A pump_simple(inlet, outlet);
 METHODS
 METHOD on_load;
 	FIX inlet.p;
 	FIX inlet.h;
 	FIX outlet.p;
-	FIX eta;
-	FIX mdot;
+	FIX PU.eta;
+	FIX PU.mdot;
 
 	inlet.p := 5 {bar};
 	inlet.h := 400 {kJ/kg};
 	outlet.p := 100 {bar};
-	eta := 0.65;
-	mdot := 900 {t/d};
+	PU.eta := 0.65;
+	PU.mdot := 900 {t/d};
 END on_load;
 END pump_simple_test;
 
@@ -138,14 +140,14 @@ END pump_simple_test;
 MODEL turbine_simple(
 	inlet "in:" WILL_BE steam_node;
 	outlet "out:" WILL_BE steam_node;
-) REFINES steam_equipment(inlet,outlet);
+) REFINES steam_equipment;
 
 	dp IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
 	
 	outlet_is IS_A steam_state;
-	outlet_is.p, outlet.p ARE_THE_SAME;
-	outlet_is.s, inlet.s ARE_THE_SAME;
+	outlet_is.p = outlet.p;
+	outlet_is.s = inlet.s;
 
 	eta IS_A fraction;
 	eta_eq:eta * (inlet.h - outlet_is.h) = (inlet.h - outlet.h);
@@ -159,21 +161,23 @@ MODEL turbine_simple(
 
 END turbine_simple;
 
-MODEL turbine_simple_test REFINES turbine_simple;
+MODEL turbine_simple_test;
+	inlet, outlet IS_A steam_node;
+	TU IS_A turbine_simple(inlet, outlet);
 	(* no equations here *)
 METHODS
 METHOD on_load;
 	FIX inlet.p;
 	FIX inlet.h;
 	FIX outlet.p;
-	FIX eta;
-	FIX mdot;
+	FIX TU.eta;
+	FIX TU.mdot;
 
 	inlet.p := 100 {bar};
 	inlet.h := 3000 {kJ/kg};
 	outlet.p := 5 {bar};
-	eta := 0.85;
-	mdot := 900 {t/d};
+	TU.eta := 0.85;
+	TU.mdot := 900 {t/d};
 END on_load;
 END turbine_simple_test;
 
@@ -188,9 +192,9 @@ END turbine_simple_test;
 MODEL boiler_simple(
 	inlet "in:" WILL_BE steam_node;
 	outlet "out:" WILL_BE steam_node;
-) REFINES steam_equipment(inlet,outlet);
+) REFINES steam_equipment;
 
-	inlet.p, outlet.p ARE_THE_SAME;
+	inlet.p = outlet.p;
 	Qdot_fuel IS_A energy_rate;
 	Qdot IS_A energy_rate;
 
@@ -200,22 +204,23 @@ MODEL boiler_simple(
 	Qdot = eta * Qdot_fuel;
 END boiler_simple;
 
-MODEL boiler_simple_test REFINES boiler_simple;
-	(* nothing here *)
+MODEL boiler_simple_test;
+	inlet, outlet IS_A steam_node;
+	BO IS_A boiler_simple(inlet, outlet);
 METHODS
 METHOD on_load;
 	FIX inlet.p;
 	FIX inlet.h;
-	FIX eta;
 	FIX outlet.h;
-	FIX mdot;
+	FIX BO.eta;
+	FIX BO.mdot;
 
 	inlet.p := 100 {bar};
 	inlet.h := 500 {kJ/kg};
 
-	eta := 0.8;
-	outlet.h := 3000 {kJ/kg};
-	mdot := 900 {t/d};
+	BO.eta := 0.8;
+	BO.outlet.h := 3000 {kJ/kg};
+	BO.mdot := 900 {t/d};
 END on_load;
 END boiler_simple_test;
 
@@ -230,20 +235,18 @@ END boiler_simple_test;
 MODEL condenser_simple(
 	inlet "in:" WILL_BE steam_node;
 	outlet "out:" WILL_BE steam_node;
-) REFINES steam_equipment(inlet,outlet);
+) REFINES steam_equipment;
 
-	inlet.p, outlet.p ARE_THE_SAME;
+	inlet.p = outlet.p;
 	Qdot IS_A energy_rate;
 
 	Qdot = mdot * (outlet.h - inlet.h);
 	
 END condenser_simple;
 
-MODEL condenser_simple_test
-	inlet IS_A steam_node;
-	outlet IS_A steam_node;
+MODEL condenser_simple_test;
+	inlet, outlet IS_A steam_node;
 	c IS_A condenser_simple(inlet, outlet);
-	(* nothing here *)
 METHODS
 METHOD on_load;
 	FIX inlet.p, inlet.x;
@@ -270,7 +273,8 @@ MODEL heater_open(
 	inlet_heat WILL_BE steam_node;
 	outlet WILL_BE steam_node;
 );
-	inlet_heat.p, inlet.p, outlet.p ARE_THE_SAME;
+	inlet_heat.p = inlet.p;
+	outlet.p = inlet.p;
 
 	(* cons. mass *)
 	cons_mass: inlet.mdot + inlet_heat.mdot = outlet.mdot;
@@ -280,8 +284,9 @@ MODEL heater_open(
 
 END heater_open;
 
-MODEL heater_open_test REFINES heater_open;
-	(* nothing here *)
+MODEL heater_open_test;
+	inlet, inlet_heat, outlet IS_A steam_node;
+	HE IS_A heater_open(inlet, inlet_heat, outlet);
 METHODS
 METHOD on_load;
 	FIX inlet.p, inlet.h;
@@ -311,8 +316,11 @@ MODEL tee(
 	outlet_branch WILL_BE steam_node;
 );
 	
-	inlet.p, outlet.p, outlet_branch.p ARE_THE_SAME;
-	inlet.h, outlet.h, outlet_branch.h ARE_THE_SAME;
+	inlet.p = outlet.p;
+	outlet_branch.p = inlet.p;
+
+	inlet.h = outlet.h;
+	inlet.h = outlet_branch.h;
 
 	(* cons. mass *)
 	cons_mass: inlet.mdot = outlet.mdot + outlet_branch.mdot;
@@ -336,7 +344,7 @@ MODEL rankine;
 	BO IS_A boiler_simple(S1, S2);
 	TU IS_A turbine_simple(S2, S3);
 	CO IS_A condenser_simple(S3, S4);
-	PU IS_A pump_simple(S4, S5);
+	PU IS_A pump_simple(S4, S1);
 
 	Qdot_loss ALIASES CO.Qdot;
 
@@ -493,9 +501,9 @@ MODEL rankine_regen;
 	S1, S2i, S2o, S2b, S3, S4, S5, S6, S7 IS_A steam_node;
 
 	BO IS_A boiler_simple(S7, S1);
-	TU1 IS_A turbine_simple(S1, S2);
+	TU1 IS_A turbine_simple(S1, S2i);
 	BL IS_A tee(S2i, S2o, S2b); (* bleed *)
-	TU2 IS_A turbine_simple(S2, S3);
+	TU2 IS_A turbine_simple(S2o, S3);
 	CO IS_A condenser_simple(S3, S4);
 	HE IS_A heater_open(S5, S2b, S6);
 	PU1 IS_A pump_simple(S4, S5);
