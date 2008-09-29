@@ -1,4 +1,4 @@
-10 Sep 2008?????
+29 Sep 2008
 -----------
 
 Version 0.9.5.116
@@ -23,12 +23,17 @@ Version 0.9.5.116
  - Fixed linking against Tcl/Tk for Fedora 9.
  - Some updates to build scripts for new SCons API.
  - Silenced some debug output from various places.
- - Added code for reading climate data in ACDB (Australian Climate Databank) format. - Update to support IPOPT 3.4.0
+ - Added code for reading climate data in ACDB (Australian Climate Databank)
+    format.
+ - Update to support IPOPT 3.4.0
  - Some work on fixing bug with IDA when derivs without vars present.
  - Fixed section numbering in 'book.pdf'.
  - Fixed Graphviz behaviour when model too large.
  - Expanded GtkSourceView2 highlighting.
  - Fixed installation in GNOME Applications menu.
+ - Fixed some problems with GUI object names that crept in due to use of Glade-3
+ - Added new external library 'FPROPS' for calculation of accurate thermodynamic
+    properties.
 
 Version 0.9.5.115
  - Was not released (due to probs with version numbering on the Ubuntu PPA)
