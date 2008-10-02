@@ -27,6 +27,8 @@
 #include <stdio.h>
 #endif
 
+#define SQ(X) ((X)*(X))
+
 /*---------------------------------------------
   IDEAL COMPONENT RELATIONS
 */
@@ -206,3 +208,19 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 #endif
 	return sum;
 }
+
+
+
+/**
+	Second partial dervivative of ideal component (phi0) of normalised helmholtz 
+	residual function (phi), with respect to tau. This one is easy! It's just
+	cp0 divided by tau^2, and it's not a function of delta.
+
+	FIXME although this one is easy, we want to pull Tstar out of the
+	ideal properties stuff, if that's possible.
+*/	
+double helm_ideal_tautau(double tau, const IdealData *data){
+	double Tstar_on_tau = data->Tstar / tau;
+	return helm_cp0(Tstar_on_tau, data) / SQ(tau);
+}
+

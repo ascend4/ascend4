@@ -30,6 +30,7 @@
 
 double helm_ideal(double tau, double delta, const IdealData *data);
 double helm_ideal_tau(double tau, double delta, const IdealData *data);
+double helm_ideal_tautau(double tau, const IdealData *data);
 
 double helm_cp0(double T, const IdealData *data);
 
