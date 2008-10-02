@@ -44,6 +44,7 @@ static double helm_resid_del(double tau, double delta, const HelmholtzData *data
 static double helm_resid_tau(double tau, double delta, const HelmholtzData *data);
 static double helm_resid_deltau(double tau, double delta, const HelmholtzData *data);
 static double helm_resid_deldel(double tau, double delta, const HelmholtzData *data);
+static double helm_resid_tautau(double tau, double delta, const HelmholtzData *data);
 
 /**
 	Function to calculate pressure from Helmholtz free energy EOS, given temperature
@@ -248,6 +249,27 @@ double helmholtz_dpdrho_T(double T, double rho, const HelmholtzData *data){
 	return data->R * T * (1 + 2*delta*phir_del + delta*delta* phir_deldel);
 }
 
+/**
+	Calculate partial derivative of h with respect to T, with rho constant
+*/
+double helmholtz_dhdT_rho(double T, double rho, const HelmholtzData *data){
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+
+	double phir_del = helm_resid_del(tau,delta,data);
+	double phir_deltau = helm_resid_deltau(tau,delta,data);
+	double phir_tautau = helm_resid_tautau(tau,delta,data);
+	double phi0_tautau = helm_ideal_tautau(tau,data->ideal);
+
+	return data->R * (1 + delta*phir_del - SQ(tau)*(phir_tautau + phi0_tautau) - delta*tau*phir_deltau);
+}
+
+double helmholtz_dhdrho_T(double T, double rho, const HelmholtzData *data){
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+
+	abort();
+}
 /*---------------------------------------------
   UTILITY FUNCTION(S)
 */
@@ -354,6 +376,8 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 #endif
 	return res;
 }
+
+/*=================== FIRST DERIVATIVES =======================*/
 
 /**
 	Derivative of the helmholtz residual function with respect to
@@ -486,6 +510,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 }	
 
 
+/*=================== SECOND DERIVATIVES =======================*/
 
 /**
 	Mixed derivative of the helmholtz residual function with respect to
@@ -616,6 +641,87 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 		++gt;
 	}
 
+	return res;
+}
+
+
+
+/**
+	Residual part of helmholtz function.
+*/
+double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
+	double dell,ldell, term, sum, res = 0;
+	unsigned n, i;
+	const HelmholtzPowTerm *pt;
+	const HelmholtzGausTerm *gt;
+
+	n = data->np;
+	pt = &(data->pt[0]);
+
+#ifdef RESID_DEBUG
+		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
+#endif
+
+	/* power terms */
+	sum = 0;
+	dell = ipow(delta,pt->l);
+	ldell = pt->l * dell;
+	unsigned oldl;
+	for(i=0; i<n; ++i){
+		term = pt->a * pt->t * (pt->t - 1) * pow(tau, pt->t) * ipow(delta, pt->d);
+		sum += term;
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d,               a=%e, t=%f, d=%d, term = %f, sum = %f",i,pt->a,pt->t,pt->d,term,sum);
+		if(pt->l==0){
+			fprintf(stderr,",row=%e\n",term);
+		}else{
+			fprintf(stderr,",row=%e\n,",term*exp(-dell));
+		}
+#endif
+		oldl = pt->l;
+		++pt;
+		if(i+1==n || oldl != pt->l){
+			if(oldl == 0){
+#ifdef RESID_DEBUG
+				fprintf(stderr,"linear ");
+#endif
+				res += sum;
+			}else{
+#ifdef RESID_DEBUG
+				fprintf(stderr,"exp dell=%f, exp(-dell)=%f sum=%f: ",dell,exp(-dell),sum);
+#endif
+				res += sum * exp(-dell);
+			}
+#ifdef RESID_DEBUG
+			fprintf(stderr,"i = %d, res = %f\n",i,res);
+#endif
+			sum = 0;
+			dell = ipow(delta,pt->l);
+			ldell = pt->l*dell;
+		}
+	}
+
+	/* gaussian terms */
+	n = data->ng;
+	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
+	gt = &(data->gt[0]);
+	for(i=0; i<n; ++i){
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d, GAUSSIAN, n = %e, t = %f, d = %f, alpha = %f, beta = %f, gamma = %f, epsilon = %f\n",i+1, gt->n, gt->t, gt->d, gt->alpha, gt->beta, gt->gamma, gt->epsilon);
+#endif
+		double d1 = delta - gt->epsilon;
+		double t1 = tau - gt->gamma;
+		double f1 = gt->t*(gt->t - 1) + 4. * gt->beta * tau * (tau * (gt->beta*SQ(t1) - 0.5) - t1*gt->t);
+		double e1 = -gt->alpha*SQ(d1) - gt->beta*SQ(t1);
+		sum = gt->n * f1 * pow(tau,gt->t) * pow(delta,gt->d) * exp(e1);
+		//fprintf(stderr,"sum = %f\n",sum);
+		res += sum;
+		++gt;
+	}
+
+#ifdef RESID_DEBUG
+	fprintf(stderr,"phir_tautau = %f\n",res);
+#endif
 	return res;
 }
 
