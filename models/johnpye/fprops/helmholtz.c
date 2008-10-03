@@ -261,7 +261,10 @@ double helmholtz_dhdT_rho(double T, double rho, const HelmholtzData *data){
 	double phir_tautau = helm_resid_tautau(tau,delta,data);
 	double phi0_tautau = helm_ideal_tautau(tau,data->ideal);
 
-	return data->R * (1 + delta*phir_del - SQ(tau)*(phir_tautau + phi0_tautau) - delta*tau*phir_deltau);
+	//fprintf(stderr,"phir_del = %f, phir_deltau = %f, phir_tautau = %f, phi0_tautau = %f\n",phir_del,phir_deltau,phir_tautau,phi0_tautau);
+
+	//return (helmholtz_h(T+0.01,rho,data) - helmholtz_h(T,rho,data)) / 0.01;
+	return data->R * (1. + delta*phir_del - tau*tau*(phi0_tautau + phir_tautau) - delta*tau*phir_deltau);
 }
 
 double helmholtz_dhdrho_T(double T, double rho, const HelmholtzData *data){

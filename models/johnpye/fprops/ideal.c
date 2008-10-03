@@ -220,7 +220,32 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 	ideal properties stuff, if that's possible.
 */	
 double helm_ideal_tautau(double tau, const IdealData *data){
-	double Tstar_on_tau = data->Tstar / tau;
-	return helm_cp0(Tstar_on_tau, data) / SQ(tau);
+	const IdealPowTerm *pt;
+	const IdealExpTerm *et;
+
+	unsigned i;
+	double sum = 0;
+	double term;
+
+	double T = data->Tstar / tau;
+
+	/* power terms */
+	pt = &(data->pt[0]);
+	for(i = 0; i<data->np; ++i, ++pt){
+		term = pt->c * pow(T, pt->t);
+		sum += term;
+	}
+
+	/* 'exponential' terms */
+	et = &(data->et[0]);
+	for(i=0; i<data->ne; ++i, ++et){
+		double x = et->beta / T;
+		double e = exp(-x);
+		double d = (1-e)*(1-e);
+		term = et->b * x*x * e / d;
+		sum += term;
+	}
+
+	return (1 - sum)/ SQ(tau);
 }
 
