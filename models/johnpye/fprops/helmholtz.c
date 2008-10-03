@@ -271,8 +271,13 @@ double helmholtz_dhdrho_T(double T, double rho, const HelmholtzData *data){
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
 
-	abort();
+	double phir_del = helm_resid_del(tau,delta,data);
+	double phir_deltau = helm_resid_deltau(tau,delta,data);
+	double phir_deldel = helm_resid_deldel(tau,delta,data);
+	
+	return data->R * T / rho * (tau*delta*(0 + phir_deltau) + delta * phir_del + SQ(delta)*phir_deldel);
 }
+
 /*---------------------------------------------
   UTILITY FUNCTION(S)
 */

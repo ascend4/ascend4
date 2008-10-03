@@ -234,9 +234,10 @@ int main(void){
 	}
 #endif
 
-	return helm_check_dhdT_rho(d, ntd, td);
-	return helm_check_dpdrho_T(d, ntd, td);
-	//return helm_run_test_cases(d, ntd, td);
+	//return helm_check_dpdrho_T(d, ntd, td);
+	//return helm_check_dhdT_rho(d, ntd, td);
+	//return helm_check_dhdrho_T(d, ntd, td);
+	return helm_run_test_cases(d, ntd, td);
 }
 
 const TestData td[] = {
