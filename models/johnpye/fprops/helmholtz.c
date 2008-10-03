@@ -304,7 +304,7 @@ double helmholtz_dudrho_T(double T, double rho, const HelmholtzData *data){
 
 	double phir_deltau = helm_resid_deltau(tau,delta,data);
 	
-	return data->R * T * tau * phir_deltau;
+	return data->R * T / rho * (tau * delta * phir_deltau);
 }
 
 /*---------------------------------------------
