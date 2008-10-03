@@ -145,7 +145,7 @@ int helm_check_dpdT_rho(const HelmholtzData *d, unsigned ntd, const TestData *td
 
 	double dT = 0.0001 /* finite difference in temperature, in K */;
 
-	fprintf(stderr,"(dP/dT)_rho RESULTS\n\n");
+	fprintf(stderr,"(dp/dT)_rho RESULTS\n\n");
 	fprintf(stderr,"%-18s\t%-18s\t%-18s\t%-18s\t%-18s\t%12s\t%12s\n","T","rho","p","dp/dT","dp/dT est","err","%err");
 	for(i=0; i<n;++i){
 		T = td[i].T + 273.15;
@@ -173,7 +173,7 @@ int helm_check_dpdrho_T(const HelmholtzData *d, unsigned ntd, const TestData *td
 
 	double drho = 0.0001 /* finite difference in temperature, in K */;
 
-	fprintf(stderr,"(dP/dT)_rho RESULTS\n\n");
+	fprintf(stderr,"(dp/drho)_T RESULTS\n\n");
 	fprintf(stderr,"%-18s\t%-18s\t%-18s\t%-18s\t%-18s\t%12s\t%12s\n","T","rho","p","dp/drho","dp/drho est","err","%err");
 	for(i=0; i<n;++i){
 		T = td[i].T + 273.15;
@@ -202,7 +202,7 @@ int helm_check_dhdT_rho(const HelmholtzData *d, unsigned ntd, const TestData *td
 
 	double dT = 1e-6 /* finite difference in temperature, in K */;
 
-	fprintf(stderr,"(dP/dT)_rho RESULTS\n\n");
+	fprintf(stderr,"(dh/dT)_rho RESULTS\n\n");
 	fprintf(stderr,"%-18s\t%-18s\t%-18s\t%-18s\t%-18s\t%12s\t%12s\n","T","rho","h","dh/dT","dh/dT est","err","%err");
 	for(i=0; i<n;++i){
 		T = td[i].T + 273.15;

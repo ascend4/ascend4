@@ -671,7 +671,7 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 	ldell = pt->l * dell;
 	unsigned oldl;
 	for(i=0; i<n; ++i){
-		term = pt->a * pt->t * (pt->t - 1) * pow(tau, pt->t) * ipow(delta, pt->d);
+		term = pt->a * pt->t * (pt->t - 1) * pow(tau, pt->t - 2) * ipow(delta, pt->d);
 		sum += term;
 #ifdef RESID_DEBUG
 		fprintf(stderr,"i = %d,               a=%e, t=%f, d=%d, term = %f, sum = %f",i,pt->a,pt->t,pt->d,term,sum);
