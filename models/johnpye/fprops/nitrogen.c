@@ -237,6 +237,12 @@ int main(void){
 	//return helm_check_dpdrho_T(d, ntd, td);
 	//return helm_check_dhdT_rho(d, ntd, td);
 	//return helm_check_dhdrho_T(d, ntd, td);
+
+	helm_check_dhdT_rho(d, ntd, td);
+	helm_check_dhdrho_T(d, ntd, td);
+	helm_check_dudT_rho(d, ntd, td);
+	helm_check_dudrho_T(d, ntd, td);
+
 	return helm_run_test_cases(d, ntd, td);
 }
 

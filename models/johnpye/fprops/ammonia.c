@@ -216,6 +216,11 @@ int main(void){
 	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1);
 	}
 
+	helm_check_dhdT_rho(d, ntd, td);
+	helm_check_dhdrho_T(d, ntd, td);
+	helm_check_dudT_rho(d, ntd, td);
+	helm_check_dudrho_T(d, ntd, td);
+
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
 	exit(0);
 }
