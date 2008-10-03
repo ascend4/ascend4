@@ -234,7 +234,12 @@ int helmholtz_u_calc(struct BBoxInterp *bbox,
 	CALCPREPARE;
 
 	/* first input is temperature, second is molar density */
-	outputs[0] = helmholtz_u(inputs[0], inputs[1], helmholtz_data);
+	if(bbox->task == bb_func_eval){
+		outputs[0] = helmholtz_u(inputs[0], inputs[1], helmholtz_data);
+	}else{
+		jacobian[0*1+0] = helmholtz_dudT_rho(inputs[0], inputs[1], helmholtz_data);
+		jacobian[0*1+1] = helmholtz_dudrho_T(inputs[0], inputs[1], helmholtz_data);
+	}
 
 	/* no need to worry about error states etc. */
 	return 0;
