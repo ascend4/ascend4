@@ -90,7 +90,7 @@ extern
 ASC_EXPORT int helmholtz_register(){
 	int result = 0;
 
-	ERROR_REPORTER_HERE(ASC_USER_WARNING,"HELMHOLTZ external relations are still EXPERIMENTAL and BUGGY...\n");
+	ERROR_REPORTER_HERE(ASC_USER_WARNING,"FPROPS is still EXPERIMENTAL. Use with caution.\n");
 
 #define CALCFN(NAME,INPUTS,OUTPUTS) \
 	result += CreateUserFunctionBlackBox(#NAME \
@@ -274,7 +274,13 @@ int helmholtz_h_calc(struct BBoxInterp *bbox,
 	CALCPREPARE;
 
 	/* first input is temperature, second is molar density */
-	outputs[0] = helmholtz_h(inputs[0], inputs[1], helmholtz_data);
+	if(bbox->task == bb_func_eval){
+		outputs[0] = helmholtz_h(inputs[0], inputs[1], helmholtz_data);
+	}else{
+		//ERROR_REPORTER_HERE(ASC_USER_NOTE,"JACOBIAN CALCULATION FOR P!\n");
+		jacobian[0*1+0] = helmholtz_dhdT_rho(inputs[0], inputs[1], helmholtz_data);
+		jacobian[0*1+1] = helmholtz_dhdrho_T(inputs[0], inputs[1], helmholtz_data);
+	}
 
 	/* no need to worry about error states etc. */
 	return 0;

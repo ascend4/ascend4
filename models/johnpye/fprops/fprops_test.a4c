@@ -27,9 +27,9 @@ MODEL fprops_test;
 		propsdata : DATA
 	);
 
-	props2: helmholtz_h(
+	props2: helmholtz_u(
 		T, rho : INPUT;
-		h : OUTPUT;
+		u : OUTPUT;
 		propsdata : DATA
 	);
 

@@ -267,6 +267,9 @@ double helmholtz_dhdT_rho(double T, double rho, const HelmholtzData *data){
 	return data->R * (1. + delta*phir_del - tau*tau*(phi0_tautau + phir_tautau) - delta*tau*phir_deltau);
 }
 
+/**
+	Calculate partial derivative of h with respect to rho, with T constant
+*/
 double helmholtz_dhdrho_T(double T, double rho, const HelmholtzData *data){
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
@@ -276,6 +279,32 @@ double helmholtz_dhdrho_T(double T, double rho, const HelmholtzData *data){
 	double phir_deldel = helm_resid_deldel(tau,delta,data);
 	
 	return data->R * T / rho * (tau*delta*(0 + phir_deltau) + delta * phir_del + SQ(delta)*phir_deldel);
+}
+
+
+/**
+	Calculate partial derivative of u with respect to T, with rho constant
+*/
+double helmholtz_dudT_rho(double T, double rho, const HelmholtzData *data){
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+
+	double phir_tautau = helm_resid_tautau(tau,delta,data);
+	double phi0_tautau = helm_ideal_tautau(tau,data->ideal);
+
+	return -data->R * SQ(tau) * (phi0_tautau + phir_tautau);
+}
+
+/**
+	Calculate partial derivative of u with respect to rho, with T constant
+*/
+double helmholtz_dudrho_T(double T, double rho, const HelmholtzData *data){
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+
+	double phir_deltau = helm_resid_deltau(tau,delta,data);
+	
+	return data->R * T * tau * phir_deltau;
 }
 
 /*---------------------------------------------
@@ -721,7 +750,7 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 		double t1 = tau - gt->gamma;
 		double f1 = gt->t*(gt->t - 1) + 4. * gt->beta * tau * (tau * (gt->beta*SQ(t1) - 0.5) - t1*gt->t);
 		double e1 = -gt->alpha*SQ(d1) - gt->beta*SQ(t1);
-		sum = gt->n * f1 * pow(tau,gt->t) * pow(delta,gt->d) * exp(e1);
+		sum = gt->n * f1 * pow(tau,gt->t - 2) * pow(delta,gt->d) * exp(e1);
 		//fprintf(stderr,"sum = %f\n",sum);
 		res += sum;
 		++gt;
