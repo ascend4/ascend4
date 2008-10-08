@@ -16,6 +16,11 @@ AnnotationDatabase::AnnotationDatabase(const SymChar &dbid){
 	this->dbid = dbid.getInternalType();
 }
 
+/**
+	This is a C++ wrapper for the GetNotes function from notate.h.
+	It doesn't allow access to the full range of functionality from GetNotes
+	though.
+*/
 vector<Annotation>
 AnnotationDatabase::getNotes(const Type &type, const SymChar *lang
 	, const SymChar *id, const SymChar *method, const int datatypeint
@@ -46,6 +51,8 @@ AnnotationDatabase::getNotes(const Type &type, const SymChar *lang
 	for(unsigned i=1; i<=gl_length(res); ++i){
 		v.push_back(Annotation((struct Note *)gl_fetch(res,i)));
 	}
+
+	gl_destroy(res);
 	
 	return v;
 }
@@ -63,6 +70,25 @@ AnnotationDatabase::getNoteForVariable(const Type &type
 		, const SymChar *lang
 ){
 	return notes_get_for_variable(this->dbid, type.getInternalType(), varname->getInternalType(), lang->getInternalType());
+}
+
+/**
+	Return most-refined note corresponding all variables within a type. Only
+	notes having 'language' lang are returned.
+*/
+vector<Annotation> 
+AnnotationDatabase::getTypeRefinedNotesLang(const Type &type
+		, const SymChar *lang
+){
+	struct gl_list_t *l = notes_get_vars_with_notetype(this->dbid, type.getInternalType(), lang->getInternalType());
+
+	vector<Annotation> v;
+	if(l != NULL){
+		for(unsigned i=1; i<=gl_length(l); ++i){
+			v.push_back(Annotation((struct Note *)gl_fetch(l,i)));
+		}
+	}
+	return v;
 }
 
 

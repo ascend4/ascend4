@@ -2,7 +2,7 @@ import ascpy
 
 L = ascpy.Library()
 
-L.load('johnpye/rankine_parametric.a4c')
+L.load('johnpye/rankine.a4c')
 
 D = L.getAnnotationDatabase()
 
@@ -10,39 +10,29 @@ M = L.getModules()
 
 blocktypes = set()
 
-for m in M:
-	T = L.getModuleTypes(m)
-	for t in T:
-		N = D.getNotes(t)
-		for n in N:
-			i = str(n.getId())
-			x = str(n.getText())
-			print "%s [%s::%s] %s" % (n.getLanguage(), n.getType(), n.getId(), n.getText())
-			if x[0:3] == "in:" or x[0:4] == "out:":
-				blocktypes.add(t)
+# convenience class for 'block' types in ASCEND
+class BlockType:
+	def __init__(self,typ):
+		self.typ = typ
+		self.inlets = set()
+		self.outlets = set()
+		nn = D.getNotes(typ,ascpy.SymChar("inline"),None)
+		for n in nn:
+			pass
 
-print "block types:"
-if not blocktypes:
-	print "NONE FOUND"
-for t in blocktypes:
-	print t.getName()
-
-print "-----"
-
-T = L.findType("pump_simple")
-print D.getNoteForVariable(T,ascpy.SymChar("inlet"),ascpy.SymChar("inline"));
-
-print "-----"
-blocktypes = set()
+	def get_inlets(self):
+		pass
 
 for m in M:
 	T = L.getModuleTypes(m)
 	for t in T:
-		# 'block' types are only those which are parametric.
-		if not t.hasParameters():
+		# 'block' types must not be parametric, because they must be able to
+		# exist even without being connected, and parametric models impose
+		# restrictions on the use of ARE_THE_SAME and similar.
+		if t.hasParameters():
 			continue
-		x = str(D.getNoteForVariable(t,ascpy.SymChar("inlet"),ascpy.SymChar("inline")))
-		if x[0:max(3,len(x))] == "in:" or x[0:max(4,len(x))] == "out:":
+		x = D.getNotes(t,ascpy.SymChar("block"),ascpy.SymChar("SELF"))
+		if x:
 			blocktypes.add(t)
 
 print "block types:"
@@ -50,4 +40,11 @@ if not blocktypes:
 	print "NONE FOUND"
 for t in blocktypes:
 	print t.getName()
+
+	nn = D.getNotes(t,ascpy.SymChar("block"),ascpy.SymChar("SELF"))
+	for n in nn: 
+		print "\t%s" % n.getText()
+	nn = D.getTypeRefinedNotesLang(t,ascpy.SymChar("inline"))
+	for n in nn:
+		print "\t\t%s: %s" % (n.getId(), n.getText())	
 

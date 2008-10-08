@@ -70,8 +70,8 @@ METHODS
 END steam_node;
 
 MODEL steam_equipment;
-	inlet "in:" IS_A steam_node;
-	outlet "out:" IS_A steam_node;
+	inlet "in: inlet steam stream" IS_A steam_node;
+	outlet "out: outlet steam stream" IS_A steam_node;
 
 	inlet.mdot, outlet.mdot ARE_THE_SAME;
 	mdot ALIASES inlet.mdot;
@@ -82,6 +82,9 @@ END steam_equipment;
 *)
 
 MODEL pump_simple REFINES steam_equipment;
+	NOTES
+		'block' SELF {Simple model of a pump using isentropic efficiency}
+	END NOTES;
 
 	dp IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
@@ -131,6 +134,9 @@ END pump_simple_test;
 *)
 
 MODEL turbine_simple REFINES steam_equipment;
+	NOTES
+		'block' SELF {Simple turbine model}
+	END NOTES;
 
 	dp IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
@@ -178,6 +184,9 @@ END turbine_simple_test;
 	flue gas temperature
 *)
 MODEL boiler_simple REFINES steam_equipment;
+	NOTES
+		'block' SELF {Simple boiler model}
+	END NOTES;
 
 	inlet.p, outlet.p ARE_THE_SAME;
 	Qdot_fuel IS_A energy_rate;
@@ -217,6 +226,9 @@ END boiler_simple_test;
 	that must be expelled to get the water down to a certain state
 *)
 MODEL condenser_simple REFINES steam_equipment;
+	NOTES
+		'block' SELF {Simple condenser model}
+	END NOTES;
 
 	inlet.p, outlet.p ARE_THE_SAME;
 	Qdot IS_A energy_rate;
@@ -249,10 +261,13 @@ END condenser_simple_test;
 	of 'steam_equipment'.
 *)
 MODEL heater_open;
+	NOTES
+		'block' SELF {Simple open feedwater heater model}
+	END NOTES;
 
-	inlet IS_A steam_node;
-	inlet_heat IS_A steam_node;
-	outlet IS_A steam_node;
+	inlet "in:" IS_A steam_node;
+	inlet_heat "in:" IS_A steam_node;
+	outlet "out:" IS_A steam_node;
 	
 	inlet_heat.p, inlet.p, outlet.p ARE_THE_SAME;
 
@@ -290,6 +305,10 @@ END heater_open_test;
 	it's not a car :-)
 *)
 MODEL tee;
+	NOTES
+		'block' SELF {Model of a branching of two flow streams}
+	END NOTES;
+
 	inlet IS_A steam_node;
 	outlet IS_A steam_node;
 	outlet_branch IS_A steam_node;
