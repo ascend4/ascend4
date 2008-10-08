@@ -11,7 +11,11 @@ test the results from this library before you rely on any of its values.
 Integration is provided to allow these routines to be called from ASCEND, but
 the support is still partial, and still lacks the derivative expressions that
 allow the most efficient possible convergence during iteration.
-
+                               ________________________________________________
+                              |                                                |
+                              | More details are available on the ASCEND Wiki: |
+                              | http://ascendwiki.cheme.cmu.edu/FPROPS         |
+                              |________________________________________________|
 
 Ideal gas properties
 --------------------
@@ -46,5 +50,5 @@ Sim42, and other process simulators. But that is a job for later.
 
 -- 
 John Pye
-18 Sep 2008.
+09 Oct 2008.
 
