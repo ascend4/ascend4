@@ -228,6 +228,7 @@ END boiler_simple_test;
 MODEL condenser_simple REFINES steam_equipment;
 	NOTES
 		'block' SELF {Simple condenser model}
+		'inline' inlet {in: yahoooo}
 	END NOTES;
 
 	inlet.p, outlet.p ARE_THE_SAME;
@@ -309,11 +310,10 @@ MODEL tee;
 		'block' SELF {Model of a branching of two flow streams}
 	END NOTES;
 
-	inlet IS_A steam_node;
-	outlet IS_A steam_node;
-	outlet_branch IS_A steam_node;
+	inlet "in:" IS_A steam_node;
+	outlet "out:" IS_A steam_node;
+	outlet_branch "out:" IS_A steam_node;
 
-	
 	inlet.p, outlet.p, outlet_branch.p ARE_THE_SAME;
 	inlet.h, outlet.h, outlet_branch.h ARE_THE_SAME;
 
