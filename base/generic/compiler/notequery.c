@@ -22,13 +22,27 @@
 #include "notequery.h"
 #include "notate.h"
 #include "symtab.h"
-#include "cmpfunc.h"
 #include <utilities/error.h>
+
+struct gl_list_t *notes_get_refined(
+	symchar *dbid
+	,const struct TypeDescription *t
+	,symchar *lang
+	,symchar *id
+	,symchar *method
+){
+	struct gl_list_t *types = GetAncestorNames(t);
+
+	CONSOLE_DEBUG("not implemented");
+	struct gl_list_t *res = gl_create(1);
+	return res;
+}
+
 
 const char *notes_get_for_variable(symchar *dbid
 	, const struct TypeDescription *t
 	, const symchar *varname
-	, const symchar *notetype
+	, const symchar *lang
 ){
 	struct gl_list_t *noteslist;
 
@@ -67,10 +81,10 @@ const char *notes_get_for_variable(symchar *dbid
 	return BraceCharString(GetNoteText(n));
 }
 
-struct gl_list_t *notes_get_vars_with_notetype(
+struct gl_list_t *notes_get_vars_with_lang(
 	symchar *dbid
 	, const struct TypeDescription *t
-	, const symchar *notetype
+	, const symchar *lang
 ){
 	int i;
 	struct gl_list_t *noteslist;
@@ -86,8 +100,8 @@ struct gl_list_t *notes_get_vars_with_notetype(
 	}
 #endif
 
-	/*CONSOLE_DEBUG("Looking for notes of type '%s'",SCP(notetype));*/
-	gl_append_ptr(langs,(VOIDPTR)notetype);
+	/*CONSOLE_DEBUG("Looking for notes of type '%s'",SCP(lang));*/
+	gl_append_ptr(langs,(VOIDPTR)lang);
 
 	/* create a new list with our top-level type at the start */
 	struct gl_list_t *typesall = gl_create(1 + gl_length(types));

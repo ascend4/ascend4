@@ -1224,6 +1224,34 @@ class Browser:
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
 
+	def on_notes_view_activate(self,*args):
+		t = None
+		try:
+			D = self.library.getAnnotationDatabase()
+			i = self.modelview.get_selected_instance()
+			if i.isModel():
+				t = i.getType()
+			else:
+				self.reporter.reportError("First select a MODEL instance");
+				return
+			v = D.getNotes(t)
+		except RuntimeError,e:
+			self.reporter.reportError("Unable to show notes: %s"%str(e))
+			return
+		text = "Notes for '%s'" % t.getName()
+		title = text
+		text += "\nHere are all notes defined within this MODEL:"
+		nn = {}
+		if len(v):
+			for n in v:
+				text += "\n\n%s (%s):" % (n.getId(), n.getLanguage())
+				text += "\n\t%s" % n.getText()
+		else:
+			text += "\n\nThere are no noted defined locally within in this model"
+
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
+
 	def on_maintabs_switch_page(self,notebook,page,pagenum):
 		#print("Page switched to %d" % pagenum)
 		if pagenum in self.tabs.keys():
