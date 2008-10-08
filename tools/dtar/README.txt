@@ -3,7 +3,7 @@ DTAR
 
 This is a fairly simple tool for building a Debian package
 from a source code tarball. Following the convention of the
-'rpm -ta' command, one can embed the necessary files for
+'rpmbuild -ta' command, one can embed the necessary files for
 building platform-dependent packages within a platform-independent
 source-code package. This script implements the necessary
 script for compiling this package on Debian platforms.

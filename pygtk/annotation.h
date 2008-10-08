@@ -34,6 +34,10 @@ public:
 		, const SymChar *id=NULL, const SymChar *method=NULL, const int flag=0
 	);
 
+	std::vector<Annotation> getNotesRefined(const Type &type, const SymChar *lang=NULL
+		, const SymChar *id=NULL, const SymChar *method=NULL
+	);
+
 	std::vector<Annotation> getTypeRefinedNotesLang(const Type &type
 		, const SymChar *lang
 	);

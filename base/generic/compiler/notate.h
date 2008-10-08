@@ -152,7 +152,7 @@ extern void DestroyNotesOnType(symchar *dbid, symchar *type_name);
  * Returns a list of notes matching the keys specified.
  * NOTESWILD key values are wildcards.
  * This list returned is yours to destroy. The contents of the
- * list are struct Note * and  are Not yours to destroy.
+ * list are struct Note * and are NOT yours to destroy.
  *
  * Examples:
  * <pre>

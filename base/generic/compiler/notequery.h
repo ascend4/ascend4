@@ -32,15 +32,33 @@
 #include <general/list.h>
 
 /**
-	Get the most refined note of a certain notetype for the specified
+	Get the most refined notes for a certain type (and its ancestors) subject
+	to the search restraints as specified for the GetNotes routine.
+
+	Pass NOTESWILD for any parameter that should be a wildcard.
+
+	@return gl_list of notes (possibly empty).
+*/
+ASC_DLLSPEC struct gl_list_t *notes_get_refined(
+	symchar *dbid
+	,const struct TypeDescription *t
+	,symchar *lang
+	,symchar *id
+	,symchar *method
+);
+
+/**
+	Get the most refined note of a certain 'language' lang for the specified
 	variable (varname) within the TypeDescription t.
 	@return pointer to the note text, or NULL if no note or no variable found.
+
+	@param lang note type symchar, eg 'inline', 'description', 'block', etc.
 */
 ASC_DLLSPEC const char *notes_get_for_variable(
 	symchar *dbid
 	, const struct TypeDescription *t
 	, const symchar *varname
-	, const symchar *notetype
+	, const symchar *lang
 );
 
 /**
@@ -49,10 +67,10 @@ ASC_DLLSPEC const char *notes_get_for_variable(
 	This is being implemented for detecting the inlets and outlets of a block 
 	in our canvas-based modelling approach.
 */
-ASC_DLLSPEC struct gl_list_t *notes_get_vars_with_notetype(
+ASC_DLLSPEC struct gl_list_t *notes_get_vars_with_lang(
 	symchar *dbid
 	,const struct TypeDescription *t
-	,const symchar *notetype
+	,const symchar *lang
 );
 #endif
 

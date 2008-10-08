@@ -195,12 +195,15 @@ class ModelView:
 					self.modelstore.set_value(_iter,3,BROWSER_UNINCLUDED_COLOR)
 
 	def get_selected_type(self):
+		return self.get_selected_instance().getType()
+
+	def get_selected_instance(self):
 		model,iter = self.modelview.get_selection().get_selected()
 		if iter is None:
 			return None
 		path = model.get_path(iter)
 		name,instance = self.otank[path]
-		return instance.getType()	
+		return instance
 	
 	def cell_edited_callback(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
