@@ -33,8 +33,6 @@ const char *notes_get_for_variable(symchar *dbid
 
 	struct gl_list_t *types = GetAncestorNames(t);
 	struct gl_list_t *langs = gl_create(1);
-	struct gl_list_t *methods = gl_create(1);
-	struct gl_list_t *nds = gl_create(1);
 	struct gl_list_t *ids = gl_create(1);
 
 	int i;
@@ -49,6 +47,10 @@ const char *notes_get_for_variable(symchar *dbid
 
 	noteslist = GetNotesList(dbid,types,langs,ids,NOTESWILDLIST,NOTESWILDLIST);
 
+	gl_destroy(types);
+	gl_destroy(langs);
+	gl_destroy(ids);
+
 	CONSOLE_DEBUG("noteslist = %ld items",gl_length(noteslist));
 
 	if(gl_length(noteslist)==0){
@@ -62,5 +64,65 @@ const char *notes_get_for_variable(symchar *dbid
 	CONSOLE_DEBUG("note text = %s",BraceCharString(GetNoteText(n)));
 	
 	return BraceCharString(GetNoteText(n));
+}
+
+struct gl_list_t *notes_get_vars_with_notetype(
+	symchar *dbid
+	, const struct TypeDescription *t
+	, const symchar *notetype
+){
+	int i;
+	struct gl_list_t *noteslist;
+	struct gl_list_t *refinednoteslist = gl_create(1);
+
+	struct gl_list_t *types = GetAncestorNames(t);
+	struct gl_list_t *langs = gl_create(1);
+	struct gl_list_t *ids = gl_create(1);
+#if 0
+	CONSOLE_DEBUG("type '%s' has %ld ancestor types",SCP(GetName(t)),gl_length(types));
+	for(i=1; i<=gl_length(types); ++i){
+		CONSOLE_DEBUG("ancestor %d: %s",i,SCP((symchar *)gl_fetch(types,i)));
+	}
+#endif
+
+	/*CONSOLE_DEBUG("Looking for notes of type '%s'",SCP(notetype));*/
+	gl_append_ptr(langs,(VOIDPTR)notetype);
+
+	/* create a new list with our top-level type at the start */
+	struct gl_list_t *typesall = gl_create(1);
+	gl_append_ptr(typesall,(VOIDPTR)t);
+	for(i=1;i<=gl_length(types);++i){
+		//CONSOLE_DEBUG("Appending '%s' to typesall",SCP(GetName((struct TypeDescription *)gl_fetch(types,i))));
+		gl_append_ptr(typesall,gl_fetch(types,i));
+	}
+	/* CONSOLE_DEBUG("length of types = %ld, typesall = %ld",gl_length(types), gl_length(typesall));*/
+
+	gl_destroy(types);
+
+	noteslist = GetNotesList(dbid,typesall,langs,NOTESWILDLIST,NOTESWILDLIST,NOTESWILDLIST);
+
+	gl_destroy(typesall);
+	gl_destroy(langs);
+
+	/*CONSOLE_DEBUG("noteslist = %ld items",gl_length(noteslist));*/
+
+	const symchar *lastid = NULL;
+	for(i=1; i<=gl_length(noteslist); ++i){
+		struct Note *n = (struct Note *)gl_fetch(noteslist,i);
+		/* CONSOLE_DEBUG("note ID = %s, lastid = %s",GetNoteId(n),lastid); */
+		if(!lastid || lastid != GetNoteId(n)){
+			gl_append_ptr(refinednoteslist,(VOIDPTR)n);
+			lastid = GetNoteId(n);
+		}
+	}
+	gl_destroy(noteslist);
+
+	if(gl_length(refinednoteslist)==0){
+		gl_destroy(refinednoteslist);
+		/* CONSOLE_DEBUG("empty notes list returned"); */
+		return NULL;
+	}
+
+	return refinednoteslist;
 }
 

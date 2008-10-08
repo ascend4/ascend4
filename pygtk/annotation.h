@@ -34,10 +34,14 @@ public:
 		, const SymChar *id=NULL, const SymChar *method=NULL, const int flag=0
 	);
 
+	std::vector<Annotation> getTypeRefinedNotesLang(const Type &type
+		, const SymChar *lang
+	);
+
 	const char *getNoteForVariable(const Type &type
 		, const SymChar *varname
 		, const SymChar *lang=NULL /* assume 'inline' if not specified */
-	);	
+	);
 };
 
 #endif

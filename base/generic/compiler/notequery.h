@@ -43,5 +43,16 @@ ASC_DLLSPEC const char *notes_get_for_variable(
 	, const symchar *notetype
 );
 
+/**
+	Look at a particular TypeDescription t its ancestors, and return
+	the most refined note of a certain notetype for each variable.
+	This is being implemented for detecting the inlets and outlets of a block 
+	in our canvas-based modelling approach.
+*/
+ASC_DLLSPEC struct gl_list_t *notes_get_vars_with_notetype(
+	symchar *dbid
+	,const struct TypeDescription *t
+	,const symchar *notetype
+);
 #endif
 
