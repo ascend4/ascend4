@@ -1,0 +1,61 @@
+REQUIRE "atoms.a4l";
+
+ATOM specific_enthalpy REFINES solver_var
+		DIMENSION L^2/T^2
+		DEFAULT 1000{kJ/kg};
+	lower_bound := 0{kJ/kg};
+	upper_bound := 1e50{kJ/kg};
+	nominal := 1000{kJ/kg};
+END specific_enthalpy;
+
+ATOM specific_volume REFINES solver_var
+		DIMENSION L^3/M
+		DEFAULT 0.001{m^3/kg};
+	lower_bound := 0{m^3/kg};
+	upper_bound := 1e50{m^3/kg};
+	nominal := 0.001{m^3/kg};
+END specific_volume;
+
+MODEL stream;
+	p IS_A pressure;
+	v IS_A specific_volume;
+	h IS_A specific_enthalpy;
+	mdot IS_A mass_rate;
+END stream;
+
+MODEL equipment;
+	inlet "in: NAMED IN equipment" IS_A stream;
+	outlet "out:"IS_A stream;
+END equipment;
+
+MODEL pump REFINES equipment;
+	NOTES
+		'block' SELF {Tee piece}
+	END NOTES;
+	inlet.p - 1 {bar} = outlet.p;
+END pump;
+
+MODEL tee REFINES equipment;
+	NOTES
+		'block' SELF {Tee piece}
+	END NOTES;
+	side "out:" IS_A stream;
+	inlet.mdot = outlet.mdot + side.mdot;
+END tee;
+
+MODEL join REFINES equipment;
+	NOTES
+		'block' SELF {Joiner piece}
+		'inline' inlet {in: AS NAMED IN 'join'}
+	END NOTES;
+	side "in:" IS_A stream;
+	inlet.mdot + side.mdot = outlet.mdot;
+END join;
+
+MODEL heater REFINES join;
+	NOTES
+		'block' SELF {Feedwater heater}
+	END NOTES;
+	V IS_A volume;
+END join;
+

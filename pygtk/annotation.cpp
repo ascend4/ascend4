@@ -58,46 +58,6 @@ AnnotationDatabase::getNotes(const Type &type, const SymChar *lang
 }
 
 /**
-	Look up notes that belong to a certain type AND its ancestors, but
-	for each id/lang combination, only return the most refined note. That way,
-	if a note is added to a variable in a base model, it will still be visible
-	when viewing the notes for a more refined model.
-*/
-vector<Annotation>
-AnnotationDatabase::getNotesRefined(const Type &type, const SymChar *lang
-	, const SymChar *id, const SymChar *method
-){
-	struct gl_list_t *res;
-
-	symchar *lang1, *id1, *method1;
-
-	if(lang==NULL)lang1 = NOTESWILD;
-	else lang1 = lang->getInternalType();
-
-	if(id==NULL)id1 = NOTESWILD;
-	else id1 = id->getInternalType();
-
-	if(method==NULL)method1 = NOTESWILD;
-	else method1 = method->getInternalType();
-	
-	res = notes_get_refined(dbid, type.getInternalType(), lang1, id1, method1);
-
-	if(res==NULL){
-		throw runtime_error("NULL from GetNotes");
-	}
-
-	vector<Annotation> v;
-	for(unsigned i=1; i<=gl_length(res); ++i){
-		v.push_back(Annotation((struct Note *)gl_fetch(res,i)));
-	}
-
-	gl_destroy(res);
-	
-	return v;
-}
-
-
-/**
 	Return the note corresponding to a variable within a type. This function
 	is cogniscent of the type hierarchy; it will locate the note on this
 	variable in the most refined parent type of 'type' for which it is present.
@@ -120,7 +80,11 @@ vector<Annotation>
 AnnotationDatabase::getTypeRefinedNotesLang(const Type &type
 		, const SymChar *lang
 ){
-	struct gl_list_t *l = notes_get_vars_with_lang(this->dbid, type.getInternalType(), lang->getInternalType());
+	struct gl_list_t *l = notes_refined_for_type_with_lang(
+		this->dbid
+		, type.getInternalType()
+		, lang->getInternalType()
+	);
 
 	vector<Annotation> v;
 	if(l != NULL){

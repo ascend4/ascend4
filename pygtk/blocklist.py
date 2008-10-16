@@ -1,27 +1,39 @@
+import sys
+
+if sys.platform.startswith("win"):
+    # Fetchs gtk2 path from registry
+    import _winreg
+    import msvcrt
+    try:
+        k = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "Software\\GTK\\2.0")
+    except EnvironmentError:
+		# use TkInter to report the error :-)
+		from TkInter import *
+		root = Tk()
+		w = Label(root,"You must install the Gtk+ 2.2 Runtime Environment to run this program")
+		w.pack()
+		root.mainloop()
+		sys.exit(1)
+    else:    
+        gtkdir = _winreg.QueryValueEx(k, "Path")
+        import os
+        # we must make sure the gtk2 path is the first thing in the path
+        # otherwise, we can get errors if the system finds other libs with
+        # the same name in the path...
+        os.environ['PATH'] = "%s/lib;%s/bin;" % (gtkdir[0], gtkdir[0]) + os.environ['PATH']
+
 import ascpy
 
 L = ascpy.Library()
 
-L.load('johnpye/rankine.a4c')
+# FIXME need to add way to add/remove modules from the Library?
+L.load('test/canvas/blocktypes.a4c')
 
 D = L.getAnnotationDatabase()
 
 M = L.getModules()
 
 blocktypes = set()
-
-# convenience class for 'block' types in ASCEND
-class BlockType:
-	def __init__(self,typ):
-		self.typ = typ
-		self.inlets = set()
-		self.outlets = set()
-		nn = D.getNotes(typ,ascpy.SymChar("inline"),None)
-		for n in nn:
-			pass
-
-	def get_inlets(self):
-		pass
 
 for m in M:
 	T = L.getModuleTypes(m)
@@ -40,8 +52,6 @@ if not blocktypes:
 	print "NONE FOUND"
 for t in blocktypes:
 	print t.getName()
-	if str(t.getName())!="condenser_simple":
-		continue
 
 	nn = D.getNotes(t,ascpy.SymChar("block"),ascpy.SymChar("SELF"))
 	for n in nn: 
@@ -57,11 +67,10 @@ for t in blocktypes:
 		elif t[0:min(len(t),4)]=="out:":
 			outputs += [n]
 
-	print "\t\tinputs:",[t.getId() for t in inputs]
-	for t in inputs:
-		print "\t\t\t%s: %s" % (t.getId(),t.getText())
-	print "\t\toutputs:",[t.getId() for t in outputs]
-	for t in outputs:
-		print "\t\t\t%s: %s" % (t.getId(),t.getText())
-
+	print "\t\tinputs:",[n.getId() for n in inputs]
+	for n in inputs:
+		print "\t\t\t%s: %s (type = %s)" % (n.getId(),n.getText(),n.getType())
+	print "\t\toutputs:",[n.getId() for n in outputs]
+	for n in outputs:
+		print "\t\t\t%s: %s" % (n.getId(),n.getText())
 
