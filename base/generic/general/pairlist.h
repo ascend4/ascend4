@@ -41,6 +41,7 @@
 #define ASC_PAIRLIST_H
 
 struct pairlist_t;
+struct gl_list_t;
 
 #define pairlist_DEBUG FALSE
 /**<
@@ -93,6 +94,13 @@ ASC_DLLSPEC unsigned long pairlist_append_unique(struct pairlist_t * pl, void *k
  *  @return the key index.
  */
 
+ASC_DLLSPEC void *pairlist_set(struct pairlist_t *pl, void *key, void *value);
+/**<
+	Add a pair to the list. If duplicate, old value is overwritten with new value.
+	If an old value was found, its pointer is returned (so that the user can
+	destroy the dereferenced data if required). If no old value was found with
+	this key, NULL is returned.
+*/
 
 ASC_DLLSPEC void pairlist_clear(struct pairlist_t * pl);
 /**<
@@ -105,6 +113,12 @@ ASC_DLLSPEC void pairlist_destroy(struct pairlist_t * pl);
  *  Deallocates everything associated with the pl.
  *  @param pl The pairlist store to destroy.
  */
+
+ASC_DLLSPEC struct gl_list_t *pairlist_values_and_destroy(struct pairlist_t *pl);
+/**<
+	Return the 'values' list from the pairlist, and destroy the
+	pairlist object.
+*/
 
 ASC_DLLSPEC long pairlist_length(struct pairlist_t * pl);
 /**<

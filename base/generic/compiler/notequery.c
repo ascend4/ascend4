@@ -24,27 +24,12 @@
 #include "symtab.h"
 #include <utilities/error.h>
 
-struct gl_list_t *notes_get_refined(
-	symchar *dbid
-	,const struct TypeDescription *t
-	,symchar *lang
-	,symchar *id
-	,symchar *method
-){
-	struct gl_list_t *types = GetAncestorNames(t);
-
-	CONSOLE_DEBUG("not implemented");
-	struct gl_list_t *res = gl_create(1);
-	return res;
-}
-
-
 const char *notes_get_for_variable(symchar *dbid
 	, const struct TypeDescription *t
 	, const symchar *varname
 	, const symchar *lang
 ){
-	struct gl_list_t *noteslist;
+	struct gl_list_t *noteslist = NULL;
 
 	struct gl_list_t *types = GetAncestorNames(t);
 	struct gl_list_t *langs = gl_create(1);
@@ -81,72 +66,35 @@ const char *notes_get_for_variable(symchar *dbid
 	return BraceCharString(GetNoteText(n));
 }
 
-struct gl_list_t *notes_get_vars_with_lang(
+struct gl_list_t *notes_refined_for_type_with_lang(
 	symchar *dbid
 	, const struct TypeDescription *t
 	, const symchar *lang
 ){
-	int i;
-	struct gl_list_t *noteslist;
-	struct gl_list_t *refinednoteslist;
+	int i, j;
+	struct gl_list_t *noteslist = NULL;
+	struct gl_list_t *types;
+	struct pairlist_t *pl;
 
-	struct gl_list_t *types = GetAncestorNames(t);
-	struct gl_list_t *langs = gl_create(1);
+	/* create list of ancestors' names; add this type's name at the end */
+	types = GetAncestorNames(t);
+	gl_append_ptr(types,(VOIDPTR)GetName(t));
 
-#if 0
-	CONSOLE_DEBUG("type '%s' has %ld ancestor types",SCP(GetName(t)),gl_length(types));
-	for(i=1; i<=gl_length(types); ++i){
-		CONSOLE_DEBUG("ancestor %d: %s",i,SCP((symchar *)gl_fetch(types,i)));
-	}
-#endif
-
-	/*CONSOLE_DEBUG("Looking for notes of type '%s'",SCP(lang));*/
-	gl_append_ptr(langs,(VOIDPTR)lang);
-
-	/* create a new list with our top-level type at the start */
-	struct gl_list_t *typesall = gl_create(1 + gl_length(types));
+	/* this pairlist will a list of (varname, NOTE) */
+	pl = pairlist_create(1);
+	
 	for(i=1;i<=gl_length(types);++i){
-		//CONSOLE_DEBUG("Appending '%s' to typesall",SCP(GetName((struct TypeDescription *)gl_fetch(types,i))));
-		gl_append_ptr(typesall,gl_fetch(types,i));
+		symchar *typename = (symchar *)gl_fetch(types,i);
+		noteslist = GetNotes(dbid, typename, lang, NOTESWILD, NOTESWILD, nd_wild);
+		for(j=1; j<=gl_length(noteslist);++j){
+			symchar *note = (symchar *)gl_fetch(noteslist,j);
+			symchar *noteid = GetNoteId(note);
+			/* only care about NOTEs with non-NULL noteid */
+			if(noteid)pairlist_set(pl, noteid, note);
+		}
+		gl_destroy(noteslist);		
 	}
-	gl_append_ptr(typesall,(VOIDPTR)GetName(t));
-	/* CONSOLE_DEBUG("length of types = %ld, typesall = %ld",gl_length(types), gl_length(typesall)); */
-
 	gl_destroy(types);
-
-#if 0
-	for(i=1;i<=gl_length(typesall);++i){
-		struct TypeDescription *t;
-		CONSOLE_DEBUG("typesall[%d] = '%s'",i,SCP((symchar *)gl_fetch(typesall,i)));
-	}
-#endif
-
-	noteslist = GetNotesList(dbid,typesall,langs,NOTESWILDLIST,NOTESWILDLIST,NOTESWILDLIST);
-
-	gl_destroy(typesall);
-	gl_destroy(langs);
-
-	/* CONSOLE_DEBUG("noteslist = %ld items",gl_length(noteslist)); */
-
-	refinednoteslist = gl_create(gl_length(noteslist));
-
-	const symchar *lastid = NULL;
-	/* CONSOLE_DEBUG("refinednotes list has %ld elements",gl_length(refinednoteslist)); */
-	for(i=1; i<=gl_length(noteslist); ++i){
-		struct Note *n = (struct Note *)gl_fetch(noteslist,i);
-		if(GetNoteId(n)==NULL)continue;
-
-		gl_append_ptr(refinednoteslist,(VOIDPTR)n);
-		lastid = GetNoteId(n);
-	}
-	gl_destroy(noteslist);
-
-	if(gl_length(refinednoteslist)==0){
-		gl_destroy(refinednoteslist);
-		CONSOLE_DEBUG("empty notes list returned");
-		return NULL;
-	}
-
-	return refinednoteslist;
+	return pairlist_values_and_destroy(pl);
 }
 

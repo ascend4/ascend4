@@ -83,12 +83,25 @@ unsigned long pairlist_append_unique(struct pairlist_t * pl, void *key, void * v
 	unsigned long eindex;
 	assert(pl != NULL);
 	eindex = pairlist_contains(pl, key);
-	if (pl==0) {
+	if(eindex==0){
 		pairlist_append(pl,key,value);
 	}
 	return gl_length(pl->keys);
 }
 
+void *pairlist_set(struct pairlist_t *pl, void *key, void *value){
+	unsigned long eindex;
+	void *oldvalue = NULL;
+	assert(pl != NULL);
+	eindex = pairlist_contains(pl, key);
+	if(eindex){
+		oldvalue = gl_fetch(pl->vals, eindex);
+		gl_store(pl->vals, eindex, value);
+	}else{
+		pairlist_append(pl,key,value);
+	}
+	return oldvalue;
+}
 
 void pairlist_clear(struct pairlist_t * pl)
 {
@@ -103,6 +116,15 @@ void pairlist_destroy(struct pairlist_t * pl)
 	pl->keys = pl->vals = NULL;
 	ascfree(pl);
 }
+
+struct gl_list_t *pairlist_values_and_destroy(struct pairlist_t *pl){
+	struct gl_list_t *vals = pl->vals;
+	gl_destroy(pl->keys);
+	pl->keys = pl->vals = NULL;
+	ascfree(pl);
+	return vals;
+}
+	
 
 long pairlist_length(struct pairlist_t * pl)
 {
