@@ -40,7 +40,7 @@ def generate(env):
 									
 		else:
 			cmd = ['pkg-config','libgvc','libagraph','--cflags','--libs']
-			env1 = env.Copy()
+			env1 = env.Clone()
 			env1['CPPPATH'] = None
 			env1['LIBPATH'] = None
 			env1['LIBS'] = None
