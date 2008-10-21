@@ -1,4 +1,5 @@
 [Desktop Entry]
+Version=1.0
 Encoding=UTF-8
 Name=ASCEND
 GenericName=ASCEND
@@ -11,3 +12,4 @@ Type=Application
 Icon=ascend-app.png
 Categories=Application;Math;Science;GTK
 MimeType=text/x-ascend-model;
+GenericName[en_AU]=ASCEND
