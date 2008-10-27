@@ -53,7 +53,7 @@ class Block:
 				self.outputs += [n]
 
 	def get_icon(self, width, height):
-		return gtk.gdk.pixbuf_new_from_file_at_size("canvas/defaultblock.svg",width,height)
+		return gtk.gdk.pixbuf_new_from_file_at_size("defaultblock.svg",width,height)
 
 for m in M:
 	T = L.getModuleTypes(m)
@@ -92,10 +92,20 @@ for t in blocktypes:
 import threading
 import gtk
 import os, os.path, re
+
+import cairo
+from gaphas import GtkView, View
+from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
+from gaphas.tool import ItemTool, RubberbandTool
+from port import *
+
 gtk.gdk.threads_init()
 
 class app(gtk.Window):
 	def __init__(self):
+
+		canvas = BlockCanvas()
+
 		gtk.Window.__init__(self)
 		self.set_title("ASCEND Blocks")
 		self.set_default_size(400, 500)
@@ -116,24 +126,39 @@ class app(gtk.Window):
 		vbox = gtk.VBox()
 		status = gtk.Statusbar()
 
+		hbox = gtk.HBox()
+
+		view = GtkView()
+		view.tool =  DefaultExampleTool()
+
+		t = gtk.Table(2,2)
+		view.canvas = canvas
+		view.zoom(1)
+		view.set_size_request(300, 500)
+		hs = gtk.HScrollbar(view.hadjustment)
+		vs = gtk.VScrollbar(view.vadjustment)
+		t.attach(view, 0, 1, 0, 1)
+		t.attach(hs, 0, 1, 1, 2, xoptions=gtk.FILL, yoptions=gtk.FILL)
+		t.attach(vs, 1, 2, 0, 1, xoptions=gtk.FILL, yoptions=gtk.FILL)
+
 		scroll.add(thumb_view)
-		vbox.pack_start(scroll, True, True)
+		hbox.pack_start(scroll, True, True)
+		hbox.pack_start(t, True, True)
+
+		vbox.pack_start(hbox, True, True)
 		vbox.pack_start(status, False, False)
 		self.add(vbox)
 		self.show_all()
 
-		dirn = "/home/john/ENGN2222/Pictures"
-		files = os.listdir(dirn)
 		thread = threading.RLock()
-		r = re.compile("^.*\\.(png|jpg)")
 		n = 0
 		with thread:
 			for b in blocks:
 				n += 1
-				pixbuf = b.get_icon(96,96)
+				pixbuf = b.get_icon(64,64)
 				model.append([b.type.getName(), pixbuf])
 			   
-		status.push(0, "Found %d images amongst %d files." % (n,len(files)))
+		status.push(0, "Found %d block types." % (n))
 	   
 a = app()
 gtk.main() 
