@@ -1,7 +1,7 @@
 from __future__ import with_statement
 import os, sys
 
-os.chdir(os.path.dirname(sys.argv[0]))
+os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
 os.environ['ASCENDLIBRARY'] = "../../models"
 os.environ['LD_LIBRARY_PATH'] = "../.."
 sys.path.append("..")
@@ -85,16 +85,6 @@ for t in blocktypes:
 
 	blocks += [b]
 
-	print b.type.getName()
-
-	print "\t\tinputs:",[n.getId() for n in b.inputs]
-	for n in b.inputs:
-		print "\t\t\t%s: %s (type = %s)" % (n.getId(),n.getText(),n.getType())
-	print "\t\toutputs:",[n.getId() for n in b.outputs]
-	for n in b.outputs:
-		print "\t\t\t%s: %s" % (n.getId(),n.getText())
-
-
 # render icon table
 import threading
 import gtk
@@ -109,6 +99,14 @@ from port import *
 gtk.gdk.threads_init()
 
 class BlockIconView(gtk.IconView):
+	"""
+	IconView containing the palette of Block available for use in the
+	canvas. The list of blocks is supplied currently as an initialisation
+	parameter, but it is intended that this would be dynamic in a final system.
+
+	It should be possible drag icons from the palette into the canvas, but
+	that is not yet implemented.
+	"""
 	def __init__(self,blocks,app):
 		# the mode containing the icons themselves...
 		self.model = gtk.ListStore(str, gtk.gdk.Pixbuf)
@@ -132,18 +130,15 @@ class BlockIconView(gtk.IconView):
 		self.set_size_request(180,100)
 		self.connect("item-activated", self.item_activated)
 		self.connect("selection-changed", self.selection_changed)
-	def item_activated(self,iconview,path):
-		b = self.otank[path]
-		self.app.status.push(0, "Activated '%s'..." % b.type.getName())
-        #view.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.CROSSHAIR))
-		self.app.set_placement_tool(b)
 
 	def selection_changed(self,iconview):
 		s = self.get_selected_items()
 		if len(s)==1:
 			b = self.otank[s[0]]
 			self.app.set_placement_tool(b)
-			self.app.status.push(0,"Selected '%s'..." % b.type.getName())
+
+	def item_activated(self,iconview, path):
+		self.app.set_placement_tool(self.otank[path])
 
 class ContextMenuTool(Tool):
 	"""
@@ -168,6 +163,8 @@ class ContextMenuTool(Tool):
 
 	def rename(self,widget):
 		print "RENAMING OBJECT"
+
+	
 
 def BlockToolChain():
     """
@@ -246,6 +243,16 @@ class app(gtk.Window):
 				return b
 			return wrapper
 		self.view.tool.grab(PlacementTool(my_block_factory(), HandleTool(), 2))
+		self.status.push(0,"Selected '%s'..." % block.type.getName())
+
+	def set_connector_tool(self):
+		def my_line_factory():
+			def wrapper():
+				l =  Line()
+				self.view.canvas.add(l)
+				return l
+			return wrapper
+		self.view.tool.grab(PlacementTool(my_line_factory(), HandleTool(), 1))
 
 	def key_press_event(self,widget,event):
 		# TODO: add undo handler
@@ -253,6 +260,9 @@ class app(gtk.Window):
 		if key == 'Delete' and self.view.focused_item:
 			self.view.canvas.remove(self.view.focused_item)
 			self.status.push(0,"Item deleted.")
+		elif key == 'l' or key == 'L':
+			self.set_connector_tool()
+			self.status.push(0,"Line draw mode...")
 	   
 a = app()
 gtk.main() 
