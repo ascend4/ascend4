@@ -167,6 +167,7 @@ class app(gtk.Window):
 		self.set_title("ASCEND Blocks")
 		self.set_default_size(400, 500)
 		self.connect("destroy", gtk.main_quit)
+		self.connect("key-press-event", self.key_press_event)
 
 		# vbox containing the main view and the status bar at the bottom
 		vbox = gtk.VBox()
@@ -210,6 +211,7 @@ class app(gtk.Window):
 		self.status.push(0, "Found %d block types." % (len(blocks)))
 				
 	def set_placement_tool(self,block):
+		# TODO: add undo handler
 		label = block.type.getName()
 		def my_block_factory():
 			def wrapper():
@@ -218,6 +220,13 @@ class app(gtk.Window):
 				return b
 			return wrapper
 		self.view.tool.grab(PlacementTool(my_block_factory(), HandleTool(), 2))
+
+	def key_press_event(self,widget,event):
+		# TODO: add undo handler
+		key = gtk.gdk.keyval_name(event.keyval)
+		if key == 'Delete' and self.view.focused_item:
+			self.view.canvas.remove(self.view.focused_item)
+			self.status.push(0,"Item deleted.")
 	   
 a = app()
 gtk.main() 
