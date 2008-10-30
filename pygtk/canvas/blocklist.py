@@ -103,18 +103,8 @@ import os, os.path, re
 import cairo
 from gaphas import GtkView, View
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
-from gaphas.tool import ItemTool, RubberbandTool
+from gaphas.tool import Tool, ItemTool, RubberbandTool
 from port import *
-
-def factory(view, cls):
-    """
-    Simple canvas item factory.
-    """
-    def wrapper():
-        item = cls()
-        view.canvas.add(item)
-        return item
-    return wrapper
 
 gtk.gdk.threads_init()
 
@@ -155,6 +145,42 @@ class BlockIconView(gtk.IconView):
 			self.app.set_placement_tool(b)
 			self.app.status.push(0,"Selected '%s'..." % b.type.getName())
 
+class ContextMenuTool(Tool):
+	"""
+	Context menu for blocks and connectors on the canvas, intended to be
+	the main mouse-based way by which interaction with blocks occurs (blocks
+	renamed, parameters specified, values examined, etc).
+	Code for performing these tasks should not be here; this should just
+	hook into the appropriate code in the Application layer.
+	"""
+	def __init__(self):
+		pass
+	def on_button_press(self, context, event):
+		if event.button != 3:
+			return False
+		if context.view.hovered_item:
+			menu = gtk.Menu()
+			menurename = gtk.MenuItem("Re_name",True);
+			menurename.connect("activate",self.rename)
+			menu.add(menurename)
+			menu.show_all()		
+			menu.popup( None, None, None, event.button, event.time)
+
+	def rename(self,widget):
+		print "RENAMING OBJECT"
+
+def BlockToolChain():
+    """
+    The default tool chain build from HoverTool, ItemTool and HandleTool.
+    """
+    chain = ToolChain()
+    chain.append(HoverTool())
+    chain.append(PortConnectingHandleTool())
+    chain.append(ContextMenuTool())
+    chain.append(ItemTool())
+    chain.append(RubberbandTool())
+    return chain
+
 class app(gtk.Window):
 	def __init__(self):
 		self.status = gtk.Statusbar()
@@ -177,7 +203,7 @@ class app(gtk.Window):
 
 		# the 'view' widget implemented by Gaphas
 		self.view = GtkView()
-		self.view.tool =  DefaultExampleTool()
+		self.view.tool =  BlockToolChain()
 
 		# table containing scrollbars and main canvas 
 		t = gtk.Table(2,2)
