@@ -167,16 +167,18 @@ class ContextMenuTool(Tool):
 	
 
 def BlockToolChain():
-    """
-    The default tool chain build from HoverTool, ItemTool and HandleTool.
-    """
-    chain = ToolChain()
-    chain.append(HoverTool())
-    chain.append(PortConnectingHandleTool())
-    chain.append(ContextMenuTool())
-    chain.append(ItemTool())
-    chain.append(RubberbandTool())
-    return chain
+	"""
+	The default tool chain build from HoverTool, ItemTool and HandleTool.
+	"""
+	chain = ToolChain()
+	chain.append(HoverTool())
+	chain.append(PortConnectingHandleTool())
+	chain.append(ContextMenuTool())
+	chain.append(ItemTool())
+	chain.append(ZoomTool())
+	chain.append(PanTool())
+	chain.append(RubberbandTool())
+	return chain
 
 class app(gtk.Window):
 	def __init__(self):
