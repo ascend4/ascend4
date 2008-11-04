@@ -1389,7 +1389,9 @@ def CheckMath(context):
 	context.env.AppendUnique(LIBS=['m'])
 	is_ok=context.TryLink(math_test_text,".c")
 	context.Result(is_ok)
-	if not is_ok:
+	if libsave is None:
+		del(context.env['LIBS'])
+	else:
 		context.env['LIBS']=libsave
 	return is_ok
 
@@ -1649,6 +1651,7 @@ ipopt_test_text = """
 int main(){
 	Number n;
 	IpoptProblem nlp = 0;
+	n = 1;
 	FreeIpoptProblem(nlp); // probably a crash if you run this
 	return 0;
 }
@@ -1887,7 +1890,15 @@ int main(void){
 
 def CheckSigReset(context):
 	context.Message("Checking signal handler reset... ")
+	libsave=context.env.get('LIBS')
+	context.env.AppendUnique(LIBS=['m'])
 	(is_ok,output) = context.TryRun(sigreset_test_text,'.c')
+
+	if libsave is None:
+		del(context.env['LIBS'])
+	else:
+		context.env['LIBS']=libsave
+
 	if not is_ok:
 		context.Result("ERROR")
 		return False
@@ -2336,6 +2347,8 @@ if platform.system()=="Windows" and env.has_key('MSVS'):
 		without_python_reason = "Header file 'basetsd.h' not found. Install the MS Platform SDK."
 
 conf.Finish()
+
+print "-=-=-=-=-=-=-=-=- LIBS =",env.get('LIBS')
 
 #---------------------------------------
 # SUBSTITUTION DICTIONARY for .in files

@@ -1,14 +1,13 @@
 Import('env')
-extenv = env.Clone()
 
 subdirs = [
 	'extfn','datareader','brent', 'fprops'
 ]
  
 for d in subdirs:
-	extenv.SConscript(d+'/SConscript',['env']);
+	env.SConscript(d+'/SConscript',['env']);
 
-if extenv.get('WITH_PYTHON'):
-	extenv.SConscript('extpy/SConscript',['env']);
+if env.get('WITH_PYTHON'):
+	env.SConscript('extpy/SConscript',['env']);
 
 # vim: set syntax=python:

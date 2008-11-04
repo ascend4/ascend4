@@ -161,7 +161,7 @@ class Block(Element):
     they can not be used to resize/modify the element.
     """
 
-    def __init__(self, label="unnamed", width=10, height=10):
+    def __init__(self, label="unnamed", width=64, height=64):
 
         self.ports = []
         self.label = label        
@@ -213,7 +213,7 @@ class DefaultBlock(Block):
     box with the input ports on the left and the output ports on the right.
     """
 
-    def __init__(self, label="unnamed", width=10, height=10, inputs=2, outputs=3):
+    def __init__(self, label="unnamed", width=64, height=64, inputs=2, outputs=3):
 
         super(DefaultBlock, self).__init__(label, width, height)
 

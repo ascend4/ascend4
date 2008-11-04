@@ -1,5 +1,4 @@
 Import('env')
-extenv = env.Clone()
 
 subdirs = [
 	'qrslv','conopt','cmslv','lrslv','lsode','ida','ipopt','dopri5'
@@ -7,6 +6,6 @@ subdirs = [
 #'tron',
 
 for d in subdirs:
-	extenv.SConscript(d+'/SConscript',['env']);
+	env.SConscript(d+'/SConscript',['env']);
 
 # vim: set syntax=python:

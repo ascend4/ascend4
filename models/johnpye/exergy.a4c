@@ -1,0 +1,181 @@
+(*	Exergy sample calculation for ASCEND modelling environment
+	Copyright (C) John Pye 2007
+
+ 	This program is free software; you can redistribute it
+	and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later
+	version.
+
+	This program is distributed in the hope that it will be
+	useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+	PURPOSE.  See the GNU General Public License for more
+	details.
+
+	You should have received a copy of the GNU General Public
+	License along with this program; if not, write to the Free
+	Software Foundation, Inc., 59 Temple Place, Suite 330,
+	Boston, MA 02111-1307  USA
+*)
+REQUIRE "johnpye/thermo_types.a4c";
+
+IMPORT "freesteam";
+
+(*
+	Generic model of a steam state, using the 'freesteam' library for
+	the calculation according to the IAPWS-IF97 steam property correlations.
+*)
+MODEL steam_state;
+	p IS_A pressure;
+	h IS_A specific_enthalpy;
+	u IS_A specific_energy;
+	v IS_A specific_volume;
+	T IS_A temperature;
+	x IS_A fraction;
+	s IS_A specific_entropy;
+	mu IS_A viscosity;
+
+	(*
+		this code hooks in to our external steam properties calculator,
+		which returns u, v, T, x, s, and mu as functions of the pressure p and
+		the specific enthalpy h. 
+	*)
+	props: iapws97_uvTxsmu_ph(
+		p,h : INPUT;
+		u,v,T,x,s,mu : OUTPUT
+	);
+METHODS
+	METHOD default;
+		p := 10{bar};
+		p.nominal := 42 {bar};
+		v.nominal := 10 {L/kg};
+		u := 2000 {kJ/kg};
+		T := 400 {K};
+		x := 0.8;
+	END default;
+END steam_state;
+
+(*
+	Model for a steam state including calculation of
+	exergy relative to a reference state.
+*)
+MODEL steam_state_exergy(
+	(* we will provide the reference state later... *)
+	S0 WILL_BE steam_state;
+) REFINES steam_state;
+	ex IS_A specific_energy;
+	ex = (u - S0.u) - S0.T *(s - S0.s) + S0.p*(v - S0.v);
+END steam_state_exergy;
+
+(*
+	This model demonstrates that if you add equal amounts of heat to
+	1000 kg of water at 20°C and 1 kg of water at 20°C in constant-pressure
+	(1 bar) heating processes, then the exergy from the 1kg of water will be 
+	higher at the end.
+
+	The amount of heat added is calculated such that it the 100 kg mass of water
+	is heated to 300 K (a temperature rise of 6.85 K)
+
+	This same amount of heat, added in constant-pressure heating, causes the
+	1 kg of water to heat up by 217 °C, into the superheated steam phase.
+	In both cases, heating of 2865 kJ is required.
+
+	The result is found that the 100 kg of water at 300 K ends up with an exergy
+	of 32.96 kJ, whereas the 1 kg of water ends up with an exergy of 611.1 kJ.
+
+	The hotter water has much greater exergy, but in neither case can any
+	significant portion of the heat added be recovered as useful work (even
+	for the hotter one, heat is only extractable with ~20% efficiency)
+
+	Example problem used by John Pye in the ENGN2222 course at ANU.
+*)
+MODEL exergy;
+	(* reference state *)
+	S0 IS_A steam_state;
+
+	(* first case: 100 kg of water *)
+	S1 IS_A steam_state_exergy(S0);
+
+	(* second case: 1 kg of water *)
+	S2 IS_A steam_state_exergy(S0);
+
+	(* two different masses, both with same amount of added heat *)
+	EX1, EX2 IS_A energy;
+	m1, m2 IS_A mass;
+	ex1 ALIASES S1.ex;
+	ex2 ALIASES S2.ex;
+
+	EX1 = m1 * ex1;
+	EX2 = m2 * ex2;
+
+	(* third case: 101 kg of water, mixed from first and second cases *)
+	S3 IS_A steam_state_exergy(S0);
+	EX3 IS_A energy;
+	ex3 ALIASES S3.ex;
+	m3 IS_A mass;
+	(* conservation of mass in mixing *)
+	m3 = m1 + m2;
+	(* conservation of energy in mixing *)
+	U1, U2, U3 IS_A energy;
+	U1 = m1 * S1.u;
+	U2 = m2 * S2.u;
+	U3 = m3 * S3.u;
+	U1 + U2 = U3;
+	(* calculate the total exergy for the mixture *)
+	EX3 = m3 * ex3;
+	
+	(*
+		For constant-pressure heating of a simple compressible system,
+		heat is equal to total enthalpy change 
+	*)
+	Q1, Q2 IS_A energy;
+	Q1 = m1 * (S1.h - S0.h);
+	Q2 = m2 * (S2.h - S0.h);
+	Q1 = Q2;
+
+	DT1, DT2, DT3 IS_A delta_temperature;
+	DT1 = S1.T - S0.T;
+	DT2 = S2.T - S0.T;
+	DT3 = S3.T - S0.T;
+
+	S0.p, S1.p, S2.p, S3.p ARE_THE_SAME;
+
+	EX_destroyed IS_A energy;
+	EX_destroyed = EX1 + EX2 - EX3;
+
+	S_1, S_2, S_3 IS_A entropy;
+	S_1 = m1 * S1.s;
+	S_2 = m2 * S2.s;	
+	S_3 = m3 * S3.s;
+
+	S_produced IS_A delta_entropy;
+	S_produced = S_3 - (S_2 + S_1);	
+
+METHODS
+	METHOD on_load;
+		(* set the reference state *)
+		FIX S0.p, S0.T;
+		S0.p := 1 {bar};
+		S0.T := 20 {K} + 273.15 {K};
+		S0.h := 84 {kJ/kg}; (* just a starting guess to help the solver *)
+		
+		(* set the heated state of the 100 kg mass of water *)
+		FIX S1.p, S1.T;
+		S1.T := 300 {K};
+		S1.h := 104.9 {kJ/kg};
+		
+		S2.h := 10000 {kJ/kg}; (* a starting guess to help the solver *)
+		S3.h := 1800 {kJ/kg}; (* a starting guess to help the solver *)
+ 
+		(* set the values of the water mass for each case *)
+		FIX m1, m2;
+		m1 := 100 {kg};	
+		m2 := 1 {kg};
+	END on_load;
+END exergy;
+
+
+
+
+

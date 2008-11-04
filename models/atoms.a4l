@@ -1094,6 +1094,14 @@ END length_parameter;
         nominal := 10000.0 {BTU/lb_mole/h};
     END delta_molar_energy_rate;
 
+    ATOM delta_entropy REFINES solver_var
+        DIMENSION M*L^2/T^2/TMP
+        DEFAULT 0.0{BTU/R};
+        lower_bound := -1e50{BTU/R};
+        upper_bound := 1e50{BTU/R};
+        nominal := 1000.0{BTU/R};
+    END delta_entropy;
+
     ATOM delta_entropy_rate REFINES solver_var
         DIMENSION M*L^2/T^3/TMP
         DEFAULT 0.0{BTU/hour/R};
