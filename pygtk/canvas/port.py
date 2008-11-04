@@ -271,7 +271,7 @@ class PortConnectingHandleTool(HandleTool):
 
         Returns the closest Port that is within the glue distance. 
         """
-        if not handle.connectable:
+        if handle and not handle.connectable:
             return
 
         # Make glue distance depend on the zoom ratio (should be about 10 pixels)
@@ -299,7 +299,7 @@ class PortConnectingHandleTool(HandleTool):
                     glue_port = port
             else:
                 print "i is item"
-        if glue_point:
+        if glue_point and handle and item:
             v2i = view.get_matrix_v2i(item).transform_point
             handle.x, handle.y = v2i(*glue_point)
             #print "Found glue point ",handle.x,handle.y 
