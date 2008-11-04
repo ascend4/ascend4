@@ -1,9 +1,7 @@
 Import('env')
+qrslv_env = env.Clone()
 
-# To run the test, type
-#     ascend johnpye/qrslv/qrslv.a4c
-
-lib = env.SharedLibrary("qrslv",["qrslv.c"]
+lib = qrslv_env.SharedLibrary("qrslv",["qrslv.c"]
 	,LIBS = ['ascend']
 	,LIBPATH = ['#']
 	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
