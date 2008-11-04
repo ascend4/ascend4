@@ -94,6 +94,7 @@ import cairo
 from gaphas import GtkView, View
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
 from gaphas.tool import Tool, ItemTool, RubberbandTool
+from gaphas.item import Line
 from port import *
 
 gtk.gdk.threads_init()
@@ -150,21 +151,30 @@ class ContextMenuTool(Tool):
 	"""
 	def __init__(self):
 		pass
+
 	def on_button_press(self, context, event):
 		if event.button != 3:
 			return False
 		if context.view.hovered_item:
 			menu = gtk.Menu()
 			menurename = gtk.MenuItem("Re_name",True);
-			menurename.connect("activate",self.rename)
+			menurename.connect("activate",self.rename,context.view.hovered_item)
 			menu.add(menurename)
+			menudelete = gtk.MenuItem("_Delete",True);
+			menudelete.connect("activate",self.delete,context.view)
+			menu.add(menudelete)
 			menu.show_all()		
 			menu.popup( None, None, None, event.button, event.time)
 
 	def rename(self,widget):
 		print "RENAMING OBJECT"
 
-	
+	def delete(self,widget,view):
+		print "DELETING OBJECT"
+		# TODO: add undo handler
+		view.canvas.remove(view.hovered_item)
+
+from connectortool import *
 
 def BlockToolChain():
 	"""
@@ -173,6 +183,7 @@ def BlockToolChain():
 	chain = ToolChain()
 	chain.append(HoverTool())
 	chain.append(PortConnectingHandleTool())
+	chain.append(ConnectorTool())
 	chain.append(ContextMenuTool())
 	chain.append(ItemTool())
 	chain.append(ZoomTool())
@@ -193,6 +204,10 @@ class app(gtk.Window):
 		self.set_default_size(400, 500)
 		self.connect("destroy", gtk.main_quit)
 		self.connect("key-press-event", self.key_press_event)
+
+		windowicon = gtk.Image()
+		windowicon.set_from_file(os.path.join("../glade/ascend.svg"))
+		self.set_icon(windowicon.get_pixbuf())
 
 		# vbox containing the main view and the status bar at the bottom
 		vbox = gtk.VBox()
