@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import with_statement
 import os, sys
 
@@ -5,7 +6,6 @@ os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
 os.environ['ASCENDLIBRARY'] = "../../models"
 os.environ['LD_LIBRARY_PATH'] = "../.."
 sys.path.append("..")
-
 
 if sys.platform.startswith("win"):
     # Fetchs gtk2 path from registry
@@ -42,26 +42,6 @@ M = L.getModules()
 
 blocktypes = set()
 
-class Block:
-	def __init__(self, typedesc, notesdb):
-		self.type = typedesc
-		self.notesdb = notesdb
-
-		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("inline"))
-
-		self.inputs = []
-		self.outputs = []
-		for n in nn:
-			t = n.getText()
-			if t[0:min(len(t),3)]=="in:":
-				self.inputs += [n]
-			elif t[0:min(len(t),4)]=="out:":
-				self.outputs += [n]
-
-	def get_icon(self, width, height):
-		return gtk.gdk.pixbuf_new_from_file_at_size("defaultblock.svg",width,height)
-
-
 for m in M:
 	T = L.getModuleTypes(m)
 	for t in T:
@@ -76,12 +56,14 @@ for m in M:
 
 blocks = []
 
+from blocktype import *
+
 print "block types:"
 if not blocktypes:
 	print "NONE FOUND"
 for t in blocktypes:
 
-	b = Block(t,D)
+	b = BlockType(t,D)
 
 	blocks += [b]
 
@@ -91,17 +73,12 @@ import gtk
 import os, os.path, re
 
 import cairo
-from gaphas import GtkView, View
-from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
-from gaphas.tool import Tool, ItemTool, RubberbandTool
-from gaphas.item import Line
-from port import *
 
 gtk.gdk.threads_init()
 
 class BlockIconView(gtk.IconView):
 	"""
-	IconView containing the palette of Block available for use in the
+	IconView containing the palette of BlockTypes available for use in the
 	canvas. The list of blocks is supplied currently as an initialisation
 	parameter, but it is intended that this would be dynamic in a final system.
 
@@ -141,40 +118,17 @@ class BlockIconView(gtk.IconView):
 	def item_activated(self,iconview, path):
 		self.app.set_placement_tool(self.otank[path])
 
-class ContextMenuTool(Tool):
-	"""
-	Context menu for blocks and connectors on the canvas, intended to be
-	the main mouse-based way by which interaction with blocks occurs (blocks
-	renamed, parameters specified, values examined, etc).
-	Code for performing these tasks should not be here; this should just
-	hook into the appropriate code in the Application layer.
-	"""
-	def __init__(self):
-		pass
-
-	def on_button_press(self, context, event):
-		if event.button != 3:
-			return False
-		if context.view.hovered_item:
-			menu = gtk.Menu()
-			menurename = gtk.MenuItem("Re_name",True);
-			menurename.connect("activate",self.rename,context.view.hovered_item)
-			menu.add(menurename)
-			menudelete = gtk.MenuItem("_Delete",True);
-			menudelete.connect("activate",self.delete,context.view)
-			menu.add(menudelete)
-			menu.show_all()		
-			menu.popup( None, None, None, event.button, event.time)
-
-	def rename(self,widget):
-		print "RENAMING OBJECT"
-
-	def delete(self,widget,view):
-		print "DELETING OBJECT"
-		# TODO: add undo handler
-		view.canvas.remove(view.hovered_item)
-
+from gaphas import GtkView, View
+from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
+from gaphas.tool import Tool, ItemTool, RubberbandTool
+from gaphas.item import Line
+from blockitem import *
+from contextmenutool import *
 from connectortool import *
+from portconnectinghandletool import *
+from blockcanvas import *
+from panzoom import *
+from blockinstance import *
 
 def BlockToolChain():
 	"""
@@ -250,17 +204,18 @@ class app(gtk.Window):
 		# a message about the found blocks
 		self.status.push(0, "Found %d block types." % (len(blocks)))
 				
-	def set_placement_tool(self,block):
+	def set_placement_tool(self,blocktype):
 		# TODO: add undo handler
-		label = block.type.getName()
+		label = blocktype.type.getName()
 		def my_block_factory():
 			def wrapper():
-				b = DefaultBlock(label,inputs=len(block.inputs),outputs=len(block.outputs))
-				self.view.canvas.add(b)
-				return b
+				b = BlockInstance(blocktype)
+				bi = DefaultBlockItem(b)
+				self.view.canvas.add(bi)
+				return bi
 			return wrapper
 		self.view.tool.grab(PlacementTool(my_block_factory(), HandleTool(), 2))
-		self.status.push(0,"Selected '%s'..." % block.type.getName())
+		self.status.push(0,"Selected '%s'..." % blocktype.type.getName())
 
 	def set_connector_tool(self):
 		def my_line_factory():
