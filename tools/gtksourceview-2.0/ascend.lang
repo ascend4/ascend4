@@ -289,6 +289,25 @@
 					<keyword>solver_var</keyword>
 					<keyword>factor</keyword>
 					<keyword>fraction</keyword>
+
+					<keyword>mass</keyword>
+					<keyword>mole</keyword>
+					<keyword>molar_mass</keyword>
+					<keyword>mass_density</keyword>
+					<keyword>molar_density</keyword>
+					<keyword>pressure</keyword>
+					<keyword>stress</keyword>
+					<keyword>temperature</keyword>
+					<keyword>energy</keyword>
+					<keyword>energy_rate</keyword>
+					<keyword>distance</keyword>
+					<keyword>area</keyword>
+					<keyword>volume</keyword>
+					<keyword>specific_volume</keyword>
+					<keyword>specific_enthalpy</keyword>
+					<keyword>specific_energy</keyword>
+					<keyword>specific_entropy</keyword>
+
                 </context>
 
                 <context id="storage-class" style-ref="storage-class">
