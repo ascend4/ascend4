@@ -1,9 +1,10 @@
 # ConnectorTool for Gaphas canvas, by John Pye, 4 Nov 2008.
 # http://pye.dyndns.org
 
-from port import PortConnectingHandleTool
+from portconnectinghandletool import *
 from gaphas.tool import HandleTool
 from gaphas.item import Line
+import cairo
 
 class ConnectorTool(PortConnectingHandleTool):
 	"""
@@ -33,6 +34,7 @@ class ConnectorTool(PortConnectingHandleTool):
 			canvas.get_matrix_i2c(line, calculate=True)
 			self._new_item = line
 			view.focused_item = line
+			del view.selected_items
 			context.grab()
 
 			h_glue = line.handles()[self._handle_index_glued]
