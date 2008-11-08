@@ -1,0 +1,93 @@
+#! /usr/bin/env python
+
+tclscript = """
+ foreach d [concat \
+      [list $tcl_library \
+            [lindex $tcl_pkgPath 0]] \
+      $auto_path \
+      [list [file dirname $tcl_library] \
+            [file dirname [lindex $tcl_pkgPath 0]] \
+            [file dirname [file dirname $tcl_library]] \
+            [file dirname [file dirname [lindex $tcl_pkgPath 0]]] \
+            [file dirname [file dirname [file dirname $tcl_library]]] \
+            [file dirname [file dirname [file dirname [lindex $tcl_pkgPath 0]]]]] \
+ ] {
+     if {[file exists [file join $d tclConfig.sh]]} {
+         puts "[file join $d tclConfig.sh]"
+         exit
+     }
+ }
+"""
+
+# determine location of tclConfig.sh
+
+import subprocess
+output = subprocess.Popen(["tclsh"], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(input=tclscript)[0]
+tclconfigfile = output.strip()
+
+# parse the file to determine the names of the variables it contains
+
+f = file(tclconfigfile)
+
+# default variables that are assumed to already be defined somehow
+d = {
+	"CC":"gcc",
+	"CFLAGS":"",
+	"LDFLAGS":"",
+	"AR":"",
+	"LIBS":"",
+	"VERSION":"$TCL_VERSION",
+	"DBGX":"$TCL_DBGX"
+}
+
+import re
+r = re.compile(r'\$\{([A-Z_0-9]+)\}')
+
+def expand(s,d):
+	m = r.search(s)
+	#print "MATCHING",s
+	if m:
+		#print "MATCH!"
+		if d.has_key(m.group(1)):
+			return expand(s[:m.start()] + d[m.group(1)] + s[m.end():],d)
+		else:
+			raise RuntimeError("Missing variable '%s'" % m.group(1))
+	return s
+
+for l in f:
+	ls = l.strip()
+	if ls == "" or ls[0]=="#":
+		continue
+	k,v = ls.split("=",1)
+	if len(v) >= 2 and v[0] == "'" and v[len(v)-1] == "'":
+		v = v[1:len(v)-1]
+
+	d[k] = expand(v,d)
+
+# output the variable that the user requests
+
+import getopt, sys
+
+def usage():
+	print """%s [--cflags] [--libs]"""
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "cflags", "libs"])
+except getopt.GetoptError, err:
+    print str(err)
+    usage()
+    sys.exit(2)
+
+for o, a in opts:
+	if o == "-h" or o == "--help":
+		usage()
+		sys.exit()
+	elif o == "--cflags":
+		print d['TCL_INCLUDE_SPEC']
+	elif o == "--libs":
+		print d['TCL_LIB_SPEC']
+	else:
+		assert False, "unhandled option"
+
+
+
