@@ -3,8 +3,14 @@ from __future__ import with_statement
 import os, sys
 
 os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
+
 os.environ['ASCENDLIBRARY'] = "../../models"
-os.environ['LD_LIBRARY_PATH'] = "../.."
+
+if sys.platform.startswith("win"):
+	os.environ['PATH'] += ";..\.."
+else:
+	os.environ['LD_LIBRARY_PATH'] = "../.."
+	
 sys.path.append("..")
 
 if sys.platform.startswith("win"):
@@ -74,7 +80,7 @@ import os, os.path, re
 
 import cairo
 
-gtk.gdk.threads_init()
+#gtk.gdk.threads_init()
 
 class BlockIconView(gtk.IconView):
 	"""
@@ -90,15 +96,15 @@ class BlockIconView(gtk.IconView):
 		self.model = gtk.ListStore(str, gtk.gdk.Pixbuf)
 		self.app = app
 		self.otank = {}
-		thread = threading.RLock()
+		#thread = threading.RLock()
 		n = 0
-		with thread:
-			for b in blocks:
-				n += 1
-				pixbuf = b.get_icon(64,64)
-				iter = self.model.append([b.type.getName(), pixbuf])
-				path = self.model.get_path(iter)
-				self.otank[path] = b
+		#with thread:
+		for b in blocks:
+			n += 1
+			pixbuf = b.get_icon(64,64)
+			iter = self.model.append([b.type.getName(), pixbuf])
+			path = self.model.get_path(iter)
+			self.otank[path] = b
 
 		gtk.IconView.__init__(self)
 		self.set_model(self.model)
