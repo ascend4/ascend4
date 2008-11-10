@@ -192,7 +192,9 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"LoadLibrary failed\n'%s'",path);
     return 1;
   }
+#if 0
   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"LoadLibrary succeeded, '%s'\n",path);
+#endif
 
   if (NULL != initFun) {
     install = (int (*)(void))GetProcAddress(xlib,initFun);

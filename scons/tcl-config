@@ -63,13 +63,14 @@ f = file(tclconfigfile)
 # not inside make, so we might not have these.
 # FIXME: could try importing these from the environment?
 d = {
-	"CC":"gcc",
-	"CFLAGS":"",
-	"LDFLAGS":"",
-	"AR":"",
-	"LIBS":"",
-	"VERSION":"",
-	"DBGX":""
+	"CC":"gcc"
+	,"CFLAGS":""
+	,"LDFLAGS":""
+	,"AR":""
+	,"LIBS":""
+	,"VERSION":""
+	,"DBGX":""
+	,"NODOT_VERSION":"" # required for ActiveState Tcl 8.4 on Windows
 }
 
 # regular expression used for variable substitution
@@ -135,7 +136,7 @@ for o, a in opts:
 		else:
 			raise RuntimeError("Unknown variable '%s'" % a)
 	elif o == "--vars":
-		for k in d.keys():
+		for k in sorted(d.keys()):
 			print k
 	else:
 		assert False, "unhandled option"
