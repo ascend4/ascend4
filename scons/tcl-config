@@ -46,7 +46,7 @@ if tclconfigfile is None:
 
 	import subprocess
 	output = subprocess.Popen(["tclsh"], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(input=tclscript)[0]
-	if os.path.exists(output.strip):
+	if os.path.exists(output.strip()):
 		# only report the file if it actually exists...
 		tclconfigfile = output.strip()
 
