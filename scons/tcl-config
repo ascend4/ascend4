@@ -29,20 +29,25 @@ tclconfigfile = output.strip()
 
 f = file(tclconfigfile)
 
-# default variables that are assumed to already be defined somehow
+# default build environment variables that are assumed to already be defined
+# note that these are normally given default values in GNU Make, but we're
+# not inside make, so we might not have these.
+# FIXME: could try importing these from the environment?
 d = {
 	"CC":"gcc",
 	"CFLAGS":"",
 	"LDFLAGS":"",
 	"AR":"",
 	"LIBS":"",
-	"VERSION":"$TCL_VERSION",
-	"DBGX":"$TCL_DBGX"
+	"VERSION":"",
+	"DBGX":""
 }
 
+# regular expression used for variable substitution
 import re
 r = re.compile(r'\$\{([A-Z_0-9]+)\}')
 
+# variable substitution/expansion function
 def expand(s,d):
 	m = r.search(s)
 	#print "MATCHING",s
@@ -68,24 +73,41 @@ for l in f:
 
 import getopt, sys
 
-def usage():
-	print """%s [--cflags] [--libs]"""
+def usage(progname):
+	print "%s [--cflags] [--libs] [--var=TCL_VAR_NAME] [--vars]" % progname
+	print "Output configuration variables for the Tcl script interpreter."
+	print "Options:"
+	print "\t--cflags           Compiler flags for C code that uses Tcl"
+	print "\t--libs             Linker flags for code that uses Tcl"
+	print "\t--vars             List all variables defined in tclConfig.sh"
+	print "\t--var=VARNAME      Output the value of a specific variable"
+	print "\nSee http://ascendwiki.cheme.cmu.edu/Tcl-config for more info."
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "cflags", "libs"])
+    opts, args = getopt.getopt(sys.argv[1:], "h",
+		["help", "cflags", "libs","var=","vars"]
+	)
 except getopt.GetoptError, err:
     print str(err)
-    usage()
+    usage(sys.argv[0])
     sys.exit(2)
 
 for o, a in opts:
 	if o == "-h" or o == "--help":
-		usage()
+		usage(sys.argv[0])
 		sys.exit()
 	elif o == "--cflags":
 		print d['TCL_INCLUDE_SPEC']
 	elif o == "--libs":
 		print d['TCL_LIB_SPEC']
+	elif o == "--var":
+		if d.has_key(a):
+			print d[a]
+		else:
+			raise RuntimeError("Unknown variable '%s'" % a)
+	elif o == "--vars":
+		for k in d.keys():
+			print k
 	else:
 		assert False, "unhandled option"
 
