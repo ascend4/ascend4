@@ -1,29 +1,58 @@
 #! /usr/bin/env python
 
-tclscript = """
- foreach d [concat \
-      [list $tcl_library \
-            [lindex $tcl_pkgPath 0]] \
-      $auto_path \
-      [list [file dirname $tcl_library] \
-            [file dirname [lindex $tcl_pkgPath 0]] \
-            [file dirname [file dirname $tcl_library]] \
-            [file dirname [file dirname [lindex $tcl_pkgPath 0]]] \
-            [file dirname [file dirname [file dirname $tcl_library]]] \
-            [file dirname [file dirname [file dirname [lindex $tcl_pkgPath 0]]]]] \
- ] {
-     if {[file exists [file join $d tclConfig.sh]]} {
-         puts "[file join $d tclConfig.sh]"
-         exit
-     }
- }
-"""
+tclconfigfile = None
 
-# determine location of tclConfig.sh
+import sys, platform, os.path
+if platform.system()=="Windows":
+	# check for ActiveState Tcl in Windows registry
+	try:
+		import _winreg
+		x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
+		y= _winreg.OpenKey(x,r"SOFTWARE\ActiveState\ActiveTcl")
+		_regversion,t = _winreg.QueryValueEx(y,"CurrentVersion")
+		z= _winreg.OpenKey(x,r"SOFTWARE\ActiveState\ActiveTcl\%s" % str(_regversion))
+		_regpath,t = _winreg.QueryValueEx(z,None)
+		_winreg.CloseKey(y)
+		_winreg.CloseKey(z)
+		_winreg.CloseKey(x)
+		# typically, c:\Tcl\lib\tclConfig.sh.
+		_regconfig = os.path.join(_regpath,os.path.join("lib","tclConfig.sh"))
+		if os.path.exists(_regconfig):
+			# if the file exists, good...
+			tclconfigfile = _regconfig
+	except:
+		pass
 
-import subprocess
-output = subprocess.Popen(["tclsh"], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(input=tclscript)[0]
-tclconfigfile = output.strip()
+if tclconfigfile is None:
+	# use a 'tclsh' script to find location of tclConfig.sh
+	tclscript = """
+	 foreach d [concat \
+		  [list $tcl_library \
+		        [lindex $tcl_pkgPath 0]] \
+		  $auto_path \
+		  [list [file dirname $tcl_library] \
+		        [file dirname [lindex $tcl_pkgPath 0]] \
+		        [file dirname [file dirname $tcl_library]] \
+		        [file dirname [file dirname [lindex $tcl_pkgPath 0]]] \
+		        [file dirname [file dirname [file dirname $tcl_library]]] \
+		        [file dirname [file dirname [file dirname [lindex $tcl_pkgPath 0]]]]] \
+	 ] {
+		 if {[file exists [file join $d tclConfig.sh]]} {
+		     puts "[file join $d tclConfig.sh]"
+		     exit
+		 }
+	 }
+	"""
+
+	import subprocess
+	output = subprocess.Popen(["tclsh"], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(input=tclscript)[0]
+	if os.path.exists(output.strip):
+		# only report the file if it actually exists...
+		tclconfigfile = output.strip()
+
+if tclconfigfile is None:
+	print "Unable to locate tclConfig.sh"
+	sys.exit(1)
 
 # parse the file to determine the names of the variables it contains
 
