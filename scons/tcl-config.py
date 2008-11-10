@@ -2,8 +2,8 @@
 
 tclconfigfile = None
 
-import sys, platform, os.path
-if platform.system()=="Windows":
+import sys, os.path
+if sys.platform.startswith("win"):
 	# check for ActiveState Tcl in Windows registry
 	try:
 		import _winreg
