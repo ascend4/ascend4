@@ -39,3 +39,4 @@ class BlockCanvas(Canvas):
         dirty_matrix_items.update(super(BlockCanvas, self)._normalize(items))
         return dirty_matrix_items
 
+

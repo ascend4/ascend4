@@ -102,3 +102,4 @@ class DefaultBlockItem(BlockItem):
 
 		# now the draw the ports using the base class
 		super(DefaultBlockItem, self).draw(context)
+

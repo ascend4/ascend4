@@ -38,3 +38,13 @@ class BlockType:
 	def get_icon(self, width, height):
 		return gtk.gdk.pixbuf_new_from_file_at_size("defaultblock.svg",width,height)
 
+	def __getstate__(self):
+		print "GET STATE ON BLOCKTYPE %s" % self.type.getName()
+		return (str(self.type.getName()),)
+
+	def __setstate__(self, state):
+		print "SET STATE ON BLOCKTYPE"
+		(typename,) = state
+		print "Recreating type '%s'" % typename
+		self.type = None
+		self.notesdb = None
