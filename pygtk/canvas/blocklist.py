@@ -13,6 +13,8 @@ else:
 	
 sys.path.append("..")
 
+import gtkexcepthook
+
 if sys.platform.startswith("win"):
     # Fetchs gtk2 path from registry
     import _winreg
@@ -138,7 +140,7 @@ from blockinstance import *
 
 def BlockToolChain():
 	"""
-	The default tool chain build from HoverTool, ItemTool and HandleTool.
+	ToolChain for working with BlockCanvas, including several custom Tools.
 	"""
 	chain = ToolChain()
 	chain.append(HoverTool())
@@ -241,6 +243,29 @@ class app(gtk.Window):
 		elif key == 'l' or key == 'L':
 			self.set_connector_tool()
 			self.status.push(0,"Line draw mode...")
+		elif key == 'S' or key == 's':
+			import cPickle as pickle
+			f = file("./test.a4b","w")
+			try:
+				pickle.dump(self.view.canvas,f)
+			except Exception,e:
+				d = gtk.Dialog("Error",self,gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+				)
+				d.vbox.add(gtk.Label(str(e)))
+				d.show_all()
+				d.run()
+				d.hide()
+			finally:
+				f.close()
+		elif key == 'R' or key == 'r':
+			import cPickle as pickle
+			f = file("./test.a4b","r")
+			try:
+				self.view.canvas = pickle.load(f)
+				self.view.canvas.update_now()
+			finally:
+				f.close()
 	   
 a = app()
 gtk.main() 
