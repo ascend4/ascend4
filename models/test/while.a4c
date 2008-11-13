@@ -1,0 +1,23 @@
+REQUIRE "system.a4l";
+
+(*
+	This is a test for the WHILE statement in ASCEND METHODs.
+	This statement is present in the parse but up to now has not
+	been documented anywhere.
+*)
+MODEL while;
+	x[0..10] IS_A solver_var;
+	FOR j IN [1..10] CREATE
+		x[j] = x[j-1] + 5;
+	END FOR;
+	i IS_A integer;
+METHODS
+	METHOD on_load;
+		i := 7;
+		x[0..10] := -1;
+		WHILE i > 2 DO
+			x[i] := i;
+			i := i - 1;
+		END WHILE;
+	END on_load;
+END while;
