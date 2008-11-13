@@ -1,4 +1,4 @@
-#LyX 1.5.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.5.6 created this file. For more info see http://www.lyx.org/
 \lyxformat 276
 \begin_document
 \begin_header
@@ -37,6 +37,7 @@
 \paperpagestyle default
 \tracking_changes false
 \output_changes false
+\author "" 
 \author "" 
 \end_header
 
@@ -7577,7 +7578,8 @@ name "FOR/DO"
 
 \end_inset
 
- statement
+\InsetSpace ~
+statement
 \end_layout
 
 \begin_deeper
@@ -7761,6 +7763,49 @@ NOT
 !=
 \family default
  clear to both the user and the system.
+\end_layout
+
+\end_deeper
+\begin_layout List
+\labelwidthstring 00.00.0000
+
+\family sans
+WHILE
+\family default
+
+\begin_inset LatexCommand index
+name "WHILE"
+
+\end_inset
+
+\InsetSpace ~
+statement
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+The 
+\family sans
+WHILE
+\family default
+ statement is similar to the C while statement, but it can only be used
+ in the procedural part of an ASCEND model.
+\end_layout
+
+\begin_layout LyX-Code
+WHILE x > 1 DO
+\end_layout
+
+\begin_layout LyX-Code
+    x := x * 0.5;
+\end_layout
+
+\begin_layout LyX-Code
+    ...
+\end_layout
+
+\begin_layout LyX-Code
+END WHILE;
 \end_layout
 
 \end_deeper
