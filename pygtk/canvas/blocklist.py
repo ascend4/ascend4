@@ -65,7 +65,6 @@ for m in M:
 blocks = []
 
 from blocktype import *
-
 print "block types:"
 if not blocktypes:
 	print "NONE FOUND"
@@ -244,12 +243,14 @@ class app(gtk.Window):
 			self.set_connector_tool()
 			self.status.push(0,"Line draw mode...")
 		elif key == 'S' or key == 's':
-			import cPickle as pickle
+			import pickle as pickle
 			f = file("./test.a4b","w")
 			try:
 				pickle.dump(self.view.canvas,f)
 			except Exception,e:
-				d = gtk.Dialog("Error",self,gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+				import obrowser
+				b = obrowser.Browser("canvas",self.view.canvas)
+				d = gtk.Dialog("Error",self,gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
 				)
 				d.vbox.add(gtk.Label(str(e)))
@@ -259,7 +260,7 @@ class app(gtk.Window):
 			finally:
 				f.close()
 		elif key == 'R' or key == 'r':
-			import cPickle as pickle
+			import pickle as pickle
 			f = file("./test.a4b","r")
 			try:
 				self.view.canvas = pickle.load(f)
