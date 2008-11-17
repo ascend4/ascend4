@@ -233,4 +233,9 @@ Type::operator<(const Type &other) const{
 	return (this->getName() < other.getName());
 }
 
+Module
+Type::getModule() const{
+	return GetModule(getInternalType());
+}
+
 

@@ -654,6 +654,11 @@ Instanc::setBoolValue(const bool &val, const unsigned &depth){
 }
 
 void
+Instanc::setIntValue(const long &val, const unsigned &depth){
+	SetIntegerAtomValue(i, val, depth);
+}
+
+void
 Instanc::setRealValue(const double &val, const unsigned &depth){
 	SetRealAtomValue(i,val, depth);
 	//ERROR_REPORTER_HERE(ASC_USER_NOTE,"Set %s to %f",getName().toString(),val);
