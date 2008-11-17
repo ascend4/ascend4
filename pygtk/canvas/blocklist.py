@@ -244,6 +244,7 @@ class app(gtk.Window):
 			self.status.push(0,"Line draw mode...")
 		elif key == 'S' or key == 's':
 			import pickle as pickle
+			import gaphas.picklers
 			f = file("./test.a4b","w")
 			try:
 				pickle.dump(self.view.canvas,f)
@@ -261,6 +262,7 @@ class app(gtk.Window):
 				f.close()
 		elif key == 'R' or key == 'r':
 			import pickle as pickle
+			import gaphas.picklers
 			f = file("./test.a4b","r")
 			try:
 				self.view.canvas = pickle.load(f)
