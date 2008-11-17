@@ -2,6 +2,33 @@ import cairo
 from gaphas.tool import HandleTool
 from port import *
 
+class PortDisconnector:
+	"""
+	A special Handle.disconnect function that knows when it's connected
+	to a Port, and treats them specially.
+	"""
+
+	def __init__(self, canvas, handle):
+		self.canvas = canvas
+		self.handle = handle
+
+	def __call__(self):
+		try:
+			self.canvas.solver.remove_constraint(self.handle.connection_data)
+		except KeyError:
+			print 'constraint was already removed for', self.handle
+			pass # constraint was alreasy removed
+		else:
+			print 'constraint removed for', self.handle
+		self.handle.connected_port.connected_to = None
+		self.handle.connection_data = None
+		self.handle.connection_port = None
+		self.handle.connected_to = None
+
+		# Remove disconnect handler:
+		self.handle.disconnect = lambda: 0
+
+
 class PortConnectingHandleTool(HandleTool):
     """
     This is a HandleTool which supports the connection of lines to the Ports
@@ -65,24 +92,7 @@ class PortConnectingHandleTool(HandleTool):
          2. The only items with connectable handles are ``Line``s
          
         """
-
-        # create a special local handle_disconnect function 
-        def handle_disconnect():
-            try:
-                view.canvas.solver.remove_constraint(handle.connection_data)
-            except KeyError:
-                print 'constraint was already removed for', item, handle
-                pass # constraint was alreasy removed
-            else:
-                print 'constraint removed for', item, handle
-            handle.connected_port.connected_to = None
-            handle.connection_data = None
-            handle.connection_port = None
-            handle.connected_to = None
-            
-            # Remove disconnect handler:
-            handle.disconnect = lambda: 0
-
+	
         #print 'Handle.connect', view, item, handle, wx, wy
         glue_port = self.glue(view, item, handle, wx, wy)
 
@@ -114,7 +124,7 @@ class PortConnectingHandleTool(HandleTool):
 
                 handle.connected_to = glue_port.block
                 handle.connected_port = glue_port
-                handle.disconnect = handle_disconnect
+                handle.disconnect = PortDisconnector(view.canvas, handle)
                 glue_port.connected_to = handle
 
     def disconnect(self, view, item, handle):
