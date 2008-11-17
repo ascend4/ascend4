@@ -121,6 +121,7 @@ public:
 	void setFixed(const bool &val=true);
 	void setIncluded(const bool &val=true);
 	void setBoolValue(const bool&, const unsigned &depth=0);
+	void setIntValue(const long&, const unsigned &depth=0);
 	void setRealValue(const double&, const unsigned &depth=0);
 	void setRealValueWithUnits(double, const char *, const unsigned &depth=0);
 	void setSymbolValue(const SymChar &);

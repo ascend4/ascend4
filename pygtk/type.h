@@ -10,6 +10,7 @@ extern "C"{
 }
 
 class Simulation;
+class Module;
 
 #include "symchar.h"
 #include "method.h"
@@ -42,6 +43,8 @@ public:
 	const bool isFundamental() const;
 	const bool isModel() const;
 	const bool hasParameters() const;
+
+	Module getModule() const;
 
 	bool operator<(const Type &other) const;
 };
