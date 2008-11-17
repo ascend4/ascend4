@@ -39,4 +39,13 @@ class BlockCanvas(Canvas):
         dirty_matrix_items.update(super(BlockCanvas, self)._normalize(items))
         return dirty_matrix_items
 
+	def reattach_ascend(self, library):
+		# FIXME still need a way of iterating through these items
+		items = []
+		for item in items:
+			if not hasattr(item, 'ports'):
+				continue
+			if item.blocktype.type is None:
+				item.blocktype.reattach_ascend(library)
+
 

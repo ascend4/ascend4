@@ -48,3 +48,10 @@ class BlockType:
 		print "Recreating type '%s'" % typename
 		self.type = None
 		self.notesdb = None
+		self._typename = typename
+
+	def reattach_ascend(self,library):
+		self.type = library.findType(self._typename)
+
+
+
