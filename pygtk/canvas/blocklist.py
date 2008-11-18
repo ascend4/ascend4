@@ -266,6 +266,9 @@ class app(gtk.Window):
 			f = file("./test.a4b","r")
 			try:
 				self.view.canvas = pickle.load(f)
+				print "canvas = ",self.view.canvas.__class__
+				print dir(self.view.canvas)
+				self.view.canvas.reattach_ascend(L,D)
 				self.view.canvas.update_now()
 			finally:
 				f.close()
