@@ -173,6 +173,13 @@ class app(gtk.Window):
 		# vbox containing the main view and the status bar at the bottom
 		vbox = gtk.VBox()
 
+		tb = gtk.Toolbar()
+		debugbutton = gtk.ToolButton(gtk.STOCK_PROPERTIES)
+		debugbutton.set_label("Debug")
+		debugbutton.connect("clicked",self.debug_canvas)
+		tb.insert(debugbutton,0)
+		vbox.pack_start(tb, True, True)
+
 		# hbox occupies top part of vbox, with icons on left & canvas on right.
 		hbox = gtk.HBox()
 
@@ -272,6 +279,10 @@ class app(gtk.Window):
 				self.view.canvas.update_now()
 			finally:
 				f.close()
+
+	def debug_canvas(self,widget):
+		import obrowser
+		b = obrowser.Browser("canvas",self.view.canvas)
 	   
 a = app()
 gtk.main() 

@@ -68,40 +68,44 @@ class Browser:
         self.make( path = path )
 
     def delete_event(self, widget, event, data=None):
-        gtk.main_quit()
-        return gtk.FALSE
+        if self.quit:
+			gtk.main_quit()
+        return False
 
-    def __init__(self, name, value):
-        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.window.set_title("Browser")
-        self.window.set_size_request(512, 320)
-        self.window.connect("delete_event", self.delete_event)
+	def __init__(self, name, value, quit=False):
+		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window.set_title("Browser")
+		self.window.set_size_request(512, 320)
+		self.window.connect("delete_event", self.delete_event)
+		self.quit = quit
 
-        # we will store the name, the type name, and the repr 
-        columns = [str,str,str]
-        self.treestore = gtk.TreeStore(*columns)
+		# we will store the name, the type name, and the repr 
+		columns = [str,str,str]
+		self.treestore = gtk.TreeStore(*columns)
 
-        # the otank tells us what object we put at each node in the tree
-        self.otank = {} # map path -> (name,value)
-        self.make( name, value )
+		# the otank tells us what object we put at each node in the tree
+		self.otank = {} # map path -> (name,value)
+		self.make( name, value )
 
-        self.treeview = gtk.TreeView(self.treestore)
-        self.treeview.connect("row-expanded", self.row_expanded )
+		self.treeview = gtk.TreeView(self.treestore)
+		self.treeview.connect("row-expanded", self.row_expanded )
 
-        self.tvcolumns = [ gtk.TreeViewColumn() for _type in columns ]
-        i = 0
-        for tvcolumn in self.tvcolumns:
-            self.treeview.append_column(tvcolumn)
-            cell = gtk.CellRendererText()
-            tvcolumn.pack_start(cell, True)
-            tvcolumn.add_attribute(cell, 'text', i)
-            i = i + 1
+		self.tvcolumns = [ gtk.TreeViewColumn() for _type in columns ]
+		i = 0
+		for tvcolumn in self.tvcolumns:
+			self.treeview.append_column(tvcolumn)
+			cell = gtk.CellRendererText()
+			tvcolumn.pack_start(cell, True)
+			tvcolumn.add_attribute(cell, 'text', i)
+			i = i + 1
 
-        self.window.add(self.treeview)
-        self.window.show_all()
+		view = gtk.ScrolledWindow()
+		view.add_with_viewport(self.treeview)
+		self.window.add(view)
+		self.window.show_all()
 
 def dump( name, value ):
-    browser = Browser( name, value )
+    browser = Browser(name, value, quit=True)
     gtk.main()
 
 def test():
