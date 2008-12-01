@@ -29,3 +29,6 @@ class BlockInstance:
 
 		return "%s%s" % (n, blocknameindex[n])
 
+	def __str__(self):
+		return "\t%s IS_A %s;\n" % (self.name, self.blocktype.type.getName())
+
