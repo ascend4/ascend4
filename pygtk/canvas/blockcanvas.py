@@ -52,7 +52,6 @@ class BlockCanvas(Canvas):
 	def __getstate__(self):
 		return super(BlockCanvas,self).__getstate__()
 
-
 	def __setstate__(self, state):
 		super(BlockCanvas,self).__setstate__(state)
 
