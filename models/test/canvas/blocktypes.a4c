@@ -31,6 +31,7 @@ END equipment;
 MODEL pump REFINES equipment;
 	NOTES
 		'block' SELF {Tee piece}
+		'icon' SELF {pump.svg}
 	END NOTES;
 	inlet.p - 1 {bar} = outlet.p;
 END pump;
@@ -38,6 +39,7 @@ END pump;
 MODEL tee REFINES equipment;
 	NOTES
 		'block' SELF {Tee piece}
+		'icon' SELF {tee.svg}
 	END NOTES;
 	side "out:" IS_A stream;
 	inlet.mdot = outlet.mdot + side.mdot;
@@ -47,6 +49,7 @@ MODEL join REFINES equipment;
 	NOTES
 		'block' SELF {Joiner piece}
 		'inline' inlet {in: AS NAMED IN 'join'}
+		'icon' SELF {join.svg}
 	END NOTES;
 	side "in:" IS_A stream;
 	inlet.mdot + side.mdot = outlet.mdot;
@@ -55,6 +58,7 @@ END join;
 MODEL heater REFINES join;
 	NOTES
 		'block' SELF {Feedwater heater}
+		'icon' SELF {heater.svg}
 	END NOTES;
 	V IS_A volume;
 END join;
