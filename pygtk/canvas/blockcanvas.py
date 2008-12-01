@@ -1,4 +1,5 @@
 from gaphas import Canvas
+from gaphas.item import Line
 
 class BlockCanvas(Canvas):
 	def update_constraints(self, items):
@@ -65,14 +66,12 @@ class BlockCanvas(Canvas):
 		for item in self.get_all_items():
 			if not hasattr(item, 'blockinstance'):
 				continue
-			bi = item.blockinstance
-			s += "\t%s IS_A %s;\n" % (bi.name, bi.blocktype.type.getName())
+			s += str(item.blockinstance)
 
 		for item in self.get_all_items():
-			if not hasattr(item, 'lineinstance'):
+			if not isinstance(item, Line):
 				continue
-			li = item.lineinstance
-			s += ("\t%s, %s ARE_THE_SAME;\n" % (li.fromblock.name, li.toblock.name))
+			s += "\t%s, %s ARE_THE_SAME;\n" % (item._handles[0].connected_to.blockinstance.name, item._handles[1].connected_to.blockinstance.name)
 		s += "END canvasmodel;\n";
 		return s
 
