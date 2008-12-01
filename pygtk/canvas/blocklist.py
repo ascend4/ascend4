@@ -282,7 +282,7 @@ class app(gtk.Window):
 
 	def debug_canvas(self,widget):
 		import obrowser
-		b = obrowser.Browser("canvas",self.view.canvas)
+		b = obrowser.Browser("canvas",self.view.canvas, False)
 	   
 a = app()
 gtk.main() 

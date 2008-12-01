@@ -30,6 +30,8 @@ class Browser:
 				_path = self.treestore.get_path( _piter )
 				self.otank[ _path ] = (_name, v)
 			return
+		elif hasattr(value,'__getitem__') and hasattr(value,'__len__'):
+			keys = range(len(value))
 		elif hasattr(value,"__iter__"):
 			# handle 'set' objects...
 			for v in value:
@@ -38,8 +40,7 @@ class Browser:
 				_path = self.treestore.get_path(_piter)
 				self.otank[_path] = (_name,v)
 			return
-		elif hasattr(value,'__len__'):
-			keys = range(len(value))
+
 		for key in keys:
 			_name = "[%s]"%str(key)
 			_piter = self.make_row( piter, _name, value[key] )
@@ -72,7 +73,7 @@ class Browser:
 			gtk.main_quit()
 		return False
 
-	def __init__(self, name, value):
+	def __init__(self, name, value, quit):
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.set_title("Browser")
 		self.window.set_size_request(512, 320)
