@@ -102,7 +102,7 @@ class BlockIconView(gtk.IconView):
 		#with thread:
 		for b in blocks:
 			n += 1
-			pixbuf = b.get_icon(64,64)
+			pixbuf = b.get_icon(48,48)
 			iter = self.model.append([b.type.getName(), pixbuf])
 			path = self.model.get_path(iter)
 			self.otank[path] = b
@@ -174,10 +174,21 @@ class app(gtk.Window):
 		vbox = gtk.VBox()
 
 		tb = gtk.Toolbar()
+		loadbutton = gtk.ToolButton(gtk.STOCK_OPEN)
+		loadbutton.connect("clicked",self.load_canvas)
+		tb.insert(loadbutton,0)
+		savebutton = gtk.ToolButton(gtk.STOCK_SAVE)
+		savebutton.connect("clicked",self.save_canvas)
+		tb.insert(savebutton,1)
 		debugbutton = gtk.ToolButton(gtk.STOCK_PROPERTIES)
 		debugbutton.set_label("Debug")
 		debugbutton.connect("clicked",self.debug_canvas)
-		tb.insert(debugbutton,0)
+		tb.insert(debugbutton,2)
+		previewb = gtk.ToolButton(gtk.STOCK_PRINT_PREVIEW)
+		previewb.set_label("Preview")
+		previewb.connect("clicked",self.preview_canvas)
+		tb.insert(previewb,3)
+
 		vbox.pack_start(tb, True, True)
 
 		# hbox occupies top part of vbox, with icons on left & canvas on right.
@@ -250,39 +261,51 @@ class app(gtk.Window):
 			self.set_connector_tool()
 			self.status.push(0,"Line draw mode...")
 		elif key == 'S' or key == 's':
-			import pickle as pickle
-			import gaphas.picklers
-			f = file("./test.a4b","w")
-			try:
-				pickle.dump(self.view.canvas,f)
-			except Exception,e:
-				import obrowser
-				b = obrowser.Browser("canvas",self.view.canvas)
-				d = gtk.Dialog("Error",self,gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
-				)
-				d.vbox.add(gtk.Label(str(e)))
-				d.show_all()
-				d.run()
-				d.hide()
-			finally:
-				f.close()
+			self.save_canvas(None)
 		elif key == 'R' or key == 'r':
-			import pickle as pickle
-			import gaphas.picklers
-			f = file("./test.a4b","r")
-			try:
-				self.view.canvas = pickle.load(f)
-				print "canvas = ",self.view.canvas.__class__
-				print dir(self.view.canvas)
-				self.view.canvas.reattach_ascend(L,D)
-				self.view.canvas.update_now()
-			finally:
-				f.close()
+			self.load_canvas(None)
+
 
 	def debug_canvas(self,widget):
 		import obrowser
 		b = obrowser.Browser("canvas",self.view.canvas, False)
+
+	def save_canvas(self,widget):
+		import pickle as pickle
+		import gaphas.picklers
+		f = file("./test.a4b","w")
+		try:
+			pickle.dump(self.view.canvas,f)
+		except Exception,e:
+			import obrowser
+			b = obrowser.Browser("canvas",self.view.canvas)
+			d = gtk.Dialog("Error",self,gtk.DIALOG_DESTROY_WITH_PARENT,
+                 (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+			)
+			d.vbox.add(gtk.Label(str(e)))
+			d.show_all()
+			d.run()
+			d.hide()
+		finally:
+			f.close()
+		self.status.push(0,"Canvas saved...")
+
+	def load_canvas(self,widget):
+		import pickle as pickle
+		import gaphas.picklers
+		f = file("./test.a4b","r")
+		try:
+			self.view.canvas = pickle.load(f)
+			print "canvas = ",self.view.canvas.__class__
+			print dir(self.view.canvas)
+			self.view.canvas.reattach_ascend(L,D)
+			self.view.canvas.update_now()
+		finally:
+			f.close()
+		self.status.push(0,"Canvas loaded...")
+
+	def preview_canvas(self,widget):
+		print self.view.canvas
 	   
 a = app()
 gtk.main() 
