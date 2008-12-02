@@ -25,7 +25,7 @@ class ContextMenuTool(Tool):
 			menurename.connect("activate",self.rename,context.view.hovered_item,window)
 			menu.add(menurename)
 			menudelete = gtk.MenuItem("_Delete",True);
-			menudelete.connect("activate",self.delete,context.view)
+			menudelete.connect("activate",self.delete,context.view.hovered_item,context.view)
 			menu.add(menudelete)
 			menu.show_all()		
 			menu.popup( None, None, None, event.button, event.time)
@@ -50,8 +50,8 @@ class ContextMenuTool(Tool):
 				bi.name = ent.get_text()
 			dia.destroy()
 
-	def delete(self,widget,view):
+	def delete(self,widget,item,view):
 		print "DELETING OBJECT"
 		# TODO: add undo handler
-		view.canvas.remove(view.hovered_item)
+		view.canvas.remove(item)
 
