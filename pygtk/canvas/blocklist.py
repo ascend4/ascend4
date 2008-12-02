@@ -154,6 +154,11 @@ def BlockToolChain():
 
 class app(gtk.Window):
 	def __init__(self):
+		"""
+		Initialise the application -- create all the widgets, and populate
+		the icon palette.
+		TODO: separate the icon palette into a separate method.
+		"""
 		self.status = gtk.Statusbar()
 
 		# the Gaphas canvas
@@ -230,6 +235,10 @@ class app(gtk.Window):
 		self.status.push(0, "Found %d block types." % (len(blocks)))
 				
 	def set_placement_tool(self,blocktype):
+		"""
+		Prepare the canvas for drawing a block of the type selected in the
+		icon palette.
+		"""
 		# TODO: add undo handler
 		label = blocktype.type.getName()
 		def my_block_factory():
@@ -243,6 +252,10 @@ class app(gtk.Window):
 		self.status.push(0,"Selected '%s'..." % blocktype.type.getName())
 
 	def set_connector_tool(self):
+		"""
+		Prepare the canvas for drawing a connecting line (note that one can
+		alternatively just drag from a port to another port).
+		"""
 		def my_line_factory():
 			def wrapper():
 				l =  Line()
@@ -252,6 +265,10 @@ class app(gtk.Window):
 		self.view.tool.grab(PlacementTool(my_line_factory(), HandleTool(), 1))
 
 	def key_press_event(self,widget,event):
+		"""
+		Handle various application-level keypresses. Fall through if keypress
+		is not handled here; it might be picked up elsewhere.
+		"""
 		# TODO: add undo handler
 		key = gtk.gdk.keyval_name(event.keyval)
 		if key == 'Delete' and self.view.focused_item:
@@ -264,13 +281,23 @@ class app(gtk.Window):
 			self.save_canvas(None)
 		elif key == 'R' or key == 'r':
 			self.load_canvas(None)
+		elif key == 'V' or key == 'v':
+			self.preview_canvas(None)
 
 
 	def debug_canvas(self,widget):
+		"""
+		Display an 'object browser' to allow inspection of the objects
+		in the canvas.
+		"""
 		import obrowser
 		b = obrowser.Browser("canvas",self.view.canvas, False)
 
 	def save_canvas(self,widget):
+		"""
+		Save the canvas in 'pickle' format. Currently saves to a single
+		predefined file named 'test.a4b'.
+		"""
 		import pickle as pickle
 		import gaphas.picklers
 		f = file("./test.a4b","w")
@@ -291,6 +318,10 @@ class app(gtk.Window):
 		self.status.push(0,"Canvas saved...")
 
 	def load_canvas(self,widget):
+		"""
+		Restore a saved canvas in 'pickle' format. Currently always uses the
+		default 'test.a4b' filename.
+		"""
 		import pickle as pickle
 		import gaphas.picklers
 		f = file("./test.a4b","r")
@@ -305,6 +336,10 @@ class app(gtk.Window):
 		self.status.push(0,"Canvas loaded...")
 
 	def preview_canvas(self,widget):
+		"""
+		Output an ASCEND representation of the canvas on the commandline.
+		Under development.
+		"""
 		print self.view.canvas
 	   
 a = app()
