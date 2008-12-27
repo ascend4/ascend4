@@ -1,12 +1,12 @@
 # ConnectorTool for Gaphas canvas, by John Pye, 4 Nov 2008.
 # http://pye.dyndns.org
 
-from portconnectinghandletool import *
 from gaphas.tool import HandleTool
+from connecthandletool import ConnectHandleTool
 from gaphas.item import Line
 import cairo
 
-class ConnectorTool(PortConnectingHandleTool):
+class ConnectorTool(ConnectHandleTool):
 	"""
 	This is a port-connecting handle tool that additionally initiates the
 	creation of connector lines when the user is withing gluing distance of an 
@@ -28,9 +28,9 @@ class ConnectorTool(PortConnectingHandleTool):
 
 		view = context.view
 		canvas = view.canvas
-		glueport = self.glue(view, None, None, event.x, event.y)
+		glueitem, glueport = self.glue(view, None, None, (event.x, event.y))
 		if glueport:
-			line = self._create_line(context,event.y, event.y)
+			line = self._create_line(context,event.x, event.y)
 			canvas.get_matrix_i2c(line, calculate=True)
 			self._new_item = line
 			view.focused_item = line
@@ -38,7 +38,7 @@ class ConnectorTool(PortConnectingHandleTool):
 			context.grab()
 
 			h_glue = line.handles()[self._handle_index_glued]
-			self.connect(view,line,h_glue, event.x, event.y)
+			self.connect(view,line,h_glue, (event.x, event.y))
 
 			h_drag = line.handles()[self._handle_index_dragged]
 			self._handle_tool.grab_handle(line, h_drag)
