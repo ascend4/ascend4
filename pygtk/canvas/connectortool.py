@@ -29,7 +29,7 @@ class ConnectorTool(ConnectHandleTool):
 		view = context.view
 		canvas = view.canvas
 		glueitem, glueport = self.glue(view, None, None, (event.x, event.y))
-		if glueport:
+		if glueport and hasattr(glueport,"point"):
 			line = self._create_line(context,event.x, event.y)
 			canvas.get_matrix_i2c(line, calculate=True)
 			self._new_item = line

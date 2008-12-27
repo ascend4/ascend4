@@ -127,13 +127,13 @@ class BlockIconView(gtk.IconView):
 
 from gaphas import GtkView, View
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
+from gaphas.tool import LineSegmentTool
 from gaphas.tool import Tool, ItemTool, RubberbandTool
 from connecthandletool import ConnectHandleTool
 from gaphas.item import Line
 from blockitem import *
 from contextmenutool import *
 from connectortool import *
-from portconnectinghandletool import *
 from blockcanvas import *
 from panzoom import *
 from blockinstance import *
@@ -148,6 +148,7 @@ def BlockToolChain():
 	#chain.append(PortConnectingHandleTool())
 	chain.append(ConnectorTool())
 	chain.append(ContextMenuTool())
+	chain.append(LineSegmentTool())
 	chain.append(ItemTool())
 	chain.append(ZoomTool())
 	chain.append(PanTool())
