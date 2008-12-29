@@ -30,13 +30,8 @@ class DisconnectHandle(object):
 
 class ConnectHandleTool(HandleTool):
     """
-    Tool for connecting two items.
-    
-    There are two items involved. Handle of connecting item (usually
-    a line) is being dragged by an user towards another item (item in
-    short). Port of an item is found by the tool and connection is
-    established by creating a constraint between line's handle and item's
-    port.
+    Modified version of ConnectHandleTool (see Gaphas `tool.py`) that allows 
+    for undefined item and handle in the `glue` method.
     """
     # distance between line and item
     GLUE_DISTANCE = 10
@@ -66,6 +61,24 @@ class ConnectHandleTool(HandleTool):
         if handle and not handle.connectable:
             return None
 
+        item, port, gluepos = self.find_connectable_port(view, vpos)
+
+        # if gluable port found...
+        if port is not None:
+            # check if line and found item can be connected on closest port
+            if not self.can_glue(view, line, handle, item, port):
+                item, port = None, None
+
+            if line is not None and handle is not None:
+                # transform coordinates from view space to the line space and
+                # update position of line's handle
+                v2i = view.get_matrix_v2i(line).transform_point
+                handle.pos = v2i(*glue_pos)
+        # else item and port will be set to None
+
+        return item, port
+
+    def find_connectable_port(self, view, vpos):
         dist = self.GLUE_DISTANCE
         max_dist = dist
         port = None
@@ -97,21 +110,7 @@ class ConnectHandleTool(HandleTool):
                 i2v = view.get_matrix_i2v(i).transform_point
                 glue_pos = i2v(*pg)
 
-        # check if line and found item can be connected on closest port
-        if port is not None \
-                and not self.can_glue(view, line, handle, item, port):
-            item, port = None, None
-
-        if port is not None \
-                and line is not None \
-                and handle is not None:
-            # transform coordinates from view space to the line space and
-            # update position of line's handle
-            v2i = view.get_matrix_v2i(line).transform_point
-            handle.pos = v2i(*glue_pos)
-
-        return item, port
-
+        return item, port, glue_pos
 
     def can_glue(self, view, line, handle, item, port):
         """
@@ -306,5 +305,14 @@ class ConnectHandleTool(HandleTool):
         if handle.connection_data:
             line.canvas.solver.remove_constraint(handle.connection_data)
             handle.connection_data = None
+
+class PortHandleTool(ConnectHandleTool):
+    """
+    Subclass of ConnectHandleTool that records connection information in the
+    LineInstance of a Line.
+    """
+    def post_connect(self,line, handle, item, port):
+        # this handle belongs to the line.
+        pass
 
 # vim: sw=4:et:ai
