@@ -71,10 +71,10 @@ class BlockCanvas(Canvas):
 				continue
 			s += str(item.blockinstance)
 
-		for item in self.get_all_items():
-			if not isinstance(item, Line):
+		for line in self.get_all_items():
+			if not isinstance(line, Line):
 				continue
-			s += "\t%s, %s ARE_THE_SAME;\n" % (item._handles[0].connected_to.blockinstance.name, item._handles[1].connected_to.blockinstance.name)
+			s += "\t%s, %s ARE_THE_SAME;\n" % (line._handles[0].connected_to.blockinstance.name, line._handles[1].connected_to.blockinstance.name)
 		s += "END canvasmodel;\n";
 		return s
 

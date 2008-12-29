@@ -13,7 +13,7 @@ else:
 	
 sys.path.append("..")
 
-import gtkexcepthook
+#import gtkexcepthook
 
 if sys.platform.startswith("win"):
     # Fetchs gtk2 path from registry
@@ -127,9 +127,9 @@ class BlockIconView(gtk.IconView):
 
 from gaphas import GtkView, View
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
-from gaphas.tool import LineSegmentTool
+from gaphas.tool import 	LineSegmentTool
 from gaphas.tool import Tool, ItemTool, RubberbandTool
-from connecthandletool import ConnectHandleTool
+from connecthandletool import PortHandleTool
 from gaphas.item import Line
 from blockitem import *
 from contextmenutool import *
@@ -144,8 +144,9 @@ def BlockToolChain():
 	"""
 	chain = ToolChain()
 	chain.append(HoverTool())
-	chain.append(ConnectHandleTool())
+	#chain.append(PortHandleTool())
 	#chain.append(PortConnectingHandleTool())
+	chain.append(ConnectHandleTool())
 	chain.append(ConnectorTool())
 	chain.append(ContextMenuTool())
 	chain.append(LineSegmentTool())
@@ -330,8 +331,8 @@ class app(gtk.Window):
 		f = file("./test.a4b","r")
 		try:
 			self.view.canvas = pickle.load(f)
-			print "canvas = ",self.view.canvas.__class__
-			print dir(self.view.canvas)
+			#print "canvas = ",self.view.canvas.__class__
+			#print dir(self.view.canvas)
 			self.view.canvas.reattach_ascend(L,D)
 			self.view.canvas.update_now()
 		finally:

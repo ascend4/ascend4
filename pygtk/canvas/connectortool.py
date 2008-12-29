@@ -1,10 +1,9 @@
-# ConnectorTool for Gaphas canvas, by John Pye, 4 Nov 2008.
-# http://pye.dyndns.org
-
-from gaphas.tool import HandleTool
-from connecthandletool import ConnectHandleTool
+from gaphas.tool import HandleTool, ConnectHandleTool
 from gaphas.item import Line
 import cairo
+
+# ConnectorTool for Gaphas canvas, by John Pye, 4 Nov 2008.
+# http://pye.dyndns.org
 
 class ConnectorTool(ConnectHandleTool):
 	"""
@@ -28,7 +27,7 @@ class ConnectorTool(ConnectHandleTool):
 
 		view = context.view
 		canvas = view.canvas
-		glueitem, glueport = self.glue(view, None, None, (event.x, event.y))
+		glueitem, glueport, gluepos = self.find_connectable_port(view, (event.x, event.y))
 		if glueport and hasattr(glueport,"point"):
 			line = self._create_line(context,event.x, event.y)
 			canvas.get_matrix_i2c(line, calculate=True)
