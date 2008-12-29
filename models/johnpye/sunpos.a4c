@@ -5,12 +5,14 @@ REQUIRE "atoms.a4l";
 	the following model allows calculation of the angle of incidence of
 	sunlight onto an inclined surface
 
-	The equation of time has been changes to the Duffie & Beckman 2nd edition
+	The equation of time has been changed to the Duffie & Beckman 2nd edition
 	form, cited as coming from Iqbal 1983. The equation for 'B' has also
 	been changed to the 2nd Ed D&B form.
 
 	For the longitude correction we use the spherical geometry convention
 	of making east positive. D&B are americocentric, obviously :-)
+
+	See further notes and references at the end of the file.
 
 	by John Pye, 2006
 *)
