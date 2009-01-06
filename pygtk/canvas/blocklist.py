@@ -182,7 +182,7 @@ class app(gtk.Window):
 		# vbox containing the main view and the status bar at the bottom
 		vbox = gtk.VBox()
 
-		tb = gtk.Toolbar()
+		tb = gtk.Toolbar()	
 		loadbutton = gtk.ToolButton(gtk.STOCK_OPEN)
 		loadbutton.connect("clicked",self.load_canvas)
 		tb.insert(loadbutton,0)
@@ -201,8 +201,8 @@ class app(gtk.Window):
 		vbox.pack_start(tb, True, True)
 
 		# hbox occupies top part of vbox, with icons on left & canvas on right.
-		hbox = gtk.HBox()
-
+		paned = gtk.HPaned()
+		
 		# the 'view' widget implemented by Gaphas
 		self.view = GtkView()
 		self.view.tool =  BlockToolChain()
@@ -222,15 +222,15 @@ class app(gtk.Window):
 		scroll = gtk.ScrolledWindow()
 		scroll.set_border_width(2)
 		scroll.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-		scroll.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
 
+		scroll.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
 		# icon palette
 		self.blockiconview = BlockIconView(blocks, self)
 		scroll.add(self.blockiconview)
 
-		hbox.pack_start(scroll, True, True)
-		hbox.pack_start(t, True, True)
-		vbox.pack_start(hbox, True, True)
+		paned.pack1(scroll, True, True)
+		paned.pack2(t, True, True)
+		vbox.pack_start(paned, True, True)
 		vbox.pack_start(self.status, False, False)
 		self.add(vbox)
 		self.show_all()
