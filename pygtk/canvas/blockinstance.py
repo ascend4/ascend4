@@ -47,13 +47,12 @@ class PortInstance:
 	def __init__(self,blockinstance,name=None):
 		self.blockinstance = blockinstance
 		self.name = name
-		# ASCEND reference:
-		self.instance = None
 
-class ConnectionInstance:
+class ConnectorInstance:
 	def __init__(self,fromport,toport):
 		self.fromport = fromport
 		self.toport = toport
 
+# TODO set up reversible properties...?
 
 

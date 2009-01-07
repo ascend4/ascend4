@@ -146,10 +146,10 @@ def BlockToolChain():
 	chain.append(HoverTool())
 	#chain.append(PortHandleTool())
 	#chain.append(PortConnectingHandleTool())
-	chain.append(ConnectHandleTool())
-	chain.append(ConnectorTool())
-	chain.append(ContextMenuTool())
-	chain.append(LineSegmentTool())
+	chain.append(ConnectHandleTool()) # for connect/disconnect of lines
+	chain.append(ConnectorTool()) # for creating new lines by drag from Port
+	chain.append(ContextMenuTool()) # right-click
+	chain.append(LineSegmentTool()) # for moving line 'elbows'
 	chain.append(ItemTool())
 	chain.append(ZoomTool())
 	chain.append(PanTool())
