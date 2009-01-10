@@ -129,8 +129,8 @@ from gaphas import GtkView, View
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
 from gaphas.tool import 	LineSegmentTool
 from gaphas.tool import Tool, ItemTool, RubberbandTool
-from connecthandletool import PortHandleTool
-from gaphas.item import Line
+from blockconnecttool import BlockConnectTool
+from blockline import *
 from blockitem import *
 from contextmenutool import *
 from connectortool import *
@@ -144,9 +144,7 @@ def BlockToolChain():
 	"""
 	chain = ToolChain()
 	chain.append(HoverTool())
-	#chain.append(PortHandleTool())
-	#chain.append(PortConnectingHandleTool())
-	chain.append(ConnectHandleTool()) # for connect/disconnect of lines
+	chain.append(BlockConnectTool()) # for connect/disconnect of lines
 	chain.append(ConnectorTool()) # for creating new lines by drag from Port
 	chain.append(ContextMenuTool()) # right-click
 	chain.append(LineSegmentTool()) # for moving line 'elbows'
@@ -262,7 +260,7 @@ class app(gtk.Window):
 		"""
 		def my_line_factory():
 			def wrapper():
-				l =  Line()
+				l =  BlockLine()
 				self.view.canvas.add(l)
 				return l
 			return wrapper
