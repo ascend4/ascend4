@@ -80,3 +80,9 @@ class BlockType:
 	
 		print "Reattached type '%s', with %d inputs, %d outputs" % (self.type.getName(), len(self.inputs), len(self.outputs))		
 
+	def get_input_name(self, index):
+		return self.inputs[index].getText()
+
+	def get_output_name(self, index):
+		return self.outputs[index].getText()
+

@@ -1,11 +1,12 @@
-from gaphas.tool import HandleTool, ConnectHandleTool
-from gaphas.item import Line
+from gaphas.tool import HandleTool
+from blockconnecttool import BlockConnectTool
+from blockline import BlockLine
 import cairo
 
 # ConnectorTool for Gaphas canvas, by John Pye, 4 Nov 2008.
 # http://pye.dyndns.org
 
-class ConnectorTool(ConnectHandleTool):
+class ConnectorTool(BlockConnectTool):
 	"""
 	This is a port-connecting handle tool that additionally initiates the
 	creation of connector lines when the user is withing gluing distance of an 
@@ -50,7 +51,7 @@ class ConnectorTool(ConnectHandleTool):
 	def _create_line(self, context, x, y):
 		view = context.view
 		canvas = view.canvas
-		line = Line()
+		line = BlockLine()
 		#line.orthogonal = True
 		line.fuzziness = 5
 		canvas.add(line)

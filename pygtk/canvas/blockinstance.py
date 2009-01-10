@@ -2,6 +2,9 @@ from blocktype import *
 
 blocknameindex = {}
 
+PORT_IN = 0
+PORT_OUT = 1
+
 class BlockInstance:
 	"""
 	Application-layer representation of an instance of a Block on the Canvas.
@@ -25,6 +28,16 @@ class BlockInstance:
 		# ASCEND reference:
 		self.instance = None
 
+		self.ports = {}
+		for n in self.blocktype.inputs:
+			t = n.getId()
+			# TODO record that it's an input port
+			self.ports[t] = PortInstance(self,t, PORT_IN)
+		for n in self.blocktype.outputs:
+			t = n.getId()
+			# TODO record that it's an output port
+			self.ports[t] = PortInstance(self,t, PORT_OUT)
+
 	def get_default_name(self):
 		n = str(self.blocktype.type.getName())
 		print blocknameindex
@@ -44,14 +57,23 @@ class PortInstance:
 	the variable represented by the Port, but no type information, as that is
 	currently difficult to extract from the ASCEND API.
 	"""
-	def __init__(self,blockinstance,name=None):
+	def __init__(self,blockinstance,name, type):
 		self.blockinstance = blockinstance
 		self.name = name
+		self.type = type
 
-class ConnectorInstance:
-	def __init__(self,fromport,toport):
+class LineInstance:
+	def __init__(self,fromport=None,toport=None):
 		self.fromport = fromport
 		self.toport = toport
+
+	def __str__(self):
+		"""
+		Create a string for use in MODEL export.
+		"""	
+		fromname = "%s.%s" % (self.fromport.blockinstance.name, self.fromport.name)
+		toname = "%s.%s" % (self.toport.blockinstance.name, self.toport.name)
+		return "\t%s, %s ARE_THE_SAME;\n" % (fromname, toname)
 
 # TODO set up reversible properties...?
 

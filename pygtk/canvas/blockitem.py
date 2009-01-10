@@ -7,6 +7,9 @@ from gaphas.solver import solvable, WEAK, NORMAL, STRONG, VERY_STRONG
 from gaphas.state import observed, reversible_method, reversible_pair, reversible_property, disable_dispatching
 from gaphas.geometry import distance_rectangle_point
 
+from blockport import BlockPort
+from blockinstance import PORT_IN, PORT_OUT
+
 class ElementNoPorts(Item):
     """
     This is a copy of the Element class, but without the declaration
@@ -197,8 +200,6 @@ class DefaultBlockItem(BlockItem):
 	def __init__(self, blockinstance):
 
 		self.blockinstance = blockinstance
-		inputs = len(blockinstance.blocktype.inputs)
-		outputs = len(blockinstance.blocktype.outputs)
 		super(DefaultBlockItem, self).__init__(64, 64)
 
 		eq = EqualsConstraint
@@ -209,18 +210,23 @@ class DefaultBlockItem(BlockItem):
 		h_sw = handles[SW]
 		h_se = handles[SE]
 
+		ninputs = len(blockinstance.blocktype.inputs)
+		noutputs = len(blockinstance.blocktype.outputs)
+		ii, oi = (0,0) # input and output index counters
 		_ports = []
-		for i in range(inputs):
-			p = PointPort(VariablePoint((0,0),strength=WEAK))
-			self._constraints.append(eq(p.point.x, h_nw.x))
-			self._constraints.append(bal(band=(h_nw.y, h_sw.y),v=p.point.y, balance=(0.5 + i)/inputs))
+		for i in self.blockinstance.ports:
+			p = BlockPort(blockinstance, i)
+			if self.blockinstance.ports[i].type is PORT_IN:
+				self._constraints.append(eq(p.point.x, h_nw.x))
+				self._constraints.append(bal(band=(h_nw.y, h_sw.y),v=p.point.y, balance=(0.5 + ii)/ninputs))
+				ii += 1
+			elif self.blockinstance.ports[i].type is PORT_OUT:
+				self._constraints.append(eq(p.point.x, h_ne.x))
+				self._constraints.append(bal(band=(h_ne.y,h_se.y),v=p.point.y, balance=(0.5 + oi)/noutputs))
+				oi += 1
+			else:
+				raise RuntimeError("Unknown port type")
 			_ports.append(p)
-
-		for i in range(outputs):
-			p = PointPort(VariablePoint((0,0),strength=WEAK))
-			_ports.append(p)
-			self._constraints.append(eq(p.point.x, h_ne.x))
-			self._constraints.append(bal(band=(h_ne.y,h_se.y),v=p.point.y, balance=(0.5 + i)/outputs))
 
 		self._ports = _ports
 
