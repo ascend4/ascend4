@@ -135,7 +135,9 @@ from blockitem import *
 from contextmenutool import *
 from connectortool import *
 from blockcanvas import *
-from panzoom import *
+from panzoom import ZoomTool
+from panzoom import PanTool
+#from gaphas.tool import PanTool
 from blockinstance import *
 
 def BlockToolChain():
@@ -294,6 +296,7 @@ class app(gtk.Window):
 		"""
 		import obrowser
 		b = obrowser.Browser("canvas",self.view.canvas, False)
+
 
 	def save_canvas(self,widget):
 		"""
