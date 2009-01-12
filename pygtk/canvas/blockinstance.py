@@ -70,10 +70,12 @@ class LineInstance:
 	def __str__(self):
 		"""
 		Create a string for use in MODEL export.
-		"""	
-		fromname = "%s.%s" % (self.fromport.blockinstance.name, self.fromport.name)
-		toname = "%s.%s" % (self.toport.blockinstance.name, self.toport.name)
-		return "\t%s, %s ARE_THE_SAME;\n" % (fromname, toname)
+		"""
+		if self.fromport and self.toport:	
+			fromname = "%s.%s" % (self.fromport.blockinstance.name, self.fromport.name)
+			toname = "%s.%s" % (self.toport.blockinstance.name, self.toport.name)
+			return "\t%s, %s ARE_THE_SAME;\n" % (fromname, toname)
+		return ""
 
 # TODO set up reversible properties...?
 
