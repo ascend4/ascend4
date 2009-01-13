@@ -136,8 +136,8 @@ from contextmenutool import *
 from connectortool import *
 from blockcanvas import *
 from panzoom import ZoomTool
-from panzoom import PanTool
-#from gaphas.tool import PanTool
+#from panzoom import PanTool
+from gaphas.tool import PanTool
 from blockinstance import *
 
 def BlockToolChain():
@@ -197,6 +197,10 @@ class app(gtk.Window):
 		previewb.set_label("Preview")
 		previewb.connect("clicked",self.preview_canvas)
 		tb.insert(previewb,3)
+		runb = gtk.ToolButton(gtk.STOCK_EXECUTE)
+		runb.set_label("Run")
+		runb.connect("clicked",self.run_canvas)
+		tb.insert(runb,4)
 
 		vbox.pack_start(tb, True, True)
 
@@ -346,6 +350,16 @@ class app(gtk.Window):
 		Under development.
 		"""
 		print self.view.canvas
+
+	def run_canvas(self,widget):
+		"""
+		Export canvas to ASCEND solver and attempt to solve, or at least to
+		to instantiate the model.
+		"""
+		model = str(self.view.canvas)
+		print model
+		print "RUN NOT IMPLEMENTED"
+		
 	   
 a = app()
 gtk.main() 
