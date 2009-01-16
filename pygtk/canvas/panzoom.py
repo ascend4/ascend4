@@ -2,14 +2,22 @@
 # http://pye.dyndns.org
 
 import gtk
+import gtk.gdk as gdk
+
 from gaphas.tool import Tool
+
+ZOOM_MASK = gdk.CONTROL_MASK | gdk.SHIFT_MASK | gdk.MOD1_MASK
+ZOOM_VALUE =gdk.CONTROL_MASK
 
 class ZoomTool(Tool):
 	"""
-	Tool for zooming using ctrl + shift + middle-mouse dragging. Move the 
-	mouse up and down while pressing middle mouse as well as ctrl+shift and
-	the view will zoom in and out. This tool should be added BEFORE the PanTool
-	in the toolchain.
+	Tool for zooming using either of two techniquies:
+		* ctrl + middle-mouse dragging in the up-down direction.
+		* ctrl + mouse-wheeel
+
+	This tool checks for correct modifier key
+	
+	
 	"""
 
 	def __init__(self):
@@ -17,16 +25,14 @@ class ZoomTool(Tool):
 		self.lastdiff = 0;
 
 	def on_button_press(self, context, event):
-		if event.state & (
-		    gtk.gdk.BUTTON2_MASK | gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK
-		):
-		    context.grab()
-		    self.x0 = event.x
-		    self.y0 = event.y
-		    self.lastdiff = 0
-
-
-		    return True
+		if event.button == 2 \
+				and event.state & ZOOM_MASK == ZOOM_VALUE:
+			print "GRABBING"
+			context.grab()
+			self.x0 = event.x
+			self.y0 = event.y
+			self.lastdiff = 0
+			return True
 
 	def on_button_release(self, context, event):
 		context.ungrab()
@@ -34,7 +40,7 @@ class ZoomTool(Tool):
 		return True
 
 	def on_motion_notify(self, context, event):
-		if event.state & gtk.gdk.BUTTON2_MASK:
+		if event.state & ZOOM_MASK == ZOOM_VALUE:
 			view = context.view
 			dy = event.y - self.y0
 
