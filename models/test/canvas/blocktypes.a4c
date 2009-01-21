@@ -61,5 +61,5 @@ MODEL heater REFINES join;
 		'icon' SELF {heater.svg}
 	END NOTES;
 	V IS_A volume;
-END join;
+END heater;
 

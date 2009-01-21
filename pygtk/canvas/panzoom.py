@@ -27,7 +27,6 @@ class ZoomTool(Tool):
 	def on_button_press(self, context, event):
 		if event.button == 2 \
 				and event.state & ZOOM_MASK == ZOOM_VALUE:
-			print "GRABBING"
 			context.grab()
 			self.x0 = event.x
 			self.y0 = event.y
