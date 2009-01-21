@@ -73,7 +73,7 @@ class Browser:
 			gtk.main_quit()
 		return False
 
-	def __init__(self, name, value, quit):
+	def __init__(self, name, value, quit=False):
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.set_title("Browser")
 		self.window.set_size_request(512, 320)

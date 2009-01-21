@@ -103,31 +103,7 @@ Library::load(const char *filename){
 		std::cerr << "Error: unable to load module '" << filename << "'." << std::endl;
 	}
 
-	char *msg;
-	switch(status){
-		case 5:
-			msg = "The module '%s' already exists. "; break;
-		case 4:
-			msg = "Caught an attempt to do a recursive require under '%s'."; break;
-		case 3:
-			msg = "A new module was created from '%s', overwriting a module's alias."; break;
-		case 2:
-			msg = "An existing module is being returned for '%s'." ; break;
-		case 1:
-			msg = "An new version of an existing module was created for '%s'."; break;
-		case 0:
-			msg = "Module for '%s' created OK."; break;
-		case -1:
-			msg = "File not found for '%s'. (-1)"; break;
-		case -2:
-			msg = "Unable to open '%s' for reading. (-2)";break;
-		case -3:
-			msg = "Insuffient memory to create module for '%s'. (-3)"; break;
-		case -4:
-			msg = "Bad input, null or zero length filename in '%s'. (-4)"; break;
-		default:
-			throw std::runtime_error("Invalid status code in library.cpp");
-	}
+	const char *msg = getLoadErrorMessage(status);
 
 	char msg1[100];
 	sprintf(msg1,msg,filename);
@@ -164,6 +140,92 @@ Library::load(const char *filename){
 	struct gl_list_t *l = Asc_TypeByModule(m);
 	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), filename);
 }
+
+/**
+	Load MODELs specified inside a text string into the Library. The string is
+	parsed and its types will then be visible to Library::findType.
+
+	@param str String containing the model, in the ASCEND modelling language.
+	@param nameprefix Name to be used to refer tothe string module when eg using
+		the Library::getModules methood.
+*/
+void
+Library::loadString(const char *str, const char *nameprefix){
+	int status;
+	struct module_t *m = Asc_OpenStringModule(str, &status, nameprefix);
+
+	const char *msg = getLoadErrorMessage(status);
+
+	char msg1[100];
+	sprintf(msg1,msg,nameprefix);
+
+	if(status<0 || status>0){
+		throw std::runtime_error(msg1);
+	}else{
+		std::cerr << "Note: Module " << Asc_ModuleName(m) << ": " << msg1 << std::endl;
+	}
+
+	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
+	//error_reporter_tree_start();
+	status = zz_parse();
+	switch(status){
+		case 0: break;
+		case 1: ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Parsing of %s was aborted",Asc_ModuleName(m)); break;
+		case 2: ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,"Out of memory when parsing %s",Asc_ModuleName(m)); break;
+		default: ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Invalid return from zz_parse"); break;
+	}
+	//status = error_reporter_tree_has_error();
+	//error_reporter_tree_end();
+	/*
+	if(!status){
+		CONSOLE_DEBUG("CLEARING TREE...");
+		error_reporter_tree_clear();
+		CONSOLE_DEBUG("DONE CLEARING TREE...");
+	}else{
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error(s) when loading '%s'",nameprefix);
+		stringstream ss;
+		ss << "Errors found in '" << nameprefix <<  "'";
+		throw runtime_error(ss.str());
+	}
+	*/
+
+	struct gl_list_t *l = Asc_TypeByModule(m);
+	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), nameprefix);
+}
+
+const char *
+Library::getLoadErrorMessage(int status){
+	const char *msg = NULL;
+	switch(status){
+		case 5:
+			msg = "The module '%s' already exists. "; break;
+		case 4:
+			msg = "Caught an attempt to do a recursive require under '%s'."; break;
+		case 3:
+			msg = "A new module was created from '%s', overwriting a module's alias."; break;
+		case 2:
+			msg = "An existing module is being returned for '%s'." ; break;
+		case 1:
+			msg = "An new version of an existing module was created for '%s'."; break;
+		case 0:
+			msg = "Module for '%s' created OK."; break;
+		case -1:
+			msg = "File not found for '%s'. (-1)"; break;
+		case -2:
+			msg = "Unable to open '%s' for reading. (-2)";break;
+		case -3:
+			msg = "Insuffient memory to create module for '%s'. (-3)"; break;
+		case -4:
+			msg = "Bad input, null or zero length filename in '%s'. (-4)"; break;
+		default:
+			throw std::runtime_error("Invalid status code in library.cpp");
+	}
+	return msg;
+}
+
+
+
+
 
 /**
 	Return a vector of all the Modules which have been loaded into
@@ -206,7 +268,7 @@ Library::listModules(const int module_type){
 		throw std::runtime_error("Library::listModules: invalid module_type parameter");
 	}
 
-	char *type = NULL;
+	const char *type = NULL;
 	switch(module_type){
 		case 0: type = "defined types"; break;
 		case 1: type = "string definitions"; break;

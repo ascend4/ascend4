@@ -5,6 +5,7 @@ import os, sys
 os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
 
 os.environ['ASCENDLIBRARY'] = "../../models"
+os.environ['ASCENDSOLVERS'] = "../../solvers/qrslv"
 
 if sys.platform.startswith("win"):
 	os.environ['PATH'] += ";..\.."
@@ -151,8 +152,8 @@ def BlockToolChain():
 	chain.append(ContextMenuTool()) # right-click
 	chain.append(LineSegmentTool()) # for moving line 'elbows'
 	chain.append(ItemTool())
-	chain.append(ZoomTool())
 	chain.append(PanTool())
+	chain.append(ZoomTool())
 	chain.append(RubberbandTool())
 	return chain
 
@@ -291,6 +292,8 @@ class app(gtk.Window):
 			self.load_canvas(None)
 		elif key == 'V' or key == 'v':
 			self.preview_canvas(None)
+		elif key == 'X' or key == 'x':
+			self.run_canvas(None)
 
 
 	def debug_canvas(self,widget):
@@ -313,6 +316,7 @@ class app(gtk.Window):
 		try:
 			pickle.dump(self.view.canvas,f)
 		except Exception,e:
+			print "ERROR:",str(e)
 			import obrowser
 			b = obrowser.Browser("canvas",self.view.canvas)
 			d = gtk.Dialog("Error",self,gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -359,6 +363,12 @@ class app(gtk.Window):
 		model = str(self.view.canvas)
 		print model
 		print "RUN NOT IMPLEMENTED"
+		L.loadString(model,"canvasmodel")
+		T = L.findType("canvasmodel")
+		M = T.getSimulation('canvassim')
+		M.setSolver(ascpy.Solver("QRSlv"))
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
+		
 		
 	   
 a = app()

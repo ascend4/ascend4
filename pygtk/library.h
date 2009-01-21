@@ -42,7 +42,11 @@ class Library{
 public:
 	Library(const char *defaultpath=NULL);
 	~Library();
+
 	void load(const char *filename);
+	void loadString(const char *str, const char *nameprefix);
+	static const char *getLoadErrorMessage(int status);
+
 	void listModules(const int module_type=0);
 	Type &findType(const SymChar &nametofind);
 	std::vector<Module> getModules(const int module_type=0);
