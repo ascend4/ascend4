@@ -112,8 +112,19 @@ const HelmholtzData helmholtz_data_water = {
 		,{0.31777497330738, 46, 6, 6}
 		,{-0.11841182425981, 50, 6, 6}
 	}
-	, 0, 0 /* no gaussian terms (YET -- NEED TO BE ADDED */
-	, 0, 0 /* no critical terms (YET -- NEED TO BE ADDED */
+	, 3 /* gaussian terms */
+	, (const HelmholtzGausTerm[]){
+		/* n, t, d, alpha, beta, gamma, epsilon */
+		{-0.31306260323435E2, 0, 3, 20, 150, 1.21, 1}
+		,{0.31546140237781E2, 1, 3, 20, 150, 1.21, 1}
+		,{-0.25213154341695E4,4, 3, 20, 250, 1.25, 1}
+	}
+	, 2 /* critical terms */
+	, (const HelmholtzCritTerm[]){
+		/* n, a, b, beta, A, B, C, D */
+		{-0.14874640856724, 3.5, 0.85, 0.3, 0.32, 0.2, 28, 700}
+		,{0.31806110878444, 3.5, 0.95, 0.3, 0.32, 0.2, 32, 800}
+	}
 };
 
 
@@ -157,6 +168,7 @@ enum Limits{
 #include <stdio.h>
 #include <math.h>
 #include "ideal_impl.h"
+#include "helmholtz_impl.h"
 
 double phi0(const double delta, const double tau){
 	int i;
@@ -190,7 +202,7 @@ int main(void){
 			);\
 			exit(1);\
 		}else{\
-			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
+			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.8f%% err.\n"\
 				,#FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
 			);\
 		}\
@@ -207,6 +219,37 @@ int main(void){
 		 	ASSERT_TOL(helm_ideal, tau, delta, d->ideal, p0, p0*1e-5);
 		}
 	}
+
+	fprintf(stderr,"IAPWS95 TABLE 6 TESTS\n");
+	T = 500.; /* K */
+	rho = 838.025; /* kg/m³ */
+	double tau = d->T_star / T;
+	double delta = rho / d->rho_star;
+
+	ASSERT_TOL(helm_ideal, tau, delta, d->ideal, 0.204797733E1, 1e-6);
+	ASSERT_TOL(helm_ideal_tau, tau, delta, d->ideal, 0.904611106E1, 1e-6);
+	ASSERT_TOL(HELM_IDEAL_DELTAU, tau, delta, d->ideal, 0., 1e-6);
+	
+	double phitt = helm_ideal_tautau(tau, d->ideal);
+	double val = (-0.193249185E1);
+	double err = phitt - val;
+	if(fabs(err) > 1e-6){
+		fprintf(stderr,"ERROR in helm_ideal_tautau near line %d\n",__LINE__);
+		exit(1);
+	}else{
+		fprintf(stderr,"    OK, helm_ideal_tautau(%f) = %8.2e with %.6f%% err.\n"
+			,tau,val,err/val*100.
+		);
+	}
+
+	/* FIXME still need to implement helm_ideal_del, helm_ideal_deldel, helm_ideal_deltau */
+
+	ASSERT_TOL(helm_resid, tau, delta, d, -0.342693206E1, 1e-8);
+	ASSERT_TOL(helm_resid_del, tau, delta, d, -0.364366650, 1e-8);
+	ASSERT_TOL(helm_resid_deldel, tau, delta, d, 0.856063701, 1e-8);
+	ASSERT_TOL(helm_resid_tau, tau, delta, d, -0.581403435E1, 1e-8);
+	ASSERT_TOL(helm_resid_tautau, tau, delta, d, -0.223440737E1, 1e-8);
+	ASSERT_TOL(helm_resid_deltau, tau, delta, d, -0.112176915e1, 1e-8);
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
 	exit(0);

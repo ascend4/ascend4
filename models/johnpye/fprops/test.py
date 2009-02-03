@@ -23,6 +23,7 @@ if not p.returncode:
 	s = './%s' % species
 	print s
 	p = subprocess.Popen(s.split(' '))
+	p.wait()
 	
 
 

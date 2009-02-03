@@ -39,12 +39,7 @@
 
 /* forward decls */
 
-static double helm_resid(double tau, double delta, const HelmholtzData *data);
-static double helm_resid_del(double tau, double delta, const HelmholtzData *data);
-static double helm_resid_tau(double tau, double delta, const HelmholtzData *data);
-static double helm_resid_deltau(double tau, double delta, const HelmholtzData *data);
-static double helm_resid_deldel(double tau, double delta, const HelmholtzData *data);
-static double helm_resid_tautau(double tau, double delta, const HelmholtzData *data);
+#include "helmholtz_impl.h"
 
 /**
 	Function to calculate pressure from Helmholtz free energy EOS, given temperature
@@ -344,6 +339,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
+	const HelmholtzCritTerm *ct;
 
 	n = data->np;
 	pt = &(data->pt[0]);
@@ -408,8 +404,25 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		++gt;
 	}
 
+	/* critical terms */
+	n = data->nc;
+	ct = &(data->ct[0]);
+	for(i=0; i<n; ++i){
 #ifdef RESID_DEBUG
-	fprintf(stderr,"phir = %f\n",res);
+		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
+#endif
+		double d1 = delta - 1.;
+		double t1 = tau - 1.;
+		double theta = (1. - tau) + ct->A * pow(d1*d1, 0.5/ct->beta);
+		double psi = exp(-ct->A*d1*d1 - ct->D*t1*t1);
+		double DELTA = theta*theta + ct->B* pow(d1*d1, ct->a);
+		sum = ct->n * pow(DELTA, ct->b) * delta * psi;
+		res += sum;
+		++ct;
+	}
+
+#ifdef RESID_DEBUG
+	fprintf(stderr,"CALCULATED RESULT FOR phir = %f\n",res);
 #endif
 	return res;
 }
@@ -472,6 +485,8 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 #endif
 		++gt;
 	}
+
+	/* FIXME add critical terms calculation */
 
 	return res;
 }
@@ -543,6 +558,8 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 		++gt;
 	}
 
+	/* FIXME add critical terms calculation */
+
 	return res;
 }	
 
@@ -608,6 +625,8 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 #endif
 		++gt;
 	}
+
+	/* FIXME add critical terms calculation */
 
 #ifdef RESID_DEBUG
 	fprintf(stderr,"phir = %f\n",res);
@@ -677,6 +696,8 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 			* exp(-(gt->alpha * s1 + gt->beta*SQ(tau-gt->gamma)));
 		++gt;
 	}
+
+	/* FIXME add critical terms calculation */
 
 	return res;
 }
@@ -755,6 +776,8 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 		res += sum;
 		++gt;
 	}
+
+	/* FIXME add critical terms calculation */
 
 #ifdef RESID_DEBUG
 	fprintf(stderr,"phir_tautau = %f\n",res);
