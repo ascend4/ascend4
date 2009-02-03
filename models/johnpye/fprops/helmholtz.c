@@ -525,6 +525,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
+	const HelmholtzCritTerm *ct;
 
 	n = data->np;
 	pt = &(data->pt[0]);
@@ -577,6 +578,28 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 #endif
 			
 		++gt;
+	}
+
+	/* critical terms */
+	n = data->nc;
+	ct = &(data->ct[0]);
+	for(i=0; i<n; ++i){
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
+#endif
+		double d1 = delta - 1.;
+		double t1 = tau - 1.;
+		double theta = (1. - tau) + ct->A * pow(d1*d1, 0.5/ct->beta);
+		double psi = exp(-ct->C*d1*d1 - ct->D*t1*t1);
+		double DELTA = theta*theta + ct->B* pow(d1*d1, ct->a);
+
+		double dDELbdtau = -2. * theta * ct->b * pow(DELTA, ct->b - 1);
+
+		double dpsidtau = -2. * ct->D * t1 * psi;
+
+		sum = ct->n * delta * (dDELbdtau * psi + pow(DELTA, ct->b) * dpsidtau);
+		res += sum;
+		++ct;
 	}
 
 	/* FIXME add critical terms calculation */
