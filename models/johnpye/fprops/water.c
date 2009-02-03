@@ -282,7 +282,7 @@ int main(void){
 		ASSERT_TOL(helmholtz_w, T, rho, d, w, w*1e-8);
 	}
 
-	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
+	fprintf(stderr,"Tests completed OK (maximum error = %0.8f%%)\n",maxerr);
 	exit(0);
 }
 
