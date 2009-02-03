@@ -682,6 +682,7 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
+	const HelmholtzCritTerm *ct;
 
 	/* power terms */
 	n = data->np;
@@ -733,7 +734,40 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 		++gt;
 	}
 
-	/* FIXME add critical terms calculation */
+	/* critical terms */
+	n = data->nc;
+	ct = &(data->ct[0]);
+	for(i=0; i<n; ++i){
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
+#endif
+		double d1 = delta - 1.;
+		double t1 = tau - 1.;
+		double theta = (1. - tau) + ct->A * pow(d1*d1, 0.5/ct->beta);
+		double psi = exp(-ct->C*d1*d1 - ct->D*t1*t1);
+		double DELTA = theta*theta + ct->B* pow(d1*d1, ct->a);
+
+		double dDELbdtau = -2. * theta * ct->b * pow(DELTA, ct->b - 1);
+
+		double dDELddel = d1*(ct->A*theta*2/ct->beta*pow(d1*d1,0.5/ct->beta-1) + 2*ct->B*ct->a*pow(d1*d1,ct->a-1));
+
+		double d2DELbddeldtau = -ct->A * ct->b * 2./ct->beta * pow(DELTA,ct->b-1)*d1*pow(d1*d1,0.5/ct->beta-1) \
+			- 2. * theta * ct->b * (ct->b - 1) * pow(DELTA,ct->b-2.) * dDELddel;
+
+		double dpsiddelta = -2. * ct->C * d1 * psi;
+
+		double d2psiddeldtau = 4. * ct->C*ct->D*d1*t1*psi;
+
+		double dpsidtau = -2. * ct->D * t1 * psi;
+
+		sum = ct->n * (pow(DELTA, ct->b) * (dpsidtau + delta * d2psiddeldtau) \
+			+ delta *dDELbdtau*dpsidtau \
+			+ dDELbdtau*(psi+delta*dpsiddelta) \
+			+ d2DELbddeldtau*delta*psi
+		);
+		res += sum;
+		++ct;
+	}
 
 #ifdef RESID_DEBUG
 	fprintf(stderr,"phir = %f\n",res);
@@ -758,7 +792,7 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
-
+	const HelmholtzCritTerm *ct;
 
 #ifdef RESID_DEBUG
 		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
@@ -804,7 +838,40 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 		++gt;
 	}
 
-	/* FIXME add critical terms calculation */
+	/* critical terms */
+	n = data->nc;
+	ct = &(data->ct[0]);
+	for(i=0; i<n; ++i){
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
+#endif
+		double d1 = delta - 1.;
+		double t1 = tau - 1.;
+		double theta = (1. - tau) + ct->A * pow(d1*d1, 0.5/ct->beta);
+		double psi = exp(-ct->C*d1*d1 - ct->D*t1*t1);
+		double DELTA = theta*theta + ct->B* pow(d1*d1, ct->a);
+
+		double dpsiddelta = -2. * ct->C * d1 * psi;
+
+		double d2psiddel2 = (2.*ct->C*SQ(d1)-1.)*2.*ct->C*psi;
+
+		double dDELddelta = d1 * (ct->A * theta * 2./ct->beta * pow(d1*d1, 0.5/ct->beta - 1) + 2* ct->B * ct->a * pow(d1*d1, ct->a - 1));
+
+		double d2DELddel2 = 1./d1*dDELddelta + SQ(d1)*(
+			4.*ct->B*ct->a*(ct->a-1)*pow(SQ(d1),ct->a-2) \
+			+ 2.*SQ(ct->A/ct->beta*pow(SQ(d1),0.5/ct->beta-1)) \
+			+ ct->A*theta*4/ct->beta*(0.5/ct->beta-1)*pow(SQ(d1),0.5/ct->beta-2)
+		);
+
+
+		double d2DELbddel2 = ct->b * (pow(DELTA,ct->b - 1.)*d2DELddel2 + (ct->b-1)*pow(DELTA,ct->b-2)*SQ(dDELddelta));
+
+		double dDELbddelta = ct->b * pow(DELTA,ct->b - 1.) * dDELddelta;
+
+		sum = ct->n * (pow(DELTA,ct->b)*(2.*dpsiddelta+delta*d2psiddel2) + 2.*dDELbddelta*(psi+delta*dpsiddelta) + d2DELbddel2*delta*psi);
+		res += sum;
+		++ct;
+	}
 
 	return res;
 }
