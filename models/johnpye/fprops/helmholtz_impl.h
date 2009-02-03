@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2008 Carnegie Mellon University
+	Copyright (C) 2009 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -17,24 +17,25 @@
 	Boston, MA 02111-1307, USA.
 */
 
-#ifndef FPROPS_IDEAL_IMPL_H
-#define FPROPS_IDEAL_IMPL_H
+#ifndef FPROPS_HELM_IMPL_H
+#define FPROPS_HELM_IMPL_H
 
-#include "ideal.h"
+#include "helmholtz.h"
 
 /*
-	This file contains the headers for the private code definedin 'ideal.c'.
+	This file contains the headers for the private code definedin 'helmholtz.c'.
 	You shouldn't include this file in your programs, because the implementation
-	of the ideal gas curves is 'secret business' of the fprops code.
+	of the helmholtz curves is 'secret business' of the fprops code.
 
 	We provide this header file just the purpose of diagnostic testing.
 */
 
-double helm_ideal(double tau, double delta, const IdealData *data);
-double helm_ideal_tau(double tau, double delta, const IdealData *data);
-double helm_ideal_tautau(double tau, const IdealData *data);
-
-double helm_cp0(double T, const IdealData *data);
+double helm_resid(double tau, double delta, const HelmholtzData *data);
+double helm_resid_del(double tau, double delta, const HelmholtzData *data);
+double helm_resid_tau(double tau, double delta, const HelmholtzData *data);
+double helm_resid_deltau(double tau, double delta, const HelmholtzData *data);
+double helm_resid_deldel(double tau, double delta, const HelmholtzData *data);
+double helm_resid_tautau(double tau, double delta, const HelmholtzData *data);
 
 /*
 	Note: the cross partial derivative with respect to delta and tau is
