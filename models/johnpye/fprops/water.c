@@ -272,12 +272,13 @@ int main(void){
 		double T = td[i].T;
 		double rho = td[i].rho;
 		double p = td[i].p * 1e6; /* Pa */
-		double cv = td[i].cv / 1e3; /* J/kgK */
+		double cv = td[i].cv * 1e3; /* J/kgK */
 		double w = td[i].w; /* m/s */
 		double s = td[i].s * 1e3; /* J/kgK */
 		//fprintf(stderr,"T = %f, rho = %f, p = %f\n",T,rho,p);
 		ASSERT_TOL(helmholtz_s, T, rho, d, s, s*1e-8);
 		ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-8);
+		ASSERT_TOL(helmholtz_cv, T, rho, d, cv, cv*1e-8);
 	}
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);

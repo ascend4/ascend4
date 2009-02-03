@@ -188,6 +188,20 @@ double helmholtz_a(double T, double rho, const HelmholtzData *data){
 	return data->R * T * (helm_ideal(tau,delta,data->ideal) + helm_resid(tau,delta,data));
 }
 
+/**
+	Function to calculate isochoric heat capacity from the Helmholtz free energy
+	EOS given temperature and mass density.
+
+	@param T temperature in K
+	@param rho mass density in kg/m³
+	@param Specific heat capacity in J/kg/K.
+*/
+double helmholtz_cv(double T, double rho, const HelmholtzData *data){
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+
+	return - data->R * tau*tau * (helm_ideal_tautau(tau,data->ideal) + helm_resid_tautau(tau,delta,data));
+}
 
 /**
 	Calculation zero-pressure specific heat capacity
@@ -756,6 +770,7 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
+	const HelmholtzCritTerm *ct;
 
 	n = data->np;
 	pt = &(data->pt[0]);
@@ -819,6 +834,29 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 		//fprintf(stderr,"sum = %f\n",sum);
 		res += sum;
 		++gt;
+	}
+
+	/* critical terms */
+	n = data->nc;
+	ct = &(data->ct[0]);
+	for(i=0; i<n; ++i){
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
+#endif
+		double d1 = delta - 1.;
+		double t1 = tau - 1.;
+		double theta = (1. - tau) + ct->A * pow(d1*d1, 0.5/ct->beta);
+		double psi = exp(-ct->C*d1*d1 - ct->D*t1*t1);
+		double DELTA = theta*theta + ct->B* pow(d1*d1, ct->a);
+
+		double d2DELbdtau2 = 2. * ct->b * pow(DELTA, ct->b - 1) + 4. * theta*theta * ct->b * (ct->b - 1) * pow(DELTA, ct->b - 2);
+		double dDELbdtau = -2. * theta * ct->b * pow(DELTA, ct->b - 1);
+		double dpsidtau = -2. * ct->D * t1 * psi;
+		double d2psidtau2 = 2. * ct->D * psi * (2. * ct->D * t1*t1 -1.);
+
+		sum = ct->n * delta * (d2DELbdtau2 * psi + 2 * dDELbdtau*dpsidtau + pow(DELTA, ct->b) * d2psidtau2);
+		res += sum;
+		++ct;
 	}
 
 	/* FIXME add critical terms calculation */
