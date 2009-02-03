@@ -414,7 +414,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		double d1 = delta - 1.;
 		double t1 = tau - 1.;
 		double theta = (1. - tau) + ct->A * pow(d1*d1, 0.5/ct->beta);
-		double psi = exp(-ct->A*d1*d1 - ct->D*t1*t1);
+		double psi = exp(-ct->C*d1*d1 - ct->D*t1*t1);
 		double DELTA = theta*theta + ct->B* pow(d1*d1, ct->a);
 		sum = ct->n * pow(DELTA, ct->b) * delta * psi;
 		res += sum;
@@ -439,7 +439,7 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
-
+	const HelmholtzCritTerm *ct;
 
 #ifdef RESID_DEBUG
 		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
@@ -469,24 +469,45 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 
 	/* gaussian terms */
 	n = data->ng;
-	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
 	gt = &(data->gt[0]);
 	for(i=0; i<n; ++i){
 #ifdef RESID_DEBUG
 		fprintf(stderr,"i = %d, GAUSSIAN, n = %e, t = %f, d = %f, alpha = %f, beta = %f, gamma = %f, epsilon = %f\n",i+1, gt->n, gt->t, gt->d, gt->alpha, gt->beta, gt->gamma, gt->epsilon);
 #endif
-		double val2;
-		val2 = - gt->n * pow(tau,gt->t) * pow(delta, -1. + gt->d)
+		sum = - gt->n * pow(tau,gt->t) * pow(delta, -1. + gt->d)
 			* (2. * gt->alpha * delta * (delta - gt->epsilon) - gt->d)
 			* exp(-(gt->alpha * SQ(delta-gt->epsilon) + gt->beta*SQ(tau-gt->gamma)));
-		res += val2;
+		res += sum;
 #ifdef RESID_DEBUG
-		fprintf(stderr,"val2 = %f --> res = %f\n",val2,res);
+		fprintf(stderr,"sum = %f --> res = %f\n",sum,res);
 #endif
 		++gt;
 	}
 
-	/* FIXME add critical terms calculation */
+	/* critical terms */
+	n = data->nc;
+	ct = &(data->ct[0]);
+	for(i=0; i<n; ++i){
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
+#endif
+		double d1 = delta - 1.;
+		double t1 = tau - 1.;
+		double theta = (1. - tau) + ct->A * pow(d1*d1, 0.5/ct->beta);
+		double psi = exp(-ct->C*d1*d1 - ct->D*t1*t1);
+		double DELTA = theta*theta + ct->B* pow(d1*d1, ct->a);
+
+		double dpsiddelta = -2. * ct->C * d1 * psi;
+
+		double dDELddelta = d1 * (ct->A * theta * 2./ct->beta * pow(d1*d1, 0.5/ct->beta - 1) + 2* ct->B * ct->a * pow(d1*d1, ct->a - 1));
+
+		double dDELbddelta = ct->b * pow(DELTA,ct->b - 1.) * dDELddelta;
+
+		sum = ct->n * (pow(DELTA, ct->b) * (psi + delta * dpsiddelta) + dDELbddelta * delta * psi);
+		res += sum;
+		++ct;
+	}
+
 
 	return res;
 }
