@@ -194,13 +194,64 @@ double helmholtz_a(double T, double rho, const HelmholtzData *data){
 
 	@param T temperature in K
 	@param rho mass density in kg/m³
-	@param Specific heat capacity in J/kg/K.
+	@return Isochoric specific heat capacity in J/kg/K.
 */
 double helmholtz_cv(double T, double rho, const HelmholtzData *data){
 	double tau = data->T_star / T;
 	double delta = rho / data->rho_star;
 
 	return - data->R * tau*tau * (helm_ideal_tautau(tau,data->ideal) + helm_resid_tautau(tau,delta,data));
+}
+
+/**
+	Function to calculate isobaric heat capacity from the Helmholtz free energy
+	EOS given temperature and mass density.
+
+	@param T temperature in K
+	@param rho mass density in kg/m³
+	@return Isobaric specific heat capacity in J/kg/K.
+*/
+double helmholtz_cp(double T, double rho, const HelmholtzData *data){
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+
+	double phir_d = helm_resid_del(tau,delta,data);
+	double phir_dd = helm_resid_deldel(tau,delta,data);
+	double phir_dt = helm_resid_deltau(tau,delta,data);
+	
+	/* note similarities with helmholtz_w */
+	double temp1 = 1 + 2*delta*phir_d + SQ(delta)*phir_dd;
+	double temp2 = 1 + delta*phir_d - delta*tau*phir_dt;
+	double temp3 = SQ(tau)*(helm_ideal_tautau(tau,data->ideal) + helm_resid_tautau(tau,delta,data));
+
+	return data->R * (-temp3 + SQ(temp2)/temp1);
+}
+
+
+/**
+	Function to calculate the speed of sound in a fluid from the Helmholtz free
+	energy EOS, given temperature and mass density.
+
+	@param T temperature in K
+	@param rho mass density in kg/m³
+	@return Speed of sound in m/s.
+*/
+double helmholtz_w(double T, double rho, const HelmholtzData *data){
+
+	double tau = data->T_star / T;
+	double delta = rho / data->rho_star;
+
+	double phir_d = helm_resid_del(tau,delta,data);
+	double phir_dd = helm_resid_deldel(tau,delta,data);
+	double phir_dt = helm_resid_deltau(tau,delta,data);
+	
+	/* note similarities with helmholtz_cp */
+	double temp1 = 1 + 2*delta*phir_d + SQ(delta)*phir_dd;
+	double temp2 = 1 + delta*phir_d - delta*tau*phir_dt;
+	double temp3 = SQ(tau)*(helm_ideal_tautau(tau,data->ideal) + helm_resid_tautau(tau,delta,data));
+
+	return sqrt(data->R * T *(temp1 - SQ(temp2)/temp3));
+
 }
 
 /**
@@ -616,8 +667,6 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 		++ct;
 	}
 
-	/* FIXME add critical terms calculation */
-
 	return res;
 }	
 
@@ -701,7 +750,7 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 	Second derivative of helmholtz residual function with respect to
 	delta (twice).
 
-	FIXME this function is WRONG.
+	FIXME this function is WRONG. (UPDATE? is this still true? Think not)
 */
 double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	double sum = 0, res = 0;
@@ -858,8 +907,6 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 		res += sum;
 		++ct;
 	}
-
-	/* FIXME add critical terms calculation */
 
 #ifdef RESID_DEBUG
 	fprintf(stderr,"phir_tautau = %f\n",res);
