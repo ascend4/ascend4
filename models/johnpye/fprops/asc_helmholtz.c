@@ -46,6 +46,8 @@
 better later on, hopefully. */
 #include "ammonia.h"
 #include "nitrogen.h"
+#include "hydrogen.h"
+#include "water.h"
 
 #ifndef ASC_EXPORT
 # error "Where is ASC_EXPORT?"
@@ -166,8 +168,12 @@ int helmholtz_prepare(struct BBoxInterp *bbox,
 		bbox->user_data = (void*)&helmholtz_data_ammonia;
 	}else if(strcmp(comp,"nitrogen")==0){
 		bbox->user_data = (void*)&helmholtz_data_nitrogen;
+	}else if(strcmp(comp,"hydrogen")==0){
+		bbox->user_data = (void*)&helmholtz_data_hydrogen;
+	}else if(strcmp(comp,"water")==0){
+		bbox->user_data = (void*)&helmholtz_data_water;
 	}else{
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component must be 'ammonia' or 'nitrogen' at this stage (only two components supported)");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component name was not recognised. Check the source-code for for the supported species.");
 	}
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Prepared component '%s' OK.\n",comp);
