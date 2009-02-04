@@ -246,11 +246,11 @@ double helmholtz_w(double T, double rho, const HelmholtzData *data){
 	double phir_dt = helm_resid_deltau(tau,delta,data);
 	
 	/* note similarities with helmholtz_cp */
-	double temp1 = 1 + 2*delta*phir_d + SQ(delta)*phir_dd;
-	double temp2 = 1 + delta*phir_d - delta*tau*phir_dt;
+	double temp1 = 1. + 2.*delta*phir_d + SQ(delta)*phir_dd;
+	double temp2 = 1. + delta*phir_d - delta*tau*phir_dt;
 	double temp3 = SQ(tau)*(helm_ideal_tautau(tau,data->ideal) + helm_resid_tautau(tau,delta,data));
 
-	return sqrt(data->R * T *(temp1 - SQ(temp2)/temp3));
+	return sqrt(data->R * T * (temp1 - SQ(temp2)/temp3));
 
 }
 
