@@ -64,6 +64,7 @@ const HelmholtzData helmholtz_data_hydrogen = {
 	, /* M */ HYDROGEN_M /* kg/kmol */
 	, /* rho_star */ 15.508 * HYDROGEN_M /* kmol/m3 * kg/kmol = kg/m³ (note, mol/L=kmol/m³) */
 	, /* T_star */ HYDROGEN_TSTAR /* K (= T_c for this model) */
+	, 0.088 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_hydrogen
 	, 9 /* power terms */
 	, (const HelmholtzPowTerm[]){

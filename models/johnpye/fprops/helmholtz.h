@@ -80,7 +80,9 @@ typedef struct HelmholtzData_struct{
 	double R; /**< specific gas constant */
 	double M; /**< molar mass, kg/kmol */
 	double rho_star; /**< normalisation density, kg/m³ */
-	double T_star; /* normalisation temperature, K */
+	double T_star; /**< normalisation temperature, K */
+
+	double omega; /**< Pitzer acentric factor */
 	
 	const IdealData *ideal; /* data for ideal component of Helmholtz energy */
 
@@ -100,6 +102,8 @@ double helmholtz_a(double T, double rho, const HelmholtzData *data);
 double helmholtz_cv(double T, double rho, const HelmholtzData *data);
 double helmholtz_cp(double T, double rho, const HelmholtzData *data);
 double helmholtz_w(double T, double rho, const HelmholtzData *data);
+
+int helmholtz_sat_t(double T, double *p, double *rho_f, double *rho_g, const HelmholtzData *data);
 
 double helmholtz_cp0(double T, const HelmholtzData *data);
 

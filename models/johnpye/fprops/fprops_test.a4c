@@ -4,10 +4,10 @@ REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "johnpye/fprops/helmholtz";
 
-MODEL mbwrconf;
+MODEL helmholtz_conf;
 	component IS_A symbol_constant;
-	component :== 'ammonia';
-END mbwrconf;
+	component :== 'water';
+END helmholtz_conf;
 
 MODEL fprops_test;
 
@@ -19,24 +19,24 @@ MODEL fprops_test;
 	a IS_A specific_energy;
 	s IS_A specific_entropy;
 
-	propsdata IS_A mbwrconf;
+	conf IS_A helmholtz_conf;
 
 	props1: helmholtz_p(
 		T, rho : INPUT;
 		p : OUTPUT;
-		propsdata : DATA
+		conf : DATA
 	);
 
 	props2: helmholtz_u(
 		T, rho : INPUT;
 		u : OUTPUT;
-		propsdata : DATA
+		conf : DATA
 	);
 
 	props3: helmholtz_s(
 		T, rho : INPUT;
 		s : OUTPUT;
-		propsdata : DATA
+		conf : DATA
 	);
 
 	rho*(h - u) = p;

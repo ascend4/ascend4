@@ -53,9 +53,10 @@ http://www.iapws.org/relguide/IAPWS95.pdf
 */
 const HelmholtzData helmholtz_data_water = {
 	/* R */ WATER_R /* J/kg/K */
-	, /* M */ 0.00000000000000 /* kg/kmol  -- need to look up value cited by IAPWS */
+	, /* M */ 18.015242 /* kg/kmol -- G S Kell, J Phys Chem Ref Data (6) 1109 (1977) */
 	, /* rho_star */322. /* kg/m³ */
 	, /* T_star */ WATER_TSTAR /* K */
+	, 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */
 	, &ideal_data_water
 	, 51 /* np */
 	, (const HelmholtzPowTerm[]){
@@ -183,6 +184,9 @@ double phi0(const double delta, const double tau){
 typedef struct{double T, rho, p, cv, w, s;} TestDataIAPWS95;
 const TestDataIAPWS95 td[]; const unsigned ntd;
 
+typedef struct{double T, p, rho_f, rho_g, h_f, h_g, s_f, s_g;} TestDataSat;
+const TestDataSat tds[]; const unsigned ntds;
+
 int main(void){
 	double rho, T;
 	const HelmholtzData *d;
@@ -199,7 +203,7 @@ int main(void){
 		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
 		if(fabs(err)>fabs(TOL)){\
 			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %0.8f,"\
-				" should be %f, error is %.10e (%.2f%%)!\n"\
+				" should be %f, error is %.10e (%.7f%%)!\n"\
 				, __LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
 				,relerrpc\
 			);\
@@ -210,7 +214,6 @@ int main(void){
 			);\
 		}\
 	}
-
 
 #if 0
 	/* these tests pass, but don't prove much */
@@ -259,6 +262,7 @@ int main(void){
 	ASSERT_TOL(helm_resid_tautau, tau, delta, d, -0.223440737E1, 1e-8);
 	ASSERT_TOL(helm_resid_deltau, tau, delta, d, -0.112176915e1, 1e-8);
 
+#if 0
 	fprintf(stderr,"\nADDITIONAL LOW-LEVEL TESTS NEAR CRITICAL POINT\n");
 	
 	T = 647.; /* K */
@@ -274,6 +278,7 @@ int main(void){
 	ASSERT_TOL(helmholtz_p, T, rho, d, 2.203847557e7, 7e-4);
 	ASSERT_TOL(helmholtz_cp, T, rho, d, 3.531798573e6, 1e-8);
 	ASSERT_TOL(helmholtz_w, T, rho, d, 2.52140783e2, 1e-8);
+#endif
 
 	fprintf(stderr,"\nIAPWS95 TABLE 7 (SINGLE-PHASE) TESTS\n");
 	for(i=0; i<ntd; ++i){
@@ -290,6 +295,24 @@ int main(void){
 		ASSERT_TOL(helmholtz_w, T, rho, d, w, w*2e-5);
 	}
 
+#ifdef NOT_YET_FDA_APPROVED
+	fprintf(stderr,"\nIAPWS95 TABLE 8 (SATURATION) TESTS\n");
+	for(i=0; i<ntds; ++i){
+		double T = tds[i].T;
+		double p = tds[i].p * 1e6; /* Pa */
+		double rho_f = tds[i].rho_f;
+		double rho_g = tds[i].rho_g;
+		double h_f = tds[i].h_f * 1e3;
+		double h_g = tds[i].h_g * 1e3;
+		double s_f = tds[i].s_f * 1e3;
+		double s_g = tds[i].s_g * 1e3;
+		fprintf(stderr,"T = %f, p = %f, rho_f = %f, rho_g = %f\n",T,p,rho_f, rho_g);
+		double rho_f_eval, rho_g_eval, p_eval;
+
+		int res;
+		res = helmholtz_sat_t(T, &p, &rho_f, &rho_g, d);
+	}
+#endif
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.8f%%)\n",maxerr);
 	exit(0);
@@ -312,6 +335,15 @@ const TestDataIAPWS95 td[] = {
 };
 
 const unsigned ntd = sizeof(td)/sizeof(TestDataIAPWS95);
+
+const TestDataSat tds[] = {
+	/* T, p (MPa), rho_f, rho_g, h_f (kJ/kg), h_g (kJ/kg), s_f (kJ/kgK), s_g (kJ/kgK) */
+	{450, 0.932203564, 0.890341250e3, 0.481200360e1, 0.749161585e3, 0.277441078e4, 0.210865845e1, 0.660921221e1}
+	,{275, 0.698451167e-3, 0.999887406e3, 0.550664919e-2, 0.775972202e1, 0.250428995e4, 0.283094670e-1, 0.910660121e1}
+	,{625, 0.169082693e2, 0.567090385e3, 0.118290280e3, 0.168626976e4, 0.255071625e4, 0.380194683e1, 0.518506121e1}
+};
+
+const unsigned ntds = sizeof(tds)/sizeof(TestDataSat);
 
 #endif
 
