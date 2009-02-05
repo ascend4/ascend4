@@ -70,6 +70,7 @@ const HelmholtzData helmholtz_data_ammonia = {
 	, /* M */ 17.03026 /* kg/kmol */
 	, /* rho_star */225. /* kg/m³ */
 	, /* T_star */ AMMONIA_TSTAR /* K */
+	, 0.250 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_ammonia
 	, 21 /* np */
 	, (const HelmholtzPowTerm[]){

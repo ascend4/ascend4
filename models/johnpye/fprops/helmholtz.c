@@ -35,11 +35,16 @@
 #include <stdio.h>
 #endif
 
+/* macros and forward decls */
+
 #define SQ(X) ((X)*(X))
 
-/* forward decls */
-
 #include "helmholtz_impl.h"
+
+/* calculate tau and delta using a macro -- is used in most functions */
+#define DEFINE_TD \
+	double tau = data->T_star / T; \
+	double delta = rho / data->rho_star
 
 /**
 	Function to calculate pressure from Helmholtz free energy EOS, given temperature
@@ -50,9 +55,7 @@
 	@return pressure in Pa???
 */
 double helmholtz_p(double T, double rho, const HelmholtzData *data){
-	
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 #ifdef TEST
 	assert(data->rho_star!=0);
@@ -83,9 +86,7 @@ double helmholtz_p(double T, double rho, const HelmholtzData *data){
 	@return internal energy in ???
 */
 double helmholtz_u(double T, double rho, const HelmholtzData *data){
-	
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 #ifdef TEST
 	assert(data->rho_star!=0);
@@ -113,9 +114,7 @@ double helmholtz_u(double T, double rho, const HelmholtzData *data){
 	@return enthalpy in J/kg
 */
 double helmholtz_h(double T, double rho, const HelmholtzData *data){
-	
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 #ifdef TEST
 	assert(data->rho_star!=0);
@@ -137,9 +136,7 @@ double helmholtz_h(double T, double rho, const HelmholtzData *data){
 	@return entropy in J/kgK
 */
 double helmholtz_s(double T, double rho, const HelmholtzData *data){
-	
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 #ifdef ENTROPY_DEBUG
 	assert(data->rho_star!=0);
@@ -168,9 +165,7 @@ double helmholtz_s(double T, double rho, const HelmholtzData *data){
 	@return Helmholtz energy 'a', in J/kg
 */
 double helmholtz_a(double T, double rho, const HelmholtzData *data){
-
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 #ifdef TEST
 	assert(data->rho_star!=0);
@@ -197,8 +192,7 @@ double helmholtz_a(double T, double rho, const HelmholtzData *data){
 	@return Isochoric specific heat capacity in J/kg/K.
 */
 double helmholtz_cv(double T, double rho, const HelmholtzData *data){
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 	return - data->R * SQ(tau) * (helm_ideal_tautau(tau,data->ideal) + helm_resid_tautau(tau,delta,data));
 }
@@ -212,8 +206,7 @@ double helmholtz_cv(double T, double rho, const HelmholtzData *data){
 	@return Isobaric specific heat capacity in J/kg/K.
 */
 double helmholtz_cp(double T, double rho, const HelmholtzData *data){
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 	double phir_d = helm_resid_del(tau,delta,data);
 	double phir_dd = helm_resid_deldel(tau,delta,data);
@@ -222,9 +215,9 @@ double helmholtz_cp(double T, double rho, const HelmholtzData *data){
 	/* note similarities with helmholtz_w */
 	double temp1 = 1 + 2*delta*phir_d + SQ(delta)*phir_dd;
 	double temp2 = 1 + delta*phir_d - delta*tau*phir_dt;
-	double temp3 = SQ(tau)*(helm_ideal_tautau(tau,data->ideal) + helm_resid_tautau(tau,delta,data));
+	double temp3 = -SQ(tau)*(helm_ideal_tautau(tau,data->ideal) + helm_resid_tautau(tau,delta,data));
 
-	return data->R * (-temp3 + SQ(temp2)/temp1);
+	return data->R * (temp3 + SQ(temp2)/temp1);
 }
 
 
@@ -237,9 +230,7 @@ double helmholtz_cp(double T, double rho, const HelmholtzData *data){
 	@return Speed of sound in m/s.
 */
 double helmholtz_w(double T, double rho, const HelmholtzData *data){
-
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 	double phir_d = helm_resid_del(tau,delta,data);
 	double phir_dd = helm_resid_deldel(tau,delta,data);
@@ -248,9 +239,9 @@ double helmholtz_w(double T, double rho, const HelmholtzData *data){
 	/* note similarities with helmholtz_cp */
 	double temp1 = 1. + 2.*delta*phir_d + SQ(delta)*phir_dd;
 	double temp2 = 1. + delta*phir_d - delta*tau*phir_dt;
-	double temp3 = SQ(tau)*(helm_ideal_tautau(tau,data->ideal) + helm_resid_tautau(tau,delta,data));
+	double temp3 = -SQ(tau)*(helm_ideal_tautau(tau,data->ideal) + helm_resid_tautau(tau,delta,data));
 
-	return sqrt(data->R * T * (temp1 - SQ(temp2)/temp3));
+	return sqrt(data->R * T * (temp1 + SQ(temp2)/temp3));
 
 }
 
@@ -266,11 +257,148 @@ double helmholtz_cp0(double T, const HelmholtzData *data){
 }
 
 /**
+	Solve density given temperature and pressure and bounds for density,
+	used in solving the saturation curve. We use a single-variable Newton
+	method to solve for the desired pressure by iteratively adjusting density.
+
+	@param rho_l lower bound on density
+	@param rho_u upper bound on density
+	@param rho (returned) solved value of density
+	@return 0 on success (1 = didn't converge within permitted iterations)
+*/
+static int helm_find_rho_tp(double T, double p, double *rho
+		, const double rho_l, const double rho_u, const HelmholtzData *data
+){
+	double rho_1 = 0.5 *(rho_l + rho_u);
+	double p_1, dpdrho;
+	double niter = 0, maxiter = 100;
+	int res = 1; /* 1 = exceeded iterations, 0 = converged */
+
+	fprintf(stderr,"\nHELM_FIND_RHO_TP: rho_l = %f, rho_u = %f (v_u = %f, v_l = %f)\n", rho_l, rho_u, 1./rho_l, 1./rho_u);
+
+#if 0 
+	double r;
+	for(r = rho_l; r <= rho_u; r += (rho_u-rho_l)/20.){
+		p_1 = helmholtz_p(T, r, data);
+		fprintf(stderr,"T = %f, rho = %f --> p = %f MPa\n",T, r, p_1/1e6);
+	}
+#endif
+
+	while(res){
+		if(++niter>maxiter)break;
+		p_1 = helmholtz_p(T, rho_1, data);
+		if(p_1 < p){
+			p_1 = 0.5*(p_1 + p);
+		}
+		//fprintf(stderr,"T = %f, rho = %f --> p = %f MPa, err = %f %%\n",T, rho_1, p_1/1e6, (p - p_1)/p *100);
+		dpdrho = helmholtz_dpdrho_T(T, rho_1, data);
+		if(dpdrho < 0){
+			if(rho_l < data->rho_star){
+				/* looking for gas solution */
+				rho_1 = 0.5*(*rho + rho_l);
+			}
+		}
+		rho_1 += (p - p_1)/dpdrho;
+		if(rho_1 > rho_u){
+			rho_1 = 0.5*(*rho + rho_u);
+			//fprintf(stderr,"UPPERBOUND ");
+		}
+		if(rho_1 < rho_l){
+			rho_1 = 0.5*(*rho + rho_l);
+			//fprintf(stderr,"LOWERBOUND ");
+		}
+		*rho = rho_1;
+
+		if(fabs((p - p_1)/p) < 1e-7){
+			fprintf(stderr,"Converged to p = %f MPa with rho = %f\n", p/1e6, rho_1);
+			res = 0;
+		}
+	}
+
+	return res;
+}
+
+/**
+	Calculation of saturation conditions given temperature
+
+	@param T temperature [K]
+	@param rho_f (returned) saturated liquid density [kg/m³]
+	@param rho_g (returned) saturated gas density [kg/m³]
+	@param p pressure p_sat(T) [Pa]
+	@return 0 on success
+*/
+int helmholtz_sat_t(double T, double *p, double *rho_f, double *rho_g, const HelmholtzData *data){
+	double tau = data->T_star / T;
+
+	if(T >= data->T_star){
+		fprintf(stderr,"ERROR: temperature exceeds critical temperature in helmholtz_sat_t.\n");
+		/* return some reasonable values */
+		*rho_f = data->rho_star;
+		*rho_g = data->rho_star;
+		*p = helmholtz_p(data->T_star, data->rho_star, data);
+		return 1; /* error status */
+	}
+
+	/* get a first estimate of saturation pressure using acentric factor */
+
+	/* critical pressure */
+	fprintf(stderr,"T_c = %f, rho_c = %f\n",data->T_star, data->rho_star);
+	double p_c = helmholtz_p(data->T_star, data->rho_star, data);
+
+	fprintf(stderr,"Critical pressure = %f MPa\n",p_c/1.e6);
+
+	fprintf(stderr,"Acentric factor = %f\n",data->omega);	
+
+	/* FIXME need to cite this formula */
+	*p = p_c * pow(10.,(data->omega + 1.)*-7./3.*(tau - 1.));
+
+	fprintf(stderr,"Estimated p_sat(T=%f) = %f MPa\n",T,(*p)/1e6);
+
+	if(tau < 1.01){
+		/* close to critical point: need a different approach */
+		fprintf(stderr,"ERROR: not implemented\n");
+		return 1;
+	}else{
+		double niter = 0;
+		int res = helm_find_rho_tp(T, *p, rho_f, data->rho_star,data->rho_star*10, data);
+		if(res){
+			fprintf(stderr,"ERROR: failed to solve rho_f\n");
+		}
+
+		res = helm_find_rho_tp(T, *p, rho_g, 0.001*data->rho_star, data->rho_star, data);
+		if(res){
+			fprintf(stderr,"ERROR: failed to solve rho_g\n");
+		}
+
+		fprintf(stderr,"p = %f MPa: rho_f = %f, rho_g = %f\n", *p, *rho_f, *rho_g);
+
+		double LHS = *p/data->R/T*(1./(*rho_g) - 1./(*rho_f)) - log((*rho_f)/(*rho_g));
+		double delta_f = (*rho_f) / data->rho_star;
+		double delta_g = (*rho_g) / data->rho_star;
+		double RHS = helm_resid(delta_f,tau,data) - helm_resid(delta_g,tau,data);
+		
+		double err = LHS - RHS;
+
+		fprintf(stderr,"LHS = %f, RHS = %f, err = %f\n",LHS, RHS, err);
+
+		/* away from critical point... */
+		*rho_f = data->rho_star;
+		*rho_g = data->rho_star;
+		fprintf(stderr,"ERROR: not implemented\n");
+		exit(1);
+		return 1;
+	}
+}
+
+/*----------------------------------------------------------------------------
+  PARTIAL DERIVATIVES
+*/
+
+/**
 	Calculate partial derivative of p with respect to T, with rho constant
 */
 double helmholtz_dpdT_rho(double T, double rho, const HelmholtzData *data){
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 	double phir_del = helm_resid_del(tau,delta,data);
 	double phir_deltau = helm_resid_deltau(tau,delta,data);
@@ -297,8 +425,7 @@ double helmholtz_dpdT_rho(double T, double rho, const HelmholtzData *data){
 	Calculate partial derivative of p with respect to rho, with T constant
 */
 double helmholtz_dpdrho_T(double T, double rho, const HelmholtzData *data){
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 	double phir_del = helm_resid_del(tau,delta,data);
 	double phir_deldel = helm_resid_deldel(tau,delta,data);
@@ -313,8 +440,7 @@ double helmholtz_dpdrho_T(double T, double rho, const HelmholtzData *data){
 	Calculate partial derivative of h with respect to T, with rho constant
 */
 double helmholtz_dhdT_rho(double T, double rho, const HelmholtzData *data){
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 	double phir_del = helm_resid_del(tau,delta,data);
 	double phir_deltau = helm_resid_deltau(tau,delta,data);
@@ -331,8 +457,7 @@ double helmholtz_dhdT_rho(double T, double rho, const HelmholtzData *data){
 	Calculate partial derivative of h with respect to rho, with T constant
 */
 double helmholtz_dhdrho_T(double T, double rho, const HelmholtzData *data){
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 	double phir_del = helm_resid_del(tau,delta,data);
 	double phir_deltau = helm_resid_deltau(tau,delta,data);
@@ -346,8 +471,7 @@ double helmholtz_dhdrho_T(double T, double rho, const HelmholtzData *data){
 	Calculate partial derivative of u with respect to T, with rho constant
 */
 double helmholtz_dudT_rho(double T, double rho, const HelmholtzData *data){
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 	double phir_tautau = helm_resid_tautau(tau,delta,data);
 	double phi0_tautau = helm_ideal_tautau(tau,data->ideal);
@@ -359,8 +483,7 @@ double helmholtz_dudT_rho(double T, double rho, const HelmholtzData *data){
 	Calculate partial derivative of u with respect to rho, with T constant
 */
 double helmholtz_dudrho_T(double T, double rho, const HelmholtzData *data){
-	double tau = data->T_star / T;
-	double delta = rho / data->rho_star;
+	DEFINE_TD;
 
 	double phir_deltau = helm_resid_deltau(tau,delta,data);
 	
@@ -421,7 +544,7 @@ static double ipow(double x, int n){
 		double dpsidtau = -2. * ct->D * t1 * psi
 
 #define DEFINE_DDELBDDELTA \
-		double dDELbddelta = ct->b * pow(DELTA,ct->b - 1.) * dDELddelta
+		double dDELbddelta = (DELTA==0?0:ct->b * pow(DELTA,ct->b - 1.) * dDELddelta)
 
 /**
 	Residual part of helmholtz function.
@@ -586,11 +709,27 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		DEFINE_DDELDDELTA;
 		DEFINE_DDELBDDELTA;
 
+#if 0
+		if(fabs(dpsiddelta) ==0)fprintf(stderr,"WARNING: dpsiddelta == 0\n");
+		if(fabs(dpsiddelta) ==0)fprintf(stderr,"WARNING: dpsiddelta == 0\n");
+		fprintf(stderr,"psi = %f\n",psi);
+		fprintf(stderr,"DELTA = %f\n",DELTA);
+
+		fprintf(stderr,"dDELddelta = %f\n",dDELddelta);
+		fprintf(stderr,"ct->b - 1. = %f\n",ct->b - 1.);
+		fprintf(stderr,"pow(DELTA,ct->b - 1.) = %f\n",pow(DELTA,ct->b - 1.));
+		assert(!isnan(pow(DELTA,ct->b - 1.)));
+		assert(!isnan(dDELddelta));
+		assert(!isnan(dDELbddelta));
+//double dDELbddelta = ct->b * pow(DELTA,ct->b - 1.) * dDELddelta
+		fprintf(stderr,"sum = %f\n",sum);
+		if(isnan(sum))fprintf(stderr,"ERROR: sum isnan with i=%d at %d\n",i,__LINE__);
+#endif
 		sum = ct->n * (pow(DELTA, ct->b) * (psi + delta * dpsiddelta) + dDELbddelta * delta * psi);
 		res += sum;
+
 		++ct;
 	}
-
 
 	return res;
 }

@@ -59,6 +59,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 	, /* M */ NITROGEN_M /* kg/kmol */
 	, /* rho_star */ 11.1839 * NITROGEN_M /* kmol/m3 * kg/kmol = kg/m³ (= rho_c for this model) */
 	, /* T_star */ NITROGEN_TSTAR /* K (= T_c for this model) */
+	, 0.039 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_nitrogen
 	, 32 /* np */
 	, (const HelmholtzPowTerm[]){
