@@ -274,7 +274,9 @@ static int helm_find_rho_tp(double T, double p, double *rho
 	double niter = 0, maxiter = 100;
 	int res = 1; /* 1 = exceeded iterations, 0 = converged */
 
+#ifdef TEST
 	fprintf(stderr,"\nHELM_FIND_RHO_TP: rho_l = %f, rho_u = %f (v_u = %f, v_l = %f)\n", rho_l, rho_u, 1./rho_l, 1./rho_u);
+#endif
 
 #if 0 
 	double r;
@@ -310,7 +312,9 @@ static int helm_find_rho_tp(double T, double p, double *rho
 		*rho = rho_1;
 
 		if(fabs((p - p_1)/p) < 1e-7){
+#ifdef TEST
 			fprintf(stderr,"Converged to p = %f MPa with rho = %f\n", p/1e6, rho_1);
+#endif
 			res = 0;
 		}
 	}
@@ -331,7 +335,9 @@ int helmholtz_sat_t(double T, double *p, double *rho_f, double *rho_g, const Hel
 	double tau = data->T_star / T;
 
 	if(T >= data->T_star){
+#ifdef TEST
 		fprintf(stderr,"ERROR: temperature exceeds critical temperature in helmholtz_sat_t.\n");
+#endif
 		/* return some reasonable values */
 		*rho_f = data->rho_star;
 		*rho_g = data->rho_star;
@@ -342,35 +348,50 @@ int helmholtz_sat_t(double T, double *p, double *rho_f, double *rho_g, const Hel
 	/* get a first estimate of saturation pressure using acentric factor */
 
 	/* critical pressure */
+#ifdef TEST
 	fprintf(stderr,"T_c = %f, rho_c = %f\n",data->T_star, data->rho_star);
+#endif
 	double p_c = helmholtz_p(data->T_star, data->rho_star, data);
 
+#ifdef TEST
 	fprintf(stderr,"Critical pressure = %f MPa\n",p_c/1.e6);
-
 	fprintf(stderr,"Acentric factor = %f\n",data->omega);	
+#endif
 
 	/* FIXME need to cite this formula */
 	*p = p_c * pow(10.,(data->omega + 1.)*-7./3.*(tau - 1.));
 
+#ifdef TEST
 	fprintf(stderr,"Estimated p_sat(T=%f) = %f MPa\n",T,(*p)/1e6);
+#endif
 
 	if(tau < 1.01){
 		/* close to critical point: need a different approach */
+#ifdef TEST
 		fprintf(stderr,"ERROR: not implemented\n");
+#endif
 		return 1;
 	}else{
 		double niter = 0;
+		(void)niter;
+
 		int res = helm_find_rho_tp(T, *p, rho_f, data->rho_star,data->rho_star*10, data);
 		if(res){
+#ifdef TEST
 			fprintf(stderr,"ERROR: failed to solve rho_f\n");
+#endif
 		}
 
 		res = helm_find_rho_tp(T, *p, rho_g, 0.001*data->rho_star, data->rho_star, data);
 		if(res){
+#ifdef TEST
 			fprintf(stderr,"ERROR: failed to solve rho_g\n");
+#endif
 		}
 
+#ifdef TEST
 		fprintf(stderr,"p = %f MPa: rho_f = %f, rho_g = %f\n", *p, *rho_f, *rho_g);
+#endif
 
 		double LHS = *p/data->R/T*(1./(*rho_g) - 1./(*rho_f)) - log((*rho_f)/(*rho_g));
 		double delta_f = (*rho_f) / data->rho_star;
@@ -378,14 +399,18 @@ int helmholtz_sat_t(double T, double *p, double *rho_f, double *rho_g, const Hel
 		double RHS = helm_resid(delta_f,tau,data) - helm_resid(delta_g,tau,data);
 		
 		double err = LHS - RHS;
+		(void)err;
 
+#ifdef TEST
 		fprintf(stderr,"LHS = %f, RHS = %f, err = %f\n",LHS, RHS, err);
-
+#endif
 		/* away from critical point... */
 		*rho_f = data->rho_star;
 		*rho_g = data->rho_star;
+#ifdef TEST
 		fprintf(stderr,"ERROR: not implemented\n");
 		exit(1);
+#endif
 		return 1;
 	}
 }
