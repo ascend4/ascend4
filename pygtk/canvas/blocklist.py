@@ -136,9 +136,9 @@ from blockitem import *
 from contextmenutool import *
 from connectortool import *
 from blockcanvas import *
-from panzoom import ZoomTool
+#from panzoom import ZoomTool
 #from panzoom import PanTool
-from gaphas.tool import PanTool
+from gaphas.tool import PanTool, ZoomTool
 from blockinstance import *
 
 def BlockToolChain():
@@ -209,7 +209,9 @@ class app(gtk.Window):
 		paned = gtk.HPaned()
 		
 		# the 'view' widget implemented by Gaphas
-		self.view = GtkView()
+		import gaphas.view
+		gaphas.view.DEBUG_DRAW_BOUNDING_BOX = True
+		self.view = GtkView()	
 		self.view.tool =  BlockToolChain()
 
 		# table containing scrollbars and main canvas 
