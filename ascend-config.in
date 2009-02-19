@@ -34,6 +34,10 @@ if platform.system()=="Windows":
 	ASCDATA,t = _winreg.QueryValueEx(y,"INSTALL_ASCDATA")
 	MODELS,t = _winreg.QueryValueEx(y,"INSTALL_MODELS")
 
+	#assume that these won't change too much on Windows...
+	EXTLIB_SUFFIX = "_ascend.dll"
+	EXTLIB_PREFIX = ""
+
 	_winreg.CloseKey(y)
 	_winreg.CloseKey(x)
 	
@@ -59,6 +63,8 @@ else:
 	INCLUDE="@INSTALL_INCLUDE@"
 	ASCDATA="@INSTALL_ASCDATA@"
 	MODELS="@INSTALL_MODELS@"
+	EXTLIB_SUFFIX="@EXTLIB_SUFFIX@"
+	EXTLIB_PREFIX="@EXTLIB_PREFIX@"
 
 usage = "usage: %prog [--help,...]"
 # the rest of this script is about returning those values in the standard way
@@ -68,6 +74,8 @@ parser.add_option("--libs", action="store_true", dest="libs", help="show linker 
 parser.add_option("--cppflags", action="store_true", dest="cppflags", help="show C pre-processor flags (for ASCEND header files)")
 parser.add_option("--data", action="store_true", dest="data", help="show location of ASCEND data files")
 parser.add_option("--models", action="store_true", dest="models", help="show location of ASCEND model library")
+parser.add_option("--extlib-suffix", action="store_true", dest="extlibsuff", help="show suffix to be used with external libraries")
+parser.add_option("--extlib-prefix", action="store_true", dest="extlibpref", help="show prefix to be used with external libraries")
 
 (options, args) = parser.parse_args()
 
@@ -102,6 +110,14 @@ if options.data:
 
 if options.models:
 	print MODELS
+	ok = True
+
+if options.extlibsuff:
+	print EXTLIB_SUFFIX
+	ok = True
+
+if options.extlibpref:
+	print EXTLIB_PREFIX
 	ok = True
 
 if not ok:
