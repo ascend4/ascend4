@@ -49,6 +49,7 @@ if platform.system()=="Windows":
 			try:
 				# we can only munge the path if it actually exists
 				s1 = win32api.GetShortPathName(s)
+				s1 = s1.replace("\\","\\\\")
 			except:
 				# if it doesn't exist, we just return the un-munged path
 				pass
