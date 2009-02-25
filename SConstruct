@@ -2019,6 +2019,8 @@ def sconsversioncheck():
 	import SCons
 	v = SCons.__version__.split(".")
 	if v[0] != '0':
+		if v[0] == '1':
+			return 1;
 		return 0
 	if int(v[1]) >= 97:
 		return 1
@@ -2267,7 +2269,9 @@ else:
 # FORTRAN
 
 if need_fortran:
-	conf.env.Tool('fortran')
+	print "NEED FORTRAN"
+	conf.env.Tool('g77')
+	conf.env.Tool('gfortran')
 	detect_fortran = conf.env.Detect(['gfortran','g77'])
 	if detect_fortran:
 		# For some reason, g77 doesn't get detected properly on MinGW
