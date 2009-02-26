@@ -168,7 +168,7 @@ if debianname != head:
 
 # check for build-time dependencies
 
-dependencies = ['build-essential']
+dependencies = ['build-essential','fakeroot']
 
 if 'Build-Depends' in control:
 	#print "Build-Depends:",control['Build-Depends']

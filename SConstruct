@@ -1955,7 +1955,14 @@ def CheckLModern(context):
 	if not b:
 		context.Result(False)
 		return False
-	is_ok = context.TryBuild(builder=b,text=lmodern_test_text,extension=".tex")
+	ff = context.env.get('LATEXFLAGS')
+	context.env.Append(LATEXFLAGS=['-interaction=nonstopmode','-halt-on-error'])
+	is_ok = context.TryBuild(builder=b,text=lmodern_test_text,extension=".latex")
+	print "is_ok=",is_ok
+	if ff is not None:
+		context.env['LATEXFLAGS'] = ff
+	else:
+		del context.env['LATEXFLAGS']
 	context.Result(is_ok)
 	return is_ok
 
@@ -2254,6 +2261,9 @@ if with_lsode:
 	need_fortran_reasons.append("LSODE")
 	need_blas=True
 
+if with_ipopt:
+	need_blas=True
+
 if need_blas:
 	if conf.CheckLib('blas'):
 		with_local_blas = False
@@ -2270,8 +2280,14 @@ else:
 
 if need_fortran:
 	print "NEED FORTRAN"
-	conf.env.Tool('g77')
-	conf.env.Tool('gfortran')
+	import SCons
+	if SCons.__version__[0:4]=="0.97":
+		# Older SCons verions 0.97 (eg Ubuntu 8.04) doesn't have the 'gfortran' tool'.
+		# On this system, the 'fortran' tool seems to detect gfortran OK.
+		conf.env.Tool('fortran')
+	else:
+		conf.env.Tool('g77')
+		conf.env.Tool('gfortran')
 	detect_fortran = conf.env.Detect(['gfortran','g77'])
 	if detect_fortran:
 		# For some reason, g77 doesn't get detected properly on MinGW
@@ -2290,10 +2306,14 @@ if need_fortran:
 			)
 			conf.env.Append(BUILDERS={'Fortran':fortran_builder})
 		if platform.system()=="Linux":
+			print "APPARENTLY FORTRAN WAS DETECTED"
 			conf.env.Append(SHFORTRANFLAGS=['-fPIC'])
 	else:
+		print "FAILED FORTRAN DETECTION"
 		with_lsode=False;
 		without_lsode_reason="FORTRAN-77 required but not found"
+else:
+	print "FORTRAN WAS NOT FOUND TO BE REQUIRED"
 
 if need_fortran and conf.CheckF77() is False:
 	print "Failed to build simple test file with your Fortran compiler."
