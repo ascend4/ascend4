@@ -2663,7 +2663,7 @@ if with_installer:
 		,'PYVERSION':pyversion
 	})
 	installer = env.Installer('nsis/installer.nsi')
-	Depends(installer,["pygtk","tcltk","ascend.dll","models","ascend-config"])
+	Depends(installer,["pygtk","tcltk","ascend.dll","models","solvers","ascend-config"])
 	env.Alias('installer',installer)
 else:
 	print "Skipping... Windows installer isn't being built:",without_installer_reason
