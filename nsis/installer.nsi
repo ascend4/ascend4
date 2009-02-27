@@ -86,42 +86,7 @@ Var /GLOBAL TCLDOWNLOAD
 
 Var /GLOBAL ASCENDINIFOUND
 
-Function .onInit
-	StrCpy $PYINSTALLED ""
-	StrCpy $TCLINSTALLED ""
-	StrCpy $ASCENDINIFOUND ""
-	StrCpy $PDFINSTALLED ""
-	
-	ExpandEnvStrings $DEFAULTPATH "%WINDIR%;%WINDIR%\system32"
-
-	Call DetectPython
-	Pop $PYOK
-	Pop $PYPATH
-	
-	Call DetectGTK
-	Pop $GTKOK
-	Pop $GTKPATH
-
-	Call DetectGlade
-	Pop $GLADEOK
-	Pop $GLADEPATH	
-	
-	Call DetectTcl
-	Pop $TCLOK
-	Pop $TCLPATH
-	
-	Call DetectPyGTK
-	Pop $PYGTKOK
-
-	Call DetectPyGObject
-	Pop $PYGOBJECTOK
-
-	Call DetectPyCairo
-	Pop $PYCAIROOK
-	
-	StrCpy $PATH "$DEFAULTPATH;$PYPATH;$GTKPATH"
-
-FunctionEnd
+; .onInit has been moved to after section decls so that they can be references
 
 ;------------------------------------------------------------
 ; DOWNLOAD AND INSTALL DEPENDENCIES FIRST
@@ -341,7 +306,7 @@ SectionEnd
 
 ;--------------------------------
 
-Section "PyGTK GUI"
+Section "PyGTK GUI" sect_pygtk
 	; Check the dependencies of the PyGTK GUI before proceding...
 	${If} $PYOK == 'NOK'
 		MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(PYPATH=$PYPATH)"
@@ -422,7 +387,7 @@ SectionEnd
 
 ;---------------------------------
 
-Section "Tcl/Tk GUI"
+Section "Tcl/Tk GUI" sect_tcltk
 
 	${If} $TCLOK != 'OK'
 		MessageBox MB_OK "Tck/Tk GUI can not be installed, because ActiveTcl was not found on this system. If do you want to use the Tcl/Tk GUI, please check the installation instructions ($TCLPATH)"
@@ -443,7 +408,7 @@ SectionEnd
 
 ;---------------------------------
 
-Section "Documentation"
+Section "Documentation" sect_doc
 	SetOutPath $INSTDIR
 	File "..\doc\book.pdf"
 	StrCpy $PDFINSTALLED "1"
@@ -451,7 +416,7 @@ Section "Documentation"
 SectionEnd
 
 ; Optional section (can be disabled by the user)
-Section "Start Menu Shortcuts"
+Section "Start Menu Shortcuts" sect_menu
   
 	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "StartMenu" 1
 
@@ -487,7 +452,7 @@ SectionEnd
 ;------------------------------------------------------------------
 ; HEADER FILES for DEVELOPERS
 
-Section /o "Header files (for developers)"
+Section /o "Header files (for developers)" sect_devel
 	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "HeaderFiles" 1
 
 	SetOutPath $INSTDIR\include
@@ -504,59 +469,58 @@ Section "Uninstall"
 ;--- python components ---
 
 	ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "Python"
-	IntCmp $0 0 unnopython unpython
+	${If} $0 <> 0
   
-unpython:
-	DetailPrint "--- REMOVING PYTHON COMPONENTS ---"
-	Delete $INSTDIR\_ascpy.pyd
-	Delete $INSTDIR\ascend
-	Delete $INSTDIR\*.py
-	Delete $INSTDIR\*.pyc
-	Delete $INSTDIR\glade\*.glade
-	Delete $INSTDIR\glade\*.png
-	Delete $INSTDIR\glade\*.svg
-	RmDir $INSTDIR\glade
-	Delete $INSTDIR\ascend-doc.ico
+		DetailPrint "--- REMOVING PYTHON COMPONENTS ---"
+		Delete $INSTDIR\_ascpy.pyd
+		Delete $INSTDIR\ascend
+		Delete $INSTDIR\*.py
+		Delete $INSTDIR\*.pyc
+		Delete $INSTDIR\glade\*.glade
+		Delete $INSTDIR\glade\*.png
+		Delete $INSTDIR\glade\*.svg
+		RmDir $INSTDIR\glade
+		Delete $INSTDIR\ascend-doc.ico
 
 ;--- file association (for Python GUI) ---
   
-	DetailPrint "--- REMOVING FILE ASSOCIATION ---"
-	;start of restore script
-	ReadRegStr $1 HKCR ".a4c" ""
-	${If} $1 == "ASCEND.model"
-		ReadRegStr $1 HKLM "SOFTWARE\ASCEND" "BackupAssocA4C"
-		${If} $1 == ""
-			; nothing to restore: delete it
-			DeleteRegKey HKCR ".a4c"
-		${Else}
-			WriteRegStr HKCR ".a4c" "" $1
+		DetailPrint "--- REMOVING FILE ASSOCIATION ---"
+		;start of restore script
+		ReadRegStr $1 HKCR ".a4c" ""
+		${If} $1 == "ASCEND.model"
+			ReadRegStr $1 HKLM "SOFTWARE\ASCEND" "BackupAssocA4C"
+			${If} $1 == ""
+				; nothing to restore: delete it
+				DeleteRegKey HKCR ".a4c"
+			${Else}
+				WriteRegStr HKCR ".a4c" "" $1
+			${EndIf}
+			DeleteRegValue HKLM "SOFTWARE\ASCEND" "BackupAssocA4C"
 		${EndIf}
-		DeleteRegValue HKLM "SOFTWARE\ASCEND" "BackupAssocA4C"
-	${EndIf}
 
-	ReadRegStr $1 HKCR ".a4l" ""	
-	${If} $1 == "ASCEND.model"
-		ReadRegStr $1 HKLM "SOFTWARE\ASCEND" "BackupAssocA4L"
-		${If} $1 == ""
-			; nothing to restore: delete it
-			DeleteRegKey HKCR ".a4l"
-		${Else}
-			WriteRegStr HKCR ".a4l" "" $1
+		ReadRegStr $1 HKCR ".a4l" ""	
+		${If} $1 == "ASCEND.model"
+			ReadRegStr $1 HKLM "SOFTWARE\ASCEND" "BackupAssocA4L"
+			${If} $1 == ""
+				; nothing to restore: delete it
+				DeleteRegKey HKCR ".a4l"
+			${Else}
+				WriteRegStr HKCR ".a4l" "" $1
+			${EndIf}
+			DeleteRegValue HKLM "SOFTWARE\ASCEND" "BackupAssocA4L"
 		${EndIf}
-		DeleteRegValue HKLM "SOFTWARE\ASCEND" "BackupAssocA4L"
+
+		DeleteRegKey HKCR "ASCEND.model" ;Delete key with association settings
+
+		System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
+		;rest of script
+
 	${EndIf}
-
-	DeleteRegKey HKCR "ASCEND.model" ;Delete key with association settings
-
-	System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
-	;rest of script
-
-unnopython:
 
 ;--- tcl/tk components ---
 
 	ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "TclTk"
-	${If} $0 != 0
+	${If} $0 <> 0
 		DetailPrint "--- REMOVING TCL/TK COMPONENTS ---"
 		Delete $INSTDIR\ascendtcl.dll
 		Delete $INSTDIR\ascend4.exe
@@ -566,7 +530,7 @@ unnopython:
 ;--- documentation ---
 
 	ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "PDF"
-	${If} $0 != 0
+	${If} $0 <> 0
 		DetailPrint "--- REMOVING DOCUMENTATION ---"
 		Delete $INSTDIR\book.pdf
 	${EndIf}
@@ -574,7 +538,7 @@ unnopython:
 ;--- header files ---
 
 	ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "HeaderFiles"
-	${If} $0 != 0
+	${If} $0 <> 0
 		DetailPrint "--- REMOVING HEADER FILES ---"
 		RMDir /r $INSTDIR\include
 	${EndIf}
@@ -582,7 +546,7 @@ unnopython:
 ;--- start menu ---
 
 	ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "StartMenu"
-	${If} $0 != 0
+	${If} $0 <> 0
 		; Remove shortcuts, if any
 		DetailPrint "--- REMOVING START MENU SHORTCUTS ---"
 		RmDir /r "$SMPROGRAMS\ASCEND"
@@ -630,3 +594,106 @@ SectionEnd
 !include "detect.nsi"
 
 !include "ascendini.nsi"
+
+Function .onInit
+	StrCpy $PYINSTALLED ""
+	StrCpy $TCLINSTALLED ""
+	StrCpy $ASCENDINIFOUND ""
+	StrCpy $PDFINSTALLED ""
+	
+	ExpandEnvStrings $DEFAULTPATH "%WINDIR%;%WINDIR%\system32"
+
+	Call DetectPython
+	Pop $PYOK
+	Pop $PYPATH
+	
+	Call DetectGTK
+	Pop $GTKOK
+	Pop $GTKPATH
+
+	Call DetectGlade
+	Pop $GLADEOK
+	Pop $GLADEPATH	
+	
+	Call DetectTcl
+	Pop $TCLOK
+	Pop $TCLPATH
+	
+	Call DetectPyGTK
+	Pop $PYGTKOK
+
+	Call DetectPyGObject
+	Pop $PYGOBJECTOK
+
+	Call DetectPyCairo
+	Pop $PYCAIROOK
+	
+	StrCpy $PATH "$DEFAULTPATH;$PYPATH;$GTKPATH"
+
+	ReadRegStr $0 HKLM "SOFTWARE\ASCEND" "Install_Dir"
+	${If} $0 != ""	
+		;MessageBox MB_OK "Previous installation detected..."
+		; If user previous deselected Tcl/Tk, then deselect it by
+		; default now, i.e don't force the user to install it.
+		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "TclTk"
+		${If} $0 = 0
+			;MessageBox MB_OK "Tcl/Tk was previously deselected"
+			SectionGetFlags "${sect_tcltk}" $1
+			IntOp $1 $1 ^ ${SF_SELECTED}
+			SectionSetFlags "${sect_tcltk}" $1
+		${Else}
+			; If previously installed, force it to stay installed;
+			; the only way to uninstall a component is via complete
+			; uninstall.
+			SectionGetFlags "${sect_tcltk}" $1
+			IntOp $1 $1 ^ ${SF_RO}
+			SectionSetFlags "${sect_tcltk}" $1
+		${EndIf}
+
+		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "Python"
+		${If} $0 = 0
+			;MessageBox MB_OK "Python was previously deselected"
+			SectionGetFlags "${sect_pygtk}" $1
+			IntOp $1 $1 ^ ${SF_SELECTED}
+			SectionSetFlags "${sect_pygtk}" $1
+		${Else}
+			SectionGetFlags "${sect_pygtk}" $1
+			IntOp $1 $1 ^ ${SF_RO}
+			SectionSetFlags "${sect_pygtk}" $1		
+		${EndIf}
+
+		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "PDF"
+		${If} $0 = 0
+			;MessageBox MB_OK "Documentation was previously deselected"
+			SectionGetFlags "${sect_doc}" $1
+			IntOp $1 $1 ^ ${SF_SELECTED}
+			SectionSetFlags "${sect_doc}" $1
+		${Else}
+			SectionGetFlags "${sect_doc}" $1
+			IntOp $1 $1 ^ ${SF_RO}
+			SectionSetFlags "${sect_doc}" $1
+		${EndIf}
+
+		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "StartMenu"
+		${If} $0 = 0
+			;MessageBox MB_OK "Start Menu was previously deselected"
+			SectionGetFlags "${sect_menu}" $1
+			IntOp $1 $1 ^ ${SF_SELECTED}
+			SectionSetFlags "${sect_menu}" $1
+		${Else}
+			SectionGetFlags "${sect_menu}" $1
+			IntOp $1 $1 ^ ${SF_RO}
+			SectionSetFlags "${sect_menu}" $1
+		${EndIf}
+		
+		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "HeaderFiles"
+		${If} $0 <> 0
+			;MessageBox MB_OK "Header files were previously selected"
+			SectionGetFlags "${sect_devel}" $1
+			IntOp $1 $1 | ${SF_SELECTED}
+			IntOp $1 $1 | ${SF_RO}
+			SectionSetFlags "${sect_devel}" $1
+		${EndIf}
+	${EndIf}	
+
+FunctionEnd
