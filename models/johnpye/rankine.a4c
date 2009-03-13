@@ -15,24 +15,25 @@ IMPORT "freesteam";
 MODEL steam_state;
 	p IS_A pressure;
 	h IS_A specific_enthalpy;
-	u IS_A specific_energy;
-	v IS_A specific_volume;
-	T IS_A temperature;
-	x IS_A fraction;
-	s IS_A specific_entropy;
-	mu IS_A viscosity;
 
-	props: iapws97_uvTxsmu_ph(
+	T IS_A temperature;
+	v IS_A specific_volume;
+	s IS_A specific_entropy;
+	x IS_A fraction;
+
+	props: freesteam_Tvsx_ph(
 		p,h : INPUT;
-		u,v,T,x,s,mu : OUTPUT
+		T,v,s,x : OUTPUT
 	);
 METHODS
 	METHOD default;
 		p := 10{bar};
 		p.nominal := 42 {bar};
-		v.nominal := 10 {L/kg};
-		u := 2000 {kJ/kg};
+		h := 2000 {kJ/kg};
+
 		T := 400 {K};
+		v.nominal := 10 {L/kg};
+		s := 4 {kJ/kg/K};
 		x := 0.8;
 	END default;
 	METHOD solve;
@@ -49,12 +50,10 @@ MODEL steam_node;
 	state IS_A steam_state;
 	p ALIASES state.p;
 	h ALIASES state.h;
-	u ALIASES state.u;
 	v ALIASES state.v;
 	T ALIASES state.T;
-	x ALIASES state.x;
 	s ALIASES state.s;
-	mu ALIASES state.mu;
+	x ALIASES state.x;
 	mdot IS_A mass_rate;
 METHODS
 	METHOD default;

@@ -178,8 +178,7 @@ if 'Build-Depends' in control:
 print "Checking build dependencies..."
 depsmissing = []
 for d in dependencies:
-	p = c[d]
-	if not p.isInstalled:
+	if d not in c or not c[d].isInstalled:
 		depsmissing.append(d)
 
 if depsmissing:
