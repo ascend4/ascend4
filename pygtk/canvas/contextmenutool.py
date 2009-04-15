@@ -43,6 +43,13 @@ class ContextMenuTool(Tool):
 			dia.set_default_response(gtk.RESPONSE_OK)
 			ent = gtk.Entry()
 			ent.set_text(bi.name)
+			def key_press(ent,event):
+				key = gtk.gdk.keyval_name(event.keyval)
+				if key == 'Return':
+					dia.response(gtk.RESPONSE_OK)
+					return True
+				return False
+			ent.connect("key-press-event",key_press)
 			dia.vbox.add(ent)
 			dia.show_all()
 			res = dia.run()

@@ -496,7 +496,14 @@ END rankine_reheat;
   REGENERATIVE RANKINE CYCLE
 *)
 (*
-	Add a boiler feedwater heater and two-stage turbine
+	Add a boiler feedwater heater and two-stage turbine.
+
+	This model is hard to solve! One solution seems to be to 
+	1. load it, run on_load.
+	2. attempt to solve
+	3. disable equation HE.cons_en
+	4. free HE.outlet.x
+	5. solve again.
 *)
 MODEL rankine_regen;
 
@@ -559,7 +566,32 @@ MODEL rankine_regen;
 	cons_en: HE.inlet.mdot * HE.inlet.h + HE.inlet_heat.mdot * HE.inlet_heat.h = HE.outlet.mdot * HE.outlet.h;
 
 METHODS
+METHOD default_self;
+	BO.outlet.h := 4000 {kJ/kg};
+	p_bleed := 37 {bar};
+	TU1.outlet.h := 2300 {kJ/kg};
+	HE.cons_en.includes := FALSE;
+END default_self;
+METHOD on_load;
+	RUN moran_ex_8_5;
+(* note:
+	acheived solution with the following variables fixed:
+		BO.eta
+		TU1.eta
+		TU2.eta
+		PU1.eta
+		PU2.eta
+		BO.outlet.p = TU1.inlet.p
+		TU2.outlet_is.p = TU2.outlet.p
+		PU2.inlet.x = HE.outlet.x
+		Wdot
+
+		REMOVE TU1.outlet.T = p_bleed
+		REMOVE HE.outlet.p (redundant)
+*)
+END on_load;
 METHOD moran_ex_8_5;
+	RUN default_self;
 	(*
 		This is Example 8.5 from Moran and Shapiro, 'Fundamentals of
 		Engineering Thermodynamics', 4th Ed.
@@ -577,7 +609,7 @@ METHOD moran_ex_8_5;
 	FIX TU1.outlet.p; TU1.outlet.p := 0.7 {MPa};
 	FIX TU2.outlet.p; TU2.outlet.p := 0.008 {MPa};
 	(* heater conditions *)
-	FIX HE.outlet.p; HE.outlet.p := 0.7 {MPa};
+	(* FIX HE.outlet.p; HE.outlet.p := 0.7 {MPa}; *)
 	FIX HE.outlet.x; HE.outlet.x := 0.001;
 	FIX Wdot; Wdot := 100 {MW};
 END moran_ex_8_5;	

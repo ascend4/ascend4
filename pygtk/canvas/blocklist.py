@@ -130,6 +130,7 @@ from gaphas import GtkView, View
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
 from gaphas.tool import 	LineSegmentTool
 from gaphas.tool import Tool, ItemTool, RubberbandTool
+from gaphas.painter import ItemPainter
 from blockconnecttool import BlockConnectTool
 from blockline import *
 from blockitem import *
@@ -198,6 +199,10 @@ class app(gtk.Window):
 		previewb.set_label("Preview")
 		previewb.connect("clicked",self.preview_canvas)
 		tb.insert(previewb,3)
+		exportbutton = gtk.ToolButton(gtk.STOCK_CONVERT)
+		exportbutton.set_label("Export SVG")
+		exportbutton.connect("clicked",self.export_svg)
+		tb.insert(exportbutton,2)
 		runb = gtk.ToolButton(gtk.STOCK_EXECUTE)
 		runb.set_label("Run")
 		runb.connect("clicked",self.run_canvas)
@@ -210,7 +215,7 @@ class app(gtk.Window):
 		
 		# the 'view' widget implemented by Gaphas
 		import gaphas.view
-		gaphas.view.DEBUG_DRAW_BOUNDING_BOX = True
+		#gaphas.view.DEBUG_DRAW_BOUNDING_BOX = True
 		self.view = GtkView()	
 		self.view.tool =  BlockToolChain()
 
@@ -296,6 +301,8 @@ class app(gtk.Window):
 			self.preview_canvas(None)
 		elif key == 'X' or key == 'x':
 			self.run_canvas(None)
+		elif key == 'G' or key == 'g':
+			self.export_svg(None)
 
 
 	def debug_canvas(self,widget):
@@ -348,6 +355,7 @@ class app(gtk.Window):
 			self.view.canvas.update_now()
 		finally:
 			f.close()
+		
 		self.status.push(0,"Canvas loaded...")
 
 	def preview_canvas(self,widget):
@@ -356,6 +364,30 @@ class app(gtk.Window):
 		Under development.
 		"""
 		print self.view.canvas
+
+	def export_svg(self,widget):
+		svgview = View(self.view.canvas)
+		svgview.painter = ItemPainter()
+
+		# Update bounding boxes with a temporaly CairoContext
+		# (used for stuff like calculating font metrics)
+		tmpsurface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 0, 0)
+		tmpcr = cairo.Context(tmpsurface)
+		svgview.update_bounding_box(tmpcr)
+		tmpcr.show_page()
+		tmpsurface.flush()
+
+		fn = 'demo.svg'
+		w, h = svgview.bounding_box.width, svgview.bounding_box.height
+		surface = cairo.SVGSurface(fn , w, h)
+		cr = cairo.Context(surface)
+		svgview.matrix.translate(-svgview.bounding_box.x, -svgview.bounding_box.y)
+		svgview.paint(cr)
+		cr.show_page()
+		surface.flush()
+		surface.finish()
+
+		self.status.push(0,"Wrote SVG file '%s'." % fn)
 
 	def run_canvas(self,widget):
 		"""
@@ -370,9 +402,7 @@ class app(gtk.Window):
 		M = T.getSimulation('canvassim')
 		M.setSolver(ascpy.Solver("QRSlv"))
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
-		
-		
-	   
+			   
 a = app()
 gtk.main() 
 
