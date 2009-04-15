@@ -1184,10 +1184,10 @@ class Browser:
 		text += "\n"
 		if len(v):
 			for var in v:
-				text += "\n%s"%var
+				text += "\n%s\t= %f"%(str(var),var.getValue())
 		else:
 			text += "\nnone"
-		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog = InfoDialog(self,self.window,text,title,tabs=[100,200])
 		_dialog.run()
 
 	def on_show_freeable_variables_activate(self,*args):

@@ -79,6 +79,10 @@ int system_write_graph(slv_system_t sys
 		sprintf(temp,"r%d",rel_sindex(id.rlist[i]));
 		n = agnode(g,temp);
 		agset(n,"label",relname);
+		if(rel_satisfied(id.rlist[i])){
+			agset(n,"style","filled");
+			agset(n,"color","blue");
+		}
 		ASC_FREE(relname);
 		nodecount++;
 	}
@@ -96,6 +100,11 @@ int system_write_graph(slv_system_t sys
 			CONSOLE_DEBUG("VAR '%s' IS FIXED",varname);
 			agset(n,"style","filled");
 			agset(n,"color","green");
+		}
+		if(!var_active(id.vlist[j])){
+			CONSOLE_DEBUG("VAR '%s' IS FIXED",varname);
+			agset(n,"style","filled");
+			agset(n,"color","gray");
 		}
 		ASC_FREE(varname);
 		nodecount++;
