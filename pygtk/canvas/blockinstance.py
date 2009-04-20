@@ -38,6 +38,12 @@ class BlockInstance:
 			# TODO record that it's an output port
 			self.ports[t] = PortInstance(self,t, PORT_OUT)
 
+		print "CREATING PARAMETERS"
+		self.params = {}
+		for n in self.blocktype.params:
+			t = n.getId()
+			self.params[t] = ParamInstance(self,t)
+
 	def get_default_name(self):
 		n = str(self.blocktype.type.getName())
 		print blocknameindex
@@ -61,6 +67,18 @@ class PortInstance:
 		self.blockinstance = blockinstance
 		self.name = name
 		self.type = type
+
+class ParamInstance:
+	"""
+	Application-layer representation of a Parameter, which is a variable inside a 
+	MODEL the value for which should be settable using the Canvas GUI. Currently
+	we have no information about the type of the parameter (its units etc)
+	because that data is still difficult to extract from the ASCEND API.
+	"""
+	def __init__(self,blockinstance,name):
+		self.blockinstance = blockinstance
+		self.name = name
+		self.value = 0
 
 class LineInstance:
 	def __init__(self,fromport=None,toport=None):

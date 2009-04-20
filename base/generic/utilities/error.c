@@ -67,7 +67,7 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 	}
 
 	color_on(ASCERR,color);
-	res = ASC_FPRINTF(ASCERR,sevmsg);
+	res = ASC_FPRINTF(ASCERR,"%s",sevmsg);
 	color_off(ASCERR);
 
 	if(filename!=NULL){
@@ -84,7 +84,7 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 	}
 
 	res += ASC_VFPRINTF(ASCERR,fmt,args);
-	res += ASC_FPRINTF(ASCERR,endtxt);
+	res += ASC_FPRINTF(ASCERR,"%s",endtxt);
 
 	return res;
 }
@@ -117,8 +117,8 @@ int error_reporter_tree_start(){
 	error_reporter_tree_t *tnew;
 	tnew = error_reporter_tree_new();
 
-	/* CONSOLE_DEBUG("TREE = %p",TREE); */
-	/* CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT); */
+	fprintf(stderr,"TREE = %p",TREE);
+	fprintf(stderr,"TREECURRENT = %p",TREECURRENT);
 
 #if 0
 	if(TREE != NULL && TREECURRENT == NULL){

@@ -2,6 +2,8 @@ from gaphas.tool import Tool
 import pygtk
 pygtk.require('2.0') 
 import gtk
+import info
+import blockinstance
 
 class ContextMenuTool(Tool):
 	"""
@@ -16,19 +18,65 @@ class ContextMenuTool(Tool):
 
 	def on_button_press(self, context, event):
 		if event.button != 3:
+			context.ungrab()
 			return False
 		if context.view.hovered_item:
 			menu = gtk.Menu()
-			menurename = gtk.MenuItem("Re_name",True);
-			window = context.view.parent.parent.parent.parent
+			menu.connect("deactivate",self.deactivate,context)
+			menurename = gtk.MenuItem("Re_name",True)
+			window = context.view.get_parent_window()
 			print window.__class__
 			menurename.connect("activate",self.rename,context.view.hovered_item,window)
 			menu.add(menurename)
-			menudelete = gtk.MenuItem("_Delete",True);
+			menudelete = gtk.MenuItem("_Delete",True)
 			menudelete.connect("activate",self.delete,context.view.hovered_item,context.view)
 			menu.add(menudelete)
-			menu.show_all()		
+			menu.add(gtk.SeparatorMenuItem())
+			menuinfo = gtk.MenuItem("_Info",True)
+			menuinfo.connect("activate",self.info,window,context,context.view.hovered_item)			
+			menu.add(menuinfo)
+			if not hasattr(context.view.hovered_item,'blockinstance'):
+				menurename.set_sensitive(False)
+				menuinfo.set_sensitive(False)
+			menu.show_all()
 			menu.popup( None, None, None, event.button, event.time)
+			context.ungrab()
+			return True
+
+	def info(self,widget,window,context,item):
+		print window.__class__
+		bi = item.blockinstance
+		title = "Info for block '%s'" % bi.name
+		text = "Block info\n\n"
+		text += "Name:\t%s\n" % bi.name
+		text += "Type:\t%s\n" % bi.blocktype.type.getName()
+
+		text += "\nPorts:\n"
+		for k,v in bi.ports.iteritems():
+			text += "\t%s" % v.name
+			if v.type == blockinstance.PORT_IN:
+				text += " (IN)\n"
+			elif v.type == blockinstance.PORT_OUT:
+				text += " (OUT)\n"
+
+		if hasattr(bi,"params"):
+			text += "\nParameters:\n"
+			for k,v in bi.params.iteritems():
+				text += "\t%s = %f\n" % (v.name, v.value)
+			
+			if bi.instance:
+				text += "\nInstance exists\n"
+			else:
+				text += "\nNo instance exists\n"
+
+		info.Info(window,text,title).run()
+
+
+	def deactivate(self,widget,context):
+		#print "DEACTIVATING MENU"
+		# TODO pass a signal to the HoverTool to update the hovered item
+		# according to where the mouse is currently located.
+		context.view.hovered_item = None
 
 	def rename(self,widget,item,window):
 		if hasattr(item,'blockinstance'):
