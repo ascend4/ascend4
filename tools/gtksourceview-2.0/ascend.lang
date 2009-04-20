@@ -295,13 +295,17 @@
 					<keyword>molar_mass</keyword>
 					<keyword>mass_density</keyword>
 					<keyword>molar_density</keyword>
+					<keyword>force</keyword>
 					<keyword>pressure</keyword>
+					<keyword>delta_pressure</keyword>
 					<keyword>stress</keyword>
 					<keyword>temperature</keyword>
 					<keyword>energy</keyword>
 					<keyword>energy_rate</keyword>
 					<keyword>distance</keyword>
+					<keyword>delta_distance</keyword>
 					<keyword>area</keyword>
+					<keyword>delta_area</keyword>
 					<keyword>volume</keyword>
 					<keyword>specific_volume</keyword>
 					<keyword>specific_enthalpy</keyword>

@@ -29,12 +29,15 @@ class BlockType:
 
 		self.inputs = []
 		self.outputs = []
+		self.params = []
 		for n in nn:
 			t = n.getText()
 			if t[0:min(len(t),3)]=="in:":
 				self.inputs += [n]
 			elif t[0:min(len(t),4)]=="out:":
 				self.outputs += [n]
+			elif t[0:min(len(t),6)]=="param:":
+				self.params += [n]
 
 		self.iconfile = None
 		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("icon"))
@@ -43,7 +46,12 @@ class BlockType:
 			if os.path.exists(n):
 				self.iconfile = n
 
+
 	def get_icon(self, width, height):
+		"""
+		Get a pixbuf representation of the block for use in the block palette
+		(or possibly elsewhere)
+		"""
 		f = self.iconfile
 		if self.iconfile is None:
 			f = "defaultblock.svg"

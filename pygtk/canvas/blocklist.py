@@ -141,6 +141,7 @@ from blockcanvas import *
 #from panzoom import PanTool
 from gaphas.tool import PanTool, ZoomTool
 from blockinstance import *
+import info
 
 def BlockToolChain():
 	"""
@@ -363,7 +364,8 @@ class app(gtk.Window):
 		Output an ASCEND representation of the canvas on the commandline.
 		Under development.
 		"""
-		print self.view.canvas
+
+		info.Info(self.view.get_parent_window(),str(self.view.canvas),"Canvas Preview").run()
 
 	def export_svg(self,widget):
 		svgview = View(self.view.canvas)
@@ -398,6 +400,7 @@ class app(gtk.Window):
 		print model
 		print "RUN NOT IMPLEMENTED"
 		L.loadString(model,"canvasmodel")
+		print "STRING MODEL LOADED"
 		T = L.findType("canvasmodel")
 		M = T.getSimulation('canvassim')
 		M.setSolver(ascpy.Solver("QRSlv"))

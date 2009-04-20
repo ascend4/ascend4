@@ -155,7 +155,7 @@ PROVIDE "atoms.a4l";
 (*  U N I V E R S A L    C O N S T A N T S
     --------------------------------------  *)
 
-    UNIVERSAL CONSTANT gas_constant
+    UNIVERSAL CONSTANT molar_gas_constant
     (* DIMENSION M*L^2/T^2/Q/TMP *)
     REFINES real_constant :== 1{GAS_C};
 

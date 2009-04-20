@@ -166,7 +166,9 @@ Library::loadString(const char *str, const char *nameprefix){
 	}
 
 	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
+#ifdef LOADSTRING_ERROR_TREE
 	error_reporter_tree_start();
+#endif
 	status = zz_parse();
 	switch(status){
 		case 0: break;
@@ -174,9 +176,9 @@ Library::loadString(const char *str, const char *nameprefix){
 		case 2: ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,"Out of memory when parsing %s",Asc_ModuleName(m)); break;
 		default: ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Invalid return from zz_parse"); break;
 	}
+#ifdef LOADSTRING_ERROR_TREE
 	status = error_reporter_tree_has_error();
 	error_reporter_tree_end();
-	/*
 	if(!status){
 		CONSOLE_DEBUG("CLEARING TREE...");
 		error_reporter_tree_clear();
@@ -187,7 +189,7 @@ Library::loadString(const char *str, const char *nameprefix){
 		ss << "Errors found in '" << nameprefix <<  "'";
 		throw runtime_error(ss.str());
 	}
-	*/
+#endif
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
 	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), nameprefix);
