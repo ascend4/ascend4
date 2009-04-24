@@ -77,6 +77,21 @@ else:
 		default_tk_lib = "tk8.4"
 		default_tktable_lib = "Tktable2.8"
 
+	if os.path.exists("/etc/lsb-release"):
+		_f = file("/etc/lsb-release")
+		_r = re.compile("([A-Z][^=]*)=(.*)")
+		LSB = {}
+		for l in _f:
+			_m = _r.match(l.strip())
+			LSB[_m.group(1)] = _m.group(2)
+		if LSB['DISTRIB_ID'] == "Ubuntu":
+			if float(LSB['DISTRIB_RELEASE']) >= 9.04:
+				default_tcl_lib = "tcl8.5"
+				default_tk_lib = "tk8.5"
+				default_tktable_lib = "Tktable2.9"
+				default_tcl_cpppath = "/usr/include/tcl8.5"
+			
+
 	default_rel_distdir = '../share/ascend'
 	default_absolute_paths = True
 	default_ida_prefix="/usr"
