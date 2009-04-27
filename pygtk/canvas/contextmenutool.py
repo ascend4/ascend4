@@ -24,8 +24,7 @@ class ContextMenuTool(Tool):
 			menu = gtk.Menu()
 			menu.connect("deactivate",self.deactivate,context)
 			menurename = gtk.MenuItem("Re_name",True)
-			window = context.view.get_parent_window()
-			print window.__class__
+			window = context.view.parent.parent.parent.parent
 			menurename.connect("activate",self.rename,context.view.hovered_item,window)
 			menu.add(menurename)
 			menudelete = gtk.MenuItem("_Delete",True)

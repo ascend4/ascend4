@@ -8,7 +8,7 @@ class Info:
 		print "parent =",parent
 		self.dialog = gtk.Dialog(
 			title=title,
-			#parent=parent, # for some reason, the parent window isn't working
+			parent=parent, # for some reason, the parent window isn't working
 			flags = (gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT)
 			,buttons = (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
 		)

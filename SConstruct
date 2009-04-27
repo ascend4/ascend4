@@ -1,15 +1,23 @@
-import sys, os, commands, platform, distutils.sysconfig, os.path, re, types
+#!/usr/bin/python scons
+# This is a build script for use with SCons. Use it to compile ASCEND on 
+# Linux, Windows. It should also give some success on Mac, although this is
+# much less tested.
+
+# version number for this ASCEND build:
 version = "0.9.5.116"
 
+# shared library API numbering, for Linux (FIXME windows too?)
+soname_major = ".1"
+soname_minor = ".0"
+
+import sys, os, commands, platform, distutils.sysconfig, os.path, re, types
+
+# version number for python, useful on Windows
 pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
 
 #------------------------------------------------------
-# OPTIONS
-#
-# Note that if you set the options via the command line, they will be
-# remembered in the file 'options.cache'. It's a feature ;-)
+# PLATFORM DEFAULTS
 
-opts = Options(['options.cache', 'config.py'])
 #print "PLATFORM = ",platform.system()
 
 default_tcl_cpppath = "$TCL/include"
@@ -18,9 +26,11 @@ default_conopt_envvar="CONOPT_PATH"
 default_with_graphviz = True
 
 if platform.system()=="Windows":
+	# these correspond the the version of Tcl/Tk linked to in the NSIS scripts
 	default_tcl_lib = "tcl84"
 	default_tk_lib = "tk84"
 	default_tktable_lib = "Tktable28"
+
 	default_install_assets = "glade/"
 	icon_extension = '.png'
 	default_tcl = "c:\\Tcl"
@@ -28,29 +38,34 @@ if platform.system()=="Windows":
 		default_tcl_libpath="$TCL\\bin"
 	else:
 		default_tcl_libpath="$TCL\\lib"
+
+	# on Windows, we build ASCEND such that it finds it support files 
+	# using paths relative to the location of the executable
 	default_rel_distdir = '.'
 	default_absolute_paths = False
 	
+	# where to look for IDA solver libraries, headers, etc.
 	default_ida_prefix = "c:\\MinGW"
 	if not os.path.exists(default_ida_prefix):
 		default_ida_prefix = None
 
+	# where to look for CONOPT when compiling
 	default_conopt_prefix = "c:\\Program Files\\CONOPT"
 	default_conopt_libpath="$CONOPT_PREFIX"
 	default_conopt_cpppath="$CONOPT_PREFIX"
 	default_conopt_dlpath="$CONOPT_PREFIX"
 	default_conopt_lib="conopt3"
+	if not os.path.exists(default_conopt_prefix):
+		default_conopt_prefix = None
 
+	# FIXME remove this
 	default_tron_prefix="c:\\Program Files\\TRON"
 	default_tron_dlpath="$TRON_PREFIX"
 	default_tron_lib="tron1"
 
 	default_prefix="c:\\MinGW"
 	default_libpath="$DEFAULT_PREFIX\\lib"
-	default_cpppath="$DEFAULT_PREFIX\\include"
-	
-	if not os.path.exists(default_conopt_prefix):
-		default_conopt_prefix = None
+	default_cpppath="$DEFAULT_PREFIX\\include"	
 		
 	need_libm = False
 	python_exe = sys.executable
@@ -59,7 +74,10 @@ if platform.system()=="Windows":
 	
 	default_fortran="g77"
 	default_f2c_lib="g2c"
+	default_python = distutils.sysconfig.get_python_lib()
 	
+	soname_minor = ""
+	soname_major = ""
 	# still problems with Graphviz on Windows, leave it off now by default.
 	
 else:
@@ -70,6 +88,7 @@ else:
 	icon_extension = '.svg'
 	default_tcl = '/usr'
 	default_tcl_libpath = "$TCL/lib"
+	default_python = distutils.sysconfig.get_python_lib()
 
 	if os.path.exists("/etc/debian_version"):
 		default_tcl_cpppath = "/usr/include/tcl8.4"
@@ -118,7 +137,6 @@ else:
 	
 	default_fortran="gfortran"
 	default_f2c_lib="gfortran"
-
 	
 	#default_graphviz_libs=["graph","cdt","gvc"]
 	#default_graphviz_libpath = default_libpath
@@ -126,6 +144,19 @@ else:
 	#	# for Ubuntu 7.04
 	#	default_graphviz_libpath="/usr/lib/graphviz"
 	#	default_graphviz_rpath="$GRAPHVIZ_LIBPATH"
+
+soname_clean = "${SHLIBPREFIX}ascend${SHLIBSUFFIX}"
+soname_full = "%s%s" % (soname_clean,soname_major)
+
+#------------------------------------------------------
+# OPTIONS
+#
+# The following give the set of command-line parameters that can be passed to
+# SCons from the commandline. Options will be 'remembered' by being cached
+# in the file 'options.cache'; if you want to start with a clean slate, you
+# should remove that file.
+
+opts = Options(['options.cache', 'config.py'])
 	
 opts.Add(
 	'CC'
@@ -145,11 +176,12 @@ opts.Add(BoolOption(
 	, False
 ))
 
-opts.Add(BoolOption(
-	'WITH_GCCVISIBILITY'
-	,"Whether to use GCC Visibility features (only applicable if available)"
-	,True
-))
+if platform.system()!="Windows":
+	opts.Add(BoolOption(
+		'WITH_GCCVISIBILITY'
+		,"Whether to use GCC Visibility features (only applicable if available)"
+		,True
+	))
 
 opts.Add(BoolOption(
 	'WITH_SIGNALS'
@@ -268,11 +300,9 @@ opts.Add(PackageOption(
 	,default_prefix
 ))
 
-#------ install location for python extensions ------
-
-# (removed for the moment)
-
 #------ cunit --------
+# CUnit is a unit testing library that we use to test libascend.
+
 # Where was CUNIT installed?
 opts.Add(PackageOption(
 	'CUNIT_PREFIX'
@@ -566,6 +596,12 @@ opts.Add(
 )
 
 opts.Add(
+	'INSTALL_PYTHON'
+	,'Common shared-file location on this system'
+	,default_python
+)
+
+opts.Add(
 	'INSTALL_ASCDATA'
 	,"Location of ASCEND shared data (TK, python, models etc)"
 	,"$INSTALL_SHARE/ascend"
@@ -574,13 +610,13 @@ opts.Add(
 opts.Add(
 	'INSTALL_MODELS'
 	,"Location of ASCEND model files (.a4c,.a4l,.a4s)"
-	,"$INSTALL_ASCDATA/models"
+	,"$INSTALL_LIB/ascend/models"
 )
 
 opts.Add(
 	'INSTALL_SOLVERS'
 	,"Location of ASCEND solvers"
-	,"$INSTALL_ASCDATA/solvers"
+	,"$INSTALL_LIB/ascend/solvers"
 )
 
 opts.Add(
@@ -618,7 +654,7 @@ opts.Add(
 
 opts.Add(
 	'PYGTK_ASSETS'
-	,'Default location for Glade assets (placed in pygtk/config.py)'
+	,'Default location for Glade assets (will be recorded in pygtk/config.py)'
 	,default_install_assets
 )
 
@@ -777,14 +813,6 @@ opts.Add(BoolOption(
 	,"Attempt to link against MSVCR71.DLL, to enable passing of FILE* objects to/from python"
 	,False
 ))
-
-if platform.system()!="Windows":
-	opts.Add(BoolOption(
-		'WITH_GCCVISIBILITY'
-		, 'Whether to use GCC Visibility extensions when building with GCC 4.0'
-		, True
-	))
-
 
 
 # TODO: OTHER OPTIONS?
@@ -2490,6 +2518,12 @@ def InstallPerm(env, dest, files, perm):
 	obj = env.Install(dest, files) 	 
 	for i in obj: 	 
 		env.AddPostAction(i, env.Chmod(str(i), perm)) 	 
+
+def InstallPermAs(env, dest, filen, perm): 	 
+	obj = env.InstallAs(dest, filen) 	 
+	for i in obj: 	 
+		env.AddPostAction(i, env.Chmod(str(i), perm))
+	return dest
   	 
 SConsEnvironment.InstallPerm = InstallPerm 	 
   	 
@@ -2497,6 +2531,7 @@ SConsEnvironment.InstallPerm = InstallPerm
 SConsEnvironment.InstallProgram = lambda env, dest, files: InstallPerm(env, dest, files, 0755) 	 
 SConsEnvironment.InstallHeader = lambda env, dest, files: InstallPerm(env, dest, files, 0644)
 SConsEnvironment.InstallShared = lambda env, dest, files: InstallPerm(env, dest, files, 0644)
+SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, dest, files, 0644)
 
 #------------------------------------------------------
 # BUILD...
@@ -2592,12 +2627,27 @@ if with_dmalloc:
 if with_ufsparse:
 	libascend_env.Append(LIBS=['cxsparse'])
 
+if platform.system()=="Linux":
+	libascend_env.Append(LINKFLAGS=['-Wl,-soname,%s' % soname_full])
+
 libascend = libascend_env.SharedLibrary('ascend',srcs)
 
-# for use in declaring dependent shared libraries in SConscript files (eg solvers/*/SConscript)
-env['libascend'] = libascend
+# create local symlink for the soname stuff.
+print "SONAME =",env.subst(soname_full)
 
-env.Alias('libascend',libascend)
+env['libascend'] = libascend
+libtargets = [libascend]
+
+if platform.system()=="Linux":
+	if soname_major:
+		libascend_env.Command(soname_full,libascend,Move("$TARGET","$SOURCE"))
+		print "MAKING LINK, SONAME_MAJOR =",soname_major
+		liblink = libascend_env.Command(soname_full, libascend, "ln -s $SOURCE $TARGET")
+		libtargets.append(liblink)
+
+# for use in declaring dependent shared libraries in SConscript files (eg solvers/*/SConscript)
+
+env.Alias('libascend',libtargets)
 
 #-------------
 # UNIT TESTS (C CODE)
@@ -2660,7 +2710,20 @@ if env.get('CAN_INSTALL'):
 	# TODO: add install options
 	env.Alias('install',install_dirs)
 
-	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_LIB")),libascend)
+	#env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_LIB")),libascend)
+
+	libname = "${INSTALL_LIB}/%s%s" % (soname_full,soname_minor)
+	install_lib = env.InstallLibraryAs("${INSTALL_ROOT}"+libname, [libascend])
+
+	link1 = "${INSTALL_LIB}/%s" % soname_clean
+	install_link1 = None
+	if env.subst(link1) != env.subst(libname):
+		install_link1 = env.Command("${INSTALL_ROOT}"+link1,install_lib,"ln -f -s %s $TARGET" % libname)
+
+	link2 = "$INSTALL_LIB/%s" % soname_full
+	install_link2 = None
+	if soname_minor:
+		install_link2 = env.Command("${INSTALL_ROOT}"+link2,install_lib,"ln -f -s %s $TARGET"%libname)
 
 	env.InstallProgram(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),ascendconfig)
 
@@ -2722,20 +2785,19 @@ env.Depends(tar,'ascend.spec')
 env.Depends(tar,'#doc/book.pdf')
 
 #------------------------------------------------------
-# DISTRIBUTION TAR FILE (new style with AccumulateBuilder)
-
-# ...
-
-#------------------------------------------------------
 # DEBIAN TARBALL for use with Build Service
 
 import glob
-deb_manfiles = glob.glob('debian/*.man')
+deb_files = glob.glob('debian/*.install')
+deb_files += glob.glob('debian/*.docs')
+deb_files += glob.glob('debian/*.dirs')
+deb_files += glob.glob('debian/*.man')
+deb_files += glob.glob('debian/*.manpages')
+deb_files += ['debian/%s' % s for s in ['rules','control','changelog','compat','copyright','dirs']]
 
 deb_tar = env.Tar(
 	'dist/debian.tar.gz'
-	,deb_manfiles + ['debian/rules','debian/control','debian/changelog','debian/compat','debian/copyright','debian/dirs'
-		,'debian/postinst','debian/postrm']
+	,deb_files
 	,TARFLAGS = ['cz']
 )
 
