@@ -365,7 +365,7 @@ class app(gtk.Window):
 		Under development.
 		"""
 
-		info.Info(self.view.get_parent_window(),str(self.view.canvas),"Canvas Preview").run()
+		info.Info(self.view.parent.parent.parent.parent,str(self.view.canvas),"Canvas Preview").run()
 
 	def export_svg(self,widget):
 		svgview = View(self.view.canvas)
