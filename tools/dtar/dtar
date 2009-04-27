@@ -260,7 +260,9 @@ try:
 		raise RuntimeError("dpkg-buildpackage returned error code %s" % res)
 
 except Exception, e:
-	print "ERROR: %s"% str(e)
+	print "ERROR DURING DPKG-BUILDPACKAGE: %s"% str(e)
+	print "Temporary files can be inspected in %s" % maindir
+	sys.exit(1)
 
 print "Found files:"
 os.chdir(maindir)

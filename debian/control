@@ -2,32 +2,52 @@ Source: ascend
 Section: contrib/science
 Priority: extra
 Maintainer: John Pye <john@curioussymbols.com>
-Build-Depends: scons, gcc, flex, bison, swig, python-dev, gfortran, libblas-dev, tcl8.5-dev, tk8.5-dev, debhelper, graphviz-dev, libtktable2.9
-#Build-Depends: libsuitesparse-dev, libsundials-serial-dev, gfortran, lyx, ccache, libtktable2.9
+Build-Depends: scons, gcc, flex, bison, swig, python-dev, gfortran, libblas-dev, tcl8.5-dev, tk8.5-dev, debhelper, graphviz-dev, libtktable2.9, libsundials-serial-dev
+#Build-Depends: libsuitesparse-dev, ccache, libtktable2.9
 Standards-Version: 3.7.2
 
 Package: ascend
 Architecture: any
-Depends: libtktable2.9, libgtksourceview-common, ${shlibs:Depends}, python-glade2, python-numpy, python-matplotlib
-#, python, libsuitesparse, libsundials-serial0, refblas3, python-gtk2, 
+Depends: python, libtktable2.9, libgtksourceview-common, ${shlibs:Depends}, python-glade2, python-numpy, python-matplotlib
+#, python, libsuitesparse, refblas3, python-gtk2, 
 Recommends: ipython, xgraph
-Description:Solver for systems of equations and ODEs/DAEs.
-	ASCEND is a modelling and simulation environment for
-	solving systems of nonlinear equations. It includes
-	a modelling language, in which you write the equations
-	that represent your system-to-be-modelled, as well as
-	a user interface that lets to interact with your model,
-	solve it, adjust values, and report results. There is also
-	a model library with many example problems, and a database of
-	thermodynamic properties for various materials.
-	.
-	ASCEND was developed at Carnegie Mellon University starting
-	in the 1980s and continues as an active open source project.
-	.
-	This package includes both the mature Tcl/Tkl GUI and
-	the newer PyGTK-based GUI, as well as documentation
-	and the model library.
-	.
-	For more information, see our web page:
-	http://ascend.cheme.cmu.edu/
+Description:Solver for systems of equations and ODEs/DAEs
+ ASCEND is a modelling and simulation environment for
+ solving systems of nonlinear equations. It includes
+ a modelling language, in which you write the equations
+ that represent your system-to-be-modelled, as well as
+ a user interface that lets to interact with your model,
+ solve it, adjust values, and report results. There is also
+ a model library with many example problems, and a database of
+ thermodynamic properties for various materials.
+ .
+ ASCEND was developed at Carnegie Mellon University starting
+ in the 1980s and continues as an active open source project.
+ .
+ This package includes both the mature Tcl/Tkl GUI and
+ the newer PyGTK-based GUI, as well as documentation
+ and the model library.
+ .
+ For more information, see our web page:
+ http://ascend.cheme.cmu.edu/
+
+Package: ascend-dev
+Architecture: any
+Depends: python, ${shlibs:Depends}
+Recommends: scons
+Description:Solver for systems of equations and ODEs/DAEs
+ ASCEND is a modelling and simulation environment for
+ solving systems of nonlinear equations. It includes
+ a modelling language, in which you write the equations
+ that represent your system-to-be-modelled, as well as
+ a user interface that lets to interact with your model,
+ solve it, adjust values, and report results. There is also
+ a model library with many example problems, and a database of
+ thermodynamic properties for various materials.
+ .
+ This package contains header files and shared libraries to allow developers to
+ compile against libascend, for example when creating ASCEND 'external
+ libraries' or programs that depend on ASCEND.
+
+
 

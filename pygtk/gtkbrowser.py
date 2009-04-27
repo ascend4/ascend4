@@ -1114,7 +1114,6 @@ class Browser:
 	def on_help_about_click(self,*args):
 		_xml = gtk.glade.XML(self.glade_file,"aboutdialog")
 		_about = _xml.get_widget("aboutdialog")
-		_about.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
 		_about.set_transient_for(self.window);
 		_about.set_version(config.VERSION)
 		_about.run()

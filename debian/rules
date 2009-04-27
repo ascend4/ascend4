@@ -29,7 +29,7 @@ endif
 # shared library versions, option 1
 major=0
 
-INSTALLROOT=$(CURDIR)/debian/ascend/
+INSTALLROOT=$(CURDIR)/debian/tmp
 DATADIR=$(INSTALLROOT)/usr/share
 
 GTKSOURCEVIEW=gtksourceview-2.0
@@ -91,11 +91,10 @@ install: build
 	cd $(CURDIR)/tcltk/gnome && \
 	install -m 644 -D ascend4.desktop $(DATADIR)/applications/ascend4.desktop
 #
-	dh_install --autodest
+	dh_install --fail-missing --sourcedir=$(INSTALLROOT)
+
 	dh_desktop
-	dh_installman debian/ascend.man 
-	dh_installman debian/ascend4.man 
-	dh_installman debian/ascend-config.man 
+	dh_installman
 
 # Build architecture-independent files here.
 binary-indep:
@@ -117,7 +116,7 @@ binary-arch: build install
 	dh_fixperms
 	dh_makeshlibs
 	dh_installdeb
-	dh_shlibdeps -L ascend -l debian/ascend/usr/lib
+	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

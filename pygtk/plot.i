@@ -21,6 +21,7 @@ SWIG interface for plotting from ASCEND
 			print "YLabel:",self.getYLabel()
 			pylab.ylabel(self.getYLabel())
 			_l = []
+			_have_legends = False
 			for _c in self.curves:
 				if self.isXLog() and self.isYLog():
 					pylab.loglog(_c.x, _c.y)
@@ -30,8 +31,13 @@ SWIG interface for plotting from ASCEND
 					pylab.semilogy(_c.x, _c.y)
 				else:
 					pylab.plot(_c.x, _c.y)
-				_l.append(_c.getLegend())
-			pylab.legend(_l)
+				_l1 = _c.getLegend()
+				if _l1:
+					_have_legends = True
+				_l.append(_l1)
+			# only show legends if their text is non-empty:
+			if _have_legends:
+				pylab.legend(_l)
 
 			print "Mainloop:",mainloop
 			pylab.ion()
