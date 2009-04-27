@@ -2621,6 +2621,10 @@ else:
 #-------------
 # LIBASCEND -- all base/generic functionality
 
+libascend_env.Append(LIBS=['m'])
+if platform.system()=="Linux":
+	libascend_env.Append(LIBS=['dl'])
+
 if with_dmalloc:
 	libascend_env.Append(LIBS=['dmalloc'])
 
