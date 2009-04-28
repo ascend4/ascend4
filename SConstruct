@@ -111,7 +111,7 @@ else:
 				default_tcl_cpppath = "/usr/include/tcl8.5"
 			
 
-	default_rel_distdir = '../share/ascend'
+	default_rel_distdir = '..'
 	default_absolute_paths = True
 	default_ida_prefix="/usr"
 	default_conopt_prefix="/usr"
@@ -598,7 +598,7 @@ opts.Add(
 opts.Add(
 	'INSTALL_PYTHON'
 	,'Common shared-file location on this system'
-	,default_python
+	,os.path.join(default_python,"ascend")
 )
 
 opts.Add(
@@ -972,6 +972,7 @@ print "INSTALL_ASCDATA =",env['INSTALL_ASCDATA']
 print "INSTALL_PREFIX =",env['INSTALL_PREFIX']
 print "INSTALL_MODELS =",env['INSTALL_MODELS']
 print "INSTALL_SOLVERS =",env['INSTALL_SOLVERS']
+print "INSTALL_PYTHON =",env['INSTALL_PYTHON']
 print "DEFAULT_ASCENDLIBRARY =",env['DEFAULT_ASCENDLIBRARY']
 print "DEFAULT_ASCENDSOLVERS =",env['DEFAULT_ASCENDSOLVERS']
 
@@ -2415,7 +2416,7 @@ if platform.system()=="Windows" and env.has_key('MSVS'):
 
 conf.Finish()
 
-print "-=-=-=-=-=-=-=-=- LIBS =",env.get('LIBS')
+#print "-=-=-=-=-=-=-=-=- LIBS =",env.get('LIBS')
 
 #---------------------------------------
 # SUBSTITUTION DICTIONARY for .in files
@@ -2438,6 +2439,7 @@ subst_dict = {
 	, '@INSTALL_LIB@':env['INSTALL_LIB']
 	, '@INSTALL_MODELS@':env['INSTALL_MODELS']
 	, '@INSTALL_SOLVERS@':env['INSTALL_SOLVERS']
+	, '@INSTALL_PYTHON@':env['INSTALL_PYTHON']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
 	, '@RELEASE@':release
@@ -2707,7 +2709,7 @@ env.AddPostAction(asc4devcmd, 'chmod 755 $TARGET')
 
 if env.get('CAN_INSTALL'):
 
-	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE','INSTALL_DOC']
+	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE','INSTALL_DOC','INSTALL_PYTHON']
 	install_dirs = [Dir(env.subst("$INSTALL_ROOT$"+d)) for d in dirs]
 	install_dirs += modeldirs + [Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS"))]
 

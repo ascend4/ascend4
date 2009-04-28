@@ -1,3 +1,4 @@
+#!/usr/bin/python scons
 Import('env')
 
 srcs = Split("""
