@@ -42,6 +42,7 @@ else:
 	INSTALL_ASCDATA="@INSTALL_ASCDATA@"
 	INSTALL_MODELS = os.path.abspath(INSTALL_ASCDATA+"/models")
 	INSTALL_SOLVERS = os.path.abspath(INSTALL_ASCDATA+"/solvers")
+	INSTALL_PYTHON = "@INSTALL_PYTHON@"
 	PYTHON="@PYTHON@"
 	DEFAULT_ASCENDLIBRARY="""@DEFAULT_ASCENDLIBRARY@"""
 	SEP=":"
@@ -117,8 +118,12 @@ if os.environ.get('ASCENDSOLVERS'):
 print "sys.path[0] = %s" % sys.path[0]
 
 if not INSTALL_ASCDATA in sys.path:
-	print "Adding INSTALL_ASCDATA to python path?"
+	print "Adding INSTALL_ASCDATA to python pathh"
 	sys.path.append(INSTALL_ASCDATA)
+
+if not INSTALL_PYTHON in sys.path:
+	print "Adding INSTALL_PYTHON=%s to python path" % INSTALL_PYTHON
+	sys.path.append(INSTALL_PYTHON)
 
 if os.environ.get('OSTYPE')=='cygwin':
 	print "CYGWIN..."

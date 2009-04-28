@@ -53,7 +53,7 @@ def get_new_swig_flags(env):
 	sep = ":"
 	if platform.system=="Windows": sep=";"
 
-	print "FLAGS=%s" % env.get('GRAPHVIZ_CPPPATH')
+	#print "FLAGS=%s" % env.get('GRAPHVIZ_CPPPATH')
 	if env.get('WITH_GRAPHVIZ') and env.get('GRAPHVIZ_CPPPATH'):
 		flags += ['-I%s' % i for i in env.get('GRAPHVIZ_CPPPATH')]
 		
@@ -157,9 +157,9 @@ if env.get('CAN_INSTALL'):
 		pythonpycs.append( env.PYC(f) )
 
 	for f in pythonfiles + pythonpycs:
-		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA")),f)
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PYTHON")),f)
 
-	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA")),"config.py")
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PYTHON")),"config.py")
 
 	gladefiles = glob.glob("glade/*")
 	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/glade")),gladefiles)

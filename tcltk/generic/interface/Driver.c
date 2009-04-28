@@ -617,7 +617,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	*/
 	if(librarydir == NULL){
 	    /* CONSOLE_DEBUG("NO " ASC_ENV_LIBRARY " VAR DEFINED"); */
-		libraryfp = ospath_new_expand_env("$ASCENDDIST/models", &GETENV);
+		libraryfp = ospath_new_expand_env("$ASCENDDIST/lib/models", &GETENV);
 		/* CONSOLE_DEBUG("CREATED LIBRARY VAL"); */
 		OSPATH_PUTENV(ASC_ENV_LIBRARY,libraryfp);
 		librarydir = ospath_str(libraryfp);
@@ -626,7 +626,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 	if(solversdir == NULL){
 	    /* CONSOLE_DEBUG("NO " ASC_ENV_LIBRARY " VAR DEFINED"); */
-		solversfp = ospath_new_expand_env("$ASCENDDIST/solvers", &GETENV);
+		solversfp = ospath_new_expand_env("$ASCENDDIST/lib/solvers", &GETENV);
 		/* CONSOLE_DEBUG("CREATED SOLVERS VAL"); */
 		OSPATH_PUTENV(ASC_ENV_SOLVERS,solversfp);
 		solversdir = ospath_str(solversfp);
