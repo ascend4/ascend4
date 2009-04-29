@@ -48,7 +48,7 @@
 #ifndef ASC_ENVVAR_H
 #define ASC_ENVVAR_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #define MAX_ENV_VAR_LENGTH 4096
 /**< Maximum length of an environment variable string. */

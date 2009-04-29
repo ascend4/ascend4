@@ -42,7 +42,7 @@
 #ifndef ASC_BIT_H
 #define ASC_BIT_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 /**	@addtogroup compiler Compiler
 	@{

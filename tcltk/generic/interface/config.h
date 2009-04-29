@@ -29,7 +29,7 @@
 #ifndef ASCTK_CONFIG_H
 #define ASCTK_CONFIG_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 /*
  * If we are in a tcl-infested file, define
  * CONST84 to be empty for back-compatibility with

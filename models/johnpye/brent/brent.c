@@ -22,19 +22,19 @@
 	by John Pye, Mar 2007
 */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascPanic.h>
-#include <utilities/error.h>
-#include <general/ospath.h>
-#include <compiler/extfunc.h>
-#include <compiler/symtab.h>
-#include <compiler/instquery.h>
-#include <compiler/parentchild.h>
-#include <compiler/atomvalue.h>
-#include <compiler/initialize.h>
-#include <compiler/type_desc.h>
-#include <compiler/rootfind.h>
-#include <compiler/instance_io.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/error.h>
+#include <ascend/general/ospath.h>
+#include <ascend/compiler/extfunc.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/initialize.h>
+#include <ascend/compiler/type_desc.h>
+#include <ascend/compiler/rootfind.h>
+#include <ascend/compiler/instance_io.h>
 
 /* #define BRENT_DEBUG */
 

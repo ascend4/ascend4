@@ -23,11 +23,11 @@
 	Based on conopt.c by Vicente Rico Ramirez (created 05/97)
 */
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
-#include <utilities/error.h>
-#include <utilities/ascEnvVar.h>
-#include <general/env.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/error.h>
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/general/env.h>
 #include "conopt_dl.h"
 
 #ifndef ASC_WITH_CONOPT
@@ -38,8 +38,8 @@
 
 #ifndef ASC_LINKED_CONOPT
 # include <ctype.h>
-# include <utilities/ascMalloc.h>
-# include <utilities/ascDynaLoad.h>
+# include <ascend/utilities/ascMalloc.h>
+# include <ascend/utilities/ascDynaLoad.h>
 
 /*------------------------------------------------------------------------------
   DLOPENING CONOPT SUPPORT FUNCTIONS

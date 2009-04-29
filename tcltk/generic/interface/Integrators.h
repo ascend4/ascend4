@@ -59,7 +59,7 @@
 #ifndef ASCTK_INTEGRATORS_H
 #define ASCTK_INTEGRATORS_H
 
-#include <integrator/integrator.h>
+#include <ascend/integrator/integrator.h>
 
 extern int Asc_IntegSetYFileCmd(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[]);

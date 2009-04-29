@@ -22,20 +22,20 @@
 #include <string.h>
 #include <CUnit/CUnit.h>
 
-#include <general/env.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascEnvVar.h>
-#include <utilities/error.h>
+#include <ascend/general/env.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/utilities/error.h>
 
-#include <compiler/ascCompiler.h>
-#include <compiler/module.h>
-#include <compiler/parser.h>
-#include <compiler/library.h>
-#include <compiler/symtab.h>
-#include <compiler/simlist.h>
-#include <compiler/instquery.h>
-#include <compiler/parentchild.h>
-#include <compiler/atomvalue.h>
+#include <ascend/compiler/ascCompiler.h>
+#include <ascend/compiler/module.h>
+#include <ascend/compiler/parser.h>
+#include <ascend/compiler/library.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/simlist.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/atomvalue.h>
 
 #include <test/assertimpl.h>
 

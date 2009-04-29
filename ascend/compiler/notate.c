@@ -27,10 +27,10 @@
 	Last in CVS: $Revision: 1.9 $ $Date: 1998/06/18 18:44:58 $ $Author: ballan $
 */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
-#include <general/pool.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
+#include <ascend/general/pool.h>
 
 #include "symtab.h"
 #include "braced.h"

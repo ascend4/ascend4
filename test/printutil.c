@@ -25,9 +25,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascPrint.h>
-#include <compiler/redirectFile.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPrint.h>
+#include <ascend/compiler/redirectFile.h>
 
 #define f_vtable_name "asc_test_vtable"
 

@@ -5,7 +5,7 @@
 
 #include "config.h"
 extern "C"{
-#include <system/slv_common.h>
+#include <ascend/system/slv_common.h>
 }
 
 #include "simulation.h"

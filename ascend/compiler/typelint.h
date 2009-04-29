@@ -35,8 +35,8 @@
 #ifndef ASC_TYPELINT_H
 #define ASC_TYPELINT_H
 
-#include <general/list.h>
-#include <utilities/ascConfig.h>
+#include <ascend/general/list.h>
+#include <ascend/utilities/ascConfig.h>
 #include "compiler.h"
 #include "stattypes.h"
 

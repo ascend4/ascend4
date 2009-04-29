@@ -2538,8 +2538,8 @@ SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, 
 #------------------------------------------------------
 # BUILD...
 
-# so that #include <modulename/headername.h> works across all modules...
-env.AppendUnique(CPPPATH=['#ascend'])
+# so that #include <ascend/modulename/headername.h> works across all modules...
+env.AppendUnique(CPPPATH=['#'])
 
 if env['DEBUG']:
 	env.Append(CCFLAGS=['-g'])
@@ -2621,9 +2621,15 @@ if with_mmio:
 else:
 	print "Skipping... MMIO export won't be built:", without_mmio_reason
 #-------------
-# LIBASCEND -- all base/generic functionality
+# LIBASCEND -- all 'core' functionality
 
-libascend_env.Append(LIBS=['m'])
+# FIXME want to move these bits to ascend/SConscript
+
+libascend_env.Append(
+	CPPPATH=['#']
+	,LIBS=['m']
+)
+
 if platform.system()=="Linux":
 	libascend_env.Append(LIBS=['dl'])
 

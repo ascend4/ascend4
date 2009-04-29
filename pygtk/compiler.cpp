@@ -4,9 +4,9 @@
 /* #define BINTOKEN_DEBUG */
 
 extern "C"{
-#include <compiler/compiler.h>
-#include <compiler/bintoken.h>
-#include <utilities/error.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/bintoken.h>
+#include <ascend/utilities/error.h>
 }
 
 using namespace std;

@@ -37,8 +37,8 @@
 #ifndef ASC_SETS_H
 #define ASC_SETS_H
 
-#include <utilities/ascConfig.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
 
 #include "fractions.h"
 #include "compiler.h"

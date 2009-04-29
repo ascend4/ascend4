@@ -29,8 +29,8 @@
 
 #include <stdlib.h>
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
 #include "pool.h"
 
 #ifndef FALSE

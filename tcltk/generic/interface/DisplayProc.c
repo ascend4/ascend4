@@ -29,19 +29,19 @@
 
 #include <tcl.h>
 #include "config.h"
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
 
-#include <compiler/symtab.h>
-#include <compiler/module.h>
-#include <compiler/library.h>
-#include <compiler/child.h>
-#include <compiler/type_desc.h>
-#include <compiler/type_descio.h>
-#include <compiler/expr_types.h>
-#include <compiler/stattypes.h>
-#include <compiler/statio.h>
-#include <system/slv_types.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/module.h>
+#include <ascend/compiler/library.h>
+#include <ascend/compiler/child.h>
+#include <ascend/compiler/type_desc.h>
+#include <ascend/compiler/type_descio.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/stattypes.h>
+#include <ascend/compiler/statio.h>
+#include <ascend/system/slv_types.h>
 #include "HelpProc.h"
 #include "DisplayProc.h"
 #include "Commands.h"

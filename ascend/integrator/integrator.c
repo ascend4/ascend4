@@ -27,15 +27,15 @@
 #include <time.h>
 #include <string.h>
 
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
-#include <compiler/packages.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/compiler/packages.h>
 
-#include <system/slv_common.h>
-#include <system/slv_stdcalls.h>
-#include <system/block.h>
+#include <ascend/system/slv_common.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/block.h>
 
-#include <solver/solver.h>
+#include <ascend/solver/solver.h>
 
 #include "integrator.h"
 #include "samplelist.h"

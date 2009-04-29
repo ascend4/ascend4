@@ -1,9 +1,9 @@
-#include <utilities/ascConfig.h>
-#include <solver/mtx.h>
-#include <solver/linsol.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/solver/mtx.h>
+#include <ascend/solver/linsol.h>
 
 #ifdef __WIN32__
-#include <utilities/ascPrint.h>
+#include <ascend/utilities/ascPrint.h>
 #define f_vtable_name "example_vtable"
 static struct Asc_PrintVTable f_vtable = {f_vtable_name, vfprintf, fflush, NULL};
 #endif

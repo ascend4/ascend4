@@ -20,9 +20,9 @@
 */
 
 #include "mtx_vector.h"
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <utilities/mem.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/mem.h>
 #include <math.h>
 
 struct vec_vector *vec_create(int32 low, int32 high)

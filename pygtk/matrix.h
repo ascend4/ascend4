@@ -28,7 +28,7 @@
 #define ASCXX_MATRIX_H
 
 extern "C"{
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 }
 
 #include <cstdio>

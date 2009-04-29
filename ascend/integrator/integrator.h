@@ -51,21 +51,21 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 
-#include <compiler/compiler.h>
-#include <compiler/instance_enum.h>
-#include <compiler/symtab.h>
-#include <compiler/parentchild.h>
-#include <compiler/instquery.h>
-#include <compiler/atomvalue.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/atomvalue.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
-#include <system/slv_client.h>
+#include <ascend/system/slv_client.h>
 
 #include "samplelist.h"
 

@@ -37,19 +37,19 @@
 #include <math.h>
 #include <stdarg.h>
 
-#include <utilities/ascSignal.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/set.h>
-#include <general/tm_time.h>
-#include <utilities/mem.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/set.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
 
-#include <system/calc.h>
-#include <system/relman.h>
-#include <system/slv_common.h>
-#include <system/slv_stdcalls.h>
-#include <system/block.h>
+#include <ascend/system/calc.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/slv_common.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/block.h>
 
 #if !defined(STATIC_NGSLV) && !defined(DYNAMIC_NGSLV)
 int slv7_register(SlvFunctionsT *f)

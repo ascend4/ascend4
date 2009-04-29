@@ -60,7 +60,7 @@
 */
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "slv_types.h"
 
 /*

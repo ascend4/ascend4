@@ -32,14 +32,14 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/mem.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/mem.h>
 
-#include <utilities/ascPanic.h>
-#include <compiler/functype.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/compiler/functype.h>
 
-#include <compiler/func.h>
+#include <ascend/compiler/func.h>
 #include "calc.h"
 
 #define BIGNUM 1.0e8

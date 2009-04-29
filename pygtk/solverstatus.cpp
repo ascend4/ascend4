@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 extern "C"{
-#include <solver/solver.h>
+#include <ascend/solver/solver.h>
 }
 
 SolverStatus::SolverStatus(){

@@ -21,8 +21,8 @@
 */
 #include <stdio.h>
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 
 #include <ascend/general/test/test_register_general.h>
 #include <ascend/utilities/test/test_register_utilities.h>

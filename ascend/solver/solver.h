@@ -26,8 +26,8 @@
 #ifndef ASC_SOLVER_H
 #define ASC_SOLVER_H
 
-#include <utilities/ascConfig.h>
-#include <system/slv_client.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/system/slv_client.h>
 
 /*-----------------------------------------------------------------------
 	SOLVER HOOKS AND REGISTRATION DATA STRUCTURE

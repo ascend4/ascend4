@@ -29,13 +29,13 @@
  */
 
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
 
 #include "symtab.h"
 #include "braced.h"
-#include <utilities/ascPanic.h>
-#include <general/list.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
 
 
 #include "functype.h"

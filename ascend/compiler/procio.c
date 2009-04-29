@@ -27,11 +27,11 @@
  */
 #include<math.h>
 #include<stdio.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
 
-#include <general/dstring.h>
-#include <general/list.h>
+#include <ascend/general/dstring.h>
+#include <ascend/general/list.h>
 
 
 #include "functype.h"

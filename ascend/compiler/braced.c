@@ -21,8 +21,8 @@
 	Last in CVS: $Revision: 1.4 $ $Date: 1998/06/16 16:38:38 $ $Author: mthomas $
 */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
 
 #include "braced.h"
 

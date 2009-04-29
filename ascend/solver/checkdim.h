@@ -36,9 +36,9 @@
 #ifndef chkdim__already_included
 #define chkdim__already_included
 
-#include <linear/linsolqr.h>
-#include <system/slv_client.h>
-#include <compiler/dimen.h>
+#include <ascend/linear/linsolqr.h>
+#include <ascend/system/slv_client.h>
+#include <ascend/compiler/dimen.h>
 
 /**	@addtogroup solver Solver
 	@{

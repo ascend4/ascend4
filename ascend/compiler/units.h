@@ -27,7 +27,7 @@
 #define ASC_UNITS_H
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "compiler.h"
 #include "fractions.h"
 #include "dimen.h"

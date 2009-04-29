@@ -35,7 +35,7 @@
 
 #include "system.h"
 #include "diffvars.h"
-#include <solver/solver.h>
+#include <ascend/solver/solver.h>
 
 /**
 	Structure that holds a differential variable and the sequence of

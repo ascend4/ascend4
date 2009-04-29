@@ -39,16 +39,16 @@
 #include <tcl.h>
 #include <tk.h>
 #include "config.h"
-#include <utilities/ascMalloc.h>
-#include <general/dstring.h>
-#include <compiler/instance_io.h>
-#include <compiler/instance_enum.h>
-#include <compiler/module.h>
-#include <compiler/library.h>
-#include <compiler/exprsym.h>
-#include <compiler/relation_util.h>
-#include <compiler/relation_io.h>
-#include <system/system.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/dstring.h>
+#include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/module.h>
+#include <ascend/compiler/library.h>
+#include <ascend/compiler/exprsym.h>
+#include <ascend/compiler/relation_util.h>
+#include <ascend/compiler/relation_io.h>
+#include <ascend/system/system.h>
 #include "Qlfdid.h"
 #include "CodeGen.h"
 

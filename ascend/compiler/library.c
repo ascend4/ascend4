@@ -32,8 +32,8 @@
 
 #include "library.h"
 
-#include <utilities/ascMalloc.h>
-#include <utilities/error.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/error.h>
 
 #include "instance_enum.h"
 #include "cmpfunc.h"

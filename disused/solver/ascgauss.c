@@ -34,11 +34,11 @@
 #define GAUSSALONE 0
 #if GAUSSALONE
 #include <math.h>
-#include <utilities/ascConfig.h>
-#include <compiler/compiler.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/mem.h>
-#include <general/tm_time.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/general/tm_time.h>
 #include "mtx.h"
 #include "linsolqr.h"
 #define D_ZERO (real64)0.0

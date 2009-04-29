@@ -22,7 +22,7 @@
 #include "notequery.h"
 #include "notate.h"
 #include "symtab.h"
-#include <utilities/error.h>
+#include <ascend/utilities/error.h>
 
 const char *notes_get_for_variable(symchar *dbid
 	, const struct TypeDescription *t

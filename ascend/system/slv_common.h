@@ -68,10 +68,10 @@
 
 #include <stdio.h>
 
-#include <utilities/ascConfig.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
 #include "slv_types.h"
 #include "rel.h"

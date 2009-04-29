@@ -31,10 +31,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>		/* !!! dont ever forget this and -lm */
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
 
 #include "expr_types.h"
 #include "instance_enum.h"

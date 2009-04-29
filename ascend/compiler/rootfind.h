@@ -41,8 +41,8 @@
 #ifndef ASC_ROOTFIND_H
 #define ASC_ROOTFIND_H
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 #ifndef STAND_ALONE
 # include "extfunc.h" /* for ExtVarFunc typedef */
 #else

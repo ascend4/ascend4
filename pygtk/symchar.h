@@ -6,10 +6,10 @@
 
 #include "config.h"
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <compiler/compiler.h>
-#include <compiler/symtab.h>
-#include <compiler/instance_name.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instance_name.h>
 }
 
 /**

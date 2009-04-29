@@ -7,14 +7,14 @@ using namespace std;
 #include "variable.h"
 
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
 
-#include <general/dstring.h>
+#include <ascend/general/dstring.h>
 
-#include <compiler/symtab.h>
-#include <compiler/instance_enum.h>
-#include <compiler/instance_io.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/instance_io.h>
 }
 
 

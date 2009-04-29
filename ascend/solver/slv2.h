@@ -39,7 +39,7 @@
 #ifndef ASC_SLV2_H
 #define ASC_SLV2_H
 
-#include <solver/solver.h>
+#include <ascend/solver/solver.h>
 
 /**	@addtogroup solver Solver
 	@{

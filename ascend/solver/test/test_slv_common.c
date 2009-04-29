@@ -22,24 +22,24 @@
  */
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
 
 #include "CUnit/CUnit.h"
 
-#include <utilities/ascMalloc.h>
+#include <ascend/utilities/ascMalloc.h>
 
-#include <general/list.h>
+#include <ascend/general/list.h>
 
-#include <linear/mtx.h>
-#include <linear/mtx_vector.h>
+#include <ascend/linear/mtx.h>
+#include <ascend/linear/mtx_vector.h>
 
-#include <system/slv_types.h>
-#include <system/rel.h>
-#include <system/logrel.h>
-#include <system/slv_common.h>
+#include <ascend/system/slv_types.h>
+#include <ascend/system/rel.h>
+#include <ascend/system/logrel.h>
+#include <ascend/system/slv_common.h>
 
 #include "test_slv_common.h"
 #include "test/assertimpl.h"

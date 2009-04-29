@@ -35,46 +35,46 @@
 
 #include "SolverProc.h"
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #ifdef ASC_SIGNAL_TRAPS
-# include <utilities/ascSignal.h>
+# include <ascend/utilities/ascSignal.h>
 #endif
 
 #include "config.h"
-#include <utilities/ascMalloc.h>
-#include <general/tm_time.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 
-#include <compiler/instance_enum.h>
-#include <compiler/symtab.h>
-#include <compiler/instance_io.h>
-#include <compiler/expr_types.h>
-#include <compiler/find.h>
-#include <compiler/rel_blackbox.h>
-#include <compiler/vlist.h>
-#include <compiler/relation.h>
-#include <compiler/functype.h>
-#include <compiler/func.h>
-#include <compiler/safe.h>
-#include <compiler/simlist.h>
-#include <compiler/relation_util.h>
-#include <compiler/pending.h>
-#include <compiler/instance_name.h>
-#include <compiler/instquery.h>
-#include <compiler/parentchild.h>
-#include <compiler/check.h>
-#include <compiler/stattypes.h>
-#include <compiler/instantiate.h>
-#include <compiler/watchpt.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/find.h>
+#include <ascend/compiler/rel_blackbox.h>
+#include <ascend/compiler/vlist.h>
+#include <ascend/compiler/relation.h>
+#include <ascend/compiler/functype.h>
+#include <ascend/compiler/func.h>
+#include <ascend/compiler/safe.h>
+#include <ascend/compiler/simlist.h>
+#include <ascend/compiler/relation_util.h>
+#include <ascend/compiler/pending.h>
+#include <ascend/compiler/instance_name.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/check.h>
+#include <ascend/compiler/stattypes.h>
+#include <ascend/compiler/instantiate.h>
+#include <ascend/compiler/watchpt.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
-#include <system/slv_server.h>   /* KHACK: not sure if this should be here */
-#include <system/system.h>
-#include <system/cond_config.h>
-#include <solver/slv_interface.h>
-#include <solver/solver.h>
+#include <ascend/system/slv_server.h>   /* KHACK: not sure if this should be here */
+#include <ascend/system/system.h>
+#include <ascend/system/cond_config.h>
+#include <ascend/solver/slv_interface.h>
+#include <ascend/solver/solver.h>
 
 #include "old_utils.h"
 #include "HelpProc.h"

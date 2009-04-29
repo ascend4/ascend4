@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #ifdef __WIN32__
 # include <io.h>

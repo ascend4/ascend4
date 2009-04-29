@@ -27,7 +27,7 @@
  *  COPYING.
  *
  */
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 
 

@@ -28,7 +28,7 @@
 
 #include <stdio.h>
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #include "type_desc.h"
 

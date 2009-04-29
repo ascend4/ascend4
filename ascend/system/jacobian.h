@@ -25,7 +25,7 @@
 #include "var.h"
 #include "rel.h"
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
 ASC_DLLSPEC const rel_filter_t system_rfilter_algeb;
 ASC_DLLSPEC const rel_filter_t system_rfilter_diff;

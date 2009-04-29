@@ -1,16 +1,16 @@
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <compiler/packages.h>
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/packages.h>
+#include <ascend/compiler/instance_enum.h>
 
 
-#include <compiler/expr_types.h>
-#include <general/list.h>
-#include <compiler/sets.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/sets.h>
 
-#include <compiler/atomvalue.h>
-#include <compiler/instquery.h>
-#include <compiler/extcall.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/extcall.h>
 #include "bisect.h"
 
 static int CheckArgTypes(struct gl_list_t *branch){

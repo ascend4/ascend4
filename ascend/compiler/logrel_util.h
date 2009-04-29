@@ -22,7 +22,7 @@
 #ifndef ASC_LOGRELATION_UTIL_H
 #define ASC_LOGRELATION_UTIL_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "compiler.h"
 #include "logrelation.h"
 #include "instance_enum.h"

@@ -32,10 +32,10 @@
 #include <stdio.h>
 #include <math.h>
 
-#include <utilities/ascConfig.h>
-#include <general/mathmacros.h>
-#include <utilities/ascMalloc.h>
-#include <general/tm_time.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/mathmacros.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/tm_time.h>
 
 #include "mtx.h"
 #include "linsolqr.h"

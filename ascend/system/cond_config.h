@@ -25,9 +25,9 @@
 #ifndef ASC_COND_CONFIG_H
 #define ASC_COND_CONFIG_H
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
-#include <compiler/instance_enum.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/instance_enum.h>
 
 #include "conditional.h" 
 #include "rel.h"

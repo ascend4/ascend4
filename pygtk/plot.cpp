@@ -1,7 +1,7 @@
 #include "plot.h"
 #include "curve.h"
 
-#include <compiler/plot.h>
+#include <ascend/compiler/plot.h>
 #include <stdexcept>
 #include <iostream>
 using namespace std;

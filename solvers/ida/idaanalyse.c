@@ -1,18 +1,18 @@
 #include "idaanalyse.h"
 
-#include <utilities/ascPanic.h>
-#include <utilities/error.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/error.h>
 
-#include <linear/linsolqr.h>
+#include <ascend/linear/linsolqr.h>
 
-#include <system/diffvars.h>
-#include <system/slv_stdcalls.h>
-#include <system/block.h>
-#include <system/diffvars.h>
-#include <system/diffvars_impl.h>
-#include <system/jacobian.h>
-#include <system/cond_config.h>
-#include <solver/slvDOF.h>
+#include <ascend/system/diffvars.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/block.h>
+#include <ascend/system/diffvars.h>
+#include <ascend/system/diffvars_impl.h>
+#include <ascend/system/jacobian.h>
+#include <ascend/system/cond_config.h>
+#include <ascend/solver/slvDOF.h>
 
 #include "ida_impl.h"
 

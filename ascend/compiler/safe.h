@@ -65,7 +65,7 @@
 #ifndef ASC_SAFE_H
 #define ASC_SAFE_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "compiler.h"
 #include "functype.h"
 

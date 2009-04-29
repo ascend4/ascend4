@@ -5,17 +5,17 @@
 
 #include "config.h"
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <general/list.h>
-#include <compiler/instance_enum.h>
-#include <compiler/watchpt.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/watchpt.h>
 
-#include <compiler/fractions.h>
-#include <compiler/compiler.h>
-#include <compiler/dimen.h>
-#include <compiler/expr_types.h>
-#include <compiler/proc.h>
-#include <compiler/initialize.h>
+#include <ascend/compiler/fractions.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/dimen.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/proc.h>
+#include <ascend/compiler/initialize.h>
 
 }
 

@@ -43,8 +43,8 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
-#include <utilities/error.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/error.h>
 #include "stattypes.h"
 
 ASC_DLLSPEC struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList*sl);

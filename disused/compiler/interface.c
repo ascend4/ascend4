@@ -37,13 +37,13 @@
 #if (defined(__alpha) || defined(sun))
 #include <malloc.h>
 #endif
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascSignal.h>
-#include <general/pool.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/general/pool.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 #include "compiler.h"
 #include "symtab.h"
 #include "notate.h"

@@ -32,13 +32,13 @@
 #include <tcl.h>
 #include <tk.h>
 #include "config.h"
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
 
-#include <compiler/symtab.h>
-#include <compiler/instance_enum.h>
-#include <compiler/instquery.h>
-#include <compiler/mergeinst.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/mergeinst.h>
 #include "HelpProc.h"
 #include "Qlfdid.h"
 #include "BrowserProc.h"

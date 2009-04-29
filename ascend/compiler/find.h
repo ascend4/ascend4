@@ -27,7 +27,7 @@
 #ifndef ASC_FIND_H
 #define ASC_FIND_H
 
-#include "utilities/ascConfig.h"
+#include <ascend/utilities/ascConfig.h>
 #include "instance_enum.h"
 #include "expr_types.h"
 

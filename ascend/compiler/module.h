@@ -39,10 +39,10 @@
 	@{
 */
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <general/list.h>
+#include <ascend/general/list.h>
 
 #define  MOD_FILE_EXTS   6
 #define  MOD_OLD_CODE    ".asc"

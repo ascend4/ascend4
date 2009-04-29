@@ -32,9 +32,9 @@
 #include <tcl.h>
 #include <tk.h>
 #include "config.h"
-#include <general/list.h>
-#include <compiler/instance_enum.h>
-#include <compiler/qlfdid.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/qlfdid.h>
 
 int Asc_BrowQlfdidSearchCmd(ClientData cdata, Tcl_Interp *interp,
                         int argc, CONST84 char *argv[])

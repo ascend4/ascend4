@@ -25,11 +25,11 @@
 
 #include "logblock.h"
 
-#include <utilities/ascMalloc.h>
-#include <general/mathmacros.h>
-#include <linear/mtx_basic.h>
-#include <system/slv_stdcalls.h>
-#include <system/logrelman.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/mathmacros.h>
+#include <ascend/linear/mtx_basic.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/logrelman.h>
 
 #include "solver.h"
 

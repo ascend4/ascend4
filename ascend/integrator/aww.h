@@ -28,7 +28,7 @@
 	@{
 */
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #include "integrator.h"
 
 IntegratorCreateFn integrator_aww_create;

@@ -28,18 +28,18 @@
  *
  */
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
-#include <general/stack.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/stack.h>
 
 
 #include "functype.h"
 #include "expr_types.h"
 #include "relation_type.h"
 #include "freestore.h"
-#include <general/mathmacros.h>
+#include <ascend/general/mathmacros.h>
 
 /*
  * This is an implementation of a *freestore* which is hoped to

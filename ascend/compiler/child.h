@@ -38,15 +38,15 @@
 #ifndef ASC_CHILD_H
 #define ASC_CHILD_H
 
-#include <utilities/ascConfig.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
 #include "compiler.h"
 
 /**	@addtogroup compiler Compiler
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 /**
  *  The ChildListStructure is a private implementation detail.

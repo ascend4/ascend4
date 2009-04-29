@@ -56,20 +56,20 @@
 # error "Where is CLOCKS_PER_SEC?"
 #endif
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
-#include <utilities/error.h>
-#include <compiler/instance_enum.h>
-#include <utilities/ascSignal.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <solver/solver.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/error.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/solver/solver.h>
 
-#include <packages/sensitivity.h>
+#include <ascend/packages/sensitivity.h>
 
-#include <linear/densemtx.h>
+#include <ascend/linear/densemtx.h>
 
-#include <integrator/integrator.h>
+#include <ascend/integrator/integrator.h>
 
 /* #define TIMING_DEBUG */
 

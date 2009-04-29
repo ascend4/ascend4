@@ -92,24 +92,24 @@
 #include <stdarg.h>
 #include <errno.h>
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 
 #ifdef ASC_SIGNAL_TRAPS
-# include <utilities/ascSignal.h>
+# include <ascend/utilities/ascSignal.h>
 #endif
 
 /*#include <stdlib.h>*/
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <utilities/error.h>
-#include <general/pool.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/error.h>
+#include <ascend/general/pool.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 
 #if TIMECOMPILER
 #include <time.h>
-#include <general/tm_time.h>
+#include <ascend/general/tm_time.h>
 #endif
 
 /* don't even THINK ABOUT adding instmacro.h to this list -- ...what the? */

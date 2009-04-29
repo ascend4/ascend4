@@ -19,19 +19,19 @@
 
 #include "incidence.h"
 
-#include <utilities/ascSignal.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/error.h>
-#include <utilities/mem.h>
-#include <utilities/set.h>
-#include <general/list.h>
-#include <general/mathmacros.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/error.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/utilities/set.h>
+#include <ascend/general/list.h>
+#include <ascend/general/mathmacros.h>
 
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/instance_enum.h>
 
-#include <linear/linsolqr.h>
+#include <ascend/linear/linsolqr.h>
 
-#include <system/slv_client.h>
+#include <ascend/system/slv_client.h>
 
 /*
 	--removed some old notes from 1996-1997, please see code repository--

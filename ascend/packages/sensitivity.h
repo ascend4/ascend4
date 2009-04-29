@@ -25,20 +25,20 @@
 #ifndef ASC_SENSITIVITY_H
 #define ASC_SENSITIVITY_H
 
-#include <utilities/ascConfig.h>
-#include <general/list.h>
-#include <compiler/extfunc.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/extfunc.h>
 
-#include <compiler/instance_enum.h>
-#include <compiler/compiler.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/compiler.h>
 
-#include <linear/linsolqr.h>
-#include <linear/densemtx.h>
+#include <ascend/linear/linsolqr.h>
+#include <ascend/linear/densemtx.h>
 
-#include <system/calc.h>
-#include <system/relman.h>
-#include <system/slv_stdcalls.h>
-#include <system/slv_client.h>
+#include <ascend/system/calc.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/slv_client.h>
 
 /*--------------------------------------------------
 	The following functions are provided only for use by LSODE. We want to

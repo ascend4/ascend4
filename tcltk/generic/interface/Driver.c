@@ -29,14 +29,14 @@
 #include <time.h>
 #include <tcl.h>
 #include <tk.h>
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #include "config.h"
-#include <general/ospath.h>
-#include <utilities/ascPrint.h>
-#include <utilities/error.h>
-#include <solver/solver.h>
+#include <ascend/general/ospath.h>
+#include <ascend/utilities/ascPrint.h>
+#include <ascend/utilities/error.h>
+#include <ascend/solver/solver.h>
 #ifdef ASC_SIGNAL_TRAPS
-# include <utilities/ascSignal.h>
+# include <ascend/utilities/ascSignal.h>
 #endif
 
 #ifndef __WIN32__
@@ -53,22 +53,22 @@
 # undef WIN32_LEAN_AND_MEAN
 #endif /* __WIN32__ */
 
-#include <utilities/config.h>
-#include <utilities/ascMalloc.h>    /* for ascshutdown */
-#include <utilities/ascPanic.h>     /* for Asc_Panic */
-#include <utilities/ascEnvVar.h>
-#include <utilities/ascPrint.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascMalloc.h>    /* for ascshutdown */
+#include <ascend/utilities/ascPanic.h>     /* for Asc_Panic */
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/utilities/ascPrint.h>
 
-#include <compiler/ascCompiler.h>
-#include <compiler/instance_enum.h>
-#include <compiler/units.h>
+#include <ascend/compiler/ascCompiler.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/units.h>
 /* #include <compiler/redirectFile.h> */  /* for Asc_RedirectCompilerDefault() */
-#include <compiler/simlist.h>
+#include <ascend/compiler/simlist.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
-#include <system/slv_client.h>
-#include <system/slv_stdcalls.h>
+#include <ascend/system/slv_client.h>
+#include <ascend/system/slv_stdcalls.h>
 
 #include "AscBitmaps.h"
 #include "AscPrintTcl.h"

@@ -46,9 +46,9 @@
 # define ASC_DLLSPEC T T
 # include "env.h"
 #else
-# include <utilities/config.h>
-# include <utilities/ascConfig.h>
-# include <utilities/ascMalloc.h>
+# include <ascend/utilities/config.h>
+# include <ascend/utilities/ascConfig.h>
+# include <ascend/utilities/ascMalloc.h>
 # include "env.h"
 #endif
 

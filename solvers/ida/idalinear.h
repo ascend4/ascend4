@@ -47,7 +47,7 @@
 # include <ida/ida.h>
 #endif
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
 /**
 	Function prototype for sparse jacobian evaluation as required by this linear solver

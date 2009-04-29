@@ -6,7 +6,7 @@
 #include <vector>
 
 extern "C"{
-#include <compiler/type_desc.h>
+#include <ascend/compiler/type_desc.h>
 }
 
 class Simulation;

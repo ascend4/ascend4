@@ -6,7 +6,7 @@ using namespace std;
 #include "dimensions.h"
 
 extern "C"{
-#include <compiler/dimen_io.h>
+#include <ascend/compiler/dimen_io.h>
 }
 
 const string Dimensions::BASEUNITS[Dimensions::MAX_DIMS] = {

@@ -39,7 +39,7 @@
 #include "ascPrint.h"
 
 /* <..> path is required here for the autotools build to be happy */
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 
 static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
 

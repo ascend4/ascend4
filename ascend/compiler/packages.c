@@ -40,21 +40,21 @@
 #include <math.h>
 #include <ctype.h>  /* was compiler/actype.h */
 
-#include <utilities/ascConfig.h>
-#include <utilities/config.h> /* NEW */
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/config.h> /* NEW */
 
 #ifndef ASC_DEFAULT_ASCENDLIBRARY
 # error "Where is ASC_DEFAULT_ASCENDLIBRARY???"
 #endif
 
-#include <general/ospath.h>
+#include <ascend/general/ospath.h>
 
 
-#include <utilities/ascMalloc.h>
-#include <utilities/ascEnvVar.h>
-#include <compiler/importhandler.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/compiler/importhandler.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
 #include "symtab.h"
 
 
@@ -72,9 +72,9 @@
 #include "safe.h"
 #include "relation_util.h"
 #include "extfunc.h"
-#include <packages/sensitivity.h>
-#include <packages/ascFreeAllVars.h>
-#include <packages/defaultall.h>
+#include <ascend/packages/sensitivity.h>
+#include <ascend/packages/ascFreeAllVars.h>
+#include <ascend/packages/defaultall.h>
 #include "module.h"
 #include "packages.h"
 #include "defaultpaths.h"

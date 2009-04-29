@@ -31,8 +31,8 @@
 
 #include "mtx.h"
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 
 /**
 	This file will be effectively empty unless ASC_WITH_UFSPARSE is defined.

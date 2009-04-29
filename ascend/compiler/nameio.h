@@ -28,11 +28,11 @@
 #define ASC_NAMEIO_H
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
-#include <general/dstring.h>
-#include <compiler/compiler.h>
-#include <compiler/expr_types.h>
-#include <compiler/symtab.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/dstring.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/symtab.h>
 
 /**	@addtogroup compiler Compiler
 	@{

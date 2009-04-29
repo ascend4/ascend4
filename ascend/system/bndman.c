@@ -24,9 +24,9 @@
 
 #include "bndman.h"
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
 
 #include "relman.h"
 #include "logrelman.h"

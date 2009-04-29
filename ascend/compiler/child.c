@@ -31,9 +31,9 @@
 
 #include "child.h"
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
 
 #include "symtab.h"
 #include "instance_enum.h"
@@ -47,7 +47,7 @@
 #define __CHILD_ILLEGAL_ACCESS__
 #include "childpriv.h"
 #include "childio.h"
-#include <general/mathmacros.h>
+#include <ascend/general/mathmacros.h>
 
 #ifndef lint
 static CONST char ChildListID[] = "$Id: child.c,v 1.25 1998/03/26 20:39:34 ballan Exp $";

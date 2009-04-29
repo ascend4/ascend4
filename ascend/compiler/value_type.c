@@ -30,13 +30,13 @@
  */
 #include <math.h>
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
-#include <general/pool.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
+#include <ascend/general/pool.h>
 #ifndef FIRSTCHOICE 
-#include <general/hashpjw.h>
+#include <ascend/general/hashpjw.h>
 #endif
 
 #include "symtab.h"

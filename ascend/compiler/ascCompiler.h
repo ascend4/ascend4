@@ -40,7 +40,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 ASC_DLLSPEC int Asc_CompilerInit(int simplify_relations);
 /**<

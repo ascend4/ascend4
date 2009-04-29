@@ -38,7 +38,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 /*------------------------------------------------------------------------------
   INTERFACE POINTER FUNCTIONS

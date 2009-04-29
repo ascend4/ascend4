@@ -1,10 +1,10 @@
 #include "annotation.h"
 
 extern "C"{
-#include <compiler/notate.h>
-#include <compiler/notequery.h>
-#include <utilities/error.h>
-#include <utilities/ascPanic.h>
+#include <ascend/compiler/notate.h>
+#include <ascend/compiler/notequery.h>
+#include <ascend/utilities/error.h>
+#include <ascend/utilities/ascPanic.h>
 }
 
 #include <stdexcept>

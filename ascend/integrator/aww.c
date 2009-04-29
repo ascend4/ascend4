@@ -21,9 +21,9 @@
 	by John Pye, Dec 2006.
 */
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPanic.h>
 #include "aww.h"
 
 const IntegratorInternals integrator_aww_internals = {

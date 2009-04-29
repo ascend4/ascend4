@@ -18,7 +18,7 @@
 	Boston, MA 02111-1307, USA.
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "test_register_linear.h"
 
 #define SUITE general

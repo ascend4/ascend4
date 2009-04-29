@@ -38,8 +38,8 @@
 #include "simulation.h"
 
 extern "C"{
-#include <compiler/importhandler.h>
-#include <utilities/ascMalloc.h>
+#include <ascend/compiler/importhandler.h>
+#include <ascend/utilities/ascMalloc.h>
 }
 
 #ifdef ASC_WITH_DMALLOC

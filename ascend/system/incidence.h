@@ -30,10 +30,10 @@
 #include <stdio.h>
 
 /* The includes required just for this *header* to load */
-#include <utilities/ascConfig.h>
-#include <system/slv_types.h>
-#include <system/var.h>
-#include <system/rel.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/system/slv_types.h>
+#include <ascend/system/var.h>
+#include <ascend/system/rel.h>
 
 /* Note, removed 'own' attribute from mplotvars struct since it was unused */
 

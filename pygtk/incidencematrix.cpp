@@ -8,8 +8,8 @@ using namespace std;
 #include "relation.h"
 
 extern "C"{
-#include <linear/mtx.h>
-#include <system/slv_client.h>
+#include <ascend/linear/mtx.h>
+#include <ascend/system/slv_client.h>
 }
 
 IncidencePoint::IncidencePoint(const int&row, const int &col, const IncidencePointType &type) : row(row), col(col), type(type){

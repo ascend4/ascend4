@@ -20,7 +20,7 @@
 	CUnit tests for the ospath.c module.
 */
 
-#include <general/ospath.h>
+#include <ascend/general/ospath.h>
 #include <CUnit/CUnit.h>
 
 FilePathTestFn ospath_searchpath_testexists;

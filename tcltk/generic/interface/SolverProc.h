@@ -38,7 +38,7 @@
 #ifndef ASCTK_SOLVERPROC_H
 #define ASCTK_SOLVERPROC_H
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 
 #include "HelpProc.h"
 

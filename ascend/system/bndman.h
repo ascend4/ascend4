@@ -28,7 +28,7 @@
 #ifndef ASC_BNDMAN_H
 #define ASC_BNDMAN_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "bnd.h"
 
 /**	@addtogroup solver Solver

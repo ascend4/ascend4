@@ -29,16 +29,16 @@
 */
 
 #include <limits.h> /* for LONG_MAX */
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascPrint.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascPrint.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 
 #if TIMECOMPILER
 #include <time.h>
-#include <general/tm_time.h>
+#include <ascend/general/tm_time.h>
 #endif
 
 

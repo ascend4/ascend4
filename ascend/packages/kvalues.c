@@ -26,21 +26,21 @@
 	Date last modified: $Date: 1997/07/18 12:20:07 $
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <compiler/packages.h>
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/packages.h>
+#include <ascend/compiler/instance_enum.h>
 
 
-#include <compiler/expr_types.h>
-#include <general/list.h>
-#include <compiler/sets.h>
-#include <compiler/atomvalue.h>
-#include <compiler/parentchild.h>
-#include <compiler/instquery.h>
-#include <compiler/instance_name.h>
-#include <compiler/symtab.h>
-#include <compiler/extcall.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/sets.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/instance_name.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/extcall.h>
 #include <math.h>
 #include "kvalues.h"
 

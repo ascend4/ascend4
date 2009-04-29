@@ -32,10 +32,10 @@
 
 #include "config.h"
 
-#include <compiler/instance_io.h>
-#include <compiler/units.h>
-#include <integrator/integrator.h>
-#include <integrator/samplelist.h>
+#include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/units.h>
+#include <ascend/integrator/integrator.h>
+#include <ascend/integrator/samplelist.h>
 
 #include "HelpProc.h"
 #include "Integrators.h"

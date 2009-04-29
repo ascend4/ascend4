@@ -25,8 +25,8 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-#include <utilities/ascConfig.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/dstring.h>
 
 
 

@@ -40,8 +40,8 @@
 #ifndef ASCTK_BROWSERQUERY_H
 #define ASCTK_BROWSERQUERY_H
 
-#include <compiler/dimen.h>
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/dimen.h>
+#include <ascend/compiler/instance_enum.h>
 
 extern int Asc_BrowIsRelationCmd(ClientData cdata, Tcl_Interp *interp,
                                  int argc, CONST84 char *argv[]);

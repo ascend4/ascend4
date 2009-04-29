@@ -29,11 +29,11 @@
 #include <time.h>
 #include <ctype.h>
 #include <sys/stat.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascEnvVar.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
 #include "scanner.h"
 
 #include "instance_enum.h"
@@ -41,7 +41,7 @@
 #include "symtab.h"
 #include "module.h"
 #include "library.h"
-#include <general/ospath.h>
+#include <ascend/general/ospath.h>
 
 /* #define SEARCH_DEBUG */
 

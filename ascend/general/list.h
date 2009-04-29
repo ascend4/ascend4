@@ -67,7 +67,7 @@
 #ifndef ASC_LIST_H
 #define ASC_LIST_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #ifndef TRUE
 #define TRUE 1

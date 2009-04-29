@@ -30,7 +30,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "child.h"
 
 /*

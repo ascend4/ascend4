@@ -8,10 +8,10 @@
 #endif
 
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <compiler/compiler.h>
-#include <compiler/extfunc.h>
-#include <compiler/importhandler.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/extfunc.h>
+#include <ascend/compiler/importhandler.h>
 }
 
 /**

@@ -42,7 +42,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 /** Plot types. */
 enum PlotTypes {

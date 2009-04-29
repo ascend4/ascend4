@@ -45,11 +45,11 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "compiler.h"
 #include "dimen.h"
 #include "expr_types.h"
-#include <general/list.h>
+#include <ascend/general/list.h>
 #include "func.h"
 
 /** If TOKENDOMINANT is 1, then we assume union RelationUnion fields

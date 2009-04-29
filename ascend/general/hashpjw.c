@@ -11,8 +11,8 @@
  */
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPanic.h>
 #include "hashpjw.h"
 
 #ifndef lint

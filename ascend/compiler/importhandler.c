@@ -26,12 +26,12 @@
 
 #include "importhandler.h"
 
-#include <utilities/config.h>
-#include <utilities/error.h>
-#include <utilities/ascDynaLoad.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascEnvVar.h>
-#include <general/table.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/error.h>
+#include <ascend/utilities/ascDynaLoad.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/general/table.h>
 
 #include <string.h>
 

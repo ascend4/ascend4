@@ -26,16 +26,16 @@
 
 #include <stdarg.h>
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/error.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/error.h>
 
-#include <general/list.h>
-#include <general/dstring.h>
-#include <general/tm_time.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
+#include <ascend/general/tm_time.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
 #include "slv_server.h"
 #include "system.h"

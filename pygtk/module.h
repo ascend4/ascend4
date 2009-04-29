@@ -3,10 +3,10 @@
 
 #include "config.h"
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <compiler/compiler.h>
-#include <general/list.h>
-#include <compiler/module.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/module.h>
 }
 
 #include "type.h"

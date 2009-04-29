@@ -23,24 +23,24 @@
 	by John Pye, 15 Feb 2007.
 */
 
-#include <packages/defaultall.h>
+#include <ascend/packages/defaultall.h>
 
-#include <compiler/proc.h>
-#include <compiler/name.h>
+#include <ascend/compiler/proc.h>
+#include <ascend/compiler/name.h>
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascPrint.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPrint.h>
+#include <ascend/utilities/ascPanic.h>
 
-#include <compiler/instquery.h>
-#include <compiler/child.h>
-#include <compiler/type_desc.h>
-#include <compiler/symtab.h>
-#include <compiler/atomvalue.h>
-#include <compiler/visitinst.h>
-#include <compiler/parentchild.h>
-#include <compiler/library.h>
-#include <compiler/initialize.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/child.h>
+#include <ascend/compiler/type_desc.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/visitinst.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/library.h>
+#include <ascend/compiler/initialize.h>
 
 /* #define DEFAULT_DEBUG */
 

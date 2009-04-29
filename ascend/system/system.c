@@ -26,14 +26,14 @@
 
 #include "system.h"
 
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
-#include <general/tm_time.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
+#include <ascend/general/tm_time.h>
 
-#include <compiler/instance_enum.h>
-#include <compiler/check.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/check.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
 #include "slv_client.h"
 

@@ -26,11 +26,11 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
-#include <compiler/compiler.h>
-#include <compiler/type_desc.h>
-#include <general/list.h>
-#include <general/pairlist.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/type_desc.h>
+#include <ascend/general/list.h>
+#include <ascend/general/pairlist.h>
 
 /**
 	Get the most refined note of a certain 'language' lang for the specified

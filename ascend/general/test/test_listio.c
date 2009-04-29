@@ -22,13 +22,13 @@
  */
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
-#include <general/listio.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
+#include <ascend/general/listio.h>
 #include "CUnit/CUnit.h"
 #include "test/assertimpl.h"
 #include "test/redirectStdStreams.h"

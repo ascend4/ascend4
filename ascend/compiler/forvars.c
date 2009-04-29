@@ -28,11 +28,11 @@
  *
  */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
 #include "symtab.h"
 #include "instance_enum.h"
 #include "cmpfunc.h"

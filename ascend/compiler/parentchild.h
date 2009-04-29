@@ -78,10 +78,10 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
-#include <compiler/compiler.h>
-#include <compiler/instance_enum.h>
-#include <compiler/instance_name.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/instance_name.h>
 
 /* Parent routines */
 

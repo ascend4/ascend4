@@ -36,10 +36,10 @@
 #ifndef ASC_MODEL_REORDER_H
 #define ASC_MODEL_REORDER_H
 
-#include <utilities/ascConfig.h>
-#include <linear/mtx.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/linear/mtx.h>
 
-#include <system/slv_types.h>
+#include <ascend/system/slv_types.h>
 
 
 /**	@addtogroup solver Solver

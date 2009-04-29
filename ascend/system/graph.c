@@ -28,7 +28,7 @@
 #ifdef HAVE_GRAPHVIZ_BOOLEAN
 # define HAVE_BOOLEAN
 #endif
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #ifdef WITH_GRAPHVIZ
 # ifdef __WIN32__
@@ -44,8 +44,8 @@ boolean X;
 #include "graph.h"
 #include "slv_client.h"
 #include "incidence.h"
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
 
 int system_write_graph(slv_system_t sys
 	, FILE *fp

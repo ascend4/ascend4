@@ -30,7 +30,7 @@
 #include <stdarg.h>
 #include <tcl.h>
 #include "config.h"
-#include <utilities/ascPrint.h>
+#include <ascend/utilities/ascPrint.h>
 
 /*
  *  Only compile this file if we are using Asc_Printf()

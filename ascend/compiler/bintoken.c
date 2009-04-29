@@ -35,16 +35,16 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 
 #include <unistd.h> /* for getpid() */
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPrint.h>
-#include <utilities/ascSignal.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascDynaLoad.h>
-#include <general/list.h>
-#include <general/dstring.h>
-#include <general/pretty.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPrint.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascDynaLoad.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
+#include <ascend/general/pretty.h>
 
 #include "functype.h"
 #include "expr_types.h"

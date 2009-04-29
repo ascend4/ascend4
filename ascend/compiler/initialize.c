@@ -29,10 +29,10 @@
  *
  */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 
 #include "symtab.h"
 #include "functype.h"

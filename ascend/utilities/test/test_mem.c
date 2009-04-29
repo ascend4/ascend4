@@ -22,10 +22,10 @@
  */
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/mem.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/general/list.h>
 #include "CUnit/CUnit.h"
 #include "test_mem.h"
 

@@ -34,59 +34,59 @@
 #include <limits.h>		/* need DBL_MAX and LONG_MAX */
 #include <float.h>		/* on a NeXT they are in here */
 
-#include <compiler/parser.h>
+#include <ascend/compiler/parser.h>
 
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
-#include <general/dstring.h>
-#include <compiler/compiler.h>
-#include <compiler/scanner.h>
-#include <compiler/symtab.h>		/* the global string/symbol table */
-#include <compiler/notate.h>		/* notes database wrapper */
-#include <compiler/braced.h>
-#include <compiler/fractions.h>
-#include <compiler/dimen.h>
-#include <compiler/functype.h>
-#include <compiler/func.h>
-#include <compiler/expr_types.h>
-#include <compiler/name.h>
-#include <compiler/nameio.h>
-#include <compiler/instance_enum.h>
-#include <compiler/extfunc.h>
-#include <compiler/packages.h>
-#include <compiler/sets.h>
-#include <compiler/exprs.h>
-#include <compiler/exprio.h>
-#include <compiler/vlist.h>
-#include <compiler/vlistio.h>		/* for debugging only */
-#include <compiler/stattypes.h>
-#include <compiler/slist.h>
-#include <compiler/statement.h>
-#include <compiler/statio.h>
-#include <compiler/units.h>
-#include <compiler/when.h>
-#include <compiler/select.h>
-#include <compiler/switch.h>
-#include <compiler/proc.h>
-#include <compiler/watchpt.h>
-#include <compiler/module.h>
-#include <compiler/child.h>
-#include <compiler/type_desc.h>
-#include <compiler/type_descio.h>
-#include <compiler/typedef.h>
-#include <compiler/library.h>
-#include <compiler/syntax.h>
-#include <compiler/lexer.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/scanner.h>
+#include <ascend/compiler/symtab.h>		/* the global string/symbol table */
+#include <ascend/compiler/notate.h>		/* notes database wrapper */
+#include <ascend/compiler/braced.h>
+#include <ascend/compiler/fractions.h>
+#include <ascend/compiler/dimen.h>
+#include <ascend/compiler/functype.h>
+#include <ascend/compiler/func.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/name.h>
+#include <ascend/compiler/nameio.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/extfunc.h>
+#include <ascend/compiler/packages.h>
+#include <ascend/compiler/sets.h>
+#include <ascend/compiler/exprs.h>
+#include <ascend/compiler/exprio.h>
+#include <ascend/compiler/vlist.h>
+#include <ascend/compiler/vlistio.h>		/* for debugging only */
+#include <ascend/compiler/stattypes.h>
+#include <ascend/compiler/slist.h>
+#include <ascend/compiler/statement.h>
+#include <ascend/compiler/statio.h>
+#include <ascend/compiler/units.h>
+#include <ascend/compiler/when.h>
+#include <ascend/compiler/select.h>
+#include <ascend/compiler/switch.h>
+#include <ascend/compiler/proc.h>
+#include <ascend/compiler/watchpt.h>
+#include <ascend/compiler/module.h>
+#include <ascend/compiler/child.h>
+#include <ascend/compiler/type_desc.h>
+#include <ascend/compiler/type_descio.h>
+#include <ascend/compiler/typedef.h>
+#include <ascend/compiler/library.h>
+#include <ascend/compiler/syntax.h>
+#include <ascend/compiler/lexer.h>
 
 /* 1 ==> expr can find missing , w/o  shift/reduce conflicts */
 #define COMMAEXPR_NOTBUGGY 0 
 #if COMMAEXPR_NOTBUGGY
-#include <compiler/exprio.h>
+#include <ascend/compiler/exprio.h>
 #endif /* for CommaExpr if working. */
 
 int g_compiler_warnings = 1;		/* level of whine to allow */
 
-#include <compiler/redirectFile.h>
+#include <ascend/compiler/redirectFile.h>
 #ifndef ASCERR
 # error "ASCERR not defined"
 #endif

@@ -37,7 +37,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "type_desc.h"
 #include "instance_enum.h"
 #include "module.h"

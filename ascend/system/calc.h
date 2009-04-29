@@ -46,9 +46,9 @@
 #ifndef ASC_SLV_CALC_H
 #define ASC_SLV_CALC_H
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
-#include <compiler/func.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/func.h>
 
 /**	@addtogroup solver Solver
 	@{

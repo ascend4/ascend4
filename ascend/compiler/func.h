@@ -40,7 +40,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "functype.h"
 #include "compiler.h"
 #include "dimen.h"

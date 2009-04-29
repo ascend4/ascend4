@@ -35,12 +35,12 @@
 
 #include "model_reorder.h"
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
 
-#include <system/slv_client.h>
+#include <ascend/system/slv_client.h>
 
 #define MRDEBUG 0
 /**< if !=0, generate spew while working */

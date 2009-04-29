@@ -26,25 +26,25 @@
 #include <tcl.h>
 #include <tk.h>
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #include "config.h"
-#include <utilities/ascSignal.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/mem.h>
-#include <utilities/set.h>
-#include <general/list.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/utilities/set.h>
+#include <ascend/general/list.h>
 
-#include <compiler/instance_enum.h>
-#include <compiler/symtab.h>
-#include <compiler/instance_name.h>
-#include <compiler/expr_types.h>
-#include <compiler/functype.h>
-#include <compiler/func.h>
-#include <compiler/extfunc.h>
-#include <compiler/extcall.h>
-#include <compiler/relation_type.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instance_name.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/functype.h>
+#include <ascend/compiler/func.h>
+#include <ascend/compiler/extfunc.h>
+#include <ascend/compiler/extcall.h>
+#include <ascend/compiler/relation_type.h>
 
-#include <system/incidence.h>
+#include <ascend/system/incidence.h>
 
 #include "old_utils.h"
 #include "HelpProc.h"

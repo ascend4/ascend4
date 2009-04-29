@@ -29,14 +29,14 @@
  *  the file named COPYING.
  */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascPrint.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascPrint.h>
+#include <ascend/general/list.h>
 #include "numlist.h" /* should be in general/ */
 #if NUMLISTUSESPOOL
-#include <general/pool.h>
+#include <ascend/general/pool.h>
 #endif
 
 /*

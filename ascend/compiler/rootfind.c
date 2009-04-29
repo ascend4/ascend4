@@ -40,10 +40,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #include "instance_enum.h"
-#include <general/list.h>
+#include <ascend/general/list.h>
 #include "extfunc.h"
 #include "rootfind.h"
 

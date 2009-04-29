@@ -28,31 +28,31 @@
 #include "logrelman.h"
 
 #include <math.h>
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
 
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/instance_enum.h>
 
 
-#include <compiler/functype.h>
-#include <compiler/safe.h>
-#include <compiler/extfunc.h>
+#include <ascend/compiler/functype.h>
+#include <ascend/compiler/safe.h>
+#include <ascend/compiler/extfunc.h>
 
-#include <compiler/expr_types.h>
-#include <compiler/exprs.h>
-#include <compiler/find.h>
-#include <compiler/atomvalue.h>
-#include <compiler/mathinst.h>
-#include <compiler/relation_type.h>
-#include <compiler/rel_blackbox.h>
-#include <compiler/vlist.h>
-#include <compiler/relation.h>
-#include <compiler/packages.h>
-#include <compiler/extcall.h>
-#include <compiler/logical_relation.h>
-#include <compiler/logrelation.h>
-#include <compiler/logrel_util.h>
-#include <compiler/logrel_io.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/exprs.h>
+#include <ascend/compiler/find.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/mathinst.h>
+#include <ascend/compiler/relation_type.h>
+#include <ascend/compiler/rel_blackbox.h>
+#include <ascend/compiler/vlist.h>
+#include <ascend/compiler/relation.h>
+#include <ascend/compiler/packages.h>
+#include <ascend/compiler/extcall.h>
+#include <ascend/compiler/logical_relation.h>
+#include <ascend/compiler/logrelation.h>
+#include <ascend/compiler/logrel_util.h>
+#include <ascend/compiler/logrel_io.h>
 
 #include "slv_server.h"
 

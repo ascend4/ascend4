@@ -30,9 +30,9 @@
 	@{
 */
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
-#include <general/list.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
 #include "instance_enum.h"
 
 #define MAXIMUM_ID_LENGTH 80

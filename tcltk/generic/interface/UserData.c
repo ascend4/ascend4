@@ -31,18 +31,18 @@
 #include <stdarg.h>
 #include <tcl.h>
 #include "config.h"
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
-#include <general/hashpjw.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
+#include <ascend/general/hashpjw.h>
 
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/instance_enum.h>
 
 
-#include <compiler/atomvalue.h>
-#include <compiler/instquery.h>
-#include <compiler/visitinst.h>
-#include <compiler/units.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/visitinst.h>
+#include <ascend/compiler/units.h>
 #include "HelpProc.h"
 #include "UserData.h"
 #include "Qlfdid.h"

@@ -1,3 +1,4 @@
+#!/usr/bin/python invoke_using_scons
 # This SConscript builds out static packages -- the ones that
 # don't need to be loaded, becuase they're built in.
 # It would be a good idea to staticly link ALL packages

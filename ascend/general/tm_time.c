@@ -28,8 +28,8 @@
  */
 
 #include <time.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPanic.h>
 #include "tm_time.h"
 
 static boolean f_first = TRUE;

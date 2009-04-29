@@ -7,7 +7,7 @@ using namespace std;
 #include "dimensions.h"
 
 extern "C"{
-#include <compiler/cmpfunc.h>
+#include <ascend/compiler/cmpfunc.h>
 }
 
 UnitsM::UnitsM(){

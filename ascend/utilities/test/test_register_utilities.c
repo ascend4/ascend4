@@ -22,8 +22,8 @@
  */
 
 #include "CUnit/CUnit.h"
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 #include "test_register_utilities.h"
 
 #include "test_ascDynaLoad.h"

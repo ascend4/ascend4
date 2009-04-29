@@ -25,10 +25,10 @@
 */
 
 #include "block.h"
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPrint.h>
-#include <utilities/ascPanic.h>
-#include <general/mathmacros.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPrint.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/mathmacros.h>
 #include "slv_client.h"
 #include "slv_stdcalls.h"
 #include "model_reorder.h"

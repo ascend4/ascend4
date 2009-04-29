@@ -26,9 +26,9 @@
 #ifndef ASC_DEFAULTALL_H
 #define ASC_DEFAULTALL_H
 
-#include <compiler/compiler.h>
-#include <general/list.h>
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/instance_enum.h>
 
 int defaultself_visit_submodels(struct Instance *root, struct gl_list_t *arglist, void *userdata);
 int defaultself_visit_childatoms(struct Instance *root, struct gl_list_t *arglist, void *userdata);

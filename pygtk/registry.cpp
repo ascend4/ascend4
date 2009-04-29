@@ -1,7 +1,7 @@
 #include "registry.h"
 
 extern "C"{
-#include <compiler/importhandler.h>
+#include <ascend/compiler/importhandler.h>
 }
 
 #include <stdexcept>

@@ -230,9 +230,9 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %defattr(-, root, root)
 %doc INSTALL.txt LICENSE.txt
 
-%{_datadir}/ascend/models
-%{_datadir}/ascend/solvers
-%{_libdir}/libascend.so
+%{_libdir}/libascend.so.*
+%{_libdir}/ascend/models
+%{_libdir}/ascend/solvers
 %{_datadir}/mime/packages/ascend.xml
 %{gtksourceview_lang_file}
 %{_datadir}/icons/text-x-ascend-model.svg
@@ -258,13 +258,8 @@ update-mime-database /usr/share/mime &> /dev/null || :
 
 %files devel
 %{_bindir}/ascend-config
-%{_includedir}/compiler
-%{_includedir}/general
-%{_includedir}/utilities
-%{_includedir}/solver
-%{_includedir}/linear
-%{_includedir}/integrator
-%{_includedir}/system
+%{_includedir}/ascend
+%{_libdir}/lib*.so
 
 %files doc
 %doc doc/book.pdf

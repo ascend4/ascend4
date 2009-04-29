@@ -32,31 +32,31 @@
 #include <tcl.h>
 #include "config.h"
 
-#include <compiler/bit.h>
-#include <compiler/pending.h>
-#include <compiler/simlist.h>
-#include <compiler/library.h>
-#include <compiler/instquery.h>
-#include <compiler/symtab.h>
-#include <compiler/createinst.h>
-#include <compiler/instantiate.h>
-#include <compiler/check.h>
-#include <compiler/copyinst.h>
-#include <compiler/destroyinst.h>
-#include <compiler/prototype.h>
-#include <compiler/instance_io.h>
-#include <compiler/statio.h>
-#include <compiler/statement.h>
-#include <compiler/bintoken.h>
+#include <ascend/compiler/bit.h>
+#include <ascend/compiler/pending.h>
+#include <ascend/compiler/simlist.h>
+#include <ascend/compiler/library.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/createinst.h>
+#include <ascend/compiler/instantiate.h>
+#include <ascend/compiler/check.h>
+#include <ascend/compiler/copyinst.h>
+#include <ascend/compiler/destroyinst.h>
+#include <ascend/compiler/prototype.h>
+#include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/statio.h>
+#include <ascend/compiler/statement.h>
+#include <ascend/compiler/bintoken.h>
 
-#include <utilities/ascMalloc.h>
-#include <general/tm_time.h>
-#include <general/list.h>
-#include <general/dstring.h>
-#include <general/tm_time.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
+#include <ascend/general/tm_time.h>
 
-#include <compiler/qlfdid.h>
-#include <system/slv_types.h>
+#include <ascend/compiler/qlfdid.h>
+#include <ascend/system/slv_types.h>
 
 #include <ctype.h>
 

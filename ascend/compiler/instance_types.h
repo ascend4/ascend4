@@ -35,7 +35,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "type_desc.h"
-#include <general/list.h>
+#include <ascend/general/list.h>
 #include "logical_relation.h"
 
 /** @file

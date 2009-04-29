@@ -27,7 +27,7 @@
 	Last in CVS: $Revision: 1.3 $ $Date: 1997/07/18 12:34:53 $ $Author: mthomas $
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #include "destroyinst.h"
 #include "simlist.h"
@@ -38,8 +38,8 @@
 #include "cmpfunc.h"
 #include "instantiate.h"
 
-#include <general/list.h>
-#include <general/tm_time.h>
+#include <ascend/general/list.h>
+#include <ascend/general/tm_time.h>
  
 struct gl_list_t *g_simulation_list = NULL;
 

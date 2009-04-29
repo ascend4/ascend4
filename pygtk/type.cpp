@@ -7,24 +7,24 @@
 using namespace std;
 
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <utilities/ascSignal.h>
-#include <general/dstring.h>
-#include <compiler/instance_enum.h>
-#include <compiler/fractions.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/general/dstring.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/fractions.h>
 
-#include <compiler/dimen.h>
-#include <compiler/symtab.h>
-#include <compiler/instance_io.h>
-#include <compiler/type_desc.h>
-#include <compiler/bintoken.h>
-#include <compiler/library.h>
-#include <linear/mtx.h>
-#include <system/calc.h>
-#include <system/relman.h>
-#include <system/slv_client.h>
-#include <system/system.h>
-#include <compiler/simlist.h>
+#include <ascend/compiler/dimen.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/type_desc.h>
+#include <ascend/compiler/bintoken.h>
+#include <ascend/compiler/library.h>
+#include <ascend/linear/mtx.h>
+#include <ascend/system/calc.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/slv_client.h>
+#include <ascend/system/system.h>
+#include <ascend/compiler/simlist.h>
 }
 
 #include "type.h"

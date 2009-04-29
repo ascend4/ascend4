@@ -27,8 +27,8 @@
 #ifndef ASC_ASCFREEALLVARS_H
 #define ASC_ASCFREEALLVARS_H
 
-#include <compiler/extfunc.h>
-#include <general/list.h>
+#include <ascend/compiler/extfunc.h>
+#include <ascend/general/list.h>
 
 ASC_DLLSPEC int Asc_ClearVarsInTree(struct Instance *i);
 /**<

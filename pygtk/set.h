@@ -8,9 +8,9 @@
 
 #include "config.h"
 extern "C"{
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "compiler/setinstval.h"
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/setinstval.h>
 }
 
 /**

@@ -30,11 +30,11 @@
 
 #include "solver.h"
 
-#include <system/system_impl.h>
-#include <general/list.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <compiler/packages.h>
+#include <ascend/system/system_impl.h>
+#include <ascend/general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/compiler/packages.h>
 
 #define SOLVER_DEBUG 0
 

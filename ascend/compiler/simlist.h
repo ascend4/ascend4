@@ -44,7 +44,7 @@
 
 #include "compiler.h"
 #include "instance_enum.h"
-#include <general/list.h>
+#include <ascend/general/list.h>
 
 /**	@addtogroup compiler Compiler
 	@{

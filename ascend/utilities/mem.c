@@ -30,7 +30,7 @@
 #include "ascConfig.h"
 #include "ascMalloc.h"
 #include "mem.h"
-#include <general/mathmacros.h>
+#include <ascend/general/mathmacros.h>
 
 static void move_fwd(POINTER from, POINTER too, size_t nbytes)
 /**

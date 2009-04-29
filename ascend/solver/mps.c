@@ -62,13 +62,13 @@
 #include <time.h>
 #include <errno.h>
 
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
-#include <utilities/set.h>
-#include <general/tm_time.h>
-#include <utilities/mem.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
+#include <ascend/utilities/set.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/utilities/mem.h>
 
-#include <system/slv_client.h>
+#include <ascend/system/slv_client.h>
 #include "slv6.h"
 
 #ifdef STATIC_MPS

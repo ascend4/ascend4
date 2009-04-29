@@ -33,17 +33,17 @@
 #include <tcl.h>
 #include <tk.h>
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #include "config.h"
-#include <general/list.h>
+#include <ascend/general/list.h>
 
-#include <compiler/instance_enum.h>
-#include <compiler/instance_name.h>
-#include <compiler/units.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/instance_name.h>
+#include <ascend/compiler/units.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
-#include <system/slv_client.h>
+#include <ascend/system/slv_client.h>
 
 #include "HelpProc.h"
 #include "Commands.h"
