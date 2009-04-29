@@ -54,7 +54,7 @@ for c in csrcs:
 import glob
 
 if libascend_env.get('CAN_INSTALL'):
-	installdir = Dir(libascend_env.subst("$INSTALL_ROOT$INSTALL_INCLUDE/solver"))
+	installdir = Dir(libascend_env.subst("$INSTALL_ROOT$INSTALL_INCLUDE/ascend/solver"))
 
 	headers = glob.glob("*.h")
 	libascend_env.InstallHeader(installdir,headers)
