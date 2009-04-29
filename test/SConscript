@@ -1,18 +1,25 @@
-Import('env')
+#!/usr/bin/python invoke_using_scons
+Import('test_env')
 
-srcs = Split("""
-	redirectStdStreams.c
-	printutil.c
-	assertimpl.c
-""")
+# local sources
+srcs = ['test.c','test_ascend_base.c','redirectStdStreams.c','printutil.c','assertimpl.c']
 
-test_cpppath = [
-	'#base/generic'
-	, '#test'
-]
-if env.has_key('CUNIT_CPPPATH'):
-	test_cpppath.append(env['CUNIT_CPPPATH'])
+# test cases from the different tested modules
+for dir in ['general','utilities','solver','linear','compiler']:
+	srcs += test_env['TESTSRCS_'+dir.upper()]
 
-#env.Library('asctest',srcs
-#	, CPPPATH=test_cpppath
-#)
+
+test_env.Append(
+	LIBS = ['ascend','cunit']
+	, LIBPATH = ['#']
+	, CPPDEFINES = ['-DASC_SHARED']
+)
+
+if test_env.has_key('CUNIT_CPPPATH'):
+	test_env.Append(CPPATH=test_env['CUNIT_CPPPATH'])
+
+if test_env.has_key('CUNIT_LIBPATH'):
+	test_env.Append(LIBPATH=test_env['CUNIT_LIBPATH'])
+
+test_env.Program('test',srcs)
+

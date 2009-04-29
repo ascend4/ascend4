@@ -24,10 +24,11 @@
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 
-#include <general/test/test_register_general.h>
-#include <utilities/test/test_register_utilities.h>
-#include <solver/test/test_register_solver.h>
-#include <compiler/test/test_register_compiler.h>
+#include <ascend/general/test/test_register_general.h>
+#include <ascend/utilities/test/test_register_utilities.h>
+#include <ascend/solver/test/test_register_solver.h>
+#include <ascend/compiler/test/test_register_compiler.h>
+#include <ascend/linear/test/test_register_linear.h>
 
 ASC_EXPORT int register_cunit_tests(){
 	test_register_general();

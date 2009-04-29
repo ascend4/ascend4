@@ -29,7 +29,7 @@
 #include <utilities/ascPrint.h>
 #include <general/list.h>
 #include "CUnit/CUnit.h"
-#include "assertimpl.h"
+#include "test/assertimpl.h"
 #include <general/mathmacros.h>
 
 /* comparison function used in test_list(). */

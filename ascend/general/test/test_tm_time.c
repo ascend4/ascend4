@@ -26,7 +26,7 @@
 #include <general/list.h>
 #include <general/tm_time.h>
 #include "CUnit/CUnit.h"
-#include "assertimpl.h"
+#include "test/assertimpl.h"
 
 /* 
  *  This is pretty simplistic, but so is tm_time.[ch].

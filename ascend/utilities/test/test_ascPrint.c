@@ -31,7 +31,7 @@
 #include <utilities/ascPrint.h>
 #include "CUnit/CUnit.h"
 #include "test_ascPrint.h"
-#include "printutil.h"
+#include "test/printutil.h"
 
 #undef STR_LEN
 #define STR_LEN 4096

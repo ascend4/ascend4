@@ -1,4 +1,4 @@
-Import('env')
+Import('test_env')
 import platform
 
 testsrcs = ['#test/'+i for i in Split("""
@@ -11,36 +11,36 @@ basesrcs = ['test_ascend_base.c']
 
 srcs = []
 for dir in ['general','utilities','solver','linear','compiler']:
-	srcs += env['TESTSRCS_'+dir.upper()]
+	srcs += test_env['TESTSRCS_'+dir.upper()]
 
-cpppath = ['#test','#base/generic']
-if env.has_key('CUNIT_CPPPATH'):
-	cpppath.append(env['CUNIT_CPPPATH'])
+cpppath = ['#','#ascend']
+if test_env.has_key('CUNIT_CPPPATH'):
+	cpppath.append(test_env['CUNIT_CPPPATH'])
 
 libpath = ['#', '#test', '#base/generic/test']
-if env.has_key('CUNIT_LIBPATH'):
-	libpath.append(env['CUNIT_LIBPATH'])
+if test_env.has_key('CUNIT_LIBPATH'):
+	libpath.append(test_env['CUNIT_LIBPATH'])
 	#print "CUNIT_LIBPATH ---> ",libpath
 
 cppdefines = []
-if env.has_key('CPPDEFINES'):
-	cppdefines += env.get('CPPDEFINES')
+if test_env.has_key('CPPDEFINES'):
+	cppdefines += test_env.get('CPPDEFINES')
 cppdefines += ['-DASC_SHARED']
 
 libs = ['ascend','m','cunit']
 if platform.system()!="Windows":
 	libs += ['dl']
 
-if env['WITH_UFSPARSE']:
+if test_env['WITH_UFSPARSE']:
 	libs += ['cxsparse']
 
 objs = []
 for src in srcs+testsrcs:
-	objs += env.SharedObject(src
+	objs += test_env.SharedObject(src
 		, CPPPATH = cpppath
 	)
 
-objs += env.SharedObject('test_ascend_base.c'
+objs += test_env.SharedObject('test_ascend_base.c'
 		, CPPPATH = cpppath
 	)
 
@@ -48,14 +48,14 @@ objs += env.SharedObject('test_ascend_base.c'
 #for o in objs:
 #	print o
 
-env.SharedLibrary('#/asctestsuite',objs
+test_env.SharedLibrary('#/asctestsuite',objs
 	, CPPPATH = cpppath
 	, LIBS = libs
 	, LIBPATH = libpath
 	, CPPDEFINES = cppdefines
 )
 
-env.Program('test',['test.c']
+test_env.Program('test',['test.c']
 	, CPPPATH = cpppath
 	, LIBS = ['ascend','cunit','asctestsuite']
 	, LIBPATH = libpath

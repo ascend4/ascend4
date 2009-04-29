@@ -37,7 +37,7 @@
 #include <compiler/parentchild.h>
 #include <compiler/atomvalue.h>
 
-#include <assertimpl.h>
+#include <test/assertimpl.h>
 
 static void test_init(void){
 

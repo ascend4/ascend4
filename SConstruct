@@ -1,4 +1,4 @@
-#!/usr/bin/python scons
+#!/usr/bin/python invoke_using_scons
 # This is a build script for use with SCons. Use it to compile ASCEND on 
 # Linux, Windows. It should also give some success on Mac, although this is
 # much less tested.
@@ -2539,7 +2539,7 @@ SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, 
 # BUILD...
 
 # so that #include <modulename/headername.h> works across all modules...
-env.AppendUnique(CPPPATH=['#base/generic'])
+env.AppendUnique(CPPPATH=['#ascend'])
 
 if env['DEBUG']:
 	env.Append(CCFLAGS=['-g'])
@@ -2592,7 +2592,7 @@ dirs = ['general','utilities','compiler','system','solver','integrator','package
 
 srcs = []
 for d in dirs:
-	heresrcs = libascend_env.SConscript('base/generic/'+d+'/SConscript','libascend_env')
+	heresrcs = libascend_env.SConscript('ascend/'+d+'/SConscript','libascend_env')
 	srcs += heresrcs
 
 #-------------
@@ -2658,20 +2658,24 @@ env.Alias('libascend',libtargets)
 #-------------
 # UNIT TESTS (C CODE)
 
+test_env = env.Clone()
+test_env.Append(
+	CPPPATH="#"
+)
+
 if with_cunit:
 	testdirs = ['general','solver','utilities','linear','compiler']
 	testsrcs = []
 	for testdir in testdirs:
-		path = 'base/generic/'+testdir+'/test/'
-		env.SConscript([path+'SConscript'],'env')
-		testsrcs += [i.path for i in env['TESTSRCS_'+testdir.upper()]]
+		path = 'ascend/'+testdir+'/test/'
+		test_env.SConscript([path+'SConscript'],'test_env')
+		testsrcs += [i.path for i in test_env['TESTSRCS_'+testdir.upper()]]
 
 	#print "TESTSRCS =",testsrcs
 		
-	env.SConscript(['test/SConscript'],'env')
-	env.SConscript(['base/generic/test/SConscript'],'env')
+	test_env.SConscript(['test/SConscript'],'test_env')
 
-	env.Alias('test',[env.Dir('test'),env.Dir('base/generic/test')])
+	env.Alias('test',[env.Dir('test')])
 	
 else:
 	print "Skipping... CUnit tests aren't being built:",without_cunit_reason
@@ -2751,12 +2755,6 @@ if with_installer:
 	env.Alias('installer',installer)
 else:
 	print "Skipping... Windows installer isn't being built:",without_installer_reason
-
-
-#------------------------------------------------------
-# PROJECT FILE for MSVC
-
-env.SConscript(['base/msvc/SConscript'],['env','libascend']);
 
 #------------------------------------------------------
 # CREATE the SPEC file for generation of RPM packages

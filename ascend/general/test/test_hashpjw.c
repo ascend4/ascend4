@@ -25,7 +25,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/hashpjw.h>
 #include "CUnit/CUnit.h"
-#include "assertimpl.h"
+#include "test/assertimpl.h"
 
 static void test_hashpjw(void)
 {

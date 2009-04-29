@@ -27,7 +27,7 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/set.h>
 #include "CUnit/CUnit.h"
-#include "assertimpl.h"
+#include "test/assertimpl.h"
 #include "test_set.h"
 
 static void test_set(void)

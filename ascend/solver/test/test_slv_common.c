@@ -42,8 +42,8 @@
 #include <system/slv_common.h>
 
 #include "test_slv_common.h"
-#include "assertimpl.h"
-#include "printutil.h"
+#include "test/assertimpl.h"
+#include "test/printutil.h"
 
 /*
  *  Independent calculation of a vector dot product.
