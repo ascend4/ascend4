@@ -30,8 +30,8 @@
 #include <general/list.h>
 #include <general/listio.h>
 #include "CUnit/CUnit.h"
-#include "assertimpl.h"
-#include "redirectStdStreams.h"
+#include "test/assertimpl.h"
+#include "test/redirectStdStreams.h"
 
 /*
  *  listio.[ch] implements writing of a list's details to file.

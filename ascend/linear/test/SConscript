@@ -1,6 +1,6 @@
-Import('env')
+Import('test_env')
 
 import glob
 
-env['TESTSRCS_LINEAR'] = [env.File(i) for i in glob.glob("test_*.c")]
+test_env['TESTSRCS_LINEAR'] = [test_env.File(i) for i in glob.glob("test_*.c")]
 

@@ -19,7 +19,7 @@
 	Test registration function for the 'compiler' component.
 */
 
-#include <test/common.h>
+#include "test/common.h"
 
 #ifdef __cplusplus
 extern "C" {

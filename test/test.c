@@ -28,7 +28,7 @@
 #include <utilities/error.h>
 #include <compiler/redirectFile.h>
 #include <utilities/ascMalloc.h>
-#include <printutil.h>
+#include "printutil.h"
 
 #include <CUnit/Basic.h>
 

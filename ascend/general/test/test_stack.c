@@ -29,7 +29,7 @@
 #include <utilities/ascPrint.h>
 #include <general/stack.h>
 #include "CUnit/CUnit.h"
-#include "assertimpl.h"
+#include "test/assertimpl.h"
 
 /* transform function used in test_stack(). */
 static

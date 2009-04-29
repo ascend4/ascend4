@@ -26,7 +26,7 @@
 #include <utilities/ascMalloc.h>
 #include <general/pretty.h>
 #include "CUnit/CUnit.h"
-#include "printutil.h"
+#include "test/printutil.h"
 
 #define MAX_STRING_LEN 100
 

@@ -31,8 +31,8 @@
 #include <utilities/readln.h>
 #include "CUnit/CUnit.h"
 #include "test_readln.h"
-#include "printutil.h"
-#include "redirectStdStreams.h"
+#include "test/printutil.h"
+#include "test/redirectStdStreams.h"
 
 #define STR_LEN 100
 

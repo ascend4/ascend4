@@ -31,7 +31,7 @@
 #include <utilities/ascMalloc.h>
 #include <CUnit/CUnit.h>
 #include "test_ascMalloc.h"
-#include "assertimpl.h"
+#include "test/assertimpl.h"
 
 #undef STR_LEN
 #define STR_LEN 100

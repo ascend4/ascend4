@@ -31,8 +31,8 @@
 /* #include <compiler/redirectFile.h> */
 #include "CUnit/CUnit.h"
 #include "test_ascPanic.h"
-#include "assertimpl.h"
-#include "printutil.h"
+#include "test/assertimpl.h"
+#include "test/printutil.h"
 
 static int f_callback_called = FALSE;
 static int f_callback_status;

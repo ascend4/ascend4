@@ -25,7 +25,7 @@
 #include <utilities/ascConfig.h>
 #include <linear/mtx_csparse.h>
 
-#include <assertimpl.h>
+#include <test/assertimpl.h>
 
 
 /*
