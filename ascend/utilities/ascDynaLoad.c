@@ -36,12 +36,12 @@
 #include "ascDynaLoad.h"
 #include "ascEnvVar.h"
 
-#include <general/env.h>
-#include <general/ospath.h>
-#include <compiler/instance_enum.h>
-#include <general/list.h>
-#include <compiler/extfunc.h>
-#include <compiler/importhandler.h>
+#include <ascend/general/env.h>
+#include <ascend/general/ospath.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/extfunc.h>
+#include <ascend/compiler/importhandler.h>
 
 typedef int (*ExternalLibraryRegister_fptr_t)(void);
 

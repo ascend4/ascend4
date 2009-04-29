@@ -30,7 +30,7 @@
 #ifndef ASCTK_QLFDID_H
 #define ASCTK_QLFDID_H
 
-#include "compiler/qlfdid.h"
+#include <ascend/compiler/qlfdid.h>
 
 extern int Asc_BrowQlfdidSearchCmd(ClientData cdata, Tcl_Interp *interp,
                                    int argc, CONST84 char *argv[]);

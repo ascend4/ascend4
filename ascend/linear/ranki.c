@@ -2,7 +2,7 @@
 #include "linsolqr_impl.h"
 #include "ranki_impl.h"
 
-#include <general/tm_time.h>
+#include <ascend/general/tm_time.h>
 #include <math.h>
 
 static void eliminate_row(mtx_matrix_t mtx,

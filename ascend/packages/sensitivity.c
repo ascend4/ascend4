@@ -28,18 +28,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <utilities/error.h>
-#include <general/mathmacros.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/error.h>
+#include <ascend/general/mathmacros.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
 
-#include <compiler/packages.h>
+#include <ascend/compiler/packages.h>
 
 
-#include <compiler/atomvalue.h>
-#include <compiler/instquery.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/instquery.h>
 
-#include <system/system.h>
+#include <ascend/system/system.h>
 
 #define DEBUG 1
 

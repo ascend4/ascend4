@@ -39,13 +39,13 @@
 #ifndef ASC_SLVDOF_H
 #define ASC_SLVDOF_H
 
-#include <system/slv_client.h>
+#include <ascend/system/slv_client.h>
 
 /**	@addtogroup solver Solver
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 /*
 	The following functions are for use in running DOF analysis and dialog

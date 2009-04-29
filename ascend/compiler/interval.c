@@ -30,12 +30,12 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/ascPanic.h>
 #include "rounded.h"
 #include "interval.h"
-#include <general/mathmacros.h>
+#include <ascend/general/mathmacros.h>
 
 #define TEST(x) assert(((x).low) <= ((x).high))
 

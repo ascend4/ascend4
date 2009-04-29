@@ -25,8 +25,8 @@
 #define ASCXX_INTEGRATORREPORTER_H
 
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <integrator/integrator.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/integrator/integrator.h>
 }
 
 #include <ostream>

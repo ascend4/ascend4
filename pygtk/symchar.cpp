@@ -2,7 +2,7 @@
 using namespace std;
 
 extern "C"{
-#include <compiler/cmpfunc.h>
+#include <ascend/compiler/cmpfunc.h>
 }
 
 #include "symchar.h"

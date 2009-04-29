@@ -22,8 +22,8 @@
 #include <string.h>
 #include <CUnit/CUnit.h>
 
-#include <utilities/ascConfig.h>
-#include <linear/mtx_csparse.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/linear/mtx_csparse.h>
 
 #include <test/assertimpl.h>
 

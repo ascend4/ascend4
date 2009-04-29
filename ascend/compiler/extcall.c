@@ -23,7 +23,7 @@
 */
 
 #include "extcall.h"
-#include <utilities/error.h>
+#include <ascend/utilities/error.h>
 
 
 #include "functype.h"

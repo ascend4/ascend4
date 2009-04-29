@@ -34,7 +34,7 @@
 #ifndef ASC_LIBRARY_H
 #define ASC_LIBRARY_H
 
-#include <general/list.h>
+#include <ascend/general/list.h>
 
 #include "compiler.h"
 #include "type_desc.h"

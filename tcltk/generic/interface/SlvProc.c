@@ -30,12 +30,12 @@
 #include <math.h>
 #include <tcl.h>
 
-#include <utilities/ascMalloc.h>
-#include <compiler/instance_enum.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/compiler/instance_enum.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
-#include <system/slv_client.h>
+#include <ascend/system/slv_client.h>
 
 #include "HelpProc.h"
 #include "SolverGlobals.h"

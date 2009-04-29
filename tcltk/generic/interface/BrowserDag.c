@@ -31,13 +31,13 @@
 #include <tcl.h>
 #include <tk.h>
 #include "config.h"
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
-#include <compiler/instance_enum.h>
-#include <system/slv_client.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/system/slv_client.h>
 #include "BrowserQuery.h"
 #include "BrowserDag.h"
-#include <general/mathmacros.h>
+#include <ascend/general/mathmacros.h>
 
 #ifndef lint
 static CONST char BrowserDagID[] = "$Id: BrowserDag.c,v 1.15 2003/08/23 18:43:04 ballan Exp $";

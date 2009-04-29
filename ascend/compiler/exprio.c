@@ -23,10 +23,10 @@
 	Last in CVS: $Revision: 1.14 $ $Date: 1998/04/10 23:25:42 $ $Author: ballan $
 */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/dstring.h>
 
 
 
@@ -34,7 +34,7 @@
 #include "expr_types.h"
 #include "func.h"
 #include "instance_enum.h"
-#include <general/list.h>
+#include <ascend/general/list.h>
 #include "extfunc.h"
 #include "exprs.h"
 #include "exprio.h"

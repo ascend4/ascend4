@@ -40,21 +40,21 @@
 
 #include <stdarg.h>
 
-#include <utilities/ascSignal.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/set.h>
-#include <utilities/mem.h>
-#include <utilities/ascPanic.h>
-#include <general/tm_time.h>
-#include <general/list.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/set.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/general/list.h>
 
-#include <compiler/instance_enum.h>
-#include <compiler/expr_types.h>
-#include <compiler/find.h>
-#include <compiler/relation_type.h>
-#include <compiler/rel_blackbox.h>  /* relation enum */
-#include <compiler/vlist.h>
-#include <compiler/relation.h>  /* relation enum */
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/find.h>
+#include <ascend/compiler/relation_type.h>
+#include <ascend/compiler/rel_blackbox.h>  /* relation enum */
+#include <ascend/compiler/vlist.h>
+#include <ascend/compiler/relation.h>  /* relation enum */
 
 #if !defined(STATIC_MINOS) && !defined(DYNAMIC_MINOS)
 /* do nothing */

@@ -29,14 +29,14 @@
  *  This module initializes the fundamental data structures used by the rest of
  *  Ascend and pulls in system headers. Largely this means memory management.
  */
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascEnvVar.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascEnvVar.h>
 
 #include "ascCompiler.h"
-#include <utilities/ascSignal.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
 
 
 #include "expr_types.h"
@@ -66,7 +66,7 @@
 #include "instquery.h"
 #include "forvars.h"
 #include "setinstval.h"
-#include <general/pool.h>
+#include <ascend/general/pool.h>
 #include "arrayinst.h"
 #include "relation_type.h"
 #include "relation_io.h"

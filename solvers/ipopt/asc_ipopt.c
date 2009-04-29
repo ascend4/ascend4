@@ -26,27 +26,27 @@
 	ASCEND wrapper for IPOPT originally by John Pye, Jun 2007 onwards.
 */
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 
 #ifndef ASC_WITH_IPOPT
 # error "ASC_WITH_IPOPT must be defined in order to build this." 
 #endif
 
-#include <solver/solver.h>
+#include <ascend/solver/solver.h>
 
-#include <system/calc.h>
-#include <system/relman.h>
-#include <system/slv_stdcalls.h>
-#include <system/block.h>
+#include <ascend/system/calc.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/block.h>
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascDynaLoad.h>
-#include <utilities/mem.h>
-#include <utilities/ascEnvVar.h>
-#include <general/tm_time.h>
-#include <general/env.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascDynaLoad.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/general/env.h>
 
 #include <coin/IpStdCInterface.h>
 

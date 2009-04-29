@@ -2,7 +2,7 @@
 #define ASCXX_SOLVERPARAMETERS_H
 
 extern "C"{
-#include <system/slv_common.h>
+#include <ascend/system/slv_common.h>
 }
 
 #include "solver.h"

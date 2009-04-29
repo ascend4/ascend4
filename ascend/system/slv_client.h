@@ -280,11 +280,11 @@
 	@{
 */
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <linear/mtx.h>
-#include <linear/linsolqr.h>
+#include <ascend/linear/mtx.h>
+#include <ascend/linear/linsolqr.h>
 
 #include "var.h"
 #include "rel.h"

@@ -34,12 +34,12 @@
 
 #include <stdarg.h>
 
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
-#include <utilities/set.h>
-#include <general/tm_time.h>
-#include <utilities/mem.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
+#include <ascend/utilities/set.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/utilities/mem.h>
 
 #if !defined(STATIC_SLV) && !defined(DYNAMIC_SLV)
 /* do nothing */

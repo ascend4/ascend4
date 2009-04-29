@@ -22,10 +22,10 @@
  */
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <general/pool.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/pool.h>
+#include <ascend/general/list.h>
 #include "CUnit/CUnit.h"
 
 static void test_pool(void)

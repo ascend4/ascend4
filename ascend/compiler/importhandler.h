@@ -27,8 +27,8 @@
 #ifndef IMPORTHANDLER_H
 #define IMPORTHANDLER_H
 
-#include <utilities/ascConfig.h>
-#include <general/ospath.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/ospath.h>
 
 /*------------------------------------------------------------------------------
   DATA STRUCTURES AND TYPES

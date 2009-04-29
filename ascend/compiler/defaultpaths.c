@@ -1,6 +1,6 @@
 #include "defaultpaths.h"
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 
 #ifdef WIN32
 #include <windows.h>

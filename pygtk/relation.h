@@ -10,9 +10,9 @@ struct Variable;
 
 #include "config.h"
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <system/slv_types.h>
-#include <system/rel.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/system/slv_types.h>
+#include <ascend/system/rel.h>
 }
 
 class Relation : public Instance{

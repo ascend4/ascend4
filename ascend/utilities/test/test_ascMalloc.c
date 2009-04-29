@@ -22,13 +22,13 @@
  */
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
-#include <utilities/error.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/error.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
 #include <CUnit/CUnit.h>
 #include "test_ascMalloc.h"
 #include "test/assertimpl.h"

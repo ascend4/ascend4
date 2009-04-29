@@ -28,7 +28,7 @@
 	@{
 */
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #include "integrator.h"
 
 #ifdef ASC_WITH_IDA

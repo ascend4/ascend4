@@ -27,9 +27,9 @@
  *  COPYING.
  */
 
-#include <utilities/ascConfig.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 
 
 

@@ -3,11 +3,11 @@
 
 #include "config.h"
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <compiler/fractions.h>
-#include <compiler/compiler.h>
-#include <compiler/dimen.h>
-#include <compiler/units.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/fractions.h>
+#include <ascend/compiler/compiler.h>
+#include <ascend/compiler/dimen.h>
+#include <ascend/compiler/units.h>
 }
 
 #include "symchar.h"

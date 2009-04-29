@@ -29,45 +29,45 @@
 
 #define ASC_BUILDING_INTERFACE
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #ifdef ASC_SIGNAL_TRAPS
-# include <utilities/ascSignal.h>
+# include <ascend/utilities/ascSignal.h>
 #endif /* ASC_SIGNAL_TRAPS */
 
 #include <tcl.h>
 #include "config.h"
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
 
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/instance_enum.h>
 
 
-#include <compiler/instance_name.h>
-#include <compiler/atomvalue.h>
-#include <compiler/instquery.h>
-#include <compiler/expr_types.h>
-#include <compiler/mathinst.h>
-#include <compiler/find.h>
-#include <compiler/functype.h>
-#include <compiler/safe.h>
-#include <compiler/rel_blackbox.h>
-#include <compiler/vlist.h>
-#include <compiler/relation.h>
-#include <compiler/relation_util.h>
-#include <compiler/pending.h>
-#include <compiler/symtab.h>
+#include <ascend/compiler/instance_name.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/mathinst.h>
+#include <ascend/compiler/find.h>
+#include <ascend/compiler/functype.h>
+#include <ascend/compiler/safe.h>
+#include <ascend/compiler/rel_blackbox.h>
+#include <ascend/compiler/vlist.h>
+#include <ascend/compiler/relation.h>
+#include <ascend/compiler/relation_util.h>
+#include <ascend/compiler/pending.h>
+#include <ascend/compiler/symtab.h>
 
-#include <linear/mtx.h>
-#include <linear/linsolqr.h>
+#include <ascend/linear/mtx.h>
+#include <ascend/linear/linsolqr.h>
 
-#include <system/calc.h>
-#include <system/relman.h>
-#include <system/slv_stdcalls.h>
-#include <system/system.h>
+#include <ascend/system/calc.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/system.h>
 
-#include <solver/solver.h>
-#include <solver/slv_interface.h>
-#include <solver/slvDOF.h>
+#include <ascend/solver/solver.h>
+#include <ascend/solver/slv_interface.h>
+#include <ascend/solver/slvDOF.h>
 
 #include "old_utils.h"
 #include "HelpProc.h"

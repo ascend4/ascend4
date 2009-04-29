@@ -27,8 +27,8 @@
 #ifndef ASC_LOGRELMAN_H
 #define ASC_LOGRELMAN_H
 
-#include <utilities/ascConfig.h>
-#include <linear/mtx.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/linear/mtx.h>
 
 #include "discrete.h"
 #include "logrel.h"

@@ -15,8 +15,8 @@
 
 #include "config.h"
 extern "C"{
-#include <compiler/createinst.h>
-#include <system/slv_types.h>
+#include <ascend/compiler/createinst.h>
+#include <ascend/system/slv_types.h>
 }
 
 class Solver;

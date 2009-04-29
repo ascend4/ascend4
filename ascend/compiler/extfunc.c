@@ -25,12 +25,12 @@
 
 #include "extfunc.h"
 
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <general/hashpjw.h>
-#include <general/list.h>
-#include <general/table.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/hashpjw.h>
+#include <ascend/general/list.h>
+#include <ascend/general/table.h>
+#include <ascend/general/dstring.h>
 
 #include "symtab.h"
 #include "instance_enum.h"

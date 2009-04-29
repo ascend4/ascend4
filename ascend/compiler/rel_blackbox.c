@@ -23,11 +23,11 @@
 #include <math.h>
 #include <errno.h>
 #include <stdarg.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
 
-#include <general/pairlist.h>
-#include <general/dstring.h>
+#include <ascend/general/pairlist.h>
+#include <ascend/general/dstring.h>
 
 #include "symtab.h"
 #include "functype.h"

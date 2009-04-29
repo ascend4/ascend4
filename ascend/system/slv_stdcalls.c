@@ -24,8 +24,8 @@
 
 #include "slv_stdcalls.h"
 
-#include <utilities/ascMalloc.h>
-#include <general/mathmacros.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/mathmacros.h>
 
 #include "relman.h"
 #include "logrelman.h"

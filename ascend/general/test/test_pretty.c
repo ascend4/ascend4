@@ -22,9 +22,9 @@
  */
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <general/pretty.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/pretty.h>
 #include "CUnit/CUnit.h"
 #include "test/printutil.h"
 

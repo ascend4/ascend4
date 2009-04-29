@@ -36,7 +36,7 @@
 #ifndef ASC_ATOMVALUE_H
 #define ASC_ATOMVALUE_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "instance_enum.h"
 #include "dimen.h"
 #include "sets.h"
@@ -45,7 +45,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 ASC_DLLSPEC unsigned AtomAssigned(CONST struct Instance *i);
 /**<

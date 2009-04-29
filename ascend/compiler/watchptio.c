@@ -29,8 +29,8 @@
  *  the file named COPYING.
  */
 
-#include <utilities/ascConfig.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
 
 #include "stattypes.h"
 #include "slist.h"

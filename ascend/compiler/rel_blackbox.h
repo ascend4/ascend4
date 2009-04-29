@@ -33,10 +33,10 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "instance_enum.h"
 #include "relation_type.h"
-#include <general/list.h>
+#include <ascend/general/list.h>
 #include "expr_types.h"
 #include "extfunc.h"
 

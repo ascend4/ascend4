@@ -25,8 +25,8 @@
 #ifndef ASC_LOGBLOCK_H
 #define ASC_LOGBLOCK_H
 
-#include <utilities/ascConfig.h>
-#include <system/slv_types.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/system/slv_types.h>
 
 ASC_DLLSPEC int slv_log_block_partition(slv_system_t sys);
 /**<

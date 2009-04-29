@@ -44,7 +44,7 @@
 #ifndef ASC_REL_H
 #define ASC_REL_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "slv_types.h"
 #include "var.h"
 

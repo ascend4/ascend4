@@ -49,10 +49,10 @@
 #ifndef ASC_ANALYZE_H
 #define ASC_ANALYZE_H
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/instance_enum.h>
 #include "slv_types.h"
 #include "conditional.h"
 

@@ -22,12 +22,12 @@
  */
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include <utilities/ascMalloc.h>
-#include <utilities/ascSignal.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascSignal.h>
 #include "CUnit/CUnit.h"
 #include "test_ascSignal.h"
 

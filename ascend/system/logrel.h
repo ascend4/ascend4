@@ -31,7 +31,7 @@
 #define ASC_LOGREL_H
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "discrete.h"
 #include "slv_types.h"
 

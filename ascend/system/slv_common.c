@@ -31,15 +31,15 @@
 
 #include <math.h>
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #ifdef ASC_SIGNAL_TRAPS
-# include <utilities/ascSignal.h>
+# include <ascend/utilities/ascSignal.h>
 #endif
 
-#include <general/mathmacros.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <utilities/mem.h>
+#include <ascend/general/mathmacros.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/mem.h>
 
 #ifdef SLV_STANDALONE
 # ifdef NDEBUG
@@ -48,7 +48,7 @@
 #  define ascnint(a) ascnintF(a)
 # endif
 #else
-# include <compiler/func.h>
+# include <ascend/compiler/func.h>
 # include "relman.h"
 # include "logrelman.h"
 #endif

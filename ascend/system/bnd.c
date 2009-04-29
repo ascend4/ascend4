@@ -25,30 +25,30 @@
 #include "bnd.h"
 
 #include <math.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/mem.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
 
 
-#include <compiler/instance_enum.h>
-#include <compiler/extfunc.h>
-#include <compiler/extcall.h>
-#include <compiler/functype.h>
-#include <compiler/safe.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/extfunc.h>
+#include <ascend/compiler/extcall.h>
+#include <ascend/compiler/functype.h>
+#include <ascend/compiler/safe.h>
 
-#include <compiler/expr_types.h>
-#include <compiler/find.h>
-#include <compiler/atomvalue.h>
-#include <compiler/instquery.h>
-#include <compiler/mathinst.h>
-#include <compiler/parentchild.h>
-#include <compiler/instance_io.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/find.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/mathinst.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/instance_io.h>
 
 #include "var.h"
 #include "discrete.h"

@@ -34,8 +34,8 @@
 #include <time.h>
 #include <stdarg.h>
 
-#include <utilities/ascPanic.h>
-#include <general/pairlist.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/pairlist.h>
 #include "symtab.h"
 
 #include "functype.h"

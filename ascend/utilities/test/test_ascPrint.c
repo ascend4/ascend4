@@ -22,13 +22,13 @@
  */
 
 #include <stdio.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
 #include <stdarg.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPrint.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPrint.h>
 #include "CUnit/CUnit.h"
 #include "test_ascPrint.h"
 #include "test/printutil.h"

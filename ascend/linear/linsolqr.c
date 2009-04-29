@@ -61,12 +61,12 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include <utilities/error.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <utilities/mem.h>
-#include <utilities/set.h>
-#include <general/mathmacros.h>
+#include <ascend/utilities/error.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/utilities/set.h>
+#include <ascend/general/mathmacros.h>
 
 #include "ranki.h"
 #include "ranki2.h"

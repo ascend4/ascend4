@@ -31,7 +31,7 @@
 #ifndef ASC_FRACTIONS_H
 #define ASC_FRACTIONS_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 /**	@addtogroup compiler Compiler
 	@{

@@ -30,14 +30,14 @@
 
 #include "dimen.h"
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/error.h>
-#include <general/list.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/error.h>
+#include <ascend/general/list.h>
 
-#include <general/mathmacros.h>
+#include <ascend/general/mathmacros.h>
 
 struct gl_list_t *g_dimen_list;
 dim_type *g_wild_dimen,*g_trig_dimen,*g_dimensionless;

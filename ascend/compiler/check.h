@@ -41,7 +41,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #define CheckInstance(a,b) CheckInstanceLevel((a),(b),5)
 ASC_DLLSPEC void CheckInstanceLevel(FILE *f, CONST struct Instance *i, int pass);

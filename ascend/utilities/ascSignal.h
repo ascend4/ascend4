@@ -125,7 +125,7 @@
 
 #include "ascConfig.h"
 
-#include <general/except.h>
+#include <ascend/general/except.h>
 
 #include <signal.h>
 

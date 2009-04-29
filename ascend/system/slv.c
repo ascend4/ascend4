@@ -20,26 +20,26 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <utilities/config.h>
-#include <system/slv_client.h>
-#include <system/slv_server.h>
-#include <solver/solver.h>
+#include <ascend/utilities/config.h>
+#include <ascend/system/slv_client.h>
+#include <ascend/system/slv_server.h>
+#include <ascend/solver/solver.h>
 
 #include <math.h>
 #include <stdarg.h>
 
 /** @TODO should not be ANY compiler includes here, right? */
 
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
 
-#include <compiler/atomvalue.h>
+#include <ascend/compiler/atomvalue.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
-#include <system/bndman.h>
-#include <system/analyze.h>
-#include <system/system_impl.h>
+#include <ascend/system/bndman.h>
+#include <ascend/system/analyze.h>
+#include <ascend/system/system_impl.h>
 
 /* #define EMPTY_DEBUG */
 

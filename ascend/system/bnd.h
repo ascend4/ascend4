@@ -30,7 +30,7 @@
 #ifndef ASC_BND_H
 #define ASC_BND_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #include "slv_types.h"
 #include "rel.h"

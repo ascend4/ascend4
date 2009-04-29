@@ -32,12 +32,12 @@
 #include <string.h>
 #include <limits.h>
 #include <ctype.h>  /* was compiler/actype.h */
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascEnvVar.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
-#include <general/pool.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
+#include <ascend/general/pool.h>
 #include "compiler.h"
 #include "ascCompiler.h"
 #include "module.h"

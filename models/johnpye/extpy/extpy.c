@@ -31,12 +31,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <utilities/ascConfig.h>
-#include <utilities/error.h>
-#include <general/ospath.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/error.h>
+#include <ascend/general/ospath.h>
 
-#include <compiler/importhandler.h>
-#include <compiler/extfunc.h>
+#include <ascend/compiler/importhandler.h>
+#include <ascend/compiler/extfunc.h>
 
 /* #define EXTPY_DEBUG */
 

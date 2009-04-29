@@ -25,9 +25,9 @@
 #include "linsolqr_impl.h"
 #include "ranki_impl.h"
 
-#include <general/mathmacros.h>
-#include <utilities/ascConfig.h>
-#include <utilities/error.h>
+#include <ascend/general/mathmacros.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/error.h>
 
 #include <math.h>
 

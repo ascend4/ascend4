@@ -42,8 +42,8 @@
 
 #include <math.h>
 
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
 
 #include "linsolqr_impl.h"
 #include "ranki_impl.h"

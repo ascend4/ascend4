@@ -31,17 +31,17 @@
 #include <math.h>
 #include <ctype.h>
 
-#include <solver/solver.h>
-#include <system/slv_stdcalls.h>
-#include <system/relman.h>
+#include <ascend/solver/solver.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/relman.h>
 
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascDynaLoad.h>
-#include <utilities/mem.h>
-#include <utilities/ascEnvVar.h>
-#include <general/tm_time.h>
-#include <general/env.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascDynaLoad.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/general/env.h>
 
 /*
 	'tron.h' declares what we expect to find in the DLL/SO that we will dlopen

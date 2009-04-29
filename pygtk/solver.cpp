@@ -8,9 +8,9 @@
 using namespace std;
 
 extern "C"{
-#include <system/system.h>
-#include <solver/solver.h>
-#include <solver/slvDOF.h>
+#include <ascend/system/system.h>
+#include <ascend/solver/solver.h>
+#include <ascend/solver/slvDOF.h>
 }
 
 /**

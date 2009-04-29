@@ -51,7 +51,7 @@
 #ifndef ASC_TM_TIME_H
 #define ASC_TM_TIME_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #ifndef CLOCKS_PER_SEC
 

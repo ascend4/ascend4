@@ -22,8 +22,8 @@
 #include <string.h>
 #include <CUnit/CUnit.h>
 
-#include <utilities/ascConfig.h>
-#include <linear/linsolqr.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/linear/linsolqr.h>
 
 #include <test/assertimpl.h>
 

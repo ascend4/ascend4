@@ -6,12 +6,12 @@ using namespace std;
 #include "name.h"
 
 extern "C"{
-#include <general/dstring.h>
-#include <utilities/ascConfig.h>
+#include <ascend/general/dstring.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <compiler/expr_types.h>
-#include <compiler/symtab.h>
-#include <compiler/nameio.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/nameio.h>
 }
 
 Nam::Nam(){

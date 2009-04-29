@@ -31,19 +31,19 @@
 
 #include <tcl.h>
 #include "config.h"
-#include <utilities/ascPanic.h>
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 
-#include <compiler/symtab.h>
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instance_enum.h>
 
 
-#include <compiler/instquery.h>
-#include <compiler/visitinst.h>
-#include <compiler/instance_name.h>
-#include <compiler/instance_io.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/visitinst.h>
+#include <ascend/compiler/instance_name.h>
+#include <ascend/compiler/instance_io.h>
 #include "HelpProc.h"
 #include "Qlfdid.h"
 #include "BrowserQuery.h"

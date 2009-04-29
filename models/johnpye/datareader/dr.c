@@ -23,12 +23,12 @@
 #include "tmy.h"
 #include "acdb.h"
 
-#include <utilities/config.h>
-#include <general/ospath.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/error.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascEnvVar.h>
+#include <ascend/utilities/config.h>
+#include <ascend/general/ospath.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/error.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascEnvVar.h>
 
 #define DR_DEBUG 0
 

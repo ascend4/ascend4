@@ -94,7 +94,7 @@
 #include "expr_types.h"
 #include "instance_enum.h"
 #include "compiler.h"
-#include <general/pool.h>
+#include <ascend/general/pool.h>
 
 /**	@addtogroup compiler Compiler
 	@{

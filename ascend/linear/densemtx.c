@@ -25,8 +25,8 @@
 */
 
 #include "densemtx.h"
-#include <utilities/ascMalloc.h>
-#include <utilities/error.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/error.h>
 #ifdef ASC_WITH_MMIO
 # include <mmio.h>
 #endif

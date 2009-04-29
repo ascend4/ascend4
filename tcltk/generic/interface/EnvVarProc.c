@@ -36,8 +36,8 @@
 
 #include <tcl.h>
 #include "config.h"
-#include <utilities/ascMalloc.h>
-#include <utilities/ascEnvVar.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascEnvVar.h>
 #include "HelpProc.h"
 #include "EnvVarProc.h"
 

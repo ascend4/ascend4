@@ -10,30 +10,30 @@ using namespace std;
 #include "config.h"
 
 extern "C"{
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <general/list.h>
-#include <compiler/ascCompiler.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/ascCompiler.h>
 
 /* #include <compiler/redirectFile.h> */
-#include <compiler/prototype.h>
-#include <compiler/dump.h>
-#include <compiler/childio.h>
-#include <compiler/type_desc.h>
-#include <compiler/typedef.h>
-#include <compiler/library.h>
-#include <system/slv_types.h>
-#include <system/system.h>
-#include <utilities/ascEnvVar.h>
-#include <compiler/symtab.h>
-#include <general/table.h>
-#include <compiler/instance_enum.h>
-#include <compiler/notate.h>
-#include <compiler/simlist.h>
-#include <compiler/parser.h>
-#include <utilities/error.h>
-#include <general/env.h>
-#include <compiler/importhandler.h>
+#include <ascend/compiler/prototype.h>
+#include <ascend/compiler/dump.h>
+#include <ascend/compiler/childio.h>
+#include <ascend/compiler/type_desc.h>
+#include <ascend/compiler/typedef.h>
+#include <ascend/compiler/library.h>
+#include <ascend/system/slv_types.h>
+#include <ascend/system/system.h>
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/general/table.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/notate.h>
+#include <ascend/compiler/simlist.h>
+#include <ascend/compiler/parser.h>
+#include <ascend/utilities/error.h>
+#include <ascend/general/env.h>
+#include <ascend/compiler/importhandler.h>
 }
 
 #include "library.h"

@@ -36,21 +36,21 @@
 
 #include "slv6.h"
 
-#include <utilities/ascMalloc.h>
-#include <utilities/set.h>
-#include <utilities/mem.h>
-#include <general/tm_time.h>
-#include <general/list.h>
-#include <general/dstring.h>
-#include <compiler/module.h>
-#include <compiler/library.h>
-#include <compiler/instance_io.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/set.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
+#include <ascend/compiler/module.h>
+#include <ascend/compiler/library.h>
+#include <ascend/compiler/instance_io.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
-#include <system/calc.h>
-#include <system/relman.h>
-#include <system/slv_common.h>
+#include <ascend/system/calc.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/slv_common.h>
 #include "mps.h"
 
 #if !defined(STATIC_MPS) && !defined(DYNAMIC_MPS)

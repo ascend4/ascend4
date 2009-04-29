@@ -21,7 +21,7 @@
  *  COPYING.
  */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "test_register_general.h"
 
 #define TESTS(T) \

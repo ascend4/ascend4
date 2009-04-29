@@ -28,13 +28,13 @@
 
 #include<stdio.h>
 #include<assert.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #include "instance_enum.h"
 #include "cmpfunc.h"
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <general/pool.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/pool.h>
 
 
 #include "functype.h"

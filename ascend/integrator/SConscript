@@ -1,3 +1,4 @@
+#!/usr/bin/python invoke_using_scons
 Import('libascend_env')
 
 objs = []

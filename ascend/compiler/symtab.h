@@ -31,7 +31,7 @@
 #ifndef ASC_SYMTAB_H
 #define ASC_SYMTAB_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "compiler.h"
 
 /**	@addtogroup compiler Compiler

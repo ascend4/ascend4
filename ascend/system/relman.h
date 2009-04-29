@@ -37,9 +37,9 @@
 #ifndef ASC_RELMAN_H
 #define ASC_RELMAN_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
 #include "var.h"
 #include "rel.h"

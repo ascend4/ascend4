@@ -27,7 +27,7 @@
 #ifndef ASC_VISITINST_H
 #define ASC_VISITINST_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "instance_enum.h"
 #include "compiler.h"
 

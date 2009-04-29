@@ -24,7 +24,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 /* ascParse.y supplies this function. */
 ASC_DLLSPEC int zz_parse();

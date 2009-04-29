@@ -31,9 +31,9 @@
  *
  */
 
-#include <utilities/ascConfig.h>
-#include <utilities/error.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/error.h>
+#include <ascend/general/list.h>
 #include "instance_enum.h"
 
 

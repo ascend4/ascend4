@@ -82,8 +82,8 @@
 #define ASC_ASCMALLOC_H
 
 /* MALLOC_DEBUG and ASC_WITH_DMALLOC will be defined in config.h... */
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 
 /*------------------------------------------------------------------------------
 	C++-ish ASC_NEW* macros

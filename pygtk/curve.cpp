@@ -1,6 +1,6 @@
 #include "curve.h"
 
-#include <compiler/plot.h>
+#include <ascend/compiler/plot.h>
 #include <stdexcept>
 using namespace std;
 

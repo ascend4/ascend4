@@ -25,11 +25,11 @@
 
 #define INDENTATION 4
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/error.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/error.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 
 
 

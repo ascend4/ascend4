@@ -307,7 +307,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 /**	addtogroup linear Linear
 	@{

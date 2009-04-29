@@ -30,8 +30,8 @@
 #ifndef ASC_SLIST_H
 #define ASC_SLIST_H
 
-#include <utilities/ascConfig.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
 #include "compiler.h"
 #include "stattypes.h"
 
@@ -39,7 +39,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 extern struct StatementList *CreateStatementList(struct gl_list_t *l);
 /**<

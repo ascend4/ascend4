@@ -34,7 +34,7 @@
 #ifndef ASC_PROTOTYPE_H
 #define ASC_PROTOTYPE_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "compiler.h"
 #include "instance_enum.h"
 

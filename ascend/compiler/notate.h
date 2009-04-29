@@ -39,8 +39,8 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
-#include <general/list.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
 #include "compiler.h"
 #include "braced.h"
 

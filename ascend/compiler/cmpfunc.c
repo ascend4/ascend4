@@ -24,7 +24,7 @@
  *  COPYING.
  */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #include "symtab.h"
 #include "functype.h"

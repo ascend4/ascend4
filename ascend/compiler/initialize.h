@@ -33,7 +33,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "instance_enum.h"
 #include "fractions.h"
 #include "compiler.h"

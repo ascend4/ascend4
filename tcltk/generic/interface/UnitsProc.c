@@ -32,44 +32,44 @@
 #include <stdarg.h>
 #include <tcl.h>
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #ifdef ASC_SIGNAL_TRAPS
-# include <utilities/ascSignal.h>
+# include <ascend/utilities/ascSignal.h>
 #endif
 
 #include "UnitsProc.h"
 
 #include "config.h"
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
-#include <general/dstring.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
+#include <ascend/general/dstring.h>
 
-#include <compiler/instance_enum.h>
-#include <compiler/cmpfunc.h>
-#include <compiler/dimen_io.h>
-#include <compiler/child.h>
-#include <compiler/type_desc.h>
-#include <compiler/module.h>
-#include <compiler/library.h>
-#include <compiler/symtab.h>
-#include <compiler/instance_io.h>
-#include <compiler/atomvalue.h>
-#include <compiler/instquery.h>
-#include <compiler/expr_types.h>
-#include <compiler/mathinst.h>
-#include <compiler/instance_name.h>
-#include <compiler/find.h>
-#include <compiler/rel_blackbox.h>
-#include <compiler/vlist.h>
-#include <compiler/relation.h>
-#include <compiler/functype.h>
-#include <compiler/safe.h>
-#include <compiler/relation_util.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/cmpfunc.h>
+#include <ascend/compiler/dimen_io.h>
+#include <ascend/compiler/child.h>
+#include <ascend/compiler/type_desc.h>
+#include <ascend/compiler/module.h>
+#include <ascend/compiler/library.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/mathinst.h>
+#include <ascend/compiler/instance_name.h>
+#include <ascend/compiler/find.h>
+#include <ascend/compiler/rel_blackbox.h>
+#include <ascend/compiler/vlist.h>
+#include <ascend/compiler/relation.h>
+#include <ascend/compiler/functype.h>
+#include <ascend/compiler/safe.h>
+#include <ascend/compiler/relation_util.h>
 
-#include <linear/mtx.h>
+#include <ascend/linear/mtx.h>
 
-#include <system/slv_client.h>
+#include <ascend/system/slv_client.h>
 
 #include "old_utils.h"
 #include "HelpProc.h"

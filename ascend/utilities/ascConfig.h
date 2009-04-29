@@ -412,7 +412,7 @@ typedef	unsigned   uint32;
 #  define ASC_FPUTC   Asc_FPutc
 #  define ASC_PUTCHAR Asc_Putchar
 #  include <stdarg.h>
-#  include "utilities/ascPrint.h"
+#  include "ascend/utilities/ascPrint.h"
 #else
 #  define ASC_PRINTF  printf
 #  define ASC_FPRINTF fprintf
@@ -433,7 +433,7 @@ typedef	unsigned   uint32;
 # define FPUTC ASC_FPUTC
 # define FFLUSH ASC_FFLUSH
 #else
-# include "utilities/error.h"
+# include "ascend/utilities/error.h"
 #endif
 
 /*	These are the remaining output macros that need to be mapped

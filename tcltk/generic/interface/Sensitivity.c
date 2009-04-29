@@ -52,26 +52,26 @@
 #include <math.h>
 #include <tcl.h>
 
-#include <utilities/ascMalloc.h>
-#include <general/tm_time.h>
-#include <general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/general/list.h>
 
-#include <linear/mtx.h>
-#include <linear/linutils.h>
+#include <ascend/linear/mtx.h>
+#include <ascend/linear/linutils.h>
 
-#include <system/calc.h>
-#include <system/relman.h>
-#include <system/system.h>
+#include <ascend/system/calc.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/system.h>
 
-#include <solver/solver.h>
+#include <ascend/solver/solver.h>
 
-#include <packages/sensitivity.h>
+#include <ascend/packages/sensitivity.h>
 
 #include "HelpProc.h"
 #include "Sensitivity.h"
 #include "HelpProc.h"
 #include "SolverGlobals.h"
-#include <general/mathmacros.h>
+#include <ascend/general/mathmacros.h>
 
 #define DOTIME FALSE
 #define DEBUG 1

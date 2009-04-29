@@ -2,8 +2,8 @@
 #include "integratorreporter.h"
 
 extern "C"{
-#include <utilities/error.h>
-#include <integrator/integrator.h>
+#include <ascend/utilities/error.h>
+#include <ascend/integrator/integrator.h>
 }
 
 #include <vector>

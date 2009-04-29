@@ -1,7 +1,7 @@
 #include "ranki2.h"
 
 #include <math.h>
-#include <general/tm_time.h>
+#include <ascend/general/tm_time.h>
 
 #include "linsolqr_impl.h"
 #include "ranki_impl.h"

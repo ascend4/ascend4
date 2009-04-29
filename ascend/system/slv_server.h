@@ -40,7 +40,7 @@
 #ifndef ASC_SLV_SERVER_H
 #define ASC_SLV_SERVER_H
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 
 #include "var.h"
 #include "rel.h"
@@ -52,9 +52,9 @@
 #include "slv_types.h"
 #include "slv_client.h"
 
-#include <linear/linsolqr.h>
+#include <ascend/linear/linsolqr.h>
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 /**	@addtogroup solver Solver
 	@{

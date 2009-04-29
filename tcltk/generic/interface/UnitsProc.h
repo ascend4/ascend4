@@ -44,9 +44,9 @@
 #ifndef ASCTK_UNITSPROC_H
 #define ASCTK_UNITSPROC_H
 
-#include <compiler/instance_enum.h>
-#include <general/list.h>
-#include <compiler/units.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/units.h>
 
 extern struct Units * g_base_units[NUM_DIMENS];
 /**< These are the working base units. */

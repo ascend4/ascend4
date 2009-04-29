@@ -28,9 +28,9 @@
 #ifdef TEST
 # define ASC_DLLSPEC T T
 #else
-# include <utilities/config.h>
-# include <utilities/ascConfig.h>
-# include <utilities/ascMalloc.h>
+# include <ascend/utilities/config.h>
+# include <ascend/utilities/ascConfig.h>
+# include <ascend/utilities/ascMalloc.h>
 # define FREE ascfree
 # define MALLOC ascmalloc
 #endif

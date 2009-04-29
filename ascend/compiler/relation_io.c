@@ -30,13 +30,13 @@
  */
 
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
-#include <general/pool.h>
-#include <general/dstring.h>
-#include <general/pretty.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
+#include <ascend/general/pool.h>
+#include <ascend/general/dstring.h>
+#include <ascend/general/pretty.h>
 
 #include "expr_types.h"
 #include "extcall.h"

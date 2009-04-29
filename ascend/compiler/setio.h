@@ -41,7 +41,7 @@
 #define ASC_SETIO_H
 
 #include "expr_types.h"
-#include <general/dstring.h>
+#include <ascend/general/dstring.h>
 #include <stdio.h>
 
 /**	@addtogroup compiler Compiler

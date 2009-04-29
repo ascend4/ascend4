@@ -29,9 +29,9 @@ struct Relation;
 
 #include "config.h"
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <system/slv_types.h>
-#include <system/var.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/system/slv_types.h>
+#include <ascend/system/var.h>
 }
 
 /**

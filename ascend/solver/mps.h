@@ -34,8 +34,8 @@
 #ifndef ASC_MPS_H
 #define ASC_MPS_H
 
-#include <utilities/ascConfig.h>
-#include <system/var.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/system/var.h>
 
 /**	@addtogroup solver Solver
 	@{

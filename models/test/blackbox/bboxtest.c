@@ -25,17 +25,17 @@
 	Date last modified: $Date: 1997/07/18 12:20:07 $
 */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
 
-#include <compiler/packages.h>
-#include <compiler/instance_enum.h>
+#include <ascend/compiler/packages.h>
+#include <ascend/compiler/instance_enum.h>
 /* next 4 needed only because we use RealAtomValue on the DATA instance. */
-#include <compiler/atomvalue.h>
-#include <compiler/instquery.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/instquery.h>
 
-#include <compiler/extcall.h>
+#include <ascend/compiler/extcall.h>
 
 /* #define BBOXTEST_DEBUG */
 

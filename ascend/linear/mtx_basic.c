@@ -29,9 +29,9 @@
 */
 
 #include <math.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/mem.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/mem.h>
 #include "mtx.h"
 #ifdef ASC_WITH_MMIO
 # include <mmio.h>
@@ -40,7 +40,7 @@
 /* grab our private parts */
 #define __MTX_C_SEEN__
 #include "mtx_use_only.h"
-#include <general/mathmacros.h>
+#include <ascend/general/mathmacros.h>
 
 /**
 	*Really* check the matrix.

@@ -57,7 +57,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "relation_util.h"
 
 /*------------------------------------------------------------------------------

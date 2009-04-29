@@ -29,7 +29,7 @@
 #ifndef ASC_ASCPANIC_H
 #define ASC_ASCPANIC_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #ifndef __GNUC__
 # ifndef __FUNCTION__

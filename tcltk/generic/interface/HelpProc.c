@@ -33,9 +33,9 @@
 #include <stdarg.h>
 #include <tcl.h>
 #include "config.h"
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
-#include <general/pool.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
+#include <ascend/general/pool.h>
 #include "HelpProc.h"
 
 struct HelpData {

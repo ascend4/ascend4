@@ -19,9 +19,9 @@
 #include "jacobian.h"
 #include "relman.h"
 #include "slv_client.h"
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <general/mathmacros.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/mathmacros.h>
 
 /* #define JACOBIAN_DEBUG */
 

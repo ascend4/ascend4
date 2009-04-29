@@ -25,21 +25,21 @@
 
 #include <math.h>
 
-#include <utilities/ascMalloc.h>
-#include <general/tm_time.h>
-#include <general/mathmacros.h>
-#include <utilities/mem.h>
-#include <general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/tm_time.h>
+#include <ascend/general/mathmacros.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/general/list.h>
 
-#include <system/calc.h>
-#include <system/relman.h>
-#include <system/logrelman.h>
-#include <system/bndman.h>
-#include <system/slv_stdcalls.h>
-#include <system/cond_config.h>
+#include <ascend/system/calc.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/logrelman.h>
+#include <ascend/system/bndman.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/cond_config.h>
 
-#include <solver/solver.h>
-#include <solver/logblock.h>
+#include <ascend/solver/solver.h>
+#include <ascend/solver/logblock.h>
 
 # define HAVE_LRSLV 1
 

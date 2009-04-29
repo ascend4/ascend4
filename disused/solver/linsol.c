@@ -30,15 +30,15 @@
  */
 
 #include <math.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <utilities/ascMalloc.h>
-#include <utilities/mem.h>
-#include <utilities/set.h>
-#include <general/tm_time.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/mem.h>
+#include <ascend/utilities/set.h>
+#include <ascend/general/tm_time.h>
 #include "mtx.h"
 #include "linsol.h"
-#include <general/mathmacros.h>
+#include <ascend/general/mathmacros.h>
 
 
 #define LINSOL_DEBUG FALSE

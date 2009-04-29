@@ -19,7 +19,7 @@
 
 #include <stdio.h>
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "redirectFile.h"
 
 #ifdef REIMPLEMENT_STREAMS

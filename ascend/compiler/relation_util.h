@@ -38,7 +38,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "fractions.h"
 #include "compiler.h"
 #include "functype.h"

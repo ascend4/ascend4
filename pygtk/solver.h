@@ -6,9 +6,9 @@
 
 #include "config.h"
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <compiler/instance_enum.h>
-#include <system/slv_client.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/system/slv_client.h>
 }
 
 /**

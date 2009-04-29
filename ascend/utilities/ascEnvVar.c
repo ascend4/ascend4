@@ -38,7 +38,7 @@
 #include "ascPanic.h"
 #include "ascMalloc.h"
 #include "ascEnvVar.h"
-#include <general/list.h>
+#include <ascend/general/list.h>
 
 #ifdef __WIN32__
 #define SLASH '\\'

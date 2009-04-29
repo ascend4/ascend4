@@ -108,7 +108,7 @@
 #ifndef ASC_POOL_H
 #define ASC_POOL_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 typedef struct pool_store_header *pool_store_t;
 /**<

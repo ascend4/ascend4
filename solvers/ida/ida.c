@@ -70,21 +70,21 @@
 # include <mmio.h>
 #endif
 
-#include <utilities/ascConfig.h>
-#include <utilities/error.h>
-#include <utilities/ascSignal.h>
-#include <utilities/ascPanic.h>
-#include <compiler/instance_enum.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/error.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/compiler/instance_enum.h>
 
-#include <system/slv_client.h>
-#include <system/relman.h>
-#include <system/block.h>
-#include <system/slv_stdcalls.h>
-#include <system/jacobian.h>
-#include <system/bndman.h>
+#include <ascend/system/slv_client.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/block.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/jacobian.h>
+#include <ascend/system/bndman.h>
 
-#include <utilities/config.h>
-#include <integrator/integrator.h>
+#include <ascend/utilities/config.h>
+#include <ascend/integrator/integrator.h>
 
 #include "idalinear.h"
 #include "idaanalyse.h"

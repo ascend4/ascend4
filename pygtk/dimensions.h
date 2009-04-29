@@ -7,8 +7,8 @@
 #include "config.h"
 
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <compiler/dimen.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/compiler/dimen.h>
 }
 
 /**

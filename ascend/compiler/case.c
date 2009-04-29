@@ -25,10 +25,10 @@
  */
 #include<stdio.h>
 #include<assert.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <utilities/ascMalloc.h>
-#include <general/list.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/list.h>
 
 
 #include "functype.h"

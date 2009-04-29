@@ -51,8 +51,8 @@
 
 #include <stdio.h>
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 
 /**	@addtogroup linear Linear
 	@{

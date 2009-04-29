@@ -30,16 +30,16 @@
 
 #include <stdarg.h>
 
-#include <utilities/ascSignal.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <general/list.h>
-#include <general/mathmacros.h>
-#include <utilities/mem.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
+#include <ascend/general/mathmacros.h>
+#include <ascend/utilities/mem.h>
 
-#include <system/relman.h>
-#include <system/slv_stdcalls.h>
-#include <system/cond_config.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/cond_config.h>
 
 #define SLVDOF(s) ((slvDOF_system_t)(s))
 

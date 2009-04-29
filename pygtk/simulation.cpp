@@ -25,32 +25,32 @@ using namespace std;
 #include "config.h"
 
 extern "C"{
-#include <utilities/error.h>
-#include <utilities/ascSignal.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
+#include <ascend/utilities/error.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
 
-#include <general/tm_time.h>
+#include <ascend/general/tm_time.h>
 
-#include <compiler/symtab.h>
-#include <compiler/instance_io.h>
-#include <compiler/instantiate.h>
-#include <compiler/bintoken.h>
-#include <compiler/instance_enum.h>
-#include <compiler/instquery.h>
-#include <compiler/check.h>
-#include <compiler/name.h>
-#include <compiler/pending.h>
-#include <compiler/importhandler.h>
-#include <linear/mtx.h>
-#include <system/calc.h>
-#include <system/relman.h>
-#include <system/system.h>
-#include <solver/slvDOF.h>
-#include <system/slv_stdcalls.h>
-#include <system/slv_server.h>
-#include <system/graph.h>
-#include <solver/solver.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/instantiate.h>
+#include <ascend/compiler/bintoken.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/check.h>
+#include <ascend/compiler/name.h>
+#include <ascend/compiler/pending.h>
+#include <ascend/compiler/importhandler.h>
+#include <ascend/linear/mtx.h>
+#include <ascend/system/calc.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/system.h>
+#include <ascend/solver/slvDOF.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/slv_server.h>
+#include <ascend/system/graph.h>
+#include <ascend/solver/solver.h>
 }
 
 #include "simulation.h"

@@ -29,12 +29,12 @@ class Plot;
 
 #include "config.h"
 extern "C"{
-#include <utilities/ascConfig.h>
-#include <utilities/error.h>
-#include <compiler/expr_types.h>
-#include <compiler/instance_enum.h>
-#include <compiler/atomvalue.h>
-#include <compiler/plot.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/error.h>
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/plot.h>
 }
 
 #include <string>

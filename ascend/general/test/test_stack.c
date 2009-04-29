@@ -24,10 +24,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPrint.h>
-#include <general/stack.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPrint.h>
+#include <ascend/general/stack.h>
 #include "CUnit/CUnit.h"
 #include "test/assertimpl.h"
 

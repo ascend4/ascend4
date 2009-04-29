@@ -27,8 +27,8 @@
 #ifndef ASC_SYS_GRAPH_H
 #define ASC_SYS_GRAPH_H
 
-#include <utilities/config.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
 #include "slv_types.h"
 #include "var.h"
 #include "rel.h"

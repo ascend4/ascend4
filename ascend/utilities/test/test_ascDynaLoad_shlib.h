@@ -20,7 +20,7 @@
 #ifndef TEST_ASCDYNALOAD_SHLIB_H
 #define TEST_ASCDYNALOAD_SHLIB_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 typedef int valuetype;
 typedef int (*initFunc)(void);

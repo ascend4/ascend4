@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 /**
  * Output functions interceptor vtable. This should be constructed

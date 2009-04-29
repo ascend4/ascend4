@@ -20,8 +20,8 @@
 */
 
 #include "samplelist.h"
-#include <utilities/ascMalloc.h>
-#include <utilities/error.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/error.h>
 
 /**
 	Free memory allocated by a SampleList.

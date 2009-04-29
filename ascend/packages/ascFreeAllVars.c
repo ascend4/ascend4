@@ -24,18 +24,18 @@
 	Last in CVS: $Revision: 1.4 $ $Date: 1998/06/16 16:42:09 $ $Author: mthomas $
 */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascPrint.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPrint.h>
 
-#include <compiler/child.h>
-#include <compiler/type_desc.h>
-#include <compiler/symtab.h>
-#include <compiler/instquery.h>
-#include <compiler/atomvalue.h>
-#include <compiler/visitinst.h>
-#include <compiler/parentchild.h>
-#include <compiler/library.h>
-#include <packages/ascFreeAllVars.h>
+#include <ascend/compiler/child.h>
+#include <ascend/compiler/type_desc.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/visitinst.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/library.h>
+#include <ascend/packages/ascFreeAllVars.h>
 
 struct cvpacket {
   struct TypeDescription *g_solver_var_type;

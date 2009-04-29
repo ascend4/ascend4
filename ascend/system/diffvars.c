@@ -22,11 +22,11 @@
 */
 #include "diffvars.h"
 
-#include <utilities/ascMalloc.h>
-#include <utilities/ascPanic.h>
-#include <utilities/error.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/error.h>
 
-#include <compiler/instance_io.h>
+#include <ascend/compiler/instance_io.h>
 
 #include "analyse_impl.h"
 #include "system_impl.h"

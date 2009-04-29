@@ -31,12 +31,12 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 #include "fractions.h"
 #include "compiler.h"
 #include "dimen.h"
 #include "child.h"
-#include <general/list.h>
+#include <ascend/general/list.h>
 #include "module.h"
 #include "childinfo.h"
 #include "slist.h"

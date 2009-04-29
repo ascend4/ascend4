@@ -39,7 +39,7 @@
 #include <limits.h>
 #include "compiler.h"
 #include "dimen.h"
-#include <general/list.h>
+#include <ascend/general/list.h>
 #include "functype.h"
 
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -32,9 +32,9 @@
  */
 
 #include <math.h>
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
-#include <utilities/mem.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/mem.h>
 #include "mtx.h"
 /* grab our private parts */
 #define __MTX_C_SEEN__

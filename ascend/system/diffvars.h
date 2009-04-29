@@ -47,7 +47,7 @@
 #ifndef ASC_DIFFVARS_H
 #define ASC_DIFFVARS_H
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #include "analyze.h"
 #include "slv_client.h"
 #include "system.h"

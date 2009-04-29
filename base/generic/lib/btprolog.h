@@ -42,7 +42,7 @@
 #ifndef ASC_BTPROLOG_H
 #define ASC_BTPROLOG_H
 
-# include <utilities/ascConfig.h>
+# include <ascend/utilities/ascConfig.h>
 
 /*
 	Macros for import/export of symbols

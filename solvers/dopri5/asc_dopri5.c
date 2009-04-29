@@ -24,14 +24,14 @@
 	by John Pye, May 2007.
 */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascPanic.h>
-#include <utilities/ascSignal.h>
-#include <utilities/error.h>
-#include <general/ospath.h>
-#include <integrator/integrator.h>
-#include <system/slv_stdcalls.h>
-#include <solver/solver.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/utilities/error.h>
+#include <ascend/general/ospath.h>
+#include <ascend/integrator/integrator.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/solver/solver.h>
 #include "dopri5.h"
 
 #define INTEG_DOPRI5 5

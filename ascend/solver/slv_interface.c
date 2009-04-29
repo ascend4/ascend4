@@ -39,22 +39,22 @@
 #include "slv_interface.h"
 #include "solver.h"
 
-#include <utilities/config.h>
+#include <ascend/utilities/config.h>
 #ifdef ASC_SIGNAL_TRAPS
-# include <utilities/ascSignal.h>
+# include <ascend/utilities/ascSignal.h>
 #endif
 
-#include <utilities/ascMalloc.h>
-#include <utilities/readln.h> /* you wot? */
+#include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/readln.h> /* you wot? */
 
 /* DISABLED -- JP 
-#include <compiler/plot.h>
+#include <ascend/compiler/plot.h>
 */
 
-#include <system/slv_client.h>
-#include <system/calc.h>
-#include <system/relman.h>
-#include <system/system.h>
+#include <ascend/system/slv_client.h>
+#include <ascend/system/calc.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/system.h>
 #include "checkdim.h"
 
 #define prompt printf

@@ -20,24 +20,24 @@
 */
 
 /* include the external function API from libascend... */
-#include <compiler/extfunc.h>
+#include <ascend/compiler/extfunc.h>
 
 /* include error reporting API as well, so we can send messages to user */
-#include <utilities/error.h>
+#include <ascend/utilities/error.h>
 
 /* for accessing the DATA instance */
-#include <compiler/child.h>
-#include <general/list.h>
-#include <compiler/module.h>
-#include <compiler/childinfo.h>
-#include <compiler/parentchild.h>
-#include <compiler/slist.h>
-#include <compiler/type_desc.h>
-#include <compiler/packages.h>
-#include <compiler/symtab.h>
-#include <compiler/instquery.h>
-#include <compiler/instmacro.h>
-#include <compiler/instance_types.h>
+#include <ascend/compiler/child.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/module.h>
+#include <ascend/compiler/childinfo.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/slist.h>
+#include <ascend/compiler/type_desc.h>
+#include <ascend/compiler/packages.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/instmacro.h>
+#include <ascend/compiler/instance_types.h>
 
 /* the code that we're wrapping... */
 #include "mbwr.h"

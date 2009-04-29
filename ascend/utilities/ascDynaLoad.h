@@ -36,7 +36,7 @@
 #ifndef ASC_ASCDYNALOAD_H
 #define ASC_ASCDYNALOAD_H
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 ASC_DLLSPEC char *SearchArchiveLibraryPath(const char *name, char *dpath, const char *envv);
 /**<

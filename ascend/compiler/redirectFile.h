@@ -47,7 +47,7 @@
 	@{
 */
 
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
 #ifdef REIMPLEMENT_STREAMS
 ASC_DLLSPEC FILE *g_ascend_errors;       /**< File for error messages.  Default is stderr. */

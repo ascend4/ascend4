@@ -27,10 +27,10 @@
  *  COPYING.
  */
 
-#include <utilities/ascConfig.h>
-#include <utilities/ascMalloc.h>
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/utilities/ascMalloc.h>
 
-#include <general/list.h>
+#include <ascend/general/list.h>
 
 
 #include "functype.h"
@@ -39,7 +39,7 @@
 #include "statement.h"
 #include "statio.h"
 #include "slist.h"
-#include <general/mathmacros.h>
+#include <ascend/general/mathmacros.h>
 
 #define SLMALLOC ASC_NEW(struct StatementList)
 

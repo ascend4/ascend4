@@ -28,10 +28,10 @@
  *
  */
 #include <stdarg.h>
-#include <utilities/ascConfig.h>
+#include <ascend/utilities/ascConfig.h>
 
-#include <utilities/ascPanic.h>
-#include <general/list.h>
+#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/list.h>
 #include "functype.h"
 #include "expr_types.h"
 #include "case.h"
