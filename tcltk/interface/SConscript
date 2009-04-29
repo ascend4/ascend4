@@ -75,7 +75,7 @@ else:
 		import os.path
 	
 		cd = os.getcwd()
-		os.chdir(env.Dir("#tcltk/TK").abspath)
+		os.chdir(env.Dir("#tcltk/tk").abspath)
 
 		files = {}
 
@@ -83,7 +83,7 @@ else:
 			#print root, "..."
 			dest = Dir(env.subst(tkdir)+"/"+root)
 			for name in files:
-				env.InstallShared(dest,"#tcltk/TK/"+os.path.join(root, name))
+				env.InstallShared(dest,"#tcltk/tk/"+os.path.join(root, name))
 				#print dest,"<---",os.path.join(root, name)
 
 			if 'CVS' in dirs:

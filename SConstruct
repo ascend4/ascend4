@@ -2571,7 +2571,7 @@ if with_graphviz and env.get('GRAPHVIZ_RPATH'):
 # TCL/TK GUI
 
 if with_tcltk:
-	env.SConscript(['tcltk/generic/interface/SConscript'],'env')
+	env.SConscript(['tcltk/SConscript'],'env')
 else:
 	print "Skipping... Tcl/Tk bindings aren't being built:",without_tcltk_reason
 
@@ -2823,9 +2823,6 @@ if not with_doc_build:
 
 #user's manual
 env.SConscript('doc/SConscript',['env'])
-
-# doxygen documentation
-env.SConscript('base/doc/SConscript',['env'])
 
 #------------------------------------------------------
 # RPM BUILD

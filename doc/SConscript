@@ -1,3 +1,4 @@
+#!/usr/bin/python invoke_with_scons
 Import('env')
 import glob, os.path
 
@@ -33,6 +34,11 @@ if env.get('WITH_DOC_BUILD'):
 		env.Depends(html,epsfigs)
 else:
 	pdf = "book.pdf"
+
+#------------------------
+# doxygen docs for libascend
+
+# FIXME
 
 #------------------------
 # install docs
