@@ -5,6 +5,7 @@ CFLAGS = -Wall -g
 
 SCONS_OPTIONS = CC="ccache gcc" \
 	CXX="ccache g++" \
+	ABSOLUTE_PATHS=1 \
 	INSTALL_PREFIX=/usr \
 	WITH_DOC_BUILD=0 \
 	WITH_DOC_INSTALL=1 \

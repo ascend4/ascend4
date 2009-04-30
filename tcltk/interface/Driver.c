@@ -638,7 +638,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	*/
 	if(librarydir == NULL){
 #if ASC_ABSOLUTE_PATHS
-		libraryfp = ospath_new(ASCENDLIBARY_DEFAULT);
+		libraryfp = ospath_new(ASCENDLIBRARY_DEFAULT);
 #else
 		libraryfp = ospath_new_expand_env("$ASCENDDIST/" ASC_LIBRARY_REL_DIST, &GETENV);
 #endif
@@ -650,7 +650,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 	if(solversdir == NULL){
 #if ASC_ABSOLUTE_PATHS
-		solversfp = ospath_new(ASCENDLIBARY_DEFAULT);
+		solversfp = ospath_new(ASCENDSOLVERS_DEFAULT);
 #else
 		solversfp = ospath_new_expand_env("$ASCENDDIST/" ASC_SOLVERS_REL_DIST, &GETENV);
 #endif

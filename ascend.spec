@@ -1,12 +1,12 @@
 Name:		ascend
 Summary:	ASCEND modelling environment
-Version:	0.9.5.116
+Version:	0.9.6
 
 # Use release 0.* so that other users can do patch releases with a higher number
 # and still have the update occur automatically.
 Release:	0%{?dist}
 
-%define disttar_name ascend-0.9.5.116
+%define disttar_name ascend-0.9.6
 
 License:	GPLv2+
 Group:		Applications/Engineering
@@ -265,6 +265,9 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %doc doc/book.pdf
 
 %changelog
+* Thu Apr 30 2009 John Pye <john.pye@anu.edu.au> 0.9.6
+- New version
+
 * Wed Jun 25 2008 John Pye <john.pye@anu.edu.au> 0.9.5.115
 - New version
 - Moved ascend-config to -devel pkg.
