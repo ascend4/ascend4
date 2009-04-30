@@ -2470,7 +2470,7 @@ subst_dict = {
 #define ASC_ABSOLUTE_PATHS @ASC_ABSOLUTE_PATHS@
 #if ASC_ABSOLUTE_PATHS
 # define ASCENDDIST_DEFAULT "@ASCENDDIST_DEFAULT@"
-# define ASCENDTK_DEAFULT "@ASCENDTK_DEFAULT@"
+# define ASCENDTK_DEFAULT "@ASCENDTK_DEFAULT@"
 # define ASCENDLIBRARY_DEFAULT "@ASCENDLIBRARY_DEFAULT@"
 # define ASCENDSOLVERS_DEFAULT "@ASCENDSOLVERS_DEFAULT@"
 #else
@@ -2757,20 +2757,25 @@ if env.get('CAN_INSTALL'):
 	libname = "${INSTALL_LIB}/%s%s" % (soname_full,soname_minor)
 	install_lib = env.InstallLibraryAs("${INSTALL_ROOT}"+libname, [libascend])
 	if env['ABSOLUTE_PATHS']:
-		link_target = install_lib
+		link_target = libname
 	else:
 		link_target = "%s%s" % (soname_full,soname_minor)
 
 	link1 = "${INSTALL_LIB}/%s" % soname_clean
 	install_link1 = None
 	if env.subst(link1) != env.subst(libname):
-		cwd = os.getcwd()
-		install_link1 = env.Command("${INSTALL_ROOT}"+link1,libname,"ln -f -s %s $TARGET" % link_target)
+		#                           v--link to create       v--file to link to   command          
+		install_link1 = env.Command("${INSTALL_ROOT}"+link1,install_lib
+		#    v-- command to do it (note the trick about 
+			,"ln -f -s %s $TARGET" % link_target
+		)
 
-	link2 = "$INSTALL_LIB/%s" % soname_full
+	link2 = "${INSTALL_LIB}/%s" % soname_full
 	install_link2 = None
 	if soname_minor:
-		install_link2 = env.Command("${INSTALL_ROOT}"+link2,libname,"ln -f -s %s $TARGET"%link_target)
+		install_link2 = env.Command("${INSTALL_ROOT}"+link2,install_lib
+			,"ln -f -s %s $TARGET" % link_target
+		)
 
 	env.InstallProgram(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),ascendconfig)
 
