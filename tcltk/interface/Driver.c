@@ -454,10 +454,10 @@ int AscDriver(int argc, CONST char **argv)
 */
 #define OSPATH_PUTENV(VAR,FP) \
 	/*CONSOLE_DEBUG("VAR: %s",VAR);*/ \
-	sprintf(envcmd,"%s=",VAR); \
-	ospath_strcat(FP,envcmd,MAX_ENV_VAR_LENGTH); \
-	/*CONSOLE_DEBUG("ENVCMD: %s",envcmd);*/ \
-	PUTENV(envcmd)
+	sprintf(tmp,"%s=",VAR); \
+	ospath_strcat(FP,tmp,MAX_ENV_VAR_LENGTH); \
+	/*CONSOLE_DEBUG("TEMP: %s",tmp);*/ \
+	PUTENV(tmp)
 
 /**
 	This is a quick macro to send data to Tcl using Tcl_SetVar.
@@ -498,10 +498,24 @@ static void printenv(){
 	<utilities/config.h>. The following comments assume that you
 	use the usual names for each of these:
 
-	ASCENDDIST defaults to $PROGDIR/@ASC_DATADIR_REL_BIN@ (also in config.h)
-	ASCENDTK defaults to $ASCENDDIST/TK (latter is from config.h)
-	ASCENDBITMAPS defaults $ASCENDTK/bitmaps
-	ASCENDLIBRARY defaults to $ASCENDDIST/models
+	For Tcl/Tk the following #defines can be needed:
+		ASCENDDIST
+		ASCENDTK_DEFAULT
+		ASCENDLIBRARY_DEFAULT
+		ASCENDSOLVERS_DEFAULT
+
+		ASC_ABSOLUTE_PATHS
+		ASC_DIST_REL_BIN
+		ASC_TK_REL_DIST
+		ASC_LIBRARY_REL_DIST
+		ASC_SOLVERS_REL_DIST
+
+	Then, using these, in the case of relative paths, we choose:
+
+		ASCENDDIST = $PROGDIR/@ASC_DIST_REL_BIN@
+		ASCENDTK = $ASCENDROOT/@ASC_TK_REL_DIST@
+		ASCENDLIBRARY = $ASCENDROOT/@ASC_LIBRARY_REL_DIST@
+		ASCENDSOLVERS = $ASCENDROOT/@ASC_SOLVERS_ROL_DIST@
 
 	Also check for the existence of the file AscendRC in $ASCENDTK
 	and if found, export the location of that file to the Tcl
@@ -513,8 +527,8 @@ static void printenv(){
 static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	char *distdir, *tkdir, *bitmapsdir, *librarydir, *solversdir;
 	struct FilePath *fp, *fp1, *distfp, *tkfp, *bitmapsfp, *libraryfp, *solversfp;
-	char envcmd[MAX_ENV_VAR_LENGTH];
-# ifndef ASC_ABSOLUTE_PATHS
+	char tmp[MAX_ENV_VAR_LENGTH];
+#if !ASC_ABSOLUTE_PATHS
 	char s1[PATH_MAX];
 #endif
 	int err;
@@ -549,8 +563,11 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	if(distdir == NULL){
 		CONSOLE_DEBUG("Note: No '" ASC_ENV_DIST "' var defined");
 
-# ifndef ASC_ABSOLUTE_PATHS
-
+#if ASC_ABSOLUTE_PATHS
+		CONSOLE_DEBUG("ASC_ABSOLUTE_PATHS=%d",ASC_ABSOLUTE_PATHS);
+		distfp = ospath_new(ASCENDDIST_DEFAULT);
+		(void)progname;
+#else
 		/* read the executable's name/relative path.*/
         fp = ospath_new(progname);
 
@@ -561,41 +578,44 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
         fp1 = ospath_getdir(fp);
         ospath_free(fp);
 
-        ospath_strncpy(fp1,s1,PATH_MAX);
-        /* CONSOLE_DEBUG("DIR = %s",s1); */
+		/* convert to absolute */
+		fp = ospath_getabs(fp1);
+		ospath_free(fp1);
 
 		/* append the contents of ASC_DISTDIR_REL_BIN to this path*/
-        fp = ospath_new_noclean(ASC_DISTDIR_REL_BIN);
-		distfp = ospath_concat(fp1,fp);
+        fp1 = ospath_new_noclean(ASC_DIST_REL_BIN);
+
+		distfp = ospath_concat(fp,fp1);
 		ospath_cleanup(distfp);
+		ospath_free(fp1);
+		ospath_free(fp);
+#endif
 
-        ospath_strncpy(fp1,s1,PATH_MAX);
-        /* CONSOLE_DEBUG("DIST = %s",s1); */
-
-# else
-		CONSOLE_DEBUG("ASC_ABSOLUTE_PATHS=%d",ASC_ABSOLUTE_PATHS);
-		distfp = ospath_new(ASC_DATADIR);
-		(void)progname;
-# endif
 		distdir = ospath_str(distfp);
-		/* CONSOLE_DEBUG("GUESSING %s = %s",ASC_ENV_DIST,distdir); */
+		
+		CONSOLE_DEBUG("Setting distdir %s = %s",ASC_ENV_DIST,distdir);
 		OSPATH_PUTENV(ASC_ENV_DIST,distfp);
 		distdir = GETENV(ASC_ENV_DIST);
 		/* CONSOLE_DEBUG("RETRIEVED %s = %s",ASC_ENV_DIST,distdir); */
 		printenv();
+		ospath_free(distfp);
 	}
 
 	if(tkdir == NULL){
-		/* CONSOLE_DEBUG("USING DEFAULT %s = %s",ASC_ENV_TK,ASC_ENV_TK_DEFAULT); */
+		/* no env var ASCENDTK... create value from compile-time info */
 		guessedtk=1;
-		tkfp = ospath_new_expand_env(ASC_ENV_TK_DEFAULT, &GETENV);
+#if ASC_ABSOLUTE_PATHS
+		tkfp = ospath_new_expand_env(ASCENDTK_DEFAULT, &GETENV);
+#else
+		fp = ospath_new(ASC_TK_REL_DIST);
+		tkfp = ospath_concat(distdir,fp);
+		ospath_free(fp);
+		ospath_cleanup(tkfp);
+#endif
 		tkdir = ospath_str(tkfp);
-
-		ospath_strncpy(tkfp,envcmd,MAX_ENV_VAR_LENGTH);
-		/* CONSOLE_DEBUG("TK = %s",envcmd); */
-
 		OSPATH_PUTENV(ASC_ENV_TK,tkfp);
 	}else{
+		/* expand env vars in ASCENDTK */
 		tkfp = ospath_new_expand_env(tkdir, &GETENV);
 		tkdir = ospath_str(tkfp);
 		OSPATH_PUTENV(ASC_ENV_TK,tkfp);
@@ -607,6 +627,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		bitmapsfp = ospath_new_expand_env("$ASCENDTK/bitmaps", &GETENV);
 		OSPATH_PUTENV(ASC_ENV_BITMAPS,bitmapsfp);
 		bitmapsdir = ospath_str(bitmapsfp);
+		ospath_free(bitmapsfp);
 	}
 
 	/**
@@ -616,8 +637,11 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		@TODO Also, what about ASCEND_DEFAULTLIBRARY ?
 	*/
 	if(librarydir == NULL){
-	    /* CONSOLE_DEBUG("NO " ASC_ENV_LIBRARY " VAR DEFINED"); */
-		libraryfp = ospath_new_expand_env("$ASCENDDIST/lib/models", &GETENV);
+#if ASC_ABSOLUTE_PATHS
+		libraryfp = ospath_new(ASCENDLIBARY_DEFAULT);
+#else
+		libraryfp = ospath_new_expand_env("$ASCENDDIST/" ASC_LIBRARY_REL_DIST, &GETENV);
+#endif
 		/* CONSOLE_DEBUG("CREATED LIBRARY VAL"); */
 		OSPATH_PUTENV(ASC_ENV_LIBRARY,libraryfp);
 		librarydir = ospath_str(libraryfp);
@@ -625,19 +649,29 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	}
 
 	if(solversdir == NULL){
-	    /* CONSOLE_DEBUG("NO " ASC_ENV_LIBRARY " VAR DEFINED"); */
-		solversfp = ospath_new_expand_env("$ASCENDDIST/lib/solvers", &GETENV);
+#if ASC_ABSOLUTE_PATHS
+		solversfp = ospath_new(ASCENDLIBARY_DEFAULT);
+#else
+		solversfp = ospath_new_expand_env("$ASCENDDIST/" ASC_SOLVERS_REL_DIST, &GETENV);
+#endif
 		/* CONSOLE_DEBUG("CREATED SOLVERS VAL"); */
 		OSPATH_PUTENV(ASC_ENV_SOLVERS,solversfp);
 		solversdir = ospath_str(solversfp);
 		ospath_free(solversfp);
 	}
 
+	CONSOLE_DEBUG("ASCENDDIST = %s",GETENV(ASC_ENV_DIST));
+	CONSOLE_DEBUG("ASCENDTK = %s",GETENV(ASC_ENV_TK));
+	CONSOLE_DEBUG("ASCENDLIBRARY = %s",GETENV(ASC_ENV_LIBRARY));
+	CONSOLE_DEBUG("ASCENDSOLVERS = %s",GETENV(ASC_ENV_SOLVERS));
+
+
     CONSOLE_DEBUG("CHECKING FOR AscendRC FILE");
 
 	fp1 = ospath_new("AscendRC");
 	fp = ospath_concat(tkfp,fp1);
 	ospath_free(fp1);
+	ospath_free(tkfp);
 	f = ospath_fopen(fp,"r");
 	if(f==NULL){
 		if(guessedtk){
@@ -658,12 +692,11 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		/* can't get here, hopefully */
 	}
 	fclose(f);
-	/* reuse 'envcmd' to get the string file location for AscendRC */
-	ospath_strncpy(fp,envcmd,MAX_ENV_VAR_LENGTH);
-	ospath_free(fp);
 
-	/* export the value to Tcl/Tk */
-    ASC_SEND_TO_TCL(tcl_rcFileName, envcmd);
+	/* put AscendRC location in string and export to Tcl */
+	ospath_strncpy(fp,tmp,MAX_ENV_VAR_LENGTH);
+    ASC_SEND_TO_TCL(tcl_rcFileName, tmp);
+	ospath_free(fp);
 
     /* send all the environment variables to Tcl/Tk as well */
     ASC_SEND_TO_TCL2(env,ASC_ENV_DIST,distdir);

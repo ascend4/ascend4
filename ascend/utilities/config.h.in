@@ -77,6 +77,8 @@
 #define ASC_SHLIBSUFFIX "@SHLIBSUFFIX@"
 
 /*
+	FIXME changes are being made to streamline the following...
+
 	This variable determines how ASCEND goes about finding all its stuff at runtime,
 	assuming the ASCENDDIST environment variable is *not* present.
 
@@ -105,37 +107,38 @@
 
 	Note: do not use ASC_ABSOLUTE_PATHS on Windows. Absolute paths mess up the
 	ability of the installer to relocate files at install-time.
+
+	For Tcl/Tk the following #defines can be needed:
+		ASCENDDIST_DEFAULT
+		ASCENDTK_DEFAULT
+		ASCENDLIBRARY_DEFAULT
+		ASCENDSOLVERS_DEFAULT
+
+		ASC_ABSOLUTE_PATHS
+		ASC_DIST_REL_BIN
+		ASC_TK_REL_DIST
+		ASC_LIBRARY_REL_DIST
+		ASC_SOLVERS_REL_DIST
+
+	Then, using these, in the case of relative paths, we choose:
+
+		ASCENDROOT = $PROGDIR/@ASC_DIST_REL_BIN@
+		ASCENDTK = $ASCENDROOT/@ASC_TK_REL_DIST@
+		ASCENDLIBRARY = $ASCENDROOT/@ASC_LIBRARY_REL_DIST@
+		ASCENDSOLVERS = $ASCENDROOT/@ASC_SOLVERS_ROL_DIST@
 */
-#ifndef ASC_ABSOLUTE_PATHS
-/* #define ASC_ABSOLUTE_PATHS @ASC_ABSOLUTE_PATHS@ */
+#define ASC_ABSOLUTE_PATHS @ASC_ABSOLUTE_PATHS@
+#if ASC_ABSOLUTE_PATHS
+# define ASCENDDIST_DEFAULT "@ASCENDDIST_DEFAULT@"
+# define ASCENDTK_DEAFULT "@ASCENDTK_DEFAULT@"
+# define ASCENDLIBRARY_DEFAULT "@ASCENDLIBRARY_DEFAULT@"
+# define ASCENDSOLVERS_DEFAULT "@ASCENDSOLVERS_DEFAULT@"
+#else
+# define ASC_DIST_REL_BIN "@ASC_DIST_REL_BIN@"
+# define ASC_TK_REL_DIST "@ASC_TK_REL_DIST@"
+# define ASC_LIBRARY_REL_DIST "@ASC_LIBRARY_REL_DIST@"
+# define ASC_SOLVERS_REL_DIST "@ASC_SOLVERS_REL_DIST@"
 #endif
-
-/*
-	See ASC_ABSOLUTE_PATHS above. ASC_DATADIR is the default value of ASCCENDDIST
-	in the case of ASC_ABSOLUTE_PATHS.
-*/
-#define ASC_DATADIR "@INSTALL_ASCDATA@"
-
-/*
-  See ASC_ABSOLUTE_PATHS above. In the case of relative paths, ASCENDDIST is
-  derived from ASC_DISTDIR_REL_BIN: this path is suffixed to the name of
-  the directory in which the currently-running executable is located. Depending
-  on how you are installing ASCEND, sensible values are likely to be
-  either '..' or '../share/ascend'.
-
-  Only applies when ASC_ABSOLUTE_PATHS is *not* defined.
-*/
-#define ASC_DISTDIR_REL_BIN "@ASC_DISTDIR_REL_BIN@"
-
-/*
-	This is the default location of the tcl/tk scripts. Environment
-	variables (dollar sign followed by uppercase letters)
-	will be expanded at runtime, so a good value for example is
-
-	$ASCENDDIST/TK
-*/
-#define ASC_ENV_TK_DEFAULT "@ASC_ENV_TK_DEFAULT@"
-
 
 /*
 	Whether to use xterm colours when writing 'error.h' output, eg

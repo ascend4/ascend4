@@ -22,6 +22,8 @@ if platform.system()=="Windows":
 	k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, "SOFTWARE\ASCEND")
 	print k
 
+	# on Windows, we should be able to *assume* relative paths...
+
 	# for some reason, QueryValue doesn't work on Py 2.4, need to use QueryValueEx.
 	INSTALL_SOLVERS,t = wreg.QueryValueEx(k,"INSTALL_SOLVERS")
 	INSTALL_MODELS,t = wreg.QueryValueEx(k,"INSTALL_MODELS")
@@ -38,6 +40,9 @@ if platform.system()=="Windows":
 	SEP=";"
 	LDPATHVAR = 'PATH'
 else:
+
+	# FIXME for possible case of relative paths...
+
 	INSTALL_LIB="@INSTALL_LIB@"
 	INSTALL_ASCDATA="@INSTALL_ASCDATA@"
 	INSTALL_MODELS = os.path.abspath(INSTALL_ASCDATA+"/models")
