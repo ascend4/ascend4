@@ -41,8 +41,11 @@ if platform.system()=="Windows":
 
 	# on Windows, we build ASCEND such that it finds it support files 
 	# using paths relative to the location of the executable
-	default_rel_distdir = '.'
 	default_absolute_paths = False
+	default_dist_rel_bin = '.'
+	default_tk_rel_dist = 'tcltk'
+	default_library_rel_dist = 'models'
+	default_solvers_rel_dist = 'solvers'
 	
 	# where to look for IDA solver libraries, headers, etc.
 	default_ida_prefix = "c:\\MinGW"
@@ -111,8 +114,12 @@ else:
 				default_tcl_cpppath = "/usr/include/tcl8.5"
 			
 
-	default_rel_distdir = '..'
 	default_absolute_paths = True
+	default_dist_rel_bin = '..'
+	default_tk_rel_dist = 'share/ascend/tcltk'
+	default_library_rel_dist = 'lib/ascend/models'
+	default_solvers_rel_dist = 'lib/ascend/solvers'
+
 	default_ida_prefix="/usr"
 	default_conopt_prefix="/usr"
 	default_conopt_libpath="$CONOPT_PREFIX/lib"
@@ -596,15 +603,21 @@ opts.Add(
 )
 
 opts.Add(
+	'INSTALL_ASCDATA'
+	,"Location of ASCEND shared data (TK, python, models etc)"
+	,"$INSTALL_SHARE/ascend"
+)
+
+opts.Add(
 	'INSTALL_PYTHON'
 	,'Common shared-file location on this system'
 	,os.path.join(default_python,"ascend")
 )
 
 opts.Add(
-	'INSTALL_ASCDATA'
-	,"Location of ASCEND shared data (TK, python, models etc)"
-	,"$INSTALL_SHARE/ascend"
+	'INSTALL_TK'
+	,'Location for Tcl/Tk files used by ASCEND Tk GUI'
+	,"$INSTALL_ASCDATA/tcltk"
 )
 
 opts.Add(
@@ -2450,11 +2463,31 @@ subst_dict = {
 	, '@EXTLIB_SUFFIX@':env['EXTLIB_SUFFIX']
 	, '@EXTLIB_PREFIX@':env['EXTLIB_PREFIX']
 	, '@ASC_ENV_TK_DEFAULT@' : '$$ASCENDDIST/tcltk'
-	, '@ASC_DISTDIR_REL_BIN@' : default_rel_distdir
 	, '@PYTHON@' : python_exe
 	, '@PYVERSION@' : pyversion
 	, '@SOURCE_ROOT@':c_escape(os.path.abspath(str(env.Dir("#"))))
 	, '@WITH_GRAPHVIZ@': str(int(env.get('WITH_GRAPHVIZ')))
+#define ASC_ABSOLUTE_PATHS @ASC_ABSOLUTE_PATHS@
+#if ASC_ABSOLUTE_PATHS
+# define ASCENDDIST_DEFAULT "@ASCENDDIST_DEFAULT@"
+# define ASCENDTK_DEAFULT "@ASCENDTK_DEFAULT@"
+# define ASCENDLIBRARY_DEFAULT "@ASCENDLIBRARY_DEFAULT@"
+# define ASCENDSOLVERS_DEFAULT "@ASCENDSOLVERS_DEFAULT@"
+#else
+# define ASC_DIST_REL_BIN "@ASC_DIST_REL_BIN@"
+# define ASC_TK_REL_DIST "@ASC_TK_REL_DIST@"
+# define ASC_LIBRARY_REL_DIST "@ASC_LIBRARY_REL_DIST@"
+# define ASC_SOLVERS_REL_DIST "@ASC_SOLVERS_REL_DIST@"
+#endif
+	, '@ASC_ABSOLUTE_PATHS@': str(int(env.get('ABSOLUTE_PATHS')))
+	, '@ASCENDDIST_DEFAULT@': c_escape(env['INSTALL_PREFIX'])
+	, '@ASCENDTK_DEFAULT@': c_escape(os.path.abspath(env.subst(env['INSTALL_TK'])))
+	, '@ASCENDLIBRARY_DEFAULT@': c_escape(os.path.abspath(env.subst(env['DEFAULT_ASCENDLIBRARY'])))
+	, '@ASCENDSOLVERS_DEFAULT@': c_escape(os.path.abspath(env.subst(env['DEFAULT_ASCENDSOLVERS'])))
+	, '@ASC_DIST_REL_BIN@' : default_dist_rel_bin
+	, '@ASC_TK_REL_DIST@' : default_tk_rel_dist
+	, '@ASC_LIBRARY_REL_DIST@' : default_library_rel_dist
+	, '@ASC_SOLVERS_REL_DIST@' : default_solvers_rel_dist
 }
 
 if env.get('WITH_DOC'):
@@ -2470,7 +2503,6 @@ for k,v in {
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
 		,'HAVE_IEEE':env.get('HAVE_IEEE')
-		,'ASC_ABSOLUTE_PATHS':env.get('ABSOLUTE_PATHS')
 		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
 		}.iteritems():
@@ -2708,12 +2740,6 @@ env.Alias('extfns',env['extfns'])
 
 ascendconfig = env.SubstInFile('ascend-config.in')
 
-
-#------------------------------------------------------
-# CREATE asc4dev scriptlet
-
-asc4devcmd = env.SubstInFile('tcltk/asc4dev.in')
-env.AddPostAction(asc4devcmd, 'chmod 755 $TARGET')
 #------------------------------------------------------
 # INSTALLATION
 
@@ -2730,16 +2756,21 @@ if env.get('CAN_INSTALL'):
 
 	libname = "${INSTALL_LIB}/%s%s" % (soname_full,soname_minor)
 	install_lib = env.InstallLibraryAs("${INSTALL_ROOT}"+libname, [libascend])
+	if env['ABSOLUTE_PATHS']:
+		link_target = install_lib
+	else:
+		link_target = "%s%s" % (soname_full,soname_minor)
 
 	link1 = "${INSTALL_LIB}/%s" % soname_clean
 	install_link1 = None
 	if env.subst(link1) != env.subst(libname):
-		install_link1 = env.Command("${INSTALL_ROOT}"+link1,install_lib,"ln -f -s %s $TARGET" % libname)
+		cwd = os.getcwd()
+		install_link1 = env.Command("${INSTALL_ROOT}"+link1,libname,"ln -f -s %s $TARGET" % link_target)
 
 	link2 = "$INSTALL_LIB/%s" % soname_full
 	install_link2 = None
 	if soname_minor:
-		install_link2 = env.Command("${INSTALL_ROOT}"+link2,install_lib,"ln -f -s %s $TARGET"%libname)
+		install_link2 = env.Command("${INSTALL_ROOT}"+link2,libname,"ln -f -s %s $TARGET"%link_target)
 
 	env.InstallProgram(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),ascendconfig)
 
