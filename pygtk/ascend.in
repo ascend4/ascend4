@@ -32,8 +32,8 @@ if platform.system()=="Windows":
 	GTKLIBS,t = wreg.QueryValueEx(k,"GTKLIBS");
 	DEFAULT_ASCENDLIBRARY="%s;%s" % (INSTALL_SOLVERS,INSTALL_MODELS)
 	
+	INSTALL_PYTHON = os.path.join(INSTALL_ASCDATA,"python")	
 	PYVERSION = "@PYVERSION@"
-	
 	PYTHON=os.path.join(sys.prefix,"pythonw.exe")
 	
 	print "PYTHON =",PYTHON
@@ -123,8 +123,8 @@ if os.environ.get('ASCENDSOLVERS'):
 print "sys.path[0] = %s" % sys.path[0]
 
 if not INSTALL_ASCDATA in sys.path:
-	print "Adding INSTALL_ASCDATA to python pathh"
-	sys.path.append(INSTALL_ASCDATA)
+	print "Adding INSTALL_PYTHON to python path"
+	sys.path.append(INSTALL_PYTHON)
 
 if not INSTALL_PYTHON in sys.path:
 	print "Adding INSTALL_PYTHON=%s to python path" % INSTALL_PYTHON

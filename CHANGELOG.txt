@@ -1,3 +1,34 @@
+30 Apr 2009
+-----------
+
+Version 0.9.6
+ - Major code reorgansation, switched active development back to trunk
+ - Snapshop of code before start of GSOC2009 students.
+ - Much expanded syntax highlighting for gedit users (Linux)
+ - Improved packaging for Ubuntu (more standards-compliant)
+ - Restored functionality of 'relative paths' usages for Tcl/Tk GUI.
+ - Implementation of Canvas GUI progressed a bit more, still pre-alpha.
+ - Support for Autotools and Visual Studio removed (too stale to stay there)
+ - Header files are now located in /usr/include/ascend on Linux.
+ - Added Python bindings for FPROPS.
+ - Added Hydrogen, Water to FPROPS.
+ - Fixed support for 'critical terms', speed of sound, specific heat 
+   and partial derivatives in FPROPS.
+ - DTAR now fails if dpkg-buildpackage fails. 
+ - In PyGTK GUI, 'fixed variables' dialog now shows variable values.
+ - Graphviz system graph now shows unconverged relations.
+ - Added 'sticky' installer preferences in Windows, to help prevent
+   uninstall problems.
+ - Add support for SCons 1.2.0 (some deprecation warnings still though)
+ - ascend-config outputs paths with double backslash on Windows.
+ - Added LoadString method in Python bindings, for use by Canvas GUI.
+ - Fixed apparent bug in pairlist_append_unique.
+ - Added pairlist_set and pairlist_values_and_destroy.
+ - Added new 'notequery' module for 'most refined' notes on a model.
+ - Added new test models in test/canvas/blocktypes.a4c.
+
+
+ 
 29 Sep 2008
 -----------
 
