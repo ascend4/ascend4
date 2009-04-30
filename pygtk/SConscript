@@ -116,10 +116,10 @@ swiglib = swig_env.SharedLibrary("ascpy",objs + swigobjs
 configpy = env.SubstInFile(source='config.py.in')
 configh = env.SubstInFile(source='config.h.in')
 
-if platform.system() != "Windows" or env.has_key('IS_MINGW'):
-	ascendcmd = env.SubstInFile(source='ascend.in')
-	env.AddPostAction(ascendcmd, 'chmod 755 $TARGET')
+ascendcmd = env.SubstInFile(source='ascend.in')
+env.AddPostAction(ascendcmd, 'chmod 755 $TARGET')
 
+if platform.system() != "Windows" or env.has_key('IS_MINGW'):
 	envdev = env.Clone()
 	# add 'WITH_SOLVERS' to the SUBST_DICT used by ascdev...
 	envdev['SUBST_DICT']['@WITH_SOLVERS@'] = ",".join(env.get('WITH_SOLVERS'))

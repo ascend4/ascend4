@@ -248,59 +248,7 @@ Section "ASCEND (required)"
 	; Write default values of ASCENDLIBRARY and ASCENDSOLVERS (user can override with env vars)
 	WriteRegStr HKLM SOFTWARE\ASCEND "ASCENDLIBRARY" "$INSTDIR\models"
 	WriteRegStr HKLM SOFTWARE\ASCEND "ASCENDSOLVERS" "$INSTDIR\solvers"
-
-	; Create 'ascend.bat' batch file for launching the PyGTK GUI.
-	ClearErrors
-	FileOpen $0 $INSTDIR\ascend.bat w
-	${If} ${Errors}
-		MessageBox MB_OK "The 'ascend.bat' file was not installed properly; problems writing to that file."	
-	${Else}
-		FileWrite $0 "@echo off"
-		FileWriteByte $0 "13"
-		FileWriteByte $0 "10"
-		FileWrite $0 "set PATH=$PATH"
-		FileWriteByte $0 "13"
-		FileWriteByte $0 "10"
-		FileWrite $0 "cd "
-		FileWrite $0 $INSTDIR 
-		FileWriteByte $0 "13"
-		FileWriteByte $0 "10"
-		FileWrite $0 "$PYPATH\python "
-		FileWriteByte $0 "34" 
-		FileWrite $0 "$INSTDIR\ascend"
-		FileWriteByte $0 "34"
-		FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
-		FileWriteByte $0 "13"
-		FileWriteByte $0 "10"
-		FileClose $0
-	${EndIf}
-	
-	; Create 'ascend-config.bat' batch file for launching the python script 'ascend-config'.
-	ClearErrors
-	FileOpen $0 $INSTDIR\ascend-config.bat w
-	${If} ${Errors}
-		MessageBox MB_OK "The 'ascend-config.bat' file was not installed properly; problems writing to that file."	
-	${Else}
-		FileWrite $0 "@echo off"
-		FileWriteByte $0 "13"
-		FileWriteByte $0 "10"
-		FileWrite $0 "set PATH=$PATH"
-		FileWriteByte $0 "13"
-		FileWriteByte $0 "10"
-		FileWrite $0 "cd "
-		FileWrite $0 $INSTDIR 
-		FileWriteByte $0 "13"
-		FileWriteByte $0 "10"
-		FileWrite $0 "$PYPATH\python "
-		FileWriteByte $0 "34" 
-		FileWrite $0 "$INSTDIR\ascend-config"
-		FileWriteByte $0 "34"
-		FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
-		FileWriteByte $0 "13"
-		FileWriteByte $0 "10"
-		FileClose $0
-	${EndIf}
-	
+		
 	Return
 SectionEnd
 
@@ -325,15 +273,17 @@ Section "PyGTK GUI" sect_pygtk
 
 		DetailPrint "--- PYTHON INTERFACE ---"
 
-		; Set output path to the installation directory.
+		; File icon
 		SetOutPath $INSTDIR
+		File "..\pygtk\glade\ascend-doc.ico"
+		File "..\pygtk\ascend"		
 
 		; Python interface
-		File /nonfatal "..\pygtk\_ascpy.pyd"
+		SetOutPath $INSTDIR\python
+		File "..\pygtk\_ascpy.pyd"
 		File "..\pygtk\*.py"
-		File "..\pygtk\ascend"
-		File "..\pygtk\glade\ascend-doc.ico"
-
+		
+		; GLADE assets
 		SetOutPath $INSTDIR\glade
 		File "..\pygtk\glade\*.glade"
 		File "..\pygtk\glade\*.png"
@@ -341,6 +291,32 @@ Section "PyGTK GUI" sect_pygtk
 
 		StrCpy $PYINSTALLED "1"
 		WriteRegDWORD HKLM "SOFTWARE\ASCEND" "Python" 1	
+
+		; Create 'ascend.bat' batch file for launching the PyGTK GUI.
+		ClearErrors
+		FileOpen $0 $INSTDIR\ascend.bat w
+		${If} ${Errors}
+			MessageBox MB_OK "The 'ascend.bat' file was not installed properly; problems writing to that file."	
+		${Else}
+			FileWrite $0 "@echo off"
+			FileWriteByte $0 "13"
+			FileWriteByte $0 "10"
+			FileWrite $0 "set PATH=$PATH"
+			FileWriteByte $0 "13"
+			FileWriteByte $0 "10"
+			FileWrite $0 "cd "
+			FileWrite $0 $INSTDIR 
+			FileWriteByte $0 "13"
+			FileWriteByte $0 "10"
+			FileWrite $0 "$PYPATH\python "
+			FileWriteByte $0 "34" 
+			FileWrite $0 "$INSTDIR\python\ascend"
+			FileWriteByte $0 "34"
+			FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
+			FileWriteByte $0 "13"
+			FileWriteByte $0 "10"
+			FileClose $0
+		${EndIf}
 
 		;---- file association ----
 
@@ -376,7 +352,7 @@ a4lnobkp:
 		WriteRegStr HKCR "ASCEND.model\DefaultIcon" "" "$INSTDIR\ascend-doc.ico"
 
 a4cskip:
-		WriteRegStr HKCR "ASCEND.model\shell\open\command" "" '$PYPATH\pythonw "$INSTDIR\ascend" "%1"'
+		WriteRegStr HKCR "ASCEND.model\shell\open\command" "" '$PYPATH\pythonw.exe "$INSTDIR\ascend" "%1"'
 
 		System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
 
@@ -394,10 +370,11 @@ Section "Tcl/Tk GUI" sect_tcltk
 	${Else}
 		DetailPrint "--- TCL/TK INTERFACE ---"
 		SetOutPath $INSTDIR\tcltk
-		File /r /x .svn "..\tcltk\TK\*"
+		; FIXME we should be a bit more selective here?
+		File /r /x .svn "..\tcltk\tk\*"
 		SetOutPath $INSTDIR
-		File "..\tcltk\generic\interface\ascendtcl.dll"
-		File "..\tcltk\generic\interface\ascend4.exe"
+		File "..\tcltk\interface\ascendtcl.dll"
+		File "..\tcltk\interface\ascend4.exe"
 
 		StrCpy $TCLINSTALLED "1"
 		WriteRegDWORD HKLM "SOFTWARE\ASCEND" "TclTk" 1
@@ -455,9 +432,34 @@ SectionEnd
 Section /o "Header files (for developers)" sect_devel
 	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "HeaderFiles" 1
 
-	SetOutPath $INSTDIR\include
-	File /r /x .svn "..\base\generic\*.h"
-
+	SetOutPath $INSTDIR\include\ascend
+	File /r /x .svn "..\ascend\*.h"
+	
+	; Create 'ascend-config.bat' batch file for launching the python script 'ascend-config'.
+	ClearErrors
+	FileOpen $0 $INSTDIR\ascend-config.bat w
+	${If} ${Errors}
+		MessageBox MB_OK "The 'ascend-config.bat' file was not installed properly; problems writing to that file."	
+	${Else}
+		FileWrite $0 "@echo off"
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileWrite $0 "set PATH=$PATH"
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileWrite $0 "cd "
+		FileWrite $0 $INSTDIR 
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileWrite $0 "$PYPATH\python "
+		FileWriteByte $0 "34" 
+		FileWrite $0 "$INSTDIR\ascend-config"
+		FileWriteByte $0 "34"
+		FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
+		FileWriteByte $0 "13"
+		FileWriteByte $0 "10"
+		FileClose $0
+	${EndIf}
 	SetOutPath $INSTDIR
 SectionEnd
 
@@ -472,15 +474,17 @@ Section "Uninstall"
 	${If} $0 <> 0
   
 		DetailPrint "--- REMOVING PYTHON COMPONENTS ---"
-		Delete $INSTDIR\_ascpy.pyd
-		Delete $INSTDIR\ascend
-		Delete $INSTDIR\*.py
-		Delete $INSTDIR\*.pyc
+		Delete $INSTDIR\python\_ascpy.pyd
+		Delete $INSTDIR\python\*.py
+		Delete $INSTDIR\python\*.pyc
 		Delete $INSTDIR\glade\*.glade
 		Delete $INSTDIR\glade\*.png
 		Delete $INSTDIR\glade\*.svg
-		RmDir $INSTDIR\glade
 		Delete $INSTDIR\ascend-doc.ico
+		Delete $INSTDIR\ascend
+		Delete $INSTDIR\ascend.bat
+		RmDir $INSTDIR\glade
+		RmDir $INSTDIR\python
 
 ;--- file association (for Python GUI) ---
   
@@ -541,6 +545,8 @@ Section "Uninstall"
 	${If} $0 <> 0
 		DetailPrint "--- REMOVING HEADER FILES ---"
 		RMDir /r $INSTDIR\include
+		Delete $INSTDIR\ascend-config
+		Delete $INSTDIR\ascend-config.bat	
 	${EndIf}
 	
 ;--- start menu ---
@@ -562,9 +568,6 @@ Section "Uninstall"
 
 	; Remove files and uninstaller
 
-	Delete $INSTDIR\ascend-config
-	Delete $INSTDIR\ascend-config.bat
-	Delete $INSTDIR\ascend.bat
 	Delete $INSTDIR\ascend.dll
 	Delete $INSTDIR\LICENSE.txt
 	Delete $INSTDIR\README-windows.txt

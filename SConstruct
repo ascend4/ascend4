@@ -4,7 +4,7 @@
 # much less tested.
 
 # version number for this ASCEND build:
-version = "0.9.5.116"
+version = "0.9.6"
 
 # shared library API numbering, for Linux (FIXME windows too?)
 soname_major = ".1"
@@ -2169,7 +2169,7 @@ if conf.CheckFunc('isnan') is False and conf.CheckFunc('_isnan') is False:
 
 if conf.CheckGcc():
 	conf.env['HAVE_GCC']=True;
-	if env['WITH_GCCVISIBILITY'] and conf.CheckGccVisibility():
+	if env.get('WITH_GCCVISIBILITY') and conf.CheckGccVisibility():
 		conf.env['HAVE_GCCVISIBILITY']=True;
 		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
 		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
@@ -2788,7 +2788,7 @@ if with_installer:
 		,'PYVERSION':pyversion
 	})
 	installer = env.Installer('nsis/installer.nsi')
-	Depends(installer,["pygtk","tcltk","ascend.dll","models","solvers","ascend-config"])
+	Depends(installer,["pygtk","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
 	env.Alias('installer',installer)
 else:
 	print "Skipping... Windows installer isn't being built:",without_installer_reason
