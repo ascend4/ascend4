@@ -161,7 +161,7 @@ ASCEND library, 'libascend'.
 %setup -q -n %{disttar_name}
 
 %build
-scons %{_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
+scons %{_smp_mflags} \
 	INSTALL_ROOT=%{buildroot} \
 	INSTALL_PREFIX=%{_prefix} \
 	INSTALL_SHARE=%{_datadir} \
@@ -239,11 +239,10 @@ update-mime-database /usr/share/mime &> /dev/null || :
 
 # %package -n ascend-python
 %{_bindir}/ascend
-%{_datadir}/ascend/*.py
-%{_datadir}/ascend/*.py[co]
-
+%{python_sitelib}/ascend/_ascpy.so
+%{python_sitelib}/ascend/*.py
+%{python_sitelib}/ascend/*.py[oc]
 %{_datadir}/ascend/glade
-%{_datadir}/ascend/_ascpy.so
 %{_datadir}/applications/ascend.desktop
 %{_datadir}/icons/ascend-app.png
 %{_datadir}/icons/hicolor/64x64/ascend.png
