@@ -33,7 +33,7 @@ Description:Solver for systems of equations and ODEs/DAEs
 
 Package: ascend-dev
 Architecture: any
-Depends: python, ${shlibs:Depends}
+Depends: ascend, python, ${shlibs:Depends}
 Recommends: scons
 Description:Solver for systems of equations and ODEs/DAEs
  ASCEND is a modelling and simulation environment for

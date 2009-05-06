@@ -94,7 +94,13 @@ print M[0].name
 
 # split the top-level directory name from that path
 
-h,path = os.path.split(M[0].name)
+for i in [0,1]:
+	print "name =",M[i].name
+	h,path = os.path.split(M[i].name)
+	print "h =",h
+	print "path =",path
+	if h:
+		break
 if not h:
 	raise RuntimeError("Tarball appears not contain a top-level directory")
 
