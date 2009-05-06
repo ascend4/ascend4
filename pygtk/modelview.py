@@ -470,6 +470,9 @@ class ModelView:
 		return 1
 
 	def props_activate(self,widget,*args):
+		if not hasattr(self,'sim'):
+			self.browser.reporter.reportError("Can't show properties until a simulation has been created.");
+			return
 		_path,_col = self.modelview.get_cursor()
 		_instance = self.otank[_path][1]
 		if _instance.isRelation():
@@ -481,7 +484,7 @@ class ModelView:
 			_dia = VarPropsWin(self.browser,_instance);
 			_dia.run();
 		else:
-			self.browser.reporter.reportWarning("Select a variable or relation first...")
+			self.browser.reporter.reportWarning("Select a variable or relation first...")			
 
 	def observe_activate(self,widget,*args):
 		_path,_col = self.modelview.get_cursor()

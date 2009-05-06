@@ -1,4 +1,4 @@
 usr/include
-usr/lib/*.so
+usr/lib/libascend.so
 usr/bin/ascend-config
 
