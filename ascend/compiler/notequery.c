@@ -75,22 +75,28 @@ struct gl_list_t *notes_refined_for_type_with_lang(
 	struct gl_list_t *noteslist = NULL;
 	struct gl_list_t *types;
 	struct pairlist_t *pl;
+	unsigned long tlen, nlen;
 
 	/* create list of ancestors' names; add this type's name at the end */
 	types = GetAncestorNames(t);
 	gl_append_ptr(types,(VOIDPTR)GetName(t));
 
 	/* this pairlist will a list of (varname, NOTE) */
-	pl = pairlist_create(1);
+	pl = pairlist_create(1);	/* FIXME: should be gllist. stored noteid is never reused unless maybe in a debugger */
 	
-	for(i=1;i<=gl_length(types);++i){
+	tlen = gl_length(types);
+	for(i=1; i<=tlen; ++i){
 		symchar *typename = (symchar *)gl_fetch(types,i);
 		noteslist = GetNotes(dbid, typename, lang, NOTESWILD, NOTESWILD, nd_wild);
-		for(j=1; j<=gl_length(noteslist);++j){
-			symchar *note = (symchar *)gl_fetch(noteslist,j);
-			symchar *noteid = GetNoteId(note);
-			/* only care about NOTEs with non-NULL noteid */
-			if(noteid)pairlist_set(pl, noteid, note);
+		nlen = gl_length(noteslist);
+		for(j=1; j<=nlen; ++j){
+			struct Note * note_ptr;
+			note_ptr = (struct Note *)gl_fetch(noteslist,j);
+			symchar *noteid = GetNoteId(note_ptr);
+			/* only care about NOTEs with non-NULL noteid. notes applied to
+				the type itself don't have an associated child id.
+			 */
+			if(noteid)pairlist_set(pl, (void *)noteid, (void *)note_ptr);
 		}
 		gl_destroy(noteslist);		
 	}

@@ -252,9 +252,13 @@ const struct gl_list_t *integrator_get_engines(){
 	return integrator_get_list(0);
 }
 
+struct gl_list_t *integrator_get_engines_growable(){
+	return integrator_get_list(0);
+}
+
 /* return 0 on success */
 int integrator_set_engine(IntegratorSystem *sys, const char *name){
-	const struct gl_list_t *L = integrator_get_engines();
+	struct gl_list_t *L = integrator_get_engines_growable();
 	int i;
 	const IntegratorInternals *I, *Ifound=NULL;
 	for(i=1; i <= gl_length(L); ++i){
@@ -351,16 +355,16 @@ void integrator_create_engine(IntegratorSystem *sys){
 
 int integrator_register(const IntegratorInternals *integ){
 	/* get the current list of registered engines */
-	const struct gl_list_t *L;
-	L = integrator_get_engines();
+	struct gl_list_t *L;
+	L = integrator_get_engines_growable();
 
 	CONSOLE_DEBUG("REGISTERING INTEGRATOR");
 	CONSOLE_DEBUG("There were %lu registered integrators", gl_length(integrator_get_list(0)));
 
 	int i;
-	const IntegratorInternals *I;
+	IntegratorInternals *I;
 	for(i=1; i <= gl_length(L); ++i){
-		I = (const IntegratorInternals *)gl_fetch(L,i);
+		I = (IntegratorInternals *)gl_fetch(L,i);
 		if(strcmp(integ->name,I->name)==0){
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Integrator with name '%s' is already registered",integ->name);
 			return 0;
@@ -373,7 +377,7 @@ int integrator_register(const IntegratorInternals *integ){
 
 	CONSOLE_DEBUG("Adding engine '%s'",integ->name);
 
-	gl_append_ptr(L,(const IntegratorInternals *)integ);
+	gl_append_ptr(L,(void *)integ);
 
 	CONSOLE_DEBUG("There are now %lu registered integrators", gl_length(integrator_get_list(0)));
 	return 0;

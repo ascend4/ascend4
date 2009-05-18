@@ -76,27 +76,27 @@ MODEL test_rc_anon;
   a,b,c,d,e,f,g,h IS_A real_constant;
   a :== 1;
   f :== 1;
-  d :== 2{meter};
-  g :== 2{meter};
+  d :== 2{m};
+  g :== 2{m};
   b :== 2;
-  c :== 3{meter};
+  c :== 3{m};
   h :== 0{?};
   (* e unassigned *)
   A,B,C,D,E,F,G,H IS_A real_constant;
   A :== 1;
   F :== 1;
-  D :== 2{meter};
-  G :== 2{meter};
+  D :== 2{m};
+  G :== 2{m};
   B :== 2;
-  C :== 3{meter};
+  C :== 3{m};
   H :== 0{?};
   (* E unassigned *)
 END test_rc_anon;
 
 MODEL test_ra_anon;
   a,b,c,d IS_A real;
-  a := 1{meter};
-  c := 1{meter};
+  a := 1{m};
+  c := 1{m};
   b,d IS_REFINED_TO solver_var;
 END test_ra_anon;
 

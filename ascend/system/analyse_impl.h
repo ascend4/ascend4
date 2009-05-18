@@ -121,15 +121,6 @@ struct solver_ipdata {
 /* a handy cast for fetching things off gllists */
 #define SIP(x) ((struct solver_ipdata *)(x))
 
-/*
-	a bridge buffer used so much we aren't going to free it, just reuse it
-*/
-static struct reuse_t {
-  size_t ipcap;			/* number of ips allocated in ipbuf */
-  size_t ipused;		/* number of ips in use */
-  struct solver_ipdata *ipbuf;
-} g_reuse = {0,0,NULL};
-
 /**
 	a data structure for bridge-building only. hell of a scaffolding.
 	all fields should be empty if construction is not in progress.

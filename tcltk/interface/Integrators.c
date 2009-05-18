@@ -134,7 +134,8 @@ void Asc_IntegReleaseObsFile(void)
 
 void Asc_IntegPrintYHeader(FILE *fp, IntegratorSystem *blsys)
 {
-  long i,len, *yip;
+  long i,len;
+  int *yip;
   char *name;
   struct Instance *in;
   int si;
@@ -183,7 +184,8 @@ void Asc_IntegPrintYHeader(FILE *fp, IntegratorSystem *blsys)
 /********************************************************************/
 void Asc_IntegPrintObsHeader(FILE *fp, IntegratorSystem *blsys)
 {
-  long i,len, *obsip;
+  long i,len;
+  int *obsip;
   char *name;
   struct Instance *in;
   int si;
@@ -716,7 +718,6 @@ int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
   CONST84 char *engine = NULL;
   int result = 0;         /* 0 = FALSE; 1 = TRUE */
   long i0=(-1), i1=(-1);
-  int ifound = 0;
   int k;
   int moststeps=0;
   double dt0=0, dtmin=0, dtmax=0;

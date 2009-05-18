@@ -9,7 +9,6 @@ PROVIDE "z-emptyarg.a4c";
  *)
 
 MODEL bug(
-END bug;
 	n IS_A integer_constant;
 	a[1..n] WILL_BE real;
 );

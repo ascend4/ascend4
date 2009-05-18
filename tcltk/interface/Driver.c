@@ -151,6 +151,8 @@ static int tty;
 	set in the user's environment.
 	TCL_LIBRARY is set to:  dirnameofexecutable/../../Tcl/lib/tcl8.0
 	TK_LIBRARY is set to $tcl_library/../tk8.0
+	These values are true for cmu only and tk8.0 only (heuristic)
+	and so if unset we are changing to accept the tk built in values.
 */
 static char initScriptTclAdjust[] =
 "proc asc_tclInit {} {\n\
@@ -161,8 +163,9 @@ static char initScriptTclAdjust[] =
     if [info exists env(TCL_LIBRARY)] {\n\
 	return\n\
     } else {\n\
-        set parentDir [file dirname [info nameofexecutable]]\n\
-	set env(TCL_LIBRARY) $parentDir/../../Tcl/lib/tcl8.0\n\
+#set parentDir [file dirname [info nameofexecutable]]\n\
+#set env(TCL_LIBRARY) $parentDir/../../Tcl/lib/tcl8.0\n\
+	set env(TCL_LIBRARY) [info library]\n\
     }\n\
   }\n\
 asc_tclInit";
@@ -181,8 +184,9 @@ static char initScriptTkAdjust[] =
     if [info exists env(TK_LIBRARY)] {\n\
 	return\n\
     } else {\n\
-        set parentDir [file dirname [info library]]\n\
-	set env(TK_LIBRARY) $parentDir/tk8.0\n\
+#set parentDir [file dirname [info tk_library]]\n\
+#set env(TK_LIBRARY) $parentDir/tk8.0\n\
+	set env(TK_LIBRARY) $tk_library\n\
     }\n\
   }\n\
 asc_tkInit";
@@ -190,6 +194,7 @@ asc_tkInit";
 	This assumes tcl_library has been found and that tcl8.0 and tk8.0
 	are installed in the same lib directory -- the default tcl/tk install.
 */
+
 
 /**
 	who built this binary and when
@@ -491,6 +496,8 @@ static void printenv(){
 	ascfree(l);
 }
 
+static void AscSaveOrgEnv(Tcl_Interp *interp,const char *progname);
+
 /**
 	Ensure that all required environment variables are present
 	and set values for them if they are not present. The names
@@ -538,6 +545,8 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	Tcl_DString buffer;
 
 	Tcl_DStringInit(&buffer);
+
+	AscSaveOrgEnv(interp, progname);
 
 	/* import these into the environment */
 	err = env_import(ASC_ENV_DIST,getenv,PUTENV);
@@ -1087,6 +1096,37 @@ defaultPrompt:
     Tcl_Flush(outChannel);
   }
   color_off(stdout);
+}
+
+/* include here to avoid contaminating everything above it. */
+#include <tclInt.h>
+/**
+preserve key stuff in the launching environment where we can check it later.
+*/
+static void AscSaveOrgEnv(Tcl_Interp *interp,const char *progname) {
+#define ENVCOUNT 8
+#define ORGVAR ascOrgEnv
+  int i;
+  CONST char *value;
+  const char *vars[ENVCOUNT] = {
+    ASC_ENV_DIST, ASC_ENV_TK, ASC_ENV_BITMAPS, ASC_ENV_LIBRARY, ASC_ENV_SOLVERS, 
+    "TK_LIBRARY", "TCL_LIBRARY", "PRINTER"
+  };
+  Tcl_DString buffer;
+  Tcl_DString search;
+  ASC_FPRINTF(stderr,"\nCACHING ENV Vars.\n");
+
+  Tcl_DStringInit(&buffer);
+  Tcl_DStringInit(&search);
+  ASC_SEND_TO_TCL2(ascOrgEnv, "dummy", "0");
+  for (i = 0; i < ENVCOUNT; i++) {
+    value = TclGetEnv(vars[i], &search);
+    if (value != NULL) {
+      ASC_SEND_TO_TCL2(ascOrgEnv, vars[i], value);
+      ASC_FPRINTF(stderr,"\nCACHING %s.\n",vars[i]);
+    }
+    Tcl_DStringFree(&search);
+  }
 }
 
 #ifdef DEBUG_MALLOC

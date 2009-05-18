@@ -48,6 +48,7 @@
 #include "mathinst.h"
 #include "tmpnum.h"
 #include "visitinst.h"
+#include "find.h"
 #include "relation_util.h"
 #include "relation_io.h"
 #include "logical_relation.h"

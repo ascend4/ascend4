@@ -196,7 +196,7 @@ struct procFrame {
   int depth;                  /**< where on the stack. redundant. */
   FILE *err;                  /**< where interactive messages should be sent */
   struct Instance *i;         /**< scope proc is being executed in. */
-  char *cname;                /**< name of scope by which we got here. */
+  char *cname;          /**< name of scope by which we got here. */
   struct InitProcedure *proc; /**< proc being evaluated. */
   struct Statement *stat;     /**< statement being evaluated. */
   struct procFrame *caller;   /**< scope that lead here in execution.
@@ -232,14 +232,14 @@ extern char *FrameControlToString(enum FrameControl frc);
 /** Init a top procFrame for normal execution with no debugging. */
 extern void InitNormalTopProcFrame(struct procFrame *fm,
                                    struct Instance *i,
-                                   char *cname,
+                                   CONST char *cname,
                                    FILE *eff,
                                    int options);
 
 /** Init a top procFrame for debugging execution. */
 extern void InitDebugTopProcFrame(struct procFrame *fm,
                                   struct Instance *i,
-                                  char *cname,
+                                  CONST char *cname,
                                   FILE *err,
                                   int options,
                                   struct procDebug *dbi,

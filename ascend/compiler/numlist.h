@@ -32,7 +32,7 @@
 /** @file
  *  Numlist management routines.
  *  Numlists are lists of integer scalars and ranges.
- *  Valid numbers are 1..INT_MAX.
+ *  Valid numbers are 1..GL_INT_MAX.
  *  Numbers are stored in increasing order, and condensed to ranges
  *  where possible.
  *  For storage efficiency, only lists you request to be expandable
@@ -63,11 +63,13 @@
  */
 #define NUMLISTUSESPOOL TRUE
 
+typedef int nlbool;
+
 /** A numlist pair. */
 typedef struct numpair_list *Numlist_p;
 
 /** Function required by the iterator defined for Numlist_p's. */
-typedef void (*NPLFunc)(int, void *);
+typedef void (*NPLFunc)(GLint, void *);
 
 /** 
  * <!--  enlp = NumpairExpandableList(enlp,size);                      -->
@@ -79,7 +81,7 @@ typedef void (*NPLFunc)(int, void *);
  * Size is the total number of separate scalars and
  * ranges that might be desired. 
  */
-extern Numlist_p NumpairExpandableList(Numlist_p nlp, int size);
+extern Numlist_p NumpairExpandableList(Numlist_p nlp, GLint size);
 
 /** <!--  NumpairDestroyList(nlp); NumpairDestroyList(enlp);           -->
  * Destroy a list. list may have come from
@@ -92,7 +94,7 @@ extern void NumpairDestroyList(Numlist_p nlp);
  * Returns an efficiently allocated numlist containing the
  * scalar with value index. nlp is not expandable.
  */
-extern Numlist_p NumpairElementary(int indexv);
+extern Numlist_p NumpairElementary(GLint indexv);
 
 /** 
  * <!--  nlp2 = NumpairCopyList(nlp);                                  -->
@@ -147,15 +149,15 @@ extern Numlist_p NumpairCombineLists(struct gl_list_t *nlpgl,
  * Inserts a num to an expandable numlist.
  * typically O(1), sometimes O(len(enlp)).
  */
-extern void NumpairAppendList(Numlist_p enlp, int num);
+extern void NumpairAppendList(Numlist_p enlp, GLint num);
 
 /**
- * <!--  int NumpairListLen(nlp);                                      -->
+ * <!--  GLint NumpairListLen(nlp);                                      -->
  * Returns the number of scalars and ranges currently
  * stored in nlp. List capacity may be larger if nlp is
  * expandable, but you do not need to know that.
  */
-extern int NumpairListLen(Numlist_p nlp);
+extern GLint NumpairListLen(Numlist_p nlp);
 
 /** 
  * <!--  NumpairClearList(enlp);                                       -->
@@ -170,11 +172,11 @@ extern void NumpairClearList(Numlist_p enlp);
  * Returns 1 if number is in list and 0 if it is not.
  * Uses a binary search.
  */
-extern int NumpairNumberInList(Numlist_p nlp, int number);
+extern nlbool NumpairNumberInList(Numlist_p nlp, GLint number);
 
 /** 
  * <!--  NumpairNumberInListHintedDecreasing(nlp,number,hint);         -->
- * <!--  int number, *hint;                                            -->
+ * <!--  GLint number, *hint;                                            -->
  * Returns 1 if number is in list at or to the left of
  * hint. hint is ignored for small lists.
  * To initiate a series of searches, call with *hint == -1.
@@ -182,14 +184,14 @@ extern int NumpairNumberInList(Numlist_p nlp, int number);
  * Note that if hint value is incorrect, this may lie about
  * whether number is in the list.
  */
-extern int NumpairNumberInListHintedDecreasing(Numlist_p nlp,
-                                               int number,
-                                               int *hint);
+extern nlbool NumpairNumberInListHintedDecreasing(Numlist_p nlp,
+                                               GLint number,
+                                               GLint *hint);
 
 /** 
  * <!--  prev = NumpairPrevNumber(nlp,last,hint);                      -->
- * <!--  int *hint;                                                    -->
- * <!--  int last;                                                     -->
+ * <!--  GLint *hint;                                                    -->
+ * <!--  GLint last;                                                     -->
  * Returns the next lower number in the list preceding
  * last. If last is 0, returns highest
  * number in the list. *hint should be the output from the
@@ -199,12 +201,12 @@ extern int NumpairNumberInListHintedDecreasing(Numlist_p nlp,
  * (0 may be a valid *hint, however.)
  * If last is not found in the list, then returns 0.
  */
-extern int NumpairPrevNumber(Numlist_p nlp, int last, int *hint);
+extern GLint NumpairPrevNumber(Numlist_p nlp, GLint last, GLint *hint);
 
 /** 
  * <!--  prev = NumpairNextNumber(nlp,last,hint);                      -->
- * <!--  int *hint;                                                    -->
- * <!--  int last;                                                     -->
+ * <!--  GLint *hint;                                                    -->
+ * <!--  GLint last;                                                     -->
  * Returns the next higher number in the list following
  * last. If last is >= end of list, wraps around and returns 0.
  * *hint should be the output from the
@@ -212,7 +214,7 @@ extern int NumpairPrevNumber(Numlist_p nlp, int last, int *hint);
  * you write a list iteration.
  * Remember that 0 is never really a valid list element.
  */
-extern int NumpairNextNumber(Numlist_p nlp, int last, int *hint);
+extern GLint NumpairNextNumber(Numlist_p nlp, GLint last, GLint *hint);
 
 /** <!--  NumpairListIterate(nlp,func,userdata);                       -->
  *  Calls func(i,userdata) for every integer i listed in nlp.
@@ -221,12 +223,12 @@ extern void NumpairListIterate(Numlist_p nlp, NPLFunc func, void *userdata);
 
 /** 
  * <!--  common = NumpairGTIntersection(nlp1,nlp2,lowlimit);           -->
- * <!--  int lowlimit;                                                 -->
+ * <!--  GLint lowlimit;                                                 -->
  * Returns the first number that is both common to nlp1, nlp2
  * and >= lowlimit.
  * If no number > lowlimit is common, returns 0.
  */
-extern int NumpairGTIntersection(Numlist_p nlp1, Numlist_p nlp2, int lowlimit);
+extern GLint NumpairGTIntersection(Numlist_p nlp1, Numlist_p nlp2, GLint lowlimit);
 
 /** 
  * <!--  last = NumpairIntersectionLTHinted(nlp1,&hint1,nlp2,&hint2,highlimit); -->
@@ -236,17 +238,17 @@ extern int NumpairGTIntersection(Numlist_p nlp1, Numlist_p nlp2, int lowlimit);
  * DECREASING highlimit hint1 and hint2 should be -1 and highlimit
  * should be 0 or INT_MAX. If no intersection is found, returns 0.
  */
-extern int NumpairIntersectionLTHinted(Numlist_p nlp1,
-                                       int *hint1,
+extern GLint NumpairIntersectionLTHinted(Numlist_p nlp1,
+                                       GLint *hint1,
                                        Numlist_p nlp2,
-                                       int *hint2,
-                                       int highlimit);
+                                       GLint *hint2,
+                                       GLint highlimit);
 
 /**
  * Returns the count of integers represented by the list.
  * Tolerates all sorts of crappy input and returns 0 in those cases.
  */
-extern int NumpairCardinality(Numlist_p nlp);
+extern GLint NumpairCardinality(Numlist_p nlp);
 
 /**
  * <!--  NumpairClearPuddle();                                         -->

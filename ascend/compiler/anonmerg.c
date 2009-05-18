@@ -129,8 +129,8 @@ struct AnonMergeIP {    /* Hangs off all instances with amipflag=1 */
   /* The list of merges contained in this inst. each element is a
    * gl_list of paths. each path is a gl_list of child numbers.
    */
-  int ip_number;	/* number of ip node (subgraph) */
-  int node_number;      /* number of merged node, or 0 if this
+  GLint ip_number;	/* number of ip node (subgraph) */
+  GLint node_number;      /* number of merged node, or 0 if this
                          * node is itself uninteresting.
                          * (shared)
                          */
@@ -164,18 +164,18 @@ struct AnonMergeVisitInfo {
 };
 
 struct sgelt {
-  int sg;
+  GLint sg;
   struct sgelt *next;
 };
 
 struct mdata {
   struct sgelt **header; /* [maxip] */
-  int *colcount; /* [maxip] */
-  int *sg2blob; /* [maxchildren] */
+  GLint *colcount; /* [maxip] */
+  GLint *sg2blob; /* [maxchildren] */
   int *blobcollected; /* [maxchildren] */
   struct gl_list_t **blob; /* [maxchildren] */
-  int nextnode_ip;
-  int sg;
+  GLint nextnode_ip;
+  GLint sg;
   int maxchildren;
   pool_store_t pool;
 };
@@ -193,8 +193,8 @@ struct AnonMergeIPData {
   unsigned int ipback;          /* number of slots from buf returned */
   FILE *fp;
 
-  int *listhints;               /* listhints[i] --> hint for graph i */
-  int *node2ip;                 /* node2ip[node_number] --> ip_number */
+  GLint *listhints;               /* listhints[i] --> hint for graph i */
+  GLint *node2ip;                 /* node2ip[node_number] --> ip_number */
 
   Numlist_p enlp0, enlp1,enlp2; /* scratch expandable Numlists */
   struct gl_list_t *nlpgl;      /* gllist of collected numlists */
@@ -956,7 +956,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
   amipd->iplen = amvi->nip;
   amipd->num_mergelists = 0;
   amipd->num_iwithmerge = 0;
-  amipd->node2ip = ASC_NEW_ARRAY(int,(amvi->nim+1));
+  amipd->node2ip = ASC_NEW_ARRAY(GLint,(amvi->nim+1));
   if (amipd->node2ip == NULL) {
     ASC_PANIC("Insufficent memory for node2ip.");
     return NULL;
@@ -996,7 +996,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
 
   asize = amvi->maxchildren; /* now some buffers of this size */
 
-  amipd->listhints = ASC_NEW_ARRAY(int,asize);
+  amipd->listhints = ASC_NEW_ARRAY(GLint,asize);
   amipd->graphs = ASC_NEW_ARRAY(Numlist_p,asize);
   amipd->mergegraphs = ASC_NEW_ARRAY(Numlist_p,asize);
   amipd->graphchildnum =
@@ -1033,12 +1033,12 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
     ASC_PANIC("Insufficent memory for md.header.");
     return NULL;
   }
-  amipd->md.colcount = ASC_NEW_ARRAY(int,amvi->nip+1);
+  amipd->md.colcount = ASC_NEW_ARRAY(GLint,amvi->nip+1);
   if (amipd->md.colcount == NULL) {
     ASC_PANIC("Insufficent memory for md.colcount.");
     return NULL;
   }
-  amipd->md.sg2blob = ASC_NEW_ARRAY(int,asize+1);
+  amipd->md.sg2blob = ASC_NEW_ARRAY(GLint,asize+1);
   if (amipd->md.sg2blob == NULL) {
     ASC_PANIC("Insufficent memory for md.sg2blob.");
     return NULL;
@@ -1077,7 +1077,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
       if ((dlen=gl_length(gl)) > 0) {
         NumpairClearList(amipd->enlp0);
         for (j=1; j <= dlen; j++) {
-          NumpairAppendList(amipd->enlp0,(int)gl_fetch(gl,j));
+          NumpairAppendList(amipd->enlp0,(GLint)gl_fetch(gl,j));
         }
         amipd->ipbuf[i].parentslist = NumpairCopyList(amipd->enlp0);
       }
@@ -1174,14 +1174,14 @@ void MergeBlobs(struct mdata *md, int bigblob, struct gl_list_t *bl)
 {
   struct gl_list_t *keep, *old;
   unsigned long c,len, blc,bllen;
-  int oldblob, oldsg;
+  GLint oldblob, oldsg;
   keep = md->blob[bigblob];
   for (blc=1,bllen = gl_length(bl); blc <= bllen; blc++) {
-    oldblob = (int)gl_fetch(bl,blc);
+    oldblob = (GLint)gl_fetch(bl,blc);
     if (oldblob != bigblob) {
       old = md->blob[oldblob];
       for (c=1, len = gl_length(old); c <= len; c++) {
-        oldsg = (int)gl_fetch(old,c);
+        oldsg = (GLint)gl_fetch(old,c);
 #if 1
         /* check the supposition that we are keeping lists nonoverlapping */
         assert(gl_ptr_search(keep,(VOIDPTR)oldsg,0)==0);
@@ -1237,10 +1237,10 @@ void CalcFinalIndependentRoutes(struct mdata *md,
 {
   unsigned long newsg,blc,bllen;
   struct sgelt *elt;
-  int blob;
-  int bigblob;
+  GLint blob;
+  GLint bigblob;
   unsigned long bigsize;
-  int p,sg,hint;
+  GLint p,sg,hint;
 
   /* init work space */
   NumpairListIterate(parentsini,(NPLFunc)ZeroArrayEntry,(VOIDPTR)md);
@@ -1340,12 +1340,12 @@ void CalcFinalIndependentRoutes(struct mdata *md,
              * Why is blobsincol empty? because someone left blobcollected 1.
              */
             /* new blob */
-          blob = (int)gl_fetch(newsgincol,bllen); /* new blob number:last */
+          blob = (GLint)gl_fetch(newsgincol,bllen); /* new blob number:last */
           assert(md->blob[blob] != NULL);
           assert(gl_length(md->blob[blob]) == 0);
           /* add sg to new blob and assign new blob to those sg */
           for (blc = 1; blc <= bllen; blc++) {
-            newsg = (int)gl_fetch(newsgincol,blc);
+            newsg = (GLint)gl_fetch(newsgincol,blc);
             gl_append_ptr(md->blob[blob],(VOIDPTR)newsg);
             md->sg2blob[newsg] = blob;
           }
@@ -1362,7 +1362,7 @@ void CalcFinalIndependentRoutes(struct mdata *md,
            */
           /* add new sg's to bigblob */
           for (blc = 1, bllen = gl_length(newsgincol); blc <= bllen; blc++) {
-            newsg = (int)gl_fetch(newsgincol,blc);
+            newsg = (GLint)gl_fetch(newsgincol,blc);
             gl_append_ptr(md->blob[bigblob],(VOIDPTR)newsg);
             md->sg2blob[newsg] = bigblob;
           }
@@ -1412,11 +1412,11 @@ void AnonMergeDetect(struct Instance *i,
   struct Instance *ch;                  /* immediate children of i */
   struct AnonMergeIP *amip, *chamip;
   unsigned long nch,c;
-  int len;
-  int nextnode, nextnode_ip;		/* index for descendant iteration */
-  int nphint;		 		/* clues for iterations */
-  int thisnode;                         /* nodenumber for i */
-  int sg;                               /* iteration */
+  GLint len;
+  GLint nextnode, nextnode_ip;		/* index for descendant iteration */
+  GLint nphint;		 		/* clues for iterations */
+  GLint thisnode;                         /* nodenumber for i */
+  GLint sg;                               /* iteration */
   unsigned int aflags;
   Numlist_p mergednodes;                /* interesting descendants of i */
   Numlist_p parents;                	/* interesting descendants of i */

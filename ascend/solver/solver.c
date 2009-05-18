@@ -49,7 +49,10 @@ static struct gl_list_t *solver_get_list(int free_space){
 	static int init = 0;
 	static struct gl_list_t *L;
 	if(free_space){
-		if(init && L)ASC_FREE(L);
+		if(init && L) {
+			 /*FIXME: ASC_FREE(L); free is never used on gl_list_t */
+			gl_destroy(L);
+		}
 		init = 0;
 		return NULL;
 	}
@@ -65,6 +68,10 @@ static struct gl_list_t *solver_get_list(int free_space){
 	nice little list of integrator names that can be used in Python :-/
 */
 const struct gl_list_t *solver_get_engines(){
+	return solver_get_list(0);
+}
+/** expansion use locally */
+struct gl_list_t *solver_get_engines_growable(){
 	return solver_get_list(0);
 }
 
@@ -160,8 +167,8 @@ int solver_register(const SlvFunctionsT *solver){
 #endif
 
 	/* get the current list of registered engines */
-	const struct gl_list_t *L;
-	L = solver_get_engines();
+	struct gl_list_t *L;
+	L = solver_get_engines_growable();
 
 #if 0
 	CONSOLE_DEBUG("REGISTERING SOLVER");
@@ -410,7 +417,7 @@ int slv_select_solver(slv_system_t sys,int solver){
 
     status_index = solver;
     sys->solver = solver;
-	sys->internals = solver_engine(solver);
+    sys->internals = solver_engine(solver);
     if(sys->internals->ccreate != NULL){
       sys->ct = (sys->internals->ccreate)(sys,&status_index);
     }else{
@@ -491,7 +498,7 @@ int slv_get_selected_solver(slv_system_t sys){
 int32 slv_get_default_parameters(int sindex,
 				slv_parameters_t *parameters)
 {
-  SlvFunctionsT *S;
+  const SlvFunctionsT *S;
   S = solver_engine(sindex);
   if(S){
     if(S->getdefparam == NULL ) {

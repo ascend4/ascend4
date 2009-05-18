@@ -16,7 +16,7 @@ test_env.Append(
 )
 
 if test_env.has_key('CUNIT_CPPPATH'):
-	test_env.Append(CPPATH=test_env['CUNIT_CPPPATH'])
+	test_env.Append(CPPPATH=test_env['CUNIT_CPPPATH'])
 
 if test_env.has_key('CUNIT_LIBPATH'):
 	test_env.Append(LIBPATH=test_env['CUNIT_LIBPATH'])

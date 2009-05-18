@@ -40,6 +40,7 @@
 #include <ascend/compiler/instquery.h>
 
 #include <ascend/system/system.h>
+#include <ascend/solver/solver.h>
 
 #define DEBUG 1
 

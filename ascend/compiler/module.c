@@ -145,7 +145,7 @@ static struct module_t *OpenModuleInternal(CONST char *, int * CONST,
 static void RemoveModule(CONST struct module_t *);
 static struct module_t *SearchForModule(CONST struct module_t *);
 static int StoreModule(CONST struct module_t *);
-static void WriteWhyNotFound(char *,  int);
+static void WriteWhyNotFound(CONST char *,  int);
 
 /*------------------------------------------------------------------------------
   MODULE HANDLING
@@ -1066,7 +1066,7 @@ int ModuleSearchPath(CONST char *name,
 	not open/stat the file named `filename'.
 */
 static
-void WriteWhyNotFound(char *filename, int error)
+void WriteWhyNotFound(CONST char *filename, int error)
 {
   switch( error ) {
   case EACCES:

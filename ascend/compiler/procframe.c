@@ -54,9 +54,13 @@
   (new) = (char *)ascmalloc(((old!=NULL)?strlen(old):0)+strlen(incr)+ \
                             + strlen(join)+1); \
   sprintf((new),"%s%s%s",((old)!=NULL?(old):""),(join),(incr))
-char * fmncreate(char *old, char *incr, char* join)
+char * fmncreate(CONST char *old, char *incr, char* join)
 {
-  char *new = ASC_NEW_ARRAY(char,( (old!=NULL) ? strlen(old) : 0 )+strlen(incr)+ strlen(join)+1);
+  char *new;
+  if (old == NULL) { old = "";}
+  if (join == NULL) { join = "";}
+  if (incr == NULL) { incr = "";}
+  new = ASC_NEW_ARRAY(char,( (old!=NULL) ? strlen(old) : 0 )+strlen(incr)+ strlen(join)+1);
   sprintf(new, "%s%s%s", ( old!=NULL ? old : ""), join , incr );
   return new;
 }
@@ -74,7 +78,7 @@ char * fmncreate(char *old, char *incr, char* join)
 int g_procframe_stop = 0;
 
 void InitNormalTopProcFrame(struct procFrame *fm, struct Instance *i,
-                            char *cname, FILE *err, int options)
+                            CONST char *cname, FILE *err, int options)
 {
   assert(i !=NULL);
   assert(cname !=NULL);
@@ -84,7 +88,7 @@ void InitNormalTopProcFrame(struct procFrame *fm, struct Instance *i,
   fm->ErrNo = Proc_all_ok;
   fm->m = FrameNormal;
   fm->depth = 0;
-  fm->cname = cname;
+  fm->cname = fmncreate(cname, NULL,"");
   fm->proc = NULL;
   fm->stat = NULL;
   fm->caller = NULL;
@@ -117,7 +121,7 @@ int WatchConfigureProcDebug(struct procFrame *fm, struct gl_list_t *wl)
 }
 
 void InitDebugTopProcFrame(struct procFrame *fm, struct Instance *i,
-                           char *cname, FILE *err, int options,
+                           CONST char *cname, FILE *err, int options,
                            struct procDebug *dbi, struct gl_list_t *watches,
                            FILE *log)
 {
@@ -129,7 +133,7 @@ void InitDebugTopProcFrame(struct procFrame *fm, struct Instance *i,
   fm->ErrNo = Proc_all_ok;
   fm->m = FrameDebug;
   fm->depth = 0;
-  fm->cname = cname;
+  fm->cname = fmncreate(cname, NULL,"");
   fm->proc = NULL;
   fm->stat = NULL;
   fm->caller = NULL;

@@ -79,7 +79,15 @@ ASC_DLLSPEC SolverDiffVarCollection *system_get_diffvars(slv_system_t sys);
 
 int system_diffvars_build(slv_system_t sys, struct problem_t *prob);
 
+/**
+	populate chains
+*/
+int system_generate_diffvars(slv_system_t sys, struct problem_t *prob);
+
+/** undocumented dtor.
+ */
 void system_diffvars_destroy(slv_system_t sys);
+
 /**
 	Write contents of diffvars struct to stream fp
 */

@@ -1797,7 +1797,7 @@ enum Proc_enum InitCalcReturn(struct procFrame *fm)
 static
 enum Proc_enum DebugInitialize(struct Instance *context,
                                struct Name *name,
-                               char *cname,
+                               CONST char *cname,
                                FILE *err,
                                wpflags options,
                                struct gl_list_t *watchpoints,
@@ -1822,7 +1822,7 @@ enum Proc_enum NormalInitialize(struct procFrame *fm, struct Name *name)
 
 enum Proc_enum Initialize(struct Instance *context,
                           struct Name *name,
-                          char *cname,
+                          CONST char *cname,
                           FILE *err,
                           wpflags options,
                           struct gl_list_t *watchpoints,
@@ -1958,7 +1958,7 @@ static
 enum Proc_enum DebugClassAccessInitialize(struct Instance *context,
         			          struct Name *class,
         			          struct Name *name,
-                                          char *cname,
+                                          CONST char *cname,
                                           FILE *err,
                                           wpflags options,
                                           struct gl_list_t *watchpoints,

@@ -1036,10 +1036,24 @@ void RealReplaceMethod(struct TypeDescription *d, struct InitProcedure *new){
   opl = GetInitializationList(d);
   pos = gl_search(opl,new,(CmpFunc)CmpProcs);
 
+#if 0 /* we will not tolerated obfuscated c code contest entries. */
   if ((pos == 0) || (0 != (old = (struct InitProcedure *)gl_fetch(opl,pos))),
       GetProcParseId(old) > GetProcParseId(new)) {
     return; /* type never had it or type redefined it */
   }
+#endif
+      
+  if (pos == 0) { 
+    return;
+    /* type did not have it; can't replace it. */
+  } 
+  old = (struct InitProcedure *)gl_fetch(opl,pos);
+  assert(old != NULL);
+  if (GetProcParseId(old) > GetProcParseId(new)) { 
+    return;
+    /* 'old' is more recent; keep it. */
+  }
+
   copy = CopyProcedure(new);
   gl_store(opl,pos,copy);
   DestroyProcedure(old);

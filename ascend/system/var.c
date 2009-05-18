@@ -33,6 +33,7 @@
 #include "var.h"
 
 #include <ascend/utilities/ascMalloc.h>
+#include <ascend/utilities/ascConfig.h>
 #include <ascend/general/dstring.h>
 #include <ascend/general/list.h>
 
@@ -475,21 +476,22 @@ static void * SetVarTags(struct Instance *i,VOIDPTR vp)
 struct var_variable **var_BackendTokens_to_vars(slv_system_t sys,
   SlvBackendToken *atoms, int32 len)
 {
-  int32 i,vartot,vlen,count=0;
-  uint32 apos,ulen;
+  int32 vartot,vlen,count=0;
+  UGLint apos,ulen;
+  GLint i;
   struct var_variable **result;
   struct var_variable **vlist;
   struct gl_list_t *oldips;
   if (sys==NULL || atoms == NULL || len < 1) {
     return NULL;
   }
-  ulen = (uint32)len;
+  ulen = (UGLint)len;
   result = (struct var_variable **)malloc(len*sizeof(struct var_variable *));
   if (result == NULL) return result;
   /* init results to null */
   for (i=0; i<len; i++) result[i] = NULL;
   /* fill ips w/len in all the vars in tree. */
-  g_var_tag = (void *)len;
+  g_var_tag = (void *)ulen;
   vartot = slv_get_num_master_vars(sys) +
            slv_get_num_master_pars(sys) +
            slv_get_num_master_unattached(sys);
@@ -511,7 +513,7 @@ struct var_variable **var_BackendTokens_to_vars(slv_system_t sys,
   vlist = slv_get_master_var_list(sys);
   vlen = slv_get_num_master_vars(sys);
   for (i = 0; i <vlen; i++) {
-    apos = (uint32)GetInterfacePtr(var_instance(vlist[i]));
+    apos = (UGLint)GetInterfacePtr(var_instance(vlist[i]));
     if ( apos < ulen ) {
       result[apos] = vlist[i];
       count++;
@@ -520,7 +522,7 @@ struct var_variable **var_BackendTokens_to_vars(slv_system_t sys,
   vlist = slv_get_master_par_list(sys);
   vlen = slv_get_num_master_pars(sys);
   for (i = 0; i <vlen; i++) {
-    apos = (uint32)GetInterfacePtr(var_instance(vlist[i]));
+    apos = (UGLint)GetInterfacePtr(var_instance(vlist[i]));
     if ( apos < ulen ) {
       result[apos] = vlist[i];
       count++;
@@ -529,7 +531,7 @@ struct var_variable **var_BackendTokens_to_vars(slv_system_t sys,
   vlist = slv_get_master_unattached_list(sys);
   vlen = slv_get_num_master_unattached(sys);
   for (i = 0; i <vlen; i++) {
-    apos = (uint32)GetInterfacePtr(var_instance(vlist[i]));
+    apos = (UGLint)GetInterfacePtr(var_instance(vlist[i]));
     if ( apos < ulen ) {
       result[apos] = vlist[i];
       count++;

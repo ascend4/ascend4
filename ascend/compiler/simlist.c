@@ -29,6 +29,7 @@
 
 #include <ascend/utilities/ascConfig.h>
 
+#include "instance_enum.h"
 #include "destroyinst.h"
 #include "simlist.h"
 #include "instquery.h"

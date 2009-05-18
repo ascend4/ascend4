@@ -728,7 +728,7 @@ static boolean do_command(int command)
 			S = (const SlvFunctionsT *)gl_fetch(L,i);
 			PRINTF("%4d     %s\n",S->number,S->name);
 		 }
-         PRINTF("Which solver? [%d]: ",i=slv_get_selected_solver(sys));
+         PRINTF("Which solver? [%d]: ",(int)(i=slv_get_selected_solver(sys)));
          i = (int)readlong((long)i);
 
          slv_select_solver(sys,i);

@@ -28,6 +28,7 @@
 
 #include "discrete.h"
 
+#include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascMalloc.h>
 #include <ascend/general/dstring.h>
 
@@ -527,12 +528,13 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
                                                SlvBackendToken *atoms,
                                                int32 len)
 {
-  int32 i,distot,bvlen,count=0;
-  uint32 apos,ulen;
+  int32 distot,bvlen,count=0;
+  UGLint apos,ulen;
+  GLint i;
   struct dis_discrete **result;
   struct dis_discrete **dislist;
   struct gl_list_t *oldips;
-  ulen = (uint32)len;
+  ulen = (UGLint)len;
 
   if (sys==NULL || atoms == NULL || len < 1) return NULL;
   result = (struct dis_discrete **)malloc(len*sizeof(struct dis_discrete *));
@@ -540,7 +542,7 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
   /* init results to null */
   for (i=0; i<len; i++) result[i] = NULL;
   /* fill ips w/len in all the vars in tree. */
-  g_dis_tag = (void *)len;
+  g_dis_tag = (void *)ulen;
   distot = slv_get_num_master_dvars(sys) +
            slv_get_num_master_disunatt(sys);
   oldips = PushInterfacePtrs(slv_instance(sys),SetDisTags,distot,0,NULL);
@@ -563,7 +565,7 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
   dislist = slv_get_master_dvar_list(sys);
   bvlen = slv_get_num_master_dvars(sys);
   for (i = 0; i <bvlen; i++) {
-    apos = (uint32)GetInterfacePtr(dis_instance(dislist[i]));
+    apos = (UGLint)GetInterfacePtr(dis_instance(dislist[i]));
     if ( apos < ulen ) {
       result[apos] = dislist[i];
       count++;
@@ -572,7 +574,7 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
   dislist = slv_get_master_disunatt_list(sys);
   bvlen = slv_get_num_master_disunatt(sys);
   for (i = 0; i <bvlen; i++) {
-    apos = (uint32)GetInterfacePtr(dis_instance(dislist[i]));
+    apos = (UGLint)GetInterfacePtr(dis_instance(dislist[i]));
     if ( apos < ulen ) {
       result[apos] = dislist[i];
       count++;

@@ -63,7 +63,7 @@ static char g_panic_outfile[PATH_MAX];
 	reporting facility in GNOME, etc?
 */
 static void asc_va_panic(const int status, const char *filename, const int line
-		, const char *function, const char *fmt, const va_list args
+		, const char *function, const char *fmt, va_list args
 ){
 	FILE *outfile;               /* The file to save the message into */
 	int cancel = FALSE;          /* If non-zero, do not call exit().  Default is to exit() */

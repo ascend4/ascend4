@@ -135,49 +135,49 @@ END testalignment1;
  * of the child packing scheme. testing pairwise, since real is generally
  * the most difficult to align.
  *)
-ATOM rt1 REFINES real DEFAULT 0.5 {meter};
+ATOM rt1 REFINES real DEFAULT 0.5 {m};
  	a IS_A boolean;
 	b IS_A real;
 	c IS_A real;
 	a := TRUE;
-	b := 7 {meter};
-	c := 7 {meter};
+	b := 7 {m};
+	c := 7 {m};
 END rt1;
 
-ATOM rt2 REFINES real DEFAULT 0.5 {meter};
+ATOM rt2 REFINES real DEFAULT 0.5 {m};
  	a IS_A integer;
 	b IS_A real;
 	c IS_A real;
 	a := 1;
-	b := 7 {meter};
-	c := 7 {meter};
+	b := 7 {m};
+	c := 7 {m};
 END rt2;
 
-ATOM rt3 REFINES real DEFAULT 0.5 {meter};
+ATOM rt3 REFINES real DEFAULT 0.5 {m};
  	a IS_A symbol;
 	b IS_A real;
 	c IS_A real;
 	a := 'fred';
-	b := 7 {meter};
-	c := 7 {meter};
+	b := 7 {m};
+	c := 7 {m};
 END rt3;
 
-ATOM rt4 REFINES real DEFAULT 0.5 {meter};
+ATOM rt4 REFINES real DEFAULT 0.5 {m};
  	a IS_A set OF symbol;
 	b IS_A real;
 	c IS_A real;
 	a := ['fred','dead'];
-	b := 7 {meter};
-	c := 7 {meter};
+	b := 7 {m};
+	c := 7 {m};
 END rt4;
 
-ATOM rt5 REFINES real DEFAULT 0.5 {meter};
+ATOM rt5 REFINES real DEFAULT 0.5 {m};
  	a IS_A real;
 	b IS_A real;
 	c IS_A real;
-	a := 7{meter};
-	b := 7 {meter};
-	c := 7 {meter};
+	a := 7{m};
+	b := 7 {m};
+	c := 7 {m};
 END rt5;
 
 MODEL testalignment2;
@@ -194,21 +194,21 @@ ATOM bt1 REFINES boolean DEFAULT TRUE;
  	a IS_A boolean;
 	b IS_A real;
 	a := FALSE;
-	b := 7 {meter};
+	b := 7 {m};
 END bt1;
 
 ATOM bt2 REFINES boolean DEFAULT TRUE;
  	a IS_A integer;
 	b IS_A real;
 	a := 1;
-	b := 7 {meter};
+	b := 7 {m};
 END bt2;
 
 ATOM bt3 REFINES boolean DEFAULT TRUE;
  	a IS_A real;
 	b IS_A real;
 	a := 1;
-	b := 7 {meter};
+	b := 7 {m};
 END bt3;
 
 MODEL testalignment3;
@@ -221,21 +221,21 @@ ATOM st1 REFINES symbol DEFAULT 'biteme';
  	a IS_A boolean;
 	b IS_A real;
 	a := FALSE;
-	b := 7 {meter};
+	b := 7 {m};
 END st1;
 
 ATOM st2 REFINES symbol DEFAULT 'biteme';
  	a IS_A integer;
 	b IS_A real;
 	a := 1;
-	b := 7 {meter};
+	b := 7 {m};
 END st2;
 
 ATOM st3 REFINES symbol DEFAULT 'biteme';
  	a IS_A real;
 	b IS_A real;
 	a := 1;
-	b := 7 {meter};
+	b := 7 {m};
 END st3;
 
 MODEL testalignment4;
@@ -249,21 +249,21 @@ ATOM it1 REFINES integer DEFAULT 3;
  	a IS_A boolean;
 	b IS_A real;
 	a := FALSE;
-	b := 7 {meter};
+	b := 7 {m};
 END it1;
 
 ATOM it2 REFINES integer DEFAULT 3;
  	a IS_A integer;
 	b IS_A real;
 	a := 1;
-	b := 7 {meter};
+	b := 7 {m};
 END it2;
 
 ATOM it3 REFINES integer DEFAULT 3;
  	a IS_A real;
 	b IS_A real;
 	a := 1;
-	b := 7 {meter};
+	b := 7 {m};
 END it3;
 
 MODEL testalignment5;

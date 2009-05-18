@@ -665,7 +665,6 @@ void WriteStatementError(const error_severity_t sev
 		, ...
 ){
 	va_list args;
-	int res;
 
 	error_reporter_start(sev,Asc_ModuleFileName(stat->mod),stat->linenum,SCP(StatementTypeString(stat)));
 	va_start(args,fmt);

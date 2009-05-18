@@ -4833,7 +4833,6 @@ static
 int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 	int32 newsolver;
 	int32 num_log_reg, num_nl_reg, num_opt_reg, num_cond_reg;
-	int32 si;
 	char *param;
 	union param_value u;
 
