@@ -243,6 +243,28 @@
 
 #define VOIDPTR void *
 
+/* The following bits of stuff could be rationalized when we are ready to require
+a conformant c99 compiler with intptr_t support. unfortunately, it is for
+some reason optional in 7.18.1.4 of iso C TC2 2005 draft to have intptr_t. 
+*/
+#if ( SIZEOF_VOID_P == SIZEOF_INT )
+typedef int GLint; /**< int fits in gl_lists exactly */
+typedef unsigned int UGLint; /**< uint fits in gl_lists exactly */
+#define GL_INT_MAX INT_MAX
+#elif (SIZEOF_VOID_P == SIZEOF_LONG ) 
+typedef long GLint; /**< int fits in gl_lists exactly */
+typedef unsigned long UGLint; /**< int fits in gl_lists exactly */
+#define GL_INT_MAX LONG_MAX
+#elif ( SIZEOF_VOID_P == SIZEOF_LONG_LONG )
+typedef long long GLint; /**< int fits in gl_lists exactly */
+typedef unsigned long long UGLint; /**< int fits in gl_lists exactly */
+#define GL_INT_MAX LLONG_MAX
+#else
+typedef int GLint; /**< warnings may result, but should all be safe if void* is bigger than int. */
+typedef unsigned int UGLint; 
+#endif
+
+
 #ifdef REIMPLEMENT_STREAMS
 ASC_DLLSPEC FILE*g_ascend_errors;         /**< File stream to receive error messages. */
 ASC_DLLSPEC FILE*g_ascend_warnings;       /**< File stream to receive warning messages. */

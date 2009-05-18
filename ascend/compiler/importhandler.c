@@ -380,7 +380,7 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 }
 
 struct FilePath *importhandler_findinpath(const char *partialname
-		, char *defaultpath, char *envv, struct ImportHandler **handler
+		, const char *defaultpath, char *envv, struct ImportHandler **handler
 ){
 	struct FilePath *fp, *fp1; /* relative path */
 	struct ImportHandlerSearch searchdata;
@@ -389,6 +389,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 	int i;
 	ospath_stat_t buf;
 	FILE *f;
+	const char *epath;
 
 	fp1 = ospath_new_noclean(partialname); /* eg 'path/to/myext' */
 	if(fp1==NULL){
@@ -479,14 +480,14 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 	/*-----------------------*/
 
-	path=Asc_GetEnv(envv);
-	if(path==NULL){
+	epath=Asc_GetEnv(envv);
+	if(epath==NULL){
 		/* CONSOLE_DEBUG("ENV VAR '%s' NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",envv,defaultpath); */
-		path=defaultpath;
+		epath=defaultpath;
 	}
 
 	/* CONSOLE_DEBUG("SEARCHPATH IS %s",path); */
-	sp = ospath_searchpath_new(path);
+	sp = ospath_searchpath_new(epath);
 
 	if(NULL==ospath_searchpath_iterate(sp,&importhandler_search_test,&searchdata)){
 		ospath_free(searchdata.relativedir);

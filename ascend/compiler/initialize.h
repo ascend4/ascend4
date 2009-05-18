@@ -60,7 +60,7 @@ extern unsigned long GetProcStackLimit(void);
 /** Run a METHOD on a model. */
 ASC_DLLSPEC enum Proc_enum Initialize(struct Instance *context
 	,struct Name *name
-	,char *cname
+	,CONST char *cname
 	,FILE *err
 	,wpflags options
 	,struct gl_list_t *watchpoints

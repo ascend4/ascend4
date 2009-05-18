@@ -5,6 +5,7 @@
 
 #include "linsolqr_impl.h"
 #include "ranki_impl.h"
+#include "rankiba2.h"
 
 /*------------------------------------------------------------------------------
  * Start of the 2 bodied factorization schemes.

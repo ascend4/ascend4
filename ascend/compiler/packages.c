@@ -142,8 +142,8 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 	struct FilePath *fp1;
 	int result;
 	struct ImportHandler *handler=NULL;
-	static char *default_solvers_path = NULL;
-	static char *default_library_path = NULL;
+	static const char *default_solvers_path = NULL;
+	static const char *default_library_path = NULL;
 	if(!default_solvers_path){
 		default_solvers_path = get_default_solvers_path();
 		CONSOLE_DEBUG("Default ASCENDSOLVERS set to '%s'", default_solvers_path);

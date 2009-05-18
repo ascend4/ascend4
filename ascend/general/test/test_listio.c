@@ -33,6 +33,8 @@
 #include "test/assertimpl.h"
 #include "test/redirectStdStreams.h"
 
+#define USE_REDIRECT 0
+
 /*
  *  listio.[ch] implements writing of a list's details to file.
  *  Because there is no specification on the file contents, this
@@ -45,7 +47,9 @@ static void test_listio(void)
   unsigned long *pint_array[20];
   unsigned long i;
   FILE *file_normal;
+#if USE_REDIRECT /* removing stream redirection (too damn confusing) */
   FILE *file_stderr;
+#endif
   int i_initialized_lists = FALSE;
   unsigned long prior_meminuse;
 
@@ -96,7 +100,7 @@ static void test_listio(void)
     CU_FAIL("Error opening output file 1 in test_listio.c");
   }
 
-#if 0 /* removing stream redirection (too damn confusing) */
+#if USE_REDIRECT /* removing stream redirection (too damn confusing) */
 
   if (NULL != (file_stderr = redirect_stderr("listiotempstderr.tmp"))) {
 

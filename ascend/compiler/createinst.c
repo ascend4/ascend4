@@ -369,13 +369,13 @@ struct Instance *CreateRealInstance(struct TypeDescription *type){
       AddPrototype(CopyInstance(INST(result)));
       return INST(result);
     }else{ /* instance type has a prototype which can be copied */
-      result = CopyInstance(INST(result));
+      result = RA_INST(CopyInstance(INST(result)));
       /*
       CONSOLE_DEBUG("CREATED (COPIED PROTOTYPE) REAL ATOM INSTANCE "
 			"of type '%s' at %p" ,SCP(GetName(type)),result
 	  );
 	  */
-	  return result;
+	  return INST(result);
     }
   } else {
     /* create constant */

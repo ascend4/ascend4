@@ -140,6 +140,15 @@ static symchar *g_strings[6];
 */
 static int g_bad_rel_in_list;
 
+/*
+	a bridge buffer used so much we aren't going to free it, just reuse it
+*/
+static struct reuse_t {
+  size_t ipcap;			/* number of ips allocated in ipbuf */
+  size_t ipused;		/* number of ips in use */
+  struct solver_ipdata *ipbuf;
+} g_reuse = {0,0,NULL};
+
 
 /* used to give an integer value to each symbol used in a when */
 struct gl_list_t *g_symbol_values_list = NULL;
@@ -605,7 +614,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 	  /* CONSOLE_DEBUG("FOUND A VAR: deriv = %d, %s = %d",ip->u.v.deriv,SCP(ODEID_A),ip->u.v.odeid); */
 
       if(RelationsCount(inst)) {
-        asc_assert((int)ip!=0x1);
+        asc_assert(ip!=(void *)0x1);
         gl_append_ptr(p_data->vars,(POINTER)ip);
       }else{
         gl_append_ptr(p_data->unas,(POINTER)ip);

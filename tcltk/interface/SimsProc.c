@@ -603,7 +603,7 @@ STDHLF(Asc_SimBinTokenSetOptions, (Asc_SimBinTokenSetOptionsHL,Asc_SimBinTokenSe
 int Asc_SimBinTokenSetOptions(ClientData cdata, Tcl_Interp *interp,
                               int argc, CONST84 char **argv)
 {
-  char *srcname, *objname, *libname, *buildcommand, *unlinkcommand;
+  const char *srcname, *objname, *libname, *buildcommand, *unlinkcommand;
   long maxrels;
   int verbose, housekeep;
   int s1,s2,s3;

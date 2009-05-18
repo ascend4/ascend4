@@ -1,26 +1,26 @@
 /*
-	ASCEND modelling environment
-	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Andre Abbott
-	Copyright (C) 2006 Carnegie Mellon University
+  ASCEND modelling environment
+  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Andre Abbott
+  Copyright (C) 2006 Carnegie Mellon University
 
-	This program is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 2, or (at your option)
-	any later version.
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2, or (at your option)
+  any later version.
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330,
+  Boston, MA 02111-1307, USA.
 *//*
-	by Kirk Andre Abbott
-	Created: July 4, 1994.
-	Last in CVS: $Revision: 1.8 $ $Date: 1998/02/05 22:23:26 $ $Author: ballan $
+  by Kirk Andre Abbott
+  Created: July 4, 1994.
+  Last in CVS: $Revision: 1.8 $ $Date: 1998/02/05 22:23:26 $ $Author: ballan $
 */
 
 #include "extfunc.h"
@@ -55,15 +55,15 @@ static struct Table *g_ExternalFuncLibrary = NULL;
 */
 
 int CreateUserFunctionBlackBox(CONST char *name,
-		ExtBBoxInitFunc *init,
-		ExtBBoxFunc *value,
-		ExtBBoxFunc *deriv,
-		ExtBBoxFunc *deriv2,
-		ExtBBoxFinalFunc *final,
-		CONST unsigned long n_inputs,
-		CONST unsigned long n_outputs,
-		CONST char *help,
-		double inputTolerance
+  	ExtBBoxInitFunc *init,
+  	ExtBBoxFunc *value,
+  	ExtBBoxFunc *deriv,
+  	ExtBBoxFunc *deriv2,
+  	ExtBBoxFinalFunc *final,
+  	CONST unsigned long n_inputs,
+  	CONST unsigned long n_outputs,
+  	CONST char *help,
+  	double inputTolerance
 ){
   struct ExternalFunc *efunc;
   int isNew = 0;
@@ -72,8 +72,8 @@ int CreateUserFunctionBlackBox(CONST char *name,
   }
   efunc = LookupExtFunc(name);
   if(efunc != NULL){
-	/* CONSOLE_DEBUG("Found efunc at %p",efunc); */
-	/* name has already been seen, so now fill in the details */
+  /* CONSOLE_DEBUG("Found efunc at %p",efunc); */
+  /* name has already been seen, so now fill in the details */
     isNew = 0;
   }else{
     isNew = 1;
@@ -81,9 +81,9 @@ int CreateUserFunctionBlackBox(CONST char *name,
     asc_assert(efunc!=NULL);
     efunc->help = NULL;
     efunc->name = ASC_STRDUP(SCP(AddSymbol(name)));
-	/* CONSOLE_DEBUG("Created new efunc at %p",efunc); */
-	/* add or find name in symbol table */
-	/* the main symtab owns the string */
+  /* CONSOLE_DEBUG("Created new efunc at %p",efunc); */
+  /* add or find name in symbol table */
+  /* the main symtab owns the string */
   }
 
   efunc->etype = efunc_BlackBox;
@@ -126,9 +126,9 @@ int CreateUserFunctionBlackBox(CONST char *name,
   }
 
   if(isNew){
-	/* CONSOLE_DEBUG("NEW BLACKBOX EFUNC %p ('%s', %lu inputs, %lu outputs, type=%d, value func=%p)"
-		,efunc, name, n_inputs, n_outputs, (int)efunc->etype, value
-	); */
+  /* CONSOLE_DEBUG("NEW BLACKBOX EFUNC %p ('%s', %lu inputs, %lu outputs, type=%d, value func=%p)"
+  	,efunc, name, n_inputs, n_outputs, (int)efunc->etype, value
+  ); */
     (void)AddExternalFunc(efunc,1);
   }
   return 0;
@@ -186,12 +186,12 @@ int DefaultExtBBoxInitFunc(struct BBoxInterp *interp,
 }
 
 int ErrorExtBBoxValueFunc(
-		struct BBoxInterp *interp,
-		int ninputs,
-		int noutputs,
-		double *inputs,
-		double *outputs,
-		double *jacobian
+  	struct BBoxInterp *interp,
+  	int ninputs,
+  	int noutputs,
+  	double *inputs,
+  	double *outputs,
+  	double *jacobian
 ){
   (void)interp;
   (void)ninputs;
@@ -211,25 +211,25 @@ void DefaultExtBBoxFinalFunc(struct BBoxInterp *interp){
 }
 
 int DefaultExtBBoxFuncDeriv2FD(
-		struct BBoxInterp *interp,
-		int ninputs,
-		int noutputs,
-		double *inputs,
-		double *outputs,
-		double *jacobian
+  	struct BBoxInterp *interp,
+  	int ninputs,
+  	int noutputs,
+  	double *inputs,
+  	double *outputs,
+  	double *jacobian
 ){
 #if EFDEBUG
-	CONSOLE_DEBUG("Braindead DefaultExtBBoxFuncDeriv2FD called.");
+  CONSOLE_DEBUG("Braindead DefaultExtBBoxFuncDeriv2FD called.");
 #endif
-	(void)interp;
-	(void)ninputs;
-	(void)noutputs;
-	(void)inputs;
-	(void)outputs;
-	(void)jacobian;
+  (void)interp;
+  (void)ninputs;
+  (void)noutputs;
+  (void)inputs;
+  (void)outputs;
+  (void)jacobian;
 
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"2nd partials merely a dream, returning -1");
-	return -1; /* FIXME */
+  ERROR_REPORTER_HERE(ASC_PROG_WARNING,"2nd partials merely a dream, returning -1");
+  return -1; /* FIXME */
 }
 
 /*------------------------------------------------------------------------------
@@ -237,14 +237,14 @@ int DefaultExtBBoxFuncDeriv2FD(
 */
 
 int CreateUserFunctionGlassBox(CONST char *name,
-		       ExtEvalFunc *init,
-		       ExtEvalFunc **value,
-		       ExtEvalFunc **deriv,
-		       ExtEvalFunc **deriv2,
-		       ExtEvalFunc *final,
-		       CONST unsigned long n_inputs,
-		       CONST unsigned long n_outputs,
-		       CONST char *help)
+  	       ExtEvalFunc *init,
+  	       ExtEvalFunc **value,
+  	       ExtEvalFunc **deriv,
+  	       ExtEvalFunc **deriv2,
+  	       ExtEvalFunc *final,
+  	       CONST unsigned long n_inputs,
+  	       CONST unsigned long n_outputs,
+  	       CONST char *help)
 {
   struct ExternalFunc *efunc;
   int isNew = 0;
@@ -260,8 +260,8 @@ int CreateUserFunctionGlassBox(CONST char *name,
     asc_assert(efunc!=NULL);
     efunc->help = NULL;
     efunc->name = ASC_STRDUP(SCP(AddSymbol(name)));
-	/* add or find name in symbol table */
-	/* the main symtab owns the string */
+  /* add or find name in symbol table */
+  /* the main symtab owns the string */
   }
 
   efunc->etype = efunc_GlassBox;
@@ -327,11 +327,11 @@ ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc)
 */
 
 int CreateUserFunctionMethod(CONST char *name
-		       ,ExtMethodRun *run
-		       ,CONST long n_args
-		       ,CONST char *help
-		       ,void *user_data
-			   ,ExtMethodDestroyFn *destroyfn
+  	       ,ExtMethodRun *run
+  	       ,CONST long n_args
+  	       ,CONST char *help
+  	       ,void *user_data
+  		   ,ExtMethodDestroyFn *destroyfn
 ){
   struct ExternalFunc *efunc;
   int isNew = 1;
@@ -349,8 +349,8 @@ int CreateUserFunctionMethod(CONST char *name
     asc_assert(efunc!=NULL);
     efunc->help = NULL;
     efunc->name = ASC_STRDUP(SCP(AddSymbol(name)));
-	/* add or find name in symbol table, and copy because  */
-	/* the main symtab owns the string */
+  /* add or find name in symbol table, and copy because  */
+  /* the main symtab owns the string */
   }
   efunc->etype = efunc_Method;
   efunc->n_inputs = n_args;
@@ -394,7 +394,7 @@ void *GetExtMethodUserData(struct ExternalFunc *efunc){
 
 void DestroyExternalFunc(struct ExternalFunc *efunc){
   struct ExternalFunc *tmp;
-  if(efunc){
+  if(efunc && efunc->etype != efunc_ERR){
     CONSOLE_DEBUG("DESTROYING EFUNC at %p",efunc);
     tmp = efunc;
     if (tmp->name ) ascfree((char *)(tmp->name)); /* we own the string */
@@ -402,16 +402,16 @@ void DestroyExternalFunc(struct ExternalFunc *efunc){
     tmp->name = NULL;
     tmp->help = NULL;
     /* might want to set null pointers here depending on etype. */
+    if(efunc->etype == efunc_Method){
+      if(efunc->u.method.destroyfn){
+  		(*efunc->u.method.destroyfn)(efunc->u.method.user_data);
+  		efunc->u.method.user_data = NULL;
+      }
+      asc_assert(efunc->u.method.user_data==NULL);
+      /* if you allocate to user_data, you must provide a method for freeing it! */
+    }
     tmp->etype = efunc_ERR;
-    ascfree((char *)tmp);
-	if(efunc->etype == efunc_Method){
-		if(efunc->u.method.destroyfn){
-			(*efunc->u.method.destroyfn)(efunc->u.method.user_data);
-			efunc->u.method.user_data = NULL;
-		}
-		asc_assert(efunc->u.method.user_data==NULL);
-		/* if you allocate to user_data, you must provide a method for freeing it! */
-	}
+    ascfree(tmp);
   }
 }
 
@@ -443,8 +443,8 @@ void InitExternalFuncLibrary(void)
 
 
 int AddExternalFunc(struct ExternalFunc *efunc, int force){
-	struct ExternalFunc *found, *tmp;
-	char *name;
+  struct ExternalFunc *found, *tmp;
+  char *name;
 
   asc_assert(efunc!=NULL);
   name = (char *)efunc->name;
@@ -475,7 +475,7 @@ struct ExternalFunc *LookupExtFunc(CONST char *funcname)
   found = (struct ExternalFunc *)
     LookupTableData(g_ExternalFuncLibrary,funcname);
   if (found) {
-	/* CONSOLE_DEBUG("Found '%s' in ExternalFuncLibrary at %p",funcname,found); */
+    /* CONSOLE_DEBUG("Found '%s' in ExternalFuncLibrary at %p",funcname,found); */
     return found;
   } else {
     return NULL; /* name not found */
@@ -485,8 +485,9 @@ struct ExternalFunc *LookupExtFunc(CONST char *funcname)
 struct ExternalFunc *RemoveExternalFunc(char *funcname)
 {
   struct ExternalFunc *found;
-  if (!funcname)
+  if (!funcname) {
     return NULL;
+  }
   found = (struct ExternalFunc *)
     RemoveTableData(g_ExternalFuncLibrary,funcname);
   return found;
@@ -532,7 +533,7 @@ void PrintExtFuncLibrary(FILE *fp){
     return;
   }
   TableApplyAllTwo(g_ExternalFuncLibrary, PrintExtFuncLibraryFunc,
-		   (void *)fp);
+  	   (void *)fp);
 }
 
 static
@@ -558,12 +559,12 @@ char *WriteExtFuncLibraryString(void)
   dsPtr = &ds;
   Asc_DStringInit(dsPtr);
   TableApplyAllTwo(g_ExternalFuncLibrary,(TableIteratorTwo)WriteExtFuncString,
-		   (void *) dsPtr);
+  	   (void *) dsPtr);
   result = Asc_DStringResult(dsPtr);
   return result;
 }
 
 void
 TraverseExtFuncLibrary(void (*func)(void *,void *), void *secondparam){
-	TableApplyAllTwo(g_ExternalFuncLibrary, func, secondparam);
+  TableApplyAllTwo(g_ExternalFuncLibrary, func, secondparam);
 }

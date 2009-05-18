@@ -120,7 +120,7 @@ int importhandler_printhandler(FILE *fp, struct ImportHandler *);
 	pointing to the location of the file found.
 */	
 struct FilePath *importhandler_findinpath(const char *partialname
-		, char *defaultpath, char *envv, struct ImportHandler **handler
+		, const char *defaultpath, char *envv, struct ImportHandler **handler
 );
 
 /*------------------------------------------------------------------------------

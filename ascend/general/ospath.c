@@ -29,6 +29,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <ctype.h>
 
@@ -594,7 +595,8 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 	int length;
 	int offset;
 	char *pos;
-	int len1;
+	ptrdiff_t len1;
+	int len2;
 	char sub[PATH_MAX];
 	struct FilePath *fp1, *fp2;
 
@@ -624,9 +626,9 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 #endif
 	}
 
-	len1 = (int)pos - (int)fp->path;
-	V(len1);
-	/*fprintf(stderr,"POS = %d\n",len1);*/
+	len1 = pos - (fp->path); len2 = (int)len1;
+	V(len2);
+	/*fprintf(stderr,"POS = %d\n",len2);*/
 
 	if(*pos==PATH_SEPARATOR_CHAR){
 #ifdef WINPATHS

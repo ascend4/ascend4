@@ -42,15 +42,15 @@
 /*
  * This is an element in a list of
  * numbers and ranges.
- * Valid numbers are 1..INT_MAX.
+ * Valid numbers are 1..GL_INT_MAX.
  * Numbers are stored in increasing order.
- * Valid numbers are 1..INT_MAX.
+ * Valid numbers are 1..GL_INT_MAX.
  * numpair is a range which include all numbers from .lo to .hi
  * including the limits of the range. A range may go from i to i.
  * but not from j to i where j >i.
  */
 struct numpair {
-  int lo, hi;
+  GLint lo, hi;
 };
 
 /*
@@ -67,14 +67,9 @@ struct numpair_list {
    * The g_recycled_npl may reference a list, as will all the
    * lists created using the data of this list.
    */
-  int len; /* size of list, meaning data in use */
-  int cap; /* capacity of allocated list, if allocated, else -1. */
-  int refcount; /* number of sharers in data space if head is NULL. */
-#if 0 /* may need this on long pointer hardware */
-#if (SIZEOF_VOID_P == 8)
-  int pad;
-#endif
-#endif
+  GLint len; /* size of list, meaning data in use */
+  GLint cap; /* capacity of allocated list, if allocated, else -1. */
+  GLint refcount; /* number of sharers in data space if head is NULL. */
 };
 
 struct shared_data {
@@ -120,7 +115,7 @@ static struct {
  * shared data chunks. If this is overwritten, someone
  * has overrun a list.
  */
-#define NHCHECKNUM INT_MAX
+#define NHCHECKNUM GL_INT_MAX
 
 /*
  * we should pool the heads.
@@ -244,7 +239,7 @@ void NLPWrite(FILE *fp, Numlist_p nlp)
  * If insufficient memory to create or expand to size
  * required, returns NULL.
  */
-Numlist_p NumpairExpandableList(Numlist_p nlp, int newsize)
+Numlist_p NumpairExpandableList(Numlist_p nlp, GLint newsize)
 {
   struct numpair *newdata;
   if (nlp == NULL) {
@@ -340,11 +335,11 @@ void NumpairDestroyList(Numlist_p nlp)
  * At any rate, the result of this function is not expandable, appendable.
  */
 static
-Numlist_p NumpairDuplicate(Numlist_p nlp,int dlen)
+Numlist_p NumpairDuplicate(Numlist_p nlp, GLint dlen)
 {
   Numlist_p result;
   struct numpair *data, *src;
-  int len,i;
+  GLint len,i;
 
   assert(nlp != NULL);
 
@@ -377,9 +372,9 @@ Numlist_p NumpairDuplicate(Numlist_p nlp,int dlen)
  * data. return -1 if none found.
  */
 static
-int GetHead(int need)
+int GetHead(GLint need)
 {
-  int len,i;
+  GLint len,i;
   len = GRN.shared_len;
   i = 0;
   while (i<len && GRN.shared[i].headfree < need) {
@@ -395,10 +390,10 @@ int GetHead(int need)
  * the list won't get pooled for future use or referenced.
  */
 static
-void AddToGRN(Numlist_p nlp, int cap)
+void AddToGRN(Numlist_p nlp, GLint cap)
 {
   struct shared_data *resize;
-  int newsize;
+  GLint newsize;
   if (nlp==NULL) {
     return;
   }
@@ -427,7 +422,7 @@ void AddToGRN(Numlist_p nlp, int cap)
 }
 
 /* return a singleton list */
-Numlist_p NumpairElementary(int num)
+Numlist_p NumpairElementary(GLint num)
 {
   struct numpair_list nl;
   struct numpair np;
@@ -453,7 +448,7 @@ Numlist_p NumpairCopyList(Numlist_p nlp)
 {
   Numlist_p head, result;
   struct numpair *data, *src;
-  int len,i, cell,nextelt;
+  GLint len,i, cell,nextelt;
   assert(nlp != NULL);
 
   /* if oversized list. create, copy, return */
@@ -524,9 +519,9 @@ Numlist_p NumpairCopyList(Numlist_p nlp)
  * assumes p.lo >= r[rlen-1].lo
  */
 static
-int ExtendResult(struct numpair *r, CONST int rlen, CONST struct numpair p)
+GLint ExtendResult(struct numpair *r, CONST GLint rlen, CONST struct numpair p)
 {
-  int idx;
+  GLint idx;
   if (rlen) {
     idx = rlen - 1;
     if (p.lo > r[idx].hi+1) {
@@ -560,7 +555,7 @@ int ExtendResult(struct numpair *r, CONST int rlen, CONST struct numpair p)
 static
 void NumpairMergeLists(Numlist_p nlp1, Numlist_p nlp2, Numlist_p nlpr)
 {
-  int n1,len1, n2,len2,lenr; /* lengths of lists */
+  GLint n1,len1, n2,len2,lenr; /* lengths of lists */
   struct numpair *p1, *p2, *r; /* data from lists */
 
   len1 = nlp1->len;
@@ -609,7 +604,7 @@ void NumpairCalcUnion(Numlist_p enlp1, Numlist_p nlp2, Numlist_p enlp3)
 {
   Numlist_p t;
   struct numpair *src, *data; /* data from lists */
-  int len, i;
+  GLint len, i;
 
   assert(enlp1 != NULL);
   assert(enlp3 != NULL);
@@ -657,8 +652,8 @@ void NumpairCalcIntersection(Numlist_p nlp1, Numlist_p nlp2, Numlist_p enlp3)
 {
   struct numpair *s1, *s2, *r; /* data from lists */
   struct numpair overlap;
-  int  i, j, lenr;
-  int l1,l2;
+  GLint  i, j, lenr;
+  GLint l1,l2;
 
   assert(nlp1 != NULL);
   assert(nlp2 != NULL);
@@ -787,7 +782,7 @@ Numlist_p NumpairCombineLists(struct gl_list_t *gl,
 }
 
 /*
- * We trust that no number difference is actually ever > INT_MAX.
+ * We trust that no number difference is actually ever > GL_INT_MAX.
  * This is a loose comparator. One argument must be a singleton
  * with lo =0 and hi the value. This is the key value we want
  * to know is in the list or not.
@@ -795,7 +790,7 @@ Numlist_p NumpairCombineLists(struct gl_list_t *gl,
  * This is for use with bsearch.
  */
 static
-int CmpNumpairs(CONST void *c1, CONST void *c2)
+nlbool CmpNumpairs(CONST void *c1, CONST void *c2)
 {
   CONST struct numpair *n1, *n2;
   assert(c1!=NULL);
@@ -827,7 +822,7 @@ int CmpNumpairs(CONST void *c1, CONST void *c2)
 
 /* want to return -1 if num > n2, 1 if num <n2, 0 if in n2. */
 static
-int CmpIntToPair(int num, struct numpair *n2)
+nlbool CmpIntToPair(GLint num, struct numpair *n2)
 {
   assert(n2->lo != 0);
   /* n2 normal range */
@@ -843,12 +838,12 @@ int CmpIntToPair(int num, struct numpair *n2)
 /* add a number somewhere into the list (sorted order)
  * list must be expandable.
  */
-void NumpairAppendList(Numlist_p enlp, int num)
+void NumpairAppendList(Numlist_p enlp, GLint num)
 {
   Numlist_p nnlp;
   struct numpair *data;
-  int comparison;
-  unsigned int lower,upper,search=0;
+  nlbool comparison;
+  UGLint lower,upper,search=0;
 
   assert(enlp!=NULL);
   assert(enlp->cap >=0);
@@ -966,7 +961,7 @@ void NumpairAppendList(Numlist_p enlp, int num)
   }
 }
 
-int NumpairListLen(Numlist_p nlp)
+GLint NumpairListLen(Numlist_p nlp)
 {
   assert(nlp!=NULL);
   return nlp->len;
@@ -983,7 +978,7 @@ void NumpairClearList(Numlist_p enlp)
  * NumberInList(nlp,number);
  * Returns 1 if number is in list and 0 if it is not.
  */
-int NumpairNumberInList(Numlist_p nlp, int num)
+nlbool NumpairNumberInList(Numlist_p nlp, GLint num)
 {
   switch (nlp->len) {
   case 0:
@@ -1035,9 +1030,9 @@ int NumpairNumberInList(Numlist_p nlp, int num)
  * Returns 1 if number is in list and 0 if it is not.
  */
 static
-int InListDecreasingHint(Numlist_p nlp, int num, int *hint)
+nlbool InListDecreasingHint(Numlist_p nlp, GLint num, GLint *hint)
 {
-  int np;
+  GLint np;
   struct numpair *list;
 
   np = *hint;
@@ -1071,7 +1066,7 @@ int InListDecreasingHint(Numlist_p nlp, int num, int *hint)
  * properly.
  * Note that if hint value is incorrect, this may lie.
  */
-int NumpairNumberInListHintedDecreasing(Numlist_p nlp, int num, int *hint)
+nlbool NumpairNumberInListHintedDecreasing(Numlist_p nlp, GLint num, GLint *hint)
 {
   assert(hint != NULL);
   switch (nlp->len) {
@@ -1114,8 +1109,8 @@ int NumpairNumberInListHintedDecreasing(Numlist_p nlp, int num, int *hint)
 
 /*
  * prev = NumpairPrevNumber(nlp,last,hint);
- * int *hint;
- * int last;
+ * GLint *hint;
+ * GLint last;
  * Returns the next lower number in the list preceding
  * last. If last is 0, returns highest
  * number in the list. *hint should be the output from the
@@ -1123,7 +1118,7 @@ int NumpairNumberInListHintedDecreasing(Numlist_p nlp, int num, int *hint)
  * you write a list iteration. If last given is 0, hint ignored.
  * Remember that 0 is never really a valid list element.
  */
-int NumpairPrevNumber(Numlist_p nlp, int last, int *hint)
+GLint NumpairPrevNumber(Numlist_p nlp, GLint last, GLint *hint)
 {
   struct numpair test;
   char *location;
@@ -1193,8 +1188,8 @@ int NumpairPrevNumber(Numlist_p nlp, int last, int *hint)
 
 /*
  * prev = NumpairNextNumber(nlp,last,hint);
- * int *hint;
- * int last;
+ * GLint *hint;
+ * GLint last;
  * Returns the next higher number in the list following
  * last. If last is >= end of list, returns 0.
  * *hint should be the output from the
@@ -1202,7 +1197,7 @@ int NumpairPrevNumber(Numlist_p nlp, int last, int *hint)
  * you write a list iteration. If last 0, hint ignored.
  * Remember that 0 is never really a valid list element.
  */
-int NumpairNextNumber(Numlist_p nlp,int last,int *hint)
+GLint NumpairNextNumber(Numlist_p nlp, GLint last, GLint *hint)
 {
   struct numpair test;
   char *location;
@@ -1273,7 +1268,7 @@ int NumpairNextNumber(Numlist_p nlp,int last,int *hint)
 
 void NumpairListIterate(Numlist_p nlp,NPLFunc func,void *userdata)
 {
-  int r,i, rlen,ihi;
+  GLint r,i, rlen,ihi;
   if (nlp == NULL || func == NULL || nlp->len == 0) {
     return;
   }
@@ -1286,19 +1281,19 @@ void NumpairListIterate(Numlist_p nlp,NPLFunc func,void *userdata)
 
 /*
  * common = NumpairGTIntersection(nlp1,nlp2,lowlimit);
- * int lowlimit;
+ * GLint lowlimit;
  * Returns the first number that is both common to nlp1, nlp2
  * and > lowlimit.
  * If no number > lowlimit is common, returns 0.
  * normally lowlimit should be common to both lists, but this
  * is not required.
  */
-int NumpairGTIntersection(Numlist_p nlp1, Numlist_p nlp2, int low)
+GLint NumpairGTIntersection(Numlist_p nlp1, Numlist_p nlp2, GLint low)
 {
-  int i,j;	/* indices into the lists of nlp1, nlp2 */
-  int l1,l2;
+  GLint i,j;	/* indices into the lists of nlp1, nlp2 */
+  GLint l1,l2;
   struct numpair *s1,*s2;
-  int change, ilo, ihi;
+  GLint change, ilo, ihi;
 
   l1 = nlp1->len;
   l2 = nlp2->len;
@@ -1353,21 +1348,21 @@ int NumpairGTIntersection(Numlist_p nlp1, Numlist_p nlp2, int low)
   return ilo;
 }
 
-int NumpairIntersectionLTHinted(Numlist_p nlp1, int *hint1,
-                                Numlist_p nlp2, int *hint2,
-                                int high)
+GLint NumpairIntersectionLTHinted(Numlist_p nlp1, GLint *hint1,
+                                Numlist_p nlp2, GLint *hint2,
+                                GLint high)
 {
-  int i,j;	/* indices into the lists of nlp1, nlp2 */
-  int l1,l2;
+  GLint i,j;	/* indices GLinto the lists of nlp1, nlp2 */
+  GLint l1,l2;
   struct numpair *s1,*s2;
-  int change, ilo, ihi;
+  GLint change, ilo, ihi;
 
   l1 = nlp1->len;
   l2 = nlp2->len;
   s1 = nlp1->list;
   s2 = nlp2->list;
   if (high <= 0) {
-    high = INT_MAX;
+    high = GL_INT_MAX;
   }
   /* skip the nobrainers */
   if (!l1 || !l2 || high < s1[0].lo || high < s2[0].lo) {
@@ -1431,9 +1426,9 @@ int NumpairIntersectionLTHinted(Numlist_p nlp1, int *hint1,
   return ihi;
 }
 
-int NumpairCardinality(Numlist_p nlp)
+GLint NumpairCardinality(Numlist_p nlp)
 {
-  int i,len,count;
+  GLint i,len,count;
   struct numpair *s;
   if (nlp == NULL || nlp->len == 0 || nlp->list == NULL) {
     return 0;
@@ -1488,7 +1483,7 @@ int main()
 {
   Numlist_p p1,p2,p3,ep4,ep5,ep6,ep7,ep8,ep9, es1,es2, p10;
   struct gl_list_t *nlpgl;
-  int last, hint, gt, h1, h2;
+  GLint last, hint, gt, h1, h2;
 
   gl_init();
   gl_init_pool();

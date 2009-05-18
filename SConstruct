@@ -99,6 +99,12 @@ else:
 		default_tk_lib = "tk8.4"
 		default_tktable_lib = "Tktable2.8"
 
+	if os.path.exists("/etc/SuSE-release"):
+		default_tcl_cpppath = "/usr/include"
+		default_tcl_lib = "tcl8.4"
+		default_tk_lib = "tk8.4"
+		default_tktable_lib = "Tktable2.9"
+
 	if os.path.exists("/etc/lsb-release"):
 		_f = file("/etc/lsb-release")
 		_r = re.compile("([A-Z][^=]*)=(.*)")
@@ -106,7 +112,8 @@ else:
 		for l in _f:
 			_m = _r.match(l.strip())
 			LSB[_m.group(1)] = _m.group(2)
-		if LSB['DISTRIB_ID'] == "Ubuntu":
+                print LSB
+		if LSB.has_key('DISTRIB_ID') and LSB['DISTRIB_ID'] == "Ubuntu":
 			if float(LSB['DISTRIB_RELEASE']) >= 9.04:
 				default_tcl_lib = "tcl8.5"
 				default_tk_lib = "tk8.5"
@@ -2126,6 +2133,34 @@ if conf.CheckHeader('stdio.h') is False:
 		print "%-30s%s" % ("%s :" % k, v)
 	Exit(1)
 
+vpsize = conf.CheckTypeSize('void *')
+if vpsize != 0:
+	conf.env.Append(CPPDEFINES=[('SIZEOF_VOID_P',str(vpsize) )])
+else:
+	print "Didn't find sizeof(void*)";
+	exit(1)
+
+isize = conf.CheckTypeSize('int')
+if isize != 0:
+	conf.env.Append(CPPDEFINES=[('SIZEOF_INT',str(isize) )])
+else:
+	print "Didn't find sizeof(int)";
+	exit(1)
+
+lsize = conf.CheckTypeSize('long')
+if lsize != 0:
+	conf.env.Append(CPPDEFINES=[('SIZEOF_LONG',str(lsize) )])
+else:
+	print "Didn't find sizeof(long)";
+	exit(1)
+
+llsize = conf.CheckTypeSize('long long')
+if llsize != 0:
+	conf.env.Append(CPPDEFINES=[('SIZEOF_LONG_LONG',str(llsize) )])
+else:
+	print "Didn't find sizeof(long long)";
+	exit(1)
+
 if conf.CheckFunc('snprintf') is False:
 	print "Didn't find snprintf";
 	exit(1)
@@ -2364,7 +2399,8 @@ if need_fortran:
 			conf.env.Append(BUILDERS={'Fortran':fortran_builder})
 		if platform.system()=="Linux":
 			print "APPARENTLY FORTRAN WAS DETECTED"
-			conf.env.Append(SHFORTRANFLAGS=['-fPIC'])
+			# not needed under scons 1.2, at least.
+			# conf.env.Append(SHFORTRANFLAGS=['-fPIC'])
 	else:
 		print "FAILED FORTRAN DETECTION"
 		with_lsode=False;
@@ -2411,8 +2447,6 @@ if with_doc_build:
 		without_doc_build_reason="'lmodern' is not available"
 
 # TODO: -D_HPUX_SOURCE is needed
-
-# TODO: check size of void*
 
 # TODO: detect if dynamic libraries are possible or not
 

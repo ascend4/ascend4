@@ -34,8 +34,10 @@
 #include "test/assertimpl.h"
 #include "test/printutil.h"
 
+#ifdef REIMPLEMENT_STREAMS
 static int f_callback_called = FALSE;
 static int f_callback_status;
+#endif
 
 /*
 	These tests have been disabled as the stream redirection in ASCEND is
