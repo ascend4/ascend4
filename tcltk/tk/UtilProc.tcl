@@ -269,7 +269,7 @@ proc Util_do_OK {} {
 # Reads in settings from ~/ascdata/ascend-config if that is available.
 #------------------------------------------------------------------------
 proc Util_do_Read {} {
-  global env 
+  global env ascOrgEnv
   set configread 0
 
   if {!$configread && [file exists ~/ascdata/ascend-config] &&
@@ -291,7 +291,7 @@ proc Util_do_Read {} {
 # save ~/ascdata/ascend-config. overwrite whatever there.
 #------------------------------------------------------------------------
 proc Util_do_Save {} {
-  global ascUtilVect ascGlobalVect
+  global ascUtilVect ascGlobalVect ascOrgEnv
 
   if {$ascGlobalVect(saveoptions) == 0} {
     puts stdout "cannot write ascend configure file"
@@ -315,11 +315,21 @@ proc Util_do_Save {} {
   foreach s $subs {
     set varname [Util_Get_Var $s]
     set aname [lindex [split $varname (] 0]
+    set aindex [lindex [split $varname "()"] 1]
     global $varname
-# we don't save environment vars
+# we save environment vars unconditionally now; they ar be ignored on read if set by user
+# or wrapper script.
     if {[string range $varname 0 2] !="env"} {
       puts $conffile "  global $aname"
       puts $conffile "  set $varname {[.util.box.main_frm.val_frm.$s get]}"
+    } else {
+      puts $conffile "  global $aname ascOrgEnv"
+      puts $conffile "  if {\[info exists ascOrgEnv($aindex)\] && \$ascOrgEnv($aindex) != \"\"} {"
+      puts $conffile "    puts \"Ignoring ascend-config value of $varname in favor of environment.\""
+      puts $conffile "  } else {"
+      puts $conffile "    puts \"Setting $varname from ascend-config.\""
+      puts $conffile "    set $varname {[.util.box.main_frm.val_frm.$s get]}"
+      puts $conffile "  }"
     }
   }
   close $conffile
