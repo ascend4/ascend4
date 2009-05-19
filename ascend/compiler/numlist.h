@@ -50,6 +50,8 @@
 #ifndef ASC_NUMPAIR_H
 #define ASC_NUMPAIR_H
 
+#include <ascend/utilities/config.h>
+
 /**	@addtogroup compiler Compiler
 	@{
 */

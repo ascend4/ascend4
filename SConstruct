@@ -2133,40 +2133,32 @@ if conf.CheckHeader('stdio.h') is False:
 		print "%-30s%s" % ("%s :" % k, v)
 	Exit(1)
 
-vpsize = conf.CheckTypeSize('void *')
-if vpsize != 0:
-	conf.env.Append(CPPDEFINES=[('SIZEOF_VOID_P',str(vpsize) )])
-else:
-	print "Didn't find sizeof(void*)";
-	exit(1)
+# sizes of vars used in libascend eg in gl_list etc.
 
-isize = conf.CheckTypeSize('int')
-if isize != 0:
-	conf.env.Append(CPPDEFINES=[('SIZEOF_INT',str(isize) )])
-else:
-	print "Didn't find sizeof(int)";
-	exit(1)
+_sizes = {
+	"VOID_P" : "void *"
+	,"INT" : "int"
+	,"LONG" : "long"
+	,"LONG_LONG" : "long long"
+}
 
-lsize = conf.CheckTypeSize('long')
-if lsize != 0:
-	conf.env.Append(CPPDEFINES=[('SIZEOF_LONG',str(lsize) )])
-else:
-	print "Didn't find sizeof(long)";
-	exit(1)
+for _var,_type in _sizes.iteritems():
+	_size = conf.CheckTypeSize(_type)
+	if not _size:
+		print "Couldn't determine 'sizeof(%s)'" % _type
+		Exit(1)
+	conf.env["SIZEOF_%s" % _var] = str(_size)
 
-llsize = conf.CheckTypeSize('long long')
-if llsize != 0:
-	conf.env.Append(CPPDEFINES=[('SIZEOF_LONG_LONG',str(llsize) )])
-else:
-	print "Didn't find sizeof(long long)";
-	exit(1)
+# check for some string functions
 
 if conf.CheckFunc('snprintf') is False:
 	print "Didn't find snprintf";
-	exit(1)
+	Exit(1)
 
 if conf.CheckFunc('strdup'):
 	conf.env['HAVE_STRDUP'] = True
+
+# attempt to support MSVCRT 7.1 on Windows
 
 if platform.system()=="Windows" and env.get('WITH_MSVCR71'):
 	conf.env.Append(LIBS='msvcr71')
@@ -2522,6 +2514,10 @@ subst_dict = {
 	, '@ASC_TK_REL_DIST@' : default_tk_rel_dist
 	, '@ASC_LIBRARY_REL_DIST@' : default_library_rel_dist
 	, '@ASC_SOLVERS_REL_DIST@' : default_solvers_rel_dist
+	, '@SIZEOF_VOID_P@' : env['SIZEOF_VOID_P']
+	, '@SIZEOF_INT@' : env['SIZEOF_INT']
+	, '@SIZEOF_LONG@' : env['SIZEOF_LONG']
+	, '@SIZEOF_LONG_LONG@' : env['SIZEOF_LONG_LONG']
 }
 
 if env.get('WITH_DOC'):
