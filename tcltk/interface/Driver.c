@@ -1099,7 +1099,7 @@ defaultPrompt:
 }
 
 /* include here to avoid contaminating everything above it. */
-#include <tclInt.h>
+//#include <tclInt.h>
 /**
 preserve key stuff in the launching environment where we can check it later.
 */
