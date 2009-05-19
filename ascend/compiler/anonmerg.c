@@ -30,6 +30,7 @@
 
 
 #include <limits.h> /* for INT_MAX */
+#include <ascend/utilities/config.h>
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>

@@ -28,6 +28,7 @@
 
 #include "discrete.h"
 
+#include <ascend/utilities/config.h>
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascMalloc.h>
 #include <ascend/general/dstring.h>
