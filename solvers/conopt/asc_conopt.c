@@ -25,6 +25,7 @@
 
 #include <math.h>
 
+#include <ascend/utilities/config.h>
 #include <ascend/utilities/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
 #include <ascend/utilities/set.h>

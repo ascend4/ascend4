@@ -307,7 +307,7 @@ int32 ipopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 			" for this string option is 'ma27'."
 			" Available options *may* include: ma27, ma57, pardiso, wsmp,"
 			" mumps, custom."
-		}, "ma27"}, (char *[]){
+		}, "mumps"}, (char *[]){
 			"ma27","ma57","pardiso","wsmp","mumps","custom",NULL
 		}
 	); 
