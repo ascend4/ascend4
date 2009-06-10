@@ -90,7 +90,7 @@ static void asc_va_panic(const int status, const char *filename, const int line
 	if(( *g_panic_outfile != '\0' )
 			&& ( (outfile=fopen(g_panic_outfile,"w")) != NULL )
 	){
-		fprintf(outfile, msg);
+		fprintf(outfile, "%s", msg);
 		CONSOLE_DEBUG("Error message written to %s\n", g_panic_outfile);
 
 		fclose(outfile);
