@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+#	dspec - Convert RPM-ish .dspec files into dpkg input files
+#	Copyright (C) 2008 John Pye <john@curioussymbols.com>
+#
+#	This program is free software; you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation; either version 2, or (at your option)
+#	any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program; if not, write to the Free Software
+#	Foundation, Inc., 59 Temple Place - Suite 330,
+#	Boston, MA 02111-1307, USA.
+
+
+import sys, re, tarfile, os.path, subprocess, shutil, getopt, glob
+import apt
+from debian_bundle import deb822, changelog
+
+def usage():
+	print """%s: Convert RPM-ish .dspec files into dpkg input files
+"""
+
+opts,args = getopt.getopt(sys.argv[1:],"nhs",["help","source","nooverwrite"])
+
+# do we just want a source package?
+buildsource = False
+overwrite = True
+
+
+for _o,_a in opts:
+	if _o in ['-h','--help']:
+		usage()
+		sys.exit()
+	elif _o in ['-s','--source']:
+		buildsource = True
+	elif _o in ['-n','--nooverwrite']:
+		overwrite = False
+	else:
+		assert False,"unhandled option"
+
+if len(args)<1 or len(args)>1:
+	raise RuntimeError("One filename must be supplied")
+
+# the tarball is the argument to this script
+
+startingcwd = os.getcwd()
+
+fn = args[0]
+
+ffull = os.path.abspath(fn)
+
+f = file(ffull).readlines()
+
+# strip comments
+fs = []
+for l in f:
+	ls = l.lstrip()
+	if len(ls) and ls[0] == "#":
+		continue
+	fs.append(l)
+
+# divide sections
+
+possiblesections = ["control","changelog","rules"]
+currentsection = "control"
+sections = {"control":[]}
+
+for l in fs:
+	if len(l) and l[0] == "%":
+		section = l[1:].strip()
+		if section in possiblesections:
+			currentsection = section
+			if currentsection not in sections.keys():
+				sections[currentsection] = []
+			continue
+	print "%s: %s" % (currentsection,l.rstrip())
+	sections[currentsection].append(l)
+
+# create location for temporary files
+
+maindir = "/tmp/dtar-%s" % os.getpid()
+
+if os.path.exists(maindir):
+	raise RuntimeError("Temp path '%s' already exists!"%maindir)
+
+os.mkdir(maindir)
+
+# create debian.tar
+
+debtarname = os.path.join(maindir,"debian.tar")
+t = tarfile.open(name = debtarname,mode="w")
+
+for s in possiblesections:
+	os.chdir(maindir)
+	file(s,"w").writelines(sections[s])
+	t.add(s,arcname=os.path.join("debian",s))
+	
+t.close()
+
+sys.stdout.write(file(debtarname).read())
+
+
