@@ -72,7 +72,7 @@ MODEL steam_equipment;
 	inlet "in: inlet steam stream" IS_A steam_node;
 	outlet "out: outlet steam stream" IS_A steam_node;
 
-	inlet.mdot, outlet.mdot ARE_THE_SAME;
+	cons_mass:inlet.mdot = outlet.mdot;
 	mdot ALIASES inlet.mdot;
 END steam_equipment;
 
@@ -233,7 +233,7 @@ MODEL condenser_simple REFINES steam_equipment;
 	inlet.p, outlet.p ARE_THE_SAME;
 	Qdot IS_A energy_rate;
 
-	Qdot = mdot * (outlet.h - inlet.h);
+	cons_en: Qdot = mdot * (outlet.h - inlet.h);
 	
 END condenser_simple;
 
@@ -570,7 +570,8 @@ METHOD default_self;
 	BO.outlet.h := 4000 {kJ/kg};
 	p_bleed := 37 {bar};
 	TU1.outlet.h := 2300 {kJ/kg};
-	HE.cons_en.includes := FALSE;
+	CO.cons_en.included := FALSE;
+	CO.cons_mass.included := FALSE;
 END default_self;
 METHOD on_load;
 	RUN moran_ex_8_5;

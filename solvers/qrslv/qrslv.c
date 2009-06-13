@@ -4156,8 +4156,8 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
   iteration_ends(sys);
   if(!OPTIMIZING(sys) && block_feasible(sys)){
     if(rank_defect){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Block %d was singular one step before convergence."
-        " You may wish to check for numeric dependency at solution."
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Block %d was singular one step before convergence.\n"
+        "You may wish to check for numeric dependency at solution."
         , sys->s.block.current_block);
     }
     find_next_unconverged_block(sys);

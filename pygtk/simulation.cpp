@@ -439,13 +439,15 @@ Simulation::checkStructuralSingularity(){
 
 	struct var_variable **varlist = slv_get_solvers_var_list(sys);
 	struct rel_relation **rellist = slv_get_solvers_rel_list(sys);
-
+	int32 nv = slv_get_num_solvers_vars(sys);
+	
 	// pull in the lists of vars and rels, and the freeable vars:
 	for(int i=0; ril[i]!=-1; ++i){
 		sing->rels.push_back( Relation(this, rellist[ril[i]]) );
 	}
 
 	for(int i=0; vil[i]!=-1; ++i){
+		assert(vil[i] < nv);
 		sing->vars.push_back( Variable(this, varlist[vil[i]]) );
 	}
 
