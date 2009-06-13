@@ -72,7 +72,7 @@ MODEL steam_equipment;
 	inlet "in: inlet steam stream" IS_A steam_node;
 	outlet "out: outlet steam stream" IS_A steam_node;
 
-	cons_mass:inlet.mdot = outlet.mdot;
+	inlet.mdot, outlet.mdot ARE_THE_SAME;
 	mdot ALIASES inlet.mdot;
 END steam_equipment;
 
@@ -495,6 +495,27 @@ END rankine_reheat;
 (*------------------------------------------------------------------------------
   REGENERATIVE RANKINE CYCLE
 *)
+
+MODEL loose_connection(
+		in WILL_BE steam_node;
+		out WILL_BE steam_node;
+);
+	cons_mass: in.mdot = out.mdot;
+	cons_en: in.h = out.h;
+	eq_pres: in.p = out.p;
+METHODS
+METHOD open;
+	cons_mass.included := FALSE;
+	cons_en.included := FALSE;
+	eq_pres.included := TRUE;
+END open;
+METHOD close;
+	cons_mass.included := TRUE;
+	cons_en.included := TRUE;
+	eq_pres.included := TRUE;
+END close;
+END loose_connection;
+
 (*
 	Add a boiler feedwater heater and two-stage turbine.
 
@@ -521,10 +542,10 @@ MODEL rankine_regen;
 	TU1.outlet, BL.inlet ARE_THE_SAME;
 	BL.outlet, TU2.inlet ARE_THE_SAME;
 	TU2.outlet, CO.inlet ARE_THE_SAME;
-	CO.outlet, PU1.inlet ARE_THE_SAME;
+	LC0 IS_A loose_connection(CO.outlet, PU1.inlet);
 	PU1.outlet, HE.inlet ARE_THE_SAME;
 	HE.outlet, PU2.inlet ARE_THE_SAME;
-	PU2.outlet, BO.inlet ARE_THE_SAME;
+	LC1 IS_A loose_connection(PU2.outlet, BO.inlet);
 
 	(* bleed stream *)
 	BL.outlet_branch, HE.inlet_heat ARE_THE_SAME;
@@ -546,7 +567,7 @@ MODEL rankine_regen;
 	Qdot_fuel ALIASES BO.Qdot_fuel;
 
 	eta_carnot IS_A fraction;
-	eta_carnot = 1 - T_C / T_H;
+	eta_carnot_eq: eta_carnot = 1 - T_C / T_H;
 
 	(* some checking output... *)
 
@@ -558,10 +579,10 @@ MODEL rankine_regen;
 	w_net_eq: TU1.mdot * w_net = TU1.mdot * (TU1.inlet.h - TU1.outlet.h) + TU2.mdot * (TU2.inlet.h - TU2.outlet.h);
 
 	q_a IS_A specific_energy;
-	q_a = TU1.inlet.h - PU2.outlet.h;
+	q_a_eq: q_a = TU1.inlet.h - PU2.outlet.h;
 
 	Wdot IS_A energy_rate;
-	Wdot = TU1.Wdot + TU2.Wdot + PU1.Wdot + PU2.Wdot;
+	Wdot_eq: Wdot = TU1.Wdot + TU2.Wdot + PU1.Wdot + PU2.Wdot;
 
 	cons_en: HE.inlet.mdot * HE.inlet.h + HE.inlet_heat.mdot * HE.inlet_heat.h = HE.outlet.mdot * HE.outlet.h;
 
@@ -570,25 +591,17 @@ METHOD default_self;
 	BO.outlet.h := 4000 {kJ/kg};
 	p_bleed := 37 {bar};
 	TU1.outlet.h := 2300 {kJ/kg};
-	CO.cons_en.included := FALSE;
-	CO.cons_mass.included := FALSE;
+	(*RUN LC0.open;*)
+	(*RUN LC1.open;*)
+	BL.cons_mass.included := FALSE;
+	(*HE.cons_mass.included := FALSE;*)
+	HE.cons_en.included := FALSE;
+	cons_en.included := FALSE;
 END default_self;
 METHOD on_load;
 	RUN moran_ex_8_5;
-(* note:
-	acheived solution with the following variables fixed:
-		BO.eta
-		TU1.eta
-		TU2.eta
-		PU1.eta
-		PU2.eta
-		BO.outlet.p = TU1.inlet.p
-		TU2.outlet_is.p = TU2.outlet.p
-		PU2.inlet.x = HE.outlet.x
-		Wdot
-
-		REMOVE TU1.outlet.T = p_bleed
-		REMOVE HE.outlet.p (redundant)
+(*
+	This model needs to be solved using QRSlv with convopt set to 'RELNOMSCALE'.
 *)
 END on_load;
 METHOD moran_ex_8_5;
@@ -611,7 +624,8 @@ METHOD moran_ex_8_5;
 	FIX TU2.outlet.p; TU2.outlet.p := 0.008 {MPa};
 	(* heater conditions *)
 	(* FIX HE.outlet.p; HE.outlet.p := 0.7 {MPa}; *)
-	FIX HE.outlet.x; HE.outlet.x := 0.001;
+	FIX CO.outlet.x; CO.outlet.x := 0.0001;
+	FIX HE.outlet.x; HE.outlet.x := 0.0001;
 	FIX Wdot; Wdot := 100 {MW};
 END moran_ex_8_5;	
 METHOD weston_ex_2_6;
