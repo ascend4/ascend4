@@ -687,6 +687,13 @@ METHOD weston_ex_2_6;
 	
 END weston_ex_2_6;
 METHOD self_test;
+	(* solution values to the Moran & Shapiro example 8.5 problem *)
+	ASSERT abs(eta - 0.369) < 0.001;
+	ASSERT abs((TU1.Wdot+TU2.Wdot)/mdot - 984.4{kJ/kg}) < 1 {kJ/kg};
+	ASSERT abs(mdot - 3.69e5 {kg/h}) < 0.05e5 {kg/h};
+	ASSERT abs(CO.inlet.h - 2249.3 {kJ/kg}) < 1.0 {kJ/kg};
+(** 
+	these values seem to be from another problem, need to check which ...
 	ASSERT abs(TU1.inlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
 	ASSERT abs(TU1.outlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
 	ASSERT abs(TU2.outlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
@@ -712,6 +719,7 @@ METHOD self_test;
 	ASSERT abs(eta - 0.463) < 0.003;
 
 	ASSERT abs(phi - 0.251) < 0.001;
+*)
 END self_test;
 END rankine_regen;
 
