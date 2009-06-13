@@ -39,10 +39,10 @@ class DiagnoseWindow:
 		self.zoomentry = _xml.get_widget("zoomentry")
 
 		self.var = None; self.rel = None
-		self.varname = _xml.get_widget("varname")
+		self.varname = _xml.get_widget("varname1")
 		self.varval = _xml.get_widget("varval")
 		self.varinfobutton = _xml.get_widget("varinfobutton")
-		self.relname = _xml.get_widget("relname")
+		self.relname = _xml.get_widget("relname1")
 		self.relresid = _xml.get_widget("relresid")
 		self.relinfobutton = _xml.get_widget("relinfobutton")
 
