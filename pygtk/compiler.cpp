@@ -23,9 +23,9 @@ Compiler::Compiler(){
 	bt_srcname = bt_targetstem + ".c";
 	bt_objname = bt_targetstem + ".o";
 	bt_libname = bt_targetstem + ".so";
-	bt_cmd = "cd ~/ascend/base/generic/lib && make BTTARGET=" 
-		+ bt_targetstem + " BTINCLUDES=~/ascend/base/generic/lib -f ~/ascend/base/generic/lib/Makefile.bt "
-		+ bt_targetstem;
+	bt_cmd = "cd ~/ascend/ascend/bintokens && "
+		"make -f ~/ascend/ascend/bintokens/Makefile" 
+		" ASCBT_TARGET=" + bt_libname;
 	bt_rm = "/bin/rm";
 }
 
