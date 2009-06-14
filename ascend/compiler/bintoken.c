@@ -1,5 +1,4 @@
-/* ex: set ts=8 : */
-/*	ASCEND modelling environment
+/*  ASCEND modelling environment
 	Copyright (C) 2006 Carnegie Mellon University
 	Copyright (C) 1998 Carnegie Mellon University
 
@@ -60,7 +59,7 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include "mathinst.h"
 /* last */
 
-#include "btprolog.h"
+#include <ascend/bintokens/btprolog.h>
 
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))
 
@@ -78,7 +77,7 @@ struct bt_table {
   char *name;
   union TableUnion *tu;
   int btable; /* check id */
-  int refcount;	/* total number of relation shares with btable = our number */
+  int refcount; /* total number of relation shares with btable = our number */
   int size; /* may be larger than refcount. */
 };
 
@@ -147,6 +146,7 @@ int BinTokenSetOptions(CONST char *srcname,
                        int verbose,
                        int housekeep)
 {
+	CONSOLE_DEBUG("...");
   int err = 0;
   err += bt_string_replace(srcname,&(g_bt_data.srcname));
   err += bt_string_replace(objname,&(g_bt_data.objname));
@@ -397,7 +397,7 @@ void WritePrologue(FILE *fp, struct Instance *root,
   CLINE("#define HAVE_ERF");
 #endif
 
-  CLINE("#include <btprolog.h>");
+  CLINE("#include <ascend/bintokens/btprolog.h>");
 }
 
 /* this function should be generalized or duplicated to
@@ -625,7 +625,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
   /** @TODO FIXME win32 has getpid but it is bogus as uniquifier. */
   /* so long as makefile deletes previous dll, windows is ok though */
   sprintf(g_bt_data.regname,"BinTokenArch_%d_%d",++(g_bt_data.nextid),(int)pid);
-  FPRINTF(fp,"int ASC_DLLSPEC %s(){\n",g_bt_data.regname);
+  FPRINTF(fp,"int ASC_EXPORT %s(){\n",g_bt_data.regname);
   CLINE("\tint status;");
   FPRINTF(fp,"\tstatic struct TableC g_ctable[%lu] =\n",len+1);
   CLINE("\t\t{ {NULL, NULL},");
@@ -773,6 +773,8 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
   char *unlinkcommand = g_bt_data.unlinkcommand;
   int verbose = g_bt_data.verbose;
 
+	CONSOLE_DEBUG("...");
+
   if (g_bt_data.maxrels == 0) {
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"BinTokensCreate disabled (maxrels=0)\n");
     return;
@@ -791,7 +793,8 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
     return;
   }
 
-  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Creating bintokens\n");
+  ERROR_REPORTER_HERE(ASC_USER_NOTE,"Creating bintokens\n");
+  CONSOLE_DEBUG("buildcommand = %s",buildcommand);
 
   switch (method) {
   case BT_C:
@@ -1020,3 +1023,6 @@ int main() { /* built only if TESTBT defined TRUE in bintoken.c */
   return 0;
 }
 #endif /*unrelocate test bt*/
+
+/* vim: set ts=2 et: */
+

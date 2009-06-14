@@ -250,6 +250,16 @@ class TestSolver(AscendSelfTester):
 		self.assertAlmostEqual( float(M.z), 4.61043629206)
 
 
+class TestBinTokens(AscendSelfTester):
+
+	def test1(self):
+		ascpy.getCompiler().setBinaryCompilation(True)
+		self.L.load('johnpye/testlog10.a4c')
+		T = self.L.findType('testlog10')
+		M = T.getSimulation('sim')
+		M.build()
+		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
+
 class TestLRSlv(AscendSelfTester):
 	def testonerel(self):
 		self._run('onerel',"LRSlv","test/lrslv/onerel.a4c")
