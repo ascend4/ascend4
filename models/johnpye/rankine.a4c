@@ -849,10 +849,10 @@ METHOD default_self;
 	TU1.outlet.h := 2300 {kJ/kg};
 	TU3.outlet.p := 37 {bar};
 	TU3.outlet.h := 2300 {kJ/kg};
-	BL1.cons_mass.included := FALSE;
-	BL2.cons_mass.included := FALSE;
-	(* HE.cons_mass.included := FALSE;*)
-	(* HE1.cons_mass.included := FALSE; *)
+	(* BL2.cons_mass.included := FALSE; *)
+	(* currently, the problem solves if you first load and attempt to solve,
+	then set BL2.cons_mass.included := FALSE, then solve again. Not sure yet
+	what the correct way to fix this will be. *)
 END default_self;
 METHOD moran_8_6;
 	(*
