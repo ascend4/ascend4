@@ -1178,8 +1178,8 @@ class Browser:
 		except RuntimeError,e:
 			self.reporter.reportError("Unable to show fixed variables: %s"%str(e))
 			return
-		text = "Fixed Variables"
-		title = text
+		text = "%d fixed variables:" % len(v)
+		title = "Fixed Variables"
 		text += "\n"
 		if len(v):
 			for var in v:

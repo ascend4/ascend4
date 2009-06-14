@@ -2,6 +2,7 @@ REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
 IMPORT "freesteam";
+IMPORT "sensitivity/solve";
 
 (* Model of simple Rankine cycle with boiler, turbine, condenser, pump *)
 
@@ -98,7 +99,7 @@ MODEL pump_simple REFINES steam_equipment;
 
 	(* work done on the environment, will be negative *)
 	Wdot IS_A energy_rate;
-	Wdot_eq:Wdot = eta * mdot * (inlet.h - outlet.h);
+	Wdot_eq:Wdot = mdot * w;
 
 	w IS_A specific_energy;
 	w_eq:w = eta * (outlet.h - inlet.h);
@@ -149,7 +150,7 @@ MODEL turbine_simple REFINES steam_equipment;
 	
 	(* work done on the environment, will be positive *)
 	Wdot IS_A energy_rate;
-	Wedot_eq:Wdot = mdot * (inlet.h - outlet.h);
+	Wedot_eq:Wdot = mdot * w;
 
 	w IS_A specific_energy;
 	w_eq:w = inlet.h - outlet.h;
@@ -189,9 +190,12 @@ MODEL boiler_simple REFINES steam_equipment;
 
 	inlet.p, outlet.p ARE_THE_SAME;
 	Qdot_fuel IS_A energy_rate;
-	Qdot IS_A energy_rate;
 
-	Qdot = mdot * (outlet.h - inlet.h);
+	q IS_A specific_energy;
+	q = (outlet.h - inlet.h);
+
+	Qdot IS_A energy_rate;
+	Qdot = mdot * q;
 
 	eta IS_A fraction;
 	Qdot = eta * Qdot_fuel;
@@ -274,8 +278,10 @@ MODEL heater_open;
 	(* cons. mass *)
 	cons_mass: inlet.mdot + inlet_heat.mdot = outlet.mdot;
 
+	m_ratio IS_A factor;
+	inlet_heat.mdot = m_ratio * inlet.mdot;
 	(* cons. energy *)
-	cons_en: inlet.mdot * inlet.h + inlet_heat.mdot * inlet_heat.h = outlet.mdot * outlet.h;
+	cons_en: inlet.h + m_ratio * inlet_heat.h = outlet.h;
 
 END heater_open;
 
@@ -296,6 +302,72 @@ METHOD on_load;
 	inlet.mdot := 700 {t/d};
 END on_load;
 END heater_open_test;
+
+MODEL heater_open2;
+	NOTES
+		'block' SELF {Simple open feedwater heater model}
+	END NOTES;
+
+	inlet "in:" IS_A steam_node;
+	inlet_heat1 "in:" IS_A steam_node;
+	inlet_heat2 "in:" IS_A steam_node;
+	outlet "out:" IS_A steam_node;
+	
+	inlet_heat1.p, inlet_heat2.p, inlet.p, outlet.p ARE_THE_SAME;
+
+	(* cons. mass *)
+	cons_mass: inlet.mdot + inlet_heat1.mdot + inlet_heat2.mdot = outlet.mdot;
+
+	(* cons. energy *)
+	cons_en: inlet.mdot * inlet.h + inlet_heat1.mdot * inlet_heat1.h 
+		+ inlet_heat2.mdot * inlet_heat2.h = outlet.mdot * outlet.h;
+
+END heater_open2;
+
+MODEL heater_closed;
+	NOTES
+		'block' SELF {Simple open feedwater heater model}
+	END NOTES;
+
+	inlet "in:" IS_A steam_node;
+	inlet_heat "in:" IS_A steam_node;
+	outlet "out:" IS_A steam_node;
+	outlet_heat "out:" IS_A steam_node;
+	
+	inlet_heat.p, outlet_heat.p ARE_THE_SAME;
+	inlet.p, outlet.p ARE_THE_SAME;
+
+	Qdot "heat transferred to main flow stream" IS_A energy_rate;
+	
+	q IS_A specific_energy;
+	Qdot = q * inlet.mdot;
+
+	(* cons. mass *)
+	cons_mass: inlet.mdot = outlet.mdot;
+	cons_mass_heat: inlet_heat.mdot = outlet_heat.mdot;
+
+	m_ratio IS_A factor;
+	inlet_heat.mdot = inlet.mdot * m_ratio;
+
+	(* cons. energy *)
+	cons_en: q + inlet.h = outlet.h;
+	cons_en_heat: m_ratio * inlet_heat.h = m_ratio * outlet.h + q;
+
+METHODS
+METHOD on_load;
+	FIX inlet.p, inlet.h;
+	inlet.p := 40 {bar};
+	inlet.h := 634 {kJ/kg};
+	FIX inlet_heat.h;
+	inlet_heat.h := 2960 {kJ/kg};
+	
+	FIX outlet.mdot; 
+	outlet.mdot := 900 {t/d};
+	
+	FIX inlet.mdot;
+	inlet.mdot := 700 {t/d};
+END on_load;
+END heater_closed;
 
 (*------------------------------------------------------------------------------
   TEE PIECE
@@ -495,27 +567,6 @@ END rankine_reheat;
 (*------------------------------------------------------------------------------
   REGENERATIVE RANKINE CYCLE
 *)
-
-MODEL loose_connection(
-		in WILL_BE steam_node;
-		out WILL_BE steam_node;
-);
-	cons_mass: in.mdot = out.mdot;
-	cons_en: in.h = out.h;
-	eq_pres: in.p = out.p;
-METHODS
-METHOD open;
-	cons_mass.included := FALSE;
-	cons_en.included := FALSE;
-	eq_pres.included := TRUE;
-END open;
-METHOD close;
-	cons_mass.included := TRUE;
-	cons_en.included := TRUE;
-	eq_pres.included := TRUE;
-END close;
-END loose_connection;
-
 (*
 	Add a boiler feedwater heater and two-stage turbine.
 
@@ -542,10 +593,10 @@ MODEL rankine_regen;
 	TU1.outlet, BL.inlet ARE_THE_SAME;
 	BL.outlet, TU2.inlet ARE_THE_SAME;
 	TU2.outlet, CO.inlet ARE_THE_SAME;
-	LC0 IS_A loose_connection(CO.outlet, PU1.inlet);
+	CO.outlet, PU1.inlet ARE_THE_SAME;
 	PU1.outlet, HE.inlet ARE_THE_SAME;
 	HE.outlet, PU2.inlet ARE_THE_SAME;
-	LC1 IS_A loose_connection(PU2.outlet, BO.inlet);
+	PU2.outlet, BO.inlet ARE_THE_SAME;
 
 	(* bleed stream *)
 	BL.outlet_branch, HE.inlet_heat ARE_THE_SAME;
@@ -591,8 +642,6 @@ METHOD default_self;
 	BO.outlet.h := 4000 {kJ/kg};
 	p_bleed := 37 {bar};
 	TU1.outlet.h := 2300 {kJ/kg};
-	(*RUN LC0.open;*)
-	(*RUN LC1.open;*)
 	BL.cons_mass.included := FALSE;
 	(*HE.cons_mass.included := FALSE;*)
 	HE.cons_en.included := FALSE;
@@ -628,6 +677,13 @@ METHOD moran_ex_8_5;
 	FIX HE.outlet.x; HE.outlet.x := 0.0001;
 	FIX Wdot; Wdot := 100 {MW};
 END moran_ex_8_5;	
+METHOD self_test;
+	(* solution values to the Moran & Shapiro example 8.5 problem *)
+	ASSERT abs(eta - 0.369) < 0.001;
+	ASSERT abs((TU1.Wdot+TU2.Wdot)/mdot - 984.4{kJ/kg}) < 1 {kJ/kg};
+	ASSERT abs(mdot - 3.69e5 {kg/h}) < 0.05e5 {kg/h};
+	ASSERT abs(CO.inlet.h - 2249.3 {kJ/kg}) < 1.0 {kJ/kg};
+END self_test;
 METHOD weston_ex_2_6;
 	(*
 		The scenario here is example 2.6 from K Weston (op. cit.), p. 55.
@@ -684,14 +740,7 @@ METHOD weston_ex_2_6;
 
 	(* FIX BL.outlet.h;
 	BL.outlet.h := 355.5 {btu/lbm}; *)
-	
-END weston_ex_2_6;
-METHOD self_test;
-	(* solution values to the Moran & Shapiro example 8.5 problem *)
-	ASSERT abs(eta - 0.369) < 0.001;
-	ASSERT abs((TU1.Wdot+TU2.Wdot)/mdot - 984.4{kJ/kg}) < 1 {kJ/kg};
-	ASSERT abs(mdot - 3.69e5 {kg/h}) < 0.05e5 {kg/h};
-	ASSERT abs(CO.inlet.h - 2249.3 {kJ/kg}) < 1.0 {kJ/kg};
+
 (** 
 	these values seem to be from another problem, need to check which ...
 	ASSERT abs(TU1.inlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
@@ -719,9 +768,129 @@ METHOD self_test;
 	ASSERT abs(eta - 0.463) < 0.003;
 
 	ASSERT abs(phi - 0.251) < 0.001;
-*)
-END self_test;
+*)	
+END weston_ex_2_6;
 END rankine_regen;
+
+MODEL trap REFINES steam_equipment;
+	NOTES
+		'block' SELF {Steam trap model}
+	END NOTES;
+	
+	inlet.h, outlet.h ARE_THE_SAME;	
+METHODS
+METHOD on_load;
+	(* FIXME change this so that x is forced exactly zero, needs us to
+	extend freesteam ASCEND interface. *)
+	FIX inlet.x; inlet.x := 0.0001;
+END on_load;
+END trap;
+(*
+	This is a reheat-regenerative Rankine cycle with two feedwater headers
+	(one open, one closed), as described in Moran & Shapiro, example 8.6.
+*)
+MODEL rankine_reheat_regen;
+
+	BO1 IS_A boiler_simple;
+	BO2 IS_A boiler_simple;
+	TU1 IS_A turbine_simple;
+	BL1 IS_A tee; (* bleed *)
+	TU2 IS_A turbine_simple;
+	TU3 IS_A turbine_simple;
+	BL2 IS_A tee; (* bleed *)
+	TU4 IS_A turbine_simple;
+	
+	CO IS_A condenser_simple;
+	PU1 IS_A pump_simple;
+	HE1 IS_A heater_open2;
+	PU2 IS_A pump_simple;
+	HE2 IS_A heater_closed;
+	TR IS_A trap;
+
+	(* connections *)
+	BO1.outlet, TU1.inlet ARE_THE_SAME;
+	TU1.outlet, BL1.inlet ARE_THE_SAME;
+	BL1.outlet, TU2.inlet ARE_THE_SAME;
+	TU2.outlet, BO2.inlet ARE_THE_SAME;
+	BO2.outlet, TU3.inlet ARE_THE_SAME;
+	TU3.outlet, BL2.inlet ARE_THE_SAME;
+	BL2.outlet, TU4.inlet ARE_THE_SAME;
+	TU4.outlet, CO.inlet ARE_THE_SAME;
+	CO.outlet, PU1.inlet ARE_THE_SAME;
+	PU1.outlet, HE1.inlet ARE_THE_SAME;
+	HE1.outlet, PU2.inlet ARE_THE_SAME;
+	PU2.outlet, HE2.inlet ARE_THE_SAME;
+	HE2.outlet, BO1.inlet ARE_THE_SAME;
+	BL1.outlet_branch, HE2.inlet_heat ARE_THE_SAME;
+	BL2.outlet_branch, HE1.inlet_heat1 ARE_THE_SAME;	
+
+	HE2.outlet_heat, TR.inlet ARE_THE_SAME;
+	TR.outlet, HE1.inlet_heat2 ARE_THE_SAME;
+
+	phi1 ALIASES BL1.phi;
+	phi2 ALIASES BL2.phi;
+	
+	Wdot_t, Wdot IS_A energy_rate;
+	Wdot = Wdot_t - PU1.Wdot - PU2.Wdot;
+	Wdot_t = TU1.Wdot + TU2.Wdot + TU3.Wdot + TU4.Wdot;
+
+(*	
+	Qdot_net IS_A energy_rate;
+	Qdot_net = BO1.Qdot + BO2.Qdot + CO.Qdot;
+*)
+METHODS
+METHOD default_self;
+	BL1.outlet.mdot := 1 {kg/s};
+	phi1 := 0.1;
+	phi2 := 0.1;
+	BO1.outlet.h := 4000 {kJ/kg};
+	BO2.outlet.h := 4000 {kJ/kg};
+	TU1.outlet.p := 37 {bar};
+	TU1.outlet.h := 2300 {kJ/kg};
+	TU3.outlet.p := 37 {bar};
+	TU3.outlet.h := 2300 {kJ/kg};
+	BL1.cons_mass.included := FALSE;
+	BL2.cons_mass.included := FALSE;
+	(* HE.cons_mass.included := FALSE;*)
+	(* HE1.cons_mass.included := FALSE; *)
+END default_self;
+METHOD moran_8_6;
+	(*
+		This is Example 8.6 from Moran and Shapiro, 'Fundamentals of
+		Engineering Thermodynamics', 4th Ed.
+	*)
+	(* component efficiencies *)
+	FIX TU1.inlet.p; TU1.inlet.p := 8.0 {MPa};
+	FIX TU1.inlet.T; TU1.inlet.T := 480 {K} + 273.15 {K};
+	FIX TU1.outlet.p; TU1.outlet.p := 2 {MPa};
+	FIX TU2.outlet.p; TU2.outlet.p := 0.7 {MPa};
+	FIX TU3.inlet.T; TU3.inlet.T := 440 {K} + 273.15 {K};
+	FIX TU3.outlet.p; TU3.outlet.p := 0.3 {MPa};
+	FIX TU4.outlet.p; TU4.outlet.p := 0.008 {MPa};
+	FIX HE2.outlet.T; HE2.outlet.T := 205 {K} + 273.15 {K};
+
+	FIX Wdot; Wdot := 100 {MW};
+	FIX BO1.eta;  BO1.eta := 1.0;
+	FIX BO2.eta;  BO2.eta := 1.0;
+	FIX TU1.eta; TU1.eta := 1.0;
+	FIX TU2.eta; TU2.eta := 1.0;
+	FIX TU3.eta; TU3.eta := 1.0;
+	FIX TU4.eta; TU4.eta := 1.0;
+	FIX PU1.eta; PU1.eta := 1.0;
+	FIX PU2.eta; PU2.eta := 1.0;
+
+	FIX TR.inlet.x; TR.inlet.x := 0.00001;
+	FIX CO.outlet.x; CO.outlet.x := 0.00001;
+	FIX HE1.outlet.x; HE1.outlet.x := 0.00001;
+END moran_8_6;
+METHOD on_load;
+	RUN ClearAll;
+	RUN default_self;
+	RUN moran_8_6;
+END on_load;
+END rankine_reheat_regen;
+
+
 
 MODEL rankine_compare;
 	simple IS_A rankine;
