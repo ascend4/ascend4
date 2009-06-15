@@ -1,0 +1,137 @@
+REQUIRE "atoms.a4l";
+
+(* 
+This model was contributed by Ioan-Alexandru Lazar, 2009. It still needs
+checking and validation by the ASCEND team.
+
+This model implements a simple PV module, as described by Duffie & Beckman,
+Chapter 23.2.	
+
+The atoms are defined in this file for brevity; conductance should really go
+into atoms.a4l. ctc and vtc are application-specific and should probably stay
+here, or go into a separate file required only by PV-related application.
+
+The model is purely demonstrative. It does not take into account the dependence
+between the maximum power point efficiency and temperature. It is also left
+unparameterized, in the idea that it is rather unlikely for several instances
+of this model to be used in another model.
+*)
+ATOM ctc REFINES solver_var
+	(* Temperature coefficient for short-circuit current *)
+	DIMENSION E/TMP
+	DEFAULT 0.0{A/K};
+	lower_bound := -0.5{A/K};
+	upper_bound := 0.5{A/K};
+	nominal := 0.0{A/K};
+	END ctc;
+	
+ATOM vtc REFINES solver_var
+	(* Temperature coefficient for open-circuit voltage *)
+	DIMENSION M*L^2/(E*T^3*TMP)
+	DEFAULT 0.0{volt/K};
+	lower_bound := -0.5{volt/K};
+	upper_bound := 0.5{volt/K};
+	nominal := 0.0{volt/K};
+	END vtc;
+
+ATOM conductance REFINES solver_var
+	(* Conductance defined as ohm^-1 or Siemens *)
+	DIMENSION E^2*T^3/(M*L^2)
+	DEFAULT 10.0{ohm^-1};
+	lower_bound := -1e50{ohm^-1};
+	upper_bound := 1e50{ohm^-1};
+    nominal := 10.0{ohm^-1};
+    END conductance;
+
+MODEL simple_pv_module;
+	NOTES
+		'reference conditions' SELF {Reference conditions are defined by reference temperature and irradiance, open-circuit voltage and short-circuit current. Under these conditions, we can obtain a reference load current (equal to the short-circuit current), a reference inverse current through the diode and the value of a under these conditions. The open-circuit voltage and short-circuit current are usually provided by the producer or measured directly. Standard irradiance is equal to the solar constant and roughly taken as 1,000 throughout this model. The reference temperature is usually supplied by the producer as well; if not, it is measured directly when the other reference values are taken.}
+
+	END NOTES;
+	surf	IS_A 	area; 		 (* Surface of the PV array *)
+	Il 	IS_A 	current; 	 (* Load current *)
+	I_lref 	IS_A 	current; 	 (* Reference load current *)
+	Isc 	IS_A 	current; 	 (* Short-circuit current *)
+	Imp 	IS_A 	current; 	 (* Supplied current *)
+	Io 	IS_A 	current; 	 (* Inverse current through diode *)
+	I_oref 	IS_A 	current; 	 (* Reference inverse current through diode *)
+	Voc 	IS_A 	voltage; 	 (* Open-circuit voltage *)
+	Vmp 	IS_A 	voltage; 	 (* Supplied voltage *)
+	Rs 	IS_A 	resistance;  	 (* Shunt resistance *)
+	Tc 	IS_A 	temperature; 	 (* Cell's temperature *)
+	T_cref 	IS_A 	temperature; 	 (* Reference cell temperature *)
+	G_T 	IS_A 	irradiance;  	 (* Irradiance *)
+	G_Tref 	IS_A 	irradiance;  	 (* Reference irradiance *)
+	u_Isc 	IS_A 	ctc;		 (* Temperature coefficient of short-circuit current *)
+	u_Voc 	IS_A 	vtc;		 (* Temperature coefficient of open-circuit voltage *)
+	P 	IS_A 	energy_rate; 	 (* Cell's power *)
+	eps 	IS_A 	energy; 	 (* Bandgap energy *)
+	Ns 	IS_A 	solver_var;  	 (* Number of cells in series *)
+	a 	IS_A 	solver_var;  	 (* A curve-fitting parameter *)
+	a_ref 	IS_A 	solver_var;  	 (* Reference curve-fitting parameter *)
+	eta 	IS_A 	factor;		 (* Cell's efficiency *)
+	
+	(* 
+	Equations are taken from Townsend (1989) as cited by Duffie & Beckman.
+	These relations ought to work for any resistive loads. Inductive loads behave differently and should be dealt with in another model.
+	*)
+	ShortCircuit:       I_lref = Isc;
+	OpenCircuit:        I_oref = Isc * exp(-Voc/a_ref);
+	Power:              P = Vmp * Imp;
+	ShuntResistance:    Rs = (a * lnm(1-(Imp/Il)) - Vmp + Voc)/Imp;
+	Shape:              a/a_ref = Tc/T_cref;
+	LoadCurrent:        Il = (G_T/G_Tref) * (I_lref + u_Isc*(Tc - T_cref));
+	ReverseDiodeCurrent:Io/I_oref = ((Tc/T_cref)^3) * exp(((eps/1{eV})*Ns/a_ref)*(1-(T_cref/Tc)));
+	ReferenceShape:     a_ref = ((u_Voc * T_cref) - Voc + ((eps/1{eV}) * Ns))/((u_Isc * T_cref/I_lref)-3);
+	Efficiency:         eta = P/(surf*G_T);
+	
+METHODS
+	METHOD on_load;
+		RUN default_self;
+		RUN specify;
+		RUN values;
+	END on_load;
+
+	METHOD specify;
+		FIX Ns;
+		FIX Isc;
+		FIX Voc;
+		FIX Imp;
+		FIX Vmp;
+		FIX u_Isc;
+		FIX u_Voc;
+		FIX eps;
+		FIX Tc;
+		FIX T_cref;
+		FIX G_T;
+		FIX G_Tref;
+		FIX surf;
+	END specify;
+
+	METHOD values;
+		(* Values for Duffie & Beckman, ex. 23.2.1 *)
+		Ns := 36;
+		Isc := 2.9 {A};
+		Voc := 20 {V};
+		Imp := 2.67 {A};
+		Vmp := 16.5 {V};
+		u_Isc := 1.325e-3 {A/K};
+		u_Voc := -0.0775 {V/K};
+		Tc := 340.2 {K};
+		T_cref := 298 {K};
+		eps := 1.12{eV};
+		G_T := 1000 {W/m^2};
+		G_Tref := 1000 {W/m^2};
+		surf := 0.427 {m^2};
+	END values;
+	
+	METHOD default_self;
+		Ns	:= 36;
+		eps 	:= 1.12 {eV}; 	 (* Default for Si-based panes *)
+		T_cref  := 298 {K};
+		Tc	:= 258 {K};
+		G_T	:= 1000	{W/m^2};
+		G_Tref	:= 1000	{W/m^2}; (* Typical irradiance for reference *)
+	END default_self;			
+END simple_pv_module;
+
