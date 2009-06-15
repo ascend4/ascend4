@@ -830,9 +830,16 @@ MODEL rankine_reheat_regen;
 	phi1 ALIASES BL1.phi;
 	phi2 ALIASES BL2.phi;
 	
-	Wdot_t, Wdot IS_A energy_rate;
-	Wdot = Wdot_t - PU1.Wdot - PU2.Wdot;
+	Wdot_t, Wdot_p, Wdot IS_A energy_rate;
+	Wdot = Wdot_t - Wdot_p;
 	Wdot_t = TU1.Wdot + TU2.Wdot + TU3.Wdot + TU4.Wdot;
+	Wdot_p = PU1.Wdot + PU2.Wdot;
+
+	Qdot_fuel IS_A energy_rate;
+	Qdot_fuel = BO1.Qdot_fuel + BO2.Qdot_fuel;
+
+	eta IS_A fraction;
+	eta_eq:eta * Qdot_fuel = Wdot;
 
 (*	
 	Qdot_net IS_A energy_rate;

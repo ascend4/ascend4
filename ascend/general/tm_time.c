@@ -38,12 +38,10 @@ double tm_cpu_time(void)
 {
    static clock_t ref;
    static double dref;
-   static double dcps;
    clock_t now;
    double dnow;
 
    if( f_first ) {
-      dcps = (double) CLOCKS_PER_SEC;
       ref = clock();
       dref = (double) ref;
       f_first = FALSE;
@@ -51,7 +49,7 @@ double tm_cpu_time(void)
    now = clock();
    dnow = (double) now;
 
-   return( (dnow - dref)/dcps );
+   return((dnow - dref)/CLOCKS_PER_SEC);
 }
 
 double tm_reset_cpu_time(void)
