@@ -230,7 +230,7 @@ class DiagnoseWindow:
 			self.zoom = MAX_ZOOM_RATIO
 
 		if self.zoom * self.nc > MAX_ZOOM_SIZE or self.zoom * self.nr > MAX_ZOOM_SIZE:
-			self.browser.reporter.reportNode("image is too big, reducing to MAX_ZOOM_SIZE = %f" % MAX_ZOOM_SIZE);
+			self.browser.reporter.reportNote("image is too big, reducing to MAX_ZOOM_SIZE = %f" % MAX_ZOOM_SIZE);
 			self.zoom = MAX_ZOOM_SIZE / max(self.nc,self.nr)
 
 		#self.browser.reporter.reportNote("Diagnose window: matrix zoom = %f" % self.zoom)
