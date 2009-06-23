@@ -1,14 +1,14 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--*- mode: xml -*-->
+<?xml version="1.0"?>
 <glade-interface>
+  <!-- interface-requires gtk+ 2.16 -->
+  <!-- interface-naming-policy toplevel-contextual -->
   <widget class="GtkWindow" id="browserwin">
     <property name="visible">True</property>
     <property name="title" translatable="yes">ASCEND PyGTK</property>
     <property name="default_width">600</property>
     <property name="default_height">800</property>
-    <signal name="check_resize" handler="on_browserwin_check_resize"/>
     <signal name="focus" handler="on_browserwin_focus"/>
+    <signal name="check_resize" handler="on_browserwin_check_resize"/>
     <child>
       <widget class="GtkVBox" id="vbox5">
         <property name="visible">True</property>
@@ -24,8 +24,8 @@
                   <widget class="GtkMenu" id="menuitem8_menu">
                     <child>
                       <widget class="GtkImageMenuItem" id="open2">
-                        <property name="visible">True</property>
                         <property name="label">gtk-open</property>
+                        <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <signal name="activate" handler="open_click"/>
@@ -33,18 +33,12 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="reload">
+                        <property name="label">_Reload</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Reload</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="reload_click"/>
-                        <accelerator key="F5" modifiers="GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image924">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-refresh</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
+                        <accelerator key="F5" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -54,8 +48,8 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="quit">
-                        <property name="visible">True</property>
                         <property name="label">gtk-quit</property>
+                        <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <signal name="activate" handler="on_file_quit_click"/>
@@ -74,18 +68,12 @@
                   <widget class="GtkMenu" id="editmenu_menu">
                     <child>
                       <widget class="GtkImageMenuItem" id="copy_observer_matrix">
+                        <property name="label">_Copy Observer Matrix</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Copy Observer Matrix</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_copy_observer_matrix_click"/>
-                        <accelerator key="C" modifiers="GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image925">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-copy</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
+                        <accelerator key="C" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -95,32 +83,22 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="fix_variable">
+                        <property name="label">_Fix Variable</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Fix Variable</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_fix_variable_activate"/>
-                        <accelerator key="F" modifiers="GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image926">
-                            <property name="visible">True</property>
-                            <property name="pixbuf">locked.png</property>
-                          </widget>
-                        </child>
+                        <accelerator key="F" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="free_variable">
+                        <property name="label">F_ree Variable</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">F_ree Variable</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_free_variable_activate"/>
-                        <accelerator key="R" modifiers="GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image927">
-                            <property name="visible">True</property>
-                            <property name="pixbuf">unlocked.png</property>
-                          </widget>
-                        </child>
+                        <accelerator key="R" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -130,17 +108,12 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="propsmenuitem">
+                        <property name="label">_Properties</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Properties</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="props_activate"/>
-                        <accelerator key="F4" modifiers="" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image928">
-                            <property name="visible">True</property>
-                            <property name="pixbuf">properties.png</property>
-                          </widget>
-                        </child>
+                        <accelerator key="F4" signal="activate"/>
                       </widget>
                     </child>
                   </widget>
@@ -158,49 +131,34 @@
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <child>
                       <widget class="GtkImageMenuItem" id="sparsity">
+                        <property name="label">_Incidence matrix...</property>
                         <property name="visible">True</property>
                         <property name="tooltip" translatable="yes">View the incidence matrix from the solver</property>
-                        <property name="label" translatable="yes">_Incidence matrix...</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_tools_sparsity_click"/>
-                        <accelerator key="I" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image934">
-                            <property name="visible">True</property>
-                            <property name="pixbuf">incidence.png</property>
-                          </widget>
-                        </child>
+                        <accelerator key="I" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="incidencegraph">
+                        <property name="label">Incidence _graph...</property>
                         <property name="visible">True</property>
                         <property name="tooltip" translatable="yes">View incidence graph for the system</property>
-                        <property name="label" translatable="yes">Incidence _graph...</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_tools_incidencegraph_click"/>
-                        <accelerator key="G" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="menu-item-image22">
-                            <property name="visible">True</property>
-                            <property name="pixbuf">graphviz.png</property>
-                          </widget>
-                        </child>
+                        <accelerator key="G" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="diagnose_blocks">
+                        <property name="label">_Diagnose blocks...</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Diagnose blocks...</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_diagnose_blocks_click"/>
-                        <accelerator key="D" modifiers="GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image935">
-                            <property name="visible">True</property>
-                            <property name="pixbuf">diagnose.png</property>
-                          </widget>
-                        </child>
+                        <accelerator key="D" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -222,7 +180,7 @@
                         <property name="label" translatable="yes">Show fi_xable vars</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_show_fixable_variables_activate"/>
-                        <accelerator key="F" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
+                        <accelerator key="F" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -231,7 +189,7 @@
                         <property name="label" translatable="yes">Show f_reeable vars</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_show_freeable_variables_activate"/>
-                        <accelerator key="R" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
+                        <accelerator key="R" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -240,7 +198,7 @@
                         <property name="label" translatable="yes">Show variables near _bounds</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_show_variables_near_bounds_activate"/>
-                        <accelerator key="B" modifiers="GDK_CONTROL_MASK" signal="activate"/>
+                        <accelerator key="B" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -257,14 +215,12 @@
                         <property name="label" translatable="yes">Show _external functions</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_show_external_functions_activate"/>
-                        <accelerator key="E" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
+                        <accelerator key="E" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkSeparatorMenuItem" id="separator999">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">menuitem1</property>
-                        <property name="use_underline">True</property>
                       </widget>
                     </child>
                     <child>
@@ -282,18 +238,12 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="repaint_tree">
+                        <property name="label">Re-_paint</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Re-_paint</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_tools_repaint_tree_activate"/>
-                        <accelerator key="F5" modifiers="" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image933">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-refresh</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
+                        <accelerator key="F5" signal="activate"/>
                       </widget>
                     </child>
                   </widget>
@@ -309,49 +259,32 @@
                   <widget class="GtkMenu" id="tools_menu">
                     <child>
                       <widget class="GtkImageMenuItem" id="check1">
+                        <property name="label">C_heck</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">C_heck</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="check_click"/>
-                        <accelerator key="F7" modifiers="" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image929">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-spell-check</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
+                        <accelerator key="F7" signal="activate"/>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="solve1">
+                        <property name="label">Sol_ve</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Sol_ve</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="solve_click"/>
-                        <accelerator key="F9" modifiers="" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image930">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-media-forward</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
+                        <accelerator key="F9" signal="activate"/>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="integrate1">
+                        <property name="label">Integrate...</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Integrate...</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="integrate_click"/>
-                        <accelerator key="F9" modifiers="GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image931">
-                            <property name="visible">True</property>
-                            <property name="pixbuf">integrator-sm.png</property>
-                          </widget>
-                        </child>
+                        <accelerator key="F9" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -361,34 +294,23 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="units">
+                        <property name="label">_Units...</property>
                         <property name="visible">True</property>
                         <property name="tooltip" translatable="yes">Select preferred units of measurement for different atom types</property>
-                        <property name="label" translatable="yes">_Units...</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_units_click"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="menu-item-image24">
-                            <property name="visible">True</property>
-                            <property name="pixbuf">ruler.png</property>
-                          </widget>
-                        </child>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="console1">
+                        <property name="label">_Console</property>
                         <property name="visible">True</property>
                         <property name="tooltip" translatable="yes">Program ASCEND with Python</property>
-                        <property name="label" translatable="yes">_Console</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="console_click"/>
-                        <accelerator key="F12" modifiers="" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image932">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-connect</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
+                        <accelerator key="F12" signal="activate"/>
                       </widget>
                     </child>
                     <child>
@@ -398,34 +320,22 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="add_observer">
+                        <property name="label">Add _Observer</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Add _Observer</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_add_observer_click"/>
-                        <accelerator key="O" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image936">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-add</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
+                        <accelerator key="O" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="keep_observed">
+                        <property name="label">_Keep Observed Values</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Keep Observed Values</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_keep_observed_click"/>
-                        <accelerator key="K" modifiers="GDK_CONTROL_MASK" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image937">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-indent</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
+                        <accelerator key="K" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -441,7 +351,7 @@
                         <property name="use_underline">True</property>
                         <property name="active">True</property>
                         <signal name="activate" handler="on_use_relation_sharing_toggle"/>
-                        <accelerator key="S" modifiers="GDK_CONTROL_MASK" signal="activate"/>
+                        <accelerator key="S" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -451,7 +361,7 @@
                         <property name="label" translatable="yes">Use binary compilation</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_use_binary_compilation_toggle"/>
-                        <accelerator key="B" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
+                        <accelerator key="B" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -469,18 +379,12 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="preferences">
+                        <property name="label">Solver _Parameters...</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Solver _Parameters...</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="preferences_click"/>
-                        <accelerator key="F11" modifiers="" signal="activate"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image938">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-preferences</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
+                        <accelerator key="F11" signal="activate"/>
                       </widget>
                     </child>
                     <child>
@@ -491,7 +395,7 @@
                         <property name="use_underline">True</property>
                         <property name="active">True</property>
                         <signal name="activate" handler="on_tools_auto_toggle"/>
-                        <accelerator key="A" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK" signal="activate"/>
+                        <accelerator key="A" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
                     <child>
@@ -543,32 +447,20 @@
                   <widget class="GtkMenu" id="help_menu">
                     <child>
                       <widget class="GtkImageMenuItem" id="contents">
+                        <property name="label">_Contents</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Contents</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_help_contents_click"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image939">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-help</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="check_for_updates">
+                        <property name="label">Check for _Updates</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Check for _Updates</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_help_check_for_updates_click"/>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image940">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-connect</property>
-                            <property name="icon_size">1</property>
-                          </widget>
-                        </child>
                       </widget>
                     </child>
                     <child>
@@ -581,8 +473,8 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="about">
-                        <property name="visible">True</property>
                         <property name="label">gtk-about</property>
+                        <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <signal name="activate" handler="on_help_about_click"/>
@@ -596,12 +488,13 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
           <widget class="GtkToolbar" id="toolbar3">
             <property name="visible">True</property>
-            <property name="toolbar_style">GTK_TOOLBAR_BOTH</property>
+            <property name="toolbar_style">both</property>
             <child>
               <widget class="GtkToolButton" id="openbutton">
                 <property name="visible">True</property>
@@ -610,6 +503,7 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -622,6 +516,7 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -630,7 +525,6 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -643,6 +537,7 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -655,6 +550,7 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -667,6 +563,7 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -675,7 +572,6 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -689,6 +585,7 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -697,7 +594,6 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -707,7 +603,7 @@
                   <widget class="GtkFrame" id="frame1">
                     <property name="visible">True</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">GTK_SHADOW_NONE</property>
+                    <property name="shadow_type">none</property>
                     <child>
                       <widget class="GtkAlignment" id="alignment1">
                         <property name="visible">True</property>
@@ -718,14 +614,17 @@
                               <widget class="GtkComboBox" id="methodsel">
                                 <property name="visible">True</property>
                               </widget>
+                              <packing>
+                                <property name="position">0</property>
+                              </packing>
                             </child>
                             <child>
                               <widget class="GtkButton" id="methodrunbutton">
+                                <property name="label" translatable="yes">_Run</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="label" translatable="yes">_Run</property>
+                                <property name="receives_default">False</property>
                                 <property name="use_underline">True</property>
-                                <property name="response_id">0</property>
                               </widget>
                               <packing>
                                 <property name="expand">False</property>
@@ -754,7 +653,6 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">False</property>
               </packing>
             </child>
           </widget>
@@ -775,8 +673,8 @@
                 <property name="height_request">400</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
                 <child>
                   <widget class="GtkViewport" id="viewport2">
                     <property name="visible">True</property>
@@ -789,8 +687,8 @@
                           <widget class="GtkScrolledWindow" id="scrolledwindow12">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                            <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                            <property name="hscrollbar_policy">automatic</property>
+                            <property name="vscrollbar_policy">automatic</property>
                             <child>
                               <widget class="GtkTreeView" id="moduleview">
                                 <property name="visible">True</property>
@@ -807,16 +705,16 @@
                             <property name="mnemonic_widget">moduleview</property>
                           </widget>
                           <packing>
-                            <property name="type">tab</property>
                             <property name="tab_fill">False</property>
+                            <property name="type">tab</property>
                           </packing>
                         </child>
                         <child>
                           <widget class="GtkScrolledWindow" id="scrolledwindow13">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                            <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                            <property name="hscrollbar_policy">automatic</property>
+                            <property name="vscrollbar_policy">automatic</property>
                             <child>
                               <widget class="GtkTreeView" id="browserview">
                                 <property name="visible">True</property>
@@ -836,9 +734,9 @@
                             <property name="label" translatable="yes">Simulation	</property>
                           </widget>
                           <packing>
-                            <property name="type">tab</property>
                             <property name="position">1</property>
                             <property name="tab_fill">False</property>
+                            <property name="type">tab</property>
                           </packing>
                         </child>
                       </widget>
@@ -859,9 +757,9 @@
                   <widget class="GtkScrolledWindow" id="scrolledwindow10">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                    <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                    <property name="shadow_type">GTK_SHADOW_IN</property>
+                    <property name="hscrollbar_policy">automatic</property>
+                    <property name="vscrollbar_policy">automatic</property>
+                    <property name="shadow_type">in</property>
                     <child>
                       <widget class="GtkTreeView" id="errorview">
                         <property name="height_request">202</property>
@@ -877,16 +775,16 @@
                     <property name="label" translatable="yes">Errors / Warnings</property>
                   </widget>
                   <packing>
-                    <property name="type">tab</property>
                     <property name="tab_fill">False</property>
+                    <property name="type">tab</property>
                   </packing>
                 </child>
                 <child>
                   <widget class="GtkScrolledWindow" id="consolescroll">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                    <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                    <property name="hscrollbar_policy">automatic</property>
+                    <property name="vscrollbar_policy">automatic</property>
                     <child>
                       <placeholder/>
                     </child>
@@ -906,6 +804,7 @@
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">False</property>
+                        <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
@@ -913,7 +812,7 @@
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="stock">gtk-fullscreen</property>
-                        <property name="icon_size">1</property>
+                        <property name="icon-size">1</property>
                       </widget>
                       <packing>
                         <property name="expand">False</property>
@@ -923,9 +822,9 @@
                     </child>
                   </widget>
                   <packing>
-                    <property name="type">tab</property>
                     <property name="position">1</property>
                     <property name="tab_fill">False</property>
+                    <property name="type">tab</property>
                   </packing>
                 </child>
               </widget>
@@ -955,36 +854,24 @@
   <widget class="GtkMenu" id="browsercontext">
     <child>
       <widget class="GtkImageMenuItem" id="fix1">
+        <property name="label">_Fix</property>
         <property name="visible">True</property>
         <property name="tooltip" translatable="yes">Make this a 'fixed' variable\n in the simulation</property>
-        <property name="label" translatable="yes">_Fix</property>
         <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
         <signal name="activate" handler="on_fix1_activate"/>
-        <accelerator key="f" modifiers="GDK_CONTROL_MASK" signal="activate"/>
-        <child internal-child="image">
-          <widget class="GtkImage" id="image11">
-            <property name="visible">True</property>
-            <property name="stock">gtk-yes</property>
-            <property name="icon_size">1</property>
-          </widget>
-        </child>
+        <accelerator key="f" signal="activate" modifiers="GDK_CONTROL_MASK"/>
       </widget>
     </child>
     <child>
       <widget class="GtkImageMenuItem" id="free1">
+        <property name="label">F_ree</property>
         <property name="visible">True</property>
         <property name="tooltip" translatable="yes">Allow this variable to be varied\nwhen solving the system</property>
-        <property name="label" translatable="yes">F_ree</property>
         <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
         <signal name="activate" handler="on_free1_activate"/>
-        <accelerator key="r" modifiers="GDK_CONTROL_MASK" signal="activate"/>
-        <child internal-child="image">
-          <widget class="GtkImage" id="image12">
-            <property name="visible">True</property>
-            <property name="stock">gtk-no</property>
-            <property name="icon_size">1</property>
-          </widget>
-        </child>
+        <accelerator key="r" signal="activate" modifiers="GDK_CONTROL_MASK"/>
       </widget>
     </child>
     <child>
@@ -998,7 +885,7 @@
         <property name="label" translatable="yes">_Plot</property>
         <property name="use_underline">True</property>
         <signal name="activate" handler="on_plot1_activate"/>
-        <accelerator key="p" modifiers="GDK_CONTROL_MASK" signal="activate"/>
+        <accelerator key="p" signal="activate" modifiers="GDK_CONTROL_MASK"/>
       </widget>
     </child>
   </widget>
@@ -1025,6 +912,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
@@ -1042,15 +930,16 @@
           <packing>
             <property name="expand">False</property>
             <property name="padding">14</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
           <widget class="GtkScrolledWindow" id="scrolledwindow14">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-            <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-            <property name="shadow_type">GTK_SHADOW_IN</property>
+            <property name="hscrollbar_policy">automatic</property>
+            <property name="vscrollbar_policy">automatic</property>
+            <property name="shadow_type">in</property>
             <child>
               <widget class="GtkViewport" id="viewport3">
                 <property name="visible">True</property>
@@ -1058,10 +947,10 @@
                   <widget class="GtkTreeView" id="paramsview">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <signal name="select_cursor_row" handler="on_paramsview_select_cursor_row"/>
                     <signal name="button_press_event" handler="on_paramsview_button_press_event"/>
-                    <signal name="row_activated" handler="on_paramsview_row_activated"/>
+                    <signal name="select_cursor_row" handler="on_paramsview_select_cursor_row"/>
                     <signal name="cursor_changed" handler="on_paramsview_cursor_changed"/>
+                    <signal name="row_activated" handler="on_paramsview_row_activated"/>
                   </widget>
                 </child>
               </widget>
@@ -1085,7 +974,7 @@
           <widget class="GtkFrame" id="frame2">
             <property name="visible">True</property>
             <property name="label_xalign">0</property>
-            <property name="shadow_type">GTK_SHADOW_NONE</property>
+            <property name="shadow_type">none</property>
             <child>
               <widget class="GtkAlignment" id="alignment2">
                 <property name="visible">True</property>
@@ -1126,33 +1015,34 @@
             <property name="homogeneous">True</property>
             <child>
               <widget class="GtkButton" id="paramsapply">
+                <property name="label">gtk-apply</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label">gtk-apply</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">0</property>
                 <signal name="clicked" handler="on_paramsapply_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="pack_type">GTK_PACK_END</property>
+                <property name="pack_type">end</property>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
               <widget class="GtkButton" id="paramscancel">
+                <property name="label">gtk-cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label">gtk-cancel</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">0</property>
                 <signal name="clicked" handler="on_paramscancel_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="pack_type">GTK_PACK_END</property>
+                <property name="pack_type">end</property>
+                <property name="position">0</property>
               </packing>
             </child>
           </widget>
@@ -1168,7 +1058,7 @@
   <widget class="GtkDialog" id="boundsdialog">
     <property name="visible">True</property>
     <property name="title" translatable="yes">Out of bounds</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>
@@ -1191,21 +1081,28 @@ upper and lower bounds displayed.</property>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area1">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkButton" id="okbutton1">
+                <property name="label">gtk-ok</property>
+                <property name="response_id">-5</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-ok</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-5</property>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -1214,32 +1111,20 @@ upper and lower bounds displayed.</property>
   <widget class="GtkMenu" id="menu8">
     <child>
       <widget class="GtkImageMenuItem" id="copy2">
+        <property name="label">Copy</property>
         <property name="visible">True</property>
-        <property name="label" translatable="yes">Copy</property>
         <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
         <signal name="activate" handler="on_copy2_activate"/>
-        <child internal-child="image">
-          <widget class="GtkImage" id="image6">
-            <property name="visible">True</property>
-            <property name="stock">gtk-copy</property>
-            <property name="icon_size">1</property>
-          </widget>
-        </child>
       </widget>
     </child>
     <child>
       <widget class="GtkImageMenuItem" id="clear_all1">
+        <property name="label">Clear all</property>
         <property name="visible">True</property>
-        <property name="label" translatable="yes">Clear all</property>
         <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
         <signal name="activate" handler="on_clear_all1_activate"/>
-        <child internal-child="image">
-          <widget class="GtkImage" id="image7">
-            <property name="visible">True</property>
-            <property name="stock">gtk-clear</property>
-            <property name="icon_size">1</property>
-          </widget>
-        </child>
       </widget>
     </child>
   </widget>
@@ -1254,25 +1139,24 @@ upper and lower bounds displayed.</property>
         <child>
           <widget class="GtkToolbar" id="toolbar4">
             <property name="visible">True</property>
-            <property name="toolbar_style">GTK_TOOLBAR_BOTH</property>
+            <property name="toolbar_style">both</property>
             <child>
               <widget class="GtkToolItem" id="toolitem4">
                 <property name="visible">True</property>
                 <child>
                   <widget class="GtkButton" id="add">
+                    <property name="label">gtk-add</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
                     <property name="border_width">3</property>
-                    <property name="label">gtk-add</property>
                     <property name="use_stock">True</property>
-                    <property name="response_id">0</property>
                     <signal name="clicked" handler="on_add_clicked"/>
                   </widget>
                 </child>
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -1280,19 +1164,18 @@ upper and lower bounds displayed.</property>
                 <property name="visible">True</property>
                 <child>
                   <widget class="GtkButton" id="clear">
+                    <property name="label">gtk-clear</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
                     <property name="border_width">3</property>
-                    <property name="label">gtk-clear</property>
                     <property name="use_stock">True</property>
-                    <property name="response_id">0</property>
                     <signal name="clicked" handler="on_clear_clicked"/>
                   </widget>
                 </child>
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -1302,8 +1185,8 @@ upper and lower bounds displayed.</property>
                   <widget class="GtkButton" id="plot">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
                     <property name="border_width">3</property>
-                    <property name="response_id">0</property>
                     <signal name="clicked" handler="on_plot_clicked"/>
                     <child>
                       <widget class="GtkAlignment" id="alignment13">
@@ -1323,6 +1206,7 @@ upper and lower bounds displayed.</property>
                                 <property name="expand">False</property>
                                 <property name="fill">False</property>
                                 <property name="padding">2</property>
+                                <property name="position">0</property>
                               </packing>
                             </child>
                             <child>
@@ -1347,7 +1231,6 @@ upper and lower bounds displayed.</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -1363,7 +1246,6 @@ upper and lower bounds displayed.</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -1378,22 +1260,22 @@ upper and lower bounds displayed.</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">False</property>
               </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
           <widget class="GtkScrolledWindow" id="scrolledwindow15">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-            <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-            <property name="shadow_type">GTK_SHADOW_IN</property>
+            <property name="hscrollbar_policy">automatic</property>
+            <property name="vscrollbar_policy">automatic</property>
+            <property name="shadow_type">in</property>
             <child>
               <widget class="GtkTreeView" id="observerview">
                 <property name="visible">True</property>
@@ -1411,13 +1293,13 @@ upper and lower bounds displayed.</property>
   <widget class="GtkDialog" id="varpropswin">
     <property name="visible">True</property>
     <property name="title" translatable="yes">Variable</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="window_position">center-on-parent</property>
     <property name="icon">properties.png</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <property name="skip_taskbar_hint">True</property>
     <signal name="close" handler="on_varpropswin_close"/>
-    <signal name="delete_event" handler="on_varpropswin_close"/>
     <signal name="response" handler="on_varpropswin_response"/>
+    <signal name="delete_event" handler="on_varpropswin_close"/>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox4">
         <property name="visible">True</property>
@@ -1494,6 +1376,7 @@ upper and lower bounds displayed.</property>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
                     <property name="padding">6</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
@@ -1504,25 +1387,26 @@ upper and lower bounds displayed.</property>
                         <property name="visible">True</property>
                         <child>
                           <widget class="GtkButton" id="cliquebutton">
+                            <property name="label" translatable="yes">Cl_ique...</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="label" translatable="yes">Cl_ique...</property>
+                            <property name="receives_default">False</property>
                             <property name="use_underline">True</property>
-                            <property name="response_id">0</property>
                             <signal name="clicked" handler="on_cliquebutton_clicked"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
                           <widget class="GtkButton" id="morepropsbutton">
+                            <property name="label" translatable="yes">_More properties...</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="label" translatable="yes">_More properties...</property>
+                            <property name="receives_default">False</property>
                             <property name="use_underline">True</property>
-                            <property name="response_id">0</property>
                             <signal name="clicked" handler="on_morepropsbutton_clicked"/>
                           </widget>
                           <packing>
@@ -1532,10 +1416,13 @@ upper and lower bounds displayed.</property>
                           </packing>
                         </child>
                       </widget>
+                      <packing>
+                        <property name="position">0</property>
+                      </packing>
                     </child>
                   </widget>
                   <packing>
-                    <property name="pack_type">GTK_PACK_END</property>
+                    <property name="pack_type">end</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
@@ -1599,25 +1486,26 @@ upper and lower bounds displayed.</property>
                 <property name="spacing">2</property>
                 <child>
                   <widget class="GtkRadioButton" id="fixed">
+                    <property name="label" translatable="yes">_Fixed</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">_Fixed</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="draw_indicator">True</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
                   <widget class="GtkRadioButton" id="free">
+                    <property name="label" translatable="yes">F_ree</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">F_ree</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">fixed</property>
                   </widget>
@@ -1655,7 +1543,6 @@ upper and lower bounds displayed.</property>
               <widget class="GtkEntry" id="nominalentry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="invisible_char">*</property>
                 <signal name="key_press_event" handler="on_entry_key_press_event"/>
               </widget>
               <packing>
@@ -1670,7 +1557,6 @@ upper and lower bounds displayed.</property>
               <widget class="GtkEntry" id="upperentry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="invisible_char">*</property>
                 <signal name="key_press_event" handler="on_entry_key_press_event"/>
               </widget>
               <packing>
@@ -1685,7 +1571,6 @@ upper and lower bounds displayed.</property>
               <widget class="GtkEntry" id="valueentry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="invisible_char">*</property>
                 <signal name="key_press_event" handler="on_entry_key_press_event"/>
               </widget>
               <packing>
@@ -1712,7 +1597,6 @@ upper and lower bounds displayed.</property>
               <widget class="GtkEntry" id="lowerentry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="invisible_char">*</property>
                 <signal name="key_press_event" handler="on_entry_key_press_event"/>
               </widget>
               <packing>
@@ -1733,6 +1617,7 @@ upper and lower bounds displayed.</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
@@ -1801,49 +1686,62 @@ upper and lower bounds displayed.</property>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area4">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkButton" id="cancelbutton">
+                <property name="label">gtk-cancel</property>
+                <property name="response_id">-6</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-cancel</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-6</property>
                 <signal name="clicked" handler="on_cancelbutton_clicked"/>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
               <widget class="GtkButton" id="applybutton">
+                <property name="label">gtk-apply</property>
+                <property name="response_id">-10</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-apply</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-10</property>
                 <signal name="clicked" handler="on_okbutton_clicked"/>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
               <widget class="GtkButton" id="okbutton">
+                <property name="label">gtk-ok</property>
+                <property name="response_id">-5</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-ok</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-5</property>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">2</property>
               </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -1853,7 +1751,7 @@ upper and lower bounds displayed.</property>
     <property name="visible">True</property>
     <property name="title" translatable="yes">Relation</property>
     <property name="icon">properties.png</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox5">
         <property name="visible">True</property>
@@ -1905,7 +1803,6 @@ upper and lower bounds displayed.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="editable">False</property>
-                <property name="invisible_char">*</property>
                 <property name="text" translatable="yes">value (not editable)</property>
                 <signal name="key_press_event" handler="on_entry_key_press_event"/>
               </widget>
@@ -1935,16 +1832,16 @@ upper and lower bounds displayed.</property>
               <widget class="GtkScrolledWindow" id="scrolledwindow16">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                <property name="shadow_type">GTK_SHADOW_IN</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
+                <property name="shadow_type">in</property>
                 <child>
                   <widget class="GtkTextView" id="expr">
                     <property name="width_request">400</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="editable">False</property>
-                    <property name="wrap_mode">GTK_WRAP_WORD</property>
+                    <property name="wrap_mode">word</property>
                     <property name="cursor_visible">False</property>
                     <property name="text" translatable="yes">equation (not editable)</property>
                     <signal name="key_press_event" handler="on_entry_key_press_event"/>
@@ -1961,11 +1858,11 @@ upper and lower bounds displayed.</property>
             </child>
             <child>
               <widget class="GtkCheckButton" id="included">
+                <property name="label" translatable="yes">included</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label" translatable="yes">included</property>
+                <property name="receives_default">False</property>
                 <property name="use_underline">True</property>
-                <property name="response_id">0</property>
                 <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="on_included_toggled"/>
               </widget>
@@ -2004,11 +1901,11 @@ upper and lower bounds displayed.</property>
             </child>
             <child>
               <widget class="GtkButton" id="morepropsbutton1">
+                <property name="label" translatable="yes">_More properties...</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label" translatable="yes">_More properties...</property>
+                <property name="receives_default">False</property>
                 <property name="use_underline">True</property>
-                <property name="response_id">0</property>
                 <signal name="clicked" handler="on_morepropsbutton_clicked"/>
               </widget>
               <packing>
@@ -2030,6 +1927,7 @@ upper and lower bounds displayed.</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
@@ -2075,21 +1973,28 @@ upper and lower bounds displayed.</property>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area5">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkButton" id="closebutton3">
+                <property name="label">gtk-close</property>
+                <property name="response_id">-7</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-close</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -2099,9 +2004,9 @@ upper and lower bounds displayed.</property>
     <property name="height_request">0</property>
     <property name="visible">True</property>
     <property name="title" translatable="yes">Block Diagnosis</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="window_position">center-on-parent</property>
     <property name="destroy_with_parent">True</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <signal name="close" handler="on_diagnosewin_close"/>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox6">
@@ -2112,7 +2017,7 @@ upper and lower bounds displayed.</property>
             <child>
               <widget class="GtkToolbar" id="toolbar5">
                 <property name="visible">True</property>
-                <property name="toolbar_style">GTK_TOOLBAR_BOTH</property>
+                <property name="toolbar_style">both</property>
                 <child>
                   <widget class="GtkToolButton" id="prevbigbutton">
                     <property name="visible">True</property>
@@ -2123,6 +2028,7 @@ upper and lower bounds displayed.</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -2133,6 +2039,7 @@ upper and lower bounds displayed.</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -2143,6 +2050,7 @@ upper and lower bounds displayed.</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -2155,6 +2063,7 @@ upper and lower bounds displayed.</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -2173,6 +2082,7 @@ upper and lower bounds displayed.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
@@ -2180,7 +2090,6 @@ upper and lower bounds displayed.</property>
                             <property name="width_request">59</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">*</property>
                             <property name="text" translatable="yes">123</property>
                             <signal name="key_press_event" handler="on_blockentry_key_press_event"/>
                           </widget>
@@ -2194,7 +2103,6 @@ upper and lower bounds displayed.</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="homogeneous">False</property>
                   </packing>
                 </child>
                 <child>
@@ -2205,6 +2113,7 @@ upper and lower bounds displayed.</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -2215,6 +2124,7 @@ upper and lower bounds displayed.</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -2233,6 +2143,7 @@ upper and lower bounds displayed.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
@@ -2241,7 +2152,6 @@ upper and lower bounds displayed.</property>
                             <property name="visible">True</property>
                             <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">*</property>
                             <property name="text" translatable="yes">123</property>
                             <signal name="key_press_event" handler="on_blockentry_key_press_event"/>
                           </widget>
@@ -2255,13 +2165,13 @@ upper and lower bounds displayed.</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="homogeneous">False</property>
                   </packing>
                 </child>
               </widget>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
@@ -2272,19 +2182,19 @@ upper and lower bounds displayed.</property>
                   <widget class="GtkFrame" id="imageframe">
                     <property name="visible">True</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">GTK_SHADOW_IN</property>
+                    <property name="shadow_type">in</property>
                     <child>
                       <widget class="GtkScrolledWindow" id="imagescroll">
                         <property name="width_request">540</property>
                         <property name="height_request">540</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                        <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <property name="hscrollbar_policy">automatic</property>
+                        <property name="vscrollbar_policy">automatic</property>
                         <child>
                           <widget class="GtkViewport" id="imageview">
                             <property name="visible">True</property>
-                            <property name="shadow_type">GTK_SHADOW_NONE</property>
+                            <property name="shadow_type">none</property>
                             <child>
                               <widget class="GtkEventBox" id="imageevent">
                                 <property name="visible">True</property>
@@ -2330,7 +2240,7 @@ upper and lower bounds displayed.</property>
                       <widget class="GtkFrame" id="frame6">
                         <property name="visible">True</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">GTK_SHADOW_IN</property>
+                        <property name="shadow_type">in</property>
                         <child>
                           <widget class="GtkAlignment" id="alignment6">
                             <property name="visible">True</property>
@@ -2375,11 +2285,11 @@ upper and lower bounds displayed.</property>
                                       <widget class="GtkEntry" id="varname1">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
-                                        <property name="invisible_char">*</property>
                                       </widget>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2390,8 +2300,10 @@ upper and lower bounds displayed.</property>
                                             <property name="width_request">100</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="invisible_char">*</property>
                                           </widget>
+                                          <packing>
+                                            <property name="position">0</property>
+                                          </packing>
                                         </child>
                                       </widget>
                                       <packing>
@@ -2412,11 +2324,11 @@ upper and lower bounds displayed.</property>
                                       <widget class="GtkEntry" id="relname1">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
-                                        <property name="invisible_char">*</property>
                                       </widget>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2427,8 +2339,10 @@ upper and lower bounds displayed.</property>
                                             <property name="width_request">100</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="invisible_char">*</property>
                                           </widget>
+                                          <packing>
+                                            <property name="position">0</property>
+                                          </packing>
                                         </child>
                                         <child>
                                           <widget class="GtkLabel" id="label48">
@@ -2461,10 +2375,10 @@ upper and lower bounds displayed.</property>
                                   <widget class="GtkButton" id="varinfobutton">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="response_id">0</property>
+                                    <property name="receives_default">False</property>
                                     <signal name="clicked" handler="on_varinfobutton_clicked"/>
-                                    <accelerator key="v" modifiers="GDK_MOD1_MASK" signal="clicked"/>
-                                    <accelerator key="v" modifiers="GDK_CONTROL_MASK" signal="clicked"/>
+                                    <accelerator key="v" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
+                                    <accelerator key="v" signal="clicked" modifiers="GDK_MOD1_MASK"/>
                                     <child>
                                       <widget class="GtkImage" id="varinfoimg">
                                         <property name="visible">True</property>
@@ -2483,10 +2397,10 @@ upper and lower bounds displayed.</property>
                                   <widget class="GtkButton" id="relinfobutton">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="response_id">0</property>
+                                    <property name="receives_default">False</property>
                                     <signal name="clicked" handler="on_relinfobutton_clicked"/>
-                                    <accelerator key="r" modifiers="GDK_MOD1_MASK" signal="clicked"/>
-                                    <accelerator key="r" modifiers="GDK_CONTROL_MASK" signal="clicked"/>
+                                    <accelerator key="r" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
+                                    <accelerator key="r" signal="clicked" modifiers="GDK_MOD1_MASK"/>
                                     <child>
                                       <widget class="GtkImage" id="relinfoimg">
                                         <property name="visible">True</property>
@@ -2520,13 +2434,14 @@ upper and lower bounds displayed.</property>
                       </widget>
                       <packing>
                         <property name="expand">False</property>
+                        <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
                       <widget class="GtkFrame" id="frame4">
                         <property name="visible">True</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">GTK_SHADOW_IN</property>
+                        <property name="shadow_type">in</property>
                         <child>
                           <widget class="GtkAlignment" id="alignment4">
                             <property name="visible">True</property>
@@ -2538,9 +2453,9 @@ upper and lower bounds displayed.</property>
                                   <widget class="GtkScrolledWindow" id="scrolledwindow17">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                                    <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                                    <property name="shadow_type">GTK_SHADOW_IN</property>
+                                    <property name="hscrollbar_policy">automatic</property>
+                                    <property name="vscrollbar_policy">automatic</property>
+                                    <property name="shadow_type">in</property>
                                     <child>
                                       <widget class="GtkTextView" id="varview">
                                         <property name="visible">True</property>
@@ -2548,11 +2463,14 @@ upper and lower bounds displayed.</property>
                                       </widget>
                                     </child>
                                   </widget>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
                                 </child>
                                 <child>
                                   <widget class="GtkToolbar" id="toolbar7">
                                     <property name="visible">True</property>
-                                    <property name="toolbar_style">GTK_TOOLBAR_BOTH</property>
+                                    <property name="toolbar_style">both</property>
                                     <child>
                                       <widget class="GtkToolItem" id="toolitem20">
                                         <property name="visible">True</property>
@@ -2565,7 +2483,6 @@ upper and lower bounds displayed.</property>
                                       </widget>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="homogeneous">False</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2573,11 +2490,11 @@ upper and lower bounds displayed.</property>
                                         <property name="visible">True</property>
                                         <child>
                                           <widget class="GtkCheckButton" id="varcollapsed">
+                                            <property name="label" translatable="yes">collapsed</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="label" translatable="yes">collapsed</property>
+                                            <property name="receives_default">False</property>
                                             <property name="use_underline">True</property>
-                                            <property name="response_id">0</property>
                                             <property name="draw_indicator">True</property>
                                             <signal name="toggled" handler="on_varcollapsed_toggled"/>
                                           </widget>
@@ -2585,7 +2502,6 @@ upper and lower bounds displayed.</property>
                                       </widget>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="homogeneous">False</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2593,18 +2509,17 @@ upper and lower bounds displayed.</property>
                                         <property name="visible">True</property>
                                         <child>
                                           <widget class="GtkCheckButton" id="varvalues">
+                                            <property name="label" translatable="yes">values</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="label" translatable="yes">values</property>
+                                            <property name="receives_default">False</property>
                                             <property name="use_underline">True</property>
-                                            <property name="response_id">0</property>
                                             <property name="draw_indicator">True</property>
                                           </widget>
                                         </child>
                                       </widget>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="homogeneous">False</property>
                                       </packing>
                                     </child>
                                   </widget>
@@ -2637,7 +2552,7 @@ upper and lower bounds displayed.</property>
                       <widget class="GtkFrame" id="frame5">
                         <property name="visible">True</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">GTK_SHADOW_IN</property>
+                        <property name="shadow_type">in</property>
                         <child>
                           <widget class="GtkAlignment" id="alignment5">
                             <property name="visible">True</property>
@@ -2649,9 +2564,9 @@ upper and lower bounds displayed.</property>
                                   <widget class="GtkScrolledWindow" id="scrolledwindow18">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                                    <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                                    <property name="shadow_type">GTK_SHADOW_IN</property>
+                                    <property name="hscrollbar_policy">automatic</property>
+                                    <property name="vscrollbar_policy">automatic</property>
+                                    <property name="shadow_type">in</property>
                                     <child>
                                       <widget class="GtkTextView" id="relview">
                                         <property name="visible">True</property>
@@ -2659,11 +2574,14 @@ upper and lower bounds displayed.</property>
                                       </widget>
                                     </child>
                                   </widget>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
                                 </child>
                                 <child>
                                   <widget class="GtkToolbar" id="toolbar6">
                                     <property name="visible">True</property>
-                                    <property name="toolbar_style">GTK_TOOLBAR_BOTH</property>
+                                    <property name="toolbar_style">both</property>
                                     <child>
                                       <widget class="GtkToolItem" id="toolitem14">
                                         <property name="visible">True</property>
@@ -2676,7 +2594,6 @@ upper and lower bounds displayed.</property>
                                       </widget>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="homogeneous">False</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2684,11 +2601,11 @@ upper and lower bounds displayed.</property>
                                         <property name="visible">True</property>
                                         <child>
                                           <widget class="GtkCheckButton" id="relcollapsed">
+                                            <property name="label" translatable="yes">collapsed</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="label" translatable="yes">collapsed</property>
+                                            <property name="receives_default">False</property>
                                             <property name="use_underline">True</property>
-                                            <property name="response_id">0</property>
                                             <property name="draw_indicator">True</property>
                                             <signal name="toggled" handler="on_relcollapsed_toggled"/>
                                           </widget>
@@ -2696,7 +2613,6 @@ upper and lower bounds displayed.</property>
                                       </widget>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="homogeneous">False</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2704,18 +2620,17 @@ upper and lower bounds displayed.</property>
                                         <property name="visible">True</property>
                                         <child>
                                           <widget class="GtkCheckButton" id="rellabels">
+                                            <property name="label" translatable="yes">labels</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="label" translatable="yes">labels</property>
+                                            <property name="receives_default">False</property>
                                             <property name="use_underline">True</property>
-                                            <property name="response_id">0</property>
                                             <property name="draw_indicator">True</property>
                                           </widget>
                                         </child>
                                       </widget>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="homogeneous">False</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2723,18 +2638,17 @@ upper and lower bounds displayed.</property>
                                         <property name="visible">True</property>
                                         <child>
                                           <widget class="GtkCheckButton" id="relrels">
+                                            <property name="label" translatable="yes">relations</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="label" translatable="yes">relations</property>
+                                            <property name="receives_default">False</property>
                                             <property name="use_underline">True</property>
-                                            <property name="response_id">0</property>
                                             <property name="draw_indicator">True</property>
                                           </widget>
                                         </child>
                                       </widget>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="homogeneous">False</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -2742,18 +2656,17 @@ upper and lower bounds displayed.</property>
                                         <property name="visible">True</property>
                                         <child>
                                           <widget class="GtkCheckButton" id="relresids">
+                                            <property name="label" translatable="yes">residuals</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="label" translatable="yes">residuals</property>
+                                            <property name="receives_default">False</property>
                                             <property name="use_underline">True</property>
-                                            <property name="response_id">0</property>
                                             <property name="draw_indicator">True</property>
                                           </widget>
                                         </child>
                                       </widget>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="homogeneous">False</property>
                                       </packing>
                                     </child>
                                   </widget>
@@ -2801,21 +2714,28 @@ upper and lower bounds displayed.</property>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area6">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkButton" id="closebutton">
+                <property name="label">gtk-close</property>
+                <property name="response_id">-7</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-close</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -2824,7 +2744,7 @@ upper and lower bounds displayed.</property>
   <widget class="GtkAboutDialog" id="aboutdialog">
     <property name="visible">True</property>
     <property name="border_width">5</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
+    <property name="type_hint">normal</property>
     <property name="program_name">ASCEND</property>
     <property name="copyright" translatable="yes">Copyright (C) 2006-2008 Carnegie Mellon University</property>
     <property name="comments" translatable="yes">A flexible modelling environment for hard engineering and science problems.</property>
@@ -3145,11 +3065,11 @@ Conversion to LyX and other formats:
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox7">
         <child internal-child="action_area">
-          <widget class="GtkHButtonBox" id="dialog-action_area7">
-          </widget>
+          <widget class="GtkHButtonBox" id="dialog-action_area7"/>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -3160,9 +3080,9 @@ Conversion to LyX and other formats:
     <property name="title" translatable="yes">Solver Status</property>
     <property name="resizable">False</property>
     <property name="modal">True</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="window_position">center-on-parent</property>
     <property name="icon">ascend.svg</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="skip_pager_hint">True</property>
     <signal name="close" handler="on_solverstatusdialog_close"/>
@@ -3177,7 +3097,7 @@ Conversion to LyX and other formats:
               <widget class="GtkFrame" id="frame8">
                 <property name="visible">True</property>
                 <property name="label_xalign">0</property>
-                <property name="shadow_type">GTK_SHADOW_IN</property>
+                <property name="shadow_type">in</property>
                 <child>
                   <widget class="GtkAlignment" id="alignment8">
                     <property name="visible">True</property>
@@ -3306,12 +3226,15 @@ Conversion to LyX and other formats:
                   </packing>
                 </child>
               </widget>
+              <packing>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
               <widget class="GtkFrame" id="frame7">
                 <property name="visible">True</property>
                 <property name="label_xalign">0</property>
-                <property name="shadow_type">GTK_SHADOW_IN</property>
+                <property name="shadow_type">in</property>
                 <child>
                   <widget class="GtkAlignment" id="alignment7">
                     <property name="visible">True</property>
@@ -3464,37 +3387,47 @@ Conversion to LyX and other formats:
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area8">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkButton" id="stopbutton">
+                <property name="label">gtk-stop</property>
+                <property name="response_id">-6</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
+                <property name="receives_default">False</property>
                 <property name="tooltip" translatable="yes">Cancel the simulation at the end of the current iteration</property>
-                <property name="label">gtk-stop</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-6</property>
                 <signal name="activate" handler="on_stopbutton_activate"/>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
               <widget class="GtkButton" id="closebutton1">
+                <property name="label">gtk-close</property>
+                <property name="response_id">-7</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-close</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -3504,11 +3437,11 @@ Conversion to LyX and other formats:
     <property name="visible">True</property>
     <property name="title" translatable="yes">Solver Parameters</property>
     <property name="modal">True</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="window_position">center-on-parent</property>
     <property name="default_width">600</property>
     <property name="default_height">500</property>
     <property name="icon">properties.png</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <signal name="close" handler="on_paramswin_close"/>
     <signal name="response" handler="on_paramswin_response"/>
     <child internal-child="vbox">
@@ -3529,6 +3462,7 @@ Conversion to LyX and other formats:
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
@@ -3546,15 +3480,16 @@ Conversion to LyX and other formats:
               <packing>
                 <property name="expand">False</property>
                 <property name="padding">14</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
               <widget class="GtkScrolledWindow" id="scrolledwindow19">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                <property name="shadow_type">GTK_SHADOW_IN</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
+                <property name="shadow_type">in</property>
                 <child>
                   <widget class="GtkViewport" id="viewport4">
                     <property name="visible">True</property>
@@ -3562,10 +3497,10 @@ Conversion to LyX and other formats:
                       <widget class="GtkTreeView" id="paramsview1">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <signal name="select_cursor_row" handler="on_paramsview_select_cursor_row"/>
                         <signal name="button_press_event" handler="on_paramsview_button_press_event"/>
-                        <signal name="row_activated" handler="on_paramsview_row_activated"/>
+                        <signal name="select_cursor_row" handler="on_paramsview_select_cursor_row"/>
                         <signal name="cursor_changed" handler="on_paramsview_cursor_changed"/>
+                        <signal name="row_activated" handler="on_paramsview_row_activated"/>
                       </widget>
                     </child>
                   </widget>
@@ -3589,7 +3524,7 @@ Conversion to LyX and other formats:
               <widget class="GtkFrame" id="frame9">
                 <property name="visible">True</property>
                 <property name="label_xalign">0</property>
-                <property name="shadow_type">GTK_SHADOW_NONE</property>
+                <property name="shadow_type">none</property>
                 <child>
                   <widget class="GtkAlignment" id="alignment9">
                     <property name="visible">True</property>
@@ -3610,6 +3545,7 @@ Conversion to LyX and other formats:
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
@@ -3624,6 +3560,7 @@ Conversion to LyX and other formats:
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">False</property>
+                                <property name="position">0</property>
                               </packing>
                             </child>
                             <child>
@@ -3672,34 +3609,44 @@ Conversion to LyX and other formats:
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area9">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkButton" id="paramscancel1">
+                <property name="label">gtk-cancel</property>
+                <property name="response_id">-6</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-cancel</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-6</property>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
               <widget class="GtkButton" id="paramsapply1">
+                <property name="label">gtk-ok</property>
+                <property name="response_id">-5</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-ok</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-5</property>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -3709,7 +3656,7 @@ Conversion to LyX and other formats:
     <property name="visible">True</property>
     <property name="title" translatable="yes">Integrator</property>
     <property name="icon">integrator.png</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <signal name="close" handler="on_integratorwin_close"/>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox10">
@@ -3734,6 +3681,7 @@ Conversion to LyX and other formats:
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">False</property>
+                        <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
@@ -3752,6 +3700,7 @@ AWW</property>
                   <packing>
                     <property name="expand">False</property>
                     <property name="padding">3</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
@@ -3822,7 +3771,6 @@ AWW</property>
                           <widget class="GtkEntry" id="durationentry">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">*</property>
                             <property name="text" translatable="yes">3600</property>
                             <signal name="key_press_event" handler="on_entry_key_press_event"/>
                           </widget>
@@ -3838,7 +3786,6 @@ AWW</property>
                           <widget class="GtkEntry" id="nstepsentry">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">*</property>
                             <property name="text" translatable="yes">100</property>
                             <signal name="key_press_event" handler="on_entry_key_press_event"/>
                           </widget>
@@ -3855,10 +3802,6 @@ AWW</property>
                             <property name="visible">True</property>
                             <property name="items" translatable="yes">Linear</property>
                             <signal name="key_press_event" handler="on_entry_key_press_event"/>
-                            <child internal-child="entry">
-                              <widget class="GtkEntry" id="comboboxentry-entry1">
-                              </widget>
-                            </child>
                           </widget>
                           <packing>
                             <property name="left_attach">1</property>
@@ -3874,7 +3817,6 @@ AWW</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="tooltip" translatable="yes">This value is retrieved from the model</property>
-                            <property name="invisible_char">*</property>
                             <property name="text" translatable="yes">0</property>
                             <signal name="key_press_event" handler="on_entry_key_press_event"/>
                           </widget>
@@ -3971,7 +3913,6 @@ AWW</property>
                           <widget class="GtkEntry" id="initialstepentry">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">*</property>
                             <property name="text" translatable="yes">4</property>
                             <signal name="key_press_event" handler="on_entry_key_press_event"/>
                           </widget>
@@ -3985,7 +3926,6 @@ AWW</property>
                           <widget class="GtkEntry" id="minstepentry">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">*</property>
                           </widget>
                           <packing>
                             <property name="left_attach">1</property>
@@ -3999,7 +3939,6 @@ AWW</property>
                           <widget class="GtkEntry" id="maxstepentry">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">*</property>
                           </widget>
                           <packing>
                             <property name="left_attach">1</property>
@@ -4013,7 +3952,6 @@ AWW</property>
                           <widget class="GtkEntry" id="maxstepsentry">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">*</property>
                           </widget>
                           <packing>
                             <property name="left_attach">1</property>
@@ -4037,13 +3975,13 @@ AWW</property>
                         </child>
                         <child>
                           <widget class="GtkButton" id="moreparametersbutton">
+                            <property name="label" translatable="yes">_More parameters...</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="label" translatable="yes">_More parameters...</property>
+                            <property name="receives_default">False</property>
                             <property name="use_underline">True</property>
-                            <property name="response_id">0</property>
                             <signal name="clicked" handler="on_moreparametersbutton_clicked"/>
-                            <accelerator key="F11" modifiers="" signal="activate"/>
+                            <accelerator key="F11" signal="activate"/>
                           </widget>
                           <packing>
                             <property name="left_attach">1</property>
@@ -4077,34 +4015,41 @@ AWW</property>
             </child>
           </widget>
           <packing>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
             <property name="position">2</property>
           </packing>
         </child>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area10">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkButton" id="integratorcancel">
+                <property name="label">gtk-cancel</property>
+                <property name="response_id">-6</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-cancel</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-6</property>
                 <signal name="activate" handler="on_integratorcancel_activate"/>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
               <widget class="GtkButton" id="integratorok">
+                <property name="response_id">-5</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
+                <property name="receives_default">False</property>
                 <property name="tooltip" translatable="yes">(you can also press ctrl-F9)</property>
-                <property name="response_id">-5</property>
                 <signal name="clicked" handler="on_integratorok_clicked"/>
-                <accelerator key="F9" modifiers="GDK_CONTROL_MASK" signal="clicked"/>
+                <accelerator key="F9" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                 <child>
                   <widget class="GtkAlignment" id="alignment12">
                     <property name="visible">True</property>
@@ -4122,6 +4067,7 @@ AWW</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
@@ -4142,13 +4088,16 @@ AWW</property>
                 </child>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -4158,9 +4107,9 @@ AWW</property>
     <property name="visible">True</property>
     <property name="title" translatable="yes">Integrator Status</property>
     <property name="modal">True</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="window_position">center-on-parent</property>
     <property name="icon">integrator.png</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox11">
         <property name="visible">True</property>
@@ -4178,6 +4127,7 @@ AWW</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
@@ -4200,35 +4150,44 @@ AWW</property>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area11">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkButton" id="cancelbutton1">
+                <property name="label">gtk-stop</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-stop</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">0</property>
                 <signal name="clicked" handler="on_cancelbutton_clicked"/>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
               <widget class="GtkButton" id="okbutton2">
+                <property name="label">gtk-close</property>
+                <property name="response_id">-7</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-close</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -4239,9 +4198,9 @@ AWW</property>
     <property name="height_request">400</property>
     <property name="visible">True</property>
     <property name="title" translatable="yes">Info</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="window_position">center-on-parent</property>
     <property name="icon">ascend.png</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <signal name="close" handler="on_infodialog_close"/>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox12">
@@ -4250,9 +4209,9 @@ AWW</property>
           <widget class="GtkScrolledWindow" id="scrolledwindow20">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-            <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-            <property name="shadow_type">GTK_SHADOW_IN</property>
+            <property name="hscrollbar_policy">automatic</property>
+            <property name="vscrollbar_policy">automatic</property>
+            <property name="shadow_type">in</property>
             <child>
               <widget class="GtkTextView" id="textview">
                 <property name="visible">True</property>
@@ -4271,21 +4230,28 @@ AWW</property>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area12">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkButton" id="closebutton2">
+                <property name="label">gtk-close</property>
+                <property name="response_id">-7</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-close</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -4296,9 +4262,9 @@ AWW</property>
     <property name="height_request">500</property>
     <property name="visible">True</property>
     <property name="title" translatable="yes">Info</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="window_position">center-on-parent</property>
     <property name="icon">ascend.png</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="type_hint">dialog</property>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="vbox">
         <property name="visible">True</property>
@@ -4308,7 +4274,7 @@ AWW</property>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area14">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkHScale" id="zoom">
                 <property name="visible">True</property>
@@ -4316,37 +4282,48 @@ AWW</property>
                 <property name="adjustment">0 0 100 10 10 10</property>
                 <signal name="change_value" handler="on_zoom_change_value"/>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
               <widget class="GtkButton" id="savebutton">
+                <property name="label">gtk-save-as</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label">gtk-save-as</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">0</property>
                 <signal name="clicked" handler="on_savebutton_clicked"/>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
               <widget class="GtkButton" id="closebutton4">
+                <property name="label">gtk-close</property>
+                <property name="response_id">-7</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="label">gtk-close</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">2</property>
               </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>
@@ -4356,7 +4333,7 @@ AWW</property>
     <property name="width_request">600</property>
     <property name="height_request">500</property>
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ALWAYS</property>
+    <property name="window_position">center-always</property>
     <signal name="destroy_event" handler="on_imagewindow_destroy_event"/>
     <child>
       <widget class="GtkVBox" id="vbox1">
@@ -4364,7 +4341,7 @@ AWW</property>
         <child>
           <widget class="GtkToolbar" id="toolbar9">
             <property name="visible">True</property>
-            <property name="toolbar_style">GTK_TOOLBAR_BOTH</property>
+            <property name="toolbar_style">both</property>
             <child>
               <widget class="GtkToolButton" id="save">
                 <property name="visible">True</property>
@@ -4373,6 +4350,7 @@ AWW</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -4383,6 +4361,7 @@ AWW</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -4393,6 +4372,7 @@ AWW</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -4403,6 +4383,7 @@ AWW</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -4413,12 +4394,14 @@ AWW</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
@@ -4442,8 +4425,8 @@ AWW</property>
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <property name="border_width">5</property>
     <property name="title" translatable="yes">Choose preferred units of measurement</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="window_position">center-on-parent</property>
+    <property name="type_hint">dialog</property>
     <property name="has_separator">False</property>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox14">
@@ -4459,14 +4442,6 @@ AWW</property>
                 <property name="width_request">400</property>
                 <property name="visible">True</property>
                 <signal name="changed" handler="on_typecombo_changed"/>
-                <child internal-child="entry">
-                  <widget class="GtkEntry" id="typeentry">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                    <property name="activates_default">True</property>
-                  </widget>
-                </child>
               </widget>
               <packing>
                 <property name="left_attach">1</property>
@@ -4502,7 +4477,7 @@ AWW</property>
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
                 <property name="ypad">5</property>
-                <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
+                <property name="ellipsize">end</property>
               </widget>
               <packing>
                 <property name="left_attach">1</property>
@@ -4531,8 +4506,8 @@ AWW</property>
               <widget class="GtkScrolledWindow" id="scrolledwindow1">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
                 <child>
                   <widget class="GtkTreeView" id="unitsview">
                     <property name="visible">True</property>
@@ -4556,44 +4531,57 @@ AWW</property>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area15">
             <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <property name="layout_style">end</property>
             <child>
               <widget class="GtkButton" id="cancelbutton2">
+                <property name="label">gtk-cancel</property>
+                <property name="response_id">-6</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label">gtk-cancel</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-6</property>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
               <widget class="GtkButton" id="units_applybutton">
+                <property name="label">gtk-apply</property>
+                <property name="response_id">-10</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label">gtk-apply</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-10</property>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
               <widget class="GtkButton" id="closebutton5">
+                <property name="label">gtk-close</property>
+                <property name="response_id">-7</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label">gtk-close</property>
+                <property name="receives_default">False</property>
                 <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">2</property>
               </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="pack_type">GTK_PACK_END</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </widget>

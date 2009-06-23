@@ -1228,7 +1228,7 @@ class Browser:
 		try:
 			D = self.library.getAnnotationDatabase()
 			i = self.modelview.get_selected_instance()
-			if i.isModel():
+			if i and i.isModel():
 				t = i.getType()
 			else:
 				self.reporter.reportError("First select a MODEL instance");

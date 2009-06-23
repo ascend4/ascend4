@@ -785,6 +785,7 @@ METHOD on_load;
 	FIX inlet.x; inlet.x := 0.0001;
 END on_load;
 END trap;
+
 (*
 	This is a reheat-regenerative Rankine cycle with two feedwater headers
 	(one open, one closed), as described in Moran & Shapiro, example 8.6.
