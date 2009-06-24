@@ -269,9 +269,10 @@ Instanc::isConst() const{
 
 const bool
 Instanc::isAssigned() const{
-	if(!isAtom()){
-		throw runtime_error("Instanc::isAssigned: not an Atom");
+	if(!isAtom() && !isConst()){
+		throw runtime_error("Instanc::isAssigned: not an Atom or Const");
 	}
+	/* AtomAssigned works for constants as well */
 	return AtomAssigned(i);
 }
 
@@ -337,7 +338,7 @@ Instanc::isSymbol() const{
 
 const bool
 Instanc::isDefined() const{
-	if(!isAtom() && !isFund())throw runtime_error("Instanc::isDefined: not an atom/fund");
+	if(!isAtom() && !isFund() && !isConst())throw runtime_error("Instanc::isDefined: not an atom/fund/const");
 	return AtomAssigned(i);
 }
 
@@ -363,8 +364,8 @@ Instanc::getRealValue() const{
 					getName().toString(),getKindStr().c_str());
 			return 0;
 	}
-	if(!isConst() && !isDefined()){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not defined (%s)", \
+	if(!isDefined()){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable/const '%s' is not defined (%s)", \
 				getName().toString(),getKindStr().c_str());
 		return 0;
 	}
@@ -396,8 +397,8 @@ Instanc::getBoolValue() const{
 			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not boolean-valued",getName().toString());
 			return false;
 	}
-	if(!isConst() && !isDefined()){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not defined",getName().toString());
+	if(!isDefined()){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Boolean value '%s' is not defined",getName().toString());
 		return false;
 	}
 	return GetBooleanAtomValue(i);
@@ -417,8 +418,8 @@ Instanc::getIntValue() const{
 			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not integer-valued",getName().toString());
 			return 0;
 	}
-	if(!isConst() && !isDefined()){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not defined",getName().toString());
+	if(!isDefined()){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Integer value '%s' is not defined",getName().toString());
 		return 0;
 	}
 	return GetIntegerAtomValue(i);
@@ -430,22 +431,23 @@ Instanc::getSymbolValue() const{
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not symbol-valued",getName().toString());
 		return SymChar("ERROR");
 	}
-	if(!isConst() && !isDefined()){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not defined",getName().toString());
+	if(!isDefined()){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Symbol value '%s' is not defined",getName().toString());
 		return SymChar("UNDEFINED");
 	}
-	return SCP(GetSymbolAtomValue(i));
+		
+	return SymChar(GetSymbolAtomValue(i));
 }
 
 void
 Instanc::setSymbolValue(const SymChar &sym){
 	stringstream ss;
 	if(!isSymbol()){
-		ss << "Variable '" << getName().toString() << "' is not symbol-valued.";
+		ss << "Instance '" << getName().toString() << "' is not symbol-valued.";
 		throw runtime_error(ss.str());
 	}
 	if(isConst() && isDefined()){
-		ss << "Variable '" << getName().toString() << "' has already been defined.";
+		ss << "Constant '" << getName().toString() << "' has already been defined.";
 		throw runtime_error(ss.str());
 	}
 
