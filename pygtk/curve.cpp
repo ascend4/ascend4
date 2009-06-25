@@ -40,3 +40,12 @@ Curve::getLegend() const{
 	}
 	return "";
 }
+
+const string
+Curve::getFormat() const{
+	Instanc li = getChild(PLOT_FORMAT);
+	if(li.isAssigned()){
+		return li.getSymbolValue().toString();
+	}
+	return "";
+}

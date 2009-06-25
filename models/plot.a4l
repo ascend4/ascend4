@@ -65,6 +65,7 @@ MODEL plt_curve(
 		increasing subscript value.
 	*)
 	legend IS_A symbol;
+	format "colour/linestyle in pylab format, eg 'r-' for red line" IS_A symbol;
 	FOR i IN [npnts] CREATE
 		pnt[i]	IS_A plt_point(x_data[i],y_data[i]);
 	END FOR;

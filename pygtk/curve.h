@@ -18,6 +18,7 @@ public:
 	std::vector<double> x;
 	std::vector<double> y;
 	const std::string getLegend() const;
+	const std::string getFormat() const;
 };
 
 #endif

@@ -23,14 +23,18 @@ SWIG interface for plotting from ASCEND
 			_l = []
 			_have_legends = False
 			for _c in self.curves:
+				_f = _c.getFormat()
+				_args = [_c.x, _c.y]
+				if len(_f):
+					_args += [_f]
 				if self.isXLog() and self.isYLog():
-					pylab.loglog(_c.x, _c.y)
+					pylab.loglog(*_args)
 				elif self.isXLog():
-					pylab.semilogx(_c.x, _c.y)
+					pylab.semilogx(*_args)
 				elif self.isYLog():
-					pylab.semilogy(_c.x, _c.y)
+					pylab.semilogy(*_args)
 				else:
-					pylab.plot(_c.x, _c.y)
+					pylab.plot(*_args)
 				_l1 = _c.getLegend()
 				if _l1:
 					_have_legends = True
