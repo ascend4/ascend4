@@ -23,6 +23,7 @@ class Curve;
 #define PLOT_YHI "Yhigh"
 #define PLOT_CURVE "curve"
 #define PLOT_LEGEND "legend"
+#define PLOT_FORMAT "format"
 #define PLOT_POINT "pnt"
 #define PLOT_XPOINT "x"
 #define PLOT_YPOINT "y"
