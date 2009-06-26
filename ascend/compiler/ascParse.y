@@ -2685,7 +2685,7 @@ zz_error(char *s){
   if (Asc_CurrentModule() != NULL) {
     error_reporter_current_line(ASC_USER_ERROR,"%s",s);
   } else {
-    error_reporter(ASC_USER_ERROR,NULL,0,"%s at end of input.\n",s);
+    error_reporter(ASC_USER_ERROR,NULL,0,NULL,"%s at end of input.",s);
   }
   return 0;
 }
