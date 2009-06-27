@@ -24,6 +24,7 @@ class Curve;
 #define PLOT_CURVE "curve"
 #define PLOT_LEGEND "legend"
 #define PLOT_FORMAT "format"
+#define PLOT_LEGENDPOSITION "legend_position"
 #define PLOT_POINT "pnt"
 #define PLOT_XPOINT "x"
 #define PLOT_YPOINT "y"
@@ -46,6 +47,16 @@ public:
 	const std::string getTitle() const;
 	const std::string getXLabel() const;
 	const std::string getYLabel() const;
+
+	/**
+		Get 'legend position', an integer for use by matplotlib, see here for
+		documentation:
+		http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.legend
+
+		This value is not used by the Tcl/Tk GUI's plotting routine.
+	*/
+	const int getLegendPosition() const;
+
 	const bool isXLog() const;
 	const bool isYLog() const;
 	const double getXLow() const;

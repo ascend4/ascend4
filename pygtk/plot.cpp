@@ -41,6 +41,11 @@ Plot::getYLabel() const{
 	return getChild(PLOT_YLABEL).getValueAsString();
 }
 
+const int
+Plot::getLegendPosition() const{
+	return getChild(PLOT_LEGENDPOSITION).getIntValue();
+}
+
 const bool
 Plot::isXLog() const{
 	return getChild(PLOT_XLOG).getBoolValue();

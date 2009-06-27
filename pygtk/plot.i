@@ -41,7 +41,7 @@ SWIG interface for plotting from ASCEND
 				_l.append(_l1)
 			# only show legends if their text is non-empty:
 			if _have_legends:
-				pylab.legend(_l)
+				pylab.legend(_l,self.getLegendPosition())
 
 			print "Mainloop:",mainloop
 			pylab.ion()
