@@ -436,7 +436,7 @@ Instanc::getSymbolValue() const{
 		return SymChar("UNDEFINED");
 	}
 		
-	return SymChar(GetSymbolAtomValue(i));
+	return SCP(GetSymbolAtomValue(i));
 }
 
 void

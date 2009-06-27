@@ -64,25 +64,31 @@ MODEL plt_curve(
 	(* points of matching subscript will be plotted in order of
 		increasing subscript value.
 	*)
-	legend IS_A symbol;
-	format "colour/linestyle in pylab format, eg 'r-' for red line" IS_A symbol;
+	legend "Label for curve (displayed in legend box)"
+	, format "colour/linestyle in pylab format, eg 'r-' for red line"
+		IS_A symbol;
 	FOR i IN [npnts] CREATE
 		pnt[i]	IS_A plt_point(x_data[i],y_data[i]);
 	END FOR;
 END plt_curve;
 
+ATOM plt_integer_default_0 REFINES integer
+    DIMENSIONLESS
+    DEFAULT 0;
+END plt_integer_default_0;
 
 MODEL plt_plot_integer(
 	curve_set IS_A set OF integer_constant;
 	curve[curve_set] WILL_BE plt_curve;
 )REFINES pltmodel();
-	title, XLabel, YLabel IS_A symbol;
-	Xlow IS_A real;
-	Ylow IS_A real;
-	Xhigh IS_A real;
-	Yhigh IS_A real;
-	Xlog IS_A boolean_start_false;
-	Ylog IS_A boolean_start_false;
+	title "Plot title (shown at top)"
+	, XLabel "X-axis label"
+	, YLabel "Y-axis label"
+		IS_A symbol;
+	legend_position "Legend position (see http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.legend)"
+		IS_A plt_integer_default_0;
+	Xlow, Ylow, Xhigh, Yhigh IS_A real;
+	Xlog, Ylog IS_A boolean_start_false;
 END plt_plot_integer;
 
 
@@ -90,11 +96,12 @@ MODEL plt_plot_symbol(
 	curve_set IS_A set OF symbol_constant;
 	curve[curve_set] WILL_BE plt_curve;
 )REFINES pltmodel();
-	title, XLabel, YLabel IS_A symbol;
-	Xlow IS_A real;
-	Ylow IS_A real;
-	Xhigh IS_A real;
-	Yhigh IS_A real;
-	Xlog IS_A boolean_start_false;
-	Ylog IS_A boolean_start_false;
+	title "Plot title (shown at top)"
+	, XLabel "X-axis label"
+	, YLabel "Y-axis label"
+		IS_A symbol;
+	legend_position "Legend position (see http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.legend)"
+		IS_A plt_integer_default_0;
+	Xlow, Ylow, Xhigh, Yhigh IS_A real;
+	Xlog, Ylog IS_A boolean_start_false;
 END plt_plot_symbol;

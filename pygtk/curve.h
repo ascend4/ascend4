@@ -18,6 +18,14 @@ public:
 	std::vector<double> x;
 	std::vector<double> y;
 	const std::string getLegend() const;
+
+	/**
+		Get the curve format string, as used by matplotlib.
+		Documented here:
+		http://matplotlib.sourceforge.net/api/axes_api.html#matplotlib.axes.Axes.plot
+
+		(This value is not used by the Tcl/Tk GUI.)
+	*/
 	const std::string getFormat() const;
 };
 
