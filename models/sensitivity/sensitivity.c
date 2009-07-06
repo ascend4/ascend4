@@ -82,7 +82,7 @@
 #include <ascend/system/system.h>
 #include <ascend/solver/solver.h>
 
-/* #define SENSITIVITY_DEBUG */
+#define SENSITIVITY_DEBUG
 
 ASC_EXPORT int sensitivity_register(void);
 
@@ -99,7 +99,7 @@ slv_system_t sens_presolve(struct Instance *inst){
 #ifdef SENSITIVITY_DEBUG
   struct var_variable **vp;
   struct rel_relation **rp;
-  int len;
+  int len, ind;
   char *tmp=NULL;
 #endif
   sys = system_build(inst);
@@ -173,7 +173,7 @@ int sensitivity_anal(
 	struct gl_list_t *branch;
 	struct var_variable **vlist = NULL;
 	int *inputs_ndx_list = NULL, *outputs_ndx_list = NULL;
-	DenseMatrix dy_dx;
+	DenseMatrix dy_dx = densematrix_create_empty();
 	slv_system_t sys = NULL;
 	int c;
 	int noutputs = 0;

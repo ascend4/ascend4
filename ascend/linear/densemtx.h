@@ -70,7 +70,7 @@ typedef struct DenseMatrixStruct{
 #define DENSEMATRIX_DATA(M)     ((M).data)
 #define DENSEMATRIX_EMPTY       (DenseMatrix){NULL,0,0}
 
-DenseMatrix densematrix_create_empty();
+ASC_DLLSPEC DenseMatrix densematrix_create_empty();
 ASC_DLLSPEC DenseMatrix densematrix_create(unsigned nrows, unsigned ncols);
 ASC_DLLSPEC void densematrix_destroy(DenseMatrix matrix);
 
