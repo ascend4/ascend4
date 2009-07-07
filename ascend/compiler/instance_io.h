@@ -211,9 +211,6 @@ extern int WritePath(FILE *f, CONST struct gl_list_t *path);
 
 extern char *WritePathString(CONST struct gl_list_t *path);
 /**<
- *  <!--  str =  WritePathString(path);                                -->
- *  <!--  CONST struct gl_list_t *path;                                -->
- *  <!--  char *str;                                                   -->
  *  Returns the path in a string. The caller should free the string when
  *  done with it.
  */

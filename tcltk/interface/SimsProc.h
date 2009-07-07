@@ -1,33 +1,21 @@
-/*
- *  SimsProc.h
- *  by Kirk Abbott and Ben Allan
- *  Created: 1/94
- *  Version: $Revision: 1.12 $
- *  Version control file: $RCSfile: SimsProc.h,v $
- *  Date last modified: $Date: 2003/08/23 18:43:08 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the ASCEND Tcl/Tk interface
- *
- *  Copyright 1997, Carnegie Mellon University
- *
- *  The ASCEND Tcl/Tk interface is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The ASCEND Tcl/Tk interface is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1997, 2009 Carnegie Mellon University
 
-/** @file
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
  *  Simulation procedures.
  *  <pre>
  *  To include this header, you must include the following:
@@ -37,7 +25,14 @@
  *      #include "compiler/instance_enum.h"
  *      #include "interface/SimsProc.h"
  *  </pre>
- */
+*//*
+ *  by Kirk Abbott and Ben Allan
+ *  Created: 1/94
+ *  Version: $Revision: 1.12 $
+ *  Version control file: $RCSfile: SimsProc.h,v $
+ *  Date last modified: $Date: 2003/08/23 18:43:08 $
+ *  Last modified by: $Author: ballan $
+*/
 
 #ifndef ASCTK_SIMSPROC_H
 #define ASCTK_SIMSPROC_H
@@ -45,7 +40,6 @@
 extern int Asc_SimsQueryCmd(ClientData cdata, Tcl_Interp *interp,
                             int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_SimsQueryCmd                                         -->
  *  Simulation name utility.
  *  -# sims getcurrent --
  *     Returns the name of the current simualation.
@@ -61,7 +55,6 @@ extern int Asc_SimsQueryCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_SimsUniqueNameCmd(ClientData dummy, Tcl_Interp *interp,
                                  int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_SimsUniqueNameCmd                                    -->
  *  Returns 1 if name is not a simulation instance or if called with
  *  wrong number of args.  Returns 0 if simulation name exists.<br><br>
  *
@@ -71,8 +64,7 @@ extern int Asc_SimsUniqueNameCmd(ClientData dummy, Tcl_Interp *interp,
 extern int Asc_SimsCreateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                      int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int CreateInstance_Callback;                                 -->
- *  A blatant ripofff of Tom Epperlys CreateInstance.
+ *  A blatant ripoff of Tom Epperly's CreateInstance.
  *  Creates a simulation instance and adds to the global simlist.
  *  Returns 0 if failed, 1 if ok;<br><br>
  *
@@ -82,7 +74,6 @@ extern int Asc_SimsCreateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_SimsResumeInstantiateCmd(ClientData cdata, Tcl_Interp *interp,
                                         int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_SimsResumeInstantiateCmd;                            -->
  *  Returns "0" if sim not found, 1 if found.
  *
  *  Registered as : sresume \"simname\";
@@ -91,7 +82,6 @@ extern int Asc_SimsResumeInstantiateCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowResumeInstantiateCmd(ClientData cdata, Tcl_Interp *interp,
                                         int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_BrowResumeInstantiateCmd;                            -->
  *  Browser callback to resume compilation.
  *  Assumes instance to be dealt with is in g_root. Returns "".<br><br>
  *
@@ -101,7 +91,6 @@ extern int Asc_BrowResumeInstantiateCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_SimsCopyInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                    int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_SimsCopyInstanceCmd;		KAA_DEBUG                      -->
  *  Will attempt to take the given qualified id id and 'copy' it.
  *  It will destroy the information immediately after. This is some
  *  experimental code.<br><br>
@@ -112,7 +101,6 @@ extern int Asc_SimsCopyInstanceCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_SimsProtoTypeInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                         int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_SimsProtoTypeInstanceCmd;		KAA_DEBUG                 -->
  *  Will attempt to take the given qualified id id and prototype it.
  *  It will add the instance to the prototype library. It will copy<br><br>
  *
@@ -122,12 +110,11 @@ extern int Asc_SimsProtoTypeInstanceCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_SimsSaveInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                    int argc, CONST84 char *argv[]);
 /**<
- *  <!--  inst Asc_SimsSaveInstanceCmd:		KAA_DEBUG                     -->
  *  Will attemptlt to take the given qualified id and 'save' it to
  *  the specified file. This is still experimental code but hopefully
  *  not for long. The details of the save format may be found in
  *  instance_io.[ch]; If all goes well there will be a matching function
- *  called SimsRestoreInstanceCmd();<br><br>
+ *  called SimsRestoreInstanceCmd();
  *
  *  Registered as : __sims_saveinst qlfdid file
  */
@@ -135,11 +122,10 @@ extern int Asc_SimsSaveInstanceCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_SimsUpdateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                      int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_SimsUpdateInstanceCmd;		KAA_DEBUG                    -->
  *  Will attempt to take the given qualified id and 'update' it
  *  using the information found in the file 'file', or using the given
  *  type information. At the moment it reads the instructions from a
- *  file. The primitives used may be found in compiler/instantiate.c<br><br>
+ *  file. The primitives used may be found in compiler/instantiate.c
  *
  *  Registered as : __sims_update qlfdid <file,type>;
  */
@@ -147,7 +133,6 @@ extern int Asc_SimsUpdateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_SimsDestroySimulationCmd(ClientData cdata, Tcl_Interp *interp,
                                         int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_SimsDestroySimulationCmd;                            -->
  *  Returns 1 if successful, returns 0 if not.
  *
  *  Registered as : sdestroy \"simname\";
@@ -156,7 +141,6 @@ extern int Asc_SimsDestroySimulationCmd(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowShowPendings(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_BrowShowPendings;                                    -->
  *  Returns the number of pending statements.
  *  Call is:
  *    - "bnumpendings simulation sim_name" -- checks given sim_name.
@@ -164,7 +148,7 @@ extern int Asc_BrowShowPendings(ClientData cdata, Tcl_Interp *interp,
  *    - "bnumpendings instance search"  -- checks search instance.
  *  Will return > 1 if there are any pending statements.
  *  Returns a BIG number if no instance.
- *  For more details, use BrowWritePendings.<br><br>
+ *  For more details, use BrowWritePendings.
  *
  *  Registered as : \"bnumpendings\" ?simulation?instance? ?sim?search?current?
  */
@@ -172,10 +156,9 @@ extern int Asc_BrowShowPendings(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_BrowWritePendingsSTDOUT(ClientData cdata, Tcl_Interp *interp,
                                        int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_BrowWritePendingsSTDOUT;                             -->
  *  Writes to stdout the list of pending statements for the given
  *  simulation. Will return an error if the simulation does not exist or
- *  the sim->root instance is NULL.<br><br>
+ *  the sim->root instance is NULL.
  *
  *  Registered as:  \"bwritependings\" simname.
  */
@@ -183,7 +166,6 @@ extern int Asc_BrowWritePendingsSTDOUT(ClientData cdata, Tcl_Interp *interp,
 extern int Asc_SimListPending(ClientData cdata, Tcl_Interp *interp,
                               int argc, CONST84 char *argv[]);
 /**<
- *  <!--  int Asc_SimListPending ()a;                                  -->
  *  Will print all the unassigned constants and undefined structures and
  *  unexecuted statements in a simulation. simname is the name of an
  *  instance in the global simulation list.
