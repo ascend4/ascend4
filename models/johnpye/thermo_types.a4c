@@ -126,6 +126,14 @@ ATOM ua_value REFINES solver_var
 	nominal := 1{kW/K}; (* heat up 1kg water by 1deg in 5 s *)
 END ua_value;
 
+ATOM thermal_resistance REFINES solver_var
+		DIMENSION TMP*T^3/M/L^2
+		DEFAULT 0.5 {K/W};
+	lower_bound := 0 {K/W};
+	upper_bound := 1e12 {K/W};
+	nominal := 0.5 {K/W};
+END thermal_resistance;
+
 ATOM R_value REFINES solver_var
 		DIMENSION TMP*T^3/M
 		DEFAULT 1{K*m^2/W};

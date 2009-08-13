@@ -1393,8 +1393,8 @@ END NOTES;
 		(* Complementarity formulation *)
 
 		FOR j IN [pd.phases] CREATE
-		complementarity[j]:
-			slack_PhaseDisappearance[j] * phase_fraction[j] = 0.0;
+			complementarity[j]:
+				slack_PhaseDisappearance[j] * phase_fraction[j] = 0.0;
 		END FOR;
 
     END SELECT;
