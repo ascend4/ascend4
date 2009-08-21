@@ -72,8 +72,10 @@ if '-Wall' in swig_env.get('CCFLAGS'):
 
 if platform.system()=="Windows":
 	swig_env['SHLIBSUFFIX']='.pyd'
-	if 'msvcr71' in env['LIBS']:
+	if 'msvcr71' in env.get('LIBS'):
 		swig_env.Append(CPPDEFINES=['HAVE_MSVCR71'])
+elif platform.system()=="Darwin":
+    swig_env['SHLIBSUFFIX']='.so'
 
 swigobjs = []
 
