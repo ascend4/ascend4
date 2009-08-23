@@ -1546,6 +1546,9 @@ def CheckPythonLib(context):
 	python_linkflags = []
 	if platform.system()=="Windows":
 		python_libpath += [os.path.join(sys.prefix,"libs")]
+	elif platform.system()=="Darwin":
+		python_libpath += [cfig['LIBPL']]
+                python_linkflags += cfig['LIBS'].split(' ')
 	else:
 		# checked on Linux and SunOS
 		if cfig['LDLIBRARY']==cfig['LIBRARY']:
