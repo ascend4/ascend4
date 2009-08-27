@@ -1093,7 +1093,7 @@ def CheckSwigVersion(context):
 		maj,min,pat = get_swig_version(context.env)
 	except:
 		context.Result("Failed to detect version, or failed to run SWIG")
-		return 0;
+		return False;
 	
 	context.env['SWIGVERSION']=tuple([maj,min,pat])
 	
@@ -1102,10 +1102,10 @@ def CheckSwigVersion(context):
 			or (min == 3 and pat >= 24)
 		):
 		context.Result("ok, %d.%d.%d" % (maj,min,pat))
-		return 1;
+		return True;
 	else:
 		context.Result("too old, %d.%d.%d" % (maj,min,pat))
-		return 0;
+		return False;
 
 #----------------
 # Scrollkeeper (Linux documentation system)
@@ -2710,7 +2710,7 @@ if platform.system()=="Linux":
 libascend = libascend_env.SharedLibrary('ascend',srcs)
 
 # create local symlink for the soname stuff.
-print "SONAME =",env.subst(soname_full)
+#print "SONAME =",env.subst(soname_full)
 
 env['libascend'] = libascend
 libtargets = [libascend]
@@ -2718,7 +2718,7 @@ libtargets = [libascend]
 if platform.system()=="Linux":
 	if soname_major:
 		libascend_env.Command(soname_full,libascend,Move("$TARGET","$SOURCE"))
-		print "MAKING LINK, SONAME_MAJOR =",soname_major
+		#print "MAKING LINK, SONAME_MAJOR =",soname_major
 		liblink = libascend_env.Command(soname_full, libascend, "ln -s $SOURCE $TARGET")
 		libtargets.append(liblink)
 
