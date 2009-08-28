@@ -7,14 +7,16 @@ MODEL drconf;
 	filename IS_A symbol_constant;
 	format IS_A symbol_constant;
 	format :== 'TMY2';
+	parameters IS_A symbol_constant;
+	parameters :== '2:linear,2:cubic,2:default';
 END drconf;
 
 MODEL testtmy;
 	t IS_A time;
 	G IS_A solver_var;
-	Gbn IS_A solver_var;
+	Gbnl,Gbnc,Gbns IS_A solver_var;
 	Gd IS_A solver_var;
-	T IS_A solver_var;
+	T IS_A temperature;
 	v_wind IS_A solver_var;
 	E IS_A solver_var; (* total radiation *)
 	Gb IS_A solver_var;
@@ -35,7 +37,8 @@ MODEL testtmy;
 
 	filereader:datareader(
 		t : INPUT;
-		G, Gbn, Gd, T, v_wind : OUTPUT;
+		(*G,Gbn,Gd,T,v_wind: OUTPUT;*)
+		Gbnl,Gbnc,Gbns :OUTPUT;
 		tmydata : DATA
 	);
 
@@ -45,24 +48,32 @@ MODEL testtmy;
 	E1_expr:E1 = E + 1;
 	
 METHODS
-
+(*
 METHOD default_self;
 END default_self;
-
+*)
 METHOD on_load;
 	RUN default_self; RUN specify; RUN values; 
+	RUN ode_init;
 END on_load;
 
-METHOD specify;
+METHOD ode_init;
 	E.ode_id := 1; E.ode_type := 1;
 	G.ode_id := 1; G.ode_type := 2;
 
+	Gbnl.obs_id := 1;
+	Gbnc.obs_id := 2;
+	Gbns.obs_id := 3;
+
 	t.ode_type :=-1;	
+END ode_init;
+
+METHOD specify;
 	FIX t;
 END specify;
 
 METHOD values;
-	t := 0 {s};
+	t := 8 {h};
 	E := 0;
 END values;
 

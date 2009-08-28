@@ -56,7 +56,7 @@ END vanderwaals;
 MODEL testvanderwaals;
 
 	c1 IS_A symbol_constant;
-	c1 :== 'helium_4';
+	c1 :== 'hydrogen';
 	cd IS_A components_data([c1],c1);
 	Tr, Pr IS_A factor;
 	P IS_A pressure;

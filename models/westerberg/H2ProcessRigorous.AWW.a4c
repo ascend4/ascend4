@@ -128,7 +128,7 @@ MODEL ZeroFeedAll REFINES VaporStream;
 END ZeroFeedAll;
 
 MODEL NaturalGasFeed REFINES VaporStream;
-    R IS_A gas_constant;
+    R IS_A molar_gas_constant;
 
     METHODS 	    
     METHOD seqmod;
@@ -423,7 +423,7 @@ MODEL ReformerSection(
     
     r1, r2, r3 IS_A reaction_rate; 
     P_me, P_wa, P_co, P_h2, P_co2 IS_A partial_pressure;
-    R IS_A gas_constant;
+    R IS_A molar_gas_constant;
     Den, K_p2 IS_A factor;
     K_p1, K_p3 IS_A pressure_squared;
     

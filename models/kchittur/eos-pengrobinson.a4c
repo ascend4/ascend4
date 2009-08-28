@@ -10,7 +10,7 @@ MODEL pengrobinson(P WILL_BE pressure;
 	data WILL_BE td_component_constants;
 ); 
 
-	R IS_A gas_constant;
+	R IS_A molar_gas_constant;
 	Pc IS_A pressure;
 	Tc IS_A temperature;
 	T_degC IS_A factor;

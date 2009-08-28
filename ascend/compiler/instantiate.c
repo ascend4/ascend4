@@ -5420,9 +5420,14 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   if (efunc == NULL) {
     return 1;
   }
-
+/*
   n_input_args = NumberInputArgs(efunc);
   n_output_args = NumberOutputArgs(efunc);
+ */
+  //so lets see if getting i and o works better than commented code above
+  n_input_args = statement->v.ext.u.black.n_inputs;
+  n_output_args = statement->v.ext.u.black.n_outputs; 
+ 
   if ((len =gl_length(arglist)) != (n_input_args + n_output_args)) {
     instantiation_error(ASC_PROG_ERR,statement
 		,"Unable to create external expression structure."

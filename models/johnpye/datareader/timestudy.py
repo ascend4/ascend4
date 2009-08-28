@@ -37,11 +37,17 @@ def timestudy(self):
 		     continue
 
 		 xdata.append(t / 3600.)
-		 ydata[0].append(self.G.as("W/m^2"))
-		 ydata[1].append(self.Gbn.as("W/m^2"))
-		 ydata[2].append(self.Gd.as("W/m^2"))
-		 ydata[3].append(self.T.as("K") - 273.15)
-		 ydata[4].append(self.v_wind.as("m/s"))
+		# ydata[0].append(self.G.as("W/m^2"))
+		# ydata[1].append(self.Gbn.as("W/m^2"))
+		# ydata[2].append(self.Gd.as("W/m^2"))
+		# ydata[3].append(self.T.as("K") - 273.15)
+		# ydata[4].append(self.v_wind.as("m/s"))
+
+		 ydata[0].append(self.G("W/m^2"))
+		 ydata[1].append(self.Gbn("W/m^2"))
+		 ydata[2].append(self.Gd("W/m^2"))
+		 ydata[3].append(self.T("K") - 273.15)
+		 ydata[4].append(self.v_wind("m/s"))
 
 
 	subplot(311)

@@ -1,0 +1,61 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/datareader/datareader";
+
+MODEL drconf;
+	filename IS_A symbol_constant;
+	format IS_A symbol_constant;
+	format :== 'CSV';
+	parameters IS_A symbol_constant;
+	parameters :== '1,2,3,4,5,10,11';
+END drconf;
+
+MODEL testcsv;
+	t IS_A time;
+	col1,col2,col3,col4,col5 IS_A solver_var;
+	col10,col11 IS_A solver_var;
+	total, average IS_A solver_var;
+
+	csvdata IS_A drconf;
+	csvdata.filename :== 'johnpye/datareader/myfile.csv';
+
+	filereader:datareader(
+		t : INPUT;
+		col1,col2,col3,col4,col5,col10,col11 :OUTPUT;
+		csvdata : DATA
+	);
+
+	totalexp: total = col1 + col2 + col3 + col4 +col5 + col10 + col11;
+	averageexp: average = total/7;
+	
+METHODS
+(*
+METHOD default_self;
+END default_self;
+*)
+METHOD on_load;
+	RUN default_self; RUN specify; RUN values; 
+	(*RUN ode_init;*)
+END on_load;
+(*
+METHOD ode_init;
+	E.ode_id := 1; E.ode_type := 1;
+	G.ode_id := 1; G.ode_type := 2;
+
+	Gbnl.obs_id := 1;
+	Gbnc.obs_id := 2;
+	Gbns.obs_id := 3;
+
+	t.ode_type :=-1;	
+END ode_init;
+*)
+METHOD specify;
+	FIX t;
+END specify;
+
+METHOD values;
+	t := 1 {s};
+END values;
+
+END testcsv;

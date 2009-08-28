@@ -503,7 +503,9 @@ struct Statement *CreateEXTERNGlassBox(
 struct Statement *CreateEXTERNBlackBox(
 			       struct Name *n, CONST char *funcname,
 			       struct VariableList *vl,
-			       struct Name *data)
+			       struct Name *data,
+			       unsigned long n_inputs,
+			       unsigned long n_outputs)
 {
   register struct Statement *result;
   struct Name *bbsuffix;
@@ -526,6 +528,8 @@ struct Statement *CreateEXTERNBlackBox(
   result->v.ext.u.black.nptr = n;
   result->v.ext.u.black.vl = vl;
   result->v.ext.u.black.data = data; 	/* NULL is valid */
+  result->v.ext.u.black.n_inputs = n_inputs; //number of inputs from parsed statement
+  result->v.ext.u.black.n_outputs = n_outputs; //number of outputs from parsed statement
   return result;
 }
 

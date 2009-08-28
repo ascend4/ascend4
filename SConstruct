@@ -2607,8 +2607,10 @@ SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, 
 env.AppendUnique(CPPPATH=['#'])
 
 if env['DEBUG']:
-	env.Append(CCFLAGS=['-g'])
-	env.Append(LINKFLAGS=['-g'])
+	env.Append(
+		CCFLAGS=['-g']
+		,LINKFLAGS=['-g']
+	)
 
 if env['GCOV']:
 	env.Append(
