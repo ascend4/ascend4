@@ -881,6 +881,14 @@ END length_parameter;
         upper_bound := 1e50{m/s};
         nominal := 1.0{m/s};
     END speed;
+    
+    ATOM angular_speed REFINES solver_var
+    	DIMENSION P/T
+    	DEFAULT 1.0 {rad/s};
+    	lower_bound := -1e50{rad/s};
+        upper_bound := 1e50{rad/s};
+        nominal := 1 {rad/s};
+    END angular_speed;
 
     ATOM acceleration REFINES solver_var
         DIMENSION L/T^2

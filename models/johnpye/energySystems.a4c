@@ -1,26 +1,90 @@
 REQUIRE "johnpye/thermo_types.a4c";
 REQUIRE "atoms.a4l";
+
+MODEL water_stream;
+	cd IS_A components_data(['water'], 'water');
+	pd IS_A phases_data('L', 'none','UNIFAC_liquid_mixture', 'none');
+	equilibrated IS_A boolean;
+	state IS_A thermodynamics(cd,pd,equilibrated);
+		Q IS_A volume_rate;
+	P IS_A pressure;
+	v IS_A speed;
+	m_dot IS_A mass_rate;
+	rho IS_A mass_density;
+	T IS_A temperature;
+	H IS_A energy_rate;
+	u IS_A energy;
+	z IS_A distance;
+	massvolume: m_dot = Q*rho;
+END water_stream;
+
+MODEL pipe; (*laminar flow on a pipe*)
+	in, out IS_A water_stream;
+	L IS_A distance;
+	A IS_A area;
+	alpha IS_A angle;
+	height IS_A distance;
+	denschange IS_A factor;
 	
-MODEL pump (
+	incline: height = sin(alpha) * L;
+	massflowin: in.m_dot = in.rho * in.v * A;
+	massflowout: out.m_dot = out.rho * out.v * A;
+	massconservation: out.m_dot = in.m_dot;
+	densitychange: out.rho = in.rho/denschange;
+METHODS
+	METHOD default_self;
+		alpha := 0 {rad};
+	END default_self;
+	
+	METHOD specify;
+		FIX alpha;
+		FIX L, A;
+		FIX in.m_dot;
+		FIX in.rho;
+		FIX denschange;
+	END specify;
+	
+	METHOD values;
+		alpha := 0 {rad};
+		L := 5 {m};
+		in.m_dot := 0.7 {kg/s};
+	END values;
+	METHOD on_load;
+	END on_load;
+	
+END pipe;
+
+MODEL pipetest;
+	P1, P2 IS_A pipe;
+	P1.out, P2.in ARE_THE_SAME;
+METHODS
+	METHOD specify_all;
+		RUN P1.specify;
+	END specify_all;
+	METHOD values;
+		RUN P1.values;
+	END values;
+END pipetest;
+
+(*	
+MODEL pump;
 	(* Ignore and changes in enthalpy, just model pressure changes 
 	
 	
 	This version compiles. Does it make any sense? probably not at this stage
 	JZap*)
-		in WILL_BE stream;
-		out WILL_BE stream;
-)WHERE(
-	in.cd, out.cd WILL_BE_THE_SAME;
-	in.pd, out.pd WILL_BE_THE_SAME;
+	
+	in, out IS_A water_stream;
+	(*in.cd, out.cd ARE_THE_SAME;
+	in.pd , out.pd ARE_THE_SAME;*)
 
 	(*in.flow, out.flow WILL_BE_THE_SAME;*)
 	(*in.f[in.components], out.f[out.components] WILL_BE_THE_SAME;*)
-);
+	(*equilibrated IS_A boolean;
+	isen IS_A stream(in.cd, in.pd,equilibrated );
 	
-	isen IS_A stream(in.cd, in.pd, in.equilibrated);
-	
-	isen.f[in.components] = in.f[out.components];
-	isen.flow = in.flow;
+	isen.f[in.cd] = in.f[out.cd];
+	isen.flow = in.flow;*)
 
 	H_max IS_A distance;
 	H_2 IS_A distance;
@@ -47,7 +111,7 @@ MODEL pump (
 	rho_is IS_A mass_density;
 
 	(* Pump curve, pressure decreases as flow rate increases *)
-	VolFlowRate: Q_2 / in.V_flow = in.flow;
+	(*VolFlowRate: Q_2 / in.V_flow = in.flow;*)
 	VolFlowRate1: Q_1 = Q_2 / N_r;       (* vol flow rate at equivalent conditions at reference speed *)
 	Head1: H_1 = C_0 + C_1*Q_1 + C_2*Q_1^2; (* head at equivalent conditions' speed. C0, C1, C2 are pump curve params (const) *)
 	Head2: H_2 = H_1 * N_r; 			  (* head in metres at actual speed *)
@@ -66,7 +130,7 @@ MODEL pump (
 
 	(* Isentropic exit state *)
 	(*isen.S = in.S;  S is not a part of the conventional stream, might endup refining the stream into something like a "hydro_stream                        *) 
-	isen.P = out.P;
+	(*isen.P = out.P;*)
 
 	(* Pump efficiency  it is also broken
 	out.h - in.h = (in.h - isen.h)/eta; *)
@@ -74,24 +138,33 @@ MODEL pump (
 END pump;
 
 MODEL pump_test;
-	cd IS_A components_data(['water'], 'water');
+	(*cd IS_A components_data(['water'], 'water');
     pd IS_A phases_data('V', 'Pitzer_vapor_mixture','none', 'none');
     equilibrated IS_A boolean;
 
     S1 IS_A stream(cd, pd, equilibrated);
     S2 IS_A stream(cd, pd, equilibrated);
-	
-	PU IS_A pump(S1,S2);
+	*)
+	PU IS_A pump;
 
 METHODS
 	METHOD ClearAll;
 	END ClearAll;
 
 	METHOD specify;
+		FIX PU.C_0, PU.C_1, PU.C_2;
 	END specify;
 	
 	METHOD values;
+		PU.C_0 := 20.1;
+		PU.C_1 := 0;
+		PU.C_2 := 0.1833333;
 	END values;
-
+	
+	METHOD on_load;
+		RUN specify;
+		RUN values;
+	END on_load;
 END pump_test;
+*)
 

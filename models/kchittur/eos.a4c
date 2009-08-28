@@ -29,7 +29,7 @@ MODEL idealgas(P WILL_BE pressure;
 	T WILL_BE temperature;
 	V WILL_BE molar_volume;);
 
-	R IS_A gas_constant;
+	R IS_A molar_gas_constant;
 
 	eq: P*V = R*T;
 
@@ -58,7 +58,7 @@ MODEL vanderwaals(P WILL_BE pressure;
 	data WILL_BE td_component_constants;
 );
 
-	R IS_A gas_constant;
+	R IS_A molar_gas_constant;
 	b IS_A molar_volume;
 	a IS_A vdwa;
 	Pc IS_A pressure;
@@ -95,7 +95,7 @@ MODEL truncated_virial_equation (P WILL_BE pressure;
 	T WILL_BE temperature; V WILL_BE molar_volume; Z WILL_BE factor;  
 	data WILL_BE td_component_constants;);
 
-	R IS_A gas_constant;
+	R IS_A molar_gas_constant;
 	Pc IS_A pressure;
 	Tc IS_A temperature;
 	T_degC IS_A factor;
@@ -148,7 +148,7 @@ MODEL rk(P WILL_BE pressure;
 	data WILL_BE td_component_constants;
 ); 
 
-	R IS_A gas_constant;
+	R IS_A molar_gas_constant;
 	Pc IS_A pressure;
 	Tc IS_A temperature;
 	T_degC IS_A factor;
@@ -200,7 +200,7 @@ MODEL srk(P WILL_BE pressure;
 	Z WILL_BE factor; 
 	data WILL_BE td_component_constants;); 
 
-	R IS_A gas_constant;
+	R IS_A molar_gas_constant;
 	Pc IS_A pressure;
 	Tc IS_A temperature;
 	T_degC IS_A factor;
@@ -254,7 +254,7 @@ MODEL pengrobinson(P WILL_BE pressure;
 	Z WILL_BE factor; 
 	data WILL_BE td_component_constants;); 
 
-	R IS_A gas_constant;
+	R IS_A molar_gas_constant;
 	Pc IS_A pressure;
 	Tc IS_A temperature;
 	T_degC IS_A factor;
@@ -310,7 +310,7 @@ MODEL vdw(P WILL_BE pressure;
 	Z WILL_BE factor; 
 	data WILL_BE td_component_constants;); 
 
-	R IS_A gas_constant;
+	R IS_A molar_gas_constant;
 	Pc IS_A pressure;
 	Tc IS_A temperature;
 	T_degC IS_A factor;

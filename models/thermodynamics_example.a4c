@@ -445,4 +445,59 @@ METHODS
    END reset_Px;
 
 END howto_thermo_ex9;
+(*
+  --------------------------------------------
+  Example 8 - VL Component 
+              (chemical potencial equilibrium)
+  --------------------------------------------
+*)
+
+MODEL howto_thermo_ex10 REFINES cmumodel;
+   cd IS_A components_data(['water'], 'water');
+   pd IS_A phases_data('VL', 'ideal_vapor_mixture', 'UNIFAC_liquid_mixture', 
+                       'none');
+   equilibrated IS_A boolean;
+   phases ALIASES pd.phases;
+
+   FOR j IN phases CREATE
+      smt[j] IS_A select_mixture_type(cd, pd.phase_type[j]);
+   END FOR;
+
+   FOR j IN phases CREATE
+      phase[j] ALIASES smt[j].phase;
+   END FOR;
+
+   state IS_A thermodynamics(cd, pd,phase, equilibrated);
+
+METHODS
+   METHOD default_self;
+      RUN state.default_self;
+   END default_self;
+
+   METHOD scale_self;
+      RUN state.scale_self; 
+   END scale_self;
+
+   METHOD specify;
+      RUN state.specify;
+   END specify;
+
+   METHOD values;
+      state.P := 1 {atm};
+      state.T := 300 {K};
+      state.y['water'] := 1; 
+      equilibrated := TRUE;
+   END values;
+
+   METHOD reset_Px;
+      equilibrated := TRUE;
+      RUN state.specify;
+      state.T.fixed := FALSE;
+      state.phase_fraction['liquid1'].fixed := TRUE;
+      state.P := 1 {atm};
+      state.y['water'] := 1;
+      state.phase_fraction['liquid1']:= 0.7;
+   END reset_Px;
+
+END howto_thermo_ex10;
 

@@ -26,6 +26,7 @@
 */
 
 #include <stdio.h>
+#include <math.h>
 /* #include <libradtran/sun.h> */
 #include "sun.h"
 
@@ -93,10 +94,14 @@ int datareader_tmy2_eof(DataReader *d){
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read %d rows",d->ndata);
 		return 1;
 	}
-
-	/* set the number of inputs and outputs */
+	
+	/* set the number of inputs and max outputs */
 	d->ninputs = 1;
-	d->noutputs = 5;
+	/*
+	@TODO change the amount of data retrieved from a TMY2 file	
+	*/
+	d->nmaxoutputs = 5; 
+		
 	return 0;
 }
 
@@ -111,7 +116,6 @@ int datareader_tmy2_data(DataReader *d){
 	/* static int lastmonth=-1;
 	static int lastday=-1; */
 	int res = 0;
-
 	Tmy2Point *tmy;
 	int year,month,day,hour;
 	int Iegh,Iedn; // Irradiation
@@ -180,7 +184,7 @@ int datareader_tmy2_data(DataReader *d){
 		for the moment, we only record global horizontal, direct normal,
 		ambient temperature, wind speed.
 	*/
-
+#define DATA(D) ((Tmy2Point *)(D->data))[D->i]
 	tmy = &DATA(d);
 	tmy->t = ((day_of_year_specific(day,month,year) - 1)*24.0 + hour)*3600.0;
 	tmy->I = Igh; /* average W/m2 for the hour in question */
@@ -201,19 +205,24 @@ int datareader_tmy2_data(DataReader *d){
 	return 0;
 }
 
+
+	
+
 int datareader_tmy2_time(DataReader *d, double *t){
 	*t = DATA(d).t;
 	return 0;
 }
 
 int datareader_tmy2_vals(DataReader *d, double *v){
-	CONSOLE_DEBUG("At t=%f h, T = %lf, I = %f J/m2"
-		,(DATA(d).t/3600.0),DATA(d).T, DATA(d).I
-	);
+	
 	v[0]=DATA(d).I;
 	v[1]=DATA(d).Ibn;
 	v[2]=DATA(d).Id;
 	v[3]=DATA(d).T;
 	v[4]=DATA(d).v_wind;
+		
+	/*CONSOLE_DEBUG("At t=%f h, T = %lf, I = %f J/m2"
+		,(DATA(d).t/3600.0),DATA(d).T, DATA(d).I);*/
+		
 	return 0;
 }

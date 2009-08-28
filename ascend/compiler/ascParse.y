@@ -1591,15 +1591,23 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 
 blackbox_statement:
     fname ':' IDENTIFIER_TOK '(' input_args ';' output_args data_args ')'
-	{
-	  /*
-	   * This is the blackbox declarative external relation.
-	   */
-	  struct VariableList *vl;
-	  vl = JoinVariableLists($5,$7);
-	  /* $$ = CreateEXTERN(2,$1,SCP($3),vl,$8,NULL); */
-	  $$ = CreateEXTERNBlackBox($1,SCP($3),vl,$8);
-	}
+    {
+      /*
+       * This is the blackbox declarative external relation.
+       */
+      	struct VariableList *vl;
+	/*determine the number of variables declared in input_args and output_args*/
+      	unsigned long n_inputs, n_outputs;
+	n_inputs = VariableListLength($5);
+	n_outputs = VariableListLength($7);
+	/*continue with normal parsing process */
+	vl = JoinVariableLists($5,$7); 
+        /* $$ = CreateEXTERN(2,$1,SCP($3),vl,$8,NULL); */
+
+      /*$$ = CreateEXTERNBlackBox($1,SCP($3),vl,$8); //original */
+      //statement now also knows how many of the variables in vl are inputs/outputs
+      $$ = CreateEXTERNBlackBox($1,SCP($3),vl,$8,n_inputs,n_outputs); 
+    }
     ;
 
 input_args:

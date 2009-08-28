@@ -18,6 +18,7 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascPanic.h>
@@ -47,9 +48,10 @@
   GLOBALS
 */
 
-static symchar *dr_symbols[2];
+static symchar *dr_symbols[3];
 #define FILENAME_SYM dr_symbols[0]
 #define FORMAT_SYM dr_symbols[1]
+#define PARAM_SYM dr_symbols[2]
 
 /*------------------------------------------------------------------------------
   BINDINGS FOR THE DATA READER TO THE ASCEND EXTERNAL FUNCTIONS API
@@ -105,14 +107,17 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 	   struct Instance *data,
 	   struct gl_list_t *arglist
 ){
-	struct Instance *fninst, *fmtinst;
-	const char *fn, *fmt;
+	struct Instance *fninst, *fmtinst, *parinst;
+	const char *fn, *fmt, *par;
 	DataReader *d;
+	char *partok = NULL; //token parser string for initialising datareader
+	int noutputs; //number of outputs as per the arg file
 
 	dr_symbols[0] = AddSymbol("filename");
 	dr_symbols[1] = AddSymbol("format");
-
-	/* get the data file name (we will look for this file in the ASCENDLIBRARY path) */
+	dr_symbols[2] = AddSymbol("parameters");
+	
+		/* get the data file name (we will look for this file in the ASCENDLIBRARY path) */
 	fninst = ChildByChar(data,FILENAME_SYM);
 	if(!fninst){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
@@ -154,27 +159,72 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'format' is NULL or empty");
 		return 1;
 	}
-
-	CONSOLE_DEBUG("Creating the datareader object...");
-
-	/* create the data reader and tell it the filename */
-	d = datareader_new(fn);
-
+/* get the datareader parameters. Ascend syntax is
+   parameters :== 'col1:interp1,col2,interp2,..,coln:interpn';
+	where	coln is the data file column assigned to corresponding variable
+			interpn is the algorithm used to interpret that data column
+*/
+	parinst = ChildByChar(data,PARAM_SYM);
+	if(!fninst){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+			,"Couldn't locate 'parameters', please check Data Reader usage."
+		);
+		return 1;
+	}
+	if(InstanceKind(parinst)!=SYMBOL_CONSTANT_INST){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'parameters' must be a symbol_constant");
+		return 1;
+	}
+	par = SCP(SYMC_INST(parinst)->value);
+	if(par==NULL || strlen(par)==0){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'parameters' is NULL or empty");
+		return 1;
+	}
+	
+	/* obtain number of outputs from the paramater statement */
+	/* this enables to create a datareader object with the right size parameter tokens */
+    /*
+    	note: the reason for this string manipulations is that par is pointing directly
+    	to the instance of the model parinst->value. Any string operations that are not
+    	read only will affect this address, potentially leaving a NULL pointer in the
+    	instance, or the datareader structure. even if passed down it wont be passed
+    	by value, but by pointer, so other functions (such as datareader_set_parameters)
+    	might affect this address, potentially causing a seg fault.
+    
+    */
+	const char *par2[strlen(par)]; //allocate enough space for a copy of par
+	strcpy(par2,par); //take a copy of par an
+	
+	/*datareader only! in rigour nouputs has to be derived by more 
+	  explicit methods, such as parsing or argument passing*/
+	noutputs = gl_length(arglist)-1; 
+	
+	/* create the data reader: tell it the filename and nouputs */
+	d = datareader_new(fn,noutputs);
+	//set datareader file format
 	if(fmt!=NULL){
 		if(datareader_set_format(d,fmt)){
 			CONSOLE_DEBUG("Invalid 'format'");
 			return 1;
 		}
 	}
-
+	//initialise datareader object
 	if(datareader_init(d)){
 		CONSOLE_DEBUG("Error initialising data reader");
 		return 1;
 	}
-
+	//asign user defined parameters
+	if(par2!=NULL){
+		if(datareader_set_parameters(d,par2)){
+		CONSOLE_DEBUG("failed to set parameters");
+		return 1;
+		}
+	}
+   
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Created data reader at %p...",d);
-	slv_interp->user_data = (void *)d;
-
+	/*assign the succesfully created datareader object to the 
+	BlackBox Cache of the relation */
+	slv_interp->user_data = (void *)d; //BROKEN AT THE MOMENT
 	return 0;
 }
 
@@ -185,8 +235,6 @@ int asc_datareader_calc(struct BBoxInterp *slv_interp,
 		double *jacobian
 ){
 	DataReader *d;
-	int i;
-
 	d = (DataReader *)slv_interp->user_data;
 	if(!d){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
@@ -208,7 +256,7 @@ int asc_datareader_calc(struct BBoxInterp *slv_interp,
 			,"Invalid number of outputs, expected <=%d but received %d"
 			,datareader_num_outputs(d), noutputs
 		);
-		return 1;
+		//return 1; warn about incompatibility but keep going ...JZap
 	}
 
 #if DATAREADER_DEBUG

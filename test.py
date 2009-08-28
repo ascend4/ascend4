@@ -1391,6 +1391,12 @@ class TestIPOPT(Ascend):
 		M.setParameter('hessian_approximation','limited-memory')
 		M.solve(ascpy.Solver("IPOPT"),ascpy.SolverReporter())
 
+class TestCSV(Ascend):
+	def test1(self):
+		self.L.load('johnpye/datareader/testcsv.a4c')
+		M = self.L.findType('testcsv').getSimulation('sim')
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+
 # test some stuff for beam calculations
 class TestSection(Ascend):
 	def test_compound3(self):

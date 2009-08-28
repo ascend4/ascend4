@@ -257,7 +257,9 @@ extern struct Statement *CreateEXTERNBlackBox(
                                       struct Name *n,
                                       CONST char *funcname,
                                       struct VariableList *vl,
-                                      struct Name *data);
+                                      struct Name *data,
+                                      unsigned long n_inputs,
+                                      unsigned long n_outputs);
 /**<
 	Create a blackbox  statement.
 	@return The created statement
@@ -265,6 +267,8 @@ extern struct Statement *CreateEXTERNBlackBox(
 	@param funcname Name of called function.
 	@param vl Parameters supplied for the external function/method
 	@param data Data arguments, possibly  null.
+	@param n_inputs The number of input variables declared for the statement
+	@param n_outputs the number of output variables declared for the statement
 
 */
 

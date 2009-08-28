@@ -308,6 +308,8 @@ struct StateExternalBlackBox {
   struct Name *nptr;        /**< name of the statement */
   struct VariableList *vl;  /**< list of arguments */
   struct Name *data;        /**< additional user data */
+  unsigned long n_inputs;  //variable arg list n of inputs in vl
+  unsigned long n_outputs; //variable arg list n of outputs in vl
 };
 
 /* blackboxes contain an implicit for loop. For

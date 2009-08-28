@@ -1,0 +1,56 @@
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/datareader/datareader";
+
+MODEL airdataconfig;
+	filename IS_A symbol_constant;
+	filename :== 'johnpye/datareader/air-props.csv';
+	format IS_A symbol_constant;
+	format :== 'CSV';
+	parameters IS_A symbol_constant;
+	parameters :== '1,2,3,5';
+END airdataconfig;
+
+MODEL base;
+END base;
+
+MODEL airprops(
+	T WILL_BE temperature;
+) REFINES base;
+	rho IS_A mass_density;
+	cp IS_A specific_heat_capacity;
+	mu IS_A viscosity;
+	k IS_A thermal_conductivity;
+
+	config IS_A airdataconfig;
+	reader:datareader(
+		T : INPUT;
+		rho, cp, mu, k : OUTPUT;
+		config : DATA
+	);
+END airprops;
+
+MODEL testairprops;
+	
+	T[1..10] IS_A temperature;
+
+	props[1..10] IS_A base;
+	FOR i IN [1..10] CREATE
+		props[i] IS_REFINED_TO airprops(T[i]);
+	END FOR;
+	
+METHODS
+METHOD on_load;
+	FIX T[1..10];
+	T[1] := 100 {K};
+	T[10] := 2500 {K};
+	T[2] := 150 {K};
+	T[3] := 2400 {K};
+	T[4] := 101 {K};
+	T[5] := 2499 {K};
+	T[6] := 99 {K};
+	T[7] := 2501 {K};
+	T[8] := 3000 {K};
+	T[9] := -400 {K};
+	T[10] := 273.15 {K};
+END on_load;
+END testairprops;
