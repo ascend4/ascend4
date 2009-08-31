@@ -2711,7 +2711,7 @@ entertrace
   Solve_Running 0 0 0
   update idletasks
   if {$args == ""} {
-    set integ_time [asc_clock "integrate_setup -engine BLSODE \
+    set integ_time [asc_clock "integrate_setup -engine LSODE \
                      -dt0 $ascSolv32767Vect(dtzero) \
                      -dtmin $ascSolv32767Vect(dtmin) \
                      -dtmax $ascSolv32767Vect(dtmax) \
