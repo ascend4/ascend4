@@ -140,6 +140,7 @@ if os.environ.get('ASC_GDB'):
 else:
 	import ascpy
 	olddir = os.getcwd()
+	print "CWD =",olddir
 	os.chdir(INSTALL_ASCDATA)
 	from gtkbrowser import *
 	os.chdir(olddir)
