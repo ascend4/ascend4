@@ -20,19 +20,52 @@ pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
 
 #print "PLATFORM = ",platform.system()
 
+default_install_prefix = '/usr/local'
+default_install_bin = "$INSTALL_PREFIX/bin"
+default_install_lib = "$INSTALL_PREFIX/lib"
+default_install_models = "$INSTALL_LIB/ascend/models"
+default_install_solvers = "$INSTALL_LIB/ascend/solvers"
+default_install_assets = "$INSTALL_ASCDATA/glade/"
+default_install_ascdata = "$INSTALL_SHARE/ascend"
+default_install_include = "$INSTALL_PREFIX/include"
+
+default_tcl = '/usr'
+default_tcl_libpath = "$TCL/lib"
 default_tcl_cpppath = "$TCL/include"
 default_tron_envvar="TRON_PATH"
 default_conopt_envvar="CONOPT_PATH"
 default_with_graphviz = True
+default_tcl_lib = "tcl8.5"
+default_tk_lib = "tk8.5"
+default_tktable_lib = "Tktable2.9"
+default_ida_prefix="$DEFAULT_PREFIX"
+default_conopt_prefix="$DEFAULT_PREFIX"
+default_conopt_libpath="$CONOPT_PREFIX"
+default_conopt_cpppath="$CONOPT_PREFIX"
+default_conopt_dlpath="$CONOPT_PREFIX"
+default_tron_prefix="$DEFAULT_PREFIX"
+default_tron_dlpath="$TRON_PREFIX/lib"
+default_tron_lib="tron1"
+default_prefix="/usr"
+default_libpath="$DEFAULT_PREFIX/lib"
+default_cpppath="$DEFAULT_PREFIX/include"
+default_fortran="gfortran"
+default_f2c_lib="gfortran"
+
+
+icon_extension = '.png'
 
 if platform.system()=="Windows":
+	default_prefix="c:\\MinGW"
+	default_libpath="$DEFAULT_PREFIX\\lib"
+	default_cpppath="$DEFAULT_PREFIX\\include"	
+
 	# these correspond the the version of Tcl/Tk linked to in the NSIS scripts
 	default_tcl_lib = "tcl84"
 	default_tk_lib = "tk84"
 	default_tktable_lib = "Tktable28"
 
 	default_install_assets = "glade/"
-	icon_extension = '.png'
 	default_tcl = "c:\\Tcl"
 	if os.environ.get('MSYSTEM'):
 		default_tcl_libpath="$TCL\\bin"
@@ -49,8 +82,6 @@ if platform.system()=="Windows":
 	
 	# where to look for IDA solver libraries, headers, etc.
 	default_ida_prefix = "c:\\MinGW"
-	if not os.path.exists(default_ida_prefix):
-		default_ida_prefix = None
 
 	# where to look for CONOPT when compiling
 	default_conopt_prefix = "c:\\Program Files\\CONOPT"
@@ -58,17 +89,10 @@ if platform.system()=="Windows":
 	default_conopt_cpppath="$CONOPT_PREFIX"
 	default_conopt_dlpath="$CONOPT_PREFIX"
 	default_conopt_lib="conopt3"
-	if not os.path.exists(default_conopt_prefix):
-		default_conopt_prefix = None
 
 	# FIXME remove this
 	default_tron_prefix="c:\\Program Files\\TRON"
 	default_tron_dlpath="$TRON_PREFIX"
-	default_tron_lib="tron1"
-
-	default_prefix="c:\\MinGW"
-	default_libpath="$DEFAULT_PREFIX\\lib"
-	default_cpppath="$DEFAULT_PREFIX\\include"	
 		
 	need_libm = False
 	python_exe = sys.executable
@@ -82,15 +106,48 @@ if platform.system()=="Windows":
 	soname_minor = ""
 	soname_major = ""
 	# still problems with Graphviz on Windows, leave it off now by default.
-	
-else:
-	default_tcl_lib = "tcl8.5"
-	default_tk_lib = "tk8.5"
-	default_tktable_lib = "Tktable2.9"
+
+elif platform.system()=="Darwin":
+
+	default_install_prefix = '/'
+	default_install_bin = "$INSTALL_PREFIX/Applications/ASCEND"
+	default_install_lib = "$INSTALL_PREFIX/Applications/ASCEND"
+	default_install_models = "$INSTALL_PREFIX/Library/ASCEND/Models"
+	default_install_solvers = "$INSTALL_PREFIX/Library/ASCEND/Solvers"
+	default_install_include = "$INSTALL_PREFIX/Applications/ASCEND/Headers"
+	default_install_ascdata = "$INSTALL_PREFIX/Applications/ASCEND/Resources"
+
+	# still need to work out the Tcl/Tk side of things...
 	default_install_assets = "$INSTALL_ASCDATA/glade/"
+
+	# within the bundle, we'll use relative paths
+	default_absolute_paths = False
+	default_dist_rel_bin = '.'
+	default_tk_rel_dist = 'tcltk'
+
+	# we want these to be in /Library/ASCEND/Models and /Library/ASCEND/Solvers
+	default_library_rel_dist = '../../Library/ASCEND/Models'
+	default_solvers_rel_dist = '../../Library/ASCEND/Solvers'
+
+	# where to look for CONOPT when compiling
+	default_conopt_prefix = "/Library/CONOPT"
+
+	default_conopt_lib="conopt3"
+
+	# FIXME remove this
+	default_tron_dlpath="$TRON_PREFIX"
+	default_tron_lib="tron1"
+		
+	need_libm = False
+	python_exe = sys.executable
+	default_with_scrollkeeper=False
+	pathsep = ";"
+	
+	default_python = distutils.sysconfig.get_python_lib()
+	
+else: # LINUX
+
 	icon_extension = '.svg'
-	default_tcl = '/usr'
-	default_tcl_libpath = "$TCL/lib"
 	default_python = distutils.sysconfig.get_python_lib()
 
 	if os.path.exists("/etc/debian_version"):
@@ -127,20 +184,10 @@ else:
 	default_library_rel_dist = 'lib/ascend/models'
 	default_solvers_rel_dist = 'lib/ascend/solvers'
 
-	default_ida_prefix="/usr"
-	default_conopt_prefix="/usr"
 	default_conopt_libpath="$CONOPT_PREFIX/lib"
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
 	default_conopt_dlpath= default_conopt_libpath + ":/usr/local/lib"
 	default_conopt_lib="consub3"
-
-	default_tron_prefix="/usr"
-	default_tron_dlpath="$TRON_PREFIX/lib"
-	default_tron_lib="tron1"
-
-	default_prefix="/usr"
-	default_libpath="$DEFAULT_PREFIX/lib"
-	default_cpppath="$DEFAULT_PREFIX/include"
 
 	need_libm = True
 	if not os.path.isdir(default_tcl):
@@ -148,16 +195,22 @@ else:
 	python_exe = distutils.sysconfig.EXEC_PREFIX+"/bin/python"
 	default_with_scrollkeeper=False
 	pathsep = ":"
-	
-	default_fortran="gfortran"
-	default_f2c_lib="gfortran"
-	
+		
 	#default_graphviz_libs=["graph","cdt","gvc"]
 	#default_graphviz_libpath = default_libpath
 	#if os.path.exists("/usr/lib/graphviz/libgraph.so"):
 	#	# for Ubuntu 7.04
 	#	default_graphviz_libpath="/usr/lib/graphviz"
 	#	default_graphviz_rpath="$GRAPHVIZ_LIBPATH"
+
+if not os.path.exists(default_conopt_prefix):
+	default_conopt_prefix = None
+
+if not os.path.exists(default_tron_prefix):
+	default_tron_prefix = None
+
+if not os.path.exists(default_ida_prefix):
+	default_ida_prefix = None
 
 soname_clean = "${SHLIBPREFIX}ascend${SHLIBSUFFIX}"
 soname_full = "%s%s" % (soname_clean,soname_major)
@@ -588,19 +641,19 @@ opts.Add(
 opts.Add(
 	'INSTALL_PREFIX'
 	,'Root location for installed files'
-	,'/usr/local'
+	,default_install_prefix
 )
 
 opts.Add(
 	'INSTALL_BIN'
 	,'Location to put binaries during installation'
-	,"$INSTALL_PREFIX/bin"
+	,default_install_bin
 )
 
 opts.Add(
 	'INSTALL_LIB'
 	,'Location to put libraries during installation'
-	,"$INSTALL_PREFIX/lib"
+	,default_install_lib
 )
 
 opts.Add(
@@ -612,7 +665,7 @@ opts.Add(
 opts.Add(
 	'INSTALL_ASCDATA'
 	,"Location of ASCEND shared data (TK, python, models etc)"
-	,"$INSTALL_SHARE/ascend"
+	,default_install_ascdata
 )
 
 opts.Add(
@@ -630,13 +683,13 @@ opts.Add(
 opts.Add(
 	'INSTALL_MODELS'
 	,"Location of ASCEND model files (.a4c,.a4l,.a4s)"
-	,"$INSTALL_LIB/ascend/models"
+	,default_install_models
 )
 
 opts.Add(
 	'INSTALL_SOLVERS'
 	,"Location of ASCEND solvers"
-	,"$INSTALL_LIB/ascend/solvers"
+	,default_install_solvers
 )
 
 opts.Add(
@@ -648,7 +701,7 @@ opts.Add(
 opts.Add(
 	'INSTALL_INCLUDE'
 	,'Location to put header files during installation'
-	,"$INSTALL_PREFIX/include"
+	,default_install_include
 )
 
 
