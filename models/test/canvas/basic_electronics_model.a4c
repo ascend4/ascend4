@@ -1,0 +1,69 @@
+REQUIRE "atoms.a4l";
+
+MODEL electron_stream;
+	V IS_A voltage;
+	I IS_A current;
+END electron_stream;
+
+MODEL equipment;
+	inlet "in:" IS_A electron_stream;
+	outlet "out:" IS_A electron_stream;
+END equipment;
+
+MODEL tee REFINES equipment;
+	NOTES
+		'block' SELF {Tee piece}
+		'icon' SELF {tee.svg}
+	END NOTES;
+	side "out:" IS_A electron_stream;
+	inlet.I = outlet.I + side.I;
+	inlet.V, outlet.V, side.V ARE_THE_SAME;
+END tee;
+
+MODEL join REFINES equipment;
+	NOTES
+		'block' SELF {Tee piece}
+		'icon' SELF {tee.svg}
+	END NOTES;
+	side "in:" IS_A electron_stream;
+	inlet.I + side.I = outlet.I;
+	inlet.V, outlet.V, side.V ARE_THE_SAME;
+END join;
+
+MODEL DC_Voltage_Source REFINES equipment;
+	NOTES
+		'block' SELF {DC Voltage Source}
+		'icon' SELF {dcvoltagesource.svg}
+	END NOTES;
+	Voltage "param: DC Voltage supplied by the DC Voltage Source" IS_A voltage;
+	inlet.V + Voltage = outlet.V;
+	inlet.I = outlet.I;
+END DC_Voltage_Source;
+
+MODEL resistor_basic REFINES equipment;
+	NOTES
+		'block' SELF {Basic Resistor}
+		'icon' SELF {resistor.svg}
+	END NOTES;
+	Resistance "param: Resistance of the resisitor" IS_A resistance;
+	inlet.I = outlet.I;
+	outlet.V = (inlet.I * Resistance) + inlet.V;
+END resistor_basic;
+
+MODEL Ground_source;
+	NOTES
+		'block' SELF {Reservoir}
+		'icon' SELF {reservoir_in.png}
+	END NOTES;
+	outlet "out:" IS_A electron_stream;
+	outlet.V = 0 {volt};
+END Ground_source;
+
+MODEL Ground_sink;
+	NOTES
+		'block' SELF {Reservoir}
+		'icon' SELF {reservoir_in.png}
+	END NOTES;
+	inlet "in:" IS_A electron_stream;
+	inlet.V = 0 {volt};
+END Ground_sink;

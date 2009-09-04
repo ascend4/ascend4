@@ -4,6 +4,7 @@ pygtk.require('2.0')
 import gtk
 import info
 import blockinstance
+import blockproperties
 
 class ContextMenuTool(Tool):
 	"""
@@ -24,16 +25,22 @@ class ContextMenuTool(Tool):
 			menu = gtk.Menu()
 			menu.connect("deactivate",self.deactivate,context)
 			menurename = gtk.MenuItem("Re_name",True)
-			window = context.view.parent.parent.parent.parent
+			window = context.view.parent.parent.parent.parent.parent
 			menurename.connect("activate",self.rename,context.view.hovered_item,window)
 			menu.add(menurename)
 			menudelete = gtk.MenuItem("_Delete",True)
 			menudelete.connect("activate",self.delete,context.view.hovered_item,context.view)
 			menu.add(menudelete)
 			menu.add(gtk.SeparatorMenuItem())
+			
+			menublockproperties = gtk.MenuItem("_Properties")
+			menublockproperties.connect("activate",self.blockproperties, window, context, context.view.hovered_item)
+			menu.add(menublockproperties)
+
 			menuinfo = gtk.MenuItem("_Info",True)
-			menuinfo.connect("activate",self.info,window,context,context.view.hovered_item)			
+			menuinfo.connect("activate",self.info,window,context,context.view.hovered_item)	
 			menu.add(menuinfo)
+			
 			if not hasattr(context.view.hovered_item,'blockinstance'):
 				menurename.set_sensitive(False)
 				menuinfo.set_sensitive(False)
@@ -57,17 +64,19 @@ class ContextMenuTool(Tool):
 				text += " (IN)\n"
 			elif v.type == blockinstance.PORT_OUT:
 				text += " (OUT)\n"
-
+			elif v.type == blockinstance.PORT_INOUT:
+				text += " (IN/OUT)\n"
+				
 		if hasattr(bi,"params"):
 			text += "\nParameters:\n"
 			for k,v in bi.params.iteritems():
 				text += "\t%s = %f\n" % (v.name, v.value)
 			
 			if bi.instance:
+				
 				text += "\nInstance exists\n"
 			else:
 				text += "\nNo instance exists\n"
-
 		info.Info(window,text,title).run()
 
 
@@ -109,3 +118,7 @@ class ContextMenuTool(Tool):
 		# TODO: add undo handler
 		view.canvas.remove(item)
 
+	def blockproperties(self, widget, window, context, item):
+		blockproperties.BlockProperties(window, item).run()
+		
+				
