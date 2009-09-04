@@ -43,6 +43,15 @@ MODEL stream;
 	p*v = R*T;
 	cp "param: stream specific heat" IS_A specific_heat_capacity;
 	h = cp*T;
+
+METHODS
+METHOD on_load;
+FIX R;
+R := 1000{kJ/kg/K};
+FIX g;
+g := 10{m/s^2};
+END on_load;
+
 END stream;
 
 MODEL equipment;
@@ -55,7 +64,6 @@ MODEL pump REFINES equipment;
 		'block' SELF {Tee piece}
 		'icon' SELF {pump.svg}
 	END NOTES;
-	dp "param: pressure rise" IS_A delta_pressure;
 	inlet.p - 1 {bar} = outlet.p;
 END pump;
 
@@ -83,6 +91,160 @@ MODEL heater REFINES join;
 		'block' SELF {Feedwater heater}
 		'icon' SELF {heater.svg}
 	END NOTES;
-	V "param: volume of heater" IS_A volume;
+	V "param:" IS_A volume;
 END heater;
+
+MODEL lots_of_params REFINES equipment;
+	NOTES
+		'block' SELF {Spurious model with lots of parameters}
+	END NOTES;
+		V "param: volume of heater" IS_A volume;
+		V1 "param: another heater" IS_A volume;
+		V2 "param: so many values" IS_A volume;
+		mdot5 "param: some flow rate" IS_A mass_rate;
+		aaabbbbccccceeeeffff "param: Some parameter with a silly long name that I can never remember and quite a long description too" IS_A energy_rate;
+		cp "param: heat cap" IS_A specific_heat_capacity;
+		cp2 "param: another heat capacity" IS_A specific_heat_capacity;
+END lots_of_params;
+
+(*
+MODEL reservoir_singleport_test;
+	NOTES
+		'block' SELF {Reservoir}
+		'icon' SELF {reservoir_singleport.png}
+	END NOTES;
+
+	in_out "dual:" IS_A stream;	
+
+	pressure "param: Pressure of the fluid at the surface" IS_A pressure;
+	temperature "param: Temperature of fluid in the reservoir" IS_A temperature;
+	totalvolume "param:" IS_A volume;
+	flowrate "param: Flow rate of fluid fowing in/out of the reservoir" IS_A mass_rate;
+	height "param: Height of the fluid in reservoir" IS_A length_constant;
+
+	inlet.p = pressure;	 
+	inlet.T = temperature;
+
+END reservoir_single_test;*)
+
+
+MODEL reservoir_in_test;
+	NOTES
+		'block' SELF {Reservoir}
+		'icon' SELF {reservoir_in.png}
+	END NOTES;
+
+	inlet "in:" IS_A stream;	
+
+	(*pressure "param: Pressure of the fluid at the outlet" IS_A pressure;
+	temperature "param: Temperature of fluid in the reservoir" IS_A temperature;
+	totalvolume "param:" IS_A volume;
+	flowrate "param: Flow rate of fluid fowing in/out of the reservoir" IS_A mass_rate;
+	height "param: Height of the fluid in reservoir" IS_A length_constant;*)
+
+END reservoir_in_test;
+
+MODEL reservoir_out_test;
+	NOTES
+		'block' SELF {Reservoir}
+		'icon' SELF {reservoir_out.png}
+	END NOTES;
+
+	outlet "out:" IS_A stream;
+	pressure "param: Pressure of the fluid at the surface" IS_A pressure;
+	R "param: stream gas constant" IS_A specific_gas_constant;
+	height "param: Height of the fluid in reservoir" IS_A distance;
+	specific_heat "param: Specific Heat Capacity of the fluid" IS_A specific_heat_capacity;
+	density "param: Density of the fluid" IS_A mass_density;
+	g IS_A gravity_constant;
+	outlet.cp = specific_heat;
+	outlet.R = R;
+	outlet.p =  pressure + g * height * density; 
+	outlet.v = 1/density;
+END reservoir_out_test;
+
+MODEL pipesegment REFINES equipment ;
+	NOTES
+		'block' SELF {Pipesegment}
+		'icon' SELF {pipesegment.png}
+	END NOTES;
+	
+	pipelength "param: Total Length of the pipesegment" IS_A distance;
+	radius "param: Internal radius of the pipesegment" IS_A distance;
+	elevation "param: Elevation of the pipesegment" IS_A distance;
+
+	friction_head "Head loss due to friction" IS_A distance;
+	friction_head = (64/2000)*(pipelength/(2*radius))*(((inlet.v*inlet.mdot)/(3.14*radius^2))^2)/(2*g); (*-- Taken Reynold's number = 2000 --*)
+	dp "Loss in pressure due to piping loss - friction head" IS_A delta_pressure;
+	g IS_A gravity_constant;
+	vel IS_A speed;
+	dp =  g * friction_head / inlet.v;
+	vel = (inlet.mdot*inlet.v)/(3.14*radius^2);
+	inlet.p =  outlet.p + dp + (0.5*vel^2)/inlet.v + (g*elevation/inlet.v);
+	outlet.mdot, inlet.mdot ARE_THE_SAME;
+	inlet.T, outlet.T ARE_THE_SAME;
+	inlet.R, outlet.R ARE_THE_SAME;
+	inlet.cp, outlet.cp ARE_THE_SAME;
+
+END pipesegment;
+
+(*MODEL pump_test REFINES equipment;
+	NOTES
+		'block' SELF {Pump}
+		'icon' SELF {pump.svg}
+	END NOTES;
+
+	(*dp "param: pressure rise" IS_A delta_pressure;
+	f "param:rotational speed" IS_A inverse_time;	
+	eta "param:isentropic efficiency" IS_A fraction;
+	w "param:work done by the pump" IS_A *)
+
+	ref_pumpspeed "param: Reference Pump speed of the pump" IS_A positive_variable;
+	ref_head "param: Head at the reference pump speed" IS_A distance;
+	ref_flowrate "param: Flow rate at the reference pump speed" IS_A volume_rate;
+	L "param: Length of the pipesegment" IS_A distance;
+	R "param: Internal radius of the pipesegment" IS_A distance;
+ 	headloss_f "Head loss due to friction" IS_A distance;
+	headloss_f = (64/2000)*(L/(2*R))*(((inlet.v*inlet.mdot)/(3.14*R^2))^2)/(2*g); (*-- Taken Reynold's number = 2000 --*)
+	
+	pumpspeed "param: Operating Speed of the pump in rpm" IS_A positive_variable;	
+	discharge_head "param: Discharge head of the pump assembly"IS_A distance;
+	static_head IS_A distance;
+	suction_head IS_A distance;
+	total_head IS_A distance;
+	flowrate IS_A volume_rate;
+	dp IS_A delta_pressure;
+
+	suction_head = inlet.p * inlet.v / inlet.g;
+	(ref_head/static_head) = (ref_pumpspeed/pumpspeed)^2;
+	total_head = static_head + headloss_f;
+	dp =  inlet.gg * headloss_f / inlet.v;
+	(*sh "param: Suction Head" IS_A distance;
+	dsh "param: Discharge Static Head" IS_A distance;
+	static_head IS_A distance;
+	static_head = dsh - sh;*)
+
+	(ref_head/total_head) = (ref_flowrate/flowrate)^2 ;
+	inlet.mdot = flowrate/inlet.v;
+	outlet.mdot = inlet.mdot;
+	 
+	inlet.p + dp = outlet.p;
+	inlet.T = outlet.T;
+END pump_test;*)
+
+MODEL pump_minimal_test REFINES equipment;
+	NOTES
+		'block' SELF {Pump}
+		'icon' SELF {pump.svg}
+	END NOTES;
+
+	dp "param: pressure rise due to the pump" IS_A delta_pressure;
+
+	inlet.p + dp = outlet.p;
+	outlet.mdot, inlet.mdot ARE_THE_SAME;
+	inlet.T, outlet.T ARE_THE_SAME;
+	inlet.R, outlet.R ARE_THE_SAME;
+	inlet.cp, outlet.cp ARE_THE_SAME;
+
+END pump_minimal_test;
 

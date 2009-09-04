@@ -96,6 +96,7 @@ public:
 	std::vector<Variable> getVariablesNearBounds(const double &epsilon=1e-4);
 	std::vector<Variable> getVariablesFarFromNominals(const double &bignum);
 	std::vector<Variable> getFixedVariables();
+	std::vector<Variable> getallVariables();
 	Matrix getMatrix();
 
 	void write(FILE *fp,const char *type=NULL) const;

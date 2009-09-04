@@ -657,6 +657,20 @@ Simulation::getFixedVariables(){
 }
 
 /**
+ Returns all variables in solver's variables list that will be saved in pickle 
+ */
+vector<Variable>
+Simulation::getallVariables(){
+	if(!sys)throw runtime_error("Simulation system not build yet");
+	vector<Variable> vars;
+	var_variable **vlist = slv_get_solvers_var_list(sys);
+	unsigned long nvars = slv_get_num_solvers_vars(sys);
+	for(unsigned long i=0;i<nvars;++i)
+		vars.push_back(Variable(this,vlist[i]));
+	return vars;
+}
+
+/**
 	For solvers that store a big matrix for the system, return a pointer to that
 	matrix (struct mtx_header*) as a C++-wrapped object of class Matrix.
 */

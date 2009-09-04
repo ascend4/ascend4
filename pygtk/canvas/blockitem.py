@@ -236,11 +236,21 @@ class DefaultBlockItem(BlockItem):
 		nw = self._handles[NW]
 		c.rectangle(nw.x, nw.y, self.width, self.height)
 		if context.hovered:
-		    c.set_source_rgba(.8,.8,1, .8)
+			try:
+		    		c.set_source_rgb(self.blockinstance.color_r,self.blockinstance.color_g,self.blockinstance.color_b)
+			except AttributeError:
+				c.set_source_rgb(1,1,1)
+				
+		    #c.set_source_rgba(.8,.8,1, .8)
 		else:
-		    c.set_source_rgba(1,1,1, .8)
+		    #c.set_source_rgba(1,1,1, .8)
+		    	try:
+		    		c.set_source_rgb(2*self.blockinstance.color_r,2*self.blockinstance.color_g,2*self.blockinstance.color_b)
+			except AttributeError:
+				c.set_source_rgb(1,1,1)
+				
 		c.fill_preserve()
-		c.set_source_rgb(0,0,0.8)
+		c.set_source_rgb(0,0,0)
 		c.stroke()
 
 		text_center(c,self.width/2,self.height/2,self.blockinstance.name)

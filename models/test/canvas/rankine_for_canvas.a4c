@@ -1,0 +1,170 @@
+REQUIRE "atoms.a4l";
+(*REQUIRE "johnpye/thermo_types.a4c";
+
+IMPORT "freesteam";*)
+
+ATOM specific_enthalpy REFINES solver_var
+		DIMENSION L^2/T^2
+		DEFAULT 1000{kJ/kg};
+	lower_bound := 0{kJ/kg};
+	upper_bound := 1e50{kJ/kg};
+	nominal := 1000{kJ/kg};
+END specific_enthalpy;
+
+ATOM specific_energy REFINES solver_var
+		DIMENSION L^2/T^2
+		DEFAULT 1000{kJ/kg};
+
+	lower_bound := 0{kJ/kg};
+	upper_bound := 1e50{kJ/kg};
+	nominal := 1000{kJ/kg};
+END specific_energy;
+
+ATOM specific_entropy REFINES solver_var
+		DIMENSION L^2/T^2/TMP
+		DEFAULT 6{kJ/kg/K};
+	
+	lower_bound := 0{kJ/kg/K};
+	upper_bound := 1e50{kJ/kg/K};
+	nominal := 6{kJ/kg/K};
+
+END specific_entropy;
+
+ATOM specific_volume REFINES solver_var
+		DIMENSION L^3/M
+		DEFAULT 0.001{m^3/kg};
+	lower_bound := 0{m^3/kg};
+	upper_bound := 1e50{m^3/kg};
+	nominal := 0.001{m^3/kg};
+END specific_volume;
+
+ATOM specific_gas_constant REFINES solver_var
+		DIMENSION L^2/T^2/TMP
+		DEFAULT 1000{kJ/kg/K};
+	lower_bound := 0{kJ/kg/K};
+	upper_bound := 1e50{kJ/kg/K};
+	nominal := 1000{kJ/kg/K};
+END specific_gas_constant;
+
+ATOM specific_heat_capacity REFINES solver_var
+		DIMENSION L^2/T^2/TMP
+		DEFAULT 4.0{kJ/kg/K};
+	
+	lower_bound := 0{kJ/kg/K};
+	upper_bound := 1e50{kJ/kg/K};
+	nominal := 4.2{kJ/kg/K};
+END specific_heat_capacity;
+
+MODEL stream;
+	p IS_A pressure;
+	h IS_A specific_enthalpy;
+
+	v IS_A specific_volume;
+	T IS_A temperature;
+	s IS_A specific_entropy;
+	x IS_A fraction;
+	mdot IS_A mass_rate;
+
+        p*v = T * 0.46{m^2/s^2/K};
+	
+END stream;
+
+MODEL equipment;
+	inlet "in: NAMED IN equipment" IS_A stream;
+	outlet "out:"IS_A stream;
+
+	inlet.mdot, outlet.mdot ARE_THE_SAME;
+	mdot ALIASES inlet.mdot;
+END equipment;
+
+MODEL pump REFINES equipment;
+	NOTES
+		'block' SELF {Tee piece}
+		'icon' SELF {pump.svg}
+	END NOTES;
+
+	dp "param:" IS_A delta_pressure;
+	oulet.p = inlet.p + dp;
+	outlet.s, inlet.s ARE_THE_SAME;
+	eta "param:" IS_A fraction;
+	eta_eq:eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
+	(* work done on the environment, will be negative *)
+	Wdot IS_A energy_rate;
+	Wdot_eq:Wdot = eta * mdot * (inlet.h - outlet.h);
+
+	w IS_A specific_energy;
+	w_eq:w = eta * (outlet.h - inlet.h);
+
+END pump;
+
+MODEL turbine_simple REFINES equipment;
+	NOTES
+		'block' SELF {Simple turbine model}
+		'icon' SELF {turbine.svg}
+	END NOTES;
+
+	dp IS_A delta_pressure;
+	inlet.p + dp = outlet.p;
+	
+	outlet_is IS_A stream;
+	outlet_is.p, outlet.p ARE_THE_SAME;
+	outlet_is.s, inlet.s ARE_THE_SAME;
+
+	eta "param:" IS_A fraction;
+	eta_eq:eta * (inlet.h - outlet_is.h) = (inlet.h - outlet.h);
+	
+	(* work done on the environment, will be positive *)
+	Wdot IS_A energy_rate;
+	Wedot_eq:Wdot = mdot * (inlet.h - outlet.h);
+
+	w IS_A specific_energy;
+	w_eq:w = inlet.h - outlet.h;
+
+END turbine_simple;
+
+MODEL boiler_simple REFINES equipment;
+	NOTES
+		'block' SELF {Simple boiler model}
+		'icon' SELF {pump.svg}
+	END NOTES;
+
+	inlet.p, outlet.p ARE_THE_SAME;
+	Qdot_fuel IS_A energy_rate;
+	Qdot IS_A energy_rate;
+
+	Qdot = mdot * (outlet.h - inlet.h);
+
+	eta IS_A fraction;
+	Qdot = eta * Qdot_fuel;
+END boiler_simple;
+
+MODEL tee REFINES equipment;
+	NOTES
+		'block' SELF {Tee piece}
+		'icon' SELF {tee.svg}
+	END NOTES;
+	side "out:" IS_A stream;
+	phi IS_A fraction;
+	phi * inlet.mdot = side.mdot;
+	inlet.mdot = outlet.mdot + side.mdot;
+	inlet.p, outlet.p, side.p ARE_THE_SAME;
+	inlet.h, outlet.h, side.h ARE_THE_SAME;
+END tee;
+
+MODEL join REFINES equipment;
+	NOTES
+		'block' SELF {Joiner piece}
+		'inline' inlet {in: AS NAMED IN 'join'}
+		'icon' SELF {join.svg}
+	END NOTES;
+	side "in:" IS_A stream;
+
+	inlet.mdot + side.mdot = outlet.mdot;
+	inlet.p, outlet.p, side.p ARE_THE_SAME;
+	inlet.h, outlet.h, side.h ARE_THE_SAME;
+
+END join;
+
+
+
+

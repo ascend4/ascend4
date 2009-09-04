@@ -30,23 +30,25 @@ class BlockType:
 		self.inputs = []
 		self.outputs = []
 		self.params = []
+		#self.duals = []
 		for n in nn:
 			t = n.getText()
 			if t[0:min(len(t),3)]=="in:":
 				self.inputs += [n]
 			elif t[0:min(len(t),4)]=="out:":
 				self.outputs += [n]
+			#elif t[0:min(len(t),5)]=="dual:":
+			#	self.duals += [n]
 			elif t[0:min(len(t),6)]=="param:":
 				self.params += [n]
-
+				
 		self.iconfile = None
 		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("icon"))
 		if nn:
 			n = nn[0].getText()
 			if os.path.exists(n):
 				self.iconfile = n
-
-
+		
 	def get_icon(self, width, height):
 		"""
 		Get a pixbuf representation of the block for use in the block palette
@@ -70,6 +72,8 @@ class BlockType:
 		self._typename = typename
 		self.inputs = range(ninputs)
 		self.outputs = range(noutputs)
+		#self.instance = instance
+		#self.duals = range(nduals)
 		print "outputs =", self.outputs
 
 	def reattach_ascend(self,library,  notesdb):
@@ -79,12 +83,18 @@ class BlockType:
 
 		self.inputs = []
 		self.outputs = []
+		self.params = []
+		#self.duals = []
 		for n in nn:
 			t = n.getText()
 			if t[0:min(len(t),3)]=="in:":
 				self.inputs += [n]
 			elif t[0:min(len(t),4)]=="out:":
 				self.outputs += [n]
+		#	elif t[0:min(len(t),4)]=="dual:":
+		#		self.duals += [n]
+			elif t[0:min(len(t),6)]=="param:":
+				self.params += [n]
 	
 		print "Reattached type '%s', with %d inputs, %d outputs" % (self.type.getName(), len(self.inputs), len(self.outputs))		
 
@@ -94,3 +104,6 @@ class BlockType:
 	def get_output_name(self, index):
 		return self.outputs[index].getText()
 
+	#def get_dual_name(self, index):
+	#	return self.duals[index].get_text()
+	

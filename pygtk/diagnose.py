@@ -79,7 +79,7 @@ class DiagnoseWindow:
 
 	def prepare_data(self):
 		# convert incidence map to pylab numarray type:
-		print "PREPARING DATA"
+		print "PREPARING DATA to be loaded"
 		self.im = self.browser.sim.getIncidenceMatrix()
 		self.data = self.im.getIncidenceData()
 		print "DATA LOADED"
