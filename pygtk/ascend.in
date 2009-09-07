@@ -54,6 +54,9 @@ else:
 	LDPATHVAR = 'LD_LIBRARY_PATH'
 	GTKLIBS = None # assume the GTK will be in the standard library path
 
+	if platform.system()=="Darwin":
+		LDPATHVAR="DYLD_LIBRARY_PATH"
+
 #-----------------------------------------------------------------------
 
 if os.environ.get(LDPATHVAR):

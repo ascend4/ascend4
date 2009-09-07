@@ -110,12 +110,12 @@ if platform.system()=="Windows":
 elif platform.system()=="Darwin":
 
 	default_install_prefix = ''
-	default_install_bin = "$INSTALL_PREFIX/Applications/ASCEND"
-	default_install_lib = "$INSTALL_PREFIX/Applications/ASCEND"
+	default_install_bin = "$INSTALL_PREFIX/Applications/ASCEND.app"
+	default_install_lib = "$INSTALL_BIN"
 	default_install_models = "$INSTALL_PREFIX/Library/ASCEND/Models"
 	default_install_solvers = "$INSTALL_PREFIX/Library/ASCEND/Solvers"
-	default_install_include = "$INSTALL_PREFIX/Applications/ASCEND/Headers"
-	default_install_ascdata = "$INSTALL_PREFIX/Applications/ASCEND/Resources"
+	default_install_include = "$INSTALL_BIN/Headers"
+	default_install_ascdata = "$INSTALL_BIN/Resources"
 	default_install_python = "$INSTALL_BIN/Python"
 
 	# still need to work out the Tcl/Tk side of things...
@@ -2650,6 +2650,7 @@ SConsEnvironment.InstallPerm = InstallPerm
 SConsEnvironment.InstallProgram = lambda env, dest, files: InstallPerm(env, dest, files, 0755) 	 
 SConsEnvironment.InstallHeader = lambda env, dest, files: InstallPerm(env, dest, files, 0644)
 SConsEnvironment.InstallShared = lambda env, dest, files: InstallPerm(env, dest, files, 0644)
+SConsEnvironment.InstallSharedAs = lambda env, dest, files: InstallPermAs(env, dest, files, 0644)
 SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, dest, files, 0644)
 
 #------------------------------------------------------
@@ -2836,9 +2837,6 @@ if env.get('CAN_INSTALL'):
 	install_dirs = [Dir(env.subst("$INSTALL_ROOT$"+d)) for d in dirs]
 	install_dirs += modeldirs + [Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS"))]
 
-	# TODO: add install options
-	env.Alias('install',install_dirs)
-
 	#env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_LIB")),libascend)
 
 	libname = "${INSTALL_LIB}/%s%s" % (soname_full,soname_minor)
@@ -2865,6 +2863,16 @@ if env.get('CAN_INSTALL'):
 		)
 
 	env.InstallProgram(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),ascendconfig)
+
+	# MAC OS X INSTALL STUFF
+
+	if platform.system()=="Darwin":
+		print "ITS DARWIN"
+		env.InstallSharedAs(env.subst("$INSTALL_ROOT${INSTALL_BIN}")+"Info.plist","mac/ascend.plist")
+		env.InstallShared(env.subst("$INSTALL_ROOT$INSTALL_BIN/Resources/"),"mac/ascend.icns")
+
+	# ALIAS FOR ALL INSTALLATION
+	env.Alias('install',install_dirs)
 
 #------------------------------------------------------
 # WINDOWS INSTALLER

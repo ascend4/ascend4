@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIconFile</key>
+	<string>ascend.svg</string>
+	<key>CFBundleVersion</key>
+	<string>no-build-number</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.9.7</string>
+	<key>CFBundleSignature</key>
+	<string>a4py</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleName</key>
+	<string>ASCEND bundle</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleIdentifier</key>
+	<string>edu.cmu.cheme.ascend</string>
+	<key>CFBundleExecutable</key>
+	<string>ascend</string>
+	<key>CFBundleDisplayName</key>
+	<string>ASCEND modelling environment</string>
+</dict>
+</plist>
