@@ -2867,9 +2867,8 @@ if env.get('CAN_INSTALL'):
 	# MAC OS X INSTALL STUFF
 
 	if platform.system()=="Darwin":
-		print "ITS DARWIN"
-		env.InstallSharedAs(env.subst("$INSTALL_ROOT${INSTALL_BIN}")+"Info.plist","mac/ascend.plist")
-		env.InstallShared(env.subst("$INSTALL_ROOT$INSTALL_BIN/Resources/"),"mac/ascend.icns")
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),"mac/Info.plist")
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN/Resources/")),"mac/ascend.icns")
 
 	# ALIAS FOR ALL INSTALLATION
 	env.Alias('install',install_dirs)

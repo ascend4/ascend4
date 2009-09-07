@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIconFile</key>
-	<string>ascend.svg</string>
+	<string>ascend.icns</string>
 	<key>CFBundleVersion</key>
 	<string>no-build-number</string>
 	<key>CFBundleShortVersionString</key>
