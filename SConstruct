@@ -28,6 +28,7 @@ default_install_solvers = "$INSTALL_LIB/ascend/solvers"
 default_install_assets = "$INSTALL_ASCDATA/glade/"
 default_install_ascdata = "$INSTALL_SHARE/ascend"
 default_install_include = "$INSTALL_PREFIX/include"
+default_install_python = os.path.join(distutils.sysconfig.get_python_lib(),"ascend")
 
 default_tcl = '/usr'
 default_tcl_libpath = "$TCL/lib"
@@ -101,7 +102,6 @@ if platform.system()=="Windows":
 	
 	default_fortran="g77"
 	default_f2c_lib="g2c"
-	default_python = distutils.sysconfig.get_python_lib()
 	
 	soname_minor = ""
 	soname_major = ""
@@ -109,13 +109,14 @@ if platform.system()=="Windows":
 
 elif platform.system()=="Darwin":
 
-	default_install_prefix = '/'
+	default_install_prefix = ''
 	default_install_bin = "$INSTALL_PREFIX/Applications/ASCEND"
 	default_install_lib = "$INSTALL_PREFIX/Applications/ASCEND"
 	default_install_models = "$INSTALL_PREFIX/Library/ASCEND/Models"
 	default_install_solvers = "$INSTALL_PREFIX/Library/ASCEND/Solvers"
 	default_install_include = "$INSTALL_PREFIX/Applications/ASCEND/Headers"
 	default_install_ascdata = "$INSTALL_PREFIX/Applications/ASCEND/Resources"
+	default_install_python = "$INSTALL_BIN/Python"
 
 	# still need to work out the Tcl/Tk side of things...
 	default_install_assets = "$INSTALL_ASCDATA/glade/"
@@ -143,12 +144,10 @@ elif platform.system()=="Darwin":
 	default_with_scrollkeeper=False
 	pathsep = ";"
 	
-	default_python = distutils.sysconfig.get_python_lib()
 	
 else: # LINUX
 
 	icon_extension = '.svg'
-	default_python = distutils.sysconfig.get_python_lib()
 
 	if os.path.exists("/etc/debian_version"):
 		default_tcl_cpppath = "/usr/include/tcl8.4"
@@ -671,7 +670,7 @@ opts.Add(
 opts.Add(
 	'INSTALL_PYTHON'
 	,'Common shared-file location on this system'
-	,os.path.join(default_python,"ascend")
+	,default_install_python
 )
 
 opts.Add(
