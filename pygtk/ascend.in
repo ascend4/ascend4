@@ -39,6 +39,19 @@ if platform.system()=="Windows":
 	print "PYTHON =",PYTHON
 	SEP=";"
 	LDPATHVAR = 'PATH'
+elif platform.system()=="Darwin":
+	import os
+	olddir = os.getcwd()
+	sys.path.insert(0,os.path.join(sys.path[0],"Python"))
+	import gtkbrowser
+	os.chdir(olddir)
+
+	# TODO add ASCEND.app/Contents to DYLD_LIBRARY_PATH the restart
+
+	b = gtkbrowser.Browser()
+	b.run()
+	sys.exit(0)
+
 else:
 
 	# FIXME for possible case of relative paths...
@@ -56,6 +69,7 @@ else:
 
 	if platform.system()=="Darwin":
 		LDPATHVAR="DYLD_LIBRARY_PATH"
+		GTKLIBS="/Users/john/gtk/inst/lib"
 
 #-----------------------------------------------------------------------
 
@@ -67,13 +81,16 @@ else:
 if not os.environ.get('ASC_GDB'):
 	# restarting messes up GDB so don't allow it
 
-	if platform.system()=="Windows":
+	if platform.system()=="Windows" or platform.system()=="Darwin":
 		# Put INSTALL_LIB then GTK at start of path
+		if GTKLIBS not in LDPATH:
+			restart = 1
+		if INSTALL_LIB not in LDPATH:
+			restart = 1
 		if GTKLIBS in LDPATH:
 			LDPATH.remove(GTKLIBS)
 		LDPATH=[INSTALL_LIB,GTKLIBS]+LDPATH
 		os.environ[LDPATHVAR] = SEP.join(LDPATH)
-		restart = 1
 	elif INSTALL_LIB != "/usr/lib" and not INSTALL_LIB in LDPATH:
 		# don't worry about GTK location; just ensure that LDPATH includes INSTALL_LIB
 		LDPATH = [INSTALL_LIB] + LDPATH

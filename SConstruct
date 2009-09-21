@@ -110,7 +110,7 @@ if platform.system()=="Windows":
 elif platform.system()=="Darwin":
 
 	default_install_prefix = ''
-	default_install_bin = "$INSTALL_PREFIX/Applications/ASCEND.app"
+	default_install_bin = "$INSTALL_PREFIX/Applications/ASCEND.app/Contents"
 	default_install_lib = "$INSTALL_BIN"
 	default_install_models = "$INSTALL_PREFIX/Library/ASCEND/Models"
 	default_install_solvers = "$INSTALL_PREFIX/Library/ASCEND/Solvers"

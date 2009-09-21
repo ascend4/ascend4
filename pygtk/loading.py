@@ -4,13 +4,16 @@ import os.path
 
 global have_gtk
 have_gtk = False
+
+print "PYTHON PATH =",sys.path
+
 try:
 	import pygtk 
 	pygtk.require('2.0') 
 	import gtk
 	have_gtk = True
-except:
-	print "PyGTK COULD NOT BE LOADED (is it installed? do you have X-Windows running?)"
+except Exception,e:
+	print "PyGTK COULD NOT BE LOADED (is it installed? do you have X-Windows running?) (%s)" % str(e)
 	sys.exit(1)
 
 global _messages
