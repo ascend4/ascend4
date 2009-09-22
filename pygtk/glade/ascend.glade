@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <glade-interface>
-<!-- interface-requires gtk+ 2.16 -->
-<!-- interface-naming-policy toplevel-contextual -->
+  <!-- interface-requires gtk+ 2.16 -->
+  <!-- interface-naming-policy toplevel-contextual -->
   <widget class="GtkWindow" id="browserwin">
     <property name="visible">True</property>
     <property name="title" translatable="yes">ASCEND PyGTK</property>
@@ -17,12 +17,12 @@
           <widget class="GtkMenuBar" id="browsermenu">
             <property name="visible">True</property>
             <child>
-              <widget class="GtkMenuItem" id="menuitem8">
+              <widget class="GtkMenuItem" id="filemenu">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_File</property>
                 <property name="use_underline">True</property>
                 <child>
-                  <widget class="GtkMenu" id="menuitem8_menu">
+                  <widget class="GtkMenu" id="filemenu_menu">
                     <child>
                       <widget class="GtkImageMenuItem" id="open2">
                         <property name="label">gtk-open</property>
@@ -37,9 +37,16 @@
                         <property name="label">_Reload</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                        <signal name="activate" handler="reload_click"/>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="reload_click" after="yes"/>
                         <accelerator key="F5" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image1">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-refresh</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -69,12 +76,19 @@
                   <widget class="GtkMenu" id="editmenu_menu">
                     <child>
                       <widget class="GtkImageMenuItem" id="copy_observer_matrix">
-                        <property name="label">_Copy Observer Matrix</property>
+                        <property name="label">_Copy observer matrix</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_copy_observer_matrix_click"/>
                         <accelerator key="C" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image2">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-copy</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -87,9 +101,16 @@
                         <property name="label">_Fix Variable</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_fix_variable_activate"/>
                         <accelerator key="F" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image3">
+                            <property name="visible">True</property>
+                            <property name="xalign">0.49000000953674316</property>
+                            <property name="pixbuf">locked.png</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -97,9 +118,15 @@
                         <property name="label">F_ree Variable</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_free_variable_activate"/>
                         <accelerator key="R" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image4">
+                            <property name="visible">True</property>
+                            <property name="pixbuf">unlocked.png</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -112,9 +139,16 @@
                         <property name="label">_Properties</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="props_activate"/>
                         <accelerator key="F4" signal="activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image5">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-properties</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                   </widget>
@@ -127,7 +161,7 @@
                 <property name="label" translatable="yes">_View</property>
                 <property name="use_underline">True</property>
                 <child>
-                  <widget class="GtkMenu" id="menu1">
+                  <widget class="GtkMenu" id="viewmenu_menu">
                     <property name="visible">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <child>
@@ -136,9 +170,16 @@
                         <property name="visible">True</property>
                         <property name="tooltip" translatable="yes">View the incidence matrix from the solver</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_tools_sparsity_click"/>
                         <accelerator key="I" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image6">
+                            <property name="visible">True</property>
+                            <property name="xalign">0.47999998927116394</property>
+                            <property name="pixbuf">incidence.png</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -147,9 +188,16 @@
                         <property name="visible">True</property>
                         <property name="tooltip" translatable="yes">View incidence graph for the system</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_tools_incidencegraph_click"/>
                         <accelerator key="G" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image7">
+                            <property name="visible">True</property>
+                            <property name="xalign">0.49000000953674316</property>
+                            <property name="pixbuf">graphviz.png</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -157,9 +205,16 @@
                         <property name="label">_Diagnose blocks...</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_diagnose_blocks_click"/>
                         <accelerator key="D" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image8">
+                            <property name="visible">True</property>
+                            <property name="xalign">0.47999998927116394</property>
+                            <property name="pixbuf">diagnose.png</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -242,9 +297,15 @@
                         <property name="label">Re-_paint</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_tools_repaint_tree_activate"/>
                         <accelerator key="F5" signal="activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image9">
+                            <property name="visible">True</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                   </widget>
@@ -263,9 +324,16 @@
                         <property name="label">C_heck</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="check_click"/>
                         <accelerator key="F7" signal="activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image10">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-spell-check</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -273,19 +341,31 @@
                         <property name="label">Sol_ve</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="solve_click"/>
                         <accelerator key="F9" signal="activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image11">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-media-play</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="integrate1">
                         <property name="label">Integrate...</property>
                         <property name="visible">True</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="integrate_click"/>
                         <accelerator key="F9" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image12">
+                            <property name="visible">True</property>
+                            <property name="pixbuf">integrator-sm.png</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -299,8 +379,14 @@
                         <property name="visible">True</property>
                         <property name="tooltip" translatable="yes">Select preferred units of measurement for different atom types</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_units_click"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image13">
+                            <property name="visible">True</property>
+                            <property name="pixbuf">ruler.png</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -309,9 +395,16 @@
                         <property name="visible">True</property>
                         <property name="tooltip" translatable="yes">Program ASCEND with Python</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="console_click"/>
                         <accelerator key="F12" signal="activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image14">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-fullscreen</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -324,9 +417,16 @@
                         <property name="label">Add _Observer</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_add_observer_click"/>
                         <accelerator key="O" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image16">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-indent</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -334,9 +434,16 @@
                         <property name="label">_Keep Observed Values</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_keep_observed_click"/>
                         <accelerator key="K" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image15">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-media-record</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -383,9 +490,15 @@
                         <property name="label">Solver _Parameters...</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="preferences_click"/>
                         <accelerator key="F11" signal="activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image19">
+                            <property name="visible">True</property>
+                            <property name="pixbuf">properties.png</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -451,8 +564,16 @@
                         <property name="label">_Contents</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_help_contents_click"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image17">
+                            <property name="visible">True</property>
+                            <property name="yalign">0.46000000834465027</property>
+                            <property name="stock">gtk-help</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -460,8 +581,15 @@
                         <property name="label">Check for _Updates</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_help_check_for_updates_click"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image18">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-connect</property>
+                            <property name="icon-size">1</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
