@@ -1,0 +1,61 @@
+REQUIRE "johnpye/datareader/testairprops.a4c";
+
+(* Dittus-Boelter equation for fully-developed turbulent pipe flow  *)
+MODEL dittus;
+	T_w, T_m IS_A temperature;
+	air IS_A airprops(T_m);
+
+	Vel IS_A speed;
+	Vdot IS_A volume_rate;
+	mdot IS_A mass_rate;
+	A IS_A area;
+	D, L IS_A distance;
+	A = 0.25{PI}* D^2;
+	mdot = air.rho * Vdot;
+	Vdot = A*Vel;
+	
+	Nu, Re, Pr IS_A factor;
+	Pr = air.cp * air.mu / air.k;
+
+	Re = air.rho * Vel * D / air.mu;
+
+	n IS_A factor;
+
+	Nu = 0.023 * Re^(4./5) * Pr^n;
+
+	for_heating: n = 0.3;
+	for_cooling: n = 0.4;
+
+	L_on_D IS_A factor;
+	L_on_D = L / D;
+
+	h IS_A heat_transfer_coefficient;
+	Nu * air.k = h * D;
+
+	Q IS_A energy_rate;
+	Q = h * L * 1{PI} * D * (T_w - T_m);
+
+METHODS
+METHOD on_load;
+	FIX mdot; 
+	mdot := 0.04 {kg/s};
+	FIX D;
+	D := 12 {cm};
+	FIX L;
+	L := 5 {m};
+	FIX T_m;
+	T_m := 10 {K} + 273.15 {K};
+	FIX T_w;
+	T_w := 50 {K} + 273.15 {K};
+
+	L_on_D.lower_bound := 10;
+	L_on_D := 20;
+	Pr.lower_bound := 0.6;
+	Pr.upper_bound := 160;
+	Re.lower_bound := 10000;
+	Re := 20000;
+	for_heating.included := FALSE;
+END on_load;
+END dittus;
+
+
