@@ -17,16 +17,19 @@ MODEL airprops(
 	T WILL_BE temperature;
 ) REFINES base;
 	rho IS_A mass_density;
-	cp IS_A specific_heat_capacity;
-	mu IS_A viscosity;
+	cp, cp_uncorrected IS_A specific_heat_capacity;
+	mu, mu_uncorrected IS_A viscosity;
 	k IS_A thermal_conductivity;
 
 	config IS_A airdataconfig;
 	reader:datareader(
 		T : INPUT;
-		rho, cp, mu, k : OUTPUT;
+		rho, cp_uncorrected, mu_uncorrected, k : OUTPUT;
 		config : DATA
 	);
+
+	mu = mu_uncorrected / 1e5;
+	cp = cp_uncorrected * 1e3;
 END airprops;
 
 MODEL testairprops;
