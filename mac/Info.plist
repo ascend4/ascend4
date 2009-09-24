@@ -21,6 +21,7 @@
 	<key>CFBundleExecutable</key>
 	<string>ascend</string>
 	<key>CFBundleDisplayName</key>
-	<string>ASCEND modelling environment</string>
+	<!-- shown in menu bar during running -->
+	<string>ASCEND</string>
 </dict>
 </plist>
