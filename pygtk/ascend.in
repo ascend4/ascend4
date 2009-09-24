@@ -5,22 +5,36 @@ import os.path, sys, platform
 
 restart = 0
 
-# This script handles restarting ascend if it's invoked without the full
-# complement of env vars. You can override values used by this script
-# by setting the appropriate env vars before this script is run.
+# This script launched ASCEND, after first ensuring that all necessary 
+# variables are present in the 'environment', and adding them and 
+# restarting the process if necessary. You can override values for these
+# env vars by setting them before this script is run.
 
-# Note that as well as env vars, ASCEND is also controllable using the 
+# Note that as well as env vars, ASCEND PyGTK is also controllable using the 
 # .ascend.ini file in the user's home directory.
+
+def path_absolute(p):
+	if os.path.isabs(p):
+		return p
+	else:
+		return os.path.join(sys.path[0],p)
 
 #-----------------------------------------------------------------------
 # Get locations of the installed files. On windows, these are defined in
 # in the registry. On other systems, these are defined at compile time
 # by @VARNAME@ substitution.
 
+SEP = ":"
+PYTHON="@PYTHON@"
+GTKLIBS = "" # assume the GTK will be in the standard library path
+
 if platform.system()=="Windows":
+	SEP=";"
+	LDPATHVAR = 'PATH'
+	PYTHON=os.path.join(sys.prefix,"pythonw.exe")
+
 	import _winreg as wreg
 	k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, "SOFTWARE\ASCEND")
-	print k
 
 	# on Windows, we should be able to *assume* relative paths...
 
@@ -34,25 +48,22 @@ if platform.system()=="Windows":
 	
 	INSTALL_PYTHON = os.path.join(INSTALL_ASCDATA,"python")	
 	PYVERSION = "@PYVERSION@"
-	PYTHON=os.path.join(sys.prefix,"pythonw.exe")
-	
-	print "PYTHON =",PYTHON
-	SEP=";"
-	LDPATHVAR = 'PATH'
+
 elif platform.system()=="Darwin":
-	import os
-	olddir = os.getcwd()
-	sys.path.insert(0,os.path.join(sys.path[0],"Python"))
-	import gtkbrowser
-	os.chdir(olddir)
 
-	# TODO add ASCEND.app/Contents to DYLD_LIBRARY_PATH the restart
+	LDPATHVAR = 'DYLD_LIBRARY_PATH'
 
-	b = gtkbrowser.Browser()
-	b.run()
-	sys.exit(0)
+	# FIXME
+	#GTKLIBS="/Users/john/gtk/inst/lib"
+
+	INSTALL_LIB = path_absolute(".")
+	INSTALL_ASCDATA = path_absolute("Resources")
+	INSATLL_MODELS = path_absolute("""@ASC_LIBRARY_REL_DIST@""")
+	INSTALL_SOLVERS = path_absolute("""@ASC_SOLVERS_REL_DIST@""")
+	INSTALL_PYTHON = path_absolute("Python")
 
 else:
+	LDPATHVAR = 'LD_LIBRARY_PATH'
 
 	# FIXME for possible case of relative paths...
 
@@ -61,15 +72,7 @@ else:
 	INSTALL_MODELS = "@INSTALL_MODELS@"
 	INSTALL_SOLVERS = "@INSTALL_SOLVERS@"
 	INSTALL_PYTHON = "@INSTALL_PYTHON@"
-	PYTHON="@PYTHON@"
 	DEFAULT_ASCENDLIBRARY="""@DEFAULT_ASCENDLIBRARY@"""
-	SEP=":"
-	LDPATHVAR = 'LD_LIBRARY_PATH'
-	GTKLIBS = None # assume the GTK will be in the standard library path
-
-	if platform.system()=="Darwin":
-		LDPATHVAR="DYLD_LIBRARY_PATH"
-		GTKLIBS="/Users/john/gtk/inst/lib"
 
 #-----------------------------------------------------------------------
 
@@ -81,7 +84,7 @@ else:
 if not os.environ.get('ASC_GDB'):
 	# restarting messes up GDB so don't allow it
 
-	if platform.system()=="Windows" or platform.system()=="Darwin":
+	if platform.system()=="Windows" :
 		# Put INSTALL_LIB then GTK at start of path
 		if GTKLIBS not in LDPATH:
 			restart = 1
