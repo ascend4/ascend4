@@ -126,9 +126,18 @@ class Browser:
 		# load the file referenced in the command line, if any
 
 		loading.print_status("Parsing options","CONFIG = %s"%config.VERSION)
+
+		#print "Command-line options:",sys.argv
 		
 		parser = optparse.OptionParser(usage="%prog [[-m typename] file]", version="gtkbrowser $rev$" )
 		# add options here if we want
+
+		#print "About to parse..."
+
+		if platform.system() == "Darwin":
+			parser.add_option("-p", "--silly-mac-thing"
+				,action="store", type="string", dest="process_number"
+				,help="Launch Services for Mac passes in a -psn-NNNNN argument that we need to swallow.")		
 
 		parser.add_option("-m", "--model"
 			,action="store", type="string", dest="model"

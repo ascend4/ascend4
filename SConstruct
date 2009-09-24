@@ -112,14 +112,15 @@ elif platform.system()=="Darwin":
 	default_install_prefix = ''
 	default_install_bin = "$INSTALL_PREFIX/Applications/ASCEND.app/Contents"
 	default_install_lib = "$INSTALL_BIN"
-	default_install_models = "$INSTALL_PREFIX/Library/ASCEND/Models"
-	default_install_solvers = "$INSTALL_PREFIX/Library/ASCEND/Solvers"
+	#default_install_models = "$INSTALL_PREFIX/Library/Application Support/ASCEND/Models"
+	default_install_models = "$INSTALL_BIN/Models"
+	#default_install_solvers = "$INSTALL_PREFIX/Library/Application Support/ASCEND/Solvers"
+	default_install_solvers = "$INSTALL_BIN/Solvers"
 	default_install_include = "$INSTALL_BIN/Headers"
 	default_install_ascdata = "$INSTALL_BIN/Resources"
 	default_install_python = "$INSTALL_BIN/Python"
-
-	# still need to work out the Tcl/Tk side of things...
 	default_install_assets = "$INSTALL_ASCDATA/glade/"
+	# FIXME still need to work out the Tcl/Tk side of things...
 
 	# within the bundle, we'll use relative paths
 	default_absolute_paths = False
@@ -127,8 +128,8 @@ elif platform.system()=="Darwin":
 	default_tk_rel_dist = 'tcltk'
 
 	# we want these to be in /Library/ASCEND/Models and /Library/ASCEND/Solvers
-	default_library_rel_dist = '../../Library/ASCEND/Models'
-	default_solvers_rel_dist = '../../Library/ASCEND/Solvers'
+	default_library_rel_dist = 'Models'
+	default_solvers_rel_dist = 'Solvers'
 
 	# where to look for CONOPT when compiling
 	default_conopt_prefix = "/Library/CONOPT"

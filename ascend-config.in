@@ -1,6 +1,6 @@
 #!@PYTHON@
 from optparse import OptionParser
-import sys, platform
+import sys, platform, os
 
 #---------------------
 # This file is generated automatically by SCons and installed in at INSTALL_BIN.
@@ -20,6 +20,15 @@ import sys, platform
 #
 # Type ascend-config --help for usage.
 #---------------------
+
+def path_absolute(p):
+	"""Mac-specific routine for making absolute paths based on location of this
+	Python script, which will have been embedded in the ASCEND.app/Contents
+	dir."""
+	if os.path.isabs(p):
+		return p
+	else:
+		return os.path.join(sys.path[0],p)
 
 # platform specific name munging for '-L' and '-I' file paths...
 munge = lambda s: s
@@ -57,8 +66,17 @@ if platform.system()=="Windows":
 		munge = munge1 
 	except:
 		pass
+
+elif platform.system()=="Darwin":
+	LIB = path_absolute("")
+	BIN = path_absolute("")
+	INCLUDE = path_absolute("Headers")
+	ASCDATA = path_absolute("Resources")
+	MODELS = path_absolute("""@ASC_LIBRARY_REL_DIST@""")
+	SOLVERS = path_absolute("""@ASC_SOLVERS_REL_DIST@""")
+
 else:
-	# If we're not in Windows, use the original values passed to us from SCons:
+	# For Linux and whatever else, use the original values passed to us from SCons:
 	LIB="@INSTALL_LIB@"
 	BIN="@INSTALL_BIN@"
 	INCLUDE="@INSTALL_INCLUDE@"
