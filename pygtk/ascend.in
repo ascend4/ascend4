@@ -58,10 +58,10 @@ elif platform.system()=="Darwin":
 
 	INSTALL_LIB = path_absolute(".")
 	INSTALL_ASCDATA = path_absolute("Resources")
-	INSATLL_MODELS = path_absolute("""@ASC_LIBRARY_REL_DIST@""")
+	INSTALL_MODELS = path_absolute("""@ASC_LIBRARY_REL_DIST@""")
 	INSTALL_SOLVERS = path_absolute("""@ASC_SOLVERS_REL_DIST@""")
 	INSTALL_PYTHON = path_absolute("Python")
-
+	DEFAULT_ASCENDLIBRARY="%s;%s" % (INSTALL_SOLVERS,INSTALL_MODELS)
 else:
 	LDPATHVAR = 'LD_LIBRARY_PATH'
 
@@ -101,7 +101,9 @@ if not os.environ.get('ASC_GDB'):
 		restart = 1
 
 	# if ASCENDLIBRARY has been specified, make sure it's including the Model Library
-	if os.environ.get('ASCENDLIBRARY'):
+	if os.environ.get('ASCENDLIBRARY') or platform.system()=="Darwin":
+		if not 'ASCENDLIBRARY' in os.environ:
+			os.environ['ASCENDLIBRARY'] = ""
 		envmodels = [os.path.abspath(i) for i in os.environ['ASCENDLIBRARY'].split(SEP)]
 		if not INSTALL_MODELS in envmodels:
 			envmodels.append(INSTALL_MODELS)
@@ -109,7 +111,9 @@ if not os.environ.get('ASC_GDB'):
 			restart = 1
 
 	# if ASCENDSOLVERS has been specified, make sure it includes the standard solvers	
-	if os.environ.get('ASCENDSOLVERS'):
+	if os.environ.get('ASCENDSOLVERS') or platform.system()=="Darwin":
+		if not 'ASCENDSOLVERS' in os.environ:
+			os.environ['ASCENDSOLVERS'] = ""
 		envsolvers = [os.path.abspath(i) for i in os.environ['ASCENDSOLVERS'].split(SEP)]
 		if not INSTALL_SOLVERS in envsolvers:
 			envsolvers.append(INSTALL_SOLVERS)
