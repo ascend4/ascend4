@@ -152,7 +152,7 @@ extern real64 bnd_tolerance(struct bnd_boundary *bnd);
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern char *bnd_make_name(slv_system_t sys, struct bnd_boundary *bnd);
+ASC_DLLSPEC char *bnd_make_name(slv_system_t sys, struct bnd_boundary *bnd);
 /**<
  *  Copies of the condition instance name can be made and returned.
  *  The string returned should be freed when no longer in use.

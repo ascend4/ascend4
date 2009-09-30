@@ -103,10 +103,21 @@
 # define SUNDIALS_VERSION_MAJOR 2
 #endif
 
+/* SUNDIALS 2.4.0 introduces new DlsMat in place of DenseMat */
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==4
+# define IDA_MTX_T DlsMat
+# define IDADENSE_SUCCESS IDADLS_SUCCESS
+# define IDADENSE_MEM_NULL IDADLS_MEM_NULL
+# define IDADENSE_ILL_INPUT IDADLS_ILL_INPUT
+# define IDADENSE_MEM_FAIL IDADLS_MEM_FAIL
+#else
+# define IDA_MTX_T DenseMat
+#endif
+
 /* #define FEX_DEBUG */
 #define JEX_DEBUG
 /* #define DJEX_DEBUG */
-/* #define SOLVE_DEBUG */
+#define SOLVE_DEBUG
 #define STATS_DEBUG
 #define PREC_DEBUG
 /* #define ROOT_DEBUG */
@@ -212,11 +223,19 @@ static void integrator_ida_error(int error_code
 );
 
 /* dense jacobian evaluation for IDADense dense direct linear solver */
-static int integrator_ida_djex(long int Neq, realtype tt
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+static int integrator_ida_djex(int Neq, realtype tt, realtype c_j
 		, N_Vector yy, N_Vector yp, N_Vector rr
-		, realtype c_j, void *jac_data, DenseMat Jac
+		, IDA_MTX_T Jac, void *jac_data
 		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
 );
+#else
+static int integrator_ida_djex(long int Neq, realtype tt
+		, N_Vector yy, N_Vector yp, N_Vector rr
+		, realtype c_j, void *jac_data, IDA_MTX_T Jac
+		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+);
+#endif
 
 /* sparse jacobian evaluation for ASCEND's sparse direct solver */
 static IntegratorSparseJacFn integrator_ida_sjex;
@@ -547,6 +566,7 @@ static int integrator_ida_solve(
 	char *pname = NULL;
 	struct rel_relation **rels;
 	int *rootsfound;
+	char havecrossed;
 
 #ifdef SOLVE_DEBUG
 	char *varname, *relname;
@@ -640,7 +660,11 @@ static int integrator_ida_solve(
 	reltol = SLV_PARAM_REAL(&(sys->params),IDA_PARAM_RTOL);
 	CONSOLE_DEBUG("rtol = %8.2e",reltol);
 
+
 	/* allocate internal memory */
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+	flag = IDAInit(ida_mem, &integrator_ida_fex, t0, y0 ,yp0);
+#else
 	if(SLV_PARAM_BOOL(&(sys->params),IDA_PARAM_ATOLVECT)){
 		/* vector of absolute tolerances */
 		CONSOLE_DEBUG("USING VECTOR OF ATOL VALUES");
@@ -656,6 +680,7 @@ static int integrator_ida_solve(
 		CONSOLE_DEBUG("USING SCALAR ATOL VALUE = %8.2e",abstol);
 		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SS, reltol, &abstol);
 	}
+#endif
 
 	if(flag==IDA_MEM_NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
@@ -668,9 +693,31 @@ static int integrator_ida_solve(
 		return 4;
 	}/* else success */
 
+
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+	CONSOLE_DEBUG("Assigning tolerances...");
+	/* assign tolerances */
+	if(SLV_PARAM_BOOL(&(sys->params),IDA_PARAM_ATOLVECT)){
+		CONSOLE_DEBUG("using vector of atol values");
+		abstolvect = N_VNew_Serial(sys->n_y);
+		integrator_get_atol(sys,NV_DATA_S(abstolvect));
+		IDASVtolerances(ida_mem, reltol, abstolvect);
+		N_VDestroy_Serial(abstolvect);
+	}else{
+		/* scalar tolerances */
+		abstol = SLV_PARAM_REAL(&(sys->params),IDA_PARAM_ATOL);
+		CONSOLE_DEBUG("using scalar atol value = %8.2e",abstol);
+		IDASStolerances(ida_mem, reltol, abstol);
+	}
+#endif
+
 	/* set optional inputs... */
 	IDASetErrHandlerFn(ida_mem, &integrator_ida_error, (void *)sys);
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+	IDASetUserData(ida_mem, (void *)sys);
+#else
 	IDASetRdata(ida_mem, (void *)sys);
+#endif
 	IDASetMaxStep(ida_mem, integrator_get_maxstep(sys));
 	IDASetInitStep(ida_mem, integrator_get_stepzero(sys));
 	IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(sys));
@@ -712,7 +759,11 @@ static int integrator_ida_solve(
 
 		if(SLV_PARAM_BOOL(&(sys->params),IDA_PARAM_AUTODIFF)){
 			CONSOLE_DEBUG("USING AUTODIFF");
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+			flag = IDADlsSetDenseJacFn(ida_mem, &integrator_ida_djex);
+#else
 			flag = IDADenseSetJacFn(ida_mem, &integrator_ida_djex, (void *)sys);
+#endif
 			switch(flag){
 				case IDADENSE_SUCCESS: break;
 				default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDADenseSetJacFn"); return 6;
@@ -722,8 +773,13 @@ static int integrator_ida_solve(
 		}
 
 		flagfntype = "IDADENSE";
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+		flagfn = &IDADlsGetLastFlag;
+		flagnamefn = &IDADlsGetReturnFlagName;
+#else
 		flagfn = &IDADenseGetLastFlag;
 		flagnamefn = &IDADenseGetReturnFlagName;
+#endif
 	}else{
 		/* remaining methods are all SPILS */
 		CONSOLE_DEBUG("IDA SPILS");
@@ -760,7 +816,11 @@ static int integrator_ida_solve(
 		if(prec){
 			/* assign the preconditioner to the linear solver */
 			(prec->pcreate)(sys);
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+			IDASpilsSetPreconditioner(ida_mem,prec->psetup,prec->psolve);
+#else
 			IDASpilsSetPreconditioner(ida_mem,prec->psetup,prec->psolve,(void *)sys);
+#endif
 			CONSOLE_DEBUG("PRECONDITIONER = %s",pname);
 		}else{
 			CONSOLE_DEBUG("No preconditioner");
@@ -781,7 +841,11 @@ static int integrator_ida_solve(
 		/* assign the J*v function */
 		if(SLV_PARAM_BOOL(&(sys->params),IDA_PARAM_AUTODIFF)){
 			CONSOLE_DEBUG("USING AUTODIFF");
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+		    flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex);
+#else
 		    flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex, (void *)sys);
+#endif
 			if(flag==IDASPILS_MEM_NULL){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 				return 10;
@@ -872,7 +936,7 @@ static int integrator_ida_solve(
 		if (setjmp(g_fpe_env)==0) {
 #endif
 
-# if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
+# if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=3
 		flag = IDACalcIC(ida_mem, icopt, tout1);/* new API from v2.3  */
 # else
 		flag = IDACalcIC(ida_mem, t0, y0, yp0, icopt, tout1);
@@ -924,7 +988,11 @@ static int integrator_ida_solve(
 
 	/* optionally, specify ROO-FINDING problem */
 	if(enginedata->nbnds){
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+		IDARootInit(ida_mem, enginedata->nbnds, &integrator_ida_rootfn);
+#else
 		IDARootInit(ida_mem, enginedata->nbnds, &integrator_ida_rootfn, (void *)sys);
+#endif
 	}
 
 	/* -- set up the IntegratorReporter */
@@ -964,25 +1032,57 @@ static int integrator_ida_solve(
 
 		/* check for roots found */
 		if(enginedata->nbnds){
-			rootsfound = ASC_NEW_ARRAY(int,enginedata->nbnds);
+			rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
+			havecrossed = 0;
 			if(IDA_SUCCESS == IDAGetRootInfo(ida_mem, rootsfound)){
 				for(i=0; i < enginedata->nbnds; ++i){
 					if(rootsfound[i]){
+						havecrossed = 1;
 #ifdef SOLVE_DEBUG
 						relname = bnd_make_name(sys->system,enginedata->bndlist[i]);
 						ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary '%s' crossed",relname);
 						ASC_FREE(relname);
 #else
-						ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary crossed!");
+						ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary %d crossed!", i);
 #endif
 					}
+				}
+
+				/* so, now we need to restart the integration. we will assume that
+				everything changes: number of variables, etc, etc, etc. */
+
+				if(havecrossed){
+					CONSOLE_DEBUG("Boundaries were crossed; need to reinitialise solver...");
+					/** try resetting the boundary states now? */
+					//IDARootInit(ida_mem, enginedata->nbnds, &integrator_ida_rootfn, (void *)sys);
+
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+					IDAReInit(ida_mem, tret, yret, ypret);
+#elif SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
+					IDAReInit(ida_mem, &integrator_ida_fex, tret, yret, ypret);
+#else
+					/* allocate internal memory */
+					if(SLV_PARAM_BOOL(&(sys->params),IDA_PARAM_ATOLVECT)){
+						/* vector of absolute tolerances */
+						abstolvect = N_VNew_Serial(sys->n_y);
+						integrator_get_atol(sys,NV_DATA_S(abstolvect));
+						if(IDA_SUCCESS != IDAReInit(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SV, reltol, abstolvect)){
+							ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to reinitialise IDA");
+						}
+						N_VDestroy_Serial(abstolvect);
+					}else{
+						/* scalar absolute tolerance (one value for all) */
+						abstol = SLV_PARAM_REAL(&(sys->params),IDA_PARAM_ATOL);
+						if(IDA_SUCCESS != IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SS, reltol, &abstol)){
+							ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to reinitialise IDA");
+						}
+					}
+#endif
 				}
 			}else{
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
 			}
 			ASC_FREE(rootsfound);
-			/* so, now we need to restart the integration. we will assume that
-			everything changes: number of variables, etc, etc, etc. */
 		}			
 
 
@@ -1225,11 +1325,19 @@ static int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	Dense Jacobian evaluation. Only suitable for small problems!
 	Has been seen working for problems up to around 2000 vars, FWIW.
 */
-static int integrator_ida_djex(long int Neq, realtype tt
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+static int integrator_ida_djex(int Neq, realtype tt, realtype c_j
 		, N_Vector yy, N_Vector yp, N_Vector rr
-		, realtype c_j, void *jac_data, DenseMat Jac
+		, IDA_MTX_T Jac, void *jac_data
 		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
 ){
+#else
+static int integrator_ida_djex(long int Neq, realtype tt
+		, N_Vector yy, N_Vector yp, N_Vector rr
+		, realtype c_j, void *jac_data, IDA_MTX_T Jac
+		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+){
+#endif
 	IntegratorSystem *sys;
 	IntegratorIdaData *enginedata;
 	char *relname;
@@ -1582,6 +1690,9 @@ int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout,
 	IntegratorSystem *sys;
 	IntegratorIdaData *enginedata;
 	int i;
+#ifdef ROOT_DEBUG
+	char *relname;
+#endif
 
 	asc_assert(g_data!=NULL);
 	sys = (IntegratorSystem *)g_data;
@@ -1604,16 +1715,23 @@ int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout,
 			case e_bnd_rel: /* real-valued boundary relation */
 				gout[i] = bndman_real_eval(enginedata->bndlist[i]);
 #ifdef ROOT_DEBUG
-				CONSOLE_DEBUG("gout[%d] = %f",i,gout[i]);
+				relname = bnd_make_name(sys->system,enginedata->bndlist[i]);
+				CONSOLE_DEBUG("gout[%d] = %f (boundary '%s')", i, gout[i], relname);
+				ASC_FREE(relname);
 #endif
 				break;
 			case e_bnd_logrel:
 				if(bndman_log_eval(enginedata->bndlist[i])){
 					CONSOLE_DEBUG("bnd[%d] = TRUE",i);
-					gout[i] = +2.0;
+#ifdef ROOT_DEBUG
+					relname = bnd_make_name(sys->system,enginedata->bndlist[i]);
+					CONSOLE_DEBUG("gout[%d] = %f (boundary '%s')", i, gout[i], relname);
+					ASC_FREE(relname);
+#endif
+					gout[i] = +1.0;
 				}else{
 					CONSOLE_DEBUG("bnd[%d] = FALSE",i);
-					gout[i] = -2.0;
+					gout[i] = -1.0;
 				}
 				break;
 			case e_bnd_undefined:
