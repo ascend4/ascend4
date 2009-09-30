@@ -412,7 +412,7 @@ ASC_DLLSPEC int32 rel_apply_filter(const struct rel_relation *rel,
  *  setting filt.matchvalue = (| of the bits you want to be TRUE).
  */
 
-extern uint32 rel_flags(struct rel_relation *rel);
+ASC_DLLSPEC uint32 rel_flags(struct rel_relation *rel);
 /**<
  * Returns the flags field of the relation.
  */

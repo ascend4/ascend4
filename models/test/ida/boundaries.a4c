@@ -61,6 +61,7 @@ METHODS
 			x[i].ode_id := i; dx_dt[i].ode_id := i;
 		END FOR;
 		t.ode_type := -1;
+		u[1].obs_id := 2;
 	END ode_init;
 	METHOD specify;
 		FIX t1,t2;

@@ -1635,7 +1635,7 @@ def CheckPythonLib(context):
 
 sundials_version_major_required = 2
 sundials_version_minor_min = 2
-sundials_version_minor_max = 3
+sundials_version_minor_max = 4
 
 sundials_version_text = """
 #include <sundials/sundials_config.h>
