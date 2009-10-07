@@ -1,4 +1,4 @@
-REQUIRE "HydroSim.a4l";
+REQUIRE "hydrosim/HydroSim.a4l";
 
 (*
    HS_HS.a4c
@@ -50,7 +50,7 @@ END z;
 
 (***********************************************************)
 
-MODEL L_z REFINES z;
+MODEL HD_HS REFINES z; (* renamed from 'L_z' *)
 
 METHODS 
 
@@ -79,7 +79,12 @@ METHODS
       HL.hb[2][1].t	:= 380 {hour}; 
       HL.ld.split[1]    := 0.5;
       HL.sd.split[1]    := 0.5;
- END values;
+END values;
+
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
 
 END L_z;
 

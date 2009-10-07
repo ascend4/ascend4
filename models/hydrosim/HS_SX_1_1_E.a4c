@@ -1,4 +1,4 @@
-REQUIRE "HydroSim.a4l";
+REQUIRE "hydrosim/HydroSim.a4l";
 
 (*
    
@@ -110,11 +110,11 @@ END flowsheet;
 
 (***********************************************************)
 
-MODEL test_flowsheet REFINES flowsheet;
+MODEL HS_SX_1_1_E REFINES flowsheet; (* renamed from 'test_flowsheet' *)
 
 METHODS 
 
-  METHOD values;
+METHOD values;
      ex1.kr['Cu'] := 0.42 {cm/s} ;
      ex1.kr['Fe'] := 0.0058 {cm/s} ;
      st1.kr['Cu'] := 0.42 {cm/s} ;
@@ -133,8 +133,13 @@ METHODS
      st1.aqfeed.Q             := 6.05 {m^3/hr};
      ex1.orfeed.Q             := 7.22222 {meter^3/hour} ;
      sp2.split[1]             := 0.1 ;
-  END values;
+END values;
 
-END test_flowsheet;
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
+
+END HS_SX_1_1_E;
 
 (***********************************************************)

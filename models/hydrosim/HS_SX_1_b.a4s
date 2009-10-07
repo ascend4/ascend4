@@ -1,12 +1,12 @@
 DELETE TYPES;
 DELETE SYSTEM;
-READ FILE "C:/Archivos de programa/ascend4-0.9.0/ascend4/models/HS_SX_1.a4c";
+READ FILE "hydrosim/HS_SX_1.a4c";
 COMPILE cc OF test_flowsheet;
 BROWSE {cc};
 RUN {cc.specify};
 RUN {cc.values};
 SOLVE {cc} WITH QRSlv;
-STUDY   {ex1.aqi.w['Cu']}  {ex1.ori.w['Cu']}  {ex1.aqi.w['Fe']}  {ex1.ori.w['Fe']}  IN  {cc}  VARYING { {ex1.orfeed_to_aqfeed}  {2.0}  {1.5}  {1.0} {0.75}  {0.5} {0.35}  {0.25}  {0.2} {0.15} }  { {ex1.aqfeed.state.z} {0.01001 {mole/meter^3}} {0.01778 {mole/meter^3}} {0.03161 {mole/meter^3}} }   USING {QRSlv}  OUTFILE {C:/Archivos de programa/ascend4-0.9.0/ascend4/models/HS_SX_1_b.dat}  ERROR STOP ; 
+STUDY   {ex1.aqi.w['Cu']}  {ex1.ori.w['Cu']}  {ex1.aqi.w['Fe']}  {ex1.ori.w['Fe']}  IN  {cc}  VARYING { {ex1.orfeed_to_aqfeed}  {2.0}  {1.5}  {1.0} {0.75}  {0.5} {0.35}  {0.25}  {0.2} {0.15} }  { {ex1.aqfeed.state.z} {0.01001 {mole/meter^3}} {0.01778 {mole/meter^3}} {0.03161 {mole/meter^3}} }   USING {QRSlv}  OUTFILE {HS_SX_1_b.dat}  ERROR STOP ; 
 
 
 

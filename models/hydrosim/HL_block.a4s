@@ -1,6 +1,6 @@
 DELETE TYPES;
 DELETE z;
-READ FILE "C:/Documents and Settings/Nancy/Mis documentos/ascend/a4_0_9_0/ascend4-0.9.0/ascend4/models/HL_block.a4c";
+READ FILE "hydrosim/HL_block.a4c";
 COMPILE z OF heap_block;
 BROWSE {z};
 RUN {z.seqmod};

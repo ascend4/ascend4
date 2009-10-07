@@ -1,4 +1,4 @@
-REQUIRE "HydroSim.a4l";
+REQUIRE "hydrosim/HydroSim.a4l";
 
 (*
    
@@ -123,7 +123,7 @@ END flowsheet;
 
 (***********************************************************)
 
-MODEL test_flowsheet REFINES flowsheet;
+MODEL HS_SX_2_2_E1 REFINES flowsheet; (* renamed from test_flowsheet *)
 
 METHODS 
 
@@ -157,6 +157,11 @@ METHODS
      sp5.split[1]             := 1.0 ;
   END values;
 
-END test_flowsheet;
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
+
+END HS_SX_2_2_E1;
 
 (***********************************************************)

@@ -1,4 +1,4 @@
-REQUIRE "HydroSim.a4l";
+REQUIRE "hydrosim/HydroSim.a4l";
 
 (*
    
@@ -99,7 +99,7 @@ END flowsheet;
 
 (***********************************************************)
 
-MODEL test_flowsheet REFINES flowsheet;
+MODEL HS_SX_1_1_R REFINES flowsheet; (* renamed from test_flowsheet *)
 
 METHODS 
 
@@ -141,6 +141,11 @@ METHODS
      ex1.orfeed.Q             := 13.00 {m^3/hr} ;
   END values;
 
-END test_flowsheet;
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
+
+END HS_SX_1_1_R;
 
 (***********************************************************)

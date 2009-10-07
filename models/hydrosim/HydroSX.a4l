@@ -1,4 +1,4 @@
-PROVIDE "HydroSX.a4l";
+PROVIDE "hydrosim/HydroSX.a4l";
 
 (*
    hydrosx.a4l

@@ -1,4 +1,4 @@
-REQUIRE "HydroSim.a4l";
+REQUIRE "hydrosim/HydroSim.a4l";
 
 (*
    HS_EW_1.a4c
@@ -54,7 +54,7 @@ METHODS
   METHOD values;
      ew1.A := 1.8 {m^2};
      ew1.T := 328.5 {K};
-     ew1.Pcu := 35 {kg/hr};
+     ew1.PCu := 35 {kg/hr};
      ew1.cat.ko:= 0.0000000119 {cm/s};
      ew1.d := 3 {cm};
 (*     ew1.L := 10 {kg/hr};  *)
@@ -68,6 +68,12 @@ METHODS
      ew1.ane.Eo:=-1.23 {volt};
      ew1.Ut:=100.0 {volt};
   END values;
+
+
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
 
 END test_flowsheet;
 

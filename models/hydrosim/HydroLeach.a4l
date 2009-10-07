@@ -1,4 +1,5 @@
-PROVIDE "HydroLeach.a4l";
+REQUIRE "hydrosim/HydroBasic.a4l";
+PROVIDE "hydrosim/HydroLeach.a4l";
 
 (*
    hydroleach.a4l
@@ -66,22 +67,22 @@ MODEL heap_block;
       RUN LS_out.clear;
       RUN Sld_in.clear;
       RUN Sld_out.clear;
- 	cnv[comp_trans].fixed	:= FALSE;
+      cnv[comp_trans].fixed	:= FALSE;
       cnvz.fixed			:= FALSE;
-	T_D[comp_trans].fixed	:= FALSE;
-	T_Dz[comp_trans].fixed	:= FALSE;
- 	t.fixed	:= FALSE;
- 	Qh.fixed	:= FALSE;
- 	Cmax.fixed	:= FALSE;
- 	Min.fixed	:= FALSE;
- 	SD.fixed    := FALSE;
+      FREE T_D[comp_trans];
+      FREE T_Dz;
+      t.fixed	:= FALSE;
+      Qh.fixed	:= FALSE;
+      Cmax.fixed	:= FALSE;
+      Min.fixed	:= FALSE;
+      SD.fixed    := FALSE;
       D.fixed     := FALSE;
       Kz.fixed    := FALSE;
       K[comp_trans].fixed := FALSE;
      END clear;
 
      METHOD seqmod;
- 	SD.fixed    := TRUE;
+      SD.fixed    := TRUE;
       Kz.fixed    := TRUE;
       D.fixed     := TRUE;
       t.fixed	:= TRUE;
@@ -97,7 +98,7 @@ MODEL heap_block;
      METHOD specify2;
       RUN LS_in.specify;
       RUN Sld_in.specify;
- 	SD.fixed    := TRUE;
+      SD.fixed    := TRUE;
       Kz.fixed    := TRUE;
       D.fixed     := TRUE;
       cnvz.fixed	:= TRUE;
@@ -164,13 +165,13 @@ MODEL heap_leach;
      lm.out, LS_out ARE_THE_SAME;
      sm.sld_out, Sld_out ARE_THE_SAME;
 
-        cnvTOT_Cu*Sld_in.state.x['Cu']*Sld_in.F =Sld_in.state.x['Cu']*Sld_in.F-Sld_out.state.x['Cu']*Sld_out.F;
+     cnvTOT_Cu*Sld_in.state.x['Cu']*Sld_in.F =Sld_in.state.x['Cu']*Sld_in.F-Sld_out.state.x['Cu']*Sld_out.F;
 
-        cnvTOTz*LS_in.state.z=LS_in.state.z-LS_out.state.z;
+     cnvTOTz*LS_in.state.z=LS_in.state.z-LS_out.state.z;
 
-        LS_in.Q=TR*A;
-  
-        Sld_in.F*T_ciclo=A*h*Sld_in.state.SD;
+     LS_in.Q=TR*A;
+
+     Sld_in.F*T_ciclo=A*h*Sld_in.state.SD;
 
 
  METHODS
@@ -184,14 +185,14 @@ MODEL heap_leach;
       RUN sd.clear;
       RUN lm.clear;
       RUN sm.clear;
- 	n_lado.fixed	:= FALSE;
-      n_largo.fixed	:= FALSE;
+      (* n_lado.fixed	:= FALSE; *)
+      (* n_largo.fixed	:= FALSE; *)
       cnvTOT_Cu.fixed	:= FALSE;
       cnvTOTz.fixed	:= FALSE;
       TR.fixed		:= FALSE;
       A.fixed		:= FALSE;
       h.fixed		:= FALSE;
- 	T_ciclo.fixed	:= FALSE;
+      T_ciclo.fixed	:= FALSE;
     END clear;
 
      METHOD seqmod;
@@ -204,7 +205,7 @@ MODEL heap_leach;
       RUN LS_in.specify;
       RUN Sld_in.specify;
       TR.fixed		:= TRUE; 
-  	(* T_ciclo.fixed	:= TRUE; *)
+      (* T_ciclo.fixed	:= TRUE; *)
       h.fixed		:= TRUE; 
      END specify;
 
@@ -235,18 +236,18 @@ MODEL heap_leaching;
 METHODS
 
     METHOD clear;
-	RUN pls.clear;
+      RUN pls.clear;
       RUN reff.clear;
       P[comp_trans].fixed := FALSE ; 
       PW[comp_trans].fixed := FALSE;        
     END clear;
 
     METHOD seqmod ;
-	RUN pls.specify;
+      RUN pls.specify;
     END seqmod ;
  
     METHOD specify;
-	RUN pls.specify;
+      RUN pls.specify;
       RUN reff.specify;        
     END specify;
 
@@ -255,8 +256,8 @@ METHODS
     END specify_special;
     
     METHOD reset;
-	RUN clear;
-	RUN specify;
+      RUN clear;
+      RUN specify;
     END reset;
 
     METHOD scale;
