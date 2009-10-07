@@ -1,4 +1,4 @@
-REQUIRE "HydroSim.a4l";
+REQUIRE "hydrosim/HydroSim.a4l";
 
 (*
    HS_HB.a4c
@@ -46,11 +46,9 @@ END n;
 
 (***********************************************************)
 
-MODEL L_n REFINES n;
-
+MODEL HS_HB REFINES n; (* previously named L_n *)
 METHODS 
-
-  METHOD values;
+METHOD values;
       hb.LS_in.Q			:= 50 {m^3/hour};
       hb.Sld_in.F			:= 30000 {kg/hour}; 
 	hb.Sld_in.state.x['Cu']	:= 0.017;
@@ -64,9 +62,14 @@ METHODS
       hb.K['Fe']	:= 34475300 {hour*mole/m^5};
       hb.D	:= 0.012 {m};
       hb.t	:= 760 {hour};
-  END values;
+END values;
 
-END L_n;
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
+
+END HS_HB;
 
 (***********************************************************)
 

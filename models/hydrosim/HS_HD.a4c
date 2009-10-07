@@ -1,4 +1,4 @@
-REQUIRE "HydroSim.a4l";
+REQUIRE "hydrosim/HydroSim.a4l";
 
 (*
    HS_HD.a4c
@@ -23,7 +23,7 @@ MODEL z;
 METHODS
 
     METHOD clear;
-	RUN HL.clear;
+      RUN HL.clear;
     END clear;
 
     METHOD seqmod;
@@ -35,8 +35,8 @@ METHODS
     END specify;
 
     METHOD reset;
-	RUN clear;
-	RUN specify;
+      RUN clear;
+      RUN specify;
     END reset;
 
     METHOD scale;
@@ -50,49 +50,52 @@ END z;
 
 (***********************************************************)
 
-MODEL L_z REFINES z;
-
+MODEL HS_HD REFINES z; (* renamed from L_z *)
 METHODS 
-
-    METHOD values;
-      HL.LS_in.Q			:= 50 {m^3/hour};
-      HL.Sld_in.F			:= 30000 {kg/hour}; 
+METHOD values;
+	HL.LS_in.Q			:= 50 {m^3/hour};
+	HL.Sld_in.F			:= 30000 {kg/hour}; 
 	HL.Sld_in.state.x['Cu']	:= 0.017;
 	HL.Sld_in.state.x['Fe']	:= 0.023;
 	HL.LS_in.state.z		:= 0.17 {mole/m^3};
 	HL.LS_in.state.w['Cu'] 	:= 5 {kg/m^3};
 	HL.LS_in.state.w['Fe'] 	:= 3 {kg/m^3};
- 	HL.TR 			:= 0.0125 {m^3/hour/m^2};
+	HL.TR 			:= 0.0125 {m^3/hour/m^2};
 	HL.h 				:= 10 {m};
-      HL.T_ciclo			:= 2160 {hour};
-  	HL.LS_in.state.w['Fe'] 	:= 0.001 {kg/m^3};
-      HL.hb[1][1].SD 	:= 1500 {kg/m^3};
+	HL.T_ciclo			:= 2160 {hour};
+	HL.LS_in.state.w['Fe'] 	:= 0.001 {kg/m^3};
+	HL.hb[1][1].SD 	:= 1500 {kg/m^3};
 	HL.hb[1][1].Kz		:= 538205.55 {hour*mole/m^5};
-      HL.hb[1][1].K['Cu']	:= 30000000 {hour*mole/m^5};
-      HL.hb[1][1].K['Fe']	:= 34475300 {hour*mole/m^5};
-      HL.hb[1][1].D	:= 0.012 {m};
-      HL.hb[1][1].t	:= 300 {hour};
-      HL.hb[1][2].SD 	:= 1500 {kg/m^3};
+	HL.hb[1][1].K['Cu']	:= 30000000 {hour*mole/m^5};
+	HL.hb[1][1].K['Fe']	:= 34475300 {hour*mole/m^5};
+	HL.hb[1][1].D	:= 0.012 {m};
+	HL.hb[1][1].t	:= 300 {hour};
+	HL.hb[1][2].SD 	:= 1500 {kg/m^3};
 	HL.hb[1][2].Kz		:= 538205.55 {hour*mole/m^5};
-      HL.hb[1][2].K['Cu']	:= 30000000 {hour*mole/m^5};
-      HL.hb[1][2].K['Fe']	:= 34475300 {hour*mole/m^5};
-      HL.hb[1][2].D	:= 0.012 {m};
-      HL.hb[1][2].t	:= 300 {hour};   
-      HL.hb[2][1].SD 	:= 1500 {kg/m^3};
+	HL.hb[1][2].K['Cu']	:= 30000000 {hour*mole/m^5};
+	HL.hb[1][2].K['Fe']	:= 34475300 {hour*mole/m^5};
+	HL.hb[1][2].D	:= 0.012 {m};
+	HL.hb[1][2].t	:= 300 {hour};   
+	HL.hb[2][1].SD 	:= 1500 {kg/m^3};
 	HL.hb[2][1].Kz		:= 538205.55 {hour*mole/m^5};
-      HL.hb[2][1].K['Cu']	:= 30000000 {hour*mole/m^5};
-      HL.hb[2][1].K['Fe']	:= 34475300 {hour*mole/m^5};
-      HL.hb[2][1].D	:= 0.012 {m};
-      HL.hb[2][1].t	:= 300 {hour}; 
-      HL.hb[2][2].SD 	:= 1500 {kg/m^3};
+	HL.hb[2][1].K['Cu']	:= 30000000 {hour*mole/m^5};
+	HL.hb[2][1].K['Fe']	:= 34475300 {hour*mole/m^5};
+	HL.hb[2][1].D	:= 0.012 {m};
+	HL.hb[2][1].t	:= 300 {hour}; 
+	HL.hb[2][2].SD 	:= 1500 {kg/m^3};
 	HL.hb[2][2].Kz		:= 538205.55 {hour*mole/m^5};
-      HL.hb[2][2].K['Cu']	:= 30000000 {hour*mole/m^5};
-      HL.hb[2][2].K['Fe']	:= 34475300 {hour*mole/m^5};
-      HL.hb[2][2].D	:= 0.012 {m};
-      HL.hb[2][2].t	:= 300 {hour};      
-      HL.ld.split[1]    := 0.5;
-      HL.sd.split[1]    := 0.5;
- END values;
+	HL.hb[2][2].K['Cu']	:= 30000000 {hour*mole/m^5};
+	HL.hb[2][2].K['Fe']	:= 34475300 {hour*mole/m^5};
+	HL.hb[2][2].D	:= 0.012 {m};
+	HL.hb[2][2].t	:= 300 {hour};      
+	HL.ld.split[1]    := 0.5;
+	HL.sd.split[1]    := 0.5;
+END values;
+
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
 
 END L_z;
 

@@ -1,4 +1,5 @@
-PROVIDE "HydroFit.a4l";
+REQUIRE "hydrosim/HydroBasic.a4l";
+PROVIDE "hydrosim/HydroFit.a4l";
 
 (*
    hydrofit.a4l

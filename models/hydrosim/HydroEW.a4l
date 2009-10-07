@@ -1,4 +1,5 @@
-PROVIDE "HydroEW.a4l";
+REQUIRE "hydrossim/HydroAtoms.a4l";
+PROVIDE "hydrosim/HydroEW.a4l";
 
 (*
    hydroew.a4l
@@ -79,7 +80,7 @@ MODEL Cathode;
 	T           IS_A temperature;
 	A           IS_A area;
 	F_C         IS_A faraday_constant;
-	R           IS_A gas_constant;
+	R           IS_A molar_gas_constant;
 
 	comp_trans,state.comp_trans 		ARE_THE_SAME;
       
@@ -151,7 +152,7 @@ MODEL Anode;
 	T           IS_A temperature;
 	A           IS_A area;
 	F_C         IS_A faraday_constant;
-	R           IS_A gas_constant;
+	R           IS_A molar_gas_constant;
 
      comp_trans, state.comp_trans      ARE_THE_SAME;
 

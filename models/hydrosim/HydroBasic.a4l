@@ -1,5 +1,5 @@
-REQUIRE "HydroAtoms.a4l";
-PROVIDE "HydroBasic.a4l";
+REQUIRE "hydrosim/HydroAtoms.a4l";
+PROVIDE "hydrosim/HydroBasic.a4l";
 
 (*
    hydrobasic.a4l
@@ -270,7 +270,7 @@ METHODS
       RUN state.clear;
       W[comp_trans].fixed := FALSE;
       Q.fixed             := FALSE;
-      F                   := FALSE;
+      FREE F;
     
     END clear;
 

@@ -1,4 +1,5 @@
-REQUIRE "HydroSim.a4l";
+REQUIRE "hydrosim/HydroSim.a4l";
+IMPORT "ipopt";
 
 MODEL mixersettler_equilibria_fitting;
       errr        IS_A generic_real;
@@ -67,7 +68,7 @@ END mixersettler_equilibria_fitting;
 
 (***********************************************************)
 
-MODEL test_ms REFINES mixersettler_equilibria_fitting;
+MODEL HS_SX_Fit REFINES mixersettler_equilibria_fitting; (* renamed from test_ms *)
 
 METHODS 
 
@@ -146,6 +147,11 @@ METHODS
      orout_ex[4].Q := 15 {m^3/hr} ;
   END values;
 
-END test_ms;
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
+
+END HS_SX_Fit;
 
 (***********************************************************)

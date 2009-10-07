@@ -1,5 +1,5 @@
 REQUIRE "atoms.a4l";
-PROVIDE "HydroAtoms.a4l";
+PROVIDE "hydrosim/HydroAtoms.a4l";
 
 (*
    Hydroatoms.a4l

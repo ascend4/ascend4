@@ -1,4 +1,4 @@
-REQUIRE "HydroSim.a4l";
+REQUIRE "hydrosim/HydroSim.a4l";
 
 (*
    by Luis Cisternas & Colaborators
@@ -48,7 +48,7 @@ END flowsheet;
 
 (***********************************************************)
 
-MODEL test_flowsheet REFINES flowsheet;
+MODEL HS_SX_1_E REFINES flowsheet; (* renamed from test_flowsheet *)
 
 METHODS 
 
@@ -67,6 +67,11 @@ METHODS
      ex1.orfeed_to_aqfeed     := 1.1 ;  
   END values;
 
-END test_flowsheet;
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
+
+END HS_SX_1_E;
 
 (***********************************************************)
