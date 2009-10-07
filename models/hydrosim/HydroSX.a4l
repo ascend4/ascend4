@@ -1,0 +1,350 @@
+PROVIDE "HydroSX.a4l";
+
+(*
+   hydrosx.a4l
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Hydrometallurgy process Modeling and Optimization.
+
+   This file provide a model for the modeling of a mixer-setter 
+   for solvent extraction that are useful in the simulation of solvent extraction circuits
+*)
+(*
+$Date:07/07/15 $
+$Revision: 2.0 $
+$Authors: Cisternas, Galvez, Malatesta, Luza  $
+*)
+
+
+
+MODEL ms;
+
+      comp_trans                      IS_A set OF symbol_constant;
+      aqfeed,aqout,orfeed,orout       IS_A stream;
+      f[comp_trans]                   IS_A molartrn_rate;
+      ni[comp_trans],m,n,p,K[comp_trans]    IS_A factor;  
+      kr[comp_trans] IS_A speed;
+      A      IS_A area; 
+      Vm,Vo  IS_A volume;
+	orfeed_to_aqfeed	IS_A factor;
+
+      comp_trans,aqfeed.comp_trans ARE_THE_SAME;
+      comp_trans,aqout.comp_trans  ARE_THE_SAME;
+      comp_trans,orfeed.comp_trans ARE_THE_SAME;
+      comp_trans,orout.comp_trans  ARE_THE_SAME;
+      
+      AqueousBal:	aqfeed.Q=aqout.Q;
+      SolventBal:	orfeed.Q=orout.Q;
+      FOR i IN comp_trans CREATE
+          MetalBalAquPhase[i]: A*f[i]= aqfeed.Q*aqfeed.state.y[i]-aqout.Q*aqout.state.y[i];
+          MetalBalOrgPhase[i]: A*f[i]= orout.Q*orout.state.y[i]-orfeed.Q*orfeed.state.y[i];
+      END FOR;
+      HydrogenBalAquPhase: A*SUM[ni[i]*f[i] | i IN comp_trans]=aqout.Q*aqout.state.z-aqfeed.Q*aqfeed.state.z; 
+      HydrogenBalOrgPhase: A*SUM[ni[i]*f[i] | i IN comp_trans]=orfeed.Q*orfeed.state.z-orout.Q*orout.state.z; 
+      OrgPhaseVolume:		Vo*(aqfeed.Q+orfeed.Q)=Vm*orfeed.Q ;
+      PartialRxOrder1:		m=1;
+      PartialRxOrder2:		n=1;
+      PartialRxOrder3:		p=1;
+      NumberH1:			ni['Cu']=2;
+      NumberH2:			ni['Fe']=3;
+      EquilibriumConst1:	K['Cu']=12;
+      EquilibriumConst2:	K['Fe']=0.0003 ;
+	Organicfeed:		orfeed_to_aqfeed*aqfeed.Q = orfeed.Q;
+
+METHODS
+
+    METHOD clear;
+      RUN  aqfeed.clear;     
+      RUN  aqout.clear;
+      RUN  orfeed.clear;
+      RUN  orout.clear;       
+      ni[comp_trans].fixed:=FALSE;
+      m.fixed:=FALSE;
+      n.fixed:=FALSE;
+      p.fixed:=FALSE;
+      K[comp_trans].fixed:=FALSE;
+      kr[comp_trans].fixed:=FALSE;
+      A.fixed:=FALSE; 
+      Vm.fixed:=FALSE;
+      Vo.fixed:=FALSE;  
+	orfeed_to_aqfeed.fixed:=FALSE;    
+    END clear;
+
+    METHOD seqmod;
+	kr[comp_trans].fixed:= TRUE ;
+	Vm.fixed:= TRUE;    
+    END seqmod;
+
+END ms;
+
+
+(*  ************************************************* *)
+
+
+MODEL mixersettler_equilibria REFINES ms;
+
+      db     IS_A distance;
+
+      FOR i IN comp_trans CREATE
+          RateChemRxn[i]: f[i]= kr[i]*(K[i]*aqout.state.y[i]^m*orout.state.z^n/aqout.state.z^p-aqout.state.z^(ni[i]-p)*orout.state.y[i]/(orout.state.z^(ni[i]-n)*aqout.state.y[i]^(1-m)));
+      END FOR;
+      InterfacialSurface:	db*A=6*Vo;
+
+METHODS
+
+    METHOD clear;
+      RUN  ms::clear;
+      f[comp_trans].fixed:=FALSE;
+      db.fixed:=FALSE;
+    END clear;
+
+    METHOD seqmod;
+      RUN ms::seqmod;  
+	db.fixed:= TRUE ; 
+    END seqmod;
+
+    METHOD seqmod_circuit;
+      RUN seqmod;
+      RUN aqfeed.specify;
+    END seqmod_circuit;
+
+    METHOD specify;
+      RUN orfeed.specify;
+      RUN seqmod_circuit;
+    END specify;
+
+    METHOD specify_2;
+      RUN seqmod_circuit;
+      RUN orfeed.state.specify;
+      orfeed_to_aqfeed.fixed:= TRUE;
+    END specify_2;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END mixersettler_equilibria;
+
+
+(**********************************************************)
+
+
+MODEL mixersettler REFINES ms;
+
+      ra[comp_trans],ro[comp_trans],rh,rrh  IS_A molartrn_rate ;
+      aqi,ori    IS_A mixture;  
+      ma[comp_trans],mo[comp_trans],mh,mrh IS_A speed;
+      db     IS_A distance;
+
+      comp_trans,ori.comp_trans ARE_THE_SAME;
+      comp_trans,aqi.comp_trans  ARE_THE_SAME;
+    
+      FOR i IN comp_trans CREATE
+          MassTrfrMetalAquPhase[i]: ra[i]= ma[i]*(aqout.state.y[i]-aqi.y[i]);
+          MassTrfrMetalOrgPhase[i]: ro[i]= mo[i]*(orout.state.y[i]-ori.y[i]); 
+          RateChemRxn[i]: f[i]= kr[i]*(K[i]*aqi.y[i]^m*ori.z^n/aqi.z^p-aqi.z^(ni[i]-p)*ori.y[i]/(ori.z^(ni[i]-n)*aqi.y[i]^(1-m)));
+          EqualRateAquOrg[i]: ra[i]=-ro[i];
+          EqualRateAquChemRxn[i]: ra[i]=f[i];
+      END FOR;
+      InterfacialSurface:	db*A=6*Vo;
+      HydrogenMassRateAquPhase: rh=mh*(aqout.state.z-aqi.z); 
+      HydrogenMassRateOrgPhase: rrh=mrh*(orout.state.z-ori.z);
+      EqualHydrogenMetalBal:	rh=SUM[ni[i]*f[i] | i IN comp_trans];
+      EqualHydrogenOrgAqu:	rrh=-rh ;
+      MassTransCoeff1:		mrh=ma['Cu'];
+      MassTransCoeff2:		mo['Cu']=ma['Cu']/2;
+      MassTransCoeff3:		mh=10*ma['Cu'];
+
+METHODS
+
+    METHOD clear;
+      RUN  ms::clear;
+      RUN  aqi.clear;
+      RUN  ori.clear;  
+      db.fixed:=FALSE;     
+      f[comp_trans].fixed:=FALSE;
+      ra[comp_trans].fixed:=FALSE;
+      ro[comp_trans].fixed:=FALSE;
+      rh.fixed:=FALSE;
+      rrh.fixed:=FALSE;
+      ma[comp_trans].fixed:=FALSE;
+      mo[comp_trans].fixed:=FALSE;
+      mh.fixed:=FALSE;
+      mrh.fixed:=FALSE;
+    END clear;
+ 
+    METHOD seqmod;
+      RUN ms::seqmod;
+	db.fixed:= TRUE ;
+      ma[comp_trans].fixed:= TRUE ;
+	mo['Fe'].fixed := TRUE ;
+    END seqmod;
+
+    METHOD seqmod_circuit;
+      RUN seqmod;
+      RUN aqfeed.specify;
+    END seqmod_circuit;
+
+    METHOD specify;
+      RUN orfeed.specify;
+      RUN seqmod_circuit;
+    END specify;
+
+    METHOD specify_2;
+      RUN seqmod_circuit;
+      RUN orfeed.state.specify;
+      orfeed_to_aqfeed.fixed:= TRUE;
+    END specify_2;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END mixersettler;
+
+
+(**********************************************************)
+
+
+MODEL mixersettler_rigorous REFINES ms;
+
+      ra[comp_trans],ro[comp_trans],rh,rrh  IS_A molartrn_rate ;
+      aqi,ori    IS_A mixture;  
+      ma[comp_trans],mo[comp_trans],mh,mrh IS_A speed;
+      dbo,dba,D   IS_A distance;
+	ext[comp_trans],W	IS_A factor;
+	alfa	IS_A fraction;
+      t_res  IS_A time;
+      ua,uo IS_A viscosity;
+      da,do IS_A mass_density;
+      Nag IS_A inverse_time;
+      sig IS_A surface_tension;
+      typ,hydrodynamic IS_A symbol_constant;
+
+      comp_trans,ori.comp_trans ARE_THE_SAME;
+      comp_trans,aqi.comp_trans  ARE_THE_SAME;
+      
+      FOR i IN comp_trans CREATE
+          MassTrfrMetalAquPhase[i]: ra[i]= ma[i]*(aqout.state.y[i]-aqi.y[i]);
+          MassTrfrMetalOrgPhase[i]: ro[i]= mo[i]*(orout.state.y[i]-ori.y[i]); 
+          RateChemRxn[i]: f[i]= kr[i]*(K[i]*aqi.y[i]^m*ori.z^n/aqi.z^p-aqi.z^(ni[i]-p)*ori.y[i]/(ori.z^(ni[i]-n)*aqi.y[i]^(1-m)));
+          EqualRateAquOrg[i]: ra[i]=-ro[i];
+          EqualRateAquChemRxn[i]: ra[i]=f[i];
+      END FOR;
+      HydrogenMassRateAquPhase: rh=mh*(aqout.state.z-aqi.z);   
+      HydrogenMassRateOrgPhase: rrh=mrh*(orout.state.z-ori.z);
+      EqualHydrogenMetalBal:	rh=SUM[ni[i]*f[i] | i IN comp_trans];
+      EqualHydrogenOrgAqu:	rrh=-rh ;
+      WeberNumber:            W*sig=Nag^2*D^3*do ;
+      MeanBubbleDiameterOr:   dbo=0.084*D*(1+1.98*(alfa*Vo/Vm)^0.85)*(uo/ua)^0.44*W^(-0.8); 
+      MeanBubbleDiameterAq:   dba=0.084*D*(1+1.98*((1-alfa)*(1-Vo/Vm))^0.85)*(ua/uo)^0.44*(W*da/do)^(-0.8);
+      InterfacialSurfaceOrC:	dba*A=6*(Vm-Vo)*(1-alfa);
+      InterfacialSurfaceAqC:	dbo*A=6*Vo*alfa;
+      InterfacialSurfaceAmb:	A*dba*dbo=6*Vo*alfa*dba+6*(Vm-Vo)*(1-alfa)*dbo;
+      ContinuidadAqu:         alfa=1;
+      ContinuidadOrg:         alfa=0;
+      ContinuidadAmb:         alfa=1.875-2.5*Vo/Vm;  
+      WHEN (hydrodynamic)
+          CASE 'ContinuidadAqueous':
+             USE InterfacialSurfaceAqC;
+             USE ContinuidadAqu;
+          CASE 'ContinuidadOrganic': 
+             USE InterfacialSurfaceOrC;
+             USE ContinuidadOrg;
+          CASE 'ContinuidadAmbivalent': 
+             USE InterfacialSurfaceAmb;
+             USE ContinuidadAmb;
+      END WHEN;  
+      ResidenceTime:          t_res*(aqfeed.Q+orfeed.Q)=Vm ;
+      MassTransCoeff1:		mrh=ma['Cu'];
+      MassTransCoeff2:		mo['Cu']=ma['Cu']/2;
+      MassTransCoeff3:		mh=10*ma['Cu'];
+      SELECT (typ)
+        CASE 'extraction':      
+          FOR i IN comp_trans CREATE
+            ExtractionInEx[i]: ext[i]*aqfeed.Q*aqfeed.state.y[i]=aqfeed.Q*aqfeed.state.y[i]-aqout.Q*aqout.state.y[i];
+          END FOR;        
+        CASE 'stripping':      
+          FOR i IN comp_trans CREATE
+            ExtractionInSt[i]: ext[i]*orfeed.Q*orfeed.state.y[i]=orfeed.Q*orfeed.state.y[i]-orout.Q*orout.state.y[i];
+          END FOR;
+      END SELECT;
+
+METHODS
+   
+    METHOD clear; 
+      RUN ms::clear;
+      RUN  aqi.clear;
+      RUN  ori.clear;
+      W.fixed:=FALSE;
+      sig.fixed:=FALSE;
+      Nag.fixed:=FALSE;
+      D.fixed:=FALSE;
+      do.fixed:=FALSE;
+      da.fixed:=FALSE;
+      ua.fixed:=FALSE;
+      uo.fixed:=FALSE;       
+      f[comp_trans].fixed:=FALSE;
+      ra[comp_trans].fixed:=FALSE;
+      ro[comp_trans].fixed:=FALSE;
+      rh.fixed:=FALSE;
+      rrh.fixed:=FALSE;
+      ma[comp_trans].fixed:=FALSE;
+      mo[comp_trans].fixed:=FALSE;
+      mh.fixed:=FALSE;
+      mrh.fixed:=FALSE;  
+      dba.fixed:=FALSE;
+      dbo.fixed:=FALSE;
+      alfa.fixed:=FALSE;
+      t_res.fixed:= FALSE;  
+      ext[comp_trans].fixed:= FALSE;  
+    END clear;
+
+    METHOD seqmod;
+      RUN ms::seqmod;
+      ma[comp_trans].fixed:= TRUE ;
+	mo['Fe'].fixed := TRUE ;
+      sig.fixed:=TRUE;
+      Nag.fixed:=TRUE;
+      D.fixed:=TRUE;
+      do.fixed:=TRUE;
+      da.fixed:=TRUE;
+      ua.fixed:=TRUE;
+      uo.fixed:=TRUE;  
+    END seqmod;
+
+    METHOD seqmod_circuit;
+      RUN seqmod;
+      RUN aqfeed.specify;
+    END seqmod_circuit;
+
+    METHOD specify;
+      RUN orfeed.specify;
+      RUN seqmod_circuit;
+    END specify;
+
+    METHOD specify_2;
+      RUN seqmod_circuit;
+      RUN orfeed.state.specify;
+      orfeed_to_aqfeed.fixed:= TRUE;
+    END specify_2;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END mixersettler_rigorous;
+

@@ -1,0 +1,151 @@
+REQUIRE "HydroSim.a4l";
+
+MODEL mixersettler_equilibria_fitting;
+      errr        IS_A generic_real;
+	comp_trans	IS_A set OF symbol_constant;
+      n_e		IS_A integer_constant;
+    	n_e:== 4;
+      comp_trans:==['Cu','Fe'];
+	aqout[1..n_e]   IS_A stream;
+	orout[1..n_e]   IS_A stream;
+	orfeed[1..n_e]	IS_A stream;
+      aqfeed[1..n_e]  IS_A stream;
+	aqout_ex[1..n_e]   IS_A stream;
+	orout_ex[1..n_e]   IS_A stream;
+      K1  IS_A K1factor;
+      K2  IS_A K2factor;
+     	FOR i IN [1..n_e] CREATE
+         comp_trans,aqout[i].comp_trans  ARE_THE_SAME;
+         comp_trans,orfeed[i].comp_trans ARE_THE_SAME;
+         comp_trans,orout[i].comp_trans  ARE_THE_SAME; 
+         comp_trans,aqfeed[i].comp_trans ARE_THE_SAME; 
+         comp_trans,orout_ex[i].comp_trans  ARE_THE_SAME; 
+         comp_trans,aqout_ex[i].comp_trans ARE_THE_SAME; 
+	   O[i]  IS_A  mixersettler_equilibria_fit(comp_trans,aqout[i],orout[i],orfeed[i],aqfeed[i],K1,K2);
+      END FOR;
+
+      errr =SUM[(aqout[i].state.w['Cu']-aqout_ex[i].state.w['Cu'])^2 +
+             0.005*(aqout[i].state.w['Fe']-aqout_ex[i].state.w['Fe'])^2 + 
+            0.1*(orout[i].state.w['Cu']-orout_ex[i].state.w['Cu'])^2 +
+             0.9*(orout[i].state.w['Fe']-orout_ex[i].state.w['Fe'])^2 | i IN [1..n_e] ];  
+      obj1:     MINIMIZE errr;
+
+METHODS
+      METHOD clear;
+		RUN O[1..n_e].clear;
+            RUN aqout[1..n_e].clear;
+	      RUN orout[1..n_e].clear;
+	      RUN orfeed[1..n_e].clear;
+            RUN aqfeed[1..n_e].clear;
+            RUN aqout_ex[1..n_e].clear;
+            RUN orout_ex[1..n_e].clear;
+            K1.fixed:=FALSE;
+            K2.fixed:=FALSE; 
+	END clear;
+
+      METHOD seqmod;
+	END seqmod;
+
+      METHOD specify;
+		RUN O[1..n_e].specify;
+            RUN aqout_ex[1..n_e].specify;
+            RUN orout_ex[1..n_e].specify;
+	END specify;
+
+	METHOD default_self;
+	END default_self;
+
+	METHOD reset;
+		RUN clear;
+		RUN specify;
+	END reset;
+
+	METHOD scale;
+	END scale;
+
+END mixersettler_equilibria_fitting;
+
+(***********************************************************)
+
+MODEL test_ms REFINES mixersettler_equilibria_fitting;
+
+METHODS 
+
+  METHOD values;
+     O[1..n_e].kr['Cu'] := 0.42 {cm/s} ;
+     O[1..n_e].kr['Fe'] := 0.0058 {cm/s} ;
+     O[1..n_e].db := 0.08 {cm} ;
+     O[1..n_e].Vm := 2.8 {m^3} ;
+
+     aqfeed[1].state.w['Cu'] := 1.96 {g/l};
+     aqfeed[1].state.w['Fe'] := 8.54 {g/l};
+     aqfeed[1].state.z       := 0.01 {mole/meter^3};
+     aqfeed[1].Q             := 6.04 {m^3/hr} ;
+     orfeed[1].state.w['Cu'] := 1.13 {g/l};
+     orfeed[1].state.w['Fe'] := 0.03 {g/l};
+     orfeed[1].state.z       := 0.37 {mole/meter^3};   
+     orfeed[1].Q := 6.644 {m^3/hr} ; 
+     aqout_ex[1].state.w['Cu'] := 0.02 {g/l};
+     aqout_ex[1].state.w['Fe'] := 8.40 {g/l};
+     aqout_ex[1].state.z       := 0.078 {mole/meter^3};
+     aqout_ex[1].Q             := 6.04 {m^3/hr} ;
+     orout_ex[1].state.w['Cu'] := 2.89 {g/l};
+     orout_ex[1].state.w['Fe'] := 0.15 {g/l};
+     orout_ex[1].state.z       := 0.31 {mole/meter^3};   
+     orout_ex[1].Q := 6.644 {m^3/hr} ;
+
+     aqfeed[2].state.w['Cu'] := 2 {g/l};
+     aqfeed[2].state.w['Fe'] := 10 {g/l};
+     aqfeed[2].state.z       := 0.05 {mole/meter^3};
+     aqfeed[2].Q             := 7 {m^3/hr} ;
+     orfeed[2].state.w['Cu'] := 1.5 {g/l};
+     orfeed[2].state.w['Fe'] := 0.08 {g/l};
+     orfeed[2].state.z       := 0.5 {mole/meter^3};   
+     orfeed[2].Q := 9.1 {m^3/hr} ; 
+     aqout_ex[2].state.w['Cu'] := 0.026 {g/l};
+     aqout_ex[2].state.w['Fe'] := 9.90 {g/l};
+     aqout_ex[2].state.z       := 0.117 {mole/meter^3};
+     aqout_ex[2].Q             := 7 {m^3/hr} ;
+     orout_ex[2].state.w['Cu'] := 3.02 {g/l};
+     orout_ex[2].state.w['Fe'] := 0.16 {g/l};
+     orout_ex[2].state.z       := 0.45 {mole/meter^3};   
+     orout_ex[2].Q := 9.1 {m^3/hr} ;
+
+     aqfeed[3].state.w['Cu'] := 1 {g/l};
+     aqfeed[3].state.w['Fe'] := 6 {g/l};
+     aqfeed[3].state.z       := 0.01 {mole/meter^3};
+     aqfeed[3].Q             := 5 {m^3/hr} ;
+     orfeed[3].state.w['Cu'] := 0.8 {g/l};
+     orfeed[3].state.w['Fe'] := 0.05 {g/l};
+     orfeed[3].state.z       := 0.1 {mole/meter^3};   
+     orfeed[3].Q := 6 {m^3/hr} ; 
+     aqout_ex[3].state.w['Cu'] := 0.036 {g/l};
+     aqout_ex[3].state.w['Fe'] := 6.04 {g/l};
+     aqout_ex[3].state.z       := 0.038 {mole/meter^3};
+     aqout_ex[3].Q             := 5 {m^3/hr} ;
+     orout_ex[3].state.w['Cu'] := 1.6 {g/l};
+     orout_ex[3].state.w['Fe'] := 0.016 {g/l};
+     orout_ex[3].state.z       := 0.077 {mole/meter^3};   
+     orout_ex[3].Q := 6 {m^3/hr} ;
+
+     aqfeed[4].state.w['Cu'] := 0.5 {g/l};
+     aqfeed[4].state.w['Fe'] := 4 {g/l};
+     aqfeed[4].state.z       := 0.1 {mole/meter^3};
+     aqfeed[4].Q             := 10 {m^3/hr} ;
+     orfeed[4].state.w['Cu'] := 0.2 {g/l};
+     orfeed[4].state.w['Fe'] := 0.5 {g/l};
+     orfeed[4].state.z       := 0.3 {mole/meter^3};   
+     orfeed[4].Q := 15 {m^3/hr} ; 
+     aqout_ex[4].state.w['Cu'] := 0.006 {g/l};
+     aqout_ex[4].state.w['Fe'] := 4.59 {g/l};
+     aqout_ex[4].state.z       := 0.084 {mole/meter^3};
+     aqout_ex[4].Q             := 10 {m^3/hr} ;
+     orout_ex[4].state.w['Cu'] := 0.53 {g/l};
+     orout_ex[4].state.w['Fe'] := 0.106 {g/l};
+     orout_ex[4].state.z       := 0.31 {mole/meter^3};   
+     orout_ex[4].Q := 15 {m^3/hr} ;
+  END values;
+
+END test_ms;
+
+(***********************************************************)

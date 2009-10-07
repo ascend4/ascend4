@@ -1,0 +1,387 @@
+REQUIRE "HydroAtoms.a4l";
+PROVIDE "HydroBasic.a4l";
+
+(*
+   hydrobasic.a4l
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Hydrometallurgy process Modeling and Optimization.
+   
+   This labrary provide simple models for mixtures, streams, mixers, 
+   splitters, both for solution and solids that are useful in the
+   simulation of hydrometallurgy process
+*)
+(*
+$Date:07/07/15 $
+$Revision: 2.0 $
+$Authors: Cisternas, Galvez, Luza  $
+*)
+
+MODEL mixture;
+
+   comp_trans 		 IS_A  set OF symbol_constant;
+   y[comp_trans]         IS_A  molar_density;
+   w[comp_trans]         IS_A  mass_density;
+   MW[comp_trans]        IS_A  molar_mass;
+   z				 IS_A  molar_density; 
+   MWz		       IS_A  molar_mass;
+
+   comp_trans:==['Cu','Fe'];
+
+   FOR i IN comp_trans CREATE
+      w[i]=y[i]*MW[i] ;
+   END FOR;
+   MW['Cu']=63.546  ;
+   MW['Fe']=55.847 ;
+   MWz     = 1 ;	
+			
+METHODS
+
+    METHOD clear;
+        y[comp_trans].fixed := FALSE;
+        w[comp_trans].fixed := FALSE;
+        MW[comp_trans].fixed := FALSE;
+        z.fixed:=FALSE;
+    END clear;
+
+    METHOD specify;
+        w[comp_trans].fixed := TRUE;
+        z.fixed:=TRUE;
+    END specify;
+
+    METHOD specify_special;
+        w['Cu'].fixed := TRUE;
+    END specify_special;
+
+    METHOD reset;
+       RUN clear;
+       RUN specify;
+    END reset;
+
+END mixture;
+
+
+(* ************************************************* *)
+
+
+MODEL stream;
+
+     comp_trans          IS_A set OF symbol_constant;
+     state               IS_A mixture;
+     Q                   IS_A volume_rate; 
+     F[comp_trans],G     IS_A molar_rate;        
+
+    comp_trans,state.comp_trans ARE_THE_SAME;
+
+    FOR i IN comp_trans CREATE
+      metalmolarFwr[i]: F[i] = Q*state.y[i];
+    END FOR ;
+    HydrogenMolarFlowrate: G = Q*state.z; 
+
+METHODS
+
+    METHOD clear;
+      RUN state.clear;
+      F[comp_trans].fixed := FALSE;
+      Q.fixed             := FALSE;
+      G.fixed             := FALSE;        
+    END clear;
+
+    METHOD specify;
+	RUN state.specify;
+	Q.fixed   := TRUE;
+    END specify;
+
+    METHOD specify_special;
+      Q.fixed  := TRUE;
+    END specify_special;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+      FOR i IN comp_trans DO
+        F[i].nominal :=F[i] + 0.05{mole/hr};
+	END FOR;
+    END scale;
+
+END stream;
+
+
+(* ************************************************ *)
+
+
+MODEL mixer;
+
+      n_inputs                IS_A integer_constant;
+      feed[1..n_inputs], out	IS_A stream;
+
+	feed[1..n_inputs].comp_trans, out.comp_trans	ARE_THE_SAME;
+
+	FOR i IN out.comp_trans CREATE
+	  MetalBalance[i]: out.F[i] = SUM[feed[1..n_inputs].F[i]];
+      END FOR;
+      SolventBalance: out.Q=SUM[feed[1..n_inputs].Q];
+      HydrogenBalance: out.G=SUM[feed[1..n_inputs].G];
+      
+METHODS
+
+    METHOD clear;
+	RUN feed[1..n_inputs].clear;
+	RUN out.clear;
+    END clear;
+
+    METHOD seqmod;
+      RUN feed[1..n_inputs-1].specify;
+    END seqmod;
+
+    METHOD specify;
+	RUN feed[1..n_inputs].specify;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+	RUN feed[1..n_inputs].scale;
+	RUN out.scale;
+    END scale;
+
+END mixer;
+
+
+(*  ************************************************* *)
+
+
+MODEL splitter;
+
+      n_outputs                       IS_A integer_constant;
+      feed, out[1..n_outputs]         IS_A stream;
+      split[1..n_outputs]             IS_A fraction;
+
+      feed.comp_trans, out[1..n_outputs].comp_trans  ARE_THE_SAME;
+      feed.state, out[1..n_outputs].state   ARE_THE_SAME; 
+
+      FOR j IN [1..n_outputs] CREATE
+          SolventBalance[j]: out[j].Q = split[j]*feed.Q;
+      END FOR;
+      SUM[split[1..n_outputs]]=1.0 ;
+
+METHODS
+
+    METHOD clear;
+	RUN feed.clear;
+	RUN out[1..n_outputs].clear;
+      split[1..n_outputs-1].fixed :=FALSE;
+    END clear;
+
+    METHOD seqmod;
+      split[1..n_outputs-1].fixed :=TRUE;
+    END seqmod;
+
+    METHOD specify;
+	RUN seqmod;
+	RUN feed.specify;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+	RUN feed.scale;
+	RUN out[1..n_outputs].scale;
+    END scale;
+
+END splitter;
+
+
+(* ******************************************************** *)
+
+
+MODEL sld_mixture;
+
+   comp_trans 		 			IS_A  set OF symbol_constant;
+   x[comp_trans],y[comp_trans]         	IS_A  fraction;
+   SD                    IS_A  mass_density;
+   MW[comp_trans]        IS_A  molar_mass;
+
+   comp_trans:==['Cu','Fe'];
+
+   FOR i IN comp_trans CREATE
+      x[i]*SUM[y[i]*MW[i] | i IN comp_trans]=y[i]*MW[i] ;
+   END FOR;
+
+   MW['Cu']=63.546  ;
+   MW['Fe']=55.847  ;
+					
+METHODS
+
+    METHOD clear;
+        y[comp_trans].fixed := FALSE;
+        x[comp_trans].fixed := FALSE;
+        MW[comp_trans].fixed := FALSE;
+        SD.fixed := FALSE;
+    END clear;
+
+    METHOD specify;
+        x[comp_trans].fixed := TRUE;
+        SD.fixed := TRUE;
+    END specify;
+
+    METHOD specify_special;
+        x['Cu'].fixed := TRUE;
+    END specify_special;
+
+    METHOD reset;
+       RUN clear;
+       RUN specify;
+    END reset;
+
+END sld_mixture ;
+
+(* ************************************************* *)
+
+MODEL sld_stream;
+
+     comp_trans          IS_A set OF symbol_constant;
+     state               IS_A sld_mixture;
+     Q                   IS_A volume_rate; 
+     F,W[comp_trans]     IS_A mass_rate;        
+
+    comp_trans,state.comp_trans ARE_THE_SAME;
+
+    TotalMassFr:  Q*state.SD=F;       
+
+    FOR i IN comp_trans CREATE
+      MetalMassFwr[i]: W[i] = F*state.x[i];
+    END FOR ;
+    
+
+METHODS
+
+    METHOD clear;
+      RUN state.clear;
+      W[comp_trans].fixed := FALSE;
+      Q.fixed             := FALSE;
+      F                   := FALSE;
+    
+    END clear;
+
+    METHOD specify;
+	RUN state.specify;
+	F.fixed   := TRUE;
+    END specify;
+
+    METHOD specify_special;
+      F.fixed  := TRUE;
+    END specify_special;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+END sld_stream;
+
+(* ************************************************ *)
+
+MODEL sld_mixer;
+
+      n_inputs                      	IS_A integer_constant;
+      sld_feed[1..n_inputs],sld_out		IS_A sld_stream;
+
+	sld_feed[1..n_inputs].comp_trans, sld_out.comp_trans	ARE_THE_SAME;
+
+	FOR i IN sld_out.comp_trans CREATE
+	  MassFrBalance[i]: sld_out.W[i] = SUM[sld_feed[1..n_inputs].W[i]];
+      END FOR;
+      
+      MineralBalance: sld_out.F=SUM[sld_feed[1..n_inputs].F];
+
+      
+METHODS
+
+    METHOD clear;
+	RUN sld_feed[1..n_inputs].clear;
+	RUN sld_out.clear;
+    END clear;
+
+    METHOD seqmod;
+      RUN sld_feed[1..n_inputs-1].specify;
+    END seqmod;
+
+    METHOD specify;
+	RUN sld_feed[1..n_inputs].specify;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+	RUN sld_feed[1..n_inputs].scale;
+	RUN sld_out.scale;
+    END scale;
+
+END sld_mixer;
+
+
+(*  ************************************************* *)
+
+
+MODEL sld_splitter;
+
+      n_outputs                       		IS_A integer_constant;
+      sld_feed,sld_out[1..n_outputs]         	IS_A sld_stream;
+      split[1..n_outputs]             		IS_A fraction;
+
+      sld_feed.comp_trans, sld_out[1..n_outputs].comp_trans  ARE_THE_SAME;
+      sld_feed.state,sld_out[1..n_outputs].state ARE_THE_SAME; 
+
+      FOR j IN [1..n_outputs] CREATE
+        MassFrBalance[j]: sld_out[j].F = split[j]*sld_feed.F;
+      END FOR;
+      
+      SUM[split[1..n_outputs]]=1.0 ;
+      
+    
+METHODS
+
+    METHOD clear;
+	RUN sld_feed.clear;
+	RUN sld_out[1..n_outputs].clear;
+      split[1..n_outputs-1].fixed :=FALSE;
+    END clear;
+
+    METHOD seqmod;
+      split[1..n_outputs-1].fixed :=TRUE;
+    END seqmod;
+
+    METHOD specify;
+	RUN seqmod;
+	RUN sld_feed.specify;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+	RUN sld_feed.scale;
+	RUN out[1..n_outputs].scale;
+    END scale;
+
+END sld_splitter;
+
+(* ************************************************* *)
+
+

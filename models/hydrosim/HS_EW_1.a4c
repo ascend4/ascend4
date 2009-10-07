@@ -1,0 +1,74 @@
+REQUIRE "HydroSim.a4l";
+
+(*
+   HS_EW_1.a4c
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Electrowinning Modeling.
+   
+   This code illustrate the modeling of a electrowinning
+   of copper. 
+*)
+(*
+$Date:06/02/05 $
+$Revision: 1.1 $
+$Authors: Cisternas, Galvez, Montenegro $
+*)
+
+MODEL flowsheet;
+
+  ew1	  IS_A Cell;
+
+
+METHODS
+
+    METHOD clear;
+	RUN ew1.clear;
+    END clear;
+
+    METHOD seqmod;
+    END seqmod;
+
+    METHOD specify;
+      RUN ew1.specify;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END flowsheet;
+
+
+(***********************************************************)
+
+MODEL test_flowsheet REFINES flowsheet;
+
+METHODS 
+
+  METHOD values;
+     ew1.A := 1.8 {m^2};
+     ew1.T := 328.5 {K};
+     ew1.Pcu := 35 {kg/hr};
+     ew1.cat.ko:= 0.0000000119 {cm/s};
+     ew1.d := 3 {cm};
+(*     ew1.L := 10 {kg/hr};  *)
+     ew1.Ra := 0.0000010 {ohm};
+     ew1.Rc := 0.0000010 {ohm};
+     ew1.feed.state.w['Cu']:=51.09 {g/l};
+     ew1.feed.state.w['Fe']:=0.3 {g/l};
+     ew1.feed.state.z:=0.882 {mole/meter^3};
+     ew1.feed.Q:= 6.04 {m^3/hr} ;
+     ew1.cat.Eo:=0.34 {volt};
+     ew1.ane.Eo:=-1.23 {volt};
+     ew1.Ut:=100.0 {volt};
+  END values;
+
+END test_flowsheet;
+
+(***********************************************************)

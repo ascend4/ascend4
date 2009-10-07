@@ -1,0 +1,261 @@
+PROVIDE "HydroFit.a4l";
+
+(*
+   hydrofit.a4l
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Hydrometallurgy process Modeling and Optimization.
+
+   This file provide a model for solvent extraction parameter estimation 
+*)
+(*
+$Date:07/07/15 $
+$Revision: 2.0 $
+$Authors: Cisternas, Galvez, Luza  $
+*)
+
+ATOM K1factor REFINES solver_var
+     DIMENSIONLESS
+     DEFAULT 13 ;
+        lower_bound := 0;
+        upper_bound := 20;
+        nominal := 0.5;
+END K1factor;
+
+ATOM K2factor REFINES solver_var
+     DIMENSIONLESS
+     DEFAULT 0.0002 ;
+        lower_bound := 0;
+        upper_bound := 1;
+        nominal := 0.05;
+END K2factor;
+
+
+
+MODEL mixersettler_equilibria_fit(
+      comp_trans IS_A set OF symbol_constant;
+	aqout    WILL_BE stream;
+	orout    WILL_BE stream;
+	orfeed   WILL_BE stream;
+      aqfeed WILL_BE stream;
+      K1  WILL_BE K1factor;
+      K2  WILL_BE K2factor;
+);
+
+      f[comp_trans]  IS_A molartrn_rate;
+      A     IS_A area; 
+      db    IS_A distance;
+      ni[comp_trans],K[comp_trans] IS_A factor; 
+      m    	IS_A factor; 
+      n    	IS_A factor; 
+      p    	IS_A factor; 
+      kr[comp_trans] 	IS_A speed;
+      Vm	IS_A volume;
+      Vo	IS_A volume;
+      orfeed_to_aqfeed IS_A factor;
+
+      AqueousBal:	aqfeed.Q=aqout.Q;
+      SolventBal:	orfeed.Q=orout.Q;
+      FOR i IN comp_trans CREATE
+          MetalBalAquPhase[i]: A*f[i]= aqfeed.Q*aqfeed.state.y[i]-aqout.Q*aqout.state.y[i];
+          MetalBalOrgPhase[i]: A*f[i]= orout.Q*orout.state.y[i]-orfeed.Q*orfeed.state.y[i];
+          RateChemRxn[i]: f[i]= kr[i]*(K[i]*aqout.state.y[i]^m*orout.state.z^n/aqout.state.z^p-aqout.state.z^(ni[i]-p)*orout.state.y[i]/(orout.state.z^(ni[i]-n)*aqout.state.y[i]^(1-m)));
+      END FOR;
+      HydrogenBalAquPhase: A*SUM[ni[i]*f[i] | i IN comp_trans]=aqout.Q*aqout.state.z-aqfeed.Q*aqfeed.state.z; 
+      HydrogenBalOrgPhase: A*SUM[ni[i]*f[i] | i IN comp_trans]=orfeed.Q*orfeed.state.z-orout.Q*orout.state.z; 
+      InterfacialSurface:	db*A=6*Vo;
+      OrgPhaseVolume:		Vo*(aqfeed.Q+orfeed.Q)=Vm*orfeed.Q ;
+      PartialRxOrder1:		m=1;
+      PartialRxOrder2:		n=1;
+      PartialRxOrder3:		p=1;
+      NumberH1:			ni['Cu']=2;
+      NumberH2:			ni['Fe']=3;
+      FactorCu:               K['Cu']=K1 ;
+      FactorFe:               K['Fe']=K2 ;
+ 	Organicfeed:		orfeed_to_aqfeed*aqfeed.Q = orfeed.Q;
+
+METHODS
+
+    METHOD clear;
+      RUN  aqfeed.clear;     
+      RUN  aqout.clear;
+      RUN  orfeed.clear;
+      RUN  orout.clear;        
+      f[comp_trans].fixed:=FALSE;
+      ni[comp_trans].fixed:=FALSE;
+      m.fixed:=FALSE;
+      n.fixed:=FALSE;
+      p.fixed:=FALSE;
+      K[comp_trans].fixed:=FALSE;
+      kr[comp_trans].fixed:=FALSE;
+      A.fixed:=FALSE; 
+      Vm.fixed:=FALSE;
+      Vo.fixed:=FALSE;  
+      db.fixed:=FALSE;
+	orfeed_to_aqfeed.fixed:=FALSE;  
+      K1.fixed:=FALSE;
+      K2.fixed:=FALSE;  
+    END clear;
+
+    METHOD seqmod;
+	kr[comp_trans].fixed:= TRUE ;
+	db.fixed:= TRUE ;
+	Vm.fixed:= TRUE;    
+    END seqmod;
+
+    METHOD specify;
+      RUN seqmod;
+      RUN orfeed.specify;
+      RUN aqfeed.specify;
+    END specify;
+
+    METHOD values;
+       kr['Cu'] := 0.42 {cm/s} ;
+       kr['Fe'] := 0.0058 {cm/s} ;
+       db := 0.08 {cm} ;
+       Vm := 2.8 {m^3} ;
+       aqfeed.state.w['Cu'] := 1.96 {g/l};
+       aqfeed.state.w['Fe'] := 8.54 {g/l};
+       aqfeed.state.z       := 0.01 {mole/meter^3};
+       aqfeed.Q             := 6.04 {m^3/hr} ;
+       orfeed.state.w['Cu'] := 1.13 {g/l};
+       orfeed.state.w['Fe'] := 0.03 {g/l};
+       orfeed.state.z       := 0.37 {mole/meter^3};   
+       orfeed.Q := 6.644 {m^3/hr} ; 
+    END values;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END mixersettler_equilibria_fit;
+
+(*  ************************************************* *)
+
+
+MODEL mixersettler_fit(
+      comp_trans IS_A set OF symbol_constant;
+	aqout    WILL_BE stream;
+	orout    WILL_BE stream;
+	orfeed   WILL_BE stream;
+      aqi	WILL_BE mixture; 
+      ori	WILL_BE mixture; 
+      orfeed_to_aqfeed	WILL_BE factor;
+      aqfeed WILL_BE stream;
+      K1  WILL_BE factor;
+      K2  WILL_BE factor;
+);
+
+      f[comp_trans]  IS_A molartrn_rate;
+      J[comp_trans]  IS_A molartrn_rate;
+      ra[comp_trans]  IS_A molartrn_rate ;
+      ro[comp_trans]  IS_A molartrn_rate ; 
+      rh  IS_A molartrn_rate ;
+      rrh IS_A molartrn_rate ;
+      mo[comp_trans]	IS_A speed;
+      mh	IS_A speed;
+      mrh	IS_A speed;
+      A     IS_A area; 
+      db    IS_A distance;
+      ni[comp_trans]   IS_A factor; 
+      m    	IS_A factor; 
+      n    	IS_A factor; 
+      p    	IS_A factor; 
+      K[comp_trans]    	IS_A factor; 
+      ma[comp_trans]	IS_A speed;
+      kr[comp_trans] 	IS_A speed;
+      Vm	IS_A volume;
+      Vo	IS_A volume;
+
+      AqueousBal:	aqfeed.Q=aqout.Q;
+      SolventBal:	orfeed.Q=orout.Q;
+
+      FOR i IN comp_trans CREATE
+          MetalBalAquPhase[i]: A*f[i]= aqfeed.Q*aqfeed.state.y[i]-aqout.Q*aqout.state.y[i];
+          MetalBalOrgPhase[i]: A*f[i]= orout.Q*orout.state.y[i]-orfeed.Q*orfeed.state.y[i];
+          MassTrfrMetalAquPhase[i]: ra[i]= ma[i]*(aqout.state.y[i]-aqi.y[i]);
+          MassTrfrMetalOrgPhase[i]: ro[i]= mo[i]*(orout.state.y[i]-ori.y[i]); 
+          RateChemRxn[i]: J[i]= kr[i]*(K[i]*aqi.y[i]^m*ori.z^n/aqi.z^p-aqi.z^(ni[i]-p)*ori.y[i]/(ori.z^(ni[i]-n)*aqi.y[i]^(1-m)));
+          EqualRateAquOrg[i]: ra[i]=-ro[i];
+          EqualRateAquChemRxn[i]: ra[i]=J[i];
+          EqualRateChemRxnOverall[i]: J[i]=f[i]; 
+      END FOR;
+
+      HydrogenBalAquPhase: A*SUM[ni[i]*f[i] | i IN comp_trans]=aqout.Q*aqout.state.z-aqfeed.Q*aqfeed.state.z; 
+      HydrogenBalOrgPhase: A*SUM[ni[i]*f[i] | i IN comp_trans]=orfeed.Q*orfeed.state.z-orout.Q*orout.state.z; 
+      HydrogenMassRateAquPhase: rh=mh*(aqout.state.z-aqi.z); 
+      HydrogenMassRateOrgPhase: rrh=mrh*(orout.state.z-ori.z);
+      EqualHydrogenMetalBal:	rh=SUM[ni[i]*f[i] | i IN comp_trans];
+      EqualHydrogenOrgAqu:	rrh=-rh ;
+      InterfacialSurface:	db*A=6*Vo;
+      OrgPhaseVolume:		Vo*(aqfeed.Q+orfeed.Q)=Vm*orfeed.Q ;
+      MassTransCoeff1:		mrh=ma['Cu'];
+      MassTransCoeff2:		mo['Cu']=ma['Cu']/2;
+      MassTransCoeff3:		mh=10*ma['Cu'];
+      PartialRxOrder1:		m=1;
+      PartialRxOrder2:		n=1;
+      PartialRxOrder3:		p=1;
+      NumberH1:			ni['Cu']=2;
+      NumberH2:			ni['Fe']=3;
+      FactorCu:               K['Cu']=K1 ;
+      FactorFe:               K['Fe']=K2 ;
+	Organicfeed:		orfeed_to_aqfeed*aqfeed.Q = orfeed.Q;
+
+METHODS
+
+    METHOD clear;
+      RUN  aqfeed.clear;     
+      RUN  aqout.clear;
+      RUN  orfeed.clear;
+      RUN  orout.clear; 
+      RUN  aqi.clear;
+      RUN  ori.clear;       
+      f[comp_trans].fixed:=FALSE;
+      J[comp_trans].fixed:=FALSE;
+      ra[comp_trans].fixed:=FALSE;
+      ro[comp_trans].fixed:=FALSE;
+      rh.fixed:=FALSE;
+      rrh.fixed:=FALSE;
+      ni[comp_trans].fixed:=FALSE;
+      m.fixed:=FALSE;
+      n.fixed:=FALSE;
+      p.fixed:=FALSE;
+      K[comp_trans].fixed:=FALSE;
+      ma[comp_trans].fixed:=FALSE;
+      mo[comp_trans].fixed:=FALSE;
+      mh.fixed:=FALSE;
+      mrh.fixed:=FALSE;
+      kr[comp_trans].fixed:=FALSE;
+      A.fixed:=FALSE; 
+      Vm.fixed:=FALSE;
+      Vo.fixed:=FALSE;  
+      db.fixed:=FALSE;
+	orfeed_to_aqfeed.fixed:=FALSE;    
+    END clear;
+
+    METHOD seqmod;
+      ma[comp_trans].fixed:= TRUE ;
+	mo['Fe'].fixed := TRUE ;
+	kr[comp_trans].fixed:= TRUE ;
+	db.fixed:= TRUE ;
+	Vm.fixed:= TRUE;    
+    END seqmod;
+
+    METHOD specify;
+      RUN seqmod;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END mixersettler_fit;

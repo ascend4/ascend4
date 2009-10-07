@@ -1,0 +1,268 @@
+PROVIDE "HydroLeach.a4l";
+
+(*
+   hydroleach.a4l
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Hydrometallurgy process Modeling and Optimization.
+
+   This file provide a model for the modeling of Heap Leaching that 
+   are useful in the simulation of solvent extraction circuits
+*)
+(*
+$Date:07/07/15 $
+$Revision: 2.0 $
+$Authors: Cisternas, Galvez, Luza  $
+*)
+
+
+MODEL heap_block;
+ 
+     comp_trans       		IS_A set OF symbol_constant;
+     LS_in,LS_out			IS_A stream;
+     Sld_in,Sld_out		IS_A sld_stream;
+     cnv[comp_trans],cnvz	IS_A fraction; 
+     T_D[comp_trans],T_Dz,t	IS_A time;
+     Qh				IS_A mass_rate;
+     Cmax				IS_A positive_variable;
+     Min				IS_A mass;
+     SD                    	IS_A mass_density;
+     D				IS_A distance;
+     Kz,K[comp_trans]		IS_A constant_acid;
+   
+     comp_trans,LS_in.comp_trans,LS_out.comp_trans,Sld_in.comp_trans,Sld_out.comp_trans ARE_THE_SAME;
+
+     LS_in.Q,LS_out.Q		ARE_THE_SAME;
+     Sld_in.F,Sld_out.F		ARE_THE_SAME;
+     SD,Sld_out.state.SD	ARE_THE_SAME;	
+
+     FOR i IN comp_trans CREATE
+       MassBal[i]: Sld_in.state.x[i]*Sld_in.F+LS_in.state.w[i]*LS_in.Q=Sld_out.state.x[i]*Sld_out.F+LS_out.state.w[i]*LS_out.Q;
+
+       Convertion[i]: cnv[i]*Sld_in.state.x[i]*Sld_in.F=Sld_in.state.x[i]*Sld_in.F-Sld_out.state.x[i]*Sld_out.F;
+
+       CharacteristicTime[i]: T_D[i]*LS_out.state.z=K[i]*Sld_in.state.x[i]*D^2;
+ 
+       Res_Time[i]: t=T_D[i]*(1-3*(1-cnv[i])^(2/3)+2*(1-cnv[i]));
+     END FOR;
+
+     BalAcid: LS_in.state.z*LS_in.Q*LS_in.state.MWz=LS_out.state.z*LS_out.Q*LS_in.state.MWz+Qh/98;
+ 
+     TimeAcid: t=T_Dz*(1-3*(1-cnvz)^(2/3)+2*(1-cnvz));
+
+     CharacteristicTimeZ: T_Dz*LS_out.state.z=Kz*D^2;
+
+     AcidConvertion:  LS_in.state.z-LS_out.state.z=cnvz*LS_in.state.z;
+
+     MineralMass:  Min = Sld_in.F*t;
+
+     ConsumptionMaxAcid:  Cmax*Sld_in.F*cnvz=Qh;
+ 
+ METHODS
+
+     METHOD clear;
+      RUN LS_in.clear;
+      RUN LS_out.clear;
+      RUN Sld_in.clear;
+      RUN Sld_out.clear;
+ 	cnv[comp_trans].fixed	:= FALSE;
+      cnvz.fixed			:= FALSE;
+	T_D[comp_trans].fixed	:= FALSE;
+	T_Dz[comp_trans].fixed	:= FALSE;
+ 	t.fixed	:= FALSE;
+ 	Qh.fixed	:= FALSE;
+ 	Cmax.fixed	:= FALSE;
+ 	Min.fixed	:= FALSE;
+ 	SD.fixed    := FALSE;
+      D.fixed     := FALSE;
+      Kz.fixed    := FALSE;
+      K[comp_trans].fixed := FALSE;
+     END clear;
+
+     METHOD seqmod;
+ 	SD.fixed    := TRUE;
+      Kz.fixed    := TRUE;
+      D.fixed     := TRUE;
+      t.fixed	:= TRUE;
+      K[comp_trans].fixed := TRUE; 
+     END seqmod;
+
+     METHOD specify;
+      RUN seqmod;
+      RUN LS_in.specify;
+      RUN Sld_in.specify;
+     END specify;
+
+     METHOD specify2;
+      RUN LS_in.specify;
+      RUN Sld_in.specify;
+ 	SD.fixed    := TRUE;
+      Kz.fixed    := TRUE;
+      D.fixed     := TRUE;
+      cnvz.fixed	:= TRUE;
+      K[comp_trans].fixed := TRUE;
+      Sld_in.state.x['Cu'].fixed := TRUE;
+     END specify2;
+
+     METHOD reset;
+      RUN clear;
+      RUN specify;
+     END reset;
+
+END heap_block;
+
+(* ************************************************* *)
+
+MODEL heap_leach;
+ 
+     comp_trans       		IS_A set OF symbol_constant;
+     LS_in,LS_out			IS_A stream;
+     Sld_in,Sld_out		IS_A sld_stream;
+     n_lado,n_largo		IS_A integer_constant;
+     ld				IS_A splitter;
+     sd				IS_A sld_splitter;
+     lm				IS_A mixer;
+     sm				IS_A sld_mixer;
+     hb[1..n_lado][1..n_largo]			IS_A heap_block;
+     cnvTOT_Cu,cnvTOTz		IS_A fraction;
+     TR				IS_A irrigation_ratio;
+     A				IS_A area;
+     h				IS_A distance;
+     T_ciclo			IS_A time;
+
+     FOR j IN [1..n_largo] CREATE
+          ld.out[j], hb[1][j].LS_in ARE_THE_SAME;
+          lm.feed[j],hb[n_lado][j].LS_out ARE_THE_SAME;
+      END FOR;
+
+     lm.n_inputs, ld.n_outputs, n_largo ARE_THE_SAME;
+     sm.n_inputs, sd.n_outputs, n_lado ARE_THE_SAME;
+     Sld_out.state.SD, Sld_in.state.SD ARE_THE_SAME;
+
+      FOR j IN [1..n_lado] CREATE
+          sd.sld_out[j], hb[j][1].Sld_in  ARE_THE_SAME;
+          sm.sld_feed[j], hb[j][n_largo].Sld_out ARE_THE_SAME;
+      END FOR;
+
+      FOR i IN [1..n_lado] CREATE
+		FOR j IN [1..n_largo-1] CREATE
+               hb[i][j].Sld_out, hb[i][j+1].Sld_in ARE_THE_SAME;
+            END FOR;
+      END FOR;
+
+      FOR i IN [1..n_largo] CREATE
+		FOR j IN [1..n_lado-1] CREATE
+               hb[j][i].LS_out, hb[j+1][i].LS_in ARE_THE_SAME;
+            END FOR;
+      END FOR;
+ 
+     LS_in.comp_trans, Sld_in.comp_trans,comp_trans   ARE_THE_SAME;
+     LS_out.comp_trans, Sld_out.comp_trans, comp_trans  ARE_THE_SAME;   
+     LS_in,ld.feed ARE_THE_SAME;
+     Sld_in, sd.sld_feed ARE_THE_SAME;
+     lm.out, LS_out ARE_THE_SAME;
+     sm.sld_out, Sld_out ARE_THE_SAME;
+
+        cnvTOT_Cu*Sld_in.state.x['Cu']*Sld_in.F =Sld_in.state.x['Cu']*Sld_in.F-Sld_out.state.x['Cu']*Sld_out.F;
+
+        cnvTOTz*LS_in.state.z=LS_in.state.z-LS_out.state.z;
+
+        LS_in.Q=TR*A;
+  
+        Sld_in.F*T_ciclo=A*h*Sld_in.state.SD;
+
+
+ METHODS
+
+     METHOD clear;
+      RUN LS_in.clear;
+      RUN LS_out.clear;
+      RUN Sld_in.clear;
+      RUN Sld_out.clear;
+      RUN ld.clear;
+      RUN sd.clear;
+      RUN lm.clear;
+      RUN sm.clear;
+ 	n_lado.fixed	:= FALSE;
+      n_largo.fixed	:= FALSE;
+      cnvTOT_Cu.fixed	:= FALSE;
+      cnvTOTz.fixed	:= FALSE;
+      TR.fixed		:= FALSE;
+      A.fixed		:= FALSE;
+      h.fixed		:= FALSE;
+ 	T_ciclo.fixed	:= FALSE;
+    END clear;
+
+     METHOD seqmod;
+      RUN ld.seqmod;
+      RUN sd.seqmod;
+     END seqmod;
+
+     METHOD specify;
+      RUN seqmod;
+      RUN LS_in.specify;
+      RUN Sld_in.specify;
+      TR.fixed		:= TRUE; 
+  	(* T_ciclo.fixed	:= TRUE; *)
+      h.fixed		:= TRUE; 
+     END specify;
+
+     METHOD reset;
+      RUN clear;
+      RUN specify;
+     END reset;
+
+END heap_leach;
+
+(* ******************************************************** *)
+
+MODEL heap_leaching;
+
+      comp_trans     IS_A set OF symbol_constant;
+      pls,reff       IS_A stream;
+      P[comp_trans]  IS_A molar_rate ;
+      PW[comp_trans] IS_A mass_rate;
+          
+      comp_trans,pls.comp_trans ARE_THE_SAME;
+      comp_trans,reff.comp_trans ARE_THE_SAME;
+
+      FOR i IN comp_trans CREATE
+          P[i]= pls.Q*pls.state.y[i]-reff.Q*reff.state.y[i];
+          PW[i]= P[i]*pls.state.MW[i] ;
+      END FOR;
+   	
+METHODS
+
+    METHOD clear;
+	RUN pls.clear;
+      RUN reff.clear;
+      P[comp_trans].fixed := FALSE ; 
+      PW[comp_trans].fixed := FALSE;        
+    END clear;
+
+    METHOD seqmod ;
+	RUN pls.specify;
+    END seqmod ;
+ 
+    METHOD specify;
+	RUN pls.specify;
+      RUN reff.specify;        
+    END specify;
+
+    METHOD specify_special;
+      PW['Cu'].fixed := TRUE ;       
+    END specify_special;
+    
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END heap_leaching;
+
+
+
