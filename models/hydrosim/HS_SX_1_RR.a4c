@@ -1,0 +1,106 @@
+REQUIRE "HydroSim.a4l";
+
+(*
+   hs_SX_1_RR.a4s
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Solvent Extraction Modeling.
+   
+   This code illustrate the modeling of a mixer-setter 
+   for solvent extraction of copper with internal recirculation.
+
+                       -----------          
+             -------->|           |---------
+                      |    ex1    |
+            <--|sp1|--|           |<--|mx1|---
+                 |     -----------      ^   
+                 |                      |   
+                  ----------------------    
+*)              
+(*
+$Date:04/11/05 $
+$Revision: 1.2 $
+$Authors: Cisternas, Galvez & Montenegro $
+*)
+
+MODEL flowsheet;
+
+  ex1	  IS_A mixersettler_rigorous;
+  mx1   IS_A mixer;
+  sp1   IS_A splitter;
+  ex1.typ :=='extraction';
+  ex1.hydrodynamic :=='ContinuidadOrganic';
+(* ContinuidadAmbivalent
+  ContinuidadAqueous
+  ContinuidadOrganic
+*)
+  mx1.n_inputs :== 2;
+  sp1.n_outputs :== 2;
+
+  ex1.orfeed,mx1.out ARE_THE_SAME;
+  ex1.orout,sp1.feed ARE_THE_SAME;
+  sp1.out[1],mx1.feed[2] ARE_THE_SAME;
+
+METHODS
+
+    METHOD clear;
+	RUN ex1.clear;
+      RUN mx1.clear;
+      RUN sp1.clear;
+    END clear;
+
+    METHOD seqmod;
+    END seqmod;
+
+    METHOD specify;
+      RUN mx1.feed[1].specify;
+      RUN sp1.seqmod;
+      RUN ex1.seqmod_circuit;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END flowsheet;
+
+
+(***********************************************************)
+
+MODEL test_flowsheet REFINES flowsheet;
+
+METHODS 
+
+  METHOD values;
+     ex1.ma['Cu'] := 0.00377 {cm/s} ;
+     ex1.ma['Fe'] := 0.000614 {cm/s} ;
+     ex1.mo['Fe'] := 0.00303 {cm/s} ;
+     ex1.kr['Cu'] := 0.42 {cm/s} ;
+     ex1.kr['Fe'] := 0.0058 {cm/s} ;
+     ex1.sig := 0.02 {N/m} ;
+     ex1.Nag := 125 {1/min} ;
+     ex1.D := 0.6 {m} ;
+     ex1.do := 0.83 {g/cm^3} ;
+     ex1.da := 1.15 {g/cm^3} ;
+     ex1.ua := 1.02{cP} ;
+     ex1.uo := 2.0 {cP} ;   
+     ex1.Vm := 2.8 {m^3} ;
+     ex1.aqfeed.state.w['Cu'] := 1.96 {g/l};
+     ex1.aqfeed.state.w['Fe'] := 8.54 {g/l};
+     ex1.aqfeed.state.z       := 0.01 {mole/meter^3};
+     ex1.aqfeed.Q             := 80.0 {m^3/hr} ;
+     mx1.feed[1].state.w['Cu'] := 1.13 {g/l};
+     mx1.feed[1].state.w['Fe'] := 0.03 {g/l};
+     mx1.feed[1].state.z       := 0.37 {mole/meter^3};
+     mx1.feed[1].Q     := 20.0 {m^3/hr} ;
+     sp1.split[1] := 0.55 ;  
+  END values;
+
+END test_flowsheet;
+
+(***********************************************************)

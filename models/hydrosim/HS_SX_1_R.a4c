@@ -1,0 +1,82 @@
+REQUIRE "HydroSim.a4l";
+
+(*
+   
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Solvent Extraction Modeling.
+   
+   This code illustrate the modeling of a 
+   mixer-setter_rigorous 
+   for solvent extraction of copper. 
+*)
+(*
+$Date:04/11/04 $
+$Revision: 1.2 $
+$Authors: Cisternas, Galvez $
+*)
+
+MODEL flowsheet;
+
+  ex1	  IS_A mixersettler_rigorous;
+  ex1.typ :=='extraction';
+  ex1.hydrodynamic :=='ContinuidadAqueous';
+
+METHODS
+
+    METHOD clear;
+	RUN ex1.clear;
+    END clear;
+
+    METHOD seqmod;
+    END seqmod;
+
+    METHOD specify;
+      RUN ex1.specify_2;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END flowsheet;
+
+
+(***********************************************************)
+
+MODEL test_flowsheet REFINES flowsheet;
+
+METHODS 
+
+  METHOD values;
+     ex1.ma['Cu'] := 0.00377 {cm/s} ;
+     ex1.ma['Fe'] := 0.000614 {cm/s} ;
+     ex1.mo['Fe'] := 0.00303 {cm/s} ;
+     ex1.kr['Cu'] := 0.42 {cm/s} ;
+     ex1.kr['Fe'] := 0.0058 {cm/s} ;
+     ex1.sig := 0.02 {N/m} ;
+     ex1.Nag := 125 {1/min} ;
+     ex1.D := 0.6 {m} ;
+     ex1.do := 0.83 {g/cm^3} ;
+     ex1.da := 1.15 {g/cm^3} ;
+     ex1.ua := 1.02{cP} ;
+     ex1.uo := 2.0 {cP} ;   
+     ex1.Vm := 2.8 {m^3} ;
+     ex1.aqfeed.state.w['Cu'] := 1.96 {g/l};
+     ex1.aqfeed.state.w['Fe'] := 8.54 {g/l};
+     ex1.aqfeed.state.z       := 0.01 {mole/meter^3};
+     ex1.aqfeed.Q             := 6.04 {m^3/hr} ;
+     ex1.orfeed.state.w['Cu'] := 1.13 {g/l};
+     ex1.orfeed.state.w['Fe'] := 0.03 {g/l};
+     ex1.orfeed.state.z       := 0.37 {mole/meter^3};
+     ex1.orfeed_to_aqfeed     := 1.1 ;  
+  END values;
+
+END test_flowsheet;
+
+(***********************************************************)

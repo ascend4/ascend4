@@ -1,0 +1,72 @@
+REQUIRE "HydroSim.a4l";
+
+(*
+   HS_HB.a4c
+   by Luis Cisternas & Colaborators
+
+   This file is an example of heap_block
+   
+*)
+(*
+$Date:07/07/15 $
+$Revision: 2.0 $
+$Authors: Cisternas, Luza  $
+*)
+
+MODEL n;
+
+  hb		  IS_A heap_block;
+
+
+METHODS
+
+    METHOD clear;
+	RUN hb.clear;
+    END clear;
+
+    METHOD seqmod;
+    END seqmod;
+
+    METHOD specify;
+      RUN hb.specify;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END n;
+
+
+
+
+(***********************************************************)
+
+MODEL L_n REFINES n;
+
+METHODS 
+
+  METHOD values;
+      hb.LS_in.Q			:= 50 {m^3/hour};
+      hb.Sld_in.F			:= 30000 {kg/hour}; 
+	hb.Sld_in.state.x['Cu']	:= 0.017;
+	hb.Sld_in.state.x['Fe']	:= 0.023;
+	hb.LS_in.state.z		:= 0.17 {mole/m^3};
+	hb.LS_in.state.w['Cu'] 	:= 0.001 {kg/m^3};
+	hb.LS_in.state.w['Fe'] 	:= 0.001 {kg/m^3};
+      hb.SD 	:= 1500 {kg/m^3};
+	hb.Kz		:= 538205.55 {hour*mole/m^5};
+      hb.K['Cu']	:= 30000000 {hour*mole/m^5};
+      hb.K['Fe']	:= 34475300 {hour*mole/m^5};
+      hb.D	:= 0.012 {m};
+      hb.t	:= 760 {hour};
+  END values;
+
+END L_n;
+
+(***********************************************************)
+

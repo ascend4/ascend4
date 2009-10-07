@@ -1,0 +1,291 @@
+PROVIDE "HydroEW.a4l";
+
+(*
+   hydroew.a4l
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Hydrometallurgy process Modeling and Optimization.
+
+   This file provide a model for the modeling of ElectroWinning 
+   that are useful in the simulation of solvent extraction circuits
+*)
+(*
+$Date:07/07/15 $
+$Revision: 2.0 $
+$Authors: Cisternas, Galvez, Montenegro  $
+*)
+
+
+	
+MODEL ew_cell;
+
+      comp_trans     IS_A set OF symbol_constant;
+      strong,spent   IS_A stream;
+      P[comp_trans]  IS_A molar_rate ;
+      PW[comp_trans] IS_A mass_rate;
+          
+      comp_trans,strong.comp_trans ARE_THE_SAME;
+      comp_trans,spent.comp_trans ARE_THE_SAME;
+
+      FOR i IN comp_trans CREATE
+          P[i]= strong.Q*strong.state.y[i]-spent.Q*spent.state.y[i];
+          PW[i]= P[i]*spent.state.MW[i] ;
+      END FOR;
+   	
+METHODS
+
+    METHOD clear;
+	RUN strong.clear;
+      RUN spent.clear ;
+      P[comp_trans].fixed := FALSE;  
+      PW[comp_trans].fixed := FALSE;             
+    END clear;
+
+    METHOD seqmod ;
+      RUN spent.specify; 
+    END seqmod ;
+
+    METHOD specify;
+	RUN strong.specify;
+      RUN spent.specify;            
+    END specify;
+
+    METHOD specify_special;
+      PW['Cu'].fixed := TRUE ;       
+    END specify_special;
+      
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END ew_cell;
+
+(* ******************************************************** *)
+
+MODEL Cathode;
+
+	comp_trans  IS_A set OF symbol_constant;
+	state       IS_A mixture;
+	n, alfa,k	IS_A factor;
+	ko		IS_A speed;
+	fr 	      IS_A molartrn_rate;
+	Eo,E,V,Uc   IS_A voltage;
+	Ic,Ict    	IS_A current;
+	T           IS_A temperature;
+	A           IS_A area;
+	F_C         IS_A faraday_constant;
+	R           IS_A gas_constant;
+
+	comp_trans,state.comp_trans 		ARE_THE_SAME;
+      
+	NerstEquation: E=Eo-(R*T/(n*F_C))*ln(1{mol/m^3}/state.y['Cu']);
+    	ReactionCurrent: Ic =A*fr*n*F_C;
+    	Overvoltage: V = Uc - E;
+	Factor: k =n*V*F_C/(R*T) ;
+    	RateElectTransfer: fr =1{mol/m^3}*ko*((state.y['Cu']/1{mol/m^3})^(1-alfa))*(exp(alfa*k)-exp(-(1-alfa)*k));
+    	FactorReaction: n = 2;
+	FactorRx: alfa = 0.62;
+      Efficiency: Ict = Ic;
+
+METHODS
+
+	METHOD clear;
+		RUN  state.clear;
+           	fr.fixed:=FALSE;
+      	E.fixed:=FALSE;
+      	Eo.fixed:=FALSE;
+      	V.fixed:=FALSE;
+      	n.fixed:=FALSE;
+      	alfa.fixed:=FALSE;
+            k.fixed:=FALSE;
+      	ko.fixed:=FALSE;
+           	Ic.fixed:=FALSE;
+            Ict.fixed:=FALSE;
+            Uc.fixed:=FALSE;
+      	A.fixed:=FALSE;
+      	T.fixed:=FALSE;
+	END clear;
+
+	METHOD seqmod_cell;
+           	ko.fixed:=TRUE;
+		Eo.fixed:=TRUE;
+    	END seqmod_cell;
+
+	METHOD seqmod;
+            RUN seqmod_cell;
+      	A.fixed:= TRUE ;
+		T.fixed:= TRUE;
+      	Uc.fixed:=TRUE;
+     	END seqmod;
+
+	METHOD specify;
+      	RUN seqmod;
+      	RUN state.specify;
+    	END specify;
+
+    	METHOD reset;
+		RUN clear;
+		RUN specify;
+    	END reset;
+
+    	METHOD scale;
+    	END scale;
+
+END Cathode;
+
+(* ***************************************************************** *)
+
+MODEL Anode;
+
+	comp_trans  IS_A set OF symbol_constant;
+	state       IS_A mixture;
+	n	  	IS_A factor;
+	fr          IS_A molartrn_rate;
+	Eo,E,V,Ua   IS_A voltage;
+	Ia,Iat   	IS_A current;
+	T           IS_A temperature;
+	A           IS_A area;
+	F_C         IS_A faraday_constant;
+	R           IS_A gas_constant;
+
+     comp_trans, state.comp_trans      ARE_THE_SAME;
+
+    	NerstEquation: E=Eo+((R*T)/(n*F_C))*ln(state.z^2/0.9{mol^2/m^6});
+    	ReactionCurrent: Ia =A*fr*n*F_C;
+    	Overvoltage: V = Ua - E;
+      RateOfElectronTransfer: V/1{volt}=0.303+0.12*ln(fr*n*F_C/1{ampere/m^2})/ln(10);
+      Efficiency: Iat= Ia ;
+	FactorReaction:n = 2;
+
+METHODS
+
+    	METHOD clear;
+		RUN  state.clear;
+		fr.fixed:=FALSE;
+      	E.fixed:=FALSE;
+      	Eo.fixed:=FALSE;
+      	V.fixed:=FALSE;
+      	n.fixed:=FALSE;
+      	Ia.fixed:=FALSE;
+            Iat.fixed:=FALSE;
+	     	Ua.fixed:=FALSE;
+      	A.fixed:=FALSE;
+      	T.fixed:=FALSE;
+	END clear;
+
+	METHOD seqmod_cell;
+		Eo.fixed:=TRUE;
+	END seqmod_cell;
+
+	METHOD seqmod;
+      	RUN seqmod_cell; 
+		A.fixed:= TRUE ;
+		T.fixed:= TRUE;
+      	Ua.fixed:=TRUE;
+      END seqmod;
+
+	METHOD specify;
+      	RUN seqmod;
+      	RUN state.specify ;
+    	END specify;
+
+    	METHOD reset;
+		RUN clear;
+		RUN specify;
+    	END reset;
+
+    	METHOD scale;
+    	END scale;
+
+END Anode;
+
+(*******************************************************************)
+
+MODEL Cell;
+
+     comp_trans   IS_A set OF symbol_constant;
+     feed, out    IS_A stream;
+     PCu          IS_A mass_rate;
+     Pz           IS_A molar_rate;
+     cat    	IS_A Cathode;
+     ane		IS_A Anode;
+     d 		IS_A distance;
+     Ra, Rc, Rs 	IS_A resistance;
+     dfeed, dout	IS_A mass_density; 
+     Ut           IS_A voltage ;
+     T            IS_A temperature;
+     A            IS_A area;
+
+     comp_trans, feed.comp_trans, out.comp_trans     ARE_THE_SAME;
+     cat.state, ane.state, out.state  ARE_THE_SAME ;
+     cat.Ict, ane.Iat  ARE_THE_SAME;
+     cat.A, ane.A, A ARE_THE_SAME ;
+     cat.T, ane.T, T ARE_THE_SAME ;
+     
+     
+(*     MassConservation: PCu+ L= feed.Q*dfeed-out.Q*dout; *)
+     RateOfDepositionCu: PCu=cat.fr*out.state.MW['Cu']*A;
+     RateOfDepositionH: Pz=2*ane.fr*A;
+     CopperBalance: feed.Q*feed.state.w['Cu']-out.Q*out.state.w['Cu']-PCu=0;
+     IronBalance: feed.Q*feed.state.w['Fe']-out.Q*out.state.w['Fe']=0 ;
+     HBalance: feed.Q*feed.state.z+Pz-out.Q*out.state.z = 0;
+     FeedDensity: dfeed/1{g/l}=1018+2.38*feed.state.w['Cu']/1{g/l}+24.51*feed.state.z/1{mole/m^3};
+     OutDensity: dout/1{g/l}=1018+2.38*out.state.w['Cu']/1{g/l}+24.51*out.state.z/1{mole/m^3};
+     TotalVoltage: Ut = cat.Ict*Ra+ cat.Ict*Rc+ cat.Ict*Rs +abs(cat.Uc)+abs(ane.Ua);
+     SulfateResistance: Rs/1{ohm} =(d/1{cm})/(0.134+0.00356*out.state.w['Cu']/1{g/l}+0.02451*out.state.z/1{mole/m^3}) ;  
+	
+METHODS
+
+    METHOD clear;
+	RUN feed.clear;
+      RUN out.clear ;
+      RUN cat.clear;
+      RUN ane.clear;
+      d.fixed:=FALSE;
+      Ra.fixed:=FALSE;
+      Rc.fixed:=FALSE;
+      Rs.fixed:=FALSE;
+(*      L.fixed:=FALSE; *)
+      PCu.fixed:=FALSE;
+      dfeed.fixed:=FALSE;
+      dout.fixed:=FALSE;
+      Ut.fixed:=FALSE;     
+    END clear;
+
+    METHOD seqmod ;
+      d.fixed:=TRUE;
+      Ra.fixed:=TRUE;
+      Rc.fixed:=TRUE;
+      PCu.fixed:=TRUE;
+ (*     L.fixed:=TRUE; *)
+	A.fixed:= TRUE ;
+	T.fixed:= TRUE ;
+      Ut.fixed:= TRUE ;
+      RUN cat.seqmod_cell;
+      RUN ane.seqmod_cell;    
+    END seqmod ;
+
+    METHOD specify;
+      RUN seqmod;
+	RUN feed.specify;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END Cell;
+(**********************************************************)
+
+
+
+

@@ -1,0 +1,87 @@
+REQUIRE "HydroSim.a4l";
+
+(*
+   HS_HS.a4c
+   by Luis Cisternas & Colaborators
+
+   This file is an example of heap_block
+   
+*)
+(*
+$Date:07/07/15 $
+$Revision: 2.0 $
+$Authors: Cisternas, Luza  $
+*)
+
+MODEL z;
+
+  HL		  IS_A heap_leach;
+  HL.n_lado		:==	2;
+  HL.n_largo	:==	1;
+  
+
+METHODS
+
+    METHOD clear;
+	RUN HL.clear;
+    END clear;
+
+    METHOD seqmod;
+      RUN HL.seqmod;
+    END seqmod;
+
+    METHOD specify;
+      RUN HL.specify;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+
+END z;
+
+
+
+
+(***********************************************************)
+
+MODEL L_z REFINES z;
+
+METHODS 
+
+    METHOD values;
+      HL.LS_in.Q			:= 50 {m^3/hour};
+      HL.Sld_in.F			:= 30000 {kg/hour}; 
+	HL.Sld_in.state.x['Cu']	:= 0.017;
+	HL.Sld_in.state.x['Fe']	:= 0.023;
+	HL.LS_in.state.z		:= 0.17 {mole/m^3};
+	HL.LS_in.state.w['Cu'] 	:= 5 {g/l};
+	HL.LS_in.state.w['Fe'] 	:= 3 {g/l};
+ 	HL.TR 			:= 0.0125 {m^3/hour/m^2};
+	HL.h 				:= 10 {m};
+      HL.A				:= 2000 {m^2};
+      HL.hb[1][1].SD 	:= 1500 {kg/m^3};
+	HL.hb[1][1].Kz		:= 538205.55 {hour*mole/m^5};
+      HL.hb[1][1].K['Cu']	:= 30000000 {hour*mole/m^5};
+      HL.hb[1][1].K['Fe']	:= 34475300 {hour*mole/m^5};
+      HL.hb[1][1].D	:= 0.012 {m};
+      HL.hb[1][1].t	:= 380 {hour};
+      HL.hb[2][1].SD 	:= 1500 {kg/m^3};
+	HL.hb[2][1].Kz		:= 538205.55 {hour*mole/m^5};
+      HL.hb[2][1].K['Cu']	:= 30000000 {hour*mole/m^5};
+      HL.hb[2][1].K['Fe']	:= 34475300 {hour*mole/m^5};
+      HL.hb[2][1].D	:= 0.012 {m};
+      HL.hb[2][1].t	:= 380 {hour}; 
+      HL.ld.split[1]    := 0.5;
+      HL.sd.split[1]    := 0.5;
+ END values;
+
+END L_z;
+
+(***********************************************************)
+

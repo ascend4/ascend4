@@ -1,0 +1,72 @@
+REQUIRE "HydroSim.a4l";
+
+(*
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Solvent Extraction Modeling.
+   
+   This code illustrate the modeling of a 
+   mixer-setter_equilibria for solvent extraction of copper. 
+   Equilibrium concentration are determined. 
+
+*)
+(*
+$Date:04/11/05 $
+$Revision: 1.2 $
+$Authors: Cisternas, Galvez, Montenegro $ 
+*)
+
+MODEL flowsheet;
+
+  ex1	  IS_A mixersettler_equilibria;
+
+
+METHODS
+
+    METHOD clear;
+	RUN ex1.clear;
+    END clear;
+
+    METHOD seqmod;
+    END seqmod;
+
+    METHOD specify;
+      RUN ex1.specify_2;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END flowsheet;
+
+
+(***********************************************************)
+
+MODEL test_flowsheet REFINES flowsheet;
+
+METHODS 
+
+  METHOD values;
+     ex1.kr['Cu'] := 0.42 {cm/s} ;
+     ex1.kr['Fe'] := 0.0058 {cm/s} ;
+     ex1.db := 0.08 {cm} ;
+     ex1.Vm := 2.8 {m^3} ;
+     ex1.aqfeed.state.w['Cu'] := 1.96 {g/l};
+     ex1.aqfeed.state.w['Fe'] := 8.54 {g/l};
+     ex1.aqfeed.state.z       := 0.01 {mole/meter^3};
+     ex1.aqfeed.Q             := 6.04 {m^3/hr} ;
+     ex1.orfeed.state.w['Cu'] := 1.13 {g/l};
+     ex1.orfeed.state.w['Fe'] := 0.03 {g/l};
+     ex1.orfeed.state.z       := 0.37 {mole/meter^3};
+     ex1.orfeed_to_aqfeed     := 1.1 ;  
+  END values;
+
+END test_flowsheet;
+
+(***********************************************************)

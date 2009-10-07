@@ -1,0 +1,33 @@
+DELETE TYPES;
+DELETE SYSTEM;
+READ FILE "C:/Documents and Settings/Nancy/Mis documentos/ascend/a4_0_9_0/ascend4-0.9.0/ascend4/models/HL_dynamic.a4c";
+COMPILE x OF L_z;
+BROWSE {x};
+RUN {x.specify};
+RUN {x.values};
+SOLVE {x} WITH QRSlv;
+STUDY  {HL.h}  {HL.Sld_in.F}   {HL.LS_in.state.z}  {HL.LS_out.state.w['Cu']}  {HL.LS_out.state.w['Fe']}  {HL.Sld_out.state.x['Cu']}  {HL.Sld_out.state.x['Fe']}  {HL.cvnTOT_Cu} {HL.cnvTOTz}   IN  {x}  VARYING    { {HL.TR} {2.777E-6{meter/second}} {4.1667E-6{meter/second}} {5.555E-6{meter/second}}  }  USING {QRSlv}  OUTFILE {C:/Documents and Settings/Nancy/Mis documentos/ascend/a4_0_9_0/ascend4-0.9.0/ascend4/models/HL_dyn.dat}  ERROR STOP; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,20 @@
+REQUIRE "HydroBasic.a4l";
+REQUIRE "HydroSX.a4l";
+REQUIRE "HydroLeach.a4l"; 
+REQUIRE "HydroFit.a4l";
+REQUIRE "HydroEW.a4l";
+PROVIDE "HydroSim.a4l";
+
+(*
+   hydrosim.a4l
+   by Luis Cisternas & Colaborators
+
+   This file is the Ascend Modeling Library 
+   for Hydrometallurgy process Modeling and Optimization.
+   
+*)
+(*
+$Date:07/07/15 $
+$Revision: 2.0 $
+$Authors: Cisternas, Galvez, Luza  $
+*)

@@ -1,0 +1,162 @@
+REQUIRE "HydroSim.a4l";
+
+(*
+   
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Solvent Extraction Modeling.
+   
+   This code illustrate the modeling of a solvent 
+   extraction circuit (equilibria) of copper. The circuit has 1
+   extraction and 1 stripping stages. 
+
+
+                        ----------
+             ----------|    hp    |<---------------------------
+             |          ----------                             |
+             |                                                 |
+             |                                                 |
+             |         -----------        -----------          |
+             -------->|    ex1    |------>|    ex2   |---------
+             ---------|           |<------|          |<--------
+             |         -----------        -----------          |
+             v                                                 |
+        -----------                                            |
+   <---|    sp1    |                                           |
+        -----------                                            |
+             |                                                 |
+             |         -----------         -----------         |
+             -------->|    st1    |------>|    st1    |---------
+             ---------|           |<------|           |<-------
+             |         -----------         -----------         |
+             |                                                 |
+             |         -----------                             |
+             -------->|    ew     |-----------------------------
+                       -----------        
+
+ 
+*)
+(*
+$Date:12/21/05 $
+$Revision: 1.3 $
+$Authors: Cisternas, Galvez, Luza $
+*)
+
+
+MODEL flowsheet;
+
+   hp                  IS_A heap_leaching;
+   ex1,st1,ex2,st2     IS_A mixersettler_equilibria;
+   ew                  IS_A ew_cell;
+   sp1,sp3,sp5         IS_A splitter;
+   mx3,mx4             IS_A mixer;
+   efi                 IS_A factor;
+   cap                 IS_A mass_rate;
+
+   sp1.n_outputs :== 2;
+   sp3.n_outputs :== 2;
+   sp5.n_outputs :== 2;
+   mx3.n_inputs  :== 2;
+   mx4.n_inputs  :== 2;
+
+   ew.spent,st2.aqfeed           ARE_THE_SAME;
+   ew.strong,st1.aqout           ARE_THE_SAME;
+   st2.aqout,st1.aqfeed          ARE_THE_SAME;
+   st1.orfeed,sp1.out[1]         ARE_THE_SAME;
+   st1.orout,sp5.feed            ARE_THE_SAME;
+   sp5.out[1],mx4.feed[1]        ARE_THE_SAME;
+   mx4.out,st2.orfeed            ARE_THE_SAME;
+   hp.pls,ex1.aqfeed             ARE_THE_SAME;
+   hp.reff,ex2.aqout             ARE_THE_SAME;
+   ex1.aqout,ex2.aqfeed          ARE_THE_SAME;
+   ex1.orfeed,mx3.out            ARE_THE_SAME;
+   mx3.feed[1],sp3.out[1]        ARE_THE_SAME;
+   ex2.orout,sp3.feed            ARE_THE_SAME;
+   sp1.feed,ex1.orout            ARE_THE_SAME;
+   st2.orout,ex2.orfeed          ARE_THE_SAME;
+   sp5.out[2],mx3.feed[2]        ARE_THE_SAME;
+   sp3.out[2],mx4.feed[2]        ARE_THE_SAME;
+
+   efi=hp.P['Cu']/hp.pls.F['Cu'];
+   cap=hp.PW['Cu'] ;
+
+METHODS
+
+    METHOD clear;
+	RUN hp.clear;
+	RUN ex1.clear;
+	RUN st1.clear;
+	RUN ew.clear;
+      RUN sp1.clear;
+      RUN sp3.clear;
+      RUN sp5.clear;
+      RUN mx3.clear;
+      RUN mx4.clear;
+      RUN ex2.clear;
+      RUN st2.clear;
+    END clear;
+
+    METHOD seqmod;
+    END seqmod;
+
+    METHOD specify;
+      RUN ex1.seqmod_circuit;
+      RUN st2.seqmod_circuit;
+      RUN ex2.orfeed.specify_special;
+      RUN ex2.seqmod;
+      RUN st1.seqmod;
+      RUN sp3.seqmod;
+      RUN sp5.seqmod;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END flowsheet;
+
+
+(***********************************************************)
+
+MODEL test_flowsheet REFINES flowsheet;
+
+METHODS 
+
+  METHOD values;
+     ex1.kr['Cu'] := 0.42 {cm/s} ;
+     ex1.kr['Fe'] := 0.0058 {cm/s} ;
+     st1.kr['Cu'] := 0.42 {cm/s} ;
+     st1.kr['Fe'] := 0.0058 {cm/s} ;
+     ex1.db := 0.08 {cm} ;
+     st1.db := 0.08 {cm} ;
+     ex1.Vm := 2.8 {m^3} ;
+     st1.Vm := 2.8 {m^3} ;
+     ex2.kr['Cu'] := 0.42 {cm/s} ;
+     ex2.kr['Fe'] := 0.0058 {cm/s} ;
+     st2.kr['Cu'] := 0.42 {cm/s} ;
+     st2.kr['Fe'] := 0.0058 {cm/s} ;
+     ex2.db := 0.08 {cm} ;
+     st2.db := 0.08 {cm} ;
+     ex2.Vm := 2.8 {m^3} ;
+     st2.Vm := 2.8 {m^3} ;
+     ex1.aqfeed.state.w['Cu'] := 1.96 {g/l};
+     ex1.aqfeed.state.w['Fe'] := 8.54 {g/l};
+     ex1.aqfeed.state.z       := 0.0167 {mole/meter^3};
+     ex1.aqfeed.Q             := 6.04 {m^3/hr} ;
+     st2.aqfeed.state.w['Cu'] := 46.7 {g/l};
+     st2.aqfeed.state.w['Fe'] := 0.03  {g/l};
+     st2.aqfeed.state.z       := 1.6326 {mole/meter^3}; 
+     st2.aqfeed.Q             := 6.05 {m^3/hr};
+     ex2.orfeed.Q             := 7.22222 {meter^3/hour} ;
+     sp3.split[1]             := 1.0 ;
+     sp5.split[1]             := 1.0 ;
+  END values;
+
+END test_flowsheet;
+
+(***********************************************************)

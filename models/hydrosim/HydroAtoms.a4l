@@ -1,0 +1,65 @@
+REQUIRE "atoms.a4l";
+PROVIDE "HydroAtoms.a4l";
+
+(*
+   Hydroatoms.a4l
+   by Luis Cisternas & Colaborators
+   This file is part of Ascend Modeling Library 
+   for Solvent Extraction Modeling.
+*)
+(*
+$Date:07/07/15 $
+$Revision: 2.0 $
+$Authors: Cisternas, Galvez, Luza $
+*)
+
+ATOM molartrn_rate REFINES solver_var
+   DIMENSION Q/T/L^2
+   DEFAULT 0.1{lb_mole/hour/ft^2};
+   lower_bound := -1e6{lb_mole/hour/ft^2};
+   upper_bound := 1e6{lb_mole/hour/ft^2};
+   nominal := 0.010{lb_mole/hour/ft^2};
+END molartrn_rate;
+
+ATOM inverse_time REFINES solver_var
+   DIMENSION 1/T
+   DEFAULT 0.1{1/hour};
+   lower_bound := -1e6{1/hour};
+   upper_bound := 1e6{1/hour};
+   nominal := 0.010{1/hour};
+END inverse_time;
+
+ATOM surface_tension REFINES solver_var
+   DIMENSION M/T^2
+   DEFAULT 0.1{N/m};
+   lower_bound := -1e6{N/m};
+   upper_bound := 1e6 {N/m};
+   nominal := 0.010{N/m};
+END surface_tension;
+
+ATOM constant_acid REFINES solver_var
+   DIMENSION T*Q/L^5
+   DEFAULT 0.1{hour*mole/m^5};
+   lower_bound := -1e11{hour*mole/m^5};
+   upper_bound := 1e11{hour*mole/m^5};
+   nominal := 1{hour*mole/m^5};
+END constant_acid;
+
+ATOM irrigation_ratio REFINES solver_var
+   DIMENSION L^3/T/L^2
+   DEFAULT 0.1{m^3/hour/m^2};
+   lower_bound := -1e6{m^3/hour/m^2};
+   upper_bound := 1e6{m^3/hour/m^2};
+   nominal := 1{m^3/hour/m^2};
+END irrigation_ratio;
+
+
+UNITS
+	Fc = {96500*A*s/mole }; (* faraday_constant *)
+END UNITS;  
+
+UNIVERSAL CONSTANT faraday_constant 
+(* DIMENSION E*T/Q *) 
+REFINES real_constant :==1{Fc};
+
+    

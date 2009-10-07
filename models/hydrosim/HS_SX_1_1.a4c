@@ -1,0 +1,131 @@
+REQUIRE "HydroSim.a4l";
+
+(*
+   HS_SX_1_1.a4c
+   by Luis Cisternas & Colaborators
+
+   This file is part of Ascend Modeling Library 
+   for Solvent Extraction Modeling.
+   
+   This code illustrate the modeling of a solvent 
+   extraction circuit of copper. The circuit has 1
+   extraction and 1 stripping stages. 
+
+
+                        ----------
+             ----------|    hp    |<------
+             |          ----------        |
+             |                            |
+             |                            |
+             |         -----------        |
+             -------->|    ex1    |-------
+             ---------|           |<------
+             |         -----------        |
+             v                            |
+        -----------                       |
+   <---|    sp1    |                      |
+        -----------                       |
+             |                            |
+             |         -----------        |
+             -------->|    st1    |-------
+             ---------|           |<------
+             |         -----------        |
+             |                            |
+             |         -----------        |
+             -------->|    ew     |-------
+                       -----------        
+
+ 
+*)
+(*
+$Date:04/09/27 $
+$Revision: 1.1 $
+$Authors: Cisternas, Malatesta, Galvez $
+*)
+
+
+MODEL flowsheet;
+
+   hp          IS_A heap_leaching;
+   ex1,st1     IS_A mixersettler;
+   ew          IS_A ew_cell;
+   sp1         IS_A splitter;
+   efi         IS_A factor;
+
+   efi=hp.P['Cu']/hp.pls.F['Cu'];
+   sp1.n_outputs :== 2;
+
+   ew.spent,st1.aqfeed           ARE_THE_SAME;
+   ew.strong,st1.aqout           ARE_THE_SAME;
+   st1.orfeed,sp1.out[1]         ARE_THE_SAME;
+   ex1.orout,sp1.feed	         ARE_THE_SAME;
+   st1.orout,ex1.orfeed          ARE_THE_SAME;
+   hp.pls,ex1.aqfeed             ARE_THE_SAME;
+   hp.reff,ex1.aqout             ARE_THE_SAME; 
+
+
+METHODS
+
+    METHOD clear;
+	RUN hp.clear;
+	RUN ex1.clear;
+	RUN st1.clear;
+	RUN ew.clear;
+      RUN sp1.clear;
+    END clear;
+
+    METHOD seqmod;
+    END seqmod;
+
+    METHOD specify;
+      RUN ex1.seqmod_circuit;
+      RUN st1.seqmod_circuit;
+      RUN ex1.orfeed.specify_special;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+    END scale;
+
+END flowsheet;
+
+
+(***********************************************************)
+
+MODEL test_flowsheet REFINES flowsheet;
+
+METHODS 
+
+  METHOD values;
+     ex1.ma['Cu'] := 0.00377 {cm/s} ;
+     ex1.ma['Fe'] := 0.000614 {cm/s} ;
+     ex1.mo['Fe'] := 0.00303 {cm/s} ;
+     ex1.kr['Cu'] := 0.42 {cm/s} ;
+     ex1.kr['Fe'] := 0.0058 {cm/s} ;
+     st1.ma['Cu'] := 0.00377 {cm/s} ;
+     st1.ma['Fe'] := 0.000614 {cm/s} ;
+     st1.mo['Fe'] := 0.00303 {cm/s} ;
+     st1.kr['Cu'] := 0.42 {cm/s} ;
+     st1.kr['Fe'] := 0.0058 {cm/s} ;
+     ex1.db := 0.08 {cm} ;
+     st1.db := 0.08 {cm} ;
+     ex1.Vm := 2.8 {m^3} ;
+     st1.Vm := 2.8 {m^3} ;
+     ex1.aqfeed.state.w['Cu'] := 1.96 {g/l};
+     ex1.aqfeed.state.w['Fe'] := 8.54 {g/l};
+     ex1.aqfeed.state.z       := 0.0167 {mole/meter^3};
+     ex1.aqfeed.Q             := 6.04 {m^3/hr} ;
+     st1.aqfeed.state.w['Cu'] := 48.7 {g/l};
+     st1.aqfeed.state.w['Fe'] := 0.03  {g/l};
+     st1.aqfeed.state.z       := 1.6326 {mole/meter^3}; 
+     st1.aqfeed.Q             := 6.05 {m^3/hr};
+     ex1.orfeed.Q             := 6.5 {m^3/hr} ;
+  END values;
+
+END test_flowsheet;
+
+(***********************************************************)
