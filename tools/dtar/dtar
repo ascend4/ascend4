@@ -43,18 +43,25 @@ def usage():
     -h
     -help       Print this message.
 
-	-o
-    --overwrite
-                Copy files into current directory *with overwrite* at the
-                end of the build.
+	-n
+    --nooverwrite
+                Do not overwrite package files in current directory at
+                the end of the build.
+
+    -k
+    --keep
+                Keep temporary files at end of build, for checking/debugging
+                purposes. These will be in /tmp/dtar-*, and you will have to
+                manually delete them yourself if you use this option. Normally
+                all the files are deleted if the build completes successfully.
 """
 
-opts,args = getopt.getopt(sys.argv[1:],"nhs",["help","source","nooverwrite"])
+opts,args = getopt.getopt(sys.argv[1:],"nhsk",["help","source","nooverwrite","keep"])
 
 # do we just want a source package?
 buildsource = False
 overwrite = True
-
+clean = True
 
 for _o,_a in opts:
 	if _o in ['-h','--help']:
@@ -64,6 +71,8 @@ for _o,_a in opts:
 		buildsource = True
 	elif _o in ['-n','--nooverwrite']:
 		overwrite = False
+	elif _o in ['-k','--keep']:
+		clean = False
 	else:
 		assert False,"unhandled option"
 
@@ -289,14 +298,18 @@ if failedtomovefiles:
 
 #clean up files
 
-print "Cleaning up files from '%s'..." % maindir
-assert maindir[:10]=="/tmp/dtar-"
-for _root,_dirs,_files in os.walk(maindir,topdown=False):
-	for _f in _files:
-		os.remove(os.path.join(_root,_f))
-	for _d in _dirs:
-		os.rmdir(os.path.join(_root,_d))
+if clean:
+	print "Cleaning up files from '%s'..." % maindir
+	assert maindir[:10]=="/tmp/dtar-"
+	for _root,_dirs,_files in os.walk(maindir,topdown=False):
+		for _f in _files:
+			os.remove(os.path.join(_root,_f))
+		for _d in _dirs:
+			os.rmdir(os.path.join(_root,_d))
+	os.rmdir(maindir)
+else:
+	print "Leaving all temporary files in '%s'..." % maindir
+
 print "All done, exiting"
 
-os.rmdir(maindir)
 
