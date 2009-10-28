@@ -110,14 +110,14 @@ if platform.system()=="Windows":
 elif platform.system()=="Darwin":
 
 	default_install_prefix = ''
-	default_install_bin = "$INSTALL_PREFIX/Applications/ASCEND.app/Contents"
+	default_install_bin = "$INSTALL_PREFIX/ASCEND.app/Contents"
 	default_install_lib = "$INSTALL_BIN"
 	#default_install_models = "$INSTALL_PREFIX/Library/Application Support/ASCEND/Models"
 	default_install_models = "$INSTALL_BIN/Models"
 	#default_install_solvers = "$INSTALL_PREFIX/Library/Application Support/ASCEND/Solvers"
 	default_install_solvers = "$INSTALL_BIN/Solvers"
-	default_install_include = "$INSTALL_BIN/Headers"
 	default_install_ascdata = "$INSTALL_BIN/Resources"
+	default_install_include = "$INSTALL_BIN/Headers"
 	default_install_python = "$INSTALL_BIN/Python"
 	default_install_assets = "$INSTALL_ASCDATA/glade/"
 	# FIXME still need to work out the Tcl/Tk side of things...
@@ -2866,10 +2866,19 @@ if env.get('CAN_INSTALL'):
 	env.InstallProgram(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),ascendconfig)
 
 	# MAC OS X INSTALL STUFF
-
+	# in this case, we're installing to INSTALL_PREFIX, assumed to be a folder
+	# created using Disk Utility as a new DMG which will be distributed.
 	if platform.system()=="Darwin":
+		# extra stuff for inside the .app
 		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN")),"mac/Info.plist")
 		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_BIN/Resources/")),"mac/ascend.icns")
+
+		# related files the .dmg folder
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PREFIX")),"README-osx.txt")
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PREFIX")),"LICENSE.txt")
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PREFIX")),"CHANGELOG.txt")
+		env.Command("$INSTALL_ROOT$INSTALL_PREFIX/Applications Folder","/Applications","ln -f -s $SOURCE $TARGET")
+		install_dirs += [Dir(env.subst("$INSTALL_ROOT$INSTALL_PREFIX"))]
 
 	# ALIAS FOR ALL INSTALLATION
 	env.Alias('install',install_dirs)
