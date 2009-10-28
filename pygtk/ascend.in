@@ -5,7 +5,7 @@ import os.path, sys, platform
 
 restart = 0
 
-# This script launched ASCEND, after first ensuring that all necessary 
+# This script launches ASCEND, after first ensuring that all necessary 
 # variables are present in the 'environment', and adding them and 
 # restarting the process if necessary. You can override values for these
 # env vars by setting them before this script is run.
@@ -14,6 +14,7 @@ restart = 0
 # .ascend.ini file in the user's home directory.
 
 def path_absolute(p):
+	"""utility function for dealing with paths on Mac platform."""
 	if os.path.isabs(p):
 		return p
 	else:
@@ -26,7 +27,7 @@ def path_absolute(p):
 
 SEP = ":"
 PYTHON="@PYTHON@"
-GTKLIBS = "" # assume the GTK will be in the standard library path
+GTKLIBS = "" # assume that GTK will be in the standard library path
 
 if platform.system()=="Windows":
 	SEP=";"
@@ -54,7 +55,7 @@ elif platform.system()=="Darwin":
 	LDPATHVAR = 'DYLD_LIBRARY_PATH'
 
 	# FIXME
-	#GTKLIBS="/Users/john/gtk/inst/lib"
+	GTKLIBS="/Users/john/gtk/inst/lib"
 
 	INSTALL_LIB = path_absolute(".")
 	INSTALL_ASCDATA = path_absolute("Resources")
