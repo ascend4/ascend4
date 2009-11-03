@@ -1,3 +1,15 @@
+???????????
+-----------
+
+Version 0.9.7
+ - Fixed problem with environment variables under Windows in 0.9.6 release
+ - Porting to Mac OS X (John)
+ - Adding support for IPOPT optimisation solver (Mahesh, Ben, John)
+ - Adding new LINK syntax and DER and INDEPENDENT statements (Dante, Ben, John)
+ - Improvements to canvas-based GUI (Arijit, John)
+ - CSV data reader (Jose, John)
+
+
 30 Apr 2009
 -----------
 
