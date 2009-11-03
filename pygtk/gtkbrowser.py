@@ -292,7 +292,16 @@ class Browser:
 		# Status icons
 
 		self.fixedimg = gtk.Image()
-		self.fixedimg.set_from_file(os.path.join(self.options.assets_dir,'locked.png'))
+		_fixedimgpath = os.path.join(self.options.assets_dir,'locked.png')
+
+		# this stuff catches some strange environment-variable related problems on Mac OSX.
+		try:
+			if not os.path.exists(_fixedimgpath):
+				raise RuntimeError("Image file '%s' could not be found" % _fixedimgpath)
+			_fixedpixbuf = gtk.gdk.pixbuf_new_from_file(_fixedimgpath)
+			self.fixedimg.set_from_pixbuf(_fixedpixbuf)
+		except Exception,e:
+			raise RuntimeError("Failed to load pixbuf '%s' (%s)" % (_fixedimgpath, str(e)))
 
 		self.inactiveimg = gtk.Image()
 		self.inactiveimg.set_from_file(os.path.join(self.options.assets_dir,'unattached.png'))

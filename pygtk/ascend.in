@@ -101,6 +101,24 @@ if not os.environ.get('ASC_GDB'):
 		os.environ[LDPATHVAR] = SEP.join(LDPATH)
 		restart = 1
 
+	if platform.system()=="Darwin":
+		if not 'XDG_DATA_HOME' in os.environ:
+			os.environ['XDG_DATA_HOME']=os.path.expanduser('~/.local/share')
+#			os.environ['XDG_CONFIG_HOME']=os.path.expanduser('~/.config')
+#			os.environ['XDG_CACHE_HOME']=os.path.expanduser('~/.cache')
+#			os.environ['XDG_CONFIG_DIRS']='/sw/etc/xdg'
+			os.environ['XDG_DATA_DIRS']='/sw/share'
+#			os.environ['XML_CATALOG_FILES']='/sw/etc/xml/catalog'
+			restart = 1
+
+#		if not 'PWD' in os.environ:
+#			os.environ['PWD']=os.path.dirname(sys.executable)
+#			restart = 1
+#
+#		if not '_' in os.environ:
+#			os.environ['_']=sys.executable
+#			restart = 1
+
 	# if ASCENDLIBRARY has been specified, make sure it's including the Model Library
 	if os.environ.get('ASCENDLIBRARY') or platform.system()=="Darwin":
 		if not 'ASCENDLIBRARY' in os.environ:
