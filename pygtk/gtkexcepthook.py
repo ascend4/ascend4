@@ -11,6 +11,7 @@ import inspect, linecache, pydoc, sys, traceback
 from cStringIO import StringIO
 from gettext import gettext as _
 from smtplib import SMTP
+#import os
 
 import pygtk
 pygtk.require ('2.0')
@@ -163,6 +164,9 @@ def _info (exctyp, value, tb):
 			sw.add (textview)
 			details.vbox.add (sw)
 			textbuffer = textview.get_buffer()
+
+#			envtext = "\n".join(["%s = %s" % (k,os.environ[k]) for k in sorted(os.environ.keys())])
+#			textbuffer.set_text (trace.getvalue() + "\n\n\nENVIRONMENT\n\n" +  envtext)
 			textbuffer.set_text (trace.getvalue())
 
 			monitor = gtk.gdk.screen_get_default ().get_monitor_at_window (dialog.window)
