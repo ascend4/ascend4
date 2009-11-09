@@ -1,0 +1,48 @@
+REQUIRE "johnpye/thermo_types.a4c";
+
+(*
+	This model contains the sublimation curve for water at temperatures from
+	50 K to 273.15 K, from the IAPWS release on melting and sublimation
+	curves for water substance:
+	http://www.iapws.org/relguide/meltsub.pdf.
+*)
+MODEL sublimation;
+
+	a[1..3] IS_A real_constant;
+	b[1..3] IS_A real_constant;
+
+	a[1] :== -0.212144006e2;
+	a[2] :== 0.273203819e2;
+	a[3] :== -0.610598130e1;
+
+	b[1] :== 0.333333333e-2;
+	b[2] :== 0.120666667e1;
+	b[3] :== 0.170333333e1;
+
+	pi, theta IS_A factor;
+
+	ln(pi) * theta = SUM[a[i]*theta^b[i] | i IN [1..3]];
+
+	T IS_A temperature;
+	Tstar IS_A temperature_constant;
+	p IS_A pressure;
+	pstar IS_A pressure_constant;
+
+	pi * pstar = p;
+	theta * Tstar = T;
+
+	Tstar :== 273.16 {K};
+	pstar :== 611.657 {Pa};
+METHODS
+METHOD on_load;
+	FIX T;
+	T := 230.0 {K};
+END on_load;
+
+METHOD self_test;
+	ASSERT abs(p - 8.94735e-6 {MPa}) < 0.00001e-6 {MPa};
+END self_test;
+
+END sublimation;
+
+
