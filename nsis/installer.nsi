@@ -18,7 +18,7 @@ SetCompressor /SOLID lzma
 !include nsDialogs.nsh
 
 !ifndef PYVERSION
-!define PYVERSION "2.5"
+!define PYVERSION "2.6"
 !endif
 
 !ifndef PYPATCH
@@ -96,20 +96,23 @@ Var /GLOBAL ASCENDINIFOUND
 !define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
 !define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive"
 
-!define GTK_FN "gtk-2.10.11-win32-1.exe"
-!define GTK_URL "http://downloads.sourceforge.net/gladewin32/${GTK_FN}"
+!define GTK_FN "glade3-3.6.7-with-GTK+.exe"
+!define GTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/glade3/3.6/${GTK_FN}"
 !define GTK_CMD "$DAI_TMPFILE"
 
-!define PYGOBJECT_FN "pygobject-2.12.3-1.win32-py${PYVERSION}.exe"
-!define PYGOBJECT_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygobject/2.12/${PYGOBJECT_FN}"
+!define PYGOBJECT_VER "2.14"
+!define PYGOBJECT_FN "pygobject-${PYGOBJECT_VER}.2-2.win32-py${PYVERSION}.exe"
+!define PYGOBJECT_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygobject/${PYGOBJECT_VER}/${PYGOBJECT_FN}"
 !define PYGOBJECT_CMD "$DAI_TMPFILE"
 
-!define PYCAIRO_FN "pycairo-1.2.6-1.win32-py${PYVERSION}.exe"
-!define PYCAIRO_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pycairo/1.2/${PYCAIRO_FN}"
+!define PYCAIRO_VER "1.4"
+!define PYCAIRO_FN "pycairo-${PYCAIRO_VER}.12-2.win32-py${PYVERSION}.exe"
+!define PYCAIRO_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pycairo/${PYCAIRO_VER}/${PYCAIRO_FN}"
 !define PYCAIRO_CMD "$DAI_TMPFILE"
 
-!define PYGTK_FN "pygtk-2.10.4-1.win32-py${PYVERSION}.exe"
-!define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.10/${PYGTK_FN}"
+!define PYGTK_VER "2.12"
+!define PYGTK_FN "pygtk-${PYGTK_VER}.1-3.win32-py${PYVERSION}.exe"
+!define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/${PYGTK_VER}/${PYGTK_FN}"
 !define PYGTK_CMD "$DAI_TMPFILE"
 
 !define TCL_VERSION "8.4.15"

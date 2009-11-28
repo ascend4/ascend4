@@ -13,8 +13,23 @@ try:
 	import gtk
 	have_gtk = True
 except Exception,e:
-	print "PyGTK COULD NOT BE LOADED (is it installed? do you have X-Windows running?) (%s)" % str(e)
-	sys.exit(1)
+
+	if sys.platform=="win32":
+		try:
+			from ctypes import c_int, WINFUNCTYPE, windll
+			from ctypes.wintypes import HWND, LPCSTR, UINT
+			prototype = WINFUNCTYPE(c_int, HWND, LPCSTR, LPCSTR, UINT)
+			paramflags = (1, "hwnd", 0), (1, "text", "Hi"), (1, "caption", None), (1, "flags", 0)
+			MessageBox = prototype(("MessageBoxA", windll.user32), paramflags)
+			MessageBox(text="""ASCEND could not load PyGTK. Probably this is because
+either PyGTK, PyCairo, PyGObject or GTK+ are not installed on your
+system. Please try re-installing ASCEND to rectify the problem.""")
+		except:	
+			pass
+	else:
+		print "PyGTK COULD NOT BE LOADED (is it installed? do you have X-Windows running?) (%s)" % str(e)
+		
+	sys.exit("FATAL ERROR: PyGTK not available, unable to start ASCEND.")
 
 global _messages
 _messages = []

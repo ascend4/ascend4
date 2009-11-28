@@ -72,7 +72,7 @@ try:
 
 except RuntimeError, e:
 	print "ASCEND had problems starting up. Please report the following"
-	print "error message at http://mantis.cruncher2.dyndns.org/."
+	print "error message on ASCEND bug tracker."
 	print "\n\nFull error message:",str(e)
 	print "\n\nPress ENTER to close this window."
 	sys.stdout.flush()
