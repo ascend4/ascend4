@@ -28,21 +28,18 @@ FunctionEnd
 ; Prefer the current user's installation of GTK, fall back to the local machine
 
 Function DetectGTK
-	ReadRegStr $R6 HKCU "SOFTWARE\GTK\2.0" "DllPath"
+	ReadRegStr $R6 HKLM "SOFTWARE\Gtk+" "Path"
 	${If} $R6 == ''
-		ReadRegStr $R6 HKLM "SOFTWARE\GTK\2.0" "DllPath"
-		${If} $R6 == ''
-			Push "No GTK registry key found"
-			Push "NOK"
-			Return
-		${EndIf}
+		Push "No GTK registry key found"
+		Push "NOK"
+		Return
 	${EndIf}
-
-	${If} ${FileExists} "$R6\libgtk-win32-2.0-0.dll"
-		Push "$R6"
+	
+	${If} ${FileExists} "$R6\bin\libgtk-win32-2.0-0.dll"
+		Push "$R6\bin"
 		Push "OK"
 	${Else}
-		Push "No libgtk-win32-2.0-0.dll found in'$R6'"
+		Push "No libgtk-win32-2.0-0.dll found in'$R6\bin'"
 		Push "NOK"
 	${EndIf}
 FunctionEnd
@@ -78,21 +75,18 @@ FunctionEnd
 ; Prefer the current user's installation of GTK, fall back to the local machine
 
 Function DetectGlade
-	ReadRegStr $R6 HKCU "SOFTWARE\GTK\2.0" "DllPath"
+	ReadRegStr $R6 HKLM "SOFTWARE\Gtk+" "Path"
 	${If} $R6 == ''
-		ReadRegStr $R6 HKLM "SOFTWARE\GTK\2.0" "DllPath"
-		${If} $R6 == ''
-			Push "No GTK registry key found"
-			Push "NOK"
-			Return
-		${EndIf}
+		Push "No GTK registry key found"
+		Push "NOK"
+		Return
 	${EndIf}
 
-	${If} ${FileExists} "$R6\libglade-2.0-0.dll"
-		Push "$R6"
+	${If} ${FileExists} "$R6\bin\libglade-2.0-0.dll"
+		Push "$R6\bin"
 		Push "OK"
 	${Else}
-		Push "No libglade-2.0-0.dll found in'$R6'"
+		Push "No libglade-2.0-0.dll found in'$R6\bin'"
 		Push "NOK"
 	${EndIf}
 FunctionEnd

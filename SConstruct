@@ -52,7 +52,7 @@ default_libpath="$DEFAULT_PREFIX/lib"
 default_cpppath="$DEFAULT_PREFIX/include"
 default_fortran="gfortran"
 default_f2c_lib="gfortran"
-
+default_swig="swig"
 
 icon_extension = '.png'
 
@@ -100,8 +100,10 @@ if platform.system()=="Windows":
 	default_with_scrollkeeper=False
 	pathsep = ";"
 	
-	default_fortran="g77"
-	default_f2c_lib="g2c"
+	default_fortran="gfortran"
+	default_f2c_lib="gfortran"
+	
+	default_swig=WhereIs("swig.exe")
 	
 	soname_minor = ""
 	soname_major = ""
@@ -340,6 +342,7 @@ opts.Add(
 	,"SWIG location, probably only required for MinGW and MSVC users."
 		+" Enter the location as a Windows-style path, for example"
 		+" 'c:\\msys\\1.0\\home\\john\\swigwin-1.3.29\\swig.exe'."
+	,default_swig
 )
 
 # Build the test suite?
@@ -1150,15 +1153,19 @@ def CheckSwigVersion(context):
 	
 	context.env['SWIGVERSION']=tuple([maj,min,pat])
 	
-	if maj == 1 and (
+	msg = "too old"
+	res = False
+	if maj ==1 and min == 3 and (pat == 40 or pat == 39):
+		msg = "buggy version, see the ASCEND wiki"
+	elif maj == 1 and (
 			min > 3
 			or (min == 3 and pat >= 24)
 		):
-		context.Result("ok, %d.%d.%d" % (maj,min,pat))
-		return True;
-	else:
-		context.Result("too old, %d.%d.%d" % (maj,min,pat))
-		return False;
+		msg = "ok"
+		res = True
+
+	context.Result("%s, %d.%d.%d" % (msg, maj,min,pat))
+	return res;
 
 #----------------
 # Scrollkeeper (Linux documentation system)
@@ -2897,7 +2904,7 @@ if with_installer:
 		,'PYVERSION':pyversion
 	})
 	installer = env.Installer('nsis/installer.nsi')
-	Depends(installer,["pygtk","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
+	env.Depends(installer,["pygtk","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
 	env.Alias('installer',installer)
 else:
 	print "Skipping... Windows installer isn't being built:",without_installer_reason
