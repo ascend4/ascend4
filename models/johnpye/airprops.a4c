@@ -83,12 +83,25 @@ MODEL airprops;
 
 	Z = 1 + (b_0 + b_1 / T_r + b_2 / T_r^2.6 + b_3 / T_r^1.6) * p_r;
 
+
+	s IS_A specific_entropy;
+	s_r IS_A factor;
+	s * M = s_r * 1{GAS_C};
+
+	s_r = SUM[ a[k] / (k - 0.5) * T_r^(k - 0.5) | k IN [0..6]] - ln(p_r)
+		+ (-b_0 + 1.6 * b_2 / T_r^2.6 + 0.6 * b_3 / T_r^1.6) * p_r
+		+ 	16.540034; (* s_r0 calculating using reference state *)	
+
 METHODS
+	METHOD bound_self;
+		h.lower_bound := -1e5 {kJ/kg};
+	END bound_self;		
 	METHOD on_load;
+		RUN ClearAll;
+		RUN bound_self;
 		FIX p, T;
 		p := 1 {bar};
 		T := 300 {K};
-		h.lower_bound := -1e5 {kJ/kg};
 	END on_load;
 END airprops;
  
