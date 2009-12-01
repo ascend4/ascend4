@@ -382,3 +382,91 @@ METHOD on_load;
 END on_load;
 END brayton;
 
+
+(*
+	Regenerator: air-to-air heat exchanger
+*)
+MODEL regenerator REFINES air_equipment;
+	inlet_hot, outlet_hot IS_A node;
+	
+	inlet.p, outlet.p ARE_THE_SAME;
+	inlet_hot.p, outlet_hot.p ARE_THE_SAME;
+
+	inlet_hot.mdot, outlet_hot.mdot ARE_THE_SAME;
+	mdot_hot ALIASES inlet_hot.mdot;
+
+	inlet_hot.T, outlet.T ARE_THE_SAME;
+
+	Qdot IS_A energy_rate;
+	Qdot = inlet.mdot*(outlet.h - inlet.h);
+	Qdot = -inlet_hot.mdot*(outlet_hot.h - inlet_hot.h);
+END regenerator;
+
+MODEL regenerator_test REFINES regenerator;
+METHODS
+METHOD on_load;
+	FIX inlet.mdot, inlet.p, inlet.T;
+	FIX inlet_hot.mdot, inlet_hot.p, inlet_hot.T;
+	inlet.mdot := 1 {kg/s};
+	inlet.p := 1 {bar};
+	inlet.T := 300 {K};
+	inlet_hot.mdot := 1 {kg/s};
+	inlet_hot.p := 15 {bar};
+	inlet_hot.T := 500 {K};
+END on_load;
+END regenerator_test;
+
+
+
+MODEL brayton_regenerative;
+	CO IS_A compressor;	
+	TU IS_A gas_turbine;
+	BU IS_A combustor;
+	DI IS_A dissipator;
+	RE IS_A regenerator;
+
+	CO.outlet, RE.inlet ARE_THE_SAME;
+	RE.outlet, BU.inlet ARE_THE_SAME;
+	BU.outlet, TU.inlet ARE_THE_SAME;
+	TU.outlet, RE.inlet_hot ARE_THE_SAME;
+	RE.outlet_hot, DI.inlet ARE_THE_SAME;
+	DI.outlet, CO.inlet ARE_THE_SAME;
+
+	Wdot_CO ALIASES CO.Wdot;
+	Wdot_TU ALIASES TU.Wdot;
+	Wdot IS_A energy_rate;
+	Wdot = Wdot_CO + Wdot_TU;
+	
+	Qdot_BU ALIASES BU.Qdot;
+	Qdot_DI ALIASES DI.Qdot;
+
+	Edot IS_A energy_rate;
+	Edot = Wdot - Qdot_BU - Qdot_DI;
+
+	eta IS_A factor;
+	eta = Wdot / Qdot_BU;
+
+	r_bw IS_A factor;
+	r_bw = -Wdot_CO / Wdot_TU;
+
+	Qdot_RE ALIASES RE.Qdot;
+
+METHODS
+METHOD on_load;
+	FIX CO.eta, TU.eta;
+	CO.eta := 0.8;
+	TU.eta := 0.85;
+	FIX CO.inlet.T, TU.inlet.T;
+	CO.inlet.T := 300 {K};
+	TU.inlet.T := 1300 {K};
+	FIX CO.r;
+	CO.r := 8;
+	FIX CO.inlet.p;
+	CO.inlet.p := 1 {bar};
+	FIX CO.inlet.mdot;
+	CO.inlet.mdot := 1 {kg/s};
+	FIX BU.eta;
+	BU.eta := 1;
+END on_load;
+END brayton_regenerative;
+
