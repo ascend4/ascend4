@@ -188,7 +188,7 @@ MODEL compressor REFINES air_equipment;
 
 	(* work done on the environment, will be negative *)
 	Wdot IS_A energy_rate;
-	Wdot_eq:Wdot = eta * mdot * (inlet.h - outlet.h);
+	Wdot_eq:Wdot * eta = mdot * (inlet.h - outlet_is.h);
 
 	w IS_A specific_energy;
 	w_eq:w = eta * (outlet.h - inlet.h);
@@ -309,7 +309,6 @@ END combustor_test;
 MODEL dissipator REFINES air_equipment;
 	NOTES
 		'block' SELF {Simple condenser model}
-		'inline' inlet {in: yahoooo}
 	END NOTES;
 
 	inlet.p, outlet.p ARE_THE_SAME;
@@ -339,12 +338,12 @@ MODEL brayton;
 	CO IS_A compressor;	
 	TU IS_A gas_turbine;
 	BU IS_A combustor;
-	HE IS_A dissipator;
+	DI IS_A dissipator;
 
 	CO.outlet, BU.inlet ARE_THE_SAME;
 	BU.outlet, TU.inlet ARE_THE_SAME;
-	TU.outlet, HE.inlet ARE_THE_SAME;
-	HE.outlet, CO.inlet ARE_THE_SAME;
+	TU.outlet, DI.inlet ARE_THE_SAME;
+	DI.outlet, CO.inlet ARE_THE_SAME;
 
 	Wdot_CO ALIASES CO.Wdot;
 	Wdot_TU ALIASES TU.Wdot;
@@ -352,16 +351,28 @@ MODEL brayton;
 	Wdot = Wdot_CO + Wdot_TU;
 	
 	Qdot_BU ALIASES BU.Qdot;
-	Qdot_HE ALIASES HE.Qdot;
+	Qdot_DI ALIASES DI.Qdot;
+
+	Qdot IS_A energy_rate;
+	Qdot = Qdot_BU + Qdot_DI;
 
 	Edot IS_A energy_rate;
-	Edot = Wdot - Qdot_BU - Qdot_HE;
+	Edot = Wdot - Qdot;
 
 	eta IS_A fraction;
 	eta = Wdot / Qdot_BU;
 
 	r_bw IS_A factor;
 	r_bw = -Wdot_CO / Wdot_TU;
+
+	state[1..4] IS_A node;
+	state[1], CO.inlet ARE_THE_SAME;
+	state[2], BU.inlet ARE_THE_SAME;
+	state[3], TU.inlet ARE_THE_SAME;
+	state[4], DI.inlet ARE_THE_SAME;
+
+	eta_TU ALIASES TU.eta;
+	eta_CO ALIASES CO.eta;
 
 METHODS
 METHOD on_load;
