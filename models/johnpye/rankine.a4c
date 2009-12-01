@@ -101,8 +101,9 @@ MODEL pump_simple REFINES steam_equipment;
 	Wdot IS_A energy_rate;
 	Wdot_eq:Wdot = mdot * w;
 
+
 	w IS_A specific_energy;
-	w_eq:w = eta * (outlet.h - inlet.h);
+	w_eq:w * eta = (outlet.h - inlet.h);
 
 (*
 	NOTES
