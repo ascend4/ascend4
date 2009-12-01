@@ -1,0 +1,384 @@
+(*
+	This file contains some models of Brayton engines and associated cycles,
+	following the development of Çengel.
+*)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/airprops.a4c";
+IMPORT "sensitivity/solve";
+
+(* first some models of air as an ideal gas *)
+
+MODEL ideal_gas_base;
+	M IS_A molar_weight_constant;	
+	c_p IS_A specific_heat_capacity;
+	s IS_A specific_entropy;
+	h IS_A specific_enthalpy;
+	v IS_A specific_volume;
+	T IS_A temperature;
+	p IS_A pressure;
+	R IS_A specific_gas_constant;
+
+	R :== 1{GAS_C} / M;
+	p * v = R * T;
+
+METHODS
+METHOD bound_self;
+	s.lower_bound := -5 {kJ/kg/K};
+END bound_self;
+END ideal_gas_base;
+
+(*
+	Ideal air assuming ideal gas and constant cp.
+*)
+MODEL simple_ideal_air
+REFINES ideal_gas_base;
+
+	M :== 28.958600656 {kg/kmol};
+
+	T_ref IS_A temperature_constant;
+	p_ref IS_A pressure_constant;
+
+	s = c_p * ln(T / T_ref) - R * ln(p / p_ref);
+	h = c_p * (T - T_ref);
+
+	T_ref :== 273.15 {K};
+	p_ref :== 1 {bar};
+
+METHODS
+METHOD on_load;
+	RUN ClearAll;
+	RUN bound_self;
+	FIX c_p;
+	c_p := 1.005 {kJ/kg/K};
+	FIX T, p;
+	T := 300 {K};
+	p := 1 {bar};
+END on_load;	
+END simple_ideal_air;
+
+(*
+	Ideal air, using a quartic polynomial for c_p as given in Moran & Shapiro
+	4th Ed.
+*)
+MODEL ideal_air REFINES ideal_gas_base;
+	M :== 28.958600656 {kg/kmol};
+
+	a[0..4] IS_A real_constant;
+	a[0] :== 3.653;
+	a[1] :== -1.337e-3{1/K};
+	a[2] :== 3.294e-6{1/K^2};
+	a[3] :== -1.913e-9{1/K^3};
+	a[4] :== 0.2763e-12{1/K^4};
+
+	T_ref IS_A temperature_constant;
+	p_ref IS_A pressure_constant;
+	h_ref IS_A real_constant;
+	s_ref IS_A real_constant;
+
+	T_ref :== 300 {K};
+	p_ref :== 1 {bar};
+	h_ref :== -4.40119 {kJ/kg};
+	s_ref :== 0. {kJ/kg/K};
+
+	c_p * M = 1{GAS_C} * SUM[a[i]*T^i | i IN [0..4]];
+
+	(h - h_ref) * M = 1{GAS_C} * SUM[a[i]/(i+1) * T^(i+1) | i IN[0..4]];
+	
+	s0 IS_A specific_entropy;
+	s0 = R * (a[0]*ln(T/T_ref) + SUM[a[i]/i * (T - T_ref)^i | i IN[1..4]]) + 1.294559 {kJ/kg/K} + 0.38191663487 {kJ/kg/K};
+
+	s = s0 - R * ln(p/p_ref);
+
+METHODS
+METHOD bound_self;
+	RUN ideal_gas_base::bound_self;
+	s0.lower_bound := -1e20 {kJ/kg/K};
+END bound_self;
+METHOD on_load;
+	RUN ClearAll;
+	RUN bound_self;
+	FIX T, p;
+	T := 200 {K};
+	p := 1 {bar};
+END on_load;	
+END ideal_air;
+
+(*
+	Thermo properties
+*)
+MODEL state;
+	air IS_A ideal_air;
+	p ALIASES air.p;
+	T ALIASES air.T;
+	h ALIASES air.h;
+	s ALIASES air.s;
+	v ALIASES air.v;
+METHODS
+	METHOD default;
+		p := 10{bar};
+		p.nominal := 42 {bar};
+		h := 2000 {kJ/kg};
+
+		T := 400 {K};
+		v.nominal := 10 {L/kg};
+		s := 4 {kJ/kg/K};
+		x := 0.8;
+	END default;
+	METHOD solve;
+		EXTERNAL do_solve(SELF);
+	END solve;
+	METHOD on_load;
+		RUN default_all;
+		FIX p, h;
+	END on_load;
+END state;
+
+
+(* a simple connector that includes calculation of steam properties *)
+MODEL node;
+	state IS_A state;
+	p ALIASES state.p;
+	h ALIASES state.h;
+	v ALIASES state.v;
+	T ALIASES state.T;
+	s ALIASES state.s;
+	mdot IS_A mass_rate;
+METHODS
+	METHOD default;
+		mdot.nominal := 2 {kg/s};
+	END default;
+	METHOD solve;
+		EXTERNAL do_solve(SELF);
+	END solve;
+	METHOD on_load;
+		RUN default_all; RUN reset; RUN values;
+		FIX p,h;
+	END on_load;
+END node;
+
+MODEL air_equipment;
+	inlet "in: inlet air stream" IS_A node;
+	outlet "out: outlet air stream" IS_A node;
+
+	inlet.mdot, outlet.mdot ARE_THE_SAME;
+	mdot ALIASES inlet.mdot;
+END air_equipment;
+
+
+MODEL compressor REFINES air_equipment;
+	NOTES
+		'block' SELF {Simple model of a compressor using isentropic efficiency}
+	END NOTES;
+
+	dp IS_A delta_pressure;
+	inlet.p + dp = outlet.p;
+
+	outlet_is IS_A state;
+	outlet_is.p, outlet.p ARE_THE_SAME;
+
+	outlet_is.s, inlet.s ARE_THE_SAME;
+	eta IS_A fraction;
+
+	r IS_A factor;
+	r = outlet.p / inlet.p;
+	
+	eta_eq:eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
+
+	(* work done on the environment, will be negative *)
+	Wdot IS_A energy_rate;
+	Wdot_eq:Wdot = eta * mdot * (inlet.h - outlet.h);
+
+	w IS_A specific_energy;
+	w_eq:w = eta * (outlet.h - inlet.h);
+
+END compressor;
+
+MODEL compressor_test REFINES compressor;
+	(* no equations here *)
+METHODS
+METHOD on_load;
+	FIX inlet.T;
+	FIX inlet.p;
+
+	inlet.T := 300 {K};
+	inlet.p := 1 {bar};
+
+	FIX r;
+	FIX eta;
+	FIX mdot;
+
+	r := 8;
+	eta := 0.8;
+	mdot := 1 {kg/s};
+END on_load;
+END compressor_test;
+
+
+
+MODEL gas_turbine REFINES air_equipment;
+	NOTES
+		'block' SELF {Simple turbine model}
+	END NOTES;
+
+	dp IS_A delta_pressure;
+	inlet.p + dp = outlet.p;
+	
+	outlet_is IS_A state;
+	outlet_is.p, outlet.p ARE_THE_SAME;
+	outlet_is.s, inlet.s ARE_THE_SAME;
+
+	eta IS_A fraction;
+	eta_eq:eta * (inlet.h - outlet_is.h) = (inlet.h - outlet.h);
+	
+	(* work done on the environment, will be positive *)
+	Wdot IS_A energy_rate;
+	Wedot_eq:Wdot = mdot * (inlet.h - outlet.h);
+
+	w IS_A specific_energy;
+	w_eq:w = inlet.h - outlet.h;
+
+END gas_turbine;
+
+MODEL gas_turbine_test REFINES gas_turbine;
+	(* no equations here *)
+METHODS
+METHOD on_load;
+	FIX inlet.p;
+	FIX inlet.T;
+	FIX outlet.p;
+	FIX eta;
+	FIX mdot;
+
+	inlet.p := 15 {bar};
+	inlet.T := 1200 {K};
+	outlet.p := 1 {bar};
+	eta := 0.85;
+	mdot := 1 {kg/s};
+END on_load;
+END gas_turbine_test;
+
+
+
+
+(*
+	simple model assumes no pressure drop, but heating losses due to
+	flue gas temperature
+*)
+MODEL combustor REFINES air_equipment;
+	NOTES
+		'block' SELF {Simple combustion chamber model}
+	END NOTES;
+
+	inlet.p, outlet.p ARE_THE_SAME;
+	Qdot_fuel IS_A energy_rate;
+	Qdot IS_A energy_rate;
+
+	Qdot = mdot * (outlet.h - inlet.h);
+
+	eta IS_A fraction;
+	Qdot = eta * Qdot_fuel;
+END combustor;
+
+MODEL combustor_test REFINES combustor;
+	(* nothing here *)
+METHODS
+METHOD on_load;
+	FIX inlet.p;
+	FIX inlet.T;
+	FIX eta;
+	FIX outlet.T;
+	FIX mdot;
+
+	inlet.p := 15 {bar};
+	inlet.T := 500 {K};
+
+	eta := 0.8;
+	outlet.T := 700 {K};
+	mdot := 1 {kg/s};
+END on_load;
+END combustor_test;
+
+
+
+(*
+	this is really simple (fluid props permitting): just work out the heat
+	that must be expelled to get the gas down to a specified temperature
+*)
+MODEL dissipator REFINES air_equipment;
+	NOTES
+		'block' SELF {Simple condenser model}
+		'inline' inlet {in: yahoooo}
+	END NOTES;
+
+	inlet.p, outlet.p ARE_THE_SAME;
+	Qdot IS_A energy_rate;
+
+	Qdot = mdot * (outlet.h - inlet.h);
+	
+END dissipator;
+
+MODEL dissipator_test REFINES dissipator;
+	(* nothing here *)
+METHODS
+METHOD on_load;
+	FIX inlet.p, inlet.T;
+	FIX outlet.T;
+	FIX mdot;
+
+	inlet.p := 1 {bar};
+	inlet.T := 500 {K};
+	outlet.T := 300 {K};
+	mdot := 1 {kg/s};
+END on_load;
+END dissipator_test;
+
+
+MODEL brayton;
+	CO IS_A compressor;	
+	TU IS_A gas_turbine;
+	BU IS_A combustor;
+	HE IS_A dissipator;
+
+	CO.outlet, BU.inlet ARE_THE_SAME;
+	BU.outlet, TU.inlet ARE_THE_SAME;
+	TU.outlet, HE.inlet ARE_THE_SAME;
+	HE.outlet, CO.inlet ARE_THE_SAME;
+
+	Wdot_CO ALIASES CO.Wdot;
+	Wdot_TU ALIASES TU.Wdot;
+	Wdot IS_A energy_rate;
+	Wdot = Wdot_CO + Wdot_TU;
+	
+	Qdot_BU ALIASES BU.Qdot;
+	Qdot_HE ALIASES HE.Qdot;
+
+	Edot IS_A energy_rate;
+	Edot = Wdot - Qdot_BU - Qdot_HE;
+
+	eta IS_A fraction;
+	eta = Wdot / Qdot_BU;
+
+	r_bw IS_A factor;
+	r_bw = -Wdot_CO / Wdot_TU;
+
+METHODS
+METHOD on_load;
+	FIX CO.eta, TU.eta;
+	CO.eta := 0.8;
+	TU.eta := 0.85;
+	FIX CO.inlet.T, TU.inlet.T;
+	CO.inlet.T := 300 {K};
+	TU.inlet.T := 1300 {K};
+	FIX CO.r;
+	CO.r := 8;
+	FIX CO.inlet.p;
+	CO.inlet.p := 1 {bar};
+	FIX CO.inlet.mdot;
+	CO.inlet.mdot := 1 {kg/s};
+	FIX BU.eta;
+	BU.eta := 1;
+END on_load;
+END brayton;
+
