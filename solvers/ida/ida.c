@@ -377,7 +377,7 @@ static IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *sys){
   PARAMETERS FOR IDA
 */
 
-static enum ida_parameters{
+enum ida_parameters{
 	IDA_PARAM_LINSOLVER
 	,IDA_PARAM_MAXL
 	,IDA_PARAM_MAXORD
@@ -1058,7 +1058,8 @@ static int integrator_ida_solve(
 
 #if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
 					IDAReInit(ida_mem, tret, yret, ypret);
-#elif SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==3
+#elif SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR<3
+					/* TODO find out what version needs the following line... not sure. */
 					IDAReInit(ida_mem, &integrator_ida_fex, tret, yret, ypret);
 #else
 					/* allocate internal memory */
@@ -1538,7 +1539,7 @@ static int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector r
 	IntegratorSystem *sys;
 	IntegratorIdaData *enginedata;
 	int i, j, is_error=0;
-	struct rel_relation** relptr;
+	struct rel_relation** relptr = 0;
 	char *relname;
 	int status;
 	double Jv_i;
@@ -1800,11 +1801,6 @@ static int integrator_ida_psetup_jacobian(realtype tt,
 	IntegratorIdaPrecDataJacobian *precdata;
 	linsolqr_system_t L;
 	mtx_matrix_t P;
-
-	L = precdata->L;
-	P = linsolqr_get_matrix(L);
-	mtx_clear(P);
-
 	struct rel_relation **relptr;
 
 	sys = (IntegratorSystem *)p_data;
@@ -1815,6 +1811,10 @@ static int integrator_ida_psetup_jacobian(realtype tt,
 	int count, status;
 	char *relname;
 	mtx_coord_t C;
+
+	L = precdata->L;
+	P = linsolqr_get_matrix(L);
+	mtx_clear(P);
 
 	CONSOLE_DEBUG("Setting up Jacobian preconditioner");
 

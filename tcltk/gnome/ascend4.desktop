@@ -9,6 +9,6 @@ StartupNotify=true
 Terminal=true
 Type=Application
 Icon=ascend-app.png
-Categories=Application;Math;Science;GTK
+Categories=Education;Math;Science;
 MimeType=text/x-ascend;
 
