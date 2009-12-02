@@ -1,6 +1,26 @@
-(*
+(*	ASCEND modelling environment
+	Copyright (C) 2007, 2008, 2009 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)(*
 	This file contains some models of Brayton engines and associated cycles,
-	following the development of Çengel.
+	following the development of Çengel & Boles 'Thermodynamcs: An Engineering
+	Approach, 6th Ed, McGraw-Hill, 2008.
+
+	Author: John Pye
 *)
 
 REQUIRE "atoms.a4l";
@@ -37,6 +57,8 @@ REFINES ideal_gas_base;
 
 	M :== 28.958600656 {kg/kmol};
 
+	c_p = 1.005 {kJ/kg/K};
+
 	T_ref IS_A temperature_constant;
 	p_ref IS_A pressure_constant;
 
@@ -50,8 +72,6 @@ METHODS
 METHOD on_load;
 	RUN ClearAll;
 	RUN bound_self;
-	FIX c_p;
-	c_p := 1.005 {kJ/kg/K};
 	FIX T, p;
 	T := 300 {K};
 	p := 1 {bar};
@@ -182,7 +202,7 @@ MODEL compressor REFINES air_equipment;
 	eta IS_A fraction;
 
 	r IS_A factor;
-	r = outlet.p / inlet.p;
+	r * inlet.p = outlet.p;
 	
 	eta_eq:eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
 
@@ -238,6 +258,9 @@ MODEL gas_turbine REFINES air_equipment;
 
 	w IS_A specific_energy;
 	w_eq:w = inlet.h - outlet.h;
+
+	r IS_A factor;
+	r * outlet.p = inlet.p;
 
 END gas_turbine;
 
@@ -407,7 +430,7 @@ END brayton;
 (*
 	Regenerator: air-to-air heat exchanger
 
-	Assumption: fluid on both sides has the same c_p.
+	Assumption: fluid on both sides have the same c_p.
 *)
 MODEL regenerator REFINES air_equipment;
 	inlet_hot, outlet_hot IS_A node;
@@ -439,11 +462,11 @@ METHOD on_load;
 	inlet.mdot := 1 {kg/s};
 	inlet.p := 1 {bar};
 	inlet.T := 300 {K};
-	inlet_hot.mdot := 2 {kg/s};
+	inlet_hot.mdot := 1.05 {kg/s};
 	inlet_hot.p := 15 {bar};
 	inlet_hot.T := 500 {K};
 	FIX epsilon;
-	epsilon := 1.0;
+	epsilon := 0.8;
 END on_load;
 END regenerator_test;
 
@@ -483,8 +506,11 @@ MODEL brayton_regenerative;
 	Qdot_BU ALIASES BU.Qdot;
 	Qdot_DI ALIASES DI.Qdot;
 
+	Qdot IS_A energy_rate;
+	Qdot = Qdot_BU + Qdot_DI;
+
 	Edot IS_A energy_rate;
-	Edot = Wdot - Qdot_BU - Qdot_DI;
+	Edot = Wdot - Qdot;
 
 	eta IS_A factor;
 	eta = Wdot / Qdot_BU;
@@ -514,7 +540,119 @@ METHOD on_load;
 	FIX BU.eta;
 	BU.eta := 1;
 	FIX RE.epsilon;
-	RE.epsilon := 1;
+	RE.epsilon := 0.8;
 END on_load;
 END brayton_regenerative;
+
+
+
+
+MODEL brayton_intercool_reheat_regen;
+	NOTES
+		'description' SELF {
+			This is a model of a Brayton cycle with intercooling, reheating, and
+			regeneration.
+
+			It has an irreversible compressor (eta=0.8) and turbine (eta=0.85)
+			and operates between 300 K and 1300 K, with a compression ratio of 8
+			and an assumed inlet pressure of 1 bar. The regenerator
+			effectiveness is 0.8.
+
+			In adding the intercooling and reheating stages, we assume an
+			intermediate pressure that results in two compression stages of
+			equal pressure ratio, and two turbine stages of equal pressure 
+			ratio.
+
+			Based on example 9-8 from Çengel & Boles, 'Thermodynamics: An 
+			Engineering Approach', 6th Ed, McGraw-Hill, 2008}
+	END NOTES;
+
+	CO1, CO2 IS_A compressor;	
+	TU1, TU2 IS_A gas_turbine;
+	BU IS_A combustor;
+	DI IS_A dissipator;
+	RE IS_A regenerator;
+	IC IS_A dissipator;
+	RH IS_A combustor;
+
+	CO1.outlet, IC.inlet ARE_THE_SAME;
+	IC.outlet, CO2.inlet ARE_THE_SAME;
+	CO2.outlet, RE.inlet ARE_THE_SAME;
+	RE.outlet, BU.inlet ARE_THE_SAME;
+	BU.outlet, TU1.inlet ARE_THE_SAME;
+	TU1.outlet, RH.inlet ARE_THE_SAME;
+	RH.outlet, TU2.inlet ARE_THE_SAME;
+	TU2.outlet, RE.inlet_hot ARE_THE_SAME;
+	RE.outlet_hot, DI.inlet ARE_THE_SAME;
+	DI.outlet, CO1.inlet ARE_THE_SAME;
+
+	Wdot_CO1 ALIASES CO1.Wdot;
+	Wdot_CO2 ALIASES CO2.Wdot;
+	Wdot_TU1 ALIASES TU1.Wdot;
+	Wdot_TU2 ALIASES TU2.Wdot;
+
+	Wdot_CO, Wdot_TU, Wdot IS_A energy_rate;
+	Wdot_CO = Wdot_CO1 + Wdot_CO2;
+	Wdot_TU = Wdot_TU1 + Wdot_TU2;
+	Wdot = Wdot_CO + Wdot_TU;
+	
+	Qdot_BU ALIASES BU.Qdot;
+	Qdot_DI ALIASES DI.Qdot;
+	Qdot_IC ALIASES IC.Qdot;
+	Qdot_RH ALIASES RH.Qdot;
+
+	Qdot IS_A energy_rate;
+	Qdot = Qdot_BU + Qdot_DI + Qdot_IC + Qdot_RH;
+
+	Edot IS_A energy_rate;
+	Edot = Wdot - Qdot;
+
+	eta IS_A factor;
+	eta = Wdot / Qdot_BU;
+
+	CO1.r = CO2.r;
+	TU1.r = TU2.r;
+
+	RH.outlet.T = BU.outlet.T;
+	IC.outlet.T = DI.outlet.T;
+
+	r IS_A factor;
+	r = CO2.outlet.p / CO1.inlet.p;
+
+	r_bw IS_A factor;
+	r_bw = -Wdot_CO / Wdot_TU;
+
+	Qdot_RE ALIASES RE.Qdot;
+
+	eta_TU1 ALIASES TU1.eta;
+	eta_TU2 ALIASES TU2.eta;
+	eta_CO1 ALIASES CO1.eta;
+	eta_CO2 ALIASES CO2.eta;
+	epsilon_RE ALIASES RE.epsilon;
+METHODS
+METHOD on_load;
+	FIX CO1.eta, CO2.eta, TU1.eta, TU2.eta;
+	CO1.eta := 0.8;
+	CO2.eta := 0.8;
+	TU1.eta := 0.85;
+	TU2.eta := 0.85;
+	FIX CO1.inlet.T, TU1.inlet.T;
+	CO1.inlet.T := 300 {K};
+	TU1.inlet.T := 1300 {K};
+	FIX r;
+	r := 8;
+	FIX CO1.inlet.p;
+	CO1.inlet.p := 1 {bar};
+	FIX CO1.inlet.mdot;
+	CO1.inlet.mdot := 1 {kg/s};
+	FIX BU.eta, RH.eta;
+	BU.eta := 1;
+	RH.eta := 1;
+	FIX RE.epsilon;
+	RE.epsilon := 0.8;
+END on_load;
+END brayton_intercool_reheat_regen;
+
+
+
 
