@@ -335,6 +335,16 @@ END dissipator_test;
 
 
 MODEL brayton;
+	NOTES
+		'description' SELF {
+			This is a model of a simple Brayton cycle with
+			irreversible compressor (eta=0.8) and turbine (eta=0.85) operating
+			between 300 K and 1300 K, with a compression ratio of 8 and an
+			assumed inlet pressure of 1 bar. Based on examples 9-5 and 9-6 from
+			Çengel & Boles, 'Thermodynamics: An Engineering Approach', 6th Ed,
+			McGraw-Hill, 2008}
+	END NOTES;
+
 	CO IS_A compressor;	
 	TU IS_A gas_turbine;
 	BU IS_A combustor;
@@ -396,6 +406,8 @@ END brayton;
 
 (*
 	Regenerator: air-to-air heat exchanger
+
+	Assumption: fluid on both sides has the same c_p.
 *)
 MODEL regenerator REFINES air_equipment;
 	inlet_hot, outlet_hot IS_A node;
@@ -406,11 +418,17 @@ MODEL regenerator REFINES air_equipment;
 	inlet_hot.mdot, outlet_hot.mdot ARE_THE_SAME;
 	mdot_hot ALIASES inlet_hot.mdot;
 
-	inlet_hot.T, outlet.T ARE_THE_SAME;
+	(* for perfect eps=1 case: inlet_hot.T, outlet.T ARE_THE_SAME;*)
+
+	epsilon IS_A fraction;
 
 	Qdot IS_A energy_rate;
-	Qdot = inlet.mdot*(outlet.h - inlet.h);
-	Qdot = -inlet_hot.mdot*(outlet_hot.h - inlet_hot.h);
+	mdot_min IS_A mass_rate;
+	mdot_min = inlet.mdot + 0.5*(inlet.mdot - inlet_hot.mdot + abs(inlet.mdot - inlet_hot.mdot));
+
+	Qdot = epsilon * mdot_min * (inlet_hot.h - inlet.h);
+	outlet.h = inlet.h + Qdot/inlet.mdot;
+	outlet_hot.h = inlet_hot.h - Qdot/inlet_hot.mdot;
 END regenerator;
 
 MODEL regenerator_test REFINES regenerator;
@@ -421,15 +439,29 @@ METHOD on_load;
 	inlet.mdot := 1 {kg/s};
 	inlet.p := 1 {bar};
 	inlet.T := 300 {K};
-	inlet_hot.mdot := 1 {kg/s};
+	inlet_hot.mdot := 2 {kg/s};
 	inlet_hot.p := 15 {bar};
 	inlet_hot.T := 500 {K};
+	FIX epsilon;
+	epsilon := 1.0;
 END on_load;
 END regenerator_test;
 
 
 
 MODEL brayton_regenerative;
+	NOTES
+		'description' SELF {
+			This is a model of a regenerative Brayton cycle with
+			irreversible compressor (eta=0.8) and turbine (eta=0.85) operating
+			between 300 K and 1300 K, with a compression ratio of 8 and an
+			assumed inlet pressure of 1 bar. The regenerator effectiveness is 
+			0.8.
+
+			Based on example 9-7 from Çengel & Boles, 'Thermodynamics: An 
+			Engineering Approach', 6th Ed, McGraw-Hill, 2008}
+	END NOTES;
+
 	CO IS_A compressor;	
 	TU IS_A gas_turbine;
 	BU IS_A combustor;
@@ -462,6 +494,9 @@ MODEL brayton_regenerative;
 
 	Qdot_RE ALIASES RE.Qdot;
 
+	eta_TU ALIASES TU.eta;
+	eta_CO ALIASES CO.eta;
+	epsilon_RE ALIASES RE.epsilon;
 METHODS
 METHOD on_load;
 	FIX CO.eta, TU.eta;
@@ -478,6 +513,8 @@ METHOD on_load;
 	CO.inlet.mdot := 1 {kg/s};
 	FIX BU.eta;
 	BU.eta := 1;
+	FIX RE.epsilon;
+	RE.epsilon := 1;
 END on_load;
 END brayton_regenerative;
 
