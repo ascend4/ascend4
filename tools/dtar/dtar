@@ -177,9 +177,11 @@ changes = changelog.Changelog(file=fchange.read())
 
 debianname = "%s-%s" % (control['Source'],changes.upstream_version)
 
-#if debianname != head:
-#	raise RuntimeError("Debian files not up to date: debian/changelog refers to version '%s' but tarball head directory is '%s'"
-#		% (debianname,head));
+need_tarball_reheaded = False
+if debianname != head:
+	need_tarball_reheaded = True
+	#raise RuntimeError("Debian files not up to date: debian/changelog refers to version '%s' but tarball head directory is '%s'"
+	#	% (debianname,head));
 
 # check for build-time dependencies
 
@@ -227,37 +229,63 @@ try:
 	
 	assert(os.path.exists(os.path.join(head,"debian/control")))
 
-	# copy original tarball (recompressing to .gz if required?)
+	# copy original tarball (recompressing to .gz/reheading if required?)
 
-	ext = ""
-	origname = "%s_%s.orig.tar.gz" % (control['Source'],changes.upstream_version)
-	t1 = t
-	if f[-7:] == ".tar.gz":
-		ext = ".tar.gz"
+	unzip = None
+	ext = None
+	if f[-7:] == ".tar.gz" or f[-4:] == ".tgz":
 		print "Original tarball is in gzip format"
-		shutil.copyfile(ffull, origname)
-	elif f[-4:] == ".tgz":
-		ext = ".tgz"
-		print "Original tarball is in gzip format"
-		shutil.copyfile(ffull, origname)
+		unzip = ["gzip","-d"]
+		exe = "/bin/gzip"
+		ext = "gz"
 	elif f[-8:] == ".tar.bz2":
-		ext = ".tar.bz2"
 		print "Original tarball is in bzip2 format"
+		unzip = ["bzip2","-d"]
+		exe = "/bin/bzip2"
+		ext = "bz2"
+
+	if not unzip:
+		raise RuntimeError("Unrecognised input format for '%s'" % f)
+
+	if need_tarball_reheaded:
+		print "Extracting tarball for re-heading..."
+		tar1 = tarfile.open(ffull)
+		tar1.extractall()
+		tar1.close()
+		print "Renaming head directory from '%s' to '%s'..." % (head,debianname)
+		assert(os.path.exists(head))
+		os.rename(head,debianname)
+		assert(os.path.exists(debianname))
+		print "Re-zipping in .tar.gz format..."
 		temptar = "%s_%s.orig.tar" % (control['Source'],changes.upstream_version)
-		tempbz2 = "%s.bz2"%temptar
-		print "Copying '%s.bz2'" % temptar
-		print "ffull = ",ffull
-		shutil.copyfile(ffull,tempbz2)
-		assert(os.path.exists(tempbz2))
-		print "Unbzipping '%s'..." % tempbz2
-		subprocess.call(["bzip2","-d",tempbz2],executable="/bin/bzip2")
+		temptz = "%s.%s"%(temptar,ext)
+		tar = tarfile.open(temptz, "w:gz")
+		tar.add(debianname, recursive=True)
+		tar.close()
+		assert(os.path.exists(temptz))
+
+	elif ext != "gz":
+		print "Source tarball needs to be re-zipped to gzip format."
+		temptar = "%s_%s.orig.tar" % (control['Source'],changes.upstream_version)
+		temptz = "%s.%s"%(temptar,ext)
+		print "Creating tarball copy '%s.%s'" % temptz
+		shutil.copyfile(ffull,temptz)
+		print "Extracting with %s..." % unzip[0]
+		subprocess.call(unzip + [temptz], executable=exe)
 		assert(os.path.exists(temptar))
-		print "Gzipping '%s'..." % temptar
-		subprocess.call(["gzip",temptar],executable="/bin/gzip")
-		print "Checking final path..."
-		assert(os.path.exists(origname))
+		print "Recompressing with gzip..."
+		subprocess.call(['gzip',temptar])
+		
 	else:
-		raise RuntimeError("Unrecognized tarball compression style")
+		origname = "%s_%s.orig.tar.gz" % (control['Source'],changes.upstream_version)
+		print "Original tarball is in gzip format"
+		shutil.copyfile(ffull, origname)
+
+	print "Checking for correct original tarball name..."
+	origname = "%s_%s.orig.tar.gz" % (control['Source'],changes.upstream_version)
+	assert(os.path.exists(origname))
+
+	t1 = t
 
 	# build the source package
 	#print "Building source package..."
@@ -267,8 +295,8 @@ try:
 	#	raise RuntimeError("dpkg-source returned error code %d" % res)
 
 	# build the binary package
-	print "Entering directory '%s'" % head
-	os.chdir(head)
+	print "Entering directory '%s'" % debianname
+	os.chdir(debianname)
 	if buildsource:
 		print "Building source package..."
 		res = subprocess.call(["debuild","-rfakeroot","-S","-sa"])
