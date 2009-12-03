@@ -7,12 +7,25 @@ env.SConscript(['test/SConscript'],['env'])
 env.SConscript(['sensitivity/SConscript'],['env'])
 
 # Hunt for all models in the directory structure
-import os, os.path
+import os, os.path, re
 
 modelfiles = []
 
 excludedirs = ['.svn','CVS']
-excludefiles = ['Makefile.in','SConscript','update-Makefile.pl']
+excludefiles = ['Makefile.in','SConscript','SConstruct','update-Makefile.pl']
+excludepatterns = [re.compile(s) for s in [
+	r"^.*\.os$"
+	, r"^.*\.o$"
+	,r"^.*\.tm2$"
+	,r"^.*/fprops/[a-z]+$"
+	,r"^.*/fprops/.*\.c$"
+	,r"^.*/fprops/.*\.h$"
+	,r"^.*/fprops/test\.py$"
+	,r"^.*/fprops/.*\.mac$"
+	,r"^.*/fprops/precalc\.py$"
+	,r"^.*/fprops/.*\.ods$"
+	,r"^.*/fprops/python/.*$"
+]]
 
 modeldir = env.Dir(".").abspath
 #print "MODEL DIR =",modeldir
@@ -37,8 +50,19 @@ for root,dirs,files in os.walk("."):
 	for f in files:
 		if f in excludefiles:
 			continue
+
+		np = os.path.normpath(os.path.join(root,f))
+
+		fail = False
+		for r in excludepatterns:
+			if r.match(np):
+				fail = True
+				break
+		if fail:
+			continue
+
 		#print "ADDING",os.path.normpath(os.path.join(root,f))
-		modelfiles.append( os.path.normpath(os.path.join(root,f)) )
+		modelfiles.append(np)
 os.chdir(cwd)
 
 #print "CWD =",cwd
