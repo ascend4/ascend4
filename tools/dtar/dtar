@@ -177,9 +177,9 @@ changes = changelog.Changelog(file=fchange.read())
 
 debianname = "%s-%s" % (control['Source'],changes.upstream_version)
 
-if debianname != head:
-	raise RuntimeError("Debian files not up to date: debian/changelog refers to version '%s' but tarball head directory is '%s'"
-		% (debianname,head));
+#if debianname != head:
+#	raise RuntimeError("Debian files not up to date: debian/changelog refers to version '%s' but tarball head directory is '%s'"
+#		% (debianname,head));
 
 # check for build-time dependencies
 
@@ -221,7 +221,7 @@ try:
 
 	if tmeta:
 		print "Extracting meta tarball to '%s'..." % maindir
-		os.chdir(os.path.join(maindir,debianname))
+		os.chdir(os.path.join(maindir,head))
 		tmeta.extractall()
 		os.chdir(maindir)
 	
@@ -233,7 +233,11 @@ try:
 	origname = "%s_%s.orig.tar.gz" % (control['Source'],changes.upstream_version)
 	t1 = t
 	if f[-7:] == ".tar.gz":
-		ext = ".tar.bz"
+		ext = ".tar.gz"
+		print "Original tarball is in gzip format"
+		shutil.copyfile(ffull, origname)
+	elif f[-4:] == ".tgz":
+		ext = ".tgz"
 		print "Original tarball is in gzip format"
 		shutil.copyfile(ffull, origname)
 	elif f[-8:] == ".tar.bz2":
@@ -263,6 +267,7 @@ try:
 	#	raise RuntimeError("dpkg-source returned error code %d" % res)
 
 	# build the binary package
+	print "Entering directory '%s'" % head
 	os.chdir(head)
 	if buildsource:
 		print "Building source package..."
