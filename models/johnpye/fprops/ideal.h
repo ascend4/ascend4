@@ -98,7 +98,7 @@ typedef struct 	IdealData_struct{
 	double c;
 	double m;
 	double Tstar; /* normalisation temperature used in residual correlation */
-	double cp0star; /* reducing parameter used for cp0 */
+	double cp0star; /* reducing parameter used for cp0, usually equals R */
 	unsigned np; /* number of power terms */
 	const IdealPowTerm *pt; /* power term data, may be NULL if np == 0 */
 	unsigned ne; /* number of 'exponential' terms */
