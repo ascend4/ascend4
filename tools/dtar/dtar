@@ -268,7 +268,7 @@ try:
 		print "Source tarball needs to be re-zipped to gzip format."
 		temptar = "%s_%s.orig.tar" % (control['Source'],changes.upstream_version)
 		temptz = "%s.%s"%(temptar,ext)
-		print "Creating tarball copy '%s.%s'" % temptz
+		print "Creating tarball copy '%s'" % temptz
 		shutil.copyfile(ffull,temptz)
 		print "Extracting with %s..." % unzip[0]
 		subprocess.call(unzip + [temptz], executable=exe)
