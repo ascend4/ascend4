@@ -25,7 +25,9 @@
 /**
 	Data structure for rows of the coefficient and exponent table (allows
 	the data to be represented more concisely when declaring a fluid from
-	C code.
+	C code. Firstly, terms of the type:
+
+		a * tau^t * delta^d
 */
 typedef struct HelmholtzPowTerm_struct{
 	double a; /* coefficient */
@@ -65,7 +67,11 @@ typedef struct HelmholtzGausTerm_struct{
 	terms are of the form described in the IAPWS-95 document, as cited in 
 	the file 'water.c'.
 
-	This structure is for the second kind, with A, B, C, D.
+	This structure is for terms are of the form:
+
+		n *& DELTA^b * delta * exp(-C (delta-1)^2 - D (tau-1)^2)
+
+	where DELTA = {(1-tau) + A*[(delta-1)^2]^(1/(2*beta)^}^2 + B[(delta-1)^2]^a
 */
 typedef struct HelmholtzCritTerm_struct{
 	double n; /**< coefficient */
