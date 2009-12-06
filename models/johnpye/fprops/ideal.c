@@ -64,8 +64,11 @@ double helm_cp0(double T, const IdealData *data){
 
 	/* 'exponential' terms */
 	et = &(data->et[0]);
-	for(i=0; i<data->ne; ++i, ++et){
 #ifdef CP0_DEBUG
+	fprintf(stderr,"ne = %d\n",data->ne);
+#endif
+	for(i=0; i<data->ne; ++i, ++et){
+#ifdef xCP0_DEBUG
 		fprintf(stderr,"exp term\n");
 #endif
 		double x = et->beta / T;
@@ -73,13 +76,14 @@ double helm_cp0(double T, const IdealData *data){
 		double d = (1-e)*(1-e);
 		term = et->b * x*x * e / d;
 #ifdef CP0_DEBUG
+		fprintf(stderr,"i = %d: ",i);
 		fprintf(stderr,"exp term, b = %f, beta = %f, val = %f\n",et->b, et->beta, term);
 #endif
 		sum += term;
 	}
 
 #ifdef CP0_DEBUG
-	fprintf(stderr,"Mult by cp0* = %f\n",data->cp0star);
+	fprintf(stderr,"Sum = %f. Mult by cp0* = %f => %f\n",sum,data->cp0star,sum*data->cp0star);
 #endif
 	return data->cp0star * sum;
 }

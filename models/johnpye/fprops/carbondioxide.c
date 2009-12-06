@@ -35,17 +35,18 @@ const IdealData ideal_data_carbondioxide = {
 	, CARBONDIOXIDE_R /* cpstar / [J/kgK] */
 	, 1 /* power terms */
 	, (const IdealPowTerm[]){
-		{2.5,  0.}
+		{3.5,  0.}
 	}
 	, 5
 	, (const IdealExpTerm[]){
-		{1.99427042, 3.15163}
-		,{0.62105248, 6.11190}
-		,{0.41195293, 6.77708}
-		,{1.04028922, 11.32384}
-		,{0.08327678, 27.08792}
+		{1.99427042 , 3.15163 * CARBONDIOXIDE_TSTAR}
+		,{0.62105248, 6.11190 * CARBONDIOXIDE_TSTAR}
+		,{0.41195293, 6.77708 * CARBONDIOXIDE_TSTAR}
+		,{1.04028922, 11.32384 * CARBONDIOXIDE_TSTAR}
+		,{0.08327678, 27.08792 * CARBONDIOXIDE_TSTAR}
 	}
 };
+
 
 /**
 	Residual (non-ideal) property data for ,....
@@ -166,10 +167,19 @@ int main(void){
 
 #define CP0(T,RHO,DATA) helmholtz_cp0(T,DATA)
 
+#if 0
+	fprintf(stderr,"CP0 PLOT\n");
+	for(i=0; i<=20; ++i){
+		double T = 216 + 1200.*(i/20.);
+		fprintf(stderr,"T = %f:  cp0 = %f\n", T, helmholtz_cp0(T,d));
+	}
+#endif
+
 	fprintf(stderr,"CP0 TESTS\n");
 	for(i=0; i<n;++i){
 		cp0 = td[i].cp0*1e3;
-	 	ASSERT_TOL(CP0, td[i].T+273.15, 0., d, cp0, cp0*1e-1);
+		//fprintf(stderr,"T = %f --> cp0 = %f\n", td[i].T, cp0);
+	 	ASSERT_TOL(CP0, td[i].T, 0., d, cp0, cp0*1e-1);
 	}
 #undef CP0
 
