@@ -25,12 +25,15 @@
 #define CARBONDIOXIDE_PC 73773e6
 #define CARBONDIOXIDE_RHOC 467.6
 
+#define CARBONDIOXIDE_TREF 298.15
+#define CARBONDIOXIDE_PREF 103.325e3
+
 /**
 	Ideal gas data for CO2
 */
 const IdealData ideal_data_carbondioxide = {
-	8.37304456 /* constant */
-	, -3.70454304 /* linear */
+	1.5759375242e+03/CARBONDIOXIDE_R /* constant, adjust to solve s */
+	, (-2.1189540883e+05 + 2.6222371192e+05)/CARBONDIOXIDE_TSTAR/CARBONDIOXIDE_R /* linear, adjust to solver h */
 	, CARBONDIOXIDE_TSTAR /* Tstar / [K] */
 	, CARBONDIOXIDE_R /* cpstar / [J/kgK] */
 	, 1 /* power terms */
@@ -46,7 +49,6 @@ const IdealData ideal_data_carbondioxide = {
 		,{0.08327678, 27.08792 * CARBONDIOXIDE_TSTAR}
 	}
 };
-
 
 /**
 	Residual (non-ideal) property data for ,....
@@ -66,7 +68,7 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 		,{-0.55867188534934e01,  1.000,   1.00,    0}
 		,{-0.76753199592477e00,  2.000,   1.00,    0}
 		,{ 0.31729005580416e00,  0.750,   2.00,    0}
-		,{ 0.548033158977867e00,  2.000,   2.00,    0}
+		,{ 0.54803315897767e00,  2.000,   2.00,    0}
 		,{ 0.12279411220335e00,  0.750,   3.00,    0}
 		,{ 0.21658961543220e01,   1.500,   1.00,    1}
 		,{ 0.15841735109724e01,   1.500,   2.00,    1}
@@ -180,6 +182,28 @@ int main(void){
 		//fprintf(stderr,"T = %f, rho = %f --> h = %f\n", td[i].T, td[i].rho, p);
 	 	ASSERT_TOL(helmholtz_p, td[i].T, td[i].rho, d, p, p*2e-4);
 	}
+
+#if 0
+	fprintf(stderr,"REFERENCE POINT CHECK\n");
+	/* solve rho to give p = PREF */
+	T = CARBONDIOXIDE_TREF;
+	rho = 100;
+	p = CARBONDIOXIDE_PREF;
+	double err;
+	for(i=0; i<100; ++i){
+		fprintf(stderr,"rho = %f\n", rho);
+		double dpdrho = helmholtz_dpdrho_T(T, rho, d);
+		err = helmholtz_p(T,rho,d) - CARBONDIOXIDE_PREF;
+		if(fabs(err) < 1e-6)break;
+		rho -= err/dpdrho;
+	}
+	if(fabs(err) < 1e-6){
+		fprintf(stderr,"err = %f -> T = %f, rho = %f --> p = %f\n", err, T, rho, helmholtz_p(T,rho,d));
+		fprintf(stderr,"h(Tref, pref) = %.10e\n", helmholtz_h(T,rho,d));
+		fprintf(stderr,"s(Tref, pref) = %.10e\n", helmholtz_s(T,rho,d));
+	}
+	exit(1);
+#endif
 
 	fprintf(stderr,"ENTHALPY TESTS\n");
 	for(i=0; i<n;++i){
