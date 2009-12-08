@@ -19,11 +19,11 @@
 
 #include "carbondioxide.h"
 
+//#define CARBONDIOXIDE_R 188.9241
 #define GAS_C 8314.510
 #define CARBONDIOXIDE_TSTAR 304.1282
 #define CARBONDIOXIDE_M 44.0098
 #define CARBONDIOXIDE_R (GAS_C/CARBONDIOXIDE_M)
-
 #define CARBONDIOXIDE_PC 73773e6
 #define CARBONDIOXIDE_RHOC 467.6
 
@@ -40,7 +40,7 @@ const IdealData ideal_data_carbondioxide = {
 	, CARBONDIOXIDE_R /* cpstar / [J/kgK] */
 	, 1 /* power terms */
 	, (const IdealPowTerm[]){
-		{3.5,  0.}
+		{1. + 2.5,  0.}
 	}
 	, 5
 	, (const IdealExpTerm[]){
@@ -124,9 +124,7 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 
 	To run the test, compile and run as follows:
 
-	gcc ideal.c helmholtz.c carbondioxide.c -DTEST -o carbondioxide -lm && ./carbondioxide
-
-	These tests all currently pass with a maximum error of 0.09%.
+	./test.py carbondioxide 
 */
 #ifdef TEST
 #include "test.h"
@@ -148,7 +146,19 @@ int main(void){
 
 	n = ntd;
 
+	ASSERT_TOL(helmholtz_p, 300.000, 679.24, d, 6.7131e6, 0.0001e6);
+	ASSERT_TOL(helmholtz_p, 300.000, 268.58, d, 6.7131e6, 0.0001e6);
+	ASSERT_TOL(helmholtz_p, 304.1282, 467.60, d, 7.3773e6, 0.0001e6);
+
+	fprintf(stderr,"PRESSURE TESTS\n");
+	for(i=0; i<n;++i){
+		p = td[i].p*1e6;
+		//fprintf(stderr,"T = %f, rho = %f --> h = %f\n", td[i].T, td[i].rho, p);
+	 	ASSERT_TOL(helmholtz_p, td[i].T, td[i].rho, d, p, p*2e-4);
+	}
+
 #if USING_CITED_REFERENCE_STATES
+>>>>>>> .r2650
 	fprintf(stderr,"REFERENCE POINT CHECK\n");
 	/* solve rho to give p = PREF */
 	T = CARBONDIOXIDE_TREF;
@@ -169,7 +179,6 @@ int main(void){
 	}
 	exit(1);
 #endif
-
 
 	return helm_run_test_cases(d, ntd, td, 'K');
 

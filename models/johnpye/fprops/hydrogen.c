@@ -114,7 +114,7 @@ int main(void){
 	//return helm_check_dhdrho_T(&helmholtz_data_hydrogen, ntd, td);
 	//return helm_check_dudT_rho(&helmholtz_data_hydrogen, ntd, td);
 	//return helm_check_dudrho_T(&helmholtz_data_hydrogen, ntd, td);
-	return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td);
+	return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td, 'C');
 }
 
 /*
