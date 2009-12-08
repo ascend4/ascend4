@@ -2,6 +2,7 @@
 #define HELMHOLTZ_TEST_H
 
 #include "helmholtz.h"
+#include "sat.h"
 
 /* Macros and type declarations for running simple test cases */
 

@@ -97,8 +97,13 @@ typedef struct IdealExpTerm_struct{
 typedef struct 	IdealData_struct{
 	double c;
 	double m;
+
+	/* FIXME refactor Tstar out of this struct */
 	double Tstar; /* normalisation temperature used in residual correlation */
+
+	/* FIXME do we need this? */
 	double cp0star; /* reducing parameter used for cp0, usually equals R */
+
 	unsigned np; /* number of power terms */
 	const IdealPowTerm *pt; /* power term data, may be NULL if np == 0 */
 	unsigned ne; /* number of 'exponential' terms */
