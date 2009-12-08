@@ -353,7 +353,7 @@ static void integrator_ida_free(void *enginedata){
 		(d->pfree)(enginedata);
 	}
 
-	ASC_FREE(d->rellist);	
+	ASC_FREE(d->rellist);
 
 #ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("Now destroying the enginedata");
@@ -1060,7 +1060,23 @@ static int integrator_ida_solve(
 					IDAReInit(ida_mem, tret, yret, ypret);
 #elif SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR<3
 					/* TODO find out what version needs the following line... not sure. */
-					IDAReInit(ida_mem, &integrator_ida_fex, tret, yret, ypret);
+					//IDAReInit(ida_mem, &integrator_ida_fex, tret, yret, ypret);
+
+					// FIXME this stuff has not been tested yet, and is very incomplete.
+
+					if(SLV_PARAM_BOOL(&(sys->params),IDA_PARAM_ATOLVECT)){
+						/* vector of absolute tolerances */
+						CONSOLE_DEBUG("USING VECTOR OF ATOL VALUES");
+						abstolvect = N_VNew_Serial(sys->n_y);
+						integrator_get_atol(sys,NV_DATA_S(abstolvect));
+						flag = IDAReInit(ida_mem, &integrator_ida_fex, tret, yret, ypret, IDA_SV, reltol, abstolvect);
+						N_VDestroy_Serial(abstolvect);
+					}else{
+						/* scalar absolute tolerance (one value for all) */
+						abstol = SLV_PARAM_REAL(&(sys->params),IDA_PARAM_ATOL);
+						CONSOLE_DEBUG("USING SCALAR ATOL VALUE = %8.2e",abstol);
+						flag = IDAReInit(ida_mem, &integrator_ida_fex, tret, yret, ypret, IDA_SS, reltol, &abstol);
+					}
 #else
 					/* allocate internal memory */
 					if(SLV_PARAM_BOOL(&(sys->params),IDA_PARAM_ATOLVECT)){
@@ -1084,7 +1100,7 @@ static int integrator_ida_solve(
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
 			}
 			ASC_FREE(rootsfound);
-		}			
+		}
 
 
 		/* pass the values of everything back to the compiler */
@@ -1261,7 +1277,7 @@ static int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 			CONSOLE_DEBUG("Calc OK");
 		}*/
 	}
-	
+
 	if(!is_error){
 		for(i=0;i< enginedata->nrels; ++i){
 			if(isnan(NV_Ith_S(rr,i))){
@@ -1698,7 +1714,7 @@ int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout,
 	asc_assert(g_data!=NULL);
 	sys = (IntegratorSystem *)g_data;
 	enginedata = integrator_ida_enginedata(sys);
-	
+
 	/* pass the values of everything back to the compiler */
 	integrator_set_t(sys, (double)tt);
 	integrator_set_y(sys, NV_DATA_S(yy));
@@ -1886,13 +1902,13 @@ static int integrator_ida_psolve_jacobian(realtype tt,
 
 	linsolqr_add_rhs(L,NV_DATA_S(rvec),FALSE);
 
-	mtx_region_t R;	
+	mtx_region_t R;
 	R.row.low = R.col.low = 0;
 	R.row.high = R.col.high = mtx_order(linsolqr_get_matrix(L)) - 1;
     linsolqr_set_region(L,R);
 
     linsolqr_prep(L,linsolqr_fmethod_to_fclass(linsolqr_fmethod(L)));
-    linsolqr_reorder(L, &R, linsolqr_rmethod(L));		
+    linsolqr_reorder(L, &R, linsolqr_rmethod(L));
 
 	/// @TODO more here
 
@@ -2050,7 +2066,7 @@ static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s){
 
 	int res;
 
-	/* 
+	/*
 		There is an error in the documentation for this function in Sundials 2.2.
 		According the the header file, the hinused stat is not provided.
 	*/
@@ -2061,7 +2077,7 @@ static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s){
 
 	/* get the missing statistic */
 	IDAGetActualInitStep(ida_mem, &s->hinused);
-	
+
 	return res;
 #else
 
@@ -2123,7 +2139,7 @@ static int integrator_ida_transfer_matrix(const IntegratorSystem *sys, struct Sy
 	};
 
 	struct SystemJacobianStruct D[II_NUM];
-	
+
 	for(i=0;i<II_NUM;++i){
 		res = system_jacobian(sys->system, matrf[i], matvf[i], 1/*safe*/ ,&(D[i]));
 	}
@@ -2220,7 +2236,7 @@ static int integrator_ida_write_matrix(const IntegratorSystem *sys, FILE *f, con
 	if(J.vars)ASC_FREE(J.vars);
 	if(J.rels)ASC_FREE(J.rels);
 	if(J.M)mtx_destroy(J.M);
-	
+
 	return status;
 }
 
