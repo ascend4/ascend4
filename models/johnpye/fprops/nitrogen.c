@@ -190,6 +190,34 @@ int main(void){
 
 	fprintf(stderr,"Running through %d test points...\n",n);
 
+/* a simple macro to actually do the testing */
+#define ASSERT_TOL(FN,PARAM1,PARAM2,PARAM3,VAL,TOL) {\
+		double cval; cval = FN(PARAM1,PARAM2,PARAM3);\
+		double err; err = cval - (double)(VAL);\
+		double relerrpc = (cval-(VAL))/(VAL)*100;\
+		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
+		if(fabs(err)>fabs(TOL)){\
+			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %0.8f,"\
+				" should be %f, error is %.10e (%.2f%%)!\n"\
+				, __LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
+				,relerrpc\
+			);\
+			exit(1);\
+		}else{\
+			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
+				,#FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
+			);\
+		}\
+	}
+
+#define CP0(T,RHO,DATA) helmholtz_cp0(T,DATA)
+	fprintf(stderr,"CP0 TESTS\n");
+	for(i=0; i<n;++i){
+		cp0 = td[i].cp0*1e3;
+	 	ASSERT_TOL(CP0, td[i].T+273.15, 0., d, cp0, cp0*1e-1);
+	}
+#undef CP0
+
 	fprintf(stderr,"CONSISTENCY TESTS (of test data): u, T, s, a...");
 	for(i=0; i<n; ++i){
 		u = td[i].u*1e3;
@@ -244,7 +272,7 @@ int main(void){
 	helm_check_dudT_rho(d, ntd, td);
 	helm_check_dudrho_T(d, ntd, td);
 
-	return helm_run_test_cases(d, ntd, td);
+	return helm_run_test_cases(d, ntd, td, 'C');
 }
 
 const TestData td[] = {
