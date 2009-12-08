@@ -7,13 +7,17 @@
 
 typedef struct{double T,p,rho,u,h,s,cv,cp,cp0,a;} TestData;
 
+/*, {Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cp, Cp0, Helmholtz}
+
 /**
 	Run tests for p, u, h, s, a against values from a user-provided TestData array
 	Tolerances are specified in the cdoe, in test.c.
 
+	@param temp_unit Set to 'C' for celsius or 'K' for Kelvin.
+
 	@return 1 if any failures occurred.
 */
-int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td);
+int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td, int temp_unit);
 
 /**
 	Check 'u' values and output discrepancy for plotting.
@@ -25,6 +29,17 @@ int helm_check_u(const HelmholtzData *d, unsigned ntd, const TestData *td);
 	difference estimates (check that helmholtz_p is working first!)
 */
 int helm_check_p_T(const HelmholtzData *d, unsigned ntd, const TestData *td);
+
+#define TEST_VERBOSE
+
+#ifdef TEST_VERBOSE
+# define TEST_SUCCESS(FN,PARAM1,PARAM2,PARAM3,VAL) \
+	fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
+		,FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
+	)
+#else
+# define TEST_SUCCESS
+#endif
 
 /* a simple macro to actually do the testing */
 #define ASSERT_TOL(FN,PARAM1,PARAM2,PARAM3,VAL,TOL) {\
@@ -40,9 +55,7 @@ int helm_check_p_T(const HelmholtzData *d, unsigned ntd, const TestData *td);
 			);\
 			exit(1);\
 		}else{\
-			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
-				,#FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
-			);\
+			TEST_SUCCESS(#FN,PARAM1,PARAM2,PARAM3,VAL);\
 		}\
 	}
 

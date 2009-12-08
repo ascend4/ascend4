@@ -6,9 +6,12 @@
 #include <math.h>
 
 
-int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td){
+int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td, int temp_unit){
 
-	double rho, T, p, u, h, a, s, cp0;
+	double rho, T, p, u, h, a, s, cp0, T_adj = 0;
+
+	if(temp_unit=='C')T_adj = 273.15;
+
 
 	double maxerr = 0;
 	double se = 0, sse = 0;
@@ -24,24 +27,33 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 	fprintf(stderr,"CP0 TESTS\n");
 	for(i=0; i<n;++i){
 		cp0 = td[i].cp0*1e3;
-	 	ASSERT_TOL(CP0_TEMP, td[i].T+273.15, td[i].rho, d, cp0, cp0*1e-6);
+	 	ASSERT_TOL(CP0_TEMP, td[i].T+T_adj, td[i].rho, d, cp0, cp0*1e-6);
 	}
 #undef CP0_TEMP
 
 	/* Checking pressure values (proves phir_delta) */
 	fprintf(stderr,"PRESSURE TESTS\n");
 	for(i=16; i<n;++i){
-		T = td[i].T+273.15;
+		T = td[i].T+T_adj;
 		rho = td[i].rho;
 		p = td[i].p*1e6;
 	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-3);
 	}
 
-	/* Checking internal energy values (proves phi0_tau, phir_tau) */
+	/* checking enthalpy values */
+	fprintf(stderr,"ENTHALPY TESTS\n");
+	se = 0, sse = 0;
+	for(i=0; i<n;++i){
+		T = td[i].T+T_adj;
+		rho = td[i].rho;
+		h = td[i].h*1e3;
+	 	ASSERT_TOL(helmholtz_h, td[i].T+T_adj, td[i].rho, d, h, 1e-3*h);
+	}
 
+	/* Checking internal energy values (proves phi0_tau, phir_tau) */
 	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
 	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
+		T = td[i].T+T_adj;
 		rho = td[i].rho;
 		u = td[i].u*1e3;
 		ASSERT_TOL(helmholtz_u, T, rho, d, u, 1e3*u);
@@ -52,33 +64,24 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 	fprintf(stderr,"ENTROPY TESTS\n");
 	se = 0, sse = 0;
 	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
+		T = td[i].T+T_adj;
 		rho = td[i].rho;
 		s = td[i].s*1e3;
-	 	ASSERT_TOL(helmholtz_s, T, rho, d, s, 1e-6*s);
+	 	ASSERT_TOL(helmholtz_s, T, rho, d, s, 1e-5*s);
 	}
 
-	/* checking enthalpy values */
-	fprintf(stderr,"ENTHALPY TESTS\n");
-	se = 0, sse = 0;
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		h = td[i].h*1e3;
-	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
-	}
 
 	/* Checking helmholtz energy values */
 
 	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
 	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
+		T = td[i].T+T_adj;
 		rho = td[i].rho;
 		a = td[i].a*1e3;
 		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(a - helmholtz_a(T,rho,d)));
-	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-6);
+	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3	);
 	}
-	
+
 	fprintf(stderr,"Tests completed OK (maximum error = %0.5f%%)\n",maxerr);
 	exit(0);
 }
@@ -153,7 +156,7 @@ int helm_check_dpdT_rho(const HelmholtzData *d, unsigned ntd, const TestData *td
 	}
 	fprintf(stderr,"average error = %.10e\n",se/n);
 	fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);
-}		
+}
 
 int helm_check_dpdrho_T(const HelmholtzData *d, unsigned ntd, const TestData *td){
 	unsigned i;
@@ -181,7 +184,7 @@ int helm_check_dpdrho_T(const HelmholtzData *d, unsigned ntd, const TestData *td
 	}
 	fprintf(stderr,"average error = %.10e\n",se/n);
 	fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);
-}		
+}
 
 /* check derivatives of h */
 
@@ -239,7 +242,7 @@ int helm_check_dhdrho_T(const HelmholtzData *d, unsigned ntd, const TestData *td
 	}
 	fprintf(stderr,"average error = %.10e\n",se/n);
 	fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);
-}	
+}
 
 /* check derivatives of u */
 
@@ -297,7 +300,7 @@ int helm_check_dudrho_T(const HelmholtzData *d, unsigned ntd, const TestData *td
 	}
 	fprintf(stderr,"average error = %.10e\n",se/n);
 	fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);
-}	
+}
 
 
 
