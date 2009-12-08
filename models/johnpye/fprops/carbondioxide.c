@@ -193,6 +193,8 @@ int main(void){
 	p = fprops_psat_T_xiang(T, d);
 	fprintf(stderr,"T = %f -> psat(T) = %f\n", T, p);
 
+	phase_criterion(679.24, 268.58, T, p, d);
+
 	exit(1);
 
 	return helm_run_test_cases(d, ntd, td, 'K');
