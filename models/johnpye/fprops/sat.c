@@ -8,6 +8,8 @@
 
 #include "sat.h"
 
+#include "helmholtz_impl.h"
+
 #include <math.h>
 #ifdef TEST
 # include <stdio.h>
@@ -54,4 +56,35 @@ double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 
 	return p_r * d->p_c;
 }
+
+/**
+	Maxwell phase criterion as described in the IAPWS95 release.
+*/
+void phase_criterion(double rho_f, double rho_g, double T, double p_sat, const HelmholtzData *D){
+	fprintf(stderr,"PHASE CRITERION\n");
+	double delta_f, delta_g, tau;
+	double eq1, eq2, eq3;
+
+    delta_f = rho_f / D->rho_c;
+    delta_g = rho_g/ D->rho_c;
+    tau = D->T_c / T;
+
+    eq1 = p_sat / (D->R * T)- (1.0 + delta_f*helm_resid_del(delta_f,tau,D)) * rho_f;
+
+	fprintf(stderr,"PHASE CRITERION\n");
+
+    eq2 = p_sat / (D->R * T) - (1.0 + delta_g*helm_resid_del(delta_g,tau,D)) * rho_g;
+
+	fprintf(stderr,"PHASE CRITERION\n");
+
+    eq3 = (p_sat / (D->R*T*D->rho_c))*((delta_f - delta_g)/(delta_f*delta_g)) - log(delta_f/delta_g) - helm_resid(delta_f,tau,D) + helm_resid(delta_g,tau,D);
+
+#ifdef TEST    
+	fprintf(stderr,"eq1 = %f\neq2 = %f\neq3 = %f\n",eq1, eq2, eq3);
+#endif
+
+	//return eq3;
+}
+
+
 
