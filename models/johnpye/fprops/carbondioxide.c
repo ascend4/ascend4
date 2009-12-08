@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2008 Carnegie Mellon University
+	Copyright (C) 2008-2009 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -15,6 +15,13 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
+*//** @file
+	This file implements a Helmholtz fundamental equation correlation for
+	Carbon Dioxide using the results from 
+
+	R Span & W Wagner ''A new equation of state for carbon dioxide covering the
+	fluid region from the triple-point temperature to 11100 K at pressures up 
+	to 800 MPa'', J Phys Chem Ref Data, Vol 25, No. 6, 1996.
 */
 
 #include "carbondioxide.h"
@@ -31,7 +38,10 @@
 #define CARBONDIOXIDE_PREF 103.325e3
 
 /**
-	Ideal gas data for CO2
+	Ideal gas data for CO2.
+	
+	The constant and linear factors for phi_0 have been offset to match the
+	reference state used by REFPROP, for the purpose of testing.
 */
 const IdealData ideal_data_carbondioxide = {
 	-1.1571354956e+003/CARBONDIOXIDE_R /* constant, adjust to solve s */
@@ -53,7 +63,7 @@ const IdealData ideal_data_carbondioxide = {
 };
 
 /**
-	Residual (non-ideal) property data for ,....
+	Residual (non-ideal) property data.
 */
 const HelmholtzData helmholtz_data_carbondioxide = {
 	/* R */ CARBONDIOXIDE_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
@@ -118,6 +128,8 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 	}
 };
 
+#ifdef TEST
+#include "test.h"
 /*
 	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 7.0.
@@ -126,8 +138,6 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 
 	./test.py carbondioxide 
 */
-#ifdef TEST
-#include "test.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -146,19 +156,12 @@ int main(void){
 
 	n = ntd;
 
+	/* couple of data from the publication itself */
 	ASSERT_TOL(helmholtz_p, 300.000, 679.24, d, 6.7131e6, 0.0001e6);
 	ASSERT_TOL(helmholtz_p, 300.000, 268.58, d, 6.7131e6, 0.0001e6);
 	ASSERT_TOL(helmholtz_p, 304.1282, 467.60, d, 7.3773e6, 0.0001e6);
 
-	fprintf(stderr,"PRESSURE TESTS\n");
-	for(i=0; i<n;++i){
-		p = td[i].p*1e6;
-		//fprintf(stderr,"T = %f, rho = %f --> h = %f\n", td[i].T, td[i].rho, p);
-	 	ASSERT_TOL(helmholtz_p, td[i].T, td[i].rho, d, p, p*2e-4);
-	}
-
 #if USING_CITED_REFERENCE_STATES
->>>>>>> .r2650
 	fprintf(stderr,"REFERENCE POINT CHECK\n");
 	/* solve rho to give p = PREF */
 	T = CARBONDIOXIDE_TREF;

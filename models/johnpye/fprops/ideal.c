@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2008 Carnegie Mellon University
+	Copyright (C) 2008-2009 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -15,7 +15,14 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
+*//** @file
+	Ideal-gas components of helmholtz fundamental functions, calculated using
+	terms in cp0 in a standard power series form. For details see the
+	publications cited in the various fluid *.c files.
+
+	John Pye, Jul 2008.
 */
+
 
 #include <math.h>
 
