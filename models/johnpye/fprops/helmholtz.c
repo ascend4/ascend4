@@ -358,6 +358,8 @@ int helmholtz_sat_t(double T, double *p, double *rho_f, double *rho_g, const Hel
 	fprintf(stderr,"Acentric factor = %f\n",data->omega);	
 #endif
 
+
+	/* maybe use http://dx.doi.org/10.1016/S0009-2509(02)00017-9 for this part? */
 	/* FIXME need to cite this formula */
 	*p = p_c * pow(10.,(data->omega + 1.)*-7./3.*(tau - 1.));
 

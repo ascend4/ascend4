@@ -28,10 +28,10 @@
 
 //#define CARBONDIOXIDE_R 188.9241
 #define GAS_C 8314.510
-#define CARBONDIOXIDE_TSTAR 304.1282
+#define CARBONDIOXIDE_TC 304.1282
 #define CARBONDIOXIDE_M 44.0098
 #define CARBONDIOXIDE_R (GAS_C/CARBONDIOXIDE_M)
-#define CARBONDIOXIDE_PC 73773e6
+#define CARBONDIOXIDE_PC 7.3773e6
 #define CARBONDIOXIDE_RHOC 467.6
 
 #define CARBONDIOXIDE_TREF 298.15
@@ -45,8 +45,8 @@
 */
 const IdealData ideal_data_carbondioxide = {
 	-1.1571354956e+003/CARBONDIOXIDE_R /* constant, adjust to solve s */
-	, 2.9392750129e+005/CARBONDIOXIDE_TSTAR/CARBONDIOXIDE_R /* linear, adjust to solver h */
-	, CARBONDIOXIDE_TSTAR /* Tstar / [K] */
+	, 2.9392750129e+005/CARBONDIOXIDE_TC/CARBONDIOXIDE_R /* linear, adjust to solver h */
+	, CARBONDIOXIDE_TC /* Tstar / [K] */
 	, CARBONDIOXIDE_R /* cpstar / [J/kgK] */
 	, 1 /* power terms */
 	, (const IdealPowTerm[]){
@@ -54,11 +54,11 @@ const IdealData ideal_data_carbondioxide = {
 	}
 	, 5
 	, (const IdealExpTerm[]){
-		{1.99427042 , 3.15163 * CARBONDIOXIDE_TSTAR}
-		,{0.62105248, 6.11190 * CARBONDIOXIDE_TSTAR}
-		,{0.41195293, 6.77708 * CARBONDIOXIDE_TSTAR}
-		,{1.04028922, 11.32384 * CARBONDIOXIDE_TSTAR}
-		,{0.08327678, 27.08792 * CARBONDIOXIDE_TSTAR}
+		{1.99427042 , 3.15163 * CARBONDIOXIDE_TC}
+		,{0.62105248, 6.11190 * CARBONDIOXIDE_TC}
+		,{0.41195293, 6.77708 * CARBONDIOXIDE_TC}
+		,{1.04028922, 11.32384 * CARBONDIOXIDE_TC}
+		,{0.08327678, 27.08792 * CARBONDIOXIDE_TC}
 	}
 };
 
@@ -69,7 +69,12 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 	/* R */ CARBONDIOXIDE_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
 	, /* M */ CARBONDIOXIDE_M /* kg/kmol */
 	, /* rho_star */ CARBONDIOXIDE_RHOC /* kg/m³ (= rho_c for this model) */
-	, /* T_star */ CARBONDIOXIDE_TSTAR /* K (= T_c for this model) */
+	, /* T_star */ CARBONDIOXIDE_TC /* K (= T_c for this model) */
+
+	, /* T_c */ CARBONDIOXIDE_TC
+	, /* p_c */ CARBONDIOXIDE_PC
+	, /* rho_c */ CARBONDIOXIDE_RHOC
+
 	,  0.239 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_carbondioxide
 	, 34 /* power terms */
@@ -182,6 +187,13 @@ int main(void){
 	}
 	exit(1);
 #endif
+
+	fprintf(stderr,"XIANG SATURATION CURVE\n");
+	T = 300;
+	p = fprops_psat_T_xiang(T, d);
+	fprintf(stderr,"T = %f -> psat(T) = %f\n", T, p);
+
+	exit(1);
 
 	return helm_run_test_cases(d, ntd, td, 'K');
 

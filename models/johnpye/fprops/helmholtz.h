@@ -88,6 +88,10 @@ typedef struct HelmholtzData_struct{
 	double rho_star; /**< normalisation density, kg/m³ */
 	double T_star; /**< normalisation temperature, K */
 
+	double T_c; /**< critical temperature */
+	double p_c; /**< critical pressure */
+	double rho_c; /**< critical density */
+
 	double omega; /**< Pitzer acentric factor */
 	
 	const IdealData *ideal; /* data for ideal component of Helmholtz energy */
