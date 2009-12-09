@@ -5,7 +5,7 @@ D = fprops.helmholtz_data_carbondioxide;
 from pylab import *
 hold(1)
 
-TT = array([217, 230,240,250,260,280,300])
+TT = array([217, 230,240,250,260,280,300],'float')
 L = []
 
 for T in TT:
