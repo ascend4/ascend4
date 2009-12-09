@@ -30,12 +30,13 @@ by NIST in its program REFPROP 7.0. */
 
 #define NITROGEN_M 28.01348
 #define NITROGEN_R (8.31451e3/NITROGEN_M)
-#define NITROGEN_TSTAR 126.192
+#define NITROGEN_TC 126.192
+#define NITROGEN_RHOC (11.1839 * NITROGEN_M)
 
 const IdealData ideal_data_nitrogen = {
 	-12.76953 +(8.66460942220E-4)/NITROGEN_R
 	, -0.007841630
-	, NITROGEN_TSTAR /* Tstar */
+	, NITROGEN_TC /* Tstar */
 	, NITROGEN_R /* cp0star */
 	, 4 /* power terms */
 	, (const IdealPowTerm[]){
@@ -57,8 +58,14 @@ const IdealData ideal_data_nitrogen = {
 const HelmholtzData helmholtz_data_nitrogen = {
 	/* R */ NITROGEN_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
 	, /* M */ NITROGEN_M /* kg/kmol */
-	, /* rho_star */ 11.1839 * NITROGEN_M /* kmol/m3 * kg/kmol = kg/m³ (= rho_c for this model) */
-	, /* T_star */ NITROGEN_TSTAR /* K (= T_c for this model) */
+	, /* rho_star */ NITROGEN_RHOC /* kmol/m3 * kg/kmol = kg/m³ (= rho_c for this model) */
+	, /* T_star */ NITROGEN_TC /* K (= T_c for this model) */
+
+	, /* T_c */ NITROGEN_TC
+	, /* p_c */ 0
+	, /* rho_c */ NITROGEN_RHOC
+	, /* p_t */ 0
+
 	, 0.039 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_nitrogen
 	, 32 /* np */
