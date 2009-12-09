@@ -246,6 +246,24 @@ double helmholtz_w(double T, double rho, const HelmholtzData *data){
 }
 
 /**
+	Function to calculate the Gibbs energy fluid from the Helmholtz free
+	energy EOS, given temperature and mass density.
+
+	@param T temperature in K
+	@param rho mass density in kg/m³
+	@return Gibbs energy, in J/kg.
+*/
+double helmholtz_g(double T, double rho, const HelmholtzData *data){
+	DEFINE_TD;
+
+	double phir_d = helm_resid_del(tau,delta,data);
+	double phir = helm_resid(tau,delta,data);
+	double phi0 = helm_ideal(tau,delta,data->ideal);
+	
+	return data->R * T * (phi0 + phir - 1. - delta * phir_d);
+}
+
+/**
 	Calculation zero-pressure specific heat capacity
 */
 double helmholtz_cp0(double T, const HelmholtzData *data){

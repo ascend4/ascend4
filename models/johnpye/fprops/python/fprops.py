@@ -221,6 +221,7 @@ helmholtz_a = _fprops.helmholtz_a
 helmholtz_cv = _fprops.helmholtz_cv
 helmholtz_cp = _fprops.helmholtz_cp
 helmholtz_w = _fprops.helmholtz_w
+helmholtz_g = _fprops.helmholtz_g
 helmholtz_sat_t = _fprops.helmholtz_sat_t
 helmholtz_cp0 = _fprops.helmholtz_cp0
 helmholtz_dpdT_rho = _fprops.helmholtz_dpdT_rho
