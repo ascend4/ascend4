@@ -197,7 +197,10 @@ int main(void){
 
 	//phase_criterion(T, 679.24, 268.58, p, d);
 
-	phase_criterion(250., 1045.97, 46.644, 1.785e6, d);
+	double eq1, eq2, eq3;
+	phase_criterion(250., 1045.97, 46.644, 1.785e6, &eq1, &eq2, &eq3, d);
+
+	solve_saturation(250., d);
 
 	exit(1);
 

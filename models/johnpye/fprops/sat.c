@@ -66,13 +66,84 @@ double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 /**
 	Maxwell phase criterion as described in the IAPWS95 release.
 */
-void phase_criterion(double T, double rho_f, double rho_g, double p_sat, const HelmholtzData *D){
+void phase_criterion(double T, double rho_f, double rho_g, double p_sat, double *eq1, double *eq2, double *eq3, const HelmholtzData *D){
 #ifdef TEST
 	fprintf(stderr,"PHASE CRITERION: T = %f, rho_f = %f, rho_g = %f, p_sat = %f\n", T, rho_f, rho_g, p_sat);
 #endif
 	double delta_f, delta_g, tau;
-	double eq1, eq2, eq3;
     tau = D->T_c / T;
+
+	delta_f = rho_f / D->rho_c;
+	delta_g = rho_g/ D->rho_c;
+
+#ifdef TEST
+	assert(!isnan(delta_f));
+	assert(!isnan(delta_g));
+	assert(!isnan(p_sat));		
+	assert(!isinf(delta_f));
+	assert(!isinf(delta_g));
+	assert(!isinf(p_sat));		
+#endif
+	*eq1 = (p_sat - helmholtz_p(T, rho_f, D));
+	*eq2 = (p_sat - helmholtz_p(T, rho_g, D));
+	*eq3 = helmholtz_g(T, rho_f, D) - helmholtz_g(T,rho_g, D);
+
+#ifdef TEST
+	fprintf(stderr,"eq1 = %e\t\teq2 = %e\t\teq3 = %e\n", *eq1, *eq2, *eq3);
+#endif
+}
+
+void solve_saturation(double T, HelmholtzData *D){
+	double rho_f, rho_g, p_sat;
+
+	p_sat = fprops_psat_T_xiang(T, D);
+
+	/* correlation of Rackett, Spencer & Danner (1972) */
+	/* see http://dx.doi.org/10.1002/aic.690250412 */
+	double Zc = D->rho_c * D->R * D->T_c / D->p_c;
+	double Tau = 1. - T/D->T_c;
+	double vf = (D->R * D->T_c / D->p_c) * pow(Zc, -1 - pow(Tau, 2./7));
+
+	rho_f = 1./vf;
+
+#ifdef TEST
+	fprintf(stderr,"Rackett liquid density: %f\n", rho_f);	
+#endif
+
+	/* correlation of Chouaieb, Ghazouani, Bellagi */
+	/* see http://dx.doi.org/10.1016/j.tca.2004.05.017 */
+
+#if 0
+# define N1 -0.1497547
+# define N2 0.6006565 
+# define P1 -19.348354
+# define P2 -41.060325
+# define P3 1.1878726
+	double MMM = 2.6; /* guess, reading from Chouaieb, Fig 8 */
+	double NNN = PPP + 1./(N1*D->omega + N2);	
+	double PPP = Zc / (P1 + P2*Zc*log(Zc) + P3/Zc);
+#else
+# define MMM 2.4686277
+# define NNN 1.1345838
+# define PPP -0.6240188
+#endif
+
+	double alpha = exp(pow(Tau,1./3) + sqrt(Tau) + Tau + pow(Tau, MMM));
+	rho_g = D->rho_c * PPP * (alpha*pow(Tau,NNN) - exp(1-alpha));
+
+#ifdef TEST
+	fprintf(stderr,"Chouaieb vapour density: %f\n", rho_g);
+#endif
+	return;
+}
+
+	/* LOOKS WRONG... GIVES NEGATIVE rho_g... */
+
+	
+	
+#if 0	
+	
+
 	
 	int i = 40;
 	while(--i > 0){
@@ -135,6 +206,6 @@ void phase_criterion(double T, double rho_f, double rho_g, double p_sat, const H
 
 	//return eq3;
 }
-
+#endif
 
 
