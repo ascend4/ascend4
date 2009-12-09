@@ -195,7 +195,7 @@ int main(void){
 	p = fprops_psat_T_xiang(T, d);
 	fprintf(stderr,"T = %f -> psat(T) = %f\n", T, p);
 
-	phase_criterion(T, 679.24, 268.58, p, d);
+	//phase_criterion(T, 679.24, 268.58, p, d);
 
 	phase_criterion(250., 1045.97, 46.644, 1.785e6, d);
 

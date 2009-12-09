@@ -1,0 +1,17 @@
+Import('env')
+
+pyenv = env.Clone()
+
+pyenv['LIBS'] = []
+pyenv['SHLIBSUFFIX'] = '.so'
+pyenv['SHLIBPREFIX'] = '_'
+
+fluidc = ['#/%s.c' % f for f in env['fluids']]
+
+pyenv.SharedLibrary('fprops',['fprops.i','#/helmholtz.c','#/sat.c','#/ideal.c']+fluidc
+	,LIBPATH=['#']
+	,CPPPATH=['#','/usr/include/python2.5']
+	,LIBS=['python']
+	,SWIGFLAGS=['-python']
+)
+

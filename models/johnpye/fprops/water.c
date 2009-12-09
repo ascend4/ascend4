@@ -20,7 +20,8 @@
 #include "water.h"
 
 #define WATER_R 461.51805 /* J/kg·K */
-#define WATER_TSTAR 647.096 /* K */
+#define WATER_TC 647.096 /* K */
+#define WATER_RHOC 322.
 
 /**
 Ideal gas data for Water/Steam, from IAPWS-95.
@@ -29,7 +30,7 @@ http://www.iapws.org/relguide/IAPWS95.pdf
 const IdealData ideal_data_water = {
 	-8.32044648201 /* constant */
 	, 6.6832105268 /* linear */
-	, WATER_TSTAR /* Tstar */
+	, WATER_TC /* Tstar */
 	, WATER_R /* cpstar J/kgK */
 	, 1 /* power terms */
 	, (const IdealPowTerm[]){
@@ -38,11 +39,11 @@ const IdealData ideal_data_water = {
 	, 5 /* exponential terms */
 	, (const IdealExpTerm []){
 		/* b, beta */
-		{0.012436, 1.28728967*WATER_TSTAR}
-		,{0.97315,  3.53734222*WATER_TSTAR}
-		,{1.27950, 7.74073708*WATER_TSTAR}
-		,{0.96956, 9.24437796*WATER_TSTAR}
-		,{0.24873, 27.5075105*WATER_TSTAR}
+		{0.012436, 1.28728967*WATER_TC}
+		,{0.97315,  3.53734222*WATER_TC}
+		,{1.27950, 7.74073708*WATER_TC}
+		,{0.96956, 9.24437796*WATER_TC}
+		,{0.24873, 27.5075105*WATER_TC}
 	}
 };
 
@@ -54,8 +55,14 @@ http://www.iapws.org/relguide/IAPWS95.pdf
 const HelmholtzData helmholtz_data_water = {
 	/* R */ WATER_R /* J/kg/K */
 	, /* M */ 18.015242 /* kg/kmol -- G S Kell, J Phys Chem Ref Data (6) 1109 (1977) */
-	, /* rho_star */322. /* kg/m³ */
-	, /* T_star */ WATER_TSTAR /* K */
+	, /* rho_star */ WATER_RHOC /* kg/m³ */
+	, /* T_star */ WATER_TC /* K */
+
+	, /* T_c */ WATER_TC
+	, /* p_c */ 0
+	, /* rho_c */ WATER_RHOC
+	, /* p_t */ 0
+
 	, 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */
 	, &ideal_data_water
 	, 51 /* np */

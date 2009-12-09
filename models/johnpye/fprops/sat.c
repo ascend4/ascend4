@@ -14,6 +14,7 @@
 #ifdef TEST
 # include <stdio.h>
 # include <assert.h>
+# include <stdlib.h>
 #endif
 
 #define SQ(X) ((X)*(X))
@@ -22,11 +23,15 @@ double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 
 	double Zc = d->p_c / (8314. * d->rho_c * d->T_c);
 
+#ifdef TEST
 	fprintf(stderr,"Zc = %f\n",Zc);
+#endif
 
 	double theta = SQ(Zc - 0.29);
 
+#ifdef TEST
 	fprintf(stderr,"theta = %f\n",theta);
+#endif
 
 	double aa[] = {5.790206, 4.888195, 33.91196
 	            , 6.251894, 15.08591, -315.0248
@@ -62,7 +67,9 @@ double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 	Maxwell phase criterion as described in the IAPWS95 release.
 */
 void phase_criterion(double T, double rho_f, double rho_g, double p_sat, const HelmholtzData *D){
+#ifdef TEST
 	fprintf(stderr,"PHASE CRITERION: T = %f, rho_f = %f, rho_g = %f, p_sat = %f\n", T, rho_f, rho_g, p_sat);
+#endif
 	double delta_f, delta_g, tau;
 	double eq1, eq2, eq3;
     tau = D->T_c / T;
@@ -114,8 +121,12 @@ void phase_criterion(double T, double rho_f, double rho_g, double p_sat, const H
 			rho_f = rho_f1;
 		}
 		if(fabs(rho_f - rho_g) < 1e-5){
+#ifdef TEST
 			fprintf(stderr,"%s:%d: rho_f = rho_g\n", __FILE__, __LINE__);
 			exit(1);
+#else
+			break;
+#endif
 		}
 
 
