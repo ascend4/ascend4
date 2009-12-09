@@ -6,12 +6,19 @@ pyenv['LIBS'] = []
 pyenv['SHLIBSUFFIX'] = '.so'
 pyenv['SHLIBPREFIX'] = '_'
 
+import distutils.sysconfig, sys, platform
+
+if platform.system()=="Windows":
+	python_lib='python%d%d'
+else:
+	python_lib='python%d.%d'
+
 fluidc = ['#/%s.c' % f for f in env['fluids']]
 
 pyenv.SharedLibrary('fprops',['fprops.i','#/helmholtz.c','#/sat.c','#/ideal.c']+fluidc
 	,LIBPATH=['#']
-	,CPPPATH=['#','/usr/include/python2.5']
-	,LIBS=['python']
+	,CPPPATH=['#',distutils.sysconfig.get_python_inc()]
+	,LIBS=[python_lib % (sys.version_info[0],sys.version_info[1])]
 	,SWIGFLAGS=['-python']
 )
 
