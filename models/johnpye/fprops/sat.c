@@ -13,6 +13,7 @@
 #include <math.h>
 #ifdef TEST
 # include <stdio.h>
+# include <assert.h>
 #endif
 
 #define SQ(X) ((X)*(X))
@@ -60,28 +61,66 @@ double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 /**
 	Maxwell phase criterion as described in the IAPWS95 release.
 */
-void phase_criterion(double rho_f, double rho_g, double T, double p_sat, const HelmholtzData *D){
-	fprintf(stderr,"PHASE CRITERION\n");
+void phase_criterion(double T, double rho_f, double rho_g, double p_sat, const HelmholtzData *D){
+	fprintf(stderr,"PHASE CRITERION: T = %f, rho_f = %f, rho_g = %f, p_sat = %f\n", T, rho_f, rho_g, p_sat);
 	double delta_f, delta_g, tau;
 	double eq1, eq2, eq3;
-
-    delta_f = rho_f / D->rho_c;
-    delta_g = rho_g/ D->rho_c;
     tau = D->T_c / T;
+	
+	int i = 40;
+	while(--i > 0){
+		delta_f = rho_f / D->rho_c;
+		delta_g = rho_g/ D->rho_c;
 
-    eq1 = p_sat / (D->R * T)- (1.0 + delta_f*helm_resid_del(delta_f,tau,D)) * rho_f;
-
-	fprintf(stderr,"PHASE CRITERION\n");
-
-    eq2 = p_sat / (D->R * T) - (1.0 + delta_g*helm_resid_del(delta_g,tau,D)) * rho_g;
-
-	fprintf(stderr,"PHASE CRITERION\n");
-
-    eq3 = (p_sat / (D->R*T*D->rho_c))*((delta_f - delta_g)/(delta_f*delta_g)) - log(delta_f/delta_g) - helm_resid(delta_f,tau,D) + helm_resid(delta_g,tau,D);
+#ifdef TEST
+		assert(!isnan(delta_f));
+		assert(!isnan(delta_g));
+		assert(!isnan(p_sat));		
+		assert(!isinf(delta_f));
+		assert(!isinf(delta_g));
+		assert(!isinf(p_sat));		
+#endif
+		eq1 = (p_sat - helmholtz_p(T, rho_f, D));
+		eq2 = (p_sat - helmholtz_p(T, rho_g, D));
+		eq3 = (p_sat * (delta_f - delta_g) / D->rho_c - delta_f*delta_g/(D->R * T)*(helm_resid(delta_f,tau,D) - helm_resid(delta_g,tau,D) + log(delta_f/delta_g)));
 
 #ifdef TEST    
-	fprintf(stderr,"eq1 = %f\neq2 = %f\neq3 = %f\n",eq1, eq2, eq3);
+		fprintf(stderr,"p_sat = %f\trho_f = %f\trho_g = %f\teq1 = %e\t\teq2 = %e\t\teq3 = %e\n",p_sat, rho_f, rho_g, eq1, eq2, eq3);
+		assert(!isnan(eq1));
+		assert(!isnan(eq2));
+		assert(!isnan(eq3));
+		assert(!isinf(eq1));		
+		assert(!isinf(eq2));		
+		assert(!isinf(eq3));		
 #endif
+
+		double p1 = D->R * T * D->rho_c * delta_f * delta_g / (delta_f - delta_g) * (helm_resid(delta_f,tau,D) - helm_resid(delta_g,tau,D) + log(delta_f/delta_g));
+		if(p1/p_sat > 1.5){
+			p1 = p_sat * 1.5;
+		}else if(p1/p_sat < 0.7){
+			p1 = p_sat * 0.7;
+		}
+		p_sat = p1;
+		if(p_sat < D->p_t) p_sat = D->p_t;
+		if(p_sat > D->p_c) p_sat = D->p_c;
+
+		double rho_f1 = rho_f - (helmholtz_p(T, rho_f, D) - p_sat) / helmholtz_dpdrho_T(T, rho_f, D);
+		double rho_g1 = rho_g - (helmholtz_p(T, rho_g, D) - p_sat) / helmholtz_dpdrho_T(T, rho_g, D);
+
+		if(rho_g1 > 0){
+			rho_g = rho_g1;
+		}
+		if(rho_f1 > 0){
+			rho_f = rho_f1;
+		}
+		if(fabs(rho_f - rho_g) < 1e-5){
+			fprintf(stderr,"%s:%d: rho_f = rho_g\n", __FILE__, __LINE__);
+			exit(1);
+		}
+
+
+
+	}
 
 	//return eq3;
 }
