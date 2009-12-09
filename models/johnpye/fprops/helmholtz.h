@@ -91,6 +91,7 @@ typedef struct HelmholtzData_struct{
 	double T_c; /**< critical temperature */
 	double p_c; /**< critical pressure */
 	double rho_c; /**< critical density */
+	double p_t; /**< triple-point pressure */
 
 	double omega; /**< Pitzer acentric factor */
 	

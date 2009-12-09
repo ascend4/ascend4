@@ -33,6 +33,7 @@
 #define CARBONDIOXIDE_R (GAS_C/CARBONDIOXIDE_M)
 #define CARBONDIOXIDE_PC 7.3773e6
 #define CARBONDIOXIDE_RHOC 467.6
+#define CARBONDIOXIDE_PT 0.51795e6
 
 #define CARBONDIOXIDE_TREF 298.15
 #define CARBONDIOXIDE_PREF 103.325e3
@@ -74,6 +75,7 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 	, /* T_c */ CARBONDIOXIDE_TC
 	, /* p_c */ CARBONDIOXIDE_PC
 	, /* rho_c */ CARBONDIOXIDE_RHOC
+	, /* p_t */ CARBONDIOXIDE_PT
 
 	,  0.239 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_carbondioxide
@@ -193,7 +195,9 @@ int main(void){
 	p = fprops_psat_T_xiang(T, d);
 	fprintf(stderr,"T = %f -> psat(T) = %f\n", T, p);
 
-	phase_criterion(679.24, 268.58, T, p, d);
+	phase_criterion(T, 679.24, 268.58, p, d);
+
+	phase_criterion(250., 1045.97, 46.644, 1.785e6, d);
 
 	exit(1);
 
