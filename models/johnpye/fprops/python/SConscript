@@ -13,9 +13,7 @@ if platform.system()=="Windows":
 else:
 	python_lib='python%d.%d'
 
-fluidc = ['#/%s.c' % f for f in env['fluids']]
-
-pyenv.SharedLibrary('fprops',['fprops.i','#/helmholtz.c','#/sat.c','#/ideal.c']+fluidc
+pyenv.SharedLibrary('fprops',['fprops.i'] + pyenv['shobjs']
 	,LIBPATH=['#']
 	,CPPPATH=['#',distutils.sysconfig.get_python_inc()]
 	,LIBS=[python_lib % (sys.version_info[0],sys.version_info[1])]

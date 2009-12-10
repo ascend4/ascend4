@@ -20,10 +20,11 @@ env.SharedLibrary('mbwr_ascend',srcs)
 
 env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide']
 
-srcs = ['ideal.c', 'helmholtz.c', 'asc_helmholtz.c'] \
-	+ ["%s.c" % f for f in env['fluids']]
+srcs = ['ideal.c', 'helmholtz.c', 'sat.c'] + ["%s.c" % f for f in env['fluids']]
 
-env.SharedLibrary('helmholtz_ascend',srcs)
+env['shobjs'] = [env.SharedObject(s) for s in srcs]
+
+env.SharedLibrary('helmholtz_ascend',env['shobjs'] + ['asc_helmholtz.c'])
 
 env.SConscript('python/SConscript',['env'])
 
