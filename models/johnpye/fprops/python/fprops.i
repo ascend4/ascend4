@@ -7,6 +7,7 @@
 #include "../hydrogen.h"
 #include "../nitrogen.h"
 #include "../helmholtz.h"
+#include "../sat.h"
 %}
 
 %immutable helmholtz_data_water;
@@ -16,6 +17,7 @@
 %immutable helmholtz_data_hydrogen;
 
 %include "../helmholtz.h"
+%include "../sat.h"
 
 %include "../carbondioxide.h"
 %include "../water.h"

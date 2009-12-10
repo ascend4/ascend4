@@ -64,6 +64,47 @@ double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 }
 
 /**
+	Saturated liquid density correlation of Rackett, Spencer & Danner (1972)
+	see http://dx.doi.org/10.1002/aic.690250412
+*/
+double fprops_vf_T_rackett(double T, const HelmholtzData *D){
+
+	double Zc = D->rho_c * D->R * D->T_c / D->p_c;
+	double Tau = 1. - T/D->T_c;
+	double vf = (D->R * D->T_c / D->p_c) * pow(Zc, -1 - pow(Tau, 2./7));
+
+	return 1./vf;
+}
+
+
+/**
+	Saturated vapour density correlation of Chouaieb, Ghazouani, Bellagi
+	see http://dx.doi.org/10.1016/j.tca.2004.05.017
+*/
+double fprops_vg_T_chouaieb(double T, const HelmholtzData *D){
+	double Zc = D->rho_c * D->R * D->T_c / D->p_c;
+	double Tau = 1. - T/D->T_c;
+#if 0
+# define N1 -0.1497547
+# define N2 0.6006565 
+# define P1 -19.348354
+# define P2 -41.060325
+# define P3 1.1878726
+	double MMM = 2.6; /* guess, reading from Chouaieb, Fig 8 */
+	double NNN = PPP + 1./(N1*D->omega + N2);	
+	double PPP = Zc / (P1 + P2*Zc*log(Zc) + P3/Zc);
+#else
+# define MMM 2.4686277
+# define NNN 1.1345838
+# define PPP -0.6240188
+#endif
+
+	double alpha = exp(pow(Tau,1./3) + sqrt(Tau) + Tau + pow(Tau, MMM));
+	return D->rho_c * PPP * (alpha*pow(Tau,NNN) - exp(1-alpha));
+}
+
+
+/**
 	Maxwell phase criterion as described in the IAPWS95 release.
 */
 void phase_criterion(double T, double rho_f, double rho_g, double p_sat, double *eq1, double *eq2, double *eq3, const HelmholtzData *D){
