@@ -67,7 +67,7 @@ double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 	Saturated liquid density correlation of Rackett, Spencer & Danner (1972)
 	see http://dx.doi.org/10.1002/aic.690250412
 */
-double fprops_vf_T_rackett(double T, const HelmholtzData *D){
+double fprops_rhof_T_rackett(double T, const HelmholtzData *D){
 
 	double Zc = D->rho_c * D->R * D->T_c / D->p_c;
 	double Tau = 1. - T/D->T_c;
@@ -81,7 +81,7 @@ double fprops_vf_T_rackett(double T, const HelmholtzData *D){
 	Saturated vapour density correlation of Chouaieb, Ghazouani, Bellagi
 	see http://dx.doi.org/10.1016/j.tca.2004.05.017
 */
-double fprops_vg_T_chouaieb(double T, const HelmholtzData *D){
+double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
 	double Zc = D->rho_c * D->R * D->T_c / D->p_c;
 	double Tau = 1. - T/D->T_c;
 #if 0
@@ -100,7 +100,7 @@ double fprops_vg_T_chouaieb(double T, const HelmholtzData *D){
 #endif
 
 	double alpha = exp(pow(Tau,1./3) + sqrt(Tau) + Tau + pow(Tau, MMM));
-	return D->rho_c * PPP * (alpha*pow(Tau,NNN) - exp(1-alpha));
+	return D->rho_c * exp(PPP * (pow(alpha,NNN) - exp(1-alpha)));
 }
 
 

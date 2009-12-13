@@ -10,8 +10,8 @@ void phase_criterion(
 	, double *eq2, double *eq3, const HelmholtzData *d
 );
 
-double fprops_vf_T_rackett(double T, const HelmholtzData *D);
-double fprops_vg_T_chouaieb(double T, const HelmholtzData *D);
+double fprops_rhof_T_rackett(double T, const HelmholtzData *D);
+double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D);
 
 void solve_saturation(double T, HelmholtzData *D);
 
