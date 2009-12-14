@@ -77,7 +77,7 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 	, /* rho_c */ CARBONDIOXIDE_RHOC
 	, /* p_t */ CARBONDIOXIDE_PT
 
-	,  0.239 /* acentric factor, from Reid, Prausnitz & Polling */
+	,  0.2239 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_carbondioxide
 	, 34 /* power terms */
 	, (const HelmholtzPowTerm[]){
@@ -200,7 +200,7 @@ int main(void){
 	double eq1, eq2, eq3;
 	phase_criterion(250., 1045.97, 46.644, 1.785e6, &eq1, &eq2, &eq3, d);
 
-	solve_saturation(250., d);
+	phase_solve(250., d);
 
 	exit(1);
 
