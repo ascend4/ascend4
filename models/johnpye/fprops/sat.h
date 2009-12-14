@@ -13,7 +13,7 @@ void phase_criterion(
 double fprops_rhof_T_rackett(double T, const HelmholtzData *D);
 double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D);
 
-double phase_solve(double T, const HelmholtzData *D);
+double phase_solve(double T, double *rho_f, double *rho_g, const HelmholtzData *D);
 
 #endif
 

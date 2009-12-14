@@ -200,7 +200,11 @@ int main(void){
 	double eq1, eq2, eq3;
 	phase_criterion(250., 1045.97, 46.644, 1.785e6, &eq1, &eq2, &eq3, d);
 
-	phase_solve(250., d);
+	double rf, rg;
+	T = 278;
+	double p_sat = phase_solve(T, &rf, &rg, d);
+
+	fprintf(stderr,"p_sat(%f) = %f MPa\n", T, p_sat / 1e6);
 
 	exit(1);
 
