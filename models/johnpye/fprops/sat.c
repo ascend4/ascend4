@@ -233,7 +233,7 @@ static int phase_residderiv(
 }
 
 
-static int print_state(size_t iter, gsl_multiroot_fdfsolver * s){
+static int print_state_fdf(size_t iter, gsl_multiroot_fdfsolver * s){
 	fprintf(stderr,"iter = %3u: delf = %.3f delg = %.3f pi = %.3f "
 		"E = % .3e % .3e %.3e\n",
 		iter,
@@ -246,7 +246,7 @@ static int print_state(size_t iter, gsl_multiroot_fdfsolver * s){
 }
 
 
-double phase_solve(double T, const HelmholtzData *D){
+double phase_solve_fdf(double T, const HelmholtzData *D){
 	gsl_multiroot_fdfsolver *s;
 	int status;
 	const size_t n = 3;
@@ -275,12 +275,12 @@ double phase_solve(double T, const HelmholtzData *D){
 	s = gsl_multiroot_fdfsolver_alloc (fdftype, n);
 	gsl_multiroot_fdfsolver_set (s, &f, x);
 
-	print_state(iter, s);
+	print_state_fdf(iter, s);
 
 	do{
 		iter++;
 		status = gsl_multiroot_fdfsolver_iterate (s);
-		print_state(iter, s);
+		print_state_fdf(iter, s);
 		if (status)break;
 		status = gsl_multiroot_test_residual(s->f, 1e-7);
 	}while(status == GSL_CONTINUE && iter < 1000);
@@ -297,6 +297,76 @@ double phase_solve(double T, const HelmholtzData *D){
 
 	return 0;
 }
+
+
+static int print_state(size_t iter, gsl_multiroot_fsolver * s){
+	fprintf(stderr,"iter = %3u: delf = %.3f delg = %.3f pi = %.3f "
+		"E = % .3e % .3e %.3e\n",
+		iter,
+		gsl_vector_get (s->x, 0),
+		gsl_vector_get (s->x, 1),
+		gsl_vector_get (s->x, 2),
+		gsl_vector_get (s->f, 0),
+		gsl_vector_get (s->f, 1),
+		gsl_vector_get (s->f, 2));
+}
+
+
+double phase_solve(double T, double *rho_f, double *rho_g, const HelmholtzData *D){
+	gsl_multiroot_fsolver *s;
+	int status;
+	const size_t n = 3;
+	double tau = D->T_c / T;
+	size_t i, iter = 0;
+	const gsl_multiroot_fsolver_type *ftype;
+
+	PhaseSolve p = {tau, D};
+	gsl_multiroot_function f = {
+		&phase_resid,
+		n, &p
+	};
+
+	double x_init[3] = {
+		/* first guesses, such as they are... */
+		fprops_rhof_T_rackett(T, D) / D->rho_c
+		,fprops_rhog_T_chouaieb(T, D) / D->rho_c
+		,fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c
+	};
+
+	gsl_vector *x = gsl_vector_alloc (n);
+	for(i=0; i<3; ++i)gsl_vector_set(x, i, x_init[i]);
+	ftype = gsl_multiroot_fsolver_broyden;
+	s = gsl_multiroot_fsolver_alloc(ftype, n);
+	gsl_multiroot_fsolver_set(s, &f, x);
+
+	//print_state(iter, s);
+
+	do{
+		iter++;
+		//if(gsl_vector_get(s->x,0) < 0)gsl_vector_set(s->x, 0, 2 * fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c);
+		status = gsl_multiroot_fsolver_iterate(s);
+		//print_state(iter, s);
+		if(status)break;
+		status = gsl_multiroot_test_residual(s->f, 1e-7);
+	}while(status == GSL_CONTINUE && iter < 1000);
+
+	if(status!=GSL_SUCCESS)fprintf(stderr,"%s:%d: warning: status = %s\n", __FILE__,__LINE__, gsl_strerror (status));
+
+	//fprintf(stderr,"SOLUTION: pi = %f\n", gsl_vector_get(s->x, 0));
+
+
+	//fprintf(stderr,"          p  = %f\n", p_sat);
+
+	*rho_f = gsl_vector_get(s->x, 0) * D->rho_c;
+	*rho_g = gsl_vector_get(s->x, 1) * D->rho_c;
+	double p_sat = gsl_vector_get(s->x, 2) * T * D->R * D->rho_c;
+
+	gsl_multiroot_fsolver_free(s);
+	gsl_vector_free(x);
+
+	return p_sat;
+}
+
 
 #if 0
 	
