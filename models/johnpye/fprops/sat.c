@@ -1,9 +1,28 @@
-/*
-	Estimate of saturation pressure using 
+/*	ASCEND modelling environment
+	Copyright (C) 2008-2009 Carnegie Mellon University
 
-	H W Xiang "The new simple extended corresponding-states principle: vapor
-	pressure and second virial coefficient", Chemical Engineering Science,
-	57 (2002) pp 1439-1449.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Routines to calculate saturation properties using Helmholtz correlation
+	data. We first include some 'generic' saturation equations that make use
+	of the acentric factor and critical point properties to predict saturation
+	properties (pressure, vapour density, liquid density). These correlations
+	seem to be only very rough in some cases, but it is hoped that they will
+	be suitable as first-guess values that can then be fed into an iterative
+	solver to converge to an accurate result.
 */
 
 #include "sat.h"
@@ -17,8 +36,16 @@
 # include <stdlib.h>
 #endif
 
+#include <gsl/gsl_multiroots.h>
+
 #define SQ(X) ((X)*(X))
 
+/**
+	Estimate of saturation pressure using H W Xiang ''The new simple extended
+	corresponding-states principle: vapor pressure and second virial
+	coefficient'', Chemical Engineering Science,
+	57 (2002) pp 1439-1449.
+*/
 double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 
 	double Zc = d->p_c / (8314. * d->rho_c * d->T_c);
@@ -91,9 +118,13 @@ double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
 # define P2 -41.060325
 # define P3 1.1878726
 	double MMM = 2.6; /* guess, reading from Chouaieb, Fig 8 */
-	double NNN = PPP + 1./(N1*D->omega + N2);	
+	//MMM = 2.4686277;
 	double PPP = Zc / (P1 + P2*Zc*log(Zc) + P3/Zc);
+	fprintf(stderr,"PPP = %f\n",PPP);
+	//PPP = -0.6240188;
+	double NNN = PPP + 1./(N1*D->omega + N2);	
 #else
+/* exact values from Chouaieb for CO2 */
 # define MMM 2.4686277
 # define NNN 1.1345838
 # define PPP -0.6240188
@@ -105,7 +136,7 @@ double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
 
 
 /**
-	Maxwell phase criterion as described in the IAPWS95 release.
+	Maxwell phase criterion, first principles
 */
 void phase_criterion(double T, double rho_f, double rho_g, double p_sat, double *eq1, double *eq2, double *eq3, const HelmholtzData *D){
 #ifdef TEST
@@ -125,6 +156,7 @@ void phase_criterion(double T, double rho_f, double rho_g, double p_sat, double 
 	assert(!isinf(delta_g));
 	assert(!isinf(p_sat));		
 #endif
+
 	*eq1 = (p_sat - helmholtz_p(T, rho_f, D));
 	*eq2 = (p_sat - helmholtz_p(T, rho_g, D));
 	*eq3 = helmholtz_g(T, rho_f, D) - helmholtz_g(T,rho_g, D);
@@ -134,58 +166,188 @@ void phase_criterion(double T, double rho_f, double rho_g, double p_sat, double 
 #endif
 }
 
-void solve_saturation(double T, HelmholtzData *D){
+
+typedef struct PhaseSolve_struct{
+	double tau;
+	const HelmholtzData *D;
+} PhaseSolve;
+
+/**
+	Maxwell phase criterion, from equations from IAPWS-95.
+
+	We define here pi = p_sat / (R T rho_c)
+*/
+static int phase_resid(const gsl_vector *x, void *params, gsl_vector *f){
+	const double tau = ((PhaseSolve *)params)->tau;
+    const double pi = gsl_vector_get(x,0);
+    const double delta_f = gsl_vector_get(x,1);
+	const double delta_g = gsl_vector_get(x,2);
+	const HelmholtzData *D = ((PhaseSolve *)params)->D;
+
+	gsl_vector_set(f, 0, 1 + delta_f * helm_resid_del(tau, delta_f, D) - pi / delta_f);
+	gsl_vector_set(f, 1, 1 + delta_g * helm_resid_del(tau, delta_g, D) - pi / delta_g);
+	gsl_vector_set(f, 2, pi * (delta_f - delta_g) * delta_f*delta_g* (log(delta_f/delta_g) + helm_resid(delta_g,tau,D) - helm_resid(delta_f,tau,D)));
+
+	return GSL_SUCCESS;
+}
+
+
+static int phase_deriv(const gsl_vector * x, void *params, gsl_matrix * J){
+	const double tau = ((PhaseSolve *)params)->tau;
+    const double pi = gsl_vector_get(x,0);
+    const double delta_f = gsl_vector_get(x,1);
+	const double delta_g = gsl_vector_get(x,2);
+	const HelmholtzData *D = ((PhaseSolve *)params)->D;
+
+	double dE1ddelf = helm_resid_del(tau, delta_f, D) + delta_f * helm_resid_deldel(tau, delta_f, D) - pi ;
+	double dE1ddelg = 0;
+	double dE1dpi = - 1./ delta_f;
+
+	double dE2ddelf = 0;
+	double dE2ddelg = helm_resid_del(tau, delta_g, D) + delta_g * helm_resid_deldel(tau, delta_g, D) - pi ;
+	double dE2dpi = - 1./ delta_g;
+
+	double dE3ddelf = pi - delta_g * (log(delta_f/delta_g) + helm_resid(delta_g, tau, D) - helm_resid(delta_f, tau, D) + 1 - delta_f * helm_resid_del(delta_f, tau, D));
+	double dE3ddelg = -pi - delta_f * (log(delta_f/delta_g) + helm_resid(delta_g, tau, D) - helm_resid(delta_f, tau, D) - 1 + delta_g * helm_resid_del(delta_g, tau, D));
+	double dE3dpi = delta_f - delta_g;
+
+	gsl_matrix_set (J, 0, 0, dE1ddelf);
+	gsl_matrix_set (J, 0, 1, dE1ddelg);
+	gsl_matrix_set (J, 0, 2, dE1dpi);
+	gsl_matrix_set (J, 1, 0, dE2ddelf);
+	gsl_matrix_set (J, 1, 1, dE2ddelg);
+	gsl_matrix_set (J, 1, 2, dE2dpi);
+	gsl_matrix_set (J, 2, 0, dE3ddelf);
+	gsl_matrix_set (J, 2, 1, dE3ddelg);
+	gsl_matrix_set (J, 2, 2, dE3dpi);
+
+	return GSL_SUCCESS;
+}
+
+static int phase_residderiv(
+	const gsl_vector * x, void *params, gsl_vector * f, gsl_matrix * J
+){
+	phase_resid(x, params, f);
+	phase_deriv(x, params, J);
+	return GSL_SUCCESS;
+}
+
+
+static int print_state(size_t iter, gsl_multiroot_fdfsolver * s){
+	fprintf(stderr,"iter = %3u: delf = %.3f delg = %.3f pi = %.3f "
+		"E = % .3e % .3e %.3e\n",
+		iter,
+		gsl_vector_get (s->x, 0),
+		gsl_vector_get (s->x, 1),
+		gsl_vector_get (s->x, 2),
+		gsl_vector_get (s->f, 0),
+		gsl_vector_get (s->f, 1),
+		gsl_vector_get (s->f, 2));
+}
+
+
+double phase_solve(double T, const HelmholtzData *D){
+	gsl_multiroot_fdfsolver *s;
+	int status;
+	const size_t n = 3;
+	double tau = D->T_c / T;
+	size_t i, iter = 0;
+	const gsl_multiroot_fdfsolver_type *fdftype;
+
+	PhaseSolve p = {tau, D};
+	gsl_multiroot_function_fdf f = {
+		&phase_resid,
+		&phase_deriv,
+		&phase_residderiv,
+		n, &p
+	};
+
+	double x_init[3] = {
+		/* first guesses, such as they are... */
+		fprops_rhof_T_rackett(T, D) / D->rho_c
+		,fprops_rhog_T_chouaieb(T, D) / D->rho_c
+		,fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c
+	};
+
+	gsl_vector *x = gsl_vector_alloc (n);
+	for(i=0; i<3; ++i)gsl_vector_set(x, i, x_init[i]);
+	fdftype = gsl_multiroot_fdfsolver_hybridsj;
+	s = gsl_multiroot_fdfsolver_alloc (fdftype, n);
+	gsl_multiroot_fdfsolver_set (s, &f, x);
+
+	print_state(iter, s);
+
+	do{
+		iter++;
+		status = gsl_multiroot_fdfsolver_iterate (s);
+		print_state(iter, s);
+		if (status)break;
+		status = gsl_multiroot_test_residual(s->f, 1e-7);
+	}while(status == GSL_CONTINUE && iter < 1000);
+
+	fprintf(stderr,"status = %s\n", gsl_strerror (status));
+
+	fprintf(stderr,"SOLUTION: pi = %f\n", gsl_vector_get(s->f, 0));
+
+	double p_sat = gsl_vector_get(s->f, 0) * T * D->R * D->rho_c;
+
+	fprintf(stderr,"          p  = %f\n", p_sat);
+	gsl_multiroot_fdfsolver_free (s);
+	gsl_vector_free (x);
+
+	return 0;
+}
+
+#if 0
+	
+
+#ifdef TEST
+	fprintf(stderr,"PHASE CRITERION: T = %f, rho_f = %f, rho_g = %f, p_sat = %f\n", T, rho_f, rho_g, p_sat);
+#endif
+	double delta_f, delta_g, tau;
+    tau = D->T_c / T;
+
+	delta_f = rho_f / D->rho_c;
+	delta_g = rho_g/ D->rho_c;
+
+#ifdef TEST
+	assert(!isnan(delta_f));
+	assert(!isnan(delta_g));
+	assert(!isnan(p_sat));		
+	assert(!isinf(delta_f));
+	assert(!isinf(delta_g));
+	assert(!isinf(p_sat));		
+#endif
+
+	*eq1 = (p_sat - helmholtz_p(T, rho_f, D));
+	*eq2 = (p_sat - helmholtz_p(T, rho_g, D));
+	*eq3 = helmholtz_g(T, rho_f, D) - helmholtz_g(T,rho_g, D);
+
+#ifdef TEST
+	fprintf(stderr,"eq1 = %e\t\teq2 = %e\t\teq3 = %e\n", *eq1, *eq2, *eq3);
+#endif
+}
+
+
+
+
+void solve_saturation(double T, const HelmholtzData *D){
 	double rho_f, rho_g, p_sat;
 
+	/* first guesses, such as they are... */
 	p_sat = fprops_psat_T_xiang(T, D);
+	rho_f = fprops_rhof_T_rackett(T, D);
+	rho_g = fprops_rhog_T_chouaieb(T, D);
 
-	/* correlation of Rackett, Spencer & Danner (1972) */
-	/* see http://dx.doi.org/10.1002/aic.690250412 */
-	double Zc = D->rho_c * D->R * D->T_c / D->p_c;
-	double Tau = 1. - T/D->T_c;
-	double vf = (D->R * D->T_c / D->p_c) * pow(Zc, -1 - pow(Tau, 2./7));
-
-	rho_f = 1./vf;
+	
 
 #ifdef TEST
 	fprintf(stderr,"Rackett liquid density: %f\n", rho_f);	
-#endif
-
-	/* correlation of Chouaieb, Ghazouani, Bellagi */
-	/* see http://dx.doi.org/10.1016/j.tca.2004.05.017 */
-
-#if 0
-# define N1 -0.1497547
-# define N2 0.6006565 
-# define P1 -19.348354
-# define P2 -41.060325
-# define P3 1.1878726
-	double MMM = 2.6; /* guess, reading from Chouaieb, Fig 8 */
-	double NNN = PPP + 1./(N1*D->omega + N2);	
-	double PPP = Zc / (P1 + P2*Zc*log(Zc) + P3/Zc);
-#else
-# define MMM 2.4686277
-# define NNN 1.1345838
-# define PPP -0.6240188
-#endif
-
-	double alpha = exp(pow(Tau,1./3) + sqrt(Tau) + Tau + pow(Tau, MMM));
-	rho_g = D->rho_c * PPP * (alpha*pow(Tau,NNN) - exp(1-alpha));
-
-#ifdef TEST
 	fprintf(stderr,"Chouaieb vapour density: %f\n", rho_g);
 #endif
-	return;
-}
 
-	/* LOOKS WRONG... GIVES NEGATIVE rho_g... */
-
-	
-	
-#if 0	
-	
-
-	
+	double delta_f, delta_g, eq1, eq2, eq3, tau;
+		
 	int i = 40;
 	while(--i > 0){
 		delta_f = rho_f / D->rho_c;
@@ -199,10 +361,9 @@ void solve_saturation(double T, HelmholtzData *D){
 		assert(!isinf(delta_g));
 		assert(!isinf(p_sat));		
 #endif
-		eq1 = (p_sat - helmholtz_p(T, rho_f, D));
-		eq2 = (p_sat - helmholtz_p(T, rho_g, D));
-		eq3 = (p_sat * (delta_f - delta_g) / D->rho_c - delta_f*delta_g/(D->R * T)*(helm_resid(delta_f,tau,D) - helm_resid(delta_g,tau,D) + log(delta_f/delta_g)));
-
+		
+		phase_criterion(T, rho_f, rho_g, p_sat, &eq1, &eq2, &eq3, D);
+			
 #ifdef TEST    
 		fprintf(stderr,"p_sat = %f\trho_f = %f\trho_g = %f\teq1 = %e\t\teq2 = %e\t\teq3 = %e\n",p_sat, rho_f, rho_g, eq1, eq2, eq3);
 		assert(!isnan(eq1));
@@ -247,6 +408,6 @@ void solve_saturation(double T, HelmholtzData *D){
 
 	//return eq3;
 }
+
+
 #endif
-
-
