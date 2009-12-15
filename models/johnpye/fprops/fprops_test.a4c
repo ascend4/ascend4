@@ -1,4 +1,4 @@
-(* test of the fluid properties routines currently implemented in asc_mbwr.c *)
+(* test via ASCEND of the fluid properties routines implemented in helmholtz.c *)
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";

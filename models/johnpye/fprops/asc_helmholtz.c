@@ -65,6 +65,8 @@ ExtBBoxFunc helmholtz_u_calc;
 ExtBBoxFunc helmholtz_s_calc;
 ExtBBoxFunc helmholtz_h_calc;
 ExtBBoxFunc helmholtz_a_calc;
+ExtBBoxFunc helmholtz_g_calc;
+ExtBBoxFunc helmholtz_phase_calc;
 
 /*------------------------------------------------------------------------------
   GLOBALS
@@ -79,6 +81,9 @@ static const char *helmholtz_u_help = "Calculate specific internal energy from t
 static const char *helmholtz_s_help = "Calculate specific entropy from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_h_help = "Calculate specific enthalpy from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_a_help = "Calculate specific Helmholtz energy from temperature and density, using Helmholtz fundamental correlation";
+static const char *helmholtz_g_help = "Calculate specific Gibbs energy from temperature and density, using Helmholtz fundamental correlation";
+
+static const char *helmholtz_phase_help = "Calculate Maxwell phase criterion residuals using Helmholtz fundamental correlation";
 
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
@@ -124,6 +129,8 @@ ASC_EXPORT int helmholtz_register(){
 	CALCFN(helmholtz_s,2,1);
 	CALCFN(helmholtz_h,2,1);
 	CALCFN(helmholtz_a,2,1);
+	CALCFN(helmholtz_g,2,1);
+	CALCFN(helmholtz_phase,4,3);
 
 #undef CALCFN
 
@@ -187,10 +194,10 @@ int helmholtz_prepare(struct BBoxInterp *bbox,
   EVALULATION ROUTINES
 */
 
-#define CALCPREPARE \
+#define CALCPREPARE(NIN,NOUT) \
 	/* a few checks about the input requirements */ \
-	if(ninputs != 2)return -1; \
-	if(noutputs != 1)return -2; \
+	if(ninputs != NIN)return -1; \
+	if(noutputs != NOUT)return -2; \
 	if(inputs==NULL)return -3; \
 	if(outputs==NULL)return -4; \
 	if(bbox==NULL)return -5; \
@@ -214,7 +221,7 @@ int helmholtz_p_calc(struct BBoxInterp *bbox,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	CALCPREPARE;
+	CALCPREPARE(2,1);
 
 	/* first input is temperature, second is molar density */
 	if(bbox->task == bb_func_eval){
@@ -240,7 +247,7 @@ int helmholtz_u_calc(struct BBoxInterp *bbox,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	CALCPREPARE;
+	CALCPREPARE(2,1);
 
 	/* first input is temperature, second is molar density */
 	if(bbox->task == bb_func_eval){
@@ -256,7 +263,7 @@ int helmholtz_u_calc(struct BBoxInterp *bbox,
 
 
 /**
-	Evaluation function for 'helmholtz_h'
+	Evaluation function for 'helmholtz_s'
 	@param jacobian ignored
 	@return 0 on success
 */
@@ -265,7 +272,7 @@ int helmholtz_s_calc(struct BBoxInterp *bbox,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	CALCPREPARE;
+	CALCPREPARE(2,1);
 
 	/* first input is temperature, second is molar density */
 	outputs[0] = helmholtz_s(inputs[0], inputs[1], helmholtz_data);
@@ -285,7 +292,7 @@ int helmholtz_h_calc(struct BBoxInterp *bbox,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	CALCPREPARE;
+	CALCPREPARE(2,1);
 
 	/* first input is temperature, second is molar density */
 	if(bbox->task == bb_func_eval){
@@ -302,7 +309,7 @@ int helmholtz_h_calc(struct BBoxInterp *bbox,
 
 
 /**
-	Evaluation function for 'helmholtz_h'
+	Evaluation function for 'helmholtz_a'
 	@param jacobian ignored
 	@return 0 on success
 */
@@ -311,7 +318,7 @@ int helmholtz_a_calc(struct BBoxInterp *bbox,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	CALCPREPARE;
+	CALCPREPARE(2,1);
 
 	/* first input is temperature, second is molar density */
 	outputs[0] = helmholtz_a(inputs[0], inputs[1], helmholtz_data);
@@ -321,4 +328,53 @@ int helmholtz_a_calc(struct BBoxInterp *bbox,
 }
 
 
+/**
+	Evaluation function for 'helmholtz_g'
+	@param jacobian ignored
+	@return 0 on success
+*/
+int helmholtz_g_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(2,1);
+
+	/* first input is temperature, second is molar density */
+	outputs[0] = helmholtz_g(inputs[0], inputs[1], helmholtz_data);
+
+	/* no need to worry about error states etc. */
+	return 0;
+}
+
+
+/**
+	Evaluation function for 'helmholtz_phase'
+	@param jacobian ignored
+	@return 0 on success
+*/
+int helmholtz_phase_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(4,3);
+
+#define T inputs[0]
+#define PSAT inputs[1]
+#define RHOF inputs[2]
+#define RHOG inputs[3]
+	
+	outputs[0] = PSAT - helmholtz_p(T,RHOF,helmholtz_data);
+	outputs[1] = PSAT - helmholtz_p(T,RHOG,helmholtz_data);
+	outputs[2] = helmholtz_g(T,RHOG,helmholtz_data) - helmholtz_g(T,RHOF,helmholtz_data);
+
+#undef T
+#undef PSAT
+#undef RHOF
+#undef RHOG
+
+	/* we won't worry about error states etc. */
+	return 0;
+}
 
