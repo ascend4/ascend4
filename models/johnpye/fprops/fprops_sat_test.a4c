@@ -1,0 +1,70 @@
+(* test of the fluid properties routines currently implemented in helmholtz.c *)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/helmholtz";
+
+MODEL helmholtz_conf(
+	component IS_A symbol_constant;
+);
+END helmholtz_conf;
+
+
+MODEL fprops_sat_test;
+
+	T IS_A temperature;
+	p IS_A pressure;
+	rho_f, rho_g IS_A mass_density;
+	g IS_A specific_energy;
+
+	conf IS_A helmholtz_conf('carbondioxide');
+
+(*
+	E1: helmholtz_p(
+		T, rho_f : INPUT;
+		p : OUTPUT;
+		conf : DATA
+	);
+
+	E2: helmholtz_p(
+		T, rho_g : INPUT;
+		p : OUTPUT;
+		conf : DATA
+	);
+	
+	E3: helmholtz_g(
+		T, rho_f : INPUT;
+		g : OUTPUT;
+		conf : DATA
+	);
+
+	E4: helmholtz_g(
+		T, rho_g : INPUT;
+		g : OUTPUT;
+		conf : DATA
+	);
+
+*)
+	err[1..3] IS_A solver_var;
+	FOR i IN [1..3] CREATE
+		err[i] = 0;
+	END FOR;
+
+	sat: helmholtz_phase(
+		T, p, rho_f, rho_g : INPUT;
+		err[1], err[2], err[3] : OUTPUT;
+		conf : DATA
+	);
+
+METHODS
+METHOD on_load;
+	FIX T;
+	T := 250 {K};
+
+	rho_f := 1000 {kg/m^3};
+	rho_g := 10 {kg/m^3};
+END on_load;
+
+END fprops_sat_test;	
+
+
