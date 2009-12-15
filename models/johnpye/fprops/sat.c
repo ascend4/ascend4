@@ -28,11 +28,11 @@
 #include "sat.h"
 
 #include "helmholtz_impl.h"
+# include <assert.h>
 
 #include <math.h>
 #ifdef TEST
 # include <stdio.h>
-# include <assert.h>
 # include <stdlib.h>
 #endif
 
@@ -170,6 +170,7 @@ void phase_criterion(double T, double rho_f, double rho_g, double p_sat, double 
 typedef struct PhaseSolve_struct{
 	double tau;
 	const HelmholtzData *D;
+	const double *scaling;
 } PhaseSolve;
 
 /**
@@ -180,18 +181,30 @@ typedef struct PhaseSolve_struct{
 static int phase_resid(const gsl_vector *x, void *params, gsl_vector *f){
 	const double tau = ((PhaseSolve *)params)->tau;
     const double pi = gsl_vector_get(x,0);
-    const double delta_f = gsl_vector_get(x,1);
-	const double delta_g = gsl_vector_get(x,2);
+    double delta_f = gsl_vector_get(x,1);
+	double delta_g = gsl_vector_get(x,2);
 	const HelmholtzData *D = ((PhaseSolve *)params)->D;
+	const double *scaling = ((PhaseSolve *)params)->scaling;
 
-	gsl_vector_set(f, 0, 1 + delta_f * helm_resid_del(tau, delta_f, D) - pi / delta_f);
-	gsl_vector_set(f, 1, 1 + delta_g * helm_resid_del(tau, delta_g, D) - pi / delta_g);
-	gsl_vector_set(f, 2, pi * (delta_f - delta_g) * delta_f*delta_g* (log(delta_f/delta_g) + helm_resid(delta_g,tau,D) - helm_resid(delta_f,tau,D)));
+	assert(!isinf(pi));
+	assert(!isinf(delta_f));
+	assert(!isinf(delta_g));
+
+	gsl_vector_set(f, 0, scaling[0] * (delta_f + delta_f * delta_f * helm_resid_del(tau, delta_f, D) - pi));
+	gsl_vector_set(f, 1, scaling[1] * (1 + delta_g * helm_resid_del(tau, delta_g, D) - pi/delta_g));
+	gsl_vector_set(f, 2, scaling[2] * (pi * (delta_f - delta_g) - delta_f * delta_g * (log(delta_f / delta_g)  + helm_resid(delta_g,tau,D) - helm_resid(delta_f,tau,D))));
+
+
+	if(isnan(gsl_vector_get(f,2)) || isnan(gsl_vector_get(f,2)) || isnan(gsl_vector_get(f,2))){
+		fprintf(stderr,"NaN encountered... ");
+	}
+
+	//gsl_vector_set(f, 2, pi * (delta_f - delta_g) * delta_f*delta_g* (log(delta_f/delta_g) + helm_resid(delta_g,tau,D) - helm_resid(delta_f,tau,D)));
 
 	return GSL_SUCCESS;
 }
 
-
+#if 0
 static int phase_deriv(const gsl_vector * x, void *params, gsl_matrix * J){
 	const double tau = ((PhaseSolve *)params)->tau;
     const double pi = gsl_vector_get(x,0);
@@ -232,7 +245,6 @@ static int phase_residderiv(
 	return GSL_SUCCESS;
 }
 
-
 static int print_state_fdf(size_t iter, gsl_multiroot_fdfsolver * s){
 	fprintf(stderr,"iter = %3u: delf = %.3f delg = %.3f pi = %.3f "
 		"E = % .3e % .3e %.3e\n",
@@ -264,9 +276,9 @@ double phase_solve_fdf(double T, const HelmholtzData *D){
 
 	double x_init[3] = {
 		/* first guesses, such as they are... */
-		fprops_rhof_T_rackett(T, D) / D->rho_c
+		fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c
+		,fprops_rhof_T_rackett(T, D) / D->rho_c
 		,fprops_rhog_T_chouaieb(T, D) / D->rho_c
-		,fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c
 	};
 
 	gsl_vector *x = gsl_vector_alloc (n);
@@ -281,7 +293,8 @@ double phase_solve_fdf(double T, const HelmholtzData *D){
 		iter++;
 		status = gsl_multiroot_fdfsolver_iterate (s);
 		print_state_fdf(iter, s);
-		if (status)break;
+		if(status)break;
+		if(gsl_vector_get(s->x,2) > D->rho_c)gsl_vector_set(s->x,2,D->rho_c);
 		status = gsl_multiroot_test_residual(s->f, 1e-7);
 	}while(status == GSL_CONTINUE && iter < 1000);
 
@@ -297,22 +310,22 @@ double phase_solve_fdf(double T, const HelmholtzData *D){
 
 	return 0;
 }
-
+#endif
 
 static int print_state(size_t iter, gsl_multiroot_fsolver * s){
-	fprintf(stderr,"iter = %3u: delf = %.3f delg = %.3f pi = %.3f "
+	fprintf(stderr,"iter = %3u: pi = %.3f delf = %.3f delg = %.3f  "
 		"E = % .3e % .3e %.3e\n",
 		iter,
-		gsl_vector_get (s->x, 0),
-		gsl_vector_get (s->x, 1),
-		gsl_vector_get (s->x, 2),
+		gsl_vector_get(s->x, 0),
+		gsl_vector_get(s->x, 1),
+		gsl_vector_get(s->x, 2),
 		gsl_vector_get (s->f, 0),
 		gsl_vector_get (s->f, 1),
 		gsl_vector_get (s->f, 2));
 }
 
 
-double phase_solve(double T, double *rho_f, double *rho_g, const HelmholtzData *D){
+int phase_solve(double T, double *p_sat, double *rho_f, double *rho_g, const HelmholtzData *D){
 	gsl_multiroot_fsolver *s;
 	int status;
 	const size_t n = 3;
@@ -320,17 +333,26 @@ double phase_solve(double T, double *rho_f, double *rho_g, const HelmholtzData *
 	size_t i, iter = 0;
 	const gsl_multiroot_fsolver_type *ftype;
 
-	PhaseSolve p = {tau, D};
+	const double scaling[3] = {1., 1., 0.01};
+
+	PhaseSolve p = {
+		tau
+		, D
+		, scaling
+	};
+
 	gsl_multiroot_function f = {
 		&phase_resid,
 		n, &p
 	};
 
+	/* TODO use the first guess 'provided' if psat, rho_f, rho_g less than zero? */
+
 	double x_init[3] = {
 		/* first guesses, such as they are... */
-		fprops_rhof_T_rackett(T, D) / D->rho_c
+		fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c
+		,fprops_rhof_T_rackett(T, D) / D->rho_c
 		,fprops_rhog_T_chouaieb(T, D) / D->rho_c
-		,fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c
 	};
 
 	gsl_vector *x = gsl_vector_alloc (n);
@@ -341,30 +363,80 @@ double phase_solve(double T, double *rho_f, double *rho_g, const HelmholtzData *
 
 	//print_state(iter, s);
 
+	double pi_xiang = fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c;
+	double delg_chouaieb = fprops_rhog_T_chouaieb(T, D) / D->rho_c;
+	double delf_rackett = fprops_rhof_T_rackett(T, D) / D->rho_c;
+
+	assert(!isnan(pi_xiang));
+	assert(!isnan(delg_chouaieb));
+	assert(!isnan(delf_rackett));
+
 	do{
 		iter++;
-		//if(gsl_vector_get(s->x,0) < 0)gsl_vector_set(s->x, 0, 2 * fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c);
-		status = gsl_multiroot_fsolver_iterate(s);
-		//print_state(iter, s);
-		if(status)break;
-		status = gsl_multiroot_test_residual(s->f, 1e-7);
-	}while(status == GSL_CONTINUE && iter < 1000);
 
-	if(status!=GSL_SUCCESS)fprintf(stderr,"%s:%d: warning: status = %s\n", __FILE__,__LINE__, gsl_strerror (status));
+		status = gsl_multiroot_fsolver_iterate(s);
+
+		print_state(iter, s);
+		if(status)break;
+
+		status = gsl_multiroot_test_residual(s->f, 1e-7);
+
+		double pi = gsl_vector_get(s->x,0);
+		double delf = gsl_vector_get(s->x,1);
+		double delg = gsl_vector_get(s->x,2);
+
+
+#define VAR_PI 0
+#define VAR_DELF 1
+#define VAR_DELG 2
+#define CHECK_RESET(COND, VAR, NEWVAL)\
+	if(COND){\
+		gsl_vector_set(s->x,VAR,NEWVAL);\
+		fprintf(stderr,"RESET %s to %s = %f (FAILED %s)\n", #VAR, #NEWVAL, NEWVAL, #COND);\
+	}
+
+#define CHECK_RESET_CONTINUE(COND, VAR, NEWVAL)\
+	if(COND){\
+		gsl_vector_set(s->x,VAR,NEWVAL);\
+		fprintf(stderr,"RESET %s to %s = %f (FAILED %s)\n", #VAR, #NEWVAL, NEWVAL, #COND);\
+		continue;\
+	}
+
+		//CHECK_RESET_CONTINUE(pi < 0, VAR_PI, pi_xiang);
+		CHECK_RESET_CONTINUE(delg < 0, VAR_DELG, delg_chouaieb);
+		CHECK_RESET_CONTINUE(delf < 0, VAR_DELF, delf_rackett);
+
+#if 0
+		CHECK_RESET_CONTINUE(delf < 1, VAR_DELF, delf_rackett);
+		CHECK_RESET_CONTINUE(delg > 1, VAR_DELG, delg_chouaieb);
+
+		CHECK_RESET_CONTINUE(pi > 2. * pi_xiang, VAR_PI, pi_xiang)
+		else CHECK_RESET_CONTINUE(pi < 0.5 * pi_xiang, VAR_PI, pi_xiang)
+
+		CHECK_RESET_CONTINUE(delg < 0.8 * delg_chouaieb, VAR_DELG, delg_chouaieb)
+		else CHECK_RESET_CONTINUE(delg > 1.5 * delg_chouaieb, VAR_DELG, delg_chouaieb);
+
+		//if(gsl_vector_get(s->x,1) < D->rho_c)gsl_vector_set(s->x,1,2 * D->rho_c);
+		//if(gsl_vector_get(s->x,2) > D->rho_c)gsl_vector_set(s->x,2,0.5 * D->rho_c);
+
+#endif
+	}while(status == GSL_CONTINUE && iter < 20);
+
+	if(status!=GSL_SUCCESS)fprintf(stderr,"%s:%d: warning: (%d) status = %s\n", __FILE__,__LINE__, status, gsl_strerror (status));
 
 	//fprintf(stderr,"SOLUTION: pi = %f\n", gsl_vector_get(s->x, 0));
 
 
 	//fprintf(stderr,"          p  = %f\n", p_sat);
 
-	*rho_f = gsl_vector_get(s->x, 0) * D->rho_c;
-	*rho_g = gsl_vector_get(s->x, 1) * D->rho_c;
-	double p_sat = gsl_vector_get(s->x, 2) * T * D->R * D->rho_c;
+	*p_sat = gsl_vector_get(s->x, 0) * T * D->R * D->rho_c;
+	*rho_f = gsl_vector_get(s->x, 1) * D->rho_c;
+	*rho_g = gsl_vector_get(s->x, 2) * D->rho_c;
 
 	gsl_multiroot_fsolver_free(s);
 	gsl_vector_free(x);
 
-	return p_sat;
+	return status;
 }
 
 
