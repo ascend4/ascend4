@@ -209,9 +209,12 @@ for d in dependencies:
 			continue
 
 		if not i.isInstalled:
+			# if it's not installed, it's not OK
 			continue
+
 		if m[1] and m[2]:
-			cmp = apt_pkg.VersionCompare(m[1], c[m[0]].installed.version)
+			# if version number is specified
+			cmp = apt_pkg.VersionCompare(c[m[0]].installed.version,m[1])
 			if m[2]=="<<" and cmp<0:
 				ok = 1
 			elif m[2]=="<=" and cmp<=0:
@@ -222,7 +225,9 @@ for d in dependencies:
 				ok = 1
 			elif m[2]==">>" and cmp>0:
 				ok = 1
-		ok = 1
+		else:
+			# no version number specified
+			ok = 1
 	if not ok:
 		depsmissing.append(d)
 
