@@ -185,7 +185,7 @@ if debianname != head:
 
 # check for build-time dependencies
 
-dependencies = ['build-essential','fakeroot']
+dependencies = ['build-essential','fakeroot','debhelper']
 
 if 'Build-Depends' in control:
 	#print "Build-Depends:",control['Build-Depends']
@@ -324,7 +324,7 @@ for _f in resultfiles:
 
 	if not overwrite and os.path.exists(_p2):
 		failedtomovefiles.append(_f)
-	os.rename(_f, _p2)
+	shutil.move(_f, _p2)
 
 if failedtomovefiles:
 	raise RuntimeError("Failed to move the following files (check --nooverwrite): %s",failedtomovefiles)
