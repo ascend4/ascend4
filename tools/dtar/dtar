@@ -100,7 +100,6 @@ ffull = os.path.abspath(f)
 t = tarfile.open(ffull)
 M = t.getmembers()
 print M[0].name
-
 # split the top-level directory name from that path
 
 for i in [0,1]:
@@ -190,12 +189,41 @@ dependencies = ['build-essential','fakeroot','debhelper']
 if 'Build-Depends' in control:
 	#print "Build-Depends:",control['Build-Depends']
 	c = apt.Cache()
-	dependencies += control['Build-Depends'].split(', ')
+	splitre = re.compile(r"\s*,\s+")
+	dependencies += splitre.split(control['Build-Depends'])
+
+	print "DEPS = ",dependencies
+
 
 print "Checking build dependencies..."
 depsmissing = []
+depre = re.compile(r"^(\S+)(\s*\(\s*([<>=]+\s*\S+)\))?$") # \s*\(\s*({<<|<=|=|>=|>>})\s*([^\)]+)\)\s*\[([^\]])\]$
+import apt_pkg
 for d in dependencies:
-	if d not in c or not c[d].isInstalled:
+	mm = apt_pkg.ParseDepends(d)[0]
+	ok = 0
+	for m in mm:
+		try:
+			i = c[m[0]]
+		except KeyError:
+			continue
+
+		if not i.isInstalled:
+			continue
+		if m[1] and m[2]:
+			cmp = apt_pkg.VersionCompare(m[1], c[m[0]].installed.version)
+			if m[2]=="<<" and cmp<0:
+				ok = 1
+			elif m[2]=="<=" and cmp<=0:
+				ok = 1
+			elif m[2]=="=" and cmp==0:
+				ok = 1
+			elif m[2]==">=" and cmp>=0:
+				ok = 1
+			elif m[2]==">>" and cmp>0:
+				ok = 1
+		ok = 1
+	if not ok:
 		depsmissing.append(d)
 
 if depsmissing:
