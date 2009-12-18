@@ -201,6 +201,7 @@ Section "ASCEND (required)"
 	File "..\LICENSE.txt"
 	File "..\CHANGELOG.txt"
 	File "..\README-windows.txt"
+	File "${IPOPTDLL}"
 	
 	; Model Library
 	SetOutPath $INSTDIR\models
@@ -217,6 +218,7 @@ Section "ASCEND (required)"
 	File "..\solvers\lsode\lsode_ascend.dll"
 	File "..\solvers\ida\ida_ascend.dll"
 	File "..\solvers\dopri5\dopri5_ascend.dll"
+	File "..\solvers\ipopt\ipopt_ascend.dll"
 	
 	SetOutPath $INSTDIR
 	;File "Makefile.bt"
@@ -578,6 +580,7 @@ Section "Uninstall"
 	Delete $INSTDIR\ascend.ico
 	Delete $INSTDIR\Makefile.bt
 	Delete $INSTDIR\ascend.syn
+	Delete $INSTDIR\ipopt38.dll
 	RMDir /r $INSTDIR\models
 	Delete $INSTDIR\solvers\qrslv_ascend.dll
 	Delete $INSTDIR\solvers\conopt_ascend.dll
@@ -586,6 +589,7 @@ Section "Uninstall"
 	Delete $INSTDIR\solvers\lsode_ascend.dll
 	Delete $INSTDIR\solvers\ida_ascend.dll
 	Delete $INSTDIR\solvers\dopri5_ascend.dll
+	Delete $INSTDIR\solvers\ipopt_ascend.dll
 	RMDir $INSTDIR\solvers
 
 	; Remove directories used
