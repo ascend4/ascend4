@@ -40,6 +40,7 @@
 #include <ascend/utilities/ascConfig.h>
 
 #include <ascend/linear/mtx.h>
+#include <ascend/general/ltmatrix.h>
 
 #include "var.h"
 #include "rel.h"
@@ -176,6 +177,34 @@ ASC_DLLSPEC int relman_diff2(struct rel_relation *rel,
 	@return 0 on success, non-zero if an error is encountered in the calculation
 */
 
+
+/* return 0 on success (derivatives, variables and count are output vars too) */
+ASC_DLLSPEC int relman_diff2_rev(struct rel_relation *rel, 
+								 const var_filter_t *filter,
+		 						 real64 *derivatives,
+		   						 int32 *variables,
+								 int32 *count, int32 safe);
+
+/**<
+  similar to relman_diff2, but uses revers Automatic differentiation to obtain derivatives
+ */
+		
+ASC_DLLSPEC int relman_hess(struct rel_relation *rel,
+							const var_filter_t *filter,
+							hessian_mtx *hess_matrix,
+							int32 *count,
+							unsigned long max_dimension,
+							int32 safe);	
+/**<
+	Hessian Matrix Evaluation,
+	@param rel is the relation whose Hessian Matrix is desired
+	@param filter is the variable filter
+	@param hess_matrix is the Lower Triangular Matrix into which values are filled
+	@param count is the count of elements filled
+	@param safe is the boolean value indicating whether evaluation is safe or non-safe
+
+	@return 0 on success, non-zero if an error is encountered in the calculation
+*/
 
 ASC_DLLSPEC int relman_diff3(struct rel_relation *rel,
                         const var_filter_t *filter,

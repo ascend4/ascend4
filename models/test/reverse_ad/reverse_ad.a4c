@@ -1,0 +1,36 @@
+REQUIRE "atoms.a4l";
+
+MODEL reverse_ad;
+
+	x IS_A factor;
+	y IS_A factor;
+	z IS_A factor;
+
+	relation1: x+y+z=0;
+	(* Add more relations Here *)
+	relation2: x^2*y+2*x+y*z=0;
+	relation3: sin(x*y)+cos(y)+tan(z)=0;
+	relation4: x*exp(x*y)/z=0;
+	relation5: ln(x^2+2*y)*(-z)=0;
+	relation6: y*x^2+z^2+y^3=0;
+	relation7: x*exp(x*y*z)=0;
+	relation8: x^y+y^z+z^x=0;
+	relation9: x/(y+z)=0;
+
+METHODS
+
+METHOD values;
+	x := 1;
+	y := 1;
+	z := 2;
+END values;
+
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
+
+METHOD self_test;
+END self_test;
+
+END reverse_ad;

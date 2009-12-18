@@ -34,7 +34,8 @@
 	T(stack) \
 	T(table) \
 	T(tm_time) \
-	T(ospath)
+	T(ospath) \
+	T(ltmatrix)
 /* 	T(qsort1) */
 
 #define PROTO_GENERAL(NAME) PROTO(general,NAME)

@@ -75,7 +75,7 @@
 
 /*extern int safe_print_errors;*/
 
-extern void safe_error_to_stderr(enum safe_err *err);
+ASC_DLLSPEC void safe_error_to_stderr(enum safe_err *err);
 /**<
  *  The variable safe_err will be set to the appropriate value whenever
  *  an undefined numerical calculation is attempted.

@@ -1,0 +1,221 @@
+(*TODO:
+fix bug so name subscripts get assigned from symbol concatenation correctly.
+*)
+UNITS
+PI= {3.1415926535897932385};   
+END UNITS;
+
+DEFINITION relation
+
+    included IS_A boolean;
+    message     IS_A symbol;
+
+    included := TRUE;
+    message := 'none';
+
+	(* analytic values can go here in the test suite for checking with a C function if
+	we want something totally self-contained. but only works for up to 3 var equations. *) 
+    partial_1 IS_A real;
+    partial_2 IS_A real;
+    partial_3 IS_A real;
+    partial_1_name IS_A symbol;
+    partial_2_name IS_A symbol;
+    partial_3_name IS_A symbol;
+
+    (* for 2 and 3 var tests, we manually set these and the advanced test code checks against matching names.
+e.g. eq_xy: 2 = x*y; 
+	eq_xy.partial_1 := y; 
+	eq_xy.partial_2 := x; 
+	eq_xy.partial_1_name := 'x'; 
+	eq_xy.partial_1_name := 'y';
+note: approach doesn't work for variable arrays very well, as naming array elements at the C level is kind of hard.
+*)
+
+END relation;
+
+ATOM solver_var REFINES real
+        DEFAULT 0.5 {?};
+
+    lower_bound IS_A real;
+    upper_bound IS_A real;
+    nominal     IS_A real;
+    fixed       IS_A boolean;
+    message     IS_A symbol;
+
+    fixed := FALSE;
+    lower_bound := -1e20 {?};
+    upper_bound := 1e20 {?};
+    nominal := 0.5 {?};
+    message := 'none';
+
+END solver_var;
+
+ATOM boolean_var REFINES boolean
+        DEFAULT TRUE;
+
+    nominal     IS_A boolean;
+    fixed       IS_A boolean;
+    fixed := FALSE;
+    nominal := TRUE;
+
+END boolean_var;
+
+ATOM generic_real REFINES solver_var
+        DIMENSIONLESS
+        DEFAULT 0.5;
+        lower_bound := -1e20;
+        upper_bound := 1e20;
+        nominal := 0.5;
+END generic_real;
+
+
+MODEL test_revad_k;
+(* this model may never solve consistently and is deeply structurally singular. it's just for testing gradients *)
+
+a,b,c,d,e,f, pi IS_A real_constant;
+a :== 1{};
+b :== 2{};
+c :== 3{};
+d :== 5{};
+e :== 7{};
+f :== 11{};
+pi :== 1{PI};
+
+m,n,o,p,q IS_A integer_constant;
+m :== 10;
+n :== 20;
+o :== 30;
+p :== 40;
+q :== 50;
+
+j, k IS_A integer;
+
+j := -1;
+k := -2;
+
+numnames IS_A set OF symbol_constant;
+numnames :==['zero','one','half', 'minus_half', 'pi', 'half_pi', 'fourth_pi'];
+x[1..20], y[numnames] IS_A generic_real;
+
+y['zero'] := 0{};
+y['one'] := 1{};
+y['half'] := 0.5{};
+y['minus_half'] := -0.5{};
+y['pi'] := 1{PI};
+y['half_pi'] := 0.5{PI};
+y['fourth_pi'] := 0.25{PI};
+
+tmp IS_A symbol;
+x[1..20] := 1/2.0;
+
+pyramid1: x[6]  = x[1]*x[2]^4*x[3]^6*x[4]^4*x[5];
+
+pyramid2: x[6]  =
+	(
+		(
+	 	(x[1]*x[2]) * 
+		(x[2]*x[3])  
+		) *
+		(
+		(x[2]*x[3]) *
+		(x[3]*x[4]) 
+		)  
+	) *
+	(
+		(
+		(x[2]*x[3]) *
+		(x[3]*x[4]) 
+		) * 
+		(
+		(x[3]*x[4]) * 
+		(x[4]*x[5])
+		)
+	)
+
+;
+
+(* exp, ln, log10, sin, cos, tan, sqr, sqrt, arcsin, arccos, arctan, ? erf, lnm, sinh, cosh, tanh arcsinh arccosh arctanh cube, cbrt, abs, hold *)
+
+FOR i IN numnames CREATE
+
+
+	(* RHS efunc tests: note FPE (domain or range error) will be expected for some values of i *)
+
+	tmp := 'y['+i+']'; (* unsupported use of symbols (concatenation) *)
+
+	exp_right[i]:  1  = exp( y[i] ); 
+	exp_right[i].partial_1 := -y[i]; 
+	exp_right[i].partial_1_name := tmp;
+
+	ln_right[i]:  1  = ln(y[i]);
+	ln_right[i].partial_1 := -1/y[i]; 
+	ln_right[i].partial_1_name := 'y['+i+']'; 
+
+	log10_right[i]: 1  = log10(y[i]);
+	log10_right[i].partial_1 := -1/(ln(10)*y[i]); 
+	log10_right[i].partial_1_name := 'y['+i+']';
+
+	sin_right[i]: 1  = sin(y[i]*1{rad});
+	sin_right[i].partial_1 := - cos(y[i]*1{rad}); 
+	sin_right[i].partial_1_name := 'y['+i+']';
+
+	cos_right[i]: 1  = cos(y[i]*1{rad});
+	cos_right[i].partial_1 :=  sin(y[i]*1{rad}); 
+	cos_right[i].partial_1_name := 'y['+i+']';
+
+	tan_right[i]: 1  = tan(y[i]*1{rad});
+	tan_right[i].partial_1 :=  -1 / cos(y[i]*1{rad})^2; 
+	tan_right[i].partial_1_name := 'y['+i+']';
+
+	sqr_right[i]: 1  = sqr(y[i]);
+	sqr_right[i].partial_1 :=  -2*y[i]; 
+	sqr_right[i].partial_1_name := 'y['+i+']';
+
+ 	(* more work to do *)
+	sqrt_right[i]: 1  = sqrt(y[i]);
+	arcsin_right[i]: 1  = arcsin(y[i]);
+	arccos_right[i]: 1  = arccos(y[i]);
+	arctan_right[i]: 1  = arctan(y[i]);
+	(* erf_right[i]: 1  = erf(y[i]); should be working and isn't *)
+	lnm_right[i]: 1  = lnm(y[i]);
+	sinh_right[i]: 1  = sinh(y[i]);
+	cosh_right[i]: 1  = cosh(y[i]);
+	tanh_right[i]: 1  = tanh(y[i]);
+	arcsinh_right[i]: 1  = arcsinh(y[i]);
+	arccosh_right[i]: 1  = arccosh(y[i]);
+	arctanh_right[i]: 1  = arctanh(y[i]);
+	cube_right[i]: 1  = cube(y[i]);
+	cbrt_right[i]: 1  = cbrt(y[i]);
+	abs_right[i]: 1  = abs(y[i]);
+	hold_right[i]: 1  = hold(y[i]);
+
+	(* LHS efunc tests: note FPE  will be expected for some values of i *)
+
+	exp_left[i]:   exp( y[i] ) = 1;
+	ln_left[i]:   ln(y[i]) = 1;
+	log10_left[i]:  log10(y[i]) = 1;
+	sin_left[i]:  sin(y[i]*1{rad}) = 1;
+	cos_left[i]:  cos(y[i]*1{rad}) = 1;
+	tan_left[i]:  tan(y[i]*1{rad}) = 1;
+	sqr_left[i]:  sqr(y[i]*1{rad}) = 1;
+	sqrt_left[i]:  sqrt(y[i]*1{rad}) = 1;
+	arcsin_left[i]:  arcsin(y[i]) = 1;
+	arccos_left[i]:  arccos(y[i]) = 1;
+	arctan_left[i]:  arctan(y[i]) = 1;
+	(* erf_left[i]:  erf(y[i]) = 1; *)
+	lnm_left[i]:  lnm(y[i]) = 1;
+	sinh_left[i]:  sinh(y[i]) = 1;
+	cosh_left[i]:  cosh(y[i]) = 1;
+	tanh_left[i]:  tanh(y[i]) = 1;
+	arcsinh_left[i]:  arcsinh(y[i]) = 1;
+	arccosh_left[i]:  arccosh(y[i]) = 1;
+	arctanh_left[i]:  arctanh(y[i]) = 1;
+	cube_left[i]:  cube(y[i]) = 1;
+	cbrt_left[i]:  cbrt(y[i]) = 1;
+	abs_left[i]:  abs(y[i]) = 1;
+	hold_left[i]:  hold(y[i]) = 1;
+
+END FOR;
+
+
+END test_revad_k;

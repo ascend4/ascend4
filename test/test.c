@@ -28,11 +28,17 @@
 #include <ascend/utilities/error.h>
 #include <ascend/compiler/redirectFile.h>
 #include <ascend/utilities/ascMalloc.h>
+
 #include "printutil.h"
+#include "test_globals.h"
+
+#include <ascend/general/ospath.h>
 
 #include <CUnit/Basic.h>
 
 ASC_IMPORT int register_cunit_tests();
+
+extern struct FilePath* ASC_TEST_DIR;
 
 /*
 	The following allows the CUnit tests to be run using a standalone executable
@@ -90,6 +96,9 @@ int main(int argc, char* argv[]){
 	CU_BasicRunMode mode = CU_BRM_VERBOSE;
 	CU_ErrorAction error_action = CUEA_IGNORE;
 	CU_ErrorCode result;
+
+	struct FilePath* test_executable = ospath_new(argv[0]);
+	ASC_TEST_DIR = ospath_getdir(test_executable); /** Global Variable containing Path information about the test directory */
 
 	static struct option long_options[] = {
 		{"on-error", required_argument, 0, 'e'},
@@ -172,6 +181,9 @@ int main(int argc, char* argv[]){
 	CU_cleanup_registry();
 
 	if(mode == CU_BRM_VERBOSE)ascshutdown("Testing completed.");/* shut down memory manager */
+
+	ospath_free(test_executable);
+	ospath_free(ASC_TEST_DIR);
 
 	return result;
 }

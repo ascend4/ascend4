@@ -17,7 +17,9 @@ int main(void){
 	S.build();
 	
 	cerr << "About to solve..." << endl;
-
+	S.run(t.getMethod("bound_self"));
+	S.run(t.getMethod("default_self"));
 	SolverReporter R;
 	S.solve(Solver("IPOPT"),R);
+	S.run(t.getMethod("self_test"));
 }

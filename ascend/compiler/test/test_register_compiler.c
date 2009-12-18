@@ -23,7 +23,9 @@
 #define SUITE compiler
 
 #define TESTS(T) \
-	T(basics)
+	T(basics) \
+	T(autodiff)
+
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)
 TESTS(PROTO_TEST)

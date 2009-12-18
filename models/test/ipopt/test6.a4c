@@ -1,0 +1,81 @@
+REQUIRE "atoms.a4l";
+
+IMPORT "ipopt";
+
+
+(*  ASCEND modelling environment
+	Copyright (C) 1998, 2006  Carnegie Mellon University
+
+	The ASCEND Modeling Library is free software; you can redistribute
+	it and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
+
+	The ASCEND Modeling Library is distributed in hope that it will
+	be useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	See the GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with the program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the
+	file named COPYING.
+*)
+
+
+MODEL test6;
+	NOTES
+	  'author' SELF {Mahesh Narayanamurthi}
+	  'description' SELF {
+             Adapted from : Hock-Schittkowsky test suite
+             Problem Number: 72
+             Solution: x* = [193.40,179.54,185.01,168.70] ; f(x*) = 727.67
+	     Url: http://www.math.uni-bayreuth.de/~kschittkowski/tp_coll1.htm
+	    }
+	  'creation date' SELF {July, 2009}
+	END NOTES;
+
+	x1,x2,x3,x4 IS_A factor;
+	
+	objective6: MAXIMIZE 1 + x1 + x2 + x3 + x4; (* may also be MINIMIZE *)
+
+	constraint61: .0401 - 4/x1 - 2.25/x2 - 1/x3 - .25/x4 >= 0;
+	
+	constraint62: .010085 - .16/x1 - .36/x2 -.64/x3 - .64/x4 >= 0;
+	
+METHODS
+
+METHOD self_test;
+	ASSERT abs(x1 - 193.40) < 1e-2;
+	ASSERT abs(x2 - 179.54) < 1e-2;
+	ASSERT abs(x3 - 185.01) < 1e-2;
+	ASSERT abs(x4 - 168.70) < 1e-2;
+END self_test;
+
+
+METHOD bound_self;
+	x1.lower_bound := .001;
+	x2.lower_bound := .001;
+	x3.lower_bound := .001;
+	x4.lower_bound := .001;
+
+	x1.upper_bound := 4e5;
+	x2.upper_bound := 3e5;
+	x3.upper_bound := 2e5;
+	x4.upper_bound := 1e5;
+END bound_self;
+
+METHOD default_self;
+	x1 := 1;
+	x2 := 1;
+	x3 := 1;
+	x4 := 1;
+END default_self;
+
+METHOD on_load;
+        RUN bound_self;
+        RUN default_self;
+END on_load;
+
+END test6;
+

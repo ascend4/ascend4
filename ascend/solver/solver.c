@@ -193,7 +193,7 @@ int solver_register(const SlvFunctionsT *solver){
 	CONSOLE_DEBUG("Adding engine '%s'",solver->name);
 #endif
 
-	gl_append_ptr(L,(SlvFunctionsT *)solver);
+	gl_append_ptr((struct gl_list_t *)L,(SlvFunctionsT *)solver);
 	
 #if 0
 	CONSOLE_DEBUG("There are now %lu registered solvers", gl_length(solver_get_list(0)));

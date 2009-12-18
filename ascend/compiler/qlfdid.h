@@ -65,12 +65,14 @@ ASC_DLLSPEC void Asc_ReInitString(char *str);
  *  If an ivalid string will leave it untouched.
  */
 
-extern struct SearchEntry *Asc_SearchEntryCreate(char *name,
+ASC_DLLSPEC struct SearchEntry *Asc_SearchEntryCreate(char *name,
                                                  struct Instance *i);
 /**<
  *  Accepts a string and a pointer to an Instance and will create a
  *  and return a SearchEntry. Will save a copy of the string. Will always
  *  try to make space for the string.
+ *
+ *  Was extern
  */
 
 ASC_DLLSPEC struct Instance *Asc_SearchEntryInstance(struct SearchEntry *se);
@@ -83,10 +85,12 @@ ASC_DLLSPEC char *Asc_SearchEntryName(struct SearchEntry *se);
  *  Returns the name of a search entry;
  */
 
-extern void Asc_SearchEntryDestroy(struct SearchEntry *se);
+ASC_DLLSPEC void Asc_SearchEntryDestroy(struct SearchEntry *se);
 /**<
  *  Will delete the memory associated with its string, set its pointers
  *  to NULL, and free the memory associated with a SearchEntry.
+ *
+ *  Was extern
  */
 
 ASC_DLLSPEC void Asc_SearchListDestroy(struct gl_list_t *search_list);

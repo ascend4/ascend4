@@ -1,3 +1,4 @@
+
 /*	ASCEND modelling environment
 	Copyright (C) 2006 Carnegie Mellon University
 
@@ -896,6 +897,9 @@ Simulation::getIncidenceMatrix(){
 */
 void
 Simulation::processVarStatus(){
+	int low;
+	int high;
+
 	if(!sys)throw runtime_error("No system built");
 
 	//CONSOLE_DEBUG("Getting var status");
@@ -925,15 +929,28 @@ Simulation::processVarStatus(){
 	}
 
 	if(!bb->block){
-		ERROR_REPORTER_HERE(ASC_USER_WARNING,"No blocks identified in system");
-		return;
-	}
+		/**
+		@todo just manually set 'low' and 'high' to both be equal to
+		sys->n if the system is converged, or else set low to 1 and hight to
+		sys->n in the case where it did not converge. 
+		*/
 
+		/** @todo find out the way code is taking */
+		if (status.converged ==  1){
+			low = high = status.block.current_size;
+		}
+		else{
+			low = 1; // is this 1 or 0??
+			high = status.block.current_size;
+		}
+	}
+	else{
 	int activeblock = status.block.current_block;
 	asc_assert(activeblock <= status.block.number_of);
 
-	int low = bb->block[activeblock].col.low;
-	int high = bb->block[activeblock].col.high;
+	low = bb->block[activeblock].col.low;
+	high = bb->block[activeblock].col.high;
+	}
 	bool allsolved = status.converged;
 	for(int c=0; c < nvars; ++c){
 		var_variable *v = vlist[c];
@@ -944,10 +961,13 @@ Simulation::processVarStatus(){
 		}else if(var_incident(v) && var_active(v)){
 			if(allsolved || c < low){
 				s = ASCXX_VAR_SOLVED;
+				CONSOLE_DEBUG("Solved Variable : %d",c);
 			}else if(c <= high){
 				s = ASCXX_VAR_ACTIVE;
+				CONSOLE_DEBUG("Active Variable : %d",c);
 			}else{
 				s = ASCXX_VAR_UNSOLVED;
+				CONSOLE_DEBUG("Unsolved Variable: %d",c);
 			}
 		}
 		i.setStatus(s);

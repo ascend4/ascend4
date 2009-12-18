@@ -276,7 +276,7 @@ struct relation {
 	* union doublong *constants;	 loop variant constants. maybe NULL.
 	*/
 	dim_type *d;
-  void *externalData; /**< null for token relations,
+  	void *externalData; /**< null for token relations,
 			struct BlackBoxData * for bbox,
 			other things for other critters.
 			*/

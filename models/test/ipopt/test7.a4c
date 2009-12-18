@@ -1,0 +1,77 @@
+REQUIRE "atoms.a4l";
+
+IMPORT "ipopt";
+
+(*  ASCEND modelling environment
+	Copyright (C) 1998, 2006  Carnegie Mellon University
+
+	The ASCEND Modeling Library is free software; you can redistribute
+	it and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
+
+	The ASCEND Modeling Library is distributed in hope that it will
+	be useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	See the GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with the program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the
+	file named COPYING.
+*)
+
+
+MODEL test7;
+	NOTES
+	'author' SELF {Mahesh Narayanamurthi}
+	'description' SELF {
+		Adapted from : Hock-Schittkowsky test suite
+		Problem Number: 73
+		Solution: x* = [.63,-.12e-11,.31,.05] ; f(x*) = 29.89
+		Url: http://www.math.uni-bayreuth.de/~kschittkowski/tp_coll1.htm
+	}
+	'creation date' SELF {July, 2009}
+	END NOTES;
+
+	x1,x2,x3,x4 IS_A factor;
+	
+	objective7: MAXIMIZE 24.55*x1+26.75*x2+39*x3+40.50*x4; (* may also be MINIMIZE *)
+
+	constraint71: 2.3*x1 + 5.6*x2 + 11.1*x3 + 1.3*x4 - 5. >= 0.;
+	
+	constraint72: 12.*x1 + 11.9*x2 + 41.8*x3 + 52.1*x4 - 21. 
+		- 1.645 * (0.28*x1^2 + 0.19*x2^2 + 20.5*x3^2 + 0.62*x4^2) ^ 0.333 >= 0;
+
+	constraint73: x1 + x2 + x3 + x4 - 1. = 0.;
+	
+METHODS
+
+METHOD self_test;
+	ASSERT abs(x1 - 0.6355216) < 1e-2;
+	ASSERT abs(x2 - -0.12e-11) < 1e-2;
+	ASSERT abs(x3 - 0.3127019) < 1e-2;
+	ASSERT abs(x4 - 0.05177655) < 1e-2;
+END self_test;
+
+METHOD bound_self;
+	x1.lower_bound := 0;
+	x2.lower_bound := 0;
+	x3.lower_bound := 0;
+	x4.lower_bound := 0;
+END bound_self;
+
+METHOD default_self;
+	x1 := 1;
+	x2 := 1;
+	x3 := 1;
+	x4 := 1;
+END default_self;
+
+METHOD on_load;
+    RUN bound_self;
+    RUN default_self;
+END on_load;
+
+END test7;
+

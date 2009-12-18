@@ -22,6 +22,7 @@
 	
 	Requires:
 	#include "utilities/ascConfig.h"
+	#include "general/dstring.h"
 	#include "fractions.h"
 	#include "compiler.h"
 	#include "dimen.h"
