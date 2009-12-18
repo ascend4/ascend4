@@ -315,7 +315,7 @@ Section "PyGTK GUI" sect_pygtk
 			FileWriteByte $0 "10"
 			FileWrite $0 "$PYPATH\python "
 			FileWriteByte $0 "34" 
-			FileWrite $0 "$INSTDIR\python\ascend"
+			FileWrite $0 "$INSTDIR\ascend"
 			FileWriteByte $0 "34"
 			FileWrite $0 " %1 %2 %3 %4 %5 %6 %7 %8"
 			FileWriteByte $0 "13"
