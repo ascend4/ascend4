@@ -18,8 +18,8 @@
 	Boston, MA 02111-1307, USA.
 */
 
-/** 
-	Light-Weight Hessian Matrix Library 
+/**
+	Light-Weight Hessian Matrix Library
 	Created by: Mahesh Narayanamurthi
 	Creation Date: Aug 2009
 */
@@ -53,8 +53,8 @@ typedef enum hess_layout layout;
 struct rel_hessian_mtx {
 	layout access_type; /* Details about access type  */
 	unsigned long dimension;  /* Dimension of Square Matrix */
-	unsigned long len; /* n*n in maximum case*/ 
-	double *h; 
+	unsigned long len; /* n*n in maximum case*/
+	double *h;
 };
 
 typedef struct rel_hessian_mtx hessian_mtx;
@@ -161,7 +161,7 @@ ASC_DLLSPEC int Hessian_Mtx_clear(hessian_mtx* matrix);
 ASC_DLLSPEC int Hessian_Mtx_init(hessian_mtx* matrix, double* new_vals);
 
 ASC_DLLSPEC unsigned long Hessian_Mtx_access(hessian_mtx* matrix,
-											unsigned long row, 
+											unsigned long row,
 											unsigned long col);
 
 ASC_DLLSPEC double* Hessian_Mtx_get_row_pointer(hessian_mtx* matrix, unsigned long row);
@@ -173,12 +173,12 @@ ASC_DLLSPEC void Hessian_Mtx_debug_print(hessian_mtx* matrix);
 ASC_DLLSPEC int Hessian_Mtx_test_validity(hessian_mtx *matrix);
 
 
-/** TODO 
+/** TODO
 	1) Modify print routines to print only the upper or
-	   lower half of a UT or LT matrix respectively	
+	   lower half of a UT or LT matrix respectively
 	2) Include a method to construct a Full matrix with
 		a lower and a upper matrix
-	When the hessian is not symmetric, can this be used 
+	When the hessian is not symmetric, can this be used
 	to speed up Hessian evalutations?
 */
 

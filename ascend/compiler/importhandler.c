@@ -36,6 +36,7 @@
 #include <string.h>
 
 /* #define SEARCH_DEBUG */
+#define FIND_DEBUG
 /* #define IMPORTHANDLER_VERBOSE */
 
 /*
@@ -164,7 +165,7 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 	}
 #ifdef SEARCH_DEBUG
 	CONSOLE_DEBUG("Importing extlib with path '%s'",path);
-#endif	
+#endif
 
 	if(initfunc==NULL){
 		fp1 = ospath_new(partialpath);
@@ -418,6 +419,10 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 	/* first, attempt to open without searching in path */
 
+#ifdef FIND_DEBUG
+	CONSOLE_DEBUG("SEARCHING RELATIVE TO CURRENT DIRECTORY");
+#endif
+
 	for(i=0; i<IMPORTHANDLER_MAX && importhandler_library[i]!=NULL; ++i){
 
 		filename = (*(importhandler_library[i]->filenamefn))(searchdata.partialname); /* eg 'myext' -> 'libmyext.so' */
@@ -432,7 +437,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 		path = ospath_str(searchdata.relativedir);
 		if(strlen(path)==0){
-#ifdef SEARCH_DEBUG
+#ifdef FIND_DEBUG
 			CONSOLE_DEBUG("ADDING '.' AT START OF EMPTY RELATIVE PATH");
 #endif
 			ospath_free(searchdata.relativedir);
@@ -440,12 +445,12 @@ struct FilePath *importhandler_findinpath(const char *partialname
 			ASC_FREE(path);
 			path = ospath_str(searchdata.relativedir);
 		}
-#ifdef SEARCH_DEBUG
+#ifdef FIND_DEBUG
 		CONSOLE_DEBUG("Relative dir is '%s'",path);
 #endif
 		ASC_FREE(path);
 
-#ifdef SEARCH_DEBUG
+#ifdef FIND_DEBUG
 		path = ospath_str(fp);
 		CONSOLE_DEBUG("Filename is '%s'",path);
 		ASC_FREE(path);
@@ -455,7 +460,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 		asc_assert(fp1!=NULL);
 		ospath_free(fp);
 
-#ifdef SEARCH_DEBUG
+#ifdef FIND_DEBUG
 		path = ospath_str(fp1);
 		CONSOLE_DEBUG("Checking for readable '%s'",path);
 		ASC_FREE(path);
@@ -469,7 +474,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 			*handler = importhandler_library[i];
 			return fp1;
 		}
-#ifdef SEARCH_DEBUG
+#ifdef FIND_DEBUG
 		else{
 			CONSOLE_DEBUG("Not found");
 		}
@@ -480,21 +485,36 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 	/*-----------------------*/
 
+#ifdef FIND_DEBUG
+	CONSOLE_DEBUG("SEARCHING ACCORDING TO ENV VAR $%s",envv);
+#endif
+
 	epath=Asc_GetEnv(envv);
 	if(epath==NULL){
-		/* CONSOLE_DEBUG("ENV VAR '%s' NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",envv,defaultpath); */
+#ifdef FIND_DEBUG
+		CONSOLE_DEBUG("ENV VAR '%s' NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",envv,defaultpath);
+#endif
 		epath=defaultpath;
 	}
 
-	/* CONSOLE_DEBUG("SEARCHPATH IS %s",path); */
+#ifdef FIND_DEBUG
+	CONSOLE_DEBUG("SEARCHPATH IS %s",epath);
+#endif
 	sp = ospath_searchpath_new(epath);
 
 	if(NULL==ospath_searchpath_iterate(sp,&importhandler_search_test,&searchdata)){
+#ifdef FIND_DEBUG
+		CONSOLE_DEBUG("Import not found in searchpath");
+#endif
 		ospath_free(searchdata.relativedir);
 		ASC_FREE(searchdata.partialname);
 		ospath_searchpath_free(sp);
 		return NULL;
 	}
+
+#ifdef FIND_DEBUG
+	CONSOLE_DEBUG("Found in searchpath :-)");
+#endif
 
 	ospath_searchpath_free(sp);
 	ASC_FREE(searchdata.partialname);
