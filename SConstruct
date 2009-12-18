@@ -11,6 +11,7 @@ soname_major = ".1"
 soname_minor = ".0"
 
 import sys, os, commands, platform, distutils.sysconfig, os.path, re, types
+import subprocess
 
 # version number for python, useful on Windows
 pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
@@ -1126,9 +1127,10 @@ def CheckF77(context):
 import os,re
 
 def get_swig_version(env):
-	cmd = env['SWIG']+' -version'
-	(cin,coutcerr) = os.popen4(cmd)
-	output = coutcerr.read()
+	cmd = [env['SWIG'],'-version']
+	p = subprocess.Popen(cmd,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True)
+
+	output = p.stdout.read()
 	
 	restr = "SWIG\\s+Version\\s+(?P<maj>[0-9]+)\\.(?P<min>[0-9]+)\\.(?P<pat>[0-9]+)\\s*$"
 	expr = re.compile(restr,re.M);
@@ -1171,10 +1173,9 @@ def CheckSwigVersion(context):
 # Scrollkeeper (Linux documentation system)
 
 def get_scrollkeeper_omfdir(env):
-	cmd = 'scrollkeeper-config --omfdir'
-	(cin,coutcerr) = os.popen4(cmd)
-	output = coutcerr.read()
-	return output.strip()
+	cmd = ['scrollkeeper-config','--omfdir']
+	p = subprocess.Popen(cmd,stdout=subprocess.PIPE,close_fds=True)
+	return p.coutcerr.read().strip()
 
 def CheckScrollkeeperConfig(context):
 	try:
