@@ -823,9 +823,12 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
       if(first) {
         if (lang == relio_C) {
           sprintf(SB255,"%s(",FuncCName(TermFunc(term)));
-        } else {
+        } else if (lang == relio_ascend) {
           sprintf(SB255,"%s(",FuncName(TermFunc(term)));
         }
+		else{
+		  sprintf(SB255,"%s(",FuncYName(TermFunc(term)));
+		}
         Asc_DStringAppend(dsPtr,SB255,-1);
         PushRelation(pos,0,NOLHS);
         PushRelation(pos-1,1,NOLHS);
@@ -991,11 +994,10 @@ void WriteTokenRelation(FILE *f,
   }
 }
 
-static
-void WriteTokenRelationDS(Asc_DString *dsPtr,
+static void WriteTokenRelationDS(Asc_DString *dsPtr,
 			  CONST struct relation *r,
 			  CONST struct Instance *ref,
-                          WRSNameFunc func, void *userdata,
+                     	   WRSNameFunc func, void *userdata,
                           enum rel_lang_format lang)
 {
   switch(RelationRelop(r)){
@@ -1005,7 +1007,7 @@ void WriteTokenRelationDS(Asc_DString *dsPtr,
   case e_greater:
   case e_lesseq:
   case e_greatereq:
-    if (lang == relio_C) {
+    if (lang == relio_C || lang == relio_yacas) {
       Asc_DStringAppend(dsPtr,"( ",2);
     }
     WriteSideDS(dsPtr,r,1,ref,func,userdata,lang);
@@ -1016,6 +1018,7 @@ void WriteTokenRelationDS(Asc_DString *dsPtr,
       Asc_DStringAppend(dsPtr," ",1);
       break;
     case relio_C:
+    case relio_yacas:
       Asc_DStringAppend(dsPtr," ) - ( ",7);
       break;
     default:
@@ -1023,7 +1026,7 @@ void WriteTokenRelationDS(Asc_DString *dsPtr,
       exit(2); /* NOTREACHED ,  shuts up gcc */
     }
     WriteSideDS(dsPtr,r,0,ref,func,userdata,lang);
-    if (lang == relio_C) {
+    if (lang == relio_C || lang == relio_yacas) {
       Asc_DStringAppend(dsPtr," )",2);
     }
     break;
@@ -1037,6 +1040,7 @@ void WriteTokenRelationDS(Asc_DString *dsPtr,
       WriteSideDS(dsPtr,r,1,ref,func,userdata,lang);
       break;
     case relio_C:
+	case relio_yacas:
       Asc_DStringAppend(dsPtr,"( ",2);
       WriteSideDS(dsPtr,r,1,ref,func,userdata,lang);
       Asc_DStringAppend(dsPtr," )",2);

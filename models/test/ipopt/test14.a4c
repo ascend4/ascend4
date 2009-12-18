@@ -1,0 +1,75 @@
+REQUIRE "atoms.a4l";
+
+IMPORT "ipopt";
+
+(*  ASCEND modelling environment
+	Copyright (C) 1998, 2006  Carnegie Mellon University
+
+	The ASCEND Modeling Library is free software; you can redistribute
+	it and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
+
+	The ASCEND Modeling Library is distributed in hope that it will
+	be useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	See the GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with the program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the
+	file named COPYING.
+*)
+
+
+MODEL test14;
+	NOTES
+	  'author' SELF {Mahesh Narayanamurthi}
+	  'description' SELF {
+             Adapted from : Hock-Schittkowsky test suite
+             Problem Number: 60
+             Solution: x* = [1.1048,1.1966,1,5352] ; f(x*) = .0325
+	     Url: http://www.math.uni-bayreuth.de/~kschittkowski/tp_coll1.htm
+	    }
+	  'creation date' SELF {July, 2009}
+	END NOTES;
+
+	x1,x2,x3 IS_A factor;
+	
+	cons14_2: x1*(1+x2^2) + x3^4 - 4 - 3*sqrt(2)=0;
+	
+
+	objective14: MAXIMIZE (x1-1)^2 + (x1-x2)^2 + (x2-x3)^4;
+METHODS
+
+METHOD self_test;
+	ASSERT abs(x1 - 1.1048) < 1e-4;
+	ASSERT abs(x2 - 1.1966) < 1e-4;
+	ASSERT abs(x3 - 1.5352) < 1e-4;
+END self_test;
+
+
+METHOD bound_self;
+	x1.lower_bound := -10;
+	x2.lower_bound := -10;
+	x3.lower_bound := -10;
+
+	x1.upper_bound := 10;
+	x2.upper_bound := 10;
+	x3.upper_bound := 10;
+
+END bound_self;
+
+METHOD default_self;
+	x1 := 2;
+	x2 := 2;
+	x3 := 2;
+END default_self;
+
+METHOD on_load;
+        RUN bound_self;
+        RUN default_self;
+END on_load;
+
+END test14;
+

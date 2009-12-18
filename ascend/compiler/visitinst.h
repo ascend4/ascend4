@@ -265,7 +265,7 @@ extern void SilentVisitInstanceTreeTwo(struct Instance *inst,
  *  global variables.
  */
 
-extern void VisitInstanceTreeTwo(struct Instance *inst,
+ASC_DLLSPEC void VisitInstanceTreeTwo(struct Instance *inst,
                                  VisitTwoProc proc,
                                  int depth,
                                  int leaf,
@@ -281,6 +281,7 @@ extern void VisitInstanceTreeTwo(struct Instance *inst,
  *  global variables.<br><br>
  *
  *  Note: the Slow mode is not supported.
+ *  Was extern
  */
 
 extern void SilentVisitInstanceFringeTwo(struct Instance *inst,

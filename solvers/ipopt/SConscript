@@ -9,11 +9,12 @@ if env.get('WITH_IPOPT'):
 		CPPDEFINES=[
 			'ASC_WITH_IPOPT'
 		]
+		,CPPPATH = [solver_env.get('IPOPT_CPPPATH')]
 	)
 
 	lib = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
 		,LIBS = ['ascend'] + solver_env.get('IPOPT_LIBS')
-		,LIBPATH = ['#']
+		,LIBPATH = ['#'] + [solver_env.get('IPOPT_LIBPATH')]
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)

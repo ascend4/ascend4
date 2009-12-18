@@ -1,0 +1,95 @@
+REQUIRE "atoms.a4l";
+
+IMPORT "ipopt";
+
+
+(*  ASCEND modelling environment
+	Copyright (C) 1998, 2006  Carnegie Mellon University
+
+	The ASCEND Modeling Library is free software; you can redistribute
+	it and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
+
+	The ASCEND Modeling Library is distributed in hope that it will
+	be useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	See the GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with the program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the
+	file named COPYING.
+*)
+
+ 
+MODEL dummy;
+	
+	x1,x2 IS_A factor;
+	
+	dummy1: x1 + x2 + x1 = 5; (* Although I can say 2*x1 + x2 *)
+
+	dummy2: x1 * x2 = 3;
+
+	dummy3: x1 ^ 1.0 = 1;
+
+	dummy4: x1^ 1 = 1;
+
+	dummy5: x1 ^ 0.5 = 1;
+
+	dummy6: x1 ^ 1.5 = 1;
+
+	dummy7: (x1+x2) ^ 0.5 = 2;
+
+	yacas_pow_bug: (x1^2) ^ 0.5 > 0;
+
+	yacas_pow_bug_test: (x1^2 + 1) ^ 0.5 >0;
+
+	dummy9: (x1^2 + x2^2) ^ 0.5 > 3;
+
+	dummy10: (2 * x2^2) ^ 0.333 >0;
+	
+	dummy11: ln((x2)/(.09*x1)) > 0;
+
+	dummy12: ln(x2) > 0;
+
+	dummy13: x2/x1 > 0;
+
+	dummy14: ln((x1 )/(.09 * x1 + x2)) > 0;
+
+	dummy15: (x1)/(x1 + x2) > 0;	
+
+	dummy16: sin(x1)*sin(x2) / (sin(x1)+sin(x2)) > 0;
+	
+	dummy17: x1^5 * x2^4 / (x1^3 + x2^3) < 0;
+	
+	dummy18: 1/(x1+x2) > 0;
+	
+	dummy19: x1 * 1/x1 = 1;
+
+	dummy20: x1 * 1/x2 > 0;
+	
+	dummy21: x1/sin(x1) > 0;
+
+METHODS
+
+METHOD self_test;
+
+END self_test;
+
+
+METHOD bound_self;
+END bound_self;
+
+METHOD default_self;
+	x1 := 1;
+	x2 := 3;
+END default_self;
+
+METHOD on_load;
+        RUN bound_self;
+        RUN default_self;
+END on_load;
+
+END dummy;
+

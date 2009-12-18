@@ -56,7 +56,8 @@
  */
 enum rel_lang_format {
   relio_ascend,
-  relio_C
+  relio_C,
+  relio_yacas
 };
 
 typedef char * (*WRSNameFunc)(CONST struct relation *,unsigned long,void *);
@@ -74,7 +75,7 @@ struct RXNameData{
   char *suffix;
 };
 
-extern char *RelationVarXName(CONST struct relation *r,
+ASC_DLLSPEC char *RelationVarXName(CONST struct relation *r,
                               unsigned long varnum,
                               struct RXNameData *rxndata);
 /**<
@@ -91,6 +92,7 @@ extern char *RelationVarXName(CONST struct relation *r,
  * r is ignored entirely.<br><br>
  *
  * This function is compatible with WriteRelationString().
+ * Was extern
  */
 
 extern int NeedParen(enum Expr_enum parent, enum Expr_enum child, int rhs);
@@ -104,13 +106,14 @@ extern int NeedParen(enum Expr_enum parent, enum Expr_enum child, int rhs);
  *  and would return nonzero.
  */
 
-extern void WriteRelation(FILE *f,
+ASC_DLLSPEC void WriteRelation(FILE *f,
                           CONST struct Instance *relinst,
                           CONST struct Instance *ref);
 /**<
  *  Write the relation in infix to the file indicated.
  *  This function comfortably handles all the relation types.
  *  Variables are written with names relative to ref.
+ *  Was extern
  */
 
 ASC_DLLSPEC char*WriteRelationString(
@@ -168,10 +171,11 @@ extern void WriteRelationsInList(FILE *f, struct gl_list_t *l);
  *  file given in various formats.
  */
 
-extern void SaveRelationVariables(FILE *fp, CONST struct relation *r);
+ASC_DLLSPEC void SaveRelationVariables(FILE *fp, CONST struct relation *r);
 /**<
  *  Given a relation will save its variable list in the ASCEND condensed
  *  format.
+ *  Was extern
  */
 
 extern void SaveGlassBoxRelation(FILE *fp, CONST struct Instance *relinst);

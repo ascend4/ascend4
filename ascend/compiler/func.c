@@ -601,6 +601,7 @@ double InterpolateD(double x, double lower, double upper,
 struct Func g_exp_f = {
   "exp",
   "exp",
+  "Exp",
   "exp",
   "exp",
   F_EXP,
@@ -626,6 +627,7 @@ struct Func g_exp_f = {
 struct Func g_ln_f = {
   "ln",
   "log",
+  "Ln",
   "dln",
   "dln2",
   F_LN,
@@ -651,6 +653,7 @@ struct Func g_ln_f = {
 struct Func g_lnm_f = {
   "lnm",
   "lnm",
+  "Lnm",  /** FIXME Yacas does not have an equivalent for Lnm??? */
   "dlnm",
   "dlnm2",
   F_LNM,
@@ -676,6 +679,7 @@ struct Func g_lnm_f = {
 struct Func g_log10_f = {
   "log10",
   "log10",
+  "Log10", /** FIXME Yacas does not have an equivalent for Log10??? */
   "dlog10",
   "dlog102",
   F_LOG10,
@@ -701,6 +705,7 @@ struct Func g_log10_f = {
 struct Func g_sin_f = {
   "sin",
   "sin",
+  "Sin",
   "cos",
   "dcos",
   F_SIN,
@@ -726,6 +731,7 @@ struct Func g_sin_f = {
 struct Func g_cos_f = {
   "cos",
   "cos",
+  "Cos",
   "dcos",
   "dcos2",
   F_COS,
@@ -751,6 +757,7 @@ struct Func g_cos_f = {
 struct Func g_tan_f = {
   "tan",
   "tan",
+  "Tan",
   "dtan",
   "dtan2",
   F_TAN,
@@ -776,6 +783,7 @@ struct Func g_tan_f = {
 struct Func g_sqr_f = {
   "sqr",
   "sqr",
+  "Sqr", /** FIXME Yacas does not have an equivalent for Sqr??? */
   "dsqr",
   "dsqr2",
   F_SQR,
@@ -801,6 +809,7 @@ struct Func g_sqr_f = {
 struct Func g_sqrt_f = {
   "sqrt",
   "sqrt",
+  "Sqrt",
   "dsqrt",
   "dsqrt2",
   F_SQRT,
@@ -826,6 +835,7 @@ struct Func g_sqrt_f = {
 struct Func g_abs_f = {
   "abs",
   "fabs",
+  "Abs",
   "dfabs",
   "dfabs2",
   F_ABS,
@@ -851,6 +861,7 @@ struct Func g_abs_f = {
 struct Func g_hold_f = {
   "hold",
   "hold",
+  "Hold", /** FIXME Yacas does not have an equivalent for Hold??? */
   "dhold",
   "dhold2",
   F_HOLD,
@@ -876,6 +887,7 @@ struct Func g_hold_f = {
 struct Func g_arcsin_f = {
   "arcsin",
   "asin",
+  "ArcSin",
   "dasin",
   "dasin2",
   F_ARCSIN,
@@ -901,6 +913,7 @@ struct Func g_arcsin_f = {
 struct Func g_arccos_f = {
   "arccos",
   "acos",
+  "ArcCos",
   "dacos",
   "dacos2",
   F_ARCCOS,
@@ -926,6 +939,7 @@ struct Func g_arccos_f = {
 struct Func g_arctan_f = {
   "arctan",
   "atan",
+  "ArcTan",
   "datan",
   "datan2",
   F_ARCTAN,
@@ -952,6 +966,7 @@ struct Func g_arctan_f = {
 struct Func g_erf_f = {
   "erf",
   "erf",
+  "Erf", /** FIXME Yacas does not have an equivalent for Erf??? */
   "derf",
   "derf2",
   F_ERF,
@@ -972,6 +987,7 @@ struct Func g_erf_f = {
 struct Func g_sinh_f = {
   "sinh",
   "sinh",
+  "Sinh", /** FIXME Yacas does not have an equivalent for Sinh??? */
   "cosh",
   "sinh",
   F_SINH,
@@ -997,6 +1013,7 @@ struct Func g_sinh_f = {
 struct Func g_cosh_f = {
   "cosh",
   "cosh",
+  "Cosh", /** FIXME Yacas does not have an equivalent for Cosh??? */
   "sinh",
   "cosh",
   F_COSH,
@@ -1022,6 +1039,7 @@ struct Func g_cosh_f = {
 struct Func g_tanh_f = {
   "tanh",
   "tanh",
+  "Tanh", /** FIXME Yacas does not have an equivalent for Tanh??? */
   "dtanh",
   "dtanh2",
   F_TANH,
@@ -1047,6 +1065,7 @@ struct Func g_tanh_f = {
 struct Func g_arcsinh_f = {
   "arcsinh",
   "arcsinh",
+  "ArcSinh", /** FIXME Yacas does not have an equivalent for ArcSinh??? */
   "darcsinh",
   "darcsinh2",
   F_ARCSINH,
@@ -1072,6 +1091,7 @@ struct Func g_arcsinh_f = {
 struct Func g_arccosh_f = {
   "arccosh",
   "arccosh",
+  "ArcCosh", /** FIXME Yacas does not have an equivalent for ArcCosh??? */
   "darccosh",
   "darccosh2",
   F_ARCCOSH,
@@ -1097,6 +1117,7 @@ struct Func g_arccosh_f = {
 struct Func g_arctanh_f = {
   "arctanh",
   "arctanh",
+  "ArcTanh", /** FIXME Yacas does not have an equivalent for ArcTanh??? */
   "darctanh",
   "darctanh2",
   F_ARCTANH,
@@ -1122,6 +1143,7 @@ struct Func g_arctanh_f = {
 struct Func g_cube_f = {
   "cube",
   "cube",
+  "Cube", /** FIXME Yacas does not have an equivalent for Cube??? */
   "dcube",
   "dcube2",
   F_CUBE,
@@ -1147,6 +1169,7 @@ struct Func g_cube_f = {
 struct Func g_cbrt_f = {
   "cbrt",
   "cbrt",
+  "Cbrt", /** FIXME Yacas does not have an equivalent for Cbrt??? */
   "dcbrt",
   "dcbrt2",
   F_CBRT,
@@ -1229,6 +1252,11 @@ CONST char *FuncName(CONST struct Func *f)
 CONST char *FuncCName(CONST struct Func *f)
 {
   return f->cname;
+}
+
+CONST char *FuncYName(CONST struct Func *f)
+{
+	return f->yname;
 }
 
 CONST char *FuncDeriv1CName(CONST struct Func *f)

@@ -83,6 +83,7 @@
 /* define symchar names needed */
 static symchar *g_strings[1];
 #define INCLUDED_R g_strings[0]
+//Do we need more gstrings for relations? eg: for obtaining relation upper and lower bounds?? 
 
 static const struct rel_relation g_rel_defaults = {
    NULL,		    /* instance */
@@ -258,6 +259,7 @@ static enum rel_enum compenum2relenum(enum Expr_enum t){
     return e_rel_not_equal;
   }
 }
+
 enum rel_enum rel_relop( struct rel_relation *rel){
   return
     compenum2relenum(RelationRelop(
@@ -265,7 +267,11 @@ enum rel_enum rel_relop( struct rel_relation *rel){
 }
 
 char *rel_make_name(slv_system_t sys,struct rel_relation *rel){
-  return WriteInstanceNameString(IPTR(rel->instance),IPTR(slv_instance(sys)));
+	if(sys == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with NULL system.");
+		return NULL;
+	}
+	return WriteInstanceNameString(IPTR(rel->instance),IPTR(slv_instance(sys)));
 }
 
 int32 rel_mindex( struct rel_relation *rel){
@@ -438,4 +444,3 @@ int rel_classify_differential(struct rel_relation *rel){
 	rel_set_differential(rel,diff);
 	return diff;
 }
-

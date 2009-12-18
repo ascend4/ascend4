@@ -39,6 +39,8 @@
 */
 
 #include <ascend/utilities/ascConfig.h>
+#include <ascend/general/ltmatrix.h>
+
 #include "fractions.h"
 #include "compiler.h"
 #include "functype.h"
@@ -47,6 +49,7 @@
 #include "expr_types.h"
 #include "relation_type.h"
 #include "instance_enum.h"
+#include "reverse_ad.h"
 
 ASC_DLLSPEC int g_check_dimensions_noisy;
 /**<
@@ -91,11 +94,12 @@ ASC_DLLSPEC enum Expr_enum RelationRelop(CONST struct relation *rel);
  *  </pre>
  */
 
-extern unsigned long NumberVariables(CONST struct relation *rel);
+ASC_DLLSPEC unsigned long NumberVariables(CONST struct relation *rel);
 /**<
 	This will indicate the number of distinct real atoms to which this relation
 	points.  This number contains both fixed and non-fixed atoms.
 	This routine is smart enough to deal with all the different relation types.
+    Was extern
 */
 
 ASC_DLLSPEC struct Instance *RelationVariable(CONST struct relation *rel,
@@ -525,7 +529,7 @@ int RelationCalcResidualInfix(struct Instance *i, double *res);
 /**<
  *  Sets *res to the value (leftside - rightside) of the relation.
  *  Uses infix evaluation.
- *  Non-zero return value implies a problem.
+ *  @return 0 on success; non-zero on error
  *  Notes: This function is a possible source of floating point
  *         exceptions and should not be used during compilation.
  */
@@ -556,25 +560,124 @@ enum safe_err RelationCalcGradientSafe(struct Instance *i, double *grad);
 
 	This function is to RelationCalcGradient as
 	RelationCalcResidualSafe is to RelationCalcResidual.
-	Non-zero return value implies a problem.
+	@return 0 on success; non-zero on error
 */
 
-int RelationCalcResidGrad(struct Instance *i, double *res, double *grad);
+ASC_DLLSPEC int RelationCalcResidGrad(struct Instance *i, double *res, double *grad);
 /**<
 	This function combines the Residual and Gradient calls, since these
 	may be done together at basically the cost of just one.
-	Non-zero return value implies a problem.
+	@return 0 on success; non-zero on error
 
 	@NOTE This function is a possible source of floating point exceptions
 	and should not be used during compilation.
 */
 
-enum safe_err
+
+ASC_DLLSPEC enum safe_err
 RelationCalcResidGradSafe(struct Instance *i, double *res, double *grad);
 /**<
 	This is the combined Safe version.
-	Non-zero return value implies a problem.
+	@return 0 on success; non-zero on error
 */
+
+/**----------------- Reverse Automatic Differentiation Routines ------------*/
+int	RelationCalcGradientRev(struct Instance *r, double *grad);
+/**<
+	This calculates the gradient of the relation df/dx (f = lhs-rhs)
+	where x is ALL entries in the relation's var list.
+	The var list is a gl_list_t indexed from 1 to length.
+	You must provide grad, the space to put the gradient, an array of
+	double of length matching the gl_list_t.
+	We will stuff df/dx[i] into grad[i-1], where i is the list position
+	in the relation's var list.
+
+	@return Non-zero return value implies a problem
+
+	@NOTE This function is a possible source of floating point
+    exceptions and should not be used during compilation
+
+	Reverse Automatic Differentiation Version
+
+ */
+		
+enum safe_err RelationCalcGradientRevSafe(struct Instance *r, double *grad);
+/**<
+	This calculates the gradient of the relation df/dx (f = lhs-rhs)
+	where x is ALL entries in the relation's var list.
+
+	This function is to RelationCalcGradientRev as
+	RelationCalcResidualSafe is to RelationCalcResidual.
+	@return 0 on success; non-zero on error
+
+	Reverse Automatic Differentiation Version
+ */
+
+ASC_DLLSPEC int RelationCalcResidGradRev(struct Instance *i, double *residual, double *gradient);
+/**<
+	This function combines the Residual and Gradient calls, since these
+	may be done together at basically the cost of just one.
+	@return 0 on success; non-zero on error
+
+	@NOTE This function uses reverse automatic differentiation to obtain derivatives
+	@NOTE This function is a possible source of floating point exceptions
+	and should not be used during compilation.
+
+	Reverse Automatic Differentiation Version
+
+ */
+
+ASC_DLLSPEC enum safe_err 
+		RelationCalcResidGradRevSafe(struct Instance *i,double *residual,double *gradient);
+/**<
+	This is the combined Safe version.
+	@return 0 on success; non-zero on error
+
+	Reverse Automatic Differentiation Version
+ */
+
+/**-------------------Second Derivative Routines-----------------------------------------*/
+
+ASC_DLLSPEC int RelationCalcSecondDeriv(struct Instance *i, double *deriv2nd, unsigned long var_index);
+/**<
+	This function calculates the second derivatives wrt variable var_index (the var_index row of a hessian)
+	@param i is the relation instance whose second derivative is to be calculated
+	@param deriv2nd is the pointer to the list of second derivatives
+	@param var_index is the variable wrt which the second derivative is to be calculated
+	@return not significant yet
+*/
+
+ASC_DLLSPEC enum safe_err RelationCalcSecondDerivSafe(struct Instance *i, double *deriv2nd,unsigned long var_index);
+/**<
+	This function calculates the second derivatives wrt variable var_index (the var_index row of a hessian)
+	@param i is the relation instance whose second derivative is to be calculated
+	@param deriv2nd is the pointer to the list of second derivatives
+	@param var_index is the variable wrt which the second derivative is to be calculated
+	@return not significant yet
+
+	Safe Version
+ */
+
+/** -----------------Hessian Calculation Routines----------------------------------------*/
+ASC_DLLSPEC int RelationCalcHessianMtx(struct Instance *i, hessian_mtx *hess_mtx, unsigned long dimension);
+/**<
+	This function calculates the full, dense hessian matrix of the relation pointed to by instance pointer i
+	@param i is the relation whose Hessian matrix is calculated
+	@param hess_mtx is the pointer to the 2 dimensional Lower triangular array of the Hessian Matrix
+	@param dimension is the dimension of the hessian matrix
+	@return not significant yet
+ */
+
+ASC_DLLSPEC enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, hessian_mtx *hess_mtx,unsigned long dimension);
+/**<
+	This function calculates the full, dense hessian matrix of the relation pointed to by instance pointer i
+	@param i is the relation whose Hessian matrix is calculated
+	@param hess_mtx is the pointer to the 2 dimensional Lower triangular array of the Hessian Matrix
+	@param dimension is the dimension of the hessian matrix
+	@return not significant yet
+
+	Safe Version
+ */
 
 /*------------------------------------------------------------------------------
 	ROOT FINDING FUNCTIONS (deprecated?)
@@ -636,6 +739,7 @@ struct gl_list_t *CollectTokenRelationsWithUniqueBINlessShares(
 	one of the relation instances which use the share is collected.
 	The list returned should be destroyed by the user (not its content,though).
 */
+
 
 /* @} */
 

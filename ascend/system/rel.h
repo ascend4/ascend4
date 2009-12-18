@@ -245,7 +245,7 @@ ASC_DLLSPEC boolean rel_greater(struct rel_relation *rel);
 	gr==TRUE implies rel would be satisfied if lhs > rhs
 */
 
-extern enum rel_enum rel_relop(struct rel_relation *rel);
+ASC_DLLSPEC enum rel_enum rel_relop(struct rel_relation *rel);
 /**<
 	Returns the type of the relational operator of a given relation.
 */
@@ -632,5 +632,6 @@ ASC_DLLSPEC int rel_classify_differential(struct rel_relation *rel);
 	@TODO FIXME what if the variable makes reference to the independent variable 't'
 	(or whatever it's called)?
 */
+
 
 #endif /* ASC_REL_H  */

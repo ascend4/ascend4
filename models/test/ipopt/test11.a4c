@@ -1,0 +1,73 @@
+REQUIRE "atoms.a4l";
+
+IMPORT "ipopt";
+
+(*  ASCEND modelling environment
+	Copyright (C) 1998, 2006  Carnegie Mellon University
+
+	The ASCEND Modeling Library is free software; you can redistribute
+	it and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
+
+	The ASCEND Modeling Library is distributed in hope that it will
+	be useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	See the GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with the program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the
+	file named COPYING.
+*)
+
+
+
+MODEL test11;
+	NOTES
+	  'author' SELF {Mahesh Narayanamurthi}
+	  'description' SELF {
+             Adapted from : Hock-Schittkowsky test suite
+             Problem Number: 63
+             Solution: x* = [3.5121,.2169,3.5521] ; f(x*) = 961.7151
+	     Url: http://www.math.uni-bayreuth.de/~kschittkowski/tp_coll1.htm
+	    }
+	  'creation date' SELF {July, 2009}
+	END NOTES;
+
+	x1,x2,x3 IS_A factor;
+	
+	cons11_1: 8*x1 + 14*x2 + 7*x3 - 56 = 0;
+	cons11_2: x1^2 + x2^2 + x3^2 -25 =0;
+	
+	
+
+	objective11: MAXIMIZE 1000 - x1^2 -2*x2^2 - x3^2 - x1*x2 - x1*x3;
+METHODS
+
+METHOD self_test;
+	ASSERT abs(x1 - 3.5121) < 1e-4;
+	ASSERT abs(x2 - .2169) < 1e-4;
+	ASSERT abs(x3 - 3.5521) < 1e-4;
+END self_test;
+
+
+METHOD bound_self;
+	x1.lower_bound := 0;
+	x2.lower_bound := 0;
+	x3.lower_bound := 0;
+END bound_self;
+
+METHOD default_self;
+	x1 := 2;
+	x2 := 2;
+	x3 := 2;
+END default_self;
+
+METHOD on_load;
+        RUN bound_self;
+        RUN default_self;
+END on_load;
+
+END test11;
+

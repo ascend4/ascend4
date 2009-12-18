@@ -299,6 +299,12 @@ extern CONST char *FuncCName(CONST struct Func *f);
  *  Return the C language name of the function, if any.
  */
 
+ASC_DLLSPEC CONST char *FuncYName(CONST struct Func *f);
+/**<
+ *  Return the Yacas language name of the function.
+ *  Not a symchar.
+ */
+
 extern CONST char *FuncDeriv1CName(CONST struct Func *f);
 /**<
  *  Return the C language name of the function first derivative, if any.

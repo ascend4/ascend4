@@ -1,0 +1,64 @@
+REQUIRE "atoms.a4l";
+
+IMPORT "ipopt";
+
+(*  ASCEND modelling environment
+	Copyright (C) 1998, 2006  Carnegie Mellon University
+
+	The ASCEND Modeling Library is free software; you can redistribute
+	it and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
+
+	The ASCEND Modeling Library is distributed in hope that it will
+	be useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	See the GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with the program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the
+	file named COPYING.
+*)
+
+MODEL test4;
+	NOTES
+	  'author' SELF {Mahesh Narayanamurthi}
+	  'description' SELF {
+             Adapted from : Hock-Schittkowsky test suite
+             Problem Number: 1
+             Solution: x* = [1.0,1.0] ; f(x*) = 909
+	     Url: http://www.math.uni-bayreuth.de/~kschittkowski/tp_coll1.htm
+	    }
+	  'creation date' SELF {June, 2008}
+	END NOTES;
+
+	x1,x2 IS_A factor;
+	
+	cons41: x2>=-1.5;
+
+	objective4: MAXIMIZE 100*(x2-x1^2)^2+(1-x1)^2;
+METHODS
+
+METHOD self_test;
+	ASSERT abs(x1 - 1) < 1e-7;
+	ASSERT abs(x2 - 1) < 1e-7;
+END self_test;
+
+
+METHOD bound_self;
+
+END bound_self;
+
+METHOD default_self;
+	x1 := -2;
+	x2 := 1;
+END default_self;
+
+METHOD on_load;
+        RUN bound_self;
+        RUN default_self;
+END on_load;
+
+END test4;
+

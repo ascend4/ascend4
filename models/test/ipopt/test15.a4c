@@ -1,0 +1,25 @@
+REQUIRE "atoms.a4l";
+(*
+This is the sample problem given in the IPOPT documentation:
+http://www.coin-or.org/Ipopt/documentation/node28.html
+*)
+MODEL test15;
+
+	x[1..4] IS_A solver_var;
+
+	MINIMIZE x[1]*x[4]*(x[1] + x[2] + x[3]) + x[3];
+
+	PROD[x[i] | i IN [1..4]] > 25.;
+
+	SUM[x[i]^2 | i IN [1..4]] = 40.;
+
+METHODS
+METHOD on_load;
+
+	x[1..4].lower_bound := 1;
+	x[1..4].upper_bound := 5;
+
+END on_load;
+END test15;
+
+

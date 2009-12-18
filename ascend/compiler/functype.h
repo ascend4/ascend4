@@ -78,6 +78,7 @@ enum Func_enum {
 struct Func {
   CONST char *name;         /**< ASCEND name of function. not symchar */
   CONST char *cname;        /**< C name of function. not symchar */
+  CONST char *yname;		/**< YACAS Name of Function. not symchar */
   CONST char *deriv1cname;  /**< C name of first derivative. not symchar */
   CONST char *deriv2cname;  /**< C name of second derivative. not symchar */
   enum Func_enum id;        /**< identification of function */

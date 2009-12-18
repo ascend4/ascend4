@@ -50,6 +50,8 @@
 #include <ascend/compiler/relation_io.h>
 #include <ascend/compiler/exprsym.h>
 
+#include <ascend/general/ltmatrix.h>
+
 #include "slv_server.h"
 
 /* #define DIFF_DEBUG */
@@ -472,29 +474,30 @@ int relman_diff2(struct rel_relation *rel, const var_filter_t *filter
   real64 *gradient;
   int32 len,c;
   int status;
-
+  //CONSOLE_DEBUG("In Function: relman_diff2");
   assert(rel!=NULL && filter!=NULL);
   len = rel_n_incidences(rel);
   vlist = rel_incidence_list(rel);
-
   gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
   *count = 0;
   if(safe){
-    status =(int32)RelationCalcGradientSafe(rel_instance(rel),gradient);
+    //CONSOLE_DEBUG("Derivative Type: Safe");
+    status =(int32)RelationCalcGradientSafe(rel_instance(rel),gradient); 
     safe_error_to_stderr( (enum safe_err *)&status );
     /* always map when using safe functions */
     for (c=0; c < len; c++) {
       if (var_apply_filter(vlist[c],filter)) {
         variables[*count] = var_sindex(vlist[c]);
         derivatives[*count] = gradient[c];
-        /* CONSOLE_DEBUG("Var %d = %f",var_sindex(vlist[c]),gradient[c]); */
+        CONSOLE_DEBUG("Var %d = %g",var_sindex(vlist[c]),gradient[c]);
         (*count)++;
       }
     }
 	/* CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status); */
 	return status;
   }else{
+    //CONSOLE_DEBUG("Derivative Type: Not SAFE");
     if((status=RelationCalcGradient(rel_instance(rel),gradient)) == 0) {
       /* successful */
       for (c=0; c < len; c++) {
@@ -510,6 +513,126 @@ int relman_diff2(struct rel_relation *rel, const var_filter_t *filter
   }
 }
 
+
+/* return 0 on success (derivatives, variables and count are output vars too) */
+int relman_diff2_rev(struct rel_relation *rel, const var_filter_t *filter
+		,real64 *derivatives, int32 *variables
+				,int32 *count, int32 safe)
+{
+	const struct var_variable **vlist=NULL;
+	real64 *gradient;
+	int32 len,c;
+	int status;
+	//CONSOLE_DEBUG("In Function: relman_diff2");
+	assert(rel!=NULL && filter!=NULL);
+	len = rel_n_incidences(rel);
+//	CONSOLE_DEBUG("In Function relman_diff2_rev");
+	vlist = rel_incidence_list(rel);
+	
+	gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
+	assert(gradient !=NULL);
+	*count = 0;
+	if(safe){
+		//CONSOLE_DEBUG("Derivative Type: Safe");
+		//PrintGradients(rel_instance(rel));
+		status =(int32)RelationCalcGradientRevSafe(rel_instance(rel),gradient); 
+		safe_error_to_stderr( (enum safe_err *)&status );
+		/* always map when using safe functions */
+		for (c=0; c < len; c++) {
+//			CONSOLE_DEBUG("c = %d",c);
+			if (var_apply_filter(vlist[c],filter)) {
+				variables[*count] = var_sindex(vlist[c]);
+				derivatives[*count] = gradient[c];
+//				CONSOLE_DEBUG("Var %d = %g",var_sindex(vlist[c]),gradient[c]);
+				(*count)++;
+			}
+		}
+//		CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status); 
+		return status;
+	}else{
+		//CONSOLE_DEBUG("Derivative Type: Not SAFE");
+		if((status =(int32)RelationCalcGradientRev(rel_instance(rel),gradient))
+== 0) {
+			/* successful */
+			for (c=0; c < len; c++) {
+				if (var_apply_filter(vlist[c],filter)) {
+					variables[*count] = var_sindex(vlist[c]);
+					derivatives[*count] = gradient[c];
+					(*count)++;
+				}
+			}
+		}
+		/* SOLE_DEBUG("RETURNING (NON-SAFE) calc_ok=%d",status); */
+		return status;
+	}
+}
+
+
+
+/** ---------------------Hessian Calculations------------------------------ */
+/* return 0 on success (derivatives, variables and count are output vars too) */
+int relman_hess(struct rel_relation *rel, const var_filter_t *filter
+		,hessian_mtx *hess_matrix,int32 *count,unsigned long max_dimension, int32 safe)
+{
+	const struct var_variable **vlist=NULL;
+	hessian_mtx *matrix;
+	int32 len,i,j;
+	int status;
+	
+	assert(rel!=NULL && filter!=NULL);
+	
+	len = rel_n_incidences(rel);
+
+	asc_assert(len<=max_dimension); //Checking if Index is out of bounds
+	
+	vlist = rel_incidence_list(rel);
+	
+//	CONSOLE_DEBUG("IN FUNCTION relman_hess");
+	
+	matrix = Hessian_Mtx_create(hess_matrix->access_type,len);	// As Hessians may be (rarely) unsymmetrical
+																	// type of Hessian matrix should be decided from 
+																	// type of relation
+	asc_assert(matrix !=NULL);
+	*count = 0;
+	
+
+
+	if(safe){
+		status =(int32)RelationCalcHessianMtxSafe(rel_instance(rel),matrix,len); 
+		safe_error_to_stderr( (enum safe_err *)&status );
+		/* always map when using safe functions */
+		for(i=0;i<len;i++){
+			if(var_apply_filter(vlist[i],filter)){	
+				for(j=0;j<=i;j++){
+					if (var_apply_filter(vlist[j],filter)) {
+						Hessian_Mtx_set_element(hess_matrix,i,j,Hessian_Mtx_get_element(matrix,i,j));
+						(*count)++;
+					}
+				}
+			}
+		}
+//		CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status); 
+	}else{
+		if((status =(int32)RelationCalcHessianMtx(rel_instance(rel),matrix,len)) == 0) {
+
+			/* successful */
+			for(i=0;i<len;i++){
+				if(var_apply_filter(vlist[i],filter)){	
+					for(j=0;j<=i;j++){
+						if (var_apply_filter(vlist[j],filter)) {
+							Hessian_Mtx_set_element(hess_matrix,i,j,Hessian_Mtx_get_element(matrix,i,j));
+							(*count)++;
+						}
+					}
+				}
+			}	
+		}
+	}
+	
+	Hessian_Mtx_destroy(matrix);
+	
+	return status;
+}
 
 /* return 0 on success */
 int relman_diff3(struct rel_relation *rel
@@ -700,7 +823,6 @@ int32 relman_diff_harwell(struct rel_relation **rlist
   return errcnt;
 }
 
-
 int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen
 		, var_filter_t *vfilter
 		, rel_filter_t *rfilter, int32 *max
@@ -721,6 +843,7 @@ int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen
           count++;
         }
       }
+
       result += count;
       *max = MAX(*max,count);
     }

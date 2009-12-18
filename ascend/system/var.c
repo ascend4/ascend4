@@ -93,7 +93,11 @@ void var_set_instanceF(struct var_variable *var, SlvBackendToken i)
 
 
 char *var_make_name(const slv_system_t sys,const  struct var_variable *var){
-  return WriteInstanceNameString(IPTR(var->ratom),IPTR(slv_instance(sys)));
+	if(sys == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with NULL system.");
+		return NULL;
+	}
+	return WriteInstanceNameString(IPTR(var->ratom),IPTR(slv_instance(sys)));
 }
 
 char *var_make_xname(const struct var_variable *var)
@@ -211,7 +215,6 @@ void var_set_nominal(struct var_variable *var, real64 nominal)
   SetRealAtomValue(c,nominal,(unsigned)0);
 }
 
-
 real64 var_lower_bound(struct var_variable *var)
 {
   struct Instance *c;
@@ -243,7 +246,6 @@ void var_set_lower_bound(struct var_variable *var, real64 lower_bound)
   }
   SetRealAtomValue(c,lower_bound,(unsigned)0);
 }
-
 
 real64 var_upper_bound(struct var_variable *var)
 {

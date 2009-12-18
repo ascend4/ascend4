@@ -1383,19 +1383,107 @@ class TestDOPRI5(Ascend):
 		assert abs(float(M.y[1]) - 0.0) < 1e-5
 
 class TestIPOPT(Ascend):
-	def test1(self):
-		self.L.load('test/ipopt/test1.a4c')
-		M = self.L.findType('test1').getSimulation('sim')
+
+	def ipopt_tester(self,testname,hessian_approx='limited-memory',linear_solver='mumps'):
+		self.L.load('test/ipopt/%s.a4c' % testname)
+		T = self.L.findType(testname)
+		M = T.getSimulation('sim')
 		M.setSolver(ascpy.Solver("IPOPT"))
-		M.setParameter('linear_solver','mumps')
-		M.setParameter('hessian_approximation','limited-memory')
+		M.setParameter('linear_solver',linear_solver)
+		M.setParameter('hessian_approximation',hessian_approx)
 		M.solve(ascpy.Solver("IPOPT"),ascpy.SolverReporter())
+		M.run(T.getMethod('self_test'))
+
+	def test2(self):
+		self.ipopt_tester('test2')
+
+	def test3(self):
+		self.ipopt_tester('test3')
+
+	def test4(self):
+		self.ipopt_tester('test4')
+
+	def test5(self):
+		self.ipopt_tester('test5')
+
+	def test6(self):
+		self.ipopt_tester('test6')
+
+	def test7(self):
+		self.ipopt_tester('test7')
+
+	def test7_hsl(self):
+		self.ipopt_tester('test7',linear_solver='ma27')
+
+	def test8(self):
+		self.ipopt_tester('test8')
+
+	def test9(self):
+		self.ipopt_tester('test9')
+
+	def test10(self):
+		self.ipopt_tester('test10')
+
+	def test11(self):
+		self.ipopt_tester('test11')
+
+	def test12(self):
+		self.ipopt_tester('test12')
+
+	def test13(self):
+		self.ipopt_tester('test13')
+
+	def test14(self):
+		self.ipopt_tester('test14')
+
+	# tests with exact hessian routines...
+
+	def test2_exact(self):
+		self.ipopt_tester('test2',hessian_approx='exact')
+
+	def test3_exact(self):
+		self.ipopt_tester('test3',hessian_approx='exact')
+
+	def test4_exact(self):
+		self.ipopt_tester('test4',hessian_approx='exact')
+
+	def test5_exact(self):
+		self.ipopt_tester('test5',hessian_approx='exact')
+
+	def test6_exact(self):
+		self.ipopt_tester('test6',hessian_approx='exact')
+
+	def test7_exact(self):
+		self.ipopt_tester('test7',hessian_approx='exact')
+
+	def test8_exact(self):
+		self.ipopt_tester('test8',hessian_approx='exact')
+
+	def test9_exact(self):
+		self.ipopt_tester('test9',hessian_approx='exact')
+
+	def test10_exact(self):
+		self.ipopt_tester('test10',hessian_approx='exact')
+
+	def test11_exact(self):
+		self.ipopt_tester('test11',hessian_approx='exact')
+
+	def test12_exact(self):
+		self.ipopt_tester('test12',hessian_approx='exact')
+
+	def test13_exact(self):
+		self.ipopt_tester('test13',hessian_approx='exact')
+
+	def test14_exact(self):
+		self.ipopt_tester('test14',hessian_approx='exact')
+
 
 class TestCSV(Ascend):
 	def test1(self):
 		self.L.load('johnpye/datareader/testcsv.a4c')
 		M = self.L.findType('testcsv').getSimulation('sim')
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+
 
 # test some stuff for beam calculations
 class TestSection(Ascend):
@@ -1548,3 +1636,6 @@ if __name__=='__main__':
 	#suite = unittest.defaultTestLoader.loadTestsFromName('__main__')
 	#unittest.TextTestRunner(verbosity=2).run(suite)
 	unittest.main()	
+
+# ex: set ts=4 :
+

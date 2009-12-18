@@ -34,10 +34,12 @@
 
 #include "relation_util.h"
 
+
 #include <ascend/utilities/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
 #include <ascend/general/mathmacros.h>
 #include <ascend/general/list.h>
+#include <ascend/general/ltmatrix.h>
 #include <ascend/general/dstring.h>
 #include "symtab.h"
 #include "vlist.h"
@@ -56,6 +58,7 @@
 #include "rootfind.h"
 #include "func.h"
 #include "parentchild.h"
+
 
 #ifndef NDEBUG
 #include "relation_io.h"
@@ -162,8 +165,10 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res);
   SOME STUFF TO DO WITH DIMENSIONS
 */
 
-/*
+/**
 	@TODO what this does needs to be documented here
+
+	UNUSED FUNCTION??
 */
 static void apply_term_dimensions(CONST struct relation *rel,
 		struct relation_term *rt,
@@ -475,6 +480,8 @@ static void apply_term_dimensions(CONST struct relation *rel,
 
 /**
 	@TODO what this does needs to be documented here
+
+	UNUSED FUNCTION??
 */
 int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
 {
@@ -2365,13 +2372,12 @@ RelationCalcGradient(struct Instance *r, double *grad){
 enum safe_err
 RelationCalcGradientSafe(struct Instance *r, double *grad){
   double residual;
-
+  //CONSOLE_DEBUG("Gradient Evaluation Type: SAFE");
   return RelationCalcResidGradSafe(r, &residual, grad);
 }
 
 /* return 0 on success, 1 on error */
-int
-RelationCalcResidGrad(struct Instance *i, double *residual, double *gradient){
+int RelationCalcResidGrad(struct Instance *i, double *residual, double *gradient){
   struct relation *r;
   enum Expr_enum reltype;
 
@@ -2397,8 +2403,7 @@ RelationCalcResidGrad(struct Instance *i, double *residual, double *gradient){
   return 1;
 }
 
-enum safe_err
-RelationCalcResidGradSafe(struct Instance *i
+enum safe_err RelationCalcResidGradSafe(struct Instance *i
 		, double *residual, double *gradient
 ){
   struct relation *r;
@@ -2430,30 +2435,343 @@ RelationCalcResidGradSafe(struct Instance *i
     return not_safe;
   }
 
+
   if( reltype == e_token ) {
     dummy_int =
       RelationEvaluateResidualGradientSafe(r, residual, gradient, &not_safe);
+    //CONSOLE_DEBUG("Relation Type: e_token");
     return not_safe;
   }
   if (reltype == e_blackbox){
     if (BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
       not_safe = safe_problem;
     }
+    CONSOLE_DEBUG("Relation Type: e_blackbox");
     return not_safe;
   }
   if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
     if (reltype == e_glassbox){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
+	CONSOLE_DEBUG("Relation Type: e_glassbox");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
     }
     if (reltype == e_opcode){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
+     	CONSOLE_DEBUG("Relation Type: e_opcode");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
     }
+    CONSOLE_DEBUG("Relation Type: other");
     not_safe = safe_problem;
     return not_safe;
   }
 
   ASC_PANIC( "reached end of routine");
 }
+
+/**-------------Reverse Automatic Differentiation---------------*/
+
+/*
+	simply call the version that calculates the gradient and the residual,
+	then ignore the residual
+*/
+int	RelationCalcGradientRev(struct Instance *r, double *grad){
+	double residual;
+	return RelationCalcResidGradRev(r, &residual, grad);
+}
+
+/*
+		simply call the version that calculates the gradient and the residual,
+		then ignore the residual
+
+		return 0 on success (as 'safe_ok' enum)
+*/
+enum safe_err RelationCalcGradientRevSafe(struct Instance *r, double *grad){
+	double residual;
+	//CONSOLE_DEBUG("Gradient Evaluation Type: SAFE");
+	return RelationCalcResidGradRevSafe(r, &residual, grad);
+}
+
+
+/* return 0 on success, 1 on error */
+int RelationCalcResidGradRev(struct Instance *i, double *residual, double *gradient){
+	struct relation *r;
+	enum Expr_enum reltype;
+
+	CHECK_INST_RES(i,residual,1);
+	CHECK_INST_RES(i,residual,1);
+
+	r = (struct relation *)GetInstanceRelation(i, &reltype);
+	if( r == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation");
+		return 1;
+	}
+
+	if(reltype == e_token ){
+		RelationEvaluateResidualGradientRev(r, residual, gradient,0);
+		return 0;
+	}
+
+	if(reltype == e_blackbox){
+		//return BlackBoxCalcResidGrad(i, residual, gradient, r);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
+	}
+
+	assert(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH);
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype %d not implemented",reltype);
+	return 1;
+}
+
+enum safe_err RelationCalcResidGradRevSafe(struct Instance *i
+		, double *residual, double *gradient)
+{
+	struct relation *r;
+	enum Expr_enum reltype;
+	enum safe_err not_safe = safe_ok;
+	
+
+	#ifndef NDEBUG
+	if( i == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null instance\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+	if( residual == NULL || gradient == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null pointer\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+	if( InstanceKind(i) != REL_INST ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+	#endif
+	r = (struct relation *)GetInstanceRelation(i, &reltype);
+	if( r == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+
+
+	if( reltype == e_token ) {
+		RelationEvaluateResidualGradientRevSafe(r, residual, gradient,0, &not_safe);
+		//CONSOLE_DEBUG("Relation Type: e_token");
+		return not_safe;
+	}
+	if (reltype == e_blackbox){
+		/*if (BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
+			not_safe = safe_problem;
+		}
+		CONSOLE_DEBUG("Relation Type: e_blackbox");
+		return not_safe;*/
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
+	}
+	if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+		if (reltype == e_glassbox){
+			CONSOLE_DEBUG("Relation Type: e_glassbox");
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
+		}
+		if (reltype == e_opcode){
+			CONSOLE_DEBUG("Relation Type: e_opcode");
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
+		}
+		CONSOLE_DEBUG("Relation Type: other");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+
+	ASC_PANIC( "reached end of routine");
+}
+
+/**----------------------------Second Derivative Calculations ------------------------------- */
+
+/* return 0 on success, 1 on error */
+int RelationCalcSecondDeriv(struct Instance *i, double *deriv2nd, unsigned long var_index){
+	struct relation *r;
+	enum Expr_enum reltype;
+
+
+	r = (struct relation *)GetInstanceRelation(i, &reltype);
+	if( r == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation");
+		return 1;
+	}
+
+	if(reltype == e_token ){
+		RelationEvaluateSecondDeriv(r,deriv2nd,var_index,0,NULL); //FIXME Check this
+  		return 0;
+	}
+
+	if(reltype == e_blackbox){
+		//return BlackBoxCalcResidGrad(i, residual, gradient, r);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
+	}
+
+	assert(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH);
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype %d not implemented",reltype);
+	return 1;
+}
+
+enum safe_err RelationCalcSecondDerivSafe(struct Instance *i, double *deriv2nd,unsigned long var_index)
+{
+	struct relation *r;
+	enum Expr_enum reltype;
+	enum safe_err not_safe = safe_ok;
+	
+
+#ifndef NDEBUG
+	if( i == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null instance\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+	if(deriv2nd == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null pointer\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+	if( InstanceKind(i) != REL_INST ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+#endif
+	r = (struct relation *)GetInstanceRelation(i, &reltype);
+	if( r == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+
+
+	if( reltype == e_token ) {
+		RelationEvaluateSecondDerivSafe(r,
+										deriv2nd,
+		  								var_index,
+										0,
+ 										NULL,
+ 										&not_safe);		
+		return not_safe;
+	}
+	if (reltype == e_blackbox){
+		/*if (BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
+		not_safe = safe_problem;
+	}
+		CONSOLE_DEBUG("Relation Type: e_blackbox");
+		return not_safe;*/
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
+	}
+	if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+		if (reltype == e_glassbox){
+			CONSOLE_DEBUG("Relation Type: e_glassbox");
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
+		}
+		if (reltype == e_opcode){
+			CONSOLE_DEBUG("Relation Type: e_opcode");
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
+		}
+		CONSOLE_DEBUG("Relation Type: other");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+
+	ASC_PANIC( "reached end of routine");
+}
+/**------------------------------------------------------------------------------------------ */
+
+/**----------------------------Hessian Calculations Routines------------------------------- */
+
+/* return 0 on success, 1 on error */
+int RelationCalcHessianMtx(struct Instance *i, hessian_mtx *hess_mtx, unsigned long dimension){
+	struct relation *r;
+	enum Expr_enum reltype;
+
+// 	CONSOLE_DEBUG("IN FUNCTION RelationCalcHessianMtx");
+
+	r = (struct relation *)GetInstanceRelation(i, &reltype);
+	if( r == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation");
+		return 1;
+	}
+
+	if(reltype == e_token ){
+		RelationEvaluateHessianMtx(r,hess_mtx,dimension);
+		return 0;
+	}
+
+	if(reltype == e_blackbox){
+		//return BlackBoxCalcResidGrad(i, residual, gradient, r);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
+	}
+
+	assert(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH);
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype %d not implemented",reltype);
+	return 1;
+}
+
+enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, hessian_mtx *hess_mtx,unsigned long dimension)
+{
+	struct relation *r;
+	enum Expr_enum reltype;
+	enum safe_err not_safe = safe_ok;
+	
+//	CONSOLE_DEBUG("IN FUNCTION RelationCalcHessianMtxSafe");
+
+#ifndef NDEBUG
+	if( i == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null instance\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+	if( hess_mtx == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null pointer\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+	if( InstanceKind(i) != REL_INST ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+#endif
+	r = (struct relation *)GetInstanceRelation(i, &reltype);
+	if( r == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+
+
+	if( reltype == e_token ) {
+		RelationEvaluateHessianMtxSafe(r,hess_mtx,dimension,&not_safe);
+		return not_safe;
+	}
+	if (reltype == e_blackbox){
+		/*if (BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
+		not_safe = safe_problem;
+	}
+		CONSOLE_DEBUG("Relation Type: e_blackbox");
+		return not_safe;*/
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
+	}
+	if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+		if (reltype == e_glassbox){
+			CONSOLE_DEBUG("Relation Type: e_glassbox");
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
+		}
+		if (reltype == e_opcode){
+			CONSOLE_DEBUG("Relation Type: e_opcode");
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
+		}
+		CONSOLE_DEBUG("Relation Type: other");
+		not_safe = safe_problem;
+		return not_safe;
+	}
+
+	ASC_PANIC( "reached end of routine");
+}
+
+
+/**------------------------------------------------------------------------------------------ */
 
 
 /*
@@ -2542,8 +2860,10 @@ void PrintGradients(struct Instance *i){
     unsigned long vars, v;
     enum Expr_enum type;
     enum safe_err safe;
+	struct relation* rel;
 
-    vars = NumberVariables((struct relation *)GetInstanceRelation(i,&type));
+	rel = (struct relation *)GetInstanceRelation(i,&type);
+    vars = NumberVariables(rel);
 
     /*****  use the non safe versions  *****/
     for( v = 0; v < vars; v++ ) {
@@ -2606,6 +2926,25 @@ void PrintGradients(struct Instance *i){
       PRINTF("**** RelationCalcResidGradSafe returned nonzero: %d\n", safe);
     }
 
+	if(safe_ok==(safe=RelationCalcResidGradRevSafe(i,&res,grads))){
+		for (v = 0; v < vars; v++) {
+			PRINTF("reverse safe grad in%6ld =\t%g\n", v+1, grads[v]);
+		}
+		PRINTF("reverse safe resid ala grad=\t%g\n", res);
+	}
+	else {
+		PRINTF("**** RelationCalcResidGradRevSafe returned nonzero: %d\n", safe);
+	}
+	
+	if( ! RelationCalcResidGradRev(i,&res,grads) ) {
+		for (v = 0; v < vars; v++) {
+			PRINTF("reverse non-safe gradient in %6ld =\t%g\n", v+1, grads[v]);
+		}
+		PRINTF("residual from reverse non-safe grad =\t%g\n", res);
+	}
+	else {
+		PRINTF("**** RelationCalcResidGradRev returned nonzero status\n");
+	}
   /*****  not implemented
     if( ! (safe = RelationCalcResidualInfixSafe(i,&res)) ) {
       PRINTF("safe infix residual=\t%g\n", res);
@@ -3995,4 +4334,5 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res){
   return 1;
 	return 1;
 }
+
 #endif
