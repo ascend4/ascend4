@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: ascend
 Architecture: any
-Depends: python, libtktable2.9, libgtksourceview-common, ${shlibs:Depends}, python-glade2, python-numpy, python-matplotlib
+Depends: python, libtktable2.9, libgtksourceview2.0-common, ${shlibs:Depends}, python-glade2, python-numpy, python-matplotlib
 Recommends: ipython, xgraph
 Description:Solver for systems of equations and ODEs/DAEs
  ASCEND is a modelling and simulation environment for
