@@ -1337,54 +1337,53 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 		ret = 0; /* success */
 		ipopt_iteration_ends(sys);
 		update_status(sys);
-	}
-	else{
+	}else{
 		//Treat all other cases here
 		switch(status){
-			case Solved_To_Acceptable_Level:
+		case Solved_To_Acceptable_Level:
 			/** @todo What should be done here? */
 			ERROR_REPORTER_HERE(ASC_USER_NOTE,"Solved to acceptable level");	
 			break;
-			case Infeasible_Problem_Detected:
+		case Infeasible_Problem_Detected:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Infeasible Problem Detected");
 			break;
-			case Diverging_Iterates:
+		case Diverging_Iterates:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Diverging iterations found.");
 			break;
-			case User_Requested_Stop:
+		case User_Requested_Stop:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"User Requested Stop.");
 			break;
-			case Maximum_Iterations_Exceeded:
+		case Maximum_Iterations_Exceeded:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Maximum Iterations Exceeded.");
 			break;
-			case Restoration_Failed:
+		case Restoration_Failed:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Restoration Failed.");
 			break;
-			case Error_In_Step_Computation:
+		case Error_In_Step_Computation:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Error in Step Computation.");
 			break;
-			case Maximum_CpuTime_Exceeded:
+		case Maximum_CpuTime_Exceeded:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Maximum CPU Time exceeded.");
 			break;
-			case Not_Enough_Degrees_Of_Freedom:
+		case Not_Enough_Degrees_Of_Freedom:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Not enough degrees of freedom.");
 			break;
-			case Invalid_Problem_Definition:
+		case Invalid_Problem_Definition:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Invalid problem definition.");
 			break;
-			case Invalid_Option:
+		case Invalid_Option:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Invalid Option.");
 			break;
-			case Invalid_Number_Detected:
+		case Invalid_Number_Detected:
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Invalid Number Detected.");
 			break;
-			case Unrecoverable_Exception:
+		case Unrecoverable_Exception:
 			ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Unrecoverable_Exception.");
 			break;
-			case Insufficient_Memory:
+		case Insufficient_Memory:
 			ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Insufficient Memory.");
 			break;
-			case Internal_Error:
+		case Internal_Error:
 			ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Internal Error.");
 			break;
 		}

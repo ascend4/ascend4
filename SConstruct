@@ -2940,7 +2940,7 @@ tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 )
 
 env.Depends(tar,'ascend.spec')
-env.Depends(tar,'#doc/book.pdf')
+env.Depends(tar,'doc/book.pdf')
 
 #------------------------------------------------------
 # DEBIAN TARBALL for use with Build Service
