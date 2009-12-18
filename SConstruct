@@ -41,6 +41,9 @@ default_tcl_lib = "tcl8.5"
 default_tk_lib = "tk8.5"
 default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
+default_ipopt_libpath = "$IPOPT_PREFIX/lib"
+default_ipopt_dll = "$IPOPT_LIBPATH/ipopt38.dll"
+default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
 default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
 default_conopt_cpppath="$CONOPT_PREFIX"
@@ -84,6 +87,10 @@ if platform.system()=="Windows":
 	
 	# where to look for IDA solver libraries, headers, etc.
 	default_ida_prefix = "c:\\MinGW"
+	
+	# IPOPT
+	default_ipopt_libpath = "$IPOPT_PREFIX/lib/win32/release"
+	default_ipopt_libs = ["ipopt"]
 
 	# where to look for CONOPT when compiling
 	default_conopt_prefix = "c:\\Program Files\\CONOPT"
@@ -477,14 +484,14 @@ opts.Add(PackageOption(
 opts.Add(
 	"IPOPT_LIBS"
 	,"Library linked to for IPOPT"
-	,["$F2C_LIB","blas","lapack","pthread","ipopt"]
+	,default_ipopt_libs
 )
 
 
 opts.Add(
 	"IPOPT_LIBPATH"
 	,"Where is your IPOPT library installed"
-	,"$IPOPT_PREFIX/lib"
+	,default_ipopt_libpath
 )
 
 opts.Add(
@@ -492,6 +499,13 @@ opts.Add(
 	,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
 	,"$IPOPT_PREFIX/include"
 )
+
+opts.Add(
+	'IPOPT_DLL'
+	,"Exact path of IPOPT DLL to be included in the installer (Windows only)"
+	,default_ipopt_dll
+)
+
 
 
 #------- TRON -------
@@ -2903,6 +2917,7 @@ if with_installer:
 		'OUTFILE':"#dist/"+env['WIN_INSTALLER_NAME']
 		,"VERSION":version
 		,'PYVERSION':pyversion
+		,'IPOPTDLL':os.path.normpath(env['IPOPT_DLL'])
 	})
 	installer = env.Installer('nsis/installer.nsi')
 	env.Depends(installer,["pygtk","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
