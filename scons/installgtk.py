@@ -38,6 +38,29 @@ def find_deps(binary):
 		deps.add(m.group(1))
 	return deps
 
+def reroute_deps(lib,gtksite,pysite):
+	deps = find_deps(lib)
+	for d in deps:
+		oldpath = d
+		r = os.path.commonprefix([oldpath,gtksite])
+		if r == gtksite:
+			# this dependency is pointing into the GTK installation location
+			c = os.path.commonprefix([lib,gtksite])
+			newpath = "@executable_path/gtk.bundle/gtk/" + oldpath[len(r):]
+		else:
+			r = os.path.commonprefix([oldpath,pysite])
+			if r == pysite:
+				# this dependency is pointing to a file installed inside Python
+				newpath = "@executable_path/gtk.bundle/python/" + oldpath[len(r):]
+			else:
+				continue
+
+		cmd = ['/usr/bin/install_name_tool','-change',oldpath,newpath,lib]
+		#print "RELINK %s: %s --> %s" % (lib,oldpath,newpath)
+		#print " ".join(cmd)
+		P = subprocess.Popen(cmd,stdout=subprocess.PIPE)
+		P.communicate()
+
 def generate(env):
 	pass
 
@@ -140,7 +163,7 @@ if __name__ == "__main__":
 		print "Copy %s --> %s" % (f, os.path.join(pytarget,r))
 		shutil.copy(f,os.path.join(pytarget,r))
 
-	print "\nCopying Python shared libraries"
+	print "\nCopying Python shared libraries and rerouting"
 	copied = set()
 	for f in realimports:
 		if os.path.commonprefix([f,pysite]) == pysite:
@@ -154,10 +177,14 @@ if __name__ == "__main__":
 			print "Create directory '%s'"% dir
 			os.makedirs(os.path.join(pytarget,dir))
 
-		shutil.copy(f,os.path.join(pytarget,r))
+		t = os.path.join(pytarget,r)
+		shutil.copy(f,t)
 		copied.add(f)
 
-	print "\nCopying GTK libraries"
+		reroute_deps(t,gtksite,pysite)
+
+
+	print "\nCopying GTK libraries and rerouting"
 	gtktarget = os.path.join(targetpath,"gtk")
 	if not os.path.exists(gtktarget):
 		os.mkdir(gtktarget)
@@ -174,8 +201,11 @@ if __name__ == "__main__":
 			os.makedirs(os.path.join(gtktarget,dir))
 
 		print "Copy %s --> %s" % (f, os.path.join(gtktarget,r))
-		shutil.copy(f,os.path.join(gtktarget,r))
+		t = os.path.join(gtktarget,r)
+		shutil.copy(f,t)
 		copied.add(f)
+
+		reroute_deps(t,gtksite,pysite)
 
 	if copied != realimports:
 		print "\nError: some library files were not copied:"
