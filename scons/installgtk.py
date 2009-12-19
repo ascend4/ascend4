@@ -56,6 +56,7 @@ if __name__ == "__main__":
 	ignore_paths = ['/System/Library/Frameworks/Python.framework'
 		,'/System/Library/Frameworks/Carbon.framework'
 		,'/System/Library/Frameworks/Cocoa.framework'
+		,'/usr/lib'
 		,os.path.dirname(script)]
 	for name, m in M.modules.items():
 		if not m.__file__:
@@ -92,7 +93,7 @@ if __name__ == "__main__":
 
 	print "\n\nRemoving system libs from list"
 	realimports = set()
-	ignore_paths += ['/usr/lib']
+	#ignore_paths += ['/usr/lib']
 	for f in files:
 		ok = True
 		for i in ignore_paths:
@@ -142,7 +143,7 @@ if __name__ == "__main__":
 
 	print "\nCopying Python shared libraries"
 	copied = set()
-	for f in files:
+	for f in realimports:
 		if os.path.commonprefix([f,pysite]) == pysite:
 			r = f[len(pysite):]
 		else:
@@ -162,12 +163,13 @@ if __name__ == "__main__":
 	if not os.path.exists(gtktarget):
 		os.mkdir(gtktarget)
 
-	for f in files:
+	for f in realimports:
 		if os.path.commonprefix([f,gtksite]) == gtksite:
-			r = f[len(pysite):]
+			r = f[len(gtksite):]
 		else:
 			continue
 
+		dir,f1 = os.path.split(r)
 		if not os.path.exists(os.path.join(gtktarget,dir)):
 			print "Create directory '%s'"% dir
 			os.makedirs(os.path.join(gtktarget,dir))
@@ -176,8 +178,10 @@ if __name__ == "__main__":
 		shutil.copy(f,os.path.join(gtktarget,r))
 		copied.add(f)
 
-	if copied != files:
-		print "Some library files were not copied!"
+	if copied != realimports:
+		print "\nError: some library files were not copied:"
+		for f in realimports - copied:
+			print f
 
 
 

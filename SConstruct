@@ -2902,6 +2902,22 @@ if env.get('CAN_INSTALL'):
 		env.Command("$INSTALL_ROOT$INSTALL_PREFIX/Applications Folder","/Applications","ln -f -s $SOURCE $TARGET")
 		install_dirs += [Dir(env.subst("$INSTALL_ROOT$INSTALL_PREFIX"))]
 
+		# GTK libraries and related files
+		gtkfiles = []
+		gtksource = "dist/gtk.bundle/"
+		def visit(gtkfiles,dirname,fnames):
+			gtkfiles += Glob("%s/*" % dirname)
+		os.path.walk(gtksource,visit,gtkfiles)
+		
+		print "GTKFILES =",gtkfiles
+
+		for f in gtkfiles:
+			r = os.path.commonprefix([gtksource,f.path])
+			dirname,filename = os.path.split(f.path[len(r):])
+			dest = os.path.join(env.subst("$INSTALL_ROOT$INSTALL_BIN/gtk.bundle"),dirname)
+			print "%s --> %s" %(f,dest)
+			env.Install(Dir(dest),f)
+
 	# ALIAS FOR ALL INSTALLATION
 	env.Alias('install',install_dirs)
 
