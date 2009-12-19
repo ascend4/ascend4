@@ -66,7 +66,7 @@ elif platform.system()=="Darwin":
 
 	INSTALL_PYGTK = path_absolute("gtk.bundle/python")
 	print "Adding %s to python path" % INSTALL_PYGTK
-	sys.path.append(INSTALL_PYGTK)
+	sys.path.insert(0,INSTALL_PYGTK)
 
 else:
 	LDPATHVAR = 'LD_LIBRARY_PATH'

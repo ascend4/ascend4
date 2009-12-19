@@ -6,18 +6,17 @@
 This tool provides SCons support for installing the necessary files to allow
 GTK to run in a standalone installation.
 
-This approach is suitable for Windows and Mac where we often must assume that
-GTK+ is not separately installed on the system, or can't assume that the version
-will be compatible.
+This approach is suitable for Mac (and maybe Windows too) where we often must 
+assume that GTK+ is not separately installed on the system, or can't assume that
+the version will be compatible.
 
 Ultimately, it would be desirable for a Mac 'framework' to be utilised for this
 purpose, but that is not yet available.
 
-To use it you must copy this file into the scons/SCons/Tools directory or use
-the tooldir arg in the Tool function and put a line like 'env.Tool("InstallGTK")'
-into your file. Then you can do 'env.InstallGTK(sourcebinary, targetdir)' which 
-will read dependencies for sourcebinary and copy required libraries and
-other files into targetdir.
+Currently, this tool is a command-line thing that you must run after ASCEND
+has been compiled, but before you run 'scons install'. It will copy all the
+necessary files into dist/gtk.bundle; these files will then be copied by SCons
+into their files (.dmg preparation folder) location.
 """
 
 #import SCons.Builder
