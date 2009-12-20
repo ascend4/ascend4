@@ -2904,7 +2904,7 @@ if env.get('CAN_INSTALL'):
 
 		# GTK libraries and related files
 		gtkfiles = []
-		gtksource = "dist/gtk.bundle/"
+		gtksource = "dist/PyGTK.bundle/"
 		def visit(gtkfiles,dirname,fnames):
 			gtkfiles += Glob("%s/*" % dirname)
 		os.path.walk(gtksource,visit,gtkfiles)
@@ -2914,7 +2914,7 @@ if env.get('CAN_INSTALL'):
 		for f in gtkfiles:
 			r = os.path.commonprefix([gtksource,f.path])
 			dirname,filename = os.path.split(f.path[len(r):])
-			dest = os.path.join(env.subst("$INSTALL_ROOT$INSTALL_BIN/gtk.bundle"),dirname)
+			dest = os.path.join(env.subst("$INSTALL_ROOT$INSTALL_BIN/PyGTK.bundle"),dirname)
 			print "%s --> %s" %(f,dest)
 			env.Install(Dir(dest),f)
 

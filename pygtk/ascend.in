@@ -54,7 +54,7 @@ elif platform.system()=="Darwin":
 
 	LDPATHVAR = 'DYLD_LIBRARY_PATH'
 
-	GTKLIBPATH=[path_absolute("gtk.bundle/gtk/lib")]
+	GTKLIBPATH=[path_absolute("PyGTK.bundle/lib")]
 
 	INSTALL_LIB = path_absolute(".")
 	INSTALL_ASCDATA = path_absolute("Resources")
@@ -63,7 +63,7 @@ elif platform.system()=="Darwin":
 	INSTALL_PYTHON = path_absolute("Python")
 	DEFAULT_ASCENDLIBRARY="%s;%s" % (INSTALL_SOLVERS,INSTALL_MODELS)
 
-	INSTALL_PYGTK = path_absolute("gtk.bundle/python")
+	INSTALL_PYGTK = path_absolute("PyGTK.bundle/python")
 	print "Adding %s to python path" % INSTALL_PYGTK
 	sys.path.insert(0,INSTALL_PYGTK)
 
@@ -111,10 +111,10 @@ if not os.environ.get('ASC_GDB'):
 #			os.environ['XDG_CONFIG_HOME']=os.path.expanduser('~/.config')
 #			os.environ['XDG_CACHE_HOME']=os.path.expanduser('~/.cache')
 #			os.environ['XDG_CONFIG_DIRS']='/sw/etc/xdg'
-			os.environ['XDG_DATA_DIRS']='/sw/share'
 #			os.environ['XML_CATALOG_FILES']='/sw/etc/xml/catalog'
+			os.environ['XDG_DATA_DIRS']="../PyGTK.bundle/share"
 
-			bundle_res = path_absolute("../gtk/")
+			bundle_res = os.path.normpath(path_absolute("../"))
 			print "BUNDLE_RES =", bundle_res
 			bundle_etc = os.path.join(bundle_res,"etc")
 			os.environ['GTK_DATA_PREFIX'] = bundle_res
@@ -123,7 +123,7 @@ if not os.environ.get('ASC_GDB'):
 			os.environ['GTK2_RC_FILES'] = os.path.join(bundle_etc,"gtk-2.0/gtkrc")
 			os.environ['GTK_IM_MODULE_FILE']=os.path.join(bundle_etc,"gtk-2.0/gtk.immodules")
 			os.environ['GDK_PIXBUF_MODULE_FILE']=os.path.join(bundle_etc,"gtk-2.0/gdk-pixbuf.loaders")
-			os.environ['PANGO_RC_FILE']=os.path.join(bundle_etc,"pango/pangorc")
+			#os.environ['PANGO_RC_FILE']=os.path.join(bundle_etc,"pango/pangorc")
 
 			restart = 1
 

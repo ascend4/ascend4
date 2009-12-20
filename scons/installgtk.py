@@ -3,25 +3,22 @@
 
 
 """
-This tool provides SCons support for installing the necessary files to allow
-GTK to run in a standalone installation.
+This tool installs the necessary files to allow GTK to run in a standalone
+installation.
 
-This approach is suitable for Mac (and maybe Windows too) where we often must 
-assume that GTK+ is not separately installed on the system, or can't assume that
-the version will be compatible.
+This approach is suitable for Mac (and maybe for Windows too) where we often
+must assume that GTK+ is not separately installed on the system, or can't assume
+that the version will be compatible.
 
 Ultimately, it would be desirable for a Mac 'framework' to be utilised for this
-purpose, but that is not yet available.
+purpose, but that option is not yet available.
 
 Currently, this tool is a command-line thing that you must run after ASCEND
 has been compiled, but before you run 'scons install'. It will copy all the
-necessary files into dist/gtk.bundle; these files will then be copied by SCons
+necessary files into dist/PyGTK.bundle; these files will then be copied by SCons
 into their files (.dmg preparation folder) location.
 """
 
-#import SCons.Builder
-#import SCons.Util
-#import SCons.Scanner
 import os.path
 import glob
 import subprocess, sys, os.path, re, shutil
@@ -47,8 +44,8 @@ def reroute_deps(lib,gtksite,pysite):
 		r = os.path.commonprefix([oldpath,gtksite])
 		if r == gtksite:
 			# this dependency is pointing into the GTK installation location
-			c = os.path.commonprefix([lib,gtksite])
-			newpath = "gtk/" + oldpath[len(r):]
+			dir, f = os.path.split(oldpath)
+			newpath = "@loader_path/"+f
 		else:
 			r = os.path.commonprefix([oldpath,pysite])
 			if r == pysite:
@@ -64,11 +61,12 @@ def reroute_deps(lib,gtksite,pysite):
 		P.communicate()
 		rpath_used = True
 
-def generate(env):
-	pass
-
-def exists(env):
-	pass
+def find_and_replace(fname, pattern, replace):
+	t = open(fname).read()
+	t1 = pattern.sub(replace,t)
+	f = open(fname,'w')
+	f.write(t1)
+	f.close()
 
 if __name__ == "__main__":
 	import modulefinder
@@ -130,97 +128,54 @@ if __name__ == "__main__":
 		print l
 		files.add(l)
 
-	print "\n\nRemoving system libs from list"
-	realimports = set()
-	#ignore_paths += ['/usr/lib']
+	print "\n\nFinding all GTK libs in the list"
+	gtkimports = set()
 	for f in files:
-		ok = True
-		for i in ignore_paths:
-			if os.path.commonprefix([i,f]) == i:
-				ok = False
-		if ok is False:
-			#print "REMOVE",f
-			continue
-		realimports.add(f)
-		print f
-
-	distpath = os.path.normpath(os.path.join(sys.path[0],"../dist"))
-	if not os.path.exists(distpath):
-		os.mkdir(distpath)
-	targetpath=os.path.join(distpath,"gtk.bundle")
-	if not os.path.exists(targetpath):
-		os.mkdir(targetpath)
-
-	pytarget=os.path.join(targetpath,"python")
-	if not os.path.exists(pytarget):
-		os.mkdir(pytarget)
-	print "PYTHON TARGET =",pytarget
-
-	print "\nCopying Python includes"
-
-	for f in pyfiles:
-		if os.path.commonprefix([f,pysite]) == pysite:
-			r = f[len(pysite):]
-		else:
-			raise RuntimeError("Unknown python file location '%s'" % f)	
-
-		dir,f1 = os.path.split(r)
-		if not os.path.exists(os.path.join(pytarget,dir)):
-			print "Create directory '%s'"% dir
-			os.makedirs(os.path.join(pytarget,dir))
-
-		print "Copy %s --> %s" % (f, os.path.join(pytarget,r))
-		shutil.copy(f,os.path.join(pytarget,r))
-
-	print "\nCopying Python shared libraries and rerouting"
-	copied = set()
-	for f in realimports:
-		if os.path.commonprefix([f,pysite]) == pysite:
-			r = f[len(pysite):]
-		else:
-			continue
-		print "Copy %s --> %s" % (f, os.path.join(pytarget,r))
-
-		dir,f1 = os.path.split(r)
-		if not os.path.exists(os.path.join(pytarget,dir)):
-			print "Create directory '%s'"% dir
-			os.makedirs(os.path.join(pytarget,dir))
-
-		t = os.path.join(pytarget,r)
-		shutil.copy(f,t)
-		copied.add(f)
-
-		reroute_deps(t,gtksite,pysite)
-
-
-	print "\nCopying GTK libraries and rerouting"
-	gtktarget = os.path.join(targetpath,"gtk")
-	if not os.path.exists(gtktarget):
-		os.mkdir(gtktarget)
-
-	for f in realimports:
-		if os.path.commonprefix([f,gtksite]) == gtksite:
-			r = f[len(gtksite):]
-		else:
-			continue
-
-		dir,f1 = os.path.split(r)
-		if not os.path.exists(os.path.join(gtktarget,dir)):
-			print "Create directory '%s'"% dir
-			os.makedirs(os.path.join(gtktarget,dir))
-
-		print "Copy %s --> %s" % (f, os.path.join(gtktarget,r))
-		t = os.path.join(gtktarget,r)
-		shutil.copy(f,t)
-		copied.add(f)
-
-		reroute_deps(t,gtksite,pysite)
-
-	if copied != realimports:
-		print "\nError: some library files were not copied:"
-		for f in realimports - copied:
+		if os.path.commonprefix([gtksite,f]) == gtksite:
+			gtkimports.add(f)
 			print f
-		raise RuntimeError("Library files were left over, see above")
+	
+	print "\n\nFinding all Python site-packages stuff in the list"
+	pyimports = set()
+	for f in files:
+		if os.path.commonprefix([pysite,f]) == pysite:
+			pyimports.add(f)
+			print f
+
+	# define the paths into which we'll copy all the stuff
+	distpath = os.path.normpath(os.path.join(sys.path[0],"../dist"))
+	targetpath = os.path.join(distpath,"PyGTK.bundle")
+	pytarget = os.path.join(targetpath,"python")
+	gtktarget = targetpath
+	gtklibtarget = os.path.join(gtktarget,"lib")
+
+	print "\n\nCopying all Python files into our bundle"
+	for f in pyfiles | pyimports:
+		if not os.path.commonprefix([f,pysite]) == pysite:
+			raise RuntimeError("Unknown python import in list")
+		r = f[len(pysite):]
+		dir, f1 = os.path.split(r)
+		if not os.path.exists(os.path.join(pytarget,dir)):
+			os.makedirs(os.path.join(pytarget,dir))
+		print r
+		dest = os.path.join(pytarget,r)
+		shutil.copy(f, dest)
+		if dest[-3:] == ".so":
+			print "  rerouting dependencies..."
+			reroute_deps(dest,gtksite,pysite)
+	
+	print "\n\nCopy all GTK libs into our bundle"
+	if not os.path.exists(gtklibtarget):
+		os.makedirs(gtklibtarget)
+	for f in gtkimports:
+		if not os.path.commonprefix([f, gtksite]) == gtksite:
+			raise RuntimeError("Unknown gtk import in list")
+		r = f[len(gtksite):]
+		dir, f1 = os.path.split(r)
+		dest = os.path.join(gtklibtarget, f1)
+		print dest
+		shutil.copy(f, dest)
+		reroute_deps(dest,gtksite,pysite)
 
 	print "\nCopying GTK related files"
 	reldirs = ["etc/gtk-2.0", "etc/pango", "etc/fonts"]
@@ -228,19 +183,17 @@ if __name__ == "__main__":
 		print "%s --> %s" % (os.path.join(gtksite,d),os.path.join(gtktarget,d))
 		copy_tree(os.path.join(gtksite,d),os.path.join(gtktarget,d))
 	
-	print "\nFixing absolute paths in GTK etc files"
+	print "\nFixing pixbuf loader paths"
+	loaderre = re.compile("%slib/gtk-2\\.0/[^/]+/loaders/" % re.escape(gtksite))
+	find_and_replace("%s/etc/gtk-2.0/gdk-pixbuf.loaders"%gtktarget,loaderre,"@loader_path/")
+
+	print "\nFixing absolute path sin GTK etc files"
 	etcfiles = ["%s/etc/%s" % (gtktarget, f) for f in 
-		['gtk-2.0/gtk.immodules','gtk-2.0/gdk-pixbuf.loaders',
-		'pango/pango.modules'] #'pango/pangorc',
+		['gtk-2.0/gtk.immodules', 'pango/pango.modules'] #'pango/pangorc',
 	]
 	etcre = re.compile("%s"%re.escape(gtksite))
 	for e in etcfiles:
 		print e
-		t = open(e).read()
-		t1 = etcre.sub("",t)
-		f = open(e,'w')
-		f.write(t1)
-		f.close()
 
 	print "\nTODO: copy localisation files (not yet implemented)"
 	#SHARE=`echo $PREFIX/share/locale/*/LC_MESSAGES/gimp*`
