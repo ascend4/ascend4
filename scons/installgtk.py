@@ -25,6 +25,7 @@ into their files (.dmg preparation folder) location.
 import os.path
 import glob
 import subprocess, sys, os.path, re, shutil
+from distutils.dir_util import copy_tree
 
 otool_re = re.compile(r"""\s+(.+)\s\(compatibility version (.*), current version (.*)\)""")
 
@@ -40,18 +41,19 @@ def find_deps(binary):
 
 def reroute_deps(lib,gtksite,pysite):
 	deps = find_deps(lib)
+	rpath_used = False
 	for d in deps:
 		oldpath = d
 		r = os.path.commonprefix([oldpath,gtksite])
 		if r == gtksite:
 			# this dependency is pointing into the GTK installation location
 			c = os.path.commonprefix([lib,gtksite])
-			newpath = "@executable_path/gtk.bundle/gtk/" + oldpath[len(r):]
+			newpath = "gtk/" + oldpath[len(r):]
 		else:
 			r = os.path.commonprefix([oldpath,pysite])
 			if r == pysite:
 				# this dependency is pointing to a file installed inside Python
-				newpath = "@executable_path/gtk.bundle/python/" + oldpath[len(r):]
+				newpath = "python/" + oldpath[len(r):]
 			else:
 				continue
 
@@ -60,6 +62,7 @@ def reroute_deps(lib,gtksite,pysite):
 		#print " ".join(cmd)
 		P = subprocess.Popen(cmd,stdout=subprocess.PIPE)
 		P.communicate()
+		rpath_used = True
 
 def generate(env):
 	pass
@@ -73,6 +76,14 @@ if __name__ == "__main__":
 	sys.path.append("..")
 	script = os.path.normpath(os.path.join(sys.path[0],"../pygtk/gtkbrowser.py"))
 	M.run_script(script)
+
+	pysite="/Library/Python/2.5/site-packages/"
+	if pysite[-1:]!="/":
+		raise RuntimeError("missing trailing slash in pysite")
+
+	gtksite = os.path.expanduser("~/gtk/inst/")
+	if gtksite[-1:]!="/":
+		raise RuntimeError("missing trailing slash in gtksite")
 
 	imports = set()
 	ignore_paths = ['/System/Library/Frameworks/Python.framework'
@@ -113,6 +124,12 @@ if __name__ == "__main__":
 		if f[-3:] != ".py":
 			print f
 
+	print "\nAdd pixbuf loaders to list..."
+	loaders = glob.glob(gtksite+"lib/gtk-2.0/*/loaders/libpixbufloader-*.so")
+	for l in loaders:
+		print l
+		files.add(l)
+
 	print "\n\nRemoving system libs from list"
 	realimports = set()
 	#ignore_paths += ['/usr/lib']
@@ -139,15 +156,7 @@ if __name__ == "__main__":
 		os.mkdir(pytarget)
 	print "PYTHON TARGET =",pytarget
 
-
 	print "\nCopying Python includes"
-	pysite="/Library/Python/2.5/site-packages/"
-	if pysite[-1:]!="/":
-		raise RuntimeError("missing trailing slash in pysite")
-
-	gtksite = os.path.expanduser("~/gtk/inst/")
-	if gtksite[-1:]!="/":
-		raise RuntimeError("missing trailing slash in gtksite")
 
 	for f in pyfiles:
 		if os.path.commonprefix([f,pysite]) == pysite:
@@ -211,16 +220,32 @@ if __name__ == "__main__":
 		print "\nError: some library files were not copied:"
 		for f in realimports - copied:
 			print f
+		raise RuntimeError("Library files were left over, see above")
 
-
-
-#	ETC="$PREFIX/etc/gimp/ $PREFIX/etc/gtk-2.0/ $PREFIX/etc/pango/ $PREFIX/lib/gimp/2.0/python/*.py* $PREFIX/lib/gimp/2.0/environ $PREFIX/lib/gimp/2.0/interpreters $PREFIX/etc/fonts"
-
-	# get the 'etc' files for GTK, Pango, fonts
-
+	print "\nCopying GTK related files"
+	reldirs = ["etc/gtk-2.0", "etc/pango", "etc/fonts"]
+	for d in reldirs:
+		print "%s --> %s" % (os.path.join(gtksite,d),os.path.join(gtktarget,d))
+		copy_tree(os.path.join(gtksite,d),os.path.join(gtktarget,d))
 	
+	print "\nFixing absolute paths in GTK etc files"
+	etcfiles = ["%s/etc/%s" % (gtktarget, f) for f in 
+		['gtk-2.0/gtk.immodules','gtk-2.0/gdk-pixbuf.loaders',
+		'pango/pango.modules'] #'pango/pangorc',
+	]
+	etcre = re.compile("%s"%re.escape(gtksite))
+	for e in etcfiles:
+		print e
+		t = open(e).read()
+		t1 = etcre.sub("",t)
+		f = open(e,'w')
+		f.write(t1)
+		f.close()
 
-#SHARE=`echo $PREFIX/share/gimp/ $PREFIX/share/locale/*/LC_MESSAGES/gimp*`
+	print "\nTODO: copy localisation files (not yet implemented)"
+	#SHARE=`echo $PREFIX/share/locale/*/LC_MESSAGES/gimp*`
 
-	# get the share files for 
+
+
+
 

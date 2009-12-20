@@ -2909,7 +2909,7 @@ if env.get('CAN_INSTALL'):
 			gtkfiles += Glob("%s/*" % dirname)
 		os.path.walk(gtksource,visit,gtkfiles)
 		
-		print "GTKFILES =",gtkfiles
+		print "GTKFILES ="
 
 		for f in gtkfiles:
 			r = os.path.commonprefix([gtksource,f.path])

@@ -27,7 +27,7 @@ def path_absolute(p):
 
 SEP = ":"
 PYTHON="@PYTHON@"
-GTKLIBS = "" # assume that GTK will be in the standard library path
+GTKLIBPATH = None # assume that GTK will be in the standard library path
 
 if platform.system()=="Windows":
 	SEP=";"
@@ -44,7 +44,7 @@ if platform.system()=="Windows":
 	INSTALL_MODELS,t = wreg.QueryValueEx(k,"INSTALL_MODELS")
 	INSTALL_LIB,t = wreg.QueryValueEx(k,"INSTALL_LIB")
 	INSTALL_ASCDATA,t = wreg.QueryValueEx(k,"INSTALL_ASCDATA")
-	GTKLIBS,t = wreg.QueryValueEx(k,"GTKLIBS");
+	GTKLIBPATH,t = wreg.QueryValueEx(k,"GTKLIBS");
 	DEFAULT_ASCENDLIBRARY="%s;%s" % (INSTALL_SOLVERS,INSTALL_MODELS)
 	
 	INSTALL_PYTHON = os.path.join(INSTALL_ASCDATA,"python")	
@@ -54,8 +54,7 @@ elif platform.system()=="Darwin":
 
 	LDPATHVAR = 'DYLD_LIBRARY_PATH'
 
-	# FIXME
-	GTKLIBS=path_absolute("gtk.bundle/gtk/gtk-2.0/lib")
+	GTKLIBPATH=[path_absolute("gtk.bundle/gtk/lib")]
 
 	INSTALL_LIB = path_absolute(".")
 	INSTALL_ASCDATA = path_absolute("Resources")
@@ -90,30 +89,42 @@ else:
 if not os.environ.get('ASC_GDB'):
 	# restarting messes up GDB so don't allow it
 
-	if platform.system()=="Windows" :
+	if platform.system()=="Windows":
 		# Put INSTALL_LIB then GTK at start of path
-		if GTKLIBS not in LDPATH:
+		if GTKLIBPATH not in LDPATH:
 			restart = 1
 		if INSTALL_LIB not in LDPATH:
 			restart = 1
-		if GTKLIBS in LDPATH:
-			LDPATH.remove(GTKLIBS)
-		LDPATH=[INSTALL_LIB,GTKLIBS]+LDPATH
+		if GTKLIBPATH in LDPATH:
+			LDPATH.remove(GTKLIBPATH)
+		LDPATH=[INSTALL_LIB,GTKLIBPATH]+LDPATH
 		os.environ[LDPATHVAR] = SEP.join(LDPATH)
 	elif INSTALL_LIB != "/usr/lib" and not INSTALL_LIB in LDPATH:
 		# don't worry about GTK location; just ensure that LDPATH includes INSTALL_LIB
-		LDPATH = [INSTALL_LIB] + LDPATH
+		LDPATH = [INSTALL_LIB] + GTKLIBPATH + LDPATH
 		os.environ[LDPATHVAR] = SEP.join(LDPATH)
 		restart = 1
 
 	if platform.system()=="Darwin":
-		if not 'XDG_DATA_HOME' in os.environ:
+		if not 'GTK_PATH' in os.environ:
 			os.environ['XDG_DATA_HOME']=os.path.expanduser('~/.local/share')
 #			os.environ['XDG_CONFIG_HOME']=os.path.expanduser('~/.config')
 #			os.environ['XDG_CACHE_HOME']=os.path.expanduser('~/.cache')
 #			os.environ['XDG_CONFIG_DIRS']='/sw/etc/xdg'
 			os.environ['XDG_DATA_DIRS']='/sw/share'
 #			os.environ['XML_CATALOG_FILES']='/sw/etc/xml/catalog'
+
+			bundle_res = path_absolute("../gtk/")
+			print "BUNDLE_RES =", bundle_res
+			bundle_etc = os.path.join(bundle_res,"etc")
+			os.environ['GTK_DATA_PREFIX'] = bundle_res
+			os.environ['GTK_EXE_PREFIX'] = bundle_res
+			os.environ['GTK_PATH'] = bundle_res
+			os.environ['GTK2_RC_FILES'] = os.path.join(bundle_etc,"gtk-2.0/gtkrc")
+			os.environ['GTK_IM_MODULE_FILE']=os.path.join(bundle_etc,"gtk-2.0/gtk.immodules")
+			os.environ['GDK_PIXBUF_MODULE_FILE']=os.path.join(bundle_etc,"gtk-2.0/gdk-pixbuf.loaders")
+			os.environ['PANGO_RC_FILE']=os.path.join(bundle_etc,"pango/pangorc")
+
 			restart = 1
 
 #		if not 'PWD' in os.environ:
@@ -162,6 +173,8 @@ print "Running with..."
 print "   %s = %s" % (LDPATHVAR, os.environ.get(LDPATHVAR))
 print "   sys.path = %s" % sys.path
 print "   argv = %s" % sys.argv
+for e in os.environ:
+	print "   %s = %s" % (e, os.environ[e])
 
 if os.environ.get('ASCENDLIBRARY'):
 	ASCENDLIBRARY = os.environ.get('ASCENDLIBRARY')

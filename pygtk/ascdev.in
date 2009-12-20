@@ -33,11 +33,18 @@ if __name__=='__main__':
 	if platform.system()=="Windows":
 		LD_LIBRARY_PATH="PATH"
 		SEP = ";"
+	elif platform.system()=="Darwin":
+		LD_LIBRARY_PATH="DYLD_LIBRARY_PATH"
+		SEP = ":"
 	else:
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
 		SEP = ":"
 
 	restart = []
+
+	# for Mac, add our local PyGTK libraries at start of Python path:
+	if platform.system()=="Darwin":
+		sys.path.insert(0,'dist/gtk.bundle/python')
 
 	# ensure that we have our 'models' dir in the ASCENDLIBRARY path
 	modeldirs = [os.path.join(sourceroot,"models")]
