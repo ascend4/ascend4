@@ -1,6 +1,6 @@
 REQUIRE "atoms.a4l";
 IMPORT "johnpye/extpy/extpy";
-IMPORT "vleplots";
+IMPORT "kchittur/vleplots";
 
 MODEL antoine(nc WILL_BE symbol_constant;);
 

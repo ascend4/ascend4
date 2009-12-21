@@ -1,7 +1,7 @@
 REQUIRE "atoms.a4l";
-REQUIRE "mymodels.a4c";
+REQUIRE "kchittur/mymodels.a4c";
 IMPORT "johnpye/extpy/extpy";
-IMPORT "vleplots";
+IMPORT "kchittur/vleplots";
 
 MODEL example101;
 
