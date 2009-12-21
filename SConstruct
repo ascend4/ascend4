@@ -1142,15 +1142,14 @@ import os,re
 
 def get_swig_version(env):
 	cmd = [env['SWIG'],'-version']
-	p = subprocess.Popen(cmd,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True)
-
-	output = p.stdout.read()
+	p = subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	output, err = p.communicate()
 	
-	restr = "SWIG\\s+Version\\s+(?P<maj>[0-9]+)\\.(?P<min>[0-9]+)\\.(?P<pat>[0-9]+)\\s*$"
-	expr = re.compile(restr,re.M);
-	m = expr.search(output);
+	restr = r"\s*SWIG\s+Version\s+(?P<maj>[0-9]+)\.(?P<min>[0-9]+)\.(?P<pat>[0-9]+)\b"
+	expr = re.compile(restr,re.MULTILINE|re.IGNORECASE);
+	m = expr.match(output);
 	if not m:
-		return None
+		raise RuntimeError("Failed match on output '%s'"  % output)
 	maj = int(m.group('maj'))
 	min = int(m.group('min'))
 	pat = int(m.group('pat'))
@@ -1163,8 +1162,8 @@ def CheckSwigVersion(context):
 	try:
 		context.Message("Checking version of SWIG... ")
 		maj,min,pat = get_swig_version(context.env)
-	except:
-		context.Result("Failed to detect version, or failed to run SWIG")
+	except Exception,e:
+		context.Result("Failed to detect version, or failed to run SWIG (%s)" % str(e))
 		return False;
 	
 	context.env['SWIGVERSION']=tuple([maj,min,pat])
@@ -1172,7 +1171,7 @@ def CheckSwigVersion(context):
 	msg = "too old"
 	res = False
 	if maj ==1 and min == 3 and (pat == 40 or pat == 39):
-		msg = "buggy version, see the ASCEND wiki"
+		msg = "buggy version, see the ASCEND wiki, or try version 1.3.36"
 	elif maj == 1 and (
 			min > 3
 			or (min == 3 and pat >= 24)
@@ -1188,8 +1187,9 @@ def CheckSwigVersion(context):
 
 def get_scrollkeeper_omfdir(env):
 	cmd = ['scrollkeeper-config','--omfdir']
-	p = subprocess.Popen(cmd,stdout=subprocess.PIPE,close_fds=True)
-	return p.coutcerr.read().strip()
+	p = subprocess.Popen(cmd,stdout=subprocess.PIPE)
+	output = p.communicate()
+	return output.strip()
 
 def CheckScrollkeeperConfig(context):
 	try:
