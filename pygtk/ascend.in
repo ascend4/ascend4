@@ -122,7 +122,7 @@ if not os.environ.get('ASC_GDB'):
 			os.environ['GTK_PATH'] = bundle_res
 			os.environ['GTK2_RC_FILES'] = os.path.join(bundle_etc,"gtk-2.0/gtkrc")
 			os.environ['GTK_IM_MODULE_FILE']=os.path.join(bundle_etc,"gtk-2.0/gtk.immodules")
-			os.environ['GDK_PIXBUF_MODULE_FILE']=os.path.join(bundle_etc,"gtk-2.0/gdk-pixbuf.loaders")
+			os.environ['GTK_PIXBUF_MODULE_FILE']=os.path.join(bundle_etc,"gtk-2.0/gdk-pixbuf.loaders")
 			#os.environ['PANGO_RC_FILE']=os.path.join(bundle_etc,"pango/pangorc")
 
 			restart = 1

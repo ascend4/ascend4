@@ -36,8 +36,15 @@ def find_deps(binary):
 		deps.add(m.group(1))
 	return deps
 
-def reroute_deps(lib,gtksite,pysite):
+def reroute_deps(lib,gtksite,pysite,orig):
 	deps = find_deps(lib)
+	lib_is_gtk = (os.path.commonprefix([gtksite,orig]) == gtksite)
+	lib_is_py = (os.path.commonprefix([pysite,orig]) == pysite)
+	if lib_is_py:
+		print "LIB %s IS PY" % orig
+	if lib_is_gtk:
+		print "LIB %s IS GTK" % orig
+
 	rpath_used = False
 	for d in deps:
 		oldpath = d
@@ -45,7 +52,18 @@ def reroute_deps(lib,gtksite,pysite):
 		if r == gtksite:
 			# this dependency is pointing into the GTK installation location
 			dir, f = os.path.split(oldpath)
-			newpath = "@loader_path/"+f
+			if lib_is_gtk:
+				newpath = "@loader_path/"+f
+			elif lib_is_py:
+				# construct relative path from python lib to GTK libs
+				uplevels = 1
+				rel = orig[len(os.path.commonprefix([pysite,orig])):]
+				print "RELPATH = ",rel
+				dir1,tail = os.path.split(rel)
+				while dir1:
+					uplevels += 1
+					dir1, tail = os.path.split(dir1)
+				newpath = "@loader_path" + ("/.."*uplevels) + "/lib/" + f 
 		else:
 			r = os.path.commonprefix([oldpath,pysite])
 			if r == pysite:
@@ -55,7 +73,7 @@ def reroute_deps(lib,gtksite,pysite):
 				continue
 
 		cmd = ['/usr/bin/install_name_tool','-change',oldpath,newpath,lib]
-		#print "RELINK %s: %s --> %s" % (lib,oldpath,newpath)
+		print "RELINK %s: %s --> %s" % (lib,oldpath,newpath)
 		#print " ".join(cmd)
 		P = subprocess.Popen(cmd,stdout=subprocess.PIPE)
 		P.communicate()
@@ -152,7 +170,7 @@ if __name__ == "__main__":
 	print "\n\nCopying all Python files into our bundle"
 	for f in pyfiles | pyimports:
 		if not os.path.commonprefix([f,pysite]) == pysite:
-			raise RuntimeError("Unknown python import in list")
+			raise RuntimeError("Unknown python import '%s' in list" % f)
 		r = f[len(pysite):]
 		dir, f1 = os.path.split(r)
 		if not os.path.exists(os.path.join(pytarget,dir)):
@@ -162,7 +180,7 @@ if __name__ == "__main__":
 		shutil.copy(f, dest)
 		if dest[-3:] == ".so":
 			print "  rerouting dependencies..."
-			reroute_deps(dest,gtksite,pysite)
+			reroute_deps(dest,gtksite,pysite,orig=f)
 	
 	print "\n\nCopy all GTK libs into our bundle"
 	if not os.path.exists(gtklibtarget):
@@ -175,7 +193,7 @@ if __name__ == "__main__":
 		dest = os.path.join(gtklibtarget, f1)
 		print dest
 		shutil.copy(f, dest)
-		reroute_deps(dest,gtksite,pysite)
+		reroute_deps(dest,gtksite,pysite,orig=f)
 
 	print "\nCopying GTK related files"
 	reldirs = ["etc/gtk-2.0", "etc/pango", "etc/fonts"]
