@@ -14,11 +14,8 @@ https://ascendserver.cheme.cmu.edu/svn/ascend/code/branches/extfn/INSTALL.txt?vi
 -----
 BUILDING ON LINUX AND WINDOWS
 
-To build ASCEND we now recommend using SCons. This is supported
-both on Windows (using the MinGW toolset) and Linux. Build scripts for using
-jam and GNU Autotools are also provided although these scripts will not allow
-you access to the full range of ASCEND functionality. The Autotools
-scripts will only build the tcl/tk interface version.
+To build ASCEND we recommend using SCons. This is supported
+both on Windows (using the MinGW toolset), Mac OS X and Linux.
 
 ASCEND provides two possible interfaces. The older, more mature
 GUI is based on Tcl/Tk. A newer interface that is more in keeping
@@ -155,9 +152,8 @@ You will then be able to install ASCEND using something like
 
   rpm -i ~/rpm/ascend-NNNNN-0.jdpipe.i386.rpm
 
-Debian/Unbuntu users should find that they can create a usable
-.deb package using the tool 'alien'. We haven't got native
-support for the generation of .deb packages at this stage.
+Instructions for buildin the .deb package are available on the
+ASCEND wiki.
 
 NOTE: occasionally the 'ascend.spec' file may need to be updated
 if changes have been made to the 'ascend.spec.in' file. Check
