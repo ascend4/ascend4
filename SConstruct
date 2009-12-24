@@ -919,10 +919,12 @@ def c_escape(str):
 envadditional={}
 
 tools = [
-	'lex', 'yacc', 'fortran', 'swig', 'nsis', 'substinfile'
+	'lex', 'yacc', 'fortran', 'swig', 'substinfile'
 	,'disttar', 'tar', 'graphviz'
 ]
 if platform.system()=="Windows":
+	tools += ['nsis']
+	
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
 		envenv = os.environ;
 		tools += ['mingw']
