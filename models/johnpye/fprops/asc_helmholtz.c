@@ -49,7 +49,6 @@ better later on, hopefully. */
 #include "hydrogen.h"
 #include "water.h"
 #include "carbondioxide.h"
-#include "methane.h"
 
 #ifndef ASC_EXPORT
 # error "Where is ASC_EXPORT?"
@@ -183,8 +182,6 @@ int helmholtz_prepare(struct BBoxInterp *bbox,
 		bbox->user_data = (void*)&helmholtz_data_water;
 	}else if(strcmp(comp,"carbondioxide")==0){
 		bbox->user_data = (void*)&helmholtz_data_carbondioxide;
-	}else if(strcmp(comp,"methane")==0){
-		bbox->user_data = (void*)&helmholtz_data_methane;	
 	}else{
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component name was not recognised. Check the source-code for for the supported species.");
 	}
