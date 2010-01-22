@@ -18,7 +18,7 @@ srcs = ['mbwr.c','asc_mbwr.c']
 
 env.SharedLibrary('mbwr_ascend',srcs)
 
-env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide']
+env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methane']
 
 srcs = ['ideal.c', 'helmholtz.c', 'sat.c'] + ["%s.c" % f for f in env['fluids']]
 

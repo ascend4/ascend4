@@ -6,7 +6,7 @@ IMPORT "johnpye/fprops/helmholtz";
 
 MODEL helmholtz_conf;
 	component IS_A symbol_constant;
-	component :== 'water';
+	component :== 'methane';
 END helmholtz_conf;
 
 MODEL fprops_test;
