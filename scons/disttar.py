@@ -1,5 +1,6 @@
 # DistTarBuilder: tool to generate tar files using SCons
 # Copyright (C) 2005, 2006  Matthew A. Nicholson
+# Copyright (C) 2006-2010 John Pye
 #
 # This file is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -14,10 +15,10 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-# vim: set et sw=3 tw=0 fo=awqorc ft=python:
 
 import os,sys
 from SCons.Script import *
+import re
 
 def disttar_emitter(target,source,env):
 
@@ -25,6 +26,8 @@ def disttar_emitter(target,source,env):
 
 	excludeexts = env.Dictionary().get('DISTTAR_EXCLUDEEXTS',[])
 	excludedirs = env.Dictionary().get('DISTTAR_EXCLUDEDIRS',[])
+	re1 = env.Dictionary().get('DISTTAR_EXCLUDERES',[])
+	excluderes = [re.compile(r) for r in re1]
 
 	# assume the sources are directories... need to check that
 	for item in origsource:
@@ -41,8 +44,16 @@ def disttar_emitter(target,source,env):
 				ext = os.path.splitext(name)
 				if not ext[1] in excludeexts:
 					relpath = os.path.join(root,name)
-					#print "Adding source",relpath
-					source.append(relpath)
+					failre = False
+					for r in excluderes:
+						#print "Match(  %s   against   %s)" % (r,relpath)
+						if r.search(relpath):
+							failre = True
+							#print "Excluding '%s' from tarball" % relpath
+							break
+					if not failre:
+						#print "Adding source",relpath
+						source.append(relpath)
 			for d in excludedirs:
 				if d in dirs:
 					dirs.remove(d)  # don't visit CVS directories etc
@@ -128,3 +139,6 @@ def exists(env):
 		return False
 	else:
 		return True
+
+# vim:set ts=4 sw=4 noexpandtab:
+

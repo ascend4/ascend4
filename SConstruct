@@ -4,7 +4,7 @@
 # much less tested.
 
 # version number for this ASCEND build:
-version = "0.9.7"
+version = "0.9.8"
 
 # shared library API numbering, for Linux (FIXME windows too?)
 soname_major = ".1"
@@ -401,33 +401,6 @@ opts.Add(PackageOption(
 	,"Where are your CUnit libraries?"
 	,"$CUNIT_PREFIX/lib"
 ))
-
-#-------- ida -------
-
-opts.Add(PackageOption(
-	"SUNDIALS_PREFIX"
-	,"Prefix for your IDA install (IDA ./configure --prefix)"
-	,default_ida_prefix
-))
-
-opts.Add(
-	'SUNDIALS_CPPPATH'
-	,"Where is your ida.h?"
-	,"$SUNDIALS_PREFIX/include"
-)
-
-# 
-opts.Add(
-	'SUNDIALS_LIBPATH'
-	,"Where are your SUNDIALS libraries installed?"
-	,"$SUNDIALS_PREFIX/lib"
-)
-
-opts.Add(
-	'SUNDIALS_LIBS'
-	,"What libraries are required for SUNDIALS?"
-	,['sundials_nvecserial','sundials_ida','m']
-)
 
 # ----- conopt-----
 
@@ -920,7 +893,7 @@ envadditional={}
 
 tools = [
 	'lex', 'yacc', 'fortran', 'swig', 'substinfile'
-	,'disttar', 'tar', 'graphviz'
+	,'disttar', 'tar', 'graphviz','sundials'
 ]
 if platform.system()=="Windows":
 	tools += ['nsis']
@@ -2966,6 +2939,7 @@ env.Append(
 		'.toc','.lof','.lot','.mm','.warnings','.tm2','.swp',',tmp','.gz',
 		'.bz2','.7z','.deb','.dsc','.changes']
 	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian']
+	, DISTTAR_EXCLUDERES=[r"_wrap\.cc?$", r"~$", r"pygtk/ascpy\.py"]
 )
 
 tar = env.DistTar("dist/"+env['DISTTAR_NAME']
