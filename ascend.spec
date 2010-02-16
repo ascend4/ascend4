@@ -1,12 +1,12 @@
 Name:		ascend
 Summary:	ASCEND modelling environment
-Version:	0.9.7
+Version:	0.9.8
 
 # Use release 0.* so that other users can do patch releases with a higher number
 # and still have the update occur automatically.
 Release:	0%{?dist}
 
-%define disttar_name ascend-0.9.7
+%define disttar_name ascend-0.9.8
 
 License:	GPLv2+
 Group:		Applications/Engineering
