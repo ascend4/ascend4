@@ -27,6 +27,17 @@ An alternative GUI is the Tcl/Tk GUI which is older but still somewhat more
 stable and complete than the new GUI. It is not really under active development
 any more, however. You can choose for yourself.
 
+If you've had any problem with getting either of the two GUIs up and running
+it may be worth reviewing the prerequisites list on our Wiki at
+
+http://ascendwiki.cheme.cmu.edu/Prerequisites_for_Windows
+
+In some cases, download/install of components may have failed during
+installation. One know case where this occurs is for people who are using
+their computer from behind an HTTP proxy. Our current installer is not
+set up for that use-case, and you should manually install all prerequisites
+before attempting to install ASCEND.
+
 
 Running the PyGTK GUI
 ---------------------

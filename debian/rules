@@ -94,7 +94,6 @@ install: build
 #
 	dh_install --fail-missing --sourcedir=$(INSTALLROOT)
 
-	dh_desktop
 	dh_installman
 
 # Build architecture-independent files here.
