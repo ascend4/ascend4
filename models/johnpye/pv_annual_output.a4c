@@ -4,6 +4,11 @@ REQUIRE "johnpye/simple_pv.a4c";
 IMPORT "johnpye/datareader/datareader";
 REQUIRE "johnpye/thermo_types.a4c";
 
+(*
+First attempts at an annual simulation of a PV cell. Lots more work required
+here. It seems to be exposing some kind of bug that's appeared in the ODE/DAE
+solvers, so we'll need to check that out.
+*)
 
 MODEL tmyparams(
 	filename IS_A symbol_constant;
