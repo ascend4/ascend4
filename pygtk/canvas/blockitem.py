@@ -2,7 +2,6 @@
 from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint, Constraint, _update, BalanceConstraint
 from gaphas.item import Line, SW, NE, NW, SE, Item, Handle
 from gaphas.util import *
-from gaphas.connector import PointPort, VariablePoint
 from gaphas.solver import solvable, WEAK, NORMAL, STRONG, VERY_STRONG
 from gaphas.state import observed, reversible_method, reversible_pair, reversible_property, disable_dispatching
 from gaphas.geometry import distance_rectangle_point
