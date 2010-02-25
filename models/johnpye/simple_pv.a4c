@@ -43,7 +43,7 @@ ATOM conductance REFINES solver_var
     nominal := 10.0{ohm^-1};
     END conductance;
 
-MODEL simple_pv_module;
+MODEL simple_pv;
 	NOTES
 		'reference conditions' SELF {Reference conditions are defined by reference temperature and irradiance, open-circuit voltage and short-circuit current. Under these conditions, we can obtain a reference load current (equal to the short-circuit current), a reference inverse current through the diode and the value of a under these conditions. The open-circuit voltage and short-circuit current are usually provided by the producer or measured directly. Standard irradiance is equal to the solar constant and roughly taken as 1,000 throughout this model. The reference temperature is usually supplied by the producer as well; if not, it is measured directly when the other reference values are taken.}
 
@@ -133,5 +133,6 @@ METHODS
 		G_T	:= 1000	{W/m^2};
 		G_Tref	:= 1000	{W/m^2}; (* Typical irradiance for reference *)
 	END default_self;			
-END simple_pv_module;
+END simple_pv;
+
 
