@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # SCons support for bundled GTK installation
 # Written by John Pye, Nov 2009
 
