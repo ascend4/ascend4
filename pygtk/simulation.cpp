@@ -961,13 +961,13 @@ Simulation::processVarStatus(){
 		}else if(var_incident(v) && var_active(v)){
 			if(allsolved || c < low){
 				s = ASCXX_VAR_SOLVED;
-				CONSOLE_DEBUG("Solved Variable : %d",c);
+				//CONSOLE_DEBUG("Solved Variable : %d",c);
 			}else if(c <= high){
 				s = ASCXX_VAR_ACTIVE;
-				CONSOLE_DEBUG("Active Variable : %d",c);
+				//CONSOLE_DEBUG("Active Variable : %d",c);
 			}else{
 				s = ASCXX_VAR_UNSOLVED;
-				CONSOLE_DEBUG("Unsolved Variable: %d",c);
+				//CONSOLE_DEBUG("Unsolved Variable: %d",c);
 			}
 		}
 		i.setStatus(s);
