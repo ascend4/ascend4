@@ -6,8 +6,11 @@ REQUIRE "johnpye/thermo_types.a4c";
 
 (*
 First attempts at an annual simulation of a PV cell. Lots more work required
-here. It seems to be exposing some kind of bug that's appeared in the ODE/DAE
-solvers, so we'll need to check that out.
+here.
+
+The PV model ('simple_pv') needs to be carefully checked, and the constraints
+on that model probably need to be changed for this calcualtion, eg to specify
+a resistive load, or something like that.
 *)
 
 MODEL tmyparams(
@@ -26,7 +29,8 @@ MODEL pv_annual_output;
 	pv IS_A simple_pv;
 
 	(* E will be the integral of the power from the cell *)
-	dEdt ALIASES pv.P;
+	dEdt IS_A energy_rate;
+	dEdt = pv.P;
 
 	(* configure and instantiate the data reader for the Daggett TMY data *)
 	params IS_A tmyparams('johnpye/datareader/23161.tm2', 'TMY2', '2');
@@ -41,8 +45,8 @@ MODEL pv_annual_output;
 METHODS
 METHOD on_load;
 	RUN pv.on_load;
-	FREE pv.G_T;
-	RUN set_ode;
+	FREE Gb;
+	FIX t;
 	t := 0 {s};
 END on_load;
 

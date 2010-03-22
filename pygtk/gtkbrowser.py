@@ -773,6 +773,12 @@ class Browser:
 			self.reporter.reportError("No model selected yet")
 
 		try:
+			self.sim.build()
+		except RuntimeError,e:
+			self.reporter.reportError("Couldn't build system: %s" % str(e));
+			return
+
+		try:
 			self.sim.run(method)
 		except RuntimeError,e:
 			self.reporter.reportError(str(e))

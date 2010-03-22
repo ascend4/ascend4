@@ -49,7 +49,7 @@ MODEL cavity_base;
 	n    "surfaces in the cavity"         IS_A set OF symbol_constant;
 	A[n] "length of the surfaces (in 2D)" IS_A distance;
 
-	F[n][n] IS_A factor;
+	F[n][n] IS_A fraction;
 
 	(* Radiation equations *)
 	q[n] "net heat transfer from each surface" IS_A energy_rate_per_length;

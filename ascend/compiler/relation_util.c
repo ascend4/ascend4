@@ -2446,19 +2446,19 @@ enum safe_err RelationCalcResidGradSafe(struct Instance *i
     if (BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
       not_safe = safe_problem;
     }
-    CONSOLE_DEBUG("Relation Type: e_blackbox");
+    //CONSOLE_DEBUG("Relation Type: e_blackbox");
     return not_safe;
   }
   if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
     if (reltype == e_glassbox){
-	CONSOLE_DEBUG("Relation Type: e_glassbox");
+	//CONSOLE_DEBUG("Relation Type: e_glassbox");
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
     }
     if (reltype == e_opcode){
-     	CONSOLE_DEBUG("Relation Type: e_opcode");
+     	//CONSOLE_DEBUG("Relation Type: e_opcode");
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
     }
-    CONSOLE_DEBUG("Relation Type: other");
+    //CONSOLE_DEBUG("Relation Type: other");
     not_safe = safe_problem;
     return not_safe;
   }
