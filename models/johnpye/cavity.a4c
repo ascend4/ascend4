@@ -57,7 +57,7 @@ MODEL cavity_base;
 	E_b[n] IS_A energy_flux;
 	J[n] IS_A energy_flux;	
 	T[n] IS_A temperature;
-	eps[n] IS_A factor; (* emissivity *)
+	eps[n] IS_A fraction; (* emissivity *)
 	
 	FOR i IN n CREATE
 		z_q[i]: q[i] =  SUM[ (J[i]-J[j])*(A[i]*F[i][j]) | j IN n];

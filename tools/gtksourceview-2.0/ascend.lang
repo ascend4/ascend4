@@ -372,6 +372,7 @@
 					<keyword>specific_energy_rate</keyword>
 					<keyword>specific_enthalpy_rate</keyword>
 					<keyword>ua_value</keyword>
+					<keyword>thermal_resistance</keyword>
 					<keyword>R_value</keyword>
 					<keyword>pressure_per_temperature</keyword>
 					<keyword>energy_rate_per_length</keyword>
