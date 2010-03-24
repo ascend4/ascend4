@@ -717,6 +717,10 @@ class Browser:
 		
 
 	def do_check(self):
+		if not self.sim:
+			self.reporter.reportError("No model selected yet")
+			return	
+
 		try:
 			self.sim.build()
 		except RuntimeError,e:
