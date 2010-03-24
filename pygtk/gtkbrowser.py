@@ -1055,9 +1055,11 @@ class Browser:
 
 	def reload_click(self,*args):
 		_type = None
-		if(self.sim):
-			_type = self.sim.getType().getName().toString();
+		if not self.sim:
+			self.reporter.reportError("No model created yet!")
+			return
 
+		_type = self.sim.getType().getName().toString();
 		self.library.clear()
 
 		try:
