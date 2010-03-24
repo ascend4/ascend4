@@ -117,6 +117,9 @@ if platform.system()=="Windows":
 	soname_major = ""
 	# still problems with Graphviz on Windows, leave it off now by default.
 
+	if not os.path.exists(default_conopt_prefix):
+		default_conopt_prefix = None
+
 elif platform.system()=="Darwin":
 
 	default_install_prefix = ''
@@ -155,6 +158,8 @@ elif platform.system()=="Darwin":
 	default_with_scrollkeeper=False
 	pathsep = ";"
 	
+	if not os.path.exists(default_conopt_prefix):
+		default_conopt_prefix = None
 	
 else: # LINUX
 
@@ -213,9 +218,6 @@ else: # LINUX
 	#	# for Ubuntu 7.04
 	#	default_graphviz_libpath="/usr/lib/graphviz"
 	#	default_graphviz_rpath="$GRAPHVIZ_LIBPATH"
-
-if not os.path.exists(default_conopt_prefix):
-	default_conopt_prefix = None
 
 if not os.path.exists(default_tron_prefix):
 	default_tron_prefix = None
