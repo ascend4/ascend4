@@ -944,7 +944,7 @@ opts.Update(env)
 
 for l in ['SUNDIALS','IPOPT']:
 	var = "%s_LIBS" % l
-	if not isinstance(env[var],types.ListType):
+	if env.get(var) and not isinstance(env[var],types.ListType):
 		env[var] = env[var].split(",")
 
 if 'LSOD' in env['WITH_SOLVERS']:
