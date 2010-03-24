@@ -194,6 +194,7 @@ else: # LINUX
 	default_library_rel_dist = 'lib/ascend/models'
 	default_solvers_rel_dist = 'lib/ascend/solvers'
 
+	default_conopt_prefix = "$DEFAULT_PREFIX"
 	default_conopt_libpath="$CONOPT_PREFIX/lib"
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
 	default_conopt_dlpath= default_conopt_libpath + ":/usr/local/lib"
