@@ -550,9 +550,15 @@ class Browser:
 # 	MAJOR GUI COMMANDS
 
 	def on_fix_variable_activate(self,*args):
+		if not self.sim:
+			self.reporter.reportError("No model selected yet")
+			return
 		self.modelview.on_fix_variable_activate(*args)
 
 	def on_free_variable_activate(self,*args):
+		if not self.sim:
+			self.reporter.reportError("No model selected yet")
+			return
 		self.modelview.on_free_variable_activate(*args)
 
 	def on_select_solver_toggled(self,widget,solvername):
