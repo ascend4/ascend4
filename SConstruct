@@ -236,55 +236,55 @@ soname_full = "%s%s" % (soname_clean,soname_major)
 # in the file 'options.cache'; if you want to start with a clean slate, you
 # should remove that file.
 
-opts = Options(['options.cache', 'config.py'])
+vars = Variables(['options.cache', 'config.py'])
 	
-opts.Add(
+vars.Add(
 	'CC'
 	,'C Compiler command'
 	,None
 )
 
-opts.Add(
+vars.Add(
 	'CXX'
 	,'C++ Compiler command'
 	,None
 )
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'GCOV'
 	, 'Whether to enable coverage testing in object code'
 	, False
 ))
 
 if platform.system()!="Windows":
-	opts.Add(BoolOption(
+	vars.Add(BoolVariable(
 		'WITH_GCCVISIBILITY'
 		,"Whether to use GCC Visibility features (only applicable if available)"
 		,True
 	))
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_SIGNALS'
 	,"Whether to permit use of signals for flow control in the C-level code"
 	,True
 ))
 
 # You can turn off building of Tcl/Tk interface
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_TCLTK'
 	,"Set to False if you don't want to build the original Tcl/Tk GUI."
 	, True
 ))
 
 # You can turn off the building of the Python interface
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_PYTHON'
 	,"Set to False if you don't want to build Python wrappers."
 	, True
 ))
 
 # Which solvers will we allow?
-opts.Add(ListOption(
+vars.Add(ListVariable(
 	'WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works. The option 'LSOD' is provided for backwards compatibility"
@@ -297,32 +297,32 @@ opts.Add(ListOption(
 ))
 
 # Where will the local copy of the help files be kept?
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_DOC'
 	, "Should we try to build and install help files? If not, ASCEND will access online help files"
 	, True
 ))
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_DOC_BUILD'
 	, "If true, we'll attempt to build docs. Set false, we'll assume we already have then (eg from the tarball)"
 	, "$WITH_DOC"
 ))
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_DOC_INSTALL'
 	, "If true, SCons will install the documentation file(s). If false, assume rpm or dpkg is going to do it."
 	, "$WITH_DOC"
 ))
 
-opts.Add(
+vars.Add(
 	'HELP_ROOT'
 	, "Location of the main help file"
 	, "$INSTALL_DOC/book.pdf"
 )
 
 # Will bintoken support be enabled?
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_BINTOKEN'
 	,"Enable bintoken support? This means compiling models as C-code before"
 		+" running them, to increase solving speed for large models."
@@ -331,7 +331,7 @@ opts.Add(BoolOption(
 
 # What should the default ASCENDLIBRARY path be?
 # Note: users can change it by editing their ~/.ascend.ini
-opts.Add(
+vars.Add(
 	'DEFAULT_ASCENDLIBRARY'
 	,"Set the default value of the ASCENDLIBRARY -- the location where"
 		+" ASCEND will look for models when running ASCEND"
@@ -340,7 +340,7 @@ opts.Add(
 
 # What should the default ASCENDLIBRARY path be?
 # Note: users can change it by editing their ~/.ascend.ini
-opts.Add(
+vars.Add(
 	'DEFAULT_ASCENDSOLVERS'
 	,"Set the default value of ASCENDSOLVERS -- the location where"
 		+" ASCEND will look for solver shared-library files"
@@ -348,7 +348,7 @@ opts.Add(
 )
 
 # Where is SWIG?
-opts.Add(
+vars.Add(
 	'SWIG'
 	,"SWIG location, probably only required for MinGW and MSVC users."
 		+" Enter the location as a Windows-style path, for example"
@@ -357,7 +357,7 @@ opts.Add(
 )
 
 # Build the test suite?
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_CUNIT'
 	,"You can disable CUnit tests with this option. This will basically stop"
 		+" SCons from parsing the SConscript files relating to the 'test'"
@@ -368,14 +368,14 @@ opts.Add(BoolOption(
 ))
 
 # Build with MMIO matrix export support?
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_MMIO'
 	,"Include support for exporting matrices in Matrix Market format"
 	,True
 ))
 
 #----- default paths -----
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	'DEFAULT_PREFIX'
 	,"Where are most of the shared libraries located on your system?"
 	,default_prefix
@@ -385,21 +385,21 @@ opts.Add(PackageOption(
 # CUnit is a unit testing library that we use to test libascend.
 
 # Where was CUNIT installed?
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	'CUNIT_PREFIX'
 	,"Where are your CUnit files?"
 	,"$DEFAULT_PREFIX"
 ))
 
 # Where are the CUnit includes?
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	'CUNIT_CPPPATH'
 	,"Where are your CUnit include files?"
 	,"$CUNIT_PREFIX/include"
 ))
 
 # Where are the CUnit libraries?
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	'CUNIT_LIBPATH'
 	,"Where are your CUnit libraries?"
 	,"$CUNIT_PREFIX/lib"
@@ -407,43 +407,43 @@ opts.Add(PackageOption(
 
 # ----- conopt-----
 
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	"CONOPT_PREFIX"
 	,"Prefix for your CONOPT install (CONOPT ./configure --prefix)"
 	,default_conopt_prefix
 ))
 
-opts.Add(
+vars.Add(
 	"CONOPT_LIB"
 	,"Library linked to for CONOPT. This is the name of the CONOPT .so or DLL. On Windows it seems to be called 'copopt3' but on linux it seems to be called 'consub3'."
 	,default_conopt_lib
 )
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	"CONOPT_LINKED"
 	,"Do you want to dynamically link to CONOPT (only possible if CONOPT is available at buildtime)"
 	,False
 ))
 
-opts.Add(
+vars.Add(
 	'CONOPT_CPPPATH'
 	,"Where is your conopt.h?"
 	,default_conopt_cpppath
 )
 
-opts.Add(
+vars.Add(
 	'CONOPT_LIBPATH'
 	,"Where is your CONOPT library installed?"
 	,default_conopt_libpath
 )
 
-opts.Add(
+vars.Add(
 	'CONOPT_DLPATH'
 	,"Default (fallback) search path that ASCEND should use when dlopening the CONOPT library at runtime? This is only used if the conopt environment variable doesn't exist and doesn't point to a location where the DLL/SO is found.  This is in platform-specific form (paths with ';' separator in Windows, ':' separator on Linux)."
 	,default_conopt_dlpath
 )
 
-opts.Add(
+vars.Add(
 	'CONOPT_ENVVAR'
 	,"Name of the optional environment variable which will be used for the value of the searchpath for the CONOPT DLL/SO."
 	,default_conopt_envvar
@@ -451,32 +451,32 @@ opts.Add(
 
 #------- IPOPT -------
 
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	"IPOPT_PREFIX"
 	,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
 	,default_conopt_prefix
 ))
 
-opts.Add(
+vars.Add(
 	"IPOPT_LIBS"
 	,"Library linked to for IPOPT"
 	,default_ipopt_libs
 )
 
 
-opts.Add(
+vars.Add(
 	"IPOPT_LIBPATH"
 	,"Where is your IPOPT library installed"
 	,default_ipopt_libpath
 )
 
-opts.Add(
+vars.Add(
 	'IPOPT_CPPPATH'
 	,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
 	,"$IPOPT_PREFIX/include"
 )
 
-opts.Add(
+vars.Add(
 	'IPOPT_DLL'
 	,"Exact path of IPOPT DLL to be included in the installer (Windows only)"
 	,default_ipopt_dll
@@ -486,25 +486,25 @@ opts.Add(
 
 #------- TRON -------
 
-opts.Add(
+vars.Add(
 	'TRON_ENVVAR'
 	,"What environment variable should be used at runtime to override the default search location for TRON DLL/SO?"
 	,default_tron_envvar
 )
 
-opts.Add(
+vars.Add(
 	"TRON_LIB"
 	,"Library linked to for TRON"
 	,"tron"
 )
 
-opts.Add(
+vars.Add(
 	"TRON_PREFIX"
 	,"Prefix for your TRON install"
 	,default_tron_prefix
 )
 
-opts.Add(
+vars.Add(
 	'TRON_DLPATH'
 	,"What is the default search path that ASCEND should use when dlopening the TRON library at runtime?"
 	,default_tron_dlpath
@@ -512,19 +512,19 @@ opts.Add(
 
 #-------- f2c ------
 
-opts.Add(
+vars.Add(
 	"F2C_LIB"
 	,"F2C library (eg. g2c, gfortran, f2c)"
 	,default_f2c_lib # the default is gfortran now
 )
 
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	"F2C_LIBPATH"
 	,"Directory containing F2C library (i.e. g2c, gfortran, f2c, etc.), if not already accessible"
 	,"off"
 ))
 
-opts.Add(
+vars.Add(
 	"FORTRAN"
 	,"Fortran compiler (eg g77, gfortran)"
 	,default_fortran
@@ -532,49 +532,49 @@ opts.Add(
 
 #------- tcl/tk --------
 
-opts.Add(
+vars.Add(
 	'TCL'
 	,'Base of Tcl distribution'
 	,default_tcl
 )
 
 # Where are the Tcl includes?
-opts.Add(
+vars.Add(
 	'TCL_CPPPATH'
 	,"Where are your Tcl include files?"
 	,default_tcl_cpppath
 )
 
 # Where are the Tcl libs?
-opts.Add(
+vars.Add(
 	'TCL_LIBPATH'
 	,"Where are your Tcl libraries?"
 	,default_tcl_libpath
 )
 
 # What is the name of the Tcl lib?
-opts.Add(
+vars.Add(
 	'TCL_LIB'
 	,"Name of Tcl lib (eg 'tcl' or 'tcl83'), for full path to static library (if STATIC_TCLTK is set)"
 	,default_tcl_lib
 )
 
 # Where are the Tk includes?
-opts.Add(
+vars.Add(
 	'TK_CPPPATH'
 	,"Where are your Tk include files?"
 	,'$TCL_CPPPATH'
 )
 
 # Where are the Tk libs?
-opts.Add(
+vars.Add(
 	'TK_LIBPATH'
 	,"Where are your Tk libraries?"
 	,'$TCL_LIBPATH'
 )
 
 # What is the name of the Tk lib?
-opts.Add(
+vars.Add(
 	'TK_LIB'
 	,"Name of Tk lib (eg 'tk' or 'tk83'), or full path to static library"
 	,default_tk_lib
@@ -582,49 +582,49 @@ opts.Add(
 
 # Static linking to TkTable
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'STATIC_TCLTK'
 	,'Set true for static linking for Tcl/Tk and TkTable. EXPERIMENTAL'
 	,False
 ))
 
-opts.Add(
+vars.Add(
 	'TKTABLE_LIBPATH'
 	,'Location of TkTable static library'
 	,'$TCL_LIBPATH/Tktable2.8'
 )
 
-opts.Add(
+vars.Add(
 	'TKTABLE_LIB'
 	,'Stem name of TkTable (eg tktable2.8, no ".so" or "lib") shared library, or full path of static tktable (/usr/lib/...)'
 	,default_tktable_lib
 )
 
-opts.Add(
+vars.Add(
 	'TKTABLE_CPPPATH'
 	,'Location of TkTable header file'
 	,'$TCL_CPPPATH'
 )
 
-opts.Add(
+vars.Add(
 	'X11'
 	,'Base X11 directory. Only used when STATIC_TCLTK is turned on. EXPERIMENTAL'
 	,'/usr/X11R6'
 )
 
-opts.Add(
+vars.Add(
 	'X11_LIBPATH'
 	,'Location of X11 lib. EXPERIMENTAL'
 	,'$X11/lib'
 )
 
-opts.Add(
+vars.Add(
 	'X11_CPPPATH'
 	,'Location of X11 includes. EXPERIMENTAL'
 	,'$X11/include'
 )
 
-opts.Add(
+vars.Add(
 	'X11_LIB'
 	,'Name of X11 lib. EXPERIMENTAL'
 	,'X11'
@@ -632,86 +632,86 @@ opts.Add(
 
 #----- installed file locations (for 'scons install') -----
 
-opts.Add(
+vars.Add(
 	'INSTALL_PREFIX'
 	,'Root location for installed files'
 	,default_install_prefix
 )
 
-opts.Add(
+vars.Add(
 	'INSTALL_BIN'
 	,'Location to put binaries during installation'
 	,default_install_bin
 )
 
-opts.Add(
+vars.Add(
 	'INSTALL_LIB'
 	,'Location to put libraries during installation'
 	,default_install_lib
 )
 
-opts.Add(
+vars.Add(
 	'INSTALL_SHARE'
 	,'Common shared-file location on this system'
 	,"$INSTALL_PREFIX/share"
 )
 
-opts.Add(
+vars.Add(
 	'INSTALL_ASCDATA'
 	,"Location of ASCEND shared data (TK, python, models etc)"
 	,default_install_ascdata
 )
 
-opts.Add(
+vars.Add(
 	'INSTALL_PYTHON'
 	,'Common shared-file location on this system'
 	,default_install_python
 )
 
-opts.Add(
+vars.Add(
 	'INSTALL_TK'
 	,'Location for Tcl/Tk files used by ASCEND Tk GUI'
 	,"$INSTALL_ASCDATA/tcltk"
 )
 
-opts.Add(
+vars.Add(
 	'INSTALL_MODELS'
 	,"Location of ASCEND model files (.a4c,.a4l,.a4s)"
 	,default_install_models
 )
 
-opts.Add(
+vars.Add(
 	'INSTALL_SOLVERS'
 	,"Location of ASCEND solvers"
 	,default_install_solvers
 )
 
-opts.Add(
+vars.Add(
 	'INSTALL_DOC'
 	,"Location of ASCEND documentation files"
 	,"$INSTALL_SHARE/doc/ascend-"+version
 )
 
-opts.Add(
+vars.Add(
 	'INSTALL_INCLUDE'
 	,'Location to put header files during installation'
 	,default_install_include
 )
 
 
-opts.Add(
+vars.Add(
 	'INSTALL_ROOT'
 	,'For use by RPM only: location of %{buildroot} during rpmbuild'
 	,""
 )
 
-opts.Add(
+vars.Add(
 	'EXTLIB_SUFFIX'
 	,"Filename suffix for ASCEND 'external libraries' (for use with IMPORT"
 	,"_ascend$SHLIBSUFFIX"
 )
 
-opts.Add(
+vars.Add(
 	'EXTLIB_PREFIX'
 	,"Filename suffix for ASCEND 'external libraries' (for use with IMPORT"
 	,"$SHLIBPREFIX"
@@ -719,81 +719,81 @@ opts.Add(
 
 #----------------------
 
-opts.Add(
+vars.Add(
 	'PYGTK_ASSETS'
 	,'Default location for Glade assets (will be recorded in pygtk/config.py)'
 	,default_install_assets
 )
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'DEBUG'
 	,"Compile source with debugger symbols, eg for use with 'gdb'"
 	,False
 ))
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'MALLOC_DEBUG'
 	,"Compile with debugging version of MALLOC. Required for full CUnit testing"
 	,False
 ))
 
 #------ dmalloc --------
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	'DMALLOC_PREFIX'
 	,"Where are your dmalloc files?"
 	,default_prefix
 ))
 
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	'DMALLOC_CPPPATH'
 	,"Where are your dmalloc include files?"
 	,default_cpppath
 ))
 
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	'DMALLOC_LIBPATH'
 	,"Where are your dmalloc libraries?"
 	,default_libpath
 ))
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_DMALLOC'
 	,"Link to the DMALLOC library (if available) for debugging of memory usage."
 	,False
 ))
 
 #------ Graphviz --------
-#	opts.Add(PackageOption(
+#	vars.Add(PackageVariable(
 #		'GRAPHVIZ_PREFIX'
 #		,"Where are your GRAPHVIZ files?"
 #		,default_prefix
 #	))
 #
-#	opts.Add(PackageOption(
+#	vars.Add(PackageVariable(
 #		'GRAPHVIZ_CPPPATH'
 #		,"Where are your GRAPHVIZ include files? (don't need the final '/graphviz')"
 #		,default_cpppath
 #	))
 #
-#	opts.Add(PackageOption(
+#	vars.Add(PackageVariable(
 #		'GRAPHVIZ_LIBPATH'
 #		,"Where are your GRAPHVIZ libraries?"
 #		,default_graphviz_libpath
 #	))
 #
-#	opts.Add(
+#	vars.Add(
 #		'GRAPHVIZ_LIBS'
 #		,"What are your GRAPHVIZ libraries named?"
 #		,default_graphviz_libs
 #	)
 #
-#	opts.Add(PackageOption(
+#	vars.Add(PackageVariable(
 #		'GRAPHVIZ_RPATH'
 #		,"What is your GRAPHVIZ rpath for locating libraries at runtime? (only required for old Ubuntu)"
 #		,default_graphviz_rpath
 #	))
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_GRAPHVIZ'
 	,"Link to the GRAPHVIZ library (if available, for generating incidence graphs)"
 	,default_with_graphviz
@@ -801,25 +801,25 @@ opts.Add(BoolOption(
 
 
 #------ ufsparse --------
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	'UFSPARSE_PREFIX'
 	,"Where are your UFSPARSE files?"
 	,default_prefix
 ))
 
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	'UFSPARSE_CPPPATH'
 	,"Where are your UFSPARSE include files?"
 	,default_cpppath
 ))
 
-opts.Add(PackageOption(
+vars.Add(PackageVariable(
 	'UFSPARSE_LIBPATH'
 	,"Where are your UFSPARSE libraries?"
 	,default_libpath
 ))
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_UFSPARSE'
 	,"Link to the UFSPARSE library (if available, for additional sparse matrix routines)"
 	,True
@@ -827,55 +827,55 @@ opts.Add(BoolOption(
 
 #-----------------------
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'UPDATE_NO_YACC_LEX'
 	,"Update the *_no_yacc* and *_no_lex* files in the source tree? (these files are created so that ASCEND can be compiled in the absence of those tools)"
 	,False
 ))
 
-opts.Add(
+vars.Add(
 	'DISTTAR_NAME'
 	,"Stem name of the tarball created by 'scons dist'. So for 'ascend-aaa.tar.bz2', set this to 'ascend-aaa'."
 	,"ascend-"+version
 )
 
-opts.Add(
+vars.Add(
 	'RELEASE'
 	,"Release number for use in RPM spec file. This should always start with a zero for releases made by the ASCEND group, in order that third parties can make 'patch' releases of higher version numbers."
 	,"0"
 )
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'ABSOLUTE_PATHS'
 	,"Whether to use absolute or relative paths in the installed Tcl/Tk interface. If you want to build an RPM, set this to false."
 	,default_absolute_paths
 ))
 
-opts.Add(
+vars.Add(
 	'WIN_INSTALLER_NAME'
 	,"Name of the installer .exe to create under Windows (minus the '.exe')"
 	,"ascend-"+version+"-py"+pyversion+".exe"
 )
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_XTERM_COLORS'
 	,"Set to 0 if you don't want xterm colour codes in the console output"
 	,True
 ))
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_EXTFNS'
 	,"Set to 0 if you don't want to attempt to build the external modules bundled with ASCEND"
 	,True
 ))
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_SCROLLKEEPER'
 	,"Set to to 1 if you want to install an OMF file that can be read by scrollkeeper (eg Yelp on GNOME)"
 	,default_with_scrollkeeper
 ))
 
-opts.Add(BoolOption(
+vars.Add(BoolVariable(
 	'WITH_MSVCR71'
 	,"Attempt to link against MSVCR71.DLL, to enable passing of FILE* objects to/from python"
 	,False
@@ -940,7 +940,7 @@ env = Environment(
 #print "PROGSUFFIX =",env['PROGSUFFIX']
 #print "CPPPATH =",env['CPPPATH']
 
-opts.Update(env)
+vars.Update(env)
 
 for l in ['SUNDIALS','IPOPT']:
 	var = "%s_LIBS" % l
@@ -952,9 +952,9 @@ if 'LSOD' in env['WITH_SOLVERS']:
 		env['WITH_SOLVERS'].append('LSODE')
 	env['WITH_SOLVERS'].remove('LSOD')
 
-opts.Save('options.cache',env)
+vars.Save('options.cache',env)
 
-Help(opts.GenerateHelpText(env))
+Help(vars.GenerateHelpText(env))
 
 with_tcltk = env.get('WITH_TCLTK')
 without_tcltk_reason = "disabled by options/config.py"
