@@ -500,9 +500,8 @@ struct gl_list_t *GetNotes(symchar *dbid,
         (id == NOTESWILD || id == n->id) &&
         (method == NOTESWILD || method == n->method) &&
         (lang == NOTESWILD || lang == n->lang) &&
-        (nd == nd_wild || nd == n->kind)) {
-      gl_append_ptr(result,n);
-    }
+        (nd == nd_wild || nd == n->kind)) 
+	if(n->id!=NULL) gl_append_ptr(result,n);
     n = n->next;
   }
   return result;
