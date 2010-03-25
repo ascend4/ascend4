@@ -661,7 +661,10 @@ class Browser:
 			self.sim.checkInstance()
 			self.do_solve()
 		else:
-			self.sim.processVarStatus()
+			try:
+				self.sim.processVarStatus()
+			except RuntimeError,e:
+				self.reporter.reportError(str(e))
 			self.modelview.refreshtree()
 
 		self.sync_observers()
