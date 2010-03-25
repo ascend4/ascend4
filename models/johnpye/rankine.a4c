@@ -375,7 +375,7 @@ MODEL heater_closed;
 
 	(* cons. energy *)
 	cons_en: q + inlet.h = outlet.h;
-	cons_en_heat: m_ratio * inlet_heat.h = m_ratio * outlet.h + q;
+	cons_en_heat: m_ratio * inlet_heat.h = m_ratio * outlet_heat.h + q;
 
 METHODS
 METHOD on_load;
