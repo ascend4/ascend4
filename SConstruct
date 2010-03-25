@@ -2420,39 +2420,19 @@ else:
 
 if need_fortran:
 	print "NEED FORTRAN"
-	import SCons
-	if SCons.__version__[0:4]=="0.97":
-		# Older SCons verions 0.97 (eg Ubuntu 8.04) doesn't have the 'gfortran' tool'.
-		# On this system, the 'fortran' tool seems to detect gfortran OK.
-		conf.env.Tool('fortran')
-	else:
-		conf.env.Tool('g77')
-		conf.env.Tool('gfortran')
+	# Removed stuff for SCons 0.97 (Ubuntu 8.04) from here -- JP
 	detect_fortran = conf.env.Detect(['gfortran','g77'])
 	if detect_fortran:
-		# For some reason, g77 doesn't get detected properly on MinGW
-		if not env.has_key('F77') and not env.has_key('FORTRAN'):
-			print "Fixing detection of F77 on MinGW...(?)"
-			conf.env.Replace(F77=detect_fortran)
-			conf.env.Replace(F77COM='$F77 $F77FLAGS -c -o $TARGET $SOURCE')
-			conf.env.Replace(F77FLAGS='')
-			#print "F77:",conf.env['F77']
-			#print "F77COM:",conf.env['F77COM']
-			#print "F77FLAGS:",conf.env['F77FLAGS']
-			fortran_builder = Builder(
-				action='$F77COM'
-				, suffix='.o'
-				, src_suffix='.f'
-			)
-			conf.env.Append(BUILDERS={'Fortran':fortran_builder})
-		if platform.system()=="Linux":
-			print "APPARENTLY FORTRAN WAS DETECTED"
-			# not needed under scons 1.2, at least.
-			# conf.env.Append(SHFORTRANFLAGS=['-fPIC'])
+		conf.env.Tool(detect_fortran)
+		if detect_fortran == 'g77':
+			print "Setting F2C_LIB to 'g2c' because G77 compiler in use"
+			conf.env['F2C_LIB'] = 'g2c'
+		#print "DETECT_FORTRAN =",detect_fortran
+		#print "NOW, FORTAN =",env['FORTRAN']
 	else:
-		print "FAILED FORTRAN DETECTION"
+		print "FAILED G77/FORTRAN DETECTION"
 		with_lsode=False;
-		without_lsode_reason="FORTRAN-77 required but not found"
+		without_lsode_reason="FORTRAN required but not detected"
 else:
 	print "FORTRAN WAS NOT FOUND TO BE REQUIRED"
 
