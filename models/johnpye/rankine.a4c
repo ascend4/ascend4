@@ -393,6 +393,25 @@ METHOD on_load;
 END on_load;
 END heater_closed;
 
+MODEL heater_closed_test REFINES heater_closed;
+	(* nothing here *)
+METHODS
+METHOD on_load;
+	FIX inlet.p, inlet.h, inlet.mdot;
+	inlet.p := 40 {bar};
+	inlet.h := 634 {kJ/kg};
+	inlet.mdot := 700 {t/d};
+
+	FIX inlet_heat.p, inlet_heat.h, inlet_heat.mdot;
+	inlet_heat.p := 50 {bar};
+	inlet_heat.h := 2960 {kJ/kg};
+	inlet_heat.mdot := 500 {t/d};	
+
+	FIX outlet.h;
+	outlet.h := 900 {kJ/kg};
+END on_load;
+END heater_closed_test;
+
 (*------------------------------------------------------------------------------
   TEE PIECE
 *)
