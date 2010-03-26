@@ -3,11 +3,13 @@
 import gtk, gtk.glade, pango
 import ascpy
 from varentry import *
+import os,shutil
 
 class ImageWindow:
-	def __init__(self,browser,parent,imagefilename,title):
+	def __init__(self,browser,parent,imagefilename,title,delete=False):
 		self.browser = browser;
 		self.imagefilename = imagefilename
+		self.delete = delete
 
 		# GUI config
 		_xml = gtk.glade.XML(browser.glade_file,"imagewindow")
@@ -54,9 +56,26 @@ class ImageWindow:
 		
 		response = chooser.run()
 		if response==gtk.RESPONSE_OK:
-			self.browser.reporter.reportWarning("NOT IMPLEMENTED: SAVE AS '%s'" % chooser.get_filename())
-			chooser.destroy()
-		
+			if os.path.exists(chooser.get_filename()):
+				label = gtk.Label("File Already Exists, Overwrite?")
+				dialog = gtk.Dialog("Error",None, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                    gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+				dialog.vbox.pack_start(label)
+				label.show()
+				response = dialog.run()
+				if response == gtk.RESPONSE_ACCEPT:
+					shutil.copy(self.imagefilename,chooser.get_filename())
+					dialog.destroy()
+					self.browser.reporter.reportWarning("FILE SAVED: '%s'" % chooser.get_filename())
+					chooser.destroy()
+				else:
+					dialog.destroy()
+					self.browser.reporter.reportWarning("FILE NOT SAVED")
+					chooser.destroy()
+			else:
+				shutil.copy(self.imagefilename,chooser.get_filename())
+				self.browser.reporter.reportWarning("FILE SAVED: '%s'" % chooser.get_filename())
+				chooser.destroy()
 
 	def on_zoomfit_clicked(self,*args):
 		self.zoom(fit=1)
@@ -107,8 +126,9 @@ class ImageWindow:
 	def run(self):
 		self.window.show()
 
-	def on_imagewindow_destroy_event(self,*args):
-		pass
+	def on_imagewindow_remove(self,*args):
+		if self.delete:
+			os.unlink(self.imagefilename)
 
 	def on_imagewindow_size_request(self,*args):
 		if self.is_fit:

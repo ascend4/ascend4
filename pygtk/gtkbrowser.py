@@ -861,13 +861,12 @@ class Browser:
 			self.sim.write(f,'dot') # create a PNG file in f
 		except Exception,e:
 			self.stop_waiting()
-			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
+			self.reporter.reportError("Faile-d to create incidence graph: %s" % str(e))
 			return
-		self.stop_waiting()
 		f.close()
-		_ig = ImageWindow(self, self.window, fname, "Incidence Graph")
+		self.stop_waiting()
+		_ig = ImageWindow(self, self.window, fname, title="Incidence Graph", delete=True)
 		_ig.run()
-		os.unlink(fname)
 
 	def on_tools_repaint_tree_activate(self,*args):
 		self.reporter.reportNote("Repainting model view...")
