@@ -3,6 +3,7 @@
   <!-- interface-requires gtk+ 2.16 -->
   <!-- interface-naming-policy toplevel-contextual -->
   <widget class="GtkWindow" id="browserwin">
+    <property name="width_request">530</property>
     <property name="visible">True</property>
     <property name="title" translatable="yes">ASCEND PyGTK</property>
     <property name="default_width">600</property>
