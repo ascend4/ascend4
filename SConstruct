@@ -2922,7 +2922,7 @@ env.Append(
 		'.toc','.lof','.lot','.mm','.warnings','.tm2','.swp',',tmp','.gz',
 		'.bz2','.7z','.deb','.dsc','.changes']
 	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian']
-	, DISTTAR_EXCLUDERES=[r"_wrap\.cc?$", r"~$", r"pygtk/ascpy\.py"]
+	, DISTTAR_EXCLUDERES=[r"_wrap\.cc?$", r"~$", r"pygtk/ascpy\.py","pygtk/testipopt$"]
 )
 
 tar = env.DistTar("dist/"+env['DISTTAR_NAME']
