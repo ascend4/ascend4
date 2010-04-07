@@ -1,0 +1,124 @@
+(*	ASCEND modelling environment
+	Copyright (C) 2010 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)(*
+	This file contains a model of a combined-cycle power station, with
+	a gas turbine (Brayton) cycle running as the 'topping' cycle and a steam
+	turbine (Rankine) cycle running as the 'bottoming' cycle. Initially the 
+	model is being based on Example 9.13 from Moran & Shapiro, 'Fundamentals of
+	Engineering Thermodynamics', 4th Ed, Wiley, 2000.
+
+	See also Example 10-9 from the book Çengel & Boles 
+	'Thermodynamcs: An Engineering Approach, 6th Ed, McGraw-Hill, 2008.
+
+	TODO: add exergy accounting to the model.
+
+	Author: John Pye
+*)
+
+REQUIRE "johnpye/rankine.a4c";
+REQUIRE "johnpye/brayton.a4c";
+
+MODEL air_steam_heat_exchanger REFINES air_equipment;
+	inlet_cold, outlet_cold IS_A steam_node;
+
+	inlet.p, outlet.p ARE_THE_SAME;
+	inlet_cold.p, outlet_cold.p ARE_THE_SAME;
+
+	inlet_cold.mdot, outlet_cold.mdot ARE_THE_SAME;
+	mdot_cold ALIASES inlet_cold.mdot;
+
+	(* for perfect eps=1 case: inlet_cold.T, outlet.T ARE_THE_SAME;*)
+
+	epsilon IS_A fraction;
+
+	Qdot IS_A energy_rate;
+	mdot_min IS_A mass_rate;
+	mdot_min = inlet.mdot + 0.5*(inlet.mdot - inlet_cold.mdot + abs(inlet.mdot - inlet_cold.mdot));
+
+	Qdot = epsilon * mdot_min * (inlet_cold.h - inlet.h);
+	outlet.h = inlet.h + Qdot/inlet.mdot;
+	outlet_cold.h = inlet_cold.h - Qdot/inlet_cold.mdot;
+END air_steam_heat_exchanger;
+
+MODEL combinedcycle;
+	(* define the blocks *)
+	GC IS_A compressor;
+	BU IS_A combustor;
+	GT IS_A gas_turbine;
+	HE IS_A air_steam_heat_exchanger;
+	DI IS_A dissipator;
+	TU IS_A turbine_simple;
+	CO IS_A condenser_simple;
+	PU IS_A pump_simple;
+
+	(* wire up the model *)
+	GC.outlet, BU.inlet ARE_THE_SAME;
+	BU.outlet, GT.inlet ARE_THE_SAME;
+	GT.outlet, HE.inlet ARE_THE_SAME;
+	HE.outlet, DI.inlet ARE_THE_SAME;
+	DI.outlet, GC.inlet ARE_THE_SAME;
+
+	HE.outlet_cold, TU.inlet ARE_THE_SAME;
+	TU.outlet, CO.inlet ARE_THE_SAME;
+	CO.outlet, PU.inlet ARE_THE_SAME;
+	PU.outlet, HE.outlet_cold ARE_THE_SAME;
+
+	Wdot, Wdot_gas, Wdot_vap IS_A energy_rate;
+	Wdot_gas = GC.Wdot + GT.Wdot;
+	Wdot_vap = TU.Wdot + PU.Wdot;
+	Wdot = Wdot_gas + Wdot_vap;
+
+METHODS
+METHOD on_load;
+	FIX Wdot;
+	Wdot := 45 {MW};
+
+	FIX GC.inlet.T, GC.inlet.p;
+	GC.inlet.T := 300 {K};
+	GC.inlet.p := 100 {kPa};
+	FIX GC.eta;
+	GC.eta := 0.84;
+	FIX GC.outlet.p;
+	GC.outlet.p := 1200 {kPa};
+	FIX BU.outlet.T;
+	BU.outlet.T := 1400 {K};
+	FIX GT.eta, GT.outlet.p;
+	GT.eta := 0.88;
+	GT.outlet.p := 100 {kPa};
+	FIX HE.outlet.T;
+	HE.outlet.T := 400 {K};
+	
+	FIX TU.inlet.T, TU.inlet.p;
+	TU.inlet.T := 400 {K} +  273.15 {K};
+	TU.inlet.p := 8 {MPa};
+	FIX TU.eta;
+	TU.eta := 0.90;
+	FIX CO.outlet.p;
+	CO.outlet.p := 8 {kPa};
+	FIX PU.eta;
+	PU.eta := 0.8;
+
+	HE.outlet_cold.h := 3000 {kJ/kg};
+	FIX HE.epsilon;
+	HE.epsilon := 1;
+	FIX BU.eta;
+	BU.eta := 1;
+
+END on_load;
+END combinedcycle;	
+
