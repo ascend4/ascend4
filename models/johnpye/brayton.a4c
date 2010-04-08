@@ -144,7 +144,6 @@ METHODS
 		T := 400 {K};
 		v.nominal := 10 {L/kg};
 		s := 4 {kJ/kg/K};
-		x := 0.8;
 	END default;
 	METHOD solve;
 		EXTERNAL do_solve(SELF);
