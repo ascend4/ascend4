@@ -181,7 +181,8 @@ class Browser:
 
 		_prefpath = self.prefs.getStringPref("Directories","librarypath",None)
 		_preffileopenpath = self.prefs.getStringPref("Directories","fileopenpath",None)
-
+		self.filename = None
+	
 		#--------
 		# set up library path and the path to use for File->Open dialogs
 		
@@ -1063,11 +1064,14 @@ class Browser:
 
 	def reload_click(self,*args):
 		_type = None
-		if not self.sim:
-			self.reporter.reportError("No model created yet!")
+
+		if not self.filename:
+			self.reporter.reportError("No file loaded yet!")
 			return
 
-		_type = self.sim.getType().getName().toString();
+		if self.sim:
+			_type = self.sim.getType().getName().toString();
+
 		self.library.clear()
 
 		try:
