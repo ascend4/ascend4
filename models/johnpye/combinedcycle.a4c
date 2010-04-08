@@ -83,8 +83,24 @@ MODEL combinedcycle;
 	Wdot_vap = TU.Wdot + PU.Wdot;
 	Wdot = Wdot_gas + Wdot_vap;
 
+	Qdot_H ALIASES BU.Qdot;
+	
+	eta IS_A fraction;
+	eta = Wdot / Qdot_H;
+
+	massflowratio IS_A factor;
+	massflowratio = TU.mdot / GT.mdot;
+
+	braytonpressureratio IS_A positive_factor;
+	braytonpressureratio * GC.inlet.p = GC.outlet.p;
+
 METHODS
 METHOD on_load;
+	RUN cengel_ex_10_9;
+END on_load;
+
+METHOD moran_ex_9_13;
+	RUN ClearAll;
 	FIX Wdot;
 	Wdot := 45 {MW};
 
@@ -119,6 +135,40 @@ METHOD on_load;
 	FIX BU.eta;
 	BU.eta := 1;
 
-END on_load;
+	FIX CO.outlet.x;
+	CO.outlet.x := 0.001;
+END moran_ex_9_13;
+
+METHOD cengel_ex_10_9;
+	RUN ClearAll;
+	FIX Wdot;
+	Wdot := 100 {MW};
+
+	FIX braytonpressureratio;
+	braytonpressureratio := 8;
+	FIX GC.inlet.p, GC.inlet.T;
+	GC.inlet.p := 1 {atm};
+	GC.inlet.T := 300 {K};
+	FIX GT.inlet.T;
+	GT.inlet.T := 1300 {K};
+	FIX GC.eta; GC.eta := 0.8;
+	FIX GT.eta; GT.eta := 0.85;
+	
+	FIX TU.inlet.p, TU.outlet.p;
+	TU.inlet.p := 7 {MPa};
+	TU.outlet.p := 5 {kPa};
+	FIX CO.outlet.x;
+	CO.outlet.x := 0.001;
+	FIX TU.inlet.T;
+	TU.inlet.T := 500 {K} +  273.15 {K};
+	FIX DI.inlet.T;
+	DI.inlet.T := 450 {K};
+
+	FIX BU.eta; BU.eta := 1;
+	FIX TU.eta; TU.eta := 1;
+	FIX PU.eta; PU.eta := 1;
+	FREE PU.eta;
+END cengel_ex_10_9;
+
 END combinedcycle;	
 
