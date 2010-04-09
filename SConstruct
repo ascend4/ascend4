@@ -2920,9 +2920,15 @@ env.Append(
 	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.lib','.cc','.cache',
 		'.pyc','.cvsignore','.dblite','.log','.pl','.out','.exe','.aux','.idx',
 		'.toc','.lof','.lot','.mm','.warnings','.tm2','.swp',',tmp','.gz',
-		'.bz2','.7z','.deb','.dsc','.changes']
+		'.bz2','.7z','.deb','.dsc','.changes','.bak']
 	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian']
-	, DISTTAR_EXCLUDERES=[r"_wrap\.cc?$", r"~$", r"pygtk/ascpy\.py","pygtk/testipopt$"]
+	, DISTTAR_EXCLUDERES=[r"_wrap\.cc?$", r"~$", r"pygtk/ascpy\.py","pygtk/testipopt$"
+		,r"/lib.*\.so\.[.0-9]+$", r"tcltk/asc4dev$", r"tcltk/interface/typelex\.c$"
+		,r"ascend/compiler/ascParse\.[ch]$", r"ascend/solver/conoptconfig\.h$"
+		,r"ascend/utilities/config\.h$", r"pygtk/config\.h$", r"pygtk/config\.py$"
+		,r"pygtk/ascdev$", r"pygtk/testconopt$", r"ascend/compiler/scanner\.c$"
+		,r"tcltk/interface/ascend4$"
+	]
 )
 
 tar = env.DistTar("dist/"+env['DISTTAR_NAME']
