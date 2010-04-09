@@ -409,6 +409,7 @@ public:
 	const double  getNominal() const;
 
 	const std::vector<Instanc> getClique() const;
+	const std::vector<std::string> getAliases() const;
 };
 
 %extend Instanc{

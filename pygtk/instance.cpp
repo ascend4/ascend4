@@ -780,6 +780,21 @@ Instanc::getClique() const{
 	return v;
 }
 
+const vector<string>
+Instanc::getAliases() const{
+	vector<string> v;
+	struct gl_list_t *paths;
+	unsigned long c,len;
+	paths = WriteAliasStrings(i);
+	len = gl_length(paths);
+	for(c=1;c<=len;c++){
+		const char *tmp = (const char *)gl_fetch(paths,c);
+		v.push_back(string(tmp));
+	}
+	gl_free_and_destroy(paths);
+	return v;
+}
+
 //------------------------------------------------------
 // static properties
 SymChar

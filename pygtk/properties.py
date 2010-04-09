@@ -193,6 +193,18 @@ class VarPropsWin:
 		_dialog = InfoDialog(self.browser,self.window,text,title)
 		_dialog.run()
 
+	def on_aliasesbutton_clicked(self,*args):
+		title = "Aliases of '%s'"%self.browser.sim.getInstanceName(self.instance)
+		text = title + "\n\n"
+		s = self.instance.getAliases();
+		if s:
+			for i in s:
+				text += "%s\n" % i
+		else:
+			text += "NO ALIASES"
+		_dialog = InfoDialog(self.browser,self.window,text,title)
+		_dialog.run()
+
 	def on_morepropsbutton_clicked(self,*args):
 		title = "All properties of '%s'" % self.browser.sim.getInstanceName(self.instance)
 		text = title + "\n\n"
