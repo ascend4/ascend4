@@ -301,6 +301,9 @@ MODEL combustor REFINES air_equipment;
 
 	eta IS_A fraction;
 	Qdot = eta * Qdot_fuel;
+
+	qdot_fuel IS_A specific_energy_rate;
+	qdot_fuel * mdot = Qdot_fuel;
 END combustor;
 
 MODEL combustor_test REFINES combustor;

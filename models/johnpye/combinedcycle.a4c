@@ -25,6 +25,10 @@
 	See also Example 10-9 from the book Çengel & Boles 
 	'Thermodynamcs: An Engineering Approach, 6th Ed, McGraw-Hill, 2008.
 
+	At the current revision (12 Apr 2010), this model seems to be working OK.
+	The Cengel model needs convopt=RELNOM_SCALE with the QRSlv solver. The
+	Moran example just works.
+
 	TODO: add exergy accounting to the model.
 
 	Author: John Pye
@@ -42,15 +46,10 @@ MODEL air_steam_heat_exchanger REFINES air_equipment;
 	inlet_cold.mdot, outlet_cold.mdot ARE_THE_SAME;
 	mdot_cold ALIASES inlet_cold.mdot;
 
-	(* for perfect eps=1 case: inlet_cold.T, outlet.T ARE_THE_SAME;*)
-
-	epsilon IS_A fraction;
+	(* we don't have epsilon worked out or specified here, so the heat exchanged
+	will depend on values specified outside this model. *)
 
 	Qdot IS_A energy_rate;
-	mdot_min IS_A mass_rate;
-	mdot_min = inlet.mdot + 0.5*(inlet.mdot - inlet_cold.mdot + abs(inlet.mdot - inlet_cold.mdot));
-
-	Qdot = epsilon * mdot_min * (inlet_cold.h - inlet.h);
 	outlet.h = inlet.h + Qdot/inlet.mdot;
 	outlet_cold.h = inlet_cold.h - Qdot/inlet_cold.mdot;
 END air_steam_heat_exchanger;
@@ -76,7 +75,7 @@ MODEL combinedcycle;
 	HE.outlet_cold, TU.inlet ARE_THE_SAME;
 	TU.outlet, CO.inlet ARE_THE_SAME;
 	CO.outlet, PU.inlet ARE_THE_SAME;
-	PU.outlet, HE.outlet_cold ARE_THE_SAME;
+	PU.outlet, HE.inlet_cold ARE_THE_SAME;
 
 	Wdot, Wdot_gas, Wdot_vap IS_A energy_rate;
 	Wdot_gas = GC.Wdot + GT.Wdot;
@@ -130,13 +129,13 @@ METHOD moran_ex_9_13;
 	PU.eta := 0.8;
 
 	HE.outlet_cold.h := 3000 {kJ/kg};
-	FIX HE.epsilon;
-	HE.epsilon := 1;
 	FIX BU.eta;
 	BU.eta := 1;
 
 	FIX CO.outlet.x;
 	CO.outlet.x := 0.001;
+
+	HE.outlet_cold.h := 3000 {kJ/kg};
 END moran_ex_9_13;
 
 METHOD cengel_ex_10_9;
@@ -154,9 +153,9 @@ METHOD cengel_ex_10_9;
 	FIX GC.eta; GC.eta := 0.8;
 	FIX GT.eta; GT.eta := 0.85;
 	
-	FIX TU.inlet.p, TU.outlet.p;
+	FIX TU.inlet.p, CO.outlet.p;
 	TU.inlet.p := 7 {MPa};
-	TU.outlet.p := 5 {kPa};
+	CO.outlet.p := 5 {kPa};
 	FIX CO.outlet.x;
 	CO.outlet.x := 0.001;
 	FIX TU.inlet.T;
@@ -167,7 +166,13 @@ METHOD cengel_ex_10_9;
 	FIX BU.eta; BU.eta := 1;
 	FIX TU.eta; TU.eta := 1;
 	FIX PU.eta; PU.eta := 1;
-	FREE PU.eta;
+
+	HE.outlet_cold.h := 3000 {kJ/kg};
+
+	PU.dp.nominal := 50 {bar};
+	TU.dp.nominal := -50 {bar};
+
+	
 END cengel_ex_10_9;
 
 END combinedcycle;	
