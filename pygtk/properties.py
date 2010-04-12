@@ -198,7 +198,7 @@ class VarPropsWin:
 		text = title + "\n\n"
 		s = self.instance.getAliases();
 		if s:
-			for i in s:
+			for i in sorted(s):
 				text += "%s\n" % i
 		else:
 			text += "NO ALIASES"
