@@ -168,11 +168,6 @@ METHOD cengel_ex_10_9;
 	FIX PU.eta; PU.eta := 1;
 
 	HE.outlet_cold.h := 3000 {kJ/kg};
-
-	PU.dp.nominal := 50 {bar};
-	TU.dp.nominal := -50 {bar};
-
-	
 END cengel_ex_10_9;
 
 END combinedcycle;	
