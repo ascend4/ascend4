@@ -1485,6 +1485,61 @@ class TestCSV(Ascend):
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
 
 
+class TestSlvReq(Ascend):
+	def test1(self):
+		self.L.load('test/slvreq/test1.a4c')
+		H = ascpy.SolverHooks(ascpy.SolverReporter())
+		ascpy.SolverHooksManager_Instance().setHooks(H)
+		T = self.L.findType('test1')
+		M = T.getSimulation('sim')
+		print "\n\n\nRUNNING ON_LOAD EXPLICITLY NOW..."
+		M.run(T.getMethod('on_load'))
+
+	def test2(self):
+		self.L.load('test/slvreq/test1.a4c')
+		R = ascpy.SolverReporter()
+		class SolverHooksPython(ascpy.SolverHooks):
+			def __init__(self):
+				print "PYTHON SOLVER HOOKS"
+				ascpy.SolverHooks.__init__(self,None)
+			def setSolver(self,solvername,sim):
+				sim.setSolver(ascpy.Solver(solvername))
+				print "PYTHON: SOLVER is now %s" % sim.getSolver().getName()	
+				return 0
+			def setOption(self,optionname,val,sim):
+				try:
+					PP = sim.getParameters()
+				except Exception,e:
+					print "PYTHON ERROR: ",str(e)
+					return ascpy.SLVREQ_OPTIONS_UNAVAILABLE
+				try:
+					for P in PP:
+						if P.getName()==optionname:
+							try:
+								P.setValueValue(val)
+								sim.setParameters(PP)
+								print "PYTHON: SET",optionname,"to",repr(val)
+								return 0
+							except Exception,e:
+								print "PYTHON ERROR: ",str(e)
+								return ascpy.SLVREQ_WRONG_OPTION_VALUE_TYPE
+					return ascpy.SLVREQ_INVALID_OPTION_NAME
+				except Exception,e:
+					print "PYTHON ERROR: ",str(e)
+					return ascpy.SLVREQ_INVALID_OPTION_NAME
+			def doSolve(self,inst,sim):
+				try:
+					print "PYTHON: SOLVING",sim.getName(),"WITH",sim.getSolver().getName()
+					sim.solve(sim.getSolver(),R)
+				except Exception,e:
+					print "PYTHON ERROR:",str(e)
+					return 3
+				return 0
+		H = SolverHooksPython()
+		ascpy.SolverHooksManager_Instance().setHooks(H)
+		T = self.L.findType('test1')
+		M = T.getSimulation('sim')
+
 # test some stuff for beam calculations
 class TestSection(Ascend):
 	def test_compound3(self):

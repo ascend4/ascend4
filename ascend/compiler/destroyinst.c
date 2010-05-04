@@ -74,6 +74,7 @@
 #include "universal.h"
 #include "instance_types.h"
 #include "cmpfunc.h"
+#include "slvreq.h"
 
 #ifndef lint
 static CONST char DestroyInstModuleID[] = "$Id: destroyinst.c,v 1.12 1997/07/18 12:28:50 mthomas Exp $";
@@ -87,6 +88,7 @@ void DeleteIPtr(struct Instance *i)
   AssertMemory(i);
   switch(i->t) {
   case SIM_INST:
+	slvreq_sim_destroy_hooks(i);
     (*InterfacePtrDelete)(i,SIM_INST(i)->interface_ptr);
     SIM_INST(i)->interface_ptr = NULL;
     return;
@@ -528,7 +530,7 @@ static void DestroyInstanceParts(struct Instance *i)
     }
     /* delete references of reals to this expression */
     if (RELN_INST(i)->ptr != NULL){
-      CONSOLE_DEBUG("Destroying relation at %p",RELN_INST(i)->ptr);
+      /*CONSOLE_DEBUG("Destroying relation at %p",RELN_INST(i)->ptr);*/
       DestroyRelation(RELN_INST(i)->ptr,i);
       RELN_INST(i)->ptr = NULL;
     }

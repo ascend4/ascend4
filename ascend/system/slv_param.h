@@ -266,6 +266,8 @@ ASC_DLLSPEC int slv_param_char(struct slv_parameters_structure *p, const int ind
 		SLV_PARAM_BOOL(p,IDA_PARAM_AUTODIFF) = FALSE;
 */
 
+#define SLV_PARAM_TYPE(PARAMS,INDEX)  ((PARAMS)->parms[INDEX].type)
+
 /* the first three are read/write */
 #define SLV_PARAM_INT(PARAMS,INDEX)  (PARAMS)->parms[INDEX].info.i.value
 #define SLV_PARAM_BOOL(PARAMS,INDEX) (PARAMS)->parms[INDEX].info.b.value
@@ -595,13 +597,14 @@ ASC_DLLSPEC int32 slv_define_parm(slv_parameters_t *p,
 	        otherwise returns the number of registered parameters in p.
  */
 
-/* slv_set_char_parameter() is defined in slv.c */
 ASC_DLLSPEC void slv_set_char_parameter(char **cptr, CONST char *newvalue);
 /**<
 	Sets a char parameter value to a new string.
-	Resetting the value of a parameter can be done directly except
-	for string parameters which must be set with this function.  The
-	string newvalue is not kept by the function.<br><br>
+
+	The string currently pointed to within the parameter structure is first
+	freed if necessary, then a new copy of 'newvalue' is created, and assigned
+	to the parameter structure. The means that it's up to the caller to
+	free the 'newvalue' string, if that needs ot be done.
 
 	Example:   slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
 

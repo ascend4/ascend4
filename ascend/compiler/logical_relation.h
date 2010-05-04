@@ -42,6 +42,8 @@
 #ifndef ASC_LOGICAL_RELATION_H
 #define ASC_LOGICAL_RELATION_H
 
+#include <ascend/compiler/expr_types.h>
+
 /**	@addtogroup compiler Compiler
 	@{
 */

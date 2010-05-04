@@ -40,7 +40,7 @@ Relation::getName() const{
 	return name;
 }
 
-const double
+double
 Relation::getResidual() const{
 	return rel_residual(rel);
 }
@@ -56,7 +56,7 @@ Relation::getIncidentVariables() const{
 	return v;
 }
 
-const int
+int
 Relation::getNumIncidentVariables() const{
 	return rel_n_incidences(rel);
 }

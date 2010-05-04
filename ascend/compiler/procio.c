@@ -50,20 +50,16 @@
 #include "initialize.h"
 #include "procio.h"
 
-void WriteInitWarn(struct procFrame *fm, char *str)
-{
-  CONSOLE_DEBUG("...");
+void WriteInitWarn(struct procFrame *fm, char *str){
   WriteStatementErrorMessage(fm->err, fm->stat, str, 0,2);
 }
 
-void WriteInitErr(struct procFrame *fm, char *str)
-{
+void WriteInitErr(struct procFrame *fm, char *str){
   WSEM(fm->err,fm->stat,str);
   FFLUSH(fm->err);
 }
 
-void ProcWriteCaseError(struct procFrame *fm, int arm, int pos)
-{
+void ProcWriteCaseError(struct procFrame *fm, int arm, int pos){
   static char nostr[] = "";
   char *fmt;
   char *tail;
@@ -126,8 +122,7 @@ void ProcWriteCaseError(struct procFrame *fm, int arm, int pos)
   WriteInitErr(fm,errmsg);
 }
 
-void ProcWriteIfError(struct procFrame *fm, CONST char *cname)
-{
+void ProcWriteIfError(struct procFrame *fm, CONST char *cname){
   char em[85];
   char cn[20];
 
@@ -194,8 +189,7 @@ void ProcWriteIfError(struct procFrame *fm, CONST char *cname)
   CONSOLE_DEBUG("...");
 }
 
-void ProcWriteAssignmentError(struct procFrame *fm)
-{
+void ProcWriteAssignmentError(struct procFrame *fm){
   switch (fm->ErrNo) {
   case Proc_nonatom_assignment:
     WriteInitErr(fm,"Assignment to a non-atomic instance");
@@ -233,8 +227,7 @@ void ProcWriteAssignmentError(struct procFrame *fm)
   }
 }
 
-void ProcWriteForError(struct procFrame *fm)
-{
+void ProcWriteForError(struct procFrame *fm){
   switch (fm->ErrNo) {
   case Proc_for_duplicate_index:
     WriteInitErr(fm,"FOR/DO uses duplicate index variable.");
@@ -253,8 +246,8 @@ void ProcWriteForError(struct procFrame *fm)
 
 /* error messages for oldstyle external functions */
 void ProcWriteExtError(struct procFrame *fm, CONST char *funcname,
-                       enum ProcExtError peerr, int pos)
-{
+                       enum ProcExtError peerr, int pos
+){
   char *errmsg;
   assert(funcname != NULL);
   errmsg = ASC_NEW_ARRAY(char,80+strlen(funcname));
@@ -310,8 +303,8 @@ void ProcWriteExtError(struct procFrame *fm, CONST char *funcname,
 }
   
 void ProcWriteStackCheck(struct procFrame *fm,
-                         struct Name *class, struct Name *name)
-{
+                         struct Name *class, struct Name *name
+){
   int unwind = 0;
   if ( fm->ErrNo == Proc_return) {
     return;
@@ -347,8 +340,7 @@ void ProcWriteStackCheck(struct procFrame *fm,
   error_reporter_end_flush();
 }
 
-void ProcWriteRunError(struct procFrame *fm) 
-{
+void ProcWriteRunError(struct procFrame *fm){
   char *errmsg;
   errmsg = "Unexpected RUN statement error";
   switch (fm->ErrNo) {
@@ -403,4 +395,24 @@ void ProcWriteFixError(struct procFrame *fm, CONST struct Name *var){
 	ascfree(name);
 	WriteInitErr(fm,errmsg);
 }
+
+void ProcWriteSlvReqError(struct procFrame *fm){
+	const char *msg;
+	switch(fm->ErrNo){
+		case Proc_slvreq_unhooked: msg = "Statement not available with this user interface"; break;
+		case Proc_slvreq_unknown_solver: msg = "Bad solver name (or solver had not yet been loaded)"; break;
+		case Proc_slvreq_no_solver_selected: msg = "No solver has been selected yet"; break;
+		case Proc_slvreq_invalid_option_name: msg = "Invalid option name (check the solver documentation?)"; break;
+		case Proc_slvreq_option_invalid_type: msg=  "Option value is not of expected type (check solver documentation)"; break;
+		case Proc_slvreq_no_system: msg = "No system (probably a bug in your user interface)"; break;
+		case Proc_slvreq_presolve_fail: msg = "Pre-solve failed"; break;
+		case Proc_slvreq_solve_fail: msg = "Solve failed"; break;
+		case Proc_slvreq_error: msg = "General solver-request error"; break;
+		case Proc_slvreq_not_implemented: msg = "Not implemented"; break;
+		default: msg = "Unknown error";
+	}
+	WriteInitErr(fm,msg);
+}
+
+
 

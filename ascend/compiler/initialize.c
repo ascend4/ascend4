@@ -68,6 +68,7 @@
 #include "exprs.h"
 #include "sets.h"
 #include "parentchild.h"
+#include "slvreq.h"
 
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
@@ -278,8 +279,10 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 		CONSOLE_DEBUG("ABOUT TO FIX %s",instname);
 	}else{
 		CONSOLE_DEBUG("ABOUT TO FREE %s",instname);
-	}*/		
+	}*/
 	ascfree(instname);
+	gl_destroy(temp);
+
 	if(InstanceKind(i1)!=REAL_ATOM_INST){
 	  fm->ErrNo = Proc_illegal_type_use;
 	  ProcWriteFixError(fm,name);
@@ -325,6 +328,112 @@ ExecuteInitFree(struct procFrame *fm, struct Statement *stat){
 	execute_init_fix_or_free(FALSE,fm,stat);
 }
 
+static void
+ExecuteInitSolver(struct procFrame *fm, struct Statement *stat){
+	int res;
+	CONST char *solvername = stat->v.solver.name;
+	assert(fm->i!=NULL);
+	/*CONSOLE_DEBUG("Setting solver to '%s'...",stat->v.solver.name);*/
+	res = slvreq_set_solver(fm->i, solvername);
+	if(res){
+		switch(res){
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+			case SLVREQ_SOLVER_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			case SLVREQ_UNKNOWN_SOLVER: fm->ErrNo = Proc_slvreq_unknown_solver; break;
+		}
+		ProcWriteSlvReqError(fm);
+		return;
+	}else{
+		fm->ErrNo = Proc_all_ok;
+	}
+	/*CONSOLE_DEBUG("Solver set to %s, OK",stat->v.solver.name);*/
+}
+
+static void
+ExecuteInitOption(struct procFrame *fm, struct Statement *stat){
+	CONST char *optionname = stat->v.option.name;
+	struct value_t value;
+	assert(GetEvaluationContext()==NULL);
+	SetEvaluationContext(fm->i);
+	value = EvaluateExpr(stat->v.option.rhs,NULL,InstanceEvaluateName);
+	SetEvaluationContext(NULL);
+	/*CONSOLE_DEBUG("Setting option '%s'...",optionname);*/
+	int res;
+
+	switch(ValueKind(value)){
+		case integer_value:
+		case real_value:
+		case symbol_value:
+		case boolean_value:
+			res = slvreq_set_option(fm->i, optionname, &value);
+			switch(res){
+				case 0: fm->ErrNo = Proc_all_ok; break;
+				case SLVREQ_OPTION_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+				case SLVREQ_OPTIONS_UNAVAILABLE: fm->ErrNo = Proc_slvreq_no_solver_selected; break;
+				case SLVREQ_INVALID_OPTION_NAME: fm->ErrNo = Proc_slvreq_invalid_option_name; break;
+				case SLVREQ_WRONG_OPTION_VALUE_TYPE: fm->ErrNo = Proc_slvreq_option_invalid_type; break;
+				case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+				default: fm->ErrNo = Proc_slvreq_error; /* unknown error! */
+			}
+			break;
+		case set_value:
+			fm->ErrNo = Proc_slvreq_option_invalid_type;
+			break;
+		case error_value:
+			fm->ErrNo = Proc_if_expr_error_confused;
+			switch (ErrorValue(value)) {
+				case type_conflict:
+					fm->ErrNo = Proc_if_expr_error_typeconflict;
+					break;
+				case name_unfound:
+					fm->ErrNo = Proc_if_expr_error_nameunfound;
+					break;
+				case incorrect_name:
+					fm->ErrNo = Proc_if_expr_error_incorrectname;
+					break;
+				case undefined_value:
+					fm->ErrNo = Proc_if_expr_error_undefinedvalue;
+					break;
+				case dimension_conflict:
+					fm->ErrNo = Proc_if_expr_error_dimensionconflict;
+					break;
+				case empty_choice:
+					fm->ErrNo = Proc_if_expr_error_emptychoice;
+					break;
+				case empty_intersection:
+					fm->ErrNo = Proc_if_expr_error_emptyintersection;
+					break;
+				default:
+					fm->ErrNo = Proc_slvreq_error;
+			}
+			break;
+		default:
+			fm->ErrNo = Proc_slvreq_error;
+			break;
+	}
+	if(fm->ErrNo != Proc_all_ok){
+		ProcWriteSlvReqError(fm);
+	}
+	DestroyValue(&value);
+	return;
+}
+
+static void
+ExecuteInitSolve(struct procFrame *fm, struct Statement *stat){
+	int res;
+	res = slvreq_do_solve(fm->i);
+	if(res){
+		switch(res){
+			case SLVREQ_NO_SOLVER_SELECTED: fm->ErrNo = Proc_slvreq_no_solver_selected; break;
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+			case SLVREQ_SOLVE_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			default: fm->ErrNo = Proc_slvreq_error; break;
+		}
+		ProcWriteSlvReqError(fm);
+		return;
+	}
+	fm->ErrNo = Proc_all_ok;
+}
 
 static
 void ExecuteInitFlow(struct procFrame *fm)
@@ -757,6 +866,7 @@ ExecuteInitAssert(struct procFrame *fm, struct Statement *stat){
 	switch(ValueKind(value)){
 		case boolean_value:
 			testerr = 0;
+			CONSOLE_DEBUG("Assertion %s.",BooleanValue(value)?"OK":"failed");
 			if(BooleanValue(value)){
 				WriteStatementError(ASC_USER_SUCCESS,stat,0,"Assertion OK");
 			}else{
@@ -1508,6 +1618,15 @@ void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat)
     break;
   case FREE:
 	ExecuteInitFree(fm,stat);
+	break;
+  case SOLVER:
+	ExecuteInitSolver(fm,stat);
+	break;
+  case OPTION:
+	ExecuteInitOption(fm,stat);
+	break;
+  case SOLVE:
+    ExecuteInitSolve(fm,stat);
 	break;
   case FLOW:
     ExecuteInitFlow(fm);

@@ -146,7 +146,7 @@ int BinTokenSetOptions(CONST char *srcname,
                        int verbose,
                        int housekeep)
 {
-	CONSOLE_DEBUG("...");
+  /*CONSOLE_DEBUG("...");*/
   int err = 0;
   err += bt_string_replace(srcname,&(g_bt_data.srcname));
   err += bt_string_replace(objname,&(g_bt_data.objname));
@@ -773,7 +773,7 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
   char *unlinkcommand = g_bt_data.unlinkcommand;
   int verbose = g_bt_data.verbose;
 
-	CONSOLE_DEBUG("...");
+  /*CONSOLE_DEBUG("...");*/
 
   if (g_bt_data.maxrels == 0) {
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"BinTokensCreate disabled (maxrels=0)\n");

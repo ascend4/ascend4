@@ -1149,7 +1149,8 @@ def CheckSwigVersion(context):
 	msg = "too old"
 	res = False
 	if maj ==1 and min == 3 and (pat == 40 or pat == 39):
-		msg = "buggy version, see the ASCEND wiki, or try version 1.3.36"
+		msg = "WARNING: buggy version, see the ASCEND wiki. Suggest: try version 1.3.36"
+		res = True
 	elif maj == 1 and (
 			min > 3
 			or (min == 3 and pat >= 24)
@@ -2927,7 +2928,7 @@ env.Append(
 		,r"ascend/compiler/ascParse\.[ch]$", r"ascend/solver/conoptconfig\.h$"
 		,r"ascend/utilities/config\.h$", r"pygtk/config\.h$", r"pygtk/config\.py$"
 		,r"pygtk/ascdev$", r"pygtk/testconopt$", r"ascend/compiler/scanner\.c$"
-		,r"tcltk/interface/ascend4$"
+		,r"tcltk/interface/ascend4$",r"pygtk/testslvreq$",r"test/test$"
 	]
 )
 

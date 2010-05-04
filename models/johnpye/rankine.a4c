@@ -612,13 +612,6 @@ END rankine_reheat;
 *)
 (*
 	Add a boiler feedwater heater and two-stage turbine.
-
-	This model is hard to solve! One solution seems to be to 
-	1. load it, run on_load.
-	2. attempt to solve
-	3. disable equation HE.cons_en
-	4. free HE.outlet.x
-	5. solve again.
 *)
 MODEL rankine_regen;
 
@@ -695,6 +688,8 @@ METHOD on_load;
 (*
 	This model needs to be solved using QRSlv with convopt set to 'RELNOMSCALE'.
 *)
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
 END on_load;
 METHOD moran_ex_8_5;
 	RUN default_self;
@@ -938,6 +933,8 @@ METHOD on_load;
 	RUN ClearAll;
 	RUN default_self;
 	RUN moran_8_6;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
 END on_load;
 END rankine_reheat_regen;
 

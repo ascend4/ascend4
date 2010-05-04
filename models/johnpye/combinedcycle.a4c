@@ -53,7 +53,7 @@ MODEL air_steam_heat_exchanger REFINES air_equipment;
 	outlet.h = inlet.h + Qdot/inlet.mdot;
 	outlet_cold.h = inlet_cold.h - Qdot/inlet_cold.mdot;
 END air_steam_heat_exchanger;
-
+	
 MODEL combinedcycle;
 	(* define the blocks *)
 	GC IS_A compressor;
@@ -96,6 +96,8 @@ MODEL combinedcycle;
 METHODS
 METHOD on_load;
 	RUN cengel_ex_10_9;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
 END on_load;
 
 METHOD moran_ex_9_13;
@@ -168,6 +170,7 @@ METHOD cengel_ex_10_9;
 	FIX PU.eta; PU.eta := 1;
 
 	HE.outlet_cold.h := 3000 {kJ/kg};
+
 END cengel_ex_10_9;
 
 END combinedcycle;	

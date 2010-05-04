@@ -65,11 +65,11 @@ extern slv_system_t slv_create(void);
 	Creates a system of the currently selected type in sys.
 */
 
-extern int slv_destroy(slv_system_t sys);
+ASC_DLLSPEC int slv_destroy(slv_system_t sys);
 /**<
 	Destroys all currently created systems in sys.
 
-	@sys a system
+	@param sys a system
 	@return 0 on success, or else the number of solvers with trouble destroying if there were problems.
 */
 

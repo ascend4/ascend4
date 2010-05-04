@@ -9,6 +9,8 @@ extern "C"{
 #include "ascend/system/slv_param.h"
 }
 
+#include "value.h"
+
 class SolverParameter{
 private:
 	struct slv_parameter *p;
@@ -50,6 +52,8 @@ public:
 	const bool isBounded() const;
 
 	const std::string toString() const;
+
+	void setValueValue(const Value &V);
 };
 
 #endif

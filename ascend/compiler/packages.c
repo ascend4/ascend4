@@ -146,11 +146,11 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 	static const char *default_library_path = NULL;
 	if(!default_solvers_path){
 		default_solvers_path = get_default_solvers_path();
-		CONSOLE_DEBUG("Default ASCENDSOLVERS set to '%s'", default_solvers_path);
+		/*CONSOLE_DEBUG("Default ASCENDSOLVERS set to '%s'", default_solvers_path);*/
 	}
 	if(!default_library_path){
 		default_library_path = get_default_library_path();
-		CONSOLE_DEBUG("Default ASCENDLIBRARY set to '%s'", default_library_path);
+		/*CONSOLE_DEBUG("Default ASCENDLIBRARY set to '%s'", default_library_path);*/
 	}
 
 #ifdef PACKAGE_DEBUG

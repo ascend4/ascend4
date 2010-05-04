@@ -66,6 +66,7 @@ try:
 	from infodialog import *       # general-purpose textual information dialog
 	from versioncheck import *     # version check (contacts ascend.cruncher2.dyndns.org)
 	from unitsdialog import *      # general-purpose textual information dialog
+	from solverhooks import *      # solver hooks for use from Python layer
 	import config
 
 	#loading.complete();
@@ -474,6 +475,13 @@ class Browser:
 		ascpy.Registry().set("browser",self)
 
 		#--------
+		# Set up SolverHooks
+
+		print "PYTHON: SETTING UP SOLVER HOOKS"
+		self.solverhooks = SolverHooksPythonBrowser(self)
+		ascpy.SolverHooksManager_Instance().setHooks(self.solverhooks)
+
+		#--------
 		# options
 
 		if(len(args)==1):
@@ -525,7 +533,7 @@ class Browser:
 		if not len(ascpy.getSolvers()):
 			print "NO SOLVERS LOADED!"
 			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
-
+	
 		#--------
 		# IPython console, if available
 

@@ -125,6 +125,11 @@ ASC_DLLSPEC const SlvFunctionsT *solver_engine_named(const char *name);
 	@return SlvFunctions for this solver, if the name is found, else NULL
 */
 
+ASC_DLLSPEC void solver_destroy_engines();
+/**<
+	Unregister (unload?) all registered solvers.
+*/
+
 /*------------------------------------------------------------------------------
   HOOKS INTO SOLVER ENGINE, CALLED BY ASCEND
 */

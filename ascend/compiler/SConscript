@@ -21,7 +21,7 @@ csrcs = Split("""
 	relation_io.c relation_util.c rootfind.c reverse_ad.c 
 	safe.c
 	select.c setinst_io.c setinstval.c setio.c
-	sets.c slist.c simlist.c statement.c statio.c switch.c
+	sets.c slist.c slvreq.c simlist.c statement.c statio.c switch.c
 	symtab.c syntax.c temp.c tmpnum.c type_desc.c
 	type_descio.c typedef.c typelint.c
 	units.c universal.c

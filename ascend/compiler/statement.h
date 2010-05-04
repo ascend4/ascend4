@@ -188,6 +188,21 @@ extern struct Statement *CreateFREE(struct VariableList *vl);
 	are stored, and the variable list is also stored.
 */
 
+extern struct Statement *CreateSOLVER(CONST char *solvername);
+/**<
+	Create a 'SOLVER' statement node.
+*/
+
+extern struct Statement *CreateOPTION(CONST char *optname, struct Expr *value);
+/**<
+	Create a 'SOLVER' statement node.
+*/
+
+extern struct Statement *CreateSOLVE();
+/**<
+	Create a 'SOLVE' statement node.
+*/
+
 extern struct Statement *CreateWBTS(struct VariableList *vl);
 /**<
  *  Create an WILL_BE_THE_SAME statement node.

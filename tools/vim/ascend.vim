@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language: ASCEND Modelling Language (.a4l/.a4c)
-" Author: Edgar Simo <bobbens@gmail.com>
-" Last Change: 29 March 2010
+" Language: ASCEND Language files (.a4l/.a4c)
+" Maintainer: Edgar Simo <bobbens@gmail.com>
+" Last Change: 30 Mar 2010 by Wojciech Mandziuk <wojciech.mandziuk@gmail.com>
 " Remark: Syntax highlighting for the ASCEND Language.
 "
 " How to use this:
@@ -17,22 +17,30 @@ if exists("b:current_syntax")
    finish
 endif
 
-syn case match
 
 " Regex matching
+syn case match
 syn region a4lComment start="(\*" end="\*)"
-syn match a4lString "\"[^\"]*\""
+syn region a4lString start="\"" end="\""
+syn region a4lUnits start="{" end="}"
 syn match a4lChar "'.'"
-syn match a4lUnits "{[^}]*}"
-" Number and float definitions stolen from c.vim
-syn match a4lNumber "\d\+\(u\=l\{0,2}\|ll\=u\)\>"
-syn match a4lFloat "\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\="
-syn match a4lFloat "\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>"
-syn match a4lFloat "\d\+e[-+]\=\d\+[fl]\=\>"
+
+" Number and float definitions taken from lua.vim
+syn case ignore
+syn match a4lNumber "\<\d\+\>"
+" floating point number, with dot, optional exponent
+syn match a4lFloat  "\<\d\+\.\d*\%(e[-+]\=\d\+\)\=\>"
+" floating point number, starting with a dot, optional exponent
+syn match a4lFloat  "\.\d\+\%(e[-+]\=\d\+\)\=\>"
+" floating point number, without dot, with exponent
+syn match a4lFloat  "\<\d\+e[-+]\=\d\+\>"
+
+
 
 " Static keywords
+syn case match
 syn keyword a4lKeyword ADD AND ALIASES ARE_ALIKE ARE_THE_SAME ARE_NOT_THE_SAME ASSERT ATOM CALL CASE CARD CHECK CHOICE CONSTANT CONDITIONAL CREATE DATA DEFAULT DEFINITION DIMENSION DIMENSIONLESS DO ELSE END EXTERNAL FIX FOR FREE IF IMPORT IN INPUT INTERSECTION IS_A IS_REFINED_TO MAX MAXIMIZE METHOD METHODS MIN MINIMIZE MODEL NOTES OF OR OTHERWISE OUTPUT PROVIDE PROD REPLACE REQUIRE REFINES RUN SATISFIED SELECT SELF STUDY SUCH_THAT SUM SWITCH THEN UNIVERSAL UNION UNITS USE WHEN WHERE WITH_VALUE WILL_BE WILL_BE_THE_SAME WILL_NOT_BE_THE_SAME  
-syn keyword a4lTypes catch_Word_model relation logic_relation solver_var boolean_var generic_real solver_int solver_binary solver_semi  constant critical_compressibility acentric_factor UNIFAC_size Wilson_constant vapor_pressure_constant factor_constant molar_weight_constant atomic_mass_constant temperature_constant boiling_temperature critical_temperature reference_temperature UNIFAC_a pressure_constant molar_volume_constant critical_volume reference_molar_volume reference_mass_density molar_energy_constant reference_molar_energymolar_gas_constant gravity_constant circle_constant speed_of_light planck_constantboolean_start_true boolean_start_false start_true start_false bound_width scaling_constant ode_counter obs_counter real_parameter length_parameter positive_variable factor variable fraction positive_factor small_factor small_positive_factor reduced_pressure exp_sub power_sub temperature inverse_temperature delta_temperature force force_per_length force_per_volume surface_tension pressure pressure_rate delta_pressure k_constant vapor_pressure youngs_modulus pressure_per_length molar_mass mass mole_scale mole mass_rate mass_rate_constant mass_flux mass_rate_rate mass_rate_per_length molar_rate_scale molar_rate conc_rate mole_fraction mass_fraction molar_volume volume_scale volume volume_rate_scale volume_rate volume_rate_square volume_expansivity molar_density mass_density molar_energy energy_scale energy energy_per_volume energy_rate_scale energy_rate power_per_length power_per_volume power_per_area power_per_temperature irradiance irradiation molar_heat_capacity molar_energy_rate molar_entropy entropy entropy_rate partition_coefficient relative_volatility monetary_unit cost_per_volume cost_per_mass cost_per_mass_constant cost_per_mole cost_per_time cost_per_energy cost_per_mass_per_distance_constant distance distance_constant area inverse_area angle solid_angle time speed acceleration frequency stiffness viscosity kinematic_viscosity thermal_conductivity diffusivity voltage resistance current capacitance inductance magnetic_field electric_field delta_distance delta_area temperature_rate delta_mass delta_mole delta_mass_rate delta_molar_rate delta_volume_rate density_rate delta_energy_rate delta_molar_energy_rate delta_entropy delta_entropy_rate mass_sec mole_sec rate deflection second_moment_of_inertia polar_moment_of_inertia second_moment_of_area_constant length_constant area_constant moment stress specific_gas_constant mass_density_constant heat_transfer_coefficient specific_enthalpy specific_entropy specific_heat_capacity heat_capacity specific_volume specific_energy delta_specific_energy specific_power delta_specific_power specific_energy_rate specific_enthalpy_rate ua_value thermal_resistance R_value pressure_per_temperature energy_rate_per_length energy_flux capacity_rate thermo_state real_constant integer_constant symbol_constant boolean_constant real integer symbol boolean set pltmodel plt_point plt_curve plt_plot_symbol plt_plot_integer 
+syn keyword a4lTypes acceleration acentric_factor angle angular_speed area area_constant atomic_mass_constant avogadro_constant boiling_temperature boolean boolean_constant boolean_start_false boolean_start_true boolean_var bound_width capacitance capacity_rate catch_Word_model circle_constant conc_rate constant cost_per_energy cost_per_mass cost_per_mass_constant cost_per_mass_per_distance_constant cost_per_mole cost_per_time cost_per_volume critical_compressibility critical_pressure critical_temperature critical_volume current deflection delta_area delta_distance delta_energy_rate delta_entropy delta_entropy_rate delta_mass delta_mass_rate delta_molar_energy_rate delta_molar_rate delta_mole delta_pressure delta_specific_energy delta_specific_power delta_temperature delta_volume_rate density_rate diffusivity distance distance_constant electric_field electron_charge electron_mass energy energy_flux energy_per_volume energy_rate energy_rate_per_length energy_rate_scale energy_scale enthalpy_of_formation_constant entropy entropy_rate exp_sub factor factor_constant force force_per_length force_per_volume fraction free_energy_of_formation_constant frequency generic_real gravity_constant heat_capacity heat_of_vaporization_constant heat_transfer_coefficient inductance integer integer_constant inverse_area inverse_temperature irradiance irradiation k_constant kinematic_viscosity length_constant length_parameter logic_relation magnetic_field mass mass_density mass_density_constant mass_flux mass_fraction mass_rate mass_rate_constant mass_rate_per_length mass_rate_rate mass_sec molar_density molar_energy molar_energy_constant molar_energy_rate molar_entropy molar_entropy_constant molar_gas_constant molar_heat_capacity molar_mass molar_rate molar_rate_scale molar_volume molar_volume_constant molar_weight_constant molar_weigth_constant mole mole_fraction mole_scale mole_sec moment momentary_unit monetary_unit obs_counter ode_counter partition_coefficient permeability_constant permittivity_constant planck_constant plt_curve plt_plot_integer plt_plot_symbol plt_point pltmodel polar_moment_of_inertia positive_factor positive_variable power_per_area power_per_length power_per_temperature power_per_volume power_sub pressure pressure_constant pressure_per_length pressure_per_temperature pressure_rate proton_mass R_value rate real real_constant real_parameter reduced_pressure reference_mass_density reference_molar_energy reference_molar_volume reference_pressure reference_temperature relation relative_volatility resistance scaling_constant second_moment_of_area second_moment_of_area_constant second_moment_of_inertia set small_factor small_positive_factor solid_angle solver_binary solver_int solver_semi solver_var specific_energy specific_energy_rate specific_enthalpy specific_enthalpy_rate specific_entropy specific_gas_constant specific_heat_capacity specific_power specific_volume speed speed_of_light start_false start_true stiffness stress surface_tension symbol symbol_constant temperature temperature_constant temperature_rate thermal_conductivity thermal_resistance thermo_state time ua_value UNIFAC_a UNIFAC_size vapor_pressure vapor_pressure_constant variable viscosity voltage volume volume_expansivity volume_rate volume_rate_scale volume_rate_square volume_scale Wilson_constant Wilson_energy_constant youngs_modulus 
 syn keyword a4lMethods on_load default_self specify reset values ClearAll bound_self default_all bound_all self_test scale_self check_self check_all scale_all default 
 syn keyword a4lBool TRUE FALSE
 
@@ -50,3 +58,4 @@ hi link a4lBool      Constant
 
 " Mark as loaded
 let b:current_syntax = "ascend"
+

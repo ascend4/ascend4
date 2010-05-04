@@ -1,16 +1,5 @@
-/*
- *  watchpt.h: An API to ascend methods
- *  by Benjamin Allan                          
- *  March 17, 1998
- *  Part of ASCEND
- *  Version: $Revision: 1.2 $
- *  Version control file: $RCSfile: watchpt.h,v $
- *  Date last modified: $Date: 1998/06/16 16:38:51 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
+/*	ASCEND modelling environment
+ *  Copyright (C) 1998-2010 Carnegie Mellon University
  *
  *  The Ascend Language Interpreter is free software; you can
  *  redistribute it and/or modify it under the terms of the GNU
@@ -27,22 +16,27 @@
  *  along with the program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
  *  the file named COPYING.
- */
-
-/** @file
+ *//** @file
  *  An API to
  *  ascend methods via an interactive or external interface
  *  without knowing about ascend compiler internals.
- *  <pre>
- *  When #including watchpt.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "general/list.h"
- *         #include "compiler/instance_enum.h"
- *  </pre>
- */
+ *//*
+ *  watchpt.h: An API to ascend methods
+ *  by Benjamin Allan                          
+ *  March 17, 1998
+ *  Part of ASCEND
+ *  Version: $Revision: 1.2 $
+ *  Version control file: $RCSfile: watchpt.h,v $
+ *  Date last modified: $Date: 1998/06/16 16:38:51 $
+ *  Last modified by: $Author: mthomas $
+*/
 
 #ifndef ASC_WATCHPT_H
 #define ASC_WATCHPT_H
+
+#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/list.h>
+#include <ascend/compiler/instance_enum.h>
 
 /**	@addtogroup compiler Compiler
 	@{
@@ -124,6 +118,18 @@ enum Proc_enum {
   Proc_nonsymbol_assignment,
   Proc_lhs_error,
   Proc_rhs_error,
+
+  Proc_slvreq_unhooked,
+  Proc_slvreq_unknown_solver,
+  Proc_slvreq_invalid_option_name,
+  Proc_slvreq_option_invalid_type,
+  Proc_slvreq_no_system,
+  Proc_slvreq_no_solver_selected,
+  Proc_slvreq_presolve_fail,
+  Proc_slvreq_solve_fail,
+  Proc_slvreq_not_implemented,
+  Proc_slvreq_error,
+
   Proc_unknown_error
 };
 

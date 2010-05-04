@@ -489,12 +489,14 @@ struct FilePath *importhandler_findinpath(const char *partialname
 	CONSOLE_DEBUG("SEARCHING ACCORDING TO ENV VAR $%s",envv);
 #endif
 
+	int free_epath = 1;
 	epath=Asc_GetEnv(envv);
 	if(epath==NULL){
 #ifdef FIND_DEBUG
 		CONSOLE_DEBUG("ENV VAR '%s' NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",envv,defaultpath);
 #endif
 		epath=defaultpath;
+		free_epath = 0;
 	}
 
 #ifdef FIND_DEBUG
@@ -509,6 +511,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 		ospath_free(searchdata.relativedir);
 		ASC_FREE(searchdata.partialname);
 		ospath_searchpath_free(sp);
+		if(free_epath)ASC_FREE(epath);
 		return NULL;
 	}
 
@@ -518,6 +521,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 	ospath_searchpath_free(sp);
 	ASC_FREE(searchdata.partialname);
+	if(free_epath)ASC_FREE(epath);
 	ospath_free(searchdata.relativedir);
 	*handler = searchdata.handler;
 	return searchdata.foundpath;

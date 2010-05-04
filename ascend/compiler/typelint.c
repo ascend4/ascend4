@@ -883,7 +883,10 @@ TypeLintIllegalMethodStatList(FILE *fp,
     case RUN:
 	case FIX:
 	case FREE:
-    case CALL:
+	case CALL:
+	case SOLVER:
+	case OPTION:
+	case SOLVE:
       break;
     case WHILE:
       if (WhileStatBlock(s) != NULL) {

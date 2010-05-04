@@ -518,6 +518,17 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
 	WriteVariableList(f,FixFreeStatVars(s));
 	FPRINTF(f,";\n");
 	break;
+  case SOLVER:
+  	FPRINTF(f,"SOLVER %s;\n",s->v.solver.name);
+	break;
+  case OPTION:
+  	FPRINTF(f,"OPTION %s ",s->v.option.name);
+	WriteExpr(f,s->v.option.rhs);
+	FPRINTF(f,";\n");
+	break;
+  case SOLVE:
+  	FPRINTF(f,"SOLVE;\n");
+	break;
   case CALL:
     FPRINTF(f,"CALL %s(",SCP(CallStatId(s)));
     WriteSet(f,CallStatArgs(s));
@@ -596,7 +607,7 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
     FPRINTF(f,"END;\n");
     break;
   default:
-    FPRINTF(f,"<Implemented statement type in WriteStatement>");
+    FPRINTF(f,"<Unimplemented statement type in WriteStatement>");
     break;
   }
 }
@@ -719,7 +730,6 @@ void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
   }
 
   error_reporter_end_flush();
-  CONSOLE_DEBUG("MESSAGE OUTPUT");
 }
 
 CONST char *StatioLabel(int level)

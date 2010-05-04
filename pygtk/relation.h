@@ -27,9 +27,9 @@ public:
 	Relation(Simulation *sim, rel_relation *rel);
 
 	const std::string getName() const;
-	const double getResidual() const;
+	double getResidual() const;
 	const std::vector<Variable> getIncidentVariables() const;
-	const int getNumIncidentVariables() const;
+	int getNumIncidentVariables() const;
 	Instanc getInstance() const;
 	std::string getRelationAsString() const;
 };

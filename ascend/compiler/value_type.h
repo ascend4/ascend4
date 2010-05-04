@@ -62,6 +62,7 @@
 #define ASC_VALUE_TYPE_H
 
 #include "dimen.h"
+#include "functype.h"
 
 /**	@addtogroup compiler Compiler
 	@{
