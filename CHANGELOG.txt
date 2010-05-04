@@ -1,3 +1,29 @@
+???????????
+-----------
+
+Version 0.9.8
+ - Added new SOLVER, OPTION and SOLVE commands for use in METHODS, see
+   http://tinyurl.com/slvreq for full details (john)
+ - Added support for viewing ALIASES lists in the PyGTK GUI (john)
+ - Fixed a couple of minor memory leaks (john)
+ - Rewrote Simulation::solve to respect solver-imposed iteration limits (john)
+ - Reduced QRSlv time limit to 20 seconds (down from 1500 s).
+ - Added ASCEND syntax highlighting capability for several new text editors
+   (see http://ascendwiki.cheme.cmu.edu/Syntax_highlighting for details)
+ - Added example model of a combined cycle gas turbine power station (john)
+ - Stopped addition of several redundant files in the source code tarball
+   which required improvements to SCons 'DistTar' functionality (john)
+ - Fixed bug with detection of SUNDIALS on Windows (Luo Yu, john)
+ - Fixed a couple of minor GUI errors in PyGTK GUI (john)
+ - Added Save As functionality for dependency graph (grivan) 
+ - Fixed bug 425: 'View notes' window shows duplicated notes (grivan)
+ - Fixed errors in closed boiler feedwater heater model (Kelvin Hang Sio)
+ - Fixed G77 detection for use by LSODE (john)
+ - Now requiring SCons v0.98 or later.
+ - Fixed bug 436: CONOPT_PATH problems with Linux (john)
+ - Some progress toward packaged App version of ASCEND for Mac (john)
+ - Partially updated Canvas GUI code to work with latest Gaphas (arijit)
+
 24 Dec 2009
 -----------
 
