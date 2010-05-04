@@ -16,6 +16,7 @@
 #include "solverparameter.h"
 #include "solverparameters.h"
 #include "solverreporter.h"
+#include "solverhooks.h"
 #include "curve.h"
 #include "matrix.h"
 %}
@@ -163,6 +164,8 @@ public:
 	const bool isBounded() const;
 
 	const std::string toString() const;
+
+	void setValueValue(const Value &);
 };
 
 %extend SolverParameter{
@@ -303,10 +306,18 @@ public:
 }
 
 %feature("director") IntegratorReporterCxx;
-
 %ignore ascxx_integratorreporter_init;
 %ignore ascxx_integratorreporter_write;
 %ignore ascxx_integratorreporter_write_obs;
 %ignore ascxx_integratorreporter_close;
-
 %include "integratorreporter.h"
+
+%feature("director") SolverHooks;
+%ignore ascxx_slvreq_set_solver;
+%ignore ascxx_slvreq_set_option;
+%ignore ascxx_slvreq_do_solve;
+%apply SWIGTYPE *DISOWN {SolverReporter *reporter};
+%apply SWIGTYPE *DISOWN {SolverHooks *hooks};
+%include "solverhooks.h"
+
+

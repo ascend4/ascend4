@@ -1,4 +1,3 @@
-
 /*	ASCEND modelling environment
 	Copyright (C) 2006 Carnegie Mellon University
 
@@ -63,6 +62,7 @@ extern "C"{
 #include "solverstatus.h"
 #include "solverreporter.h"
 #include "matrix.h"
+#include "solverhooks.h"
 
 #define SIMULATION_DEBUG 0
 
@@ -72,8 +72,11 @@ extern "C"{
 	@TODO fix mutex on compile command filenames
 */
 Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), simroot(GetSimulationRoot(i),SymChar("simroot")){
-	// CONSOLE_DEBUG("Created simulation");	
+#if SIMULATION_DEBUG
+	CONSOLE_DEBUG("Created simulation at %p",this);	
+#endif
 	sys = NULL;
+	solverhooks = NULL;
 	//is_built = false;
 	// Create an Instance object for the 'simulation root' (we'll call
 	// it the 'simulation model') and it can be fetched using 'getModel()'
@@ -83,9 +86,12 @@ Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), sim
 
 Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroot){
 	//is_built = old.is_built;
-	//CONSOLE_DEBUG("Copying Simulation...");
+#if SIMULATION_DEBUG
+	CONSOLE_DEBUG("Copying Simulation...");
+#endif
 	sys = old.sys;
 	sing = NULL;
+	solverhooks = old.solverhooks;
 }
 
 Instanc Simulation::getRoot(){
@@ -186,6 +192,11 @@ Simulation::write(FILE *fp, const char *type) const{
 
 void
 Simulation::run(const Method &method){
+
+	// we have to assign hooks every time, because the Python layer causes
+	// copying of Simulation objects, resulting in the 'this' address changing.
+	SolverHooksManager::Instance()->getHooks()->assign(this);
+	
 	Instanc &model = getModel();
 	this->run(method,model);
 }
@@ -228,7 +239,7 @@ Simulation::run(const Method &method, Instanc &model){
 	pe = Initialize(
 		&*(model.getInternalType()) ,name.getInternalType(), "__not_named__"
 		,ASCERR
-		,0, NULL, NULL
+		,WP_STOPONERR, NULL, NULL
 	);
 
 	int haserror=0;
@@ -558,7 +569,9 @@ Simulation::build(){
 		throw runtime_error("System has pending instances; can't yet send to solver.");
 	}
 
+#if SIMULATION_DEBUG
 	CONSOLE_DEBUG("============== REALLY building system...");
+#endif
 	sys = system_build(simroot.getInternalType());
 	if(!sys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build system");
@@ -591,7 +604,9 @@ Simulation::getParameters() const{
 void
 Simulation::setParameters(SolverParameters &P){
 	if(!sys)throw runtime_error("Can't set solver parameters: simulation has not been built yet.");
+#if SIMULATION_DEBUG
 	CONSOLE_DEBUG("Calling slv_set_parameters");
+#endif
 	slv_set_parameters(sys, &(P.getInternalType()));
 }
 
@@ -798,8 +813,6 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	//cerr << "DONE" << endl;
 
 	//cerr << "SOLVING SYSTEM..." << endl;
-	// Add some stuff here for cleverer iteration....
-	unsigned niter = 1000;
 	//double updateinterval = 0.02;
 
 	double starttime = tm_cpu_time();
@@ -811,22 +824,22 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	status.getSimulationStatus(*this);
 	reporter.report(&status);
 
-	//CONSOLE_DEBUG("About to start %d iterations...", niter);
-	for(unsigned iter = 1; iter <= niter && !stop; ++iter){
-
+	unsigned iter;
+	for(iter = 0; stop==false; ++iter){
+#if SIMULATION_DEBUG
+		CONSOLE_DEBUG("Iter %d",iter);
+#endif
 		if(status.isReadyToSolve()){
-			//CONSOLE_DEBUG("Calling slv_iterate...");
 			res = slv_iterate(sys);
-		}/*else{
-			CONSOLE_DEBUG("not ready to solve!");
-		}*/
-
-		if(res)CONSOLE_DEBUG("slv_iterate returns %d",res);
+			if(res)CONSOLE_DEBUG("slv_iterate returns %d",res);
+		}else{
+			stop = true;
+		}
 
 		status.getSimulationStatus(*this);
 
 		if(res || reporter.report(&status)){
-			//CONSOLE_DEBUG("STOPPING!");
+			CONSOLE_DEBUG("STOPPING!");
 			stop = true;
 		}
 	}
@@ -834,7 +847,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	double elapsed = tm_cpu_time() - starttime;
 
 #if SIMULATION_DEBUG
-	CONSOLE_DEBUG("Elapsed time: %0.3f (solver completed)", elapsed);
+	CONSOLE_DEBUG("Elapsed time %0.3f for %d iterations (solver completed)", elapsed,iter);
 #endif
 
 	activeblock = status.getCurrentBlockNum();
@@ -988,4 +1001,19 @@ Simulation::processVarStatus(){
 	//CONSOLE_DEBUG(" ...done var status");
 }
 
+void
+Simulation::setSolverHooks(SolverHooks *H){
+#if SIMULATION_DEBUG
+	CONSOLE_DEBUG("Setting SolverHooks to %p for Simulation at %p",H,this);
+#endif
+	this->solverhooks = H;
+}
+
+SolverHooks *
+Simulation::getSolverHooks() const{
+#if SIMULATION_DEBUG
+	CONSOLE_DEBUG("Got SolverHooks at %p for Simulation at %p",this->solverhooks,this);
+#endif
+	return this->solverhooks;
+}
 

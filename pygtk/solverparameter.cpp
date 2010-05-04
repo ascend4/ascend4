@@ -7,6 +7,8 @@
 #include <iostream>
 using namespace std;
 
+#include <ascend/compiler/value_type.h>
+
 SolverParameter::SolverParameter(slv_parameter *p) : p(p){
 	// created new SolverParameter wrapper
 }
@@ -225,4 +227,36 @@ SolverParameter::isBounded() const{
 }
 
 
+void
+SolverParameter::setValueValue(const Value &V){
+	/* parameter has been found */
+	switch(p->type){
+	case int_parm:
+		if(ValueKind(*(V.v))!=integer_value){
+			throw runtime_error("Wrong value type: expecting integer parameter");
+		}
+		setIntValue(IntegerValue(*(V.v)));
+		break;
+	case bool_parm: 
+		if(ValueKind(*(V.v))!=boolean_value){
+			throw runtime_error("Wrong value type: expecting boolean parameter");
+		}
+		setBoolValue(BooleanValue(*(V.v)));
+		break;
+	case real_parm:
+		if(ValueKind(*(V.v))!=real_value){
+			throw runtime_error("Wrong value type: expecting real parameter");
+		}
+		setRealValue(RealValue(*(V.v)));
+		break;
+	case char_parm:
+		if(ValueKind(*(V.v))!=symbol_value){
+			throw runtime_error("Wrong value type: expecting string (i.e. symbol) parameter");
+		}
+		setStrValue(std::string(SCP(SymbolValue(*(V.v)))));
+		break;
+	default:
+		throw runtime_error("Unrecognised solver parameter type");
+	}
+}
 

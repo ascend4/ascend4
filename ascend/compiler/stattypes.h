@@ -103,6 +103,9 @@ enum stat_t {
   IF,           /**< IF-ELSE statement */
   WHEN,         /**< WHEN statement */
   FNAME,        /**< Name of model or relation */
+  SOLVER,       /**< SOLVER statement */
+  OPTION,       /**< OPTION statement */
+  SOLVE,        /**< SOLVE statement */
   SELECT,       /**< SELECT statement */
   SWITCH,       /**< SWITCH statement */
   WHILE,        /**< WHILE statement */
@@ -352,7 +355,7 @@ struct StateFlow {
   struct bracechar *message;  /**< message on change, if any */
 };
 
-/**< used for FOR loops */
+/** used for FOR loops */
 struct StateFOR {
   symchar *index;
   struct Expr *e;
@@ -365,10 +368,21 @@ struct StateFOR {
   unsigned int contains;    /**< bit flags about what in for statement list */
 };
 
-/**< used for While loops */
+/** used for While loops */
 struct StateWhile {
   struct Expr *test;
   struct StatementList *block;
+};
+
+/** used for SOLVER statement */
+struct StateSOLVER{
+  CONST char *name; /**< name of the solver being requested */
+};
+
+/** used for OPTION statement */
+struct StateOPTION{
+  CONST char *name; /**< name of the option being set FIXME can we deal with hierarchical options, eg 'linlsv.convopt'? */
+  struct Expr *rhs;
 };
 
 /**
@@ -422,6 +436,8 @@ union StateUnion {
   struct StateCOND       cond;
   struct StateWhile      loop;
   struct StateFlow       flow;
+  struct StateSOLVER     solver;
+  struct StateOPTION     option;
 };
 
 struct Statement {

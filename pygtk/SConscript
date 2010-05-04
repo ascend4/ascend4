@@ -10,8 +10,10 @@ srcs = Split("""
 	reporter.cpp simulation.cpp set.cpp units.cpp dimensions.cpp extmethod.cpp
 	variable.cpp registry.cpp relation.cpp 
 	solver.cpp curve.cpp plot.cpp
+	solverhooks.cpp
 	solverparameters.cpp solverparameter.cpp solverparameteriterator.cpp
 	solverstatus.cpp solverreporter.cpp
+	value.cpp
 	incidencematrix.cpp
 	integrator.cpp
 	integratorreporter.cpp
@@ -139,6 +141,7 @@ if platform.system() != "Windows" or env.has_key('IS_MINGW'):
 
 ipopttest = swig_env.Program('testipopt',['testipopt.cpp'] + objs)
 conopttest = swig_env.Program('testconopt',['testconopt.cpp'] + objs)
+slvreqtest = swig_env.Program('testslvreq',['testslvreq.cpp'] + objs)
 
 #env.Alias('ascxx',ascxxtest)
 

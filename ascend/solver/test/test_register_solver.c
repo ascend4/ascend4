@@ -43,7 +43,12 @@ CU_ErrorCode test_register_solver(void)
 
   /* solver/slv_common.c */
   result = test_register_solver_slv_common();
-  if (CUE_SUCCESS != result)
+  if(CUE_SUCCESS != result)
+    return result;
+
+  /* compiler/slvreq.c */
+  result = test_register_solver_slvreq();
+  if(CUE_SUCCESS != result)
     return result;
 
   /* solver/slv.c */

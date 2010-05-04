@@ -86,6 +86,10 @@ extern void ProcWriteAssignmentError(struct procFrame *fm);
  */
 extern void ProcWriteFixError(struct procFrame *fm, CONST struct Name *var);
 
+/**
+ * Write error encountered while performing a 'slvreq' request
+ */
+extern void ProcWriteSlvReqError(struct procFrame *fm);
 
 /**
  * <!--  ProcWriteIfError(fm,cname);                                   -->

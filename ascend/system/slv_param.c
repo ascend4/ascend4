@@ -39,14 +39,14 @@ void slv_set_char_parameter(char **cp, CONST char *newvalue)
 }
 
 void slv_destroy_parms(slv_parameters_t *p) {
-  int32 i/*, j */;
+  int32 i, j;
   for(i = 0; i < p->num_parms; i++){
     switch(p->parms[i].type) {
     case char_parm:
-      /* ASC_FREE(p->parms[i].info.c.value);
+      ASC_FREE(p->parms[i].info.c.value);
       for (j = 0; j < p->parms[i].info.c.high; j++) {
         ASC_FREE(p->parms[i].info.c.argv[j]);
-      }*/
+      }
       ASC_FREE(p->parms[i].info.c.argv);
       /* FALL THROUGH */
     case int_parm:
@@ -181,7 +181,7 @@ int slv_param_char(slv_parameters_t *p, const int index
 	p1->info.c.argv = ASC_NEW_ARRAY(char *,noptions);
 
 	for(i = 0; i < noptions; ++i){
-	    p1->info.c.argv[i] = strdup(options[i]);
+	    p1->info.c.argv[i] = ASC_STRDUP(options[i]);
 		/* CONSOLE_DEBUG("Copied '%s' --> argv[%d] = '%s'",options[i],i,p1->info.c.argv[i]); */
 	}
 

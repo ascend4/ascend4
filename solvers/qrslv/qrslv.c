@@ -2878,7 +2878,7 @@ int32 qrslv_get_default_parameters(slv_system_t server, SlvClientToken asys
   	,(SlvParameterInitInt){{"timelimit"
   		,"time limit (CPU sec/block)",1
   		,"time limit (CPU sec/block)"
-  	}, 1500, 1, 20000}
+  	}, 20, 1, 20000}
   );
 
   slv_param_int(parameters,ITER_LIMIT

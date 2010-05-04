@@ -75,6 +75,10 @@ struct gl_list_t *solver_get_engines_growable(){
 	return solver_get_list(0);
 }
 
+void solver_destroy_engines(){
+	solver_get_list(1);
+}
+
 const SlvFunctionsT *solver_engine(const int number){
 	const struct gl_list_t *L = solver_get_engines();
 	int i;

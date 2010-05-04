@@ -25,6 +25,7 @@ class SolverStatus;
 class IncidenceMatrix;
 class SolverReporter;
 class Matrix;
+class SolverHooks;
 
 /**
 	A class to contain singularity information as returned by the DOF
@@ -74,7 +75,7 @@ private:
 	bool is_built;
 	SingularityInfo *sing; /// will be used to store this iff singularity found
 	int activeblock;
-
+	SolverHooks *solverhooks;
 protected:
 	slv_system_t getSystem();
 	Instanc getRoot();
@@ -90,8 +91,11 @@ public:
 	void run(const Method &method, Instanc &model);
 	enum StructuralStatus checkDoF() const;
 	void checkInstance();
+
 	void build();
+
 	void solve(Solver s, SolverReporter &reporter);
+
 	std::vector<Variable> getFixableVariables();
 	std::vector<Variable> getVariablesNearBounds(const double &epsilon=1e-4);
 	std::vector<Variable> getVariablesFarFromNominals(const double &bignum);
@@ -119,7 +123,9 @@ public:
 	std::vector<Variable> getFreeableVariables();
 	bool checkStructuralSingularity();
 	const SingularityInfo &getSingularityInfo() const;
-};
 
+	void setSolverHooks(SolverHooks *H);
+	SolverHooks *getSolverHooks() const;
+};
 
 #endif

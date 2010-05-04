@@ -354,6 +354,12 @@ ASC_DLLSPEC struct Instance*GetSimulationRoot(struct Instance *i);
  *  i must be a sim instance.
  */
 
+ASC_DLLSPEC struct Instance *FindSimulationInstance(struct Instance *i);
+/**<
+	Attempt to navigate up the Instance Tree until a SIM_INST SimulationInstance
+	is located.
+*/
+
 /* @} */
 
 #endif  /* ASC_INSTQUERY_H */

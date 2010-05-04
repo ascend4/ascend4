@@ -640,6 +640,7 @@ struct SimulationInstance {
   unsigned long tmp_num;        /**< used when an instance tree is being copied*/
   unsigned int anon_flags;      /**< anonymous field to be manipulated */
   /* add other interesting stuff here */
+  VOIDPTR slvreq_hooks;
 };
 
 /** dummy instance for unselected children of models

@@ -11526,7 +11526,7 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
 #if TIMECOMPILER
   clock_t start,classt;
 #endif
-  CONSOLE_DEBUG("...");
+  /*CONSOLE_DEBUG("...");*/
 
   /* pending will have at least one instance, or quick return. */
   asc_assert(PASS2MAXNUMBER==1);
@@ -12176,7 +12176,7 @@ void Pass3SetLogRelBits(struct Instance *inst)
 static struct Instance *Pass2InstantiateModel(struct Instance *result,
 		unsigned long *pcount
 ){
-  CONSOLE_DEBUG("starting...");
+  /*CONSOLE_DEBUG("starting...");*/
   /* do we need a ForTable on the stack here? don't think so. np2ppi does it */
   if (result!=NULL) {
     /* CONSOLE_DEBUG("result!=NULL..."); */
@@ -12363,7 +12363,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   clock_t start, phase1t,phase2t,phase3t,phase4t,phase5t;
 #endif
 
-  CONSOLE_DEBUG("starting...");
+  /*CONSOLE_DEBUG("starting...");*/
 
   pass1pendings = 0L;
   pass2pendings = 0L;

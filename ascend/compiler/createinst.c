@@ -181,6 +181,7 @@ struct Instance *CreateSimulationInstance(struct TypeDescription *type,
   result->desc = type;
   result->name = name;
   result->extvars = NULL;
+  result->slvreq_hooks = NULL;
   return INST(result);
 }
 

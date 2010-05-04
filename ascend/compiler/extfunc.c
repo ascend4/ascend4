@@ -395,7 +395,7 @@ void *GetExtMethodUserData(struct ExternalFunc *efunc){
 void DestroyExternalFunc(struct ExternalFunc *efunc){
   struct ExternalFunc *tmp;
   if(efunc && efunc->etype != efunc_ERR){
-    CONSOLE_DEBUG("DESTROYING EFUNC at %p",efunc);
+    /*CONSOLE_DEBUG("DESTROYING EFUNC at %p",efunc);*/
     tmp = efunc;
     if (tmp->name ) ascfree((char *)(tmp->name)); /* we own the string */
     if (tmp->help) ascfree((char *)(tmp->help)); /* we own the string */

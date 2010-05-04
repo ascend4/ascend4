@@ -1,17 +1,7 @@
-/*
- *  procframe.h: Method interpreter debugger stack frame information.
- *  by Benjamin Allan
- *  March 17, 1998
- *  Part of ASCEND
- *  Version: $Revision: 1.2 $
- *  Version control file: $RCSfile: procframe.h,v $
- *  Date last modified: $Date: 1998/06/16 16:38:49 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
+/*	ASCEND modelling environment
+	Copyright (C) 1998, 2010 Carnegie Mellon University
+	Copyright (C) 2010 Carnegie Mellon University
+
  *  The Ascend Language Interpreter is free software; you can
  *  redistribute it and/or modify it under the terms of the GNU
  *  General Public License as published by the Free Software
@@ -27,24 +17,28 @@
  *  along with the program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
  *  the file named COPYING.
- */
-
-/** @file
+ *//** @file
  *  Method interpreter debugger stack frame information.
  *  The data structures in this header should not be passed
  *  through headers except inside gl_lists. This header
  *  should not be accessed except by the interpreter and
  *  interpreter io routines. watchpt.h is the header for
  *  client consumption.
- *  <pre>
- *  When #including procframe.h, make sure these files are #included first:
- *         #include <stdio.h>
- *         #include "utilities/ascConfig.h"
- *  </pre>
- */
+ *//*
+ *  by Benjamin Allan
+ *  March 17, 1998
+ *  Part of ASCEND
+ *  Version: $Revision: 1.2 $
+ *  Version control file: $RCSfile: procframe.h,v $
+ *  Date last modified: $Date: 1998/06/16 16:38:49 $
+ *  Last modified by: $Author: mthomas $
+*/
 
 #ifndef ASC_PROCFRAME_H
 #define ASC_PROCFRAME_H
+
+#include <stdio.h>
+#include <ascend/utilities/ascConfig.h>
 
 /**	@addtogroup compiler Compiler
 	@{

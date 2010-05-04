@@ -466,6 +466,19 @@ struct Instance *GetSimulationRoot(struct Instance *i){
   return *child_adr;
 }
 
+struct Instance *FindSimulationInstance(struct Instance *i){
+	struct gl_list_t *sims;
+	sims = FindSimulationAncestors(i);
+	if(gl_length(sims)!=1){
+		CONSOLE_DEBUG("Instance does not have just one SIM_INST ancestor");
+		return NULL;
+	}
+	struct Instance *sim;
+	sim = gl_fetch(sims,1);
+	gl_destroy(sims);
+	return sim;
+}
+
 
 /* Returns the number of bytes spent on a particular instance
  * Does not count relation guts, dimens, strings, or set_t *

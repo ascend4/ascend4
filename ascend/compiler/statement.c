@@ -135,6 +135,9 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case REF:
     case FIX:
     case FREE:
+    case SOLVER:
+    case OPTION:
+    case SOLVE:
     case RUN:
     case FNAME:
     case FLOW:
@@ -305,6 +308,28 @@ struct Statement *CreateFREE(struct VariableList *vars){
   result=create_statement_here(FREE);
   result->v.fx.vars = vars;
   return result;
+}
+
+struct Statement *CreateSOLVER(CONST char *solvername){
+	register struct Statement *result;
+	result=create_statement_here(SOLVER);
+	result->v.solver.name = solvername;
+	/*CONSOLE_DEBUG("CREATED SOLVER STATEMENT");*/
+	return result;
+}
+
+struct Statement *CreateOPTION(CONST char *optname, struct Expr *rhs){
+	register struct Statement *result;
+	result=create_statement_here(OPTION);
+	result->v.option.name = optname;
+	result->v.option.rhs = rhs;
+	return result;
+}
+
+struct Statement *CreateSOLVE(){
+	register struct Statement *result;
+	result=create_statement_here(SOLVE);
+	return result;
 }
 
 struct Statement *CreateWBTS(struct VariableList *vl)
@@ -844,8 +869,8 @@ void DestroyStatement(struct Statement *s)
         s->v.call.args = NULL;
         break;
       case EXT:
-	s->v.ext.extcall = NULL;
-	switch (s->v.ext.mode) {
+        s->v.ext.extcall = NULL;
+        switch (s->v.ext.mode) {
         case ek_method:
           DestroyVariableList(s->v.ext.u.method.vl);
           s->v.ext.u.method.vl = NULL;
@@ -859,7 +884,7 @@ void DestroyStatement(struct Statement *s)
           s->v.ext.u.glass.data = NULL;
           if (s->v.ext.u.glass.scope) DestroyName(s->v.ext.u.glass.scope);
           s->v.ext.u.glass.scope = NULL;
-	  break;
+          break;
         case ek_black:
           DestroyName(s->v.ext.u.black.nptr);
           s->v.ext.u.black.nptr = NULL;
@@ -889,13 +914,26 @@ void DestroyStatement(struct Statement *s)
         break;
 
       case FIX:
-	  case FREE:
+      case FREE:
         DestroyVariableList(s->v.fx.vars);
-		break;
+        break;
 
       case ASSERT:
         DestroyExprList(s->v.asserts.test);
         s->v.asserts.test = NULL;
+        break;
+
+      case SOLVER:
+        s->v.solver.name = NULL;
+        break;
+
+      case OPTION:
+        s->v.option.name = NULL;
+        DestroyExprList(s->v.option.rhs);
+        break;
+
+      case SOLVE:
+        /* currently there's no data stored in this command */
         break;
 
       case IF:
@@ -1059,13 +1097,29 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.r.proc_name = CopyName(s->v.r.proc_name);
     result->v.r.type_name = CopyName(s->v.r.type_name);
     break;
+
   case ASSERT:
     result->v.asserts.test = CopyExprList(s->v.asserts.test);
     break;
+
   case FIX:
   case FREE:
     result->v.fx.vars = CopyVariableList(s->v.fx.vars);
-	break;
+    break;
+
+  case SOLVER:
+    result->v.solver.name = s->v.solver.name;
+    break;
+
+  case OPTION:
+    result->v.option.name = s->v.option.name;
+    result->v.option.rhs = CopyExprList(s->v.option.rhs);
+    break;
+
+  case SOLVE:
+    /* no data to be copied for this command */
+    break;
+
   case IF:
     result->v.ifs.test = CopyExprList(s->v.ifs.test);
     result->v.ifs.thenblock = CopyListToModify(s->v.ifs.thenblock);
@@ -1135,6 +1189,9 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case RUN:
   case FIX:
   case FREE:
+  case SOLVER:
+  case OPTION:
+  case SOLVE:
   case ASSERT:
   case IF:
   case WHEN:
@@ -1175,6 +1232,9 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case RUN:
   case FIX:
   case FREE:
+  case SOLVER:
+  case OPTION:
+  case SOLVE:
   case ASSERT:
   case IF:
   case WHEN:
@@ -1217,6 +1277,9 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case RUN:
   case FIX:
   case FREE:
+  case SOLVER:
+  case OPTION:
+  case SOLVE:
   case ASSERT:
   case IF:
   case WHEN:
