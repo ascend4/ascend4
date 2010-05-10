@@ -29,6 +29,19 @@ pagecontent = r.search(f).group(1)
 print "Parsing page content..."
 s1 = BeautifulSoup(pagecontent)
 
+def replace_templates(soup):
+	for t in soup.findAll("div",{"id":"task","class":"notice metadata"}):
+		t.replaceWith(NavigableString("{{task}}"))
+
+def strip_contents(soup):
+	c = soup.find('table',{'id':'toc','class':'toc','summary':'Contents'})
+	if c:
+		c.extract()
+
+def strip_script(soup):
+	for s in soup.findAll('script'):
+		s.extract()
+
 def strip_highlight(soup):
 	for a1 in soup.findAll('p'):
 		if a1.find('style',{'type':"text/css"}):
@@ -68,18 +81,17 @@ def strip_highlight(soup):
 
 def strip_anchors(soup):
 	for a1 in soup.findAll('a',{'name':True}):
+		print "ANCHOR:",a1
 		a1.extract()
 
 def wikify_headings(soup):
-	def h1(tag):
-		if not tag.name in ['h1','h2','h3','h4','h5','h6']:
-			return False
-		if tag.span['class'] == 'mw-headline':
-			return True
-		return False
-	for h in soup.findAll(h1):
+	for h in soup.findAll(['h1','h2','h3','h4','h5','h6']):
+		if not h.find('span',{'class':'mw-headline'}):
+			print "HEADING: SKIPPING:",h
+			continue
+		print "HEADING:",h
 		level = int(str(h.name)[1:])
-		h2 = NavigableString("="*level + h.span.string + "="*level)
+		h2 = NavigableString("="*level + h.span.renderContents() + "="*level)
 		h.replaceWith(h2)
 
 def wikify_paragraphs(soup):
@@ -113,6 +125,18 @@ def wikify_categories(soup):
 		cats.parent.append(c)
 	cats.extract()
 
+def wikify_images(soup):
+	for a in soup.findAll("a",{'class':'image'}):
+		if a.img:
+			if a.img['alt'][0:6] == "Image:":
+				print "IMG",a.img['alt'][6:]
+			elif a['href'][0:6] == "/File:":
+				print "IMG",a['href'][6:]
+				a1 = NavigableString("[[Image:" + a['href'][6:] + "]]")
+				a.replaceWith(a1)
+			else:
+				print "CAN'T PROCESS IMAGE LINK",a
+
 def wikify_links(soup):
 	rr1 = re.compile(" ")
 	def linkified(s):
@@ -138,19 +162,30 @@ def wikify_links(soup):
 			print " --> ",t
 
 def wikify_bold(soup):
-	for b in soup.findAll("b",{"style":True}):
+	for b in soup.findAll("b"):
 		#print "BOLD:",b
 		b2 = NavigableString("'''" + b.renderContents() + "'''")
 		b.replaceWith(b2)
 
+def wikify_italics(soup):
+	for i in soup.findAll("i"):
+		i.replaceWith("''" + i.renderContents() + "''")
+
+replace_templates(s1)
+strip_contents(s1)
+strip_script(s1)
 strip_printfooter(s1)
 strip_highlight(s1)
 strip_anchors(s1)
 wikify_headings(s1)
 wikify_paragraphs(s1)
-s1 = BeautifulSoup(str(s1))
 wikify_categories(s1)
+s1 = BeautifulSoup(str(s1))
 wikify_bold(s1)
+s1 = BeautifulSoup(str(s1))
+wikify_italics(s1)
+s1 = BeautifulSoup(str(s1))
+wikify_images(s1)
 wikify_links(s1)
 #sys.exit(1)
 print str(s1)
