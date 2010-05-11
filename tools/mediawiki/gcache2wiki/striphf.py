@@ -100,7 +100,7 @@ def wikify_paragraphs(soup):
 		if p.renderContents() is None:
 			p.replaceWith(NavigableString("\n"))
 		else:
-			p.replaceWith(NavigableString("\n" + p.renderContents() + "\n"))
+			p.replaceWith(NavigableString("\n" + p.renderContents()))
 
 def strip_printfooter(soup):
 	soup.find('div',{'class':'printfooter'}).extract()
@@ -129,11 +129,15 @@ def wikify_images(soup):
 	for a in soup.findAll("a",{'class':'image'}):
 		if a.img:
 			if a.img['alt'][0:6] == "Image:":
-				print "IMG",a.img['alt'][6:]
+				print "IMG1",a.img['alt'][6:]
+				a1 = NavigableString("[[Image:" + a.img['alt'][6:] + "]]")
+				print "-->",a1
+				a.replaceWith(a1)
 			elif a['href'][0:6] == "/File:":
 				print "IMG",a['href'][6:]
 				a1 = NavigableString("[[Image:" + a['href'][6:] + "]]")
 				a.replaceWith(a1)
+				print "-->",a1
 			else:
 				print "CAN'T PROCESS IMAGE LINK",a
 
@@ -146,10 +150,38 @@ def wikify_links(soup):
 
 	r = re.compile("^http://")
 	r2 = re.compile("/[A-Z][a-z_0-9-]*")
+	r3 = re.compile(r"^http://ascendcode.cheme.cmu.edu/viewvc.cgi/code/(.*)$");
+	r3trunk = re.compile(r"trunk/(.*)\?view=markup$")
+	r3branch = re.compile(r"branches/([^)]+)/(.*)\?view=markup$")
+	r3dir = re.compile(r"trunk/(.*)")
 	for a in soup.findAll('a',{'href':True}):
 		#print "LINK:",a.parent
-		if r.match(a['href']):
-			t = NavigableString("[" + a['href'] + " " + a.renderContents() + "]")
+		m3 = r3.match(a['href'])
+		if m3:
+			t1 = m3.group(1)
+			m3 = r3trunk.match(t1)
+			if m3:
+				t = NavigableString("{{src|%s}}" % m3.group(1))
+				a.replaceWith(t)
+			else:
+				m3 = r3branch.match(t1)
+				if m3:
+					t = NavigableString("{{srcbranch|%s|%s}}" % [m3.group(1),m3.group(2)])
+					a.replaceWith(t)
+				else:
+					m3 = r3dir.match(t1)
+					if m3:
+						t = NavigableString("{{srcdir|%s}}" % m3.group(1))
+						a.replaceWith(t)
+					else:
+						t = NavigableString("[" + a['href'] + " " + a.renderContents() + "]")
+						a.replaceWith(t)
+			print " --> ",t
+		elif r.match(a['href']):
+			if a['href'] == a.renderContents():
+				t = NavigableString("[" + a['href'] + "]")
+			else:
+				t = NavigableString("[" + a['href'] + " " + a.renderContents() + "]")
 			a.replaceWith(t)
 			print " --> ",t
 
@@ -171,6 +203,32 @@ def wikify_italics(soup):
 	for i in soup.findAll("i"):
 		i.replaceWith("''" + i.renderContents() + "''")
 
+def wikify_lists(soup):
+	items = []
+	# FIXME handle nested lists!
+	for ul in soup.findAll("ul"):
+		for li in ul.findAll("li"):
+			print "LIST ITEM:",li.renderContents().strip()
+			items += [NavigableString("\n* %s" % li.renderContents().strip())]
+		l2 = Tag(soup,"div")
+		for i in range(len(items)):
+			l2.insert(i,items[i])
+		ul.replaceWith(NavigableString(l2.renderContents()))
+		print "NEW LIST:",l2.renderContents()
+
+def wikify_tables(soup):
+	for ta in soup.findAll("table"):
+		s = '\n{| class="wikitable"\n'
+		for tr in ta.findAll("tr"):
+			s += "|-\n"
+			for t in tr.findAll(["td",'th']):
+				if t.name == "td":
+					s += "| " + t.renderContents()
+				else:
+					s += "! " + t.renderContents()
+		s += "|}"
+		ta.replaceWith(NavigableString(s))
+
 replace_templates(s1)
 strip_contents(s1)
 strip_script(s1)
@@ -186,8 +244,13 @@ s1 = BeautifulSoup(str(s1))
 wikify_italics(s1)
 s1 = BeautifulSoup(str(s1))
 wikify_images(s1)
+
 wikify_links(s1)
-#sys.exit(1)
+
+wikify_lists(s1)
+wikify_tables(s1)
+
 print str(s1)
+sys.exit(1)
 
 
