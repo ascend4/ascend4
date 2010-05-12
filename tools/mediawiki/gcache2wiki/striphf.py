@@ -38,6 +38,22 @@ def strip_contents(soup):
 	if c:
 		c.extract()
 
+def strip_wiki_comments(soup):
+	msg1 = "NewPP limit report"
+	l1 = len(msg1)
+	msg2 = "Saved in parser cache"
+	l2 = len(msg2)
+	print "STRIPPING WIKI COMMENTS"
+	def co(tag):
+		if isinstance(tag, Comment):
+			if tag.string.strip()[0:l1] == msg1 or tag.string.strip()[0:l2]==msg2:
+				print "COMMENT:",tag.string.strip()
+				return True
+		return False
+	for c in soup.findAll(text=co):
+		c.extract()
+	
+
 def strip_script(soup):
 	for s in soup.findAll('script'):
 		s.extract()
@@ -105,6 +121,9 @@ def wikify_paragraphs(soup):
 def strip_printfooter(soup):
 	soup.find('div',{'class':'printfooter'}).extract()
 
+def strip_wikicomments(soup):
+	pass
+
 def wikify_categories(soup):
 	cats = soup.find("div",{"id":"catlinks"})
 	if not cats:
@@ -141,6 +160,14 @@ def wikify_images(soup):
 			else:
 				print "CAN'T PROCESS IMAGE LINK",a
 
+def wikify_math(soup):
+	for img in soup.findAll("img",{'class':'tex'}):
+		s = "<math>" + img['alt'] + "</math>"
+		print "MATH:",s
+		img1 = NavigableString(s)
+		img.replaceWith(img1)
+		#img.replaceWith(NavigableText(s))
+
 def wikify_links(soup):
 	rr1 = re.compile(" ")
 	def linkified(s):
@@ -176,14 +203,14 @@ def wikify_links(soup):
 					else:
 						t = NavigableString("[" + a['href'] + " " + a.renderContents() + "]")
 						a.replaceWith(t)
-			print " --> ",t
+			print "LINK:",t
 		elif r.match(a['href']):
 			if a['href'] == a.renderContents():
 				t = NavigableString("[" + a['href'] + "]")
 			else:
 				t = NavigableString("[" + a['href'] + " " + a.renderContents() + "]")
 			a.replaceWith(t)
-			print " --> ",t
+			print "LINK:",t
 
 		elif r2.match(a['href']):
 			if linkified(a.renderContents()) == a['href'][1:]:
@@ -191,7 +218,7 @@ def wikify_links(soup):
 			else:
 				t = NavigableString("[[" + a['href'][1:] + "|" + a.renderContents() + "]]")
 			a.replaceWith(t)
-			print " --> ",t
+			print "LINK:",t
 
 def wikify_bold(soup):
 	for b in soup.findAll("b"):
@@ -231,6 +258,7 @@ def wikify_tables(soup):
 
 replace_templates(s1)
 strip_contents(s1)
+strip_wiki_comments(s1)
 strip_script(s1)
 strip_printfooter(s1)
 strip_highlight(s1)
@@ -244,13 +272,22 @@ s1 = BeautifulSoup(str(s1))
 wikify_italics(s1)
 s1 = BeautifulSoup(str(s1))
 wikify_images(s1)
+wikify_math(s1)
 
 wikify_links(s1)
 
 wikify_lists(s1)
 wikify_tables(s1)
 
-print str(s1)
-sys.exit(1)
+if 1:
+	print str(s1)
+else:
+	newfile = sys.argv[1] + ".txt"
+
+	f2 = open(newfile,"w")
+	f2.write(str(s1))
+	f2.close()
+
+	print "Output written to %s" % newfile
 
 
