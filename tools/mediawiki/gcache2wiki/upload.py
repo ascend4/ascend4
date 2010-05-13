@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 # This script will do the hard work of uploading the content to our wiki.
 import sys
-
-user = "WikiSysop"
-password = sys.argv[1]
-
 import urllib2
-
 import os.path
-
 import pickle
 
 res = pickle.load(open("reslist.pickle"))
@@ -36,39 +30,46 @@ if 0:
 
 sys.path.append(os.path.expanduser("~/pywikipedia"))
 import pagefromfile
+import codecs
 
 print "UPLOADING TO WIKI"
 
 errorfile = None
+# TODO: make config variables for these.
+filename = "bigpage.txt"
+
+include = False
+force = True
+append = None
+notitle = True
+summary = "Restored page from Google Cache, uploaded by John Pye"
+minor = False
+autosummary = False
+dry = False
+
+bot = pagefromfile.PageFromFileRobot(None, force, append, summary, minor, autosummary, dry)
+
 try:
-	# TODO: make config variables for these.
-	filename = "bigpage.txt"
-
-	include = False
-	force = True
-	append = None
-	notitle = True
-	summary = "Restored page from Google Cache, uploaded by John Pye"
-	minor = False
-	autosummary = False
-	dry = True
-
-	bot = pagefromfile.PageFromFileRobot(None, force, append, summary, minor, autosummary, dry)
-
 	for name in res:
 		filename,status = res[name]
 		if status !="SAVED" and status !="ERROR":
-			content = open(filename).read()
+			content = codecs.open(filename,'r','utf-8').read()
 			errrorfile = name
-			bot.put(name,content)
-			errorfile = None
-			res[name] = (filename,"SAVED")
+			try:
+				bot.put(name,content)
+				errorfile = None
+				res[name] = (filename,"SAVED")
+			except Exception,e:
+				print "ERROR in uploading:",e
+				if errorfile:
+					filename,status=res[errorfile]
+					res[errorfile]=(filename,"ERROR")
 
 except Exception,e:
-	print "ERROR in uploading:",str(e)
-	if errorfile:
-		filename,status=res[errorfile]
-		res[errorfile]=(filename,"ERROR")
-	pickle.dump(res,open("reslist.pickle","w"))
-	print "STATUS FILE UPDATED"
+	print "ERROR:",str(e)
+except KeyboardInterrupt:
+	print "INTERRUPTED"
+
+pickle.dump(res,open("reslist.pickle","w"))
+print "STATUS FILE UPDATED"
 
