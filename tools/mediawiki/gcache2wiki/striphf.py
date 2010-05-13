@@ -4,31 +4,6 @@
 from BeautifulSoup import *
 import sys
 
-print "Reading file",sys.argv[1],"..."
-
-f = open(sys.argv[1]).read()
-
-print "Parsing whole page..."
-
-s = BeautifulSoup(f);
-
-title = s.title.string
-
-if(title[-9:] != " - ASCEND"):
-	print "Incorrect title '%s'" % s.title.string
-	sys.exit(1)
-
-title = title[:-9]
-print "  page title = '%s'" % title
-
-import re
-r = re.compile("<!-- start content -->(.*)<!-- end content -->",re.S);
-
-pagecontent = r.search(f).group(1)
-
-print "Parsing page content..."
-s1 = BeautifulSoup(pagecontent)
-
 def replace_templates(soup):
 	for t in soup.findAll("div",{"id":"task","class":"notice metadata"}):
 		t.replaceWith(NavigableString("{{task}}"))
@@ -43,11 +18,11 @@ def strip_wiki_comments(soup):
 	l1 = len(msg1)
 	msg2 = "Saved in parser cache"
 	l2 = len(msg2)
-	print "STRIPPING WIKI COMMENTS"
+	#print "STRIPPING WIKI COMMENTS"
 	def co(tag):
 		if isinstance(tag, Comment):
 			if tag.string.strip()[0:l1] == msg1 or tag.string.strip()[0:l2]==msg2:
-				print "COMMENT:",tag.string.strip()
+				#print "COMMENT:",tag.string.strip()
 				return True
 		return False
 	for c in soup.findAll(text=co):
@@ -63,7 +38,7 @@ def strip_highlight(soup):
 		if a1.find('style',{'type':"text/css"}):
 			n1 = a1.nextSibling
 			if str(n1.string).strip() != "/* Highlighting theme definition: */":
-				print "NO MATCH"
+				#print "NO MATCH"
 				sys.exit(1)
 			n2 = n1.nextSibling
 			#print "REMOVING",str(a1)
@@ -81,7 +56,7 @@ def strip_highlight(soup):
 			n4.extract()
 
 			if pre.name != 'pre':
-				print "ERROR parsing syntax-highlighting:",pre
+				#print "ERROR parsing syntax-highlighting:",pre
 				sys.exit(1)
 			for x in pre.findAll('b',{'style':True}):
 				x1 = NavigableString(str(x.string))
@@ -97,15 +72,15 @@ def strip_highlight(soup):
 
 def strip_anchors(soup):
 	for a1 in soup.findAll('a',{'name':True}):
-		print "ANCHOR:",a1
+		#print "ANCHOR:",a1
 		a1.extract()
 
 def wikify_headings(soup):
 	for h in soup.findAll(['h1','h2','h3','h4','h5','h6']):
 		if not h.find('span',{'class':'mw-headline'}):
-			print "HEADING: SKIPPING:",h
+			#print "HEADING: SKIPPING:",h
 			continue
-		print "HEADING:",h
+		#print "HEADING:",h
 		level = int(str(h.name)[1:])
 		h2 = NavigableString("="*level + h.span.renderContents() + "="*level)
 		h.replaceWith(h2)
@@ -136,7 +111,7 @@ def wikify_categories(soup):
 			a.extract()
 		elif r2.match(a['href']):
 			t = NavigableString("[[" + a['href'][1:] + "]]\n")
-			print "  categ:",t.strip()
+			#print "  categ:",t.strip()
 			cc.append(t)
 	#print "CATS:",cc
 	#cats.replace(cc)
@@ -148,25 +123,33 @@ def wikify_images(soup):
 	for a in soup.findAll("a",{'class':'image'}):
 		if a.img:
 			if a.img['alt'][0:6] == "Image:":
-				print "IMG1",a.img['alt'][6:]
+				#print "IMG1",a.img['alt'][6:]
 				a1 = NavigableString("[[Image:" + a.img['alt'][6:] + "]]")
-				print "-->",a1
+				#print "-->",a1
 				a.replaceWith(a1)
 			elif a['href'][0:6] == "/File:":
-				print "IMG",a['href'][6:]
+				#print "IMG",a['href'][6:]
 				a1 = NavigableString("[[Image:" + a['href'][6:] + "]]")
 				a.replaceWith(a1)
-				print "-->",a1
+				#print "-->",a1
 			else:
-				print "CAN'T PROCESS IMAGE LINK",a
+				sys.stderr.write("CAN'T PROCESS IMAGE LINK %s\n" % str(a))
 
 def wikify_math(soup):
 	for img in soup.findAll("img",{'class':'tex'}):
 		s = "<math>" + img['alt'] + "</math>"
-		print "MATH:",s
+		#print "MATH:",s
 		img1 = NavigableString(s)
 		img.replaceWith(img1)
 		#img.replaceWith(NavigableText(s))
+
+def wikify_indents(soup):
+	for dl in soup.findAll("dl"):
+		s = ""
+		for dd in dl.findAll("dd"):
+			s += ":" + dd.renderContents() + "\n"
+		dl1 = NavigableString(s)
+		dl.replaceWith(dl1)		
 
 def wikify_links(soup):
 	rr1 = re.compile(" ")
@@ -179,7 +162,7 @@ def wikify_links(soup):
 	r2 = re.compile("/[A-Z][a-z_0-9-]*")
 	r3 = re.compile(r"^http://ascendcode.cheme.cmu.edu/viewvc.cgi/code/(.*)$");
 	r3trunk = re.compile(r"trunk/(.*)\?view=markup$")
-	r3branch = re.compile(r"branches/([^)]+)/(.*)\?view=markup$")
+	r3branch = re.compile(r"branches/([^/]+)/(.*)\?view=markup$")
 	r3dir = re.compile(r"trunk/(.*)")
 	for a in soup.findAll('a',{'href':True}):
 		#print "LINK:",a.parent
@@ -193,7 +176,7 @@ def wikify_links(soup):
 			else:
 				m3 = r3branch.match(t1)
 				if m3:
-					t = NavigableString("{{srcbranch|%s|%s}}" % [m3.group(1),m3.group(2)])
+					t = NavigableString("{{srcbranch|%s|%s}}" % (m3.group(1),m3.group(2)))
 					a.replaceWith(t)
 				else:
 					m3 = r3dir.match(t1)
@@ -203,14 +186,14 @@ def wikify_links(soup):
 					else:
 						t = NavigableString("[" + a['href'] + " " + a.renderContents() + "]")
 						a.replaceWith(t)
-			print "LINK:",t
+			#print "LINK:",t
 		elif r.match(a['href']):
 			if a['href'] == a.renderContents():
 				t = NavigableString("[" + a['href'] + "]")
 			else:
 				t = NavigableString("[" + a['href'] + " " + a.renderContents() + "]")
 			a.replaceWith(t)
-			print "LINK:",t
+			#print "LINK:",t
 
 		elif r2.match(a['href']):
 			if linkified(a.renderContents()) == a['href'][1:]:
@@ -218,7 +201,7 @@ def wikify_links(soup):
 			else:
 				t = NavigableString("[[" + a['href'][1:] + "|" + a.renderContents() + "]]")
 			a.replaceWith(t)
-			print "LINK:",t
+			#print "LINK:",t
 
 def wikify_bold(soup):
 	for b in soup.findAll("b"):
@@ -231,17 +214,17 @@ def wikify_italics(soup):
 		i.replaceWith("''" + i.renderContents() + "''")
 
 def wikify_lists(soup):
-	items = []
 	# FIXME handle nested lists!
 	for ul in soup.findAll("ul"):
+		items = []
 		for li in ul.findAll("li"):
-			print "LIST ITEM:",li.renderContents().strip()
+			#print "LIST ITEM:",li.renderContents().strip()
 			items += [NavigableString("\n* %s" % li.renderContents().strip())]
 		l2 = Tag(soup,"div")
 		for i in range(len(items)):
 			l2.insert(i,items[i])
 		ul.replaceWith(NavigableString(l2.renderContents()))
-		print "NEW LIST:",l2.renderContents()
+		#print "NEW LIST:",l2.renderContents()
 
 def wikify_tables(soup):
 	for ta in soup.findAll("table"):
@@ -256,38 +239,65 @@ def wikify_tables(soup):
 		s += "|}"
 		ta.replaceWith(NavigableString(s))
 
-replace_templates(s1)
-strip_contents(s1)
-strip_wiki_comments(s1)
-strip_script(s1)
-strip_printfooter(s1)
-strip_highlight(s1)
-strip_anchors(s1)
-wikify_headings(s1)
-wikify_paragraphs(s1)
-wikify_categories(s1)
-s1 = BeautifulSoup(str(s1))
-wikify_bold(s1)
-s1 = BeautifulSoup(str(s1))
-wikify_italics(s1)
-s1 = BeautifulSoup(str(s1))
-wikify_images(s1)
-wikify_math(s1)
 
-wikify_links(s1)
+def html2wiki(html,wikiname):
+	"""
+	This is the main function that converts an HTML string into corresponding wiki syntax.
+	It expects a full HTML page including header, footer, etc, not just the 'content' section
+	of the page.
 
-wikify_lists(s1)
-wikify_tables(s1)
+	@param html the raw 'page source' input (eg from Google Cache)
+	@param wikiname the name of the wiki from which the content is derived
+	"""
+	s = BeautifulSoup(html)
 
-if 1:
-	print str(s1)
-else:
-	newfile = sys.argv[1] + ".txt"
+	title = s.title.string
 
-	f2 = open(newfile,"w")
-	f2.write(str(s1))
-	f2.close()
+	if(title[-9:] != " - " + wikiname):
+		print "Incorrect title '%s'" % s.title.string
+		sys.exit(1)
 
-	print "Output written to %s" % newfile
+	title = title[:-9]
+	#print "  page title = '%s'" % title
+
+	import re
+	r = re.compile("<!-- start content -->(.*)<!-- end content -->",re.S);
+
+	pagecontent = r.search(html).group(1)
+
+	#print "Parsing page content..."
+	s1 = BeautifulSoup(pagecontent)
+
+	replace_templates(s1)
+	strip_contents(s1)
+	strip_wiki_comments(s1)
+	strip_script(s1)
+	strip_printfooter(s1)
+	strip_highlight(s1)
+	strip_anchors(s1)
+	wikify_headings(s1)
+	wikify_paragraphs(s1)
+	wikify_categories(s1)
+	s1 = BeautifulSoup(str(s1))
+	wikify_bold(s1)
+	s1 = BeautifulSoup(str(s1))
+	wikify_italics(s1)
+	s1 = BeautifulSoup(str(s1))
+	wikify_images(s1)
+	wikify_math(s1)
+	wikify_indents(s1)
+
+	wikify_links(s1)
+
+	wikify_lists(s1)
+	wikify_tables(s1)
+
+	return str(s1)
+
+if __name__=="__main__":
+	sys.stderr.write("Reading file %s...\n"%sys.argv[1])
+	f = open(sys.argv[1]).read()
+	wikiname = "ASCEND"
+	print html2wiki(f,wikiname)
 
 
