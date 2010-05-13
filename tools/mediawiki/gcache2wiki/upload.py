@@ -15,6 +15,9 @@ wiki = "http://ascend.cheme.cmu.edu/"
 
 print "LOGGING IN TO WIKI"
 b = Browser(wiki)
+
+print "HEADERS",b.headers
+
 login = b.getLink("Log in / create account")
 login.click()
 print "AT LOGIN PAGE:",b.url
@@ -26,6 +29,8 @@ submitbutton = b.getControl(name="wpLoginattempt")
 submitbutton.click()
 print "LOGGED IN TO:",b.url
 b.handleErrors = True
+
+print(b.headers)
 
 editpage = wiki + '/index.php?title=%s&action=edit'
 
