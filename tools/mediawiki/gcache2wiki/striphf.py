@@ -316,7 +316,7 @@ def html2wiki(html,wikiname):
 
 	# TODO: do something to catch 'texhtml'?
 
-	return str(s1)
+	return str(s1),title
 
 if __name__=="__main__":
 	sys.stderr.write("Reading file %s...\n"%sys.argv[1])
