@@ -2,66 +2,73 @@
 # This script will do the hard work of uploading the content to our wiki.
 import sys
 
-user = "Jpye"
+user = "WikiSysop"
 password = sys.argv[1]
 
 import urllib2
-from zope.testbrowser.browser import Browser
+
+import os.path
+
 import pickle
 
 res = pickle.load(open("reslist.pickle"))
 
 wiki = "http://ascend.cheme.cmu.edu/"
 
-print "LOGGING IN TO WIKI"
-b = Browser(wiki)
+# first create a big huge textfile containing the pages
 
-print "HEADERS",b.headers
-
-login = b.getLink("Log in / create account")
-login.click()
-print "AT LOGIN PAGE:",b.url
-userinput = b.getControl(name="wpName")
-userinput.value = user
-passwordinput = b.getControl(name="wpPassword")
-passwordinput.value = password
-submitbutton = b.getControl(name="wpLoginattempt")
-submitbutton.click()
-print "LOGGED IN TO:",b.url
-b.handleErrors = True
-
-print(b.headers)
-
-editpage = wiki + '/index.php?title=%s&action=edit'
-
-try:
+if 0:
+	pagestart = "\nPAGESTARTxkljhdakljfdfsljhkjhdsgnsdgnweisdwgwrehjgsjfs\n"
+	pageend =   "\nPAGEENDslkfjsldkfjskldfjskljfsghwuewrweorswnmbrwewemwr\n"
+	titlestart = "TITLESTART>>>"
+	titleend =   "<<<TITLEEND\n"
+	print "WRITING PAGES TO BIG TEXT FILE"
+	f = open('bigpage.txt','w')
 	for name in res:
 		filename,status = res[name]
-		if status!="SAVED":
-			print "Creating page '%s'..."%name
-			try:
-				url = editpage%name
-				print "OPENING:",url
-				b.open(url)
-			except urllib2.HTTPError,e:
-				print "ERROR CODE:",e.code
-				print "ERROR:",str(e)
-				print "ERROR OPENING",wiki+name
-				print "CONTENT =",b.content
-				raise RuntimeError("Quitting, failed to load page")
-			print 
-			if "There is currently no text in this page." in b.content:
-				print "CREATING PAGE AT",b.url
-			else:
-				raise RuntimeError("Page '%s' already exists"%name)
-			#res[name] = filename,"SAVED"
-		else:
-			print "Skipping already-saved '%s'" % name
+		f.write(pagestart)
+		f.write(titlestart + name + titleend)
+		f.write(open(filename).read())
+		f.write(pageend)
+	f.close()
+
+	print "PAGES WRITTEN"
+
+sys.path.append(os.path.expanduser("~/pywikipedia"))
+import pagefromfile
+
+print "UPLOADING TO WIKI"
+
+errorfile = None
+try:
+	# TODO: make config variables for these.
+	filename = "bigpage.txt"
+
+	include = False
+	force = True
+	append = None
+	notitle = True
+	summary = "Restored page from Google Cache, uploaded by John Pye"
+	minor = False
+	autosummary = False
+	dry = True
+
+	bot = pagefromfile.PageFromFileRobot(None, force, append, summary, minor, autosummary, dry)
+
+	for name in res:
+		filename,status = res[name]
+		if status !="SAVED" and status !="ERROR":
+			content = open(filename).read()
+			errrorfile = name
+			bot.put(name,content)
+			errorfile = None
+			res[name] = (filename,"SAVED")
+
 except Exception,e:
-	print "ERROR:",str(e)
-	print "Saving updated status to pickle..."
+	print "ERROR in uploading:",str(e)
+	if errorfile:
+		filename,status=res[errorfile]
+		res[errorfile]=(filename,"ERROR")
 	pickle.dump(res,open("reslist.pickle","w"))
-
-print "DONE"
-
+	print "STATUS FILE UPDATED"
 

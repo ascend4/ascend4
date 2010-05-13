@@ -66,7 +66,7 @@ def strip_highlight(soup):
 				x1 = NavigableString(str(x.renderContents()))
 				x.replaceWith(x1)
 
-			t = Tag(soup,"src",[("lang",'a4c')])
+			t = Tag(soup,"source",[("lang",'a4c')])
 			t.insert(0, NavigableString(str(pre.renderContents()).strip()))
 			pre.replaceWith(t)
 
@@ -164,6 +164,7 @@ def wikify_links(soup):
 	r3trunk = re.compile(r"trunk/(.*)\?view=markup$")
 	r3branch = re.compile(r"branches/([^/]+)/(.*)\?view=markup$")
 	r3dir = re.compile(r"trunk/(.*)")
+	r4 = re.compile(r"^([^)]+)\s+\(page does not exist\)$")
 	for a in soup.findAll('a',{'href':True}):
 		#print "LINK:",a.parent
 		m3 = r3.match(a['href'])
@@ -202,6 +203,12 @@ def wikify_links(soup):
 				t = NavigableString("[[" + a['href'][1:] + "|" + a.renderContents() + "]]")
 			a.replaceWith(t)
 			#print "LINK:",t
+
+		else:
+			m4 = r4.match(a['title'])
+			if m4:
+				t = NavigableString("[[" + m4.group(1) + "]]")
+				a.replaceWith(t)
 
 def wikify_bold(soup):
 	for b in soup.findAll("b"):
