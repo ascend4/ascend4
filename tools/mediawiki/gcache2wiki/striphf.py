@@ -82,7 +82,7 @@ def wikify_headings(soup):
 			continue
 		#print "HEADING:",h
 		level = int(str(h.name)[1:])
-		h2 = NavigableString("="*level + h.span.renderContents() + "="*level)
+		h2 = NavigableString("\n" + "="*level + h.span.renderContents() + "="*level)
 		h.replaceWith(h2)
 
 def wikify_paragraphs(soup):
@@ -213,18 +213,40 @@ def wikify_italics(soup):
 	for i in soup.findAll("i"):
 		i.replaceWith("''" + i.renderContents() + "''")
 
+
+def wikify_list(l, prefix="*"):
+	#print "WIKIFY L:",l.prettify()
+	s = ""
+	for tag in l.findAll(['ul','ol','li']):
+		if tag.name == "ul":
+			s += wikify_list(tag,prefix+"*")
+		elif tag.name == "ol":
+			s += wikify_list(tag,prefix+"#")
+		elif tag.name == "li":
+			# sometimes nested lists are incorrectly placed within a <li>
+			#print "STUFF IN LI:"
+			if tag.findAll(["ol","ul"]):
+				for stuff in tag:
+					if isinstance(stuff,Tag) and stuff.name == "ol":
+						s += wikify_list(stuff,prefix + "#")
+					elif isinstance(stuff,Tag) and stuff.name == "ul":
+						s += wikify_list(stuff,prefix + "*")
+					elif isinstance(stuff,NavigableString) and stuff.string.strip():
+						s += "\n" + prefix + " " + stuff.string.strip()
+			else:
+				s += "\n" + prefix + " " + tag.renderContents().strip()
+
+
+	#print "\n\nRESULT OF WIKIFY L:",s,"\n\n"
+
+	return s
+
 def wikify_lists(soup):
 	# FIXME handle nested lists!
 	for ul in soup.findAll("ul"):
-		items = []
-		for li in ul.findAll("li"):
-			#print "LIST ITEM:",li.renderContents().strip()
-			items += [NavigableString("\n* %s" % li.renderContents().strip())]
-		l2 = Tag(soup,"div")
-		for i in range(len(items)):
-			l2.insert(i,items[i])
-		ul.replaceWith(NavigableString(l2.renderContents()))
-		#print "NEW LIST:",l2.renderContents()
+		ul.replaceWith(NavigableString(wikify_list(ul,"*")))
+	for ol in soup.findAll("ol"):
+		ol.replaceWith(NavigableString(wikify_list(ol,"#")))
 
 def wikify_tables(soup):
 	for ta in soup.findAll("table"):
@@ -291,6 +313,8 @@ def html2wiki(html,wikiname):
 
 	wikify_lists(s1)
 	wikify_tables(s1)
+
+	# TODO: do something to catch 'texhtml'?
 
 	return str(s1)
 
