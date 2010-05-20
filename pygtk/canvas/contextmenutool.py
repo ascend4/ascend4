@@ -1,3 +1,4 @@
+
 from gaphas.tool import Tool
 import pygtk
 pygtk.require('2.0') 
@@ -16,10 +17,11 @@ class ContextMenuTool(Tool):
 	"""
 	def __init__(self):
 		pass
-
-	def on_button_press(self, context, event):
+			
+	def on_button_press(self, event):
+		context = self.view.tool
 		if event.button != 3:
-			context.ungrab()
+			context.ungrab(self.view.tool)
 			return False
 		if context.view.hovered_item:
 			menu = gtk.Menu()
@@ -46,7 +48,7 @@ class ContextMenuTool(Tool):
 				menuinfo.set_sensitive(False)
 			menu.show_all()
 			menu.popup( None, None, None, event.button, event.time)
-			context.ungrab()
+			self.view.tool.ungrab(self.view.tool)
 			return True
 
 	def info(self,widget,window,context,item):

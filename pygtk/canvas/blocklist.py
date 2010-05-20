@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 from __future__ import with_statement
 import os, sys
 
@@ -18,11 +19,11 @@ sys.path.append("..")
 
 if sys.platform.startswith("win"):
     # Fetchs gtk2 path from registry
-    import _winreg
-    import msvcrt
-    try:
-        k = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "Software\\GTK\\2.0")
-    except EnvironmentError:
+	import _winreg
+	import msvcrt
+	try:
+		k = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "Software\\GTK\\2.0")
+	except EnvironmentError:
 		# use TkInter to report the error :-)
 		from TkInter import *
 		root = Tk()
@@ -30,8 +31,8 @@ if sys.platform.startswith("win"):
 		w.pack()
 		root.mainloop()
 		sys.exit(1)
-    else:    
-        gtkdir = _winreg.QueryValueEx(k, "Path")
+	else:
+		gtkdir = _winreg.QueryValueEx(k, "Path")
         import os
         # we must make sure the gtk2 path is the first thing in the path
         # otherwise, we can get errors if the system finds other libs with
@@ -366,7 +367,7 @@ class app(gtk.Window):
 		dbg.connect("activate",self.debug_canvas)
 		tmenu.append(dbg)
 		dbg.show()
-		
+
 		slv = gtk.ImageMenuItem(gtk.STOCK_EXECUTE, agr)
 		slv.connect("activate", self.run_canvas)
 		tmenu.append(slv)
@@ -524,21 +525,22 @@ class app(gtk.Window):
 				self.view.canvas.add(bi)
 				return bi
 			return wrapper
-		self.view.tool.grab(PlacementTool(my_block_factory(), HandleTool(), 2))
+		self.view.tool.grab(PlacementTool(self.view,my_block_factory(), HandleTool(), 2))
 		self.status.push(0,"Selected '%s'..." % blocktype.type.getName())
 
-	def set_connector_tool(self):
+	def set_connector_tool(self,foobar):
 		"""
 		Prepare the canvas for drawing a connecting line (note that one can
 		alternatively just drag from a port to another port).
 		"""
+		
 		def my_line_factory():
 			def wrapper():
 				l =  BlockLine()
 				self.view.canvas.add(l)
 				return l
 			return wrapper
-		self.view.tool.grab(PlacementTool(my_line_factory(), HandleTool(), 1))
+		self.view.tool.grab(PlacementTool(self.view,my_line_factory(), HandleTool(), 1))
 		
 	def key_press_event(self,widget,event):
 		"""

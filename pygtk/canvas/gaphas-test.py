@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pygtk
 pygtk.require('2.0') 
 
@@ -6,12 +7,13 @@ import gtk
 import cairo
 from gaphas import GtkView, View
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
-from gaphas.tool import ItemTool, RubberbandTool
-
+from gaphas.tool import ItemTool, RubberbandTool, DefaultTool
+from blockcanvas import BlockCanvas
+from blockitem  import DefaultBlockItem
 from gaphas import painter
 #painter.DEBUG_DRAW_BOUNDING_BOX = True
 
-from port import *
+#from port import *
 
 def factory(view, cls):
     """
@@ -26,7 +28,7 @@ def factory(view, cls):
 
 def create_window(canvas, title, zoom=1.0):
     view = GtkView()
-    view.tool = DefaultExampleTool()
+    view.tool = DefaultTool()
 
     w = gtk.Window()
     w.set_title(title)
@@ -47,7 +49,7 @@ def create_window(canvas, title, zoom=1.0):
 
     def on_clicked(button, view):
         #view.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.CROSSHAIR))
-        view.tool.grab(PlacementTool(factory(view, DefaultBlock), HandleTool(), 2))
+        view.tool.grab(PlacementTool(factory(view, DefaultBlockItem), HandleTool(), 2))
 
     b.connect('clicked', on_clicked, view)
     v.add(b)
