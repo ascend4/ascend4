@@ -107,3 +107,4 @@ class BlockType:
 	#def get_dual_name(self, index):
 	#	return self.duals[index].get_text()
 	
+	

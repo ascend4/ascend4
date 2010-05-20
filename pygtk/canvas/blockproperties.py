@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import gtk, gobject, os, gtksourceview, pango, re
+import gtk, gobject, os, pango, re
 import blockinstance
 import preferences
+import gtksourceview2 as gtksourceview
 
 UNITS_RE = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)");
 
@@ -141,11 +142,11 @@ class BlockProperties:
 		
 		methodvbox = gtk.VBox(homogeneous=True)
 		methodframe = gtk.Frame("Enter your custom METHODs for the block below")
-		methodentry = gtksourceview.SourceView()
+		methodentry = gtksourceview.View()
 		methodentry.set_show_line_numbers(True) 
-		self.sb = gtksourceview.SourceBuffer()
-		self.sb.set_check_brackets(True)
-		self.sb.set_highlight(True)
+		self.sb = gtksourceview.Buffer()
+		self.sb.set_highlight_matching_brackets(True)
+		self.sb.set_highlight_syntax(True)
 		self.sb.set_text(bi.usercode)
 		methodentry.set_buffer(self.sb)
 		scrolled_window2 = gtk.ScrolledWindow()

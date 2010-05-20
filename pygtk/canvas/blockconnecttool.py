@@ -27,4 +27,3 @@ class BlockConnectTool(ConnectHandleTool):
 		elif handle is line._handles[-1]:
 			line.lineinstance.toport = None
 
-

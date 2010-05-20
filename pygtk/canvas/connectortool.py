@@ -1,4 +1,6 @@
-from gaphas.tool import HandleTool
+
+from gaphas.tool import HandleTool, PlacementTool
+from gaphas import geometry
 from blockconnecttool import BlockConnectTool
 from blockline import BlockLine
 import cairo
@@ -18,44 +20,50 @@ class ConnectorTool(BlockConnectTool):
 		self._handle_tool = HandleTool()
 		self._handle_index_glued = 0
 		self._handle_index_dragged = 1
-		self._grabbed_handle = None
-		self._grabbed_item = None
+		self.grabbed_handle = None
+		self.grabbed_item = None
 		self._new_item = None
+		self.motion_handle = None
 
-	def on_button_press(self,context,event):
+	def on_button_press(self,event):		
 		if event.button != 1:
 			return False
 
-		view = context.view
-		canvas = view.canvas
-		glueitem, glueport, gluepos = self.get_item_at_point(view, (event.x, event.y), list())
-		if glueport and hasattr(glueport,"point"):
-			line = self._create_line(context,event.x, event.y)
-			canvas.get_matrix_i2c(line, calculate=True)
-			self._new_item = line
-			view.focused_item = line
-			del view.selected_items
-			context.grab()
-
-			h_glue = line.handles()[self._handle_index_glued]
-			self.connect(view,line,h_glue, (event.x, event.y))
-
-			h_drag = line.handles()[self._handle_index_dragged]
-			self._handle_tool.grab_handle(line, h_drag)
-			self._grabbed_handle = h_drag
-			self._grabbed_item = line
+		glueitem,glueport,gluepos = self.view.get_port_at_point((event.x,event.y),distance = 10,exclude = [])
+		
+		if glueport:
+			self.line = self._create_line((event.x, event.y))
+			self._new_item = self.line
+			h_glue = self.line.handles()[self._handle_index_glued]
+			self.connect(self.line,h_glue,(event.x,event.y))
+			self.post_connect(self.line,h_glue,None,glueport)
+			#print "Conn.Tool L40\n"
 			
-			print "STARTED NEW CONNECTOR"
-			return True
+			h_drag = self.line.handles()[self._handle_index_dragged]
+			self._handle_tool.grab_handle(self.line, h_drag)
+			self.grabbed_handle = h_drag
+			self.grabbed_item = self.line
+			
+		return True
 
-	def _create_line(self, context, x, y):
-		view = context.view
-		canvas = view.canvas
+	def on_button_release(self,event):
+
+		dragitem,dragport,dragpos = self.view.get_port_at_point((event.x,event.y),distance = 10,exclude = [])
+		
+		try:
+			if dragport:
+				h_drag = self.line.handles()[self._handle_index_dragged]
+				self.post_connect(self.line,h_drag,None,dragport)
+		finally:
+			return super(ConnectorTool, self).on_button_release(event)
+		
+		
+	def _create_line(self, (x, y)):
+		canvas = self.view.canvas
 		line = BlockLine()
 		#line.orthogonal = True
 		line.fuzziness = 5
 		canvas.add(line)
-		x, y = view.get_matrix_v2i(line).transform_point(x, y)
+		x, y = self.view.get_matrix_v2i(line).transform_point(x, y)
 		line.matrix.translate(x, y)
 		return line
-

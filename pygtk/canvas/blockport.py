@@ -11,6 +11,6 @@ class BlockPort(PointPort):
 	"""
 	
 	def __init__(self, blockinstance, portname):
-		super(BlockPort,self).__init__(Position((0,0),strength=WEAK))
+		super(BlockPort,self).__init__(Position((0,0)))
 		self.portinstance = blockinstance.ports[portname]
 
