@@ -65,6 +65,8 @@ METHOD on_load;
 	RUN reset;
 	RUN values;
 	RUN default_self;
+	SOLVER QRSlv;
+	OPTION iterationlimit 50;
 END on_load;
 END fourbar;
 	
