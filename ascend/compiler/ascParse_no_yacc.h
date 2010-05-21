@@ -1,27 +1,37 @@
-/* A Bison parser, made by GNU Bison 2.1.  */
 
-/* Skeleton parser for Yacc-like parsing with Bison,
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+/* A Bison parser, made by GNU Bison 2.4.1.  */
 
-   This program is free software; you can redistribute it and/or modify
+/* Skeleton interface for Bison's Yacc-like parsers in C
+   
+      Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
+   Free Software Foundation, Inc.
+   
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
+   
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-/* As a special exception, when this file is copied by Bison into a
-   Bison output file, you may use that output file without restriction.
-   This special exception was added by the Free Software Foundation
-   in version 1.24 of Bison.  */
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
+   
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -88,54 +98,57 @@
      NOT_TOK = 314,
      NOTES_TOK = 315,
      OF_TOK = 316,
-     OR_TOK = 317,
-     OTHERWISE_TOK = 318,
-     OUTPUT_TOK = 319,
-     PATCH_TOK = 320,
-     PROD_TOK = 321,
-     PROVIDE_TOK = 322,
-     REFINES_TOK = 323,
-     REPLACE_TOK = 324,
-     REQUIRE_TOK = 325,
-     RETURN_TOK = 326,
-     RUN_TOK = 327,
-     SATISFIED_TOK = 328,
-     SELECT_TOK = 329,
-     SIZE_TOK = 330,
-     STOP_TOK = 331,
-     SUCHTHAT_TOK = 332,
-     SUM_TOK = 333,
-     SWITCH_TOK = 334,
-     THEN_TOK = 335,
-     TRUE_TOK = 336,
-     UNION_TOK = 337,
-     UNITS_TOK = 338,
-     UNIVERSAL_TOK = 339,
-     WHEN_TOK = 340,
-     WHERE_TOK = 341,
-     WHILE_TOK = 342,
-     WILLBE_TOK = 343,
-     WILLBETHESAME_TOK = 344,
-     WILLNOTBETHESAME_TOK = 345,
-     ASSIGN_TOK = 346,
-     CASSIGN_TOK = 347,
-     DBLCOLON_TOK = 348,
-     USE_TOK = 349,
-     LEQ_TOK = 350,
-     GEQ_TOK = 351,
-     NEQ_TOK = 352,
-     DOTDOT_TOK = 353,
-     WITH_TOK = 354,
-     VALUE_TOK = 355,
-     WITH_VALUE_T = 356,
-     REAL_TOK = 357,
-     INTEGER_TOK = 358,
-     IDENTIFIER_TOK = 359,
-     BRACEDTEXT_TOK = 360,
-     SYMBOL_TOK = 361,
-     DQUOTE_TOK = 362,
-     UPLUS_TOK = 363,
-     UMINUS_TOK = 364
+     OPTION_TOK = 317,
+     OR_TOK = 318,
+     OTHERWISE_TOK = 319,
+     OUTPUT_TOK = 320,
+     PATCH_TOK = 321,
+     PROD_TOK = 322,
+     PROVIDE_TOK = 323,
+     REFINES_TOK = 324,
+     REPLACE_TOK = 325,
+     REQUIRE_TOK = 326,
+     RETURN_TOK = 327,
+     RUN_TOK = 328,
+     SATISFIED_TOK = 329,
+     SELECT_TOK = 330,
+     SIZE_TOK = 331,
+     SOLVE_TOK = 332,
+     SOLVER_TOK = 333,
+     STOP_TOK = 334,
+     SUCHTHAT_TOK = 335,
+     SUM_TOK = 336,
+     SWITCH_TOK = 337,
+     THEN_TOK = 338,
+     TRUE_TOK = 339,
+     UNION_TOK = 340,
+     UNITS_TOK = 341,
+     UNIVERSAL_TOK = 342,
+     WHEN_TOK = 343,
+     WHERE_TOK = 344,
+     WHILE_TOK = 345,
+     WILLBE_TOK = 346,
+     WILLBETHESAME_TOK = 347,
+     WILLNOTBETHESAME_TOK = 348,
+     ASSIGN_TOK = 349,
+     CASSIGN_TOK = 350,
+     DBLCOLON_TOK = 351,
+     USE_TOK = 352,
+     LEQ_TOK = 353,
+     GEQ_TOK = 354,
+     NEQ_TOK = 355,
+     DOTDOT_TOK = 356,
+     WITH_TOK = 357,
+     VALUE_TOK = 358,
+     WITH_VALUE_T = 359,
+     REAL_TOK = 360,
+     INTEGER_TOK = 361,
+     IDENTIFIER_TOK = 362,
+     BRACEDTEXT_TOK = 363,
+     SYMBOL_TOK = 364,
+     DQUOTE_TOK = 365,
+     UPLUS_TOK = 366,
+     UMINUS_TOK = 367
    };
 #endif
 /* Tokens.  */
@@ -198,61 +211,68 @@
 #define NOT_TOK 314
 #define NOTES_TOK 315
 #define OF_TOK 316
-#define OR_TOK 317
-#define OTHERWISE_TOK 318
-#define OUTPUT_TOK 319
-#define PATCH_TOK 320
-#define PROD_TOK 321
-#define PROVIDE_TOK 322
-#define REFINES_TOK 323
-#define REPLACE_TOK 324
-#define REQUIRE_TOK 325
-#define RETURN_TOK 326
-#define RUN_TOK 327
-#define SATISFIED_TOK 328
-#define SELECT_TOK 329
-#define SIZE_TOK 330
-#define STOP_TOK 331
-#define SUCHTHAT_TOK 332
-#define SUM_TOK 333
-#define SWITCH_TOK 334
-#define THEN_TOK 335
-#define TRUE_TOK 336
-#define UNION_TOK 337
-#define UNITS_TOK 338
-#define UNIVERSAL_TOK 339
-#define WHEN_TOK 340
-#define WHERE_TOK 341
-#define WHILE_TOK 342
-#define WILLBE_TOK 343
-#define WILLBETHESAME_TOK 344
-#define WILLNOTBETHESAME_TOK 345
-#define ASSIGN_TOK 346
-#define CASSIGN_TOK 347
-#define DBLCOLON_TOK 348
-#define USE_TOK 349
-#define LEQ_TOK 350
-#define GEQ_TOK 351
-#define NEQ_TOK 352
-#define DOTDOT_TOK 353
-#define WITH_TOK 354
-#define VALUE_TOK 355
-#define WITH_VALUE_T 356
-#define REAL_TOK 357
-#define INTEGER_TOK 358
-#define IDENTIFIER_TOK 359
-#define BRACEDTEXT_TOK 360
-#define SYMBOL_TOK 361
-#define DQUOTE_TOK 362
-#define UPLUS_TOK 363
-#define UMINUS_TOK 364
+#define OPTION_TOK 317
+#define OR_TOK 318
+#define OTHERWISE_TOK 319
+#define OUTPUT_TOK 320
+#define PATCH_TOK 321
+#define PROD_TOK 322
+#define PROVIDE_TOK 323
+#define REFINES_TOK 324
+#define REPLACE_TOK 325
+#define REQUIRE_TOK 326
+#define RETURN_TOK 327
+#define RUN_TOK 328
+#define SATISFIED_TOK 329
+#define SELECT_TOK 330
+#define SIZE_TOK 331
+#define SOLVE_TOK 332
+#define SOLVER_TOK 333
+#define STOP_TOK 334
+#define SUCHTHAT_TOK 335
+#define SUM_TOK 336
+#define SWITCH_TOK 337
+#define THEN_TOK 338
+#define TRUE_TOK 339
+#define UNION_TOK 340
+#define UNITS_TOK 341
+#define UNIVERSAL_TOK 342
+#define WHEN_TOK 343
+#define WHERE_TOK 344
+#define WHILE_TOK 345
+#define WILLBE_TOK 346
+#define WILLBETHESAME_TOK 347
+#define WILLNOTBETHESAME_TOK 348
+#define ASSIGN_TOK 349
+#define CASSIGN_TOK 350
+#define DBLCOLON_TOK 351
+#define USE_TOK 352
+#define LEQ_TOK 353
+#define GEQ_TOK 354
+#define NEQ_TOK 355
+#define DOTDOT_TOK 356
+#define WITH_TOK 357
+#define VALUE_TOK 358
+#define WITH_VALUE_T 359
+#define REAL_TOK 360
+#define INTEGER_TOK 361
+#define IDENTIFIER_TOK 362
+#define BRACEDTEXT_TOK 363
+#define SYMBOL_TOK 364
+#define DQUOTE_TOK 365
+#define UPLUS_TOK 366
+#define UMINUS_TOK 367
 
 
 
 
-#if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 304 "ascend\\compiler\\ascParse.y"
-typedef union YYSTYPE {
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+typedef union YYSTYPE
+{
+
+/* Line 1676 of yacc.c  */
+#line 304 "ascend/compiler/ascParse.y"
+
   double real_value;
   long   int_value;
   struct fraction frac_value;
@@ -278,15 +298,17 @@ typedef union YYSTYPE {
   dim_type dimen;
   enum ForOrder order;
   enum ForKind fkind;
+
+
+
+/* Line 1676 of yacc.c  */
+#line 306 "ascend/compiler/ascParse.h"
 } YYSTYPE;
-/* Line 1447 of yacc.c.  */
-#line 284 "ascend\\compiler\\ascParse.h"
+# define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
 #endif
 
 extern YYSTYPE zz_lval;
-
 
 
