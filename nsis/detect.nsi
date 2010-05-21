@@ -109,7 +109,7 @@ Function DetectTcl
 		StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
 		ReadRegStr $R8 HKCU $R7 ""		
 	${EndIf}
-
+	
 	${If} $R8 == ''
 		Push "No value for $R7"
 		Push "NOK"

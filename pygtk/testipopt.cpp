@@ -9,17 +9,15 @@ using namespace std;
 int main(void){
 
 	Library L;
-	L.load("test/ipopt/test1.a4c");
-	Type t = L.findType("test1");
-	cerr << "Type = " << t.getName() << endl;
+	L.load("test/ipopt/test2.a4c");
+	Type t = L.findType("test2");
 	Simulation S = t.getSimulation("S");
-	
-	S.build();
-	
-	cerr << "About to solve..." << endl;
-	S.run(t.getMethod("bound_self"));
-	S.run(t.getMethod("default_self"));
 	SolverReporter R;
-	S.solve(Solver("IPOPT"),R);
+	try{
+		S.solve(Solver("IPOPT"),R);
+	}catch(runtime_error &e){
+		cerr << "ERROR in solving:" << e.what() << endl;
+		exit(1);
+	}
 	S.run(t.getMethod("self_test"));
 }

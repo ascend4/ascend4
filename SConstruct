@@ -42,7 +42,7 @@ default_tk_lib = "tk8.5"
 default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
 default_ipopt_libpath = "$IPOPT_PREFIX/lib"
-default_ipopt_dll = "$IPOPT_LIBPATH/ipopt38.dll"
+default_ipopt_dll = "$IPOPT_LIBPATH/Ipopt38.dll"
 default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
 default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
@@ -90,7 +90,7 @@ if platform.system()=="Windows":
 	
 	# IPOPT
 	default_ipopt_libpath = "$IPOPT_PREFIX/lib/win32/release"
-	default_ipopt_libs = ["ipopt"]
+	default_ipopt_libs = ["Ipopt"]
 
 	# where to look for CONOPT when compiling
 	default_conopt_prefix = "c:\\Program Files\\CONOPT"
@@ -2896,6 +2896,7 @@ if with_installer:
 	})
 	installer = env.Installer('nsis/installer.nsi')
 	env.Depends(installer,["pygtk","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
+	env.Depends(installer,[os.path.normpath(env['IPOPT_DLL'])])
 	env.Alias('installer',installer)
 else:
 	print "Skipping... Windows installer isn't being built:",without_installer_reason
@@ -2983,8 +2984,8 @@ if with_tcltk:
 	default_targets.append('tcltk')
 if with_python:
 	default_targets.append('pygtk')
-if with_installer:
-	default_targets.append('installer')
+#if with_installer:
+#	default_targets.append('installer')
 if with_extfns:
 	default_targets.append('extfns')
 if with_doc_build:
