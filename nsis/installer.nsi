@@ -115,10 +115,10 @@ Var /GLOBAL ASCENDINIFOUND
 !define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/${PYGTK_VER}/${PYGTK_FN}"
 !define PYGTK_CMD "$DAI_TMPFILE"
 
-!define TCL_VERSION "8.4.15"
-!define TCL_PATCH ".0.280619"
+!define TCL_VERSION "8.5.8.2"
+!define TCL_PATCH ".292682"
 !define TCL_FN "ActiveTcl${TCL_VERSION}${TCL_PATCH}-win32-ix86-threaded.exe"
-!define TCL_URL "http://downloads.activestate.com/ActiveTcl/Windows/${TCL_VERSION}/${TCL_FN}"
+!define TCL_URL "http://downloads.activestate.com/ActiveTcl/releases/${TCL_VERSION}/${TCL_FN}"
 !define TCL_CMD "$DAI_TMPFILE"
 !include "download.nsi"
 
