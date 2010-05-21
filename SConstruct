@@ -66,8 +66,8 @@ if platform.system()=="Windows":
 	default_cpppath="$DEFAULT_PREFIX\\include"	
 
 	# these correspond the the version of Tcl/Tk linked to in the NSIS scripts
-	default_tcl_lib = "tcl84"
-	default_tk_lib = "tk84"
+	default_tcl_lib = "tcl85"
+	default_tk_lib = "tk85"
 	default_tktable_lib = "Tktable28"
 
 	default_install_assets = "glade/"
