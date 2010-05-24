@@ -26,12 +26,15 @@ class ConnectorTool(BlockConnectTool):
 		self.motion_handle = None
 
 	def on_button_press(self,event):		
+		
 		if event.button != 1:
 			return False
 
 		glueitem,glueport,gluepos = self.view.get_port_at_point((event.x,event.y),distance = 10,exclude = [])
 		
-		if glueport:
+		if glueport and hasattr(glueport,"point"):
+			
+			#print "Conn.Tool L36\n: "glueitem,glueport,gluepos
 			self.line = self._create_line((event.x, event.y))
 			self._new_item = self.line
 			h_glue = self.line.handles()[self._handle_index_glued]
@@ -44,7 +47,7 @@ class ConnectorTool(BlockConnectTool):
 			self.grabbed_handle = h_drag
 			self.grabbed_item = self.line
 			
-		return True
+			return True
 
 	def on_button_release(self,event):
 
