@@ -38,10 +38,6 @@
 %#endif
 }
 
-%template(VariableVector) std::vector<Variable>;
-%template(RelationVector) std::vector<Relation>;
-%template(SolverVector) std::vector<Solver>;
-
 %ignore registerSolver;
 %ignore registerStandardSolvers;
 %include "solver.h"
@@ -220,11 +216,12 @@ public:
 	}
 }
 
+//%include "relation.h"
 class Relation{
 public:
 	explicit Relation(const Relation &old);
 	const std::string getName();
-	const double &getResidual();
+	double getResidual() const;
 	const std::vector<Variable> getIncidentVariables() const;
 	const int getNumIncidentVariables() const;
 	Instanc getInstance() const;
@@ -238,6 +235,9 @@ public:
 	}
 }
 
+%template(VariableVector) std::vector<Variable>;
+%template(RelationVector) std::vector<Relation>;
+%template(SolverVector) std::vector<Solver>;
 
 class SolverStatus{
 public:
