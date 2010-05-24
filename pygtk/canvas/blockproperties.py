@@ -142,17 +142,29 @@ class BlockProperties:
 		
 		methodvbox = gtk.VBox(homogeneous=True)
 		methodframe = gtk.Frame("Enter your custom METHODs for the block below")
-		methodentry = gtksourceview.View()
-		methodentry.set_show_line_numbers(True) 
-		self.sb = gtksourceview.Buffer()
-		self.sb.set_highlight_matching_brackets(True)
-		self.sb.set_highlight_syntax(True)
-		self.sb.set_text(bi.usercode)
-		methodentry.set_buffer(self.sb)
+		
+		self.sourceviewView = gtksourceview.View()
+		self.sourceviewView.set_show_line_numbers(True) 
+		
+		self.sourceviewLangman = gtksourceview.language_manager_get_default()
+		
+		op = self.sourceviewLangman.get_search_path()
+		op.append(os.path.join('..','..','tools','gtksourceview-2.0'))
+		self.sourceviewLangman.set_search_path(op)
+		
+		self.sourceviewLang = self.sourceviewLangman.get_language('ascend')
+		
+		self.sourceviewBuff = gtksourceview.Buffer()
+		self.sourceviewBuff.set_language(self.sourceviewLang)
+		
+		self.sourceviewBuff.set_highlight_syntax(True)
+		self.sourceviewBuff.set_text(bi.usercode)
+		
+		self.sourceviewView.set_buffer(self.sourceviewBuff)
 		scrolled_window2 = gtk.ScrolledWindow()
 		scrolled_window2.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 		label = gtk.Label("Custom Method")
-		methodframe.add(methodentry)
+		methodframe.add(self.sourceviewView)
 		scrolled_window2.add_with_viewport(methodframe)
 		self.notebook.append_page(scrolled_window2, label)
 		
@@ -228,9 +240,9 @@ class BlockProperties:
 			item.blockinstance.name = self.pname.get_text()			
 			v.value = str(self.textbox[v.name].get_text())
 
-		startiter = self.sb.get_start_iter()
-		enditer = self.sb.get_end_iter()
-		usertext = self.sb.get_text(startiter, enditer)	
+		startiter = self.sourceviewBuff.get_start_iter()
+		enditer = self.sourceviewBuff.get_end_iter()
+		usertext = self.sourceviewBuff.get_text(startiter, enditer)	
 		if usertext == "" :
 			pass
 		else:	
