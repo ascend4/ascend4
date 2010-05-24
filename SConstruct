@@ -1148,10 +1148,7 @@ def CheckSwigVersion(context):
 	
 	msg = "too old"
 	res = False
-	if maj ==1 and min == 3 and (pat == 40 or pat == 39):
-		msg = "WARNING: buggy version, see the ASCEND wiki. Suggest: try version 1.3.36"
-		res = True
-	elif maj == 1 and (
+	if maj == 1 and (
 			min > 3
 			or (min == 3 and pat >= 24)
 		):
