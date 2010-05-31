@@ -52,8 +52,8 @@ ARE_THE_SAME
 ARE_NOT_THE_SAME
 ASSERT
 ATOM
-CALL	
-CASE	
+CALL
+CASE
 CARD
 CHECK
 CHOICE
@@ -86,9 +86,10 @@ MIN
 MINIMIZE
 MODEL
 NOTES
-OUTPUT
+OPTION
 OR
 OTHERWISE
+OUTPUT
 PROVIDE
 PROD
 REPLACE
@@ -98,7 +99,8 @@ RUN
 SATISFIED
 SELECT
 SELF
-STUDY
+SOLVE
+SOLVER
 STOP
 SUCH_THAT
 SUM
@@ -190,7 +192,7 @@ scale_self
 reset
 
 [Keywords 4]
-;;; builtin constants		
+;;; builtin constants
 FALSE
 TRUE
 real_constant
@@ -213,7 +215,7 @@ solver_int
 relaxed
 is_zero
 solver_binary
-solver_semi		
+solver_semi
 
 [Keywords 5]
 ;;; math functions
