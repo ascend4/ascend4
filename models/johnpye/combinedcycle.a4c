@@ -102,76 +102,78 @@ END on_load;
 
 METHOD moran_ex_9_13;
 	RUN ClearAll;
-	FIX Wdot;
-	Wdot := 45 {MW};
+	FIX Wdot; Wdot := 45 {MW};
 
 	FIX GC.inlet.T, GC.inlet.p;
 	GC.inlet.T := 300 {K};
 	GC.inlet.p := 100 {kPa};
-	FIX GC.eta;
-	GC.eta := 0.84;
+
 	FIX GC.outlet.p;
 	GC.outlet.p := 1200 {kPa};
-	FIX BU.outlet.T;
-	BU.outlet.T := 1400 {K};
-	FIX GT.eta, GT.outlet.p;
-	GT.eta := 0.88;
-	GT.outlet.p := 100 {kPa};
-	FIX HE.outlet.T;
-	HE.outlet.T := 400 {K};
+
+	FIX GC.eta; GC.eta := 0.84;
+
+	FIX BU.outlet.T; BU.outlet.T := 1400 {K};
+
+	FIX GT.eta; GT.eta := 0.88;
+
+	(* GT.outlet.p := 100 {kPa};*)
+	FIX HE.outlet.T; HE.outlet.T := 400 {K};
 	
 	FIX TU.inlet.T, TU.inlet.p;
 	TU.inlet.T := 400 {K} +  273.15 {K};
 	TU.inlet.p := 8 {MPa};
-	FIX TU.eta;
-	TU.eta := 0.90;
-	FIX CO.outlet.p;
-	CO.outlet.p := 8 {kPa};
-	FIX PU.eta;
-	PU.eta := 0.8;
+	FIX TU.outlet.p; TU.outlet.p := 8 {kPa};
+
+	FIX PU.inlet.x;
+	PU.inlet.x := 0.0001;
+
+	FIX TU.eta; TU.eta := 0.90;
+	FIX PU.eta; PU.eta := 0.8;
 
 	HE.outlet_cold.h := 3000 {kJ/kg};
+
+	(* assumed *)
 	FIX BU.eta;
 	BU.eta := 1;
 
-	FIX CO.outlet.x;
-	CO.outlet.x := 0.001;
-
+	(* starting guess, for easy solving *)
 	HE.outlet_cold.h := 3000 {kJ/kg};
 END moran_ex_9_13;
 
 METHOD cengel_ex_10_9;
 	RUN ClearAll;
-	FIX Wdot;
-	Wdot := 100 {MW};
+	FIX Wdot; Wdot := 100 {MW};
 
-	FIX braytonpressureratio;
-	braytonpressureratio := 8;
-	FIX GC.inlet.p, GC.inlet.T;
-	GC.inlet.p := 1 {atm};
-	GC.inlet.T := 300 {K};
-	FIX GT.inlet.T;
-	GT.inlet.T := 1300 {K};
+	FIX GC.inlet.p; GC.inlet.p := 1 {atm}; (* assumed *)
+
+	FIX braytonpressureratio; braytonpressureratio := 8;
+
+	FIX GC.inlet.T; GC.inlet.T := 300 {K};
+	FIX GT.inlet.T; GT.inlet.T := 1300 {K};
+
 	FIX GC.eta; GC.eta := 0.8;
 	FIX GT.eta; GT.eta := 0.85;
-	
-	FIX TU.inlet.p, CO.outlet.p;
-	TU.inlet.p := 7 {MPa};
-	CO.outlet.p := 5 {kPa};
-	FIX CO.outlet.x;
-	CO.outlet.x := 0.001;
-	FIX TU.inlet.T;
-	TU.inlet.T := 500 {K} +  273.15 {K};
-	FIX DI.inlet.T;
-	DI.inlet.T := 450 {K};
 
-	FIX BU.eta; BU.eta := 1;
+	FIX TU.inlet.p; TU.inlet.p := 7 {MPa};
+	FIX CO.outlet.p; CO.outlet.p := 5 {kPa};
+
+	FIX TU.inlet.T; TU.inlet.T := 500 {K} +  273.15 {K};
+	FIX DI.inlet.T; DI.inlet.T := 450 {K};
+
+	(* 'complete' condensation... bit of a hack *)
+	FIX CO.outlet.x; CO.outlet.x := 0.0001;
+
+	(* 'simple ideal Rankine cycle *)
 	FIX TU.eta; TU.eta := 1;
+	FIX BU.eta; BU.eta := 1;
 	FIX PU.eta; PU.eta := 1;
 
+	(* first guess, for easy solving *)
 	HE.outlet_cold.h := 3000 {kJ/kg};
-
 END cengel_ex_10_9;
 
-END combinedcycle;	
+END combinedcycle;
+
+
 
