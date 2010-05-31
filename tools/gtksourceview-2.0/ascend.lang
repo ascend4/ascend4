@@ -145,6 +145,7 @@
 					<keyword>MODEL</keyword>
 					<keyword>NOTES</keyword>
 					<keyword>OF</keyword>
+					<keyword>OPTION</keyword>
 					<keyword>OR</keyword>
 					<keyword>OTHERWISE</keyword>
 					<keyword>OUTPUT</keyword>
@@ -157,7 +158,8 @@
 					<keyword>SATISFIED</keyword>
 					<keyword>SELECT</keyword>
 					<keyword>SELF</keyword>
-					<keyword>STUDY</keyword>
+					<keyword>SOLVER</keyword>
+					<keyword>SOLVE</keyword>
 					<keyword>SUCH_THAT</keyword>
 					<keyword>SUM</keyword>
 					<keyword>SWITCH</keyword>
