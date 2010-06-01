@@ -138,7 +138,7 @@ MODEL ideal_air_table REFINES ideal_gas_base;
 	dataparams IS_A drconf;
 	dataparams.filename :== 'johnpye/idealair.csv';
 	dataparams.format :== 'CSV';
-	dataparams.parameters :== '1,4,5';
+	dataparams.parameters :== '1,4,6';
 	
 	s0 IS_A specific_entropy;	
 	u IS_A specific_energy;
