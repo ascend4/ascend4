@@ -82,7 +82,7 @@ END simple_ideal_air;
 	Ideal air, using a quartic polynomial for c_p as given in Moran & Shapiro
 	4th Ed.
 *)
-MODEL ideal_air REFINES ideal_gas_base;
+MODEL ideal_air_poly REFINES ideal_gas_base;
 	M :== 28.958600656 {kg/kmol};
 
 	a[0..4] IS_A real_constant;
@@ -123,13 +123,42 @@ METHOD on_load;
 	T := 200 {K};
 	p := 1 {bar};
 END on_load;	
-END ideal_air;
+END ideal_air_poly;
 
+IMPORT "johnpye/datareader/datareader";
+MODEL drconf;
+	filename IS_A symbol_constant;
+	format IS_A symbol_constant;
+	parameters IS_A symbol_constant;
+END drconf;
+	
+MODEL ideal_air_table REFINES ideal_gas_base;
+	M :== 28.958600656 {kg/kmol};
+
+	dataparams IS_A drconf;
+	dataparams.filename :== 'johnpye/idealair.csv';
+	dataparams.format :== 'CSV';
+	dataparams.parameters :== '1,4,5';
+	
+	s0 IS_A specific_entropy;	
+	u IS_A specific_energy;
+
+	data: datareader(
+		T : INPUT;
+		u, s0 :OUTPUT;
+		dataparams : DATA
+	);
+
+	h = u + R * T; 
+
+	s = s0 - R * ln(p/p_ref);
+END ideal_air_table;
+	
 (*
 	Thermo properties
 *)
 MODEL state;
-	air IS_A ideal_air;
+	air IS_A ideal_air_table;
 	p ALIASES air.p;
 	T ALIASES air.T;
 	h ALIASES air.h;
