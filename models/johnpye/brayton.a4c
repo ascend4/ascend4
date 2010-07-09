@@ -158,7 +158,7 @@ END ideal_air_table;
 	Thermo properties
 *)
 MODEL state;
-	air IS_A ideal_air_table;
+	air IS_A ideal_air_poly;
 	p ALIASES air.p;
 	T ALIASES air.T;
 	h ALIASES air.h;
