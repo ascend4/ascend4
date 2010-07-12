@@ -14,6 +14,9 @@ else:
 		,CPPPATH=["#/../../.."]
 	)
 
+if WhereIs('gsl-config'):
+	env.ParseConfig(['gsl-config','--libs','--cflags'])
+
 srcs = ['mbwr.c','asc_mbwr.c']
 
 env.SharedLibrary('mbwr_ascend',srcs)
