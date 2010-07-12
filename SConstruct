@@ -2865,13 +2865,13 @@ if env.get('CAN_INSTALL'):
 			gtkfiles += Glob("%s/*" % dirname)
 		os.path.walk(gtksource,visit,gtkfiles)
 		
-		print "GTKFILES ="
-
+		#print "GTKFILES ="
+#
 		for f in gtkfiles:
 			r = os.path.commonprefix([gtksource,f.path])
 			dirname,filename = os.path.split(f.path[len(r):])
 			dest = os.path.join(env.subst("$INSTALL_ROOT$INSTALL_BIN/PyGTK.bundle"),dirname)
-			print "%s --> %s" %(f,dest)
+		#	print "%s --> %s" %(f,dest)
 			env.Install(Dir(dest),f)
 
 	# ALIAS FOR ALL INSTALLATION
