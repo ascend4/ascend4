@@ -243,79 +243,84 @@ void ExecuteInitRun(struct procFrame *fm, struct Statement *stat)
 */
 static void
 execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
-  CONST struct VariableList *vars;
-  enum find_errors e;
-  struct gl_list_t *temp;
-  unsigned i, len;
-  struct Instance *i1, *i2;
-  char *instname;
-  struct TypeDescription *t, *st;
-  CONST struct Name *name;
-  symchar *fixed;
-  /* setup */
-  fixed = AddSymbol("fixed");
-  st = FindType(AddSymbol("solver_var"));
-  if(st==NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"'solver_var' type is not yet in library");
-	fm->ErrNo = Proc_type_not_found;
-    return;
-  }
+	CONST struct VariableList *vars;
+	enum find_errors e;
+	struct gl_list_t *temp;
+	unsigned i, len;
+	struct Instance *i1, *i2;
+	//char *instname;
+	struct TypeDescription *t, *st;
+	CONST struct Name *name;
+	symchar *fixed;
+	/* setup */
+	fixed = AddSymbol("fixed");
+	st = FindType(AddSymbol("solver_var"));
+	if(st==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"'solver_var' type is not yet in library");
+		fm->ErrNo = Proc_type_not_found;
+		return;
+	}
 
-  /* iterate through the variable list */
-  /*CONSOLE_DEBUG("STARTING 'FIX'/'FREE' STATEMENT EXECUTION");*/
-  vars = stat->v.fx.vars;
-  while(vars!=NULL){
-    name = NamePointer(vars);
-    temp = FindInstances(fm->i, name, &e);
-    if(temp==NULL){
-	  fm->ErrNo = Proc_bad_name;
-      return;
-    }
-    len = gl_length(temp);
-    for(i=1; i<=len; i++){
-    	i1 = (struct Instance *)gl_fetch(temp,i);
-	instname = WriteInstanceNameString(i1,NULL);
-	/*if(val){
-		CONSOLE_DEBUG("ABOUT TO FIX %s",instname);
-	}else{
-		CONSOLE_DEBUG("ABOUT TO FREE %s",instname);
-	}*/
-	ascfree(instname);
-	gl_destroy(temp);
+#ifdef FIXFREE_DEBUG
+	CONSOLE_DEBUG("STARTING 'FIX'/'FREE' EXECUTION...");
+	WriteStatement(ASCERR,stat,4);
+#endif
 
-	if(InstanceKind(i1)!=REAL_ATOM_INST){
-	  fm->ErrNo = Proc_illegal_type_use;
-	  ProcWriteFixError(fm,name);
-	  return;
+	/* iterate through the variable list */
+	vars = stat->v.fx.vars;
+	while(vars!=NULL){
+		name = NamePointer(vars);
+		temp = FindInstances(fm->i, name, &e);
+		if(temp==NULL){
+			fm->ErrNo = Proc_bad_name;
+			return;
+		}
+		len = gl_length(temp);
+		for(i=1; i<=len; i++){
+			i1 = (struct Instance *)gl_fetch(temp,i);
+#ifdef FIXFREE_DEBUG
+			instname = WriteInstanceNameString(i1,NULL);
+			if(val){
+				CONSOLE_DEBUG("ABOUT TO FIX %s",instname);
+			}else{
+				CONSOLE_DEBUG("ABOUT TO FREE %s",instname);
+			}
+			ascfree(instname);
+#endif
+			if(InstanceKind(i1)!=REAL_ATOM_INST){
+				fm->ErrNo = Proc_illegal_type_use;
+				ProcWriteFixError(fm,name);
+				return;
+			}
+			t = InstanceTypeDesc(i1);
+			if(!MoreRefined(t,st)){
+				CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a refined solver_var.");
+				fm->ErrNo = Proc_illegal_type_use;
+				ProcWriteFixError(fm,name);
+				return;
+			}
+			i2 = ChildByChar(i1,fixed);
+			if(i2==NULL){
+				CONSOLE_DEBUG("Attempted to FIX or FREE a solver_var that doesn't have a 'fixed' child!");
+				fm->ErrNo = Proc_illegal_type_use;
+				ProcWriteFixError(fm,name);
+				return;
+			}
+			if(InstanceKind(i2)!=BOOLEAN_INST){
+				CONSOLE_DEBUG("Attempted to FIX or FREE a solver_var whose 'fixed' child is not boolean!");
+				fm->ErrNo = Proc_illegal_type_use;
+				ProcWriteFixError(fm,name);
+				return;
+			}
+			SetBooleanAtomValue(i2,val,0);
+		}
+		gl_destroy(temp);
+		vars = NextVariableNode(vars);
 	}
-	t = InstanceTypeDesc(i1);
-	if(!MoreRefined(t,st)){
-	  CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a refined solver_var.");
-	  fm->ErrNo = Proc_illegal_type_use;
-	  ProcWriteFixError(fm,name);
-	  return;
-	}
-	i2 = ChildByChar(i1,fixed);
-	if(i2==NULL){
-	  CONSOLE_DEBUG("Attempted to FIX or FREE a solver_var that doesn't have a 'fixed' child!");
-	  fm->ErrNo = Proc_illegal_type_use;
-	  ProcWriteFixError(fm,name);
-	  return;
-	}
-	if(InstanceKind(i2)!=BOOLEAN_INST){
-	  CONSOLE_DEBUG("Attempted to FIX or FREE a solver_var whose 'fixed' child is not boolean!");
-	  fm->ErrNo = Proc_illegal_type_use;
-	  ProcWriteFixError(fm,name);
-	  return;
-	}
-	SetBooleanAtomValue(i2,val,0);
-    }
-    vars = NextVariableNode(vars);
-  }
-  /* CONSOLE_DEBUG("DONE WITH VARLIST"); */
+	/* CONSOLE_DEBUG("DONE WITH VARLIST"); */
 
-  /* return 'ok' */
-  fm->ErrNo = Proc_all_ok;
+	/* return 'ok' */
+	fm->ErrNo = Proc_all_ok;
 }
 
 static void
