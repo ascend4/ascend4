@@ -357,7 +357,7 @@ a4lnobkp:
 		WriteRegStr HKCR "ASCEND.model\DefaultIcon" "" "$INSTDIR\ascend-doc.ico"
 
 a4cskip:
-		WriteRegStr HKCR "ASCEND.model\shell\open\command" "" '$PYPATH\pythonw.exe "$INSTDIR\ascend" "%1"'
+		WriteRegStr HKCR "ASCEND.model\shell\open\command" "" '$PYPATH\python.exe "$INSTDIR\ascend" "%1"'
 
 		System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
 
@@ -406,7 +406,7 @@ Section "Start Menu Shortcuts" sect_menu
 
 	; Link to PyGTK GUI
 	${If} $PYINSTALLED == "1"
-		CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$PYPATH\pythonw.exe" '"$INSTDIR\ascend"' "$INSTDIR\ascend.ico" 0
+		CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$PYPATH\python.exe" '"$INSTDIR\ascend"' "$INSTDIR\ascend.ico" 0
 	${EndIf}
 
 	; Model library shortcut
