@@ -5,7 +5,7 @@ D = fprops.helmholtz_data_carbondioxide;
 from pylab import *
 hold(1)
 
-TT = array([217, 230,240,250,260,280,300],'float')
+TT = array([217, 230,240,250,260,280,290,300,310,350],'float')
 L = []
 
 for T in TT:
@@ -18,7 +18,7 @@ for T in TT:
 
 xlabel('Density')
 ylabel('Pressure')
-#legend(L)
+legend(L)
 
 axis([10,1200,1.,1e6 * D.p_c])
 #axis([0,1000,0,100e6])
