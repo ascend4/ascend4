@@ -5,7 +5,8 @@ import os.path
 global have_gtk
 have_gtk = False
 
-print "PYTHON PATH =",sys.path
+if not sys.executable.endswith("pythonw.exe"):
+	print "PYTHON PATH =",sys.path
 
 try:
 	import pygtk 
@@ -126,7 +127,8 @@ class LoadingWindow:
 	
 	def print_status(self,status,msg=None):
 		if self.is_loading:
-			print status
+			if not sys.executable.endswith("pythonw.exe"):
+				print status
 			self.label.set_text(status)
 			if msg is not None:
 				try:
