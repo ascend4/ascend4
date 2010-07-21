@@ -5,7 +5,9 @@ Version 0.9.8
  - Added new SOLVER, OPTION and SOLVE commands for use in METHODS, see
    http://tinyurl.com/slvreq for full details (john)
  - Added support for viewing ALIASES lists in the PyGTK GUI (john)
- - Fixed a couple of minor memory leaks (john)
+ - Fixed crash due to console output with when starting with pythonw on
+   Windows.
+ - Fixed a couple of minor memory leaks and too-early freeing (john)
  - Rewrote Simulation::solve to respect solver-imposed iteration limits (john)
  - Reduced QRSlv time limit to 20 seconds (down from 1500 s).
  - Added ASCEND syntax highlighting capability for several new text editors
