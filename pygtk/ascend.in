@@ -1,7 +1,7 @@
 #!@PYTHON@
 # ^ python path substituted here is not depended-upon in Windows
 
-import os.path, sys, platform
+import os, os.path, sys, platform
 
 restart = 0
 
@@ -20,10 +20,9 @@ def path_absolute(p):
 	else:
 		return os.path.join(sys.path[0],p)
 
-def print_maybe(*p):
-	load_debug = True
-	if load_debug and not sys.executable.endswith("pythonw.exe"):
-		print p
+if platform.system()=="Windows" and sys.executable.endswith("pythonw.exe"):
+	_blackhole = file(os.devnull,"w")
+	sys.stdout = sys.stderr = _blackhole
 
 #-----------------------------------------------------------------------
 # Get locations of the installed files. On windows, these are defined in
@@ -69,7 +68,7 @@ elif platform.system()=="Darwin":
 	DEFAULT_ASCENDLIBRARY="%s;%s" % (INSTALL_SOLVERS,INSTALL_MODELS)
 
 	INSTALL_PYGTK = path_absolute("PyGTK.bundle/python")
-	print_maybe("Adding %s to python path" % INSTALL_PYGTK)
+	print("Adding %s to python path" % INSTALL_PYGTK)
 	sys.path.insert(0,INSTALL_PYGTK)
 
 else:
@@ -120,7 +119,7 @@ if not os.environ.get('ASC_GDB'):
 			os.environ['XDG_DATA_DIRS']="../PyGTK.bundle/share"
 
 			bundle_res = os.path.normpath(path_absolute("../"))
-			print_maybe("BUNDLE_RES =", bundle_res)
+			print("BUNDLE_RES =", bundle_res)
 			bundle_etc = os.path.join(bundle_res,"etc")
 			os.environ['GTK_DATA_PREFIX'] = bundle_res
 			os.environ['GTK_EXE_PREFIX'] = bundle_res
@@ -162,54 +161,54 @@ if not os.environ.get('ASC_GDB'):
 
 	# don't need to restart process on Windows as env vars update immediately
 	if restart and platform.system()!="Windows":
-		print_maybe("Restarting with corrected environment...")
+		print("Restarting with corrected environment...")
 		if os.environ.get(LDPATHVAR):
-			print_maybe("   %s = %s" % (LDPATHVAR,os.environ.get(LDPATHVAR)))
+			print("   %s = %s" % (LDPATHVAR,os.environ.get(LDPATHVAR)))
 		if os.environ.get('ASCENDLIBRARY'):
-			print_maybe("   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY'))
+			print("   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY'))
 		if os.environ.get('ASCENDSOLVERS'):
-			print_maybe("   ASCENDSOLVERS = %s" % os.environ.get('ASCENDSOLVERS'))
+			print("   ASCENDSOLVERS = %s" % os.environ.get('ASCENDSOLVERS'))
 		script = os.path.join(sys.path[0],"ascend")
-		print_maybe("PYTHON =",PYTHON)
-		print_maybe("script =",script)
+		print("PYTHON =",PYTHON)
+		print("script =",script)
 		os.execve(PYTHON,[script] + sys.argv, os.environ)
 
-print_maybe("Running with...")
-print_maybe("   %s = %s" % (LDPATHVAR, os.environ.get(LDPATHVAR)))
-print_maybe("   sys.path = %s" % sys.path)
-print_maybe("   argv = %s" % sys.argv)
+print("Running with...")
+print("   %s = %s" % (LDPATHVAR, os.environ.get(LDPATHVAR)))
+print("   sys.path = %s" % sys.path)
+print("   argv = %s" % sys.argv)
 for e in os.environ:
-	print_maybe("   %s = %s" % (e, os.environ[e]))
+	print("   %s = %s" % (e, os.environ[e]))
 
 if os.environ.get('ASCENDLIBRARY'):
 	ASCENDLIBRARY = os.environ.get('ASCENDLIBRARY')
-	print_maybe("   ASCENDLIBRARY = %s" % ASCENDLIBRARY)
+	print("   ASCENDLIBRARY = %s" % ASCENDLIBRARY)
 
 if os.environ.get('ASCENDSOLVERS'):
 	ASCENDSOLVERS = os.environ.get('ASCENDSOLVERS')
-	print_maybe("   ASCENDSOLVERS = %s" % ASCENDLIBRARY)
+	print("   ASCENDSOLVERS = %s" % ASCENDLIBRARY)
 
-print_maybe("sys.path[0] = %s" % sys.path[0])
+print("sys.path[0] = %s" % sys.path[0])
 
 if not INSTALL_PYTHON in sys.path:
-	print_maybe("Adding INSTALL_PYTHON=%s to python path" % INSTALL_PYTHON)
+	print("Adding INSTALL_PYTHON=%s to python path" % INSTALL_PYTHON)
 	sys.path.append(INSTALL_PYTHON)
 
 if os.environ.get('OSTYPE')=='cygwin':
-	print_maybe("CYGWIN...")
+	print("CYGWIN...")
 elif os.environ.get('OSTYPE')=='msys':
-	print_maybe("MSYS...")
+	print("MSYS...")
 
 if os.environ.get('ASC_GDB'):
 	args = sys.argv
 	args.pop(0)
 	cmd = ["gdb","--args","python",os.path.join(INSTALL_PYTHON,"gtkbrowser.py")]+args
-	print_maybe(cmd)
+	print(cmd)
 	os.execv("/usr/bin/gdb",cmd)
 else:
 	import ascpy
 	olddir = os.getcwd()
-	print_maybe("CWD =",olddir)
+	print("CWD =",olddir)
 	os.chdir(INSTALL_ASCDATA)
 	from gtkbrowser import *
 	os.chdir(olddir)
