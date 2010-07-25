@@ -299,7 +299,7 @@ int main(void){
 		double h_g = tds[i].h_g * 1e3;
 		double s_f = tds[i].s_f * 1e3;
 		double s_g = tds[i].s_g * 1e3;
-		fprintf(stderr,"T = %f, p = %f, rho_f = %f, rho_g = %f\n",T,p,rho_f, rho_g);
+		fprintf(stderr,"T = %f, p = %f bar, rho_f = %f, rho_g = %f\n",T,p/1e5,rho_f, rho_g);
 		double rho_f_eval, rho_g_eval, p_eval;
 		int res;
 	
@@ -317,15 +317,15 @@ int main(void){
 		}
 		fprintf(stderr,"Solved rho_g(p=%f bar, T=%f K) = %f, should be %f\n", p/1e5, T, rho_g_eval, rho_g);
 	
-		exit(0);
-
-
+# if 1
 		p_eval = fprops_sat_succsubs(T, &rho_f_eval, &rho_g_eval, d, &res);
 		if(fabs(p_eval - p) > 0.005 * p){
 			fprintf(stderr,"FAILED TEST\n");
 			exit(1);
 		}
+# endif
 	}
+	exit(0);
 #endif
 
 

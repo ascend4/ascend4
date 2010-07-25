@@ -29,21 +29,23 @@ double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const H
 	double rhof = -1, rhog = -1;
 
 	for(i=0;i<FPROPS_MAX_SUCCSUBS;++i){
-		fprintf(stderr,"Iter %d: p = %f, rhof = %f, rhog = %f\n",i, p, rhof, rhog);
-
 		if(fprops_rho_pT(p,T,FPROPS_PHASE_LIQUID,use_guess, d, &rhof)){
+			fprintf(stderr,"  increasing p, error with rho_f\n");
 			p *= 1.005;
 			continue;
 		}
 
 		if(fprops_rho_pT(p,T,FPROPS_PHASE_VAPOUR, use_guess, d, &rhog)){
+			fprintf(stderr,"  decreasing p, error with rho_g\n");
 			p *= 0.95;
 			continue;
 		}
 
+		fprintf(stderr,"Iter %d: p = %f, rhof = %f, rhog = %f\n",i, p, rhof, rhog);
+
 		use_guess = 1; /* after first run, start re-using current guess */
 
-		double delta_g = helmholtz_g(T, rhof, d) - helmholtz_g(T, rhog, d);
+		double delta_a = helmholtz_a(T, rhog, d) - helmholtz_a(T, rhof, d);
 
 		if(fabs(rhof - rhog) < 1e-8){
 			fprintf(stderr,"FPROPS: densities converged to same value\n");
@@ -53,11 +55,11 @@ double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const H
 			return p;
 		}
 
-		delta_p = delta_g / (1./rhof - 1./rhog);
+		delta_p = delta_a / (1./rhog - 1./rhof);
 	
 		/* note possible need for delp non-change test for certain fluids */
 		if(abs(delta_p/p) < 1e-6){
-	        p = p - delta_p;
+	        p = p + delta_p;
 		
 			/* find vapour density, using guess */
 			if(fprops_rho_pT(p, T, FPROPS_PHASE_VAPOUR, use_guess, d, &rhog)){
@@ -95,7 +97,7 @@ double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const H
 			fprintf(stderr,"FPROPS: delta_p was too large, has been shortened\n");
 		}
 
-		p = p - delta_p;
+		p = p + delta_p;
 	}
 
 	if(i = FPROPS_MAX_SUCCSUBS){
