@@ -33,7 +33,7 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 	int i,j;
 	char use_guess = 0;
 
-#define FPROPS_MAX_SUCCSUBS 200
+#define FPROPS_MAX_SUCCSUBS 15
 
 	double rhof = -1, rhog = -1;
 
@@ -55,7 +55,7 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 		use_guess = 1; /* after first run, start re-using current guess */
 
 		if(fabs(rhof - rhog) < 1e-8){
-			MSG("FPROPS: densities converged to same value\n");
+			fprintf(stderr,"FPROPS: densities converged to same value\n");
 			*p_out = p;
 			*rhof_out = rhof;
 			*rhog_out = rhog;
@@ -118,11 +118,19 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 		p = p + delta_p;
 	}
 
-	MSG("FPROPS: too many iterations in %s, or need to try alternative method\n",__func__);
+	if(i==FPROPS_MAX_SUCCSUBS){
+		fprintf(stderr,"FPROPS: too many iterations (%d) in %s(T = %f), or need to try alternative method\n",i,__func__,T);
+		*p_out = p;
+		*rhof_out = rhof;
+		*rhog_out = rhog;
+		return 4;
+	}
+
+	fprintf(stderr,"FPROPS: unknown error with T = %f in %s\n",T,__func__);
 	*p_out = p;
 	*rhof_out = rhof;
 	*rhog_out = rhog;
-	return 1;
+	return 9;
 }
 
 
