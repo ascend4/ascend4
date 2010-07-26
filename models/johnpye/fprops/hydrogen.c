@@ -60,7 +60,8 @@ const IdealData ideal_data_hydrogen = {
 	version 8.0.
 */
 const HelmholtzData helmholtz_data_hydrogen = {
-	/* R */ HYDROGEN_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
+	"hydrogen"
+	, /* R */ HYDROGEN_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
 	, /* M */ HYDROGEN_M /* kg/kmol */
 	, /* rho_star */ 15.508 * HYDROGEN_M /* kmol/m3 * kg/kmol = kg/m³ (note, mol/L=kmol/m³) */
 	, /* T_star */ HYDROGEN_TSTAR /* K (= T_c for this model) */
@@ -68,6 +69,7 @@ const HelmholtzData helmholtz_data_hydrogen = {
 	, /* T_c */ HYDROGEN_TSTAR
 	, /* p_c */ 0
 	, /* rho_c */ 15.508 * HYDROGEN_M
+	, /* T_t */ 0
 	, /* p_t */ 0
 
 	, 0.088 /* acentric factor, from Reid, Prausnitz & Polling */

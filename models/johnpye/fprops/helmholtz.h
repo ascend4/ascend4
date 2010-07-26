@@ -83,6 +83,7 @@ typedef struct HelmholtzCritTerm_struct{
 	See Tillner-Roth 1993 for information about 'atd' and 'a0' data.
 */
 typedef struct HelmholtzData_struct{
+	const char *name;
 	double R; /**< specific gas constant */
 	double M; /**< molar mass, kg/kmol */
 	double rho_star; /**< normalisation density, kg/m³ */
@@ -91,6 +92,7 @@ typedef struct HelmholtzData_struct{
 	double T_c; /**< critical temperature */
 	double p_c; /**< critical pressure */
 	double rho_c; /**< critical density */
+	double T_t; /**< triple-point temperature */
 	double p_t; /**< triple-point pressure */
 
 	double omega; /**< Pitzer acentric factor */

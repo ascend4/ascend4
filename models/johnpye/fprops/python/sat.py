@@ -1,11 +1,11 @@
 from fprops import *
 
-D = helmholtz_data_carbondioxide;
+D = helmholtz_data_water;
 
 from pylab import *
 hold(1)
 
-T_min = 206.
+T_min = D.T_t
 TT = linspace(T_min, D.T_c, 1000)
 
 rhog = array([fprops_rhog_T_chouaieb(T,D) for T in TT])
@@ -44,6 +44,7 @@ print "failcount =",failcount
 TT = array(TT)
 TT1 = array(TT1)
 psat1 = array(psat1)
+psat2 = array(psat2)
 psat = array(psat)
 
 plot(rhog,TT,label="vapour (Chouaieb)")
@@ -66,7 +67,9 @@ figure()
 hold(1)
 
 plot(TT,psat/1e5,label="Xiang")
-plot(TT1,psat1/1e5,'rx',label="Maxwell")
+plot(TT1,psat1/1e5,'rx',label="Maxwell (error)")
+plot(TT2,psat2/1e5,'g.',label="Maxwell (OK)")
+legend()
 
 show()
 
