@@ -308,14 +308,14 @@ int main(void){
 			fprintf(stderr,"FAILED TO SOLVE RHO_F\n");
 			exit(1);
 		}
-		fprintf(stderr,"Solved rho_f(p=%f bar, T=%f K) = %f, should be %f\n", p/1e5, T, rho_f_eval, rho_f);
+		fprintf(stderr,"Solved rho_f(p=%f bar, T=%f K) = %f, should be %f, relerr = %e\n", p/1e5, T, rho_f_eval, rho_f,(rho_f_eval - rho_f)/rho_f);
 
 		res = fprops_rho_pT(p, T, FPROPS_PHASE_VAPOUR, 0, d, &rho_g_eval);
 		if(fabs(rho_g_eval - rho_g) > 0.005 * rho_g){
 			fprintf(stderr,"FAILED TO SOLVE RHO_G\n");
 			exit(1);
 		}
-		fprintf(stderr,"Solved rho_g(p=%f bar, T=%f K) = %f, should be %f\n", p/1e5, T, rho_g_eval, rho_g);
+		fprintf(stderr,"Solved rho_g(p=%f bar, T=%f K) = %f, should be %f, relerr = %e\n", p/1e5, T, rho_g_eval, rho_g, (rho_g_eval-rho_g)/rho_g);
 	
 # if 1
 		p_eval = fprops_sat_succsubs(T, &rho_f_eval, &rho_g_eval, d, &res);
