@@ -21,8 +21,8 @@ TT1 = []
 for T in TT2:
 	res, p1, rf1, rg1 = fprops_sat_T(T,D)
 	if res:
-		print "error in saturation function T =",T
-		continue
+		print "error %d in saturation function T = %f " % (res,T)
+		#continue
 	rhof1.append(rf1)
 	rhog1.append(rg1)
 	psat1.append(p1)
