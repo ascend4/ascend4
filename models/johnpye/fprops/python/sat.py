@@ -15,19 +15,31 @@ psat = array([fprops_psat_T_xiang(T,D) for T in TT])
 rhof1 = []
 rhog1 = []
 psat1 = []
+rhof2 = []
+rhog2 = []
+psat2 = []
+TT2 = []
 
-TT2 = linspace(T_min, D.T_c, 300)
+TT_src = linspace(T_min, D.T_c, 300)
 TT1 = []
-for T in TT2:
+failcount = 0
+for T in TT_src:
 	res, p1, rf1, rg1 = fprops_sat_T(T,D)
+	#print "T=%f, psat=%f bar, rhof=%f, rhog=%f" % (T,p1/1e5,rf1,rg1)
 	if res:
 		print "error %d in saturation function T = %f " % (res,T)
-		#continue
-	rhof1.append(rf1)
-	rhog1.append(rg1)
-	psat1.append(p1)
-	#print "T=%f, psat=%f bar, rhof=%f, rhog=%f" % (T,p1/1e5,rf1,rg1)
-	TT1.append(T)
+		failcount += 1
+		rhof1.append(rf1)
+		rhog1.append(rg1)
+		psat1.append(p1)
+		TT1.append(T)
+		continue
+	rhof2.append(rf1)
+	rhog2.append(rg1)
+	psat2.append(p1)
+	TT2.append(T)
+
+print "failcount =",failcount
 
 TT = array(TT)
 TT1 = array(TT1)
@@ -37,8 +49,10 @@ psat = array(psat)
 plot(rhog,TT,label="vapour (Chouaieb)")
 plot(rhof,TT,label="liquid (Rackett)")
 
-plot(rhog1,TT1,'rx',label="vapour (Maxwell)")
-plot(rhof1,TT1,'bx',label="liquid (Maxwell)")
+plot(rhog1,TT1,'rx',label="vapour (unconverged)")
+plot(rhof1,TT1,'bx',label="liquid (unconverged)")
+plot(rhog2,TT2,'r.',label="vapour (OK, converged)")
+plot(rhof2,TT2,'b.',label="liquid (OK, converged)")
 
 
 legend(loc=8)
