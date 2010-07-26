@@ -216,7 +216,7 @@ static int print_state(size_t iter, gsl_multiroot_fsolver * s){
 		gsl_vector_get (s->f, 2));
 }
 
-
+#if 0
 int phase_solve(double T, double *p_sat, double *rho_f, double *rho_g, const HelmholtzData *D){
 	gsl_multiroot_fsolver *s;
 	int status;
@@ -330,7 +330,7 @@ int phase_solve(double T, double *p_sat, double *rho_f, double *rho_g, const Hel
 
 	return status;
 }
-
+#endif 
 
 #if 0
 	

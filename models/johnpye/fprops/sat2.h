@@ -3,7 +3,7 @@
 
 #include "helmholtz.h"
 
-double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const HelmholtzData *d, int *err);
+int fprops_sat_T(double T, double *p_sat, double *rho_f, double *rho_g, const HelmholtzData *d);
 
 
 #define FPROPS_PHASE_LIQUID 'L'

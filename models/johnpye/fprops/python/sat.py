@@ -16,17 +16,23 @@ rhof1 = []
 rhog1 = []
 psat1 = []
 
-TT2 = linspace(T_min, D.T_c, 50)
+TT2 = linspace(T_min, D.T_c, 300)
 TT1 = []
 for T in TT2:
-	res, p1, rf1, rg1 = phase_solve(T,D)
-	#if res:
-	#	continue
+	res, p1, rf1, rg1 = fprops_sat_T(T,D)
+	if res:
+		print "error in saturation function T =",T
+		continue
 	rhof1.append(rf1)
 	rhog1.append(rg1)
 	psat1.append(p1)
-	print "T=%f, psat=%f, rhof=%f, rhog=%f" % (T,p1,rf1,rg1)
+	#print "T=%f, psat=%f bar, rhof=%f, rhog=%f" % (T,p1/1e5,rf1,rg1)
 	TT1.append(T)
+
+TT = array(TT)
+TT1 = array(TT1)
+psat1 = array(psat1)
+psat = array(psat)
 
 plot(rhog,TT,label="vapour (Chouaieb)")
 plot(rhof,TT,label="liquid (Rackett)")
@@ -45,8 +51,8 @@ ylabel('Temperature')
 figure()
 hold(1)
 
-plot(TT,psat,label="Xiang")
-plot(TT1,psat1,'rx',label="Maxwell")
+plot(TT,psat/1e5,label="Xiang")
+plot(TT1,psat1/1e5,'rx',label="Maxwell")
 
 show()
 

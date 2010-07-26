@@ -204,9 +204,8 @@ int main(void){
 	fprintf(stderr,"ITERATION WITH SUCCESSIVE SUBSTITUTION\n");
 	double rf, rg;
 	T = 220;	
-	int sat_err = 0;
-	double p_sat = fprops_sat_succsubs(T, &rf, &rg, d, &sat_err);
-	assert(sat_err==0);
+	double p_sat;
+	assert(0==fprops_sat_T(T, &p_sat, &rf, &rg, d));
 
 	fprintf(stderr,"p_sat(%f) = %f bar\n", T, p_sat / 1e5);
 

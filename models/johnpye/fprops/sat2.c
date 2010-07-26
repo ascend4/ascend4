@@ -5,21 +5,30 @@
 #include <math.h>
 #include <stdio.h>
 
+//#define PHASE_DEBUG
+
+#ifndef PHASE_DEBUG
+# define MSG(...) 
+#else
+# define MSG(ARGS...) fprintf(stderr,"FPROPS: " ARGS)
+#endif
+
+
 /**
 	solve Maxwell phase criterion using successive substitution
 
-	@return p
+	@return 0 on success, else error code.
+	@param p output, pressure
 	@param rhof output, liquid density
 	@param rhof output, vapour density
-	@param err error code, returns non-zero if unable to solve.
 */
-double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const HelmholtzData *d, int *err){
+int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
 	double p, p_new, delta_p, delta_p_old;
 
 	/* first guess using acentric factor */
 	p = d->p_c * pow(10, -7./3 * (1.+d->omega) * (d->T_c / T - 1.));
 
-	fprintf(stderr,"Initial estimate: psat(%f) = %f bar\n",T,p/1e5);
+	MSG("Initial estimate: psat(%f) = %f bar\n",T,p/1e5);
 
 	int i,j;
 	char use_guess = 0;
@@ -30,48 +39,48 @@ double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const H
 
 	for(i=0;i<FPROPS_MAX_SUCCSUBS;++i){
 		if(fprops_rho_pT(p,T,FPROPS_PHASE_LIQUID,use_guess, d, &rhof)){
-			fprintf(stderr,"  increasing p, error with rho_f\n");
+			MSG("  increasing p, error with rho_f\n");
 			p *= 1.005;
 			continue;
 		}
 
 		if(fprops_rho_pT(p,T,FPROPS_PHASE_VAPOUR, use_guess, d, &rhog)){
-			fprintf(stderr,"  decreasing p, error with rho_g\n");
+			MSG("  decreasing p, error with rho_g\n");
 			p *= 0.95;
 			continue;
 		}
 
-		fprintf(stderr,"Iter %d: p = %f bar, rhof = %f, rhog = %f\n",i, p/1e5, rhof, rhog);
+		MSG("Iter %d: p = %f bar, rhof = %f, rhog = %f\n",i, p/1e5, rhof, rhog);
 
 		use_guess = 1; /* after first run, start re-using current guess */
 
 		if(fabs(rhof - rhog) < 1e-8){
-			fprintf(stderr,"FPROPS: densities converged to same value\n");
-			*err = 1;
+			MSG("FPROPS: densities converged to same value\n");
+			*p_out = p;
 			*rhof_out = rhof;
 			*rhog_out = rhog;
-			return p;
+			return 1;
 		}
 
 		p_new = (helmholtz_a(T, rhof, d) - helmholtz_a(T, rhog, d)) / (1./rhog - 1./rhof);
 		delta_p = p_new - p;
 
-		//fprintf(stderr," delta_p = %f bar\n",delta_p/1e5);
+		//MSG(" delta_p = %f bar\n",delta_p/1e5);
 	
 		/* convergence test */
 		if(abs(delta_p/p) < 1e-6){
-			fprintf(stderr,"CONVERGED...\n");
+			MSG("CONVERGED...\n");
 			/* note possible need for delp non-change test for certain fluids */
 
 			p = p_new;
 		
 			/* find vapour density, using guess */
 			if(fprops_rho_pT(p, T, FPROPS_PHASE_VAPOUR, use_guess, d, &rhog)){
-				fprintf(stderr,"FPROPS: fails to estimate vapour density\n");
-				*err = 2;
+				MSG("FPROPS: fails to estimate vapour density\n");
 				*rhof_out = rhof;
 				*rhog_out = rhog;
-				return p;
+				*p_out = p;
+				return 2;
 			}
 			/* find liquid phase, using guess */
 			fprops_rho_pT(p, T, FPROPS_PHASE_LIQUID, use_guess, d, &rhof);
@@ -80,18 +89,19 @@ double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const H
 			p = helmholtz_p(T,rhof,d);
 
 			if(p > d->p_c || rhof < d->rho_c){
-				fprintf(stderr,"FPROPS: invalid converged value of p, beyond p_crit\n");
-				*err = 3;
+				MSG("FPROPS: invalid converged value of p, beyond p_crit\n");
+				*p_out = p;
 				*rhof_out = rhof;
 				*rhog_out = rhog;
-				return p;
+				return 3;
 
 			}
 
-			fprintf(stderr,"  recalc p = %f bar\n",p/1e5);
+			MSG("  recalc p = %f bar\n",p/1e5);
+			*p_out = p;
 			*rhof_out = rhof;
 			*rhog_out = rhog;
-			return p;
+			return 0;
 		}
 
 		delta_p_old = delta_p;
@@ -102,19 +112,17 @@ double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const H
 				delta_p *= 0.5;
 				if(fabs(delta_p) < 0.4 * p)break;
 			}
-			fprintf(stderr,"FPROPS: delta_p was too large, has been shortened\n");
+			MSG("FPROPS: delta_p was too large, has been shortened\n");
 		}
 
 		p = p + delta_p;
 	}
 
-	if(i = FPROPS_MAX_SUCCSUBS){
-		fprintf(stderr,"FPROPS: too many iterations in %s, need to try alternative method\n",__func__);
-		*err = 1;
-		*rhof_out = rhof;
-		*rhog_out = rhog;
-		return p;
-	}
+	MSG("FPROPS: too many iterations in %s, or need to try alternative method\n",__func__);
+	*p_out = p;
+	*rhof_out = rhof;
+	*rhog_out = rhog;
+	return 1;
 }
 
 
@@ -234,7 +242,7 @@ int fprops_rho_pT(double p, double T, char phase, char use_guess, const Helmholt
 					}
 					if (vlog < -5.0 && T > d->T_c){
 						use_liquid_calc = 0;
-						fprintf(stderr,"FPROPS: switching to vapour calc\n");
+						MSG("FPROPS: switching to vapour calc\n");
 						break; /* switch to vapour calc */
 					}
 				}
@@ -249,7 +257,7 @@ int fprops_rho_pT(double p, double T, char phase, char use_guess, const Helmholt
         }
 
 		if(use_liquid_calc){
-			fprintf(stderr,"FPROPS: liquid iteration did not converge\n");
+			MSG("FPROPS: liquid iteration did not converge\n");
 			return 1;
 		}
 	}
@@ -288,7 +296,7 @@ int fprops_rho_pT(double p, double T, char phase, char use_guess, const Helmholt
 
 	// not converged
     *rho=1./exp(vlog);
-	fprintf(stderr,"FPROPS: liquid iteration did not converge\n");
+	MSG("FPROPS: liquid iteration did not converge\n");
 	return 1;
 }
 
