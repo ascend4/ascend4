@@ -66,7 +66,8 @@ DKV-Tagungsbericht, 20:167-181, 1993. This is the ammmonia property correlation
 recommended by NIST in its program REFPROP 7.0.
 */
 const HelmholtzData helmholtz_data_ammonia = {
-	/* R */ AMMONIA_R /* J/kg/K */
+	"ammonia"
+	, /* R */ AMMONIA_R /* J/kg/K */
 	, /* M */ 17.03026 /* kg/kmol */
 	, /* rho_star */225. /* kg/m³ */
 	, /* T_star */ AMMONIA_TSTAR /* K */
@@ -74,6 +75,8 @@ const HelmholtzData helmholtz_data_ammonia = {
 	, /* T_c */ AMMONIA_TSTAR
 	, /* p_c */ 0
 	, /* rho_c */ 225.
+
+	, /* T_t */ 0
 	, /* p_t */ 0
 
 	, 0.250 /* acentric factor, from Reid, Prausnitz & Polling */

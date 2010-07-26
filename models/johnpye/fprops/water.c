@@ -55,7 +55,8 @@ Residual (non-ideal) property data for Water/Steam, from IAPWS-95.
 http://www.iapws.org/relguide/IAPWS95.pdf
 */
 const HelmholtzData helmholtz_data_water = {
-	/* R */ WATER_R /* J/kg/K */
+	"water"
+	, /* R */ WATER_R /* J/kg/K */
 	, /* M */ 18.015242 /* kg/kmol -- G S Kell, J Phys Chem Ref Data (6) 1109 (1977) */
 	, /* rho_star */ WATER_RHOC /* kg/m³ */
 	, /* T_star */ WATER_TC /* K */
@@ -63,6 +64,7 @@ const HelmholtzData helmholtz_data_water = {
 	, /* T_c */ WATER_TC
 	, /* p_c */ WATER_PC
 	, /* rho_c */ WATER_RHOC
+	, /* T_t */ 273.16
 	, /* p_t */ 0
 
 	, 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */

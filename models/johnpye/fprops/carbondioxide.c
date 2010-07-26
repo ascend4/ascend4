@@ -22,6 +22,7 @@
 	R Span & W Wagner ''A new equation of state for carbon dioxide covering the
 	fluid region from the triple-point temperature to 11100 K at pressures up 
 	to 800 MPa'', J Phys Chem Ref Data, Vol 25, No. 6, 1996.
+	http://link.aip.org/link/JPCRBU/v25/i6/p1509/s1
 */
 
 #include "carbondioxide.h"
@@ -68,7 +69,8 @@ const IdealData ideal_data_carbondioxide = {
 	Residual (non-ideal) property data.
 */
 const HelmholtzData helmholtz_data_carbondioxide = {
-	/* R */ CARBONDIOXIDE_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
+	"carbondioxide"
+	, /* R */ CARBONDIOXIDE_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
 	, /* M */ CARBONDIOXIDE_M /* kg/kmol */
 	, /* rho_star */ CARBONDIOXIDE_RHOC /* kg/m³ (= rho_c for this model) */
 	, /* T_star */ CARBONDIOXIDE_TC /* K (= T_c for this model) */
@@ -76,6 +78,7 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 	, /* T_c */ CARBONDIOXIDE_TC
 	, /* p_c */ CARBONDIOXIDE_PC
 	, /* rho_c */ CARBONDIOXIDE_RHOC
+	, /* T_t */ 216.592
 	, /* p_t */ CARBONDIOXIDE_PT
 
 	,  0.2239 /* acentric factor, from Reid, Prausnitz & Polling */

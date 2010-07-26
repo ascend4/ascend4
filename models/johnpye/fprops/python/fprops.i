@@ -6,6 +6,7 @@
 #include "../ammonia.h"
 #include "../hydrogen.h"
 #include "../nitrogen.h"
+#include "../methane.h"
 #include "../helmholtz.h"
 #include "../sat.h"
 #include "../sat2.h"
@@ -18,6 +19,7 @@
 %immutable helmholtz_data_ammonia;
 %immutable helmholtz_data_nitrogen;
 %immutable helmholtz_data_hydrogen;
+%immutable helmholtz_data_methane;
 
 %include "../helmholtz.h"
 
@@ -44,6 +46,7 @@ int fprops_sat_T(double T, double *p_sat, double *rho_f, double *rho_g, const He
 %include "../ammonia.h"
 %include "../hydrogen.h"
 %include "../nitrogen.h"
+%include "../methane.h"
 
 /*
 If you're not using SCons, then try something like...

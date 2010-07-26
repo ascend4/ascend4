@@ -56,7 +56,8 @@ const IdealData ideal_data_nitrogen = {
 	basis by changing the scaling density rho_star, and the ideal gas constant.
 */
 const HelmholtzData helmholtz_data_nitrogen = {
-	/* R */ NITROGEN_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
+	"nitrogen"
+	, /* R */ NITROGEN_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
 	, /* M */ NITROGEN_M /* kg/kmol */
 	, /* rho_star */ NITROGEN_RHOC /* kmol/m3 * kg/kmol = kg/m³ (= rho_c for this model) */
 	, /* T_star */ NITROGEN_TC /* K (= T_c for this model) */
@@ -64,6 +65,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 	, /* T_c */ NITROGEN_TC
 	, /* p_c */ 0
 	, /* rho_c */ NITROGEN_RHOC
+	, /* T_t */ 0
 	, /* p_t */ 0
 
 	, 0.039 /* acentric factor, from Reid, Prausnitz & Polling */

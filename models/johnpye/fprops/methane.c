@@ -37,7 +37,8 @@ const IdealData ideal_data_methane = {
 
 
 const HelmholtzData helmholtz_data_methane = {
-    /* R */ METHANE_R /* J/kg/K */
+	"methane"
+    , /* R */ METHANE_R /* J/kg/K */
     , /* M */ METHANE_M /* kg/kmol */
     , /* rho_star */ 162.66 /* kg/m3(= rho_c for this model) */
     , /* T_star */ METHANE_TSTAR /* K (= T_c for this model) */
@@ -45,6 +46,7 @@ const HelmholtzData helmholtz_data_methane = {
     , /* T_c */ METHANE_TSTAR
     , /* p_c */ 0
     , /* rho_c */ 162.66 /* kg/m3 */
+	, /* T_t */ 0
     , /* p_t */ 0
 
     , 0.01142 /* acentric factor */
