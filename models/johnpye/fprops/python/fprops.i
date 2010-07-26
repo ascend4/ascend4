@@ -8,7 +8,10 @@
 #include "../nitrogen.h"
 #include "../helmholtz.h"
 #include "../sat.h"
+#include "../sat2.h"
 %}
+
+%include exception.i
 
 %immutable helmholtz_data_water;
 %immutable helmholtz_data_carbondioxide;
@@ -25,6 +28,16 @@
 %clear double *p_sat;
 %clear double *rho_f;
 %clear double *rho_g;
+
+%apply double *OUTPUT {double *p_sat};
+%apply double *OUTPUT {double *rho_f};
+%apply double *OUTPUT {double *rho_g};
+int fprops_sat_T(double T, double *p_sat, double *rho_f, double *rho_g, const HelmholtzData *d);
+%clear double *p_sat;
+%clear double *rho_f;
+%clear double *rho_g;
+
+%exception;
 
 %include "../carbondioxide.h"
 %include "../water.h"

@@ -318,7 +318,7 @@ int main(void){
 		fprintf(stderr,"Solved rho_g(p=%f bar, T=%f K) = %f, should be %f, relerr = %e\n", p/1e5, T, rho_g_eval, rho_g, (rho_g_eval-rho_g)/rho_g);
 	
 # if 1
-		p_eval = fprops_sat_succsubs(T, &rho_f_eval, &rho_g_eval, d, &res);
+		res = fprops_sat_T(T, &p_eval, &rho_f_eval, &rho_g_eval, d);
 		if(fabs(p_eval - p) > 0.005 * p){
 			fprintf(stderr,"FAILED TEST\n");
 			exit(1);
