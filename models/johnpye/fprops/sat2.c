@@ -14,7 +14,7 @@
 	@param err error code, returns non-zero if unable to solve.
 */
 double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const HelmholtzData *d, int *err){
-	double p, delta_p, delta_p_old;
+	double p, p_new, delta_p, delta_p_old;
 
 	/* first guess using acentric factor */
 	p = d->p_c * pow(10, -7./3 * (1.+d->omega) * (d->T_c / T - 1.));
@@ -41,11 +41,9 @@ double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const H
 			continue;
 		}
 
-		fprintf(stderr,"Iter %d: p = %f, rhof = %f, rhog = %f\n",i, p, rhof, rhog);
+		fprintf(stderr,"Iter %d: p = %f bar, rhof = %f, rhog = %f\n",i, p/1e5, rhof, rhog);
 
 		use_guess = 1; /* after first run, start re-using current guess */
-
-		double delta_a = helmholtz_a(T, rhog, d) - helmholtz_a(T, rhof, d);
 
 		if(fabs(rhof - rhog) < 1e-8){
 			fprintf(stderr,"FPROPS: densities converged to same value\n");
@@ -55,11 +53,17 @@ double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const H
 			return p;
 		}
 
-		delta_p = delta_a / (1./rhog - 1./rhof);
+		p_new = (helmholtz_a(T, rhof, d) - helmholtz_a(T, rhog, d)) / (1./rhog - 1./rhof);
+		delta_p = p_new - p;
+
+		//fprintf(stderr," delta_p = %f bar\n",delta_p/1e5);
 	
-		/* note possible need for delp non-change test for certain fluids */
+		/* convergence test */
 		if(abs(delta_p/p) < 1e-6){
-	        p = p + delta_p;
+			fprintf(stderr,"CONVERGED...\n");
+			/* note possible need for delp non-change test for certain fluids */
+
+			p = p_new;
 		
 			/* find vapour density, using guess */
 			if(fprops_rho_pT(p, T, FPROPS_PHASE_VAPOUR, use_guess, d, &rhog)){
@@ -69,6 +73,7 @@ double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const H
 				*rhog_out = rhog;
 				return p;
 			}
+			/* find liquid phase, using guess */
 			fprops_rho_pT(p, T, FPROPS_PHASE_LIQUID, use_guess, d, &rhof);
 
 			/* re-evaluate exact p for the value of rhof calculated */
@@ -82,10 +87,13 @@ double fprops_sat_succsubs(double T, double *rhof_out, double *rhog_out, const H
 				return p;
 
 			}
+
+			fprintf(stderr,"  recalc p = %f bar\n",p/1e5);
 			*rhof_out = rhof;
 			*rhog_out = rhog;
 			return p;
 		}
+
 		delta_p_old = delta_p;
 
 		if(fabs(delta_p) > 0.4 * p){

@@ -25,6 +25,7 @@
 */
 
 #include "carbondioxide.h"
+#include "sat2.h"
 
 //#define CARBONDIOXIDE_R 188.9241
 #define GAS_C 8314.510
@@ -183,7 +184,7 @@ int main(void){
 		rho -= err/dpdrho;
 	}
 	if(fabs(err) < 1e-6){
-		fprintf(stderr,"err = %f -> T = %f, rho = %f --> p = %f\n", err, T, rho, helmholtz_p(T,rho,d));
+		fprintf(stderr,"err = %f -> T = %f, rho = %f --> p = %f bar\n", err, T, rho, helmholtz_p(T,rho,d)/1e5);
 		fprintf(stderr,"h(Tref, pref) = %.10e\n", helmholtz_h(T,rho,d));
 		fprintf(stderr,"s(Tref, pref) = %.10e\n", helmholtz_s(T,rho,d));
 	}
@@ -193,21 +194,21 @@ int main(void){
 	fprintf(stderr,"XIANG SATURATION CURVE\n");
 	T = 300;
 	p = fprops_psat_T_xiang(T, d);
-	fprintf(stderr,"T = %f -> psat(T) = %f\n", T, p);
+	fprintf(stderr,"T = %f -> psat(T) = %f bar\n", T, p/1e5);
 
 	//phase_criterion(T, 679.24, 268.58, p, d);
 
 	double eq1, eq2, eq3;
 	phase_criterion(250., 1045.97, 46.644, 1.785e6, &eq1, &eq2, &eq3, d);
 
+	fprintf(stderr,"ITERATION WITH SUCCESSIVE SUBSTITUTION\n");
 	double rf, rg;
-	T = 200;	
-	int sat_err;
+	T = 220;	
+	int sat_err = 0;
 	double p_sat = fprops_sat_succsubs(T, &rf, &rg, d, &sat_err);
+	assert(sat_err==0);
 
-	fprintf(stderr,"p_sat(%f) = %f MPa\n", T, p_sat / 1e6);
-
-	exit(1);
+	fprintf(stderr,"p_sat(%f) = %f bar\n", T, p_sat / 1e5);
 
 	return helm_run_test_cases(d, ntd, td, 'K');
 
