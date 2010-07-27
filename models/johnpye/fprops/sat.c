@@ -91,6 +91,17 @@ double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 }
 
 /**
+	Estimate saturation pressure using acentric factor. This algorithm
+	is used for first estimates for later refinement in the program REFPROP.
+*/
+double fprops_psat_T_acentric(double T, const HelmholtzData *d){
+	/* first guess using acentric factor */
+	double p = d->p_c * pow(10, -7./3 * (1.+d->omega) * (d->T_c / T - 1.));
+	return p;
+}
+
+
+/**
 	Saturated liquid density correlation of Rackett, Spencer & Danner (1972)
 	see http://dx.doi.org/10.1002/aic.690250412
 */

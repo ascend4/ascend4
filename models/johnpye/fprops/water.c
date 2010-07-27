@@ -327,7 +327,22 @@ int main(void){
 		}
 # endif
 	}
-	exit(0);
+
+
+	fprintf(stderr,"\nPROBLEMATIC SATURATION VALUES\n");
+	{
+		double T = 3.7631475862e+02;
+		T = 3.8920910345e+02;
+		double p, rho_f, rho_g;
+		int res = fprops_sat_T(T, &p, &rho_f, &rho_g, d);
+		if(res){
+			fprintf(stderr,"ERROR = %d\n",res);
+		}else{
+			fprintf(stderr,"OK :-)\n");
+		}
+		fprintf(stderr,"p_sat(T = %f) = %f bar, rho_f = %f, rho_g = %f\n", T, p/1e5, rho_f, rho_g);
+	}
+
 #endif
 
 

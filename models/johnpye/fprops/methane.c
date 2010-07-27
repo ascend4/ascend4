@@ -46,7 +46,7 @@ const HelmholtzData helmholtz_data_methane = {
     , /* T_c */ METHANE_TSTAR
     , /* p_c */ 0
     , /* rho_c */ 162.66 /* kg/m3 */
-	, /* T_t */ 0
+	, /* T_t */ 90.6941
     , /* p_t */ 0
 
     , 0.01142 /* acentric factor */

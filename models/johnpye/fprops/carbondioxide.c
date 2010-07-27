@@ -206,7 +206,7 @@ int main(void){
 
 	fprintf(stderr,"ITERATION WITH SUCCESSIVE SUBSTITUTION\n");
 	double rf, rg;
-	T = 220;	
+	T = 276.961793;	
 	double p_sat;
 	assert(0==fprops_sat_T(T, &p_sat, &rf, &rg, d));
 
