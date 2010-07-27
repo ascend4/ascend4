@@ -1161,3 +1161,64 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 	return res;
 }
 
+/* === THIRD DERIVATIVES (this is getting boring now) === */
+
+#if 0
+/**
+	Third derivative of helmholtz residual function, with respect to
+	delta (thrice).
+*/
+double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
+	double sum = 0, res = 0;
+	double dell, ldell;
+	unsigned n, i;
+	const HelmholtzPowTerm *pt;
+	const HelmholtzGausTerm *gt;
+	const HelmholtzCritTerm *ct;
+
+#ifdef RESID_DEBUG
+		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
+#endif
+
+
+#ifdef RESID_DEBUG
+		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
+#endif
+
+	/* power terms */
+	n = data->np;
+	pt = &(data->pt[0]);
+	dell = ipow(delta,pt->l);
+	ldell = pt->l * dell;
+	unsigned oldl;
+	for(i=0; i<n; ++i){
+		double lpart = pt->l ? SQ(ldell) + ldell*(1. - 2*pt->d - pt->l) : 0;
+		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (pt->d*(pt->d - 1) + lpart);
+		oldl = pt->l;
+		++pt;
+		if(i+1==n || oldl != pt->l){
+			if(oldl == 0){
+				res += sum;
+			}else{
+				res += sum * exp(-dell);
+			}
+			sum = 0;
+			dell = ipow(delta,pt->l);
+			ldell = pt->l*dell;
+		}
+	}
+
+
+
+-pow(del,d-3) * tau * a (l3*DL2*DL - 3*l3*DL2 - 3*d*l2*DL2 + 3*l2*DL2 + l3*DL + 3*d*l2*DL - 3*l2*DL+3*d^2*l*DL - 6*d*l*DL + 2*l*DL - d^3+3*d^2 - 2*d)*exp(-DL)
+
+else:
+
+pow(del,d-3) * tau * a * (d-2)*(d-1)*d * exp(-DL)
+
+
+#endif
+
+
+
+

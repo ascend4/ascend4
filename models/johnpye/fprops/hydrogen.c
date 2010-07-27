@@ -69,8 +69,8 @@ const HelmholtzData helmholtz_data_hydrogen = {
 	, /* T_c */ HYDROGEN_TSTAR
 	, /* p_c */ 0
 	, /* rho_c */ 15.508 * HYDROGEN_M
-	, /* T_t */ 0
-	, /* p_t */ 0
+	, /* T_t */ 13.957
+	, /* p_t */ 0.00736e6
 
 	, 0.088 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_hydrogen
