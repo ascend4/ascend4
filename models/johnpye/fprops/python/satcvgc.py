@@ -3,24 +3,28 @@
 
 from fprops import *
 from pylab import *
+import sys
 
 DD = [
 	helmholtz_data_water
 	, helmholtz_data_carbondioxide
-## following still need T_triple data added
-#	, helmholtz_data_ammonia
-#	, helmholtz_data_hydrogen
-#	, helmholtz_data_nitrogen
+## unexplained errors for these fluids:
 #	, helmholtz_data_methane
+#	, helmholtz_data_ammonia
+#	, helmholtz_data_nitrogen
+## following still need T_triple data added
+#	, helmholtz_data_hydrogen
 ]
 
 toterrors = 0
 totchecks = 0
 for D in DD:
-	TT = linspace(D.T_t, D.T_c, 300);
+	print D.name, D.T_t, D.T_c
+	TT = linspace(D.T_t, D.T_c, 1000);
 	firsterror = True
 	errcount = 0
 	for T in TT:
+		sys.stderr.write("%f\r" % T)
 		res, p, rhof, rhog = fprops_sat_T(T,D)
 		if res:
 			if firsterror:

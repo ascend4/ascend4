@@ -11,6 +11,7 @@ TT = linspace(T_min, D.T_c, 1000)
 rhog = array([fprops_rhog_T_chouaieb(T,D) for T in TT])
 rhof = array([fprops_rhof_T_rackett(T,D) for T in TT])
 psat = array([fprops_psat_T_xiang(T,D) for T in TT])
+psata = array([fprops_psat_T_acentric(T,D) for T in TT])
 
 rhof1 = []
 rhog1 = []
@@ -20,14 +21,14 @@ rhog2 = []
 psat2 = []
 TT2 = []
 
-TT_src = linspace(T_min, D.T_c, 300)
+TT_src = linspace(T_min, D.T_c, 100)
 TT1 = []
 failcount = 0
 for T in TT_src:
 	res, p1, rf1, rg1 = fprops_sat_T(T,D)
 	#print "T=%f, psat=%f bar, rhof=%f, rhog=%f" % (T,p1/1e5,rf1,rg1)
 	if res:
-		print "error %d in saturation function T = %f " % (res,T)
+		print "error %d in %s saturation function T = %0.10e " % (res,D.name,T)
 		failcount += 1
 		rhof1.append(rf1)
 		rhog1.append(rg1)
@@ -46,6 +47,7 @@ TT1 = array(TT1)
 psat1 = array(psat1)
 psat2 = array(psat2)
 psat = array(psat)
+psata = array(psata)
 
 plot(rhog,TT,label="vapour (Chouaieb)")
 plot(rhof,TT,label="liquid (Rackett)")
@@ -67,9 +69,10 @@ figure()
 hold(1)
 
 plot(TT,psat/1e5,label="Xiang")
+plot(TT,psata/1e5,label="Acentric")
 plot(TT1,psat1/1e5,'rx',label="Maxwell (error)")
 plot(TT2,psat2/1e5,'g.',label="Maxwell (OK)")
-legend()
+legend(loc=2)
 
 show()
 

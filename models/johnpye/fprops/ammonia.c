@@ -76,7 +76,7 @@ const HelmholtzData helmholtz_data_ammonia = {
 	, /* p_c */ 0
 	, /* rho_c */ 225.
 
-	, /* T_t */ 0
+	, /* T_t */ 195.495
 	, /* p_t */ 0
 
 	, 0.250 /* acentric factor, from Reid, Prausnitz & Polling */

@@ -6,11 +6,18 @@
 #include <stdio.h>
 
 //#define PHASE_DEBUG
+#define PHASE_ERRORS
 
 #ifndef PHASE_DEBUG
 # define MSG(...) 
 #else
 # define MSG(ARGS...) fprintf(stderr,"FPROPS: " ARGS)
+#endif
+
+#ifndef PHASE_DEBUG
+# define ERR(...) 
+#else
+# define ERR(ARGS...) fprintf(stderr,"FPROPS: " ARGS)
 #endif
 
 
@@ -55,20 +62,23 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 		use_guess = 1; /* after first run, start re-using current guess */
 
 		if(fabs(rhof - rhog) < 1e-8){
-			MSG("FPROPS: densities converged to same value\n");
+			ERR("densities converged to same value\n");
 			*p_out = p;
 			*rhof_out = rhof;
 			*rhog_out = rhog;
 			return 1;
 		}
 
-		p_new = (helmholtz_a(T, rhof, d) - helmholtz_a(T, rhog, d)) / (1./rhog - 1./rhof);
+		double delta_a = helmholtz_a(T, rhof, d) - helmholtz_a(T, rhog, d);
+		MSG(" delta_a = %f\n",delta_a);
+
+		p_new = delta_a / (1./rhog - 1./rhof);
 		delta_p = p_new - p;
 
-		//MSG(" delta_p = %f bar\n",delta_p/1e5);
+		MSG(" delta_p = %f bar\n",delta_p/1e5);
 	
 		/* convergence test */
-		if(abs(delta_p/p) < 1e-6){
+		if(fabs(delta_p/p) < 1e-6){
 			MSG("CONVERGED...\n");
 			/* note possible need for delp non-change test for certain fluids */
 
@@ -76,7 +86,7 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 		
 			/* find vapour density, using guess */
 			if(fprops_rho_pT(p, T, FPROPS_PHASE_VAPOUR, use_guess, d, &rhog)){
-				MSG("FPROPS: fails to estimate vapour density\n");
+				ERR("failed to estimate vapour density\n");
 				*rhof_out = rhof;
 				*rhog_out = rhog;
 				*p_out = p;
@@ -89,7 +99,7 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 			p = helmholtz_p(T,rhof,d);
 
 			if(p > d->p_c || rhof < d->rho_c){
-				MSG("FPROPS: invalid converged value of p, beyond p_crit\n");
+				ERR("invalid converged value of p, beyond p_crit\n");
 				*p_out = p;
 				*rhof_out = rhof;
 				*rhog_out = rhog;
@@ -119,14 +129,14 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 	}
 
 	if(i==FPROPS_MAX_SUCCSUBS){
-		MSG("FPROPS: too many iterations (%d) in %s(T = %f), or need to try alternative method\n",i,__func__,T);
+		ERR("too many iterations (%d) in %s(T = %f), or need to try alternative method\n",i,__func__,T);
 		*p_out = p;
 		*rhof_out = rhof;
 		*rhog_out = rhog;
 		return 4;
 	}
 
-	fprintf(stderr,"FPROPS: unknown error with T = %f in %s\n",T,__func__);
+	ERR("unknown error with T = %f in %s\n",T,__func__);
 	*p_out = p;
 	*rhof_out = rhof;
 	*rhog_out = rhog;
