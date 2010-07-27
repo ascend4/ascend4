@@ -66,7 +66,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 	, /* p_c */ 0
 	, /* rho_c */ NITROGEN_RHOC
 	, /* T_t */ 63.151
-	, /* p_t */ 0
+	, /* p_t */ 12.523e3
 
 	, 0.039 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_nitrogen
