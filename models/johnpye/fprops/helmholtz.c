@@ -605,14 +605,14 @@ static double ipow(double x, int n){
 
 #define DEFINE_D2DELDDELTA2 \
 		double powd12bm1 = pow(d12,0.5/ct->beta-1.); \
-		double d2DELddel2 = 1./d1*dDELddelta + d12*( \
+		double d2DELddelta2 = 1./d1*dDELddelta + d12*( \
 			4.*ct->B*ct->a*(ct->a-1.)*pow(d12,ct->a-2.) \
 			+ 2.*SQ(ct->A)*SQ(1./ct->beta)*SQ(powd12bm1) \
 			+ ct->A*theta*4./ct->beta*(0.5/ct->beta-1.)*powd12bm1/d12 \
 		)
 
 #define DEFINE_D2DELBDDELTA2 \
-		double d2DELbddelta2 = ct->b * ( (DELB/DELTA)*d2DELddel2 + (ct->b-1.)*(DELB/SQ(DELTA)*SQ(dDELddelta)))
+		double d2DELbddelta2 = ct->b * ( (DELB/DELTA)*d2DELddelta2 + (ct->b-1.)*(DELB/SQ(DELTA)*SQ(dDELddelta)))
 
 #define DEFINE_D2PSIDDELTA2 \
 		double d2PSIddelta2 = (2.*ct->C*d12 - 1.)*2.*ct->C * PSI
@@ -621,13 +621,16 @@ static double ipow(double x, int n){
 	double d3PSIddelta3 = -4. * d1 * SQ(ct->C) * (2.*d12*ct->C - 3.) * PSI
 
 #define DEFINE_D3DELDDELTA3 \
-	double d3DELddelta3 = 0/*UNKNOWN*/
+	double d3DELddelta3 = 1./(d1*d12*ct->beta*SQ(ct->beta)) * (\
+		4*ct->B*ct->a*(1.+ct->a*(2*ct->a-3))*SQ(ct->beta)*pow(d12,ct->a)\
+		+ ct->A * (1.+ct->beta*(2*ct->beta-3))*pow(d12,0.5/ct->beta)\
+	)
 
 #define DEFINE_D3DELBDDELTA3 \
-	double d3DELbddelta3 = b / (DELTA*SQ(DELTA)) * ( \
-		(2+b*(b-3))*dDELddelta*SQ(dDELddelta)*DELB \
+	double d3DELbddelta3 = ct->b / (DELTA*SQ(DELTA)) * ( \
+		(2+ct->b*(ct->b-3))*dDELddelta*SQ(dDELddelta)*DELB \
 		+ DELB*SQ(DELTA)*d3DELddelta3 \
-		+ 3*(b-1) * DELB * DELTA * dDELddelta * d2DELddelta2 \
+		+ 3*(ct->b-1) * DELB * DELTA * dDELddelta * d2DELddelta2 \
 	)
 
 /**
