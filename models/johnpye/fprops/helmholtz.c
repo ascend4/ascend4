@@ -564,6 +564,15 @@ static double ipow(double x, int n){
 
 //#define RESID_DEBUG
 
+/* maxima expressions:
+	Psi(delta) := exp(-C*(delta-1)^2 -D*(tau-1)^2);
+	theta(delta) := (1-tau) + A*((delta-1)^2)^(1/(2*beta));
+	Delta(delta):= theta(delta)^2 + B*((delta-1)^2)^a;
+	n*Delta(delta)^b*delta*Psi(delta);
+	diff(%,delta,3);
+	yikes, that's scary! break down into steps.
+*/
+
 /*
 	We avoid duplication by using the following #defines for common code in
 	calculation of critical terms.
@@ -573,23 +582,53 @@ static double ipow(double x, int n){
 		double t1 = tau - 1.; \
 		double d12 = SQ(d1); \
 		double theta = (1. - tau) + ct->A * pow(d12, 0.5/ct->beta); \
-		double psi = exp(-ct->C*d12 - ct->D*SQ(t1)); \
+		double PSI = exp(-ct->C*d12 - ct->D*SQ(t1)); \
 		double DELTA = SQ(theta) + ct->B* pow(d12, ct->a)
 
+#define DEFINE_DELB \
+		double DELB = pow(DELTA,ct->b)
+
 #define DEFINE_DPSIDDELTA \
-		double dpsiddelta = -2. * ct->C * d1 * psi
+		double dPSIddelta = -2. * ct->C * d1 * PSI
 
 #define DEFINE_DDELDDELTA \
 		double dDELddelta = d1 * (ct->A * theta * 2./ct->beta * pow(d12, 0.5/ct->beta - 1) + 2* ct->B * ct->a * pow(d12, ct->a - 1))
 
 #define DEFINE_DDELBDTAU \
-		double dDELbdtau = -2. * theta * ct->b * pow(DELTA, ct->b - 1)
+		double dDELbdtau = -2. * theta * ct->b * (DELB/DELTA)
 
 #define DEFINE_DPSIDTAU \
-		double dpsidtau = -2. * ct->D * t1 * psi
+		double dPSIdtau = -2. * ct->D * t1 * PSI
 
 #define DEFINE_DDELBDDELTA \
-		double dDELbddelta = (DELTA==0?0:ct->b * pow(DELTA,ct->b - 1.) * dDELddelta)
+		double dDELbddelta = (DELTA==0?0:ct->b * (DELB/DELTA) * dDELddelta)
+
+#define DEFINE_D2DELDDELTA2 \
+		double powd12bm1 = pow(d12,0.5/ct->beta-1.); \
+		double d2DELddel2 = 1./d1*dDELddelta + d12*( \
+			4.*ct->B*ct->a*(ct->a-1.)*pow(d12,ct->a-2.) \
+			+ 2.*SQ(ct->A)*SQ(1./ct->beta)*SQ(powd12bm1) \
+			+ ct->A*theta*4./ct->beta*(0.5/ct->beta-1.)*powd12bm1/d12 \
+		)
+
+#define DEFINE_D2DELBDDELTA2 \
+		double d2DELbddelta2 = ct->b * ( (DELB/DELTA)*d2DELddel2 + (ct->b-1.)*(DELB/SQ(DELTA)*SQ(dDELddelta)))
+
+#define DEFINE_D2PSIDDELTA2 \
+		double d2PSIddelta2 = (2.*ct->C*d12 - 1.)*2.*ct->C * PSI
+
+#define DEFINE_D3PSIDDELTA3 \
+	double d3PSIddelta3 = -4. * d1 * SQ(ct->C) * (2.*d12*ct->C - 3.) * PSI
+
+#define DEFINE_D3DELDDELTA3 \
+	double d3DELddelta3 = 0/*UNKNOWN*/
+
+#define DEFINE_D3DELBDDELTA3 \
+	double d3DELbddelta3 = b / (DELTA*SQ(DELTA)) * ( \
+		(2+b*(b-3))*dDELddelta*SQ(dDELddelta)*DELB \
+		+ DELB*SQ(DELTA)*d3DELddelta3 \
+		+ 3*(b-1) * DELB * DELTA * dDELddelta * d2DELddelta2 \
+	)
 
 /**
 	Residual part of helmholtz function.
@@ -673,8 +712,9 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 #endif
 
 		DEFINE_DELTA;
+		DEFINE_DELB;
 
-		sum = ct->n * pow(DELTA, ct->b) * delta * psi;
+		sum = ct->n * DELB * delta * PSI;
 		res += sum;
 		++ct;
 	}
@@ -750,6 +790,7 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
 #endif
 		DEFINE_DELTA;
+		DEFINE_DELB;
 		DEFINE_DPSIDDELTA;
 		DEFINE_DDELDDELTA;
 		DEFINE_DDELBDDELTA;
@@ -770,7 +811,7 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		fprintf(stderr,"sum = %f\n",sum);
 		if(isnan(sum))fprintf(stderr,"ERROR: sum isnan with i=%d at %d\n",i,__LINE__);
 #endif
-		sum = ct->n * (pow(DELTA, ct->b) * (psi + delta * dpsiddelta) + dDELbddelta * delta * psi);
+		sum = ct->n * (DELB * (PSI + delta * dPSIddelta) + dDELbddelta * delta * PSI);
 		res += sum;
 
 		++ct;
@@ -855,10 +896,11 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
 #endif
 		DEFINE_DELTA;
+		DEFINE_DELB;
 		DEFINE_DDELBDTAU;
 		DEFINE_DPSIDTAU;
 
-		sum = ct->n * delta * (dDELbdtau * psi + pow(DELTA, ct->b) * dpsidtau);
+		sum = ct->n * delta * (dDELbdtau * PSI + DELB * dPSIdtau);
 		res += sum;
 		++ct;
 	}
@@ -938,21 +980,22 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
 #endif
 		DEFINE_DELTA;
+		DEFINE_DELB;
 		DEFINE_DPSIDDELTA;
 		DEFINE_DDELBDTAU;
 		DEFINE_DDELDDELTA;
 
-		double d2DELbddeldtau = -ct->A * ct->b * 2./ct->beta * pow(DELTA,ct->b-1)*d1*pow(d12,0.5/ct->beta-1) \
-			- 2. * theta * ct->b * (ct->b - 1) * pow(DELTA,ct->b-2.) * dDELddelta;
+		double d2DELbddeldtau = -ct->A * ct->b * 2./ct->beta * (DELB/DELTA)*d1*pow(d12,0.5/ct->beta-1) \
+			- 2. * theta * ct->b * (ct->b - 1) * (DELB/SQ(DELTA)) * dDELddelta;
 
-		double d2psiddeldtau = 4. * ct->C*ct->D*d1*t1*psi;
+		double d2PSIddeldtau = 4. * ct->C*ct->D*d1*t1*PSI;
 
 		DEFINE_DPSIDTAU;
 
-		sum = ct->n * (pow(DELTA, ct->b) * (dpsidtau + delta * d2psiddeldtau) \
-			+ delta *dDELbdtau*dpsidtau \
-			+ dDELbdtau*(psi+delta*dpsiddelta) \
-			+ d2DELbddeldtau*delta*psi
+		sum = ct->n * (DELB * (dPSIdtau + delta * d2PSIddeldtau) \
+			+ delta *dDELbdtau*dPSIdtau \
+			+ dDELbdtau*(PSI+delta*dPSIddelta) \
+			+ d2DELbddeldtau*delta*PSI
 		);
 		res += sum;
 		++ct;
@@ -1034,23 +1077,17 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 #endif
 
 		DEFINE_DELTA;
+		DEFINE_DELB;
 		DEFINE_DPSIDDELTA;
 		DEFINE_DDELDDELTA;
 		DEFINE_DDELBDDELTA;
 
-		double powd12bm1 = pow(d12,0.5/ct->beta-1.);
+		DEFINE_D2DELDDELTA2;
+		DEFINE_D2DELBDDELTA2;
 
-		double d2psiddel2 = (2.*ct->C*d12 - 1.)*2.*ct->C*psi;
+		DEFINE_D2PSIDDELTA2;
 
-		double d2DELddel2 = 1./d1*dDELddelta + d12*(
-			4.*ct->B*ct->a*(ct->a-1.)*pow(d12,ct->a-2.) \
-			+ 2.*SQ(ct->A)*SQ(1./ct->beta)*SQ(powd12bm1) \
-			+ ct->A*theta*4./ct->beta*(0.5/ct->beta-1.)*powd12bm1/d12
-		);
-
-		double d2DELbddel2 = ct->b * (pow(DELTA,ct->b - 1.)*d2DELddel2 + (ct->b-1.)*pow(DELTA,ct->b-2.)*SQ(dDELddelta));
-
-		sum = ct->n * (pow(DELTA,ct->b)*(2.*dpsiddelta + delta*d2psiddel2) + 2.*dDELbddelta*(psi+delta*dpsiddelta) + d2DELbddel2*delta*psi);
+		sum = ct->n * (DELB*(2.*dPSIddelta + delta*d2PSIddelta2) + 2.*dDELbddelta*(PSI+delta*dPSIddelta) + d2DELbddelta2*delta*PSI);
 
 		res += sum;
 		++ct;
@@ -1143,14 +1180,15 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
 #endif
 		DEFINE_DELTA;
+		DEFINE_DELB;
 		DEFINE_DDELBDTAU;
 		DEFINE_DPSIDTAU;
 
-		double d2DELbdtau2 = 2. * ct->b * pow(DELTA, ct->b - 1) + 4. * SQ(theta) * ct->b * (ct->b - 1) * pow(DELTA, ct->b - 2);	
+		double d2DELbdtau2 = 2. * ct->b * (DELB/DELTA) + 4. * SQ(theta) * ct->b * (ct->b - 1) * (DELB/SQ(DELTA));	
 
-		double d2psidtau2 = 2. * ct->D * psi * (2. * ct->D * SQ(t1) -1.);
+		double d2PSIdtau2 = 2. * ct->D * PSI * (2. * ct->D * SQ(t1) -1.);
 
-		sum = ct->n * delta * (d2DELbdtau2 * psi + 2 * dDELbdtau*dpsidtau + pow(DELTA, ct->b) * d2psidtau2);
+		sum = ct->n * delta * (d2DELbdtau2 * PSI + 2 * dDELbdtau*dPSIdtau + DELB * d2PSIdtau2);
 		res += sum;
 		++ct;
 	}
@@ -1163,14 +1201,13 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 
 /* === THIRD DERIVATIVES (this is getting boring now) === */
 
-#if 0
 /**
 	Third derivative of helmholtz residual function, with respect to
 	delta (thrice).
 */
-double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
+double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 	double sum = 0, res = 0;
-	double dell, ldell;
+	double dell, L, L2;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
@@ -1180,44 +1217,96 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
 #endif
 
-
-#ifdef RESID_DEBUG
-		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
-#endif
-
 	/* power terms */
 	n = data->np;
 	pt = &(data->pt[0]);
 	dell = ipow(delta,pt->l);
-	ldell = pt->l * dell;
+	L = pt->l * dell;
+	L2 = SQ(L);
 	unsigned oldl;
 	for(i=0; i<n; ++i){
-		double lpart = pt->l ? SQ(ldell) + ldell*(1. - 2*pt->d - pt->l) : 0;
-		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 2) * (pt->d*(pt->d - 1) + lpart);
+		double lpart = pt->l
+			? L2*L + 3*L2*(1 - pt->d - pt->l) + L*(SQ(pt->l) + 3*(pt->d - 1)*pt->l + 3*SQ(pt->d) - 6*pt->d + 1)
+			: 0;
+		sum += pt->a * pow(tau,pt->t) * ipow(delta, pt->d - 3) * (pt->d*(pt->d - 1)*(pt->d - 2) + lpart);
 		oldl = pt->l;
 		++pt;
 		if(i+1==n || oldl != pt->l){
 			if(oldl == 0){
-				res += sum;
+				res += sum; // note special meaning of l==0 case: no exponential
 			}else{
 				res += sum * exp(-dell);
 			}
 			sum = 0;
 			dell = ipow(delta,pt->l);
-			ldell = pt->l*dell;
+			L = pt->l*dell;
+			L2 = SQ(L);
 		}
 	}
 
+	/* gaussian terms */
+	n = data->ng;
+	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
+	gt = &(data->gt[0]);
+	for(i=0; i<n; ++i){
+		double D = delta - gt->epsilon;
+		double D2 = SQ(D);
+		double T2 = SQ(tau - gt->gamma);
+		double A = gt->alpha * delta;
+		double A2 = SQ(A);
+		double d = gt->d;
+		double d2 = SQ(d);
+
+		// this expression calculated from wxMaxima using subsitutions for
+		// D=delta-epsilon and A=alpha*delta.
+		double f1 = 
+			- (8*A*A2) * D*D2 
+			+ (12*d * A2) * D2
+			+ (12 * delta * A2 + (6*d - 6*d2)*A) * D
+			- (6 * d * delta * A + d*d2 - 3*d2 + 2*d);
+
+		res += gt->n * pow(tau,gt->t) * pow(delta, d - 3.)
+			* f1
+			* exp(-(gt->alpha * D2 + gt->beta * T2));
+		++gt;
+	}
 
 
--pow(del,d-3) * tau * a (l3*DL2*DL - 3*l3*DL2 - 3*d*l2*DL2 + 3*l2*DL2 + l3*DL + 3*d*l2*DL - 3*l2*DL+3*d^2*l*DL - 6*d*l*DL + 2*l*DL - d^3+3*d^2 - 2*d)*exp(-DL)
-
-else:
-
-pow(del,d-3) * tau * a * (d-2)*(d-1)*d * exp(-DL)
-
-
+#if 1
+	/* critical terms */
+	n = data->nc;
+	ct = &(data->ct[0]);
+	for(i=0; i<n; ++i){
+#ifdef RESID_DEBUG
+		fprintf(stderr,"i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
 #endif
+
+		DEFINE_DELTA;
+		DEFINE_DELB;
+		DEFINE_DPSIDDELTA;
+		DEFINE_DDELDDELTA;
+		DEFINE_DDELBDDELTA;
+
+		DEFINE_D2PSIDDELTA2;
+		DEFINE_D2DELDDELTA2;
+		DEFINE_D2DELBDDELTA2;
+
+		DEFINE_D3PSIDDELTA3;
+		DEFINE_D3DELDDELTA3;
+		DEFINE_D3DELBDDELTA3;
+
+		sum = ct->n * (
+			delta * (DELB*d3PSIddelta3 + 3 * dDELbddelta * d2PSIddelta2 + 3 * d2DELbddelta2 * dPSIddelta + PSI * d3DELbddelta3)
+			+ 3 * (DELB*d2PSIddelta2 +  2 *  dDELbddelta * dPSIddelta + d2DELbddelta2 * PSI)
+		);
+
+		res += sum;
+		++ct;
+	}
+#endif
+
+	return res;
+}
 
 
 
