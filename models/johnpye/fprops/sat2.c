@@ -32,7 +32,11 @@
 int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
 	double p, p_new, delta_p, delta_p_old;
 
-	/* first guess using acentric factor */
+	/*
+	Estimate of saturation pressure assuming algebraic form
+		log10(p)=A + B/T
+	See Reid, Prausnitz and Poling, 4th Ed., section 2.3. 
+	*/
 	p = d->p_c * pow(10, -7./3 * (1.+d->omega) * (d->T_c / T - 1.));
 
 	MSG("Initial estimate: psat(%f) = %f bar\n",T,p/1e5);
@@ -44,6 +48,9 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 
 	double rhof = -1, rhog = -1;
 
+	/* this approach follows approximately the approach of Soave, page 204:
+	http://dx.doi.org/10.1016/0378-3812(86)90013-0
+	*/
 	for(i=0;i<FPROPS_MAX_SUCCSUBS;++i){
 		if(fprops_rho_pT(p,T,FPROPS_PHASE_LIQUID,use_guess, d, &rhof)){
 			MSG("  increasing p, error with rho_f\n");

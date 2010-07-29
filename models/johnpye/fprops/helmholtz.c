@@ -494,7 +494,7 @@ double helmholtz_d2pdrho2_T(double T, double rho, const HelmholtzData *data){
 	assert(!isinf(phir_deldeldel));
 #endif	
 
-	return data->R * T * (2*phir_del + 4*delta*phir_deldel + SQ(delta)*phir_deldeldel);
+	return data->R * T / rho * delta * (2*phir_del + delta*(4*phir_deldel + delta*phir_deldeldel));
 }
 
 /**
@@ -1226,7 +1226,7 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 */
 double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 	double sum = 0, res = 0;
-	double dell, L, L2;
+	double D,L;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
@@ -1236,33 +1236,50 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
 #endif
 
+#if 1
+	/* major shortcut, but not efficient */
+	double ddel = 0.0000000001;
+	return (helm_resid_deldel(tau,delta+ddel,data) - helm_resid_deldel(tau,delta,data))/ddel;
+#endif
+
+	/* seem to be errors in the following, still haven't tracked them all down. */
+
+#if 0
+	/* wxmaxima code:
+		a*delta^d*%e^(-delta^l)*tau^t
+		diff(%,delta,3);
+	*/
 	/* power terms */
 	n = data->np;
 	pt = &(data->pt[0]);
-	dell = ipow(delta,pt->l);
-	L = pt->l * dell;
-	L2 = SQ(L);
+	D = ipow(delta,pt->l);
 	unsigned oldl;
 	for(i=0; i<n; ++i){
+		double d = pt->d;
+		double l = pt->l;
 		double lpart = pt->l
-			? L2*L + 3*L2*(1 - pt->d - pt->l) + L*(SQ(pt->l) + 3*(pt->d - 1)*pt->l + 3*SQ(pt->d) - 6*pt->d + 1)
+			? D*((D-1)*(D-2)-1)   * l*SQ(l)
+				+ 3*D*(1-d)*(D-1) * SQ(l)
+				+ D*(3*SQ(d-1)-1) * l
 			: 0;
-		sum += pt->a * pow(tau,pt->t) * ipow(delta, pt->d - 3) * (pt->d*(pt->d - 1)*(pt->d - 2) + lpart);
+		sum += pt->a * pow(tau,pt->t) * ipow(delta, d-3) * (d*(d-1)*(d-2) + lpart);
 		oldl = pt->l;
 		++pt;
 		if(i+1==n || oldl != pt->l){
 			if(oldl == 0){
 				res += sum; // note special meaning of l==0 case: no exponential
 			}else{
-				res += sum * exp(-dell);
+				res += sum * exp(-D);
 			}
 			sum = 0;
-			dell = ipow(delta,pt->l);
-			L = pt->l*dell;
-			L2 = SQ(L);
+			D = ipow(delta,pt->l);
 		}
 	}
 
+	//fprintf(stderr,"DELDELDEL fiff = %f, sum = %f  ",fdiff, res);
+#endif
+
+#if 0
 	/* gaussian terms */
 	n = data->ng;
 	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
@@ -1289,9 +1306,9 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 			* exp(-(gt->alpha * D2 + gt->beta * T2));
 		++gt;
 	}
+#endif
 
-
-#if 1
+#if 0
 	/* critical terms */
 	n = data->nc;
 	ct = &(data->ct[0]);
