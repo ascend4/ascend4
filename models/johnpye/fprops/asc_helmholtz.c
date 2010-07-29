@@ -41,6 +41,7 @@
 
 /* the code that we're wrapping... */
 #include "helmholtz.h"
+#include "sat2.h"
 
 /* for the moment, species data are defined in C code, we'll implement something
 better later on, hopefully. */
@@ -66,6 +67,7 @@ ExtBBoxFunc helmholtz_s_calc;
 ExtBBoxFunc helmholtz_h_calc;
 ExtBBoxFunc helmholtz_a_calc;
 ExtBBoxFunc helmholtz_g_calc;
+ExtBBoxFunc helmholtz_phsx_vT_calc;
 ExtBBoxFunc helmholtz_phase_calc;
 
 /*------------------------------------------------------------------------------
@@ -82,6 +84,8 @@ static const char *helmholtz_s_help = "Calculate specific entropy from temperatu
 static const char *helmholtz_h_help = "Calculate specific enthalpy from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_a_help = "Calculate specific Helmholtz energy from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_g_help = "Calculate specific Gibbs energy from temperature and density, using Helmholtz fundamental correlation";
+
+static const char *helmholtz_phsx_vT_help = "Calculate p, h, s, x from temperature and density, using FPROPS/Helmholtz eqn";
 
 static const char *helmholtz_phase_help = "Calculate Maxwell phase criterion residuals using Helmholtz fundamental correlation";
 
@@ -130,6 +134,7 @@ ASC_EXPORT int helmholtz_register(){
 	CALCFN(helmholtz_h,2,1);
 	CALCFN(helmholtz_a,2,1);
 	CALCFN(helmholtz_g,2,1);
+	CALCFN(helmholtz_phsx_vT,2,4);
 	CALCFN(helmholtz_phase,4,3);
 
 #undef CALCFN
@@ -223,7 +228,7 @@ int helmholtz_p_calc(struct BBoxInterp *bbox,
 ){
 	CALCPREPARE(2,1);
 
-	/* first input is temperature, second is molar density */
+	/* first input is temperature, second is density */
 	if(bbox->task == bb_func_eval){
 		outputs[0] = helmholtz_p(inputs[0], inputs[1], helmholtz_data);
 	}else{
@@ -249,7 +254,7 @@ int helmholtz_u_calc(struct BBoxInterp *bbox,
 ){
 	CALCPREPARE(2,1);
 
-	/* first input is temperature, second is molar density */
+	/* first input is temperature, second is density */
 	if(bbox->task == bb_func_eval){
 		outputs[0] = helmholtz_u(inputs[0], inputs[1], helmholtz_data);
 	}else{
@@ -274,7 +279,7 @@ int helmholtz_s_calc(struct BBoxInterp *bbox,
 ){
 	CALCPREPARE(2,1);
 
-	/* first input is temperature, second is molar density */
+	/* first input is temperature, second is density */
 	outputs[0] = helmholtz_s(inputs[0], inputs[1], helmholtz_data);
 
 	/* no need to worry about error states etc. */
@@ -294,7 +299,7 @@ int helmholtz_h_calc(struct BBoxInterp *bbox,
 ){
 	CALCPREPARE(2,1);
 
-	/* first input is temperature, second is molar density */
+	/* first input is temperature, second is density */
 	if(bbox->task == bb_func_eval){
 		outputs[0] = helmholtz_h(inputs[0], inputs[1], helmholtz_data);
 	}else{
@@ -320,7 +325,7 @@ int helmholtz_a_calc(struct BBoxInterp *bbox,
 ){
 	CALCPREPARE(2,1);
 
-	/* first input is temperature, second is molar density */
+	/* first input is temperature, second is density */
 	outputs[0] = helmholtz_a(inputs[0], inputs[1], helmholtz_data);
 
 	/* no need to worry about error states etc. */
@@ -340,12 +345,60 @@ int helmholtz_g_calc(struct BBoxInterp *bbox,
 ){
 	CALCPREPARE(2,1);
 
-	/* first input is temperature, second is molar density */
+	/* first input is temperature, second is density */
 	outputs[0] = helmholtz_g(inputs[0], inputs[1], helmholtz_data);
 
 	/* no need to worry about error states etc. */
 	return 0;
 }
+
+
+
+/**
+	Evaluation function for 'helmholtz_phsx_vT'
+	@return 0 on success
+*/
+int helmholtz_phsx_vT_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(2,4);
+
+	double rho = 1./inputs[0];
+	double T = inputs[1];
+	double p_sat, rho_f, rho_g;
+
+	if(T < helmholtz_data->T_c){
+		int res = fprops_sat_T(T, &p_sat, &rho_f, &rho_g, helmholtz_data);
+
+		if(rho < rho_f && rho > rho_g){
+			/* saturated */
+			double vf = 1./rho_f;
+			double vg = 1./rho_g;
+			double x = (inputs[0] - vf)  /(vg - vf);
+			double sf = helmholtz_s(T,rho_f, helmholtz_data);
+			double hf = helmholtz_h(T,rho_f, helmholtz_data);
+			double sg = helmholtz_s(T,rho_g, helmholtz_data);
+			double hg = helmholtz_h(T,rho_g, helmholtz_data);
+			outputs[0] = p_sat;
+			outputs[1] = hf + x * (hg-hf);
+			outputs[2] = sf + x * (sg-sf);
+			outputs[3] = x;
+			/* maybe there was an error solving the saturation state? */
+			return res;
+		}
+	}
+
+	/* non-saturated */
+	outputs[0] = helmholtz_p(T,rho, helmholtz_data);
+	outputs[1] = helmholtz_h(T,rho, helmholtz_data);
+	outputs[2] = helmholtz_s(T,rho, helmholtz_data);
+	outputs[3] = (rho > rho_f ? 0 : 1);
+	return 0;
+}
+
+
 
 
 /**

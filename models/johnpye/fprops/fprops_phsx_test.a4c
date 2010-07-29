@@ -1,0 +1,43 @@
+(* test of the fluid properties routines currently implemented in helmholtz.c *)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/helmholtz";
+
+MODEL helmholtz_conf(
+	component IS_A symbol_constant;
+);
+END helmholtz_conf;
+
+
+MODEL fprops_phsx_test;
+
+	T IS_A temperature;
+	p IS_A pressure;
+	h IS_A specific_energy;
+	s IS_A specific_entropy;
+	x IS_A fraction;
+	v IS_A specific_volume;
+	rho IS_A mass_density;
+
+	rho * v = 1.;
+
+	conf IS_A helmholtz_conf('water');
+
+	sat: helmholtz_phsx_vT(
+		v, T : INPUT;
+		p, h, s, x : OUTPUT;
+		conf : DATA
+	);
+
+METHODS
+METHOD on_load;
+	FIX T;
+	T := 250 {K};
+	FIX h;
+	h := 1500 {kJ/kg};
+END on_load;
+
+END fprops_phsx_test;	
+
+
