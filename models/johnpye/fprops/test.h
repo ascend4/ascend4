@@ -31,6 +31,10 @@ int helm_check_u(const HelmholtzData *d, unsigned ntd, const TestData *td);
 */
 int helm_check_p_T(const HelmholtzData *d, unsigned ntd, const TestData *td);
 
+
+int helm_check_d2pdrho2_T(const HelmholtzData *d, unsigned ntd, const TestData *td);
+
+
 #define TEST_VERBOSE
 
 #ifdef TEST_VERBOSE

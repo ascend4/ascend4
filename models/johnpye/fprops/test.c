@@ -180,7 +180,37 @@ int helm_check_dpdrho_T(const HelmholtzData *d, unsigned ntd, const TestData *td
 		err = (dpdrho_est - dpdrho);
 		se += err;
 		sse += err*err;
-		fprintf(stderr,"%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%12.4e\t%12.2f\n",T,rho,p,dpdrho,dpdrho_est,err,err/dpdrho*100);
+		fprintf(stderr,"%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%12.4e\t%12.6f\n",T,rho,p,dpdrho,dpdrho_est,err,err/dpdrho*100);
+	}
+	fprintf(stderr,"average error = %.10e\n",se/n);
+	fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);
+}
+
+
+int helm_check_d2pdrho2_T(const HelmholtzData *d, unsigned ntd, const TestData *td){
+	unsigned i;
+	double T,rho,p,dpdrho,rho1,dpdrho1,d2pdrho2,d2pdrho2_est,err,se = 0,sse = 0;
+	unsigned n = ntd;
+	double tol = 1e-1;
+
+	double drho = 0.0001 /* finite difference in temperature, in K */;
+
+	fprintf(stderr,"\n(d2p/drho2)_T RESULTS\n\n");
+	fprintf(stderr,"%-18s\t%-18s\t%-18s\t%-18s\t%-18s\t%12s\t%12s\t%12s\n","T","rho","p","dp/drho","d2p/drho2 est","d2p/drho2 calc","err","rel err");
+	for(i=0; i<n;++i){
+		T = td[i].T + 273.15;
+		rho = td[i].rho;
+		p = helmholtz_p(T,rho,d);
+		dpdrho = helmholtz_dpdrho_T(T,rho,d);
+		d2pdrho2 = helmholtz_d2pdrho2_T(T, rho, d);
+		assert(!isinf(d2pdrho2));
+		rho1 = rho + drho;
+		dpdrho1 = helmholtz_dpdrho_T(T, rho1, d);
+		d2pdrho2_est = (dpdrho1 - dpdrho)/drho;
+		err = (d2pdrho2_est - d2pdrho2);
+		se += err;
+		sse += err*err;
+		fprintf(stderr,"%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%12.4e\t%12.2e\t%12.3e\n",T,rho,p,dpdrho,d2pdrho2_est,d2pdrho2,err,err/d2pdrho2_est);
 	}
 	fprintf(stderr,"average error = %.10e\n",se/n);
 	fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);

@@ -345,11 +345,18 @@ int main(void){
 
 #endif
 
-
+#if 0
 	helm_run_test_cases(d, ntd1, td1, 'K');
+#endif
 
+	helm_check_dpdrho_T(d, ntd1, td1);
+
+#if 1
+	helm_check_d2pdrho2_T(d,ntd1, td1);
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.8f%%)\n",maxerr);
+#endif
+
 	exit(0);
 }
 
