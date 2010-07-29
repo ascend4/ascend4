@@ -36,6 +36,7 @@ double helm_resid_tau(double tau, double delta, const HelmholtzData *data);
 double helm_resid_deltau(double tau, double delta, const HelmholtzData *data);
 double helm_resid_deldel(double tau, double delta, const HelmholtzData *data);
 double helm_resid_tautau(double tau, double delta, const HelmholtzData *data);
+double helm_resid_deldeldel(double tau, double delta, const HelmholtzData *data);
 
 /*
 	Note: the cross partial derivative with respect to delta and tau is
