@@ -103,7 +103,7 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 			fprops_rho_pT(p, T, FPROPS_PHASE_LIQUID, use_guess, d, &rhof);
 
 			/* re-evaluate exact p for the value of rhof calculated */
-			p = helmholtz_p(T,rhof,d);
+			p = helmholtz_p_raw(T,rhof,d);
 
 			if(p > d->p_c || rhof < d->rho_c){
 				ERR("invalid converged value of p, beyond p_crit\n");
@@ -235,7 +235,7 @@ int fprops_rho_pT(double p, double T, char phase, char use_guess, const Helmholt
 			vlog_prev=vlog;
 
 			*rho=1./exp(vlog);
-			double p2 = helmholtz_p(T,*rho,d);
+			double p2 = helmholtz_p_raw(T,*rho,d);
 			double dpdrho = helmholtz_dpdrho_T(T,*rho,d);
 
 			if(dpdrho < 0){
@@ -293,7 +293,7 @@ int fprops_rho_pT(double p, double T, char phase, char use_guess, const Helmholt
 	for(i=0; i<30; ++i){
 		vlog_prev = vlog;
 		*rho = 1./exp(vlog);
-		double p2 = helmholtz_p(T,*rho,d);
+		double p2 = helmholtz_p_raw(T,*rho,d);
 		double dpdrho = helmholtz_dpdrho_T(T,*rho,d);
 		if(dpdrho < 0. || p2 <= 0.){
 			// increase spec vol if dpdrho < 0 or guess pressure < 0

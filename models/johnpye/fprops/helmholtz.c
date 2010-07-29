@@ -46,6 +46,21 @@
 	double tau = data->T_star / T; \
 	double delta = rho / data->rho_star
 
+double helmholtz_p(double T, double rho, const HelmholtzData *d){
+	double p, rho_f, rho_g;
+	if(T <= d->T_c){
+		int res = fprops_sat_T(T, &p, &rho_f, &rho_g, d);
+		if(res){
+			//fprintf(stderr,"ERROR: got error % from saturation calc in %s",res,__func__);
+			return p;
+		}
+		if(rho < rho_f && rho > rho_g){
+			return p;
+		}
+	}
+	return helmholtz_p_raw(T,rho,d);
+}
+
 /**
 	Function to calculate pressure from Helmholtz free energy EOS, given temperature
 	and mass density.
@@ -54,7 +69,7 @@
 	@param rho mass density in kg/m³
 	@return pressure in Pa???
 */
-double helmholtz_p(double T, double rho, const HelmholtzData *data){
+double helmholtz_p_raw(double T, double rho, const HelmholtzData *data){
 	DEFINE_TD;
 
 #ifdef TEST
