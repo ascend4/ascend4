@@ -481,6 +481,22 @@ double helmholtz_dpdrho_T(double T, double rho, const HelmholtzData *data){
 	return data->R * T * (1 + 2*delta*phir_del + SQ(delta)*phir_deldel);
 }
 
+
+double helmholtz_d2pdrho2_T(double T, double rho, const HelmholtzData *data){
+	DEFINE_TD;
+
+	double phir_del = helm_resid_del(tau,delta,data);
+	double phir_deldel = helm_resid_deldel(tau,delta,data);
+	double phir_deldeldel = helm_resid_deldeldel(tau,delta,data);
+#ifdef TEST
+	assert(!isinf(phir_del));
+	assert(!isinf(phir_deldel));
+	assert(!isinf(phir_deldeldel));
+#endif	
+
+	return data->R * T * (2*phir_del + 4*delta*phir_deldel + SQ(delta)*phir_deldeldel);
+}
+
 /**
 	Calculate partial derivative of h with respect to T, with rho constant
 */

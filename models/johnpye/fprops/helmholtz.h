@@ -123,6 +123,7 @@ double helmholtz_cp0(double T, const HelmholtzData *data);
 
 double helmholtz_dpdT_rho(double T, double rho, const HelmholtzData *data);
 double helmholtz_dpdrho_T(double T, double rho, const HelmholtzData *data);
+double helmholtz_d2pdrho2_T(double T, double rho, const HelmholtzData *data);
 
 double helmholtz_dhdT_rho(double T, double rho, const HelmholtzData *data);
 double helmholtz_dhdrho_T(double T, double rho, const HelmholtzData *data);
