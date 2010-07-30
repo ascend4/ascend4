@@ -150,6 +150,14 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 	return 9;
 }
 
+/**
+	Routine to calculate saturation condition at points close to saturation.
+	The above successive substitution method fails in those cases.
+*/
+int fprops_sat_T_crit(double T, double *p_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
+	/* nothing yet */
+	return 99;
+}
 
 /*
 	Iterate to find density as a function of pressure and temperature
