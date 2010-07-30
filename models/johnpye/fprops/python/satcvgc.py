@@ -10,7 +10,7 @@ DD = [
 	, helmholtz_data_carbondioxide
 ## unexplained errors for these fluids:
 #	, helmholtz_data_methane
-#	, helmholtz_data_ammonia
+	, helmholtz_data_ammonia
 #	, helmholtz_data_nitrogen
 ## following still need T_triple data added
 #	, helmholtz_data_hydrogen

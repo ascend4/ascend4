@@ -32,6 +32,9 @@ MODEL fprops_phsx_test;
 
 METHODS
 METHOD on_load;
+	(* a first guess *)
+	v := 100 {m^3/kg};
+
 	FIX T;
 	T := 250 {K};
 	FIX h;
