@@ -86,10 +86,10 @@ class PopupSolverReporter(PythonSolverReporter):
 			gtk.main_iteration()
 
 	def on_stopbutton_activate(self,*args):
-		print "STOPPING..."
-		self.guiinterrupt = True;
+		self.guiinterrupt = True
 
 	def on_solverstatusdialog_response(self,widget,response):
+		self.guiinterrupt = True
 		self.window.destroy()
 		
 	def fill_values(self,status):
