@@ -196,7 +196,7 @@ class DiagnoseWindow:
 
 	def fill_selection_info(self):
 		if self.var:
-			#self.varname.set_text(self.var.getName())
+			self.varname.set_text(self.var.getName())
 			self.varval.set_text(str(self.var.getValue()))
 			self.varinfobutton.set_sensitive(True)
 		else:
