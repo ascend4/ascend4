@@ -142,6 +142,7 @@ MODEL ideal_air_table REFINES ideal_gas_base;
 	
 	s0 IS_A specific_entropy;	
 	u IS_A specific_energy;
+	p_ref IS_A pressure;
 
 	data: datareader(
 		T : INPUT;
