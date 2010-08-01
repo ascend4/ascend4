@@ -42,7 +42,7 @@
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/initialize.h>
 
-/* #define DEFAULT_DEBUG */
+#define DEFAULT_DEBUG
 
 /*------------------------------------------------------------------------------
   visit child atoms of the current model (don't visit sub models) and set
@@ -130,6 +130,7 @@ static int defaultself_visit_submodels1(struct Instance *inst
 int defaultself_visit_submodels(struct Instance *root
 		, struct gl_list_t *arglist, void *userdata
 ){
+	CONSOLE_DEBUG("starting");
 	struct DefaultAll_data data;
 	data.method_name = AddSymbol("default_self");
 	

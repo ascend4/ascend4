@@ -115,7 +115,7 @@ int Builtins_Init(void){
 		,NULL /* destroy fn */
   );
 
-  /* ERROR_REPORTER_DEBUG("Registering EXTERNAL asc_default_self"); */
+  CONSOLE_DEBUG("Registering EXTERNAL defaultself_visit_submodels");
   result = CreateUserFunctionMethod("defaultself_visit_childatoms"
 		,defaultself_visit_childatoms
 		,1 /* num of args */
@@ -124,7 +124,7 @@ int Builtins_Init(void){
 		,NULL /* destroy fn */
   );
 
-  /* ERROR_REPORTER_DEBUG("Registering EXTERNAL asc_default_all"); */
+  CONSOLE_DEBUG("Registering EXTERNAL defaultself_visit_submodels");
   result = CreateUserFunctionMethod("defaultself_visit_submodels"
 		,defaultself_visit_submodels
 		,1 /* num of args */

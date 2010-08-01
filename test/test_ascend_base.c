@@ -18,7 +18,8 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	Central registration 'base/generic' test routines in ASCEND
-*/
+*/
+
 #include <stdio.h>
 
 #include <ascend/utilities/config.h>
@@ -29,6 +30,7 @@
 #include <ascend/solver/test/test_register_solver.h>
 #include <ascend/compiler/test/test_register_compiler.h>
 #include <ascend/linear/test/test_register_linear.h>
+#include <ascend/packages/test/test_register_packages.h>
 
 ASC_EXPORT int register_cunit_tests(){
 	test_register_general();
@@ -36,6 +38,7 @@ ASC_EXPORT int register_cunit_tests(){
 	test_register_solver();
  	test_register_linear();
 	test_register_compiler();
+	test_register_packages();
 	fprintf(stderr,"Registered ASCEND test suites\n");
 	return 0;
 }
