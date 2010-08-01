@@ -73,7 +73,7 @@
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
 
-/* #define INIT_DEBUG */
+#define INIT_DEBUG
 
 /*********************************************************************\
   There is a stack of procedure calls kept for tracing and breaking
@@ -1811,7 +1811,9 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
 
   morename = WriteNameString(name);
 #ifdef INIT_DEBUG
-  CONSOLE_DEBUG("Running method '%s'...",morename);
+  char *name1 = WriteInstanceNameString(fm->i,NULL);
+  CONSOLE_DEBUG("Running METHOD %s on '%s'",SCP(fm->cname),name1);
+  ASC_FREE(name1);
 #endif
   ASC_FREE(morename);
 
@@ -1956,7 +1958,9 @@ enum Proc_enum Initialize(struct Instance *context,
   struct procFrame fm;
   
 #ifdef INIT_DEBUG
-  CONSOLE_DEBUG("RUNNING METHOD...");
+  char *instname = WriteInstanceNameString(context,NULL);
+  CONSOLE_DEBUG("Running method '%s' on '%s'...",cname,instname);
+  ASC_FREE(instname);
 #endif
 
   assert(err != NULL);

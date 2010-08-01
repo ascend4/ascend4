@@ -1,0 +1,25 @@
+(* test file for 'default_all' automatic recursive model initialisation trick *)
+
+REQUIRE "system.a4l";
+
+(* this time, we test with two levels of nesting *)
+
+MODEL sub1;
+	a IS_A solver_var;
+	b IS_A solver_var;
+METHODS
+METHOD default_self;
+	a := 4;
+	b := 8;
+END default_self;
+END sub1;
+
+MODEL sub2;
+	s1a IS_A sub1;
+	s1b IS_A sub1;
+END sub2;	
+
+MODEL test2;
+	s2 IS_A sub2;
+END test2;
+
