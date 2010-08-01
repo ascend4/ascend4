@@ -126,8 +126,6 @@ void ProcWriteIfError(struct procFrame *fm, CONST char *cname){
   char em[85];
   char cn[20];
 
-  CONSOLE_DEBUG("...");
-
   if (strlen(cname) > 19) {
     strncpy(cn,cname,19);
     cn[19] = '\0';
@@ -184,9 +182,7 @@ void ProcWriteIfError(struct procFrame *fm, CONST char *cname){
     sprintf(em,"%s unexpected error message",cn);
     break;
   }
-  CONSOLE_DEBUG("...");
   WriteInitErr(fm,em);
-  CONSOLE_DEBUG("...");
 }
 
 void ProcWriteAssignmentError(struct procFrame *fm){

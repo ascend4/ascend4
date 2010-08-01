@@ -213,6 +213,7 @@ MODEL. Hopefully this approach can replace the current practise of writing
 model being reset to default values, rather than only those explicitly stated
 by the modeller.
 } END NOTES;
+	STOP {it works!};
 	(* nothing here *)
 END default;
 
@@ -240,7 +241,7 @@ the PyGTK GUI.
 } END NOTES;
 	EXTERNAL defaultself_visit_childatoms(SELF);
 	EXTERNAL defaultself_visit_submodels(SELF); (* overwrite ATOM defaults explicit nested code if needed *)
-	RUN default; (* local overrides *)
+	(*RUN default;*) (* local overrides *)
 END default_self;
 
 METHOD default_all;

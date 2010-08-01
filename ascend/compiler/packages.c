@@ -115,7 +115,7 @@ int Builtins_Init(void){
 		,NULL /* destroy fn */
   );
 
-  CONSOLE_DEBUG("Registering EXTERNAL defaultself_visit_submodels");
+  CONSOLE_DEBUG("Registering EXTERNAL defaultself_visit_childatoms");
   result = CreateUserFunctionMethod("defaultself_visit_childatoms"
 		,defaultself_visit_childatoms
 		,1 /* num of args */

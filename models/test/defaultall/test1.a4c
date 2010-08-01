@@ -1,0 +1,18 @@
+(* test file for 'default_all' automatic recursive model initialisation trick *)
+
+REQUIRE "system.a4l";
+
+MODEL sub1;
+	a IS_A solver_var;
+	b IS_A solver_var;
+METHODS
+METHOD default_self;
+	a := 4;
+	b := 8;
+END default_self;
+END sub1;
+
+MODEL test1;
+	s1 IS_A sub1;
+END test1;
+

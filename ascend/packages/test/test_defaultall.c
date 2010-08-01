@@ -133,12 +133,12 @@ static void test_default2(void){
 
 	/* check for vars and rels */
 	struct Instance *root = GetSimulationRoot(sim);
-	struct Instance *inst, *a, *b;
+	struct Instance *inst1, *inst2, *a, *b;
 
-	CU_ASSERT_FATAL((inst = ChildByChar(root,AddSymbol("s2"))) && InstanceKind(inst)==MODEL_INST);
-	CU_ASSERT_FATAL((inst = ChildByChar(root,AddSymbol("s1a"))) && InstanceKind(inst)==MODEL_INST);
-	CU_ASSERT_FATAL((a = ChildByChar(inst,AddSymbol("a"))) && InstanceKind(a)==REAL_ATOM_INST); 
-	CU_ASSERT_FATAL((b = ChildByChar(inst,AddSymbol("b"))) && InstanceKind(b)==REAL_ATOM_INST);
+	CU_ASSERT_FATAL((inst1 = ChildByChar(root,AddSymbol("s2"))) && InstanceKind(inst1)==MODEL_INST);
+	CU_ASSERT_FATAL((inst2 = ChildByChar(inst1,AddSymbol("s1a"))) && InstanceKind(inst2)==MODEL_INST);
+	CU_ASSERT_FATAL((a = ChildByChar(inst2,AddSymbol("a"))) && InstanceKind(a)==REAL_ATOM_INST); 
+	CU_ASSERT_FATAL((b = ChildByChar(inst2,AddSymbol("b"))) && InstanceKind(b)==REAL_ATOM_INST);
 
 	CONSOLE_DEBUG("Checking values...");
 

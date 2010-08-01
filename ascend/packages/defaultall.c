@@ -44,6 +44,11 @@
 
 #define DEFAULT_DEBUG
 
+#ifdef DEFAULT_DEBUG
+# include <ascend/compiler/instance_io.h>
+# include <ascend/utilities/ascMalloc.h>
+#endif
+
 /*------------------------------------------------------------------------------
   visit child atoms of the current model (don't visit sub models) and set
   to ATOM default values
@@ -175,7 +180,9 @@ int defaultself_visit_submodels1(struct Instance *inst
 			method = FindMethod(type,data->method_name);
 			if(method){
 #ifdef DEFAULT_DEBUG
-				CONSOLE_DEBUG("Running METHOD %s on '%s'",SCP(data->method_name),SCP(GetName(type)));
+				char *name1 = WriteInstanceNameString(c,NULL);
+				CONSOLE_DEBUG("Running METHOD %s on '%s'",SCP(data->method_name),name1);
+				ASC_FREE(name1);
 #endif
 				pe = Initialize(c , CreateIdName(ProcName(method))
 					, SCP(data->method_name)
@@ -196,7 +203,7 @@ int defaultself_visit_submodels1(struct Instance *inst
 	}
 
 #ifdef DEFAULT_DEBUG
-	CONSOLE_DEBUG("defaultself_visit_submodels1 return ing %d",err);
+	CONSOLE_DEBUG("defaultself_visit_submodels1 returning %d",err);
 #endif
 	return err;
 }
