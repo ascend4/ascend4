@@ -33,15 +33,15 @@ IMPORT "sensitivity/solve";
   BACKGROUND STUFF
 *)
 
-UNIVERSAL MODEL fluid1;
+MODEL fluid;
 	component IS_A symbol_constant;
-	component :== 'water';
-END fluid1;
+END fluid;
 
 (*
 	Thermo properties -- IAPWS-IF97
 *)
-MODEL steam_state;
+MODEL stream_state;
+	cd IS_A fluid;
 	p IS_A pressure;
 	h IS_A specific_enthalpy;
 
@@ -50,12 +50,10 @@ MODEL steam_state;
 	s IS_A specific_entropy;
 	x IS_A fraction;
 
-	conf IS_A fluid1;
-
 	sat: helmholtz_phsx_vT(
 		v, T : INPUT;
 		p, h, s, x : OUTPUT;
-		conf : DATA
+		cd : DATA
 	);
 METHODS
 	METHOD default;
@@ -75,11 +73,12 @@ METHODS
 		RUN default_all;
 		FIX p, h;
 	END on_load;
-END steam_state;
+END stream_state;
 
 (* a simple connector that includes calculation of steam properties *)
-MODEL steam_node;
-	state IS_A steam_state;
+MODEL stream_node;
+	state IS_A stream_state;
+	cd ALIASES state.cd;
 	p ALIASES state.p;
 	h ALIASES state.h;
 	v ALIASES state.v;
@@ -98,21 +97,22 @@ METHODS
 		RUN default_all; RUN reset; RUN values;
 		FIX p,h;
 	END on_load;
-END steam_node;
+END stream_node;
 
-MODEL steam_equipment;
-	inlet "in: inlet steam stream" IS_A steam_node;
-	outlet "out: outlet steam stream" IS_A steam_node;
-
+MODEL stream_equipment;
+	inlet "in: inlet steam stream" IS_A stream_node;
+	outlet "out: outlet steam stream" IS_A stream_node;
+	inlet.cd, outlet.cd ARE_THE_SAME;
 	inlet.mdot, outlet.mdot ARE_THE_SAME;
+	cd ALIASES inlet.cd;
 	mdot ALIASES inlet.mdot;
-END steam_equipment;
+END stream_equipment;
 
 (*------------------------------------------------------------------------------
   PUMP COMPONENT
 *)
 
-MODEL pump_simple REFINES steam_equipment;
+MODEL pump_simple REFINES stream_equipment;
 	NOTES
 		'block' SELF {Simple model of a pump using isentropic efficiency}
 	END NOTES;
@@ -120,9 +120,9 @@ MODEL pump_simple REFINES steam_equipment;
 	dp IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
 
-	outlet_is IS_A steam_state;
+	outlet_is IS_A stream_state;
 	outlet_is.p, outlet.p ARE_THE_SAME;
-
+	outlet_is.cd, outlet.cd ARE_THE_SAME;
 	outlet_is.s, inlet.s ARE_THE_SAME;
 	eta IS_A fraction;
 	
@@ -143,21 +143,23 @@ MODEL pump_simple REFINES steam_equipment;
 	END NOTES;
 *)
 END pump_simple;
+
 MODEL pump_simple_test REFINES pump_simple;
-	(* no equations here *)
+	cd.component :== 'water';
 METHODS
 METHOD on_load;
-	FIX inlet.p;
-	FIX inlet.h;
-	FIX outlet.p;
-	FIX eta;
-	FIX mdot;
+	FIX inlet.p; inlet.p := 5 {bar};
+	FIX inlet.h; inlet.h := 400 {kJ/kg};
+	FIX outlet.p; outlet.p := 100 {bar};
+	FIX eta; eta := 0.65;
+	FIX mdot; mdot := 900 {t/d};
 
-	inlet.p := 5 {bar};
-	inlet.h := 400 {kJ/kg};
-	outlet.p := 100 {bar};
-	eta := 0.65;
-	mdot := 900 {t/d};
+	inlet.v := 0.97 {L/kg};	
+	inlet.T := 300 {K};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
 END on_load;
 END pump_simple_test;
 
@@ -165,7 +167,7 @@ END pump_simple_test;
   TURBINE COMPONENT
 *)
 
-MODEL turbine_simple REFINES steam_equipment;
+MODEL turbine_simple REFINES stream_equipment;
 	NOTES
 		'block' SELF {Simple turbine model}
 	END NOTES;
@@ -173,7 +175,8 @@ MODEL turbine_simple REFINES steam_equipment;
 	dp IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
 	
-	outlet_is IS_A steam_state;
+	outlet_is IS_A stream_state;
+	outlet_is.cd, outlet.cd ARE_THE_SAME;
 	outlet_is.p, outlet.p ARE_THE_SAME;
 	outlet_is.s, inlet.s ARE_THE_SAME;
 
@@ -190,7 +193,7 @@ MODEL turbine_simple REFINES steam_equipment;
 END turbine_simple;
 
 MODEL turbine_simple_test REFINES turbine_simple;
-	(* no equations here *)
+	cd.component :== 'water';
 METHODS
 METHOD on_load;
 	FIX inlet.p;
@@ -215,7 +218,7 @@ END turbine_simple_test;
 	simple model assumes no pressure drop, but heating losses due to
 	flue gas temperature
 *)
-MODEL boiler_simple REFINES steam_equipment;
+MODEL boiler_simple REFINES stream_equipment;
 	NOTES
 		'block' SELF {Simple boiler model}
 	END NOTES;
@@ -234,7 +237,7 @@ MODEL boiler_simple REFINES steam_equipment;
 END boiler_simple;
 
 MODEL boiler_simple_test REFINES boiler_simple;
-	(* nothing here *)
+	cd.component :== 'water';
 METHODS
 METHOD on_load;
 	FIX inlet.p;
@@ -260,7 +263,7 @@ END boiler_simple_test;
 	this is really simple (fluid props permitting): just work out the heat
 	that must be expelled to get the water down to a certain state
 *)
-MODEL condenser_simple REFINES steam_equipment;
+MODEL condenser_simple REFINES stream_equipment;
 	NOTES
 		'block' SELF {Simple condenser model}
 		'inline' inlet {in: yahoooo}
@@ -274,7 +277,7 @@ MODEL condenser_simple REFINES steam_equipment;
 END condenser_simple;
 
 MODEL condenser_simple_test REFINES condenser_simple;
-	(* nothing here *)
+	cd.component :== 'water';
 METHODS
 METHOD on_load;
 	FIX inlet.p, inlet.x;
@@ -294,18 +297,19 @@ END condenser_simple_test;
 
 (*
 	open heater does not have inlet.mdot==outlet.mdot, so not a refinement
-	of 'steam_equipment'.
+	of 'stream_equipment'.
 *)
 MODEL heater_open;
 	NOTES
 		'block' SELF {Simple open feedwater heater model}
 	END NOTES;
 
-	inlet "in:" IS_A steam_node;
-	inlet_heat "in:" IS_A steam_node;
-	outlet "out:" IS_A steam_node;
-	
+	inlet "in:" IS_A stream_node;
+	inlet_heat "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
 	inlet_heat.p, inlet.p, outlet.p ARE_THE_SAME;
+	inlet.cd, outlet.cd, inlet_heat.cd ARE_THE_SAME;
+	cd ALIASES inlet.cd;
 
 	(* cons. mass *)
 	cons_mass: inlet.mdot + inlet_heat.mdot = outlet.mdot;
@@ -318,7 +322,7 @@ MODEL heater_open;
 END heater_open;
 
 MODEL heater_open_test REFINES heater_open;
-	(* nothing here *)
+	cd.component :== 'water';
 METHODS
 METHOD on_load;
 	FIX inlet.p, inlet.h;
@@ -340,12 +344,13 @@ MODEL heater_open2;
 		'block' SELF {Simple open feedwater heater model}
 	END NOTES;
 
-	inlet "in:" IS_A steam_node;
-	inlet_heat1 "in:" IS_A steam_node;
-	inlet_heat2 "in:" IS_A steam_node;
-	outlet "out:" IS_A steam_node;
-	
+	inlet "in:" IS_A stream_node;
+	inlet_heat1 "in:" IS_A stream_node;
+	inlet_heat2 "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
+	inlet.cd, inlet_heat1.cd, inlet_heat2.cd, outlet.cd ARE_THE_SAME;
 	inlet_heat1.p, inlet_heat2.p, inlet.p, outlet.p ARE_THE_SAME;
+	cd ALIASES inlet.cd;
 
 	(* cons. mass *)
 	cons_mass: inlet.mdot + inlet_heat1.mdot + inlet_heat2.mdot = outlet.mdot;
@@ -361,11 +366,16 @@ MODEL heater_closed;
 		'block' SELF {Simple open feedwater heater model}
 	END NOTES;
 
-	inlet "in:" IS_A steam_node;
-	inlet_heat "in:" IS_A steam_node;
-	outlet "out:" IS_A steam_node;
-	outlet_heat "out:" IS_A steam_node;
+	inlet "in:" IS_A stream_node;
+	inlet_heat "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
+	outlet_heat "out:" IS_A stream_node;
 	
+	inlet.cd, outlet.cd ARE_THE_SAME;
+	inlet_heat.cd, outlet_heat.cd ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+	cd_heat ALIASES inlet_heat.cd;
+
 	inlet_heat.p, outlet_heat.p ARE_THE_SAME;
 	inlet.p, outlet.p ARE_THE_SAME;
 
@@ -402,7 +412,8 @@ END on_load;
 END heater_closed;
 
 MODEL heater_closed_test REFINES heater_closed;
-	(* nothing here *)
+	cd.component :== 'water';
+	cd_heat.component :== 'water';
 METHODS
 METHOD on_load;
 	FIX inlet.p, inlet.h, inlet.mdot;
@@ -417,6 +428,10 @@ METHOD on_load;
 
 	FIX outlet.h;
 	outlet.h := 900 {kJ/kg};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
 END on_load;
 END heater_closed_test;
 
@@ -432,9 +447,12 @@ MODEL tee;
 		'block' SELF {Model of a branching of two flow streams}
 	END NOTES;
 
-	inlet "in:" IS_A steam_node;
-	outlet "out:" IS_A steam_node;
-	outlet_branch "out:" IS_A steam_node;
+	inlet "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
+	outlet_branch "out:" IS_A stream_node;
+
+	inlet.cd, outlet.cd, outlet_branch.cd ARE_THE_SAME;
+	cd ALIASES inlet.cd;
 
 	inlet.p, outlet.p, outlet_branch.p ARE_THE_SAME;
 	inlet.h, outlet.h, outlet_branch.h ARE_THE_SAME;
@@ -454,12 +472,15 @@ END tee;
 (*
 	simplest possible rankine cycle
 *)
-MODEL rankine;
+MODEL rankine_fprops;
 
 	BO IS_A boiler_simple;
 	TU IS_A turbine_simple;
 	CO IS_A condenser_simple;
 	PU IS_A pump_simple;
+
+	cd ALIASES BO.cd;
+	cd.component :== 'carbondioxide';
 
 	BO.outlet, TU.inlet ARE_THE_SAME;
 	TU.outlet, CO.inlet ARE_THE_SAME;
@@ -530,6 +551,7 @@ END values;
 METHOD on_load;
 	RUN specify;
 	RUN values;
+
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 	OPTION iterationlimit 200;
@@ -542,5 +564,299 @@ METHOD self_test;
 	ASSERT abs(TU.outlet.x - 0.7736) < 0.0005;
 	ASSERT abs(TU.w - 603.1 {btu/lbm}) < 0.7 {btu/lbm};
 END self_test;
-END rankine;
+END rankine_fprops;
+
+
+(*------------------------------------------------------------------------------
+  REHEAT RANKINE CYCLE
+*)
+MODEL rankine_reheat;
+
+	BO1 IS_A boiler_simple;
+	BO2 IS_A boiler_simple;
+	TU1 IS_A turbine_simple;
+	TU2 IS_A turbine_simple;
+	CO IS_A condenser_simple;
+	PU IS_A pump_simple;
+
+	BO1.cd.component :== 'water';
+
+	BO1.outlet, TU1.inlet ARE_THE_SAME;
+	TU1.outlet, BO2.inlet ARE_THE_SAME;
+	BO2.outlet, TU2.inlet ARE_THE_SAME;
+	TU2.outlet, CO.inlet ARE_THE_SAME;
+	CO.outlet, PU.inlet ARE_THE_SAME;
+	PU.outlet, BO1.inlet ARE_THE_SAME;
+
+	BO1.eta, BO2.eta ARE_THE_SAME;
+
+	(* boiler peak temperature is reached for both main and reheat... *)
+	BO1.outlet.T, BO2.outlet.T ARE_THE_SAME;
+
+	mdot ALIASES PU.mdot;
+
+	T_H ALIASES BO1.outlet.T;
+	T_C ALIASES CO.outlet.T;
+
+	eta IS_A fraction;
+	eta * (BO1.Qdot_fuel + BO2.Qdot_fuel - PU.Wdot) = TU1.Wdot + TU2.Wdot;
+
+	eta_carnot IS_A fraction;
+	eta_carnot = 1 - T_C / T_H;
+
+METHODS
+(*
+	The on_load scenario reproduces the same calculation from 
+	K Weston, op. cit., Example 2.5, p. 51.
+*)
+METHOD on_load;
+	FIX BO1.eta;
+	BO1.eta := 1.0;
+	FIX TU1.eta, TU2.eta;
+	TU1.eta := 1.0;
+	TU2.eta := 1.0;
+	FIX PU.eta;
+	PU.eta := 1.0;
+	FIX PU.inlet.p;
+	PU.inlet.p := 1 {psi};
+	FIX PU.inlet.h;
+	PU.inlet.h := 69.73 {btu/lbm};
+	FIX BO1.outlet.T;
+	BO1.outlet.T := 1460 {R};
+	BO1.outlet.h := 3000 {kJ/kg}; (* guess *)
+	TU1.outlet.h := 3000 {kJ/kg}; (* guess *)
+	FIX PU.outlet.p;
+	PU.outlet.p := 2000 {psi};
+	FIX mdot;
+	mdot := 900 {t/d};
+
+	(* this value here is what defines the intermediate pressure *)
+	FIX TU1.outlet.T;
+	TU1.outlet.T := 860 {R};
+
+	TU2.inlet.h := 3000 {kJ/kg}; (* guess *)
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
+END on_load;
+METHOD self_test;
+	ASSERT abs(eta - 0.443) < 0.0005;
+	ASSERT abs(TU2.outlet.x - 0.926) < 0.0015;
+	ASSERT abs(TU1.w + TU2.w) - 763.1 {btu/lbm} < 1 {btu/lbm};
+END self_test;
+END rankine_reheat;
+
+
+
+
+(*------------------------------------------------------------------------------
+  REGENERATIVE RANKINE CYCLE
+*)
+(*
+	Add a boiler feedwater heater and two-stage turbine.
+*)
+MODEL rankine_regen;
+
+	BO IS_A boiler_simple;
+	TU1 IS_A turbine_simple;
+	BL IS_A tee; (* bleed *)
+	TU2 IS_A turbine_simple;
+	CO IS_A condenser_simple;
+	HE IS_A heater_open;
+	PU1 IS_A pump_simple;
+	PU2 IS_A pump_simple;
+
+	BO.cd.component :== 'water';
+
+	(* main loop *)
+	BO.outlet, TU1.inlet ARE_THE_SAME;
+	TU1.outlet, BL.inlet ARE_THE_SAME;
+	BL.outlet, TU2.inlet ARE_THE_SAME;
+	TU2.outlet, CO.inlet ARE_THE_SAME;
+	CO.outlet, PU1.inlet ARE_THE_SAME;
+	PU1.outlet, HE.inlet ARE_THE_SAME;
+	HE.outlet, PU2.inlet ARE_THE_SAME;
+	PU2.outlet, BO.inlet ARE_THE_SAME;
+
+	(* bleed stream *)
+	BL.outlet_branch, HE.inlet_heat ARE_THE_SAME;
+	phi ALIASES BL.phi;
+	p_bleed ALIASES TU1.outlet.p;
+
+	mdot ALIASES BO.mdot;
+
+	T_H ALIASES BO.outlet.T;
+	T_C ALIASES CO.outlet.T;
+
+	eta IS_A fraction;
+	eta_eq:eta * (BO.Qdot_fuel) = TU1.Wdot + TU2.Wdot + PU1.Wdot + PU2.Wdot;
+
+	Wdot_TU1 ALIASES TU1.Wdot;
+	Wdot_TU2 ALIASES TU2.Wdot;
+	Wdot_PU1 ALIASES PU1.Wdot;
+	Wdot_PU2 ALIASES PU2.Wdot;
+	Qdot_fuel ALIASES BO.Qdot_fuel;
+
+	eta_carnot IS_A fraction;
+	eta_carnot_eq: eta_carnot = 1 - T_C / T_H;
+
+	(* some checking output... *)
+
+	phi_weston IS_A fraction;
+	phi_weston_eq:phi_weston * (TU1.outlet.h - PU1.outlet.h) = (PU2.inlet.h - PU1.outlet.h);
+	phi_eq:phi_weston = phi;
+
+	w_net IS_A specific_energy;
+	w_net_eq: TU1.mdot * w_net = TU1.mdot * (TU1.inlet.h - TU1.outlet.h) + TU2.mdot * (TU2.inlet.h - TU2.outlet.h);
+
+	q_a IS_A specific_energy;
+	q_a_eq: q_a = TU1.inlet.h - PU2.outlet.h;
+
+	Wdot IS_A energy_rate;
+	Wdot_eq: Wdot = TU1.Wdot + TU2.Wdot + PU1.Wdot + PU2.Wdot;
+
+	cons_en: HE.inlet.mdot * HE.inlet.h + HE.inlet_heat.mdot * HE.inlet_heat.h = HE.outlet.mdot * HE.outlet.h;
+
+METHODS
+METHOD default_self;
+	BO.outlet.h := 4000 {kJ/kg};
+	p_bleed := 37 {bar};
+	TU1.outlet.h := 2300 {kJ/kg};
+	BL.cons_mass.included := FALSE;
+	(*HE.cons_mass.included := FALSE;*)
+	HE.cons_en.included := FALSE;
+	cons_en.included := FALSE;
+	HE.inlet.v := 100 {m^3/kg};
+	HE.inlet.p.nominal := 40 {bar};
+	HE.inlet.v.nominal := 1 {L/kg};
+	HE.inlet.h.nominal := 100 {kJ/kg};
+END default_self;
+METHOD on_load;
+	RUN moran_ex_8_5;
+(*
+	This model needs to be solved using QRSlv with convopt set to 'RELNOMSCALE'.
+*)
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 400;
+END on_load;
+METHOD moran_ex_8_5;
+	RUN default_self;
+	(*
+		This is Example 8.5 from Moran and Shapiro, 'Fundamentals of
+		Engineering Thermodynamics', 4th Ed.
+	*)
+	RUN ClearAll;
+	(* component efficiencies *)
+	FIX BO.eta;  BO.eta := 1.0;
+	FIX TU1.eta; TU1.eta := 0.85;
+	FIX TU2.eta; TU2.eta := 0.85;
+	FIX PU1.eta; PU1.eta := 1.0;
+	FIX PU2.eta; PU2.eta := 1.0;
+	(* turbine conditions *)
+	FIX TU1.inlet.p; TU1.inlet.p := 8. {MPa};
+	FIX TU1.inlet.T; TU1.inlet.T := 480 {K} + 273.15 {K};
+	FIX TU1.outlet.p; TU1.outlet.p := 0.7 {MPa};
+	FIX TU2.outlet.p; TU2.outlet.p := 0.008 {MPa};
+	(* heater conditions *)
+	(* FIX HE.outlet.p; HE.outlet.p := 0.7 {MPa}; *)
+	FIX CO.outlet.x; CO.outlet.x := 0.0001;
+	FIX HE.outlet.x; HE.outlet.x := 0.0001;
+	FIX Wdot; Wdot := 100 {MW};
+END moran_ex_8_5;	
+METHOD self_test;
+	(* solution values to the Moran & Shapiro example 8.5 problem *)
+	ASSERT abs(eta - 0.369) < 0.001;
+	ASSERT abs((TU1.Wdot+TU2.Wdot)/mdot - 984.4{kJ/kg}) < 1 {kJ/kg};
+	ASSERT abs(mdot - 3.69e5 {kg/h}) < 0.05e5 {kg/h};
+	ASSERT abs(CO.inlet.h - 2249.3 {kJ/kg}) < 1.0 {kJ/kg};
+END self_test;
+METHOD weston_ex_2_6;
+	(*
+		The scenario here is example 2.6 from K Weston (op. cit.), p. 55.
+	*)
+	RUN ClearAll;
+
+	(* all ideal components *)
+	FIX BO.eta;  BO.eta := 1.0;
+	FIX TU1.eta; TU1.eta := 1.0;
+	FIX TU2.eta; TU2.eta := 1.0;
+	FIX PU1.eta; PU1.eta := 1.0;
+	FIX PU2.eta; PU2.eta := 1.0;
+
+	(* mass flow rate is arbitrary *)
+	FIX mdot;
+	mdot := 10 {kg/s};
+	
+	(* max pressure constraint *)
+	FIX PU2.outlet.p;
+	PU2.outlet.p := 2000 {psi};
+	PU2.outlet.h := 1400 {btu/lbm}; (* guess *)
+
+	(* boiler max temp *)
+	FIX BO.outlet.T;
+	BO.outlet.T := 1460 {R};
+	BO.outlet.h := 1400 {btu/lbm}; (* guess *)
+
+	(* intermediate temperature setting *)
+	FIX TU1.outlet.p;
+	TU1.outlet.p := 200 {psi};
+	(* FIX TU1.outlet.T;
+	TU1.outlet.T := 860 {R}; (* 400 °F *)
+	TU1.outlet.h := 3000 {kJ/kg}; (* guess *) *)
+
+	(* minimum pressure constraint *)
+	FIX CO.outlet.p;
+	CO.outlet.p := 1 {psi};
+
+	(* condenser outlet is saturated liquid *)
+	FIX CO.outlet.h;
+	CO.outlet.h := 69.73 {btu/lbm};
+
+	(* remove the redundant balance equations *)
+	HE.cons_mass.included := TRUE;
+	HE.cons_en.included := TRUE;
+	BL.cons_mass.included := FALSE;
+	phi_weston_eq.included := TRUE;
+	phi_eq.included := FALSE;
+	cons_en.included := FALSE;
+
+	(* fix the bleed ratio *)
+	FIX BL.phi;
+	BL.phi := 0.251;
+
+	(* FIX BL.outlet.h;
+	BL.outlet.h := 355.5 {btu/lbm}; *)
+
+(** 
+	these values seem to be from another problem, need to check which ...
+	ASSERT abs(TU1.inlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
+	ASSERT abs(TU1.outlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
+	ASSERT abs(TU2.outlet.s - 1.5603 {btu/lbm/R}) < 0.01 {btu/lbm/R};
+	ASSERT abs(PU1.inlet.s - 0.1326 {btu/lbm/R}) < 0.001 {btu/lbm/R};
+	ASSERT abs(PU1.outlet.s - 0.1326 {btu/lbm/R}) < 0.002 {btu/lbm/R};
+	ASSERT abs(PU2.inlet.s - 0.5438 {btu/lbm/R}) < 0.002 {btu/lbm/R};
+	ASSERT abs(PU2.outlet.s - 0.5438 {btu/lbm/R}) < 0.002 {btu/lbm/R};
+
+	ASSERT abs(TU1.inlet.h - 1474.1 {btu/lbm}) < 1.5 {btu/lbm};
+	ASSERT abs(TU1.outlet.h - 1210.0 {btu/lbm}) < 1.5 {btu/lbm};
+	ASSERT abs(TU2.outlet.h - 871.0 {btu/lbm}) < 1.5 {btu/lbm};
+	ASSERT abs(PU1.inlet.h - 69.73 {btu/lbm}) < 0.001 {btu/lbm};
+	ASSERT abs(PU1.outlet.h - 69.73 {btu/lbm}) < 1.0 {btu/lbm};
+	ASSERT abs(PU2.inlet.h - 355.5 {btu/lbm}) < 1.5 {btu/lbm};
+	ASSERT abs(PU2.outlet.h - 355.5 {btu/lbm}) < 8 {btu/lbm};
+
+	ASSERT abs(w_net - 518.1 {btu/lbm}) < 0.3 {btu/lbm};
+
+	ASSERT abs(w_net * mdot - (TU1.Wdot + TU2.Wdot)) < 1 {W};
+
+	ASSERT abs(q_a - 1118.6 {btu/lbm}) < 7 {btu/lbm};
+
+	ASSERT abs(eta - 0.463) < 0.003;
+
+	ASSERT abs(phi - 0.251) < 0.001;
+*)	
+END weston_ex_2_6;
+END rankine_regen;
 

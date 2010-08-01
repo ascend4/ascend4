@@ -22,7 +22,7 @@ MODEL fprops_phsx_test;
 
 	rho * v = 1.;
 
-	conf IS_A helmholtz_conf('water');
+	conf IS_A helmholtz_conf('carbondioxide');
 
 	sat: helmholtz_phsx_vT(
 		v, T : INPUT;
@@ -31,6 +31,17 @@ MODEL fprops_phsx_test;
 	);
 
 METHODS
+METHOD problem_case;
+	(* currently the FPROPS routines don't seem to be able to converge to
+	a solution in the following case. *)
+	RUN ClearAll;
+	FIX p; p := 7.0 {bar};
+	FIX h; h := 174.777 {kJ/kg};
+	rho := 900 {kg/m^3};
+	v := 1/rho;
+	SOLVER QRSlv;
+	OPTION iterationlimit 200;
+END problem_case;
 METHOD on_load;
 	(* a first guess *)
 	v := 100 {m^3/kg};
