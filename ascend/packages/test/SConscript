@@ -1,0 +1,6 @@
+Import('test_env')
+
+import glob
+
+test_env['TESTSRCS_PACKAGES'] = [test_env.File(i) for i in glob.glob("*.c")]
+

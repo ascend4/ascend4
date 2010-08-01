@@ -2769,12 +2769,13 @@ test_env.Append(
 )
 
 if with_cunit:
-	testdirs = ['general','solver','utilities','linear','compiler']
+	testdirs = ['general','solver','utilities','linear','compiler','packages']
 	testsrcs = []
 	for testdir in testdirs:
 		path = 'ascend/'+testdir+'/test/'
 		test_env.SConscript([path+'SConscript'],'test_env')
 		testsrcs += [i.path for i in test_env['TESTSRCS_'+testdir.upper()]]
+	test_env['TESTDIRS'] = testdirs
 
 	#print "TESTSRCS =",testsrcs
 		

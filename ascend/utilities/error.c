@@ -2,7 +2,7 @@
 
 #include "error.h"
 
-#define ERROR_REPORTER_TREE_ACTIVE
+//#define ERROR_REPORTER_TREE_ACTIVE
 
 #ifdef ERROR_REPORTER_TREE_ACTIVE
 # include "ascMalloc.h"

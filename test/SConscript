@@ -5,7 +5,7 @@ Import('test_env')
 srcs = ['test.c','test_ascend_base.c','redirectStdStreams.c','printutil.c','assertimpl.c']
 
 # test cases from the different tested modules
-for dir in ['general','utilities','solver','linear','compiler']:
+for dir in test_env['TESTDIRS']:
 	srcs += test_env['TESTSRCS_'+dir.upper()]
 
 
