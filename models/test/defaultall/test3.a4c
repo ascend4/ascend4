@@ -15,25 +15,42 @@ END var_default_to_three;
 
 
 MODEL sub1;
-	v IS_A var_default_to_three
+	c IS_A var_default_to_three;
 	a IS_A solver_var;
 	b IS_A solver_var;
-	v = 5;
+	c = 5; (* equation, value is not applied until model is solved *)
 METHODS
-METHOD default_self;
+METHOD default;
 	a := 4;
 	b := 8;
-END default_self;
+END default;
 END sub1;
 
 MODEL sub2;
 	s1a IS_A sub1;
 	s1b IS_A sub1;
-	v IS_A var_default_to_3;
+	c IS_A var_default_to_three;
+	d IS_A var_default_to_three;
+METHODS 
+METHOD default;
+	d := 5.;
+END default;
 END sub2;	
 
-MODEL test2;
+MODEL test3;
 	s2 IS_A sub2;
-	v IS_A var_default_to_3;
-END test2;
+	c IS_A var_default_to_three;
+METHODS
+METHOD mess_up_values;
+	c := 0;
+	s2.c := 0;
+	s2.d := 0;
+	s2.s1a.a := 0;
+	s2.s1a.b := 0;
+	s2.s1a.c := 0;
+	s2.s1b.a := 0;
+	s2.s1b.b := 0;
+	s2.s1b.c := 0;
+END mess_up_values;
+END test3;
 

@@ -42,6 +42,14 @@
 
 #include <test/assertimpl.h>
 
+static enum Proc_enum run_method(struct Instance *sim, const char *methodname){
+	CONSOLE_DEBUG("Running '%s'...",methodname);
+
+	symchar *onload = AddSymbol(methodname);
+	enum Proc_enum pe;
+	pe = Initialize(GetSimulationRoot(sim),CreateIdName(onload),SCP(onload), ASCERR, WP_STOPONERR, NULL, NULL);
+	return pe;
+}
 
 static struct Instance *load_and_initialise(const char *fname, const char *modelname){
 
@@ -67,12 +75,7 @@ static struct Instance *load_and_initialise(const char *fname, const char *model
 	struct Instance *sim = SimsCreateInstance(AddSymbol(modelname), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(sim!=NULL);
 
-	CONSOLE_DEBUG("Running on_load...");
-
-	symchar *onload = AddSymbol("on_load");
-	enum Proc_enum pe;
-	pe = Initialize(GetSimulationRoot(sim),CreateIdName(onload),SCP(onload), ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT_FATAL(pe == Proc_all_ok);
+	CU_ASSERT_FATAL(Proc_all_ok == run_method(sim, "on_load"));
 
 	return sim;
 }
@@ -137,6 +140,70 @@ static void test_default2(void){
 }
 
 
+static void test_default3(void){
+
+	struct Instance *sim = load_and_initialise("test/defaultall/test3.a4c", "test3");
+
+	/* check for vars and rels */
+	struct Instance *root, *inst1, *inst2, *a, *b, *c, *d;
+	root = GetSimulationRoot(sim);
+
+	CU_ASSERT_FATAL((inst1 = ChildByChar(root,AddSymbol("s2"))) && InstanceKind(inst1)==MODEL_INST);
+	CU_ASSERT_FATAL((inst2 = ChildByChar(inst1,AddSymbol("s1a"))) && InstanceKind(inst2)==MODEL_INST);
+	CU_ASSERT_FATAL((a = ChildByChar(inst2,AddSymbol("a"))) && InstanceKind(a)==REAL_ATOM_INST); 
+	CU_ASSERT_FATAL((b = ChildByChar(inst2,AddSymbol("b"))) && InstanceKind(b)==REAL_ATOM_INST);
+	CU_ASSERT_FATAL((c = ChildByChar(inst2,AddSymbol("c"))) && InstanceKind(c)==REAL_ATOM_INST);
+	CU_ASSERT_FATAL((d = ChildByChar(inst1,AddSymbol("d"))) && InstanceKind(d)==REAL_ATOM_INST);
+
+	CONSOLE_DEBUG("Checking values...");
+
+	CU_ASSERT(RealAtomValue(a)==4.);
+	CU_ASSERT(RealAtomValue(c)==3);
+	CU_ASSERT(RealAtomValue(b)==8.);
+	CU_ASSERT(RealAtomValue(d)==5);
+
+	CONSOLE_DEBUG("Cleaning up...");
+	/* clean up */
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+
+
+static void test_default3b(void){
+
+	struct Instance *sim = load_and_initialise("test/defaultall/test3.a4c", "test3");
+
+	/* check for vars and rels */
+	struct Instance *root, *inst1, *inst2, *a, *b, *c, *d;
+
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL((inst1 = ChildByChar(root,AddSymbol("s2"))) && InstanceKind(inst1)==MODEL_INST);
+	CU_ASSERT_FATAL((inst2 = ChildByChar(inst1,AddSymbol("s1a"))) && InstanceKind(inst2)==MODEL_INST);
+	CU_ASSERT_FATAL((a = ChildByChar(inst2,AddSymbol("a"))) && InstanceKind(a)==REAL_ATOM_INST); 
+	CU_ASSERT_FATAL((b = ChildByChar(inst2,AddSymbol("b"))) && InstanceKind(b)==REAL_ATOM_INST);
+	CU_ASSERT_FATAL((c = ChildByChar(inst2,AddSymbol("c"))) && InstanceKind(c)==REAL_ATOM_INST);
+	CU_ASSERT_FATAL((d = ChildByChar(inst1,AddSymbol("d"))) && InstanceKind(d)==REAL_ATOM_INST);
+
+	CU_ASSERT_FATAL(Proc_all_ok == run_method(sim, "mess_up_values"));
+
+	CU_ASSERT(RealAtomValue(a)==0.);
+	CU_ASSERT(RealAtomValue(b)==0.);
+	CU_ASSERT(RealAtomValue(c)==0.);
+	CU_ASSERT(RealAtomValue(d)==0.);
+
+	CU_ASSERT_FATAL(Proc_all_ok == run_method(sim, "on_load"));
+
+	CU_ASSERT(RealAtomValue(a)==4.);
+	CU_ASSERT(RealAtomValue(c)==3);
+	CU_ASSERT(RealAtomValue(b)==8.);
+	CU_ASSERT(RealAtomValue(d)==5);
+
+	/* clean up */
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -144,7 +211,9 @@ static void test_default2(void){
 
 #define TESTS(T,X) \
 	T(default1) \
-	X T(default2)
+	X T(default2) \
+	X T(default3) \
+	X T(default3b)
 
 /* you shouldn't need to change the following */
 
