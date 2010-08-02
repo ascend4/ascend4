@@ -43,36 +43,43 @@
 #include <test/assertimpl.h>
 
 
-static void test_default1(void){
+static struct Instance *load_and_initialise(const char *fname, const char *modelname){
 
 	struct module_t *m;
 	int status;
 
-	CONSOLE_DEBUG("Loading model...");
+	CONSOLE_DEBUG("Loading model '%s'...",fname);
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	
 	/* load the file */
-	m = Asc_OpenModule("test/defaultall/test1.a4c",&status);
+	m = Asc_OpenModule(fname,&status);
 	CU_ASSERT(status == 0);
 
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
 
 	/* find the model */	
-	CU_ASSERT(FindType(AddSymbol("test1"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol(modelname))!=NULL);
 
 	/* instantiate it */
-	struct Instance *sim = SimsCreateInstance(AddSymbol("test1"), AddSymbol("sim1"), e_normal, NULL);
+	struct Instance *sim = SimsCreateInstance(AddSymbol(modelname), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(sim!=NULL);
 
 	CONSOLE_DEBUG("Running on_load...");
 
 	symchar *onload = AddSymbol("on_load");
 	enum Proc_enum pe;
-	pe = Initialize(sim,CreateIdName(onload),SCP(onload), ASCERR, WP_STOPONERR, NULL, NULL);
+	pe = Initialize(GetSimulationRoot(sim),CreateIdName(onload),SCP(onload), ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT_FATAL(pe == Proc_all_ok);
+
+	return sim;
+}
+
+static void test_default1(void){
+
+	struct Instance *sim = load_and_initialise("test/defaultall/test1.a4c", "test1");
 
 	/* check for vars and rels */
 	struct Instance *root = GetSimulationRoot(sim);
@@ -88,7 +95,7 @@ static void test_default1(void){
 	double va = RealAtomValue(a);
 	double vb = RealAtomValue(b);
 	CONSOLE_DEBUG("Value of 'a' = %f",va); 
-	CU_ASSERT(vb==4.);
+	CU_ASSERT(va==4.);
 	CONSOLE_DEBUG("Value of 'b' = %f",vb); 
 	CU_ASSERT(vb==8.);
 
@@ -102,38 +109,11 @@ static void test_default1(void){
 
 static void test_default2(void){
 
-	struct module_t *m;
-	int status;
-
-	CONSOLE_DEBUG("Loading model...");
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	
-	/* load the file */
-	m = Asc_OpenModule("test/defaultall/test2.a4c",&status);
-	CU_ASSERT(status == 0);
-
-	/* parse it */
-	CU_ASSERT(0 == zz_parse());
-
-	/* find the model */	
-	CU_ASSERT(FindType(AddSymbol("test2"))!=NULL);
-
-	/* instantiate it */
-	struct Instance *sim = SimsCreateInstance(AddSymbol("test2"), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(sim!=NULL);
-
-	CONSOLE_DEBUG("Running on_load...");
-
-	symchar *onload = AddSymbol("on_load");
-	enum Proc_enum pe;
-	pe = Initialize(sim,CreateIdName(onload),SCP(onload), ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT_FATAL(pe == Proc_all_ok);
+	struct Instance *sim = load_and_initialise("test/defaultall/test2.a4c", "test2");
 
 	/* check for vars and rels */
-	struct Instance *root = GetSimulationRoot(sim);
-	struct Instance *inst1, *inst2, *a, *b;
+	struct Instance *root, *inst1, *inst2, *a, *b;
+	root = GetSimulationRoot(sim);
 
 	CU_ASSERT_FATAL((inst1 = ChildByChar(root,AddSymbol("s2"))) && InstanceKind(inst1)==MODEL_INST);
 	CU_ASSERT_FATAL((inst2 = ChildByChar(inst1,AddSymbol("s1a"))) && InstanceKind(inst2)==MODEL_INST);
@@ -146,7 +126,7 @@ static void test_default2(void){
 	double va = RealAtomValue(a);
 	double vb = RealAtomValue(b);
 	CONSOLE_DEBUG("Value of 'a' = %f",va); 
-	CU_ASSERT(vb==4.);
+	CU_ASSERT(va==4.);
 	CONSOLE_DEBUG("Value of 'b' = %f",vb); 
 	CU_ASSERT(vb==8.);
 

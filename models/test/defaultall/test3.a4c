@@ -1,0 +1,39 @@
+(* test file for 'default_all' automatic recursive model initialisation trick *)
+
+REQUIRE "system.a4l";
+
+(* this time, we check that the defaultself_visit_childatoms routine is
+	doing its job. *)
+
+ATOM var_default_to_three REFINES solver_var
+    DIMENSIONLESS
+    DEFAULT 3.0;
+    nominal := 1.0;
+    lower_bound := 0.0;
+    upper_bound := 10.0;
+END var_default_to_three;
+
+
+MODEL sub1;
+	v IS_A var_default_to_three
+	a IS_A solver_var;
+	b IS_A solver_var;
+	v = 5;
+METHODS
+METHOD default_self;
+	a := 4;
+	b := 8;
+END default_self;
+END sub1;
+
+MODEL sub2;
+	s1a IS_A sub1;
+	s1b IS_A sub1;
+	v IS_A var_default_to_3;
+END sub2;	
+
+MODEL test2;
+	s2 IS_A sub2;
+	v IS_A var_default_to_3;
+END test2;
+
