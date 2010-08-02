@@ -170,7 +170,9 @@ int main(void){
 	/* couple of data from the publication itself */
 	ASSERT_TOL(helmholtz_p, 300.000, 679.24, d, 6.7131e6, 0.0001e6);
 	ASSERT_TOL(helmholtz_p, 300.000, 268.58, d, 6.7131e6, 0.0001e6);
-	ASSERT_TOL(helmholtz_p, 304.1282, 467.60, d, 7.3773e6, 0.0001e6);
+	//ASSERT_TOL(helmholtz_p, 304.1282, 467.60, d, 7.3773e6, 0.0001e6);
+
+	helm_check_p_c(d);
 
 #if USING_CITED_REFERENCE_STATES
 	fprintf(stderr,"REFERENCE POINT CHECK\n");

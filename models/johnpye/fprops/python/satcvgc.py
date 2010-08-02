@@ -9,11 +9,11 @@ DD = [
 	helmholtz_data_water
 	, helmholtz_data_carbondioxide
 	, helmholtz_data_ammonia
+	, helmholtz_data_methane
+	, helmholtz_data_nitrogen
+	, helmholtz_data_hydrogen
 ## unexplained errors for these fluids:
-#	, helmholtz_data_methane
-#	, helmholtz_data_nitrogen
 ## following still need T_triple data added
-#	, helmholtz_data_hydrogen
 ]
 
 toterrors = 0

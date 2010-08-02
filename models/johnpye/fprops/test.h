@@ -34,6 +34,10 @@ int helm_check_p_T(const HelmholtzData *d, unsigned ntd, const TestData *td);
 
 int helm_check_d2pdrho2_T(const HelmholtzData *d, unsigned ntd, const TestData *td);
 
+/*
+	Check the value of critical pressure given in the species data.
+*/
+int helm_check_p_c(const HelmholtzData *d);
 
 #define TEST_VERBOSE
 
