@@ -63,7 +63,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 	, /* T_star */ NITROGEN_TC /* K (= T_c for this model) */
 
 	, /* T_c */ NITROGEN_TC
-	, /* p_c */ 0
+	, /* p_c */ 3.395800000020e+06 /* calculated from rho_c, T_c */
 	, /* rho_c */ NITROGEN_RHOC
 	, /* T_t */ 63.151
 	, /* p_t */ 12.523e3
@@ -177,6 +177,8 @@ int main(void){
 
 	d = &helmholtz_data_nitrogen;
 	double maxerr = 0;
+
+	helm_check_p_c(d);
 
 	unsigned i;
 	const unsigned n = ntd;

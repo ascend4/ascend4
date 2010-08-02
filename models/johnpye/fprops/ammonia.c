@@ -73,7 +73,7 @@ const HelmholtzData helmholtz_data_ammonia = {
 	, /* T_star */ AMMONIA_TSTAR /* K */
 
 	, /* T_c */ AMMONIA_TSTAR
-	, /* p_c */ 1.133868033610e+07 /* note: value calculated from rho_c, T_c */
+	, /* p_c */ 1.133868565951e+07 /* note: value calculated from rho_c, T_c */
 	, /* rho_c */ 225.
 
 	, /* T_t */ 195.495
@@ -139,6 +139,8 @@ int main(void){
 	d = &helmholtz_data_ammonia;
 	double maxerr = 0;
 
+	helm_check_p_c(d);
+
 	n = ntd;
 	fprintf(stderr,"Running through %d test points...\n",n);
 
@@ -170,9 +172,6 @@ int main(void){
 	 	ASSERT_TOL(CP0, td[i].T+273.15, 0., d, cp0, cp0*1e-1);
 	}
 #undef CP0
-
-	fprintf(stderr,"\nCALCULATION OF CRITICAL PRESSURE\n");
-	fprintf(stderr,"p_c = %0.12e\n", helmholtz_p(d->T_c, d->rho_c,d));
 
 	fprintf(stderr,"PRESSURE TESTS\n");
 	for(i=0; i<n;++i){

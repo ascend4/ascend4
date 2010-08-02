@@ -48,7 +48,7 @@
 
 double helmholtz_p(double T, double rho, const HelmholtzData *d){
 	double p, rho_f, rho_g;
-	if(T <= d->T_c){
+	if(T < d->T_c){
 		int res = fprops_sat_T(T, &p, &rho_f, &rho_g, d);
 		if(res){
 			//fprintf(stderr,"ERROR: got error % from saturation calc in %s",res,__func__);
