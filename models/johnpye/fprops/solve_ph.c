@@ -55,8 +55,9 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 			fprintf(stderr,"SATURATION REGION\n");
 			/* saturation region... easy */
 			double x = (h - hf)/(hg - hf);
-			*rho = x/rhog + (1.-x)/rhof;
+			*rho = 1./(x/rhog + (1.-x)/rhof);
 			*T = Tsat;
+			return 0;
 		}
 
 		if(!use_guess){
