@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <gsl/gsl_multiroots.h>
 
+#define SQ(X) ((X)*(X))
+
 /*------------------------------------------------------------------------------
   Iterative two-way solver for the non-saturation region, making use of GSL.
 */
@@ -44,8 +46,8 @@ static int nonsolver_df(const gsl_vector *x, void *user_data, gsl_matrix *J){
 	//SteamState S = freesteam_region3_set_rhoT(rho,T); /* FIXME work out the best call sig for dZdv_T etc */
 	gsl_matrix_set(J, 0, 0, -1./SQ(rho) * fprops_non_dZdv_T(U->A,T,rho,U->D));
 	gsl_matrix_set(J, 0, 1, fprops_non_dZdT_v(U->A,T,rho,U->D));
-	gsl_matrix_set(J, 1, 0, -1./SQ(rho) * fprops_non_dAdv_T(U->B,T,rho,U->D));
-	gsl_matrix_set(J, 1, 1, fprops_non_dAdT_v(U->B,T,rho,U->D));
+	gsl_matrix_set(J, 1, 0, -1./SQ(rho) * fprops_non_dZdv_T(U->B,T,rho,U->D));
+	gsl_matrix_set(J, 1, 1, fprops_non_dZdT_v(U->B,T,rho,U->D));
 	return GSL_SUCCESS;
 #undef U
 }

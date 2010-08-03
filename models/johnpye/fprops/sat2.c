@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdio.h>
 
-//#define PHASE_DEBUG
+#define PHASE_DEBUG
 #define PHASE_ERRORS
 
 #ifndef PHASE_DEBUG
@@ -33,7 +33,8 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 	double p, p_new, delta_p, delta_p_old;
 
 	/*
-	Estimate of saturation pressure assuming algebraic form
+	Estimate of saturation temperature using definition	of acentric factor and
+	the assumed p(T) relationship:
 		log10(p)=A + B/T
 	See Reid, Prausnitz and Poling, 4th Ed., section 2.3. 
 	*/
@@ -86,7 +87,7 @@ int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, co
 	
 		/* convergence test */
 		if(fabs(delta_p/p) < 1e-6){
-			MSG("CONVERGED...\n");
+			MSG("CONVERGED to p = %f bar...\n",p/1e5);
 			/* note possible need for delp non-change test for certain fluids */
 
 			p = p_new;
@@ -160,7 +161,167 @@ int fprops_sat_T_crit(double T, double *p_out, double *rhof_out, double *rhog_ou
 }
 
 int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
-	/* nothing yet */
+	double T, T_new, delta_T, delta_T_old;
+
+	/*
+	Estimate of saturation temperature using definition	of acentric factor and
+	the assumed p(T) relationship:
+		log10(p)=A + B/T
+	See Reid, Prausnitz and Poling, 4th Ed., section 2.3. 
+	*/
+	T = d->T_c / (1. - 3./7. * (1.+d->omega)  * log10(p / d->p_c));
+
+	/* following code is based on successive substitution */
+	MSG("Initial estimate: Tsat(%f bar) = %f K\n",p/1e5,T);
+
+	int i,j;
+	char use_guess = 0;
+	double rhof = -1, rhog = -1;
+
+#define FPROPS_MAX_P_SUCCSUBS 40
+
+	/* this approach follows approximately the approach of Soave, page 204:
+	http://dx.doi.org/10.1016/0378-3812(86)90013-0
+	*/
+	double Tfactor = 1.002;
+	for(i=0;i<FPROPS_MAX_P_SUCCSUBS;++i){
+		MSG("calculating rho_f estimate\n");
+		
+		if(fprops_rho_pT(p,T,FPROPS_PHASE_LIQUID,use_guess, d, &rhof)){
+			T=T/Tfactor;
+			Tfactor = 1 + (Tfactor-1)/1.2;
+			MSG("  adjusting T, error with rho_f. new T = %f\n",T);
+			continue;
+		}
+		MSG("rho_f = %f, T = %f\n",rhof,T);
+
+		MSG("calculating rho_g estimate\n");
+		if(fprops_rho_pT(p,T,FPROPS_PHASE_VAPOUR, use_guess, d, &rhog)){
+			T=T*1.001;
+			if(T >  d->T_c)T = T/1.001 * 1.00005;
+			if(rhog > d->rho_c)rhog=d->rho_c / 2.;
+			MSG("  adjusting T, error with rho_g = %f, new T = %f\n",rhog,T);
+			continue;
+		}
+		MSG("rho_g = %f\n",rhog);
+
+		MSG("Iter %d: T = %f K, rhof = %f, rhog = %f\n",i, T, rhof, rhog);
+
+		use_guess = 1; /* after first run, start re-using current guess */
+
+		double delta_g = helmholtz_g(T, rhof, d) - helmholtz_g(T, rhog, d);
+		double delta_s = helmholtz_s(T, rhof, d) - helmholtz_s(T, rhog, d);
+		MSG(" delta_g = %f\n",delta_g);
+
+		/* equation from REFPROP */
+		delta_T = delta_g/delta_s;
+
+		MSG(" delta_T = %f K\n",delta_T);
+
+		assert(!isnan(T_new));
+	
+		/* convergence test */
+		if(fabs(delta_T/T) < 1e-6){
+			MSG("CONVERGED...\n");
+			/* note possible need for delp non-change test for certain fluids */
+
+			T = T + delta_T;
+		
+			/* find liquid phase, using guess */
+			if(
+				fprops_rho_pT(p, T, FPROPS_PHASE_LIQUID, use_guess, d, &rhof)
+				 || T > d->T_c || rhof < d->rho_c
+			){
+				ERR("failed to converge liquid density\n");
+				if(p > 0.9999 * d->p_c){
+					/* no converged, but let's return critical point data */
+					*T_out = d->T_c;
+					*rhof_out = d->rho_c;
+					*rhog_out = d->rho_c;
+				}else{
+					*T_out = T;
+					*rhof_out = rhof;
+					*rhog_out = rhog;
+				}
+				return 3;
+
+			}
+
+			/* find vapour density, using guess */
+			if(
+				fprops_rho_pT(p, T, FPROPS_PHASE_VAPOUR, use_guess, d, &rhog)
+				|| T > d->T_c || rhog > d->rho_c
+			){
+				ERR("failed to converge vapour density\n");
+				if(p > 0.9999 * d->p_c){
+					/* no converged, but let's return critical point data */
+					*T_out = d->T_c;
+					*rhof_out = d->rho_c;
+					*rhog_out = d->rho_c;
+				}else{
+					*T_out = T;
+					*rhof_out = rhof;
+					*rhog_out = rhog;
+				}
+				return 2;
+			}
+
+			MSG("  recalc T = %f K\n",T);
+			*T_out = T;
+			*rhof_out = rhof;
+			*rhog_out = rhog;
+			return 0;
+		}
+
+		delta_T_old = delta_T;
+
+		if(fabs(delta_T) > 0.5 * T){
+			/* reduce the size of delta_p steps */
+			for(j=0;j<10;++j){
+				delta_T *= 0.25;
+				if(fabs(delta_T) < 0.5 * p)break;
+			}
+			MSG(" delta_T was too large, has been shortened\n");
+		}
+
+		T = T + delta_T;
+	}
+
+	MSG("Trying to solve using fprops_sat_T");
+
+	/* none of that worked, so use sat_T instead, and iterate. much less efficient */
+	double T1 = 0.999 * d->T_c, T2 = 0.9995 * d->T_c;
+	double p1, p2;
+	int res = fprops_sat_T(T1, &p1, &rhof, &rhog, d);
+	i = 0;
+	while(1){
+		res = fprops_sat_T(T2, &p1, &rhof, &rhog, d);
+		T = T2;
+		if(fabs(p2 - p) < 1e-6 && !res){
+			MSG("Converged using sat_T");
+			*T_out = T;
+			*rhof_out = rhof;
+			*rhog_out = rhog;
+			return 0;
+		}
+		++i;
+		/* REFPROP's method */
+		if(fabs(p1 - p1) < 1e-12)break;
+		if(i > 20)break;
+		T = T1 - (T2 - T1) / (p2 - p1) * (p1 - p);
+		if(T > d->T_c && T2 > T1)T = 0.5*(T2 + d->T_c);
+		if(T > d->T_c && T1 > T2)T = 0.5*(T1 + d->T_c);
+		T1 = T2;
+		p1 = p2;
+		T2 = T;
+	}
+
+	MSG("Failed to converge using sat_T approach\n");
+
+	*rhof_out = -1;
+	*rhog_out = -1;
+	*T_out = -1;
+
 	return 99;
 }
 
@@ -282,7 +443,7 @@ int fprops_rho_pT(double p, double T, char phase, char use_guess, const Helmholt
 					}
 					if (vlog < -5.0 && T > d->T_c){
 						use_liquid_calc = 0;
-						MSG("FPROPS: switching to vapour calc\n");
+						MSG(" switching to vapour calc\n");
 						break; /* switch to vapour calc */
 					}
 				}
@@ -297,7 +458,7 @@ int fprops_rho_pT(double p, double T, char phase, char use_guess, const Helmholt
         }
 
 		if(use_liquid_calc){
-			MSG("FPROPS: liquid iteration did not converge\n");
+			MSG("liquid iteration did not converge, final value rho = %f\n",*rho);
 			return 1;
 		}
 	}
@@ -336,7 +497,7 @@ int fprops_rho_pT(double p, double T, char phase, char use_guess, const Helmholt
 
 	// not converged
     *rho=1./exp(vlog);
-	MSG("FPROPS: liquid iteration did not converge\n");
+	MSG(" vapour iteration did not converge\n");
 	return 1;
 }
 
