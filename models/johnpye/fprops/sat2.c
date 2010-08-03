@@ -159,6 +159,13 @@ int fprops_sat_T_crit(double T, double *p_out, double *rhof_out, double *rhog_ou
 	return 99;
 }
 
+int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
+	/* nothing yet */
+	return 99;
+}
+
+
+
 /*
 	Iterate to find density as a function of pressure and temperature
 

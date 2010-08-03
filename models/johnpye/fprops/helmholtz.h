@@ -20,6 +20,8 @@
 #ifndef FPROPS_HELMHOLTZ_H
 #define FPROPS_HELMHOLTZ_H
 
+#define FPROPS_CHAR int
+
 #include "ideal.h"
 
 /**
