@@ -65,7 +65,7 @@ const HelmholtzData helmholtz_data_water = {
 	, /* p_c */ WATER_PC
 	, /* rho_c */ WATER_RHOC
 	, /* T_t */ 273.16
-	, /* p_t */ 0
+	, /* p_t */ 661.654771 /* Pa, from IAPWS-95 rev.2009 */
 
 	, 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */
 	, &ideal_data_water

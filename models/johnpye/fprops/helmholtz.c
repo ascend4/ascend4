@@ -275,7 +275,7 @@ double helmholtz_g(double T, double rho, const HelmholtzData *data){
 	double phir = helm_resid(tau,delta,data);
 	double phi0 = helm_ideal(tau,delta,data->ideal);
 	
-	return data->R * T * (phi0 + phir + 1. - delta * phir_d);
+	return data->R * T * (phi0 + phir + 1. + delta * phir_d);
 }
 
 /**
