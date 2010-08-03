@@ -49,8 +49,10 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 		}
 		hf = helmholtz_h(Tsat, rhof, D);
 		hg = helmholtz_h(Tsat, rhog, D);
+		fprintf(stderr,"hf = %f kJ/kg, hg = %f\n",hf/1e3,hg/1e3);
 
 		if(h > hf && h < hg){
+			fprintf(stderr,"SATURATION REGION\n");
 			/* saturation region... easy */
 			double x = (h - hf)/(hg - hf);
 			*rho = x/rhog + (1.-x)/rhof;

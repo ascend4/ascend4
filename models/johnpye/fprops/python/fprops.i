@@ -10,6 +10,7 @@
 #include "../helmholtz.h"
 #include "../sat.h"
 #include "../sat2.h"
+#include "../solve_ph.h"
 %}
 
 %include exception.i
@@ -41,6 +42,13 @@ int fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const He
 %clear double *T_sat;
 %clear double *rho_f;
 %clear double *rho_g;
+
+%apply double *OUTPUT {double *T};
+%apply double *OUTPUT {double *rho};
+int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, const HelmholtzData *D);
+%clear double *T;
+%clear double *rho;
+
 
 %exception;
 
