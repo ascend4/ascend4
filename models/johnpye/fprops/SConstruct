@@ -27,7 +27,9 @@ env.SharedLibrary('mbwr_ascend',srcs)
 
 env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methane']
 
-srcs = ['ideal.c', 'helmholtz.c', 'sat.c', 'sat2.c','derivs.c'] + ["%s.c" % f for f in env['fluids']]
+coresrcs = ['ideal.c', 'helmholtz.c', 'sat.c', 'sat2.c','derivs.c', 'nonsolver.c', 'solve_ph.c']
+
+srcs = coresrcs + ["%s.c" % f for f in env['fluids']]
 
 env['shobjs'] = [env.SharedObject(s) for s in srcs]
 
