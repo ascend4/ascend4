@@ -1,6 +1,6 @@
 #include "sat2.h"
-
 #include "helmholtz_impl.h"
+
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -11,13 +11,13 @@
 #ifndef PHASE_DEBUG
 # define MSG(...) 
 #else
-# define MSG(ARGS...) fprintf(stderr,"FPROPS: " ARGS)
+# define MSG(ARGS...) fprintf(stderr,"%s: ",__func__);fprintf(stderr,ARGS)
 #endif
 
 #ifndef PHASE_DEBUG
 # define ERR(...) 
 #else
-# define ERR(ARGS...) fprintf(stderr,"FPROPS: " ARGS)
+# define ERR(ARGS...) fprintf(stderr,"%s: ",__func__);fprintf(stderr,ARGS)
 #endif
 
 
@@ -160,8 +160,16 @@ int fprops_sat_T_crit(double T, double *p_out, double *rhof_out, double *rhog_ou
 	return 99;
 }
 
+/**
+	Routine to calculate saturation properties for a set value of pressure.
+	@return 0 on success.
+*/
 int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
-	double T, T_new, delta_T, delta_T_old;
+	double T, T_new, delta_T, delta_T_old, rhof = -1, rhog = -1;
+	int res, i, j;
+	char use_guess = 0;
+
+	MSG("p_c = %f bar\n",d->p_c/1e5);
 
 	/*
 	Estimate of saturation temperature using definition	of acentric factor and
@@ -169,14 +177,16 @@ int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, co
 		log10(p)=A + B/T
 	See Reid, Prausnitz and Poling, 4th Ed., section 2.3. 
 	*/
-	T = d->T_c / (1. - 3./7. * (1.+d->omega)  * log10(p / d->p_c));
+	T = d->T_c / (1. - 3./7. / (1.+d->omega) * log10(p / d->p_c));
 
 	/* following code is based on successive substitution */
 	MSG("Initial estimate: Tsat(%f bar) = %f K\n",p/1e5,T);
 
-	int i,j;
-	char use_guess = 0;
-	double rhof = -1, rhog = -1;
+#if 0
+	int res = fprops_sat_T(T, &T_new, &rhof, &rhog, d);
+	MSG("...gives rhof = %f, rhog = %f and p = %f bar\n",rhof, rhof, p/1e5);
+#endif
+	
 
 #define FPROPS_MAX_P_SUCCSUBS 40
 
@@ -187,7 +197,7 @@ int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, co
 	for(i=0;i<FPROPS_MAX_P_SUCCSUBS;++i){
 		MSG("calculating rho_f estimate\n");
 		
-		if(fprops_rho_pT(p,T,FPROPS_PHASE_LIQUID,use_guess, d, &rhof)){
+		if(fprops_rho_pT(p,T,FPROPS_PHASE_LIQUID,use_guess, d, &rhof) || rhof < d->rho_c){
 			T=T/Tfactor;
 			Tfactor = 1 + (Tfactor-1)/1.2;
 			MSG("  adjusting T, error with rho_f. new T = %f\n",T);
@@ -196,7 +206,7 @@ int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, co
 		MSG("rho_f = %f, T = %f\n",rhof,T);
 
 		MSG("calculating rho_g estimate\n");
-		if(fprops_rho_pT(p,T,FPROPS_PHASE_VAPOUR, use_guess, d, &rhog)){
+		if(fprops_rho_pT(p,T,FPROPS_PHASE_VAPOUR, use_guess, d, &rhog) || rhog > d->rho_c){
 			T=T*1.001;
 			if(T >  d->T_c)T = T/1.001 * 1.00005;
 			if(rhog > d->rho_c)rhog=d->rho_c / 2.;
@@ -292,7 +302,7 @@ int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, co
 	/* none of that worked, so use sat_T instead, and iterate. much less efficient */
 	double T1 = 0.999 * d->T_c, T2 = 0.9995 * d->T_c;
 	double p1, p2;
-	int res = fprops_sat_T(T1, &p1, &rhof, &rhog, d);
+	res = fprops_sat_T(T1, &p1, &rhof, &rhog, d);
 	i = 0;
 	while(1){
 		res = fprops_sat_T(T2, &p1, &rhof, &rhog, d);
