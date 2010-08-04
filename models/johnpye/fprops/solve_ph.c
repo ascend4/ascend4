@@ -19,8 +19,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "solve_ph.h"
 #include "sat2.h"
+#include "derivs.h"
 
 #include <stdio.h>
+#include <math.h>
+#include <assert.h>
+
+#define SQ(X) ((X)*(X))
 
 int fprops_region_ph(double p, double h, const HelmholtzData *D){
 
@@ -41,6 +46,8 @@ int fprops_region_ph(double p, double h, const HelmholtzData *D){
 
 int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, const HelmholtzData *D){
 	double Tsat, rhof, rhog, hf, hg;
+	double T1, rho1;
+	int subcrit = 0;
 	if(p < D->p_c){
 		int res = fprops_sat_p(p, &Tsat, &rhof, &rhog, D);
 		if(res){
@@ -60,6 +67,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 			return 0;
 		}
 
+		subcrit = 1;
 		if(!use_guess){
 			*T = Tsat;
 			if(h <= hf)*rho = 1.1 * rhof;
@@ -71,6 +79,68 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 			*rho = D->rho_c;
 		}
 	}
+
+	fprintf(stderr,"STARTING NON-SAT ITERATION\n");
+
+	T1 = *T;
+	rho1 = *rho;
+	/* try our own home-baked newton iteration */
+	int i = 0;
+	while(i++ < 30){
+		double p1 = helmholtz_p_raw(T1,rho1,D);
+		assert(!__isnan(p1));
+		double h1 = helmholtz_h_raw(T1,rho1,D);
+		assert(!__isnan(h1));
+
+		fprintf(stderr,"  T = %e, rho = %e\t\tp = %e bar, h = %e kJ/kg\n", T1, rho1, p1/1e5, h1/1e3);
+		if(fabs(p1 - p) < 1e-6 && fabs(h1 - h) < 1e-6){
+			fprintf(stderr,"Converged in homebaked Newton solver");
+			*T = T1;
+			*rho = rho1;
+			break;
+		}
+		/* calculate step */
+		double p_T = fprops_non_dZdT_v('p', T1,rho1, D);
+		double p_rho = -1./SQ(rho1) * fprops_non_dZdv_T('p', T1, rho1, D);
+		double h_T = fprops_non_dZdT_v('h', T1,rho1, D);
+		double h_rho = -1./SQ(rho1) * fprops_non_dZdv_T('h', T1, rho1, D);
+		double det = p_T * h_rho - p_rho * h_T;
+	
+		double delta_T = - 1./det * (h_rho * p - p_rho * h);
+		double delta_rho = - 1./det * (p_T * h - h_T * p);
+
+		if(subcrit){
+			if(h > hg){
+				/* vapour */
+				int i = 0;
+				while(rho1 + delta_rho > rhog && i++ < 20){
+					delta_rho *= 0.5;
+				}
+			}else{
+				/* liquid */
+				while(rho1 + delta_rho < rhof && i++ < 20){
+					delta_rho *= 0.5;
+				}
+				if(T1 + delta_T < D->T_t) delta_T = 0.5 * (T1 + D->T_t);
+				if(T1 < D->T_t) delta_T = +1;
+			}
+		}
+		/* don't go too dense */
+		if(rho1 + delta_rho > 2000) delta_rho = 2000;
+
+		/* avoid huge step */
+		while(fabs(delta_T / T1) > 0.2){
+			delta_T *= 0.5;
+		}
+		while(fabs(delta_rho / rho1) > 0.2){
+			delta_rho *= 0.5;
+		}
+
+		T1 = T1 + delta_T;
+		rho1 = rho1 + delta_rho;
+	}
+
+	return 999;
 
 	int res = fprops_nonsolver('p','h',p,h,T,rho,D);
 	fprintf(stderr,"%s: Iteration failed in nonsolver\n",__func__);
