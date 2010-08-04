@@ -26,10 +26,12 @@
 
 #include <math.h>
 
+//#define HELMHOLTZ_DEBUG
+
 #include "helmholtz.h"
 #include "ideal_impl.h"
 
-#ifdef TEST
+#if defined(TEST) || defined(HELMHOLTZ_DEBUG)
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -108,7 +110,11 @@ double helmholtz_p_raw(double T, double rho, const HelmholtzData *data){
 	//fprintf(stderr,"rhob = %f, rhob* = %f, delta = %f\n", rho/data->M, data->rho_star/data->M, delta);
 #endif
 	
-	return data->R * T * rho * (1 + delta * helm_resid_del(tau,delta,data));
+	double p = data->R * T * rho * (1 + delta * helm_resid_del(tau,delta,data));
+#ifdef HELMHOLTZ_DEBUG
+	fprintf(stderr,"%s: p(T=%e, rho=%e) = %e\n",__func__,T,rho,p);
+#endif
+	return p;
 }
 
 /**
