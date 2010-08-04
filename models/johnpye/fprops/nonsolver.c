@@ -3,8 +3,11 @@
 
 #include <stdio.h>
 #include <gsl/gsl_multiroots.h>
+#include <assert.h>
 
 #define SQ(X) ((X)*(X))
+
+#define NONSOLVER_DEBUG
 
 /*------------------------------------------------------------------------------
   Iterative two-way solver for the non-saturation region, making use of GSL.
@@ -24,7 +27,7 @@ static PropertyFunction *nonsolver_propfn(FPROPS_CHAR A){
 		case 'p': return &helmholtz_p_raw;
 		case 'u': return &helmholtz_u;
 		case 's': return &helmholtz_s;
-		case 'h': return &helmholtz_h;
+		case 'h': return &helmholtz_h_raw;
 		default: return 0;
 	}
 }
@@ -33,8 +36,15 @@ static int nonsolver_f(const gsl_vector *x, void *user_data, gsl_vector *f){
 #define U ((Solver2Data *)user_data)
 	double T = gsl_vector_get(x,0);
 	double rho = gsl_vector_get(x,1);
-	gsl_vector_set(f, 0, (*(U->Afn))(rho,T,U->D) - (U->a));
-	gsl_vector_set(f, 1, (*(U->Bfn))(rho,T,U->D) - (U->b));
+	assert(U->Afn == helmholtz_p_raw);
+	double a = (*(U->Afn))(T,rho,U->D);
+	double b = (*(U->Bfn))(T,rho,U->D);
+	gsl_vector_set(f, 0, a - U->a);
+	gsl_vector_set(f, 1, b - U->b);
+	//fprintf(stderr,"  T = %e, rho = %e\t-->\t%c = %e, %c = %e\n",T,rho,U->A, a, U->B, b);
+	//fprintf(stderr,"  %c_target = %f, %c_target = %f\n",U->A,U->a, U->B, U->b);
+	assert(!isnan(a));
+	assert(!isnan(b));
 	return GSL_SUCCESS;
 #undef U
 }
@@ -48,6 +58,9 @@ static int nonsolver_df(const gsl_vector *x, void *user_data, gsl_matrix *J){
 	gsl_matrix_set(J, 0, 1, fprops_non_dZdT_v(U->A,T,rho,U->D));
 	gsl_matrix_set(J, 1, 0, -1./SQ(rho) * fprops_non_dZdv_T(U->B,T,rho,U->D));
 	gsl_matrix_set(J, 1, 1, fprops_non_dZdT_v(U->B,T,rho,U->D));
+
+	fprintf(stderr,"\t∂%c/∂v_T = %e, ∂%c/∂T_v = %e,\t\t∂%c/∂v_T = %e, ∂%c/∂T_v = %e\n",U->A,gsl_matrix_get(J,0,0),U->A,gsl_matrix_get(J,0,1),U->B,gsl_matrix_get(J,1,0),U->B,gsl_matrix_get(J,1,1));
+
 	return GSL_SUCCESS;
 #undef U
 }
@@ -58,8 +71,8 @@ static int nonsolver_fdf(const gsl_vector *x, void *user_data, gsl_vector *f, gs
 
 #ifdef NONSOLVER_DEBUG
 static void nonsolver_print_state(size_t iter, gsl_multiroot_fdfsolver *s){
-	double T = gsl_vector_get(x,0);
-	double rho = gsl_vector_get(x,1);
+	double T = gsl_vector_get(s->x,0);
+	double rho = gsl_vector_get(s->x,1);
 	fprintf(stderr,"iter = %lu: rho = %g, T = %g\n", iter,rho,T);
 }
 #endif
@@ -86,8 +99,8 @@ int fprops_nonsolver(FPROPS_CHAR A, FPROPS_CHAR B, double atarget, double btarge
 
 	/* set initial guesses */
 	gsl_vector *x = gsl_vector_alloc(n);
-	gsl_vector_set(x, 0, *rho);
-	gsl_vector_set(x, 1, *T);
+	gsl_vector_set(x, 0, *T);
+	gsl_vector_set(x, 1, *rho);
 
 	/* configure GSL solver */
 	s = gsl_multiroot_fdfsolver_alloc(gsl_multiroot_fdfsolver_gnewton, n);
@@ -107,7 +120,7 @@ int fprops_nonsolver(FPROPS_CHAR A, FPROPS_CHAR B, double atarget, double btarge
 			break;
 		}
 		status = gsl_multiroot_test_residual(s->f, 2e-6);
-	} while(status == GSL_CONTINUE && iter < 50);
+	} while(status == GSL_CONTINUE && iter < 200);
 
 	*T = gsl_vector_get(x,0);
 	*rho = gsl_vector_get(x,1);
@@ -116,7 +129,7 @@ int fprops_nonsolver(FPROPS_CHAR A, FPROPS_CHAR B, double atarget, double btarge
 #endif
 	gsl_multiroot_fdfsolver_free(s);
 	gsl_vector_free(x);
-	if(status)fprintf(stderr,"%s (%s:%d): %s: ",__func__,__FILE__,__LINE__,gsl_strerror(status));
+	if(status)fprintf(stderr,"%s (%s:%d): %s\n",__func__,__FILE__,__LINE__,gsl_strerror(status));
 	return status;
 }
 

@@ -62,8 +62,8 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 
 		if(!use_guess){
 			*T = Tsat;
-			if(h <= hf)*rho = rhof;
-			else *rho = rhog;
+			if(h <= hf)*rho = 1.1 * rhof;
+			else *rho = rhog * 0.5;
 		}
 	}else{
 		if(!use_guess){
@@ -73,7 +73,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	}
 
 	int res = fprops_nonsolver('p','h',p,h,T,rho,D);
-	fprintf(stderr,"Iteration failed in nonsolver");
+	fprintf(stderr,"%s: Iteration failed in nonsolver\n",__func__);
 	return res;
 }
 
