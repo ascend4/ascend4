@@ -1216,11 +1216,18 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	gt = &(data->gt[0]);
 	for(i=0; i<n; ++i){
 		double s1 = SQ(delta - gt->epsilon);
+		assert(!__isnan(s1));
 		double f1 = gt->d*(gt->d - 1) 
-			+ 2.*gt->alpha*delta * (
+			+ 2.*gt->alpha*delta * ( /* FIXME check this, some nan's happening... */
 				delta * (2. * gt->alpha * s1 - 1) 
 				- 2. * gt->d * (delta - gt->epsilon)
 			);
+		if(__isnan(f1)){
+			fprintf(stderr,"delta = %e\n",delta);
+			fprintf(stderr,"s1 = %e\n",delta);
+		}
+		assert(!__isnan(f1));
+
 		res += gt->n * pow(tau,gt->t) * pow(delta, gt->d - 2.)
 			* f1
 			* exp(-(gt->alpha * s1 + gt->beta*SQ(tau-gt->gamma)));
