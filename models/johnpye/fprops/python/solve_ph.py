@@ -3,8 +3,8 @@ from pylab import *
 
 D = helmholtz_data_water;
 
-p = 230e5;
-h = 2000e3;
+p = 1e5;
+h = 200e3;
 print "p = %f bar, h = %f kJ/kg" % (p/1e5, h/1e3)
 
 print "p_raw(400,0.9) =", helmholtz_p_raw(400,0.9,D)
