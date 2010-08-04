@@ -329,7 +329,8 @@ double helmholtz_cp0(double T, const HelmholtzData *data){
 }
 
 /** 
-	alpha_p function from IAPWS Advisory Note 3, used in calculation of
+	Relative pressure coefficient, alpha_p.
+	As required by IAPWS Advisory Note 3, used in calculation of
 	partial property derivatives.
 */
 double helmholtz_alphap(double T, double rho, const HelmholtzData *data){
@@ -340,14 +341,15 @@ double helmholtz_alphap(double T, double rho, const HelmholtzData *data){
 }
 
 /**
-	beta_p function from IAPWS Advisory Note 3 , used in calculation of partial
-	property derivatives.
+	Isothermal stress coefficient, beta_p.
+	As required by IAPWS Advisory Note 3, used in calculation of
+	partial property derivatives.
 */
 double helmholtz_betap(double T, double rho, const HelmholtzData *data){
 	DEFINE_TD;
 	double phir_d = helm_resid_del(tau,delta,data);
 	double phir_dd = helm_resid_deldel(tau,delta,data);
-	return rho*(1. + (delta*phir_d + SQ(delta)*phir_dd)/(1+delta*phir_d));
+	return rho*(1. + (delta*phir_d + SQ(delta)*phir_dd)/(1.+delta*phir_d));
 }
 
 

@@ -81,33 +81,43 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	}
 
 	fprintf(stderr,"STARTING NON-SAT ITERATION\n");
+	//*rho = 0.21584907523805483;
+	//*T = 1004.0675923338069;
 
 	T1 = *T;
 	rho1 = *rho;
 	/* try our own home-baked newton iteration */
 	int i = 0;
-	while(i++ < 30){
-		double p1 = helmholtz_p_raw(T1,rho1,D);
+	while(i++ < 40){
+		double p1 = helmholtz_p(T1,rho1,D);
 		assert(!__isnan(p1));
-		double h1 = helmholtz_h_raw(T1,rho1,D);
+		double h1 = helmholtz_h(T1,rho1,D);
 		assert(!__isnan(h1));
 
-		fprintf(stderr,"  T = %e, rho = %e\t\tp = %e bar, h = %e kJ/kg\n", T1, rho1, p1/1e5, h1/1e3);
-		if(fabs(p1 - p) < 1e-6 && fabs(h1 - h) < 1e-6){
-			fprintf(stderr,"Converged in homebaked Newton solver");
+		fprintf(stderr,"  T = %f, rho = %f\tp = %f bar, h = %f kJ/kg\n", T1, rho1, p1/1e5, h1/1e3);
+		fprintf(stderr,"      p error = %f bar\n",(p1 - p)/1e5);
+		fprintf(stderr,"      h error = %f kJ/kg\n",(h1 - h)/1e3);
+		if(fabs(p1 - p) < 1e-7 && fabs(h1 - h) < 1e-7){
+			fprintf(stderr,"Converged to T = %f, rho = %f, in homebaked Newton solver", T1, rho1);
 			*T = T1;
 			*rho = rho1;
-			break;
+			return 0;
 		}
 		/* calculate step */
-		double p_T = fprops_non_dZdT_v('p', T1,rho1, D);
-		double p_rho = -1./SQ(rho1) * fprops_non_dZdv_T('p', T1, rho1, D);
-		double h_T = fprops_non_dZdT_v('h', T1,rho1, D);
-		double h_rho = -1./SQ(rho1) * fprops_non_dZdv_T('h', T1, rho1, D);
-		double det = p_T * h_rho - p_rho * h_T;
+		double f = log(p1) - log(p);
+		double g = h1 - h;
+		double f_T = 1./p1 * fprops_non_dZdT_v('p', T1,rho1, D);
+		double f_rho = -1./p1/SQ(rho1) * fprops_non_dZdv_T('p', T1, rho1, D);
+		double g_T = fprops_non_dZdT_v('h', T1,rho1, D);
+		double g_rho = -1./SQ(rho1) * fprops_non_dZdv_T('h', T1, rho1, D);
+		double det = g_rho * f_T - f_rho * g_T;
+		fprintf(stderr,"      ∂f/∂T = %e\t\t∂f/∂rho = %e\n",f_T, f_rho);
+		fprintf(stderr,"      ∂g/∂T = %e\t\t∂g/∂rho = %e\n",g_T, g_rho);
 	
-		double delta_T = - 1./det * (h_rho * p - p_rho * h);
-		double delta_rho = - 1./det * (p_T * h - h_T * p);
+		double delta_T = -1./det * (g_rho * f - f_rho * g);
+		double delta_rho = -1./det * (f_T * g - g_T * f);
+		fprintf(stderr,"          ΔT   = %f\n", delta_T);
+		fprintf(stderr,"          Δrho = %f\n", delta_rho);
 
 		if(subcrit){
 			if(h > hg){
@@ -129,7 +139,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 		if(rho1 + delta_rho > 2000) delta_rho = 2000;
 
 		/* avoid huge step */
-		while(fabs(delta_T / T1) > 0.2){
+		while(fabs(delta_T / T1) > 0.6){
 			delta_T *= 0.5;
 		}
 		while(fabs(delta_rho / rho1) > 0.2){
