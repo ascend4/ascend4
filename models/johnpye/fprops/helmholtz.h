@@ -111,6 +111,7 @@ typedef struct HelmholtzData_struct{
 
 double helmholtz_p_raw(double T, double rho, const HelmholtzData *data);
 double helmholtz_h_raw(double T, double rho, const HelmholtzData *data);
+double helmholtz_s_raw(double T, double rho, const HelmholtzData *data);
 
 double helmholtz_p(double T, double rho, const HelmholtzData *data);
 double helmholtz_u(double T, double rho, const HelmholtzData *data);

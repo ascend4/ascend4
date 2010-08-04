@@ -113,10 +113,10 @@ double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, doubl
 	will be calculated several times in different calls to VT3.
 */
 
-#define p helmholtz_p(T,rho,D)
+#define p helmholtz_p_raw(T,rho,D)
 #define cv helmholtz_cv(T,rho,D)
 #define v (1./rho)
-#define s helmholtz_s(T,rho,D)
+#define s helmholtz_s_raw(T,rho,D)
 #define alphap helmholtz_alphap(T,rho,D)
 #define betap helmholtz_betap(T,rho,D)
 
