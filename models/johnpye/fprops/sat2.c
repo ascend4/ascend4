@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#define PHASE_DEBUG
+//#define PHASE_DEBUG
 #define PHASE_ERRORS
 
 #ifndef PHASE_DEBUG
@@ -297,6 +297,7 @@ int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, co
 		T = T + delta_T;
 	}
 
+#if 0
 	MSG("Trying to solve using fprops_sat_T");
 
 	/* none of that worked, so use sat_T instead, and iterate. much less efficient */
@@ -325,6 +326,7 @@ int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, co
 		p1 = p2;
 		T2 = T;
 	}
+#endif
 
 	MSG("Failed to converge using sat_T approach\n");
 

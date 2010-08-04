@@ -31,31 +31,7 @@ etc., for saturation and non-saturation regions.
 #include <stdlib.h>
 #include <assert.h>
 
-/* forward decls */
-
-#define TV3 fprops_deriv_nonsat_dAdTv
-#define VT3 fprops_deriv_nonsat_dAdvT
-#define TV4 fprops_deriv_sat_dAdTv
-#define VT4 fprops_deriv_sat_dAdvT
-
-typedef struct{
-	double T;
-	double rho;
-	double psat;
-	double rhof;
-	double rhog;
-	double dpdT_sat;
-	const HelmholtzData *D;
-} StateData;
-
-typedef double PartialDerivFn(FPROPS_CHAR Z, StateData *S);
-
-#define TVSAT fprops_sat_dZdT_v
-#define VTSAT fprops_sat_dZdv_T
-#define TVNON fprops_non_dZdT_v
-#define VTNON fprops_non_dZdv_T
-
-PartialDerivFn TVSAT, VTSAT, TVNON, VTNON;
+#define SQ(X) ((X)*(X))
 
 /*------------------------------------------------------------------------------
   EXPORTED FUNCTION(S)
@@ -106,15 +82,21 @@ double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, doubl
 		exit(1);
 
 		/* ...then call the partial deriv routines, which use dpdT_sat */
-		ZTV = TVSAT(z,&S); ZVT = VTSAT(z,&S);
-		XTV = TVSAT(x,&S); XVT = VTSAT(x,&S);
-		YTV = TVSAT(y,&S); YVT = VTSAT(y,&S);
+#define TVSAT(X) fprops_sat_dZdT_v(X,&S)
+#define VTSAT(X) fprops_sat_dZdv_T(X,&S)
+		ZTV = TVSAT(z); ZVT = VTSAT(z);
+		XTV = TVSAT(x); XVT = VTSAT(x);
+		YTV = TVSAT(y); YVT = VTSAT(y);
 	}else{
 		/* non-saturated */
-		ZTV = TVNON(z,&S); ZVT = VTNON(z,&S);
-		XTV = TVNON(x,&S); XVT = VTNON(x,&S);
-		YTV = TVNON(y,&S); YVT = VTNON(y,&S);
+#define TVNON(X) fprops_non_dZdT_v(X,T,rho,D)
+#define VTNON(X) fprops_non_dZdv_T(X,T,rho,D)
+		ZTV = TVNON(z); ZVT = VTNON(z);
+		XTV = TVNON(x); XVT = VTNON(x);
+		YTV = TVNON(y); YVT = VTNON(y);
 	}
+#undef TVNON
+#undef VTNON
 
 	double deriv = ((ZTV*YVT-ZVT*YTV)/(XTV*YVT-XVT*YTV));
 	//fprintf(stderr,"Calculated (∂%c/∂%c)%c = %g\n",z,x,y,deriv);
@@ -131,21 +113,21 @@ double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, doubl
 	will be calculated several times in different calls to VT3.
 */
 
-#define p helmholtz_p(S->T,S->rho,S->D)
-#define cv helmholtz_cv(S->T,S->rho,S->D)
-#define v (1./S->rho)
-#define s helmholtz_s(S->T,S->rho,S->D)
-#define alphap helmholtz_alphap(S->T,S->rho,S->D)
-#define betap helmholtz_betap(S->T,S->rho,S->D)
+#define p helmholtz_p(T,rho,D)
+#define cv helmholtz_cv(T,rho,D)
+#define v (1./rho)
+#define s helmholtz_s(T,rho,D)
+#define alphap helmholtz_alphap(T,rho,D)
+#define betap helmholtz_betap(T,rho,D)
 
-double fprops_non_dZdv_T(FPROPS_CHAR x, StateData *S){
+double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D){
 	double res;
 	switch(x){
 		case 'p': res = -p*betap; break;
 		case 'T': res = 0; break;
 		case 'v': res = 1; break;
-		case 'u': res = p*(S->T*alphap-1.); break;
-		case 'h': res = p*(S->T*alphap-v*betap); break;
+		case 'u': res = p*(T*alphap-1.); break;
+		case 'h': res = p*(T*alphap-v*betap); break;
 		case 's': res = p*alphap; break;
 		case 'g': res = -p*v*betap; break;
 		case 'a':
@@ -158,7 +140,7 @@ double fprops_non_dZdv_T(FPROPS_CHAR x, StateData *S){
 	return res;
 }
 
-double fprops_non_dZdT_v(FPROPS_CHAR x, StateData *S){
+double fprops_non_dZdT_v(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D){
 	double res;
 	switch(x){
 		case 'p': res = p*alphap; break;
@@ -166,7 +148,7 @@ double fprops_non_dZdT_v(FPROPS_CHAR x, StateData *S){
 		case 'v': res = 0; break;
 		case 'u': res = cv; break;
 		case 'h': res = cv + p*v*alphap; break;
-		case 's': res = cv/S->T; break;
+		case 's': res = cv/T; break;
 		case 'g': res = p*v*alphap - s; break;
 		case 'a':
 		case 'f': res = -s; break;
@@ -184,7 +166,7 @@ double fprops_non_dZdT_v(FPROPS_CHAR x, StateData *S){
 #undef alphap
 #undef betap
 
-#if 0
+
 /*------------------------------------------------------------------------------
   Saturation region derivatives... a bit harder.
 
@@ -195,8 +177,10 @@ derivatives are going to be within the saturation region.
 /*
 	⎰ ∂z ⎱   =  ⎰∂z_f⎱ (1 - x) + ⎰∂z_g⎱ x
 	⎱ ∂T ⎰v     ⎱ ∂T ⎰           ⎱ ∂T ⎰
+
+	Need to review the theory of this section, might not be correct.
 */
-double fprops_deriv_sat_dZdT_v(FPROPS_CHAR z, StateData *S){
+double fprops_sat_dZdT_v(FPROPS_CHAR z, const StateData *S){
 	double res;
 	switch(z){
 		/* a couple of easy cases, first: */
@@ -204,30 +188,29 @@ double fprops_deriv_sat_dZdT_v(FPROPS_CHAR z, StateData *S){
 		case 'T': return 1.;
 	}
 
-	double drhofdT = fprops_drhofdT_T(S);
-	double drhogdT = fprops_drhogdT_T(S);
-
+	double drhofdT = fprops_drhofdT(S);
+	double drhogdT = fprops_drhogdT(S);
 
 	double dzfdT, dzgdT;
 
 	assert(S->rhof!=0);
 	assert(S->rhog!=0);
-	double dvfdT = -1./SQ(rhof) * drhofdT_T;
+	double dvfdT = -1./SQ(S->rhof) * drhofdT;
 	assert(!isnan(dvfdT));
-	double dvgdT = -1./SQ(rhog) * drhogdT_T;
+	double dvgdT = -1./SQ(S->rhog) * drhogdT;
 	assert(!isnan(dvgdT));
 
-	dzfdT = VT3(z,T,rhof,D)*dvfdT + TV3(z,T,rhof,D);
-	dzgdT = VT3(z,T,rhog,D)*dvgdT + TV3(z,T,rhog,D);
+#define TVNON(X,RHO) fprops_non_dZdT_v(X,S->T,RHO,S->D)
+#define VTNON(X,RHO) fprops_non_dZdv_T(X,S->T,RHO,S->D)
+	dzfdT = VTNON(z,S->rhof)*dvfdT + TVNON(z,S->rhof);
+	dzgdT = VTNON(z,S->rhog)*dvgdT + TVNON(z,S->rhog);
 
 	assert(!isnan(dzfdT));
 	assert(!isnan(dzgdT));
-#define x S.R4.x
+	double x;
 	res = dzfdT*(1-x) + dzgdT*x;
 	//fprintf(stderr,"(∂%c/∂T)x = %g\n",z,res);
 	return res;
-#undef T
-#undef x
 }
 
 /*
@@ -242,19 +225,20 @@ double fprops_deriv_sat_dZdT_v(FPROPS_CHAR z, StateData *S){
 	⎰ ∂T ⎱  , ⎰ ∂p ⎱    = 0
 	⎱ ∂x ⎰T   ⎱ ∂x ⎰T
 
-*/	
-double fprops_deriv_sat_dZdv_T(FPROPS_CHAR z, double T, double rho, const HelmholtzData *D){
+
+	Need to double-check theory in this section.
+*/
+double fprops_sat_dZdv_T(FPROPS_CHAR z, const StateData *S){
 	switch(z){
 		case 'p': return 0;
 		case 'T': return 0;
 	}
-	double p,rhof,rhog;
-	int res = fprops_sat_T(T, &p, &rhof, &rhog, d);
 	double zf, zg;
 #define ZFG(Z,P,T) \
-	zf = helmholtz_##Z##(T,rhof,d);\
-	zg = helmholtz_##Z##(T,rhog,d)	switch(z){
-		case 'v': ZFG(v,p,T); break;
+	zf = helmholtz_##Z(S->T,S->rhof,S->D);\
+	zg = helmholtz_##Z(S->T,S->rhog,S->D)
+	switch(z){
+		case 'v': zf = 1./S->rhof; zg = 1./S->rhog; break;
 		case 'u': ZFG(u,p,T); break;
 		case 'h': ZFG(h,p,T); break;
 		case 's': ZFG(s,p,T); break;
@@ -273,24 +257,17 @@ double fprops_deriv_sat_dZdv_T(FPROPS_CHAR z, double T, double rho, const Helmho
   DERIVATIVES OF rhof and rhog with temperature
 */
 
-double freesteam_drhofdT(StateData *S){
-	double rho1 = S->rho;
-	S->rho = S->rhof; /* set StateData to the saturated gas line */
-	double dpdT = TVNON('p',S);
-	double dpdrho = -1./SQ(rhof) * VTNON('p',S);
-	S->rho = rho1; /* restore StateData */
-	return (dpsatdT - dpdT)/dpdrho;
+double fprops_drhofdT(const StateData *S){
+	double dpdT = TVNON('p',S->rhof);
+	double dpdrho = -1./SQ(S->rhof) * VTNON('p',S->rhof);
+	return (S->dpdT_sat - dpdT)/dpdrho;
 }
 
-double freesteam_drhogdT(StateData *S){
-	double rho1 = S->rho;
-	S->rho = S->rhog; /* set StateData to the saturated gas line */
-	double dpdT = TVNON('p',S);
-	double dpdrho = -1./SQ(rhog) * VTNON('p',S);
-	S->rho = rho1; /* restore StateData */
-	return (dpsatdT - dpdT)/dpdrho;
+double fprops_drhogdT(const StateData *S){
+	double dpdT = TVNON('p',S->rhog);
+	double dpdrho = -1./SQ(S->rhog) * VTNON('p',S->rhog);
+	return (S->dpdT_sat - dpdT)/dpdrho;
 }
-#endif
 
 
 

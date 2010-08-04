@@ -23,7 +23,29 @@
 
 #define FPROPS_CHAR int
 
+typedef struct{
+	double T;
+	double rho;
+	double psat;
+	double rhof;
+	double rhog;
+	double dpdT_sat;
+	const HelmholtzData *D;
+} StateData;
+
 double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, double rho, const HelmholtzData *D);
+
+double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D);
+double fprops_non_dZdT_v(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D);
+
+/* the StateData object must be filled in/calculated external to the following
+functions */
+
+double fprops_sat_dZdT_v(FPROPS_CHAR z, const StateData *S);
+double fprops_sat_dZdv_T(FPROPS_CHAR z, const StateData *S);
+
+double fprops_drhofdT(const StateData *S);
+double fprops_drhogdT(const StateData *S);
 
 #endif
 
