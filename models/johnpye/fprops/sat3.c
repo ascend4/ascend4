@@ -17,6 +17,7 @@
 	Boston, MA 02111-1307, USA.
 */
 #include "sat3.h"
+#include "helmholtz_impl.h"
 #include "sat.h"
 #include <math.h>
 #include <stdio.h>
@@ -29,16 +30,17 @@ int fprops_sat_T_akasaka(double T, double *psat_out, double *rhof_out, double * 
 	double tau = d->T_c / T;
 	double delf = 1.1 * fprops_rhof_T_rackett(T,d) / d->rho_c;
 	double delg = 0.9 * fprops_rhog_T_chouaieb(T,d) / d->rho_c;
-	feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+	//feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 
 	int i = 0;
-	while(i < 20){
-		double phirf = helm_resid(delf,tau,d);
-		double phirf_d = helm_resid_del(delf,tau,d);
-		double phirf_dd = helm_resid_deldel(delf,tau,d);
-		double phirg = helm_resid(delg,tau,d);
-		double phirg_d = helm_resid_del(delg,tau,d);
-		double phirg_dd = helm_resid_deldel(delg,tau,d);
+	while(i++ < 50){
+		fprintf(stderr,"%s: iter %d: rhof = %f, rhog = %f\n",__func__,i,delf*d->rho_c, delg*d->rho_c);
+		double phirf = helm_resid(tau,delf,d);
+		double phirf_d = helm_resid_del(tau,delf,d);
+		double phirf_dd = helm_resid_deldel(tau,delf,d);
+		double phirg = helm_resid(tau,delg,d);
+		double phirg_d = helm_resid_del(tau,delg,d);
+		double phirg_dd = helm_resid_deldel(tau,delg,d);
 
 #define J(FG) (del##FG * (1. + del##FG * phir##FG##_d))
 #define K(FG) (del##FG * phir##FG##_d + phir##FG + log(del##FG))
@@ -55,7 +57,7 @@ int fprops_sat_T_akasaka(double T, double *psat_out, double *rhof_out, double * 
 
 		double DELTA = Jg_del * Kf_del - Jf_del * Kg_del;
 
-#define gamma 1.
+#define gamma 1
 		delf += gamma/DELTA * ((Kg - Kf) * Jg_del - (Jg - Jf) * Kg_del);
 		delg += gamma/DELTA * ((Kg - Kf) * Jf_del - (Jg - Jf) * Kf_del);
 

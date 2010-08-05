@@ -41,7 +41,7 @@
 
 /* the code that we're wrapping... */
 #include "helmholtz.h"
-#include "sat2.h"
+#include "sat.h"
 
 /* for the moment, species data are defined in C code, we'll implement something
 better later on, hopefully. */

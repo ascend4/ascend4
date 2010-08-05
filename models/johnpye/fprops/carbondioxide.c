@@ -26,7 +26,7 @@
 */
 
 #include "carbondioxide.h"
-#include "sat2.h"
+#include "sat.h"
 
 //#define CARBONDIOXIDE_R 188.9241
 #define GAS_C 8314.510
@@ -196,23 +196,13 @@ int main(void){
 	exit(1);
 #endif
 
-	fprintf(stderr,"XIANG SATURATION CURVE\n");
-	T = 300;
-	p = fprops_psat_T_xiang(T, d);
-	fprintf(stderr,"T = %f -> psat(T) = %f bar\n", T, p/1e5);
-
-	//phase_criterion(T, 679.24, 268.58, p, d);
-
-	double eq1, eq2, eq3;
-	phase_criterion(250., 1045.97, 46.644, 1.785e6, &eq1, &eq2, &eq3, d);
-
 	fprintf(stderr,"ITERATION WITH SUCCESSIVE SUBSTITUTION\n");
 	double rf, rg;
 	T = 276.961793;	
 	double p_sat;
 	assert(0==fprops_sat_T(T, &p_sat, &rf, &rg, d));
 
-	fprintf(stderr,"p_sat(%f) = %f bar\n", T, p_sat / 1e5);
+	fprintf(stderr,"p_sat(%f) = %f bar\n\n", T, p_sat / 1e5);
 
 	return helm_run_test_cases(d, ntd, td, 'K');
 
