@@ -69,20 +69,25 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 
 		subcrit = 1;
 		if(!use_guess){
-			*T = Tsat;
-			if(h <= hf)*rho = 1.1 * rhof;
-			else *rho = rhog * 0.5;
+			*T = 1.1 * Tsat;
+			if(h <= hf){
+				*rho = rhof;
+				fprintf(stderr,"LIQUID GUESS: T = %f, rho = %f\n",*T, *rho);
+			}else{
+				*rho = rhog * 0.5;
+				fprintf(stderr,"GAS GUESS: T = %f, rho = %f\n",*T, *rho);
+			}
 		}
 	}else{
 		if(!use_guess){
-			*T = D->T_c;
+			*T = D->T_c * 1.1;
 			*rho = D->rho_c;
 		}
 	}
 
 	fprintf(stderr,"STARTING NON-SAT ITERATION\n");
-	//*rho = 0.21584907523805483;
-	//*T = 1004.0675923338069;
+	//*rho = 976.82687191126922;
+	//*T = 344.80371310850518;
 
 	T1 = *T;
 	rho1 = *rho;
@@ -150,6 +155,11 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 				}
 				if(T1 + delta_T < D->T_t) delta_T = 0.5 * (T1 + D->T_t);
 				if(T1 < D->T_t) delta_T = +1;
+			}
+		}else{
+			/* supercritical... stay above critical temperature of density > rho_crit */
+			if(rho1 + delta_rho > D->rho_c && T1 + delta_T < D->T_c){
+				delta_T = 0.5 *(T1 + D->T_c);
 			}
 		}
 		/* don't go too dense */

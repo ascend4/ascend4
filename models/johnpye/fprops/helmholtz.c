@@ -40,6 +40,7 @@
 /* macros and forward decls */
 
 #define SQ(X) ((X)*(X))
+#define MSGEXPR(X) fprintf(stderr,"%s = %e\n",#X,(X));
 
 #include "helmholtz_impl.h"
 
@@ -879,8 +880,15 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 			fprintf(stderr,"tau = %f, t = %f, ERROR\n",tau, pt->t);
 			exit(1);
 		}
-		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - ldell);
+		double term = pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - ldell);
+		sum += term;
+		assert(!__isnan(term));
+		assert(!__isinf(term));
+		if(__isnan(sum)){
+			MSGEXPR(pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - ldell));
+		}
 		assert(!__isnan(sum));
+
 		oldl = pt->l;
 		++pt;
 		if(i+1==n || oldl != pt->l){
@@ -1217,15 +1225,10 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	for(i=0; i<n; ++i){
 		double s1 = SQ(delta - gt->epsilon);
 		assert(!__isnan(s1));
-		double f1 = gt->d*(gt->d - 1) 
-			+ 2.*gt->alpha*delta * ( /* FIXME check this, some nan's happening... */
-				delta * (2. * gt->alpha * s1 - 1) 
-				- 2. * gt->d * (delta - gt->epsilon)
-			);
-		if(__isnan(f1)){
-			fprintf(stderr,"delta = %e\n",delta);
-			fprintf(stderr,"s1 = %e\n",delta);
-		}
+		double r1 = delta * (2. * gt->alpha * s1 - 1) 
+				- 2. * gt->d * (delta - gt->epsilon);
+		assert(!__isnan(r1));
+		double f1 = gt->d*(gt->d - 1) + 2.*gt->alpha*delta * r1;
 		assert(!__isnan(f1));
 
 		res += gt->n * pow(tau,gt->t) * pow(delta, gt->d - 2.)
