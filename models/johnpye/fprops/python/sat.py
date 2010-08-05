@@ -25,7 +25,7 @@ TT_src = linspace(T_min, D.T_c, 100)
 TT1 = []
 failcount = 0
 for T in TT_src:
-	res, p1, rf1, rg1 = fprops_sat_T(T,D)
+	res, p1, rf1, rg1 = fprops_sat_T_akasaka(T,D)
 	#print "T=%f, psat=%f bar, rhof=%f, rhog=%f" % (T,p1/1e5,rf1,rg1)
 	if res:
 		print "error %d in %s saturation function T = %0.10e " % (res,D.name,T)

@@ -283,8 +283,8 @@ int main(void){
 		double w = td[i].w; /* m/s */
 		double s = td[i].s * 1e3; /* J/kgK */
 		//fprintf(stderr,"T = %f, rho = %f, p = %f, w = %f, wcalc = %f\n",T,rho,p,w, helmholtz_w(T,rho,d));
-		ASSERT_TOL(helmholtz_s, T, rho, d, s, s*1e-8);
-		ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-8);
+		ASSERT_TOL(helmholtz_s_raw, T, rho, d, s, s*1e-8);
+		ASSERT_TOL(helmholtz_p_raw, T, rho, d, p, p*1e-8);
 		ASSERT_TOL(helmholtz_cv, T, rho, d, cv, cv*1e-8);
 		ASSERT_TOL(helmholtz_w, T, rho, d, w, w*2e-5);
 	}
@@ -319,7 +319,7 @@ int main(void){
 		}
 		fprintf(stderr,"Solved rho_g(p=%f bar, T=%f K) = %f, should be %f, relerr = %e\n", p/1e5, T, rho_g_eval, rho_g, (rho_g_eval-rho_g)/rho_g);
 	
-# if 1
+# if 0
 		res = fprops_sat_T(T, &p_eval, &rho_f_eval, &rho_g_eval, d);
 		if(fabs(p_eval - p) > 0.005 * p){
 			fprintf(stderr,"FAILED TEST\n");
@@ -328,7 +328,7 @@ int main(void){
 # endif
 	}
 
-
+#if 0
 	fprintf(stderr,"\nPROBLEMATIC SATURATION VALUES\n");
 	{
 		double T = 3.7631475862e+02;
@@ -342,6 +342,7 @@ int main(void){
 		}
 		fprintf(stderr,"p_sat(T = %f) = %f bar, rho_f = %f, rho_g = %f\n", T, p/1e5, rho_f, rho_g);
 	}
+#endif
 
 #endif
 
