@@ -3,13 +3,13 @@ from pylab import *
 
 D = helmholtz_data_water;
 
-TT = linspace(273.16, 1000, 20);
-rr = logspace(log10(0.01), log10(900), 20);
+TT = linspace(273.16, 1000, 40);
+rr = logspace(log10(0.01), log10(900), 40);
 
 goodT = []
-goodrho = []
+goodv = []
 badT = []
-badrho = []
+badv = []
 
 for T in TT:
 	for rho in rr:
@@ -24,15 +24,32 @@ for T in TT:
 		if res:
 			print "   +++ BAD RESULT"
 			if not isnan(T) and not isnan(rho):
-				badT.append(T); badrho.append(rho)
+				badT.append(T); badv.append(1./rho)
 		else:
-			goodT.append(T); goodrho.append(rho)
+			if not isnan(T) and not isnan(rho):
+				goodT.append(T); goodv.append(1./rho)
 			print "   +++ GOOD RESULT T1 = %f, rho1 = %f" % (T1, rho1)
 
 figure()
 print badT
-semilogx(badrho, badT, 'rx')
+semilogx(badv, badT, 'rx')
 hold(1)
-semilogx(goodrho, goodT, 'g.')
+semilogx(goodv, goodT, 'g.')
+
+# plot saturation curves
+TT = linspace(D.T_t, D.T_c, 100)
+TT1 = []
+vf1 = []
+vg1 = []
+for T in TT:
+	res, p, rhof, rhog = fprops_sat_T(T,D)
+	if not res:
+		TT1.append(T)
+		vf1.append(1./rhof)
+		vg1.append(1./rhog)
+
+semilogx(vf1,TT1,"b-")
+semilogx(vg1,TT1,"b-")
+
 show()
 
