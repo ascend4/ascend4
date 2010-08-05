@@ -13,7 +13,7 @@ lib = fprops_env.SharedLibrary("mbwr"
 env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methane']
 
 lib = fprops_env.SharedLibrary("helmholtz"
-	,['ideal.c','helmholtz.c','asc_helmholtz.c','sat2.c','sat.c']
+	,['ideal.c','helmholtz.c','asc_helmholtz.c','sat.c','derivs.c','nonsolver.c','solve_ph.c']
 		+ ['%s.c' % f for f in env['fluids']]
 	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 	,SHLIBPREFIX = env['EXTLIB_PREFIX']

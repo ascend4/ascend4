@@ -28,6 +28,7 @@
 
 #include "helmholtz.h"
 #include "ideal_impl.h"
+#include "sat.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -1007,7 +1008,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 	delta and tau.
 */
 double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
-	double dell,ldell, term, sum = 0, res = 0;
+	double dell,ldell, sum = 0, res = 0;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
