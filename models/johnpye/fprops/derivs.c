@@ -26,10 +26,12 @@ etc., for saturation and non-saturation regions.
 
 #include "derivs.h"
 #include "helmholtz.h"
+#include "sat.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 #define SQ(X) ((X)*(X))
 
@@ -59,7 +61,7 @@ double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, doubl
 	char sat = 0;
 
 	if(T < D->T_c){
-		int res = fprops_sat_T(T,&S.psat, &S.rhof, &S.rhog);\
+		int res = fprops_sat_T(T,&S.psat, &S.rhof, &S.rhog, D);\
 		if(res){
 			fprintf(stderr,"Failed to calculation saturation props\n");
 			exit(1);
@@ -216,6 +218,10 @@ double fprops_sat_dZdT_v(FPROPS_CHAR z, const StateData *S){
 	assert(!isnan(dzfdT));
 	assert(!isnan(dzgdT));
 	double x;
+
+	/* FIXME this is not the correct solution, this is for x const, not rho const. */
+
+	x = 1./(x/S->rhog + (1-x)/S->rhof);
 	res = dzfdT*(1-x) + dzgdT*x;
 	//fprintf(stderr,"(∂%c/∂T)x = %g\n",z,res);
 	return res;
