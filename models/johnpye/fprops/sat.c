@@ -196,7 +196,36 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 }
 
 int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out, const HelmholtzData *d){
-	fprintf(stderr,"%s: NOT YET IMPLEMENTED\n",__func__);
+	/*
+	Estimate of saturation temperature using definition	of acentric factor and
+	the assumed p(T) relationship:
+		log10(p)=A + B/T
+	See Reid, Prausnitz and Poling, 4th Ed., section 2.3. 
+	*/
+	double T1 = d->T_c / (1. - 3./7. / (1.+d->omega) * log10(p / d->p_c));
+	double p1, rhof, rhog;
+	int i = 0;
+	while(i++ < 20){
+		int res = fprops_sat_T(T1, &p1, &rhof, &rhog, d);
+		if(res)return 1;
+		//fprintf(stderr,"%s: T1 = %f ——> p = %f bar\trhof = %f\trhog = %f\n",__func__, T1, p1/1e5, rhof, rhog);
+		if(fabs(p1 - p) < 1e-5){
+			*Tsat_out = T1;
+			*rhof_out = rhof;
+			*rhog_out = rhog;
+			return 0;
+		}
+		double hf = helmholtz_h_raw(T1, rhof, d);
+		double hg = helmholtz_h_raw(T1, rhog, d);
+		double dpdT_sat = (hg - hf) / T1 / (1./rhog - 1./rhof);
+		//fprintf(stderr,"\t\tdpdT_sat = %f bar/K\n",dpdT_sat/1e5);
+		double delta_T = -(p1 - p)/dpdT_sat;
+		if(T1 + delta_T < d->T_t)T1 = 0.5 * (d->T_t + T1);
+		else T1 += delta_T;
+	}
+	*Tsat_out = T1;
+	*rhof_out = rhof;
+	*rhog_out = rhog;
 	return 1;
 }
 

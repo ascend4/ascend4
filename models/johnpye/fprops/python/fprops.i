@@ -24,10 +24,12 @@
 %include "../helmholtz.h"
 
 %apply double *OUTPUT {double *p_sat};
+%apply double *OUTPUT {double *T_sat};
 %apply double *OUTPUT {double *rho_f};
 %apply double *OUTPUT {double *rho_g};
 %include "../sat.h"
 %clear double *p_sat;
+%clear double *T_sat;
 %clear double *rho_f;
 %clear double *rho_g;
 
