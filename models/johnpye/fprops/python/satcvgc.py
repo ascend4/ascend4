@@ -16,6 +16,8 @@ DD = [
 ## following still need T_triple data added
 ]
 
+print "\nfprops_sat_T test...\n"
+
 toterrors = 0
 totchecks = 0
 for D in DD:
@@ -36,4 +38,30 @@ for D in DD:
 	toterrors += errcount
 
 print "Total: %d errors across all tested substances (%0.1f%% correct)" % (toterrors,100.*(1 - float(toterrors)/totchecks))
-	
+
+
+
+
+print "\nfprops_sat_p test...\n"
+
+toterrors = 0
+totchecks = 0
+for D in DD:
+	print D.name, D.p_t, D.p_c
+	pp = linspace(D.p_t, D.p_c, 100);
+	firsterror = True
+	errcount = 0
+	for p in pp:
+		sys.stderr.write("%f\r" % p)
+		res, T, rhof, rhog = fprops_sat_p(p,D)
+		if res:
+			if firsterror:
+				print "%s: Error %d at p = %f" % (D.name,res,p)
+				firsterror = False
+			errcount += 1				
+	print "%s: %d errors from %d checks" % (D.name, errcount, len(pp))
+	totchecks += len(pp)
+	toterrors += errcount
+
+print "Total: %d errors across all tested substances (%0.1f%% correct)" % (toterrors,100.*(1 - float(toterrors)/totchecks))
+
