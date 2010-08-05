@@ -10,6 +10,7 @@
 #include "../helmholtz.h"
 #include "../sat.h"
 #include "../sat2.h"
+#include "../sat3.h"
 #include "../solve_ph.h"
 %}
 
@@ -36,6 +37,7 @@
 %apply double *OUTPUT {double *rho_f};
 %apply double *OUTPUT {double *rho_g};
 %apply double *OUTPUT {double *T_sat};
+int fprops_sat_T_akasaka(double T, double *p_sat, double *rho_f, double *rho_g, const HelmholtzData *d);
 int fprops_sat_T(double T, double *p_sat, double *rho_f, double *rho_g, const HelmholtzData *d);
 int fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const HelmholtzData *d);
 %clear double *p_sat;

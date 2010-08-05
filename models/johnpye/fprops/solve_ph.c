@@ -25,6 +25,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <math.h>
 #include <assert.h>
 
+#define _GNU_SOURCE
+#include <fenv.h>
+
 #define SQ(X) ((X)*(X))
 
 int fprops_region_ph(double p, double h, const HelmholtzData *D){
@@ -48,6 +51,8 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	double Tsat, rhof, rhog, hf, hg;
 	double T1, rho1;
 	int subcrit = 0;
+    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+
 	if(p < D->p_c){
 		int res = fprops_sat_p(p, &Tsat, &rhof, &rhog, D);
 		if(res){
