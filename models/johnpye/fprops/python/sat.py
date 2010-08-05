@@ -1,6 +1,6 @@
 from fprops import *
 
-D = helmholtz_data_water;
+D = helmholtz_data_methane;
 
 from pylab import *
 hold(1)
@@ -21,7 +21,7 @@ rhog2 = []
 psat2 = []
 TT2 = []
 
-TT_src = linspace(T_min, D.T_c, 100)
+TT_src = linspace(T_min, D.T_c, 4000)
 TT1 = []
 failcount = 0
 for T in TT_src:
