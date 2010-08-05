@@ -3,8 +3,8 @@ from pylab import *
 
 D = helmholtz_data_water;
 
-TT = linspace(273.16, 1000, 40);
-rr = logspace(log10(0.01), log10(900), 40);
+TT = linspace(273.16, 1000, 100);
+rr = logspace(log10(0.01), log10(900), 100);
 
 goodT = []
 goodv = []
@@ -22,7 +22,7 @@ for T in TT:
 
 		res, T1, rho1 = fprops_solve_ph(p,h,0,D);
 		if res:
-			print "   +++ BAD RESULT"
+			print "   +++ BAD RESULT T1 = %f, rho1 = %f" % (T1, rho1)
 			if not isnan(T) and not isnan(rho):
 				badT.append(T); badv.append(1./rho)
 		else:
@@ -50,6 +50,8 @@ for T in TT:
 
 semilogx(vf1,TT1,"b-")
 semilogx(vg1,TT1,"b-")
+xlabel("specific volume")
+ylabel("temperature")
 
 show()
 

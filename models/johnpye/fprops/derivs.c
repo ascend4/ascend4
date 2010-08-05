@@ -30,8 +30,15 @@ etc., for saturation and non-saturation regions.
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <math.h>
+
+//#define FPE_DEBUG
+#ifdef FPE_DEBUG
+# include <assert.h>
+#else
+# define assert(ARGS...)
+#endif
+
 
 #define SQ(X) ((X)*(X))
 
@@ -138,9 +145,11 @@ double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const HelmholtzDat
 			fprintf(stderr,"%s (%s:%d): Invalid variable '%c'\n", __func__,__FILE__,__LINE__,x);
 			exit(1);
 	}
+#if 1
 	if(__isnan(res)){
 		fprintf(stderr,"calculating '%c'\n",x);
 	}
+#endif
 	assert(!__isnan(res));
 	//fprintf(stderr,"(∂%c/∂v)T = %f\n",x,res);
 	return res;
@@ -162,9 +171,11 @@ double fprops_non_dZdT_v(FPROPS_CHAR x, double T, double rho, const HelmholtzDat
 			fprintf(stderr,"%s (%s:%d): Invalid variable '%c'\n", __func__,__FILE__,__LINE__,x);
 			exit(1);
 	}
+#if 0
 	if(__isnan(res)){
 		fprintf(stderr,"calculating '%c'\n",x);
 	}
+#endif
 	assert(!__isnan(res));
 	//fprintf(stderr,"(∂%c/∂T)v = %f\n",x,res);
 	return res;
