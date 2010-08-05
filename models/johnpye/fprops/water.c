@@ -18,7 +18,7 @@
 */
 
 #include "water.h"
-#include "sat2.h"
+#include "sat.h"
 
 #define WATER_R 461.51805 /* J/kg·K */
 #define WATER_TC 647.096 /* K */
@@ -289,8 +289,6 @@ int main(void){
 		ASSERT_TOL(helmholtz_w, T, rho, d, w, w*2e-5);
 	}
 
-#define NOT_YET_FDA_APPROVED
-#ifdef NOT_YET_FDA_APPROVED
 	fprintf(stderr,"\nIAPWS95 TABLE 8 (SATURATION) TESTS\n");
 	for(i=0; i<ntds; ++i){
 		double T = tds[i].T;
@@ -304,28 +302,11 @@ int main(void){
 		fprintf(stderr,"T = %f, p = %f bar, rho_f = %f, rho_g = %f\n",T,p/1e5,rho_f, rho_g);
 		double rho_f_eval, rho_g_eval, p_eval;
 		int res;
-	
-		res = fprops_rho_pT(p, T, FPROPS_PHASE_LIQUID, 0, d, &rho_f_eval);
-		if(fabs(rho_f_eval - rho_f) > 0.005 * rho_f){
-			fprintf(stderr,"FAILED TO SOLVE RHO_F\n");
-			exit(1);
-		}
-		fprintf(stderr,"Solved rho_f(p=%f bar, T=%f K) = %f, should be %f, relerr = %e\n", p/1e5, T, rho_f_eval, rho_f,(rho_f_eval - rho_f)/rho_f);
 
-		res = fprops_rho_pT(p, T, FPROPS_PHASE_VAPOUR, 0, d, &rho_g_eval);
-		if(fabs(rho_g_eval - rho_g) > 0.005 * rho_g){
-			fprintf(stderr,"FAILED TO SOLVE RHO_G\n");
-			exit(1);
-		}
-		fprintf(stderr,"Solved rho_g(p=%f bar, T=%f K) = %f, should be %f, relerr = %e\n", p/1e5, T, rho_g_eval, rho_g, (rho_g_eval-rho_g)/rho_g);
-	
-# if 0
 		res = fprops_sat_T(T, &p_eval, &rho_f_eval, &rho_g_eval, d);
-		if(fabs(p_eval - p) > 0.005 * p){
-			fprintf(stderr,"FAILED TEST\n");
-			exit(1);
-		}
-# endif
+		ASSERT_TOL_VAL(p_eval, p, 1e-8);
+		ASSERT_TOL_VAL(rho_f_eval, rho_f, 1e-8);
+		ASSERT_TOL_VAL(rho_g_eval, rho_g, 1e-8);
 	}
 
 #if 0
@@ -342,8 +323,6 @@ int main(void){
 		}
 		fprintf(stderr,"p_sat(T = %f) = %f bar, rho_f = %f, rho_g = %f\n", T, p/1e5, rho_f, rho_g);
 	}
-#endif
-
 #endif
 
 #if 0

@@ -68,4 +68,23 @@ int helm_check_p_c(const HelmholtzData *d);
 		}\
 	}
 
+/* even simpler testing of an assertion */
+#define ASSERT_TOL_VAL(CALC,REF,TOL) {\
+		double cval = (CALC);\
+		double rval = (REF);\
+		double relerrpc = (cval-rval)/100.;\
+		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
+		if(fabs(err)>fabs(TOL)){\
+			fprintf(stderr,"ERROR in line %d: value of '%s' = %.5e,"\
+				" should be %.5e, error is %.10e (%.2f%%)!\n"\
+				,__LINE__,#CALC,cval,rval,cval-rval,relerrpc\
+			);\
+			exit(1);\
+		}else{\
+			fprintf(stderr,"    OK, %s = %8.2e with %0.6f%% err.\n"\
+				,#CALC,rval,relerrpc\
+			);\
+		}\
+	}
+
 #endif

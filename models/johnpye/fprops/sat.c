@@ -26,19 +26,18 @@
 */
 
 #include "sat.h"
-
 #include "helmholtz_impl.h"
+
 # include <assert.h>
-
 #include <math.h>
-#ifdef TEST
-# include <stdio.h>
-# include <stdlib.h>
-#endif
-
-#include <gsl/gsl_multiroots.h>
+#include <stdio.h>
 
 #define SQ(X) ((X)*(X))
+
+#if 0
+#define _GNU_SOURCE
+#include <fenv.h>
+#endif
 
 /**
 	Estimate of saturation pressure using H W Xiang ''The new simple extended
@@ -145,425 +144,63 @@ double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
 	return D->rho_c * exp(PPP * (pow(alpha,NNN) - exp(1-alpha)));
 }
 
-
-/**
-	Maxwell phase criterion, first principles
-*/
-void phase_criterion(double T, double rho_f, double rho_g, double p_sat, double *eq1, double *eq2, double *eq3, const HelmholtzData *D){
-#ifdef TEST
-	fprintf(stderr,"PHASE CRITERION: T = %f, rho_f = %f, rho_g = %f, p_sat = %f\n", T, rho_f, rho_g, p_sat);
-#endif
-	double delta_f, delta_g, tau;
-    tau = D->T_c / T;
-
-	delta_f = rho_f / D->rho_c;
-	delta_g = rho_g/ D->rho_c;
-
-#ifdef TEST
-	assert(!isnan(delta_f));
-	assert(!isnan(delta_g));
-	assert(!isnan(p_sat));		
-	assert(!isinf(delta_f));
-	assert(!isinf(delta_g));
-	assert(!isinf(p_sat));		
-#endif
-
-	*eq1 = (p_sat - helmholtz_p(T, rho_f, D));
-	*eq2 = (p_sat - helmholtz_p(T, rho_g, D));
-	*eq3 = helmholtz_g(T, rho_f, D) - helmholtz_g(T,rho_g, D);
-
-#ifdef TEST
-	fprintf(stderr,"eq1 = %e\t\teq2 = %e\t\teq3 = %e\n", *eq1, *eq2, *eq3);
-#endif
-}
-
-
-typedef struct PhaseSolve_struct{
-	double tau;
-	const HelmholtzData *D;
-	const double *scaling;
-} PhaseSolve;
-
-/**
-	Maxwell phase criterion, from equations from IAPWS-95.
-
-	We define here pi = p_sat / (R T rho_c)
-*/
-static int phase_resid(const gsl_vector *x, void *params, gsl_vector *f){
-	const double tau = ((PhaseSolve *)params)->tau;
-    const double pi = gsl_vector_get(x,0);
-    double delta_f = gsl_vector_get(x,1);
-	double delta_g = exp(gsl_vector_get(x,2));
-	const HelmholtzData *D = ((PhaseSolve *)params)->D;
-	const double *scaling = ((PhaseSolve *)params)->scaling;
-
-	assert(!isinf(pi));
-	assert(!isinf(delta_f));
-	assert(!isinf(delta_g));
-
-	gsl_vector_set(f, 0, scaling[0] * (delta_f + delta_f * delta_f * helm_resid_del(tau, delta_f, D) - pi));
-	gsl_vector_set(f, 1, scaling[1] * (1 + delta_g * helm_resid_del(tau, delta_g, D) - pi/delta_g));
-	gsl_vector_set(f, 2, scaling[2] * (pi * (delta_f - delta_g) - delta_f * delta_g * (log(delta_f / delta_g)  + helm_resid(delta_g,tau,D) - helm_resid(delta_f,tau,D))));
-
-
-	if(isnan(gsl_vector_get(f,2)) || isnan(gsl_vector_get(f,2)) || isnan(gsl_vector_get(f,2))){
-		fprintf(stderr,"NaN encountered... ");
-	}
-
-	//gsl_vector_set(f, 2, pi * (delta_f - delta_g) * delta_f*delta_g* (log(delta_f/delta_g) + helm_resid(delta_g,tau,D) - helm_resid(delta_f,tau,D)));
-
-	return GSL_SUCCESS;
-}
-
-static int print_state(size_t iter, gsl_multiroot_fsolver * s){
-	fprintf(stderr,"iter = %3u: pi = %.3f delf = %.3f delg = %.3f  "
-		"E = % .3e % .3e %.3e\n",
-		iter,
-		gsl_vector_get(s->x, 0),
-		gsl_vector_get(s->x, 1),
-		gsl_vector_get(s->x, 2),
-		gsl_vector_get (s->f, 0),
-		gsl_vector_get (s->f, 1),
-		gsl_vector_get (s->f, 2));
-}
-
-#if 0
-int phase_solve(double T, double *p_sat, double *rho_f, double *rho_g, const HelmholtzData *D){
-	gsl_multiroot_fsolver *s;
-	int status;
-	const size_t n = 3;
-	double tau = D->T_c / T;
-	size_t i, iter = 0;
-	const gsl_multiroot_fsolver_type *ftype;
-
-	const double scaling[3] = {1., 1., 0.1};
-
-	PhaseSolve p = {
-		tau
-		, D
-		, scaling
-	};
-
-	gsl_multiroot_function f = {
-		&phase_resid,
-		n, &p
-	};
-
-	/* TODO use the first guess 'provided' if psat, rho_f, rho_g less than zero? */
-
-	double x_init[3] = {
-		/* first guesses, such as they are... */
-		fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c
-		,fprops_rhof_T_rackett(T, D) / D->rho_c
-		,log(fprops_rhog_T_chouaieb(T, D) / D->rho_c)
-	};
-
-	gsl_vector *x = gsl_vector_alloc (n);
-	for(i=0; i<3; ++i)gsl_vector_set(x, i, x_init[i]);
-	ftype = gsl_multiroot_fsolver_broyden;
-	s = gsl_multiroot_fsolver_alloc(ftype, n);
-	gsl_multiroot_fsolver_set(s, &f, x);
-
-	//print_state(iter, s);
-
-	double pi_xiang = fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c;
-	double delg_chouaieb = fprops_rhog_T_chouaieb(T, D) / D->rho_c;
-	double delf_rackett = fprops_rhof_T_rackett(T, D) / D->rho_c;
-
-	assert(!isnan(pi_xiang));
-	assert(!isnan(delg_chouaieb));
-	assert(!isnan(delf_rackett));
-
-	do{
-		iter++;
-
-		status = gsl_multiroot_fsolver_iterate(s);
-
-		print_state(iter, s);
-		if(status)break;
-
-		status = gsl_multiroot_test_residual(s->f, 1e-7);
-
-		double pi = gsl_vector_get(s->x,0);
-		double delf = gsl_vector_get(s->x,1);
-		double delg = exp(gsl_vector_get(s->x,2));
-
-
-#define VAR_PI 0
-#define VAR_DELF 1
-#define VAR_DELG 2
-#define CHECK_RESET(COND, VAR, NEWVAL)\
-	if(COND){\
-		gsl_vector_set(s->x,VAR,NEWVAL);\
-		fprintf(stderr,"RESET %s to %s = %f (FAILED %s)\n", #VAR, #NEWVAL, NEWVAL, #COND);\
-	}
-
-#define CHECK_RESET_CONTINUE(COND, VAR, NEWVAL)\
-	if(COND){\
-		gsl_vector_set(s->x,VAR,NEWVAL);\
-		fprintf(stderr,"RESET %s to %s = %f (FAILED %s)\n", #VAR, #NEWVAL, NEWVAL, #COND);\
-		continue;\
-	}
-
-		//CHECK_RESET_CONTINUE(pi < 0, VAR_PI, pi_xiang);
-		//CHECK_RESET_CONTINUE(delg < 0, VAR_DELG, delg_chouaieb);
-		//CHECK_RESET_CONTINUE(delf < 0, VAR_DELF, delf_rackett);
-
-#if 0
-		CHECK_RESET_CONTINUE(delf < 1, VAR_DELF, delf_rackett);
-		CHECK_RESET_CONTINUE(delg > 1, VAR_DELG, delg_chouaieb);
-
-		CHECK_RESET_CONTINUE(pi > 2. * pi_xiang, VAR_PI, pi_xiang)
-		else CHECK_RESET_CONTINUE(pi < 0.5 * pi_xiang, VAR_PI, pi_xiang)
-
-		CHECK_RESET_CONTINUE(delg < 0.8 * delg_chouaieb, VAR_DELG, delg_chouaieb)
-		else CHECK_RESET_CONTINUE(delg > 1.5 * delg_chouaieb, VAR_DELG, delg_chouaieb);
-
-		//if(gsl_vector_get(s->x,1) < D->rho_c)gsl_vector_set(s->x,1,2 * D->rho_c);
-		//if(gsl_vector_get(s->x,2) > D->rho_c)gsl_vector_set(s->x,2,0.5 * D->rho_c);
-
-#endif
-	}while(status == GSL_CONTINUE && iter < 40);
-
-	if(status!=GSL_SUCCESS)fprintf(stderr,"%s:%d: warning: (%d) status = %s\n", __FILE__,__LINE__, status, gsl_strerror (status));
-
-	//fprintf(stderr,"SOLUTION: pi = %f\n", gsl_vector_get(s->x, 0));
-
-
-	//fprintf(stderr,"          p  = %f\n", p_sat);
-
-	*p_sat = gsl_vector_get(s->x, 0) * T * D->R * D->rho_c;
-	*rho_f = gsl_vector_get(s->x, 1) * D->rho_c;
-	*rho_g = gsl_vector_get(s->x, 2) * D->rho_c;
-
-	gsl_multiroot_fsolver_free(s);
-	gsl_vector_free(x);
-
-	return status;
-}
-#endif 
-
-#if 0
-	
-
-#ifdef TEST
-	fprintf(stderr,"PHASE CRITERION: T = %f, rho_f = %f, rho_g = %f, p_sat = %f\n", T, rho_f, rho_g, p_sat);
-#endif
-	double delta_f, delta_g, tau;
-    tau = D->T_c / T;
-
-	delta_f = rho_f / D->rho_c;
-	delta_g = rho_g/ D->rho_c;
-
-#ifdef TEST
-	assert(!isnan(delta_f));
-	assert(!isnan(delta_g));
-	assert(!isnan(p_sat));		
-	assert(!isinf(delta_f));
-	assert(!isinf(delta_g));
-	assert(!isinf(p_sat));		
-#endif
-
-	*eq1 = (p_sat - helmholtz_p(T, rho_f, D));
-	*eq2 = (p_sat - helmholtz_p(T, rho_g, D));
-	*eq3 = helmholtz_g(T, rho_f, D) - helmholtz_g(T,rho_g, D);
-
-#ifdef TEST
-	fprintf(stderr,"eq1 = %e\t\teq2 = %e\t\teq3 = %e\n", *eq1, *eq2, *eq3);
-#endif
-}
-
-
-
-#if 0
-static int phase_deriv(const gsl_vector * x, void *params, gsl_matrix * J){
-	const double tau = ((PhaseSolve *)params)->tau;
-    const double pi = gsl_vector_get(x,0);
-    const double delta_f = gsl_vector_get(x,1);
-	const double delta_g = gsl_vector_get(x,2);
-	const HelmholtzData *D = ((PhaseSolve *)params)->D;
-
-	double dE1ddelf = helm_resid_del(tau, delta_f, D) + delta_f * helm_resid_deldel(tau, delta_f, D) - pi ;
-	double dE1ddelg = 0;
-	double dE1dpi = - 1./ delta_f;
-
-	double dE2ddelf = 0;
-	double dE2ddelg = helm_resid_del(tau, delta_g, D) + delta_g * helm_resid_deldel(tau, delta_g, D) - pi ;
-	double dE2dpi = - 1./ delta_g;
-
-	double dE3ddelf = pi - delta_g * (log(delta_f/delta_g) + helm_resid(delta_g, tau, D) - helm_resid(delta_f, tau, D) + 1 - delta_f * helm_resid_del(delta_f, tau, D));
-	double dE3ddelg = -pi - delta_f * (log(delta_f/delta_g) + helm_resid(delta_g, tau, D) - helm_resid(delta_f, tau, D) - 1 + delta_g * helm_resid_del(delta_g, tau, D));
-	double dE3dpi = delta_f - delta_g;
-
-	gsl_matrix_set (J, 0, 0, dE1ddelf);
-	gsl_matrix_set (J, 0, 1, dE1ddelg);
-	gsl_matrix_set (J, 0, 2, dE1dpi);
-	gsl_matrix_set (J, 1, 0, dE2ddelf);
-	gsl_matrix_set (J, 1, 1, dE2ddelg);
-	gsl_matrix_set (J, 1, 2, dE2dpi);
-	gsl_matrix_set (J, 2, 0, dE3ddelf);
-	gsl_matrix_set (J, 2, 1, dE3ddelg);
-	gsl_matrix_set (J, 2, 2, dE3dpi);
-
-	return GSL_SUCCESS;
-}
-
-static int phase_residderiv(
-	const gsl_vector * x, void *params, gsl_vector * f, gsl_matrix * J
-){
-	phase_resid(x, params, f);
-	phase_deriv(x, params, J);
-	return GSL_SUCCESS;
-}
-
-static int print_state_fdf(size_t iter, gsl_multiroot_fdfsolver * s){
-	fprintf(stderr,"iter = %3u: delf = %.3f delg = %.3f pi = %.3f "
-		"E = % .3e % .3e %.3e\n",
-		iter,
-		gsl_vector_get (s->x, 0),
-		gsl_vector_get (s->x, 1),
-		gsl_vector_get (s->x, 2),
-		gsl_vector_get (s->f, 0),
-		gsl_vector_get (s->f, 1),
-		gsl_vector_get (s->f, 2));
-}
-
-
-double phase_solve_fdf(double T, const HelmholtzData *D){
-	gsl_multiroot_fdfsolver *s;
-	int status;
-	const size_t n = 3;
-	double tau = D->T_c / T;
-	size_t i, iter = 0;
-	const gsl_multiroot_fdfsolver_type *fdftype;
-
-	PhaseSolve p = {tau, D};
-	gsl_multiroot_function_fdf f = {
-		&phase_resid,
-		&phase_deriv,
-		&phase_residderiv,
-		n, &p
-	};
-
-	double x_init[3] = {
-		/* first guesses, such as they are... */
-		fprops_psat_T_xiang(T, D) / D->R / T / D->rho_c
-		,fprops_rhof_T_rackett(T, D) / D->rho_c
-		,fprops_rhog_T_chouaieb(T, D) / D->rho_c
-	};
-
-	gsl_vector *x = gsl_vector_alloc (n);
-	for(i=0; i<3; ++i)gsl_vector_set(x, i, x_init[i]);
-	fdftype = gsl_multiroot_fdfsolver_hybridsj;
-	s = gsl_multiroot_fdfsolver_alloc (fdftype, n);
-	gsl_multiroot_fdfsolver_set (s, &f, x);
-
-	print_state_fdf(iter, s);
-
-	do{
-		iter++;
-		status = gsl_multiroot_fdfsolver_iterate (s);
-		print_state_fdf(iter, s);
-		if(status)break;
-		if(gsl_vector_get(s->x,2) > D->rho_c)gsl_vector_set(s->x,2,D->rho_c);
-		status = gsl_multiroot_test_residual(s->f, 1e-7);
-	}while(status == GSL_CONTINUE && iter < 1000);
-
-	fprintf(stderr,"status = %s\n", gsl_strerror (status));
-
-	fprintf(stderr,"SOLUTION: pi = %f\n", gsl_vector_get(s->f, 0));
-
-	double p_sat = gsl_vector_get(s->f, 0) * T * D->R * D->rho_c;
-
-	fprintf(stderr,"          p  = %f\n", p_sat);
-	gsl_multiroot_fdfsolver_free (s);
-	gsl_vector_free (x);
-
-	return 0;
-}
-#endif
-
-
-void solve_saturation(double T, const HelmholtzData *D){
-	double rho_f, rho_g, p_sat;
-
-	/* first guesses, such as they are... */
-	p_sat = fprops_psat_T_xiang(T, D);
-	rho_f = fprops_rhof_T_rackett(T, D);
-	rho_g = fprops_rhog_T_chouaieb(T, D);
-
-	
-
-#ifdef TEST
-	fprintf(stderr,"Rackett liquid density: %f\n", rho_f);	
-	fprintf(stderr,"Chouaieb vapour density: %f\n", rho_g);
-#endif
-
-	double delta_f, delta_g, eq1, eq2, eq3, tau;
-		
-	int i = 40;
-	while(--i > 0){
-		delta_f = rho_f / D->rho_c;
-		delta_g = rho_g/ D->rho_c;
-
-#ifdef TEST
-		assert(!isnan(delta_f));
-		assert(!isnan(delta_g));
-		assert(!isnan(p_sat));		
-		assert(!isinf(delta_f));
-		assert(!isinf(delta_g));
-		assert(!isinf(p_sat));		
-#endif
-		
-		phase_criterion(T, rho_f, rho_g, p_sat, &eq1, &eq2, &eq3, D);
-			
-#ifdef TEST    
-		fprintf(stderr,"p_sat = %f\trho_f = %f\trho_g = %f\teq1 = %e\t\teq2 = %e\t\teq3 = %e\n",p_sat, rho_f, rho_g, eq1, eq2, eq3);
-		assert(!isnan(eq1));
-		assert(!isnan(eq2));
-		assert(!isnan(eq3));
-		assert(!isinf(eq1));		
-		assert(!isinf(eq2));		
-		assert(!isinf(eq3));		
-#endif
-
-		double p1 = D->R * T * D->rho_c * delta_f * delta_g / (delta_f - delta_g) * (helm_resid(delta_f,tau,D) - helm_resid(delta_g,tau,D) + log(delta_f/delta_g));
-		if(p1/p_sat > 1.5){
-			p1 = p_sat * 1.5;
-		}else if(p1/p_sat < 0.7){
-			p1 = p_sat * 0.7;
+int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out, const HelmholtzData *d){
+	double tau = d->T_c / T;
+	double delf = 1.1 * fprops_rhof_T_rackett(T,d) / d->rho_c;
+	double delg = 0.9 * fprops_rhog_T_chouaieb(T,d) / d->rho_c;
+	//feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+
+	int i = 0;
+	while(i++ < 50){
+		//fprintf(stderr,"%s: iter %d: rhof = %f, rhog = %f\n",__func__,i,delf*d->rho_c, delg*d->rho_c);
+		double phirf = helm_resid(tau,delf,d);
+		double phirf_d = helm_resid_del(tau,delf,d);
+		double phirf_dd = helm_resid_deldel(tau,delf,d);
+		double phirg = helm_resid(tau,delg,d);
+		double phirg_d = helm_resid_del(tau,delg,d);
+		double phirg_dd = helm_resid_deldel(tau,delg,d);
+
+#define J(FG) (del##FG * (1. + del##FG * phir##FG##_d))
+#define K(FG) (del##FG * phir##FG##_d + phir##FG + log(del##FG))
+#define J_del(FG) (1 + 2 * del##FG * phir##FG##_d + SQ(del##FG) * phir##FG##_dd)
+#define K_del(FG) (2 * phir##FG##_d + del##FG * phir##FG##_dd + 1./del##FG)
+		double Jf = J(f);
+		double Jg = J(g);
+		double Kf = K(f);
+		double Kg = K(g);
+		double Jf_del = J_del(f);
+		double Jg_del = J_del(g);
+		double Kf_del = K_del(f);
+		double Kg_del = K_del(g);
+
+		double DELTA = Jg_del * Kf_del - Jf_del * Kg_del;
+
+#define gamma 1
+		delf += gamma/DELTA * ((Kg - Kf) * Jg_del - (Jg - Jf) * Kg_del);
+		delg += gamma/DELTA * ((Kg - Kf) * Jf_del - (Jg - Jf) * Kf_del);
+
+		if(fabs(Kg - Kf) + fabs(Jg - Jf) < 1e-8){
+			//fprintf(stderr,"%s: CONVERGED\n",__func__);
+			*rhof_out = delf * d->rho_c;
+			*rhog_out = delg * d->rho_c;
+			*psat_out = helmholtz_p_raw(T, *rhog_out, d);
+			return 0;
 		}
-		p_sat = p1;
-		if(p_sat < D->p_t) p_sat = D->p_t;
-		if(p_sat > D->p_c) p_sat = D->p_c;
-
-		double rho_f1 = rho_f - (helmholtz_p(T, rho_f, D) - p_sat) / helmholtz_dpdrho_T(T, rho_f, D);
-		double rho_g1 = rho_g - (helmholtz_p(T, rho_g, D) - p_sat) / helmholtz_dpdrho_T(T, rho_g, D);
-
-		if(rho_g1 > 0){
-			rho_g = rho_g1;
-		}
-		if(rho_f1 > 0){
-			rho_f = rho_f1;
-		}
-		if(fabs(rho_f - rho_g) < 1e-5){
-#ifdef TEST
-			fprintf(stderr,"%s:%d: rho_f = rho_g\n", __FILE__, __LINE__);
-			exit(1);
-#else
-			break;
-#endif
-		}
-
-
-
 	}
+	*rhof_out = delf * d->rho_c;
+	*rhog_out = delg * d->rho_c;
+	*psat_out = helmholtz_p_raw(T, *rhog_out, d);
+	fprintf(stderr,"%s: NOT CONVERGED for '%s' with T = %e (rhof=%f, rhog=%f)\n",__func__,d->name,T,*rhof_out,*rhog_out);
+	return 1;
 
-	//return eq3;
+}
+
+int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out, const HelmholtzData *d){
+	fprintf(stderr,"%s: NOT YET IMPLEMENTED\n",__func__);
+	return 1;
 }
 
 
-#endif
 
 
 

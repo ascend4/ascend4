@@ -26,21 +26,16 @@
 
 #include <math.h>
 
-//#define HELMHOLTZ_DEBUG
-
 #include "helmholtz.h"
 #include "ideal_impl.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#if defined(TEST) || defined(HELMHOLTZ_DEBUG)
-#endif
 
 /* macros and forward decls */
 
 #define SQ(X) ((X)*(X))
-#define MSGEXPR(X) fprintf(stderr,"%s = %e\n",#X,(X));
 
 #include "helmholtz_impl.h"
 
@@ -100,7 +95,6 @@ double helmholtz_s(double T, double rho, const HelmholtzData *d){
 	return helmholtz_s_raw(T,rho,d);
 }
 
-
 /**
 	Function to calculate pressure from Helmholtz free energy EOS, given temperature
 	and mass density.
@@ -112,13 +106,12 @@ double helmholtz_s(double T, double rho, const HelmholtzData *d){
 double helmholtz_p_raw(double T, double rho, const HelmholtzData *data){
 	DEFINE_TD;
 
-//#ifdef TEST
+#ifdef TEST
 	assert(data->rho_star!=0);
 	assert(T!=0);
-	assert(!__isnan(T));
-	assert(!__isnan(tau));
-	assert(!__isnan(delta));
-	assert(!__isnan(data->R));
+	assert(!isnan(tau));
+	assert(!isnan(delta));
+	assert(!isnan(data->R));
 
 	//fprintf(stderr,"p calc: T = %f\n",T);
 	//fprintf(stderr,"p calc: tau = %f\n",tau);
@@ -128,15 +121,9 @@ double helmholtz_p_raw(double T, double rho, const HelmholtzData *data){
 
 	//fprintf(stderr,"T = %f\n", T);
 	//fprintf(stderr,"rhob = %f, rhob* = %f, delta = %f\n", rho/data->M, data->rho_star/data->M, delta);
-//#endif
-	
-	assert(!__isnan(helm_resid_del(tau,delta,data)));
-	double p = data->R * T * rho * (1 + delta * helm_resid_del(tau,delta,data));
-	assert(!__isnan(p));
-#ifdef HELMHOLTZ_DEBUG
-	fprintf(stderr,"%s: p(T=%e, rho=%e) = %e\n",__func__,T,rho,p);
 #endif
-	return p;
+	
+	return data->R * T * rho * (1 + delta * helm_resid_del(tau,delta,data));
 }
 
 /**
@@ -178,21 +165,15 @@ double helmholtz_u(double T, double rho, const HelmholtzData *data){
 double helmholtz_h_raw(double T, double rho, const HelmholtzData *data){
 	DEFINE_TD;
 
-//#ifdef TEST
+#ifdef TEST
 	assert(data->rho_star!=0);
 	assert(T!=0);
 	assert(!isnan(tau));
 	assert(!isnan(delta));
 	assert(!isnan(data->R));
-//#endif
+#endif
 
-	assert(!__isnan(helm_ideal_tau(tau,delta,data->ideal)));
-	assert(!__isnan(helm_resid_tau(tau,delta,data)));
-	assert(!__isnan(helm_resid_del(tau,delta,data)));
-
-	double h = data->R * T * (1. + tau * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data)) + delta*helm_resid_del(tau,delta,data));
-	assert(!__isnan(h));
-	return h;
+	return data->R * T * (1 + tau * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data)) + delta*helm_resid_del(tau,delta,data));
 }
 
 /**
@@ -343,31 +324,25 @@ double helmholtz_cp0(double T, const HelmholtzData *data){
 }
 
 /** 
-	Relative pressure coefficient, alpha_p.
-	As required by IAPWS Advisory Note 3, used in calculation of
+	alpha_p function from IAPWS Advisory Note 3, used in calculation of
 	partial property derivatives.
 */
 double helmholtz_alphap(double T, double rho, const HelmholtzData *data){
 	DEFINE_TD;
 	double phir_d = helm_resid_del(tau,delta,data);
 	double phir_dt = helm_resid_deltau(tau,delta,data);
-	assert(!__isnan(phir_d));
-	assert(!__isnan(phir_dt));
 	return 1./T * (1. - delta*tau*phir_dt/(1 + delta*phir_d));
 }
 
 /**
-	Isothermal stress coefficient, beta_p.
-	As required by IAPWS Advisory Note 3, used in calculation of
-	partial property derivatives.
+	beta_p function from IAPWS Advisory Note 3 , used in calculation of partial
+	property derivatives.
 */
 double helmholtz_betap(double T, double rho, const HelmholtzData *data){
 	DEFINE_TD;
 	double phir_d = helm_resid_del(tau,delta,data);
 	double phir_dd = helm_resid_deldel(tau,delta,data);
-	assert(!__isnan(phir_d));
-	assert(!__isnan(phir_dd));
-	return rho*(1. + (delta*phir_d + SQ(delta)*phir_dd)/(1.+delta*phir_d));
+	return rho*(1. + (delta*phir_d + SQ(delta)*phir_dd)/(1+delta*phir_d));
 }
 
 
@@ -696,48 +671,36 @@ static double ipow(double x, int n){
 		double d12 = SQ(d1); \
 		double theta = (1. - tau) + ct->A * pow(d12, 0.5/ct->beta); \
 		double PSI = exp(-ct->C*d12 - ct->D*SQ(t1)); \
-		double DELTA = SQ(theta) + ct->B* pow(d12, ct->a);
+		double DELTA = SQ(theta) + ct->B* pow(d12, ct->a)
 
 #define DEFINE_DELB \
 		double DELB = pow(DELTA,ct->b)
-
-#define DEFINE_DELB_ON_DELTA \
-		double DELB_on_DELTA = (DELTA == 0) ? 0 : DELB/DELTA;\
-		assert(!__isnan(DELB_on_DELTA))
 
 #define DEFINE_DPSIDDELTA \
 		double dPSIddelta = -2. * ct->C * d1 * PSI
 
 #define DEFINE_DDELDDELTA \
-		double dDELddelta = d1 * (ct->A * theta * 2./ct->beta * pow(d12, 0.5/ct->beta - 1) + 2* ct->B * ct->a * pow(d12, ct->a - 1));\
-		assert(!__isnan(dDELddelta))
+		double dDELddelta = d1 * (ct->A * theta * 2./ct->beta * pow(d12, 0.5/ct->beta - 1) + 2* ct->B * ct->a * pow(d12, ct->a - 1))
 
 #define DEFINE_DDELBDTAU \
-		double dDELbdtau = -2. * theta * ct->b * DELB_on_DELTA
+		double dDELbdtau = -2. * theta * ct->b * (DELB/DELTA)
 
 #define DEFINE_DPSIDTAU \
 		double dPSIdtau = -2. * ct->D * t1 * PSI
 
 #define DEFINE_DDELBDDELTA \
-		double dDELbddelta = (DELTA==0?0:ct->b * DELB_on_DELTA * dDELddelta)
+		double dDELbddelta = (DELTA==0?0:ct->b * (DELB/DELTA) * dDELddelta)
 
 #define DEFINE_D2DELDDELTA2 \
 		double powd12bm1 = pow(d12,0.5/ct->beta-1.); \
-		assert(!__isnan(powd12bm1));\
-		assert(!__isnan(dDELddelta));\
-		double d2DELddelta2 = (d1==0 ? 0 : 1./d1*dDELddelta + 12*( \
+		double d2DELddelta2 = 1./d1*dDELddelta + d12*( \
 			4.*ct->B*ct->a*(ct->a-1.)*pow(d12,ct->a-2.) \
 			+ 2.*SQ(ct->A)*SQ(1./ct->beta)*SQ(powd12bm1) \
 			+ ct->A*theta*4./ct->beta*(0.5/ct->beta-1.)*powd12bm1/d12 \
-		));\
-		assert(!__isnan(d2DELddelta2));
+		)
 
 #define DEFINE_D2DELBDDELTA2 \
-		assert(!__isnan(DELB_on_DELTA));\
-		assert(!__isnan(dDELddelta));\
-		assert(!__isnan(d2DELddelta2));\
-		double d2DELbddelta2 = DELB_on_DELTA * ct->b * (d2DELddelta2 + (ct->b-1.)*SQ(dDELddelta));\
-		assert(!__isnan(d2DELbddelta2))
+		double d2DELbddelta2 = ct->b * ( (DELB/DELTA)*d2DELddelta2 + (ct->b-1.)*(DELB/SQ(DELTA)*SQ(dDELddelta)))
 
 #define DEFINE_D2PSIDDELTA2 \
 		double d2PSIddelta2 = (2.*ct->C*d12 - 1.)*2.*ct->C * PSI
@@ -752,7 +715,7 @@ static double ipow(double x, int n){
 	)
 
 #define DEFINE_D3DELBDDELTA3 \
-	double d3DELbddelta3 = ct->b / (DELTA==0?0:(DELTA*SQ(DELTA))) * ( \
+	double d3DELbddelta3 = ct->b / (DELTA*SQ(DELTA)) * ( \
 		(2+ct->b*(ct->b-3))*dDELddelta*SQ(dDELddelta)*DELB \
 		+ DELB*SQ(DELTA)*d3DELddelta3 \
 		+ 3*(ct->b-1) * DELB * DELTA * dDELddelta * d2DELddelta2 \
@@ -877,29 +840,8 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 	dell = ipow(delta,pt->l);
 	ldell = pt->l * dell;
 	unsigned oldl;
-	assert(!__isnan(dell));
-	assert(!__isnan(ldell));
 	for(i=0; i<n; ++i){
-		if(__isnan(pow(tau,pt->t))){
-			fprintf(stderr,"tau = %f, t = %f, ERROR\n",tau, pt->t);
-			exit(1);
-		}
-		double term = pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - ldell);
-		sum += term;
-		if(__isinf(pow(tau, pt->t))){
-			MSGEXPR(tau);
-			MSGEXPR(pt->t);
-		}
-		assert(!__isnan(term));
-		assert(!__isinf(ipow(delta, pt->d - 1)));
-		assert(!__isinf(pow(tau, pt->t)));
-		assert(!__isinf((pt->d - ldell)));
-		assert(!__isinf(term));
-		if(__isnan(sum)){
-			MSGEXPR(pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - ldell));
-		}
-		assert(!__isnan(sum));
-
+		sum += pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - ldell);
 		oldl = pt->l;
 		++pt;
 		if(i+1==n || oldl != pt->l){
@@ -913,8 +855,6 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 			ldell = pt->l*dell;
 		}
 	}
-
-	assert(!__isnan(res));
 
 	/* gaussian terms */
 	n = data->ng;
@@ -933,8 +873,6 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		++gt;
 	}
 
-	assert(!__isnan(res));
-
 	/* critical terms */
 	n = data->nc;
 	ct = &(data->ct[0]);
@@ -946,7 +884,6 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		DEFINE_DELB;
 		DEFINE_DPSIDDELTA;
 		DEFINE_DDELDDELTA;
-		DEFINE_DELB_ON_DELTA;
 		DEFINE_DDELBDDELTA;
 
 #if 0
@@ -970,8 +907,6 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 
 		++ct;
 	}
-
-	assert(!__isnan(res));
 
 	return res;
 }
@@ -1023,8 +958,6 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 		}
 	}
 
-	assert(!__isnan(res));
-
 //#define RESID_DEBUG
 	/* gaussian terms */
 	n = data->ng;
@@ -1046,8 +979,6 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 		++gt;
 	}
 
-	assert(!__isnan(res));
-
 	/* critical terms */
 	n = data->nc;
 	ct = &(data->ct[0]);
@@ -1057,19 +988,13 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 #endif
 		DEFINE_DELTA;
 		DEFINE_DELB;
-		assert(!__isnan(DELB));
-		DEFINE_DELB_ON_DELTA;
 		DEFINE_DDELBDTAU;
-		assert(!__isnan(dDELbdtau));
 		DEFINE_DPSIDTAU;
-		assert(!__isnan(dPSIdtau));
 
 		sum = ct->n * delta * (dDELbdtau * PSI + DELB * dPSIdtau);
 		res += sum;
 		++ct;
 	}
-
-	assert(!__isnan(res));
 
 	return res;
 }	
@@ -1110,7 +1035,6 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 		}
 	}
 
-	assert(!__isnan(res));
 #ifdef TEST
 	assert(!isinf(res));
 #endif
@@ -1139,8 +1063,6 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 		++gt;
 	}
 
-	assert(!__isnan(res));
-
 	/* critical terms */
 	n = data->nc;
 	ct = &(data->ct[0]);
@@ -1151,18 +1073,13 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 		DEFINE_DELTA;
 		DEFINE_DELB;
 		DEFINE_DPSIDDELTA;
-		DEFINE_DELB_ON_DELTA;
 		DEFINE_DDELBDTAU;
 		DEFINE_DDELDDELTA;
 
-		double d2DELbddeldtau = -ct->A * ct->b * 2./ct->beta * (DELB_on_DELTA)*d1*pow(d12,0.5/ct->beta-1) \
-			- 2. * theta * ct->b * (ct->b - 1) * (DELTA==0?0:(DELB/SQ(DELTA))) * dDELddelta;
-
-		assert(!__isnan(d2DELbddeldtau));
+		double d2DELbddeldtau = -ct->A * ct->b * 2./ct->beta * (DELB/DELTA)*d1*pow(d12,0.5/ct->beta-1) \
+			- 2. * theta * ct->b * (ct->b - 1) * (DELB/SQ(DELTA)) * dDELddelta;
 
 		double d2PSIddeldtau = 4. * ct->C*ct->D*d1*t1*PSI;
-
-		assert(!__isnan(d2PSIddeldtau));
 
 		DEFINE_DPSIDTAU;
 
@@ -1174,8 +1091,6 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 		res += sum;
 		++ct;
 	}
-
-	assert(!__isnan(res));
 
 #ifdef RESID_DEBUG
 	fprintf(stderr,"phir = %f\n",res);
@@ -1227,28 +1142,22 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 		}
 	}
 
-	assert(!__isnan(res));
-
 	/* gaussian terms */
 	n = data->ng;
 	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
 	gt = &(data->gt[0]);
 	for(i=0; i<n; ++i){
 		double s1 = SQ(delta - gt->epsilon);
-		assert(!__isnan(s1));
-		double r1 = delta * (2. * gt->alpha * s1 - 1) 
-				- 2. * gt->d * (delta - gt->epsilon);
-		assert(!__isnan(r1));
-		double f1 = gt->d*(gt->d - 1) + 2.*gt->alpha*delta * r1;
-		assert(!__isnan(f1));
-
+		double f1 = gt->d*(gt->d - 1) 
+			+ 2.*gt->alpha*delta * (
+				delta * (2. * gt->alpha * s1 - 1) 
+				- 2. * gt->d * (delta - gt->epsilon)
+			);
 		res += gt->n * pow(tau,gt->t) * pow(delta, gt->d - 2.)
 			* f1
 			* exp(-(gt->alpha * s1 + gt->beta*SQ(tau-gt->gamma)));
 		++gt;
 	}
-
-	assert(!__isnan(res));
 
 	/* critical terms */
 	n = data->nc;
@@ -1262,7 +1171,6 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 		DEFINE_DELB;
 		DEFINE_DPSIDDELTA;
 		DEFINE_DDELDDELTA;
-		DEFINE_DELB_ON_DELTA;
 		DEFINE_DDELBDDELTA;
 
 		DEFINE_D2DELDDELTA2;
@@ -1270,18 +1178,11 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 
 		DEFINE_D2PSIDDELTA2;
 
-		assert(!__isnan(d2PSIddelta2));
-		assert(!__isnan(dPSIddelta));
-		assert(!__isnan(dDELbddelta));
-		assert(!__isnan(d2DELbddelta2));
-
 		sum = ct->n * (DELB*(2.*dPSIddelta + delta*d2PSIddelta2) + 2.*dDELbddelta*(PSI+delta*dPSIddelta) + d2DELbddelta2*delta*PSI);
 
 		res += sum;
 		++ct;
 	}
-
-	assert(!__isnan(res));
 
 	return res;
 }
@@ -1371,11 +1272,10 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 #endif
 		DEFINE_DELTA;
 		DEFINE_DELB;
-		DEFINE_DELB_ON_DELTA;
 		DEFINE_DDELBDTAU;
 		DEFINE_DPSIDTAU;
 
-		double d2DELbdtau2 = 2. * ct->b * (DELB_on_DELTA) + 4. * SQ(theta) * ct->b * (ct->b - 1) * (DELTA==0?0:(DELB/SQ(DELTA)));	
+		double d2DELbdtau2 = 2. * ct->b * (DELB/DELTA) + 4. * SQ(theta) * ct->b * (ct->b - 1) * (DELB/SQ(DELTA));	
 
 		double d2PSIdtau2 = 2. * ct->D * PSI * (2. * ct->D * SQ(t1) -1.);
 
@@ -1493,7 +1393,6 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 		DEFINE_DELB;
 		DEFINE_DPSIDDELTA;
 		DEFINE_DDELDDELTA;
-		DEFINE_DELB_ON_DELTA;
 		DEFINE_DDELBDDELTA;
 
 		DEFINE_D2PSIDDELTA2;

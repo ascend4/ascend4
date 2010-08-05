@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "solve_ph.h"
-#include "sat2.h"
+#include "sat.h"
 #include "derivs.h"
 
 #include <stdio.h>

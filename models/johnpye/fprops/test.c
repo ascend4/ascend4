@@ -1,5 +1,5 @@
 #include "test.h"
-#include "sat2.h"
+#include "sat.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -38,7 +38,7 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 		T = td[i].T+T_adj;
 		rho = td[i].rho;
 		p = td[i].p*1e6;
-	 	ASSERT_TOL(helmholtz_p, T, rho, d, p, p*1e-3);
+	 	ASSERT_TOL(helmholtz_p_raw, T, rho, d, p, p*1e-3);
 	}
 
 	/* checking enthalpy values */
