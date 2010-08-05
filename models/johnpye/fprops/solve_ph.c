@@ -80,7 +80,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 		}
 	}else{
 		if(!use_guess){
-			*T = D->T_c * 1.1;
+			*T = D->T_c * 1.03;
 			*rho = D->rho_c;
 		}
 	}
@@ -96,6 +96,9 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 
 	/* try our own home-baked newton iteration */
 	int i = 0;
+	double delta_T = 0;
+	double delta_rho = 0;
+	fprintf(stderr,"STARTING ITERATION\n");
 	while(i++ < 60){
 		double p1 = helmholtz_p_raw(T1,rho1,D);
 		assert(!__isnan(p1));
@@ -105,6 +108,13 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 		fprintf(stderr,"  T = %f, rho = %f\tp = %f bar, h = %f kJ/kg\n", T1, rho1, p1/1e5, h1/1e3);
 		fprintf(stderr,"      p error = %f bar\n",(p1 - p)/1e5);
 		fprintf(stderr,"      h error = %f kJ/kg\n",(h1 - h)/1e3);
+
+		if(p1 < 0){
+			T1 -= (delta_T *= 0.5); 
+			rho1 -= (delta_rho *= 0.5); 
+			continue;
+		}
+
 		if(fabs(p1 - p) < 1e-6 && fabs(h1 - h) < 1e-8){
 			fprintf(stderr,"Converged to T = %f, rho = %f, in homebaked Newton solver", T1, rho1);
 			*T = T1;
@@ -134,8 +144,8 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 		fprintf(stderr,"      ∂f/∂T = %e\t\t∂f/∂rho = %e\n",f_T, f_rho);
 		fprintf(stderr,"      ∂g/∂T = %e\t\t∂g/∂rho = %e\n",g_T, g_rho);
 	
-		double delta_T = -1./det * (g_rho * f - f_rho * g);
-		double delta_rho = -1./det * (f_T * g - g_T * f);
+		delta_T = -1./det * (g_rho * f - f_rho * g);
+		delta_rho = -1./det * (f_T * g - g_T * f);
 		assert(!__isnan(delta_T));
 		assert(!__isnan(delta_rho));
 		fprintf(stderr,"          ΔT   = %f\n", delta_T);
@@ -164,6 +174,9 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 		}
 		/* don't go too dense */
 		if(rho1 + delta_rho > 2000) delta_rho = 2000;
+		
+		/* don't go too hot */
+		if(T1 + delta_T > 5000) delta_T = 5000 - T1;
 
 		/* avoid huge step */
 		while(fabs(delta_T / T1) > 0.6){

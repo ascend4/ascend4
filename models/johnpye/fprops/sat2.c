@@ -5,13 +5,13 @@
 #include <math.h>
 #include <stdio.h>
 
-//#define PHASE_DEBUG
+#define PHASE_DEBUG
 #define PHASE_ERRORS
 
 #ifndef PHASE_DEBUG
 # define MSG(...) 
 #else
-# define MSG(ARGS...) fprintf(stderr,"%s: ",__func__);fprintf(stderr,ARGS)
+# define MSG(ARGS...) fprintf(stderr,"%s:%d: ",__func__,__LINE__);fprintf(stderr,ARGS)
 #endif
 
 #ifndef PHASE_DEBUG
@@ -31,6 +31,11 @@
 */
 int fprops_sat_T(double T, double *p_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
 	double p, p_new, delta_p, delta_p_old;
+
+	if(T < d->T_t){
+		ERR("Temperature T = %e K is below triple point, unable to calculate saturation properties.\n",T);
+		return 5;
+	}
 
 	/*
 	Estimate of saturation temperature using definition	of acentric factor and
@@ -293,6 +298,9 @@ int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, co
 			}
 			MSG(" delta_T was too large, has been shortened\n");
 		}
+		assert(T > 0);
+		if(T + delta_T < 0)delta_T = -0.2 * T;
+		while(T + delta_T > 10000)delta_T *= 0.5;
 
 		T = T + delta_T;
 	}
@@ -330,10 +338,9 @@ int fprops_sat_p(double p, double *T_out, double *rhof_out, double *rhog_out, co
 
 	MSG("Failed to converge using sat_T approach\n");
 
-	*rhof_out = -1;
-	*rhog_out = -1;
-	*T_out = -1;
-
+	*rhof_out = d->rho_c;
+	*rhog_out = d->rho_c;
+	*T_out = d->T_c;
 	return 99;
 }
 

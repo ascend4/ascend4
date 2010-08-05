@@ -51,6 +51,10 @@
 
 double helmholtz_p(double T, double rho, const HelmholtzData *d){
 	double p, rho_f, rho_g;
+	if(T < d->T_t){
+		fprintf(stderr,"%s: Unable to calculate pressure, T = %e is below triple point.\n", __func__, T);
+		return d->p_t;
+	}
 	if(T < d->T_c){
 		int res = fprops_sat_T(T, &p, &rho_f, &rho_g, d);
 		if(res){
@@ -882,7 +886,14 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 		}
 		double term = pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - ldell);
 		sum += term;
+		if(__isinf(pow(tau, pt->t))){
+			MSGEXPR(tau);
+			MSGEXPR(pt->t);
+		}
 		assert(!__isnan(term));
+		assert(!__isinf(ipow(delta, pt->d - 1)));
+		assert(!__isinf(pow(tau, pt->t)));
+		assert(!__isinf((pt->d - ldell)));
 		assert(!__isinf(term));
 		if(__isnan(sum)){
 			MSGEXPR(pt->a * pow(tau, pt->t) * ipow(delta, pt->d - 1) * (pt->d - ldell));
