@@ -113,6 +113,15 @@ double fprops_rhof_T_rackett(double T, const HelmholtzData *D){
 	return 1./vf;
 }
 
+/**
+	Inverse of fprops_rhof_T_rackett. FIXME this need checking.
+*/
+double fprops_T_rhof_rackett(double rhof, const HelmholtzData *D){
+	double Zc = D->rho_c * D->R * D->T_c / D->p_c;
+	double f1 = D->p_c / D->R / D->T_c / rhof;
+	double f2 = -log(f1)/log(Zc);
+	return pow(f2 -1, 3./2);
+}
 
 /**
 	Saturated vapour density correlation of Chouaieb, Ghazouani, Bellagi
@@ -195,6 +204,13 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 
 }
 
+/**
+	Solve saturation properties in terms of pressure.
+	This function makes calls to fprops_sat_T, and solves for temperature using
+	a Newton solver algorith. Derivatives dp/dT are calculated using the
+	Clapeyron equation.
+	@return 0 on success.
+*/
 int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out, const HelmholtzData *d){
 	/*
 	Estimate of saturation temperature using definition	of acentric factor and
@@ -231,6 +247,42 @@ int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out
 
 
 
+/**
+	Calculate Tsat based on a value of hf. This value is useful in setting
+	first guess Temperatures when solving for the coordinates (p,h).
+	Secant method.
+*/
+int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
+	double T1 = 0.8 * d->T_t + 0.2 * d->T_c;
+	double T2 = d->T_t;
+	double h1, h2, p, rhof, rhog;
+	int res = fprops_sat_T(T2, &p, &rhof, &rhog, d);
+	if(res)return 1;
+	h2 = helmholtz_h(T2,rhof,d);
+	int i = 0;
+	while(i++ < 20){
+		res = fprops_sat_T(T1, &p, &rhof, &rhog, d);
+		if(res)return 1;
+		h1 = helmholtz_h(T1,rhof, d);
+		if(fabs(h1 - hf) < 1e-5){
+			*Tsat_out = T1;
+			*psat_out = p;
+			*rhof_out = rhof;
+			*rhog_out = rhog;
+			return 0;
+		}
 
+		double delta_T = -(h1 - hf) * (T1 - T2) / (h1 - h2);
+		T2 = T1;
+		h2 = h1;
+		T1 += delta_T;
+	}
+	fprintf(stderr,"Failed to solve Tsat for hf = %f\n",hf);
+	*Tsat_out = T1;
+	*psat_out = p;
+	*rhof_out = rhof;
+	*rhog_out = rhog;
+	return 1;
+}
 
 
