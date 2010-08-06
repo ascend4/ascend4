@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define SQ(X) ((X)*(X))
 
+//#define SOLVE_PH_DEBUG
 #ifdef SOLVE_PH_DEBUG
 # define MSG(STR,...) fprintf(stderr,"%s:%d: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 #else
@@ -76,6 +77,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	double Tsat, rhof, rhog, hf, hg;
 	double T1, rho1;
 	int subcrit_pressure = 0;
+	int liquid_iteration = 0;
 
     //feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 	SignalHandler *old = signal(SIGFPE,&fprops_fpe);
@@ -102,20 +104,30 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 			}
 
 			subcrit_pressure = 1;
-			if(!use_guess){
-				*T = 1.1 * Tsat;
-				if(h <= hf){
-					*rho = rhof;
+			if(h < hf){
+				liquid_iteration = 1;
+				if(!use_guess){
+					double Tsat1, psat1, rhof1, rhog1;
+					MSG("SOLVING TSAT(HF)");
+					res = fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, D);
+					if(res){
+						ERRMSG("Unable to solve Tsat(hf)");
+						return res;
+					}
+					*T = Tsat1;
+					*rho = rhof1;
 					MSG("LIQUID GUESS: T = %f, rho = %f",*T, *rho);
-				}else{
-					*rho = rhog * 0.5;
-					MSG("GAS GUESS: T = %f, rho = %f",*T, *rho);
 				}
+			}else if(!use_guess){
+				*T = 1.1 * Tsat;
+				*rho = rhog * 0.5;
+				MSG("GAS GUESS: T = %f, rho = %f",*T, *rho);
 			}
 		}else{
+			/* still some problems here at very high pressures */
 			if(!use_guess){
-				*T = D->T_c * 1.03;
-				*rho = D->rho_c * 0.99;
+				*T = D->T_c * 1.01;
+				*rho = D->rho_c * 1.05;
 			}
 		}
 
@@ -133,7 +145,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 		double delta_T = 0;
 		double delta_rho = 0;
 		MSG("STARTING ITERATION");
-		while(i++ < 60){
+		while(i++ < 100){
 			double p1 = helmholtz_p_raw(T1,rho1,D);
 			assert(!__isnan(p1));
 			double h1 = helmholtz_h_raw(T1,rho1,D);
@@ -155,7 +167,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 				*rho = rho1;
 				return 0;
 			}
-			/* calculate step */
+			/* calculate step, we're solving log(p1) in this code... */
 			double f = log(p1) - log(p);
 			double g = h1 - h;
 			assert(!__isnan(f));
@@ -203,7 +215,6 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 						delta_rho *= 0.5;
 					}
 					if(T1 + delta_T < D->T_t) delta_T = 0.5 * (T1 + D->T_t);
-					if(T1 < D->T_t) delta_T = +1;
 				}
 			}else{
 #if 0
@@ -228,6 +239,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 			}
 
 			T1 = T1 + delta_T;
+			assert(T1 > D->T_t);
 			rho1 = rho1 + delta_rho;
 		}
 	}else{

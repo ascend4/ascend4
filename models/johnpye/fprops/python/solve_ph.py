@@ -3,8 +3,13 @@ from pylab import *
 
 D = helmholtz_data_water;
 
-p = 207.544081e5;
-h = 2722.928340e3
+T = 290.883055
+rho = 999.792520
+print "T = %f, rho = %f" % (T,rho)
+p = helmholtz_p(T,rho,D)
+h = helmholtz_h(T,rho,D)
+#p = 207.544081e5;
+#h = 2722.928340e3
 #p = 279.851966e5
 #h = 1894.424202e3
 #p = 1e5;
