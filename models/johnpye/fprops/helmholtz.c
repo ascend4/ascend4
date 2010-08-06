@@ -166,15 +166,16 @@ double helmholtz_u(double T, double rho, const HelmholtzData *data){
 double helmholtz_h_raw(double T, double rho, const HelmholtzData *data){
 	DEFINE_TD;
 
-#ifdef TEST
+//#ifdef TEST
 	assert(data->rho_star!=0);
 	assert(T!=0);
 	assert(!isnan(tau));
 	assert(!isnan(delta));
 	assert(!isnan(data->R));
-#endif
-
-	return data->R * T * (1 + tau * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data)) + delta*helm_resid_del(tau,delta,data));
+//#endif
+	double h = data->R * T * (1 + tau * (helm_ideal_tau(tau,delta,data->ideal) + helm_resid_tau(tau,delta,data)) + delta*helm_resid_del(tau,delta,data));
+	assert(!__isnan(h));
+	return h;
 }
 
 /**
@@ -684,7 +685,8 @@ static double ipow(double x, int n){
 		double dDELddelta = d1 * (ct->A * theta * 2./ct->beta * pow(d12, 0.5/ct->beta - 1) + 2* ct->B * ct->a * pow(d12, ct->a - 1))
 
 #define DEFINE_DDELBDTAU \
-		double dDELbdtau = -2. * theta * ct->b * (DELB/DELTA)
+		double dDELbdtau = (DELTA == 0) ? 0 : -2. * theta * ct->b * (DELB/DELTA);\
+		assert(!__isnan(dDELbdtau))
 
 #define DEFINE_DPSIDTAU \
 		double dPSIdtau = -2. * ct->D * t1 * PSI
@@ -958,6 +960,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 			}
 		}
 	}
+	assert(!__isnan(res));
 
 //#define RESID_DEBUG
 	/* gaussian terms */
@@ -979,6 +982,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 			
 		++gt;
 	}
+	assert(!__isnan(res));
 
 	/* critical terms */
 	n = data->nc;
@@ -996,6 +1000,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 		res += sum;
 		++ct;
 	}
+	assert(!__isnan(res));
 
 	return res;
 }	

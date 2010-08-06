@@ -27,4 +27,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 int fprops_region_ph(double p, double h, const HelmholtzData *D);
 int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, const HelmholtzData *D);
 
+#if 0
+/* functions for reporting steps back to python */
+typedef struct{
+	double x,y;
+} StepData;
+
+stepdata_reset();
+int stepdata_record(double x, double y);
+stepdata_count();
+StepData stepdata_get(int i);
+#endif
+
 #endif
