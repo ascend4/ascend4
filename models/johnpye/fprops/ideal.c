@@ -28,11 +28,9 @@
 
 #include "ideal.h"
 
-#ifdef TEST
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#endif
 
 #define SQ(X) ((X)*(X))
 
@@ -199,6 +197,7 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 			abort();
 		}
 #endif
+		assert(!__isnan(term));
 		sum += term;
 	}
 

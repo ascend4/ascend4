@@ -47,7 +47,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define ERRMSG(STR,...) fprintf(stderr,"%s:%d: ERROR: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 
-
 int fprops_region_ph(double p, double h, const HelmholtzData *D){
 
 	double Tsat, rhof, rhog;
@@ -78,6 +77,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	double T1, rho1;
 	int subcrit_pressure = 0;
 	int liquid_iteration = 0;
+	double rhof_t;
 
     //feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 	SignalHandler *old = signal(SIGFPE,&fprops_fpe);
@@ -107,6 +107,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 			if(h < hf){
 				liquid_iteration = 1;
 				if(!use_guess){
+#if 1
 					double Tsat1, psat1, rhof1, rhog1;
 					MSG("SOLVING TSAT(HF)");
 					res = fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, D);
@@ -116,6 +117,10 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 					}
 					*T = Tsat1;
 					*rho = rhof1;
+#else
+					*T = Tsat;
+					*rho = rhof;
+#endif
 					MSG("LIQUID GUESS: T = %f, rho = %f",*T, *rho);
 				}
 			}else if(!use_guess){
@@ -124,10 +129,26 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 				MSG("GAS GUESS: T = %f, rho = %f",*T, *rho);
 			}
 		}else{
-			/* still some problems here at very high pressures */
+			/* FIXME still some problems here at very high pressures */
 			if(!use_guess){
-				*T = D->T_c * 1.01;
-				*rho = D->rho_c * 1.05;
+				double hc = helmholtz_h_raw(D->T_c, D->rho_c, D);
+				assert(!__isnan(hc));
+				MSG("hc = %f",hc);
+				if(h < hc){
+					MSG("h < hc... using saturation Tsat(hf) for startin guess");
+					double Tsat1, psat1, rhof1, rhog1;
+					int res = fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, D);
+					if(res){
+						ERRMSG("Unable to solve Tsat(hf)");
+						return res;
+					}
+					*T = Tsat1;
+					*rho = rhof1;
+				}else{
+					*T = D->T_c * 1.01;
+					*rho = D->rho_c * 1.05;
+				}
+				MSG("SUPERCRITICAL GUESS: T = %f, rho = %f", *T, *rho);
 			}
 		}
 
@@ -139,6 +160,15 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 		rho1 = *rho;
 		assert(!__isnan(T1));
 		assert(!__isnan(rho1));
+
+		if(liquid_iteration){
+			double pt,rhogt;
+			int res = fprops_sat_T(D->T_t,&pt,&rhof_t, &rhogt, D);
+			if(res){
+				ERRMSG("Unable to solve triple point liquid density.");
+				return 1;
+			}
+		}
 
 		/* try our own home-baked newton iteration */
 		int i = 0;
@@ -225,7 +255,9 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 #endif
 			}
 			/* don't go too dense */
-			if(rho1 + delta_rho > 2000) delta_rho = 2000;
+			if(liquid_iteration){
+				if(rho1 + delta_rho > rhof_t) delta_rho = rhof_t;
+			}
 		
 			/* don't go too hot */
 			if(T1 + delta_T > 5000) delta_T = 5000 - T1;
@@ -239,7 +271,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 			}
 
 			T1 = T1 + delta_T;
-			assert(T1 > D->T_t);
+			if(T1 < D->T_t)T1 = D->T_t;
 			rho1 = rho1 + delta_rho;
 		}
 	}else{

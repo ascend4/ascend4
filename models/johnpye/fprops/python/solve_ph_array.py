@@ -8,11 +8,12 @@ res, p_t, rhof_t, rhog_t = fprops_sat_T(D.T_t, D)
 
 pmax = 100e6
 
-TT = linspace(D.T_t, 2. * D.T_c, 100);
-rr = logspace(log10(0.01), log10(900), 100);
-
-TT = linspace(D.T_t, 1.1 * D.T_c, 100);
-rr = logspace(log10(350), log10(rhof_t), 100);
+Tmin = D.T_t
+Tmax = 0.8 * D.T_t + 0.2 * D.T_c
+vmin = 1./rhof_t
+vmax = 1.01*vmin;
+TT = linspace(Tmin, Tmax, 30);
+vv = logspace(log10(vmin),log10(vmax), 30);
 
 goodT = []
 goodv = []
@@ -20,7 +21,8 @@ badT = []
 badv = []
 
 for T in TT:
-	for rho in rr:
+	for v in vv:
+		rho = 1./v
 		sys.stderr.write("+++ T = %f, rho = %f\r" % (T,rho))
 		p = helmholtz_p(T,rho,D)
 		if p > pmax:
@@ -31,13 +33,11 @@ for T in TT:
 			continue
 
 		res, T1, rho1 = fprops_solve_ph(p,h,0,D);
-		if res:
+		if res or isnan(T1) or isnan(rho1):
 			print "Error at T1 = %f, rho1 = %f (T = %f, rho = %f)" % (T1, rho1,T,rho)
-			if not isnan(T) and not isnan(rho):
-				badT.append(T); badv.append(1./rho)
+			badT.append(T); badv.append(v)
 		else:
-			if not isnan(T) and not isnan(rho):
-				goodT.append(T); goodv.append(1./rho)
+			goodT.append(T); goodv.append(v)
 			#print "   +++ GOOD RESULT T1 = %f, rho1 = %f" % (T1, rho1)
 
 figure()
@@ -48,16 +48,19 @@ for i in range(len(badT)):
 
 print "TOTAL %d BAD POINTS" % (len(badT))
 
+print "AXIS =",axis()
 semilogx(badv, badT, 'rx')
+axis([vmin,vmax,Tmin,Tmax])
+print "AXIS =",axis()
 hold(1)
 semilogx(goodv, goodT, 'g.')
 
 # plot saturation curves
-TT = linspace(D.T_t, D.T_c, 100)
+TTs = linspace(D.T_t, D.T_c, 300)
 TT1 = []
 vf1 = []
 vg1 = []
-for T in TT:
+for T in TTs:
 	res, p, rhof, rhog = fprops_sat_T(T,D)
 	if not res:
 		TT1.append(T)
@@ -66,6 +69,7 @@ for T in TT:
 
 semilogx(vf1,TT1,"b-")
 semilogx(vg1,TT1,"b-")
+axis([vmin,vmax,Tmin,Tmax])
 xlabel("specific volume")
 ylabel("temperature")
 

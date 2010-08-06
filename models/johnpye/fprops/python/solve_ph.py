@@ -1,10 +1,13 @@
 from fprops import *
 from pylab import *
+import sys
 
 D = helmholtz_data_water;
 
-T = 290.883055
-rho = 999.792520
+T = 3.221585e+02
+v = 1.000208e-03
+
+rho = 1./v
 print "T = %f, rho = %f" % (T,rho)
 p = helmholtz_p(T,rho,D)
 h = helmholtz_h(T,rho,D)
