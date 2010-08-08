@@ -30,7 +30,12 @@
 #include "ideal_impl.h"
 #include "sat.h"
 
-#include <assert.h>
+#if 0
+# include <assert.h>
+#else
+# define assert(ARGS...)
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -1129,6 +1134,10 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
 	const HelmholtzCritTerm *ct;
+	
+	if(__isnan(delta)){
+		abort();
+	}
 
 #ifdef RESID_DEBUG
 		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);

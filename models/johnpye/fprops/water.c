@@ -62,10 +62,8 @@ const HelmholtzData helmholtz_data_water = {
 	, /* T_star */ WATER_TC /* K */
 
 	, /* T_c */ WATER_TC
-	, /* p_c */ WATER_PC
 	, /* rho_c */ WATER_RHOC
 	, /* T_t */ 273.16
-	, /* p_t */ 661.654771 /* Pa, from IAPWS-95 rev.2009 */
 
 	, 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */
 	, &ideal_data_water
@@ -325,14 +323,14 @@ int main(void){
 	}
 #endif
 
-#if 0
+#if 1
 	helm_run_test_cases(d, ntd1, td1, 'K');
 #endif
 
-	helm_check_dpdrho_T(d, ntd1, td1);
+	//helm_check_dpdrho_T(d, ntd1, td1);
 
 #if 1
-	helm_check_d2pdrho2_T(d,ntd1, td1);
+	//helm_check_d2pdrho2_T(d,ntd1, td1);
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.8f%%)\n",maxerr);
 #endif

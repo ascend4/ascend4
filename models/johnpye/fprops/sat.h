@@ -15,5 +15,8 @@ double fprops_T_rhof_rackett(double rhof, const HelmholtzData *D);
 
 int fprops_sat_hf(double hf, double *T_sat, double *p_sat, double *rho_f, double *rho_g, const HelmholtzData *d);
 
+double fprops_pc(const HelmholtzData *d);
+int fprops_triple_point(double *p_sat, double *rho_f, double *rho_g, const HelmholtzData *d);
+
 #endif
 

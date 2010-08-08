@@ -47,8 +47,9 @@ print "\nfprops_sat_p test...\n"
 toterrors = 0
 totchecks = 0
 for D in DD:
-	print D.name, D.p_t, D.p_c
-	pp = linspace(D.p_t, D.p_c, 100);
+	res, pt, rhof, rhog = fprops_triple_point(D)
+	print D.name, pt, D.p_c
+	pp = linspace(pt, D.p_c, 100);
 	firsterror = True
 	errcount = 0
 	for p in pp:
@@ -56,7 +57,7 @@ for D in DD:
 		res, T, rhof, rhog = fprops_sat_p(p,D)
 		if res:
 			if firsterror:
-				print "%s: Error %d at p = %f" % (D.name,res,p)
+				print "%s: Error %d at p = %0.12e" % (D.name,res,p)
 				firsterror = False
 			errcount += 1				
 	print "%s: %d errors from %d checks" % (D.name, errcount, len(pp))

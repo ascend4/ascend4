@@ -83,6 +83,9 @@ typedef struct HelmholtzCritTerm_struct{
 /**
 	Data structure for fluid-specific data for the Helmholtz free energy EOS.
 	See Tillner-Roth 1993 for information about 'atd' and 'a0' data.
+
+	p_c and T_t are removed from this struct because they can more accurately
+	be calculated from other data already present.
 */
 typedef struct HelmholtzData_struct{
 	const char *name;
@@ -92,11 +95,11 @@ typedef struct HelmholtzData_struct{
 	double T_star; /**< normalisation temperature, K */
 
 	double T_c; /**< critical temperature */
-	double p_c; /**< critical pressure */
+	//REMOVED: double p_c; /**< critical pressure */
 	double rho_c; /**< critical density */
 	double T_t; /**< triple-point temperature */
-	double p_t; /**< triple-point pressure */
-
+	//REMOVED: double p_t; /**< triple-point pressure */
+	
 	double omega; /**< Pitzer acentric factor */
 	
 	const IdealData *ideal; /* data for ideal component of Helmholtz energy */

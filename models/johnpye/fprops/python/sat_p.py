@@ -1,9 +1,12 @@
 from fprops import *
 from pylab import *
 
-p = 1e5;
 
-D = helmholtz_data_water;
+D = helmholtz_data_carbondioxide;
+p = fprops_pc(D)
+res, p, rhof, rhof = fprops_triple_point(D)
+
+print "p = %.12e" % p
 
 res, T1, rf1, rg1 = fprops_sat_p(p,D)
 

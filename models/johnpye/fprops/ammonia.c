@@ -73,11 +73,10 @@ const HelmholtzData helmholtz_data_ammonia = {
 	, /* T_star */ AMMONIA_TSTAR /* K */
 
 	, /* T_c */ AMMONIA_TSTAR
-	, /* p_c */ 1.133868565951e+07 /* note: value calculated from rho_c, T_c */
+	//REMOVED /* p_c */ 1.133868565951e+07 /* note: value calculated from rho_c, T_c */
 	, /* rho_c */ 225.
 
 	, /* T_t */ 195.495
-	, /* p_t */ 0
 
 	, 0.250 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_ammonia
@@ -138,8 +137,6 @@ int main(void){
 
 	d = &helmholtz_data_ammonia;
 	double maxerr = 0;
-
-	helm_check_p_c(d);
 
 	n = ntd;
 	fprintf(stderr,"Running through %d test points...\n",n);
