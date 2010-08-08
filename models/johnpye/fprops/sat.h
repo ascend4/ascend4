@@ -12,7 +12,8 @@ int fprops_sat_T(double T, double *p_sat, double *rho_f, double *rho_g, const He
 int fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const HelmholtzData *d);
 
 double fprops_T_rhof_rackett(double rhof, const HelmholtzData *D);
-int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_out, double *rhog_out, const HelmholtzData *d);
+
+int fprops_sat_hf(double hf, double *T_sat, double *p_sat, double *rho_f, double *rho_g, const HelmholtzData *d);
 
 #endif
 

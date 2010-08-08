@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define SQ(X) ((X)*(X))
 
-#define SOLVE_PH_DEBUG
+//#define SOLVE_PH_DEBUG
 #ifdef SOLVE_PH_DEBUG
 # define MSG(STR,...) fprintf(stderr,"%s:%d: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 #else
@@ -113,7 +113,9 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 					MSG("SOLVING TSAT(HF)");
 					res = fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, D);
 					if(res){
-						ERRMSG("Unable to solve Tsat(hf)");
+						ERRMSG("Unable to solve Tsat(hf), returning T = %f, rho = %f.",Tsat,rhof);
+						*T = Tsat;
+						*rho = rhof;
 						return res;
 					}
 					*T = Tsat1;
@@ -135,13 +137,14 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 				double hc = helmholtz_h_raw(D->T_c, D->rho_c, D);
 				assert(!__isnan(hc));
 				MSG("hc = %f",hc);
-				if(h < hc){
+				if(h < 0.9 * hc){
 					MSG("h < hc... using saturation Tsat(hf) for starting guess");
 					double Tsat1, psat1, rhof1, rhog1;
 					int res = fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, D);
 					if(res){
-						ERRMSG("Unable to solve Tsat(hf)");
-						return res;
+						MSG("Unable to solve Tsat(hf)");
+						/* accuracy of the estimate of Tsat(hf) doesn't matter 
+						very much so we can ignore this error. */
 					}
 					*T = Tsat1;
 					*rho = rhof1;

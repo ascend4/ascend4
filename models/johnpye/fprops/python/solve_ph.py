@@ -14,10 +14,12 @@ T = 3.298951e+02
 #rho = 9.973958154879e+02
 #T = 6.727273e+02
 #rho = 1./2.078561e-03
-
-T = 6.636364e+02
-rho = 1./2.609722e-03
-
+#T = 6.636364e+02
+#rho = 1./2.609722e-03
+#T = 7.242424242424e+02
+#rho = 5.847226548308e+02
+T = 4.484887272727e+02
+rho = 2.765899020837e-03
 
 print "T = %f, rho = %f" % (T,rho)
 p = helmholtz_p(T,rho,D)
@@ -28,9 +30,9 @@ h = helmholtz_h(T,rho,D)
 #h = 1894.424202e3
 #p = 1e5;
 #h = 300e3;
-print "p = %f bar, h = %f kJ/kg" % (p/1e5, h/1e3)
+sys.stderr.write("p = %f bar, h = %f kJ/kg\n" % (p/1e5, h/1e3))
 
-print "p_raw(400,0.9) =", helmholtz_p_raw(400,0.9,D)
+#sys.stderr.write("p_raw(400,0.9) =", helmholtz_p_raw(400,0.9,D))
 
 res, T, rho = fprops_solve_ph(p,h,0,D);
 

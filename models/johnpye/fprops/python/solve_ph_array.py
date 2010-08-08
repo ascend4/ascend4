@@ -8,10 +8,10 @@ res, p_t, rhof_t, rhog_t = fprops_sat_T(D.T_t, D)
 
 pmax = 100e6
 
-Tmin = 500 #D.T_t
-Tmax = 800 #2 * D.T_c
+Tmin = D.T_t
+Tmax = 2 * D.T_c
 vmin = 1./rhof_t
-vmax = 5e-3 #2./rhog_t
+vmax = 2./rhog_t
 TT = linspace(Tmin, Tmax, 100);
 vv = logspace(log10(vmin),log10(vmax), 100);
 
