@@ -4,7 +4,10 @@ import sys
 
 D = helmholtz_data_water;
 
-res, p_t, rhof_t, rhog_t = fprops_sat_T(D.T_t, D)
+res, p_t, rhof_t, rhog_t = fprops_triple_point(D)
+if res:
+	print "failed to solve triple point"
+	sys.exit(1)
 
 pmax = 100e6
 

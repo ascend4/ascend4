@@ -10,6 +10,9 @@ lib = fprops_env.SharedLibrary("mbwr"
 	,SHLIBPREFIX = env['EXTLIB_PREFIX']
 )
 
+if WhereIs('gsl-config'):
+	fprops_env.ParseConfig(['gsl-config','--libs','--cflags'])
+
 env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methane']
 
 lib = fprops_env.SharedLibrary("helmholtz"
