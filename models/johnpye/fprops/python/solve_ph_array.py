@@ -8,12 +8,12 @@ res, p_t, rhof_t, rhog_t = fprops_sat_T(D.T_t, D)
 
 pmax = 100e6
 
-Tmin = D.T_t
-Tmax = 0.8 * D.T_t + 0.2 * D.T_c
+Tmin = 500 #D.T_t
+Tmax = 800 #2 * D.T_c
 vmin = 1./rhof_t
-vmax = 1.01*vmin;
-TT = linspace(Tmin, Tmax, 30);
-vv = logspace(log10(vmin),log10(vmax), 30);
+vmax = 5e-3 #2./rhog_t
+TT = linspace(Tmin, Tmax, 100);
+vv = logspace(log10(vmin),log10(vmax), 100);
 
 goodT = []
 goodv = []
@@ -21,9 +21,9 @@ badT = []
 badv = []
 
 for T in TT:
+	sys.stderr.write("+++ T = %f\r" % (T))
 	for v in vv:
 		rho = 1./v
-		sys.stderr.write("+++ T = %f, rho = %f\r" % (T,rho))
 		p = helmholtz_p(T,rho,D)
 		if p > pmax:
 			continue
@@ -34,7 +34,7 @@ for T in TT:
 
 		res, T1, rho1 = fprops_solve_ph(p,h,0,D);
 		if res or isnan(T1) or isnan(rho1):
-			print "Error at T1 = %f, rho1 = %f (T = %f, rho = %f)" % (T1, rho1,T,rho)
+			print "Error at T1 = %f, rho1 = %f (T = %.12e, rho = %.12e)" % (T1, rho1,T,rho)
 			badT.append(T); badv.append(v)
 		else:
 			goodT.append(T); goodv.append(v)
