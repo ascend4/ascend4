@@ -28,7 +28,12 @@
 #include "sat.h"
 #include "helmholtz_impl.h"
 
+#if 0
 # include <assert.h>
+#else
+# define assert(ARGS...)
+#endif
+
 #include <math.h>
 #include <stdio.h>
 
@@ -46,8 +51,8 @@
 	57 (2002) pp 1439-1449.
 */
 double fprops_psat_T_xiang(double T, const HelmholtzData *d){
-
-	double Zc = d->p_c / (8314. * d->rho_c * d->T_c);
+	double p_c = fprops_pc(d);
+	double Zc = p_c / (8314. * d->rho_c * d->T_c);
 
 #ifdef TEST
 	fprintf(stderr,"Zc = %f\n",Zc);
@@ -86,7 +91,7 @@ double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 	fprintf(stderr,"p_r = %f\n", p_r);
 #endif
 
-	return p_r * d->p_c;
+	return p_r * p_c;
 }
 
 /**
@@ -95,7 +100,8 @@ double fprops_psat_T_xiang(double T, const HelmholtzData *d){
 */
 double fprops_psat_T_acentric(double T, const HelmholtzData *d){
 	/* first guess using acentric factor */
-	double p = d->p_c * pow(10, -7./3 * (1.+d->omega) * (d->T_c / T - 1.));
+	double p_c = fprops_pc(d);
+	double p = p_c * pow(10, -7./3 * (1.+d->omega) * (d->T_c / T - 1.));
 	return p;
 }
 
@@ -105,10 +111,10 @@ double fprops_psat_T_acentric(double T, const HelmholtzData *d){
 	see http://dx.doi.org/10.1002/aic.690250412
 */
 double fprops_rhof_T_rackett(double T, const HelmholtzData *D){
-
-	double Zc = D->rho_c * D->R * D->T_c / D->p_c;
+	double p_c = fprops_pc(D);
+	double Zc = D->rho_c * D->R * D->T_c / p_c;
 	double Tau = 1. - T/D->T_c;
-	double vf = (D->R * D->T_c / D->p_c) * pow(Zc, -1 - pow(Tau, 2./7));
+	double vf = (D->R * D->T_c / p_c) * pow(Zc, -1 - pow(Tau, 2./7));
 
 	return 1./vf;
 }
@@ -117,8 +123,9 @@ double fprops_rhof_T_rackett(double T, const HelmholtzData *D){
 	Inverse of fprops_rhof_T_rackett. FIXME this need checking.
 */
 double fprops_T_rhof_rackett(double rhof, const HelmholtzData *D){
-	double Zc = D->rho_c * D->R * D->T_c / D->p_c;
-	double f1 = D->p_c / D->R / D->T_c / rhof;
+	double p_c = fprops_pc(D);
+	double Zc = D->rho_c * D->R * D->T_c / p_c;
+	double f1 = p_c / D->R / D->T_c / rhof;
 	double f2 = -log(f1)/log(Zc);
 	return pow(f2 -1, 3./2);
 }
@@ -128,7 +135,8 @@ double fprops_T_rhof_rackett(double rhof, const HelmholtzData *D){
 	see http://dx.doi.org/10.1016/j.tca.2004.05.017
 */
 double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
-	double Zc = D->rho_c * D->R * D->T_c / D->p_c;
+	double p_c = fprops_pc(D);
+	double Zc = D->rho_c * D->R * D->T_c / p_c;
 	double Tau = 1. - T/D->T_c;
 #if 0
 # define N1 -0.1497547
@@ -150,10 +158,6 @@ double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
 #endif
 
 	double alpha = exp(pow(Tau,1./3) + sqrt(Tau) + Tau + pow(Tau, MMM));
-	if(__isnan(alpha)){
-		fprintf(stderr,"%s: T = %.12e\n",__func__,T);
-	}
-	assert(!__isnan(alpha));
 	return D->rho_c * exp(PPP * (pow(alpha,NNN) - exp(1-alpha)));
 }
 
@@ -226,6 +230,44 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 }
 
 /**
+	Calculate the critical pressure using the T_c and rho_c values in the HelmholtzData.
+*/
+double fprops_pc(const HelmholtzData *d){
+	static const HelmholtzData *d_last = NULL;
+	static double p_c = 0;
+	if(d == d_last){
+		return p_c;
+	}
+	p_c = helmholtz_p_raw(d->T_c, d->rho_c,d);
+	d_last = d;
+	return p_c;
+}
+
+/**
+	Calculate the critical pressure using the T_c and rho_c values in the HelmholtzData.
+*/
+int fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out, const HelmholtzData *d){
+	static const HelmholtzData *d_last = NULL;
+	static double p_t, rhof_t, rhog_t;
+	if(d == d_last){
+		*p_t_out = p_t;
+		*rhof_t_out = rhof_t;
+		*rhog_t_out = rhog_t;
+		return 0;
+	}
+	int res = fprops_sat_T(d->T_t, &p_t, &rhof_t, &rhog_t,d);
+	if(res)return res;
+	else{
+		d_last = d;
+		*p_t_out = p_t;
+		*rhof_t_out = rhof_t;
+		*rhog_t_out = rhog_t;
+		return 0;
+	}
+}
+	
+
+/**
 	Solve saturation properties in terms of pressure.
 	This function makes calls to fprops_sat_T, and solves for temperature using
 	a Newton solver algorith. Derivatives dp/dT are calculated using the
@@ -233,16 +275,28 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 	@return 0 on success.
 */
 int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out, const HelmholtzData *d){
-	/*
-	Estimate of saturation temperature using definition	of acentric factor and
-	the assumed p(T) relationship:
-		log10(p)=A + B/T
-	See Reid, Prausnitz and Poling, 4th Ed., section 2.3. 
-	*/
-	double T1 = d->T_c / (1. - 3./7. / (1.+d->omega) * log10(p / d->p_c));
+	double T1;
+	double p_c = fprops_pc(d);
+	if(fabs(p - p_c)/p_c < 1e-6){
+		T1 = d->T_c;
+		double p1, rhof, rhog;
+		int res = fprops_sat_T(T1, &p1, &rhof, &rhog, d);
+		*Tsat_out = T1;
+		*rhof_out = rhof;
+		*rhog_out = rhog;
+		return res;
+	}else{
+		/*
+		Estimate of saturation temperature using definition	of acentric factor and
+		the assumed p(T) relationship:
+			log10(p)=A + B/T
+		See Reid, Prausnitz and Poling, 4th Ed., section 2.3. 
+		*/
+		T1 = d->T_c / (1. - 3./7. / (1.+d->omega) * log10(p / p_c));
+	}
 	double p1, rhof, rhog;
 	int i = 0;
-	while(i++ < 20){
+	while(i++ < 50){
 		int res = fprops_sat_T(T1, &p1, &rhof, &rhog, d);
 		if(res)return 1;
 		//fprintf(stderr,"%s: T1 = %f ——> p = %f bar\trhof = %f\trhog = %f\n",__func__, T1, p1/1e5, rhof, rhog);
@@ -317,5 +371,6 @@ int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_ou
 	*rhog_out = rhog;
 	return 1;
 }
+
 
 

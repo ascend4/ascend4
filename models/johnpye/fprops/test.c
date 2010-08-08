@@ -333,16 +333,6 @@ int helm_check_dudrho_T(const HelmholtzData *d, unsigned ntd, const TestData *td
 	fprintf(stderr,"sse - n se^2 = %.3e\n",sse - n*se*se);
 }
 
-int helm_check_p_c(const HelmholtzData *d){
-	fprintf(stderr,"\nCRITICAL PRESSURE\n");
-	double pc = helmholtz_p(d->T_c, d->rho_c, d);
-	fprintf(stderr,"calculated p_c = %0.12e\n",pc);
-	fprintf(stderr,"data p_c = %0.12e\n",d->p_c);
-	double rtol = 1e-5;
-	assert(fabs((d->p_c - pc)/pc) < rtol);
-	return 0;
-}
-
 
 
 

@@ -76,10 +76,8 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 	, /* T_star */ CARBONDIOXIDE_TC /* K (= T_c for this model) */
 
 	, /* T_c */ CARBONDIOXIDE_TC
-	, /* p_c */ CARBONDIOXIDE_PC
 	, /* rho_c */ CARBONDIOXIDE_RHOC
 	, /* T_t */ 216.592
-	, /* p_t */ CARBONDIOXIDE_PT
 
 	,  0.2239 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_carbondioxide
@@ -171,8 +169,6 @@ int main(void){
 	ASSERT_TOL(helmholtz_p, 300.000, 679.24, d, 6.7131e6, 0.0001e6);
 	ASSERT_TOL(helmholtz_p, 300.000, 268.58, d, 6.7131e6, 0.0001e6);
 	//ASSERT_TOL(helmholtz_p, 304.1282, 467.60, d, 7.3773e6, 0.0001e6);
-
-	helm_check_p_c(d);
 
 #if USING_CITED_REFERENCE_STATES
 	fprintf(stderr,"REFERENCE POINT CHECK\n");

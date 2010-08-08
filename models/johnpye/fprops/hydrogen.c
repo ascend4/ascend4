@@ -67,10 +67,8 @@ const HelmholtzData helmholtz_data_hydrogen = {
 	, /* T_star */ HYDROGEN_TSTAR /* K (= T_c for this model) */
 
 	, /* T_c */ HYDROGEN_TSTAR
-	, /* p_c */ 1.296484557201e+06 /* calculated, p(T_c, rho_c) */
 	, /* rho_c */ 15.508 * HYDROGEN_M
 	, /* T_t */ 13.957
-	, /* p_t */ 0.00736e6
 
 	, 0.088 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_hydrogen
@@ -122,7 +120,6 @@ int main(void){
 	//return helm_check_dhdrho_T(&helmholtz_data_hydrogen, ntd, td);
 	//return helm_check_dudT_rho(&helmholtz_data_hydrogen, ntd, td);
 	//return helm_check_dudrho_T(&helmholtz_data_hydrogen, ntd, td);
-	helm_check_p_c(&helmholtz_data_hydrogen);
 
 	return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td, 'C');
 }

@@ -50,8 +50,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 int fprops_region_ph(double p, double h, const HelmholtzData *D){
 
 	double Tsat, rhof, rhog;
+	double p_c = fprops_pc(D);
 
-	if(p >= D->p_c)return FPROPS_NON;
+	if(p >= p_c)return FPROPS_NON;
 
 	int res = fprops_sat_p(p, &Tsat, &rhof, &rhog, D);
 
@@ -78,13 +79,14 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	int subcrit_pressure = 0;
 	int liquid_iteration = 0;
 	double rhof_t;
+	double p_c = fprops_pc(D);
 
     //feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 	SignalHandler *old = signal(SIGFPE,&fprops_fpe);
 	int jmpret = setjmp(mark);
 	if(jmpret==0){
 		
-		if(p < D->p_c){
+		if(p < p_c){
 			MSG("Calculate saturation Tsat(p < p_c)");
 			int res = fprops_sat_p(p, &Tsat, &rhof, &rhog, D);
 			if(res){
