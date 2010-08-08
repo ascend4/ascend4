@@ -47,10 +47,13 @@
 
 double helmholtz_p(double T, double rho, const HelmholtzData *d){
 	double p, rho_f, rho_g;
+#if 0
 	if(T < d->T_t){
 		fprintf(stderr,"%s: Unable to calculate pressure, T = %e is below triple point.\n", __func__, T);
 		return d->p_t;
 	}
+	/* but what if we're in the sublimation region?? */
+#endif
 	if(T < d->T_c){
 		int res = fprops_sat_T(T, &p, &rho_f, &rho_g, d);
 		if(res){
@@ -107,12 +110,11 @@ double helmholtz_s(double T, double rho, const HelmholtzData *d){
 double helmholtz_p_raw(double T, double rho, const HelmholtzData *data){
 	DEFINE_TD;
 
-#ifdef TEST
 	assert(data->rho_star!=0);
 	assert(T!=0);
-	assert(!isnan(tau));
-	assert(!isnan(delta));
-	assert(!isnan(data->R));
+	assert(!__isnan(T));
+	assert(!__isnan(rho));
+	assert(!__isnan(data->R));
 
 	//fprintf(stderr,"p calc: T = %f\n",T);
 	//fprintf(stderr,"p calc: tau = %f\n",tau);
@@ -122,9 +124,13 @@ double helmholtz_p_raw(double T, double rho, const HelmholtzData *data){
 
 	//fprintf(stderr,"T = %f\n", T);
 	//fprintf(stderr,"rhob = %f, rhob* = %f, delta = %f\n", rho/data->M, data->rho_star/data->M, delta);
-#endif
 	
-	return data->R * T * rho * (1 + delta * helm_resid_del(tau,delta,data));
+	double p = data->R * T * rho * (1 + delta * helm_resid_del(tau,delta,data));
+	if(isnan(p)){
+		fprintf(stderr,"T = %.12e, rho = %.12e\n",T,rho);
+	}
+	assert(!__isnan(p));
+	return p;
 }
 
 /**
@@ -779,6 +785,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 			ldell = pt->l*dell;
 		}
 	}
+	assert(!__isnan(res));
 
 	/* gaussian terms */
 	n = data->ng;
@@ -796,6 +803,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		res += sum;
 		++gt;
 	}
+	assert(!__isnan(res));
 
 	/* critical terms */
 	n = data->nc;
@@ -812,6 +820,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		res += sum;
 		++ct;
 	}
+	assert(!__isnan(res));
 
 #ifdef RESID_DEBUG
 	fprintf(stderr,"CALCULATED RESULT FOR phir = %f\n",res);
@@ -1147,6 +1156,10 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 			ldell = pt->l*dell;
 		}
 	}
+	if(__isnan(res)){
+		fprintf(stderr,"tau = %.12e, del = %.12e\n",tau,delta);
+	}
+	assert(!__isnan(res));
 
 	/* gaussian terms */
 	n = data->ng;
@@ -1164,6 +1177,7 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 			* exp(-(gt->alpha * s1 + gt->beta*SQ(tau-gt->gamma)));
 		++gt;
 	}
+	assert(!__isnan(res));
 
 	/* critical terms */
 	n = data->nc;
@@ -1189,6 +1203,7 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 		res += sum;
 		++ct;
 	}
+	assert(!__isnan(res));
 
 	return res;
 }

@@ -150,6 +150,10 @@ double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
 #endif
 
 	double alpha = exp(pow(Tau,1./3) + sqrt(Tau) + Tau + pow(Tau, MMM));
+	if(__isnan(alpha)){
+		fprintf(stderr,"%s: T = %.12e\n",__func__,T);
+	}
+	assert(!__isnan(alpha));
 	return D->rho_c * exp(PPP * (pow(alpha,NNN) - exp(1-alpha)));
 }
 
@@ -160,7 +164,8 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 	//feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 
 	int i = 0;
-	while(i++ < 50){
+	while(i++ < 20){
+		assert(!__isnan(delg));
 		//fprintf(stderr,"%s: iter %d: rhof = %f, rhog = %f\n",__func__,i,delf*d->rho_c, delg*d->rho_c);
 		double phirf = helm_resid(tau,delf,d);
 		double phirf_d = helm_resid_del(tau,delf,d);
@@ -168,6 +173,12 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 		double phirg = helm_resid(tau,delg,d);
 		double phirg_d = helm_resid_del(tau,delg,d);
 		double phirg_dd = helm_resid_deldel(tau,delg,d);
+		assert(!__isnan(phirf));
+		assert(!__isnan(phirf_d));
+		assert(!__isnan(phirf_dd));
+		assert(!__isnan(phirg));
+		assert(!__isnan(phirg_d));
+		assert(!__isnan(phirg_dd));
 
 #define J(FG) (del##FG * (1. + del##FG * phir##FG##_d))
 #define K(FG) (del##FG * phir##FG##_d + phir##FG + log(del##FG))
@@ -183,18 +194,28 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 		double Kg_del = K_del(g);
 
 		double DELTA = Jg_del * Kf_del - Jf_del * Kg_del;
+		assert(!__isnan(DELTA));
 
-#define gamma 1
+#define gamma 1.0
 		delf += gamma/DELTA * ((Kg - Kf) * Jg_del - (Jg - Jf) * Kg_del);
 		delg += gamma/DELTA * ((Kg - Kf) * Jf_del - (Jg - Jf) * Kf_del);
+
+		assert(!__isnan(delg));
+		assert(!__isnan(delf));
 
 		if(fabs(Kg - Kf) + fabs(Jg - Jf) < 1e-8){
 			//fprintf(stderr,"%s: CONVERGED\n",__func__);
 			*rhof_out = delf * d->rho_c;
 			*rhog_out = delg * d->rho_c;
+			if(__isnan(*rhog_out)){
+				fprintf(stderr,"%s: T = %.12e\n",__func__,T);
+			}
 			*psat_out = helmholtz_p_raw(T, *rhog_out, d);
 			return 0;
 		}
+		//if(delg > 1)delg = 1.001;
+		//if(delf > 1)delf = 0.999;
+
 	}
 	*rhof_out = delf * d->rho_c;
 	*rhog_out = delg * d->rho_c;
@@ -253,7 +274,7 @@ int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out
 	Secant method.
 */
 int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
-	double T1 = 0.8 * d->T_t + 0.2 * d->T_c;
+	double T1 = 0.4 * d->T_t + 0.6 * d->T_c;
 	double T2 = d->T_t;
 	double h1, h2, p, rhof, rhog;
 	int res = fprops_sat_T(T2, &p, &rhof, &rhog, d);
@@ -261,16 +282,19 @@ int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_ou
 		fprintf(stderr,"%s:%d: Failed to solve psat(T_t)\n",__func__,__LINE__);
 		return 1;
 	}
+	double tol = 1e-6;
 	h2 = helmholtz_h(T2,rhof,d);
 	int i = 0;
-	while(i++ < 20){
+	while(i++ < 40){
+		assert(T1 >= d->T_t);
+		assert(T1 <= d->T_c);
 		res = fprops_sat_T(T1, &p, &rhof, &rhog, d);
 		if(res){
 			fprintf(stderr,"%s:%d: Failed to solve psat(T = %.12e)\n",__func__,__LINE__,T1);
 			return 1;
 		}
 		h1 = helmholtz_h(T1,rhof, d);
-		if(fabs(h1 - hf) < 1e-5){
+		if(fabs(h1 - hf) < tol){
 			*Tsat_out = T1;
 			*psat_out = p;
 			*rhof_out = rhof;
@@ -282,9 +306,11 @@ int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_ou
 		T2 = T1;
 		h2 = h1;
 		while(T1 + delta_T > d->T_c)delta_T *= 0.5;
+		while(T1 + delta_T < d->T_t)delta_T *= 0.5;
 		T1 += delta_T;
+		if(i==20 || i==30)tol*=100;
 	}
-	fprintf(stderr,"Failed to solve Tsat for hf = %f\n",hf);
+	fprintf(stderr,"Failed to solve Tsat for hf = %f (got to T = %f)\n",hf,T1);
 	*Tsat_out = T1;
 	*psat_out = p;
 	*rhof_out = rhof;
