@@ -40,16 +40,17 @@ METHOD problem_case;
 	rho := 900 {kg/m^3};
 	v := 1/rho;
 	SOLVER QRSlv;
-	OPTION iterationlimit 200;
+	OPTION iterationlimit 500;
 END problem_case;
 METHOD on_load;
 	(* a first guess *)
 	v := 100 {m^3/kg};
+	T := 300 {K};
 
-	FIX T;
-	T := 250 {K};
+	FIX p;
+	p := 1 {bar};
 	FIX h;
-	h := 1500 {kJ/kg};
+	h := 400 {kJ/kg};
 END on_load;
 
 END fprops_phsx_test;	

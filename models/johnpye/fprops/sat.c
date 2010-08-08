@@ -135,10 +135,10 @@ double fprops_T_rhof_rackett(double rhof, const HelmholtzData *D){
 	see http://dx.doi.org/10.1016/j.tca.2004.05.017
 */
 double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
-	double p_c = fprops_pc(D);
-	double Zc = D->rho_c * D->R * D->T_c / p_c;
 	double Tau = 1. - T/D->T_c;
 #if 0
+	double p_c = fprops_pc(D);
+	double Zc = D->rho_c * D->R * D->T_c / p_c;
 # define N1 -0.1497547
 # define N2 0.6006565 
 # define P1 -19.348354

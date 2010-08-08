@@ -42,6 +42,7 @@
 /* the code that we're wrapping... */
 #include "helmholtz.h"
 #include "sat.h"
+#include "solve_ph.h"
 
 /* for the moment, species data are defined in C code, we'll implement something
 better later on, hopefully. */
@@ -68,7 +69,7 @@ ExtBBoxFunc helmholtz_h_calc;
 ExtBBoxFunc helmholtz_a_calc;
 ExtBBoxFunc helmholtz_g_calc;
 ExtBBoxFunc helmholtz_phsx_vT_calc;
-ExtBBoxFunc helmholtz_phase_calc;
+ExtBBoxFunc helmholtz_Tvsx_ph_calc;
 
 /*------------------------------------------------------------------------------
   GLOBALS
@@ -87,7 +88,8 @@ static const char *helmholtz_g_help = "Calculate specific Gibbs energy from temp
 
 static const char *helmholtz_phsx_vT_help = "Calculate p, h, s, x from temperature and density, using FPROPS/Helmholtz eqn";
 
-static const char *helmholtz_phase_help = "Calculate Maxwell phase criterion residuals using Helmholtz fundamental correlation";
+static const char *helmholtz_Tvsx_ph_help = "Calculate T, v, s, x from pressure and enthalpy, using FPROPS/Helmholtz eqn";
+
 
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
@@ -135,7 +137,7 @@ ASC_EXPORT int helmholtz_register(){
 	CALCFN(helmholtz_a,2,1);
 	CALCFN(helmholtz_g,2,1);
 	CALCFN(helmholtz_phsx_vT,2,4);
-	CALCFN(helmholtz_phase,4,3);
+	CALCFN(helmholtz_Tvsx_ph,2,4);
 
 #undef CALCFN
 
@@ -209,7 +211,7 @@ int helmholtz_prepare(struct BBoxInterp *bbox,
 	\
 	/* the 'user_data' in the black box object will contain the */\
 	/* coefficients required for this fluid; cast it to the required form: */\
-	HelmholtzData *helmholtz_data = (HelmholtzData *)bbox->user_data
+	const HelmholtzData *helmholtz_data = (const HelmholtzData *)bbox->user_data
 
 /**
 	Evaluation function for 'helmholtz_p'.
@@ -399,35 +401,70 @@ int helmholtz_phsx_vT_calc(struct BBoxInterp *bbox,
 }
 
 
-
-
 /**
-	Evaluation function for 'helmholtz_phase'
-	@param jacobian ignored
+	Evaluation function for 'helmholtz_Tvsx_ph'
 	@return 0 on success
 */
-int helmholtz_phase_calc(struct BBoxInterp *bbox,
+int helmholtz_Tvsx_ph_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	CALCPREPARE(4,3);
+	CALCPREPARE(2,4);
 
-#define T inputs[0]
-#define PSAT inputs[1]
-#define RHOF inputs[2]
-#define RHOG inputs[3]
+	static const HelmholtzData *last = NULL;
+	static double p,h,T,v,s,x;
+	int res;
+	if(last == helmholtz_data && p == inputs[0] && h == inputs[1]){
+		outputs[0] = T;
+		outputs[1] = v;
+		outputs[2] = s;
+		outputs[3] = x;
+		return 0;
+	}
 	
-	outputs[0] = PSAT - helmholtz_p(T,RHOF,helmholtz_data);
-	outputs[1] = PSAT - helmholtz_p(T,RHOG,helmholtz_data);
-	outputs[2] = helmholtz_g(T,RHOG,helmholtz_data) - helmholtz_g(T,RHOF,helmholtz_data);
+	p = inputs[0];
+	h = inputs[1];
 
-#undef T
-#undef PSAT
-#undef RHOF
-#undef RHOG
+	if(p < fprops_pc(helmholtz_data)){
+		double T_sat, rho_f, rho_g;
+		res = fprops_sat_p(p, &T_sat, &rho_f, &rho_g, helmholtz_data);
+		if(res)return 1;
+		double hf = helmholtz_h(T_sat,rho_f, helmholtz_data);
+		double hg = helmholtz_h(T_sat,rho_g, helmholtz_data);
 
-	/* we won't worry about error states etc. */
+		if(hf < h && h < hg){
+			/* saturated */
+			double vf = 1./rho_f;
+			double vg = 1./rho_g;
+			double sf = helmholtz_s(T_sat,rho_f, helmholtz_data);
+			double sg = helmholtz_s(T_sat,rho_g, helmholtz_data);
+			T = T_sat;
+			x = (h - hf)  /(hg - hf);
+			v = vf + x * (vg-vf);
+			s = sf + x * (sg-sf);
+			last = helmholtz_data;
+			outputs[0] = T;
+			outputs[1] = v;
+			outputs[2] = s;
+			outputs[3] = x;
+			return 0;
+		}
+	}
+
+	double rho;
+	res = fprops_solve_ph(p,h, &T, &rho, 0, helmholtz_data);
+	/* non-saturated */
+	v = 1./rho;
+	s = helmholtz_s(T,rho, helmholtz_data);
+	x = (v > 1./helmholtz_data->rho_c) ? 1 : 0;
+	last = helmholtz_data;
+	outputs[0] = T;
+	outputs[1] = v;
+	outputs[2] = s;
+	outputs[3] = x;
 	return 0;
 }
+
+
 

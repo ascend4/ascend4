@@ -44,10 +44,9 @@ const HelmholtzData helmholtz_data_methane = {
     , /* T_star */ METHANE_TSTAR /* K (= T_c for this model) */
 
     , /* T_c */ METHANE_TSTAR
-    , /* p_c */ 4.599200001121e+06 /* calculated from T_c, rho_c */
+    //REMOVED , /* p_c */ 4.599200001121e+06 /* calculated from T_c, rho_c */
     , /* rho_c */ 162.66 /* kg/m3 */
 	, /* T_t */ 90.6941
-    , /* p_t */ 0
 
     , 0.01142 /* acentric factor */
     , &ideal_data_methane
@@ -126,8 +125,7 @@ int main(void){
     //return helm_check_dhdrho_T(&helmholtz_data_methane, ntd, td);
     //return helm_check_dudT_rho(&helmholtz_data_methane, ntd, td);
     //return helm_check_dudrho_T(&helmholtz_data_methane, ntd, td);
-	helm_check_p_c(&helmholtz_data_methane);
-    return helm_run_test_cases(&helmholtz_data_methane, ntd, td, 'C');
+	return helm_run_test_cases(&helmholtz_data_methane, ntd, td, 'C');
 }
 
 /*
