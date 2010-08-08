@@ -4,10 +4,21 @@ import sys
 
 D = helmholtz_data_water;
 
-T = 3.221585e+02
-v = 1.000208e-03
+v = 1.005714e-03
+T = 3.298951e+02
+#rho = 1./v
 
-rho = 1./v
+#T = 3.092641655172e+02
+#rho = 9.997925200316e+02
+#T = 3.024735758794e+02
+#rho = 9.973958154879e+02
+#T = 6.727273e+02
+#rho = 1./2.078561e-03
+
+T = 6.636364e+02
+rho = 1./2.609722e-03
+
+
 print "T = %f, rho = %f" % (T,rho)
 p = helmholtz_p(T,rho,D)
 h = helmholtz_h(T,rho,D)

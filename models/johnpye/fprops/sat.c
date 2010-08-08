@@ -257,12 +257,18 @@ int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_ou
 	double T2 = d->T_t;
 	double h1, h2, p, rhof, rhog;
 	int res = fprops_sat_T(T2, &p, &rhof, &rhog, d);
-	if(res)return 1;
+	if(res){
+		fprintf(stderr,"%s:%d: Failed to solve psat(T_t)\n",__func__,__LINE__);
+		return 1;
+	}
 	h2 = helmholtz_h(T2,rhof,d);
 	int i = 0;
 	while(i++ < 20){
 		res = fprops_sat_T(T1, &p, &rhof, &rhog, d);
-		if(res)return 1;
+		if(res){
+			fprintf(stderr,"%s:%d: Failed to solve psat(T = %.12e)\n",__func__,__LINE__,T1);
+			return 1;
+		}
 		h1 = helmholtz_h(T1,rhof, d);
 		if(fabs(h1 - hf) < 1e-5){
 			*Tsat_out = T1;
@@ -275,6 +281,7 @@ int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_ou
 		double delta_T = -(h1 - hf) * (T1 - T2) / (h1 - h2);
 		T2 = T1;
 		h2 = h1;
+		while(T1 + delta_T > d->T_c)delta_T *= 0.5;
 		T1 += delta_T;
 	}
 	fprintf(stderr,"Failed to solve Tsat for hf = %f\n",hf);

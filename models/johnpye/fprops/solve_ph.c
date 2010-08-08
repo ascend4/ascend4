@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define SQ(X) ((X)*(X))
 
-//#define SOLVE_PH_DEBUG
+#define SOLVE_PH_DEBUG
 #ifdef SOLVE_PH_DEBUG
 # define MSG(STR,...) fprintf(stderr,"%s:%d: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 #else
@@ -85,6 +85,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	if(jmpret==0){
 		
 		if(p < D->p_c){
+			MSG("Calculate saturation Tsat(p < p_c)");
 			int res = fprops_sat_p(p, &Tsat, &rhof, &rhog, D);
 			if(res){
 				ERRMSG("Unable to solve saturation state");
@@ -135,7 +136,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 				assert(!__isnan(hc));
 				MSG("hc = %f",hc);
 				if(h < hc){
-					MSG("h < hc... using saturation Tsat(hf) for startin guess");
+					MSG("h < hc... using saturation Tsat(hf) for starting guess");
 					double Tsat1, psat1, rhof1, rhog1;
 					int res = fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, D);
 					if(res){
@@ -175,7 +176,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 		double delta_T = 0;
 		double delta_rho = 0;
 		MSG("STARTING ITERATION");
-		while(i++ < 100){
+		while(i++ < 200){
 			double p1 = helmholtz_p_raw(T1,rho1,D);
 			assert(!__isnan(p1));
 			double h1 = helmholtz_h_raw(T1,rho1,D);
@@ -191,7 +192,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 				continue;
 			}
 
-			if(fabs(p1 - p) < 1e-6 && fabs(h1 - h) < 1e-8){
+			if(fabs(p1 - p) < 1e-4 && fabs(h1 - h) < 1e-8){
 				MSG("Converged to T = %f, rho = %f, in homebaked Newton solver", T1, rho1);
 				*T = T1;
 				*rho = rho1;
