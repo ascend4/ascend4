@@ -276,7 +276,7 @@ int Asc_SignalHandlerPush(int signum, SigHandlerFn *tp)
 #endif
       break;
     case SIGINT:
-#if SIGNAL_DEBUG
+#ifdef SIGNAL_DEBUG
 	  CONSOLE_DEBUG("PUSH SIGINT");
 #endif
       err = push_trap(f_int_traps, &f_int_top_of_stack, tp);
