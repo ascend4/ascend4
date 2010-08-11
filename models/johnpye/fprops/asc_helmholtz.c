@@ -463,7 +463,7 @@ int helmholtz_Tvsx_ph_calc(struct BBoxInterp *bbox,
 	outputs[1] = v;
 	outputs[2] = s;
 	outputs[3] = x;
-	return 0;
+	return res;
 }
 
 

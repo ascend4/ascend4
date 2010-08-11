@@ -225,7 +225,7 @@ Simulation::run(const Method &method, Instanc &model){
 		CONSOLE_DEBUG("WARNING, SIMULATION NOT YET BUILT");
 	}*/
 
-	CONSOLE_DEBUG("Running method %s...", method.getName());
+	CONSOLE_DEBUG("Running method '%s' on simulation '%s'...", method.getName(),getName().getInternalType());
 
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
@@ -237,7 +237,7 @@ Simulation::run(const Method &method, Instanc &model){
 
 	Proc_enum pe;
 	pe = Initialize(
-		&*(model.getInternalType()) ,name.getInternalType(), "__not_named__"
+		&*(model.getInternalType()), name.getInternalType(), name.getName().c_str()
 		,ASCERR
 		,WP_STOPONERR, NULL, NULL
 	);

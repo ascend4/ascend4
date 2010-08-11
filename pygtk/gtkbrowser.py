@@ -661,7 +661,7 @@ class Browser:
 		# run the 'on_load' method
 		self.start_waiting("Running default method...")
 		try:
-			#self.reporter.reportNote("SIMULATION CREATED, RUNNING DEFAULT METHOD NOW...")
+			self.reporter.reportNote("SIMULATION CREATED, RUNNING DEFAULT METHOD NOW...")
 			self.sim.runDefaultMethod()
 		except RuntimeError, e:
 			self.stop_waiting()
