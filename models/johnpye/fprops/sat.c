@@ -166,6 +166,10 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 	double delf = 1.1 * fprops_rhof_T_rackett(T,d) / d->rho_c;
 	double delg = 0.9 * fprops_rhog_T_chouaieb(T,d) / d->rho_c;
 	//feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+	
+	if(T < d->T_t){
+		return 1;
+	}
 
 	int i = 0;
 	while(i++ < 20){

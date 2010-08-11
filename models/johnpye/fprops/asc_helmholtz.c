@@ -396,7 +396,7 @@ int helmholtz_phsx_vT_calc(struct BBoxInterp *bbox,
 	outputs[0] = helmholtz_p(T,rho, helmholtz_data);
 	outputs[1] = helmholtz_h(T,rho, helmholtz_data);
 	outputs[2] = helmholtz_s(T,rho, helmholtz_data);
-	outputs[3] = (rho > rho_f ? 0 : 1);
+	outputs[3] = rho < helmholtz_data->rho_c ? 1 : 0;
 	return 0;
 }
 
