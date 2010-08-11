@@ -50,30 +50,63 @@ MODEL stream_state;
 	s IS_A specific_entropy;
 	x IS_A fraction;
 
-	sat: helmholtz_phsx_vT(
+	calc_vT: helmholtz_phsx_vT(
 		v, T : INPUT;
 		p, h, s, x : OUTPUT;
 		cd : DATA
 	);
+	calc_ph: helmholtz_Tvsx_ph(
+		p, h : INPUT;
+		T, v, s, x : OUTPUT;
+		cd : DATA
+	);
 METHODS
-	METHOD default;
-		p := 10{bar};
-		p.nominal := 42 {bar};
-		h := 2000 {kJ/kg};
+METHOD default;
+	p := 10{bar};
+	p.nominal := 42 {bar};
+	h := 2000 {kJ/kg};
 
-		T := 400 {K};
-		v.nominal := 10 {L/kg};
-		s := 4 {kJ/kg/K};
-		x := 0.8;
-	END default;
-	METHOD solve;
-		EXTERNAL do_solve(SELF);
-	END solve;
-	METHOD on_load;
-		RUN default_all;
-		FIX p, h;
-	END on_load;
+	T := 400 {K};
+	v.nominal := 10 {L/kg};
+	s := 4 {kJ/kg/K};
+	x := 0.8;
+
+	RUN enable_pT;
+END default;
+METHOD enable_pT;
+	FOR i IN [1..4] DO
+		calc_ph[i].included := FALSE;
+		calc_vT[i].included := TRUE;
+	END FOR;
+END enable_pT;
+METHOD enable_ph;
+	FOR i IN [1..4] DO
+		calc_ph[i].included := TRUE;
+		calc_vT[i].included := FALSE;
+	END FOR;
+END enable_ph;
+METHOD solve;
+	EXTERNAL do_solve(SELF);
+END solve;
 END stream_state;
+
+MODEL stream_state_test REFINES stream_state;
+	cd.component :== 'water';
+METHODS
+METHOD on_load;
+	RUN default_all;
+	FIX p, h;
+	p := 10 {bar};
+	h := 2000 {kJ/kg};
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE;
+	ASSERT abs(T - 453.03 {K}) < 0.01 {K};
+	ASSERT abs(v - 0.119808 {m^3/kg}) < 0.0001 {m^3/kg};
+	ASSERT abs(x - 0.6142) < 0.0001;
+	ASSERT abs(s - 4.8696 {kJ/kg/K}) < 0.0001 {kJ/kg/K};
+END on_load;
+END	stream_state_test;
 
 (* a simple connector that includes calculation of steam properties *)
 MODEL stream_node;

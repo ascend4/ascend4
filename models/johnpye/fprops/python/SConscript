@@ -16,7 +16,7 @@ else:
 pyenv.SharedLibrary('fprops',['fprops.i'] + pyenv['shobjs']
 	,LIBPATH=['#']
 	,CPPPATH=['#',distutils.sysconfig.get_python_inc()]
-	,LIBS=[python_lib % (sys.version_info[0],sys.version_info[1]), 'gsl','gslcblas']
+	,LIBS=[python_lib % (sys.version_info[0],sys.version_info[1])]
 	,SWIGFLAGS=['-python']
 )
 
