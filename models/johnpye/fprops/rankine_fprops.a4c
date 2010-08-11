@@ -73,10 +73,9 @@ METHOD default;
 
 	RUN enable_ph;
 END default;
-(**** THIS CODE, IF UNCOMMENTED, REMOVES ERROR.
 METHOD default_self;
 	RUN default;
-END default_self;*)
+END default_self;
 METHOD enable_pT;
 	FOR i IN [1..4] DO
 		calc_ph[i].included := FALSE;
@@ -124,16 +123,20 @@ MODEL stream_node;
 	x ALIASES state.x;
 	mdot IS_A mass_rate;
 METHODS
-	METHOD default;
-		mdot.nominal := 2 {kg/s};
-	END default;
-	METHOD solve;
-		EXTERNAL do_solve(SELF);
-	END solve;
-	METHOD on_load;
-		RUN default_all; RUN reset; RUN values;
-		FIX p,h;
-	END on_load;
+METHOD default_self;
+	RUN state.default_self;
+	RUN default;
+END default_self;
+METHOD default;
+	mdot.nominal := 2 {kg/s};
+END default;
+METHOD solve;
+	EXTERNAL do_solve(SELF);
+END solve;
+METHOD on_load;
+	RUN default_all; RUN reset; RUN values;
+	FIX p,h;
+END on_load;
 END stream_node;
 
 MODEL stream_equipment;
@@ -179,6 +182,12 @@ MODEL pump_simple REFINES stream_equipment;
 		'inline' outlet {out:}
 	END NOTES;
 *)
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+	RUN outlet_is.default_self;
+END default_self;
 END pump_simple;
 
 MODEL pump_simple_test REFINES pump_simple;
@@ -227,7 +236,12 @@ MODEL turbine_simple REFINES stream_equipment;
 
 	w IS_A specific_energy;
 	w_eq:w = inlet.h - outlet.h;
-
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+	RUN outlet_is.default_self;
+END default_self;
 END turbine_simple;
 
 MODEL turbine_simple_test REFINES turbine_simple;
@@ -317,13 +331,18 @@ MODEL condenser_simple REFINES stream_equipment;
 	Qdot IS_A energy_rate;
 
 	cons_en: Qdot = mdot * (outlet.h - inlet.h);
-	
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+END default_self;
 END condenser_simple;
 
 MODEL condenser_simple_test REFINES condenser_simple;
 	cd.component :== 'water';
 METHODS
 METHOD on_load;
+	RUN default_self;
 	FIX inlet.p, inlet.x;
 	FIX outlet.h;
 	FIX mdot;
@@ -362,13 +381,19 @@ MODEL heater_open;
 	inlet_heat.mdot = m_ratio * inlet.mdot;
 	(* cons. energy *)
 	cons_en: inlet.h + m_ratio * inlet_heat.h = outlet.h;
-
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN inlet_heat.default_self;
+	RUN outlet.default_self;
+END default_self;
 END heater_open;
 
 MODEL heater_open_test REFINES heater_open;
 	cd.component :== 'water';
 METHODS
 METHOD on_load;
+	RUN default_self;
 	FIX inlet.p, inlet.h;
 	inlet.p := 40 {bar};
 	inlet.h := 634 {kJ/kg};
@@ -402,7 +427,13 @@ MODEL heater_open2;
 	(* cons. energy *)
 	cons_en: inlet.mdot * inlet.h + inlet_heat1.mdot * inlet_heat1.h 
 		+ inlet_heat2.mdot * inlet_heat2.h = outlet.mdot * outlet.h;
-
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN inlet_heat.default_self;
+	RUN inlet_heat2.default_self;
+	RUN outlet.default_self;
+END default_self;
 END heater_open2;
 
 MODEL heater_closed;
@@ -438,21 +469,13 @@ MODEL heater_closed;
 	(* cons. energy *)
 	cons_en: q + inlet.h = outlet.h;
 	cons_en_heat: m_ratio * inlet_heat.h = m_ratio * outlet_heat.h + q;
-
 METHODS
-METHOD on_load;
-	FIX inlet.p, inlet.h;
-	inlet.p := 40 {bar};
-	inlet.h := 634 {kJ/kg};
-	FIX inlet_heat.h;
-	inlet_heat.h := 2960 {kJ/kg};
-	
-	FIX outlet.mdot; 
-	outlet.mdot := 900 {t/d};
-	
-	FIX inlet.mdot;
-	inlet.mdot := 700 {t/d};
-END on_load;
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN inlet_heat.default_self;
+	RUN outlet.default_self;
+	RUN outlet_heat.default_self;
+END default_self;
 END heater_closed;
 
 MODEL heater_closed_test REFINES heater_closed;
@@ -524,7 +547,7 @@ MODEL rankine_fprops;
 	PU IS_A pump_simple;
 
 	cd ALIASES BO.cd;
-	cd.component :== 'carbondioxide';
+	cd.component :== 'water';
 
 	BO.outlet, TU.inlet ARE_THE_SAME;
 	TU.outlet, CO.inlet ARE_THE_SAME;
@@ -545,6 +568,12 @@ MODEL rankine_fprops;
 	mdot ALIASES TU.mdot;
 	x_turb_out ALIASES TU.outlet.x;
 METHODS
+METHOD default_self;
+	RUN BO.default_self;
+	RUN TU.default_self;
+	RUN CO.default_self;
+	RUN PU.default_self;
+END default_self;
 (* first test case: just some plausible values *)
 METHOD specify_1;
 	RUN ClearAll;
@@ -592,9 +621,6 @@ METHOD values;
 	BO.eta := 1.0;
 	mdot := 900 {t/d};
 END values;
-METHOD default;
-	(* nothing *)
-END default;
 METHOD on_load;
 	RUN default_self;
 	RUN specify;
@@ -653,6 +679,14 @@ MODEL rankine_reheat;
 	eta_carnot = 1 - T_C / T_H;
 
 METHODS
+METHOD default_self;
+	RUN BO1.default_self;
+	RUN BO2.default_self;
+	RUN TU1.default_self;
+	RUN TU2.default_self;
+	RUN CO.default_self;
+	RUN PU.default_self;
+END default_self;
 (*
 	The on_load scenario reproduces the same calculation from 
 	K Weston, op. cit., Example 2.5, p. 51.
@@ -768,6 +802,12 @@ MODEL rankine_regen;
 
 METHODS
 METHOD default_self;
+	RUN BO.default_self;
+	RUN TU1.default_self;
+	RUN TU2.default_self;
+	RUN CO.default_self;
+	RUN PU1.default_self;
+	RUN PU2.default_self;
 	BO.outlet.h := 4000 {kJ/kg};
 	p_bleed := 37 {bar};
 	TU1.outlet.h := 2300 {kJ/kg};
