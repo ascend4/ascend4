@@ -71,8 +71,12 @@ METHOD default;
 	s := 4 {kJ/kg/K};
 	x := 0.8;
 
-	RUN enable_pT;
+	RUN enable_ph;
 END default;
+(**** THIS CODE, IF UNCOMMENTED, REMOVES ERROR.
+METHOD default_self;
+	RUN default;
+END default_self;*)
 METHOD enable_pT;
 	FOR i IN [1..4] DO
 		calc_ph[i].included := FALSE;
@@ -181,6 +185,7 @@ MODEL pump_simple_test REFINES pump_simple;
 	cd.component :== 'water';
 METHODS
 METHOD on_load;
+	RUN default_self;
 	FIX inlet.p; inlet.p := 5 {bar};
 	FIX inlet.h; inlet.h := 400 {kJ/kg};
 	FIX outlet.p; outlet.p := 100 {bar};
@@ -229,6 +234,7 @@ MODEL turbine_simple_test REFINES turbine_simple;
 	cd.component :== 'water';
 METHODS
 METHOD on_load;
+	RUN default_self;
 	FIX inlet.p;
 	FIX inlet.h;
 	FIX outlet.p;
@@ -267,16 +273,21 @@ MODEL boiler_simple REFINES stream_equipment;
 
 	eta IS_A fraction;
 	Qdot = eta * Qdot_fuel;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+END default_self;
 END boiler_simple;
 
 MODEL boiler_simple_test REFINES boiler_simple;
 	cd.component :== 'water';
 METHODS
 METHOD on_load;
+	RUN default_self;
 	FIX inlet.p;
 	FIX inlet.h;
 	FIX eta;
-	FIX outlet.h;
 	FIX mdot;
 
 	inlet.p := 100 {bar};
@@ -581,7 +592,11 @@ METHOD values;
 	BO.eta := 1.0;
 	mdot := 900 {t/d};
 END values;
+METHOD default;
+	(* nothing *)
+END default;
 METHOD on_load;
+	RUN default_self;
 	RUN specify;
 	RUN values;
 

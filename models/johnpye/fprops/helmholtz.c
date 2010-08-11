@@ -1135,10 +1135,6 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	const HelmholtzGausTerm *gt;
 	const HelmholtzCritTerm *ct;
 	
-	if(__isnan(delta)){
-		abort();
-	}
-
 #ifdef RESID_DEBUG
 		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
 #endif
@@ -1322,6 +1318,7 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 
 /* === THIRD DERIVATIVES (this is getting boring now) === */
 
+#ifdef INCLUDE_THIRD_DERIV_CODE
 /**
 	Third derivative of helmholtz residual function, with respect to
 	delta (thrice).
@@ -1446,6 +1443,6 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 	return res;
 }
 
-
+#endif
 
 

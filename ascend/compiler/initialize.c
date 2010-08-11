@@ -1959,7 +1959,11 @@ enum Proc_enum Initialize(struct Instance *context,
   
 #ifdef INIT_DEBUG
   char *instname = WriteInstanceNameString(context,NULL);
-  CONSOLE_DEBUG("Running method '%s' on '%s'...",cname,instname);
+  const char *insttype = 
+		InstanceKind(context)==SIM_INST ? "SIM_INST" :(
+		InstanceKind(context)==MODEL_INST ? "MODEL_INST" : (
+		"UNRECOGNIZED-TYPE"));
+  CONSOLE_DEBUG("Running method '%s' on %s '%s'...",cname,insttype,instname);
   ASC_FREE(instname);
 #endif
 
