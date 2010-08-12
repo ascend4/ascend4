@@ -1,0 +1,214 @@
+(*	ASCEND modelling environment
+	Copyright (C) 2010 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)(*
+	This file contains a model of a combined-cycle power station, with
+	a gas turbine (Brayton) cycle running as the 'topping' cycle and a steam
+	turbine (Rankine) cycle running as the 'bottoming' cycle. Initially the 
+	model is being based on Example 9.13 from Moran & Shapiro, 'Fundamentals of
+	Engineering Thermodynamics', 4th Ed, Wiley, 2000.
+
+	See also Example 10-9 from the book Çengel & Boles 
+	'Thermodynamcs: An Engineering Approach, 6th Ed, McGraw-Hill, 2008.
+
+	At the current revision (12 Apr 2010), this model seems to be working OK.
+	The Cengel model needs convopt=RELNOM_SCALE with the QRSlv solver. The
+	Moran example just works.
+
+	TODO: add exergy accounting to the model.
+
+	Author: John Pye
+*)
+
+REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+REQUIRE "johnpye/brayton.a4c";
+
+MODEL air_stream_heat_exchanger REFINES air_equipment;
+	inlet_cold, outlet_cold IS_A stream_node;
+	inlet.p, outlet.p ARE_THE_SAME;
+	inlet_cold.p, outlet_cold.p ARE_THE_SAME;
+	inlet_cold.mdot, outlet_cold.mdot ARE_THE_SAME;
+	inlet_cold.cd, outlet_cold.cd ARE_THE_SAME;
+
+	mdot_cold ALIASES inlet_cold.mdot;
+	cd_cold ALIASES inlet_cold.cd;
+
+	(* we don't have epsilon worked out or specified here, so the heat exchanged
+	will depend on values specified outside this model. *)
+
+	Qdot IS_A energy_rate;
+	outlet.h = inlet.h + Qdot/inlet.mdot;
+	outlet_cold.h = inlet_cold.h - Qdot/inlet_cold.mdot;
+METHODS
+METHOD default_self;
+	RUN inlet_cold.default_self;
+	RUN outlet_cold.default_self;
+END default_self;
+END air_stream_heat_exchanger;
+
+MODEL air_stream_heat_exchanger_test REFINES air_stream_heat_exchanger;
+	cd_cold.component :== 'water';
+METHODS
+METHOD on_load;
+	RUN default_self;
+	FIX inlet_cold.p, inlet_cold.h;
+	inlet_cold.p := 50 {bar};
+	inlet_cold.h := 200 {kJ/kg};
+	FIX inlet.p, inlet.T;
+	inlet.p := 1 {bar};
+	inlet.T := 700 {K};
+	FIX mdot, mdot_cold;
+	mdot := 1 {kg/s};
+	mdot_cold := 0.1 {kg/s};
+	FIX Qdot;
+	Qdot := 10 {kW};
+END on_load;
+END air_stream_heat_exchanger_test;
+
+MODEL combinedcycle_fprops;
+	(* define the blocks *)
+	GC IS_A compressor;
+	BU IS_A combustor;
+	GT IS_A gas_turbine;
+	HE IS_A air_stream_heat_exchanger;
+	DI IS_A dissipator;
+	TU IS_A turbine_simple;
+	CO IS_A condenser_simple;
+	PU IS_A pump_simple;
+
+	(* wire up the model *)
+	GC.outlet, BU.inlet ARE_THE_SAME;
+	BU.outlet, GT.inlet ARE_THE_SAME;
+	GT.outlet, HE.inlet ARE_THE_SAME;
+	HE.outlet, DI.inlet ARE_THE_SAME;
+	DI.outlet, GC.inlet ARE_THE_SAME;
+
+	HE.outlet_cold, TU.inlet ARE_THE_SAME;
+	TU.outlet, CO.inlet ARE_THE_SAME;
+	CO.outlet, PU.inlet ARE_THE_SAME;
+	PU.outlet, HE.inlet_cold ARE_THE_SAME;
+
+	cd_rankine ALIASES TU.inlet.cd;
+	TU.inlet.cd.component :== 'water';
+
+	Wdot, Wdot_gas, Wdot_vap IS_A energy_rate;
+	Wdot_gas = GC.Wdot + GT.Wdot;
+	Wdot_vap = TU.Wdot + PU.Wdot;
+	Wdot = Wdot_gas + Wdot_vap;
+
+	Qdot_H ALIASES BU.Qdot;
+	
+	eta IS_A fraction;
+	eta = Wdot / Qdot_H;
+
+	massflowratio IS_A factor;
+	massflowratio = TU.mdot / GT.mdot;
+
+	braytonpressureratio IS_A positive_factor;
+	braytonpressureratio * GC.inlet.p = GC.outlet.p;
+
+METHODS
+METHOD default_self;
+	RUN TU.default_self;
+	RUN PU.default_self;
+	RUN CO.default_self;
+	RUN HE.default_self;
+END default_self;
+METHOD on_load;
+	RUN default_self;
+	RUN cengel_ex_10_9;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END on_load;
+
+METHOD moran_ex_9_13;
+	RUN ClearAll;
+	FIX Wdot; Wdot := 45 {MW};
+
+	FIX GC.inlet.T, GC.inlet.p;
+	GC.inlet.T := 300 {K};
+	GC.inlet.p := 100 {kPa};
+
+	FIX GC.outlet.p;
+	GC.outlet.p := 1200 {kPa};
+
+	FIX GC.eta; GC.eta := 0.84;
+
+	FIX BU.outlet.T; BU.outlet.T := 1400 {K};
+
+	FIX GT.eta; GT.eta := 0.88;
+
+	(* GT.outlet.p := 100 {kPa};*)
+	FIX HE.outlet.T; HE.outlet.T := 400 {K};
+	
+	FIX TU.inlet.T, TU.inlet.p;
+	TU.inlet.T := 400 {K} +  273.15 {K};
+	TU.inlet.p := 8 {MPa};
+	FIX TU.outlet.p; TU.outlet.p := 8 {kPa};
+
+	FIX PU.inlet.x;
+	PU.inlet.x := 0.0001;
+
+	FIX TU.eta; TU.eta := 0.90;
+	FIX PU.eta; PU.eta := 0.8;
+
+	HE.outlet_cold.h := 3000 {kJ/kg};
+
+	(* assumed *)
+	FIX BU.eta;
+	BU.eta := 1;
+
+	(* starting guess, for easy solving *)
+	HE.outlet_cold.h := 3000 {kJ/kg};
+END moran_ex_9_13;
+
+METHOD cengel_ex_10_9;
+	RUN ClearAll;
+	FIX Wdot; Wdot := 100 {MW};
+
+	FIX GC.inlet.p; GC.inlet.p := 1 {atm}; (* assumed *)
+
+	FIX braytonpressureratio; braytonpressureratio := 8;
+
+	FIX GC.inlet.T; GC.inlet.T := 300 {K};
+	FIX GT.inlet.T; GT.inlet.T := 1300 {K};
+
+	FIX GC.eta; GC.eta := 0.8;
+	FIX GT.eta; GT.eta := 0.85;
+
+	FIX TU.inlet.p; TU.inlet.p := 7 {MPa};
+	FIX CO.outlet.p; CO.outlet.p := 5 {kPa};
+
+	FIX TU.inlet.T; TU.inlet.T := 500 {K} +  273.15 {K};
+	FIX DI.inlet.T; DI.inlet.T := 450 {K};
+
+	(* 'complete' condensation... bit of a hack *)
+	FIX CO.outlet.x; CO.outlet.x := 0.0001;
+
+	(* 'simple ideal Rankine cycle *)
+	FIX TU.eta; TU.eta := 1;
+	FIX BU.eta; BU.eta := 1;
+	FIX PU.eta; PU.eta := 1;
+
+	(* first guess, for easy solving *)
+	HE.outlet_cold.h := 3000 {kJ/kg};
+END cengel_ex_10_9;
+
+END combinedcycle;
+
+
+

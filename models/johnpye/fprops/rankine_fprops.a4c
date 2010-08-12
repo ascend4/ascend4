@@ -82,7 +82,7 @@ METHOD enable_vT;
 		calc_vT[i].included := TRUE;*)
 		calc_ph[i].included := TRUE;
 	END FOR;
-END enable_pT;
+END enable_vT;
 METHOD enable_ph;
 	FOR i IN [1..4] DO
 		calc_ph[i].included := TRUE;
@@ -769,6 +769,9 @@ MODEL rankine_regen;
 	phi ALIASES BL.phi;
 	p_bleed ALIASES TU1.outlet.p;
 
+	p_bleed_ratio IS_A fraction;
+	p_bleed_ratio * (TU1.inlet.p - TU2.outlet.p) = (TU1.outlet.p - TU2.outlet.p);
+	
 	mdot ALIASES BO.mdot;
 
 	T_H ALIASES BO.outlet.T;
