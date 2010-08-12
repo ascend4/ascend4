@@ -50,11 +50,11 @@ MODEL stream_state;
 	s IS_A specific_entropy;
 	x IS_A fraction;
 
-	calc_vT: helmholtz_phsx_vT(
+	(*calc_vT: helmholtz_phsx_vT(
 		v, T : INPUT;
 		p, h, s, x : OUTPUT;
 		cd : DATA
-	);
+	);*)
 	calc_ph: helmholtz_Tvsx_ph(
 		p, h : INPUT;
 		T, v, s, x : OUTPUT;
@@ -76,16 +76,17 @@ END default;
 METHOD default_self;
 	RUN default;
 END default_self;
-METHOD enable_pT;
+METHOD enable_vT;
 	FOR i IN [1..4] DO
-		calc_ph[i].included := FALSE;
-		calc_vT[i].included := TRUE;
+		(*calc_ph[i].included := FALSE;
+		calc_vT[i].included := TRUE;*)
+		calc_ph[i].included := TRUE;
 	END FOR;
 END enable_pT;
 METHOD enable_ph;
 	FOR i IN [1..4] DO
 		calc_ph[i].included := TRUE;
-		calc_vT[i].included := FALSE;
+		(*calc_vT[i].included := FALSE;*)
 	END FOR;
 END enable_ph;
 METHOD solve;
@@ -123,10 +124,12 @@ MODEL stream_node;
 	x ALIASES state.x;
 	mdot IS_A mass_rate;
 METHODS
+
 METHOD default_self;
 	RUN state.default_self;
 	RUN default;
 END default_self;
+
 METHOD default;
 	mdot.nominal := 2 {kg/s};
 END default;
