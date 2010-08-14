@@ -37,7 +37,7 @@ double helm_resid_deltau(double tau, double delta, const HelmholtzData *data);
 double helm_resid_deldel(double tau, double delta, const HelmholtzData *data);
 double helm_resid_tautau(double tau, double delta, const HelmholtzData *data);
 
-#if 0
+#ifdef INCLUDE_THIRD_DERIV_CODE
 double helm_resid_deldeldel(double tau, double delta, const HelmholtzData *data);
 #endif
 

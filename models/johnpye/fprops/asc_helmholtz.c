@@ -51,6 +51,37 @@ better later on, hopefully. */
 #include "hydrogen.h"
 #include "water.h"
 #include "carbondioxide.h"
+#include "methane.h"
+#include "carbonmonoxide.h"
+#include "ethanol.h"
+#include "acetone.h"
+#include "carbonylsulfide.h"
+#include "decane.h"
+#include "hydrogensulfide.h"
+#include "isohexane.h"
+#include "isopentane.h"
+#include "krypton.h"
+#include "neopentane.h"
+#include "nitrousoxide.h"
+#include "nonane.h"
+#include "sulfurdioxide.h"
+#include "toluene.h"
+#include "xenon.h"
+#include "butane.h"
+#include "butene.h"
+#include "cisbutene.h"
+#include "isobutene.h"
+#include "transbutene.h"
+#include "dimethylether.h"
+#include "ethane.h"
+#include "parahydrogen.h"
+#include "isobutane.h"
+#include "r41.h"
+#include "r116.h"
+#include "r141b.h"
+#include "r142b.h"
+#include "r218.h"
+#include "r245fa.h"
 
 #ifndef ASC_EXPORT
 # error "Where is ASC_EXPORT?"
@@ -189,7 +220,69 @@ int helmholtz_prepare(struct BBoxInterp *bbox,
 		bbox->user_data = (void*)&helmholtz_data_water;
 	}else if(strcmp(comp,"carbondioxide")==0){
 		bbox->user_data = (void*)&helmholtz_data_carbondioxide;
-	}else{
+	}else if(strcmp(comp,"methane")==0){
+		bbox->user_data = (void*)&helmholtz_data_methane;	
+	}else if(strcmp(comp,"carbonmonoxide")==0){
+		bbox->user_data = (void*)&helmholtz_data_carbonmonoxide;	
+	}else if(strcmp(comp,"ethanol")==0){
+		bbox->user_data = (void*)&helmholtz_data_ethanol;
+	}else if(strcmp(comp,"acetone")==0){
+		bbox->user_data = (void*)&helmholtz_data_acetone;
+	}else if(strcmp(comp,"carbonylsulfide")==0){
+		bbox->user_data = (void*)&helmholtz_data_carbonylsulfide;
+	}else if(strcmp(comp,"decane")==0){
+		bbox->user_data = (void*)&helmholtz_data_decane;
+	}else if(strcmp(comp,"hydrogensulfide")==0){
+		bbox->user_data = (void*)&helmholtz_data_hydrogensulfide;
+	}else if(strcmp(comp,"isohexane")==0){
+		bbox->user_data = (void*)&helmholtz_data_isohexane;
+	}else if(strcmp(comp,"isopentane")==0){
+		bbox->user_data = (void*)&helmholtz_data_isopentane;
+	}else if(strcmp(comp,"krypton")==0){
+		bbox->user_data = (void*)&helmholtz_data_krypton;
+	}else if(strcmp(comp,"neopentane")==0){
+		bbox->user_data = (void*)&helmholtz_data_neopentane;
+	}else if(strcmp(comp,"nitrousoxide")==0){
+		bbox->user_data = (void*)&helmholtz_data_nitrousoxide;	
+	}else if(strcmp(comp,"nonane")==0){
+		bbox->user_data = (void*)&helmholtz_data_nonane;	
+	}else if(strcmp(comp,"sulfurdioxide")==0){
+		bbox->user_data = (void*)&helmholtz_data_sulfurdioxide;
+	}else if(strcmp(comp,"toluene")==0){
+		bbox->user_data = (void*)&helmholtz_data_toluene;
+	}else if(strcmp(comp,"xenon")==0){
+		bbox->user_data = (void*)&helmholtz_data_xenon;
+	}else if(strcmp(comp,"butane")==0){
+		bbox->user_data = (void*)&helmholtz_data_butane;
+	}else if(strcmp(comp,"butene")==0){
+		bbox->user_data = (void*)&helmholtz_data_butene;
+	}else if(strcmp(comp,"cisbutene")==0){
+		bbox->user_data = (void*)&helmholtz_data_cisbutene;
+	}else if(strcmp(comp,"isobutene")==0){
+		bbox->user_data = (void*)&helmholtz_data_isobutene;
+	}else if(strcmp(comp,"transbutene")==0){
+		bbox->user_data = (void*)&helmholtz_data_transbutene;
+	}else if(strcmp(comp,"dimethylether")==0){
+		bbox->user_data = (void*)&helmholtz_data_dimethylether;
+	}else if(strcmp(comp,"ethane")==0){
+		bbox->user_data = (void*)&helmholtz_data_ethane;
+	}else if(strcmp(comp,"parahydrogen")==0){
+		bbox->user_data = (void*)&helmholtz_data_parahydrogen;
+	}else if(strcmp(comp,"isobutane")==0){
+		bbox->user_data = (void*)&helmholtz_data_isobutane;
+	}else if(strcmp(comp,"r41")==0){
+		bbox->user_data = (void*)&helmholtz_data_r41;
+	}else if(strcmp(comp,"r116")==0){
+		bbox->user_data = (void*)&helmholtz_data_r116;
+	}else if(strcmp(comp,"r141b")==0){
+		bbox->user_data = (void*)&helmholtz_data_r141b;
+	}else if(strcmp(comp,"r142b")==0){
+		bbox->user_data = (void*)&helmholtz_data_r142b;
+	}else if(strcmp(comp,"r218")==0){
+		bbox->user_data = (void*)&helmholtz_data_r218;
+	}else if(strcmp(comp,"r245fa")==0){
+		bbox->user_data = (void*)&helmholtz_data_r245fa;
+        }else{
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component name was not recognised. Check the source-code for for the supported species.");
 	}
 

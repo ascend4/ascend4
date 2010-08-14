@@ -25,7 +25,9 @@ srcs = ['mbwr.c','asc_mbwr.c']
 
 env.SharedLibrary('mbwr_ascend',srcs)
 
-env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methane']
+env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methane','carbonmonoxide','ethanol',
+'acetone','carbonylsulfide','decane','hydrogensulfide','isopentane','krypton',
+'neopentane','nitrousoxide','sulfurdioxide','toluene','xenon','butane','butene','cisbutene','isobutene','transbutene','dimethylether','ethane','parahydrogen','isobutane','r41','r116','r141b','r142b','r218','r245fa']
 
 coresrcs = ['ideal.c', 'helmholtz.c', 'sat.c', 'derivs.c', 'solve_ph.c']
 

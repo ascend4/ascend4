@@ -43,6 +43,8 @@
 
 #define SQ(X) ((X)*(X))
 
+#define INCLUDE_THIRD_DERIV_CODE
+
 #include "helmholtz_impl.h"
 
 /* calculate tau and delta using a macro -- is used in most functions */

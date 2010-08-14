@@ -13,7 +13,7 @@ lib = fprops_env.SharedLibrary("mbwr"
 if WhereIs('gsl-config'):
 	fprops_env.ParseConfig(['gsl-config','--libs','--cflags'])
 
-env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methane']
+env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methane','carbonmonoxide','ethanol','acetone','carbonylsulfide','decane','hydrogensulfide','isopentane','krypton','neopentane','nitrousoxide','sulfurdioxide','toluene','xenon','butane','butene','cisbutene','isobutene','transbutene','dimethylether','ethane','parahydrogen','isobutane','r41','r116','r141b','r142b','r218','r245fa']
 
 lib = fprops_env.SharedLibrary("helmholtz"
 	,['ideal.c','helmholtz.c','asc_helmholtz.c','sat.c','derivs.c','nonsolver.c','solve_ph.c']
@@ -25,4 +25,3 @@ lib = fprops_env.SharedLibrary("helmholtz"
 env['extfns'] += [lib]
 
 # vim: set syntax=python:
-
