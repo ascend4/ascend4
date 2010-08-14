@@ -203,7 +203,8 @@ METHODS
 METHOD default_self;
 	RUN combinedcycle_fprops_common::default_self;
 	(* starting guess, for easy solving *)
-	HE.outlet_cold.h := 80 {kJ/kg};
+	HE.outlet_cold.h := 400 {kJ/kg};
+	CO.outlet.h := 400 {kJ/kg};
 END default_self;
 METHOD on_load;
 	RUN ClearAll;
@@ -222,6 +223,9 @@ METHOD on_load;
 	FIX BU.outlet.T; BU.outlet.T := 1300 {K};
 	FIX TU.inlet.T; TU.inlet.T := 600 {K};
 	FIX TU.inlet.p; TU.inlet.p := 50 {bar};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
 END on_load;
 END combinedcycle_toluene;
 

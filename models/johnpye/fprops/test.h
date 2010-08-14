@@ -21,6 +21,13 @@ typedef struct{double T,p,rho,u,h,s,cv,cp,cp0,a;} TestData;
 int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td, int temp_unit);
 
 /**
+	Calculate values of 'c' and 'm' for the IdealData, based on expected values of h, s at reference
+	state.
+*/
+int helm_calc_offsets(double Tref, double rhoref, double href, double sref, const HelmholtzData *d);
+
+
+/**
 	Check 'u' values and output discrepancy for plotting.
 */
 int helm_check_u(const HelmholtzData *d, unsigned ntd, const TestData *td);
@@ -88,3 +95,4 @@ int helm_check_p_c(const HelmholtzData *d);
 	}
 
 #endif
+

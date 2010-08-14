@@ -342,8 +342,22 @@ int helm_check_dudrho_T(const HelmholtzData *d, unsigned ntd, const TestData *td
 }
 
 
+int helm_calc_offsets(double Tref, double rhoref, double href, double sref, const HelmholtzData *d){
+	double h = helmholtz_h(Tref, rhoref, d);
+	double s = helmholtz_s(Tref, rhoref, d);
 
+	fprintf(stderr,"Tref = %f\n",Tref);
+	fprintf(stderr,"rhoref = %f\n",rhoref);
+	fprintf(stderr,"--> h(Tref,rhoref) = %.14e  (wanted %.14e)\n",h, href);
+	fprintf(stderr,"--> s(Tref,rhoref) = %.14e  (wanted %.14e)\n",s, sref);
 
+	double m_new = d->ideal->m + (href - h)/d->R/d->T_star;
 
+	double c_new = d->ideal->c - (sref - s)/d->R;
 
+	fprintf(stderr,"c_new = %.20e\n",c_new);
+	fprintf(stderr,"m_new = %.20e\n",m_new);
+
+	return 0;
+}
 
