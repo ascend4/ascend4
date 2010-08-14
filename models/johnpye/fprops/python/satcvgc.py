@@ -7,11 +7,12 @@ import sys
 
 DD = [
 	helmholtz_data_water
-	, helmholtz_data_carbondioxide
-	, helmholtz_data_ammonia
-	, helmholtz_data_methane
-	, helmholtz_data_nitrogen
-	, helmholtz_data_hydrogen
+#	, helmholtz_data_carbondioxide
+#	, helmholtz_data_ammonia
+#	, helmholtz_data_methane
+#	, helmholtz_data_nitrogen
+#	, helmholtz_data_hydrogen
+	, helmholtz_data_toluene
 ## unexplained errors for these fluids:
 ## following still need T_triple data added
 ]
@@ -48,8 +49,9 @@ toterrors = 0
 totchecks = 0
 for D in DD:
 	res, pt, rhof, rhog = fprops_triple_point(D)
-	print D.name, pt, D.p_c
-	pp = linspace(pt, D.p_c, 100);
+	pc = helmholtz_p(D.T_c, D.rho_c, D)
+	print D.name, pt, pc
+	pp = linspace(pt, pc, 100);
 	firsterror = True
 	errcount = 0
 	for p in pp:

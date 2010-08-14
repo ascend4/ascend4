@@ -8,6 +8,14 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
+/*
+NOTE: aAnother EOS for toluene is
+	J. Phys. Chem. Ref. Data 18, 1565 (1989)
+	http://dx.doi.org/10.1063/1.555837
+The triple-point temperature entered below has been taken from the abstract of
+that article. -- jpye
+*/
+
 #include "toluene.h"
 
 #define TOLUENE_M 92.13842 /* kg/kmol */
@@ -43,7 +51,7 @@ const HelmholtzData helmholtz_data_toluene = {
 
     , /* T_c */ TOLUENE_TSTAR
     , /* rho_c */ 3.169*TOLUENE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 178.15
 
     , 0.2657 /* acentric factor */
     , &ideal_data_toluene
@@ -85,13 +93,6 @@ const HelmholtzData helmholtz_data_toluene = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_toluene, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_toluene, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_toluene, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_toluene, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_toluene, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_toluene, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_toluene, ntd, td);
     return helm_run_test_cases(&helmholtz_data_toluene, ntd, td, 'C');
 }
 

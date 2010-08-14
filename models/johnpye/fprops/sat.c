@@ -28,7 +28,9 @@
 #include "sat.h"
 #include "helmholtz_impl.h"
 
-#if 0
+//#define SAT_DEBUG
+
+#ifdef SAT_DEBUG 
 # include <assert.h>
 #else
 # define assert(ARGS...)
@@ -39,7 +41,9 @@
 
 #define SQ(X) ((X)*(X))
 
-#if 0
+#define THROW_FPE
+
+#ifdef THROW_FPE
 #define _GNU_SOURCE
 #include <fenv.h>
 #endif
@@ -161,12 +165,26 @@ double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
 	return D->rho_c * exp(PPP * (pow(alpha,NNN) - exp(1-alpha)));
 }
 
+/**
+	Solve saturation condition for a specified temperature.
+	@param T temperature [K]
+	@param psat_out output, saturation pressure [Pa]
+	@param rhof_out output, saturated liquid density [kg/m^3]
+	@param rhog_out output, saturated vapour density [kg/m^3]
+	@param d helmholtz data object for the fluid in question.
+	@return 0 on success, non-zero on error (eg algorithm failed to converge, T out of range, etc.)
+*/
 int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out, const HelmholtzData *d){
 	double tau = d->T_c / T;
 	double delf = 1.1 * fprops_rhof_T_rackett(T,d) / d->rho_c;
 	double delg = 0.9 * fprops_rhog_T_chouaieb(T,d) / d->rho_c;
-	//feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
-	
+#ifdef THROW_FPE
+	feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+#endif
+#ifdef SAT_DEBUG
+	fprintf(stderr,"%s: calculating for %s, T = %.12e\n",__func__,d->name,T);
+#endif
+
 	if(T < d->T_t){
 		return 1;
 	}
@@ -174,7 +192,9 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 	int i = 0;
 	while(i++ < 20){
 		assert(!__isnan(delg));
-		//fprintf(stderr,"%s: iter %d: rhof = %f, rhog = %f\n",__func__,i,delf*d->rho_c, delg*d->rho_c);
+#ifdef SAT_DEBUG
+		fprintf(stderr,"%s: iter %d: rhof = %f, rhog = %f\n",__func__,i,delf*d->rho_c, delg*d->rho_c);
+#endif
 		double phirf = helm_resid(tau,delf,d);
 		double phirf_d = helm_resid_del(tau,delf,d);
 		double phirf_dd = helm_resid_deldel(tau,delf,d);
@@ -221,6 +241,8 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 			*psat_out = helmholtz_p_raw(T, *rhog_out, d);
 			return 0;
 		}
+		if(delg < 0)delg = -0.5*delg;
+		if(delf < 0)delf = -0.5*delf;
 		//if(delg > 1)delg = 1.001;
 		//if(delf > 1)delf = 0.999;
 
