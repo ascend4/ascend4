@@ -79,7 +79,8 @@ METHOD on_load;
 END on_load;
 END air_stream_heat_exchanger_test;
 
-MODEL combinedcycle_fprops;
+
+MODEL combinedcycle_fprops_common;
 	(* define the blocks *)
 	GC IS_A compressor;
 	BU IS_A combustor;
@@ -103,7 +104,6 @@ MODEL combinedcycle_fprops;
 	PU.outlet, HE.inlet_cold ARE_THE_SAME;
 
 	cd_rankine ALIASES TU.inlet.cd;
-	TU.inlet.cd.component :== 'water';
 
 	Wdot, Wdot_gas, Wdot_vap IS_A energy_rate;
 	Wdot_gas = GC.Wdot + GT.Wdot;
@@ -128,6 +128,76 @@ METHOD default_self;
 	RUN CO.default_self;
 	RUN HE.default_self;
 END default_self;
+METHOD specify;
+	(* these values should be independent of the fluid we choose to use *)
+	FIX GC.eta; GC.eta := 0.84;
+	FIX GT.eta; GT.eta := 0.88;
+	FIX TU.eta; TU.eta := 0.90;
+	FIX PU.eta; PU.eta := 0.8;
+	FIX CO.outlet.x; CO.outlet.x := 1e-6;
+	FIX BU.eta; BU.eta := 1;
+END specify;
+END combinedcycle_fprops_common;
+
+MODEL combinedcycle_water REFINES combinedcycle_fprops_common;
+	TU.inlet.cd.component :== 'water';
+METHODS
+METHOD default_self;
+	RUN combinedcycle_fprops_common::default_self;
+	(* starting guess, for easy solving *)
+	HE.outlet_cold.h := 3000 {kJ/kg};
+END default_self;
+METHOD on_load;
+	RUN ClearAll;
+	RUN default_self;
+	RUN combinedcycle_fprops_common::specify;
+	FIX Wdot; Wdot := 100 {MW};
+	FIX GC.inlet.T, GC.inlet.p;
+	GC.inlet.T := 300 {K};
+	GC.inlet.p := 1 {bar};
+	FIX CO.outlet.p; CO.outlet.p := 8 {kPa};
+
+	(* optimisable *)
+	FIX braytonpressureratio; braytonpressureratio := 8;
+
+	FIX HE.outlet.T; HE.outlet.T := 400 {K};
+	FIX BU.outlet.T; BU.outlet.T := 1300 {K};
+	FIX TU.inlet.T; TU.inlet.T := 600 {K};
+	FIX TU.inlet.p; TU.inlet.p := 50 {bar};
+END on_load;
+END combinedcycle_water;
+
+
+MODEL combinedcycle_co2 REFINES combinedcycle_fprops_common;
+	TU.inlet.cd.component :== 'carbondioxide';
+METHODS
+METHOD default_self;
+	RUN combinedcycle_fprops_common::default_self;
+	(* starting guess, for easy solving *)
+	HE.outlet_cold.h := 80 {kJ/kg};
+END default_self;
+METHOD on_load;
+	RUN ClearAll;
+	RUN default_self;
+	RUN combinedcycle_fprops_common::specify;
+	FIX Wdot; Wdot := 100 {MW};
+	FIX GC.inlet.T, GC.inlet.p;
+	GC.inlet.T := 300 {K};
+	GC.inlet.p := 1 {bar};
+	FIX CO.outlet.p; CO.outlet.p := 518 {kPa};
+
+	(* optimisable *)
+	FIX braytonpressureratio; braytonpressureratio := 8;
+
+	FIX HE.outlet.T; HE.outlet.T := 400 {K};
+	FIX BU.outlet.T; BU.outlet.T := 1300 {K};
+	FIX TU.inlet.T; TU.inlet.T := 600 {K};
+	FIX TU.inlet.p; TU.inlet.p := 50 {bar};
+END on_load;
+END combinedcycle_co2;
+
+MODEL combinedcycle_fprops REFINES combinedcycle_water;
+METHODS
 METHOD on_load;
 	RUN default_self;
 	RUN cengel_ex_10_9;
@@ -166,14 +236,9 @@ METHOD moran_ex_9_13;
 	FIX TU.eta; TU.eta := 0.90;
 	FIX PU.eta; PU.eta := 0.8;
 
-	HE.outlet_cold.h := 3000 {kJ/kg};
-
 	(* assumed *)
 	FIX BU.eta;
 	BU.eta := 1;
-
-	(* starting guess, for easy solving *)
-	HE.outlet_cold.h := 3000 {kJ/kg};
 END moran_ex_9_13;
 
 METHOD cengel_ex_10_9;
@@ -208,7 +273,10 @@ METHOD cengel_ex_10_9;
 	HE.outlet_cold.h := 3000 {kJ/kg};
 END cengel_ex_10_9;
 
-END combinedcycle;
+END combinedcycle_fprops;
+
+
+
 
 
 
