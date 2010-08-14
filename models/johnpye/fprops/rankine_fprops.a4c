@@ -112,6 +112,21 @@ METHOD on_load;
 END on_load;
 END	stream_state_test;
 
+
+MODEL stream_state_test_co2 REFINES stream_state;
+	cd.component :== 'carbondioxide';
+METHODS
+METHOD on_load;
+	RUN default_all;
+	FIX p, x;
+	p := 8 {kPa};
+	x := 1e-6;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END on_load;
+END stream_state_test_co2;
+
+
 (* a simple connector that includes calculation of steam properties *)
 MODEL stream_node;
 	state IS_A stream_state;
