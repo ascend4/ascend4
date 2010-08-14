@@ -10,7 +10,7 @@ http://dx.doi.org/10.1021/je050186n
 */
 
 /*
-NOTE: aAnother EOS for toluene is
+NOTE: Another EOS for toluene is
 	J. Phys. Chem. Ref. Data 18, 1565 (1989)
 	http://dx.doi.org/10.1063/1.555837
 The triple-point temperature entered below has been taken from the abstract of
@@ -25,8 +25,15 @@ that article. -- jpye
 
 
 const IdealData ideal_data_toluene = {
+#ifdef TEST
     3.5241174832 /* constant */
     , 1.1360823464 /* linear */
+#else
+	/* these values have been selected to give zero enthalpy and zero
+	entropy at the triple point for this fluid, see test.c 'helm_calc_offsets'*/
+    -1.04342666628772882120e+01 /* constant */
+    , 7.59094882818676630620e+00 /* linear */
+#endif
     , TOLUENE_TSTAR /* Tstar */
     , TOLUENE_R /* cp0star */
     , 1 /* power terms */
@@ -94,6 +101,11 @@ const HelmholtzData helmholtz_data_toluene = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
+	const HelmholtzData *d = &helmholtz_data_toluene;
+	double p,rhof,rhog;
+	int res = fprops_triple_point(&p,&rhof,&rhog,d);
+	return helm_calc_offsets(d->T_t, rhof, 0, 0, d);
+
     return helm_run_test_cases(&helmholtz_data_toluene, ntd, td, 'C');
 }
 
