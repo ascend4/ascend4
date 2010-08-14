@@ -6,6 +6,7 @@ LITERATURE REFERENCE
 Lemmon, E.W. and Span, R.,
 "Short Fundamental Equations of State for 20 Industrial Fluids,"
 J. Chem. Eng. Data, 51:785-850, 2006.
+http://dx.doi.org/10.1021/je050186n
 */
 
 /*

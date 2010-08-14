@@ -1,5 +1,7 @@
 %module fprops
 
+%feature("autodoc");
+
 %{
 #include "../ammonia.h"
 #include "../nitrogen.h"
@@ -99,7 +101,6 @@
 int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, const HelmholtzData *D);
 %clear double *T;
 %clear double *rho;
-
 
 %exception;
 

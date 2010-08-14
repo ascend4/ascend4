@@ -2,11 +2,16 @@ from fprops import *
 from pylab import *
 
 
-D = helmholtz_data_carbondioxide;
-p = fprops_pc(D)
-res, p, rhof, rhof = fprops_triple_point(D)
+D = helmholtz_data_toluene;
+pc = fprops_pc(D)
+res, pt, rhof, rhog = fprops_triple_point(D)
 
-print "p = %.12e" % p
+print "pt = %.12e" % pt
+print "rhof_t = %f, rhog_t = %f" % (rhof, rhog);
+
+p = 0.08e5;
+
+print "p = %f" % p
 
 res, T1, rf1, rg1 = fprops_sat_p(p,D)
 

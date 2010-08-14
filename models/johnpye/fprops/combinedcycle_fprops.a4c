@@ -196,6 +196,39 @@ METHOD on_load;
 END on_load;
 END combinedcycle_co2;
 
+
+MODEL combinedcycle_toluene REFINES combinedcycle_fprops_common;
+	TU.inlet.cd.component :== 'toluene';
+METHODS
+METHOD default_self;
+	RUN combinedcycle_fprops_common::default_self;
+	(* starting guess, for easy solving *)
+	HE.outlet_cold.h := 80 {kJ/kg};
+END default_self;
+METHOD on_load;
+	RUN ClearAll;
+	RUN default_self;
+	RUN combinedcycle_fprops_common::specify;
+	FIX Wdot; Wdot := 100 {MW};
+	FIX GC.inlet.T, GC.inlet.p;
+	GC.inlet.T := 300 {K};
+	GC.inlet.p := 1 {bar};
+	FIX CO.outlet.p; CO.outlet.p := 8 {kPa};
+
+	(* optimisable *)
+	FIX braytonpressureratio; braytonpressureratio := 8;
+
+	FIX HE.outlet.T; HE.outlet.T := 400 {K};
+	FIX BU.outlet.T; BU.outlet.T := 1300 {K};
+	FIX TU.inlet.T; TU.inlet.T := 600 {K};
+	FIX TU.inlet.p; TU.inlet.p := 50 {bar};
+END on_load;
+END combinedcycle_toluene;
+
+
+
+
+
 MODEL combinedcycle_fprops REFINES combinedcycle_water;
 METHODS
 METHOD on_load;
