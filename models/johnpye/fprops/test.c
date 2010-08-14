@@ -83,6 +83,14 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1e-3	);
 	}
 
+	fprintf(stderr,"\nTRIPLE POINT PROPERTIES\n\n");
+	double pt,rhoft,rhogt;
+	fprops_sat_T(d->T_t, &pt, &rhoft, &rhogt, d);
+	fprintf(stderr,"p_t = %.12e Pa\n", pt);
+	fprintf(stderr,"rhof_t = %.12e kg/m^3\n", rhoft);
+	fprintf(stderr,"rhog_t = %.12e kg/m^3\n\n", rhogt);
+
+
 	fprintf(stderr,"Tests completed OK (maximum error = %0.5f%%)\n",maxerr);
 	exit(0);
 }
