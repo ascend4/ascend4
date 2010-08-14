@@ -104,7 +104,7 @@ int main(void){
 	const HelmholtzData *d = &helmholtz_data_toluene;
 	double p,rhof,rhog;
 	int res = fprops_triple_point(&p,&rhof,&rhog,d);
-	return helm_calc_offsets(d->T_t, rhof, 0, 0, d);
+	helm_calc_offsets(d->T_t, rhof, 0, 0, d);
 
     return helm_run_test_cases(&helmholtz_data_toluene, ntd, td, 'C');
 }

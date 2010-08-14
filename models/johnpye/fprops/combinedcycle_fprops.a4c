@@ -33,6 +33,9 @@
 
 	Author: John Pye
 *)
+IMPORT "johnpye/extpy/extpy";
+
+IMPORT "johnpye/fprops/cycle_plot";
 
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 REQUIRE "johnpye/brayton.a4c";
@@ -137,6 +140,9 @@ METHOD specify;
 	FIX CO.outlet.x; CO.outlet.x := 1e-6;
 	FIX BU.eta; BU.eta := 1;
 END specify;
+METHOD cycle_plot;
+	EXTERNAL cycle_plot(SELF);
+END cycle_plot;
 END combinedcycle_fprops_common;
 
 MODEL combinedcycle_water REFINES combinedcycle_fprops_common;
@@ -175,6 +181,7 @@ METHOD default_self;
 	RUN combinedcycle_fprops_common::default_self;
 	(* starting guess, for easy solving *)
 	HE.outlet_cold.h := 80 {kJ/kg};
+	CO.outlet.h := 80 {kJ/kg};
 END default_self;
 METHOD on_load;
 	RUN ClearAll;
@@ -193,6 +200,9 @@ METHOD on_load;
 	FIX BU.outlet.T; BU.outlet.T := 1300 {K};
 	FIX TU.inlet.T; TU.inlet.T := 600 {K};
 	FIX TU.inlet.p; TU.inlet.p := 50 {bar};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
 END on_load;
 END combinedcycle_co2;
 
