@@ -52,3 +52,15 @@ Sim42, and other process simulators. But that is a job for later.
 John Pye
 09 Oct 2008.
 
+Let me add to what John Pye wrote - this code is experimental, we have
+added methane, CO and ethanol (and we know ethanol does not give the
+right answers) - we are checking the code and the coefficients, use them
+at your risk, if at all.
+
+HongKe Zhu, a graduate student at the Univ of ALabama Huntsville has
+been working on fprops/adding components, making some changes.
+We have not checked the results, yet.
+
+Krishnan Chittur
+February 1, 2010
+
