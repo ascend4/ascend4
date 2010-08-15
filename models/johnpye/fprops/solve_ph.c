@@ -306,7 +306,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 
 	*T = T1;
 	*rho = rho1;
-	ERRMSG("Iteration failed");
+	ERRMSG("Iteration failed for p = %.12e, h = %.12e",p,h);
 	return 999;
 
 #if 0

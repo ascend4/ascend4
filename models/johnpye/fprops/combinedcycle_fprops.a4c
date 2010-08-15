@@ -180,8 +180,8 @@ METHODS
 METHOD default_self;
 	RUN combinedcycle_fprops_common::default_self;
 	(* starting guess, for easy solving *)
-	HE.outlet_cold.h := 80 {kJ/kg};
-	CO.outlet.h := 80 {kJ/kg};
+	HE.outlet_cold.h := 200 {kJ/kg};
+	CO.outlet.h := 200 {kJ/kg};
 END default_self;
 METHOD on_load;
 	RUN ClearAll;
@@ -191,7 +191,7 @@ METHOD on_load;
 	FIX GC.inlet.T, GC.inlet.p;
 	GC.inlet.T := 300 {K};
 	GC.inlet.p := 1 {bar};
-	FIX CO.outlet.p; CO.outlet.p := 518 {kPa};
+	FIX CO.outlet.p; CO.outlet.p := 5.2 {bar};
 
 	(* optimisable *)
 	FIX braytonpressureratio; braytonpressureratio := 8;

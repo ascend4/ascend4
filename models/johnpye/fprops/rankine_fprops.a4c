@@ -64,7 +64,15 @@ METHODS
 METHOD default;
 	p := 10{bar};
 	p.nominal := 42 {bar};
-	h := 2000 {kJ/kg};
+	IF cd.component == 'water' THEN
+		h := 2000 {kJ/kg};
+	ELSE 
+		IF cd.component == 'carbondioxide' THEN
+			h := 350 {kJ/kg};
+		ELSE
+			h := 350 {kJ/kg};
+		END IF;
+	END IF;
 
 	T := 400 {K};
 	v.nominal := 10 {L/kg};
@@ -118,8 +126,9 @@ MODEL stream_state_test_co2 REFINES stream_state;
 METHODS
 METHOD on_load;
 	RUN default_all;
+	h := 350 {kJ/kg};
 	FIX p, x;
-	p := 8 {kPa};
+	p := 9 {kPa};
 	x := 1e-6;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';

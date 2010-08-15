@@ -46,6 +46,9 @@
 #ifdef THROW_FPE
 #define _GNU_SOURCE
 #include <fenv.h>
+int feenableexcept (int excepts);
+int fedisableexcept (int excepts);
+int fegetexcept (void);
 #endif
 
 #ifdef SAT_DEBUG
@@ -53,6 +56,7 @@
 #else
 # define MSG(ARGS...)
 #endif
+#define ERRMSG(STR,...) fprintf(stderr,"%s:%d: ERROR: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 
 /**
 	Estimate of saturation pressure using H W Xiang ''The new simple extended
@@ -373,7 +377,7 @@ int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out
 /**
 	Calculate Tsat based on a value of hf. This value is useful in setting
 	first guess Temperatures when solving for the coordinates (p,h).
-	Secant method.
+	This function uses the secant method for the iterative solution.
 */
 int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
 	double T1 = 0.4 * d->T_t + 0.6 * d->T_c;
@@ -381,18 +385,23 @@ int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_ou
 	double h1, h2, p, rhof, rhog;
 	int res = fprops_sat_T(T2, &p, &rhof, &rhog, d);
 	if(res){
-		fprintf(stderr,"%s:%d: Failed to solve psat(T_t)\n",__func__,__LINE__);
+		ERRMSG("Failed to solve psat(T_t = %.12e) for %s",T2,d->name);
 		return 1;
 	}
 	double tol = 1e-6;
 	h2 = helmholtz_h(T2,rhof,d);
+	if(hf < h2){
+		ERRMSG("Value given for hf = %.12e is below that calculated for triple point liquid hf_t = %.12e",hf,h2);
+		return 2;
+	}
+
 	int i = 0;
-	while(i++ < 40){
-		assert(T1 >= d->T_t);
+	while(i++ < 60){
+		assert(T1 >= d->T_t - 1e-4);
 		assert(T1 <= d->T_c);
 		res = fprops_sat_T(T1, &p, &rhof, &rhog, d);
 		if(res){
-			fprintf(stderr,"%s:%d: Failed to solve psat(T = %.12e)\n",__func__,__LINE__,T1);
+			ERRMSG("Failed to solve psat(T = %.12e) for %s",T1,d->name);
 			return 1;
 		}
 		h1 = helmholtz_h(T1,rhof, d);
@@ -403,13 +412,17 @@ int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_ou
 			*rhog_out = rhog;
 			return 0;
 		}
+		if(h1 == h2){
+			MSG("With %s, got h1 = h2 = %.12e, but hf = %.12e!",d->name,h1,hf);
+			return 2;
+		}
 
 		double delta_T = -(h1 - hf) * (T1 - T2) / (h1 - h2);
 		T2 = T1;
 		h2 = h1;
 		while(T1 + delta_T > d->T_c)delta_T *= 0.5;
-		while(T1 + delta_T < d->T_t)delta_T *= 0.5;
 		T1 += delta_T;
+		if(T1 < d->T_t)T1 = d->T_t;
 		if(i==20 || i==30)tol*=100;
 	}
 	fprintf(stderr,"Failed to solve Tsat for hf = %f (got to T = %f)\n",hf,T1);

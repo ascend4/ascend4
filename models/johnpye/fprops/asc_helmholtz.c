@@ -515,14 +515,51 @@ int helmholtz_Tvsx_ph_calc(struct BBoxInterp *bbox,
 		outputs[3] = x;
 		return 0;
 	}
-	
+
 	p = inputs[0];
 	h = inputs[1];
+
+	double hft, pt, rhoft,rhogt;
+	res = fprops_triple_point(&pt,&rhoft,&rhogt,helmholtz_data);
+	if(res){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve triple point for %s.",helmholtz_data->name);
+		return 5;
+	}
+	hft = helmholtz_h(helmholtz_data->T_t, rhoft, helmholtz_data);
+	if(h < hft){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR
+			,"Input enthalpy %f kJ/kg is below triple point liquid enthalpy %f kJ/kg"
+			,h/1e3,hft/1e3
+		);
+		return 6;
+	}
+	
+	if(p < pt){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR
+			,"Input pressure %f bar is below triple point pressure %f bar"
+			,p/1e5,pt/1e5
+		);
+		outputs[0] = helmholtz_data->T_t;
+		outputs[1] = 1./ rhoft;
+		outputs[2] = helmholtz_s_raw(helmholtz_data->T_t, rhoft, helmholtz_data);
+		outputs[3] = 0;
+		return 6;
+	}
 
 	if(p < fprops_pc(helmholtz_data)){
 		double T_sat, rho_f, rho_g;
 		res = fprops_sat_p(p, &T_sat, &rho_f, &rho_g, helmholtz_data);
-		if(res)return 1;
+		if(res){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR
+				, "Failed to solve saturation state of %s for p = %f bar < pc (= %f bar)"
+				, helmholtz_data->name, p/1e5,fprops_pc(helmholtz_data)/1e5
+			);
+			outputs[0] = helmholtz_data->T_t;
+			outputs[1] = 1./rhoft;
+			outputs[2] = helmholtz_s_raw(helmholtz_data->T_t, rhoft, helmholtz_data);
+			outputs[3] = 0;
+			return 1;
+		}
 		double hf = helmholtz_h(T_sat,rho_f, helmholtz_data);
 		double hg = helmholtz_h(T_sat,rho_g, helmholtz_data);
 
@@ -541,6 +578,7 @@ int helmholtz_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			outputs[1] = v;
 			outputs[2] = s;
 			outputs[3] = x;
+			ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Saturated state, p=%f bar, h = %f kJ/kg",p/1e5,h/1e3);
 			return 0;
 		}
 	}
@@ -556,6 +594,7 @@ int helmholtz_Tvsx_ph_calc(struct BBoxInterp *bbox,
 	outputs[1] = v;
 	outputs[2] = s;
 	outputs[3] = x;
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Non-saturated state, p = %f bar, h = %f kJ/kg",p/1e5,h/1e3);
 	return res;
 }
 
