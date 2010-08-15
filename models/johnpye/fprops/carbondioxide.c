@@ -49,6 +49,14 @@
 const IdealData ideal_data_carbondioxide = {
 	-1.1571354956e+003/CARBONDIOXIDE_R /* constant, adjust to solve s */
 	, 2.9392750129e+005/CARBONDIOXIDE_TC/CARBONDIOXIDE_R /* linear, adjust to solver h */
+#if 0
+	/* The following values have been selected to give zero enthalpy and zero
+	entropy at the triple point for this fluid, see test.c 'helm_calc_offsets'.
+	However these changes are now disabled, because enthalpy never goes negative 
+	for	this species. */
+	-3.36545655935087095756
+	, 3.72263567031386832795
+#endif
 	, CARBONDIOXIDE_TC /* Tstar / [K] */
 	, CARBONDIOXIDE_R /* cpstar / [J/kgK] */
 	, 1 /* power terms */
@@ -162,6 +170,10 @@ int main(void){
 
 	d = &helmholtz_data_carbondioxide;
 	double maxerr = 0;
+
+	double rhof,rhog;
+	int res = fprops_triple_point(&p,&rhof,&rhog,d);
+	helm_calc_offsets(d->T_t, rhof, 0, 0, d);
 
 	n = ntd;
 

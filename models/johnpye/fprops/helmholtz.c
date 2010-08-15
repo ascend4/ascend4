@@ -901,8 +901,10 @@ double helm_resid_deltau(double tau,double delta,const HelmholtzData *data){
 				res += sum * exp(-dell);
 			}
 			sum = 0;
-			dell = ipow(delta,pt->l);
-			ldell = pt->l*dell;
+			if(i+1<n){
+				dell = ipow(delta,pt->l);
+				ldell = pt->l*dell;
+			}
 		}
 	}
 
@@ -1119,8 +1121,10 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 			fprintf(stderr,"i = %d, res = %f\n",i,res);
 #endif
 			sum = 0;
-			dell = ipow(delta,pt->l);
-			ldell = pt->l*dell;
+			if(i+1<n){
+				dell = ipow(delta,pt->l);
+				ldell = pt->l*dell;
+			}
 		}
 	}
 

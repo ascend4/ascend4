@@ -2,24 +2,10 @@ from fprops import *
 from pylab import *
 import sys
 
-D = helmholtz_data_water;
+D = helmholtz_data_carbondioxide;
 
-v = 1.005714e-03
-T = 3.298951e+02
-#rho = 1./v
-
-#T = 3.092641655172e+02
-#rho = 9.997925200316e+02
-#T = 3.024735758794e+02
-#rho = 9.973958154879e+02
-#T = 6.727273e+02
-#rho = 1./2.078561e-03
-#T = 6.636364e+02
-#rho = 1./2.609722e-03
-#T = 7.242424242424e+02
-#rho = 5.847226548308e+02
-T = 4.484887272727e+02
-rho = 2.765899020837e-03
+T = 220
+rho = 600
 
 print "T = %f, rho = %f" % (T,rho)
 p = helmholtz_p(T,rho,D)
