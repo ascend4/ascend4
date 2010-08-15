@@ -166,9 +166,10 @@ int main(void){
 	n = ntd;
 
 	/* couple of data from the publication itself */
+	fprintf(stderr,"\nTEST DATA FROM THE ORIGINAL PUBLICATION\n");
 	ASSERT_TOL(helmholtz_p, 300.000, 679.24, d, 6.7131e6, 0.0001e6);
 	ASSERT_TOL(helmholtz_p, 300.000, 268.58, d, 6.7131e6, 0.0001e6);
-	//ASSERT_TOL(helmholtz_p, 304.1282, 467.60, d, 7.3773e6, 0.0001e6);
+	ASSERT_TOL(helmholtz_p, 304.1282, 467.60, d, 7.3773e6, 0.0001e6);
 
 #if USING_CITED_REFERENCE_STATES
 	fprintf(stderr,"REFERENCE POINT CHECK\n");
@@ -192,7 +193,7 @@ int main(void){
 	exit(1);
 #endif
 
-	fprintf(stderr,"ITERATION WITH SUCCESSIVE SUBSTITUTION\n");
+	fprintf(stderr,"\nITERATION WITH SUCCESSIVE SUBSTITUTION\n");
 	double rf, rg;
 	T = 276.961793;	
 	double p_sat;

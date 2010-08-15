@@ -48,6 +48,12 @@
 #include <fenv.h>
 #endif
 
+#ifdef SAT_DEBUG
+# define MSG(STR,...) fprintf(stderr,"%s:%d: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+#else
+# define MSG(ARGS...)
+#endif
+
 /**
 	Estimate of saturation pressure using H W Xiang ''The new simple extended
 	corresponding-states principle: vapor pressure and second virial
@@ -273,6 +279,7 @@ double fprops_pc(const HelmholtzData *d){
 	Calculate the critical pressure using the T_c and rho_c values in the HelmholtzData.
 */
 int fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out, const HelmholtzData *d){
+	MSG("Startin triple point routine");
 	static const HelmholtzData *d_last = NULL;
 	static double p_t, rhof_t, rhog_t;
 	if(d == d_last){
@@ -281,6 +288,7 @@ int fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out,
 		*rhog_t_out = rhog_t;
 		return 0;
 	}
+	MSG("Calculating saturation for T = %f",d->T_t);
 	int res = fprops_sat_T(d->T_t, &p_t, &rhof_t, &rhog_t,d);
 	if(res)return res;
 	else{
@@ -337,7 +345,7 @@ int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out
 		double dpdT_sat = (hg - hf) / T1 / (1./rhog - 1./rhof);
 		//fprintf(stderr,"\t\tdpdT_sat = %f bar/K\n",dpdT_sat/1e5);
 		double delta_T = -(p1 - p)/dpdT_sat;
-		if(T1 + delta_T < d->T_t)T1 = 0.5 * (d->T_t + T1);
+		if(T1 + delta_T < d->T_t - 1e-4)T1 = 0.5 * (d->T_t + T1);
 		else T1 += delta_T;
 	}
 	*Tsat_out = T1;

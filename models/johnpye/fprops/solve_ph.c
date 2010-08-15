@@ -40,6 +40,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef FPE_DEBUG
 #define _GNU_SOURCE
 #include <fenv.h>
+int feenableexcept (int excepts);
+int fedisableexcept (int excepts);
+int fegetexcept (void);
 #endif
 
 #define SQ(X) ((X)*(X))
@@ -61,6 +64,7 @@ int fprops_region_ph(double p, double h, const HelmholtzData *D){
 	if(p >= p_c)return FPROPS_NON;
 
 	int res = fprops_sat_p(p, &Tsat, &rhof, &rhog, D);
+	if(res)return FPROPS_ERR;
 
 	double hf = helmholtz_h(Tsat, rhof, D);
 	if(h <= hf)return FPROPS_NON;
@@ -93,6 +97,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 #ifdef FPE_DEBUG
     feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 	SignalHandler *old = signal(SIGFPE,&fprops_fpe);
+	(void)old;/* not used for anything at this stage */
 	int jmpret = setjmp(mark);
 	if(jmpret==0){
 #endif
@@ -304,8 +309,10 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	ERRMSG("Iteration failed");
 	return 999;
 
+#if 0
 	int res = fprops_nonsolver('p','h',p,h,T,rho,D);
 	ERRMSG("Iteration failed in nonsolver");
 	return res;
+#endif
 }
 

@@ -129,8 +129,6 @@ double helmholtz_g(double T, double rho, const HelmholtzData *data);
 double helmholtz_alphap(double T, double rho, const HelmholtzData *data);
 double helmholtz_betap(double T, double rho, const HelmholtzData *data);
 
-//int helmholtz_sat_t(double T, double *p, double *rho_f, double *rho_g, const HelmholtzData *data);
-
 double helmholtz_cp0(double T, const HelmholtzData *data);
 
 double helmholtz_dpdT_rho(double T, double rho, const HelmholtzData *data);
