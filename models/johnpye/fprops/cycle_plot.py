@@ -11,8 +11,7 @@ try:
 except:
 	pass
 
-def sat_curve(fluid):
-	d = eval("fprops.helmholtz_data_%s" % fluid.getSymbolValue())
+def sat_curve(d):
 	Tt = d.T_t
 	Tc = d.T_c
 	TT = []
@@ -29,6 +28,25 @@ def sat_curve(fluid):
 	plot(ssf,TT,"b--")
 	plot(ssg,TT,"r--")
 
+class TSPoint:
+	def __init__(self,T,s):
+		self.T = T
+		self.s = s
+
+def write(msg):
+	extpy.getbrowser().reporter.reportNote(msg)
+
+def pconst(S1,S2,n):
+	"""Return a set of (T,s) points between two states, with pressure held constant."""
+	D = eval("fprops.helmholtz_data_%s" % S1.cd.component.getSymbolValue())	
+	out = []
+	hh = linspace(float(S1.h), float(S2.h), n)
+	for h in hh:
+		res, T, rho = fprops.fprops_solve_ph(float(S1.p), h, 0, D)
+		if not res:
+			out += [TSPoint(T,fprops.helmholtz_s(T,rho,D))]
+	return out
+
 def cycle_plot(self):
 	"""Plot the geometry of the four-bar linkage"""
 	# following is an unfortunate necessity in the current system architecture:
@@ -38,8 +56,10 @@ def cycle_plot(self):
 	ioff()
 	figure()
 
+	d = eval("fprops.helmholtz_data_%s" % self.cd_rankine.component.getSymbolValue())	
+
 	# plot gas turbine cycle
-	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.GC.inlet]
+	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.HE.inlet, self.HE.outlet, self.GC.inlet]
 	xx = []
 	yy = []
 	for S in SS:
@@ -48,9 +68,11 @@ def cycle_plot(self):
 	plot(xx,yy);
 	hold(1)
 	
-	sat_curve(self.cd_rankine.component)
+	sat_curve(d)
 
-	SS2 = [self.PU.outlet, self.HE.inlet_cold, self.HE.outlet_cold, self.TU.inlet, self.TU.outlet, self.CO.inlet, self.CO.outlet, self.PU.inlet, self.PU.outlet]
+	boiler_curve = pconst(self.HE.inlet_cold,self.HE.outlet_cold,100)
+	#boiler_curve = []
+	SS2 = [self.PU.outlet, self.HE.inlet_cold] + boiler_curve + [self.HE.outlet_cold, self.TU.inlet, self.TU.outlet, self.CO.inlet, self.CO.outlet, self.PU.inlet, self.PU.outlet]
 	xx = []
 	yy = []
 	for S in SS2:
@@ -58,6 +80,7 @@ def cycle_plot(self):
 		xx.append(float(S.s)/1.e3)
 
 	plot(xx,yy);
+	title(unicode(r"With %s bottoming cycle" % d.name))
 	ylabel(unicode(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
