@@ -53,8 +53,25 @@ MODEL air_stream_heat_exchanger REFINES air_equipment;
 	(* we don't have epsilon worked out or specified here, so the heat exchanged
 	will depend on values specified outside this model. *)
 
+	epsilon IS_A factor;
+	Cc,Ch,Cmin IS_A capacity_rate;	
+	Ch = inlet.mdot * (inlet.h - outlet.h)/(inlet.T - outlet.T);
+	Cc = inlet_cold.mdot * (inlet_cold.h - outlet_cold.h)/(inlet_cold.T - outlet_cold.T);
+	Cmin = Cc + (Cc-Ch + abs(Cc-Ch))/2.;
+
+	DThi IS_A delta_temperature;
+	DTci IS_A delta_temperature;
+	DThi = inlet.T - outlet_cold.T;
+	DTci = outlet.T - inlet_cold.T;
+
+	Qdotmax IS_A energy_rate;
+	Qdotmax = -Cmin * (inlet.T - inlet_cold.T);
+	epsilon * Qdotmax = Qdot;
+
 	Qdot IS_A energy_rate;
-	outlet.h = inlet.h + Qdot/inlet.mdot;
+	(* Strange, but the following form solves better than the obvious form, 
+	Could maybe be something to do with scaling. *)
+	outlet.h - inlet.h = Qdot/inlet.mdot;
 	outlet_cold.h = inlet_cold.h - Qdot/inlet_cold.mdot;
 METHODS
 METHOD default_self;
@@ -152,6 +169,7 @@ METHOD default_self;
 	RUN combinedcycle_fprops_common::default_self;
 	(* starting guess, for easy solving *)
 	HE.outlet_cold.h := 3000 {kJ/kg};
+	TU.inlet.h := 4000 {kJ/kg};
 END default_self;
 METHOD on_load;
 	RUN ClearAll;
