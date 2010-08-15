@@ -23,9 +23,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 #define FPE_DEBUG
-#ifdef FPE_DEBUG
+#define ASSERT_DEBUG
+
+#ifdef ASSERT_DEBUG
 # include <assert.h>
 #else
 # define assert(ARGS...)
@@ -33,8 +36,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <setjmp.h>
 #include <signal.h>
+
+#ifdef FPE_DEBUG
 #define _GNU_SOURCE
 #include <fenv.h>
+#endif
 
 #define SQ(X) ((X)*(X))
 
@@ -67,11 +73,14 @@ int fprops_region_ph(double p, double h, const HelmholtzData *D){
 
 typedef void SignalHandler(int);
 
+#ifdef FPE_DEBUG
 jmp_buf mark;
 void fprops_fpe(int sig){
+	MSG("Catching signal %d!",sig);
 	feclearexcept(FE_DIVBYZERO|FE_INVALID|FE_OVERFLOW);
 	longjmp(mark, -1);
 }
+#endif
 
 int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, const HelmholtzData *D){
 	double Tsat, rhof, rhog, hf, hg;
@@ -81,10 +90,12 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	double rhof_t;
 	double p_c = fprops_pc(D);
 
-    //feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+#ifdef FPE_DEBUG
+    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 	SignalHandler *old = signal(SIGFPE,&fprops_fpe);
 	int jmpret = setjmp(mark);
 	if(jmpret==0){
+#endif
 		
 		if(p < p_c){
 			MSG("Calculate saturation Tsat(p < p_c)");
@@ -280,10 +291,13 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 			if(T1 < D->T_t)T1 = D->T_t;
 			rho1 = rho1 + delta_rho;
 		}
+#ifdef FPE_DEBUG
 	}else{
 		/* an FPE occurred */
 		MSG("An FPE occurred");
+		abort();
 	}
+#endif
 
 	*T = T1;
 	*rho = rho1;
