@@ -191,7 +191,8 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 	fprintf(stderr,"%s: calculating for %s, T = %.12e\n",__func__,d->name,T);
 #endif
 
-	if(T < d->T_t){
+	if(T < d->T_t - 1e-8){
+		MSG("Input temperature is below triple-point temperature");
 		return 1;
 	}
 
@@ -256,7 +257,7 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 	*rhof_out = delf * d->rho_c;
 	*rhog_out = delg * d->rho_c;
 	*psat_out = helmholtz_p_raw(T, *rhog_out, d);
-	fprintf(stderr,"%s: NOT CONVERGED for '%s' with T = %e (rhof=%f, rhog=%f)\n",__func__,d->name,T,*rhof_out,*rhog_out);
+	MSG("NOT CONVERGED for '%s' with T = %e (rhof=%f, rhog=%f)\n",d->name,T,*rhof_out,*rhog_out);
 	return 1;
 
 }
@@ -279,7 +280,6 @@ double fprops_pc(const HelmholtzData *d){
 	Calculate the critical pressure using the T_c and rho_c values in the HelmholtzData.
 */
 int fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out, const HelmholtzData *d){
-	MSG("Startin triple point routine");
 	static const HelmholtzData *d_last = NULL;
 	static double p_t, rhof_t, rhog_t;
 	if(d == d_last){
@@ -309,9 +309,11 @@ int fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out,
 	@return 0 on success.
 */
 int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out, const HelmholtzData *d){
+	MSG("Calculating for %s at p = %.12e Pa",d->name,p);
 	double T1;
 	double p_c = fprops_pc(d);
 	if(fabs(p - p_c)/p_c < 1e-6){
+		MSG("Very close to critical pressure: using critical temperature without iteration.");
 		T1 = d->T_c;
 		double p1, rhof, rhog;
 		int res = fprops_sat_T(T1, &p1, &rhof, &rhog, d);
@@ -327,13 +329,21 @@ int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out
 		See Reid, Prausnitz and Poling, 4th Ed., section 2.3. 
 		*/
 		T1 = d->T_c / (1. - 3./7. / (1.+d->omega) * log10(p / p_c));
+		MSG("Estimated using acentric factor: T = %f",T1);
+		if(T1 < d->T_t){
+			T1 = d->T_t;
+			MSG("Estimate moved up to T_t = %f",T1);
+		}
 	}
 	double p1, rhof, rhog;
 	int i = 0;
 	while(i++ < 50){
 		int res = fprops_sat_T(T1, &p1, &rhof, &rhog, d);
-		if(res)return 1;
-		//fprintf(stderr,"%s: T1 = %f ——> p = %f bar\trhof = %f\trhog = %f\n",__func__, T1, p1/1e5, rhof, rhog);
+		if(res){
+			MSG("Got error %d from fprops_sat_T at T = %.12e", res,T1);
+			return 1;
+		}
+		MSG("T1 = %f ——> p = %f bar\trhof = %f\trhog = %f",T1, p1/1e5, rhof, rhog);
 		if(fabs(p1 - p) < 1e-5){
 			*Tsat_out = T1;
 			*rhof_out = rhof;
@@ -345,9 +355,13 @@ int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out
 		double dpdT_sat = (hg - hf) / T1 / (1./rhog - 1./rhof);
 		//fprintf(stderr,"\t\tdpdT_sat = %f bar/K\n",dpdT_sat/1e5);
 		double delta_T = -(p1 - p)/dpdT_sat;
-		if(T1 + delta_T < d->T_t - 1e-4)T1 = 0.5 * (d->T_t + T1);
+		if(T1 + delta_T < d->T_t - 1e-2){
+			MSG("Correcting sub-triple-point temperature guess");
+			T1 = 0.5 * (d->T_t + T1);
+		}
 		else T1 += delta_T;
 	}
+	MSG("Exceeded iteration limit, returning last guess with error code");
 	*Tsat_out = T1;
 	*rhof_out = rhof;
 	*rhog_out = rhog;

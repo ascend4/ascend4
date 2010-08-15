@@ -2,14 +2,14 @@ from fprops import *
 from pylab import *
 
 
-D = helmholtz_data_toluene;
+D = helmholtz_data_hydrogen;
 pc = fprops_pc(D)
 res, pt, rhof, rhog = fprops_triple_point(D)
 
 print "pt = %.12e" % pt
 print "rhof_t = %f, rhog_t = %f" % (rhof, rhog);
 
-p = 0.08e5;
+p = pt;
 
 print "p = %f" % p
 
