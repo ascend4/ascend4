@@ -1,7 +1,7 @@
 from fprops import *
 from pylab import *
 
-D = helmholtz_data_toluene;
+D = helmholtz_data_carbondioxide;
 T = D.T_t
 
 res, p1, rf1, rg1 = fprops_sat_T(T,D)

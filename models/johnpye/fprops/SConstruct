@@ -15,7 +15,7 @@ else:
 	)
 
 env.Append(
-	CFLAGS=['-g']
+	CFLAGS=['-g','-Wall']
 )
 
 #if WhereIs('gsl-config'):

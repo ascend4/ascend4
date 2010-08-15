@@ -39,11 +39,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+//#define RESID_DEBUG
+
+#ifdef RESID_DEBUG
+# define MSG(STR,...) fprintf(stderr,"%s:%d: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+#else
+# define MSG(ARGS...)
+#endif
+
+#define INCLUDE_THIRD_DERIV_CODE
+
 /* macros and forward decls */
 
 #define SQ(X) ((X)*(X))
-
-#define INCLUDE_THIRD_DERIV_CODE
 
 #include "helmholtz_impl.h"
 
@@ -360,168 +368,6 @@ double helmholtz_betap(double T, double rho, const HelmholtzData *data){
 	return rho*(1. + (delta*phir_d + SQ(delta)*phir_dd)/(1+delta*phir_d));
 }
 
-
-/**
-	Solve density given temperature and pressure and bounds for density,
-	used in solving the saturation curve. We use a single-variable Newton
-	method to solve for the desired pressure by iteratively adjusting density.
-
-	@param rho_l lower bound on density
-	@param rho_u upper bound on density
-	@param rho (returned) solved value of density
-	@return 0 on success (1 = didn't converge within permitted iterations)
-*/
-static int helm_find_rho_tp(double T, double p, double *rho
-		, const double rho_l, const double rho_u, const HelmholtzData *data
-){
-	double rho_1 = 0.5 *(rho_l + rho_u);
-	double p_1, dpdrho;
-	double niter = 0, maxiter = 100;
-	int res = 1; /* 1 = exceeded iterations, 0 = converged */
-
-#ifdef TEST
-	fprintf(stderr,"\nHELM_FIND_RHO_TP: rho_l = %f, rho_u = %f (v_u = %f, v_l = %f)\n", rho_l, rho_u, 1./rho_l, 1./rho_u);
-#endif
-
-#if 0 
-	double r;
-	for(r = rho_l; r <= rho_u; r += (rho_u-rho_l)/20.){
-		p_1 = helmholtz_p(T, r, data);
-		fprintf(stderr,"T = %f, rho = %f --> p = %f MPa\n",T, r, p_1/1e6);
-	}
-#endif
-
-	while(res){
-		if(++niter>maxiter)break;
-		p_1 = helmholtz_p(T, rho_1, data);
-		if(p_1 < p){
-			p_1 = 0.5*(p_1 + p);
-		}
-		//fprintf(stderr,"T = %f, rho = %f --> p = %f MPa, err = %f %%\n",T, rho_1, p_1/1e6, (p - p_1)/p *100);
-		dpdrho = helmholtz_dpdrho_T(T, rho_1, data);
-		if(dpdrho < 0){
-			if(rho_l < data->rho_star){
-				/* looking for gas solution */
-				rho_1 = 0.5*(*rho + rho_l);
-			}
-		}
-		rho_1 += (p - p_1)/dpdrho;
-		if(rho_1 > rho_u){
-			rho_1 = 0.5*(*rho + rho_u);
-			//fprintf(stderr,"UPPERBOUND ");
-		}
-		if(rho_1 < rho_l){
-			rho_1 = 0.5*(*rho + rho_l);
-			//fprintf(stderr,"LOWERBOUND ");
-		}
-		*rho = rho_1;
-
-		if(fabs((p - p_1)/p) < 1e-7){
-#ifdef TEST
-			fprintf(stderr,"Converged to p = %f MPa with rho = %f\n", p/1e6, rho_1);
-#endif
-			res = 0;
-		}
-	}
-
-	return res;
-}
-
-/**
-	Calculation of saturation conditions given temperature
-
-	@param T temperature [K]
-	@param rho_f (returned) saturated liquid density [kg/m³]
-	@param rho_g (returned) saturated gas density [kg/m³]
-	@param p pressure p_sat(T) [Pa]
-	@return 0 on success
-*/
-int helmholtz_sat_t(double T, double *p, double *rho_f, double *rho_g, const HelmholtzData *data){
-	double tau = data->T_star / T;
-
-	if(T >= data->T_star){
-#ifdef TEST
-		fprintf(stderr,"ERROR: temperature exceeds critical temperature in helmholtz_sat_t.\n");
-#endif
-		/* return some reasonable values */
-		*rho_f = data->rho_star;
-		*rho_g = data->rho_star;
-		*p = helmholtz_p(data->T_star, data->rho_star, data);
-		return 1; /* error status */
-	}
-
-	/* get a first estimate of saturation pressure using acentric factor */
-
-	/* critical pressure */
-#ifdef TEST
-	fprintf(stderr,"T_c = %f, rho_c = %f\n",data->T_star, data->rho_star);
-#endif
-	double p_c = helmholtz_p(data->T_star, data->rho_star, data);
-
-#ifdef TEST
-	fprintf(stderr,"Critical pressure = %f MPa\n",p_c/1.e6);
-	fprintf(stderr,"Acentric factor = %f\n",data->omega);	
-#endif
-
-
-	/* maybe use http://dx.doi.org/10.1016/S0009-2509(02)00017-9 for this part? */
-	/* FIXME need to cite this formula */
-	*p = p_c * pow(10.,(data->omega + 1.)*-7./3.*(tau - 1.));
-
-#ifdef TEST
-	fprintf(stderr,"Estimated p_sat(T=%f) = %f MPa\n",T,(*p)/1e6);
-#endif
-
-	if(tau < 1.01){
-		/* close to critical point: need a different approach */
-#ifdef TEST
-		fprintf(stderr,"ERROR: not implemented\n");
-#endif
-		return 1;
-	}else{
-		double niter = 0;
-		(void)niter;
-
-		int res = helm_find_rho_tp(T, *p, rho_f, data->rho_star,data->rho_star*10, data);
-		if(res){
-#ifdef TEST
-			fprintf(stderr,"ERROR: failed to solve rho_f\n");
-#endif
-		}
-
-		res = helm_find_rho_tp(T, *p, rho_g, 0.001*data->rho_star, data->rho_star, data);
-		if(res){
-#ifdef TEST
-			fprintf(stderr,"ERROR: failed to solve rho_g\n");
-#endif
-		}
-
-#ifdef TEST
-		fprintf(stderr,"p = %f MPa: rho_f = %f, rho_g = %f\n", *p, *rho_f, *rho_g);
-#endif
-
-		double LHS = *p/data->R/T*(1./(*rho_g) - 1./(*rho_f)) - log((*rho_f)/(*rho_g));
-		double delta_f = (*rho_f) / data->rho_star;
-		double delta_g = (*rho_g) / data->rho_star;
-		double RHS = helm_resid(delta_f,tau,data) - helm_resid(delta_g,tau,data);
-		
-		double err = LHS - RHS;
-		(void)err;
-
-#ifdef TEST
-		fprintf(stderr,"LHS = %f, RHS = %f, err = %f\n",LHS, RHS, err);
-#endif
-		/* away from critical point... */
-		*rho_f = data->rho_star;
-		*rho_g = data->rho_star;
-#ifdef TEST
-		fprintf(stderr,"ERROR: not implemented\n");
-		exit(1);
-#endif
-		return 1;
-	}
-}
-
 /*----------------------------------------------------------------------------
   PARTIAL DERIVATIVES
 */
@@ -665,8 +511,6 @@ static double ipow(double x, int n){
 	return t; 
 }
 
-//#define RESID_DEBUG
-
 /* maxima expressions:
 	Psi(delta) := exp(-C*(delta-1)^2 -D*(tau-1)^2);
 	theta(delta) := (1-tau) + A*((delta-1)^2)^(1/(2*beta));
@@ -750,9 +594,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 	n = data->np;
 	pt = &(data->pt[0]);
 
-#ifdef RESID_DEBUG
-		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
-#endif
+	MSG("tau=%f, del=%f",tau,delta);
 
 	/* power terms */
 	sum = 0;
@@ -763,11 +605,11 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		term = pt->a * pow(tau, pt->t) * ipow(delta, pt->d);
 		sum += term;
 #ifdef RESID_DEBUG
-		fprintf(stderr,"i = %d,               a=%e, t=%f, d=%d, term = %f, sum = %f",i,pt->a,pt->t,pt->d,term,sum);
+		fprintf(stderr,"i = %d,               a=%e, t=%f, d=%d, l=%u, term = %f, sum = %f",i,pt->a,pt->t,pt->d,pt->l,term,sum);
 		if(pt->l==0){
 			fprintf(stderr,",row=%e\n",term);
 		}else{
-			fprintf(stderr,",row=%e\n,",term*exp(-dell));
+			fprintf(stderr,",row=%e\n",term*exp(-dell));
 		}
 #endif
 		oldl = pt->l;
@@ -775,12 +617,12 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 		if(i+1==n || oldl != pt->l){
 			if(oldl == 0){
 #ifdef RESID_DEBUG
-				fprintf(stderr,"linear ");
+				fprintf(stderr,"                      linear ");
 #endif
 				res += sum;
 			}else{
 #ifdef RESID_DEBUG
-				fprintf(stderr,"exp dell=%f, exp(-dell)=%f sum=%f: ",dell,exp(-dell),sum);
+				fprintf(stderr,"                      %sEXP dell=%f, exp(-dell)=%f sum=%f: ",(i+1==n?"LAST ":""),dell,exp(-dell),sum);
 #endif
 				res += sum * exp(-dell);
 			}
@@ -788,8 +630,13 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 			fprintf(stderr,"i = %d, res = %f\n",i,res);
 #endif
 			sum = 0;
-			dell = ipow(delta,pt->l);
-			ldell = pt->l*dell;
+			if(i+1<n){
+#ifdef RESID_DEBUG
+				fprintf(stderr,"                      next delta = %.12e, l = %u\n",delta, pt->l);
+#endif
+				dell = (delta==0 ? 0 : ipow(delta,pt->l));
+				ldell = pt->l*dell;
+			}
 		}
 	}
 	assert(!__isnan(res));
@@ -870,8 +717,10 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 				res += sum * exp(-dell);
 			}
 			sum = 0;
-			dell = ipow(delta,pt->l);
-			ldell = pt->l*dell;
+			if(i+1<n){
+				dell = (delta==0 ? 0 : ipow(delta,pt->l));
+				ldell = pt->l*dell;
+			}
 		}
 	}
 
@@ -1159,8 +1008,10 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 				res += sum * exp(-dell);
 			}
 			sum = 0;
-			dell = ipow(delta,pt->l);
-			ldell = pt->l*dell;
+			if(i+1<n){
+				dell = ipow(delta,pt->l);
+				ldell = pt->l*dell;
+			}
 		}
 	}
 	if(__isnan(res)){

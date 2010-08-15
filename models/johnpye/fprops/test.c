@@ -48,7 +48,7 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 		T = td[i].T+T_adj;
 		rho = td[i].rho;
 		h = td[i].h*1e3;
-	 	ASSERT_TOL(helmholtz_h, td[i].T+T_adj, td[i].rho, d, h, 1e-3*h);
+	 	ASSERT_TOL(helmholtz_h_raw, td[i].T+T_adj, td[i].rho, d, h, 1e-3*h);
 	}
 
 	/* Checking internal energy values (proves phi0_tau, phir_tau) */
@@ -68,7 +68,7 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 		T = td[i].T+T_adj;
 		rho = td[i].rho;
 		s = td[i].s*1e3;
-	 	ASSERT_TOL(helmholtz_s, T, rho, d, s, 1e-5*s);
+	 	ASSERT_TOL(helmholtz_s_raw, T, rho, d, s, 1e-5*s);
 	}
 
 
