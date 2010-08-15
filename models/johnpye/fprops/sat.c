@@ -41,7 +41,7 @@
 
 #define SQ(X) ((X)*(X))
 
-//#define THROW_FPE
+#define THROW_FPE
 
 #ifdef THROW_FPE
 #define _GNU_SOURCE

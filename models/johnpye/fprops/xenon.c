@@ -6,6 +6,14 @@ LITERATURE REFERENCE
 Lemmon, E.W. and Span, R.,
 "Short Fundamental Equations of State for 20 Industrial Fluids,"
 J. Chem. Eng. Data, 51:785-850, 2006.
+
+Triple point value below comes from 
+http://en.wikipedia.org/wiki/Xenon
+which in turn cites
+Lide, David R. (2004). "Section 4, Properties of the Elements and Inorganic Compounds; Melting, boiling, triple, and critical temperatures of the elements". CRC Handbook of Chemistry and Physics (85th edition ed.). Boca Raton, Florida: CRC Press. ISBN 0849304857.
+
+There is also a paper devoted to the properties of Xenon only:
+Sifner & Klomfar, J. Phys. Chem. Ref. Data 23, 63 (1994); doi:10.1063/1.555956
 */
 
 #include "xenon.h"
@@ -37,7 +45,7 @@ const HelmholtzData helmholtz_data_xenon = {
 
     , /* T_c */ XENON_TSTAR
     , /* rho_c */ 8.40*XENON_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 161.405
 
     , 0.00363 /* acentric factor */
     , &ideal_data_xenon

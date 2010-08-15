@@ -2,7 +2,9 @@ from fprops import *
 from pylab import *
 import sys
 
-D = helmholtz_data_water;
+D = helmholtz_data_carbondioxide;
+
+print "SOLVING TRIPLE POINT..."
 
 res, p_t, rhof_t, rhog_t = fprops_triple_point(D)
 if res:
