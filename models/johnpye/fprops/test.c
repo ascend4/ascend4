@@ -34,7 +34,7 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 
 	/* Checking pressure values (proves phir_delta) */
 	fprintf(stderr,"PRESSURE TESTS\n");
-	for(i=16; i<n;++i){
+	for(i=0; i<n;++i){
 		T = td[i].T+T_adj;
 		rho = td[i].rho;
 		p = td[i].p*1e6;
@@ -92,7 +92,7 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.5f%%)\n",maxerr);
-	exit(0);
+	return 0;
 }
 
 int helm_check_u(const HelmholtzData *d, unsigned ntd, const TestData *td){
@@ -346,7 +346,7 @@ int helm_calc_offsets(double Tref, double rhoref, double href, double sref, cons
 	double h = helmholtz_h(Tref, rhoref, d);
 	double s = helmholtz_s(Tref, rhoref, d);
 
-	fprintf(stderr,"\nH,S REFERENCE STATE CALCULATE\n\n");
+	fprintf(stderr,"\nH,S REFERENCE STATE CALCULATION\n\n");
 
 	fprintf(stderr,"Tref = %f\n",Tref);
 	fprintf(stderr,"rhoref = %f\n",rhoref);
@@ -360,6 +360,46 @@ int helm_calc_offsets(double Tref, double rhoref, double href, double sref, cons
 	fprintf(stderr,"c_new = %.20e\n",c_new);
 	fprintf(stderr,"m_new = %.20e\n\n",m_new);
 
+	return 0;
+}
+
+
+
+int helm_run_saturation_tests(const HelmholtzData *d, unsigned nsd, const TestDataSat *td, int temp_unit){
+
+	double T, p, rhof, rhog, hf, hg, sf, sg, T_adj = 0;
+	if(temp_unit=='C')T_adj = 273.15;
+
+	double err, maxerr = 0;
+	double se = 0, sse = 0;
+
+	unsigned i;
+	const unsigned n = nsd;
+
+	fprintf(stderr,"\nSATURATION TESTS\n\n");
+
+	fprintf(stderr,"Running through %d saturation-region points...\n",n);
+	double tol = 1e5;
+	for(i=0; i<n;++i){
+		T = td[i].T+T_adj;
+		int res = fprops_sat_T(T, &p, &rhof, &rhog, d);
+		double p_tab = td[i].p*1e6;
+		ASSERT_TOL_VAL(p,p_tab,p_tab*tol);
+		double rhof_tab = td[i].rhof;
+		ASSERT_TOL_VAL(rhof,rhof_tab,rhof_tab*tol);
+		double rhog_tab = td[i].rhog;
+		ASSERT_TOL_VAL(rhog,rhog_tab,rhog_tab*tol);
+		hf = td[i].hf*1e3;
+	 	ASSERT_TOL(helmholtz_h_raw, T, rhof, d, hf, hf*tol);
+		hg = td[i].hg*1e3;
+	 	ASSERT_TOL(helmholtz_h_raw, T, rhog, d, hg, hg*tol);
+		sf = td[i].sf*1e3;
+	 	ASSERT_TOL(helmholtz_s_raw, T, rhof, d, sf, sf*tol);
+		sg = td[i].sg*1e3;
+	 	ASSERT_TOL(helmholtz_s_raw, T, rhog, d, sg, sg*tol);
+	}
+
+	fprintf(stderr,"Tests completed OK (maximum error = %0.5f%%)\n",maxerr);
 	return 0;
 }
 

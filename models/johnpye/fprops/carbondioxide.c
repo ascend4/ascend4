@@ -162,8 +162,10 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 #include <math.h>
 
 const TestData td[]; const unsigned ntd;
+const TestDataSat tds[]; const unsigned nsd;
 
 int main(void){
+	int err = 0;
 	unsigned n, i;
 	double rho, T, cp0, p, u, h, s;
 	const HelmholtzData *d;
@@ -177,43 +179,17 @@ int main(void){
 
 	n = ntd;
 
+#if 0
 	/* couple of data from the publication itself */
 	fprintf(stderr,"\nTEST DATA FROM THE ORIGINAL PUBLICATION\n");
 	ASSERT_TOL(helmholtz_p, 300.000, 679.24, d, 6.7131e6, 0.0001e6);
 	ASSERT_TOL(helmholtz_p, 300.000, 268.58, d, 6.7131e6, 0.0001e6);
 	ASSERT_TOL(helmholtz_p, 304.1282, 467.60, d, 7.3773e6, 0.0001e6);
-
-#if USING_CITED_REFERENCE_STATES
-	fprintf(stderr,"REFERENCE POINT CHECK\n");
-	/* solve rho to give p = PREF */
-	T = CARBONDIOXIDE_TREF;
-	rho = 100;
-	p = CARBONDIOXIDE_PREF;
-	double err;
-	for(i=0; i<100; ++i){
-		fprintf(stderr,"rho = %f\n", rho);
-		double dpdrho = helmholtz_dpdrho_T(T, rho, d);
-		err = helmholtz_p(T,rho,d) - CARBONDIOXIDE_PREF;
-		if(fabs(err) < 1e-6)break;
-		rho -= err/dpdrho;
-	}
-	if(fabs(err) < 1e-6){
-		fprintf(stderr,"err = %f -> T = %f, rho = %f --> p = %f bar\n", err, T, rho, helmholtz_p(T,rho,d)/1e5);
-		fprintf(stderr,"h(Tref, pref) = %.10e\n", helmholtz_h(T,rho,d));
-		fprintf(stderr,"s(Tref, pref) = %.10e\n", helmholtz_s(T,rho,d));
-	}
-	exit(1);
 #endif
 
-	fprintf(stderr,"\nITERATION WITH SUCCESSIVE SUBSTITUTION\n");
-	double rf, rg;
-	T = 276.961793;	
-	double p_sat;
-	assert(0==fprops_sat_T(T, &p_sat, &rf, &rg, d));
+	err += helm_run_test_cases(d, ntd, td, 'K');
 
-	fprintf(stderr,"p_sat(%f) = %f bar\n\n", T, p_sat / 1e5);
-
-	return helm_run_test_cases(d, ntd, td, 'K');
+	err += helm_run_saturation_tests(d, nsd,tds, 'K');
 
 	//fprintf(stderr,"Tests completed OK (maximum error = %0.2f%% (%5.2e))\n",maxerr,maxerr);
 	//exit(0);
@@ -334,5 +310,27 @@ const TestData td[] = {
 };
 
 const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+const TestDataSat tds[] = {
+{220.000000000, 0.599130449034, 1166.13976600, 15.8174202308, 86.7281613275, 431.637874913, 0.551661610209, 2.11943303560}
+,{225.000000000, 0.735085699345, 1147.67029863, 19.2614580139, 96.6069951848, 433.241718116, 0.595533960717, 2.09168828485}
+,{230.000000000, 0.892910118998, 1128.68330995, 23.2712985706, 106.572092850, 434.601580379, 0.638728115039, 2.06494327821}
+,{235.000000000, 1.07466929219, 1109.10999663, 27.9206598198, 116.642133632, 435.692844921, 0.681342254996, 2.03900485622}
+,{240.000000000, 1.28248349845, 1088.86924012, 33.2951380877, 126.838238625, 436.487084829, 0.723477640325, 2.01368116617}
+,{245.000000000, 1.51852934655, 1067.86342896, 39.4957795392, 137.184750698, 436.950713672, 0.765241410270, 1.98877595302}
+,{250.000000000, 1.78504424288, 1045.97213016, 46.6440144713, 147.710270176, 437.043880852, 0.806750080517, 1.96408452322}
+,{255.000000000, 2.08433493958, 1023.04376445, 54.8887453677, 158.448876326, 436.719124919, 0.848133350592, 1.93938922743}
+,{260.000000000, 2.41879251004, 998.886219611, 64.4170347984, 169.441814500, 435.917961605, 0.889539229596, 1.91444748769}
+,{265.000000000, 2.79091607506, 973.254484348, 75.4707735374, 180.740690422, 434.564527190, 0.931144240189, 1.88897003931}
+,{270.000000000, 3.20334736808, 945.826894738, 88.3735621676, 192.413428170, 432.556457629, 0.973172747257, 1.86259137488}
+,{275.000000000, 3.65892056097, 916.156930387, 103.576535473, 204.553973941, 429.751080646, 1.01592785008, 1.83482641991}
+,{280.000000000, 4.16073911901, 883.582774417, 121.743047087, 217.298773190, 425.940206874, 1.05984314453, 1.80499112197}
+,{285.000000000, 4.71230346489, 847.046375592, 143.922608662, 230.862798508, 420.797588823, 1.10559759742, 1.77203545818}
+,{290.000000000, 5.31772800547, 804.666392196, 171.962693055, 245.629204211, 413.754580302, 1.15440371196, 1.73414638814}
+,{295.000000000, 5.98217143562, 752.559363792, 209.723101645, 262.379125191, 403.639131176, 1.20874158295, 1.68758906086}
+,{300.000000000, 6.71307806313, 679.239165127, 268.583657474, 283.377786661, 387.080481889, 1.27587199689, 1.62154764765}
+};
+
+const unsigned nsd = sizeof(tds)/sizeof(TestDataSat);
 
 #endif

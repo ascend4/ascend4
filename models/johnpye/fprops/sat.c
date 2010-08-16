@@ -196,7 +196,7 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 #endif
 
 	if(T < d->T_t - 1e-8){
-		MSG("Input temperature is below triple-point temperature");
+		ERRMSG("Input temperature is below triple-point temperature");
 		return 1;
 	}
 
@@ -254,14 +254,11 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 		}
 		if(delg < 0)delg = -0.5*delg;
 		if(delf < 0)delf = -0.5*delf;
-		//if(delg > 1)delg = 1.001;
-		//if(delf > 1)delf = 0.999;
-
 	}
 	*rhof_out = delf * d->rho_c;
 	*rhog_out = delg * d->rho_c;
 	*psat_out = helmholtz_p_raw(T, *rhog_out, d);
-	MSG("NOT CONVERGED for '%s' with T = %e (rhof=%f, rhog=%f)\n",d->name,T,*rhof_out,*rhog_out);
+	ERRMSG("Not converged: '%s' with T = %e (rhof=%f, rhog=%f).",d->name,T,*rhof_out,*rhog_out);
 	return 1;
 
 }

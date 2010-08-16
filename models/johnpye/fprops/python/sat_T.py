@@ -1,8 +1,8 @@
 from fprops import *
 from pylab import *
 
-D = helmholtz_data_hydrogen;
-T = D.T_t
+D = helmholtz_data_carbondioxide;
+T = D.T_c - 0.0001
 
 res, p1, rf1, rg1 = fprops_sat_T(T,D)
 
