@@ -588,6 +588,8 @@ MODEL rankine_common;
 	PU.outlet, BO.inlet ARE_THE_SAME;
 
 	Qdot_loss ALIASES CO.Qdot;
+	Wdot IS_A energy_rate;
+	Wdot = TU.Wdot + PU.Wdot;
 
 	T_H ALIASES BO.outlet.T;
 	T_C ALIASES CO.outlet.T;
@@ -609,9 +611,6 @@ METHOD default_self;
 	RUN TU.default_self;
 	RUN CO.default_self;
 	RUN PU.default_self;
-	BO.outlet.h := 3000 {kJ/kg}; (* guess *)
-	TU.outlet.h := 3000 {kJ/kg}; (* guess *)
-	CO.outlet.h := 200 {kJ/kg};
 END default_self;
 METHOD cycle_plot;
 	EXTERNAL cycle_plot_rankine(SELF);
@@ -685,6 +684,12 @@ METHOD self_test;
 	ASSERT abs(TU.outlet.x - 0.7736) < 0.0005;
 	ASSERT abs(TU.w - 603.1 {btu/lbm}) < 0.7 {btu/lbm};
 END self_test;
+METHOD default_self;
+	RUN rankine_common::default_self;
+	BO.outlet.h := 3000 {kJ/kg}; (* guess *)
+	TU.outlet.h := 3000 {kJ/kg}; (* guess *)
+	CO.outlet.h := 200 {kJ/kg};
+END default_self;
 END rankine_water;
 
 MODEL rankine_co2 REFINES rankine_common;
@@ -696,11 +701,11 @@ METHOD on_load;
 	FIX BO.eta; BO.eta := 1.0;
 	FIX TU.eta; TU.eta := 1.0;
 	FIX PU.eta; PU.eta := 1.0;
-	FIX mdot; mdot := 1 {kg/s};
-	FIX CO.outlet.p; CO.outlet.p := 6 {MPa};
+	FIX Wdot; Wdot := 100 {MW};
+	FIX CO.outlet.p; CO.outlet.p := 10 {bar};
 	FIX CO.outlet.x; CO.outlet.x := 1e-6;
-	FIX PU.outlet.p; PU.outlet.p := 8.8 {MPa};
-	FIX BO.outlet.T; BO.outlet.T := 185 {K} + 273.15 {K};
+	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
+	FIX BO.outlet.T; BO.outlet.T := 300 {K} + 273.15 {K};
 
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
@@ -713,6 +718,34 @@ METHOD default_self;
 	CO.outlet.h := 350 {kJ/kg};
 END default_self;
 END rankine_co2;
+
+MODEL rankine_toluene REFINES rankine_common;
+	cd.component :== 'toluene';
+METHODS
+METHOD on_load;
+	RUN ClearAll;
+	RUN default_self;
+	FIX BO.eta; BO.eta := 1.0;
+	FIX TU.eta; TU.eta := 1.0;
+	FIX PU.eta; PU.eta := 1.0;
+	FIX Wdot; Wdot := 100 {MW};
+	FIX CO.outlet.p; CO.outlet.p := 10 {bar};
+	FIX CO.outlet.x; CO.outlet.x := 1e-6;
+	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
+	FIX BO.outlet.T; BO.outlet.T := 300 {K} + 273.15 {K};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
+END on_load;
+METHOD default_self;
+	RUN rankine_common::default_self;
+	PU.inlet.h := 400 {kJ/kg};
+	BO.outlet.h := 400 {kJ/kg};
+	CO.outlet.h := 400 {kJ/kg};
+END default_self;
+END rankine_toluene;
+
 
 
 (*------------------------------------------------------------------------------

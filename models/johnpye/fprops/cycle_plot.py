@@ -18,18 +18,13 @@ def sat_curve(d):
 	pp = []
 	ssf = []
 	ssg = []
-	sys.stderr.write("Calculating saturation curve.\n")
 	for T in linspace(Tt,Tc,100):
 		res,p,rf,rg = fprops.fprops_sat_T(T,d)
 		if not res:
 			TT.append(T - 273.15)
 			pp.append(p)
-			sys.stderr.write("s(T = %f,rf)\n" % T)
 			ssf.append(fprops.helmholtz_s_raw(T,rf,d)/1.e3)
-			sys.stderr.write("s(T = %f,rg)\n" % T)
 			ssg.append(fprops.helmholtz_s_raw(T,rg,d)/1.e3)
-			sys.stderr.write("OK\n");
-	sys.stderr.write("Plotting saturation curve.\n")
 	plot(ssf,TT,"b--")
 	plot(ssg,TT,"r--")
 
