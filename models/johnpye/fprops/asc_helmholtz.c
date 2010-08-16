@@ -19,6 +19,8 @@
 	Wrapper for helmholtz.c to allow access to the routine from ASCEND.
 */
 
+//#define ASC_HELMHOLTZ_DEBUG
+
 /* include the external function API from libascend... */
 #include <ascend/compiler/extfunc.h>
 
@@ -578,7 +580,9 @@ int helmholtz_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			outputs[1] = v;
 			outputs[2] = s;
 			outputs[3] = x;
+#ifdef ASC_HELMHOLTZ_DEBUG
 			ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Saturated state, p=%f bar, h = %f kJ/kg",p/1e5,h/1e3);
+#endif
 			return 0;
 		}
 	}
@@ -594,7 +598,9 @@ int helmholtz_Tvsx_ph_calc(struct BBoxInterp *bbox,
 	outputs[1] = v;
 	outputs[2] = s;
 	outputs[3] = x;
+#ifdef ASC_HELMHOLTZ_DEBUG
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Non-saturated state, p = %f bar, h = %f kJ/kg",p/1e5,h/1e3);
+#endif
 	return res;
 }
 
