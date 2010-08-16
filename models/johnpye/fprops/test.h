@@ -8,6 +8,8 @@
 
 typedef struct{double T,p,rho,u,h,s,cv,cp,cp0,a;} TestData;
 
+typedef struct{double T,p,rhof,rhog,hf,hg,sf,sg;} TestDataSat;
+
 /*, {Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cp, Cp0, Helmholtz}
 
 /**
@@ -19,6 +21,16 @@ typedef struct{double T,p,rho,u,h,s,cv,cp,cp0,a;} TestData;
 	@return 1 if any failures occurred.
 */
 int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td, int temp_unit);
+
+/**
+	Run tests data in the saturation region from a user-provided TestData array
+	Tolerances are specified in the code, in test.c.
+
+	@param temp_unit Set to 'C' for celsius or 'K' for Kelvin.
+
+	@return 1 if any failures occurred.
+*/
+int helm_run_saturation_tests(const HelmholtzData *d, unsigned nsd, const TestDataSat *td, int temp_unit);
 
 /**
 	Calculate values of 'c' and 'm' for the IdealData, based on expected values of h, s at reference

@@ -28,7 +28,7 @@ for D in DD:
 	firsterror = True
 	errcount = 0
 	for T in TT:
-		sys.stderr.write("%f\r" % T)
+		sys.stderr.write("%s: %f\r" % (D.name,T))
 		res, p, rhof, rhog = fprops_sat_T(T,D)
 		if res:
 			if firsterror:
@@ -56,7 +56,7 @@ for D in DD:
 	firsterror = True
 	errcount = 0
 	for p in pp:
-		sys.stderr.write("%f\r" % p)
+		sys.stderr.write("%s: %f\r" % (D.name,p))
 		res, T, rhof, rhog = fprops_sat_p(p,D)
 		if res:
 			if firsterror:

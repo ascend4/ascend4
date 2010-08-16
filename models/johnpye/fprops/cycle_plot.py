@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-import extpy
+import extpy, sys
 from solverreporter import *
 
 import sys, os, os.path
@@ -18,13 +18,18 @@ def sat_curve(d):
 	pp = []
 	ssf = []
 	ssg = []
+	sys.stderr.write("Calculating saturation curve.\n")
 	for T in linspace(Tt,Tc,100):
 		res,p,rf,rg = fprops.fprops_sat_T(T,d)
 		if not res:
 			TT.append(T - 273.15)
 			pp.append(p)
-			ssf.append(fprops.helmholtz_s(T,rf,d)/1.e3)
-			ssg.append(fprops.helmholtz_s(T,rg,d)/1.e3)
+			sys.stderr.write("s(T = %f,rf)\n" % T)
+			ssf.append(fprops.helmholtz_s_raw(T,rf,d)/1.e3)
+			sys.stderr.write("s(T = %f,rg)\n" % T)
+			ssg.append(fprops.helmholtz_s_raw(T,rg,d)/1.e3)
+			sys.stderr.write("OK\n");
+	sys.stderr.write("Plotting saturation curve.\n")
 	plot(ssf,TT,"b--")
 	plot(ssg,TT,"r--")
 
@@ -47,25 +52,26 @@ def pconst(S1,S2,n):
 			out += [TSPoint(T,fprops.helmholtz_s(T,rho,D))]
 	return out
 
-def cycle_plot(self):
-	"""Plot the geometry of the four-bar linkage"""
-	# following is an unfortunate necessity in the current system architecture:
-	import loading
-	loading.load_matplotlib(throw=True)
-
-	ioff()
-	figure()
-
-	d = eval("fprops.helmholtz_data_%s" % self.cd_rankine.component.getSymbolValue())	
-
-	# plot gas turbine cycle
-	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.HE.inlet, self.HE.outlet, self.GC.inlet]
+def plot_Ts(SS):
 	xx = []
 	yy = []
 	for S in SS:
 		yy.append(float(S.T) - 273.15)
 		xx.append(float(S.s)/1.e3)
-	plot(xx,yy);
+	plot(xx,yy)
+
+def cycle_plot(self):
+	"""Plot T-s diagram for combined-cycle gas turbine"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()
+
+	d = eval("fprops.helmholtz_data_%s" % self.cd_rankine.component.getSymbolValue())
+
+	# plot gas turbine cycle
+	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.HE.inlet, self.HE.outlet, self.GC.inlet]
+	plot_Ts(SS)
 	hold(1)
 	
 	sat_curve(d)
@@ -73,13 +79,8 @@ def cycle_plot(self):
 	boiler_curve = pconst(self.HE.inlet_cold,self.HE.outlet_cold,100)
 	#boiler_curve = []
 	SS2 = [self.PU.outlet, self.HE.inlet_cold] + boiler_curve + [self.HE.outlet_cold, self.TU.inlet, self.TU.outlet, self.CO.inlet, self.CO.outlet, self.PU.inlet, self.PU.outlet]
-	xx = []
-	yy = []
-	for S in SS2:
-		yy.append(float(S.T) - 273.15)
-		xx.append(float(S.s)/1.e3)
+	plot_Ts(SS2)
 
-	plot(xx,yy);
 	title(unicode(r"With %s bottoming cycle" % d.name))
 	ylabel(unicode(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
@@ -87,6 +88,30 @@ def cycle_plot(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
+
+def cycle_plot_rankine(self):
+	"""Plot T-s diagram for a simple Rankine cycle"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()
+	hold(1)
+	D = eval("fprops.helmholtz_data_%s" % self.cd.component.getSymbolValue())
+	sat_curve(D)
+
+	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
+	SS = [self.PU.outlet, self.BO.inlet] + boiler_curve + [self.TU.inlet, self.TU.outlet, self.CO.outlet, self.PU.outlet]
+	plot_Ts(SS)
+	title(unicode(r"Rankine cycle with %s" % d.name))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+
+
+extpy.registermethod(cycle_plot_rankine)
 
 extpy.registermethod(cycle_plot)
 #the above method can be called using "EXTERNAL fourbarplot(SELF)" in ASCEND.

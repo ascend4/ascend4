@@ -28,6 +28,8 @@ REQUIRE "johnpye/thermo_types.a4c";
 
 IMPORT "johnpye/fprops/helmholtz";
 IMPORT "sensitivity/solve";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/fprops/cycle_plot";
 
 (*------------------------------------------------------------------------------
   BACKGROUND STUFF
@@ -213,16 +215,8 @@ MODEL pump_simple REFINES stream_equipment;
 	Wdot IS_A energy_rate;
 	Wdot_eq:Wdot = mdot * w;
 
-
-	w IS_A specific_energy;
-	w_eq:w * eta = (outlet.h - inlet.h);
-
-(*
-	NOTES
-		'inline' inlet {in:}
-		'inline' outlet {out:}
-	END NOTES;
-*)
+	w IS_A negative_specific_work;
+	w_eq:w = inlet.h - outlet.h;
 METHODS
 METHOD default_self;
 	RUN inlet.default_self;
@@ -275,7 +269,7 @@ MODEL turbine_simple REFINES stream_equipment;
 	Wdot IS_A energy_rate;
 	Wedot_eq:Wdot = mdot * w;
 
-	w IS_A specific_energy;
+	w IS_A positive_specific_work;
 	w_eq:w = inlet.h - outlet.h;
 METHODS
 METHOD default_self;
@@ -580,15 +574,13 @@ END tee;
 (*
 	simplest possible rankine cycle
 *)
-MODEL rankine_fprops;
+MODEL rankine_common;
 
 	BO IS_A boiler_simple;
 	TU IS_A turbine_simple;
 	CO IS_A condenser_simple;
 	PU IS_A pump_simple;
-
 	cd ALIASES BO.cd;
-	cd.component :== 'water';
 
 	BO.outlet, TU.inlet ARE_THE_SAME;
 	TU.outlet, CO.inlet ARE_THE_SAME;
@@ -601,10 +593,13 @@ MODEL rankine_fprops;
 	T_C ALIASES CO.outlet.T;
 
 	eta IS_A fraction;
-	eta * (BO.Qdot_fuel - PU.Wdot) = TU.Wdot;
+	eta * (BO.Qdot_fuel) = TU.Wdot + PU.Wdot;
 
 	eta_carnot IS_A fraction;
 	eta_carnot = 1 - T_C / T_H;
+
+	DE_cycle "cycle energy balance, should be zero" IS_A energy_rate;
+	DE_cycle = BO.Qdot + CO.Qdot - TU.Wdot - PU.Wdot;
 
 	mdot ALIASES TU.mdot;
 	x_turb_out ALIASES TU.outlet.x;
@@ -614,7 +609,18 @@ METHOD default_self;
 	RUN TU.default_self;
 	RUN CO.default_self;
 	RUN PU.default_self;
+	BO.outlet.h := 3000 {kJ/kg}; (* guess *)
+	TU.outlet.h := 3000 {kJ/kg}; (* guess *)
+	CO.outlet.h := 200 {kJ/kg};
 END default_self;
+METHOD cycle_plot;
+	EXTERNAL cycle_plot_rankine(SELF);
+END cycle_plot;
+END rankine_common;
+
+MODEL rankine_water REFINES rankine_common;
+	cd.component :== 'water';
+METHODS
 (* first test case: just some plausible values *)
 METHOD specify_1;
 	RUN ClearAll;
@@ -646,7 +652,7 @@ METHOD specify;
 	FIX PU.outlet.p;
 	FIX BO.outlet.T;
 	FIX PU.inlet.p;
-	FIX PU.inlet.h;
+	FIX CO.outlet.x;
 	FIX TU.eta;
 	FIX PU.eta;
 	FIX BO.eta;
@@ -656,7 +662,7 @@ METHOD values;
 	PU.outlet.p := 2000 {psi};
 	BO.outlet.T := 1460 {R}; BO.outlet.h := 3400 {kJ/kg};
 	PU.inlet.p := 1 {psi};
-	PU.inlet.h := 69.73 {btu/lbm};
+	CO.outlet.x := 1e-6; (*PU.inlet.h := 69.73 {btu/lbm};*)
 	TU.eta := 1.0;
 	PU.eta := 1.0;
 	BO.eta := 1.0;
@@ -674,27 +680,51 @@ END on_load;
 METHOD self_test;
 	(* check the results against those from K Weston's book *)
 	(* note that we have NOT neglected pump work in this case! *)
-	ASSERT abs(eta - 0.4294) < 0.0005;
+	ASSERT abs(eta - 0.4294) < 0.0030;
 	ASSERT abs(eta_carnot - 0.6152) < 0.0005;
 	ASSERT abs(TU.outlet.x - 0.7736) < 0.0005;
 	ASSERT abs(TU.w - 603.1 {btu/lbm}) < 0.7 {btu/lbm};
 END self_test;
-END rankine_fprops;
+END rankine_water;
+
+MODEL rankine_co2 REFINES rankine_common;
+	cd.component :== 'carbondioxide';
+METHODS
+METHOD on_load;
+	RUN ClearAll;
+	RUN default_self;
+	FIX BO.eta; BO.eta := 1.0;
+	FIX TU.eta; TU.eta := 1.0;
+	FIX PU.eta; PU.eta := 1.0;
+	FIX mdot; mdot := 1 {kg/s};
+	FIX CO.outlet.p; CO.outlet.p := 6 {MPa};
+	FIX CO.outlet.x; CO.outlet.x := 1e-6;
+	FIX PU.outlet.p; PU.outlet.p := 8.8 {MPa};
+	FIX BO.outlet.T; BO.outlet.T := 185 {K} + 273.15 {K};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
+END on_load;
+METHOD default_self;
+	RUN rankine_common::default_self;
+	BO.outlet.h := 350 {kJ/kg}; (* guess *)
+	TU.outlet.h := 1000 {kJ/kg}; (* guess *)
+	CO.outlet.h := 350 {kJ/kg};
+END default_self;
+END rankine_co2;
 
 
 (*------------------------------------------------------------------------------
   REHEAT RANKINE CYCLE
 *)
-MODEL rankine_reheat;
-
+MODEL rankine_reheat_common;
 	BO1 IS_A boiler_simple;
 	BO2 IS_A boiler_simple;
 	TU1 IS_A turbine_simple;
 	TU2 IS_A turbine_simple;
 	CO IS_A condenser_simple;
 	PU IS_A pump_simple;
-
-	BO1.cd.component :== 'water';
 
 	BO1.outlet, TU1.inlet ARE_THE_SAME;
 	TU1.outlet, BO2.inlet ARE_THE_SAME;
@@ -714,11 +744,13 @@ MODEL rankine_reheat;
 	T_C ALIASES CO.outlet.T;
 
 	eta IS_A fraction;
-	eta * (BO1.Qdot_fuel + BO2.Qdot_fuel - PU.Wdot) = TU1.Wdot + TU2.Wdot;
+	eta * (BO1.Qdot_fuel + BO2.Qdot_fuel) = TU1.Wdot + TU2.Wdot + PU.Wdot;
+
+	DE_cycle IS_A energy_rate;
+	DE_cycle = BO1.Qdot + BO2.Qdot + CO.Qdot - TU1.Wdot - TU2.Wdot - PU.Wdot;
 
 	eta_carnot IS_A fraction;
 	eta_carnot = 1 - T_C / T_H;
-
 METHODS
 METHOD default_self;
 	RUN BO1.default_self;
@@ -728,49 +760,50 @@ METHOD default_self;
 	RUN CO.default_self;
 	RUN PU.default_self;
 END default_self;
+END rankine_reheat_common;
+
 (*
-	The on_load scenario reproduces the same calculation from 
-	K Weston, op. cit., Example 2.5, p. 51.
+	A model for Rankine cycle with water as the working fluid
 *)
+MODEL rankine_reheat_water REFINES rankine_reheat_common;
+	BO1.cd.component :== 'water';
+METHODS
 METHOD on_load;
-	FIX BO1.eta;
-	BO1.eta := 1.0;
-	FIX TU1.eta, TU2.eta;
-	TU1.eta := 1.0;
-	TU2.eta := 1.0;
-	FIX PU.eta;
-	PU.eta := 1.0;
-	FIX PU.inlet.p;
-	PU.inlet.p := 1 {psi};
-	FIX PU.inlet.h;
-	PU.inlet.h := 69.73 {btu/lbm};
-	FIX BO1.outlet.T;
-	BO1.outlet.T := 1460 {R};
+	RUN default_self;
+	RUN cengel_ex_10_4;
+END on_load;
+METHOD cengel_ex_10_4;
+	(* This example 10.4 from Cengel & Boles, 2011, 'Thermodynamics: An
+	Engineering Approach', 7th Ed., McGraw-Hill. *)
+	RUN ClearAll;
+	RUN default_self;
+	FIX BO1.eta; BO1.eta := 1.0;
+	FIX TU1.eta; TU1.eta := 1.0;
+	FIX TU2.eta; TU2.eta := 1.0;
+	FIX PU.eta; PU.eta := 1.0;
+
+	FIX TU1.inlet.p; TU1.inlet.p := 15 {MPa};
+	FIX TU1.inlet.T; TU1.inlet.T := (600 {K} + 273.15 {K});
+	FIX BO2.outlet.T; BO2.outlet.T := TU1.inlet.T;
+	FIX TU2.outlet.x; TU2.outlet.x := 0.896;
+	FIX CO.inlet.p; CO.inlet.p := 10 {kPa};
+	FIX CO.outlet.x; CO.outlet.x := 1e-6;
+	FIX mdot; mdot := 1 {kg/s};
+END cengel_ex_10_4;
+METHOD self_test_cengel;
+	ASSERT abs(TU2.outlet.s -7.3688 {kJ/kg/K}) < 0.0001 {kJ/kg/K};
+	ASSERT abs(TU2.outlet.h - 2335.1 {kJ/kg}) < 0.1 {kJ/kg};
+	ASSERT abs(BO2.outlet.p - 4.0 {MPa}) < 0.05 {MPa};
+	ASSERT abs(BO2.outlet.h - 3674.9 {kJ/kg}) < 0.2 {kJ/kg};
+	ASSERT abs(eta - 0.450) < 0.0005;
+END self_test_cengel;
+METHOD default_self;
+	RUN rankine_reheat_common::default_self;
 	BO1.outlet.h := 3000 {kJ/kg}; (* guess *)
 	TU1.outlet.h := 3000 {kJ/kg}; (* guess *)
-	FIX PU.outlet.p;
-	PU.outlet.p := 2000 {psi};
-	FIX mdot;
-	mdot := 900 {t/d};
-
-	(* this value here is what defines the intermediate pressure *)
-	FIX TU1.outlet.T;
-	TU1.outlet.T := 860 {R};
-
 	TU2.inlet.h := 3000 {kJ/kg}; (* guess *)
-
-	SOLVER QRSlv;
-	OPTION convopt 'RELNOM_SCALE';
-	OPTION iterationlimit 200;
-END on_load;
-METHOD self_test;
-	ASSERT abs(eta - 0.443) < 0.0005;
-	ASSERT abs(TU2.outlet.x - 0.926) < 0.0015;
-	ASSERT abs(TU1.w + TU2.w) - 763.1 {btu/lbm} < 1 {btu/lbm};
-END self_test;
-END rankine_reheat;
-
-
+END default_self;
+END rankine_reheat_water;
 
 
 (*------------------------------------------------------------------------------
@@ -833,7 +866,7 @@ MODEL rankine_regen;
 	phi_weston_eq:phi_weston * (TU1.outlet.h - PU1.outlet.h) = (PU2.inlet.h - PU1.outlet.h);
 	phi_eq:phi_weston = phi;
 
-	w_net IS_A specific_energy;
+	w_net IS_A positive_specific_work;
 	w_net_eq: TU1.mdot * w_net = TU1.mdot * (TU1.inlet.h - TU1.outlet.h) + TU2.mdot * (TU2.inlet.h - TU2.outlet.h);
 
 	q_a IS_A specific_energy;
