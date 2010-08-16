@@ -200,6 +200,13 @@ int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out
 		return 1;
 	}
 
+	if(fabs(T - d->T_c) < 1e-9){
+		*psat_out = fprops_pc(d);
+		*rhof_out = d->rho_c;
+		*rhog_out = d->rho_c;
+		return 0;
+	}
+
 	int i = 0;
 	while(i++ < 20){
 		assert(!__isnan(delg));
