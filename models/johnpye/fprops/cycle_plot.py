@@ -77,8 +77,8 @@ def cycle_plot(self):
 	sat_curve(d)
 
 	boiler_curve = pconst(self.HE.inlet_cold,self.HE.outlet_cold,100)
-	#boiler_curve = []
-	SS2 = [self.PU.outlet, self.HE.inlet_cold] + boiler_curve + [self.HE.outlet_cold, self.TU.inlet, self.TU.outlet, self.CO.inlet, self.CO.outlet, self.PU.inlet, self.PU.outlet]
+	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
+	SS2 = [self.PU.outlet, self.HE.inlet_cold] + boiler_curve + [self.HE.outlet_cold, self.TU.inlet, self.TU.outlet, self.CO.inlet] + condenser_curve + [self.CO.outlet, self.PU.inlet, self.PU.outlet]
 	plot_Ts(SS2)
 
 	title(unicode(r"With %s bottoming cycle" % d.name))
@@ -100,9 +100,10 @@ def cycle_plot_rankine(self):
 	sat_curve(D)
 
 	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
-	SS = [self.PU.outlet, self.BO.inlet] + boiler_curve + [self.TU.inlet, self.TU.outlet, self.CO.outlet, self.PU.outlet]
+	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
+	SS = [self.PU.outlet, self.BO.inlet] + boiler_curve + [self.TU.inlet, self.TU.outlet] + condenser_curve + [self.CO.outlet, self.PU.outlet]
 	plot_Ts(SS)
-	title(unicode(r"Rankine cycle with %s" % d.name))
+	title(unicode(r"Rankine cycle with %s" % D.name))
 	ylabel(unicode(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
