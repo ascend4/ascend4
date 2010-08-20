@@ -2,7 +2,7 @@ from fprops import *
 from pylab import *
 
 
-D = helmholtz_data_hydrogen;
+D = fprops_fluid('hydrogen');
 pc = fprops_pc(D)
 res, pt, rhof, rhog = fprops_triple_point(D)
 

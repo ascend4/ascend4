@@ -17,8 +17,7 @@
 	Boston, MA 02111-1307, USA.
 */
 
-#include "water.h"
-#include "sat.h"
+#include "helmholtz.h"
 
 #define WATER_R 461.51805 /* J/kg·K */
 #define WATER_TC 647.096 /* K */
@@ -139,6 +138,7 @@ const HelmholtzData helmholtz_data_water = {
 
 #ifdef TEST
 # include "test.h"
+#include "sat.h"
 /*
 	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 7.0.

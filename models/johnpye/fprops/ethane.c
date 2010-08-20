@@ -8,12 +8,11 @@ Buecker, D. and Wagner, W.
 J. Phys. Chem. Ref. Data, 35(1):205-266, 2006.
 */
 
-#include "ethane.h"
+#include "helmholtz.h"
 
 #define ETHANE_M 30.06904 /* kg/kmol */
 #define ETHANE_R (8314.472/ETHANE_M) /* J/kg/K */
 #define ETHANE_TSTAR 305.322 /* K */
-
 
 const IdealData ideal_data_ethane = {
     9.212802589 /* constant */

@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "sulfurdioxide.h"
+#include "helmholtz.h"
 
 #define SULFURDIOXIDE_M 64.0638 /* kg/kmol */
 #define SULFURDIOXIDE_R (8314.472/SULFURDIOXIDE_M) /* J/kg/K */
 #define SULFURDIOXIDE_TSTAR 430.64 /* K */
-
 
 const IdealData ideal_data_sulfurdioxide = {
     -4.5328346436 /* constant */

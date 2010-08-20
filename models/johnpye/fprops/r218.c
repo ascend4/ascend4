@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "r218.h"
+#include "helmholtz.h"
 
 #define R218_M 188.01933 /* kg/kmol */
 #define R218_R (8314.472/R218_M) /* J/kg/K */
 #define R218_TSTAR 345.02 /* K */
-
 
 const IdealData ideal_data_r218 = {
     -15.6587335175 /* constant */

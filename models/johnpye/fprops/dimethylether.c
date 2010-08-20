@@ -8,12 +8,11 @@ Ihmels, E.C. and Lemmon, E.W.
 in press, Fluid Phase Equilibria, 2007.
 */
 
-#include "dimethylether.h"
+#include "helmholtz.h"
 
 #define DIMETHYLETHER_M 46.06844 /* kg/kmol */
 #define DIMETHYLETHER_R (8314.472/DIMETHYLETHER_M) /* J/kg/K */
 #define DIMETHYLETHER_TSTAR 400.3 /* K */
-
 
 const IdealData ideal_data_dimethylether = {
     -1.928925 /* constant */

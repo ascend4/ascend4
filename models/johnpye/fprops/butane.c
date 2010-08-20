@@ -8,7 +8,7 @@ Buecker, D. and Wagner, W.,
 J. Phys. Chem. Ref. Data, 35(2):929-1019, 2006.
 */
 
-#include "butane.h"
+#include "helmholtz.h"
 
 #define BUTANE_M 58.12220 /* kg/kmol */
 #define BUTANE_R (8314.472/BUTANE_M) /* J/kg/K */

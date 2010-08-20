@@ -8,12 +8,11 @@ Setzmann, U. and Wagner, W.,
 J. Phys. Chem. Ref. Data, 20(6):1061-1151, 1991.
 */
 
-#include "methane.h"
+#include "helmholtz.h"
 
 #define METHANE_M 16.0428 /* kg/kmol */
 #define METHANE_R 518.2705 /* J/kg/K */
 #define METHANE_TSTAR 190.564 /* K */
-
 
 const IdealData ideal_data_methane = {
     9.91243972/METHANE_R /* constant, adjust to solver s */

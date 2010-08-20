@@ -20,13 +20,12 @@
 	Carbon Dioxide using the results from 
 
 	R Span & W Wagner ''A new equation of state for carbon dioxide covering the
-	fluid region from the triple-point temperature to 11100 K at pressures up 
+	fluid region from the triple-point temperature to 1100 K at pressures up 
 	to 800 MPa'', J Phys Chem Ref Data, Vol 25, No. 6, 1996.
 	http://link.aip.org/link/JPCRBU/v25/i6/p1509/s1
 */
 
-#include "carbondioxide.h"
-#include "sat.h"
+#include "helmholtz.h"
 
 //#define CARBONDIOXIDE_R 188.9241
 #define GAS_C 8314.510
@@ -147,6 +146,7 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 
 #ifdef TEST
 #include "test.h"
+#include "sat.h"
 /*
 	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 7.0.

@@ -8,12 +8,11 @@ Leachman, J.W., Jacobsen, R.T, Lemmon, E.W.,
 International Journal of Thermophysics, 2007.
 */
 
-#include "parahydrogen.h"
+#include "helmholtz.h"
 
 #define PARAHYDROGEN_M 2.01594 /* kg/kmol */
 #define PARAHYDROGEN_R (8314.472/PARAHYDROGEN_M) /* J/kg/K */
 #define PARAHYDROGEN_TSTAR 32.938 /* K */
-
 
 const IdealData ideal_data_parahydrogen = {
     -1.4485891134 /* constant */

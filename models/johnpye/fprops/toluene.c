@@ -17,12 +17,11 @@ The triple-point temperature entered below has been taken from the abstract of
 that article. -- jpye
 */
 
-#include "toluene.h"
+#include "helmholtz.h"
 
 #define TOLUENE_M 92.13842 /* kg/kmol */
 #define TOLUENE_R (8314.472/TOLUENE_M) /* J/kg/K */
 #define TOLUENE_TSTAR 591.75 /* K */
-
 
 const IdealData ideal_data_toluene = {
 #ifdef TEST

@@ -7,12 +7,11 @@ Dillon, H.E. and Penoncello, S.G., "A Fundamental Equation for Calculation of th
 Int. J. Thermophys., 25(2):321-335, 2004.
 */
 
-#include "ethanol.h"
+#include "helmholtz.h"
 
 #define ETHANOL_M 46.06904 /* kg/kmol */
 #define ETHANOL_R (8314.472/ETHANOL_M) /* J/kg/K */
 #define ETHANOL_TSTAR 513.9 /* K */
-
 
 const IdealData ideal_data_ethanol = {
     4.321903955/ETHANOL_R /* constant, adjust to solver s */

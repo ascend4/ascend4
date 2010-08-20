@@ -2,7 +2,7 @@ from fprops import *
 from pylab import *
 import sys
 
-D = helmholtz_data_carbondioxide;
+D = fprops_fluid('carbondioxide');
 
 T = 220
 rho = 600

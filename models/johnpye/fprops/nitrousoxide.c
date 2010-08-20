@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "nitrousoxide.h"
+#include "helmholtz.h"
 
 #define NITROUSOXIDE_M 44.0128 /* kg/kmol */
 #define NITROUSOXIDE_R (8314.472/NITROUSOXIDE_M) /* J/kg/K */
 #define NITROUSOXIDE_TSTAR 309.52 /* K */
-
 
 const IdealData ideal_data_nitrousoxide = {
     -4.4262736272 /* constant */

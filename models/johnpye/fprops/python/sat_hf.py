@@ -2,7 +2,7 @@ from fprops import *
 
 hf=80400
 
-D = helmholtz_data_carbondioxide;
+D = fprops_fluid("carbondioxide")
 
 print "hf = %.12e" % hf
 

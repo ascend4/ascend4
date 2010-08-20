@@ -38,7 +38,7 @@ def write(msg):
 
 def pconst(S1,S2,n):
 	"""Return a set of (T,s) points between two states, with pressure held constant."""
-	D = eval("fprops.helmholtz_data_%s" % S1.cd.component.getSymbolValue())	
+	D = fprops_fluid(S1.cd.component.getSymbolValue())	
 	out = []
 	hh = linspace(float(S1.h), float(S2.h), n)
 	for h in hh:
@@ -62,7 +62,7 @@ def cycle_plot(self):
 	ioff()
 	figure()
 
-	d = eval("fprops.helmholtz_data_%s" % self.cd_rankine.component.getSymbolValue())
+	D = fprops_fluid(self.cd_rankine.component.getSymbolValue())
 
 	# plot gas turbine cycle
 	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.HE.inlet, self.HE.outlet, self.GC.inlet]
@@ -91,7 +91,7 @@ def cycle_plot_rankine(self):
 	ioff()
 	figure()
 	hold(1)
-	D = eval("fprops.helmholtz_data_%s" % self.cd.component.getSymbolValue())
+	D = fprops_fluid(self.cd.component.getSymbolValue())
 	sat_curve(D)
 
 	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)

@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "carbonylsulfide.h"
+#include "helmholtz.h"
 
 #define CARBONYLSULFIDE_M 60.0751 /* kg/kmol */
 #define CARBONYLSULFIDE_R (8314.472/CARBONYLSULFIDE_M) /* J/kg/K */
 #define CARBONYLSULFIDE_TSTAR 378.77 /* K */
-
 
 const IdealData ideal_data_carbonylsulfide = {
     -3.6587449805 /* constant, a_1, adjust to solver s */

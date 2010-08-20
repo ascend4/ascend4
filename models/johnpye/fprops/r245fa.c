@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "r245fa.h"
+#include "helmholtz.h"
 
 #define R245FA_M 134.04794 /* kg/kmol */
 #define R245FA_R (8314.472/R245FA_M) /* J/kg/K */
 #define R245FA_TSTAR 427.16 /* K */
-
 
 const IdealData ideal_data_r245fa = {
     -13.4283638514 /* constant */
