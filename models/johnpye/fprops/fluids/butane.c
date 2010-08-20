@@ -91,7 +91,7 @@ const HelmholtzData helmholtz_data_butane = {
 
 #ifdef TEST
 
-#include "test.h"
+#include "../test.h"
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>

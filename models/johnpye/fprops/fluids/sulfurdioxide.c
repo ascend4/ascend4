@@ -74,7 +74,7 @@ const HelmholtzData helmholtz_data_sulfurdioxide = {
 
 #ifdef TEST
 
-#include "test.h"
+#include "../test.h"
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
