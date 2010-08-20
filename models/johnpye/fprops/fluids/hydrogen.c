@@ -17,7 +17,7 @@
 	Boston, MA 02111-1307, USA.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define HYDROGEN_M 2.01594
 #define HYDROGEN_R (8314.472/HYDROGEN_M)

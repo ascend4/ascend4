@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define R142B_M 100.49503 /* kg/kmol */
 #define R142B_R (8314.472/R142B_M) /* J/kg/K */

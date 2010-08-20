@@ -8,7 +8,7 @@ Buecker, D. and Wagner, W.,
 J. Phys. Chem. Ref. Data, 35(2):929-1019, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define ISOBUTANE_M 58.1222  /* kg/kmol */
 #define ISOBUTANE_R (8314.472/ISOBUTANE_M) /* J/kg/K */

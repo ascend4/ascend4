@@ -26,7 +26,7 @@ Int J Thermophysics, Vol 18, No 4, 1998.
 This is the nitrogren property correlation recommended
 by NIST in its program REFPROP 7.0. */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define NITROGEN_M 28.01348
 #define NITROGEN_R (8.31451e3/NITROGEN_M)

@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define KRYPTON_M 83.798 /* kg/kmol */
 #define KRYPTON_R (8314.472/KRYPTON_M) /* J/kg/K */

@@ -8,7 +8,7 @@ Lemmon, E.W. and Ihmels, E.C.,
 Fluid Phase Equilibria, 228-229C:173-187, 2005.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define BUTENE_M 56.10632 /* kg/kmol */
 #define BUTENE_R (8314.472/BUTENE_M) /* J/kg/K */

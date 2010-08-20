@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define CARBONMONOXIDE_M 28.0101 /* kg/kmol */
 #define CARBONMONOXIDE_R (8314.472/CARBONMONOXIDE_M) /* J/kg/K */

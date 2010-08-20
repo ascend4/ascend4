@@ -7,7 +7,7 @@ Dillon, H.E. and Penoncello, S.G., "A Fundamental Equation for Calculation of th
 Int. J. Thermophys., 25(2):321-335, 2004.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define ETHANOL_M 46.06904 /* kg/kmol */
 #define ETHANOL_R (8314.472/ETHANOL_M) /* J/kg/K */

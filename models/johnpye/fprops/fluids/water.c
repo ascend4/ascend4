@@ -17,7 +17,7 @@
 	Boston, MA 02111-1307, USA.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define WATER_R 461.51805 /* J/kg·K */
 #define WATER_TC 647.096 /* K */

@@ -228,11 +228,10 @@ double fprops_sat_dZdT_v(FPROPS_CHAR z, const StateData *S){
 
 	assert(!isnan(dzfdT));
 	assert(!isnan(dzgdT));
-	double x;
 
 	/* FIXME this is not the correct solution, this is for x const, not rho const. */
 
-	x = 1./(x/S->rhog + (1-x)/S->rhof);
+	double x = (1./S->rho - 1./S->rhof) / (1./S->rhog - 1./S->rhof);
 	res = dzfdT*(1-x) + dzgdT*x;
 	//fprintf(stderr,"(∂%c/∂T)x = %g\n",z,res);
 	return res;

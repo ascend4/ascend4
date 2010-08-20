@@ -1,0 +1,9 @@
+Import('fprops_env')
+
+fprops_env['fluids'] = Glob("*.c")
+
+fprops_env['SUBST_DICT'] = {
+	"@FLUIDSLIST@": " X \\\n\t".join(["F(%s)" % str(f)[0:-2] for f in fprops_env['fluids']])
+}
+fluidslist = fprops_env.SubstInFile('fluids_list.h.in')
+

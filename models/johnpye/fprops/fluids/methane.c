@@ -8,7 +8,7 @@ Setzmann, U. and Wagner, W.,
 J. Phys. Chem. Ref. Data, 20(6):1061-1151, 1991.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define METHANE_M 16.0428 /* kg/kmol */
 #define METHANE_R 518.2705 /* J/kg/K */

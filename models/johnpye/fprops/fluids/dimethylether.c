@@ -8,7 +8,7 @@ Ihmels, E.C. and Lemmon, E.W.
 in press, Fluid Phase Equilibria, 2007.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define DIMETHYLETHER_M 46.06844 /* kg/kmol */
 #define DIMETHYLETHER_R (8314.472/DIMETHYLETHER_M) /* J/kg/K */

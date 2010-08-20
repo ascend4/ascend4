@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define CARBONYLSULFIDE_M 60.0751 /* kg/kmol */
 #define CARBONYLSULFIDE_R (8314.472/CARBONYLSULFIDE_M) /* J/kg/K */

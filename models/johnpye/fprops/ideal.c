@@ -187,8 +187,8 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 		}else{
 			// term = -c / (t*(t+1)) * pow(Tstar_on_tau,t);
 			term = c/(t+1)*pow(Tstar_on_tau,t)/tau;
-			double coeff = c/(t+1)*pow(data->Tstar,t);
-			double powtau = pow(tau,-t-1.);
+			//double coeff = c/(t+1)*pow(data->Tstar,t);
+			//double powtau = pow(tau,-t-1.);
 			//fprintf(stderr,"\tc / tau^p = %f (t=%f, c=%.3e, p=%f)\n",term,t,coeff,-t-1.);
 		}
 #ifdef TEST

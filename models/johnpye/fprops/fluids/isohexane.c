@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define ISOHEXANE_M 86.17536 /* kg/kmol */
 #define ISOHEXANE_R (8314.472/ISOHEXANE_M) /* J/kg/K */
@@ -33,13 +33,13 @@ const IdealData ideal_data_isohexane = {
 };
 
 const HelmholtzData helmholtz_data_isohexane = {
-    /* R */ ISOHEXANE_R /* J/kg/K */
+	"isohexane"
+    , /* R */ ISOHEXANE_R /* J/kg/K */
     , /* M */ ISOHEXANE_M /* kg/kmol */
     , /* rho_star */ 2.715*ISOHEXANE_M /* kg/m3(= rho_c for this model) */
     , /* T_star */ ISOHEXANE_TSTAR /* K (= T_c for this model) */
 
     , /* T_c */ ISOHEXANE_TSTAR
-    , /* p_c */ 0
     , /* rho_c */ 2.715*ISOHEXANE_M /* kg/m3 */
     , /* p_t */ 0
 
