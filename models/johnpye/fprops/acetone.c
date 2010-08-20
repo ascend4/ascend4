@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "acetone.h"
+#include "helmholtz.h"
 
 #define ACETONE_M 58.07914 /* kg/kmol */
 #define ACETONE_R (8314.472/ACETONE_M) /* J/kg/K */
 #define ACETONE_TSTAR 508.1 /* K */
-
 
 const IdealData ideal_data_acetone = {
     -9.4883659997 /* constant, a_1, adjust to solver s */

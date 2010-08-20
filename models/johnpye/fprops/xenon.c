@@ -16,12 +16,11 @@ There is also a paper devoted to the properties of Xenon only:
 Sifner & Klomfar, J. Phys. Chem. Ref. Data 23, 63 (1994); doi:10.1063/1.555956
 */
 
-#include "xenon.h"
+#include "helmholtz.h"
 
 #define XENON_M 131.293 /* kg/kmol */
 #define XENON_R (8314.472/XENON_M) /* J/kg/K */
 #define XENON_TSTAR 289.733 /* K */
-
 
 const IdealData ideal_data_xenon = {
     -3.8227178129 /* constant */

@@ -9,12 +9,11 @@ Equations of State,"
 Fluid Phase Equilibria, 228-229C:173-187, 2005.
 */
 
-#include "isobutene.h"
+#include "helmholtz.h"
 
 #define ISOBUTENE_M 56.10632 /* kg/kmol */
 #define ISOBUTENE_R (8314.472/ISOBUTENE_M) /* J/kg/K */
 #define ISOBUTENE_TSTAR 418.09 /* K */
-
 
 const IdealData ideal_data_isobutene = {
     -0.12737888 /* constant */

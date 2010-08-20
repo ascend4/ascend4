@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "isohexane.h"
+#include "helmholtz.h"
 
 #define ISOHEXANE_M 86.17536 /* kg/kmol */
 #define ISOHEXANE_R (8314.472/ISOHEXANE_M) /* J/kg/K */
 #define ISOHEXANE_TSTAR 497.7 /* K */
-
 
 const IdealData ideal_data_isohexane = {
     6.9259123919 /* constant */

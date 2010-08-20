@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "carbonmonoxide.h"
+#include "helmholtz.h"
 
 #define CARBONMONOXIDE_M 28.0101 /* kg/kmol */
 #define CARBONMONOXIDE_R (8314.472/CARBONMONOXIDE_M) /* J/kg/K */
 #define CARBONMONOXIDE_TSTAR 132.86 /* K */
-
 
 const IdealData ideal_data_carbonmonoxide = {
     -3.3728318564 /* constant, a_1, adjust to solver s */

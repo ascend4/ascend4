@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "hydrogensulfide.h"
+#include "helmholtz.h"
 
 #define HYDROGENSULFIDE_M 34.08088 /* kg/kmol */
 #define HYDROGENSULFIDE_R (8314.472/HYDROGENSULFIDE_M) /* J/kg/K */
 #define HYDROGENSULFIDE_TSTAR 373.1 /* K */
-
 
 const IdealData ideal_data_hydrogensulfide = {
     -4.0740770957 /* constant, a_1, adjust to solver s */

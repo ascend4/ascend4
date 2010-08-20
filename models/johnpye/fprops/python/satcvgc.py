@@ -5,24 +5,14 @@ from fprops import *
 from pylab import *
 import sys
 
-DD = [
-	helmholtz_data_water
-	, helmholtz_data_toluene
-	, helmholtz_data_carbondioxide
-	, helmholtz_data_xenon
-	, helmholtz_data_ammonia
-	, helmholtz_data_methane
-	, helmholtz_data_nitrogen
-	, helmholtz_data_hydrogen
-## unexplained errors for these fluids:
-## following still need T_triple data added
-]
+testfluids = ['water','toluene','carbondioxide','xenon','ammonia','methane','nitrogen','hydrogen']
 
 print "\nfprops_sat_T test...\n"
 
 toterrors = 0
 totchecks = 0
-for D in DD:
+for f in testfluids:
+	D = fprops_fluid(f)
 	print D.name, D.T_t, D.T_c
 	TT = linspace(D.T_t, D.T_c, 1000);
 	firsterror = True
@@ -48,7 +38,8 @@ print "\nfprops_sat_p test...\n"
 
 toterrors = 0
 totchecks = 0
-for D in DD:
+for f in testfluids:
+	D = fprops_fluid(f)
 	res, pt, rhof, rhog = fprops_triple_point(D)
 	pc = helmholtz_p(D.T_c, D.rho_c, D)
 	print D.name, pt, pc

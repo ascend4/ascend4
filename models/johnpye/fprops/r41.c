@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "r41.h"
+#include "helmholtz.h"
 
 #define R41_M 34.03292 /* kg/kmol */
 #define R41_R (8314.472/R41_M) /* J/kg/K */
 #define R41_TSTAR 317.28 /* K */
-
 
 const IdealData ideal_data_r41 = {
     -4.8676441160 /* constant */

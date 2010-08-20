@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "nonane.h"
+#include "helmholtz.h"
 
 #define NONANE_M 128.2551 /* kg/kmol */
 #define NONANE_R (8314.472/NONANE_M) /* J/kg/K */
 #define NONANE_TSTAR 594.55 /* K */
-
 
 const IdealData ideal_data_nonane = {
     10.7927224829 /* constant */

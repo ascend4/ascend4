@@ -2,7 +2,10 @@
 # this ASCEND external library against an existing copy of
 # ASCEND installed on your system.
 
-env = Environment()
+env = Environment(
+	toolpath=['scons']
+	,tools = ['default','substinfile']
+)
 
 if WhereIs('ascend-config'):
 	env.ParseConfig(['ascend-config','--libs','--cppflags'])
@@ -29,7 +32,15 @@ env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methan
 'acetone','carbonylsulfide','decane','hydrogensulfide','isopentane','krypton',
 'neopentane','nitrousoxide','sulfurdioxide','toluene','xenon','butane','butene','cisbutene','isobutene','transbutene','dimethylether','ethane','parahydrogen','isobutane','r41','r116','r141b','r142b','r218','r245fa']
 
-coresrcs = ['ideal.c', 'helmholtz.c', 'sat.c', 'derivs.c', 'solve_ph.c']
+env['SUBST_DICT'] = {
+	"@FLUIDSLIST@": " X \\\n\t".join(["F(%s)" % str(f) for f in env['fluids']])
+}
+
+ascendconfig = env.SubstInFile('fluids_list.h.in')
+
+env.Depends('fluids.c','fluids_list.h')
+
+coresrcs = ['ideal.c', 'helmholtz.c', 'sat.c', 'derivs.c', 'solve_ph.c', 'fluids.c']
 
 srcs = coresrcs + ["%s.c" % f for f in env['fluids']]
 

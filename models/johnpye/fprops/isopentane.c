@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "isopentane.h"
+#include "helmholtz.h"
 
 #define ISOPENTANE_M 72.14878 /* kg/kmol */
 #define ISOPENTANE_R (8314.472/ISOPENTANE_M) /* J/kg/K */
 #define ISOPENTANE_TSTAR 460.35 /* K */
-
 
 const IdealData ideal_data_isopentane = {
     2.5822330405 /* constant */

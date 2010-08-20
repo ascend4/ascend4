@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "r116.h"
+#include "helmholtz.h"
 
 #define R116_M 138.01182 /* kg/kmol */
 #define R116_R (8314.472/R116_M) /* J/kg/K */
 #define R116_TSTAR 293.03 /* K */
-
 
 const IdealData ideal_data_r116 = {
     -10.7088650331 /* constant */

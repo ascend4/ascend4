@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "r141b.h"
+#include "helmholtz.h"
 
 #define R141B_M 116.94962 /* kg/kmol */
 #define R141B_R (8314.472/R141B_M) /* J/kg/K */
 #define R141B_TSTAR 477.5 /* K */
-
 
 const IdealData ideal_data_r141b = {
     -15.5074814985 /* constant */

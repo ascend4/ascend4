@@ -8,12 +8,11 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "neopentane.h"
+#include "helmholtz.h"
 
 #define NEOPENTANE_M 72.14878 /* kg/kmol */
 #define NEOPENTANE_R (8314.472/NEOPENTANE_M) /* J/kg/K */
 #define NEOPENTANE_TSTAR 433.74 /* K */
-
 
 const IdealData ideal_data_neopentane = {
     0.8702452614 /* constant */

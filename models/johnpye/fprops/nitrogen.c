@@ -17,8 +17,6 @@
 	Boston, MA 02111-1307, USA.
 */
 
-#include "ammonia.h"
-
 /* Property data for Nitrogen
 
 From Span, Lemmon, Jacobsen & Wagner
@@ -27,6 +25,8 @@ Int J Thermophysics, Vol 18, No 4, 1998.
 
 This is the nitrogren property correlation recommended
 by NIST in its program REFPROP 7.0. */
+
+#include "helmholtz.h"
 
 #define NITROGEN_M 28.01348
 #define NITROGEN_R (8.31451e3/NITROGEN_M)

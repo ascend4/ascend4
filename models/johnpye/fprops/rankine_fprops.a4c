@@ -702,10 +702,10 @@ METHOD on_load;
 	FIX TU.eta; TU.eta := 1.0;
 	FIX PU.eta; PU.eta := 1.0;
 	FIX Wdot; Wdot := 100 {MW};
-	FIX CO.outlet.p; CO.outlet.p := 10 {bar};
+	FIX CO.outlet.p; CO.outlet.p := 5.2 {bar};
 	FIX CO.outlet.x; CO.outlet.x := 1e-6;
 	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
-	FIX BO.outlet.T; BO.outlet.T := 300 {K} + 273.15 {K};
+	FIX BO.outlet.T; BO.outlet.T := 580 {K} + 273.15 {K};
 
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
@@ -730,13 +730,17 @@ METHOD on_load;
 	FIX PU.eta; PU.eta := 1.0;
 	FIX Wdot; Wdot := 100 {MW};
 	FIX CO.outlet.p; CO.outlet.p := 10 {bar};
-	FIX CO.outlet.x; CO.outlet.x := 1e-6;
+	FIX CO.outlet.h; CO.outlet.h := 500 {kJ/kg}; (*temporary *)
 	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
 	FIX BO.outlet.T; BO.outlet.T := 300 {K} + 273.15 {K};
 
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 	OPTION iterationlimit 200;
+
+	FREE CO.outlet.h;
+	FIX CO.outlet.x; CO.outlet.x := 1e-6;
+
 END on_load;
 METHOD default_self;
 	RUN rankine_common::default_self;

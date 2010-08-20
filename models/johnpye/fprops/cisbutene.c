@@ -9,12 +9,11 @@ Equations of State,"
 Fluid Phase Equilibria, 228-229C:173-187, 2005.
 */
 
-#include "cisbutene.h"
+#include "helmholtz.h"
 
 #define CISBUTENE_M 56.10632 /* kg/kmol */
 #define CISBUTENE_R (8314.472/CISBUTENE_M) /* J/kg/K */
 #define CISBUTENE_TSTAR 435.75 /* K */
-
 
 const IdealData ideal_data_cisbutene = {
     0.2591542 /* constant */
