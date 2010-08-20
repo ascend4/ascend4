@@ -145,8 +145,8 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 };
 
 #ifdef TEST
-#include "test.h"
-#include "sat.h"
+#include "../test.h"
+#include "../sat.h"
 /*
 	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 7.0.

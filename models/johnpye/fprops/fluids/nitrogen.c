@@ -128,7 +128,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 
 #include "ideal_impl.h"
 
-#include "test.h"
+#include "../test.h"
 #include <math.h>
 #include <stdio.h>
 #include <assert.h>
