@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define DECANE_M 142.28168 /* kg/kmol */
 #define DECANE_R (8314.472/DECANE_M) /* J/kg/K */

@@ -10,17 +10,16 @@ lib = fprops_env.SharedLibrary("mbwr"
 	,SHLIBPREFIX = env['EXTLIB_PREFIX']
 )
 
-if WhereIs('gsl-config'):
-	fprops_env.ParseConfig(['gsl-config','--libs','--cflags'])
-
-env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methane','carbonmonoxide','ethanol','acetone','carbonylsulfide','decane','hydrogensulfide','isopentane','krypton','neopentane','nitrousoxide','sulfurdioxide','toluene','xenon','butane','butene','cisbutene','isobutene','transbutene','dimethylether','ethane','parahydrogen','isobutane','r41','r116','r141b','r142b','r218','r245fa']
+fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 
 lib = fprops_env.SharedLibrary("helmholtz"
-	,['ideal.c','helmholtz.c','asc_helmholtz.c','sat.c','derivs.c','nonsolver.c','solve_ph.c']
-		+ ['%s.c' % f for f in env['fluids']]
+	,['ideal.c','helmholtz.c','asc_helmholtz.c','sat.c','derivs.c','solve_ph.c']
+		+ ['%s' % f for f in fprops_env['fluids']]
 	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 	,SHLIBPREFIX = env['EXTLIB_PREFIX']
 )
+
+fprops_env.Depends("fluids.c","fluids/fluids_list.h")
 
 env['extfns'] += [lib]
 

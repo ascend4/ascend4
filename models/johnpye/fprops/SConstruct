@@ -2,51 +2,45 @@
 # this ASCEND external library against an existing copy of
 # ASCEND installed on your system.
 
-env = Environment(
+import os.path
+
+fprops_env = Environment(
 	toolpath=['scons']
 	,tools = ['default','substinfile']
 )
 
 if WhereIs('ascend-config'):
-	env.ParseConfig(['ascend-config','--libs','--cppflags'])
+	fprops_env.ParseConfig(['ascend-config','--libs','--cppflags'])
 else:
 	print "ERROR: no ascend-config in path"
-	env.Append(
+	fprops_env.Append(
 		LIBS=["ascend"]
 		,LIBPATH=["#/../../.."]
 		,CPPPATH=["#/../../.."]
 	)
 
-env.Append(
+fprops_env.Append(
 	CFLAGS=['-g','-Wall']
 )
 
 #if WhereIs('gsl-config'):
-#	env.ParseConfig(['gsl-config','--libs','--cflags'])
+#	fprops_env.ParseConfig(['gsl-config','--libs','--cflags'])
 
 srcs = ['mbwr.c','asc_mbwr.c']
 
-env.SharedLibrary('mbwr_ascend',srcs)
+fprops_env.SharedLibrary('mbwr_ascend',srcs)
 
-env['fluids'] = ['ammonia','water','nitrogen','hydrogen','carbondioxide','methane','carbonmonoxide','ethanol',
-'acetone','carbonylsulfide','decane','hydrogensulfide','isopentane','krypton',
-'neopentane','nitrousoxide','sulfurdioxide','toluene','xenon','butane','butene','cisbutene','isobutene','transbutene','dimethylether','ethane','parahydrogen','isobutane','r41','r116','r141b','r142b','r218','r245fa']
+fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 
-env['SUBST_DICT'] = {
-	"@FLUIDSLIST@": " X \\\n\t".join(["F(%s)" % str(f) for f in env['fluids']])
-}
-
-ascendconfig = env.SubstInFile('fluids_list.h.in')
-
-env.Depends('fluids.c','fluids_list.h')
+fprops_env.Depends('fluids.c','fluids/fluids_list.h')
 
 coresrcs = ['ideal.c', 'helmholtz.c', 'sat.c', 'derivs.c', 'solve_ph.c', 'fluids.c']
 
-srcs = coresrcs + ["%s.c" % f for f in env['fluids']]
+srcs = coresrcs + fprops_env['fluids']
 
-env['shobjs'] = [env.SharedObject(s) for s in srcs]
+fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 
-env.SharedLibrary('helmholtz_ascend',env['shobjs'] + ['asc_helmholtz.c'])
+fprops_env.SharedLibrary('helmholtz_ascend',fprops_env['shobjs'] + ['asc_helmholtz.c'])
 
-env.SConscript('python/SConscript',['env'])
+fprops_env.SConscript('python/SConscript',['fprops_env'])
 

@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define NEOPENTANE_M 72.14878 /* kg/kmol */
 #define NEOPENTANE_R (8314.472/NEOPENTANE_M) /* J/kg/K */

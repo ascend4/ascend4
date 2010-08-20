@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define ACETONE_M 58.07914 /* kg/kmol */
 #define ACETONE_R (8314.472/ACETONE_M) /* J/kg/K */

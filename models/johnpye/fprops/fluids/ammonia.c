@@ -17,7 +17,7 @@
 	Boston, MA 02111-1307, USA.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define AMMONIA_OFFSET_H -1.4311891570e+05
 #define AMMONIA_R 488.189

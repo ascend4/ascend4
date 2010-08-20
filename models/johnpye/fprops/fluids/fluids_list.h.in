@@ -1,0 +1,9 @@
+
+/* SCons will create the file 'fluids_list.h' automatically using the file
+'fluids_list.h.in as a basis. A listing of *.c files in the 'fluids' directory
+is used to create that list, so in fact no special code is required to add a new
+fluid to FPROPS other than just running SCons and recompiling FPROPS again. */
+
+#define FLUIDS(F,X)\
+	@FLUIDSLIST@
+

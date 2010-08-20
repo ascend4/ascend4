@@ -8,63 +8,63 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define NONANE_M 128.2551 /* kg/kmol */
 #define NONANE_R (8314.472/NONANE_M) /* J/kg/K */
 #define NONANE_TSTAR 594.55 /* K */
 
 const IdealData ideal_data_nonane = {
-    10.7927224829 /* constant */
-    , -8.2418318753 /* linear */
-    , NONANE_TSTAR /* Tstar */
-    , NONANE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {17.349,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {24.926,	1221.0}
-        ,{24.842,	2244.0}
-        ,{11.188,	5008.0}
-        ,{17.483,	11724.0}
-    }
+	10.7927224829 /* constant */
+	, -8.2418318753 /* linear */
+	, NONANE_TSTAR /* Tstar */
+	, NONANE_R /* cp0star */
+	, 1 /* power terms */
+	, (const IdealPowTerm[]){
+		{17.349,	0.0}
+	}
+	, 4 /* exponential terms */
+	, (const IdealExpTerm[]){
+		{24.926,	1221.0}
+		,{24.842,	2244.0}
+		,{11.188,	5008.0}
+		,{17.483,	11724.0}
+	}
 };
 
 const HelmholtzData helmholtz_data_nonane = {
-    /* R */ NONANE_R /* J/kg/K */
-    , /* M */ NONANE_M /* kg/kmol */
-    , /* rho_star */ 1.81*NONANE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ NONANE_TSTAR /* K (= T_c for this model) */
+	"nonane"
+	, /* R */ NONANE_R /* J/kg/K */
+	, /* M */ NONANE_M /* kg/kmol */
+	, /* rho_star */ 1.81*NONANE_M /* kg/m3(= rho_c for this model) */
+	, /* T_star */ NONANE_TSTAR /* K (= T_c for this model) */
 
-    , /* T_c */ NONANE_TSTAR
-    , /* p_c */ 0
-    , /* rho_c */ 1.81*NONANE_M /* kg/m3 */
-    , /* p_t */ 0
+	, /* T_c */ NONANE_TSTAR
+	, /* rho_c */ 1.81*NONANE_M /* kg/m3 */
+	, /* p_t */ 0
 
-    , 0.4433 /* acentric factor */
-    , &ideal_data_nonane
-    , 12 /* power terms */
-    , (const HelmholtzPowTerm[]){
-        /* a_i, 	t_i, 	d_i, 	l_i */
-        {1.1151,	0.25,	1.0,	0.0}
-        , {-2.7020,	1.125,	1.0,	0.0}
-        , {0.83416,	1.5,	1.0,	0.0}
-        , {-0.38828,	1.375,	2.0,	0.0}
-        , {0.13760,	0.25,	3.0,	0.0}
-        , {0.00028185,	0.875,	7.0,	0.0}
-        , {0.62037,	0.625,	2.0,	1.0}
-        , {0.015847,	1.75,	5.0,	1.0}
-        , {-0.61726,	3.625,	1.0,	2.0}
-        , {-0.15043,	3.625,	4.0,	2.0}
-        , {-0.012982,	14.5,	3.0,	3.0}
-        , {0.0044325,	12.0,	4.0,	3.0}
-    }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+	, 0.4433 /* acentric factor */
+	, &ideal_data_nonane
+	, 12 /* power terms */
+	, (const HelmholtzPowTerm[]){
+		/* a_i, 	t_i, 	d_i, 	l_i */
+		{1.1151,	0.25,	1.0,	0.0}
+		, {-2.7020,	1.125,	1.0,	0.0}
+		, {0.83416,	1.5,	1.0,	0.0}
+		, {-0.38828,	1.375,	2.0,	0.0}
+		, {0.13760,	0.25,	3.0,	0.0}
+		, {0.00028185,	0.875,	7.0,	0.0}
+		, {0.62037,	0.625,	2.0,	1.0}
+		, {0.015847,	1.75,	5.0,	1.0}
+		, {-0.61726,	3.625,	1.0,	2.0}
+		, {-0.15043,	3.625,	4.0,	2.0}
+		, {-0.012982,	14.5,	3.0,	3.0}
+		, {0.0044325,	12.0,	4.0,	3.0}
+	}
+	, 0 /* gaussian terms */
+	, 0
+	, 0 /* critical terms */
+	, 0
 };
 
 /*

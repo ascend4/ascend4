@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define R245FA_M 134.04794 /* kg/kmol */
 #define R245FA_R (8314.472/R245FA_M) /* J/kg/K */

@@ -25,7 +25,7 @@
 	http://link.aip.org/link/JPCRBU/v25/i6/p1509/s1
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 //#define CARBONDIOXIDE_R 188.9241
 #define GAS_C 8314.510

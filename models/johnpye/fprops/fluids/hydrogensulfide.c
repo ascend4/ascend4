@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define HYDROGENSULFIDE_M 34.08088 /* kg/kmol */
 #define HYDROGENSULFIDE_R (8314.472/HYDROGENSULFIDE_M) /* J/kg/K */

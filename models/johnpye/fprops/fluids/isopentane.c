@@ -8,7 +8,7 @@ Lemmon, E.W. and Span, R.,
 J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define ISOPENTANE_M 72.14878 /* kg/kmol */
 #define ISOPENTANE_R (8314.472/ISOPENTANE_M) /* J/kg/K */

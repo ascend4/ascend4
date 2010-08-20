@@ -1182,7 +1182,7 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 */
 double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 	double sum = 0, res = 0;
-	double D,L;
+	double D;
 	unsigned n, i;
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
@@ -1200,7 +1200,7 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 
 	/* seem to be errors in the following, still haven't tracked them all down. */
 
-#if 0
+#if 1
 	/* wxmaxima code:
 		a*delta^d*%e^(-delta^l)*tau^t
 		diff(%,delta,3);
@@ -1235,7 +1235,7 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 	//fprintf(stderr,"DELDELDEL fiff = %f, sum = %f  ",fdiff, res);
 #endif
 
-#if 0
+#if 1
 	/* gaussian terms */
 	n = data->ng;
 	//fprintf(stderr,"THERE ARE %d GAUSSIAN TERMS\n",n);
@@ -1264,7 +1264,7 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 	}
 #endif
 
-#if 0
+#if 1
 	/* critical terms */
 	n = data->nc;
 	ct = &(data->ct[0]);

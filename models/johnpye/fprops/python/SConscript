@@ -1,6 +1,6 @@
-Import('env')
+Import('fprops_env')
 
-pyenv = env.Clone()
+pyenv = fprops_env.Clone()
 
 pyenv['LIBS'] = []
 pyenv['SHLIBSUFFIX'] = '.so'

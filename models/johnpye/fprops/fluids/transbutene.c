@@ -9,7 +9,7 @@ Equations of State,"
 Fluid Phase Equilibria, 228-229C:173-187, 2005.
 */
 
-#include "helmholtz.h"
+#include "../helmholtz.h"
 
 #define TRANSBUTENE_M 56.10632 /* kg/kmol */
 #define TRANSBUTENE_R (8314.472/TRANSBUTENE_M) /* J/kg/K */
