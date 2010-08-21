@@ -35,3 +35,18 @@ const HelmholtzData *fprops_fluid(const char *name){
 	}
 	return NULL;
 }
+
+
+int fprops_num_fluids(){
+	return nfluids;
+}
+
+const HelmholtzData *fprops_get_fluid(int i){
+	if(i >= 0 && i < nfluids){
+		return fluids[i];
+	}
+	return NULL;
+}
+
+
+

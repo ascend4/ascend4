@@ -40,7 +40,7 @@ const HelmholtzData helmholtz_data_r116 = {
 
     , /* T_c */ R116_TSTAR
     , /* rho_c */ 4.444*R116_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 173.1
 
     , 0.2566 /* acentric factor */
     , &ideal_data_r116

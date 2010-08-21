@@ -137,8 +137,9 @@ const HelmholtzData helmholtz_data_water = {
 };
 
 #ifdef TEST
-# include "test.h"
-#include "../sat.h"
+# include "../test.h"
+# include "../sat.h"
+
 /*
 	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 7.0.
@@ -172,12 +173,11 @@ enum Limits{
     eGamma2 = 9,
 };
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include "ideal_impl.h"
-#include "helmholtz_impl.h"
+# include <math.h>
+# include <stdlib.h>
+# include <stdio.h>
+# include "../ideal_impl.h"
+# include "../helmholtz_impl.h"
 
 double phi0(const double delta, const double tau){
 	int i;
@@ -193,7 +193,6 @@ double phi0(const double delta, const double tau){
 typedef struct{double T, rho, p, cv, w, s;} TestDataIAPWS95;
 const TestDataIAPWS95 td[]; const unsigned ntd;
 
-typedef struct{double T, p, rho_f, rho_g, h_f, h_g, s_f, s_g;} TestDataSat;
 const TestDataSat tds[]; const unsigned ntds;
 
 const TestData td1[]; const unsigned ntd1;
@@ -287,21 +286,19 @@ int main(void){
 		ASSERT_TOL(helmholtz_w, T, rho, d, w, w*2e-5);
 	}
 
-	fprintf(stderr,"\nIAPWS95 TABLE 8 (SATURATION) TESTS\n");
+	fprintf(stderr,"\nIAPWS95 TABLE 8 (SATURATION) TESTS (%d items)\n",ntds);
 	for(i=0; i<ntds; ++i){
 		double T = tds[i].T;
 		double p = tds[i].p * 1e6; /* Pa */
-		double rho_f = tds[i].rho_f;
-		double rho_g = tds[i].rho_g;
-		double h_f = tds[i].h_f * 1e3;
-		double h_g = tds[i].h_g * 1e3;
-		double s_f = tds[i].s_f * 1e3;
-		double s_g = tds[i].s_g * 1e3;
+		double rho_f = tds[i].rhof;
+		double rho_g = tds[i].rhog;
+		double h_f = tds[i].hf * 1e3;
+		double h_g = tds[i].hg * 1e3;
+		double s_f = tds[i].sf * 1e3;
+		double s_g = tds[i].sg * 1e3;
 		fprintf(stderr,"T = %f, p = %f bar, rho_f = %f, rho_g = %f\n",T,p/1e5,rho_f, rho_g);
 		double rho_f_eval, rho_g_eval, p_eval;
-		int res;
-
-		res = fprops_sat_T(T, &p_eval, &rho_f_eval, &rho_g_eval, d);
+		int res = fprops_sat_T(T, &p_eval, &rho_f_eval, &rho_g_eval, d);
 		ASSERT_TOL_VAL(p_eval, p, 1e-8);
 		ASSERT_TOL_VAL(rho_f_eval, rho_f, 1e-8);
 		ASSERT_TOL_VAL(rho_g_eval, rho_g, 1e-8);
@@ -323,17 +320,17 @@ int main(void){
 	}
 #endif
 
-#if 1
+# if 1
 	helm_run_test_cases(d, ntd1, td1, 'K');
-#endif
+# endif
 
 	//helm_check_dpdrho_T(d, ntd1, td1);
 
-#if 1
+# if 1
 	//helm_check_d2pdrho2_T(d,ntd1, td1);
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.8f%%)\n",maxerr);
-#endif
+# endif
 
 	exit(0);
 }

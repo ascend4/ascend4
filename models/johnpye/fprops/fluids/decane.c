@@ -41,7 +41,7 @@ const HelmholtzData helmholtz_data_decane = {
 
     , /* T_c */ DECANE_TSTAR
     , /* rho_c */ 1.64*DECANE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 243.5
 
     , 0.4884 /* acentric factor */
     , &ideal_data_decane

@@ -40,7 +40,7 @@ const HelmholtzData helmholtz_data_sulfurdioxide = {
 
     , /* T_c */ SULFURDIOXIDE_TSTAR
     , /* rho_c */ 8.195*SULFURDIOXIDE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 197.7
 
     , 0.2557 /* acentric factor */
     , &ideal_data_sulfurdioxide

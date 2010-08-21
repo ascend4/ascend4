@@ -42,7 +42,7 @@ const HelmholtzData helmholtz_data_butene = {
 
     , /* T_c */ BUTENE_TSTAR
     , /* rho_c */ 4.24*BUTENE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 87.8
 
     , 0.192 /* acentric factor */
     , &ideal_data_butene

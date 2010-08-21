@@ -41,7 +41,7 @@ const HelmholtzData helmholtz_data_isohexane = {
 
     , /* T_c */ ISOHEXANE_TSTAR
     , /* rho_c */ 2.715*ISOHEXANE_M /* kg/m3 */
-    , /* p_t */ 0
+    , /* p_t */ 119.6
 
     , 0.2797 /* acentric factor */
     , &ideal_data_isohexane

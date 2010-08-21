@@ -41,7 +41,7 @@ const HelmholtzData helmholtz_data_isopentane = {
 
     , /* T_c */ ISOPENTANE_TSTAR
     , /* rho_c */ 3.271*ISOPENTANE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 112.65
 
     , 0.2274 /* acentric factor */
     , &ideal_data_isopentane

@@ -42,7 +42,7 @@ const HelmholtzData helmholtz_data_transbutene = {
 
     , /* T_c */ TRANSBUTENE_TSTAR
     , /* rho_c */ 4.213*TRANSBUTENE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 167.6
 
     , 0.21 /* acentric factor */
     , &ideal_data_transbutene

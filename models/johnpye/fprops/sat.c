@@ -41,7 +41,7 @@
 
 #define SQ(X) ((X)*(X))
 
-#define THROW_FPE
+//#define THROW_FPE
 
 #ifdef THROW_FPE
 #define _GNU_SOURCE
@@ -403,6 +403,7 @@ int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_ou
 	while(i++ < 60){
 		assert(T1 >= d->T_t - 1e-4);
 		assert(T1 <= d->T_c);
+		MSG("T1 = %f\n",T1);
 		res = fprops_sat_T(T1, &p, &rhof, &rhog, d);
 		if(res){
 			ERRMSG("Failed to solve psat(T = %.12e) for %s",T1,d->name);

@@ -40,7 +40,7 @@ const HelmholtzData helmholtz_data_r245fa = {
 
     , /* T_c */ R245FA_TSTAR
     , /* rho_c */ 3.85*R245FA_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 171.05
 
     , 0.3776 /* acentric factor */
     , &ideal_data_r245fa

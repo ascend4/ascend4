@@ -42,7 +42,7 @@ const HelmholtzData helmholtz_data_cisbutene = {
 
     , /* T_c */ CISBUTENE_TSTAR
     , /* rho_c */ 4.244*CISBUTENE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 134.3
 
     , 0.202 /* acentric factor */
     , &ideal_data_cisbutene
