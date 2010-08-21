@@ -41,7 +41,7 @@ const HelmholtzData helmholtz_data_neopentane = {
 
     , /* T_c */ NEOPENTANE_TSTAR
     , /* rho_c */ 3.27*NEOPENTANE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 256.6
 
     , 0.1961 /* acentric factor */
     , &ideal_data_neopentane

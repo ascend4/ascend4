@@ -75,6 +75,7 @@ for T in TTs:
 semilogx(vf1,TT1,"b-")
 semilogx(vg1,TT1,"b-")
 axis([vmin,vmax,Tmin,Tmax])
+title("convergence of (p,h) solver for %s" % D.name)
 xlabel("specific volume")
 ylabel("temperature")
 

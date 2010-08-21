@@ -42,7 +42,7 @@ const HelmholtzData helmholtz_data_isobutene = {
 
     , /* T_c */ ISOBUTENE_TSTAR
     , /* rho_c */ 4.17*ISOBUTENE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 132.4
 
     , 0.193 /* acentric factor */
     , &ideal_data_isobutene

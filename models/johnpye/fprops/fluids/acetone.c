@@ -40,7 +40,7 @@ const HelmholtzData helmholtz_data_acetone = {
 
     , /* T_c */ ACETONE_TSTAR
     , /* rho_c */ 4.7*ACETONE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 178.5
 
     , 0.3071 /* acentric factor */
     , &ideal_data_acetone

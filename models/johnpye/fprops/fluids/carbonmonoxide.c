@@ -39,7 +39,7 @@ const HelmholtzData helmholtz_data_carbonmonoxide = {
 
     , /* T_c */ CARBONMONOXIDE_TSTAR
     , /* rho_c */ 10.85*CARBONMONOXIDE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 68.16
 
     , 0.0497 /* acentric factor */
     , &ideal_data_carbonmonoxide

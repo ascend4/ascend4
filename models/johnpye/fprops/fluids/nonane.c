@@ -41,7 +41,7 @@ const HelmholtzData helmholtz_data_nonane = {
 
 	, /* T_c */ NONANE_TSTAR
 	, /* rho_c */ 1.81*NONANE_M /* kg/m3 */
-	, /* p_t */ 0
+	, /* T_t */ 219.7
 
 	, 0.4433 /* acentric factor */
 	, &ideal_data_nonane

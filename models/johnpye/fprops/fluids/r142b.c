@@ -41,7 +41,7 @@ const HelmholtzData helmholtz_data_r142b = {
 
     , /* T_c */ R142B_TSTAR
     , /* rho_c */ 4.438*R142B_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 142.72
 
     , 0.2321 /* acentric factor */
     , &ideal_data_r142b

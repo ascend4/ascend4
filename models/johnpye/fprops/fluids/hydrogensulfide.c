@@ -40,7 +40,7 @@ const HelmholtzData helmholtz_data_hydrogensulfide = {
 
     , /* T_c */ HYDROGENSULFIDE_TSTAR
     , /* rho_c */ 10.19*HYDROGENSULFIDE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 187.7
 
     , 0.1005 /* acentric factor */
     , &ideal_data_hydrogensulfide

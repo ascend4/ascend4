@@ -5,6 +5,9 @@ University of Alabama in Huntsville, United States.
 LITERATURE REFERENCE
 Dillon, H.E. and Penoncello, S.G., "A Fundamental Equation for Calculation of the Thermodynamic Properties of Ethanol"
 Int. J. Thermophys., 25(2):321-335, 2004.
+
+Triple point temperature comes from
+http://webbook.nist.gov/cgi/cbook.cgi?ID=C64175&Units=SI&Mask=4#Thermo-Phase
 */
 
 #include "../helmholtz.h"
@@ -42,7 +45,7 @@ const HelmholtzData helmholtz_data_ethanol = {
 
     , /* T_c */ ETHANOL_TSTAR
     , /* rho_c */ 5.991*ETHANOL_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 150.0
 
     , 0.644 /* acentric factor */
     , &ideal_data_ethanol

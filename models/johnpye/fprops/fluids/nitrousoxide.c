@@ -40,7 +40,7 @@ const HelmholtzData helmholtz_data_nitrousoxide = {
 
     , /* T_c */ NITROUSOXIDE_TSTAR
     , /* rho_c */ 10.27*NITROUSOXIDE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 182.33
 
     , 0.1613 /* acentric factor */
     , &ideal_data_nitrousoxide

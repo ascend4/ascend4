@@ -40,7 +40,7 @@ const HelmholtzData helmholtz_data_r218 = {
 
     , /* T_c */ R218_TSTAR
     , /* rho_c */ 3.34*R218_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 125.45
 
     , 0.3172 /* acentric factor */
     , &ideal_data_r218

@@ -38,7 +38,7 @@ def write(msg):
 
 def pconst(S1,S2,n):
 	"""Return a set of (T,s) points between two states, with pressure held constant."""
-	D = fprops_fluid(S1.cd.component.getSymbolValue())	
+	D = fprops.fprops_fluid(str(S1.cd.component.getSymbolValue()))	
 	out = []
 	hh = linspace(float(S1.h), float(S2.h), n)
 	for h in hh:
@@ -47,13 +47,13 @@ def pconst(S1,S2,n):
 			out += [TSPoint(T,fprops.helmholtz_s(T,rho,D))]
 	return out
 
-def plot_Ts(SS):
+def plot_Ts(SS,style='b-'):
 	xx = []
 	yy = []
 	for S in SS:
 		yy.append(float(S.T) - 273.15)
 		xx.append(float(S.s)/1.e3)
-	plot(xx,yy)
+	plot(xx,yy,style)
 
 def cycle_plot(self):
 	"""Plot T-s diagram for combined-cycle gas turbine"""
@@ -62,7 +62,7 @@ def cycle_plot(self):
 	ioff()
 	figure()
 
-	D = fprops_fluid(self.cd_rankine.component.getSymbolValue())
+	D = fprops.fprops_fluid(str(self.cd_rankine.component.getSymbolValue()))
 
 	# plot gas turbine cycle
 	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.HE.inlet, self.HE.outlet, self.GC.inlet]
@@ -91,14 +91,94 @@ def cycle_plot_rankine(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops_fluid(self.cd.component.getSymbolValue())
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)
 
 	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
 	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
 	SS = [self.PU.outlet, self.BO.inlet] + boiler_curve + [self.TU.inlet, self.TU.outlet] + condenser_curve + [self.CO.outlet, self.PU.outlet]
 	plot_Ts(SS)
+
 	title(unicode(r"Rankine cycle with %s" % D.name))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+
+def cycle_plot_rankine_regen2(self):
+	"""Plot T-s diagram for a regenerative Rankine cycle (bleed steam regen)"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()
+	hold(1)
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	sat_curve(D)
+
+	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
+	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
+
+	SS = [self.PU1.inlet, self.PU1.outlet] + \
+			pconst(self.HE.inlet, self.HE.outlet, 100) + \
+			[self.PU2.inlet, self.PU2.outlet] + \
+			boiler_curve + \
+			[self.TU1.inlet, self.TU1.outlet, self.TU2.outlet] + \
+			condenser_curve + [self.PU1.inlet]
+
+	plot_Ts(SS)
+	plot_Ts(
+		[self.PU1.inlet, self.PU1.outlet, self.HE.inlet, self.HE.outlet, 
+			self.PU2.inlet, self.PU2.outlet, self.TU1.inlet, self.TU1.outlet, 
+			self.TU2.outlet, self.PU1.inlet]
+		,'bo'
+	)
+
+	# line for the heat exchanger
+	plot_Ts(pconst(self.HE.inlet_heat, self.HE.outlet,100),'b-')
+
+	title(unicode(r"Regenerative Rankine cycle with %s" % D.name))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+	import os.path
+	savefig(os.path.expanduser("~/Desktop/regen2.eps"))
+
+
+
+def cycle_plot_rankine_regen1(self):
+	"""Plot T-s diagram for a regenerative Rankine cycle"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()
+	hold(1)
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	sat_curve(D)
+
+	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
+	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
+	he_hot = pconst(self.HE.inlet_heat, self.HE.outlet_heat,100)
+	he_cold = pconst(self.HE.inlet, self.HE.outlet,100)
+
+	SS = [self.PU.outlet] + he_cold + [self.BO.inlet] + boiler_curve + [self.TU.inlet, self.TU.outlet] + he_hot + condenser_curve + [self.PU.inlet, self.PU.outlet]
+
+	plot_Ts(SS)
+	plot_Ts(
+		[self.PU.outlet,self.BO.inlet,self.TU.inlet, self.TU.outlet
+		 	,self.HE.outlet_heat, self.PU.inlet, self.PU.outlet]
+		,'bo'
+	)
+
+	# dotted lines for the heat exchanger
+	plot_Ts([self.HE.inlet_heat, self.HE.outlet],'b:')
+	plot_Ts([self.HE.outlet_heat, self.HE.inlet],'b:')
+
+	title(unicode(r"Regenerative Rankine cycle with %s" % D.name))
 	ylabel(unicode(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
@@ -108,6 +188,8 @@ def cycle_plot_rankine(self):
 
 
 extpy.registermethod(cycle_plot_rankine)
+extpy.registermethod(cycle_plot_rankine_regen1)
+extpy.registermethod(cycle_plot_rankine_regen2)
 
 extpy.registermethod(cycle_plot)
 #the above method can be called using "EXTERNAL fourbarplot(SELF)" in ASCEND.

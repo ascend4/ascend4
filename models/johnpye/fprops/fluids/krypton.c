@@ -36,7 +36,7 @@ const HelmholtzData helmholtz_data_krypton = {
 
     , /* T_c */ KRYPTON_TSTAR
     , /* rho_c */ 10.85*KRYPTON_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 115.77
 
     , -0.00089 /* acentric factor */
     , &ideal_data_krypton
