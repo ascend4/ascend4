@@ -119,7 +119,7 @@ METHOD solarpaces2010;
 	(* turbine conditions *)
 	FIX TU1.inlet.p; TU1.inlet.p := 150 {bar};
 	FIX TU1.inlet.T; TU1.inlet.T := 580 {K} + 273.15 {K};
-	FIX TU1.outlet.p; TU1.outlet.p := 7 {bar};
+	FIX TU1.outlet.p; TU1.outlet.p := 10.3 {bar};
 	FIX CO.outlet.T; CO.outlet.T := 40 {K} + 273.15 {K};
 	(* heater conditions *)
 	TU2.outlet.p := 10 {kPa};
@@ -136,10 +136,14 @@ METHOD on_load;
 	OPTION convopt 'RELNOM_SCALE';
 	OPTION iterationlimit 400;
 END on_load;
-METHOD set_x_limit;
+METHOD set_x_limit_correct_turb;
 	FREE PU2.outlet.p;
 	PU2.outlet.p.upper_bound := 150 {bar};
 	FIX TU2.outlet.x; TU2.outlet.x := 0.9;
+	(* a little corrctn to ensure we're comparing the same *overall* turbine eff *)
+	FREE TU1.eta;
+	TU2.eta := 0.823;
+	FIX eta_turb_tot; eta_turb_tot := 0.85;
 END set_x_limit;
 METHOD cycle_plot;
 	EXTERNAL cycle_plot_rankine_regen2(SELF);
@@ -298,6 +302,11 @@ MODEL rankine_regen_common;
 	Wdot IS_A energy_rate;
 	Wdot_eq: Wdot = TU.Wdot + PU.Wdot;
 
+	T_ci ALIASES HE.inlet.T;
+	T_co ALIASES HE.outlet.T;
+	T_hi ALIASES HE.inlet_heat.T;
+	T_ho ALIASES HE.outlet_heat.T;
+
 	DE_cycle "cycle energy balance, should be zero" IS_A energy_rate;
 	DE_cycle = BO.Qdot + CO.Qdot - TU.Wdot - PU.Wdot;
 
@@ -315,19 +324,21 @@ END default_self;
 METHOD cycle_plot;
 	EXTERNAL cycle_plot_rankine_regen1(SELF);
 END cycle_plot;
+METHOD heater_plot;
+	EXTERNAL heater_closed_plot(SELF);
+END cycle_plot;
 END rankine_regen_common;
 
-MODEL rankine_regen_toluene REFINES rankine_regen_common;
-	
-	BO.cd.component :== 'toluene';
 
+MODEL rankine_regen_toluene REFINES rankine_regen_common;
+	BO.cd.component :== 'toluene';
 METHODS
 METHOD on_load;
 	FIX BO.outlet.T; BO.outlet.T := 580 {K} + 273.15 {K};
 	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
 	FIX CO.outlet.T; CO.outlet.T := 40 {K} + 273.15 {K};
 	FIX CO.outlet.x; CO.outlet.x := 1e-6;
-	FIX HE.outlet.T; HE.outlet.T := 300 {K} + 273.15 {K};
+	FIX HE.outlet.T; HE.outlet.T := 307 {K} + 273.15 {K};
 	
 	FIX BO.eta;  BO.eta := 1.0;
 	FIX TU.eta; TU.eta := 0.85;
@@ -346,6 +357,33 @@ METHOD default_self;
 END default_self;
 END rankine_regen_toluene;
 
+
+MODEL rankine_regen_ammonia REFINES rankine_regen_common;
+	BO.cd.component :== 'ammonia';
+METHODS
+METHOD on_load;
+	FIX BO.outlet.T; BO.outlet.T := 580 {K} + 273.15 {K};
+	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
+	FIX CO.outlet.T; CO.outlet.T := 40 {K} + 273.15 {K};
+	FIX CO.outlet.x; CO.outlet.x := 1e-6;
+	FIX HE.outlet.T; HE.outlet.T := 150.1 {K} + 273.15 {K};
+	
+	FIX BO.eta;  BO.eta := 1.0;
+	FIX TU.eta; TU.eta := 0.85;
+	FIX PU.eta; PU.eta := 0.8;
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
+END on_load;
+METHOD default_self;
+	RUN rankine_regen_common::default_self;
+	PU.inlet.h := 400 {kJ/kg};
+	BO.outlet.h := 400 {kJ/kg};
+	CO.outlet.h := 400 {kJ/kg};
+	CO.outlet.p := 10 {kPa};
+END default_self;
+END rankine_regen_ammonia;
 
 
 

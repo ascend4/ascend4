@@ -13,7 +13,7 @@ lib = fprops_env.SharedLibrary("mbwr"
 fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 
 lib = fprops_env.SharedLibrary("helmholtz"
-	,['ideal.c','helmholtz.c','asc_helmholtz.c','sat.c','derivs.c','solve_ph.c']
+	,['ideal.c','helmholtz.c','asc_helmholtz.c','sat.c','derivs.c','solve_ph.c','fluids.c']
 		+ ['%s' % f for f in fprops_env['fluids']]
 	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 	,SHLIBPREFIX = env['EXTLIB_PREFIX']
