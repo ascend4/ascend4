@@ -11,6 +11,8 @@ try:
 except:
 	pass
 
+#--- for (T,s) plots ---
+
 def sat_curve(d):
 	Tt = d.T_t
 	Tc = d.T_c
@@ -47,6 +49,7 @@ def pconst(S1,S2,n):
 			out += [TSPoint(T,fprops.helmholtz_s(T,rho,D))]
 	return out
 
+
 def plot_Ts(SS,style='b-'):
 	xx = []
 	yy = []
@@ -55,34 +58,33 @@ def plot_Ts(SS,style='b-'):
 		xx.append(float(S.s)/1.e3)
 	plot(xx,yy,style)
 
-def cycle_plot(self):
-	"""Plot T-s diagram for combined-cycle gas turbine"""
-	import loading
-	loading.load_matplotlib(throw=True)
-	ioff()
-	figure()
+#--- for (T,H) plots ---
 
-	D = fprops.fprops_fluid(str(self.cd_rankine.component.getSymbolValue()))
+class THPoint:
+	def __init__(self,T,H):
+		self.T = T
+		self.H = H
 
-	# plot gas turbine cycle
-	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.HE.inlet, self.HE.outlet, self.GC.inlet]
-	plot_Ts(SS)
-	hold(1)
-	
-	sat_curve(d)
+def pconsth(S1,S2,n):
+	"""Return a set of (T,H) points between two states, with pressure constant"""
+	D = fprops.fprops_fluid(str(S1.cd.component.getSymbolValue()))	
+	out = []
+	hh = linspace(float(S1.h), float(S2.h), n)
+	for h in hh:
+		res, T, rho = fprops.fprops_solve_ph(float(S1.p), h, 0, D)
+		if not res:
+			out += [THPoint(T,h * float(S1.mdot))]
+	return out
 
-	boiler_curve = pconst(self.HE.inlet_cold,self.HE.outlet_cold,100)
-	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
-	SS2 = [self.PU.outlet, self.HE.inlet_cold] + boiler_curve + [self.HE.outlet_cold, self.TU.inlet, self.TU.outlet, self.CO.inlet] + condenser_curve + [self.CO.outlet, self.PU.inlet, self.PU.outlet]
-	plot_Ts(SS2)
+def plot_TH(SS,style='b-',Href = 0):
+	xx = []
+	yy = []
+	for S in SS:
+		yy.append(float(S.T) - 273.15)
+		xx.append((float(S.H) - Href)/1.e6)
+	plot(xx,yy,style)
 
-	title(unicode(r"With %s bottoming cycle" % d.name))
-	ylabel(unicode(r"T / [°C]"))
-	xlabel("s / [kJ/kg/K]")
-
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
-	ion()
-	show()
+#--- various Rankine cycle configurations ---
 
 def cycle_plot_rankine(self):
 	"""Plot T-s diagram for a simple Rankine cycle"""
@@ -106,6 +108,7 @@ def cycle_plot_rankine(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
+
 
 def cycle_plot_rankine_regen2(self):
 	"""Plot T-s diagram for a regenerative Rankine cycle (bleed steam regen)"""
@@ -145,7 +148,6 @@ def cycle_plot_rankine_regen2(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
-	import os.path
 	savefig(os.path.expanduser("~/Desktop/regen2.eps"))
 
 
@@ -185,11 +187,76 @@ def cycle_plot_rankine_regen1(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
+	savefig(os.path.expanduser("~/Desktop/regen1.eps"))
+
+
+#--- heat exchange (T,H) plot ---
+
+def heater_closed_plot(self):
+	"""Plot T-H diagram of heat transfer in a heater_closed model"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()
+	hold(1)
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	HE = self.HE
+
+	extpy.getbrowser().reporter.reportNote("Fluid is %s" % D.name)	
+
+	plot_TH(pconsth(HE.inlet_heat, HE.outlet_heat, 50),'r-',
+		Href = (float(HE.outlet_heat.h)*float(HE.outlet_heat.mdot))\
+	)
+
+	plot_TH(pconsth(HE.inlet, HE.outlet, 50),'b-',
+		Href = (float(HE.inlet.h)*float(HE.inlet.mdot))\
+	)
+
+	title(unicode(r"Closed feedwater heater with %s" % D.name))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("H / [MW]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+	savefig(os.path.expanduser("~/Desktop/heater_closed.eps"))
+
+#--- the big one: a combined-cycle GT ---
+
+def cycle_plot(self):
+	"""Plot T-s diagram for combined-cycle gas turbine"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()
+
+	D = fprops.fprops_fluid(str(self.cd_rankine.component.getSymbolValue()))
+
+	# plot gas turbine cycle
+	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.HE.inlet, self.HE.outlet, self.GC.inlet]
+	plot_Ts(SS)
+	hold(1)
+	
+	sat_curve(d)
+
+	boiler_curve = pconst(self.HE.inlet_cold,self.HE.outlet_cold,100)
+	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
+	SS2 = [self.PU.outlet, self.HE.inlet_cold] + boiler_curve + [self.HE.outlet_cold, self.TU.inlet, self.TU.outlet, self.CO.inlet] + condenser_curve + [self.CO.outlet, self.PU.inlet, self.PU.outlet]
+	plot_Ts(SS2)
+
+	title(unicode(r"With %s bottoming cycle" % d.name))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
 
 
 extpy.registermethod(cycle_plot_rankine)
 extpy.registermethod(cycle_plot_rankine_regen1)
 extpy.registermethod(cycle_plot_rankine_regen2)
+extpy.registermethod(heater_closed_plot)
 
 extpy.registermethod(cycle_plot)
 #the above method can be called using "EXTERNAL fourbarplot(SELF)" in ASCEND.
