@@ -28,6 +28,9 @@ REQUIRE "johnpye/thermo_types.a4c";
 REQUIRE "johnpye/airprops.a4c";
 IMPORT "sensitivity/solve";
 
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/fprops/cycle_plot";
+
 (* first some models of air as an ideal gas *)
 
 MODEL ideal_gas_base;
@@ -158,7 +161,7 @@ END ideal_air_table;
 (*
 	Thermo properties
 *)
-MODEL state;
+MODEL air_state;
 	air IS_A ideal_air_poly;
 	p ALIASES air.p;
 	T ALIASES air.T;
@@ -182,12 +185,12 @@ METHODS
 		RUN default_all;
 		FIX p, h;
 	END on_load;
-END state;
+END air_state;
 
 
 (* a simple connector that includes calculation of steam properties *)
-MODEL node;
-	state IS_A state;
+MODEL air_node;
+	state IS_A air_state;
 	p ALIASES state.p;
 	h ALIASES state.h;
 	v ALIASES state.v;
@@ -205,11 +208,11 @@ METHODS
 		RUN default; RUN reset; RUN values;
 		FIX p,h;
 	END on_load;
-END node;
+END air_node;
 
 MODEL air_equipment;
-	inlet "in: inlet air stream" IS_A node;
-	outlet "out: outlet air stream" IS_A node;
+	inlet "in: inlet air stream" IS_A air_node;
+	outlet "out: outlet air stream" IS_A air_node;
 
 	inlet.mdot, outlet.mdot ARE_THE_SAME;
 	mdot ALIASES inlet.mdot;
@@ -224,7 +227,7 @@ MODEL compressor REFINES air_equipment;
 	dp IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
 
-	outlet_is IS_A state;
+	outlet_is IS_A air_state;
 	outlet_is.p, outlet.p ARE_THE_SAME;
 
 	outlet_is.s, inlet.s ARE_THE_SAME;
@@ -274,7 +277,7 @@ MODEL gas_turbine REFINES air_equipment;
 	dp IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
 	
-	outlet_is IS_A state;
+	outlet_is IS_A air_state;
 	outlet_is.p, outlet.p ARE_THE_SAME;
 	outlet_is.s, inlet.s ARE_THE_SAME;
 
@@ -409,6 +412,8 @@ MODEL brayton;
 	BU.outlet, TU.inlet ARE_THE_SAME;
 	TU.outlet, DI.inlet ARE_THE_SAME;
 	DI.outlet, CO.inlet ARE_THE_SAME;
+	braytonpressureratio IS_A positive_factor;
+	braytonpressureratio * CO.inlet.p = TU.outlet.p;
 
 	Wdot_CO ALIASES CO.Wdot;
 	Wdot_TU ALIASES TU.Wdot;
@@ -430,7 +435,7 @@ MODEL brayton;
 	r_bw IS_A factor;
 	r_bw = -Wdot_CO / Wdot_TU;
 
-	state[1..4] IS_A node;
+	state[1..4] IS_A air_node;
 	state[1], CO.inlet ARE_THE_SAME;
 	state[2], BU.inlet ARE_THE_SAME;
 	state[3], TU.inlet ARE_THE_SAME;
@@ -465,7 +470,7 @@ END brayton;
 	Assumption: fluid on both sides have the same c_p.
 *)
 MODEL regenerator REFINES air_equipment;
-	inlet_hot, outlet_hot IS_A node;
+	inlet_hot, outlet_hot IS_A air_node;
 	
 	inlet.p, outlet.p ARE_THE_SAME;
 	inlet_hot.p, outlet_hot.p ARE_THE_SAME;
@@ -555,16 +560,18 @@ MODEL brayton_regenerative;
 	eta_TU ALIASES TU.eta;
 	eta_CO ALIASES CO.eta;
 	epsilon_RE ALIASES RE.epsilon;
+
+	braytonpressureratio ALIASES CO.r;
 METHODS
 METHOD on_load;
 	FIX CO.eta, TU.eta;
-	CO.eta := 0.8;
+	CO.eta := 0.88;
 	TU.eta := 0.85;
 	FIX CO.inlet.T, TU.inlet.T;
 	CO.inlet.T := 300 {K};
 	TU.inlet.T := 1300 {K};
 	FIX CO.r;
-	CO.r := 8;
+	CO.r := 4.5;
 	FIX CO.inlet.p;
 	CO.inlet.p := 1 {bar};
 	FIX CO.inlet.mdot;
@@ -574,6 +581,9 @@ METHOD on_load;
 	FIX RE.epsilon;
 	RE.epsilon := 0.8;
 END on_load;
+METHOD cycle_plot;
+	EXTERNAL cycle_plot_brayton_regen(SELF);
+END cycle_plot;	
 END brayton_regenerative;
 
 

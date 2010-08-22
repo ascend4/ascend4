@@ -61,19 +61,21 @@ def plot_Ts(SS,style='b-'):
 #--- for (T,H) plots ---
 
 class THPoint:
-	def __init__(self,T,H):
+	def __init__(self,T,h,mdot = 1.):
 		self.T = T
-		self.H = H
+		self.h = h
+		self.mdot = mdot
 
 def pconsth(S1,S2,n):
 	"""Return a set of (T,H) points between two states, with pressure constant"""
 	D = fprops.fprops_fluid(str(S1.cd.component.getSymbolValue()))	
 	out = []
 	hh = linspace(float(S1.h), float(S2.h), n)
+	mdot = float(S1.mdot)
 	for h in hh:
 		res, T, rho = fprops.fprops_solve_ph(float(S1.p), h, 0, D)
 		if not res:
-			out += [THPoint(T,h * float(S1.mdot))]
+			out += [THPoint(T,h * mdot)]
 	return out
 
 def plot_TH(SS,style='b-',Href = 0):
@@ -81,7 +83,7 @@ def plot_TH(SS,style='b-',Href = 0):
 	yy = []
 	for S in SS:
 		yy.append(float(S.T) - 273.15)
-		xx.append((float(S.H) - Href)/1.e6)
+		xx.append(((float(S.h)*float(S.mdot)) - Href)/1.e6)
 	plot(xx,yy,style)
 
 #--- various Rankine cycle configurations ---
@@ -223,7 +225,7 @@ def heater_closed_plot(self):
 
 #--- the big one: a combined-cycle GT ---
 
-def cycle_plot(self):
+def cycle_plot_ccgt(self):
 	"""Plot T-s diagram for combined-cycle gas turbine"""
 	import loading
 	loading.load_matplotlib(throw=True)
@@ -234,29 +236,93 @@ def cycle_plot(self):
 
 	# plot gas turbine cycle
 	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.HE.inlet, self.HE.outlet, self.GC.inlet]
-	plot_Ts(SS)
+	plot_Ts(SS,'g-')
+	plot_Ts(SS,'go')
 	hold(1)
 	
-	sat_curve(d)
+	sat_curve(D)
 
 	boiler_curve = pconst(self.HE.inlet_cold,self.HE.outlet_cold,100)
 	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
 	SS2 = [self.PU.outlet, self.HE.inlet_cold] + boiler_curve + [self.HE.outlet_cold, self.TU.inlet, self.TU.outlet, self.CO.inlet] + condenser_curve + [self.CO.outlet, self.PU.inlet, self.PU.outlet]
 	plot_Ts(SS2)
+	plot_Ts([self.PU.outlet, self.HE.inlet_cold,self.HE.outlet_cold, self.TU.inlet, self.TU.outlet, self.CO.inlet,self.CO.outlet, self.PU.inlet, self.PU.outlet],'bo')
 
-	title(unicode(r"With %s bottoming cycle" % d.name))
+	title(unicode(r"Combined cycle with air and %s" % D.name))
 	ylabel(unicode(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
+	savefig(os.path.expanduser("~/Desktop/ccgt.eps"))
+	savefig(os.path.expanduser("~/Desktop/ccgt.png"))
+
+
+#--- simple gas turbine models ---
+
+def cycle_plot_brayton_regen(self):
+	"""Plot T-s diagran for regenerative gas turbine"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()		
+
+	# plot gas turbine cycle
+	SS = [self.CO.inlet, self.CO.outlet, self.RE.inlet, self.RE.outlet, self.BU.inlet,self.BU.outlet, self.TU.inlet, self.TU.outlet,self.RE.inlet_hot, self.RE.outlet_hot, self.DI.inlet, self.DI.outlet,self.CO.inlet]
+	plot_Ts(SS,'g-')
+	plot_Ts(SS,'go')
+	hold(1)
+
+	title(unicode(r"Regenerative Brayton cycle"))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+	savefig(os.path.expanduser("~/Desktop/brayton_regen.eps"))
+
+#--- air-to-stream heat exchanger plot ---
+
+def air_stream_heat_exchanger_plot(self):
+	"""Plot T-H diagram of heat transfer in a heater_closed model"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()
+	hold(1)
+	D = fprops.fprops_fluid(str(self.cd_cold.component.getSymbolValue()))
+
+	n = self.n.getIntValue()
+	extpy.getbrowser().reporter.reportNote("Fluid is %s" % D.name)	
+
+	# hot side is the air, calculated in the model
+	plot_TH( [self.H[i] for i in range(1+int(n))],'r-',\
+		Href = (float(self.outlet.h)*float(self.outlet.mdot))\
+	)
+
+	plot_TH(pconsth(self.inlet_cold, self.outlet_cold, 50),'b-',
+		Href = (float(self.inlet_cold.h)*float(self.inlet_cold.mdot))\
+	)
+
+	title(unicode(r"Combined-cycle air-%s heat exchanger" % D.name))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("H / [MW]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+	savefig(os.path.expanduser("~/Desktop/air_strea_heatex.eps"))
 
 
 extpy.registermethod(cycle_plot_rankine)
 extpy.registermethod(cycle_plot_rankine_regen1)
 extpy.registermethod(cycle_plot_rankine_regen2)
-extpy.registermethod(heater_closed_plot)
+extpy.registermethod(cycle_plot_brayton_regen)
+extpy.registermethod(cycle_plot_ccgt)
 
-extpy.registermethod(cycle_plot)
+extpy.registermethod(heater_closed_plot)
+extpy.registermethod(air_stream_heat_exchanger_plot)
+
 #the above method can be called using "EXTERNAL fourbarplot(SELF)" in ASCEND.
