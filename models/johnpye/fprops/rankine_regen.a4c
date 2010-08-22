@@ -318,8 +318,7 @@ METHOD default_self;
 	RUN CO.default_self;
 	RUN PU.default_self;
 	RUN HE.default_self;
-	BL.cons_mass.included := FALSE;
-	HE.cons_en.included := FALSE;
+	HE.cons_mass_heat.included := FALSE;
 END default_self;
 METHOD cycle_plot;
 	EXTERNAL cycle_plot_rankine_regen1(SELF);
@@ -334,11 +333,13 @@ MODEL rankine_regen_toluene REFINES rankine_regen_common;
 	BO.cd.component :== 'toluene';
 METHODS
 METHOD on_load;
+	RUN default_self;
 	FIX BO.outlet.T; BO.outlet.T := 580 {K} + 273.15 {K};
 	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
 	FIX CO.outlet.T; CO.outlet.T := 40 {K} + 273.15 {K};
 	FIX CO.outlet.x; CO.outlet.x := 1e-6;
 	FIX HE.outlet.T; HE.outlet.T := 307 {K} + 273.15 {K};
+	FIX Wdot; Wdot := 100 {MW};
 	
 	FIX BO.eta;  BO.eta := 1.0;
 	FIX TU.eta; TU.eta := 0.85;
@@ -362,11 +363,13 @@ MODEL rankine_regen_ammonia REFINES rankine_regen_common;
 	BO.cd.component :== 'ammonia';
 METHODS
 METHOD on_load;
+	RUN default_self;
 	FIX BO.outlet.T; BO.outlet.T := 580 {K} + 273.15 {K};
 	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
 	FIX CO.outlet.T; CO.outlet.T := 40 {K} + 273.15 {K};
 	FIX CO.outlet.x; CO.outlet.x := 1e-6;
 	FIX HE.outlet.T; HE.outlet.T := 150.1 {K} + 273.15 {K};
+	FIX Wdot; Wdot := 100 {MW};
 	
 	FIX BO.eta;  BO.eta := 1.0;
 	FIX TU.eta; TU.eta := 0.85;
