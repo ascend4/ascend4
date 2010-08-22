@@ -126,12 +126,12 @@ const HelmholtzData helmholtz_data_nitrogen = {
 */
 #ifdef TEST
 
-#include "ideal_impl.h"
-
+#include "../ideal_impl.h"
 #include "../test.h"
 #include <math.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
 
 double phi0(double tau, double del){
 	return log(del) - log(tau) - 12.76953 - 0.007841630*tau + 3.5*log(tau) - 1.934819e-4/tau - 1.247742e-5/(tau*tau) + 6.678326e-8/(tau*tau*tau) + 1.012941*log(1 - exp(-26.65788*tau));
