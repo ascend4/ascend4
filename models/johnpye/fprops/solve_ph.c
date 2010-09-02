@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <math.h>
 #include <stdlib.h>
 
-#define FPE_DEBUG
+//#define FPE_DEBUG
 #define ASSERT_DEBUG
 
 #ifdef ASSERT_DEBUG
