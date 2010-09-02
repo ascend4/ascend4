@@ -171,8 +171,9 @@ END combinedcycle_fprops_common;
 
 MODEL combinedcycle_toluene REFINES combinedcycle_fprops_common;
 	TU.inlet.cd.component :== 'toluene';
-	HE.outlet.T = PU.outlet.T + 50 {K};
+	HE.outlet.T = PU.outlet.T + 40 {K};
 	HE.outlet_cold.T = GT.outlet.T - 20 {K};
+	Tmax_rankine ALIASES HE.outlet_cold.T;
 METHODS
 METHOD default_self;
 	RUN combinedcycle_fprops_common::default_self;

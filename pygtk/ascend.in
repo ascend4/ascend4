@@ -51,7 +51,7 @@ if platform.system()=="Windows":
 	GTKLIBPATH,t = wreg.QueryValueEx(k,"GTKLIBS");
 	DEFAULT_ASCENDLIBRARY="%s;%s" % (INSTALL_SOLVERS,INSTALL_MODELS)
 	
-	INSTALL_PYTHON = os.path.join(INSTALL_ASCDATA,"python")	
+	ASCEND_PYTHON = os.path.join(INSTALL_ASCDATA,"python")	
 	PYVERSION = "@PYVERSION@"
 
 elif platform.system()=="Darwin":
@@ -64,7 +64,7 @@ elif platform.system()=="Darwin":
 	INSTALL_ASCDATA = path_absolute("Resources")
 	INSTALL_MODELS = path_absolute("""@ASC_LIBRARY_REL_DIST@""")
 	INSTALL_SOLVERS = path_absolute("""@ASC_SOLVERS_REL_DIST@""")
-	INSTALL_PYTHON = path_absolute("Python")
+	ASCEND_PYTHON = path_absolute("Python")
 	DEFAULT_ASCENDLIBRARY="%s;%s" % (INSTALL_SOLVERS,INSTALL_MODELS)
 
 	INSTALL_PYGTK = path_absolute("PyGTK.bundle/python")
@@ -80,7 +80,7 @@ else:
 	INSTALL_ASCDATA="@INSTALL_ASCDATA@"
 	INSTALL_MODELS = "@INSTALL_MODELS@"
 	INSTALL_SOLVERS = "@INSTALL_SOLVERS@"
-	INSTALL_PYTHON = "@INSTALL_PYTHON@"
+	ASCEND_PYTHON = "@INSTALL_PYTHON_ASCEND@"
 	DEFAULT_ASCENDLIBRARY="""@DEFAULT_ASCENDLIBRARY@"""
 
 #-----------------------------------------------------------------------
@@ -190,9 +190,9 @@ if os.environ.get('ASCENDSOLVERS'):
 
 print("sys.path[0] = %s" % sys.path[0])
 
-if not INSTALL_PYTHON in sys.path:
-	print("Adding INSTALL_PYTHON=%s to python path" % INSTALL_PYTHON)
-	sys.path.append(INSTALL_PYTHON)
+if not ASCEND_PYTHON in sys.path:
+	print("Adding ASCEND_PYTHON=%s to python path" % ASCEND_PYTHON)
+	sys.path.append(ASCEND_PYTHON)
 
 if os.environ.get('OSTYPE')=='cygwin':
 	print("CYGWIN...")
@@ -202,7 +202,7 @@ elif os.environ.get('OSTYPE')=='msys':
 if os.environ.get('ASC_GDB'):
 	args = sys.argv
 	args.pop(0)
-	cmd = ["gdb","--args","python",os.path.join(INSTALL_PYTHON,"gtkbrowser.py")]+args
+	cmd = ["gdb","--args","python",os.path.join(ASCEND_PYTHON,"gtkbrowser.py")]+args
 	print(cmd)
 	os.execv("/usr/bin/gdb",cmd)
 else:

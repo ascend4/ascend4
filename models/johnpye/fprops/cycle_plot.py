@@ -105,12 +105,13 @@ def cycle_plot_rankine(self):
 
 	title(unicode(r"Rankine cycle with %s" % D.name))
 	ylabel(unicode(r"T / [°C]"))
+	aa = axis(); axis([aa[0],aa[1],-100,600])
 	xlabel("s / [kJ/kg/K]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
-
+	savefig(os.path.expanduser("~/Desktop/rankine.eps"))
 
 def cycle_plot_rankine_regen2(self):
 	"""Plot T-s diagram for a regenerative Rankine cycle (bleed steam regen)"""
@@ -145,6 +146,7 @@ def cycle_plot_rankine_regen2(self):
 
 	title(unicode(r"Regenerative Rankine cycle with %s" % D.name))
 	ylabel(unicode(r"T / [°C]"))
+	aa = axis(); axis([aa[0],aa[1],-100,600])
 	xlabel("s / [kJ/kg/K]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
@@ -184,6 +186,7 @@ def cycle_plot_rankine_regen1(self):
 
 	title(unicode(r"Regenerative Rankine cycle with %s" % D.name))
 	ylabel(unicode(r"T / [°C]"))
+	aa = axis(); axis([aa[0],aa[1],-100,600])
 	xlabel("s / [kJ/kg/K]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
@@ -261,6 +264,7 @@ def cycle_plot_ccgt(self):
 
 #--- simple gas turbine models ---
 
+
 def cycle_plot_brayton_regen(self):
 	"""Plot T-s diagran for regenerative gas turbine"""
 	import loading
@@ -313,7 +317,7 @@ def air_stream_heat_exchanger_plot(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
-	savefig(os.path.expanduser("~/Desktop/air_strea_heatex.eps"))
+	savefig(os.path.expanduser("~/Desktop/air_stream_heatex.eps"))
 
 
 extpy.registermethod(cycle_plot_rankine)
