@@ -756,7 +756,7 @@ METHOD on_load;
 	FIX CO.outlet.T; CO.outlet.T := 40 {K} + 273.15 {K};
 	FIX CO.outlet.x; CO.outlet.x := 1e-6;
 	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
-	FIX BO.outlet.T; BO.outlet.T := 580 {K} + 273.15 {K};
+	FIX BO.outlet.T; BO.outlet.T := 375. {K} + 273.15 {K};
 
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';

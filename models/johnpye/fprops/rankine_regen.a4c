@@ -144,7 +144,7 @@ METHOD set_x_limit_correct_turb;
 	FREE TU1.eta;
 	TU2.eta := 0.823;
 	FIX eta_turb_tot; eta_turb_tot := 0.85;
-END set_x_limit;
+END set_x_limit_correct_turb;
 METHOD cycle_plot;
 	EXTERNAL cycle_plot_rankine_regen2(SELF);
 END cycle_plot;
@@ -325,20 +325,21 @@ METHOD cycle_plot;
 END cycle_plot;
 METHOD heater_plot;
 	EXTERNAL heater_closed_plot(SELF);
-END cycle_plot;
+END heater_plot;
 END rankine_regen_common;
 
 
 MODEL rankine_regen_toluene REFINES rankine_regen_common;
 	BO.cd.component :== 'toluene';
+	HE.inlet_heat.T = HE.outlet.T + 33 {K};
+(*	HE.outlet_heat.T = HE.inlet.T + 12 {K};*)
 METHODS
 METHOD on_load;
 	RUN default_self;
-	FIX BO.outlet.T; BO.outlet.T := 580 {K} + 273.15 {K};
+	FIX BO.outlet.T; BO.outlet.T := 375. {K} + 273.15 {K}; (* lowered for toluene *)
 	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
 	FIX CO.outlet.T; CO.outlet.T := 40 {K} + 273.15 {K};
 	FIX CO.outlet.x; CO.outlet.x := 1e-6;
-	FIX HE.outlet.T; HE.outlet.T := 307 {K} + 273.15 {K};
 	FIX Wdot; Wdot := 100 {MW};
 	
 	FIX BO.eta;  BO.eta := 1.0;

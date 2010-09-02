@@ -29,8 +29,8 @@ default_install_solvers = "$INSTALL_LIB/ascend/solvers"
 default_install_assets = "$INSTALL_ASCDATA/glade/"
 default_install_ascdata = "$INSTALL_SHARE/ascend"
 default_install_include = "$INSTALL_PREFIX/include"
-default_install_python = os.path.join(distutils.sysconfig.get_python_lib(),"ascend")
-
+default_install_python = distutils.sysconfig.get_python_lib()
+default_install_python_ascend = "$INSTALL_PYTHON/ascend"
 default_tcl = '/usr'
 default_tcl_libpath = "$TCL/lib"
 default_tcl_cpppath = "$TCL/include"
@@ -132,6 +132,7 @@ elif platform.system()=="Darwin":
 	default_install_ascdata = "$INSTALL_BIN/Resources"
 	default_install_include = "$INSTALL_BIN/Headers"
 	default_install_python = "$INSTALL_BIN/Python"
+	default_install_python_ascend = default_install_python
 	default_install_assets = "$INSTALL_ASCDATA/glade/"
 	# FIXME still need to work out the Tcl/Tk side of things...
 
@@ -664,8 +665,14 @@ vars.Add(
 
 vars.Add(
 	'INSTALL_PYTHON'
-	,'Common shared-file location on this system'
+	,'General location for Python extensions on this system'
 	,default_install_python
+)
+
+vars.Add(
+	'INSTALL_PYTHON_ASCEND'
+	,'Location for installation of Python modules specific to ASCEND'
+	,default_install_python_ascend
 )
 
 vars.Add(
@@ -1042,6 +1049,8 @@ print "INSTALL_PREFIX =",env['INSTALL_PREFIX']
 print "INSTALL_MODELS =",env['INSTALL_MODELS']
 print "INSTALL_SOLVERS =",env['INSTALL_SOLVERS']
 print "INSTALL_PYTHON =",env['INSTALL_PYTHON']
+print "INSTALL_PYTHON_ASCEND =",env['INSTALL_PYTHON_ASCEND']
+
 print "DEFAULT_ASCENDLIBRARY =",env['DEFAULT_ASCENDLIBRARY']
 print "DEFAULT_ASCENDSOLVERS =",env['DEFAULT_ASCENDSOLVERS']
 
@@ -2513,6 +2522,7 @@ subst_dict = {
 	, '@INSTALL_MODELS@':env['INSTALL_MODELS']
 	, '@INSTALL_SOLVERS@':env['INSTALL_SOLVERS']
 	, '@INSTALL_PYTHON@':env['INSTALL_PYTHON']
+	, '@INSTALL_PYTHON_ASCEND@':env['INSTALL_PYTHON_ASCEND']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
 	, '@RELEASE@':release
@@ -2803,6 +2813,11 @@ if not with_extfns:
 
 env.Alias('extfns',env['extfns'])
 
+#-------------
+# FPROPS python bindings
+
+env.Alias('pyfprops',env['pyfprops'])
+
 #------------------------------------------------------
 # CREATE ASCEND-CONFIG scriptlet
 
@@ -2984,6 +2999,7 @@ if with_tcltk:
 	default_targets.append('tcltk')
 if with_python:
 	default_targets.append('pygtk')
+	default_targets.append('pyfprops')
 #if with_installer:
 #	default_targets.append('installer')
 if with_extfns:

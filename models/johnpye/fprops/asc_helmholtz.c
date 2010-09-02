@@ -177,7 +177,7 @@ int helmholtz_prepare(struct BBoxInterp *bbox,
 		return 1;
 	}
 
-	bbox->user_data = fprops_fluid(comp);
+	bbox->user_data = (void *)fprops_fluid(comp);
 	if(bbox->user_data == NULL){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component name was not recognised. Check the source-code for for the supported species.");
 		return 1;
