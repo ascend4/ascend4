@@ -288,6 +288,10 @@ Section "PyGTK GUI" sect_pygtk
 		File "..\pygtk\_ascpy.pyd"
 		File "..\pygtk\*.py"
 		
+		; FPROPS: python bindings
+		File "..\models\johnpye\fprops\python\_fprops.pyd"
+		File "..\models\johnpye\fprops\python\*.py"
+		
 		; GLADE assets
 		SetOutPath $INSTDIR\glade
 		File "..\pygtk\glade\*.glade"
@@ -480,6 +484,7 @@ Section "Uninstall"
   
 		DetailPrint "--- REMOVING PYTHON COMPONENTS ---"
 		Delete $INSTDIR\python\_ascpy.pyd
+		Delete $INSTDIR\python\_fprops.pyd
 		Delete $INSTDIR\python\*.py
 		Delete $INSTDIR\python\*.pyc
 		Delete $INSTDIR\glade\*.glade

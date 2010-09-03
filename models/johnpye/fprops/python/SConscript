@@ -10,11 +10,12 @@ import distutils.sysconfig, sys, platform
 
 if platform.system()=="Windows":
 	python_lib='python%d%d'
+	pyenv['SHLIBSUFFIX']='.pyd'
 else:
 	python_lib='python%d.%d'
 
 lib = pyenv.SharedLibrary('fprops',['fprops.i'] + pyenv['shobjs']
-	,LIBPATH=['#']
+	,LIBPATH=['#'] + fprops_env['PYTHON_LIBPATH']
 	,CPPPATH=['#',distutils.sysconfig.get_python_inc()]
 	,LIBS=[python_lib % (sys.version_info[0],sys.version_info[1])]
 	,SWIGFLAGS=['-python']
