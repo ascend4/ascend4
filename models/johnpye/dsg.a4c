@@ -12,7 +12,7 @@ IMPORT "dsg";
 	ASCENDLIBRARY path variable. See http://freesteam.sf.net/
 
 	This model also requires the 'dsg' library for Direct Steam Generation
-	calculations, available on request from http://pye.dyndns.org/
+	calculations, available on request from http://jpye.dyndns.org/
 
 	For example (assuming you already have the source code for the above):
 	export $ASCENDLIBRARY=$HOME/src/ascend/models

@@ -1,7 +1,7 @@
 (*
 	ASCEND model library: radiation heat transfer model
 	Copyright (C) John Pye 2006
-	http://pye.dyndns.org/
+	http://jpye.dyndns.org/
 
 	This program is free software; you can redistribute it
 	and/or modify it under the terms of the GNU General Public
@@ -24,7 +24,7 @@
 	This is a radiation heat transfer model that is being used
 	to simulate (just a rough model) the absorber of a large solar
 	thermal energy system. For more information see 
-	http://pye.dyndns.org or google for 'CLFR'. This is a linear
+	http://jpye.dyndns.org or google for 'CLFR'. This is a linear
 	concentrator, so the cavity is simulated with a two-dimensional 
 	model. The cavity is trapezoidal in shape, wider at the base
 	through which radiation enters.
@@ -172,7 +172,7 @@ END cavity;
 	the model, and an ambient temperature.
 	
 	We also calculate the 'F_rad' correlation parameter (see
-	http://pye.dyndns.org for more information).
+	http://jpye.dyndns.org for more information).
 *)
 MODEL cavity_losses REFINES cavity;
 	h_B, h_N IS_A heat_transfer_coefficient;
