@@ -6,7 +6,6 @@ from blockline import BlockLine
 import cairo
 
 # ConnectorTool for Gaphas canvas, by John Pye, 4 Nov 2008.
-# http://pye.dyndns.org
 
 class ConnectorTool(BlockConnectTool):
 	"""
