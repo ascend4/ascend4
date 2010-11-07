@@ -1163,6 +1163,9 @@ def CheckSwigVersion(context):
 		):
 		msg = "ok"
 		res = True
+	elif maj == 2:
+		msg = "ok"
+		res = True
 
 	context.Result("%s, %d.%d.%d" % (msg, maj,min,pat))
 	return res;
