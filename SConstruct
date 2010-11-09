@@ -2156,7 +2156,7 @@ def sconsversioncheck():
 	import SCons
 	v = SCons.__version__.split(".")
 	if v[0] != '0':
-		if v[0] == '1':
+		if v[0] == '1' or v[0] == '2':
 			return 1;
 		return 0
 	if int(v[1]) >= 97:
