@@ -932,10 +932,8 @@ else:
 		envadditional['LIBS']=['gcc']
 	else:
 		envenv = os.environ
-		tools += ['default']
-		#TODO removed 'doxygen' for SCons 0.96.93
-	
-	
+		tools += ['default','doxygen']
+
 env = Environment(
 	ENV=envenv
 	, toolpath=['scons']

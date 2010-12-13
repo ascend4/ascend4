@@ -33,12 +33,15 @@
 
 #ifndef ASC_EXPRS_H
 #define ASC_EXPRS_H
+#include "symtab.h"
+#include "dimen.h"
+#include "name.h"
 
 /**	@addtogroup compiler Compiler
 	@{
 */
 
-extern struct Expr *CreateVarExpr(struct Name *n);
+ASC_DLLSPEC struct Expr *CreateVarExpr(struct Name *n);
 /**<
  *  Create a name type expr node.
  */
@@ -62,7 +65,7 @@ extern void InitVarExpr(struct Expr *e, CONST struct Name *n);
  *  after the node dies is that the name is destroyed when the node is.
  */
 
-extern struct Expr *CreateOpExpr(enum Expr_enum t);
+ASC_DLLSPEC struct Expr *CreateOpExpr(enum Expr_enum t);
 /**< 
  *  Create an operator node.
  */
@@ -109,7 +112,7 @@ extern struct Expr *CreateSetExpr(struct Set *set);
  *  Create a set node.
  */
 
-extern struct Expr *CreateSymbolExpr(symchar *sym);
+ASC_DLLSPEC struct Expr *CreateSymbolExpr(symchar *sym);
 /**< 
  *  Create a symbol node.
  */
@@ -425,7 +428,7 @@ extern void DestroyExprList(struct Expr *e);
  *  Handles NULL input gracefully.
  */
 
-extern struct Expr *JoinExprLists(struct Expr *e1, struct Expr *e2);
+ASC_DLLSPEC struct Expr *JoinExprLists(struct Expr *e1, struct Expr *e2);
 /**< 
  *  Append list e2 to the end of e1.  This returns e1, unless e1
  *  is NULL in which case it returns e2.

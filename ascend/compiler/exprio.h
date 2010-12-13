@@ -35,6 +35,8 @@
 
 #ifndef ASC_EXPRIO_H
 #define ASC_EXPRIO_H
+#include "expr_types.h"
+#include <ascend/general/dstring.h>
 
 /**	@addtogroup compiler Compiler
 	@{
@@ -52,7 +54,7 @@ extern void WriteExprNode(FILE *f, CONST struct Expr *e);
 	Write a single expression node with no leading or trailing white space.
  */
 
-extern void WriteExpr(FILE *f, CONST struct Expr *e);
+ASC_DLLSPEC void WriteExpr(FILE *f, CONST struct Expr *e);
 /**<
 	Write the expression with no leading or trailing white space.
 	@NOTE The output is in POSTFIX format
