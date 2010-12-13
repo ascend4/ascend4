@@ -24,7 +24,8 @@
 
 #define TESTS(T) \
 	T(basics) \
-	T(autodiff)
+	T(autodiff) \
+	T(expr)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

@@ -1,7 +1,6 @@
 Import('env')
 
-# TODO removed doxygen for SCons 0.96.93
+doxyfile = env.SubstInFile('Doxyfile','Doxyfile.base')
 
-#docs = env.Doxygen('Doxyfile.base')
-#env.Alias('docs',docs)
+doxyout = env.Doxygen(doxyfile)
 
