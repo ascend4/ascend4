@@ -52,8 +52,11 @@ MODEL plotbvp;
 METHODS
 
 	METHOD default_self;
+		(*
+		no defaults required here:
 		RUN Plot_Y.default_self;
 		RUN Y_curve.default_self;
+		*)
 		RUN bt.default_self;
 		Plot_Y.title := 'd/dx = 2x exp(-2t) cos(t)';
 		Plot_Y.XLabel := 'time t';
@@ -94,12 +97,19 @@ METHODS
 	END scale_all;
 
 	METHOD specify;
-		RUN bt.reset;
+		RUN bt.specify;
 	END specify;
+
+	METHOD values;
+		RUN bt.values;
+	END values;
 
 	METHOD on_load;
 		RUN reset;
 		RUN default_self;
+		RUN bound_self;
+		RUN scale_self;
+		RUN values;
 	END on_load;
 
 END plotbvp;
