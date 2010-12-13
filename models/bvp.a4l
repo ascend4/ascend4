@@ -30,7 +30,7 @@ REQUIRE "atoms.a4l";
 	'test_dynamics' and 'bvp_test'. Note also that the model 'plotbvp.a4c'
 	includes this test model and provides graphical output from the integration.
 
-	@NODE some old comments were removed here as they confused the issue by
+	@NOTE some old comments were removed here as they confused the issue by
 	referring to the LSODE integration engine.
 
 	@NOTE The LSODE integration engine is provided as part of ASCEND and
@@ -93,7 +93,7 @@ METHODS
 
 	METHOD specify;
 		(* The state variables are set
-	 	* TRUE, while their derivatives are FALSE.
+	 	* FIXED, while their derivatives are FREE.
 	 	*)
 		FIX x;
 		FIX y[1..n_eq];
