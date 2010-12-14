@@ -28,13 +28,12 @@
 #include <math.h>
 #include <stdarg.h>
 #include <ctype.h>
+
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
-
-
 
 #include "functype.h"
 #include "expr_types.h"

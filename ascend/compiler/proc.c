@@ -44,7 +44,6 @@
 #include "expr_types.h"
 #include "stattypes.h"
 #include "statement.h"
-#include "slist.h"
 
 #define PMALLOC(x) x = ASC_NEW(struct InitProcedure)
 /*

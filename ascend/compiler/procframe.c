@@ -37,7 +37,6 @@
 
 #include "expr_types.h"
 #include "stattypes.h"
-#include "slist.h"
 #include "proc.h"
 #include "instance_enum.h"
 #include "watchpt.h"

@@ -25,12 +25,11 @@
  *  with the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
-#include<stdio.h>
-#include<assert.h>
+#include <stdio.h>
+#include <assert.h>
+
 #include <ascend/utilities/ascConfig.h>
-
 #include <ascend/utilities/ascMalloc.h>
-
 
 #include "functype.h"
 #include "expr_types.h"

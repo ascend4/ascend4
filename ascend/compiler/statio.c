@@ -31,8 +31,6 @@
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
 
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "stattypes.h"
