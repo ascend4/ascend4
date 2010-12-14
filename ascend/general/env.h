@@ -35,6 +35,10 @@
 # define MALLOC ascmalloc
 #endif
 
+/**	@addtogroup general_env General Environment Variables
+	@{
+*/
+
 /**
 	This is the type of env var function that you must send to 'env_subst'.
 	It doesn't have to actually consult the environment; it could do all
@@ -70,5 +74,7 @@ ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *put
 	later, 'as an exercise'.
 */
 ASC_DLLSPEC char *env_subst(const char *path,GetEnvFn *getenvptr);
+
+/* @} */
 
 #endif

@@ -40,6 +40,10 @@
 #ifndef ASC_PAIRLIST_H
 #define ASC_PAIRLIST_H
 
+/**	@addtogroup general_pairlist General Pointer-pair Manager
+	@{
+*/
+
 struct pairlist_t;
 struct gl_list_t;
 
@@ -133,6 +137,8 @@ extern void pairlist_print(FILE *fp, struct pairlist_t * pl);
  *  @param fp     The open file stream on which to print the report.
  *  @param pl     The pairlist store on which to report.
  */
+
+/* @} */
 
 #endif /* ASC_PAIRLIST_H */
 

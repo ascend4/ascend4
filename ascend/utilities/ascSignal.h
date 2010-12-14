@@ -106,6 +106,11 @@
 #define ASC_ASCSIGNAL_H
 
 #include "config.h"
+
+/**	@addtogroup utilities_signal Utilities Signal Handling
+	@{
+*/
+
 #ifndef ASC_SIGNAL_TRAPS
 
 /* if our wizzband PITA signal handing isn't turned on, at least allow
@@ -309,6 +314,8 @@ ASC_DLLSPEC int Asc_SignalStackLength(int signum);
 ASC_DLLSPEC SigHandlerFn *Asc_SignalStackTop(int signum);
 
 #endif /* ASC_SIGNAL_TRAPS */
+
+/* @} */
 
 #endif  /* ASC_ASCSIGNAL_H */
 

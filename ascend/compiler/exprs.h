@@ -37,7 +37,7 @@
 #include "dimen.h"
 #include "name.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_expr Compiler Expressions
 	@{
 */
 

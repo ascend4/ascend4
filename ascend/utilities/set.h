@@ -45,6 +45,10 @@
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascMalloc.h>
 
+/**	@addtogroup utilities_set Utilities Set
+	@{
+*/
+
 #define	set_size(n) \
    (((n)+((int)WORDSIZE-1))/(int)WORDSIZE)
 /**<
@@ -225,5 +229,6 @@ extern unsigned *set_union(unsigned int *set,
 
 #endif /* THIS_IS_DEAD_CODE */
 
+/* @} */
 #endif  /* ASC_SET_H */
 

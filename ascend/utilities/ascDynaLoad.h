@@ -38,6 +38,10 @@
 
 #include <ascend/utilities/ascConfig.h>
 
+/**	@addtogroup utilities_dl Utilities Dynamic Library Loading
+	@{
+*/
+
 ASC_DLLSPEC char *SearchArchiveLibraryPath(const char *name, char *dpath, const char *envv);
 /**<
 	Search the archive library path for a file matching the given
@@ -169,5 +173,7 @@ ASC_DLLSPEC DynamicF Asc_DynamicFunction(CONST char *libraryname,
  *  We don't know about aix, and others.
  */
 #endif /* gnu,hp,alpha,win,solaris,sunos,irix */
+
+/* @} */
 
 #endif /* ASC_ASCDYNALOAD_H */

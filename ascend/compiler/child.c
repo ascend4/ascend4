@@ -38,20 +38,17 @@
 #include "symtab.h"
 #include "instance_enum.h"
 
-
 #include "expr_types.h"
 #include "stattypes.h"
 #include "statio.h"
 #include "type_desc.h"
 #include "cmpfunc.h"
-#define __CHILD_ILLEGAL_ACCESS__
+
+#define ASC_CHILDPRIV_ACCESS
 #include "childpriv.h"
+
 #include "childio.h"
 #include <ascend/general/mathmacros.h>
-
-#ifndef lint
-static CONST char ChildListID[] = "$Id: child.c,v 1.25 1998/03/26 20:39:34 ballan Exp $";
-#endif
 
 #define NEWCL 1
 /* origin of sanity (or sanity of origin) check. dependent on header */

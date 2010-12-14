@@ -16,7 +16,20 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
+*//*
+	by Kirk A. Abbott
+	Created December 29, 1994.
+	Last in CVS $Revision: 1.3 $ $Date: 1998/06/16 15:47:47 $ $Author: mthomas $
+*/
+
+#ifndef ASC_TABLE_H
+#define ASC_TABLE_H
+
+/**	@addtogroup general_table General Table
+	@{
+*/
+
+/** @file
 	Hash Table Module.
 	
 	Many hash tables are used throughout the implementation of a compiler
@@ -32,14 +45,7 @@
 
 	Requires:
 	#include "utilities/ascConfig.h"
-*//*
-	by Kirk A. Abbott
-	Created December 29, 1994.
-	Last in CVS $Revision: 1.3 $ $Date: 1998/06/16 15:47:47 $ $Author: mthomas $
 */
-
-#ifndef ASC_TABLE_H
-#define ASC_TABLE_H
 
 typedef  void (*TableIteratorOne)(void *);
 /**<
@@ -215,5 +221,7 @@ ASC_DLLSPEC void *TableLastFind(struct Table *table);
  *
  *  @param table Pointer to the hash table to query (non-NULL).
  */
+
+/* @} */
 
 #endif /* ASC_TABLE_H */

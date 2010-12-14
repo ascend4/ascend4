@@ -64,7 +64,7 @@
 #include "dimen.h"
 #include "functype.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 

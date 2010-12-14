@@ -77,6 +77,10 @@
 #endif
 #define LISTIMPLEMENTED 0 		/**< BAA_DEBUG changes that need work */
 
+/**	@addtogroup general_list General List
+	@{
+*/
+
 /*
  * The following bit fields are defined for the gl_list flags
  */
@@ -824,6 +828,8 @@ extern void gl_reportrecycler(FILE *fp);
  *
  *  @param fp  Pointer to file stream to receive report.
  */
+
+/* @} */
 
 #endif /* ASC_LIST_H */
 

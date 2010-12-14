@@ -33,7 +33,7 @@
 #ifndef ASC_TYPEDEF_H
 #define ASC_TYPEDEF_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_type Compiler Type Description
 	@{
 */
 

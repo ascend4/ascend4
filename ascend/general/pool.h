@@ -28,6 +28,15 @@
  *
  */
 
+#include <ascend/utilities/ascConfig.h>
+
+#ifndef ASC_POOL_H
+#define ASC_POOL_H
+
+/**	@addtogroup general_pool General Memory Pool
+	@{
+*/
+
 /** @file
  *  Ascend Pooled Memory Manager.
  *  <pre>
@@ -104,11 +113,6 @@
  *         #include "compiler.h"
  *  </pre>
  */
-
-#ifndef ASC_POOL_H
-#define ASC_POOL_H
-
-#include <ascend/utilities/ascConfig.h>
 
 typedef struct pool_store_header *pool_store_t;
 /**<
@@ -385,6 +389,8 @@ extern size_t pool_sizeof_store(pool_store_t ps);
  *  @param ps pool_store_t, the pool store to query.
  *  @return The total bytes currently used by the pool store.
  */
+
+/* @} */
 
 #endif  /* ASC_POOL_H */
 

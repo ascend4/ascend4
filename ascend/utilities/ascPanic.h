@@ -37,6 +37,10 @@
 # endif
 #endif
 
+/**	@addtogroup utilities_panic Utilities Fatal Error Handling
+	@{
+*/
+
 NORETURN ASC_DLLSPEC void asc_panic_line(
 		const int status, const char *file, const int line, const char *function,
 		const char *format, ...
@@ -178,5 +182,7 @@ ASC_DLLSPEC void Asc_PanicDisplayMessageBox(int is_displayed);
 
 	Has no effect on non-Windows platforms.
 */
+
+/* @} */
 
 #endif /* ASC_ASCPANIC_H */

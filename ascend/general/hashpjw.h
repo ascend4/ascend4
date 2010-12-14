@@ -19,6 +19,10 @@
 #ifndef __hashpjw_h_seen__
 #define __hashpjw_h_seen__
 
+/**	@addtogroup general_hash General String Hashing
+	@{
+*/
+
 ASC_DLLSPEC unsigned long hashpjw(CONST char *str, unsigned long size);
 /**<
  *  Return a hash value base on str.  The value will be >= 0 and < size.
@@ -45,6 +49,8 @@ ASC_DLLSPEC unsigned long hashpjw_int(int id, unsigned long size);
  *  @todo general/hashpjw.h - Provide integer hashing function (or
  *        possibly remove function as hashpjw_int is not used in ASCEND).
  */
+
+/* @} */
 
 #endif /* __hashpjw_h_seen__ */
 

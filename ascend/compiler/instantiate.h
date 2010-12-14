@@ -57,7 +57,7 @@
 
 #include "stattypes.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 

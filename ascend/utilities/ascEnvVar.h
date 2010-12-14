@@ -16,7 +16,25 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//**
+*//*
+	by Ben Allan
+	Created: 6/3/97
+	Version: $Revision: 1.4 $
+	Version control file: $RCSfile: ascEnvVar.h,v $
+	Date last modified: $Date: 1997/07/18 12:04:08 $
+	Last modified by: $Author: mthomas $
+*/
+
+#ifndef ASC_ENVVAR_H
+#define ASC_ENVVAR_H
+
+#include <ascend/utilities/ascConfig.h>
+
+/**	@addtogroup utilities_env Utilities Environment Variable Imitation
+	@{
+*/
+
+/**
 	@file
 	Ascend Environment Variable Imitation.
 
@@ -36,19 +54,7 @@
 	    - list.o
 	    - ascPanic.o
 	    - ascEnvVar.o
- *//*
-	by Ben Allan
-	Created: 6/3/97
-	Version: $Revision: 1.4 $
-	Version control file: $RCSfile: ascEnvVar.h,v $
-	Date last modified: $Date: 1997/07/18 12:04:08 $
-	Last modified by: $Author: mthomas $
-*/
-
-#ifndef ASC_ENVVAR_H
-#define ASC_ENVVAR_H
-
-#include <ascend/utilities/ascConfig.h>
+ */
 
 #define MAX_ENV_VAR_LENGTH 4096
 /**< Maximum length of an environment variable string. */
@@ -254,6 +260,8 @@ ASC_DLLSPEC const char **Asc_EnvNames(int *argc);
  *          (error) the returned array pointer will be NULL.  Otherwise,
  *          the caller should free the array when finished with it.
  */
+
+/* @} */
 
 #endif /* ASC_ENVVAR_H */
 

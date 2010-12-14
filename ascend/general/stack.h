@@ -29,6 +29,13 @@
  *  the file named COPYING.
  */
 
+#ifndef __stack_h_seen__
+#define __stack_h_seen__
+
+/**	@addtogroup general_stack General Stack
+	@{
+*/
+
 /** @file
  *  Stack Module.
  *
@@ -44,9 +51,6 @@
  *        #include "compiler/compiler.h"
  *  </pre>
  */
-
-#ifndef __stack_h_seen__
-#define __stack_h_seen__
 
 /** Stack data structure. */
 struct gs_stack_t {
@@ -172,6 +176,8 @@ ASC_DLLSPEC void gs_stack_apply(struct gs_stack_t *stack, void (*func) (VOIDPTR)
  *  @param stack The stack to apply func to (non-NULL).
  *  @param func The function to execute for each stack item.
  */
+
+/* @} */
 
 #endif /* __stack_h_seen__ */
 

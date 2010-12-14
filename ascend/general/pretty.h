@@ -40,6 +40,10 @@
 #ifndef __pretty_h_seen__
 #define __pretty_h_seen__
 
+/**	@addtogroup general_pretty General String Pretty-printing
+	@{
+*/
+
 /**
  *  Writes a string to a file, splitting it at whitespace characters to
  *  try to limit each line to the specified width.  The string is split 
@@ -91,6 +95,8 @@ ASC_DLLSPEC int print_long_string(FILE *fp, char *string, int width, int indent)
  *  @return The total number of characters printed.
  */
 ASC_DLLSPEC int print_long_string_EOL(FILE *fp, char *string, int indent);
+
+/* @} */
 
 #endif /* __pretty_h_seen__ */
 

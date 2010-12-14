@@ -37,7 +37,7 @@
 #include "instance_enum.h"
 #include <ascend/general/list.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_anon Compiler Anonymous Types
 	@{
 */
 

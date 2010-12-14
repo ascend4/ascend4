@@ -48,7 +48,7 @@
 
 #include "compiler.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_stmt Compiler Statements
 	@{
 */
 

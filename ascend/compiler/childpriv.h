@@ -1,4 +1,3 @@
-#ifdef __CHILD_ILLEGAL_ACCESS__
 /*
  *  Child List Internal Implementation details
  *  by Benjamin Allan
@@ -36,12 +35,16 @@
  *  </pre>
  */
 
-#ifndef _CHILDPRIV_H_SEEN_
-#define _CHILDPRIV_H_SEEN_
+#ifndef ASC_CHILDPRIV_H
+#define ASC_CHILDPRIV_H
 
-#ifndef lint
-static CONST char ChildPrivID[] = "$Id: childpriv.h,v 1.1 1998/03/27 10:43:58 ballan Exp $";
+#ifndef ASC_CHILDPRIV_ACCESS
+# error "Illegal inclusion of 'childpriv.h'; code should only be accessed by child.c and childio.c!"
 #endif
+
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
+	@{
+*/
 
 /** origin of sanity (or sanity of origin) check. dependent on header */
 #define LegalOrigin(n) ( ((n)>0 && (n) <=8) ? (n) : 0 )
@@ -92,6 +95,5 @@ struct ChildListStructure {
 /** macro to fetch the gl list of names from the ChildListPtr */
 #define GN(a) (a)->symbols
 
-#endif  /* _CHILDPRIV_H_SEEN_ */
-#endif  /* __CHILD_ILLEGAL_ACCESS__ */
+#endif  /* ASC_CHILDPRIV_H */
 

@@ -46,7 +46,7 @@
 #ifndef ASC_CHILDDEF_H
 #define ASC_CHILDDEF_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 
@@ -60,8 +60,6 @@
 
 extern int BaseType(symchar *name);
 /**<
- * <!--  int BaseType(name)                                            -->
- * <!--  symchar * name;                                               -->
  * Returns the number of the fundamental type, or -1 if not fundamental.
  * The code here is *VERY* dependent upon the number and position
  * of the FundamentalTypeList (internal to childdef.c)!
@@ -75,10 +73,6 @@ extern struct ChildDesc *MakeChildDesc(symchar *name,
                                        struct StatementList *sl,
                                        ChildListPtr clist);
 /**<
- * <!--  struct ChildDesc *childd = MakeChildDesc(name,sl,clist);      -->
- * <!--  symchar *name;                                                -->
- * <!--  struct StatementList *sl;                                     -->
- * <!--  ChildListPtr clist;                                           -->
  * Returns the child description array based on legal statements in sl.
  */
 
@@ -86,11 +80,6 @@ extern unsigned long CalcByteSize(enum type_kind t,
                                   ChildListPtr clist,
                                   struct ChildDesc *childd);
 /**<
- * <!--  len =  CalcByteSize(t,clist,childd);                          -->
- * <!--  enum type_kind t;                                             -->
- * <!--  ChildListPtr clist;                                           -->
- * <!--  struct ChildDesc *childd;                                     -->
- * <!--  unsigned long len;                                            -->
  * Calculates the byte size of an atomic instance given its
  * child information
  */

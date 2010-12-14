@@ -38,7 +38,7 @@
 #ifndef ASC_REVERSE_AD_H
 #define ASC_REVERSE_AD_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_revad Compiler Reverse Automatic Differentiation
 	@{
 */
 

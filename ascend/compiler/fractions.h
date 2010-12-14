@@ -33,7 +33,7 @@
 
 #include <ascend/utilities/ascConfig.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_frac Compiler Fractions
 	@{
 */
 

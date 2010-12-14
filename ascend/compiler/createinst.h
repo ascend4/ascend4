@@ -32,7 +32,7 @@
 #include "instance_enum.h"
 #include "expr_types.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 

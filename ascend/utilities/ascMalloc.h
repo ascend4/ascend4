@@ -67,10 +67,6 @@
 						realloc() that behaves properly with purify.
 						This is more expensive, and should be used
 						for debugging only.
-
-	Requires:
-		   #include "utilities/ascConfig.h"
-		   #include "utilities/ascPanic.h"
 	</pre>
 *//*
 	by Tom Epperly
@@ -80,6 +76,10 @@
 
 #ifndef ASC_ASCMALLOC_H
 #define ASC_ASCMALLOC_H
+
+/**	@addtogroup utilities_malloc Utilities Memory Management
+	@{
+*/
 
 /* MALLOC_DEBUG and ASC_WITH_DMALLOC will be defined in config.h... */
 #include <ascend/utilities/config.h>
@@ -637,6 +637,8 @@ ASC_DLLSPEC int InMemoryBlockF(CONST VOIDPTR ptr1, CONST VOIDPTR ptr2);
  */
 
 #endif /* ASC_WITH_DMALLOC */
+
+/* @} */
 
 #endif /* ASC_ASCMALLOC_H */
 

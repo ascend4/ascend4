@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include <ascend/utilities/ascConfig.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_proc Compiler Methods
 	@{
 */
 

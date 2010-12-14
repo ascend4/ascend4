@@ -33,7 +33,7 @@
 #include "slist.h"
 #include "compiler.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_proc Compiler Methods
 	@{
 */
 

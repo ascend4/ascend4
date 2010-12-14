@@ -27,7 +27,7 @@
 #include "logrelation.h"
 #include "instance_enum.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_logrel Compiler Logical Relations
 	@{
 */
 

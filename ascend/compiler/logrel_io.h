@@ -41,7 +41,7 @@
 #ifndef ASC_LOGRELATION_IO_H
 #define ASC_LOGRELATION_IO_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_logrel Compiler Logical Relations
 	@{
 */
 
@@ -49,10 +49,6 @@ extern int LogExprNeedParentheses(enum Expr_enum parent,
                                   enum Expr_enum child,
                                   int rhs);
 /**<
- *  <!--  int LogExprNeedParentheses(parent,child,rhs);                -->
- *  <!--  enum Expr_enum parent_op;                                    -->
- *  <!--  enum Expr_enum child_op;                                     -->
- *  <!--  int rhs;                                                     -->
  *  Given a unary or binary expression, will determine whether, the
  *  child expression needs parentheses. "rhs" tells if we are looking
  *  at the left or right side of a binary token.
@@ -62,20 +58,12 @@ extern void WriteLogRel(FILE *f,
                         CONST struct Instance *lrelinst,
                         CONST struct Instance *ref);
 /**<
- *  <!--  WriteLogRel(f,lrelinst,ref);                                 -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  const struct Instance *lrelinst;                             -->
- *  <!--  const struct Instance *ref;                                  -->
  *  Write the logical relation in infix to the file indicated.
  */
 
 ASC_DLLSPEC char *WriteLogRelToString(CONST struct Instance *lrelinst,
                                  CONST struct Instance *ref);
 /**<
- *  <!--  s = WriteLogRelToString(lrelinst,ref);                       -->
- *  <!--  char *f;                                                     -->
- *  <!--  const struct Instance *lrelinst;                             -->
- *  <!--  const struct Instance *ref;                                  -->
  *  Write the logical relation in infix to a char.
  */
 
@@ -83,20 +71,12 @@ extern void WriteLogRelPostfix(FILE *f,
                                CONST struct Instance *lrelinst,
                                CONST struct Instance *ref);
 /**<
- *  <!--  void WriteLogRelPostfix(f,lrelinst,ref)                      -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  const struct Instance *lrelinst;                             -->
- *  <!--  const struct Instance *ref;                                  -->
  *  Write the logical relation in postfix to the file indicated.
  */
 
 ASC_DLLSPEC char *WriteLogRelPostfixToString(CONST struct Instance *lrelinst,
                                         CONST struct Instance *ref);
 /**<
- *  <!--  void WriteRelationPostfixString(lrelinst,ref)                -->
- *  <!--  char *f;                                                     -->
- *  <!--  const struct Instance *lrelinst;                             -->
- *  <!--  const struct Instance *ref;                                  -->
  *  Write the logical relation in postfix to a char
  */
 
@@ -104,10 +84,6 @@ extern void WriteLogRelInfix(FILE *f,
                              CONST struct Instance *lrelinst,
                              CONST struct Instance *ref);
 /**<
- *  <!--  void WriteLogRelInfix(f,lrelinst,ref)                        -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  const struct Instance *lrelinst;                             -->
- *  <!--  const struct Instance *ref;                                  -->
  *  Write the logical relation in infix to the file indicated.
  */
 

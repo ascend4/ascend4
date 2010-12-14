@@ -115,6 +115,10 @@
 #include <stdio.h>
 #include <ascend/utilities/ascConfig.h>
 
+/**	@addtogroup utilities_malloc Utilities Memory Management
+	@{
+*/
+
 #define mem_address(ptr)      ((long)(ptr))
 #define mem_code_address(ptr) ((long)(ptr))
 
@@ -508,6 +512,8 @@ extern size_t mem_sizeof_store(mem_store_t ms);
 	@param ms The memory store to query.
 	@return The total bytes currently used by the memory store.
 */
+
+/* @} */
 
 #endif  /* ASC_MEM_H */
 

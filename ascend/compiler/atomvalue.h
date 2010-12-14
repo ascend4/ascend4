@@ -41,7 +41,7 @@
 #include "dimen.h"
 #include "sets.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 

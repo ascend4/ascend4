@@ -38,7 +38,7 @@
 #include <ascend/general/list.h>
 #include <ascend/compiler/instance_enum.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_proc Compiler Methods
 	@{
 */
 

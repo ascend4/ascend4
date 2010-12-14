@@ -39,7 +39,7 @@
 #include "expr_types.h"
 #include "compiler.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_expr Compiler Expressions
 	@{
 */
 

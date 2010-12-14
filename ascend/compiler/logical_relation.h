@@ -44,7 +44,7 @@
 
 #include <ascend/compiler/expr_types.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_logrel Compiler Logical Relations
 	@{
 */
 

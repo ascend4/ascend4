@@ -1,32 +1,28 @@
-/*
- *  Relation Construction Routines
- *  by Tom Epperly
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 1994, 1995 Kirk Andre' Abbott
+	Copyright (C) 1996 Benjamin Andrew Allan
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file Relation Construction Routines
+*//*  by Tom Epperly
  *  Created: 1/30/90
  *  Version: $Revision: 1.14 $
  *  Date last modified: $Date: 1998/01/11 17:03:59 $
  *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *  Copyright (C) 1994, 1995 Kirk Andre' Abbott
- *  Copyright (C) 1996 Benjamin Andrew Allan
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
-/*
  *  Change log:
  *  1995 Abbott
  *   - Added glassbox and blackbox external relations.
@@ -37,10 +33,6 @@
  *   - Improved relation error reporting.
  *   - Added compile time relation simplification.
  *   - Removed relation query/scaling routines to relation_util.h.
- */
-
-/** @file
- *  Relation Construction Routines.
  *  <pre>
  *  When #including relation.h, make sure these files are #included first:
  *         #include "utilities/ascConfig.h"
@@ -62,7 +54,7 @@
 #ifndef ASC_RELATION_H
 #define ASC_RELATION_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_rel Compiler Relations
 	@{
 */
 
