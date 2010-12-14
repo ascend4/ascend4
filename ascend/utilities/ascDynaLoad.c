@@ -38,10 +38,7 @@
 
 #include <ascend/general/env.h>
 #include <ascend/general/ospath.h>
-#include <ascend/compiler/instance_enum.h>
 #include <ascend/general/list.h>
-#include <ascend/compiler/extfunc.h>
-#include <ascend/compiler/importhandler.h>
 
 typedef int (*ExternalLibraryRegister_fptr_t)(void);
 
