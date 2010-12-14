@@ -33,6 +33,10 @@
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/compiler/value_type.h>
 
+/**	@addtogroup compiler_proc Compiler Methods
+	@{
+*/
+
 /*
 	type definitions for the solver request functions. functions of these
 	types would be provided by the user interface.

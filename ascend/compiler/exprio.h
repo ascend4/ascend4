@@ -38,7 +38,7 @@
 #include "expr_types.h"
 #include <ascend/general/dstring.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_expr Compiler Expressions
 	@{
 */
 

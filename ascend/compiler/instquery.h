@@ -33,8 +33,9 @@
 
 #include "compiler.h"
 #include "instance_enum.h"
+#include "bit.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 

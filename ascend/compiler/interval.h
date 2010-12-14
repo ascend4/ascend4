@@ -49,29 +49,21 @@ struct Interval {
 
 extern struct Interval CreateInterval(double low, double high);
 /**< 
- *  <!--  struct Interval CreateInterval(low,high)                     -->
- *  <!--  double low,high;                                             -->
  *  Create an interval from low to high.
  */
 
 extern struct Interval IntervalFromIntegers(long low, long high);
 /**< 
- *  <!--  struct Interval IntervalFromIntegers(low,high)               -->
- *  <!--  long low,high;                                               -->
  *  Create an interval from low to high where the endpoints are integers.
  */
 
 extern struct Interval CreateThin(double v);
 /**< 
- *  <!--  struct Interval CreateThin(v)                                -->
- *  <!--  double v;                                                    -->
  *  Create an interval with lower and upper bound equal to v.
  */
 
 extern struct Interval CreateThinInteger(long l);
 /**< 
- *  <!--  struct Interval CreateThingInteger(l)                        -->
- *  <!--  long l;                                                      -->
  *  Create an interval with lower and upper bound equal to the integer l.
  */
 
@@ -177,8 +169,6 @@ extern struct Interval PowerInterval(struct Interval i, long power);
 
 extern struct Interval PowInterval(struct Interval i1, struct Interval i2);
 /**< 
- *  <!--  struct Interval PowInterval(x,y)                             -->
- *  <!--  struct Interval x,y;                                         -->
  *  Return x^y  or x**y.
  */
 

@@ -58,6 +58,10 @@
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascPrint.h>
 
+/**	@addtogroup utilities_error Utilities Error Message Handling
+	@{
+*/
+
 /**
 	FPRINTF(ASCERR,...) messages will by default be treated
 	by the error_reporter as ASC_PROG_NOTE messages. These will
@@ -317,5 +321,7 @@ ASC_DLLSPEC int va_error_reporter(ERROR_REPORTER_CALLBACK_ARGS);
 ASC_DLLSPEC void error_reporter_set_callback(
 		const error_reporter_callback_t new_callback
 );
+
+/* @} */
 
 #endif /* ASC_ERROR_H */

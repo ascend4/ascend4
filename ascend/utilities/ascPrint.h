@@ -44,6 +44,10 @@
 
 #include <ascend/utilities/ascConfig.h>
 
+/**	@addtogroup utilities_print Utilities Output Stream Handling
+	@{
+*/
+
 /**
  * Output functions interceptor vtable. This should be constructed
  * and the functions fully operational before it is
@@ -191,6 +195,7 @@ ASC_DLLSPEC int Asc_Putchar(int c);
 ASC_DLLSPEC int color_on(FILE *f, const char *colorcode);
 ASC_DLLSPEC int color_off(FILE *f);
 
-#endif /* _ASCPRINT_H */
+/* @} */
 
+#endif /* _ASCPRINT_H */
 

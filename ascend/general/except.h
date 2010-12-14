@@ -42,8 +42,12 @@
 #ifndef ASC_EXCEPT_H
 #define ASC_EXCEPT_H
 
-/* File : except.h */
 #include <setjmp.h>
+
+/**	@addtogroup general_except General Exception Handling
+	@{
+*/
+
 extern jmp_buf exception_buffer;
 extern int exception_status;
 
@@ -87,5 +91,7 @@ typedef struct{
 #define JMP_BUF asc_jmp_buf
 #define SIGNAL(SIG,HANDLER) (CONSOLE_DEBUG("SIGNAL(%d,%s)",SIG,#HANDLER),signal(SIG,HANDLER))
 #endif
+
+/* @} */
 
 #endif

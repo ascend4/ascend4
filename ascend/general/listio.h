@@ -28,6 +28,13 @@
  *  the file named COPYING.  COPYING is found in ../compiler.
  */
 
+#ifndef __listio_h_seen__
+#define __listio_h_seen__
+
+/**	@addtogroup general_list General List
+	@{
+*/
+
 /** @file
  *  List I/O Routines.
  *  <pre>
@@ -36,9 +43,6 @@
  *        #include "general/list.h"
  *  </pre>
  */
-
-#ifndef __listio_h_seen__
-#define __listio_h_seen__
 
 /**
  *  Write the data in a list (as ints/pointers) to a file stream.
@@ -49,6 +53,8 @@
  *  @param l  The gl_list_t to write to fp (non-NULL).
  */
 ASC_DLLSPEC void gl_write_list(FILE *fp, struct gl_list_t *l);
+
+/* @} */
 
 #endif  /* __listio_h_seen__ */
 

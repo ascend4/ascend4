@@ -43,7 +43,7 @@
 
 #include "dimen.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_dimen Compiler Dimensions
 	@{
 */
 

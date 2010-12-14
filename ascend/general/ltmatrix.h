@@ -27,11 +27,13 @@
 #ifndef LT_MATRIX_H
 #define LT_MATRIX_H
 
-
 #include <ascend/utilities/ascPanic.h>
 #include <ascend/utilities/ascMalloc.h>
 #include <ascend/general/mathmacros.h>
 
+/**	@addtogroup general_ltmatrix General Lightweight Matrix
+	@{
+*/
 
 /**
 	Hessian Matrix Layout-Structure
@@ -181,5 +183,7 @@ ASC_DLLSPEC int Hessian_Mtx_test_validity(hessian_mtx *matrix);
 	When the hessian is not symmetric, can this be used
 	to speed up Hessian evalutations?
 */
+
+/* @} */
 
 #endif

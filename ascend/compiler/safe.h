@@ -69,7 +69,7 @@
 #include "compiler.h"
 #include "functype.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_rel Compiler Relations
 	@{
 */
 

@@ -40,7 +40,7 @@
 #include "type_desc.h"
 #include "module.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_file Compiler File Handling
 	@{
 */
 

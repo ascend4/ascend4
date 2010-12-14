@@ -69,6 +69,10 @@
 # endif
 #endif
 
+/**	@addtogroup general_ospath General File Pathname Manipulation
+	@{
+*/
+
 #ifndef PATH_MAX
 # define PATH_MAX 1023
 #endif
@@ -293,5 +297,7 @@ ASC_DLLSPEC struct FilePath *ospath_searchpath_iterate(
 		, FilePathTestFn *testfn
 		, void *searchdata
 );
+
+/* @} */
 
 #endif

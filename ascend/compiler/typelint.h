@@ -40,7 +40,7 @@
 #include "compiler.h"
 #include "stattypes.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_type Compiler Type Description
 	@{
 */
 

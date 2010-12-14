@@ -38,11 +38,6 @@
 
 typedef unsigned char byte;
 
-
-#ifndef lint
-static CONST char BitID[] = "$Id: bit.c,v 1.8 1997/09/08 18:07:31 ballan Exp $";
-#endif
-
 struct BitList *CreateBList(unsigned long int len)
 {
   register struct BitList *result;

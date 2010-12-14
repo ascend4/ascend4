@@ -48,6 +48,10 @@
 #ifndef _READLN_H
 #define _READLN_H
 
+/**	@addtogroup utilities_readln Utilities Read-line
+	@{
+*/
+
 ASC_DLLSPEC int readln(char *str, int max);
 /**<
  *  Reads a line from standard input to a target string having a
@@ -117,6 +121,8 @@ ASC_DLLSPEC double readdouble(double value_default);
  *                       cannot be read.
  *  @return The input double or value_default if none is found.
  */
+
+/* @} */
 
 #endif  /* _READLN_H */
 

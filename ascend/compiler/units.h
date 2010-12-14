@@ -32,7 +32,7 @@
 #include "fractions.h"
 #include "dimen.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_units Compiler Units
 	@{
 */
 

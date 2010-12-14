@@ -22,7 +22,7 @@
 #ifndef ASC_NOTEQUERY_H
 #define ASC_NOTEQUERY_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_notes Compiler Notes
 	@{
 */
 

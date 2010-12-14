@@ -38,6 +38,9 @@
 #ifndef ASC_DSTRING_H
 #define ASC_DSTRING_H
 
+/**	@addtogroup general_dstr General Dynamic String
+	@{
+*/
 #define ASC_RESULT_SIZE 200
 #define ASC_DSTRING_STATIC_SIZE 200
 #define ASC_ALL_STRING -1
@@ -164,6 +167,8 @@ ASC_DLLSPEC void Asc_DStringTrunc(Asc_DString *dsPtr, int length);
  *  @return Returns the new value of the dynamic string.
  */
 ASC_DLLSPEC char *Asc_DStringSet(Asc_DString *dsPtr, CONST char *string);
+
+/* @} */
 
 #endif /* ASC_DSTRING_H */
 

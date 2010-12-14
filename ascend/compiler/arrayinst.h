@@ -96,7 +96,7 @@
 #include "compiler.h"
 #include <ascend/general/pool.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 

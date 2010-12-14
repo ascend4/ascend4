@@ -51,13 +51,11 @@
 #include "nameio.h"
 #include "vlist.h"
 #include "module.h"
-#define __CHILD_ILLEGAL_ACCESS__
-#include "childpriv.h"
-#include "childio.h"
 
-#ifndef lint
-static CONST char ChildIOID[] = "$Id: childio.c,v 1.6 1998/06/11 17:36:22 ballan Exp $";
-#endif
+#define ASC_CHILDPRIV_ACCESS
+#include "childpriv.h"
+
+#include "childio.h"
 
 /*
  * list of children reported missing.

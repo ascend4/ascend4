@@ -26,7 +26,7 @@
 #ifndef ASC_CHILDIO_H
 #define ASC_CHILDIO_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 

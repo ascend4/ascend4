@@ -30,6 +30,10 @@
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/general/ospath.h>
 
+/**	@addtogroup compiler_file Compiler File Handling
+	@{
+*/
+
 /*------------------------------------------------------------------------------
   DATA STRUCTURES AND TYPES
 */
@@ -153,5 +157,7 @@ ASC_DLLSPEC int importhandler_setsharedpointer(const char *key, void *ptr);
 	@return NULL on not found (or NULL value stored in registry)
 */
 ASC_DLLSPEC void *importhandler_getsharedpointer(const char *key);
+
+/* }@ */
 
 #endif

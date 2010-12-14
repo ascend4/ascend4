@@ -27,7 +27,7 @@
 #ifndef ASC_INSTANCE_TYPES_H
 #define ASC_INSTANCE_TYPES_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 
@@ -37,6 +37,7 @@
 #include "type_desc.h"
 #include <ascend/general/list.h>
 #include "logical_relation.h"
+#include "bit.h"
 
 /** @file
  *  Real Ascend Instance Types.
