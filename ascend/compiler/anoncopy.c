@@ -56,7 +56,6 @@
 #include "name.h"
 #include "nameio.h"
 #include "vlist.h"
-#include "slist.h"
 #include "evaluate.h"
 #include "value_type.h"
 #include "statio.h"

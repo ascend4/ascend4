@@ -33,7 +33,6 @@
 #include <ascend/general/list.h>
 
 #include "stattypes.h"
-#include "slist.h"
 #include "statio.h"
 #include "proc.h"
 #include "watchptio.h"

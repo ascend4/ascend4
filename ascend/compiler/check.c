@@ -37,6 +37,7 @@
 #include <ascend/general/dstring.h>
 
 #include "symtab.h"
+#include "slist.h"
 
 #include "functype.h"
 #include "expr_types.h"
@@ -44,7 +45,6 @@
 #include "statio.h"
 #include "module.h"
 #include "statement.h"
-#include "slist.h"
 #include "instance_types.h" /* for sizes */
 #include "parentchild.h"
 #include "atomvalue.h"

@@ -32,7 +32,6 @@
 
 #include <ascend/general/list.h>
 
-
 #include "functype.h"
 #include "expr_types.h"
 #include "stattypes.h"

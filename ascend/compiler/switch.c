@@ -27,8 +27,6 @@
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascMalloc.h>
 
-
-
 #include "functype.h"
 #include "func.h"
 #include "expr_types.h"

@@ -36,11 +36,12 @@
 #include <ascend/general/list.h>
 #include <ascend/utilities/bit.h>
 
+#include "slist.h"
+
 #include "functype.h"
 #include "expr_types.h"
 #include "stattypes.h"
 #include "statement.h"
-#include "slist.h"
 #include "statio.h"
 #include "symtab.h"
 #include "module.h"
