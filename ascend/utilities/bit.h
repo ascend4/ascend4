@@ -44,7 +44,7 @@
 
 #include <ascend/utilities/ascConfig.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup utilities_bit Utilities Bit-list
 	@{
 */
 

@@ -37,7 +37,7 @@
 #include "type_desc.h"
 #include <ascend/general/list.h>
 #include "logical_relation.h"
-#include "bit.h"
+#include <ascend/utilities/bit.h>
 
 /** @file
  *  Real Ascend Instance Types.

@@ -33,6 +33,7 @@
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
 #include <ascend/general/table.h>
+#include <ascend/utilities/bit.h>
 
 #include "functype.h"
 #include "expr_types.h"
@@ -61,7 +62,6 @@
 #include "sets.h"
 #include "setio.h"
 #include "setinst_io.h"
-#include "bit.h"
 #include "child.h"
 #include "type_desc.h"
 #include "copyinst.h"

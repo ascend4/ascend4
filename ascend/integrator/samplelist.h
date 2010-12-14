@@ -33,7 +33,7 @@
 #ifndef ASC_SAMPLELIST_H
 #define ASC_SAMPLELIST_H
 
-/**	@addtogroup integrator Integrator
+/**	@addtogroup integrator_sample Integrator Sample List
 	@{
 */
 

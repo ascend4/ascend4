@@ -34,8 +34,8 @@
 #include <ascend/utilities/ascMalloc.h>
 #include <ascend/general/pool.h>
 #include <ascend/general/list.h>
+#include <ascend/utilities/bit.h>
 
-#include "bit.h"
 #include "functype.h"
 #include "expr_types.h"
 #include "stattypes.h"
