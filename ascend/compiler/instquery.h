@@ -33,7 +33,7 @@
 
 #include "compiler.h"
 #include "instance_enum.h"
-#include "bit.h"
+#include <ascend/utilities/bit.h>
 
 /**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{

@@ -38,7 +38,6 @@
 #include <ascend/general/dstring.h>
 
 #include "symtab.h"
-#include "bit.h"
 #include "functype.h"
 #include "expr_types.h"
 #include "instance_name.h"

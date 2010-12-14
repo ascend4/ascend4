@@ -44,8 +44,8 @@
 #include <ascend/utilities/ascPanic.h>
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
+#include <ascend/utilities/bit.h>
 
-#include "bit.h"
 #include "symtab.h"
 
 

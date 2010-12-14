@@ -2,10 +2,10 @@
 Import('libascend_env')
 
 csrcs = Split("""
-
 	ascDynaLoad.c ascEnvVar.c ascMalloc.c ascPanic.c
-	ascPrint.c error.c mem.c readln.c set.c
-
+	ascPrint.c 
+	bit.c 
+	error.c mem.c readln.c set.c
 """)
 
 configh = libascend_env.SubstInFile(source='config.h.in')

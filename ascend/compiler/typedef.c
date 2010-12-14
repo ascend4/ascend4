@@ -56,7 +56,6 @@
 #include "exprs.h"
 #include "exprio.h"
 #include "forvars.h"
-#include "bit.h"
 #include "setinstval.h"
 #include "childinfo.h"
 #include "instance_enum.h"

@@ -33,7 +33,6 @@
 #include <ascend/utilities/ascMalloc.h>
 #include <ascend/general/list.h>
 
-#include "bit.h"
 #include "functype.h"
 #include "expr_types.h"
 #include "child.h"
@@ -44,10 +43,6 @@
 #include "instquery.h"
 #include "find.h"
 #include "tmpnum.h"
-
-#ifndef lint
-static CONST char TmpNumModuleID[] = "$Id: tmpnum.c,v 1.11 1998/02/20 02:10:34 ballan Exp $";
-#endif
 
 /*
  * Modified by kaa 12 Sep 1995, to be more useful friendly

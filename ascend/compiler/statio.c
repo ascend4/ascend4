@@ -43,7 +43,6 @@
 #include "when.h"
 #include "select.h"
 #include "switch.h"
-#include "bit.h"
 #include "vlistio.h"
 #include "slist.h"
 #include "setio.h"

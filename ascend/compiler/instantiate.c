@@ -30,7 +30,8 @@
 
 #include "instantiate.h"
 
-#include "bit.h"
+#include <ascend/utilities/bit.h>
+
 #include "vlist.h"
 #include "initialize.h"
 #include "watchpt.h"

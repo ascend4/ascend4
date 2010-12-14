@@ -32,10 +32,9 @@
 #include <stdarg.h>
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascMalloc.h>
-
 #include <ascend/utilities/ascPanic.h>
 #include <ascend/general/list.h>
-
+#include <ascend/utilities/bit.h>
 
 #include "functype.h"
 #include "expr_types.h"
@@ -54,7 +53,6 @@
 #include "sets.h"
 #include "exprs.h"
 #include "forvars.h"
-#include "bit.h"
 #include "setinstval.h"
 #include "childinfo.h"
 #include "instance_enum.h"

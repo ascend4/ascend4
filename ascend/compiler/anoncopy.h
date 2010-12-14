@@ -33,9 +33,10 @@
 #ifndef ASC_ANONCOPY_H
 #define ASC_ANONCOPY_H
 
-#include "bit.h"
-#include "instance_enum.h"
+#include <ascend/utilities/bit.h>
 #include <ascend/general/list.h>
+
+#include "instance_enum.h"
 
 /**	@addtogroup compiler_anon Compiler Anonymous Types
 	@{

@@ -33,8 +33,8 @@
 #include <ascend/utilities/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
+#include <ascend/utilities/bit.h>
 
-#include "bit.h"
 #include "symtab.h"
 #include "functype.h"
 #include "expr_types.h"

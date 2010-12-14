@@ -33,8 +33,6 @@
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
 
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "stattypes.h"
@@ -55,7 +53,6 @@
 #include "sets.h"
 #include "exprs.h"
 #include "forvars.h"
-#include "bit.h"
 #include "syntax.h"
 #include "setinstval.h"
 #include "childinfo.h"
@@ -64,10 +61,6 @@
 #include "type_desc.h"
 #include "typedef.h"
 #include "typelint.h"
-
-#ifndef lint
-static CONST char TypeLintRCSid[] ="$Id: typelint.c,v 1.48 1998/07/23 13:57:59 ballan Exp $";
-#endif
 
 struct errormessage {
   const char *str;
