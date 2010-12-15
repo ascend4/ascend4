@@ -30,8 +30,8 @@
 
 #include <math.h>
 #include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascMalloc.h>
-#include <ascend/utilities/mem.h>
+#include <ascend/general/ascMalloc.h>
+#include <ascend/general/mem.h>
 #include "mtx.h"
 #ifdef ASC_WITH_MMIO
 # include <mmio.h>

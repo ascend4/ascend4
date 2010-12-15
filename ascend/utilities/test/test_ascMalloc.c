@@ -28,7 +28,7 @@
 #include <io.h>
 #endif
 #include <ascend/utilities/ascPanic.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <CUnit/CUnit.h>
 #include "test_ascMalloc.h"
 #include "test/assertimpl.h"

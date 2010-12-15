@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/set.h>
 #include "CUnit/CUnit.h"
 #include "test/assertimpl.h"

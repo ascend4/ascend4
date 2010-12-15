@@ -27,7 +27,7 @@
 #include <io.h>
 #endif
 #include <ascend/utilities/ascEnvVar.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include "CUnit/CUnit.h"
 #include "test_ascEnvVar.h"

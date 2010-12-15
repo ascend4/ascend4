@@ -46,7 +46,7 @@
 
 #ifdef DEFAULT_DEBUG
 # include <ascend/compiler/instance_io.h>
-# include <ascend/utilities/ascMalloc.h>
+# include <ascend/general/ascMalloc.h>
 #endif
 
 /*------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #include <ascend/utilities/config.h>
 #include "slvreq.h"
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
 #include "instance_types.h"
 #include "instquery.h"

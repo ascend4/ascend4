@@ -32,8 +32,8 @@
 #include <math.h>
 #include <ascend/utilities/ascConfig.h>
 
-#include <ascend/utilities/ascMalloc.h>
-#include <ascend/utilities/mem.h>
+#include <ascend/general/ascMalloc.h>
+#include <ascend/general/mem.h>
 #include <ascend/utilities/set.h>
 #include <ascend/general/tm_time.h>
 #include "mtx.h"

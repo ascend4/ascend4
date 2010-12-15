@@ -37,7 +37,7 @@
 
 
 #include <math.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/mathmacros.h>
 #include <ascend/general/ltmatrix.h>
 #include <ascend/general/dstring.h>

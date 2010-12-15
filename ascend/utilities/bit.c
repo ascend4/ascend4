@@ -31,7 +31,7 @@
 #include <assert.h>
 #include <ascend/utilities/ascConfig.h>
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
 
 #define BLENGTH(bl) ((bl)->length)

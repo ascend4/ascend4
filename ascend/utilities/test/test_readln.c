@@ -27,7 +27,7 @@
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/readln.h>
 #include "CUnit/CUnit.h"
 #include "test_readln.h"

@@ -27,7 +27,7 @@
 #include <stdarg.h>
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascPanic.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include "pairlist.h"
 #include "list.h"
 

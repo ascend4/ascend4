@@ -30,7 +30,7 @@
 
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascPanic.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
 

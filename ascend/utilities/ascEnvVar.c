@@ -36,7 +36,7 @@
 #include <ctype.h>
 #include "ascConfig.h"
 #include "ascPanic.h"
-#include "ascMalloc.h"
+#include <ascend/general/ascMalloc.h>
 #include "ascEnvVar.h"
 #include <ascend/general/list.h>
 

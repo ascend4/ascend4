@@ -25,7 +25,7 @@
 
 #include "logblock.h"
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/mathmacros.h>
 #include <ascend/linear/mtx_basic.h>
 #include <ascend/system/slv_stdcalls.h>

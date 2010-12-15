@@ -43,9 +43,9 @@
 
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascPanic.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascDynaLoad.h>
-#include <ascend/utilities/mem.h>
+#include <ascend/general/mem.h>
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/general/tm_time.h>
 #include <ascend/general/env.h>

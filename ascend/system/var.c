@@ -33,7 +33,7 @@
 #include "var.h"
 
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/general/dstring.h>
 #include <ascend/general/list.h>

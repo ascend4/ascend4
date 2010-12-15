@@ -12,7 +12,7 @@ csrcs = Split("""
 	freestore.c func.c findpath.c
 	importhandler.c initialize.c instance_io.c
 	instantiate.c instmacro.c instquery.c
-	library.c linkinst.c logrel_io.c logrel_util.c`
+	library.c linkinst.c logrel_io.c logrel_util.c
 	logrelation.c mathinst.c mergeinst.c module.c name.c
 	nameio.c notate.c notequery.c numlist.c parentchild.c
 	parpend.c pending.c plot.c proc.c procframe.c
@@ -22,7 +22,7 @@ csrcs = Split("""
 	safe.c
 	select.c setinst_io.c setinstval.c setio.c
 	sets.c slist.c slvreq.c simlist.c statement.c statio.c switch.c
-	symtab.c syntax.c temp.c stmpnum.c type_desc.c
+	symtab.c syntax.c temp.c tmpnum.c type_desc.c
 	type_descio.c typedef.c typelint.c
 	units.c universal.c
 	value_type.c visitinst.c visitlink.c vlist.c vlistio.c

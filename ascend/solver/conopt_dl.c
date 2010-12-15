@@ -38,7 +38,7 @@
 
 #ifndef ASC_LINKED_CONOPT
 # include <ctype.h>
-# include <ascend/utilities/ascMalloc.h>
+# include <ascend/general/ascMalloc.h>
 # include <ascend/utilities/ascDynaLoad.h>
 
 /*------------------------------------------------------------------------------

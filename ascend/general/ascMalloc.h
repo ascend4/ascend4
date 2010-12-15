@@ -77,7 +77,7 @@
 #ifndef ASC_ASCMALLOC_H
 #define ASC_ASCMALLOC_H
 
-/**	@addtogroup utilities_malloc Utilities Memory Management
+/**	@addtogroup general_mem General Memory Management
 	@{
 */
 

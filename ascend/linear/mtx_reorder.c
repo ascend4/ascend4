@@ -29,8 +29,8 @@
 
 #include <math.h>
 #include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascMalloc.h>
-#include <ascend/utilities/mem.h>
+#include <ascend/general/ascMalloc.h>
+#include <ascend/general/mem.h>
 #include "mtx.h"
 #define __MTX_C_SEEN__
 #include "mtx_use_only.h"

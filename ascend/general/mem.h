@@ -115,7 +115,7 @@
 #include <stdio.h>
 #include <ascend/utilities/ascConfig.h>
 
-/**	@addtogroup utilities_malloc Utilities Memory Management
+/**	@addtogroup general_mem General Memory Management
 	@{
 */
 

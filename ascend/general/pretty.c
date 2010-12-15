@@ -31,7 +31,7 @@
 
 #include <ctype.h>
 #include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include "pretty.h"
 
 static int outstring(FILE *fp, char *s, int indent)

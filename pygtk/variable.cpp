@@ -7,7 +7,7 @@
 
 extern "C"{
 #include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 
 #include <ascend/general/dstring.h>
 

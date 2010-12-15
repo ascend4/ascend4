@@ -62,9 +62,9 @@
 #include <math.h>
 #include <stdarg.h>
 #include <ascend/utilities/error.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
-#include <ascend/utilities/mem.h>
+#include <ascend/general/mem.h>
 #include <ascend/utilities/set.h>
 #include <ascend/general/mathmacros.h>
 

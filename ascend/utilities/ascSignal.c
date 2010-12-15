@@ -62,7 +62,7 @@
 # include <unistd.h>
 #endif
 
-#include "ascMalloc.h"
+#include <ascend/general/ascMalloc.h>
 #include "ascSignal.h"
 #include "ascPanic.h"
 

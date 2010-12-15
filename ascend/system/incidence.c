@@ -20,9 +20,9 @@
 #include "incidence.h"
 
 #include <ascend/utilities/ascSignal.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
-#include <ascend/utilities/mem.h>
+#include <ascend/general/mem.h>
 #include <ascend/utilities/set.h>
 #include <ascend/general/list.h>
 #include <ascend/general/mathmacros.h>

@@ -30,7 +30,7 @@
 
 /** @TODO should not be ANY compiler includes here, right? */
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
 
 #include <ascend/compiler/atomvalue.h>

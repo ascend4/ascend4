@@ -30,13 +30,12 @@
 #include <stdarg.h>
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/ascPanic.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 
 #include "symtab.h"
 #include "instance_enum.h"
 #include "cmpfunc.h"
-
 
 #include "functype.h"
 #include "value_type.h"
