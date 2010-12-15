@@ -35,7 +35,7 @@
 #ifndef ASC_COMPILER_H
 #define ASC_COMPILER_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_common Compiler Common
 	@{
 */
 
@@ -48,16 +48,16 @@
 */
 
 #ifndef TIMECOMPILER
-#define TIMECOMPILER 0
+# define TIMECOMPILER 0
 /**<  Set to 1 for timing spew or 0 for not. */
 #endif
 
 #ifndef CHECK_SYMBOL_USE
-#ifdef NDEBUG
-#define CHECK_SYMBOL_USE 0
-#else
-#define CHECK_SYMBOL_USE 1
-#endif
+# ifdef NDEBUG
+#  define CHECK_SYMBOL_USE 0
+# else
+#  define CHECK_SYMBOL_USE 1
+# endif
 #endif
 /**<
  * Define to check internal and client compliance with symbol
@@ -65,11 +65,10 @@
  */
 
 #if CHECK_SYMBOL_USE
-
-#ifndef __GNUC__
+# ifndef __GNUC__
 /** strcmp() is dumb in string.h. We want it to whine a lot. */
 extern int strcmp(CONST char *s1, CONST char *s2);
-#endif  /* __GNU__ */
+# endif  /* __GNU__ */
 typedef CONST double symchar;
 #else   /* !CHECK_SYMBOL_USE */
 /* This is the real definition for production builds. */

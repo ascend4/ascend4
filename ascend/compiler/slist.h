@@ -35,7 +35,7 @@
 #include "compiler.h"
 #include "stattypes.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_stmt Compiler Statements
 	@{
 */
 

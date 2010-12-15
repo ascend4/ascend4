@@ -43,7 +43,7 @@
 #include "compiler.h"
 #include "expr_types.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_stmt Compiler Statements
 	@{
 */
 

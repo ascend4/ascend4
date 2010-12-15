@@ -28,16 +28,14 @@
 
 /** @file
  *  Interval Arithmetic Routines.
- *  <pre>
- *  When #including interval.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *  </pre>
  */
 
 #ifndef ASC_INTERVAL_H
 #define ASC_INTERVAL_H
 
-/**	@addtogroup compiler Compiler
+#include <ascend/utilities/ascConfig.h>
+
+/**	@addtogroup compiler_interval Compiler Interval Arithmetic
 	@{
 */
 

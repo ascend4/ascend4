@@ -40,7 +40,7 @@
 #ifndef ASC_WHENINST_IO_H
 #define ASC_WHENINST_IO_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 
@@ -49,20 +49,12 @@
 extern void WriteWhen(FILE *f, CONST struct Instance *wheninst,
                       CONST struct Instance *ref);
 /**<
- *  <!--  void WriteWhen(f,wheninst,ref);                              -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  CONST struct Instance *wheninst;                             -->
- *  <!--  CONST struct Instance *ref;                                  -->
  *  Write a when instance to the file f
  */
 
 ASC_DLLSPEC char *WriteWhenString(CONST struct Instance *wheninst,
                              CONST struct Instance *ref);
 /**<
- *  <!--  char WriteWhenString(wheninst,ref);                          -->
- *  <!--  char *result;                                                -->
- *  <!--  CONST struct Instance *wheninst;                             -->
- *  <!--  CONST struct Instance *ref;                                  -->
  *  Write a when instance to a char
  */
 

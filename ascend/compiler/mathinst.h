@@ -38,7 +38,10 @@
 #ifndef ASC_MATHINST_H
 #define ASC_MATHINST_H
 
-/**	@addtogroup compiler Compiler
+#include "expr_types.h"
+#include "instance_enum.h"
+
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 

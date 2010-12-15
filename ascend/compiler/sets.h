@@ -37,14 +37,10 @@
 #ifndef ASC_SETS_H
 #define ASC_SETS_H
 
-#include <ascend/utilities/ascConfig.h>
 #include <ascend/general/list.h>
-
-#include "fractions.h"
-#include "compiler.h"
 #include "expr_types.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_expr Compiler Expressions
 	@{
 */
 

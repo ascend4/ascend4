@@ -20,11 +20,11 @@
 #ifndef ASC_PARSER_H
 #define ASC_PARSER_H
 
-/**	@addtogroup compiler Compiler
+#include <ascend/utilities/ascConfig.h>
+
+/**	@addtogroup compiler_parse Compiler Scanner/Parser
 	@{
 */
-
-#include <ascend/utilities/ascConfig.h>
 
 /* ascParse.y supplies this function. */
 ASC_DLLSPEC int zz_parse();

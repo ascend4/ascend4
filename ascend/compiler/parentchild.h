@@ -74,14 +74,13 @@
 #ifndef ASC_PARENTCHILD_H
 #define ASC_PARENTCHILD_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/compiler/compiler.h>
-#include <ascend/compiler/instance_enum.h>
-#include <ascend/compiler/instance_name.h>
+#include "compiler.h"
+#include "instance_enum.h"
+#include "instance_name.h"
 
 /* Parent routines */
 

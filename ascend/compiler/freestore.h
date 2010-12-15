@@ -47,7 +47,9 @@
 #ifndef ASC_FREESTORE_H
 #define ASC_FREESTORE_H
 
-/**	@addtogroup compiler Compiler
+#include "relation_type.h"
+
+/**	@addtogroup compiler_rel Compiler Relations
 	@{
 */
 

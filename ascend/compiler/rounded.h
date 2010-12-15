@@ -28,203 +28,147 @@
 
 /** @file
  *  Rounded Arithmetic Routines.
- *  <pre>
- *  When #including rounded.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *  </pre>
  */
 
 #ifndef ASC_ROUNDED_H
 #define ASC_ROUNDED_H
 
-/**	@addtogroup compiler Compiler
+#include <ascend/utilities/ascConfig.h>
+
+/**	@addtogroup compiler_rounded Compiler Rounded Arithmetic
 	@{
 */
 
 extern double DIPow(register double d, long int n);
 /**< 
- *  <!--  double DIPow(d,n)                                            -->
- *  <!--  double d;                                                    -->
- *  <!--  long n;                                                      -->
  *  Return d^n rounded downward.
  */
 
 extern double UIPow(register double d, long int n);
 /**< 
- *  <!--  double UIPow(d,n)                                            -->
- *  <!--  double d;                                                    -->
- *  <!--  long n;                                                      -->
  *  Return d^n rounded upward.
  */
 
 #ifndef SLOPPY
 extern double DPow(register double d1, register double d2);
 /**< 
- *  <!--  double DPow(d1,d2)                                           -->
- *  <!--  double d1,d2;                                                -->
  *  Return the downward rounded result of d1^d2(d1 raised to the power d2).
  */
 
 extern double UPow(register double d1, register double d2);
 /**< 
- *  <!--  double UPow(d1,d2)                                           -->
- *  <!--  double d1,d2;                                                -->
  *  Return the downward rounded result of d1^d2(d1 raised to the power d2).
  */
 
 extern double DPlus(register double d1, register double d2);
 /**< 
- *  <!--  double DPlus(d1,d2)                                          -->
- *  <!--  double d1,d2;                                                -->
  *  Return the downward rounded addition of d1 and d2.
  */
 
 extern double UPlus(register double d1, register double d2);
 /**< 
- *  <!--  double UPlus(d1,d2)                                          -->
- *  <!--  double d1,d2;                                                -->
  *  Return the upward rounded addition of d1 and d2.
  */
 
 extern double DMinus(register double d1, register double d2);
 /**< 
- *  <!--  double DMinus(d1,d2)                                         -->
- *  <!--  double d1,d2;                                                -->
  *  Return d1-d2 with downward rounding.
  */
 
 extern double UMinus(register double d1, register double d2);
 /**< 
- *  <!--  double UMinus(d1,d2)                                         -->
- *  <!--  double d1,d2;                                                -->
  *  Return d1-d2 with upward rounding.
  */
 
 extern double DTimes(register double d1, register double d2);
 /**< 
- *  <!--  double DTimes(d1,d2)                                         -->
- *  <!--  double d1,d2;                                                -->
  *  Return d1*d2 with downward rounding.
  */
 
 extern double UTimes(register double d1, register double d2);
 /**< 
- *  <!--  double UTimes(d1,d2)                                         -->
- *  <!--  double d1,d2;                                                -->
  *  Return d1*d2 with upward rounding.
  */
 
 extern double DDivide(register double d1, register double d2);
 /**< 
- *  <!--  double DDivide(d1,d2);                                       -->
- *  <!--  double d1,d2;                                                -->
  *  Return d1/d2 with downward rounding.
  */
 
 extern double UDivide(register double d1, register double d2);
 /**< 
- *  <!--  double UDivide(d1,d2);                                       -->
- *  <!--  double d1,d2;                                                -->
  *  Return d1/d2 with upward rounding.
  */
 
 extern double DSqr(register double d);
 /**< 
- *  <!--  double DSqr(d)                                               -->
- *  <!--  double d;                                                    -->
  *  Return sqr(d) with downward rounding.
  */
 
 extern double USqr(register double d);
 /**< 
- *  <!--  double USqr(d)                                               -->
- *  <!--  double d;                                                    -->
  *  Return sqr(d) with upward rounding.
  */
 
 extern double DSqrt(register double d);
 /**< 
- *  <!--  double DSqrt(d);                                             -->
- *  <!--  double d;                                                    -->
  *  Return sqrt(d) with downward rounding.
  */
 
 extern double USqrt(register double d);
 /**< 
- *  <!--  double USqrt(d)                                              -->
- *  <!--  double d;                                                    -->
  *  Return sqrt(d) with upward rounding.
  */
 
 extern double DExp(register double d);
 /**< 
- *  <!--  double DExp(d)                                               -->
- *  <!--  double d;                                                    -->
  *  Return exp(d) with downward rounding.
  */
 
 extern double UExp(register double d);
 /**< 
- *  <!--  double UExp(d)                                               -->
- *  <!--  double d;                                                    -->
  *  Return exp(d) with upward rounding.
  */
 
 extern double DLog(register double d);
 /**< 
- *  <!--  double DLog(d)                                               -->
- *  <!--  double d;                                                    -->
  *  Return log base 10 of d rounded down.
  */
 
 extern double ULog(register double d);
 /**< 
- *  <!--  double ULog(d)                                               -->
- *  <!--  double d;                                                    -->
  *  Return the log base 10 of d.
  */
 
 extern double DLn(register double d);
 /**< 
- *  <!--  double DLn(d)                                                -->
- *  <!--  double d;                                                    -->
  *  Return ln(d) (log base e) with downward rounding.
  */
 
 extern double ULn(register double d);
 /**< 
- *  <!--  double ULn(d)                                                -->
- *  <!--  double d;                                                    -->
  *  Return ln(d) with upward rounding.
  */
 
 #ifdef HAVE_ERF
 extern double DErf(register double d);
 /**< 
- *  <!--  double DErf(d)                                               -->
- *  <!--  double d;                                                    -->
  *  Return erf(d) with downward rounding.
  */
 
 extern double UErf(register double d);
 /**< 
- *  <!--  double UErf(d)                                               -->
- *  <!--  double d;                                                    -->
  *  Return erf(d) with upward rounding.
  */
 #endif /* HAVE_ERF */
 
 extern double Dltod(long int l);
 /**< 
- *  <!--  double Dltod(l)                                              -->
- *  <!--  long l;                                                      -->
  *  Convert long to double with downward rounding.
  */
 
 extern double Ultod(long int l);
 /**<
- *  <!--  double Ultod(l);                                             -->
- *  <!--  long l                                                       -->
  *  Convert long to double with upward rounding.
  */
 

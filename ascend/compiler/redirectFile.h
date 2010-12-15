@@ -43,11 +43,11 @@
 #ifndef ASC_REDIRECTFILE_H
 #define ASC_REDIRECTFILE_H
 
-/**	@addtogroup compiler Compiler
+#include <ascend/utilities/ascConfig.h>
+
+/**	@addtogroup compiler_common Compiler Common
 	@{
 */
-
-#include <ascend/utilities/ascConfig.h>
 
 #ifdef REIMPLEMENT_STREAMS
 ASC_DLLSPEC FILE *g_ascend_errors;       /**< File for error messages.  Default is stderr. */

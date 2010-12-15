@@ -43,7 +43,7 @@
 #ifndef ASC_WHEN_UTIL_H
 #define ASC_WHEN_UTIL_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 
@@ -58,8 +58,6 @@
 
 extern unsigned long NumberWhenVariables(CONST struct Instance *when);
 /**< 
- *  <!--  unsigned long NumberWhenVariables(when)                      -->
- *  <!--  struct Instance *when;                                       -->
  *  This will indicate the number of distinct variables to which the
  *  varlist of this when instance points.
  */
@@ -67,24 +65,16 @@ extern unsigned long NumberWhenVariables(CONST struct Instance *when);
 extern struct Instance *WhenVariable(CONST struct Instance *when,
                                      unsigned long varnum);
 /**<
- *  <!--  struct Instance *WhenVariable(when,varnum)                   -->
- *  <!--  struct Instance *when;                                       -->
- *  <!--  unsigned long varnum;                                        -->
  *  This will return the varnum'th variable of the when varlist.
  */
 
 extern int VarFoundInWhen(CONST struct Instance *var, CONST struct Instance *when);
 /**<
- *  <!--  int VarFoundInWhen(var,when)                                 -->
- *  <!--  struct Instance *var;                                        -->
- *  <!--  struct Instance *when;                                       -->
  *  Return 1 if var is a member of the when var list, else return 0.
  */
 
 extern unsigned long NumberWhenCases(CONST struct Instance *when);
 /**<
- *  <!--  unsigned long NumberWhenCases(when)                          -->
- *  <!--  struct Instance *when;                                       -->
  *  This will indicate the number of distinct cases to which the
  *  caselist of this when instance points.
  */
@@ -92,9 +82,6 @@ extern unsigned long NumberWhenCases(CONST struct Instance *when);
 extern struct Case *WhenCase(CONST struct Instance *when,
                              unsigned long casenum);
 /**<
- *  <!--  struct Instance *WhenCase(when,casenum)                      -->
- *  <!--  struct Instance *when;                                       -->
- *  <!--  unsigned long casenum;                                       -->
  *  This will return the casenum'th case of the when caselist.
  */
 
@@ -102,11 +89,6 @@ extern void ModifyWhenPointers(struct gl_list_t *reforvar,
                                CONST struct Instance *old,
                                CONST struct Instance *new);
 /**<
- *  <!--  void ModifyWhenPointers(reforvar,old,new);                   -->
- *  <!--  struct gl_list_t *reforvar;                                  -->
- *  <!--  CONST struct Instance *old;                                  -->
- *  <!--  CONST struct Instance *new;                                  -->
- *
  *  Variable List or Case List Maintenance.
  *
  *  This requires some explanation. There are a number of cases
@@ -129,36 +111,23 @@ extern void ModifyWhenPointers(struct gl_list_t *reforvar,
 extern struct gl_list_t *CopyWhenBVarList(struct Instance *dest_inst,
                                           struct gl_list_t *copylist);
 /**<
- *  <!--  struct gl_list_t *CopyWhenBVarList(dest_inst,copylist)       -->
- *  <!--  struct Instance *dest_inst;                                  -->
- *  <!--  struct gl_list_t *copylist;                                  -->
- *
  *  Copy a When list of variables.
  */
 
 extern struct gl_list_t *CopyWhenCaseRefList(struct Instance *dest_inst,
                                              struct gl_list_t *copylist);
 /**<
- *  <!--  struct gl_list_t *CopyWhenCaseRefList(dest_inst,copylist)    -->
- *  <!--  struct Instance *dest_inst;                                  -->
- *  <!--  struct gl_list_t *copylist;                                  -->
  *  Copy the Reference list of a case in a WHEN instance
  */
 
 extern void DestroyWhenVarList(struct gl_list_t *l, struct Instance *inst);
 /**<
- *  <!--  void DestroyWhenVarList(l,inst)                              -->
- *  <!--  struct gl_list_t *l;                                         -->
- *  <!--  struct Instance *inst;                                       -->
  *  Destroy a When list of variables.
  */
 
 
 extern void DestroyWhenCaseList(struct gl_list_t *l, struct Instance *inst);
 /**<
- *  <!--  void DestroyWhenCaseList(l,inst);                            -->
- *  <!--  struct gl_list_t *l;                                         -->
- *  <!--  struct Instance *inst;                                       -->
  *  Destroy a When list of cases
  */
 
@@ -175,20 +144,14 @@ extern unsigned int model_flags(struct Instance *mod);
 /**<  Returns the anon_flags field of the model instance. */
 extern void model_set_flags(struct Instance *mod, unsigned int flags);
 /**<
- *  <!--  struct ModelInstance *mod;                                   -->
- *  <!--  unsigned int anon_ flags;                                    -->
- *
- *  <!--  model_flags(mod) returns the anon_flags field of the model in-->stance.
- *  <!--  model_set_flags(mod,flags) sets the entire anon_flags field t-->o the
- *  <!--  value of flags given.                                        -->
  *  Sets the entire anon_flags field to the value of flags given.
+ *  @note model_flags(mod) returns the anon_flags field of the model instance.<br><br>
+ *  model_set_flags(mod,flags) sets the entire anon_flags field to the
+ *  value of flags given @endnote
  */
 
 extern unsigned int model_flagbit(CONST struct Instance *mod, unsigned int name);
 /**< 
- *  <!--  model_flagbit(mod,name);                                     -->
- *  <!--  struct WhenInstance *mod;                                    -->
- *  <!--  unsigned int name;                                           -->
  *  Returns the value of the bit specified from the model instance flags.
  *  name should be a MOD_xx flag
  */
@@ -197,10 +160,6 @@ extern void model_set_flagbit(struct Instance *mod,
                               unsigned int NAME,
                               unsigned int oneorzero);
 /**<
- *  <!--  struct ModelInstance *mod;                                   -->
- *  <!--  unsigned int NAME,oneorzero;                                 -->
- *  <!--  model_set_flagbit(mod,NAME,oneorzero)                        -->
- *
  *  Sets the bit, which should be referred to by its macro name,
  *  on if oneorzero is >0 and off is oneorzero is 0.<br><br>
  *  <pre>
@@ -247,20 +206,14 @@ extern unsigned int relinst_flags(struct Instance *rel);
 /**<  Returns the anon_flags field of the relation instance. */
 extern void relinst_set_flags(struct Instance *rel, unsigned int flags);
 /**<
- *  <!--  struct Instance *rel;                                        -->
- *  <!--  unsigned int anon_ flags;                                    -->
- *
+ *  Sets the entire anon_flags field to the value of flags given.
  *  <!--  relinst_flags(rel) returns the anon_flags field of the relati-->on instance.
  *  <!--  relinst_set_flags(rel,flags) sets the entire anon_flags field--> to the
  *  <!--  value of flags given.                                        -->
- *  Sets the entire anon_flags field to the value of flags given.
  */
 
 extern unsigned int relinst_flagbit(CONST struct Instance *rel, unsigned int name);
 /**<
- *  <!--  relinst_flagbit(rel,name);                                   -->
- *  <!--  struct Instance *rel;                                        -->
- *  <!--  unsigned int name;                                           -->
  *  Returns the value of the bit specified from the relation instance flags.
  *  name should be a REL_xx flag
  */
@@ -269,10 +222,6 @@ extern void relinst_set_flagbit(struct Instance *rel,
                                 unsigned int NAME,
                                 unsigned int oneorzero);
 /**<
- *  <!--  struct Instance *rel;                                        -->
- *  <!--  unsigned int NAME,oneorzero;                                 -->
- *  <!--  relinst_set_flagbit(rel,NAME,oneorzero)                      -->
- *
  *  Sets the bit, which should be referred to by its macro name,
  *  on if oneorzero is >0 and off is oneorzero is 0.<br><br>
  *  <pre>
@@ -292,21 +241,15 @@ extern unsigned int logrelinst_flags(struct Instance *lrel);
 /**<  Returns the anon_flags field of the logical relation instance. */
 extern void logrelinst_set_flags(struct Instance *lrel, unsigned intflags);
 /**< 
- *  <!--  struct Instance *lrel;                                       -->
- *  <!--  unsigned int anon_ flags;                                    -->
- *
+ *  Sets the entire anon_flags field to the value of flags given.
  *  <!--  logrelinst_flags(lrel) returns the anon_flags field of the lo-->gical
  *  <!--  relation instance.                                           -->
  *  <!--  log relinst_set_flags(lrel,flags) sets the entire anon_flags -->field to the
  *  <!--  value of flags given.                                        -->
- *  Sets the entire anon_flags field to the value of flags given.
  */
 
 extern unsigned int logrelinst_flagbit(CONST struct Instance *lrel, unsigned int name);
 /**<
- *  <!--  logrelinst_flagbit(lrel,name);                               -->
- *  <!--  struct Instance *lrel;                                       -->
- *  <!--  unsigned int name;                                           -->
  *  Returns the value of the bit specified from the logical relation
  *  instance flags.
  *  name should be a LOGREL_xx flag
@@ -316,10 +259,6 @@ extern void logrelinst_set_flagbit(struct Instance *rel,
                                    unsigned int NAME,
                                    unsigned int oneorzero);
 /**<
- *  <!--  struct Instance *rel;                                        -->
- *  <!--  unsigned int NAME,oneorzero;                                 -->
- *  <!--  logrelinst_set_flagbit(lrel,NAME,oneorzero)                  -->
- *
  *  Sets the bit, which should be referred to by its macro name,
  *  on if oneorzero is >0 and off is oneorzero is 0.<br><br>
  *  <pre>

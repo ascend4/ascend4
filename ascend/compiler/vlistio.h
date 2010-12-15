@@ -30,7 +30,7 @@
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/compiler/vlist.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_type Compiler Type Description
 	@{
 */
 
